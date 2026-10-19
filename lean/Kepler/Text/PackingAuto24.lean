@@ -9060,4 +9060,1229 @@ theorem GRUTOTI1_concl_p24_pub : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3),
   GRUTOTI1_concl_p24
 
 
+/-! ## 七发波章（2026-10-19, lane pa24reuhady; SF-44 双轨并行）
+轨 (a)：k = 3/4 臂 PA23 kit 续移植（`p24_angleMono`/`p24_fan_cap_sub_hull4`/
+`p24_hull_arm_eq`，逐字移植 + `grutotiConicCap` → `conicCapP24` 适配）+ 逐臂
+帽石 `p24_d3_cell3_vol`/`p24_d3_cell4_vol`（hw3/hw4 加强前提）+ 逐胞强派发
+`p24_cell_cap_dihX_strong`（k ∈ {0,1} junk 臂 ∅-不交 + k ∈ {2,3,4} 帽石直用）
++ REUHADY1 装配改接件 `p24_wedge_setSum_eq_azim_strong`（帽石路径装配；
+null-trace 臂以 `hnullarm` 显式假设承接 = HL :7799 SUM_SUPERSET 臂的接口形）。
+冻结语句 `p24_cell_cap_dihX` 本体零改动；SF-44 修法走轨 (b) 提案（见
+lane_snapshots/pa24reuhady/7gen_SF44_*.md 与 .patch）。 -/
+
+/-! ### §1 k = 3/4 臂 kit（PA23 GT-3f 私拷） -/
+
+/-- 方位角锥单调（PA23:3864 逐字移植）：沿负 `t` 方向的投影衰减 —— 锥帽
+切割段不交性的 Cauchy–Schwarz 核。 -/
+private theorem p24_angleMono {e v : V3} {t : ℝ} (hve : 0 < inner ℝ v e)
+    (hu : t • e + v ≠ 0) (ht : t ≤ 0) :
+    inner ℝ (t • e + v) e / ‖t • e + v‖ ≤ inner ℝ v e / ‖v‖ := by
+  have hv0 : v ≠ 0 := by
+    intro h0
+    rw [h0] at hve
+    simp at hve
+  have hvp : (0:ℝ) < ‖v‖ := norm_pos_iff.mpr hv0
+  have hup : (0:ℝ) < ‖t • e + v‖ := norm_pos_iff.mpr hu
+  have hB0 : 0 ≤ inner ℝ e e := real_inner_self_nonneg
+  have hue : inner ℝ (t • e + v) e = inner ℝ v e + t * inner ℝ e e := by
+    rw [inner_add_left, real_inner_smul_left]; ring
+  have hDu : inner ℝ (t • e + v) (t • e + v)
+      = inner ℝ v v + 2 * t * inner ℝ v e + t * t * inner ℝ e e := by
+    rw [inner_add_left, inner_add_right, inner_add_right, real_inner_smul_left,
+      real_inner_smul_left, real_inner_smul_right, real_inner_smul_right,
+      real_inner_comm e v]
+    ring
+  by_cases huepos : 0 < inner ℝ (t • e + v) e
+  · -- cross-multiply route
+    have hcs : 0 ≤ inner ℝ e e * (‖v‖ * ‖v‖) - inner ℝ v e * inner ℝ v e := by
+      have h1 := norm_inner_le_norm (𝕜 := ℝ) v e
+      obtain ⟨h1a, h1b⟩ := abs_le.mp h1
+      have hee : inner ℝ e e = ‖e‖ * ‖e‖ := real_inner_self_eq_norm_mul_norm e
+      have hsq2 : inner ℝ v e * inner ℝ v e ≤ (‖v‖ * ‖e‖) * (‖v‖ * ‖e‖) := by
+        nlinarith [h1a, h1b]
+      rw [hee]
+      nlinarith [hsq2, norm_nonneg v, norm_nonneg e]
+    have h2p : (0:ℝ) < 2 * inner ℝ v e + t * inner ℝ e e := by
+      rw [hue] at huepos; linarith
+    have hrhs : (0:ℝ) ≤ (-t) * (2 * inner ℝ v e + t * inner ℝ e e)
+        * (inner ℝ e e * (‖v‖ * ‖v‖) - inner ℝ v e * inner ℝ v e) :=
+      mul_nonneg (mul_nonneg (neg_nonneg.mpr ht) (le_of_lt h2p)) hcs
+    have hkey : (inner ℝ v e * inner ℝ v e) * (‖t • e + v‖ * ‖t • e + v‖)
+        - (inner ℝ v e + t * inner ℝ e e) * (inner ℝ v e + t * inner ℝ e e) * (‖v‖ * ‖v‖)
+        = (-t) * (2 * inner ℝ v e + t * inner ℝ e e)
+          * (inner ℝ e e * (‖v‖ * ‖v‖) - inner ℝ v e * inner ℝ v e) := by
+      nlinarith [hDu, real_inner_self_eq_norm_mul_norm (t • e + v),
+        real_inner_self_eq_norm_mul_norm v, hue]
+    have hs2 : (inner ℝ v e + t * inner ℝ e e) * (inner ℝ v e + t * inner ℝ e e)
+        * (‖v‖ * ‖v‖) ≤ (inner ℝ v e * inner ℝ v e) * (‖t • e + v‖ * ‖t • e + v‖) := by
+      linarith [hkey, hrhs]
+    have hfinal : (inner ℝ v e + t * inner ℝ e e) * ‖v‖
+        ≤ inner ℝ v e * ‖t • e + v‖ := by
+      by_contra hcon
+      have hlt2 : inner ℝ v e * ‖t • e + v‖
+          < (inner ℝ v e + t * inner ℝ e e) * ‖v‖ := lt_of_not_ge hcon
+      have hp1 : 0 ≤ inner ℝ v e * ‖t • e + v‖ :=
+        mul_nonneg hve.le (norm_nonneg _)
+      have hp2 : 0 < (inner ℝ v e + t * inner ℝ e e) * ‖v‖ := by
+        have := huepos; rw [hue] at this; exact mul_pos this hvp
+      have hsq := sq_lt_sq' (by linarith) hlt2
+      rw [sq, sq] at hsq
+      have e1 : (inner ℝ v e * ‖t • e + v‖) * (inner ℝ v e * ‖t • e + v‖)
+          = (inner ℝ v e * inner ℝ v e) * (‖t • e + v‖ * ‖t • e + v‖) := by ring
+      have e2 : ((inner ℝ v e + t * inner ℝ e e) * ‖v‖)
+          * ((inner ℝ v e + t * inner ℝ e e) * ‖v‖)
+          = ((inner ℝ v e + t * inner ℝ e e) * (inner ℝ v e + t * inner ℝ e e))
+            * (‖v‖ * ‖v‖) := by ring
+      rw [e1, e2] at hsq
+      linarith [hkey, hrhs, hsq]
+    rw [hue]
+    refine (div_le_iff₀ hup).mpr ?_
+    rw [div_mul_eq_mul_div, le_div_iff₀ hvp]
+    exact hfinal
+  · -- the killed branch: the projection is nonpositive, the target positive
+    refine le_trans ?_ (le_of_lt (div_pos hve hvp))
+    rw [div_le_iff₀ hup]
+    linarith [hue]
+
+/-- 开锥参数单调（PA23 `grutoti_rconeGt_subset` 私拷；junk k=1 臂的
+`hw1` 消费端）。 -/
+private theorem p24_rconeGt_mono {u0 u1 : V3} {a b : ℝ} (h : a ≤ b) :
+    rconeGt u0 u1 b ⊆ rconeGt u0 u1 a := by
+  intro x hx
+  simp only [rconeGt, Set.mem_setOf_eq] at hx ⊢
+  exact lt_of_le_of_lt (mul_le_mul_of_nonneg_left h (by positivity)) hx
+
+/-- GT-3f (HL §E/§F fan∩cap ⊆ hull；PA23:3944 逐字移植 + `conicCapP24`
+适配）：`affGe {u0,u1} {w1,w2}` 扇内落在锥帽 `D` 的点必落四点凸包，给定
+SF-28 窄性对 —— 远面 `{u1,w1,w2}` 与 `u0` 距离 ≥ r（面-距离径向排除），
+切割段 `conv {w1,w2}` 与严格锥 `rconeGt u0 u1 d` 不交（Cauchy–Schwarz 锥
+单调 via `p24_angleMono`）。 -/
+private theorem p24_fan_cap_sub_hull4 {u0 u1 w1 w2 : V3} {r d : ℝ}
+    (hr : 0 < r) (hd : 0 < d)
+    (hc1 : ¬ Collinear3 u0 u1 w1) (hc2 : ¬ Collinear3 u0 u1 w2) (hw12 : w1 ≠ w2)
+    (hface : ∀ z ∈ (affineSpan ℝ ({u1, w1, w2} : Set V3)), r ≤ dist u0 z)
+    (hcone : ∀ z ∈ convexHull ℝ ({w1, w2} : Set V3), z ∉ rconeGt u0 u1 d)
+    {x : V3} (hxfan : x ∈ affGe {u0, u1} {w1, w2})
+    (hxcap : x ∈ conicCapP24 u0 u1 r d) :
+    x ∈ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+  have hu01 : u0 ≠ u1 := fun h => hc1 (by rw [h]; exact collinear3_of_eq rfl)
+  have hplane : u0 ∉ (affineSpan ℝ ({u1, w1, w2} : Set V3)) := by
+    intro hm
+    have h0 := hface u0 hm
+    rw [dist_self] at h0
+    exact absurd h0 (not_le.mpr hr)
+  have hu0w1 : u0 ≠ w1 := fun h =>
+    hplane (by rw [h]; exact mem_affineSpan (k := ℝ) (by simp))
+  have hu0w2 : u0 ≠ w2 := fun h =>
+    hplane (by rw [h]; exact mem_affineSpan (k := ℝ) (by simp))
+  have hu1w1 : u1 ≠ w1 := by
+    intro h
+    refine hc1 ?_
+    rw [h]
+    exact (collinear3_iff_smul (v := u0) (w := w1) (w1 := w1)
+      (Ne.symm hu0w1)).mpr ⟨1, (one_smul ℝ (w1 - u0)).symm⟩
+  have hu1w2 : u1 ≠ w2 := by
+    intro h
+    refine hc2 ?_
+    rw [h]
+    exact (collinear3_iff_smul (v := u0) (w := w2) (w1 := w2)
+      (Ne.symm hu0w2)).mpr ⟨1, (one_smul ℝ (w2 - u0)).symm⟩
+  obtain ⟨f, hfin, hsum, hfpos, hone⟩ := hxfan
+  have hFeq : hfin.toFinset = ({u0, u1, w1, w2} : Finset V3) := by
+    refine Finset.ext fun z => ?_
+    rw [Set.Finite.mem_toFinset]
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+      Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [hFeq] at hsum hone
+  have hxv : x = f u0 • u0 + f u1 • u1 + f w1 • w1 + f w2 • w2 := by
+    rw [hsum, show ({u0, u1, w1, w2} : Finset V3)
+      = insert u0 (insert u1 (insert w1 ({w2} : Finset V3))) from rfl,
+      Finset.sum_insert (by simp [hu01, hu0w1, hu0w2]),
+      Finset.sum_insert (by simp [hu1w1, hu1w2]),
+      Finset.sum_insert (by simp [hw12]), Finset.sum_singleton]
+    abel
+  have hone4 : f u0 + f u1 + f w1 + f w2 = 1 := by
+    rw [← hone, show ({u0, u1, w1, w2} : Finset V3)
+      = insert u0 (insert u1 (insert w1 ({w2} : Finset V3))) from rfl,
+      Finset.sum_insert (by simp [hu01, hu0w1, hu0w2]),
+      Finset.sum_insert (by simp [hu1w1, hu1w2]),
+      Finset.sum_insert (by simp [hw12]), Finset.sum_singleton]
+    ring
+  have hs2p : 0 ≤ f w1 := hfpos w1 (by simp)
+  have hs3p : 0 ≤ f w2 := hfpos w2 (by simp)
+  by_cases ht0 : 0 ≤ f u0
+  · by_cases ht1 : 0 ≤ f u1
+    · -- both base coefficients nonnegative: outright convex combination
+      have hxc : f u0 • u0 + f u1 • u1 + f w1 • w1 + f w2 • w2
+          ∈ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+        rw [CONVEX_HULL_4 u0 u1 w1 w2]
+        simp only [Set.mem_setOf_eq]
+        exact ⟨f u0, f u1, f w1, f w2, ht0, ht1, hs2p, hs3p, hone4, rfl⟩
+      rwa [← hxv] at hxc
+    · -- u1-coefficient negative: the cone-monotonicity case
+      have hxball : dist x u0 ≤ r := by
+        simp only [conicCapP24, Set.mem_inter_iff, Metric.mem_closedBall,
+          rconeGt, Set.mem_setOf_eq] at hxcap
+        exact hxcap.1
+      have hcgt : dist x u0 * dist u1 u0 * d < inner ℝ (x - u0) (u1 - u0) := by
+        simp only [conicCapP24, Set.mem_inter_iff, Metric.mem_closedBall,
+          rconeGt, Set.mem_setOf_eq] at hxcap
+        rw [← inner_eq_dot] at hxcap
+        exact hxcap.2
+      have hdotpos : (0:ℝ) < inner ℝ (x - u0) (u1 - u0) :=
+        lt_of_le_of_lt (mul_nonneg (mul_nonneg dist_nonneg dist_nonneg) hd.le) hcgt
+      have hxu0ne : x - u0 ≠ 0 := by
+        intro h0
+        rw [h0] at hdotpos
+        simp at hdotpos
+      have hsub : x - u0
+          = f u1 • (u1 - u0) + f w1 • (w1 - u0) + f w2 • (w2 - u0) := by
+        rw [hxv, show f u0 = 1 - (f u1 + f w1 + f w2) from by linarith]
+        module
+      by_cases hl0 : f w1 + f w2 = 0
+      · -- both tips zero: x sits behind u0 on the axis, cone condition dies
+        have hs2z : f w1 = 0 := by have := hs2p; linarith
+        have hs3z : f w2 = 0 := by have := hs3p; linarith
+        have hsub0 : x - u0 = f u1 • (u1 - u0) := by rw [hsub, hs2z, hs3z]; simp
+        have hB0 : 0 ≤ inner ℝ (u1 - u0) (u1 - u0) := real_inner_self_nonneg
+        have hnB : (0:ℝ) ≤ -(f u1) * inner ℝ (u1 - u0) (u1 - u0) := by
+          nlinarith [hB0, lt_of_not_ge ht1]
+        have h1 : inner ℝ (x - u0) (u1 - u0)
+            = f u1 * inner ℝ (u1 - u0) (u1 - u0) := by
+          rw [hsub0, real_inner_smul_left]
+        have hcontra : (0:ℝ) < 0 := by linarith [h1, hdotpos, hnB]
+        exact absurd hcontra (by norm_num)
+      · have hlam : (0:ℝ) < f w1 + f w2 := lt_of_le_of_ne
+          (add_nonneg hs2p hs3p) (Ne.symm hl0)
+        obtain ⟨lam, hlamdef⟩ : ∃ lam : ℝ, lam = f w1 + f w2 := ⟨_, rfl⟩
+        have hlampos : (0:ℝ) < lam := hlamdef ▸ hlam
+        have hl0' : lam ≠ 0 := ne_of_gt hlampos
+        set z : V3 := (f w1 / lam) • w1 + (f w2 / lam) • w2 with hzdef
+        -- z on the cut segment
+        have hab : f w1 / lam + f w2 / lam = 1 := by
+          have hl2 : f w1 + f w2 ≠ 0 := by rw [← hlamdef]; exact hl0'
+          rw [hlamdef]
+          field_simp [hl2]
+        have hpt : (f w1 / lam) • w1 + (f w2 / lam) • w2 = z := by
+          rw [hzdef]
+        have hzconv : z ∈ convexHull ℝ ({w1, w2} : Set V3) := by
+          rw [convexHull_pair]
+          exact ⟨f w1 / lam, f w2 / lam, div_nonneg hs2p (le_of_lt hlampos),
+            div_nonneg hs3p (le_of_lt hlampos), hab, hpt⟩
+        -- x - u0 = f u1 • e + lam • (z - u0)
+        have hR : lam • (z - u0) = f w1 • (w1 - u0) + f w2 • (w2 - u0) := by
+          rw [hzdef, smul_sub, smul_add, smul_smul, smul_smul,
+            mul_div_cancel₀ (f w1) hl0', mul_div_cancel₀ (f w2) hl0', hlamdef]
+          module
+        have hsubz : x - u0 = f u1 • (u1 - u0) + lam • (z - u0) := by
+          rw [hsub, hR]
+          abel
+        -- the angle chain
+        have h2 : inner ℝ (lam • (z - u0)) (u1 - u0)
+            = inner ℝ (x - u0) (u1 - u0)
+              - f u1 * inner ℝ (u1 - u0) (u1 - u0) := by
+          simp only [hsubz, real_inner_smul_left, inner_add_left]
+          ring
+        have hB0 : 0 ≤ inner ℝ (u1 - u0) (u1 - u0) := real_inner_self_nonneg
+        have hnB : (0:ℝ) ≤ -(f u1) * inner ℝ (u1 - u0) (u1 - u0) := by
+          nlinarith [hB0, lt_of_not_ge ht1]
+        have hvdot : (0:ℝ) < inner ℝ (lam • (z - u0)) (u1 - u0) := by
+          rw [h2]; linarith
+        have hvne : f u1 • (u1 - u0) + lam • (z - u0) ≠ 0 := by
+          intro h0
+          rw [← hsubz] at h0
+          exact hxu0ne h0
+        have hmono := p24_angleMono (e := u1 - u0) (v := lam • (z - u0))
+          (t := f u1) hvdot hvne (le_of_lt (lt_of_not_ge ht1))
+        -- scale invariance: g(scaled tip direction) = g(tip direction)
+        have hscale : inner ℝ (lam • (z - u0)) (u1 - u0) / ‖lam • (z - u0)‖
+            = inner ℝ (z - u0) (u1 - u0) / ‖z - u0‖ := by
+          rw [norm_smul, Real.norm_eq_abs, abs_of_pos hlampos,
+            real_inner_smul_left, mul_div_mul_left _ _ hl0']
+        -- the cap's strict cone condition, divided by ‖x - u0‖
+        have hxu0p : (0:ℝ) < ‖x - u0‖ := norm_pos_iff.mpr hxu0ne
+        have hcapdiv : dist u1 u0 * d
+            < inner ℝ (x - u0) (u1 - u0) / ‖x - u0‖ := by
+          have hdx : dist x u0 = ‖x - u0‖ := dist_eq_norm x u0
+          have hdu : dist u1 u0 = ‖u1 - u0‖ := dist_eq_norm u1 u0
+          rw [hdx, hdu] at hcgt
+          rw [lt_div_iff₀ hxu0p, hdu]
+          nlinarith [hcgt, norm_nonneg (x - u0)]
+        -- the cut segment sits outside the strict cone
+        have hznd : z ∉ rconeGt u0 u1 d := hcone z hzconv
+        by_cases hz0 : ‖z - u0‖ = 0
+        · -- z = u0: x on the axis behind u0 again
+          have hz0' : z - u0 = 0 := norm_eq_zero.mp hz0
+          have hsub0 : x - u0 = f u1 • (u1 - u0) := by rw [hsubz, hz0']; simp
+          have h1 : inner ℝ (x - u0) (u1 - u0)
+              = f u1 * inner ℝ (u1 - u0) (u1 - u0) := by
+            rw [hsub0, real_inner_smul_left]
+          have hcontra : (0:ℝ) < 0 := by linarith [h1, hdotpos, hnB]
+          exact absurd hcontra (by norm_num)
+        · have hzup : (0:ℝ) < ‖z - u0‖ :=
+            lt_of_le_of_ne (norm_nonneg _) (Ne.symm hz0)
+          have hzconed : (z - u0) ⬝ᵥ (u1 - u0) ≤ dist z u0 * dist u1 u0 * d := by
+            simp only [rconeGt, Set.mem_setOf_eq] at hznd
+            exact le_of_not_gt hznd
+          have hzdiv : inner ℝ (z - u0) (u1 - u0) / ‖z - u0‖ ≤ dist u1 u0 * d := by
+            have hdz : dist z u0 = ‖z - u0‖ := dist_eq_norm z u0
+            rw [inner_eq_dot, div_le_iff₀ hzup]
+            rw [hdz, mul_assoc] at hzconed
+            calc (z - u0) ⬝ᵥ (u1 - u0) ≤ ‖z - u0‖ * (dist u1 u0 * d) := hzconed
+              _ = (dist u1 u0 * d) * ‖z - u0‖ := by ring
+          rw [← hsubz, hscale] at hmono
+          linarith
+  · -- u0-coefficient negative: the far-face case
+    have hs : (0:ℝ) < 1 - f u0 := by linarith
+    have hs2' : (1:ℝ) < 1 - f u0 := by linarith
+    obtain ⟨s, hsdef⟩ : ∃ s : ℝ, s = 1 - f u0 := ⟨_, rfl⟩
+    have hspos : (0:ℝ) < s := hsdef ▸ hs
+    set y : V3 := (f u1 / s) • u1 + (f w1 / s) • w1 + (f w2 / s) • w2 with hydef
+    have hcoef2 : (1:ℝ) - f w1 / s - f w2 / s = f u1 / s := by
+      have hsum' : f u1 + f w1 + f w2 = s := by linarith
+      have hs0 : s ≠ 0 := ne_of_gt hspos
+      field_simp [hsdef]
+      linarith
+    have hy3 : y = u1 + (f w1 / s) • (w1 - u1) + (f w2 / s) • (w2 - u1) := by
+      rw [hydef]
+      have hsplit : u1 + (f w1 / s) • (w1 - u1) + (f w2 / s) • (w2 - u1)
+          = (f u1 / s) • u1 + (f w1 / s) • w1 + (f w2 / s) • w2 := by
+        have hcoef3 : (1:ℝ) - f w1 / s - f w2 / s = f u1 / s := hcoef2
+        have hsplit2 : u1 + (f w1 / s) • (w1 - u1) + (f w2 / s) • (w2 - u1)
+            = (1 - f w1 / s - f w2 / s) • u1 + (f w1 / s) • w1
+              + (f w2 / s) • w2 := by
+          module
+        rw [hsplit2, hcoef3]
+      rw [hsplit]
+    have hyspan : y ∈ (affineSpan ℝ ({u1, w1, w2} : Set V3)) :=
+      p24_mem_affineSpan_triple u1 w1 w2 y (f w1 / s) (f w2 / s) hy3
+    have hydist : r ≤ dist u0 y := hface y hyspan
+    have hsne : s ≠ 0 := ne_of_gt hspos
+    have hsmul : s • ((f u1 / s) • u1 + (f w1 / s) • w1 + (f w2 / s) • w2 - u0)
+        = f u1 • u1 + f w1 • w1 + f w2 • w2 - s • u0 := by
+      simp only [smul_sub, smul_add, smul_smul, mul_div_cancel₀ _ hsne]
+    have hyx : x - u0 = s • (y - u0) := by
+      have hfu0 : f u0 = 1 - s := by rw [hsdef]; ring
+      rw [hydef, hxv, hfu0, hsmul]
+      module
+    have hdistxy : dist x u0 = s * dist u0 y := by
+      have h1 : dist x u0 = ‖x - u0‖ := dist_eq_norm x u0
+      have h2 : dist u0 y = ‖y - u0‖ :=
+        (dist_eq_norm u0 y).trans (norm_sub_rev y u0).symm
+      rw [h1, hyx, norm_smul, Real.norm_eq_abs, abs_of_pos hspos, h2]
+    have hball : dist x u0 ≤ r := by
+      simp only [conicCapP24, Set.mem_inter_iff, Metric.mem_closedBall,
+        rconeGt, Set.mem_setOf_eq] at hxcap
+      exact hxcap.1
+    have hyr : (0:ℝ) < dist u0 y := lt_of_lt_of_le hr hydist
+    nlinarith [hball, hdistxy, hydist, hyr, hs2']
+
+/-- GT-3f：k = 3/4 hull 臂组合器（PA23:4170 逐字移植 + `conicCapP24` 适配）——
+`T = hull {u0,u1,w1,w2}`、`T ∩ D` 非零测与 SF-28 窄性对给楔体积式
+（hull ⊆ 楠 by CONVEX_HULL_4_SUBSET_AFF_GE_2_2，楠∩D ⊆ hull by
+`p24_fan_cap_sub_hull4`，非退化 by `p24_quartet_nondeg`，体积 by
+`p24_vol_D_inter_affGe`）。 -/
+private theorem p24_hull_arm_eq {u0 u1 w1 w2 : V3} {r d : ℝ} {T : Set V3}
+    (hr : 0 < r) (hd : 0 < d) (hd1 : d < 1) (hu01 : u0 ≠ u1)
+    (hT : T = convexHull ℝ ({u0, u1, w1, w2} : Set V3))
+    (hTnn : ¬ nullSet (T ∩ conicCapP24 u0 u1 r d))
+    (hface : ∀ z ∈ (affineSpan ℝ ({u1, w1, w2} : Set V3)), r ≤ dist u0 z)
+    (hcone : ∀ z ∈ convexHull ℝ ({w1, w2} : Set V3), z ∉ rconeGt u0 u1 d) :
+    volume.real (T ∩ conicCapP24 u0 u1 r d)
+      = volume.real (conicCapP24 u0 u1 r d) * dihV u0 u1 w1 w2 / (2 * Real.pi) := by
+  have hvolT : volume T ≠ 0 := fun h0 =>
+    hTnn (measure_mono_null Set.inter_subset_left h0)
+  have hsub : T ⊆ (affineSpan ℝ ({u0, u1, w1, w2} : Set V3)) := by
+    rw [hT]; exact convexHull_min (subset_affineSpan ℝ _) (AffineSubspace.convex _)
+  obtain ⟨hc1, hc2, hw12, hpl⟩ := p24_quartet_nondeg hu01 hsub hvolT
+  have hsubL : T ∩ conicCapP24 u0 u1 r d
+      ⊆ (affGe {u0, u1} {w1, w2} : Set V3) ∩ conicCapP24 u0 u1 r d :=
+    Set.inter_subset_inter (by rw [hT]; exact CONVEX_HULL_4_SUBSET_AFF_GE_2_2 u0 u1 w1 w2)
+      (subset_refl _)
+  have hsubR : (affGe {u0, u1} {w1, w2} : Set V3) ∩ conicCapP24 u0 u1 r d
+      ⊆ T ∩ conicCapP24 u0 u1 r d := by
+    rintro z ⟨hzL, hzD⟩
+    refine ⟨?_, hzD⟩
+    rw [hT]
+    exact p24_fan_cap_sub_hull4 hr hd hc1 hc2 hw12 hface hcone hzL hzD
+  have heq : T ∩ conicCapP24 u0 u1 r d
+      = (affGe {u0, u1} {w1, w2} : Set V3) ∩ conicCapP24 u0 u1 r d :=
+    le_antisymm hsubL hsubR
+  rw [heq, p24_vol_D_inter_affGe u0 u1 w1 w2 r d hr hd hd1 hc1 hc2 hpl]
+
+/-! ### §2 k = 3/4 逐臂帽石（hw3/hw4 加强前提；六发波处方 scaffold 2-2 的
+k = 3/4 支。`p24_d3_cell2_vol`（六发波已落）为 k = 2 支。） -/
+
+/-- **D3 k=3 章帽石**（七发波真证；PA23 `grutoti_cell_vol` k=3 臂 GT-3f 的
+加强前提移植形）：k=3 见证胞的锥帽比例式。闭链：∅-支反 `hn` → hull 展形
+（成员级 ext）→ hw3 面/锥窄性经 `p24_hull_arm_eq`（hull ⊆ 楠
+CONVEX_HULL_4_SUBSET_AFF_GE_2_2 + 楠∩D ⊆ hull by `p24_fan_cap_sub_hull4`：
+面-距离径向 / `p24_angleMono` 锥单调；非退化由 `p24_quartet_nondeg`）+
+`dihX↔dihu3↔dihV` 对接。前提差 = 冻结 `p24_cell_cap_dihX` 的 `hw3`
+（HL `d ≥ d1`/`r ≤ r1` 型 min-max 数据，[d1]/[r1] 波供给）。 -/
+private theorem p24_d3_cell3_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ) (X : Set V3)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (hne : u0 ≠ u1)
+    (hn : ¬ nullSet (X ∩ conicCapP24 u0 u1 r d))
+    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 3 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hq3 : (cellParamsD V X [u0, u1]).1 = 3)
+    (hbar : barV V 3 (cellParamsD V X [u0, u1]).2)
+    (hinit : initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2)
+    (hXm : X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2) :
+    volume.real (X ∩ conicCapP24 u0 u1 r d)
+      = volume.real (conicCapP24 u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
+  have hns : ¬ nullSet X := fun hnull =>
+    hn (measure_mono_null (Set.inter_subset_left : X ∩ _ ⊆ X) hnull)
+  obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+    ⟨_, rfl⟩
+  have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+    rw [huldef]; exact hXm
+  have hqbar' : barV V 3 ul := by rw [huldef]; exact hbar
+  have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hinit
+  rw [hq3] at hXm'
+  have hfamtr1 : truncateSimplex 1 ul = [u0, u1] := p24_trunc1_of_init hinit'
+  have htr1 : truncateSimplex 1 ul = [u0, u1] := hfamtr1
+  have htr2 : truncateSimplex 2 ul = [u0, u1, elV ul 2] := by
+    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V ul hqbar'
+    have h1 : truncateSimplex 1 ul = [v0, v1] := by
+      rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+    have h2t : truncateSimplex 2 ul = [v0, v1, v2] := by
+      rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_2 v0 v1 v2 v3).2
+    injection (htr1.symm.trans h1).symm with ha hb
+    injection hb with hc _
+    have hv2 : v2 = elV ul 2 := by rw [hvul]; simp [elV]
+    rw [h2t, ha, hc, hv2]
+  by_cases hcond : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+  · -- X = hull {u0, u1, elV ul 2, mxi V ul}（成员级 ext 展形）
+    have hXhull : X
+        = convexHull ℝ ({u0, u1, elV ul 2, mxi V ul} : Set V3) := by
+      ext z
+      rw [hXm', (MCELL_EXPLICIT 3 V ul).2.2.2.1]
+      rw [mcell3, if_pos hcond, htr2]
+      have hsets : setOfList [u0, u1, elV ul 2] ∪ {mxi V ul}
+          = ({u0, u1, elV ul 2, mxi V ul} : Set V3) := by
+        ext w
+        simp only [setOfList, Set.mem_setOf_eq, List.mem_cons,
+          List.not_mem_nil, Set.mem_union, Set.mem_insert_iff,
+          Set.mem_singleton_iff]
+        tauto
+      rw [hsets]
+    -- hw3 消费（门条件由 hn 一步供给）
+    have hdoor : ¬ nullSet (mcell 3 V ul ∩ conicCapP24 u0 u1 r d) := by
+      rw [← hXm']
+      exact hn
+    obtain ⟨hface3, hcone3⟩ := hw3 ul hqbar' htr1 hdoor
+    have hdihX : dihX V X (u0, u1)
+        = dihV u0 u1 (elV ul 2) (mxi V ul) := by
+      have hE0 : elV ul 0 = u0 := p24_elV0 hqbar' htr1
+      have hE1 : elV ul 1 = u1 := p24_elV1 hqbar' htr1
+      simp only [dihX, if_neg hns]
+      rw [hq3, if_neg (by decide : ¬ (3:ℕ) = 2), if_pos (rfl : (3:ℕ) = 3)]
+      rw [← huldef, dihu3, hE0, hE1]
+    rw [p24_hull_arm_eq hr hd hd1 hne hXhull hn hface3 hcone3, hdihX]
+  · -- ∅-支
+    have hXeq : X ∩ conicCapP24 u0 u1 r d = ∅ := by
+      apply Set.eq_empty_iff_forall_notMem.mpr
+      intro z hz
+      obtain ⟨hzX, -⟩ := hz
+      rw [hXm'] at hzX
+      rw [(MCELL_EXPLICIT 3 V ul).2.2.2.1, mcell3, if_neg hcond] at hzX
+      simp at hzX
+    exact absurd (show nullSet (X ∩ conicCapP24 u0 u1 r d) from by
+      show volume (X ∩ conicCapP24 u0 u1 r d) = 0
+      rw [hXeq]
+      exact measure_empty) hn
+
+/-- **D3 k=4 章帽石**（七发波真证；PA23 `grutoti_cell_vol` k=4 臂 GT-3f 的
+加强前提移植形）：k=4 见证胞的锥帽比例式。闭链同 k=3（`p24_elV1`/htr 链
+BARV_3_EXPLICIT + TRUNCATE_SIMPLEX_EXPLICIT_1 + setOfList 四点展形）+
+`dihX↔dihu4↔dihV` 对接。前提差 = 冻结 `p24_cell_cap_dihX` 的 `hw4`
+（HL `d ≥ d2`/`r ≤ r2` 型 min-max 数据，[d2]/[r2] 波供给）。 -/
+private theorem p24_d3_cell4_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ) (X : Set V3)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (hne : u0 ≠ u1)
+    (hn : ¬ nullSet (X ∩ conicCapP24 u0 u1 r d))
+    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 4 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hq4 : (cellParamsD V X [u0, u1]).1 = 4)
+    (hbar : barV V 3 (cellParamsD V X [u0, u1]).2)
+    (hinit : initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2)
+    (hXm : X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2) :
+    volume.real (X ∩ conicCapP24 u0 u1 r d)
+      = volume.real (conicCapP24 u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
+  have hns : ¬ nullSet X := fun hnull =>
+    hn (measure_mono_null (Set.inter_subset_left : X ∩ _ ⊆ X) hnull)
+  obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+    ⟨_, rfl⟩
+  have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+    rw [huldef]; exact hXm
+  have hqbar' : barV V 3 ul := by rw [huldef]; exact hbar
+  have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hinit
+  rw [hq4] at hXm'
+  have htr1 : truncateSimplex 1 ul = [u0, u1] := p24_trunc1_of_init hinit'
+  have hseteq : setOfList ul = ({u0, u1, elV ul 2, elV ul 3} : Set V3) := by
+    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V ul hqbar'
+    have h1 : truncateSimplex 1 ul = [v0, v1] := by
+      rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+    injection (htr1.symm.trans h1).symm with ha hb
+    injection hb with hc _
+    have hv2 : v2 = elV ul 2 := by rw [hvul]; simp [elV]
+    have hv3 : v3 = elV ul 3 := by rw [hvul]; simp [elV]
+    ext w
+    have hw : w ∈ setOfList ul ↔ w ∈ [v0, v1, v2, v3] := by
+      rw [hvul, setOfList, Set.mem_setOf_eq]
+    rw [hw, ha, hc, hv2, hv3]
+    simp
+  by_cases hcond : hl ul < Real.sqrt 2
+  · -- X = hull {u0, u1, elV ul 2, elV ul 3}（成员级 ext 展形）
+    have hXhull : X
+        = convexHull ℝ ({u0, u1, elV ul 2, elV ul 3} : Set V3) := by
+      ext z
+      rw [hXm', (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+      rw [mcell4, if_pos hcond, hseteq]
+    -- hw4 消费（门条件由 hn 一步供给）
+    have hdoor : ¬ nullSet (mcell 4 V ul ∩ conicCapP24 u0 u1 r d) := by
+      rw [← hXm']
+      exact hn
+    obtain ⟨hface4, hcone4⟩ := hw4 ul hqbar' htr1 hdoor
+    have hdihX : dihX V X (u0, u1)
+        = dihV u0 u1 (elV ul 2) (elV ul 3) := by
+      have hE0 : elV ul 0 = u0 := p24_elV0 hqbar' htr1
+      have hE1 : elV ul 1 = u1 := p24_elV1 hqbar' htr1
+      simp only [dihX, if_neg hns]
+      rw [hq4, if_neg (by decide : ¬ (4:ℕ) = 2),
+        if_neg (by decide : ¬ (4:ℕ) = 3), if_pos (rfl : (4:ℕ) = 4)]
+      rw [← huldef, dihu4, hE0, hE1]
+    rw [p24_hull_arm_eq hr hd hd1 hne hXhull hn hface4 hcone4, hdihX]
+  · -- ∅-支
+    have hXeq : X ∩ conicCapP24 u0 u1 r d = ∅ := by
+      apply Set.eq_empty_iff_forall_notMem.mpr
+      intro z hz
+      obtain ⟨hzX, -⟩ := hz
+      rw [hXm'] at hzX
+      rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4), mcell4,
+        if_neg hcond] at hzX
+      simp at hzX
+    exact absurd (show nullSet (X ∩ conicCapP24 u0 u1 r d) from by
+      show volume (X ∩ conicCapP24 u0 u1 r d) = 0
+      rw [hXeq]
+      exact measure_empty) hn
+
+/-! ### §3 REUHADY1 装配改接件：逐胞强派发 + 强装配 -/
+
+/-- 任意指标的 `mcell` 折入 `{0,1,2,3,4}`（PA23:1737 `p23_mcell_reduce`
+逐字移植）：`mcell i V ul = mcell (min i 4) V ul`。 -/
+private theorem p24_mcell_reduce (i : ℕ) (V : Set V3) (ul : List V3) :
+    mcell i V ul = mcell (min i 4) V ul := by
+  rcases Nat.lt_or_ge i 4 with hlt | hle
+  · rw [min_eq_left (le_of_lt hlt)]
+  · rw [min_eq_right hle, (MCELL_EXPLICIT i V ul).2.2.2.2 hle,
+      (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+
+/-- **逐胞强派发**（七发波真证；scaffold 2-2 改接件的胞级核）：给定
+`cellParamsD` 见证与加强前提（`hw1`/`hw3`/`hw4`），k=2 现成帽石
+`p24_d3_cell2_vol` 直用、k=3/4 新帽石接上、k ∈ {0,1} junk 臂由帽-不交性
+闭合（mcell0 在 `ball u0 √2` 外而帽内接于 `closedBall u0 r ⊆ ball u0 √2`；
+mcell1 的截锥参数 `a = hl [u0,u1]/√2 ≤ d`（hw1）给锥补集不交）。冻结语句
+`p24_cell_cap_dihX` 无窄性前提不可照搬本件 —— 见其 NEEDS docstring 的
+六发波发现与 SF-44 提案。 -/
+private theorem p24_cell_cap_dihX_strong (V : Set V3) (u0 u1 : V3) (r d : ℝ)
+    (X : Set V3)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (hne : u0 ≠ u1)
+    (hp : Packing V)
+    (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
+    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 3 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 4 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hbar : barV V 3 (cellParamsD V X [u0, u1]).2)
+    (hinit : initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2)
+    (hXm : X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2)
+    (hn : ¬ nullSet (X ∩ conicCapP24 u0 u1 r d)) :
+    volume.real (conicCapP24 u0 u1 r d ∩ X)
+      = volume.real (conicCapP24 u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
+  -- 见证指标 ≤ 4（`p24_mcell_reduce` 把任意 mcell 指标折入 min i 4，
+  -- 同表 witness 走 `p24_cellParamsD_spec`）
+  have hwit' : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧
+      X = mcell p.1 V p.2 ∧ initialSublist [u0, u1] p.2 := by
+    refine ⟨(min (cellParamsD V X [u0, u1]).1 4, (cellParamsD V X [u0, u1]).2),
+      Nat.min_le_right _ _, hbar, ?_, hinit⟩
+    conv_lhs => rw [hXm]
+    rw [p24_mcell_reduce]
+  have hq4le : (cellParamsD V X [u0, u1]).1 ≤ 4 :=
+    (p24_cellParamsD_spec V X [u0, u1] hwit').1
+  rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 2 with h12 | hge2
+  · rcases Nat.eq_zero_or_pos (cellParamsD V X [u0, u1]).1 with hq0 | hq1pos
+    · -- k = 0 junk 臂：X ∩ D = ∅ 反 hn
+      have hXm' : X = mcell 0 V (cellParamsD V X [u0, u1]).2 := by
+        rw [hq0] at hXm
+        exact hXm
+      obtain ⟨yl, hyl⟩ := hinit
+      have hhd : hdV (cellParamsD V X [u0, u1]).2 = u0 := by
+        rw [show (cellParamsD V X [u0, u1]).2 = [u0, u1] ++ yl from hyl]
+        simp [hdV]
+      have hXeq : X ∩ conicCapP24 u0 u1 r d = ∅ := by
+        apply Set.eq_empty_iff_forall_notMem.mpr
+        intro z hz
+        obtain ⟨hzX, hzD⟩ := hz
+        rw [hXm'] at hzX
+        have hzm : z ∈ rogers V (cellParamsD V X [u0, u1]).2 \
+            Metric.ball (hdV (cellParamsD V X [u0, u1]).2) (Real.sqrt 2) := hzX
+        rw [hhd] at hzm
+        have h1 : √(1:ℝ) < Real.sqrt 2 :=
+          Real.sqrt_lt_sqrt (by norm_num : (0:ℝ) ≤ 1) (by norm_num : (1:ℝ) < 2)
+        rw [Real.sqrt_one] at h1
+        exact hzm.2 (Metric.mem_ball.mpr (lt_of_le_of_lt
+          (Metric.mem_closedBall.mp (Set.inter_subset_left hzD)) (lt_of_le_of_lt hr1 h1)))
+      exact absurd (show nullSet (X ∩ conicCapP24 u0 u1 r d) from by
+        show volume (X ∩ conicCapP24 u0 u1 r d) = 0
+        rw [hXeq]
+        exact measure_empty) hn
+    · -- k = 1 junk 臂（hw1 消费）：mcell1 的截锥参数 a = hl [u0,u1]/√2 ≤ d，
+      -- D ⊆ rconeGt u0 u1 d ⊆ rconeGt u0 u1 a，而 mcell1 在截锥补集中。
+      have hq1 : (cellParamsD V X [u0, u1]).1 = 1 := by omega
+      have hXm' : X = mcell 1 V (cellParamsD V X [u0, u1]).2 := by
+        rw [hq1] at hXm
+        exact hXm
+      have htr1 : truncateSimplex 1 (cellParamsD V X [u0, u1]).2 = [u0, u1] :=
+        p24_trunc1_of_init hinit
+      have hd0 : hdV (cellParamsD V X [u0, u1]).2 = u0 :=
+        p24_hdV_eq_u0 hbar htr1
+      have hd1v : hdV (cellParamsD V X [u0, u1]).2.tail = u1 :=
+        p24_hdTail_eq_u1 hbar htr1
+      have hXeq : X ∩ conicCapP24 u0 u1 r d = ∅ := by
+        rw [hXm', (MCELL_EXPLICIT 1 V (cellParamsD V X [u0, u1]).2).2.1]
+        simp only [mcell1]
+        by_cases hhl2 : Real.sqrt 2 ≤ hl (cellParamsD V X [u0, u1]).2
+        · rw [if_pos hhl2, hd0, hd1v, htr1]
+          apply Set.eq_empty_iff_forall_notMem.mpr
+          intro z hz
+          obtain ⟨⟨-, hz2⟩, hzD⟩ := hz
+          exact hz2 (p24_rconeGt_mono (u0 := u0) (u1 := u1) hw1 hzD.2)
+        · rw [if_neg hhl2, Set.empty_inter]
+      exact absurd (show nullSet (X ∩ conicCapP24 u0 u1 r d) from by
+        show volume (X ∩ conicCapP24 u0 u1 r d) = 0
+        rw [hXeq]
+        exact measure_empty) hn
+  · rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 4 with hlt4 | hge4
+    · rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 3 with hlt3 | hge3
+      · -- k = 2：六发波现成帽石直用
+        rw [Set.inter_comm]
+        exact p24_d3_cell2_vol V u0 u1 r d X hr hr1 hd hd1 hne hn hw1
+          (show (cellParamsD V X [u0, u1]).1 = 2 by omega) hbar hinit hXm hp
+      · -- k = 3：本波新帽石接上
+        rw [Set.inter_comm]
+        exact p24_d3_cell3_vol V u0 u1 r d X hr hr1 hd hd1 hne hn hw3
+          (show (cellParamsD V X [u0, u1]).1 = 3 by omega) hbar hinit hXm
+    · -- k = 4：本波新帽石接上
+      rw [Set.inter_comm]
+      exact p24_d3_cell4_vol V u0 u1 r d X hr hr1 hd hd1 hne hn hw4
+        (show (cellParamsD V X [u0, u1]).1 = 4 by omega) hbar hinit hXm
+
+
+/-- **强装配（REUHADY1 装配改接件，七发波真证）**：`p24_wedge_setSum_eq_azim`
+的帽石路径版 —— 逐胞恒等式不再消费冻结语句 `p24_cell_cap_dihX`，改由
+`p24_cell_cap_dihX_strong`（k=2 现成帽石直用 + k=3/4 新帽石 + junk 臂）
+按 nullity 二分供出；null-trace 胞的 `dihX` 零侧由 `hnullarm` 显式承接
+（= HL :7799 `SUM_SUPERSET` 臂的接口形；其本体 = HL :7829-8000 的
+LEPJBDJ/HDTFNFZ 近轴正体积论证，八发波处方）。REUHADY1 的换接在
+scaffold 3 加强形（产出 hwit/hw1/hw3/hw4 + hnullarm 供货）落地时启用。 -/
+private theorem p24_wedge_setSum_eq_azim_strong (V : Set V3) (u0 u1 n1 n2 : V3)
+    (e : Set V3) (r d : ℝ)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hnc1 : ¬ Collinear3 u0 u1 n1) (hnc2 : ¬ Collinear3 u0 u1 n2)
+    (hfin : {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}.Finite)
+    (hpair : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e, ∀ Y ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      X ≠ Y → volume (X ∩ Y) = 0)
+    (hcov : ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
+      x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e)
+    (hnullarm : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      nullSet (X ∩ conicCapP24 u0 u1 r d) → dihX V X (u0, u1) = 0)
+    (hwit : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      barV V 3 (cellParamsD V X [u0, u1]).2 ∧
+      initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2 ∧
+      X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2)
+    (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
+    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 3 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 4 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d) :
+    setSum (p24_wedgeCells V u0 u1 n1 n2 e) (fun X => dihX V X (u0, u1))
+      = azim u0 u1 n1 n2 := by
+  refine p24_wedge_setSum_eq_azim V u0 u1 n1 n2 e r d hs hp hu0 hu1 hne hr hr1
+    hd hd1 hnc1 hnc2 hfin hpair hcov ?_
+  intro X hX
+  by_cases hnT : nullSet (X ∩ conicCapP24 u0 u1 r d)
+  · -- null-trace 臂：LHS = 0，dihX = 0（hnullarm）
+    have hdih0 := hnullarm X hX hnT
+    have h0 : volume.real (conicCapP24 u0 u1 r d ∩ X) = 0 := by
+      show (volume (conicCapP24 u0 u1 r d ∩ X) : ENNReal).toReal = 0
+      rw [Set.inter_comm, show volume (X ∩ conicCapP24 u0 u1 r d) = 0 from hnT]
+      rfl
+    rw [hdih0, h0]
+    ring
+  · -- 非 null-trace 臂：逐胞强派发
+    exact p24_cell_cap_dihX_strong V u0 u1 r d X hr hr1 hd hd1 hne hp hw1 hw3 hw4
+      (hwit X hX).1 (hwit X hX).2.1 (hwit X hX).2.2 hnT
+
+/-! ### §4 [r1] 收口：closestPoint 存在性桥 → f1 正性 → r1 = min P1
+（六发波处方 scaffold 3-2；HL REUHADY.hl :1703-1810 的 f1/P1/r1 形） -/
+
+/-- 有限集的仿射包是闭集（`AffineSubspace.closed_of_finiteDimensional` +
+方向有限维；平面投影存在性桥的闭性支）。 -/
+private theorem p24_affineSpan_isClosed_of_finite {K : Set V3} (hK : K.Finite) :
+    IsClosed (affineSpan ℝ K : Set V3) := by
+  have hdir : FiniteDimensional ℝ (affineSpan ℝ K).direction := by
+    rw [direction_affineSpan]
+    exact FiniteDimensional.span_of_finite ℝ (Set.Finite.vsub hK hK)
+  exact AffineSubspace.closed_of_finiteDimensional _
+
+/-- **[r1] 桥（本波主件）**：非空闭集上的 `closestPoint`（PA2:178 ε-选取形）
+给出真正的最近点 —— 成员性 + 全局极小性。K = affineSpan 无界非紧，ε-见证
+不能取集内点代充，也不能凭紧性 —— 走 Heine–Borel 有界切片：K ∩
+closedBall x (δ+1)（δ = infDist）非空闭有界 ⟹ 紧 ⟹ dist 在其上取最小元，
+界外点按 δ+1 严格分离。 -/
+private theorem p24_closestPoint_exists {K : Set V3} (hKne : K.Nonempty)
+    (hKcl : IsClosed K) (x : V3) :
+    closestPoint K x ∈ K ∧ ∀ z ∈ K, dist x (closestPoint K x) ≤ dist x z := by
+  classical
+  have hδnn : (0:ℝ) ≤ Metric.infDist x K := Metric.infDist_nonneg
+  have hinfb : ∃ y ∈ K, dist x y < Metric.infDist x K + 1 := by
+    have hlt : Metric.infDist x K < Metric.infDist x K + 1 := by linarith
+    obtain ⟨y, hyK, hyd⟩ := (Metric.infDist_lt_iff hKne).1 hlt
+    exact ⟨y, hyK, hyd⟩
+  obtain ⟨y₀, hy₀K, hy₀d⟩ := hinfb
+  have hy₀ball : y₀ ∈ Metric.closedBall x (Metric.infDist x K + 1) :=
+    Metric.mem_closedBall'.mpr (le_of_lt hy₀d)
+  set Kb : Set V3 := K ∩ Metric.closedBall x (Metric.infDist x K + 1) with hKbdef
+  have hKbne : Kb.Nonempty := ⟨y₀, hy₀K, hy₀ball⟩
+  have hKbcl : IsClosed Kb := hKcl.inter Metric.isClosed_closedBall
+  have hKbbb : Bornology.IsBounded Kb :=
+    (Metric.isBounded_closedBall : Bornology.IsBounded
+      (Metric.closedBall x (Metric.infDist x K + 1))).subset
+      (fun z hz => hz.2)
+  have hKbcp : IsCompact Kb := Metric.isCompact_iff_isClosed_bounded.mpr ⟨hKbcl, hKbbb⟩
+  obtain ⟨w, hwKb, hwmin⟩ := hKbcp.exists_isMinOn hKbne
+    ((continuous_const.dist continuous_id).continuousOn)
+  have hwK : w ∈ K := hwKb.1
+  have hwmin' : ∀ z ∈ Kb, dist x w ≤ dist x z := isMinOn_iff.mp hwmin
+  have hwle : ∀ z ∈ K, dist x w ≤ dist x z := by
+    intro z hzK
+    by_cases hzb : z ∈ Kb
+    · exact hwmin' z hzb
+    · -- z ∈ K 但 z ∉ K ∩ closedBall ⟹ z ∉ closedBall
+      have hzball : z ∉ Metric.closedBall x (Metric.infDist x K + 1) := fun hmem =>
+        hzb ⟨hzK, hmem⟩
+      have hzfar : (Metric.infDist x K + 1 : ℝ) < dist x z := by
+        by_contra hcon
+        exact hzball (Metric.mem_closedBall'.mpr (not_lt.mp hcon))
+      have hwne : dist x w ≤ dist x y₀ := hwmin' y₀ ⟨hy₀K, hy₀ball⟩
+      linarith
+  exact Classical.epsilon_spec
+    (p := fun y : V3 => y ∈ K ∧ ∀ z ∈ K, dist x y ≤ dist x z) ⟨w, hwK, hwle⟩
+
+/-- **[r1] f1 正性**（HL :1793-1810 的 DIST_POS_LT + CLOSEST_POINT_REFL 形，
+本仓 `closestPoint` 为 PA2 ε-选取形，存在性由 `p24_closestPoint_exists`
+供给；排除机理 = 六发波 `p24_u0_notIn_span3`）：非零测叶表满足
+`u0 ∉ affineSpan {u1, elV 2, mxi}`，而 `closestPoint` 落在该平面内，故
+`dist u0 (closestPoint …) > 0`（零距离 ⟹ 最近点 = u0 ⟹ u0 入面 ⟹
+mcell3 共面零测反 hnn）。 -/
+private theorem p24_f1_pos (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 3 V ul ∩ Cst)) :
+    0 < dist u0 (closestPoint
+      (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3) : Set V3) u0) := by
+  set K : Set V3 := (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3) : Set V3)
+    with hKdef
+  have hKne : K.Nonempty := ⟨u1, mem_affineSpan (k := ℝ) (by simp)⟩
+  have hKfin : ({u1, elV ul 2, mxi V ul} : Set V3).Finite :=
+    Set.Finite.insert u1 (Set.Finite.insert (elV ul 2)
+      (Set.finite_singleton (mxi V ul)))
+  have hKcl : IsClosed K := p24_affineSpan_isClosed_of_finite hKfin
+  obtain ⟨hcpK, hmin⟩ := p24_closestPoint_exists hKne hKcl u0
+  by_cases h0 : dist u0 (closestPoint K u0) = 0
+  · exfalso
+    refine p24_u0_notIn_span3 V u0 u1 hp hs hb htr Cst hnn ?_
+    rw [show u0 = closestPoint K u0 from dist_eq_zero.mp h0]
+    exact hcpK
+  · exact lt_of_le_of_ne dist_nonneg (Ne.symm h0)
+
+/-- HL :1703-1705 `f1`：叶表到「次位-远点-mxi 平面」的最近距离。 -/
+noncomputable def p24_f1 (V : Set V3) (u0 u1 : V3) (ul : List V3) : ℝ :=
+  dist u0 (closestPoint
+    (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3) : Set V3) u0)
+
+/-- HL :1707-1710 `P1`：f1 在叶表族（barV + trunc 1 = 边 + mcell3 ∩ Cst
+非零测门）上的像。 -/
+private def p24_P1 (V : Set V3) (u0 u1 : V3) (Cst : Set V3) : Set ℝ :=
+  p24_f1 V u0 u1 '' {ul : List V3 | barV V 3 ul ∧
+    ¬ nullSet (mcell 3 V ul ∩ Cst) ∧ truncateSimplex 1 ul = [u0, u1]}
+
+/-- **[r1] 收口件**（HL :1771-1810 的 `r1 = min P1` / `∅ ↦ 1` 装配，本仓
+min-max 合同形）：P1 有限（六发波 `p24_finite_leaf_family` + 门控子族 +
+像）非空时最小元在族内，`r1` 是正下界。八发波 min-max 覆盖装配的
+`r1 = min 1 (min r1 r2)` 供货面即此（[r2] 的 `p24_f2`/`p24_P2` 为
+mcell4 同构支，PA23:2493 先例）。 -/
+private theorem p24_r1_min_exists (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) (Cst : Set V3) :
+    ∃ r1 : ℝ, 0 < r1 ∧ (∀ b ∈ p24_P1 V u0 u1 Cst, r1 ≤ b) ∧
+      ((p24_P1 V u0 u1 Cst).Nonempty → r1 ∈ p24_P1 V u0 u1 Cst) := by
+  classical
+  have hleaffin := p24_finite_leaf_family V u0 u1 hp hs
+  have hsub : {ul : List V3 | barV V 3 ul ∧ ¬ nullSet (mcell 3 V ul ∩ Cst) ∧
+      truncateSimplex 1 ul = [u0, u1]} ⊆ {ul : List V3 | barV V 3 ul ∧
+      truncateSimplex 1 ul = [u0, u1]} := fun ul hul => ⟨hul.1, hul.2.2⟩
+  have hfin : (p24_P1 V u0 u1 Cst).Finite :=
+    (hleaffin.subset hsub).image _
+  by_cases hne : (p24_P1 V u0 u1 Cst).Nonempty
+  · obtain ⟨m, hmP1, hmle⟩ :=
+      Set.exists_min_image (p24_P1 V u0 u1 Cst) id hfin hne
+    obtain ⟨ul0, hul0, hmeq⟩ := hmP1
+    have hm0 : 0 < m := by
+      rw [← hmeq]
+      exact p24_f1_pos V u0 u1 hp hs hul0.1 hul0.2.2 Cst hul0.2.1
+    exact ⟨m, hm0, hmle, fun _ => ⟨ul0, hul0, hmeq⟩⟩
+  · exact ⟨1, by norm_num, fun b hb => absurd ⟨b, hb⟩ hne, fun hcon => absurd hcon hne⟩
+
+/-! ### §5 [d1]/[d2] smallestAngleLine 私拷（结构装配起步）
+PA15:1411-1472 的 marchal3.hl smallest-angle kit 私拷（PA24 不 import
+PA15 —— `Kepler.Text.wedge` 遮蔽），供 min-max 覆盖装配的 P3/P4 方向
+余弦上界（HL :1538-2610 的 B6 段；PA23:2306-2585 同款先例逐字移植）。 -/
+
+private theorem p24_dot_contOn {X : Type*} [TopologicalSpace X] {s : Set X}
+    {f g : X → V3} (hf : ContinuousOn f s) (hg : ContinuousOn g s) :
+    ContinuousOn (fun x => f x ⬝ᵥ g x) s := by
+  have h : (fun x : X => f x ⬝ᵥ g x) = fun x => inner ℝ (f x) (g x) := by
+    funext x
+    exact (inner_eq_dot _ _).symm
+  rw [h]
+  exact hf.inner hg
+
+/-- marchal3.hl:2358 `smallest_angle_set`（PA15:1417 私拷）。 -/
+noncomputable def p24_smallestAngleSet (s : Set V3) (u0 u1 : V3) : V3 :=
+  Classical.epsilon fun x => x ∈ s ∧ ∀ y ∈ s,
+    ((y - u0) ⬝ᵥ (u1 - u0)) / (norm (y - u0) * norm (u1 - u0)) ≤
+      ((x - u0) ⬝ᵥ (u1 - u0)) / (norm (x - u0) * norm (u1 - u0))
+
+/-- marchal3.hl:2367 `smallest_angle_line`（PA15:1423 私拷）。 -/
+noncomputable def p24_smallestAngleLine (a b c d : V3) : V3 :=
+  p24_smallestAngleSet (convexHull ℝ {a, b}) c d
+
+/-- marchal3.hl:2371 `SMALLEST_ANGLE_LINE_EXISTS`（PA15:1426 逐字私拷）：
+紧凑凸包上的方向余弦取到最大元。 -/
+private theorem p24_SMALLEST_ANGLE_LINE_EXISTS (a b u0 u1 : V3) (hu0 : u0 ≠ u1)
+    (hu0K : u0 ∉ convexHull ℝ {a, b}) :
+    ∃ x, x ∈ convexHull ℝ {a, b} ∧ ∀ y ∈ convexHull ℝ {a, b},
+      ((y - u0) ⬝ᵥ (u1 - u0)) / (norm (y - u0) * norm (u1 - u0)) ≤
+        ((x - u0) ⬝ᵥ (u1 - u0)) / (norm (x - u0) * norm (u1 - u0)) := by
+  have hKfin : ({a, b} : Set V3).Finite := Set.Finite.insert a (Set.finite_singleton b)
+  have hKcp : IsCompact (convexHull ℝ {a, b}) := Set.Finite.isCompact_convexHull ℝ hKfin
+  have hKne : (convexHull ℝ {a, b}).Nonempty :=
+    ⟨a, subset_convexHull ℝ _ (Set.mem_insert a _)⟩
+  have hden : ∀ y ∈ convexHull ℝ {a, b}, norm (y - u0) * norm (u1 - u0) ≠ 0 := by
+    intro y hy h0
+    rcases mul_eq_zero.mp h0 with h | h
+    · have hy2 : y = u0 := sub_eq_zero.mp (norm_eq_zero.mp h)
+      rw [hy2] at hy
+      exact hu0K hy
+    · exact hu0 (sub_eq_zero.mp (norm_eq_zero.mp h)).symm
+  have hcont : ContinuousOn (fun y : V3 =>
+      ((y - u0) ⬝ᵥ (u1 - u0)) / (norm (y - u0) * norm (u1 - u0)))
+      (convexHull ℝ {a, b}) :=
+    (p24_dot_contOn (continuousOn_id.sub continuousOn_const) continuousOn_const).div
+      (((continuousOn_id.sub continuousOn_const).norm).mul continuousOn_const)
+      (fun y hy => hden y hy)
+  obtain ⟨x, hxK, hmax⟩ := hKcp.exists_isMaxOn hKne hcont
+  exact ⟨x, hxK, fun y hy => hmax hy⟩
+
+/-- marchal3.hl:2419 `SMALLEST_ANGLE_IN_CONVEX_HULL`（PA15:1456 逐字私拷）。 -/
+private theorem p24_SMALLEST_ANGLE_IN_CONVEX_HULL (m n p q x : V3) (hpq : p ≠ q)
+    (hp : p ∉ convexHull ℝ {m, n}) (hx : x = p24_smallestAngleLine m n p q) :
+    x ∈ convexHull ℝ {m, n} := by
+  have hex := p24_SMALLEST_ANGLE_LINE_EXISTS m n p q hpq hp
+  rw [hx, p24_smallestAngleLine, p24_smallestAngleSet]
+  exact (Classical.epsilon_spec hex).1
+
+/-- marchal3.hl:2438 `SMALLEST_ANGLE_LINE_PROPERTY`（PA15:1464 逐字私拷）：
+`smallestAngleLine` 实现方向余弦的最大性。 -/
+private theorem p24_SMALLEST_ANGLE_LINE_PROPERTY (m n u0 u1 x y : V3) (hu0 : u0 ≠ u1)
+    (hu0K : u0 ∉ convexHull ℝ {m, n}) (hx : x = p24_smallestAngleLine m n u0 u1)
+    (hy : y ∈ convexHull ℝ {m, n}) :
+    ((y - u0) ⬝ᵥ (u1 - u0)) / (norm (y - u0) * norm (u1 - u0)) ≤
+      ((x - u0) ⬝ᵥ (u1 - u0)) / (norm (x - u0) * norm (u1 - u0)) := by
+  have hex := p24_SMALLEST_ANGLE_LINE_EXISTS m n u0 u1 hu0 hu0K
+  rw [hx, p24_smallestAngleLine, p24_smallestAngleSet]
+  exact (Classical.epsilon_spec hex).2 y hy
+
+/-- [d1] 排除件（六发波 `p24_u0_notIn_span3` 的 hull 桥形；PA23:2234
+`p23_u0_notIn_hull3` 对位）：非零测 `mcell 3` 叶表满足
+`u0 ∉ conv {elV 2, mxi}`。 -/
+private theorem p24_u0_notIn_hull3 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 3 V ul ∩ Cst)) :
+    u0 ∉ convexHull ℝ ({elV ul 2, mxi V ul} : Set V3) := by
+  have hspan : convexHull ℝ ({elV ul 2, mxi V ul} : Set V3) ⊆
+      (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3) : Set V3) := by
+    refine convexHull_min (𝕜 := ℝ) ?_ (AffineSubspace.convex _)
+    intro z hz
+    rcases hz with rfl | rfl
+    · exact mem_affineSpan (k := ℝ) (by simp)
+    · exact mem_affineSpan (k := ℝ) (by simp)
+  exact fun hu0 => p24_u0_notIn_span3 V u0 u1 hp hs hb htr Cst hnn (hspan hu0)
+
+/-- [d2] 排除件（PA23:2200 `p23_mcell4_sub_span` 对位移植）：`mcell 4` 胞体
+落在含其四个定义点的任一仿射包内。 -/
+private theorem p24_mcell4_sub_span {V : Set V3} {ul : List V3} {u0 u1 v2 v3 : V3}
+    (htr4 : setOfList ul = ({u0, u1, v2, v3} : Set V3))
+    {S : Set V3}
+    (h0 : u0 ∈ (affineSpan ℝ S : Set V3)) (h1 : u1 ∈ (affineSpan ℝ S : Set V3))
+    (h2 : v2 ∈ (affineSpan ℝ S : Set V3)) (h3 : v3 ∈ (affineSpan ℝ S : Set V3)) :
+    mcell 4 V ul ⊆ (affineSpan ℝ S : Set V3) := by
+  rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+  unfold mcell4
+  split
+  · refine convexHull_min (𝕜 := ℝ) ?_ (AffineSubspace.convex _)
+    intro z hz
+    rw [htr4] at hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | hz
+    · exact h0
+    · rcases hz with rfl | hz
+      · exact h1
+      · rcases hz with rfl | rfl
+        · exact h2
+        · exact h3
+  · intro z hz
+    exact absurd hz (Set.notMem_empty z)
+
+/-- [d2] 排除件（PA23:2271 `p23_u0_notIn_hull4` 对位移植）：非零测
+`mcell 4` 叶表满足 `u0 ∉ affineSpan {u1, elV 2, elV 3}` —— 反设则四点全落
+该平面，`mcell 4` 共面零测，与 hnn 矛盾。 -/
+private theorem p24_u0_notIn_span4 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 4 V ul ∩ Cst)) :
+    u0 ∉ (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3) : Set V3) := by
+  intro hu0
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+  subst hv
+  have hv01 : v0 = u0 ∧ v1 = u1 := by
+    have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+    rw [h1] at htr
+    have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+    exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+  rw [hv01.1, hv01.2] at htr hnn hu0
+  have htr4 : setOfList [u0, u1, v2, v3] = ({u0, u1, v2, v3} : Set V3) := by
+    ext z
+    simp [setOfList]
+  have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+  have hE3 : elV [u0, u1, v2, v3] 3 = v3 := rfl
+  rw [hE2, hE3] at hu0
+  have hu0span : u0 ∈
+      (affineSpan ℝ ({u1, v2, v3} : Set V3) : Set V3) := hu0
+  have hnull : nullSet (mcell 4 V [u0, u1, v2, v3]) :=
+    p24_coplanar_affineSpan_null (coplanar_triple (k := ℝ) u1 v2 v3)
+      (p24_mcell4_sub_span htr4 hu0span (mem_affineSpan (k := ℝ) (by simp))
+        (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)))
+  exact hnn (measure_mono_null Set.inter_subset_left hnull)
+
+/-- [d2] 排除件的 hull 桥形（PA23:2493 `p23_u0_notIn_hull4` 对位）。 -/
+private theorem p24_u0_notIn_hull4 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 4 V ul ∩ Cst)) :
+    u0 ∉ convexHull ℝ ({elV ul 2, elV ul 3} : Set V3) := by
+  have hspan : convexHull ℝ ({elV ul 2, elV ul 3} : Set V3) ⊆
+      (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3) : Set V3) := by
+    refine convexHull_min (𝕜 := ℝ) ?_ (AffineSubspace.convex _)
+    intro z hz
+    rcases hz with rfl | rfl
+    · exact mem_affineSpan (k := ℝ) (by simp)
+    · exact mem_affineSpan (k := ℝ) (by simp)
+  exact fun hu0 => p24_u0_notIn_span4 V u0 u1 hp hs hb htr Cst hnn (hspan hu0)
+
+/-- C-S 等号核（HL 2126-2255 重构；PA23:2306 `p23_collinear_core` 逐字
+移植）：线段 `[a,b]` 上一朝向边 `(u0,u1)` 的方向余弦恰为 `1` 的点给
+`b ∈ affineSpan {u0,u1,a}` 或 `a ∈ affineSpan {u0,u1,b}` —— f3/f4 的
+平面-胞致死器。 -/
+private theorem p24_collinear_core (u0 u1 a b : V3) (hne : u0 ≠ u1) (xx : V3)
+    (hxx : xx ∈ convexHull ℝ ({a, b} : Set V3)) (hk1 : ‖xx - u0‖ ≠ 0)
+    (hcs : inner ℝ (xx - u0) (u1 - u0) = ‖xx - u0‖ * ‖u1 - u0‖) :
+    b ∈ (affineSpan ℝ ({u0, u1, a} : Set V3) : Set V3) ∨
+      a ∈ (affineSpan ℝ ({u0, u1, b} : Set V3) : Set V3) := by
+  have hk1p : 0 < ‖xx - u0‖ := lt_of_le_of_ne (norm_nonneg (xx - u0)) (Ne.symm hk1)
+  have hk2 : ‖u1 - u0‖ ≠ 0 := fun hcc => hne (dist_eq_zero.mp
+    (by rw [dist_comm u0 u1]; exact hcc))
+  have hk2p : 0 < ‖u1 - u0‖ := lt_of_le_of_ne (norm_nonneg (u1 - u0)) (Ne.symm hk2)
+  set k1 := ‖xx - u0‖ with hk1def
+  set k2 := ‖u1 - u0‖ with hk2def
+  -- the unit-vector trick gives k2 • (xx - u0) = k1 • (u1 - u0)
+  have ha'n : ‖(k1)⁻¹ • (xx - u0)‖ = 1 := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr hk1p), inv_mul_cancel₀ hk1]
+  have hb'n : ‖(k2)⁻¹ • (u1 - u0)‖ = 1 := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr hk2p), inv_mul_cancel₀ hk2]
+  have hA1 : inner ℝ ((k1)⁻¹ • (xx - u0)) ((k1)⁻¹ • (xx - u0)) = 1 := by
+    rw [real_inner_self_eq_norm_sq, ha'n]; norm_num
+  have hB1 : inner ℝ ((k2)⁻¹ • (u1 - u0)) ((k2)⁻¹ • (u1 - u0)) = 1 := by
+    rw [real_inner_self_eq_norm_sq, hb'n]; norm_num
+  have hAb : inner ℝ ((k1)⁻¹ • (xx - u0)) ((k2)⁻¹ • (u1 - u0)) = 1 := by
+    rw [real_inner_smul_left, real_inner_smul_right, hcs]
+    field_simp
+  have hsub : ‖(k1)⁻¹ • (xx - u0) - (k2)⁻¹ • (u1 - u0)‖ = 0 := by
+    have h2 : ‖(k1)⁻¹ • (xx - u0) - (k2)⁻¹ • (u1 - u0)‖ ^ 2 = 0 := by
+      rw [← real_inner_self_eq_norm_sq, inner_sub_left, inner_sub_right, inner_sub_right,
+        hA1, hB1, real_inner_comm ((k1)⁻¹ • (xx - u0)) ((k2)⁻¹ • (u1 - u0)), hAb]
+      ring
+    exact pow_eq_zero_iff (n := 2) (by norm_num) |>.mp h2
+  have hzero : (k1)⁻¹ • (xx - u0) - (k2)⁻¹ • (u1 - u0) = 0 := norm_eq_zero.mp hsub
+  have he1 : (k1)⁻¹ • (xx - u0) = (k2)⁻¹ • (u1 - u0) := sub_eq_zero.mp hzero
+  have hlin : k2 • (xx - u0) = k1 • (u1 - u0) := by
+    have key := congrArg (fun z : V3 => (k2 * k1) • z) he1
+    simp only [smul_smul] at key
+    field_simp at key
+    exact key
+  -- the segment coordinates of xx
+  obtain ⟨u, v, hu0, hv0, huv, hxuv⟩ :
+      ∃ u v : ℝ, 0 ≤ u ∧ 0 ≤ v ∧ u + v = 1 ∧ u • a + v • b = xx := by
+    have hseg : convexHull ℝ ({a, b} : Set V3) = segment ℝ a b := convexHull_pair a b
+    rw [hseg] at hxx
+    exact hxx
+  have hE1 : k2 • xx = k1 • (u1 - u0) + k2 • u0 := by rw [← hlin]; module
+  have hE2 : k2 • xx = (k2 * u) • a + (k2 * v) • b := by
+    have hxx2 : xx = u • a + v • b := hxuv.symm
+    rw [hxx2, smul_add, smul_smul, smul_smul]
+  by_cases hv : v = 0
+  · -- xx = u • a with u = 1: a lies on the line u0→u1
+    right
+    have hu1 : u = 1 := by linarith
+    have hvne : k2 * 1 ≠ 0 := mul_ne_zero hk2 (by norm_num : (1:ℝ) ≠ 0)
+    have hkey : a = u0 + (k1 / (k2 * 1)) • (u1 - u0)
+        + (-(k2 * 0) / (k2 * 1)) • (b - u0) := by
+      have hscaled : (k2 * 1) • a = (k2 * 1) • (u0 + (k1 / (k2 * 1)) • (u1 - u0)
+          + (-(k2 * 0) / (k2 * 1)) • (b - u0)) := by
+        rw [mul_one, mul_zero, neg_zero, zero_div, zero_smul, add_zero, smul_add, smul_smul,
+          mul_div_cancel₀ _ hk2, add_comm (k2 • u0) (k1 • (u1 - u0)), ← hE1, hE2,
+          hu1, hv, mul_one, mul_zero, zero_smul, add_zero]
+      exact smul_right_injective V3 hvne hscaled
+    exact p24_mem_affineSpan_triple u0 u1 b a (k1 / (k2 * 1)) (-(k2 * 0) / (k2 * 1)) hkey
+  · -- v ≠ 0: b lies in the plane of {u0, u1, a}
+    left
+    have hvne : k2 * v ≠ 0 := mul_ne_zero hk2 hv
+    have hv1 : k2 * v + k2 * u = k2 := by
+      have h2 : k2 * v + k2 * u = k2 * (u + v) := by ring
+      rw [h2, huv, mul_one]
+    have hbexp : (k2 * v) • b = k1 • (u1 - u0) + k2 • u0 - (k2 * u) • a := by
+      calc (k2 * v) • b = k2 • xx - (k2 * u) • a := by rw [hE2]; module
+        _ = k1 • (u1 - u0) + k2 • u0 - (k2 * u) • a := by rw [hE1]
+    have hkey : b = u0 + (k1 / (k2 * v)) • (u1 - u0)
+        + ((k2 * u) / (k2 * v)) • (u0 - a) := by
+      have hadd : (k2 * v) • u0 + (k2 * u) • u0 = k2 • u0 := by
+        rw [← add_smul, hv1]
+      have hscaled : (k2 * v) • b = (k2 * v) • (u0 + (k1 / (k2 * v)) • (u1 - u0)
+          + ((k2 * u) / (k2 * v)) • (u0 - a)) := by
+        simp only [smul_add, smul_smul, mul_div_cancel₀ _ hvne]
+        rw [hbexp, smul_sub (k2 * u) u0 a]
+        linear_combination (norm := module) -hadd
+      exact smul_right_injective V3 hvne hscaled
+    refine p24_mem_affineSpan_triple u0 u1 a b (k1 / (k2 * v)) (-(k2 * u) / (k2 * v)) ?_
+    rw [hkey, smul_sub]
+    module
+
+/-- [d1] P3 方向余弦上界（HL 1546-1600 + 1826-1911；PA23:2396
+`p23_f3_lt_one` 逐字移植）：`[elV 2, mxi]` 段的最小角点不能与边共线，
+否则 `mcell 3` 胞落平面（`p24_mcell3_sub_span` + 共面零测）。本件 = [d1]
+结构装配起步：P3 族有限（六发波 `p24_finite_leaf_family`）+ 本上界给八发波
+`d1 = max P3`（∅ ↦ c）的极值装配供货。 -/
+private theorem p24_f3_lt_one (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) (hne : u0 ≠ u1) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 3 V ul ∩ Cst)) :
+    inner ℝ (p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0) /
+      (‖p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖) < 1 := by
+  have hu0K : u0 ∉ convexHull ℝ ({elV ul 2, mxi V ul} : Set V3) :=
+    p24_u0_notIn_hull3 V u0 u1 hp hs hb htr Cst hnn
+  have hxmem : p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1
+      ∈ convexHull ℝ ({elV ul 2, mxi V ul} : Set V3) :=
+    p24_SMALLEST_ANGLE_IN_CONVEX_HULL (elV ul 2) (mxi V ul) u0 u1
+      (p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1) hne hu0K rfl
+  have hxxne : p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 ≠ u0 := fun hcc =>
+    hu0K (hcc ▸ hxmem)
+  have hk1 : ‖p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ ≠ 0 := fun hcc =>
+    hxxne (sub_eq_zero.mp (norm_eq_zero.mp hcc))
+  have hk2 : ‖u1 - u0‖ ≠ 0 := fun hcc =>
+    hne (sub_eq_zero.mp (norm_eq_zero.mp hcc)).symm
+  have hk1p : 0 < ‖p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ :=
+    lt_of_le_of_ne (norm_nonneg _) (Ne.symm hk1)
+  have hk2p : 0 < ‖u1 - u0‖ := lt_of_le_of_ne (norm_nonneg _) (Ne.symm hk2)
+  have hle : inner ℝ (p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0)
+      ≤ ‖p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖ := by
+    have h1 := norm_inner_le_norm (𝕜 := ℝ)
+      (p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0)
+    simp only [Real.norm_eq_abs] at h1
+    have h2 := le_abs_self (inner ℝ
+      (p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0))
+    linarith
+  by_cases hcos : inner ℝ (p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0)
+      (u1 - u0) / (‖p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖) = 1
+  · exfalso
+    have hcs : inner ℝ (p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0)
+        (u1 - u0)
+        = ‖p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖ := by
+      field_simp at hcos
+      exact hcos
+    obtain horr | horr := p24_collinear_core u0 u1 (elV ul 2) (mxi V ul) hne
+      (p24_smallestAngleLine (elV ul 2) (mxi V ul) u0 u1) hxmem hk1 hcs
+    · -- mxi in the plane of {u0, u1, elV ul 2}
+      obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+      subst hv
+      have hv01 : v0 = u0 ∧ v1 = u1 := by
+        have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+        rw [h1] at htr
+        have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+        exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+      rw [hv01.1, hv01.2] at htr hnn horr
+      have htr2 : setOfList (truncateSimplex 2 [u0, u1, v2, v3])
+          = ({u0, u1, v2} : Set V3) := by
+        rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 v2 v3).2]
+        ext z
+        simp [setOfList]
+      have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+      rw [hE2] at horr
+      exact hnn (measure_mono_null Set.inter_subset_left
+        (p24_coplanar_affineSpan_null (coplanar_triple (k := ℝ) u0 u1 v2)
+          (p24_mcell3_sub_span htr2 (mem_affineSpan (k := ℝ) (by simp))
+            (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)) horr)))
+    · -- elV ul 2 in the plane of {u0, u1, mxi}
+      obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+      subst hv
+      have hv01 : v0 = u0 ∧ v1 = u1 := by
+        have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+        rw [h1] at htr
+        have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+        exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+      rw [hv01.1, hv01.2] at htr hnn horr
+      have htr2 : setOfList (truncateSimplex 2 [u0, u1, v2, v3])
+          = ({u0, u1, v2} : Set V3) := by
+        rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 v2 v3).2]
+        ext z
+        simp [setOfList]
+      have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+      rw [hE2] at horr
+      exact hnn (measure_mono_null Set.inter_subset_left
+        (p24_coplanar_affineSpan_null
+          (coplanar_triple (k := ℝ) u0 u1 (mxi V [u0, u1, v2, v3]))
+          (p24_mcell3_sub_span htr2 (mem_affineSpan (k := ℝ) (by simp))
+            (mem_affineSpan (k := ℝ) (by simp)) horr
+            (mem_affineSpan (k := ℝ) (by simp)))))
+  · rw [div_lt_one (mul_pos hk1p hk2p)]
+    have h2 := hcos
+    field_simp at h2
+    exact lt_of_le_of_ne hle (fun hcc => h2 (by rw [hcc]))
+
+/-- [d2] P4 方向余弦上界（HL 2247-2605；PA23:2486 `p23_f4_lt_one` 逐字
+移植）：同 f3 的共线性致死器，第四顶点替代 `mxi`、`mcell 4` 胞体
+（`p24_mcell4_sub_span`）。本件 = [d2] 结构装配起步：P4 族有限 + 本上界
+给八发波 `d2 = max P4` 极值装配供货。 -/
+private theorem p24_f4_lt_one (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) (hne : u0 ≠ u1) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 4 V ul ∩ Cst)) :
+    inner ℝ (p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0) /
+      (‖p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖) < 1 := by
+  have hu0K : u0 ∉ convexHull ℝ ({elV ul 2, elV ul 3} : Set V3) :=
+    p24_u0_notIn_hull4 V u0 u1 hp hs hb htr Cst hnn
+  have hxmem : p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1
+      ∈ convexHull ℝ ({elV ul 2, elV ul 3} : Set V3) :=
+    p24_SMALLEST_ANGLE_IN_CONVEX_HULL (elV ul 2) (elV ul 3) u0 u1
+      (p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1) hne hu0K rfl
+  have hxxne : p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 ≠ u0 := fun hcc =>
+    hu0K (hcc ▸ hxmem)
+  have hk1 : ‖p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ ≠ 0 := fun hcc =>
+    hxxne (sub_eq_zero.mp (norm_eq_zero.mp hcc))
+  have hk2 : ‖u1 - u0‖ ≠ 0 := fun hcc =>
+    hne (sub_eq_zero.mp (norm_eq_zero.mp hcc)).symm
+  have hk1p : 0 < ‖p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ :=
+    lt_of_le_of_ne (norm_nonneg _) (Ne.symm hk1)
+  have hk2p : 0 < ‖u1 - u0‖ := lt_of_le_of_ne (norm_nonneg _) (Ne.symm hk2)
+  have hle : inner ℝ (p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0)
+      ≤ ‖p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖ := by
+    have h1 := norm_inner_le_norm (𝕜 := ℝ)
+      (p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0)
+    simp only [Real.norm_eq_abs] at h1
+    have h2 := le_abs_self (inner ℝ
+      (p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0))
+    linarith
+  by_cases hcos : inner ℝ (p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0)
+      (u1 - u0) / (‖p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖) = 1
+  · exfalso
+    have hcs : inner ℝ (p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0)
+        (u1 - u0)
+        = ‖p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖ := by
+      field_simp at hcos
+      exact hcos
+    obtain horr | horr := p24_collinear_core u0 u1 (elV ul 2) (elV ul 3) hne
+      (p24_smallestAngleLine (elV ul 2) (elV ul 3) u0 u1) hxmem hk1 hcs
+    · -- elV ul 3 in the plane of {u0, u1, elV ul 2}
+      obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+      subst hv
+      have hv01 : v0 = u0 ∧ v1 = u1 := by
+        have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+        rw [h1] at htr
+        have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+        exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+      rw [hv01.1, hv01.2] at htr hnn horr
+      have htr4 : setOfList [u0, u1, v2, v3] = ({u0, u1, v2, v3} : Set V3) := by
+        ext z
+        simp [setOfList]
+      have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+      have hE3 : elV [u0, u1, v2, v3] 3 = v3 := rfl
+      rw [hE2, hE3] at horr
+      exact hnn (measure_mono_null Set.inter_subset_left
+        (p24_coplanar_affineSpan_null (coplanar_triple (k := ℝ) u0 u1 v2)
+          (p24_mcell4_sub_span htr4 (mem_affineSpan (k := ℝ) (by simp))
+            (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)) horr)))
+    · -- elV ul 2 in the plane of {u0, u1, elV ul 3}
+      obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+      subst hv
+      have hv01 : v0 = u0 ∧ v1 = u1 := by
+        have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+        rw [h1] at htr
+        have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+        exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+      rw [hv01.1, hv01.2] at htr hnn horr
+      have htr4 : setOfList [u0, u1, v2, v3] = ({u0, u1, v2, v3} : Set V3) := by
+        ext z
+        simp [setOfList]
+      have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+      have hE3 : elV [u0, u1, v2, v3] 3 = v3 := rfl
+      rw [hE2, hE3] at horr
+      exact hnn (measure_mono_null Set.inter_subset_left
+        (p24_coplanar_affineSpan_null (coplanar_triple (k := ℝ) u0 u1 v3)
+          (p24_mcell4_sub_span htr4 (mem_affineSpan (k := ℝ) (by simp))
+            (mem_affineSpan (k := ℝ) (by simp)) horr
+            (mem_affineSpan (k := ℝ) (by simp)))))
+  · rw [div_lt_one (mul_pos hk1p hk2p)]
+    have h2 := hcos
+    field_simp at h2
+    exact lt_of_le_of_ne hle (fun hcc => h2 (by rw [hcc]))
 end Kepler.Text
