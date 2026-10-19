@@ -1426,8 +1426,13 @@ theorem RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE (V : Set V3) (a b : V3) (r : �
 /-- HOL `OMEGA_LIST_1_EXPLICIT_NEW` (marchal2.hl:1693): the `hl [a;b] < √2`
 variant of the omega-explicit lemma (differs from PackingAuto8's
 `OMEGA_LIST_1_EXPLICIT`, whose hypothesis bounds `hl ul` of the full list).
-Both reduce to the shared Rogers interface `XNHPWAB1_concl` (PackingAuto2)
-applied to the pair `[a, b]`. -/
+Both reduce to the Rogers `XNHPWAB1` content applied to the pair `[a, b]`.
+九发波真化（2026-10-19, lane pa24reuhady）：消费面从 PA2 收割 shim
+`XNHPWAB1_concl`（PA2 因 import 成环不可达 PA7 真件，shim 仍在册供 PA8
+`OMEGA_LIST_{1,2,3}_EXPLICIT` 消费）换接为 PA7 r3 lane 真证本体
+`XNHPWAB1`（PA12 已 import PA7，前提 `saturated` 弃用——PA7 形仅取
+`Packing`）。语句零改动；本件经此 axiom 三零（PA2 shim 残余债务记于
+PA8 消费面，九发波二处方）。 -/
 theorem OMEGA_LIST_1_EXPLICIT_NEW (a b c d : V3) (V : Set V3) (ul : List V3)
     (_hs : saturated V) (_hp : Packing V) (hb : barV V 3 ul)
     (hul : ul = [a, b, c, d]) (hh : hl [a, b] < Real.sqrt 2) :
@@ -1443,7 +1448,7 @@ theorem OMEGA_LIST_1_EXPLICIT_NEW (a b c d : V3) (V : Set V3) (ul : List V3)
       (TRUNCATE_SIMPLEX_EXPLICIT_1 a b c d).1]
     rfl
   have hcen : omegaList V [a, b] = circumcenter (setOfList [a, b]) :=
-    XNHPWAB1_concl V [a, b] 1 _hs _hp (by omega) hb1 hh
+    XNHPWAB1 V [a, b] 1 _hp hb1 hh
   rw [h1, hcen]
   exact congrArg circumcenter (by ext x; simp [setOfList])
 
@@ -1938,20 +1943,82 @@ theorem CLOSEST_POINT_SING (a b : V3) : closestPoint {a} b = a := by
 /-! ## marchal2.hl:2516 MXI_EXPLICIT -/
 
 /-- HOL `MXI_EXPLICIT` (marchal2.hl:2516). DISCHARGES the public form of
-PackingAuto11's PRIVATE sorry'd `mxiExplicit` via the interface
-`MXI_EXISTS_concl` (PackingAuto2). -/
+PackingAuto11's PRIVATE sorry'd `mxiExplicit`.
+
+九发波真化（2026-10-19, lane pa24reuhady）：证明体从 PA2 收割 shim
+`MXI_EXISTS_concl`（PA2 因 import 成环不可达 PA7/PA12 真件；shim 仍在册，
+残余消费者 = PA11 `mxiExplicit`/PA20:2031/PA24 B3 支 `p24_caseB3_*`，
+九发波二处方）换接为 HL 原证路线的真证装配（语句零改动）：
+端点 1 `dist u0 ω₂ = hl (trunc 2) < √2`（PA7 `XNHPWAB1` 真件 + Rogers
+`HL_EQ_DIST0` + PA8 `OMEGA_LIST_TRUNCATE_2`）；端点 2 `dist u0 ω₃ = hl ≥ √2`
+（PA12 `VORONOI_LIST_3_SINGLETON_EXPLICIT`：barV 3 全表 voronoi 胞 =
+{外心} 单点 + `CLOSEST_POINT_SING`）；跨球存在性 = `SEGMENT_INTER_CBALL_LEMMA`；
+`mxi` 认同 = 定义 if 负支 + `Classical.epsilon_spec`（HL SELECT_UNIQUE 臂）。
+本件经此 axiom 三零；SLTSTLO1 案例树（PA13）随之脱离 sorryAx。 -/
 theorem MXI_EXPLICIT (V : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3)
     (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
     (hul : ul = [u0, u1, u2, u3]) (h2 : hl (truncateSimplex 2 ul) < Real.sqrt 2)
     (h3 : Real.sqrt 2 ≤ hl ul) :
     ∃ s : V3, s ∈ segment ℝ (omegaListN V ul 2) (omegaListN V ul 3) ∧
       dist (hdV ul) s = Real.sqrt 2 ∧ s = mxi V ul := by
-  have hm := MXI_EXISTS_concl V ul hs hp hb h2 h3
-  have h2' : dist (hdV ul) (mxi V ul) = Real.sqrt 2 :=
-    (dist_comm _ _).trans hm.2
-  refine ⟨mxi V ul, ?_, h2', rfl⟩
-  rw [← p12_hull_pair]
-  exact hm.1
+  subst hul
+  -- 端点 1：ω₂ = 三角外心，dist u0 ω₂ = hl (trunc 2) < √2
+  have hTR2 : truncateSimplex 2 [u0, u1, u2, u3] = [u0, u1, u2] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2
+  have hbar2 : barV V 2 [u0, u1, u2] := by
+    have h := TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, u2, u3] hb (by omega)
+    rw [hTR2] at h
+    exact h
+  have hl2' : hl [u0, u1, u2] < Real.sqrt 2 := by rw [← hTR2]; exact h2
+  have hcc2 : omegaListN V [u0, u1, u2, u3] 2 = circumcenter (setOfList [u0, u1, u2]) := by
+    rw [OMEGA_LIST_TRUNCATE_2 V u0 u1 u2 u3,
+      XNHPWAB1 V [u0, u1, u2] 2 hp hbar2 hl2']
+  have hd0 : dist u0 (omegaListN V [u0, u1, u2, u3] 2)
+      = hl (truncateSimplex 2 [u0, u1, u2, u3]) := by
+    rw [hTR2, hcc2, HL_EQ_DIST0 V 2 [u0, u1, u2] hp hbar2]
+    have hhd : hdV [u0, u1, u2] = u0 := rfl
+    rw [hhd, dist_comm]
+  have hlt2 : dist u0 (omegaListN V [u0, u1, u2, u3] 2) < Real.sqrt 2 := by
+    rw [hd0]; exact h2
+  -- 端点 2：ω₃ = 全表 voronoi 单点胞最近点 = 外心，dist u0 ω₃ = hl ≥ √2
+  obtain ⟨a, ha1, ha2, ha3⟩ :=
+    VORONOI_LIST_3_SINGLETON_EXPLICIT V [u0, u1, u2, u3] hp hs hb
+  have hw3e : omegaListN V [u0, u1, u2, u3] 3 = a := by
+    show closestPoint (voronoiList V (truncateSimplex 3 [u0, u1, u2, u3]))
+      (closestPoint (voronoiList V (truncateSimplex 2 [u0, u1, u2, u3]))
+        (closestPoint (voronoiList V (truncateSimplex 1 [u0, u1, u2, u3]))
+          (hdV [u0, u1, u2, u3]))) = a
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 u2 u3),
+      (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2,
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2, ha1]
+    exact CLOSEST_POINT_SING a _
+  have hge3 : Real.sqrt 2 ≤ dist u0 (omegaListN V [u0, u1, u2, u3] 3) := by
+    rw [hw3e]
+    have ha3' : hl [u0, u1, u2, u3] = dist u0 a := by
+      have hhd : hdV [u0, u1, u2, u3] = u0 := rfl
+      rw [ha3, hhd]
+    rw [← ha3']
+    exact h3
+  -- 跨球存在性 + mxi 认同（定义负支 + ε-spec）
+  obtain ⟨c, hcseg, hcdist⟩ := SEGMENT_INTER_CBALL_LEMMA u0 (Real.sqrt 2)
+    (omegaListN V [u0, u1, u2, u3] 2) (omegaListN V [u0, u1, u2, u3] 3)
+    (le_of_lt hlt2) hge3
+  have hnotle : ¬(Real.sqrt 2 ≤ hl (truncateSimplex 2 [u0, u1, u2, u3])) :=
+    not_le.mpr h2
+  have hmxiP : (mxi V [u0, u1, u2, u3] ∈ convexHull ℝ
+        {omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3} ∧
+      dist (mxi V [u0, u1, u2, u3]) (hdV [u0, u1, u2, u3]) = Real.sqrt 2) := by
+    unfold mxi
+    rw [if_neg hnotle]
+    exact Classical.epsilon_spec
+      (show ∃ y : V3, y ∈ convexHull ℝ
+          {omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3} ∧
+        dist y (hdV [u0, u1, u2, u3]) = Real.sqrt 2 from
+        ⟨c, by rw [p12_hull_pair]; exact hcseg, by rw [dist_comm]; exact hcdist⟩)
+  refine ⟨mxi V [u0, u1, u2, u3], ?_, ?_, rfl⟩
+  · rw [← p12_hull_pair]
+    exact hmxiP.1
+  · exact (dist_comm _ _).trans hmxiP.2
 
 /-! ## marchal2.hl:2864 CONVEX_HULL_4_IMP_2_2 -/
 

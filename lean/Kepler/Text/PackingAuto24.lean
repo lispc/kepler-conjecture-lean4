@@ -11649,4 +11649,100 @@ private theorem p24_region_data_strong (V : Set V3) (u0 u1 : V3)
             * ‖u1 - u0‖) ≤ d2 := hd2ub vl hmem
     linarith [hcos, hzx, hd2ub', hdd2]
 
+/-! ## 九发波（2026-10-19，lane pa24reuhady）：XNHPWAB 真化落地记账 + 门控
+hwit 强装配适配器
+
+**污染闭包（本波第一步侦察结论）**：PA13 `SLTSTLO1`（覆盖半唯一在树点态覆盖
+源）经 axiom 探针的 sorryAx 源恰为两处，均在 PA2 收割 shim 层——
+1. `XNHPWAB1_concl`（PA2:5405，sorry）→ PA12 `OMEGA_LIST_1_EXPLICIT_NEW`
+   （:1446 消费）→ SLTSTLO1 Case 4b（ω₁ = midpoint）；
+2. `MXI_EXISTS_concl`（PA2:5484，sorry）→ PA12 `MXI_EXPLICIT`（:1949 消费）
+   → `MXI_EXPLICIT_OLD` → SLTSTLO1 Case 3/4b-ii（mcell3 支 s 见证）。
+其余前提逐件核验均为真证：`OMEGA_LIST_N_IN_CONVEX_HULL`/`XNHPWAB2`
+（PA7 r3 lane 已闭）、`RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE`
+（PA12 2026-09-30 已闭）、`GLTVHUM_concl`、`MCELL_EXPLICIT`、
+`p13_hull_break4`（诚实私件）、`TRUNCATE_*`/`BARV_*`。
+
+**真化落地（PA12 语句零改动，两处证明体换接）**：
+1. `OMEGA_LIST_1_EXPLICIT_NEW`：消费面 `XNHPWAB1_concl` → PA7 真件
+   `XNHPWAB1`（PA12 已 import PA7；`saturated` 前提弃用——PA7 形仅取
+   `Packing`）；
+2. `MXI_EXPLICIT`：HL marchal2.hl:2516 原证路线整装——端点 1 =
+   `XNHPWAB1`(PA7) + `HL_EQ_DIST0` + `OMEGA_LIST_TRUNCATE_2`，端点 2 =
+   `VORONOI_LIST_3_SINGLETON_EXPLICIT`（本文件内真证）+
+   `CLOSEST_POINT_SING`，跨球存在性 = `SEGMENT_INTER_CBALL_LEMMA`，
+   `mxi` 认同 = 定义负支 + `Classical.epsilon_spec`。
+两 shim 本体在 PA2 仍在册（PA2 因 import 成环不可达 PA7/PA12，真证原地
+不可行；PA2 内 p3a_* 链复制路线 = GIANT，不值）。残余消费者（九发波二
+处方）：`XNHPWAB1_concl` ← PA8 `OMEGA_LIST_{1,2,3}_EXPLICIT`（PA8 可加
+import PA7 后同法换接）；`MXI_EXISTS_concl` ← PA11 `mxiExplicit`、PA20、
+本文件 B3 支 `p24_caseB3_*`（可换接为已真化的 `MXI_EXPLICIT` 派生）。
+**SLTSTLO1 在树净版**：PA12 真化后 PA13 `SLTSTLO1` 案例树全链零 sorryAx
+（axiom 探针 9gen_axiom_probe_output.log），PA24 经 import 链
+PA24→PA17→PA13 直接消费净版，无需私拷（八发波记档的「净版私拷」处方
+据此收窄为直接消费）。cover_strong 覆盖半的 SLTSTLO1 供数阻塞解除。
+
+**退化见证角点（八发波阻塞② recon 结论 + 处置）**：`p24_wedgeCells` 允许
+「全 witnesses 非 [u0,u1] 头」的胞（k=3 换位表 [u1,u0,v2,v3] 形——
+`cellParamsD V X [u0,u1]` 的 ε-谓词对其不可满足，三元组/`dihX` 读数落
+junk）。HL 原文对账（REUHADY.hl:2818-2823 逐字）：HL 逐胞恒等式本体自带
+`~NULLSET (X INTER D)` 门，且 `[u0;u1]` 头见证恰在该门下由走廊覆盖
+（:1531-1629）+ SLTSTLO1 + AJRIPQN（非零测交 ⇒ 胞同一）链**推导**——
+HL 从不要求全族 hwit，只要求门下 hwit。故八发波「wedgeCells 收窄 or
+hwit 改 VX-形」二选一收窄为第三案（最小 diff、零语句改动）：
+**hwit 加门**。本波落地其消费侧适配器（下件）；供给侧（门下见证推导 =
+走廊点覆盖链 + AJRIPQN）与 hnullarm 全族供数（null 胞定义零侧 + 活胞
+正迹矛盾，HL :7799-8000 的 i=2/3/4 CONIC_CAP 论证）为十发波主件，
+SF-45 候选草案随本波报告呈批（不改任何在树语句）。 -/
+/-- **门控 hwit 强装配（九发波新件，HL :2818 门形对齐）**：
+七发波 `p24_wedge_setSum_eq_azim_strong` 的适配版——`hwit` 前提加
+`¬ nullSet (X ∩ conicCapP24 u0 u1 r d)` 门（退化见证角点的 HL 忠实形）。
+消费点不变：`p24_cell_cap_dihX_strong` 本就只在非零测臂消费三元组。
+七发波无门件保型不动（其全族 hwit 形无货源，降为过时接口，SF-45 裁定后
+或退役）。前提与证体逐字同 `p24_wedge_setSum_eq_azim_strong`，仅 hwit
+加门与消费点传门。 -/
+private theorem p24_wedge_setSum_eq_azim_gated (V : Set V3) (u0 u1 n1 n2 : V3)
+    (e : Set V3) (r d : ℝ)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hnc1 : ¬ Collinear3 u0 u1 n1) (hnc2 : ¬ Collinear3 u0 u1 n2)
+    (hfin : {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}.Finite)
+    (hpair : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e, ∀ Y ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      X ≠ Y → volume (X ∩ Y) = 0)
+    (hcov : ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
+      x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e)
+    (hnullarm : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      nullSet (X ∩ conicCapP24 u0 u1 r d) → dihX V X (u0, u1) = 0)
+    (hwit : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      ¬ nullSet (X ∩ conicCapP24 u0 u1 r d) →
+      barV V 3 (cellParamsD V X [u0, u1]).2 ∧
+      initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2 ∧
+      X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2)
+    (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
+    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 3 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 4 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d) :
+    setSum (p24_wedgeCells V u0 u1 n1 n2 e) (fun X => dihX V X (u0, u1))
+      = azim u0 u1 n1 n2 := by
+  refine p24_wedge_setSum_eq_azim V u0 u1 n1 n2 e r d hs hp hu0 hu1 hne hr hr1
+    hd hd1 hnc1 hnc2 hfin hpair hcov ?_
+  intro X hX
+  by_cases hnT : nullSet (X ∩ conicCapP24 u0 u1 r d)
+  · -- null-trace 臂：LHS = 0，dihX = 0（hnullarm）
+    have hdih0 := hnullarm X hX hnT
+    have h0 : volume.real (conicCapP24 u0 u1 r d ∩ X) = 0 := by
+      show (volume (conicCapP24 u0 u1 r d ∩ X) : ENNReal).toReal = 0
+      rw [Set.inter_comm, show volume (X ∩ conicCapP24 u0 u1 r d) = 0 from hnT]
+      rfl
+    rw [hdih0, h0]
+    ring
+  · -- 非 null-trace 臂：逐胞强派发（门下三元组供货）
+    exact p24_cell_cap_dihX_strong V u0 u1 r d X hr hr1 hd hd1 hne hp hw1 hw3 hw4
+      (hwit X hX hnT).1 (hwit X hX hnT).2.1 (hwit X hX hnT).2.2 hnT
+
 end Kepler.Text
