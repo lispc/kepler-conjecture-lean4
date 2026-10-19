@@ -1915,3 +1915,47 @@ clone build 绿 8698 jobs；axiom 探针：`DLWCHEM_VECTOR_sum`/
 Classical.choice/Quot.sound/sorryAx 白名单轴（上游债既记）；文件 sorry
 面持平（本波零新增债）。闸参数：`SF_ITEM=43`，GATE_MODE=STATEMENT-FIX，
 验收定理 `DLWCHEM`。
+
+## 44. PA24 `p24_cell_cap_dihX` 冻结语句补五前提（hw1+hw3+hw4+hn+hwit；HL 原生前提整条丢失+骨架期自由变量抽象丢约束）— 分级 A（statement 保真修正 · 假陈述修复）
+
+**立案：2026-10-19/20，REUHADY1 六发波发现+七发波 HL 对账补全，用户批准双轨
+（"并行"）并过目终修法（"SF 44: 同意"）。** 对象 = PA24 冻结直 sorry 2 号位
+`p24_cell_cap_dihX`（scaffold 2，HL REUHADY.hl 2386-7358+8187-8241 的逐臂
+体积比例义务）。车道七发波已在树上真证应用后的全部承重件
+（`p24_cell_cap_dihX_strong` 逐臂派发 + k=3/4 帽石 + kit，25 件 axiom 三零）。
+
+(a) HOL：REUHADY.hl:2818-2823 逐字 `(NEW_GOAL \`!X. mcell_set V X /\
+~NULLSET (X INTER D) ==> vol (X INTER D) = vol (D) * (dihX V X (u0,u1)) /
+(&2 * pi)\`);`——HL 本体 (i) 自带非零测迹前提 `~NULLSET (X INTER D)`；
+(ii) 锥参数 `D` 从非自由变量：HL :1254 `c = max b (hl[u0;u1]/sqrt 2)`、
+:1978 `r = min 1 (min r1 r2)`、:2783 `d = max c (max d1 d2)`（走廊章构造
+内定窄性）。骨架期把 `r d` 抽象成自由变量只带 (0,1)/(0,1] 界，三条结构性
+约束全丢 → 按现前提为假（非仅难证）。
+
+### (a) 出处与缺陷（三失真点）
+
+1. **k=2 双锥窗（六发波发现）**：rconeGt 的 `d` 为余弦参数，mcell2 双锥窗
+   = arccos(hl[u0,u1]/√2)；`d < hl/√2` 时锥帽方位角窗 `(arccos a, arccos d]`
+   正体积漏出双锥，切片恒等式失效（LHS > 比例式右端）。
+2. **k=3/4 逐臂窄性（七发波补证）**：hull 体积式需远面距离 `r ≤ r1/r2` 与
+   锥不交 `d ≥ d1/d2`（SMALLEST_ANGLE_LINE 方向余弦极大值）——PA23
+   `grutoti_cell_vol` 的 `hw3/hw4` 即此 Lean 化。
+3. **HL 原生 `~NULLSET` 前提整条丢失**：无迹前提则 junk 侧体积恒等式无意义。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/44-pa24-cellcap-dihx-strong.patch`
+（对七发波树干净应用已验；+16/−3）：冻结语句加五前提
+`hw1`（hl/√2 ≤ d）+ `hw3`/`hw4`（k=3/4 逐臂，PA23 同形）+ `hn`（¬nullSet
+(X ∩ cap)）+ `hwit`（cellParamsD 见证三元组）；证明体 `sorry` →
+`exact p24_cell_cap_dihX_strong …`（七发波真证 axiom 三零）。形态裁决
+Option A 单语句加前提（HL 本体即单语句 premise-minimal 形；PA23 SF-28+29
+先例；记账锚不拆；消费合同单一）。**影响面**：唯一消费者 REUHADY1:3625
+装配线。
+
+### (c) 验收与应用计划
+
+应用与走闸随八发波同批：hnullarm 本体 + scaffold 3-2 加强形 cover（五前提
+供给方）+ REUHADY1 换接 + 本 patch 应用一次成型；走闸时以全量波差为最终权
+补丁归档（statement 变更部分即本 patch 逐字不变），STATEMENT-FIX 模式
+`SF_ITEM=44`；应用后 PA24 直 sorry 2→1。八发波交付报告给用户终验。

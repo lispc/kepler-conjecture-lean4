@@ -1,0 +1,51 @@
+SF-44 提案 fix diff（草案，未应用；基准 = 主仓 HEAD 988afa9b 的
+lean/Kepler/Text/PackingAuto24.lean，md5 2c91a4f22fc9c2525073781368cd890b，
+冻结语句位于 :3382-3389）。
+
+修法形态：单语句加前提（Option A，理由见 7gen_SF44_proposal.md §44.4）。
+前置新增五条 ——
+  hw1  : hl [u0,u1]/√2 ≤ d          （k=2 双锥窗窄性；HL 结构量 b ≤ c ≤ d）
+  hw3  : k=3 逐臂面/锥窄性（PA23 grutoti_cell_vol 的 hw3 形 = HL r ≤ r1 ∧ d ≥ d1）
+  hw4  : k=4 逐臂面/锥窄性（同上 r2/d2）
+  hn   : ¬ nullSet (X ∩ conicCapP24 u0 u1 r d)
+       （HL :2818-2822 原生前提 ~NULLSET (X INTER D) —— 冻结语句整体丢失）
+  hwit : cellParamsD 见证三件（k∈{0,1} junk 臂的派发锚；PA23 项 29 同功能）
+证明体换接：p24_cell_cap_dihX_strong（七发波已真证入库，axiom 三零）。
+
+影响面（应用前置核对）：唯一消费者 = REUHADY1 内的装配线
+（:3625 `(fun X hX => p24_cell_cap_dihX …)`）。应用本 diff 须同步把
+REUHADY1 的装配尾换接为 `p24_wedge_setSum_eq_azim_strong`（其 hwit/hw1/
+hw3/hw4/hnullarm 由 scaffold 3 加强形 cover 供出，hnullarm 侧即 HL :7799
+SUM_SUPERSET 臂，八发波处方）——故本 diff 应与 scaffold 3-2（加强形
+cover，产 d = max b (hl/√2) 型 + min-max 数据）同批走闸，不可单独应用。
+
+--- a/lean/Kepler/Text/PackingAuto24.lean
++++ b/lean/Kepler/Text/PackingAuto24.lean
+@@ -3382,8 +3382,21 @@
+ private theorem p24_cell_cap_dihX (V : Set V3) (u0 u1 n1 n2 : V3) (e : Set V3) (X : Set V3)
+     (r d : ℝ) (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+     (hne : u0 ≠ u1) (he : e = {u0, u1}) (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
++    (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
++    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
++      ¬ nullSet (mcell 3 V vl ∩ conicCapP24 u0 u1 r d) →
++      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
++        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
++    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
++      ¬ nullSet (mcell 4 V vl ∩ conicCapP24 u0 u1 r d) →
++      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
++        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d)
++    (hn : ¬ nullSet (X ∩ conicCapP24 u0 u1 r d))
++    (hwit : barV V 3 (cellParamsD V X [u0, u1]).2 ∧
++      initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2 ∧
++      X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2)
+     (hX : X ∈ p24_wedgeCells V u0 u1 n1 n2 e) :
+     volume.real (conicCapP24 u0 u1 r d ∩ X)
+       = volume.real (conicCapP24 u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
+-  -- NEEDS (d)(i)+(ii)-bulk: see docstring. HL REUHADY.hl 2386-7358 + 8187-8241.
+-  sorry
++  exact p24_cell_cap_dihX_strong V u0 u1 r d X hr hr1 hd hd1 hne hp hw1 hw3 hw4
++    hwit.1 hwit.2.1 hwit.2.2 hn
+
+随批记（非 diff 体）：冻结 docstring 的六发波发现段随应用批改写为
+CLOSED 记账（指向本 SF 与 p24_cell_cap_dihX_strong）；PA24 直 sorry 总数
+2 → 1（残余 = scaffold 3 p24_cap_wedge_cover）。
