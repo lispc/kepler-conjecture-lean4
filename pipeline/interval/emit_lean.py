@@ -2970,6 +2970,64 @@ def _monotree_trans_marks(prog):
     return marks, cnt[0], bad
 
 
+def _monotree_const_trans(prog):
+    """W8 gen-4: the RPN-order indices of trans nodes whose ENTIRE feeding
+    subtree is var-free (constant subterms).  Their interval values are
+    box-independent, so lowering their rung buys no adaptivity while the
+    coarse Taylor at a lowered rung can push a constant divisor row
+    (atan-fed constants like 20*(1-4*atan(1)/3...) carried in the guard-free
+    top level) across zero — BIXPCGW_7274157868_a carries two such rows that
+    straddle at rung 16 on EVERY box and vanish at the spec rung.  The
+    `--mono-dom-rung-keepconst` policy lowers every trans EXCEPT these.
+    Traversal mirrors `RPN.emit_pair` exactly (dict = cond/then/else in
+    order, binary ops pop right-then-left)."""
+    const = set()
+    cnt = [0]
+
+    def walk(p):
+        st = []
+        for ins in p:
+            if isinstance(ins, dict):
+                it = ins["ite"]
+                c = walk(it["cond"])
+                t = walk(it["then"])
+                e = walk(it["else"])
+                st.append((True, c[1] | t[1] | e[1]))
+                continue
+            op = ins[0]
+            if op == "push_var":
+                st.append((True, set()))
+            elif op == "push_const":
+                st.append((False, set()))
+            elif op in ("add", "sub", "mul"):
+                b = st.pop()
+                a = st.pop()
+                st.append((a[0] or b[0], a[1] | b[1]))
+            elif op in ("neg", "abs"):
+                st.append(st.pop())
+            elif op == "div":
+                b = st.pop()
+                a = st.pop()
+                st.append((a[0] or b[0], a[1] | b[1]))
+            elif op == "sqrt":
+                st.append(st.pop())
+            elif op in TRANS_KIND:
+                k = cnt[0]
+                cnt[0] += 1
+                a = st.pop()
+                if not a[0]:
+                    const.add(k)
+                st.append((a[0], a[1] | {k}))
+            else:
+                die(f"unknown op {op}")
+        if len(st) != 1:
+            die("RPN stack imbalance in const-trans marking")
+        return st[0]
+
+    walk(prog)
+    return const, cnt[0]
+
+
 def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False,
            dom_rung=None, witness_marks=None):
     """The W8 mono-tree RPN policy: sqrt slots from `slots` when given
@@ -3017,7 +3075,7 @@ def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False,
 
 
 def monotree_main(case, cid, n, args, spec, params_file,
-                  dom_rung=None, witness_rung=None):
+                  dom_rung=None, witness_rung=None, keepconst_rung=None):
     import re
     nsp = "MonoTree_" + re.sub(r"\W", "_", cid)
     pad_bits = spec.get("pad_sqrt_const")
@@ -3026,10 +3084,12 @@ def monotree_main(case, cid, n, args, spec, params_file,
     # A `None` out component resolves to the spec's rung_out.
     marks = None
     dom_rung_eff = None
-    if dom_rung is not None or witness_rung is not None:
-        if dom_rung is not None and witness_rung is not None:
-            die("--mono-dom-rung and --mono-witness-rung are mutually "
-                "exclusive")
+    if dom_rung is not None or witness_rung is not None \
+            or keepconst_rung is not None:
+        if sum(x is not None for x in
+               (dom_rung, witness_rung, keepconst_rung)) > 1:
+            die("--mono-dom-rung / --mono-witness-rung /"
+                " --mono-dom-rung-keepconst are mutually exclusive")
         if witness_rung is not None:
             mset, _nt, bad = _monotree_trans_marks(spec["expr"])
             if bad:
@@ -3042,9 +3102,25 @@ def monotree_main(case, cid, n, args, spec, params_file,
             dom_rung_eff = (wr[0], out)
             marks = mset
         else:
-            dr = dom_rung
-            out = rung[1] if dr[1] is None else dr[1]
-            dom_rung_eff = (dr[0], out)
+            if keepconst_rung is not None:
+                kr = keepconst_rung
+                out = rung[1] if kr[1] is None else kr[1]
+                dom_rung_eff = (kr[0], out)
+                const, nt_total = _monotree_const_trans(spec["expr"])
+                # only const trans that feed a DomOK row (divisor/guard/
+                # radicand subtree) must keep the spec rung — a lowered
+                # rung can push an atan-fed constant ROW across zero;
+                # const trans outside row subtrees feed no row and lower
+                # like everything else.
+                mset, _nt, bad = _monotree_trans_marks(spec["expr"])
+                protect = mset & const
+                marks = set(range(nt_total)) - protect
+                if not marks:
+                    marks = None  # all-constant: falls back to spec rung
+            else:
+                dr = dom_rung
+                out = rung[1] if dr[1] is None else dr[1]
+                dom_rung_eff = (dr[0], out)
     rpn = em_RPN(pad_bits, rung=rung,
                  dom_rung=dom_rung_eff, witness_marks=marks)
     expr0 = rpn.emit(spec["expr"])
@@ -3070,6 +3146,16 @@ def monotree_main(case, cid, n, args, spec, params_file,
                        f"{dom_rung_eff} on EVERY trans node (uniform —\n"
                        "    the DomOK decide pays transOn at all of them;\n"
                        "    sign accuracy is all it consumes there).\n")
+        elif keepconst_rung is not None:
+            wr_note = ("    W8 gen-4 keepconst policy: lowered rung "
+                       f"{dom_rung_eff} on every trans node EXCEPT\n"
+                       "    constant-subtree trans INSIDE DomOK row "
+                       "subtrees (var-free feeding\n    subtrees — their "
+                       "values are box-independent, and a lowered rung can "
+                       "push\n    an atan-fed constant divisor row across "
+                       "zero, so those keep the spec\n    rung; the DomOK "
+                       "discharge pays transOn at all the lowered "
+                       "ones).\n")
         else:
             wr_note = ("    W8 witness-rung policy: lowered rung "
                        f"{dom_rung_eff} on the {len(marks)}/{ntrans0}\n"
@@ -3192,6 +3278,10 @@ def monotree_main(case, cid, n, args, spec, params_file,
             if marks is None:
                 pol = (f"; witness-rung POLICY: uniform {dom_rung_eff} on "
                        f"all {ntrans0} trans")
+            elif keepconst_rung is not None:
+                pol = (f"; keepconst POLICY: {dom_rung_eff} on "
+                       f"{len(marks)}/{ntrans0} trans (constant-subtree "
+                       "trans keep the spec rung)")
             else:
                 pol = (f"; witness-rung POLICY: {dom_rung_eff} on "
                        f"{len(marks)}/{ntrans0} witness-position trans")
@@ -3406,6 +3496,10 @@ def monotree_main(case, cid, n, args, spec, params_file,
         if marks is None:
             pol = (f"; witness rung {dom_rung_eff} uniform on {ntrans0} "
                    "trans")
+        elif keepconst_rung is not None:
+            pol = (f"; keepconst rung {dom_rung_eff} on {len(marks)}/"
+                   f"{ntrans0} trans (constant-subtree trans keep the "
+                   "spec rung)")
         else:
             pol = (f"; witness rung {dom_rung_eff} on {len(marks)}/"
                    f"{ntrans0} witness-position trans")
@@ -3452,6 +3546,7 @@ def main():
     pad_sqrt_const = None
     dom_rung = None
     witness_rung = None
+    keepconst_rung = None
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
@@ -3479,6 +3574,9 @@ def main():
         elif a.startswith("--mono-witness-rung="):
             witness_rung = _parse_rung_arg(a.split("=", 1)[1],
                                            "--mono-witness-rung")
+        elif a.startswith("--mono-dom-rung-keepconst="):
+            keepconst_rung = _parse_rung_arg(a.split("=", 1)[1],
+                                             "--mono-dom-rung-keepconst")
         elif a == "--fill":
             fill = True
         elif a == "--stage-a":
@@ -3557,7 +3655,8 @@ def main():
         spec = json.load(open(args[1]))
         nsp_n = int(spec.get("n", n))
         monotree_main(case, cid, nsp_n, args, spec, params_file,
-                      dom_rung=dom_rung, witness_rung=witness_rung)
+                      dom_rung=dom_rung, witness_rung=witness_rung,
+                      keepconst_rung=keepconst_rung)
         return
 
     if mono:
