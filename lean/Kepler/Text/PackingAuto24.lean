@@ -66,6 +66,22 @@ SORRY INVENTORY (giants, with blockers)
     (`p24_azim_base_shift`, `p24_wedge_ge_split`, `p24_setSum_congr`/
     `_superset_eq`/`_union`; new imports `TopologyFan`/`LuneVolume`),
     shrinking the open work to the mcell4 realization + measure sandwich.
+    2026-10-19 二发/三发 waves (lane pa24reuhady): the (d) bulk itself is now
+    a layered scaffold (see chapter `## (d) 段分层施工骨架`) with its (d)-local
+    pieces genuine (D-FIN finiteness / D6 union-sum bridge / junk-zero
+    definitional / D7 end wall / `p24_barV2_far_noncollinear` / final
+    assembly `p24_wedge_setSum_eq_azim`); `REUHADY1` is rewritten as a
+    genuine assembly over the three scaffold items. File-level `sorryAx`
+    entries are now exactly: the two open scaffolds (`p24_cell_cap_dihX`
+    = D3+D4+D5 per-arm ratio, HL 2386-7358+8187-8241; `p24_cap_wedge_cover`
+    = D1+D2 corridor/cover, HL 345-2386) plus, via scaffold 1
+    `p24_wedge_cells_pair_null` — CLOSED 三发 2026-10-19 through
+    `import Kepler.Text.PackingAuto17` + `AJRIPQN` — the upstream SF-20
+    shim debt (PA13 `SLTSTLO2`/`DDZUPHJ`, PA10 `RVFXZBU` i=2,3, PA14
+    `QZKSYKG1`/`QZKSYKG2`). Axiom probe (same day): `p24_barV2_far_noncollinear`
+    and `p24_cap_wedge_vol` print [propext, Classical.choice, Quot.sound]
+    only (三零); the assembly/`REUHADY1` carry the scaffold `sorryAx` as
+    ledgered.
   - `coplanarAzimEq`: FILLED (2026-09-30) from the documented route
     (frame + `azim_eq_azim_iff` + coplanarity plumbing; ingredients
     `p24_exists_azim_point` / `p24_mem_affineSpan_triple`).
@@ -116,6 +132,7 @@ import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto5
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto12
+import Kepler.Text.PackingAuto17
 import Kepler.Text.ConicCapVolume
 import Kepler.Text.Polytope
 import Kepler.Text.TopologyFan
@@ -1034,93 +1051,6 @@ private theorem p24_dihX_of_k3 (V X : Set V3) (u0 u1 : V3)
       else 0 := by unfold dihX; rfl
   rw [hd, if_neg hn, if_neg h2, if_pos h3]
 
-/-- HOL `REUHADY1` (REUHADY.hl:239, refinement proof over lines
-239-8356). GIANT — the dihedral-splitting bulk (d) is the single
-remaining `sorry`; the preamble (a)-(c) landed genuinely in the
-2026-09-30 REUHADY wave (private chain right above).
-REFINEMENT SKELETON vs. this file:
-(a) `barV V 1 [u0;u1]` — FILLED genuinely: `p24_barV1`
-    (`HL_LE_SQRT2_IMP_BARV_1`; PA15:578 twin is still a `ported sorry`;
-    core = `p24_affDim_voronoiList2`, bisector-plane affDim via
-    `p24_affDim_bis_pair`/`affDim_hyperplane` + packing-margin patch
-    points for the `≥ 2` direction).
-(b) the k-decomposition set `{k | ... voronoi_list V [u0;u1] = UNIONS ...}`
-    pinned to `1..3` with `3 ∈` it via Rogers `GLTVHUM_lemma1` — public
-    GENUINE copy at PackingAuto6:1108 (PA6 imported here; do NOT touch PA2's
-    private `p2g_GLTVHUM_lemma1`, another lane owns that file) — wired as
-    `p24_gltvhum3`.
-(c) per-leaf-cell: `voronoi_list V vl = {circumcenter}` via
-    `VORONOI_LIST_3_SINGLETON_EXPLICIT` (PA12:1677, CLOSED 2026-09-30,
-    this file now imports PA12) and `omega_list_n V vl 3 = circumcenter`
-    via `OMEGA_LIST_IN_VORONOI_LIST` (PA5:2296, CLOSED 2026-09-30) —
-    wired as `p24_leaf_singleton`, composed with (b) into the fan
-    structure `p24_voronoi_pair_split`.
-(d) NEEDS (the residual, HL lines ~400-8356, new work): with the fan
-    structure in hand, split `setSum` over the mcells inside the closed
-    wedge: (i) mcell4 leaf-cell realization `X = mcell 4 V [u0;u1;u2;u3]`
-    over the leaf triples of the fan (cell_params_d/china kit; the HL
-    does this via MCELL_EXPLICIT + SET_TAC plumbing; PA21's genuine
-    `MCELL_CELL_PARAMETERS_D_EXIST` kit shows the route but PA21 imports
-    PA15/PA18, so it is NOT importable here — re-derive privately);
-    (ii) the conic-cap/annulus measure argument around the edge —
-    `vol (t ∩ E)` sums over the fan partitioning the azimuth wedge,
-    `dihV = azim` conversion (`azim_dihv_same`/`azim_dihv_compl`,
-    now imported from `Kepler.Geom.LuneVolume`), and the finite fan sum
-    `∑ leaf dihX = azim u0 u1 n1 n2` (HL ~7000-8356: SUM_EQ +
-    SUM_SUPERSET + measure sandwich). LANDED 2026-10-08 (all genuine,
-    section above): the azim-additivity kit `p24_azim_base_shift` +
-    `p24_wedge_ge_split` (PA18:3532/:3566 genuine twins, re-ported here
-    since PA18 is not importable), the `setSum` final-assembly kit
-    `p24_setSum_congr`/`p24_setSum_superset_eq`/`p24_setSum_union`
-    (SUM_EQ/SUM_SUPERSET/SUM_UNION), and the (d)(i) `cell_params_d`
-    front half `p24_cellParamsD_spec` + `dihX` read-offs
-    `p24_dihX_of_k3`/`p24_dihX_of_k4` (PA21 wave-B1 first half,
-    import-free). STILL OPEN: (i) the mcell4 realization (the `k'`
-    identification with a given `k` — PA17 `AJRIPQN` rigidity, and the
-    fan-triple cells' non-nullness) and (ii) the measure sandwich that
-    identifies `∑ leaf dihX` with the azimuth split of `wedgeGe` (consume
-    `p24_wedge_ge_split` + `p24_setSum_*` there); upstream sorried
-    twins: PA7 `YIFVQDV_lemma_aff_dim` (PA7:854, ported sorry), PA15
-    `HL_LE_SQRT2_IMP_BARV_1` (PA15:578, ported sorry — superseded here).
-DOWNSTREAM (2026-09-30; shim split 2026-10-08): the two capstones
-`REUHADY_p24` / `REUHADY_version2_p24` (below) are wired to this theorem
-with every hypothesis synthesized genuinely (see the kit before the
-capstone section); their remaining content is exactly `REUHADY1` + the
-`p24_REUHADY_nondeg_azim` azimuth exclusion (2026-10-08 wave: that shim's
-own residue is narrowed to two precisely-scoped facts — the pure-metric
-exclusion `p24_nondeg_azim_ne` for `v1 ≠ v2` — GENUINE 2026-10-08/09: the coordinate
-kit `p24_tri_data` + the strengthened `p24_tri_gamma` (γ-relation
-`2wh = h² + t² − dt`) + disk/cone bounds + the final `dist v1 v2 < 2`
-contradiction) and the non-flat-cell existence `p24_exists_mcell_not_flat`
-for `v1 = v2` — GENUINE since the 2026-10-10..12 waves (branch assembly
-`p24_caseB2_branch`; see its docstring). Both branches are wired into
-`p24_REUHADY_nondeg_azim`, which is genuinely closed. The file's single
-remaining `sorry` is THIS theorem's (d) body below (the dihedral-splitting
-bulk). Statement (REUHADY_concl1_new) itself needs only PA2 defs,
-no voronoi. -/
-theorem REUHADY1 : REUHADY_concl1_new := by
-  intro V u0 u1 vl1 vl2 n1 n2 e hs hp hu0 hu1 hne hhl he hwedge haz hvlne
-    hhl1 hhl2 hbar1 hbar2 htr1 htr2 hn1 hn2 heX
-  -- (a) genuine: the pair is barV V 1
-  have hbarV1 : barV V 1 [u0, u1] := p24_barV1 V u0 u1 hp hu0 hu1 hne hhl
-  -- (b)+(c) genuine: the pair voronoi list splits over the leaf triples
-  have hfan := p24_voronoi_pair_split V u0 u1 hs hp hu0 hu1 hne hhl
-  -- NEEDS (d): the dihedral-splitting bulk (HL REUHADY.hl ~400-8356, new
-  -- work), two open pieces after the 2026-10-08 wave:
-  -- (i) mcell4 leaf-cell realization over the fan triples: the
-  --     `cell_params_d` front half is landed (`p24_cellParamsD_spec`,
-  --     `p24_dihX_of_k3`/`p24_dihX_of_k4`); open = the `k'`-vs-`k`
-  --     identification (PA17 `AJRIPQN` rigidity; PA21's genuine
-  --     MCELL_CELL_PARAMETERS_D_EXIST route is NOT importable here —
-  --     PA21 pulls PA15/PA18) and the fan-triple cells' non-nullness;
-  -- (ii) the conic-cap/azimuth measure sandwich ∑ leaf dihX =
-  --     azim u0 u1 n1 n2, consuming the landed azim-additivity kit
-  --     (`p24_azim_base_shift` + `p24_wedge_ge_split`), the setSum
-  --     assembly kit (`p24_setSum_congr`/`_superset_eq`/`_union`), and
-  --     the dihV→azim conversion via `azim_dihv_same`/`azim_dihv_compl`
-  --     (Kepler.Geom.LuneVolume, now imported).
-  -- Segments (a)-(c) are genuinely closed above.
-  sorry
 
 /-! ## Harrison's `Arg` halfline lemmas (REUHADY.hl:88, :110)
 
@@ -1651,6 +1581,629 @@ theorem volumeConicCapWedgeGeVsConicCap (v0 v1 w1 w2 : V3) (r a : ℝ)
     rw [Measure.real_def, Measure.real_def, hvol]
   rw [key, p24_cap_eq_ccv]
   exact volumeConicCapWedge v0 v1 w1 w2 r a ha1 h1 h2
+
+/-! ## (d) 段分层施工骨架（2026-10-19 REUHADY1 二发波，lane pa24reuhady）
+
+HL REUHADY.hl 345-8356（(d) 主体，8100 行 / 642 NEW_GOAL）施工图（分层沿 HL 界标注释）：
+
+- D1 走廊章（HL 345-1250，界标 "OK until here" :1250）：S = voronoi_list V [u0;u1]
+  的闭性/仿射性/有界性矛盾（:416-504）、内点 p = circumcenter、margin d、最近包装点
+  a' 与 8-界分离 `dist (p,u0) + 4d ≤ dist (p,w)`（:733-830）。产出 b ∈ (0,1)：
+  无其他 Voronoi 胞侵入走廊。纯度量/凸性，无 Marchal 依赖，可独立移植。
+- D2 覆盖章（HL 1251-2386）：aff_ge_alt W、c = max b (hl/√2)、C = ball(u0,1) ∩
+  rcone_gt(u0,u1,c)；C 内每点落在某 `mcell i V ul`（i ≤ 4、barV V 3、
+  truncate 1 = [u0;u1]，:1531-1629）；P1/P2/P3 半径参数集与 r1/r2/r、d1/d2/d 的
+  min-max 装配（:1705-2790）。
+- D3 k=2 章（HL 2834-3562，界标 "OK here" :3562）：mcell2 胞的
+  `vol (X ∩ D) = vol D · dihX / (2π)`（VOLUME_CONIC_CAP_WEDGE + MCELL_EXPLICIT）。
+- D4 k≥4 章（HL 3908-5596，界标 "OK here" :5198）：mcell4 胞同上 + AJRIPQN 首批识别。
+- D5 k=3 章（HL 5627-7358）：mcell3 胞同上（"begin the computation" :6692）。
+- D6 家族装配章（HL 7395-8250）：E = D ∩ wedge_ge、s = 楔族、
+  MEASURE_NEGLIGIBLE_UNIONS_IMAGE 三支（有限性 FINITE_EDGE_X2 / 成对零交 AJRIPQN
+  :7437 / 覆盖 = D2）+ 逐胞 SUM_EQ（junk 零侧 :8187-8241）。
+- D7 终墙（HL 8250-8356）：`vol E = vol D · azim / (2π)`
+  （VOLUME_CONIC_CAP_WEDGE_GE_VS_CONIC_CAP）+ vol D > 0 + 2π > 0 消去
+  ⇒ `sum s dihX = azim`。
+
+本章落地状态（2026-10-19）：
+- **真证**：D6 并集-求和桥（`p24_measure_setSum_biUnion`，PA23 银行桥私拷——PA23
+  import PA15 故不可 import）、有限性（`p24_finite_edge_cells`，PA15
+  `FINITE_EDGE_X2` 链私拷——PA15 的 `Kepler.Text.wedge` 会遮蔽本文件的开楔，
+  见文件头注）、D7 终墙（`p24_cap_wedge_vol`，消费本文件
+  `volumeConicCapWedgeGeVsConicCap` + CCV `volumeConicCapPos`）、junk 零侧
+  定义性件（`p24_dihX_of_nullSet`）、(d) 前置真证件
+  `p24_barV2_far_noncollinear`、装配（`p24_wedge_setSum_eq_azim`，纯组合零 sorry）。
+- **scaffold 三 sorry**（每条 `-- NEEDS` 记账，注 HL 行段 + 闭链路径）：
+  `p24_wedge_cells_pair_null`（D6 成对零交支；闭链 = PA17 `AJRIPQN`——帽石
+  2026-10-12 已闭，其上游 PA13 SLTSTLO2/DDZUPHJ、PA10 RVFXZBU、PA14 QZKSYKG
+  语句在树而体开放（SF-20 shim 债）；PA17 import 拓扑 2026-10-19 已验证安全：
+  不传递依赖 PA24，其 Kepler.Text 顶层 def 不遮蔽 wedge/dihV/azim/hl）；
+  `p24_cell_cap_dihX`（D3+D4+D5 逐臂比例式 + junk 零侧，含 (d)(i) k′-vs-k
+  识别与 fan-triple 胞非空性）；`p24_cap_wedge_cover`（D1+D2 走廊与覆盖，
+  产出半径 r d 存在性）。
+- `REUHADY1` 本体改真装配（消费以上全部），原 8100 行单体黑箱 `sorry` 退役；
+  残余 sorryAx 入口从 1 个不可定位黑箱 → 3 个 HL 行段精确定位 scaffold。 -/
+
+/-- (d) 骨架的楔形胞族：REUHADY_concl1_new 结论中 `setSum` 家族的本体。 -/
+private def p24_wedgeCells (V : Set V3) (u0 u1 n1 n2 : V3) (e : Set V3) : Set (Set V3) :=
+  {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X ∧ X ⊆ wedgeGe u0 u1 n1 n2}
+
+/-! ### D6 有限性支（真证；PA15 `FINITE_EDGE_X2` 链私拷，体逐字 p15_→p24_） -/
+
+/-- A translate of a packing is a packing (rigidity of `dist`). -/
+private theorem p24_packing_translate (V : Set V3) (t : V3) (hp : Packing V) :
+    Packing ((fun w => w - t) '' V) := by
+  intro a ha b hb hdist
+  obtain ⟨u, huV, rfl⟩ := ha
+  obtain ⟨v, hvV, rfl⟩ := hb
+  simp only [] at hdist ⊢
+  have hd : dist (u - t) (v - t) = dist u v := by
+    simp only [dist_eq_norm]
+    congr 1
+    abel
+  rw [hd] at hdist
+  have huv := hp u huV v hvV hdist
+  rw [huv]
+
+/-- Finiteness of the packing points in a ball centered at an arbitrary point
+(`Packing.finite_inter_ball` is stated for balls centered at `0`). -/
+private theorem p24_finite_inter_ball_at (V : Set V3) (c : V3) (r : ℝ) (hp : Packing V) :
+    (V ∩ Metric.ball c r).Finite := by
+  classical
+  have hfin : ((fun w : V3 => w - c) '' V ∩ Metric.ball 0 r).Finite :=
+    (p24_packing_translate V c hp).finite_inter_ball r
+  have hsub : V ∩ Metric.ball c r ⊆
+      (fun w : V3 => w + c) '' ((fun w : V3 => w - c) '' V ∩ Metric.ball 0 r) := by
+    rintro x ⟨hxV, hxb⟩
+    refine ⟨x - c, ⟨⟨x, hxV, rfl⟩, ?_⟩, by simp⟩
+    rw [Metric.mem_ball, dist_zero_right]
+    have hxc : dist x c < r := Metric.mem_ball.mp hxb
+    rw [dist_eq_norm] at hxc
+    exact hxc
+  exact (hfin.image (fun w : V3 => w + c)).subset hsub
+
+/-- `BARV_3_IMP_FINITE_lemma1`（QZYZMJC.hl:62-100；PA15:207 私拷）：`barV V 3`
+单形的两个表点相距 < 4（饱和包装 + PA12 单点 Voronoi 胞）。 -/
+private theorem p24_barV3ImpFinite1 {V : Set V3} {ul : List V3} {u v : V3}
+    (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul)
+    (huv : {u, v} ⊆ setOfList ul) : dist u v < 4 := by
+  obtain ⟨a, ha1, _ha2, _ha3⟩ := VORONOI_LIST_3_SINGLETON_EXPLICIT V ul hp hs hb
+  have hamem : a ∈ voronoiList V ul := by rw [ha1]; exact rfl
+  have key : ∀ s ∈ setOfList ul, dist a s < 2 := by
+    intro s hsmem
+    obtain ⟨y, hyV, hyd⟩ := hs a
+    have hmem : a ∈ ⋂₀ {voronoiClosed V w | w ∈ setOfList ul} := hamem
+    have has : a ∈ voronoiClosed V s :=
+      Set.mem_sInter.mp hmem (voronoiClosed V s) ⟨s, hsmem, rfl⟩
+    have h1 : dist a s ≤ dist a y := by
+      simpa only [voronoiClosed, Set.mem_setOf_eq] using has y hyV
+    calc dist a s ≤ dist a y := h1
+      _ < 2 := hyd
+  have hdu : dist a u < 2 := key u (huv (by simp))
+  have hdv : dist a v < 2 := key v (huv (by simp))
+  calc dist u v ≤ dist u a + dist a v := dist_triangle u a v
+    _ < 4 := by rw [dist_comm u a]; linarith
+
+/-- `BARV_3_IMP_FINITE_lemma2`（QZYZMJC.hl:104-110；PA15:244 私拷）：整个表
+落在任一表点的 4-球内。 -/
+private theorem p24_barV3ImpFinite2 {V : Set V3} {ul : List V3} {v : V3}
+    (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul) (hv : v ∈ setOfList ul) :
+    setOfList ul ⊆ Metric.ball v 4 := by
+  intro s hsmem
+  refine p24_barV3ImpFinite1 hp hs hb ?_
+  intro x hx
+  rcases (by simpa using hx : x = s ∨ x = v) with hx1 | hx1
+  · rw [hx1]
+    exact hsmem
+  · rw [hx1]
+    exact hv
+
+/-- D-FIN（真证）：marchal3.hl:2184 `FINITE_EDGE_X2`（PA15:1257 私拷）。边上
+胞族有限 —— (d) 的楔族是它的子集，D6 的 MEASURE_NEGLIGIBLE_UNIONS_IMAGE 支
+由此吃饭；同时服务 GRUTOTI/OXLZLEZ3 等边胞装配。 -/
+private theorem p24_finite_edge_cells (V : Set V3) (e : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) (he : e = {u0, u1}) :
+    {X : Set V3 | mcellSet V X ∧ edgeX V X e}.Finite := by
+  classical
+  -- the finite index tuples: 4-point lists drawn from `V ∩ ball u0 4`
+  have hVb : (V ∩ Metric.ball u0 4).Finite := p24_finite_inter_ball_at V u0 4 hp
+  have hT : {ul : List V3 | ∃ a b c d : V3, a ∈ V ∩ Metric.ball u0 4 ∧
+      b ∈ V ∩ Metric.ball u0 4 ∧ c ∈ V ∩ Metric.ball u0 4 ∧
+      d ∈ V ∩ Metric.ball u0 4 ∧ ul = [a, b, c, d]}.Finite := by
+    have hsub : {ul : List V3 | ∃ a b c d : V3, a ∈ V ∩ Metric.ball u0 4 ∧
+        b ∈ V ∩ Metric.ball u0 4 ∧ c ∈ V ∩ Metric.ball u0 4 ∧
+        d ∈ V ∩ Metric.ball u0 4 ∧ ul = [a, b, c, d]} ⊆
+        (fun q : V3 × V3 × V3 × V3 => [q.1, q.2.1, q.2.2.1, q.2.2.2]) ''
+        ((V ∩ Metric.ball u0 4) ×ˢ ((V ∩ Metric.ball u0 4) ×ˢ
+          ((V ∩ Metric.ball u0 4) ×ˢ (V ∩ Metric.ball u0 4)))) := by
+      intro l hl
+      rw [Set.mem_setOf_eq] at hl
+      obtain ⟨a, b, c, d, h0, h1', h2', h3', rfl⟩ := hl
+      exact ⟨(a, b, c, d),
+        Set.mem_prod.mpr ⟨h0, Set.mem_prod.mpr ⟨h1', Set.mem_prod.mpr ⟨h2', h3'⟩⟩⟩, rfl⟩
+    exact Set.Finite.subset ((hVb.prod (hVb.prod (hVb.prod hVb))).image _) hsub
+  have hsub : {X : Set V3 | mcellSet V X ∧ edgeX V X e} ⊆
+      (fun t : ℕ × List V3 => mcell t.1 V t.2) ''
+        ((Set.Iic (4 : ℕ)) ×ˢ
+          {ul : List V3 | ∃ a b c d : V3, a ∈ V ∩ Metric.ball u0 4 ∧
+            b ∈ V ∩ Metric.ball u0 4 ∧ c ∈ V ∩ Metric.ball u0 4 ∧
+            d ∈ V ∩ Metric.ball u0 4 ∧ ul = [a, b, c, d]}) := by
+    intro X hX
+    obtain ⟨hm, hedge⟩ := hX
+    simp only [mcellSet] at hm
+    obtain ⟨i, ul, hXmul, hbul⟩ := hm
+    simp only [edgeX] at hedge
+    obtain ⟨w0, w1, he0, hw0, hw1, hwne⟩ := hedge
+    have heq : {w0, w1} = {u0, u1} := he0.symm.trans he
+    have hw0in : w0 ∈ ({u0, u1} : Set V3) := by rw [← heq]; exact Set.mem_insert w0 {w1}
+    have hu0in : u0 ∈ ({w0, w1} : Set V3) := by rw [heq]; exact Set.mem_insert u0 {u1}
+    have hu1in : u1 ∈ ({w0, w1} : Set V3) := by
+      rw [heq]
+      exact Set.mem_insert_of_mem u0 (Set.mem_singleton u1)
+    have hu0vx : u0 ∈ VX V X := by
+      rcases Set.mem_insert_iff.mp hu0in with h | h
+      · rw [h]
+        exact hw0
+      · rcases Set.mem_singleton_iff.mp h with h
+        rw [h]
+        exact hw1
+    by_cases hnull : nullSet X
+    · exfalso
+      have hvx0 : VX V X = ∅ := by rw [VX, if_pos hnull]
+      rw [hvx0] at hu0vx
+      simp at hu0vx
+    -- extract the cell parameters chosen by `cellParams`
+    have hwit : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 := by
+      refine ⟨(if i ≤ 4 then i else 4, ul), ?_, hbul, ?_⟩
+      · by_cases hle : i ≤ 4 <;> simp [hle]
+      · by_cases hle : i ≤ 4
+        · rw [if_pos hle, hXmul]
+        · rw [if_neg hle]
+          exact hXmul.trans ((MCELL_EXPLICIT i V ul).2.2.2.2 (by omega))
+    have hspec := Classical.epsilon_spec
+      (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2) hwit
+    obtain ⟨hk4, hbarp, hXp⟩ := hspec
+    by_cases hk0 : (cellParams V X).1 = 0
+    · exfalso
+      have hvx0 : VX V X = ∅ := by rw [VX, if_neg hnull, if_pos hk0]
+      rw [hvx0] at hu0vx
+      simp at hu0vx
+    · -- `u0` is a list point of the parameter list
+      have hvx : VX V X =
+          setOfList (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+        rw [VX, if_neg hnull, if_neg hk0]
+      have hu0tr : u0 ∈ setOfList (truncateSimplex ((cellParams V X).1 - 1)
+          (cellParams V X).2) := hvx ▸ hu0vx
+      have hk4' : (cellParams V X).1 ≤ 4 := hk4
+      have hk0' : (cellParams V X).1 ≠ 0 := hk0
+      have hlen4 : (cellParams V X).2.length = 3 + 1 := hbarp.1
+      have hinit := (TRUNCATE_SIMPLEX_INITIAL_SUBLIST ((cellParams V X).1 - 1)
+        (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2)
+          (cellParams V X).2).1
+        ⟨rfl, by omega⟩
+      obtain ⟨hsubl, -⟩ := hinit
+      rcases hsubl with ⟨yl, hyl⟩
+      have hu0list : u0 ∈ setOfList (cellParams V X).2 := by
+        rw [hyl]
+        exact List.mem_append_left _ hu0tr
+      obtain ⟨a, b, c, d, hulp⟩ := BARV_3_EXPLICIT V (cellParams V X).2 hbarp
+      have hball := p24_barV3ImpFinite2 hp hs hbarp hu0list
+      have hpts : ∀ z ∈ setOfList (cellParams V X).2, z ∈ V ∩ Metric.ball u0 4 := by
+        intro z hz
+        exact ⟨BARV_SUBSET V 3 (cellParams V X).2 hbarp hz, hball hz⟩
+      refine ⟨((cellParams V X).1, (cellParams V X).2),
+        ⟨hk4, ⟨a, b, c, d, ?_, ?_, ?_, ?_, hulp⟩⟩, hXp.symm⟩
+      · exact hpts a (by rw [hulp]; simp [setOfList])
+      · exact hpts b (by rw [hulp]; simp [setOfList])
+      · exact hpts c (by rw [hulp]; simp [setOfList])
+      · exact hpts d (by rw [hulp]; simp [setOfList])
+  exact Set.Finite.subset
+    ((((Set.finite_Iic 4).prod hT).image (fun t : ℕ × List V3 => mcell t.1 V t.2))) hsub
+
+/-! ### D6 并集-求和桥（真证；PA23 `p23_measure_setSum_biUnion` 银行桥私拷） -/
+
+/-- Finite `MEASURE_NEGLIGIBLE_UNIONS_IMAGE`（Pack2 桥；grutoti-scout §2.2）：
+有限族 + 可测 + 成对零交 + 逐项有限体积 ⇒ 体积和 = 并的体积。 -/
+private theorem p24_measure_setSum_biUnion {ι : Type*} {s : Set ι} {f : ι → Set V3}
+    (hs : s.Finite) (hmeas : ∀ i ∈ s, MeasurableSet (f i))
+    (hpair : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → volume (f i ∩ f j) = 0)
+    (hne : ∀ i ∈ s, volume (f i) ≠ ⊤) :
+    setSum s (fun i => volume.real (f i)) = volume.real (⋃₀ (f '' s)) := by
+  classical
+  have hbU : (⋃ a ∈ s, f a) = ⋃ a ∈ hs.toFinset, f a := by
+    ext x
+    constructor
+    · intro hx
+      obtain ⟨a, ha, hfx⟩ := Set.mem_iUnion₂.mp hx
+      exact Set.mem_iUnion₂.mpr ⟨a, (Set.Finite.mem_toFinset hs).mpr ha, hfx⟩
+    · intro hx
+      obtain ⟨a, ha, hfx⟩ := Set.mem_iUnion₂.mp hx
+      exact Set.mem_iUnion₂.mpr ⟨a, (Set.Finite.mem_toFinset hs).mp ha, hfx⟩
+  have hd : Set.Pairwise (↑hs.toFinset) (Function.onFun (AEDisjoint volume) f) := by
+    intro i hi j hj hij
+    show volume (f i ∩ f j) = 0
+    exact hpair i ((Set.Finite.mem_toFinset hs).mp hi) j
+      ((Set.Finite.mem_toFinset hs).mp hj) hij
+  have hm : ∀ b ∈ hs.toFinset, NullMeasurableSet (f b) volume := fun b hb =>
+    (hmeas b ((Set.Finite.mem_toFinset hs).mp hb)).nullMeasurableSet
+  rw [setSum, dif_pos hs, Set.sUnion_image, hbU]
+  show (∑ w ∈ hs.toFinset, (volume (f w)).toReal)
+      = (volume (⋃ a ∈ hs.toFinset, f a)).toReal
+  rw [MeasureTheory.measure_biUnion_finset₀ hd hm]
+  rw [ENNReal.toReal_sum fun i hi => hne i ((Set.Finite.mem_toFinset hs).mp hi)]
+
+/-! ### junk 零侧定义性件（真证） -/
+
+/-- junk 零侧其一：null 胞的 `dihX` 为 0（`dihX` if-链首支；PA23:350 先例私拷）。
+D3-D5 junk 臂的 vol 侧零（HL :8187-8241 共面性论证）留在
+`p24_cell_cap_dihX` 的 NEEDS 债内。 -/
+private theorem p24_dihX_of_nullSet (V : Set V3) (X : Set V3) (p : V3 × V3)
+    (h : nullSet X) : dihX V X p = 0 := if_pos h
+
+/-! ### (d) 前置真证件 -/
+
+/-- (d) 前置真证件：`barV V 2` 单形的远顶点与截断边不共线（HL :8280-8315
+BARV_2_EXPLICIT + BARV_2_IMP_NOT_COLLINEAR_SET_OF_LIST 支的 Lean 直推导，
+消费本文件 `barV2_imp_not_collinear_setOfList`）。 -/
+private theorem p24_barV2_far_noncollinear (V : Set V3) (u0 u1 : V3) (vl : List V3) (n : V3)
+    (hp : Packing V) (hbar : barV V 2 vl)
+    (he : setOfList (truncateSimplex 1 vl) = {u0, u1}) (hn : n = elV vl 2) :
+    ¬ Collinear3 u0 u1 n := by
+  have h3 : vl.length = 2 + 1 := hbar.1
+  obtain ⟨a, b, c, rfl⟩ : ∃ a b c, vl = [a, b, c] := by
+    rcases vl with _ | ⟨a, _ | ⟨b, _ | ⟨c, _ | _⟩⟩⟩
+    · simp at h3
+    · simp at h3
+    · simp at h3
+    · exact ⟨a, b, c, rfl⟩
+    · simp at h3
+  have htr : truncateSimplex 1 [a, b, c] = [a, b] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_1 a b c c).2.1
+  have h2' : setOfList [a, b] = {u0, u1} := by rw [← he, htr]
+  have hmem : ∀ z : V3, z ∈ ({a, b} : Set V3) → z ∈ ({u0, u1} : Set V3) := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with hza | hzb
+    · have hzin : a ∈ setOfList [a, b] := by simp [setOfList]
+      rw [h2'] at hzin
+      rw [hza]
+      exact hzin
+    · have hzin : b ∈ setOfList [a, b] := by simp [setOfList]
+      rw [h2'] at hzin
+      rw [hzb]
+      exact hzin
+  have hnc : ¬ Collinear ℝ (setOfList [a, b, c]) :=
+    barV2_imp_not_collinear_setOfList V [a, b, c] hp hbar
+  have hn' : n = c := hn.trans rfl
+  intro hcol
+  rw [hn'] at hcol
+  refine hnc ?_
+  have hsub : (setOfList [a, b, c]) ⊆ ({u0, u1, c} : Set V3) := by
+    intro z hz
+    simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false] at hz
+    rcases hz with rfl | rfl | rfl
+    · rcases hmem z (Or.inl rfl) with h | h
+      · exact Or.inl h
+      · exact Or.inr (Or.inl h)
+    · rcases hmem z (Or.inr rfl) with h | h
+      · exact Or.inl h
+      · exact Or.inr (Or.inl h)
+    · exact Or.inr (Or.inr rfl)
+  exact Collinear.subset hsub hcol
+
+/-! ### D7 终墙（真证） -/
+
+/-- D7 终墙（真证）：REUHADY 实例形 —— 锥帽体积正性 + 闭楔比例式。消费
+CCV `volumeConicCapPos` 与本文件 `volumeConicCapWedgeGeVsConicCap`（HL
+VOLUME_CONIC_CAP / VOLUME_CONIC_CAP_WEDGE_GE_VS_CONIC_CAP 的真证孪生）。 -/
+private theorem p24_cap_wedge_vol (u0 u1 n1 n2 : V3) (r d : ℝ)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (hne : u0 ≠ u1)
+    (h1 : ¬ Collinear3 u0 u1 n1) (h2 : ¬ Collinear3 u0 u1 n2) :
+    0 < volume.real (conicCapP24 u0 u1 r d) ∧
+      volume.real (conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2)
+        = volume.real (conicCapP24 u0 u1 r d) * azim u0 u1 n1 n2 / (2 * Real.pi) :=
+  ⟨volumeConicCapPos hr hd hd1 hne,
+    volumeConicCapWedgeGeVsConicCap u0 u1 n1 n2 r d hd hd1 ⟨hr, hr1⟩ h1 h2⟩
+
+/-! ### scaffold 三 sorry（NEEDS 记账；三发波后残余债务 = scaffold 2/3 两条） -/
+
+/-- NEEDS → CLOSED（2026-10-19 三发波，lane pa24reuhady）：scaffold 1/3，D6 成对
+零交支；HL REUHADY.hl 7395-7470，核心 :7437 `i' = i ∧ mcell i' V ul' = mcell i V ul`。
+楔族中两个不同胞的交为零体积。闭链：两楔族胞的胞参数 `(i, ul)` / `(i', ul')`
+（`mcellSet` 给 barV V 3）若有正体积交，则 PA17 `AJRIPQN`（五阶段覆盖装配；帽石
+2026-10-12 已闭 = `p17_ajripqn_of_tailfix` + SF-38 tail-fixed `QZKSYKG2`，其上游
+PA13 `SLTSTLO2`/`DDZUPHJ`、PA10 `RVFXZBU`、PA14 `QZKSYKG1`/`QZKSYKG2` 语句在树而
+体开放 = SF-20 shim 债）给出 `k = k' ∧ mcell k V ul = mcell k' V vl`，故 X = Y，
+与 X ≠ Y 矛盾。Lean 侧比 HL 多一步归一化：本仓 `mcellSet`（PA2:368）不含
+`i ≤ 4` 合取项（HOL `mcell_set` 亦然——两边的 i 有界性都由 `mcell` 的 if 链
+`i > 3 ⇒ mcell4` 吸收），故先按 `mcell` 分派把任意指标折入 `{0,1,2,3,4}` 再施
+AJRIPQN。import 拓扑（2026-10-19 验证并落地）：`import Kepler.Text.PackingAuto17`
+进 PA24 无环（PA17 闭包 = PA2/5/6/7/8/10/11/12/13/14，不传递依赖 PA24；
+Kepler.Text 顶层 def 不遮蔽本文件用名 wedge/dihV/azim/hl/wedgeGe）。
+HL 侧同型论证的 `mcell_set_2`（两胞共边 ⇒ 交在公共仿射壳内共面零体积）在
+Lean 侧不需要——AJRIPQN 对任意两胞直接给胞同一性，无需共边结构。 -/
+private theorem p24_wedge_cells_pair_null (V : Set V3) (u0 u1 n1 n2 : V3) (e : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (he : e = {u0, u1})
+    (hnc1 : ¬ Collinear3 u0 u1 n1) (hnc2 : ¬ Collinear3 u0 u1 n2) :
+    ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e, ∀ Y ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      X ≠ Y → volume (X ∩ Y) = 0 := by
+  -- CLOSED (d)(ii)-pair via PA17 `AJRIPQN` (HL REUHADY.hl 7395-7470, :7437).
+  intro X hX Y hY hXY
+  obtain ⟨hmX, -, -⟩ := hX
+  obtain ⟨hmY, -, -⟩ := hY
+  obtain ⟨i, ul, rfl, hbarX⟩ := hmX
+  obtain ⟨j, vl, rfl, hbarY⟩ := hmY
+  -- `mcell` dispatch collapses every index into {0,1,2,3,4} (i > 3 ⇒ mcell4)
+  have hnorm : ∀ (f : ℕ) (t : List V3), ∃ k, k ∈ ({0, 1, 2, 3, 4} : Set ℕ) ∧
+      mcell k V t = mcell f V t := by
+    intro f t
+    rcases Nat.lt_or_ge f 4 with hf | hf
+    · exact ⟨f, by simp; omega, rfl⟩
+    · have hL : mcell 4 V t = mcell4 V t := by
+        rw [mcell, if_neg (show (4:ℕ) ≠ 0 by decide), if_neg (show (4:ℕ) ≠ 1 by decide),
+          if_neg (show (4:ℕ) ≠ 2 by decide), if_neg (show (4:ℕ) ≠ 3 by decide)]
+      have hR : mcell f V t = mcell4 V t := by
+        rw [mcell, if_neg (show (f:ℕ) ≠ 0 by omega), if_neg (show f ≠ 1 by omega),
+          if_neg (show f ≠ 2 by omega), if_neg (show f ≠ 3 by omega)]
+      exact ⟨4, by simp, by rw [hL, hR]⟩
+  obtain ⟨k, hk, hki⟩ := hnorm i ul
+  obtain ⟨k', hk', hkj⟩ := hnorm j vl
+  by_contra hpos
+  have hvol : ¬ nullSet (mcell k V ul ∩ mcell k' V vl) := by
+    intro hcon
+    rw [hki, hkj] at hcon
+    exact hpos hcon
+  have hij := AJRIPQN V ul vl k k' hs hp hbarX hbarY hk hk' hvol
+  refine hXY ?_
+  rw [← hki, ← hkj, hij.2]
+
+/-- NEEDS（scaffold 2/3，D3+D4+D5 逐臂锥帽比例式；HL REUHADY.hl 2386-7358：
+k=2 章 :2834-3562 / k≥4 章 :3908-5596 / k=3 章 :5627-7358 的
+`vol (X ∩ D) = vol D · dihX V X (u0,u1) / (2π)`，junk 零侧 :8187-8241）。
+分解：(α) junk 侧（nullSet 或 cellParamsD 首 ∈ {0,1}）双零——dihX 侧已由
+`p24_dihX_of_nullSet` 与 `dihX` if-链定义性收口；vol 侧需 MCELL_EXPLICIT 的
+mcell0/1 显式形 + {u0,u1,m,R} 共面零体积（COPLANAR_IMP_NEGLIGIBLE）。
+(β) k′ ∈ {2,3,4} 侧：`p24_cellParamsD_spec`（已落）读出臂型，`p24_dihX_of_k3`/
+`p24_dihX_of_k4`（已落）读出 dihX；vol 侧 = VOLUME_CONIC_CAP_WEDGE per 臂
+（锥帽 ∩ aff_ge 楔片比例）+ mcell k′ 形状按 MCELL_EXPLICIT 分解 + 共面零体积修边；
+其中 (d)(i) 的 k′-vs-k 识别（给定的楔族胞 X 的参数表 ul 与 fan 叶表 vl 的同一化，
+PA17 `AJRIPQN` 刚性，见 scaffold 1 记账）与 fan-triple 胞非空性（HL :1476-1629）
+也在本债内。消(side) 费件已全部在树：`volumeConicCapWedgeGeVsConicCap`（本文件
+:1599）、`azim_dihv_same`/`azim_dihv_compl`（LuneVolume）、MCELL_EXPLICIT
+（PA12:623）、`MEASURABLE_MCELL`（PA10:585）。 -/
+private theorem p24_cell_cap_dihX (V : Set V3) (u0 u1 n1 n2 : V3) (e : Set V3) (X : Set V3)
+    (r d : ℝ) (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (he : e = {u0, u1}) (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hX : X ∈ p24_wedgeCells V u0 u1 n1 n2 e) :
+    volume.real (conicCapP24 u0 u1 r d ∩ X)
+      = volume.real (conicCapP24 u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
+  -- NEEDS (d)(i)+(ii)-bulk: see docstring. HL REUHADY.hl 2386-7358 + 8187-8241.
+  sorry
+
+/-- NEEDS（scaffold 3/3，D1+D2 走廊与覆盖；HL REUHADY.hl 345-2386，界标
+"OK until here" :1250）：产出锥帽半径 `r d`（0 < r ≤ 1、0 < d < 1）并证覆盖
+`cap ∩ wedgeGe ⊆ ⋃楔族胞`。HL 路线：S = voronoi_list V [u0;u1] 闭/仿射/有界
+论证（:416-504）→ 内点 p = circumcenter、margin d、最近包装点 a'、8-界分离
+（:733-830）→ C = ball(u0,1) ∩ rcone_gt(u0,u1,c) 内每点落某 `mcell i V ul`
+（i ≤ 4、barV V 3、truncate 1 = [u0;u1]，:1531-1629；消费 PA6 `GLTVHUM`
+闭 Voronoi 胞 = 根 u0 的 Rogers 单形并 + PA12 `MCELL_EXPLICIT`）→ e ∈ edgeX 由
+truncate 结构 + heX 定楔侧 → P1/P2/P3 半径参数集 min-max 装配（:1705-2790）。
+纯度量/凸性/覆盖，无测量论证，可独立移植（本车道下一浪首选）。 -/
+private theorem p24_cap_wedge_cover (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
+    (n1 n2 : V3) (e : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1})
+    (hwedge : wedgeGe u0 u1 n1 n2 ∩ wedgeGe u0 u1 n2 n1 ⊆
+      affGe {u0, u1} {n1} ∪ affGe {u0, u1} {n2})
+    (haz : azim u0 u1 n1 n2 ≠ 0) (hvlne : vl1 ≠ vl2)
+    (hhl1 : hl vl1 < Real.sqrt 2) (hhl2 : hl vl2 < Real.sqrt 2)
+    (hbar1 : barV V 2 vl1) (hbar2 : barV V 2 vl2)
+    (htr1 : setOfList (truncateSimplex 1 vl1) = e)
+    (htr2 : setOfList (truncateSimplex 1 vl2) = e)
+    (hn1 : n1 = elV vl1 2) (hn2 : n2 = elV vl2 2)
+    (heX : ∀ X : Set V3, X ∈ mcellSet V ∧ e ∈ edgeX V X →
+      X ⊆ wedgeGe u0 u1 n1 n2 ∨ X ⊆ wedgeGe u0 u1 n2 n1)
+    (hbarV1 : barV V 1 [u0, u1])
+    (hfan : voronoiList V [u0, u1] =
+      ⋃₀ {convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2,
+        circumcenter (setOfList vl)} | vl ∈ {vl : List V3 |
+        barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}}) :
+    ∃ r d : ℝ, 0 < r ∧ r ≤ 1 ∧ 0 < d ∧ d < 1 ∧
+      ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
+        x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e := by
+  -- NEEDS (d)-cover/corridor: see docstring. HL REUHADY.hl 345-2386.
+  sorry
+
+/-! ### (d) 装配章（真证，零 sorry）：D6+D7 的家族求和恒等式 -/
+
+/-- (d) 装配（真证）：楔族上 `dihX` 的 `setSum` = 边方位角。消费 D-FIN
+（有限性）、scaffold 1-3（成对零交 / 逐胞比例式 / 覆盖）、D-WALL（终墙）、
+D6 并集-求和桥与 `p24_setSum_congr`。HL 对应 = REUHADY.hl 7395-8356 的
+家族章 + 终墙章；三 scaffold 收口后本件即 (d) 完整真证。 -/
+private theorem p24_wedge_setSum_eq_azim (V : Set V3) (u0 u1 n1 n2 : V3) (e : Set V3)
+    (r d : ℝ) (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hnc1 : ¬ Collinear3 u0 u1 n1) (hnc2 : ¬ Collinear3 u0 u1 n2)
+    (hfin : {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}.Finite)
+    (hpair : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e, ∀ Y ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      X ≠ Y → volume (X ∩ Y) = 0)
+    (hcov : ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
+      x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e)
+    (hcell : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      volume.real (conicCapP24 u0 u1 r d ∩ X)
+        = volume.real (conicCapP24 u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi)) :
+    setSum (p24_wedgeCells V u0 u1 n1 n2 e) (fun X => dihX V X (u0, u1))
+      = azim u0 u1 n1 n2 := by
+  classical
+  set s : Set (Set V3) := p24_wedgeCells V u0 u1 n1 n2 e with hsdef
+  -- D-FIN: the wedge family is finite (subset of the edge-cell family)
+  have hsfin : s.Finite := hfin.subset (fun X hX => ⟨hX.1, hX.2.1⟩)
+  -- measurability of the traces `X ∩ cap` (X is an mcell, cap is Borel)
+  have hmeas : ∀ X ∈ s, MeasurableSet (X ∩ conicCapP24 u0 u1 r d) := by
+    intro X hX
+    obtain ⟨hm, -, -⟩ := hX
+    obtain ⟨i, ul, rfl, hbar⟩ := hm
+    exact (MEASURABLE_MCELL V ul i hs hp hbar).inter (measurableConicCap u0 u1 r d)
+  -- traces have finite volume (they sit in the closed ball of radius r)
+  have hnetop : ∀ X ∈ s, volume (X ∩ conicCapP24 u0 u1 r d) ≠ ⊤ := by
+    intro X hX
+    have hsub : X ∩ conicCapP24 u0 u1 r d ⊆ Metric.closedBall u0 r := fun z hz => hz.2.1
+    have hlt : volume (Metric.closedBall u0 r) < ⊤ :=
+      IsCompact.measure_lt_top (isCompact_closedBall u0 r)
+    exact fun hcon =>
+      absurd (lt_of_le_of_lt (measure_mono hsub) hlt)
+        (by rw [hcon]; exact not_lt.mpr le_top)
+  -- pairwise-null for the traces (subsets of the pairwise-null cell intersections)
+  have hpair' : ∀ X ∈ s, ∀ Y ∈ s, X ≠ Y →
+      volume ((X ∩ conicCapP24 u0 u1 r d) ∩ (Y ∩ conicCapP24 u0 u1 r d)) = 0 := by
+    intro X hX Y hY hne
+    exact measure_mono_null
+      (fun z hz => ⟨hz.1.1, hz.2.1⟩ :
+        (X ∩ conicCapP24 u0 u1 r d) ∩ (Y ∩ conicCapP24 u0 u1 r d) ⊆ X ∩ Y)
+      (hpair X hX Y hY hne)
+  -- the trace family's union is exactly `cap ∩ wedgeGe` (set identity + D-COVER)
+  have huniteq : ⋃₀ ((fun X => X ∩ conicCapP24 u0 u1 r d) '' s)
+      = conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2 := by
+    ext z
+    constructor
+    · rintro ⟨S, ⟨X, hX, rfl⟩, hz⟩
+      obtain ⟨hz1, hz2⟩ : z ∈ X ∩ conicCapP24 u0 u1 r d := hz
+      exact ⟨hz2, hX.2.2 hz1⟩
+    · rintro ⟨hzc, hzw⟩
+      obtain ⟨X, hX, hzX⟩ := hcov z ⟨hzc, hzw⟩
+      exact ⟨X ∩ conicCapP24 u0 u1 r d, ⟨X, hX, rfl⟩, ⟨hzX, hzc⟩⟩
+  -- D6 sum identity: sum of trace volumes = volume of the union = vol E
+  have hsum : setSum s (fun X => volume.real (X ∩ conicCapP24 u0 u1 r d))
+      = volume.real (conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) := by
+    rw [p24_measure_setSum_biUnion hsfin hmeas hpair' hnetop, huniteq]
+  -- D7 wall: vol E = vol D * azim / (2π), with vol D > 0
+  have hwpos := p24_cap_wedge_vol u0 u1 n1 n2 r d hr hr1 hd hd1 hne hnc1 hnc2
+  -- per-cell congruence + factorization
+  have hc := p24_setSum_congr (s := s)
+    (f := fun X : Set V3 => volume.real (X ∩ conicCapP24 u0 u1 r d))
+    (g := fun X : Set V3 => volume.real (conicCapP24 u0 u1 r d)
+      * dihX V X (u0, u1) / (2 * Real.pi))
+    (fun X hX => by
+      rw [Set.inter_comm]
+      exact hcell X hX)
+  have hfactor : setSum s (fun X => volume.real (conicCapP24 u0 u1 r d)
+        * dihX V X (u0, u1) / (2 * Real.pi))
+      = volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi)
+        * setSum s (fun X => dihX V X (u0, u1)) := by
+    unfold setSum
+    simp only [dif_pos hsfin]
+    calc ∑ a ∈ hsfin.toFinset,
+          volume.real (conicCapP24 u0 u1 r d) * dihX V a (u0, u1) / (2 * Real.pi)
+        = ∑ a ∈ hsfin.toFinset,
+            volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi) * dihX V a (u0, u1) :=
+          Finset.sum_congr rfl fun a _ => by ring
+      _ = volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi)
+            * ∑ a ∈ hsfin.toFinset, dihX V a (u0, u1) := (Finset.mul_sum _ _ _).symm
+  have hkey : volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi)
+      * setSum s (fun X => dihX V X (u0, u1))
+      = volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi) * azim u0 u1 n1 n2 := by
+    rw [← hfactor, ← hc, hsum, hwpos.2]
+    ring
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  exact mul_left_cancel₀ (ne_of_gt (div_pos hwpos.1 h2pi)) hkey
+
+/-- HOL `REUHADY1` (REUHADY.hl:239, refinement proof over lines
+239-8356). GIANT — the dihedral-splitting bulk (d) is the single
+remaining `sorry`; the preamble (a)-(c) landed genuinely in the
+2026-09-30 REUHADY wave (private chain right above).
+REFINEMENT SKELETON vs. this file:
+(a) `barV V 1 [u0;u1]` — FILLED genuinely: `p24_barV1`
+    (`HL_LE_SQRT2_IMP_BARV_1`; PA15:578 twin is still a `ported sorry`;
+    core = `p24_affDim_voronoiList2`, bisector-plane affDim via
+    `p24_affDim_bis_pair`/`affDim_hyperplane` + packing-margin patch
+    points for the `≥ 2` direction).
+(b) the k-decomposition set `{k | ... voronoi_list V [u0;u1] = UNIONS ...}`
+    pinned to `1..3` with `3 ∈` it via Rogers `GLTVHUM_lemma1` — public
+    GENUINE copy at PackingAuto6:1108 (PA6 imported here; do NOT touch PA2's
+    private `p2g_GLTVHUM_lemma1`, another lane owns that file) — wired as
+    `p24_gltvhum3`.
+(c) per-leaf-cell: `voronoi_list V vl = {circumcenter}` via
+    `VORONOI_LIST_3_SINGLETON_EXPLICIT` (PA12:1677, CLOSED 2026-09-30,
+    this file now imports PA12) and `omega_list_n V vl 3 = circumcenter`
+    via `OMEGA_LIST_IN_VORONOI_LIST` (PA5:2296, CLOSED 2026-09-30) —
+    wired as `p24_leaf_singleton`, composed with (b) into the fan
+    structure `p24_voronoi_pair_split`.
+(d) NEEDS (the residual, HL lines ~400-8356, new work): with the fan
+    structure in hand, split `setSum` over the mcells inside the closed
+    wedge: (i) mcell4 leaf-cell realization `X = mcell 4 V [u0;u1;u2;u3]`
+    over the leaf triples of the fan (cell_params_d/china kit; the HL
+    does this via MCELL_EXPLICIT + SET_TAC plumbing; PA21's genuine
+    `MCELL_CELL_PARAMETERS_D_EXIST` kit shows the route but PA21 imports
+    PA15/PA18, so it is NOT importable here — re-derive privately);
+    (ii) the conic-cap/annulus measure argument around the edge —
+    `vol (t ∩ E)` sums over the fan partitioning the azimuth wedge,
+    `dihV = azim` conversion (`azim_dihv_same`/`azim_dihv_compl`,
+    now imported from `Kepler.Geom.LuneVolume`), and the finite fan sum
+    `∑ leaf dihX = azim u0 u1 n1 n2` (HL ~7000-8356: SUM_EQ +
+    SUM_SUPERSET + measure sandwich). LANDED 2026-10-08 (all genuine,
+    section above): the azim-additivity kit `p24_azim_base_shift` +
+    `p24_wedge_ge_split` (PA18:3532/:3566 genuine twins, re-ported here
+    since PA18 is not importable), the `setSum` final-assembly kit
+    `p24_setSum_congr`/`p24_setSum_superset_eq`/`p24_setSum_union`
+    (SUM_EQ/SUM_SUPERSET/SUM_UNION), and the (d)(i) `cell_params_d`
+    front half `p24_cellParamsD_spec` + `dihX` read-offs
+    `p24_dihX_of_k3`/`p24_dihX_of_k4` (PA21 wave-B1 first half,
+    import-free). STILL OPEN: (i) the mcell4 realization (the `k'`
+    identification with a given `k` — PA17 `AJRIPQN` rigidity, and the
+    fan-triple cells' non-nullness) and (ii) the measure sandwich that
+    identifies `∑ leaf dihX` with the azimuth split of `wedgeGe` (consume
+    `p24_wedge_ge_split` + `p24_setSum_*` there); upstream sorried
+    twins: PA7 `YIFVQDV_lemma_aff_dim` (PA7:854, ported sorry), PA15
+    `HL_LE_SQRT2_IMP_BARV_1` (PA15:578, ported sorry — superseded here).
+DOWNSTREAM (2026-09-30; shim split 2026-10-08): the two capstones
+`REUHADY_p24` / `REUHADY_version2_p24` (below) are wired to this theorem
+with every hypothesis synthesized genuinely (see the kit before the
+capstone section); their remaining content is exactly `REUHADY1` + the
+`p24_REUHADY_nondeg_azim` azimuth exclusion (2026-10-08 wave: that shim's
+own residue is narrowed to two precisely-scoped facts — the pure-metric
+exclusion `p24_nondeg_azim_ne` for `v1 ≠ v2` — GENUINE 2026-10-08/09: the coordinate
+kit `p24_tri_data` + the strengthened `p24_tri_gamma` (γ-relation
+`2wh = h² + t² − dt`) + disk/cone bounds + the final `dist v1 v2 < 2`
+contradiction) and the non-flat-cell existence `p24_exists_mcell_not_flat`
+for `v1 = v2` — GENUINE since the 2026-10-10..12 waves (branch assembly
+`p24_caseB2_branch`; see its docstring). Both branches are wired into
+`p24_REUHADY_nondeg_azim`, which is genuinely closed. The file's single
+remaining `sorry` is THIS theorem's (d) body below (the dihedral-splitting
+bulk). Statement (REUHADY_concl1_new) itself needs only PA2 defs,
+no voronoi.
+
+UPDATE 2026-10-19 (REUHADY1 二发波，lane pa24reuhady)：本体的单体黑箱 `sorry`
+退役，改为真装配（下方 proof 体）＝ (a)(b)(c) 真证前置 + (d) 前置真证
+`p24_barV2_far_noncollinear` + scaffold 3（`p24_cap_wedge_cover`，产出锥帽半径
+r d 与覆盖）+ 真装配 `p24_wedge_setSum_eq_azim`（消费 D-FIN `p24_finite_edge_cells`
+/ scaffold 1 `p24_wedge_cells_pair_null` / scaffold 2 `p24_cell_cap_dihX` /
+D-WALL `p24_cap_wedge_vol` / D6 并集-求和桥）。残余 sorryAx 入口 = 恰好三个
+scaffold，各自 docstring 记 HL 行段与闭链路径（施工图见 (d) 骨架章节头）。 -/
+theorem REUHADY1 : REUHADY_concl1_new := by
+  intro V u0 u1 vl1 vl2 n1 n2 e hs hp hu0 hu1 hne hhl he hwedge haz hvlne
+    hhl1 hhl2 hbar1 hbar2 htr1 htr2 hn1 hn2 heX
+  -- (a) genuine: the pair is barV V 1
+  have hbarV1 : barV V 1 [u0, u1] := p24_barV1 V u0 u1 hp hu0 hu1 hne hhl
+  -- (b)+(c) genuine: the pair voronoi list splits over the leaf triples
+  have hfan := p24_voronoi_pair_split V u0 u1 hs hp hu0 hu1 hne hhl
+  -- (d) genuinely derived: the far vertices are non-collinear with the edge
+  have hnc1 : ¬ Collinear3 u0 u1 n1 :=
+    p24_barV2_far_noncollinear V u0 u1 vl1 n1 hp hbar1 (htr1.trans he) hn1
+  have hnc2 : ¬ Collinear3 u0 u1 n2 :=
+    p24_barV2_far_noncollinear V u0 u1 vl2 n2 hp hbar2 (htr2.trans he) hn2
+  -- (d) scaffold chapters (each NEEDS item is ledgered at its own docstring):
+  -- cover/corridor (scaffold 3) produces the cone-cap radii r d
+  obtain ⟨r, d, hr, hr1, hd, hd1, hcov⟩ :=
+    p24_cap_wedge_cover V u0 u1 vl1 vl2 n1 n2 e hs hp hu0 hu1 hne hhl he hwedge haz
+      hvlne hhl1 hhl2 hbar1 hbar2 htr1 htr2 hn1 hn2 heX hbarV1 hfan
+  -- genuine assembly over the three scaffold chapters
+  exact p24_wedge_setSum_eq_azim V u0 u1 n1 n2 e r d hs hp hu0 hu1 hne hr hr1 hd hd1
+    hnc1 hnc2 (p24_finite_edge_cells V e u0 u1 hp hs he)
+    (p24_wedge_cells_pair_null V u0 u1 n1 n2 e hs hp hu0 hu1 hne he hnc1 hnc2)
+    hcov
+    (fun X hX => p24_cell_cap_dihX V u0 u1 n1 n2 e X r d hs hp hu0 hu1 hne he
+      hr hr1 hd hd1 hX)
+
 
 /-! ## 闭楔不交与假设合成 kit（2026-09-30 fill，capstone 消费的私件群） -/
 
@@ -7084,5 +7637,6 @@ theorem GRUTOTI1_concl_p24_pub : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3),
     setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}
         (fun t => dihX V t (u0, u1)) = 2 * Real.pi :=
   GRUTOTI1_concl_p24
+
 
 end Kepler.Text
