@@ -2016,44 +2016,334 @@ private theorem p24_vor_pair_margin (V : Set V3) (u0 u1 : V3) (hp : Packing V)
         linarith [dist_comm x (midpoint ℝ u0 u1)]
       linarith
 
-/- D1(ii) 锥走廊（HL REUHADY.hl :1251-1530）——**本浪只留施工图，未落码**
-（三次编译迭代未收敛，余量让位给 D1(i)/(iii)；完整初等证明如下，下一浪照抄
-即得）：设 m = 中点、dm = dist(m,u0)、margin 参数 d > 0（(i) 的产出），
-倾角 `b = ‖u0−u1‖/√(‖u0−u1‖²+4d²) ∈ (0,1)`（恒等式 `b²(dm²+d²) = dm²` 由
-hb 平方 + d01 = 2·dm 圈闭）。对 `x ∈ rconeGt u0 u1 b ∩ ball(u0,1)`，x ≠ u0：
-置 v = x − u0（t = ‖v‖ ∈ (0,1)）、`vdot = v ⬝ᵥ (u1−u0) > t·‖u0−u1‖·b > 0`
-（Cauchy–Schwarz 给上界 vdot ≤ t·‖u0−u1‖），射线-等距面交点参数
-`s = ‖u0−u1‖²/(2·vdot)`，y = u0 + s•v。五条事实（全部纯内积代数，本轮草稿
-已推净）：(1) s ≥ 1：2·vdot ≤ 2·t·‖u0−u1‖ ≤ ‖u0−u1‖²（d01 ≥ 2）；(2) y 在
-平分面：‖y−u1‖² = s²t² − 2·s·vdot + ‖u0−u1‖² = s²t²（s 的定义消去）；(3)
-‖y−m‖² = s²t² − dm²（y−m = s•v − (u1−u0)/2，内积项 = d01²/4 = ‖m−u0‖²，
-展开后相消）；(4) `b·(s·t) < dm`：等价于 s 的定义代入后恰为 hvx（vdot >
-t·‖u0−u1‖·b）两端乘 ‖u0−u1‖；(5) 由 (3)+(4)+b²(dm²+d²) = dm²：
-b²‖y−m‖² < b²d² ⟹ dist(y,m) < d。于是 y 等距（(2)）且近中点（(5)），
-`hmargin` 给 y ∈ voronoiList V [u0,u1]；而 x = u0 + (1/s)•(y−u0)、
-1/s ∈ [0,1]（(1)），即 `x ∈ convexHull ℝ {u0, y}`（convexHull_pair +
-lineMap image）。∎Lean 落码时注意：`⅟2`/`2⁻¹` 形（midpoint 展开为
-AffineMap.lineMap，用 lineMap_apply_module'）；hmargin 应用处的 dist_self
-先 rw；hvx 从 rconeGt 成员提出时 dist u1 u0 与 dist u0 u1 需 dist_comm 对齐；
-内积-点积转换用 `inner_eq_dot` 的 rw 形（ofLp 展开会破 syntactic rw）；
-`mem_segment_iff` 在本 Mathlib 不存在，走 `convexHull_pair` + lineMap image。
--/
+/-! ### D1(ii) 锥走廊 + D1(iii) 扇叶桥（2026-10-19 五发波，lane pa24reuhady）
 
-/- D1(iii) 扇叶桥（HL REUHADY.hl :1531-1629）——**本浪只留施工图，未落码**
-（凸包并集塌缩 conv (insert u0 (conv S)) = conv (insert u0 S) 的
-mono/antisymm 装配经三次编译迭代未收敛；完整路线：hy ∈ hfan 抽叶
-⟨T, hT, hyT⟩ → ⟨vl, hbar, htr⟩（barV V 3 + truncate 1 = [u0,u1]）→
-BARV_3_EXPLICIT 换表 [v0;v1;v2;v3]（v0 = u0 由 injection htr）→
-p24_leaf_singleton 给 ω₃ = circumcenter (setOfList vl) →
-x ∈ conv {u0, y} ⊆ conv (insert u0 (conv {ω₁,ω₂,cc})) = conv (insert u0
-{ω₁,ω₂,cc})（conv-mono：{u0,y} ⊆ insert u0 (conv S) 与
-S ⊆ insert u0 (conv S)（经 subset_convexHull ℝ S）两个方向，再
-convHull_mono-antisymm；凸包并集塌缩 = 同法）→ 顶点集包含
-insert u0 {ω₁,ω₂,cc} ⊆ ω-image{0..3}（ω₀ = v0 = u0、ω₃ = cc）→
-convHull_mono 得 x ∈ rogers V vl。∎下一浪照抄；注意 `set S := ... with
-hSdef` 的 let-fvar 会让 rw [hSdef] 与 mem_insert_iff 的 insert-结构展开失灵
-——直接内联集合表达式；`mem_segment_iff` 不存在于本 Mathlib，走
-convexHull_pair + lineMap image（AffineMap.lineMap_apply_module'）。-/
+四发波施工图（HL REUHADY.hl :1251-1629）落码，坑位笔记全数绕开：midpoint 展开
+用 `lineMap_apply_module'` 形；rconeGt 成员先 `dist_comm` 对齐再收；内积-点积
+转换走 `inner_eq_dot` 的 rw 形（不碰 ofLp 展开）；线段成员无 `mem_segment_iff`，
+走 `convexHull_pair` + `segment` 原始 ∃a b 形；标量组合用 `add_smul` 正向 +
+`← add_assoc` 重联。D1(ii) 拆两层：抽象锥级 `b`（`hkey : b²(dm²+d²)=dm²`）的
+几何壳 + sqrt 级实例化壳，编译错误定位面最小。五条中间事实（施工图 (1)-(5)）
+全部落进 `hy0/hy1/hmid/hbst/hsq2`。 -/
+
+/-- D1(ii) 锥走廊（几何壳；HL REUHADY.hl :1251-1530）。短棱 `u0u1` 上，锥级 `b`
+满足 `b²(dm²+d²) = dm²`（dm = 半棱长，`hkey`）且 `0 < b`，则严格锥 ∩ 单位球内
+任一点 `x` 落在 `[u0, y]` 线段上，其中 `y` 等距于 u0,u1 且近中点 —— 于是由
+margin（D1(i) 的产出，抽象为 `hmargin`）落进对的 Voronoi 胞。射线-等距面交点
+`y = u0 + s•(x-u0)`，`s = d01²/(2·(v⬝ᵥ(u1−u0)))`。 -/
+private theorem p24_rcone_corridor (V : Set V3) (u0 u1 : V3) (b d : ℝ)
+    (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hu01 : u0 ≠ u1) (hd : 0 < d)
+    (hb0 : 0 < b) (hkey : b ^ 2 * ((dist u0 u1 / 2) ^ 2 + d ^ 2) = (dist u0 u1 / 2) ^ 2)
+    (hmargin : ∀ z : V3, dist z u0 = dist z u1 →
+      dist z (midpoint ℝ u0 u1) ≤ d → z ∈ voronoiList V [u0, u1])
+    (x : V3) (hball : dist x u0 ≤ 1) (hcone : x ∈ rconeGt u0 u1 b) :
+    ∃ y : V3, x ∈ convexHull ℝ {u0, y} ∧ y ∈ voronoiList V [u0, u1] ∧
+      dist y (midpoint ℝ u0 u1) ≤ d := by
+  have hd2 : (2:ℝ) ≤ dist u0 u1 := by
+    by_contra hlt
+    exact hu01 (hp u0 hu0 u1 hu1 (not_le.1 hlt))
+  have hd01p : 0 < dist u0 u1 := dist_pos.mpr hu01
+  have hblt : b < 1 := by
+    have h1 : (dist u0 u1 / 2) ^ 2 < (dist u0 u1 / 2) ^ 2 + d ^ 2 := by nlinarith
+    have h2 : b ^ 2 < 1 := by nlinarith
+    nlinarith
+  obtain ⟨hdm0, -⟩ := p24_midpair_dist u0 u1
+  -- 锥成员展开，dist 对齐（坑位：rconeGt 用 dist u1 u0 形）
+  simp only [rconeGt, Set.mem_setOf_eq] at hcone
+  rw [dist_comm u1 u0] at hcone
+  set d01 : ℝ := dist u0 u1 with hd01def
+  -- 点积收成不透明局部 vdot（坑位：ofLp 协变位置两种规范化形不 syntactic 匹配，
+  -- 一律经 vdot 原子交换；inner→dot 的桥用 exact 走 defeq）
+  obtain ⟨vdot, hvdot⟩ : ∃ c : ℝ, c = (x - u0) ⬝ᵥ (u1 - u0) := ⟨_, rfl⟩
+  rw [← hvdot] at hcone
+  have hinner : inner ℝ (x - u0) (u1 - u0) = vdot := by
+    rw [inner_eq_dot]; exact hvdot.symm
+  -- Cauchy–Schwarz：vdot ≤ t·d01
+  have hcs : vdot ≤ dist x u0 * d01 := by
+    have h := real_inner_le_norm (x - u0) (u1 - u0)
+    rw [hinner, ← dist_eq_norm x u0, ← dist_eq_norm u1 u0, dist_comm u1 u0] at h
+    exact h
+  -- 点积为正、x ≠ u0（t > 0）
+  have hdistx : (0:ℝ) ≤ dist x u0 := dist_nonneg
+  have hvd0 : 0 < vdot := by
+    nlinarith [mul_nonneg hdistx hb0.le, hcone]
+  have ht0 : 0 < dist x u0 := by
+    nlinarith
+  have hL0 : (2:ℝ) * vdot ≠ 0 :=
+    mul_ne_zero two_ne_zero hvd0.ne'
+  -- 射线-等距面交点参数 s ≥ 1（事实 (1)）
+  set s : ℝ := d01 ^ 2 / (2 * vdot) with hsdef
+  have hs0 : 0 < s := by
+    rw [hsdef]; exact div_pos (pow_pos hd01p 2) (mul_pos two_pos hvd0)
+  have hs1 : 1 ≤ s := by
+    have hA : dist x u0 * d01 ≤ d01 := by
+      nlinarith [hball, hdistx, hd2,
+        mul_nonneg (by linarith : (0:ℝ) ≤ 1 - dist x u0) (by linarith : (0:ℝ) ≤ d01)]
+    have hB : (2:ℝ) * d01 ≤ d01 ^ 2 := by
+      nlinarith [hd2, hd01p,
+        mul_nonneg (by linarith : (0:ℝ) ≤ d01 - 2) (by linarith : (0:ℝ) ≤ d01)]
+    rw [hsdef]
+    exact (one_le_div (mul_pos two_pos hvd0)).mpr (by linarith [hcs, hA, hB])
+  -- y = u0 + s•(x-u0) 的两条距离（事实 (2)：y 在平分面）
+  have hy0 : dist (u0 + s • (x - u0)) u0 = s * dist x u0 := by
+    have hstep : ((u0 + s • (x - u0) : V3) - u0) = s • (x - u0) := by abel
+    calc dist (u0 + s • (x - u0)) u0 = ‖(u0 + s • (x - u0)) - u0‖ := dist_eq_norm _ _
+      _ = ‖s • (x - u0)‖ := by rw [hstep]
+      _ = s * ‖x - u0‖ := by rw [norm_smul, Real.norm_eq_abs, abs_of_pos hs0]
+      _ = s * dist x u0 := by rw [dist_eq_norm]
+  have hy1 : dist (u0 + s • (x - u0)) u1 = s * dist x u0 := by
+    have hsL : s * vdot = d01 ^ 2 / 2 := by
+      rw [hsdef]; field_simp [hL0]
+    have hv : ‖s • (x - u0)‖ ^ 2 = (s * dist x u0) ^ 2 := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos hs0, ← dist_eq_norm]
+    have hw : ‖u1 - u0‖ ^ 2 = d01 ^ 2 := by
+      rw [← dist_eq_norm u1 u0, dist_comm u1 u0]
+    have hfin : Real.sqrt (‖s • (x - u0) - (u1 - u0)‖ ^ 2) = s * dist x u0 := by
+      have hns := norm_sub_sq_real (s • (x - u0)) (u1 - u0)
+      rw [real_inner_smul_left (x - u0) (u1 - u0) s, hinner] at hns
+      rw [hv, hw, hsL] at hns
+      have hsimp : (s * dist x u0) ^ 2 - 2 * (d01 ^ 2 / 2) + d01 ^ 2
+          = (s * dist x u0) ^ 2 := by ring
+      rw [hsimp] at hns
+      rw [hns, Real.sqrt_sq (mul_nonneg hs0.le dist_nonneg)]
+    have h2 := hfin
+    rw [Real.sqrt_sq (norm_nonneg (s • (x - u0) - (u1 - u0)))] at h2
+    rw [dist_eq_norm,
+      show ((u0 + s • (x - u0) : V3) - u1) = s • (x - u0) - (u1 - u0) from by abel]
+    exact h2
+  -- 事实 (3)：‖y − m‖² = (s·t)² − dm²
+  have hw2 : (2:ℝ) • (midpoint ℝ u0 u1 - u0) = u1 - u0 := by
+    have h2m : (2:ℝ) • midpoint ℝ u0 u1 = u0 + u1 := by
+      rw [midpoint, AffineMap.lineMap_apply_module', smul_add, smul_smul]
+      have h21 : (2:ℝ) * ⅟(2:ℝ) = 1 := by norm_num
+      rw [h21, one_smul, two_smul]
+      abel
+    have hss : (2:ℝ) • (midpoint ℝ u0 u1 - u0)
+        = (2:ℝ) • midpoint ℝ u0 u1 - (2:ℝ) • u0 := by rw [smul_sub]
+    rw [hss, h2m, two_smul]
+    abel
+  have hcd : inner ℝ (x - u0) (midpoint ℝ u0 u1 - u0) = vdot / 2 := by
+    have h3 : inner ℝ (x - u0) ((2:ℝ) • (midpoint ℝ u0 u1 - u0))
+        = 2 * inner ℝ (x - u0) (midpoint ℝ u0 u1 - u0) := real_inner_smul_right _ _ 2
+    rw [hw2, hinner] at h3
+    rw [h3]
+    ring
+  have hcdn : ‖midpoint ℝ u0 u1 - u0‖ = d01 / 2 := by
+    have h1 : ‖midpoint ℝ u0 u1 - u0‖ = dist (midpoint ℝ u0 u1) u0 :=
+      (dist_eq_norm _ _).symm
+    rw [h1, hdm0]
+  have hmid : ‖((u0 + s • (x - u0) : V3)) - midpoint ℝ u0 u1‖ ^ 2
+      = (s * dist x u0) ^ 2 - (d01 / 2) ^ 2 := by
+    have hsL2 : s * (vdot / 2) = d01 ^ 2 / 4 := by
+      have hsl : s * vdot = d01 ^ 2 / 2 := by
+        rw [hsdef]; field_simp [hL0]
+      rw [← mul_div_assoc, hsl, div_div]
+      norm_num
+    have hv : ‖s • (x - u0)‖ ^ 2 = (s * dist x u0) ^ 2 := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos hs0, ← dist_eq_norm]
+    have hns := norm_sub_sq_real (s • (x - u0)) (midpoint ℝ u0 u1 - u0)
+    rw [real_inner_smul_left (x - u0) (midpoint ℝ u0 u1 - u0) s, hcd] at hns
+    rw [hsL2] at hns
+    have hc2 : ‖midpoint ℝ u0 u1 - u0‖ ^ 2 = (d01 / 2) ^ 2 := by rw [hcdn]
+    rw [hv, hc2] at hns
+    have hstep : ((u0 + s • (x - u0) : V3) - midpoint ℝ u0 u1)
+        = s • (x - u0) - (midpoint ℝ u0 u1 - u0) := by abel
+    rw [hstep, hns]
+    ring
+  -- 事实 (4)：b·(s·t) < dm（恰为 hcone 的整式重排）
+  have hbst : b * (s * dist x u0) < d01 / 2 := by
+    have h1 : b * (s * dist x u0) = (d01 ^ 2 * b * dist x u0) / (2 * vdot) := by
+      rw [hsdef]; field_simp [hL0]
+    rw [h1, div_lt_iff₀ (mul_pos two_pos hvd0)]
+    nlinarith [mul_lt_mul_of_pos_right hcone hd01p]
+  -- 事实 (5)：b²‖y−m‖² < b²d² ⟹ dist(y,m) < d
+  have hnp : (0:ℝ) ≤ b * (s * dist x u0) :=
+    mul_nonneg hb0.le (mul_nonneg hs0.le ht0.le)
+  have hsq1 : (b * (s * dist x u0)) ^ 2 < (d01 / 2) ^ 2 := by
+    have hc0 : (0:ℝ) < d01 / 2 := by linarith
+    have hvp : (0:ℝ) < b * (s * dist x u0) := mul_pos hb0 (mul_pos hs0 ht0)
+    have h1 : b * (s * dist x u0) * (b * (s * dist x u0))
+        < (d01 / 2) * (b * (s * dist x u0)) := mul_lt_mul_of_pos_right hbst hvp
+    have h2 : b * (s * dist x u0) * (d01 / 2) < (d01 / 2) * (d01 / 2) :=
+      mul_lt_mul_of_pos_right hbst hc0
+    calc (b * (s * dist x u0)) ^ 2
+        = b * (s * dist x u0) * (b * (s * dist x u0)) := by ring
+      _ < (d01 / 2) * (b * (s * dist x u0)) := h1
+      _ = b * (s * dist x u0) * (d01 / 2) := by ring
+      _ < (d01 / 2) * (d01 / 2) := h2
+      _ = (d01 / 2) ^ 2 := by ring
+  have h5 : b ^ 2 * (s * dist x u0) ^ 2 = (b * (s * dist x u0)) ^ 2 := by ring
+  have hsq2 : ‖((u0 + s • (x - u0) : V3)) - midpoint ℝ u0 u1‖ ^ 2 < d ^ 2 := by
+    nlinarith [hsq1, hkey, h5, hb0]
+  -- 结论三支：线段成员 + margin + 距离
+  have hstrict : dist (u0 + s • (x - u0)) (midpoint ℝ u0 u1) < d := by
+    have h4 : Real.sqrt (‖((u0 + s • (x - u0) : V3)) - midpoint ℝ u0 u1‖ ^ 2)
+        < Real.sqrt (d ^ 2) := Real.sqrt_lt_sqrt (sq_nonneg _) hsq2
+    rw [Real.sqrt_sq (norm_nonneg ((u0 + s • (x - u0) : V3) - midpoint ℝ u0 u1)),
+      Real.sqrt_sq hd.le] at h4
+    rw [dist_eq_norm]
+    exact h4
+  refine ⟨u0 + s • (x - u0), ?_, ?_, ?_⟩
+  · -- x ∈ conv {u0, y}（1/s ∈ [0,1]，segment 原始形；标量组合 module 收口）
+    simp only [convexHull_pair, segment, Set.mem_setOf_eq]
+    refine ⟨1 - 1/s, 1/s, ?_, ?_, ?_, ?_⟩
+    · have h11 : 1 / s ≤ 1 := (div_le_one hs0).mpr hs1
+      linarith
+    · positivity
+    · ring
+    · have hcancel : (1/s) * s = 1 := by field_simp
+      rw [smul_add, smul_smul, hcancel, one_smul]
+      module
+  · -- y 落进对的 Voronoi 胞（margin）
+    refine hmargin (u0 + s • (x - u0)) ?_ (le_of_lt hstrict)
+    rw [hy0, hy1]
+  · exact le_of_lt hstrict
+
+/-- D1(ii) 实例化壳：锥级取 `b = d01/√(d01²+4d²)`（施工图的倾角），此时
+`b ∈ (0,1)` 与 `b²(dm²+d²) = dm²` 由 `Real.sq_sqrt` 一次 field_simp 圈闭，
+margin 取 D1(i) `p24_vor_pair_margin` 的产出（抽象为 `hmargin`）。 -/
+private theorem p24_cone_corridor (V : Set V3) (u0 u1 : V3) (d : ℝ)
+    (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hu01 : u0 ≠ u1) (hd : 0 < d)
+    (hmargin : ∀ z : V3, dist z u0 = dist z u1 →
+      dist z (midpoint ℝ u0 u1) ≤ d → z ∈ voronoiList V [u0, u1])
+    (x : V3) (hball : dist x u0 ≤ 1)
+    (hcone : x ∈ rconeGt u0 u1 (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2))) :
+    ∃ y : V3, x ∈ convexHull ℝ {u0, y} ∧ y ∈ voronoiList V [u0, u1] ∧
+      dist y (midpoint ℝ u0 u1) ≤ d := by
+  have hd01p : 0 < dist u0 u1 := dist_pos.mpr hu01
+  have hsqpos : 0 < dist u0 u1 ^ 2 + 4 * d ^ 2 := by positivity
+  have hb0 : 0 < dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) :=
+    div_pos hd01p (Real.sqrt_pos.mpr hsqpos)
+  have hkey : (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2)) ^ 2
+      * ((dist u0 u1 / 2) ^ 2 + d ^ 2) = (dist u0 u1 / 2) ^ 2 := by
+    rw [div_pow, Real.sq_sqrt hsqpos.le]
+    field_simp
+    ring
+  exact p24_rcone_corridor V u0 u1 _ d hp hu0 hu1 hu01 hd hb0 hkey hmargin x hball hcone
+
+/-- D1(iii) 扇叶桥（HL REUHADY.hl :1531-1629）：走廊点 `x ∈ conv {u0, y}`、
+`y` 属于某叶表的凸包 `conv {ω₁, ω₂, cc}`，则 `x` 落进该叶表的 Rogers 单形。
+路线：`conv {u0,y} ⊆ conv (ω-image)` 单向 mono（四发波施工图里的
+antisymm 方向不需要——目标是 `rogers V vl` 的原始定义形）；ω₀ = hdV = v0 =
+u0（truncate 显式形 + injection）、ω₃ = cc（`p24_leaf_singleton`）。 -/
+private theorem p24_fan_leaf_bridge (V : Set V3) (u0 u1 : V3) (vl : List V3) (x y : V3)
+    (hs : saturated V) (hp : Packing V) (hbar : barV V 3 vl)
+    (htr : truncateSimplex 1 vl = [u0, u1])
+    (hy : y ∈ convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2,
+      circumcenter (setOfList vl)})
+    (hxy : x ∈ convexHull ℝ {u0, y}) :
+    x ∈ rogers V vl := by
+  obtain ⟨v0, v1, v2, v3, hvllist⟩ := BARV_3_EXPLICIT V vl hbar
+  obtain ⟨a, -, ha2, ha3⟩ := p24_leaf_singleton V vl hs hp hbar
+  have htr1 : truncateSimplex 1 vl = [v0, v1] := by
+    rw [hvllist]
+    exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+  rw [htr] at htr1
+  obtain ⟨hv0, -⟩ := by simpa using htr1
+  have h0 : omegaListN V vl 0 = u0 := by
+    have he : omegaListN V vl 0 = hdV vl := rfl
+    rw [he, hvllist]
+    exact hv0.symm
+  have hlen : vl.length = 4 := by rw [hvllist]; rfl
+  -- 凸包塌缩链（四发波施工图的 insert-∪ 形）：x ∈ conv {u0,y} ⊆
+  -- conv ({u0} ∪ conv T) = conv ({u0} ∪ T) ⊆ conv S = rogers，T = {ω₁,ω₂,cc}、
+  -- S = ω-image{0..3}（u0 = ω₀ 由 h0、ω₃ = cc 由 p24_leaf_singleton）
+  have hu0S : u0 ∈ omegaListN V vl '' {j : ℕ | j < vl.length} :=
+    ⟨0, by simp [hlen], h0⟩
+  have hx2 : x ∈ convexHull ℝ (({u0} : Set V3) ∪ convexHull ℝ {omegaListN V vl 1,
+      omegaListN V vl 2, circumcenter (setOfList vl)}) := by
+    refine convexHull_mono ?_ hxy
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz0 | hz0
+    · rw [hz0]; exact Set.mem_union_left _ (Set.mem_singleton u0)
+    · rw [hz0]; exact Set.mem_union_right _ hy
+  rw [convexHull_convexHull_union_right] at hx2
+  refine convexHull_mono ?_ hx2
+  intro w hw
+  simp only [Set.mem_insert_iff, Set.mem_union, Set.mem_singleton_iff] at hw
+  rcases hw with hw0 | hw1 | hw2 | hw3
+  · rw [hw0]; exact hu0S
+  · rw [hw1]; exact ⟨1, by simp [hlen], rfl⟩
+  · rw [hw2]; exact ⟨2, by simp [hlen], rfl⟩
+  · rw [hw3]; exact ⟨3, by simp [hlen], ha3.trans ha2⟩
+
+/-! ### scaffold 3 min-max 结构装配 + RH3 备选路线侦察（2026-10-19 五发波记档；
+HL REUHADY.hl :1705-2386（P1/r1、P2/r2、r、P3/d1）与 :2386-2790（P4/d2、
+d = max c (max d1 d2)，界标 :2783）的 Lean 侧施工结构。零新语句，引理清单供
+六发波照单落码。）
+
+**已落消费链（本波真证，三条即走廊-叶桥全链）**：
+- margin (i)　`p24_vor_pair_margin`：等距点近中点球 ⊆ `voronoiList V [u0,u1]`；
+- 走廊 (ii)　`p24_cone_corridor`：`x ∈ rconeGt u0 u1 (d01/√(d01²+4d²)) ∩
+  ball(u0,1)` ⟹ ∃ y, `x ∈ conv {u0,y}` ∧ `y ∈ voronoiList V [u0,u1]` ∧
+  `dist y m ≤ d`；
+- 叶桥 (iii)　`p24_fan_leaf_bridge`：`y ∈ conv {ω₁,ω₂,cc}`（叶 vl）+
+  `x ∈ conv {u0,y}` ⟹ `x ∈ rogers V vl`。
+即：C = cap ∩ wedge 固定侧内每点 x ⟹ ∃ vl（barV V 3, truncateSimplex 1 vl =
+[u0,u1]），`x ∈ rogers V vl`。剩余 = 把 `rogers V vl` 折进某 `mcell i V ul` 并
+指认正确楔侧 —— 正是 HL 的 P1/P2/P3(4) 半径-角度 min-max 机制（hwedge 硬核：
+轴与两边界方位平面同属 W1∩W2，heX 二分对边界扇上的点不判定）。
+
+**HL :1705-2386 结构逐段（Lean 侧积木对照）**：
+- [F] 有限性支（:1705-1755）：叶表族 {vl | barV V 3 vl ∧ truncate 1 vl =
+  [u0;u1] ∧ 四点 ∈ V ∩ ball(u0,4)} 有限。Lean：`p24_finite_inter_ball_at`
+  （本文件）+ `p24_barV3ImpFinite1/2`（BARV_3_IMP_FINITE 链私拷）+
+  `BARV_3_EXPLICIT`；缺 = 四点表的 List 有限组合（PA15
+  FINITE_SET_LIST_LEMMA/FINITE_PACK_LEMMA 链私拷，~40 行）。
+- [r1]（:1711-1830）P1 = {f1 vl | barV V 3 vl ∧ ¬null (mcell 3 V vl ∩ C) ∧
+  truncate 1 vl = [u0;u1]}，f1 vl = dist(u0, closestPoint (affineSpan ℝ
+  {u1, elV vl 2, mxi V vl}) u0)；r1 = min P1（∅ ↦ 1）；`0 < r1` 证法：u0 ∉
+  affineSpan {u1, elV 2, mxi}（反设则 mcell 3 V vl ⊆ 该 3-平面，经
+  MCELL_EXPLICIT + CONVEX_HULL_SUBSET_AFFINE_HULL，与 ¬null(mcell 3 ∩ C) 矛盾
+  ——3-平面零体积）。Lean 缺 = closestPoint 反射律私拷
+  （CLOSEST_POINT_REFL：p ∈ 闭集 ⟺ closestPoint S p = p）+ 平面零体积私拷
+  （NEGLIGIBLE_AFFINE_HULL_3；scaffold 2 的 (α) 支 COPLANAR_IMP_NEGLIGIBLE
+  可共享）。
+- [r2]（:1857-1975）同构，mcell 4、f2 用 elV vl 3 替 mxi V vl（壳 =
+  affineSpan {u1, elV 2, elV 3}）。
+- [r]（:1977-1982）r = min 1 (min r1 r2)；0 < r 纯序算术。
+- [d1]（:1984-2090）P3 = {f3 vl | …mcell 3…}，f3 = ((smallestAngleLine
+  (elV vl 2) (mxi V vl) u0 u1 − u0) ⬝ᵥ (u1−u0)) / (‖·‖·‖u1−u0‖)（方向余弦）；
+  d1 = max P3（∅ ↦ c）；d1 < 1：smallestAngleLine ∈ conv {elV 2, mxi}
+  （SMALLEST_ANGLE_IN_CONVEX_HULL）+ Cauchy–Schwarz。Lean：smallestAngleLine
+  在 PA15:1423，PA24 不可 import PA15（wedge 遮蔽），须私拷定义 + 该凸包成员
+  引理（PA23:2585-2900 有同款 f3 消费先例可抄）。
+- [d2]+[d]（:2386-2790）P4/d2 同构 mcell 4（smallestAngleLine (elV 2) (elV 3)）；
+  d = max c (max d1 d2)，d < 1（c = max b (hl[u0;u1]/√2)，b = 走廊倾角，
+  本波 `p24_cone_corridor` 已按 b < 1 圈闭其一角容差面）。
+- 消费/排除链：cap 固定侧点 x → 走廊+叶桥给 vl 与 x ∈ rogers V vl →
+  rogers V vl ⊆ mcell i V vl（MCELL_EXPLICIT 逐臂，与 scaffold 2 共享消费面）
+  → 若 x 只能落在非本侧叶 vl′ 的 rogers 单形，则 mcell i V vl′ ∩ C 非零体积
+  给 vl′ ∈ P_i，min-max 把 f_i vl′ / f3 vl′ 钉进 r/d 容差，与半径比较矛盾 →
+  每点只落本侧叶 → p24_cap_wedge_cover 的 ∃ r d 封口。
+
+**六发波处方（按依赖序；估行数为 Lean 私拷+装配量级）**：
+1. [F] 叶表有限性（~60 行；积木全在树）；
+2. [r1] f1 正性（~150 行；closestPoint 反射私拷 + MCELL_EXPLICIT 消费与
+   scaffold 2 的 (α)/(β) 共享）；
+3. [r2] 同构改造（~40 行）；
+4. [d1]/[d2] smallestAngleLine 私拷 + 方向余弦上界（~200 行）；
+5. p24_cap_wedge_cover 装配（rogers ⊆ mcell 逐臂 + 侧指认 min-max 消费，
+   ~300 行；与 scaffold 2 的 dihX 比例式共享 MCELL_EXPLICIT 消费面）。
+scaffold 2（p24_cell_cap_dihX）与 scaffold 3 收口顺序可互换；建议先 2 后 3
+（scaffold 2 的逐臂比例式不依赖 min-max，且其 MCELL_EXPLICIT 消费面是 3 的
+第 5 步的先导）。
+
+**RH3 塔换路线可行性（备选侦察，不落码）**：
+- 提法：以 ω-链（omegaListN vl 2 = truncate 2 外接圆心、ω₃ = cc =
+  p24_leaf_singleton 的外心）替换 min-max 定位件 closestPoint(affineSpan
+  {u1, elV 2, mxi/elV 3})。
+- 可省项：ω₃ = 外心恒等式已在树（p24_leaf_singleton），f1 > 0 正性支的
+  closestPoint 反射律可望省 ~50 行（u0 ∉ affineSpan {u1, elV 2, cc} 直接由
+  mcell 3 ∩ C 非零体积 + rogers ⊆ mcell3 推出）。
+- 不可行项：整塔换线需要 affineSpan {u1, elV 2, mxi} = affineSpan {u1, ω₂, ω₃}
+  的壳换元——mxi ∈ conv {ω₂,ω₃}（PA2:311 定义即然）给出
+  affineSpan {u1, elV 2, mxi} ⊆ affineSpan {u1, elV 2, ω₂, ω₃}，但反向包含
+  需要 elV 2 与 ω₂ 的共面冗余，无先验事实（HL 亦未走此路，:1705-2790 全程用
+  closestPoint 形）。估 ~200 行无把握成本换 ~50 行节省，止损。
+- 结论：主路线照 HL closestPoint 形走，仅正性支按上式微简化；RH3 全塔换线
+  记档止损。 -/
 
 /-! ### scaffold 三 sorry（NEEDS 记账；三发波后残余债务 = scaffold 2/3 两条） -/
 /-! ### scaffold 三 sorry（NEEDS 记账；三发波后残余债务 = scaffold 2/3 两条） -/
@@ -2165,13 +2455,15 @@ private theorem p24_cap_wedge_cover (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3
       ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
         x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e := by
   -- NEEDS (d)-cover/corridor: see docstring. HL REUHADY.hl 345-2386.
-  -- 四发波（2026-10-19）推进：D1(i) margin 已真证落码（`p24_vor_pair_margin`，
-  -- 等距点近中点球 ⊆ 对胞）；D1(ii) 锥走廊与 D1(iii) 扇叶桥留有完整施工图
-  -- （见上方两则块注释，含全部中间事实与坑位记录）。闭链残余 =
-  -- (ii)+(iii) 落码 + SLTSTLO1 逐叶分派 + edgeX 装配 + **楔侧指认 min-max**
-  -- （HL :1705-2386 的 P1/P2/P3 半径集——轴与两边界方位平面同属
-  -- W1 ∩ W2（hwedge），heX 二分对边界扇上的点不判定，须以半径 min-max
-  -- 排除非本侧叶。此为 scaffold 3 的最后硬核，多会话量级）。
+  -- 五发波（2026-10-19）推进：D1(i) margin（`p24_vor_pair_margin`）+ D1(ii)
+  -- 锥走廊（`p24_rcone_corridor`/`p24_cone_corridor`：锥 ∩ 单位球 ⟹ ∃y,
+  -- x ∈ conv {u0,y} ∧ y ∈ voronoiList [u0,u1] ∧ dist y m ≤ d）+ D1(iii) 扇叶桥
+  -- （`p24_fan_leaf_bridge`：y ∈ 叶凸包 + x ∈ conv {u0,y} ⟹ x ∈ rogers V vl）
+  -- 全部真证落码（消费链 = hmargin + hfan 抽叶 + 桥）。闭链残余 =
+  -- **楔侧指认 min-max**（HL :1705-2386 的 P1/P2/P3 半径集——轴与两边界方位
+  -- 平面同属 W1 ∩ W2（hwedge），heX 二分对边界扇上的点不判定，须以半径
+  -- min-max 排除非本侧叶）+ rogers V vl ⊆ mcell 的逐臂装配 + edgeX 装配
+  -- （结构装配与引理清单见 p24_fan_leaf_bridge 上方块注释；六发波处方）。
   sorry
 
 /-! ### (d) 装配章（真证，零 sorry）：D6+D7 的家族求和恒等式 -/
