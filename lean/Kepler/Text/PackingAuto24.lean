@@ -1904,6 +1904,159 @@ private theorem p24_cap_wedge_vol (u0 u1 n1 n2 : V3) (r d : ℝ)
   ⟨volumeConicCapPos hr hd hd1 hne,
     volumeConicCapWedgeGeVsConicCap u0 u1 n1 n2 r d hd hd1 ⟨hr, hr1⟩ h1 h2⟩
 
+/-! ### D1 走廊真证子件（2026-10-19 四发波，lane pa24reuhady；HL REUHADY.hl
+345-1250 的三条独立移植）：(i) margin——平分面上的等距点，其中点近邻整部落进
+对的 Voronoi 胞（HL :733-830 的 8-界分离 Lean 形；**等距条件不可省**——中点
+球内非等距点不属两闭胞之交）；(ii) 锥走廊——严格锥 ∩ 单位球的点在 `[u0, y]`
+线段上且 `y` 等距近中点（射线-等距面交点，倾角
+b = ‖u0−u1‖/√(‖u0−u1‖²+4d²) 恰匹配 margin 的角容差）；(iii) 扇叶桥——走廊点
+落在某叶表的 Rogers 单形内（hfan 抽叶 + ω₃ = 外心 + hull 并集恒等式）。 -/
+/-- 中点到对点的距离（两对称形）。 -/
+private theorem p24_midpair_dist (u0 u1 : V3) :
+    dist (midpoint ℝ u0 u1) u0 = dist u0 u1 / 2
+    ∧ dist (midpoint ℝ u0 u1) u1 = dist u0 u1 / 2 := by
+  have h20 : (0:ℝ) < (2:ℝ) := by norm_num
+  refine ⟨?_, ?_⟩
+  · rw [dist_comm, dist_left_midpoint, Real.norm_eq_abs, abs_of_pos h20, inv_mul_eq_div]
+  · rw [dist_comm, dist_right_midpoint, Real.norm_eq_abs, abs_of_pos h20, inv_mul_eq_div]
+
+/-- D1(i) margin（HL REUHADY.hl :733-830）：`u0u1` 短棱（`dist < 2√2`）处，
+平分面上的等距点其近中点邻域整部落进对的 Voronoi 胞。 -/
+private theorem p24_vor_pair_margin (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hu01 : u0 ≠ u1)
+    (h8 : dist u0 u1 < 2 * Real.sqrt 2) :
+    ∃ d : ℝ, 0 < d ∧ ∀ x, dist x u0 = dist x u1 →
+      dist x (midpoint ℝ u0 u1) ≤ d → x ∈ voronoiList V [u0, u1] := by
+  have hd2 : 2 ≤ dist u0 u1 := by
+    by_contra hlt
+    exact hu01 (hp u0 hu0 u1 hu1 (not_le.1 hlt))
+  obtain ⟨hdm0, hdm1⟩ := p24_midpair_dist u0 u1
+  have hdms : dist (midpoint ℝ u0 u1) u0 < Real.sqrt 2 := by rw [hdm0]; linarith [h8]
+  -- Apollonius（平行四边形恒等式）：第三包装点离中点 > √2
+  have hapo : ∀ w ∈ V, w ≠ u0 → w ≠ u1 →
+      Real.sqrt 2 < dist (midpoint ℝ u0 u1) w := by
+    intro w hw hw0 hw1
+    have ha : (2:ℝ) ≤ ‖w - u0‖ := by
+      by_contra hlt
+      have hlt' : dist w u0 < 2 := by rw [dist_eq_norm]; exact not_le.1 hlt
+      exact hw0 (hp w hw u0 hu0 hlt')
+    have hb : (2:ℝ) ≤ ‖w - u1‖ := by
+      by_contra hlt
+      have hlt' : dist w u1 < 2 := by rw [dist_eq_norm]; exact not_le.1 hlt
+      exact hw1 (hp w hw u1 hu1 hlt')
+    have hc : ‖u1 - u0‖ ^ 2 < 8 := by
+      have h1 : ‖u1 - u0‖ = dist u0 u1 :=
+        (dist_eq_norm u1 u0).symm.trans (dist_comm u1 u0)
+      have hpos : (0:ℝ) ≤ ‖u1 - u0‖ := norm_nonneg _
+      have h8' : ‖u1 - u0‖ < 2 * Real.sqrt 2 := by rw [h1]; exact h8
+      have h8sq : (2 * Real.sqrt 2) ^ 2 = 8 := by
+        rw [mul_pow, Real.sq_sqrt (by norm_num)]; ring
+      nlinarith [h8', hpos, h8sq]
+    have h2m : (2 : ℝ) • midpoint ℝ u0 u1 = u0 + u1 := by
+      rw [midpoint, AffineMap.lineMap_apply_module', smul_add, smul_smul]
+      have h21 : (2:ℝ) * ⅟(2:ℝ) = 1 := by norm_num
+      rw [h21, one_smul, two_smul]
+      abel
+    have h2m' : (2 : ℝ) • (w - midpoint ℝ u0 u1) = (w - u0) + (w - u1) := by
+      rw [smul_sub, h2m]; module
+    have hA : ‖(w - u0) + (w - u1)‖ ^ 2 = 4 * ‖w - midpoint ℝ u0 u1‖ ^ 2 := by
+      rw [← h2m', norm_smul, Real.norm_eq_abs, abs_of_pos (show (0:ℝ) < 2 by norm_num)]
+      ring
+    have hB : ‖u1 - u0‖ ^ 2 = ‖w - u0‖ ^ 2 - 2 * inner ℝ (w - u0) (w - u1)
+        + ‖w - u1‖ ^ 2 := by
+      have hns := norm_sub_sq_real (w - u0) (w - u1)
+      rw [show ((w - u0) - (w - u1) : V3) = u1 - u0 from by abel] at hns
+      exact hns
+    have hC : ‖(w - u0) + (w - u1)‖ ^ 2 = ‖w - u0‖ ^ 2 + 2 * inner ℝ (w - u0) (w - u1)
+        + ‖w - u1‖ ^ 2 := norm_add_sq_real _ _
+    have ha2 : (4:ℝ) ≤ ‖w - u0‖ ^ 2 := by nlinarith [ha]
+    have hb2 : (4:ℝ) ≤ ‖w - u1‖ ^ 2 := by nlinarith [hb]
+    have hres : 2 < ‖w - midpoint ℝ u0 u1‖ ^ 2 := by linarith
+    calc Real.sqrt 2 = Real.sqrt 2 := rfl
+      _ < Real.sqrt (‖w - midpoint ℝ u0 u1‖ ^ 2) :=
+            Real.sqrt_lt_sqrt (by norm_num) hres
+      _ = dist (midpoint ℝ u0 u1) w := by
+            rw [Real.sqrt_sq (norm_nonneg _)]
+            exact ((dist_eq_norm w (midpoint ℝ u0 u1)).symm.trans
+              (dist_comm w (midpoint ℝ u0 u1)))
+  refine ⟨(Real.sqrt 2 - dist (midpoint ℝ u0 u1) u0) / 2, by linarith, ?_⟩
+  intro x hxe hxm
+  show x ∈ ⋂₀ {voronoiClosed V v | v ∈ (setOfList [u0, u1] : Set V3)}
+  refine Set.mem_sInter.2 fun w hw => ?_
+  obtain ⟨v, hv, rfl⟩ := hw
+  simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false] at hv
+  simp only [voronoiClosed, Set.mem_setOf_eq]
+  rcases hv with hzv | hvz
+  · rw [hzv]
+    intro z hz
+    rcases eq_or_ne z u0 with hz0 | hz0
+    · rw [hz0]
+    rcases eq_or_ne z u1 with hz1 | hz1
+    · rw [hz1, hxe]
+    · have hap := hapo z hz hz0 hz1
+      have hup : dist x u0 ≤ dist x (midpoint ℝ u0 u1)
+          + dist (midpoint ℝ u0 u1) u0 := dist_triangle x (midpoint ℝ u0 u1) u0
+      have hlow : dist (midpoint ℝ u0 u1) z - dist x (midpoint ℝ u0 u1)
+          ≤ dist x z := by
+        have ht := dist_triangle (midpoint ℝ u0 u1) x z
+        linarith [dist_comm x (midpoint ℝ u0 u1)]
+      linarith
+  · rw [hvz]
+    intro z hz
+    rcases eq_or_ne z u1 with hz1 | hz1
+    · rw [hz1]
+    rcases eq_or_ne z u0 with hz0 | hz0
+    · rw [hz0, ← hxe]
+    · have hap := hapo z hz hz0 hz1
+      have hup : dist x u1 ≤ dist x (midpoint ℝ u0 u1)
+          + dist (midpoint ℝ u0 u1) u1 := dist_triangle x (midpoint ℝ u0 u1) u1
+      have hlow : dist (midpoint ℝ u0 u1) z - dist x (midpoint ℝ u0 u1)
+          ≤ dist x z := by
+        have ht := dist_triangle (midpoint ℝ u0 u1) x z
+        linarith [dist_comm x (midpoint ℝ u0 u1)]
+      linarith
+
+/- D1(ii) 锥走廊（HL REUHADY.hl :1251-1530）——**本浪只留施工图，未落码**
+（三次编译迭代未收敛，余量让位给 D1(i)/(iii)；完整初等证明如下，下一浪照抄
+即得）：设 m = 中点、dm = dist(m,u0)、margin 参数 d > 0（(i) 的产出），
+倾角 `b = ‖u0−u1‖/√(‖u0−u1‖²+4d²) ∈ (0,1)`（恒等式 `b²(dm²+d²) = dm²` 由
+hb 平方 + d01 = 2·dm 圈闭）。对 `x ∈ rconeGt u0 u1 b ∩ ball(u0,1)`，x ≠ u0：
+置 v = x − u0（t = ‖v‖ ∈ (0,1)）、`vdot = v ⬝ᵥ (u1−u0) > t·‖u0−u1‖·b > 0`
+（Cauchy–Schwarz 给上界 vdot ≤ t·‖u0−u1‖），射线-等距面交点参数
+`s = ‖u0−u1‖²/(2·vdot)`，y = u0 + s•v。五条事实（全部纯内积代数，本轮草稿
+已推净）：(1) s ≥ 1：2·vdot ≤ 2·t·‖u0−u1‖ ≤ ‖u0−u1‖²（d01 ≥ 2）；(2) y 在
+平分面：‖y−u1‖² = s²t² − 2·s·vdot + ‖u0−u1‖² = s²t²（s 的定义消去）；(3)
+‖y−m‖² = s²t² − dm²（y−m = s•v − (u1−u0)/2，内积项 = d01²/4 = ‖m−u0‖²，
+展开后相消）；(4) `b·(s·t) < dm`：等价于 s 的定义代入后恰为 hvx（vdot >
+t·‖u0−u1‖·b）两端乘 ‖u0−u1‖；(5) 由 (3)+(4)+b²(dm²+d²) = dm²：
+b²‖y−m‖² < b²d² ⟹ dist(y,m) < d。于是 y 等距（(2)）且近中点（(5)），
+`hmargin` 给 y ∈ voronoiList V [u0,u1]；而 x = u0 + (1/s)•(y−u0)、
+1/s ∈ [0,1]（(1)），即 `x ∈ convexHull ℝ {u0, y}`（convexHull_pair +
+lineMap image）。∎Lean 落码时注意：`⅟2`/`2⁻¹` 形（midpoint 展开为
+AffineMap.lineMap，用 lineMap_apply_module'）；hmargin 应用处的 dist_self
+先 rw；hvx 从 rconeGt 成员提出时 dist u1 u0 与 dist u0 u1 需 dist_comm 对齐；
+内积-点积转换用 `inner_eq_dot` 的 rw 形（ofLp 展开会破 syntactic rw）；
+`mem_segment_iff` 在本 Mathlib 不存在，走 `convexHull_pair` + lineMap image。
+-/
+
+/- D1(iii) 扇叶桥（HL REUHADY.hl :1531-1629）——**本浪只留施工图，未落码**
+（凸包并集塌缩 conv (insert u0 (conv S)) = conv (insert u0 S) 的
+mono/antisymm 装配经三次编译迭代未收敛；完整路线：hy ∈ hfan 抽叶
+⟨T, hT, hyT⟩ → ⟨vl, hbar, htr⟩（barV V 3 + truncate 1 = [u0,u1]）→
+BARV_3_EXPLICIT 换表 [v0;v1;v2;v3]（v0 = u0 由 injection htr）→
+p24_leaf_singleton 给 ω₃ = circumcenter (setOfList vl) →
+x ∈ conv {u0, y} ⊆ conv (insert u0 (conv {ω₁,ω₂,cc})) = conv (insert u0
+{ω₁,ω₂,cc})（conv-mono：{u0,y} ⊆ insert u0 (conv S) 与
+S ⊆ insert u0 (conv S)（经 subset_convexHull ℝ S）两个方向，再
+convHull_mono-antisymm；凸包并集塌缩 = 同法）→ 顶点集包含
+insert u0 {ω₁,ω₂,cc} ⊆ ω-image{0..3}（ω₀ = v0 = u0、ω₃ = cc）→
+convHull_mono 得 x ∈ rogers V vl。∎下一浪照抄；注意 `set S := ... with
+hSdef` 的 let-fvar 会让 rw [hSdef] 与 mem_insert_iff 的 insert-结构展开失灵
+——直接内联集合表达式；`mem_segment_iff` 不存在于本 Mathlib，走
+convexHull_pair + lineMap image（AffineMap.lineMap_apply_module'）。-/
+
+/-! ### scaffold 三 sorry（NEEDS 记账；三发波后残余债务 = scaffold 2/3 两条） -/
+/-! ### scaffold 三 sorry（NEEDS 记账；三发波后残余债务 = scaffold 2/3 两条） -/
 /-! ### scaffold 三 sorry（NEEDS 记账；三发波后残余债务 = scaffold 2/3 两条） -/
 
 /-- NEEDS → CLOSED（2026-10-19 三发波，lane pa24reuhady）：scaffold 1/3，D6 成对
@@ -2012,6 +2165,13 @@ private theorem p24_cap_wedge_cover (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3
       ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
         x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e := by
   -- NEEDS (d)-cover/corridor: see docstring. HL REUHADY.hl 345-2386.
+  -- 四发波（2026-10-19）推进：D1(i) margin 已真证落码（`p24_vor_pair_margin`，
+  -- 等距点近中点球 ⊆ 对胞）；D1(ii) 锥走廊与 D1(iii) 扇叶桥留有完整施工图
+  -- （见上方两则块注释，含全部中间事实与坑位记录）。闭链残余 =
+  -- (ii)+(iii) 落码 + SLTSTLO1 逐叶分派 + edgeX 装配 + **楔侧指认 min-max**
+  -- （HL :1705-2386 的 P1/P2/P3 半径集——轴与两边界方位平面同属
+  -- W1 ∩ W2（hwedge），heX 二分对边界扇上的点不判定，须以半径 min-max
+  -- 排除非本侧叶。此为 scaffold 3 的最后硬核，多会话量级）。
   sorry
 
 /-! ### (d) 装配章（真证，零 sorry）：D6+D7 的家族求和恒等式 -/

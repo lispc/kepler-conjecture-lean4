@@ -172,6 +172,218 @@ private theorem eq_refl_of_fix_p10 {p : Equiv.Perm ℕ}
     · exact h0
     · simpa using hfix j hj
 
+/-! ### The `{0,1}`-swap invariance kit (ports the core of marchal2.hl:5848
+`LEFT_ACTION_LIST_1_PROPERTIES` for the `i = 2` case of `RVFXZBU`)
+
+Geometric heart: the omega tower points `ω₂, ω₃` of a `barV V 3` list lie in
+`voronoiList V (truncateSimplex 1 ul)` (PA5 `OMEGA_LIST_N_IN_VORONOI_LIST`,
+monotone in the truncation), and every point of the pair cell is equidistant
+from the two pair points — so the `mxi` selection predicate (hull of
+`{ω₂, ω₃}` at `√2` from the head) reads the same at `u0` and `u1`. -/
+
+/-- `closestPoint` only sees the query point through distances on `K`. -/
+private theorem closestPoint_congr_p10 {K : Set V3} {x x' : V3}
+    (h : ∀ y ∈ K, dist x y = dist x' y) : closestPoint K x = closestPoint K x' := by
+  show Classical.epsilon (fun y => y ∈ K ∧ ∀ z ∈ K, dist x y ≤ dist x z)
+      = Classical.epsilon (fun y => y ∈ K ∧ ∀ z ∈ K, dist x' y ≤ dist x' z)
+  congr 1
+  funext y
+  refine propext ⟨fun h1 => ⟨h1.1, ?_⟩, fun h1 => ⟨h1.1, ?_⟩⟩
+  · intro z hz
+    rw [← h z hz, ← h y h1.1]
+    exact h1.2 z hz
+  · intro z hz
+    rw [h z hz, h y h1.1]
+    exact h1.2 z hz
+
+/-- Every point of the pair Voronoi cell is equidistant from the pair. -/
+private theorem voronoiList2_dist_p10 {V : Set V3} {a b x : V3}
+    (haV : a ∈ V) (hbV : b ∈ V) (hx : x ∈ voronoiList V [a, b]) :
+    dist x a = dist x b := by
+  have hmem : x ∈ ⋂₀ {voronoiClosed V v | v ∈ (setOfList [a, b] : Set V3)} := hx
+  have ha : x ∈ voronoiClosed V a :=
+    Set.mem_sInter.1 hmem _ ⟨a, by simp [setOfList], rfl⟩
+  have hb : x ∈ voronoiClosed V b :=
+    Set.mem_sInter.1 hmem _ ⟨b, by simp [setOfList], rfl⟩
+  simp only [voronoiClosed, Set.mem_setOf_eq] at ha hb
+  exact le_antisymm (ha b hbV) (hb a haV)
+
+/-- `voronoiList` only sees the list through its point set. -/
+private theorem voronoiList_setOfList_p10 {V : Set V3} {ul vl : List V3}
+    (h : setOfList ul = setOfList vl) : voronoiList V ul = voronoiList V vl := by
+  show voronoiSet V (setOfList ul) = voronoiSet V (setOfList vl)
+  exact congrArg (voronoiSet V) h
+
+/-- Swapping the first two entries does not change the point set. -/
+private theorem setOfList_swap_head_p10 {a b : V3} {l : List V3} :
+    setOfList (a :: b :: l) = setOfList (b :: a :: l) := by
+  ext x
+  simp only [setOfList, Set.mem_setOf_eq, List.mem_cons]
+  tauto
+
+/-- Enlarging the point set shrinks the cell. -/
+private theorem voronoiList_mono_p10 {V : Set V3} {ul vl : List V3}
+    (hsub : setOfList ul ⊆ setOfList vl) : voronoiList V vl ⊆ voronoiList V ul := by
+  intro x hx
+  have hmem : x ∈ ⋂₀ {voronoiClosed V v | v ∈ (setOfList vl : Set V3)} := hx
+  refine Set.mem_sInter.2 fun w hw => ?_
+  obtain ⟨v, hv, rfl⟩ := hw
+  exact Set.mem_sInter.1 hmem (voronoiClosed V v) ⟨v, hsub hv, rfl⟩
+
+/-- `omega_list_n V · 1` is invariant under swapping the first two entries:
+the closest point of the pair cell is read through equidistance, so the
+query head `u1` vs `u0` does not matter. -/
+private theorem omegaListN1_swap_p10 (V : Set V3) (u0 u1 u2 u3 : V3)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) :
+    omegaListN V [u1, u0, u2, u3] 1 = omegaListN V [u0, u1, u2, u3] 1 := by
+  show closestPoint (voronoiList V (truncateSimplex 1 [u1, u0, u2, u3]))
+      (hdV [u1, u0, u2, u3]) =
+    closestPoint (voronoiList V (truncateSimplex 1 [u0, u1, u2, u3]))
+      (hdV [u0, u1, u2, u3])
+  rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u1 u0 u2 u3).2.2,
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2,
+      show hdV [u1, u0, u2, u3] = u1 from rfl,
+      show hdV [u0, u1, u2, u3] = u0 from rfl,
+      voronoiList_setOfList_p10 setOfList_swap_head_p10]
+  refine closestPoint_congr_p10 fun y hy => ?_
+  rw [dist_comm u1 y, dist_comm u0 y]
+  exact (voronoiList2_dist_p10 hu0 hu1 hy).symm
+
+/-- `omega_list_n V · 2` is invariant under the `{0,1}`-swap (same 3-point
+cell, same query after the level-1 invariance). -/
+private theorem omegaListN2_swap_p10 (V : Set V3) (u0 u1 u2 u3 : V3)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) :
+    omegaListN V [u1, u0, u2, u3] 2 = omegaListN V [u0, u1, u2, u3] 2 := by
+  show closestPoint (voronoiList V (truncateSimplex 2 [u1, u0, u2, u3]))
+      (omegaListN V [u1, u0, u2, u3] 1) =
+    closestPoint (voronoiList V (truncateSimplex 2 [u0, u1, u2, u3]))
+      (omegaListN V [u0, u1, u2, u3] 1)
+  rw [omegaListN1_swap_p10 V u0 u1 u2 u3 hu0 hu1,
+      (TRUNCATE_SIMPLEX_EXPLICIT_2 u1 u0 u2 u3).2,
+      (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2,
+      voronoiList_setOfList_p10 setOfList_swap_head_p10]
+
+/-- `omega_list_n V · 3` is invariant under the `{0,1}`-swap (same 4-point
+cell, same query after the level-2 invariance). -/
+private theorem omegaListN3_swap_p10 (V : Set V3) (u0 u1 u2 u3 : V3)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) :
+    omegaListN V [u1, u0, u2, u3] 3 = omegaListN V [u0, u1, u2, u3] 3 := by
+  show closestPoint (voronoiList V (truncateSimplex 3 [u1, u0, u2, u3]))
+      (omegaListN V [u1, u0, u2, u3] 2) =
+    closestPoint (voronoiList V (truncateSimplex 3 [u0, u1, u2, u3]))
+      (omegaListN V [u0, u1, u2, u3] 2)
+  rw [omegaListN2_swap_p10 V u0 u1 u2 u3 hu0 hu1,
+      TRUNCATE_SIMPLEX_EXPLICIT_3 u1 u0 u2 u3,
+      TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 u2 u3,
+      voronoiList_setOfList_p10 setOfList_swap_head_p10]
+
+/-- `mxi` is invariant under the `{0,1}`-swap: the branch condition reads
+`hl` of equal point sets, the true branch is the level-2 invariance, and in
+the epsilon branch the selection predicate is the same function — the hull
+of `{ω₂, ω₃}` sits in the pair cell, where `u0` and `u1` are equidistant.
+(The geometric core of HL `LEFT_ACTION_LIST_1_PROPERTIES`,
+marchal2.hl:5848, minus the `barV` persistence clause, which `RVFXZBU`
+does not need.) -/
+private theorem mxi_swap_p10 (V : Set V3) (u0 u1 u2 u3 : V3)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hbar : barV V 3 [u0, u1, u2, u3]) :
+    mxi V [u1, u0, u2, u3] = mxi V [u0, u1, u2, u3] := by
+  have hhl : hl (truncateSimplex 2 [u1, u0, u2, u3])
+      = hl (truncateSimplex 2 [u0, u1, u2, u3]) := by
+    show radV (setOfList (truncateSimplex 2 [u1, u0, u2, u3]))
+        = radV (setOfList (truncateSimplex 2 [u0, u1, u2, u3]))
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u1 u0 u2 u3).2,
+      (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2]
+    exact congrArg _ setOfList_swap_head_p10
+  -- both omega points sit in the pair cell (equidistant from `u0` and `u1`)
+  have hω2 : omegaListN V [u0, u1, u2, u3] 2 ∈ voronoiList V [u0, u1] := by
+    have h := OMEGA_LIST_N_IN_VORONOI_LIST (V := V) (ul := [u0, u1, u2, u3]) (k := 3)
+      (i := 2) hbar (by omega)
+    have hsub : setOfList (truncateSimplex 1 [u0, u1, u2, u3])
+        ⊆ setOfList (truncateSimplex 2 [u0, u1, u2, u3]) := by
+      rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2,
+        (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2]
+      simp [setOfList]
+    have h2 := voronoiList_mono_p10 hsub h
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2] at h2
+    exact h2
+  have hω3 : omegaListN V [u0, u1, u2, u3] 3 ∈ voronoiList V [u0, u1] := by
+    have h := OMEGA_LIST_N_IN_VORONOI_LIST (V := V) (ul := [u0, u1, u2, u3]) (k := 3)
+      (i := 3) hbar (by omega)
+    rw [TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 u2 u3] at h
+    have hsub : setOfList (truncateSimplex 1 [u0, u1, u2, u3])
+        ⊆ setOfList [u0, u1, u2, u3] := by
+      rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2]
+      simp [setOfList]
+    have h2 := voronoiList_mono_p10 hsub h
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2] at h2
+    exact h2
+  have heq : ∀ y ∈ voronoiList V [u0, u1], dist y u0 = dist y u1 :=
+    fun y hy => voronoiList2_dist_p10 hu0 hu1 hy
+  by_cases hcond : Real.sqrt 2 ≤ hl (truncateSimplex 2 [u0, u1, u2, u3])
+  · simp only [mxi]
+    rw [if_pos (by rw [hhl]; exact hcond), if_pos hcond,
+      omegaListN2_swap_p10 V u0 u1 u2 u3 hu0 hu1]
+  · simp only [mxi]
+    rw [if_neg (by rw [hhl]; exact hcond), if_neg hcond]
+    refine congrArg Classical.epsilon ?_
+    funext q
+    have h2r : hdV [u1, u0, u2, u3] = u1 := rfl
+    have h2l : hdV [u0, u1, u2, u3] = u0 := rfl
+    have hull2 : ∀ q' ∈ convexHull ℝ {omegaListN V [u0, u1, u2, u3] 2,
+        omegaListN V [u0, u1, u2, u3] 3}, q' ∈ voronoiList V [u0, u1] := fun q' hq' =>
+      convexHull_min (Set.pair_subset_iff.mpr ⟨hω2, hω3⟩)
+        (CONVEX_VORONOI_LIST V [u0, u1]) hq'
+    rw [omegaListN2_swap_p10 V u0 u1 u2 u3 hu0 hu1,
+      omegaListN3_swap_p10 V u0 u1 u2 u3 hu0 hu1, h2r, h2l]
+    exact propext ⟨fun hq => ⟨hq.1, by rw [heq q (hull2 q hq.1)]; exact hq.2⟩,
+      fun hq => ⟨hq.1, by rw [← heq q (hull2 q hq.1)]; exact hq.2⟩⟩
+
+/-- `mcell 2` is invariant under swapping the first two entries: the
+dispatch condition reads `hl` of equal point sets, the two mutual
+`rconeGe` factors trade places, and the `affGe` wedge only sees the base
+as a point set — with the `mxi`/`ω₃` invariances above. (HL `RVFXZBU.hl`
+core case, via marchal2.hl:5848.) -/
+private theorem mcell2_swap_p10 (V : Set V3) (u0 u1 u2 u3 : V3)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hbar : barV V 3 [u0, u1, u2, u3]) :
+    mcell 2 V [u1, u0, u2, u3] = mcell 2 V [u0, u1, u2, u3] := by
+  have eL : mcell 2 V [u1, u0, u2, u3] = mcell2 V [u1, u0, u2, u3] := by
+    rw [mcell, if_neg (show (2:ℕ) ≠ 0 by decide), if_neg (show (2:ℕ) ≠ 1 by decide),
+      if_pos rfl]
+  have eR : mcell 2 V [u0, u1, u2, u3] = mcell2 V [u0, u1, u2, u3] := by
+    rw [mcell, if_neg (show (2:ℕ) ≠ 0 by decide), if_neg (show (2:ℕ) ≠ 1 by decide),
+      if_pos rfl]
+  rw [eL, eR]
+  simp only [mcell2]
+  rw [show hdV [u1, u0, u2, u3].tail = u0 from rfl,
+    show hdV [u0, u1, u2, u3].tail = u1 from rfl,
+    show hdV [u1, u0, u2, u3] = u1 from rfl,
+    show hdV [u0, u1, u2, u3] = u0 from rfl]
+  have hhl1 : hl (truncateSimplex 1 [u1, u0, u2, u3])
+      = hl (truncateSimplex 1 [u0, u1, u2, u3]) := by
+    show radV (setOfList (truncateSimplex 1 [u1, u0, u2, u3]))
+        = radV (setOfList (truncateSimplex 1 [u0, u1, u2, u3]))
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u1 u0 u2 u3).2.2,
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2]
+    exact congrArg _ setOfList_swap_head_p10
+  have hhl0 : hl [u1, u0, u2, u3] = hl [u0, u1, u2, u3] := by
+    show radV (setOfList [u1, u0, u2, u3]) = radV (setOfList [u0, u1, u2, u3])
+    exact congrArg _ setOfList_swap_head_p10
+  by_cases hcond : hl (truncateSimplex 1 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+      Real.sqrt 2 ≤ hl [u0, u1, u2, u3]
+  · have hcondL : hl (truncateSimplex 1 [u1, u0, u2, u3]) < Real.sqrt 2 ∧
+      Real.sqrt 2 ≤ hl [u1, u0, u2, u3] :=
+      ⟨by rw [hhl1]; exact hcond.1, by rw [hhl0]; exact hcond.2⟩
+    rw [if_pos hcondL, if_pos hcond, hhl1,
+      mxi_swap_p10 V u0 u1 u2 u3 hu0 hu1 hbar,
+      omegaListN3_swap_p10 V u0 u1 u2 u3 hu0 hu1,
+      Set.inter_comm (rconeGe u1 u0 _) (rconeGe u0 u1 _),
+      show ({u1, u0} : Set V3) = {u0, u1} from Set.pair_comm u1 u0]
+  · rw [if_neg (fun hc => hcond ⟨by rw [← hhl1]; exact hc.1, by rw [← hhl0]; exact hc.2⟩),
+      if_neg hcond]
+
+/-! ## RVFXZBU (RVFXZBU.hl:32-195): cell invariance under the left action -/
+/-! ## RVFXZBU (RVFXZBU.hl:32-195): cell invariance under the left action -/
+/-! ## RVFXZBU (RVFXZBU.hl:32-195): cell invariance under the left action -/
 /-! ## RVFXZBU (RVFXZBU.hl:32-195): cell invariance under the left action -/
 
 /-- HOL `RVFXZBU_concl` (RVFXZBU.hl:32-36): permuting the first `i` points
@@ -188,12 +400,16 @@ pointwise `permutes` the statement is false (`p` a transposition of `2,3`
 weakly permutes `Icc 0 1` yet changes `hl ul`, hence `mcell4`, on
 `[u0;u1;u2;u3]`).
 
-Proof status: cases `i = 0, 1` (`p` forced to `Equiv.refl`) and `i = 4`
-(`mcell4` depends only on `setOfList`/`hl`) are proved via the tail-fixed
-kit above; cases `i = 2, 3` remain `sorry`: they need the ported
-`LEFT_ACTION_LIST_1_PROPERTIES`/`LEFT_ACTION_LIST_PROPERTIES`
-(marchal2.hl:5848/4460) — `mxi`/`omegaListN` invariance under the
-`{0,1}`-swap resp. the `S₃`-action, a genuine geometry bite. -/
+Proof status: cases `i = 0, 1` (`p` forced to `Equiv.refl`), `i = 2`
+(CLOSED 2026-10-19 wave: the `{0,1}`-swap kit above ports the geometric
+core of `LEFT_ACTION_LIST_1_PROPERTIES` (marchal2.hl:5848) — `mxi` reads
+only the hull of `{ω₂, ω₃}` in the pair Voronoi cell where `u0`/`u1` are
+equidistant, plus `omegaListN` 1/2/3 invariance by closest-point
+congruence) and `i = 4` (`mcell4` depends only on `setOfList`/`hl`) are
+proved; case `i = 3` remains `sorry`: it needs the ported
+`LEFT_ACTION_LIST_PROPERTIES` (marchal2.hl:4460) — `ω₂` invariance under
+the `S₃`-action (the closest point of the 3-point cell is read through the
+circumaxis projection, a genuine geometry bite). -/
 theorem RVFXZBU {V : Set V3} {ul : List V3} {i : ℕ} {p : Equiv.Perm ℕ}
     (hi : i ∈ ({0, 1, 2, 3, 4} : Set ℕ))
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
@@ -217,11 +433,57 @@ theorem RVFXZBU {V : Set V3} {ul : List V3} {i : ℕ} {p : Equiv.Perm ℕ}
     have hp : p = Equiv.refl ℕ := eq_refl_of_fix_p10 h0 hfix
     subst hp
     rw [leftActionList_refl_p10]
-  · -- i = 2: needs LEFT_ACTION_LIST_1_PROPERTIES (marchal2.hl:5848)
-    sorry
-    -- NEEDS: mcell2 invariance under the {0, 1}-swap (RVFXZBU.hl core):
-    -- mxi/omegaListN invariance under LEFT_ACTION_LIST_1_PROPERTIES
-    -- (marchal2.hl:5848), then mcell2-def dispatch. Not ported.
+  · -- i = 2: CLOSED (2026-10-19 wave). p is the identity or the {0,1}-swap;
+    -- in both cases mcell2 is invariant (mcell2_swap_p10 above, via the
+    -- bisector-blind mxi kit porting marchal2.hl:5848).
+    obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+    subst hul
+    have hVsub : (setOfList [u0, u1, u2, u3] : Set V3) ⊆ V := BARV_SUBSET V 3 _ hbar
+    have hu0 : u0 ∈ V := hVsub (by simp [setOfList])
+    have hu1 : u1 ∈ V := hVsub (by simp [setOfList])
+    have hp0m : p 0 ∈ Set.Icc 0 (2 - 1) := (hperm 0).mp (by simp [Set.mem_Icc])
+    have hp0' : p 0 = 0 ∨ p 0 = 1 := by
+      simp only [Set.mem_Icc] at hp0m; omega
+    rcases hp0' with h0 | h0
+    · -- p fixes 0, so p 1 = 1 (injectivity on the block) and p = refl
+      have hp1 : p 1 = 1 := by
+        have hp1m : p 1 ∈ Set.Icc 0 (2 - 1) := (hperm 1).mp (by simp [Set.mem_Icc])
+        simp only [Set.mem_Icc] at hp1m
+        rcases Nat.eq_zero_or_pos (p 1) with hz | hp
+        · exact absurd (Equiv.injective p (hz.trans h0.symm)) (by decide)
+        · omega
+      have hpr : p = Equiv.refl ℕ := eq_refl_of_fix_p10 h0 (fun j hj => by
+        rcases Nat.lt_or_ge j 2 with hlt | hge
+        · have hj1 : j = 1 := by omega
+          rw [hj1]; exact hp1
+        · exact hfix j hge)
+      subst hpr
+      rw [leftActionList_refl_p10]
+    · -- p swaps 0 and 1: leftActionList p ul = [u1, u0, u2, u3]
+      have hp1 : p 1 = 0 := by
+        have hp1m : p 1 ∈ Set.Icc 0 (2 - 1) := (hperm 1).mp (by simp [Set.mem_Icc])
+        simp only [Set.mem_Icc] at hp1m
+        rcases Nat.eq_zero_or_pos (p 1) with hz | hp
+        · exact hz
+        · have h11 : p 1 = 1 := by omega
+          exact absurd (Equiv.injective p (h11.trans h0.symm)) (by decide)
+      have hs0 : p.symm 0 = 1 := by rw [← hp1]; exact Equiv.symm_apply_apply p 1
+      have hs1 : p.symm 1 = 0 := by rw [← h0]; exact Equiv.symm_apply_apply p 0
+      have hs2 : p.symm 2 = 2 := by
+        rw [show p.symm 2 = p.symm (p 2) by rw [hfix 2 (le_refl 2)]]
+        exact Equiv.symm_apply_apply p 2
+      have hs3 : p.symm 3 = 3 := by
+        rw [show p.symm 3 = p.symm (p 3) by rw [hfix 3 (by omega)]]
+        exact Equiv.symm_apply_apply p 3
+      have hxl : leftActionList p [u0, u1, u2, u3] = [u1, u0, u2, u3] := by
+        show (List.range [u0, u1, u2, u3].length).map
+          (fun i => [u0, u1, u2, u3].getD (p.symm i) default) = [u1, u0, u2, u3]
+        rw [show [u0, u1, u2, u3].length = 4 from rfl,
+          show List.range 4 = [0, 1, 2, 3] from rfl,
+          List.map_cons, List.map_cons, List.map_cons, List.map_cons, List.map_nil]
+        simp [hs0, hs1, hs2, hs3]
+      rw [hxl]
+      exact mcell2_swap_p10 V u0 u1 u2 u3 hu0 hu1 hbar
   · -- i = 3: needs LEFT_ACTION_LIST_PROPERTIES (marchal2.hl:4460)
     sorry
     -- NEEDS: mcell3/mcell4 dispatch invariance under the S3-action
