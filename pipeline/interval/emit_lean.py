@@ -2822,6 +2822,20 @@ def mono_lean_main(case, cid, n, args, mono_json, pad_bits=None):
 # every div/sqrt/ite node, O(n·depth), the sb12-heavy leaf's >67 min blowup).
 # All decides are kernel checks of exactly the emitted data; wrong Python-side
 # verdicts/tables can only fail a decide, never pass.
+#
+# W8 witness-position rung lowering (`--mono-dom-rung=N[,OUT]` uniform /
+# `--mono-witness-rung=N[,OUT]` marked, both off by default = v2 identical):
+# the per-restrict DomOK decide pays `transOn` at EVERY trans node of E
+# (rung-2048 closed-atan kernel Taylor: ~40-80s/node, the sb12-heavy leaf's
+# dominant cost).  `transOn_sound` holds at every N, so a lowered rung only
+# WIDENS a node's enclosure — sound everywhere, tighter nowhere.  The flags
+# mark which trans nodes carry the lowered rung:
+#   - uniform: every trans node (the DomOK decide pays all of them);
+#   - witness-position (`_monotree_trans_marks`): only the trans nodes whose
+#     values feed the witness table rows (divisor/guard/radicand subtrees).
+# Every consumer (domTable, probes, stage-B decides) re-derives everything
+# from the SAME emitted E, so a wrong stage-A verdict/table at any rung mix
+# still can only fail a decide, never pass.
 # ---------------------------------------------------------------------------
 
 def _monotree_nodes(node, acc, path="T"):
@@ -2887,29 +2901,152 @@ def _monotree_count_ops(expr_text):
             expr_text.count("(.trans "))
 
 
-def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False):
+def _monotree_trans_marks(prog):
+    """W8 witness-position marking: the RPN-order indices of the trans
+    nodes whose interval values feed a DomOK v2 witness row, the total
+    trans count, and the set of trans indices sitting under a `sqrt`
+    radicand (must be empty for a witness-rung emission).
+
+    The witness table rows are exactly the `div` divisor / `sqrt`
+    radicand / `ite` guard intervals (the `domEvals` spec, and `domTable`
+    collects the same list), so a trans node is a *witness position* iff
+    it lies in one of those subtrees — for those nodes the DomOK discharge
+    only consumes the SIGN of the value (divisor off 0, radicand positive,
+    guard polarity), never a tight margin, which is what a lowered rung
+    still certifies (`transOn_sound` holds at every N).  On the
+    guard-resolved, abs-eliminated programs e* the tree carries no ite and
+    the search-side precondition forbids trans under sqrt radicands, so in
+    practice the marks are the divisor-subtree trans nodes.
+
+    Traversal mirrors `RPN.emit_pair` exactly (dict = cond/then/else in
+    order, binary ops pop right-then-left), so the trans counter here
+    matches the emitter's per-node callback order."""
+    marks = set()
+    bad = set()
+    cnt = [0]
+
+    def walk(p):
+        # stack entries: the set of trans indices each value contains
+        st = []
+        for ins in p:
+            if isinstance(ins, dict):
+                it = ins["ite"]
+                c = walk(it["cond"])
+                t = walk(it["then"])
+                e = walk(it["else"])
+                marks.update(c)  # guard: polarity check only
+                st.append(c | t | e)
+                continue
+            op = ins[0]
+            if op in ("push_var", "push_const"):
+                st.append(set())
+            elif op in ("add", "sub", "mul"):
+                b = st.pop()
+                a = st.pop()
+                st.append(a | b)
+            elif op in ("neg", "abs"):
+                st.append(st.pop())
+            elif op == "div":
+                b = st.pop()  # e2 = the divisor (witness row)
+                a = st.pop()
+                marks.update(b)
+                st.append(a | b)
+            elif op == "sqrt":
+                a = st.pop()
+                bad.update(a)
+                st.append(a)
+            elif op in TRANS_KIND:
+                k = cnt[0]
+                cnt[0] += 1
+                a = st.pop()
+                st.append(a | {k})
+            else:
+                die(f"unknown op {op}")
+        if len(st) != 1:
+            die("RPN stack imbalance in witness marking")
+        return st[0]
+
+    walk(prog)
+    return marks, cnt[0], bad
+
+
+def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False,
+           dom_rung=None, witness_marks=None):
     """The W8 mono-tree RPN policy: sqrt slots from `slots` when given
     (`slots(ms)(i)` returns the (s1, s2) TEXT of the i-th sqrt node in RPN
     order — real mantissas computed kernel-side by `slotsDeep`, so closed
     trans args KEEP the fast path, no `trans_unclose_sqrt`), dummy `(0, 0)`
     otherwise; trans rung (N, out) for closed and open args alike; W6b
-    plan-A const padding behind `pad_bits`."""
+    plan-A const padding behind `pad_bits`.
+
+    `dom_rung` (W8 witness-position rung lowering, off by default): when
+    set to (N, out), trans nodes at DomOK witness positions are emitted at
+    that lowered rung instead of `rung` — the domain discharge only needs
+    the sign of those values (coarse interval suffices), while `rung`
+    keeps serving the tight-margin TM certificates.  `witness_marks` = the
+    `_monotree_trans_marks` index set to lower; `None` (with `dom_rung`
+    set) lowers EVERY trans node (uniform mode — the DomOK decide pays
+    `transOn` at all of them).  Default `dom_rung=None` keeps the v2
+    behavior byte-identical."""
     if slots is None:
         sq = lambda i: ("0", "0")
     else:
         sq = slots
+    if dom_rung is None:
+        trans_cb = lambda op, closed: (str(rung[0]), "(" + str(rung[1]) + ")")
+    else:
+        dn = str(dom_rung[0])
+        dout = "(" + str(dom_rung[1]) + ")"
+        dr = (str(rung[0]), "(" + str(rung[1]) + ")")
+        cnt = [0]
+        if witness_marks is None:
+            def trans_cb(op, closed):
+                cnt[0] += 1
+                return (dn, dout)
+        else:
+            def trans_cb(op, closed):
+                k = cnt[0]
+                cnt[0] += 1
+                if k in witness_marks:
+                    return (dn, dout)
+                return dr
     return RPN(sqrt_slot=sq,
-               trans=lambda op, closed: (str(rung[0]), f"({rung[1]})"),
+               trans=trans_cb,
                trans_unclose_sqrt=unclose,
                sqrt_const_pad_bits=pad_bits)
 
 
-def monotree_main(case, cid, n, args, spec, params_file):
+def monotree_main(case, cid, n, args, spec, params_file,
+                  dom_rung=None, witness_rung=None):
     import re
     nsp = "MonoTree_" + re.sub(r"\W", "_", cid)
     pad_bits = spec.get("pad_sqrt_const")
     rung = (int(spec.get("rung_n", 2048)), int(spec.get("rung_out", -64)))
-    rpn = em_RPN(pad_bits, rung=rung)
+    # W8 witness-position rung lowering (flag-gated; absent = v2 identical).
+    # A `None` out component resolves to the spec's rung_out.
+    marks = None
+    dom_rung_eff = None
+    if dom_rung is not None or witness_rung is not None:
+        if dom_rung is not None and witness_rung is not None:
+            die("--mono-dom-rung and --mono-witness-rung are mutually "
+                "exclusive")
+        if witness_rung is not None:
+            mset, _nt, bad = _monotree_trans_marks(spec["expr"])
+            if bad:
+                die(f"witness rung: {len(bad)} trans node(s) under a sqrt "
+                    "radicand — slotsDeep bakes the mantissa certificates "
+                    "trans-free, so the radicand interval (and hence the "
+                    "certificates) would become rung-dependent")
+            wr = witness_rung
+            out = rung[1] if wr[1] is None else wr[1]
+            dom_rung_eff = (wr[0], out)
+            marks = mset
+        else:
+            dr = dom_rung
+            out = rung[1] if dr[1] is None else dr[1]
+            dom_rung_eff = (dr[0], out)
+    rpn = em_RPN(pad_bits, rung=rung,
+                 dom_rung=dom_rung_eff, witness_marks=marks)
     expr0 = rpn.emit(spec["expr"])
     nsq0, ndiv0, ntrans0 = _monotree_count_ops(expr0)
     gran = int(spec.get("gran", -80))
@@ -2923,6 +3060,26 @@ def monotree_main(case, cid, n, args, spec, params_file):
     g = f"({gran})"
     iv_rep = f"List.replicate 8000 \u27e8{gran}, {gran}, {gran}\u27e9"
     tv_rep = f"List.replicate 8000 \u27e8{gran}, {gran}\u27e9"
+    # Default-off byte-identity: with no rung flags the prelude must end
+    # exactly as the pre-W8 emitter wrote it ("...kernel checks. -/" on one
+    # line); the witness-rung note (if any) is spliced before the closure.
+    wr_note = ""
+    if dom_rung_eff is not None:
+        if marks is None:
+            wr_note = ("    W8 witness-rung policy: lowered rung "
+                       f"{dom_rung_eff} on EVERY trans node (uniform —\n"
+                       "    the DomOK decide pays transOn at all of them;\n"
+                       "    sign accuracy is all it consumes there).\n")
+        else:
+            wr_note = ("    W8 witness-rung policy: lowered rung "
+                       f"{dom_rung_eff} on the {len(marks)}/{ntrans0}\n"
+                       "    witness-position trans nodes (the divisor/guard/"
+                       "radicand subtrees\n    the witness table rows read); "
+                       "sign accuracy is all the DomOK\n    discharge "
+                       "consumes there, and transOn_sound holds at every\n"
+                       "    rung.  Tight-margin TM nodes keep the spec "
+                       "rung.\n")
+        wr_note = ("  All decides are kernel checks.\n" + wr_note + "-/\n")
     prelude = (
         "/- W8 mono-tree certificate: a closed restrict\u00d7bisect subtree "
         "of the\n    W6a search over " + cid + " (route A; assembly via "
@@ -2935,7 +3092,9 @@ def monotree_main(case, cid, n, args, spec, params_file):
         "    cate is stated for e*; the guard/abs sign facts are search-side\n"
         "    premises re-verified by the mirror).  Plan-A padded consts;\n"
         "    real sqrt slots computed kernel-side by evalFill (stage A) and\n"
-        "    baked as `sbMs`.  All decides are kernel checks. -/\n"
+        "    baked as `sbMs`."
+        + (wr_note if wr_note
+           else "  All decides are kernel checks. -/\n") +
         "import Kepler.Interval.CertTM\n"
         "import Kepler.Interval.MonoTree\n\n"
         "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n"
@@ -2975,7 +3134,9 @@ def monotree_main(case, cid, n, args, spec, params_file):
             +            "/-- E0 with slots read from the computed list (RPN order). -/\n"
             f"def MkE (ms : List (Int \u00d7 Int)) : IExpr {n} :=\n  "
             + em_RPN(pad_bits, rung=rung, slots=lambda i:
-                     (f"(ms[{i}]!).1", f"(ms[{i}]!).2")).emit(spec["expr"])
+                     (f"(ms[{i}]!).1", f"(ms[{i}]!).2"),
+                     dom_rung=dom_rung_eff,
+                     witness_marks=marks).emit(spec["expr"])
             + "\n\n"
             "/-- The certified expression: E0 with real slots baked. -/\n"
             f"def E : IExpr {n} := MkE sbMs\n\n"
@@ -3026,9 +3187,17 @@ def monotree_main(case, cid, n, args, spec, params_file):
             "        IO.println s!\"PROBE {probeTags[i]!} FAIL\"\n"
             "        stdout.flush\n"
             "  return 0\n")
+        pol = ""
+        if dom_rung_eff is not None:
+            if marks is None:
+                pol = (f"; witness-rung POLICY: uniform {dom_rung_eff} on "
+                       f"all {ntrans0} trans")
+            else:
+                pol = (f"; witness-rung POLICY: {dom_rung_eff} on "
+                       f"{len(marks)}/{ntrans0} witness-position trans")
         print(f"emit_lean: wrote {args[2]} (W8 mono-tree stage A: "
               f"{len(probes)} probes + {len(doms)} DOM tables; E0 static "
-              f"sqrt {nsq0}, div {ndiv0}, trans {ntrans0}; run "
+              f"sqrt {nsq0}, div {ndiv0}, trans {ntrans0}{pol}; run "
               f"`lake env lean --run {args[2]} > params.txt`)")
         return
 
@@ -3076,7 +3245,9 @@ def monotree_main(case, cid, n, args, spec, params_file):
 
     def _slot(i):
         return (str(ms[i][0]), str(ms[i][1]))
-    expr_conc = em_RPN(pad_bits, rung=rung, slots=_slot).emit(spec["expr"])
+    expr_conc = em_RPN(pad_bits, rung=rung, slots=_slot,
+                       dom_rung=dom_rung_eff,
+                       witness_marks=marks).emit(spec["expr"])
     out = [prelude +
         "/-- The certified expression (real sqrt slots baked concretely;\n"
         f"    stage-A ms, {nsq} sqrt nodes, RPN order). -/\n"
@@ -3230,8 +3401,27 @@ def monotree_main(case, cid, n, args, spec, params_file):
         "tree is needed). -/\n"
         "theorem B0_interval_neg : checkPos E B0 = false := by decide\n")
     open(args[2], "w").write("\n".join(out))
+    pol = ""
+    if dom_rung_eff is not None:
+        if marks is None:
+            pol = (f"; witness rung {dom_rung_eff} uniform on {ntrans0} "
+                   "trans")
+        else:
+            pol = (f"; witness rung {dom_rung_eff} on {len(marks)}/"
+                   f"{ntrans0} witness-position trans")
     print(f"emit_lean: wrote {args[2]} (W8 mono-tree stage B: {nleaf} leaf "
-          f"certs + {ndf} df certs; {nsq} sqrt slots baked)")
+          f"certs + {ndf} df certs; {nsq} sqrt slots baked{pol})")
+
+
+def _parse_rung_arg(s, flag):
+    """`N` or `N,OUT` -> (N, OUT-or-None); None out resolves to the spec's
+    rung_out inside monotree_main."""
+    parts = s.split(",")
+    if len(parts) == 1:
+        return (int(parts[0]), None)
+    if len(parts) == 2:
+        return (int(parts[0]), int(parts[1]))
+    die(f"{flag}: bad rung {s!r} (expected N or N,OUT)")
 
 
 def main():
@@ -3260,6 +3450,8 @@ def main():
     monolean = False
     monotree = False
     pad_sqrt_const = None
+    dom_rung = None
+    witness_rung = None
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
@@ -3282,6 +3474,11 @@ def main():
             mono_subbox = int(a.split("=", 1)[1])
         elif a.startswith("--pad-sqrt-const="):
             pad_sqrt_const = int(a.split("=", 1)[1])
+        elif a.startswith("--mono-dom-rung="):
+            dom_rung = _parse_rung_arg(a.split("=", 1)[1], "--mono-dom-rung")
+        elif a.startswith("--mono-witness-rung="):
+            witness_rung = _parse_rung_arg(a.split("=", 1)[1],
+                                           "--mono-witness-rung")
         elif a == "--fill":
             fill = True
         elif a == "--stage-a":
@@ -3331,6 +3528,15 @@ def main():
             "                replay <out>.monolean.lean from the cert plan)\n"
             "                [--pad-sqrt-const=N] (W6b plan A: scale sqrt-fed\n"
             "                const mantissas to >= 2^N in mono-lean replays)\n"
+            "                [--mono-tree --mono-dom-rung=N[,OUT]] (W8: emit\n"
+            "                EVERY trans node at the lowered rung — the DomOK\n"
+            "                decide pays transOn at all of them; OUT defaults\n"
+            "                to the spec rung_out)\n"
+            "                [--mono-tree --mono-witness-rung=N[,OUT]] (W8:\n"
+            "                lower the rung only at DomOK witness-position\n"
+            "                trans nodes — divisor/guard/radicand subtrees the\n"
+            "                witness table reads; tight-margin nodes keep the\n"
+            "                spec rung; the two flags are exclusive)\n"
             "                (mono: <arg2> = sub-box manifest, <out> = report)")
     if disj_gd and not bbg:
         die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
@@ -3350,7 +3556,8 @@ def main():
         # stage A = compiled slot/probe driver, stage B = kernel bake) ----
         spec = json.load(open(args[1]))
         nsp_n = int(spec.get("n", n))
-        monotree_main(case, cid, nsp_n, args, spec, params_file)
+        monotree_main(case, cid, nsp_n, args, spec, params_file,
+                      dom_rung=dom_rung, witness_rung=witness_rung)
         return
 
     if mono:
