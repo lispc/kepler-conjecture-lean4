@@ -379,3 +379,41 @@ REUHADY1 (d) ← PA17 `AJRIPQN` ← Rogers 覆盖链（TIWWFYQ→SLTSTLO1/2+DDZU
 RVFXZBU）。接续处方：闭 R1/R2 后 PA24 侧零编辑真化（mxi 私证 ~90 行处方在
 案）；REUHADY1 (d) 依赖序 = Rogers 覆盖链 → AJRIPQN 五阶段 → HL 400-8356
 移植（消费 PA24 在飞 kit）。
+
+## 2026-10-20 增量节（tame_list 收官日 + p24 直 sorry 2→1 日 + 发车冻结→三发批准）
+
+**账本**：DEBT 44,481→**44,478**（−3 逐笔对账：PA2 shim 退役 −2 `a5960367`、PA24
+直 sorry 2→1 `80b4554d`）；可比口径（扣 LP 叶户 43,078）**1,400**。spine 探针
+（`--with-spine`）本次未跑——机器 12 核/36G，舰队 shard+runner+euler 已占 16G，
+root 全构建的内存窗口不够；**周四 root runner 收完的安静窗口补跑**，届时主定理
+可达债务面以该次为准。
+
+**本日落地与可达性影响**：
+- **B1 全清**：批 59 `f0361c78` tame_list.hl :23-:14428 零缺口、649 主定理零
+  sorryAx。tame 章地基层就位，W2（B3 D 链）可开。
+- **R2 taint 根（PA2 shim 层）退役**：`XNHPWAB1_concl`/`XNHPWAB4_concl` 删除
+  （PA7 本体真证早已入库，shim 删除 = 环境清理，零可达性损失）；`MXI_EXISTS_concl`
+  残余消费者 = PA11 `mxiExplicit`（成环未解，记账保留）。
+- **REUHADY1 (d) 主体真化**：SF-44+45 应用 + cover_strong 四件 + :3625 gated
+  换接（`80b4554d`，STATEMENT-FIX 闸，全量波差 `44b-…fullwave.patch`）。REUHADY1
+  的 sorryAx 来源收窄为两条：**scaffold 3 `p24_cap_wedge_cover`**（:3366，走廊/
+  侧指认主体，PA24 唯一直 sorry）+ **R3 AJRIPQN inherited**（`p24_wedge_witness_of_
+  trace` 携，PA17 GIANT）。10-17 普查的 R1（LEPJBDJ→HDTFNFZ）仍在 B3 支。
+- **cleanable 排名**：scaffold 3 收口 = REUHADY1→REUHADY_p24→GRUTOTI1→textCapstone
+  链上贪心值最高叶（收掉后 REUHADY1 只剩 AJRIPQN 一债主）；其次 AJRIPQN 本体
+  （PA17，同时是 capstone 2 号件输入）。
+
+**派工（用户 2026-10-20 批准三发，间隔 15 分钟，③错峰）**：
+1. **十二发波**（pa24reuhady）：scaffold 3 残余真证收口——缺口件「叶表 mcell
+   非零测性」+ 侧指认 min-max；p4pa24e 车道 730 行 WIP + 12 根因 fixnotes 作底稿；
+   随后 GIANT 分期 a) PA10 可测链 → d) AJRIPQN。
+2. **TameSpine 批 60**：**B3 D 链入口 = AUQTZYZ.hl（Rxokskc 直接前置，TameList19/25
+   已越章预收部分件）→ RXOKSKC.hl（含 A9 接口件 :523）**——按 port-plan §4/§7 关键
+   路径 W2 裁定，取代批 59 候选 reduction1.hl（B5，压 Dpzgbyf/Rxokskc/Aq56 三个
+   未移植前置，先开必撞墙）。
+3. **W8 gen-8**（rung 收尾 + kd 对半产盒器 + `emit_lean --decide-mode=native|kernel`
+   开发/收尾双模开关，用户 10-20 提议）——等 TM 舰队 C549Mono shard 排空再发。
+
+**容量纪律（本日实测后立）**：重 lean 构建同时 ≤3 个 + runner 恒 2；车道克隆
+`lake build` 一律 `-j2`/`-j3`（PA 级模块 6–8G/个，shard 7G/个，36G 墙）。
+在飞：euler v22（残错估 8–10）、TM 舰队、root runner 2,750/6,900（周四上午收）。
