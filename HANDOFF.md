@@ -44,7 +44,9 @@
   ②TameSpine 批 60 = B3 入口 AUQTZYZ→RXOKSKC（19:04 发，克隆 p4t21）③W8 gen-8
   + decide-mode 开关（**错峰：等 TM 舰队 shard 排空再发**）。**此三条之外仍冻结**
   （AJRIPQN 本体 / Lean 4.35 升级波 / 雷场入 playbook 等待用户令）。容量纪律：
-  12 核/36G，重 lean 构建同时 ≤3 + runner 2，车道 lake build 一律 -j2。
+  12 核/36G，重 lean 构建同时 ≤3 + runner 2，车道 lake build 串行（禁止跨
+  lane 并发构建）+ 只用热缓存；**Lake 5.0.0 无 `-j`/`--jobs` 旗标，禁用 `-K`
+  未知键**（见 §5.5）。
   六小时巡检自动化同样钉死不得代发。
 
 ---
@@ -285,6 +287,20 @@ pin 死）。
 - 车道配额死/API 死：见 §1.4（续作重发 / salvage 协议）；
 - 并行车道互写干扰闸：LANE_FILES 白名单 + 根集裁剪 + 排队连闸；
 - 会话超长：交接断点写进 `docs/handoffs/`，接力者从 HANDOFF.md 重入。
+
+### 5.5 Lake 构建旗标（2026-10-20 十二发波首发事故）
+
+- **Lake 5.0.0（Lean 4.32.2 捆绑）没有 `-j` 也没有 `--jobs` 旗标**——`lake build
+  -j2` 直接 `unknown short option '-j'` EXIT=1（十二发波基线预热构建即死于此，
+  车道自救去掉旗标后 8700 jobs 绿）。并发控制没有 CLI 开关，纪律是**操作性的**：
+  每 lane 一次只跑一个 lake build、跨 lane 串行、只用热缓存（rsync 自主仓后仅
+  变更闭包重编）、冷重建只在安静窗口做。
+- **`-K<未知键>` 陷阱**：`lake -Kjobs=2 …` 不报错、静默接受，且任何 `-K` 键变更
+  触发 workspace reconfigure → 共享热克隆缓存被毒化，下一次普通构建全量回放
+  （实测 1:06 重放 9491 jobs）。共享克隆上**禁止用 `-K` 试任何键**。
+- 冷全树重建是 36G 内存事故（10-16/17）的根因形态：PA 级模块 6–8G/个、shard
+  7G/个，Lake 默认并行度会同时拉起多个 elaborator——冷重建前先看
+  `memory_pressure -Q` 与在飞 lean 进程。
 
 ## 6. 文档地图
 

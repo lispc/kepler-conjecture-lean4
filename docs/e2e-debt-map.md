@@ -414,6 +414,8 @@ root 全构建的内存窗口不够；**周四 root runner 收完的安静窗口
 3. **W8 gen-8**（rung 收尾 + kd 对半产盒器 + `emit_lean --decide-mode=native|kernel`
    开发/收尾双模开关，用户 10-20 提议）——等 TM 舰队 C549Mono shard 排空再发。
 
-**容量纪律（本日实测后立）**：重 lean 构建同时 ≤3 个 + runner 恒 2；车道克隆
-`lake build` 一律 `-j2`/`-j3`（PA 级模块 6–8G/个，shard 7G/个，36G 墙）。
+**容量纪律（本日实测后立；20:00 修订）**：重 lean 构建同时 ≤3 个 + runner 恒 2；
+**Lake 5.0.0 无 `-j`/`--jobs` 旗标（`-j2` 直接 EXIT=1，十二发波首发即踩；`-Kjobs`
+静默毒化缓存）——并发控制靠操作性纪律：每 lane 单 build 跨 lane 串行、热缓存、
+冷重建只进安静窗口**（HANDOFF §5.5）。PA 级模块 6–8G/个，shard 7G/个，36G 墙。
 在飞：euler v22（残错估 8–10）、TM 舰队、root runner 2,750/6,900（周四上午收）。
