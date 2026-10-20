@@ -1,0 +1,22 @@
+SF-47 提案 fix diff（草案，未应用，待用户批；相对基准 = 主仓 39d26502 的
+lean/Kepler/Text/PackingAuto24.lean md5 7d426b7e86841c258c44019162bd5293
+的 p24_cap_wedge_cover_strong 末合取；十三发波车道 13gen 波差的语句 hunk 2）。
+
+修法形态：capstone 件 `p24_cap_wedge_cover_strong` 的末合取（点态 hcov 覆盖
+`∀ x ∈ cap ∩ wedgeGe, x ∈ ⋃₀ wedgeCells`）→ 与 SF-46 同型的测度级形
+（未覆盖迹 nullSet 对称差式）。理由：该合取即十二发波墙 B 的冻结载体——
+scaffold 3 经 SF-46 恢复测度级形后，点态合取在树内无货源（差异恰为边界扇
+零迹，HL 原生以 NEGLIGIBLE_SYMDIFF 吸收、从不点态承诺，REUHADY.hl:7483-7790）。
+其余合取（hw3/hw4/hnullarm/hwit 族）零改动。patch 头附 13gen 实测：换接后
+PA24 直 sorry 1→0（scaffold 3 本体真证收口），PA24/PackingConcl/根全树
+8700/8715/9359 jobs 三绿。
+
+--- a/lean/Kepler/Text/PackingAuto24.lean
++++ b/lean/Kepler/Text/PackingAuto24.lean
+@@ -7380,8 +7380,8 @@
+         X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2) ∧
+-      ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
+-        x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e := by
++      nullSet ((conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) \
++        ⋃₀ ((fun X : Set V3 => X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) ''
++          p24_wedgeCells V u0 u1 n1 n2 e)) := by

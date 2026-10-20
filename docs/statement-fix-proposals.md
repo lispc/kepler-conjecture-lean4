@@ -2041,3 +2041,42 @@ HL D6 覆盖段（REUHADY.hl :7395-7790）证明该点态形是移植期**真加
 → STATEMENT-FIX 闸 `SF_ITEM=46` → 应用后 PA24 直 sorry 1→0（REUHADY1 链仅余
 AJRIPQN inherited）。应用批随带 kit 装配收口件走全量波差归档闸（§44(c)/§45(c)
 先例）。
+
+## 47. PA24 `p24_cap_wedge_cover_strong` 末合取点态 hcov → 测度级零迹形（SF-46 联动：墙 B 的 capstone 载体）— 分级 A（statement 保真修正 · 过度加强形修复）
+
+**立案：2026-10-21，十三发波车道产出、编排者核（13gen 波差语句净变更恰两处，
+hunk 1 = SF-46 批准形逐字，hunk 2 = 本项——车道超出任务书"只许一处"约束时
+如实上报，本项即对该越界的正式立案）；待用户批。** 对象 = capstone 件
+`p24_cap_wedge_cover_strong` 末合取的点态覆盖 `∀ x ∈ cap ∩ wedgeGe, x ∈
+⋃₀ wedgeCells`。机理：该合取即十二发波**墙 B 的冻结载体**——scaffold 3 经
+SF-46 恢复测度级形后点态合取无货源（点态与测度级之差恰为边界扇零迹，HL
+原生 NEGLIGIBLE_SYMDIFF 吸收、从不点态承诺）；编排者在 §46(b) 预写的
+"消费件语句冻结不动"条款不成立（当时误判测度级+零迹侧可复原点态——不可），
+以本项修正。
+
+(a) HOL：REUHADY.hl:7483-7790 逐字（同 SF-46 (a)）——HL 的覆盖承诺自始为
+测度级零迹形；本项把 capstone 件的对应合取恢复为忠实形（nullSet 对称差式，
+与 scaffold 3 新形同构）。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/47-pa24-coverstrong-msr.patch`
+（+2/−2）：末合取点态 → `nullSet ((cap ∩ wedgeGe) \ ⋃₀ (X∩cap∩wedgeGe)''
+wedgeCells)`，其余合取（hw3/hw4/hnullarm/hwit 族）零改动。十三发波车道已在
+克隆实测：两 hunk 联合应用后 scaffold 3 真证收口，**PA24 直 sorry 1→0**，
+PA24/PackingConcl/根全树 8700/8715/9359 jobs 三绿，axiom 28 件探针 EXIT=0。
+
+### (c) 验收与应用计划
+
+与 SF-46 应用批（13gen 全量波差）一次走闸：语句净变更 = SF-46 ∘ SF-47 两
+patch 叠加逐字（§44+45 先例），全量波差最终权归档，STATEMENT-FIX 模式
+`SF_ITEM=46`（净变更含两 patch 时以全量波差归档件为准）。若不批：13gen
+交付件不入库，PA24 维持 12gen 态（直 sorry 1），capstone 点态合取按十三发波
+处方等待 R1-GIANT 路线（k2Case/k3Subset）+ 边界扇组合结构。
+
+### (d) 附带记账（非本项范围）
+
+新 taint 一条：`p24_edgeX_of_leaf23`（十三发波新件）消费 PA2 `RVFXZBU2_concl`
+shim（:5496，pack_concl.hl:145-147，R3 家族）——替代路为 LEPJBDJ k∈{2,3}
+content（R1-GIANT，墙 A 复活），按"覆盖链 R1-free"取向定案。该 shim 列入
+未来 shim 清理批盘点（同 MXI_EXISTS_concl 成环案）。
