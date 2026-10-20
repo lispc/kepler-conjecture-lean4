@@ -5391,21 +5391,15 @@ private theorem p3a_gap_tri (V : Set V3) (a b c p w : V3) (hV : Packing V)
   sorry
 
 
-/-- HOL `XNHPWAB1_concl` (pack_concl.hl:66-68): below `sqrt 2` the omega
+/- HOL `XNHPWAB1_concl` (pack_concl.hl:66-68): below `sqrt 2` the omega
 point is the circumcenter.
-波 3a (2026-10-08) 侦察+收窄：本体 = Rogers.hl:7194 `XNHPWAB1`（对 k 归纳 +
-closest-point 分析），GIANT。PA2 不可 import PA5/6/7（成环），已按链复制纪律
-真证前置件 p3a_*（truncate/omegaListN 桥、cc_pair 中点件、PYTH/RADV_MONO、
-tri_span、gap_pair、affInd_of_card；见上节）。剩余缺口（NEEDS 记账）：
-(i) BARV→affDim 桥（=MHFTTZN1 本体，PA6 `MHFTTZN_lemma2` 链，GIANT port）；
-(ii) 三点 gap 本体（=PA7 `XYOFCGX_3_0` 同源解析核，PA7 亦 sorry；骨架已按
-p3a_gap_tri docstring 五步记账）；(iii) 核心 k-归纳装配（单点/对/顶点案
-已在探针验证，模 (i)(ii) 即闭）。下游：PA8 OMEGA_LIST_{1,2,3}_EXPLICIT、
-PA12 MXI_EXISTS。 -/
-theorem XNHPWAB1_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
-    Packing V → k ≤ 3 → barV V k ul → hl ul < Real.sqrt 2 →
-    omegaList V ul = circumcenter (setOfList ul) := by
-  sorry
+**退役（2026-10-20，十一发波，REUHADY1 lane）**：本 sorry shim 已删除——
+七/九/十发波真化链闭合后零代码消费者（下游 PA8 `OMEGA_LIST_{1,2,3}_EXPLICIT`
+十发波换接 PA7 真件 `XNHPWAB1`；PA12 `OMEGA_LIST_1_EXPLICIT_NEW` 九发波换接；
+PackingConcl 走 `XNHPWAB1_concl_discharged` 真证版 = PA7 本体）。历史记账：
+波 3a (2026-10-08) 曾按链复制纪律真证前置件 p3a_*（见上节，其余消费者已
+退役，p3a_* kit 保留在册）。 -/
+
 
 /-- HOL `XNHPWAB2_concl` (pack_concl.hl:70-72). -/
 theorem XNHPWAB2_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
@@ -5419,19 +5413,14 @@ theorem XNHPWAB3_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V 
     affDim {omegaListN V ul j | j ∈ Finset.Icc 0 k} = (k : ℤ) := by
   sorry
 
-/-- HOL `XNHPWAB4_concl` (pack_concl.hl:84-86): the truncated circumradii
+/- HOL `XNHPWAB4_concl` (pack_concl.hl:84-86): the truncated circumradii
 increase strictly.
-波 3a (2026-10-08) 侦察+收窄：本体 = Rogers.hl:7691 `XNHPWAB4`（Pythagoras
-+ 严格性经 XYOFCGX），GIANT。同 XNHPWAB1_concl 记账：前置件 p3a_* 已真证
-（含 p3a_PYTH/p3a_RADV_MONO 与 |S|≤3 gap 的 pair 案）；剩余缺口 (i) BARV→
-affDim 桥（PA6 `MHFTTZN_lemma2` 链）；(ii) 三点 gap 本体（p3a_gap_tri 骨架，
-PA7 `XYOFCGX_3_0` 同源）。i<j≤k≤3 时仅用到 |S|≤3 的 gap。下游：PA8
-OMEGA_LIST_1/2_EXPLICIT。 -/
-theorem XNHPWAB4_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
-    Packing V → k ≤ 3 → barV V k ul → hl ul < Real.sqrt 2 →
-    ∀ i j : ℕ, i < j → j ≤ k →
-      hl (truncateSimplex i ul) < hl (truncateSimplex j ul) := by
-  sorry
+**退役（2026-10-20，十一发波，REUHADY1 lane）**：本 sorry shim 已删除——
+十发波 PA8 `OMEGA_LIST_{1,2}_EXPLICIT` 换接 PA7 真件 `XNHPWAB4` 后零代码
+消费者（PackingConcl 走 `XNHPWAB4_concl_discharged` 真证版 = PA7 本体）。
+历史记账：波 3a (2026-10-08) 侦察 = Rogers.hl:7691 本体（Pythagoras +
+严格性经 XYOFCGX），GIANT，前置件 p3a_* 已真证（kit 保留在册）。 -/
+
 
 /-- HOL `WAUFCHE2_concl` (pack_concl.hl:93-95). -/
 theorem WAUFCHE2_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
