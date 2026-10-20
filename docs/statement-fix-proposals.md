@@ -1963,7 +1963,10 @@ Option A 单语句加前提（HL 本体即单语句 premise-minimal 形；PA23 S
 ## 45. PA24 `p24_cell_cap_dihX` hwit 前提加门（SF-44 应用批 1 行联动微调；门下 hwit 为装配链正式接口形）— 分级 A（statement 保真修正 · 死前提预防）
 
 **立案：2026-10-20，pa24reuhady 车道九发波侦察产出（9gen_SF45_draft.md），
-编排者代车道正式入册；待用户批。** 对象 = SF-44 批准补丁的 `hwit` 前提行
+编排者代车道正式入册；用户批准（2026-10-20，"SF 45: 同意"）——批准「门下
+hwit」为 REUHADY1 装配链正式接口形 + SF-44 应用批 hwit 行 1 行联动微调；
+七发波无门件 `p24_wedge_setSum_eq_azim_strong` 的退役/加门改造二选一仍按
+§45.3-1 届时再呈。** 对象 = SF-44 批准补丁的 `hwit` 前提行
 （未门形）。SF-44 应用批的装配链供给侧（scaffold 3 加强形 cover）按
 HL :1531-1629 走廊覆盖 + 门下见证推导 `?k vl` 见证，恰在 `~NULLSET` 门下
 成立；无门形 `hwit` 对退化见证角点胞（全 witnesses 非 [u0,u1] 头，
