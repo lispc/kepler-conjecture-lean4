@@ -6623,7 +6623,15 @@ private theorem p24_caseB3_aux (V : Set V3) (u0 u1 : V3) (vl : List V3)
   obtain ⟨hEae3, hEaP⟩ := p24_axial_eqs u0 u1 v mid e3 P (dist u0 u1) t h wg
     a haxd hdne h33 hmiddef hv' hPe3 hPn hhpos hgam heqa1 heqav
   -- 7. mxi 数据 + segment 权重线性传播
-  obtain ⟨hmx1, hmx2⟩ := MXI_EXISTS_concl V [u0, u1, v, w] hs hp hbar hr3 hr4
+  -- 十发波换接（2026-10-20）：PA2 `MXI_EXISTS_concl`（sorry shim）→ PA12
+  -- `MXI_EXPLICIT`（HL marchal2.hl:2516 真件；PA24 已 import PA12，无环）。
+  obtain ⟨s, hseg, hdistS, hsmx⟩ :=
+    MXI_EXPLICIT V [u0, u1, v, w] u0 u1 v w hs hp hbar rfl hr3 hr4
+  have hmx1 : mxi V [u0, u1, v, w] ∈ convexHull ℝ
+      {omegaListN V [u0, u1, v, w] 2, omegaListN V [u0, u1, v, w] 3} := by
+    rw [← hsmx, convexHull_pair]; exact hseg
+  have hmx2 : dist (mxi V [u0, u1, v, w]) (hdV [u0, u1, v, w]) = Real.sqrt 2 := by
+    rw [← hsmx]; exact (dist_comm _ _).trans hdistS
   have hmx2' : dist (mxi V [u0, u1, v, w]) u0 = Real.sqrt 2 := by
     rwa [show hdV [u0, u1, v, w] = u0 from rfl] at hmx2
   rw [convexHull_pair, hw3eq] at hmx1

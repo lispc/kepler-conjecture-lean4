@@ -185,14 +185,380 @@ theorem STRICT_CYCLIC_FAN_PROPERTIES (V : Set V3) (p : V3)
       {e : Set V3 | ∃ v ∈ V, e = {p, v}}) (p, v) = {(p, w) | w ∈ V}) := by
   sorry
 
+/-- Nondegenerate azimuth forces both points off the `0p` axis (junk case of
+`azim`'s definition: a collinear argument zeroes the azimuth). -/
+private theorem p7_ncol_of_azim_pos {p z w : V3} (h : 0 < azim 0 p z w) :
+    ¬ Collinear3 0 p z ∧ ¬ Collinear3 0 p w := by
+  constructor
+  · intro hcol
+    unfold azim at h
+    rw [if_pos (Or.inl hcol)] at h
+    exact lt_irrefl 0 h
+  · intro hcol
+    unfold azim at h
+    rw [if_pos (Or.inr hcol)] at h
+    exact lt_irrefl 0 h
+
+/-- Phase composition: azimuths around a common apex/axis add on the unit
+circle. With the frame aligned to the axis, `azim_frame_spec` exhibits each
+point's polar phase; chaining the three pairwise phase representations and
+cancelling the common phases gives `e^{i(θ_ab+θ_bc)} = e^{i θ_ac}` (the
+exponential form of the azim additivity behind Rogers.hl:5901). -/
+private theorem p7_azim_exp_comp {p a b c : V3} (hp : p ≠ 0)
+    (ha : ¬ Collinear3 0 p a) (hb : ¬ Collinear3 0 p b) (hc : ¬ Collinear3 0 p c) :
+    Complex.exp (((azim 0 p a b + azim 0 p b c : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((azim 0 p a c : ℝ) : ℂ) * Complex.I) := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (p - 0) (sub_ne_zero.mpr hp)
+  have hax : (p - 0 : V3) = dist p 0 • f3 := by rw [dist_eq_norm]; exact halign
+  obtain ⟨ψ₁, r₁, s₁, hr₁, hs₁, hz₁, hzz₁⟩ := azim_frame_spec ha hb hon hax hp
+  obtain ⟨ψ₂, r₂, s₂, hr₂, hs₂, hz₂, hzz₂⟩ := azim_frame_spec hb hc hon hax hp
+  obtain ⟨ψ₃, r₃, s₃, hr₃, hs₃, hz₃, hzz₃⟩ := azim_frame_spec ha hc hon hax hp
+  -- the two representations of `a` share the phase
+  have hA : Complex.exp (((ψ₁ : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ₃ : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hr₁ hr₃ (hz₁.symm.trans hz₃)
+  -- the two representations of `b`
+  have hB : Complex.exp ((((ψ₁ + azim 0 p a b : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp (((ψ₂ : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hs₁ hr₂ (hzz₁.symm.trans hz₂)
+  -- the two representations of `c`
+  have hC : Complex.exp ((((ψ₂ + azim 0 p b c : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp ((((ψ₃ + azim 0 p a c : ℝ) : ℂ)) * Complex.I) :=
+    exp_pos_mul_eq hs₂ hs₃ (hzz₂.symm.trans hzz₃)
+  have h1 : Complex.exp (((ψ₂ : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ₁ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim 0 p a b : ℝ) : ℂ) * Complex.I) := by
+    rw [← hB]
+    exact exp_add_I ψ₁ (azim 0 p a b)
+  have h2 : Complex.exp (((ψ₃ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim 0 p a c : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ₂ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim 0 p b c : ℝ) : ℂ) * Complex.I) := by
+    rw [← exp_add_I ψ₃ (azim 0 p a c), ← hC]
+    exact exp_add_I ψ₂ (azim 0 p b c)
+  have hkey : Complex.exp (((ψ₃ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim 0 p a b + azim 0 p b c : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ₃ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim 0 p a c : ℝ) : ℂ) * Complex.I) := by
+    calc Complex.exp (((ψ₃ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim 0 p a b + azim 0 p b c : ℝ) : ℂ) * Complex.I)
+        = Complex.exp (((ψ₃ : ℝ) : ℂ) * Complex.I)
+            * (Complex.exp (((azim 0 p a b : ℝ) : ℂ) * Complex.I)
+              * Complex.exp (((azim 0 p b c : ℝ) : ℂ) * Complex.I)) :=
+          by rw [exp_add_I]
+      _ = Complex.exp (((ψ₁ : ℝ) : ℂ) * Complex.I)
+            * Complex.exp (((azim 0 p a b : ℝ) : ℂ) * Complex.I)
+            * Complex.exp (((azim 0 p b c : ℝ) : ℂ) * Complex.I) := by
+          rw [hA]; ring
+      _ = Complex.exp (((ψ₂ : ℝ) : ℂ) * Complex.I)
+            * Complex.exp (((azim 0 p b c : ℝ) : ℂ) * Complex.I) := by
+          rw [← h1]
+      _ = Complex.exp (((ψ₃ : ℝ) : ℂ) * Complex.I)
+            * Complex.exp (((azim 0 p a c : ℝ) : ℂ) * Complex.I) := h2.symm
+  exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
+
+/-- The resolved form: with `θ z = azim 0 p e₀ z`, every azimuth is the cyclic
+θ-difference (values in `[0,2π)`, so the wrap branch adds `2π`). -/
+private theorem p7_theta_comp {p e₀ a c : V3} (hp : p ≠ 0)
+    (he : ¬ Collinear3 0 p e₀) (ha : ¬ Collinear3 0 p a) (hc : ¬ Collinear3 0 p c) :
+    azim 0 p a c = azim 0 p e₀ c - azim 0 p e₀ a ∨
+      azim 0 p a c = azim 0 p e₀ c - azim 0 p e₀ a + 2 * Real.pi := by
+  have hcomp := p7_azim_exp_comp hp he ha hc
+  have h3 : Complex.exp (((azim 0 p a c : ℝ) : ℂ) * Complex.I)
+      = Complex.exp ((((azim 0 p e₀ c - azim 0 p e₀ a : ℝ) : ℂ)) * Complex.I) := by
+    have harg : ((azim 0 p e₀ a + (azim 0 p e₀ c - azim 0 p e₀ a) : ℝ) : ℂ)
+        = ((azim 0 p e₀ c : ℝ) : ℂ) := by
+      push_cast; ring
+    have he1 : Complex.exp (((azim 0 p e₀ a : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim 0 p a c : ℝ) : ℂ) * Complex.I)
+        = Complex.exp (((azim 0 p e₀ c : ℝ) : ℂ) * Complex.I) := by
+      rw [← exp_add_I]; exact hcomp
+    have he2 : Complex.exp (((azim 0 p e₀ a : ℝ) : ℂ) * Complex.I)
+        * Complex.exp ((((azim 0 p e₀ c - azim 0 p e₀ a : ℝ) : ℂ)) * Complex.I)
+        = Complex.exp (((azim 0 p e₀ c : ℝ) : ℂ) * Complex.I) := by
+      rw [← exp_add_I, harg]
+    exact mul_left_cancel₀ (Complex.exp_ne_zero _) (he1.trans he2.symm)
+  obtain ⟨k, hk⟩ := Complex.exp_eq_exp_iff_exists_int.mp h3
+  -- lift the complex phase equation to a real equation
+  have hkR : (azim 0 p a c : ℝ)
+      = azim 0 p e₀ c - azim 0 p e₀ a + (k : ℝ) * (2 * Real.pi) := by
+    have h2 : ((azim 0 p a c : ℝ) : ℂ) * Complex.I
+        = (((azim 0 p e₀ c - azim 0 p e₀ a + (k : ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
+      rw [hk]; push_cast; ring
+    have := mul_right_cancel₀ Complex.I_ne_zero h2
+    exact_mod_cast this
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hrng : 0 ≤ azim 0 p a c ∧ azim 0 p a c < 2 * Real.pi :=
+    ⟨azim_nonneg 0 p a c, azim_lt_two_pi 0 p a c⟩
+  have hδlo : -(2 * Real.pi) < azim 0 p e₀ c - azim 0 p e₀ a := by
+    linarith [azim_nonneg 0 p e₀ c, azim_lt_two_pi 0 p e₀ a]
+  have hδhi : azim 0 p e₀ c - azim 0 p e₀ a < 2 * Real.pi := by
+    linarith [azim_nonneg 0 p e₀ a, azim_lt_two_pi 0 p e₀ c]
+  rcases Int.lt_trichotomy k 0 with hk0 | hk1 | hk2
+  · exfalso
+    have hle : ((k:ℤ) : ℝ) ≤ -1 := by
+      have := (by omega : (k:ℤ) ≤ -1); exact_mod_cast this
+    have hprod : ((k:ℤ) : ℝ) * (2 * Real.pi) ≤ -(2 * Real.pi) :=
+      by linarith [mul_le_mul_of_nonneg_right hle h2pi.le]
+    linarith [hkR, hprod, hδlo, hrng.1]
+  · refine Or.inl ?_
+    rw [hk1, Int.cast_zero, zero_mul] at hkR
+    linarith
+  · rcases Int.lt_trichotomy k 1 with hklt | hkeq | hkgt
+    · exfalso
+      omega
+    · refine Or.inr ?_
+      rw [hkeq, Int.cast_one, one_mul] at hkR
+      linarith
+    · exfalso
+      have hge : ((k:ℤ) : ℝ) ≥ 2 := by
+        have := (by omega : (k:ℤ) ≥ 2); exact_mod_cast this
+      have hprod : ((k:ℤ) : ℝ) * (2 * Real.pi) ≥ 2 * (2 * Real.pi) :=
+        by linarith [mul_le_mul_of_nonneg_right hge h2pi.le]
+      linarith [hkR, hprod, hδlo, hrng.2]
+
 /-- HL `ANGLE_SUM_lemma` (Rogers.hl:5901): the cyclic ordering pairing each
-point to its azim-successor realizes the full angle sum `2π`. -/
+point to its azim-successor realizes the full angle sum `2π`.
+Proof (direct θ-cycle, bypassing the HOL FAN/hypermap route): rank the points
+by `θ z = azim 0 p e₀ z`, map each point to its θ-successor (θ-max wrapping to
+the θ-min), and telescope the gaps around the circle. -/
 theorem ANGLE_SUM_lemma (V : Set V3) (p : V3) (hfin : V.Finite)
     (hcard : 2 ≤ Nat.card V)
     (hazim : ∀ v w, v ∈ V → w ∈ V → v ≠ w → 0 < azim 0 p v w) :
     ∃ f : V3 → V3, (∀ x, x ∈ V → f x ∈ V ∧ x ≠ f x) ∧
       setSum V (fun x => azim 0 p x (f x)) = 2 * Real.pi := by
-  sorry
+  classical
+  -- finiteness bookkeeping
+  set S := hfin.toFinset with hSdef
+  haveI : Fintype ↥V := hfin.fintype
+  have hcardF : Nat.card ↥V = S.card := by
+    rw [Nat.card_eq_fintype_card]; exact (Set.Finite.card_toFinset hfin).symm
+  have h2le : 2 ≤ S.card := by rw [← hcardF]; exact hcard
+  have hne : S.Nonempty := by
+    by_contra h0
+    rw [Finset.not_nonempty_iff_eq_empty] at h0
+    rw [h0, Finset.card_empty] at h2le
+    omega
+  have hmem : ∀ x ∈ S, x ∈ V := fun x hx => hfin.mem_toFinset.mp hx
+  have hmem' : ∀ x ∈ V, x ∈ S := fun x hx => hfin.mem_toFinset.mpr hx
+  -- two distinct points, per-point witness
+  obtain ⟨a₀, ha₀, b₀, hb₀, hab₀⟩ := Finset.one_lt_card.mp h2le
+  have hother : ∀ z ∈ S, ∃ w ∈ S, w ≠ z := by
+    intro z hz
+    by_cases haz : a₀ = z
+    · refine ⟨b₀, hb₀, ?_⟩
+      intro hcon
+      rw [haz] at hab₀
+      exact hab₀ hcon.symm
+    · exact ⟨a₀, ha₀, haz⟩
+  -- every point of V is off the 0p axis, and so is p
+  have hncol : ∀ z ∈ S, ¬ Collinear3 0 p z := by
+    intro z hz
+    obtain ⟨w, hwS, hwz⟩ := hother z hz
+    exact (p7_ncol_of_azim_pos (hazim z w (hmem z hz) (hmem w hwS) hwz.symm)).1
+  obtain ⟨e₀, he₀S⟩ := hne
+  have he₀ : ¬ Collinear3 0 p e₀ := hncol e₀ he₀S
+  have hp : p ≠ 0 := by
+    intro h0
+    rw [h0] at he₀
+    exact he₀ (by
+      show Collinear ℝ ({(0:V3), 0, e₀} : Set V3)
+      have h2 : ({(0:V3), 0, e₀} : Set V3) = {(0:V3), e₀} := by ext q; simp
+      rw [h2]
+      exact collinear_pair ℝ (0:V3) e₀)
+  -- θ-coordinates and their injectivity on V
+  set theta : V3 → ℝ := fun z => azim 0 p e₀ z with htheta
+  have hthetaeq : ∀ z : V3, theta z = azim 0 p e₀ z := fun _ => rfl
+  have hinj : ∀ x ∈ S, ∀ y ∈ S, theta x = theta y → x = y := by
+    intro x hx y hy hθ
+    rw [hthetaeq] at hθ
+    by_contra hne2
+    have hpos := hazim x y (hmem x hx) (hmem y hy) hne2
+    have hlt := azim_lt_two_pi 0 p x y
+    rcases p7_theta_comp hp he₀ (hncol x hx) (hncol y hy) with h | h
+    · rw [hθ] at h; linarith
+    · rw [hθ] at h; linarith
+  -- θ-min and θ-max values and realizing points
+  have himgne : (S.image theta).Nonempty := ⟨theta e₀, Finset.mem_image.mpr ⟨e₀, he₀S, rfl⟩⟩
+  obtain ⟨tMax, htMaxmem, htMaxle⟩ : ∃ t, t ∈ S.image theta ∧
+      ∀ t' ∈ S.image theta, t' ≤ t :=
+    ⟨(S.image theta).max' himgne, (S.image theta).max'_mem himgne,
+      fun t' ht' => Finset.le_max' (S.image theta) t' ht'⟩
+  obtain ⟨tMin, htMinmem, htMinge⟩ : ∃ t, t ∈ S.image theta ∧
+      ∀ t' ∈ S.image theta, t ≤ t' :=
+    ⟨(S.image theta).min' himgne, (S.image theta).min'_mem himgne,
+      fun t' ht' => Finset.min'_le (S.image theta) t' ht'⟩
+  obtain ⟨xM, hxMS, hxMθ⟩ := Finset.mem_image.mp htMaxmem
+  obtain ⟨yM, hyMS, hyMθ⟩ := Finset.mem_image.mp htMinmem
+  have hxMax : ∀ w ∈ S, theta w ≤ tMax := by
+    intro w hw; exact htMaxle (theta w) (Finset.mem_image.mpr ⟨w, hw, rfl⟩)
+  have hyMin : ∀ w ∈ S, tMin ≤ theta w := by
+    intro w hw; exact htMinge (theta w) (Finset.mem_image.mpr ⟨w, hw, rfl⟩)
+  have hθne : theta a₀ ≠ theta b₀ := fun hh => hab₀ (hinj a₀ ha₀ b₀ hb₀ hh)
+  have hstrict : tMin < tMax := by
+    rcases lt_trichotomy (theta a₀) (theta b₀) with h | h | h
+    · linarith [hyMin a₀ ha₀, h, hxMax b₀ hb₀]
+    · exact absurd h hθne
+    · linarith [hyMin b₀ hb₀, h, hxMax a₀ ha₀]
+  -- the successor function: θ-successor, with the θ-max wrapping to the θ-min
+  set f : V3 → V3 := fun x =>
+    if theta x = tMax then yM else
+      Classical.epsilon (fun w => w ∈ S ∧ theta x < theta w ∧
+        ∀ w₁ ∈ S, theta x < theta w₁ → theta w ≤ theta w₁) with hfdef
+  have hfmax : f xM = yM := by simp only [hfdef]; exact if_pos hxMθ
+  have hfA : ∀ x ∈ S, theta x ≠ tMax →
+      f x ∈ S ∧ theta x < theta (f x) ∧ ∀ w₁ ∈ S, theta x < theta w₁ → theta (f x) ≤ theta w₁ := by
+    intro x hx hne
+    simp only [hfdef, if_neg hne]
+    -- the upper set {w ∈ S | theta x < theta w} is finite nonempty, take its θ-min
+    have hUne : ((S.filter (fun w => theta x < theta w)).image theta).Nonempty :=
+      ⟨theta xM, Finset.mem_image.mpr ⟨xM, Finset.mem_filter.mpr ⟨hxMS, by
+        rw [hxMθ]; exact lt_of_le_of_ne (hxMax x hx) hne⟩, rfl⟩⟩
+    obtain ⟨u, huU, huθ⟩ := Finset.mem_image.mp
+      (((S.filter (fun w => theta x < theta w)).image theta).min'_mem hUne)
+    have humin : ∀ t' ∈ (S.filter (fun w => theta x < theta w)).image theta,
+        theta u ≤ t' := by
+      intro t' ht'
+      rw [huθ]
+      exact Finset.min'_le
+        ((S.filter (fun w => theta x < theta w)).image theta) t' ht'
+    have huF : u ∈ S ∧ theta x < theta u := Finset.mem_filter.mp huU
+    have hmin1 : ∀ w₁ ∈ S, theta x < theta w₁ → theta u ≤ theta w₁ := fun w₁ hw₁ hlt =>
+      humin (theta w₁) (Finset.mem_image.mpr ⟨w₁, Finset.mem_filter.mpr ⟨hw₁, hlt⟩, rfl⟩)
+    exact Classical.epsilon_spec (p := fun w => w ∈ S ∧ theta x < theta w ∧
+      ∀ w₁ ∈ S, theta x < theta w₁ → theta w ≤ theta w₁) ⟨u, huF.1, huF.2, hmin1⟩
+  have hfmem : ∀ x ∈ S, f x ∈ S := by
+    intro x hx
+    by_cases hne : theta x = tMax
+    · simp only [hfdef, if_pos hne]; exact hyMS
+    · exact (hfA x hx hne).1
+  have hfne : ∀ x ∈ S, x ≠ f x := by
+    intro x hx
+    by_cases hxm : x = xM
+    · rw [hxm, hfmax]
+      intro heq
+      exact absurd (by rw [← hyMθ, ← heq, ← hxMθ]) hstrict.ne
+    · have hlt : theta x < theta (f x) :=
+        (hfA x hx (fun hh => hxm (hinj x hx xM hxMS (hh.trans hxMθ.symm)))).2.1
+      intro hcon
+      rw [← hcon] at hlt
+      exact lt_irrefl _ hlt
+  refine ⟨f, fun x hx => ⟨hmem _ (hfmem x (hmem' x hx)), hfne x (hmem' x hx)⟩, ?_⟩
+  unfold setSum
+  rw [dif_pos hfin]
+  -- split off the θ-max point
+  have hsplit := Finset.sum_erase_add S (fun x => azim 0 p x (f x)) hxMS
+  rw [← hsplit, hfmax]
+  -- inner edges: azimuth = forward θ-gap
+  have hxne : ∀ x ∈ S.erase xM, theta x ≠ tMax := by
+    intro x hx
+    have hxS : x ∈ S := (Finset.mem_erase.mp hx).2
+    intro hh
+    exact (Finset.mem_erase.mp hx).1 (hinj x hxS xM hxMS (hh.trans hxMθ.symm))
+  have hxAB : ∀ x ∈ S.erase xM, theta x < theta (f x) := by
+    intro x hx; exact (hfA x ((Finset.mem_erase.mp hx).2) (hxne x hx)).2.1
+  have hinner : ∀ x ∈ S.erase xM, azim 0 p x (f x) = theta (f x) - theta x := by
+    intro x hx
+    have hxS : x ∈ S := (Finset.mem_erase.mp hx).2
+    have h2 := hxAB x hx
+    rcases p7_theta_comp hp he₀ (hncol x hxS) (hncol (f x) (hfmem x hxS)) with h | h
+    · exact h
+    · exfalso
+      linarith [h, azim_lt_two_pi 0 p x (f x), h2]
+  rw [Finset.sum_congr rfl fun x hx => hinner x hx]
+  -- the successor map restricts to a bijection `S.erase xM → S.erase yM`
+  have hfB : ∀ x ∈ S.erase xM, f x ∈ S.erase yM := by
+    intro x hx
+    have hxS : x ∈ S := (Finset.mem_erase.mp hx).2
+    have hlt := hxAB x hx
+    refine Finset.mem_erase.mpr ⟨fun heq => ?_, hfmem x hxS⟩
+    rw [heq, hyMθ] at hlt
+    linarith [hyMin x hxS]
+  have hinjA : ∀ x₁ ∈ S.erase xM, ∀ x₂ ∈ S.erase xM, f x₁ = f x₂ → x₁ = x₂ := by
+    intro x₁ h₁ x₂ h₂ heq
+    by_contra hne2
+    have hx₁ : x₁ ∈ S := (Finset.mem_erase.mp h₁).2
+    have hx₂ : x₂ ∈ S := (Finset.mem_erase.mp h₂).2
+    have hmin₁ : ∀ w₁ ∈ S, theta x₁ < theta w₁ → theta (f x₂) ≤ theta w₁ := by
+      rw [← heq]; exact (hfA x₁ hx₁ (hxne x₁ h₁)).2.2
+    have hmin₂ : ∀ w₁ ∈ S, theta x₂ < theta w₁ → theta (f x₁) ≤ theta w₁ := by
+      rw [heq]; exact (hfA x₂ hx₂ (hxne x₂ h₂)).2.2
+    rcases lt_trichotomy (theta x₁) (theta x₂) with h | h | h
+    · exact absurd (hxAB x₂ h₂) (not_lt.mpr (hmin₁ x₂ hx₂ h))
+    · exact hne2 (hinj x₁ hx₁ x₂ hx₂ h)
+    · exact absurd (hxAB x₁ h₁) (not_lt.mpr (hmin₂ x₁ hx₁ h))
+  have hbij : (S.erase xM).sum (fun x => theta (f x))
+      = (S.erase yM).sum theta := by
+    refine Finset.sum_bij (fun x _ => f x) hfB hinjA ?_ (fun _ _ => rfl)
+    intro y hy
+    have hyS : y ∈ S := (Finset.mem_erase.mp hy).2
+    have hyNe : y ≠ yM := (Finset.mem_erase.mp hy).1
+    have hyθ : theta y ≠ tMin := fun hh =>
+      hyNe (hinj y hyS yM hyMS (hh.trans hyMθ.symm))
+    -- the θ-predecessor of `y`: θ-max among the points strictly below θ y
+    obtain ⟨w₀, hw₀T⟩ : (S.filter (fun w => theta w < theta y)).Nonempty := ⟨yM,
+      Finset.mem_filter.mpr ⟨hyMS, by
+        rw [hyMθ]
+        exact lt_of_le_of_ne (hyMin y hyS) (fun hh => hyθ hh.symm)⟩⟩
+    have hTimgne : ((S.filter (fun w => theta w < theta y)).image theta).Nonempty :=
+      ⟨theta w₀, Finset.mem_image.mpr ⟨w₀, hw₀T, rfl⟩⟩
+    obtain ⟨u, huTimg, huTmax⟩ : ∃ u ∈ (S.filter (fun w => theta w < theta y)).image theta,
+        ∀ u' ∈ (S.filter (fun w => theta w < theta y)).image theta, u' ≤ u :=
+      ⟨((S.filter (fun w => theta w < theta y)).image theta).max' hTimgne,
+        ((S.filter (fun w => theta w < theta y)).image theta).max'_mem hTimgne,
+        fun t' ht' => Finset.le_max' ((S.filter (fun w => theta w < theta y)).image theta) t' ht'⟩
+    obtain ⟨x, hxT, hxθu⟩ := Finset.mem_image.mp huTimg
+    have hxT' : x ∈ S ∧ theta x < theta y := Finset.mem_filter.mp hxT
+    have hxMne : x ≠ xM := by
+      intro heq
+      rw [heq, hxMθ] at hxT'
+      exact absurd hxT'.2 (not_lt.2 (hxMax y hyS))
+    have hxtMax : theta x ≠ tMax := fun hh =>
+      hxMne (hinj x hxT'.1 xM hxMS (hh.trans hxMθ.symm))
+    have hxABx : theta x < theta (f x) := (hfA x hxT'.1 hxtMax).2.1
+    have hxmin : ∀ w₁ ∈ S, theta x < theta w₁ → theta (f x) ≤ theta w₁ :=
+      (hfA x hxT'.1 hxtMax).2.2
+    have hle : theta (f x) ≤ theta y := hxmin y hyS hxT'.2
+    have heqθ : theta (f x) = theta y := by
+      rcases lt_or_eq_of_le hle with h | h
+      · exfalso
+        have hfT : f x ∈ S.filter (fun w => theta w < theta y) :=
+          Finset.mem_filter.mpr ⟨hfmem x hxT'.1, h⟩
+        have hmax := huTmax (theta (f x)) (Finset.mem_image.mpr ⟨f x, hfT, rfl⟩)
+        rw [← hxθu] at hmax
+        linarith [hmax, hxABx]
+      · exact h
+    refine ⟨x, Finset.mem_erase.mpr ⟨hxMne, hxT'.1⟩,
+      hinj (f x) (hfmem x hxT'.1) y hyS heqθ⟩
+  -- telescoping around the circle
+  have hAsplit := Finset.sum_erase_add S theta hxMS
+  have hBsplit := Finset.sum_erase_add S theta hyMS
+  have hA2 : (S.erase xM).sum theta = S.sum theta - theta xM := by
+    rw [← hAsplit]; ring
+  have hB2 : (S.erase yM).sum theta = S.sum theta - theta yM := by
+    rw [← hBsplit]; ring
+  have hsub : (S.erase xM).sum (fun x => theta (f x) - theta x)
+      + (S.erase xM).sum theta
+      = (S.erase xM).sum (fun x => theta (f x)) := by
+    rw [← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun x _ => sub_add_cancel _ _
+  have hsub2 : (S.erase xM).sum (fun x => theta (f x) - theta x)
+      = (S.erase xM).sum (fun x => theta (f x)) - (S.erase xM).sum theta := by
+    linarith [hsub]
+  rw [hsub2, hbij, hB2, hA2]
+  -- the wrap edge: azimuth from the θ-max to the θ-min
+  have hxMθa : azim 0 p e₀ xM = tMax := hthetaeq xM ▸ hxMθ
+  have hyMθa : azim 0 p e₀ yM = tMin := hthetaeq yM ▸ hyMθ
+  have hwrap : azim 0 p xM yM = theta yM - theta xM + 2 * Real.pi := by
+    rcases p7_theta_comp hp he₀ (hncol xM hxMS) (hncol yM hyMS) with h | h
+    · exfalso
+      have h1 : azim 0 p e₀ yM - azim 0 p e₀ xM < 0 := by
+        rw [hyMθa, hxMθa]; linarith
+      linarith [h, h1, azim_nonneg 0 p xM yM]
+    · exact h
+  rw [hwrap, hyMθ, hxMθ]
+  linarith
+
 
 /-- HL `ANGLE_SUM_BOUND` (Rogers.hl:5992). -/
 theorem ANGLE_SUM_BOUND (V : Set V3) (p : V3) (a : ℝ) (ha : 0 ≤ a)

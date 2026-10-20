@@ -2028,7 +2028,17 @@ private theorem p20g_apex_dist3 (V X : Set V3) (a b c d : V3)
   have hw3'' := hw3
   rw [hT3] at hw3''
   have hw3' : omegaListN V [a, b, c, d] 3 ∈ voronoiList V [a, b, c] := hmono hw3''
-  have hm := MXI_EXISTS_concl V [a, b, c, d] hs hp hbarW hlow hhigh
+  -- 十发波换接（2026-10-20）：PA2 `MXI_EXISTS_concl`（sorry shim）→ PA12
+  -- `MXI_EXPLICIT`（HL marchal2.hl:2516 真件；PA20 已 import PA12，无环）。
+  -- 派生：segment ⊆ convexHull（`convexHull_pair`）+ `dist_comm`。
+  have hm : mxi V [a, b, c, d] ∈ convexHull ℝ
+      {omegaListN V [a, b, c, d] 2, omegaListN V [a, b, c, d] 3} ∧
+      dist (mxi V [a, b, c, d]) (hdV [a, b, c, d]) = Real.sqrt 2 := by
+    obtain ⟨s, hseg, hdistS, hsmx⟩ :=
+      MXI_EXPLICIT V [a, b, c, d] a b c d hs hp hbarW rfl hlow hhigh
+    refine ⟨?_, ?_⟩
+    · rw [← hsmx, convexHull_pair]; exact hseg
+    · rw [← hsmx]; exact (dist_comm _ _).trans hdistS
   have hSS : ({omegaListN V [a, b, c, d] 2, omegaListN V [a, b, c, d] 3} : Set V3) ⊆
       voronoiList V [a, b, c] := by
     intro z hz

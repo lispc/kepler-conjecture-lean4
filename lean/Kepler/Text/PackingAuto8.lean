@@ -21,10 +21,11 @@ Encoding notes.
 - HOL `convex hull` ↔ `convexHull ℝ`; `dist (s,x)` ↔ `dist s x`;
   `ball (s,r)` ↔ `Metric.ball s r`.
 - Rogers dependency: HL `OMEGA_LIST_{1,2,3}_EXPLICIT` cite Rogers.hl
-  `XNHPWAB1` (HL:319/364/411) and `XNHPWAB4` (HL:342/387) via
+  `XNHPWAB1` (HL:319/364/411) and `XNHPWAB4` (HL:342/387) via the Rogers
+  real items (PackingAuto7; 十发波换接 2026-10-20, formerly the
   `open Rogers;;` (marchal1.hl:34). Those Rogers lanes (PackingAuto6/7) are
   NOT importable yet, so the three proofs are discharged here through the
-  statement-identical pack_concl interfaces `XNHPWAB1_concl`/`XNHPWAB4_concl`
+  statement-identical pack_concl interfaces `XNHPWAB1_concl`/`XNHPWAB4_concl`).
   of PackingAuto2 (which carry the Rogers `sorry`s at this stage). Delete
   this note when Auto6/7 land and those interfaces get proved.
 - The two `AFF_DIM_LE_LENGTH`/`BALL_CONVEX_HULL_LEMMA` statements are
@@ -36,6 +37,7 @@ Encoding notes.
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto5
+import Kepler.Text.PackingAuto7
 import Kepler.Text.Polytope
 import Mathlib
 
@@ -144,9 +146,10 @@ theorem OMEGA_LIST_0_EXPLICIT (a b c d : V3) (V : Set V3) (ul : List V3)
 
 /-- HOL `OMEGA_LIST_1_EXPLICIT` (marchal1.hl:306): on a `sqrt 2`-small
 `barV V 3` list, the first omega point is the circumcenter of `{a,b}`.
-NEEDS: Rogers (PackingAuto6/7) `XNHPWAB4` (HL:342) and `XNHPWAB1` (HL:319) —
-discharged via the statement-identical PackingAuto2 interfaces
-`XNHPWAB4_concl`/`XNHPWAB1_concl`. -/
+DISCHARGED (2026-10-20 PA8 十发波换接): consumes the Rogers real items
+`XNHPWAB4` (PackingAuto7, HL:7691) / `XNHPWAB1` (PackingAuto7, HL:7194)
+directly; the statement-identical PackingAuto2 interfaces
+`XNHPWAB4_concl`/`XNHPWAB1_concl` are no longer used here. -/
 theorem OMEGA_LIST_1_EXPLICIT (a b c d : V3) (V : Set V3) (ul : List V3)
     (_hsat : saturated V) (_hpack : Packing V) (hbar : barV V 3 ul)
     (_hlt : hl ul < Real.sqrt 2) (hul : ul = [a, b, c, d]) :
@@ -156,18 +159,18 @@ theorem OMEGA_LIST_1_EXPLICIT (a b c d : V3) (V : Set V3) (ul : List V3)
     simpa using BARV_INITIAL_SUBLIST V 3 [a, b, c, d] [a, b] hbar
       (INITIAL_SUBLIST_APPEND [a, b] [c, d]) (by simp)
   have hmono : hl (truncateSimplex 1 [a, b, c, d]) < hl (truncateSimplex 3 [a, b, c, d]) :=
-    XNHPWAB4_concl V [a, b, c, d] 3 _hsat _hpack le_rfl hbar _hlt 1 3 (by omega) (by omega)
+    XNHPWAB4 V [a, b, c, d] 3 _hpack hbar _hlt 1 3 (by omega) (by omega)
   rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 a b c d).2.2,
       TRUNCATE_SIMPLEX_REFL 3 [a, b, c, d] rfl] at hmono
   have hcen : omegaList V [a, b] = circumcenter (setOfList [a, b]) :=
-    XNHPWAB1_concl V [a, b] 1 _hsat _hpack (by omega) hb1 (hmono.trans _hlt)
+    XNHPWAB1 V [a, b] 1 _hpack hb1 (hmono.trans _hlt)
   rw [OMEGA_LIST_TRUNCATE_1, hcen]
   exact congrArg circumcenter (by ext x; simp [setOfList])
 
 /-- HOL `OMEGA_LIST_2_EXPLICIT` (marchal1.hl:351): the second omega point is
 the circumcenter of `{a,b,c}`.
-NEEDS: Rogers (PackingAuto6/7) `XNHPWAB4` (HL:387) and `XNHPWAB1` (HL:364) —
-discharged via `XNHPWAB4_concl`/`XNHPWAB1_concl`. -/
+DISCHARGED (2026-10-20 PA8 十发波换接): consumes the Rogers real items
+`XNHPWAB4`/`XNHPWAB1` (PackingAuto7) directly. -/
 theorem OMEGA_LIST_2_EXPLICIT (a b c d : V3) (V : Set V3) (ul : List V3)
     (_hsat : saturated V) (_hpack : Packing V) (hbar : barV V 3 ul)
     (_hlt : hl ul < Real.sqrt 2) (hul : ul = [a, b, c, d]) :
@@ -177,25 +180,25 @@ theorem OMEGA_LIST_2_EXPLICIT (a b c d : V3) (V : Set V3) (ul : List V3)
     simpa using BARV_INITIAL_SUBLIST V 3 [a, b, c, d] [a, b, c] hbar
       (INITIAL_SUBLIST_APPEND [a, b, c] [d]) (by simp)
   have hmono : hl (truncateSimplex 2 [a, b, c, d]) < hl (truncateSimplex 3 [a, b, c, d]) :=
-    XNHPWAB4_concl V [a, b, c, d] 3 _hsat _hpack le_rfl hbar _hlt 2 3 (by omega) (by omega)
+    XNHPWAB4 V [a, b, c, d] 3 _hpack hbar _hlt 2 3 (by omega) (by omega)
   rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 a b c d).2,
       TRUNCATE_SIMPLEX_REFL 3 [a, b, c, d] rfl] at hmono
   have hcen : omegaList V [a, b, c] = circumcenter (setOfList [a, b, c]) :=
-    XNHPWAB1_concl V [a, b, c] 2 _hsat _hpack (by omega) hb2 (hmono.trans _hlt)
+    XNHPWAB1 V [a, b, c] 2 _hpack hb2 (hmono.trans _hlt)
   rw [OMEGA_LIST_TRUNCATE_2, hcen]
   exact congrArg circumcenter (by ext x; simp [setOfList])
 
 /-- HOL `OMEGA_LIST_3_EXPLICIT` (marchal1.hl:398): the last omega point is
 the circumcenter of the whole list.
-NEEDS: Rogers (PackingAuto6/7) `XNHPWAB1` (HL:411) — discharged via
-`XNHPWAB1_concl`. -/
+DISCHARGED (2026-10-20 PA8 十发波换接): consumes the Rogers real item
+`XNHPWAB1` (PackingAuto7) directly. -/
 theorem OMEGA_LIST_3_EXPLICIT (a b c d : V3) (V : Set V3) (ul : List V3)
     (_hsat : saturated V) (_hpack : Packing V) (hbar : barV V 3 ul)
     (_hlt : hl ul < Real.sqrt 2) (hul : ul = [a, b, c, d]) :
     omegaListN V ul 3 = circumcenter {a, b, c, d} := by
   rw [hul] at hbar _hlt ⊢
   have hcen : omegaList V [a, b, c, d] = circumcenter (setOfList [a, b, c, d]) :=
-    XNHPWAB1_concl V [a, b, c, d] 3 _hsat _hpack le_rfl hbar _hlt
+    XNHPWAB1 V [a, b, c, d] 3 _hpack hbar _hlt
   have hrw : omegaListN V [a, b, c, d] 3 = omegaList V [a, b, c, d] := rfl
   rw [hrw, hcen]
   exact congrArg circumcenter (by ext x; simp [setOfList])
