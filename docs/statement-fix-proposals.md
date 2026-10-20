@@ -1959,3 +1959,39 @@ Option A 单语句加前提（HL 本体即单语句 premise-minimal 形；PA23 S
 供给方）+ REUHADY1 换接 + 本 patch 应用一次成型；走闸时以全量波差为最终权
 补丁归档（statement 变更部分即本 patch 逐字不变），STATEMENT-FIX 模式
 `SF_ITEM=44`；应用后 PA24 直 sorry 2→1。八发波交付报告给用户终验。
+
+## 45. PA24 `p24_cell_cap_dihX` hwit 前提加门（SF-44 应用批 1 行联动微调；门下 hwit 为装配链正式接口形）— 分级 A（statement 保真修正 · 死前提预防）
+
+**立案：2026-10-20，pa24reuhady 车道九发波侦察产出（9gen_SF45_draft.md），
+编排者代车道正式入册；待用户批。** 对象 = SF-44 批准补丁的 `hwit` 前提行
+（未门形）。SF-44 应用批的装配链供给侧（scaffold 3 加强形 cover）按
+HL :1531-1629 走廊覆盖 + 门下见证推导 `?k vl` 见证，恰在 `~NULLSET` 门下
+成立；无门形 `hwit` 对退化见证角点胞（全 witnesses 非 [u0,u1] 头，
+`initialSublist [u0,u1] p.2` 不可满足）无货源 ⇒ SF-44 应用后该前提成为
+不可供货死前提，:3625 换接在角点胞卡死。
+
+(a) HOL：REUHADY.hl:2818-2823 逐字 `(NEW_GOAL \`!X. mcell_set V X /\
+~NULLSET (X INTER D) ==> vol (X INTER D) = vol (D) * (dihX V X (u0,u1)) /
+(&2 * pi)\`);`——HL 本体的见证由走廊覆盖链在 `~NULLSET (X INTER D)` 门下
+推导，从不要求全族无条件 hwit；SF-44 的 `hn` 前提即此门的单胞形，本项把
+`hwit` 同步收窄为门形（`¬ nullSet (X ∩ conicCapP24 u0 u1 r d) → 三元组`），
+门在消费点（仅非零测臂）恒真，数值语义与 SF-44 批准文本一致。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/45-pa24-hwit-gate.patch`
+（相对基准 = 44 补丁应用后的树；+2/−1）：`hwit` 行加门 + 消费点
+`hwit.1/hwit.2.1/hwit.2.2` 改门下取元组（门由装配侧 hX/hn 供证）。消费侧
+适配器 `p24_wedge_setSum_eq_azim_gated`（九发波已入树，零语句改动）与本项
+同接口形。七发波无门件 `p24_wedge_setSum_eq_azim_strong`（当前零消费者）
+在本项批准后由后续清理批退役或加门改造（二选一，届时再呈）。
+
+### (c) 验收与应用计划
+
+与 SF-44 应用同批一次成型：scaffold 3-2 加强形 cover（§45.4 施工图四件：
+走廊覆盖/门下见证/hnullarm 全族/hcov 主体）+ 本 patch 应用 + :3625 换接
+gated 适配器，走闸以全量波差为最终权补丁归档（statement 变更部分 = 44
+补丁逐字 + 本 patch 逐字），STATEMENT-FIX 模式 `SF_ITEM=44`（statement
+净变更为两 patch 之叠加）；应用后 PA24 直 sorry 2→1。若本项不批，SF-44
+仍按批准原文逐字应用（:3625 换接以无门强件为目标，角点胞受阻如实记账，
+直 sorry 收口顺延）。

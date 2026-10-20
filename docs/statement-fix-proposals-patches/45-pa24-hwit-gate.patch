@@ -1,0 +1,24 @@
+SF-45 提案 fix diff（草案，未应用，待用户批；相对基准 = SF-44 补丁
+44-pa24-cellcap-dihx-strong.patch 应用后的 lean/Kepler/Text/PackingAuto24.lean，
+即仅 hwit 前提 1 行联动微调；草案全文见 pa24reuhady 车道 9gen_SF45_draft.md）。
+
+修法形态：SF-44 批准文本的 hwit 前提行加 `¬ nullSet (X ∩ conicCapP24 u0 u1 r d)`
+门（差异 1 行，§45.3-2）。理由：无门形在 SF-44 应用后成为不可供货的死前提
+（退化见证角点反例：`p24_wedgeCells` 允许「全 witnesses 非 [u0,u1] 头」的胞，
+`initialSublist [u0,u1] p.2` 对其不可满足）；加门后与 HL REUHADY.hl:2818-2823
+原生 `~NULLSET (X INTER D)` 门形严格对齐，与消费体 `p24_cell_cap_dihX_strong`
+的消费点（仅非零测臂）一致，装配侧 hX/hn 在门下直接供元组。
+随批改写冻结 docstring 六发波发现段为 CLOSED 记账的条款不变。
+应用后消费点 `hwit.1/hwit.2.1/hwit.2.2` 须同步改 `门下取元组`（门在装配侧
+恒真——消费点本就只在非零测臂，由 hX/hn 供门证明）。
+
+--- a/lean/Kepler/Text/PackingAuto24.lean
++++ b/lean/Kepler/Text/PackingAuto24.lean
+@@ -3392,5 +3392,6 @@
+     (hn : ¬ nullSet (X ∩ conicCapP24 u0 u1 r d))
+-    (hwit : barV V 3 (cellParamsD V X [u0, u1]).2 ∧
++    (hwit : ¬ nullSet (X ∩ conicCapP24 u0 u1 r d) →
++      barV V 3 (cellParamsD V X [u0, u1]).2 ∧
+       initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2 ∧
+       X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2)
+     (hX : X ∈ p24_wedgeCells V u0 u1 n1 n2 e) :
