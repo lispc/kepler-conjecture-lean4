@@ -2002,7 +2002,10 @@ gated 适配器，走闸以全量波差为最终权补丁归档（statement 变�
 ## 46. PA24 `p24_cap_wedge_cover`（scaffold 3）冻结覆盖语句点态形 → HL 测度级原文形（移植期真加强形降级为忠实形）— 分级 A（statement 保真修正 · 过度加强形修复）
 
 **立案：2026-10-20/21，十二发波两墙定位产出（12gen_LEDGER_updated.md），编排者
-代车道入册；待用户批。** 对象 = scaffold 3（PA24 :3366，现全文件唯一直 sorry）
+代车道入册；用户批准（2026-10-20，"新Sf：批准"）——scaffold 3 覆盖结论恢复为
+HL 忠实测度级形即行生效；十三发波按 §46(c) 执行：patch 起草→编排者核→
+STATEMENT-FIX 闸 SF_ITEM=46→应用后 PA24 直 sorry 1→0（REUHADY1 链仅余
+AJRIPQN inherited）。** 对象 = scaffold 3（PA24 :3366，现全文件唯一直 sorry）
 冻结语句的覆盖结论：现形为点态 `cap ∩ wedgeGe ⊆ ⋃楔族胞`。十二发波逐臂对位
 HL D6 覆盖段（REUHADY.hl :7395-7790）证明该点态形是移植期**真加强**：HL 原生
 为**测度级**（`E DIFF ⋃族 迹 ⊆ ⋃零迹迹` + NEGLIGIBLE_SYMDIFF，REUHADY.hl
