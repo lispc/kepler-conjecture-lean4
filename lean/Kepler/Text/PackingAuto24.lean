@@ -12482,6 +12482,351 @@ null-trace 臂以 `hnullarm` 显式假设承接 = HL :7799 SUM_SUPERSET 臂的�
 冻结语句 `p24_cell_cap_dihX` 本体零改动；SF-44 修法走轨 (b) 提案（见
 lane_snapshots/pa24reuhady/7gen_SF44_*.md 与 .patch）。 -/
 
+/-! ## 十二发波章（2026-10-20, lane pa24reuhady 12gen）：scaffold-3 k=4 臂 kit
+（走廊低维排除 + 叶表 mcell4 非零测 + k4 顶点抽取 + edgeX 指认 + 条件装配臂）
 
+本波 recon 定案（详见 12gen_LEDGER）：scaffold 3 `p24_cap_wedge_cover` 的点态
+收口存在两堵墙，本波不触本体（冻结语句零改动，残余 sorry 持平）：
+- **墙 A（k ∈ {2,3} 叶表胞非零测性）**：`edgeX` 指认的 `VX` 非空分支要求
+  `¬nullSet` 胞；k=4 臂经 `p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0` 帽石 +
+  `AFF_INDEPENDENT_SET_OF_LIST_BARV`（PA12，`MHFTTZN1` affDim=3 ⟹ 非共面
+  `AFF_DIM_LE_2_IMP_COPLANAR` 反证）本波真证闭合（`p24_mcell4_leaf_nonnull`）；
+  k ∈ {2,3} 的非零测性需 R1-GIANT 形事实——k=3 需 `mxi` 的 Voronoi-cycle
+  √2-族（= PA11 `k3Subset`（LEPJBDJ.hl:740-906）的 open 核心），k=2 需扇非
+  退化 `azim u0 u1 (mxi V ul) (omegaListN V ul 3) ≠ 0`（= PA11 `k2Case`
+  （LEPJBDJ.hl:126-656）的 open 核心）——现树无此二件，如实记档。
+- **墙 B（边界扇点态覆盖）**：楔族 `p24_wedgeCells` 为 W1-单侧族；边界扇点
+  （`x ∈ W1 ∩ W2 ∩ D ⊆ affGe{n1} ∪ affGe{n2}`）若仅被 W2-侧叶胞覆盖则点态
+  结论失效，需扇邻接结构（W1-侧邻接胞的面含边界平面片）+ 半径装配；HL 原生
+  D6 覆盖（REUHADY.hl:7395+）为测度级（零迹自毁 + NEGLIGIBLE_SYMDIFF），
+  无点态命题可移植。`heX` 二分在 `x ∉ W2` 时即定向（内域点，本波
+  `p24_cap_wedge_cover_arm4` 条件件闭合）；边界点留十三发波。
+
+本章六件全部独立真证；唯一 inherited 消费 = `p24_edgeX_of_leaf4` 内 PA17
+`AJRIPQN`（cellParams 指标归一 = R3 债，十一发波同惯例逐件记账；
+`p24_k4Subset_content`/`p24_corridor_algebra` 为 PA11 私件/十一发波 WIP 的
+逐字私拷，零新依赖）。 -/
+
+/-- 短棱代数（十一发波 WIP `p24_corridor_algebra` 逐字私拷）：`2 ≤ d01 <
+2√2` 与可用 margin `0 ≤ d ≤ (√2 − d01/2)/2` 给走廊锥窄性 `d01² + 4d² ≤ 8`
+（等价于走廊锥参数 `c(d) ≥ hl[u0,u1]/√2`，供低维排除的 mcell1 臂）。 -/
+private theorem p24_corridor_algebra {d01 d : ℝ} (hd2 : 2 ≤ d01)
+    (hhl : d01 < 2 * Real.sqrt 2) (hdnn : 0 ≤ d)
+    (hdm : d ≤ (Real.sqrt 2 - d01 / 2) / 2) :
+    d01 ^ 2 + 4 * d ^ 2 ≤ 8 := by
+  have hsq2 : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+  have hdu : 0 ≤ Real.sqrt 2 - d01 / 2 := by nlinarith [hsq2, hhl]
+  have ht : 0 < 2 * Real.sqrt 2 - d01 := by nlinarith [hsq2, hhl]
+  have hmono1 : (2 * Real.sqrt 2 - d01) ≤ 2 * Real.sqrt 2 := by linarith
+  -- u = 2√2 − d01 的二次不等式核：(5/4)u² ≤ 4√2·u
+  have hkey : ((2 * Real.sqrt 2 - d01) ^ 2) * (5 / 4) ≤
+      (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) := by
+    have h1 : (2 * Real.sqrt 2 - d01) * ((5 / 4) * (2 * Real.sqrt 2 - d01)) ≤
+        (2 * Real.sqrt 2 - d01) * (4 * Real.sqrt 2) := by
+      have g1 : (5 / 4 : ℝ) * (2 * Real.sqrt 2 - d01) ≤ 4 * Real.sqrt 2 := by
+        have g2 : (5 / 4 : ℝ) * (2 * Real.sqrt 2 - d01) ≤ (5 / 4) * (2 * Real.sqrt 2) := by
+          refine mul_le_mul_of_nonneg_left hmono1 (by norm_num)
+        linarith [g2, hsq2]
+      have hmul := mul_le_mul_of_nonneg_right g1 ht.le
+      have heqL : (2 * Real.sqrt 2 - d01) * ((5 / 4) * (2 * Real.sqrt 2 - d01))
+          = (5 / 4) * (2 * Real.sqrt 2 - d01) * (2 * Real.sqrt 2 - d01) := by ring
+      have heqR : (2 * Real.sqrt 2 - d01) * (4 * Real.sqrt 2)
+          = (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) := by ring
+      rw [heqL, heqR]
+      exact hmul
+    nlinarith [h1, hsq2]
+  -- (2d)² ≤ (√2 − d01/2)²
+  have hbound : (2 * d) ^ 2 ≤ (Real.sqrt 2 - d01 / 2) ^ 2 := by
+    have e1 : 2 * d ≤ Real.sqrt 2 - d01 / 2 := by nlinarith
+    exact sq_le_sq' (by nlinarith) e1
+  have hsq4 : (2 * d) ^ 2 = 4 * d ^ 2 := by ring
+  have hexpand : (Real.sqrt 2 - d01 / 2) ^ 2 = 2 - Real.sqrt 2 * d01 + d01 ^ 2 / 4 := by
+    rw [pow_two, sub_mul, mul_sub, Real.mul_self_sqrt (by norm_num)]
+    ring
+  -- hkey 的展开形：(5/4)d01² ≤ 6 + √2 d01
+  have hstep1 : (5 / 4 : ℝ) * d01 ^ 2 ≤ 6 + Real.sqrt 2 * d01 := by
+    have hexp : (2 * Real.sqrt 2 - d01) ^ 2 = 8 - 4 * Real.sqrt 2 * d01 + d01 ^ 2 := by
+      rw [pow_two, sub_mul, mul_sub,
+        show (2 * Real.sqrt 2) * (2 * Real.sqrt 2) = 8 from by
+          have hs : Real.sqrt 2 * Real.sqrt 2 = 2 := Real.mul_self_sqrt (by norm_num)
+          nlinarith [hs]]
+      ring
+    have h1 := hkey
+    rw [hexp] at h1
+    have h2 : (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) = 16 - 4 * Real.sqrt 2 * d01 := by
+      have hs : Real.sqrt 2 * Real.sqrt 2 = 2 := Real.mul_self_sqrt (by norm_num)
+      nlinarith [hs]
+    rw [h2] at h1
+    nlinarith
+  nlinarith [hbound, hsq4, hexpand, hstep1, hdnn]
+
+/-- **走廊点覆盖（含低维排除）**：走廊域（`dist x u0 ≤ 1` ∧ 斜率匹配锥）内
+每点落某 `2 ≤ k ≤ 4` 的叶表 Marchal 胞。链 = `p24_cap_leaf_pointwise_cover`
+（十一发波件）+ i = 0 排除（mcell0 活在 `ball u0 √2` 外）+ i = 1 排除
+（mcell1 活在 `rconeGt (hl[u0,u1]/√2)` 外，锥参数 `≥ hl/√2` 由
+`p24_corridor_algebra` 短棱代数给出）。HOL 锚点 = REUHADY.hl :1531-1629
+（`NEW_GOAL ?i. i <= 4 /\ x' IN mcell i V vl` + i' = 0/1 排除臂 :1629-1700）。 -/
+private theorem p24_corridor_point_cover_excl (V : Set V3) (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hhl : hl [u0, u1] < Real.sqrt 2)
+    (d : ℝ) (hd : 0 < d)
+    (hmargin : ∀ z : V3, dist z u0 = dist z u1 →
+      dist z (midpoint ℝ u0 u1) ≤ d → z ∈ voronoiList V [u0, u1])
+    (hbalg : dist u0 u1 ^ 2 + 4 * d ^ 2 ≤ 8)
+    (hfan : voronoiList V [u0, u1] =
+      ⋃₀ {convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2,
+        circumcenter (setOfList vl)} | vl ∈ {vl : List V3 |
+        barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}})
+    (x : V3) (hxb : dist x u0 ≤ 1)
+    (hxc : x ∈ rconeGt u0 u1 (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2))) :
+    ∃ k : ℕ, 2 ≤ k ∧ k ≤ 4 ∧ ∃ vl : List V3, barV V 3 vl ∧ x ∈ mcell k V vl ∧
+      truncateSimplex 1 vl = [u0, u1] := by
+  obtain ⟨i, vl, hile, hbar, htr, hxm⟩ :=
+    p24_cap_leaf_pointwise_cover V u0 u1 d hs hp hu0 hu1 hne hhl hfan hd hmargin x hxb hxc
+  refine ⟨i, ?_, hile, vl, hbar, hxm, htr⟩
+  rcases Nat.lt_or_ge i 2 with hlt | hge
+  · exfalso
+    rcases Nat.eq_zero_or_pos i with h0 | h1pos
+    · -- i = 0：mcell0 活在 ball u0 √2 外
+      subst h0
+      rw [(MCELL_EXPLICIT 0 V vl).1, mcell0, Set.mem_sdiff,
+        show hdV vl = u0 from p24_hdV_eq_u0 hbar htr] at hxm
+      have honesqrt : (1:ℝ) < Real.sqrt 2 := by
+        have h := Real.sqrt_lt_sqrt (show (0:ℝ) ≤ (1:ℝ) by norm_num)
+          (show (1:ℝ) < (2:ℝ) by norm_num)
+        rwa [Real.sqrt_one] at h
+      exact hxm.2 (Metric.mem_ball.mpr (lt_of_le_of_lt hxb honesqrt))
+    · -- i = 1：mcell1 活在 rconeGt (hl/√2) 外（走廊锥参数 ≥ hl/√2）
+      have h1 : i = 1 := by omega
+      subst h1
+      have hd01p : 0 < dist u0 u1 := dist_pos.mpr hne
+      have hsqrt8 : Real.sqrt 8 = 2 * Real.sqrt 2 := by
+        rw [show (8:ℝ) = 4 * 2 from by norm_num, Real.sqrt_mul (by norm_num),
+          show Real.sqrt 4 = 2 from by norm_num]
+      have hkey : Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) ≤ Real.sqrt 8 :=
+        Real.sqrt_le_sqrt hbalg
+      have hcge : hl [u0, u1] / Real.sqrt 2 ≤
+          dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) := by
+        have hlhs : hl [u0, u1] / Real.sqrt 2 = dist u0 u1 / (2 * Real.sqrt 2) := by
+          rw [p24_hl_pair]; field_simp
+        have hden : Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) ≤ (2:ℝ) * Real.sqrt 2 := by
+          rw [← hsqrt8]; exact hkey
+        have hstep : dist u0 u1 / (2 * Real.sqrt 2)
+            ≤ dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) :=
+          div_le_div_of_nonneg_left hd01p.le (by positivity) hden
+        rw [hlhs]; exact hstep
+      rw [(MCELL_EXPLICIT 1 V vl).2.1, mcell1] at hxm
+      by_cases hcond : Real.sqrt 2 ≤ hl vl
+      · rw [if_pos hcond, Set.mem_sdiff, p24_hdV_eq_u0 hbar htr,
+          p24_hdTail_eq_u1 hbar htr, htr] at hxm
+        exact hxm.2 ((p24_rconeGt_mono (u0 := u0) (u1 := u1) hcge) hxc)
+      · rw [if_neg hcond] at hxm
+        exact absurd hxm (by simp)
+  · exact hge
+
+/-- **叶表 mcell4 非零测**（k=4 臂的缺口件闭合）：`barV V 3` 叶表在
+`hl vl < √2` 时 `mcell 4 V vl` 为四点凸包，四点仿射无关（PA12
+`AFF_INDEPENDENT_SET_OF_LIST_BARV`，经 `MHFTTZN1` affDim = 3 ⟹ 非共面
+`AFF_DIM_LE_2_IMP_COPLANAR` 反证）⟹ 锥帽 ∩ 壳正体积帽石
+（`p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`，r = 1、a = 1/2 实例）⟹ 胞非零测。
+k ∈ {2,3} 的同形件 = 墙 A（见节头注），本波不闭合。 -/
+private theorem p24_mcell4_leaf_nonnull (V : Set V3) (hp : Packing V) (hs : saturated V)
+    {vl : List V3} (hbar : barV V 3 vl) (hlt : hl vl < Real.sqrt 2) :
+    ¬ nullSet (mcell 4 V vl) := by
+  obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
+  have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
+    rw [hvul]; ext z; simp [setOfList]
+  have hd3 : affDim (setOfList vl) = 3 := MHFTTZN1 V vl 3 hp hbar
+  rw [hset] at hd3
+  have hSne : ({v0, v1, v2, v3} : Set V3) ≠ ∅ := by
+    intro hcc
+    have hmem : v0 ∈ ({v0, v1, v2, v3} : Set V3) := by simp
+    rw [hcc] at hmem
+    simp at hmem
+  have hfr3 : Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) = 3 := by
+    have h1 : affDim ({v0, v1, v2, v3} : Set V3) =
+        ((Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) : ℕ) : ℤ) :=
+      if_neg hSne
+    rw [hd3] at h1
+    exact_mod_cast h1.symm
+  have hncopl : ¬ Coplanar ℝ ({v0, v1, v2, v3} : Set V3) := by
+    intro hc
+    have hfin2 : Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) ≤ 2 :=
+      (coplanar_iff_finrank_le_two (k := ℝ)).mp hc
+    rw [hfr3] at hfin2
+    norm_num at hfin2
+  have hpos := p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 v0 v1 v2 v3 1 (1 / 2)
+    (by norm_num) (by norm_num) (by norm_num) hncopl
+  intro hnull
+  rw [nullSet, (MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt,
+    hset] at hnull
+  have h0 : volume.real
+      (conicCapP24 v0 v1 (1:ℝ) (1 / 2) ∩ convexHull ℝ ({v0, v1, v2, v3} : Set V3)) = 0 := by
+    show (volume _ : ENNReal).toReal = 0
+    have hvol0 : volume
+        (conicCapP24 v0 v1 (1:ℝ) (1 / 2) ∩ convexHull ℝ ({v0, v1, v2, v3} : Set V3)) = 0 :=
+      measure_mono_null (fun z hz => hz.2) hnull
+    rw [hvol0]; rfl
+  exact absurd h0 (ne_of_gt hpos)
+
+/-- **k4 顶点抽取内容**（PA11 `k4Subset`（LEPJBDJ.hl:674-712，已证私件）逐字
+私拷改名，消费 PA12 公开 `SIMPLEX_FURTHEST_LT_2` + PA5
+`OMEGA_LIST_IN_VORONOI_LIST`）：`hl ul < √2` 时 Delaunay 壳内的包装点必为
+表点（`V ∩ mcell 4 = 表点集` 的 k = 4 内容）。 -/
+private theorem p24_k4Subset_content (V : Set V3) (hp : Packing V) {ul : List V3}
+    (hb : barV V 3 ul) (hlt : hl ul < Real.sqrt 2) :
+    V ∩ mcell 4 V ul ⊆ setOfList ul := by
+  have hVsub := BARV_SUBSET V 3 ul hb
+  rintro x ⟨hxV, hxHull⟩
+  rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt] at hxHull
+  by_contra hxS
+  obtain ⟨a, b, c, dd, hvul⟩ := BARV_3_EXPLICIT V ul hb
+  have hfin : (setOfList ul).Finite := by
+    refine Set.Finite.ofFinset (insert a (insert b (insert c {dd}))) (fun z => ?_)
+    have hset : setOfList ul = ({a, b, c, dd} : Set V3) := by
+      rw [hvul]; ext w; simp [setOfList]
+    constructor
+    · intro hz
+      rw [hset]; simpa using hz
+    · intro hz
+      rw [hset] at hz; simpa using hz
+  obtain ⟨y, hyS, hydist⟩ :=
+    SIMPLEX_FURTHEST_LT_2 (omegaList V ul) (setOfList ul) hfin hxHull hxS
+  have hyV : y ∈ V := hVsub hyS
+  have havo : omegaList V ul ∈ voronoiList V ul :=
+    OMEGA_LIST_IN_VORONOI_LIST V ul 3 hb
+  have hmem : omegaList V ul ∈ voronoiClosed V y :=
+    Set.mem_sInter.mp havo (voronoiClosed V y)
+      (Set.mem_setOf.mpr ⟨y, hyS, rfl⟩)
+  have hyC : ∀ w ∈ V,
+      dist (omegaList V ul) y ≤ dist (omegaList V ul) w :=
+    Set.mem_setOf.mp hmem
+  have h1 := hyC y hyV
+  have h2 := hyC x hxV
+  have e1 : dist (omegaList V ul) y = ‖y - omegaList V ul‖ := by
+    rw [dist_eq_norm, norm_sub_rev]
+  have e2 : dist (omegaList V ul) x = ‖x - omegaList V ul‖ := by
+    rw [dist_eq_norm, norm_sub_rev]
+  linarith
+
+/-- **叶表胞的 edgeX 指认（k = 4）**：非空叶表 `mcell 4 V vl` 满足
+`e = {u0,u1}` 属于其 `edgeX`——活跃性（hl < √2）+ 非零测
+（`p24_mcell4_leaf_nonnull`）+ cellParams 指标归一（PA17 `AJRIPQN`，R3
+inherited，如实记账）+ `VX` 展开（null 分支排除、k = 4 分支）+ k4 顶点抽取
+（`p24_k4Subset_content`）⟹ `{u0,u1} ⊆ VX`。 -/
+private theorem p24_edgeX_of_leaf4 (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (he : e = {u0, u1})
+    {vl : List V3} (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
+    (hne0 : mcell 4 V vl ≠ ∅) :
+    e ∈ edgeX V (mcell 4 V vl) := by
+  classical
+  -- 活跃性：hl vl < √2（非空桥）
+  have hlt : hl vl < Real.sqrt 2 := by
+    by_contra hc
+    refine hne0 ?_
+    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_neg hc]
+  -- 非零测（k = 4 缺口件）
+  have hnn : ¬ nullSet (mcell 4 V vl) := p24_mcell4_leaf_nonnull V hp hs hbar hlt
+  -- cellParams 读出
+  have hsel : (cellParams V (mcell 4 V vl)).1 ≤ 4 ∧ barV V 3 (cellParams V (mcell 4 V vl)).2 ∧
+      mcell 4 V vl = mcell (cellParams V (mcell 4 V vl)).1 V (cellParams V (mcell 4 V vl)).2 :=
+    Classical.epsilon_spec
+      (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧ mcell 4 V vl = mcell p.1 V p.2)
+      ⟨(4, vl), Nat.le_refl 4, hbar, rfl⟩
+  -- 指标归一 = 4（AJRIPQN，R3 inherited）
+  have hXself : ¬ nullSet (mcell (cellParams V (mcell 4 V vl)).1 V (cellParams V (mcell 4 V vl)).2
+      ∩ mcell 4 V vl) := by
+    intro h0
+    rw [nullSet] at h0
+    refine hnn ?_
+    rw [← hsel.2.2, Set.inter_self] at h0
+    rw [nullSet]
+    exact h0
+  have hajo := AJRIPQN V (cellParams V (mcell 4 V vl)).2 vl
+    (cellParams V (mcell 4 V vl)).1 4 hs hp hsel.2.1 hbar
+    (by simp; omega) (by simp) hXself
+  have hidx4 : (cellParams V (mcell 4 V vl)).1 = 4 := hajo.1
+  -- pp.2 的活跃性（经 hajo + 非空桥）
+  have hlt2 : hl (cellParams V (mcell 4 V vl)).2 < Real.sqrt 2 := by
+    by_contra hc
+    refine hne0 ?_
+    rw [← hajo.2, hajo.1, (MCELL_EXPLICIT 4 V (cellParams V (mcell 4 V vl)).2).2.2.2.2
+      (Nat.le_refl 4), mcell4, if_neg hc]
+  -- u0, u1 ∈ X（叶表壳顶点）
+  have hu0X : u0 ∈ mcell 4 V vl := by
+    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt]
+    refine subset_convexHull ℝ _ ?_
+    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
+    have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
+      rw [hvul]; ext z; simp [setOfList]
+    rw [hset]
+    have hv0 : v0 = u0 := by
+      have htrv : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+        (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+      rw [hvul, htrv] at htr
+      exact (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).1
+    have hmemset : u0 ∈ ({v0, v1, v2, v3} : Set V3) := by
+      rw [hv0]; simp
+    simpa [setOfList] using hmemset
+  have hu1X : u1 ∈ mcell 4 V vl := by
+    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt]
+    refine subset_convexHull ℝ _ ?_
+    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
+    have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
+      rw [hvul]; ext z; simp [setOfList]
+    rw [hset]
+    have hv1 : v1 = u1 := by
+      have htrv : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+        (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+      rw [hvul, htrv] at htr
+      exact (List.cons.injEq v1 [] u1 [] |>.mp
+        (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).2).1
+    have hmemset : u1 ∈ ({v0, v1, v2, v3} : Set V3) := by
+      rw [hv1]; simp
+    simpa [setOfList] using hmemset
+  -- k4 顶点抽取：u0, u1 ∈ 表点集
+  have hXpp : mcell 4 V (cellParams V (mcell 4 V vl)).2 = mcell 4 V vl := by
+    have h1 := hajo.2
+    rw [hajo.1] at h1
+    exact h1
+  have hu0in : u0 ∈ setOfList (cellParams V (mcell 4 V vl)).2 := by
+    refine p24_k4Subset_content V hp hsel.2.1 hlt2 ⟨hu0, ?_⟩
+    rw [hXpp]; exact hu0X
+  have hu1in : u1 ∈ setOfList (cellParams V (mcell 4 V vl)).2 := by
+    refine p24_k4Subset_content V hp hsel.2.1 hlt2 ⟨hu1, ?_⟩
+    rw [hXpp]; exact hu1X
+  -- VX 展开（null 分支排除 + k = 4 分支）
+  have hVXeq : VX V (mcell 4 V vl) =
+      setOfList (cellParams V (mcell 4 V vl)).2 := by
+    simp only [VX, if_neg hnn]
+    rw [hajo.1]
+    have h31 : ((4:ℕ) - 1) = 3 := rfl
+    rw [h31]
+    simp only [if_neg (show (4:ℕ) ≠ 0 by omega)]
+    obtain ⟨a, b, c, dd, hvul2⟩ := BARV_3_EXPLICIT V (cellParams V (mcell 4 V vl)).2 hsel.2.1
+    rw [hvul2, TRUNCATE_SIMPLEX_EXPLICIT_3 a b c dd]
+  refine Set.mem_setOf.mpr ⟨u0, u1, he, ?_, ?_, hne⟩
+  · rw [hVXeq]; exact hu0in
+  · rw [hVXeq]; exact hu1in
+
+/-- **条件装配臂（k = 4，内域点）**：走廊点 `x` 落叶表 `mcell 4 V vl` 且
+`x ∉ W2` 时，`heX` 二分定向（`p24_edgeX_of_leaf4` 供 edgeX）⟹ 胞入楔族 ⟹
+`x ∈ ⋃₀ 楔族`。边界扇点（`x ∈ W1 ∩ W2`）留十三发波（墙 B，见节头注）。 -/
+private theorem p24_cap_wedge_cover_arm4 (V : Set V3) (u0 u1 n1 n2 : V3) (e : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (he : e = {u0, u1})
+    (heX : ∀ X : Set V3, X ∈ mcellSet V ∧ e ∈ edgeX V X →
+      X ⊆ wedgeGe u0 u1 n1 n2 ∨ X ⊆ wedgeGe u0 u1 n2 n1)
+    {vl : List V3} (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
+    (hne0 : mcell 4 V vl ≠ ∅)
+    {x : V3} (hxm : x ∈ mcell 4 V vl) (hxW2 : x ∉ wedgeGe u0 u1 n2 n1) :
+    x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e := by
+  have hedge := p24_edgeX_of_leaf4 V u0 u1 e hs hp hu0 hu1 hne he hbar htr hne0
+  have hXmset : mcell 4 V vl ∈ mcellSet V := ⟨4, vl, rfl, hbar⟩
+  obtain hW1 | hW2 := heX (mcell 4 V vl) ⟨hXmset, hedge⟩
+  · exact Set.mem_sUnion.mpr ⟨mcell 4 V vl, ⟨hXmset, hedge, hW1⟩, hxm⟩
+  · exact absurd (hW2 hxm) hxW2
 
 end Kepler.Text
+
