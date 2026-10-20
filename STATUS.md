@@ -241,7 +241,7 @@ CDTETAT/KCBLRQC 链真化——**TameLp 桥链全通**）。
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ✅ **全书收官（2026-09-12）**：批次 1-23 全闭合（~230 枚定理，全部零 sorry、标准公理），含巨证 `lemma_connect_hypermap`（~1900 行 HOL 证明，6 段 sub-agent 流水攻克）与收尾 Euler/`Hypermap.Planar`；已合入 main | **100%** |
 | fan/polyhedron.hl | 3,200 | ✅ **全书收官（2026-09-14）**：71 条定理 + Polytope 面理论基层（`Kepler/Text/Polytope.lean` ~2.5k 行，0 sorry）全部闭合进 main；巨证 `FLVNSME`（~1000 行 HOL）经 6 段 sub-agent 流水 + 两阶段规划攻克；曾发现 FaceOf 闭/开线段编码 bug，已修正为 Brøndsted 开线段规范并诚实重做受污染证明 | **100%** |
-| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | 🟡 **骨架 100% 就位（2026-09-15）**：25 模块 20.5k 行 Lean，~1114 定理全部陈述（GRUTOTI/OXLZLEZ/URRPHBZ3 等多个 capstone 已证），920 sorry 纯填证期；REUHADY1 波次施工中（十波环境载体 127→101，十一波 PA2 shim 退役 −2、p24 直 sorry 收口分期中）；GRUTOTI 终章在飞 | 骨架100% / 填证推进中（09-15 的 ~25% 口径已过时，现值以 `docs/e2e-debt-map.md` 可达债图为准） |
+| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | 🟡 **骨架 100% 就位（2026-09-15）**：25 模块 20.5k 行 Lean，~1114 定理全部陈述（GRUTOTI/OXLZLEZ/URRPHBZ3 等多个 capstone 已证），920 sorry 纯填证期；REUHADY1 十一波收官（10-20）：**p24 直 sorry 2→1**（SF-44/45 应用+cover_strong 四件装配+:3625 换接）、PA2 shim 退役；GRUTOTI 终章在飞 | 骨架100% / 填证推进中（09-15 的 ~25% 口径已过时，现值以 `docs/e2e-debt-map.md` 可达债图为准） |
 | local/（IMJXPHR/QKNVMLB/XWITCCN/local_lemmas/terminal…） | **174,694（68 文件，2026-09-13 实测）** | 🟡 **骨架 100% 就位（2026-09-16，`aa4baf6b`）**：W1-W7 七波 39 模块（LocalAuto1-38 + LocalAnchors），174.7k 行 HOL 源全部骨架化，各批根构建绿（38-way root clean），1793 sorry 纯填证期；LA5 POS_DIRECT 根系五件已真证（2026-10-19） | 骨架100% / 填证推进中（09-16 的 ~10% 口径已过时，以债图为准） |
 | **tame/ 文字章（TameSpine 移植线，2026-10 立线）** | **98,000（64 .hl；tame_list.hl 14,428）** | 🟡 **首本 tame_list.hl 全书收官（2026-10-20，`f0361c78`）**：批 1-59 五十九批 :23-:14428 零缺口覆盖，649 主定理全真证、axiom 探针零 sorryAx；下一领土 reduction1.hl（4,976 行，批 49/56 已越章预收部分件）——当前发车冻结待用户令 | 首本 100%（1/64 文件） |
 | trigonometry/（trig1/trig2/euler） | 10,511 | 🟡 EULER 三代车道在飞（2026-10 起：p21e_* 家族 + W-乘积恒等式/模度书/M>0/h14 链，克隆内 v19 打磨、尚未入库，自写 HANDOFF 接续）；trig1/trig2 未启动（部分语义已被 azim 层覆盖） | 入库 0%（试炼件在飞） |
@@ -341,20 +341,26 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
   PA24 `p24_cell_cap_dihX` hwit 前提加 ¬nullSet 门（SF-44 应用批 1 行联动微调）；
   无门形对退化见证角点胞无货源，加门后与 HL :2818 门形对齐。与 SF-44 同批
   应用走"全量波差最终权"归档闸。
-- **十一发波交付（车道 pa24reuhady，克隆 /tmp/p4pa24e）**：
-  - ✅ 任务 2 PA2 shim 退役：删 `XNHPWAB1_concl`/`XNHPWAB4_concl` 两 sorry shim
-    （零代码消费者，下游走 PackingConcl `_discharged` 真证版），PA2 直 sorry
-    28→26，下游全链重建绿（闸 @XNHPWAB2_concl）。
-  - 🟡 任务 1 cover_strong 四件**诚实分期**：①走廊覆盖②门下见证③楔族活胞正迹
-    （HL :7799-8060，VX/集合恒等路线覆盖换位角点——定案推论：楔族胞恒有正锥帽迹）
-    成稿 ~730 行零 sorry 纯追加，编译 5 轮未收敛（75→41→34→34 错，~12 根因全部
-    定位成改法处方 `11gen_cover_strong_wip_fixnotes.md`，均机械改形无新几何），
-    按止损纪律 WIP 不入树；④ hcov recon 定案：内域点 = ①胞+heX 定向（无需
-    min-max），缺口件 =「叶表 mcell 非零测性」（已记档）。PA24 树体零改动，
-    直 sorry 持平 2。
-  - ⏸ 任务 3 SF-44+45 全量应用**原子性阻塞**如预期：语句变更强制 :3625 gated
-    换接，供数 = 四件全集，本波可接量 0%；备料 diff 已归档（44∘45 逐字叠加 hunk
-    + 换接同伴 hunk + 保真自证段）。应用 = 四件收口后（十二发波）首机械动作。
+- **十一发波交付（双并行车道，用户批准"并行"；终账以收获车道为准）**：
+  - ✅ **任务 2 PA2 shim 退役（p4pa24e 车道）**：删 `XNHPWAB1_concl`/
+    `XNHPWAB4_concl` 两 sorry shim（零代码消费者，下游走 PackingConcl
+    `_discharged` 真证版），PA2 直 sorry 28→26，下游全链重建绿
+    （闸 @XNHPWAB2_concl，`a5960367`）。
+  - ✅ **任务 1+3 全量落地（p4pa24d 收获车道，`80b4554d`）**：cover_strong
+    四件装配八新件（走廊点覆盖/门下见证/hnullarm 全族=楔族活胞恒有正锥帽迹
+    定案/hcov 组装；五件标准三零，witness_of_trace 携 AJRIPQN inherited、
+    cover_strong 携 scaffold 3 inherited，均如实记账）+ SF-44 逐字应用 +
+    SF-45 §45.3-2 hwit 门形微调（编排者逐字核验 = 44∘45 批准文本）+ :3625
+    gated 换接。**PA24 直 sorry 2→1**（唯一残余 :3366 `p24_cap_wedge_cover`
+    scaffold 3），闸 PASS @p24_cell_cap_dihX（STATEMENT-FIX，全量波差
+    最终权补丁 `44b-…fullwave.patch`，`5dcb2695`），根全树 9359 jobs 绿；
+    `p24_cell_cap_dihX` axiom 标准三零。SF-44 立案时"应用后 2→1"承诺兑现。
+  - 📦 p4pa24e 车道任务 1 诚实分期稿（①②③ ~730 行未收敛 WIP + 12 根因
+    fixnotes 处方）留档，作 scaffold 3 残余收口参考底稿；两车道文件不相交，
+    快照撞名事故互相恢复有账。
+- **十二发波处方（挂起待用户令，发车冻结中）**：scaffold 3 残余真证收口
+  （缺口件 =「叶表 mcell 非零测性」+ 侧指认 min-max）→ PA10 可测链 →
+  PA7 唯一性族 → fan 三件 → AJRIPQN 本体（门下见证的 inherited 债主）。
 - **发车冻结（用户令）**："每个 lane 结束后不发新的，等我新的指令"——批 60/
   W8 gen-8/GIANT 分期/十二发波全部挂起；HANDOFF 已入档（`6039cb69`），巡检
   自动化钉死不得代发。
