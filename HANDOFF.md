@@ -299,6 +299,14 @@ pin 死）。
 | 架构与陈述保真 | `docs/architecture.md` / `docs/statement-fidelity.md` |
 | 端到端对象 | `lean/Kepler/Final.lean`（`the_kepler_conjecture_e2e`） |
 
+**文档债拐点（2026-10-20 专家评审记账，现不动、到点即立项）**：
+`statement-fix-proposals.md` 十天 77KB→124KB（~5KB/天，追加型台账），
+`fill-worker-playbook.md` 已 81KB。**重组触发线：任一破 200KB，或"查一条
+已批 SF 的最终形态"需要翻三个节以上**——届时重组方案：proposals 已批且
+已应用的项搬 `docs/statement-fix-history-<季度>.md` 卷宗（正本只留在册未决
++近 30 天），playbook 按章拆分（骨架纪律/闸体例/雷场分册）。两项都属"追加
+即增值"文档，禁止为瘦身删历史记录，只许搬卷。
+
 ## 7. 接班 / 交班清单
 
 **接班（按序）**：① `git log --oneline -15` + `git status`（盘上脏文件=
@@ -307,5 +315,9 @@ pin 死）。
 
 **交班（编排者，每波/每日）**：① 落地一切可落地（闸→commit→push）；②
 e2e-debt-map 增量节 + DEBT.md 重生成 + STATUS 刷新；③ 重大波次随更
-module-map；④ 会话级 wrap 写 `docs/handoffs/session-<date>-wrap.md`；
-⑤ 全部推远端，工作树干净或脏文件皆有归属记档。
+module-map；④ 波次 wrap 并入 STATUS.md 日期节即算数（2026-10-20 修订，
+规则向实践靠拢：10-12 起的波次 wrap 实际全部写进 STATUS 日期节且功能完好；
+独立 `docs/handoffs/session-<date>-wrap.md` 文件仅当用户索要时才写）；
+⑤ 全部推远端，工作树干净或脏文件皆有归属记档；⑥ 项目收官/被取代即把
+`docs/projects/` 对应文件挪 `archive/` 并全库同步路径引用（2026-10-20 首次
+执行，见 `docs/projects/archive/README.md`）。
