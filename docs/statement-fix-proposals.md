@@ -90,7 +90,7 @@ CARD/sum 无限集约定）：`setSum` 的按集合 junk 约定与 HOL 支撑集
 **(e) 分级：A**（加前提即闭合，反例已核，零消费者波及）。
 
 **(f) 状态（2026-10-12 用户批准；应用波复核记录）**：批准见
-docs/projects/sf-decision-batch-2026-10-12.md 项 1。应用波（LocalAuto38
+docs/projects/archive/sf-decision-batch-2026-10-12.md 项 1。应用波（LocalAuto38
 车道）复核发现本修复**已随 `ddc3683e`（2026-09-29，STATEMENT-FIX 闸 PASS）
 落地**：以 ddc3683e^ 为基 `git apply` 本补丁成功，且应用产物 SUM_INTER 区域
 与现树 LocalAuto38.lean:426-454 逐字节一致；全树零消费者复核依旧成立；
@@ -495,7 +495,7 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 **(e) 分级：C**（零补丁；`12-affine_facet_hyper.patch` 为裁决存档）。
 
 **(f) DEF-FIX 状态（2026-09-29）：解冻前置已就绪** —— planar 编码定义纠正
-（`docs/projects/planar-encoding-fix.md` §2 补丁）已落地：新 `facetOfC` 自带 ≠∅ + `affDimC`
+（`docs/projects/archive/planar-encoding-fix.md` §2 补丁）已落地：新 `facetOfC` 自带 ≠∅ + `affDimC`
 条件、新 `polyhedronC` 为 HOL 镜像，本项陈述在新定义下即真（HOL 镜像）。
 仍按 (d) 冻结至重填 kit（affDimC 超平面 kit → §2.3 表）落地后入重填队列
 （章程 §3c：中等档，kit 后）。
@@ -527,7 +527,7 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 **(e) 分级：C**（`13-pad2d3d_facet.patch` 为裁决存档；编号 13 双占见 14' 注）。
 
 **(f) DEF-FIX 状态（2026-09-29）：解冻前置已就绪** —— planar 编码定义纠正
-（`docs/projects/planar-encoding-fix.md` §2 补丁）已落地：结论侧 `facetOfC` 已含 ≠∅ +
+（`docs/projects/archive/planar-encoding-fix.md` §2 补丁）已落地：结论侧 `facetOfC` 已含 ≠∅ +
 `affDimC` 条件，前提/结论计数口径统一（HOL 镜像），(b) 的 ∅ 混入反例不再成立。
 仍按 (d) 冻结至重填 kit（`FACET_OF_LINEAR_IMAGE` ℂ 版，§2.3 表）落地后入重填
 队列（章程 §3c：GIANT 档）。
@@ -790,7 +790,7 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
 编译与闸门验收待修复波）。
 
 ### (g) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
-docs/projects/sf-decision-batch-2026-10-12.md 项 17。应用波（LocalAuto38
+docs/projects/archive/sf-decision-batch-2026-10-12.md 项 17。应用波（LocalAuto38
 车道）复核发现本修复**已于 2026-09-29 落地且超出本提案**：陈述补陈随
 `5bcb4e11`（STATEMENT-FIX 闸 PASS，h1-h6 与 (c) 节提案陈述逐字一致），
 两定理证明体已随 `8939b636` 填成真证零 sorry（ballAnnulus 成员 + `tau3_taum`
@@ -803,7 +803,7 @@ LocalAuto38.lean:1492-1574）；全树零直接消费点复核依旧成立；
 
 ## merge-ineq-bank. 波 0 ——银行结构化 + eta_y 重指向（Merge_ineq 通道章程 §2）
 
-> 立项与章程：`docs/projects/merge-ineq-channel.md`（编排者审定通过，见章程末
+> 立项与章程：`docs/projects/archive/merge-ineq-channel.md`（编排者审定通过，见章程末
 > "附：编排者审定意见"）。本条目为波 0（陈述级）的**执行存档**：补丁已于
 > 2026-09-29 落地 `lean/Kepler/Text/PackingAuto21.lean`（下称 PA21），构建
 > 与台账验收实测见 (f)。补丁正文不再重复誊写，以章程 §2.1/§2.2 为准。
@@ -953,7 +953,7 @@ capstone `GRUTOTI` 内一处（补丁 ③）。属 GT-2/GT-3/GT-4 收口时
 编译 0 error；应用待编排者 GATE_MODE=STATEMENT-FIX）。
 
 ### (g) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
-docs/projects/sf-decision-batch-2026-10-12.md 项 18。续作车道（PA23）复核
+docs/projects/archive/sf-decision-batch-2026-10-12.md 项 18。续作车道（PA23）复核
 发现本修复**已随 `54fe4ee2`（2026-09-30，用户批准 2026-09-30）应用落地**，
 (f) 的"草案待审"状态行已过时：机器实证——以 54fe4ee2^ 为基 `git apply`
 本补丁成功，且应用产物与 54fe4ee2 树的 PackingAuto23.lean **逐字节一致**
@@ -1038,7 +1038,7 @@ k=2 核走 `volumeConicCapWedge` + mcell2 形；k=3 走 `AZIM_COMPL_EXT`
 同批，待用户拍板）。
 
 ### (d) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
-docs/projects/sf-decision-batch-2026-10-12.md 项 21。续作车道（PA23）复核
+docs/projects/archive/sf-decision-batch-2026-10-12.md 项 21。续作车道（PA23）复核
 发现本修复**已随 `3aef75fa`（2026-09-30，用户已批准，GATE_MODE=STATEMENT-FIX
 过）应用落地**——签名补 `(he : {u0, u1} ∈ edgeX V X)`（执行形把 (b) 节
 `e ∈ edgeX V X` 具象为 `{u0,u1} ∈ edgeX V X`，与 (a) 节 §D–§H 边胞语境

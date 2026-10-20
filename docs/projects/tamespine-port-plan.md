@@ -322,4 +322,4 @@ W5（收口）：       A9 装配（Jcajydu 99 行 + S6）→ A9 离账；A10 �
 - A10 装配：`docs/scouts/mqmsmab-scout.md`（Step 0-3 作战计划）。
 - 债务记账：`docs/e2e-debt-map.md` A 表（A2/A5/A7/A8/A9/A10 六行）+ `DEBT.md`；
   本文件立项后，各批收口在 e2e-debt-map 对应行追加 commit 锚点。
-- 命名治理：`docs/projects/fqn-conflicts.md` + `lean/scripts/fqn_scan.py`（§6.1 处置工具）。
+- 命名治理：`docs/projects/archive/fqn-conflicts.md` + `lean/scripts/fqn_scan.py`（§6.1 处置工具）。
