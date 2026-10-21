@@ -312,6 +312,27 @@ pin 死）。
   7G/个，Lake 默认并行度会同时拉起多个 elaborator——冷重建前先看
   `memory_pressure -Q` 与在飞 lean 进程。
 
+### 5.6 `reasoning_content` 400 与 provider 故障处置（2026-10-21 专项调研，报告 `lane_snapshots/rcprobe/REPORT.md`）
+
+- **症状**：异步 subagent 运行中随机死于 `[invalid_request_error] The reasoning_content
+  in the thinking mode must be passed back to the API`（今日 4 次，7–51 分钟不等）。
+- **根因（调研结论）**：OpenCode Zen Go 中转对 DeepSeek thinking 模式的
+  `reasoning_content` 回传做严格/不稳定校验；ZCode 侧固定发 `reasoning_effort:"max"`
+  （`zcode.cjs:2112`）且对"本轮 reasoning=0"的 tool turn 省略 `reasoning_content`
+  （转换器 `zcode.cjs:2102`）。公开 issue 佐证：Cline #14965（同 route/model 同 400）、
+  OpenCode #48180（echo-back × effort 并存才 400）、ZCode #676/#938。**非历史裁剪、
+  非"跑太久"**——幸存者形态相同，属请求/边缘副本间发性（长会话近似确定性）。
+- **处置协议（outcome-proven）**：①遇该 400 **绝不重试/唤醒同一 subagent**——用磁盘
+  交接状态（PROGRESS.md + 文件快照）**新开**一个窄任务 subagent（已验证零风险）；
+  ②重启前先 `cp ~/.zcode/cli/rollout/model-io-<sid>.jsonl` 保住失败请求体
+  （3 文件轮转 `eHs=3` 会秒吞证据，`modelIoFullRetentionEnabled=false`）；
+  ③车道任务书一律带"每步落盘+5 分钟 PROGRESS 锚点"条款。
+- **根治选项（需用户拍板/上游修复）**：把 subagent 模型从
+  `opencode-go-chat/deepseek-v4.1-flash/reasoningLevel=max` 换非 thinking 模型或
+  另一家 provider；或该 route 不发送 `reasoning_effort`。最小客户端修复点 =
+  `zcode.cjs:2171` col 6296 的"anthropic-only 思考拒绝修复重试"扩展到
+  openai-compatible `reasoning_content` 400。
+
 ## 6. 文档地图
 
 | 要找什么 | 去哪 |
