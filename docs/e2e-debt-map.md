@@ -451,6 +451,50 @@ sorryAx → `#print axioms` 传递记录），非真债——C549MonoBatch1 cens
 收敛、零语句改动——**SF-42 翻假使命闭合**。终账 `lane_snapshots/
 w8fleet_rebake/FLEET_REBAKE_FINAL.md`（manifest 199 件 md5 + 排除清单）。
 
-**在决项（等用户）**：SF-47（PA24 直 sorry 1→0 入库）；gen-8 取消待令
-（decide-mode 方案留档）；euler 四代/AJRIPQN/Lean 4.35/雷场入 playbook/
-RVFXZBU2_concl shim 盘点全部待令。
+**在决项（2026-10-21 晚更新）**：SF-47 已落库（`fcad9e41`）、gen-8 已落库
+（`a726fce2`），原"在决"两项结清；最新待令清单见本节末尾。
+
+## 2026-10-21 第二波增量节（用户令 A·B·E 三发）
+
+**A 批 72 落地（`b40aa2dd`）**：DANGEYJ.hl :739-:949 收章——
+SPLIT_NORMAL_LIST_CASES + DANGEYJ_concl/DANGEYJ 主定理 + 15 私件；闸
+PASS @DANGEYJ；clone 模块 9504 jobs + 主仓 Text roots 8789 jobs；零 sorry、
+零 sorryAx（探针 3/3 标准三）；新雷区 #195-#201。**DANGEYJ 章收官**；
+批 73 接续点 = PWSSRAT.hl（759 行）:50 min_not_eq_imp_eq。
+
+**B AJRIPQN 侦察（报告 `docs/scouts/ajripqn-scout.md`，落库 `972ac949`）**：
+关键勘误——TIWWFYQ（PA5:663）与 SLTSTLO1（PA13:597）已真证，不是债务；
+代码可达 direct sorry = **7 根**（SLTSTLO2 / DDZUPHJ / RVFXZBU 仅 i=3 /
+QZKSYKG1 / QZKSYKG2 + PA10 隐藏叶 2），全闭包 **15 节点**。最大单件 =
+**QZKSYKG2 k=2**（HOL 约 1681 行），不是 SLTSTLO2。架构雷 = S₃ kit 落点
+（PA12 imports PA10，反向不可用；建议 PA14 重落 `RVFXZBU_p14` + PA17 的
+hRV 一行改接）。贪心首推 **B1 S₃ action kit**（U=4，解锁 RVFXZBU i=3 /
+YNHYJIT i=3 / QZKSYKG1 k=3 / QZKSYKG2 k=3）→ B2/B3/B4/B5；备选并行
+**B9 PA10 可测链**（独立便宜）+ B6→B7；B8 最后。**前置 = SF-48**
+（`LEFT_ACTION_LIST_PROPERTIES` 补 hfix；新件非改冻结陈述；报告里写的
+"SF-47" 编号已占用，正确空号为 48）。
+
+**E W8 gen-9（纯 pipeline，快照 `lane_snapshots/w8rung/gen9/`，主仓零改动）**：
+wr64 混合配方证伪（>3342s 未出 DOM 行，≥8× keepconst）；叶 hull rung 门槛
+夹在 **(64,128]**，keepconst-128 PASS 且 DOM 99/99——**一套 unified 表达式
+同时服务两条线**，无需分表达式 Lean 桥；kc128 ≈ kc256（stage-A 426.2 vs
+411.2s，decide 178.9 vs 188.4s，DOM 表 0/99 行差；gen-5 的 612.3s 是
+load 9-11 虚高 ≈1.49×）。真实 t3 三叶 @kc128 = 604.3 + 209.4 = **813.7s**
+（rc=0、0 error、峰值 23.4GB；gen-8 的 1119.1s 含跨波负载，归一化一致，
+不宣称加速比）。kd 整合：case 根 d3 8/8 guard-straddle（0 绿、发射后
+8/8 probe FAIL）；POS1 根 d2/d3 全 POS（4/4、8/8 绿）；首 screen-pass 深度
+POS1=0（根自身可证，细分多余）。成本模型：每叶 ≈210s 烘 + ≈150s decide
+≈ **360 CPU-s**；251k 叶 ≈1046 CPU-天串行；并发受内存卡（decide 峰值
+17.2-24.2GB）。gen-10 **不改发射器**（md5 不变、gen-5 重放逐字节相同），
+最高杠杆 = Lean 侧常数 trans 盒烘进 `TMParams`（潜力 40-80 CPU-s/叶，
+251k ≈116-232 CPU-天）+ kd "首个 screen-pass 即停"。
+
+**euler 窄任务 1 收绿**（`v24_finisher_green.lean` md5 `91765d03`，
+286 行、0 sorry；真实上下文 `lake env lean` 0 error、326.97s）：根因 =
+把 hre/him 的巨型修正多项式重写进 hsqid 导致 simp motive 爆炸（>40min
+不返回）；绿版改用零因子小引理保持 P/Q opaque。窄任务 2（master 移植）
+处方在 `v24_TASK1_DONE.md`，未发车。
+
+**在飞/待令**：三条车道全部收工，当前零 subagent 在飞。待用户令 =
+SF-48 批准 / AJRIPQN B1·B9 派工 / euler 窄任务 2 / Lean 4.35 /
+雷场入 playbook / RVFXZBU2_concl shim 盘点。

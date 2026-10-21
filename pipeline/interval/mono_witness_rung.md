@@ -1,6 +1,10 @@
 # W8 mono-tree witness-rung policy (BIXPCGW_7274157868_a sb12-heavy)
 
-Stable recipe (gen-8): `--mono-tree --mono-witness-rung=64`.
+Stable recipe (gen-9 correction): `--mono-tree --mono-dom-rung-keepconst=128`
+(128 and 256 are cost-equivalent; 128 is the minimal provable rung).
+The gen-8 `--mono-witness-rung=64` recipe is **not** the tree policy: its
+unified expression is the cost anomaly (>3342 s, no DOM rows). See the
+gen-9 closure below.
 
 This flag is **off by default**. With no rung flag the emitter output is
 byte-identical to the pre-W8 emitter (gen-3..7 discipline, re-verified in
@@ -57,11 +61,50 @@ leaf. The tree policy therefore is:
 - internal node DOM discharge: rung <= 64 (`--mono-witness-rung=64`);
 - leaf hull: keep the constant-bit policy (`keepconst-2048`).
 
-The gen-7 t2/t3 split-tree pilots (no restrict nodes) and the gen-8 kd
-producer both carry these markers. Whether the single mixed `wr64`
-expression is enough for a leaf hull is exactly what
-`gen7/POS1_wr64.*` / the gen-8 rerun measures; if the probe is PASS, one
-`wr64` expression serves both lines.
+The gen-9 measurement closed this question: a single **unified
+keepconst-128** expression passes both the 99/99 DOM rows and the leaf hull
+probe, so no split-expression Lean bridge is needed. The mixed `wr64`
+expression is not cheaper — it is the anomaly (no DOM rows after 3342 s).
+The leaf-hull rung threshold is in (64, 128]: keepconst-64 NEG,
+keepconst-128 PASS. kd split trees have zero restrict nodes, so the
+split-expression saving (~165 s per restrict node) does not apply to the
+251k-leaf tree.
+
+## gen-9 closure (2026-10-21, same-wave measurements)
+
+All numbers below are same-machine, serial, load average ~1.9-2.3 (no
+cross-wave load inflation).
+
+- **Leaf hull rung threshold ∈ (64, 128]**: keepconst-64 NEG (231.6 s);
+  keepconst-128 PASS (241.7 s). Uniform-64 is NEG even on a narrow kd d2
+  leaf; the constant bits at 2048 are necessary.
+- **kc128 ≈ kc256**: stage-A 426.2 s vs 411.2 s; stage-B decide 178.9 s vs
+  188.4 s; DOM tables identical (0/99 row difference). gen-5's 612.3 s for
+  kc256 was load 9-11 inflation (≈1.49×), not recipe cost.
+- **Unified expression works**: keepconst-128 stage-A yields DOM 99/99
+  admissible **and** leaf probe PASS; stage-B kernel decide rc=0, 0 error.
+  Split expressions would save ~165 s per restrict node but need a
+  cross-expression DOM bridge — not worth it for kd split trees.
+- **Real t3 end-to-end @kc128**: stage-A 604.3 s (3/3 PASS) + kernel decide
+  209.4 s = **813.7 s**, rc=0, 0 error, peak RSS 23.4 GB. gen-8's 1119.1 s
+  included cross-wave load; normalized it agrees. No 1.37× speedup claim.
+- **kd integration**: case root d3 = 8/8 guard-straddle (0 green, 8/8 probe
+  FAIL after emit); POS1 root d2/d3 all POS (4/4, 8/8 green). Per-leaf
+  kc128 e2e: POS1 d2 4/4 green (209-215 s + 145-151 s); d3 sample green
+  (198.6 s + 146.5 s). Depth histogram: first screen-pass depth POS1 = 0
+  (the root itself suffices; deeper kd is wasted), case ≤3 none; coverage
+  POS1 100%, case 0%. Face-literal audit: 18 specs, zero errors.
+- **Cost model**: per leaf ≈210 s bake + ≈150 s decide ≈ 360 CPU-s; the bake
+  is dominated by the 8 box-independent constant trans@2048. 251k leaves
+  ≈ 9.0e7 CPU-s ≈ 1046 CPU-days serial. Memory, not CPU, caps concurrency:
+  stage-A ≈5.6 GB (×5-6 per 36 GB node), decide peak 17.2-24.2 GB
+  (×1 per 36 GB, ×2 per 64 GB).
+- **gen-10 direction**: no emitter change needed (md5 unchanged; gen-5
+  replay byte-identical). Highest leverage = bake the constant-trans boxes
+  into `TMParams` on the Lean side (potential 40-80 CPU-s/leaf, 251k
+  ≈116-232 CPU-days) plus kd "stop at first screen-pass" policy.
+- Provenance: `gen9/REPORT.md`, `gen9/COMMANDS.md`, `gen9/manifest.md5`
+  (160 files), under `lane_snapshots/w8rung/`.
 
 ## Provenance
 
