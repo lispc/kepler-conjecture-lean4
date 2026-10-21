@@ -327,6 +327,10 @@ pin 死）。
   ②重启前先 `cp ~/.zcode/cli/rollout/model-io-<sid>.jsonl` 保住失败请求体
   （3 文件轮转 `eHs=3` 会秒吞证据，`modelIoFullRetentionEnabled=false`）；
   ③车道任务书一律带"每步落盘+5 分钟 PROGRESS 锚点"条款。
+- **2026-10-21 17:13 复发一例**：AJRIPQN 侦察车道运行 22 分钟后死于同一 400；报告
+  已完整落盘（零产物损失）。当时 `zcode.cjs` 补丁已打，但进程是否已重启未知；若用户
+  重启后仍复发，则 v1 补丁不足，按 `~/bak/repatch_zcode.sh` 回滚或改走"换 provider /
+  不发 effort"路线。
 - **根治选项（需用户拍板/上游修复）**：把 subagent 模型从
   `opencode-go-chat/deepseek-v4.1-flash/reasoningLevel=max` 换非 thinking 模型或
   另一家 provider；或该 route 不发送 `reasoning_effort`。最小客户端修复点 =
