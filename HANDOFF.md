@@ -5,6 +5,29 @@
 > 实时看板 = `STATUS.md`，债务刻度 = `DEBT.md`，决策日志 = `DECISIONS.md`。
 > 车道工人开工另必读 `docs/fill-worker-playbook.md`。
 
+## 🔴 移交令（2026-10-21，用户令）：Phase 5 → opencode
+
+> **用户令原文**："之后我们做一个大的转变。未来这个项目逐渐会让 opencode
+> 负责一部分（甚至全部，如果效果好的话）。目前，我打算让他负责 phase5 部分。
+> ……你自己，现在只负责两个活跃 sub agents 和 root runner 的收工。
+> opencode 会从 phase5 开始启动。"
+>
+> **分工自本文起生效**：
+> - **opencode**：Phase 5 文字移植全线（TameSpine 产线从批 68 起接力 +
+>   packing/local/trig 填证）。**接手入口 = `docs/projects/phase5-opencode-takeover.md`**
+>   （自足简报：状态精确账/relay 全协议/短期长期计划/边界与协作）。
+> - **ZCode（本文暂任编排者）**：只收工三件——TameSpine 批 67（在飞，
+>   落库后 TameSpine 线移交）、TM 舰队重烤（在飞，落库+终账）、root runner
+>   （后台计算，周三深夜-周四凌晨收 → 终账 + spine 探针补跑）。收工期间
+>   照常核验→走闸→落库→push，**不派任何新车道**（发车冻结 §3 继续生效）。
+> - **通用纪律跨系统有效**：Statement 冻结 + SF 流程（§7/cleanup 先例）、
+>   零 sorry、构建纪律（§5.5 Lake 旗标坑 + 内存 ≤3）、交付自检三条。
+> - **未定域**（Phase 3/4/6 之后归谁、euler 四代、AJRIPQN 本体）：等用户令。
+> - **在决项**：SF-47（PA24 cover_strong 末合取测度级形，1463ad31 立案）
+>   待用户批；批则 46∘47 联合走闸把 13gen（PA24 直 sorry 1→0 实测三闸绿）
+>   入库。此决定涉及 13gen 交付件（ZCode 车道产出），opencode 接手 TameSpine
+>   线不受其影响。
+
 
 ---
 

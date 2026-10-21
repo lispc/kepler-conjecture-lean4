@@ -106,6 +106,11 @@ arctan 曲率紧致化，样本曾达 ~95% 可验证。**重计算按 §5 约束
 
 ### Phase 5 — 文字证明移植 🟡 主战场
 
+> **🔴 2026-10-21 移交令：Phase 5 → opencode**（用户令）。接管入口 =
+> `docs/projects/phase5-opencode-takeover.md`（自足简报：状态精确账/relay
+> 全协议/短期长期计划）。ZCode 只收工在飞三件（TameSpine 批 67/舰队/root
+> runner）。本节以下文字为移交前状态存档。
+
 骨架 100%（25+39 模块，2713 sorry 起步）；hypermap/fan/topology/planarity/
 Conforming/polyhedron 全书收官（~61.8k 行 HOL 全证）。当前滚动批次制清债：
 账本 1951→1719（2026-10-10）。大块剩余：tame 文字章移植（64 .hl/4.6MB，T3 线

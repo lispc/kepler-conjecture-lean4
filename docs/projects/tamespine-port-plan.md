@@ -1,5 +1,13 @@
 # tamespine-port-plan — tame 文字章移植立项文件（2026-10-08 只读侦察轮）
 
+> **⭐ 进度戳（2026-10-21，接手者必读）**：本文件为立项时作战地图，进度以
+> `docs/projects/phase5-opencode-takeover.md` §1 为准。快照：**B1
+> tame_list.hl 全本收官（批 1-59，649 件，`f0361c78`）；B3 首本 AUQTZYZ.hl
+> 收官（批 60-65）；RXOKSKC.hl 六站前件 5/6 闭（:25-:492，批 66
+> `f7a559d6`）；批 67 在飞（冲 :523 RXOKSKC = A9 接口件）**。雷场登记
+> #1-#167（各 TameList*.lean 头注）。**2026-10-21 起 TameSpine 线由
+> opencode 接力（从批 68 = RXOKSKC :523-:1105 章末起）**。
+
 > 任务来源：终装配后最大单一工作量——`reference/flyspeck/text_formalization/tame/`
 > 文字章（64 个顶层 .hl，3.3MB / 91,841 行 / **2,042 条定理**（实测口径
 > `^[[:space:]]*let NAME = (prove|prove_by_refinement)`——注意两类文件风格不同：
