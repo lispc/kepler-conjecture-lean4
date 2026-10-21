@@ -3076,11 +3076,16 @@ def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False,
 
 def monotree_main(case, cid, n, args, spec, params_file,
                   dom_rung=None, witness_rung=None, keepconst_rung=None,
-                  split_fix=False):
+                  split_fix=False, decide_mode="kernel"):
     import re
     nsp = "MonoTree_" + re.sub(r"\W", "_", cid)
     pad_bits = spec.get("pad_sqrt_const")
     rung = (int(spec.get("rung_n", 2048)), int(spec.get("rung_out", -64)))
+    # W8 gen-8 `--decide-mode`: "kernel" (default; byte-identical output) or
+    # "native" (DEV SPEED ONLY: every emitted decision tactic becomes
+    # `native_decide`, which introduces the Lean.ofReduceBool axiom — never
+    # a gate artifact; the gate lane stays kernel + axiom whitelist).
+    dt = "native_decide" if decide_mode == "native" else "decide"
     # W8 witness-position rung lowering (flag-gated; absent = v2 identical).
     # A `None` out component resolves to the spec's rung_out.
     marks = None
@@ -3140,6 +3145,13 @@ def monotree_main(case, cid, n, args, spec, params_file,
     # Default-off byte-identity: with no rung flags the prelude must end
     # exactly as the pre-W8 emitter wrote it ("...kernel checks. -/" on one
     # line); the witness-rung note (if any) is spliced before the closure.
+    all_note = "  All decides are kernel checks. -/\n"
+    wr_all_note = "  All decides are kernel checks.\n"
+    if decide_mode == "native":
+        dev = ("  All decides are native_decide checks (DEV MODE: uses\n"
+               "  Lean.ofReduceBool; never a gate artifact).")
+        all_note = dev + " -/\n"
+        wr_all_note = dev + "\n"
     wr_note = ""
     if dom_rung_eff is not None:
         if marks is None:
@@ -3166,7 +3178,7 @@ def monotree_main(case, cid, n, args, spec, params_file,
                        "consumes there, and transOn_sound holds at every\n"
                        "    rung.  Tight-margin TM nodes keep the spec "
                        "rung.\n")
-        wr_note = ("  All decides are kernel checks.\n" + wr_note + "-/\n")
+        wr_note = (wr_all_note + wr_note + "-/\n")
     prelude = (
         "/- W8 mono-tree certificate: a closed restrict\u00d7bisect subtree "
         "of the\n    W6a search over " + cid + " (route A; assembly via "
@@ -3180,8 +3192,7 @@ def monotree_main(case, cid, n, args, spec, params_file,
         "    premises re-verified by the mirror).  Plan-A padded consts;\n"
         "    real sqrt slots computed kernel-side by evalFill (stage A) and\n"
         "    baked as `sbMs`."
-        + (wr_note if wr_note
-           else "  All decides are kernel checks. -/\n") +
+        + (wr_note if wr_note else all_note) +
         "import Kepler.Interval.CertTM\n"
         "import Kepler.Interval.MonoTree\n\n"
         "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n"
@@ -3362,7 +3373,7 @@ def monotree_main(case, cid, n, args, spec, params_file,
                 f"def {nid}Box : Fin {n} \u2192 DInterval := {bl}\n\n"
                 f"def {nid}Ps : TMParams := {ps_lit(v[3])}\n\n"
                 f"theorem {nid}_cert : checkPosTMHull E {nid}Box {nid}Ps"
-                f" = true := by decide\n")
+                f" = true := by {dt}\n")
             return f"(MonoTree.leaf {nid}Box {nid}Ps {nid}_cert)"
         if kind == "restrict":
             sgn = node["sgn"]
@@ -3385,7 +3396,7 @@ def monotree_main(case, cid, n, args, spec, params_file,
                     f"/-- \u2202\u2c7cE at {nid} (stage-A margin {v[1]}"
                     f"*2^({v[2]}); {len(v[3])} sqrt certs). -/\n"
                     f"theorem {nid}_df{j} : checkPosTMHull ({side} {j}) "
-                    f"{nid}Box {ps_lit(v[3])} = true := by decide\n")
+                    f"{nid}Box {ps_lit(v[3])} = true := by {dt}\n")
                 (incr if sg == "+" else decr).append(j)
             psd_parts = []
             for j in range(n):
@@ -3419,8 +3430,8 @@ def monotree_main(case, cid, n, args, spec, params_file,
                 + "\n".join("  " + b for b in decr_body) + "\n\n"
                 f"theorem {nid}_hwf : \u2200 j, {nid}Sgn j \u2260 none "
                 f"\u2192 ({nid}Box j).wf = true := by\n"
-                f"  intro j hj\n  fin_cases j <;> decide\n\n"
-                f"theorem {nid}_safe : E.derivSafe = true := by decide\n\n")
+                f"  intro j hj\n  fin_cases j <;> {dt}\n\n"
+                f"theorem {nid}_safe : E.derivSafe = true := by {dt}\n\n")
             # DomOK v2 (witness-table batch discharge): stage A computed the
             # table compiled-side by `domTable`; stage B bakes it as a literal
             # and the two kernel decides re-derive + consume it (O(n) each).
@@ -3439,7 +3450,7 @@ def monotree_main(case, cid, n, args, spec, params_file,
                 f"def {nid}DomTable : List (Option DInterval) := [{entries}]\n\n"
                 f"theorem {nid}_dom : DomOK {nid}Box E :=\n"
                 f"  domOK_of_domByIntervalTable {nid}Box E {nid}DomTable\n"
-                f"    (by decide) (by decide)\n")
+                f"    (by {dt}) (by {dt})\n")
             return (f"(MonoTree.restrict {nid}Box {nid}Sgn {nid}Psd {nid}_hwf"
                     f" {nid}_incr {nid}_decr {nid}_safe {nid}_dom {sub_term})")
         if kind == "split":
@@ -3458,8 +3469,8 @@ def monotree_main(case, cid, n, args, spec, params_file,
                 + "".join("    \u00b7 exact absurd rfl hi\n" if j == d else
                           "    \u00b7 exact \u27e8rfl, rfl\u27e9\n"
                           for j in range(n))
-                + "  \u00b7 decide\n  \u00b7 decide\n  \u00b7 decide\n"
-                "  \u00b7 decide\n")
+                + f"  \u00b7 {dt}\n  \u00b7 {dt}\n  \u00b7 {dt}\n"
+                f"  \u00b7 {dt}\n")
             if split_fix:
                 return (f"(MonoTree.split {nid}Box {d} {lterm} {rterm})")
             return (f"(MonoTree.split {nid}Box {d} {lterm} {rterm} "
@@ -3503,7 +3514,7 @@ def monotree_main(case, cid, n, args, spec, params_file,
         "  monoTree_sound sbTree sbTree_covers \u03c1 h\u03c1\n\n"
         "/-- Plain interval arithmetic fails on the root box (the reason the\n"
         "tree is needed). -/\n"
-        "theorem B0_interval_neg : checkPos E B0 = false := by decide\n")
+        "theorem B0_interval_neg : checkPos E B0 = false := by " + dt + "\n")
     if split_fix:
         # The v2 diagnostic `B0_interval_neg` presumes plain interval FAILS on
         # the root; on merged (split-root) boxes it may as well SUCCEED (the
@@ -3513,7 +3524,7 @@ def monotree_main(case, cid, n, args, spec, params_file,
         out[-1] = out[-1].replace(
             "/-- Plain interval arithmetic fails on the root box (the reason"
             " the\ntree is needed). -/\n"
-            "theorem B0_interval_neg : checkPos E B0 = false := by decide\n",
+            "theorem B0_interval_neg : checkPos E B0 = false := by " + dt + "\n",
             "")
     open(args[2], "w").write("\n".join(out))
     pol = ""
@@ -3530,6 +3541,18 @@ def monotree_main(case, cid, n, args, spec, params_file,
                    f"{ntrans0} witness-position trans")
     print(f"emit_lean: wrote {args[2]} (W8 mono-tree stage B: {nleaf} leaf "
           f"certs + {ndf} df certs; {nsq} sqrt slots baked{pol})")
+
+
+# W8 gen-7 rung curve (BIXPCGW_7274157868_a sb12-heavy, POS1 and L1 boxes
+# agree row-for-row): of the 99 DOM witness rows, 97 are admissible at
+# rung 8; rows 3 and 52 (both `div`) need rung 64; none need >64 and the
+# nesting is monotone with zero counterexamples.  The stable recipe for the
+# witness line is therefore `--mono-tree --mono-witness-rung=64` (8/53
+# witness-position trans lowered, the 45 tight-margin trans keep the spec
+# 2048 rung).  The leaf final-value line (checkPosTMHull) is separate: it
+# still needs the constant bits at 2048 (keepconst policy).  This constant
+# is documentation for drivers; the flag is the policy.
+W8_WITNESS_RUNG_SB12HEAVY = 64
 
 
 def _parse_rung_arg(s, flag):
@@ -3578,6 +3601,9 @@ def main():
     # for provenance; it never elaborates -- the split path was never exercised
     # before gen-7).
     split_fix = False
+    # W8 gen-8: kernel (default, byte-identical) or native (DEV ONLY:
+    # native_decide, introduces Lean.ofReduceBool; never a gate artifact).
+    decide_mode = "kernel"
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
@@ -3610,6 +3636,10 @@ def main():
                                              "--mono-dom-rung-keepconst")
         elif a == "--mono-split-fix":
             split_fix = True
+        elif a.startswith("--decide-mode="):
+            decide_mode = a.split("=", 1)[1]
+            if decide_mode not in ("kernel", "native"):
+                die("--decide-mode: expected `kernel` or `native`")
         elif a == "--fill":
             fill = True
         elif a == "--stage-a":
@@ -3668,6 +3698,9 @@ def main():
             "                trans nodes — divisor/guard/radicand subtrees the\n"
             "                witness table reads; tight-margin nodes keep the\n"
             "                spec rung; the two flags are exclusive)\n"
+            "                [--decide-mode=kernel|native] (gen-8: default\n"
+            "                kernel = byte-identical; native = DEV ONLY,\n"
+            "                emits native_decide and uses Lean.ofReduceBool)\n"
             "                (mono: <arg2> = sub-box manifest, <out> = report)")
     if disj_gd and not bbg:
         die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
@@ -3689,7 +3722,8 @@ def main():
         nsp_n = int(spec.get("n", n))
         monotree_main(case, cid, nsp_n, args, spec, params_file,
                       dom_rung=dom_rung, witness_rung=witness_rung,
-                      keepconst_rung=keepconst_rung, split_fix=split_fix)
+                      keepconst_rung=keepconst_rung, split_fix=split_fix,
+                      decide_mode=decide_mode)
         return
 
     if mono:
