@@ -3354,15 +3354,1405 @@ private theorem p24_wedge_cells_pair_null (V : Set V3) (u0 u1 n1 n2 : V3) (e : S
   refine hXY ?_
   rw [← hki, ← hkj, hij.2]
 
-/-- NEEDS（scaffold 3/3，D1+D2 走廊与覆盖；HL REUHADY.hl 345-2386，界标
-"OK until here" :1250）：产出锥帽半径 `r d`（0 < r ≤ 1、0 < d < 1）并证覆盖
-`cap ∩ wedgeGe ⊆ ⋃楔族胞`。HL 路线：S = voronoi_list V [u0;u1] 闭/仿射/有界
-论证（:416-504）→ 内点 p = circumcenter、margin d、最近包装点 a'、8-界分离
-（:733-830）→ C = ball(u0,1) ∩ rcone_gt(u0,u1,c) 内每点落某 `mcell i V ul`
-（i ≤ 4、barV V 3、truncate 1 = [u0;u1]，:1531-1629；消费 PA6 `GLTVHUM`
-闭 Voronoi 胞 = 根 u0 的 Rogers 单形并 + PA12 `MCELL_EXPLICIT`）→ e ∈ edgeX 由
-truncate 结构 + heX 定楔侧 → P1/P2/P3 半径参数集 min-max 装配（:1705-2790）。
-纯度量/凸性/覆盖，无测量论证，可独立移植（本车道下一浪首选）。 -/
+/-- 开锥参数单调（PA23 `grutoti_rconeGt_subset` 私拷；junk k=1 臂的
+`hw1` 消费端）。 -/
+private theorem p24_rconeGt_mono {u0 u1 : V3} {a b : ℝ} (h : a ≤ b) :
+    rconeGt u0 u1 b ⊆ rconeGt u0 u1 a := by
+  intro x hx
+  simp only [rconeGt, Set.mem_setOf_eq] at hx ⊢
+  exact lt_of_le_of_lt (mul_le_mul_of_nonneg_left h (by positivity)) hx
+
+
+/-- ℝ 上非零纯量乘法在 V3 上单射。 -/
+private theorem p24_smulR_inj {c : ℝ} (hc : c ≠ 0) :
+    Function.Injective ((c • ·) : V3 → V3) := by
+  intro x y hxy
+  have h1 : (c:ℝ) • x = (c:ℝ) • y := hxy
+  have h2 : c⁻¹ • ((c:ℝ) • x) = c⁻¹ • ((c:ℝ) • y) := by rw [h1]
+  rw [inv_smul_smul₀ hc, inv_smul_smul₀ hc] at h2
+  exact h2
+
+
+/-- `¬Coplanar ℝ {u0,u1,w1,w2} ⟹ 差向量族线性无关`（PA15:1806 `p15_li_of_ncopl`
+移植，共面谓词统一为 Mathlib root-`Coplanar ℝ` 形：三处塌缩支改经
+root-`coplanar_triple` + `_root_.Coplanar.subset` + `p24_coplanar_affineSpan_triple`
+（PA24 既有件）给 `Coplanar ℝ` 四点共面，其余逐字）。 -/
+private theorem p24_li_of_ncopl {u0 u1 w1 w2 : V3}
+    (hcop : ¬ Coplanar ℝ ({u0, u1, w1, w2} : Set V3)) :
+    LinearIndependent ℝ ![u1 - u0, w1 - u0, w2 - u0] := by
+  rw [Fintype.linearIndependent_iff]
+  intro g hg
+  have hsum : g 0 • (u1 - u0) + g 1 • (w1 - u0) + g 2 • (w2 - u0) = 0 := by
+    simpa [Fin.sum_univ_three] using hg
+  by_cases h0 : g 0 = 0
+  · by_cases h1 : g 1 = 0
+    · by_cases h2 : g 2 = 0
+      · intro i; fin_cases i <;> assumption
+      · -- w2 = u0，塌缩为三点
+        rw [h0, h1] at hsum
+        simp only [zero_smul, zero_add] at hsum
+        have hw2 : w2 = u0 := by
+          rcases smul_eq_zero.mp hsum with h | h
+          · exact absurd h h2
+          · exact sub_eq_zero.mp h
+        have hc1 : Coplanar ℝ ({u0, u1, w1, w2} : Set V3) := by
+          have hset : ({u0, u1, w1, w2} : Set V3) = {u0, u1, w1} := by
+            rw [hw2]
+            ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+          rw [hset]
+          exact coplanar_triple (k := ℝ) u0 u1 w1
+        exact absurd hc1 hcop
+    · -- w1 = u0 + (−g2/g1)•(w2−u0) ∈ affineSpan {u0, u1, w2}
+      rw [h0, zero_smul, zero_add] at hsum
+      have hmove : g 1 • (w1 - u0) = -(g 2 • (w2 - u0)) :=
+        eq_neg_of_add_eq_zero_left hsum
+      have hne1 : (g 1 : ℝ) ≠ 0 := h1
+      have hrel : w1 - u0 = (-g 2 / g 1) • (w2 - u0) := by
+        have hsc : (g 1:ℝ) * (-g 2 / g 1) = -g 2 := by field_simp
+        have hstep : (g 1:ℝ) • (w1 - u0)
+            = (g 1:ℝ) • ((-g 2 / g 1) • (w2 - u0)) := by
+          rw [smul_smul, hsc, neg_smul]
+          exact hmove
+        exact p24_smulR_inj hne1 hstep
+      have hc1 : Coplanar ℝ ({u0, u1, w1, w2} : Set V3) := by
+        have hsub : ({u0, u1, w1, w2} : Set V3) ⊆
+            ((affineSpan ℝ ({u0, u1, w2} : Set V3)) : Set V3) := by
+          intro p hp
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+          rcases hp with rfl | rfl | rfl | rfl
+          · exact mem_affineSpan (k := ℝ) (by simp)
+          · exact mem_affineSpan (k := ℝ) (by simp)
+          · refine p24_mem_affineSpan_triple u0 u1 w2 _ 0 (-g 2 / g 1) ?_
+            rw [zero_smul, add_zero, ← hrel]; abel
+          · exact mem_affineSpan (k := ℝ) (by simp)
+        exact Coplanar.subset hsub (p24_coplanar_affineSpan_triple u0 u1 w2)
+      exact absurd hc1 hcop
+  · -- u1 = u0 + (−g1/g0)•(w1−u0) + (−g2/g0)•(w2−u0) ∈ affineSpan {u0, w1, w2}
+    have hmove : g 0 • (u1 - u0) = -(g 1 • (w1 - u0) + g 2 • (w2 - u0)) := by
+      have h2 : g 0 • (u1 - u0) + (g 1 • (w1 - u0) + g 2 • (w2 - u0)) = 0 := by
+        rw [← add_assoc]; exact hsum
+      exact eq_neg_of_add_eq_zero_left h2
+    have hne0 : (g 0 : ℝ) ≠ 0 := h0
+    have hrel : u1 - u0 = (-g 1 / g 0) • (w1 - u0) + (-g 2 / g 0) • (w2 - u0) := by
+      have hstep : (g 0:ℝ) • (u1 - u0)
+          = (g 0:ℝ) • ((-g 1 / g 0) • (w1 - u0) + (-g 2 / g 0) • (w2 - u0)) := by
+        have hsc1 : (g 0:ℝ) * (-g 1 / g 0) = -g 1 := by field_simp
+        have hsc2 : (g 0:ℝ) * (-g 2 / g 0) = -g 2 := by field_simp
+        rw [smul_add, smul_smul, smul_smul, hsc1, hsc2, neg_smul, neg_smul,
+          ← neg_add]
+        exact hmove
+      exact p24_smulR_inj hne0 hstep
+    have hc1 : Coplanar ℝ ({u0, u1, w1, w2} : Set V3) := by
+      have hsub : ({u0, u1, w1, w2} : Set V3) ⊆
+          ((affineSpan ℝ ({u0, w1, w2} : Set V3)) : Set V3) := by
+        intro p hp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+        rcases hp with rfl | rfl | rfl | rfl
+        · exact mem_affineSpan (k := ℝ) (by simp)
+        · refine p24_mem_affineSpan_triple u0 w1 w2 _ (-g 1 / g 0) (-g 2 / g 0) ?_
+          rw [add_assoc, ← hrel]; abel
+        · exact mem_affineSpan (k := ℝ) (by simp)
+        · exact mem_affineSpan (k := ℝ) (by simp)
+      exact Coplanar.subset hsub (p24_coplanar_affineSpan_triple u0 w1 w2)
+    exact absurd hc1 hcop
+private theorem p24_coll3_zero_sub {x a b : V3} :
+    Collinear3 x a b ↔ Collinear3 0 (a - x) (b - x) := by
+  by_cases h : a = x
+  · rw [h]
+    simp only [sub_self]
+    constructor <;> intro _ <;> exact collinear3_of_eq rfl
+  · have h' : a - x ≠ 0 := sub_ne_zero.mpr h
+    rw [collinear3_iff_smul h, collinear3_iff_smul h']
+    simp only [sub_zero]
+
+private theorem p24_azim_zero_of_collY (v0 v1 w y : V3) (h : Collinear3 v0 v1 y) :
+    azim v0 v1 w y = 0 := by
+  unfold azim
+  exact if_pos (Or.inr h)
+
+private theorem p24_smul_dot (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) := by
+  rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left]
+
+private theorem p24_add_dot (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c := by
+  rw [← inner_eq_dot, ← inner_eq_dot, ← inner_eq_dot, inner_add_left]
+
+private theorem p24_dot_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a := by
+  rw [← inner_eq_dot, ← inner_eq_dot, real_inner_comm]
+
+/-- 平分线点：方位角 θ ∈ (0, 2π) 时存在 `b` 使 `azim v0 v1 w1 b = θ/2`、
+`¬Collinear3 v0 v1 b` 且三差向量线性无关。 -/
+private theorem p24_bisector_exists {v0 v1 w1 w2 : V3}
+    (h1 : ¬ Collinear3 v0 v1 w1) (h2 : ¬ Collinear3 v0 v1 w2)
+    (h0 : 0 < azim v0 v1 w1 w2) :
+    ∃ b : V3, azim v0 v1 w1 b = azim v0 v1 w1 w2 / 2 ∧
+      ¬ Collinear3 v0 v1 b ∧
+      LinearIndependent ℝ ![v1 - v0, w1 - v0, b - v0] := by
+  have hv0v1 : v0 ≠ v1 := fun he => h1 (collinear3_of_eq he.symm)
+  have hdne : v1 - v0 ≠ 0 := sub_ne_zero.mpr (Ne.symm hv0v1)
+  have hv1ne : (v1 : V3) ≠ v0 := Ne.symm hv0v1
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v1 - v0) hdne
+  have hax : (v1 - v0 : V3) = dist v1 v0 • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  have hax0 : (v1 - v0 : V3) = dist (v1 - v0) 0 • f3 := by
+    rw [dist_eq_norm, sub_zero]
+    exact halign
+  obtain ⟨ψ, r1, r2, hr1, hr2, hz1, hz2⟩ := azim_frame_spec h1 h2 hon hax hv1ne
+  set b : V3 := v0 + (Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
+    + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 with hbdef
+  have hbv : b - v0 = (Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
+      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 := by rw [hbdef]; abel
+  have hf11 : (f1 : V3) ⬝ᵥ f1 = 1 := hon.1
+  have hf22 : (f2 : V3) ⬝ᵥ f2 = 1 := hon.2.1
+  have hf12 : (f1 : V3) ⬝ᵥ f2 = 0 := hon.2.2.2.1
+  have hf21 : (f2 : V3) ⬝ᵥ f1 = 0 := by rw [p24_dot_comm]; exact hf12
+  have hdot1 : ((Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
+      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 : V3) ⬝ᵥ f1
+      = Real.cos (ψ + azim v0 v1 w1 w2 / 2) := by
+    rw [p24_add_dot, p24_smul_dot, p24_smul_dot, hf11, hf21]
+    ring
+  have hdot2 : ((Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
+      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 : V3) ⬝ᵥ f2
+      = Real.sin (ψ + azim v0 v1 w1 w2 / 2) := by
+    rw [p24_add_dot, p24_smul_dot, p24_smul_dot, hf12, hf22]
+    ring
+  have hzb : zOf f1 f2 (b - v0) = Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
+    rw [hbv]
+    show _ + _ * Complex.I = _
+    rw [hdot1, hdot2, Complex.exp_mul_I]
+    push_cast
+    ring
+  have hax0' : v1 - v0 - 0 = dist (v1 - v0) 0 • f3 := by rw [sub_zero]; exact hax0
+  have hbnc : ¬ Collinear3 0 (v1 - v0) (b - v0) := by
+    rw [← zOf_ne_zero_iff (e1 := f1) (e2 := f2) (e3 := f3) hon hax0' hdne,
+      show (b - v0) - 0 = b - v0 from by rw [sub_zero], hzb]
+    exact Complex.exp_ne_zero _
+  have haz : azim v0 v1 w1 b = azim v0 v1 w1 w2 / 2 := by
+    rw [p24_azim_sub_self v0 v1 w1 b, azim_eq_ang_of_frame f1 f2 f3 hon hax0 hdne
+      (fun hc => h1 (p24_coll3_zero_sub.mpr hc)) hbnc]
+    have hdiv : (zOf f1 f2 (w1 - v0))⁻¹
+        * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
+        = ((r1 : ℝ)⁻¹ : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
+      rw [hz1, exp_add_I]
+      have hr1c : ((r1 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hr1.ne'
+      have hE : Complex.exp ((ψ : ℝ) * Complex.I) ≠ 0 := Complex.exp_ne_zero _
+      field_simp
+    rw [hzb, hdiv, ← Complex.ofReal_inv, ang_ofReal_mul_of_pos (by positivity),
+      ang_exp_mul_I (by linarith [azim_nonneg v0 v1 w1 w2])
+        (by linarith [azim_lt_two_pi v0 v1 w1 w2])]
+  refine ⟨b, haz, ?_, ?_⟩
+  · intro hc
+    have hzz := haz
+    rw [p24_azim_zero_of_collY v0 v1 w1 b hc] at hzz
+    have hz2 : azim v0 v1 w1 w2 = 0 := by linarith
+    exact h0.ne' hz2
+  · rw [Fintype.linearIndependent_iff]
+    intro g hg
+    have hsum : g 0 • (v1 - v0) + g 1 • (w1 - v0) + g 2 • (b - v0) = 0 := by
+      simpa [Fin.sum_univ_three] using hg
+    have hzf : (v1 - v0 : V3) ⬝ᵥ f1 = 0 ∧ (v1 - v0 : V3) ⬝ᵥ f2 = 0 :=
+      axis_perp hax hon
+    have hzax : zOf f1 f2 (v1 - v0) = 0 := by
+      show (v1 - v0 : V3) ⬝ᵥ f1 + (v1 - v0 : V3) ⬝ᵥ f2 * Complex.I = 0
+      rw [hzf.1, hzf.2]
+      simp
+    have hz : ((g 1 : ℝ) : ℂ) * ((r1 : ℝ) : ℂ)
+        + ((g 2 : ℝ) : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) = 0 := by
+      have hunit : Complex.exp ((-(ψ:ℝ)) * Complex.I)
+          * Complex.exp ((ψ:ℝ) * Complex.I) = 1 := by
+        rw [← Complex.exp_add]
+        simp
+      have harg : (-(ψ:ℝ)) * Complex.I
+          + ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
+          = (azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I := by
+        rw [Complex.ofReal_add]
+        push_cast
+        ring
+      have hsplit : Complex.exp ((-(ψ:ℝ)) * Complex.I)
+          * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
+          = Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
+        rw [← Complex.exp_add, harg]
+      have hE' : Complex.exp ((-(ψ:ℝ)) * Complex.I) * zOf f1 f2 (w1 - v0)
+          = ((r1 : ℝ) : ℂ) := by
+        rw [hz1, mul_left_comm, hunit, mul_one]
+      have hz2' : Complex.exp ((-(ψ:ℝ)) * Complex.I)
+          * (((g 1 : ℝ) : ℂ) * zOf f1 f2 (w1 - v0)
+            + ((g 2 : ℝ) : ℂ) * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I))
+          = ((g 1 : ℝ) : ℂ) * ((r1 : ℝ) : ℂ)
+            + ((g 2 : ℝ) : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
+        rw [mul_add, mul_left_comm, hE', mul_left_comm, hsplit]
+      have h0' := congrArg (zOf f1 f2) hsum
+      rw [zOf_add, zOf_add, zOf_smul, zOf_smul, zOf_smul, hzax, hzb] at h0'
+      have hr0 : zOf f1 f2 0 = 0 := by simp [zOf]
+      rw [hr0, mul_zero, zero_add] at h0'
+      have h0'' := congrArg (fun z : ℂ => Complex.exp ((-(ψ:ℝ)) * Complex.I) * z) h0'
+      rw [mul_zero] at h0''
+      exact hz2'.symm.trans h0''
+    have him : (g 2 : ℝ) * Real.sin (azim v0 v1 w1 w2 / 2) = 0 := by
+      have hexp2 : Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
+          = Complex.cos ((azim v0 v1 w1 w2 / 2 : ℝ) : ℂ)
+            + Complex.sin ((azim v0 v1 w1 w2 / 2 : ℝ) : ℂ) * Complex.I :=
+        Complex.exp_mul_I _
+      have h4 := congrArg Complex.im hz
+      rw [hexp2] at h4
+      simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_im,
+        Complex.ofReal_re, Complex.cos_ofReal_im,
+        Complex.sin_ofReal_re, Complex.sin_ofReal_im, Complex.I_re,
+        Complex.I_im, zero_mul, zero_add, mul_zero, add_zero] at h4
+      simpa using h4
+    have hthpos : 0 < azim v0 v1 w1 w2 / 2 := by linarith
+    have hthlt : azim v0 v1 w1 w2 / 2 < Real.pi := by
+      have h2π := azim_lt_two_pi v0 v1 w1 w2
+      linarith
+    have hsin : Real.sin (azim v0 v1 w1 w2 / 2) ≠ 0 :=
+      ne_of_gt (Real.sin_pos_of_pos_of_lt_pi hthpos hthlt)
+    have hg2 : g 2 = 0 := by
+      rcases mul_eq_zero.mp him with h | h
+      · exact h
+      · exact absurd h hsin
+    have hre : (g 1 : ℝ) * r1 = 0 := by
+      have h're := congrArg Complex.re hz
+      rw [hg2] at h're
+      simpa [Complex.ofReal_zero, zero_mul, add_zero, Complex.I_re] using h're
+    have hg1 : g 1 = 0 := by
+      rcases mul_eq_zero.mp hre with h | h
+      · exact h
+      · exact absurd h hr1.ne'
+    rw [hg1, hg2, zero_smul, zero_smul, add_zero, add_zero] at hsum
+    rcases smul_eq_zero.mp hsum with h | h
+    · intro i; fin_cases i <;> simp [h, hg1, hg2]
+    · exact absurd h hdne
+
+
+/-! ### Kit D: affine-box positivity (p24_box_pos; rebuilt from the GT-3a
+continuation map, probe /tmp/gt3a_probeD.lean)
+
+The `¬coplanar` box route: with `LinearIndependent ℝ ![u1 - u0, w1 - u0, w2 - u0]`
+(Kit B) the parameter box `G = {v | coords > 0, C1, C2, ‖comboMap v‖ < r, sum < 1}`
+is an open neighborhood-invariant region; `p24_mem_of_good` sends every good
+parameter point into `conicCapP24 ∩ affGt` and into `conicCapP24 ∩ convexHull`, and the
+volume of the image is `|det comboMap| * volume (ball vstar ε) > 0` by
+`addHaar_image_linearMap` + `IsOpen.measure_pos` + translation invariance. -/
+
+private def p24_bvec (u0 u1 w1 w2 : V3) : Fin 3 → V3 := ![u1 - u0, w1 - u0, w2 - u0]
+
+private def p24_comboMap (u0 u1 w1 w2 : V3) : V3 →ₗ[ℝ] V3 where
+  toFun v := ∑ i : Fin 3, (WithLp.ofLp v) i • p24_bvec u0 u1 w1 w2 i
+  map_add' x y := by
+    simp only [WithLp.ofLp_add, Pi.add_apply, add_smul, Finset.sum_add_distrib]
+  map_smul' c x := by
+    simp only [WithLp.ofLp_smul, RingHom.id_apply]
+    rw [Finset.smul_sum]
+    exact Finset.sum_congr rfl fun i _ => by rw [smul_smul, Pi.smul_apply, smul_eq_mul]
+
+private theorem p24_comboMap_apply (u0 u1 w1 w2 : V3) (v : V3) :
+    p24_comboMap u0 u1 w1 w2 v = ∑ i : Fin 3, (WithLp.ofLp v) i • p24_bvec u0 u1 w1 w2 i :=
+  rfl
+
+private theorem p24_zero_toLp : (WithLp.toLp 2 (0 : Fin 3 → ℝ) : V3) = 0 := by
+  have h : (WithLp.toLp 2 (0 : Fin 3 → ℝ) : V3) = (0 : V3) := by
+    ext i
+    simp
+  exact h
+
+private theorem p24_comboMap_ker {u0 u1 w1 w2 : V3}
+    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
+    LinearMap.ker (p24_comboMap u0 u1 w1 w2) = ⊥ := by
+  rw [LinearMap.ker_eq_bot]
+  intro x y hxy
+  have h1 : p24_comboMap u0 u1 w1 w2 (x - y) = 0 := by
+    rw [map_sub, hxy, sub_self]
+  rw [p24_comboMap_apply] at h1
+  have hg := (Fintype.linearIndependent_iff.mp hli) (fun i => (WithLp.ofLp (x - y)) i) h1
+  have h0 : (WithLp.ofLp (x - y)) = 0 := funext hg
+  have hv : x - y = WithLp.toLp 2 (WithLp.ofLp (x - y)) := (WithLp.toLp_ofLp 2 _).symm
+  exact sub_eq_zero.mp (by rw [hv, h0, p24_zero_toLp])
+
+private theorem p24_comboMap_inj {u0 u1 w1 w2 : V3}
+    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
+    Function.Injective (p24_comboMap u0 u1 w1 w2) :=
+  LinearMap.ker_eq_bot.mp (p24_comboMap_ker hli)
+
+private theorem p24_comboMap_det {u0 u1 w1 w2 : V3}
+    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
+    LinearMap.det (p24_comboMap u0 u1 w1 w2) ≠ 0 := by
+  have hinj := p24_comboMap_inj hli
+  have hsurj := LinearMap.injective_iff_surjective.mp hinj
+  have hbij : Function.Bijective (p24_comboMap u0 u1 w1 w2) := ⟨hinj, hsurj⟩
+  have he : IsUnit (LinearMap.det (p24_comboMap u0 u1 w1 w2)) :=
+    LinearEquiv.isUnit_det' (LinearEquiv.ofBijective (p24_comboMap u0 u1 w1 w2) hbij)
+  exact he.ne_zero
+
+/-! ## scalar prelude: κ, c, distinctness -/
+
+private theorem p24_kappa_exists {D E F a : ℝ} (hD : 0 < D) (hEF : 0 < E + F) (ha : a < 1) :
+    ∃ κ : ℝ, 0 < κ ∧ κ * D > E + F ∧ κ * D * (1 - a) > (1 + a) * (E + F) := by
+  by_cases h1a : 0 < 1 + a
+  · have hT : 0 < (1 - a) * D := by nlinarith
+    have hTne : (1 - a) * D ≠ 0 := ne_of_gt hT
+    have hnum : 0 < (2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F))) := by
+      have hA : 0 < (1 + a) * (E + F) := by nlinarith
+      nlinarith
+    refine ⟨(2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F))) / ((1 - a) * D),
+      div_pos hnum hT, ?_, ?_⟩
+    · have hkey : (E + F) * (1 - a)
+            < (2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F)))
+              / ((1 - a) * D) * D * (1 - a) := by
+        rw [mul_assoc, mul_comm D (1 - a), div_mul_cancel₀ _ hTne]
+        nlinarith
+      exact lt_of_mul_lt_mul_right hkey (le_of_lt (by linarith))
+    · rw [mul_assoc, mul_comm D (1 - a), div_mul_cancel₀ _ hTne]
+      nlinarith
+  · have hDne : (D:ℝ) ≠ 0 := ne_of_gt hD
+    have hnum2 : 0 < D + E + F := by linarith
+    have hκD : (D + E + F) / D * D = D + E + F := div_mul_cancel₀ _ hDne
+    refine ⟨(D + E + F) / D, div_pos hnum2 hD, ?_, ?_⟩
+    · rw [hκD]
+      linarith
+    · rw [hκD]
+      have hn : (1 + a) * (E + F) ≤ 0 := by nlinarith
+      have hp : 0 < (D + E + F) * (1 - a) := by nlinarith
+      linarith
+
+private theorem p24_c_exists {P Q r : ℝ} (hP : 0 < P) (hQ : 0 < Q) (hr : 0 < r) :
+    ∃ c : ℝ, 0 < c ∧ c * P < 1 ∧ c * Q < r := by
+  refine ⟨min (1 / (2 * P)) (r / (2 * Q)), lt_min (div_pos (by nlinarith) (by nlinarith))
+    (div_pos (by nlinarith) (by nlinarith)), ?_, ?_⟩
+  · have hle : min (1 / (2 * P)) (r / (2 * Q)) ≤ 1 / (2 * P) := min_le_left _ _
+    have h1 : min (1 / (2 * P)) (r / (2 * Q)) * P ≤ (1 / (2 * P)) * P :=
+      mul_le_mul_of_nonneg_right hle (le_of_lt hP)
+    have h2 : (1 / (2 * P)) * P = 1 / 2 := by field_simp
+    rw [h2] at h1
+    linarith
+  · have hle : min (1 / (2 * P)) (r / (2 * Q)) ≤ r / (2 * Q) := min_le_right _ _
+    have h1 : min (1 / (2 * P)) (r / (2 * Q)) * Q ≤ (r / (2 * Q)) * Q :=
+      mul_le_mul_of_nonneg_right hle (le_of_lt hQ)
+    have h2 : (r / (2 * Q)) * Q = r / 2 := by field_simp
+    rw [h2] at h1
+    linarith
+
+private theorem p24_ne_of_li {u0 u1 w1 w2 : V3}
+    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
+    u0 ≠ u1 ∧ w1 ≠ u0 ∧ w1 ≠ u1 ∧ w2 ≠ u0 ∧ w2 ≠ u1 ∧ w1 ≠ w2 := by
+  have hg := Fintype.linearIndependent_iff.mp hli
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · intro he
+    have hz : ∑ j : Fin 3, (![1, 0, 0] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p24_bvec, he]
+    exact absurd (hg ![1, 0, 0] hz 0) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![0, 1, 0] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p24_bvec, he]
+    exact absurd (hg ![0, 1, 0] hz 1) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![1, -1, 0] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p24_bvec, he]
+    exact absurd (hg ![1, -1, 0] hz 0) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![0, 0, 1] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p24_bvec, he]
+    exact absurd (hg ![0, 0, 1] hz 2) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![1, 0, -1] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p24_bvec, he]
+    exact absurd (hg ![1, 0, -1] hz 0) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![0, 1, -1] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p24_bvec, he]
+    exact absurd (hg ![0, 1, -1] hz 1) (by simp)
+
+/-! ## affGt membership by explicit f-sum -/
+
+private theorem p24_mem_affGt {u0 u1 w1 w2 : V3} {x y z : ℝ} (hy : 0 < y) (hz : 0 < z)
+    (h1 : u0 ≠ u1) (h2 : w1 ≠ u0) (h3 : w1 ≠ u1) (h4 : w2 ≠ u0) (h5 : w2 ≠ u1) (h6 : w1 ≠ w2) :
+    (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 ∈
+      affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
+  have hfin : (({u0, u1} : Set V3) ∪ {w1, w2}).Finite :=
+    ((Set.finite_singleton u1).insert u0).union ((Set.finite_singleton w2).insert w1)
+  set f : V3 → ℝ := fun p => if p = u0 then 1 - x - y - z else if p = u1 then x
+    else if p = w1 then y else if p = w2 then z else 0 with hfdef
+  have hTF : hfin.toFinset = ({u0, u1, w1, w2} : Finset V3) := by
+    apply Finset.ext
+    intro p
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  have hU0 : u0 ∉ insert u1 (insert w1 ({w2} : Finset V3)) := by
+    simp [h1, Ne.symm h2, Ne.symm h4]
+  have hU1 : u1 ∉ insert w1 ({w2} : Finset V3) := by
+    simp [Ne.symm h3, Ne.symm h5]
+  have hU2 : w1 ∉ ({w2} : Finset V3) := by simp [h6]
+  have hifev : ∀ p : V3, f p = (if p = u0 then 1 - x - y - z else if p = u1 then x
+    else if p = w1 then y else if p = w2 then z else 0) := fun p => rfl
+  refine ⟨f, hfin, ?_, ?_, ?_⟩
+  · rw [hTF, Finset.sum_insert hU0, Finset.sum_insert hU1, Finset.sum_insert hU2,
+      Finset.sum_singleton]
+    simp only [hifev]
+    simp [h2, h3, h4, h5, Ne.symm h1, Ne.symm h6]
+    abel
+  · intro w hw
+    have hw1 : 0 < f w1 := by
+      rw [hifev]
+      simp only [h2, h3]
+      exact hy
+    have hw2 : 0 < f w2 := by
+      rw [hifev]
+      simp only [h4, h5, Ne.symm h6]
+      exact hz
+    rcases Set.mem_insert_iff.mp hw with he | he
+    · rw [he]; exact hw1
+    · rw [Set.mem_singleton_iff.mp he]; exact hw2
+  · rw [hTF, Finset.sum_insert hU0, Finset.sum_insert hU1, Finset.sum_insert hU2,
+      Finset.sum_singleton]
+    simp only [hifev]
+    simp [h2, h3, h4, h5, Ne.symm h1, Ne.symm h6]
+    ring
+
+/-! ## convex hull membership -/
+
+private theorem p24_mem_convexHull {u0 u1 w1 w2 : V3} {x y z : ℝ} (hx : 0 < x) (hy : 0 < y)
+    (hz : 0 < z) (hsum : x + y + z < 1) :
+    (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 ∈
+      convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+  have hσpos : 0 < y + z := by linarith
+  have hden : (1:ℝ) - (y + z) ≠ 0 := by linarith
+  have hA : ((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1
+      ∈ segment ℝ u0 u1 := by
+    refine ⟨(1 - x - y - z) / (1 - (y + z)), x / (1 - (y + z)),
+      div_nonneg (by linarith) (by linarith), div_nonneg (by linarith) (by linarith),
+      ?_, rfl⟩
+    rw [← add_div, show (1 - x - y - z) + x = 1 - (y + z) from by ring, div_self hden]
+  have hB : (y / (y + z)) • w1 + (z / (y + z)) • w2 ∈ segment ℝ w1 w2 := by
+    refine ⟨y / (y + z), z / (y + z), div_nonneg (le_of_lt hy) hσpos.le,
+      div_nonneg (le_of_lt hz) hσpos.le, ?_, rfl⟩
+    rw [← add_div]
+    exact div_self (by linarith)
+  have hconv : Convex ℝ (convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := convex_convexHull _ _
+  have hAin : ((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1 ∈
+      convexHull ℝ ({u0, u1, w1, w2} : Set V3) :=
+    (segment_subset_convexHull (by simp) (by simp)) hA
+  have hBin : (y / (y + z)) • w1 + (z / (y + z)) • w2 ∈
+      convexHull ℝ ({u0, u1, w1, w2} : Set V3) :=
+    (segment_subset_convexHull (by simp) (by simp)) hB
+  have hq : (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2
+      = (1 - (y + z)) • (((1 - x - y - z) / (1 - (y + z))) • u0
+          + (x / (1 - (y + z))) • u1)
+        + (y + z) • ((y / (y + z)) • w1 + (z / (y + z)) • w2) := by
+    rw [smul_add, smul_smul, smul_smul, smul_add, smul_smul, smul_smul,
+      mul_comm (1 - (y + z)) ((1 - x - y - z) / (1 - (y + z))), div_mul_cancel₀ _ hden,
+      mul_comm (1 - (y + z)) (x / (1 - (y + z))), div_mul_cancel₀ _ hden,
+      mul_comm (y + z) (y / (y + z)), div_mul_cancel₀ _ hσpos.ne',
+      mul_comm (y + z) (z / (y + z)), div_mul_cancel₀ _ hσpos.ne']
+    abel
+  have hseg : (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2
+      ∈ segment ℝ (((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1)
+          ((y / (y + z)) • w1 + (z / (y + z)) • w2) :=
+    ⟨1 - (y + z), y + z, by linarith, by linarith, by ring, hq.symm⟩
+  exact (hconv.segment_subset hAin hBin) hseg
+
+
+/-! ## membership of a good-coordinate point in cap/affGt/hull -/
+
+private theorem p24_mem_of_good {u0 u1 w1 w2 v : V3} {r a x y z : ℝ} (hr : 0 < r)
+    (h1 : u0 ≠ u1) (h2 : w1 ≠ u0) (h3 : w1 ≠ u1) (h4 : w2 ≠ u0) (h5 : w2 ≠ u1) (h6 : w1 ≠ w2)
+    (hx : (WithLp.ofLp v) 0 = x) (hy : (WithLp.ofLp v) 1 = y) (hz : (WithLp.ofLp v) 2 = z)
+    (hx0 : 0 < x) (hy0 : 0 < y) (hz0 : 0 < z)
+    (hC1 : x * dist u0 u1 > y * dist u0 w1 + z * dist u0 w2)
+    (hC2 : x * dist u0 u1 * (1 - a) > (1 + a) * (y * dist u0 w1 + z * dist u0 w2))
+    (hball : ‖p24_comboMap u0 u1 w1 w2 v‖ < r) (hsum : x + y + z < 1) :
+    u0 + p24_comboMap u0 u1 w1 w2 v ∈
+        conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) ∧
+      u0 + p24_comboMap u0 u1 w1 w2 v ∈
+        conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+  have hD : 0 < dist u0 u1 := dist_pos.mpr h1
+  have hE : 0 < dist u0 w1 := dist_pos.mpr (Ne.symm h2)
+  have hF : 0 < dist u0 w2 := dist_pos.mpr (Ne.symm h4)
+  have hδ1low : -(dist u0 w1 * dist u0 u1) ≤ (w1 - u0) ⬝ᵥ (u1 - u0) := by
+    have hcs : |(w1 - u0) ⬝ᵥ (u1 - u0)| ≤ dist u0 w1 * dist u0 u1 := by
+      have h2 : (w1 - u0) ⬝ᵥ (u1 - u0) = inner ℝ (w1 - u0) (u1 - u0) :=
+        (inner_eq_dot _ _).symm
+      calc |(w1 - u0) ⬝ᵥ (u1 - u0)|
+          = |inner ℝ (w1 - u0) (u1 - u0)| := by rw [h2]
+        _ ≤ ‖(w1 - u0 : V3)‖ * ‖(u1 - u0 : V3)‖ := abs_real_inner_le_norm _ _
+        _ = dist w1 u0 * dist u1 u0 := by rw [← dist_eq_norm, ← dist_eq_norm]
+        _ = dist u0 w1 * dist u0 u1 := by rw [dist_comm w1 u0, dist_comm u1 u0]
+    have hneg := neg_abs_le ((w1 - u0) ⬝ᵥ (u1 - u0))
+    linarith
+  have hδ2low : -(dist u0 w2 * dist u0 u1) ≤ (w2 - u0) ⬝ᵥ (u1 - u0) := by
+    have hcs : |(w2 - u0) ⬝ᵥ (u1 - u0)| ≤ dist u0 w2 * dist u0 u1 := by
+      have h2 : (w2 - u0) ⬝ᵥ (u1 - u0) = inner ℝ (w2 - u0) (u1 - u0) :=
+        (inner_eq_dot _ _).symm
+      calc |(w2 - u0) ⬝ᵥ (u1 - u0)|
+          = |inner ℝ (w2 - u0) (u1 - u0)| := by rw [h2]
+        _ ≤ ‖(w2 - u0 : V3)‖ * ‖(u1 - u0 : V3)‖ := abs_real_inner_le_norm _ _
+        _ = dist w2 u0 * dist u1 u0 := by rw [← dist_eq_norm, ← dist_eq_norm]
+        _ = dist u0 w2 * dist u0 u1 := by rw [dist_comm w2 u0, dist_comm u1 u0]
+    have hneg := neg_abs_le ((w2 - u0) ⬝ᵥ (u1 - u0))
+    linarith
+  have h11 : (u1 - u0) ⬝ᵥ (u1 - u0) = dist u0 u1 * dist u0 u1 := by
+    calc (u1 - u0) ⬝ᵥ (u1 - u0) = ‖(u1 - u0 : V3)‖ ^ 2 := (norm_sq_eq_dot _).symm
+      _ = ‖u1 - u0‖ * ‖u1 - u0‖ := pow_two _
+      _ = dist u1 u0 * dist u1 u0 := by rw [← dist_eq_norm]
+      _ = dist u0 u1 * dist u0 u1 := by rw [dist_comm]
+  have hcmb : p24_comboMap u0 u1 w1 w2 v = x • (u1 - u0) + y • (w1 - u0) + z • (w2 - u0) := by
+    rw [p24_comboMap_apply, Fin.sum_univ_three, hx, hy, hz]
+    simp [p24_bvec]
+  have hdoteq : (p24_comboMap u0 u1 w1 w2 v) ⬝ᵥ (u1 - u0)
+      = x * ((u1 - u0) ⬝ᵥ (u1 - u0)) + y * ((w1 - u0) ⬝ᵥ (u1 - u0))
+        + z * ((w2 - u0) ⬝ᵥ (u1 - u0)) := by
+    rw [hcmb, p24_add_dot, p24_add_dot, p24_smul_dot, p24_smul_dot, p24_smul_dot]
+  have hnormUB : ‖p24_comboMap u0 u1 w1 w2 v‖
+      ≤ x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2) := by
+    calc ‖p24_comboMap u0 u1 w1 w2 v‖
+        = ‖x • (u1 - u0) + (y • (w1 - u0) + z • (w2 - u0))‖ := by rw [hcmb, add_assoc]
+      _ ≤ ‖x • (u1 - u0)‖ + ‖y • (w1 - u0) + z • (w2 - u0)‖ := norm_add_le _ _
+      _ ≤ ‖x • (u1 - u0)‖ + (‖y • (w1 - u0)‖ + ‖z • (w2 - u0)‖) :=
+            add_le_add_right (norm_add_le _ _) _
+      _ = x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2) := by
+          rw [norm_smul, norm_smul, norm_smul, Real.norm_eq_abs, abs_of_pos hx0,
+            Real.norm_eq_abs, abs_of_pos hy0, Real.norm_eq_abs, abs_of_pos hz0,
+            ← dist_eq_norm, ← dist_eq_norm, ← dist_eq_norm, dist_comm u0 u1,
+            dist_comm u0 w1, dist_comm u0 w2]
+  -- hoisted shared facts
+  have hδ1ge : -(y * dist u0 w1 * dist u0 u1) ≤ y * ((w1 - u0) ⬝ᵥ (u1 - u0)) := by
+    have h := mul_le_mul_of_nonneg_left
+      (show -(dist u0 w1 * dist u0 u1) ≤ (w1 - u0) ⬝ᵥ (u1 - u0) from hδ1low)
+      (le_of_lt hy0)
+    rwa [mul_neg, ← mul_assoc] at h
+  have hδ2ge : -(z * dist u0 w2 * dist u0 u1) ≤ z * ((w2 - u0) ⬝ᵥ (u1 - u0)) := by
+    have h := mul_le_mul_of_nonneg_left
+      (show -(dist u0 w2 * dist u0 u1) ≤ (w2 - u0) ⬝ᵥ (u1 - u0) from hδ2low)
+      (le_of_lt hz0)
+    rwa [mul_neg, ← mul_assoc] at h
+  rw [h11] at hdoteq
+  -- cone membership
+  have hconemem : u0 + p24_comboMap u0 u1 w1 w2 v ∈ rconeGt u0 u1 a := by
+    have hdist : dist (u0 + p24_comboMap u0 u1 w1 w2 v) u0
+        = ‖p24_comboMap u0 u1 w1 w2 v‖ := by
+      rw [dist_eq_norm, add_sub_cancel_left]
+    have hsub : u0 + p24_comboMap u0 u1 w1 w2 v - u0 = p24_comboMap u0 u1 w1 w2 v := by
+      rw [add_sub_cancel_left]
+    show (u0 + p24_comboMap u0 u1 w1 w2 v - u0) ⬝ᵥ (u1 - u0)
+      > dist (u0 + p24_comboMap u0 u1 w1 w2 v) u0 * dist u1 u0 * a
+    rw [hsub, hdist, dist_comm u1 u0]
+    by_cases ha0 : 0 ≤ a
+    · have hR : ‖p24_comboMap u0 u1 w1 w2 v‖ * dist u0 u1 * a
+          ≤ (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) * dist u0 u1 * a :=
+        mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hnormUB (le_of_lt hD))
+          ha0
+      have hs : 0 < x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2
+          - a * (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) := by linarith
+      have hkey := mul_pos hD hs
+      have hprod : x * (dist u0 u1 * dist u0 u1)
+          - y * dist u0 w1 * dist u0 u1 - z * dist u0 w2 * dist u0 u1
+          - (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) * dist u0 u1 * a
+          = dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2
+            - a * (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2))) := by ring
+      linarith
+    · have ha0lt : a < 0 := lt_of_not_ge ha0
+      have hDa : dist u0 u1 * a < 0 := by nlinarith
+      have hR : ‖p24_comboMap u0 u1 w1 w2 v‖ * dist u0 u1 * a ≤ 0 := by
+        nlinarith [norm_nonneg (p24_comboMap u0 u1 w1 w2 v), hDa]
+      have hp : 0 < dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2) :=
+        by nlinarith
+      have hprod : x * (dist u0 u1 * dist u0 u1)
+          - y * dist u0 w1 * dist u0 u1 - z * dist u0 w2 * dist u0 u1
+          = dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2) := by ring
+      linarith
+  have hballmem : u0 + p24_comboMap u0 u1 w1 w2 v ∈ Metric.closedBall u0 r :=
+    Metric.mem_closedBall.mpr (le_of_lt (by
+      rw [dist_eq_norm, add_sub_cancel_left]
+      exact hball))
+  have hqform : u0 + p24_comboMap u0 u1 w1 w2 v
+      = (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 := by
+    rw [hcmb]
+    module
+  have hcap : u0 + p24_comboMap u0 u1 w1 w2 v ∈ conicCapP24 u0 u1 r a :=
+    Set.mem_inter hballmem hconemem
+  have haffmem : u0 + p24_comboMap u0 u1 w1 w2 v ∈
+      affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
+    rw [hqform]
+    exact p24_mem_affGt hy0 hz0 h1 h2 h3 h4 h5 h6
+  have hhullmem : u0 + p24_comboMap u0 u1 w1 w2 v ∈
+      convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+    rw [hqform]
+    exact p24_mem_convexHull hx0 hy0 hz0 hsum
+  exact ⟨Set.mem_inter hcap haffmem, Set.mem_inter hcap hhullmem⟩
+
+
+/-! ## the box-positivity main lemma -/
+
+private theorem p24_norm_triple (b1 b2 b3 : V3) (x y z : ℝ) (hx : 0 < x) (hy : 0 < y)
+    (hz : 0 < z) :
+    ‖x • b1 + y • b2 + z • b3‖ ≤ x * ‖b1‖ + (y * ‖b2‖ + z * ‖b3‖) := by
+  calc ‖x • b1 + y • b2 + z • b3‖
+      = ‖x • b1 + (y • b2 + z • b3)‖ := by rw [add_assoc]
+    _ ≤ ‖x • b1‖ + ‖y • b2 + z • b3‖ := norm_add_le _ _
+    _ ≤ ‖x • b1‖ + (‖y • b2‖ + ‖z • b3‖) := add_le_add_right (norm_add_le _ _) _
+    _ = x * ‖b1‖ + (y * ‖b2‖ + z * ‖b3‖) := by
+        rw [norm_smul, norm_smul, norm_smul, Real.norm_eq_abs, abs_of_pos hx,
+          Real.norm_eq_abs, abs_of_pos hy, Real.norm_eq_abs, abs_of_pos hz]
+
+private theorem p24_box_pos {u0 u1 w1 w2 : V3} {r a : ℝ} (hr : 0 < r) (ha : a < 1)
+    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
+    0 < volume.real (conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3)) ∧
+    0 < volume.real (conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := by
+  -- distinctness
+  obtain ⟨hu0u1, hw1u0, hw1u1, hw2u0, hw2u1, hw1w2⟩ := p24_ne_of_li hli
+  have hD : 0 < dist u0 u1 := dist_pos.mpr hu0u1
+  have hE : 0 < dist u0 w1 := dist_pos.mpr (Ne.symm hw1u0)
+  have hF : 0 < dist u0 w2 := dist_pos.mpr (Ne.symm hw2u0)
+  -- scalar parameters
+  obtain ⟨κ, hκ0, hκ1, hκ2⟩ :=
+    p24_kappa_exists (D := dist u0 u1) (E := dist u0 w1) (F := dist u0 w2) hD
+      (by linarith) ha
+  obtain ⟨c, hc0, hc1, hc2⟩ :=
+    p24_c_exists (P := κ + 2) (Q := κ * dist u0 u1 + dist u0 w1 + dist u0 w2)
+      (by nlinarith) (by nlinarith) hr
+  -- witness coordinates
+  set vstar : V3 := WithLp.toLp 2 ![c * κ, c, c] with hvdef
+  have hv0 : (WithLp.ofLp vstar) 0 = c * κ := by rw [hvdef]; simp
+  have hv1 : (WithLp.ofLp vstar) 1 = c := by rw [hvdef]; simp
+  have hv2 : (WithLp.ofLp vstar) 2 = c := by rw [hvdef]; simp
+  -- the good region and its openness
+  have hcont : ∀ i : Fin 3, Continuous fun v : V3 => (WithLp.ofLp v) i := fun i =>
+    (continuous_apply i).comp (PiLp.continuous_ofLp 2 _)
+  have hc0c : Continuous fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 :=
+    (hcont 0).mul continuous_const
+  have hc1c : Continuous fun v : V3 => (WithLp.ofLp v) 1 * dist u0 w1 :=
+    (hcont 1).mul continuous_const
+  have hc2c : Continuous fun v : V3 => (WithLp.ofLp v) 2 * dist u0 w2 :=
+    (hcont 2).mul continuous_const
+  set G : Set V3 := (fun v : V3 => (WithLp.ofLp v) 0) ⁻¹' Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 1) ⁻¹' Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 2) ⁻¹' Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 -
+      ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
+      Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) -
+      (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
+      Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2) ⁻¹'
+      Set.Ioo (0:ℝ) (1:ℝ) ∩
+    (p24_comboMap u0 u1 w1 w2) ⁻¹' Metric.ball (0:V3) r with hGdef
+  have hGeq : ∀ v : V3, v ∈ G ↔ 0 < (WithLp.ofLp v) 0 ∧ 0 < (WithLp.ofLp v) 1 ∧
+      0 < (WithLp.ofLp v) 2 ∧
+      (WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2 <
+        (WithLp.ofLp v) 0 * dist u0 u1 ∧
+      (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2) <
+        (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) ∧
+      0 < (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2 ∧
+      (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2 < 1 ∧
+      ‖p24_comboMap u0 u1 w1 w2 v‖ < r := by
+    intro v
+    simp only [hGdef, Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ioi, Set.mem_Ioo,
+      sub_pos, Metric.mem_ball, dist_zero_right, and_assoc]
+  have hcmbv : p24_comboMap u0 u1 w1 w2 vstar
+      = (c * κ) • (u1 - u0) + c • (w1 - u0) + c • (w2 - u0) := by
+    rw [p24_comboMap_apply, Fin.sum_univ_three, hv0, hv1, hv2]
+    simp [p24_bvec]
+  have hnb : ‖p24_comboMap u0 u1 w1 w2 vstar‖
+      ≤ c * κ * dist u0 u1 + (c * dist u0 w1 + c * dist u0 w2) := by
+    have h := p24_norm_triple (u1 - u0) (w1 - u0) (w2 - u0) (c * κ) c c
+      (mul_pos hc0 hκ0) hc0 hc0
+    have hD1 : ‖(u1 - u0 : V3)‖ = dist u0 u1 := by rw [norm_sub_rev, dist_eq_norm]
+    have hE1 : ‖(w1 - u0 : V3)‖ = dist u0 w1 := by rw [norm_sub_rev, dist_eq_norm]
+    have hF1 : ‖(w2 - u0 : V3)‖ = dist u0 w2 := by rw [norm_sub_rev, dist_eq_norm]
+    rw [hD1, hE1, hF1] at h
+    rw [hcmbv]
+    exact h
+  have hGopen : IsOpen G := by
+    have p1 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0) ⁻¹' Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage (hcont 0)
+    have p2 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 1) ⁻¹' Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage (hcont 1)
+    have p3 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 2) ⁻¹' Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage (hcont 2)
+    have p4 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 -
+        ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
+        Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage (hc0c.sub (hc1c.add hc2c))
+    have p5 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) -
+        (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
+        Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage ((hc0c.mul (continuous_const (y := 1 - a))).sub
+        ((continuous_const (y := 1 + a)).mul (hc1c.add hc2c)))
+    have p6 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 +
+        (WithLp.ofLp v) 2) ⁻¹' Set.Ioo (0:ℝ) (1:ℝ)) :=
+      isOpen_Ioo.preimage (((hcont 0).add (hcont 1)).add (hcont 2))
+    have p7 : IsOpen (p24_comboMap u0 u1 w1 w2 ⁻¹' Metric.ball (0:V3) r) :=
+      Metric.isOpen_ball.preimage (LinearMap.continuous_of_finiteDimensional
+        (p24_comboMap u0 u1 w1 w2))
+    exact IsOpen.inter (IsOpen.inter (IsOpen.inter (IsOpen.inter (IsOpen.inter
+      (IsOpen.inter p1 p2) p3) p4) p5) p6) p7
+  have hvG : vstar ∈ G := by
+    rw [hGeq vstar, hv0, hv1, hv2]
+    refine ⟨mul_pos hc0 hκ0, hc0, hc0, ?_, ?_, ?_, ?_, ?_⟩
+    · nlinarith [hκ1, hc0, hE, hF]
+    · nlinarith [hκ2, hc0, hE, hF]
+    · nlinarith [hc0, hκ0]
+    · have hre : c * κ + c + c = c * (κ + 2) := by ring
+      rw [hre]
+      linarith
+    · rw [hcmbv]
+      refine lt_of_le_of_lt (p24_norm_triple (u1 - u0) (w1 - u0) (w2 - u0) (c * κ) c c
+        (mul_pos hc0 hκ0) hc0 hc0) ?_
+      have hD1 : ‖(u1 - u0 : V3)‖ = dist u0 u1 := by rw [norm_sub_rev, dist_eq_norm]
+      have hE1 : ‖(w1 - u0 : V3)‖ = dist u0 w1 := by rw [norm_sub_rev, dist_eq_norm]
+      have hF1 : ‖(w2 - u0 : V3)‖ = dist u0 w2 := by rw [norm_sub_rev, dist_eq_norm]
+      have hre : c * κ * dist u0 u1 + (c * dist u0 w1 + c * dist u0 w2)
+          = c * (κ * dist u0 u1 + dist u0 w1 + dist u0 w2) := by ring
+      rw [hD1, hE1, hF1, hre]
+      linarith
+  -- the open box
+  obtain ⟨ε, hε0, hεsub⟩ := Metric.isOpen_iff.mp hGopen vstar hvG
+  have hposB : 0 < volume.real (Metric.ball vstar ε) := by
+    rw [Measure.real_def]
+    refine ENNReal.toReal_pos (ne_of_gt (IsOpen.measure_pos volume Metric.isOpen_ball
+      ⟨vstar, Metric.mem_ball_self hε0⟩)) ?_
+    exact ne_of_lt (measure_ball_lt_top (x := vstar) (r := ε))
+  have hdet : LinearMap.det (p24_comboMap u0 u1 w1 w2) ≠ 0 := p24_comboMap_det hli
+  have hvolB : volume.real (p24_comboMap u0 u1 w1 w2 '' Metric.ball vstar ε)
+      = |LinearMap.det (p24_comboMap u0 u1 w1 w2)| * volume.real (Metric.ball vstar ε) := by
+    rw [Measure.real_def, Measure.real_def, Measure.addHaar_image_linearMap,
+      ENNReal.toReal_mul, ENNReal.toReal_ofReal (abs_nonneg _)]
+  have himg : (fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε
+      = (fun p : V3 => u0 + p) ''
+        (p24_comboMap u0 u1 w1 w2 '' Metric.ball vstar ε) := by
+    rw [← Set.image_comp]
+    rfl
+  have hposI : 0 < volume.real
+      ((fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) := by
+    rw [himg, volume_real_add_left u0, hvolB]
+    exact mul_pos (abs_pos.mpr hdet) hposB
+  -- containment of the image
+  have hsub1 : ∀ v ∈ Metric.ball vstar ε,
+      u0 + p24_comboMap u0 u1 w1 w2 v ∈
+        conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
+    intro v hv
+    have hvG : v ∈ G := hεsub hv
+    rw [hGeq v] at hvG
+    obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
+    exact (p24_mem_of_good hr hu0u1 hw1u0 hw1u1 hw2u0 hw2u1 hw1w2 rfl rfl rfl
+      hx0 hy0 hz0 hC1 hC2 hball hsum).1
+  have hsub2 : ∀ v ∈ Metric.ball vstar ε,
+      u0 + p24_comboMap u0 u1 w1 w2 v ∈
+        conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+    intro v hv
+    have hvG : v ∈ G := hεsub hv
+    rw [hGeq v] at hvG
+    obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
+    exact (p24_mem_of_good hr hu0u1 hw1u0 hw1u1 hw2u0 hw2u1 hw1w2 rfl rfl rfl
+      hx0 hy0 hz0 hC1 hC2 hball hsum).2
+  -- volume transport
+  have hTfin : ∀ T : Set V3, T ⊆ Metric.closedBall u0 r → volume T ≠ ⊤ := by
+    intro T hT htop
+    have h1 : volume T ≤ volume (Metric.ball u0 (r + 1)) :=
+      measure_mono (fun p hp => Metric.mem_ball.mpr (by
+        have hd := Metric.mem_closedBall.mp (hT hp)
+        linarith))
+    exact absurd htop (ne_of_lt (h1.trans_lt measure_ball_lt_top))
+  have hmonofin : volume
+      ((fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≠ ⊤ :=
+    hTfin _ (by
+      rintro p ⟨v, hv, rfl⟩
+      have hvG : v ∈ G := hεsub hv
+      rw [hGeq v] at hvG
+      obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
+      rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left]
+      exact le_of_lt hball)
+  have hsubimg1 : (fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε ⊆
+      conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
+    rintro p ⟨v, hv, rfl⟩
+    exact hsub1 v hv
+  have hsubimg2 : (fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε ⊆
+      conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+    rintro p ⟨v, hv, rfl⟩
+    exact hsub2 v hv
+  have hfin1 : volume (conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3))
+      ≠ ⊤ :=
+    hTfin _ ((Set.inter_subset_left (s := conicCapP24 u0 u1 r a)
+      (t := affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3))).trans
+      (Set.inter_subset_left (s := Metric.closedBall u0 r) (t := rconeGt u0 u1 a)))
+  have hfin2 : volume
+      (conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) ≠ ⊤ :=
+    hTfin _ ((Set.inter_subset_left (s := conicCapP24 u0 u1 r a)
+      (t := convexHull ℝ ({u0, u1, w1, w2} : Set V3))).trans
+      (Set.inter_subset_left (s := Metric.closedBall u0 r) (t := rconeGt u0 u1 a)))
+  have hmono1 : volume.real
+      ((fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≤
+      volume.real (conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3)) := by
+    rw [Measure.real_def, Measure.real_def]
+    exact (ENNReal.toReal_le_toReal hmonofin hfin1).mpr (measure_mono hsubimg1)
+  have hmono2 : volume.real
+      ((fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≤
+      volume.real (conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := by
+    rw [Measure.real_def, Measure.real_def]
+    exact (ENNReal.toReal_le_toReal hmonofin hfin2).mpr (measure_mono hsubimg2)
+  exact ⟨lt_of_lt_of_le hposI hmono1, lt_of_lt_of_le hposI hmono2⟩
+
+
+/-- marchal3.hl:2708 `CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`（PA15:2771 公开件
+私拷收口；`conicCap` → `conicCapP24` 同体换名，`p15_li_of_ncopl` 已按 root-
+`Coplanar ℝ` 形移植故省去 `coplML` 桥）。八发波 hnullarm 的 k=3/4 正体积臂
+帽石（PA24 不可 import PA15——`Kepler.Text.wedge` 遮蔽，kit 全套私拷见上）。 -/
+private theorem p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 (u0 u1 w1 w2 : V3) (r a : ℝ)
+    (hr : 0 < r) (ha : a < 1) (ha0 : 0 ≤ a) (hcop : ¬Coplanar ℝ ({u0, u1, w1, w2} : Set V3)) :
+    0 < volume.real (conicCapP24 u0 u1 r a ∩ convexHull ℝ {u0, u1, w1, w2}) := by
+  have hli := p24_li_of_ncopl hcop
+  exact (p24_box_pos hr ha hli).2
+
+
+/-- **走廊点覆盖**（§45.4-1；HL REUHADY.hl :1531-1629 消费形）：margin-δ
+匹配斜率的走廊锥 ∩ 单位球内每点落某叶表胞。 -/
+private theorem p24_cap_leaf_pointwise_cover (V : Set V3) (u0 u1 : V3) (δ : ℝ)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hhl : hl [u0, u1] < Real.sqrt 2)
+    (hfan : voronoiList V [u0, u1] =
+      ⋃₀ {convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2,
+        circumcenter (setOfList vl)} | vl ∈ {vl : List V3 |
+        barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}})
+    (hδ : 0 < δ)
+    (hmargin : ∀ z : V3, dist z u0 = dist z u1 →
+      dist z (midpoint ℝ u0 u1) ≤ δ → z ∈ voronoiList V [u0, u1])
+    (z : V3) (hz1 : dist z u0 ≤ 1)
+    (hz2 : z ∈ rconeGt u0 u1 (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * δ ^ 2))) :
+    ∃ (i : ℕ) (vl : List V3), i ≤ 4 ∧ barV V 3 vl ∧
+      truncateSimplex 1 vl = [u0, u1] ∧ z ∈ mcell i V vl := by
+  obtain ⟨y, hxy, hyvor, -⟩ :=
+    p24_cone_corridor V u0 u1 δ hp hu0 hu1 hne hδ hmargin z hz1 hz2
+  rw [hfan] at hyvor
+  obtain ⟨S, hS, hyS⟩ := hyvor
+  obtain ⟨vl, hvl, rfl⟩ := hS
+  obtain ⟨hbar, htr⟩ := hvl
+  have hrg : z ∈ rogers V vl :=
+    p24_fan_leaf_bridge V u0 u1 vl z y hs hp hbar htr hyS hxy
+  obtain ⟨i, hi, hz⟩ := SLTSTLO1 V vl z hs hp hbar hrg
+  exact ⟨i, vl, hi, hbar, htr, hz⟩
+
+
+/-- 短棱代数（十一发波 WIP `p24_corridor_algebra` 逐字私拷）：`2 ≤ d01 <
+2√2` 与可用 margin `0 ≤ d ≤ (√2 − d01/2)/2` 给走廊锥窄性 `d01² + 4d² ≤ 8`
+（等价于走廊锥参数 `c(d) ≥ hl[u0,u1]/√2`，供低维排除的 mcell1 臂）。 -/
+private theorem p24_corridor_algebra {d01 d : ℝ} (hd2 : 2 ≤ d01)
+    (hhl : d01 < 2 * Real.sqrt 2) (hdnn : 0 ≤ d)
+    (hdm : d ≤ (Real.sqrt 2 - d01 / 2) / 2) :
+    d01 ^ 2 + 4 * d ^ 2 ≤ 8 := by
+  have hsq2 : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+  have hdu : 0 ≤ Real.sqrt 2 - d01 / 2 := by nlinarith [hsq2, hhl]
+  have ht : 0 < 2 * Real.sqrt 2 - d01 := by nlinarith [hsq2, hhl]
+  have hmono1 : (2 * Real.sqrt 2 - d01) ≤ 2 * Real.sqrt 2 := by linarith
+  -- u = 2√2 − d01 的二次不等式核：(5/4)u² ≤ 4√2·u
+  have hkey : ((2 * Real.sqrt 2 - d01) ^ 2) * (5 / 4) ≤
+      (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) := by
+    have h1 : (2 * Real.sqrt 2 - d01) * ((5 / 4) * (2 * Real.sqrt 2 - d01)) ≤
+        (2 * Real.sqrt 2 - d01) * (4 * Real.sqrt 2) := by
+      have g1 : (5 / 4 : ℝ) * (2 * Real.sqrt 2 - d01) ≤ 4 * Real.sqrt 2 := by
+        have g2 : (5 / 4 : ℝ) * (2 * Real.sqrt 2 - d01) ≤ (5 / 4) * (2 * Real.sqrt 2) := by
+          refine mul_le_mul_of_nonneg_left hmono1 (by norm_num)
+        linarith [g2, hsq2]
+      have hmul := mul_le_mul_of_nonneg_right g1 ht.le
+      have heqL : (2 * Real.sqrt 2 - d01) * ((5 / 4) * (2 * Real.sqrt 2 - d01))
+          = (5 / 4) * (2 * Real.sqrt 2 - d01) * (2 * Real.sqrt 2 - d01) := by ring
+      have heqR : (2 * Real.sqrt 2 - d01) * (4 * Real.sqrt 2)
+          = (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) := by ring
+      rw [heqL, heqR]
+      exact hmul
+    nlinarith [h1, hsq2]
+  -- (2d)² ≤ (√2 − d01/2)²
+  have hbound : (2 * d) ^ 2 ≤ (Real.sqrt 2 - d01 / 2) ^ 2 := by
+    have e1 : 2 * d ≤ Real.sqrt 2 - d01 / 2 := by nlinarith
+    exact sq_le_sq' (by nlinarith) e1
+  have hsq4 : (2 * d) ^ 2 = 4 * d ^ 2 := by ring
+  have hexpand : (Real.sqrt 2 - d01 / 2) ^ 2 = 2 - Real.sqrt 2 * d01 + d01 ^ 2 / 4 := by
+    rw [pow_two, sub_mul, mul_sub, Real.mul_self_sqrt (by norm_num)]
+    ring
+  -- hkey 的展开形：(5/4)d01² ≤ 6 + √2 d01
+  have hstep1 : (5 / 4 : ℝ) * d01 ^ 2 ≤ 6 + Real.sqrt 2 * d01 := by
+    have hexp : (2 * Real.sqrt 2 - d01) ^ 2 = 8 - 4 * Real.sqrt 2 * d01 + d01 ^ 2 := by
+      rw [pow_two, sub_mul, mul_sub,
+        show (2 * Real.sqrt 2) * (2 * Real.sqrt 2) = 8 from by
+          have hs : Real.sqrt 2 * Real.sqrt 2 = 2 := Real.mul_self_sqrt (by norm_num)
+          nlinarith [hs]]
+      ring
+    have h1 := hkey
+    rw [hexp] at h1
+    have h2 : (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) = 16 - 4 * Real.sqrt 2 * d01 := by
+      have hs : Real.sqrt 2 * Real.sqrt 2 = 2 := Real.mul_self_sqrt (by norm_num)
+      nlinarith [hs]
+    rw [h2] at h1
+    nlinarith
+  nlinarith [hbound, hsq4, hexpand, hstep1, hdnn]
+
+/-- **走廊点覆盖（含低维排除）**：走廊域（`dist x u0 ≤ 1` ∧ 斜率匹配锥）内
+每点落某 `2 ≤ k ≤ 4` 的叶表 Marchal 胞。链 = `p24_cap_leaf_pointwise_cover`
+（十一发波件）+ i = 0 排除（mcell0 活在 `ball u0 √2` 外）+ i = 1 排除
+（mcell1 活在 `rconeGt (hl[u0,u1]/√2)` 外，锥参数 `≥ hl/√2` 由
+`p24_corridor_algebra` 短棱代数给出）。HOL 锚点 = REUHADY.hl :1531-1629
+（`NEW_GOAL ?i. i <= 4 /\ x' IN mcell i V vl` + i' = 0/1 排除臂 :1629-1700）。 -/
+private theorem p24_corridor_point_cover_excl (V : Set V3) (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hhl : hl [u0, u1] < Real.sqrt 2)
+    (d : ℝ) (hd : 0 < d)
+    (hmargin : ∀ z : V3, dist z u0 = dist z u1 →
+      dist z (midpoint ℝ u0 u1) ≤ d → z ∈ voronoiList V [u0, u1])
+    (hbalg : dist u0 u1 ^ 2 + 4 * d ^ 2 ≤ 8)
+    (hfan : voronoiList V [u0, u1] =
+      ⋃₀ {convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2,
+        circumcenter (setOfList vl)} | vl ∈ {vl : List V3 |
+        barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}})
+    (x : V3) (hxb : dist x u0 ≤ 1)
+    (hxc : x ∈ rconeGt u0 u1 (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2))) :
+    ∃ k : ℕ, 2 ≤ k ∧ k ≤ 4 ∧ ∃ vl : List V3, barV V 3 vl ∧ x ∈ mcell k V vl ∧
+      truncateSimplex 1 vl = [u0, u1] := by
+  obtain ⟨i, vl, hile, hbar, htr, hxm⟩ :=
+    p24_cap_leaf_pointwise_cover V u0 u1 d hs hp hu0 hu1 hne hhl hfan hd hmargin x hxb hxc
+  refine ⟨i, ?_, hile, vl, hbar, hxm, htr⟩
+  rcases Nat.lt_or_ge i 2 with hlt | hge
+  · exfalso
+    rcases Nat.eq_zero_or_pos i with h0 | h1pos
+    · -- i = 0：mcell0 活在 ball u0 √2 外
+      subst h0
+      rw [(MCELL_EXPLICIT 0 V vl).1, mcell0, Set.mem_sdiff,
+        show hdV vl = u0 from p24_hdV_eq_u0 hbar htr] at hxm
+      have honesqrt : (1:ℝ) < Real.sqrt 2 := by
+        have h := Real.sqrt_lt_sqrt (show (0:ℝ) ≤ (1:ℝ) by norm_num)
+          (show (1:ℝ) < (2:ℝ) by norm_num)
+        rwa [Real.sqrt_one] at h
+      exact hxm.2 (Metric.mem_ball.mpr (lt_of_le_of_lt hxb honesqrt))
+    · -- i = 1：mcell1 活在 rconeGt (hl/√2) 外（走廊锥参数 ≥ hl/√2）
+      have h1 : i = 1 := by omega
+      subst h1
+      have hd01p : 0 < dist u0 u1 := dist_pos.mpr hne
+      have hsqrt8 : Real.sqrt 8 = 2 * Real.sqrt 2 := by
+        rw [show (8:ℝ) = 4 * 2 from by norm_num, Real.sqrt_mul (by norm_num),
+          show Real.sqrt 4 = 2 from by norm_num]
+      have hkey : Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) ≤ Real.sqrt 8 :=
+        Real.sqrt_le_sqrt hbalg
+      have hcge : hl [u0, u1] / Real.sqrt 2 ≤
+          dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) := by
+        have hlhs : hl [u0, u1] / Real.sqrt 2 = dist u0 u1 / (2 * Real.sqrt 2) := by
+          rw [p24_hl_pair]; field_simp
+        have hden : Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) ≤ (2:ℝ) * Real.sqrt 2 := by
+          rw [← hsqrt8]; exact hkey
+        have hstep : dist u0 u1 / (2 * Real.sqrt 2)
+            ≤ dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) :=
+          div_le_div_of_nonneg_left hd01p.le (by positivity) hden
+        rw [hlhs]; exact hstep
+      rw [(MCELL_EXPLICIT 1 V vl).2.1, mcell1] at hxm
+      by_cases hcond : Real.sqrt 2 ≤ hl vl
+      · rw [if_pos hcond, Set.mem_sdiff, p24_hdV_eq_u0 hbar htr,
+          p24_hdTail_eq_u1 hbar htr, htr] at hxm
+        exact hxm.2 ((p24_rconeGt_mono (u0 := u0) (u1 := u1) hcge) hxc)
+      · rw [if_neg hcond] at hxm
+        exact absurd hxm (by simp)
+  · exact hge
+
+/-- **叶表 mcell4 非零测**（k=4 臂的缺口件闭合）：`barV V 3` 叶表在
+`hl vl < √2` 时 `mcell 4 V vl` 为四点凸包，四点仿射无关（PA12
+`AFF_INDEPENDENT_SET_OF_LIST_BARV`，经 `MHFTTZN1` affDim = 3 ⟹ 非共面
+`AFF_DIM_LE_2_IMP_COPLANAR` 反证）⟹ 锥帽 ∩ 壳正体积帽石
+（`p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`，r = 1、a = 1/2 实例）⟹ 胞非零测。
+k ∈ {2,3} 的同形件 = 墙 A（见节头注），本波不闭合。 -/
+private theorem p24_mcell4_leaf_nonnull (V : Set V3) (hp : Packing V) (hs : saturated V)
+    {vl : List V3} (hbar : barV V 3 vl) (hlt : hl vl < Real.sqrt 2) :
+    ¬ nullSet (mcell 4 V vl) := by
+  obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
+  have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
+    rw [hvul]; ext z; simp [setOfList]
+  have hd3 : affDim (setOfList vl) = 3 := MHFTTZN1 V vl 3 hp hbar
+  rw [hset] at hd3
+  have hSne : ({v0, v1, v2, v3} : Set V3) ≠ ∅ := by
+    intro hcc
+    have hmem : v0 ∈ ({v0, v1, v2, v3} : Set V3) := by simp
+    rw [hcc] at hmem
+    simp at hmem
+  have hfr3 : Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) = 3 := by
+    have h1 : affDim ({v0, v1, v2, v3} : Set V3) =
+        ((Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) : ℕ) : ℤ) :=
+      if_neg hSne
+    rw [hd3] at h1
+    exact_mod_cast h1.symm
+  have hncopl : ¬ Coplanar ℝ ({v0, v1, v2, v3} : Set V3) := by
+    intro hc
+    have hfin2 : Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) ≤ 2 :=
+      (coplanar_iff_finrank_le_two (k := ℝ)).mp hc
+    rw [hfr3] at hfin2
+    norm_num at hfin2
+  have hpos := p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 v0 v1 v2 v3 1 (1 / 2)
+    (by norm_num) (by norm_num) (by norm_num) hncopl
+  intro hnull
+  rw [nullSet, (MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt,
+    hset] at hnull
+  have h0 : volume.real
+      (conicCapP24 v0 v1 (1:ℝ) (1 / 2) ∩ convexHull ℝ ({v0, v1, v2, v3} : Set V3)) = 0 := by
+    show (volume _ : ENNReal).toReal = 0
+    have hvol0 : volume
+        (conicCapP24 v0 v1 (1:ℝ) (1 / 2) ∩ convexHull ℝ ({v0, v1, v2, v3} : Set V3)) = 0 :=
+      measure_mono_null (fun z hz => hz.2) hnull
+    rw [hvol0]; rfl
+  exact absurd h0 (ne_of_gt hpos)
+
+/-- **k4 顶点抽取内容**（PA11 `k4Subset`（LEPJBDJ.hl:674-712，已证私件）逐字
+私拷改名，消费 PA12 公开 `SIMPLEX_FURTHEST_LT_2` + PA5
+`OMEGA_LIST_IN_VORONOI_LIST`）：`hl ul < √2` 时 Delaunay 壳内的包装点必为
+表点（`V ∩ mcell 4 = 表点集` 的 k = 4 内容）。 -/
+private theorem p24_k4Subset_content (V : Set V3) (hp : Packing V) {ul : List V3}
+    (hb : barV V 3 ul) (hlt : hl ul < Real.sqrt 2) :
+    V ∩ mcell 4 V ul ⊆ setOfList ul := by
+  have hVsub := BARV_SUBSET V 3 ul hb
+  rintro x ⟨hxV, hxHull⟩
+  rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt] at hxHull
+  by_contra hxS
+  obtain ⟨a, b, c, dd, hvul⟩ := BARV_3_EXPLICIT V ul hb
+  have hfin : (setOfList ul).Finite := by
+    refine Set.Finite.ofFinset (insert a (insert b (insert c {dd}))) (fun z => ?_)
+    have hset : setOfList ul = ({a, b, c, dd} : Set V3) := by
+      rw [hvul]; ext w; simp [setOfList]
+    constructor
+    · intro hz
+      rw [hset]; simpa using hz
+    · intro hz
+      rw [hset] at hz; simpa using hz
+  obtain ⟨y, hyS, hydist⟩ :=
+    SIMPLEX_FURTHEST_LT_2 (omegaList V ul) (setOfList ul) hfin hxHull hxS
+  have hyV : y ∈ V := hVsub hyS
+  have havo : omegaList V ul ∈ voronoiList V ul :=
+    OMEGA_LIST_IN_VORONOI_LIST V ul 3 hb
+  have hmem : omegaList V ul ∈ voronoiClosed V y :=
+    Set.mem_sInter.mp havo (voronoiClosed V y)
+      (Set.mem_setOf.mpr ⟨y, hyS, rfl⟩)
+  have hyC : ∀ w ∈ V,
+      dist (omegaList V ul) y ≤ dist (omegaList V ul) w :=
+    Set.mem_setOf.mp hmem
+  have h1 := hyC y hyV
+  have h2 := hyC x hxV
+  have e1 : dist (omegaList V ul) y = ‖y - omegaList V ul‖ := by
+    rw [dist_eq_norm, norm_sub_rev]
+  have e2 : dist (omegaList V ul) x = ‖x - omegaList V ul‖ := by
+    rw [dist_eq_norm, norm_sub_rev]
+  linarith
+
+/-- **叶表胞的 edgeX 指认（k = 4）**：非空叶表 `mcell 4 V vl` 满足
+`e = {u0,u1}` 属于其 `edgeX`——活跃性（hl < √2）+ 非零测
+（`p24_mcell4_leaf_nonnull`）+ cellParams 指标归一（PA17 `AJRIPQN`，R3
+inherited，如实记账）+ `VX` 展开（null 分支排除、k = 4 分支）+ k4 顶点抽取
+（`p24_k4Subset_content`）⟹ `{u0,u1} ⊆ VX`。 -/
+private theorem p24_edgeX_of_leaf4 (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (he : e = {u0, u1})
+    {vl : List V3} (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
+    (hne0 : mcell 4 V vl ≠ ∅) :
+    e ∈ edgeX V (mcell 4 V vl) := by
+  classical
+  -- 活跃性：hl vl < √2（非空桥）
+  have hlt : hl vl < Real.sqrt 2 := by
+    by_contra hc
+    refine hne0 ?_
+    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_neg hc]
+  -- 非零测（k = 4 缺口件）
+  have hnn : ¬ nullSet (mcell 4 V vl) := p24_mcell4_leaf_nonnull V hp hs hbar hlt
+  -- cellParams 读出
+  have hsel : (cellParams V (mcell 4 V vl)).1 ≤ 4 ∧ barV V 3 (cellParams V (mcell 4 V vl)).2 ∧
+      mcell 4 V vl = mcell (cellParams V (mcell 4 V vl)).1 V (cellParams V (mcell 4 V vl)).2 :=
+    Classical.epsilon_spec
+      (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧ mcell 4 V vl = mcell p.1 V p.2)
+      ⟨(4, vl), Nat.le_refl 4, hbar, rfl⟩
+  -- 指标归一 = 4（AJRIPQN，R3 inherited）
+  have hXself : ¬ nullSet (mcell (cellParams V (mcell 4 V vl)).1 V (cellParams V (mcell 4 V vl)).2
+      ∩ mcell 4 V vl) := by
+    intro h0
+    rw [nullSet] at h0
+    refine hnn ?_
+    rw [← hsel.2.2, Set.inter_self] at h0
+    rw [nullSet]
+    exact h0
+  have hajo := AJRIPQN V (cellParams V (mcell 4 V vl)).2 vl
+    (cellParams V (mcell 4 V vl)).1 4 hs hp hsel.2.1 hbar
+    (by simp; omega) (by simp) hXself
+  have hidx4 : (cellParams V (mcell 4 V vl)).1 = 4 := hajo.1
+  -- pp.2 的活跃性（经 hajo + 非空桥）
+  have hlt2 : hl (cellParams V (mcell 4 V vl)).2 < Real.sqrt 2 := by
+    by_contra hc
+    refine hne0 ?_
+    rw [← hajo.2, hajo.1, (MCELL_EXPLICIT 4 V (cellParams V (mcell 4 V vl)).2).2.2.2.2
+      (Nat.le_refl 4), mcell4, if_neg hc]
+  -- u0, u1 ∈ X（叶表壳顶点）
+  have hu0X : u0 ∈ mcell 4 V vl := by
+    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt]
+    refine subset_convexHull ℝ _ ?_
+    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
+    have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
+      rw [hvul]; ext z; simp [setOfList]
+    rw [hset]
+    have hv0 : v0 = u0 := by
+      have htrv : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+        (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+      rw [hvul, htrv] at htr
+      exact (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).1
+    have hmemset : u0 ∈ ({v0, v1, v2, v3} : Set V3) := by
+      rw [hv0]; simp
+    simpa [setOfList] using hmemset
+  have hu1X : u1 ∈ mcell 4 V vl := by
+    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt]
+    refine subset_convexHull ℝ _ ?_
+    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
+    have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
+      rw [hvul]; ext z; simp [setOfList]
+    rw [hset]
+    have hv1 : v1 = u1 := by
+      have htrv : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+        (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+      rw [hvul, htrv] at htr
+      exact (List.cons.injEq v1 [] u1 [] |>.mp
+        (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).2).1
+    have hmemset : u1 ∈ ({v0, v1, v2, v3} : Set V3) := by
+      rw [hv1]; simp
+    simpa [setOfList] using hmemset
+  -- k4 顶点抽取：u0, u1 ∈ 表点集
+  have hXpp : mcell 4 V (cellParams V (mcell 4 V vl)).2 = mcell 4 V vl := by
+    have h1 := hajo.2
+    rw [hajo.1] at h1
+    exact h1
+  have hu0in : u0 ∈ setOfList (cellParams V (mcell 4 V vl)).2 := by
+    refine p24_k4Subset_content V hp hsel.2.1 hlt2 ⟨hu0, ?_⟩
+    rw [hXpp]; exact hu0X
+  have hu1in : u1 ∈ setOfList (cellParams V (mcell 4 V vl)).2 := by
+    refine p24_k4Subset_content V hp hsel.2.1 hlt2 ⟨hu1, ?_⟩
+    rw [hXpp]; exact hu1X
+  -- VX 展开（null 分支排除 + k = 4 分支）
+  have hVXeq : VX V (mcell 4 V vl) =
+      setOfList (cellParams V (mcell 4 V vl)).2 := by
+    simp only [VX, if_neg hnn]
+    rw [hajo.1]
+    have h31 : ((4:ℕ) - 1) = 3 := rfl
+    rw [h31]
+    simp only [if_neg (show (4:ℕ) ≠ 0 by omega)]
+    obtain ⟨a, b, c, dd, hvul2⟩ := BARV_3_EXPLICIT V (cellParams V (mcell 4 V vl)).2 hsel.2.1
+    rw [hvul2, TRUNCATE_SIMPLEX_EXPLICIT_3 a b c dd]
+  refine Set.mem_setOf.mpr ⟨u0, u1, he, ?_, ?_, hne⟩
+  · rw [hVXeq]; exact hu0in
+  · rw [hVXeq]; exact hu1in
+
+
+
+/-! ### 十三发波 SF-46 测度级收口 kit（纯追加私有件，2026-10-20 十三发波）
+
+scaffold 3 覆盖结论按 SF-46 恢复为 HL 忠实测度级形（`nullSet (E \ ⋃₀楔族迹)`
+= HL REUHADY.hl:7507-7790 零迹自毁 + :7466 `MEASURE_NEGLIGIBLE_SYMDIFF` 的
+树内映射）后的装配辅助四件：
+
+1. `p24_initialSublist_getElem`：initialSublist 的逐位读出（前缀逐位相等）。
+2. `p24_truncateSimplex_eq_take`：截断表的显式 take 形（ε-见证 +
+   initialSublist 逐位唯一性）。
+3. `p24_setOfList_trunc_leftAction`：左行动下截断表的集合不变性（RVFXZBU2
+   路线的清单步：`leftActionList p ul [j] = ul [p.symm j]` + `p.symm` 在
+   `Icc 0 m` 上的双射性，后者由 `permutes` 给出）。
+4. `p24_edgeX_of_leaf23`：k∈{2,3} 叶表胞在**非零测假设下**的 edgeX 指认——
+   cellParams ε-见证（自选谓词直接给叶表形）+ PA17 `AJRIPQN` 指标归一（R3
+   inherited）+ PA2 `RVFXZBU2_concl` 同指标胞重合的置换结构（R3 类 SF-20
+   shim，逐件记账）+ 件 3 首段集合不变性 ⟹ `{u0,u1} ⊆ VX`。
+   k = 4 已由十二发波 `p24_edgeX_of_leaf4` 真证（R3 一路）；k∈{2,3} 的
+   **无条件**非零测性 = 墙 A（R1-GIANT），测度级形下不再需要——非零测性是
+   零迹自毁二分的**假设侧**（HL 原生同构：REUHADY.hl:7628+ 的
+   HDTFNFZ+LEPJBDJ 段在 `¬NULLSET (X INTER E)` 门下运行，本件以
+   AJRIPQN+RVFXZBU2 替换该两 R1 件的指认步，保持覆盖链 R1-free）。 -/
+
+/-- **sUnion-image 成员范式**（十三发波装配辅助；HL REUHADY.hl:7507 的
+`UNIONS {y | ?x. x IN s ∧ y = x INTER E}` 成员形的展开）：`⋃₀ (f '' s)` 的
+成员 ⟺ 平面 `∃ X, X ∈ s ∧ z ∈ f X`——Bex/像糖展开为裸 `Exists+And`，
+下游一律经本件获得平面成员形（规避 rcases/obtain 对糖形的不同展开深度）。 -/
+private theorem p24_mem_sUnion_image {f : Set V3 → Set V3} {s : Set (Set V3)}
+    {z : V3} :
+    z ∈ ⋃₀ (f '' s) ↔ ∃ X, X ∈ s ∧ z ∈ f X := by
+  constructor
+  · rintro ⟨Y, ⟨X, hXmem, hXeq⟩, hzY⟩
+    subst hXeq
+    exact ⟨X, hXmem, hzY⟩
+  · rintro ⟨X, hXmem, hzX⟩
+    exact ⟨f X, ⟨X, hXmem, rfl⟩, hzX⟩
+
+/-- initialSublist 长度支：前缀表长 ≤ 全表长。 -/
+private theorem p24_initialSublist_length {xl zl : List V3} (h : initialSublist xl zl) :
+    xl.length ≤ zl.length := by
+  obtain ⟨yl, rfl⟩ := h
+  rw [List.length_append]
+  omega
+
+/-- initialSublist 逐位读出：前缀表与全表在前缀长度内逐位相等。 -/
+private theorem p24_initialSublist_getElem {xl zl : List V3} (h : initialSublist xl zl)
+    {j : ℕ} (hj : j < xl.length) :
+    xl[j]'hj = zl[j]'(by have := p24_initialSublist_length h; omega) := by
+  obtain ⟨yl, rfl⟩ := h
+  rw [List.getElem_append, dif_pos hj]
+
+/-- 截断表的显式 take 形：`truncateSimplex m w = w.take (m+1)`（ε-谓词由
+take 见证；前缀表经 take_left 同一）。 -/
+private theorem p24_truncateSimplex_eq_take (w : List V3) (m : ℕ)
+    (hm : m + 1 ≤ w.length) :
+    truncateSimplex m w = w.take (m + 1) := by
+  have htklen : (w.take (m + 1)).length = m + 1 := by rw [List.length_take]; omega
+  have htk : initialSublist (w.take (m + 1)) w :=
+    ⟨w.drop (m + 1), (List.take_append_drop (m + 1) w).symm⟩
+  have heps : (truncateSimplex m w).length = m + 1 ∧
+      initialSublist (truncateSimplex m w) w :=
+    Classical.epsilon_spec
+      (p := fun v : List V3 => v.length = m + 1 ∧ initialSublist v w)
+      ⟨w.take (m + 1), htklen, htk⟩
+  refine List.ext_getElem ?_ fun j hj₁ hj₂ => ?_
+  · rw [heps.1, List.length_take]; omega
+  · rw [p24_initialSublist_getElem heps.2 hj₁,
+      p24_initialSublist_getElem htk hj₂]
+
+/-- 左行动下截断表的集合不变性：`permutes p (Icc 0 m)` 时 `leftActionList p ul`
+的前 `m+1` 元素集合 = `ul` 的前 `m+1` 元素集合（`p.symm` 双射性）。 -/
+private theorem p24_setOfList_trunc_leftAction (ul : List V3) (m : ℕ)
+    (p : Equiv.Perm ℕ) (hp : permutes p (Set.Icc 0 m)) (hm : m + 1 ≤ ul.length) :
+    setOfList (truncateSimplex m (leftActionList p ul))
+      = setOfList (truncateSimplex m ul) := by
+  classical
+  have hlen : (leftActionList p ul).length = ul.length := by
+    rw [leftActionList, List.length_map, List.length_range]
+  rw [p24_truncateSimplex_eq_take _ _ (hm.trans hlen.ge),
+    p24_truncateSimplex_eq_take _ _ hm]
+  have hmap : (leftActionList p ul).take (m + 1)
+      = (List.range (m + 1)).map (fun j : ℕ => ul.getD (p.symm j) default) := by
+    refine List.ext_getElem ?_ fun i h₁ h₂ => ?_
+    · rw [List.length_take, min_eq_left (hm.trans hlen.ge)]; simp
+    · rw [List.getElem_take]
+      simp only [leftActionList, List.getElem_map, List.getElem_range]
+  have htakeR : ul.take (m + 1)
+      = (List.range (m + 1)).map (fun j : ℕ => ul.getD j default) := by
+    refine List.ext_getElem ?_ fun i h₁ h₂ => ?_
+    · rw [List.length_take, min_eq_left hm]; simp
+    · rw [List.getElem_take, List.getElem_map, List.getElem_range,
+        List.getElem_eq_getD]
+  rw [hmap, htakeR]
+  ext x
+  simp only [setOfList, Set.mem_setOf_eq, List.mem_map, List.mem_range]
+  constructor
+  · rintro ⟨i, hi, hfl⟩
+    refine ⟨p.symm i, ?_, ?_⟩
+    · have hbi : p.symm i ∈ Set.Icc 0 m ↔ i ∈ Set.Icc 0 m :=
+        (hp (p.symm i)).trans (by rw [Equiv.apply_symm_apply])
+      simp only [Set.mem_Icc, Set.mem_Iio] at hbi hi ⊢
+      omega
+    · exact hfl
+  · rintro ⟨j, hj, hfl⟩
+    refine ⟨p j, ?_, ?_⟩
+    · have hbi : p j ∈ Set.Icc 0 m ↔ j ∈ Set.Icc 0 m := (hp j).symm
+      simp only [Set.mem_Icc, Set.mem_Iio] at hbi hj ⊢
+      omega
+    · rw [Equiv.symm_apply_apply]; exact hfl
+
+/-- k∈{2,3} 叶表胞在非零测假设下的 edgeX 指认（SF-46 测度级收口 k∈{2,3} 臂
+的缺口件；链 = cellParams ε-见证 + AJRIPQN 指标归一（R3）+ RVFXZBU2_concl
+置换结构（R3-class shim）+ 首段集合不变性 ⟹ `{u0,u1} ⊆ VX`。HL 锚点 =
+REUHADY.hl:7628-7745（HDTFNFZ+LEPJBDJ 段）在 `¬NULLSET (X INTER E)` 门下的
+k∈{2,3} 臂；本件以 AJRIPQN+RVFXZBU2 替换 HDTFNFZ/LEPJBDJ（R1-GIANT open），
+保持覆盖链 R1-free。 -/
+private theorem p24_edgeX_of_leaf23 (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (he : e = {u0, u1})
+    {k : ℕ} (hk : k = 2 ∨ k = 3)
+    {vl : List V3} (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
+    (hnn : ¬ nullSet (mcell k V vl)) :
+    e ∈ edgeX V (mcell k V vl) := by
+  classical
+  have hk4 : k ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by rcases hk with _ | _ <;> simp <;> omega
+  -- cellParams ε-见证（自选谓词 = 叶表形；型写 cellParams 投影形保 ε-同一）
+  have hcp : (cellParams V (mcell k V vl)).1 ≤ 4 ∧
+      barV V 3 (cellParams V (mcell k V vl)).2 ∧
+      mcell k V vl = mcell (cellParams V (mcell k V vl)).1 V (cellParams V (mcell k V vl)).2 :=
+    Classical.epsilon_spec
+      (p := fun q : ℕ × List V3 => q.1 ≤ 4 ∧ barV V 3 q.2 ∧ mcell k V vl = mcell q.1 V q.2)
+      ⟨(k, vl), by rcases hk with _ | _ <;> omega, hbar, rfl⟩
+  -- AJRIPQN 指标归一（R3 inherited）
+  have hk'4i : (cellParams V (mcell k V vl)).1 ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+    have := hcp.1
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hvol : ¬ nullSet (mcell (cellParams V (mcell k V vl)).1
+      V (cellParams V (mcell k V vl)).2 ∩ mcell k V vl) := by
+    rw [← hcp.2.2, Set.inter_self]
+    exact hnn
+  obtain ⟨hk'k, -⟩ := AJRIPQN V (cellParams V (mcell k V vl)).2 vl
+    (cellParams V (mcell k V vl)).1 k hs hp hcp.2.1 hbar hk'4i hk4 hvol
+  -- 同指标胞重合的置换结构（RVFXZBU2_concl，R3-class shim，如实记账）
+  obtain ⟨p, hpIcc, hvleq⟩ := RVFXZBU2_concl V (cellParams V (mcell k V vl)).2 vl
+    (cellParams V (mcell k V vl)).1 hs hp hcp.2.1 hbar (by
+      rw [← hcp.2.2, hk'k, Set.inter_self]
+      exact hnn)
+  rw [hk'k] at hpIcc
+  -- 首段集合不变性（件 3；← hvleq 只折左行动外层，不触 cellParams 内层）
+  have hlen4 : (cellParams V (mcell k V vl)).2.length = 4 := by
+    obtain ⟨a, b, c, dd, hvul⟩ := BARV_3_EXPLICIT V (cellParams V (mcell k V vl)).2 hcp.2.1
+    rw [hvul]; rfl
+  have htr' : setOfList (truncateSimplex (k - 1) (cellParams V (mcell k V vl)).2)
+      = setOfList (truncateSimplex (k - 1) vl) := by
+    have h1 := p24_setOfList_trunc_leftAction (cellParams V (mcell k V vl)).2 (k - 1) p hpIcc
+      (by rw [show (k - 1) + 1 = k from by omega, hlen4]
+          rcases hk with _ | _ <;> omega)
+    rw [← hvleq] at h1
+    exact h1.symm
+  -- VX 展开（null 分支排除 + k = k' 归一）
+  have hk0 : (cellParams V (mcell k V vl)).1 ≠ 0 := by
+    rw [hk'k]; rcases hk with _ | _ <;> omega
+  have hVXeq : VX V (mcell k V vl)
+      = setOfList (truncateSimplex (k - 1) (cellParams V (mcell k V vl)).2) := by
+    simp only [VX, if_neg hnn, if_neg hk0]
+    rw [hk'k]
+  -- {u0,u1} ⊆ 前段
+  have hsub : {u0, u1} ⊆ setOfList (truncateSimplex (k - 1) vl) := by
+    rcases hk with hk2 | hk3
+    · subst hk2
+      rw [show (2:ℕ) - 1 = 1 from rfl, htr]
+      intro z hz
+      simpa [setOfList] using hz
+    · subst hk3
+      have htr2 : truncateSimplex 2 vl = [u0, u1, elV vl 2] := by
+        obtain ⟨a, b, c, dd, hvul⟩ := BARV_3_EXPLICIT V vl hbar
+        rw [hvul] at htr ⊢
+        have htrv : truncateSimplex 1 [a, b, c, dd] = [a, b] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 a b c dd).2.2
+        rw [htrv] at htr
+        obtain ⟨ha, hbr⟩ := List.cons.injEq a [b] u0 [u1] |>.mp htr
+        obtain ⟨hb, -⟩ := List.cons.injEq b [] u1 [] |>.mp hbr
+        subst ha
+        subst hb
+        rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 _ _ c dd).2]
+        rfl
+      rw [show (3:ℕ) - 1 = 2 from rfl, htr2]
+      intro z hz
+      simp only [setOfList, List.mem_cons, List.mem_singleton] at hz ⊢
+      rcases hz with h | h
+      · exact Or.inl h
+      · exact Or.inr (Or.inl h)
+  refine Set.mem_setOf.mpr ⟨u0, u1, he, ?_, ?_, hne⟩
+  · rw [hVXeq, htr']; exact hsub (by simp)
+  · rw [hVXeq, htr']; exact hsub (by simp)
+
+/-- **SF-46 scaffold 3（测度级覆盖，原点态加强形恢复为 HL 忠实形）**：产出锥帽
+半径 `r d`（0 < r ≤ 1、0 < d < 1）并证测度级覆盖
+`nullSet (E \ ⋃₀楔族迹)`——HL REUHADY.hl:7483-7790 D6 覆盖收尾的树内映射：
+
+| HL（REUHADY.hl） | Lean（本文件） |
+|---|---|
+| `E = D INTER wedge_ge u0 u1 n1 n2`（:7360 前 D := conic_cap u0 u1 r d） | `conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2`（PA24:160，`conic_cap = normball ∩ rcone_gt` 的 closedBall/rconeGt 编码） |
+| `s = {X \| mcell_set V X ∧ edgeX V X e ∧ X SUBSET wedge_ge u0 u1 n1 n2}` | `p24_wedgeCells V u0 u1 n1 n2 e`（PA24:1628 定义逐字） |
+| `UNIONS {y \| ?x. x IN s ∧ y = x INTER E}` | `⋃₀ ((fun X => X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) '' p24_wedgeCells …)` |
+| 零迹自毁（:7507-7790：`x IN E DIFF UNIONS` → SLTSTLO1 覆盖胞 → `¬NULLSET (X INTER E)` 门下 HDTFNFZ+LEPJBDJ edgeX 指认 → heX 二分 → W1 臂入族 / W2 臂与边界零迹矛盾） | `p24_corridor_point_cover_excl`（:1531-1629+1629-1700 的 i∈{0,1} 排除）+ `p24_edgeX_of_leaf4`（k=4，R3）+ `p24_edgeX_of_leaf23`（k∈{2,3}，AJRIPQN+RVFXZBU2，R3；替换 HDTFNFZ/LEPJBDJ 两 R1 件）+ heX 二分（本语句前提 `heX`） |
+| W2 臂矛盾：`X INTER E ⊆ W1 ∩ W2 ⊆ aff_ge {u0,u1} {n1} ∪ aff_ge {u0,u1} {n2}`（:7740-7785）+ `NEGLIGIBLE_AFFINE_HULL_3` | `hwedge`（本语句前提）+ `p24_coplanar_affineSpan_null`（`coplanar_triple` 三点共面 + `p24_mem_affineSpan_of_affGe`） |
+| 零迹吸收（:7750+ `NULLSET (X INTER E)` 臂入 `⋃{Y \| NULLSET (Y INTER E) ∧ ≠ ∅}` 族）+ `NEGLIGIBLE_UNIONS` | 零迹吸收族 `Zfam`（有限叶表 × {2,3} × 零迹）+ `MeasureTheory.measure_biUnion_null_iff` |
+| `MEASURE_NEGLIGIBLE_SYMDIFF`（:7466）折叠 `sum s (λt. vol (t INTER E)) = vol E` | `nullSet (E \ ⋃₀迹族)`（`nullSet = volume = 0`，PA2:174）；体积恒等式侧由下游 `p24_wedge_setSum_eq_azim_msr` 消费 |
+
+前提与半径产出部分（0 < r ≤ 1、0 < d < 1）逐字不动（SF-46 (b)）。 -/
 private theorem p24_cap_wedge_cover (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (n1 n2 : V3) (e : Set V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
@@ -3383,30 +4773,152 @@ private theorem p24_cap_wedge_cover (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3
         circumcenter (setOfList vl)} | vl ∈ {vl : List V3 |
         barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}}) :
     ∃ r d : ℝ, 0 < r ∧ r ≤ 1 ∧ 0 < d ∧ d < 1 ∧
-      ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
-        x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e := by
-  -- NEEDS (d)-cover/corridor: see docstring. HL REUHADY.hl 345-2386.
-  -- 五发波（2026-10-19）推进：D1(i) margin（`p24_vor_pair_margin`）+ D1(ii)
-  -- 锥走廊（`p24_rcone_corridor`/`p24_cone_corridor`：锥 ∩ 单位球 ⟹ ∃y,
-  -- x ∈ conv {u0,y} ∧ y ∈ voronoiList [u0,u1] ∧ dist y m ≤ d）+ D1(iii) 扇叶桥
-  -- （`p24_fan_leaf_bridge`：y ∈ 叶凸包 + x ∈ conv {u0,y} ⟹ x ∈ rogers V vl）
-  -- 全部真证落码（消费链 = hmargin + hfan 抽叶 + 桥）。闭链残余 =
-  -- **楔侧指认 min-max**（HL :1705-2386 的 P1/P2/P3 半径集——轴与两边界方位
-  -- 平面同属 W1 ∩ W2（hwedge），heX 二分对边界扇上的点不判定，须以半径
-  -- min-max 排除非本侧叶）+ rogers V vl ⊆ mcell 的逐臂装配 + edgeX 装配
-  -- （结构装配与引理清单见 p24_fan_leaf_bridge 上方块注释；六发波处方）。
-  -- 六发波（2026-10-19）推进：[F] 叶表有限性 `p24_finite_leaf_family` 真证
-  -- 落码（hfan 指标族有限 + min-max P1/P3 参数集有限性支）+ [r1] 种子三件
-  -- （`p24_closestPoint_refl`/`p24_mcell3_sub_span`/`p24_u0_notIn_span3`；
-  -- f1 正性的 closestPoint 形待平面投影存在性桥接，见其止损记档）。
-  sorry
+      nullSet ((conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) \
+        ⋃₀ ((fun X : Set V3 => X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) ''
+          p24_wedgeCells V u0 u1 n1 n2 e)) := by
+  classical
+  -- SF-46 收口（十三发波 2026-10-20）：HL :7483-7790 测度级覆盖的真证装配。
+  -- 走廊机械（十一波 cover_strong 同款）：margin δ 折入走廊代数界
+  have hd01p : 0 < dist u0 u1 := dist_pos.mpr hne
+  have hd2 : (2:ℝ) ≤ dist u0 u1 := by
+    by_contra hlt
+    exact hne (hp u0 hu0 u1 hu1 (not_le.1 hlt))
+  have h8 : dist u0 u1 < 2 * Real.sqrt 2 := by rw [p24_hl_pair] at hhl; linarith
+  obtain ⟨δ, hδ0, hmargin⟩ := p24_vor_pair_margin V u0 u1 hp hu0 hu1 hne h8
+  set δ' : ℝ := min δ ((Real.sqrt 2 - dist u0 u1 / 2) / 2) with hδ'def
+  have hsq2p : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+  have hδ'0 : 0 < δ' := lt_min hδ0
+    (div_pos (by linarith) (by norm_num))
+  have hmargin' : ∀ z : V3, dist z u0 = dist z u1 →
+      dist z (midpoint ℝ u0 u1) ≤ δ' → z ∈ voronoiList V [u0, u1] :=
+    fun z hz1 hz2 => hmargin z hz1 (le_trans hz2 (min_le_left _ _))
+  have hbalg : dist u0 u1 ^ 2 + 4 * δ' ^ 2 ≤ 8 :=
+    p24_corridor_algebra hd2 h8 (by linarith) (min_le_right _ _)
+  -- 半径产出：r = 1、d = 走廊斜率（1 < √2 ⟹ 0 < d < 1）
+  have hsq : (0:ℝ) < dist u0 u1 ^ 2 + 4 * δ' ^ 2 :=
+    add_pos (sq_pos_iff.mpr (ne_of_gt hd01p))
+      (mul_pos (by norm_num) (sq_pos_iff.mpr (ne_of_gt hδ'0)))
+  set d : ℝ := dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * δ' ^ 2) with hddef
+  have hd0 : 0 < d := div_pos hd01p (Real.sqrt_pos.mpr hsq)
+  have hd1 : d < 1 := by
+    refine div_lt_one (Real.sqrt_pos.mpr hsq) |>.mpr ?_
+    calc dist u0 u1 = Real.sqrt (dist u0 u1 ^ 2) := (Real.sqrt_sq dist_nonneg).symm
+      _ < Real.sqrt (dist u0 u1 ^ 2 + 4 * δ' ^ 2) :=
+            Real.sqrt_lt_sqrt (sq_nonneg _)
+              (by have h2 := sq_pos_iff.mpr (ne_of_gt hδ'0); linarith)
+  refine ⟨1, d, by norm_num, le_refl 1, hd0, hd1, ?_⟩
+  -- 走廊点覆盖（十二发波件 2：含 i∈{0,1} 低维排除）
+  have hcovexcl := p24_corridor_point_cover_excl V u0 u1 hs hp hu0 hu1 hne hhl δ' hδ'0
+    hmargin' hbalg hfan
+  -- 边界零测（HL :7740-7785：W1∩W2 ⊆ aff_ge 并，三点仿射包零测）
+  have hB1 : volume ((affGe ({u0, u1} : Set V3) ({n1} : Set V3))) = 0 :=
+    p24_coplanar_affineSpan_null (coplanar_triple (k := ℝ) u0 u1 n1)
+      (fun z hz => p24_mem_affineSpan_of_affGe hz)
+  have hB2 : volume ((affGe ({u0, u1} : Set V3) ({n2} : Set V3))) = 0 :=
+    p24_coplanar_affineSpan_null (coplanar_triple (k := ℝ) u0 u1 n2)
+      (fun z hz => p24_mem_affineSpan_of_affGe hz)
+  -- 零迹吸收族（有限叶表 × {2,3} × 零迹；HL :7750+ 零迹族）
+  have hfam : {vl : List V3 | barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}.Finite :=
+    p24_finite_leaf_family V u0 u1 hp hs
+  set Zfam : Set (Set V3) := {T : Set V3 | ∃ q : ℕ × List V3,
+    q.1 ∈ ({2, 3} : Set ℕ) ∧ barV V 3 q.2 ∧ truncateSimplex 1 q.2 = [u0, u1] ∧
+    T = mcell q.1 V q.2 ∩ conicCapP24 u0 u1 1 d ∩ wedgeGe u0 u1 n1 n2 ∧
+    nullSet T}
+    with hZfdef
+  have hidx : {q : ℕ × List V3 | q.1 ∈ ({2, 3} : Set ℕ) ∧ barV V 3 q.2 ∧
+      truncateSimplex 1 q.2 = [u0, u1]}.Finite := by
+    refine ((Set.finite_le_nat 3).prod hfam).subset ?_
+    rintro ⟨q1, q2⟩ ⟨hq1, hq2, hq3⟩
+    refine ⟨?_, hq2, hq3⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq1
+    rcases hq1 with h | h
+    · exact h.le.trans (by norm_num)
+    · exact h.le.trans (by norm_num)
+  have hZfin : Zfam.Finite :=
+    (hidx.image (fun q : ℕ × List V3 => mcell q.1 V q.2 ∩
+      conicCapP24 u0 u1 1 d ∩ wedgeGe u0 u1 n1 n2)).subset (fun T hT => by
+      rw [hZfdef] at hT
+      simp only [Set.mem_setOf_eq] at hT
+      obtain ⟨q, hq1, hq2, hq3, hTeq, -⟩ := hT
+      exact ⟨q, ⟨hq1, hq2, hq3⟩, hTeq.symm⟩)
+  have hZnull : volume (⋃₀ Zfam) = 0 := by
+    have key := MeasureTheory.measure_biUnion_null_iff (I := Zfam) (μ := volume)
+      (s := fun Y : Set V3 => Y) hZfin.countable
+    rw [Set.sUnion_eq_biUnion]
+    refine key.mpr fun Y hY => ?_
+    rw [hZfdef] at hY
+    simp only [Set.mem_setOf_eq] at hY
+    obtain ⟨q, -, -, -, -, hnull⟩ := hY
+    exact hnull
+  -- 主包含：E \ ⋃₀楔族迹 ⊆ (affGe{n1} ∪ affGe{n2}) ∪ ⋃₀ Zfam
+  -- （零迹自毁：HL :7507-7790 的逐点结构）
+  refine measure_mono_null ?_ (measure_union_null (measure_union_null hB1 hB2) hZnull)
+  intro x hx
+  rw [Set.mem_sdiff] at hx
+  obtain ⟨hxE, hxU⟩ := hx
+  -- 走廊覆盖胞（x ∈ E ⊆ closedBall 1 ∩ rconeGt d = 走廊域）
+  obtain ⟨k, hk2, hk4, vl, hbar, hxm, htr⟩ := hcovexcl x hxE.1.1 hxE.1.2
+  -- U（楔族迹并）的成员与 hxU 矛盾（同一集合表达式）
+  have hUmem : x ∈ ⋃₀ ((fun X : Set V3 =>
+      X ∩ conicCapP24 u0 u1 1 d ∩ wedgeGe u0 u1 n1 n2) ''
+      p24_wedgeCells V u0 u1 n1 n2 e) → False := fun hmem => hxU hmem
+  by_cases hX4 : x ∈ mcell 4 V vl
+  · -- k = 4 臂（十二发波 arm4 的无点态化形）
+    have hne0 : mcell 4 V vl ≠ ∅ := by
+      intro hcon
+      rw [hcon] at hX4
+      exact hX4
+    have hedge := p24_edgeX_of_leaf4 V u0 u1 e hs hp hu0 hu1 hne he hbar htr hne0
+    have hXmset : mcell 4 V vl ∈ mcellSet V := ⟨4, vl, rfl, hbar⟩
+    obtain hW1 | hW2 := heX (mcell 4 V vl) ⟨hXmset, hedge⟩
+    · have hXin : mcell 4 V vl ∈ p24_wedgeCells V u0 u1 n1 n2 e :=
+        ⟨hXmset, hedge, hW1⟩
+      have hxT : x ∈ mcell 4 V vl ∩ conicCapP24 u0 u1 1 d ∩ wedgeGe u0 u1 n1 n2 :=
+        ⟨⟨hX4, hxE.1⟩, hxE.2⟩
+      exact (hUmem (p24_mem_sUnion_image.mpr ⟨mcell 4 V vl, hXin, hxT⟩)).elim
+    · exact Or.inl (hwedge (Set.mem_inter hxE.2 (hW2 hX4)))
+  · -- k ∈ {2,3} 臂（SF-46：非零测性是二分的假设侧）
+    have hk23 : k = 2 ∨ k = 3 := by
+      have hne4 : k ≠ 4 := fun hcc => hX4 (hcc ▸ hxm)
+      omega
+    by_cases hnullT : nullSet (mcell k V vl ∩ conicCapP24 u0 u1 1 d ∩ wedgeGe u0 u1 n1 n2)
+    · -- 零迹吸收
+      have hYin : mcell k V vl ∩ conicCapP24 u0 u1 1 d ∩ wedgeGe u0 u1 n1 n2 ∈ Zfam := by
+        refine ⟨(k, vl), ?_, hbar, htr, rfl, hnullT⟩
+        rcases hk23 with h2 | h3
+        · simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          exact Or.inl h2
+        · simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          exact Or.inr h3
+      refine Or.inr (Set.mem_sUnion.mpr
+        ⟨mcell k V vl ∩ conicCapP24 u0 u1 1 d ∩ wedgeGe u0 u1 n1 n2,
+         ⟨hYin, ⟨⟨hxm, hxE.1⟩, hxE.2⟩⟩⟩)
+    · -- 非零测迹 ⟹ edgeX（件 4）⟹ heX 二分 ⟹ W1 臂入族矛盾 / W2 臂边界吸收
+      have hnn : ¬ nullSet (mcell k V vl) := fun hnull =>
+        hnullT (measure_mono_null
+          (fun z hz => hz.1.1 : mcell k V vl ∩ conicCapP24 u0 u1 1 d ∩
+            wedgeGe u0 u1 n1 n2 ⊆ mcell k V vl) hnull)
+      have hedge := p24_edgeX_of_leaf23 V u0 u1 e hs hp hu0 hu1 hne he hk23 hbar htr hnn
+      have hXmset : mcell k V vl ∈ mcellSet V := ⟨k, vl, rfl, hbar⟩
+      obtain hW1 | hW2 := heX (mcell k V vl) ⟨hXmset, hedge⟩
+      · have hXin : mcell k V vl ∈ p24_wedgeCells V u0 u1 n1 n2 e :=
+          ⟨hXmset, hedge, hW1⟩
+        have hxT : x ∈ mcell k V vl ∩ conicCapP24 u0 u1 1 d ∩ wedgeGe u0 u1 n1 n2 :=
+          ⟨⟨hxm, hxE.1⟩, hxE.2⟩
+        exact (hUmem (p24_mem_sUnion_image.mpr ⟨mcell k V vl, hXin, hxT⟩)).elim
+      · exact Or.inl (hwedge (Set.mem_inter hxE.2 (hW2 hxm)))
 
 /-! ### (d) 装配章（真证，零 sorry）：D6+D7 的家族求和恒等式 -/
 
 /-- (d) 装配（真证）：楔族上 `dihX` 的 `setSum` = 边方位角。消费 D-FIN
 （有限性）、scaffold 1-3（成对零交 / 逐胞比例式 / 覆盖）、D-WALL（终墙）、
 D6 并集-求和桥与 `p24_setSum_congr`。HL 对应 = REUHADY.hl 7395-8356 的
-家族章 + 终墙章；三 scaffold 收口后本件即 (d) 完整真证。 -/
+家族章 + 终墙章；三 scaffold 收口后本件即 (d) 完整真证。
+**SF-46 收口（2026-10-20 十三发波）**：scaffold 1-3 全部真证（scaffold 3 的
+覆盖结论按 §46 恢复 HL 忠实测度级形后，经走廊低维排除 + 零迹自毁二分 +
+k=4/k∈{2,3} edgeX 指认（AJRIPQN+RVFXZBU2，R3）+ heX 二分 + 边界/零迹吸收
+收口），PA24 直 sorry 1 → 0；D6/D7 装配线换接 `p24_wedge_setSum_eq_azim_msr`
+/`_gated_msr`（测度级 hcovM 合同），旧点态件语句冻结保型。 -/
 private theorem p24_wedge_setSum_eq_azim (V : Set V3) (u0 u1 n1 n2 : V3) (e : Set V3)
     (r d : ℝ) (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
     (hne : u0 ≠ u1) (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
@@ -3568,13 +5080,6 @@ private theorem p24_angleMono {e v : V3} {t : ℝ} (hve : 0 < inner ℝ v e)
     rw [div_le_iff₀ hup]
     linarith [hue]
 
-/-- 开锥参数单调（PA23 `grutoti_rconeGt_subset` 私拷；junk k=1 臂的
-`hw1` 消费端）。 -/
-private theorem p24_rconeGt_mono {u0 u1 : V3} {a b : ℝ} (h : a ≤ b) :
-    rconeGt u0 u1 b ⊆ rconeGt u0 u1 a := by
-  intro x hx
-  simp only [rconeGt, Set.mem_setOf_eq] at hx ⊢
-  exact lt_of_le_of_lt (mul_le_mul_of_nonneg_left h (by positivity)) hx
 
 /-- GT-3f (HL §E/§F fan∩cap ⊆ hull；PA23:3944 逐字移植 + `conicCapP24`
 适配）：`affGe {u0,u1} {w1,w2}` 扇内落在锥帽 `D` 的点必落四点凸包，给定
@@ -4774,849 +6279,6 @@ private theorem p24_f4_lt_one (V : Set V3) (u0 u1 : V3) (hp : Packing V)
 `p24_region_data_strong`（min-max 数据 kit：r d + hw1 + hw3 + hw4，SF-44
 五前提的供数半；触发前提 = REUHADY1 的 hbar1/hfan 等，零新 sorry）。 -/
 
-/-- ℝ 上非零纯量乘法在 V3 上单射。 -/
-private theorem p24_smulR_inj {c : ℝ} (hc : c ≠ 0) :
-    Function.Injective ((c • ·) : V3 → V3) := by
-  intro x y hxy
-  have h1 : (c:ℝ) • x = (c:ℝ) • y := hxy
-  have h2 : c⁻¹ • ((c:ℝ) • x) = c⁻¹ • ((c:ℝ) • y) := by rw [h1]
-  rw [inv_smul_smul₀ hc, inv_smul_smul₀ hc] at h2
-  exact h2
-
-/-- `¬Coplanar ℝ {u0,u1,w1,w2} ⟹ 差向量族线性无关`（PA15:1806 `p15_li_of_ncopl`
-移植，共面谓词统一为 Mathlib root-`Coplanar ℝ` 形：三处塌缩支改经
-root-`coplanar_triple` + `_root_.Coplanar.subset` + `p24_coplanar_affineSpan_triple`
-（PA24 既有件）给 `Coplanar ℝ` 四点共面，其余逐字）。 -/
-private theorem p24_li_of_ncopl {u0 u1 w1 w2 : V3}
-    (hcop : ¬ Coplanar ℝ ({u0, u1, w1, w2} : Set V3)) :
-    LinearIndependent ℝ ![u1 - u0, w1 - u0, w2 - u0] := by
-  rw [Fintype.linearIndependent_iff]
-  intro g hg
-  have hsum : g 0 • (u1 - u0) + g 1 • (w1 - u0) + g 2 • (w2 - u0) = 0 := by
-    simpa [Fin.sum_univ_three] using hg
-  by_cases h0 : g 0 = 0
-  · by_cases h1 : g 1 = 0
-    · by_cases h2 : g 2 = 0
-      · intro i; fin_cases i <;> assumption
-      · -- w2 = u0，塌缩为三点
-        rw [h0, h1] at hsum
-        simp only [zero_smul, zero_add] at hsum
-        have hw2 : w2 = u0 := by
-          rcases smul_eq_zero.mp hsum with h | h
-          · exact absurd h h2
-          · exact sub_eq_zero.mp h
-        have hc1 : Coplanar ℝ ({u0, u1, w1, w2} : Set V3) := by
-          have hset : ({u0, u1, w1, w2} : Set V3) = {u0, u1, w1} := by
-            rw [hw2]
-            ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
-          rw [hset]
-          exact coplanar_triple (k := ℝ) u0 u1 w1
-        exact absurd hc1 hcop
-    · -- w1 = u0 + (−g2/g1)•(w2−u0) ∈ affineSpan {u0, u1, w2}
-      rw [h0, zero_smul, zero_add] at hsum
-      have hmove : g 1 • (w1 - u0) = -(g 2 • (w2 - u0)) :=
-        eq_neg_of_add_eq_zero_left hsum
-      have hne1 : (g 1 : ℝ) ≠ 0 := h1
-      have hrel : w1 - u0 = (-g 2 / g 1) • (w2 - u0) := by
-        have hsc : (g 1:ℝ) * (-g 2 / g 1) = -g 2 := by field_simp
-        have hstep : (g 1:ℝ) • (w1 - u0)
-            = (g 1:ℝ) • ((-g 2 / g 1) • (w2 - u0)) := by
-          rw [smul_smul, hsc, neg_smul]
-          exact hmove
-        exact p24_smulR_inj hne1 hstep
-      have hc1 : Coplanar ℝ ({u0, u1, w1, w2} : Set V3) := by
-        have hsub : ({u0, u1, w1, w2} : Set V3) ⊆
-            ((affineSpan ℝ ({u0, u1, w2} : Set V3)) : Set V3) := by
-          intro p hp
-          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
-          rcases hp with rfl | rfl | rfl | rfl
-          · exact mem_affineSpan (k := ℝ) (by simp)
-          · exact mem_affineSpan (k := ℝ) (by simp)
-          · refine p24_mem_affineSpan_triple u0 u1 w2 _ 0 (-g 2 / g 1) ?_
-            rw [zero_smul, add_zero, ← hrel]; abel
-          · exact mem_affineSpan (k := ℝ) (by simp)
-        exact Coplanar.subset hsub (p24_coplanar_affineSpan_triple u0 u1 w2)
-      exact absurd hc1 hcop
-  · -- u1 = u0 + (−g1/g0)•(w1−u0) + (−g2/g0)•(w2−u0) ∈ affineSpan {u0, w1, w2}
-    have hmove : g 0 • (u1 - u0) = -(g 1 • (w1 - u0) + g 2 • (w2 - u0)) := by
-      have h2 : g 0 • (u1 - u0) + (g 1 • (w1 - u0) + g 2 • (w2 - u0)) = 0 := by
-        rw [← add_assoc]; exact hsum
-      exact eq_neg_of_add_eq_zero_left h2
-    have hne0 : (g 0 : ℝ) ≠ 0 := h0
-    have hrel : u1 - u0 = (-g 1 / g 0) • (w1 - u0) + (-g 2 / g 0) • (w2 - u0) := by
-      have hstep : (g 0:ℝ) • (u1 - u0)
-          = (g 0:ℝ) • ((-g 1 / g 0) • (w1 - u0) + (-g 2 / g 0) • (w2 - u0)) := by
-        have hsc1 : (g 0:ℝ) * (-g 1 / g 0) = -g 1 := by field_simp
-        have hsc2 : (g 0:ℝ) * (-g 2 / g 0) = -g 2 := by field_simp
-        rw [smul_add, smul_smul, smul_smul, hsc1, hsc2, neg_smul, neg_smul,
-          ← neg_add]
-        exact hmove
-      exact p24_smulR_inj hne0 hstep
-    have hc1 : Coplanar ℝ ({u0, u1, w1, w2} : Set V3) := by
-      have hsub : ({u0, u1, w1, w2} : Set V3) ⊆
-          ((affineSpan ℝ ({u0, w1, w2} : Set V3)) : Set V3) := by
-        intro p hp
-        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
-        rcases hp with rfl | rfl | rfl | rfl
-        · exact mem_affineSpan (k := ℝ) (by simp)
-        · refine p24_mem_affineSpan_triple u0 w1 w2 _ (-g 1 / g 0) (-g 2 / g 0) ?_
-          rw [add_assoc, ← hrel]; abel
-        · exact mem_affineSpan (k := ℝ) (by simp)
-        · exact mem_affineSpan (k := ℝ) (by simp)
-      exact Coplanar.subset hsub (p24_coplanar_affineSpan_triple u0 w1 w2)
-    exact absurd hc1 hcop
-private theorem p24_coll3_zero_sub {x a b : V3} :
-    Collinear3 x a b ↔ Collinear3 0 (a - x) (b - x) := by
-  by_cases h : a = x
-  · rw [h]
-    simp only [sub_self]
-    constructor <;> intro _ <;> exact collinear3_of_eq rfl
-  · have h' : a - x ≠ 0 := sub_ne_zero.mpr h
-    rw [collinear3_iff_smul h, collinear3_iff_smul h']
-    simp only [sub_zero]
-
-private theorem p24_azim_zero_of_collY (v0 v1 w y : V3) (h : Collinear3 v0 v1 y) :
-    azim v0 v1 w y = 0 := by
-  unfold azim
-  exact if_pos (Or.inr h)
-
-private theorem p24_smul_dot (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) := by
-  rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left]
-
-private theorem p24_add_dot (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c := by
-  rw [← inner_eq_dot, ← inner_eq_dot, ← inner_eq_dot, inner_add_left]
-
-private theorem p24_dot_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a := by
-  rw [← inner_eq_dot, ← inner_eq_dot, real_inner_comm]
-
-/-- 平分线点：方位角 θ ∈ (0, 2π) 时存在 `b` 使 `azim v0 v1 w1 b = θ/2`、
-`¬Collinear3 v0 v1 b` 且三差向量线性无关。 -/
-private theorem p24_bisector_exists {v0 v1 w1 w2 : V3}
-    (h1 : ¬ Collinear3 v0 v1 w1) (h2 : ¬ Collinear3 v0 v1 w2)
-    (h0 : 0 < azim v0 v1 w1 w2) :
-    ∃ b : V3, azim v0 v1 w1 b = azim v0 v1 w1 w2 / 2 ∧
-      ¬ Collinear3 v0 v1 b ∧
-      LinearIndependent ℝ ![v1 - v0, w1 - v0, b - v0] := by
-  have hv0v1 : v0 ≠ v1 := fun he => h1 (collinear3_of_eq he.symm)
-  have hdne : v1 - v0 ≠ 0 := sub_ne_zero.mpr (Ne.symm hv0v1)
-  have hv1ne : (v1 : V3) ≠ v0 := Ne.symm hv0v1
-  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v1 - v0) hdne
-  have hax : (v1 - v0 : V3) = dist v1 v0 • f3 := by
-    rw [dist_eq_norm]
-    exact halign
-  have hax0 : (v1 - v0 : V3) = dist (v1 - v0) 0 • f3 := by
-    rw [dist_eq_norm, sub_zero]
-    exact halign
-  obtain ⟨ψ, r1, r2, hr1, hr2, hz1, hz2⟩ := azim_frame_spec h1 h2 hon hax hv1ne
-  set b : V3 := v0 + (Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
-    + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 with hbdef
-  have hbv : b - v0 = (Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
-      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 := by rw [hbdef]; abel
-  have hf11 : (f1 : V3) ⬝ᵥ f1 = 1 := hon.1
-  have hf22 : (f2 : V3) ⬝ᵥ f2 = 1 := hon.2.1
-  have hf12 : (f1 : V3) ⬝ᵥ f2 = 0 := hon.2.2.2.1
-  have hf21 : (f2 : V3) ⬝ᵥ f1 = 0 := by rw [p24_dot_comm]; exact hf12
-  have hdot1 : ((Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
-      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 : V3) ⬝ᵥ f1
-      = Real.cos (ψ + azim v0 v1 w1 w2 / 2) := by
-    rw [p24_add_dot, p24_smul_dot, p24_smul_dot, hf11, hf21]
-    ring
-  have hdot2 : ((Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
-      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 : V3) ⬝ᵥ f2
-      = Real.sin (ψ + azim v0 v1 w1 w2 / 2) := by
-    rw [p24_add_dot, p24_smul_dot, p24_smul_dot, hf12, hf22]
-    ring
-  have hzb : zOf f1 f2 (b - v0) = Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
-    rw [hbv]
-    show _ + _ * Complex.I = _
-    rw [hdot1, hdot2, Complex.exp_mul_I]
-    push_cast
-    ring
-  have hax0' : v1 - v0 - 0 = dist (v1 - v0) 0 • f3 := by rw [sub_zero]; exact hax0
-  have hbnc : ¬ Collinear3 0 (v1 - v0) (b - v0) := by
-    rw [← zOf_ne_zero_iff (e1 := f1) (e2 := f2) (e3 := f3) hon hax0' hdne,
-      show (b - v0) - 0 = b - v0 from by rw [sub_zero], hzb]
-    exact Complex.exp_ne_zero _
-  have haz : azim v0 v1 w1 b = azim v0 v1 w1 w2 / 2 := by
-    rw [p24_azim_sub_self v0 v1 w1 b, azim_eq_ang_of_frame f1 f2 f3 hon hax0 hdne
-      (fun hc => h1 (p24_coll3_zero_sub.mpr hc)) hbnc]
-    have hdiv : (zOf f1 f2 (w1 - v0))⁻¹
-        * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
-        = ((r1 : ℝ)⁻¹ : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
-      rw [hz1, exp_add_I]
-      have hr1c : ((r1 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hr1.ne'
-      have hE : Complex.exp ((ψ : ℝ) * Complex.I) ≠ 0 := Complex.exp_ne_zero _
-      field_simp
-    rw [hzb, hdiv, ← Complex.ofReal_inv, ang_ofReal_mul_of_pos (by positivity),
-      ang_exp_mul_I (by linarith [azim_nonneg v0 v1 w1 w2])
-        (by linarith [azim_lt_two_pi v0 v1 w1 w2])]
-  refine ⟨b, haz, ?_, ?_⟩
-  · intro hc
-    have hzz := haz
-    rw [p24_azim_zero_of_collY v0 v1 w1 b hc] at hzz
-    have hz2 : azim v0 v1 w1 w2 = 0 := by linarith
-    exact h0.ne' hz2
-  · rw [Fintype.linearIndependent_iff]
-    intro g hg
-    have hsum : g 0 • (v1 - v0) + g 1 • (w1 - v0) + g 2 • (b - v0) = 0 := by
-      simpa [Fin.sum_univ_three] using hg
-    have hzf : (v1 - v0 : V3) ⬝ᵥ f1 = 0 ∧ (v1 - v0 : V3) ⬝ᵥ f2 = 0 :=
-      axis_perp hax hon
-    have hzax : zOf f1 f2 (v1 - v0) = 0 := by
-      show (v1 - v0 : V3) ⬝ᵥ f1 + (v1 - v0 : V3) ⬝ᵥ f2 * Complex.I = 0
-      rw [hzf.1, hzf.2]
-      simp
-    have hz : ((g 1 : ℝ) : ℂ) * ((r1 : ℝ) : ℂ)
-        + ((g 2 : ℝ) : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) = 0 := by
-      have hunit : Complex.exp ((-(ψ:ℝ)) * Complex.I)
-          * Complex.exp ((ψ:ℝ) * Complex.I) = 1 := by
-        rw [← Complex.exp_add]
-        simp
-      have harg : (-(ψ:ℝ)) * Complex.I
-          + ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
-          = (azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I := by
-        rw [Complex.ofReal_add]
-        push_cast
-        ring
-      have hsplit : Complex.exp ((-(ψ:ℝ)) * Complex.I)
-          * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
-          = Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
-        rw [← Complex.exp_add, harg]
-      have hE' : Complex.exp ((-(ψ:ℝ)) * Complex.I) * zOf f1 f2 (w1 - v0)
-          = ((r1 : ℝ) : ℂ) := by
-        rw [hz1, mul_left_comm, hunit, mul_one]
-      have hz2' : Complex.exp ((-(ψ:ℝ)) * Complex.I)
-          * (((g 1 : ℝ) : ℂ) * zOf f1 f2 (w1 - v0)
-            + ((g 2 : ℝ) : ℂ) * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I))
-          = ((g 1 : ℝ) : ℂ) * ((r1 : ℝ) : ℂ)
-            + ((g 2 : ℝ) : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
-        rw [mul_add, mul_left_comm, hE', mul_left_comm, hsplit]
-      have h0' := congrArg (zOf f1 f2) hsum
-      rw [zOf_add, zOf_add, zOf_smul, zOf_smul, zOf_smul, hzax, hzb] at h0'
-      have hr0 : zOf f1 f2 0 = 0 := by simp [zOf]
-      rw [hr0, mul_zero, zero_add] at h0'
-      have h0'' := congrArg (fun z : ℂ => Complex.exp ((-(ψ:ℝ)) * Complex.I) * z) h0'
-      rw [mul_zero] at h0''
-      exact hz2'.symm.trans h0''
-    have him : (g 2 : ℝ) * Real.sin (azim v0 v1 w1 w2 / 2) = 0 := by
-      have hexp2 : Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
-          = Complex.cos ((azim v0 v1 w1 w2 / 2 : ℝ) : ℂ)
-            + Complex.sin ((azim v0 v1 w1 w2 / 2 : ℝ) : ℂ) * Complex.I :=
-        Complex.exp_mul_I _
-      have h4 := congrArg Complex.im hz
-      rw [hexp2] at h4
-      simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_im,
-        Complex.ofReal_re, Complex.cos_ofReal_im,
-        Complex.sin_ofReal_re, Complex.sin_ofReal_im, Complex.I_re,
-        Complex.I_im, zero_mul, zero_add, mul_zero, add_zero] at h4
-      simpa using h4
-    have hthpos : 0 < azim v0 v1 w1 w2 / 2 := by linarith
-    have hthlt : azim v0 v1 w1 w2 / 2 < Real.pi := by
-      have h2π := azim_lt_two_pi v0 v1 w1 w2
-      linarith
-    have hsin : Real.sin (azim v0 v1 w1 w2 / 2) ≠ 0 :=
-      ne_of_gt (Real.sin_pos_of_pos_of_lt_pi hthpos hthlt)
-    have hg2 : g 2 = 0 := by
-      rcases mul_eq_zero.mp him with h | h
-      · exact h
-      · exact absurd h hsin
-    have hre : (g 1 : ℝ) * r1 = 0 := by
-      have h're := congrArg Complex.re hz
-      rw [hg2] at h're
-      simpa [Complex.ofReal_zero, zero_mul, add_zero, Complex.I_re] using h're
-    have hg1 : g 1 = 0 := by
-      rcases mul_eq_zero.mp hre with h | h
-      · exact h
-      · exact absurd h hr1.ne'
-    rw [hg1, hg2, zero_smul, zero_smul, add_zero, add_zero] at hsum
-    rcases smul_eq_zero.mp hsum with h | h
-    · intro i; fin_cases i <;> simp [h, hg1, hg2]
-    · exact absurd h hdne
-
-
-/-! ### Kit D: affine-box positivity (p24_box_pos; rebuilt from the GT-3a
-continuation map, probe /tmp/gt3a_probeD.lean)
-
-The `¬coplanar` box route: with `LinearIndependent ℝ ![u1 - u0, w1 - u0, w2 - u0]`
-(Kit B) the parameter box `G = {v | coords > 0, C1, C2, ‖comboMap v‖ < r, sum < 1}`
-is an open neighborhood-invariant region; `p24_mem_of_good` sends every good
-parameter point into `conicCapP24 ∩ affGt` and into `conicCapP24 ∩ convexHull`, and the
-volume of the image is `|det comboMap| * volume (ball vstar ε) > 0` by
-`addHaar_image_linearMap` + `IsOpen.measure_pos` + translation invariance. -/
-
-private def p24_bvec (u0 u1 w1 w2 : V3) : Fin 3 → V3 := ![u1 - u0, w1 - u0, w2 - u0]
-
-private def p24_comboMap (u0 u1 w1 w2 : V3) : V3 →ₗ[ℝ] V3 where
-  toFun v := ∑ i : Fin 3, (WithLp.ofLp v) i • p24_bvec u0 u1 w1 w2 i
-  map_add' x y := by
-    simp only [WithLp.ofLp_add, Pi.add_apply, add_smul, Finset.sum_add_distrib]
-  map_smul' c x := by
-    simp only [WithLp.ofLp_smul, RingHom.id_apply]
-    rw [Finset.smul_sum]
-    exact Finset.sum_congr rfl fun i _ => by rw [smul_smul, Pi.smul_apply, smul_eq_mul]
-
-private theorem p24_comboMap_apply (u0 u1 w1 w2 : V3) (v : V3) :
-    p24_comboMap u0 u1 w1 w2 v = ∑ i : Fin 3, (WithLp.ofLp v) i • p24_bvec u0 u1 w1 w2 i :=
-  rfl
-
-private theorem p24_zero_toLp : (WithLp.toLp 2 (0 : Fin 3 → ℝ) : V3) = 0 := by
-  have h : (WithLp.toLp 2 (0 : Fin 3 → ℝ) : V3) = (0 : V3) := by
-    ext i
-    simp
-  exact h
-
-private theorem p24_comboMap_ker {u0 u1 w1 w2 : V3}
-    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
-    LinearMap.ker (p24_comboMap u0 u1 w1 w2) = ⊥ := by
-  rw [LinearMap.ker_eq_bot]
-  intro x y hxy
-  have h1 : p24_comboMap u0 u1 w1 w2 (x - y) = 0 := by
-    rw [map_sub, hxy, sub_self]
-  rw [p24_comboMap_apply] at h1
-  have hg := (Fintype.linearIndependent_iff.mp hli) (fun i => (WithLp.ofLp (x - y)) i) h1
-  have h0 : (WithLp.ofLp (x - y)) = 0 := funext hg
-  have hv : x - y = WithLp.toLp 2 (WithLp.ofLp (x - y)) := (WithLp.toLp_ofLp 2 _).symm
-  exact sub_eq_zero.mp (by rw [hv, h0, p24_zero_toLp])
-
-private theorem p24_comboMap_inj {u0 u1 w1 w2 : V3}
-    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
-    Function.Injective (p24_comboMap u0 u1 w1 w2) :=
-  LinearMap.ker_eq_bot.mp (p24_comboMap_ker hli)
-
-private theorem p24_comboMap_det {u0 u1 w1 w2 : V3}
-    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
-    LinearMap.det (p24_comboMap u0 u1 w1 w2) ≠ 0 := by
-  have hinj := p24_comboMap_inj hli
-  have hsurj := LinearMap.injective_iff_surjective.mp hinj
-  have hbij : Function.Bijective (p24_comboMap u0 u1 w1 w2) := ⟨hinj, hsurj⟩
-  have he : IsUnit (LinearMap.det (p24_comboMap u0 u1 w1 w2)) :=
-    LinearEquiv.isUnit_det' (LinearEquiv.ofBijective (p24_comboMap u0 u1 w1 w2) hbij)
-  exact he.ne_zero
-
-/-! ## scalar prelude: κ, c, distinctness -/
-
-private theorem p24_kappa_exists {D E F a : ℝ} (hD : 0 < D) (hEF : 0 < E + F) (ha : a < 1) :
-    ∃ κ : ℝ, 0 < κ ∧ κ * D > E + F ∧ κ * D * (1 - a) > (1 + a) * (E + F) := by
-  by_cases h1a : 0 < 1 + a
-  · have hT : 0 < (1 - a) * D := by nlinarith
-    have hTne : (1 - a) * D ≠ 0 := ne_of_gt hT
-    have hnum : 0 < (2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F))) := by
-      have hA : 0 < (1 + a) * (E + F) := by nlinarith
-      nlinarith
-    refine ⟨(2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F))) / ((1 - a) * D),
-      div_pos hnum hT, ?_, ?_⟩
-    · have hkey : (E + F) * (1 - a)
-            < (2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F)))
-              / ((1 - a) * D) * D * (1 - a) := by
-        rw [mul_assoc, mul_comm D (1 - a), div_mul_cancel₀ _ hTne]
-        nlinarith
-      exact lt_of_mul_lt_mul_right hkey (le_of_lt (by linarith))
-    · rw [mul_assoc, mul_comm D (1 - a), div_mul_cancel₀ _ hTne]
-      nlinarith
-  · have hDne : (D:ℝ) ≠ 0 := ne_of_gt hD
-    have hnum2 : 0 < D + E + F := by linarith
-    have hκD : (D + E + F) / D * D = D + E + F := div_mul_cancel₀ _ hDne
-    refine ⟨(D + E + F) / D, div_pos hnum2 hD, ?_, ?_⟩
-    · rw [hκD]
-      linarith
-    · rw [hκD]
-      have hn : (1 + a) * (E + F) ≤ 0 := by nlinarith
-      have hp : 0 < (D + E + F) * (1 - a) := by nlinarith
-      linarith
-
-private theorem p24_c_exists {P Q r : ℝ} (hP : 0 < P) (hQ : 0 < Q) (hr : 0 < r) :
-    ∃ c : ℝ, 0 < c ∧ c * P < 1 ∧ c * Q < r := by
-  refine ⟨min (1 / (2 * P)) (r / (2 * Q)), lt_min (div_pos (by nlinarith) (by nlinarith))
-    (div_pos (by nlinarith) (by nlinarith)), ?_, ?_⟩
-  · have hle : min (1 / (2 * P)) (r / (2 * Q)) ≤ 1 / (2 * P) := min_le_left _ _
-    have h1 : min (1 / (2 * P)) (r / (2 * Q)) * P ≤ (1 / (2 * P)) * P :=
-      mul_le_mul_of_nonneg_right hle (le_of_lt hP)
-    have h2 : (1 / (2 * P)) * P = 1 / 2 := by field_simp
-    rw [h2] at h1
-    linarith
-  · have hle : min (1 / (2 * P)) (r / (2 * Q)) ≤ r / (2 * Q) := min_le_right _ _
-    have h1 : min (1 / (2 * P)) (r / (2 * Q)) * Q ≤ (r / (2 * Q)) * Q :=
-      mul_le_mul_of_nonneg_right hle (le_of_lt hQ)
-    have h2 : (r / (2 * Q)) * Q = r / 2 := by field_simp
-    rw [h2] at h1
-    linarith
-
-private theorem p24_ne_of_li {u0 u1 w1 w2 : V3}
-    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
-    u0 ≠ u1 ∧ w1 ≠ u0 ∧ w1 ≠ u1 ∧ w2 ≠ u0 ∧ w2 ≠ u1 ∧ w1 ≠ w2 := by
-  have hg := Fintype.linearIndependent_iff.mp hli
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
-  · intro he
-    have hz : ∑ j : Fin 3, (![1, 0, 0] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
-      rw [Fin.sum_univ_three]
-      simp [p24_bvec, he]
-    exact absurd (hg ![1, 0, 0] hz 0) (by simp)
-  · intro he
-    have hz : ∑ j : Fin 3, (![0, 1, 0] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
-      rw [Fin.sum_univ_three]
-      simp [p24_bvec, he]
-    exact absurd (hg ![0, 1, 0] hz 1) (by simp)
-  · intro he
-    have hz : ∑ j : Fin 3, (![1, -1, 0] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
-      rw [Fin.sum_univ_three]
-      simp [p24_bvec, he]
-    exact absurd (hg ![1, -1, 0] hz 0) (by simp)
-  · intro he
-    have hz : ∑ j : Fin 3, (![0, 0, 1] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
-      rw [Fin.sum_univ_three]
-      simp [p24_bvec, he]
-    exact absurd (hg ![0, 0, 1] hz 2) (by simp)
-  · intro he
-    have hz : ∑ j : Fin 3, (![1, 0, -1] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
-      rw [Fin.sum_univ_three]
-      simp [p24_bvec, he]
-    exact absurd (hg ![1, 0, -1] hz 0) (by simp)
-  · intro he
-    have hz : ∑ j : Fin 3, (![0, 1, -1] : Fin 3 → ℝ) j • p24_bvec u0 u1 w1 w2 j = 0 := by
-      rw [Fin.sum_univ_three]
-      simp [p24_bvec, he]
-    exact absurd (hg ![0, 1, -1] hz 1) (by simp)
-
-/-! ## affGt membership by explicit f-sum -/
-
-private theorem p24_mem_affGt {u0 u1 w1 w2 : V3} {x y z : ℝ} (hy : 0 < y) (hz : 0 < z)
-    (h1 : u0 ≠ u1) (h2 : w1 ≠ u0) (h3 : w1 ≠ u1) (h4 : w2 ≠ u0) (h5 : w2 ≠ u1) (h6 : w1 ≠ w2) :
-    (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 ∈
-      affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
-  have hfin : (({u0, u1} : Set V3) ∪ {w1, w2}).Finite :=
-    ((Set.finite_singleton u1).insert u0).union ((Set.finite_singleton w2).insert w1)
-  set f : V3 → ℝ := fun p => if p = u0 then 1 - x - y - z else if p = u1 then x
-    else if p = w1 then y else if p = w2 then z else 0 with hfdef
-  have hTF : hfin.toFinset = ({u0, u1, w1, w2} : Finset V3) := by
-    apply Finset.ext
-    intro p
-    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
-      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
-    tauto
-  have hU0 : u0 ∉ insert u1 (insert w1 ({w2} : Finset V3)) := by
-    simp [h1, Ne.symm h2, Ne.symm h4]
-  have hU1 : u1 ∉ insert w1 ({w2} : Finset V3) := by
-    simp [Ne.symm h3, Ne.symm h5]
-  have hU2 : w1 ∉ ({w2} : Finset V3) := by simp [h6]
-  have hifev : ∀ p : V3, f p = (if p = u0 then 1 - x - y - z else if p = u1 then x
-    else if p = w1 then y else if p = w2 then z else 0) := fun p => rfl
-  refine ⟨f, hfin, ?_, ?_, ?_⟩
-  · rw [hTF, Finset.sum_insert hU0, Finset.sum_insert hU1, Finset.sum_insert hU2,
-      Finset.sum_singleton]
-    simp only [hifev]
-    simp [h2, h3, h4, h5, Ne.symm h1, Ne.symm h6]
-    abel
-  · intro w hw
-    have hw1 : 0 < f w1 := by
-      rw [hifev]
-      simp only [h2, h3]
-      exact hy
-    have hw2 : 0 < f w2 := by
-      rw [hifev]
-      simp only [h4, h5, Ne.symm h6]
-      exact hz
-    rcases Set.mem_insert_iff.mp hw with he | he
-    · rw [he]; exact hw1
-    · rw [Set.mem_singleton_iff.mp he]; exact hw2
-  · rw [hTF, Finset.sum_insert hU0, Finset.sum_insert hU1, Finset.sum_insert hU2,
-      Finset.sum_singleton]
-    simp only [hifev]
-    simp [h2, h3, h4, h5, Ne.symm h1, Ne.symm h6]
-    ring
-
-/-! ## convex hull membership -/
-
-private theorem p24_mem_convexHull {u0 u1 w1 w2 : V3} {x y z : ℝ} (hx : 0 < x) (hy : 0 < y)
-    (hz : 0 < z) (hsum : x + y + z < 1) :
-    (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 ∈
-      convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
-  have hσpos : 0 < y + z := by linarith
-  have hden : (1:ℝ) - (y + z) ≠ 0 := by linarith
-  have hA : ((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1
-      ∈ segment ℝ u0 u1 := by
-    refine ⟨(1 - x - y - z) / (1 - (y + z)), x / (1 - (y + z)),
-      div_nonneg (by linarith) (by linarith), div_nonneg (by linarith) (by linarith),
-      ?_, rfl⟩
-    rw [← add_div, show (1 - x - y - z) + x = 1 - (y + z) from by ring, div_self hden]
-  have hB : (y / (y + z)) • w1 + (z / (y + z)) • w2 ∈ segment ℝ w1 w2 := by
-    refine ⟨y / (y + z), z / (y + z), div_nonneg (le_of_lt hy) hσpos.le,
-      div_nonneg (le_of_lt hz) hσpos.le, ?_, rfl⟩
-    rw [← add_div]
-    exact div_self (by linarith)
-  have hconv : Convex ℝ (convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := convex_convexHull _ _
-  have hAin : ((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1 ∈
-      convexHull ℝ ({u0, u1, w1, w2} : Set V3) :=
-    (segment_subset_convexHull (by simp) (by simp)) hA
-  have hBin : (y / (y + z)) • w1 + (z / (y + z)) • w2 ∈
-      convexHull ℝ ({u0, u1, w1, w2} : Set V3) :=
-    (segment_subset_convexHull (by simp) (by simp)) hB
-  have hq : (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2
-      = (1 - (y + z)) • (((1 - x - y - z) / (1 - (y + z))) • u0
-          + (x / (1 - (y + z))) • u1)
-        + (y + z) • ((y / (y + z)) • w1 + (z / (y + z)) • w2) := by
-    rw [smul_add, smul_smul, smul_smul, smul_add, smul_smul, smul_smul,
-      mul_comm (1 - (y + z)) ((1 - x - y - z) / (1 - (y + z))), div_mul_cancel₀ _ hden,
-      mul_comm (1 - (y + z)) (x / (1 - (y + z))), div_mul_cancel₀ _ hden,
-      mul_comm (y + z) (y / (y + z)), div_mul_cancel₀ _ hσpos.ne',
-      mul_comm (y + z) (z / (y + z)), div_mul_cancel₀ _ hσpos.ne']
-    abel
-  have hseg : (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2
-      ∈ segment ℝ (((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1)
-          ((y / (y + z)) • w1 + (z / (y + z)) • w2) :=
-    ⟨1 - (y + z), y + z, by linarith, by linarith, by ring, hq.symm⟩
-  exact (hconv.segment_subset hAin hBin) hseg
-
-
-/-! ## membership of a good-coordinate point in cap/affGt/hull -/
-
-private theorem p24_mem_of_good {u0 u1 w1 w2 v : V3} {r a x y z : ℝ} (hr : 0 < r)
-    (h1 : u0 ≠ u1) (h2 : w1 ≠ u0) (h3 : w1 ≠ u1) (h4 : w2 ≠ u0) (h5 : w2 ≠ u1) (h6 : w1 ≠ w2)
-    (hx : (WithLp.ofLp v) 0 = x) (hy : (WithLp.ofLp v) 1 = y) (hz : (WithLp.ofLp v) 2 = z)
-    (hx0 : 0 < x) (hy0 : 0 < y) (hz0 : 0 < z)
-    (hC1 : x * dist u0 u1 > y * dist u0 w1 + z * dist u0 w2)
-    (hC2 : x * dist u0 u1 * (1 - a) > (1 + a) * (y * dist u0 w1 + z * dist u0 w2))
-    (hball : ‖p24_comboMap u0 u1 w1 w2 v‖ < r) (hsum : x + y + z < 1) :
-    u0 + p24_comboMap u0 u1 w1 w2 v ∈
-        conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) ∧
-      u0 + p24_comboMap u0 u1 w1 w2 v ∈
-        conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
-  have hD : 0 < dist u0 u1 := dist_pos.mpr h1
-  have hE : 0 < dist u0 w1 := dist_pos.mpr (Ne.symm h2)
-  have hF : 0 < dist u0 w2 := dist_pos.mpr (Ne.symm h4)
-  have hδ1low : -(dist u0 w1 * dist u0 u1) ≤ (w1 - u0) ⬝ᵥ (u1 - u0) := by
-    have hcs : |(w1 - u0) ⬝ᵥ (u1 - u0)| ≤ dist u0 w1 * dist u0 u1 := by
-      have h2 : (w1 - u0) ⬝ᵥ (u1 - u0) = inner ℝ (w1 - u0) (u1 - u0) :=
-        (inner_eq_dot _ _).symm
-      calc |(w1 - u0) ⬝ᵥ (u1 - u0)|
-          = |inner ℝ (w1 - u0) (u1 - u0)| := by rw [h2]
-        _ ≤ ‖(w1 - u0 : V3)‖ * ‖(u1 - u0 : V3)‖ := abs_real_inner_le_norm _ _
-        _ = dist w1 u0 * dist u1 u0 := by rw [← dist_eq_norm, ← dist_eq_norm]
-        _ = dist u0 w1 * dist u0 u1 := by rw [dist_comm w1 u0, dist_comm u1 u0]
-    have hneg := neg_abs_le ((w1 - u0) ⬝ᵥ (u1 - u0))
-    linarith
-  have hδ2low : -(dist u0 w2 * dist u0 u1) ≤ (w2 - u0) ⬝ᵥ (u1 - u0) := by
-    have hcs : |(w2 - u0) ⬝ᵥ (u1 - u0)| ≤ dist u0 w2 * dist u0 u1 := by
-      have h2 : (w2 - u0) ⬝ᵥ (u1 - u0) = inner ℝ (w2 - u0) (u1 - u0) :=
-        (inner_eq_dot _ _).symm
-      calc |(w2 - u0) ⬝ᵥ (u1 - u0)|
-          = |inner ℝ (w2 - u0) (u1 - u0)| := by rw [h2]
-        _ ≤ ‖(w2 - u0 : V3)‖ * ‖(u1 - u0 : V3)‖ := abs_real_inner_le_norm _ _
-        _ = dist w2 u0 * dist u1 u0 := by rw [← dist_eq_norm, ← dist_eq_norm]
-        _ = dist u0 w2 * dist u0 u1 := by rw [dist_comm w2 u0, dist_comm u1 u0]
-    have hneg := neg_abs_le ((w2 - u0) ⬝ᵥ (u1 - u0))
-    linarith
-  have h11 : (u1 - u0) ⬝ᵥ (u1 - u0) = dist u0 u1 * dist u0 u1 := by
-    calc (u1 - u0) ⬝ᵥ (u1 - u0) = ‖(u1 - u0 : V3)‖ ^ 2 := (norm_sq_eq_dot _).symm
-      _ = ‖u1 - u0‖ * ‖u1 - u0‖ := pow_two _
-      _ = dist u1 u0 * dist u1 u0 := by rw [← dist_eq_norm]
-      _ = dist u0 u1 * dist u0 u1 := by rw [dist_comm]
-  have hcmb : p24_comboMap u0 u1 w1 w2 v = x • (u1 - u0) + y • (w1 - u0) + z • (w2 - u0) := by
-    rw [p24_comboMap_apply, Fin.sum_univ_three, hx, hy, hz]
-    simp [p24_bvec]
-  have hdoteq : (p24_comboMap u0 u1 w1 w2 v) ⬝ᵥ (u1 - u0)
-      = x * ((u1 - u0) ⬝ᵥ (u1 - u0)) + y * ((w1 - u0) ⬝ᵥ (u1 - u0))
-        + z * ((w2 - u0) ⬝ᵥ (u1 - u0)) := by
-    rw [hcmb, p24_add_dot, p24_add_dot, p24_smul_dot, p24_smul_dot, p24_smul_dot]
-  have hnormUB : ‖p24_comboMap u0 u1 w1 w2 v‖
-      ≤ x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2) := by
-    calc ‖p24_comboMap u0 u1 w1 w2 v‖
-        = ‖x • (u1 - u0) + (y • (w1 - u0) + z • (w2 - u0))‖ := by rw [hcmb, add_assoc]
-      _ ≤ ‖x • (u1 - u0)‖ + ‖y • (w1 - u0) + z • (w2 - u0)‖ := norm_add_le _ _
-      _ ≤ ‖x • (u1 - u0)‖ + (‖y • (w1 - u0)‖ + ‖z • (w2 - u0)‖) :=
-            add_le_add_right (norm_add_le _ _) _
-      _ = x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2) := by
-          rw [norm_smul, norm_smul, norm_smul, Real.norm_eq_abs, abs_of_pos hx0,
-            Real.norm_eq_abs, abs_of_pos hy0, Real.norm_eq_abs, abs_of_pos hz0,
-            ← dist_eq_norm, ← dist_eq_norm, ← dist_eq_norm, dist_comm u0 u1,
-            dist_comm u0 w1, dist_comm u0 w2]
-  -- hoisted shared facts
-  have hδ1ge : -(y * dist u0 w1 * dist u0 u1) ≤ y * ((w1 - u0) ⬝ᵥ (u1 - u0)) := by
-    have h := mul_le_mul_of_nonneg_left
-      (show -(dist u0 w1 * dist u0 u1) ≤ (w1 - u0) ⬝ᵥ (u1 - u0) from hδ1low)
-      (le_of_lt hy0)
-    rwa [mul_neg, ← mul_assoc] at h
-  have hδ2ge : -(z * dist u0 w2 * dist u0 u1) ≤ z * ((w2 - u0) ⬝ᵥ (u1 - u0)) := by
-    have h := mul_le_mul_of_nonneg_left
-      (show -(dist u0 w2 * dist u0 u1) ≤ (w2 - u0) ⬝ᵥ (u1 - u0) from hδ2low)
-      (le_of_lt hz0)
-    rwa [mul_neg, ← mul_assoc] at h
-  rw [h11] at hdoteq
-  -- cone membership
-  have hconemem : u0 + p24_comboMap u0 u1 w1 w2 v ∈ rconeGt u0 u1 a := by
-    have hdist : dist (u0 + p24_comboMap u0 u1 w1 w2 v) u0
-        = ‖p24_comboMap u0 u1 w1 w2 v‖ := by
-      rw [dist_eq_norm, add_sub_cancel_left]
-    have hsub : u0 + p24_comboMap u0 u1 w1 w2 v - u0 = p24_comboMap u0 u1 w1 w2 v := by
-      rw [add_sub_cancel_left]
-    show (u0 + p24_comboMap u0 u1 w1 w2 v - u0) ⬝ᵥ (u1 - u0)
-      > dist (u0 + p24_comboMap u0 u1 w1 w2 v) u0 * dist u1 u0 * a
-    rw [hsub, hdist, dist_comm u1 u0]
-    by_cases ha0 : 0 ≤ a
-    · have hR : ‖p24_comboMap u0 u1 w1 w2 v‖ * dist u0 u1 * a
-          ≤ (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) * dist u0 u1 * a :=
-        mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hnormUB (le_of_lt hD))
-          ha0
-      have hs : 0 < x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2
-          - a * (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) := by linarith
-      have hkey := mul_pos hD hs
-      have hprod : x * (dist u0 u1 * dist u0 u1)
-          - y * dist u0 w1 * dist u0 u1 - z * dist u0 w2 * dist u0 u1
-          - (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) * dist u0 u1 * a
-          = dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2
-            - a * (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2))) := by ring
-      linarith
-    · have ha0lt : a < 0 := lt_of_not_ge ha0
-      have hDa : dist u0 u1 * a < 0 := by nlinarith
-      have hR : ‖p24_comboMap u0 u1 w1 w2 v‖ * dist u0 u1 * a ≤ 0 := by
-        nlinarith [norm_nonneg (p24_comboMap u0 u1 w1 w2 v), hDa]
-      have hp : 0 < dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2) :=
-        by nlinarith
-      have hprod : x * (dist u0 u1 * dist u0 u1)
-          - y * dist u0 w1 * dist u0 u1 - z * dist u0 w2 * dist u0 u1
-          = dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2) := by ring
-      linarith
-  have hballmem : u0 + p24_comboMap u0 u1 w1 w2 v ∈ Metric.closedBall u0 r :=
-    Metric.mem_closedBall.mpr (le_of_lt (by
-      rw [dist_eq_norm, add_sub_cancel_left]
-      exact hball))
-  have hqform : u0 + p24_comboMap u0 u1 w1 w2 v
-      = (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 := by
-    rw [hcmb]
-    module
-  have hcap : u0 + p24_comboMap u0 u1 w1 w2 v ∈ conicCapP24 u0 u1 r a :=
-    Set.mem_inter hballmem hconemem
-  have haffmem : u0 + p24_comboMap u0 u1 w1 w2 v ∈
-      affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
-    rw [hqform]
-    exact p24_mem_affGt hy0 hz0 h1 h2 h3 h4 h5 h6
-  have hhullmem : u0 + p24_comboMap u0 u1 w1 w2 v ∈
-      convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
-    rw [hqform]
-    exact p24_mem_convexHull hx0 hy0 hz0 hsum
-  exact ⟨Set.mem_inter hcap haffmem, Set.mem_inter hcap hhullmem⟩
-
-
-/-! ## the box-positivity main lemma -/
-
-private theorem p24_norm_triple (b1 b2 b3 : V3) (x y z : ℝ) (hx : 0 < x) (hy : 0 < y)
-    (hz : 0 < z) :
-    ‖x • b1 + y • b2 + z • b3‖ ≤ x * ‖b1‖ + (y * ‖b2‖ + z * ‖b3‖) := by
-  calc ‖x • b1 + y • b2 + z • b3‖
-      = ‖x • b1 + (y • b2 + z • b3)‖ := by rw [add_assoc]
-    _ ≤ ‖x • b1‖ + ‖y • b2 + z • b3‖ := norm_add_le _ _
-    _ ≤ ‖x • b1‖ + (‖y • b2‖ + ‖z • b3‖) := add_le_add_right (norm_add_le _ _) _
-    _ = x * ‖b1‖ + (y * ‖b2‖ + z * ‖b3‖) := by
-        rw [norm_smul, norm_smul, norm_smul, Real.norm_eq_abs, abs_of_pos hx,
-          Real.norm_eq_abs, abs_of_pos hy, Real.norm_eq_abs, abs_of_pos hz]
-
-private theorem p24_box_pos {u0 u1 w1 w2 : V3} {r a : ℝ} (hr : 0 < r) (ha : a < 1)
-    (hli : LinearIndependent ℝ (p24_bvec u0 u1 w1 w2)) :
-    0 < volume.real (conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3)) ∧
-    0 < volume.real (conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := by
-  -- distinctness
-  obtain ⟨hu0u1, hw1u0, hw1u1, hw2u0, hw2u1, hw1w2⟩ := p24_ne_of_li hli
-  have hD : 0 < dist u0 u1 := dist_pos.mpr hu0u1
-  have hE : 0 < dist u0 w1 := dist_pos.mpr (Ne.symm hw1u0)
-  have hF : 0 < dist u0 w2 := dist_pos.mpr (Ne.symm hw2u0)
-  -- scalar parameters
-  obtain ⟨κ, hκ0, hκ1, hκ2⟩ :=
-    p24_kappa_exists (D := dist u0 u1) (E := dist u0 w1) (F := dist u0 w2) hD
-      (by linarith) ha
-  obtain ⟨c, hc0, hc1, hc2⟩ :=
-    p24_c_exists (P := κ + 2) (Q := κ * dist u0 u1 + dist u0 w1 + dist u0 w2)
-      (by nlinarith) (by nlinarith) hr
-  -- witness coordinates
-  set vstar : V3 := WithLp.toLp 2 ![c * κ, c, c] with hvdef
-  have hv0 : (WithLp.ofLp vstar) 0 = c * κ := by rw [hvdef]; simp
-  have hv1 : (WithLp.ofLp vstar) 1 = c := by rw [hvdef]; simp
-  have hv2 : (WithLp.ofLp vstar) 2 = c := by rw [hvdef]; simp
-  -- the good region and its openness
-  have hcont : ∀ i : Fin 3, Continuous fun v : V3 => (WithLp.ofLp v) i := fun i =>
-    (continuous_apply i).comp (PiLp.continuous_ofLp 2 _)
-  have hc0c : Continuous fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 :=
-    (hcont 0).mul continuous_const
-  have hc1c : Continuous fun v : V3 => (WithLp.ofLp v) 1 * dist u0 w1 :=
-    (hcont 1).mul continuous_const
-  have hc2c : Continuous fun v : V3 => (WithLp.ofLp v) 2 * dist u0 w2 :=
-    (hcont 2).mul continuous_const
-  set G : Set V3 := (fun v : V3 => (WithLp.ofLp v) 0) ⁻¹' Set.Ioi (0:ℝ) ∩
-    (fun v : V3 => (WithLp.ofLp v) 1) ⁻¹' Set.Ioi (0:ℝ) ∩
-    (fun v : V3 => (WithLp.ofLp v) 2) ⁻¹' Set.Ioi (0:ℝ) ∩
-    (fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 -
-      ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
-      Set.Ioi (0:ℝ) ∩
-    (fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) -
-      (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
-      Set.Ioi (0:ℝ) ∩
-    (fun v : V3 => (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2) ⁻¹'
-      Set.Ioo (0:ℝ) (1:ℝ) ∩
-    (p24_comboMap u0 u1 w1 w2) ⁻¹' Metric.ball (0:V3) r with hGdef
-  have hGeq : ∀ v : V3, v ∈ G ↔ 0 < (WithLp.ofLp v) 0 ∧ 0 < (WithLp.ofLp v) 1 ∧
-      0 < (WithLp.ofLp v) 2 ∧
-      (WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2 <
-        (WithLp.ofLp v) 0 * dist u0 u1 ∧
-      (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2) <
-        (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) ∧
-      0 < (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2 ∧
-      (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2 < 1 ∧
-      ‖p24_comboMap u0 u1 w1 w2 v‖ < r := by
-    intro v
-    simp only [hGdef, Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ioi, Set.mem_Ioo,
-      sub_pos, Metric.mem_ball, dist_zero_right, and_assoc]
-  have hcmbv : p24_comboMap u0 u1 w1 w2 vstar
-      = (c * κ) • (u1 - u0) + c • (w1 - u0) + c • (w2 - u0) := by
-    rw [p24_comboMap_apply, Fin.sum_univ_three, hv0, hv1, hv2]
-    simp [p24_bvec]
-  have hnb : ‖p24_comboMap u0 u1 w1 w2 vstar‖
-      ≤ c * κ * dist u0 u1 + (c * dist u0 w1 + c * dist u0 w2) := by
-    have h := p24_norm_triple (u1 - u0) (w1 - u0) (w2 - u0) (c * κ) c c
-      (mul_pos hc0 hκ0) hc0 hc0
-    have hD1 : ‖(u1 - u0 : V3)‖ = dist u0 u1 := by rw [norm_sub_rev, dist_eq_norm]
-    have hE1 : ‖(w1 - u0 : V3)‖ = dist u0 w1 := by rw [norm_sub_rev, dist_eq_norm]
-    have hF1 : ‖(w2 - u0 : V3)‖ = dist u0 w2 := by rw [norm_sub_rev, dist_eq_norm]
-    rw [hD1, hE1, hF1] at h
-    rw [hcmbv]
-    exact h
-  have hGopen : IsOpen G := by
-    have p1 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0) ⁻¹' Set.Ioi (0:ℝ)) :=
-      isOpen_Ioi.preimage (hcont 0)
-    have p2 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 1) ⁻¹' Set.Ioi (0:ℝ)) :=
-      isOpen_Ioi.preimage (hcont 1)
-    have p3 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 2) ⁻¹' Set.Ioi (0:ℝ)) :=
-      isOpen_Ioi.preimage (hcont 2)
-    have p4 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 -
-        ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
-        Set.Ioi (0:ℝ)) :=
-      isOpen_Ioi.preimage (hc0c.sub (hc1c.add hc2c))
-    have p5 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) -
-        (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
-        Set.Ioi (0:ℝ)) :=
-      isOpen_Ioi.preimage ((hc0c.mul (continuous_const (y := 1 - a))).sub
-        ((continuous_const (y := 1 + a)).mul (hc1c.add hc2c)))
-    have p6 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 +
-        (WithLp.ofLp v) 2) ⁻¹' Set.Ioo (0:ℝ) (1:ℝ)) :=
-      isOpen_Ioo.preimage (((hcont 0).add (hcont 1)).add (hcont 2))
-    have p7 : IsOpen (p24_comboMap u0 u1 w1 w2 ⁻¹' Metric.ball (0:V3) r) :=
-      Metric.isOpen_ball.preimage (LinearMap.continuous_of_finiteDimensional
-        (p24_comboMap u0 u1 w1 w2))
-    exact IsOpen.inter (IsOpen.inter (IsOpen.inter (IsOpen.inter (IsOpen.inter
-      (IsOpen.inter p1 p2) p3) p4) p5) p6) p7
-  have hvG : vstar ∈ G := by
-    rw [hGeq vstar, hv0, hv1, hv2]
-    refine ⟨mul_pos hc0 hκ0, hc0, hc0, ?_, ?_, ?_, ?_, ?_⟩
-    · nlinarith [hκ1, hc0, hE, hF]
-    · nlinarith [hκ2, hc0, hE, hF]
-    · nlinarith [hc0, hκ0]
-    · have hre : c * κ + c + c = c * (κ + 2) := by ring
-      rw [hre]
-      linarith
-    · rw [hcmbv]
-      refine lt_of_le_of_lt (p24_norm_triple (u1 - u0) (w1 - u0) (w2 - u0) (c * κ) c c
-        (mul_pos hc0 hκ0) hc0 hc0) ?_
-      have hD1 : ‖(u1 - u0 : V3)‖ = dist u0 u1 := by rw [norm_sub_rev, dist_eq_norm]
-      have hE1 : ‖(w1 - u0 : V3)‖ = dist u0 w1 := by rw [norm_sub_rev, dist_eq_norm]
-      have hF1 : ‖(w2 - u0 : V3)‖ = dist u0 w2 := by rw [norm_sub_rev, dist_eq_norm]
-      have hre : c * κ * dist u0 u1 + (c * dist u0 w1 + c * dist u0 w2)
-          = c * (κ * dist u0 u1 + dist u0 w1 + dist u0 w2) := by ring
-      rw [hD1, hE1, hF1, hre]
-      linarith
-  -- the open box
-  obtain ⟨ε, hε0, hεsub⟩ := Metric.isOpen_iff.mp hGopen vstar hvG
-  have hposB : 0 < volume.real (Metric.ball vstar ε) := by
-    rw [Measure.real_def]
-    refine ENNReal.toReal_pos (ne_of_gt (IsOpen.measure_pos volume Metric.isOpen_ball
-      ⟨vstar, Metric.mem_ball_self hε0⟩)) ?_
-    exact ne_of_lt (measure_ball_lt_top (x := vstar) (r := ε))
-  have hdet : LinearMap.det (p24_comboMap u0 u1 w1 w2) ≠ 0 := p24_comboMap_det hli
-  have hvolB : volume.real (p24_comboMap u0 u1 w1 w2 '' Metric.ball vstar ε)
-      = |LinearMap.det (p24_comboMap u0 u1 w1 w2)| * volume.real (Metric.ball vstar ε) := by
-    rw [Measure.real_def, Measure.real_def, Measure.addHaar_image_linearMap,
-      ENNReal.toReal_mul, ENNReal.toReal_ofReal (abs_nonneg _)]
-  have himg : (fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε
-      = (fun p : V3 => u0 + p) ''
-        (p24_comboMap u0 u1 w1 w2 '' Metric.ball vstar ε) := by
-    rw [← Set.image_comp]
-    rfl
-  have hposI : 0 < volume.real
-      ((fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) := by
-    rw [himg, volume_real_add_left u0, hvolB]
-    exact mul_pos (abs_pos.mpr hdet) hposB
-  -- containment of the image
-  have hsub1 : ∀ v ∈ Metric.ball vstar ε,
-      u0 + p24_comboMap u0 u1 w1 w2 v ∈
-        conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
-    intro v hv
-    have hvG : v ∈ G := hεsub hv
-    rw [hGeq v] at hvG
-    obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
-    exact (p24_mem_of_good hr hu0u1 hw1u0 hw1u1 hw2u0 hw2u1 hw1w2 rfl rfl rfl
-      hx0 hy0 hz0 hC1 hC2 hball hsum).1
-  have hsub2 : ∀ v ∈ Metric.ball vstar ε,
-      u0 + p24_comboMap u0 u1 w1 w2 v ∈
-        conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
-    intro v hv
-    have hvG : v ∈ G := hεsub hv
-    rw [hGeq v] at hvG
-    obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
-    exact (p24_mem_of_good hr hu0u1 hw1u0 hw1u1 hw2u0 hw2u1 hw1w2 rfl rfl rfl
-      hx0 hy0 hz0 hC1 hC2 hball hsum).2
-  -- volume transport
-  have hTfin : ∀ T : Set V3, T ⊆ Metric.closedBall u0 r → volume T ≠ ⊤ := by
-    intro T hT htop
-    have h1 : volume T ≤ volume (Metric.ball u0 (r + 1)) :=
-      measure_mono (fun p hp => Metric.mem_ball.mpr (by
-        have hd := Metric.mem_closedBall.mp (hT hp)
-        linarith))
-    exact absurd htop (ne_of_lt (h1.trans_lt measure_ball_lt_top))
-  have hmonofin : volume
-      ((fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≠ ⊤ :=
-    hTfin _ (by
-      rintro p ⟨v, hv, rfl⟩
-      have hvG : v ∈ G := hεsub hv
-      rw [hGeq v] at hvG
-      obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
-      rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left]
-      exact le_of_lt hball)
-  have hsubimg1 : (fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε ⊆
-      conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
-    rintro p ⟨v, hv, rfl⟩
-    exact hsub1 v hv
-  have hsubimg2 : (fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε ⊆
-      conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
-    rintro p ⟨v, hv, rfl⟩
-    exact hsub2 v hv
-  have hfin1 : volume (conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3))
-      ≠ ⊤ :=
-    hTfin _ ((Set.inter_subset_left (s := conicCapP24 u0 u1 r a)
-      (t := affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3))).trans
-      (Set.inter_subset_left (s := Metric.closedBall u0 r) (t := rconeGt u0 u1 a)))
-  have hfin2 : volume
-      (conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) ≠ ⊤ :=
-    hTfin _ ((Set.inter_subset_left (s := conicCapP24 u0 u1 r a)
-      (t := convexHull ℝ ({u0, u1, w1, w2} : Set V3))).trans
-      (Set.inter_subset_left (s := Metric.closedBall u0 r) (t := rconeGt u0 u1 a)))
-  have hmono1 : volume.real
-      ((fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≤
-      volume.real (conicCapP24 u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3)) := by
-    rw [Measure.real_def, Measure.real_def]
-    exact (ENNReal.toReal_le_toReal hmonofin hfin1).mpr (measure_mono hsubimg1)
-  have hmono2 : volume.real
-      ((fun v : V3 => u0 + p24_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≤
-      volume.real (conicCapP24 u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := by
-    rw [Measure.real_def, Measure.real_def]
-    exact (ENNReal.toReal_le_toReal hmonofin hfin2).mpr (measure_mono hsubimg2)
-  exact ⟨lt_of_lt_of_le hposI hmono1, lt_of_lt_of_le hposI hmono2⟩
-
-
-/-- marchal3.hl:2708 `CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`（PA15:2771 公开件
-私拷收口；`conicCap` → `conicCapP24` 同体换名，`p15_li_of_ncopl` 已按 root-
-`Coplanar ℝ` 形移植故省去 `coplML` 桥）。八发波 hnullarm 的 k=3/4 正体积臂
-帽石（PA24 不可 import PA15——`Kepler.Text.wedge` 遮蔽，kit 全套私拷见上）。 -/
-private theorem p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 (u0 u1 w1 w2 : V3) (r a : ℝ)
-    (hr : 0 < r) (ha : a < 1) (ha0 : 0 ≤ a) (hcop : ¬Coplanar ℝ ({u0, u1, w1, w2} : Set V3)) :
-    0 < volume.real (conicCapP24 u0 u1 r a ∩ convexHull ℝ {u0, u1, w1, w2}) := by
-  have hli := p24_li_of_ncopl hcop
-  exact (p24_box_pos hr ha hli).2
 
 /-! ### §6 八发波 hnullarm 本体（HL REUHADY.hl :7799-8000 迹零臂；接口形 =
 七发波 hwit 三元组）。结构：`dihX` if-链二分——`nullSet X` 直接零；k ∈ {0,1}
@@ -6402,32 +7064,6 @@ private theorem p24_d3_cell2_inter_eq_swap {V : Set V3} {u0 u1 : V3} {ul : List 
     · rw [hseteq]
       exact hzL
 
-/-- **走廊点覆盖**（§45.4-1；HL REUHADY.hl :1531-1629 消费形）：margin-δ
-匹配斜率的走廊锥 ∩ 单位球内每点落某叶表胞。 -/
-private theorem p24_cap_leaf_pointwise_cover (V : Set V3) (u0 u1 : V3) (δ : ℝ)
-    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
-    (hhl : hl [u0, u1] < Real.sqrt 2)
-    (hfan : voronoiList V [u0, u1] =
-      ⋃₀ {convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2,
-        circumcenter (setOfList vl)} | vl ∈ {vl : List V3 |
-        barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}})
-    (hδ : 0 < δ)
-    (hmargin : ∀ z : V3, dist z u0 = dist z u1 →
-      dist z (midpoint ℝ u0 u1) ≤ δ → z ∈ voronoiList V [u0, u1])
-    (z : V3) (hz1 : dist z u0 ≤ 1)
-    (hz2 : z ∈ rconeGt u0 u1 (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * δ ^ 2))) :
-    ∃ (i : ℕ) (vl : List V3), i ≤ 4 ∧ barV V 3 vl ∧
-      truncateSimplex 1 vl = [u0, u1] ∧ z ∈ mcell i V vl := by
-  obtain ⟨y, hxy, hyvor, -⟩ :=
-    p24_cone_corridor V u0 u1 δ hp hu0 hu1 hne hδ hmargin z hz1 hz2
-  rw [hfan] at hyvor
-  obtain ⟨S, hS, hyS⟩ := hyvor
-  obtain ⟨vl, hvl, rfl⟩ := hS
-  obtain ⟨hbar, htr⟩ := hvl
-  have hrg : z ∈ rogers V vl :=
-    p24_fan_leaf_bridge V u0 u1 vl z y hs hp hbar htr hyS hxy
-  obtain ⟨i, hi, hz⟩ := SLTSTLO1 V vl z hs hp hbar hrg
-  exact ⟨i, vl, hi, hbar, htr, hz⟩
 
 /-- **活楔胞正迹**（§45.4-3；HL REUHADY.hl :7799-8000 全族形）：楔族活胞
 （`¬ nullSet X`）恒有非零测锥帽迹。结构链：`edgeX`/`cellParams` 的 VX
@@ -6700,10 +7336,13 @@ private theorem p24_wedge_null_dihX (V : Set V3) (u0 u1 n1 n2 : V3) (e : Set V3)
 
 /-! ### §E capstone 组装（§45.4-4） -/
 
-/-- **cover_strong capstone**（十一波主件；scaffold 3 的加强形）：产出
-SF-44 五前提（SF-45 §45.3-2 hwit 加门形）+ hnullarm + gated hcov 全套。
-走廊斜率 c（margin-δ 匹配）折入 d，hcov 由 scaffold 3 侧运输
-（D(r,d) ⊆ D(r₀,d₀)）；残余 sorry = scaffold 3 原位（如实记账）。 -/
+/-- **cover_strong capstone**（十一波主件；scaffold 3 的加强形；SF-46 十三发波
+换接测度级）：产出 SF-44 五前提（SF-45 §45.3-2 hwit 加门形）+ hnullarm +
+测度级覆盖全套。走廊斜率 c（margin-δ 匹配）折入 d，末合取由 SF-46 的点态
+形恢复为 HL 忠实测度级形 `nullSet (E \ ⋃₀楔族迹)`（scaffold 3 同形），
+scaffold 3 的 null-diff 经 D(r,d) ⊆ D(r₀,d₀) 集合运输（子集包含逐点成立：
+U(r,d) ∋ x ∈ X ∩ D(r₀,d₀) ∩ W1 ⟹ x ∈ X ∩ D(r,d) ∩ W1）；scaffold 3 本体
+已于十三发波真证收口（直 sorry 1→0）。 -/
 private theorem p24_cap_wedge_cover_strong (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (n1 n2 : V3) (e : Set V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
@@ -6740,8 +7379,9 @@ private theorem p24_cap_wedge_cover_strong (V : Set V3) (u0 u1 : V3) (vl1 vl2 : 
         barV V 3 (cellParamsD V X [u0, u1]).2 ∧
         initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2 ∧
         X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2) ∧
-      ∀ x ∈ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2,
-        x ∈ ⋃₀ p24_wedgeCells V u0 u1 n1 n2 e := by
+      nullSet ((conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) \
+        ⋃₀ ((fun X : Set V3 => X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) ''
+          p24_wedgeCells V u0 u1 n1 n2 e)) := by
   classical
   -- scaffold 3（残余 sorry 原位继承 = 本波唯一 PA24 直 sorry，如实记账）
   obtain ⟨r₀, d₀, hr₀, hr₀₁, hd₀, hd₀₁, hcov₀⟩ :=
@@ -6829,13 +7469,20 @@ private theorem p24_cap_wedge_cover_strong (V : Set V3) (u0 u1 : V3) (vl1 vl2 : 
       X hm hnT
     obtain ⟨-, hb, hXe, hinit⟩ := p24_cellParamsD_spec V X [u0, u1] htriple
     exact ⟨hb, hinit, hXe⟩
-  · -- hcov（侧运输自 scaffold 3：D(r,d) ⊆ D(r₀,d₀)）
-    intro z hz
-    refine hcov₀ z
-      ⟨⟨Metric.closedBall_subset_closedBall (min_le_left _ _) hz.1.1,
-        p24_rconeGt_mono (le_max_left d₀ (max d₁
-          (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * δ ^ 2)))) hz.1.2⟩,
-      hz.2⟩
+  · -- 测度级覆盖（SF-46 消费合同：scaffold 3 null-diff 形的 D(r,d) ⊆ D(r₀,d₀) 运输）
+    rw [nullSet] at hcov₀ ⊢
+    refine measure_mono_null ?_ hcov₀
+    intro x hx
+    rw [Set.mem_sdiff] at hx
+    obtain ⟨hxE, hxU⟩ := hx
+    refine ⟨⟨⟨Metric.closedBall_subset_closedBall (min_le_left _ _) hxE.1.1,
+      p24_rconeGt_mono (le_max_left d₀ (max d₁
+        (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * δ ^ 2)))) hxE.1.2⟩,
+      hxE.2⟩, fun hxU₀ => ?_⟩
+    rw [p24_mem_sUnion_image] at hxU₀
+    obtain ⟨X, hXmem, hzx⟩ := hxU₀
+    refine hxU (p24_mem_sUnion_image.mpr ⟨X, hXmem, ?_⟩)
+    exact ⟨⟨hzx.1.1, hxE.1⟩, hzx.2⟩
 
 /-! ## 九发波（2026-10-19，lane pa24reuhady）：XNHPWAB 真化落地记账 + 门控
 hwit 强装配适配器
@@ -6919,6 +7566,205 @@ private theorem p24_wedge_setSum_eq_azim_gated (V : Set V3) (u0 u1 n1 n2 : V3)
       = azim u0 u1 n1 n2 := by
   refine p24_wedge_setSum_eq_azim V u0 u1 n1 n2 e r d hs hp hu0 hu1 hne hr hr1
     hd hd1 hnc1 hnc2 hfin hpair hcov ?_
+  intro X hX
+  by_cases hnT : nullSet (X ∩ conicCapP24 u0 u1 r d)
+  · -- null-trace 臂：LHS = 0，dihX = 0（hnullarm）
+    have hdih0 := hnullarm X hX hnT
+    have h0 : volume.real (conicCapP24 u0 u1 r d ∩ X) = 0 := by
+      show (volume (conicCapP24 u0 u1 r d ∩ X) : ENNReal).toReal = 0
+      rw [Set.inter_comm, show volume (X ∩ conicCapP24 u0 u1 r d) = 0 from hnT]
+      rfl
+    rw [hdih0, h0]
+    ring
+  · -- 非 null-trace 臂：逐胞强派发（门下三元组供货）
+    exact p24_cell_cap_dihX_strong V u0 u1 r d X hr hr1 hd hd1 hne hp hw1 hw3 hw4
+      (hwit X hX hnT).1 (hwit X hX hnT).2.1 (hwit X hX hnT).2.2 hnT
+
+/-! ## 十三发波（2026-10-20，lane pa24reuhady 13gen）：SF-46 测度级装配适配器
+
+scaffold 3 `p24_cap_wedge_cover` 与 capstone `p24_cap_wedge_cover_strong` 的
+覆盖合取按 SF-46 恢复 HL 忠实测度级形（`nullSet (E \ ⋃₀楔族迹)`，
+REUHADY.hl:7483-7790 映射）后的 D6/D7 装配链换接：`p24_wedge_setSum_eq_azim`
+的点态 `hcov` 前提改接测度级 `hcovM`——D6 并集-求和桥
+（`p24_measure_setSum_biUnion`）只需迹并的**体积**等于 E 的体积（nullSet
+差异不进 vol；体积恒等式 = null-diff + 双方可测 + U ⊆ E 的可加性读出，
+HL :7466 `MEASURE_NEGLIGIBLE_SYMDIFF` 折叠步的树内对应），逐胞比例式与
+junk 零侧承接不变。旧点态件（`p24_wedge_setSum_eq_azim`/`_strong`/`_gated`）
+语句冻结保型不动（hcov 为前提，纯假设面）。本组两件纯追加；
+消费件 = REUHADY1 装配线（语句 `REUHADY_concl1_new` 冻结，证体改接）。 -/
+
+/-- **测度级 D6+D7 装配**（SF-46 换接件）：`p24_wedge_setSum_eq_azim` 的
+测度级版——点态 `hcov` 前提换成 scaffold 3/cover_strong 的 null-diff 形
+`hcovM`，体积求和恒等式改由「迹并体积 = E 体积」读出（可加性 =
+`Set.disjoint_diff_left` 分裂 + 零差吸收）。其余前提与结论逐字同
+`p24_wedge_setSum_eq_azim`。HL 对应 = REUHADY.hl:7395-7483
+（`sum s (\t. vol (t INTER E)) = vol (E)`）+ D7 终墙 :8250-8356。 -/
+private theorem p24_wedge_setSum_eq_azim_msr (V : Set V3) (u0 u1 n1 n2 : V3)
+    (e : Set V3) (r d : ℝ)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hnc1 : ¬ Collinear3 u0 u1 n1) (hnc2 : ¬ Collinear3 u0 u1 n2)
+    (hfin : {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}.Finite)
+    (hpair : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e, ∀ Y ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      X ≠ Y → volume (X ∩ Y) = 0)
+    (hcovM : nullSet ((conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) \
+      ⋃₀ ((fun X : Set V3 => X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) ''
+        p24_wedgeCells V u0 u1 n1 n2 e)))
+    (hcell : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      volume.real (conicCapP24 u0 u1 r d ∩ X)
+        = volume.real (conicCapP24 u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi)) :
+    setSum (p24_wedgeCells V u0 u1 n1 n2 e) (fun X => dihX V X (u0, u1))
+      = azim u0 u1 n1 n2 := by
+  classical
+  set s : Set (Set V3) := p24_wedgeCells V u0 u1 n1 n2 e with hsdef
+  -- D-FIN: 有限族（同 `p24_wedge_setSum_eq_azim`）
+  have hsfin : s.Finite := hfin.subset (fun X hX => ⟨hX.1, hX.2.1⟩)
+  -- 可测性 / 有限体积 / 成对零交（同原件）
+  have hmeas : ∀ X ∈ s, MeasurableSet (X ∩ conicCapP24 u0 u1 r d) := by
+    intro X hX
+    obtain ⟨hm, -, -⟩ := hX
+    obtain ⟨i, ul, rfl, hbar⟩ := hm
+    exact (MEASURABLE_MCELL V ul i hs hp hbar).inter (measurableConicCap u0 u1 r d)
+  have hnetop : ∀ X ∈ s, volume (X ∩ conicCapP24 u0 u1 r d) ≠ ⊤ := by
+    intro X hX
+    have hsub : X ∩ conicCapP24 u0 u1 r d ⊆ Metric.closedBall u0 r := fun z hz => hz.2.1
+    have hlt : volume (Metric.closedBall u0 r) < ⊤ :=
+      IsCompact.measure_lt_top (isCompact_closedBall u0 r)
+    exact fun hcon =>
+      absurd (lt_of_le_of_lt (measure_mono hsub) hlt)
+        (by rw [hcon]; exact not_lt.mpr le_top)
+  have hpair' : ∀ X ∈ s, ∀ Y ∈ s, X ≠ Y →
+      volume ((X ∩ conicCapP24 u0 u1 r d) ∩ (Y ∩ conicCapP24 u0 u1 r d)) = 0 := by
+    intro X hX Y hY hne
+    exact measure_mono_null
+      (fun z hz => ⟨hz.1.1, hz.2.1⟩ :
+        (X ∩ conicCapP24 u0 u1 r d) ∩ (Y ∩ conicCapP24 u0 u1 r d) ⊆ X ∩ Y)
+      (hpair X hX Y hY hne)
+  -- SF-46 核：迹并（W1-交形）的体积 = E 的体积（null-diff 可加性读出）
+  set E : Set V3 := conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2 with hEdef
+  set U : Set V3 := ⋃₀ ((fun X : Set V3 =>
+    X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) '' s) with hUdef
+  have hUsubE : U ⊆ E := by
+    intro z hz
+    rw [hUdef, p24_mem_sUnion_image] at hz
+    obtain ⟨X, hXmem, hzx⟩ := hz
+    exact ⟨hzx.1.2, hXmem.2.2 hzx.1.1⟩
+  have hEmeas : MeasurableSet E := measurableConicCapWedgeGe u0 u1 n1 n2 r d
+  have hUmeas : MeasurableSet U := by
+    rw [hUdef, Set.sUnion_image]
+    exact MeasurableSet.biUnion hsfin.countable (fun X hX => by
+      obtain ⟨hXm, -, hXW1⟩ := hX
+      obtain ⟨i, ul, rfl, hbar⟩ := hXm
+      exact ((MEASURABLE_MCELL V ul i hs hp hbar).inter
+        (measurableConicCap u0 u1 r d)).inter (p24_measSet_wedgeGe u0 u1 n1 n2))
+  have hnd : volume (E \ U) = 0 := hcovM
+  have hvolEU : volume E = volume U := by
+    have hEq : E = U ∪ (E \ U) := by
+      rw [hEdef, hUdef]
+      ext z
+      simp only [Set.mem_inter_iff, Set.mem_union, Set.mem_sdiff]
+      constructor
+      · rintro ⟨h1, h2⟩
+        by_cases hU : z ∈ ⋃₀ ((fun X : Set V3 =>
+          X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) '' s)
+        · exact Or.inl hU
+        · exact Or.inr ⟨⟨h1, h2⟩, hU⟩
+      · rintro (h | ⟨⟨h1, h2⟩, -⟩)
+        · rw [p24_mem_sUnion_image] at h
+          obtain ⟨Y, hYmem, hyz⟩ := h
+          exact ⟨hyz.1.2, hYmem.2.2 hyz.1.1⟩
+        · exact ⟨h1, h2⟩
+    have hdisj : Disjoint U (E \ U) := Set.disjoint_left.mpr fun _ h1 h2 => h2.2 h1
+    have hmeasdiff : MeasurableSet (E \ U) := hEmeas.diff hUmeas
+    rw [hEq, measure_union hdisj hmeasdiff, hnd, add_zero]
+  have hvolEU' : volume.real E = volume.real U := by
+    show (volume E).toReal = (volume U).toReal
+    rw [hvolEU]
+  -- 迹族（无 W1-交形）与 U 同并（族胞 ⊆ W1）
+  have huni : ⋃₀ ((fun X : Set V3 => X ∩ conicCapP24 u0 u1 r d) '' s) = U := by
+    rw [hUdef]
+    ext z
+    constructor
+    · rw [p24_mem_sUnion_image]
+      rintro ⟨X, hXmem, hzX⟩
+      obtain ⟨hzX1, hzX2⟩ : z ∈ X ∩ conicCapP24 u0 u1 r d := hzX
+      exact p24_mem_sUnion_image.mpr
+        ⟨X, hXmem, ⟨⟨hzX1, hzX2⟩, hXmem.2.2 hzX1⟩⟩
+    · rw [p24_mem_sUnion_image]
+      rintro ⟨X, hXmem, hzX⟩
+      obtain ⟨hzX1, hzX2⟩ :
+          z ∈ X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2 := hzX
+      exact p24_mem_sUnion_image.mpr ⟨X, hXmem, ⟨hzX1.1, hzX1.2⟩⟩
+  -- D6 求和恒等式（并集-求和桥 + 体积恒等式）
+  have hsum : setSum s (fun X => volume.real (X ∩ conicCapP24 u0 u1 r d))
+      = volume.real E := by
+    rw [p24_measure_setSum_biUnion hsfin hmeas hpair' hnetop, huni]
+    exact hvolEU'.symm
+  -- D7 终墙 + 逐胞同余 + 因子化（以下逐字同 `p24_wedge_setSum_eq_azim`）
+  have hwpos := p24_cap_wedge_vol u0 u1 n1 n2 r d hr hr1 hd hd1 hne hnc1 hnc2
+  have hc := p24_setSum_congr (s := s)
+    (f := fun X : Set V3 => volume.real (X ∩ conicCapP24 u0 u1 r d))
+    (g := fun X : Set V3 => volume.real (conicCapP24 u0 u1 r d)
+      * dihX V X (u0, u1) / (2 * Real.pi))
+    (fun X hX => by
+      rw [Set.inter_comm]
+      exact hcell X hX)
+  have hfactor : setSum s (fun X => volume.real (conicCapP24 u0 u1 r d)
+        * dihX V X (u0, u1) / (2 * Real.pi))
+      = volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi)
+        * setSum s (fun X => dihX V X (u0, u1)) := by
+    unfold setSum
+    simp only [dif_pos hsfin]
+    calc ∑ a ∈ hsfin.toFinset,
+          volume.real (conicCapP24 u0 u1 r d) * dihX V a (u0, u1) / (2 * Real.pi)
+        = ∑ a ∈ hsfin.toFinset,
+            volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi) * dihX V a (u0, u1) :=
+          Finset.sum_congr rfl fun a _ => by ring
+      _ = volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi)
+            * ∑ a ∈ hsfin.toFinset, dihX V a (u0, u1) := (Finset.mul_sum _ _ _).symm
+  have hkey : volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi)
+      * setSum s (fun X => dihX V X (u0, u1))
+      = volume.real (conicCapP24 u0 u1 r d) / (2 * Real.pi) * azim u0 u1 n1 n2 := by
+    rw [← hfactor, ← hc, hsum, hwpos.2]
+    ring
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  exact mul_left_cancel₀ (ne_of_gt (div_pos hwpos.1 h2pi)) hkey
+
+/-- **门控测度级装配**（SF-46 换接件）：`p24_wedge_setSum_eq_azim_gated` 的
+测度级版——`hcov` 换 `hcovM`（scaffold 3/cover_strong null-diff 形），逐胞
+派发链（hnullarm 零侧 + 门下 `p24_cell_cap_dihX_strong`）逐字同原件。
+HL 对应 = REUHADY.hl :7799 SUM_SUPERSET 臂接口形 + :8187-8241 junk 零侧。 -/
+private theorem p24_wedge_setSum_eq_azim_gated_msr (V : Set V3) (u0 u1 n1 n2 : V3)
+    (e : Set V3) (r d : ℝ)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hnc1 : ¬ Collinear3 u0 u1 n1) (hnc2 : ¬ Collinear3 u0 u1 n2)
+    (hfin : {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}.Finite)
+    (hpair : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e, ∀ Y ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      X ≠ Y → volume (X ∩ Y) = 0)
+    (hcovM : nullSet ((conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) \
+      ⋃₀ ((fun X : Set V3 => X ∩ conicCapP24 u0 u1 r d ∩ wedgeGe u0 u1 n1 n2) ''
+        p24_wedgeCells V u0 u1 n1 n2 e)))
+    (hnullarm : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      nullSet (X ∩ conicCapP24 u0 u1 r d) → dihX V X (u0, u1) = 0)
+    (hwit : ∀ X ∈ p24_wedgeCells V u0 u1 n1 n2 e,
+      ¬ nullSet (X ∩ conicCapP24 u0 u1 r d) →
+      barV V 3 (cellParamsD V X [u0, u1]).2 ∧
+      initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2 ∧
+      X = mcell (cellParamsD V X [u0, u1]).1 V (cellParamsD V X [u0, u1]).2)
+    (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
+    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 3 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬ nullSet (mcell 4 V vl ∩ conicCapP24 u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d) :
+    setSum (p24_wedgeCells V u0 u1 n1 n2 e) (fun X => dihX V X (u0, u1))
+      = azim u0 u1 n1 n2 := by
+  refine p24_wedge_setSum_eq_azim_msr V u0 u1 n1 n2 e r d hs hp hu0 hu1 hne hr hr1
+    hd hd1 hnc1 hnc2 hfin hpair hcovM ?_
   intro X hX
   by_cases hnT : nullSet (X ∩ conicCapP24 u0 u1 r d)
   · -- null-trace 臂：LHS = 0，dihX = 0（hnullarm）
@@ -7018,16 +7864,16 @@ theorem REUHADY1 : REUHADY_concl1_new := by
   have hnc2 : ¬ Collinear3 u0 u1 n2 :=
     p24_barV2_far_noncollinear V u0 u1 vl2 n2 hp hbar2 (htr2.trans he) hn2
   -- (d) scaffold chapters: 十一波 cover_strong capstone 全套供数
-  -- （r d + hw1/hw3/hw4 + 门下 hwit + hnullarm + gated hcov；残余 sorry =
-  -- scaffold 3 `p24_cap_wedge_cover` 原位继承，如实记账）
-  obtain ⟨r, d, hr, hr1, hd, hd1, hw1, hw3, hw4, hnullarm, hwitfam, hcov⟩ :=
+  -- （r d + hw1/hw3/hw4 + 门下 hwit + hnullarm + 测度级覆盖；SF-46 后
+  -- scaffold 3 已真证收口，直 sorry 1→0，十三发波 2026-10-20）
+  obtain ⟨r, d, hr, hr1, hd, hd1, hw1, hw3, hw4, hnullarm, hwitfam, hcovM⟩ :=
     p24_cap_wedge_cover_strong V u0 u1 vl1 vl2 n1 n2 e hs hp hu0 hu1 hne hhl he hwedge
       haz hvlne hhl1 hhl2 hbar1 hbar2 htr1 htr2 hn1 hn2 heX hbarV1 hfan
-  -- genuine assembly over the gated strong adapter（九发波门控 hwit 形）
-  exact p24_wedge_setSum_eq_azim_gated V u0 u1 n1 n2 e r d hs hp hu0 hu1 hne hr hr1
+  -- genuine assembly over the gated measured adapter（SF-46 测度级换接形）
+  exact p24_wedge_setSum_eq_azim_gated_msr V u0 u1 n1 n2 e r d hs hp hu0 hu1 hne hr hr1
     hd hd1 hnc1 hnc2 (p24_finite_edge_cells V e u0 u1 hp hs he)
     (p24_wedge_cells_pair_null V u0 u1 n1 n2 e hs hp hu0 hu1 hne he hnc1 hnc2)
-    hcov hnullarm hwitfam hw1 hw3 hw4
+    hcovM hnullarm hwitfam hw1 hw3 hw4
 
 
 /-! ## 闭楔不交与假设合成 kit（2026-09-30 fill，capstone 消费的私件群） -/
@@ -12502,313 +13348,16 @@ lane_snapshots/pa24reuhady/7gen_SF44_*.md 与 .patch）。 -/
   无点态命题可移植。`heX` 二分在 `x ∉ W2` 时即定向（内域点，本波
   `p24_cap_wedge_cover_arm4` 条件件闭合）；边界点留十三发波。
 
+**十三发波（2026-10-20） relocation 记录**：SF-46 测度级收口的装配顺序要求
+本章五件（件 1/2/3/4/5：短棱代数/走廊低维排除/mcell4 非零测/k4 顶点抽取/
+edgeX-of-leaf4）连同其依赖（`p24_rconeGt_mono`、`p24_cap_leaf_pointwise_cover`、
+PA15 正体积 kit 全套、`p24_smulR_inj`）**整块前移**至 `p24_cap_wedge_cover`
+之前（语句逐字零改动，纯位置迁移；消费件 arm4 保留本章）。收口后 REUHADY1
+直 sorry 1 → 0。
 本章六件全部独立真证；唯一 inherited 消费 = `p24_edgeX_of_leaf4` 内 PA17
 `AJRIPQN`（cellParams 指标归一 = R3 债，十一发波同惯例逐件记账；
 `p24_k4Subset_content`/`p24_corridor_algebra` 为 PA11 私件/十一发波 WIP 的
 逐字私拷，零新依赖）。 -/
-
-/-- 短棱代数（十一发波 WIP `p24_corridor_algebra` 逐字私拷）：`2 ≤ d01 <
-2√2` 与可用 margin `0 ≤ d ≤ (√2 − d01/2)/2` 给走廊锥窄性 `d01² + 4d² ≤ 8`
-（等价于走廊锥参数 `c(d) ≥ hl[u0,u1]/√2`，供低维排除的 mcell1 臂）。 -/
-private theorem p24_corridor_algebra {d01 d : ℝ} (hd2 : 2 ≤ d01)
-    (hhl : d01 < 2 * Real.sqrt 2) (hdnn : 0 ≤ d)
-    (hdm : d ≤ (Real.sqrt 2 - d01 / 2) / 2) :
-    d01 ^ 2 + 4 * d ^ 2 ≤ 8 := by
-  have hsq2 : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
-  have hdu : 0 ≤ Real.sqrt 2 - d01 / 2 := by nlinarith [hsq2, hhl]
-  have ht : 0 < 2 * Real.sqrt 2 - d01 := by nlinarith [hsq2, hhl]
-  have hmono1 : (2 * Real.sqrt 2 - d01) ≤ 2 * Real.sqrt 2 := by linarith
-  -- u = 2√2 − d01 的二次不等式核：(5/4)u² ≤ 4√2·u
-  have hkey : ((2 * Real.sqrt 2 - d01) ^ 2) * (5 / 4) ≤
-      (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) := by
-    have h1 : (2 * Real.sqrt 2 - d01) * ((5 / 4) * (2 * Real.sqrt 2 - d01)) ≤
-        (2 * Real.sqrt 2 - d01) * (4 * Real.sqrt 2) := by
-      have g1 : (5 / 4 : ℝ) * (2 * Real.sqrt 2 - d01) ≤ 4 * Real.sqrt 2 := by
-        have g2 : (5 / 4 : ℝ) * (2 * Real.sqrt 2 - d01) ≤ (5 / 4) * (2 * Real.sqrt 2) := by
-          refine mul_le_mul_of_nonneg_left hmono1 (by norm_num)
-        linarith [g2, hsq2]
-      have hmul := mul_le_mul_of_nonneg_right g1 ht.le
-      have heqL : (2 * Real.sqrt 2 - d01) * ((5 / 4) * (2 * Real.sqrt 2 - d01))
-          = (5 / 4) * (2 * Real.sqrt 2 - d01) * (2 * Real.sqrt 2 - d01) := by ring
-      have heqR : (2 * Real.sqrt 2 - d01) * (4 * Real.sqrt 2)
-          = (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) := by ring
-      rw [heqL, heqR]
-      exact hmul
-    nlinarith [h1, hsq2]
-  -- (2d)² ≤ (√2 − d01/2)²
-  have hbound : (2 * d) ^ 2 ≤ (Real.sqrt 2 - d01 / 2) ^ 2 := by
-    have e1 : 2 * d ≤ Real.sqrt 2 - d01 / 2 := by nlinarith
-    exact sq_le_sq' (by nlinarith) e1
-  have hsq4 : (2 * d) ^ 2 = 4 * d ^ 2 := by ring
-  have hexpand : (Real.sqrt 2 - d01 / 2) ^ 2 = 2 - Real.sqrt 2 * d01 + d01 ^ 2 / 4 := by
-    rw [pow_two, sub_mul, mul_sub, Real.mul_self_sqrt (by norm_num)]
-    ring
-  -- hkey 的展开形：(5/4)d01² ≤ 6 + √2 d01
-  have hstep1 : (5 / 4 : ℝ) * d01 ^ 2 ≤ 6 + Real.sqrt 2 * d01 := by
-    have hexp : (2 * Real.sqrt 2 - d01) ^ 2 = 8 - 4 * Real.sqrt 2 * d01 + d01 ^ 2 := by
-      rw [pow_two, sub_mul, mul_sub,
-        show (2 * Real.sqrt 2) * (2 * Real.sqrt 2) = 8 from by
-          have hs : Real.sqrt 2 * Real.sqrt 2 = 2 := Real.mul_self_sqrt (by norm_num)
-          nlinarith [hs]]
-      ring
-    have h1 := hkey
-    rw [hexp] at h1
-    have h2 : (4 * Real.sqrt 2) * (2 * Real.sqrt 2 - d01) = 16 - 4 * Real.sqrt 2 * d01 := by
-      have hs : Real.sqrt 2 * Real.sqrt 2 = 2 := Real.mul_self_sqrt (by norm_num)
-      nlinarith [hs]
-    rw [h2] at h1
-    nlinarith
-  nlinarith [hbound, hsq4, hexpand, hstep1, hdnn]
-
-/-- **走廊点覆盖（含低维排除）**：走廊域（`dist x u0 ≤ 1` ∧ 斜率匹配锥）内
-每点落某 `2 ≤ k ≤ 4` 的叶表 Marchal 胞。链 = `p24_cap_leaf_pointwise_cover`
-（十一发波件）+ i = 0 排除（mcell0 活在 `ball u0 √2` 外）+ i = 1 排除
-（mcell1 活在 `rconeGt (hl[u0,u1]/√2)` 外，锥参数 `≥ hl/√2` 由
-`p24_corridor_algebra` 短棱代数给出）。HOL 锚点 = REUHADY.hl :1531-1629
-（`NEW_GOAL ?i. i <= 4 /\ x' IN mcell i V vl` + i' = 0/1 排除臂 :1629-1700）。 -/
-private theorem p24_corridor_point_cover_excl (V : Set V3) (u0 u1 : V3)
-    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
-    (hhl : hl [u0, u1] < Real.sqrt 2)
-    (d : ℝ) (hd : 0 < d)
-    (hmargin : ∀ z : V3, dist z u0 = dist z u1 →
-      dist z (midpoint ℝ u0 u1) ≤ d → z ∈ voronoiList V [u0, u1])
-    (hbalg : dist u0 u1 ^ 2 + 4 * d ^ 2 ≤ 8)
-    (hfan : voronoiList V [u0, u1] =
-      ⋃₀ {convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2,
-        circumcenter (setOfList vl)} | vl ∈ {vl : List V3 |
-        barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}})
-    (x : V3) (hxb : dist x u0 ≤ 1)
-    (hxc : x ∈ rconeGt u0 u1 (dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2))) :
-    ∃ k : ℕ, 2 ≤ k ∧ k ≤ 4 ∧ ∃ vl : List V3, barV V 3 vl ∧ x ∈ mcell k V vl ∧
-      truncateSimplex 1 vl = [u0, u1] := by
-  obtain ⟨i, vl, hile, hbar, htr, hxm⟩ :=
-    p24_cap_leaf_pointwise_cover V u0 u1 d hs hp hu0 hu1 hne hhl hfan hd hmargin x hxb hxc
-  refine ⟨i, ?_, hile, vl, hbar, hxm, htr⟩
-  rcases Nat.lt_or_ge i 2 with hlt | hge
-  · exfalso
-    rcases Nat.eq_zero_or_pos i with h0 | h1pos
-    · -- i = 0：mcell0 活在 ball u0 √2 外
-      subst h0
-      rw [(MCELL_EXPLICIT 0 V vl).1, mcell0, Set.mem_sdiff,
-        show hdV vl = u0 from p24_hdV_eq_u0 hbar htr] at hxm
-      have honesqrt : (1:ℝ) < Real.sqrt 2 := by
-        have h := Real.sqrt_lt_sqrt (show (0:ℝ) ≤ (1:ℝ) by norm_num)
-          (show (1:ℝ) < (2:ℝ) by norm_num)
-        rwa [Real.sqrt_one] at h
-      exact hxm.2 (Metric.mem_ball.mpr (lt_of_le_of_lt hxb honesqrt))
-    · -- i = 1：mcell1 活在 rconeGt (hl/√2) 外（走廊锥参数 ≥ hl/√2）
-      have h1 : i = 1 := by omega
-      subst h1
-      have hd01p : 0 < dist u0 u1 := dist_pos.mpr hne
-      have hsqrt8 : Real.sqrt 8 = 2 * Real.sqrt 2 := by
-        rw [show (8:ℝ) = 4 * 2 from by norm_num, Real.sqrt_mul (by norm_num),
-          show Real.sqrt 4 = 2 from by norm_num]
-      have hkey : Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) ≤ Real.sqrt 8 :=
-        Real.sqrt_le_sqrt hbalg
-      have hcge : hl [u0, u1] / Real.sqrt 2 ≤
-          dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) := by
-        have hlhs : hl [u0, u1] / Real.sqrt 2 = dist u0 u1 / (2 * Real.sqrt 2) := by
-          rw [p24_hl_pair]; field_simp
-        have hden : Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) ≤ (2:ℝ) * Real.sqrt 2 := by
-          rw [← hsqrt8]; exact hkey
-        have hstep : dist u0 u1 / (2 * Real.sqrt 2)
-            ≤ dist u0 u1 / Real.sqrt (dist u0 u1 ^ 2 + 4 * d ^ 2) :=
-          div_le_div_of_nonneg_left hd01p.le (by positivity) hden
-        rw [hlhs]; exact hstep
-      rw [(MCELL_EXPLICIT 1 V vl).2.1, mcell1] at hxm
-      by_cases hcond : Real.sqrt 2 ≤ hl vl
-      · rw [if_pos hcond, Set.mem_sdiff, p24_hdV_eq_u0 hbar htr,
-          p24_hdTail_eq_u1 hbar htr, htr] at hxm
-        exact hxm.2 ((p24_rconeGt_mono (u0 := u0) (u1 := u1) hcge) hxc)
-      · rw [if_neg hcond] at hxm
-        exact absurd hxm (by simp)
-  · exact hge
-
-/-- **叶表 mcell4 非零测**（k=4 臂的缺口件闭合）：`barV V 3` 叶表在
-`hl vl < √2` 时 `mcell 4 V vl` 为四点凸包，四点仿射无关（PA12
-`AFF_INDEPENDENT_SET_OF_LIST_BARV`，经 `MHFTTZN1` affDim = 3 ⟹ 非共面
-`AFF_DIM_LE_2_IMP_COPLANAR` 反证）⟹ 锥帽 ∩ 壳正体积帽石
-（`p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`，r = 1、a = 1/2 实例）⟹ 胞非零测。
-k ∈ {2,3} 的同形件 = 墙 A（见节头注），本波不闭合。 -/
-private theorem p24_mcell4_leaf_nonnull (V : Set V3) (hp : Packing V) (hs : saturated V)
-    {vl : List V3} (hbar : barV V 3 vl) (hlt : hl vl < Real.sqrt 2) :
-    ¬ nullSet (mcell 4 V vl) := by
-  obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
-  have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
-    rw [hvul]; ext z; simp [setOfList]
-  have hd3 : affDim (setOfList vl) = 3 := MHFTTZN1 V vl 3 hp hbar
-  rw [hset] at hd3
-  have hSne : ({v0, v1, v2, v3} : Set V3) ≠ ∅ := by
-    intro hcc
-    have hmem : v0 ∈ ({v0, v1, v2, v3} : Set V3) := by simp
-    rw [hcc] at hmem
-    simp at hmem
-  have hfr3 : Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) = 3 := by
-    have h1 : affDim ({v0, v1, v2, v3} : Set V3) =
-        ((Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) : ℕ) : ℤ) :=
-      if_neg hSne
-    rw [hd3] at h1
-    exact_mod_cast h1.symm
-  have hncopl : ¬ Coplanar ℝ ({v0, v1, v2, v3} : Set V3) := by
-    intro hc
-    have hfin2 : Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2, v3} : Set V3)) ≤ 2 :=
-      (coplanar_iff_finrank_le_two (k := ℝ)).mp hc
-    rw [hfr3] at hfin2
-    norm_num at hfin2
-  have hpos := p24_CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 v0 v1 v2 v3 1 (1 / 2)
-    (by norm_num) (by norm_num) (by norm_num) hncopl
-  intro hnull
-  rw [nullSet, (MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt,
-    hset] at hnull
-  have h0 : volume.real
-      (conicCapP24 v0 v1 (1:ℝ) (1 / 2) ∩ convexHull ℝ ({v0, v1, v2, v3} : Set V3)) = 0 := by
-    show (volume _ : ENNReal).toReal = 0
-    have hvol0 : volume
-        (conicCapP24 v0 v1 (1:ℝ) (1 / 2) ∩ convexHull ℝ ({v0, v1, v2, v3} : Set V3)) = 0 :=
-      measure_mono_null (fun z hz => hz.2) hnull
-    rw [hvol0]; rfl
-  exact absurd h0 (ne_of_gt hpos)
-
-/-- **k4 顶点抽取内容**（PA11 `k4Subset`（LEPJBDJ.hl:674-712，已证私件）逐字
-私拷改名，消费 PA12 公开 `SIMPLEX_FURTHEST_LT_2` + PA5
-`OMEGA_LIST_IN_VORONOI_LIST`）：`hl ul < √2` 时 Delaunay 壳内的包装点必为
-表点（`V ∩ mcell 4 = 表点集` 的 k = 4 内容）。 -/
-private theorem p24_k4Subset_content (V : Set V3) (hp : Packing V) {ul : List V3}
-    (hb : barV V 3 ul) (hlt : hl ul < Real.sqrt 2) :
-    V ∩ mcell 4 V ul ⊆ setOfList ul := by
-  have hVsub := BARV_SUBSET V 3 ul hb
-  rintro x ⟨hxV, hxHull⟩
-  rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt] at hxHull
-  by_contra hxS
-  obtain ⟨a, b, c, dd, hvul⟩ := BARV_3_EXPLICIT V ul hb
-  have hfin : (setOfList ul).Finite := by
-    refine Set.Finite.ofFinset (insert a (insert b (insert c {dd}))) (fun z => ?_)
-    have hset : setOfList ul = ({a, b, c, dd} : Set V3) := by
-      rw [hvul]; ext w; simp [setOfList]
-    constructor
-    · intro hz
-      rw [hset]; simpa using hz
-    · intro hz
-      rw [hset] at hz; simpa using hz
-  obtain ⟨y, hyS, hydist⟩ :=
-    SIMPLEX_FURTHEST_LT_2 (omegaList V ul) (setOfList ul) hfin hxHull hxS
-  have hyV : y ∈ V := hVsub hyS
-  have havo : omegaList V ul ∈ voronoiList V ul :=
-    OMEGA_LIST_IN_VORONOI_LIST V ul 3 hb
-  have hmem : omegaList V ul ∈ voronoiClosed V y :=
-    Set.mem_sInter.mp havo (voronoiClosed V y)
-      (Set.mem_setOf.mpr ⟨y, hyS, rfl⟩)
-  have hyC : ∀ w ∈ V,
-      dist (omegaList V ul) y ≤ dist (omegaList V ul) w :=
-    Set.mem_setOf.mp hmem
-  have h1 := hyC y hyV
-  have h2 := hyC x hxV
-  have e1 : dist (omegaList V ul) y = ‖y - omegaList V ul‖ := by
-    rw [dist_eq_norm, norm_sub_rev]
-  have e2 : dist (omegaList V ul) x = ‖x - omegaList V ul‖ := by
-    rw [dist_eq_norm, norm_sub_rev]
-  linarith
-
-/-- **叶表胞的 edgeX 指认（k = 4）**：非空叶表 `mcell 4 V vl` 满足
-`e = {u0,u1}` 属于其 `edgeX`——活跃性（hl < √2）+ 非零测
-（`p24_mcell4_leaf_nonnull`）+ cellParams 指标归一（PA17 `AJRIPQN`，R3
-inherited，如实记账）+ `VX` 展开（null 分支排除、k = 4 分支）+ k4 顶点抽取
-（`p24_k4Subset_content`）⟹ `{u0,u1} ⊆ VX`。 -/
-private theorem p24_edgeX_of_leaf4 (V : Set V3) (u0 u1 : V3) (e : Set V3)
-    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
-    (he : e = {u0, u1})
-    {vl : List V3} (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
-    (hne0 : mcell 4 V vl ≠ ∅) :
-    e ∈ edgeX V (mcell 4 V vl) := by
-  classical
-  -- 活跃性：hl vl < √2（非空桥）
-  have hlt : hl vl < Real.sqrt 2 := by
-    by_contra hc
-    refine hne0 ?_
-    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_neg hc]
-  -- 非零测（k = 4 缺口件）
-  have hnn : ¬ nullSet (mcell 4 V vl) := p24_mcell4_leaf_nonnull V hp hs hbar hlt
-  -- cellParams 读出
-  have hsel : (cellParams V (mcell 4 V vl)).1 ≤ 4 ∧ barV V 3 (cellParams V (mcell 4 V vl)).2 ∧
-      mcell 4 V vl = mcell (cellParams V (mcell 4 V vl)).1 V (cellParams V (mcell 4 V vl)).2 :=
-    Classical.epsilon_spec
-      (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧ mcell 4 V vl = mcell p.1 V p.2)
-      ⟨(4, vl), Nat.le_refl 4, hbar, rfl⟩
-  -- 指标归一 = 4（AJRIPQN，R3 inherited）
-  have hXself : ¬ nullSet (mcell (cellParams V (mcell 4 V vl)).1 V (cellParams V (mcell 4 V vl)).2
-      ∩ mcell 4 V vl) := by
-    intro h0
-    rw [nullSet] at h0
-    refine hnn ?_
-    rw [← hsel.2.2, Set.inter_self] at h0
-    rw [nullSet]
-    exact h0
-  have hajo := AJRIPQN V (cellParams V (mcell 4 V vl)).2 vl
-    (cellParams V (mcell 4 V vl)).1 4 hs hp hsel.2.1 hbar
-    (by simp; omega) (by simp) hXself
-  have hidx4 : (cellParams V (mcell 4 V vl)).1 = 4 := hajo.1
-  -- pp.2 的活跃性（经 hajo + 非空桥）
-  have hlt2 : hl (cellParams V (mcell 4 V vl)).2 < Real.sqrt 2 := by
-    by_contra hc
-    refine hne0 ?_
-    rw [← hajo.2, hajo.1, (MCELL_EXPLICIT 4 V (cellParams V (mcell 4 V vl)).2).2.2.2.2
-      (Nat.le_refl 4), mcell4, if_neg hc]
-  -- u0, u1 ∈ X（叶表壳顶点）
-  have hu0X : u0 ∈ mcell 4 V vl := by
-    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt]
-    refine subset_convexHull ℝ _ ?_
-    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
-    have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
-      rw [hvul]; ext z; simp [setOfList]
-    rw [hset]
-    have hv0 : v0 = u0 := by
-      have htrv : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
-        (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
-      rw [hvul, htrv] at htr
-      exact (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).1
-    have hmemset : u0 ∈ ({v0, v1, v2, v3} : Set V3) := by
-      rw [hv0]; simp
-    simpa [setOfList] using hmemset
-  have hu1X : u1 ∈ mcell 4 V vl := by
-    rw [(MCELL_EXPLICIT 4 V vl).2.2.2.2 (Nat.le_refl 4), mcell4, if_pos hlt]
-    refine subset_convexHull ℝ _ ?_
-    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V vl hbar
-    have hset : setOfList vl = ({v0, v1, v2, v3} : Set V3) := by
-      rw [hvul]; ext z; simp [setOfList]
-    rw [hset]
-    have hv1 : v1 = u1 := by
-      have htrv : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
-        (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
-      rw [hvul, htrv] at htr
-      exact (List.cons.injEq v1 [] u1 [] |>.mp
-        (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).2).1
-    have hmemset : u1 ∈ ({v0, v1, v2, v3} : Set V3) := by
-      rw [hv1]; simp
-    simpa [setOfList] using hmemset
-  -- k4 顶点抽取：u0, u1 ∈ 表点集
-  have hXpp : mcell 4 V (cellParams V (mcell 4 V vl)).2 = mcell 4 V vl := by
-    have h1 := hajo.2
-    rw [hajo.1] at h1
-    exact h1
-  have hu0in : u0 ∈ setOfList (cellParams V (mcell 4 V vl)).2 := by
-    refine p24_k4Subset_content V hp hsel.2.1 hlt2 ⟨hu0, ?_⟩
-    rw [hXpp]; exact hu0X
-  have hu1in : u1 ∈ setOfList (cellParams V (mcell 4 V vl)).2 := by
-    refine p24_k4Subset_content V hp hsel.2.1 hlt2 ⟨hu1, ?_⟩
-    rw [hXpp]; exact hu1X
-  -- VX 展开（null 分支排除 + k = 4 分支）
-  have hVXeq : VX V (mcell 4 V vl) =
-      setOfList (cellParams V (mcell 4 V vl)).2 := by
-    simp only [VX, if_neg hnn]
-    rw [hajo.1]
-    have h31 : ((4:ℕ) - 1) = 3 := rfl
-    rw [h31]
-    simp only [if_neg (show (4:ℕ) ≠ 0 by omega)]
-    obtain ⟨a, b, c, dd, hvul2⟩ := BARV_3_EXPLICIT V (cellParams V (mcell 4 V vl)).2 hsel.2.1
-    rw [hvul2, TRUNCATE_SIMPLEX_EXPLICIT_3 a b c dd]
-  refine Set.mem_setOf.mpr ⟨u0, u1, he, ?_, ?_, hne⟩
-  · rw [hVXeq]; exact hu0in
-  · rw [hVXeq]; exact hu1in
 
 /-- **条件装配臂（k = 4，内域点）**：走廊点 `x` 落叶表 `mcell 4 V vl` 且
 `x ∉ W2` 时，`heX` 二分定向（`p24_edgeX_of_leaf4` 供 edgeX）⟹ 胞入楔族 ⟹
