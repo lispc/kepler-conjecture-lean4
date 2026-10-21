@@ -419,3 +419,38 @@ root 全构建的内存窗口不够；**周四 root runner 收完的安静窗口
 静默毒化缓存）——并发控制靠操作性纪律：每 lane 单 build 跨 lane 串行、热缓存、
 冷重建只进安静窗口**（HANDOFF §5.5）。PA 级模块 6–8G/个，shard 7G/个，36G 墙。
 在飞：euler v22（残错估 8–10）、TM 舰队、root runner 2,750/6,900（周四上午收）。
+
+## 2026-10-21 增量节（移交令日 + 两 salvage 收工 + spine 探针补跑）
+
+**🔴 移交令（用户令）**：Phase 5 → opencode（接管入口
+`docs/projects/phase5-opencode-takeover.md`，自足简报）。ZCode 只收工三件；
+TameSpine 线自批 67 移交 opencode。
+
+**账本**：DEBT.md 带 spine 探针重生成（`95e6a037`，11:27）——**主定理可达
+债务面首次落盘**：sorryAx 3 个冻结接口（nonlinearInequalities /
+linearProgrammingResults / textCapstone）+ 624 shard 特许 native_decide
+公理（Phase 2 白名单）+ 标准三公理，**异常项无**。总 sorry 44,478 持平
+（可比口径 1,400）。
+
+**root runner 终账（ZCode 收工 1/3）**：首批 6,900/6,900 零 fail 收官
+（6 天 22 小时，111 条/时均值，results.jsonl 全 exit=0）；spine 探针欠账清。
+
+**TameSpine 批 67 salvage（ZCode 收工 2/3，`73f14f76`）**：配额断线死在
+交付前的半成品直验绿——A9 接口链地基批 27 公开件 607 行（bijOn 三件 +
+hypermapOfListG 构造四槽 + good_list_nodes 泛型形 + 缺口底座四件重推导），
+6 探针标准三内零 sorryAx，闸 PASS @hypermapOfListG。iso 主件 RXOKSKC（:523）
+本体诚实分期 = **批 68（opencode 首棒，处方全备）**。
+
+**TM 舰队重烤终验（ZCode 收工 3/3）**：199/199 全绿入库（8922 jobs RC=0，
+sorryAx=0）；12 件怪物件（9-24 用户叫停遗留）全程未触碰、grep 0 命中实证；
+9 家族公理抽探全标准三零 sorryAx。**关键勘误**：前驱 ledger 170 条
+"axioms_sorry" 为 census 失败态工件（翻假叶 decide 失败 → 错误恢复置
+sorryAx → `#print axioms` 传递记录），非真债——C549MonoBatch1 census 20 条
+↔ 终建 0 条实证。舰队实账：**197 模块翻假重烤收官**（180 green-rebaked +
+17 green-noflip），翻假叶重参数化 6,129 叶、证书参数重写 6,128 处、全 1 轮
+收敛、零语句改动——**SF-42 翻假使命闭合**。终账 `lane_snapshots/
+w8fleet_rebake/FLEET_REBAKE_FINAL.md`（manifest 199 件 md5 + 排除清单）。
+
+**在决项（等用户）**：SF-47（PA24 直 sorry 1→0 入库）；gen-8 取消待令
+（decide-mode 方案留档）；euler 四代/AJRIPQN/Lean 4.35/雷场入 playbook/
+RVFXZBU2_concl shim 盘点全部待令。
