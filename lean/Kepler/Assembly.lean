@@ -38,6 +38,9 @@ import Kepler.Assembly.GoodListAll
 -- `CertifiedIneqHolds` 查表的试点链（G4 证书 C3397113841 + 粘合 + 语义命题）。
 import Kepler.Assembly.IdLists
 import Kepler.Assembly.IneqPilot
+-- nli A1 车道（2026-10-22）：rest 20 `FWGKMBZ` 的在库 G4 证书（605 分片 + Base，
+-- 205,418 叶；导出 `CFWGKMBZ_pos`）。证书模块自包含，不依赖 Assembly。
+import Kepler.Interval.Cases.CFWGKMBZ
 
 open Classical Metric Set
 open Kepler.Geom Kepler.Text Kepler.Text.Fan Kepler.Graphs
@@ -683,9 +686,72 @@ theorem nliRestBIXPCGW9455898160 : bank_BIXPCGW9455898160 := sorry
 
 /-- rest 20/62：HOL ineq entry `FWGKMBZ`（ineq.hl:967，盒
 [2hmin,2hplus]×[2,√8]⁵；PA21 `bank_FWGKMBZ` / `proj_bank_FWGKMBZ`）。
-资产状态：deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestFWGKMBZ : bank_FWGKMBZ := sorry
+
+证明（nli A1 车道，2026-10-22）：在库 G4 证书
+`Kepler.Interval.Cases.CFWGKMBZ`（605 分片 + Base，205,418 叶，
+`CFWGKMBZ_pos`）经 `evalReal` 粘合（证书表达式 = `yOfX deltaX`，全多项式）
++ 端点嵌入（十进制原盒 ⊆ dyadic 外扩盒，`mi_hminus_prop`）。 -/
+theorem nliRestFWGKMBZ : bank_FWGKMBZ := by
+  intro y1 y2 y3 y4 y5 y6 h1l h1h h2l h2h h3l h3h h4l h4h h5l h5h h6l h6h
+  have hsqrt8 : Real.sqrt 8 ≤ Kepler.Interval.Dyadic.toReal
+      (⟨759250125, -28⟩ : Kepler.Interval.Dyadic) := by
+    rw [Kepler.Interval.Dyadic.toReal_def]
+    norm_num
+    nlinarith [Real.sq_sqrt (show (0 : ℝ) ≤ 8 by norm_num), Real.sqrt_nonneg 8]
+  have hmem : Kepler.Interval.boxMem Kepler.Interval.Cases.CFWGKMBZBox
+      ![hminus, y1, y2, y3, y4, y5, y6] := by
+    intro i
+    fin_cases i
+    · show (⟨⟨322122547, -28⟩, ⟨348966093, -28⟩⟩ :
+          Kepler.Interval.DInterval).mem hminus
+      constructor
+      · rw [Kepler.Interval.Dyadic.toReal_def]; norm_num
+        linarith [mi_hminus_prop.1]
+      · rw [Kepler.Interval.Dyadic.toReal_def]; norm_num
+        linarith [mi_hminus_prop.2.1]
+    · show (⟨⟨2576980377, -30⟩, ⟨711568707, -28⟩⟩ :
+          Kepler.Interval.DInterval).mem y1
+      constructor
+      · rw [Kepler.Interval.Dyadic.toReal_def]; norm_num
+        linarith [mi_hminus_prop.1]
+      · rw [Kepler.Interval.Dyadic.toReal_def]
+        norm_num [hplus] at h1h ⊢
+        linarith
+    · show (⟨⟨2, 0⟩, ⟨759250125, -28⟩⟩ : Kepler.Interval.DInterval).mem y2
+      constructor
+      · rw [Kepler.Interval.Dyadic.toReal_def]; norm_num
+        exact h2l
+      · exact le_trans h2h hsqrt8
+    · show (⟨⟨2, 0⟩, ⟨759250125, -28⟩⟩ : Kepler.Interval.DInterval).mem y3
+      constructor
+      · rw [Kepler.Interval.Dyadic.toReal_def]; norm_num
+        exact h3l
+      · exact le_trans h3h hsqrt8
+    · show (⟨⟨2, 0⟩, ⟨759250125, -28⟩⟩ : Kepler.Interval.DInterval).mem y4
+      constructor
+      · rw [Kepler.Interval.Dyadic.toReal_def]; norm_num
+        exact h4l
+      · exact le_trans h4h hsqrt8
+    · show (⟨⟨2, 0⟩, ⟨759250125, -28⟩⟩ : Kepler.Interval.DInterval).mem y5
+      constructor
+      · rw [Kepler.Interval.Dyadic.toReal_def]; norm_num
+        exact h5l
+      · exact le_trans h5h hsqrt8
+    · show (⟨⟨2, 0⟩, ⟨759250125, -28⟩⟩ : Kepler.Interval.DInterval).mem y6
+      constructor
+      · rw [Kepler.Interval.Dyadic.toReal_def]; norm_num
+        exact h6l
+      · exact le_trans h6h hsqrt8
+  have heq : ∀ ρ : Fin 7 → ℝ,
+      Kepler.Interval.Cases.CFWGKMBZExpr.evalReal ρ =
+        yOfX deltaX (ρ 1) (ρ 2) (ρ 3) (ρ 4) (ρ 5) (ρ 6) := by
+    intro ρ
+    simp only [Kepler.Interval.Cases.CFWGKMBZExpr, Kepler.Interval.IExpr.evalReal,
+      deltaX, yOfX, Kepler.Interval.Dyadic.toReal_int, Int.cast_zero, sub_zero]
+  have hpos := Kepler.Interval.Cases.CFWGKMBZ_pos
+    ![hminus, y1, y2, y3, y4, y5, y6] hmem
+  rw [heq] at hpos
+  simpa using hpos
 
 /-- rest 21/62：HOL ineq entry `FHBVYXZ b`（ineq.hl:942；PA21
 `bank_FHBVYXZb` / `proj_bank_FHBVYXZb`）。资产状态：deferred-compute。
