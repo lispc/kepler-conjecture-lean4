@@ -2160,3 +2160,62 @@ B1 车道落地，提交 `ae475e70`，PA12 md5 `4674279c69612855ca563624ced18ade
 Text roots 8789 jobs、主仓 `lake build Kepler` 9359 jobs 全绿。陈述与 (b) 逐字
 相同（`h2` 未消费但按冻结形保留）。B2 待办：PA14 重落
 `RVFXZBU_p14`/`ynhyjit_i3_p14`，PA17 `hRV` 一行改接。
+
+## 49. PA21 `bank_BIXPCGW9455898160` 符号纠正（HOL `> -0.00569`，Lean 误写 `> +0.00569`）— 分级 A（statement 保真修正 · 假陈述修复）
+
+**立案：2026-10-22，`nliPackNonlinearRest` 侦察车道
+（`docs/scouts/nli-rest-scout.md` §2.3）产出，编排者复核 HOL 原文与
+pipeline AST；用户批准：待批（未应用）。** 对象 = PA21:596
+`bank_BIXPCGW9455898160` 的结论常量符号。机理：HOL `ineq.hl:985` 为
+`gamma4fgcy ... > -- #0.00569`（HOL `--` 是一元负号），同条 doc 自述
+"If X is a quarter, then γ(X,L) ≥ -0.00569"；pipeline 的 AST
+`records[35]` 与 case RPN 也按 `-0.00569` 编码。Lean 写成 `> +0.00569`，
+比 HOL 强 0.01138——该 Prop 在给定 box 上为假，证书永远粘不上。
+`Assembly.lean:677-681` 的 docstring 自己记了 "`-- #0.00569` 双重负号"，
+但转录结论写反。
+
+(a) HOL：`reference/flyspeck/text_formalization/nonlinear/ineq.hl:982-998`
+逐字：
+
+```hol
+add
+{
+  idv = "BIXPCGW 9455898160";
+  ineq = all_forall `ineq
+   [(&2 * hminus, y1, &2 * hplus);
+    (&2,y2, &2 * hminus);
+    (&2,y3, &2 * hminus);
+    (&2,y4, &2 * hminus);
+    (&2,y5, &2 * hminus);
+    (&2,y6, &2 * hminus)
+   ]
+    (gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > -- #0.00569) `;
+  doc =   "
+  OXLZLEZ.mod 'gamma_qu'
+     If $X$ is a quarter, then $\\gamma(X,L)\\ge -0.00569$.";
+  tags=[Marchal;Flypaper["OXLZLEZ";];Cfsqp;Clusterlp;Tex;Xconvert;Branching;Split[0]];
+};;
+```
+
+（`--` 为一元负号；同源 `sphere.hl:632/634` 的
+`b_spine5 = -- #0.0445813` 是负数用法。）
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/49-pa21-bixpcgw-sign.patch`
+（+1/−1）：`> 0.00569` → `> -0.00569`；其余零改动。
+`patch -p1 --dry-run` EXIT=0。
+
+### (c) 验收与应用计划
+
+用户批准后按 STATEMENT-FIX 模式应用（`SF_ITEM=49`，工作树 diff 与 patch
+多重集相等）；应用后 PA21 构建 + `bank_BIXPCGW9455898160` /
+`nliRestBIXPCGW9455898160` 探针。pipeline 侧已按 `-0.00569` 生成，无需重产。
+若与 euler 任务 4 的 PA21 交付冲突，以本 patch 为最终权（一行，手工重放）。
+
+### (d) 附带记账
+
+- 59 个 nliRest 源中唯一陈述级问题；其余为证书/规模问题
+  （19 已解 / 22 无 case 模板 / 18 硬解）。
+- 本件在 e2e 锥内：`nliRestBIXPCGW9455898160`（Assembly:682）→
+  `nliPackNonlinearRest` → 分量 1/6 `pack_nonlinear_non_ox3q1h`。

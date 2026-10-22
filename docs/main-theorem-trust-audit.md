@@ -123,30 +123,34 @@ shard 公理的来源。
 |---|---|---|---|---|
 | `DUUNHOR_concl` | PA2:3504 | 比 pack_concl 多 `Packing`/`saturated` 前提 | 经 PA17 stage 3，很可能在 | 不是逐字 pack_concl；若最终要逐字接口，另立 `_verbatim`，不要改现有件 |
 | `p17_measure_sdiff_ge` | PA17:297 | 只有 `volume s = 0 → volume (s \ t) ≤ volume (t \ s)` 型不等式，非 HOL `MEASURE_NEGLIGIBLE_SYMDIFF` | 经 PA17 stage 3，很可能在 | 确认用途足够；不足则补逐字件 |
-| `RVFXZBU` (PA10) | PA10:413 | weak-permutes + i=3 sorry | **否**（B2 后 PA17 改用 PA14 `RVFXZBU_p14`） | off-path orphan；DEBT 记账保留，不再消费 |
+| `RVFXZBU` (PA10) | PA10:413 | weak-permutes + i=3 sorry | **是**（父 = PA25 `MCELL4_BARV_FI`:3184/5455） | B2 只把它从 AJRIPQN hRV 移除；packing chapter 仍消费。建议改接 PA14 `RVFXZBU_p14` |
 | `RVFXZBU_p14` | PA14:1102 | 带 `hfix`，i=0/1/2/4 + B1 收 i=3 | 是（PA17 hRV） | clean；探针标准三零 |
 | `QZKSYKG1` | PA14:1243 | SF-20 hfix 已应用；仍 sorry | 是（AJRIPQN hQ1） | B3 目标 |
-| `QZKSYKG2` | PA14:1286 | SF-38 tail-fixed；k=2 在飞；k=3/4 待 | 是（AJRIPQN hQ2） | 当前 QZKSYKG2 k=2 车道 + 后续 k=3/4 |
+| `QZKSYKG2` | PA14:1286 | SF-38 tail-fixed；k=2/0/1 已落，k=3/4 待 | 是（AJRIPQN hQ2） | B4 收 k=3/4 |
 | `qzksykg1_p17`/`qzksykg2_p17` | PA17:236/259 | PA14 件的私有转发副本 | 是（PA17 内部） | PA14 本体落地后删除副本，避免双账 |
-| `MXI_EXISTS_concl` | PA2:5473 | pack_concl 接口；PA11 `mxiExplicit` 消费（成环） | 经 PA17？`MXI_EXPLICIT` 在 PA12，PA17 stage 3 | 成环未解；列入 shim 清理批 |
+| `MXI_EXISTS_concl` | PA2:5473 | pack_concl 接口；PA11 `mxiExplicit` 消费（成环） | **否**（地图：PA2 唯一可达源是 `UPFZBZM_concl`） | 成环未解；列入 shim 清理批 |
+| `bank_BIXPCGW9455898160` | PA21:596 | Lean `> +0.00569`；HOL `ineq.hl:985` 是 `> -0.00569`（`--` 一元负号） | **是**（Assembly:682 → `nliPackNonlinearRest` → 分量 1/6） | **假陈述**；SF-49 已立案待批；pipeline AST/RPN 已按 -0.00569 编码 |
 | `RVFXZBU2_concl` | PA2:5496 | 无 twin 的 pack_concl 接口 | 否（PackingConcl:388 桥在邻近层） | 列入 R3/shim 盘点；PA24 `p24_edgeX_of_leaf23` 消费其桥 |
 | `RVFXZBU3_concl` | PA2:5507 | twin mismatch（PA10 只覆盖 i≤4） | 否 | off-path；DEBT 记账保留 |
 | PA10 剩余 3 sorry | PA10:488/604/608 | RVFXZBU i=3 / YNHYJIT i=2/3 | 否（PA14 已重落 RVFXZBU/YNHYJIT i=3） | off-path；YNHYJIT i=2 待 S₂ kit |
 
 ## 5. 建议的验证动作（按优先级）
 
-1. **P0 — 声明级 reachability 地图（1 个只读车道或主 agent 脚本）**：
-   从 `the_kepler_conjecture_e2e` 出发遍历 proof term 的常量依赖，输出
-   "每个 sorryAx 来源声明 + 是否可达"的清单。重点确认：
-   `PACKING_CHAPTER_MAIN_CONCLUSION` 是否真的消费 `AJRIPQN` 与 PA25 的
-   哪些 sorry；`textCapstone` 的 86+2+... 个导入 sorry 中哪些在路径上。
-   这会把"3 接口"归因升级为可审计的债务图。
+**最优先（P0，先于一切 nli 工作）**：**SF-49**——`bank_BIXPCGW9455898160`
+的符号纠正（HOL `ineq.hl:985` 是 `> -0.00569`，Lean 写成 `> +0.00569`）。
+这是 e2e 锥内已确认的假陈述，nli rest 19 的证书无论如何都粘不上；用户批准后
+立即按 STATEMENT-FIX 应用（patch `49-pa21-bixpcgw-sign.patch`），再谈该件的
+pipeline/Lean 批次。
+
+1. **P0 — 声明级 reachability 地图：已完成**（`docs/e2e-reachability-map.md`；
+   8,305 声明 / 149 direct sources / 624 公理）。剩余动作：PA25
+   `MCELL4_BARV_FI` 改接 PA14 `RVFXZBU_p14`（去掉 PA10 源）。
 2. **P0 — 624 shard 公理 manifest + 抽样 replay**：把
-   `GoodListShard*` 23 个分片的公理名、图数、生成器版本、复核命令写成
-   manifest；抽 10% 分片用 kernel 路径重放，确认 `ofReduceBool` 族无异常。
+   `GoodListShard*` 23 个分片（+ `Graphs.Cert*` 601 条）的公理名、图数、
+   生成器版本、复核命令写成 manifest；抽 10% 分片用 kernel 路径重放。
 3. **P1 — LP 端到端审计**：在填 `lpArchiveCertificatesDebt` 之前，先验
    43,078 个 LP 叶户的证书格式、Farkas 检查器公理面、抽样 replay；
-   否则一次接线会让主定理锥从 3+624 跳到 43k。
+   否则一次接线会让主定理锥从 149+624 跳到 43k。
 4. **P1 — 逐接口 HOL 陈述对照**：把 `TheNonlinearInequalities` /
    `LinearProgrammingResults` / `TextCapstone` 三个 def 与
    the_main_statement.hl 的原文并排，补进 `docs/statement-fidelity.md`

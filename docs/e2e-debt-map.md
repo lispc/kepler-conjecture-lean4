@@ -549,6 +549,18 @@ MXI_EXISTS/RVFXZBU1/2/3 的 `_discharged` 桥等；全仓零 importer）、
 **勘误**：PA10 `RVFXZBU` 不是 off-path——地图父边显示 PA25 `MCELL4_BARV_FI`
 （:3184/5455）仍消费它；B2 只把它从 AJRIPQN hRV 移除。建议小批把
 `MCELL4_BARV_FI` 改接 PA14 `RVFXZBU_p14`。逐条"在锥/不在锥/替代路"表已入
-审计文档 §4。P0 验证动作：声明级 reachability 地图（已完成）→
-MCELL4_BARV_FI 改接 → 624 manifest+replay → LP 端到端审计；
-P1：三接口 HOL 陈述对照；P2：shim 清理批。
+审计文档 §4。
+
+**2026-10-22 nli 侦察（`docs/scouts/nli-rest-scout.md`）**：
+- 59 个 `nliRest*` 源**全是证书型**（非 ID 清单）：19 已解 / 22 无 case 模板 /
+  18 硬解；pipeline 是闸门，Lean 是 59 条粘合。最大单件 rest 9
+  `QITNPEA3725403817`（964,792 叶 / 2,775 分片）。
+- **rest 19 `bank_BIXPCGW9455898160` 是假陈述**：HOL `ineq.hl:985` 是
+  `> -0.00569`（`--` 一元负号），Lean PA21:596 写成 `> +0.00569`；pipeline
+  AST/RPN 已按 `-0.00569` 编码。**SF-49 已立案待批**；批准前不要发该件的
+  pipeline/Lean 批次。
+- 推荐首批：B 批 = rest 10 + 62 + 1（证书共 139 叶）+ 1 Lean 批，解锁 3/59；
+  或仅本机 A1 = rest 20 `FWGKMBZ`（证书源在库，605 分片 + Base）。
+
+P0 验证动作：SF-49 应用 → MCELL4_BARV_FI 改接 → 624 manifest+replay →
+LP 端到端审计；P1：三接口 HOL 陈述对照；P2：shim 清理批。

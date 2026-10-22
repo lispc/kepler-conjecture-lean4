@@ -125,6 +125,9 @@ LocalAuto16/LocalAuto1/ContraFan（各 1）。
 
 ## 6. 建议的下一步
 
+0. **P0 — SF-49（假陈述）**：rest 19 `bank_BIXPCGW9455898160` 的符号纠正
+   （HOL `ineq.hl:985` `> -0.00569` vs Lean `> +0.00569`）。已立案待批；
+   批准前不要发该件的 nli 批次。
 1. **P0 小批**：把 PA25 `MCELL4_BARV_FI` 的 `RVFXZBU` 改接 `RVFXZBU_p14`，
    重跑地图确认 PA10 源消失（−1）。
 2. **当前两条 AJRIPQN 车道收工后**重跑地图：QZKSYKG2（k=2 分支）与
