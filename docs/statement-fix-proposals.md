@@ -2150,3 +2150,13 @@ import。B2 消费：PA14 重落 `RVFXZBU_p14`/`ynhyjit_i3_p14`，PA17 的 `hRV`
 
 - `PERMUTES_TRIVIAL`（PA5:135）仍 sorry，本件禁用。
 - 本件不进入 `pack_concl` 逐字接口；它只服务 AJRIPQN 五阶段的 S₃ 对称性。
+
+### (e) 应用记录（2026-10-22）
+
+B1 车道落地，提交 `ae475e70`，PA12 md5 `4674279c69612855ca563624ced18ade`；
+新增 716 行 `p12_` 私件 + 公开定理。闸 PASS @LEFT_ACTION_LIST_PROPERTIES；
+`#print axioms` = `[propext, Classical.choice, Quot.sound]`（零 sorryAx）；新增区
+零 sorry / 零 axiom / 无 native_decide。构建：clone PA12 8695 jobs、
+Text roots 8789 jobs、主仓 `lake build Kepler` 9359 jobs 全绿。陈述与 (b) 逐字
+相同（`h2` 未消费但按冻结形保留）。B2 待办：PA14 重落
+`RVFXZBU_p14`/`ynhyjit_i3_p14`，PA17 `hRV` 一行改接。
