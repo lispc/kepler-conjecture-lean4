@@ -2462,34 +2462,260 @@ private theorem p13t_mcell0_mcell3_subset_Z (V : Set V3) (ul : List V3) (p : V3)
 
 /-! ## DDZUPHJ.hl: the capstone -/
 
+/-- B7 helper: along an equal omega chain, `sqrt 2 ≤ hl ul` transfers to
+`vl`. Contrapositively, `hl vl < sqrt 2` gives
+`hl vl = dist (omegaList V vl) (HD vl)` (`WAUFCHE2`), and the `ul` side
+bounds the same distance from below (`WAUFCHE1`), with the two distances
+identified through `OMEGA_LIST_LEMMA` and the `HD` equality at `i = 0`. -/
+private theorem p13_dd_hl_ge_of_omega_eq (V : Set V3) (ul vl : List V3)
+    (hp : Packing V) (hb1 : barV V 3 ul) (hb2 : barV V 3 vl)
+    (homega : ∀ i : ℕ, i ≤ 3 → omegaListN V ul i = omegaListN V vl i)
+    (hge : Real.sqrt 2 ≤ hl ul) : Real.sqrt 2 ≤ hl vl := by
+  by_contra hcon
+  have hlt : hl vl < Real.sqrt 2 := lt_of_not_ge hcon
+  have hw2 := WAUFCHE2 V vl 3 hp hb2 hlt
+  have hw1 := WAUFCHE1 V ul 3 hp hb1
+  have hLu : omegaList V ul = omegaListN V ul 3 := by simp [omegaList, hb1.1]
+  have hLv : omegaList V vl = omegaListN V vl 3 := by simp [omegaList, hb2.1]
+  have hd0 : hdV ul = hdV vl := homega 0 (by norm_num)
+  have heq : dist (omegaList V ul) (hdV ul) = dist (omegaList V vl) (hdV vl) := by
+    rw [hLu, hLv, homega 3 (by norm_num), hd0]
+  have hge' : Real.sqrt 2 ≤ dist (omegaList V vl) (hdV vl) := by
+    rw [← heq]
+    exact le_trans hge hw1
+  rw [← hw2] at hge'
+  exact absurd hge' hcon
+
+/-- B7 helper: the `mxi` regime test `sqrt 2 ≤ hl (truncateSimplex 2 ·)`
+transfers along an equal omega chain. If it failed on `vl`, `WAUFCHE2` on
+the `vl` truncation would exhibit `hl (truncateSimplex 2 vl)` as the
+distance of the common `(omega 2, HD)` pair, while `WAUFCHE1` on the `ul`
+truncation bounds that distance below by `hl (truncateSimplex 2 ul) ≥
+sqrt 2`. -/
+private theorem p13_dd_hl_trunc2_ge_of_omega_eq (V : Set V3) (ul vl : List V3)
+    (hp : Packing V) (hb1 : barV V 3 ul) (hb2 : barV V 3 vl)
+    (homega : ∀ i : ℕ, i ≤ 3 → omegaListN V ul i = omegaListN V vl i)
+    (hge : Real.sqrt 2 ≤ hl (truncateSimplex 2 ul)) :
+    Real.sqrt 2 ≤ hl (truncateSimplex 2 vl) := by
+  by_contra hcon
+  have hlt : hl (truncateSimplex 2 vl) < Real.sqrt 2 := lt_of_not_ge hcon
+  have hlen1 : ul.length = 4 := hb1.1
+  have hlen2 : vl.length = 4 := hb2.1
+  have hbaru : barV V 2 (truncateSimplex 2 ul) :=
+    TRUNCATE_SIMPLEX_BARV V 2 3 ul hb1 (by omega)
+  have hbarv : barV V 2 (truncateSimplex 2 vl) :=
+    TRUNCATE_SIMPLEX_BARV V 2 3 vl hb2 (by omega)
+  have hw2 := WAUFCHE2 V (truncateSimplex 2 vl) 2 hp hbarv hlt
+  have hw1 := WAUFCHE1 V (truncateSimplex 2 ul) 2 hp hbaru
+  have hLu : omegaList V (truncateSimplex 2 ul) = omegaListN V ul 2 :=
+    OMEGA_LIST_LEMMA V ul 2 (by omega)
+  have hLv : omegaList V (truncateSimplex 2 vl) = omegaListN V vl 2 :=
+    OMEGA_LIST_LEMMA V vl 2 (by omega)
+  have hDu : hdV (truncateSimplex 2 ul) = hdV ul := HD_TRUNCATE_SIMPLEX ul 2 (by omega)
+  have hDv : hdV (truncateSimplex 2 vl) = hdV vl := HD_TRUNCATE_SIMPLEX vl 2 (by omega)
+  have hd0 : hdV ul = hdV vl := homega 0 (by norm_num)
+  have hchain : hl (truncateSimplex 2 ul) ≤ hl (truncateSimplex 2 vl) := by
+    calc hl (truncateSimplex 2 ul)
+        ≤ dist (omegaList V (truncateSimplex 2 ul)) (hdV (truncateSimplex 2 ul)) := hw1
+      _ = dist (omegaListN V ul 2) (hdV ul) := by rw [hLu, hDu]
+      _ = dist (omegaListN V vl 2) (hdV vl) := by rw [homega 2 (by norm_num), hd0]
+      _ = dist (omegaList V (truncateSimplex 2 vl)) (hdV (truncateSimplex 2 vl)) := by
+          rw [hLv, hDv]
+      _ = hl (truncateSimplex 2 vl) := hw2.symm
+  linarith
+
+/-- B7 helper: the two `mxi` choices agree along an equal omega chain. In the
+`omega 2` branch the regime test is transferred by
+`p13_dd_hl_trunc2_ge_of_omega_eq`; in the `@`-branch the defining predicates
+are literally the same (`omega 2`, `omega 3`, `HD` all agree). -/
+private theorem p13_dd_mxi_eq_of_omega (V : Set V3) (ul vl : List V3)
+    (hp : Packing V) (hb1 : barV V 3 ul) (hb2 : barV V 3 vl)
+    (homega : ∀ i : ℕ, i ≤ 3 → omegaListN V ul i = omegaListN V vl i) :
+    mxi V ul = mxi V vl := by
+  have hd0 : hdV ul = hdV vl := homega 0 (by norm_num)
+  by_cases h2 : Real.sqrt 2 ≤ hl (truncateSimplex 2 ul)
+  · have h2v : Real.sqrt 2 ≤ hl (truncateSimplex 2 vl) :=
+      p13_dd_hl_trunc2_ge_of_omega_eq V ul vl hp hb1 hb2 homega h2
+    conv_lhs => rw [mxi, if_pos h2]
+    conv_rhs => rw [mxi, if_pos h2v]
+    rw [homega 2 (by norm_num)]
+  · have h2v : ¬ Real.sqrt 2 ≤ hl (truncateSimplex 2 vl) := by
+      intro hc
+      exact h2 (p13_dd_hl_trunc2_ge_of_omega_eq V vl ul hp hb2 hb1
+        (fun i hi => (homega i hi).symm) hc)
+    conv_lhs => rw [mxi, if_neg h2]
+    conv_rhs => rw [mxi, if_neg h2v]
+    have hpred : (fun p : V3 => p ∈ convexHull ℝ
+        ({omegaListN V ul 2, omegaListN V ul 3} : Set V3) ∧
+        dist p (hdV ul) = Real.sqrt 2) =
+        (fun p : V3 => p ∈ convexHull ℝ
+        ({omegaListN V vl 2, omegaListN V vl 3} : Set V3) ∧
+        dist p (hdV vl) = Real.sqrt 2) := by
+      funext p
+      rw [homega 2 (by norm_num), homega 3 (by norm_num), hd0]
+    exact congrArg (fun f : V3 → Prop => Classical.epsilon f) hpred
+
 /-- GIANT — HOL `DDZUPHJ` (DDZUPHJ.hl:59-608; concl DDZUPHJ.hl:29-34): two
 `barV V 3` lists with the same full-dimensional Rogers simplex carry the
 same Marchal cell of every index `k ∈ {0..4}` with nonempty `mcell k V ul`.
 (HOL `k IN {0,1,2,3,4}` rendered as `k ≤ 4`.) No pack_concl interface
 exists for this statement; it consumes Auto9's `TEZFFSK`/`NJIUTIU`.
 
-Proof architecture (HL, case `k = 4,3,2,1,0`). `k = 4`: nonemptiness gives
-`hl ul < sqrt 2`, so `truncate_simplex 3 ul = ul = vl` by `TEZFFSK`
-(Auto9). `k = 3,2,1`: nonemptiness gives the circumradius regime
-(`hl (truncate_simplex (k-1) ul) < sqrt 2`, `sqrt 2 <= hl ul`); the omega
-chains agree by `NJIUTIU` (Auto9), `truncate_simplex (k-1) ul` =
-`truncate_simplex (k-1) vl` by `TEZFFSK`, `mxi V ul = mxi V vl` via
-`WAUFCHE1/2` (`hl ≤ dist (omega_list, HD)`), `HD_TRUNCATE_SIMPLEX` and
-`OMEGA_LIST_LEMMA`; `mcell1` additionally needs
-`HD ul = HD vl` (via NEEDS `ROGERS_INTER_V_LEMMA`, Auto11 private sorry,
-on the shared Rogers simplex) and the `k = 1` tail case discharges the
-`rcone_gt` factor by `RCONE_GT_EQ_EMPTY_LEMMA` above once
-`1 ≤ hl (truncate_simplex 1 ·) / sqrt 2`; `k = 2` identifies
-`{u0,u1} = {v0,v1}` from the shared truncation (NEEDS
-`BARV_IMP_LENGTH_EQ_CARD` + `TRUNCATE_SIMPLEX_BARV`). `k = 0`: the cells
-are the shared Rogers simplex minus the same ball. Cell definitions
-dispatch via `MCELL_EXPLICIT` (Auto11 private `mcellExplicit`). -/
+FILLED (B7, 2026-10-22; HOL proof architecture `k = 4,3,2,1,0`). The omega
+chain agrees by `NJIUTIU` throughout, so `HD ul = HD vl` comes straight from
+its `i = 0` instance (no `ROGERS_INTER_V_LEMMA` needed). `k = 4`:
+nonemptiness gives `hl ul < sqrt 2`; `TEZFFSK` at `k = 3` identifies the full
+lists. `k = 3,2,1`: nonemptiness gives the circumradius regime
+(`hl (truncateSimplex (k-1) ul) < sqrt 2`, `sqrt 2 ≤ hl ul`); `TEZFFSK` at
+`k - 1` identifies the truncation, `p13_dd_hl_ge_of_omega_eq` transfers
+`sqrt 2 ≤ hl vl`, and `mxi` agrees by `p13_dd_mxi_eq_of_omega` (which uses
+`p13_dd_hl_trunc2_ge_of_omega_eq`, `WAUFCHE1/2`, `OMEGA_LIST_LEMMA`,
+`HD_TRUNCATE_SIMPLEX`). `k = 2` additionally reads `{u0,u1} = {v0,v1}` off
+the shared truncation (`BARV_3_EXPLICIT` + `TRUNCATE_SIMPLEX_EXPLICIT_1`),
+`k = 1`'s tail case discharges the `rconeGt` factor by
+`RCONE_GT_EQ_EMPTY_LEMMA` once `sqrt 2 ≤ hl (truncateSimplex 1 ·)`, and
+`k = 0` is the shared Rogers simplex minus the same ball. Cell definitions
+dispatch via `MCELL_EXPLICIT`. -/
 theorem DDZUPHJ (V : Set V3) (ul vl : List V3) (k : ℕ)
     (hs : saturated V) (hp : Packing V) (hk : k ≤ 4)
     (hb1 : barV V 3 ul) (hb2 : barV V 3 vl)
     (hrogers : rogers V ul = rogers V vl) (hdim : affDim (rogers V ul) = 3)
     (hne : mcell k V ul ≠ ∅) :
     mcell k V ul = mcell k V vl := by
-  sorry
+  have homega : ∀ i : ℕ, i ≤ 3 → omegaListN V ul i = omegaListN V vl i :=
+    NJIUTIU V ul vl hs hp hb1 hb2 hrogers hdim
+  have hHD : hdV ul = hdV vl := homega 0 (by norm_num)
+  have h2pos : 0 < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+  have hk5 : k = 0 ∨ k = 1 ∨ k = 2 ∨ k = 3 ∨ k = 4 := by omega
+  rcases hk5 with rfl | rfl | rfl | rfl | rfl
+  · -- ===================== k = 0 =====================
+    rw [(MCELL_EXPLICIT 0 V ul).1, (MCELL_EXPLICIT 0 V vl).1]
+    simp only [mcell0]
+    rw [hrogers, hHD]
+  · -- ===================== k = 1 =====================
+    have hH : Real.sqrt 2 ≤ hl ul := by
+      by_contra h
+      have hempty : mcell1 V ul = ∅ := by rw [mcell1, if_neg h]
+      rw [(MCELL_EXPLICIT 1 V ul).2.1, hempty] at hne
+      exact hne rfl
+    have hHv : Real.sqrt 2 ≤ hl vl :=
+      p13_dd_hl_ge_of_omega_eq V ul vl hp hb1 hb2 homega hH
+    by_cases hlt1 : hl (truncateSimplex 1 ul) < Real.sqrt 2
+    · -- truncation below sqrt 2: TEZFFSK identifies the pair
+      obtain ⟨u0, u1, u2, u3, rfl⟩ := BARV_3_EXPLICIT V ul hb1
+      obtain ⟨v0, v1, v2, v3, rfl⟩ := BARV_3_EXPLICIT V vl hb2
+      have htr1 : truncateSimplex 1 [u0, u1, u2, u3] =
+          truncateSimplex 1 [v0, v1, v2, v3] :=
+        TEZFFSK V [u0, u1, u2, u3] [v0, v1, v2, v3] 1 hs hp hb1 hb2 hrogers hdim
+          (by norm_num) hlt1
+      have hpair : [u0, u1] = [v0, v1] := by
+        simpa [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2,
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2] using htr1
+      have hpair' : u0 = v0 ∧ u1 = v1 := by
+        simpa [List.cons.injEq] using hpair
+      have hu0 : u0 = v0 := hpair'.1
+      have hu1 : u1 = v1 := hpair'.2
+      have e0 : hdV [u0, u1, u2, u3] = u0 := rfl
+      have e1 : hdV [u0, u1, u2, u3].tail = u1 := rfl
+      have f0 : hdV [v0, v1, v2, v3] = v0 := rfl
+      have f1 : hdV [v0, v1, v2, v3].tail = v1 := rfl
+      conv_lhs => rw [(MCELL_EXPLICIT 1 V [u0, u1, u2, u3]).2.1, mcell1, if_pos hH]
+      conv_rhs => rw [(MCELL_EXPLICIT 1 V [v0, v1, v2, v3]).2.1, mcell1, if_pos hHv]
+      rw [hrogers, htr1, e0, e1, f0, f1, hu0, hu1]
+    · -- truncation at least sqrt 2: both strict cones are empty
+      have hge1 : Real.sqrt 2 ≤ hl (truncateSimplex 1 ul) := le_of_not_gt hlt1
+      have hge1v : Real.sqrt 2 ≤ hl (truncateSimplex 1 vl) := by
+        by_contra h
+        have hltv : hl (truncateSimplex 1 vl) < Real.sqrt 2 := lt_of_not_ge h
+        have hdimv : affDim (rogers V vl) = 3 := by rw [← hrogers]; exact hdim
+        have htr := TEZFFSK V vl ul 1 hs hp hb2 hb1 hrogers.symm hdimv
+          (by norm_num) hltv
+        have hsmall : hl (truncateSimplex 1 ul) < Real.sqrt 2 := by
+          rw [← htr]
+          exact hltv
+        exact absurd hsmall (not_lt.mpr hge1)
+      have hempty_u : rconeGt (hdV ul) (hdV ul.tail)
+          (hl (truncateSimplex 1 ul) / Real.sqrt 2) = ∅ :=
+        RCONE_GT_EQ_EMPTY_LEMMA _ _ _ ((le_div_iff₀ h2pos).mpr (by linarith))
+      have hempty_v : rconeGt (hdV vl) (hdV vl.tail)
+          (hl (truncateSimplex 1 vl) / Real.sqrt 2) = ∅ :=
+        RCONE_GT_EQ_EMPTY_LEMMA _ _ _ ((le_div_iff₀ h2pos).mpr (by linarith))
+      conv_lhs => rw [(MCELL_EXPLICIT 1 V ul).2.1, mcell1, if_pos hH]
+      conv_rhs => rw [(MCELL_EXPLICIT 1 V vl).2.1, mcell1, if_pos hHv]
+      rw [hempty_u, hempty_v]
+      simp only [Set.sdiff_empty]
+      rw [hrogers, hHD]
+  · -- ===================== k = 2 =====================
+    obtain ⟨u0, u1, u2, u3, rfl⟩ := BARV_3_EXPLICIT V ul hb1
+    obtain ⟨v0, v1, v2, v3, rfl⟩ := BARV_3_EXPLICIT V vl hb2
+    have hcond : hl (truncateSimplex 1 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl [u0, u1, u2, u3] := by
+      by_contra h
+      have hempty : mcell2 V [u0, u1, u2, u3] = ∅ := by rw [mcell2, if_neg h]
+      rw [(MCELL_EXPLICIT 2 V [u0, u1, u2, u3]).2.2.1, hempty] at hne
+      exact hne rfl
+    have htr1 : truncateSimplex 1 [u0, u1, u2, u3] =
+        truncateSimplex 1 [v0, v1, v2, v3] :=
+      TEZFFSK V [u0, u1, u2, u3] [v0, v1, v2, v3] 1 hs hp hb1 hb2 hrogers hdim
+        (by norm_num) hcond.1
+    have hge_vl : Real.sqrt 2 ≤ hl [v0, v1, v2, v3] :=
+      p13_dd_hl_ge_of_omega_eq V [u0, u1, u2, u3] [v0, v1, v2, v3] hp hb1 hb2
+        homega hcond.2
+    have hcondv : hl (truncateSimplex 1 [v0, v1, v2, v3]) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl [v0, v1, v2, v3] := by
+      rw [← htr1]
+      exact ⟨hcond.1, hge_vl⟩
+    have hmxi : mxi V [u0, u1, u2, u3] = mxi V [v0, v1, v2, v3] :=
+      p13_dd_mxi_eq_of_omega V [u0, u1, u2, u3] [v0, v1, v2, v3] hp hb1 hb2 homega
+    have hpair : [u0, u1] = [v0, v1] := by
+      simpa [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2,
+        (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2] using htr1
+    have hpair' : u0 = v0 ∧ u1 = v1 := by
+      simpa [List.cons.injEq] using hpair
+    have hu0 : u0 = v0 := hpair'.1
+    have hu1 : u1 = v1 := hpair'.2
+    have e0 : hdV [u0, u1, u2, u3] = u0 := rfl
+    have e1 : hdV [u0, u1, u2, u3].tail = u1 := rfl
+    have f0 : hdV [v0, v1, v2, v3] = v0 := rfl
+    have f1 : hdV [v0, v1, v2, v3].tail = v1 := rfl
+    conv_lhs => rw [(MCELL_EXPLICIT 2 V [u0, u1, u2, u3]).2.2.1, mcell2, if_pos hcond]
+    conv_rhs => rw [(MCELL_EXPLICIT 2 V [v0, v1, v2, v3]).2.2.1, mcell2, if_pos hcondv]
+    dsimp only
+    rw [htr1, hmxi, e0, e1, f0, f1, homega 3 (by norm_num), hu0, hu1]
+  · -- ===================== k = 3 =====================
+    have hcond : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul := by
+      by_contra h
+      have hempty : mcell3 V ul = ∅ := by rw [mcell3, if_neg h]
+      rw [(MCELL_EXPLICIT 3 V ul).2.2.2.1, hempty] at hne
+      exact hne rfl
+    have htr2 : truncateSimplex 2 ul = truncateSimplex 2 vl :=
+      TEZFFSK V ul vl 2 hs hp hb1 hb2 hrogers hdim (by norm_num) hcond.1
+    have hge_vl : Real.sqrt 2 ≤ hl vl :=
+      p13_dd_hl_ge_of_omega_eq V ul vl hp hb1 hb2 homega hcond.2
+    have hcondv : hl (truncateSimplex 2 vl) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl vl := by
+      rw [← htr2]
+      exact ⟨hcond.1, hge_vl⟩
+    have hmxi : mxi V ul = mxi V vl :=
+      p13_dd_mxi_eq_of_omega V ul vl hp hb1 hb2 homega
+    conv_lhs => rw [(MCELL_EXPLICIT 3 V ul).2.2.2.1, mcell3, if_pos hcond]
+    conv_rhs => rw [(MCELL_EXPLICIT 3 V vl).2.2.2.1, mcell3, if_pos hcondv]
+    rw [htr2, hmxi]
+  · -- ===================== k = 4 =====================
+    have hlt : hl ul < Real.sqrt 2 := by
+      by_contra h
+      have hempty : mcell4 V ul = ∅ := by rw [mcell4, if_neg h]
+      rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (le_refl 4), hempty] at hne
+      exact hne rfl
+    obtain ⟨u0, u1, u2, u3, rfl⟩ := BARV_3_EXPLICIT V ul hb1
+    obtain ⟨v0, v1, v2, v3, rfl⟩ := BARV_3_EXPLICIT V vl hb2
+    have hlt3 : hl (truncateSimplex 3 [u0, u1, u2, u3]) < Real.sqrt 2 := by
+      rw [TRUNCATE_SIMPLEX_EXPLICIT_3]
+      exact hlt
+    have htr := TEZFFSK V [u0, u1, u2, u3] [v0, v1, v2, v3] 3 hs hp hb1 hb2
+      hrogers hdim (by norm_num) hlt3
+    have heq : [u0, u1, u2, u3] = [v0, v1, v2, v3] := by
+      simpa [(TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 u2 u3),
+        (TRUNCATE_SIMPLEX_EXPLICIT_3 v0 v1 v2 v3)] using htr
+    rw [heq]
 
 end Kepler.Text
