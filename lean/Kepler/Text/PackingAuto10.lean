@@ -681,6 +681,163 @@ theorem INTER_RCONE_GE_IMP_BETWEEN_PROJ_POINT {a b p : V3} {r : ℝ}
   rw [e1, e2, hab']
   ring
 
+private theorem inter_rcone_ge_le_aux_p10 {a b p s : V3} {r : ℝ}
+    (hab : ¬(a = b)) (hs : s = midpoint ℝ a b) (hr : 0 < r)
+    (hpa : ¬(p = a)) (hpb : ¬(p = b)) (hinv : 1 / 2 ≤ r ^ 2)
+    (hmem : p ∈ rconeGe a b r ∩ rconeGe b a r) :
+    dist s p ≤ dist s a := by
+  obtain ⟨h1, h2⟩ := hmem
+  simp only [rconeGe, Set.mem_setOf_eq] at h1 h2
+  have h1i : inner ℝ (p - a) (b - a) ≥ dist p a * dist b a * r := by
+    rw [inner_eq_dot]; exact h1
+  have h2i : inner ℝ (p - b) (a - b) ≥ dist p b * dist a b * r := by
+    rw [inner_eq_dot]; exact h2
+  set v : V3 := b - a with hv
+  have hv0 : v ≠ 0 := by
+    rw [hv]; exact sub_ne_zero.mpr (Ne.symm hab)
+  have hnvpos : 0 < ‖v‖ := norm_pos_iff.mpr hv0
+  have hvvpos : 0 < v ⬝ᵥ v := by
+    rw [← norm_sq_eq_dot]
+    exact pow_pos hnvpos 2
+  have hvvne : v ⬝ᵥ v ≠ 0 := ne_of_gt hvvpos
+  set τ : ℝ := ((p - a) ⬝ᵥ v) / (v ⬝ᵥ v) with hτ
+  have hpa_dot : (p - a) ⬝ᵥ v = τ * (v ⬝ᵥ v) := by
+    rw [hτ]
+    exact (div_mul_cancel₀ _ hvvne).symm
+  have hpa_inner : inner ℝ (p - a) v = τ * ‖v‖ ^ 2 := by
+    rw [inner_eq_dot, hpa_dot, norm_sq_eq_dot]
+  set A : ℝ := τ * ‖v‖ with hAdef
+  set B : ℝ := (1 - τ) * ‖v‖ with hBdef
+  have hAB : A + B = ‖v‖ := by rw [hAdef, hBdef]; ring
+  have h1v : inner ℝ (p - a) v ≥ ‖p - a‖ * ‖v‖ * r := by
+    simpa only [dist_eq_norm] using h1i
+  have hA_ge : ‖p - a‖ * r ≤ A := by
+    have hmul : (‖p - a‖ * r) * ‖v‖ ≤ A * ‖v‖ := by
+      have hleft : A * ‖v‖ = inner ℝ (p - a) v := by
+        rw [hAdef, hpa_inner]; ring
+      rw [hleft]
+      nlinarith [h1v]
+    exact le_of_mul_le_mul_right hmul hnvpos
+  have hApos : 0 < A := by
+    have hnormpa : 0 < ‖p - a‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hpa)
+    have hpos : 0 < ‖p - a‖ * r := mul_pos hnormpa hr
+    linarith
+  have h2v : inner ℝ (p - b) (a - b) ≥ ‖p - b‖ * ‖v‖ * r := by
+    have h := h2i
+    have habv : a - b = -v := by rw [hv]; abel
+    have hdist : ‖a - b‖ = ‖v‖ := by rw [habv, norm_neg]
+    rw [dist_eq_norm, dist_eq_norm, hdist] at h
+    exact h
+  have hpb_inner : inner ℝ (p - b) (a - b) = ‖v‖ ^ 2 - inner ℝ (p - a) v := by
+    have habv : a - b = -v := by rw [hv]; abel
+    have e1 : p - b = (p - a) - v := by rw [hv]; abel
+    rw [e1, habv, inner_sub_left, inner_neg_right, inner_neg_right,
+      real_inner_self_eq_norm_sq]
+    ring
+  have hB_ge : ‖p - b‖ * r ≤ B := by
+    have hleft : B * ‖v‖ = inner ℝ (p - b) (a - b) := by
+      rw [hBdef, hpb_inner, hpa_inner]
+      ring
+    have hmul : (‖p - b‖ * r) * ‖v‖ ≤ B * ‖v‖ := by
+      rw [hleft]
+      nlinarith [h2v]
+    exact le_of_mul_le_mul_right hmul hnvpos
+  have hBpos : 0 < B := by
+    have hnormpb : 0 < ‖p - b‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hpb)
+    have hpos : 0 < ‖p - b‖ * r := mul_pos hnormpb hr
+    linarith
+  set hsq : ℝ := ‖p - a‖ ^ 2 - A ^ 2 with hsq_def
+  have hA_le : A ≤ ‖p - a‖ := by
+    have hinnerle := real_inner_le_norm (p - a) v
+    have hAeq : A = inner ℝ (p - a) v / ‖v‖ := by
+      rw [hAdef, hpa_inner]; field_simp
+    rw [hAeq]
+    calc inner ℝ (p - a) v / ‖v‖ ≤ (‖p - a‖ * ‖v‖) / ‖v‖ :=
+          div_le_div_of_nonneg_right hinnerle hnvpos.le
+      _ = ‖p - a‖ := by field_simp
+  have hsq_nonneg : 0 ≤ hsq := by
+    rw [hsq_def]
+    have h2 := pow_le_pow_left₀ hApos.le hA_le 2
+    linarith
+  have hcone1 : r ^ 2 * (A ^ 2 + hsq) ≤ A ^ 2 := by
+    have h1sq : (‖p - a‖ * r) ^ 2 ≤ A ^ 2 := by
+      rw [sq_le_sq, abs_of_nonneg (mul_nonneg (norm_nonneg _) hr.le),
+        abs_of_nonneg hApos.le]
+      exact hA_ge
+    have hexp : (‖p - a‖ * r) ^ 2 = r ^ 2 * ‖p - a‖ ^ 2 := by ring
+    rw [hexp] at h1sq
+    have hsqn : ‖p - a‖ ^ 2 = A ^ 2 + hsq := by rw [hsq_def]; ring
+    nlinarith
+  have hpb_norm : ‖p - b‖ ^ 2 = B ^ 2 + hsq := by
+    have e1 : p - b = (p - a) - v := by rw [hv]; abel
+    rw [e1, norm_sub_sq_real, hpa_inner]
+    rw [hBdef, hsq_def]
+    ring
+  have hcone2 : r ^ 2 * (B ^ 2 + hsq) ≤ B ^ 2 := by
+    have h2sq : (‖p - b‖ * r) ^ 2 ≤ B ^ 2 := by
+      rw [sq_le_sq, abs_of_nonneg (mul_nonneg (norm_nonneg _) hr.le),
+        abs_of_nonneg hBpos.le]
+      exact hB_ge
+    have hexp : (‖p - b‖ * r) ^ 2 = r ^ 2 * ‖p - b‖ ^ 2 := by ring
+    rw [hexp, hpb_norm] at h2sq
+    nlinarith
+  have hsq_le_AB : hsq ≤ A * B := by
+    rcases le_or_gt (r ^ 2) 1 with hr2 | hr2
+    · have hr2pos : 0 < r ^ 2 := by positivity
+      have hb1 : r ^ 2 * hsq ≤ (1 - r ^ 2) * A ^ 2 := by nlinarith [hcone1]
+      have hb2 : r ^ 2 * hsq ≤ (1 - r ^ 2) * B ^ 2 := by nlinarith [hcone2]
+      have hdiv1 : hsq ≤ ((1 - r ^ 2) / r ^ 2) * A ^ 2 := by
+        rw [div_mul_eq_mul_div, le_div_iff₀ hr2pos]
+        nlinarith [hb1]
+      have hdiv2 : hsq ≤ ((1 - r ^ 2) / r ^ 2) * B ^ 2 := by
+        rw [div_mul_eq_mul_div, le_div_iff₀ hr2pos]
+        nlinarith [hb2]
+      have hbeta_le : (1 - r ^ 2) / r ^ 2 ≤ 1 := by
+        rw [div_le_one hr2pos]
+        linarith
+      have hsqA : hsq ≤ A ^ 2 := by
+        calc hsq ≤ ((1 - r ^ 2) / r ^ 2) * A ^ 2 := hdiv1
+          _ ≤ 1 * A ^ 2 := mul_le_mul_of_nonneg_right hbeta_le (sq_nonneg A)
+          _ = A ^ 2 := one_mul _
+      have hsqB : hsq ≤ B ^ 2 := by
+        calc hsq ≤ ((1 - r ^ 2) / r ^ 2) * B ^ 2 := hdiv2
+          _ ≤ 1 * B ^ 2 := mul_le_mul_of_nonneg_right hbeta_le (sq_nonneg B)
+          _ = B ^ 2 := one_mul _
+      rcases le_total A B with hle | hle
+      · calc hsq ≤ A ^ 2 := hsqA
+          _ = A * A := (sq A)
+          _ ≤ A * B := mul_le_mul_of_nonneg_left hle hApos.le
+      · calc hsq ≤ B ^ 2 := hsqB
+          _ = B * B := (sq B)
+          _ ≤ B * A := mul_le_mul_of_nonneg_left hle hBpos.le
+          _ = A * B := mul_comm B A
+    · exfalso
+      have hA2pos : 0 < A ^ 2 := by positivity
+      have hr2A : A ^ 2 < r ^ 2 * A ^ 2 := by nlinarith
+      have hr2hsq : 0 ≤ r ^ 2 * hsq := mul_nonneg (by linarith) hsq_nonneg
+      nlinarith [hcone1]
+  have hsa : s - a = (1 / 2 : ℝ) • v := by
+    rw [hs, hv]
+    rw [midpoint_sub_left]
+    norm_num
+  have hps_sq : ‖p - s‖ ^ 2 = hsq + ((A - B) / 2) ^ 2 := by
+    have e : p - s = (p - a) - (s - a) := by abel
+    rw [e, norm_sub_sq_real, hsa, norm_smul, Real.norm_eq_abs,
+      abs_of_nonneg (by norm_num : (0:ℝ) ≤ 1 / 2), real_inner_smul_right]
+    rw [hpa_inner, hsq_def, hAdef, hBdef]
+    ring
+  have hsa_sq : ‖a - s‖ ^ 2 = ((A + B) / 2) ^ 2 := by
+    rw [norm_sub_rev, hsa, norm_smul, Real.norm_eq_abs,
+      abs_of_nonneg (by norm_num : (0:ℝ) ≤ 1 / 2)]
+    rw [← hAB]
+    ring
+  have hsq_dists : dist s p ^ 2 ≤ dist s a ^ 2 := by
+    rw [dist_eq_norm, dist_eq_norm, norm_sub_rev s p, norm_sub_rev s a]
+    rw [hps_sq, hsa_sq]
+    nlinarith [hsq_le_AB]
+  have h := sq_le_sq.mp hsq_dists
+  rwa [abs_of_nonneg (dist_nonneg), abs_of_nonneg (dist_nonneg)] at h
+
 /-- HOL `INTER_RCONE_GE_LE_lemma` (URRPHBZ1.hl:70-363): for a point in two
 mutually opposite `rcone_ge`s with `inv 2 ≤ r^2`, if the perpendicular foot
 lies between `a` and the midpoint `s`, then `p` is no further from `s` than
@@ -692,10 +849,31 @@ theorem INTER_RCONE_GE_LE_lemma {a b p s : V3} {r : ℝ}
     (hbet : betweenP10 (projPoint_p10 (b - a) (p - a) + a) a s)
     (hmem : p ∈ rconeGe a b r ∩ rconeGe b a r) :
     dist s p ≤ dist s a := by
-  sorry
-  -- NEEDS: the 300-line HL rhombus comparison (URRPHBZ1.hl:70-363, via
-  -- SIMPLEX_FURTHEST_LE). Out of budget; the squeezed-projection setup
-  -- (INTER_RCONE_GE_IMP_BETWEEN_PROJ_POINT, proved above) is the input.
+  exact inter_rcone_ge_le_aux_p10 hab hs hr hpa hpb hinv hmem
+
+private theorem HL_2_p10 (u v : V3) : hl [u, v] = dist u v / 2 := by
+  have hset : setOfList [u, v] = ({u, v} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hcc : circumcenter ({u, v} : Set V3) = midpoint ℝ u v := CIRCUMCENTER_2 u v
+  have hexi : ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w := by
+    refine ⟨dist (midpoint ℝ u v) u, ?_⟩
+    rw [hcc]
+    intro w hw
+    rcases Set.mem_insert_iff.mp hw with rfl | hw'
+    · rfl
+    · rcases Set.mem_singleton_iff.mp hw' with rfl
+      simp
+  have key : radV ({u, v} : Set V3) = dist (circumcenter ({u, v} : Set V3)) u :=
+    (Classical.epsilon_spec (p := fun c : ℝ => ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w) hexi) u (Set.mem_insert u {v})
+  have hhl : hl [u, v] = dist (circumcenter ({u, v} : Set V3)) u := by
+    show radV (setOfList [u, v]) = _
+    rw [hset, key]
+  rw [hhl, hcc]
+  simp
+  ring
 
 /-- HOL `MCELL_2_PROPERTIES_lemma1` (URRPHBZ1.hl:366-589): every point of the
 edge cell `mcell2` is within `hl (truncate_simplex 1 ul)` of the midpoint of
@@ -704,9 +882,66 @@ theorem MCELL_2_PROPERTIES_lemma1 {V : Set V3} {ul : List V3} {p : V3}
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
     (hp : p ∈ mcell2 V ul) :
     dist (midpoint ℝ (hdV ul) (hdV ul.tail)) p ≤ hl (truncateSimplex 1 ul) := by
-  sorry
-  -- NEEDS: URRPHBZ1.hl:366-589 (the edge-cell capped estimate via
-  -- INTER_RCONE_GE_LE_lemma + the packing distance bound). Not ported.
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+  subst hul
+  have hT : truncateSimplex 1 [u0, u1, u2, u3] = [u0, u1] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2
+  have hcond : hl (truncateSimplex 1 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+      Real.sqrt 2 ≤ hl [u0, u1, u2, u3] := by
+    by_contra hc
+    rw [mcell2, if_neg hc] at hp
+    exact hp
+  have hmem := hp
+  rw [mcell2, if_pos hcond] at hmem
+  dsimp only at hmem
+  obtain ⟨hcones, hwedge⟩ := hmem
+  rw [hT] at hcones
+  change dist (midpoint ℝ u0 u1) p ≤ hl (truncateSimplex 1 [u0, u1, u2, u3])
+  rw [hT]
+  -- distinctness of u0 and u1
+  have hb1 : barV V 1 [u0, u1] := by
+    have h := TRUNCATE_SIMPLEX_BARV V 1 3 [u0, u1, u2, u3] hbar (by omega)
+    rwa [hT] at h
+  have hcard1 := BARV_IMP_LENGTH_EQ_CARD V [u0, u1] 1 hpack hb1
+  have hab : ¬(u0 = u1) := by
+    intro he
+    subst he
+    have hc : Nat.card (setOfList [u0, u0]) = 1 := by simp [setOfList]
+    omega
+  have hhl : hl [u0, u1] = dist u0 u1 / 2 := HL_2_p10 u0 u1
+  by_cases hp0 : p = u0
+  · rw [hp0, hhl, dist_midpoint_left]
+    have h2 : ‖(2:ℝ)‖ = 2 := by norm_num
+    rw [h2]
+    linarith
+  by_cases hp1 : p = u1
+  · rw [hp1, hhl, dist_midpoint_right]
+    have h2 : ‖(2:ℝ)‖ = 2 := by norm_num
+    rw [h2]
+    linarith
+  have hsub : setOfList [u0, u1] ⊆ V := BARV_SUBSET V 1 [u0, u1] hb1
+  have hu0V : u0 ∈ V := hsub (by simp [setOfList])
+  have hu1V : u1 ∈ V := hsub (by simp [setOfList])
+  have hle2 : 2 ≤ dist u0 u1 := Packing.dist_ge_two hpack hu0V hu1V hab
+  have hhl1 : 1 ≤ hl [u0, u1] := by rw [hhl]; linarith
+  have hdistpos : 0 < dist u0 u1 := dist_pos.mpr hab
+  have hr : 0 < hl [u0, u1] / Real.sqrt 2 := by
+    have hpos : 0 < hl [u0, u1] := by rw [hhl]; linarith
+    exact div_pos hpos (Real.sqrt_pos.mpr (by norm_num))
+  have hinv : 1 / 2 ≤ (hl [u0, u1] / Real.sqrt 2) ^ 2 := by
+    rw [div_pow, Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2)]
+    have h2 : (1:ℝ) ≤ hl [u0, u1] ^ 2 := by
+      simpa using pow_le_pow_left₀ (by norm_num : (0:ℝ) ≤ 1) hhl1 2
+    linarith
+  have hres := inter_rcone_ge_le_aux_p10 (a := u0) (b := u1) (p := p)
+    (s := midpoint ℝ u0 u1) (r := hl [u0, u1] / Real.sqrt 2)
+    hab rfl hr hp0 hp1 hinv hcones
+  have hsu0 : dist (midpoint ℝ u0 u1) u0 = hl [u0, u1] := by
+    rw [hhl, dist_midpoint_left]
+    have h2 : ‖(2:ℝ)‖ = 2 := by norm_num
+    rw [h2]
+    ring
+  rwa [hsu0] at hres
 
 /-! ### The Rogers simplex: finiteness, boundedness, measurability -/
 
@@ -822,6 +1057,147 @@ private theorem measurableSet_rconeGt_p10 (v w : V3) (a : ℝ) :
   rw [hset]
   exact ((isOpen_Ioi).preimage (continuous_rcone_p10 v w a)).measurableSet
 
+private lemma sum_subtype_finset_p10 {M : Type*} [AddCommMonoid M]
+    (S : Finset V3) (F : V3 → M) :
+    (∑ w : S, F w) = ∑ w ∈ S, F w := by
+  rw [Finset.sum_coe_sort_eq_attach]
+  exact Finset.sum_attach S F
+
+private lemma sum_ite_subtype_p10 {M : Type*} [AddCommMonoid M]
+    (S : Finset V3) (g : S → M) :
+    (∑ z ∈ S, (if hz : z ∈ S then g ⟨z, hz⟩ else 0)) = ∑ w : S, g w := by
+  rw [← Finset.sum_attach (s := S)
+    (f := fun z => if hz : z ∈ S then g ⟨z, hz⟩ else 0)]
+  rw [Finset.sum_coe_sort_eq_attach (s := S) (f := g)]
+  apply Finset.sum_congr rfl
+  intro z _
+  simp only [dif_pos z.property]
+
+private lemma affGe_finset_coeff_p10 {s t : Set V3} (S : Finset V3)
+    (hS : (S : Set V3) = s ∪ t) :
+    affGe s t = {v : V3 | ∃ g : S → ℝ,
+      (∀ w : S, (w : V3) ∈ t → 0 ≤ g w) ∧
+      (∑ w, g w = 1) ∧
+      v = ∑ w, g w • (w : V3)} := by
+  ext v
+  constructor
+  · rintro ⟨f, h, hveq, hpos, hsum⟩
+    have hEqS : h.toFinset = S := by
+      ext x
+      rw [Set.Finite.mem_toFinset, ← hS, Finset.mem_coe]
+    refine ⟨fun w => f w, ?_, ?_, ?_⟩
+    · intro w hwt
+      exact hpos w hwt
+    · calc (∑ w : S, f (w : V3)) = ∑ w ∈ S, f w := sum_subtype_finset_p10 S f
+        _ = ∑ w ∈ h.toFinset, f w := by rw [hEqS]
+        _ = 1 := hsum
+    · calc v = ∑ w ∈ h.toFinset, f w • w := hveq
+        _ = ∑ w ∈ S, f w • w := by rw [hEqS]
+        _ = ∑ w : S, f w • (w : V3) :=
+            (sum_subtype_finset_p10 S (fun w => f w • w)).symm
+  · rintro ⟨g, hgpos, hgsum, rfl⟩
+    have hfin : (s ∪ t).Finite := by
+      rw [← hS]; exact S.finite_toSet
+    have hEqS : hfin.toFinset = S := by
+      ext x
+      rw [Set.Finite.mem_toFinset, ← hS, Finset.mem_coe]
+    refine ⟨fun z => if hz : z ∈ S then g ⟨z, hz⟩ else 0, hfin, ?_, ?_, ?_⟩
+    · have h0 : (∑ z ∈ S, (if hz : z ∈ S then g ⟨z, hz⟩ else 0) • z)
+          = ∑ w : S, g w • (w : V3) := by
+        rw [← sum_ite_subtype_p10 S (fun w => g w • (w : V3))]
+        apply Finset.sum_congr rfl
+        intro z hz
+        simp only [dif_pos hz]
+      rw [hEqS]
+      exact h0.symm
+    · intro z hzt
+      have hzS : z ∈ S := by
+        rw [← Finset.mem_coe, hS]
+        exact Set.mem_union_right s hzt
+      simp only [dif_pos hzS]
+      exact hgpos ⟨z, hzS⟩ hzt
+    · calc (∑ z ∈ hfin.toFinset, (if hz : z ∈ S then g ⟨z, hz⟩ else 0))
+          = ∑ z ∈ S, (if hz : z ∈ S then g ⟨z, hz⟩ else 0) := by rw [hEqS]
+        _ = ∑ w : S, g w := sum_ite_subtype_p10 S g
+        _ = 1 := hgsum
+
+private theorem measurableSet_affGe_finite_p10 {s t : Set V3}
+    (hs : s.Finite) (ht : t.Finite) : MeasurableSet (affGe s t) := by
+  classical
+  let S : Finset V3 := (hs.union ht).toFinset
+  have hS : (S : Set V3) = s ∪ t := by
+    ext x
+    simp [S]
+  let K : ℕ → Set (S → ℝ) := fun n => {g | (∀ w : S, (w : V3) ∈ t → 0 ≤ g w) ∧
+      (∑ w, g w = 1) ∧ (∀ w : S, |g w| ≤ (n : ℝ))}
+  let φ : (S → ℝ) → V3 := fun g => ∑ w : S, g w • (w : V3)
+  have hφcont : Continuous φ := by
+    rw [show φ = fun g : S → ℝ => ∑ w : S, g w • (w : V3) from rfl]
+    exact continuous_finsetSum _ (fun w _ => (continuous_apply w).smul continuous_const)
+  have hEq : affGe s t = ⋃ n : ℕ, φ '' K n := by
+    rw [affGe_finset_coeff_p10 S hS]
+    ext v
+    constructor
+    · rintro ⟨g, hgpos, hgsum, rfl⟩
+      let n : ℕ := Finset.univ.sup (fun w : S => ⌈|g w|⌉₊)
+      refine Set.mem_iUnion.mpr ⟨n, ?_⟩
+      have hbound : ∀ w : S, |g w| ≤ (n : ℝ) := by
+        intro w
+        calc |g w| ≤ (⌈|g w|⌉₊ : ℝ) := Nat.le_ceil _
+          _ ≤ (n : ℝ) := by
+              exact_mod_cast Finset.le_sup (s := (Finset.univ : Finset S))
+                (f := fun w : S => ⌈|g w|⌉₊) (Finset.mem_univ w)
+      exact Set.mem_image_of_mem φ ⟨hgpos, hgsum, hbound⟩
+    · intro hv
+      obtain ⟨n, hv⟩ := Set.mem_iUnion.mp hv
+      obtain ⟨g, hgK, hφg⟩ := hv
+      rw [← hφg]
+      exact ⟨g, hgK.1, hgK.2.1, rfl⟩
+  rw [hEq]
+  apply MeasurableSet.iUnion
+  intro n
+  have hclosed1 : IsClosed {g : S → ℝ | ∀ w : S, (w : V3) ∈ t → 0 ≤ g w} := by
+    have hset : {g : S → ℝ | ∀ w : S, (w : V3) ∈ t → 0 ≤ g w}
+        = ⋂ w : S, ⋂ (_ : (w : V3) ∈ t), {g : S → ℝ | 0 ≤ g w} := by
+      ext g
+      simp only [Set.mem_setOf_eq, Set.mem_iInter]
+    rw [hset]
+    exact isClosed_iInter (fun w => isClosed_iInter (fun _ =>
+      isClosed_Ici.preimage (continuous_apply w)))
+  have hclosed2 : IsClosed {g : S → ℝ | (∑ w, g w) = 1} := by
+    have hcont : Continuous (fun g : S → ℝ => ∑ w, g w) :=
+      continuous_finsetSum _ (fun w _ => continuous_apply w)
+    have hset : {g : S → ℝ | (∑ w, g w) = 1}
+        = (fun g : S → ℝ => ∑ w, g w) ⁻¹' ({1} : Set ℝ) := rfl
+    rw [hset]
+    exact isClosed_singleton.preimage hcont
+  have hclosed3 : IsClosed {g : S → ℝ | ∀ w : S, |g w| ≤ (n : ℝ)} := by
+    have hset : {g : S → ℝ | ∀ w : S, |g w| ≤ (n : ℝ)}
+        = ⋂ w : S, {g : S → ℝ | |g w| ≤ (n : ℝ)} := by
+      ext g
+      simp only [Set.mem_setOf_eq, Set.mem_iInter]
+    rw [hset]
+    exact isClosed_iInter (fun w =>
+      isClosed_Iic.preimage ((continuous_apply w).abs))
+  have hKclosed : IsClosed (K n) := by
+    show IsClosed {g : S → ℝ | (∀ w : S, (w : V3) ∈ t → 0 ≤ g w) ∧
+      (∑ w, g w = 1) ∧ (∀ w : S, |g w| ≤ (n : ℝ))}
+    exact hclosed1.inter (hclosed2.inter hclosed3)
+  have hKbounded : Bornology.IsBounded (K n) := by
+    show Bornology.IsBounded {g : S → ℝ | (∀ w : S, (w : V3) ∈ t → 0 ≤ g w) ∧
+      (∑ w, g w = 1) ∧ (∀ w : S, |g w| ≤ (n : ℝ))}
+    rw [Metric.isBounded_iff_subset_closedBall (0 : S → ℝ)]
+    refine ⟨(n : ℝ), ?_⟩
+    intro g hg
+    rw [Metric.mem_closedBall, dist_zero_right]
+    rw [pi_norm_le_iff_of_nonneg (Nat.cast_nonneg n)]
+    intro w
+    simpa [Real.norm_eq_abs] using hg.2.2 w
+  haveI : ProperSpace (S → ℝ) := FiniteDimensional.proper ℝ _
+  have hKcompact : IsCompact (K n) :=
+    Metric.isCompact_iff_isClosed_bounded.mpr ⟨hKclosed, hKbounded⟩
+  exact (hKcompact.image hφcont).measurableSet
+
 /-- Measurability of the `mcell2` wedge `aff_ge {u0, u1} {p, q}`.
 NEEDS: an explicit wedge/bisector representation of `affGe` — the port's
 closedness lemmas (`TopologyFan.closed_aff_ge_2_1`) require `¬Collinear3`
@@ -830,13 +1206,7 @@ not directly measurable. Filled in when a general `affGe` Borel lemma
 lands (Auto9/Auto11 merge). -/
 private theorem measurableSet_affGe_wedge_p10 (u0 u1 p q : V3) :
     MeasurableSet (affGe {u0, u1} {p, q}) := by
-  sorry
-  -- NEEDS: cone-parametrization route (mapped 2026-09-30, see
-  -- /tmp/weisou_handoff.md): from the Affsign definition,
-  -- affGe {u0, u1} {p, q} = u0 + cone(u1 - u0, p - u0, q - u0); a
-  -- finitely-generated cone is the countable union of compact linear
-  -- images of the cubes [0, n]^3 (measurable), bridged through the
-  -- Affsign finset-sum membership (~100 lines). Not filled.
+  exact measurableSet_affGe_finite_p10 (by simp) (by simp)
 
 /-- HOL `MEASURABLE_MCELL` (URRPHBZ1.hl:673-682): every Marchal cell is
 measurable. HL reaches this via `MEASURABLE_COMPACT` (`CLOSED_MCELL` +
