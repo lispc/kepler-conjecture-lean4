@@ -2060,15 +2060,914 @@ theorem mi_gamma3fYDivSqrtdelta_arg3 (m4 m5 m6 : ℝ → ℝ) (y1 y2 y3 y4 y5 y6
     yOfX (gamma3fXDivSqrtdelta (m4 y4) (m5 y5) (m6 y6)) y1 y2 y3 y4 y5 y6
       = yOfX (gamma3fXDivSqrtdelta (m4 y4) (m5 y5) (m6 y6)) 1 1 1 y4 y5 y6 := rfl
 
+section P21Euler4Kit
+
+set_option maxHeartbeats 50000000
+set_option maxRecDepth 20000
+
+/-- The `R[J]/(J^2+1)` element `a + b*J`, realized as a complex number. -/
+private def mi_p21eJ (a b : ℝ) : ℂ := a + b * Complex.I
+
+private theorem mi_p21eJ_mul (a b c d : ℝ) :
+    mi_p21eJ a b * mi_p21eJ c d = mi_p21eJ (a * c - b * d) (a * d + b * c) := by
+  simp only [mi_p21eJ, Complex.ext_iff, Complex.mul_re, Complex.mul_im, Complex.add_re,
+    Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.ofReal_re, Complex.ofReal_im,
+    Complex.I_re, Complex.I_im]
+  constructor <;> ring
+
+private theorem mi_p21eJ_inj {a b c d : ℝ} (h : mi_p21eJ a b = mi_p21eJ c d) : a = c ∧ b = d := by
+  have h1 := congrArg Complex.re h
+  have h2 := congrArg Complex.im h
+  simp only [mi_p21eJ, Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+    Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im] at h1 h2
+  norm_num at h1 h2
+  exact ⟨h1, h2⟩
+
+private theorem mi_p21eJ_injEq {a b c d : ℝ} :
+    mi_p21eJ a b = mi_p21eJ c d ↔ a = c ∧ b = d := ⟨mi_p21eJ_inj, fun h => by obtain ⟨e1, e2⟩ := h; simp only [e1, e2]⟩
+
+private theorem mi_p21e_atn2 (a b : ℝ) (ha : 0 < a) : atn2 a b = Real.arctan (b / a) := by
+  rw [atn2]
+  split_ifs with h1 h2 h3
+  · rfl
+  · have hba : 0 < b / a := div_pos h2 ha
+    rw [show a / b = (b / a)⁻¹ from by field_simp, Real.arctan_inv_of_pos hba]
+    ring
+  · have hz : 0 < -(b / a) := by
+      rw [neg_pos]
+      exact div_neg_of_neg_of_pos h3 ha
+    have h1' : a / b = -(-(b / a))⁻¹ := by field_simp
+    have h2' : b / a = -(-(b / a)) := by ring
+    rw [h1', Real.arctan_neg, Real.arctan_inv_of_pos hz, h2', Real.arctan_neg]
+    ring
+  · have hb0 : b = 0 := by linarith
+    rw [hb0] at h1
+    simp at h1
+    linarith
+
+private theorem mi_p21e_matan (z : ℝ) (hz : 0 < z) :
+    matan z = Real.arctan (Real.sqrt z) / Real.sqrt z := by
+  rw [matan, if_neg (ne_of_gt hz), if_pos hz]
+
+private theorem mi_p21e_dihsym (a b c : ℝ) : dihXf a b 2 2 2 c = dihXf a 2 c 2 b 2 := by
+  have hd : deltaX a b 2 2 2 c = deltaX a 2 c 2 b 2 := by simp only [deltaX]; ring
+  have hd4 : deltaX4 a b 2 2 2 c = deltaX4 a 2 c 2 b 2 := by simp only [deltaX4]; ring
+  unfold dihXf
+  rw [hd, hd4]
+
+/-! ### complex-exp helpers -/
+
+private theorem mi_p21e_expI (x : ℝ) :
+    Complex.exp (Complex.I * x) = Complex.cos x + Complex.sin x * Complex.I := by
+  apply Complex.ext
+  · rw [show Complex.I * x = x * Complex.I from by ring, Complex.exp_ofReal_mul_I_re]
+    simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.cos_ofReal_re,
+      Complex.ofReal_im]
+  · rw [show Complex.I * x = x * Complex.I from by ring, Complex.exp_ofReal_mul_I_im]
+    simp [Complex.add_im, Complex.mul_im, Complex.I_im, Complex.sin_ofReal_re,
+      Complex.cos_ofReal_im]
+
+private theorem mi_p21e_expI' (x : ℝ) :
+    Complex.exp (x * Complex.I) = Complex.cos x + Complex.sin x * Complex.I := by
+  rw [show x * Complex.I = Complex.I * x from by ring, mi_p21e_expI]
+
+private theorem mi_p21e_expIpi : Complex.exp (Complex.I * Real.pi) = -1 := by
+  rw [mi_p21e_expI, ← Complex.ofReal_cos, ← Complex.ofReal_sin, Real.cos_pi, Real.sin_pi]
+  norm_num
+
+private theorem mi_p21e_expIc (z : ℂ) :
+    Complex.exp (Complex.I * z) = Complex.cos z + Complex.sin z * Complex.I := by
+  rw [← mul_comm z Complex.I, Complex.exp_mul_I]
+
+private theorem mi_p21e_T (e q : ℝ) (hq : 0 < q) :
+    Complex.exp (Complex.I * (Real.pi / 2 - Real.arctan (e / q)))
+      = mi_p21eJ e q / Real.sqrt (e ^ 2 + q ^ 2) := by
+  have hc : Complex.cos (↑Real.pi / 2 - ↑(Real.arctan (e / q)))
+      = ↑(Real.sin (Real.arctan (e / q))) := by
+    have harg : (↑Real.pi / 2 - ↑(Real.arctan (e / q)) : ℂ)
+        = ((Real.pi / 2 - Real.arctan (e / q) : ℝ) : ℂ) := by push_cast; ring
+    rw [harg, ← Complex.ofReal_cos, Real.cos_pi_div_two_sub]
+  have hs : Complex.sin (↑Real.pi / 2 - ↑(Real.arctan (e / q)))
+      = ↑(Real.cos (Real.arctan (e / q))) := by
+    have harg : (↑Real.pi / 2 - ↑(Real.arctan (e / q)) : ℂ)
+        = ((Real.pi / 2 - Real.arctan (e / q) : ℝ) : ℂ) := by push_cast; ring
+    rw [harg, ← Complex.ofReal_sin, Real.sin_pi_div_two_sub]
+  rw [mi_p21e_expIc, hc, hs, Real.sin_arctan, Real.cos_arctan, mi_p21eJ]
+  have h1 : Real.sqrt (1 + (e / q) ^ 2) = Real.sqrt (e ^ 2 + q ^ 2) / q := by
+    rw [show 1 + (e / q) ^ 2 = (e ^ 2 + q ^ 2) / q ^ 2 from by field_simp; ring,
+      Real.sqrt_div (by positivity) (q ^ 2), Real.sqrt_sq (le_of_lt hq)]
+  rw [h1]
+  field_simp
+  push_cast
+  ring
+
+private theorem mi_p21e_dih_atn (x1 x2 x3 x4 x5 x6 : ℝ) (h1 : 0 < x1)
+    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) :
+    dihXf x1 x2 x3 x4 x5 x6
+      = Real.pi / 2 - Real.arctan (deltaX4 x1 x2 x3 x4 x5 x6
+          / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) := by
+  have hA : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) :=
+    Real.sqrt_pos.mpr (by positivity)
+  unfold dihXf
+  rw [mi_p21e_atn2 _ _ hA]
+  rw [show (-deltaX4 x1 x2 x3 x4 x5 x6 / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+      = -(deltaX4 x1 x2 x3 x4 x5 x6 / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) from
+    by ring, Real.arctan_neg]
+  ring
+
+/-! ### The W-product chain (fixed branch order; d-form statements) -/
+
+private theorem mi_p21e_g2 (u v w t d E1 E2 : ℝ) (htd : t ^ 2 = d)
+    (hE1 : E1 = u ^ 2 * (v ^ 2 + w ^ 2 - u ^ 2))
+    (hE2 : E2 = v ^ 2 * (u ^ 2 + w ^ 2 - v ^ 2)) :
+    mi_p21eJ E1 (2 * t * u) * mi_p21eJ E2 (2 * t * v)
+      = mi_p21eJ (E1 * E2 - 4 * d * u * v) (2 * t * (v * E1 + u * E2)) := by
+  rw [mi_p21eJ_mul, mi_p21eJ_injEq, hE1, hE2]
+  constructor
+  · ring_nf; rw [htd]; try ring
+  · ring
+
+private theorem mi_p21e_g3 (u v w t d s E1 E2 E3 : ℝ) (htd : t ^ 2 = d) :
+    mi_p21eJ (E1 * E2 - 4 * d * u * v) (2 * t * (v * E1 + u * E2)) * mi_p21eJ E3 (2 * s * t)
+      = mi_p21eJ ((E1 * E2 - 4 * d * u * v) * E3 - 4 * s * d * (v * E1 + u * E2))
+          (2 * t * (s * (E1 * E2 - 4 * d * u * v) + (v * E1 + u * E2) * E3)) := by
+  rw [mi_p21eJ_mul, mi_p21eJ_injEq]
+  constructor
+  · ring_nf; rw [htd]; try ring
+  · ring
+
+
+
+
+
+
+/-- Euler's solid-angle formula at the `(u^2, v^2, 2, 2, 2, w^2)`-pinned
+tetrahedron: the spherical-excess form equals the closed form
+`pi - 2*arctan(X/t)` (the `EULER_TRIANGLE` specialization consumed by
+`sol_x_sol_euler_x`, merge_ineq.hl:841; W-product method: the product
+`Z1*Z2*Z3*(t+X*I)^2` over `R[J]/(J^2+1)` elements equals the positive
+real `M`, so `e^{i(S-R)} = 1`, and the pinning `S in (-pi, 2*pi)`,
+`R in (0, pi)` forces `S = R`). -/
+private theorem mi_p21e_euler (u v w t s X E1 E2 E3 : ℝ)
+    (hu : 0 < u) (hv : 0 < v) (hw : 0 < w)
+    (hu8 : u ^ 2 < 8) (hv8 : v ^ 2 < 8)
+    (h1 : u < v + w) (h2 : v < u + w) (h3 : w < u + v)
+    (ht0 : 0 < t) (htd : t ^ 2 = (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4))
+    (hΔ : 0 < (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4))
+    (hs2 : s ^ 2 = 2) (hs0 : 0 < s)
+    (hE1 : E1 = u ^ 2 * (v ^ 2 + w ^ 2 - u ^ 2))
+    (hE2 : E2 = v ^ 2 * (u ^ 2 + w ^ 2 - v ^ 2))
+    (hE3 : E3 = 4 * (u ^ 2 + v ^ 2 - w ^ 2) - u ^ 2 * v ^ 2)
+    (hX : X = (2 * s * u * v + u * v ^ 2 + u ^ 2 * v + s * (u ^ 2 + v ^ 2 - w ^ 2)))
+    (hXp : 0 < X) :
+    (Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + (Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+      + (Real.pi / 2 - Real.arctan (E3 / (2 * s * t)))
+      - Real.pi
+      = Real.pi - 2 * Real.arctan (X / t) := by
+  -- the W-product coefficient M is positive on the cell-3 domain
+  -- (four sign-carrying factors: `-u^3*v^3`, `u^2-8`, `v^2-8`, `u-v-w`)
+  have hM : (0:ℝ) < ((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) := by
+    have hu3 : 0 < u ^ 3 := pow_pos hu 3
+    have hv3 : 0 < v ^ 3 := pow_pos hv 3
+    have hP : (0:ℝ) < u ^ 3 * v ^ 3 := mul_pos hu3 hv3
+    have hN1 : (u ^ 2 - 8 : ℝ) < 0 := by linarith
+    have hN2 : (v ^ 2 - 8 : ℝ) < 0 := by linarith
+    have hN3 : (u - v - w : ℝ) < 0 := by linarith
+    have hP4 : (0:ℝ) < u - v + w := by linarith
+    have hK8 : (0:ℝ) < 2 * s * (u + v) + u * v + 8 := by
+      have hsu : (0:ℝ) < 2 * s * u := by nlinarith
+      have hsv : (0:ℝ) < 2 * s * v := by nlinarith
+      have hvu : (0:ℝ) < u * v := by nlinarith
+      linarith
+    have A : (0:ℝ) < -u ^ 3 * v ^ 3 * (u ^ 2 - 8) := by
+      have h := mul_neg_of_pos_of_neg hP hN1
+      rw [show (-u ^ 3 * v ^ 3 * (u ^ 2 - 8)) = -(u ^ 3 * v ^ 3 * (u ^ 2 - 8)) from by ring]
+      exact neg_pos.mpr h
+    have B : (-u ^ 3 * v ^ 3 * (u ^ 2 - 8)) * (v ^ 2 - 8) < 0 :=
+      mul_neg_of_pos_of_neg A hN2
+    have C : (0:ℝ) < (-u ^ 3 * v ^ 3 * (u ^ 2 - 8)) * (v ^ 2 - 8) * (u - v - w) := by
+      have h := mul_pos (neg_pos.mpr B) (neg_pos.mpr hN3)
+      rwa [show (-((-u ^ 3 * v ^ 3 * (u ^ 2 - 8)) * (v ^ 2 - 8))) * (-(u - v - w))
+          = (-u ^ 3 * v ^ 3 * (u ^ 2 - 8)) * (v ^ 2 - 8) * (u - v - w) from by ring] at h
+    refine mul_pos (mul_pos (mul_pos (mul_pos C hP4)
+      (sq_pos_iff.mpr (by linarith : u + v - w ≠ 0)))
+      (sq_pos_iff.mpr (by positivity : u + v + w ≠ 0))) hK8
+  -- nonnegativity of the modulus factors (from `hΔ : 0 < DEXP`)
+  have hnn1 : (0:ℝ) ≤ E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2 := by
+    have h1 : (0:ℝ) ≤ E1 ^ 2 := sq_nonneg E1
+    have h2 : (0:ℝ) ≤ u ^ 2 := sq_nonneg u
+    have h3 : (0:ℝ) ≤ 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2 := by nlinarith
+    linarith
+  have hnn2 : (0:ℝ) ≤ E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2 := by
+    have h1 : (0:ℝ) ≤ E2 ^ 2 := sq_nonneg E2
+    have h2 : (0:ℝ) ≤ v ^ 2 := sq_nonneg v
+    have h3 : (0:ℝ) ≤ 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2 := by nlinarith
+    linarith
+  have hnn3 : (0:ℝ) ≤ E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) := by
+    have h1 : (0:ℝ) ≤ E3 ^ 2 := sq_nonneg E3
+    have h2 : (0:ℝ) ≤ s ^ 2 := sq_nonneg s
+    have h3 : (0:ℝ) ≤ 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) := by nlinarith
+    linarith
+  have hnn12 : (0:ℝ) ≤ (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) * (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2) :=
+    mul_nonneg hnn1 hnn2
+  -- the W-product chain over `R[J]/(J^2+1)` elements, `t^2` reduced to `DEXP`
+  set W := v * E1 + u * E2 with hW
+  set a := E1 * E2 - 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u * v with ha
+  set A := a * E3 - 4 * s * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * W with hA
+  set B := 2 * t * (s * a + W * E3) with hB
+  have hz12 : mi_p21eJ E1 (2 * t * u) * mi_p21eJ E2 (2 * t * v) = mi_p21eJ a (2 * t * W) := by
+    rw [mi_p21e_g2 u v w t (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) E1 E2 htd hE1 hE2, ← hW, ← ha]
+  have hz123 : mi_p21eJ a (2 * t * W) * mi_p21eJ E3 (2 * s * t) = mi_p21eJ A B := by
+    rw [mi_p21e_g3 u v w t (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) s E1 E2 E3 htd, ← hW, ← ha]
+  have hf4 : (t + X * Complex.I) ^ 2 = mi_p21eJ ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) (2 * t * X) := by
+    have h1 : mi_p21eJ t X * mi_p21eJ t X = mi_p21eJ (t ^ 2 - X ^ 2) (2 * t * X) := by
+      rw [mi_p21eJ_mul t X t X, mi_p21eJ_injEq]
+      constructor <;> ring
+    rw [sq]
+    calc (t + X * Complex.I) * (t + X * Complex.I)
+        = mi_p21eJ t X * mi_p21eJ t X := by rw [mi_p21eJ]
+      _ = mi_p21eJ (t ^ 2 - X ^ 2) (2 * t * X) := h1
+      _ = mi_p21eJ ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) (2 * t * X) := by rw [htd]
+  have hprod : mi_p21eJ A B * mi_p21eJ ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) (2 * t * X)
+      = mi_p21eJ (A * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) - B * (2 * t * X))
+          (A * (2 * t * X) + B * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2)) :=
+    mi_p21eJ_mul A B ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) (2 * t * X)
+  -- the two sympy identities (W-product = M modulo `t ^ 2 = DEXP`, `s ^ 2 = 2`)
+  have hre : A * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) - B * (2 * t * X)
+      = ((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) + (t ^ 2 - (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4)) * ((-16*u^4*v^6 - 16*u^6*v^4 - 4*u^4*v^8 - 4*u^8*v^4 + 8*u^6*v^6 + 16*u^2*v^8 + 16*u^8*v^2 - 64*s^2*u^2*v^6 - 64*s^2*u^6*v^2 - 48*s*u^3*v^6 - 48*s*u^6*v^3 - 32*u*s^2*v^7 - 32*v*s^2*u^7 - 32*u^2*v^6*w^2 - 32*u^3*v^5*w^2 - 32*u^5*v^3*w^2 - 32*u^6*v^2*w^2 - 16*s*u^2*v^7 - 16*s*u^7*v^2 - 16*s^2*u^5*v^5 - 4*s^2*u^4*v^6 - 4*s^2*u^6*v^4 + 4*s^2*u^2*v^8 + 4*s^2*u^8*v^2 + 4*u^4*v^6*w^2 + 4*u^6*v^4*w^2 + 8*s^2*u^3*v^7 + 8*s^2*u^7*v^3 + 8*u^5*v^5*w^2 + 16*s*u*v^8 + 16*s*v*u^8 + 16*u^2*v^4*w^4 + 16*u^4*v^2*w^4 + 32*s^2*u^3*v^5 + 32*s^2*u^5*v^3 + 32*u^3*v^3*w^4 + 48*s*u^4*v^5 + 48*s*u^5*v^4 + 128*s^2*u^4*v^4 - 96*u*s^2*v^3*w^4 - 96*v*s^2*u^3*w^4 - 64*s^2*u^2*v^2*w^4 - 48*s*u*v^6*w^2 - 48*s*v*u^6*w^2 - 24*s^2*u^4*v^4*w^2 - 16*s*u*v^2*w^6 - 16*s*v*u^2*w^6 - 16*s^2*u^3*v^5*w^2 - 16*s^2*u^5*v^3*w^2 - 8*s*u^3*v^4*w^4 - 8*s*u^4*v^3*w^4 - 8*s*u^4*v^5*w^2 - 8*s*u^5*v^4*w^2 - 4*s^2*u^2*v^4*w^4 - 4*s^2*u^2*v^6*w^2 - 4*s^2*u^4*v^2*w^4 - 4*s^2*u^6*v^2*w^2 + 4*s^2*u^2*v^2*w^6 + 8*s*u^3*v^6*w^2 + 8*s*u^6*v^3*w^2 + 8*s^2*u^3*v^3*w^4 + 16*s*u^2*v^3*w^4 + 16*s*u^2*v^5*w^2 + 16*s*u^3*v^2*w^4 + 16*s*u^5*v^2*w^2 + 32*s*u^3*v^4*w^2 + 32*s*u^4*v^3*w^2 + 32*u*v*s^2*w^6 + 48*s*u*v^4*w^4 + 48*s*v*u^4*w^4 + 64*s^2*u^3*v^3*w^2 + 96*u*s^2*v^5*w^2 + 96*v*s^2*u^5*w^2 + 128*s^2*u^2*v^4*w^2 + 128*s^2*u^4*v^2*w^2)) + (s ^ 2 - 2) * ((-u^4*v^12 - u^12*v^4 - 512*u^4*v^8 - 512*u^8*v^4 - 352*u^3*v^9 - 352*u^9*v^3 - 40*u^6*v^8 - 40*u^8*v^6 - 32*u^5*v^9 - 32*u^9*v^5 - 16*u^7*v^7 - 4*u^5*v^11 - 4*u^6*v^10 - 4*u^10*v^6 - 4*u^11*v^5 + 4*u^7*v^9 + 4*u^9*v^7 + 10*u^8*v^8 + 12*u^2*v^12 + 12*u^12*v^2 + 28*u^4*v^10 + 28*u^10*v^4 + 32*u*v^11 + 32*v*u^11 + 40*u^3*v^11 + 40*u^11*v^3 + 320*u^5*v^7 + 320*u^7*v^5 + 1024*u^6*v^6 - 576*u^3*v^5*w^4 - 576*u^5*v^3*w^4 - 512*u^4*v^4*w^4 - 320*u*v^5*w^6 - 320*v*u^5*w^6 - 248*u^6*v^6*w^2 - 160*u*v^9*w^2 - 160*v*u^9*w^2 - 144*u^5*v^7*w^2 - 144*u^7*v^5*w^2 - 128*u^3*v^3*w^6 - 112*u^3*v^9*w^2 - 112*u^9*v^3*w^2 - 88*s*u^4*v^9 - 88*s*u^9*v^4 - 80*u^4*v^4*w^6 - 80*u^4*v^8*w^2 - 80*u^8*v^4*w^2 - 72*u^2*v^6*w^6 - 72*u^6*v^2*w^6 - 52*u^2*v^10*w^2 - 52*u^10*v^2*w^2 - 48*s*u^5*v^8 - 48*s*u^8*v^5 - 32*u*v*w^10 - 20*u^5*v^7*w^4 - 20*u^7*v^5*w^4 - 16*u^3*v^5*w^6 - 16*u^5*v^3*w^6 - 16*u^6*v^6*w^4 - 12*u^4*v^8*w^4 - 12*u^8*v^4*w^4 - 8*s*u^3*v^10 - 8*s*u^10*v^3 - 8*u^3*v^3*w^8 - 4*u^2*v^2*w^10 - 3*u^4*v^4*w^8 + 6*u^4*v^10*w^2 + 6*u^10*v^4*w^2 + 8*s*u*v^12 + 8*s*v*u^12 + 8*u^5*v^5*w^6 + 10*u^4*v^6*w^6 + 10*u^6*v^4*w^6 + 10*u^6*v^8*w^2 + 10*u^8*v^6*w^2 + 16*u^5*v^9*w^2 + 16*u^9*v^5*w^2 + 24*s*u^2*v^11 + 24*s*u^11*v^2 + 28*u^2*v^4*w^8 + 28*u^4*v^2*w^8 + 88*u^2*v^8*w^4 + 88*u^8*v^2*w^4 + 96*u^3*v^7*w^4 + 96*u^7*v^3*w^4 + 104*u^4*v^6*w^4 + 104*u^6*v^4*w^4 + 112*s*u^6*v^7 + 112*s*u^7*v^6 + 160*u*v^3*w^8 + 160*v*u^3*w^8 + 192*u^5*v^5*w^4 + 320*u*v^7*w^4 + 320*v*u^7*w^4 + 576*u^5*v^5*w^2 + 896*u^3*v^7*w^2 + 896*u^7*v^3*w^2 + 1024*u^4*v^6*w^2 + 1024*u^6*v^4*w^2 - 160*s*u^3*v^4*w^6 - 160*s*u^4*v^3*w^6 - 144*s*u^2*v^5*w^6 - 144*s*u^5*v^2*w^6 - 104*s*u^2*v^9*w^2 - 104*s*u^9*v^2*w^2 - 80*s*u*v^6*w^6 - 80*s*v*u^6*w^6 - 40*s*u*v^10*w^2 - 40*s*v*u^10*w^2 - 32*s*u^3*v^8*w^2 - 32*s*u^8*v^3*w^2 - 28*s*u^4*v^7*w^4 - 28*s*u^7*v^4*w^4 - 24*s*u^5*v^6*w^4 - 24*s*u^6*v^5*w^4 - 20*s*u^6*v^7*w^2 - 20*s*u^7*v^6*w^2 - 12*s*u^3*v^8*w^4 - 12*s*u^8*v^3*w^4 - 8*s*u*v^2*w^10 - 8*s*v*u^2*w^10 - 4*s*u^3*v^4*w^8 - 4*s*u^4*v^3*w^8 + 4*s*u^3*v^10*w^2 + 4*s*u^5*v^8*w^2 + 4*s*u^8*v^5*w^2 + 4*s*u^10*v^3*w^2 + 12*s*u^3*v^6*w^6 + 12*s*u^4*v^9*w^2 + 12*s*u^6*v^3*w^6 + 12*s*u^9*v^4*w^2 + 20*s*u^4*v^5*w^6 + 20*s*u^5*v^4*w^6 + 40*s*u*v^4*w^8 + 40*s*v*u^4*w^8 + 56*s*u^2*v^3*w^8 + 56*s*u^3*v^2*w^8 + 80*s*u*v^8*w^4 + 80*s*v*u^8*w^4 + 80*s*u^5*v^6*w^2 + 80*s*u^6*v^5*w^2 + 96*s*u^4*v^7*w^2 + 96*s*u^7*v^4*w^2 + 112*s*u^4*v^5*w^4 + 112*s*u^5*v^4*w^4 + 144*s*u^3*v^6*w^4 + 144*s*u^6*v^3*w^4 + 176*s*u^2*v^7*w^4 + 176*s*u^7*v^2*w^4)) := by
+    rw [hA, hB, ha, hW, hE1, hE2, hE3, hX]
+    ring
+  have him : A * (2 * t * X) + B * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2)
+      = (s ^ 2 - 2) * ((-24*t*u^2*v^9 - 24*t*u^9*v^2 - 16*t*u^3*v^8 - 16*t*u^8*v^3 - 10*t*u^6*v^7 - 10*t*u^7*v^6 - 8*t*u*v^10 - 8*t*v*u^10 + 2*t*u^3*v^10 + 2*t*u^5*v^8 + 2*t*u^8*v^5 + 2*t*u^10*v^3 + 6*t*u^4*v^9 + 6*t*u^9*v^4 + 16*t*u^4*v^7 + 16*t*u^7*v^4 + 32*t*u^5*v^6 + 32*t*u^6*v^5 - 112*t*u^3*v^4*w^4 - 112*t*u^4*v^3*w^4 - 96*t*u^2*v^5*w^4 - 96*t*u^5*v^2*w^4 - 64*s*t*u^2*v^8 - 64*s*t*u^3*v^7 - 64*s*t*u^7*v^3 - 64*s*t*u^8*v^2 - 48*t*u*v^6*w^4 - 48*t*v*u^6*w^4 - 20*s*t*u^6*v^6 - 16*s*t*u*v^9 - 16*s*t*v*u^9 - 14*t*u^4*v^7*w^2 - 14*t*u^7*v^4*w^2 - 12*t*u^5*v^6*w^2 - 12*t*u^6*v^5*w^2 - 8*s*t*u^5*v^7 - 8*s*t*u^7*v^5 - 8*t*u*v^2*w^8 - 8*t*v*u^2*w^8 - 6*t*u^3*v^8*w^2 - 6*t*u^8*v^3*w^2 - 2*t*u^3*v^4*w^6 - 2*t*u^4*v^3*w^6 + 2*s*t*u^2*v^10 + 2*s*t*u^10*v^2 + 6*t*u^3*v^6*w^4 + 6*t*u^6*v^3*w^4 + 8*s*t*u^3*v^9 + 8*s*t*u^4*v^8 + 8*s*t*u^8*v^4 + 8*s*t*u^9*v^3 + 10*t*u^4*v^5*w^4 + 10*t*u^5*v^4*w^4 + 32*t*u*v^4*w^6 + 32*t*u*v^8*w^2 + 32*t*v*u^4*w^6 + 32*t*v*u^8*w^2 + 48*t*u^2*v^3*w^6 + 48*t*u^3*v^2*w^6 + 64*s*t*u^4*v^6 + 64*s*t*u^6*v^4 + 64*t*u^4*v^5*w^2 + 64*t*u^5*v^4*w^2 + 80*t*u^2*v^7*w^2 + 80*t*u^3*v^6*w^2 + 80*t*u^6*v^3*w^2 + 80*t*u^7*v^2*w^2 + 160*s*t*u^5*v^5 - 192*s*t*u^2*v^4*w^4 - 192*s*t*u^3*v^3*w^4 - 192*s*t*u^4*v^2*w^4 - 96*s*t*u*v^5*w^4 - 96*s*t*v*u^5*w^4 - 32*s*t*u^5*v^5*w^2 - 28*s*t*u^4*v^6*w^2 - 28*s*t*u^6*v^4*w^2 - 16*s*t*u*v*w^8 - 16*s*t*u^3*v^7*w^2 - 16*s*t*u^7*v^3*w^2 - 4*s*t*u^2*v^8*w^2 - 4*s*t*u^8*v^2*w^2 - 2*s*t*u^2*v^2*w^8 + 4*s*t*u^2*v^4*w^6 + 4*s*t*u^4*v^2*w^6 + 8*s*t*u^3*v^5*w^4 + 8*s*t*u^5*v^3*w^4 + 16*s*t*u^4*v^4*w^4 + 64*s*t*u*v^3*w^6 + 64*s*t*u*v^7*w^2 + 64*s*t*v*u^3*w^6 + 64*s*t*v*u^7*w^2 + 64*s*t*u^2*v^2*w^6 + 128*s*t*u^4*v^4*w^2 + 192*s*t*u^2*v^6*w^2 + 192*s*t*u^3*v^5*w^2 + 192*s*t*u^5*v^3*w^2 + 192*s*t*u^6*v^2*w^2)) := by
+    rw [hA, hB, ha, hW, hE1, hE2, hE3, hX]
+    ring
+  -- the squared-modulus bookkeeping (all real, pure ring)
+  have hsqid : (A ^ 2 + B ^ 2) * (((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) ^ 2 + (2 * t * X) ^ 2)
+      = (A * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) - B * (2 * t * X)) ^ 2
+        + (A * (2 * t * X) + B * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2)) ^ 2 := by ring
+  -- kill the correction terms in `hre`/`him` *before* they ever touch `hsqid`:
+  -- rewriting the giant correction polynomials into `hsqid` builds an enormous
+  -- motive; instead keep them opaque and kill each zero factor separately.
+  have htd' : t ^ 2 - (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) = 0 := by
+    rw [htd]; ring
+  have hs2' : s ^ 2 - 2 = 0 := by rw [hs2]; ring
+  have hre0 : A * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) - B * (2 * t * X) = ((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) := by
+    rw [hre, htd', hs2']
+    ring
+  have him0 : A * (2 * t * X) + B * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) = 0 := by
+    rw [him, hs2']
+    ring
+  have hsqid' : (A ^ 2 + B ^ 2) * (((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) ^ 2 + (2 * t * X) ^ 2)
+      = ((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) ^ 2 := by
+    have h1 := hsqid
+    rw [hre0, him0] at h1
+    simpa using h1
+  have hpow2 : (2 * t * X) ^ 2 = 4 * t ^ 2 * X ^ 2 := by ring
+  have hgh2 : (((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) - X ^ 2) ^ 2 + 4 * t ^ 2 * X ^ 2) = (((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) + X ^ 2) ^ 2) := by
+    rw [htd]; ring
+  -- nonnegativity of the three squared modulus factors (from `hΔ`)
+  have hf1 : (0:ℝ) ≤ E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2 := by
+    positivity
+  have hf2 : (0:ℝ) ≤ E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2 := by
+    positivity
+  have hf3 : (0:ℝ) ≤ E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) := by
+    positivity
+  -- `(2*t*u)^2`-shapes into the D-form used by the sqrt factors
+  have hsqr1 : Real.sqrt (E1 ^ 2 + (2 * t * u) ^ 2) = Real.sqrt (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) := by
+    congr 1
+    rw [show (2 * t * u) ^ 2 = 4 * t ^ 2 * u ^ 2 from by ring, htd]
+  have hsqr2 : Real.sqrt (E2 ^ 2 + (2 * t * v) ^ 2) = Real.sqrt (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2) := by
+    congr 1
+    rw [show (2 * t * v) ^ 2 = 4 * t ^ 2 * v ^ 2 from by ring, htd]
+  have hsqr3 : Real.sqrt (E3 ^ 2 + (2 * s * t) ^ 2) = Real.sqrt (E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4)) := by
+    congr 1
+    rw [show (2 * s * t) ^ 2 = 4 * s ^ 2 * t ^ 2 from by ring, htd]
+  -- squares of the sqrt factors
+  have hd1 : Real.sqrt (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) ^ 2 = E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2 :=
+    Real.sq_sqrt hf1
+  have hd2 : Real.sqrt (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2) ^ 2 = E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2 :=
+    Real.sq_sqrt hf2
+  have hd3 : Real.sqrt (E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4)) ^ 2 = E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) :=
+    Real.sq_sqrt hf3
+  have hrad : (Real.sqrt (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) * Real.sqrt (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2)
+      * Real.sqrt (E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4))) ^ 2
+      = (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) * (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2) * (E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4)) := by
+    rw [mul_pow, mul_pow, hd1, hd2, hd3]
+  -- factor identities for the modulus (small rings: `a, W` stay abstract)
+  have hsq1 : A ^ 2 + B ^ 2
+      = (a ^ 2 + 4 * t ^ 2 * W ^ 2) * (E3 ^ 2 + 4 * s ^ 2 * t ^ 2) := by
+    have hA2 : A ^ 2 = (a * E3 - 4 * s * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * W) ^ 2 := by rw [hA]
+    have hB2 : B ^ 2 = 4 * t ^ 2 * (s * a + W * E3) ^ 2 := by rw [hB]; ring
+    rw [hA2, hB2, htd]
+    ring
+  have hsq2 : a ^ 2 + 4 * t ^ 2 * W ^ 2
+      = (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) * (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2) := by
+    rw [ha, hW, htd]; ring
+  have hmod : A ^ 2 + B ^ 2
+      = (Real.sqrt (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) * Real.sqrt (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2)
+        * Real.sqrt (E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4))) ^ 2 := by
+    rw [hsq1, hsq2, htd]
+    exact hrad.symm
+  -- hsqid : (A^2 + B^2) * (DEXP + X^2)^2 = M^2
+  have hcomb : ((Real.sqrt (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) * Real.sqrt (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2)
+        * Real.sqrt (E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4))) * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) + X ^ 2)) ^ 2 = ((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) ^ 2 := by
+    have h1 := hsqid'
+    rw [hpow2, hgh2] at h1
+    rw [hmod, ← mul_pow] at h1
+    exact h1
+  have hkey : (Real.sqrt (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) * Real.sqrt (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2)
+      * Real.sqrt (E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4))) * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) + X ^ 2) = ((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) := by
+    have hpos : (0:ℝ) ≤ (Real.sqrt (E1 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * u ^ 2) * Real.sqrt (E2 ^ 2 + 4 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) * v ^ 2) * Real.sqrt (E3 ^ 2 + 4 * s ^ 2 * (-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4))) * ((-2*u^4 - u^2*v^2*w^2 + 4*u^2*v^2 + 4*u^2*w^2 - 2*v^4 + 4*v^2*w^2 - 2*w^4) + X ^ 2) := by
+      refine mul_nonneg ?_ ?_
+      · positivity
+      · positivity
+    exact (sq_eq_sq₀ hpos (le_of_lt hM)).mp hcomb
+  have hM0 : mi_p21eJ ((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) 0 = (((((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) : ℝ) : ℂ)) := by
+    simp [mi_p21eJ]
+  -- the main identity: `Z1 * Z2 * Z3 * (t + X*I)^2 = M`
+  have h14 : mi_p21eJ E1 (2 * t * u) * mi_p21eJ E2 (2 * t * v) * mi_p21eJ E3 (2 * s * t)
+      * (t + X * Complex.I) ^ 2 = (((((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) : ℝ) : ℂ)) := by
+    rw [hf4, hz12, hz123, hprod, hre0, him0, hM0]
+  have hZP : mi_p21eJ E1 (2 * t * u) * mi_p21eJ E2 (2 * t * v) * mi_p21eJ E3 (2 * s * t)
+      = ((((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) : ℝ) : ℂ) / (t + X * Complex.I) ^ 2 := by
+    rw [eq_div_iff ?_]
+    · exact h14
+    · have hnz : (t + X * Complex.I) ≠ 0 := by
+        intro hc
+        have h := congrArg Complex.re hc
+        simp at h
+        linarith only [ht0, h]
+      exact pow_ne_zero 2 hnz
+  -- the exponential assembly
+  have hexpS : Complex.exp (Complex.I * ((Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + ((Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+        + ((Real.pi / 2 - Real.arctan (E3 / (2 * s * t))) - Real.pi))))
+      = -(mi_p21eJ E1 (2 * t * u) * mi_p21eJ E2 (2 * t * v) * mi_p21eJ E3 (2 * s * t))
+        / (Real.sqrt (E1 ^ 2 + (2 * t * u) ^ 2) * Real.sqrt (E2 ^ 2 + (2 * t * v) ^ 2)
+          * Real.sqrt (E3 ^ 2 + (2 * s * t) ^ 2)) := by
+    rw [show Complex.I * ((Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+        + ((Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+          + ((Real.pi / 2 - Real.arctan (E3 / (2 * s * t))) - Real.pi)))
+      = Complex.I * (Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+        + (Complex.I * (Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+          + (Complex.I * (Real.pi / 2 - Real.arctan (E3 / (2 * s * t)))
+            + Complex.I * (-Real.pi))) from by ring,
+      Complex.exp_add, Complex.exp_add, Complex.exp_add,
+      mi_p21e_T _ _ (by positivity), mi_p21e_T _ _ (by positivity), mi_p21e_T _ _ (by positivity),
+      show Complex.I * (-Real.pi) = -(Complex.I * Real.pi) from by ring,
+      Complex.exp_neg, mi_p21e_expIpi]
+    ring
+  have hexpR : Complex.exp (Complex.I * (Real.pi - 2 * Real.arctan (X / t)))
+      = (X + t * Complex.I) ^ 2 / (((t ^ 2 + X ^ 2 : ℝ) : ℂ)) := by
+    have h2 : Complex.I * (Real.pi - 2 * Real.arctan (X / t))
+        = ((2:ℕ):ℂ) * (Complex.I * (↑Real.pi / 2 - ↑(Real.arctan (X / t)))) := by
+      push_cast
+      ring
+    rw [h2, Complex.exp_nat_mul, mi_p21e_T X t ht0, div_pow]
+    congr 1
+    rw [sq, ← Complex.ofReal_mul, Real.mul_self_sqrt (by positivity : (0:ℝ) ≤ X ^ 2 + t ^ 2)]
+    congr 1
+    ring
+  have hXt : (X + t * Complex.I) ^ 2 = -((t - X * Complex.I) ^ 2) := by
+    apply Complex.ext
+    · simp only [pow_two, Complex.mul_re, Complex.mul_im, Complex.add_re, Complex.add_im,
+        Complex.sub_re, Complex.sub_im, Complex.neg_re, Complex.neg_im,
+        Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im]
+      ring
+    · simp only [pow_two, Complex.mul_re, Complex.mul_im, Complex.add_re, Complex.add_im,
+        Complex.sub_re, Complex.sub_im, Complex.neg_re, Complex.neg_im,
+        Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im]
+      ring
+  have hIform : ((t + X * Complex.I) * (t - X * Complex.I) : ℂ) = ((t ^ 2 + X ^ 2 : ℝ) : ℂ) := by
+    apply Complex.ext
+    · simp only [Complex.mul_re, Complex.mul_im, Complex.add_re, Complex.add_im,
+        Complex.sub_re, Complex.sub_im, Complex.ofReal_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im]
+      ring
+    · simp only [Complex.mul_re, Complex.mul_im, Complex.add_re, Complex.add_im,
+        Complex.sub_re, Complex.sub_im, Complex.ofReal_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im]
+      ring
+  have hkr : (Real.sqrt (E1 ^ 2 + (2 * t * u) ^ 2) * Real.sqrt (E2 ^ 2 + (2 * t * v) ^ 2)
+      * Real.sqrt (E3 ^ 2 + (2 * s * t) ^ 2)) * (t ^ 2 + X ^ 2) = ((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) := by
+    rw [hsqr1, hsqr2, hsqr3, htd]
+    exact hkey
+  have hkeyT : ((Real.sqrt (E1 ^ 2 + (2 * t * u) ^ 2) : ℂ) * (Real.sqrt (E2 ^ 2 + (2 * t * v) ^ 2) : ℂ)
+      * (Real.sqrt (E3 ^ 2 + (2 * s * t) ^ 2) : ℂ)) * (((t ^ 2 + X ^ 2) : ℝ) : ℂ)
+      = ((((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) : ℝ) : ℂ) := by
+    have h := congrArg Complex.ofReal hkr
+    push_cast at h ⊢
+    exact h
+  have hTpos : (0:ℝ) < t ^ 2 + X ^ 2 := by positivity
+  have hTne : (((t ^ 2 + X ^ 2 : ℝ)) : ℂ) ≠ 0 := by
+    exact_mod_cast ne_of_gt hTpos
+  have hKne : (↑t + ↑X * Complex.I : ℂ) ≠ 0 := by
+    intro hc
+    have h := hIform
+    rw [hc, zero_mul] at h
+    exact hTne h.symm
+  have hKbarne : (↑t - ↑X * Complex.I : ℂ) ≠ 0 := by
+    intro hc
+    have h := hIform
+    rw [hc, mul_zero] at h
+    exact hTne h.symm
+  have hq1 : (0:ℝ) < 2 * t * u := by positivity
+  have hq2 : (0:ℝ) < 2 * t * v := by positivity
+  have hq3 : (0:ℝ) < 2 * s * t := by positivity
+  have h1pos : (0:ℝ) < Real.sqrt (E1 ^ 2 + (2 * t * u) ^ 2) :=
+    Real.sqrt_pos.mpr (by positivity)
+  have h2pos : (0:ℝ) < Real.sqrt (E2 ^ 2 + (2 * t * v) ^ 2) :=
+    Real.sqrt_pos.mpr (by positivity)
+  have h3pos : (0:ℝ) < Real.sqrt (E3 ^ 2 + (2 * s * t) ^ 2) :=
+    Real.sqrt_pos.mpr (by positivity)
+  have h1ne : ((Real.sqrt (E1 ^ 2 + (2 * t * u) ^ 2)) : ℂ) ≠ 0 := by
+    exact_mod_cast ne_of_gt h1pos
+  have h2ne : ((Real.sqrt (E2 ^ 2 + (2 * t * v) ^ 2)) : ℂ) ≠ 0 := by
+    exact_mod_cast ne_of_gt h2pos
+  have h3ne : ((Real.sqrt (E3 ^ 2 + (2 * s * t) ^ 2)) : ℂ) ≠ 0 := by
+    exact_mod_cast ne_of_gt h3pos
+  have hRne : ((Real.sqrt (E1 ^ 2 + (2 * t * u) ^ 2) : ℂ) * (Real.sqrt (E2 ^ 2 + (2 * t * v) ^ 2) : ℂ)
+      * (Real.sqrt (E3 ^ 2 + (2 * s * t) ^ 2) : ℂ)) ≠ 0 := by
+    exact mul_ne_zero (mul_ne_zero h1ne h2ne) h3ne
+  -- atomize the giant modulus/key expressions so that `field_simp`/`ring`
+  -- never expand them
+  set MM : ℂ := ((((-u ^ 3 * v ^ 3 * (u ^ 2 - 8) * (v ^ 2 - 8) * (u - v - w) * (u - v + w) * (u + v - w) ^ 2 * (u + v + w) ^ 2 * (2 * s * (u + v) + u * v + 8))) : ℝ) : ℂ) with hMM
+  set RR : ℂ := ((Real.sqrt (E1 ^ 2 + (2 * t * u) ^ 2) : ℂ) * (Real.sqrt (E2 ^ 2 + (2 * t * v) ^ 2) : ℂ)
+    * (Real.sqrt (E3 ^ 2 + (2 * s * t) ^ 2) : ℂ)) with hRR
+  set KK : ℂ := ((t : ℂ) + (X : ℂ) * Complex.I) with hKK
+  set KB : ℂ := ((t : ℂ) - (X : ℂ) * Complex.I) with hKB
+  set TT : ℂ := (((t ^ 2 + X ^ 2 : ℝ)) : ℂ) with hTT
+  have hZP' : mi_p21eJ E1 (2 * t * u) * mi_p21eJ E2 (2 * t * v) * mi_p21eJ E3 (2 * s * t) = MM / KK ^ 2 := by
+    rw [hMM, hKK]
+    exact hZP
+  have hXt' : ((X : ℂ) + (t : ℂ) * Complex.I) ^ 2 = -(KB ^ 2) := by
+    rw [hKB]
+    exact hXt
+  have hexpR' : Complex.exp (Complex.I * (Real.pi - 2 * Real.arctan (X / t))) = -(KB ^ 2) / TT := by
+    rw [hTT, ← hXt']
+    exact hexpR
+  have hkeyT' : RR * TT = MM := by
+    rw [hRR, hTT, hMM]
+    exact hkeyT
+  have hIform' : KK * KB = TT := by
+    rw [hKK, hKB, hTT]
+    exact hIform
+  have hKKne : KK ≠ 0 := by rw [hKK]; exact hKne
+  have hKBne : KB ≠ 0 := by rw [hKB]; exact hKbarne
+  have hTTne : TT ≠ 0 := by rw [hTT]; exact hTne
+  have hRRne : RR ≠ 0 := by rw [hRR]; exact hRne
+  have hexpSR : Complex.exp (Complex.I * (((Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + ((Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+        + ((Real.pi / 2 - Real.arctan (E3 / (2 * s * t))) - Real.pi)))
+      - (Real.pi - 2 * Real.arctan (X / t)))) = 1 := by
+    rw [mul_sub, Complex.exp_sub, hexpS, hexpR', hZP']
+    field_simp [hKKne, hKBne, hTTne, hRRne]
+    rw [← hkeyT']
+    rw [show KK ^ 2 * RR * KB ^ 2 = RR * (KK ^ 2 * KB ^ 2) from by ring]
+    rw [show KK ^ 2 * KB ^ 2 = TT ^ 2 from by rw [← mul_pow, hIform']]
+    ring
+  obtain ⟨n, hn⟩ := (Complex.exp_eq_one_iff).mp hexpSR
+  have hSR : ((Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + ((Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+        + ((Real.pi / 2 - Real.arctan (E3 / (2 * s * t))) - Real.pi)))
+      - (Real.pi - 2 * Real.arctan (X / t)) = (n:ℝ) * (2 * Real.pi) := by
+    have h := congrArg Complex.im hn
+    have hpi : ((n:ℤ) : ℂ) * (2 * (Real.pi : ℂ) * Complex.I)
+        = (((n:ℝ) * (2 * Real.pi) : ℝ) : ℂ) * Complex.I := by
+      push_cast
+      ring
+    rw [hpi] at h
+    simp only [Complex.mul_re, Complex.mul_im, Complex.sub_re, Complex.sub_im,
+      Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
+      Complex.add_re, Complex.add_im, zero_mul, one_mul, mul_one, mul_zero,
+      add_zero, zero_add, sub_zero] at h
+    rw [Complex.div_re] at h
+    norm_num [Complex.normSq] at h
+    linarith only [h]
+  -- pinning: the S-side lies in `(-pi, 2*pi)`, the R-side in `(0, pi)`
+  have hb1 : (0:ℝ) < Real.pi / 2 - Real.arctan (E1 / (2 * t * u)) :=
+    by linarith only [Real.arctan_lt_pi_div_two (E1 / (2 * t * u))]
+  have hb2 : (0:ℝ) < Real.pi / 2 - Real.arctan (E2 / (2 * t * v)) :=
+    by linarith only [Real.arctan_lt_pi_div_two (E2 / (2 * t * v))]
+  have hb3 : (0:ℝ) < Real.pi / 2 - Real.arctan (E3 / (2 * s * t)) :=
+    by linarith only [Real.arctan_lt_pi_div_two (E3 / (2 * s * t))]
+  have hb1' : Real.pi / 2 - Real.arctan (E1 / (2 * t * u)) < Real.pi :=
+    by linarith only [Real.neg_pi_div_two_lt_arctan (E1 / (2 * t * u))]
+  have hb2' : Real.pi / 2 - Real.arctan (E2 / (2 * t * v)) < Real.pi :=
+    by linarith only [Real.neg_pi_div_two_lt_arctan (E2 / (2 * t * v))]
+  have hb3' : Real.pi / 2 - Real.arctan (E3 / (2 * s * t)) < Real.pi :=
+    by linarith only [Real.neg_pi_div_two_lt_arctan (E3 / (2 * s * t))]
+  have hq : (0:ℝ) < X / t := div_pos hXp ht0
+  have hbR : (0:ℝ) < Real.pi - 2 * Real.arctan (X / t) :=
+    by linarith only [Real.arctan_pos.mpr hq, Real.arctan_lt_pi_div_two (X / t)]
+  have hbR' : Real.pi - 2 * Real.arctan (X / t) < Real.pi :=
+    by linarith only [Real.arctan_pos.mpr hq]
+  have hS0 : -(Real.pi) < (Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + ((Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+        + ((Real.pi / 2 - Real.arctan (E3 / (2 * s * t))) - Real.pi)) := by
+    linarith only [hb1, hb2, hb3]
+  have hS1 : (Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + ((Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+        + ((Real.pi / 2 - Real.arctan (E3 / (2 * s * t))) - Real.pi)) < 2 * Real.pi := by
+    linarith only [hb1', hb2', hb3']
+  have hSR' : (Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + (Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+      + (Real.pi / 2 - Real.arctan (E3 / (2 * s * t)))
+      - Real.pi - (Real.pi - 2 * Real.arctan (X / t)) = (n:ℝ) * (2 * Real.pi) := by
+    linarith only [hSR]
+  have hS0' : -(Real.pi) < (Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + (Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+      + (Real.pi / 2 - Real.arctan (E3 / (2 * s * t)))
+      - Real.pi := by
+    linarith only [hS0]
+  have hS1' : (Real.pi / 2 - Real.arctan (E1 / (2 * t * u)))
+      + (Real.pi / 2 - Real.arctan (E2 / (2 * t * v)))
+      + (Real.pi / 2 - Real.arctan (E3 / (2 * s * t)))
+      - Real.pi < 2 * Real.pi := by
+    linarith only [hS1]
+  -- local copy of the two-pin lemma: the green finisher was developed in a
+  -- file where `mi_p21e_pin_zero` was a file-level lemma; this master has no such
+  -- lemma, so keep the identical statement local to this proof segment.
+  have mi_p21e_pin_zero : ∀ (S R : ℝ) (n : ℤ),
+      S - R = (n:ℝ) * (2*Real.pi) → -(Real.pi) < S → S < 2*Real.pi →
+      0 < R → R < Real.pi → S = R := by
+    intro S R n hSR hS0 hS1 hR0 hR1
+    have hn : n = 0 := by
+      rcases lt_trichotomy n 0 with h | h | h
+      · have hle : (n:ℝ) ≤ -1 := by
+          have hz : n ≤ -1 := by omega
+          exact_mod_cast hz
+        have hb : S - R ≤ -(2*Real.pi) := by
+          calc S - R = (n:ℝ) * (2*Real.pi) := hSR
+            _ ≤ (-1:ℝ) * (2*Real.pi) := mul_le_mul_of_nonneg_right hle (by positivity)
+            _ = -(2*Real.pi) := by ring
+        linarith only [hb, hS0, hS1, hR0, hR1]
+      · exact h
+      · have hle : (1:ℝ) ≤ (n:ℝ) := by
+          have hz : (1:ℤ) ≤ n := by omega
+          exact_mod_cast hz
+        have hb : 2*Real.pi ≤ S - R := by
+          calc (2*Real.pi : ℝ) = 1 * (2*Real.pi) := by ring
+            _ ≤ (n:ℝ) * (2*Real.pi) := mul_le_mul_of_nonneg_right hle (by positivity)
+            _ = S - R := hSR.symm
+        linarith only [hb, hS1, hR0]
+    rw [hn] at hSR
+    push_cast at hSR
+    linarith only [hSR]
+  exact mi_p21e_pin_zero _ _ n hSR' hS0' hS1' hbR hbR'
+
+/-! ### the sol/dih bridges at the `(2,2,2)` pattern -/
+
+/-- Positivity of the `(2,2,2)`-pinned Cayley determinant on the cell-3
+domain (from the eta bound: `y_j < sqrt 8` forces `deltaX 2 2 2 > 0`). -/
+private theorem mi_p21e_delta222_pos (y1 y2 y3 : ℝ) (h1 : 2 ≤ y1) (h1' : y1 ≤ Real.sqrt 8)
+    (h2 : 2 ≤ y2) (h2' : y2 ≤ Real.sqrt 8) (h3 : 2 ≤ y3) (h3' : y3 ≤ Real.sqrt 8)
+    (het : eta_y y1 y2 y3 < Real.sqrt 2) :
+    0 < deltaX 2 2 2 (y1 * y1) (y2 * y2) (y3 * y3) := by
+  exact mi_ETA_Y_BOUNDS y1 y2 y3 h1 h1' h2 h2' h3 h3' het |>.2
+
+/-- The base-triangle inequality `y4^2 < y5^2 + y6^2` on the cell domain. -/
+private theorem mi_p21e_tri (y4 y5 y6 : ℝ) (h4 : 2 ≤ y4) (h4' : y4 ≤ Real.sqrt 8)
+    (h5 : 2 ≤ y5) (h5' : y5 ≤ Real.sqrt 8) (h6 : 2 ≤ y6) (h6' : y6 ≤ Real.sqrt 8)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2) : y4 * y4 < y5 * y5 + y6 * y6 := by
+  obtain ⟨hlt4, hlt5, hlt6⟩ := mi_ETA_Y_LE_IMP_LT_ALL y4 y5 y6 h4 h4' h5 h5' h6 h6' het
+  have h8 : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+  have h4sq : y4 * y4 < 8 := by rw [← h8]; nlinarith
+  have h5sq : (4:ℝ) ≤ y5 * y5 := by nlinarith
+  have h6sq : (4:ℝ) ≤ y6 * y6 := by nlinarith
+  linarith
+
+/-- Unfolding `sol_euler_x_div_sqrtdelta` at the `(y1^2,y2^2,2,2,2,y3^2)`
+pattern: the let-bound `a` is `X/2` (with `X` the `mi_p21e_euler` variable),
+and `delta_x` is `D`. -/
+private theorem mi_p21e_solE (y1 y2 y3 s X D : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
+    (hX : X = 2 * s * y1 * y2 + y1 * y2 ^ 2 + y1 ^ 2 * y2
+      + s * (y1 ^ 2 + y2 ^ 2 - y3 ^ 2))
+    (hs : s = Real.sqrt 2) (hs2 : s ^ 2 = 2)
+    (hDa : deltaX (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3) = D) :
+    solEulerXDivSqrtdelta (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3)
+      = matan (D / (4 * (X / 2) ^ 2)) / (X / 2) := by
+  unfold solEulerXDivSqrtdelta
+  dsimp only
+  have hs0 : 0 < s := by rw [hs]; positivity
+  have hsa : Real.sqrt (y1 * y1) = y1 := by
+    rw [show y1 * y1 = y1 ^ 2 by ring, Real.sqrt_sq (le_of_lt hy1)]
+  have hsb : Real.sqrt (y2 * y2) = y2 := by
+    rw [show y2 * y2 = y2 ^ 2 by ring, Real.sqrt_sq (le_of_lt hy2)]
+  have hsabc : Real.sqrt ((y1 * y1) * (y2 * y2) * 2) = y1 * y2 * s := by
+    have hsq : (y1 * y2 * s) ^ 2 = (y1 * y1) * (y2 * y2) * 2 := by
+      calc (y1 * y2 * s) ^ 2 = y1 ^ 2 * y2 ^ 2 * s ^ 2 := by ring
+        _ = y1 ^ 2 * y2 ^ 2 * 2 := by rw [hs2]
+        _ = (y1 * y1) * (y2 * y2) * 2 := by ring
+    rw [← hsq, Real.sqrt_sq (le_of_lt (by positivity : 0 < y1 * y2 * s))]
+  rw [hsabc, hsa, hsb, ← hs, hDa]
+  have hA : y1 * y2 * s + y1 * (y2 * y2 + 2 - 2) / 2
+      + y2 * (y1 * y1 + 2 - 2) / 2
+      + s * (y1 * y1 + y2 * y2 - y3 * y3) / 2 = X / 2 := by
+    rw [hX]; ring
+  rw [hA]
+
+/-- The `matan`/`arctan` half of the sol bridge: after the `mi_p21e_euler`
+reduction the right-hand side is `t * matan(D/(4*(X/2)^2))/(X/2)`, i.e.
+`2*arctan(t/X)`, which is the complement of `pi - 2*arctan(X/t)`. -/
+private theorem mi_p21e_soltrig (t X D : ℝ) (ht : 0 < t) (hX : 0 < X)
+    (hD : D = t ^ 2) :
+    Real.pi - 2 * Real.arctan (X / t)
+      = t * (matan (D / (4 * (X / 2) ^ 2)) / (X / 2)) := by
+  have harg : D / (4 * (X / 2) ^ 2) = (t / X) ^ 2 := by
+    rw [hD]; field_simp; ring
+  have hz : 0 < (t / X) ^ 2 := by positivity
+  have hmat : matan ((t / X) ^ 2) = (X / t) * Real.arctan (t / X) := by
+    rw [mi_p21e_matan _ hz]
+    have hs : Real.sqrt ((t / X) ^ 2) = t / X :=
+      Real.sqrt_sq (le_of_lt (div_pos ht hX))
+    rw [hs]
+    field_simp [ne_of_gt ht, ne_of_gt hX]
+  have hcomp : Real.pi - 2 * Real.arctan (X / t) = 2 * Real.arctan (t / X) := by
+    have h : Real.arctan ((X / t)⁻¹) = Real.pi / 2 - Real.arctan (X / t) :=
+      Real.arctan_inv_of_pos (div_pos hX ht)
+    have hinv : (X / t)⁻¹ = t / X := by field_simp
+    rw [hinv] at h
+    linarith
+  rw [harg, hmat, hcomp]
+  field_simp [ne_of_gt ht, ne_of_gt hX]
+
+/-- The `matan`/`arctan` half of the dihedral bridge: `dih_x` written as
+`pi/2 - arctan(d4/sqrt(4ad))` equals `sqrt(D)` times the posbranch formula
+(valid on the `d4 > 0` branch). -/
+private theorem mi_p21e_dihalg (a d d4 D : ℝ) (ha : 0 < a) (hd : 0 < d) (hd4 : 0 < d4)
+    (hD : D = d) :
+    Real.pi / 2 - Real.arctan (d4 / Real.sqrt (4 * a * d))
+      = Real.sqrt D * (Real.sqrt (4 * a) / d4 * matan (4 * a * d / d4 ^ 2)) := by
+  set z : ℝ := Real.sqrt (4 * a * d) / d4 with hzdef
+  have harg : 0 < 4 * a * d / d4 ^ 2 := by positivity
+  have hsqd : Real.sqrt (4 * a * d / d4 ^ 2) = z := by
+    rw [hzdef, show 4 * a * d / d4 ^ 2 = (Real.sqrt (4 * a * d) / d4) ^ 2 by
+      rw [div_pow, Real.sq_sqrt (by positivity)]]
+    exact Real.sqrt_sq (le_of_lt (by positivity : 0 < Real.sqrt (4 * a * d) / d4))
+  have hmat : matan (4 * a * d / d4 ^ 2) = Real.arctan z / z := by
+    rw [mi_p21e_matan _ harg, hsqd]
+  have hcomp : Real.arctan z = Real.pi / 2 - Real.arctan (d4 / Real.sqrt (4 * a * d)) := by
+    have h : Real.arctan ((d4 / Real.sqrt (4 * a * d))⁻¹)
+        = Real.pi / 2 - Real.arctan (d4 / Real.sqrt (4 * a * d)) :=
+      Real.arctan_inv_of_pos (div_pos hd4 (Real.sqrt_pos.mpr (by positivity)))
+    have hinv : (d4 / Real.sqrt (4 * a * d))⁻¹ = z := by
+      rw [hzdef]; field_simp
+    rw [← h, hinv]
+  rw [← hcomp, hmat, hD, hzdef]
+  have hsq : Real.sqrt d * Real.sqrt (4 * a) = Real.sqrt (4 * a * d) := by
+    rw [mul_comm]
+    exact (Real.sqrt_mul (by positivity : (0:ℝ) ≤ 4 * a) d).symm
+  field_simp [ne_of_gt (Real.sqrt_pos.mpr hd), ne_of_gt hd4]
+  exact hsq.symm
+
+/-- **The sol bridge** (EULER_TRIANGLE at the `(2,2,2)` pattern): the
+spherical-excess form equals `sqrt(delta_x) * sol_euler_x_div_sqrtdelta`. -/
+private theorem mi_p21e_sol_bridge (y1 y2 y3 : ℝ) (hy1 : 2 ≤ y1) (hy1' : y1 ≤ Real.sqrt 8)
+    (hy2 : 2 ≤ y2) (hy2' : y2 ≤ Real.sqrt 8) (hy3 : 2 ≤ y3) (hy3' : y3 ≤ Real.sqrt 8)
+    (het : eta_y y1 y2 y3 < Real.sqrt 2) :
+    solY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y3
+      = Real.sqrt (deltaX 2 2 2 (y1 * y1) (y2 * y2) (y3 * y3))
+        * solEulerXDivSqrtdelta (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3) := by
+  set D : ℝ := -2 * y1 ^ 4 - y1 ^ 2 * y2 ^ 2 * y3 ^ 2 + 4 * y1 ^ 2 * y2 ^ 2
+      + 4 * y1 ^ 2 * y3 ^ 2 - 2 * y2 ^ 4 + 4 * y2 ^ 2 * y3 ^ 2 - 2 * y3 ^ 4 with hD
+  set t : ℝ := Real.sqrt D with ht
+  set s : ℝ := Real.sqrt 2 with hs
+  set X : ℝ := 2 * s * y1 * y2 + y1 * y2 ^ 2 + y1 ^ 2 * y2
+      + s * (y1 ^ 2 + y2 ^ 2 - y3 ^ 2) with hX
+  set E1 : ℝ := y1 ^ 2 * (y2 ^ 2 + y3 ^ 2 - y1 ^ 2) with hE1
+  set E2 : ℝ := y2 ^ 2 * (y1 ^ 2 + y3 ^ 2 - y2 ^ 2) with hE2
+  set E3 : ℝ := 4 * (y1 ^ 2 + y2 ^ 2 - y3 ^ 2) - y1 ^ 2 * y2 ^ 2 with hE3
+  have hy1pos : 0 < y1 := by linarith
+  have hy2pos : 0 < y2 := by linarith
+  have hy3pos : 0 < y3 := by linarith
+  have hDdelta : deltaX 2 2 2 (y1 * y1) (y2 * y2) (y3 * y3) = D := by
+    rw [hD]; simp only [deltaX]; ring
+  have hDpos : 0 < D := by
+    rw [← hDdelta]
+    exact mi_p21e_delta222_pos y1 y2 y3 hy1 hy1' hy2 hy2' hy3 hy3' het
+  have htpos : 0 < t := by rw [ht]; exact Real.sqrt_pos.mpr hDpos
+  have htd : t ^ 2 = D := by rw [ht]; exact Real.sq_sqrt (le_of_lt hDpos)
+  have hs2 : s ^ 2 = 2 := by rw [hs]; exact Real.sq_sqrt (by norm_num)
+  have hs0 : 0 < s := by rw [hs]; exact Real.sqrt_pos.mpr (by norm_num)
+  obtain ⟨hlt1, hlt2, _⟩ :=
+    mi_ETA_Y_LE_IMP_LT_ALL y1 y2 y3 hy1 hy1' hy2 hy2' hy3 hy3' het
+  have h8 : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+  have hu8 : y1 ^ 2 < 8 := by nlinarith [hlt1, hy1pos, h8]
+  have hv8 : y2 ^ 2 < 8 := by nlinarith [hlt2, hy2pos, h8]
+  have heta231 : eta_y y2 y3 y1 < Real.sqrt 2 := by
+    have he : eta_y y1 y2 y3 = eta_y y2 y3 y1 := by
+      rw [(mi_eta_y_sym y1 y2 y3).1, (mi_eta_y_sym y2 y1 y3).2]
+    rwa [← he]
+  have heta312 : eta_y y3 y1 y2 < Real.sqrt 2 := by
+    have he : eta_y y1 y2 y3 = eta_y y3 y1 y2 := by
+      rw [(mi_eta_y_sym y1 y2 y3).2, (mi_eta_y_sym y1 y3 y2).1]
+    rwa [← he]
+  have htri1 : y1 * y1 < y2 * y2 + y3 * y3 :=
+    mi_p21e_tri y1 y2 y3 hy1 hy1' hy2 hy2' hy3 hy3' het
+  have htri2 : y2 * y2 < y3 * y3 + y1 * y1 :=
+    mi_p21e_tri y2 y3 y1 hy2 hy2' hy3 hy3' hy1 hy1' heta231
+  have htri3 : y3 * y3 < y1 * y1 + y2 * y2 :=
+    mi_p21e_tri y3 y1 y2 hy3 hy3' hy1 hy1' hy2 hy2' heta312
+  have htri1' : y1 < y2 + y3 := by
+    nlinarith [htri1, hy1pos, hy2pos, hy3pos, sq_nonneg (y1 - (y2 + y3))]
+  have htri2' : y2 < y1 + y3 := by
+    nlinarith [htri2, hy1pos, hy2pos, hy3pos, sq_nonneg (y2 - (y1 + y3))]
+  have htri3' : y3 < y1 + y2 := by
+    nlinarith [htri3, hy1pos, hy2pos, hy3pos, sq_nonneg (y3 - (y1 + y2))]
+  have hbr : 0 < y1 ^ 2 + y2 ^ 2 - y3 ^ 2 := by linarith
+  have hXpos : 0 < X := by
+    rw [hX]
+    have h1 : 0 < 2 * s * y1 * y2 := by positivity
+    have h2 : 0 < y1 * y2 ^ 2 := by positivity
+    have h3 : 0 < y1 ^ 2 * y2 := by positivity
+    have h4 : 0 < s * (y1 ^ 2 + y2 ^ 2 - y3 ^ 2) := mul_pos hs0 hbr
+    linarith
+  have heuler := mi_p21e_euler y1 y2 y3 t s X E1 E2 E3 hy1pos hy2pos hy3pos
+    hu8 hv8 htri1' htri2' htri3' htpos (htd.trans hD)
+    (by rw [← hD]; exact hDpos) hs2 hs0 hE1 hE2 hE3 hX hXpos
+  have hDa : deltaX (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3) = D := by
+    rw [hD]; simp only [deltaX]; ring
+  have hDb : deltaX (y2 * y2) 2 (y1 * y1) 2 (y3 * y3) 2 = D := by
+    rw [hD]; simp only [deltaX]; ring
+  have hDc : deltaX 2 (y1 * y1) (y2 * y2) (y3 * y3) 2 2 = D := by
+    rw [hD]; simp only [deltaX]; ring
+  have hE1d : deltaX4 (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3) = E1 := by
+    rw [hE1]; simp only [deltaX4]; ring
+  have hE2d : deltaX4 (y2 * y2) 2 (y1 * y1) 2 (y3 * y3) 2 = E2 := by
+    rw [hE2]; simp only [deltaX4]; ring
+  have hE3d : deltaX4 2 (y1 * y1) (y2 * y2) (y3 * y3) 2 2 = E3 := by
+    rw [hE3]; simp only [deltaX4]; ring
+  have hT1 : dihXf (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3)
+      = Real.pi / 2 - Real.arctan (E1 / (2 * t * y1)) := by
+    rw [mi_p21e_dih_atn (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3) (by positivity)
+      (by rw [hDa]; exact hDpos)]
+    rw [hE1d, hDa]
+    have hsq : (4:ℝ) * (y1 * y1) * D = (2 * t * y1) ^ 2 := by
+      rw [← htd]; ring
+    rw [hsq, Real.sqrt_sq (by positivity : (0:ℝ) ≤ 2 * t * y1)]
+  have hT2 : dihXf (y2 * y2) 2 (y1 * y1) 2 (y3 * y3) 2
+      = Real.pi / 2 - Real.arctan (E2 / (2 * t * y2)) := by
+    rw [mi_p21e_dih_atn (y2 * y2) 2 (y1 * y1) 2 (y3 * y3) 2 (by positivity)
+      (by rw [hDb]; exact hDpos)]
+    rw [hE2d, hDb]
+    have hsq : (4:ℝ) * (y2 * y2) * D = (2 * t * y2) ^ 2 := by
+      rw [← htd]; ring
+    rw [hsq, Real.sqrt_sq (by positivity : (0:ℝ) ≤ 2 * t * y2)]
+  have hT3 : dihXf 2 (y1 * y1) (y2 * y2) (y3 * y3) 2 2
+      = Real.pi / 2 - Real.arctan (E3 / (2 * s * t)) := by
+    rw [mi_p21e_dih_atn 2 (y1 * y1) (y2 * y2) (y3 * y3) 2 2 (by norm_num)
+      (by rw [hDc]; exact hDpos)]
+    rw [hE3d, hDc]
+    have hs8 : (2 * s * t) ^ 2 = 8 * t ^ 2 := by
+      calc (2 * s * t) ^ 2 = 4 * s ^ 2 * t ^ 2 := by ring
+        _ = 8 * t ^ 2 := by rw [hs2]; ring
+    have hsq : (4:ℝ) * 2 * D = (2 * s * t) ^ 2 := by
+      rw [← htd, hs8]; ring
+    rw [hsq, Real.sqrt_sq (by positivity : (0:ℝ) ≤ 2 * s * t)]
+  have hsum : dihXf (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3)
+      + dihXf (y2 * y2) 2 (y1 * y1) 2 (y3 * y3) 2
+      + dihXf 2 (y1 * y1) (y2 * y2) (y3 * y3) 2 2 - Real.pi
+      = (Real.pi / 2 - Real.arctan (E1 / (2 * t * y1)))
+        + (Real.pi / 2 - Real.arctan (E2 / (2 * t * y2)))
+        + (Real.pi / 2 - Real.arctan (E3 / (2 * s * t))) - Real.pi := by
+    rw [hT1, hT2, hT3]
+  have hs2m : s * s = 2 := by rw [show s * s = s ^ 2 by ring, hs2]
+  have hsol : solY y1 y2 s s s y3 = Real.pi - 2 * Real.arctan (X / t) := by
+    simp only [solY, dihY]
+    rw [hs2m, hsum, heuler]
+  have hsE := mi_p21e_solE y1 y2 y3 s X D hy1pos hy2pos hX hs hs2 hDa
+  rw [hsol, hDdelta, ← ht, hsE]
+  exact mi_p21e_soltrig t X D htpos hXpos htd.symm
+
+/-- **The dihedral bridge** at the `(2,2,2)` pattern: `dih_y` equals
+`sqrt(delta_x) * dih_x_div_sqrtdelta_posbranch` at the slot-normalized
+pattern. -/
+private theorem mi_p21e_dih_bridge (y4 y5 y6 : ℝ) (hy4 : 2 ≤ y4) (hy4' : y4 ≤ Real.sqrt 8)
+    (hy5 : 2 ≤ y5) (hy5' : y5 ≤ Real.sqrt 8) (hy6 : 2 ≤ y6) (hy6' : y6 ≤ Real.sqrt 8)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2) :
+    dihY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
+        * dihXDivSqrtdeltaPosbranch (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
+  set a : ℝ := y4 * y4 with hA
+  set b : ℝ := y5 * y5 with hB
+  set c : ℝ := y6 * y6 with hC
+  set s : ℝ := Real.sqrt 2 with hs
+  have hy4pos : 0 < y4 := by linarith
+  have hy5pos : 0 < y5 := by linarith
+  have hy6pos : 0 < y6 := by linarith
+  have hapos : 0 < a := by rw [hA]; positivity
+  have hbpos : 0 < b := by rw [hB]; positivity
+  have hcpos : 0 < c := by rw [hC]; positivity
+  have hDpos : 0 < deltaX 2 2 2 a b c := by
+    have h := mi_p21e_delta222_pos y4 y5 y6 hy4 hy4' hy5 hy5' hy6 hy6' het
+    rwa [← hA, ← hB, ← hC] at h
+  have htrib : a < b + c := by
+    have h := mi_p21e_tri y4 y5 y6 hy4 hy4' hy5 hy5' hy6 hy6' het
+    rwa [← hA, ← hB, ← hC] at h
+  have hd : deltaX a 2 c 2 b 2 = deltaX 2 2 2 a b c := by
+    simp only [deltaX]; ring
+  have hdpos : 0 < deltaX a 2 c 2 b 2 := by rw [hd]; exact hDpos
+  have hd4pos : 0 < deltaX4 a 2 c 2 b 2 := by
+    rw [show deltaX4 a 2 c 2 b 2 = a * (b + c - a) by simp only [deltaX4]; ring]
+    exact mul_pos hapos (by linarith)
+  have hs2 : s * s = 2 := by rw [hs]; exact Real.mul_self_sqrt (by norm_num)
+  have hL : dihY y4 y5 s s s y6 = dihXf a 2 c 2 b 2 := by
+    rw [dihY, hs2, ← hA, ← hB, ← hC]
+    exact mi_p21e_dihsym a b c
+  have hT : dihXf a 2 c 2 b 2
+      = Real.pi / 2 - Real.arctan
+          (deltaX4 a 2 c 2 b 2 / Real.sqrt (4 * a * deltaX a 2 c 2 b 2)) :=
+    mi_p21e_dih_atn a 2 c 2 b 2 hapos hdpos
+  rw [hL, hT]
+  unfold dihXDivSqrtdeltaPosbranch
+  dsimp only
+  exact mi_p21e_dihalg a (deltaX a 2 c 2 b 2) (deltaX4 a 2 c 2 b 2)
+    (deltaX 2 2 2 a b c) hapos hdpos hd4pos hd.symm
+
+
+/-- Pattern-swap for `sol_euler_x_div_sqrtdelta` at the two `(2,2,2)`
+encodings of the same tetrahedron (`(y1²,y2²,2,2,2,y3²)` vs
+`(y2²,2,y1²,2,y3²,2)`): both `delta_x` and the let-bound `a` coincide. -/
+private theorem mi_solE_swap (y1 y2 y3 : ℝ) (h1 : 0 ≤ y1) (h2 : 0 ≤ y2) :
+    solEulerXDivSqrtdelta (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3)
+      = solEulerXDivSqrtdelta (y2 * y2) 2 (y1 * y1) 2 (y3 * y3) 2 := by
+  have hs1 : Real.sqrt (y1 * y1) = y1 := by
+    rw [show y1 * y1 = y1 ^ 2 by ring, Real.sqrt_sq h1]
+  have hs2 : Real.sqrt (y2 * y2) = y2 := by
+    rw [show y2 * y2 = y2 ^ 2 by ring, Real.sqrt_sq h2]
+  have hs12 : Real.sqrt ((y1 * y1) * (y2 * y2) * 2) = y1 * y2 * Real.sqrt 2 := by
+    rw [show (y1 * y1) * (y2 * y2) * 2 = (y1 * y2) ^ 2 * 2 by ring,
+      Real.sqrt_mul (sq_nonneg (y1 * y2)) 2, Real.sqrt_sq (mul_nonneg h1 h2)]
+  have h21 : Real.sqrt ((y2 * y2) * 2 * (y1 * y1)) = y1 * y2 * Real.sqrt 2 := by
+    rw [show (y2 * y2) * 2 * (y1 * y1) = (y1 * y2) ^ 2 * 2 by ring,
+      Real.sqrt_mul (sq_nonneg (y1 * y2)) 2, Real.sqrt_sq (mul_nonneg h1 h2)]
+  have hD : deltaX (y1 * y1) (y2 * y2) 2 2 2 (y3 * y3)
+      = deltaX (y2 * y2) 2 (y1 * y1) 2 (y3 * y3) 2 := by
+    simp only [deltaX]; ring
+  have hA : y1 * y2 * Real.sqrt 2 + y1 * (y2 * y2 + 2 - 2) / 2
+        + y2 * (y1 * y1 + 2 - 2) / 2 + Real.sqrt 2 * (y1 * y1 + y2 * y2 - y3 * y3) / 2
+      = y1 * y2 * Real.sqrt 2 + y2 * (2 + y1 * y1 - 2) / 2
+        + Real.sqrt 2 * (y2 * y2 + y1 * y1 - y3 * y3) / 2 + y1 * (y2 * y2 + 2 - 2) / 2 := by
+    ring
+  unfold solEulerXDivSqrtdelta
+  dsimp only
+  rw [hs1, hs2, hs12, h21]
+  rw [hD, hA]
+
+/-- Explicit unfolding of `gamma3fXDivSqrtdelta` at an arbitrary point
+(the `mk456`/`rotate*`/`uni`/`scalar6` glue of nonlin_def.hl:349-363). -/
+private theorem mi_gamma3fXDivSqrtdelta_unfold (m4 m5 m6 x1 x2 x3 x4 x5 x6 : ℝ) :
+    gamma3fXDivSqrtdelta m4 m5 m6 x1 x2 x3 x4 x5 x6
+      = 1 / 12
+        - (2 * mm1 / Real.pi) * (solEulerXDivSqrtdelta x5 2 x4 2 x6 2
+            + solEulerXDivSqrtdelta x6 2 x5 2 x4 2
+            + solEulerXDivSqrtdelta x4 2 x6 2 x5 2)
+        + (8 * mm2 / Real.pi) * (lfun (Real.sqrt x4 * 0.5) * m4
+              * dihXDivSqrtdeltaPosbranch x4 2 x6 2 x5 2
+            + lfun (Real.sqrt x5 * 0.5) * m5
+              * dihXDivSqrtdeltaPosbranch x5 2 x4 2 x6 2
+            + lfun (Real.sqrt x6 * 0.5) * m6
+              * dihXDivSqrtdeltaPosbranch x6 2 x5 2 x4 2) := by
+  simp only [gamma3fXDivSqrtdelta, scalar6, uni, mk456, compose6, projX4, projX5, projX6,
+    projY4, projY5, projY6, constant6, two6, rotate4, rotate5, rotate6,
+    Pi.add_apply, Pi.mul_apply, Pi.sub_apply]
+  ring
+
+/-- Local copy of the `(2 3)(5 6)`-type `dihXf` slot symmetry (identical
+statement to the file's later `mi_dihXf_sym2`; kept local to this section so
+the item-9 assembly does not depend on declaration order). -/
+private theorem mi_euler4_dihXf_sym2 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    dihXf x1 x2 x3 x4 x5 x6 = dihXf x1 x5 x6 x4 x2 x3 := by
+  have hd : deltaX x1 x5 x6 x4 x2 x3 = deltaX x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX]; ring
+  have hd4 : deltaX4 x1 x5 x6 x4 x2 x3 = deltaX4 x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX4]; ring
+  simp only [dihXf, hd, hd4]
+
+/-- Local copy of the `solX` 3-cycle (identical statement to the file's later
+`mi_solX_cycle`; the three `dihXf` summands just permute). -/
+private theorem mi_euler4_solX_cycle (x1 x2 x3 x4 x5 x6 : ℝ) :
+    solX x1 x2 x3 x4 x5 x6 = solX x2 x3 x1 x5 x6 x4 := by
+  simp only [solX]
+  ring
+
 /-- HOL `gamma3f_gamma3f_x_div_sqrtdelta` (merge_ineq.hl:3292-3310).
-Statement frozen for the wave 2b track-7 consumer.  NEEDS: the proof body
-runs `gamma3f_gamma3f_x_div_sqrtdelta_WEAK2` (merge_ineq.hl:3079) →
-`..._WEAK` (:3024), which needs the solid-angle conversions
-`sol_x_sol_euler_x` (:841 — via `simplex_exists` +
-`Euler_main_theorem.EULER_TRIANGLE`, both absent from the tree), plus the
-matan-level `sol_euler_x = sqrt(delta_x) * sol_euler_x_div_sqrtdelta`
-(:1060) and `dih_x = sqrt(delta_x) * dih_x_div_sqrtdelta_posbranch`
-(:920) conversions. -/
+Statement frozen for the wave 2b track-7 consumer.  PROVED (EULER lane 4)
+by direct assembly instead of the absent `..._WEAK2`/`..._WEAK` route:
+`gamma3f` unfolds over `vol3r`/`vol3f`; the three `solY` summands become
+`solX` at the `mk456`-rotated `(y5²,2,y4²,2,y6²,2)`-type patterns
+(`mi_euler4_solX_cycle`) and the three `dihY` summands become `dihXf`
+(`mi_euler4_dihXf_sym2`).  The private bridge kit `mi_p21e_sol_bridge`/
+`mi_p21e_dih_bridge` (copied verbatim from the green `P21EulerScratch`
+lane, `mi_`-renamed per the §0' bridge-copy convention — the scratch module
+imports this file, so no import edge is possible) supplies
+`sol_x = sqrt(delta_x) * sol_euler_x_div_sqrtdelta` and
+`dih_x = sqrt(delta_x) * dih_x_div_sqrtdelta_posbranch` at the `(2,2,2)`
+pattern; the residual `solEulerXDivSqrtdelta` pattern mismatch is closed by
+the pure-algebra `mi_solE_swap`, `lmfun` by `mi_lmfun_h0cut`, and the whole
+by `mi_gamma3fXDivSqrtdelta_unfold` + `ring`. -/
 theorem mi_gamma3f_gamma3f_x_div_sqrtdelta (a b c y4 y5 y6 : ℝ)
     (h4 : 2 ≤ y4) (h5 : 2 ≤ y5) (h6 : 2 ≤ y6) (h4' : y4 ≤ 2 * Real.sqrt 2)
     (h5' : y5 ≤ 2 * Real.sqrt 2) (h6' : y6 ≤ 2 * Real.sqrt 2)
@@ -2077,8 +2976,136 @@ theorem mi_gamma3f_gamma3f_x_div_sqrtdelta (a b c y4 y5 y6 : ℝ)
       = gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) (h0cut y6) a b c
           (y4 * y4) (y5 * y5) (y6 * y6)
         * Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6)) := by
-  -- NEEDS: merge_ineq.hl:3024/3079 WEAK/WEAK2 (+ :841/:920/:1060 conversions; EULER_TRIANGLE absent) — see docstring
-  sorry
+  have hs2 : (Real.sqrt 2 * Real.sqrt 2 : ℝ) = 2 := Real.mul_self_sqrt (by norm_num)
+  have h8a : y4 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h4'
+  have h8b : y5 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h5'
+  have h8c : y6 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h6'
+  have heta234 : eta_y y5 y6 y4 < Real.sqrt 2 := by
+    have he : eta_y y4 y5 y6 = eta_y y5 y6 y4 := by
+      rw [(mi_eta_y_sym y4 y5 y6).1, (mi_eta_y_sym y5 y4 y6).2]
+    rwa [← he]
+  have heta342 : eta_y y6 y4 y5 < Real.sqrt 2 := by
+    have he : eta_y y4 y5 y6 = eta_y y6 y4 y5 := by
+      rw [(mi_eta_y_sym y4 y5 y6).2, (mi_eta_y_sym y4 y6 y5).1]
+    rwa [← he]
+  have hS1 := mi_p21e_sol_bridge y4 y5 y6 h4 h8a h5 h8b h6 h8c het
+  have hS2 := mi_p21e_sol_bridge y5 y6 y4 h5 h8b h6 h8c h4 h8a heta234
+  have hS3 := mi_p21e_sol_bridge y6 y4 y5 h6 h8c h4 h8a h5 h8b heta342
+  have hT1 := mi_p21e_dih_bridge y4 y5 y6 h4 h8a h5 h8b h6 h8c het
+  have hT2 := mi_p21e_dih_bridge y5 y6 y4 h5 h8b h6 h8c h4 h8a heta234
+  have hT3 := mi_p21e_dih_bridge y6 y4 y5 h6 h8c h4 h8a h5 h8b heta342
+  have hp1 := mi_solE_swap y4 y5 y6 (by linarith) (by linarith)
+  have hp2 := mi_solE_swap y5 y6 y4 (by linarith) (by linarith)
+  have hp3 := mi_solE_swap y6 y4 y5 (by linarith) (by linarith)
+  have hDc2 : deltaX 2 2 2 (y5 * y5) (y6 * y6) (y4 * y4)
+      = deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
+    simp only [deltaX]; ring
+  have hDc3 : deltaX 2 2 2 (y6 * y6) (y4 * y4) (y5 * y5)
+      = deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
+    simp only [deltaX]; ring
+  have hs4 : Real.sqrt (y4 * y4) = y4 := by
+    rw [show y4 * y4 = y4 ^ 2 by ring, Real.sqrt_sq (by linarith)]
+  have hs5 : Real.sqrt (y5 * y5) = y5 := by
+    rw [show y5 * y5 = y5 ^ 2 by ring, Real.sqrt_sq (by linarith)]
+  have hs6 : Real.sqrt (y6 * y6) = y6 := by
+    rw [show y6 * y6 = y6 ^ 2 by ring, Real.sqrt_sq (by linarith)]
+  have e1 : solY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+      = solX (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2 := by
+    have h0 : solY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+        = solX (y4 * y4) (y5 * y5) (Real.sqrt 2 * Real.sqrt 2)
+            (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y6 * y6) := rfl
+    rw [h0, hs2]
+    exact mi_euler4_solX_cycle (y4 * y4) (y5 * y5) 2 2 2 (y6 * y6)
+  have e2 : solY y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4
+      = solX (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2 := by
+    have h0 : solY y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4
+        = solX (y5 * y5) (y6 * y6) (Real.sqrt 2 * Real.sqrt 2)
+            (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y4 * y4) := rfl
+    rw [h0, hs2]
+    exact mi_euler4_solX_cycle (y5 * y5) (y6 * y6) 2 2 2 (y4 * y4)
+  have e3 : solY y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5
+      = solX (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
+    have h0 : solY y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5
+        = solX (y6 * y6) (y4 * y4) (Real.sqrt 2 * Real.sqrt 2)
+            (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y5 * y5) := rfl
+    rw [h0, hs2]
+    exact mi_euler4_solX_cycle (y6 * y6) (y4 * y4) 2 2 2 (y5 * y5)
+  have e4 : dihY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+      = dihXf (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
+    show dihXf (y4 * y4) (y5 * y5) (Real.sqrt 2 * Real.sqrt 2)
+      (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y6 * y6) = _
+    rw [hs2]
+    exact mi_euler4_dihXf_sym2 (y4 * y4) (y5 * y5) 2 2 2 (y6 * y6)
+  have e5 : dihY y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4
+      = dihXf (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2 := by
+    show dihXf (y5 * y5) (y6 * y6) (Real.sqrt 2 * Real.sqrt 2)
+      (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y4 * y4) = _
+    rw [hs2]
+    exact mi_euler4_dihXf_sym2 (y5 * y5) (y6 * y6) 2 2 2 (y4 * y4)
+  have e6 : dihY y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5
+      = dihXf (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2 := by
+    show dihXf (y6 * y6) (y4 * y4) (Real.sqrt 2 * Real.sqrt 2)
+      (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y5 * y5) = _
+    rw [hs2]
+    exact mi_euler4_dihXf_sym2 (y6 * y6) (y4 * y4) 2 2 2 (y5 * y5)
+  have hQ2 : solX (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2
+      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
+        * solEulerXDivSqrtdelta (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2 := by
+    rw [← e1, hS1, hp1]
+  have hQ3 : solX (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2
+      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
+        * solEulerXDivSqrtdelta (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2 := by
+    rw [← e2, hS2, hDc2, hp2]
+  have hQ1 : solX (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2
+      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
+        * solEulerXDivSqrtdelta (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
+    rw [← e3, hS3, hDc3, hp3]
+  have hR1 : dihXf (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2
+      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
+        * dihXDivSqrtdeltaPosbranch (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
+    rw [← e4, hT1]
+  have hR2 : dihXf (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2
+      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
+        * dihXDivSqrtdeltaPosbranch (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2 := by
+    rw [← e5, hT2, hDc2]
+  have hR3 : dihXf (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2
+      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
+        * dihXDivSqrtdeltaPosbranch (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2 := by
+    rw [← e6, hT3, hDc3]
+  have hvol : vol3r y4 y5 y6 (Real.sqrt 2)
+      = volXf 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
+    show volY (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 = _
+    unfold volY
+    rw [hs2]
+  have hmain : gamma3f y4 y5 y6 (Real.sqrt 2) lmfun
+      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
+        * (1 / 12
+          - (2 * mm1 / Real.pi) * (solEulerXDivSqrtdelta (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2
+              + solEulerXDivSqrtdelta (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2
+              + solEulerXDivSqrtdelta (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2)
+          + (8 * mm2 / Real.pi) * (lfun (y4 / 2) * h0cut y4
+                * dihXDivSqrtdeltaPosbranch (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2
+              + lfun (y5 / 2) * h0cut y5
+                * dihXDivSqrtdeltaPosbranch (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2
+              + lfun (y6 / 2) * h0cut y6
+                * dihXDivSqrtdeltaPosbranch (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2)) := by
+    unfold gamma3f vol3f
+    rw [e1, e2, e3, e4, e5, e6]
+    rw [hvol]
+    unfold volXf
+    rw [mi_lmfun_h0cut y4, mi_lmfun_h0cut y5, mi_lmfun_h0cut y6]
+    rw [hQ2, hQ3, hQ1, hR1, hR2, hR3]
+    ring
+  calc gamma3f y4 y5 y6 (Real.sqrt 2) lmfun
+      = _ := hmain
+    _ = gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) (h0cut y6) a b c
+          (y4 * y4) (y5 * y5) (y6 * y6)
+        * Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6)) := by
+        rw [mi_gamma3fXDivSqrtdelta_unfold]
+        rw [hs4, hs5, hs6]
+        ring
+
+end P21Euler4Kit
 
 /-! ### Item 10: gamma3f_sym -/
 
