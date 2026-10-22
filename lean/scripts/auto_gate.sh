@@ -465,12 +465,16 @@ wcmt=$(awk '
     next
   }' "$FILE" | sort -u)
 filter_not_in(){ # usage: lines | filter_not_in <cmtset> — pass through lines
-                 # whose body (leading +/- stripped) is NOT in the set
+                 # whose body (leading +/- stripped) is NOT in the set.
+                 # 2026-10-22: exact-line match (`-x`), not substring `-F`.
+                 # Live false positive: PA14 docstring line
+                 # "  sorry-free**（…）" made `grep -F "  sorry"` drop the
+                 # deleted bare sorry of QZKSYKG2, failing the scaffold net.
   local set="$1" line body
   while IFS= read -r line; do
     [ -z "$line" ] && continue
     body="${line#-}"; body="${body#+}"
-    if [ -n "$set" ] && printf '%s\n' "$set" | grep -qF -- "$body"; then
+    if [ -n "$set" ] && printf '%s\n' "$set" | grep -qxF -- "$body"; then
       continue
     fi
     printf '%s\n' "$line"
