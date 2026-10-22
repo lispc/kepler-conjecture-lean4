@@ -72,10 +72,13 @@ def IExpr.derivExpr {n : ℕ} : IExpr n → Fin n → IExpr n
       .div (e.derivExpr j) (.mul (.const ⟨2, 0⟩) (.sqrt e s₁ s₂)) (-80)
   | .trans .arctanK e _ _, j =>
       .div (e.derivExpr j) (.add (.const ⟨1, 0⟩) (.mul e e)) (-80)
+  | .trans .atan1K e _ _, j =>
+      .div (e.derivExpr j) (.add (.const ⟨1, 0⟩) (.mul e e)) (-80)
   | .trans _ _ _ _, _ => .const ⟨0, 0⟩
 
-/-- The node whitelist of `derivExpr`: no `.abs`, and `arctanK` is the only
-transcendental kind. -/
+/-- The node whitelist of `derivExpr`: no `.abs`, and `arctanK` (and its
+W8 gen-10 opt-in `atan1K` variant, same real function/derivative) is the
+only transcendental kind. -/
 def IExpr.derivSafe {n : ℕ} : IExpr n → Bool
   | .const _ => true
   | .var _ => true
@@ -88,6 +91,7 @@ def IExpr.derivSafe {n : ℕ} : IExpr n → Bool
   | .div e₁ e₂ _ => e₁.derivSafe && e₂.derivSafe
   | .sqrt e _ _ => e.derivSafe
   | .trans .arctanK e _ _ => e.derivSafe
+  | .trans .atan1K e _ _ => e.derivSafe
   | .trans _ _ _ _ => false
 
 /-! ## Domain premises -/
@@ -491,6 +495,21 @@ theorem hasDeriv_sliceEval {n : ℕ} (j : Fin n) (box : Fin n → DInterval) :
             Dyadic.toReal_one, one_div, inv_mul_eq_div]
         rw [hv]
         exact hc
+      | atan1K =>
+        -- W8 gen-10 opt-in kind: same real function and derivative rule as
+        -- `arctanK` (`transReal .atan1K = Real.arctan`).
+        simp only [IExpr.derivSafe] at hSafe
+        have hu := ih σ hσ hint hSafe (DomOK.trans_inv hDom)
+        have hc := HasDerivAt.comp (σ j)
+          (Real.hasDerivAt_arctan (sliceEval e j σ (σ j))) hu
+        rw [sliceEval_self e j σ, pow_two] at hc
+        have hv : (IExpr.derivExpr (.trans .atan1K e N out) j).evalReal σ
+            = (1 / (1 + e.evalReal σ * e.evalReal σ))
+              * (IExpr.derivExpr e j).evalReal σ := by
+          simp only [IExpr.derivExpr, IExpr.evalReal, transReal,
+            Dyadic.toReal_one, one_div, inv_mul_eq_div]
+        rw [hv]
+        exact hc
 
 /-- **The chain rule**, `deriv` form (the W6a-stated shape
 `∂ⱼ(e.evalReal) = dfⱼ.evalReal`). -/
@@ -595,6 +614,10 @@ theorem continuousOn_sliceEval {n : ℕ} (j : Fin n) (box : Fin n → DInterval)
       | cosK => exact Bool.noConfusion hSafe
       | lnK => exact Bool.noConfusion hSafe
       | arctanK =>
+        simp only [IExpr.derivSafe] at hSafe
+        exact Real.continuous_arctan.comp_continuousOn
+          (ih σ hσ hSafe (DomOK.trans_inv hDom))
+      | atan1K =>
         simp only [IExpr.derivSafe] at hSafe
         exact Real.continuous_arctan.comp_continuousOn
           (ih σ hσ hSafe (DomOK.trans_inv hDom))

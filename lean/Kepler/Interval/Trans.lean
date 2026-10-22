@@ -1210,6 +1210,38 @@ theorem arctanHull_sound {a b : Option DInterval} {K : DInterval} {z : ℝ}
           rw [Dyadic.toReal_dmax]
           exact le_trans h2 (le_max_right _ _)
 
+/-- W8 gen-10: **precomputed constant box for `atan(1) = π/4`**, used only
+by the opt-in `TKind.atan1K` node (the default `arctanI` is untouched).
+`x = 1` is a boundary point of the alternating arctan series, so the spec
+rung 2048 is genuinely needed for a ~`2^-12` enclosure and costs ~2.2 s per
+compiled evaluation.  The value is a `π` multiple, so Mathlib's 20-digit
+rational bounds (`Real.pi_gt_d20` / `pi_lt_d20`) certify a one-`2^-64`-ulp
+box with two kernel-cheap `norm_num` comparisons; the box is defined once
+and referenced (olean) by every opt-in leaf instead of being re-expanded.
+
+Lower endpoint `14488038916154245684 · 2^-64 ≈ 0.785398163397448309615`;
+upper `14488038916154245685 · 2^-64`.  The true
+`π/4 = 0.7853981633974483096156608…` lies strictly inside. -/
+def pi4D : DInterval :=
+  ⟨⟨14488038916154245684, -64⟩, ⟨14488038916154245685, -64⟩⟩
+
+theorem pi4D_mem : pi4D.mem (Real.pi / 4) := by
+  constructor
+  · show Dyadic.toReal ⟨14488038916154245684, -64⟩ ≤ Real.pi / 4
+    simp only [Dyadic.toReal_def]
+    have h := Real.pi_gt_d20
+    have h2 : (((14488038916154245684 : ℤ) : ℝ)) * (2:ℝ)^((-64:ℤ))
+        = 14488038916154245684 / 18446744073709551616 := by norm_num
+    rw [h2]
+    linarith
+  · show Real.pi / 4 ≤ Dyadic.toReal ⟨14488038916154245685, -64⟩
+    simp only [Dyadic.toReal_def]
+    have h := Real.pi_lt_d20
+    have h2 : (((14488038916154245685 : ℤ) : ℝ)) * (2:ℝ)^((-64:ℤ))
+        = 14488038916154245685 / 18446744073709551616 := by norm_num
+    rw [h2]
+    linarith
+
 /-- Interval-level `arctan`, total on all of `ℝ`: the base branch covers
 `J ⊆ [-1, 1]`; `1 ≤ J.lo` reduces via `arctan x = π/2 − arctan x⁻¹`
 (`arctanIPos`); `J.hi ≤ −1` by odd symmetry (`arctanINeg`); intervals

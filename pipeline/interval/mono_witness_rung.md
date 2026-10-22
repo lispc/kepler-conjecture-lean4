@@ -138,6 +138,96 @@ Answer: the `TMParams` route is **NO-GO**, but a library constant box for
 - Provenance: `gen10/REPORT.md`, `gen10/code.diff`, snapshot
   `lane_snapshots/w8rung/gen10probe/` (65 items, manifest.md5).
 
+## gen-10 full landing (2026-10-22, main-repo opt-in change)
+
+The probe's global `arctanI` fast path was **not** adopted. The landed form
+is an opt-in AST kind, so every existing `atan(1)` artifact keeps the old
+`arctanI` interval and every default emission is byte-identical.
+
+### Opt-in encoding
+
+- New constructor `TKind.atan1K` (`lean/Kepler/Interval/Expr.lean`):
+  `transReal .atan1K x = Real.arctan x`; `transOn .atan1K I N out` returns
+  `some pi4D` iff `I` is exactly the point interval `[1, 1]`, otherwise it
+  falls back to `arctanI I N out` (so mis-use is still sound).
+- `pi4D` + `pi4D_mem` in `lean/Kepler/Interval/Trans.lean`: one-ulp
+  (`2^-64`) π/4 box, certified from Mathlib `Real.pi_gt_d20` /
+  `Real.pi_lt_d20`; no new axioms.
+- Supporting matches: `CertTM.lean` (`TaylorM.trans`, `valid_trans`,
+  `TMSafe`), `MonoCorner.lean` (`derivExpr`/`derivSafe` and both
+  chain-rule/continuity `atan1K` cases), `Tools/FillParams.lean`
+  (`toTag = 4`), `Cases/C549Mono.lean`, `Cases/C549RangeCurvSim.lean`.
+  `TaylorM.trans .atan1K` reuses the arctan TM rule (same real function);
+  closed `atan1K` nodes take the plain-eval `pi4D` fast path in every
+  leaf evaluator, so the TM decide never expands the 128-term Taylor series
+  for `atan(1)`.
+- Emitter: **`--mono-atan1-box`**, default OFF. Only `op == atan`, closed,
+  and argument a direct dyadic literal with value 1 (padded mantissas
+  recognized) becomes `.trans .atan1K`; all other nodes stay `arctanK`.
+  With the flag off the emission is byte-identical (checked against the
+  gen-5 kc256 stage B, md5 `5fbf0047...`); with it on, the only textual
+  delta is the prelude note + 31 `atan1K` tags per expression copy.
+
+### Recipe
+
+```
+EM=pipeline/interval/emit_lean.py; CASE=pipeline_out_cases_BIXPCGW.json
+python3 $EM $CASE POS1.monotree.json POS1_A.lean \
+    --mono-tree --mono-dom-rung=128 --mono-atan1-box
+cd lean && lake env lean --run ../POS1_A.lean > POS1.params.txt
+python3 ../$EM ../$CASE POS1.monotree.json POS1_B.lean \
+    --mono-tree --mono-dom-rung=128 --mono-atan1-box \
+    --mono-split-fix --params=../POS1.params.txt
+lake env lean ../POS1_B.lean
+```
+`--mono-split-fix` is recommended for stage B: the tight π/4 box can flip
+the advisory `checkPos E B0 = false` diagnostic to true (it is not consumed
+by `monoTree_sound`). t3 adds `--mono-split-fix` to stage A as well.
+
+### Measured (same machine, serial)
+
+| run | stage A wall/user | stage B wall/user | RSS A/B | verdict |
+|---|---|---|---|---|
+| POS1 unified (7d) | 9.70 / 8.30 s | 43.92 / 44.74 s | 5.60 / 8.75 GB | DOM 99/99 bad=0, probe PASS (-1898), B rc=0 |
+| t3 (3 leaves) | 14.74 / 13.32 s | 80.83 / 132.84 s | 5.60 / 12.48 GB | 3/3 PASS (-1900/-1900/-1899), B rc=0 |
+| kd pos1_d2 `K0LL` | 8.72 / 7.17 s | 46.27 / 44.30 s | 5.60 / 9.01 GB | probe PASS, B rc=0 |
+| kd pos1_d3 `K0LLL` | 8.63 / 7.12 s | 45.35 / 43.66 s | 5.60 / 8.87 GB | probe PASS, B rc=0 |
+
+- POS1 end-to-end **53.6 s** (gen-9 kc128 baseline 605.1 s, **11.3×**);
+  t3 **95.6 s** (baseline 813.7 s, **8.5×**). These agree with the probe
+  (52.2 s / 92.7 s) within run-load noise; the probe's global fast path and
+  this opt-in kind produce identical stage-A probe margins (-1898, -1900,
+  -1900, -1899) and the same 4 DOM-row changes.
+- DOM vs gen-9 kc128: rows 2,3,51,52 differ (the constant `atan` divisor
+  rows), all **tighter** (width ~2^-62/2^-51/2^-62/2^-48 vs
+  ~2^-10/2^-5/2^-10/2^-2); 99/99 admissible.
+- Axioms (POS1, t3, kd d2): `sb_end_to_end` =
+  `[propext, Classical.choice, Quot.sound]`; leaf/`L1_cert` =
+  `[propext, Quot.sound]`; `pi4D_mem` and `transOn_sound` also standard
+  three. No `sorryAx`, no `native_decide`.
+- Per-leaf CPU: ≈**50.8–51.5 s** (leaf-only), ≈48.7 s (t3), 53.0 s
+  (POS1 incl. restrict). 251k leaves × ≈51 CPU-s ≈ **148 CPU-days**
+  (gen-9 1046); 64 cores ≈**2.3 days**; stage-B max RSS 8.8–9.0 GB per
+  leaf (36 GB node at the 50% budget: 2 concurrent B workers; at ≤80%: 3).
+- Default-semantics regression: the old gen-5 kc256 POS1 stage B artifact
+  still kernel-checks under the new library (rc=0, 0 error, 239.8 s,
+  18.5 GB), and `transOn .arctanK` on `[1,1]` is unchanged.
+- Builds (serial): `Kepler.Interval.CertTM` rc=0 (Trans 30 s, Expr 3 s,
+  Cert 3.6 s, CertTM 13 s), `MonoTree` rc=0, `Tools.FillParams` rc=0,
+  `C549Mono` rc=0 (144 s), `C549RangeCurvSim` rc=0,
+  `Kepler.Text.PackingConcl` rc=0; a probe importing both
+  `Kepler.Interval.MonoTree` and `Kepler.Text.PackingConcl` compiles with
+  no collisions.
+- Difference from the probe: the probe changed `arctanI` globally; this
+  landing leaves it untouched and routes the 31 literal-1 `atan` nodes
+  through `atan1K`. The probe's `--mono-dom-rung-keepconst-atan1` marker is
+  superseded by `--mono-atan1-box`; nothing in the default path changed.
+- Remaining risk: a leaf whose stage-B `checkPos E B0` diagnostic flips
+  (use `--mono-split-fix`); consumers of the old exact `atan(1)` interval
+  are unaffected but do not get π/4 unless they opt in; `atan(1/√2)` stays
+  on the ordinary `atanq` path at rung 128 (residual ~1e-41, already at
+  output granularity).
+
 ## Provenance
 
 - Curve: `gen7/{POS1,L1}.rungcurve.json`, `gen7/*_u{8..256}.stageA_run.log`,
@@ -146,3 +236,7 @@ Answer: the `TMParams` route is **NO-GO**, but a library constant box for
   (`pipeline/interval/emit_lean.py`).
 - Emitter flag: `--mono-witness-rung=N[,OUT]` (`OUT` defaults to the spec
   `rung_out`).
+- gen-10 full landing: `gen10full/{PROGRESS,REPORT,COMMANDS}.md`,
+  `gen10full/logs/`, snapshot `lane_snapshots/w8rung/gen10full/`
+  (`code/` + artifacts + `manifest.md5`). Probe provenance remains
+  `gen10/REPORT.md` / `gen10/code.diff`.

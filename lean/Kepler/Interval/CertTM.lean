@@ -455,6 +455,22 @@ def trans {n : ℕ} (k : TKind) (M : TaylorM n) (N : ℕ) (out : Int) (p : Trans
           ((M.W.mul M.W).mul (Dyadic.dmin
             (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
             ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))))).chopCeilTo M.errScale⟩
+  | .atan1K =>
+      -- W8 gen-10 opt-in kind: the *TM model* is the arctan rule with the
+      -- ordinary `arctanI` enclosure (the point `[1,1]`/`pi4D` fast path is
+      -- taken by the plain `IExpr.eval` closed-node fast path of the leaf
+      -- evaluators, which is the route a closed `atan1K` node takes).
+      -- `transOn .arctanK` here makes this branch definitionally identical
+      -- to the `arctanK` one, so `valid_trans_atan` applies unchanged
+      -- (`Real.arctan` is the real function of both kinds).
+      (transOn .arctanK ⟨M.fB.lo, M.fB.hi⟩ N out).bind fun V =>
+      (DInterval.recip ⟨(⟨1, 0⟩ : Dyadic).add (M.fB.abs.lo.mul M.fB.abs.lo),
+        (⟨1, 0⟩ : Dyadic).add (M.fB.abs.hi.mul M.fB.abs.hi)⟩ p.o1).map fun J =>
+      ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
+        ((M.err.mul J.abs.hi).add
+          ((M.W.mul M.W).mul (Dyadic.dmin
+            (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
+            ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))))).chopCeilTo M.errScale⟩
   | .lnK =>
       if (M.fB.lo.add (-M.W)).isPos = true then
         (transOn .lnK ⟨M.fB.lo, M.fB.hi⟩ N out).bind fun V =>
@@ -2227,6 +2243,7 @@ theorem valid_trans {k : TKind} {M : TaylorM n} {box : Fin n → DInterval}
   | cosK => simp [TaylorM.trans] at h
   | arctanK => exact valid_trans_atan hV N out p h
   | lnK => exact valid_trans_ln hV N out p h
+  | atan1K => exact valid_trans_atan hV N out p h
 
 /-- Exact constant model of a closed (variable-free) subexpression with a
 successful plain evaluation: the value is `ρ`-independent, so zero slopes and
@@ -2443,7 +2460,7 @@ def IExpr.TMSafe {n : ℕ} : IExpr n → Bool
   | .div e₁ e₂ _ => e₁.TMSafe && e₂.TMSafe
   | .sqrt e _ _ => e.TMSafe
   | .trans k _ _ _ => match k with
-      | .sinK | .arctanK | .lnK => true
+      | .sinK | .arctanK | .lnK | .atan1K => true
       | .cosK => false
 
 /-! ## Hybrid evaluation: zero-order fallback for TM-unsafe nodes

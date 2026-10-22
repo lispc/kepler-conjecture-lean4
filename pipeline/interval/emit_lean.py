@@ -241,6 +241,33 @@ def build_goals(case, rpn):
 TRANS_KIND = {"atan": "arctanK", "sin": "sinK", "cos": "cosK", "ln": "lnK"}
 
 
+_LIT_ONE_RE = None  # compiled lazily: r"^\(\.const ⟨(-?\d+), (-?\d+)⟩\)$"
+
+
+def is_lit_one_text(text):
+    """True iff `text` is a dyadic literal `(.const ⟨m, e⟩)` with value 1.
+
+    W8 gen-10 `--mono-atan1-box`: only a *literal* `1` argument is rewired to
+    the opt-in `TKind.atan1K` node (which returns the library `pi4D` box);
+    computed expressions that happen to equal 1 stay on `arctanK`.  The
+    parse is value-based, so a mantissa-padded literal (`4^k · 2^-2k`) is
+    still recognized."""
+    global _LIT_ONE_RE
+    import re as _re
+    if _LIT_ONE_RE is None:
+        _LIT_ONE_RE = _re.compile(r"^\(\.const ⟨(-?\d+), (-?\d+)⟩\)$")
+    m = _LIT_ONE_RE.match(text.strip())
+    if m is None:
+        return False
+    mant, ex = int(m.group(1)), int(m.group(2))
+    if mant <= 0:
+        return False
+    if ex > 0:
+        return mant << ex == 1
+    return mant == (1 << (-ex))
+
+
+
 def tree_box_map(t):
     """cert-form box -> tree (node-form) box over all leaves of a
     reconstructed tree.  Stage-A drivers must evaluate the *node* forms:
@@ -313,12 +340,14 @@ class RPN:
     minefield).  Default None = v1/v2 byte-identical behavior."""
 
     def __init__(self, div_out=-64, sqrt_slot=None, trans=None,
-                 trans_unclose_sqrt=False, sqrt_const_pad_bits=None):
+                 trans_unclose_sqrt=False, sqrt_const_pad_bits=None,
+                 atan1_box=False):
         self.div_out = div_out
         self.sqrt_slot = sqrt_slot
         self.trans = trans
         self.trans_unclose_sqrt = trans_unclose_sqrt
         self.sqrt_const_pad_bits = sqrt_const_pad_bits
+        self.atan1_box = atan1_box
         self._pad_vals = None
         self.sqrt_count = 0
 
@@ -497,6 +526,15 @@ class RPN:
                 a = st.pop()
                 N, out = self.trans(op, a[1])
                 text, closed = a[0], a[1]
+                # W8 gen-10 `--mono-atan1-box` (default OFF): only a closed
+                # `atan` whose argument is the literal 1 goes to the opt-in
+                # `atan1K` kind, whose library wrapper returns the precomputed
+                # `pi4D` (π/4) box.  Everything else keeps `arctanK`, so the
+                # default emission is byte-identical.
+                kind = TRANS_KIND[op]
+                if (self.atan1_box and op == "atan" and closed
+                        and is_lit_one_text(text)):
+                    kind = "atan1K"
                 if (self.trans_unclose_sqrt and closed
                         and "(.sqrt " in text):
                     # See `trans_unclose_sqrt` in the class docstring: keep
@@ -504,7 +542,7 @@ class RPN:
                     # fast path (dead dummy sqrt certificates there).
                     text = (f"(.add {text} (.mul (.var 0) (.const ⟨0, 0⟩)))")
                     closed = False
-                st.append((f"(.trans .{TRANS_KIND[op]} {text} {N} {out})",
+                st.append((f"(.trans .{kind} {text} {N} {out})",
                            closed, None))
             else:
                 die(f"unknown op {op}")
@@ -3029,7 +3067,7 @@ def _monotree_const_trans(prog):
 
 
 def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False,
-           dom_rung=None, witness_marks=None):
+           dom_rung=None, witness_marks=None, atan1_box=False):
     """The W8 mono-tree RPN policy: sqrt slots from `slots` when given
     (`slots(ms)(i)` returns the (s1, s2) TEXT of the i-th sqrt node in RPN
     order — real mantissas computed kernel-side by `slotsDeep`, so closed
@@ -3071,12 +3109,13 @@ def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False,
     return RPN(sqrt_slot=sq,
                trans=trans_cb,
                trans_unclose_sqrt=unclose,
-               sqrt_const_pad_bits=pad_bits)
+               sqrt_const_pad_bits=pad_bits,
+               atan1_box=atan1_box)
 
 
 def monotree_main(case, cid, n, args, spec, params_file,
                   dom_rung=None, witness_rung=None, keepconst_rung=None,
-                  split_fix=False, decide_mode="kernel"):
+                  split_fix=False, decide_mode="kernel", atan1_box=False):
     import re
     nsp = "MonoTree_" + re.sub(r"\W", "_", cid)
     pad_bits = spec.get("pad_sqrt_const")
@@ -3128,7 +3167,8 @@ def monotree_main(case, cid, n, args, spec, params_file,
                 out = rung[1] if dr[1] is None else dr[1]
                 dom_rung_eff = (dr[0], out)
     rpn = em_RPN(pad_bits, rung=rung,
-                 dom_rung=dom_rung_eff, witness_marks=marks)
+                 dom_rung=dom_rung_eff, witness_marks=marks,
+                 atan1_box=atan1_box)
     expr0 = rpn.emit(spec["expr"])
     nsq0, ndiv0, ntrans0 = _monotree_count_ops(expr0)
     gran = int(spec.get("gran", -80))
@@ -3179,6 +3219,14 @@ def monotree_main(case, cid, n, args, spec, params_file,
                        "    rung.  Tight-margin TM nodes keep the spec "
                        "rung.\n")
         wr_note = (wr_all_note + wr_note + "-/\n")
+    if atan1_box:
+        ab_note = ("    W8 gen-10 atan1-box: closed `atan` nodes whose "
+                   "argument is the\n    literal 1 are emitted as "
+                   "`TKind.atan1K` (the library `pi4D` = π/4\n    box, "
+                   "certified from the Mathlib `pi_gt_d20`/`pi_lt_d20`\n"
+                   "    bounds); every other trans node stays `arctanK`.\n")
+        wr_note = (wr_note[:-3] + ab_note + "-/\n") if wr_note \
+            else (ab_note + "-/\n")
     prelude = (
         "/- W8 mono-tree certificate: a closed restrict\u00d7bisect subtree "
         "of the\n    W6a search over " + cid + " (route A; assembly via "
@@ -3234,7 +3282,8 @@ def monotree_main(case, cid, n, args, spec, params_file,
             + em_RPN(pad_bits, rung=rung, slots=lambda i:
                      (f"(ms[{i}]!).1", f"(ms[{i}]!).2"),
                      dom_rung=dom_rung_eff,
-                     witness_marks=marks).emit(spec["expr"])
+                     witness_marks=marks,
+                     atan1_box=atan1_box).emit(spec["expr"])
             + "\n\n"
             "/-- The certified expression: E0 with real slots baked. -/\n"
             f"def E : IExpr {n} := MkE sbMs\n\n"
@@ -3297,6 +3346,9 @@ def monotree_main(case, cid, n, args, spec, params_file,
             else:
                 pol = (f"; witness-rung POLICY: {dom_rung_eff} on "
                        f"{len(marks)}/{ntrans0} witness-position trans")
+        if atan1_box:
+            pol += ("; atan1-box: closed atan(literal 1) nodes -> "
+                    "TKind.atan1K (pi4D)")
         print(f"emit_lean: wrote {args[2]} (W8 mono-tree stage A: "
               f"{len(probes)} probes + {len(doms)} DOM tables; E0 static "
               f"sqrt {nsq0}, div {ndiv0}, trans {ntrans0}{pol}; run "
@@ -3349,7 +3401,8 @@ def monotree_main(case, cid, n, args, spec, params_file,
         return (str(ms[i][0]), str(ms[i][1]))
     expr_conc = em_RPN(pad_bits, rung=rung, slots=_slot,
                        dom_rung=dom_rung_eff,
-                       witness_marks=marks).emit(spec["expr"])
+                       witness_marks=marks,
+                       atan1_box=atan1_box).emit(spec["expr"])
     out = [prelude +
         "/-- The certified expression (real sqrt slots baked concretely;\n"
         f"    stage-A ms, {nsq} sqrt nodes, RPN order). -/\n"
@@ -3539,6 +3592,9 @@ def monotree_main(case, cid, n, args, spec, params_file,
         else:
             pol = (f"; witness rung {dom_rung_eff} on {len(marks)}/"
                    f"{ntrans0} witness-position trans")
+    if atan1_box:
+        pol += ("; atan1-box: closed atan(literal 1) nodes -> "
+                "TKind.atan1K (pi4D)")
     print(f"emit_lean: wrote {args[2]} (W8 mono-tree stage B: {nleaf} leaf "
           f"certs + {ndf} df certs; {nsq} sqrt slots baked{pol})")
 
@@ -3595,6 +3651,11 @@ def main():
     dom_rung = None
     witness_rung = None
     keepconst_rung = None
+    # W8 gen-10: opt-in `TKind.atan1K` emission (default OFF = byte-identical
+    # emission: every trans stays `arctanK`).  When on, a closed `atan` node
+    # whose argument is the literal 1 is emitted as `atan1K`, whose library
+    # wrapper returns the precomputed `pi4D` (π/4) box.
+    atan1_box = False
     # W8 gen-7: fixed split-node skeleton (the constructor takes box/d/l/r;
     # the splitOK proof is consumed by `covers`, not by the constructor).
     # OFF by default = byte-identical emission (the v2 5-arg skeleton is kept
@@ -3636,6 +3697,8 @@ def main():
                                              "--mono-dom-rung-keepconst")
         elif a == "--mono-split-fix":
             split_fix = True
+        elif a == "--mono-atan1-box":
+            atan1_box = True
         elif a.startswith("--decide-mode="):
             decide_mode = a.split("=", 1)[1]
             if decide_mode not in ("kernel", "native"):
@@ -3701,6 +3764,10 @@ def main():
             "                [--decide-mode=kernel|native] (gen-8: default\n"
             "                kernel = byte-identical; native = DEV ONLY,\n"
             "                emits native_decide and uses Lean.ofReduceBool)\n"
+            "                [--mono-atan1-box] (gen-10: emit closed atan\n"
+            "                nodes with literal argument 1 as TKind.atan1K,\n"
+            "                whose wrapper returns the certified pi/4 box;\n"
+            "                default OFF = byte-identical arctanK emission)\n"
             "                (mono: <arg2> = sub-box manifest, <out> = report)")
     if disj_gd and not bbg:
         die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
@@ -3723,7 +3790,7 @@ def main():
         monotree_main(case, cid, nsp_n, args, spec, params_file,
                       dom_rung=dom_rung, witness_rung=witness_rung,
                       keepconst_rung=keepconst_rung, split_fix=split_fix,
-                      decide_mode=decide_mode)
+                      decide_mode=decide_mode, atan1_box=atan1_box)
         return
 
     if mono:

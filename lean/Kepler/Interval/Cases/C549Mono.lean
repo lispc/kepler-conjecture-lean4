@@ -68,6 +68,7 @@ def derivIExprM {n : ℕ} : Bool → IExpr n → Fin n → IExpr n
       | .sinK => .mul (.trans .cosK a N out) (derivIExprM m a j)
       | .cosK => .neg (.mul (.trans .sinK a N out) (derivIExprM m a j))
       | .arctanK => .div (derivIExprM m a j) (.add (.const ⟨1, 0⟩) (.mul a a)) 0
+      | .atan1K => .div (derivIExprM m a j) (.add (.const ⟨1, 0⟩) (.mul a a)) 0
       | .lnK => .div (derivIExprM m a j) a 0
 
 /-- then 支符号偏导（guard 定号负时 sound）。 -/

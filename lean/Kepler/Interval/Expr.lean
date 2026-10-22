@@ -55,12 +55,19 @@ namespace Kepler.Interval
 
 /-! ## Transcendental kinds and the extended AST -/
 
-/-- Kind tag of the `.trans` AST node. -/
+/-- Kind tag of the `.trans` AST node.  `atan1K` is the W8 gen-10 **opt-in**
+variant of `arctanK`: same real function (`Real.arctan`), but the interval
+wrapper returns the precomputed `π/4` box (`Trans.pi4D`) on the exact point
+interval `[1, 1]` and falls back to the ordinary `arctanI` everywhere else.
+The emitter only produces it behind `--mono-atan1-box`, for closed `atan`
+nodes whose argument is the literal `1`; the default `arctanK` path is
+unchanged. -/
 inductive TKind where
   | sinK : TKind
   | cosK : TKind
   | arctanK : TKind
   | lnK : TKind
+  | atan1K : TKind
   deriving Repr, DecidableEq
 
 /-- The real function denoted by a `TKind`. -/
@@ -70,6 +77,7 @@ noncomputable def transReal (k : TKind) (x : ℝ) : ℝ :=
   | .cosK => Real.cos x
   | .arctanK => Real.arctan x
   | .lnK => Real.log x
+  | .atan1K => Real.arctan x
 
 /-- The interval-level enclosure denoted by a `TKind` (range checks are
 internal to the wrappers; failure gives `none`). -/
@@ -79,6 +87,10 @@ def transOn (k : TKind) (I : DInterval) (N : ℕ) (out : Int) : Option DInterval
   | .cosK => cosI I N out
   | .arctanK => arctanI I N out
   | .lnK => lnI I N out
+  | .atan1K =>
+      if I.lo = (⟨1, 0⟩ : Dyadic) ∧ I.hi = (⟨1, 0⟩ : Dyadic) then
+        some pi4D
+      else arctanI I N out
 
 /-- Interval expression AST: constants, variables, `+ - × Neg`, division at
 granularity `out`, certificate-based square root (two root mantissas), and
@@ -167,11 +179,28 @@ noncomputable def evalReal {n : ℕ} : IExpr n → (Fin n → ℝ) → ℝ
 theorem transOn_sound (k : TKind) {I : DInterval} {N : ℕ} {out : Int}
     {K : DInterval} {y : ℝ} (hy : I.mem y) (h : transOn k I N out = some K) :
     K.mem (transReal k y) := by
-  rcases k with _ | _ | _ | _
+  rcases k with _ | _ | _ | _ | _
   · exact sinGen_sound hy h
   · exact cosI_sound hy h
   · exact arctanI_sound hy h
   · exact lnI_sound hy h
+  · -- `.atan1K`: either the exact point `[1, 1]` (π/4 box) or `arctanI`.
+    by_cases h1 : I.lo = (⟨1, 0⟩ : Dyadic) ∧ I.hi = (⟨1, 0⟩ : Dyadic)
+    · rw [transOn, if_pos h1] at h
+      obtain rfl : K = pi4D := (Option.some.inj h).symm
+      have hy1 : (1 : ℝ) ≤ y := by
+        have := hy.1
+        rw [h1.1] at this
+        simpa using this
+      have hy2 : y ≤ (1 : ℝ) := by
+        have := hy.2
+        rw [h1.2] at this
+        simpa using this
+      have hyv : y = 1 := le_antisymm hy2 hy1
+      rw [transReal, hyv, Real.arctan_one]
+      exact pi4D_mem
+    · rw [transOn, if_neg h1] at h
+      exact arctanI_sound hy h
 
 /-- **Soundness of interval evaluation**: every *successful* interval value
 contains the real value for every assignment pointwise inside the box. -/

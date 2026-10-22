@@ -58,7 +58,7 @@ instance : Hashable Dyadic := ⟨fun d => mixHash (Hashable.hash d.m) (Hashable.
 
 /-- Tag for hashing `TKind`. -/
 def TKind.toTag : TKind → UInt64
-  | .sinK => 0 | .cosK => 1 | .arctanK => 2 | .lnK => 3
+  | .sinK => 0 | .cosK => 1 | .arctanK => 2 | .lnK => 3 | .atan1K => 4
 
 instance : Hashable TKind := ⟨fun k => k.toTag⟩
 

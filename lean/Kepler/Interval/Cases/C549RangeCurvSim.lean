@@ -72,6 +72,7 @@ def transT {n : ℕ} (k : TKind) (M : TaylorM n) (N : ℕ) (out : Int)
   | .sinK => M.trans .sinK N out p
   | .cosK => none
   | .lnK => M.trans .lnK N out p
+  | .atan1K => M.trans .atan1K N out p
 
 /-- D2 clone with the tight-curvature arctan trans. -/
 def evalTMHullD2T (box : Fin 6 → DInterval) :
