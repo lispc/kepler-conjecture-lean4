@@ -614,3 +614,37 @@ LP 端到端审计；P1：三接口 HOL 陈述对照；P2：shim 清理批。
   nli A1 `nliRestFWGKMBZ`）；可达公理 **624 不变**；可达声明 8,305→215,561
   （CFWGKMBZ 证书闭包进锥，非债务，口径见地图 §3.7）。剩余最大簇：
   `nliPackNonlinearRest` 58、PA25 39、TameLp 6。
+
+## 2026-10-23 prep P2 节（812 队列 + R1 再闭 12 案 + 混合 checker GO）
+
+**入库**（`56ac7c11`，clean-anchor 闸 PASS @PA12 `LEFT_ACTION_LIST_PROPERTIES`
++ 全部新根）：`prep_queue.jsonl` 812 行（R1 101 / R2 665 / R3 39 / R4 7，
+含路由、类别、ops/ite、实测叶数档、证书路径、阻塞）；`prep_probe.jsonl`
+实测 R1 97 条（closed 32 / node-limit 63 / timeout 2），pilot 6 条叶数-节点
+数逐项回归 PASS；4 脚本修改 + 2 新脚本；12 个新 Case 模块 + 24 份证书。
+
+**工具三修**：`parse_defs` binder 检查（去幻影 `g`）+ 引号内常量名索引
+（`mud_126/135/234_x_v1`）；`emit_rpn` 柯里化过应用（9 实参→3 形参）；
+`emit_lean --leaves` 采样改用收缩网格盒（修 `_sub`）+ 新增 `--leaf-start`
++ 新增 `--mixed-tm`。全量 prep 发射 **745→793/812**，余 19 条均为
+`recursion limit`（真深记录）。
+
+**R1 批量**（12 条，非 pilot）：叶数 1/1/1/12/27/40/40/49/152/354/711/1731，
+合计 3,119 叶；主仓逐目标重编全绿，`#print axioms` 12/12 标准三；含 1 条
+析取案（`C8346775862`，`disj:0`，BBTreeD）。累计 prep 内核闭合 **17 案**
+（pilot 5 + 本批 12）。被筛掉 2 条（含 atan，plain emitter 需 `--fill`）。
+
+**混合 checker**：`CertMixed.BBTreeM` 最小内核件（plain `.leaf` + TM
+`.taylorLeaf`，无 pilot；`bb_soundM` 标准三）；`CertG` 在 SF-42 后不可重编
+（旧 sqrt/TM pilot 失烤 + 不在默认闭包，残留 olean 会假绿）——混合路径
+勿 import `CertG`。`prep-2125338128` 全树 46,099 叶 / 132 shards 发射
+2.6 s；纯 tm 叶实测 1.33 CPU-s/叶，全案外推 **~3.1 CPU-h**（plain 路线
+~15 CPU-h，repair 模拟 ~11 CPU-h）——**GO**，尚未跑全树 build，需独占
+窗口按 shard 分批（每 128 叶 ≈170 s）。
+
+**未入库/阻塞**：793 份全量 case JSON（256 MB）为可再生产物，只在
+`lane_snapshots/prep2/`，队列内 `case_json` 路径指向该目录；R1 剩余闭
+候选 `prep-3078028960`(1358)/`prep-JNTEFVP 1`(3142)/`prep-4680581274
+delta issue-cayleytr0`(5422) 可按同一 runbook 续跑；R3 39 条全部等第三
+武器（radicand 预切分 / t=√u 换元）；雷区 #460–#469 见
+`lane_snapshots/prep2/DELIVERY.md`。
