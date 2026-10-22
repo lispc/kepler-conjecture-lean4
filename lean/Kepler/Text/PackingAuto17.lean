@@ -669,8 +669,8 @@ private theorem p17_stage5 {V : Set V3} {wl : List V3} {S4 : Set V3} {k : ℕ}
 /-! ### Assembly: AJRIPQN from its five stages and the upstream pieces -/
 
 /-- The full AJRIPQN covering assembly (HL:89-1048), parameterized over the
-five upstream pieces that are still open in their home files (PA13
-`SLTSTLO2`/`DDZUPHJ`, PA10 `RVFXZBU`, PA14 `QZKSYKG1`/`QZKSYKG2`). Every
+five upstream pieces (all closed as of 2026-10-23: PA13 `SLTSTLO2`/`DDZUPHJ`,
+PA14 `RVFXZBU_p14`/`QZKSYKG1`/`QZKSYKG2`). Every
 hypothesis is a verbatim-or-stronger form of a frozen upstream statement; when
 the upstreams land, the capstone `AJRIPQN` closes by direct application.
 
@@ -894,15 +894,17 @@ Missing pieces (all statements importable; internal `sorry` upstream):
   `Coplanar`-implies-null bridge remains open — distinct Rogers simplices
   meet in a null set — stage 3 trimming
   (with `MEASURE_NEGLIGIBLE_SYMDIFF`, HL:646-732).
-- `SLTSTLO1` (PackingAuto13:307, sorry): Rogers simplex covered by
-  `mcell 0..4 V wl` — stage 4 covering.
-- `SLTSTLO2` (PackingAuto13:333, sorry): the unique-cell null set `Z` —
-  stage 5 refinement `S5 = S4 \ Z`.
-- `RVFXZBU` (PackingAuto10:79, sorry, weak-`permutes` caveat):
-  `mcell i V kl = mcell i V ul` for `kl = left_action_list p ul`.
-- `DDZUPHJ` (PackingAuto13:362, sorry): same Rogers simplex + positive
-  dimension ⇒ `mcell i V kl = mcell i V wl`.
-- `qzksykg1_p17`/`qzksykg2_p17` (above, Auto14 copies).
+- `SLTSTLO1` (PackingAuto13: `p13_sltstlo1_exists`): Rogers simplex covered
+  by `mcell 0..4 V wl` — stage 4 covering (proved).
+- `SLTSTLO2` (PackingAuto13, **proved 2026-10-23**, B8f `cb268b64`): the
+  unique-cell null set `Z` — stage 5 refinement `S5 = S4 \ Z`.
+- `RVFXZBU_p14` (PackingAuto14:1102, **proved 2026-10-22**, B2 `51a72e2c`,
+  `hfix` form): `mcell i V kl = mcell i V ul` for `kl = left_action_list p ul`.
+  (The old PA10 `RVFXZBU` is off-path; PA17 has consumed `RVFXZBU_p14` since B2.)
+- `DDZUPHJ` (PackingAuto13, **proved 2026-10-23**, B7 `c8b43895`): same
+  Rogers simplex + positive dimension ⇒ `mcell i V kl = mcell i V wl`.
+- `qzksykg1_p17`/`qzksykg2_p17` (above, Auto14 forwarding copies; QZKSYKG1/
+  QZKSYKG2 themselves proved in B3/B4).
 
 Proved and consumed as-is: `MEASURABLE_MCELL`/`URRPHBZ1`/`BOUNDED_MCELL`
 (PackingAuto10), `MEASURABLE_ROGERS`/`CLOSED_MCELL`/`MCELL_EXPLICIT`
