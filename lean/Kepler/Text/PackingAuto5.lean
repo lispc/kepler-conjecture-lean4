@@ -148,11 +148,195 @@ theorem CONV_UNION_lemma (A B : Set V3) :
     convexHull ℝ (A ∪ B) = convexHull ℝ (A ∪ convexHull ℝ B) :=
   (convexHull_convexHull_union_right A B).symm
 
-/-- pack3.hl:177 `CONVEX_HULL_EQ_EQ_SET_EQ`. NEEDS: the Mathlib port of the
-affine-independence hull-injectivity argument (affinely independent sets with
-equal convex hulls coincide) — no upstream lemma available at this writing. -/
+/-! ### pack3.hl:177 `CONVEX_HULL_EQ_EQ_SET_EQ` support kit
+
+HOL's proof (`EXTREME_POINT_OF_CONVEX_HULL_AFFINE_INDEPENDENT`) shows that an
+affinely independent set is exactly the set of extreme points of its convex
+hull. Mathlib's `AffineIndependent.convexIndependent` bridge is still a TODO
+(Analysis/Convex/Independent.lean:36), so we rebuild the needed ingredient
+directly: for an affinely independent `s`, `convexHull s \ {x}` is convex for
+`x ∈ s`. The proof uses uniqueness of convex coordinates, which is Mathlib's
+`AffineIndependent.affineCombination_eq_iff_eq` after reindexing the
+`V3`-indexed weights of `convexHull_range_eq_exists_affineCombination` to the
+subtype `↥s`. -/
+
+/-- Convex combinations of a finite set, indexed by the subtype `↥s`. -/
+private lemma p5_mem_convexHull_set_iff (s : Set V3) [Fintype ↥s] (y : V3) :
+    y ∈ convexHull ℝ s ↔ ∃ w : ↥s → ℝ, (∀ i, 0 ≤ w i) ∧ (∑ i, w i = 1) ∧
+      (∑ i, w i • (i : V3)) = y := by
+  constructor
+  · intro hy
+    have h : y ∈ convexHull ℝ (Set.range (fun x : ↥s => (x : V3))) := by simpa using hy
+    rw [convexHull_range_eq_exists_affineCombination] at h
+    obtain ⟨F, w, hw0, hw1, hwF⟩ := h
+    refine ⟨fun i => if i ∈ F then w i else 0, ?_, ?_, ?_⟩
+    · intro i
+      by_cases hi : i ∈ F
+      · simpa [hi] using hw0 i hi
+      · simp [hi]
+    · rw [Finset.sum_ite_mem, Finset.univ_inter]
+      exact hw1
+    · have hlin : (F.affineCombination ℝ (fun i : ↥s => (i : V3))) w
+          = ∑ i ∈ F, w i • (i : V3) :=
+        Finset.affineCombination_eq_linear_combination F _ w hw1
+      simp only [ite_smul, zero_smul]
+      rw [Finset.sum_ite_mem, Finset.univ_inter, ← hlin, hwF]
+  · rintro ⟨w, hw0, hw1, hw⟩
+    exact mem_convexHull_of_exists_fintype w (fun i : ↥s => (i : V3)) hw0 hw1 (fun i => i.2) hw
+
+/-- Uniqueness of convex coordinates of an affinely independent finite set. -/
+private theorem p5_convex_coeff_unique {s : Set V3} [Fintype ↥s] (hs : ¬ affineDependent s)
+    {w w' : ↥s → ℝ} (hw0 : ∀ i, 0 ≤ w i) (hw1 : ∑ i, w i = 1)
+    (hw0' : ∀ i, 0 ≤ w' i) (hw1' : ∑ i, w' i = 1)
+    (heq : ∑ i, w i • (i : V3) = ∑ i, w' i • (i : V3)) : w = w' := by
+  have haff : AffineIndependent ℝ (fun i : ↥s => (i : V3)) := not_not.mp hs
+  have e1 : (Finset.univ.affineCombination ℝ (fun i : ↥s => (i : V3))) w
+      = ∑ i, w i • (i : V3) :=
+    Finset.affineCombination_eq_linear_combination _ _ _ hw1
+  have e2 : (Finset.univ.affineCombination ℝ (fun i : ↥s => (i : V3))) w'
+      = ∑ i, w' i • (i : V3) :=
+    Finset.affineCombination_eq_linear_combination _ _ _ hw1'
+  have hcomb : (Finset.univ.affineCombination ℝ (fun i : ↥s => (i : V3))) w
+      = (Finset.univ.affineCombination ℝ (fun i : ↥s => (i : V3))) w' := by
+    rw [e1, e2]; exact heq
+  funext i
+  exact (haff.affineCombination_eq_iff_eq (s := Finset.univ) hw1 hw1').1 hcomb i
+    (Finset.mem_univ i)
+
+/-- `convexHull ℝ s \ {x}` is convex for `x ∈ s` when `s` is affinely
+independent: a segment between two points of the hull hits the vertex `x`
+only at an endpoint (uniqueness of the `x`-coefficient). -/
+private theorem p5_convex_convexHull_sdiff_singleton {s : Set V3} [Fintype ↥s]
+    (hs : ¬ affineDependent s) {x : V3} (hx : x ∈ s) :
+    Convex ℝ (convexHull ℝ s \ {x}) := by
+  intro a ha b hb t u ht hu htu
+  have haS : a ∈ convexHull ℝ s := ha.1
+  have hbS : b ∈ convexHull ℝ s := hb.1
+  have hax : a ≠ x := fun h => ha.2 (by rw [h]; exact rfl)
+  have hbx : b ≠ x := fun h => hb.2 (by rw [h]; exact rfl)
+  refine ⟨(convex_convexHull ℝ s) haS hbS ht hu htu, ?_⟩
+  intro hmem
+  have hcomb : t • a + u • b = x := by simpa using hmem
+  obtain ⟨wa, hwa0, hwa1, hwaeq⟩ := (p5_mem_convexHull_set_iff (s := s) a).1 haS
+  obtain ⟨wb, hwb0, hwb1, hwbeq⟩ := (p5_mem_convexHull_set_iff (s := s) b).1 hbS
+  set ix : ↥s := ⟨x, hx⟩ with hixdef
+  set W : ↥s → ℝ := fun i => t * wa i + u * wb i with hWdef
+  have hW0 : ∀ i, 0 ≤ W i := fun i =>
+    add_nonneg (mul_nonneg ht (hwa0 i)) (mul_nonneg hu (hwb0 i))
+  have hW1 : ∑ i, W i = 1 := by
+    simp only [hWdef]
+    rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum, hwa1, hwb1]
+    linarith
+  have hWeq : ∑ i, W i • (i : V3) = x := by
+    have hsplit : ∑ i, W i • (i : V3)
+        = t • (∑ i, wa i • (i : V3)) + u • (∑ i, wb i • (i : V3)) := by
+      calc ∑ i, W i • (i : V3)
+          = ∑ i, (t • (wa i • (i : V3)) + u • (wb i • (i : V3))) := by
+              refine Finset.sum_congr rfl ?_
+              intro i _
+              simp only [hWdef, add_smul, mul_smul]
+          _ = t • ∑ i, wa i • (i : V3) + u • ∑ i, wb i • (i : V3) := by
+              rw [Finset.sum_add_distrib, Finset.smul_sum, Finset.smul_sum]
+    rw [hsplit, hwaeq, hwbeq, hcomb]
+  set W0 : ↥s → ℝ := fun i => if i = ix then 1 else 0 with hW0def
+  have hW00 : ∀ i, 0 ≤ W0 i := by
+    intro i; simp only [hW0def]; split_ifs <;> norm_num
+  have hW01 : ∑ i, W0 i = 1 := by
+    simp only [hW0def]
+    rw [Finset.sum_eq_single ix (fun j _ hj => by simp [hj])
+      (fun h => absurd (Finset.mem_univ ix) h)]
+    simp
+  have hW0eq : ∑ i, W0 i • (i : V3) = x := by
+    simp only [hW0def]
+    rw [Finset.sum_eq_single ix (fun j _ hj => by rw [if_neg hj, zero_smul])
+      (fun h => absurd (Finset.mem_univ ix) h)]
+    simp
+    rfl
+  have huniq : W = W0 := p5_convex_coeff_unique (s := s) hs hW0 hW1 hW00 hW01 (by rw [hWeq, hW0eq])
+  have hWix : W ix = 1 := by
+    rw [huniq]; simp [hW0def]
+  have hWval : t * wa ix + u * wb ix = 1 := by
+    rw [← hWix]
+  have hwa_le : wa ix ≤ 1 := by
+    have h := Finset.single_le_sum (f := wa) (fun i _ => hwa0 i) (Finset.mem_univ ix)
+    linarith
+  have hwb_le : wb ix ≤ 1 := by
+    have h := Finset.single_le_sum (f := wb) (fun i _ => hwb0 i) (Finset.mem_univ ix)
+    linarith
+  rcases eq_or_lt_of_le ht with ht_eq | ht_pos
+  · have ht_zero : t = 0 := ht_eq.symm
+    have hu_eq : u = 1 := by linarith
+    have h1 : t • a + u • b = b := by rw [ht_zero, hu_eq]; simp
+    have : b = x := by
+      rw [← hwbeq, ← hcomb, h1]
+      exact hwbeq
+    exact hbx this
+  rcases eq_or_lt_of_le hu with hu_eq | hu_pos
+  · have hu_zero : u = 0 := hu_eq.symm
+    have ht_one : t = 1 := by linarith
+    have h1 : t • a + u • b = a := by rw [hu_zero, ht_one]; simp
+    have : a = x := by
+      rw [← hwaeq, ← hcomb, h1]
+      exact hwaeq
+    exact hax this
+  · have h1 : t * wa ix ≤ t * 1 := mul_le_mul_of_nonneg_left hwa_le (le_of_lt ht_pos)
+    have h2 : u * wb ix ≤ u * 1 := mul_le_mul_of_nonneg_left hwb_le (le_of_lt hu_pos)
+    have hta : t * wa ix = t := by linarith
+    have hwa1' : wa ix = 1 :=
+      mul_left_cancel₀ (ne_of_gt ht_pos) (by linarith)
+    have hzero : ∀ j, j ≠ ix → wa j = 0 := by
+      intro j hj
+      have hsum_erase : ∑ k ∈ Finset.univ.erase ix, wa k = 0 := by
+        have h := Finset.sum_erase_add (Finset.univ : Finset ↥s) wa (Finset.mem_univ ix)
+        rw [hwa1'] at h
+        linarith
+      have hz := (Finset.sum_eq_zero_iff_of_nonneg (fun k _ => hwa0 k)).1 hsum_erase
+      exact hz j (Finset.mem_erase.2 ⟨hj, Finset.mem_univ j⟩)
+    have haeqx : a = x := by
+      rw [← hwaeq]
+      have hsingle : ∑ i, wa i • (i : V3) = wa ix • (ix : V3) :=
+        Finset.sum_eq_single ix (fun j _ hj => by rw [hzero j hj, zero_smul])
+          (fun h => absurd (Finset.mem_univ ix) h)
+      rw [hsingle, hwa1']
+      simp
+      rfl
+    exact hax haeqx
+
+/-- For an affinely independent `s`, every point of `s` is an extreme point
+of `convexHull ℝ s` (HOL `EXTREME_POINT_OF_CONVEX_HULL_AFFINE_INDEPENDENT`). -/
+private lemma p5_mem_extremePoints_of_affineIndependent {s : Set V3} [Fintype ↥s]
+    (hs : ¬ affineDependent s) {x : V3} (hx : x ∈ s) :
+    x ∈ (convexHull ℝ s).extremePoints ℝ := by
+  rw [Convex.mem_extremePoints_iff_convex_sdiff (convex_convexHull ℝ s)]
+  exact ⟨subset_convexHull ℝ s hx, p5_convex_convexHull_sdiff_singleton (s := s) hs hx⟩
+
+/-- pack3.hl:177 `CONVEX_HULL_EQ_EQ_SET_EQ`. FILLED (B6a, 2026-10-22):
+affinely independent sets with equal convex hulls coincide. Forward: a point
+`x ∈ s` is an extreme point of `convexHull ℝ s = convexHull ℝ t`, and the
+extreme points of a convex hull lie in the generating set
+(`extremePoints_convexHull_subset`); so `s ⊆ t`, symmetrically. -/
 theorem CONVEX_HULL_EQ_EQ_SET_EQ (s t : Set V3) (hs : ¬ affineDependent s)
-    (ht : ¬ affineDependent t) : (convexHull ℝ s = convexHull ℝ t ↔ s = t) := sorry
+    (ht : ¬ affineDependent t) : (convexHull ℝ s = convexHull ℝ t ↔ s = t) := by
+  have hsf : s.Finite := finite_set_of_fin_dim_affineIndependent (k := ℝ) (not_not.mp hs)
+  have htf : t.Finite := finite_set_of_fin_dim_affineIndependent (k := ℝ) (not_not.mp ht)
+  haveI := hsf.fintype
+  haveI := htf.fintype
+  constructor
+  · intro hconv
+    have hst : s ⊆ t := by
+      intro x hx
+      have hext : x ∈ (convexHull ℝ t).extremePoints ℝ := by
+        rw [← hconv]
+        exact p5_mem_extremePoints_of_affineIndependent (s := s) hs hx
+      exact extremePoints_convexHull_subset hext
+    have hts : t ⊆ s := by
+      intro x hx
+      have hext : x ∈ (convexHull ℝ s).extremePoints ℝ := by
+        rw [hconv]
+        exact p5_mem_extremePoints_of_affineIndependent (s := t) ht hx
+      exact extremePoints_convexHull_subset hext
+    exact Set.Subset.antisymm hst hts
+  · rintro rfl; rfl
 
 /-- pack3.hl:208 `HULL_INTER_SUBSET_INTER_HULL` (instantiated at the convex
 hull operator; HOL is generic in `P`). -/

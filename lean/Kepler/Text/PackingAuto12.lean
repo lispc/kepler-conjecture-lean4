@@ -870,13 +870,26 @@ theorem BARV_IMP_u0_IN_V (V : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3)
 /-! ## marchal2.hl:626 ROGERS_INTER_V_LEMMA -/
 
 /-- HOL `ROGERS_INTER_V_LEMMA` (marchal2.hl:626): `v ∈ V` inside the Rogers
-simplex forces `v = HD ul`. Sorried: matches the PRIVATE sorry'd copy
-`PackingAuto11.rogersInterVLemma` (needs the omega-points-within-2 geometry). -/
+simplex forces `v = HD ul`.
+
+FILLED (B6c, 2026-10-22), following the HOL proof: `ul = [u0,u1,u2,u3]` with
+`u0 = HD ul`; `GLTVHUM_concl` (PA2, `→` direction, applied to `ul` itself)
+puts the whole Rogers simplex inside `voronoiClosed V u0`, so for `v ∈ V` we
+get `dist v u0 ≤ dist v v = 0`, hence `v = u0`. -/
 theorem ROGERS_INTER_V_LEMMA (V : Set V3) (ul : List V3) (v : V3)
     (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul)
     (_hv : v ∈ V) (_hr : rogers V ul v) : v = hdV ul := by
-  sorry
-  -- NEEDS: omega-points-within-2 geometry (cf. PackingAuto11 private copy)
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul _hb
+  have hu0 : u0 ∈ V := BARV_IMP_u0_IN_V V ul u0 u1 u2 u3 _hs _hp _hb hul
+  have htr : truncateSimplex 0 ul = [u0] := by
+    rw [hul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_0 u0 u1 u2 u3).2.2.2
+  have hgl := (GLTVHUM_concl V u0 v ⟨_hp, _hs⟩ hu0).2 ⟨ul, _hb, _hr, htr⟩
+  have hle : dist v u0 ≤ dist v v := hgl v _hv
+  rw [dist_self] at hle
+  have hdist : dist v u0 = 0 := le_antisymm hle dist_nonneg
+  have hveq : v = u0 := dist_eq_zero.mp hdist
+  rw [hveq, hul]
+  rfl
 
 /-! ## marchal2.hl:669 CONVEX_HULL_4 -/
 
