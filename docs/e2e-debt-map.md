@@ -495,6 +495,24 @@ POS1=0（根自身可证，细分多余）。成本模型：每叶 ≈210s 烘 +
 不返回）；绿版改用零因子小引理保持 P/Q opaque。窄任务 2（master 移植）
 处方在 `v24_TASK1_DONE.md`，未发车。
 
-**在飞/待令**：三条车道全部收工，当前零 subagent 在飞。待用户令 =
-SF-48 批准 / AJRIPQN B1·B9 派工 / euler 窄任务 2 / Lean 4.35 /
-雷场入 playbook / RVFXZBU2_concl shim 盘点。
+**B1/B2/B9 收口（2026-10-22，AJRIPQN 链三连）**：
+- **B1**（`ae475e70`，SF-48）：PA12 新增 `LEFT_ACTION_LIST_PROPERTIES`
+  （S₃ action kit），716 行 `p12_` 私件，零 sorryAx；解开 RVFXZBU /
+  QZKSYKG1 / QZKSYKG2 的 S₃ 前置。
+- **B2**（`51a72e2c`）：PA14 新增 `RVFXZBU_p14`（i=3 用 B1 收口）与
+  `ynhyjit_i3_p14`；PA17 `hRV` 改接 PA14 新件。PA10 源 `RVFXZBU` 保留为
+  off-path orphan（仍计入 PA10 的 direct sorry，但已不在 AJRIPQN 公理锥）。
+- **B9**（`612bea61`）：PA10 三叶 `INTER_RCONE_GE_LE_lemma` /
+  `MCELL_2_PROPERTIES_lemma1` / `measurableSet_affGe_wedge_p10` 全证；
+  `BOUNDED_MCELL`/`MEASURABLE_MCELL` 探针翻三零。
+- **AJRIPQN 剩余债主**：SLTSTLO2、DDZUPHJ、QZKSYKG1/QZKSYKG2；PA10 的
+  RVFXZBU i=3 / YNHYJIT i=2/3 是 off-path（YNHYJIT i=2 待 S₂ kit）。
+  下一档建议 B3（YIFVQDV_1+QZKSYKG1）与 B6（DDZUPHJ 支撑链），B8 独立最后。
+- **W8**：gen-9 的 1046 CPU-天被 HOL 侦察拆解——251k 是 TADIAMB
+  （pilot ≈2.5s/叶，7.3 CPU-天串行），重叶成本属 BIX；gen-10 探针
+  （库 `pi4D` 盒 + uniform-128）把 BIX 每叶降到 ≈50 CPU-s、RSS 减半，
+  完整 opt-in 落地在飞。
+
+**在飞/待令**：gen-10 完整 opt-in 车道在飞（4-6 轮）。待用户令 =
+B3/B6/B8 组合 / 批 73 / euler 窄任务 3 / 主定理锥陈述保真+可信基座清点 /
+Lean 4.35 / 雷场入 playbook / RVFXZBU2_concl shim 盘点。
