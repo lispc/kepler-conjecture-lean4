@@ -691,6 +691,205 @@ private theorem p14_swap_pack {V : Set V3} {u0 u1 u2 u3 : V3}
     exact congrArg _ hw2
   exact ⟨hbV, hw1, hw2, hw3, p14_mxi_swap hp hb hw2 hw3⟩
 
+/-! ### Permutation kit for `RVFXZBU_p14` / `ynhyjit_i3_p14`
+
+Private copies of the tail-fixedness toolkit owned by PackingAuto10/12
+(`mem_iff_getD_p10`, `p_lt_i_iff_p10`, `p12_setOfList_trunc2_leftAction` and
+the `p12_leftActionList_four_explicit` helpers), renamed `p14_`. They are
+rebuilt here rather than imported because the PA10/PA12 copies are
+`private`. -/
+
+/-- A typed permutation fixing `0` and every `j ≥ 1` is the identity. -/
+private theorem p14_eqRefl_of_fix {p : Equiv.Perm ℕ}
+    (h0 : p 0 = 0) (hfix : ∀ j, 1 ≤ j → p j = j) : p = Equiv.refl ℕ :=
+  Equiv.ext fun j => by
+    rcases Nat.eq_zero_or_pos j with rfl | hj
+    · exact h0
+    · simpa using hfix j hj
+
+/-- The identity permutation acts trivially. -/
+private theorem p14_leftActionList_refl {α : Type*} [Inhabited α] (ul : List α) :
+    leftActionList (Equiv.refl ℕ) ul = ul := by
+  apply List.ext_get
+  · simp [leftActionList]
+  · intro n _ h2
+    simp [leftActionList, Equiv.refl_symm, h2]
+
+/-- A permutation weakly permuting `Icc 0 (i-1)` and fixing every `j ≥ i`
+bijects the initial block `{j | j < i}`. -/
+private theorem p14_permutes_lt {p : Equiv.Perm ℕ} {i : ℕ}
+    (hperm : permutes p (Set.Icc 0 (i - 1))) (hfix : ∀ j, i ≤ j → p j = j) :
+    permutes p {j : ℕ | j < i} := by
+  intro m
+  constructor
+  · intro hm
+    have hm' : m < i := hm
+    have hi0 : i ≠ 0 := by omega
+    have hmem : m ∈ Set.Icc 0 (i - 1) := ⟨Nat.zero_le _, Nat.le_sub_one_of_lt hm'⟩
+    have hp := (hperm m).mp hmem
+    simp only [Set.mem_Icc] at hp
+    exact lt_of_le_of_lt hp.2 (Nat.sub_one_lt hi0)
+  · intro hm
+    have hm' : p m < i := hm
+    by_cases hlt : m < i
+    · exact hlt
+    · exfalso
+      have hfixm : p m = m := hfix m (Nat.le_of_not_lt hlt)
+      rw [hfixm] at hm'
+      exact hlt hm'
+
+/-- A permutation weakly permuting `Icc 0 2` and fixing every `j ≥ 3`
+bijects `{0,1,2,3}` (PA12 `p12_permutes_four`, renamed). -/
+private theorem p14_permutes_four (p : Equiv.Perm ℕ) (hperm : permutes p (Set.Icc 0 2))
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j) : permutes p {i : ℕ | i < 4} := by
+  intro x
+  constructor
+  · intro hx
+    by_cases hx3 : x < 3
+    · have hp := (hperm x).1 (Set.mem_Icc.mpr ⟨Nat.zero_le _, Nat.lt_succ_iff.mp hx3⟩)
+      exact Nat.lt_of_le_of_lt (Set.mem_Icc.mp hp).2 (by norm_num)
+    · have hx3' : 3 ≤ x := Nat.le_of_not_lt hx3
+      have hx3'' : x = 3 := le_antisymm (Nat.lt_succ_iff.mp hx) hx3'
+      rw [hx3'', hfix 3 (by norm_num)]
+      norm_num
+  · intro hpx
+    by_contra hx
+    have hx4 : 4 ≤ x := Nat.le_of_not_lt hx
+    rw [hfix x (le_trans (by norm_num) hx4)] at hpx
+    exact absurd hpx (Nat.not_lt.mpr hx4)
+
+/-- Under the tail-fixed hypotheses the left action only permutes the
+entries of a length-`i` list, so the point set is unchanged (via the public
+`SET_OF_LIST_LEFT_ACTION_LIST`). -/
+private theorem p14_setOfList_leftActionList {p : Equiv.Perm ℕ} {ul : List V3} {i : ℕ}
+    (hlen : ul.length = i) (hperm : permutes p (Set.Icc 0 (i - 1)))
+    (hfix : ∀ j, i ≤ j → p j = j) :
+    setOfList (leftActionList p ul) = setOfList ul := by
+  rw [← hlen] at hperm hfix
+  exact SET_OF_LIST_LEFT_ACTION_LIST ul p (p14_permutes_lt hperm hfix)
+
+/-- The inverse of a tail-fixed permutation maps `j < 3` into `{0,1,2}`. -/
+private theorem p14_symm_lt3 {p : Equiv.Perm ℕ}
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j) {j : ℕ} (hj : j < 3) : p.symm j < 3 := by
+  by_contra h
+  have h3 : 3 ≤ p.symm j := Nat.le_of_not_lt h
+  have h4 := hfix (p.symm j) h3
+  rw [Equiv.apply_symm_apply] at h4
+  omega
+
+/-- Explicit shape of the left action on a four-element list. -/
+private theorem p14_leftActionList_four_explicit (p : Equiv.Perm ℕ) (u0 u1 u2 u3 : V3) :
+    leftActionList p [u0, u1, u2, u3]
+      = [[u0, u1, u2, u3].getD (p.symm 0) default, [u0, u1, u2, u3].getD (p.symm 1) default,
+         [u0, u1, u2, u3].getD (p.symm 2) default,
+         [u0, u1, u2, u3].getD (p.symm 3) default] := by
+  simp only [leftActionList]
+  norm_num [List.range_succ, List.range_zero]
+
+/-- The first three entries of the acting list are drawn from `{u0,u1,u2}`. -/
+private theorem p14_getD_symm_mem (p : Equiv.Perm ℕ) (u0 u1 u2 u3 : V3)
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j) {j : ℕ} (hj : j < 3) :
+    [u0, u1, u2, u3].getD (p.symm j) default ∈ ({u0, u1, u2} : Set V3) := by
+  have hs := p14_symm_lt3 hfix hj
+  interval_cases h : p.symm j <;> simp
+
+/-- HOL `SET_OF_LIST_TRUN2_LEFT_ACTION_LIST2`: the truncated point set of the
+acting list is the same triple (PA12 private copy, renamed). -/
+private theorem p14_setOfList_trunc2_leftAction (p : Equiv.Perm ℕ) (u0 u1 u2 u3 : V3)
+    (hperm : permutes p (Set.Icc 0 2)) (hfix : ∀ j : ℕ, 3 ≤ j → p j = j) :
+    setOfList (truncateSimplex 2 (leftActionList p [u0, u1, u2, u3])) = {u0, u1, u2} := by
+  rw [p14_leftActionList_four_explicit]
+  rw [(TRUNCATE_SIMPLEX_EXPLICIT_2
+    ([u0, u1, u2, u3].getD (p.symm 0) default) ([u0, u1, u2, u3].getD (p.symm 1) default)
+    ([u0, u1, u2, u3].getD (p.symm 2) default)
+    ([u0, u1, u2, u3].getD (p.symm 3) default)).2]
+  ext x
+  simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false, Set.mem_insert_iff,
+    Set.mem_singleton_iff]
+  constructor
+  · rintro (rfl | rfl | rfl)
+    · exact p14_getD_symm_mem p u0 u1 u2 u3 hfix (by norm_num)
+    · exact p14_getD_symm_mem p u0 u1 u2 u3 hfix (by norm_num)
+    · exact p14_getD_symm_mem p u0 u1 u2 u3 hfix (by norm_num)
+  · rintro (hx | hx | hx)
+    · rw [hx]
+      have hp0 : p 0 < 3 := by
+        have h := (hperm 0).1 (Set.mem_Icc.mpr ⟨Nat.zero_le _, by norm_num⟩)
+        exact Nat.lt_of_le_of_lt (Set.mem_Icc.mp h).2 (by norm_num)
+      have e : [u0, u1, u2, u3].getD (p.symm (p 0)) default = u0 := by
+        rw [Equiv.symm_apply_apply]; rfl
+      interval_cases h : p 0
+      · exact Or.inl e.symm
+      · exact Or.inr (Or.inl e.symm)
+      · exact Or.inr (Or.inr e.symm)
+    · rw [hx]
+      have hp1 : p 1 < 3 := by
+        have h := (hperm 1).1 (Set.mem_Icc.mpr ⟨Nat.zero_le _, by norm_num⟩)
+        exact Nat.lt_of_le_of_lt (Set.mem_Icc.mp h).2 (by norm_num)
+      have e : [u0, u1, u2, u3].getD (p.symm (p 1)) default = u1 := by
+        rw [Equiv.symm_apply_apply]; rfl
+      interval_cases h : p 1
+      · exact Or.inl e.symm
+      · exact Or.inr (Or.inl e.symm)
+      · exact Or.inr (Or.inr e.symm)
+    · rw [hx]
+      have hp2 : p 2 < 3 := by
+        have h := (hperm 2).1 (Set.mem_Icc.mpr ⟨Nat.zero_le _, by norm_num⟩)
+        exact Nat.lt_of_le_of_lt (Set.mem_Icc.mp h).2 (by norm_num)
+      have e : [u0, u1, u2, u3].getD (p.symm (p 2)) default = u2 := by
+        rw [Equiv.symm_apply_apply]; rfl
+      interval_cases h : p 2
+      · exact Or.inl e.symm
+      · exact Or.inr (Or.inl e.symm)
+      · exact Or.inr (Or.inr e.symm)
+
+/-- `mcell 2` is invariant under the `{0,1}`-swap (the `i = 2` case of
+`RVFXZBU`), via the `p14_swap_pack` 01-kit. Both branches of the `mcell2`
+dispatch are handled: the branch condition only reads `hl` of point sets,
+which the swap preserves. -/
+private theorem p14_mcell2_swap {V : Set V3} {u0 u1 u2 u3 : V3}
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3]) :
+    mcell 2 V [u1, u0, u2, u3] = mcell 2 V [u0, u1, u2, u3] := by
+  rw [(MCELL_EXPLICIT 2 V [u1, u0, u2, u3]).2.2.1,
+    (MCELL_EXPLICIT 2 V [u0, u1, u2, u3]).2.2.1]
+  simp only [mcell2]
+  rw [show hdV [u1, u0, u2, u3].tail = u0 from rfl,
+    show hdV [u0, u1, u2, u3].tail = u1 from rfl,
+    show hdV [u1, u0, u2, u3] = u1 from rfl,
+    show hdV [u0, u1, u2, u3] = u0 from rfl]
+  have hhl1 : hl (truncateSimplex 1 [u1, u0, u2, u3])
+      = hl (truncateSimplex 1 [u0, u1, u2, u3]) := by
+    rw [hl, hl, (TRUNCATE_SIMPLEX_EXPLICIT_1 u1 u0 u2 u3).2.2,
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2]
+    congr 1
+    ext x
+    simp [setOfList]
+    tauto
+  have hs4 : setOfList [u1, u0, u2, u3] = setOfList [u0, u1, u2, u3] := by
+    ext x
+    simp [setOfList]
+    tauto
+  have hhlfull : hl [u1, u0, u2, u3] = hl [u0, u1, u2, u3] := by
+    rw [hl, hl, hs4]
+  by_cases hcond : hl (truncateSimplex 1 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+      Real.sqrt 2 ≤ hl [u0, u1, u2, u3]
+  · have hcond' : hl (truncateSimplex 1 [u1, u0, u2, u3]) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl [u1, u0, u2, u3] :=
+      ⟨by rw [hhl1]; exact hcond.1, by rw [hhlfull]; exact hcond.2⟩
+    have hhl : hl [u0, u1] < Real.sqrt 2 := by
+      have h := hcond.1
+      rwa [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2] at h
+    obtain ⟨-, -, -, hw3, hmxi⟩ := p14_swap_pack hs hp hb hhl hcond.2
+    rw [if_pos hcond', if_pos hcond, hhl1, hmxi, hw3,
+      Set.inter_comm (rconeGe u1 u0 (hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2))
+        (rconeGe u0 u1 (hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2)),
+      show ({u1, u0} : Set V3) = {u0, u1} from Set.pair_comm u1 u0]
+  · have hcond' : ¬(hl (truncateSimplex 1 [u1, u0, u2, u3]) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl [u1, u0, u2, u3]) := by
+      rintro ⟨h1', h2'⟩
+      exact hcond ⟨by rwa [hhl1] at h1', by rwa [hhlfull] at h2'⟩
+    rw [if_neg hcond', if_neg hcond]
+
 /-! ## NEEDS copies (parallel-owned sources not importable here) -/
 
 /-- NEEDS: `YNHYJIT` (YNHYJIT.hl:33-103) — parallel-owned by PackingAuto10,
@@ -879,6 +1078,148 @@ theorem MCELL2_PERMUTE_01 (V : Set V3) (ul : List V3) (hs : saturated V)
   exact ⟨[u1, u0, u2, u3], hlv, hlv2, hmxi.symm, hw3.symm,
     by rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2,
       (TRUNCATE_SIMPLEX_EXPLICIT_1 u1 u0 u2 u3).2.2, hs1], hm2, hbV⟩
+
+/-- HOL `RVFXZBU_concl` (RVFXZBU.hl:32-36), PA14 copy: permuting the first
+`i` points of a `barV V 3` list by `p` leaves the cell `mcell i` unchanged.
+
+This is the B2 landing of the AJRIPQN lane: the PA10 source (`RVFXZBU`,
+PackingAuto10:413) proves `i = 0, 1, 2, 4` and leaves `i = 3` open behind
+the missing S₃ kit. Here the whole statement is proved; the `i = 3` case is
+closed by the public B1 kit `LEFT_ACTION_LIST_PROPERTIES` (PackingAuto12),
+which supplies `mxi` invariance and the truncated point set is compared by
+the private `p14_setOfList_trunc2_leftAction` (the HOL
+`SET_OF_LIST_TRUN2_LEFT_ACTION_LIST2` copy). The other cases copy the PA10
+proof structure with the PA10 private helpers rebuilt as `p14_` copies.
+
+-- ENCODING-FIX 2026-09-17 (inherited from PA10): the tail-fixedness
+hypothesis is the faithful HOL `permutes` (complement-fixing) content; the
+weak pointwise `permutes` alone makes the statement false at `i = 2` (a
+transposition of `2,3` weakly permutes `Icc 0 1` yet changes `hl ul`, hence
+`mcell4`).
+
+DISCHARGES: none (the Auto2 interface `RVFXZBU3_concl` is the all-`i` twin
+with a different shape, owned elsewhere). -/
+theorem RVFXZBU_p14 {V : Set V3} {ul : List V3} {i : ℕ} {p : Equiv.Perm ℕ}
+    (hi : i ∈ ({0, 1, 2, 3, 4} : Set ℕ))
+    (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
+    (hperm : permutes p (Set.Icc 0 (i - 1)))
+    (hfix : ∀ j, i ≤ j → p j = j) :
+    mcell i V (leftActionList p ul) = mcell i V ul := by
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hi
+  rcases hi with rfl | rfl | rfl | rfl | rfl
+  · -- i = 0: hfix forces p = refl
+    have hp : p = Equiv.refl ℕ :=
+      p14_eqRefl_of_fix (hfix 0 (Nat.zero_le 0))
+        (fun j hj => hfix j (by omega))
+    subst hp
+    rw [p14_leftActionList_refl]
+  · -- i = 1: hperm forces p 0 = 0, hfix the tail, so p = refl
+    have h0 : p 0 = 0 := by
+      have hin : (0:ℕ) ∈ Set.Icc 0 (1 - 1) := Set.mem_Icc.2 (by omega)
+      have hp0 := (hperm 0).mp hin
+      simp only [Set.mem_Icc] at hp0
+      omega
+    have hp : p = Equiv.refl ℕ := p14_eqRefl_of_fix h0 hfix
+    subst hp
+    rw [p14_leftActionList_refl]
+  · -- i = 2: p is the identity or the {0,1}-swap; mcell2 is swap-invariant
+    obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+    subst hul
+    have hp0m : p 0 ∈ Set.Icc 0 (2 - 1) := (hperm 0).mp (by simp [Set.mem_Icc])
+    have hp0' : p 0 = 0 ∨ p 0 = 1 := by
+      simp only [Set.mem_Icc] at hp0m; omega
+    rcases hp0' with h0 | h0
+    · -- p fixes 0, so p 1 = 1 (injectivity on the block) and p = refl
+      have hp1 : p 1 = 1 := by
+        have hp1m : p 1 ∈ Set.Icc 0 (2 - 1) := (hperm 1).mp (by simp [Set.mem_Icc])
+        simp only [Set.mem_Icc] at hp1m
+        rcases Nat.eq_zero_or_pos (p 1) with hz | hp
+        · exact absurd (Equiv.injective p (hz.trans h0.symm)) (by decide)
+        · omega
+      rw [p14_leftActionList_refl01 u0 u1 u2 u3 p h0 hp1 hfix]
+    · -- p swaps 0 and 1: leftActionList p ul = [u1, u0, u2, u3]
+      have hp1 : p 1 = 0 := by
+        have hp1m : p 1 ∈ Set.Icc 0 (2 - 1) := (hperm 1).mp (by simp [Set.mem_Icc])
+        simp only [Set.mem_Icc] at hp1m
+        rcases Nat.eq_zero_or_pos (p 1) with hz | hp
+        · exact hz
+        · have h11 : p 1 = 1 := by omega
+          exact absurd (Equiv.injective p (h11.trans h0.symm)) (by decide)
+      rw [p14_leftActionList_swap01 u0 u1 u2 u3 p h0 hp1 hfix]
+      exact p14_mcell2_swap hsat hpack hbar
+  · -- i = 3: the S₃-action case, closed by the B1 kit
+    obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+    subst hul
+    have hperm2 : permutes p (Set.Icc 0 2) := hperm
+    have hsetFull : setOfList (leftActionList p [u0, u1, u2, u3])
+        = setOfList [u0, u1, u2, u3] :=
+      SET_OF_LIST_LEFT_ACTION_LIST [u0, u1, u2, u3] p
+        (p14_permutes_four p hperm2 hfix)
+    have hsetTr2 : setOfList (truncateSimplex 2 (leftActionList p [u0, u1, u2, u3]))
+        = setOfList (truncateSimplex 2 [u0, u1, u2, u3]) := by
+      rw [p14_setOfList_trunc2_leftAction p u0 u1 u2 u3 hperm2 hfix,
+        (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2]
+      ext x; simp [setOfList]
+    have hhl2 : hl (truncateSimplex 2 (leftActionList p [u0, u1, u2, u3]))
+        = hl (truncateSimplex 2 [u0, u1, u2, u3]) := by
+      rw [hl, hl, hsetTr2]
+    have hhlfull : hl (leftActionList p [u0, u1, u2, u3]) = hl [u0, u1, u2, u3] := by
+      rw [hl, hl, hsetFull]
+    rw [(MCELL_EXPLICIT 3 V (leftActionList p [u0, u1, u2, u3])).2.2.2.1,
+      (MCELL_EXPLICIT 3 V [u0, u1, u2, u3]).2.2.2.1]
+    simp only [mcell3]
+    by_cases hcond : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl [u0, u1, u2, u3]
+    · have hcond' : hl (truncateSimplex 2 (leftActionList p [u0, u1, u2, u3]))
+          < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl (leftActionList p [u0, u1, u2, u3]) :=
+        ⟨by rw [hhl2]; exact hcond.1, by rw [hhlfull]; exact hcond.2⟩
+      rw [if_pos hcond', if_pos hcond]
+      obtain ⟨-, -, -, hmxi⟩ :=
+        LEFT_ACTION_LIST_PROPERTIES hpack hsat hbar hcond.1 hcond.2 hperm2 hfix rfl
+      rw [hsetTr2, hmxi]
+    · have hcond' : ¬(hl (truncateSimplex 2 (leftActionList p [u0, u1, u2, u3]))
+          < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl (leftActionList p [u0, u1, u2, u3])) := by
+        rintro ⟨h1', h2'⟩
+        exact hcond ⟨by rwa [hhl2] at h1', by rwa [hhlfull] at h2'⟩
+      rw [if_neg hcond', if_neg hcond]
+  · -- i = 4: mcell4 depends only on setOfList and hl
+    have h4 : ul.length = 3 + 1 := hbar.1
+    have hlen : ul.length = 4 := by omega
+    have hset := p14_setOfList_leftActionList hlen hperm hfix
+    have hhl : hl (leftActionList p ul) = hl ul := by rw [hl, hl, hset]
+    have hL : mcell 4 V (leftActionList p ul) = mcell4 V (leftActionList p ul) := by
+      rw [mcell, if_neg (show (4:ℕ) ≠ 0 by omega), if_neg (by omega),
+        if_neg (by omega), if_neg (by omega)]
+    have hR : mcell 4 V ul = mcell4 V ul := by
+      rw [mcell, if_neg (show (4:ℕ) ≠ 0 by omega), if_neg (by omega),
+        if_neg (by omega), if_neg (by omega)]
+    rw [hL, hR, mcell4, mcell4, hhl, hset]
+
+/-- HOL `YNHYJIT_concl` (YNHYJIT.hl:33-40), `i = 3` specialization: in the
+small-truncation regime the left action of a permutation of `0..2` fixing
+the tail preserves `barV V 3` and the omega points at levels `2, 3`.
+
+This is the B2 landing: it is a direct projection of the B1 kit
+`LEFT_ACTION_LIST_PROPERTIES` (its `barV`/`ω₂`/`ω₃` conjuncts); `h2` is
+retained in the frozen statement but not consumed. The general PA10
+`YNHYJIT` still has its `i = 2` case open (owned elsewhere); this landing
+covers exactly the `i = 3` instance needed downstream. -/
+theorem ynhyjit_i3_p14 {V : Set V3} {ul vl : List V3} {p : Equiv.Perm ℕ}
+    (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
+    (h1 : hl (truncateSimplex 2 ul) < Real.sqrt 2)
+    (h2 : Real.sqrt 2 ≤ hl ul)
+    (hperm : permutes p (Set.Icc 0 2))
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j)
+    (hvl : vl = leftActionList p ul) :
+    barV V 3 vl ∧
+      ∀ j : ℕ, 2 ≤ j → j ≤ 3 → omegaListN V vl j = omegaListN V ul j := by
+  subst hvl
+  obtain ⟨hbarV, hω2, hω3, -⟩ :=
+    LEFT_ACTION_LIST_PROPERTIES hpack hsat hbar h1 h2 hperm hfix rfl
+  refine ⟨hbarV, fun j hj1 hj2 => ?_⟩
+  interval_cases j
+  · exact hω2
+  · exact hω3
 
 /-! ## The two QZKSYKG capstones (QZKSYKG.hl:266-2251) -/
 

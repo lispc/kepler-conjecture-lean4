@@ -846,7 +846,7 @@ private theorem p17_ajripqn_of_tailfix (V : Set V3) (ul vl : List V3) (i j : ℕ
       QZKSYKG1 hs hp hbw ((upTo4KyLemma_p17 k).1 hk4) hne hperm hfix rfl)
     hQ2
     (fun w k p hbw hk4 hperm hfix =>
-      RVFXZBU ((upTo4KyLemma_p17 k).1 hk4) hs hp hbw hperm hfix)
+      RVFXZBU_p14 ((upTo4KyLemma_p17 k).1 hk4) hs hp hbw hperm hfix)
     (fun w t k hk4 hbw hbt hreq hdim hne =>
       DDZUPHJ V w t k hs hp hk4 hbw hbt hreq hdim hne)
 
@@ -864,7 +864,7 @@ the capstone = one application of `p17_ajripqn_of_pieces` with
 - `hi`/`hj` := `(upTo4KyLemma_p17 i).1` / `(upTo4KyLemma_p17 j).1`,
 - `hSLT2` := per-`w` destructure of `SLTSTLO2 V w` (PA13; statement as-is),
 - `hQ1` := `QZKSYKG1` (PA14; statement as-is),
-- `hRV` := `RVFXZBU` (PA10; statement as-is),
+- `hRV` := `RVFXZBU_p14` (PA14; B2 landing, statement as-is),
 - `hDD` := `DDZUPHJ` (PA13; statement as-is),
 - `hQ2` := PA14 `QZKSYKG2` **in the tail-fixed (HOL-faithful) form** - the
   frozen weak-`permutes` comprehension does NOT suffice (a junk tail cannot be
