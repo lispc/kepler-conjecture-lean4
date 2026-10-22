@@ -2228,3 +2228,720 @@ theorem IN_AFFINE_HULL_3_KY_LEMMA2 (X Y Z a b c : V3)
   have hle : affineSpan ℝ ({X, Y} : Set V3) ≤ affineSpan ℝ ({a, b, c} : Set V3) :=
     affineSpan_le.2 hsub
   exact hle h1
+
+private theorem p12_symm_lt3 (p : Equiv.Perm ℕ) (_hperm : permutes p (Set.Icc 0 2))
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j) {j : ℕ} (hj : j < 3) : p.symm j < 3 := by
+  by_contra h
+  have h3 : 3 ≤ p.symm j := Nat.le_of_not_lt h
+  have h4 := hfix (p.symm j) h3
+  rw [Equiv.apply_symm_apply] at h4
+  omega
+
+private theorem p12_permutes_four (p : Equiv.Perm ℕ) (hperm : permutes p (Set.Icc 0 2))
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j) : permutes p {i : ℕ | i < 4} := by
+  intro x
+  constructor
+  · intro hx
+    by_cases hx3 : x < 3
+    · have hp := (hperm x).1 (Set.mem_Icc.mpr ⟨Nat.zero_le _, Nat.lt_succ_iff.mp hx3⟩)
+      exact Nat.lt_of_le_of_lt (Set.mem_Icc.mp hp).2 (by norm_num)
+    · have hx3' : 3 ≤ x := Nat.le_of_not_lt hx3
+      have hx3'' : x = 3 := le_antisymm (Nat.lt_succ_iff.mp hx) hx3'
+      rw [hx3'', hfix 3 (by norm_num)]
+      norm_num
+  · intro hpx
+    by_contra hx
+    have hx4 : 4 ≤ x := Nat.le_of_not_lt hx
+    rw [hfix x (le_trans (by norm_num) hx4)] at hpx
+    exact absurd hpx (Nat.not_lt.mpr hx4)
+
+private theorem p12_leftActionList_four_explicit (p : Equiv.Perm ℕ) (u0 u1 u2 u3 : V3) :
+    leftActionList p [u0, u1, u2, u3]
+      = [[u0, u1, u2, u3].getD (p.symm 0) default, [u0, u1, u2, u3].getD (p.symm 1) default,
+         [u0, u1, u2, u3].getD (p.symm 2) default,
+         [u0, u1, u2, u3].getD (p.symm 3) default] := by
+  simp only [leftActionList]
+  norm_num [List.range_succ, List.range_zero]
+
+private theorem p12_getD_symm_mem (p : Equiv.Perm ℕ) (u0 u1 u2 u3 : V3)
+    (hperm : permutes p (Set.Icc 0 2)) (hfix : ∀ j : ℕ, 3 ≤ j → p j = j)
+    {j : ℕ} (hj : j < 3) :
+    [u0, u1, u2, u3].getD (p.symm j) default ∈ ({u0, u1, u2} : Set V3) := by
+  have hs := p12_symm_lt3 p hperm hfix hj
+  interval_cases h : p.symm j <;> simp
+
+
+private theorem p12_setOfList_trunc2_leftAction (p : Equiv.Perm ℕ) (u0 u1 u2 u3 : V3)
+    (hperm : permutes p (Set.Icc 0 2)) (hfix : ∀ j : ℕ, 3 ≤ j → p j = j) :
+    setOfList (truncateSimplex 2 (leftActionList p [u0, u1, u2, u3])) = {u0, u1, u2} := by
+  rw [p12_leftActionList_four_explicit]
+  rw [(TRUNCATE_SIMPLEX_EXPLICIT_2
+    ([u0, u1, u2, u3].getD (p.symm 0) default) ([u0, u1, u2, u3].getD (p.symm 1) default)
+    ([u0, u1, u2, u3].getD (p.symm 2) default)
+    ([u0, u1, u2, u3].getD (p.symm 3) default)).2]
+  ext x
+  simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false, Set.mem_insert_iff,
+    Set.mem_singleton_iff]
+  constructor
+  · rintro (rfl | rfl | rfl)
+    · exact p12_getD_symm_mem p u0 u1 u2 u3 hperm hfix (by norm_num)
+    · exact p12_getD_symm_mem p u0 u1 u2 u3 hperm hfix (by norm_num)
+    · exact p12_getD_symm_mem p u0 u1 u2 u3 hperm hfix (by norm_num)
+  · rintro (hx | hx | hx)
+    · rw [hx]
+      have hp0 : p 0 < 3 := by
+        have h := (hperm 0).1 (Set.mem_Icc.mpr ⟨Nat.zero_le _, by norm_num⟩)
+        exact Nat.lt_of_le_of_lt (Set.mem_Icc.mp h).2 (by norm_num)
+      have e : [u0, u1, u2, u3].getD (p.symm (p 0)) default = u0 := by
+        rw [Equiv.symm_apply_apply]; rfl
+      interval_cases h : p 0
+      · exact Or.inl e.symm
+      · exact Or.inr (Or.inl e.symm)
+      · exact Or.inr (Or.inr e.symm)
+    · rw [hx]
+      have hp1 : p 1 < 3 := by
+        have h := (hperm 1).1 (Set.mem_Icc.mpr ⟨Nat.zero_le _, by norm_num⟩)
+        exact Nat.lt_of_le_of_lt (Set.mem_Icc.mp h).2 (by norm_num)
+      have e : [u0, u1, u2, u3].getD (p.symm (p 1)) default = u1 := by
+        rw [Equiv.symm_apply_apply]; rfl
+      interval_cases h : p 1
+      · exact Or.inl e.symm
+      · exact Or.inr (Or.inl e.symm)
+      · exact Or.inr (Or.inr e.symm)
+    · rw [hx]
+      have hp2 : p 2 < 3 := by
+        have h := (hperm 2).1 (Set.mem_Icc.mpr ⟨Nat.zero_le _, by norm_num⟩)
+        exact Nat.lt_of_le_of_lt (Set.mem_Icc.mp h).2 (by norm_num)
+      have e : [u0, u1, u2, u3].getD (p.symm (p 2)) default = u2 := by
+        rw [Equiv.symm_apply_apply]; rfl
+      interval_cases h : p 2
+      · exact Or.inl e.symm
+      · exact Or.inr (Or.inl e.symm)
+      · exact Or.inr (Or.inr e.symm)
+
+private theorem p12_affDim_affineSpan (s : Set V3) :
+    affDim ((affineSpan ℝ s : Set V3)) = affDim s := by
+  rcases s.eq_empty_or_nonempty with hs | hs
+  · rw [hs, affDim_empty, AffineSubspace.span_empty, AffineSubspace.bot_coe, affDim_empty]
+  · have hne : s ≠ ∅ := Set.nonempty_iff_ne_empty.mp hs
+    have hne2 : (affineSpan ℝ s : Set V3) ≠ ∅ := by
+      intro h0
+      exact hne (Set.subset_empty_iff.1 (h0 ▸ subset_affineSpan ℝ s))
+    simp only [affDim, if_neg hne, if_neg hne2]
+    rw [← AffineSubspace.direction_eq_vectorSpan (affineSpan ℝ s), direction_affineSpan]
+
+/-- `affDim` of a nondegenerate bisector is `2` (the `p15_affDim_bis_pair`
+pattern: `BIS_EQ_HYPERPLANE` + `affDim_hyperplane`). -/
+private theorem p12_affDim_bis_pair {u0 u1 : V3} (hne : u0 ≠ u1) :
+    affDim (bis u0 u1) = 2 := by
+  have hsub : u1 - u0 ≠ 0 := sub_ne_zero.mpr (Ne.symm hne)
+  rw [BIS_EQ_HYPERPLANE]
+  have heq : {x : V3 | 2 * ((u1 - u0) ⬝ᵥ x) = u1 ⬝ᵥ u1 - u0 ⬝ᵥ u0} =
+      {x : V3 | (u1 - u0) ⬝ᵥ x = (u1 ⬝ᵥ u1 - u0 ⬝ᵥ u0) / 2} := by
+    ext x
+    simp only [Set.mem_setOf_eq]
+    constructor <;> intro h <;> linarith
+  rw [heq]
+  exact affDim_hyperplane hsub _
+
+private theorem p12_affines_inter_ball_eq (s t : Set V3) (x : V3) (r : ℝ)
+    (hs : ∃ K : AffineSubspace ℝ V3, (K : Set V3) = s)
+    (ht : ∃ K : AffineSubspace ℝ V3, (K : Set V3) = t)
+    (hr : 0 < r) (heq : s ∩ Metric.ball x r = t ∩ Metric.ball x r)
+    (hx : x ∈ s) : s = t := by
+  have hxt : x ∈ t := by
+    have h1 : x ∈ s ∩ Metric.ball x r := ⟨hx, Metric.mem_ball.mpr (by simpa using hr)⟩
+    rw [heq] at h1
+    exact h1.1
+  obtain ⟨Ks, rfl⟩ := hs
+  obtain ⟨Kt, rfl⟩ := ht
+  -- the shift `p ↦ p - x` carries a carrier through `x` onto its direction
+  have shift : ∀ K : AffineSubspace ℝ V3, x ∈ K →
+      ∃ L : Submodule ℝ V3, (L : Set V3) = (fun p : V3 => p - x) '' (K : Set V3) := by
+    intro K hxK
+    refine ⟨K.direction, ?_⟩
+    ext q
+    constructor
+    · intro hq
+      exact ⟨q + x, AffineSubspace.vadd_mem_of_mem_direction hq hxK, by simp⟩
+    · rintro ⟨p, hp, rfl⟩
+      exact AffineSubspace.vsub_mem_direction hp hxK
+  obtain ⟨Ls, hLs⟩ := shift Ks hx
+  obtain ⟨Lt, hLt⟩ := shift Kt hxt
+  -- the ball intersection transfers through the shift
+  have key : ∀ K₁ K₂ : AffineSubspace ℝ V3,
+      (K₁ : Set V3) ∩ Metric.ball x r = (K₂ : Set V3) ∩ Metric.ball x r →
+      ((fun p : V3 => p - x) '' (K₁ : Set V3)) ∩ Metric.ball 0 r =
+        ((fun p : V3 => p - x) '' (K₂ : Set V3)) ∩ Metric.ball 0 r := by
+    intro K₁ K₂ h'
+    ext q
+    rw [Set.mem_inter_iff, Set.mem_inter_iff, Set.mem_image, Set.mem_image]
+    constructor
+    · rintro ⟨⟨p, hpK, rfl⟩, hqb⟩
+      have hpx : dist p x < r := by
+        rw [dist_eq_norm]
+        simpa using hqb
+      have hp2 : p ∈ (K₂ : Set V3) ∩ Metric.ball x r := by
+        rw [← h']
+        exact ⟨hpK, hpx⟩
+      exact ⟨⟨p, hp2.1, rfl⟩, hqb⟩
+    · rintro ⟨⟨p, hpK, rfl⟩, hqb⟩
+      have hpx : dist p x < r := by
+        rw [dist_eq_norm]
+        simpa using hqb
+      have hp2 : p ∈ (K₁ : Set V3) ∩ Metric.ball x r := by
+        rw [h']
+        exact ⟨hpK, hpx⟩
+      exact ⟨⟨p, hp2.1, rfl⟩, hqb⟩
+  have hshift := key Ks Kt heq
+  have hsubspace := SUBSPACES_INTER_BALL_EQ_IMP_EQ
+    ((fun p : V3 => p - x) '' (Ks : Set V3)) ((fun p : V3 => p - x) '' (Kt : Set V3)) r
+    ⟨Ls, hLs⟩ ⟨Lt, hLt⟩ hr hshift
+  -- translate back
+  ext p
+  constructor
+  · intro hp
+    have h1 : (p - x : V3) ∈ (fun p : V3 => p - x) '' (Ks : Set V3) := ⟨p, hp, rfl⟩
+    have h2 : (p - x : V3) ∈ (fun p : V3 => p - x) '' (Kt : Set V3) := by
+      rw [← hsubspace]
+      exact h1
+    obtain ⟨p', hp'Kt, hp'q⟩ := h2
+    have hp'p : p' = p := by simpa using hp'q
+    rw [hp'p] at hp'Kt
+    exact hp'Kt
+  · intro hp
+    have h1 : (p - x : V3) ∈ (fun p : V3 => p - x) '' (Kt : Set V3) := ⟨p, hp, rfl⟩
+    have h2 : (p - x : V3) ∈ (fun p : V3 => p - x) '' (Ks : Set V3) := by
+      rw [hsubspace]
+      exact h1
+    obtain ⟨p', hp'Ks, hp'q⟩ := h2
+    have hp'p : p' = p := by simpa using hp'q
+    rw [hp'p] at hp'Ks
+    exact hp'Ks
+
+/-- The bisector family over a set is itself an affine set (the carrier of
+its affine hull, by `AFFINE_HULL_INTERS_BIS`). -/
+private theorem p12_inters_bis_affine (p : V3) (s : Set V3) :
+    ∃ K : AffineSubspace ℝ V3, (K : Set V3) = ⋂₀ {bis p v | v ∈ s} :=
+  ⟨affineSpan ℝ (⋂₀ {bis p v | v ∈ s}), AFFINE_HULL_INTERS_BIS p s⟩
+
+/-- The pa18 copy of HOL `YIFVQDV_lemma_aff_dim` (Rogers.hl:8656): inside
+the `hl < √2` margin the Voronoi list and the bisector intersection share
+their affine hull, hence their affine dimension (`NEIGHBORHOOD_lemma` +
+`XYOFCGX` + `p12_affines_inter_ball_eq`). -/
+
+private theorem p12_YIFVQDV_lemma (V : Set V3) (vl : List V3) (hV : Packing V)
+    (hsub : setOfList vl ⊆ V) (hind : ¬ affineDependent (setOfList vl))
+    (hhl : hl vl < Real.sqrt 2) :
+    affDim (voronoiList V vl) =
+      affDim (⋂₀ {bis (hdV vl) v | v ∈ setOfList vl}) := by
+  classical
+  rcases eq_or_ne (setOfList vl) (∅ : Set V3) with hE | hne
+  · -- the empty list: both families are empty, both sides are `univ`
+    cases vl with
+    | nil =>
+      have h1 : voronoiList V ([] : List V3) = (univ : Set V3) := by
+        rw [voronoiList]
+        ext q
+        simp [voronoiSet, setOfList]
+      have h2 : (⋂₀ {bis (hdV ([] : List V3)) v | v ∈ setOfList ([] : List V3)}) =
+          (univ : Set V3) := by
+        ext q
+        simp [setOfList]
+      rw [h1, h2]
+    | cons a t =>
+      have hmem : (a : V3) ∈ setOfList (a :: t) := by simp [setOfList]
+      rw [hE] at hmem
+      simp at hmem
+  · -- the gap ball around the circumcenter
+    have hgap : ∀ u ∈ setOfList vl, ∀ v ∈ V \ setOfList vl,
+        dist v (circumcenter (setOfList vl)) > dist u (circumcenter (setOfList vl)) := by
+      intro u hu v hv
+      exact XYOFCGX V (setOfList vl) (circumcenter (setOfList vl)) hV hsub hind rfl hhl u v
+        hu hv
+    obtain ⟨r, hrpos, hrgap⟩ := NEIGHBORHOOD_lemma V (setOfList vl)
+      (circumcenter (setOfList vl)) hV hsub hgap
+    have hdm : hdV vl ∈ setOfList vl := by
+      cases vl with
+      | nil =>
+        have hE0 : setOfList ([] : List V3) = ∅ := by
+          rw [Set.eq_empty_iff_forall_notMem]
+          intro q hq
+          exact absurd (Set.mem_setOf.mp hq) List.not_mem_nil
+        exact absurd hE0 hne
+      | cons a t => simp [setOfList, hdV]
+    have hlen1 : 1 ≤ vl.length := by
+      cases vl with
+      | nil =>
+        exact absurd (Set.eq_empty_of_forall_notMem fun q hq => by
+          simp [setOfList] at hq) hne
+      | cons a t => simp
+    have hpH : circumcenter (setOfList vl) ∈
+        (affineSpan ℝ (voronoiList V vl) : Set V3) :=
+      subset_affineSpan ℝ _ (CIRCUMCENTER_IN_VORONOI_SET V (setOfList vl) hV hsub hind hhl)
+    have heq : (affineSpan ℝ (voronoiList V vl) : Set V3) ∩ Metric.ball
+        (circumcenter (setOfList vl)) r =
+        (⋂₀ {bis (hdV vl) v | v ∈ setOfList vl}) ∩ Metric.ball
+        (circumcenter (setOfList vl)) r := by
+      ext q
+      rw [Set.mem_inter_iff, Set.mem_inter_iff]
+      constructor
+      · rintro ⟨hqa, hqb⟩
+        exact ⟨AFFINE_HULL_VORONOI_LIST_SUBSET_INTERS_BIS V vl hsub hqa, hqb⟩
+      · rintro ⟨hqt, hqb⟩
+        have hqvc : q ∈ voronoiClosed V (hdV vl) := by
+          intro w hw
+          by_cases hwS : w ∈ setOfList vl
+          · have h2 : dist q (hdV vl) = dist q w :=
+              Set.mem_sInter.mp hqt _ (by simpa using ⟨w, hwS, rfl⟩)
+            show dist q (hdV vl) ≤ dist q w
+            linarith
+          · have hg := hrgap q hqb (hdV vl) hdm w ⟨hw, hwS⟩
+            rw [dist_comm w q, dist_comm (hdV vl) q] at hg
+            exact le_of_lt hg
+        have hqvl : q ∈ voronoiList V vl := by
+          rw [VORONOI_LIST_EQ_INTERS_BIS V vl hsub hlen1]
+          exact ⟨hqvc, hqt⟩
+        exact ⟨subset_affineSpan ℝ _ hqvl, hqb⟩
+    have hspaneq := p12_affines_inter_ball_eq
+      (affineSpan ℝ (voronoiList V vl) : Set V3)
+      (⋂₀ {bis (hdV vl) v | v ∈ setOfList vl})
+      (circumcenter (setOfList vl)) r
+      ⟨affineSpan ℝ (voronoiList V vl), rfl⟩
+      (p12_inters_bis_affine (hdV vl) (setOfList vl)) hrpos heq hpH
+    calc affDim (voronoiList V vl)
+        = affDim ((affineSpan ℝ (voronoiList V vl) : Set V3)) :=
+          (p12_affDim_affineSpan (voronoiList V vl)).symm
+      _ = affDim (⋂₀ {bis (hdV vl) v | v ∈ setOfList vl}) := by rw [hspaneq]
+
+/-- The bisector family over a pair collapses to the one nontrivial
+bisector (`bis u u = univ`). -/
+private theorem p12_inters_bis_pair (u v : V3) :
+    ⋂₀ {bis u w | w ∈ ({u, v} : Set V3)} = bis u v := by
+  ext q
+  rw [Set.mem_sInter]
+  constructor
+  · intro h
+    exact h (bis u v) ⟨v, by simp, rfl⟩
+  · intro h T hT
+    rw [Set.mem_setOf_eq] at hT
+    obtain ⟨w, hw, rfl⟩ := hT
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+    rcases hw with hwu | hwv
+    · rw [hwu]
+      show dist q u = dist q u
+      rfl
+    · rw [hwv]
+      exact h
+
+/-- The coe family on a set has the set as its range. -/
+private theorem p12_range_coe {S : Set V3} :
+    Set.range (fun x : ↥S => (x : V3)) = S := by
+  ext y
+  constructor
+  · rintro ⟨x, rfl⟩; exact x.2
+  · intro hy; exact ⟨⟨y, hy⟩, rfl⟩
+
+private theorem p12_affDim_voronoiList_pair (V : Set V3) (a b : V3)
+    (hp : Packing V) (ha : a ∈ V) (hb : b ∈ V) (hne : a ≠ b)
+    (hhl : hl [a, b] < Real.sqrt 2) :
+    affDim (voronoiList V [a, b]) = 2 := by
+  have hsub : setOfList [a, b] ⊆ V := by
+    intro x hx
+    rcases List.mem_cons.mp hx with rfl | hx
+    · exact ha
+    rcases List.mem_cons.mp hx with rfl | hx
+    · exact hb
+    exact absurd hx (by simp)
+  have hpair : setOfList [a, b] = ({a, b} : Set V3) := by
+    ext x; simp [setOfList]
+  have hind : ¬ affineDependent (setOfList [a, b]) := by
+    rw [affineDependent, not_not, hpair]
+    have hfin : ({a, b} : Set V3).Finite := Set.Finite.insert _ (Set.finite_singleton b)
+    haveI : Fintype ↥({a, b} : Set V3) := hfin.fintype
+    have hcard : Fintype.card ↥({a, b} : Set V3) = 0 + 2 := by
+      have hn : Nat.card ({a, b} : Set V3) = 2 := by
+        have e1 : ({a, b} : Set V3).ncard = ({b} : Set V3).ncard + 1 :=
+          Set.ncard_insert_of_notMem (by simp [hne])
+        have e2 : ({b} : Set V3).ncard = 1 := Set.ncard_singleton b
+        have he : Nat.card ({a, b} : Set V3) = ({a, b} : Set V3).ncard := rfl
+        rw [he, e1, e2]
+      rw [Nat.card_eq_fintype_card] at hn
+      omega
+    rw [affineIndependent_iff_not_finrank_vectorSpan_le ℝ
+      (fun x : ↥({a, b} : Set V3) => (x : V3)) hcard, p12_range_coe,
+      vectorSpan_pair, finrank_span_singleton
+        (show (a -ᵥ b : V3) ≠ 0 from sub_ne_zero.mpr hne)]
+    norm_num
+  have hdim := p12_YIFVQDV_lemma V [a, b] hp hsub hind hhl
+  rw [hdim]
+  have hhd : hdV [a, b] = a := rfl
+  have hinter : (⋂₀ {bis (hdV [a, b]) v | v ∈ setOfList [a, b]}) = bis a b := by
+    rw [hhd]
+    rw [hpair]
+    exact p12_inters_bis_pair a b
+  rw [hinter]
+  exact p12_affDim_bis_pair hne
+
+private theorem p12_norm_sq_dot (v : V3) :
+    ‖v‖ ^ 2 = (v : Fin 3 → ℝ) ⬝ᵥ (v : Fin 3 → ℝ) := by
+  have h := real_inner_self_eq_norm_sq v
+  rw [← h, EuclideanSpace.inner_eq_star_dotProduct]
+  simp
+
+/-- Membership in two Voronoi cells forces equidistance. -/
+private theorem p12_dist_eq_of_mem {V : Set V3} {a b x : V3} (ha : a ∈ V) (hb : b ∈ V)
+    (h0 : x ∈ voronoiClosed V a) (h1 : x ∈ voronoiClosed V b) : dist x a = dist x b :=
+  le_antisymm (h0 b hb) (h1 a ha)
+
+/-- equidistant endpoints propagate along the segment. -/
+private theorem p12_seg_dist_eq {a b x y : V3} (h1 : dist a x = dist a y)
+    (h2 : dist b x = dist b y) {p : V3} (hp : p ∈ segment ℝ a b) : dist p x = dist p y := by
+  obtain ⟨α, β, hα, hβ, hαβ, rfl⟩ := hp
+  have hbrin : ∀ u v w : Fin 3 → ℝ, u ⬝ᵥ (v - w) = u ⬝ᵥ v - u ⬝ᵥ w := dotProduct_sub
+  have hcomm : ∀ u v : Fin 3 → ℝ, u ⬝ᵥ v = v ⬝ᵥ u := dotProduct_comm
+  have haddl : ∀ u v w : Fin 3 → ℝ, (u + v) ⬝ᵥ w = u ⬝ᵥ w + v ⬝ᵥ w := add_dotProduct
+  have hsmull : ∀ (r : ℝ) (u w : Fin 3 → ℝ), (r • u) ⬝ᵥ w = r * (u ⬝ᵥ w) := smul_dotProduct
+  have hsqrw : ∀ u v : Fin 3 → ℝ, (u - v) ⬝ᵥ (u - v) = u ⬝ᵥ u - 2 * (v ⬝ᵥ u) + v ⬝ᵥ v := by
+    intro u v
+    rw [dotProduct_sub, sub_dotProduct, sub_dotProduct, hcomm v u]
+    ring
+  have key : ∀ z : V3, dist z x ^ 2 - dist z y ^ 2
+      = 2 * ((z : Fin 3 → ℝ) ⬝ᵥ ((y : Fin 3 → ℝ) - (x : Fin 3 → ℝ)))
+        + (((x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ)) - ((y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ))) := by
+    intro z
+    rw [dist_eq_norm, dist_eq_norm, p12_norm_sq_dot (z - x), p12_norm_sq_dot (z - y),
+      WithLp.ofLp_sub, WithLp.ofLp_sub,
+      hsqrw (z : Fin 3 → ℝ) (x : Fin 3 → ℝ), hsqrw (z : Fin 3 → ℝ) (y : Fin 3 → ℝ),
+      hbrin (z : Fin 3 → ℝ) (y : Fin 3 → ℝ) (x : Fin 3 → ℝ),
+      hcomm (x : Fin 3 → ℝ) (z : Fin 3 → ℝ), hcomm (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)]
+    ring
+  have hlin : (α • a + β • b : V3) ⬝ᵥ ((y : Fin 3 → ℝ) - (x : Fin 3 → ℝ))
+      = α * ((a : Fin 3 → ℝ) ⬝ᵥ ((y : Fin 3 → ℝ) - (x : Fin 3 → ℝ)))
+        + β * ((b : Fin 3 → ℝ) ⬝ᵥ ((y : Fin 3 → ℝ) - (x : Fin 3 → ℝ))) := by
+    rw [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_smul, haddl, hsmull, hsmull]
+  have haff : dist (α • a + β • b) x ^ 2 - dist (α • a + β • b) y ^ 2 = 0 := by
+    have hsum : (α + β) * ((x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ)
+              - (y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ))
+        = ((x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ) - (y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+      rw [hαβ, one_mul]
+    have φa : dist a x ^ 2 - dist a y ^ 2 = 0 := by rw [h1]; ring
+    have φb : dist b x ^ 2 - dist b y ^ 2 = 0 := by rw [h2]; ring
+    have e4t : 2 * ((a : Fin 3 → ℝ) ⬝ᵥ ((y : Fin 3 → ℝ) - (x : Fin 3 → ℝ)))
+        + ((x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ) - (y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ)) = 0 := by
+      rw [← key a]
+      exact φa
+    have e5t : 2 * ((b : Fin 3 → ℝ) ⬝ᵥ ((y : Fin 3 → ℝ) - (x : Fin 3 → ℝ)))
+        + ((x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ) - (y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ)) = 0 := by
+      rw [← key b]
+      exact φb
+    rw [key (α • a + β • b), hlin]
+    linear_combination α * e4t + β * e5t - hsum
+  have hsq : dist (α • a + β • b) x ^ 2 = dist (α • a + β • b) y ^ 2 :=
+    sub_eq_zero.1 haff
+  rw [sq_eq_sq_iff_abs_eq_abs, abs_of_nonneg dist_nonneg, abs_of_nonneg dist_nonneg] at hsq
+  exact hsq
+
+/-- The left action of a permutation of `{0,1,2}` fixing the tail preserves
+`barV V 3` (the `barV` half of HOL `LEFT_ACTION_LIST_PROPERTIES`).  Prefixes of
+length `1,2,3,4` are dispatched by `AFF_DIM_VORONOI_CLOSED`, the pair-cell
+dimension lemma, `TRUNCATE_SIMPLEX_BARV` on the first triple (the set is
+unchanged by the permutation), and `barV`'s full-list clause. -/
+private theorem p12_barV_three_leftAction {V : Set V3} {ul : List V3} {p : Equiv.Perm ℕ}
+    (hpack : Packing V) (hbar : barV V 3 ul)
+    (h1 : hl (truncateSimplex 2 ul) < Real.sqrt 2)
+    (hperm : permutes p (Set.Icc 0 2))
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j) :
+    barV V 3 (leftActionList p ul) := by
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+  subst hul
+  set yl := leftActionList p [u0, u1, u2, u3] with hyl
+  have hyllen : yl.length = 4 := by rw [hyl, LENGTH_LEFT_ACTION_LIST]; rfl
+  set g : ℕ → V3 := fun j => [u0, u1, u2, u3].getD (p.symm j) default with hg
+  have hyl_exp : yl = [g 0, g 1, g 2, g 3] := by
+    rw [hyl]; exact p12_leftActionList_four_explicit p u0 u1 u2 u3
+  have hcard : Nat.card (setOfList [u0, u1, u2, u3]) = 4 :=
+    (BARV_IMP_LENGTH_EQ_CARD V [u0, u1, u2, u3] 3 hpack hbar).2
+  have hVsub : setOfList [u0, u1, u2, u3] ⊆ V :=
+    BARV_SUBSET V 3 [u0, u1, u2, u3] hbar
+  have htriV : ({u0, u1, u2} : Set V3) ⊆ V := by
+    intro x hx
+    apply hVsub
+    simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false, Set.mem_insert_iff,
+      Set.mem_singleton_iff] at hx ⊢
+    tauto
+  have hg0V : g 0 ∈ V :=
+    htriV (p12_getD_symm_mem p u0 u1 u2 u3 hperm hfix (j := 0) (by norm_num))
+  have hg1V : g 1 ∈ V :=
+    htriV (p12_getD_symm_mem p u0 u1 u2 u3 hperm hfix (j := 1) (by norm_num))
+  have hg01 : g 0 ≠ g 1 := by
+    intro he
+    have h0 : p.symm 0 < 4 := by
+      have := p12_symm_lt3 p hperm hfix (j := 0) (by norm_num); omega
+    have h1 : p.symm 1 < 4 := by
+      have := p12_symm_lt3 p hperm hfix (j := 1) (by norm_num); omega
+    have hne : p.symm 0 ≠ p.symm 1 := fun h =>
+      absurd (p.symm.injective h) (by decide : (0:ℕ) ≠ 1)
+    exact (CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT [u0, u1, u2, u3] hcard
+      (p.symm 0) (p.symm 1) h0 h1 hne) he
+  have hhl2 : hl [g 0, g 1] < Real.sqrt 2 := by
+    have htri : ({u0, u1, u2} : Set V3) = setOfList [u0, u1, u2] := by
+      ext x; simp [setOfList]
+    have hsub_t : setOfList [g 0, g 1] ⊆ ({u0, u1, u2} : Set V3) := by
+      intro x hx
+      simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false] at hx
+      rcases hx with rfl | rfl
+      · exact p12_getD_symm_mem p u0 u1 u2 u3 hperm hfix (j := 0) (by norm_num)
+      · exact p12_getD_symm_mem p u0 u1 u2 u3 hperm hfix (j := 1) (by norm_num)
+    have hbar2 : barV V 2 [u0, u1, u2] := by
+      have h := TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, u2, u3] hbar (by norm_num)
+      rwa [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2] at h
+    have hhind3 : ¬ affineDependent ({u0, u1, u2} : Set V3) := by
+      have h := BARV_AFFINE_INDEPENDENT V [u0, u1, u2] 2 hpack hbar2
+      rwa [htri]
+    have hne_t : setOfList [g 0, g 1] ≠ ∅ := by
+      intro h
+      have hmem : g 0 ∈ setOfList [g 0, g 1] := by simp [setOfList]
+      rw [h] at hmem
+      exact hmem
+    have hradv := RADV_MONO ({u0, u1, u2} : Set V3) (setOfList [g 0, g 1])
+      hhind3 hsub_t hne_t
+    have hh1 : hl [u0, u1, u2] < Real.sqrt 2 := by
+      have := h1
+      rwa [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2] at this
+    have heq : radV ({u0, u1, u2} : Set V3) = hl [u0, u1, u2] := by
+      rw [hl]; exact congrArg radV htri
+    rw [hl]
+    exact lt_of_le_of_lt hradv (by rw [heq]; exact hh1)
+  have hbar2 : barV V 2 [u0, u1, u2] := by
+    have h := TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, u2, u3] hbar (by norm_num)
+    rwa [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2] at h
+  have hsetf : setOfList yl = setOfList [u0, u1, u2, u3] := by
+    rw [hyl]
+    exact SET_OF_LIST_LEFT_ACTION_LIST [u0, u1, u2, u3] p
+      (by simpa using p12_permutes_four p hperm hfix)
+  have hdim_full : affDim (voronoiList V [u0, u1, u2, u3]) + ((4 : ℕ) : ℤ) = 4 :=
+    (hbar.2 [u0, u1, u2, u3] ⟨INITIAL_SUBLIST_REFL _, by simp⟩).2.2
+  have hdim_tri : affDim (voronoiList V [u0, u1, u2]) + ((3 : ℕ) : ℤ) = 4 :=
+    (hbar2.2 [u0, u1, u2] ⟨INITIAL_SUBLIST_REFL _, by simp⟩).2.2
+  have hdim_pair : affDim (voronoiList V [g 0, g 1]) = 2 :=
+    p12_affDim_voronoiList_pair V (g 0) (g 1) hpack hg0V hg1V hg01 hhl2
+  refine ⟨hyllen, ?_⟩
+  rintro vl ⟨hinit, hpos⟩
+  have hle : vl.length ≤ 4 := by
+    have := INITIAL_SUBLIST_LENGTH_LE hinit
+    omega
+  have hvltrunc := INITIAL_SUBLIST_IMP_TRUNCATE_SIMPLEX hinit (by omega : 1 ≤ vl.length)
+  refine ⟨by omega, ?_, ?_⟩
+  · intro x hx
+    have h1 : x ∈ setOfList yl := SET_OF_LIST_INITIAL_SUBLIST_SUBSET hinit hx
+    rw [hsetf] at h1
+    exact hVsub h1
+  · interval_cases hlen : vl.length
+    · -- length 1
+      have hvl1 : vl = [g 0] := by
+        rw [hvltrunc.1]
+        show truncateSimplex 0 yl = [g 0]
+        rw [hyl_exp]
+        rw [TRUNCATE_0_EQ_HEAD _ (by simp)]
+        rfl
+      rw [hvl1, VORONOI_LIST_SING (V := V) (u := g 0),
+        AFF_DIM_VORONOI_CLOSED V (g 0) hpack]
+      norm_num
+    · -- length 2
+      have hvl2 : vl = [g 0, g 1] := by
+        rw [hvltrunc.1]
+        show truncateSimplex 1 yl = [g 0, g 1]
+        rw [hyl_exp]
+        exact (TRUNCATE_SIMPLEX_EXPLICIT_1 (g 0) (g 1) (g 2) (g 3)).2.2
+      rw [hvl2, hdim_pair]
+      norm_num
+    · -- length 3
+      have hvl3 : vl = truncateSimplex 2 (leftActionList p [u0, u1, u2, u3]) := by
+        rw [hvltrunc.1, hyl]
+      have hset3 : setOfList vl = setOfList [u0, u1, u2] := by
+        rw [hvl3, p12_setOfList_trunc2_leftAction p u0 u1 u2 u3 hperm hfix]
+        ext x; simp [setOfList]
+      have hcongr : voronoiList V vl = voronoiList V [u0, u1, u2] := by
+        rw [voronoiList, voronoiList, hset3]
+      rw [hcongr]; exact hdim_tri
+    · -- length 4
+      have hvl4 : vl = yl := by
+        rw [hvltrunc.1]
+        show truncateSimplex 3 yl = yl
+        exact TRUNCATE_SIMPLEX_REFL 3 yl (by rw [hyllen])
+      have hset4 : setOfList vl = setOfList [u0, u1, u2, u3] := by
+        rw [hvl4]; exact hsetf
+      have hcongr : voronoiList V vl = voronoiList V [u0, u1, u2, u3] := by
+        rw [voronoiList, voronoiList, hset4]
+      rw [hcongr]; exact hdim_full
+
+/-- Membership of the omega points in a truncation's Voronoi cell makes them
+equidistant from all points of that truncation (both in `V`). -/
+private theorem p12_omega_dist_eq {V : Set V3} {wl : List V3} {j : ℕ} {a b : V3}
+    (hmem : omegaListN V wl j ∈ voronoiList V (truncateSimplex j wl))
+    (ha : a ∈ setOfList (truncateSimplex j wl)) (hb : b ∈ setOfList (truncateSimplex j wl))
+    (haV : a ∈ V) (hbV : b ∈ V) :
+    dist (omegaListN V wl j) a = dist (omegaListN V wl j) b := by
+  rw [voronoiList, voronoiSet, Set.mem_sInter] at hmem
+  have h0 : omegaListN V wl j ∈ voronoiClosed V a :=
+    hmem _ (Set.mem_setOf.2 ⟨a, ha, rfl⟩)
+  have h1 : omegaListN V wl j ∈ voronoiClosed V b :=
+    hmem _ (Set.mem_setOf.2 ⟨b, hb, rfl⟩)
+  exact p12_dist_eq_of_mem haV hbV h0 h1
+
+/-- `omegaListN` at level `2` is the circumcenter of the first triple below
+the `sqrt 2` margin (HOL `OMEGA_LIST_2_EXPLICIT_NEW`). -/
+private theorem p12_omega2_eq_circumcenter (V : Set V3) (ul : List V3)
+    (u0 u1 u2 u3 : V3) (hpack : Packing V) (hb : barV V 3 ul)
+    (hul : ul = [u0, u1, u2, u3])
+    (h1 : hl (truncateSimplex 2 ul) < Real.sqrt 2) :
+    omegaListN V ul 2 = circumcenter (setOfList (truncateSimplex 2 ul)) := by
+  subst hul
+  rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2]
+  have hbar2 : barV V 2 [u0, u1, u2] := by
+    have h := TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, u2, u3] hb (by norm_num)
+    rwa [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2] at h
+  have hlt : hl [u0, u1, u2] < Real.sqrt 2 := by
+    rwa [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2] at h1
+  rw [OMEGA_LIST_TRUNCATE_2 V u0 u1 u2 u3,
+    XNHPWAB1 V [u0, u1, u2] 2 hpack hbar2 hlt]
+
+/-- The last omega point of a `barV V 3` list is the singleton Voronoi point. -/
+private theorem p12_omega3_eq (V : Set V3) (ul : List V3) (_hpack : Packing V)
+    (_hsat : saturated V) (hb : barV V 3 ul) (a : V3)
+    (ha : voronoiList V ul = {a}) :
+    omegaListN V ul 3 = a := by
+  show closestPoint (voronoiList V (truncateSimplex 3 ul)) (omegaListN V ul 2) = a
+  rw [TRUNCATE_SIMPLEX_REFL 3 ul (by rw [hb.1])]
+  rw [ha]
+  exact CLOSEST_POINT_SING a _
+
+/-- `mxi` is invariant when the two lists have the same `omega` points at
+levels 2 and 3, the same truncated `hl`, and their heads are equidistant on
+the `omega2--omega3` segment (the `p14_mxi_swap` pointwise-epsilon argument,
+generalized to an arbitrary permutation of the first three indices). -/
+private theorem p12_mxi_leftAction {V : Set V3} {ul xl : List V3}
+    (h1 : hl (truncateSimplex 2 ul) < Real.sqrt 2)
+    (hhl2 : hl (truncateSimplex 2 xl) = hl (truncateSimplex 2 ul))
+    (hω2 : omegaListN V xl 2 = omegaListN V ul 2)
+    (hω3 : omegaListN V xl 3 = omegaListN V ul 3)
+    (hseg : ∀ q ∈ segment ℝ (omegaListN V ul 2) (omegaListN V ul 3),
+      dist q (hdV xl) = dist q (hdV ul)) :
+    mxi V xl = mxi V ul := by
+  have h1x : hl (truncateSimplex 2 xl) < Real.sqrt 2 := by rw [hhl2]; exact h1
+  have hpointwise : ∀ q : V3,
+      (q ∈ convexHull ℝ {omegaListN V xl 2, omegaListN V xl 3} ∧
+        dist q (hdV xl) = Real.sqrt 2) ↔
+      (q ∈ convexHull ℝ {omegaListN V ul 2, omegaListN V ul 3} ∧
+        dist q (hdV ul) = Real.sqrt 2) := by
+    intro q
+    rw [hω2, hω3]
+    constructor
+    · rintro ⟨hm, hd⟩
+      have hq : q ∈ segment ℝ (omegaListN V ul 2) (omegaListN V ul 3) := by
+        rwa [p12_hull_pair] at hm
+      exact ⟨hm, by rw [← hseg q hq]; exact hd⟩
+    · rintro ⟨hm, hd⟩
+      have hq : q ∈ segment ℝ (omegaListN V ul 2) (omegaListN V ul 3) := by
+        rwa [p12_hull_pair] at hm
+      exact ⟨hm, by rw [hseg q hq]; exact hd⟩
+  unfold mxi
+  rw [if_neg (not_le.mpr h1x), if_neg (not_le.mpr h1)]
+  exact congrArg Classical.epsilon (funext fun q => propext (hpointwise q))
+
+/-- HOL `LEFT_ACTION_LIST_PROPERTIES` (marchal2.hl:4460-4474): the S₃ action on
+`left_action_list p ul` preserves `barV V 3`, the omega points 2 and 3, and
+`mxi`. The HOL `permutes` is complement-fixing; the Lean encoding takes the
+tail-fixedness as the explicit hypothesis `hfix` (SF-48, approved 2026-10-22). -/
+theorem LEFT_ACTION_LIST_PROPERTIES {V : Set V3} {ul xl : List V3} {p : Equiv.Perm ℕ}
+    (hpack : Packing V) (hsat : saturated V) (hbar : barV V 3 ul)
+    (h1 : hl (truncateSimplex 2 ul) < Real.sqrt 2)
+    (h2 : Real.sqrt 2 ≤ hl ul)
+    (hperm : permutes p (Set.Icc 0 2))
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j)
+    (hxl : xl = leftActionList p ul) :
+    barV V 3 xl ∧
+      omegaListN V xl 2 = omegaListN V ul 2 ∧
+      omegaListN V xl 3 = omegaListN V ul 3 ∧
+      mxi V xl = mxi V ul := by
+  have _h2 := h2
+  subst hxl
+  have hbxl := p12_barV_three_leftAction hpack hbar h1 hperm hfix
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+  subst hul
+  obtain ⟨w0, w1, w2, w3, hwl⟩ :=
+    BARV_3_EXPLICIT V (leftActionList p [u0, u1, u2, u3]) hbxl
+  rw [hwl] at hbxl ⊢
+  have hset_pref3 : setOfList [w0, w1, w2] = ({u0, u1, u2} : Set V3) := by
+    rw [← (TRUNCATE_SIMPLEX_EXPLICIT_2 w0 w1 w2 w3).2, ← hwl]
+    exact p12_setOfList_trunc2_leftAction p u0 u1 u2 u3 hperm hfix
+  have hset_pref3u : setOfList [u0, u1, u2] = ({u0, u1, u2} : Set V3) := by
+    ext x; simp [setOfList]
+  have hset_tr2 : setOfList (truncateSimplex 2 [w0, w1, w2, w3])
+      = setOfList (truncateSimplex 2 [u0, u1, u2, u3]) := by
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 w0 w1 w2 w3).2,
+      (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2, hset_pref3, hset_pref3u]
+  have hset_full : setOfList [w0, w1, w2, w3] = setOfList [u0, u1, u2, u3] := by
+    rw [← hwl]
+    exact SET_OF_LIST_LEFT_ACTION_LIST [u0, u1, u2, u3] p
+      (by simpa using p12_permutes_four p hperm hfix)
+  have hhl2 : hl (truncateSimplex 2 [w0, w1, w2, w3])
+      = hl (truncateSimplex 2 [u0, u1, u2, u3]) := by
+    rw [hl, hl, hset_tr2]
+  have h1x : hl (truncateSimplex 2 [w0, w1, w2, w3]) < Real.sqrt 2 := by
+    rw [hhl2]; exact h1
+  have hω2 : omegaListN V [w0, w1, w2, w3] 2
+      = omegaListN V [u0, u1, u2, u3] 2 := by
+    rw [p12_omega2_eq_circumcenter V [w0, w1, w2, w3] w0 w1 w2 w3 hpack hbxl rfl h1x,
+      p12_omega2_eq_circumcenter V [u0, u1, u2, u3] u0 u1 u2 u3 hpack hbar rfl h1,
+      hset_tr2]
+  obtain ⟨a, ha1, -, -⟩ :=
+    VORONOI_LIST_3_SINGLETON_EXPLICIT V [u0, u1, u2, u3] hpack hsat hbar
+  have hvleq : voronoiList V [w0, w1, w2, w3] = voronoiList V [u0, u1, u2, u3] := by
+    rw [voronoiList, voronoiList, hset_full]
+  have hω3 : omegaListN V [w0, w1, w2, w3] 3
+      = omegaListN V [u0, u1, u2, u3] 3 := by
+    rw [p12_omega3_eq V [w0, w1, w2, w3] hpack hsat hbxl a (by rw [hvleq, ha1]),
+      p12_omega3_eq V [u0, u1, u2, u3] hpack hsat hbar a ha1]
+  have htriV : ({u0, u1, u2} : Set V3) ⊆ V := by
+    intro x hx
+    have := BARV_SUBSET V 3 [u0, u1, u2, u3] hbar
+    apply this
+    simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false, Set.mem_insert_iff,
+      Set.mem_singleton_iff] at hx ⊢
+    tauto
+  have hw0V : w0 ∈ V := by
+    apply htriV
+    have hw : w0 ∈ setOfList [w0, w1, w2] := by simp [setOfList]
+    rw [hset_pref3] at hw
+    exact hw
+  have hu0V : u0 ∈ V := by
+    apply htriV
+    simp
+  have hw0_pref : w0 ∈ setOfList (truncateSimplex 2 [u0, u1, u2, u3]) := by
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2, hset_pref3u, ← hset_pref3]
+    simp [setOfList]
+  have hu0_pref : u0 ∈ setOfList (truncateSimplex 2 [u0, u1, u2, u3]) := by
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2]
+    simp [setOfList]
+  have hw0_full : w0 ∈ setOfList [u0, u1, u2, u3] := by
+    rw [← hset_full]
+    simp [setOfList]
+  have hu0_full : u0 ∈ setOfList [u0, u1, u2, u3] := by simp [setOfList]
+  have hseg : ∀ q ∈ segment ℝ (omegaListN V [u0, u1, u2, u3] 2)
+      (omegaListN V [u0, u1, u2, u3] 3),
+      dist q (hdV [w0, w1, w2, w3]) = dist q (hdV [u0, u1, u2, u3]) := by
+    intro q hq
+    apply p12_seg_dist_eq
+    · exact p12_omega_dist_eq
+        (hmem := OMEGA_LIST_N_IN_VORONOI_LIST V [u0, u1, u2, u3] 3 2 hbar (by norm_num))
+        hw0_pref hu0_pref hw0V hu0V
+    · exact p12_omega_dist_eq
+        (hmem := OMEGA_LIST_N_IN_VORONOI_LIST V [u0, u1, u2, u3] 3 3 hbar le_rfl)
+        (by rw [TRUNCATE_SIMPLEX_EXPLICIT_3]; exact hw0_full)
+        (by rw [TRUNCATE_SIMPLEX_EXPLICIT_3]; exact hu0_full) hw0V hu0V
+    · exact hq
+  have hmxi : mxi V [w0, w1, w2, w3] = mxi V [u0, u1, u2, u3] :=
+    p12_mxi_leftAction h1 hhl2 hω2 hω3 hseg
+  exact ⟨hbxl, hω2, hω3, hmxi⟩
