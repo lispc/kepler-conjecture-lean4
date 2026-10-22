@@ -13,9 +13,11 @@
 
 1. **"主定理只剩 3 个接口"是顶层归因，不是完整债务图。** `Assembly` 直接
    import `PackingAuto21`/`PackingAuto25`，而 PA21 import PA17、PA25 又直接
-   引用 `AJRIPQN`。因此 AJRIPQN 链（QZKSYKG2、SLTSTLO2、DDZUPHJ、
-   QZKSYKG1 等）**很可能已经在 e2e 锥内**；PA25 自身还有 86 个 direct sorry。
-   需要一次声明级依赖遍历把"在锥内/不在锥内"钉死 `[待核]`。
+   引用 `AJRIPQN`。**声明级可达性地图已确认**（`docs/e2e-reachability-map.md`，
+   2026-10-22）：e2e 锥内有 **149 个 direct sorryAx 源**——Assembly 83、
+   PA25 39、TameLp 6、PA15/PA11 各 3、PA21/PA18/PA14/PA13 各 2、其余 7 个各 1。
+   AJRIPQN 链的 QZKSYKG1/SLTSTLO2/DDZUPHJ 父声明正是
+   `p17_ajripqn_of_tailfix`，QZKSYKG2 的父是 `qzksykg2_p17`。
 2. **PackingConcl / PA24 / REUHADY1 不在当前 e2e 锥内。** `Assembly` 不 import
    `PackingConcl`（全仓零 importer），也不 import `PackingAuto24`；PA25 也不
    import PA24。REUHADY1(d)、PA24 的 AJRIPQN inherited taint、以及
@@ -70,9 +72,9 @@ Kepler.the_kepler_conjecture_e2e          Final.lean
 
 | 接口 | 定义 | 当前证明 | 债点 | HOL |
 |---|---|---|---|---|
-| `TheNonlinearInequalities` | Assembly:261 | `nonlinearInequalities` Assembly:6076 六分量显式装配 | 分量 1 真；`nliOx3q1h`/`nliMainNonlinearTerminalV11`/`nliLpIneqs`/`nliPackIneqDefA`/`nliKcblrqcIneqDef` 均 sorry；另有 14 个开放骨架节点 | the_main_statement.hl:55-59 |
+| `TheNonlinearInequalities` | Assembly:261 | `nonlinearInequalities` Assembly:6076 六分量显式装配 | 分量 1 真；`nliOx3q1h`/`nliMainNonlinearTerminalV11`/`nliLpIneqs`/`nliPackIneqDefA`/`nliKcblrqcIneqDef` 均 sorry；地图显示 Assembly 内共 **83** 个 direct 源（79 个 `nli*` + `fcdjdot`/`jcajydu`/`tameCorrespondenceIso` + `lpArchiveCertificatesDebt`） | the_main_statement.hl:55-59 |
 | `LinearProgrammingResults` | Assembly:1123（`LinearProgrammingResultsOn` :1117） | `linearProgrammingResults` Assembly:6085 真推导 | `lpArchiveCertificatesDebt` Assembly:6040 单点 sorry；43k LP 叶户尚未接入 | the_main_statement.hl:47-53 |
-| `TextCapstone` | Assembly:1149 | `textCapstone` Assembly:6094 真证明脚本 | 消费 PA25/AJRIPQN/LocalAuto16/TameSpine 占位；PA25 有 86 direct sorry `[待核 reachability]` | the_main_statement.hl:170-175 |
+| `TextCapstone` | Assembly:1149 | `textCapstone` Assembly:6094 真证明脚本 | 消费 PA25/AJRIPQN/LocalAuto16/TameSpine 占位；地图显示 PA25 有 **39** 个可达 direct 源（PA25 文件总 direct sorry 86，其中 39 在锥内） | the_main_statement.hl:170-175 |
 
 `goodListArchive`（Assembly:6226）已闭合：19715 图、23 个
 `GoodListShard*` 分片、纯内核组合器 `goodListArchiveAll`。它是 624 条
@@ -80,18 +82,21 @@ shard 公理的来源。
 
 ## 3. 在锥内 vs 邻近层（本次审计的核心区分）
 
-### 3.1 很可能在 e2e 锥内（需声明级 reachability 确认）
+### 3.1 已在 e2e 锥内（地图确认，2026-10-22）
 
 - **AJRIPQN 链**：PA25 的证明引用 `AJRIPQN`（PA25:234/2814/2876/5071），
-  而 `AJRIPQN` 的装配消费 QZKSYKG1/QZKSYKG2/SLTSTLO2/DDZUPHJ/
-  `RVFXZBU_p14`。因此 QZKSYKG2/SLTSTLO2/DDZUPHJ/QZKSYKG1 的证明
-  **直接减少主定理的 sorryAx**，不只是 PA24 的旁支。
-- **PA25 的 86 direct sorry**：其中被 `PACKING_CHAPTER_MAIN_CONCLUSION`
-  及其 `RDWKARC_concl`/`OXLZLEZ`/`TSKAJXY` 消费的部分在锥内；其余可能是
-  backfill/off-path，需要逐声明遍历。
+  地图父边显示 `QZKSYKG1`/`SLTSTLO2`/`DDZUPHJ` 的父是
+  `p17_ajripqn_of_tailfix`，`QZKSYKG2` 的父是 `qzksykg2_p17`。因此
+  QZKSYKG2/SLTSTLO2/DDZUPHJ/QZKSYKG1 的证明**直接减少主定理的 sorryAx**。
+- **PA25 的 39 个可达 direct 源**：`real_model_*` 25（父 `pkrmQu/Qx/Qy`）、
+  `LEAF_RANK_PROPS` 4、`MCELL4_*`/`ox3q1hP25` 等；PA25 文件总 direct sorry
+  86，其余 47 个不在锥内。
 - **PA17 的 AJRIPQN 本体**：PA17 direct sorry = 0，但 `AJRIPQN` 的
-  axiom cone 仍带 SLTSTLO2/DDZUPHJ/QZKSYKG1/QZKSYKG2 的 sorryAx
-  （B2 已把 RVFXZBU 换成 PA14 的 clean 版）。
+  axiom cone 仍带 SLTSTLO2/DDZUPHJ/QZKSYKG1/QZKSYKG2 的 sorryAx。
+- **PA10 `RVFXZBU`**：父边是 PA25 `MCELL4_BARV_FI`（PA25:3184/5455），
+  不是 PA17。B2 的 `hRV` 改接只把它从 AJRIPQN 装配路径移除；packing
+  chapter 仍消费 PA10 源件。建议把 `MCELL4_BARV_FI` 改接 PA14
+  `RVFXZBU_p14`（同陈述，clean），即可从 e2e 去掉这根源。
 
 ### 3.2 不在当前 e2e 锥内（邻近债务）
 

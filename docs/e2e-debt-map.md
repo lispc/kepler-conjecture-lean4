@@ -522,9 +522,11 @@ Lean 4.35 / 雷场入 playbook / RVFXZBU2_concl shim 盘点。
 **e2e 锥（`Final → Assembly` 的 import 图）**：`Assembly` import
 `PackingAuto2/18/21/25`、`LocalAuto16`、`TameLp` 等；`PackingAuto21` import
 `PackingAuto17`，`PackingAuto25` 直接引用 `AJRIPQN`（PA25:234/2814/2876/5071）。
-故 **AJRIPQN 链的 QZKSYKG2 / SLTSTLO2 / DDZUPHJ / QZKSYKG1 很可能已在主定理
-锥内**（声明级 reachability 待核），是直接 e2e 债务削减；QZKSYKG2 k=2 与
-SLTSTLO2 两条在飞车道因此是主线工作，不只是旁支。
+**声明级可达性地图已确认**（`docs/e2e-reachability-map.md`，2026-10-22）：
+e2e 锥内 **149 个 direct sorryAx 源**、**624 条可达公理**（与 DEBT 脊柱探针
+完全一致）。QZKSYKG1/SLTSTLO2/DDZUPHJ 的父声明 = `p17_ajripqn_of_tailfix`，
+QZKSYKG2 的父 = `qzksykg2_p17`——AJRIPQN 链**确实在主定理锥内**，QZKSYKG2 k=2
+与 SLTSTLO2 是直接 e2e 债务削减。
 
 **不在 e2e 锥（邻近 pack_concl 层）**：`PackingConcl`（7 direct sorry：
 MXI_EXISTS/RVFXZBU1/2/3 的 `_discharged` 桥等；全仓零 importer）、
@@ -535,14 +537,18 @@ MXI_EXISTS/RVFXZBU1/2/3 的 `_discharged` 桥等；全仓零 importer）、
 **锥外但将来会一次性接入**：43,078 个 LP 叶户——`linearProgrammingResults`
 的唯一债点 `lpArchiveCertificatesDebt`（Assembly:6040）目前是单点 sorry，
 填实前 43k 不入锥；接线前必须先做 LP 证书端到端审计，否则主定理锥会从
-3+624 一次跳到 43k。
+149+624 一次跳到 43k。
 
-**唯一非 sorry 可信计算**：624 条 shard 公理（`goodListArchive`，
-19,715 图 / 23 个 `GoodListShard*` 分片，`native_decide` 白名单）；内核不
-验证生成器。列为 P0：manifest + 抽样 replay。
+**唯一非 sorry 可信计算**：624 条 shard 公理 = 23 条
+`Assembly.GoodListShard*` + 601 条 `Graphs.CertShards.*`/`CertTri/Quad/Pent/Hex`
+（`native_decide` 白名单，地图按模块分布已核）；内核不验证生成器。
+列为 P0：manifest + 抽样 replay。
 
 **弱形/shim 清单**：`DUUNHOR_concl` 前提加强、`p17_measure_sdiff_ge` 不等式
-替身、PA10 `RVFXZBU` off-path、`qzksykg1/2_p17` 副本、`MXI_EXISTS_concl`
-成环、`RVFXZBU2/3_concl` shim——逐条"在锥/不在锥/替代路"表已入审计文档
-§4。P0 验证动作：声明级 reachability 地图 → 624 manifest+replay →
-LP 端到端审计；P1：三接口 HOL 陈述对照；P2：shim 清理批。
+替身、`qzksykg1/2_p17` 副本、`MXI_EXISTS_concl` 成环、`RVFXZBU2/3_concl` shim。
+**勘误**：PA10 `RVFXZBU` 不是 off-path——地图父边显示 PA25 `MCELL4_BARV_FI`
+（:3184/5455）仍消费它；B2 只把它从 AJRIPQN hRV 移除。建议小批把
+`MCELL4_BARV_FI` 改接 PA14 `RVFXZBU_p14`。逐条"在锥/不在锥/替代路"表已入
+审计文档 §4。P0 验证动作：声明级 reachability 地图（已完成）→
+MCELL4_BARV_FI 改接 → 624 manifest+replay → LP 端到端审计；
+P1：三接口 HOL 陈述对照；P2：shim 清理批。
