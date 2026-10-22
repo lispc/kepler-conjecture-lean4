@@ -106,6 +106,38 @@ cross-wave load inflation).
 - Provenance: `gen9/REPORT.md`, `gen9/COMMANDS.md`, `gen9/manifest.md5`
   (160 files), under `lane_snapshots/w8rung/`.
 
+## gen-10 probe (2026-10-22, clone-only; no main-repo code change)
+
+Question: bake the 8 box-independent constant trans boxes into `TMParams`?
+Answer: the `TMParams` route is **NO-GO**, but a library constant box for
+`atan(1)` is **GO**.
+
+- The 8 constants are 6× `atan(1)` (π/4) and 2× `atan(1/√2)` (≈0.61548).
+  Cost is concentrated in the two `atanq` at N=2048 (~99.9 s each); each
+  `atan1` is ~2.2 s. Uniform-128 without a constant box is NEG because
+  `atan(1)`'s rung-128 interval (~0.0039) is too coarse.
+- Prototype (clone only): `pi4D` constant box in
+  `lean/Kepler/Interval/Trans.lean` (`pi4D_mem` kernel-checked from Mathlib
+  `pi_gt_d20`/`pi_lt_d20`, no new axioms); `arctanI` returns it on `[1,1]`;
+  `atanq` drops to rung 128 (residual ~1e-41). Emitter default path is
+  byte-identical.
+- POS1 unified: stage-A 426.2→**9.51 s**, decide 178.9→**42.71 s**
+  (total 605.1→**52.22 s**, 11.6×); DOM 99/99, leaf probe PASS; decide RSS
+  17.18→**8.90 GB**.
+- t3 three leaves: 813.7→**92.73 s** (8.8×), 3/3 PASS, kernel rc=0, no new
+  axioms; RSS 23.42→12.48 GB.
+- Per leaf ≈**50 CPU-s** (vs 360); 251k leaves ≈**145 CPU-days** (vs 1046);
+  64 cores ≈2.3 days; a 36 GB node fits 3 decide workers (vs 1), so memory
+  is no longer the hard one-worker-per-node constraint.
+- `TMParams` full bake: **NO-GO** — no value-box field, the soundness chain
+  needs 400-600 lines / 3-5 rounds, and the incremental benefit here is zero.
+- Adoption options: (a) global `arctanI` fast path — changes the `atan(1)`
+  interval semantics for all old artifacts, old params/DOM tables must be
+  regenerated; (b) opt-in `TKind.atan1K` — preserves default semantics,
+  +1-2 rounds. **Pending user decision; nothing has landed in the main repo.**
+- Provenance: `gen10/REPORT.md`, `gen10/code.diff`, snapshot
+  `lane_snapshots/w8rung/gen10probe/` (65 items, manifest.md5).
+
 ## Provenance
 
 - Curve: `gen7/{POS1,L1}.rungcurve.json`, `gen7/*_u{8..256}.stageA_run.log`,
