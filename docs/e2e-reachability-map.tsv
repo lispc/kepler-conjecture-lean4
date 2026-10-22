@@ -1,6 +1,6 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 8305
-SORRIED 149
+TOTAL_REACHABLE_KEPLER_DECLS 215561
+SORRIED 141
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
@@ -29,7 +29,6 @@ Kepler.Assembly	Kepler.Assembly.nliRestBIXPCGWb	parent=Kepler.Assembly.nliPackNo
 Kepler.Assembly	Kepler.Assembly.nliRestFHBVYXZa	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestFHBVYXZb	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestFHBVYXZv2a	parent=Kepler.Assembly.nliPackNonlinearRest
-Kepler.Assembly	Kepler.Assembly.nliRestFWGKMBZ	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestGCKBQEA	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestGLFVCVK4	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestGLFVCVK4a8328676778	parent=Kepler.Assembly.nliPackNonlinearRest
@@ -88,7 +87,6 @@ Kepler.Assembly	Kepler.Assembly.nliTskXLLIPLS	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.tameCorrespondenceIso	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.CC_CELL_WEDGE_MATCH_UH	parent=Kepler.Text.cc_4_UL
 Kepler.Text.ContraFan	Kepler.Text.ContraFan.LEMMA_4_POINTS_FINAL	parent=Kepler.Text.ContraFan.fan7_4_0
-Kepler.Text.PackingAuto13	Kepler.Text.DDZUPHJ	parent=_private.Kepler.Text.PackingAuto17.0.Kepler.Text.p17_ajripqn_of_tailfix
 Kepler.Text.PackingAuto15	Kepler.Text.DIHX_SYM	parent=Kepler.Text.GAMMAX_MCELL2
 Kepler.Text.PackingAuto3	Kepler.Text.GRHIDFA_concl	parent=Kepler.Text.OXLZLEZ
 Kepler.Text.LocalAuto16	Kepler.Text.JEJTVGB_p16	parent=Kepler.Text.nonlinear_imp_lp_main_estimate_p16
@@ -99,10 +97,6 @@ Kepler.Text.PackingAuto25	Kepler.Text.MCELL4_AZIM_LT_PI	parent=Kepler.Text.c_4_a
 Kepler.Text.PackingAuto25	Kepler.Text.MCELL4_FULL_WEDGE	parent=Kepler.Text.cc_4_cc_ke4
 Kepler.Text.PackingAuto15	Kepler.Text.MCELL_ID_MXI_2	parent=Kepler.Text.MCELL2_DIHX
 Kepler.Text.PackingAuto15	Kepler.Text.MCELL_ID_OMEGA_LIST_N	parent=Kepler.Text.MCELL2_DIHX
-Kepler.Text.PackingAuto14	Kepler.Text.QZKSYKG1	parent=_private.Kepler.Text.PackingAuto17.0.Kepler.Text.p17_ajripqn_of_tailfix
-Kepler.Text.PackingAuto14	Kepler.Text.QZKSYKG2	parent=_private.Kepler.Text.PackingAuto17.0.Kepler.Text.qzksykg2_p17
-Kepler.Text.PackingAuto10	Kepler.Text.RVFXZBU	parent=Kepler.Text.MCELL4_BARV_FI
-Kepler.Text.PackingAuto13	Kepler.Text.SLTSTLO2	parent=_private.Kepler.Text.PackingAuto17.0.Kepler.Text.p17_ajripqn_of_tailfix
 Kepler.Text.PackingAuto21	Kepler.Text.TSKAJXY_034	parent=Kepler.Text.TSKAJXY
 Kepler.Text.TameLp	Kepler.Text.TameLp.fully_surrounded_perimeter_bound	parent=Kepler.Text.TameLp.MQMSMAB
 Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau3_tauVEF_std	parent=Kepler.Text.TameLp.MQMSMAB_adm1
@@ -111,12 +105,10 @@ Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau5_tauVEF_std	parent=Kepler.Text.Ta
 Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau6_tauVEF_std	parent=Kepler.Text.TameLp.MQMSMAB_adm1
 Kepler.Text.TameLp	Kepler.Text.TameLp.sum_tauVEF_upper_bound	parent=Kepler.Text.TameLp.MQMSMAB_tame13a
 Kepler.Text.PackingAuto2	Kepler.Text.UPFZBZM_concl	parent=Kepler.Text.RDWKARC_concl
-Kepler.Text.PackingAuto7	Kepler.Text.YIFVQDV_1	parent=Kepler.Text.MCELL4_BARV_FI
 Kepler.Text.PackingAuto25	Kepler.Text.cc_bool_model_data	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.PackingAuto18	Kepler.Text.cc_pe_exists	parent=Kepler.Text.CC_PE_FACET_OF
 Kepler.Text.PackingAuto25	Kepler.Text.cc_prep_model_data	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.LocalAuto1	Kepler.Text.main_nonlinear_terminal_v11	parent=Kepler.Assembly.textCapstone
-Kepler.Text.PackingAuto21	Kepler.Text.mi_gamma3f_gamma3f_x_div_sqrtdelta	parent=_private.Kepler.Text.PackingAuto21.0.Kepler.Text.p21_track7
 Kepler.Text.PackingAuto25	Kepler.Text.ox3q1hP25	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankAzimPointwise	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankCriticalEdge	parent=Kepler.Text.LEAF_RANK_PROPS
@@ -778,3 +770,4 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_bounds._native.native_decide.ax_1_1
 Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_no_finals._native.native_decide.ax_1_1
 Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 --- END ---
+REACH_EXIT=0

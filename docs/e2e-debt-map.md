@@ -585,3 +585,32 @@ LP 端到端审计；P1：三接口 HOL 陈述对照；P2：shim 清理批。
   （SLTSTLO2 剩余三交 + `p13_cell_unique_off_Z`）、nli A1
   （`nliRestFWGKMBZ` Assembly:688 粘合）。排序不变：B3 收工发 B4
   （WQPRRDY + QZKSYKG2 k=3/4）；B8c-e 收工发 B7（DDZUPHJ）。
+
+## 2026-10-22/23 AJRIPQN 归零节（四根全证 + nli 首源 + prep R1 pilot）
+
+- **AJRIPQN 四根全证**（`ce71abd3` / `c7b67c9b` / `c8b43895` / `cb268b64`）：
+  `QZKSYKG1`（B3，S₃ kit + YIFVQDV_1）、`QZKSYKG2`（B4，k=3/4 纯仿射覆盖，
+  **不消费 WQPRRDY**）、`DDZUPHJ`（B7，NJIUTIU omega 链 + TEZFFSK +
+  WAUFCHE1/2）、`SLTSTLO2`（B8c-e `67a6556b` 先证 (2,3)/(0,3) 两交 + 9 枚
+  `p13t_*`；B8f 补 (1,3)（KY_LEMMA_5 仿射坐标版 + B7 仿射独立 / B3 q 构造
+  + 锥齐性）+ `p13_cell_unique_off_Z` + ∃! 装配）。`#print axioms
+  Kepler.Text.AJRIPQN` = `[propext, Classical.choice, Quot.sound]`；PA13 sorry
+  3→1（余上游 `URRPHBZ2`）。`WQPRRDY`（PA7:3976）仍 sorry 但已出 e2e 锥。
+- **nli A1**（`286d11b8`）：59 个 nli rest 首源 `nliRestFWGKMBZ` 接线——由
+  `Kepler.Interval.Cases.CFWGKMBZ`（605 分片 + Base，205,418 叶，探针标准三）
+  直接导出；证书闭包 ~206k 声明进锥，**零新公理**。A2（rest 9
+  `QITNPEA3725403817`，2,775 分片/96 万叶，含 sqrt+atan+ite）冷构建外推
+  40–45h，需预构建 oleans/分机，不能照搬本 glue。
+- **prep R1 pilot**（`abf636dd`）：从 vendored `reference/_distfiles` 重建
+  GMP/MPFR/FLINT + `bb_arb`；`prep.hl` 812/812 解析；6/6 R1 求解 PASS，
+  5/6 Lean 内核闭合（标准三，48/46/26/1729/487 叶）；`prep-2125338128`
+  求解 PASS 但缺 main+tm 混合 BBTree 内核件（plain 134,539 叶 ~15 CPU-h，
+  TM 46,099 叶）；R2 重记录 TIMEOUT。复现 runbook 在
+  `lane_snapshots/prep1/DELIVERY.md` §6；全量缺口：`defs_prep` 缺
+  `g`/`mud_*` 六向量语法、`--leaves` 采样 `_sub` bug。
+- **e2e 地图重跑**（`docs/e2e-reachability-map.tsv`，2026-10-23）：direct
+  sorry 源 **149→141**（euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3
+  `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、
+  nli A1 `nliRestFWGKMBZ`）；可达公理 **624 不变**；可达声明 8,305→215,561
+  （CFWGKMBZ 证书闭包进锥，非债务，口径见地图 §3.7）。剩余最大簇：
+  `nliPackNonlinearRest` 58、PA25 39、TameLp 6。

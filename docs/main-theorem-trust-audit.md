@@ -123,16 +123,24 @@ shard 公理的来源。
 |---|---|---|---|---|
 | `DUUNHOR_concl` | PA2:3504 | 比 pack_concl 多 `Packing`/`saturated` 前提 | 经 PA17 stage 3，很可能在 | 不是逐字 pack_concl；若最终要逐字接口，另立 `_verbatim`，不要改现有件 |
 | `p17_measure_sdiff_ge` | PA17:297 | 只有 `volume s = 0 → volume (s \ t) ≤ volume (t \ s)` 型不等式，非 HOL `MEASURE_NEGLIGIBLE_SYMDIFF` | 经 PA17 stage 3，很可能在 | 确认用途足够；不足则补逐字件 |
-| `RVFXZBU` (PA10) | PA10:413 | weak-permutes + i=3 sorry | **是**（父 = PA25 `MCELL4_BARV_FI`:3184/5455） | B2 只把它从 AJRIPQN hRV 移除；packing chapter 仍消费。建议改接 PA14 `RVFXZBU_p14` |
-| `RVFXZBU_p14` | PA14:1102 | 带 `hfix`，i=0/1/2/4 + B1 收 i=3 | 是（PA17 hRV） | clean；探针标准三零 |
-| `QZKSYKG1` | PA14:1243 | SF-20 hfix 已应用；仍 sorry | 是（AJRIPQN hQ1） | B3 目标 |
-| `QZKSYKG2` | PA14:1286 | SF-38 tail-fixed；k=2/0/1 已落，k=3/4 待 | 是（AJRIPQN hQ2） | B4 收 k=3/4 |
+| `RVFXZBU` (PA10) | PA10:413 | weak-permutes + i=3 sorry | **否**（P0 `760a192a` 后 PA25 `MCELL4_BARV_FI`/`MCELL4_LEAF3` 改接 `RVFXZBU_p14`；PA20 两处不在锥） | 已解决；源件留 off-path 记账 |
+| `RVFXZBU_p14` | PA14:1102 | 带 `hfix`，i=0/1/2/4 + B1 收 i=3 | 是（PA17 hRV + PA25 MCELL4） | clean；探针标准三零 |
+| `QZKSYKG1` | PA14:1934 | **已证**（B3 `ce71abd3`；S₃ kit + k=4 用 YIFVQDV_1） | 是（AJRIPQN hQ1） | 探针标准三零 sorryAx |
+| `QZKSYKG2` | PA14:2028 | **已证**（B4 `c7b67c9b`；k=3/4 纯仿射覆盖，不消费 WQPRRDY） | 是（AJRIPQN hQ2） | 探针标准三零 sorryAx |
 | `qzksykg1_p17`/`qzksykg2_p17` | PA17:236/259 | PA14 件的私有转发副本 | 是（PA17 内部） | PA14 本体落地后删除副本，避免双账 |
 | `MXI_EXISTS_concl` | PA2:5473 | pack_concl 接口；PA11 `mxiExplicit` 消费（成环） | **否**（地图：PA2 唯一可达源是 `UPFZBZM_concl`） | 成环未解；列入 shim 清理批 |
-| `bank_BIXPCGW9455898160` | PA21:596 | Lean `> +0.00569`；HOL `ineq.hl:985` 是 `> -0.00569`（`--` 一元负号） | **是**（Assembly:682 → `nliPackNonlinearRest` → 分量 1/6） | **假陈述**；SF-49 已立案待批；pipeline AST/RPN 已按 -0.00569 编码 |
+| `bank_BIXPCGW9455898160` | PA21:601 | 已由 **SF-49 修正**（`d3e411dd`；`> -0.00569` 与 HOL `ineq.hl:985` 逐字一致） | **是**（Assembly:682 → `nliPackNonlinearRest` → 分量 1/6） | 陈述保真已恢复；pipeline AST/RPN 一致 |
 | `RVFXZBU2_concl` | PA2:5496 | 无 twin 的 pack_concl 接口 | 否（PackingConcl:388 桥在邻近层） | 列入 R3/shim 盘点；PA24 `p24_edgeX_of_leaf23` 消费其桥 |
 | `RVFXZBU3_concl` | PA2:5507 | twin mismatch（PA10 只覆盖 i≤4） | 否 | off-path；DEBT 记账保留 |
 | PA10 剩余 3 sorry | PA10:488/604/608 | RVFXZBU i=3 / YNHYJIT i=2/3 | 否（PA14 已重落 RVFXZBU/YNHYJIT i=3） | off-path；YNHYJIT i=2 待 S₂ kit |
+
+> **2026-10-23 更新（AJRIPQN 归零）**：AJRIPQN 四根 `QZKSYKG1`（B3 `ce71abd3`）、
+> `QZKSYKG2`（B4 `c7b67c9b`）、`DDZUPHJ`（B7 `c8b43895`）、`SLTSTLO2`
+> （B8c-e `67a6556b` + B8f `cb268b64`）已全部真证，
+> `#print axioms Kepler.Text.AJRIPQN` = `[propext, Classical.choice, Quot.sound]`。
+> `WQPRRDY`（PA7:3976）仍 sorry 但已出 e2e 锥（B4 的 QZKSYKG2 k=3/4 不消费它）。
+> 首个 nli rest 源 `nliRestFWGKMBZ` 已接线（nli A1 `286d11b8`），
+> e2e direct sorry 源 149→141（见 `docs/e2e-reachability-map.md`）。
 
 ## 5. 建议的验证动作（按优先级）
 
