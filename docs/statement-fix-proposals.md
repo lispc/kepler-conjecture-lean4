@@ -2165,7 +2165,7 @@ Text roots 8789 jobs、主仓 `lake build Kepler` 9359 jobs 全绿。陈述与 (
 
 **立案：2026-10-22，`nliPackNonlinearRest` 侦察车道
 （`docs/scouts/nli-rest-scout.md` §2.3）产出，编排者复核 HOL 原文与
-pipeline AST；用户批准：待批（未应用）。** 对象 = PA21:596
+pipeline AST；用户批准（2026-10-22，"Sf 批准"）——本项即行应用。** 对象 = PA21:596
 `bank_BIXPCGW9455898160` 的结论常量符号。机理：HOL `ineq.hl:985` 为
 `gamma4fgcy ... > -- #0.00569`（HOL `--` 是一元负号），同条 doc 自述
 "If X is a quarter, then γ(X,L) ≥ -0.00569"；pipeline 的 AST

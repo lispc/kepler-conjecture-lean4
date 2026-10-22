@@ -598,7 +598,7 @@ def bank_BIXPCGW9455898160 : Prop :=
     2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
     2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
     2 ≤ y6 → y6 ≤ 2 * hminus →
-    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > 0.00569
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > -0.00569
 
 /-- HOL ineq entry `FWGKMBZ` (ineq.hl:967).  Box
 [2hmin,2hplus]×[2,√8]⁵. -/
