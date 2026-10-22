@@ -1937,13 +1937,64 @@ theorem QZKSYKG1 {V : Set V3} {ul vl : List V3} {k : ℕ} {p : Equiv.Perm ℕ}
     (hperm : permutes p (Set.Icc 0 (k - 1)))
     (hfix : ∀ j : ℕ, k ≤ j → p j = j) (hvl : vl = leftActionList p ul) :
     barV V 3 vl := by
-  -- NEEDS: (a) k ≤ 3 — STATEMENT-FIX 项 20 已应用（补 PA10 式 tail-fixedness
-  -- `∀ j ≥ k, p j = j`：弱 permutes 编码下 p 可把 getD-default junk 甩进 tail
-  -- slot，k=1 p 1↦7 时点集跑出 V，陈述为假）；余下是 S₃ 巨案
-  -- （LEFT_ACTION_LIST_PROPERTIES, marchal2.hl:4460 的 facet 维数几何）。
-  -- (b) k = 4 — the `YIFVQDV_1` giant (barV-invariance under the
-  -- full rearrangement of 0..3: voronoiNondg for all pair/triple facets).
-  sorry
+  subst hvl
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hk
+  rcases hk with rfl | rfl | rfl | rfl | rfl
+  · -- k = 0: `hfix` forces the identity permutation
+    have hp : p = Equiv.refl ℕ :=
+      Equiv.ext fun j => hfix j (Nat.zero_le j)
+    subst hp
+    rw [p14_leftActionList_refl]
+    exact hbar
+  · -- k = 1: `hperm` fixes 0 and `hfix` fixes the tail
+    have h0 : p 0 = 0 := by
+      have hmem : (0:ℕ) ∈ Set.Icc 0 (1 - 1) :=
+        Set.mem_Icc.mpr ⟨Nat.zero_le _, by norm_num⟩
+      have h := (hperm 0).mp hmem
+      simpa [Set.mem_Icc] using h
+    have hp : p = Equiv.refl ℕ :=
+      p14_eqRefl_of_fix h0 (fun j hj => hfix j (by omega))
+    subst hp
+    rw [p14_leftActionList_refl]
+    exact hbar
+  · -- k = 2: the 01-swap bridge
+    have hm : mcell 2 V ul = mcell2 V ul := (MCELL_EXPLICIT 2 V ul).2.2.1
+    rw [hm, mcell2] at hne
+    have hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl ul := by
+      by_contra hc
+      rw [if_neg hc] at hne
+      exact hne rfl
+    have hperm' : permutes p ({0, 1} : Set ℕ) := by
+      intro x
+      have hx := hperm x
+      simp only [Set.mem_Icc, Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+      omega
+    have hfix' : ∀ j : ℕ, 2 ≤ j → p j = j := fun j hj => hfix j (by omega)
+    exact (LEFT_ACTION_LIST_1_PROPERTIES_ALT V ul (leftActionList p ul) p hpack hsat
+      hbar hperm' hfix' hcond.1 hcond.2 rfl).1
+  · -- k = 3: the S₃ left-action kit
+    have hm : mcell 3 V ul = mcell3 V ul := (MCELL_EXPLICIT 3 V ul).2.2.2.1
+    rw [hm, mcell3] at hne
+    have hcond : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl ul := by
+      by_contra hc
+      rw [if_neg hc] at hne
+      exact hne rfl
+    have hperm' : permutes p (Set.Icc 0 2) := by simpa using hperm
+    have hfix' : ∀ j : ℕ, 3 ≤ j → p j = j := fun j hj => hfix j (by omega)
+    exact (LEFT_ACTION_LIST_PROPERTIES hpack hsat hbar hcond.1 hcond.2
+      hperm' hfix' rfl).1
+  · -- k = 4: nonemptiness of `mcell4` gives `hl ul < sqrt 2`; `YIFVQDV_1`
+    have hm : mcell 4 V ul = mcell4 V ul :=
+      (MCELL_EXPLICIT 4 V ul).2.2.2.2 (by norm_num)
+    rw [hm, mcell4] at hne
+    have hhl : hl ul < Real.sqrt 2 := by
+      by_contra hc
+      rw [if_neg hc] at hne
+      exact hne rfl
+    have hperm' : permutes p (Set.Icc 0 3) := by simpa using hperm
+    exact YIFVQDV_1 V ul 3 p hpack hbar hhl hperm'
 
 /-- HOL `QZKSYKG2` (QZKSYKG.hl:255-262 concl, proof 325-2251): `mcell k V ul`
 is covered by the union of the Rogers simplices of all left-action
