@@ -1996,6 +1996,1010 @@ theorem QZKSYKG1 {V : Set V3} {ul vl : List V3} {k : ℕ} {p : Equiv.Perm ℕ}
     have hperm' : permutes p (Set.Icc 0 3) := by simpa using hperm
     exact YIFVQDV_1 V ul 3 p hpack hbar hhl hperm'
 
+
+
+/-! ## Barycentric coordinates on a finite range -/
+
+private theorem p14_bary {n : ℕ} {v : Fin n → V3} (hinj : Function.Injective v)
+    {x : V3} (hx : x ∈ convexHull ℝ (Set.range v)) :
+    ∃ lam : Fin n → ℝ, (∀ i, 0 ≤ lam i) ∧ (∑ i, lam i = 1) ∧ (∑ i, lam i • v i = x) := by
+  have hx' : x ∈ convexHull ℝ ((Finset.univ.image v : Finset V3) : Set V3) := by
+    rwa [Finset.coe_image, Finset.coe_univ, Set.image_univ]
+  rw [Finset.mem_convexHull'] at hx'
+  obtain ⟨w, hw0, hw1, hwx⟩ := hx'
+  have hsum : ∑ y ∈ Finset.univ.image v, w y = ∑ i, w (v i) :=
+    Finset.sum_image (fun i _ j _ h => hinj h)
+  have hsum' : ∑ y ∈ Finset.univ.image v, w y • y = ∑ i, w (v i) • v i :=
+    Finset.sum_image (fun i _ j _ h => hinj h)
+  exact ⟨fun i => w (v i), fun i => hw0 _ (Finset.mem_image_of_mem _ (Finset.mem_univ i)),
+    by rw [← hsum]; exact hw1, by rw [← hsum']; exact hwx⟩
+
+/-! ## Abstract face decomposition -/
+
+private theorem p14_face_decomp {n : ℕ} {v : Fin n → V3} {x c : V3} {lam mu : Fin n → ℝ}
+    (hlam0 : ∀ i, 0 ≤ lam i) (hmu0 : ∀ i, 0 ≤ mu i)
+    (hlam1 : ∑ i, lam i = 1) (hmu1 : ∑ i, mu i = 1)
+    (hx : ∑ i, lam i • v i = x) (hc : ∑ i, mu i • v i = c)
+    (hne : x ≠ c) :
+    ∃ (i0 : Fin n) (t : ℝ) (y : V3) (nu : Fin n → ℝ), 0 ≤ t ∧ t < 1 ∧ 0 < mu i0 ∧
+      x = t • c + (1 - t) • y ∧
+      (∀ i, 0 ≤ nu i) ∧ (∑ i, nu i = 1) ∧ y = ∑ i, nu i • v i ∧ nu i0 = 0 ∧
+      y ∈ convexHull ℝ (v '' {i | i ≠ i0}) := by
+  classical
+  set S : Finset (Fin n) := Finset.univ.filter (fun i => 0 < mu i) with hS
+  have hSne : S.Nonempty := by
+    by_contra hcon
+    rw [Finset.not_nonempty_iff_eq_empty] at hcon
+    have hz : ∀ i, mu i = 0 := by
+      intro i
+      have hi : i ∉ S := by rw [hcon]; exact Finset.notMem_empty i
+      simp only [hS, Finset.mem_filter, Finset.mem_univ, true_and, not_lt] at hi
+      exact le_antisymm hi (hmu0 i)
+    have hsum0 : ∑ i, mu i = 0 := Finset.sum_eq_zero fun i _ => hz i
+    rw [hmu1] at hsum0
+    exact one_ne_zero hsum0
+  obtain ⟨i0, hi0S, hi0min⟩ := Finset.exists_min_image S (fun i => lam i / mu i) hSne
+  have hi0pos : 0 < mu i0 := (Finset.mem_filter.mp hi0S).2
+  set t : ℝ := lam i0 / mu i0 with ht
+  have ht0 : 0 ≤ t := div_nonneg (hlam0 i0) (le_of_lt hi0pos)
+  have hex : ∃ j, lam j < mu j := by
+    by_contra hcon
+    push Not at hcon
+    have hnonneg : ∀ i, 0 ≤ lam i - mu i := fun i => by linarith [hcon i]
+    have hsumz : ∑ i, (lam i - mu i) = 0 := by
+      rw [Finset.sum_sub_distrib, hlam1, hmu1, sub_self]
+    have hzero : ∀ i, lam i - mu i = 0 := fun i =>
+      (Finset.sum_eq_zero_iff_of_nonneg (s := Finset.univ)
+        (fun i _ => hnonneg i)).mp hsumz i (Finset.mem_univ i)
+    have hxc : x = c := by
+      rw [← hx, ← hc]
+      exact Finset.sum_congr rfl fun i _ => by rw [sub_eq_zero.mp (hzero i)]
+    exact hne hxc
+  obtain ⟨j, hj⟩ := hex
+  have hjpos : 0 < mu j := lt_of_le_of_lt (hlam0 j) hj
+  have hjS : j ∈ S := Finset.mem_filter.mpr ⟨Finset.mem_univ j, hjpos⟩
+  have ht1 : t < 1 := by
+    have h1 := hi0min j hjS
+    have h2 : lam j / mu j < 1 := by rw [div_lt_one hjpos]; exact hj
+    linarith
+  have h1t : (1 : ℝ) - t ≠ 0 := by linarith
+  set nu : Fin n → ℝ := fun i => (1 - t)⁻¹ * (lam i - t * mu i) with hnu
+  have hnu0 : ∀ i, 0 ≤ nu i := by
+    intro i
+    by_cases hi : 0 < mu i
+    · have hiS : i ∈ S := Finset.mem_filter.mpr ⟨Finset.mem_univ i, hi⟩
+      have hle := hi0min i hiS
+      have hti : t * mu i ≤ lam i := (le_div_iff₀ hi).mp (by simpa [ht] using hle)
+      exact mul_nonneg (inv_nonneg.mpr (by linarith)) (by linarith)
+    · have hz : mu i = 0 := le_antisymm (le_of_not_gt hi) (hmu0 i)
+      simp only [hnu, hz, mul_zero, sub_zero]
+      exact mul_nonneg (inv_nonneg.mpr (by linarith)) (hlam0 i)
+  have hnu_i0 : nu i0 = 0 := by
+    have hz : lam i0 - t * mu i0 = 0 := by
+      rw [ht, div_mul_cancel₀ (lam i0) (ne_of_gt hi0pos), sub_self]
+    simp only [hnu, hz, mul_zero]
+  have hnu1 : ∑ i, nu i = 1 := by
+    have h1 : ∑ i, nu i = (1 - t)⁻¹ * ∑ i, (lam i - t * mu i) := by
+      simp only [hnu, Finset.mul_sum]
+    have h2 : ∑ i, (lam i - t * mu i) = 1 - t := by
+      rw [Finset.sum_sub_distrib, hlam1, ← Finset.mul_sum, hmu1, mul_one]
+    rw [h1, h2, inv_mul_cancel₀ h1t]
+  refine ⟨i0, t, ∑ i, nu i • v i, nu, ht0, ht1, hi0pos, ?_, hnu0, hnu1, rfl, hnu_i0, ?_⟩
+  have hyx : (1 - t) • (∑ i, nu i • v i) = x - t • c := by
+    have h1 : (1 - t) • (∑ i, nu i • v i) = ∑ i, ((1 - t) * nu i) • v i := by
+      rw [Finset.smul_sum]
+      exact Finset.sum_congr rfl fun i _ => by rw [smul_smul]
+    rw [h1]
+    have hterm : ∀ i, ((1 - t) * nu i) • v i = (lam i - t * mu i) • v i := by
+      intro i
+      rw [hnu]
+      have hc : (1 - t) * ((1 - t)⁻¹ * (lam i - t * mu i)) = lam i - t * mu i := by
+        rw [← mul_assoc, mul_inv_cancel₀ h1t, one_mul]
+      rw [hc]
+    rw [show ∑ i, ((1 - t) * nu i) • v i = ∑ i, (lam i - t * mu i) • v i from
+      Finset.sum_congr rfl fun i _ => hterm i]
+    rw [show ∑ i, (lam i - t * mu i) • v i
+        = ∑ i, (lam i • v i - (t * mu i) • v i) from
+      Finset.sum_congr rfl fun i _ => sub_smul (lam i) (t * mu i) (v i)]
+    rw [Finset.sum_sub_distrib]
+    have hsmul : ∑ i, (t * mu i) • v i = t • c := by
+      rw [← hc, Finset.smul_sum]
+      exact Finset.sum_congr rfl fun i _ => by rw [smul_smul]
+    rw [hx, hsmul]
+  · calc x = t • c + (x - t • c) := by module
+      _ = t • c + (1 - t) • (∑ i, nu i • v i) := by rw [hyx]
+  · have hsum' : ∑ i, nu i • v i = ∑ i ∈ Finset.univ.erase i0, nu i • v i := by
+      rw [← Finset.sum_erase_add _ _ (Finset.mem_univ i0), hnu_i0, zero_smul, add_zero]
+    rw [hsum']
+    have hcoef1 : ∑ i ∈ Finset.univ.erase i0, nu i = 1 := by
+      have h := Finset.sum_erase_add (s := Finset.univ) (f := nu) (a := i0)
+        (Finset.mem_univ i0)
+      rw [hnu_i0, add_zero] at h
+      rw [h, hnu1]
+    exact (convex_convexHull ℝ (v '' {i | i ≠ i0})).sum_mem
+      (t := Finset.univ.erase i0)
+      (w := nu) (z := v)
+      (fun i _ => hnu0 i)
+      hcoef1
+      (fun i hi => subset_convexHull ℝ _ (Set.mem_image_of_mem v (by
+        simp only [Set.mem_setOf_eq]
+        exact Finset.ne_of_mem_erase hi)))
+
+/-! ## The 2D segment split -/
+
+private theorem p14_in_tri_pair {A B M cc x y : V3} {t s : ℝ}
+    (hM : M = midpoint ℝ A B)
+    (ht0 : 0 ≤ t) (ht1 : t ≤ 1)
+    (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
+    (hy : y = (1 - s) • A + s • B)
+    (hx : x = t • cc + (1 - t) • y) :
+    x ∈ convexHull ℝ ({A, M, cc} : Set V3) ∨
+      x ∈ convexHull ℝ ({B, M, cc} : Set V3) := by
+  by_cases hle : s ≤ 1 / 2
+  · have hmid : midpoint ℝ A B = (1 / 2 : ℝ) • A + (1 / 2 : ℝ) • B := by
+      rw [midpoint_eq_smul_add]; norm_num
+    have hyseg : y ∈ segment ℝ A M := by
+      rw [segment_eq_image]
+      refine ⟨2 * s, ⟨by linarith, by linarith⟩, ?_⟩
+      rw [hM, hmid, hy]
+      module
+    have hseg : y ∈ convexHull ℝ ({A, M, cc} : Set V3) :=
+      segment_subset_convexHull (s := ({A, M, cc} : Set V3)) (by simp) (by simp) hyseg
+    have hconv := convex_convexHull ℝ ({A, M, cc} : Set V3)
+    have hmem := hconv.sum_mem (t := Finset.univ)
+      (w := fun i : Fin 2 => ![t, 1 - t] i) (z := fun i : Fin 2 => ![cc, y] i)
+      (by
+        intro i _
+        fin_cases i
+        simpa using ht0
+        simpa using sub_nonneg.mpr ht1)
+      (by simp [Fin.sum_univ_two])
+      (by
+        intro i _
+        fin_cases i
+        exact subset_convexHull ℝ _ (by simp)
+        exact hseg)
+    exact Or.inl (by simpa [Fin.sum_univ_two, hx] using hmem)
+  · have hs2 : (1 : ℝ) / 2 ≤ s := le_of_lt (lt_of_not_ge hle)
+    have hmid : midpoint ℝ B A = (1 / 2 : ℝ) • B + (1 / 2 : ℝ) • A := by
+      rw [midpoint_eq_smul_add]; norm_num
+    have hyseg : y ∈ segment ℝ B M := by
+      rw [segment_eq_image]
+      refine ⟨2 - 2 * s, ⟨by linarith, by linarith⟩, ?_⟩
+      rw [show midpoint ℝ A B = midpoint ℝ B A from midpoint_comm A B] at hM
+      rw [hM, hmid, hy]
+      module
+    have hseg : y ∈ convexHull ℝ ({B, M, cc} : Set V3) :=
+      segment_subset_convexHull (s := ({B, M, cc} : Set V3)) (by simp) (by simp) hyseg
+    have hMba : M = midpoint ℝ B A := by rw [hM, midpoint_comm]
+    have hconv := convex_convexHull ℝ ({B, M, cc} : Set V3)
+    have hmem := hconv.sum_mem (t := Finset.univ)
+      (w := fun i : Fin 2 => ![t, 1 - t] i) (z := fun i : Fin 2 => ![cc, y] i)
+      (by
+        intro i _
+        fin_cases i
+        simpa using ht0
+        simpa using sub_nonneg.mpr ht1)
+      (by simp [Fin.sum_univ_two])
+      (by
+        intro i _
+        fin_cases i
+        exact subset_convexHull ℝ _ (by simp)
+        exact hseg)
+    exact Or.inr (by simpa [Fin.sum_univ_two, hx] using hmem)
+
+/-! ## Generic convex-combination closure -/
+
+private theorem p14_convex_comb {C : Set V3} (hC : Convex ℝ C) {x y cc : V3} {t : ℝ}
+    (ht0 : 0 ≤ t) (ht1 : t ≤ 1) (hy : y ∈ C) (hc : cc ∈ C)
+    (hx : x = t • cc + (1 - t) • y) : x ∈ C := by
+  have h := hC.sum_mem (t := Finset.univ)
+    (w := fun i : Fin 2 => ![t, 1 - t] i) (z := fun i : Fin 2 => ![cc, y] i)
+    (by
+      intro i _
+      fin_cases i
+      simpa using ht0
+      simpa using sub_nonneg.mpr ht1)
+    (by simp [Fin.sum_univ_two])
+    (by
+      intro i _
+      fin_cases i
+      simpa using hc
+      simpa using hy)
+  simpa [Fin.sum_univ_two, hx] using h
+
+/-! ## Affine 2D cover -/
+
+private theorem p14_affine_tri_cover {v : Fin 3 → V3} {x cc : V3}
+    (hinj : Function.Injective v)
+    (hx : x ∈ convexHull ℝ (Set.range v))
+    (hc : cc ∈ convexHull ℝ (Set.range v)) :
+    ∃ i j : Fin 3, i ≠ j ∧
+      x ∈ convexHull ℝ ({v i, midpoint ℝ (v i) (v j), cc} : Set V3) := by
+  by_cases hxc : x = cc
+  · subst hxc
+    exact ⟨0, 1, by decide, subset_convexHull ℝ _ (by simp)⟩
+  obtain ⟨lam, hlam0, hlam1, hx'⟩ := p14_bary hinj hx
+  obtain ⟨mu, hmu0, hmu1, hc'⟩ := p14_bary hinj hc
+  obtain ⟨i0, t, y, nu, ht0, ht1, hi0pos, hxdec, hnu0, hnu1, hy, hnu_i0, hyface⟩ :=
+    p14_face_decomp hlam0 hmu0 hlam1 hmu1 hx' hc' hxc
+  have htle : t ≤ 1 := le_of_lt ht1
+  fin_cases i0
+  · -- i0 = 0: pair (1,2) or (2,1)
+    have hz : nu 0 = 0 := by simpa using hnu_i0
+    have hsum : nu 1 + nu 2 = 1 := by
+      have h := hnu1
+      rw [Fin.sum_univ_three] at h
+      linarith
+    have hy' : y = (1 - nu 2) • v 1 + nu 2 • v 2 := by
+      rw [hy, Fin.sum_univ_three]
+      rw [hz, zero_smul, zero_add]
+      rw [show nu 1 = 1 - nu 2 by linarith]
+    rcases p14_in_tri_pair (A := v 1) (B := v 2) (M := midpoint ℝ (v 1) (v 2))
+      (cc := cc) (x := x) (y := y) (t := t) (s := nu 2) rfl ht0 htle (hnu0 2)
+      (by linarith [hnu0 1]) hy' hxdec with h | h
+    · exact ⟨1, 2, by decide, h⟩
+    · exact ⟨2, 1, by decide, by simpa [midpoint_comm] using h⟩
+  · -- i0 = 1: pair (0,2) or (2,0)
+    have hz : nu 1 = 0 := by simpa using hnu_i0
+    have hsum : nu 0 + nu 2 = 1 := by
+      have h := hnu1
+      rw [Fin.sum_univ_three] at h
+      linarith
+    have hy' : y = (1 - nu 2) • v 0 + nu 2 • v 2 := by
+      rw [hy, Fin.sum_univ_three]
+      rw [hz, zero_smul]
+      rw [show nu 0 = 1 - nu 2 by linarith]
+      abel
+    rcases p14_in_tri_pair (A := v 0) (B := v 2) (M := midpoint ℝ (v 0) (v 2))
+      (cc := cc) (x := x) (y := y) (t := t) (s := nu 2) rfl ht0 htle (hnu0 2)
+      (by linarith [hnu0 0]) hy' hxdec with h | h
+    · exact ⟨0, 2, by decide, h⟩
+    · exact ⟨2, 0, by decide, by simpa [midpoint_comm] using h⟩
+  · -- i0 = 2: pair (0,1) or (1,0)
+    have hz : nu 2 = 0 := by simpa using hnu_i0
+    have hsum : nu 0 + nu 1 = 1 := by
+      have h := hnu1
+      rw [Fin.sum_univ_three] at h
+      linarith
+    have hy' : y = (1 - nu 1) • v 0 + nu 1 • v 1 := by
+      rw [hy, Fin.sum_univ_three]
+      rw [hz, zero_smul, add_zero]
+      rw [show nu 0 = 1 - nu 1 by linarith]
+    rcases p14_in_tri_pair (A := v 0) (B := v 1) (M := midpoint ℝ (v 0) (v 1))
+      (cc := cc) (x := x) (y := y) (t := t) (s := nu 1) rfl ht0 htle (hnu0 1)
+      (by linarith [hnu0 0]) hy' hxdec with h | h
+    · exact ⟨0, 1, by decide, h⟩
+    · exact ⟨1, 0, by decide, by simpa [midpoint_comm] using h⟩
+
+/-! ## Affine 3D cover -/
+
+private theorem p14_affine_tetra_cover {v : Fin 4 → V3} {x cc : V3} (cf : Fin 4 → V3)
+    (hinj : Function.Injective v)
+    (hx : x ∈ convexHull ℝ (Set.range v))
+    (hc : cc ∈ convexHull ℝ (Set.range v))
+    (hcf : ∀ l : Fin 4, cf l ∈ convexHull ℝ (v '' {i | i ≠ l})) :
+    ∃ i j l : Fin 4, i ≠ j ∧ i ≠ l ∧ j ≠ l ∧
+      x ∈ convexHull ℝ ({v i, midpoint ℝ (v i) (v j), cf l, cc} : Set V3) := by
+  by_cases hxc : x = cc
+  · subst hxc
+    refine ⟨0, 1, 2, by decide, by decide, by decide, ?_⟩
+    exact subset_convexHull ℝ _ (by simp)
+  obtain ⟨lam, hlam0, hlam1, hx'⟩ := p14_bary hinj hx
+  obtain ⟨mu, hmu0, hmu1, hc'⟩ := p14_bary hinj hc
+  obtain ⟨l, t, y, nu, ht0, ht1, hlpos, hxdec, hnu0, hnu1, hy, hnu_l, hyface⟩ :=
+    p14_face_decomp hlam0 hmu0 hlam1 hmu1 hx' hc' hxc
+  have hinj' : Function.Injective (fun i : Fin 3 => v (l.succAbove i)) :=
+    fun a b h => l.succAbove_right_injective (hinj h)
+  have hrange : Set.range (fun i : Fin 3 => v (l.succAbove i)) = v '' {i | i ≠ l} := by
+    change Set.range (v ∘ l.succAbove) = v '' {i | i ≠ l}
+    rw [Set.range_comp, Fin.range_succAbove]
+    rfl
+  have hy' : y ∈ convexHull ℝ (Set.range (fun i : Fin 3 => v (l.succAbove i))) :=
+    hrange ▸ hyface
+  have hcf' : cf l ∈ convexHull ℝ (Set.range (fun i : Fin 3 => v (l.succAbove i))) :=
+    hrange ▸ hcf l
+  obtain ⟨i', j', hne, hmem⟩ := p14_affine_tri_cover hinj' hy' hcf'
+  refine ⟨l.succAbove i', l.succAbove j', l, ?_, ?_, ?_, ?_⟩
+  · intro h; exact hne (l.succAbove_right_injective h)
+  · exact l.succAbove_ne i'
+  · exact l.succAbove_ne j'
+  · have hsub : convexHull ℝ
+        ({v (l.succAbove i'), midpoint ℝ (v (l.succAbove i')) (v (l.succAbove j')),
+          cf l} : Set V3) ⊆
+        convexHull ℝ ({v (l.succAbove i'), midpoint ℝ (v (l.succAbove i')) (v (l.succAbove j')),
+          cf l, cc} : Set V3) :=
+      convexHull_mono (by
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+        tauto)
+    exact p14_convex_comb (convex_convexHull ℝ _) ht0 (le_of_lt ht1) (hsub hmem)
+      (subset_convexHull ℝ _ (by simp)) hxdec
+
+
+
+
+private theorem p14_omega1_mid {V : Set V3} {a b c d : V3} (hp : Packing V)
+    (hb : barV V 3 [a, b, c, d]) (hhl : hl [a, b] < Real.sqrt 2) :
+    omegaListN V [a, b, c, d] 1 = midpoint ℝ a b := by
+  have hb1 : barV V 1 [a, b] := by
+    simpa using BARV_INITIAL_SUBLIST V 3 [a, b, c, d] [a, b] hb
+      (INITIAL_SUBLIST_APPEND [a, b] [c, d]) (by simp)
+  rw [OMEGA_LIST_TRUNCATE_1, XNHPWAB1 V [a, b] 1 hp hb1 hhl,
+    show setOfList [a, b] = ({a, b} : Set V3) from by ext x; simp [setOfList],
+    CIRCUMCENTER_2]
+
+private theorem p14_omega2_cc {V : Set V3} {a b c d : V3} (hp : Packing V)
+    (hb : barV V 3 [a, b, c, d]) (hhl : hl [a, b, c] < Real.sqrt 2) :
+    omegaListN V [a, b, c, d] 2 = circumcenter ({a, b, c} : Set V3) := by
+  have hb2 : barV V 2 [a, b, c] := by
+    simpa using BARV_INITIAL_SUBLIST V 3 [a, b, c, d] [a, b, c] hb
+      (INITIAL_SUBLIST_APPEND [a, b, c] [d]) (by simp)
+  rw [OMEGA_LIST_TRUNCATE_2, XNHPWAB1 V [a, b, c] 2 hp hb2 hhl,
+    show setOfList [a, b, c] = ({a, b, c} : Set V3) from by ext x; simp [setOfList]]
+
+-- range of a vector
+example (u0 u1 u2 : V3) : Set.range ![u0, u1, u2] = ({u0, u1, u2} : Set V3) := by
+  ext x; simp; tauto
+
+example (u0 u1 u2 u3 : V3) :
+    Set.range ![u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+  ext x; simp; tauto
+
+-- remaining index completion
+private theorem p14_fin4_complete {i j l : Fin 4} (hij : i ≠ j) (hil : i ≠ l)
+    (hjl : j ≠ l) :
+    ∃ k : Fin 4, k ≠ i ∧ k ≠ j ∧ k ≠ l ∧ Function.Bijective ![i, j, k, l] := by
+  have hsub : ({i, j, l} : Finset (Fin 4)) ⊆ Finset.univ := Finset.subset_univ _
+  have hcard : ({i, j, l} : Finset (Fin 4)).card = 3 := by
+    rw [Finset.card_insert_of_notMem (by simp [hij, hil]),
+      Finset.card_insert_of_notMem (by simp [hjl]), Finset.card_singleton]
+  have hk : ∃ k : Fin 4, k ∉ ({i, j, l} : Finset (Fin 4)) := by
+    by_contra hcon
+    push Not at hcon
+    have hle : (Finset.univ : Finset (Fin 4)) ⊆ {i, j, l} := by
+      intro t _; exact hcon t
+    have hcard2 : (Finset.univ : Finset (Fin 4)).card ≤ 3 :=
+      (Finset.card_le_card hle).trans_eq hcard
+    simp at hcard2
+  obtain ⟨k, hk⟩ := hk
+  simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hk
+  obtain ⟨hki, hkj, hkl⟩ := hk
+  refine ⟨k, hki, hkj, hkl, ?_⟩
+  have hinj : Function.Injective ![i, j, k, l] := by
+    intro a b h
+    fin_cases a <;> fin_cases b <;> simp_all
+  exact (Fintype.bijective_iff_injective_and_card _).mpr ⟨hinj, by simp⟩
+
+
+
+
+private noncomputable def p14_natEquiv (n : ℕ) : Fin n ⊕ ℕ ≃ ℕ :=
+  Equiv.ofBijective
+    (Sum.elim (fun i : Fin n => (i : ℕ)) (fun k : ℕ => n + k)) <| by
+    constructor
+    · intro a b h
+      cases a with
+      | inl i =>
+        cases b with
+        | inl j =>
+          simp only [Sum.elim_inl, Fin.val_eq_val] at h
+          exact congrArg Sum.inl h
+        | inr j =>
+          simp only [Sum.elim_inl, Sum.elim_inr] at h
+          have hi : (i : ℕ) < n := i.isLt
+          omega
+      | inr i =>
+        cases b with
+        | inl j =>
+          simp only [Sum.elim_inl, Sum.elim_inr] at h
+          have hj : (j : ℕ) < n := j.isLt
+          omega
+        | inr j =>
+          simp only [Sum.elim_inr] at h
+          exact congrArg Sum.inr (Nat.add_left_cancel h)
+    · intro m
+      by_cases hm : m < n
+      · exact ⟨Sum.inl ⟨m, hm⟩, by simp [Sum.elim]⟩
+      · exact ⟨Sum.inr (m - n), by simp [Sum.elim]; omega⟩
+
+private theorem p14_natEquiv_apply_inl (n : ℕ) (i : Fin n) :
+    p14_natEquiv n (Sum.inl i) = (i : ℕ) := rfl
+
+private theorem p14_natEquiv_apply_inr (n : ℕ) (k : ℕ) :
+    p14_natEquiv n (Sum.inr k) = n + k := rfl
+
+private theorem p14_natEquiv_symm_apply_lt (n : ℕ) (i : Fin n) :
+    (p14_natEquiv n).symm (i : ℕ) = Sum.inl i := by
+  rw [← p14_natEquiv_apply_inl n i, Equiv.symm_apply_apply]
+
+private theorem p14_natEquiv_symm_apply_ge (n : ℕ) {j : ℕ} (hj : n ≤ j) :
+    (p14_natEquiv n).symm j = Sum.inr (j - n) := by
+  have h : p14_natEquiv n (Sum.inr (j - n)) = j := by
+    rw [p14_natEquiv_apply_inr, Nat.add_sub_cancel' hj]
+  calc (p14_natEquiv n).symm j
+      = (p14_natEquiv n).symm (p14_natEquiv n (Sum.inr (j - n))) := by rw [h]
+    _ = Sum.inr (j - n) := Equiv.symm_apply_apply _ _
+
+private noncomputable def p14_natPerm {n : ℕ} (σ : Equiv.Perm (Fin n)) : Equiv.Perm ℕ :=
+  ((p14_natEquiv n).symm.trans (σ.sumCongr (Equiv.refl ℕ))).trans (p14_natEquiv n)
+
+private theorem p14_natPerm_apply_lt {n : ℕ} (σ : Equiv.Perm (Fin n)) (i : Fin n) :
+    p14_natPerm σ (i : ℕ) = (σ i : ℕ) := by
+  rw [p14_natPerm, Equiv.trans_apply, Equiv.trans_apply, p14_natEquiv_symm_apply_lt,
+    Equiv.sumCongr_apply, Sum.map_inl, p14_natEquiv_apply_inl]
+
+private theorem p14_natPerm_symm_lt {n : ℕ} (σ : Equiv.Perm (Fin n)) (i : Fin n) :
+    (p14_natPerm σ).symm (i : ℕ) = (σ.symm i : ℕ) := by
+  have h : p14_natPerm σ ((σ.symm i : Fin n) : ℕ) = (i : ℕ) := by
+    rw [p14_natPerm_apply_lt]
+    simp
+  rw [← h, Equiv.symm_apply_apply]
+
+private theorem p14_natPerm_apply_ge {n : ℕ} (σ : Equiv.Perm (Fin n)) {j : ℕ}
+    (hj : n ≤ j) : p14_natPerm σ j = j := by
+  rw [p14_natPerm, Equiv.trans_apply, Equiv.trans_apply, p14_natEquiv_symm_apply_ge n hj,
+    Equiv.sumCongr_apply, Sum.map_inr, p14_natEquiv_apply_inr]
+  simp only [Equiv.refl_apply]
+  omega
+
+private theorem p14_natPerm_permutes {n : ℕ} (σ : Equiv.Perm (Fin n)) :
+    permutes (p14_natPerm σ) {j : ℕ | j < n} := by
+  intro j
+  constructor
+  · intro hj
+    have := p14_natPerm_apply_lt σ ⟨j, hj⟩
+    rw [this]
+    exact (σ ⟨j, hj⟩).isLt
+  · intro hj
+    by_contra hcon
+    have hge : n ≤ j := Nat.le_of_not_lt hcon
+    rw [p14_natPerm_apply_ge σ hge] at hj
+    exact absurd hj (Nat.not_lt.mpr hge)
+
+
+/-! ## Range/set bridges for the finite-index vectors -/
+
+private theorem p14_image_three {v : Fin 3 → V3} {i j k : Fin 3}
+    (hbij : Function.Bijective ![i, j, k]) :
+    v '' ({i, j, k} : Set (Fin 3)) = Set.range v := by
+  ext z
+  constructor
+  · rintro ⟨t, ht, rfl⟩
+    exact Set.mem_range_self t
+  · rintro ⟨t, rfl⟩
+    obtain ⟨s, rfl⟩ := hbij.2 t
+    refine ⟨![i, j, k] s, ?_, rfl⟩
+    fin_cases s <;> simp
+
+private theorem p14_three_set {v : Fin 3 → V3} {i j k : Fin 3}
+    (hbij : Function.Bijective ![i, j, k]) :
+    ({v i, v j, v k} : Set V3) = Set.range v := by
+  ext z
+  constructor
+  · intro hz
+    rcases hz with h | h | h
+    · exact ⟨i, h.symm⟩
+    · exact ⟨j, h.symm⟩
+    · exact ⟨k, h.symm⟩
+  · rintro ⟨t, rfl⟩
+    obtain ⟨s, rfl⟩ := hbij.2 t
+    fin_cases s
+    · exact Or.inl rfl
+    · exact Or.inr (Or.inl rfl)
+    · exact Or.inr (Or.inr rfl)
+
+private theorem p14_four_set {v : Fin 4 → V3} {i j k l : Fin 4}
+    (hbij : Function.Bijective ![i, j, k, l]) :
+    ({v i, v j, v k, v l} : Set V3) = Set.range v := by
+  ext z
+  constructor
+  · intro hz
+    rcases hz with h | h | h | h
+    · exact ⟨i, h.symm⟩
+    · exact ⟨j, h.symm⟩
+    · exact ⟨k, h.symm⟩
+    · exact ⟨l, h.symm⟩
+  · rintro ⟨t, rfl⟩
+    obtain ⟨s, rfl⟩ := hbij.2 t
+    fin_cases s
+    · exact Or.inl rfl
+    · exact Or.inr (Or.inl rfl)
+    · exact Or.inr (Or.inr (Or.inl rfl))
+    · exact Or.inr (Or.inr (Or.inr rfl))
+
+private theorem p14_triple_set (a b c : V3) :
+    setOfList [a, b, c] = ({a, b, c} : Set V3) := by
+  ext z; simp [setOfList]
+
+private theorem p14_quad_set (a b c d : V3) :
+    setOfList [a, b, c, d] = ({a, b, c, d} : Set V3) := by
+  ext z; simp [setOfList]
+
+private theorem p14_range_three (a b c : V3) :
+    Set.range ![a, b, c] = ({a, b, c} : Set V3) := by
+  ext z
+  constructor
+  · rintro ⟨t, rfl⟩
+    fin_cases t
+    · exact Or.inl rfl
+    · exact Or.inr (Or.inl rfl)
+    · exact Or.inr (Or.inr rfl)
+  · intro hz
+    rcases hz with h | h | h
+    · exact ⟨0, by simpa using h.symm⟩
+    · exact ⟨1, by simpa using h.symm⟩
+    · exact ⟨2, by simpa using h.symm⟩
+
+private theorem p14_range_four (a b c d : V3) :
+    Set.range ![a, b, c, d] = ({a, b, c, d} : Set V3) := by
+  ext z
+  constructor
+  · rintro ⟨t, rfl⟩
+    fin_cases t
+    · exact Or.inl rfl
+    · exact Or.inr (Or.inl rfl)
+    · exact Or.inr (Or.inr (Or.inl rfl))
+    · exact Or.inr (Or.inr (Or.inr rfl))
+  · intro hz
+    rcases hz with h | h | h | h
+    · exact ⟨0, by simpa using h.symm⟩
+    · exact ⟨1, by simpa using h.symm⟩
+    · exact ⟨2, by simpa using h.symm⟩
+    · exact ⟨3, by simpa using h.symm⟩
+
+private theorem p14_face_range {v : Fin 4 → V3} (l : Fin 4) :
+    v '' {t | t ≠ l} = Set.range (fun s : Fin 3 => v (l.succAbove s)) := by
+  change v '' {t | t ≠ l} = Set.range (v ∘ l.succAbove)
+  rw [Set.range_comp, Fin.range_succAbove]
+  rfl
+
+private theorem p14_fin3_complete {i j : Fin 3} (hij : i ≠ j) :
+    ∃ k : Fin 3, k ≠ i ∧ k ≠ j ∧ Function.Bijective ![i, j, k] := by
+  have hcard : ({i, j} : Finset (Fin 3)).card = 2 := by
+    rw [Finset.card_insert_of_notMem (by simp [hij]), Finset.card_singleton]
+  have hk : ∃ k : Fin 3, k ∉ ({i, j} : Finset (Fin 3)) := by
+    by_contra hcon
+    push Not at hcon
+    have hle : (Finset.univ : Finset (Fin 3)) ⊆ {i, j} := fun t _ => hcon t
+    have hcard2 : (Finset.univ : Finset (Fin 3)).card ≤ 2 :=
+      (Finset.card_le_card hle).trans_eq hcard
+    simp at hcard2
+  obtain ⟨k, hk⟩ := hk
+  simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hk
+  obtain ⟨hki, hkj⟩ := hk
+  refine ⟨k, hki, hkj, ?_⟩
+  have hinj : Function.Injective ![i, j, k] := by
+    intro a b h
+    fin_cases a <;> fin_cases b <;> simp_all
+  exact (Fintype.bijective_iff_injective_and_card _).mpr ⟨hinj, by simp⟩
+
+/-! ## k = 3 branch prototype -/
+
+private theorem p14_k3_branch {V : Set V3} {u0 u1 u2 u3 x : V3}
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3])
+    (h1 : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2)
+    (h2 : Real.sqrt 2 ≤ hl [u0, u1, u2, u3])
+    (hx : x ∈ mcell3 V [u0, u1, u2, u3]) :
+    x ∈ ⋃₀ ((fun p : Equiv.Perm ℕ => rogers V (leftActionList p [u0, u1, u2, u3])) ''
+      {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 2) ∧ ∀ n : ℕ, 3 ≤ n → p n = n}) := by
+  classical
+  have htr2 : truncateSimplex 2 [u0, u1, u2, u3] = [u0, u1, u2] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2
+  have htr1 : truncateSimplex 1 [u0, u1, u2, u3] = [u0, u1] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2
+  rw [mcell3, if_pos ⟨h1, h2⟩] at hx
+  have hset : setOfList (truncateSimplex 2 [u0, u1, u2, u3]) ∪ {mxi V [u0, u1, u2, u3]}
+      = ({u0, u1, u2, mxi V [u0, u1, u2, u3]} : Set V3) := by
+    rw [htr2, p14_triple_set]
+    ext z; simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [hset] at hx
+  obtain ⟨x1, t1, t2, hx1, ht1, ht2, hsum, hxdec⟩ :=
+    convexHull4Imp31 (a := u0) (b := u1) (c := u2) (d := mxi V [u0, u1, u2, u3]) hx
+  -- membership and distinctness
+  have hmemV : ∀ t ∈ ({u0, u1, u2, u3} : Set V3), t ∈ V := by
+    intro t ht
+    have hsub := BARV_SUBSET V 3 [u0, u1, u2, u3] hb
+    exact hsub (by simpa [setOfList] using ht)
+  have hu0V : u0 ∈ V := hmemV u0 (by simp)
+  have hu1V : u1 ∈ V := hmemV u1 (by simp)
+  have hu2V : u2 ∈ V := hmemV u2 (by simp)
+  have hu3V : u3 ∈ V := hmemV u3 (by simp)
+  have hcard : Nat.card (setOfList [u0, u1, u2, u3]) = 4 :=
+    (BARV_IMP_LENGTH_EQ_CARD V [u0, u1, u2, u3] 3 hp hb).2
+  have hdist := CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT [u0, u1, u2, u3]
+    (by rw [hcard]; rfl)
+  have hu01 : u0 ≠ u1 := by simpa [elV] using hdist 0 1 (by norm_num) (by norm_num) (by norm_num)
+  have hu02 : u0 ≠ u2 := by simpa [elV] using hdist 0 2 (by norm_num) (by norm_num) (by norm_num)
+  have hu03 : u0 ≠ u3 := by simpa [elV] using hdist 0 3 (by norm_num) (by norm_num) (by norm_num)
+  have hu12 : u1 ≠ u2 := by simpa [elV] using hdist 1 2 (by norm_num) (by norm_num) (by norm_num)
+  have hu13 : u1 ≠ u3 := by simpa [elV] using hdist 1 3 (by norm_num) (by norm_num) (by norm_num)
+  have hu23 : u2 ≠ u3 := by simpa [elV] using hdist 2 3 (by norm_num) (by norm_num) (by norm_num)
+  -- the truncated triangle
+  have hbar2 : barV V 2 [u0, u1, u2] := by
+    have h := TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, u2, u3] hb (by norm_num)
+    rwa [htr2] at h
+  have hlt2 : hl [u0, u1, u2] < Real.sqrt 2 := by rwa [← htr2]
+  have hcc2mem : circumcenter ({u0, u1, u2} : Set V3) ∈
+      convexHull ℝ ({u0, u1, u2} : Set V3) := by
+    have homega := XNHPWAB2 V [u0, u1, u2] 2 hp hbar2 hlt2
+    rw [XNHPWAB1 V [u0, u1, u2] 2 hp hbar2 hlt2,
+      show setOfList [u0, u1, u2] = ({u0, u1, u2} : Set V3) from by
+        ext z; simp [setOfList]] at homega
+    exact homega
+  -- the 2D cover
+  have hinj3 : Function.Injective ![u0, u1, u2] := by
+    intro a b h
+    fin_cases a <;> fin_cases b <;> simp_all
+  have hx1' : x1 ∈ convexHull ℝ (Set.range ![u0, u1, u2]) := by
+    rw [p14_range_three]; exact hx1
+  have hcc2' : circumcenter ({u0, u1, u2} : Set V3) ∈
+      convexHull ℝ (Set.range ![u0, u1, u2]) := by
+    rw [p14_range_three]; exact hcc2mem
+  obtain ⟨i, j, hij, hx1mem⟩ := p14_affine_tri_cover hinj3 hx1' hcc2'
+  obtain ⟨k, hki, hkj, hbij⟩ := p14_fin3_complete hij
+  -- the permutation
+  let σ : Equiv.Perm (Fin 3) :=
+    (Equiv.ofBijective (fun t : Fin 3 => ![i, j, k] t) hbij).symm
+  let p : Equiv.Perm ℕ := p14_natPerm σ
+  have hp0 : p.symm 0 = (i : ℕ) := by
+    have h := p14_natPerm_symm_lt σ (⟨0, by norm_num⟩ : Fin 3)
+    simpa [σ, Equiv.ofBijective_apply] using h
+  have hp1 : p.symm 1 = (j : ℕ) := by
+    have h := p14_natPerm_symm_lt σ (⟨1, by norm_num⟩ : Fin 3)
+    simpa [σ, Equiv.ofBijective_apply] using h
+  have hp2 : p.symm 2 = (k : ℕ) := by
+    have h := p14_natPerm_symm_lt σ (⟨2, by norm_num⟩ : Fin 3)
+    simpa [σ, Equiv.ofBijective_apply] using h
+  have hp3 : p.symm 3 = 3 := by
+    have h3 : p 3 = 3 := p14_natPerm_apply_ge σ (by norm_num : 3 ≤ 3)
+    calc p.symm 3 = p.symm (p 3) := by rw [h3]
+      _ = 3 := Equiv.symm_apply_apply p 3
+  have hperm : permutes p (Set.Icc 0 2) := by
+    have h := p14_natPerm_permutes σ
+    intro m
+    have h' := h m
+    simpa [Set.Icc, Nat.lt_succ_iff] using h'
+  have hfix : ∀ n : ℕ, 3 ≤ n → p n = n := fun n hn => p14_natPerm_apply_ge σ hn
+  set vl : List V3 := leftActionList p [u0, u1, u2, u3] with hvl
+  have hvl_eq : vl = [![u0, u1, u2] i, ![u0, u1, u2] j, ![u0, u1, u2] k, u3] := by
+    rw [hvl, p14_leftActionList_four_explicit]
+    have hgd : ∀ t : Fin 3, [u0, u1, u2, u3].getD (t : ℕ) default = ![u0, u1, u2] t := by
+      intro t; fin_cases t <;> simp
+    rw [hp0, hp1, hp2, hp3]
+    simp only [hgd]
+    rfl
+  have hprops := LEFT_ACTION_LIST_PROPERTIES (V := V) (ul := [u0, u1, u2, u3]) (xl := vl)
+    (p := p) hp hs hb h1 h2 hperm hfix rfl
+  obtain ⟨hbvl, hω2, hω3, hmxi⟩ := hprops
+  have hrog := ROGERS_EXPLICIT V vl hs hp hbvl
+  -- omega 1 is the midpoint of the first two entries
+  have hhlpair : hl [![u0, u1, u2] i, ![u0, u1, u2] j] < Real.sqrt 2 := by
+    have hvl2eq : truncateSimplex 2 vl
+        = [![u0, u1, u2] i, ![u0, u1, u2] j, ![u0, u1, u2] k] := by
+      rw [hvl_eq]; exact (TRUNCATE_SIMPLEX_EXPLICIT_2 _ _ _ _).2
+    have hvl1eq : truncateSimplex 1 vl = [![u0, u1, u2] i, ![u0, u1, u2] j] := by
+      rw [hvl_eq]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 _ _ _ _).2.2
+    have hsetvl2 : setOfList (truncateSimplex 2 vl) = ({u0, u1, u2} : Set V3) := by
+      rw [hvl2eq, p14_triple_set, p14_three_set (v := ![u0, u1, u2]) hbij,
+        p14_range_three]
+    have hhlvl2 : hl (truncateSimplex 2 vl) < Real.sqrt 2 := by
+      have he : hl (truncateSimplex 2 vl) = hl [u0, u1, u2] := by
+        rw [hl, hl, hsetvl2]
+        congr 1
+        rw [show setOfList [u0, u1, u2] = ({u0, u1, u2} : Set V3) from by
+          ext z; simp [setOfList]]
+      rw [he]; exact hlt2
+    have hbarvl2 : barV V 2 (truncateSimplex 2 vl) :=
+      TRUNCATE_SIMPLEX_BARV V 2 3 vl hbvl (by norm_num)
+    have hne : setOfList (truncateSimplex 1 vl) ≠ ∅ := by
+      rw [hvl1eq]
+      exact Set.nonempty_iff_ne_empty.mp ⟨![u0, u1, u2] i, by simp [setOfList]⟩
+    have hsub12 : setOfList (truncateSimplex 1 vl) ⊆ setOfList (truncateSimplex 2 vl) := by
+      rw [hvl1eq, hvl2eq, p14_triple_set,
+        show setOfList [![u0, u1, u2] i, ![u0, u1, u2] j]
+          = ({![u0, u1, u2] i, ![u0, u1, u2] j} : Set V3) from by ext z; simp [setOfList]]
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto
+    have hle := RADV_MONO (setOfList (truncateSimplex 2 vl))
+      (setOfList (truncateSimplex 1 vl))
+      (BARV_AFFINE_INDEPENDENT V (truncateSimplex 2 vl) 2 hp hbarvl2)
+      hsub12 hne
+    rw [hvl1eq] at hle
+    have hfin : radV (setOfList [![u0, u1, u2] i, ![u0, u1, u2] j]) < Real.sqrt 2 :=
+      lt_of_le_of_lt hle hhlvl2
+    simpa [hl] using hfin
+  have hω1vl : omegaListN V vl 1 = midpoint ℝ (![u0, u1, u2] i) (![u0, u1, u2] j) := by
+    rw [hvl_eq]
+    exact p14_omega1_mid hp (by rw [← hvl_eq]; exact hbvl) hhlpair
+  have hω2vl : omegaListN V vl 2 = circumcenter ({u0, u1, u2} : Set V3) := by
+    rw [hω2]
+    exact p14_omega2_cc hp hb hlt2
+  have hhdvl : hdV vl = ![u0, u1, u2] i := by rw [hvl_eq]; rfl
+  -- x1 lands in the Rogers simplex
+  have hx1rog : x1 ∈ rogers V vl := by
+    rw [hrog]
+    apply convexHull_mono ?_ hx1mem
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    rcases hz with rfl | rfl | rfl
+    · exact Or.inl hhdvl.symm
+    · exact Or.inr (Or.inl (by rw [hω1vl]))
+    · exact Or.inr (Or.inr (Or.inl (by rw [hω2vl])))
+  -- mxi lands in the Rogers simplex
+  have hmrog : mxi V [u0, u1, u2, u3] ∈ rogers V vl := by
+    obtain ⟨s, hseg, hdist, hms⟩ :=
+      MXI_EXPLICIT V [u0, u1, u2, u3] u0 u1 u2 u3 hs hp hb rfl h1 h2
+    rw [hrog]
+    have hseg' : mxi V [u0, u1, u2, u3] ∈
+        segment ℝ (omegaListN V vl 2) (omegaListN V vl 3) := by
+      rw [← hms, hω2, hω3]
+      exact hseg
+    exact segment_subset_convexHull (x := omegaListN V vl 2) (y := omegaListN V vl 3)
+      (s := ({hdV vl, omegaListN V vl 1, omegaListN V vl 2,
+        omegaListN V vl 3} : Set V3))
+      (by simp)
+      (by simp)
+      hseg'
+  -- glue
+  have hxrog : x ∈ rogers V vl := by
+    rw [rogers]
+    have hconv := convex_convexHull ℝ (omegaListN V vl '' {j : ℕ | j < vl.length})
+    have hmem := hconv.sum_mem (t := Finset.univ)
+      (w := fun t : Fin 2 => ![t1, t2] t) (z := fun t : Fin 2 => ![x1, mxi V [u0, u1, u2, u3]] t)
+      (by
+        intro t _
+        fin_cases t
+        simpa using ht1
+        simpa using ht2)
+      (by simp [Fin.sum_univ_two]; linarith)
+      (by
+        intro t _
+        fin_cases t
+        · change x1 ∈ convexHull ℝ (omegaListN V vl '' {j : ℕ | j < vl.length})
+          exact hx1rog
+        · change mxi V [u0, u1, u2, u3] ∈
+            convexHull ℝ (omegaListN V vl '' {j : ℕ | j < vl.length})
+          exact hmrog)
+    have heq : t1 • x1 + t2 • mxi V [u0, u1, u2, u3] = x := by
+      rw [hxdec]
+    simpa [Fin.sum_univ_two, heq] using hmem
+  exact Set.mem_sUnion.2 ⟨rogers V vl, Set.mem_image_of_mem _ ⟨hperm, hfix⟩, hxrog⟩
+
+/-! ## help for the k = 4 branch -/
+
+private theorem p14_face_set (v : Fin 4 → V3) (l : Fin 4) :
+    setOfList [v (l.succAbove 0), v (l.succAbove 1), v (l.succAbove 2)] =
+      Set.range (fun s : Fin 3 => v (l.succAbove s)) := by
+  ext z
+  constructor
+  · intro hz
+    simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false] at hz
+    rcases hz with h | h | h
+    · exact ⟨0, h.symm⟩
+    · exact ⟨1, h.symm⟩
+    · exact ⟨2, h.symm⟩
+  · rintro ⟨s, rfl⟩
+    fin_cases s <;> simp [setOfList]
+
+private theorem p14_erase_eq {i j k l : Fin 4} (hij : i ≠ j) (hik : i ≠ k)
+    (hil : i ≠ l) (hjk : j ≠ k) (hjl : j ≠ l) (hkl : k ≠ l) :
+    ({i, j, k} : Finset (Fin 4)) = Finset.univ.erase l := by
+  apply Finset.eq_of_subset_of_card_le
+  · intro t ht
+    simp only [Finset.mem_insert, Finset.mem_singleton] at ht
+    rcases ht with rfl | rfl | rfl
+    · exact Finset.mem_erase.mpr ⟨hil, Finset.mem_univ _⟩
+    · exact Finset.mem_erase.mpr ⟨hjl, Finset.mem_univ _⟩
+    · exact Finset.mem_erase.mpr ⟨hkl, Finset.mem_univ _⟩
+  · have hc1 : ({i, j, k} : Finset (Fin 4)).card = 3 := by
+      rw [Finset.card_insert_of_notMem (by simp [hij, hik]),
+        Finset.card_insert_of_notMem (by simp [hjk]), Finset.card_singleton]
+    have hc2 : (Finset.univ.erase l).card = 3 := by
+      rw [Finset.card_erase_of_mem (Finset.mem_univ l)]
+      simp
+    omega
+
+private theorem p14_index_set {i j k l : Fin 4} (hij : i ≠ j) (hik : i ≠ k)
+    (hil : i ≠ l) (hjk : j ≠ k) (hjl : j ≠ l) (hkl : k ≠ l) :
+    ({i, j, k} : Set (Fin 4)) = {t | t ≠ l} := by
+  have hEq := p14_erase_eq hij hik hil hjk hjl hkl
+  calc ({i, j, k} : Set (Fin 4))
+      = ((Finset.univ.erase l : Finset (Fin 4)) : Set (Fin 4)) := by
+        rw [← hEq]
+        simp
+    _ = {t | t ≠ l} := by ext t; simp
+
+private theorem p14_face_set3 {v : Fin 4 → V3} {i j k l : Fin 4}
+    (hij : i ≠ j) (hik : i ≠ k) (hil : i ≠ l) (hjk : j ≠ k) (hjl : j ≠ l)
+    (hkl : k ≠ l) :
+    ({v i, v j, v k} : Set V3) = Set.range (fun s : Fin 3 => v (l.succAbove s)) := by
+  have himg : ({v i, v j, v k} : Set V3) = v '' ({i, j, k} : Set (Fin 4)) := by
+    ext z
+    constructor
+    · intro hz
+      rcases hz with h | h | h
+      · exact ⟨i, by simp, h.symm⟩
+      · exact ⟨j, by simp, h.symm⟩
+      · exact ⟨k, by simp, h.symm⟩
+    · rintro ⟨t, ht, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      rcases ht with rfl | rfl | rfl <;> simp
+  rw [himg, p14_index_set hij hik hil hjk hjl hkl, p14_face_range]
+
+/-! ## k = 4 branch prototype -/
+
+private theorem p14_k4_branch {V : Set V3} {u0 u1 u2 u3 x : V3}
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3])
+    (hhl : hl [u0, u1, u2, u3] < Real.sqrt 2)
+    (hx : x ∈ mcell4 V [u0, u1, u2, u3]) :
+    x ∈ ⋃₀ ((fun p : Equiv.Perm ℕ => rogers V (leftActionList p [u0, u1, u2, u3])) ''
+      {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 3) ∧ ∀ n : ℕ, 4 ≤ n → p n = n}) := by
+  classical
+  rw [mcell4, if_pos hhl] at hx
+  -- distinctness of the four points
+  have hmemV : ∀ t ∈ ({u0, u1, u2, u3} : Set V3), t ∈ V := by
+    intro t ht
+    exact BARV_SUBSET V 3 [u0, u1, u2, u3] hb (by simpa [setOfList] using ht)
+  have hcard : Nat.card (setOfList [u0, u1, u2, u3]) = 4 :=
+    (BARV_IMP_LENGTH_EQ_CARD V [u0, u1, u2, u3] 3 hp hb).2
+  have hdist := CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT [u0, u1, u2, u3]
+    (by rw [hcard]; rfl)
+  have hu01 : u0 ≠ u1 := by simpa [elV] using hdist 0 1 (by norm_num) (by norm_num) (by norm_num)
+  have hu02 : u0 ≠ u2 := by simpa [elV] using hdist 0 2 (by norm_num) (by norm_num) (by norm_num)
+  have hu03 : u0 ≠ u3 := by simpa [elV] using hdist 0 3 (by norm_num) (by norm_num) (by norm_num)
+  have hu12 : u1 ≠ u2 := by simpa [elV] using hdist 1 2 (by norm_num) (by norm_num) (by norm_num)
+  have hu13 : u1 ≠ u3 := by simpa [elV] using hdist 1 3 (by norm_num) (by norm_num) (by norm_num)
+  have hu23 : u2 ≠ u3 := by simpa [elV] using hdist 2 3 (by norm_num) (by norm_num) (by norm_num)
+  have hinj4 : Function.Injective ![u0, u1, u2, u3] := by
+    intro a b h
+    fin_cases a <;> fin_cases b <;> simp_all
+  have hx' : x ∈ convexHull ℝ (Set.range ![u0, u1, u2, u3]) := by
+    rw [p14_quad_set, ← p14_range_four] at hx
+    exact hx
+  -- the circumcenter of the whole tetrahedron
+  let cc4 : V3 := circumcenter (Set.range ![u0, u1, u2, u3])
+  have hcc4mem : cc4 ∈ convexHull ℝ (Set.range ![u0, u1, u2, u3]) := by
+    have h1 : setOfList [u0, u1, u2, u3] = Set.range ![u0, u1, u2, u3] := by
+      rw [p14_quad_set, ← p14_range_four]
+    have homega := XNHPWAB2 V [u0, u1, u2, u3] 3 hp hb hhl
+    have hcc := XNHPWAB1 V [u0, u1, u2, u3] 3 hp hb hhl
+    rw [hcc, h1] at homega
+    exact homega
+  -- the face circumcenters
+  let cf : Fin 4 → V3 := fun l =>
+    circumcenter (Set.range (fun s : Fin 3 => ![u0, u1, u2, u3] (l.succAbove s)))
+  have hcf : ∀ l : Fin 4, cf l ∈
+      convexHull ℝ (![u0, u1, u2, u3] '' {i | i ≠ l}) := by
+    intro l
+    let τ : Fin 4 → Fin 4 :=
+      ![l.succAbove 0, l.succAbove 1, l.succAbove 2, l]
+    have hτ : Function.Bijective τ := by
+      fin_cases l <;> decide
+    let σl : Equiv.Perm (Fin 4) := (Equiv.ofBijective τ hτ).symm
+    let pl : Equiv.Perm ℕ := p14_natPerm σl
+    have hs0 : pl.symm 0 = (l.succAbove 0 : ℕ) := by
+      have h := p14_natPerm_symm_lt σl (⟨0, by norm_num⟩ : Fin 4)
+      simpa [σl, τ, Equiv.ofBijective_apply] using h
+    have hs1 : pl.symm 1 = (l.succAbove 1 : ℕ) := by
+      have h := p14_natPerm_symm_lt σl (⟨1, by norm_num⟩ : Fin 4)
+      simpa [σl, τ, Equiv.ofBijective_apply] using h
+    have hs2 : pl.symm 2 = (l.succAbove 2 : ℕ) := by
+      have h := p14_natPerm_symm_lt σl (⟨2, by norm_num⟩ : Fin 4)
+      simpa [σl, τ, Equiv.ofBijective_apply] using h
+    have hs3 : pl.symm 3 = (l : ℕ) := by
+      have h := p14_natPerm_symm_lt σl (⟨3, by norm_num⟩ : Fin 4)
+      simpa [σl, τ, Equiv.ofBijective_apply] using h
+    have hperm_l : permutes pl (Set.Icc 0 3) := by
+      have h := p14_natPerm_permutes σl
+      intro m
+      simpa [Set.Icc, Nat.lt_succ_iff] using h m
+    have hvl_eq : leftActionList pl [u0, u1, u2, u3] =
+        [![u0, u1, u2, u3] (l.succAbove 0), ![u0, u1, u2, u3] (l.succAbove 1),
+         ![u0, u1, u2, u3] (l.succAbove 2), ![u0, u1, u2, u3] l] := by
+      rw [p14_leftActionList_four_explicit]
+      have hgd : ∀ t : Fin 4, [u0, u1, u2, u3].getD (t : ℕ) default = ![u0, u1, u2, u3] t := by
+        intro t; fin_cases t <;> simp
+      rw [hs0, hs1, hs2, hs3]
+      simp only [hgd]
+    have hbvl : barV V 3 (leftActionList pl [u0, u1, u2, u3]) :=
+      YIFVQDV_1 V [u0, u1, u2, u3] 3 pl hp hb hhl hperm_l
+    have htr2 : truncateSimplex 2 (leftActionList pl [u0, u1, u2, u3]) =
+        [![u0, u1, u2, u3] (l.succAbove 0), ![u0, u1, u2, u3] (l.succAbove 1),
+         ![u0, u1, u2, u3] (l.succAbove 2)] := by
+      rw [hvl_eq]; exact (TRUNCATE_SIMPLEX_EXPLICIT_2 _ _ _ _).2
+    have hbar2 : barV V 2 (truncateSimplex 2 (leftActionList pl [u0, u1, u2, u3])) :=
+      TRUNCATE_SIMPLEX_BARV V 2 3 _ hbvl (by norm_num)
+    have hsetvl : setOfList (leftActionList pl [u0, u1, u2, u3])
+        = setOfList [u0, u1, u2, u3] := by
+      rw [hvl_eq, p14_quad_set, p14_four_set (v := ![u0, u1, u2, u3]) hτ,
+        p14_range_four, ← p14_quad_set]
+    have hhlvl : hl (leftActionList pl [u0, u1, u2, u3]) = hl [u0, u1, u2, u3] := by
+      rw [hl, hl, hsetvl]
+    have hhl2 : hl (truncateSimplex 2 (leftActionList pl [u0, u1, u2, u3])) < Real.sqrt 2 := by
+      have hle := HL_DECREASE V (leftActionList pl [u0, u1, u2, u3]) 3 2 hp hbvl (by norm_num)
+      rw [hhlvl] at hle
+      exact lt_of_le_of_lt hle hhl
+    have homega := XNHPWAB2 V (truncateSimplex 2 (leftActionList pl [u0, u1, u2, u3])) 2 hp hbar2 hhl2
+    have hcc := XNHPWAB1 V (truncateSimplex 2 (leftActionList pl [u0, u1, u2, u3])) 2 hp hbar2 hhl2
+    rw [hcc] at homega
+    rw [htr2, p14_face_set] at homega
+    rw [p14_face_range]
+    exact homega
+  -- the affine tetrahedron cover
+  obtain ⟨i, j, l, hij, hil, hjl, hxmem⟩ :=
+    p14_affine_tetra_cover (v := ![u0, u1, u2, u3]) cf hinj4 hx' hcc4mem hcf
+  obtain ⟨k, hki, hkj, hkl, hbij⟩ := p14_fin4_complete hij hil hjl
+  -- the permutation bringing `(i,j,k,l)` to the front
+  let σ : Equiv.Perm (Fin 4) :=
+    (Equiv.ofBijective (fun t : Fin 4 => ![i, j, k, l] t) hbij).symm
+  let p : Equiv.Perm ℕ := p14_natPerm σ
+  have hp0 : p.symm 0 = (i : ℕ) := by
+    have h := p14_natPerm_symm_lt σ (⟨0, by norm_num⟩ : Fin 4)
+    simpa [σ, Equiv.ofBijective_apply] using h
+  have hp1 : p.symm 1 = (j : ℕ) := by
+    have h := p14_natPerm_symm_lt σ (⟨1, by norm_num⟩ : Fin 4)
+    simpa [σ, Equiv.ofBijective_apply] using h
+  have hp2 : p.symm 2 = (k : ℕ) := by
+    have h := p14_natPerm_symm_lt σ (⟨2, by norm_num⟩ : Fin 4)
+    simpa [σ, Equiv.ofBijective_apply] using h
+  have hp3 : p.symm 3 = (l : ℕ) := by
+    have h := p14_natPerm_symm_lt σ (⟨3, by norm_num⟩ : Fin 4)
+    simpa [σ, Equiv.ofBijective_apply] using h
+  have hperm : permutes p (Set.Icc 0 3) := by
+    have h := p14_natPerm_permutes σ
+    intro m
+    simpa [Set.Icc, Nat.lt_succ_iff] using h m
+  have hfix : ∀ n : ℕ, 4 ≤ n → p n = n := fun n hn => p14_natPerm_apply_ge σ hn
+  set vl : List V3 := leftActionList p [u0, u1, u2, u3] with hvl
+  have hvl_eq : vl = [![u0, u1, u2, u3] i, ![u0, u1, u2, u3] j,
+      ![u0, u1, u2, u3] k, ![u0, u1, u2, u3] l] := by
+    rw [hvl, p14_leftActionList_four_explicit]
+    have hgd : ∀ t : Fin 4, [u0, u1, u2, u3].getD (t : ℕ) default = ![u0, u1, u2, u3] t := by
+      intro t; fin_cases t <;> simp
+    rw [hp0, hp1, hp2, hp3]
+    simp only [hgd]
+  have hik : i ≠ k := hki.symm
+  have hjk : j ≠ k := hkj.symm
+  have hbvl : barV V 3 vl := YIFVQDV_1 V [u0, u1, u2, u3] 3 p hp hb hhl hperm
+  have hsetvl : setOfList vl = setOfList [u0, u1, u2, u3] := by
+    rw [hvl_eq, p14_quad_set, p14_four_set (v := ![u0, u1, u2, u3]) hbij,
+      p14_range_four, ← p14_quad_set]
+  have hhlvl : hl vl = hl [u0, u1, u2, u3] := by rw [hl, hl, hsetvl]
+  have hrog := ROGERS_EXPLICIT V vl hs hp hbvl
+  have hltvl : hl vl < Real.sqrt 2 := by rw [hhlvl]; exact hhl
+  have hω1vl : omegaListN V vl 1 = midpoint ℝ (![u0, u1, u2, u3] i) (![u0, u1, u2, u3] j) := by
+    rw [OMEGA_LIST_1_EXPLICIT (![u0, u1, u2, u3] i) (![u0, u1, u2, u3] j)
+      (![u0, u1, u2, u3] k) (![u0, u1, u2, u3] l) V vl hs hp hbvl hltvl hvl_eq,
+      CIRCUMCENTER_2]
+  have hcf_eq : cf l = circumcenter ({![u0, u1, u2, u3] i, ![u0, u1, u2, u3] j,
+      ![u0, u1, u2, u3] k} : Set V3) := by
+    dsimp only [cf]
+    congr 1
+    exact (p14_face_set3 hij hik hil hjk hjl hkl).symm
+  have hω2vl : omegaListN V vl 2 = cf l := by
+    rw [OMEGA_LIST_2_EXPLICIT (![u0, u1, u2, u3] i) (![u0, u1, u2, u3] j)
+      (![u0, u1, u2, u3] k) (![u0, u1, u2, u3] l) V vl hs hp hbvl hltvl hvl_eq,
+      hcf_eq]
+  have hω3vl : omegaListN V vl 3 = cc4 := by
+    rw [OMEGA_LIST_3_EXPLICIT (![u0, u1, u2, u3] i) (![u0, u1, u2, u3] j)
+      (![u0, u1, u2, u3] k) (![u0, u1, u2, u3] l) V vl hs hp hbvl hltvl hvl_eq]
+    dsimp only [cc4]
+    congr 1
+    exact p14_four_set (v := ![u0, u1, u2, u3]) hbij
+  have hhdvl : hdV vl = ![u0, u1, u2, u3] i := by rw [hvl_eq]; rfl
+  have hxrog : x ∈ rogers V vl := by
+    rw [hrog]
+    have hseteq : ({hdV vl, omegaListN V vl 1, omegaListN V vl 2, omegaListN V vl 3} : Set V3)
+        = ({![u0, u1, u2, u3] i, midpoint ℝ (![u0, u1, u2, u3] i) (![u0, u1, u2, u3] j),
+            cf l, cc4} : Set V3) := by
+      rw [hhdvl, hω1vl, hω2vl, hω3vl]
+    rw [hseteq]
+    exact hxmem
+  exact Set.mem_sUnion.2 ⟨rogers V vl, Set.mem_image_of_mem _ ⟨hperm, hfix⟩, hxrog⟩
+
 /-- HOL `QZKSYKG2` (QZKSYKG.hl:255-262 concl, proof 325-2251): `mcell k V ul`
 is covered by the union of the Rogers simplices of all left-action
 permutations of `ul` of `0..k-1`.
@@ -2104,21 +3108,29 @@ theorem QZKSYKG2 {V : Set V3} {ul : List V3} {k : ℕ}
             (fun j hj => Equiv.swap_apply_of_ne_of_ne (by omega) (by omega))
         rw [hleft_swap]
         exact hright
-  · -- k = 3
-    -- NEEDS: QZKSYKG2 k=3 — the `mcell3` cover: `mcell3 = convexHull`
-    -- `({u0,u1,u2} ∪ {mxi})`, then `CONVEX_HULL_4_IMP_3_1` /
-    -- `TRUNCATE_SIMPLEX` / `OMEGA_LIST_N` decomposition with `WAUFCHE1`,
-    -- `MXI_EXPLICIT`, `MHFTTZN4`, `XNHPWAB1`, `WQPRRDY` (B4, not landed),
-    -- and the S₃ `LEFT_ACTION_LIST_PROPERTIES` kit (B1) for the 3!-image
-    -- union.  The blocking giant is still `ynhyjit_i3_p14`'s i = 3 NEEDS.
-    sorry
-  · -- k = 4
-    -- NEEDS: QZKSYKG2 k=4 — `mcell4 = convexHull (setOfList ul)` and
-    -- `WQPRRDY` (Rogers.hl:10534, `INDUCT_TAC` over k) together with
-    -- permutation invariance of `setOfList` (B4); the induction step also
-    -- consumes `HL_PROPERTIES`.  `YIFVQDV_1` blocks the sibling
-    -- `QZKSYKG1` k = 4 case.  None of these are landed.
-    sorry
+  · -- k = 3: the `mcell3` cover (B4 lane 2026-10-22)
+    obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+    subst hul
+    have hm : mcell 3 V [u0, u1, u2, u3] = mcell3 V [u0, u1, u2, u3] :=
+      (MCELL_EXPLICIT 3 V [u0, u1, u2, u3]).2.2.2.1
+    rw [hm] at hx
+    have hcond : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl [u0, u1, u2, u3] := by
+      by_contra hc
+      rw [mcell3, if_neg hc] at hx
+      exact hx
+    exact p14_k3_branch hsat hpack hbar hcond.1 hcond.2 hx
+  · -- k = 4: the `mcell4` cover (B4 lane 2026-10-22)
+    obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+    subst hul
+    have hm : mcell 4 V [u0, u1, u2, u3] = mcell4 V [u0, u1, u2, u3] :=
+      (MCELL_EXPLICIT 4 V [u0, u1, u2, u3]).2.2.2.2 (by norm_num)
+    rw [hm] at hx
+    have hhl : hl [u0, u1, u2, u3] < Real.sqrt 2 := by
+      by_contra hc
+      rw [mcell4, if_neg hc] at hx
+      exact hx
+    exact p14_k4_branch hsat hpack hbar hhl hx
 
 
 end Kepler.Text
