@@ -1,0 +1,26 @@
+--- a/lean/Kepler/Text/PackingAuto12.lean
++++ b/lean/Kepler/Text/PackingAuto12.lean
+@@ -2227,4 +2227,21 @@
+     exact convexHull_subset_affineSpan ({X, Y} : Set V3) hZ
+   have hle : affineSpan ℝ ({X, Y} : Set V3) ≤ affineSpan ℝ ({a, b, c} : Set V3) :=
+     affineSpan_le.2 hsub
+-  exact hle h1
+\ No newline at end of file
++  exact hle h1
++
++/-- HOL `LEFT_ACTION_LIST_PROPERTIES` (marchal2.hl:4460-4474): the S₃ action on
++`left_action_list p ul` preserves `barV V 3`, the omega points 2 and 3, and
++`mxi`. The HOL `permutes` is complement-fixing; the Lean encoding takes the
++tail-fixedness as the explicit hypothesis `hfix` (SF-48, approved 2026-10-22). -/
++theorem LEFT_ACTION_LIST_PROPERTIES {V : Set V3} {ul xl : List V3} {p : Equiv.Perm ℕ}
++    (hpack : Packing V) (hsat : saturated V) (hbar : barV V 3 ul)
++    (h1 : hl (truncateSimplex 2 ul) < Real.sqrt 2)
++    (h2 : Real.sqrt 2 ≤ hl ul)
++    (hperm : permutes p (Set.Icc 0 2))
++    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j)
++    (hxl : xl = leftActionList p ul) :
++    barV V 3 xl ∧
++      omegaListN V xl 2 = omegaListN V ul 2 ∧
++      omegaListN V xl 3 = omegaListN V ul 3 ∧
++      mxi V xl = mxi V ul := by
++  sorry

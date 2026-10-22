@@ -2081,3 +2081,72 @@ patch 叠加逐字（§44+45 先例），全量波差最终权归档，STATEMENT
 shim（:5496，pack_concl.hl:145-147，R3 家族）——替代路为 LEPJBDJ k∈{2,3}
 content（R1-GIANT，墙 A 复活），按"覆盖链 R1-free"取向定案。该 shim 列入
 未来 shim 清理批盘点（同 MXI_EXISTS_concl 成环案）。
+
+## 48. PA12 `LEFT_ACTION_LIST_PROPERTIES` 新件立案（S₃ action kit 补尾固定 `hfix`；AJRIPQN B1 前置）— 分级 B（新增陈述保真立案）
+
+**立案：2026-10-21，AJRIPQN 分期侦察报告（`docs/scouts/ajripqn-scout.md` §4 B1）
+产出；用户批准（2026-10-22，"SF-48：批准。AJRIPQN B1：发"）——B1 车道即行
+开工。** 对象 = **新增**定理 `Kepler.Text.LEFT_ACTION_LIST_PROPERTIES`（落
+PA12），不触碰任何冻结陈述。机理：HOL `permutes` 是 complement-fixing
+（`!x. ~(x IN s) ==> p x = x`），Lean 的 `permutes p s := ∀ x, x ∈ s ↔ p x ∈ s`
+不含尾固定；本件读 index 3（`ul.length = 4`），弱式允许 p 把 index 3 换成
+junk 点，陈述为假/不可证。`hfix` 是 HOL 语义的显式化，补后式 ⇒ 弱式
+（丢弃 `hfix` 即回退），无下游破坏。
+
+(a) HOL：marchal2.hl:4460-4474 逐字：
+
+```hol
+let LEFT_ACTION_LIST_PROPERTIES = prove_by_refinement (
+ `!V ul p.
+    packing V /\ saturated V /\ barV V 3 ul /\
+    hl (truncate_simplex 2 ul) < sqrt (&2) /\ sqrt (&2) <= hl ul /\
+    p permutes 0..2 /\
+    xl = left_action_list p ul
+    ==> xl IN barV V 3 /\
+        omega_list_n V xl 2 = omega_list_n V ul 2 /\
+        omega_list_n V xl 3 = omega_list_n V ul 3 /\
+        mxi V xl = mxi V ul`,
+```
+
+HOL `permutes` 语义（`reference/flyspeck/azure/hol-light-nat/Library/permutations.ml:9`）：
+
+```ml
+let permutes = new_definition
+ `p permutes s <=> (!x. ~(x IN s) ==> p(x) = x) /\ (!y. ?!x. p x = y)`;;
+```
+
+即 complement-fixing，自动固定所有 `j ≥ 3`。
+
+### (b) 陈述宪章
+
+存档 `docs/statement-fix-proposals-patches/48-pa12-left-action-list-properties.patch`
+（对 PA12 EOF 追加，+17 行、零既有行改动；`patch -p1 --dry-run` EXIT=0）。
+批准形（逐字）：
+
+```lean
+theorem LEFT_ACTION_LIST_PROPERTIES {V : Set V3} {ul xl : List V3} {p : Equiv.Perm ℕ}
+    (hpack : Packing V) (hsat : saturated V) (hbar : barV V 3 ul)
+    (h1 : hl (truncateSimplex 2 ul) < Real.sqrt 2)
+    (h2 : Real.sqrt 2 ≤ hl ul)
+    (hperm : permutes p (Set.Icc 0 2))
+    (hfix : ∀ j : ℕ, 3 ≤ j → p j = j)
+    (hxl : xl = leftActionList p ul) :
+    barV V 3 xl ∧
+      omegaListN V xl 2 = omegaListN V ul 2 ∧
+      omegaListN V xl 3 = omegaListN V ul 3 ∧
+      mxi V xl = mxi V ul
+```
+
+### (c) 验收与应用计划
+
+B1 车道在 PA12 落地该陈述并真证（零 sorry/零 sorryAx，普通闸；新增件不是
+STATEMENT-FIX 模式）。陈述须与 (b) 逐字（binder 名与换行可异，命题结构不可
+动；不得删 `hfix`、不得加前提）。PA12 禁止 import PA13/PA14（环）；S₂ 模板
+`LEFT_ACTION_LIST_1_PROPERTIES_ALT`（PA14:792）按 §0' 复制私件体例，不反向
+import。B2 消费：PA14 重落 `RVFXZBU_p14`/`ynhyjit_i3_p14`，PA17 的 `hRV`
+一行改接；PA10 源件保留为 off-path orphan（另账）。
+
+### (d) 记账
+
+- `PERMUTES_TRIVIAL`（PA5:135）仍 sorry，本件禁用。
+- 本件不进入 `pack_concl` 逐字接口；它只服务 AJRIPQN 五阶段的 S₃ 对称性。
