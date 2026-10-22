@@ -564,3 +564,24 @@ MXI_EXISTS/RVFXZBU1/2/3 的 `_discharged` 桥等；全仓零 importer）、
 
 P0 验证动作：SF-49 应用 → MCELL4_BARV_FI 改接 → 624 manifest+replay →
 LP 端到端审计；P1：三接口 HOL 陈述对照；P2：shim 清理批。
+
+## 2026-10-22 第二增量节（SF-49 + B6 + P0 收口；B3/B8c-e/nli A1 三线在飞）
+
+- **SF-49 应用**（`d3e411dd`）：PA21:601 `bank_BIXPCGW9455898160` 符号由
+  `> +0.00569` 修为 `> -0.00569`（HOL `ineq.hl:985` 逐字），STATEMENT-FIX
+  闸 PASS，探针标准三零。nli rest 19 的"假陈述"判定自此闭合；该件的
+  pipeline/Lean 批次解锁（仍按证书 pipeline 闸门排序）。
+- **B6 落地**（`ec40617c`）：PA5/PA9/PA12 四件支撑全证（`CONVEX_HULL_EQ_EQ_SET_EQ`
+  / `NJIUTIU` / `TEZFFSK` / `ROGERS_INTER_V_LEMMA`，+848/−52），探针四件
+  标准三零。DDZUPHJ（B7 目标，PA13）的支撑面就位。
+- **P0 改接落地**（`760a192a`）：PA25 两处 `RVFXZBU`（PA10）→ `RVFXZBU_p14`
+  （PA14，i:=4），+4/−4；纯改接零 sorry 消费，按 playbook ㊱ 走干净锚
+  （PA12 未动 + `LANE_FILES=PA25`），全七根闭包绿。探针：`MCELL4_BARV_FI`/
+  `MCELL4_LEAF3` = 标准三 + sorryAx（唯一来源 PA7 `YIFVQDV_1` 显式桩，非
+  PA10）；`RVFXZBU_p14` = 标准三零。**审计勘误收口**：PA10 `RVFXZBU` 自此
+  不在 PA25 消费面（PA20:818/:2114 两处仍在，但 PA20 不在 e2e 锥）；地图
+  重跑后确认其父边消失（待三线落地后统一刷新）。
+- **在飞**：B3（YIFVQDV_1 PA7:2697 + QZKSYKG1 PA14:1243）、B8c-e
+  （SLTSTLO2 剩余三交 + `p13_cell_unique_off_Z`）、nli A1
+  （`nliRestFWGKMBZ` Assembly:688 粘合）。排序不变：B3 收工发 B4
+  （WQPRRDY + QZKSYKG2 k=3/4）；B8c-e 收工发 B7（DDZUPHJ）。
