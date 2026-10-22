@@ -75,6 +75,7 @@ import Kepler.Text.PackingAuto5
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto7
 import Kepler.Text.PackingAuto8
+import Kepler.Text.PackingAuto9
 import Kepler.Text.PackingAuto12
 import Mathlib
 
@@ -821,6 +822,649 @@ theorem SLTSTLO2 (V : Set V3) (ul : List V3) :
     ∃ Z : Set V3, ∀ p : V3, saturated V → Packing V → barV V 3 ul →
       nullSet Z ∧ (p ∈ rogers V ul \ Z → ∃! i : ℕ, i ≤ 4 ∧ p ∈ mcell i V ul) := by
   sorry
+
+/-- HOL `rcone_eq z w h` (flyspeck_multivariate.ml:4580): the equality
+version of the radial cone, in inner-product form (`inner` = `dot`). -/
+private def rconeEq (v w : V3) (h : ℝ) : Set V3 :=
+  {x | inner ℝ (x - v) (w - v) = dist x v * dist w v * h}
+
+/-- Copy of PA17's `p17_coplanar_null`: subsets of a coplanar set are null. -/
+private theorem p13_coplanar_null {s t : Set V3} (hcop : Coplanar s) (hsub : t ⊆ s) :
+    volume t = 0 := by
+  obtain ⟨u, v, w, hsp⟩ := hcop
+  have hvs : vectorSpan ℝ ({u, v, w} : Set V3)
+      = Submodule.span ℝ ({v - u, w - u} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show u ∈ ({u, v, w} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro z ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro z (rfl | rfl)
+      · exact Submodule.subset_span ⟨v, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨w, by simp, rfl⟩
+  have hne : (affineSpan ℝ ({u, v, w} : Set V3) : AffineSubspace ℝ V3) ≠ ⊤ := by
+    intro htop
+    have hdir : (affineSpan ℝ ({u, v, w} : Set V3)).direction = ⊤ := by
+      rw [htop]; exact AffineSubspace.direction_top ℝ V3 V3
+    have hfr : Module.finrank ℝ
+        (Submodule.span ℝ ({v - u, w - u} : Set V3)) ≤ 2 := by
+      have h2 := finrank_span_finset_le_card (R := ℝ) ({v - u, w - u} : Finset V3)
+      unfold Set.finrank at h2
+      rw [show (({v - u, w - u} : Finset V3) : Set V3)
+        = ({v - u, w - u} : Set V3) from by simp] at h2
+      refine h2.trans ?_
+      calc ({v - u, w - u} : Finset V3).card
+          ≤ ({w - u} : Finset V3).card + 1 := Finset.card_insert_le _ _
+        _ = 2 := by simp
+    have hle : Module.finrank ℝ (affineSpan ℝ ({u, v, w} : Set V3)).direction ≤ 2 := by
+      rw [direction_affineSpan, hvs]
+      exact hfr
+    rw [hdir, finrank_top] at hle
+    exact absurd hle (by norm_num)
+  exact measure_mono_null (hsub.trans hsp)
+    (Measure.addHaar_affineSubspace volume _ hne)
+
+/-- Convexity of the radial cone for nonnegative parameter (copy of
+PA24's `p24_rconeGe_convex`). -/
+private theorem p13_rconeGe_convex (v w : V3) (c : ℝ) (hc0 : 0 ≤ c) :
+    Convex ℝ (rconeGe v w c) := by
+  intro x hx y hy α β hα hβ hαβ
+  have hv : ((α • x + β • y : V3) - v) = α • (x - v) + β • (y - v) := by
+    have hvs : ((α • x + β • y : V3) - v)
+        = α • (x - v) + β • (y - v) + ((α + β - 1 : ℝ)) • v := by
+      module
+    rw [hvs]
+    have hz : ((α + β - 1 : ℝ)) • v = 0 := by
+      rw [← hαβ]
+      simp
+    rw [hz, add_zero]
+  have hdot : ((α • x + β • y : V3) - v) ⬝ᵥ (w - v)
+      = α * ((x - v : V3) ⬝ᵥ (w - v)) + β * ((y - v : V3) ⬝ᵥ (w - v)) := by
+    rw [hv]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct,
+      smul_eq_mul]
+  have hdist : dist (α • x + β • y) v ≤ α * dist x v + β * dist y v := by
+    have h1 : dist (α • x + β • y) v = ‖((α • x + β • y : V3) - v)‖ :=
+      dist_eq_norm _ _
+    have h3 : ‖α • (x - v) + β • (y - v)‖
+        ≤ ‖(α : ℝ) • (x - v)‖ + ‖(β : ℝ) • (y - v)‖ := norm_add_le _ _
+    rw [norm_smul, norm_smul, Real.norm_eq_abs, Real.norm_eq_abs,
+      abs_of_nonneg hα, abs_of_nonneg hβ] at h3
+    rw [h1, hv]
+    calc ‖α • (x - v) + β • (y - v)‖
+        ≤ α * ‖(x - v : V3)‖ + β * ‖(y - v : V3)‖ := h3
+      _ = α * dist x v + β * dist y v := by
+          rw [← dist_eq_norm, ← dist_eq_norm]
+  have hD : 0 ≤ dist w v := dist_nonneg
+  show ((α • x + β • y : V3) - v) ⬝ᵥ (w - v)
+      ≥ dist (α • x + β • y) v * dist w v * c
+  calc ((α • x + β • y : V3) - v) ⬝ᵥ (w - v)
+      = α * ((x - v : V3) ⬝ᵥ (w - v)) + β * ((y - v : V3) ⬝ᵥ (w - v)) := hdot
+    _ ≥ α * (dist x v * dist w v * c) + β * (dist y v * dist w v * c) := by
+        have e1 := mul_le_mul_of_nonneg_left hx hα
+        have e2 := mul_le_mul_of_nonneg_left hy hβ
+        linarith
+    _ = (α * dist x v + β * dist y v) * dist w v * c := by ring
+    _ ≥ dist (α • x + β • y) v * dist w v * c :=
+        mul_le_mul_of_nonneg_right
+          (mul_le_mul_of_nonneg_right hdist hD) hc0
+
+/-- For `0 ≤ h < 1` the equality cone is contained in the frontier of the
+convex solid cone. -/
+private theorem p13_rconeEq_subset_frontier {v w : V3} {h : ℝ}
+    (hw : w ≠ v) (h0 : 0 ≤ h) (h1 : h < 1) :
+    rconeEq v w h ⊆ frontier (rconeGe v w h) := by
+  intro x hx
+  have hcpos : 0 < ‖w - v‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hw)
+  have hx' : inner ℝ (x - v) (w - v) = dist x v * dist w v * h := hx
+  have hxdot : (x - v) ⬝ᵥ (w - v) = dist x v * dist w v * h := by
+    rw [← inner_eq_dot]; exact hx'
+  have hxge : x ∈ rconeGe v w h := by
+    rw [rconeGe, Set.mem_setOf_eq]
+    exact le_of_eq hxdot.symm
+  rw [frontier, Set.mem_sdiff]
+  refine ⟨subset_closure hxge, ?_⟩
+  intro hint
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp isOpen_interior x hint
+  set t := ε / (2 * ‖w - v‖) with ht
+  have htpos : 0 < t := by
+    rw [ht]; positivity
+  set y := x - t • (w - v) with hy
+  have hyball : y ∈ Metric.ball x ε := by
+    rw [Metric.mem_ball]
+    have hsub : y - x = -(t • (w - v)) := by rw [hy]; module
+    rw [dist_eq_norm, hsub, norm_neg, norm_smul, Real.norm_eq_abs,
+      abs_of_pos htpos]
+    have htv : t * ‖w - v‖ = ε / 2 := by
+      rw [ht]; field_simp
+    rw [htv]; linarith
+  have hyge : y ∈ rconeGe v w h := interior_subset (hball hyball)
+  have hyge_inner : inner ℝ (y - v) (w - v) ≥ dist y v * dist w v * h := by
+    have hh := hyge
+    rw [rconeGe, Set.mem_setOf_eq] at hh
+    have h2 : inner ℝ (y - v) (w - v) = (y - v) ⬝ᵥ (w - v) := inner_eq_dot ..
+    rw [h2]
+    exact hh
+  set s := x - v with hs
+  set c := w - v with hc
+  have hCpos : 0 < ‖c‖ := by rw [hc]; exact hcpos
+  have hsineq : inner ℝ s c = dist x v * dist w v * h := by
+    have h := hx'
+    rw [hs, hc] at h
+    exact h
+  have hsi : inner ℝ s c = ‖s‖ * ‖c‖ * h := by
+    rw [hsineq, hs, hc, dist_eq_norm, dist_eq_norm]
+  have hydot : inner ℝ (y - v) c = inner ℝ s c - t * inner ℝ c c := by
+    have hsub : (y - v : V3) = s - t • c := by rw [hy, hs, hc]; module
+    rw [hsub, inner_sub_left, real_inner_smul_left]
+  have hcc : inner ℝ c c = ‖c‖ ^ 2 := real_inner_self_eq_norm_sq c
+  have hydist : dist y v ≥ ‖s‖ - t * ‖c‖ := by
+    have hsub : (y - v : V3) = s - t • c := by rw [hy, hs, hc]; module
+    rw [dist_eq_norm, hsub, hs]
+    have htri := norm_sub_norm_le (x - v) (t • c)
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos htpos] at htri
+    exact htri
+  have hyout : inner ℝ (y - v) c < dist y v * ‖c‖ * h := by
+    have hC2pos : 0 < t * ‖c‖ ^ 2 := by positivity
+    rw [hydot, hsi, hcc]
+    by_cases hh0 : h = 0
+    · subst hh0
+      have : dist y v * ‖c‖ * (0:ℝ) = 0 := by ring
+      rw [this]
+      linarith [hC2pos]
+    · have hhpos : 0 < h := lt_of_le_of_ne h0 (Ne.symm hh0)
+      have hkey : ‖s‖ * ‖c‖ * h - t * ‖c‖ ^ 2
+          < (‖s‖ - t * ‖c‖) * ‖c‖ * h := by
+        nlinarith [htpos, hCpos, hhpos, h1]
+      refine lt_of_lt_of_le hkey ?_
+      have hnonneg : 0 ≤ ‖c‖ * h := mul_nonneg hCpos.le hhpos.le
+      have hmono : (‖s‖ - t * ‖c‖) * (‖c‖ * h) ≤ dist y v * (‖c‖ * h) :=
+        mul_le_mul_of_nonneg_right hydist hnonneg
+      nlinarith [hmono]
+  have hyge'' : dist y v * ‖c‖ * h ≤ inner ℝ (y - v) c := by
+    have h := hyge_inner
+    rw [hc] at h
+    have hd : dist w v = ‖c‖ := by rw [hc, dist_eq_norm]
+    rwa [hd] at h
+  linarith
+
+/-- For `|h| = 1` the equality cone lies in the line through `v` and `w`. -/
+private theorem p13_rconeEq_subset_line {v w : V3} (hw : w ≠ v) {h : ℝ}
+    (hh : h = 1 ∨ h = -1) :
+    rconeEq v w h ⊆ (affineSpan ℝ {v, w} : Set V3) := by
+  intro x hx
+  have hcpos : 0 < ‖w - v‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hw)
+  have hxeq : inner ℝ (x - v) (w - v) = dist x v * dist w v * h := hx
+  rcases hh with rfl | rfl
+  · have hx1 : inner ℝ (x - v) (w - v) = dist x v * dist w v := by
+      simpa using hxeq
+    by_cases hxv : x = v
+    · rw [hxv]
+      exact subset_affineSpan ℝ _ (Set.mem_insert v {w})
+    · have hinner : inner ℝ (x - v) (w - v) = ‖x - v‖ * ‖w - v‖ := by
+        rw [← dist_eq_norm, ← dist_eq_norm]
+        exact hx1
+      have hpar : ‖w - v‖ • (x - v) = ‖x - v‖ • (w - v) :=
+        (inner_eq_norm_mul_iff_real).mp hinner
+      have hC : (‖w - v‖ : ℝ) ≠ 0 := ne_of_gt hcpos
+      have hxexpr : x - v = (‖w - v‖⁻¹ * ‖x - v‖) • (w - v) := by
+        have h1 : (‖w - v‖)⁻¹ • (‖w - v‖ • (x - v))
+            = (‖w - v‖)⁻¹ • (‖x - v‖ • (w - v)) := by rw [hpar]
+        rw [inv_smul_smul₀ hC, smul_smul] at h1
+        exact h1
+      have hthis : x = (x - v) +ᵥ v := by simp
+      rw [hthis, hxexpr]
+      exact smul_vsub_vadd_mem_affineSpan_pair _ v w
+  · have hx1 : inner ℝ (x - v) (w - v) = -(dist x v * dist w v) := by
+      have h := hxeq
+      rw [h, mul_neg, mul_one]
+    have hinner : inner ℝ (x - v) (v - w) = ‖x - v‖ * ‖v - w‖ := by
+      have hneg : inner ℝ (x - v) (v - w) = -inner ℝ (x - v) (w - v) := by
+        rw [show (v - w : V3) = -(w - v) from by module, inner_neg_right]
+      rw [hneg, hx1]
+      have h1 : ‖v - w‖ = ‖w - v‖ := by
+        rw [show (v - w : V3) = -(w - v) from by module, norm_neg]
+      rw [dist_eq_norm, dist_eq_norm, h1]
+      ring
+    have hpar : ‖v - w‖ • (x - v) = ‖x - v‖ • (v - w) :=
+      (inner_eq_norm_mul_iff_real).mp hinner
+    have hvw : (v - w : V3) = -(w - v) := by module
+    have hnorm : ‖v - w‖ = ‖w - v‖ := by rw [hvw, norm_neg]
+    rw [hnorm] at hpar
+    have hneg2 : ‖x - v‖ • (v - w) = -(‖x - v‖ • (w - v)) := by
+      rw [hvw, smul_neg]
+    rw [hneg2] at hpar
+    have hC : (‖w - v‖ : ℝ) ≠ 0 := ne_of_gt hcpos
+    have hxexpr : x - v = (-(‖w - v‖⁻¹ * ‖x - v‖)) • (w - v) := by
+      have h1 : (‖w - v‖)⁻¹ • (‖w - v‖ • (x - v))
+          = (‖w - v‖)⁻¹ • (-(‖x - v‖ • (w - v))) := by rw [hpar]
+      rw [inv_smul_smul₀ hC, smul_neg, smul_smul, ← neg_smul] at h1
+      exact h1
+    have hthis : x = (x - v) +ᵥ v := by simp
+    rw [hthis, hxexpr]
+    exact smul_vsub_vadd_mem_affineSpan_pair _ v w
+
+private theorem p13_rconeEq_null_of_nonneg {v w : V3} (hw : w ≠ v) {h : ℝ}
+    (h0 : 0 ≤ h) (h1 : h < 1) : nullSet (rconeEq v w h) :=
+  measure_mono_null (p13_rconeEq_subset_frontier hw h0 h1)
+    (Convex.addHaar_frontier volume (p13_rconeGe_convex v w h h0))
+
+private theorem p13_rconeEq_null_of_abs_one {v w : V3} (hw : w ≠ v) {h : ℝ}
+    (hh : h = 1 ∨ h = -1) : nullSet (rconeEq v w h) := by
+  have hline : rconeEq v w h ⊆ (affineSpan ℝ {v, w} : Set V3) :=
+    p13_rconeEq_subset_line hw hh
+  have hcop : Coplanar (affineSpan ℝ {v, w} : Set V3) := by
+    refine ⟨v, v, w, ?_⟩
+    intro z hz
+    simpa [show ({v, v, w} : Set V3) = {v, w} from by ext q; simp] using hz
+  exact p13_coplanar_null hcop hline
+
+private theorem p13_rconeEq_null_of_abs_gt_one {v w : V3} (hw : w ≠ v) {h : ℝ}
+    (hh : h < -1 ∨ 1 < h) : nullSet (rconeEq v w h) := by
+  have hsub : rconeEq v w h ⊆ {v} := by
+    intro x hx
+    have hxeq : inner ℝ (x - v) (w - v) = dist x v * dist w v * h := hx
+    by_contra hxv
+    have hdist : 0 < dist x v := dist_pos.mpr hxv
+    have hcpos : 0 < dist w v := dist_pos.mpr hw
+    have hcs : |inner ℝ (x - v) (w - v)| ≤ ‖x - v‖ * ‖w - v‖ :=
+      abs_real_inner_le_norm (x - v) (w - v)
+    have h1 : ‖x - v‖ * ‖w - v‖ = dist x v * dist w v := by
+      rw [dist_eq_norm, dist_eq_norm]
+    have hp : 0 < dist x v * dist w v := mul_pos hdist hcpos
+    rw [abs_le] at hcs
+    rw [hxeq, h1] at hcs
+    rcases hh with hlt | hgt
+    · nlinarith [hcs.1, hp]
+    · nlinarith [hcs.2, hp]
+  exact measure_mono_null hsub (by simp)
+
+/-- HOL `NEGLIGIBLE_RCONE_EQ` (flyspeck_multivariate.ml:5196): for `w ≠ v`
+the equality radial cone is null. -/
+theorem nullset_rcone_eq (v w : V3) (h : ℝ) (hw : w ≠ v) :
+    nullSet (rconeEq v w h) := by
+  rcases lt_trichotomy h (-1) with hlt | heq | hgt
+  · exact p13_rconeEq_null_of_abs_gt_one hw (Or.inl hlt)
+  · subst heq
+    exact p13_rconeEq_null_of_abs_one hw (Or.inr rfl)
+  · rcases lt_trichotomy h 0 with hneg | hzero | hpos
+    · have hd : dist (2 • v - w) v = dist w v := by
+        rw [dist_comm]
+        have h : (v - (2 • v - w) : V3) = w - v := by module
+        rw [dist_eq_norm, dist_eq_norm, h]
+      have hdotneg : ∀ x : V3, inner ℝ (x - v) ((2 • v - w) - v)
+          = -inner ℝ (x - v) (w - v) := by
+        intro x
+        rw [show ((2 • v - w) - v : V3) = -(w - v) from by module, inner_neg_right]
+      have hsub : rconeEq v w h = rconeEq v (2 • v - w) (-h) := by
+        ext x
+        constructor
+        · intro hx
+          have hxi : inner ℝ (x - v) (w - v) = dist x v * dist w v * h := hx
+          have hnew : inner ℝ (x - v) ((2 • v - w) - v)
+              = dist x v * dist (2 • v - w) v * (-h) := by
+            rw [hdotneg x, hxi, hd, mul_neg]
+          exact hnew
+        · intro hx
+          have hxi : inner ℝ (x - v) ((2 • v - w) - v)
+              = dist x v * dist (2 • v - w) v * (-h) := hx
+          have h1 : -inner ℝ (x - v) (w - v) = -(dist x v * dist w v * h) := by
+            rw [← hdotneg x, hxi, hd, mul_neg]
+          show inner ℝ (x - v) (w - v) = dist x v * dist w v * h
+          linarith
+      rw [hsub]
+      have hw' : (2 • v - w) ≠ v := by
+        intro he
+        apply hw
+        have h3 : v - w = 0 := by
+          have h2 := congrArg (fun z : V3 => z - v) he
+          simpa [two_smul, sub_eq_add_neg, add_assoc, add_comm, add_left_comm] using h2
+        exact (sub_eq_zero.mp h3).symm
+      exact p13_rconeEq_null_of_nonneg hw' (by linarith) (by linarith)
+    · subst hzero
+      exact p13_rconeEq_null_of_nonneg hw le_rfl (by norm_num)
+    · rcases lt_trichotomy h 1 with hlt1 | heq1 | hgt1
+      · exact p13_rconeEq_null_of_nonneg hw hpos.le hlt1
+      · subst heq1
+        exact p13_rconeEq_null_of_abs_one hw (Or.inl rfl)
+      · exact p13_rconeEq_null_of_abs_gt_one hw (Or.inr hgt1)
+
+/-! ## SLTSTLO.hl: the `SLTSTLO2` null set `Z` (B8a) -/
+
+/-- The seven boundary surfaces of `ul`'s data (HOL `SLTSTLO2`'s
+`B1 .. B7`).  `Z` is their nested union, exactly as in the HOL
+`NEGLIGIBLE_UNION` chain. -/
+private def sltZ (V : Set V3) (ul : List V3) : Set V3 :=
+  ((((((frontier (rogers V ul)
+        ∪ {w : V3 | ‖w - hdV ul‖ = Real.sqrt 2})
+       ∪ rconeEq (hdV ul) (hdV (ul.tail))
+           (hl (truncateSimplex 1 ul) / Real.sqrt 2))
+      ∪ (affineSpan ℝ ({hdV ul, (hdV (ul.tail)), mxi V ul} : Set V3) : Set V3))
+     ∪ convexHull ℝ ({omegaListN V ul 2, omegaListN V ul 3} : Set V3))
+    ∪ (affineSpan ℝ ({hdV ul, (hdV (ul.tail)), (hdV (ul.tail.tail))} : Set V3) : Set V3))
+   ∪ (affineSpan ℝ ({omegaListN V ul 1, omegaListN V ul 2,
+        omegaListN V ul 3} : Set V3) : Set V3))
+
+/-- `hdV ul ≠ hdV ul.tail` for a `barV V 3` list. -/
+private theorem p13_barV_hd_ne_tail (V : Set V3) (ul : List V3)
+    (hb : barV V 3 ul) : hdV ul ≠ (hdV (ul.tail)) := by
+  obtain ⟨u0, u1, u2, u3, rfl⟩ := BARV_3_EXPLICIT V ul hb
+  simpa [hdV] using p13_barV_hd_ne V u0 u1 u2 u3 hb
+
+/-- An affine span of three points is null. -/
+private theorem p13_nullset_affineSpan_triple (a b c : V3) :
+    nullSet (affineSpan ℝ ({a, b, c} : Set V3)) :=
+  p13_coplanar_null ⟨a, b, c, subset_rfl⟩ subset_rfl
+
+/-- A segment (convex hull of two points) is null. -/
+private theorem p13_nullset_convexHull_pair (a b : V3) :
+    nullSet (convexHull ℝ ({a, b} : Set V3)) := by
+  have h1 : convexHull ℝ ({a, b} : Set V3) ⊆
+      (affineSpan ℝ ({a, b} : Set V3) : Set V3) :=
+    convexHull_subset_affineSpan ({a, b} : Set V3)
+  have h2 : (affineSpan ℝ ({a, b} : Set V3) : Set V3) ⊆
+      (affineSpan ℝ ({a, b, b} : Set V3) : Set V3) := by
+    rw [show ({a, b, b} : Set V3) = {a, b} from by ext q; simp]
+  exact p13_coplanar_null ⟨a, b, b, subset_rfl⟩ (h1.trans h2)
+
+/-- `frontier (rogers V ul)` is null on the `barV V 3` regime. -/
+private theorem p13_nullset_frontier_rogers (V : Set V3) (ul : List V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul) :
+    nullSet (frontier (rogers V ul)) := by
+  rw [ROGERS_EXPLICIT V ul hs hp hb]
+  exact Convex.addHaar_frontier volume (convex_convexHull ℝ _)
+
+/-- B8a: the `SLTSTLO2` null set is null. -/
+private theorem p13_sltZ_null (V : Set V3) (ul : List V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul) :
+    nullSet (sltZ V ul) := by
+  unfold sltZ
+  refine measure_union_null (measure_union_null (measure_union_null
+    (measure_union_null (measure_union_null (measure_union_null ?_ ?_) ?_) ?_)
+    ?_) ?_) ?_
+  · exact p13_nullset_frontier_rogers V ul hs hp hb
+  · exact NULLSET_SPHERE _ ⟨hdV ul, Real.sqrt 2, Real.sqrt_pos.2 (by norm_num), rfl⟩
+  · exact nullset_rcone_eq (hdV ul) (hdV (ul.tail))
+      (hl (truncateSimplex 1 ul) / Real.sqrt 2) (Ne.symm (p13_barV_hd_ne_tail V ul hb))
+  · exact p13_nullset_affineSpan_triple _ _ _
+  · exact p13_nullset_convexHull_pair _ _
+  · exact p13_nullset_affineSpan_triple _ _ _
+  · exact p13_nullset_affineSpan_triple _ _ _
+
+/-- B8a: existence of a covering cell index off `Z` (HOL's `SLTSTLO1`
+call, including the `p ∈ rogers \ Z` projection). -/
+private theorem p13_sltstlo2_exists (V : Set V3) (ul : List V3) (p : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
+    (hpZ : p ∈ rogers V ul \ sltZ V ul) :
+    ∃ i : ℕ, i ≤ 4 ∧ p ∈ mcell i V ul :=
+  SLTSTLO1 V ul p hs hp hb hpZ.1
+
+
+/-! ## SLTSTLO2 case-tree fragments (B8a/B8b partial, green) -/
+
+/-- In the `hl ul < √2` regime every covering index is `4` (`EMNWUUS2`
+kills `mcell0..3`). -/
+private theorem p13_lowhl_index (V : Set V3) (ul : List V3) (p : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
+    (hlt : hl ul < Real.sqrt 2) {i : ℕ} (hi : i ≤ 4)
+    (hpi : p ∈ mcell i V ul) : i = 4 := by
+  obtain ⟨e0, e1, e2, e3⟩ := (EMNWUUS2 V ul hs hp hb).1 hlt
+  interval_cases i
+  · rw [(MCELL_EXPLICIT 0 V ul).1, e0] at hpi
+    exact absurd hpi (Set.notMem_empty p)
+  · rw [(MCELL_EXPLICIT 1 V ul).2.1, e1] at hpi
+    exact absurd hpi (Set.notMem_empty p)
+  · rw [(MCELL_EXPLICIT 2 V ul).2.2.1, e2] at hpi
+    exact absurd hpi (Set.notMem_empty p)
+  · rw [(MCELL_EXPLICIT 3 V ul).2.2.2.1, e3] at hpi
+    exact absurd hpi (Set.notMem_empty p)
+  · rfl
+
+/-- In the `sqrt 2 ≤ hl ul` regime `mcell4` is empty, so every covering
+index is `≤ 3`. -/
+private theorem p13_highhl_index (V : Set V3) (ul : List V3) (p : V3)
+    (hb : barV V 3 ul) (hge : Real.sqrt 2 ≤ hl ul) {i : ℕ} (hi : i ≤ 4)
+    (hpi : p ∈ mcell i V ul) : i ≤ 3 := by
+  rcases Nat.lt_or_ge i 4 with h | h
+  · omega
+  · have h4 : mcell i V ul = mcell4 V ul := (MCELL_EXPLICIT i V ul).2.2.2.2 h
+    have hempty : mcell4 V ul = ∅ := by
+      rw [mcell4, if_neg (not_lt.mpr hge)]
+    rw [h4, hempty] at hpi
+    exact absurd hpi (Set.notMem_empty p)
+
+/-- Off `Z`, `mcell0` and `mcell1` are disjoint: the only interface is the
+sphere `B2`. -/
+private theorem p13_disjoint_mcell0_mcell1 (V : Set V3) (ul : List V3) (p : V3)
+    (hpZ : p ∈ rogers V ul \ sltZ V ul)
+    (h0 : p ∈ mcell 0 V ul) (h1 : p ∈ mcell 1 V ul) : False := by
+  rw [(MCELL_EXPLICIT 0 V ul).1, mcell0] at h0
+  rw [(MCELL_EXPLICIT 1 V ul).2.1] at h1
+  by_cases hc : Real.sqrt 2 ≤ hl ul
+  · rw [mcell1, if_pos hc] at h1
+    have hfar : ¬ p ∈ Metric.ball (hdV ul) (Real.sqrt 2) := fun hb => h0.2 hb
+    have hnear : p ∈ Metric.closedBall (hdV ul) (Real.sqrt 2) := h1.1.2
+    have hd : dist p (hdV ul) = Real.sqrt 2 := by
+      refine le_antisymm ?_ ?_
+      · simpa [Metric.mem_closedBall] using hnear
+      · simpa [Metric.mem_ball, not_lt] using hfar
+    have hB2 : p ∈ {w : V3 | ‖w - hdV ul‖ = Real.sqrt 2} := by
+      simpa [dist_eq_norm] using hd
+    have hmem : p ∈ sltZ V ul := by
+      simp only [sltZ, Set.mem_union]
+      tauto
+    exact hpZ.2 hmem
+  · rw [mcell1, if_neg hc] at h1
+    exact absurd h1 (Set.notMem_empty p)
+
+/-- Off `Z`, `mcell1` and `mcell2` are disjoint: the only interface is the
+equality cone `B3`. -/
+private theorem p13_disjoint_mcell1_mcell2 (V : Set V3) (ul : List V3) (p : V3)
+    (hpZ : p ∈ rogers V ul \ sltZ V ul)
+    (h1 : p ∈ mcell 1 V ul) (h2 : p ∈ mcell 2 V ul) : False := by
+  rw [(MCELL_EXPLICIT 1 V ul).2.1] at h1
+  rw [(MCELL_EXPLICIT 2 V ul).2.2.1] at h2
+  by_cases hc : Real.sqrt 2 ≤ hl ul
+  · rw [mcell1, if_pos hc] at h1
+    have hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 := by
+      by_contra h
+      rw [mcell2, if_neg (by tauto)] at h2
+      exact absurd h2 (Set.notMem_empty p)
+    rw [mcell2, if_pos ⟨hcond, hc⟩] at h2
+    dsimp only at h2
+    have hnotgt : ¬ ((p - hdV ul) ⬝ᵥ (hdV (ul.tail) - hdV ul) >
+        dist p (hdV ul) * dist (hdV (ul.tail)) (hdV ul)
+          * (hl (truncateSimplex 1 ul) / Real.sqrt 2)) := h1.2
+    have hge : (p - hdV ul) ⬝ᵥ (hdV (ul.tail) - hdV ul) ≥
+        dist p (hdV ul) * dist (hdV (ul.tail)) (hdV ul)
+          * (hl (truncateSimplex 1 ul) / Real.sqrt 2) := h2.1.1
+    have heqdot : (p - hdV ul) ⬝ᵥ (hdV (ul.tail) - hdV ul) =
+        dist p (hdV ul) * dist (hdV (ul.tail)) (hdV ul)
+          * (hl (truncateSimplex 1 ul) / Real.sqrt 2) :=
+      le_antisymm (le_of_not_gt hnotgt) hge
+    have hinner : inner ℝ (p - hdV ul) (hdV (ul.tail) - hdV ul) =
+        dist p (hdV ul) * dist (hdV (ul.tail)) (hdV ul)
+          * (hl (truncateSimplex 1 ul) / Real.sqrt 2) := by
+      rw [inner_eq_dot]; exact heqdot
+    have hmem : p ∈ sltZ V ul := by
+      simp only [sltZ, Set.mem_union]
+      tauto
+    exact hpZ.2 hmem
+  · rw [mcell1, if_neg hc] at h1
+    exact absurd h1 (Set.notMem_empty p)
+
+private theorem p13_hl_pair (u v : V3) : hl [u, v] = dist u v / 2 := by
+  have hset : setOfList [u, v] = ({u, v} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hcc : circumcenter ({u, v} : Set V3) = midpoint ℝ u v := CIRCUMCENTER_2 u v
+  have hexi : ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w := by
+    refine ⟨dist (midpoint ℝ u v) u, ?_⟩
+    rw [hcc]
+    intro w hw
+    rcases Set.mem_insert_iff.mp hw with rfl | hw'
+    · rfl
+    · rcases Set.mem_singleton_iff.mp hw' with rfl
+      simp
+  have key : radV ({u, v} : Set V3) = dist (circumcenter ({u, v} : Set V3)) u :=
+    (Classical.epsilon_spec (p := fun c : ℝ => ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w) hexi) u (Set.mem_insert u {v})
+  have hhl : hl [u, v] = dist (circumcenter ({u, v} : Set V3)) u := by
+    show radV (setOfList [u, v]) = _
+    rw [hset, key]
+  rw [hhl, hcc]
+  simp
+  ring
+
+/-- `rogers V ul` sits in the closed Voronoi cell of its head vertex. -/
+private theorem p13_rogers_subset_voronoiClosed (V : Set V3) (ul : List V3)
+    (hb : barV V 3 ul) :
+    rogers V ul ⊆ voronoiClosed V (hdV ul) := by
+  obtain ⟨u0, u1, u2, u3, rfl⟩ := BARV_3_EXPLICIT V ul hb
+  have hbar' : barV V 3 [u0, u1, u2, u3] := hb
+  have hmem : ∀ (j : ℕ), j < 4 →
+      omegaListN V [u0, u1, u2, u3] j ∈ voronoiClosed V u0 := by
+    intro j hj
+    interval_cases j
+    · show hdV [u0, u1, u2, u3] ∈ voronoiClosed V u0
+      rw [show hdV [u0, u1, u2, u3] = u0 from rfl]
+      intro w hw
+      show dist u0 u0 ≤ dist u0 w
+      rw [dist_self]
+      exact dist_nonneg
+    · have h1 := OMEGA_LIST_N_IN_VORONOI_LIST V [u0, u1, u2, u3] 3 1 hbar' (by norm_num)
+      rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2] at h1
+      have hsub : voronoiList V [u0, u1] ⊆ voronoiClosed V u0 := by
+        intro z hz
+        have hzv : z ∈ voronoiSet V (setOfList [u0, u1]) := hz
+        rw [voronoiSet] at hzv
+        rw [Set.mem_sInter] at hzv
+        exact hzv (voronoiClosed V u0) ⟨u0, by simp [setOfList], rfl⟩
+      exact hsub h1
+    · have h1 := OMEGA_LIST_N_IN_VORONOI_LIST V [u0, u1, u2, u3] 3 2 hbar' (by norm_num)
+      rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2] at h1
+      have hsub : voronoiList V [u0, u1, u2] ⊆ voronoiClosed V u0 := by
+        intro z hz
+        have hzv : z ∈ voronoiSet V (setOfList [u0, u1, u2]) := hz
+        rw [voronoiSet] at hzv
+        rw [Set.mem_sInter] at hzv
+        exact hzv (voronoiClosed V u0) ⟨u0, by simp [setOfList], rfl⟩
+      exact hsub h1
+    · have h1 := OMEGA_LIST_N_IN_VORONOI_LIST V [u0, u1, u2, u3] 3 3 hbar' le_rfl
+      rw [TRUNCATE_SIMPLEX_REFL 3 [u0, u1, u2, u3] hbar'.1] at h1
+      have hsub : voronoiList V [u0, u1, u2, u3] ⊆ voronoiClosed V u0 := by
+        intro z hz
+        have hzv : z ∈ voronoiSet V (setOfList [u0, u1, u2, u3]) := hz
+        rw [voronoiSet] at hzv
+        rw [Set.mem_sInter] at hzv
+        exact hzv (voronoiClosed V u0) ⟨u0, by simp [setOfList], rfl⟩
+      exact hsub h1
+  intro p hp
+  rw [rogers] at hp
+  refine convexHull_min ?_ (CONVEX_VORONOI_CLOSED V u0) hp
+  rintro z ⟨j, hj, rfl⟩
+  exact hmem j (by simpa using hj)
+
+/-- Off `Z`, `mcell0` and `mcell2` are disjoint (the `mcell2` far branch
+lands on the sphere `B2`). -/
+private theorem p13_disjoint_mcell0_mcell2 (V : Set V3) (ul : List V3) (p : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
+    (hpZ : p ∈ rogers V ul \ sltZ V ul)
+    (h0 : p ∈ mcell 0 V ul) (h2 : p ∈ mcell 2 V ul) : False := by
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+  -- unfold cells before specializing the list
+  rw [(MCELL_EXPLICIT 0 V ul).1] at h0
+  rw [(MCELL_EXPLICIT 2 V ul).2.2.1] at h2
+  have hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul := by
+    by_contra h
+    rw [mcell2, if_neg h] at h2
+    exact absurd h2 (Set.notMem_empty p)
+  rw [mcell2, if_pos hcond] at h2
+  dsimp only at h2
+  rw [mcell0] at h0
+  -- specialize the list everywhere
+  rw [hul] at hb hpZ h0 h2 hcond
+  -- mcell0: outside the ball
+  have hfar : Real.sqrt 2 ≤ dist p (hdV [u0, u1, u2, u3]) := by
+    have := h0.2
+    simpa [Metric.mem_ball, not_lt] using this
+  set a := hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2 with ha
+  have hcone1 : p ∈ rconeGe (hdV [u0, u1, u2, u3]) (hdV ([u0, u1, u2, u3].tail)) a := h2.1.1
+  have hcone2 : p ∈ rconeGe (hdV ([u0, u1, u2, u3].tail)) (hdV [u0, u1, u2, u3]) a := h2.1.2
+  have hhd : hdV [u0, u1, u2, u3] = u0 := rfl
+  have htl : hdV ([u0, u1, u2, u3].tail) = u1 := rfl
+  rw [hhd, htl] at hcone1 hcone2
+  have hrog : p ∈ voronoiClosed V u0 :=
+    p13_rogers_subset_voronoiClosed V [u0, u1, u2, u3] hb hpZ.1
+  have hu1V : u1 ∈ V := by
+    have hsub := BARV_SUBSET V 3 [u0, u1, u2, u3] hb
+    exact hsub (by simp [setOfList])
+  have hle : dist p u0 ≤ dist p u1 := hrog u1 hu1V
+  have hc1 : (p - u0) ⬝ᵥ (u1 - u0) ≥ dist p u0 * dist u1 u0 * a := hcone1
+  have hc2 : (p - u1) ⬝ᵥ (u0 - u1) ≥ dist p u1 * dist u0 u1 * a := hcone2
+  have hc1i : inner ℝ (p - u0) (u1 - u0) ≥ dist p u0 * dist u1 u0 * a := by
+    rw [inner_eq_dot]; exact hc1
+  have hc2i : inner ℝ (p - u1) (u0 - u1) ≥ dist p u1 * dist u0 u1 * a := by
+    rw [inner_eq_dot]; exact hc2
+  set e := dist u0 u1 with he
+  set x := dist p u0 with hx
+  set y := dist p u1 with hy
+  have hes : dist u1 u0 = e := by rw [he, dist_comm]
+  have hsum : e ^ 2 ≥ a * e * (x + y) := by
+    have hdot : inner ℝ (p - u0) (u1 - u0) + inner ℝ (p - u1) (u0 - u1)
+        = inner ℝ (u1 - u0) (u1 - u0) := by
+      have h1 : (p - u1 : V3) = (p - u0) - (u1 - u0) := by module
+      have h2 : (u0 - u1 : V3) = -(u1 - u0) := by module
+      rw [h1, h2]
+      simp only [inner_sub_left, inner_neg_right]
+      ring
+    have hab : dist p u0 * dist u1 u0 * a + dist p u1 * dist u0 u1 * a
+        = a * e * (x + y) := by
+      rw [hes, he, hx, hy]; ring
+    have hcc : inner ℝ (u1 - u0) (u1 - u0) = e ^ 2 := by
+      rw [real_inner_self_eq_norm_sq, he, dist_eq_norm, norm_sub_rev]
+    have hadd := add_le_add hc1i hc2i
+    rw [hab, hdot, hcc] at hadd
+    exact hadd
+  have hepos : 0 < e := by
+    rw [he]
+    exact dist_pos.mpr (p13_barV_hd_ne V u0 u1 u2 u3 hb)
+  have hapos : 0 < a := by
+    rw [ha]
+    exact div_pos (BARV_IMP_HL_1_POS_LT V [u0, u1, u2, u3] hs hp hb)
+      (Real.sqrt_pos.2 (by norm_num))
+  have hhea : e / a = 2 * Real.sqrt 2 := by
+    have h1 : hl (truncateSimplex 1 [u0, u1, u2, u3]) = e / 2 := by
+      rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2, he, p13_hl_pair u0 u1]
+    rw [ha, h1]
+    field_simp
+  have hxy : x + y ≤ 2 * Real.sqrt 2 := by
+    have h1 : e * e ≥ a * e * (x + y) := by simpa [pow_two] using hsum
+    have h2 : e ≥ a * (x + y) := by
+      have h3 := mul_le_mul_of_nonneg_left h1 (le_of_lt (inv_pos.mpr hepos))
+      field_simp at h3
+      linarith
+    have h3 : x + y ≤ e / a := by
+      rw [le_div_iff₀ hapos]
+      simpa [mul_comm] using h2
+    rwa [hhea] at h3
+  have hxle : x ≤ y := hle
+  have hx2 : x ≤ Real.sqrt 2 := by nlinarith [hxy, hxle]
+  have hxeq : x = Real.sqrt 2 := le_antisymm hx2 hfar
+  have hdpx : dist p (hdV [u0, u1, u2, u3]) = Real.sqrt 2 := by
+    rw [hhd, ← hx]
+    exact hxeq
+  have hB2 : p ∈ {w : V3 | ‖w - hdV [u0, u1, u2, u3]‖ = Real.sqrt 2} := by
+    simpa [dist_eq_norm] using hdpx
+  have hmem : p ∈ sltZ V [u0, u1, u2, u3] := by
+    simp only [sltZ, Set.mem_union]
+    tauto
+  exact hpZ.2 hmem
 
 /-! ## DDZUPHJ.hl: the capstone -/
 
