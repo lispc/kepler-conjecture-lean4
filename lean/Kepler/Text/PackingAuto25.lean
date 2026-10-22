@@ -2678,7 +2678,7 @@ theorem MCELL4_CARD4 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturate
 
 /-- HOL `MCELL4_LEAF3`.
 2026-10-12 转真（装配级）：对换置换 `Equiv.swap 2 3` 的显式装配——
-`YIFVQDV_1`（PA7:1936，具名桩）给置换后 `barV V 3`，`RVFXZBU`（PA10，i=4 支
+`YIFVQDV_1`（PA7:1936，具名桩）给置换后 `barV V 3`，`RVFXZBU_p14`（PA14，i=4 支
 已证）给 `mcell4` 不变性，套 `MCELL4_LEAF2` 后经四点表 `[EL 0, EL 1, EL 3,
 EL 2] = leftActionList (swap 2 3) ul` 换回。债走账本：闭包含 YIFVQDV_1 的
 上游桩债（PA7 具名桩，非本波引入）。 -/
@@ -2739,7 +2739,7 @@ theorem MCELL4_LEAF3 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturate
     have hbP : barV V 3 (leftActionList (Equiv.swap (2:ℕ) 3) ul) :=
       YIFVQDV_1 V ul 3 (Equiv.swap (2:ℕ) 3) hp hb hlt hperm
     have hmc : mcell 4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul)
-        = mcell 4 V ul := RVFXZBU (i := 4) (by simp) hs hp hb hperm hfix
+        = mcell 4 V ul := RVFXZBU_p14 (i := 4) (by simp) hs hp hb hperm hfix
     have hn4 : ¬ nullSet (mcell4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul)) := by
       rw [show mcell4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul)
             = mcell 4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul) from rfl,
@@ -3180,7 +3180,7 @@ private theorem p25_list4_eq (ul : List V3) (h : ul.length = 4) :
 2026-10-12 转真（装配级）：由 `MCELL4_FI_EL`（本波转真）的两序两案——
 `el 2 = f i` 时表即 `ul`（`p25_list4_eq`）零成本；`el 2 = f (i+1)` 时表是
 `leftActionList (Equiv.swap 2 3) ul`（同 `MCELL4_LEAF3` 的 swap 套件），经
-`YIFVQDV_1`（PA7 具名桩）+ `RVFXZBU`（PA10，i=4 支已证）搬移。 -/
+`YIFVQDV_1`（PA7 具名桩）+ `RVFXZBU_p14`（PA14，i=4 支已证）搬移。 -/
 theorem MCELL4_BARV_FI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f) (hb : barV V 3 ul)
@@ -3295,7 +3295,7 @@ theorem MCELL4_BARV_FI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ 
     rw [show mcell4 V ul = mcell 4 V ul from rfl,
         show mcell4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul)
           = mcell 4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul) from rfl,
-        RVFXZBU (i := 4) (by simp) hs hp hb hperm hfix]
+        RVFXZBU_p14 (i := 4) (by simp) hs hp hb hperm hfix]
 
 /-- HOL `MCELL4_AZIM_LT_PI`. -/
 theorem MCELL4_AZIM_LT_PI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
