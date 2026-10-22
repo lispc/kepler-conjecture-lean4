@@ -702,6 +702,15 @@ class RPNEmitter(object):
             for p, v in zip(cl.params, vals):
                 env2[p] = v
             return self.ev(cl.body, env2)
+        if len(vals) > len(cl.params):
+            # Curried definition returning a function/6-vector: apply the
+            # declared params first, then feed the remaining arguments to the
+            # result (`mud_135_x_v1 y2 y4 y6 x1 .. x6`, flat_term2_* etc.).
+            env2 = dict(cl.env)
+            for p, v in zip(cl.params, vals):
+                env2[p] = v
+            return self.apply_value(self.ev(cl.body, env2),
+                                    vals[len(cl.params):])
         raise Skip("arity mismatch applying %r (%d args, %d params)"
                    % (cl.name, len(vals), len(cl.params)))
 

@@ -4383,7 +4383,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:288"
  },
- "aff_gt_def": {
+ "aff_gt": {
   "params": [],
   "body_ast": {
    "app": "affsign",
@@ -4395,7 +4395,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:296"
  },
- "aff_ge_def": {
+ "aff_ge": {
   "params": [],
   "body_ast": {
    "app": "affsign",
@@ -4407,7 +4407,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:298"
  },
- "aff_lt_def": {
+ "aff_lt": {
   "params": [],
   "body_ast": {
    "app": "affsign",
@@ -4419,7 +4419,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:300"
  },
- "aff_le_def": {
+ "aff_le": {
   "params": [],
   "body_ast": {
    "app": "affsign",
@@ -4431,7 +4431,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:302"
  },
- "VORONOI_LIST": {
+ "voronoi_list": {
   "params": [
    "V",
    "wl"
@@ -4454,7 +4454,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:313"
  },
- "INITIAL_SUBLIST": {
+ "initial_sublist": {
   "params": [
    "xl",
    "zl"
@@ -4487,7 +4487,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:321"
  },
- "BARV": {
+ "barV": {
   "params": [
    "V",
    "k",
@@ -4579,7 +4579,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:324"
  },
- "TRUNCATE_SIMPLEX": {
+ "truncate_simplex": {
   "params": [
    "j",
    "ul"
@@ -4736,7 +4736,7 @@
   },
   "source": "reference/flyspeck/text_formalization/general/sphere.hl:331"
  },
- "OMEGA_LIST": {
+ "omega_list": {
   "params": [
    "V",
    "ul"
@@ -21011,7 +21011,7 @@
   },
   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:492"
  },
- "mud_135_x": {
+ "mud_135_x_v1": {
   "params": [
    "y2",
    "y4",
@@ -21110,7 +21110,7 @@
   },
   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:495"
  },
- "mud_126_x": {
+ "mud_126_x_v1": {
   "params": [
    "y3",
    "y4",
@@ -21209,7 +21209,7 @@
   },
   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:499"
  },
- "mud_234_x": {
+ "mud_234_x_v1": {
   "params": [
    "y1",
    "y5",
@@ -29989,17 +29989,17 @@
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:307",
    "reason": "reference/flyspeck/text_formalization/general/sphere.hl:307: set/list notation"
   },
-  "VORONOI_SET": {
+  "voronoi_set": {
    "raw": "voronoi_set V W = INTERS { voronoi_closed V (v:real^3) |  v IN W}",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:310",
    "reason": "reference/flyspeck/text_formalization/general/sphere.hl:310: unsupported construct '{'"
   },
-  "VORONOI_NONDG": {
+  "voronoi_nondg": {
    "raw": "voronoi_nondg V ul =\n  ((LENGTH ul < 5) /\\ (set_of_list ul SUBSET V) /\\\n     (aff_dim (voronoi_list V ul) + &(LENGTH ul) = &4))",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:316",
    "reason": "reference/flyspeck/text_formalization/general/sphere.hl:316: cannot tokenize at ...aff_dim (voronoi_list V ul) + &(LENGTH ul) = &4))"
   },
-  "ROGERS": {
+  "rogers": {
    "raw": "!V ul.  rogers V ul =\n  convex hull (IMAGE (omega_list_n V ul) {  j |    j  < LENGTH ul })",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:338",
    "reason": "reference/flyspeck/text_formalization/general/sphere.hl:338:group: unsupported construct '{'"
@@ -30118,8 +30118,8 @@
    "delta_x6": 1
   },
   "closure_roots": 91,
-  "closure_size": 186,
-  "closure_resolved": 173,
+  "closure_size": 185,
+  "closure_resolved": 176,
   "statement_variables": [
    "x1",
    "x2",
@@ -30128,16 +30128,8 @@
    "x5",
    "x6"
   ],
-  "missing": [
-   "g",
-   "mud_126_x_v1",
-   "mud_135_x_v1",
-   "mud_234_x_v1"
-  ],
+  "missing": [],
   "unsupported_names": [
-   "ROGERS",
-   "VORONOI_NONDG",
-   "VORONOI_SET",
    "abc_param",
    "azim_cycle",
    "bis",
@@ -30159,11 +30151,14 @@
    "ortho0",
    "plane",
    "rconesgn",
+   "rogers",
    "scale",
    "subat",
    "vol_rect",
    "voronoi_closed",
-   "voronoi_open"
+   "voronoi_nondg",
+   "voronoi_open",
+   "voronoi_set"
   ],
   "fallback_sources": {}
  }

@@ -518,6 +518,23 @@ DEF_RE = re.compile(
     r"((?:new_recursive_definition|new_definition|define_dart|define)'?)\b"
     r"[^`]*`", re.S)
 
+DECL_RE = re.compile(r"^\s*(?:![^.]*\.\s*)?([A-Za-z_][A-Za-z0-9_']*)")
+
+
+def declared_name(quote):
+    """Name of the constant declared inside a quotation (`name args = ...`),
+    skipping a leading `!binders.` quantifier.  None when unreadable."""
+    m = DECL_RE.match(quote)
+    if not m:
+        return None
+    name = m.group(1)
+    # Guard against `then`/`if`/quantifier leftovers: must look like a term
+    # head directly followed by whitespace, a binder or `=`.
+    rest = quote[m.end(1):m.end(1) + 1]
+    if rest and not (rest.isspace() or rest in "=(["):
+        return None
+    return name
+
 
 def strip_block_comments(text):
     """Blank out (* ... *) regions, preserving newlines (line numbers)."""
@@ -557,6 +574,13 @@ def extract_defs(path, _cache={}):
         j_bt = text.index("`", i_bt + 1)
         quote = text[i_bt + 1:j_bt]
         line = text[:m.start()].count("\n") + 1
+        # The OCaml let-name and the constant named inside the quotation can
+        # differ (`let mud_135_x = new_definition `mud_135_x_v1 ...``,
+        # `let VORONOI_SET = ... `voronoi_set ...``).  Statements refer to
+        # the *declared* name, so index by that when it is readable.
+        declared = declared_name(quote)
+        if declared:
+            name = declared
         defs.append((name, quote, line))
     return defs
 
@@ -694,7 +718,11 @@ def walk_syms(node, bound, out):
     """Collect free applied symbols / constants; `bound` = local binders."""
     if isinstance(node, dict):
         if "app" in node:
-            out.add(node["app"])
+            # A parameter bound in the enclosing definition may itself be
+            # applied (e.g. `mul6 f g ... = f ... * g ...`): it is not a
+            # global symbol and must not enter the closure roots.
+            if node["app"] not in bound:
+                out.add(node["app"])
             for a in node["args"]:
                 walk_syms(a, bound, out)
             return
