@@ -2,9 +2,11 @@
   Kepler.Text.TameLp — formal_lp/hypermap 桥章（KCBLRQC / BDJYFFB / CRTTXAT /
   JGTDEBU / SZIPOAS / CDTETAT 群 + `lp_fan` 支撑件）的定理陈述层移植。
   填实状态：JGTDEBU 全组 + CDTETAT/SZIPOAS + KCBLRQC/BDJYFFB1/BDJYFFB2
-  已真证明；剩余 sorry = fully_surrounded_perimeter_bound /
-  sum_tauVEF_upper_bound / ineq_tauK_tauVEF_std 群（各依赖未移植深章，
-  见 §8 债务图）。CRTTXAT 已于 2026-10-12 第二波真证明（arc kit 五件套
+  已真证明；sum_tauVEF_upper_bound 已于 2026-10-23 真证明（§3b kit：
+  confV 桥 + ConformingAuto6.SUM_SOL_IN_FACE_SET_EQ_4PI + 前向阻塞副本
+  五件 + 纯算术装配）；剩余 sorry = fully_surrounded_perimeter_bound /
+  ineq_tauK_tauVEF_std 群（各依赖未移植深章，见 §8 债务图与原位 NEEDS
+  注记）。CRTTXAT 已于 2026-10-12 第二波真证明（arc kit 五件套
   自证 + face_sum_snd_eq_fst 鸽笼换元，见 §7/§7c）。
 
   依赖清单来源：`text_formalization/tame/ssreflect/MQMSMAB-compiled.hl`
@@ -43,6 +45,7 @@ import Kepler.Text.ConformingAuto1
 import Kepler.Text.ConformingAuto21
 import Kepler.Text.ConformingAuto23
 import Kepler.Text.ContraFan
+import Kepler.Text.ConformingAuto6
 import Kepler.Geom.LuneVolume
 
 namespace Kepler.Text.TameLp
@@ -836,6 +839,11 @@ DISCHARGES：骨架占位；HOL 证明走 `lemma_face_representation` +
 theorem fully_surrounded_perimeter_bound (V : Set V3) (E : Set (Set V3))
     (hfan : FAN 0 V E) (hsurr : FullySurrounded V E) :
     PerimeterBound V E hfan := by
+  -- NEEDS（Lane G 侦察 2026-10-23）：卡具名桥——LocalAuto7（Polar_fan 移植）的
+  -- 周长 lane `WSEWPCH`/`FAN_PERIMETER`/`BGMIFTE` 均为 faithful sorry 陈述
+  -- （LocalAuto7.lean 周长 lane），且 Local_lemmas 章的
+  -- `f_surr_localization_convex_local`/`lemma_face_representation`/
+  -- `sum_face_rho_node1` 未移植。三桥齐备后按 HOL 五步机械装配。
   sorry
 
 /-- HOL `NODE_TYPE_lemma`（`tame/tame_general.hl:488-495`，"Alternative form
@@ -906,24 +914,532 @@ theorem NODE_TYPE_lemma {α : Type*} [DecidableEq α] (H : Hypermap α) (x : α)
   rw [e1, e2, e3, Set.InjOn.ncard_image hJ3, Set.InjOn.ncard_image hJ4,
     Set.InjOn.ncard_image hJ5]
 
+/-! ### 3b. `sum_tauVEF_upper_bound` 的支撑 kit（2026-10-23 Lane G 真证）。
+
+原 NEEDS 注记的两条路线均由树内存量解除：(a) confV 桥按 §4
+`contraveningConformingTl` 同模板机械构造——`surroundedNode` 在定义上弱于
+`FullySurrounded`（仅多一个 `d.1 = v` 前置条件）；(b) 面集上 `sol` 和不需要
+Euler 关系，直接消费 ConformingAuto6 的 `SUM_SOL_IN_FACE_SET_EQ_4PI`
+（Lean 编码以 `hypermapOfFan` 直述 face_set，HOL 的
+`fan_hypermaps_iso_explicit2` 传输层整体消失）。逐面恒等式即 HOL
+`tauVEF_alt2_alt` 的 Lean 折算（sol 方程取 `conformingSolidAngleFan`
+第五合取项），帽石装配为纯算术。 -/
+
+/-! **前向阻塞副本注记**：本节 `p6g_orbit_partition`/`p6g_img_sum_injOn`/
+`p6g_node_sum_azim`/`p6g_node_sum_azim_lmfun`/`p6g_hrxefdm` 五件是 §7a/§7b
+`setSum_setOfOrbits`/`setSum_image_injOn`/`node_sum_azim(_lmfun)`/
+`HRXEFDM_lemma1` 的逐字副本（本文件 §3b 在 §7b 之前，同文件禁前向引用）。
+后续若文件序调整使 §7b 前移，应删除本块并回引正本去重。 -/
+
+/-- 前向阻塞副本：`setSum_setOfOrbits`（§7a）。 -/
+private theorem p6g_orbit_partition {α : Type*} [DecidableEq α] (D : Finset α)
+    (f : Equiv.Perm α) (hf : PermutesOn f D) (g : α → ℝ) :
+    setSum (setOfOrbits D f) (fun o => setSum o g) = setSum (↑D : Set α) g := by
+  classical
+  have hFO : (setOfOrbits D f).Finite := setOfOrbits_finite D f
+  set S : Finset (Set α) := hFO.toFinset with hSdef
+  have hmemS : ∀ o ∈ S, o ∈ setOfOrbits D f := by
+    intro o ho
+    exact (Set.Finite.mem_toFinset hFO).mp (Finset.mem_coe.mp ho)
+  have hdisj : (↑S : Set (Set α)).PairwiseDisjoint
+      (fun o : Set α => if h : o.Finite then h.toFinset else ∅) := by
+    intro o₁ h₁ o₂ h₂ hne
+    obtain ⟨x, hx, rfl⟩ := hmemS o₁ h₁
+    obtain ⟨y, hy, rfl⟩ := hmemS o₂ h₂
+    rcases orbitMap_disjoint_or_eq hf x y with hd | he
+    · refine Finset.disjoint_left.mpr ?_
+      intro a ha hab
+      simp only [dif_pos (orbitMap_finite hf x), dif_pos (orbitMap_finite hf y)] at ha hab
+      have hm : a ∈ (orbitMap f x ∩ orbitMap f y : Set α) :=
+        ⟨(Set.Finite.mem_toFinset (orbitMap_finite hf x)).mp ha,
+          (Set.Finite.mem_toFinset (orbitMap_finite hf y)).mp hab⟩
+      rw [hd] at hm
+      exact absurd hm (by simp)
+    · exact absurd he hne
+  have hinner : ∀ o ∈ S, setSum o g
+      = ∑ y ∈ (fun o : Set α => if h : o.Finite then h.toFinset else ∅) o, g y := by
+    intro o ho
+    obtain ⟨x, hx, rfl⟩ := hmemS o ho
+    rw [setSum, dif_pos (orbitMap_finite hf x)]
+    simp only [dif_pos (orbitMap_finite hf x)]
+  have huni : (S.biUnion (fun o : Set α => if h : o.Finite then h.toFinset else ∅) : Finset α)
+      = D := by
+    ext y
+    simp only [Finset.mem_biUnion]
+    constructor
+    · rintro ⟨o, ho, hyo⟩
+      obtain ⟨x, hx, rfl⟩ := hmemS o ho
+      simp only [dif_pos (orbitMap_finite hf x)] at hyo
+      have hyD : y ∈ (orbitMap f x : Set α) :=
+        (Set.Finite.mem_toFinset (orbitMap_finite hf x)).mp hyo
+      have hsub := orbitMap_subset_of_permutesOn hf hx hyD
+      simpa using hsub
+    · intro hy
+      refine ⟨orbitMap f y, ?_, ?_⟩
+      · rw [hSdef]
+        exact Set.Finite.mem_toFinset hFO |>.mpr ⟨y, by simpa using hy, rfl⟩
+      · simp only [dif_pos (orbitMap_finite hf y)]
+        exact (Set.Finite.mem_toFinset (orbitMap_finite hf y)).mpr
+          (pow_apply_mem_orbitMap f 0 y)
+  have hstep : ∑ o ∈ S,
+      ∑ y ∈ (fun o : Set α => if h : o.Finite then h.toFinset else ∅) o, g y
+      = ∑ y ∈ D, g y := by
+    rw [← huni]
+    exact (Finset.sum_biUnion (t := fun (o : Set α) => if h : o.Finite then h.toFinset else ∅)
+      (f := fun y => g y) hdisj).symm
+  have hD : Set.Finite.toFinset D.finite_toSet = D := by ext y; simp
+  rw [setSum, setSum, dif_pos hFO, dif_pos D.finite_toSet, hD, ← hSdef]
+  rw [Finset.sum_congr rfl (fun o ho => hinner o ho)]
+  exact hstep
+
+/-- 前向阻塞副本：`setSum_image_injOn`（§7a）。 -/
+private theorem p6g_img_sum_injOn {α β : Type*} [DecidableEq β] {s : Set α} (hs : s.Finite)
+    {φ : α → β} (hφ : Set.InjOn φ s) (g : β → ℝ) :
+    setSum (φ '' s) g = setSum s (fun x => g (φ x)) := by
+  have hfin : (φ '' s).Finite := hs.image φ
+  rw [setSum, setSum, dif_pos hfin, dif_pos hs]
+  refine (Finset.sum_bij (fun x _ => φ x) ?_ ?_ ?_ ?_).symm
+  · intro x hx
+    exact (Set.Finite.mem_toFinset hfin).mpr
+      ⟨x, (Set.Finite.mem_toFinset hs).mp hx, rfl⟩
+  · intro x hx y hy heq
+    exact hφ ((Set.Finite.mem_toFinset hs).mp hx) ((Set.Finite.mem_toFinset hs).mp hy) heq
+  · intro y hy
+    obtain ⟨x, hx, hex⟩ := (Set.mem_image φ s y).mp
+      ((Set.Finite.mem_toFinset hfin).mp hy)
+    exact ⟨x, (Set.Finite.mem_toFinset hs).mpr hx, hex⟩
+  · intro x hx
+    rfl
+
+/-- 前向阻塞副本：`azimDart_iterate_eq`（§4b）。 -/
+private theorem p6g_azimDart_iterate_eq (hfan : FAN 0 V E) {v u : V3} (hvu : {v, u} ∈ E)
+    (hcard1 : 1 < (setOfEdge v V E).ncard) (i : ℕ)
+    (hin : i < (setOfEdge v V E).ncard) :
+    azimDart V E (v, (sigmaFan 0 V E v)^[i] u) = azimIfan 0 V E v u i := by
+  have hvw : v ≠ (sigmaFan 0 V E v)^[i] u := by
+    have he : {v, (sigmaFan 0 V E v)^[i] u} ∈ E :=
+      (properties_of_setOfEdge_fan 0 V E v _ hfan).mpr
+        (iterates_mem_setOfEdge hfan v u
+          ((properties_of_setOfEdge_fan 0 V E v u hfan).mp hvu) i)
+    exact edge_ne_of_fan hfan he
+  show (if (v, _).1 = (v, _).2 then 2 * Real.pi
+      else azimFan 0 V E (v, _).1 (v, _).2) = azimIfan 0 V E v u i
+  rw [if_neg hvw]
+  show (if (setOfEdge v V E).ncard > 1 then
+      azim 0 v ((sigmaFan 0 V E v)^[i] u) (sigmaFan 0 V E v ((sigmaFan 0 V E v)^[i] u))
+    else 2 * Real.pi) = azim 0 v ((sigmaFan 0 V E v)^[i] u)
+      ((sigmaFan 0 V E v)^[i + 1] u)
+  rw [if_pos hcard1, Function.iterate_succ_apply']
+
+/-- 前向阻塞副本：`node_sum_azim`（§7b NodeSum）。 -/
+private theorem p6g_node_sum_azim (hfan : FAN 0 V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    setSum ((hypermapOfFanTl V E hfan).node d) (fun y => azimDart V E y)
+      = 2 * Real.pi := by
+  set H := hypermapOfFanTl V E hfan with hHdef
+  rcases Nat.lt_or_ge (setOfEdge d.1 V E).ncard 2 with h1 | h2
+  · -- card(soe d.1) ≤ 1：card = 1，node d = {d}，azimDart d = 2π
+    have hdm : d.2 ∈ setOfEdge d.1 V E := (FAN_in_setOfEdge 0 V E d.1 d.2 hfan hd).2.2.1
+    have hpos : 0 < (setOfEdge d.1 V E).ncard :=
+      Iff.mpr (Set.ncard_pos (hs := remark_finite_fan1 d.1 V E hfan.2.2.1.1)) ⟨d.2, hdm⟩
+    have hcard1 : (setOfEdge d.1 V E).ncard = 1 := by omega
+    obtain ⟨x, hx⟩ := Set.ncard_eq_one.mp hcard1
+    have hx2 : x = d.2 := by
+      have h2' : d.2 ∈ setOfEdge d.1 V E := hdm
+      rw [hx] at h2'
+      exact (Set.mem_singleton_iff.mp h2').symm
+    have hsoe : setOfEdge d.1 V E = {d.2} := by rw [hx, hx2]
+    have hnode : H.node d = {d} := by
+      rw [nodeTl_eq_image hfan hd, hsoe, Set.image_singleton]
+    have hncard1 : ¬ ((setOfEdge d.1 V E).ncard > 1) := by
+      rw [hsoe, Set.ncard_singleton]
+      simp
+    have hazim : azimDart V E d = 2 * Real.pi := by
+      show (if d.1 = d.2 then 2 * Real.pi
+        else if (setOfEdge d.1 V E).ncard > 1 then
+          azim 0 d.1 d.2 (sigmaFan 0 V E d.1 d.2)
+        else 2 * Real.pi) = 2 * Real.pi
+      rw [if_neg (edge_ne_of_fan hfan hd), if_neg hncard1]
+    rw [hnode, setSum, dif_pos (Set.finite_singleton d), Set.Finite.toFinset_singleton,
+      Finset.sum_singleton]
+    exact hazim
+  · -- card ≥ 2：σ-循环双射 + sum_azims_eq_2pi
+    have hne_u : setOfEdge d.1 V E ≠ {d.2} := by
+      intro he
+      rw [he, Set.ncard_singleton] at h2
+      omega
+    have hdE : {d.1, d.2} ∈ E := hd
+    have hfin : (H.node d).Finite := orbitMap_finite H.nodeMap_permutes d
+    have step1 : (∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard,
+          azimDart V E (d.1, (sigmaFan 0 V E d.1)^[i] d.2))
+        = setSum (H.node d) (fun y => azimDart V E y) := by
+      rw [setSum, dif_pos hfin]
+      refine Finset.sum_bij (fun i _ => (d.1, (sigmaFan 0 V E d.1)^[i] d.2)) ?_ ?_ ?_ ?_
+      · intro i hi
+        have hmem : (d.1, (sigmaFan 0 V E d.1)^[i] d.2) ∈ H.node d := by
+          have h1' : H.nodeMap^[i] d = (d.1, (sigmaFan 0 V E d.1)^[i] d.2) :=
+            nodeMapTl_iterate hd i
+          rw [← h1']
+          exact pow_apply_mem_orbitMap H.nodeMap i d
+        exact (Set.Finite.mem_toFinset hfin).mpr hmem
+      · intro i hi j hj heq
+        have hin : i < (setOfEdge d.1 V E).ncard := Finset.mem_range.mp hi
+        have hjn : j < (setOfEdge d.1 V E).ncard := Finset.mem_range.mp hj
+        simp only [Prod.mk.injEq] at heq
+        rcases lt_trichotomy i j with hlt | heqi | hgt
+        · exact absurd heq.2.symm (cyclic_power_sigmaFan 0 V E hfan hdE j i hjn hlt)
+        · exact heqi
+        · exact absurd heq.2 (cyclic_power_sigmaFan 0 V E hfan hdE i j hin hgt)
+      · intro y hy
+        have hyn : y ∈ H.node d := (Set.Finite.mem_toFinset hfin).mp hy
+        simp only [Hypermap.node, orbitMap, Set.mem_setOf_eq] at hyn
+        obtain ⟨n, hn⟩ := hyn
+        rw [Equiv.Perm.coe_pow] at hn
+        rw [nodeMapTl_iterate hd n] at hn
+        have hsoe : (sigmaFan 0 V E d.1)^[n] d.2 ∈ setOfEdge d.1 V E :=
+          iterates_mem_setOfEdge hfan d.1 d.2
+            ((properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan).mp hdE) n
+        obtain ⟨j, hj, hj_eq⟩ := iterates_mem_sigmaFan hfan hdE hsoe
+        refine ⟨j, Finset.mem_range.mpr hj, ?_⟩
+        rw [hj_eq]
+        exact hn
+      · intro i hi
+        rfl
+    have step2 : (∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard,
+          azimDart V E (d.1, (sigmaFan 0 V E d.1)^[i] d.2))
+        = (∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard, azimIfan 0 V E d.1 d.2 i) :=
+      Finset.sum_congr rfl (fun i hi =>
+        p6g_azimDart_iterate_eq hfan hdE (by omega) i (Finset.mem_range.mp hi))
+    calc setSum (H.node d) (fun y => azimDart V E y)
+        = ∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard,
+            azimDart V E (d.1, (sigmaFan 0 V E d.1)^[i] d.2) := step1.symm
+      _ = ∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard, azimIfan 0 V E d.1 d.2 i := step2
+      _ = 2 * Real.pi := sum_azims_eq_2pi hfan hdE hne_u
+
+/-- 前向阻塞副本：`node_sum_azim_lmfun`（§7b）。 -/
+private theorem p6g_node_sum_azim_lmfun (hfan : FAN 0 V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    setSum ((hypermapOfFanTl V E hfan).node d)
+        (fun y => azimDart V E y * lmfun (hDart_p2 y))
+      = 2 * Real.pi * lmfun (hDart_p2 d) := by
+  set H := hypermapOfFanTl V E hfan with hHdef
+  have hfin : (H.node d).Finite := orbitMap_finite H.nodeMap_permutes d
+  have hconst : ∀ y ∈ H.node d, lmfun (hDart_p2 y) = lmfun (hDart_p2 d) := by
+    intro y hy
+    rw [nodeTl_eq_image hfan hd] at hy
+    obtain ⟨q, hq, hyq⟩ := hy
+    have hy1 : y.1 = d.1 := by rw [← hyq]
+    show lmfun (‖y.1‖ / 2) = lmfun (‖d.1‖ / 2)
+    rw [hy1]
+  calc setSum (H.node d) (fun y => azimDart V E y * lmfun (hDart_p2 y))
+      = setSum (H.node d) (fun y => azimDart V E y * lmfun (hDart_p2 d)) := by
+        rw [setSum, setSum, dif_pos hfin, dif_pos hfin]
+        exact Finset.sum_congr rfl (fun y hy => by
+          rw [hconst y ((Set.Finite.mem_toFinset hfin).mp hy)])
+    _ = setSum (H.node d) (fun y => azimDart V E y) * lmfun (hDart_p2 d) := by
+        rw [setSum, setSum, dif_pos hfin, dif_pos hfin, Finset.sum_mul]
+    _ = 2 * Real.pi * lmfun (hDart_p2 d) := by rw [p6g_node_sum_azim hfan hd]
+
+/-- 前向阻塞副本：`HRXEFDM_lemma1`（§7b）。 -/
+private theorem p6g_hrxefdm (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (hns : ∀ v ∈ V, (setOfEdge v V E).Nonempty) :
+    setSum (hypermapOfFanTl V E hfan).faceSet
+        (fun o => setSum o (fun x => azimDart V E x * lmfun (hDart_p2 x)))
+      = 2 * Real.pi * scriptL V := by
+  classical
+  set H := hypermapOfFanTl V E hfan with hHdef
+  have hVfin : V.Finite := hfan.2.2.1.1
+  have hex : ∀ v : V3, v ∈ V → ∃ w, (v, w) ∈ dart1OfFan V E := by
+    intro v hv
+    obtain ⟨w, hw⟩ := hns v hv
+    exact ⟨w, (properties_of_setOfEdge_fan 0 V E v w hfan).mpr hw⟩
+  set dd : V3 → V3 × V3 :=
+    fun v => if h : v ∈ V then (v, Classical.choose (hex v h)) else (v, v) with hdddef
+  have hdd : ∀ v : V3, v ∈ V → dd v ∈ dart1OfFan V E := by
+    intro v hv
+    simp only [hdddef, dif_pos hv]
+    exact Classical.choose_spec (hex v hv)
+  have hddfst : ∀ v : V3, v ∈ V → (dd v).1 = v := by
+    intro v hv
+    simp only [hdddef, dif_pos hv]
+  have himg : H.nodeSet = (fun v : V3 => H.node (dd v)) '' V := by
+    ext S
+    constructor
+    · intro hS
+      obtain ⟨d, hd, rfl⟩ := hS.out
+      have hvV : d.1 ∈ V := (FAN_in_setOfEdge 0 V E d.1 d.2 hfan (dartsTl_mem hd)).1
+      refine ⟨d.1, hvV, ?_⟩
+      show H.node (dd d.1) = H.node d
+      rw [nodeTl_eq_image hfan (dartsTl_mem hd), nodeTl_eq_image hfan (hdd d.1 hvV),
+        hddfst d.1 hvV]
+    · rintro ⟨v, hv, rfl⟩
+      exact ⟨dd v, mem_dartsTl (hdd v hv),
+        (by rfl : orbitMap H.nodeMap (dd v) = (fun v : V3 => H.node (dd v)) v)⟩
+  have hinj : Set.InjOn (fun v : V3 => H.node (dd v)) V := by
+    intro v hv w hw heq
+    simp only [] at heq
+    have hmem0 : dd v ∈ H.node (dd v) := mem_orbitMap_self H.nodeMap (dd v)
+    rw [nodeTl_eq_image hfan (hdd v hv)] at hmem0
+    simp only [Set.mem_image, Set.mem_setOf_eq] at hmem0
+    obtain ⟨q, hq, hprod⟩ := hmem0
+    rw [hddfst v hv] at hq
+    have hddv : dd v = (v, q) := by rw [hprod.symm, hddfst v hv]
+    rw [hddv] at heq
+    have hmq : (v, q) ∈ H.node (dd w) := by
+      rw [← heq, nodeTl_eq_image hfan (by rw [← hddv]; exact hdd v hv)]
+      exact ⟨q, hq, rfl⟩
+    rw [nodeTl_eq_image hfan (hdd w hw)] at hmq
+    simp only [Set.mem_image, Set.mem_setOf_eq] at hmq
+    obtain ⟨q2, hq2, hprod2⟩ := hmq
+    injection hprod2 with h5 h6
+    exact h5.symm.trans (hddfst w hw)
+  calc setSum H.faceSet (fun o => setSum o (fun x => azimDart V E x * lmfun (hDart_p2 x)))
+      = setSum (↑H.darts : Set (V3 × V3)) (fun x => azimDart V E x * lmfun (hDart_p2 x)) :=
+        p6g_orbit_partition H.darts H.faceMap H.faceMap_permutes _
+    _ = setSum H.nodeSet (fun o => setSum o (fun x => azimDart V E x * lmfun (hDart_p2 x))) :=
+        (p6g_orbit_partition H.darts H.nodeMap H.nodeMap_permutes _).symm
+    _ = setSum ((fun v : V3 => H.node (dd v)) '' V)
+          (fun o => setSum o (fun x => azimDart V E x * lmfun (hDart_p2 x))) := by rw [himg]
+    _ = setSum V (fun v => setSum (H.node (dd v))
+          (fun x => azimDart V E x * lmfun (hDart_p2 x))) :=
+        p6g_img_sum_injOn hVfin hinj _
+    _ = setSum V (fun v => 2 * Real.pi * lmfun (hDart_p2 (dd v))) := by
+        rw [setSum, setSum, dif_pos hVfin, dif_pos hVfin]
+        exact Finset.sum_congr rfl (fun v hv => p6g_node_sum_azim_lmfun hfan
+          (hdd v ((Set.Finite.mem_toFinset hVfin).mp hv)))
+    _ = setSum V (fun v => 2 * Real.pi * lmfun (‖v‖ / 2)) := by
+        rw [setSum, setSum, dif_pos hVfin, dif_pos hVfin]
+        exact Finset.sum_congr rfl (fun v hv => by
+          show 2 * Real.pi * lmfun (‖(dd v).1‖ / 2) = 2 * Real.pi * lmfun (‖v‖ / 2)
+          rw [hddfst v ((Set.Finite.mem_toFinset hVfin).mp hv)])
+    _ = 2 * Real.pi * setSum V (fun v => lmfun (‖v‖ / 2)) := by
+        rw [setSum, setSum, dif_pos hVfin, dif_pos hVfin]
+        exact (Finset.mul_sum _ _ _).symm
+    _ = 2 * Real.pi * scriptL V := by rw [scriptL, dif_pos hVfin, setSum, dif_pos hVfin]
+
+/-- 数值锚：`0 < sol0`（LocalAuto19.sol0Pos_p19 同款，仅用 Mathlib）。 -/
+private theorem p6g_sol0_pos : (0 : ℝ) < sol0 := by
+  have h2 : (1 / 2 : ℝ) = Real.cos (Real.pi / 3) := Real.cos_pi_div_three.symm
+  have h3 : Real.arccos (1 / 2) = Real.pi / 3 := by
+    rw [h2]; exact Real.arccos_cos (by linarith [Real.pi_pos]) (by linarith [Real.pi_pos])
+  have h4 : Real.arccos (1 / 2) < Real.arccos (1 / 3) :=
+    Real.arccos_lt_arccos (by norm_num) (by norm_num) (by norm_num)
+  have h5 : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
+  linarith
+
+/-- 有限集上 `setSum` 与 finsum 的互译桥。 -/
+private theorem p6g_setSum_finsum {α : Type*} [DecidableEq α] {s : Set α}
+    (hs : s.Finite) (g : α → ℝ) : setSum s g = ∑ᶠ a ∈ s, g a := by
+  rw [setSum, dif_pos hs]
+  conv_rhs => rw [← hs.coe_toFinset, finsum_mem_coe_finset]
+
+/-- HOL `fully_surrounded_imp_conforming`（add_triangle-compiled.hl:651）：
+FAN + fully_surrounded 给 conformingFan。§4 `contraveningConformingTl` 同
+模板——其 `surroundedNode` 输入由 `FullySurrounded` 逐 dart 直接弱化给出。 -/
+private theorem p6g_fullySurrounded_conforming (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN 0 V E) (hsurr : FullySurrounded V E) :
+    conformingFan 0 V E hfan := by
+  have hsN : ∀ v ∈ V, surroundedNode V E v := fun v _ d hd _ => hsurr d hd
+  have hcard3 : ∀ v ∈ V, 3 ≤ (setOfEdge v V E).ncard := fun v hv =>
+    SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hv (hsN v hv)
+  have hcard : ∀ v ∈ V, 1 < (setOfEdge v V E).ncard := fun v hv =>
+    lt_of_lt_of_le (by omega) (hcard3 v hv)
+  have hfan80 : fan80 0 V E := by
+    intro v u he
+    have hvV : v ∈ V := (FAN_in_setOfEdge 0 V E v u hfan he).1
+    have hd1 : (v, u) ∈ dart1OfFan V E := he
+    have hlt : azimDart V E (v, u) < Real.pi :=
+      hsN v hvV (v, u) (Set.mem_union_right _ hd1) rfl
+    have hne : v ≠ u := edge_ne_of_fan hfan he
+    have heq : azimDart V E (v, u) = azim 0 v u (sigmaFan 0 V E v u) := by
+      show (if (v, u).1 = (v, u).2 then 2 * Real.pi else
+        if (setOfEdge (v, u).1 V E).ncard > 1 then
+          azim 0 (v, u).1 (v, u).2 (sigmaFan 0 V E (v, u).1 (v, u).2)
+        else 2 * Real.pi) = _
+      have hgt : (setOfEdge (v, u).1 V E).ncard > 1 :=
+        lt_of_lt_of_le (by omega : (1:ℕ) < 3) (hcard3 v hvV)
+      rw [if_neg hne, if_pos hgt]
+    rw [heq] at hlt
+    refine ⟨?_, hlt⟩
+    refine lt_of_le_of_ne (azim_nonneg 0 v u _) ?_
+    intro h0
+    have hsoene : setOfEdge v V E ≠ {u} := by
+      intro h1
+      have hcp := hcard3 v hvV
+      rw [h1, Set.ncard_singleton] at hcp
+      omega
+    have hsig := SIGMA_FAN hsoene hfan
+      ((properties_of_setOfEdge_fan 0 V E v u hfan).mp he)
+    exact hsig.2.1 (unique_azim0_point_fan hfan he
+      ((properties_of_setOfEdge_fan 0 V E v (sigmaFan 0 V E v u) hfan).mpr
+        hsig.1) h0.symm).symm
+  exact PIIJBJK 0 V E hfan ⟨hfan, hcard, hfan80⟩
+
+/-- HOL `tauVEF_alt2_alt`（tame_lemmas-compiled.hl FullySurrounded section）
+的 Lean 折算：面上 `tauVEF` = 对面 leads-into 集 sol × (1 + sol0/π) −
+(sol0/π) × 面上 azim·lmfun 和。sol 方程 = `conformingSolidAngleFan`
+第五合取项；`azimFan`/`azimDart` 的逐点认同由 fully_surrounded 的
+`azimDart < π` 挡死两处 2π 缺省支。 -/
+private theorem p6g_face_tauVEF (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (hsurr : FullySurrounded V E) (hconf : conformingFan 0 V E hfan)
+    {f : Set (V3 × V3)} (hf : f ∈ (hypermapOfFanTl V E hfan).faceSet) :
+    f.Finite ∧ tauVEF_p2 V E f =
+      (1 + sol0 / Real.pi) * sol 0 (dartsetLeadsIntoFan 0 V E f)
+        - sol0 / Real.pi * setSum f (fun x => azimDart V E x * lmfun (hDart_p2 x)) := by
+  classical
+  set H := hypermapOfFanTl V E hfan with hHdef
+  obtain ⟨d, hd, hfd⟩ := hf
+  have hf0 : f ∈ (hypermapOfFanTl V E hfan).faceSet := ⟨d, hd, hfd⟩
+  have hface : H.face d = f := hfd
+  have hfin : f.Finite := by
+    rw [← hface]
+    exact H.face_finite d
+  refine ⟨hfin, ?_⟩
+  -- hypermapOfFan 的结果实例烤定为 instDecidableEqProd（TameLp 的合成偏好是
+  -- dartDecEq2，点投影会实例失配），凡裸 hypermapOfFan 的 faceSet 一律 @ 显式。
+  have hfeq2 : (hypermapOfFanTl V E hfan).faceSet
+      = @Hypermap.faceSet (V3 × V3) (fun a b => instDecidableEqProd a b)
+          (hypermapOfFan 0 V E hfan) := rfl
+  have hfeq : f ∈ @Hypermap.faceSet (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := by
+    rw [← hfeq2]; exact hf0
+  -- f 的元素都是 dart
+  have hdartmem : ∀ y ∈ f, y ∈ dartOfFan V E := by
+    intro y hy
+    have hyf : y ∈ H.face d := by rw [hface]; exact hy
+    have hy2 : y ∈ (↑H.darts : Set (V3 × V3)) := H.face_subset_darts hd hyf
+    rw [dartsTl_coe] at hy2
+    exact Set.mem_union_right _ hy2
+  -- fully_surrounded 下 azimDart = azimFan（y.1 = y.2 或边集 ≤ 1 均给 2π ≮ π）
+  have hA : ∀ y ∈ f, azimDart V E y = azimFan 0 V E y.1 y.2 := by
+    intro y hy
+    have hlt : azimDart V E y < Real.pi := hsurr y (hdartmem y hy)
+    have hyne : y.1 ≠ y.2 := by
+      intro heq
+      have h2pi : azimDart V E y = 2 * Real.pi := by simp only [azimDart, if_pos heq]
+      rw [h2pi] at hlt
+      linarith [Real.pi_pos]
+    show (if y.1 = y.2 then 2 * Real.pi else azimFan 0 V E y.1 y.2)
+      = azimFan 0 V E y.1 y.2
+    rw [if_neg hyne]
+  -- finsum → toFinset 有限和
+  have hz : ∑ᶠ y ∈ f, (azimFan 0 V E y.1 y.2 - Real.pi)
+      = ∑ x ∈ hfin.toFinset, (azimFan 0 V E x.1 x.2 - Real.pi) := by
+    conv_lhs => rw [← hfin.coe_toFinset, finsum_mem_coe_finset]
+  have hS1 : ∑ x ∈ hfin.toFinset, azimFan 0 V E x.1 x.2
+      = ∑ x ∈ hfin.toFinset, azimDart V E x :=
+    Finset.sum_congr rfl fun x hx =>
+      (hA x ((Set.Finite.mem_toFinset hfin).mp hx)).symm
+  -- sol 方程（conforming 第五合取项）
+  have hsol : sol 0 (dartsetLeadsIntoFan 0 V E f)
+      = 2 * Real.pi + (∑ x ∈ hfin.toFinset, azimDart V E x
+        - (f.ncard : ℝ) * Real.pi) := by
+    have h5 := hconf.2.2.2.2.1 f hfeq
+    have h6 : sol 0 (dartsetLeadsIntoFan 0 V E f)
+        = 2 * Real.pi + ∑ᶠ y ∈ f, (azimFan 0 V E y.1 y.2 - Real.pi) := h5.2.2
+    rw [hz, Finset.sum_sub_distrib, hS1, Finset.sum_const, nsmul_eq_mul,
+      ← Set.ncard_eq_toFinset_card f hfin] at h6
+    exact h6
+  set S1 : ℝ := ∑ x ∈ hfin.toFinset, azimDart V E x with hS1def
+  set S2 : ℝ := ∑ x ∈ hfin.toFinset, azimDart V E x * lmfun (hDart_p2 x) with hS2def
+  have hsplit : setSum f
+        (fun x => azimDart V E x * (1 + sol0 / Real.pi * (1 - lmfun (hDart_p2 x))))
+      = S1 + sol0 / Real.pi * (S1 - S2) := by
+    rw [setSum, dif_pos hfin]
+    have hpt : ∀ x ∈ hfin.toFinset,
+        azimDart V E x * (1 + sol0 / Real.pi * (1 - lmfun (hDart_p2 x)))
+          = azimDart V E x
+            + sol0 / Real.pi * (azimDart V E x - azimDart V E x * lmfun (hDart_p2 x)) := by
+      intro x _; ring
+    rw [Finset.sum_congr rfl fun x hx => hpt x hx, Finset.sum_add_distrib,
+      ← Finset.mul_sum, ← Finset.sum_sub_distrib]
+  have hinner : setSum f (fun x => azimDart V E x * lmfun (hDart_p2 x)) = S2 := by
+    rw [setSum, dif_pos hfin]
+  have harith : ∀ s1 s2 n : ℝ,
+      s1 + sol0 / Real.pi * (s1 - s2) + (Real.pi + sol0) * (2 - n)
+        = (2 * Real.pi + (s1 - n * Real.pi)) * (1 + sol0 / Real.pi)
+          - sol0 / Real.pi * s2 := by
+    intro s1 s2 n
+    have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+    field_simp
+    ring
+  show setSum f
+        (fun x => azimDart V E x * (1 + sol0 / Real.pi * (1 - lmfun (hDart_p2 x))))
+      + (Real.pi + sol0) * (2 - (f.ncard : ℝ))
+    = (1 + sol0 / Real.pi) * sol 0 (dartsetLeadsIntoFan 0 V E f)
+      - sol0 / Real.pi * setSum f (fun x => azimDart V E x * lmfun (hDart_p2 x))
+  rw [hinner, hsplit, hsol, harith]
+  ring
+
 /-- HOL `sum_tauVEF_upper_bound`（`tame/ssreflect/tame_lemmas-compiled.hl:529-538`，
 section FullySurrounded（fanV + f_surr，:286-290）finalized 形）。
 `tauVEF` ↦ `Kepler.Text.tauVEF_p2`（localization.hl:1559）。
-DISCHARGES：骨架占位；HOL 证明经 `tauVEF_alt2_alt` 改写 + `fully_surrounded_sum_sol`
-+ `HRXEFDM_lemma1`，约 9 步。 -/
+真证明 2026-10-23（Lane G，§3b kit）：confV 桥 `p6g_fullySurrounded_conforming`
++ ConformingAuto6 `SUM_SOL_IN_FACE_SET_EQ_4PI`（面集 sol 和 = 4π，Lean 编码
+不需要 HOL 的 iso 传输层与 Euler 关系）+ `p6g_hrxefdm`（前向阻塞副本）+
+`p6g_face_tauVEF`（`tauVEF_alt2_alt` 折算）+ 纯算术（12 ≤ scriptL、sol0 > 0）。 -/
 theorem sum_tauVEF_upper_bound (V : Set V3) (E : Set (Set V3))
     (hfan : FAN 0 V E) (hsurr : FullySurrounded V E)
     (hscript : 12 ≤ scriptL V) :
     setSum (hypermapOfFanTl V E hfan).faceSet (fun f => tauVEF_p2 V E f)
       ≤ 4 * Real.pi - 20 * sol0 := by
-  -- NEEDS（B6-U2 记账 2026-10-12）：HOL 九步的实质前置在树中缺位——
-  -- (a) confV（FAN + fully_surrounded → conformingFan，含 conformingSolidAngleFan 的
-  --     sol/dartsetLeadsIntoFan 章；dartsetLeadsIntoFan 仅 P22 ∅ 桩）或
-  -- (b) fan 超映射的 Euler 关系 F − E + N = 2（无 twin；fully_surrounded_sum_sol
-  --     本质即它的 sol 外衣）。
-  -- 二者任一落地后，帽石装配 = 展开tauVEF_p2 + §7b 的 HRXEFDM_lemma1 + 有限和重排
-  -- + 纯算术（sol0 > 0 与 hscript 收尾），预计 ≤ 120 行。
-  sorry
+  classical
+  set H := hypermapOfFanTl V E hfan with hHdef
+  have hconf := p6g_fullySurrounded_conforming V E hfan hsurr
+  have hfinFS : H.faceSet.Finite := H.faceSet_finite
+  have hcard3 : ∀ v ∈ V, 3 ≤ (setOfEdge v V E).ncard := fun v hv =>
+    SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hv (fun d hd _ => hsurr d hd)
+  have hns : ∀ v ∈ V, (setOfEdge v V E).Nonempty := by
+    intro v hv
+    by_contra hcon
+    push_neg at hcon
+    have h0 : (setOfEdge v V E).ncard = 0 := by rw [hcon, Set.ncard_empty]
+    have h3 := hcard3 v hv
+    omega
+  have hHRX := p6g_hrxefdm V E hfan hns
+  have h4pi := SUM_SOL_IN_FACE_SET_EQ_4PI hfan hconf
+  have pface : ∀ f ∈ H.faceSet, tauVEF_p2 V E f
+      = (1 + sol0 / Real.pi) * sol 0 (dartsetLeadsIntoFan 0 V E f)
+        - sol0 / Real.pi * setSum f (fun x => azimDart V E x * lmfun (hDart_p2 x)) :=
+    fun f hf => (p6g_face_tauVEF V E hfan hsurr hconf hf).2
+  -- 面集和按逐面恒等式拆解
+  have key : setSum H.faceSet (fun f => tauVEF_p2 V E f)
+      = (1 + sol0 / Real.pi) * setSum H.faceSet (fun f => sol 0 (dartsetLeadsIntoFan 0 V E f))
+        - sol0 / Real.pi * setSum H.faceSet
+            (fun f => setSum f (fun x => azimDart V E x * lmfun (hDart_p2 x))) := by
+    have e1 : setSum H.faceSet (fun f => tauVEF_p2 V E f)
+        = ∑ f ∈ hfinFS.toFinset, tauVEF_p2 V E f := by rw [setSum, dif_pos hfinFS]
+    have e2 : setSum H.faceSet (fun f => sol 0 (dartsetLeadsIntoFan 0 V E f))
+        = ∑ f ∈ hfinFS.toFinset, sol 0 (dartsetLeadsIntoFan 0 V E f) := by
+      rw [setSum, dif_pos hfinFS]
+    have e3 : setSum H.faceSet
+          (fun f => setSum f (fun x => azimDart V E x * lmfun (hDart_p2 x)))
+        = ∑ f ∈ hfinFS.toFinset,
+            setSum f (fun x => azimDart V E x * lmfun (hDart_p2 x)) := by
+      rw [setSum, dif_pos hfinFS]
+    rw [e1, e2, e3, Finset.mul_sum, Finset.mul_sum, ← Finset.sum_sub_distrib,
+      Finset.sum_congr rfl fun f hf =>
+        pface f ((Set.Finite.mem_toFinset hfinFS).mp hf)]
+  -- 面集上 sol 和 = 4π（ConformingAuto6，finsum → setSum 桥）
+  have hfeq2 : (hypermapOfFanTl V E hfan).faceSet
+      = @Hypermap.faceSet (V3 × V3) (fun a b => instDecidableEqProd a b)
+          (hypermapOfFan 0 V E hfan) := rfl
+  have h4pi' : setSum H.faceSet (fun f => sol 0 (dartsetLeadsIntoFan 0 V E f))
+      = 4 * Real.pi := by
+    rw [p6g_setSum_finsum hfinFS, hfeq2]
+    exact h4pi
+  rw [key, h4pi', hHRX]
+  -- 收尾算术：(1 + sol0/π)·4π − (sol0/π)·2π·scriptL = 4π + 4sol0 − 2·scriptL·sol0
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have hpos : 0 < sol0 := p6g_sol0_pos
+  have e2 : (1 + sol0 / Real.pi) * (4 * Real.pi)
+        - sol0 / Real.pi * (2 * Real.pi * scriptL V)
+      = 4 * Real.pi + 4 * sol0 - 2 * (scriptL V * sol0) := by
+    field_simp
+  rw [e2]
+  have hU : (12:ℝ) * sol0 ≤ scriptL V * sol0 :=
+    mul_le_mul_of_nonneg_right hscript hpos.le
+  linarith
 
 /-! ### 3a. ineq_tauK_tauVEF_std 群（lp_main_estimate-compiled.hl，
 section MainEstimate（h_fan := lp_fan，:568-571）× FaceK（ineq := JEJTVGB_*_concl）
@@ -938,6 +1454,11 @@ theorem ineq_tau3_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
     (hineq : JEJTVGB_std3_concl) (d : V3 × V3)
     (hd : d ∈ dartsK 3 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
     0 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
+  -- NEEDS（Lane G 侦察 2026-10-23）：卡 y-kit 章（GIANT 移植波）——HOL 四步
+  -- 消费 lp_ineqs_proofs 的 `ineq_tau3_tauVEF`（Face3 节）+ `y4/y5/y6_hi_std2`
+  -- （Std2 节），其上游 `f_surr_tau3_eq_tauVEF`/`ys_eq`/`y1..y6_lo,hi` 全树未
+  -- 移植（已证可引：COMPONENTS_HYPERMAP_OF_FAN 本文件 :543、
+  -- LOFA_IMP_CARD_FF_V_EQ LocalAuto5:6041）。
   sorry
 
 /-- HOL `ineq_tau4_tauVEF_std`（`lp_main_estimate-compiled.hl:796-817`）。
@@ -946,6 +1467,9 @@ theorem ineq_tau4_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
     (hineq : JEJTVGB_std_concl) (d : V3 × V3)
     (hd : d ∈ dartsK 4 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
     0.206 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
+  -- NEEDS（Lane G 侦察 2026-10-23）：同 tau3 卡 y-kit 章 + Face4 节
+  -- `f_surr_tau_fun_eq_tauVEF`/`tau_fun_local`/`f_surr_localization_convex_local`
+  -- （Local_lemmas 未移植）。
   sorry
 
 /-- HOL `ineq_tau5_tauVEF_std`（`lp_main_estimate-compiled.hl:889-915`）。
@@ -954,6 +1478,7 @@ theorem ineq_tau5_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
     (hineq : JEJTVGB_std_concl) (d : V3 × V3)
     (hd : d ∈ dartsK 5 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
     0.4819 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
+  -- NEEDS（Lane G 侦察 2026-10-23）：同 tau4，卡 y-kit 章 + Face5 节桥。
   sorry
 
 /-- HOL `ineq_tau6_tauVEF_std`（`lp_main_estimate-compiled.hl:988-1015`）。
@@ -962,6 +1487,7 @@ theorem ineq_tau6_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
     (hineq : JEJTVGB_std_concl) (d : V3 × V3)
     (hd : d ∈ dartsK 6 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
     0.712 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
+  -- NEEDS（Lane G 侦察 2026-10-23）：同 tau4，卡 y-kit 章 + Face6 节桥。
   sorry
 
 /-! ## 4. JGTDEBU 群（tame/JGTDEBU.hl，"general properties of a
