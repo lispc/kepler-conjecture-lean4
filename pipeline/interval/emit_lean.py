@@ -628,7 +628,8 @@ def base_file(mod, n, expr, box, mode):
 
 def shard_file(mod, k, sub, n, mode):
     return (HDR + f"import Kepler.Interval.Cases.{mod}.Base\n\n"
-            "set_option maxHeartbeats 0\n\n"
+            "set_option maxHeartbeats 0\n"
+            "set_option maxRecDepth 1000000\n\n"
             "namespace Kepler.Interval.Cases\n\n"
             f"/-- Shard {k} subtree (leaf certs are inline kernel `decide`s). -/\n"
             f"def {mod}Shard{k}Tree : {mode.tree_type(mod, n)} :=\n  {emit_tree(sub, mode.goal_k)}\n\n"

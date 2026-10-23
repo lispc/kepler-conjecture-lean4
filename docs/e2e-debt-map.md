@@ -756,9 +756,9 @@ bare sorry 86→83；闸 PASS @`cc_bool_model_data`（PA25 单文件）。
   非证明捷径；完整日志/逐 shard 时间表在 `lane_snapshots/prep3/`。
 - **闸**：clean-anchor（PA12 `LEFT_ACTION_LIST_PROPERTIES`）+ `GATE_ROOTS`
   含新根；纯新增零删除，规则 2/5 按零删除豁免，根/全 shard 已手工探针。
-- **账**：Phase 4 prep R1 的 2125 大案闭环；R1 已闭 **18 案**
-  （pilot 5 + P2 批 12 + 2125）。R1 队列余 14 个 closed 候选（1358/3142/
-  5422/5929/9424/14266/40785/49998/54771/75965/133228/154721 +
+- **账**：Phase 4 prep R1 的 2125 大案闭环；R1 已闭 **22 案**
+  （pilot 5 + P2 批 12 + 2125 + R1 rest 4，见下节）。R1 队列余 **10** 个
+  closed 候选（9424/14266/40785/49998/54771/75965/133228/154721 +
   6096597438 b/ZTGIJCF0）；rest 10/62 仍是 stale-record 阻塞。
 - **未做**：plain 134k 叶路线未生成；`CertMixed` 仍未并入默认构建闭包
   （opt-in 内核件）。
@@ -827,3 +827,37 @@ PA15 sorry **15→12**。三条删除行逐字为 `… := sorry` 尾式；冻结
   `PackingAuto15` 进入零 direct 源模块名单。
 - **快照**：`~/c17_backup/lane_snapshots/pa15fin/`（含 diff、三次 build
   日志、axioms 探针、`#valax3` 41,006 定理节点记录、MD5SUMS）。
+
+## 2026-10-23 Phase 4 R1 rest 节（4/4 案内核闭合，15,851 叶）
+
+**投放**：4 个 case 模块 + 206 shards（4 Base）+ 4 case JSON + 4 plain 证书
+JSON（7.2 MB）+ `emit_lean.py` **+2/−1**。R1 已闭 **18→22 案**；余 10 个
+closed 候选（9424/14266/40785/49998/54771/75965/133228/154721 +
+6096597438 b/ZTGIJCF0）。
+
+| idv | 模块 | 叶数 | shards | build | axioms |
+|---|---|---:|---:|---:|---|
+| prep-3078028960（disj） | `C3078028960` | 1,358（main 542 + disj 816） | 16 | 270 s | 标准三 |
+| prep-JNTEFVP 1 | `CJNTEFVP_1` | 3,142（全 main） | 43 | 493 s | 标准三 |
+| prep-2073661826 | `C2073661826` | 5,929（全 main） | 85 | 932 s | 标准三 |
+| prep-4680581274 delta issue-cayleytr0（disj） | `C4680581274deltacayleytr0` | 5,422（main 4,144 + disj 1,278） | 62 | 2,739 s* | 标准三 |
+
+\* 含一次 Shard1 `maximum recursion depth` 失败与修复；成功编译合计
+2,395 s。四条合计 **15,851 叶 / 206 shards / 编译 4,083 s**。
+
+- **求解**：全部 plain 一次闭合（`--prec 64 --max-nodes 4000000`，实际
+  2,715/6,283/11,857/10,843 nodes，≤0.27 s），无需 `--tm`；两条 disj 按
+  `BBTreeD` 发射，终定理 `∃ g ∈ Goals, g.eval ρ`；未 import `CertG`、
+  未用 `--mixed-tm`。
+- **新雷区 #470（深树 shard recDepth）**：v1 发射器 `shard_file()` 只写
+  `maxHeartbeats 0`；深链叶 `by decide` 超过默认 `maxRecDepth 1000`。
+  62 个 Shard 补 `set_option maxRecDepth 1000000` 后全绿；`emit_lean.py`
+  同步补该行（仅 +2/−1），并用补丁版重发射 case4 逐字节 diff 验证一致。
+  其余三条不需要（浅树），故其 shard 无此 option。
+- **闸**：每案一次 `auto_gate.sh` + `GATE_ROOTS=<该案根>`，四次
+  **GATE-PASS**；纯新增零删除，规则 2/5 按零删除豁免；四根 `_pos`
+  独立探针均标准三，禁词扫描零。
+- **账**：R1 叶闭合仍属 prep 材料层——`Interval.Cases.*` 尚未被
+  Assembly/Text 根 import，**e2e 直源与公理数不变（136 / 624）**。
+- **快照**：`~/c17_backup/lane_snapshots/r1rest/`（19 MB，454 文件
+  MD5SUMS 全验，含逐 shard 日志、失败存档、times TSV）。
