@@ -2860,4 +2860,719 @@ private theorem cf4_rotation_1_full {v1 v2 v3 v4 : V3}
   · rw [segment_symm, Set.pair_comm]; exact hw4cross
 
 
+/-! ## W2（四点链 Wave-2）：投影 helper + segment_inter_conv + rotation2 家族
+
+HOL 参照（CKQOWSA_4.hl）：`PROJECTION_DIST_SPECIAL_LE`（:267-283）、
+`segment_inter_conv`（:3266-3378）、`lemma_4_points_rotation2`（:3379-3813）、
+`lemma_4_points_rotation2_full`（:3814-3865）以及 checkpoint 中转件
+`rotation_lemma_segments`（:1395-1675，非退化支）的吸收移植。
+全部为自身完全证明的私件，供 W3/W4 装配消费；不改 ContraFan.lean。 -/
+
+/-- 轴向正交投影残差（HOL `projection d w`，CKQOWSA_4.hl:135 附近定义）：
+`y` 去掉沿 `d` 的影子后的 ⊥ 分量。 -/
+private noncomputable def cf4Proj (d y : V3) : V3 := y - (inner ℝ y d / ‖d‖ ^ 2) • d
+
+private theorem cf4Proj_orth {d y : V3} : inner ℝ (cf4Proj d y) d = 0 := by
+  rcases eq_or_ne d 0 with h0 | hne
+  · subst h0
+    simp [cf4Proj]
+  · have hd2 : (0:ℝ) < ‖d‖ ^ 2 := pow_pos (norm_pos_iff.2 hne) 2
+    rw [cf4Proj, inner_sub_left, real_inner_smul_left, real_inner_self_eq_norm_sq]
+    field_simp
+    ring
+
+private theorem cf4Proj_self {d : V3} (hd : d ≠ 0) : cf4Proj d d = 0 := by
+  have hd2 : (0:ℝ) < ‖d‖ ^ 2 := pow_pos (norm_pos_iff.2 hd) 2
+  have h1 : inner ℝ d d / ‖d‖ ^ 2 = 1 := by
+    rw [real_inner_self_eq_norm_sq, pow_two]
+    field_simp
+  rw [cf4Proj, h1, one_smul, sub_self]
+
+private theorem cf4Proj_id_of_orth {d y : V3} (h : inner ℝ y d = 0) : cf4Proj d y = y := by
+  rw [cf4Proj, h, zero_div, zero_smul, sub_zero]
+
+private theorem cf4Proj_add {d y z : V3} :
+    cf4Proj d (y + z) = cf4Proj d y + cf4Proj d z := by
+  rw [cf4Proj, cf4Proj, cf4Proj, inner_add_left]
+  module
+
+private theorem cf4Proj_smul {d y : V3} (c : ℝ) :
+    cf4Proj d (c • y) = c • cf4Proj d y := by
+  rw [cf4Proj, cf4Proj, real_inner_smul_left]
+  module
+
+private theorem cf4Proj_dot_n {d n y : V3} (h : inner ℝ d n = 0) :
+    inner ℝ (cf4Proj d y) n = inner ℝ y n := by
+  rw [cf4Proj, inner_sub_left, real_inner_smul_left, h, mul_zero, sub_zero]
+
+/-- HOL `PROJECTION_DIST_SPECIAL_LE`（CKQOWSA_4.hl:267-283）：`x ⊥ d` 且
+`x` 到 `w` 的残差不大于 `v` 到 `w` 的残差 ⟹ 把 `v` 平移到 `d` 的影子（`v1+ 影子`）
+后到 `w` 的距离不增。证法：残差-影子正交分解 + 勾股恒等式（同
+`cf4_rotation_about_axis` 的 s1/s2 模式）。 -/
+private theorem cf4_projection_dist_le {d x v w : V3} (hd : d ≠ 0) (hxd : inner ℝ x d = 0)
+    (hle : dist x (cf4Proj d w) ≤ dist (cf4Proj d v) (cf4Proj d w)) :
+    dist (x + (inner ℝ v d / ‖d‖ ^ 2) • d) w ≤ dist v w := by
+  have hd2 : (0:ℝ) < ‖d‖ ^ 2 := pow_pos (norm_pos_iff.2 hd) 2
+  -- 残差抽象化：qv + lam•d = v、qw + mu•d = w（残差 ⊥ d；lam/mu 即影子系数）
+  obtain ⟨qv, lam, hlam, hqvadd, hqvd⟩ :
+      ∃ q : V3, ∃ lam : ℝ, lam = inner ℝ v d / ‖d‖ ^ 2 ∧
+        q + lam • d = v ∧ inner ℝ q d = 0 :=
+    ⟨cf4Proj d v, inner ℝ v d / ‖d‖ ^ 2, rfl, by
+      rw [cf4Proj]; module, cf4Proj_orth⟩
+  obtain ⟨qw, mu, hmu, hqwadd, hqwd⟩ :
+      ∃ q : V3, ∃ mu : ℝ, mu = inner ℝ w d / ‖d‖ ^ 2 ∧
+        q + mu • d = w ∧ inner ℝ q d = 0 :=
+    ⟨cf4Proj d w, inner ℝ w d / ‖d‖ ^ 2, rfl, by
+      rw [cf4Proj]; module, cf4Proj_orth⟩
+  rw [← hlam]
+  simp only [cf4Proj] at hle
+  rw [← hlam, ← hmu] at hle
+  have eqw : w - mu • d = qw := by rw [← hqwadd]; module
+  have eqv : v - lam • d = qv := by rw [← hqvadd]; module
+  rw [eqw, eqv] at hle
+  -- 勾股恒等式
+  have pyth : ∀ (y z : V3) (a b : ℝ), inner ℝ y d = 0 → inner ℝ z d = 0 →
+      ‖(y - z) + (a - b) • d‖ ^ 2 = ‖y - z‖ ^ 2 + (a - b) ^ 2 * ‖d‖ ^ 2 := by
+    intro y z a b hyd hzd
+    have h1 : ‖(y - z) + (a - b) • d‖ ^ 2
+        = inner ℝ ((y - z) + (a - b) • d) ((y - z) + (a - b) • d) :=
+      (real_inner_self_eq_norm_sq _).symm
+    rw [h1, inner_add_left, inner_add_right, inner_add_right, real_inner_smul_left,
+      real_inner_smul_left, real_inner_smul_right, real_inner_smul_right,
+      real_inner_comm (y - z) d, inner_sub_left y z d, hyd, hzd,
+      real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq]
+    ring
+  have e1 : dist (x + lam • d) w = ‖(x - qw) + (lam - mu) • d‖ := by
+    rw [dist_eq_norm]
+    refine congrArg norm ?_
+    rw [← hqwadd]
+    module
+  have e2 : dist v w = ‖(qv - qw) + (lam - mu) • d‖ := by
+    rw [dist_eq_norm]
+    refine congrArg norm ?_
+    rw [← hqvadd, ← hqwadd]
+    module
+  refine nonneg_le_nonneg_of_sq_le_sq dist_nonneg ?_
+  rw [← pow_two, ← pow_two]
+  rw [e1, pyth x qw lam mu hxd hqwd, e2, pyth qv qw lam mu hqvd hqwd]
+  have hsq : ‖x - qw‖ ^ 2 ≤ ‖qv - qw‖ ^ 2 := by
+    rw [← dist_eq_norm x qw, ← dist_eq_norm qv qw]
+    exact pow_le_pow_left₀ dist_nonneg hle 2
+  linarith
+
+/-- 三点凸包成员的系数提取（`Finset.mem_convexHull'` + `fin_sum_three`）：
+`z ∈ convex hull {0, v2, v4}` ⟹ `z = t2•v2 + t4•v4`、t2 t4 ≥ 0、t2+t4 ≤ 1。 -/
+private theorem cf4_mem_convexHull3 {v2 v4 z : V3} (hv2 : v2 ≠ 0) (hv4 : v4 ≠ 0)
+    (h24 : v2 ≠ v4)
+    (hz : z ∈ convexHull ℝ (insert (0:V3) ({v2, v4} : Set V3))) :
+    ∃ t2 t4 : ℝ, 0 ≤ t2 ∧ 0 ≤ t4 ∧ t2 + t4 ≤ 1 ∧ z = t2 • v2 + t4 • v4 := by
+  have hS : (insert (0:V3) ({v2, v4} : Set V3))
+      = (({0, v2, v4} : Finset V3) : Set V3) := by
+    ext y
+    simp [Set.mem_insert_iff, Set.mem_singleton_iff]
+  rw [hS] at hz
+  rw [Finset.mem_convexHull'] at hz
+  obtain ⟨w, hw0, hw1, hwx⟩ := hz
+  have hsum : ∑ y ∈ ({0, v2, v4} : Finset V3), w y = w (0:V3) + w v2 + w v4 := by
+    rw [fin_sum_three (g := fun y => w y) (fun h => hv2 h.symm) (fun h => hv4 h.symm) h24]
+  have hx : ∑ y ∈ ({0, v2, v4} : Finset V3), w y • y
+      = w v2 • v2 + w v4 • v4 := by
+    rw [fin_sum_three (g := fun y => w y • y) (fun h => hv2 h.symm) (fun h => hv4 h.symm) h24]
+    simp
+  have hw00 : 0 ≤ w (0:V3) := hw0 (0:V3) (by simp)
+  have hw02 : 0 ≤ w v2 := hw0 v2 (by simp)
+  have hw04 : 0 ≤ w v4 := hw0 v4 (by simp)
+  refine ⟨w v2, w v4, hw02, hw04, ?_, ?_⟩
+  · have h1 : w (0:V3) + w v2 + w v4 = 1 := by
+      rw [← hsum]; exact hw1
+    linarith
+  · rw [← hx, hwx]
+
+/-- `b = c•a` 时 `{0, a, b}` 共线（`cf4_not_collinear_smul` 的反向构造）。 -/
+private theorem cf4_collinear_mk_smul {a b : V3} (c : ℝ) (h : b = c • a) :
+    Collinear ℝ (insert (0:V3) ({a, b} : Set V3)) := by
+  rw [collinear_iff_exists_forall_eq_smul_vadd]
+  refine ⟨(0:V3), a, ?_⟩
+  intro z hz
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with rfl | hz
+  · exact ⟨0, by rw [zero_smul, vadd_eq_add, add_zero]⟩
+  rcases hz with rfl | hz
+  · exact ⟨1, by rw [one_smul, vadd_eq_add, add_zero]⟩
+  · rw [hz, h]
+    exact ⟨c, by rw [vadd_eq_add, add_zero]⟩
+
+/-- W2 checkpoint（HOL `rotation_lemma_segments` CKQOWSA_4.hl:1395-1675 的非退化支，
+「任意连续族不变量」范式的投影平面实例）：`d⊥` 平面内旋转族——保范、保轴正交、
+到两投影点距离不增、segment[g t, qw] 恒穿射线 cone{pu}。途经
+`cf4_rotation_family_special`（族 + dist-to-pu + 锥成员）+ `cf4_rotation_dist_decrease`
+（dist-to-qw；τ=0 退化支 qw = κ•qv、κ ≤ 0 走 C–S 直接界）+
+`cf4_aff_ge_inter_segments`（穿越不变量传递）。 -/
+private theorem cf4_rotation_2_family {d qv qw pu : V3} (hd : d ≠ 0)
+    (hqv : qv ≠ 0) (hqw : qw ≠ 0) (hpu : pu ≠ 0)
+    (hqvd : inner ℝ qv d = 0) (hpwd : inner ℝ qw d = 0) (hpud : inner ℝ pu d = 0)
+    (hcol : ¬ Collinear ℝ (insert (0:V3) ({qv, pu} : Set V3)))
+    (hcr : ∃ σ τ : ℝ, 0 ≤ σ ∧ σ ≤ 1 ∧ 0 ≤ τ ∧ (1 - σ) • qv + σ • qw = τ • pu) :
+    ∃ g : ℝ → V3, Continuous g ∧ g 0 = qv ∧ g 1 = (‖qv‖ / ‖pu‖) • pu ∧
+      (∀ t, ‖g t‖ = ‖qv‖ ∧ inner ℝ (g t) d = 0) ∧
+      (∀ t ∈ Set.Icc 0 1, dist (g t) pu ≤ dist qv pu) ∧
+      (∀ t ∈ Set.Icc 0 1, dist (g t) qw ≤ dist qv qw) ∧
+      (∀ t ∈ Set.Icc 0 1,
+        (segment ℝ (g t) qw ∩ affGe {0} ({pu} : Set V3)).Nonempty) := by
+  obtain ⟨g, hgcont, hg0, hg1, hgprop, hgdist, hgcone⟩ :=
+    cf4_rotation_family_special (v := qv) (w := pu) (n := d) hqv hpu hqvd hpud
+  obtain ⟨σ, τ, hσ0, hσ1, hτ0, hcr⟩ := hcr
+  have hqvp : qv ≠ pu := by
+    intro he
+    refine hcol ?_
+    have hset : (insert (0:V3) ({qv, pu} : Set V3)) = ({0, pu} : Set V3) := by
+      rw [he]
+      ext z
+      simp
+    rw [hset]
+    exact collinear_pair ℝ (0:V3) pu
+  have hcrossray : (segment ℝ qv qw ∩ affGe {0} ({pu} : Set V3)).Nonempty :=
+    ⟨(1 - σ) • qv + σ • qw, ⟨1 - σ, σ, by linarith, hσ0, by ring, rfl⟩,
+      (affGe_0_1_char pu _).2 ⟨τ, hτ0, hcr⟩⟩
+  refine ⟨g, hgcont, hg0, hg1, hgprop, fun t ht => hgdist t ht, ?_, ?_⟩
+  · -- dist(g t, qw) ≤ dist(qv, qw)
+    intro t ht
+    rcases eq_or_lt_of_le hτ0 with hτ | hτp
+    · -- τ = 0 退化支：qw = κ•qv、κ ≤ 0，C–S 直接界
+      have hcr0 : (1 - σ) • qv + σ • qw = (0:V3) := by
+        rw [← hτ, zero_smul] at hcr
+        exact hcr
+      have hσpos : 0 < σ := by
+        rcases eq_or_lt_of_le hσ0 with h | h
+        · exfalso
+          rw [← h, sub_zero, zero_smul, add_zero, one_smul] at hcr0
+          exact hqv hcr0
+        · exact h
+      have hσlt : σ < 1 := by
+        rcases eq_or_lt_of_le hσ1 with h | h
+        · exfalso
+          rw [h, sub_self, zero_smul, zero_add, one_smul] at hcr0
+          exact hqw hcr0
+        · exact h
+      have hκ : qw = ((σ - 1) / σ) • qv := by
+        have h2 : σ • qw = (σ - 1) • qv := by
+          linear_combination (norm := module) hcr0
+        have h3 := congrArg (fun z : V3 => (σ:ℝ)⁻¹ • z) h2
+        rw [inv_smul_smul₀ hσpos.ne', smul_smul] at h3
+        field_simp at h3
+        exact h3
+      have hκle : (σ - 1) / σ ≤ 0 := by
+        rw [div_le_iff₀ hσpos]
+        linarith
+      have hR : dist qv qw = (1 - (σ - 1) / σ) * ‖qv‖ := by
+        rw [hκ, dist_eq_norm]
+        have h5 : qv - ((σ - 1) / σ) • qv = (1 - (σ - 1) / σ) • qv := by module
+        rw [h5, norm_smul, Real.norm_eq_abs, abs_of_nonneg (by linarith :
+          (0:ℝ) ≤ 1 - (σ - 1) / σ)]
+      have hcs : inner ℝ (g t) qv ≤ ‖qv‖ ^ 2 := by
+        have h3 := abs_real_inner_le_norm (g t) qv
+        have h4 : inner ℝ (g t) qv ≤ |inner ℝ (g t) qv| := le_abs_self _
+        rw [(hgprop t).1, ← pow_two] at h3
+        linarith
+      have hkey : ‖g t - ((σ - 1) / σ) • qv‖ ^ 2
+          ≤ ((1 - (σ - 1) / σ) * ‖qv‖) ^ 2 := by
+        have h6 : ‖g t - ((σ - 1) / σ) • qv‖ ^ 2
+            = ‖qv‖ ^ 2 - 2 * ((σ - 1) / σ) * inner ℝ (g t) qv
+              + ((σ - 1) / σ) ^ 2 * ‖qv‖ ^ 2 := by
+          rw [cf4_norm_sq_sub, real_inner_smul_right, norm_smul, Real.norm_eq_abs,
+            abs_of_nonpos hκle, (hgprop t).1]
+          ring
+        have h7 : ((1 - (σ - 1) / σ) * ‖qv‖) ^ 2
+            = (1 - (σ - 1) / σ) ^ 2 * ‖qv‖ ^ 2 := by
+          rw [mul_pow]
+        have h8 : inner ℝ (g t) qv - ‖qv‖ ^ 2 ≤ 0 := by linarith
+        have h9 : (2:ℝ) * ((σ - 1) / σ) ≤ 0 := by linarith
+        have hprod : (2:ℝ) * ((σ - 1) / σ) * (inner ℝ (g t) qv - ‖qv‖ ^ 2) ≥ 0 := by
+          nlinarith [h8, h9]
+        rw [h6, h7]
+        nlinarith [hprod]
+      rw [hR, hκ, dist_eq_norm]
+      exact (sq_le_sq₀ (norm_nonneg _) (mul_nonneg (by linarith) (norm_nonneg _))).1 hkey
+    · -- 主支：pu ∈ cone{qv,qw} ⟹ g t ∈ cone{qv,qw} ⟹ 距离不增
+      have hqvw : qv ≠ qw := by
+        intro he
+        have h1 : (1 - σ) • qv + σ • qv = τ • pu := by rw [← he] at hcr; exact hcr
+        have h2 : qv = τ • pu := by
+          rw [← add_smul] at h1
+          have h5 : (1:ℝ) - σ + σ = 1 := by ring
+          rw [h5, one_smul] at h1
+          exact h1
+        have h3 : pu = (τ:ℝ)⁻¹ • qv := by
+          have h4 := congrArg (fun z : V3 => (τ:ℝ)⁻¹ • z) h2
+          rw [inv_smul_smul₀ hτp.ne'] at h4
+          exact h4.symm
+        exact hcol (cf4_collinear_mk_smul (τ:ℝ)⁻¹ h3)
+      have hpuexp : pu = ((1 - σ) / τ) • qv + (σ / τ) • qw := by
+        have h2 := congrArg (fun z : V3 => (τ:ℝ)⁻¹ • z) hcr
+        rw [inv_smul_smul₀ hτp.ne', smul_add, smul_smul, smul_smul] at h2
+        field_simp at h2
+        exact h2.symm
+      obtain ⟨a, b, ha, hb2, hgp⟩ :=
+        (affGe_0_2_char hqv hpu hqvp (g t)).1 (hgcone hcol t ht)
+      have hd1p : 0 ≤ (1 - σ) / τ := div_nonneg (by linarith : 0 ≤ 1 - σ) hτp.le
+      have hd2p : 0 ≤ σ / τ := div_nonneg hσ0 hτp.le
+      have hmem : g t ∈ affGe {0} ({qv, qw} : Set V3) :=
+        (affGe_0_2_char hqv hqw hqvw (g t)).2 ⟨a + b * ((1 - σ) / τ), b * (σ / τ),
+          by nlinarith [ha, hb2, hd1p], by nlinarith [hb2, hd2p],
+          by rw [hgp, hpuexp]; module⟩
+      exact cf4_rotation_dist_decrease hqv hqw hmem (hgprop t).1
+  · -- 穿越不变量：aff_ge_inter_segments 传递
+    intro t ht
+    exact cf4_aff_ge_inter_segments hcol (hgcone hcol t ht) hcrossray
+
+/-- HOL `segment_inter_conv`（CKQOWSA_4.hl:3266-3378）：锥交 + 投影段-射线穿越 ⟹
+凸包交。证法：交点 x 的双表示给恒等式 u•(v1−v2) + u'•(v3−v2) = t4•d + (1−t2−t4)(−v2)，
+投影到 d⊥ 后与投影段穿越点的 dot 方程联立（两侧参数同为 v1·n/(v1·n−v3·n)），
+再由 pu ≠ 0 得 tp = 1−t2−t4 ≥ 0，x 以 (t2, t4) 入凸包。 -/
+private theorem cf4_segment_inter_conv {v1 v2 v3 v4 n : V3}
+    (hv2 : v2 ≠ 0) (hv4 : v4 ≠ 0) (h24 : v2 ≠ v4)
+    (hpu : cf4Proj (v4 - v2) (-v2) ≠ 0)
+    (hcross : (segment ℝ v1 v3 ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty)
+    (h1n : inner ℝ v1 n < 0) (h3n : 0 < inner ℝ v3 n)
+    (h2n : inner ℝ v2 n = 0) (h4n : inner ℝ v4 n = 0)
+    (hproj : (segment ℝ (cf4Proj (v4 - v2) (v1 - v2)) (cf4Proj (v4 - v2) (v3 - v2)) ∩
+        affGe {0} ({cf4Proj (v4 - v2) (-v2)} : Set V3)).Nonempty) :
+    (segment ℝ v1 v3 ∩ convexHull ℝ (insert (0:V3) ({v2, v4} : Set V3))).Nonempty := by
+  have hd : v4 - v2 ≠ 0 := fun hcon => h24 (eq_of_sub_eq_zero hcon).symm
+  have hdnn : inner ℝ (v4 - v2) n = 0 := by rw [inner_sub_left, h4n, h2n, sub_zero]
+  have e1n : inner ℝ (v1 - v2) n = inner ℝ v1 n := by rw [inner_sub_left, h2n, sub_zero]
+  have e3n : inner ℝ (v3 - v2) n = inner ℝ v3 n := by rw [inner_sub_left, h2n, sub_zero]
+  have eun : inner ℝ (-v2) n = 0 := by rw [inner_neg_left, h2n, neg_zero]
+  obtain ⟨x, hxseg, hxcone⟩ := hcross
+  obtain ⟨u, u', hu, hu', huu, hxueq⟩ := hxseg
+  obtain ⟨t2, t4, ht2, ht4, hxeq⟩ := (affGe_0_2_char hv2 hv4 h24 x).1 hxcone
+  -- 恒等式 (A) 与其投影
+  have iA : u • (v1 - v2) + u' • (v3 - v2)
+      = t4 • (v4 - v2) + (1 - t2 - t4) • (-v2) := by
+    have h1 : u • (v1 - v2) + u' • (v3 - v2)
+        = (u • v1 + u' • v3) - (u + u') • v2 := by module
+    rw [h1, huu, hxueq, hxeq]
+    module
+  have iProj : u • cf4Proj (v4 - v2) (v1 - v2) + u' • cf4Proj (v4 - v2) (v3 - v2)
+      = (1 - t2 - t4) • cf4Proj (v4 - v2) (-v2) := by
+    have h0 : cf4Proj (v4 - v2) (v4 - v2) = 0 := cf4Proj_self hd
+    have h := congrArg (cf4Proj (v4 - v2)) iA
+    rw [cf4Proj_add, cf4Proj_smul, cf4Proj_smul, cf4Proj_add, cf4Proj_smul,
+      cf4Proj_smul, h0, smul_zero, zero_add] at h
+    exact h
+  have keyA : u * inner ℝ v1 n + u' * inner ℝ v3 n = 0 := by
+    have h := congrArg (fun z : V3 => inner ℝ z n) iProj
+    rw [inner_add_left, real_inner_smul_left, real_inner_smul_left, real_inner_smul_left,
+      cf4Proj_dot_n hdnn, cf4Proj_dot_n hdnn, cf4Proj_dot_n hdnn, e1n, e3n, eun,
+      mul_zero] at h
+    linarith
+  -- 投影段穿越点的 dot 方程
+  obtain ⟨px, hpxseg, hpxray⟩ := hproj
+  obtain ⟨up, up', hup, hup', hupu, hpxueq⟩ := hpxseg
+  obtain ⟨tp, htp, hpxeq⟩ := (affGe_0_1_char _ _).1 hpxray
+  have keyB : up * inner ℝ v1 n + up' * inner ℝ v3 n = 0 := by
+    have h := congrArg (fun z : V3 => inner ℝ z n) hpxueq
+    rw [inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      cf4Proj_dot_n hdnn, cf4Proj_dot_n hdnn, e1n, e3n, hpxeq, real_inner_smul_left,
+      cf4Proj_dot_n hdnn, eun, mul_zero] at h
+    linarith
+  -- 两侧参数一致（同解 v1·n/(v1·n − v3·n)）
+  have hu_eq : u = up := by
+    have h3 : (u - up) * (inner ℝ v1 n - inner ℝ v3 n) = 0 := by
+      have h9 : (u - up) * (inner ℝ v1 n - inner ℝ v3 n)
+          = (u * inner ℝ v1 n + u' * inner ℝ v3 n)
+            - (up * inner ℝ v1 n + up' * inner ℝ v3 n) := by
+        have h10 : (1:ℝ) - u = u' := by linarith
+        have h11 : (1:ℝ) - up = up' := by linarith
+        rw [← h10, ← h11]
+        ring
+      rw [h9, keyA, keyB]
+      ring
+    have hne : inner ℝ v1 n - inner ℝ v3 n ≠ 0 :=
+      ne_of_lt (show inner ℝ v1 n - inner ℝ v3 n < 0 by linarith)
+    have h4 : u - up = 0 := by
+      rcases mul_eq_zero.1 h3 with h5 | h5
+      · exact h5
+      · exact absurd h5 hne
+    linarith
+  -- tp = 1 − t2 − t4 ≥ 0
+  have hpxproj : px = (1 - t2 - t4) • cf4Proj (v4 - v2) (-v2) := by
+    have h2 : up' = u' := by linarith
+    rw [← hpxueq, h2, hu_eq.symm, iProj]
+  have htp_eq : tp = 1 - t2 - t4 := by
+    have h6 : (1 - t2 - t4) • cf4Proj (v4 - v2) (-v2)
+        = tp • cf4Proj (v4 - v2) (-v2) := by
+      rw [← hpxeq, hpxproj]
+    have h7 : (1 - t2 - t4 - tp) • cf4Proj (v4 - v2) (-v2) = 0 := by
+      have h8 : (1 - t2 - t4 - tp) • cf4Proj (v4 - v2) (-v2)
+          = (1 - t2 - t4) • cf4Proj (v4 - v2) (-v2)
+            - tp • cf4Proj (v4 - v2) (-v2) := by module
+      rw [h8, h6, sub_self]
+    rcases smul_eq_zero.1 h7 with h9 | h9
+    · linarith
+    · exact absurd h9 hpu
+  refine ⟨x, ⟨u, u', hu, hu', huu, hxueq⟩, cf4_smul_mem_convexHull3 ht2 ht4 ?_ hxeq.symm⟩
+  linarith
+
+/-- 勾股恒等式（⊥ d 的 y 与沿 d 的平移）：`‖y + a•d‖² = ‖y‖² + a²‖d‖²`。 -/
+private theorem cf4_pyth_axis {d y : V3} (a : ℝ) (hyd : inner ℝ y d = 0) :
+    ‖y + a • d‖ ^ 2 = ‖y‖ ^ 2 + a ^ 2 * ‖d‖ ^ 2 := by
+  have h1 : ‖y + a • d‖ ^ 2 = inner ℝ (y + a • d) (y + a • d) :=
+    (real_inner_self_eq_norm_sq _).symm
+  rw [h1, inner_add_left, inner_add_right, inner_add_right, real_inner_smul_left,
+    real_inner_smul_left, real_inner_smul_right, real_inner_smul_right,
+    real_inner_comm y d, hyd, real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq]
+  ring
+
+/-- HOL `lemma_4_points_rotation2`（CKQOWSA_4.hl:3379-3813）：绕平移轴 v2 + ℝ(v4−v2)
+转动 v1（保到 v2、v4 两点距离），把 ‖v1‖ 打到恰 2，交不变量换成凸包形。途经：
+凸包分解（u, t2, t4）+ 分离法向（早应用于 v1）+ 残差正交分解（cf4Proj）+
+checkpoint 旋转族（cf4_rotation_2_family）+ 平移距离双保（`cf4_pyth_axis`）+
+`cf4_projection_dist_le`（‖f t‖ ≤ ‖v1‖ 与 dist(f t,v3) ≤ dist(v1,v3)）+
+`cf4_ivt_first_dec`（‖·‖ 下穿 2 打靶）+ `cf4_continuous_lemma_aff_ge`
+（交不变量传递，s 处存续）+ 分离法向（再应用于 f s）+ `cf4_segment_inter_conv` 收尾。 -/
+private theorem cf4_rotation_2 {v1 v2 v3 v4 : V3}
+    (hb1 : v1 ∈ ballAnnulus) (hb2 : v2 ∈ ballAnnulus) (hb3 : v3 ∈ ballAnnulus)
+    (hb4 : v4 ∈ ballAnnulus)
+    (hd13l : dist v1 v3 ≤ 2 * h0) (hd24l : dist v2 v4 ≤ 2 * h0)
+    (hd12 : 2 ≤ dist v1 v2) (hd14 : 2 ≤ dist v1 v4)
+    (hd23 : 2 ≤ dist v2 v3) (hd34 : 2 ≤ dist v3 v4)
+    (hd24 : 2 ≤ dist v2 v4)
+    (hcross : (segment ℝ v1 v3 ∩ convexHull ℝ (insert (0:V3) ({v2, v4} : Set V3))).Nonempty) :
+    ∃ v1' : V3, v1' ∈ ballAnnulus ∧ ‖v1'‖ = 2 ∧ dist v1' v3 ≤ 2 * h0 ∧
+      dist v1' v2 = dist v1 v2 ∧ dist v1' v4 = dist v1 v4 ∧
+      (segment ℝ v1' v3 ∩ convexHull ℝ (insert (0:V3) ({v2, v4} : Set V3))).Nonempty := by
+  -- §0 基本非退化
+  have hcol : ¬ Collinear ℝ (insert (0:V3) ({v2, v4} : Set V3)) :=
+    estd_non_collinear_lemma hb2 hb4 hd24 hd24l
+  obtain ⟨hv20, hv40, hv24ne⟩ := cf4_not_collinear_smul hcol
+  have hv24 : v2 ≠ v4 := fun he => hv24ne 1 (by rw [he, one_smul])
+  have hd : v4 - v2 ≠ 0 := fun hcon => hv24 (eq_of_sub_eq_zero hcon).symm
+  -- §1 凸包分解
+  obtain ⟨x, hxseg, hxhull⟩ := hcross
+  obtain ⟨u, u', hu, hu', huu, hxueq⟩ := id hxseg
+  obtain ⟨t2, t4, ht2, ht4, hsum, hxeq⟩ :=
+    cf4_mem_convexHull3 hv20 hv40 hv24 hxhull
+  -- §2 锥形式 + 分离法向（早应用于 v1）
+  have hxcone : x ∈ affGe {0} ({v2, v4} : Set V3) :=
+    (affGe_0_2_char hv20 hv40 hv24 x).2 ⟨t2, t4, ht2, ht4, hxeq⟩
+  obtain ⟨n, hn0, h2n, h4n, h1n, h3n⟩ :=
+    cf4_separation_plane_4_points hb1 hb2 hb3 hb4 hd13l hd24l hd24 hd12 hd14 hd23 hd34
+      ⟨x, hxseg, hxcone⟩
+  -- §3 残差与 dot 事实
+  have hdnn : inner ℝ (v4 - v2) n = 0 := by rw [inner_sub_left, h4n, h2n, sub_zero]
+  have e1n : inner ℝ (v1 - v2) n = inner ℝ v1 n := by rw [inner_sub_left, h2n, sub_zero]
+  have e3n : inner ℝ (v3 - v2) n = inner ℝ v3 n := by rw [inner_sub_left, h2n, sub_zero]
+  have eun : inner ℝ (-v2) n = 0 := by rw [inner_neg_left, h2n, neg_zero]
+  have hqv0 : cf4Proj (v4 - v2) (v1 - v2) ≠ 0 := by
+    intro hzero
+    have h1 : inner ℝ (cf4Proj (v4 - v2) (v1 - v2)) n = 0 := by
+      rw [hzero, inner_zero_left]
+    rw [cf4Proj_dot_n hdnn, e1n] at h1
+    rw [h1] at h1n
+    norm_num at h1n
+  have hqw0 : cf4Proj (v4 - v2) (v3 - v2) ≠ 0 := by
+    intro hzero
+    have h1 : inner ℝ (cf4Proj (v4 - v2) (v3 - v2)) n = 0 := by
+      rw [hzero, inner_zero_left]
+    rw [cf4Proj_dot_n hdnn, e3n] at h1
+    rw [h1] at h3n
+    norm_num at h3n
+  have hpu0 : cf4Proj (v4 - v2) (-v2) ≠ 0 := by
+    intro hzero
+    rw [cf4Proj] at hzero
+    have hneg2 : -v2 = (inner ℝ (-v2) (v4 - v2) / ‖v4 - v2‖ ^ 2) • (v4 - v2) :=
+      eq_of_sub_eq_zero hzero
+    have h5 := congrArg (fun z : V3 => -z) hneg2
+    rw [neg_neg, ← neg_smul] at h5
+    obtain ⟨k, hk⟩ : ∃ k : ℝ, v2 = k • (v4 - v2) :=
+      ⟨-(inner ℝ (-v2) (v4 - v2) / ‖v4 - v2‖ ^ 2), h5⟩
+    rcases eq_or_ne k 0 with hk0 | hk0
+    · rw [hk0, zero_smul] at hk
+      exact hv20 hk
+    · have h6 : (k:ℝ)⁻¹ • v2 = v4 - v2 := by
+        have h6' := congrArg (fun z : V3 => (k:ℝ)⁻¹ • z) hk
+        rw [inv_smul_smul₀ hk0] at h6'
+        exact h6'
+      apply hv24ne ((k:ℝ)⁻¹ + 1)
+      have h8 : (k:ℝ)⁻¹ • v2 + v2 = v4 := by rw [h6]; module
+      calc v4 = (k:ℝ)⁻¹ • v2 + v2 := h8.symm
+        _ = ((k:ℝ)⁻¹ + 1) • v2 := by module
+  have hcolqp : ¬ Collinear ℝ (insert (0:V3)
+      ({cf4Proj (v4 - v2) (v1 - v2), cf4Proj (v4 - v2) (-v2)} : Set V3)) := by
+    intro hcoll
+    obtain ⟨c, hc⟩ := cf4_collinear_smul hqv0 hcoll
+    have h1 : inner ℝ (cf4Proj (v4 - v2) (-v2)) n
+        = c * inner ℝ (cf4Proj (v4 - v2) (v1 - v2)) n := by
+      rw [hc, real_inner_smul_left]
+    rw [cf4Proj_dot_n hdnn, cf4Proj_dot_n hdnn, eun, e1n] at h1
+    rcases mul_eq_zero.1 h1.symm with h3 | h3
+    · rw [h3, zero_smul] at hc
+      exact hpu0 hc
+    · rw [h3] at h1n
+      norm_num at h1n
+  -- §4 恒等式 (A) 与其投影（checkpoint 的 segment 穿越）
+  have iA : u • (v1 - v2) + u' • (v3 - v2)
+      = t4 • (v4 - v2) + (1 - t2 - t4) • (-v2) := by
+    have h1 : u • (v1 - v2) + u' • (v3 - v2)
+        = (u • v1 + u' • v3) - (u + u') • v2 := by module
+    rw [h1, huu, hxueq, hxeq]
+    module
+  have iProj : u • cf4Proj (v4 - v2) (v1 - v2) + u' • cf4Proj (v4 - v2) (v3 - v2)
+      = (1 - t2 - t4) • cf4Proj (v4 - v2) (-v2) := by
+    have h0 : cf4Proj (v4 - v2) (v4 - v2) = 0 := cf4Proj_self hd
+    have h := congrArg (cf4Proj (v4 - v2)) iA
+    rw [cf4Proj_add, cf4Proj_smul, cf4Proj_smul, cf4Proj_add, cf4Proj_smul,
+      cf4Proj_smul, h0, smul_zero, zero_add] at h
+    exact h
+  -- §5 checkpoint 旋转族
+  obtain ⟨g, hgcont, hg0, hg1, hgprop, hgdistp, hgdistq, hgcross⟩ :=
+    cf4_rotation_2_family (d := v4 - v2) hd hqv0 hqw0 hpu0 cf4Proj_orth cf4Proj_orth
+      cf4Proj_orth hcolqp
+      ⟨u', 1 - t2 - t4, hu', by linarith, by linarith, by
+        rw [show (1:ℝ) - u' = u from by linarith]
+        exact iProj⟩
+  -- §6 f 的定义与基本性质（平移 + 距离双保 + W2a 两界）
+  obtain ⟨lam, hlamv, hlamlam⟩ : ∃ lam : ℝ,
+      lam • (v4 - v2) + cf4Proj (v4 - v2) (v1 - v2) = v1 - v2 ∧
+      lam = inner ℝ (v1 - v2) (v4 - v2) / ‖v4 - v2‖ ^ 2 :=
+    ⟨inner ℝ (v1 - v2) (v4 - v2) / ‖v4 - v2‖ ^ 2, by rw [cf4Proj]; module, rfl⟩
+  have hfcont : Continuous (fun t => g t + lam • (v4 - v2) + v2) := by fun_prop
+  have hf0 : g 0 + lam • (v4 - v2) + v2 = v1 := by
+    rw [hg0]
+    have h2 : cf4Proj (v4 - v2) (v1 - v2) + lam • (v4 - v2)
+        = lam • (v4 - v2) + cf4Proj (v4 - v2) (v1 - v2) := add_comm _ _
+    have h3 : lam • (v4 - v2) + cf4Proj (v4 - v2) (v1 - v2) + v2 = v1 := by
+      rw [hlamv]
+      module
+    rw [h2, h3]
+  have hf1n : inner ℝ (g 1 + lam • (v4 - v2) + v2) n = 0 := by
+    rw [hg1, inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      cf4Proj_dot_n hdnn, eun, hdnn, h2n]
+    ring
+  have hdist2 : ∀ t, dist (g t + lam • (v4 - v2) + v2) v2 = dist v1 v2 := by
+    intro t
+    refine sq_eq_sq₀ dist_nonneg dist_nonneg |>.1 ?_
+    have e1 : dist (g t + lam • (v4 - v2) + v2) v2 = ‖g t + lam • (v4 - v2)‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      module
+    have e2 : dist v1 v2 = ‖cf4Proj (v4 - v2) (v1 - v2) + lam • (v4 - v2)‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      nth_rewrite 1 [← hlamv]
+      module
+    rw [e1, e2, cf4_pyth_axis lam ((hgprop t).2), cf4_pyth_axis lam cf4Proj_orth,
+      (hgprop t).1]
+  have hdist4 : ∀ t, dist (g t + lam • (v4 - v2) + v2) v4 = dist v1 v4 := by
+    intro t
+    refine sq_eq_sq₀ dist_nonneg dist_nonneg |>.1 ?_
+    have e1 : dist (g t + lam • (v4 - v2) + v2) v4 = ‖g t + (lam - 1) • (v4 - v2)‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      module
+    have e2 : dist v1 v4 = ‖cf4Proj (v4 - v2) (v1 - v2) + (lam - 1) • (v4 - v2)‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      have h9 : v1 - v4
+          = lam • (v4 - v2) + cf4Proj (v4 - v2) (v1 - v2) - (v4 - v2) := by
+        rw [hlamv]
+        module
+      rw [h9]
+      module
+    rw [e1, e2, cf4_pyth_axis (lam - 1) ((hgprop t).2),
+      cf4_pyth_axis (lam - 1) cf4Proj_orth, (hgprop t).1]
+  have hnormub : ∀ t ∈ Set.Icc 0 1,
+      ‖g t + lam • (v4 - v2) + v2‖ ≤ ‖v1‖ := by
+    intro t ht
+    have h3 := cf4_projection_dist_le hd (hgprop t).2 (hgdistp t ht)
+    rw [← hlamlam] at h3
+    have h4 : ‖g t + lam • (v4 - v2) + v2‖
+        = dist (g t + lam • (v4 - v2)) (-v2) := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      module
+    have h5 : dist (v1 - v2) (-v2) = ‖v1‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      module
+    rw [h4]
+    exact le_trans h3 h5.le
+  have hdist3 : ∀ t ∈ Set.Icc 0 1,
+      dist (g t + lam • (v4 - v2) + v2) v3 ≤ 2 * h0 := by
+    intro t ht
+    have h3 := cf4_projection_dist_le hd (hgprop t).2 (hgdistq t ht)
+    rw [← hlamlam] at h3
+    have h4 : dist (g t + lam • (v4 - v2) + v2) v3
+        = dist (g t + lam • (v4 - v2)) (v3 - v2) := by
+      rw [dist_eq_norm, dist_eq_norm]
+      refine congrArg norm ?_
+      module
+    have h5 : dist (v1 - v2) (v3 - v2) = dist v1 v3 := by
+      rw [dist_eq_norm, dist_eq_norm]
+      refine congrArg norm ?_
+      module
+    rw [h4]
+    exact le_trans h3 (le_trans h5.le hd13l)
+  -- §7 情形 A（全程 ‖f t‖ ≥ 2）反证
+  have hba : ∀ t ∈ Set.Icc 0 1, 2 ≤ ‖g t + lam • (v4 - v2) + v2‖ →
+      g t + lam • (v4 - v2) + v2 ∈ ballAnnulus := by
+    intro t ht h2
+    obtain ⟨hz1, hz2⟩ := inBallAnnulus hb1
+    exact cf4_ballAnnulus_mk (le_trans (hnormub t ht) hz2) h2
+  have hnb_gen : ∀ t ∈ Set.Icc 0 1, 2 ≤ ‖g t + lam • (v4 - v2) + v2‖ →
+      (0:V3) ∉ segment ℝ (g t + lam • (v4 - v2) + v2) v3 := fun t ht h2 =>
+    cf4_not_between_estd (hba t ht h2) hb3 (hdist3 t ht)
+  have hstart : (segment ℝ (g 0 + lam • (v4 - v2) + v2) v3
+      ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty := by
+    rw [hf0]
+    exact ⟨x, hxseg, hxcone⟩
+  by_cases hall2 : ∀ t ∈ Set.Icc 0 1, 2 ≤ ‖g t + lam • (v4 - v2) + v2‖
+  · exfalso
+    rcases cf4_continuous_lemma_aff_ge (v1 := v2) (v2 := v4) (w := v3)
+        (fun t => g t + lam • (v4 - v2) + v2) 1 (by norm_num) hfcont.continuousOn
+        hstart (fun t ht => hnb_gen t ht (hall2 t ht)) hcol with
+      hall | ⟨x0, hx00, hx01, hallx, hdisj⟩
+    · -- 全程有交：f 1 · n = 0 ⟹ f 1 ∈ 锥（cf4_segment_inter_aff_ge_ends）⟹ L3PF
+      obtain ⟨x1, hx1seg, hx1cone⟩ := hall 1 (Set.mem_Icc.2 ⟨zero_le_one, le_refl 1⟩)
+      exact cf4_LEMMA_3_POINTS_FINAL (v1 := v2) (v2 := v4)
+        (v3 := g 1 + lam • (v4 - v2) + v2)
+        (cf4_segment_inter_aff_ge_ends (v1 := v2) (v2 := v4) hv20 hv40 hv24 h2n h4n
+          hf1n (ne_of_gt h3n) ⟨x1, hx1seg, hx1cone⟩)
+        hb2 hb4
+        (hba 1 (Set.mem_Icc.2 ⟨zero_le_one, le_refl 1⟩)
+          (hall2 1 (Set.mem_Icc.2 ⟨zero_le_one, le_refl 1⟩))) hd24l
+        (by rw [dist_comm, hdist2]; exact hd12)
+        (by rw [dist_comm, hdist4]; exact hd14)
+    · -- 首穿支三支 L3PF 排空
+      have hfx0 : 2 ≤ ‖g x0 + lam • (v4 - v2) + v2‖ :=
+        hall2 x0 (Set.mem_Icc.2 ⟨hx00, hx01⟩)
+      rcases hdisj with hd1 | hd2 | hd3
+      · exact cf4_LEMMA_3_POINTS_FINAL (v1 := v2) (v2 := v4)
+          (v3 := g x0 + lam • (v4 - v2) + v2) hd1 hb2 hb4
+          (hba x0 (Set.mem_Icc.2 ⟨hx00, hx01⟩) hfx0) hd24l
+          (by rw [dist_comm, hdist2]; exact hd12)
+          (by rw [dist_comm, hdist4]; exact hd14)
+      · exact cf4_LEMMA_3_POINTS_FINAL (v1 := g x0 + lam • (v4 - v2) + v2) (v2 := v3)
+          (v3 := v2) hd2 (hba x0 (Set.mem_Icc.2 ⟨hx00, hx01⟩) hfx0) hb3 hb2
+          (hdist3 x0 (Set.mem_Icc.2 ⟨hx00, hx01⟩))
+          (by rw [hdist2]; exact hd12) (by rw [dist_comm]; exact hd23)
+      · exact cf4_LEMMA_3_POINTS_FINAL (v1 := g x0 + lam • (v4 - v2) + v2) (v2 := v3)
+          (v3 := v4) hd3 (hba x0 (Set.mem_Icc.2 ⟨hx00, hx01⟩) hfx0) hb3 hb4
+          (hdist3 x0 (Set.mem_Icc.2 ⟨hx00, hx01⟩))
+          (by rw [hdist4]; exact hd14) hd34
+  -- §8 IVT：‖f·‖ 下穿 2 打靶 s
+  push_neg at hall2
+  obtain ⟨h, hhI, hhl⟩ := hall2
+  obtain ⟨s, hs0, hsh, hsn, hsl⟩ :=
+    cf4_ivt_first_dec (fun t => ‖g t + lam • (v4 - v2) + v2‖) 2 h hhI.1
+      ((hfcont.norm).continuousOn) (by rw [hf0]; exact (inBallAnnulus hb1).1)
+      (le_of_lt hhl)
+  have hs1 : s ≤ 1 := le_trans hsh hhI.2
+  -- §9 continuous_lemma 在 h := s：好分支存续、首穿支排空
+  have hge2 : ∀ t ∈ Set.Icc 0 s, 2 ≤ ‖g t + lam • (v4 - v2) + v2‖ := by
+    intro t ht
+    rcases eq_or_lt_of_le ht.2 with heq | hlt
+    · rw [heq]
+      exact le_of_eq hsn.symm
+    · exact le_of_lt (hsl t ⟨ht.1, hlt⟩)
+  have hbas : ∀ t ∈ Set.Icc 0 s, g t + lam • (v4 - v2) + v2 ∈ ballAnnulus := by
+    intro t ht
+    exact hba t (Set.mem_Icc.2 ⟨ht.1, le_trans ht.2 hs1⟩) (hge2 t ht)
+  rcases cf4_continuous_lemma_aff_ge (v1 := v2) (v2 := v4) (w := v3)
+      (fun t => g t + lam • (v4 - v2) + v2) s hs0
+      (hfcont.continuousOn.mono (fun z hz => Set.mem_Icc.2 ⟨hz.1, le_trans hz.2 hs1⟩))
+      hstart
+      (fun t ht => hnb_gen t (Set.mem_Icc.2 ⟨ht.1, le_trans ht.2 hs1⟩) (hge2 t ht))
+      hcol with
+    hall | ⟨x0, hx00, hx01, hallx, hdisj⟩
+  · -- 好分支：s 处存续交不变量
+    obtain ⟨x1, hx1seg, hx1cone⟩ := hall s ⟨hs0, le_refl s⟩
+    obtain ⟨n', hn0', h2n', h4n', hfsn, h3n'⟩ :=
+      cf4_separation_plane_4_points (hbas s ⟨hs0, le_refl s⟩) hb2 hb3 hb4
+        (hdist3 s (Set.mem_Icc.2 ⟨hs0, le_trans (le_refl s) hs1⟩)) hd24l hd24
+        (by rw [hdist2]; exact hd12) (by rw [hdist4]; exact hd14) hd23 hd34
+        ⟨x1, hx1seg, hx1cone⟩
+    have hprojcross : (segment ℝ (cf4Proj (v4 - v2)
+          (g s + lam • (v4 - v2) + v2 - v2)) (cf4Proj (v4 - v2) (v3 - v2))
+        ∩ affGe {0} ({cf4Proj (v4 - v2) (-v2)} : Set V3)).Nonempty := by
+      have h1 : cf4Proj (v4 - v2) (g s + lam • (v4 - v2) + v2 - v2) = g s := by
+        have h0 : g s + lam • (v4 - v2) + v2 - v2 = g s + lam • (v4 - v2) := by module
+        rw [h0, cf4Proj]
+        have hd2p : (0:ℝ) < ‖v4 - v2‖ ^ 2 := pow_pos (norm_pos_iff.2 hd) 2
+        have hd2n : ‖v4 - v2‖ ^ 2 ≠ 0 := ne_of_gt hd2p
+        have h2 : inner ℝ (g s + lam • (v4 - v2)) (v4 - v2)
+            = inner ℝ (g s) (v4 - v2) + lam * ‖v4 - v2‖ ^ 2 := by
+          rw [inner_add_left, real_inner_smul_left, real_inner_self_eq_norm_sq]
+        rw [h2, (hgprop s).2, zero_add]
+        have hexp : (lam * ‖v4 - v2‖ ^ 2) / ‖v4 - v2‖ ^ 2 = lam := by field_simp
+        rw [hexp]
+        module
+      rw [h1]
+      exact hgcross s (Set.mem_Icc.2 ⟨hs0, le_trans hsh hhI.2⟩)
+    refine ⟨g s + lam • (v4 - v2) + v2, hbas s ⟨hs0, le_refl s⟩, hsn,
+      hdist3 s (Set.mem_Icc.2 ⟨hs0, le_trans (le_refl s) hs1⟩), hdist2 s, hdist4 s, ?_⟩
+    exact cf4_segment_inter_conv hv20 hv40 hv24 hpu0 ⟨x1, hx1seg, hx1cone⟩ hfsn h3n'
+      h2n' h4n' hprojcross
+  · exfalso
+    -- 首穿支三支 L3PF 排空
+    have hx01' : x0 ∈ Set.Icc 0 1 := ⟨hx00, le_trans hx01 hs1⟩
+    have hfx0 : 2 ≤ ‖g x0 + lam • (v4 - v2) + v2‖ := hge2 x0 ⟨hx00, hx01⟩
+    rcases hdisj with hd1 | hd2 | hd3
+    · exact cf4_LEMMA_3_POINTS_FINAL (v1 := v2) (v2 := v4)
+        (v3 := g x0 + lam • (v4 - v2) + v2) hd1 hb2 hb4 (hba x0 hx01' hfx0) hd24l
+        (by rw [dist_comm, hdist2]; exact hd12)
+        (by rw [dist_comm, hdist4]; exact hd14)
+    · exact cf4_LEMMA_3_POINTS_FINAL (v1 := g x0 + lam • (v4 - v2) + v2) (v2 := v3)
+        (v3 := v2) hd2 (hba x0 hx01' hfx0) hb3 hb2 (hdist3 x0 hx01')
+        (by rw [hdist2]; exact hd12) (by rw [dist_comm]; exact hd23)
+    · exact cf4_LEMMA_3_POINTS_FINAL (v1 := g x0 + lam • (v4 - v2) + v2) (v2 := v3)
+        (v3 := v4) hd3 (hba x0 hx01' hfx0) hb3 hb4
+        (hdist3 x0 hx01')
+        (by rw [hdist4]; exact hd14) hd34
+
+
+/-- HOL `lemma_4_points_rotation2_full`（CKQOWSA_4.hl:3814-3865）：rotation2 两次
+（v1 绕平移轴打 ‖·‖ 恰 2、v3 绕同一轴打 ‖·‖ 恰 2），四条到 v2/v4 的距离全部原值保持，
+交不变量换成锥形（凸包交点以 (s2, s4) 系数入锥）。 -/
+private theorem cf4_rotation_2_full {v1 v2 v3 v4 : V3}
+    (hb1 : v1 ∈ ballAnnulus) (hb2 : v2 ∈ ballAnnulus) (hb3 : v3 ∈ ballAnnulus)
+    (hb4 : v4 ∈ ballAnnulus)
+    (hd13l : dist v1 v3 ≤ 2 * h0) (hd24l : dist v2 v4 ≤ 2 * h0)
+    (hd12 : 2 ≤ dist v1 v2) (hd14 : 2 ≤ dist v1 v4)
+    (hd23 : 2 ≤ dist v2 v3) (hd34 : 2 ≤ dist v3 v4)
+    (hd24 : 2 ≤ dist v2 v4)
+    (hcross : (segment ℝ v1 v3 ∩ convexHull ℝ (insert (0:V3) ({v2, v4} : Set V3))).Nonempty) :
+    ∃ v1' v3' : V3, v1' ∈ ballAnnulus ∧ v3' ∈ ballAnnulus ∧ ‖v1'‖ = 2 ∧ ‖v3'‖ = 2 ∧
+      dist v1' v3' ≤ 2 * h0 ∧
+      dist v1' v2 = dist v1 v2 ∧ dist v1' v4 = dist v1 v4 ∧
+      dist v2 v3' = dist v2 v3 ∧ dist v3' v4 = dist v3 v4 ∧
+      (segment ℝ v1' v3' ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty := by
+  have hcol : ¬ Collinear ℝ (insert (0:V3) ({v2, v4} : Set V3)) :=
+    estd_non_collinear_lemma hb2 hb4 hd24 hd24l
+  obtain ⟨hv20, hv40, hv24ne⟩ := cf4_not_collinear_smul hcol
+  have hv24 : v2 ≠ v4 := fun he => hv24ne 1 (by rw [he, one_smul])
+  -- 第 1 次：v1 绕平移轴
+  obtain ⟨w1, hw1b, hw1n2, hw1d13, hw1d2, hw1d4, hw1cross⟩ :=
+    cf4_rotation_2 hb1 hb2 hb3 hb4 hd13l hd24l hd12 hd14 hd23 hd34 hd24 hcross
+  -- 第 2 次：v3 绕同一平移轴（w1 作对侧点）
+  obtain ⟨w3, hw3b, hw3n2, hw3d13, hw3d2, hw3d4, hw3cross⟩ :=
+    cf4_rotation_2 hb3 hb2 hw1b hb4
+      (by rw [dist_comm]; exact hw1d13) hd24l (by rw [dist_comm]; exact hd23) hd34
+      (by rw [dist_comm, hw1d2]; exact hd12)
+      (by rw [hw1d4]; exact hd14)
+      hd24
+      (by rw [segment_symm]; exact hw1cross)
+  refine ⟨w1, w3, hw1b, hw3b, hw1n2, hw3n2, ?_, hw1d2, hw1d4, ?_, hw3d4, ?_⟩
+  · rw [dist_comm]
+    exact hw3d13
+  · rw [dist_comm v2 w3, hw3d2, dist_comm v3 v2]
+  · -- 锥交：凸包交点提取系数入锥
+    obtain ⟨y, hyseg, hyhull⟩ := hw3cross
+    obtain ⟨s2, s4, hs2, hs4, hsum, hyeq2⟩ := cf4_mem_convexHull3 hv20 hv40 hv24 hyhull
+    refine ⟨y, ?_, (affGe_0_2_char hv20 hv40 hv24 y).2 ⟨s2, s4, hs2, hs4, hyeq2⟩⟩
+    rw [segment_symm]
+    exact hyseg
+
+
 end Kepler.Text.ContraFanDeep
