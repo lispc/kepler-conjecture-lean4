@@ -40,6 +40,7 @@
 import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
 import Kepler.Geom.Aff
+import Kepler.Text.ContraFanDeep  -- W4：cf4_LEMMA_4_POINTS_FINAL 终件真身所在模块（其闭包 {Geom.Aff, PackingAuto2, IneqClosureDefs} 均不 import 本模块，无环）
 
 open Kepler.Geom
 open Kepler.Text.Fan
@@ -610,7 +611,8 @@ theorem LEMMA_4_POINTS_FINAL {v1 v2 v3 v4 : V3}
     (hd23 : 2 ≤ dist v2 v3) (hd34 : 2 ≤ dist v3 v4)
     (hd13 : 2 ≤ dist v1 v3) (hd24 : 2 ≤ dist v2 v4) :
     affGe {0} ({v1, v3} : Set V3) ∩ affGe {0} ({v2, v4} : Set V3) = {(0:V3)} := by
-  sorry
+  exact Kepler.Text.ContraFanDeep.cf4_LEMMA_4_POINTS_FINAL hb1 hb2 hb3 hb4 hd13l hd24l
+    hd12 hd14 hd23 hd34 hd13 hd24
 
 /-! ## 4. fan7 的两点/三点块（CKQOWSA.hl:95/178） -/
 

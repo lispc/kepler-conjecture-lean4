@@ -3995,4 +3995,65 @@ theorem cf4_4_points_contradiction {v1 v2 v3 v4 : V3}
   exact absurd hle (by norm_num)
 
 
+/-- **W4 终件**（HOL `LEMMA_4_POINTS_FINAL`，CKQOWSA_4.hl:4093-4096）：环带中四点、
+两组对边距离 ≤ 2·h0、六对距离 ≥ 2 ⟹ 双锥 `affGe {0} {v1,v3} ∩ affGe {0} {v2,v4}`
+恰交于原点。装配四步（W3 交付 §5 的四步装配说明）：反设双锥交含非零点 p 后——
+①`cf4_cone_inter_imp_segment_conv`（含 (v1,v3)↔(v2,v4) WLOG）把锥交换成
+segment∩凸包形；②`cf4_rotation_2_full` 两次 rotation2 打 ‖·‖ 恰 2、四条交叉距
+原值保持、穿凸包换成穿锥形；③`cf4_rotation_1_full` 四次 rotation1 把四条交叉距
+打成恰 2（hd32 一处 `dist_comm` 定向）；④`cf4_4_points_contradiction` 收口为
+False。 -/
+theorem cf4_LEMMA_4_POINTS_FINAL {v1 v2 v3 v4 : V3}
+    (hb1 : v1 ∈ ballAnnulus) (hb2 : v2 ∈ ballAnnulus)
+    (hb3 : v3 ∈ ballAnnulus) (hb4 : v4 ∈ ballAnnulus)
+    (hd13l : dist v1 v3 ≤ 2 * h0) (hd24l : dist v2 v4 ≤ 2 * h0)
+    (hd12 : 2 ≤ dist v1 v2) (hd14 : 2 ≤ dist v1 v4)
+    (hd23 : 2 ≤ dist v2 v3) (hd34 : 2 ≤ dist v3 v4)
+    (hd13 : 2 ≤ dist v1 v3) (hd24 : 2 ≤ dist v2 v4) :
+    affGe {0} ({v1, v3} : Set V3) ∩ affGe {0} ({v2, v4} : Set V3) = {(0:V3)} := by
+  -- 环带点非原点；对边距离 ≥ 2 给两对点互异（have 块内改写不伤外层假设）
+  obtain ⟨ha1, -⟩ := inBallAnnulus hb1
+  obtain ⟨ha2, -⟩ := inBallAnnulus hb2
+  obtain ⟨ha3, -⟩ := inBallAnnulus hb3
+  obtain ⟨ha4, -⟩ := inBallAnnulus hb4
+  have hv1n : v1 ≠ 0 := by
+    intro h; rw [h, norm_zero] at ha1; norm_num at ha1
+  have hv2n : v2 ≠ 0 := by
+    intro h; rw [h, norm_zero] at ha2; norm_num at ha2
+  have hv3n : v3 ≠ 0 := by
+    intro h; rw [h, norm_zero] at ha3; norm_num at ha3
+  have hv4n : v4 ≠ 0 := by
+    intro h; rw [h, norm_zero] at ha4; norm_num at ha4
+  have h13 : v1 ≠ v3 := by
+    intro he; rw [he, dist_self] at hd13; norm_num at hd13
+  have h24 : v2 ≠ v4 := by
+    intro he; rw [he, dist_self] at hd24; norm_num at hd24
+  ext p
+  constructor
+  · -- p ∈ 双锥交 ⟹ p = 0：反设 p ≠ 0，四步装配到 False
+    rintro ⟨hp1, hp2⟩
+    show p = (0:V3)
+    by_contra hpn
+    -- 步 1：锥交（非零点）⟹ segment∩凸包形（件 1，内含 WLOG 对换）
+    obtain ⟨w1, w2, w3, w4, hw1b, hw2b, hw3b, hw4b, hw13l, hw24l, hw12, hw14, hw23,
+      hw34, hw24, hcross⟩ :=
+      cf4_cone_inter_imp_segment_conv hb1 hb2 hb3 hb4 h13 h24 hd13l hd24l hd12 hd14
+        hd23 hd34 hd13 hd24 ⟨p, hpn, ⟨hp1, hp2⟩⟩
+    -- 步 2：rotation2×2：‖·‖ 恰 2，四条交叉距原值保持，穿凸包换穿锥形
+    obtain ⟨a1, a3, ha1b, ha3b, ha1n2, ha3n2, ha13l, ha12, ha14, ha23, ha34, hacross⟩ :=
+      cf4_rotation_2_full hw1b hw2b hw3b hw4b hw13l hw24l hw12 hw14 hw23 hw34 hw24 hcross
+    -- 步 3：rotation1×4：四条交叉距打成恰 2（距离用步 2 的原值保持桥接）
+    obtain ⟨b1, b3, hb1c, hb3c, hb1n, hb3n, hb13l2, hb12, hb14, hb23, hb34, hbcross⟩ :=
+      cf4_rotation_1_full ha1b hw2b ha3b hw4b ha13l hw24l
+        (by rw [ha12]; exact hw12) (by rw [ha14]; exact hw14)
+        (by rw [ha23]; exact hw23) (by rw [ha34]; exact hw34) hw24 hacross
+    -- 步 4：终局矛盾（hd32 : dist b3 w2 = 2 经 dist_comm 定向）
+    exact cf4_4_points_contradiction hw2b hw4b hw24l hw24 hbcross
+      (hb1n.trans ha1n2) (hb3n.trans ha3n2) hb12 hb14
+      (by rw [dist_comm]; exact hb23) hb34 hb13l2
+  · -- 0 在两锥内：affGe_0_2_char 的零系数见证
+    rintro rfl
+    exact ⟨(affGe_0_2_char hv1n hv3n h13 (0:V3)).2 ⟨0, 0, le_refl 0, le_refl 0, by simp⟩,
+      (affGe_0_2_char hv2n hv4n h24 (0:V3)).2 ⟨0, 0, le_refl 0, le_refl 0, by simp⟩⟩
+
 end Kepler.Text.ContraFanDeep
