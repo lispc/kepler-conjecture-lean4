@@ -1984,7 +1984,58 @@ theorem COPLANAR_UNION {P Q : Set V3} {a b : V3} (hP : P ≠ ∅) (hQ : Q ≠ �
     (h1 : ∀ p ∈ P, ¬Collinear3 p a b) (h2 : ∀ q ∈ Q, ¬Collinear3 q a b)
     (h3 : ∀ p ∈ P, ∀ q ∈ Q, Coplanar ({p, q, a, b} : Set V3)) :
     Coplanar (P ∪ Q ∪ {a, b} : Set V3) := by
-  sorry
+  obtain ⟨x, hxP⟩ := Set.nonempty_iff_ne_empty.2 hP
+  obtain ⟨y, hyQ⟩ := Set.nonempty_iff_ne_empty.2 hQ
+  -- The stem point `x ∈ P` (with `y ∈ Q` as auxiliary) absorbs both sides:
+  -- `y ∈ affineSpan ℝ {x, a, b}` by COPLANAR_INSERT, hence the `{y,a,b}`-span
+  -- (which absorbs P) sits inside the `{x,a,b}`-span (which absorbs Q).
+  have hdim : affDim ({x, a, b} : Set V3) = 2 :=
+    NOT_COLLINEAR_AFF_DIM2 x a b (h1 x hxP)
+  have hdim' : affDim ({y, a, b} : Set V3) = 2 :=
+    NOT_COLLINEAR_AFF_DIM2 y a b (h2 y hyQ)
+  have hyMem0 : Coplanar ({y, x, a, b} : Set V3) := by
+    have h0 := h3 x hxP y hyQ
+    have heqy : ({x, y, a, b} : Set V3) = ({y, x, a, b} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rwa [heqy] at h0
+  have hyMem : y ∈ (affineSpan ℝ ({x, a, b} : Set V3) : Set V3) :=
+    COPLANAR_INSERT y hdim hyMem0
+  have hspanle : (affineSpan ℝ ({y, a, b} : Set V3) : Set V3)
+      ⊆ (affineSpan ℝ ({x, a, b} : Set V3) : Set V3) := by
+    intro w hw
+    have hle : affineSpan ℝ ({y, a, b} : Set V3)
+        ≤ affineSpan ℝ ({x, a, b} : Set V3) :=
+      affineSpan_le_of_subset_coe (by
+        intro w hw
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+        rcases hw with hw | hw | hw
+        · rw [hw]
+          exact hyMem
+        · rw [hw]
+          exact subset_affineSpan ℝ ({x, a, b} : Set V3)
+            (Set.mem_insert_of_mem x (Set.mem_insert a ({b} : Set V3)))
+        · rw [hw]
+          exact subset_affineSpan ℝ ({x, a, b} : Set V3)
+            (Set.mem_insert_of_mem x (Set.mem_insert_of_mem a (Set.mem_singleton b))))
+    exact SetLike.mem_coe.mp (hle (SetLike.mem_coe.mpr hw))
+  refine ⟨x, a, b, ?_⟩
+  intro z hz
+  rcases (Set.mem_union z (P ∪ Q) ({a, b} : Set V3)).1 hz with hz | hz
+  · rcases (Set.mem_union z P Q).1 hz with hz | hz
+    · -- z ∈ P: absorbed into the {y, a, b}-span
+      exact hspanle (COPLANAR_INSERT z hdim' (h3 z hz y hyQ))
+    · -- z ∈ Q: swap {x, z, a, b} into insert-z shape first
+      have hxz := h3 x hxP z hz
+      have heq : ({x, z, a, b} : Set V3) = ({z, x, a, b} : Set V3) := by
+        ext w
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [heq] at hxz
+      exact COPLANAR_INSERT z hdim hxz
+  · -- z ∈ {a, b}
+    exact subset_affineSpan ℝ ({x, a, b} : Set V3) (Set.mem_insert_of_mem x hz)
 
 /-- HOL `CONNECTED_SEGMENT_NOT_COVERED` (leaf_cell.hl:304-327): a segment is
 preconnected, so two disjoint open sets cannot separate its endpoints. -/
@@ -6980,7 +7031,101 @@ theorem WEDGE_SUBSET_WEDGE_GE (u0 u1 u2 u3 : V3) :
 theorem AFF_INTER_IMP_COPLANAR (a b c d : V3)
     (h : (affineSpan ℝ {a, b} : Set V3) ∩ (affineSpan ℝ {c, d} : Set V3) ≠ ∅) :
     Coplanar ({a, b, c, d} : Set V3) := by
-  sorry
+  -- Dimension route: the four points lie in the translate of a 2-dimensional
+  -- span (stem directions `b - a` and `d - c`), since the intersection point
+  -- `x` puts `a, b` in the span of `b - a` and `c, d` in the span of `d - c`.
+  obtain ⟨x, hx1, hx2⟩ := Set.nonempty_iff_ne_empty.2 h
+  refine AFF_DIM_LE_2_IMP_COPLANAR _ ?_
+  have hne : ({a, b, c, d} : Set V3) ≠ ∅ := by
+    intro h0
+    have ham : a ∈ ({a, b, c, d} : Set V3) := Set.mem_insert a ({b, c, d} : Set V3)
+    rw [h0] at ham
+    exact ham
+  rw [affDim, if_neg hne]
+  have hkey : vectorSpan ℝ ({a, b, c, d} : Set V3)
+      ≤ Submodule.span ℝ ({b - a, d - c} : Set V3) := by
+    -- direction of the stem line {a,b} sits in the span of its one vector
+    -- (kept in `.direction` form: the direction↔vectorSpan conversion is only
+    -- propositional and defeats `whnf` on this WithLp type)
+    have hgen1 : (affineSpan ℝ ({a, b} : Set V3)).direction
+        ≤ Submodule.span ℝ ({b - a} : Set V3) := by
+      rw [direction_affineSpan,
+        vectorSpan_eq_span_vsub_set_right ℝ (Set.mem_insert a ({b} : Set V3)),
+        Submodule.span_le]
+      rintro z ⟨u, hu, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu
+      rcases hu with hu | hu
+      · rw [hu]
+        show (a -ᵥ a : V3) ∈ Submodule.span ℝ ({b - a} : Set V3)
+        rw [vsub_self]
+        exact Submodule.zero_mem _
+      · rw [hu]
+        show (b -ᵥ a : V3) ∈ Submodule.span ℝ ({b - a} : Set V3)
+        rw [vsub_eq_sub]
+        exact Submodule.subset_span (Set.mem_singleton _)
+    have hgen2 : (affineSpan ℝ ({c, d} : Set V3)).direction
+        ≤ Submodule.span ℝ ({d - c} : Set V3) := by
+      rw [direction_affineSpan,
+        vectorSpan_eq_span_vsub_set_right ℝ (Set.mem_insert c ({d} : Set V3)),
+        Submodule.span_le]
+      rintro z ⟨u, hu, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu
+      rcases hu with hu | hu
+      · rw [hu]
+        show (c -ᵥ c : V3) ∈ Submodule.span ℝ ({d - c} : Set V3)
+        rw [vsub_self]
+        exact Submodule.zero_mem _
+      · rw [hu]
+        show (d -ᵥ c : V3) ∈ Submodule.span ℝ ({d - c} : Set V3)
+        rw [vsub_eq_sub]
+        exact Submodule.subset_span (Set.mem_singleton _)
+    -- points of each stem line sit `x`-relatively in the one-vector span
+    have hmem1 : ∀ p ∈ ({a, b} : Set V3),
+        p - x ∈ Submodule.span ℝ ({b - a} : Set V3) := fun p hp =>
+      hgen1 (AffineSubspace.vsub_mem_direction
+        (SetLike.mem_coe.mp (subset_affineSpan ℝ ({a, b} : Set V3) hp))
+        (SetLike.mem_coe.mp hx1))
+    have hmem2 : ∀ p ∈ ({c, d} : Set V3),
+        p - x ∈ Submodule.span ℝ ({d - c} : Set V3) := fun p hp =>
+      hgen2 (AffineSubspace.vsub_mem_direction
+        (SetLike.mem_coe.mp (subset_affineSpan ℝ ({c, d} : Set V3) hp))
+        (SetLike.mem_coe.mp hx2))
+    have hle1 : Submodule.span ℝ ({b - a} : Set V3)
+        ≤ Submodule.span ℝ ({b - a, d - c} : Set V3) :=
+      Submodule.span_mono (Set.singleton_subset_iff.2
+        (Set.mem_insert (b - a) ({d - c} : Set V3)))
+    have hle2 : Submodule.span ℝ ({d - c} : Set V3)
+        ≤ Submodule.span ℝ ({b - a, d - c} : Set V3) :=
+      Submodule.span_mono (Set.singleton_subset_iff.2
+        (Set.mem_insert_of_mem (b - a) (Set.mem_singleton (d - c))))
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (Set.mem_insert a ({b, c, d} : Set V3)),
+      Submodule.span_le]
+    rintro z ⟨u, hu, rfl⟩
+    have hmemu : u - x ∈ Submodule.span ℝ ({b - a, d - c} : Set V3) := by
+      have hu' : u ∈ ({a, b} : Set V3) ∨ u ∈ ({c, d} : Set V3) := by
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu ⊢
+        tauto
+      rcases hu' with hu' | hu'
+      · exact hle1 (hmem1 u hu')
+      · exact hle2 (hmem2 u hu')
+    have hmemx : a - x ∈ Submodule.span ℝ ({b - a, d - c} : Set V3) :=
+      hle1 (hmem1 a (Set.mem_insert a ({b} : Set V3)))
+    show (u -ᵥ a : V3) ∈ Submodule.span ℝ ({b - a, d - c} : Set V3)
+    rw [vsub_eq_sub, show (u - a : V3) = (u - x) - (a - x) from by abel]
+    exact Submodule.sub_mem _ hmemu hmemx
+  have hfr1 : Module.finrank ℝ (vectorSpan ℝ ({a, b, c, d} : Set V3))
+      ≤ Module.finrank ℝ (Submodule.span ℝ ({b - a, d - c} : Set V3)) :=
+    Submodule.finrank_mono hkey
+  have hfr2 : Module.finrank ℝ (Submodule.span ℝ ({b - a, d - c} : Set V3)) ≤ 2 := by
+    refine le_trans (finrank_span_le_card (R := ℝ) (M := V3)
+      (s := ({b - a, d - c} : Set V3))) ?_
+    have hn1 : ({b - a, d - c} : Set V3).ncard ≤ ({d - c} : Set V3).ncard + 1 :=
+      Set.ncard_insert_le (b - a) ({d - c} : Set V3)
+    have hn2 : ({b - a, d - c} : Set V3).ncard = ({b - a, d - c} : Set V3).toFinset.card :=
+      Set.ncard_eq_toFinset_card' _
+    have hn3 : ({d - c} : Set V3).ncard = 1 := Set.ncard_singleton _
+    omega
+  exact_mod_cast le_trans hfr1 hfr2
 
 /-- HOL `NOT_COLLINEAR_AFF_DIM2` is proved above; `ADD_NN_ZERO` here. -/
 theorem ADD_NN_ZERO (a b x y : ℝ) (ha : 0 < a) (hb : 0 < b) (hx : 0 ≤ x)
@@ -7025,12 +7170,96 @@ theorem AZIM_POS_IMP_SUM_2PI_ALT (a b c d : V3) (h : 0 < azim a b c d) :
 /-- HOL `WEDGE_GE_COMPLEMENT` (leaf_cell.hl:4167-4201). -/
 theorem WEDGE_GE_COMPLEMENT (u0 u1 v1 v2 : V3) (h : azim u0 u1 v1 v2 ≠ 0) :
     (Set.univ : Set V3) \ wedgeGe u0 u1 v1 v2 = wedge u0 u1 v2 v1 := by
-  sorry
+  -- AZIM_DEGENERATE contrapositive + stem nondegeneracy
+  have hncpair : ¬Collinear3 u0 u1 v1 ∧ ¬Collinear3 u0 u1 v2 := by
+    by_cases hc : Collinear3 u0 u1 v1 ∨ Collinear3 u0 u1 v2
+    · exfalso
+      rw [azim, if_pos hc] at h
+      exact h rfl
+    · exact ⟨fun h1 => hc (Or.inl h1), fun h2 => hc (Or.inr h2)⟩
+  have hnc1 := hncpair.1
+  have hnc2 := hncpair.2
+  have hu01 : u1 ≠ u0 := fun hcon => hncpair.1 (by
+    show Collinear ℝ ({u0, u1, v1} : Set V3)
+    have hset : ({u0, u1, v1} : Set V3) = ({u0, v1} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [← hcon]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ u0 v1)
+  have hpos : 0 < azim u0 u1 v1 v2 :=
+    lt_of_le_of_ne (azim_nonneg u0 u1 v1 v2) (Ne.symm h)
+  have hsum := AZIM_POS_IMP_SUM_2PI_ALT u0 u1 v1 v2 hpos
+  ext x
+  simp only [Set.mem_diff, Set.mem_univ, true_and, wedgeGe, Set.mem_setOf_eq,
+    wedge, Set.mem_setOf_eq]
+  by_cases hcolx : Collinear3 u0 u1 x
+  · -- degenerate point: inside the closed wedge, outside the open one
+    have hx0 : azim u0 u1 v1 x = 0 := by
+      rw [azim, if_pos (Or.inr hcolx : Collinear3 u0 u1 v1 ∨ Collinear3 u0 u1 x)]
+    have hmem : x ∈ wedgeGe u0 u1 v1 v2 := by
+      rw [wedgeGe, Set.mem_setOf_eq]
+      exact ⟨by rw [hx0], by rw [hx0]; exact azim_nonneg u0 u1 v1 v2⟩
+    exact ⟨fun hcon => absurd hmem hcon, fun hcon _ => absurd hcolx hcon.1⟩
+  · -- genuine point: the two azimuths split the 2π range around `az u1 v2`
+    have hncx : ¬Collinear3 u0 u1 x := hcolx
+    constructor
+    · -- out of the closed wedge ⟹ az u1 v2 < az u1 v1 x ⟹ open wedge v2 v1
+      intro hcon
+      have hnb : ¬(azim u0 u1 v1 x ≤ azim u0 u1 v1 v2) := fun hb =>
+        hcon ⟨azim_nonneg u0 u1 v1 x, hb⟩
+      have hgt : azim u0 u1 v1 v2 < azim u0 u1 v1 x :=
+        (le_or_gt (azim u0 u1 v1 x) (azim u0 u1 v1 v2)).resolve_left hnb
+      have hlt : azim u0 u1 v1 x < 2 * Real.pi := azim_lt_two_pi u0 u1 v1 x
+      have hsplit := sum4_azim_fan hu01 hnc1 hnc2 hncx (le_of_lt hgt)
+      refine ⟨hncx, ?_, ?_⟩
+      · linarith
+      · linarith
+    · -- open wedge v2 v1 ⟹ az u1 v1 x = az u1 v2 + az u1 v2 x ≥ az u1 v2
+      intro hcon
+      obtain ⟨-, h3, h4⟩ := hcon
+      have hv2v1pos : 0 < azim u0 u1 v2 v1 := by linarith
+      have hsum2 := AZIM_POS_IMP_SUM_2PI_ALT u0 u1 v2 v1 hv2v1pos
+      have hsplit := sum4_azim_fan hu01 hnc2 hncx hnc1 (le_of_lt h4)
+      have hxv1 : 0 < azim u0 u1 x v1 := by linarith
+      have hsum3 := AZIM_POS_IMP_SUM_2PI_ALT u0 u1 x v1 hxv1
+      refine fun hmemb => absurd hmemb.2 (by linarith)
 
 /-- HOL `WEDGE_COMPLEMENT` (leaf_cell.hl:4202-4215). -/
 theorem WEDGE_COMPLEMENT (u0 u1 v1 v2 : V3) (h : azim u0 u1 v1 v2 ≠ 0) :
     (Set.univ : Set V3) \ wedge u0 u1 v1 v2 = wedgeGe u0 u1 v2 v1 := by
-  sorry
+  -- AZIM_EQ_0_SYM2: the swapped azimuth is nonzero as well
+  have hncpair : ¬Collinear3 u0 u1 v1 ∧ ¬Collinear3 u0 u1 v2 := by
+    by_cases hc : Collinear3 u0 u1 v1 ∨ Collinear3 u0 u1 v2
+    · exfalso
+      rw [azim, if_pos hc] at h
+      exact h rfl
+    · exact ⟨fun h1 => hc (Or.inl h1), fun h2 => hc (Or.inr h2)⟩
+  obtain ⟨hnc1, hnc2⟩ := hncpair
+  have h' : azim u0 u1 v2 v1 ≠ 0 := by
+    intro h0
+    have hsum := azim_compl hnc2 hnc1
+    rw [if_pos h0] at hsum
+    exact h (by linarith)
+  have hWGC := WEDGE_GE_COMPLEMENT u0 u1 v2 v1 h'
+  ext x
+  have key : x ∈ wedgeGe u0 u1 v2 v1 ↔ x ∉ wedge u0 u1 v1 v2 := by
+    constructor
+    · intro hx hw
+      rw [hWGC.symm] at hw
+      exact hw.2 hx
+    · intro hx
+      by_contra hcon
+      have hx' : x ∈ (Set.univ : Set V3) \ wedgeGe u0 u1 v2 v1 :=
+        ⟨Set.mem_univ x, hcon⟩
+      rw [hWGC] at hx'
+      exact hx hx'
+  constructor
+  · intro hx
+    exact key.mpr hx.2
+  · intro hx
+    exact ⟨Set.mem_univ x, fun hw => key.mp hx hw⟩
 
 /-- HOL `EWYBJUA` (leaf_cell.hl:4216-4306): two cells sharing a leaf stem lie
 on azimuthal sides of the stem. -/
@@ -8496,6 +8725,270 @@ theorem SUM_GAMMAX_LMFUN_ESTIMATE : SUM_GAMMAX_LMFUN_ESTIMATE_concl := by
     · exact ⟨0, fun hsat hpack _ _ hpack' _ _ _ => absurd ⟨hsat, hpack'⟩ hsp⟩
   obtain ⟨c, hc⟩ := hkey
   exact ⟨c, fun r hsat hpack hr1 hcc hts => hc hsat hpack r hsat hpack hr1 hcc hts⟩
+
+/-! ## Pool B W1 micro kit (leaf_cell.hl support lemmas for BDXKHTW / PREP)
+
+The named micro pieces of WAVES.md §W1: `NOT_COLLINEAR_IMP_2_UNEQUAL`,
+`Fan.th3a` content, `COLLINEAR_3_IN_AFFINE_HULL` (both directions),
+`AFF_GT_SUBSET_AFFINE_HULL`, `AFFINE_HULL_SUBSET_AFF_GE` (stem-pair form),
+`Collect_geom.IN_AFF_GE_INTERPRET_TO_AFF_GT_AND_AFF` ingredients,
+`Conforming.NEGLIGIBLE_AFF_GE_2_1` (local, hypothesis-free since Lean's
+`Coplanar` is the three-witness form) and the `NULLSET_RULES` union /
+`NEGLIGIBLE_SUBSET` measure glue. -/
+
+/-- The direction of a two-point affine span sits in the span of the one
+difference vector. -/
+private theorem pa18_vectorSpan_pair_le (p q : V3) :
+    vectorSpan ℝ ({p, q} : Set V3) ≤ Submodule.span ℝ ({q - p} : Set V3) := by
+  rw [vectorSpan_eq_span_vsub_set_right ℝ (Set.mem_insert p ({q} : Set V3)),
+    Submodule.span_le]
+  rintro z ⟨u, hu, rfl⟩
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu
+  rcases hu with hu | hu
+  · rw [hu]
+    show (p -ᵥ p : V3) ∈ Submodule.span ℝ ({q - p} : Set V3)
+    rw [vsub_self]
+    exact Submodule.zero_mem _
+  · rw [hu]
+    show (q -ᵥ p : V3) ∈ Submodule.span ℝ ({q - p} : Set V3)
+    rw [vsub_eq_sub]
+    exact Submodule.subset_span (Set.mem_singleton _)
+
+/-- HOL `Collect_geom.NOT_COLLINEAR_IMP_2_UNEQUAL`: non-collinearity yields
+all three pairwise inequalities. -/
+theorem pa18_notCollinear3_ne {a b c : V3} (h : ¬Collinear3 a b c) :
+    a ≠ b ∧ a ≠ c ∧ b ≠ c := by
+  refine ⟨fun h0 => h ?_, fun h0 => h ?_, fun h0 => h ?_⟩
+  · show Collinear ℝ ({a, b, c} : Set V3)
+    have hset : ({a, b, c} : Set V3) = ({a, c} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [← h0]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ a c
+  · show Collinear ℝ ({a, b, c} : Set V3)
+    have hset : ({a, b, c} : Set V3) = ({a, b} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [← h0]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ a b
+  · show Collinear ℝ ({a, b, c} : Set V3)
+    have hset : ({a, b, c} : Set V3) = ({a, b} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [h0]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ a b
+
+/-- HOL `Fan.th3a` content: non-collinearity separates the stem pair from the
+tip point. -/
+theorem pa18_ncol3_disjoint {u0 u1 v : V3} (h : ¬Collinear3 u0 u1 v) :
+    Disjoint ({u0, u1} : Set V3) ({v} : Set V3) := by
+  rw [Set.disjoint_singleton_right]
+  obtain ⟨h01, h02, h12⟩ := pa18_notCollinear3_ne h
+  intro hcon
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hcon
+  rcases hcon with hcon | hcon
+  · exact h02 hcon.symm
+  · exact h12 hcon.symm
+
+/-- A point of the two-point affine span is collinear with the pair
+(unconditional: the degenerate pair spans a singleton). -/
+theorem pa18_affSpan2_collinear {u0 u1 x : V3}
+    (hx : x ∈ (affineSpan ℝ ({u0, u1} : Set V3) : Set V3)) : Collinear3 u0 u1 x := by
+  by_cases h01 : u0 = u1
+  · show Collinear ℝ ({u0, u1, x} : Set V3)
+    have hset : ({u0, u1, x} : Set V3) = ({u0, x} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [← h01]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ u0 x
+  · show Collinear ℝ ({u0, u1, x} : Set V3)
+    have hxS : x ∈ affineSpan ℝ ({u0, u1} : Set V3) := SetLike.mem_coe.mp hx
+    have hvs : x -ᵥ u0 ∈ vectorSpan ℝ ({u0, u1} : Set V3) := by
+      rw [← direction_affineSpan]
+      exact AffineSubspace.vsub_mem_direction hxS
+        (mem_affineSpan ℝ (Set.mem_insert u0 ({u1} : Set V3)))
+    obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.1
+      ((pa18_vectorSpan_pair_le u0 u1) hvs)
+    exact (collinear3_iff_smul (Ne.symm h01)).2 ⟨c, by
+      show (x : V3) - u0 = c • ((u1 : V3) - u0)
+      rw [hc]
+      exact (vsub_eq_sub x u0).symm⟩
+
+/-- HOL `COLLINEAR_3_IN_AFFINE_HULL` (Collect_geom, stem pair kept as the
+span generators): a collinear third point sits on the two-point affine span. -/
+theorem pa18_collinear3_affSpan2 {u0 u1 x : V3} (h01 : u0 ≠ u1)
+    (hcol : Collinear3 u0 u1 x) : x ∈ (affineSpan ℝ ({u0, u1} : Set V3) : Set V3) := by
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (Ne.symm h01)).1 hcol
+  refine (mem_affineSpan_pair_iff_exists_lineMap_eq (p := x) (p₁ := u0) (p₂ := u1)).2
+    ⟨c, ?_⟩
+  show AffineMap.lineMap u0 u1 c = x
+  rw [AffineMap.lineMap_apply]
+  simp only [vsub_eq_sub]
+  rw [← hc, vadd_eq_add]
+  abel
+
+/-- Any `Affsign` point (hence any point of `affGt`/`affGe`/`affLt`/`affLe`)
+lies in the affine span of the sign-set union. Bridge for
+`AFF_GT_SUBSET_AFFINE_HULL` and the local `NEGLIGIBLE_AFF_GE_2_1`. -/
+private theorem pa18_affsign_mem_affSpan {s t : Set V3} {sgn : ℝ → Prop} {v : V3}
+    (hv : Affsign sgn s t v) : v ∈ (affineSpan ℝ (s ∪ t) : Set V3) := by
+  obtain ⟨f, hfin, hvec, -, hone⟩ := hv
+  by_cases hF : hfin.toFinset = ∅
+  · rw [hF, Finset.sum_empty] at hone
+    norm_num at hone
+  · obtain ⟨w₀, hw₀F⟩ := Finset.nonempty_iff_ne_empty.2 hF
+    have hw₀S : w₀ ∈ (s ∪ t : Set V3) := (Set.Finite.mem_toFinset hfin).1 hw₀F
+    -- rewrite the combination as an affine telescoping sum around `w₀`
+    have key : v - w₀ = ∑ w ∈ hfin.toFinset, f w • (w - w₀) := by
+      have h1 : (∑ w ∈ hfin.toFinset, f w • (w - w₀) : V3)
+          = (∑ w ∈ hfin.toFinset, f w • w) - (∑ w ∈ hfin.toFinset, f w) • w₀ := by
+        rw [Finset.sum_smul, ← Finset.sum_sub_distrib]
+        exact Finset.sum_congr rfl fun w _ => by rw [smul_sub]
+      rw [h1, hvec, hone, one_smul]
+    have hd : (v - w₀ : V3) ∈ vectorSpan ℝ (s ∪ t : Set V3) := by
+      rw [vectorSpan_def, key]
+      refine Submodule.sum_mem _ fun w hw => ?_
+      exact Submodule.smul_mem _ _ (Submodule.subset_span (Set.mem_vsub.2
+        ⟨w, (Set.Finite.mem_toFinset hfin).1 hw, w₀, hw₀S, rfl⟩))
+    have hvv : v = (v -ᵥ w₀) +ᵥ w₀ := by rw [vsub_vadd]
+    rw [SetLike.mem_coe, hvv,
+      AffineSubspace.vadd_mem_iff_mem_direction (v -ᵥ w₀)
+        (subset_affineSpan ℝ (s ∪ t : Set V3) hw₀S),
+      direction_affineSpan]
+    exact hd
+
+/-- HOL `AFF_GT_SUBSET_AFFINE_HULL` (Collect_geom). -/
+theorem AFF_GT_SUBSET_AFFINE_HULL (s t : Set V3) :
+    affGt s t ⊆ (affineSpan ℝ (s ∪ t) : Set V3) := by
+  intro v hv
+  have hv' : Affsign (fun w => 0 < w) s t v := Set.mem_setOf_eq.mp hv
+  exact pa18_affsign_mem_affSpan hv'
+
+/-- HOL `AFFINE_HULL_SUBSET_AFF_GE` (Collect_geom), stem-pair form used by
+BDXKHTW / BDXKHTW_PREP_LEMMA: with the tip off the stem pair, the whole stem
+line sits in the closed half-space over the pair with the tip on the boundary. -/
+theorem pa18_affSpan2_subset_affGe {u0 u1 v : V3} (h01 : u0 ≠ u1)
+    (hv : v ∉ ({u0, u1} : Set V3)) :
+    (affineSpan ℝ ({u0, u1} : Set V3) : Set V3)
+      ⊆ affGe ({u0, u1} : Set V3) ({v} : Set V3) := by
+  have h0v : u0 ≠ v := by
+    intro hcon
+    apply hv
+    rw [← hcon]
+    exact Set.mem_insert u0 ({u1} : Set V3)
+  have h1v : u1 ≠ v := by
+    intro hcon
+    apply hv
+    rw [← hcon]
+    exact Set.mem_insert_of_mem u0 (Set.mem_singleton u1)
+  intro p hp
+  obtain ⟨r, hr⟩ := (mem_affineSpan_pair_iff_exists_lineMap_eq (p := p) (p₁ := u0)
+    (p₂ := u1)).1 hp
+  have hfin : ({u0, u1} ∪ {v} : Set V3).Finite :=
+    Set.Finite.union (Set.Finite.insert u0 (Set.finite_singleton u1))
+      (Set.finite_singleton v)
+  rw [affGe, Set.mem_setOf_eq, Affsign]
+  refine ⟨fun z => if z = u0 then 1 - r else if z = u1 then r else 0, hfin, ?_, ?_, ?_⟩
+  · have hF := pa18_toFinset3 h01 h0v h1v hfin
+    rw [hF,
+      Finset.sum_insert (by
+        intro hcon
+        simp only [Finset.mem_insert, Finset.mem_singleton] at hcon
+        rcases hcon with h | h
+        · exact h01 h
+        · exact h0v h),
+      Finset.sum_insert (by
+        intro hcon
+        simp only [Finset.mem_insert, Finset.mem_singleton] at hcon
+        exact h1v hcon),
+      Finset.sum_singleton, ← hr, AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+    simp only [if_pos rfl, if_neg (Ne.symm h01), if_neg (Ne.symm h0v),
+      if_neg (Ne.symm h1v), reduceIte]
+    module
+  · intro z hz
+    rw [Set.mem_singleton_iff.1 hz]
+    simp only [if_neg (Ne.symm h0v), if_neg (Ne.symm h1v), reduceIte]
+    norm_num
+  · have hF := pa18_toFinset3 h01 h0v h1v hfin
+    rw [hF,
+      Finset.sum_insert (by
+        intro hcon
+        simp only [Finset.mem_insert, Finset.mem_singleton] at hcon
+        rcases hcon with h | h
+        · exact h01 h
+        · exact h0v h),
+      Finset.sum_insert (by
+        intro hcon
+        simp only [Finset.mem_insert, Finset.mem_singleton] at hcon
+        exact h1v hcon),
+      Finset.sum_singleton]
+    simp only [if_pos rfl, if_neg (Ne.symm h01), if_neg (Ne.symm h0v),
+      if_neg (Ne.symm h1v), reduceIte]
+    norm_num
+
+/-- HOL `Conforming.NEGLIGIBLE_AFF_GE_2_1`, local form: the closed half-space
+over a stem pair with one tip is Lebesgue-null. (Hypothesis-free: Lean's
+`Coplanar` is the three-witness form, so the degenerate stems need no case
+split — every point of `affGe` is an affine combination of the three points.) -/
+theorem pa18_nullSet_affGe2 (u0 u1 v : V3) :
+    nullSet (affGe ({u0, u1} : Set V3) ({v} : Set V3)) := by
+  show MeasureTheory.volume (affGe ({u0, u1} : Set V3) ({v} : Set V3)) = 0
+  refine pa18_coplanar_measure_null ⟨u0, u1, v, fun x hx => ?_⟩ (subset_refl _)
+  have hx' : Affsign (fun w => 0 ≤ w) ({u0, u1} : Set V3) ({v} : Set V3) x :=
+    Set.mem_setOf_eq.mp hx
+  have heq : (({u0, u1} : Set V3) ∪ {v}) = ({u0, u1, v} : Set V3) := by
+    ext w
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [← heq]
+  exact pa18_affsign_mem_affSpan (s := ({u0, u1} : Set V3)) (t := ({v} : Set V3))
+    (sgn := fun w => 0 ≤ w) hx'
+
+/-- HOL `NULLSET_RULES` (union half): null sets are closed under union. -/
+theorem pa18_nullSet_union {s t : Set V3} (hs : nullSet s) (ht : nullSet t) :
+    nullSet (s ∪ t) := by
+  show MeasureTheory.volume (s ∪ t) = 0
+  have hs' : MeasureTheory.volume s = 0 := hs
+  have ht' : MeasureTheory.volume t = 0 := ht
+  have hle : MeasureTheory.volume (s ∪ t)
+      ≤ MeasureTheory.volume s + MeasureTheory.volume t :=
+    MeasureTheory.measure_union_le s t
+  rw [hs', ht', zero_add] at hle
+  exact le_antisymm hle zero_le
+
+/-- HOL `NEGLIGIBLE_SUBSET` content: subsets of null sets are null. -/
+theorem pa18_nullSet_subset {s t : Set V3} (hsub : t ⊆ s) (hs : nullSet s) :
+    nullSet t := by
+  show MeasureTheory.volume t = 0
+  exact MeasureTheory.measure_mono_null hsub hs
+
+/-- HOL `Local_lemmas.AZIM_DEGENERATE` contrapositive: a nonzero azimuth
+forces both defining triples off the stem line. -/
+theorem pa18_azim_ne0_ncol {u0 u1 v1 v2 : V3} (h : azim u0 u1 v1 v2 ≠ 0) :
+    ¬Collinear3 u0 u1 v1 ∧ ¬Collinear3 u0 u1 v2 := by
+  by_cases hc : Collinear3 u0 u1 v1 ∨ Collinear3 u0 u1 v2
+  · exfalso
+    rw [azim, if_pos hc] at h
+    exact h rfl
+  · exact ⟨fun h1 => hc (Or.inl h1), fun h2 => hc (Or.inr h2)⟩
+
+/-- HOL `Local_lemmas.AZIM_EQ_0_SYM2`: nonvanishing of the azimuth is
+invariant under swapping the last two arguments. -/
+theorem pa18_azim_sym2_ne {u0 u1 v1 v2 : V3} (h : azim u0 u1 v1 v2 ≠ 0) :
+    azim u0 u1 v2 v1 ≠ 0 := by
+  obtain ⟨hnc1, hnc2⟩ := pa18_azim_ne0_ncol h
+  intro h0
+  have hsum := azim_compl hnc2 hnc1
+  rw [if_pos h0] at hsum
+  exact h (by linarith)
 
 end
 end Kepler.Text
