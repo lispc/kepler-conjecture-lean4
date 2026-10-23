@@ -6788,4 +6788,188 @@ theorem y4p_eq_y4 (hfan : FAN 0 V E) {d : V3 × V3}
     rw [h7, ← faceMapTl_apply (V := V) (E := E) (hfan := hfan) hd1, hfeq]
   rw [hp, hq]
 
+/-! ### 9g. W4·W1 墙件（Lane AA 2026-10-23）：
+`Cfyxfty.AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN`（CFYXFTY.hl:982-1022）
+
+wdart/conforming 侦察（docs/scouts/conforming-wall-scout.md + WAVES.md §W1a）
+钉死的唯一真墙件。简化链（勿逐字抄 HOL 的 aff_ge 分解步）：
+σ := sigmaFan x V E e.1 e.2；
+`aff_gt_1_3_subset_dart_leads_into_fan`（PlanarityAuto12:270，hsigma := rfl）
+给 affGt {x} {σ, e.1, e.2} ⊆ dartLeadsInto x V E e.1 e.2；
+`DARTSET_LEADS_INTO_FAN`（PlanarityComponent:375）换 dartsetLeadsIntoFan f；
+affGt {x} {e.1, e.2} ⊆ closure(affGt {x} {σ, e.1, e.2}) 由密度胶水私件
+`wk_affGt12_subset_closure_affGt13` 给出（HOL 的 CLOSURE_AFF_GT_1_3_EQ_AFF_GE_1_3
+消费侧替代：不走 affGe 闭性——OPEN_DIFF_AFF_GE 只给 closure(affGt) ⊆ affGe
+的"错向"包含——而是经公开件 `aff_gt_1_2`/`AFF_GT_1_3` 的显式系数形，用内点
+p = (x+v+u+w)/4 的凸扰动直接构造逼近点）。
+注意：闭扇步不需要 CLOSED_WEDGE（PackingAuto18:5629-5644 现为未证桩，
+W1b 须另行立项）也不需要
+properties_fully_surrounded / fan80 的非共面内容（fan80 仅作为上游
+aff_gt_1_3_subset_dart_leads_into_fan 的假设透传）。
+HOL 证明中的 ext_dart 超图同构步在 pair-dart 编码下整体消失（侦察已核），
+不移植。 -/
+
+/-- 密度胶水（W4·W1 私件）：开扇 `affGt {x} {u, w}` 含于三点开锥
+`affGt {x} {v, u, w}` 的闭包。HOL CFYXFTY.hl:940
+`CLOSURE_AFF_GT_1_3_EQ_AFF_GE_1_3`（closure(aff_gt) = aff_ge，需非共面）
+的替代：本包含对任意点成立，只需 Disjoint（去重求和的显式系数形条件）。
+构造：内点 p = (x+v+u+w)/4 ∈ affGt {x} {v,u,w}（v 侧系数 1/4 > 0），
+逼近点 y' = (1-t)•y + t•p 的 u/w 侧锥系数 (1-t)·t + t/4 > 0（t ≤ 1）。 -/
+private theorem wk_affGt12_subset_closure_affGt13 {x u v w : V3}
+    (hdis12 : Disjoint ({x} : Set V3) ({u, w} : Set V3))
+    (hdis13 : Disjoint ({x} : Set V3) ({v, u, w} : Set V3)) :
+    affGt ({x} : Set V3) ({u, w} : Set V3) ⊆
+      closure (affGt ({x} : Set V3) ({v, u, w} : Set V3)) := by
+  intro z hz
+  rw [aff_gt_1_2 hdis12] at hz
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hzeq⟩ := hz
+  rw [AFF_GT_1_3 x v u w hdis13, Metric.mem_closure_iff]
+  intro ε hε
+  set p : V3 := (1 / 4 : ℝ) • x + (1 / 4 : ℝ) • v + (1 / 4 : ℝ) • u + (1 / 4 : ℝ) • w
+    with hpdef
+  have hpmem : p ∈ affGt ({x} : Set V3) ({v, u, w} : Set V3) := by
+    rw [AFF_GT_1_3 x v u w hdis13, Set.mem_setOf_eq]
+    exact ⟨1 / 4, 1 / 4, 1 / 4, 1 / 4, by norm_num, by norm_num, by norm_num,
+      by norm_num, rfl⟩
+  set t : ℝ := min (1 / 2) (ε / (2 * (‖z - p‖ + 1))) with htdef
+  have hN : 0 ≤ ‖z - p‖ := norm_nonneg _
+  have ht0 : 0 < t := by
+    rw [htdef]
+    exact lt_min (by norm_num) (div_pos hε (by linarith))
+  have ht1 : t ≤ 1 := by
+    rw [htdef]
+    exact le_trans (min_le_left _ _) (by norm_num)
+  have htmin : t ≤ ε / (2 * (‖z - p‖ + 1)) := by rw [htdef]; exact min_le_right _ _
+  refine ⟨(1 - t) • z + t • p, ?_, ?_⟩
+  · simp only [Set.mem_setOf_eq]
+    refine ⟨(1 - t) * t1 + t / 4, t / 4, (1 - t) * t2 + t / 4, (1 - t) * t3 + t / 4,
+      ?_, by positivity, ?_, ?_, ?_⟩
+    · have h10 : 0 ≤ 1 - t := by linarith
+      have h20 : 0 ≤ (1 - t) * t2 := mul_nonneg h10 ht2.le
+      linarith
+    · have h10 : 0 ≤ 1 - t := by linarith
+      have h30 : 0 ≤ (1 - t) * t3 := mul_nonneg h10 ht3.le
+      linarith
+    · linear_combination (1 - t) * hsum
+    · rw [hzeq, hpdef]
+      module
+  · rw [dist_eq_norm]
+    have hsub : z - ((1 - t) • z + t • p) = t • (z - p) := by
+      rw [hzeq, hpdef]
+      module
+    rw [hsub, norm_smul, Real.norm_eq_abs, abs_of_pos ht0]
+    calc t * ‖z - p‖ ≤ ε / (2 * (‖z - p‖ + 1)) * ‖z - p‖ :=
+          mul_le_mul_of_nonneg_right htmin hN
+      _ < ε := by
+          have hpos : 0 < 2 * (‖z - p‖ + 1) := by linarith
+          have hlt : ε / (2 * (‖z - p‖ + 1)) * ‖z - p‖
+              < ε / (2 * (‖z - p‖ + 1)) * (‖z - p‖ + 1) :=
+            mul_lt_mul_of_pos_left (by linarith) (div_pos hε hpos)
+          have heq : ε / (2 * (‖z - p‖ + 1)) * (‖z - p‖ + 1) = ε / 2 := by
+            field_simp
+          linarith [hlt, half_lt_self hε]
+
+/-- HOL CFYXFTY.hl:982 `Cfyxfty.AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN`：
+FAN + 邻数 > 1 + fan80 + f 为 hypermap_of_fan 的面 + e ∈ f，则
+`affGt {x} {e.1, e.2} ⊆ closure (dartsetLeadsIntoFan x V E f)`。
+W4·W1 主件（Lane AA 2026-10-23）；证明链见 §9g 头注。
+面成员取边技巧照抄
+PlanarityComponent.dartset_leads_into_is_topological_component_yfan
+（faceSet → darts = dart1OfFan → {e.1, e.2} ∈ E）。
+实例注记：本模块闭包内 dartDecEq2 抢占 Hypermap 投影的实例合成
+（§0a 陷阱），投影一律 `@`-显式钉 instProd 味（与 DARTSET_LEADS_INTO_FAN
+陈述的 PlanarityComponent 烤定味一致）。 -/
+theorem AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN
+    (x : V3) (V : Set V3) (E : Set (Set V3)) (f : Set (V3 × V3)) (e : V3 × V3)
+    (hfan : FAN x V E) (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hf : f ∈ @Hypermap.faceSet (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan)) (he : e ∈ f) :
+    affGt ({x} : Set V3) ({e.1, e.2} : Set V3) ⊆
+      closure (dartsetLeadsIntoFan x V E f) := by
+  have hdarts : (↑(@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan)) : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have he_darts : e ∈ @Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan) := by
+    have heU : e ∈ ⋃₀ @Hypermap.faceSet (V3 × V3)
+        (fun a b => instDecidableEqProd a b) (hypermapOfFan x V E hfan) :=
+      Set.mem_sUnion.mpr ⟨f, hf, he⟩
+    have hsu := sUnion_setOfOrbits
+      (@Hypermap.faceMap_permutes (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan x V E hfan))
+    change e ∈ (↑(@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan)) : Set (V3 × V3))
+    rw [hsu]
+    simpa [Hypermap.faceSet] using heU
+  have he_dart1 : e ∈ dart1OfFan V E := by rw [← hdarts]; exact he_darts
+  have hvw : ({e.1, e.2} : Set V3) ∈ E := by simpa [dart1OfFan] using he_dart1
+  have he2S : e.2 ∈ setOfEdge e.1 V E :=
+    (properties_of_setOfEdge_fan x V E e.1 e.2 hfan).mp hvw
+  have hσS : sigmaFan x V E e.1 e.2 ∈ setOfEdge e.1 V E :=
+    sigma_fan_in_setOfEdge hfan he2S
+  have huv' : ({e.1, sigmaFan x V E e.1 e.2} : Set V3) ∈ E :=
+    (properties_of_setOfEdge_fan x V E e.1 (sigmaFan x V E e.1 e.2) hfan).mpr hσS
+  have hpair : ({e.1, sigmaFan x V E e.1 e.2} : Set V3)
+      = ({sigmaFan x V E e.1 e.2, e.1} : Set V3) := by
+    ext a; simp; tauto
+  have huv : ({sigmaFan x V E e.1 e.2, e.1} : Set V3) ∈ E := by rwa [hpair] at huv'
+  have hnc : ¬ Collinear3 x e.1 e.2 := fan_not_collinear hfan hvw
+  have hxe1 : x ≠ e.1 :=
+    fun heq => hnc (collinear3_of_eq (v := x) (w := e.1) (w1 := e.2) heq.symm)
+  have hxe2 : x ≠ e.2 :=
+    fun heq => hnc (collinear3_pair_left (v0 := x) (v1 := e.1) heq.symm)
+  have hncσ : ¬ Collinear3 x (sigmaFan x V E e.1 e.2) e.1 := fan_not_collinear hfan huv
+  have hxσ : x ≠ sigmaFan x V E e.1 e.2 :=
+    fun heq => hncσ (collinear3_of_eq (v := x) (w := sigmaFan x V E e.1 e.2)
+      (w1 := e.1) heq.symm)
+  have hdis12 : Disjoint ({x} : Set V3) ({e.1, e.2} : Set V3) := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    rw [Set.mem_singleton_iff] at ha
+    subst ha
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hb
+    rcases hb with h | h
+    · exact hxe1 h
+    · exact hxe2 h
+  have hdis13 : Disjoint ({x} : Set V3)
+      ({sigmaFan x V E e.1 e.2, e.1, e.2} : Set V3) := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    rw [Set.mem_singleton_iff] at ha
+    subst ha
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hb
+    rcases hb with h | h | h
+    · exact hxσ h
+    · exact hxe1 h
+    · exact hxe2 h
+  calc affGt ({x} : Set V3) ({e.1, e.2} : Set V3)
+      ⊆ closure (affGt ({x} : Set V3)
+          ({sigmaFan x V E e.1 e.2, e.1, e.2} : Set V3)) :=
+        wk_affGt12_subset_closure_affGt13 hdis12 hdis13
+    _ ⊆ closure (dartLeadsInto x V E e.1 e.2) :=
+        closure_mono (aff_gt_1_3_subset_dart_leads_into_fan x V E
+          (sigmaFan x V E e.1 e.2) e.1 e.2 hfan huv hvw rfl hcard hfan80)
+    _ = closure (dartsetLeadsIntoFan x V E f) := by
+        rw [DARTSET_LEADS_INTO_FAN hfan hcard hfan80 hf e he]
+
+/-- W4·W1 主件的 Tl 接口版：面成员改走 `hypermapOfFanTl` 的 faceSet
+（TameLp 章 `faceSetOfFan` 惯例，dartDecEq2 味）。faceSet 作为集合经
+§0b 字段级 rfl 桥对实例参数不敏感（setOfOrbits 的数据不含实例）。 -/
+theorem AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN_tl
+    (V : Set V3) (E : Set (Set V3)) (f : Set (V3 × V3)) (e : V3 × V3)
+    (hfan : FAN 0 V E) (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 0 V E)
+    (hf : f ∈ (hypermapOfFanTl V E hfan).faceSet) (he : e ∈ f) :
+    affGt ({0} : Set V3) ({e.1, e.2} : Set V3) ⊆
+      closure (dartsetLeadsIntoFan 0 V E f) := by
+  have hfs : (hypermapOfFanTl V E hfan).faceSet =
+      @Hypermap.faceSet (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan 0 V E hfan) := by
+    unfold Hypermap.faceSet
+    rw [dartsTl_eq, faceMapTl_eq]
+  refine AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN 0 V E f e hfan hcard hfan80
+    (hfs ▸ hf) he
+
 end Kepler.Text.TameLp
