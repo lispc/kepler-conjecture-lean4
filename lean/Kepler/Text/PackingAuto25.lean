@@ -2457,25 +2457,113 @@ theorem LEAF_RANK_GG_SUM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : �
         gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {elV ul 0, elV ul 1} X := by
   sorry
 
+/-- Private helper (2026-10-23 pa25dihx): `dihV` of a non-coplanar quadruple
+never vanishes — Ne-form copy of `DIHV_EQ_0_PI_EQ_COPLANAR_ALT` (file tail,
+past :8900), which is unreachable from this point because Lean forbids
+same-file forward references.  Body is verbatim the tail lemma's; every
+ingredient is public in `Kepler.Geom`/Mathlib. -/
+private theorem p25_dihV_ne_zero_of_not_coplanar (v0 v1 w1 w2 : V3)
+    (hnc : ¬ Coplanar ({v0, v1, w1, w2} : Set V3)) :
+    dihV v0 v1 w1 w2 ≠ 0 := by
+  classical
+  -- a point collinear with the axis already lives in the axis line
+  have axisLine : ∀ x : V3, Collinear3 v0 v1 x →
+      x ∈ (affineSpan ℝ ({v0, v1} : Set V3)) := by
+    intro x hx
+    have hv : v1 ≠ v0 := by
+      intro he
+      have hset : ({v0, v1, w1, w2} : Set V3) = ({v0, w1, w2} : Set V3) := by
+        rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      exact hnc (by rw [hset]; exact coplanar_triple v0 w1 w2)
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := v0) (w := v1) (w1 := x) hv).mp hx
+    have hmem := smul_vsub_vadd_mem_affineSpan_pair (k := ℝ) (p₁ := v0) (p₂ := v1) (r := c)
+    have heq : (c • (v1 -ᵥ v0) +ᵥ v0 : V3) = x := by
+      rw [vadd_eq_add, vsub_eq_sub, ← hc]; abel
+    rwa [heq] at hmem
+  -- a plane spanned by the axis and either point contains the whole quadruple
+  have copPlane : ∀ x y : V3, Collinear3 v0 v1 x →
+      Coplanar ({v0, v1, x, y} : Set V3) := by
+    intro x y hx
+    refine ⟨v0, v1, y, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with hpe | hpe | hpe | hpe
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+    · rw [hpe]
+      exact SetLike.le_def.mp (affineSpan_mono ℝ (by
+        intro q hq; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto))
+        (axisLine x hx)
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+  have h1 : ¬ Collinear3 v0 v1 w1 := fun hc => hnc (copPlane w1 w2 hc)
+  have h2 : ¬ Collinear3 v0 v1 w2 := by
+    intro hc
+    have hset : ({v0, v1, w1, w2} : Set V3) = ({v0, v1, w2, w1} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    exact hnc (by rw [hset]; exact copPlane w2 w1 hc)
+  intro hdih
+  rcases lt_or_ge (azim v0 v1 w1 w2) Real.pi with hlt | hge
+  · have hazi : azim v0 v1 w1 w2 = 0 := by
+      rw [azim_dihv_same h1 h2 hlt]; exact hdih
+    have hw1gt : w1 ∈ affGt ({v0, v1} : Set V3) {w2} := (azim_eq_zero_iff h1 h2).mp hazi
+    have hwv : v0 ≠ v1 := fun he => h1 (collinear3_of_eq he.symm)
+    have hw20 : w2 ≠ v0 := fun he => h2 (collinear3_pair_left he)
+    have hw21 : w2 ≠ v1 := fun he => h2 (collinear3_pair_right he)
+    obtain ⟨c, -, h, hcomb⟩ :=
+      (affGt_pair_iff (v0 := v0) (v1 := v1) (x := w2) (y := w1) hwv hw20 hw21) |>.mp hw1gt
+    refine hnc ⟨v0, v1, w2, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with hpe | hpe | hpe | hpe
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+    · rw [hpe]
+      have hw2mem : w2 ∈ (affineSpan ℝ ({v0, v1, w2} : Set V3)) :=
+        mem_affineSpan (k := ℝ) (by simp : w2 ∈ ({v0, v1, w2} : Set V3))
+      have hw1eq : (w1 - w2 : V3) = (1 - c - h) • (v0 - w2) + h • (v1 - w2) := by
+        rw [show (w1 : V3) = v0 + (w1 - v0) from by abel, hcomb]; module
+      have hvv : (w1 - w2 : V3) ∈ vectorSpan ℝ ({v0, v1, w2} : Set V3) := by
+        rw [hw1eq, vectorSpan_eq_span_vsub_set_right ℝ (show w2 ∈ ({v0, v1, w2} : Set V3) from
+          by simp)]
+        have himg1 : (v0 -ᵥ w2 : V3) ∈
+            (fun x : V3 => x -ᵥ w2) '' ({v0, v1, w2} : Set V3) := ⟨v0, by simp, rfl⟩
+        have himg2 : (v1 -ᵥ w2 : V3) ∈
+            (fun x : V3 => x -ᵥ w2) '' ({v0, v1, w2} : Set V3) := ⟨v1, by simp, rfl⟩
+        exact Submodule.add_mem _ (Submodule.smul_mem _ _ (Submodule.subset_span himg1))
+          (Submodule.smul_mem _ _ (Submodule.subset_span himg2))
+      have hres := vadd_mem_affineSpan_of_mem_affineSpan_of_mem_vectorSpan hw2mem hvv
+      rwa [vadd_eq_add, sub_add_cancel] at hres
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+  · have hazi := azim_dihv_compl h1 h2 hge
+    rw [hdih] at hazi
+    have h2pi := azim_lt_two_pi v0 v1 w1 w2
+    linarith
+
 /-- HOL `MCELL2_DIHX_POS`. -/
 theorem MCELL2_DIHX_POS (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X) :
     0 < dihX V X (elV ul 0, elV ul 1) := by
-  -- NEEDS(2026-10-23 pa25wim 复评降档重开): 全部输入已证、证明骨架已写好
-  -- (4 次编译未收口, 按 2 次纪律回退, 处方存 lane_snapshots/pa25wim/DELIVERY.md §5):
-  -- ① 非零测: 茎边成员 he 经 RIJRIED(PA4:1224, mcell2/mcell 2 换形用 BumpP4.MCELL2)
-  -- 反证; ② MCELL2_DIHX(PA21:5906 已证)化归 dihV; ③ 0 ≤ dihV 内联两行
-  -- (simp only [dihV, Kepler.Geom.arcV]; exact Real.arccos_nonneg _, PA19
-  -- DIHV_LE_0 不在 import 闭包勿引); ④ ≠ 0 支: DIHV_EQ_0_PI_EQ_COPLANAR_ALT
-  -- (本文件 :8830 已证)需 ¬Coplanar {el0, el1, mxi, omega}——反证共面后
-  -- mcell2 ⊆ affGe ⊆ affineSpan 四点集(p25_affGe_subset_affineSpan +
-  -- MCELL2_SUBSET_AFF_GE + hdV/elV 具体列表换形用 p25m_list4_eq ul hb.1 先
-  -- cases 成具体四元表)再 Measure.addHaar_affineSubspace +
-  -- p25_affineSpan_three_ne_top 零测矛盾。工程坑: SetLike ≤ 的成员传输要
-  -- SetLike.le_def.mp(文件 :8906 有先例); List.getD 本版是 Option 链式实现,
-  -- headD/getD 换形勿用 rfl 用 simp。
-  sorry
+  -- 2026-10-23 pa25dihx 收口(纯装配): ① 茎边成员 he 经 BumpP4.RIJRIED +
+  -- BumpP4.MCELL2 反证出 X 非零测; ② MCELL2_DIHX(PA21, import 闭包内)化归
+  -- dihV; ③ 0 ≤ dihV 内联两行(PA19 不在 import 闭包, 勿引); ④ ≠ 0 支 =
+  -- DIHV_EQ_0_PI_EQ_COPLANAR_ALT(本文件) + NOT_COPLANAR_EXTREME_MCELL2
+  -- (PA21 已证)——处方里"共面 ⇒ affGe ⊆ affineSpan ⇒ 零测"的重建被后者
+  -- 整体覆盖, 无需 p25m_list4_eq / SetLike.le_def 路线。
+  subst hX
+  have hn : ¬ nullSet (mcell2 V ul) := by
+    intro hnull
+    rw [BumpP4.MCELL2] at hnull
+    have hempt := BumpP4.RIJRIED V ul 2 hnull
+    rw [← BumpP4.MCELL2] at hempt
+    rw [hempt] at he
+    exact Set.notMem_empty _ he
+  rw [MCELL2_DIHX V (mcell2 V ul) ul hs hp hb rfl hn]
+  refine lt_of_le_of_ne ?_ ?_
+  · simp only [dihV, Kepler.Geom.arcV]
+    exact Real.arccos_nonneg _
+  · exact (p25_dihV_ne_zero_of_not_coplanar _ _ _ _
+      (NOT_COPLANAR_EXTREME_MCELL2 V ul hp hs hb hn)).symm
 
 /-- Helper: `truncateSimplex j ul` is the `j+1`-st prefix of `ul` whenever
 that prefix exists (unfolding the `Classical.epsilon`). -/
