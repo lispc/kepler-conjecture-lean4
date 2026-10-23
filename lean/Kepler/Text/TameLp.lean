@@ -5788,4 +5788,332 @@ theorem MQMSMAB (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
     JGTDEBU11 V hc hfan, SZIPOAS hineq V hc hfan, BDJYFFB1 V hc hmain hineq hfan,
     MQMSMAB_tame13a V hc hlpfan hmain hineq h9a⟩
 
+/-! ## 9. y-kit 定义层（lp_ineqs_proofs Fan 节 Dart/DartMore/StdDart/Nonlinear-Y
+小节 + lp_ineqs_defs.hl y_fan 定义族；2026-10-23 Lane N W1）
+
+HOL 锚点：lp_ineqs_defs.hl:16-23,34（y1..y9_fan、y4'_fan 定义）、
+lp_ineqs_proofs-compiled.hl:1296-1475（Dart 节 y1/y2/y6 界 + fd_in/ifd_in）、
+:1478-1509（Dart3）、:1533-1651（StdDart/Inner = std2 族）、:1654-1881（DartMore
+y3/y4/y5 界）、:2184-2259（Nonlinear-Y：ys_eq/ys_eq_alt）、
+INVERSE_F_FAN_PAIR_EXT_EXPLICIT（fan/hypermap_and_fan.hl:519）。
+
+编码偏差注记：HOL y-kit 各节以 `d IN dart_of_fan (V,E)` 为节前提，再经
+`dart1_eq`（FullySurrounded ⟹ dart1 = dart，lp_ineqs_proofs:1178）折算到 dart1
+上使用；Lean 侧 `hypermapOfFanTl` 的 dart 集按构造即 `dart1OfFan`
+（COMPONENTS_HYPERMAP_OF_FAN 偏差注记，§2），四目标 `darts_k` 消费亦在 dart1
+上，故本节各件一律取 `d ∈ dart1OfFan V E` 为前提（省去 dart1_eq 折算；
+`yk_dart1_eq` 单独保留 FullySurrounded 桥供 W2 的 f_surr 链使用）。
+`dist` 对偶：HOL 二元组距离 `dist (v,w) = ‖v−w‖` 折算为 Lean `dist d.1 d.2`
+（§7 arc kit 同约定，非 Prod 上确界度量）。-/
+
+/-! ### 9a. y_fan 定义族（lp_ineqs_defs.hl:16-23,34 逐字镜像） -/
+
+/-- HOL `y1_fan`（lp_ineqs_defs.hl:16）：dart 第一分量范数。 -/
+noncomputable def y1Fan (d : V3 × V3) : ℝ := ‖d.1‖
+
+/-- HOL `y2_fan`（lp_ineqs_defs.hl:17）：dart 第二分量范数。 -/
+noncomputable def y2Fan (d : V3 × V3) : ℝ := ‖d.2‖
+
+/-- HOL `y3_fan`（lp_ineqs_defs.hl:18）：`inverse f` 第一分量范数
+（apex 0 烤定，同 lp_ineqs 无参形）。 -/
+noncomputable def y3Fan (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) : ℝ :=
+  ‖(Function.invFun (fFanPairExt 0 V E) d).1‖
+
+/-- HOL `y4_fan`（lp_ineqs_defs.hl:19）：`f d` 的二元组距离。 -/
+noncomputable def y4Fan (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) : ℝ :=
+  dist (fFanPairExt 0 V E d).1 (fFanPairExt 0 V E d).2
+
+/-- HOL `y5_fan`（lp_ineqs_defs.hl:20）：`inverse f d` 的二元组距离。 -/
+noncomputable def y5Fan (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) : ℝ :=
+  dist (Function.invFun (fFanPairExt 0 V E) d).1
+    (Function.invFun (fFanPairExt 0 V E) d).2
+
+/-- HOL `y6_fan`（lp_ineqs_defs.hl:21）：dart 二元组距离。 -/
+noncomputable def y6Fan (d : V3 × V3) : ℝ := dist d.1 d.2
+
+/-- HOL `y4'_fan`（lp_ineqs_defs.hl:34）：`dist (SND x, FST (inverse f x))`。 -/
+noncomputable def y4pFan (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) : ℝ :=
+  dist d.2 (Function.invFun (fFanPairExt 0 V E) d).1
+
+/-- HOL `y8_fan`（lp_ineqs_defs.hl:22）：`y5_fan (inverse f x)`。 -/
+noncomputable def y8Fan (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) : ℝ :=
+  y5Fan V E (Function.invFun (fFanPairExt 0 V E) d)
+
+/-- HOL `y9_fan`（lp_ineqs_defs.hl:23）：`dist (f d)`（与 y4_fan 逐字同式，
+HOL 保留双名，此处忠实镜像）。 -/
+noncomputable def y9Fan (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) : ℝ :=
+  dist (fFanPairExt 0 V E d).1 (fFanPairExt 0 V E d).2
+
+/-! ### 9b. 逆映射显式形（INVERSE_F_FAN_PAIR_EXT_EXPLICIT 折算） -/
+
+/-- HOL `INVERSE_F_FAN_PAIR_EXT_EXPLICIT`（hypermap_and_fan.hl:519）的逐点形：
+`f_fan_pair_ext` 的函数逆在 dart1 上 = `(σ_v w, v)`，在 dart1 外 = 恒等
+（HOL 全函数等式 `inverse (f_fan_pair_ext (V,E)) =
+res ((v,w). σ_(vec 0) v w, v) (dart1_of_fan (V,E))` 的 funext 拆开形；
+Lean `Function.invFun` 即 HOL `inverse`）。 -/
+theorem yk_invFunFFanPairExt_apply (hfan : FAN 0 V E) (d : V3 × V3) :
+    Function.invFun (fFanPairExt 0 V E) d =
+      if d ∈ dart1OfFan V E then (sigmaFan 0 V E d.1 d.2, d.1) else d := by
+  have hfg : ∀ e : V3 × V3, fFanPairExt 0 V E
+        (if e ∈ dart1OfFan V E then (sigmaFan 0 V E e.1 e.2, e.1) else e) = e := by
+    intro e
+    by_cases he : e ∈ dart1OfFan V E
+    · rw [if_pos he]
+      -- (σ e.1 e.2, e.1) ∈ dart1，且 f 作用其上回到 e
+      have hmemV := FAN_in_setOfEdge 0 V E e.1 e.2 hfan he
+      have hsoe : e.2 ∈ setOfEdge e.1 V E := hmemV.2.2.1
+      have hs : sigmaFan 0 V E e.1 e.2 ∈ setOfEdge e.1 V E :=
+        sigma_fan_in_setOfEdge hfan hsoe
+      have hge1 : (sigmaFan 0 V E e.1 e.2, e.1) ∈ dart1OfFan V E := by
+        have h := (properties_of_setOfEdge_fan 0 V E e.1
+          (sigmaFan 0 V E e.1 e.2) hfan).mpr hs
+        rwa [Set.pair_comm] at h
+      have hfe : fFanPairExt 0 V E (sigmaFan 0 V E e.1 e.2, e.1)
+          = fFanPair 0 V E (sigmaFan 0 V E e.1 e.2, e.1) := by
+        simp only [fFanPairExt]
+        exact if_pos hge1
+      have hinv : inverseSigmaFan 0 V E e.1 (sigmaFan 0 V E e.1 e.2) = e.2 := by
+        have hcomp := (inverse_sigma_fan_comp hfan hsoe).1
+        have hext : extensionSigmaFan 0 V E e.1 e.2 = sigmaFan 0 V E e.1 e.2 := by
+          simp only [extensionSigmaFan, if_neg (not_not.mpr hsoe)]
+        rw [← hext]
+        exact congrFun hcomp e.2
+      show fFanPairExt 0 V E (sigmaFan 0 V E e.1 e.2, e.1) = e
+      rw [hfe]
+      show (e.1, inverseSigmaFan 0 V E e.1 (sigmaFan 0 V E e.1 e.2)) = e
+      rw [hinv]
+    · rw [if_neg he]
+      have hfe : fFanPairExt 0 V E e = e := by
+        simp only [fFanPairExt, if_neg he]
+      rw [hfe]
+  have hgf : ∀ e : V3 × V3,
+      (if fFanPairExt 0 V E e ∈ dart1OfFan V E
+        then (sigmaFan 0 V E (fFanPairExt 0 V E e).1 (fFanPairExt 0 V E e).2,
+          (fFanPairExt 0 V E e).1)
+        else fFanPairExt 0 V E e) = e := by
+    intro e
+    by_cases he : e ∈ dart1OfFan V E
+    · have hfe : fFanPairExt 0 V E e = (e.2, inverseSigmaFan 0 V E e.2 e.1) := by
+        simp only [fFanPairExt, if_pos he]
+        rfl
+      have hfp : fFanPair 0 V E e = (e.2, inverseSigmaFan 0 V E e.2 e.1) := rfl
+      have hf1 : (e.2, inverseSigmaFan 0 V E e.2 e.1) ∈ dart1OfFan V E := by
+        rw [← hfp]
+        exact fFanPair_mem_dart1 hfan he
+      have hσ : sigmaFan 0 V E e.2 (inverseSigmaFan 0 V E e.2 e.1) = e.1 :=
+        (inverseSigmaFan_eq hfan (FAN_in_setOfEdge 0 V E e.1 e.2 hfan he).2.2.2
+          rfl).2
+      rw [hfe, if_pos hf1]
+      show (sigmaFan 0 V E e.2 (inverseSigmaFan 0 V E e.2 e.1), e.2) = e
+      rw [hσ]
+    · have hfe : fFanPairExt 0 V E e = e := by
+        simp only [fFanPairExt, if_neg he]
+      rw [hfe, if_neg he]
+  have hfq : fFanPairExt 0 V E (Function.invFun (fFanPairExt 0 V E) d) = d :=
+    Function.invFun_eq
+      ⟨if d ∈ dart1OfFan V E then (sigmaFan 0 V E d.1 d.2, d.1) else d, hfg d⟩
+  have hinj : Function.Injective (fFanPairExt 0 V E) :=
+    Function.LeftInverse.injective
+      (g := fun e =>
+        if e ∈ dart1OfFan V E then (sigmaFan 0 V E e.1 e.2, e.1) else e)
+      hgf
+  apply hinj
+  rw [hfq]
+  exact (hfg d).symm
+
+/-- HOL `fd_in`（lp_ineqs_proofs:1511，dart1 折算形）：dart1 在
+`f_fan_pair_ext` 下封闭（Fan.lean `fFanPair_mem_dart1` 的 ext 版）。 -/
+theorem yk_fd_in (hfan : FAN 0 V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    fFanPairExt 0 V E d ∈ dart1OfFan V E := by
+  rw [show fFanPairExt 0 V E d = fFanPair 0 V E d from by
+    simp only [fFanPairExt, if_pos hd]]
+  exact fFanPair_mem_dart1 hfan hd
+
+/-- HOL `ifd_in`（lp_ineqs_proofs:1518，dart1 折算形）：dart1 在函数逆下封闭
+（逆在 dart1 上 = `(σ_v w, v)`，仍为 dart1）。 -/
+theorem yk_ifd_in (hfan : FAN 0 V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    Function.invFun (fFanPairExt 0 V E) d ∈ dart1OfFan V E := by
+  rw [yk_invFunFFanPairExt_apply hfan d, if_pos hd]
+  have hmemV := FAN_in_setOfEdge 0 V E d.1 d.2 hfan hd
+  have hs : sigmaFan 0 V E d.1 d.2 ∈ setOfEdge d.1 V E :=
+    sigma_fan_in_setOfEdge hfan hmemV.2.2.1
+  have h := (properties_of_setOfEdge_fan 0 V E d.1
+    (sigmaFan 0 V E d.1 d.2) hfan).mpr hs
+  rwa [Set.pair_comm] at h
+
+/-- dart 的两个分量都在 V 中（HOL `in_dart_inV`/`PAIR_IN_DART_OF_FAN`，
+dart1 折算形；fst 侧同 §2c `dartOfFan_fst_mem`）。 -/
+theorem yk_in_dart_inV (hfan : FAN 0 V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    d.1 ∈ V ∧ d.2 ∈ V :=
+  ⟨(FAN_in_setOfEdge 0 V E d.1 d.2 hfan hd).1,
+    (FAN_in_setOfEdge 0 V E d.1 d.2 hfan hd).2.1⟩
+
+/-! ### 9c. 支撑估计（norm_v / dart1_eq / pack_dist / in_std） -/
+
+/-- HOL `norm_v`（lp_ineqs_proofs:1204）：V 中向量范数 ∈ [2, 2h0]。 -/
+theorem yk_norm_v (hsub : V ⊆ ballAnnulus) {v : V3} (hv : v ∈ V) :
+    (2 : ℝ) ≤ ‖v‖ ∧ ‖v‖ ≤ 2 * h0 := by
+  have hmem : v ∈ ballAnnulus := hsub hv
+  have hlow := two_le_norm_of_mem_ballAnnulus hmem
+  simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball] at hmem
+  have h2 : dist v 0 = ‖v‖ := by rw [dist_eq_norm, sub_zero]
+  refine ⟨hlow, ?_⟩
+  rw [← h2]
+  exact hmem.1
+
+/-- HOL `dart1_eq`（lp_ineqs_proofs:1178 的 FullySurrounded 形，经
+add_triangle-compiled.hl:207 `fully_surrounded_dart_of_fan_eq`）：
+FullySurrounded 下无孤立点。 -/
+theorem yk_dart1_eq (hfan : FAN 0 V E) (hfs : FullySurrounded V E) :
+    dartOfFan V E = dart1OfFan V E := by
+  refine dartOfFan_eq_dart1_of_surrounded hfan (fun v hv => ?_)
+  have h := SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hv
+    (fun d hd _ => hfs d hd)
+  omega
+
+/-- HOL `pack_dist`（lp_ineqs_proofs:1219，dart1 折算形）：dart1 对的二元组
+距离 ≥ 2（packing 下界，经 `edge_ne_of_fan` + `Packing.dist_ge_two`）。 -/
+theorem yk_pack_dist (hfan : FAN 0 V E) (hpack : Packing V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : 2 ≤ dist d.1 d.2 := by
+  have hmem := FAN_in_setOfEdge 0 V E d.1 d.2 hfan hd
+  exact Packing.dist_ge_two hpack hmem.1 hmem.2.1 (edge_ne_of_fan hfan hd)
+
+/-- HOL `in_std`（lp_ineqs_proofs:1539，dart1 折算形）：E = ESTD V 时 dart
+二元组距离 ≤ 2h0（= 2.52）且 ≤ 3（`IN_ESTD` 的 dist ≤ 2h0 + 算术）。 -/
+theorem yk_in_std (hE : E = ESTD V) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    dist d.1 d.2 ≤ 2 * h0 ∧ dist d.1 d.2 ≤ 3 := by
+  rw [hE] at hd
+  obtain ⟨v, w, he, -, -, -, hle⟩ := hd
+  have h23 : (2 : ℝ) * h0 ≤ 3 := by norm_num [h0]
+  rcases Set.pair_eq_pair_iff.mp he with h | h
+  · rw [h.1, h.2]
+    exact ⟨hle, le_trans hle h23⟩
+  · rw [h.1, h.2, dist_comm]
+    exact ⟨hle, le_trans hle h23⟩
+
+/-! ### 9d. y 界（Dart 节 :1421-1456 + DartMore 节 :1715-1743 +
+StdDart/Inner 节 :1550-1630） -/
+
+/-- HOL `y1_lo`（lp_ineqs_proofs:1421）。 -/
+theorem y1_lo (hfan : FAN 0 V E) (hsub : V ⊆ ballAnnulus) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : (2 : ℝ) ≤ y1Fan d :=
+  (yk_norm_v hsub (yk_in_dart_inV hfan hd).1).1
+
+/-- HOL `y1_hi`（lp_ineqs_proofs:1435）。 -/
+theorem y1_hi (hfan : FAN 0 V E) (hsub : V ⊆ ballAnnulus) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y1Fan d ≤ 2 * h0 :=
+  (yk_norm_v hsub (yk_in_dart_inV hfan hd).1).2
+
+/-- HOL `y2_lo`（lp_ineqs_proofs:1428）。 -/
+theorem y2_lo (hfan : FAN 0 V E) (hsub : V ⊆ ballAnnulus) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : (2 : ℝ) ≤ y2Fan d :=
+  (yk_norm_v hsub (yk_in_dart_inV hfan hd).2).1
+
+/-- HOL `y2_hi`（lp_ineqs_proofs:1442）。 -/
+theorem y2_hi (hfan : FAN 0 V E) (hsub : V ⊆ ballAnnulus) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y2Fan d ≤ 2 * h0 :=
+  (yk_norm_v hsub (yk_in_dart_inV hfan hd).2).2
+
+/-- HOL `y6_lo`（lp_ineqs_proofs:1449）。 -/
+theorem y6_lo (hfan : FAN 0 V E) (hpack : Packing V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : (2 : ℝ) ≤ y6Fan d :=
+  yk_pack_dist hfan hpack hd
+
+/-- HOL `y3_lo`（lp_ineqs_proofs:1715）：经 `ifd_in` + `in_dart_inV` +
+`norm_v`。 -/
+theorem y3_lo (hfan : FAN 0 V E) (hsub : V ⊆ ballAnnulus) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : (2 : ℝ) ≤ y3Fan V E d :=
+  (yk_norm_v hsub (yk_in_dart_inV hfan (yk_ifd_in hfan hd)).1).1
+
+/-- HOL `y3_hi`（lp_ineqs_proofs:1722）。 -/
+theorem y3_hi (hfan : FAN 0 V E) (hsub : V ⊆ ballAnnulus) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y3Fan V E d ≤ 2 * h0 :=
+  (yk_norm_v hsub (yk_in_dart_inV hfan (yk_ifd_in hfan hd)).1).2
+
+/-- HOL `y4_lo`（lp_ineqs_proofs:1729）：经 `fd_in` + `pack_dist`。 -/
+theorem y4_lo (hfan : FAN 0 V E) (hpack : Packing V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : (2 : ℝ) ≤ y4Fan V E d :=
+  yk_pack_dist hfan hpack (yk_fd_in hfan hd)
+
+/-- HOL `y5_lo`（lp_ineqs_proofs:1736）：经 `ifd_in` + `pack_dist`。 -/
+theorem y5_lo (hfan : FAN 0 V E) (hpack : Packing V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : (2 : ℝ) ≤ y5Fan V E d :=
+  yk_pack_dist hfan hpack (yk_ifd_in hfan hd)
+
+/-- HOL `y4_hi_std`（lp_ineqs_proofs:1556）：E = ESTD V 时 y4 ≤ 3。 -/
+theorem y4_hi_std (hfan : FAN 0 V E) (hE : E = ESTD V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y4Fan V E d ≤ 3 :=
+  (yk_in_std hE (yk_fd_in hfan hd)).2
+
+/-- HOL `y5_hi_std`（lp_ineqs_proofs:1563）。 -/
+theorem y5_hi_std (hfan : FAN 0 V E) (hE : E = ESTD V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y5Fan V E d ≤ 3 :=
+  (yk_in_std hE (yk_ifd_in hfan hd)).2
+
+/-- HOL `y6_hi_std`（lp_ineqs_proofs:1570）。 -/
+theorem y6_hi_std (hE : E = ESTD V) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    y6Fan d ≤ 3 :=
+  (yk_in_std hE hd).2
+
+/-- HOL `y8_hi_std`（lp_ineqs_proofs:1578）：y8 = y5∘inv f ≤ 2h0
+（`ifd_in` 两次 + `in_std`）。 -/
+theorem y8_hi_std (hfan : FAN 0 V E) (hE : E = ESTD V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y8Fan V E d ≤ 2 * h0 :=
+  (yk_in_std hE (yk_ifd_in hfan (yk_ifd_in hfan hd))).1
+
+/-- HOL `y9_hi_std`（lp_ineqs_proofs:1586）：经 `fd_in` + `in_std`。 -/
+theorem y9_hi_std (hfan : FAN 0 V E) (hE : E = ESTD V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y9Fan V E d ≤ 2 * h0 :=
+  (yk_in_std hE (yk_fd_in hfan hd)).1
+
+/-- HOL `y4_hi_std2`（lp_ineqs_proofs:1598）。 -/
+theorem y4_hi_std2 (hfan : FAN 0 V E) (hE : E = ESTD V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y4Fan V E d ≤ 2 * h0 :=
+  (yk_in_std hE (yk_fd_in hfan hd)).1
+
+/-- HOL `y5_hi_std2`（lp_ineqs_proofs:1605）。 -/
+theorem y5_hi_std2 (hfan : FAN 0 V E) (hE : E = ESTD V) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : y5Fan V E d ≤ 2 * h0 :=
+  (yk_in_std hE (yk_ifd_in hfan hd)).1
+
+/-- HOL `y6_hi_std2`（lp_ineqs_proofs:1612）。 -/
+theorem y6_hi_std2 (hE : E = ESTD V) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    y6Fan d ≤ 2 * h0 :=
+  (yk_in_std hE hd).1
+
+/-! ### 9e. ys_eq（Nonlinear-Y 节 :2184-2259，定义层顶石） -/
+
+/-- HOL `ys_eq`（lp_ineqs_proofs:2187，dart1 折算形）：y1..y6 在 dart
+`(v, w)` 上全部显式化——核心 = `yk_invFunFFanPairExt_apply`。 -/
+theorem ys_eq (hfan : FAN 0 V E) {v w : V3} (hvw : (v, w) ∈ dart1OfFan V E) :
+    y1Fan (v, w) = ‖v‖ ∧ y2Fan (v, w) = ‖w‖ ∧
+      y3Fan V E (v, w) = ‖sigmaFan 0 V E v w‖ ∧
+      y4pFan V E (v, w) = dist w (sigmaFan 0 V E v w) ∧
+      y5Fan V E (v, w) = dist v (sigmaFan 0 V E v w) ∧
+      y6Fan (v, w) = dist v w := by
+  have hinv : Function.invFun (fFanPairExt 0 V E) (v, w)
+      = (sigmaFan 0 V E v w, v) := by
+    rw [yk_invFunFFanPairExt_apply hfan (v, w), if_pos hvw]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, rfl⟩
+  · show ‖(Function.invFun (fFanPairExt 0 V E) (v, w)).1‖
+      = ‖sigmaFan 0 V E v w‖
+    rw [hinv]
+  · show dist (v, w).2 (Function.invFun (fFanPairExt 0 V E) (v, w)).1
+      = dist w (sigmaFan 0 V E v w)
+    rw [hinv]
+  · show dist (Function.invFun (fFanPairExt 0 V E) (v, w)).1
+      (Function.invFun (fFanPairExt 0 V E) (v, w)).2
+      = dist v (sigmaFan 0 V E v w)
+    rw [hinv, dist_comm]
+
+/-- HOL `ys_eq_alt`（lp_ineqs_proofs:2241，投影形）。 -/
+theorem ys_eq_alt (hfan : FAN 0 V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    y1Fan d = ‖d.1‖ ∧ y2Fan d = ‖d.2‖ ∧
+      y3Fan V E d = ‖sigmaFan 0 V E d.1 d.2‖ ∧
+      y4pFan V E d = dist d.2 (sigmaFan 0 V E d.1 d.2) ∧
+      y5Fan V E d = dist d.1 (sigmaFan 0 V E d.1 d.2) ∧
+      y6Fan d = dist d.1 d.2 := by
+  obtain ⟨v, w⟩ := d
+  exact ys_eq hfan hd
+
 end Kepler.Text.TameLp
