@@ -12,11 +12,11 @@
 
 | 指标 | 2026-10-22 | 2026-10-23 | 变化 |
 |---|---:|---:|---|
-| 可达 Kepler 声明 | 8,305 | **216,134** | +207,829（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25/PA15/PA11/N2 证明体；2026-10-23 晚 TameLp/PA18 填证连带 +102 私有 kit 声明入锥。全部内核检查、零新公理） |
-| 直接 sorryAx 债务源 | 149 | **131** | −18（日间 −16：euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`、nli N2 `nliRest6096597438b`、PA15 `MCELL_ID_MXI_2`+`MCELL_ID_OMEGA_LIST_N`+`DIHX_SYM`、PA11 `k2Case`+`k3Subset`+`rogersInterVLemma`；**晚间 −2：TameLp `sum_tauVEF_upper_bound`、PA18 `cc_pe_exists`**，diff 仅此两行删除、零新增零搬家） |
+| 可达 Kepler 声明 | 8,305 | **216,234** | +207,929（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25/PA15/PA11/N2 证明体；2026-10-23/24 填证连带 +202 私有 kit 声明入锥。全部内核检查、零新公理） |
+| 直接 sorryAx 债务源 | 149 | **130** | −19（日间 −16：euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`、nli N2 `nliRest6096597438b`、PA15 `MCELL_ID_MXI_2`+`MCELL_ID_OMEGA_LIST_N`+`DIHX_SYM`、PA11 `k2Case`+`k3Subset`+`rogersInterVLemma`；**−2：TameLp `sum_tauVEF_upper_bound`、PA18 `cc_pe_exists`；−1：ContraFan `LEMMA_4_POINTS_FINAL`（四波真证+原子接线，ContraFan 全模块归零，diff 仅此一行删除、零新增零搬家）**） |
 | 可达 Kepler 公理 | 624 | **624** | 0（全部 `native_decide` 图 shard；interval 证书用内核 decide，不新增公理） |
 
-**结论：主定理当前的实际债务源是 131 个声明（2026-10-23 晚地图重生成）。** AJRIPQN 的五个名字
+**结论：主定理当前的实际债务源是 130 个声明（2026-10-24 地图重生成）。** AJRIPQN 的五个名字
 （`QZKSYKG1` / `QZKSYKG2` / `SLTSTLO2` / `DDZUPHJ` / `YIFVQDV_1`）、nli
 `nliRestFWGKMBZ`/`nliRest6096597438b`、PA25 `cc_bool_model_data`、PA15
 `MCELL_ID_MXI_2`/`MCELL_ID_OMEGA_LIST_N`/`DIHX_SYM` 与 PA11
@@ -45,9 +45,9 @@
 | `Kepler.Text.PackingAuto2` | 1 | `UPFZBZM_concl` |
 | `Kepler.Text.LocalAuto16` | 1 | `JEJTVGB_p16` |
 | `Kepler.Text.LocalAuto1` | 1 | `main_nonlinear_terminal_v11` |
-| `Kepler.Text.ContraFan` | 1 | `LEMMA_4_POINTS_FINAL` |
 
-**零 direct 源的关键模块**：`PackingAuto11`（LEPJBDJ 三私件后）、
+**零 direct 源的关键模块**：`ContraFan`（2026-10-24 `LEMMA_4_POINTS_FINAL` 四波真证 + W4 原子接线后全模块归零；`ContraFanDeep` 全程零 sorry）、
+`PackingAuto11`（LEPJBDJ 三私件后）、
 `PackingAuto15`（DIHX_SYM 后）、
 `PackingAuto17`（AJRIPQN 本体真装配）、
 `PackingAuto13`（B8f 后）、`PackingAuto14`（B4 后）、`PackingAuto7`（B3 后）、
@@ -98,7 +98,7 @@
    生成，模块分布见 §4，与 DEBT 脊柱探针的 624 完全一致。
 7. **口径警告**：可达声明数从 8,305 跳到 216,032 不是债务增加，而是
    CFWGKMBZ 证书（内核可检查的 shard 树）进入了证明项闭包；比较债务时
-   看 direct sorry 源（131）与公理（624），不要看可达声明总数。
+   看 direct sorry 源（130）与公理（624），不要看可达声明总数。
 
 ## 4. 624 条可达公理的模块分布
 
@@ -127,7 +127,7 @@
   cp /tmp/reachmap.out docs/e2e-reachability-map.tsv
   ```
   首次运行会重建 `Assembly.olean`；后续热缓存约数秒。每次落库后重跑并
-  diff 131 行清单，就是最直接的 e2e 债务刻度。
+  diff 130 行清单，就是最直接的 e2e 债务刻度。
 
 ## 6. 建议的下一步
 
