@@ -1,5 +1,10 @@
 # BIXPCGW_7274157868_a 残留失败叶特征（depth-8 repair STUCK）
 
+> **⚠️ 2026-10-23 诊断翻案**：本文末尾"闭合移交 549 加速车道 mono/convex 降维 + TM"
+> 的处置建议已被实测否定（TM 全案 0 闭合、mono-tree ≈148 CPU-days）。病因主因 =
+> 行列式型子式区间 dependency overestimation；新处置 = gsplit2 + centered form/
+> affine arithmetic 紧致化。见 `docs/scouts/bixpcgw-diagnosis.md`（Lane E）。
+
 残留失败盒数：134788（round 8 的 206,120 盒中 134,788 FAIL，本文件按 chunk 重算 134788）
 
 根盒 7 维：['hminus', 'y1', 'y2', 'y3', 'y4', 'y5', 'y6']
