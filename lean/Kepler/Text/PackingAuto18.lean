@@ -7006,6 +7006,94 @@ theorem AFF_GE_SUBSET_WEDGE_GE (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
       have hiff := azim_eq_azim_iff h1 h2 hcolx
       rw [hiff.2 hgt]
 
+/-- Local copies (`pa18w3_*`) of the micro-kit that lives at the end of this
+file: `BDXKHTW_PREP_LEMMA` sits before that block and Lean forbids forward
+references, so PREP carries full re-proofs here.  The file-end originals stay
+canonical for later consumers. -/
+private theorem pa18w3_ne {a b c : V3} (h : ¬Collinear3 a b c) :
+    a ≠ b ∧ a ≠ c ∧ b ≠ c := by
+  refine ⟨fun h0 => h ?_, fun h0 => h ?_, fun h0 => h ?_⟩
+  · show Collinear ℝ ({a, b, c} : Set V3)
+    have hset : ({a, b, c} : Set V3) = ({a, c} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [← h0]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ a c
+  · show Collinear ℝ ({a, b, c} : Set V3)
+    have hset : ({a, b, c} : Set V3) = ({a, b} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [← h0]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ a b
+  · show Collinear ℝ ({a, b, c} : Set V3)
+    have hset : ({a, b, c} : Set V3) = ({a, b} : Set V3) := by
+      ext w
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [← h0]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ a b
+
+private theorem pa18w3_affsign_mem_affSpan {s t : Set V3} {sgn : ℝ → Prop} {v : V3}
+    (hv : Affsign sgn s t v) : v ∈ (affineSpan ℝ (s ∪ t) : Set V3) := by
+  obtain ⟨f, hfin, hvec, -, hone⟩ := hv
+  by_cases hF : hfin.toFinset = ∅
+  · rw [hF, Finset.sum_empty] at hone
+    norm_num at hone
+  · obtain ⟨w₀, hw₀F⟩ := Finset.nonempty_iff_ne_empty.2 hF
+    have hw₀S : w₀ ∈ (s ∪ t : Set V3) := (Set.Finite.mem_toFinset hfin).1 hw₀F
+    have key : v - w₀ = ∑ w ∈ hfin.toFinset, f w • (w - w₀) := by
+      have h1 : (∑ w ∈ hfin.toFinset, f w • (w - w₀) : V3)
+          = (∑ w ∈ hfin.toFinset, f w • w) - (∑ w ∈ hfin.toFinset, f w) • w₀ := by
+        rw [Finset.sum_smul, ← Finset.sum_sub_distrib]
+        exact Finset.sum_congr rfl fun w _ => by rw [smul_sub]
+      rw [h1, hvec, hone, one_smul]
+    have hd : (v - w₀ : V3) ∈ vectorSpan ℝ (s ∪ t : Set V3) := by
+      rw [vectorSpan_def, key]
+      refine Submodule.sum_mem _ fun w hw => ?_
+      exact Submodule.smul_mem _ _ (Submodule.subset_span (Set.mem_vsub.2
+        ⟨w, (Set.Finite.mem_toFinset hfin).1 hw, w₀, hw₀S, rfl⟩))
+    have hvv : v = (v -ᵥ w₀) +ᵥ w₀ := by rw [vsub_vadd]
+    rw [SetLike.mem_coe, hvv,
+      AffineSubspace.vadd_mem_iff_mem_direction (v -ᵥ w₀)
+        (subset_affineSpan ℝ (s ∪ t : Set V3) hw₀S),
+      direction_affineSpan]
+    exact hd
+
+private theorem pa18w3_nullSet_affGe2 (u0 u1 v : V3) :
+    nullSet (affGe ({u0, u1} : Set V3) ({v} : Set V3)) := by
+  show MeasureTheory.volume (affGe ({u0, u1} : Set V3) ({v} : Set V3)) = 0
+  refine pa18_coplanar_measure_null ⟨u0, u1, v, fun x hx => ?_⟩ (subset_refl _)
+  have hx' : Affsign (fun w => 0 ≤ w) ({u0, u1} : Set V3) ({v} : Set V3) x :=
+    Set.mem_setOf_eq.mp hx
+  have heq : (({u0, u1} : Set V3) ∪ {v}) = ({u0, u1, v} : Set V3) := by
+    ext w
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [← heq]
+  exact pa18w3_affsign_mem_affSpan (s := ({u0, u1} : Set V3)) (t := ({v} : Set V3))
+    (sgn := fun w => 0 ≤ w) hx'
+
+private theorem pa18w3_nullSet_union {s t : Set V3} (hs : nullSet s) (ht : nullSet t) :
+    nullSet (s ∪ t) := by
+  show MeasureTheory.volume (s ∪ t) = 0
+  have hs' : MeasureTheory.volume s = 0 := hs
+  have ht' : MeasureTheory.volume t = 0 := ht
+  have hle : MeasureTheory.volume (s ∪ t)
+      ≤ MeasureTheory.volume s + MeasureTheory.volume t :=
+    MeasureTheory.measure_union_le s t
+  rw [hs', ht', zero_add] at hle
+  exact le_antisymm hle zero_le
+
+private theorem pa18w3_nullSet_subset {s t : Set V3} (hsub : t ⊆ s) (hs : nullSet s) :
+    nullSet t := by
+  show MeasureTheory.volume t = 0
+  exact MeasureTheory.measure_mono_null hsub hs
+
 /-- HOL `BDXKHTW_PREP_LEMMA` (leaf_cell.hl:3767-3903). -/
 theorem BDXKHTW_PREP_LEMMA {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
     (hs : saturated V) (hp : Packing V)
@@ -7019,7 +7107,140 @@ theorem BDXKHTW_PREP_LEMMA {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
         ¬Coplanar ({p, q, u0, u1} : Set V3) ∧
         p ∉ affGe {u0, u1} {v1} ∪ affGe {u0, u1} {v2} ∧
         q ∉ affGe {u0, u1} {v1} ∪ affGe {u0, u1} {v2} := by
-  sorry
+  -- Steps 1-3 (HOL :3787-3803): `X` is a non-null `mcell k V ul` with `2 ≤ k`,
+  -- hence convex.  Null cells have no edges (RIJRIED); an edge forces `2 ≤ k`
+  -- (EDGE_IMP_K2); `MCELL_CONVEX` needs exactly `2 ≤ k`.
+  simp only [mcellSet, Set.mem_setOf_eq] at hX
+  obtain ⟨k, ul, hXk, hbar⟩ := hX
+  have hnullX : ¬nullSet X := by
+    intro hn
+    rw [hXk] at hn he
+    rw [BumpP4.RIJRIED V ul k hn] at he
+    exact Set.notMem_empty _ he
+  have hk2 : 2 ≤ k := by
+    by_contra hc
+    rw [hXk] at he
+    rw [BumpP4.EDGE_IMP_K2 V ul k hs hp hbar (by omega)] at he
+    exact Set.notMem_empty _ he
+  have hconv : Convex ℝ X := by
+    rw [hXk]
+    exact MCELL_CONVEX hs hp hbar hk2
+  -- Step 4 (HOL :3783-3786): both tips are noncollinear with the stem (GBEWYFX).
+  have hn1 : ¬Collinear3 u0 u1 v1 := by
+    have h := GBEWYFX hp hs hl1
+    simpa using h
+  have hn2 : ¬Collinear3 u0 u1 v2 := by
+    have h := GBEWYFX hp hs hl2
+    simpa using h
+  have h01 : u0 ≠ u1 := (pa18w3_ne hn1).1
+  obtain ⟨y, hy⟩ := hy
+  obtain ⟨x, hx⟩ := hx
+  -- Step 5 (HOL :3805-3809): the union `s` of the two bounding half-planes is
+  -- Lebesgue-null (NEGLIGIBLE_AFF_GE_2_1, twice, and union closure).
+  set s : Set V3 := affGe ({u0, u1} : Set V3) ({v1} : Set V3) ∪
+    affGe ({u0, u1} : Set V3) ({v2} : Set V3) with hsdef
+  have hmem : ∀ w : V3, w ∈ affGe ({u0, u1} : Set V3) ({v1} : Set V3) ∪
+      affGe ({u0, u1} : Set V3) ({v2} : Set V3) → w ∈ s := fun _ h => h
+  have hmem' : ∀ w : V3, w ∈ s → w ∈ affGe ({u0, u1} : Set V3) ({v1} : Set V3) ∪
+      affGe ({u0, u1} : Set V3) ({v2} : Set V3) := fun _ h => h
+  have hnulls : nullSet s :=
+    pa18w3_nullSet_union (pa18w3_nullSet_affGe2 u0 u1 v1) (pa18w3_nullSet_affGe2 u0 u1 v2)
+  have hWIA := WEDGE_INTER_AFF_GE u0 u1 v1 v2
+  -- Steps 6-7 (HOL :3847-3866): `y` misses `s` (the open wedge is disjoint from
+  -- both bounding half-planes) and `x` misses `s` (it misses the closed wedge,
+  -- which contains `s`).
+  have hys : y ∉ s := by
+    intro hc
+    rcases (Set.mem_union y (affGe ({u0, u1} : Set V3) ({v1} : Set V3))
+      (affGe ({u0, u1} : Set V3) ({v2} : Set V3))).1 (hmem' y hc) with h | h
+    · exact Set.notMem_empty y (by rw [← hWIA.1]; exact Set.mem_inter hy.2 h)
+    · exact Set.notMem_empty y (by rw [← hWIA.2]; exact Set.mem_inter hy.2 h)
+  have hxs : x ∉ s := by
+    intro hc
+    rcases (Set.mem_union x (affGe ({u0, u1} : Set V3) ({v1} : Set V3))
+      (affGe ({u0, u1} : Set V3) ({v2} : Set V3))).1 (hmem' x hc) with h | h
+    · exact hx.2 ((AFF_GE_SUBSET_WEDGE_GE u0 u1 v1 v2 hn1 hn2).1 h)
+    · exact hx.2 ((AFF_GE_SUBSET_WEDGE_GE u0 u1 v1 v2 hn1 hn2).2 h)
+  have hyX' : y ∈ (X \ s) ∩ wedge u0 u1 v1 v2 :=
+    Set.mem_inter (Set.mem_sdiff_of_mem hy.1 hys) hy.2
+  have hxX' : x ∈ (X \ s) \ wedgeGe u0 u1 v1 v2 :=
+    Set.mem_sdiff_of_mem (Set.mem_sdiff_of_mem hx.1 hxs) hx.2
+  -- Step 8 (HOL :3868-3887): a stem-collinear point of `X` lands in `s`, so
+  -- every point of `X \ s` is stem-noncollinear.
+  have hkey : ∀ z ∈ X, Collinear3 z u0 u1 → z ∈ s := by
+    intro z hz hcol
+    have hcolz : Collinear3 u0 u1 z := by
+      show Collinear ℝ ({u0, u1, z} : Set V3)
+      have hset : ({z, u0, u1} : Set V3) = ({u0, u1, z} : Set V3) := by
+        ext w
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [← hset]
+      exact hcol
+    have haz0 : azim u0 u1 v1 z = 0 := by rw [azim, if_pos (Or.inr hcolz)]
+    exact hmem z (Set.mem_union_left _ ((pa18_azim_zero_affGe hn1).1 haz0))
+  -- Steps 9-10 (HOL :3810-3845): `X ⊆ X \ s ∪ s` with `s` null makes `X \ s`
+  -- non-coplanar-carrying: the union `X'' = X' ∩ wedge ∪ X' \ wedgeGe ∪ {u0,u1}`
+  -- absorbs `X \ s`, and if `X''` were coplanar, `X \ s` and then `X` itself
+  -- would be null — contradiction.
+  have hXsub : X ⊆ (X \ s) ∪ s := by
+    intro z hz
+    by_cases hzs : z ∈ s
+    · exact Set.mem_union_right _ hzs
+    · exact Set.mem_union_left _ (Set.mem_sdiff_of_mem hz hzs)
+  have hsub : (X \ s) ⊆ ((X \ s) ∩ wedge u0 u1 v1 v2) ∪
+      ((X \ s) \ wedgeGe u0 u1 v1 v2) ∪ ({u0, u1} : Set V3) := by
+    intro z hz
+    by_cases hzw : z ∈ wedge u0 u1 v1 v2
+    · exact Set.mem_union_left ({u0, u1} : Set V3)
+        (Set.mem_union_left ((X \ s) \ wedgeGe u0 u1 v1 v2) (Set.mem_inter hz hzw))
+    · by_cases hzwg : z ∈ wedgeGe u0 u1 v1 v2
+      · rcases (Set.mem_union z (wedge u0 u1 v1 v2 ∪
+            affGe ({u0, u1} : Set V3) ({v1} : Set V3))
+            (affGe ({u0, u1} : Set V3) ({v2} : Set V3))).1
+            (WEDGE_WEDGE_GE u0 u1 v1 v2 hn1 hn2 hzwg) with h | h
+        · rcases (Set.mem_union z (wedge u0 u1 v1 v2)
+              (affGe ({u0, u1} : Set V3) ({v1} : Set V3))).1 h with h2 | h2
+          · exact absurd h2 hzw
+          · exact absurd (hmem z (Set.mem_union_left
+                (affGe ({u0, u1} : Set V3) ({v2} : Set V3)) h2)) hz.2
+        · exact absurd (hmem z (Set.mem_union_right
+              (affGe ({u0, u1} : Set V3) ({v1} : Set V3)) h)) hz.2
+      · exact Set.mem_union_left ({u0, u1} : Set V3)
+          (Set.mem_union_right ((X \ s) ∩ wedge u0 u1 v1 v2) (Set.mem_sdiff_of_mem hz hzwg))
+  have hncX'' : ¬Coplanar (((X \ s) ∩ wedge u0 u1 v1 v2) ∪
+      ((X \ s) \ wedgeGe u0 u1 v1 v2) ∪ ({u0, u1} : Set V3)) := by
+    intro hcop
+    have hcX' : Coplanar (X \ s : Set V3) := Geom.Coplanar.subset hsub hcop
+    have hns' : nullSet (X \ s : Set V3) :=
+      pa18_coplanar_measure_null hcX' (Set.Subset.refl _)
+    exact hnullX (pa18w3_nullSet_subset hXsub (pa18w3_nullSet_union hns' hnulls))
+  -- Final conjunct (HOL :3888-3900): the witness pair exists by the
+  -- contrapositive of COPLANAR_UNION against the non-coplanarity above.
+  refine ⟨hconv, h01, hn1, hn2, ?_⟩
+  by_contra hcon
+  have hPne : ((X \ s) ∩ wedge u0 u1 v1 v2 : Set V3) ≠ ∅ := by
+    intro h0
+    rw [h0] at hyX'
+    exact Set.notMem_empty _ hyX'
+  have hQne : ((X \ s) \ wedgeGe u0 u1 v1 v2 : Set V3) ≠ ∅ := by
+    intro h0
+    rw [h0] at hxX'
+    exact Set.notMem_empty _ hxX'
+  have h1q : ∀ p ∈ ((X \ s) ∩ wedge u0 u1 v1 v2 : Set V3), ¬Collinear3 p u0 u1 := by
+    intro p hp hcol
+    exact hp.1.2 (hkey p hp.1.1 hcol)
+  have h2q : ∀ q ∈ ((X \ s) \ wedgeGe u0 u1 v1 v2 : Set V3), ¬Collinear3 q u0 u1 := by
+    intro q hq hcol
+    exact hq.1.2 (hkey q hq.1.1 hcol)
+  have h3 : ∀ p ∈ ((X \ s) ∩ wedge u0 u1 v1 v2 : Set V3),
+      ∀ q ∈ ((X \ s) \ wedgeGe u0 u1 v1 v2 : Set V3),
+      Coplanar ({p, q, u0, u1} : Set V3) := by
+    intro p hp q hq
+    by_contra hc
+    exact hcon ⟨p, q, Set.mem_inter hp.1.1 hp.2, Set.mem_sdiff_of_mem hq.1.1 hq.2, hc,
+      hp.1.2, hq.1.2⟩
+  exact hncX'' (COPLANAR_UNION hPne hQne h1q h2q h3)
 
 /-- HOL `WEDGE_SUBSET_WEDGE_GE` (leaf_cell.hl:3904-3912). -/
 theorem WEDGE_SUBSET_WEDGE_GE (u0 u1 u2 u3 : V3) :
@@ -7151,6 +7372,11 @@ theorem BDXKHTW {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
     (haz : azim u0 u1 v1 v2 ≠ 0)
     (hy : ∃ y, y ∈ X ∩ wedge u0 u1 v1 v2) :
     X ⊆ wedgeGe u0 u1 v1 v2 := by
+  -- NEEDS (W4 status check 2026-10-23): sole remaining blocker is the pool-A
+  -- CFFONNL statement fix (orchestrator-owned); BDXKHTW_PREP_LEMMA is now
+  -- proven in place above, so once the fix lands this closes by contradiction
+  -- + PREP quadruple + the two-line interpret wiring
+  -- (pa18_affSpan2_collinear contrapositive, then pa18_affGe_affGt_of_ncol).
   sorry
 
 /-- HOL `AZIM_POS_IMP_SUM_2PI_ALT` (leaf_cell.hl:4167-?), from the Geom
@@ -8989,6 +9215,13 @@ theorem pa18_azim_sym2_ne {u0 u1 v1 v2 : V3} (h : azim u0 u1 v1 v2 ≠ 0) :
   have hsum := azim_compl hnc2 hnc1
   rw [if_pos h0] at hsum
   exact h (by linarith)
+
+/-- HOL `Local_lemmas.AZIM_RANGE` (LocalAuto5:1549), local copy: the azimuth
+lies in `[0, 2π)`.  Gift for the PA25 `MCELL_IN_WEDGE` lane (W5), which has
+neither LocalAuto5 nor a direct Geom.Azim re-derivation in its usual kit. -/
+theorem pa18_azim_range (u0 u1 v1 v2 : V3) :
+    0 ≤ azim u0 u1 v1 v2 ∧ azim u0 u1 v1 v2 < 2 * Real.pi :=
+  ⟨azim_nonneg u0 u1 v1 v2, azim_lt_two_pi u0 u1 v1 v2⟩
 
 end
 end Kepler.Text
