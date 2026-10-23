@@ -638,9 +638,9 @@ LP 端到端审计；P1：三接口 HOL 陈述对照；P2：shim 清理批。
 `.taylorLeaf`，无 pilot；`bb_soundM` 标准三）；`CertG` 在 SF-42 后不可重编
 （旧 sqrt/TM pilot 失烤 + 不在默认闭包，残留 olean 会假绿）——混合路径
 勿 import `CertG`。`prep-2125338128` 全树 46,099 叶 / 132 shards 发射
-2.6 s；纯 tm 叶实测 1.33 CPU-s/叶，全案外推 **~3.1 CPU-h**（plain 路线
-~15 CPU-h，repair 模拟 ~11 CPU-h）——**GO**，尚未跑全树 build，需独占
-窗口按 shard 分批（每 128 叶 ≈170 s）。
+2.6 s；纯 tm 叶实测 1.33 CPU-s/叶，全案外推 ~3.1 CPU-h（plain 路线
+~15 CPU-h，repair 模拟 ~11 CPU-h）。**P3 已完成全树 132/132 build
+（4h45m，根标准三），见下节。**
 
 **未入库/阻塞**：793 份全量 case JSON（256 MB）为可再生产物，只在
 `lane_snapshots/prep2/`，队列内 `case_json` 路径指向该目录；R1 剩余闭
@@ -730,3 +730,32 @@ bare sorry 86→83；闸 PASS @`cc_bool_model_data`（PA25 单文件）。
   已恢复）；剩余 ~95 shards，批次 4 个/批。下一波 Phase 5 候选：PA15
   `DIHX_SYM`（先落 `LEFT_ACTION_LIST_2/3_EXISTS`）、PA25 `real_model_*`、
   nli rest 10/62（需重新编码/求解，不是粘合问题）。
+
+## 2026-10-23 Phase 4 P3 节（2125 全树混合证书收官，`3f3c05a1`）
+
+**投放**：`Kepler.Interval.Cases.C2125338128M`（Base + 132 shards，29 MB）
++ `prep-2125338128_tm.cert.json`（22 MB）+ 全部源码/证书 md5 核对。
+
+- **证书**：46,099 叶 / 92,197 节点（39,532 main + 6,567 tm）；`bb_arb --tm`
+  重解 0.65–0.67 s，md5 与 P2 基准逐项一致。发射
+  `--mixed-tm --shard-leaves=512`，132 shards，每 shard
+  `maxRecDepth 1000000`，6,567 个 `.taylorLeaf TMParams.empty`、39,532 个
+  `.leaf`；无 `native_decide`/`sorry`/`admit`/新 axiom，未 import CertG。
+- **Build**：132/132 全绿，0 retry / 0 failed；总墙钟 **4h45m**
+  （08:04–12:49，含 ~32 min 内存暂停），逐 shard CPU 合计 33,291 s；
+  4 targets/批、Lake 默认并行（无 `-j/-K`）。峰值 RSS 26.4 GB、
+  min free 65%；两次 SIGSTOP 均为调度原因，无结果丢失。
+- **根验证**：`C2125338128M_pos` = `[propext, Classical.choice, Quot.sound]`；
+  抽查 tm 最密 Shard1/12/13 的 `Covers` = `[propext, Quot.sound]`，无
+  sorryAx。
+- **产物复用**：从 P3 车道克隆复用 `.lake` olean/trace/IR（源码 md5 逐项
+  核对），主仓根 build replay 366 s（9 个 shard 在主仓重编、其余 replay），
+  非证明捷径；完整日志/逐 shard 时间表在 `lane_snapshots/prep3/`。
+- **闸**：clean-anchor（PA12 `LEFT_ACTION_LIST_PROPERTIES`）+ `GATE_ROOTS`
+  含新根；纯新增零删除，规则 2/5 按零删除豁免，根/全 shard 已手工探针。
+- **账**：Phase 4 prep R1 的 2125 大案闭环；R1 已闭 **18 案**
+  （pilot 5 + P2 批 12 + 2125）。R1 队列余 14 个 closed 候选（1358/3142/
+  5422/5929/9424/14266/40785/49998/54771/75965/133228/154721 +
+  6096597438 b/ZTGIJCF0）；rest 10/62 仍是 stale-record 阻塞。
+- **未做**：plain 134k 叶路线未生成；`CertMixed` 仍未并入默认构建闭包
+  （opt-in 内核件）。
