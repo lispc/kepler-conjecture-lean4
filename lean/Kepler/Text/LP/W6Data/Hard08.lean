@@ -1,0 +1,37 @@
+/-
+  Hard08 — W6-A light LP certificate data (machine generated, do not edit).
+
+  Generator: `tools/gen_w6_lean.py` from `tools/dump_w6_light.py` output.
+  Source: reference/flyspeck/formal_lp/glpk/binary/{easy,hard}_*.dat
+  + hard_7.tar.gz member (39 Marshal files, 19,715 graphs, 43,078 terminals).
+
+  W6-A contract: only the split-tree shape is carried. Terminal
+  constraints / targetVariables / variableBounds are `[]` (not carried;
+  W6-B+ adds the constraint semantics). Splits carry splitType + splitFace.
+-/
+import Kepler.Text.LP.W6Data.Basic
+
+set_option maxRecDepth 100000
+set_option maxHeartbeats 0
+
+namespace Kepler.Text.LP.W6Data.Hard08
+
+open Kepler.Text.LP
+
+def data : List LpGraphCert := [
+  ⟨"65974205892 19 4 0 1 2 3 4 0 3 4 5 3 4 3 6 3 6 3 2 4 1 0 5 7 3 2 1 8 3 8 1 7 3 6 2 9 3 9 2 8 3 7 5 10 3 10 5 4 3 10 4 11 3 11 4 6 3 8 7 12 3 12 7 10 3 11 6 9 3 9 8 12 3 11 9 12 3 12 10 11 ", .split ⟨.quad, [0, 1, 2, 3]⟩ [.split ⟨.quad, [0, 3, 4, 5]⟩ [.split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p5, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p3, false, [], [], []⟩]], .split ⟨.quad, [0, 3, 4, 5]⟩ [.split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p5, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p5, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .split ⟨.tri, [6, 2, 9]⟩ [.terminal ⟨.p5, false, [], [], []⟩, .split ⟨.s218, [0]⟩ [.split ⟨.s218, [3]⟩ [.split ⟨.mid, [3, 0]⟩ [.terminal ⟨.p4, false, [], [], []⟩], .split ⟨.s218, [1]⟩ [.split ⟨.mid, [1, 0]⟩ [.terminal ⟨.p4, false, [], [], []⟩], .terminal ⟨.p5, false, [], [], []⟩]], .terminal ⟨.p4, false, [], [], []⟩]]], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.split ⟨.tri, [6, 2, 9]⟩ [.split ⟨.s218, [0]⟩ [.split ⟨.s218, [1]⟩ [.split ⟨.mid, [1, 0]⟩ [.terminal ⟨.p4, false, [], [], []⟩], .split ⟨.s218, [3]⟩ [.split ⟨.mid, [3, 0]⟩ [.terminal ⟨.p4, false, [], [], []⟩], .terminal ⟨.p5, false, [], [], []⟩]], .terminal ⟨.p4, false, [], [], []⟩], .terminal ⟨.p5, false, [], [], []⟩], .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩]], .split ⟨.quad, [0, 3, 4, 5]⟩ [.split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p3, false, [], [], []⟩]], .split ⟨.quad, [0, 3, 4, 5]⟩ [.split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p3, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p3, false, [], [], []⟩]], .split ⟨.quad, [0, 3, 4, 5]⟩ [.split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p3, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.split ⟨.tri, [6, 2, 9]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .split ⟨.s218, [0]⟩ [.split ⟨.s218, [3]⟩ [.split ⟨.mid, [3, 0]⟩ [.terminal ⟨.p4, false, [], [], []⟩], .split ⟨.s218, [5]⟩ [.split ⟨.mid, [5, 0]⟩ [.terminal ⟨.p4, false, [], [], []⟩], .terminal ⟨.p5, false, [], [], []⟩]], .terminal ⟨.p4, false, [], [], []⟩]], .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p3, false, [], [], []⟩], .split ⟨.quad, [1, 0, 5, 7]⟩ [.terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p4, false, [], [], []⟩, .terminal ⟨.p3, false, [], [], []⟩], .terminal ⟨.p4, false, [], [], []⟩]]⟩
+]
+
+theorem data_length : data.length = 1 := rfl
+
+/-- Literal terminal count from the dumper (not kernel-reduced:
+the hard trees are too large for `decide`; see W6A_REPORT). -/
+def terminalCount : Nat := 133
+
+/-- Literal infeasible-terminal count from the dumper. -/
+def infeasibleCount : Nat := 0
+
+/-- Literal split-node count from the dumper. -/
+def splitCount : Nat := 48
+
+end Kepler.Text.LP.W6Data.Hard08
