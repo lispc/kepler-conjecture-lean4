@@ -2060,15 +2060,55 @@ theorem ineq_tau3_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
   rw [← wk_f_surr_tau3_eq_tauVEF hfan hfs hsub hd1 hcard3]
   exact key
 
+/-! ### 3b. W3 kit（Lane V 2026-10-23）：dTame 数值件（W4 Std 装配消费——
+bank 结论 `dTame (vPrime.ncard)` 折算数值用；插入点在目标群之前防前向引用）。 -/
+
+/-- `dTame 4 = 0.206`（`dTame` if 链的第二支，核层可直接判定）。 -/
+private theorem wk_dtame4 : dTame 4 = 0.206 := rfl
+
+/-- `dTame 5 = 0.4819`. -/
+private theorem wk_dtame5 : dTame 5 = 0.4819 := rfl
+
+/-- `dTame 6 = 0.712`. -/
+private theorem wk_dtame6 : dTame 6 = 0.712 := rfl
+
 /-- HOL `ineq_tau4_tauVEF_std`（`lp_main_estimate-compiled.hl:796-817`）。
 DISCHARGES：骨架占位（同上群）。 -/
 theorem ineq_tau4_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
     (hineq : JEJTVGB_std_concl) (d : V3 × V3)
     (hd : d ∈ dartsK 4 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
     0.206 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
-  -- NEEDS（Lane G 侦察 2026-10-23）：同 tau3 卡 y-kit 章 + Face4 节
-  -- `f_surr_tau_fun_eq_tauVEF`/`tau_fun_local`/`f_surr_localization_convex_local`
-  -- （Local_lemmas 未移植）。
+  -- NEEDS（Lane V 侦察结案 2026-10-23）：Std 装配绕不开 ConvexLocalFan 桥，
+  -- 但真卡点比原先估计窄：tau_fun_local/local_diag/local_std 三件均有绕行，
+  -- 唯一真墙 = HOL `f_surr_localization_convex_local`（RNSYJXM-compiled.hl:327，
+  -- wdart/conforming 章未移植）。
+  -- 消费链：目标 ⟸ dTame 4 ≤ tauFun V (ESTD V) f（经 wk_f_surr_tauFun_eq_tauVEF
+  -- 反向 + wk_dtame4）；hineq 唯一声音实例化 = (vPrime V f, ePrime (ESTD V) f, f)
+  -- （(V,ESTD V,f) 形的 wedge 前提 V ⊆ wedgeInFanGe x E 几何为假——扇面 sector
+  -- 装不下全 V；LocalFan 要求 ⋃₀E' ⊆ V' 又排除其余形状）。
+  -- HOL Face4 忠实链（ineq_tau4_tauVEF :739）逐件对应：
+  -- ① f_surr_localization_convex_local【墙，见下】；② packing_v_prime/
+  -- v_prime_subset = def 级（vPrime ⊆ V 定义自带）；③ 4 ≤ CARD ≤ 6 =
+  -- LOFA_IMP_CARD_FF_V_EQ / vPrime.ncard = k（面圈顶点两两相异：σ⁻¹ 在 N(v)
+  -- 上单射 + 反向归纳）；④ 非边前提 = LpFan.3 + ePrime ⊆ E + vPrime ⊆ V
+  -- （local_diag 绕行，~20 行）；⑤ 边前提 = Packing V + wk_estd_dist_le
+  -- （local_std 绕行——Std 节 E = ESTD V 时距离界是定义性的）；⑥
+  -- tau_fun_local 绕行 = azim 桥：faceMap 圈的定义性形状给
+  -- σ⁻¹(E)_{v_i}(v_{i-1}) = v_{i+1}，σ 往返得 σ(E)_{v_i}(v_{i+1}) = v_{i-1}，
+  -- e' 侧 N_{e'}(v_i) = {v_{i-1}, v_{i+1}} 唯一候选 ε 同值（v_{i-1} ≠ v_{i+1}
+  -- 由轨道计数 k ≥ 3）。
+  -- 墙的分解（W4 施工图）：ConvexLocalFan (vPrime,ePrime,f) = LocalFan +
+  -- azim ≤ π + wedge。fan1/2/6/7 从 FAN 0 V E 逐条继承（ePrime ⊆ E 且
+  -- singletons(vPrime) ⊆ singletons(V)，fan6/fan7 陈述逐字相同）；azimInFan
+  -- x e' ≤ π = FullySurrounded + azim 桥；LocalFan 的 FAN 0 vPrime ePrime 同上
+  -- 继承，f = 受限超图 face = 轨道簿记（dart1(v',e') = f ∪ reverse f，2k 元），
+  -- Dih2k 同为簿记；唯一实质几何 = wedge 前提 vPrime ⊆ wedgeInFanGe x e'
+  -- （HOL 证明链：f_surr_localization ← fully_surrounded_imp_conforming +
+  -- Conforming.DARTSET_LEADS_INTO_SUBSET_WDART_FAN + Cfyxfty.
+  -- AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN）。
+  -- W4 具名缺件清单：vPrime/ePrime defs（localization.hl:97/100 逐字移植，
+  -- e_prime = 面 dart 的 underlying 边集，无弦问题）；vPrime.ncard = k；
+  -- azim 桥；受限超图 Dih2k；wedge。本波新增：wk_dtame4/5/6（§3b）。
   sorry
 
 /-- HOL `ineq_tau5_tauVEF_std`（`lp_main_estimate-compiled.hl:889-915`）。
@@ -2077,7 +2117,11 @@ theorem ineq_tau5_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
     (hineq : JEJTVGB_std_concl) (d : V3 × V3)
     (hd : d ∈ dartsK 5 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
     0.4819 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
-  -- NEEDS（Lane G 侦察 2026-10-23）：同 tau4，卡 y-kit 章 + Face5 节桥。
+  -- NEEDS（Lane V 侦察结案 2026-10-23）：同 tau4 处的结案注记（唯一真墙 =
+  -- f_surr_localization_convex_local 的移植；tau_fun_local/local_diag/local_std
+  -- 均有绕行，施工图见 tau4 注记）。K=5 差分：HOL Face5 节 :827-922
+  -- （ineq_tau5_tauVEF :831，Std :893 消费 y5/y6/y8/y9_hi_std 系）；bank 结论
+  -- dTame 5 = 0.4819（wk_dtame5 已备）；vPrime.ncard = 5 轨道计数同构递推。
   sorry
 
 /-- HOL `ineq_tau6_tauVEF_std`（`lp_main_estimate-compiled.hl:988-1015`）。
@@ -2086,7 +2130,11 @@ theorem ineq_tau6_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
     (hineq : JEJTVGB_std_concl) (d : V3 × V3)
     (hd : d ∈ dartsK 6 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
     0.712 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
-  -- NEEDS（Lane G 侦察 2026-10-23）：同 tau4，卡 y-kit 章 + Face6 节桥。
+  -- NEEDS（Lane V 侦察结案 2026-10-23）：同 tau4 处的结案注记（唯一真墙 =
+  -- f_surr_localization_convex_local 的移植；tau_fun_local/local_diag/local_std
+  -- 均有绕行，施工图见 tau4 注记）。K=6 差分：HOL Face6 节 :925-1022
+  -- （ineq_tau6_tauVEF :929，Std :992 消费 y5/y6/y8/y9_hi_std 系）；bank 结论
+  -- dTame 6 = 0.712（wk_dtame6 已备）；vPrime.ncard = 6 轨道计数同构递推。
   sorry
 
 /-! ## 4. JGTDEBU 群（tame/JGTDEBU.hl，"general properties of a
