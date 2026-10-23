@@ -35,7 +35,7 @@
 | 模块 | direct sorry 源 | 代表声明 |
 |---|---:|---|
 | `Kepler.Assembly` | 81 | 77 个 `nli*`（57 个父为 `nliPackNonlinearRest`、8 个 `nliTskBank`、7 个 `nliCell3Bank`、5 个直挂 `nonlinearInequalities`）+ `fcdjdot` / `jcajydu` / `tameCorrespondenceIso`（父 `textCapstone`）+ `lpArchiveCertificatesDebt`（父 `lpArchiveCertificates`） |
-| `Kepler.Text.PackingAuto25` | 38 | 25 个 `real_model_*`（父 `pkrmQu/Qx/Qy` 等）+ `LEAF_RANK_PROPS` 4 + `MCELL4_FULL_WEDGE` 等 + `ox3q1hP25` |
+| `Kepler.Text.PackingAuto25` | 38 | 28 个 `real_model_*`（父 `pkrmQu/Qx/Qy` 等）+ `LEAF_RANK_PROPS` 4 + `MCELL4_FULL_WEDGE` 等 + `ox3q1hP25` |
 | `Kepler.Text.TameLp` | 6 | `fully_surrounded_perimeter_bound`、`ineq_tau{3,4,5,6}_tauVEF_std`、`sum_tauVEF_upper_bound` |
 | `Kepler.Text.PackingAuto18` | 2 | `cc_pe_exists`、private `pa18_ccCell_swap` |
 | `Kepler.Text.PackingAuto3` | 1 | `GRHIDFA_concl` |
@@ -90,7 +90,7 @@
 4. **PA24 / PackingConcl 零可达**：仍是邻近的 pack_concl 合并层，
    不在当前 e2e 锥；REUHADY1(d) 不阻塞当前主定理。
 5. **最大的下一块是 Assembly 的 57 个 `nliPackNonlinearRest` 源**；
-   其次是 PA25 的 38 个源（25 `real_model_*` + 13 其他）。
+   其次是 PA25 的 38 个源（28 `real_model_*` + 10 其他）。
 6. **624 条公理 = 23 条 `Assembly.GoodListShard*` + 601 条
    `Graphs.CertShards.*`/`CertTri/Quad/Pent/Hex`**，全部 `native_decide`
    生成，模块分布见 §4，与 DEBT 脊柱探针的 624 完全一致。
@@ -133,7 +133,7 @@
    固化成模板；A2（rest 9，2,775 分片/96 万叶）先解决预构建 oleans/分机，
    再接线。
 2. **P0 — 624 公理 manifest + 抽样 replay**（审计文档 P0 第 2 项）。
-3. **按簇派工**：58 `nliPackNonlinearRest` → 39 PA25（25 `real_model_*`）→
+3. **按簇派工**：58 `nliPackNonlinearRest` → 39 PA25（28 `real_model_*`）→
    8 `nliTskBank` → 7 `nliCell3Bank`。
 4. **LP 端到端审计**：在填 `lpArchiveCertificatesDebt` 之前完成
    （`leanprover/lp-verify` + 原始 `formal_lp` 证书，见

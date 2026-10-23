@@ -925,3 +925,32 @@ proof sorry **3→0**（文件内 `sorry` 提及 9→4，余下全在 PA2 接口
   警告因陈述冻结保留。
 - **快照**：`~/c17_backup/lane_snapshots/pa11lep/`（SCOUT/PROGRESS/DELIVERY、
   diff、build 日志、axioms/valax3 探针、MD5SUMS 全验）。
+
+## 2026-10-23 PA25 `real_model_*` 侦察节（28 枚分类；8 件试填净 −2，按守恒规则不合并）
+
+**车道 pa25real**（`/tmp/p4p11`，HEAD `4053ef5a`；快照
+`~/c17_backup/lane_snapshots/pa25real/`：`SCOUT2.md` 28 行分类表、8 件试填
+diff、`taint_all28_v2.log`）。
+
+- **数量勘误**：tsv 实际 **28** 个 `real_model_*` direct source（旧文写 25）；
+  PA25 38 = 28 real_model + 10 其他。
+- **分类结论**：28 枚中**没有一枚在值级闭包意义下独立可填**，全部至少触碰
+  一个根：
+  1. `cc_pe_exists`（PA18:206，GIANT；经 `cc_uh_exists`/`CC_PE_FACET_OF`）；
+  2. 本文件仍 `:= sorry` 的骨架（`GG_MCELL_*`、`CC_3_SUM_*`、
+     `critical_weight1*`、`MCELL3_008`、`GAMMAX_008*`、`LEAF_RANK_REUHADY`）；
+  3. 未移植 Merge_ineq 派生件（`gamma_qx_ALT`、`g_quqya_g_quqyb_ALT`、
+     `gamma10_gamma11_ALT`、`ztg4_ALT`、`QITNPEA4_9063653052_weak_ALT`、
+     `gamma4fgcy_sym23` 全树零命中）。
+- **8 件试填（未合并）**：`real_model_3a/3b`、`gamma_qu`、`fhbv2`、`gckb`、
+  `azim1`、`gaz4`、`gaz6`，+177/−8，build 绿、闸 PASS。但应用到主仓后地图
+  **133→131**：8 枚自身 direct 源消失，**新暴露 6 个源**
+  （`CC_4_BETA_BUMP_0`、`FUEIMOV_3`、`K3_CC_WIM_ALT`、`K4_CC_WIM`、
+  `MCELL4_GG`、`RVFXZBU`），其中 `RVFXZBU` 经 PA20 `gammaX_gamma3f` →
+  `p20g_perm_wit3` 回归（P0 曾从 PA25 消费面移除）。净 −2 是**债务搬家**，
+  按源数守恒规则不合并；试填文件与逐件证明保留在快照，待
+  `cc_pe_exists`/K3-K4 kit 落地后原样复用。
+- **战略结论**：`cc_pe_exists` 是 28 枚 real_model 的**主根**；下一波 PA25
+  不应继续填 real_model，而应先攻 PA18 `cc_pe_exists`（GIANT）或
+  K3/K4 `WIM` kit（`K3_CC_WIM_ALT`/`K4_CC_WIM`/`FUEIMOV_3`/
+  `CC_4_BETA_BUMP_0`）。这 6 个新源即使不合并试填也已存在于下游闭包。

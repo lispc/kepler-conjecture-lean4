@@ -237,7 +237,11 @@ CDTETAT/KCBLRQC 链真化——**TameLp 桥链全通**）。
 （+1018/−3，未消费 `HDTFNFZ`/`LEPJBDJ`）；PA11 `LEPJBDJ` 三私件
 `k2Case`/`k3Subset`/`rogersInterVLemma` 全闭（+434/−48，proof sorry 3→0，
 `LEPJBDJ`/`LEPJBDJ_0` 值级标准三）。e2e 直源 137→**133**，公理 624 不变；
-PA2 `LEPJBDJ_concl`/`_0_concl` 待 merge 换接。
+PA2 `LEPJBDJ_concl`/`_0_concl` 待 merge 换接。**PA25 real_model 侦察
+（同一日，未合并）**：28 枚全部值级根在 `cc_pe_exists` / 本文件骨架 /
+缺 ALT kit；8 件试填（+177/−8）应用到主仓使地图 133→131，但新暴露 6 源
+（含 PA10 `RVFXZBU` 经 PA20 回归），属债务搬家，按源数守恒规则回退，
+试填留 `lane_snapshots/pa25real/`；下一目标应为 PA18 `cc_pe_exists`。
 
 | 模块（HOL 源文件） | 行数 | 状态 | 完成度 |
 |---|---|---|---|
