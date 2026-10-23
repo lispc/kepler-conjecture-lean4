@@ -145,6 +145,11 @@ consuming ZWVCBMN (closed in the edge-rigidity wave below) plus one new
 scoped debt `pa18_ccCell_swap`
 (cc-cell insensitivity under the 0-1 stem swap; mathematically true but
 blocked by the cc_pe1 Skolem root — see its NEEDS note).
+(UPDATED 2026-10-23 lane pa18a7: the swap statement is FALSE — the two cc-cell
+orientations live in opposite closed halfspaces of the stem plane, refuted by
+`pa18_ccCell_swap_ne` below; the real debt is a CFFONNL hypothesis deviation
+from its HOL original — see the reversed-verdict docstring on
+`pa18_ccCell_swap` and the STATEMENT-FIX path recorded there).
 -/
 
 import Kepler.Text.PackingAuto13
@@ -4587,6 +4592,28 @@ remains is the swap-insensitivity of the characterizing property itself
 is derivable from the current kit). True statement: both cells are the mcell
 over a 4-list with the same point set `{u0, u1, u2, cc_pe1}`; needs a
 dedicated scout (Skolem-coincidence or cell-uniqueness route). -/
+-- statement is FALSE** — refuted below by the fully proved `pa18_ccCell_swap_ne`.
+-- `chiMsb` is *antisymmetric* under the 0-1 stem swap (`chi_msb_swap_01`), so
+-- the characterizing property `0 < chiMsb ul p1` of `cc_pe_exists` selects the
+-- *opposite* endpoints of the Voronoi segment for the two orientations (the
+-- Skolem-coincidence route was never available), and the two cells live in
+-- opposite closed halfspaces of the stem plane: the apex of `ccCell V ul` has
+-- `0 < chiMsb ul apex` (`CELL3_NONDEG` / `K4_CHI_MSB_POS`, hull form
+-- `CC_CELL34`) while `ccCell V [u1,u0,u2] ⊆ {z | chiMsb [u0,u1,u2] z ≤ 0}`
+-- (`pa18_ccCell_chi_nonneg`).
+-- ROOT CAUSE of the felt need: the `CFFONNL` statement above deviates from its
+-- HOL original (leaf_cell.hl:2178-2514) — HOL assumes `¬(X = cc_cell V ul)`
+-- (original order), the Lean port assumes `X ≠ ccCell V [EL 1, EL 0, EL 2]`
+-- (swapped). With the HOL hypothesis the `wl = ul` branch of the orientation
+-- dispatch (step 10 of the CFFONNL proof) closes by *direct contradiction* with
+-- `hXYc : X = ccCell V ul`, and no swap lemma is ever needed.
+-- UNBLOCK PATH (STATEMENT-FIX, orchestrator-owned): restore `CFFONNL`'s
+-- hypothesis to the HOL form `X ≠ ccCell V ul` (then the `rw [e1, e0, e2] at
+-- hne` step in its proof is dropped and the `wl = [u0,u1,u2]` branch becomes
+-- `exact absurd hXYc hne`), delete this theorem, and switch PA25
+-- `MCELL4_LEAF_S_LEAF`'s `by_cases`/`hne` to the original-order equality — the
+-- AJRIPQN dispatch argument there is order-symmetric, so the ripple is
+-- mechanical. Kept here (statement frozen) purely as the audit anchor for the
 private theorem pa18_ccCell_swap {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
     (hs : saturated V) (hl : leaf V [u0, u1, u2]) :
     ccCell V [u0, u1, u2] = ccCell V [u1, u0, u2] := by
@@ -4881,6 +4908,108 @@ theorem CFFONNL {V : Set V3} {ul : List V3} {X : Set V3} (hp : Packing V)
   rcases hwlcase with rfl | rfl
   · rw [hXYc, pa18_ccCell_swap hp hs hl']
   · exact hXYc
+
+/-! ### Swap-refutation kit (2026-10-23, lane pa18a7): the two cc-cell
+orientations are genuinely different sets. This block discharges the A7
+re-evaluation: the scoped equality `ccCell V [u0,u1,u2] = ccCell V [u1,u0,u2]`
+above is refuted machine-checkably, and the CFFONNL hypothesis deviation from
+its HOL original is pinpointed as the real debt. -/
+
+/-- `chiMsb ul ·` is affine in the point (`CHI_MSB_ADDITIVE`), so its
+nonnegative halfspace is convex. -/
+theorem pa18_chi_halfspace_convex (ul : List V3) :
+    Convex ℝ {z : V3 | 0 ≤ chiMsb ul z} := by
+  rw [convex_iff_forall_pos]
+  intro x hx y hy a b ha hb hab
+  simp only [Set.mem_setOf_eq] at hx hy ⊢
+  rw [CHI_MSB_ADDITIVE ul x y a b hab]
+  exact add_nonneg (mul_nonneg (le_of_lt ha) hx) (mul_nonneg (le_of_lt hb) hy)
+
+/-- The apex of the cc-cell (the `k = 3` `mxi` point, resp. the `k = 4` fourth
+point of `cc_uh`) lies in the cell with strictly positive `chi_msb`. -/
+theorem pa18_ccCell_apex_pos {V : Set V3} {ul : List V3} (hp : Packing V)
+    (hs : saturated V) (hl' : leaf V ul) :
+    ∃ a : V3, a ∈ ccCell V ul ∧ 0 < chiMsb ul a := by
+  have h34 := CC_CELL34 (V := V) (ul := ul)
+    (pp := if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0)
+    hp hs hl' rfl
+  by_cases hk : ccKe V ul = 3
+  · rw [h34, if_pos hk]
+    exact ⟨mxi V (ccUh V ul), subset_convexHull ℝ _ (by simp),
+      (CELL3_NONDEG hp hs hl' hk).2⟩
+  · have h4 : ccKe V ul = 4 := by
+      rcases CC_KE_34 V ul with h | h
+      · exact absurd h hk
+      · exact h
+    rw [h34, if_neg hk]
+    exact ⟨(ccUh V ul).getD 3 0, subset_convexHull ℝ _ (by simp),
+      K4_CHI_MSB_POS hp hs hl' h4⟩
+
+/-- Every point of the cc-cell has nonnegative `chi_msb`: by `CC_CELL34` the
+cell is the convex hull of the stem triple (`chi_msb = 0` on the stem's affine
+span, `AFFINE_IMP_CHI_MSB_0`) and the apex (strictly positive), and the
+nonnegative halfspace is convex (`pa18_chi_halfspace_convex`). -/
+theorem pa18_ccCell_chi_nonneg {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
+    (hs : saturated V) (hl' : leaf V [u0, u1, u2]) :
+    ∀ z ∈ ccCell V [u0, u1, u2], 0 ≤ chiMsb [u0, u1, u2] z := by
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH (V := V) (ul := [u0, u1, u2]) hp hs hl'
+  have hspan : ∀ w ∈ ({u0, u1, u2} : Set V3),
+      w ∈ (affineSpan ℝ (setOfList [u0, u1, u2]) : Set V3) := fun w hw =>
+    subset_affineSpan ℝ _ (by simp [setOfList]; tauto)
+  have hs0 : ([u0, u1, u2] : List V3).getD 0 0 = u0 := rfl
+  have hs1 : ([u0, u1, u2] : List V3).getD 1 0 = u1 := rfl
+  have hs2 : ([u0, u1, u2] : List V3).getD 2 0 = u2 := rfl
+  have hvtx : ({(ccUh V [u0, u1, u2]).getD 0 0, (ccUh V [u0, u1, u2]).getD 1 0,
+      (ccUh V [u0, u1, u2]).getD 2 0,
+      if ccKe V [u0, u1, u2] = 3 then mxi V (ccUh V [u0, u1, u2])
+      else (ccUh V [u0, u1, u2]).getD 3 0} : Set V3)
+      ⊆ {z : V3 | 0 ≤ chiMsb [u0, u1, u2] z} := by
+    intro w hw
+    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+    rcases hw with hw | hw | hw | hw
+    · rw [hw, e0, hs0]
+      exact (AFFINE_IMP_CHI_MSB_0 [u0, u1, u2] u0 (by simp)
+        (hspan u0 (by simp))).symm.le
+    · rw [hw, e1, hs1]
+      exact (AFFINE_IMP_CHI_MSB_0 [u0, u1, u2] u1 (by simp)
+        (hspan u1 (by simp))).symm.le
+    · rw [hw, e2, hs2]
+      exact (AFFINE_IMP_CHI_MSB_0 [u0, u1, u2] u2 (by simp)
+        (hspan u2 (by simp))).symm.le
+    · by_cases hk : ccKe V [u0, u1, u2] = 3
+      · rw [hw, if_pos hk]
+        exact (CELL3_NONDEG hp hs hl' hk).2.le
+      · rw [hw, if_neg hk]
+        exact (K4_CHI_MSB_POS hp hs hl'
+          (by rcases CC_KE_34 V [u0, u1, u2] with h | h
+              · exact absurd h hk
+              · exact h)).le
+  intro z hz
+  have h34 := CC_CELL34 (V := V) (ul := [u0, u1, u2])
+    (pp := if ccKe V [u0, u1, u2] = 3 then mxi V (ccUh V [u0, u1, u2])
+      else (ccUh V [u0, u1, u2]).getD 3 0) hp hs hl' rfl
+  rw [h34] at hz
+  exact convexHull_min hvtx (pa18_chi_halfspace_convex [u0, u1, u2]) hz
+
+/-- **The machine-checked refutation of the scoped swap statement above**: the
+two orientations of the cc-cell are different sets — the apex of each lies
+strictly on its own side of the stem plane (`pa18_ccCell_apex_pos`), so the
+cells sit in opposite closed halfspaces (`pa18_ccCell_chi_nonneg` composed
+with `chi_msb_swap_01`). See the reversed-verdict docstring on
+`pa18_ccCell_swap` for the CFFONNL root cause and the STATEMENT-FIX path. -/
+theorem pa18_ccCell_swap_ne {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
+    (hs : saturated V) (hl : leaf V [u0, u1, u2]) :
+    ccCell V [u0, u1, u2] ≠ ccCell V [u1, u0, u2] := by
+  intro hEq
+  obtain ⟨a, haY, haχ⟩ := pa18_ccCell_apex_pos hp hs hl
+  have hl' : leaf V [u1, u0, u2] := (ZASUVOR hp hs hl).1
+  have hsub := pa18_ccCell_chi_nonneg (V := V) (u0 := u1) (u1 := u0) (u2 := u2)
+    hp hs hl'
+  have haY' : a ∈ ccCell V [u1, u0, u2] := by rw [← hEq]; exact haY
+  have h1 : 0 ≤ chiMsb [u1, u0, u2] a := hsub a haY'
+  rw [chi_msb_swap_01 u1 u0 u2 a] at h1
+  linarith
 
 /-- HOL `CC_CELL_IN_MCELL_SET` (leaf_cell.hl:2515-2584). -/
 theorem CC_CELL_IN_MCELL_SET {V : Set V3} {ul : List V3} (hs : saturated V)
