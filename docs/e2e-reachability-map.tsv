@@ -1,6 +1,6 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 215561
-SORRIED 141
+TOTAL_REACHABLE_KEPLER_DECLS 215573
+SORRIED 140
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
@@ -105,7 +105,6 @@ Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau5_tauVEF_std	parent=Kepler.Text.Ta
 Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau6_tauVEF_std	parent=Kepler.Text.TameLp.MQMSMAB_adm1
 Kepler.Text.TameLp	Kepler.Text.TameLp.sum_tauVEF_upper_bound	parent=Kepler.Text.TameLp.MQMSMAB_tame13a
 Kepler.Text.PackingAuto2	Kepler.Text.UPFZBZM_concl	parent=Kepler.Text.RDWKARC_concl
-Kepler.Text.PackingAuto25	Kepler.Text.cc_bool_model_data	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.PackingAuto18	Kepler.Text.cc_pe_exists	parent=Kepler.Text.CC_PE_FACET_OF
 Kepler.Text.PackingAuto25	Kepler.Text.cc_prep_model_data	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.LocalAuto1	Kepler.Text.main_nonlinear_terminal_v11	parent=Kepler.Assembly.textCapstone
@@ -770,4 +769,3 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_bounds._native.native_decide.ax_1_1
 Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_no_finals._native.native_decide.ax_1_1
 Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 --- END ---
-REACH_EXIT=0

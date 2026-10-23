@@ -648,3 +648,42 @@ LP 端到端审计；P1：三接口 HOL 陈述对照；P2：shim 清理批。
 delta issue-cayleytr0`(5422) 可按同一 runbook 续跑；R3 39 条全部等第三
 武器（radicand 预切分 / t=√u 换元）；雷区 #460–#469 见
 `lane_snapshots/prep2/DELIVERY.md`。
+
+## 2026-10-23 Phase 5 PA25 leaf-rank 首批节（`eada8550`）
+
+**入库**：`PackingAuto25.lean` +207/−3，三件转真，陈述/docstring 逐字未动，
+bare sorry 86→83；闸 PASS @`cc_bool_model_data`（PA25 单文件）。
+
+- **`JSPEVYT_EXPLICIT`**（:3604，72 行）：`hl ≤ 1.34 → radV ≤ 1.34`（`RADV_ETAY`）
+  + `RADV_MONO`/`RADV2` 得三边 ≤ 2.68 ≤ √8；对 `(d01,d12,d02)` 用
+  `proj_bank_JSPEVYT` 得 `eta_y > 1.34²`，`mi_eta_y_sym` 换序 + `nlinarith`
+  矛盾。零新源，标准三。
+- **`JSP_BOUNDS`**（:7572，19 行）：两次 `JSPEVYT_EXPLICIT`（swap `u0/u1`）
+  得两距离 `< 2hminus`。零新源，标准三。
+- **`cc_bool_model_data`**（:3727，107 行）：HOL `OXLZLEZ3.hl:3926` 逐段
+  装配——card≠0、periodic×6、三组距离互斥、`4cell → crit ∨ subcrit ∨
+  supercrit`、`small_eta → small`（经 `JSPEVYT_EXPLICIT`，**不是**
+  `JSP_BOUNDS`）。证明调用图 19,858 个定理节点，仅标准三。
+- **口径注（重要）**：`#print axioms cc_bool_model_data` 仍含 `sorryAx`，
+  这不是证明债，而是**冻结陈述类型**经 `cc_data_v8 → ccCell → ccUh →
+  cc_uh_exists → cc_pe_exists`（PA18 既存 source）触达的 `Classical.choose`
+  闭包；任何证明（含恒等函数）都会如此。e2e 地图按**证明体值**统计，故该件
+  从 141→140 源消失；类型债由 `cc_pe_exists` 自身独立记账（仍在 140 内），
+  未被掩盖。闸 rule 5 自 2026-09-28 起本就允许 `sorryAx`，故正常 PASS。
+  值级复核工具 `#valax3`（defs 视为原子、theorem 值展开）在
+  `lane_snapshots/pa25leaf/valax3.lean`。
+- **阻塞（未动，精确缺口见 `lane_snapshots/pa25leaf/SCOUT.md`）**：
+  `cc_prep_model_data`（HOL 经 `CC_KE_34` 调 `K4_CC_WI_ALT`/`K4_CC_WIM`，
+  压在 `CC_CELL_SUBSET_WEDGE`/`LEAF_RANK4_CHI_MSB_ALT`/
+  `CC_CELL_WEDGE_MATCH_UH`/`MCELL4_REPARAM`/`K4_CHI_MSB_POS` 5+ 开放件上，
+  非单车道缺口）；`real_model_sum_azim`（只差点态恒等式，`ORDER_AZIM_SUM2Pi0`
+  已证，装配约 20 行，但点态即下一项，不能搬债）；`pkLeafRankAzimPointwise`
+  （HOL 证明即一次 `REUHADY`；`c_4_azim_mcell_dih_y` 循环调用
+  `LEAF_RANK_REUHADY`；`CC_3_PROPS` 的证明经 `NO_4CELL_IMP_K3 →
+  K3_CC_WI_ALT` direct source；PA24 `REUHADY1`/`REUHADY_p24` 在本 HEAD 仍
+  打印 `sorryAx`，import 会引入新债）。
+- **地图重跑**（2026-10-23 PA25 后）：direct source **141→140**；可达公理
+  **624 不变**；可达声明 215,561→215,573。PA25 模块源 39→38。
+- **下一波候选**：优先 `real_model_sum_azim`（待点态）；点态需先解决
+  `REUHADY` 或 K3/K4 edge-rigidity kit；`JSPEVYT_EXPLICIT`/`JSP_BOUNDS`
+  的转真为 `cc_bool_model_data` 以外的小件提供了模板。

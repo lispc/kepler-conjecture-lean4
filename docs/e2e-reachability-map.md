@@ -12,21 +12,28 @@
 
 | 指标 | 2026-10-22 | 2026-10-23 | 变化 |
 |---|---:|---:|---|
-| 可达 Kepler 声明 | 8,305 | **215,561** | +207,256（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；全部内核检查、零新公理） |
-| 直接 sorryAx 债务源 | 149 | **141** | −8（euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`） |
+| 可达 Kepler 声明 | 8,305 | **215,573** | +207,268（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25 三件证明体。全部内核检查、零新公理） |
+| 直接 sorryAx 债务源 | 149 | **140** | −9（euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`） |
 | 可达 Kepler 公理 | 624 | **624** | 0（全部 `native_decide` 图 shard；interval 证书用内核 decide，不新增公理） |
 
-**结论：主定理当前的实际债务源是 141 个声明。** AJRIPQN 的五个名字
-（`QZKSYKG1` / `QZKSYKG2` / `SLTSTLO2` / `DDZUPHJ` / `YIFVQDV_1`）与首个
-nli rest 源 `nliRestFWGKMBZ` 已全部从清单消失；`#print axioms Kepler.Text.AJRIPQN`
-= `[propext, Classical.choice, Quot.sound]`。
+**结论：主定理当前的实际债务源是 140 个声明。** AJRIPQN 的五个名字
+（`QZKSYKG1` / `QZKSYKG2` / `SLTSTLO2` / `DDZUPHJ` / `YIFVQDV_1`）、首个
+nli rest 源 `nliRestFWGKMBZ` 与 PA25 `cc_bool_model_data` 已从清单消失；
+`#print axioms Kepler.Text.AJRIPQN` = `[propext, Classical.choice, Quot.sound]`。
+
+> **PA25 口径注**：`cc_bool_model_data` 的证明体已无 `sorryAx`（`#valax3`
+> 证明调用图 19,858 节点，仅标准三），故地图按其值把它移出 source。但它的
+> 冻结陈述类型经 `cc_data_v8 → ccCell → ccUh → cc_uh_exists → cc_pe_exists`
+> 仍触达 PA18 既存 sorry，因此字面 `#print axioms cc_bool_model_data` 仍会
+> 打印 `sorryAx`；该类型债由 **`cc_pe_exists` 自身**作为独立 source 记账，
+> 未被掩盖。闸的 rule 5 自 2026-09-28 起本就允许 `sorryAx`。
 
 ## 1. 债务源按模块
 
 | 模块 | direct sorry 源 | 代表声明 |
 |---|---:|---|
 | `Kepler.Assembly` | 82 | 78 个 `nli*`（58 个父为 `nliPackNonlinearRest`、8 个 `nliTskBank`、7 个 `nliCell3Bank`、5 个直挂 `nonlinearInequalities`）+ `fcdjdot` / `jcajydu` / `tameCorrespondenceIso`（父 `textCapstone`）+ `lpArchiveCertificatesDebt`（父 `lpArchiveCertificates`） |
-| `Kepler.Text.PackingAuto25` | 39 | 25 个 `real_model_*`（父 `pkrmQu/Qx/Qy` 等）+ `LEAF_RANK_PROPS` 4 + `MCELL4_BARV_FI`/`MCELL4_FULL_WEDGE` 等 + `ox3q1hP25` |
+| `Kepler.Text.PackingAuto25` | 38 | 25 个 `real_model_*`（父 `pkrmQu/Qx/Qy` 等）+ `LEAF_RANK_PROPS` 4 + `MCELL4_FULL_WEDGE` 等 + `ox3q1hP25` |
 | `Kepler.Text.TameLp` | 6 | `fully_surrounded_perimeter_bound`、`ineq_tau{3,4,5,6}_tauVEF_std`、`sum_tauVEF_upper_bound` |
 | `Kepler.Text.PackingAuto15` | 3 | `DIHX_SYM`、`MCELL_ID_MXI_2`、`MCELL_ID_OMEGA_LIST_N` |
 | `Kepler.Text.PackingAuto11` | 3 | private `k2Case`、`k3Subset`、`rogersInterVLemma` |
@@ -80,13 +87,13 @@ nli rest 源 `nliRestFWGKMBZ` 已全部从清单消失；`#print axioms Kepler.T
 4. **PA24 / PackingConcl 零可达**：仍是邻近的 pack_concl 合并层，
    不在当前 e2e 锥；REUHADY1(d) 不阻塞当前主定理。
 5. **最大的下一块是 Assembly 的 58 个 `nliPackNonlinearRest` 源**；
-   其次是 PA25 的 39 个源（25 `real_model_*` + 14 其他）。
+   其次是 PA25 的 38 个源（25 `real_model_*` + 13 其他）。
 6. **624 条公理 = 23 条 `Assembly.GoodListShard*` + 601 条
    `Graphs.CertShards.*`/`CertTri/Quad/Pent/Hex`**，全部 `native_decide`
    生成，模块分布见 §4，与 DEBT 脊柱探针的 624 完全一致。
-7. **口径警告**：可达声明数从 8,305 跳到 215,561 不是债务增加，而是
+7. **口径警告**：可达声明数从 8,305 跳到 215,573 不是债务增加，而是
    CFWGKMBZ 证书（内核可检查的 shard 树）进入了证明项闭包；比较债务时
-   看 direct sorry 源（141）与公理（624），不要看可达声明总数。
+   看 direct sorry 源（140）与公理（624），不要看可达声明总数。
 
 ## 4. 624 条可达公理的模块分布
 
@@ -115,7 +122,7 @@ nli rest 源 `nliRestFWGKMBZ` 已全部从清单消失；`#print axioms Kepler.T
   cp /tmp/reachmap.out docs/e2e-reachability-map.tsv
   ```
   首次运行会重建 `Assembly.olean`；后续热缓存约数秒。每次落库后重跑并
-  diff 141 行清单，就是最直接的 e2e 债务刻度。
+  diff 140 行清单，就是最直接的 e2e 债务刻度。
 
 ## 6. 建议的下一步
 
