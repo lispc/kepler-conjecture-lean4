@@ -3356,13 +3356,237 @@ theorem MCELL4_FULL_WEDGE (V : Set V3) (X : Set V3) (ul : List V3) (w0 : V3) (n 
     X = mcell4 V ul := by
   sorry
 
+/-! ### `MCELL4_REPARAM` kit: index permutation of two length-4 lists with the
+same point set.  Builds the permutation constructively from `List.idxOf`
+(no `Classical.choose`, no `LEFT_ACTION_LIST_3_EXISTS`) and hands the `barV`
+transfer to the axiom-clean `QZKSYKG1`. -/
+
+/-- A length-4 list whose point set has cardinality 4 is `Nodup`. -/
+private theorem p25r_list4_nodup {ul : List V3} (hlen : ul.length = 4)
+    (hc : Set.ncard (setOfList ul) = 4) : ul.Nodup := by
+  rw [List.nodup_iff_injective_getElem]
+  intro i j hij
+  by_contra hne
+  have hcard : Nat.card (setOfList ul) = ul.length := by
+    rw [Nat.card_coe_set_eq, hc, hlen]
+  have hdist := CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT ul hcard i.1 j.1 i.2 j.2
+    (fun h => hne (Fin.ext h))
+  apply hdist
+  show elV ul i.1 = elV ul j.1
+  have hij' : ul[i.1] = ul[j.1] := hij
+  simp only [elV, List.getD_eq_getElem _ _ i.2, List.getD_eq_getElem _ _ j.2]
+  exact hij'
+
+/-- A `getD` entry below the length is a list member. -/
+private theorem p25r_getD_mem {l : List V3} {j : ℕ} (hj : j < l.length) :
+    l.getD j 0 ∈ l := by
+  rw [List.getD_eq_getElem _ _ hj]
+  exact List.getElem_mem hj
+
+/-- `getD` at `idxOf` returns the member. -/
+private theorem p25r_getD_idxOf {l : List V3} {x : V3} (hx : x ∈ l) :
+    l.getD (l.idxOf x) 0 = x := by
+  have hlt : l.idxOf x < l.length := List.idxOf_lt_length_iff.mpr hx
+  rw [List.getD_eq_getElem _ _ hlt]
+  exact List.getElem_idxOf hlt
+
+/-- `idxOf` of a distinct list entry returns its index. -/
+private theorem p25r_idxOf_getD {l : List V3} (hn : l.Nodup) {j : ℕ}
+    (hj : j < l.length) : l.idxOf (l.getD j 0) = j := by
+  have hmem : l.getD j 0 ∈ l := p25r_getD_mem hj
+  have hlt : l.idxOf (l.getD j 0) < l.length := List.idxOf_lt_length_iff.mpr hmem
+  have he : l[l.idxOf (l.getD j 0)] = l[j] := by
+    rw [List.getElem_idxOf hlt, List.getD_eq_getElem _ _ hj]
+  exact (hn.getElem_inj_iff (hi := hlt) (hj := hj)).mp he
+
+/-- Forward index map: position of `ul[j]` in `vl`, identity above index 3. -/
+private noncomputable def p25r_idxMap (ul vl : List V3) (j : ℕ) : ℕ :=
+  if j < 4 then vl.idxOf (ul.getD j 0) else j
+
+/-- Inverse index map: position of `vl[j]` in `ul`, identity above index 3. -/
+private noncomputable def p25r_idxMapInv (ul vl : List V3) (j : ℕ) : ℕ :=
+  if j < 4 then ul.idxOf (vl.getD j 0) else j
+
+private theorem p25r_idxMap_lt (ul vl : List V3) (hul : ul.length = 4)
+    (hvl : vl.length = 4) (hset : setOfList ul = setOfList vl)
+    {j : ℕ} (hj : j < 4) : p25r_idxMap ul vl j < 4 := by
+  have hmem : ul.getD j 0 ∈ vl := by
+    have h1 : ul.getD j 0 ∈ setOfList vl := by
+      rw [← hset]
+      exact p25r_getD_mem (by rw [hul]; exact hj)
+    exact h1
+  have hlt : vl.idxOf (ul.getD j 0) < vl.length := List.idxOf_lt_length_iff.mpr hmem
+  have hmap : p25r_idxMap ul vl j = vl.idxOf (ul.getD j 0) := by
+    unfold p25r_idxMap
+    rw [if_pos hj]
+  rw [hmap]
+  simpa [hvl] using hlt
+
+private theorem p25r_idxMapInv_lt (ul vl : List V3) (hul : ul.length = 4)
+    (hvl : vl.length = 4) (hset : setOfList ul = setOfList vl)
+    {j : ℕ} (hj : j < 4) : p25r_idxMapInv ul vl j < 4 := by
+  have hmem : vl.getD j 0 ∈ ul := by
+    have h1 : vl.getD j 0 ∈ setOfList ul := by
+      rw [hset]
+      exact p25r_getD_mem (by rw [hvl]; exact hj)
+    exact h1
+  have hlt : ul.idxOf (vl.getD j 0) < ul.length := List.idxOf_lt_length_iff.mpr hmem
+  have hmap : p25r_idxMapInv ul vl j = ul.idxOf (vl.getD j 0) := by
+    unfold p25r_idxMapInv
+    rw [if_pos hj]
+  rw [hmap]
+  simpa [hul] using hlt
+
+private theorem p25r_idxMapInv_comp (ul vl : List V3) (hul : ul.length = 4)
+    (hvl : vl.length = 4) (hset : setOfList ul = setOfList vl) (hnu : ul.Nodup)
+    (hnv : vl.Nodup) : ∀ j, p25r_idxMapInv ul vl (p25r_idxMap ul vl j) = j := by
+  intro j
+  by_cases hj : j < 4
+  · have hmem : ul.getD j 0 ∈ vl := by
+      have h1 : ul.getD j 0 ∈ setOfList vl := by
+        rw [← hset]
+        exact p25r_getD_mem (by rw [hul]; exact hj)
+      exact h1
+    have hlt : vl.idxOf (ul.getD j 0) < 4 := by
+      simpa [hvl] using List.idxOf_lt_length_iff.mpr hmem
+    have hf : p25r_idxMap ul vl j = vl.idxOf (ul.getD j 0) := by
+      unfold p25r_idxMap
+      rw [if_pos hj]
+    rw [hf]
+    have hq : p25r_idxMapInv ul vl (vl.idxOf (ul.getD j 0))
+        = ul.idxOf (vl.getD (vl.idxOf (ul.getD j 0)) 0) := by
+      unfold p25r_idxMapInv
+      rw [if_pos hlt]
+    rw [hq, p25r_getD_idxOf hmem]
+    exact p25r_idxOf_getD hnu (by rw [hul]; exact hj)
+  · have hf : p25r_idxMap ul vl j = j := by
+      unfold p25r_idxMap
+      rw [if_neg hj]
+    rw [hf]
+    unfold p25r_idxMapInv
+    rw [if_neg hj]
+
+private theorem p25r_idxMap_comp (ul vl : List V3) (hul : ul.length = 4)
+    (hvl : vl.length = 4) (hset : setOfList ul = setOfList vl) (hnu : ul.Nodup)
+    (hnv : vl.Nodup) : ∀ j, p25r_idxMap ul vl (p25r_idxMapInv ul vl j) = j := by
+  intro j
+  by_cases hj : j < 4
+  · have hmem : vl.getD j 0 ∈ ul := by
+      have h1 : vl.getD j 0 ∈ setOfList ul := by
+        rw [hset]
+        exact p25r_getD_mem (by rw [hvl]; exact hj)
+      exact h1
+    have hlt : ul.idxOf (vl.getD j 0) < 4 := by
+      simpa [hul] using List.idxOf_lt_length_iff.mpr hmem
+    have hg : p25r_idxMapInv ul vl j = ul.idxOf (vl.getD j 0) := by
+      unfold p25r_idxMapInv
+      rw [if_pos hj]
+    rw [hg]
+    have hf : p25r_idxMap ul vl (ul.idxOf (vl.getD j 0))
+        = vl.idxOf (ul.getD (ul.idxOf (vl.getD j 0)) 0) := by
+      unfold p25r_idxMap
+      rw [if_pos hlt]
+    rw [hf, p25r_getD_idxOf hmem]
+    exact p25r_idxOf_getD hnv (by rw [hvl]; exact hj)
+  · have hg : p25r_idxMapInv ul vl j = j := by
+      unfold p25r_idxMapInv
+      rw [if_neg hj]
+    rw [hg]
+    unfold p25r_idxMap
+    rw [if_neg hj]
+
+/-- `MCELL4_REPARAM` proof body (zero-debt): the `mcell4` equality is pure
+`setOfList`/`hl` rewriting; `barV` transfer is `QZKSYKG1` at `k = 4` with the
+explicit index permutation. -/
+private theorem p25r_mcell4_reparam (V : Set V3) (ul vl : List V3) (hp : Packing V)
+    (hs : saturated V) (hc : Set.ncard (setOfList ul) = 4)
+    (hs' : setOfList ul = setOfList vl) (hl4 : vl.length = 4)
+    (hnn : ¬ nullSet (mcell4 V ul)) (hb : barV V 3 ul) :
+    mcell4 V ul = mcell4 V vl ∧ barV V 3 vl := by
+  have hul : ul.length = 4 := hb.1
+  have hnu : ul.Nodup := p25r_list4_nodup hul hc
+  have hnv : vl.Nodup := p25r_list4_nodup hl4 (by rw [← hs']; exact hc)
+  have hgf := p25r_idxMapInv_comp ul vl hul hl4 hs' hnu hnv
+  have hfg := p25r_idxMap_comp ul vl hul hl4 hs' hnu hnv
+  let p : Equiv.Perm ℕ := Equiv.ofBijective (p25r_idxMap ul vl)
+    ⟨fun a b hab => by rw [← hgf a, hab, hgf b],
+     fun b => ⟨p25r_idxMapInv ul vl b, hfg b⟩⟩
+  have hp_apply : ∀ j, p j = p25r_idxMap ul vl j := fun j => rfl
+  have hperm : permutes p (Set.Icc 0 3) := by
+    intro x
+    rw [hp_apply x]
+    by_cases hx : x < 4
+    · have hlt := p25r_idxMap_lt ul vl hul hl4 hs' hx
+      constructor
+      · intro _
+        exact ⟨by omega, by omega⟩
+      · intro _
+        exact ⟨by omega, by omega⟩
+    · have hx' : p25r_idxMap ul vl x = x := by
+        unfold p25r_idxMap
+        rw [if_neg hx]
+      rw [hx']
+  have hfix : ∀ j, 4 ≤ j → p j = j := by
+    intro j hj
+    rw [hp_apply j]
+    unfold p25r_idxMap
+    rw [if_neg (by omega)]
+  have hsymm : ∀ i, p.symm i = p25r_idxMapInv ul vl i := by
+    intro i
+    exact (Equiv.symm_apply_eq p).mpr (hfg i).symm
+  have hqget : ∀ i, i < 4 → ul.getD (p25r_idxMapInv ul vl i) 0 = vl.getD i 0 := by
+    intro i hi
+    have hq : p25r_idxMapInv ul vl i = ul.idxOf (vl.getD i 0) := by
+      unfold p25r_idxMapInv
+      rw [if_pos hi]
+    rw [hq]
+    exact p25r_getD_idxOf (by
+      have h1 : vl.getD i 0 ∈ setOfList ul := by
+        rw [hs']
+        exact p25r_getD_mem (by rw [hl4]; exact hi)
+      exact h1)
+  have hleft : leftActionList p ul = vl := by
+    rw [leftActionList, hul, show List.range 4 = [0, 1, 2, 3] from rfl]
+    simp only [List.map_cons, List.map_nil]
+    rw [hsymm 0, hsymm 1, hsymm 2, hsymm 3]
+    have hdef : (default : V3) = 0 := rfl
+    rw [hdef]
+    rw [hqget 0 (by norm_num), hqget 1 (by norm_num),
+      hqget 2 (by norm_num), hqget 3 (by norm_num)]
+    exact (p25_list4_eq vl hl4).symm
+  have hlt : Kepler.Text.hl ul < Real.sqrt 2 := by
+    by_contra hcon
+    apply hnn
+    show MeasureTheory.volume (mcell4 V ul) = 0
+    unfold mcell4
+    rw [if_neg hcon]
+    exact measure_empty
+  have hhl : Kepler.Text.hl vl = Kepler.Text.hl ul := by
+    unfold Kepler.Text.hl
+    rw [hs']
+  have hmc : mcell4 V ul = mcell4 V vl := by
+    unfold mcell4
+    rw [if_pos hlt, if_pos (by rw [hhl]; exact hlt), hs']
+  have hne4 : mcell 4 V ul ≠ ∅ := by
+    intro h0
+    apply hnn
+    have h0' : mcell4 V ul = ∅ := by
+      rw [show mcell 4 V ul = mcell4 V ul from rfl] at h0
+      exact h0
+    rw [h0']
+    exact measure_empty
+  have hbarv : barV V 3 vl :=
+    QZKSYKG1 (V := V) (ul := ul) (vl := vl) (k := 4) (p := p)
+      hs hp hb (by norm_num) hne4 hperm hfix hleft.symm
+  exact ⟨hmc, hbarv⟩
+
 /-- HOL `MCELL4_REPARAM`. -/
 theorem MCELL4_REPARAM (V : Set V3) (ul vl : List V3) (hp : Packing V)
     (hs : saturated V) (hc : Set.ncard (setOfList ul) = 4)
     (hs' : setOfList ul = setOfList vl) (hl : vl.length = 4)
     (hnn : ¬ nullSet (mcell4 V ul)) (hb : barV V 3 ul) :
     mcell4 V ul = mcell4 V vl ∧ barV V 3 vl := by
-  sorry
+  exact p25r_mcell4_reparam V ul vl hp hs hc hs' hl hnn hb
 
 /-- HOL `MCELL4_GG`: for the unique wedge cell, `gg_mcell` collapses to the
 single cell weight. -/
