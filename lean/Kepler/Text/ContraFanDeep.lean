@@ -2599,4 +2599,265 @@ theorem cf4_circumcenter3_existsUnique {v2 v4 : V3}
     (hcuniq (EuclideanGeometry.Sphere.mk y (dist y (0:V3))) (And.intro hspan hp))
 
 
+/-! ## W1（四点链 Wave-1）：分离平面重装 + dot_of_dist2 + rotation1 家族
+
+HOL 参照（CKQOWSA_4.hl:2870-3265 及 :3870-3882）：`separation_plane_4_points`
+（CF-4b 重构时溶散成私件群，此处按原陈述重装配）、`dot_of_dist2`（终局外心件
+首子目标，本波先备）、`lemma_4_points_rotation1`、`lemma_4_points_rotation1_full`。
+全部为自身完全证明的私件，供 W2/W3/W4 装配消费；不改 ContraFan.lean（W4 接线）。 -/
+
+/-- 环带成员的构造方向（`inBallAnnulus` 之逆）：`‖z‖ ≤ 2h0 ∧ 2 ≤ ‖z‖`。 -/
+private theorem cf4_ballAnnulus_mk {z : V3} (h1 : ‖z‖ ≤ 2 * h0) (h2 : 2 ≤ ‖z‖) :
+    z ∈ ballAnnulus := by
+  simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+    dist_zero_right]
+  exact ⟨h1, fun hcon => lt_irrefl (2:ℝ) (lt_of_le_of_lt h2 hcon)⟩
+
+/-- HOL `dot_of_dist2` 场景特形（CKQOWSA_4.hl:3870-3882，终局外心件首子目标）：
+两"单位配置"（‖v‖ = 2、dist v w = 2）下距离平方展开直接给出内积值。 -/
+private theorem cf4_dot_of_dist2 {v w : V3} (hv : ‖v‖ = 2) (hd : dist v w = 2) :
+    inner ℝ v w = ‖w‖ ^ 2 / 2 := by
+  have h2 : dist v w ^ 2 = ‖v - w‖ ^ 2 := by rw [dist_eq_norm]
+  rw [hd, norm_sub_sq_real, hv] at h2
+  linarith
+
+/-- HOL `separation_plane_4_points`（CKQOWSA_4.hl:2870-3002）重装：环带四点、
+两条对边 ≤ 2h0、四条连接边与长对角 ≥ 2、segment[v1,v3] 穿锥 {v2,v4} ⟹
+存在分离法向 n（v2, v4 ⊥ n，v1·n 与 v3·n 反号）。途径：n := ±(v2 × v4)
+（`cf4Cross` kit）；`cf4_LEMMA_3_POINTS_FINAL` 四次反用排四点入对面锥；
+v1·n = 0 的余支用 `cf4_segment_intersects_aff_ge` / `cf4_segment_inter_aff_ge_ends`
+（经 `cf4_mem_affSpan3_of_inner_eq` 把 v1、v3 拉进平面）排空。 -/
+private theorem cf4_separation_plane_4_points {v1 v2 v3 v4 : V3}
+    (hb1 : v1 ∈ ballAnnulus) (hb2 : v2 ∈ ballAnnulus) (hb3 : v3 ∈ ballAnnulus)
+    (hb4 : v4 ∈ ballAnnulus)
+    (hd13l : dist v1 v3 ≤ 2 * h0) (hd24l : dist v2 v4 ≤ 2 * h0)
+    (hd24 : 2 ≤ dist v2 v4) (hd12 : 2 ≤ dist v1 v2) (hd14 : 2 ≤ dist v1 v4)
+    (hd23 : 2 ≤ dist v2 v3) (hd34 : 2 ≤ dist v3 v4)
+    (hcross : (segment ℝ v1 v3 ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty) :
+    ∃ n : V3, n ≠ 0 ∧ inner ℝ v2 n = 0 ∧ inner ℝ v4 n = 0 ∧
+      inner ℝ v1 n < 0 ∧ 0 < inner ℝ v3 n := by
+  have hcol : ¬ Collinear ℝ (insert (0:V3) ({v2, v4} : Set V3)) :=
+    estd_non_collinear_lemma hb2 hb4 hd24 hd24l
+  obtain ⟨hv20, hv40, hv24ne⟩ := cf4_not_collinear_smul hcol
+  have hv24 : v2 ≠ v4 := fun he => hv24ne 1 (by rw [he, one_smul])
+  have hnb : (0:V3) ∉ segment ℝ v1 v3 := cf4_not_between_estd hb1 hb3 hd13l
+  -- n := ±(v2 × v4)：正交 v2、v4，取号使 v1·n ≤ 0
+  obtain ⟨n, hn0, h2n, h4n, h1n0⟩ :
+      ∃ n : V3, n ≠ 0 ∧ inner ℝ v2 n = 0 ∧ inner ℝ v4 n = 0 ∧ inner ℝ v1 n ≤ 0 := by
+    rcases le_or_gt (inner ℝ v1 (cf4Cross v2 v4)) 0 with hle | hgt
+    · exact ⟨cf4Cross v2 v4, cf4Cross_ne_zero hcol, cf4Cross_dot_left v2 v4,
+        cf4Cross_dot_right v2 v4, hle⟩
+    · refine ⟨-cf4Cross v2 v4, neg_ne_zero.2 (cf4Cross_ne_zero hcol), ?_, ?_, ?_⟩
+      · rw [inner_neg_right, cf4Cross_dot_left, neg_zero]
+      · rw [inner_neg_right, cf4Cross_dot_right, neg_zero]
+      · rw [inner_neg_right]; linarith
+  -- LEMMA_3_POINTS_FINAL 反用：四点均不落对面锥
+  have hv1ncone : v1 ∉ affGe {0} ({v2, v4} : Set V3) := fun hmem =>
+    cf4_LEMMA_3_POINTS_FINAL (v1 := v2) (v2 := v4) (v3 := v1) hmem hb2 hb4 hb1 hd24l
+      (by rw [dist_comm]; exact hd12) (by rw [dist_comm]; exact hd14)
+  have hv3ncone : v3 ∉ affGe {0} ({v2, v4} : Set V3) := fun hmem =>
+    cf4_LEMMA_3_POINTS_FINAL (v1 := v2) (v2 := v4) (v3 := v3) hmem hb2 hb4 hb3 hd24l hd23
+      (by rw [dist_comm]; exact hd34)
+  have hv2ncone : v2 ∉ affGe {0} ({v1, v3} : Set V3) := fun hmem =>
+    cf4_LEMMA_3_POINTS_FINAL (v1 := v1) (v2 := v3) (v3 := v2) hmem hb1 hb3 hb2 hd13l hd12
+      (by rw [dist_comm]; exact hd23)
+  have hv4ncone : v4 ∉ affGe {0} ({v1, v3} : Set V3) := fun hmem =>
+    cf4_LEMMA_3_POINTS_FINAL (v1 := v1) (v2 := v3) (v3 := v4) hmem hb1 hb3 hb4 hd13l hd14 hd34
+  -- v1·n = 0 与穿锥假设矛盾（两支分别排空）
+  rcases eq_or_ne (inner ℝ v1 n) 0 with hz | hv1nne
+  · exfalso
+    have hindep : LinearIndependent ℝ ![v2, v4] := cf4_linearIndependent_pair hcol
+    have hv1span : v1 ∈ affineSpan ℝ (insert (0:V3) ({v2, v4} : Set V3)) :=
+      cf4_mem_affSpan3_of_inner_eq hindep hn0 h2n h4n hz
+    rcases eq_or_ne (inner ℝ v3 n) 0 with hz3 | hne3
+    · have hv3span : v3 ∈ affineSpan ℝ (insert (0:V3) ({v2, v4} : Set V3)) :=
+        cf4_mem_affSpan3_of_inner_eq hindep hn0 h2n h4n hz3
+      have hdisj := cf4_segment_intersects_aff_ge hcol hnb hv1span hv3span hcross
+      exact Or.elim hdisj (fun hc1 => hv1ncone hc1)
+        (fun hc23 => Or.elim hc23 (fun hc2 => hv2ncone hc2) (fun hc3 => hv4ncone hc3))
+    · exact hv1ncone
+        (cf4_segment_inter_aff_ge_ends (v1 := v2) (v2 := v4) hv20 hv40 hv24 h2n h4n hz hne3
+          hcross)
+  refine ⟨n, hn0, h2n, h4n, lt_of_le_of_ne h1n0 hv1nne, ?_⟩
+  have hv1nlt : inner ℝ v1 n < 0 := lt_of_le_of_ne h1n0 hv1nne
+  rcases lt_trichotomy (inner ℝ v3 n) 0 with h3l | h3e | h3g
+  · -- v3·n < 0：交点 dot 同时为零（锥侧）与负（段侧），矛盾
+    exfalso
+    obtain ⟨x, hxseg, hxcone⟩ := hcross
+    obtain ⟨u, u', hu, hu', huu, hxueq⟩ := hxseg
+    obtain ⟨t1, t2, ht1, ht2, hxceq⟩ := (affGe_0_2_char hv20 hv40 hv24 x).1 hxcone
+    have kcone : inner ℝ x n = 0 := by
+      rw [hxceq, inner_add_left, real_inner_smul_left, real_inner_smul_left, h2n, h4n]
+      ring
+    have kseg : inner ℝ x n = u * inner ℝ v1 n + u' * inner ℝ v3 n := by
+      rw [← hxueq, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    rcases eq_or_lt_of_le hu with hu0 | hup
+    · subst hu0
+      have hu'1 : u' = 1 := by linarith
+      rw [kseg] at kcone
+      rw [zero_mul, zero_add, hu'1] at kcone
+      linarith
+    · have e1 : u * inner ℝ v1 n < 0 := mul_neg_of_pos_of_neg hup hv1nlt
+      have e2 : u' * inner ℝ v3 n ≤ 0 := mul_nonpos_of_nonneg_of_nonpos hu' (le_of_lt h3l)
+      rw [kseg] at kcone
+      linarith
+  · exfalso
+    -- v3·n = 0：换端点引理把 v3 拉进对面锥
+    refine hv3ncone
+      (cf4_segment_inter_aff_ge_ends (v1 := v2) (v2 := v4) hv20 hv40 hv24 h2n h4n h3e hv1nne ?_)
+    rw [segment_symm]
+    exact hcross
+  · exact h3g
+
+/-- HOL `lemma_4_points_rotation1`（CKQOWSA_4.hl:3003-3202）：绕轴 ℝ•v2 转动 v1
+（保 ‖·‖、保到轴上点距离），落点 v1' 与 v4 距离恰为 2，且 segment[v1',v3] 仍穿锥
+{v2,v4}。途径：分离法向 n（W1a）+ `cf4_rotation_about_axis`（轴上点距全保）
++ `cf4_continuous_lemma_aff_ge` 交不变量传递 + `cf4_ivt_first_dec` 打靶
+dist(·,v4) = 2 + `cf4_LEMMA_3_POINTS_FINAL` 排掉首穿点三支与全程有交支。 -/
+private theorem cf4_rotation_1 {v1 v2 v3 v4 : V3}
+    (hb1 : v1 ∈ ballAnnulus) (hb2 : v2 ∈ ballAnnulus) (hb3 : v3 ∈ ballAnnulus)
+    (hb4 : v4 ∈ ballAnnulus)
+    (hd13l : dist v1 v3 ≤ 2 * h0) (hd24l : dist v2 v4 ≤ 2 * h0)
+    (hd12 : 2 ≤ dist v1 v2) (hd14 : 2 ≤ dist v1 v4)
+    (hd23 : 2 ≤ dist v2 v3) (hd34 : 2 ≤ dist v3 v4)
+    (hd24 : 2 ≤ dist v2 v4)
+    (hcross : (segment ℝ v1 v3 ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty) :
+    ∃ v1' : V3, v1' ∈ ballAnnulus ∧ ‖v1'‖ = ‖v1‖ ∧ dist v1' v3 ≤ 2 * h0 ∧
+      dist v1' v2 = dist v1 v2 ∧ dist v1' v4 = 2 ∧
+      (segment ℝ v1' v3 ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty := by
+  have hcol : ¬ Collinear ℝ (insert (0:V3) ({v2, v4} : Set V3)) :=
+    estd_non_collinear_lemma hb2 hb4 hd24 hd24l
+  obtain ⟨hv20, hv40, hv24ne⟩ := cf4_not_collinear_smul hcol
+  have hv24 : v2 ≠ v4 := fun he => hv24ne 1 (by rw [he, one_smul])
+  obtain ⟨n, hn0, h2n, h4n, h1n, h3n⟩ :=
+    cf4_separation_plane_4_points hb1 hb2 hb3 hb4 hd13l hd24l hd24 hd12 hd14 hd23 hd34 hcross
+  -- 轴投影差非零：v1−proj·v2、v3−proj·v2 的 dot n 分别 < 0 / > 0
+  have hvw0 : v1 - (inner ℝ v1 v2 / ‖v2‖ ^ 2) • v2 ≠ 0 := by
+    intro hzero
+    have hz : inner ℝ (v1 - (inner ℝ v1 v2 / ‖v2‖ ^ 2) • v2) n = 0 := by
+      rw [hzero]; simp
+    rw [inner_sub_left, real_inner_smul_left, h2n, mul_zero, sub_zero] at hz
+    linarith
+  have hww0 : v3 - (inner ℝ v3 v2 / ‖v2‖ ^ 2) • v2 ≠ 0 := by
+    intro hzero
+    have hz : inner ℝ (v3 - (inner ℝ v3 v2 / ‖v2‖ ^ 2) • v2) n = 0 := by
+      rw [hzero]; simp
+    rw [inner_sub_left, real_inner_smul_left, h2n, mul_zero, sub_zero] at hz
+    linarith
+  obtain ⟨f, a, b, hap, hfcont, hf0, hf1, hfdist, hfdec⟩ :=
+    cf4_rotation_about_axis (d := v2) (v := v1) (w := v3) hv20 hvw0 hww0
+  have hnormft : ∀ t : ℝ, ‖f t‖ = ‖v1‖ := by
+    intro t
+    have h5 := hfdist t 0
+    rw [zero_smul, dist_zero_right, dist_zero_right] at h5
+    exact h5
+  have hba : ∀ t : ℝ, f t ∈ ballAnnulus := by
+    intro t
+    obtain ⟨hz1, hz2⟩ := inBallAnnulus hb1
+    exact cf4_ballAnnulus_mk (by rw [hnormft t]; exact hz2) (by rw [hnormft t]; exact hz1)
+  have hfub : ∀ t ∈ Set.Icc 0 1, dist (f t) v3 ≤ 2 * h0 := fun t ht =>
+    le_trans (hfdec t ht) hd13l
+  rcases cf4_continuous_lemma_aff_ge (v1 := v2) (v2 := v4) (w := v3) f 1 (by norm_num)
+      hfcont.continuousOn (by rw [hf0]; exact hcross)
+      (fun t ht => cf4_not_between_estd (hba t) hb3 (hfub t ht)) hcol with
+    hall | ⟨x, hx0, hx1, hallx, hdisj⟩
+  · -- 全程有交支：f 1 = a•v3 + b•v2（a > 0）在分离面正侧，交点 dot 矛盾
+    exfalso
+    obtain ⟨x0, hx0seg, hx0cone⟩ := hall 1 (Set.mem_Icc.2 ⟨zero_le_one, le_refl 1⟩)
+    obtain ⟨t1, t2, ht1, ht2, hxceq⟩ := (affGe_0_2_char hv20 hv40 hv24 x0).1 hx0cone
+    obtain ⟨u, u', hu, hu', huu, hxueq⟩ := hx0seg
+    have kcone : inner ℝ x0 n = 0 := by
+      rw [hxceq, inner_add_left, real_inner_smul_left, real_inner_smul_left, h2n, h4n]
+      ring
+    have kf1 : 0 < inner ℝ (f 1) n := by
+      rw [hf1, inner_add_left, real_inner_smul_left, real_inner_smul_left, h2n, mul_zero,
+        add_zero]
+      exact mul_pos hap h3n
+    have kseg : inner ℝ x0 n = u * inner ℝ (f 1) n + u' * inner ℝ v3 n := by
+      rw [← hxueq, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    rcases eq_or_lt_of_le hu with hu0 | hup
+    · subst hu0
+      have hu'1 : u' = 1 := by linarith
+      rw [kseg] at kcone
+      rw [zero_mul, zero_add, hu'1] at kcone
+      linarith
+    · have e1 : 0 < u * inner ℝ (f 1) n := mul_pos hup kf1
+      have e2 : 0 ≤ u' * inner ℝ v3 n := mul_nonneg hu' (le_of_lt h3n)
+      rw [kseg] at kcone
+      linarith
+  · -- 首穿支：dist(f x, v4) < 2 经三支排空，IVT 打靶恰等 2
+    have hxd2 : dist (f x) v2 = dist v1 v2 := by
+      have h5 := hfdist x 1
+      rw [one_smul] at h5
+      exact h5
+    have hfx2 : dist (f x) v4 < 2 := by
+      by_contra hge
+      push_neg at hge
+      rcases hdisj with hd1 | hd2 | hd3
+      · exact cf4_LEMMA_3_POINTS_FINAL (v1 := v2) (v2 := v4) (v3 := f x) hd1 hb2 hb4 (hba x)
+          hd24l (by rw [dist_comm]; linarith) (by rw [dist_comm]; exact hge)
+      · exact cf4_LEMMA_3_POINTS_FINAL (v1 := f x) (v2 := v3) (v3 := v2) hd2 (hba x) hb3 hb2
+          (le_trans (hfdec x (Set.mem_Icc.2 ⟨hx0, hx1⟩)) hd13l) (by linarith)
+          (by rw [dist_comm]; exact hd23)
+      · exact cf4_LEMMA_3_POINTS_FINAL (v1 := f x) (v2 := v3) (v3 := v4) hd3 (hba x) hb3 hb4
+          (le_trans (hfdec x (Set.mem_Icc.2 ⟨hx0, hx1⟩)) hd13l) hge hd34
+    obtain ⟨s, hs0, hsx, hsd, -⟩ :=
+      cf4_ivt_first_dec (fun t => dist (f t) v4) 2 x hx0
+        ((hfcont.dist continuous_const).continuousOn)
+        (by show (2:ℝ) ≤ dist (f 0) v4; rw [hf0]; exact hd14)
+        (by show dist (f x) v4 ≤ 2; exact le_of_lt hfx2)
+    refine ⟨f s, hba s, hnormft s,
+      le_trans (hfdec s (Set.mem_Icc.2 ⟨hs0, le_trans hsx hx1⟩)) hd13l, ?_, hsd,
+      hallx s (Set.mem_Icc.2 ⟨hs0, hsx⟩)⟩
+    have h5 := hfdist s 1
+    rw [one_smul] at h5
+    exact h5
+
+/-- HOL `lemma_4_points_rotation1_full`（CKQOWSA_4.hl:3203-3265）：rotation1 四次
+（v1 绕 v2、v1' 绕 v4；v3 绕 v2、v3' 绕 v4），四条交叉距离全部打成恰 2，范数保持，
+穿锥交不变量保持。 -/
+private theorem cf4_rotation_1_full {v1 v2 v3 v4 : V3}
+    (hb1 : v1 ∈ ballAnnulus) (hb2 : v2 ∈ ballAnnulus) (hb3 : v3 ∈ ballAnnulus)
+    (hb4 : v4 ∈ ballAnnulus)
+    (hd13l : dist v1 v3 ≤ 2 * h0) (hd24l : dist v2 v4 ≤ 2 * h0)
+    (hd12 : 2 ≤ dist v1 v2) (hd14 : 2 ≤ dist v1 v4)
+    (hd23 : 2 ≤ dist v2 v3) (hd34 : 2 ≤ dist v3 v4)
+    (hd24 : 2 ≤ dist v2 v4)
+    (hcross : (segment ℝ v1 v3 ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty) :
+    ∃ v1' v3' : V3, v1' ∈ ballAnnulus ∧ v3' ∈ ballAnnulus ∧
+      ‖v1'‖ = ‖v1‖ ∧ ‖v3'‖ = ‖v3‖ ∧ dist v1' v3' ≤ 2 * h0 ∧
+      dist v1' v2 = 2 ∧ dist v1' v4 = 2 ∧ dist v2 v3' = 2 ∧ dist v3' v4 = 2 ∧
+      (segment ℝ v1' v3' ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty := by
+  -- 第 1 次：v1 绕 v2 转
+  obtain ⟨w1, hw1b, hw1n, hw1d13, hw1d2, hw1d4, hw1cross⟩ :=
+    cf4_rotation_1 hb1 hb2 hb3 hb4 hd13l hd24l hd12 hd14 hd23 hd34 hd24 hcross
+  -- 第 2 次：w1 绕 v4 转
+  obtain ⟨w2, hw2b, hw2n, hw2d13, hw2d4, hw2d2, hw2cross⟩ :=
+    cf4_rotation_1 hw1b hb4 hb3 hb2 hw1d13 (by rw [dist_comm]; exact hd24l)
+      (by linarith [hw1d4]) (by linarith [hw1d2, hd12])
+      (by rw [dist_comm]; exact hd34) (by rw [dist_comm]; exact hd23)
+      (by rw [dist_comm]; exact hd24)
+      (by rw [Set.pair_comm]; exact hw1cross)
+  -- 第 3 次：v3 绕 v2 转
+  obtain ⟨w3, hw3b, hw3n, hw3d13, hw3d2, hw3d4, hw3cross⟩ :=
+    cf4_rotation_1 hb3 hb2 hw2b hb4 (by rw [dist_comm]; exact hw2d13) hd24l
+      (by rw [dist_comm]; exact hd23) hd34
+      (by rw [dist_comm]; linarith [hw2d2]) (by linarith [hw2d4, hw1d4]) hd24
+      (by rw [segment_symm, Set.pair_comm]; exact hw2cross)
+  -- 第 4 次：w3 绕 v4 转
+  obtain ⟨w4, hw4b, hw4n, hw4d13, hw4d4, hw4d2, hw4cross⟩ :=
+    cf4_rotation_1 hw3b hb4 hw2b hb2 hw3d13 (by rw [dist_comm]; exact hd24l)
+      (by linarith [hw3d4]) (by linarith [hw3d2, hd23, dist_comm v2 v3])
+      (by rw [dist_comm]; linarith [hw2d4, hw1d4]) (by linarith [hw2d2])
+      (by rw [dist_comm]; exact hd24)
+      (by rw [Set.pair_comm]; exact hw3cross)
+  refine ⟨w2, w4, hw2b, hw4b, hw2n.trans hw1n, hw4n.trans hw3n,
+    ?_, hw2d2, ?_, ?_, ?_, ?_⟩
+  · rw [dist_comm]; exact hw4d13
+  · linarith [hw2d4, hw1d4]
+  · rw [dist_comm]; exact hw4d2
+  · linarith [hw4d4, hw3d4]
+  · rw [segment_symm, Set.pair_comm]; exact hw4cross
+
+
 end Kepler.Text.ContraFanDeep
