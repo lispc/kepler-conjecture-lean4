@@ -687,3 +687,46 @@ bare sorry 86→83；闸 PASS @`cc_bool_model_data`（PA25 单文件）。
 - **下一波候选**：优先 `real_model_sum_azim`（待点态）；点态需先解决
   `REUHADY` 或 K3/K4 edge-rigidity kit；`JSPEVYT_EXPLICIT`/`JSP_BOUNDS`
   的转真为 `cc_bool_model_data` 以外的小件提供了模板。
+
+## 2026-10-23 Phase 5 三车道节（N2 rest 1 + PA15 两件 + PA25 residue）
+
+**入库**（按顺序）：`26fe738e`（nli N2）、`b6ae7aee`（emit_lean 合并修复）、
+`09d22d69`（PA25 residue）、`0adb05a9`（PA15）。三车道各走各的闸，
+全部 PASS；e2e direct source **140→137**，可达公理 **624 不变**，可达声明
+215,573→215,937。
+
+- **nli N2 `nliRest6096597438b`**（+121/−3 Assembly + 78 叶证书）：原 case
+  在 x1→3 处 `sin` 参数 π/x1∈(1,2.25) 是 `Trans.lean sinGen` 覆盖空洞；
+  用恒等式 `ite (t<3/4) (sin t) (cos|π/2−t|)` 得 78 叶，closed atan(1) 走
+  `atan1K` 的 pi4D（新增 `--fill-atan1-box`）。证书走 **CertGD/BBTreeGD**
+  （CertG 在 SF-42 后 `:248/:420` 旧 pilot `decide` 翻假，不可重编）。
+  `#print axioms` 标准三；`Assembly := sorry` 85→84；`nliPackNonlinearRest`
+  子项 58→57。**rest 10/62 BLOCKED**：当前 case 编码在 4M–20M 节点内不闭
+  （rest 10 19/15 叶、rest 62 17/11 叶）；9/28 `bbarb_results2` 的 16/46
+  叶记录早于 10/16 case 编码，已失效（stale-record 雷区）。
+- **PA15 `MCELL_ID_OMEGA_LIST_N` + `MCELL_ID_MXI_2`**（+921/−2）：前者用
+  `OMEGA_LIST_N_IN_VORONOI_LIST` + cell 分解；后者用干净件
+  `QZKSYKG1`/`QZKSYKG2`/`AJRIPQN`/`LEFT_ACTION_LIST_*` + 有限置换鸽笼，
+  未使用 `MCELL_ID_MXI`/`LEPJBDJ`/`HDTFNFZ`/`YNHYJIT`；新增 import
+  `PackingAuto14`/`PackingAuto17`（无环）。值级 40,850/40,898 定理节点
+  标准三；PA15 源 3→1。**`DIHX_SYM` BLOCKED**：需从 `{u,v}∈edgeX` 造两方向
+  `cellParamsD` 见证，现有路径只有 `HDTFNFZ`（带 sorryAx）或 `LEPJBDJ`
+  （`k2Case`/`k3Subset` GIANT），还需 `LEFT_ACTION_LIST_2/3_EXISTS`
+  （PA15:3034/3040 仍 sorry）。
+- **PA25 residue `MCELL4_REPARAM`**（+225/−1）：`mcell4` 等式由
+  `setOfList`/`hl` 重写，`barV V 3 vl` 走 `QZKSYKG1` + 自建 `List.idxOf`
+  索引置换，未用 `LEFT_ACTION_LIST_3_EXISTS`。值级 39,276 定理节点标准三。
+  **注意：该件不在 137 源清单**（off-path），故不产生源数变化；收益是
+  PA25 文件的 sorry 计数与后续 K4 链的可用件。**`MCELL4_AZIM_LT_PI` /
+  `MCELL4_DIHX_AZIM` / `MCELL4_GG` BLOCKED**：前者唯一缺口是 `MCELL4_FI`
+  经 `MCELL4_FI_EL → LEAF_IN_WEDGE_GE → LEAF_RANK_ONTO →
+  MCELL4_LEAF_S_LEAF → HDTFNFZ/LEPJBDJ`（k2/k3 sorry）；`DIHX_AZIM` 消费
+  `AZIM_LT_PI`；`GG` 直接是 `MCELL4_FULL_WEDGE`。
+- **工具修正**：N2 的 `emit_lean.py` 基于 P2 前克隆，复制到主仓时误回退了
+  P2 的 `--mixed-tm`/`--leaf-start`/采样盒修复；`b6ae7aee` 已恢复 P2 并在其上
+  重叠 19 行 `--fill-atan1-box` 补丁。合并后文件与 P2 的 diff 恰为 19+/4−，
+  不影响已闸的 N2 证书/Assembly。
+- **在飞**：prep P3 2125 全树已建 37/132 shards（batch 41-44 后因内存暂停，
+  已恢复）；剩余 ~95 shards，批次 4 个/批。下一波 Phase 5 候选：PA15
+  `DIHX_SYM`（先落 `LEFT_ACTION_LIST_2/3_EXISTS`）、PA25 `real_model_*`、
+  nli rest 10/62（需重新编码/求解，不是粘合问题）。

@@ -12,13 +12,14 @@
 
 | 指标 | 2026-10-22 | 2026-10-23 | 变化 |
 |---|---:|---:|---|
-| 可达 Kepler 声明 | 8,305 | **215,573** | +207,268（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25 三件证明体。全部内核检查、零新公理） |
-| 直接 sorryAx 债务源 | 149 | **140** | −9（euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`） |
+| 可达 Kepler 声明 | 8,305 | **215,937** | +207,632（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25/PA15/N2 证明体。全部内核检查、零新公理） |
+| 直接 sorryAx 债务源 | 149 | **137** | −12（euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`、nli N2 `nliRest6096597438b`、PA15 `MCELL_ID_MXI_2`+`MCELL_ID_OMEGA_LIST_N`） |
 | 可达 Kepler 公理 | 624 | **624** | 0（全部 `native_decide` 图 shard；interval 证书用内核 decide，不新增公理） |
 
-**结论：主定理当前的实际债务源是 140 个声明。** AJRIPQN 的五个名字
-（`QZKSYKG1` / `QZKSYKG2` / `SLTSTLO2` / `DDZUPHJ` / `YIFVQDV_1`）、首个
-nli rest 源 `nliRestFWGKMBZ` 与 PA25 `cc_bool_model_data` 已从清单消失；
+**结论：主定理当前的实际债务源是 137 个声明。** AJRIPQN 的五个名字
+（`QZKSYKG1` / `QZKSYKG2` / `SLTSTLO2` / `DDZUPHJ` / `YIFVQDV_1`）、nli
+`nliRestFWGKMBZ`/`nliRest6096597438b`、PA25 `cc_bool_model_data` 与 PA15
+`MCELL_ID_MXI_2`/`MCELL_ID_OMEGA_LIST_N` 已从清单消失；
 `#print axioms Kepler.Text.AJRIPQN` = `[propext, Classical.choice, Quot.sound]`。
 
 > **PA25 口径注**：`cc_bool_model_data` 的证明体已无 `sorryAx`（`#valax3`
@@ -32,10 +33,10 @@ nli rest 源 `nliRestFWGKMBZ` 与 PA25 `cc_bool_model_data` 已从清单消失�
 
 | 模块 | direct sorry 源 | 代表声明 |
 |---|---:|---|
-| `Kepler.Assembly` | 82 | 78 个 `nli*`（58 个父为 `nliPackNonlinearRest`、8 个 `nliTskBank`、7 个 `nliCell3Bank`、5 个直挂 `nonlinearInequalities`）+ `fcdjdot` / `jcajydu` / `tameCorrespondenceIso`（父 `textCapstone`）+ `lpArchiveCertificatesDebt`（父 `lpArchiveCertificates`） |
+| `Kepler.Assembly` | 81 | 77 个 `nli*`（57 个父为 `nliPackNonlinearRest`、8 个 `nliTskBank`、7 个 `nliCell3Bank`、5 个直挂 `nonlinearInequalities`）+ `fcdjdot` / `jcajydu` / `tameCorrespondenceIso`（父 `textCapstone`）+ `lpArchiveCertificatesDebt`（父 `lpArchiveCertificates`） |
 | `Kepler.Text.PackingAuto25` | 38 | 25 个 `real_model_*`（父 `pkrmQu/Qx/Qy` 等）+ `LEAF_RANK_PROPS` 4 + `MCELL4_FULL_WEDGE` 等 + `ox3q1hP25` |
 | `Kepler.Text.TameLp` | 6 | `fully_surrounded_perimeter_bound`、`ineq_tau{3,4,5,6}_tauVEF_std`、`sum_tauVEF_upper_bound` |
-| `Kepler.Text.PackingAuto15` | 3 | `DIHX_SYM`、`MCELL_ID_MXI_2`、`MCELL_ID_OMEGA_LIST_N` |
+| `Kepler.Text.PackingAuto15` | 1 | `DIHX_SYM` |
 | `Kepler.Text.PackingAuto11` | 3 | private `k2Case`、`k3Subset`、`rogersInterVLemma` |
 | `Kepler.Text.PackingAuto18` | 2 | `cc_pe_exists`、private `pa18_ccCell_swap` |
 | `Kepler.Text.PackingAuto3` | 1 | `GRHIDFA_concl` |
@@ -78,22 +79,23 @@ nli rest 源 `nliRestFWGKMBZ` 与 PA25 `cc_bool_model_data` 已从清单消失�
    已退出 e2e 锥。
 2. **首个 nli rest 源接线（nli A1 `286d11b8`）**：`nliRestFWGKMBZ` 由
    `Kepler.Interval.Cases.CFWGKMBZ`（605 分片 + Base，205,418 叶，探针标准三）
-   直接导出；证书闭包 ~206k 声明进入锥，但**零新公理**。这是 58 个
+   直接导出；证书闭包 ~206k 声明进入锥，但**零新公理**。这是 57 个
    `nliPackNonlinearRest` 源的可复制样板（A2 rest 9 含 sqrt/atan/ite，
-   不能照搬 glue，且冷构建外推 40–45h）。
+   不能照搬 glue，且冷构建外推 40–45h）。N2 rest 1 先用 hybrid sin 编码 +
+   CertGD/BBTreeGD 绕开损坏的 CertG，达到 78 叶闭合。
 3. **PA10 `RVFXZBU` 已由 P0（`760a192a`）解决**：PA25 `MCELL4_BARV_FI`/
    `MCELL4_LEAF3` 改接 PA14 `RVFXZBU_p14`，PA10 源已离场（PA20 的两处消费
    不在 e2e 锥）。
 4. **PA24 / PackingConcl 零可达**：仍是邻近的 pack_concl 合并层，
    不在当前 e2e 锥；REUHADY1(d) 不阻塞当前主定理。
-5. **最大的下一块是 Assembly 的 58 个 `nliPackNonlinearRest` 源**；
+5. **最大的下一块是 Assembly 的 57 个 `nliPackNonlinearRest` 源**；
    其次是 PA25 的 38 个源（25 `real_model_*` + 13 其他）。
 6. **624 条公理 = 23 条 `Assembly.GoodListShard*` + 601 条
    `Graphs.CertShards.*`/`CertTri/Quad/Pent/Hex`**，全部 `native_decide`
    生成，模块分布见 §4，与 DEBT 脊柱探针的 624 完全一致。
-7. **口径警告**：可达声明数从 8,305 跳到 215,573 不是债务增加，而是
+7. **口径警告**：可达声明数从 8,305 跳到 215,937 不是债务增加，而是
    CFWGKMBZ 证书（内核可检查的 shard 树）进入了证明项闭包；比较债务时
-   看 direct sorry 源（140）与公理（624），不要看可达声明总数。
+   看 direct sorry 源（137）与公理（624），不要看可达声明总数。
 
 ## 4. 624 条可达公理的模块分布
 
@@ -122,7 +124,7 @@ nli rest 源 `nliRestFWGKMBZ` 与 PA25 `cc_bool_model_data` 已从清单消失�
   cp /tmp/reachmap.out docs/e2e-reachability-map.tsv
   ```
   首次运行会重建 `Assembly.olean`；后续热缓存约数秒。每次落库后重跑并
-  diff 140 行清单，就是最直接的 e2e 债务刻度。
+  diff 137 行清单，就是最直接的 e2e 债务刻度。
 
 ## 6. 建议的下一步
 

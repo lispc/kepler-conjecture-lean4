@@ -1,6 +1,6 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 215573
-SORRIED 140
+TOTAL_REACHABLE_KEPLER_DECLS 215937
+SORRIED 137
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
@@ -19,7 +19,6 @@ Kepler.Assembly	Kepler.Assembly.nliMainNonlinearTerminalV11	parent=Kepler.Assemb
 Kepler.Assembly	Kepler.Assembly.nliOx3q1h	parent=Kepler.Assembly.nonlinearInequalities
 Kepler.Assembly	Kepler.Assembly.nliPackIneqDefA	parent=Kepler.Assembly.nonlinearInequalities
 Kepler.Assembly	Kepler.Assembly.nliRest1965189142a	parent=Kepler.Assembly.nliPackNonlinearRest
-Kepler.Assembly	Kepler.Assembly.nliRest6096597438b	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestBIXPCGW1738910218a2	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestBIXPCGW6652007036a2	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestBIXPCGW7080972881a2	parent=Kepler.Assembly.nliPackNonlinearRest
@@ -95,8 +94,6 @@ Kepler.Text.PackingAuto25	Kepler.Text.K4_CC_WI_ALT	parent=Kepler.Text.CC_4_PROPS
 Kepler.Text.PackingAuto25	Kepler.Text.LEAF_RANK_REUHADY	parent=Kepler.Text.c_4_azim_mcell_dih_y
 Kepler.Text.PackingAuto25	Kepler.Text.MCELL4_AZIM_LT_PI	parent=Kepler.Text.c_4_azim_mcell_dih_y
 Kepler.Text.PackingAuto25	Kepler.Text.MCELL4_FULL_WEDGE	parent=Kepler.Text.cc_4_cc_ke4
-Kepler.Text.PackingAuto15	Kepler.Text.MCELL_ID_MXI_2	parent=Kepler.Text.MCELL2_DIHX
-Kepler.Text.PackingAuto15	Kepler.Text.MCELL_ID_OMEGA_LIST_N	parent=Kepler.Text.MCELL2_DIHX
 Kepler.Text.PackingAuto21	Kepler.Text.TSKAJXY_034	parent=Kepler.Text.TSKAJXY
 Kepler.Text.TameLp	Kepler.Text.TameLp.fully_surrounded_perimeter_bound	parent=Kepler.Text.TameLp.MQMSMAB
 Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau3_tauVEF_std	parent=Kepler.Text.TameLp.MQMSMAB_adm1
