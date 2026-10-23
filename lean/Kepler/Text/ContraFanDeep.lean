@@ -34,6 +34,7 @@
 -/
 import Kepler.Geom.Aff
 import Kepler.Text.PackingAuto2
+import Kepler.Text.IneqClosureDefs  -- W3a：etaY/etaX 真体（upsX 经 SphereKit 传递可见；无环已核）
 
 set_option maxHeartbeats 800000
 
@@ -3573,6 +3574,425 @@ private theorem cf4_rotation_2_full {v1 v2 v3 v4 : V3}
     refine ⟨y, ?_, (affGe_0_2_char hv20 hv40 hv24 y).2 ⟨s2, s4, hs2, hs4, hyeq2⟩⟩
     rw [segment_symm]
     exact hyseg
+
+
+/-! ## W3（四点链 Wave-3）：etaY 盒界 + 外心恒等 + 终局矛盾
+
+HOL 参照（CKQOWSA_4.hl:3866-4092、tame/Inequalities.hl:356-372）：
+`lemma_4_points_circumcenter`（:3866-4027）、`PARALLELOGRAM_LAW`（:4028-4034）、
+`lemma_4_points_contradiction`（:4035-4092）、外部锚 `ETA_Y_4_POINTS_INEQ`
+（Inequalities.hl:356-372，HOL 侧即纯有理数盒式论证——此处以「凹二次逐变量归结
+到 8 角点」的单体插值恒等式替代移植，数值 margin 人工预验：角 (4,4,4) 富余 41.6、
+最紧角 (6.3504³) 富余 ≈10.07、终局 4·(11/5) + 6.3504 = 15.1504 < 16）。
+etaY/etaX 用 IneqClosureDefs 真体、upsX 用 SphereKit 真体（scout 注记：
+勿用 PackingAuto21 的 `eta_y` 同名件）。W3a/W3b 为私件；顶件
+`cf4_4_points_contradiction` 公开（W4 终件装配消费 + axiom 审计锚）。 -/
+
+/-- **W3a 核心**（HOL `ETA_Y_4_POINTS_INEQ` 的盒式内核，Inequalities.hl:356-372）：
+`P a b c := (11/5)·upsX a b c − a·b·c` 在盒 `[4, 6.3504]³` 上非负
+（`6.3504 = (2·h0)²`）。`P` 全对称且对每个变元是首项 −11/5 的凹二次，
+凹函数最小值在端点 ⟹ 逐变量归结到 8 角点。单体重排恒等式（记 `D := 6.3504 − 4`）：
+`D³·P(a,b,c) = Σ_角点 权重·P(角点) + (11/5)·D³·Σ_{u∈{a,b,c}} (u−4)(R−u)`
+（由一维恒等式 `p(x) = 弦(x) + q(x−l)(r−x)` 三级迭代而得；ring 验证）。
+权重与修正项全部非负、8 个角点值 `norm_num` 收口。 -/
+private theorem cf4_etaP_box (a b c : ℝ) (ha : a ∈ Icc (4:ℝ) 6.3504)
+    (hb : b ∈ Icc (4:ℝ) 6.3504) (hc : c ∈ Icc (4:ℝ) 6.3504) :
+    0 ≤ (11 / 5) * upsX a b c - a * b * c := by
+  have wa : 0 ≤ 6.3504 - a := by linarith [ha.2]
+  have wap : 0 ≤ a - 4 := by linarith [ha.1]
+  have wb : 0 ≤ 6.3504 - b := by linarith [hb.2]
+  have wbp : 0 ≤ b - 4 := by linarith [hb.1]
+  have wc : 0 ≤ 6.3504 - c := by linarith [hc.2]
+  have wcp : 0 ≤ c - 4 := by linarith [hc.1]
+  -- 8 个角点值（纯数值）
+  have k1 : 0 ≤ (11 / 5) * upsX (4:ℝ) 4 4 - 4 * 4 * 4 := by norm_num [upsX]
+  have k2 : 0 ≤ (11 / 5) * upsX (4:ℝ) 4 6.3504 - 4 * 4 * 6.3504 := by norm_num [upsX]
+  have k3 : 0 ≤ (11 / 5) * upsX (4:ℝ) 6.3504 4 - 4 * 6.3504 * 4 := by norm_num [upsX]
+  have k4 : 0 ≤ (11 / 5) * upsX (6.3504:ℝ) 4 4 - 6.3504 * 4 * 4 := by norm_num [upsX]
+  have k5 : 0 ≤ (11 / 5) * upsX (4:ℝ) 6.3504 6.3504 - 4 * 6.3504 * 6.3504 := by
+    norm_num [upsX]
+  have k6 : 0 ≤ (11 / 5) * upsX (6.3504:ℝ) 4 6.3504 - 6.3504 * 4 * 6.3504 := by
+    norm_num [upsX]
+  have k7 : 0 ≤ (11 / 5) * upsX (6.3504:ℝ) 6.3504 4 - 6.3504 * 6.3504 * 4 := by
+    norm_num [upsX]
+  have k8 : 0 ≤ (11 / 5) * upsX (6.3504:ℝ) 6.3504 6.3504 - 6.3504 * 6.3504 * 6.3504 := by
+    norm_num [upsX]
+  -- 单体插值恒等式（角点值在 simp only [upsX] 后全部折叠为数值系数）
+  have key : (6.3504 - 4) ^ 3 * ((11 / 5) * upsX a b c - a * b * c)
+      = (6.3504 - a) * (6.3504 - b) * (6.3504 - c)
+          * ((11 / 5) * upsX (4:ℝ) 4 4 - 4 * 4 * 4)
+      + (a - 4) * (6.3504 - b) * (6.3504 - c)
+          * ((11 / 5) * upsX (6.3504:ℝ) 4 4 - 6.3504 * 4 * 4)
+      + (6.3504 - a) * (b - 4) * (6.3504 - c)
+          * ((11 / 5) * upsX (4:ℝ) 6.3504 4 - 4 * 6.3504 * 4)
+      + (6.3504 - a) * (6.3504 - b) * (c - 4)
+          * ((11 / 5) * upsX (4:ℝ) 4 6.3504 - 4 * 4 * 6.3504)
+      + (a - 4) * (b - 4) * (6.3504 - c)
+          * ((11 / 5) * upsX (6.3504:ℝ) 6.3504 4 - 6.3504 * 6.3504 * 4)
+      + (a - 4) * (6.3504 - b) * (c - 4)
+          * ((11 / 5) * upsX (6.3504:ℝ) 4 6.3504 - 6.3504 * 4 * 6.3504)
+      + (6.3504 - a) * (b - 4) * (c - 4)
+          * ((11 / 5) * upsX (4:ℝ) 6.3504 6.3504 - 4 * 6.3504 * 6.3504)
+      + (a - 4) * (b - 4) * (c - 4)
+          * ((11 / 5) * upsX (6.3504:ℝ) 6.3504 6.3504
+            - 6.3504 * 6.3504 * 6.3504)
+      + (11 / 5) * (6.3504 - 4) ^ 3
+          * ((a - 4) * (6.3504 - a) + (b - 4) * (6.3504 - b)
+            + (c - 4) * (6.3504 - c)) := by
+    simp only [upsX]
+    ring
+  -- 角点项（权重 × 角点值，双双非负）
+  have p1 : 0 ≤ (6.3504 - a) * (6.3504 - b) * (6.3504 - c)
+      * ((11 / 5) * upsX (4:ℝ) 4 4 - 4 * 4 * 4) :=
+    mul_nonneg (mul_nonneg (mul_nonneg wa wb) wc) k1
+  have p2 : 0 ≤ (a - 4) * (6.3504 - b) * (6.3504 - c)
+      * ((11 / 5) * upsX (6.3504:ℝ) 4 4 - 6.3504 * 4 * 4) :=
+    mul_nonneg (mul_nonneg (mul_nonneg wap wb) wc) k4
+  have p3 : 0 ≤ (6.3504 - a) * (b - 4) * (6.3504 - c)
+      * ((11 / 5) * upsX (4:ℝ) 6.3504 4 - 4 * 6.3504 * 4) :=
+    mul_nonneg (mul_nonneg (mul_nonneg wa wbp) wc) k3
+  have p4 : 0 ≤ (6.3504 - a) * (6.3504 - b) * (c - 4)
+      * ((11 / 5) * upsX (4:ℝ) 4 6.3504 - 4 * 4 * 6.3504) :=
+    mul_nonneg (mul_nonneg (mul_nonneg wa wb) wcp) k2
+  have p5 : 0 ≤ (a - 4) * (b - 4) * (6.3504 - c)
+      * ((11 / 5) * upsX (6.3504:ℝ) 6.3504 4 - 6.3504 * 6.3504 * 4) :=
+    mul_nonneg (mul_nonneg (mul_nonneg wap wbp) wc) k7
+  have p6 : 0 ≤ (a - 4) * (6.3504 - b) * (c - 4)
+      * ((11 / 5) * upsX (6.3504:ℝ) 4 6.3504 - 6.3504 * 4 * 6.3504) :=
+    mul_nonneg (mul_nonneg (mul_nonneg wap wb) wcp) k6
+  have p7 : 0 ≤ (6.3504 - a) * (b - 4) * (c - 4)
+      * ((11 / 5) * upsX (4:ℝ) 6.3504 6.3504 - 4 * 6.3504 * 6.3504) :=
+    mul_nonneg (mul_nonneg (mul_nonneg wa wbp) wcp) k5
+  have p8 : 0 ≤ (a - 4) * (b - 4) * (c - 4)
+      * ((11 / 5) * upsX (6.3504:ℝ) 6.3504 6.3504
+        - 6.3504 * 6.3504 * 6.3504) :=
+    mul_nonneg (mul_nonneg (mul_nonneg wap wbp) wcp) k8
+  have corr : 0 ≤ (11 / 5) * (6.3504 - 4) ^ 3
+      * ((a - 4) * (6.3504 - a) + (b - 4) * (6.3504 - b)
+        + (c - 4) * (6.3504 - c)) := by
+    have h1c : (0:ℝ) ≤ (11:ℝ) / 5 * ((6.3504:ℝ) - 4) ^ 3 := by norm_num
+    have h2c : 0 ≤ (a - 4) * (6.3504 - a) := mul_nonneg wap wa
+    have h3c : 0 ≤ (b - 4) * (6.3504 - b) := mul_nonneg wbp wb
+    have h4c : 0 ≤ (c - 4) * (6.3504 - c) := mul_nonneg wcp wc
+    exact mul_nonneg h1c (add_nonneg (add_nonneg h2c h3c) h4c)
+  -- 收口：D³ > 0 消去因子
+  have hd3 : (0:ℝ) < ((6.3504:ℝ) - 4) ^ 3 := by norm_num
+  have hzero : 0 ≤ (6.3504 - 4) ^ 3 * ((11 / 5) * upsX a b c - a * b * c) := by
+    linarith [key, p1, p2, p3, p4, p5, p6, p7, p8, corr]
+  rcases lt_or_ge ((11 / 5) * upsX a b c - a * b * c) 0 with hneg | hge
+  · exfalso
+    have hmul : (6.3504 - 4) ^ 3 * ((11 / 5) * upsX a b c - a * b * c) < 0 := by
+      have h1 := mul_lt_mul_of_pos_left hneg hd3
+      rwa [mul_zero] at h1
+    linarith
+  · exact hge
+
+/-- **W3a**（HOL `ETA_Y_4_POINTS_INEQ`，Inequalities.hl:356-372）：
+`y₁, y₂, y₃ ∈ [2, 2·h0]` ⟹ `etaY y₁ y₂ y₃ ^ 2 ≤ 11 / 5`（= 2.2）。
+x_i := y_i² ∈ [4, 6.3504]（mul_le_mul 两侧平方 + `2·h0 = 2.52`），盒不等式
+x₁x₂x₃ ≤ (11/5)·upsX x₁x₂x₃（`cf4_etaP_box`），etaY² = x₁x₂x₃/upsX
+（etaX/etaY 定义展开 + `Real.sqrt_sq`）。 -/
+private theorem cf4_etaY_box (y1 y2 y3 : ℝ) (hy1 : y1 ∈ Icc (2:ℝ) (2 * h0))
+    (hy2 : y2 ∈ Icc (2:ℝ) (2 * h0)) (hy3 : y3 ∈ Icc (2:ℝ) (2 * h0)) :
+    etaY y1 y2 y3 ^ 2 ≤ 11 / 5 := by
+  have hsq : (2:ℝ) * h0 * (2 * h0) = 6.3504 := by rw [two_h0]; norm_num
+  have h1m : y1 * y1 ∈ Icc (4:ℝ) 6.3504 := by
+    constructor
+    · have h := le_trans (mul_le_mul_of_nonneg_left hy1.1 (by norm_num : (0:ℝ) ≤ 2))
+        (mul_le_mul_of_nonneg_right hy1.1 (le_trans (by norm_num : (0:ℝ) ≤ 2) hy1.1))
+      norm_num at h
+      exact h
+    · have h := le_trans (mul_le_mul_of_nonneg_right hy1.2
+          (le_trans (by norm_num : (0:ℝ) ≤ 2) hy1.1))
+        (mul_le_mul_of_nonneg_left hy1.2 (by norm_num [h0]))
+      rwa [hsq] at h
+  have h2m : y2 * y2 ∈ Icc (4:ℝ) 6.3504 := by
+    constructor
+    · have h := le_trans (mul_le_mul_of_nonneg_left hy2.1 (by norm_num : (0:ℝ) ≤ 2))
+        (mul_le_mul_of_nonneg_right hy2.1 (le_trans (by norm_num : (0:ℝ) ≤ 2) hy2.1))
+      norm_num at h
+      exact h
+    · have h := le_trans (mul_le_mul_of_nonneg_right hy2.2
+          (le_trans (by norm_num : (0:ℝ) ≤ 2) hy2.1))
+        (mul_le_mul_of_nonneg_left hy2.2 (by norm_num [h0]))
+      rwa [hsq] at h
+  have h3m : y3 * y3 ∈ Icc (4:ℝ) 6.3504 := by
+    constructor
+    · have h := le_trans (mul_le_mul_of_nonneg_left hy3.1 (by norm_num : (0:ℝ) ≤ 2))
+        (mul_le_mul_of_nonneg_right hy3.1 (le_trans (by norm_num : (0:ℝ) ≤ 2) hy3.1))
+      norm_num at h
+      exact h
+    · have h := le_trans (mul_le_mul_of_nonneg_right hy3.2
+          (le_trans (by norm_num : (0:ℝ) ≤ 2) hy3.1))
+        (mul_le_mul_of_nonneg_left hy3.2 (by norm_num [h0]))
+      rwa [hsq] at h
+  have hPpos : 0 < y1 * y1 * (y2 * y2) * (y3 * y3) :=
+    mul_pos (mul_pos (mul_pos (lt_of_lt_of_le (by norm_num : (0:ℝ) < (2:ℝ)) hy1.1)
+        (lt_of_lt_of_le (by norm_num : (0:ℝ) < (2:ℝ)) hy1.1))
+      (mul_pos (lt_of_lt_of_le (by norm_num : (0:ℝ) < (2:ℝ)) hy2.1)
+        (lt_of_lt_of_le (by norm_num : (0:ℝ) < (2:ℝ)) hy2.1)))
+      (mul_pos (lt_of_lt_of_le (by norm_num : (0:ℝ) < (2:ℝ)) hy3.1)
+        (lt_of_lt_of_le (by norm_num : (0:ℝ) < (2:ℝ)) hy3.1))
+  have hbox : 0 ≤ (11 / 5) * upsX (y1 * y1) (y2 * y2) (y3 * y3)
+      - y1 * y1 * (y2 * y2) * (y3 * y3) :=
+    cf4_etaP_box (y1 * y1) (y2 * y2) (y3 * y3) h1m h2m h3m
+  have hQpos : 0 < upsX (y1 * y1) (y2 * y2) (y3 * y3) := by
+    by_contra hcon
+    push_neg at hcon
+    have h2 : (11 / 5) * upsX (y1 * y1) (y2 * y2) (y3 * y3) ≤ 0 := by
+      calc (11 / 5) * upsX (y1 * y1) (y2 * y2) (y3 * y3)
+          ≤ (11 / 5) * 0 := mul_le_mul_of_nonneg_left hcon (by norm_num)
+        _ = 0 := by ring
+    linarith
+  have hdiv : y1 * y1 * (y2 * y2) * (y3 * y3)
+      / upsX (y1 * y1) (y2 * y2) (y3 * y3) ≤ 11 / 5 := by
+    rw [div_le_iff₀ hQpos]
+    linarith
+  have hetasq : etaY y1 y2 y3 ^ 2
+      = y1 * y1 * (y2 * y2) * (y3 * y3)
+        / upsX (y1 * y1) (y2 * y2) (y3 * y3) := by
+    simp only [etaY, etaX]
+    exact Real.sq_sqrt (div_nonneg hPpos.le hQpos.le)
+  rwa [hetasq]
+
+/-- **W3b**（HOL `lemma_4_points_circumcenter`，CKQOWSA_4.hl:3866-4027）：
+`{0, v2, v4}` 非共线、segment[v1,v3] 穿锥 {v2,v4}、‖v1‖ = ‖v3‖ = 2、四条交叉
+距离恰 2 ⟹ `‖v1 + v3‖ = 2·etaY ‖v2‖ ‖v4‖ (dist v2 v4)`（中点
+`m := (v1+v3)/2` 为三角形 {0,v2,v4} 的外心，‖m‖ 即外接圆半径 = etaY 式）。
+
+途径（对 HOL 的显式重排）：cf4_dot_of_dist2 ×4 ⟹ `m·v2 = ‖v2‖²/2`、
+`m·v4 = ‖v4‖²/2`；交点 `x` 两种表示的内积比较给 `(4 − ⟨v1,v3⟩)·(u − u′) = 0`：
+`u = u′` 主支 `m = x` 入锥；`⟨v1,v3⟩ = 4` 退化支经 cf4_norm_sq_sub 归零得
+`v1 = v3` 仍 `m = x`。半径式：`m = s₂•v2 + s₄•v4` 与两条 dot 方程线性组合解出
+`s₂·2g = b(a−cv)`、`s₄·2g = a(b−cv)`（`g := a·b − cv² > 0`，平行性由非共线
+排除），得 `‖m‖²·4g = a·b·(a+b−2cv)`；`upsX a b (a+b−2cv) = 4g` 收口。 -/
+private theorem cf4_4pts_circumcenter {v1 v2 v3 v4 : V3}
+    (hcol : ¬ Collinear ℝ (insert (0:V3) ({v2, v4} : Set V3)))
+    (hseg : (segment ℝ v1 v3 ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty)
+    (hn1 : ‖v1‖ = 2) (hn3 : ‖v3‖ = 2)
+    (hd12 : dist v1 v2 = 2) (hd14 : dist v1 v4 = 2)
+    (hd32 : dist v3 v2 = 2) (hd34 : dist v3 v4 = 2) :
+    ‖v1 + v3‖ = 2 * etaY ‖v2‖ ‖v4‖ (dist v2 v4) := by
+  obtain ⟨hv20, hv40, hpar⟩ := cf4_not_collinear_smul hcol
+  have hv24 : v2 ≠ v4 := fun he => hpar 1 (by rw [he, one_smul])
+  -- 四条交叉距离的 dot 事实（HOL :3870-3882 首子目标，cf4_dot_of_dist2 ×4）
+  have d12 := cf4_dot_of_dist2 hn1 hd12
+  have d14 := cf4_dot_of_dist2 hn1 hd14
+  have d32 := cf4_dot_of_dist2 hn3 hd32
+  have d34 := cf4_dot_of_dist2 hn3 hd34
+  -- 中点 m 与两条 dot 恒等式
+  obtain ⟨m, hm⟩ : ∃ z : V3, z = ((1:ℝ) / 2) • (v1 + v3) := ⟨_, rfl⟩
+  have hA2 : inner ℝ m v2 = ‖v2‖ ^ 2 / 2 := by
+    rw [hm, real_inner_smul_left, inner_add_left, d12, d32]
+    ring
+  have hA4 : inner ℝ m v4 = ‖v4‖ ^ 2 / 2 := by
+    rw [hm, real_inner_smul_left, inner_add_left, d14, d34]
+    ring
+  -- m 落锥：交点 x 的 segment 表示与锥表示的内积比较（HOL :3940-3990）
+  obtain ⟨x, hxseg, hxcone⟩ := hseg
+  obtain ⟨u, u', hu, hu', huu, hxeq⟩ := hxseg
+  obtain ⟨t2, t4, ht2, ht4, hxc⟩ := (affGe_0_2_char hv20 hv40 hv24 x).1 hxcone
+  have eX1 : inner ℝ x v1 = u * 4 + u' * inner ℝ v1 v3 := by
+    rw [← hxeq, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      real_inner_self_eq_norm_sq, hn1, real_inner_comm v3 v1]
+    ring
+  have eX3 : inner ℝ x v3 = u * inner ℝ v1 v3 + u' * 4 := by
+    rw [← hxeq, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      real_inner_self_eq_norm_sq, hn3]
+    ring
+  have eC1 : inner ℝ x v1 = t2 * inner ℝ v2 v1 + t4 * inner ℝ v4 v1 := by
+    rw [hxc, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+  have eC3 : inner ℝ x v3 = t2 * inner ℝ v2 v3 + t4 * inner ℝ v4 v3 := by
+    rw [hxc, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+  have hXX : inner ℝ x v1 = inner ℝ x v3 := by
+    rw [eC1, eC3, real_inner_comm v1 v2, d12, real_inner_comm v1 v4, d14,
+      real_inner_comm v3 v2, d32, real_inner_comm v3 v4, d34]
+  have hkey : (4 - inner ℝ v1 v3) * (u - u') = 0 := by
+    have h1 : inner ℝ x v1 - inner ℝ x v3 = (4 - inner ℝ v1 v3) * (u - u') := by
+      rw [eX1, eX3]
+      ring
+    rw [← h1, hXX, sub_self]
+  have hmcone : m ∈ affGe {0} ({v2, v4} : Set V3) := by
+    rcases mul_eq_zero.1 hkey with hca | hcb
+    · -- ⟨v1,v3⟩ = 4 退化支：v1 = v3（C–S 等号），仍 m = x
+      have hAeq : inner ℝ v1 v3 = 4 := by linarith
+      have hv13 : v1 = v3 := by
+        have hzero : ‖v1 - v3‖ ^ 2 = 0 := by
+          rw [cf4_norm_sq_sub, hn1, hn3, hAeq]
+          ring
+        exact eq_of_sub_eq_zero (norm_eq_zero.1 (sq_eq_zero_iff.1 hzero))
+      have hxv1 : x = v1 := by
+        rw [← hxeq, hv13, ← add_smul, huu, one_smul]
+      have hmv1 : m = v1 := by
+        rw [hm, hv13, smul_add, ← add_smul,
+          show ((1:ℝ) / 2 + (1:ℝ) / 2) = 1 from by norm_num, one_smul]
+      exact (affGe_0_2_char hv20 hv40 hv24 m).2
+        ⟨t2, t4, ht2, ht4, by rw [hmv1, ← hxc, hxv1]⟩
+    · -- u = u′ 主支：m = x = (1/2)•(v1+v3)
+      have hcb' : u = u' := sub_eq_zero.1 hcb
+      have hmx : m = x := by
+        rw [hm, ← hxeq, ← hcb', ← smul_add,
+          show u = (1:ℝ) / 2 from by linarith]
+      exact (affGe_0_2_char hv20 hv40 hv24 m).2
+        ⟨t2, t4, ht2, ht4, by rw [hmx]; exact hxc⟩
+  -- 半径式：a := ‖v2‖², b := ‖v4‖², cv := ⟨v2,v4⟩, x3 := dist v2 v4²
+  obtain ⟨a, ha⟩ : ∃ z, z = ‖v2‖ ^ 2 := ⟨_, rfl⟩
+  obtain ⟨b, hb⟩ : ∃ z, z = ‖v4‖ ^ 2 := ⟨_, rfl⟩
+  obtain ⟨cv, hcv⟩ : ∃ z, z = inner ℝ v2 v4 := ⟨_, rfl⟩
+  obtain ⟨x3, hx3def⟩ : ∃ z, z = dist v2 v4 ^ 2 := ⟨_, rfl⟩
+  have hn20 : ‖v2‖ ≠ 0 := fun he => hv20 (norm_eq_zero.1 he)
+  have hn40 : ‖v4‖ ≠ 0 := fun he => hv40 (norm_eq_zero.1 he)
+  have hap : 0 < a := by
+    rw [ha, pow_two]
+    exact mul_pos (lt_of_le_of_ne (norm_nonneg v2) (Ne.symm hn20))
+      (lt_of_le_of_ne (norm_nonneg v2) (Ne.symm hn20))
+  have hbp : 0 < b := by
+    rw [hb, pow_two]
+    exact mul_pos (lt_of_le_of_ne (norm_nonneg v4) (Ne.symm hn40))
+      (lt_of_le_of_ne (norm_nonneg v4) (Ne.symm hn40))
+  have hane : (a:ℝ) ≠ 0 := ne_of_gt hap
+  -- x3 = a + b − 2·cv
+  have hx3 : x3 = a + b - 2 * cv := by
+    rw [hx3def, dist_eq_norm, cf4_norm_sq_sub, ← hcv, ← ha, ← hb]
+    ring
+  -- Gram 行列式 g := a·b − cv² > 0（缩放差向量恒等式，平行性由 hpar 排除）
+  have hcomp3 : ‖(a:ℝ) • v4 - cv • v2‖ ^ 2 = a * (a * b - cv * cv) := by
+    rw [cf4_norm_sq_sub]
+    have e1 : ‖(a:ℝ) • v4‖ ^ 2 = a ^ 2 * b := by
+      rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, ← hb]
+    have e2 : ‖cv • v2‖ ^ 2 = cv ^ 2 * a := by
+      rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, ← ha]
+    have e3 : inner ℝ ((a:ℝ) • v4) (cv • v2) = a * cv * cv := by
+      rw [real_inner_smul_left, real_inner_smul_right, real_inner_comm v2 v4,
+        ← hcv, mul_assoc]
+    rw [e1, e3, e2]
+    ring
+  have hgg : 0 < a * b - cv * cv := by
+    have hge : 0 ≤ a * b - cv * cv := by
+      rcases lt_or_ge (a * b - cv * cv) 0 with hneg | hge0
+      · exfalso
+        have hsq : 0 ≤ ‖(a:ℝ) • v4 - cv • v2‖ ^ 2 := sq_nonneg _
+        rw [hcomp3] at hsq
+        have hneg' := mul_lt_mul_of_pos_left hneg hap
+        rw [mul_zero] at hneg'
+        linarith
+      · exact hge0
+    have hgne : a * b - cv * cv ≠ 0 := by
+      intro h0
+      have h2 : ‖(a:ℝ) • v4 - cv • v2‖ ^ 2 = 0 := by rw [hcomp3, h0, mul_zero]
+      have h4 : (a:ℝ) • v4 - cv • v2 = 0 := norm_eq_zero.1 (sq_eq_zero_iff.1 h2)
+      have h6 : (a:ℝ) • v4 = cv • v2 := eq_of_sub_eq_zero h4
+      -- v2 与 v4 平行 ⟹ 与线性无关矛盾（cf4_repr_unique 给 cv = 0 ∧ a = 0）
+      have hlin : LinearIndependent ℝ ![v2, v4] := cf4_linearIndependent_pair hcol
+      have hpair1 : (0:ℝ) • v2 + (a:ℝ) • v4 = cv • v2 := by
+        rw [zero_smul, zero_add, h6]
+      have hpair2 : cv • v2 + (0:ℝ) • v4 = cv • v2 := by
+        rw [zero_smul, add_zero]
+      exact hane (cf4_repr_unique hlin hpair1 hpair2).2
+    exact lt_of_le_of_ne hge (Ne.symm hgne)
+  -- m 的锥表示与两条 dot 方程
+  obtain ⟨s2, s4, hs2, hs4, hme⟩ := (affGe_0_2_char hv20 hv40 hv24 m).1 hmcone
+  have eq2 : s2 * a + s4 * cv = a / 2 := by
+    have h1 : inner ℝ m v2 = s2 * inner ℝ v2 v2 + s4 * inner ℝ v4 v2 := by
+      rw [hme, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    rw [hA2] at h1
+    rw [real_inner_self_eq_norm_sq, ← ha] at h1
+    rw [real_inner_comm v2 v4, ← hcv] at h1
+    linarith
+  have eq4 : s2 * cv + s4 * b = b / 2 := by
+    have h1 : inner ℝ m v4 = s2 * inner ℝ v2 v4 + s4 * inner ℝ v4 v4 := by
+      rw [hme, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    rw [hA4] at h1
+    rw [real_inner_self_eq_norm_sq, ← hb] at h1
+    rw [← hcv] at h1
+    linarith
+  have eqm : ‖m‖ ^ 2 = s2 * (a / 2) + s4 * (b / 2) := by
+    have h1 : inner ℝ m (s2 • v2 + s4 • v4) = s2 * (a / 2) + s4 * (b / 2) := by
+      rw [inner_add_right, real_inner_smul_right, real_inner_smul_right,
+        hA2, ← ha, hA4, ← hb]
+    rw [← hme] at h1
+    rw [← real_inner_self_eq_norm_sq]
+    exact h1
+  -- 线性组合求解 s2、s4（2b·eq2 − 2cv·eq4 / 2a·eq4 − 2cv·eq2）
+  have key1 : s2 * (2 * (a * b - cv * cv)) = b * (a - cv) := by
+    linear_combination (2 * b) * eq2 - (2 * cv) * eq4
+  have key2 : s4 * (2 * (a * b - cv * cv)) = a * (b - cv) := by
+    linear_combination (2 * a) * eq4 - (2 * cv) * eq2
+  have key3 : ‖m‖ ^ 2 * (4 * (a * b - cv * cv)) = a * b * x3 := by
+    rw [eqm, hx3]
+    linear_combination a * key1 + b * key2
+  -- 收口：upsX a b x3 = 4g ⟹ ‖m‖² = a·b·x3 / upsX（= etaY²）
+  have hups : upsX a b x3 = 4 * (a * b - cv * cv) := by
+    rw [hx3]
+    simp only [upsX]
+    ring
+  have hupspos : upsX a b x3 ≠ 0 := by
+    rw [hups]
+    exact ne_of_gt (mul_pos (by norm_num) hgg)
+  have hsqm : ‖m‖ ^ 2 * upsX a b x3 = a * b * x3 := by
+    rw [hups, key3]
+  have hdiv : a * b * x3 / upsX a b x3 = ‖m‖ ^ 2 := by
+    rw [div_eq_iff hupspos, hsqm]
+  have hetasq : etaY ‖v2‖ ‖v4‖ (dist v2 v4) = ‖m‖ := by
+    simp only [etaY, etaX]
+    rw [show ‖v2‖ * ‖v2‖ = ‖v2‖ ^ 2 from (pow_two ‖v2‖).symm,
+        show ‖v4‖ * ‖v4‖ = ‖v4‖ ^ 2 from (pow_two ‖v4‖).symm,
+        show dist v2 v4 * dist v2 v4 = dist v2 v4 ^ 2 from (pow_two (dist v2 v4)).symm,
+        ← ha, ← hb, ← hx3def, hdiv, Real.sqrt_sq (norm_nonneg m)]
+  -- 终目标：‖v1+v3‖ = 2·‖m‖ = 2·etaY …
+  have h2m : v1 + v3 = (2:ℝ) • m := by
+    rw [hm, smul_smul, show (2:ℝ) * ((1:ℝ) / 2) = 1 from by norm_num, one_smul]
+  rw [h2m, norm_smul, Real.norm_eq_abs,
+    abs_of_pos (by norm_num : (0:ℝ) < 2), hetasq]
+
+/-- **W3c**（HOL `lemma_4_points_contradiction`，CKQOWSA_4.hl:4035-4092；
+`PARALLELOGRAM_LAW` :4028-4034）：环带 v2、v4、`2 ≤ dist v2 v4 ≤ 2·h0`、
+segment[v1,v3] 穿锥、‖v1‖ = ‖v3‖ = 2、四条交叉距离恰 2、dist v1 v3 ≤ 2·h0
+⟹ False。平行四边形恒等式 `‖v1+v3‖² + ‖v1−v3‖² = 2(‖v1‖²+‖v3‖²) = 16`，
+W3b 给 `‖v1+v3‖² = 4·etaY²`、W3a 给 `etaY² ≤ 11/5`、dist² ≤ (2·h0)² = 6.3504：
+`4·(11/5) + 6.3504 = 15.1504 < 16` 矛盾。 -/
+theorem cf4_4_points_contradiction {v1 v2 v3 v4 : V3}
+    (hb2 : v2 ∈ ballAnnulus) (hb4 : v4 ∈ ballAnnulus)
+    (hd24l : dist v2 v4 ≤ 2 * h0) (hd24 : 2 ≤ dist v2 v4)
+    (hseg : (segment ℝ v1 v3 ∩ affGe {0} ({v2, v4} : Set V3)).Nonempty)
+    (hn1 : ‖v1‖ = 2) (hn3 : ‖v3‖ = 2)
+    (hd12 : dist v1 v2 = 2) (hd14 : dist v1 v4 = 2)
+    (hd32 : dist v3 v2 = 2) (hd34 : dist v3 v4 = 2)
+    (hd13l : dist v1 v3 ≤ 2 * h0) : False := by
+  have hcol : ¬ Collinear ℝ (insert (0:V3) ({v2, v4} : Set V3)) :=
+    estd_non_collinear_lemma hb2 hb4 hd24 hd24l
+  have hcc := cf4_4pts_circumcenter hcol hseg hn1 hn3 hd12 hd14 hd32 hd34
+  obtain ⟨hv2, hv2u⟩ := inBallAnnulus hb2
+  obtain ⟨hv4, hv4u⟩ := inBallAnnulus hb4
+  have hbox := cf4_etaY_box ‖v2‖ ‖v4‖ (dist v2 v4) ⟨hv2, hv2u⟩ ⟨hv4, hv4u⟩
+    ⟨hd24, hd24l⟩
+  have h1 : ‖v1 + v3‖ ^ 2 ≤ 4 * (11 / 5) := by
+    rw [hcc, show (2 * etaY ‖v2‖ ‖v4‖ (dist v2 v4)) ^ 2
+      = 4 * (etaY ‖v2‖ ‖v4‖ (dist v2 v4)) ^ 2 from by ring]
+    exact mul_le_mul_of_nonneg_left hbox (by norm_num)
+  have hdn : dist v1 v3 = ‖v1 - v3‖ := dist_eq_norm v1 v3
+  have h2 : ‖v1 - v3‖ ^ 2 ≤ 6.3504 := by
+    have hd : ‖v1 - v3‖ ≤ 2 * h0 := by rw [← hdn]; exact hd13l
+    have hs : ‖v1 - v3‖ * ‖v1 - v3‖ ≤ (2:ℝ) * h0 * (2 * h0) :=
+      le_trans (mul_le_mul_of_nonneg_right hd (norm_nonneg (v1 - v3)))
+        (mul_le_mul_of_nonneg_left hd (by norm_num [h0]))
+    rw [← pow_two (‖v1 - v3‖), ← pow_two ((2:ℝ) * h0), two_h0] at hs
+    norm_num at hs
+    linarith
+  have hpara : ‖v1 + v3‖ ^ 2 + ‖v1 - v3‖ ^ 2 = 16 := by
+    have e1 : ‖v1 + v3‖ ^ 2 = ‖v1‖ ^ 2 + ‖v3‖ ^ 2 + 2 * inner ℝ v1 v3 := by
+      rw [← real_inner_self_eq_norm_sq (v1 + v3), inner_add_left, inner_add_right,
+        inner_add_right, real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq,
+        real_inner_comm v1 v3]
+      ring
+    have e2 := cf4_norm_sq_sub v1 v3
+    have n1 : ‖v1‖ ^ 2 = 4 := by rw [hn1]; norm_num
+    have n3 : ‖v3‖ ^ 2 = 4 := by rw [hn3]; norm_num
+    linarith [e1, e2, n1, n3]
+  have hle : ‖v1 + v3‖ ^ 2 + ‖v1 - v3‖ ^ 2 ≤ 4 * (11 / 5) + 6.3504 :=
+    add_le_add h1 h2
+  rw [hpara] at hle
+  exact absurd hle (by norm_num)
 
 
 end Kepler.Text.ContraFanDeep
