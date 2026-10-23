@@ -169,14 +169,14 @@
   `lake build Kepler` glob 收敛 G2 已验证态；wire 588 片 olean 零缺失
 - ⚠️ 红线：绝不 `rm -rf lean/.lake`，分片重建需 ~7 天
 
-## Phase 3 — 线性规划 ✅ 100%（2026-09-07 全闭合；root 区预灌装重跑在跑，产物待灌）
+## Phase 3 — 线性规划 ✅ 求解/checker 层 100%（2026-09-07）；root 重跑已收官，灌装审计已完成、待分波
 
 - [x] 证书链路全通：Flyspeck 证书解析 → LP 展开/扁平化 → SoPlex 精确求解 → 整数对偶证书 → Lean 内核弱对偶 checker（`Kepler/LP/Cert.lean`、`ColMajor.lean`）
 - [x] 试点图端到端闭合（行主序 + 列主序，`3cbe979`）；生产 harness 入 git（`pipeline/lp/run/`）
 - [x] easy 23,640/23,640 终端内核验证通过
 - [x] hard_1 偏差根因修复（`d5e32af`：branch.py 逐节点数值收紧重放）
-- [x] **全部 43,078 个终端 LP 内核验证通过**：SoPlex 数值放弃的 51 例全部经 glpsol 精确对偶通道闭合（`glpsol_dual.py`，glpsol --exact 最慢 13.5h/例 + 内核 decide ~245s/例）。账本 `~/lprun-logs/results.jsonl`（43,078/43,078 exit=0）
-- [x] 🔄 **root 区 LP 预灌装重跑在跑（2026-10-12 启动，看护手册 `/Users/zhangzhuo/lprun/MONITOR.md`）**：root 区 19,237 条（与 `LPIds.lean` lpRootIds 77 chunk 同集已核）按 hlen 升序、恒 2 solver（用户 2 核配额）；首批 6,900 条 2,500/6,900 零 fail（2026-10-20 快照，预计 10-22 上午收）。**重跑产物证书待灌回仓库**——上两行 ✅ 指 2026-09 通道/账本闭合口径，灌回是独立收尾步
+- [x] **全部 43,078 个终端 LP 内核验证通过**：SoPlex 数值放弃的 51 例全部经 glpsol 精确对偶通道闭合（`glpsol_dual.py`，glpsol --exact 最慢 13.5h/例 + 内核 decide ~245s/例）。账本 `~/lprun-logs/results.jsonl`（43,078/43,078 exit=0）——⚠️ **2026-10-23 审计：该 2026-09 账本与产物不在本机**，此 ✅ 是当时通道/账本口径；当前可复核证据仅 root 19,237（2026-10 账本）+ infeas 189（在库闭合）
+- [x] **root 区 LP 预灌装重跑收官 + 灌装审计（2026-10-23）**：root 19,237 条唯一 id **全部 exit=0**（残余失败 0/缺失 0；1,800 条失败尝试均为环境性且已有成功行，非"非 root 历史账"）；总 CPU 302.7 h；试点 4 条 build 全绿、axioms 标准三、Data.lean sha256 **5/5 逐字节复现**。计划见 `docs/e2e-debt-map.md` 2026-10-23 LP 节与 `lane_snapshots/lpaudit/IMPORT_PLAN.md`：W1–W3 root 分波灌装（≈6.3 天 @2 workers），W4/W5 easy 4,362 + hard 19,290 **必须重跑**（旧账丢失），W6 覆盖桥（叶全闭合也不自动清 `lpArchiveCertificatesDebt`）先于 W7 终装配（olean ≈0.9–1 TB，本机 181 GB free 不可行）
 
 ## Phase 4 — 非线性不等式 🟡 求解层 68/176（39% 可信口径）/ 内核闭合 8 案端到端 + C1.7 收官（prep 重做已启动：812 队列 + R1 已闭 18 案）
 

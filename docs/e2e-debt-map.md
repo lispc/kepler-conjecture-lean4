@@ -537,7 +537,10 @@ MXI_EXISTS/RVFXZBU1/2/3 的 `_discharged` 桥等；全仓零 importer）、
 **锥外但将来会一次性接入**：43,078 个 LP 叶户——`linearProgrammingResults`
 的唯一债点 `lpArchiveCertificatesDebt`（Assembly:6040）目前是单点 sorry，
 填实前 43k 不入锥；接线前必须先做 LP 证书端到端审计，否则主定理锥会从
-149+624 一次跳到 43k。
+149+624 一次跳到 43k。**审计已完成（2026-10-23，见文末 LP 灌装审计节）**：
+root 19,237 全部可复现将 5/5 sha 逐字节重发，但 easy/hard 23,652 条
+2026-09 账本/产物不在本机，必须重跑；且叶全闭合**不会**自动消除该 sorry
+（覆盖桥是独立证明工程）。
 
 **唯一非 sorry 可信计算**：624 条 shard 公理 = 23 条
 `Assembly.GoodListShard*` + 601 条 `Graphs.CertShards.*`/`CertTri/Quad/Pent/Hex`
@@ -759,3 +762,42 @@ bare sorry 86→83；闸 PASS @`cc_bool_model_data`（PA25 单文件）。
   6096597438 b/ZTGIJCF0）；rest 10/62 仍是 stale-record 阻塞。
 - **未做**：plain 134k 叶路线未生成；`CertMixed` 仍未并入默认构建闭包
   （opt-in 内核件）。
+
+## 2026-10-23 LP 灌装审计节（root 19,237 全对账 + 4 条试点）
+
+**车道 lpaudit**（`/tmp/p4p10`，main HEAD `9fd7af4e`；只读审计 + scratch
+试点，未改 `LPAll`/`LPLeaf*`/`lpArchiveCertificatesDebt`；快照
+`~/c17_backup/lane_snapshots/lpaudit/`，42 文件 MD5SUMS 全验）。
+
+- **root 对账（口径修正）**：`LPIds` root 19,237 唯一；`results.jsonl`
+  21,037 行 / 唯一 id 19,237；**exit=0 覆盖 19,237，残余失败 0、缺失 0**。
+  1,800 条失败尝试**全部是 root id**（1,659 `unknown module prefix Mathlib`、
+  126 olean 缺失、11 ENOSPC、2 timeout、2 killed），每个后继都有 exit=0
+  成功行。先前"1,785 exit=1 = 非 root 历史账"的读法**不成立**；也不存在
+  非 root 记录混入。总 CPU 302.7 h（p50 49.2 s/条，p99 195.7 s）；
+  D_bits min 109 / p50 1,042 / max 1,894；全为 `easy_*.dat`、`ti=0`。
+- **试点 4 条**（3 条任务 + 1 条 p50 scaling probe；模块在
+  `Pilot/LPRootAudit*`）：`10968745018_t0000` / `105844038257_t0000` /
+  `14302510206_t0000` / `90929167843_t0000`。单条 build 61.6–87.3 s；
+  axioms 全部 `[propext, Classical.choice, Quot.sound]`，零 sorryAx；
+  **Data.lean sha256 4/4 与账本逐字节一致**，另抽验历史失败样本
+  `62788256193_t0000` 重发 sha 也与成功行一致（5/5 复现）→ exit=1 为
+  环境性，不是 LP 数据问题。SoPlex 必须钉 8.1.0。
+- **可灌装口径**：root 19,237 有 2026-10 账本，只需重发射 + 构建；
+  infeas 189 已在库闭合；**easy 4,362 + hard 19,290 = 23,652 条只有
+  2026-09 的 STATUS 口径，账本与产物均不在本机，必须重跑**（历史 51 例
+  SoPlex 放弃的 id 清单也随旧账丢失，需 `glpsol_dual.py` 重新命中）。
+- **波次与成本**（2 workers，单核标定）：root 302.7 CPU-h ≈ 6.3 天
+  （W1–W3 按 77 chunk 分 5,000/7,500/6,737）；easy ≈ 69 CPU-h ≈ 1.5 天；
+  hard ≈ 304 CPU-h + glpsol 尾部 0–689 CPU-h ≈ 6.3–20.7 天。全 feasible
+  **675–1,370 CPU-h ≈ 14–28.5 天**。内存峰值 p50 8.67 GB / max 9.83 GB，
+  36 GiB 只允许 **2 workers**。
+- **硬门槛**：①**覆盖桥未移植**——`lpArchiveCertificatesDebt` 需要 HOL
+  `formal_lp/verify_all`/`lp_certificate` 的"per-record 证书 ⟹ 终端树覆盖
+  ⟹ `¬Contravening`"桥；42,889 叶全闭合也不自动清债，W6 必须先做或并行。
+  ②**磁盘**：Data.olean 20–22 MB/条；root ≈400 GB、全 feasible ≈860–940 GB，
+  本机 181 GB free；终装配 W7 需 ≥1.5 TB 磁盘（或逐 chunk 探针后清 olean，
+  终装配换机器）。禁止用 `axiom`/`opaque`/`native_decide` 规避。
+- **建议排序**：W1–W3（root，账本在库、sha 可复核）→ 并行启动 W6 覆盖桥 →
+  W4/W5 重跑（等大磁盘/算力窗口）→ W7 终装配。W1–W5 只是"材料就绪"，
+  不缩小主定理锥；不要在 W6 落地前声称 LP 已入 e2e。
