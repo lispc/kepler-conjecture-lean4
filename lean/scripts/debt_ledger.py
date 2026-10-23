@@ -94,7 +94,7 @@ def main():
     if "--with-spine" in sys.argv[1:]:
         spine = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "spine_axioms.py")
-        proc = subprocess.run([sys.executable, spine, ROOT],
+        proc = subprocess.run([sys.executable, spine, os.path.abspath(ROOT)],
                               capture_output=True, text=True)
         print(proc.stdout)
         if proc.stderr:

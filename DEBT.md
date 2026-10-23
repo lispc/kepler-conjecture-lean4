@@ -1,12 +1,12 @@
 # DEBT.md — sorry 债务账本
 
-> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **44478** 个 sorry。
+> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **44448** 个 sorry。
 
 | 区域 | sorry 数 | 涉及文件数 |
 |---|---|---|
-| Text | 44389 | 238 |
-| (root) | 89 | 2 |
-| **合计** | **44478** | **240** |
+| Text | 44361 | 235 |
+| (root) | 87 | 2 |
+| **合计** | **44448** | **237** |
 
 <details><summary>逐文件明细</summary>
 
@@ -184,8 +184,8 @@
 | Text/LP/LPLeafRoot75.lean | 250 |
 | Text/LP/LPLeafRoot76.lean | 237 |
 | Text/LP/LPLeafEasy17.lean | 112 |
-| Assembly.lean | 88 |
-| Text/PackingAuto25.lean | 88 |
+| Assembly.lean | 86 |
+| Text/PackingAuto25.lean | 84 |
 | Text/LocalAuto1.lean | 82 |
 | Text/LocalAuto22.lean | 82 |
 | Text/LocalAuto32.lean | 65 |
@@ -219,53 +219,35 @@
 | Text/LocalAuto10.lean | 17 |
 | Text/LocalAuto16.lean | 17 |
 | Text/LocalAuto31.lean | 17 |
-| Text/PackingAuto15.lean | 16 |
 | Text/LocalAuto36.lean | 13 |
 | Text/LocalAuto8.lean | 13 |
 | Text/LocalAuto15.lean | 12 |
-| Text/PackingAuto7.lean | 12 |
 | Text/LocalAuto3.lean | 11 |
+| Text/PackingAuto15.lean | 11 |
 | Text/LocalAuto26.lean | 10 |
 | Text/PackingAuto3.lean | 9 |
+| Text/PackingAuto7.lean | 9 |
 | Text/PackingConcl.lean | 9 |
 | Text/LocalAuto17.lean | 8 |
 | Text/LocalAuto27.lean | 8 |
 | Text/LocalAuto20.lean | 7 |
 | Text/TameSpine/TameList16.lean | 7 |
 | Text/LocalAuto5.lean | 6 |
-| Text/PackingAuto10.lean | 6 |
 | Text/TameLp.lean | 6 |
 | Text/LocalAuto25.lean | 4 |
 | Text/LocalAnchors.lean | 3 |
-| Text/PackingAuto11.lean | 3 |
-| Text/PackingAuto12.lean | 3 |
-| Text/PackingAuto13.lean | 3 |
-| Text/PackingAuto14.lean | 3 |
+| Text/PackingAuto10.lean | 3 |
 | Text/PackingAuto16.lean | 3 |
-| Text/PackingAuto5.lean | 3 |
-| Text/PackingAuto21.lean | 2 |
-| Text/PackingAuto9.lean | 2 |
+| Text/PackingAuto12.lean | 2 |
+| Text/PackingAuto5.lean | 2 |
 | Statement.lean | 1 |
 | Text/ContraFan.lean | 1 |
 | Text/LocalAuto12.lean | 1 |
 | Text/LocalAuto30.lean | 1 |
 | Text/LocalBridge.lean | 1 |
+| Text/PackingAuto13.lean | 1 |
+| Text/PackingAuto14.lean | 1 |
 | Text/PackingAuto19.lean | 1 |
-| Text/PackingAuto24.lean | 1 |
+| Text/PackingAuto21.lean | 1 |
 
 </details>
-
-## 主定理可达债务（脊柱公理探针）
-
-> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-10-21 11:27 +0800（main @ ea42f97f，全闭包自主源编译）。
-> 与上面的 token 计数不同：这里只统计**装配后主定理实际依赖**的公理。
-
-| 类别 | 公理 |
-|---|---|
-| sorry 占位（接口债务） | sorryAx |
-| 特许 native_decide（DECISIONS.md 2026-08-10 scoped exception） | 624 个 shard 公理 / ofReduceBool 族 |
-| 标准三公理 | Classical.choice, Quot.sound, propext |
-| 其它（**异常，需排查**） | 无 |
-
-`sorryAx` 当前来源 = Assembly.lean 的冻结接口占位（剩余 `nonlinearInequalities` / `linearProgrammingResults` / `textCapstone` 三个；`goodListArchive` 已于 2026-09-19 由 P6-C 闭合，见 docs/phase6-spine.md §1）；每闭合一个接口，此处可达债务随之消减。
-

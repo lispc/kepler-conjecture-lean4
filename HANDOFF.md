@@ -1,4 +1,4 @@
-# HANDOFF.md — 交接文档（2026-10-12，面向接手的 coding agent）
+# HANDOFF.md — 交接文档（2026-10-23 更新，面向接手的 coding agent）
 
 > 2026-10-10 曾退役并入 PLAN/STATUS；**2026-10-12 用户令恢复为独立交接文档**。
 > 本文是接手入口，读完即可开工；权威计划 = `PLAN.md`（冲突时以它为准），
@@ -18,46 +18,31 @@
 
 ---
 
-## ⚡ 当前状态速览（2026-10-17 收波更新；细节见 STATUS 2026-10-16/17 mega 波节 + e2e-debt-map 增量节四）
+## ⚡ 当前状态速览（2026-10-23 收波更新）
 
-> **2026-10-16/17 mega 波**：**C1.7 全线收官**（七 commit 全闸绿，7b492f63..51f3403a）。
-> 189 条 LP 不可行 Farkas 证书：列主序手术（B086 4h22m→7m45s = 33.8×；B087
-> 6h+65.8GB 不可完成→9m10s）→ 189 闭合模块入库+列→行桥 LPFarkasCM →
-> **infeas 段 sorry 清零** → 统一终账扫波 **189/189 全绿零失败**。SF-42 落地
-> （sqrtRel 相对粒度，C549Mono 12/12 重烤；TM 舰队 197 模块重烤=尾波排队）；
-> DomOK v2（mono stage-B 批化，真瓶颈=rung 2048 atan，witness 位降 rung 移交
-> W8）；批 20（含前批脚手架虚账勘误）；PA25 wwtcount6_y finisher（行首裸
-> sorry 87→86）。**16:13 内存打穿强重启事故**：五 lane 并发+巨物同机 → swap
-> 打穿；/tmp 全清靠 diff 快照打捞零损失续跑；顺手破案"环境收割者"= 磁盘满→
-> jetsam。**内存三规**（lane 串行/≥12GB/巨物禁并行）。DEBT 44,481（−193）。
-> 六小时巡检 automation 在岗。
+> **基线：main @ `e0d14810`，工作树干净，已推 origin/main。** e2e 可达
+> 债务源 **133**（地图 2026-10-23；起点 149），可达声明 **216,032**，
+> 可达公理 **624**（全部 `native_decide` 特许 shard，无异常公理）。
+> DEBT.md token 总量 **44,448**（2026-10-23 重生成；42,889 枚 bound LP
+> 叶占绝大部分，按旧口径扣 43,078 后可比 **1,370**；真正非 LP 文本债
+> 1,559）。本波（10-22/23）六条线全部收口。
 
-- **在飞**：EULER_TRIANGLE 三代车道（GIANT 级：:2081 需闭式立体角定理本体，
-  W-乘积法施工图已备，dih 桥已证，二代 sympy 双验证）；root runner 长跑
-  （16:13 阵亡当日复活账本零损失，~3,500/8,283 本轮 done 含历史 fail 重试，
-  ETA ≈ 34h，配方 /Users/zhangzhuo/lprun/MONITOR.md §4，巡检自动化每 6h
-  查活救活）。
-- **脊柱接口**：A1-A5 已清；A6（柱②归一化本体一件）/A7/A8/A9（tame GIANT，
-  **B1 地基 20 批全落，批 21 起点 = HOL :10595 fgraph_seed**）/A10（帽石全清，
-  mqmsmab 装配波待立项）/A11/A12（C1.7 已收官，A12 数据绑定收口）。
-- **A12/C1**：**C1.7 已全线收官**（189/189 内核验证+入库+骨架闭合+统一终账，
-  见上）；root runner 长跑如上。
-- **Phase 4**：DomOK v2 落地（sb12 真瓶颈=rung 2048 闭式 atan 内核 Taylor），
-  **下一杆 = witness 位 trans 降 rung**（移交 W8 拍板）；TM 舰队重烤波
-  （197 模块/18,477 站点，SF-42 后机械批量）排队；W9 判定的第三武器 C 侧
-  集成仍 deferred。
-- **排队待派**：舰队重烤波 / A6③（DLWCHEM/XULJEPR GIANT）/ PA24 B2 续 /
-  W8 witness 位降 rung / EULER 三代（已在飞）。
-- **⚠️ 发车冻结（用户令 2026-10-20/21，在先于上表）**：2026-10-21 晚再令：
-  "这两个 sub agents 结束后，先不启动新 sub agents。等我消息。"——**当前在飞
-  两条（TameSpine 批 71 DANGEYJ 续、EULER 窄任务 1 finisher）收尾后即止**：
-  照常核验→走闸→落库→push，但不派任何后继（批 72、euler 窄任务 2+、gen-9、
-  GIANT 分期全部取消待令）。此前已收的账：十二发波/批 60-70/gen-8/SF-44..47/
-  舰队重烤/root runner 全部落地。容量纪律：
-  12 核/36G，重 lean 构建同时 ≤3 + runner 2，车道 lake build 串行（禁止跨
-  lane 并发构建）+ 只用热缓存；**Lake 5.0.0 无 `-j`/`--jobs` 旗标，禁用 `-K`
-  未知键**（见 §5.5）。
-  六小时巡检自动化已按用户令删除（2026-10-21）；巡检职责回归编排者手动/事件驱动。
+- **在飞**：无。三车道均已交付；PA25 试填按源数守恒规则回退。
+- **最近提交**：`e5cd4abb` LP 审计 → `d6c72ee8` PA15 → `4053ef5a` R1 4 案
+  → `5d57f21e` W6 侦察 → `fab33d0e` PA11 → `e0d14810` PA25 负结果。
+- **e2e 133 源结构**：Assembly 81（57 `nliRest*` + 8 `nliTsk*` + 7
+  `nliCell3*` + 5 直挂 + `fcdjdot`/`jcajydu`/`tameCorrespondenceIso`/
+  `lpArchiveCertificatesDebt`）、PA25 38（**28 `real_model_*`** + 10 其他）、
+  TameLp 6、PA18 2（`cc_pe_exists` + `pa18_ccCell_swap`）、其余 6
+  （PA3/PA21/PA2/LocalAuto16/LocalAuto1/ContraFan 各 1）。
+- **Phase 4**：prep R1 已闭 **22 案**（pilot 5 + P2 12 + 2125 + rest 4）；
+  P3 2125 全树 132/132、46,099 叶；R1 余 10 个 closed 候选；R2/R3 未动。
+- **Phase 3/LP**：root 19,237 全部有 exit=0 账（残余失败/缺失 0），试点
+  5/5 sha 逐字节复现；easy 4,362 + hard 19,290 **必须重跑**（2026-09
+  账本/产物不在本机）；W6 组合覆盖层真证、终端语义是多波项目；终装配
+  olean ≈0.9–1 TB，本机 177 GB free ⇒ 需大磁盘。
+- **环境**：M3 Pro 12C/36G；本波峰值约 26 GB、空闲 80%；磁盘 177 GB free。
+  单 build 串行、`nice -n 19`、禁 `-j`/`-K`、空闲 <50% 暂停。
 
 ---
 
@@ -71,7 +56,7 @@
 用 5-6 个并发 sub agent 车道滚动生产，编排者统一闸/提交/推送。终局 = 会师
 （M5″）后清叶，零 sorry 组装（M5/G5），干净机器复现交付（M6/G6）。
 
-## 1. 现状（2026-10-13 收波时点，main @ `aaae330c`+文档笔，工作树干净；编排者停等中）
+## 1. 现状（2026-10-23 收波时点，main @ `e0d14810`，工作树干净；无在飞车道）
 
 ### 1.1 阶段完成度
 
@@ -79,42 +64,50 @@
 |---|---|---|
 | 1 | 陈述形式化（`Statement.lean`） | ✅（:111 占位 sorry sanctioned，终版退役） |
 | 2 | tame 平面图枚举（19,715 图 + 完备性证书） | ✅ `tame_classification` 闭合 |
-| 3 | 线性规划（43,078 终端 LP 内核验证层） | ✅ 求解+checker 层；**2026-09 重跑账本/产物已丢失**（换机）。2026-10 审计：root 19,237 全部有 exit=0 账、试点 5/5 sha 逐字节复现；easy/hard 23,652 必须重跑。Lean 侧叶户 `Text/LP/`（177 模块，43,078 枚 `lpT<id>` 叶）已立户待灌，计划见 debt-map 2026-10-23 LP 节 |
-| 4 | 非线性不等式 | 🟡 求解层 68/176 + 内核 8 案；重计算全部 deferred（见 §3.3） |
-| 5 | 文字证明移植（`Text/` 25+39 模块） | 🟡 **主战场**，滚动清债中 |
-| 6 | 集成交付（`Final.lean` e2e） | 🟡 e2e 已立；余三接口清债 + 占位去重 + 终验 |
+| 3 | 线性规划（43,078 终端 LP 内核验证层） | ✅ 求解/checker 层；2026-10 审计：root 19,237 全账、5/5 sha；easy/hard 23,652 需重跑；W6 覆盖桥侦察完成，语义移植多波；叶户待灌数据 |
+| 4 | 非线性不等式 | 🟡 求解层 68/176；内核 prep R1 22 案（P3 2125 全树 132/132）；重计算 deferred |
+| 5 | 文字证明移植 | 🟡 主战场；e2e 直源 133；PA11/PA15 已归零；PA25 28 `real_model_*` 待 `cc_pe_exists` |
+| 6 | 集成交付 | 🟡 e2e 已立；余 3 接口 + 133 源 + 占位去重 + 终验 |
 
-里程碑：M0-M4 ✅（M4 重计算部分 deferred）、**M5′ ✅**（2026-10-10）、
-M5″ 会师 🟡（T/B 线推进中）、M5=G5 零 sorry 组装 ⬜、M6 交付 ⬜。
+里程碑：M0-M4 ✅（M4 重计算 deferred）、**M5′ ✅**（2026-10-10）、
+M5″ 会师 🟡、M5=G5 零 sorry 组装 ⬜、M6 交付 ⬜。
 
-### 1.2 债务与覆盖度账
+### 1.2 债务与覆盖度账（2026-10-23）
 
-- **DEBT.md 总量 44,646**（2026-10-13 收波重生成）——其中 43,078 是 LP 叶户
-  （deferred-compute，灌数据即清，**勿当文字债攻击**）；**可比口径（Text 非LP +
-  root）= 1,568**（前波 1,639，净 −71：LA5 −10 / PA15 −2 / Assembly −3 /
-  TameLp −1 等本波真实清偿）。Geom 区已清零。
-- 非 LP 大户（按新账本）：PA25 131 / LA1 82 / LA22 82 / LA32 65 / LA28 63 /
-  LA34 60 / LA6 60 / LA24 53 / PA18 53 / LA38 47 / PA7 22。
-  但**派工顺序不看这个表**——看贪心排名（§2.4 重排名循环）。
+- **DEBT.md 总量 44,448**（2026-10-23 重生成，旧 44,478；净 −30）。本次
+  `--with-spine` 因 `debt_ledger.py` 传相对根给 `spine_axioms.py` 报错
+  （已修：改传 `os.path.abspath(ROOT)`；脊柱节留待下次重跑，当前可达债务
+  以 e2e 地图 133 源 / 624 公理为准）。
+  其中 42,889 枚是 bound LP 叶（deferred-compute，灌数据即清，**勿当
+  文字债攻击**）；按旧口径扣 43,078（含已闭合的 189 infeas 叶）后
+  **可比口径 1,370**（10-13 基线 1,568，净 −198；对上一版 44,478 为 −30）。
+  非 LP 文本 + root 实为 1,559。
+- 非 LP 大户（新账本）：PA25 84 / LocalAuto1 82 / LocalAuto22 82 /
+  LocalAuto32 65 / LocalAuto28 63 / LocalAuto34 60 / LocalAuto6 60 /
+  LocalAuto24 53 / LocalAuto38 47 / PackingAuto4 39 / PackingAuto18 38。
+- **e2e 刻度的权威口径**：`docs/e2e-reachability-map.tsv`（133 直源 /
+  624 公理 / 216,032 可达）。DEBT token 总量含大量不可达/模板债，派工
+  顺序看 e2e 地图与贪心排名，不看 token 总量。
 - 全库三态覆盖度（`docs/module-map.md` 普查节，2026-10-12 实测）：
   HOL 6,540 定理 / 686k 行 → 已移植 38% / 证书替代 20% / 未移植 42%
-  （按行 40/28/32）。结论：无半成品章；证书替代类=计算性内容等灌装；
-  tame 章按需求批移植、无需全搬。
+  （按行 40/28/32）。无半成品章。
 
-### 1.3 刚发生的事（2026-10-13 收波：三线全落地推送后停等）
+### 1.3 刚发生的事（2026-10-22/23 波，六线全收口）
 
 | 线 | 结果 |
 |---|---|
-| TameSpine 批 10-12 | 三连批 +2,232 行/94 件零 sorry，**B1 链 :23-8920 无缺口**（批 10=阵亡草稿独立机械验收零编辑采用）；批 13 起点=HOL :8921 contour_list_cons 旗塔章 |
-| A10 | **CRTTXAT 帽石装配完成 = B6 出口件一号全清**；arc kit 五件套全零；鸽笼原理替代 SUM_ORBIT 方法论突破；TameLp 7→6 |
-| A6 | 柱② 三件中等档+钥匙件 salvage 落地，**柱② 仅剩归一化本体一件**（Lean 路线 spec 已入 NEEDS） |
-| C1.6-G5 | **收官**：gen_farkas.py 1035 行——189/189 精确 Farkas 预检+试点 B 端到端 [propext]，93 族零 UNKNOWN；C1.7 批量发射处方已给 |
-| Phase4-W3 | 四工位落账：**guard-straddle=证书结构缺口**（根因钉死+13 子盒修复路线量化）；disj stage-A/B 端到端首绿；decide 成本 122.7 s/叶实测；formal_ineqs 考古（monotonicity 降维=免费武器） |
-| 决策 | Phase 4 路由表批准（R1-R4 混合）；92 prep 画像 94.3% 可立即灌装（R1 101/R2 665/R3 39/R4 7） |
+| PA15 DIHX_SYM（`d6c72ee8`） | `DIHX_SYM` + `LEFT_ACTION_LIST_2/3_EXISTS` 闭合，+1018/−3，闸 ×3 PASS；未消费 `HDTFNFZ`/`LEPJBDJ`；PA15 sorry 15→12；e2e 137→136 |
+| R1 rest 4 案（`4053ef5a`） | 3078028960(1358)/JNTEFVP_1(3142)/2073661826(5929)/4680581274 cayleytr0(5422)，合计 15,851 叶/206 shards/4,083 s；四闸 PASS；R1 18→22；新雷区 #470（shard 缺 maxRecDepth），`emit_lean.py` +2/−1 |
+| LP root 审计（`e5cd4abb`） | root 19,237/19,237 exit=0，残余失败/缺失 0；1,800 条 exit=1 全是环境性重试；4 pilot + 1 失败重试样本 **5/5 sha 逐字节复现**；计划 W1–W7 写入 `lane_snapshots/lpaudit/IMPORT_PLAN.md` |
+| LP W6 侦察（`5d57f21e`） | 组合覆盖层真证（DFS 终端序/注册表覆盖/tame_result_lemma/三接口归约，267 行骨架 build 绿）；真正缺口=终端 LP 语义（HOL ~8,700 行 → Lean 5k–10k 行，多波）；报告 `docs/scouts/lp-w6-coverage-scout.md` |
+| PA11 LEPJBDJ（`fab33d0e`） | `rogersInterVLemma`/`k3Subset`/`k2Case` 全闭，+434/−48，闸 PASS；`k3Subset` 不用 tainted `mxiExplicit`，改用 clean PA7/PA8 kit；LEPJBDJ/LEPJBDJ_0 值级标准三；e2e 136→133 |
+| PA25 real_model（`e0d14810`） | 勘误 28 枚（非 25）；28/28 值级根在 `cc_pe_exists`/本文件骨架/缺 ALT kit；8 件试填 +177/−8 应用后地图 133→131，但新暴露 6 源（含 PA10 `RVFXZBU` 经 PA20 回归），净 −2=债务搬家，按守恒规则回退；试填留快照 |
 
-闸门本次无演进（EV22-24 已在前波）；新雷区 3 条入 playbook §5.4''
-（孤儿进程 PPID→1 / 解释跑 stdout 块缓冲假死象 / 探针层 Nat.sqrt 与内核层
-baked 证书的分层纪律——decide 只吃后者）。
+**新雷区（详见 §5.7）**：①R1 深树 shard 的 `by decide` 需
+`maxRecDepth 1000000`；②PA25 类“填 8 件净 −2”的债务搬家——合并前必须
+重跑地图看新增源；③类型级 sorryAx（`#print axioms`）≠ 值级 direct 源
+（地图口径），两者要分开记；④`cc_pe_exists` 已是 28 枚 real_model 的
+唯一主根。
 
 ### 1.4 环境与基础设施
 
@@ -179,9 +172,12 @@ elaboration；私有名 mangling 与 `_stdin` 重写已在脚本内处理）→
 tainted 常量数）→ TOP-N 给编排者。deferred-compute 叶（LP/prep/重放）不入
 排名。**每当一批根波落地，对受影响模块局部重扫→重排名→按排名派工**；
 头条指标 = meeting-ready 数（taint 路径全终结于 deferred-compute 叶的
-tainted 常量）。上次全量排名的头部：ccPe1/ccUh/ccKe（PA18 cc 链，单根
-cc_pe_exists）、s_leaf/leaf_rank（PA25）、pack_nonlinear_rest（PA21 62 bank
-pin 死）。
+tainted 常量）。上次全量排名的头部：ccPe1/ccUh/ccKe（PA18 cc 链，单根 `cc_pe_exists`）、
+s_leaf/leaf_rank（PA25）、pack_nonlinear_rest（PA21 62 bank pin 死）。
+**2026-10-23 更新**：PA11 三私件闭合后，`cc_pe_exists` 成为 28 枚
+`real_model_*` 的唯一值级主根；下一轮局部重扫应聚焦 PA18 cc-chain 与
+K3/K4 WIM kit（`K3_CC_WIM_ALT`/`K4_CC_WIM`/`FUEIMOV_3`/
+`CC_4_BETA_BUMP_0`/`MCELL4_GG`）。
 
 ### 2.5 陈述冻结与 SF 通道
 
@@ -200,61 +196,112 @@ pin 死）。
 重大波次随更 module-map.md 普查节、批次末 DEBT.md 重生成
 （`python3 lean/scripts/debt_ledger.py . > DEBT.md`）、STATUS.md 刷新。
 
-## 3. 短期计划（接手即干，按优先级）
+## 3. 短期计划（接手即干，按优先级；2026-10-23 收波时点）
 
-### 3.1 可立即派工的车道（2026-10-13 收波时点队列，**全部待用户令**）
+### 3.1 可立即派工的车道
 
-1. **TameSpine 批 13**：HOL :8921 `contour_list_cons` 起旗塔章（contour_list_cons/
-   contour_list_is_contour/face_map_list_power/hyp_S_list/marked_list_empty_flagged）；
-   `ContourListSpine` 载体批 8 已备，`hyp_S_list` 差件（hypMLm+faceMap 幂桥）批 12
-   已就位公开。批次表 `docs/projects/tamespine-port-plan.md`。
-2. **C1.7 189 条批量发射**：遍历 /tmp/p4g5/batch_results.json 逐条 `gen_farkas.py
-   --lean` 出 LpInfeasCert 套 pin 模板；排产=小编译批次+长预算（最大 327×230
-   decide >40 分钟；注意 hard_7 解包副本 /tmp/p4g5/hard7 易失须先补）。
-3. **W4 线（Phase 4）**：①镜像 gsplit 实施（Lean 侧 stage-A 批量驱动+子盒 params
-   +stage-B 发射 BBTreeGD 分裂节点，`emit_lean.py --hull` 两段式现成）；
-   ②第三武器 R&D（radicand 预切分/t=√u 换元，R3 39 条靶标已定标）；
-   ③decide 成本工程（shard 粒度/并行/rung 降档）。
-4. **A6 续五**：柱② 归一化本体一件（Lean 路线全文 spec 在 Assembly NEEDS：
-   packingConfig 紧致机器+字典序极小化 k 步递归+末步扰动矛盾）；其后柱③
-   DLWCHEM/XULJEPR 侦察。
-5. **A10 装配波**：mqmsmab 章 CRTTXAT 消费点已解锁（B6 出口件一号全清）。
-6. **PA25 leaf_rank 车道**：`PackingAuto25.lean` mcell3_gammaX_gamma3f 链照旧
-   （127 残余，s_leaf/leaf_rank 贪心头）。
-7. **INTERSECTION_LEMMA GIANT**（解锁 LA5 剩 6 件中的 2 件；LA5 可填面其余已清零）。
-8. **顺手账**（下一碰该文件的车道顺带）：PA21 :89-106 "PROVED" 降格诚实措辞；
-   PA14 :42-43 "sorry-free"→"locally sorry-free"。
-9. **重排名**：上述根波落地后局部重扫受影响模块 → 重排名 → 按新 TOP-N 派工
-   （§2.4 循环）。
+1. **PA18 `cc_pe_exists` 侦察/攻坚（最高优先）**
+   - 位置：`lean/Kepler/Text/PackingAuto18.lean:206`；HOL
+     `leaf_cell.hl:1052-1084`。文件内 NEEDS：证明 = `FUZBZGI_1` +
+     `JDWAWAY` sign-split；`FUZBZGI_1` 消费 PA7 仍 sorry 的 `XYOFCGX`；
+     `YBZFUPO` 需“1 维多胞形 = 线段”分类（仓库/Mathlib 无现成件）。
+   - 影响：28 枚 `real_model_*` 的唯一值级主根；cc 链约 280 下游类型
+     污染；闭合后 PA25 已试填的 8 件可原样转真（快照 `pa25real`）。
+   - 建议：先派**侦察车道**拆 HOL 证明、评估 GIANT 规模与 PA7 `XYOFCGX`
+     依赖，产出分波施工图；不要直接让填充车道硬啃整件。
+
+2. **K3/K4 WIM kit（PA25 直接解锁面）**
+   - 源：`K3_CC_WIM_ALT`（PA25:3704）、`K4_CC_WIM`（PA25:3684）、
+     `FUEIMOV_3`（PA18:4121）、`CC_4_BETA_BUMP_0`（PA25:5878）、
+     `MCELL4_GG`（PA25:3593）。
+   - 这些是 PA25 试填暴露的 6 个新源（另含 PA10 `RVFXZBU` 经 PA20
+     `gammaX_gamma3f → p20g_perm_wit3` 的回归路径）；`NO_4CELL_IMP_K3`
+     已装配 `K4_CC_WI_ALT`/`K4_CC_WIM`/`STEM_EDGEX`/`FUEIMOV_3` 分支，
+     缺的是 K3/K4 WIM 与 `FUEIMOV_3` 本体。
+   - 建议顺序：`FUEIMOV_3`（同 stem 同胞 ⟹ 表相等 ⟹ 首两点相等 ⟹
+     共线撞 `hnc`，HOL 在案）→ `K3_CC_WIM_ALT` → `K4_CC_WIM` →
+     `CC_4_BETA_BUMP_0`/`MCELL4_GG`。规模远小于 PA18，适合先拿分。
+
+3. **LP W6-A/B/C（数据 + 最小语义，Mac 可做）**
+   - 依据 `docs/scouts/lp-w6-coverage-scout.md` 与
+     `lane_snapshots/lpw6/LPCoverage.lean`。
+   - **W6-A**：39 个 `.dat`（404 MB，在库）→ light `LpGraphCert` 树
+     （split 型 + face + precision/infeasible 旗标）+ archive 对齐；
+     `hdata`/`hcov` 用 `decide`/`rfl`。机械、产物小。
+   - **W6-B**：`lp_fan`/`lp_cond`/`lp_tau` 定义 + `contravening_lp_fan`
+     （复用 `contraveningFan`，补 fully_surrounded / 2.52 距离 /
+     ball_annulus / packing）。
+   - **W6-C**：`yeList`/`ynList` + `split218/236/225`、`split4/5/6`
+     （纯实数 `linarith`/`nlinarith`）。
+   - **不要**从 `prove_flyspeck_lp_step1`/`compute_all` 起手（依赖 127 族
+     不等式数据库与 LP 数据对齐，是第 3–4 波）。
+
+4. **R1 收尾 10 案（机械、e2e 中性，适合填充车道）**
+   - 余：9424/14266/40785/49998/54771/75965/133228/154721 +
+     `6096597438 b`/`ZTGIJCF0`。
+   - Runbook：`lane_snapshots/r1rest/pipeline/build_case.sh` +
+     `lane_snapshots/prep2/DELIVERY.md` §8；纯多项式直接复用，含 atan/sqrt
+     需 `--fill`；深树 shard 记得 `maxRecDepth 1000000`。
+   - 注意：R1 产物是 prep 材料层，`Interval.Cases.*` 尚未被 Assembly/Text
+     根 import，闭合不直接改变 e2e 源数。
+
+5. **624 公理 manifest + 抽样 replay（信任加固，P0）**
+   - 23 条 `Assembly.GoodListShard*` + 601 条
+     `Graphs.CertShards.*`/`CertTri/Quad/Pent/Hex`。
+   - 建 manifest（模块/名字/shard 范围）+ 抽 3–5 shard 从源码重放，
+     确认 `native_decide` 公理与证书内容一致；不削 e2e，但这是当前
+     唯一非 sorry 信任面。
+
+6. **PA25 已试填 8 件复用**
+   - 快照 `lane_snapshots/pa25real/PackingAuto25.lean`（+177/−8，8 件
+     真证、闸 PASS）。等 `cc_pe_exists` 或 K3/K4 WIM 落地后原样套用，
+     再跑地图确认无新暴露源。
+
+7. **TameLp 6 源 / nli 大案（暂缓）**
+   - TameLp 6 源依赖 Polar_fan/Local_lemmas/Face3 未移植深章，先侦察
+     再排；`main_nonlinear_terminal_v11` 链是 Phase 4 终端，不在本波。
+   - nli A2 rest 9（964,792 叶 / 2,775 shards）冷构建 40–45 h，deferred。
 
 ### 3.2 待用户拍板项（不要自行做）
 
-- TameSpine Assembly §2b 五枚 True-placeholder DEF-FIX flip（flip 源已备于
-  `Kepler/Text/TameSpine/GoodGraph.lean`，等 A7/A8/A9 波到位提请）。
-- SF 提案项 18（volD_pos 缺 `hne`）等历史 SF 案 volume 补前提类，均在
-  `docs/statement-fix-proposals.md` 排队等裁决。
+- **LP root W1–W3**：19,237 条重发射 + 构建，302.7 CPU-h ≈ **6.3 天
+  @2 workers**，root olean ≈400 GB；需要明确窗口。
+- **LP easy/hard 重跑**：23,652 条（easy 4,362 + hard 19,290），
+  675–1,370 CPU-h ≈ **14–28.5 天**；2026-09 账本/产物丢失，必须重跑；
+  51 例 SoPlex 放弃的 glpsol 尾部 id 清单也丢失。
+- **W6 全语义移植**：HOL ~8,700 行 → Lean 5k–10k 行，多波；先 W6-A/B/C
+  还是全力 W6，需要定节奏。
+- **终装配 W7**：需 ≥1.5 TB 磁盘（本机 177 GB free），或换机器。
+- **历史 SF 提案**（`docs/statement-fix-proposals.md` 排队项）与
+  TameSpine Assembly §2b 五枚 True-placeholder DEF-FIX flip。
+- **624 manifest** 是否现在插入（P0 信任项）。
 
 ### 3.3 deferred-compute（Mac 不做，等强机器）
 
 | 项 | 说明 |
 |---|---|
-| A12：43,078 LP 数据灌装 | 审计+试点已完成（2026-10-23，`lane_snapshots/lpaudit/IMPORT_PLAN.md`）：root 19,237 可重发射灌装（≈6.3 天 @2 workers）；easy/hard 23,652 需重跑；覆盖桥 W6 未移植（独立证明工程，先于终装配）；终装配需 ≥1.5 TB 磁盘 |
+| A12：43,078 LP 数据灌装 | 审计+试点已完成（2026-10-23，`lane_snapshots/lpaudit/IMPORT_PLAN.md`）：root 19,237 可重发射灌装（≈6.3 天 @2 workers）；easy/hard 23,652 需重跑；覆盖桥 W6 独立多波；终装配需 ≥1.5 TB 磁盘 |
 | A11：993 证书 + 81 G4 residue | 重跑产物丢失清单见 DECISIONS 2026-09-28 |
-| 92 prep 家族重求解 | 附带策略决策（TM vs BBTreeGD） |
+| 92 prep 家族重求解 | 附带策略决策（TM vs BBTreeGD）；R1 余 10 案先做 |
 | Phase 4 两巨兽重放 | 784/6321、770/12553（olean 保留可幂等续跑） |
 
 ## 4. 长期路线（细节以 PLAN.md 为权威）
 
 ```
-现在 ──贪心触达清债（Phase 5 主战场 + T1-T4 展开 / B1-B5 上拉）──> M5″ 会师
-     ──BFS/DFS 清叶（纯填证批 / deferred-compute / 真数学缺口三拣）──> M5=G5 零 sorry
-     ──Statement 占位退役 + 全量公理审计 + 复现文档──> M6 干净机器 make reprove 全绿
+现在 ── e2e 清债（133→0；PA18 cc-chain / K3-K4 WIM / Assembly nli /
+        PA25 / TameLp）──> M5″ 会师
+     ── Phase 3 并行：W1-W3 root → W4/W5 重跑 → W6 语义 → W7 终装配
+     ── 清叶 / 占位退役 / 全量公理审计 ──> M5=G5 零 sorry
+     ── 复现文档 + 干净机器 make reprove ──> M6
 ```
 
-已知真数学缺口清点（非工程量）：pivot 反向 k=3/4（GRUTOTI 最后一块，
-~200-400 行）、GRKIBMB 尖锐边界组、PA24 B2 退化情形。风险排序：Phase 4
-重计算量 > tame 章体量（批次流水线缓解）> Mathlib 缺口（项目内自证）>
-陈述保真（SF 通道）。
+已知真数学缺口（非工程量）：PA18 `cc_pe_exists`（cc 链 GIANT，
+HOL `leaf_cell.hl:1052-1084`；`FUZBZGI_1` + `JDWAWAY`；`FUZBZGI_1`
+依赖 PA7 `XYOFCGX`；`YBZFUPO` 需 1 维多胞形 = 线段分类）、K3/K4
+WIM/`FUEIMOV_3`（edge-rigidity kit）、pivot 反向 k=3/4
+（GRUTOTI 最后一块）、GRKIBMB 尖锐边界、PA24 B2 退化情形。
+风险排序：LP 灌装/终装配磁盘 > PA18 GIANT > Phase 4 重计算 >
+tame 章体量 > Mathlib 缺口 > 陈述保真（SF 通道）。
 
 ## 5. 已知坑（血泪清单，新人必读）
 
@@ -337,6 +384,47 @@ pin 死）。
   `zcode.cjs:2171` col 6296 的"anthropic-only 思考拒绝修复重试"扩展到
   openai-compatible `reasoning_content` 400。
 
+### 5.7 LP/PA25 账目与验证雷区（2026-10-23 新增）
+
+- **类型级 vs 值级**：`#print axioms` 会遍历冻结陈述的类型闭包（PA25 的
+  `ccCell → ccUh → cc_pe_exists`），故很多 `real_model_*` 即使证明体干净
+  也打印 `sorryAx`。地图的 direct source 只认**值里直接含 sorryAx**；
+  值级检查用 `#valax3`/`taintprobe`（defs 原子、theorem 值展开）。记账时
+  两栏分开，禁止互相掩盖。
+- **债务搬家检测**：任何 PA25/PA18 填充批合并前，先重跑
+  `cd lean && lake env lean scripts/e2e_reach_map.lean > /tmp/reachmap.out`，
+  diff 源清单；若“消失 N、新增 M”且净减很小或出现 `RVFXZBU` 回归，按
+  源数守恒规则**停批**。PA25 8 件试填（+177/−8）即因此回退，试填在
+  `lane_snapshots/pa25real/`。
+- **`mxiExplicit` 仍带 sorryAx**（经 PA2 `MXI_EXISTS_concl`），不得作为
+  clean 件消费；PA11 `k3Subset` 已示范用 PA7/PA8 kit 内联替代。
+- **`cc_pe_exists` 是枢纽**：PA18:206，HOL `leaf_cell.hl:1052-1084`，
+  约 280 下游类型污染；不要用 `ccPe1`/`ccPe2` 的 choose 定义绕债。
+- **R1 shard recDepth**：v1 发射器 `shard_file()` 缺 `maxRecDepth`，深链
+  叶 `by decide` 爆默认 1000；已给 `emit_lean.py` +2/−1（`maxRecDepth
+  1000000`），新案重发射会自动带；老案手工补 62 个 Shard。
+- **LP 口径**：SoPlex 必须钉 8.1.0；`LpTerminalCertified` 对 id 不敏感
+  （LPCert:61），叶必须由 `--emit-closure` 从本记录 pin 转发，禁止手写
+  五元组/跨记录借用；`GoodListNodes` 仍是 `True` 占位（Assembly:1526），
+  `LpIneqs` 空清单，`hypermapOfList` 未落地——W6 前必须先裁决。
+- **W6 骨架**：`lane_snapshots/lpw6/LPCoverage.lean` import
+  `Kepler.Assembly`，最终接线前必须先把共享类型下沉（否则环）；未入仓。
+
+### 5.8 地图/闸/账本操作补充
+
+- 闸的 `LANE_FILES` 与目标文件路径都用 **lean-相对**（如
+  `Kepler/Text/PackingAuto25.lean`）；新文件先 `git add`。
+- 车道并行时，`LANE_FILES` 要列出所有脏的 lean 文件（只放行不编译）；
+  根集用 `GATE_ROOTS` 按需裁剪。
+- e2e 地图再生成：`cd lean && lake env lean scripts/e2e_reach_map.lean >
+  /tmp/reachmap.out`，再 `cp` 到 `docs/e2e-reachability-map.tsv`；热缓存
+  数秒，冷启动会重建 Assembly olean。
+- DEBT.md 再生成：`python3 lean/scripts/debt_ledger.py . > DEBT.md`
+  （约 6 分钟）；带脊柱探针用 `--with-spine`（更久）。
+- 快照的 `MD5SUMS` 有时是 sha256 而非 md5：用
+  `shasum -a 256 -c MD5SUMS` 验，不要用 `md5sum -c`（会报 improperly
+  formatted）。
+
 ## 6. 文档地图
 
 | 要找什么 | 去哪 |
@@ -349,6 +437,8 @@ pin 死）。
 | 章节→模块映射+全库覆盖度普查 | `docs/module-map.md` |
 | 车道工人手册 | `docs/fill-worker-playbook.md` |
 | 侦察报告 / 车道交接 / 专项设计 | `docs/scouts|handoffs|projects/` |
+| LP W6 侦察 / A12 历史侦察 | `docs/scouts/lp-w6-coverage-scout.md` / `formal-lp-verify-scout.md` |
+| 车道产物与证据快照 | `~/c17_backup/lane_snapshots/{lpaudit,pa15fin,pa11lep,lpw6,pa25real,r1rest,prep3}/` |
 | SF 提案与执行补丁 | `docs/statement-fix-proposals.md` + `-patches/` |
 | 架构与陈述保真 | `docs/architecture.md` / `docs/statement-fidelity.md` |
 | 端到端对象 | `lean/Kepler/Final.lean`（`the_kepler_conjecture_e2e`） |
@@ -363,15 +453,16 @@ pin 死）。
 
 ## 7. 接班 / 交班清单
 
-**接班（按序）**：① `git log --oneline -15` + `git status`（盘上脏文件=
-在途半成品，先核盘再动）；② 读本文 §1/§3；③ `PLAN.md` §5 + `docs/e2e-debt-map.md`
-最新增量节；④ 若是车道工人，读 `docs/fill-worker-playbook.md` 全文。
+**接班（按序）**：① `git log --oneline -15` + `git status`（盘上脏文件 =
+在途半成品，先核盘再动）；② 读本文 §1.3/§3；③ `PLAN.md` §5 +
+`docs/e2e-debt-map.md` 最新增量节（2026-10-23 PA25 节是当前末端）；
+④ 重跑 e2e 地图核对 133/624；⑤ 若接 LP 线，读
+`docs/scouts/lp-w6-coverage-scout.md` 与 `lane_snapshots/lpaudit/IMPORT_PLAN.md`；
+⑥ 若是车道工人，读 `docs/fill-worker-playbook.md` 全文。
 
-**交班（编排者，每波/每日）**：① 落地一切可落地（闸→commit→push）；②
-e2e-debt-map 增量节 + DEBT.md 重生成 + STATUS 刷新；③ 重大波次随更
+**交班（编排者，每波/每日）**：① 落地一切可落地（闸→commit→push）；
+② e2e-debt-map 增量节 + DEBT.md 重生成 + STATUS 刷新；③ 重大波次随更
 module-map；④ 波次 wrap 并入 STATUS.md 日期节即算数（2026-10-20 修订，
-规则向实践靠拢：10-12 起的波次 wrap 实际全部写进 STATUS 日期节且功能完好；
-独立 `docs/handoffs/session-<date>-wrap.md` 文件仅当用户索要时才写）；
-⑤ 全部推远端，工作树干净或脏文件皆有归属记档；⑥ 项目收官/被取代即把
-`docs/projects/` 对应文件挪 `archive/` 并全库同步路径引用（2026-10-20 首次
-执行，见 `docs/projects/archive/README.md`）。
+独立 `docs/handoffs/session-<date>-wrap.md` 仅当用户索要时写）；⑤ 全部
+推远端，工作树干净或脏文件皆有归属记档；⑥ 项目收官/被取代即把
+`docs/projects/` 对应文件挪 `archive/` 并全库同步路径引用。
