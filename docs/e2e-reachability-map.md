@@ -1,4 +1,4 @@
-# 主定理 e2e 可达性地图（2026-10-23 重跑；AJRIPQN 归零后）
+# 主定理 e2e 可达性地图（2026-10-24 重跑；pa18_ccCell_swap 出列后）
 
 > 根 = `Kepler.Assembly.the_kepler_conjecture_from_interfaces`（即
 > `Kepler.Final.the_kepler_conjecture_e2e` 的直接证明项）。
@@ -10,13 +10,13 @@
 
 ## 0. 头版
 
-| 指标 | 2026-10-22 | 2026-10-23 | 变化 |
+| 指标 | 2026-10-22 | 2026-10-24 | 变化 |
 |---|---:|---:|---|
-| 可达 Kepler 声明 | 8,305 | **216,234** | +207,929（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25/PA15/PA11/N2 证明体；2026-10-23/24 填证连带 +202 私有 kit 声明入锥。全部内核检查、零新公理） |
-| 直接 sorryAx 债务源 | 149 | **130** | −19（日间 −16：euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`、nli N2 `nliRest6096597438b`、PA15 `MCELL_ID_MXI_2`+`MCELL_ID_OMEGA_LIST_N`+`DIHX_SYM`、PA11 `k2Case`+`k3Subset`+`rogersInterVLemma`；**−2：TameLp `sum_tauVEF_upper_bound`、PA18 `cc_pe_exists`；−1：ContraFan `LEMMA_4_POINTS_FINAL`（四波真证+原子接线，ContraFan 全模块归零，diff 仅此一行删除、零新增零搬家）**） |
+| 可达 Kepler 声明 | 8,305 | **216,263** | +207,958（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25/PA15/PA11/N2 证明体；2026-10-23/24 填证连带 +231 私有 kit 声明入锥。全部内核检查、零新公理） |
+| 直接 sorryAx 债务源 | 149 | **128** | −21（日间 −16：euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`、nli N2 `nliRest6096597438b`、PA15 `MCELL_ID_MXI_2`+`MCELL_ID_OMEGA_LIST_N`+`DIHX_SYM`、PA11 `k2Case`+`k3Subset`+`rogersInterVLemma`；**−2：TameLp `sum_tauVEF_upper_bound`、PA18 `cc_pe_exists`；−1：ContraFan `LEMMA_4_POINTS_FINAL`（四波真证+原子接线，ContraFan 全模块归零，diff 仅此一行删除、零新增零搬家）；−2（10-24）：TameLp `ineq_tau3_tauVEF_std`（随 y-kit W6 装配波 87c6435a 闭）、PA18 `pa18_ccCell_swap`（SF-50 删假陈述：CFFONNL 前提复 HOL 原序后 `absurd` 直闭，diff 仅此一行删除、零新增）**） |
 | 可达 Kepler 公理 | 624 | **624** | 0（全部 `native_decide` 图 shard；interval 证书用内核 decide，不新增公理） |
 
-**结论：主定理当前的实际债务源是 130 个声明（2026-10-24 地图重生成）。** AJRIPQN 的五个名字
+**结论：主定理当前的实际债务源是 128 个声明（2026-10-24 SF-50 落库后地图重生成）。** AJRIPQN 的五个名字
 （`QZKSYKG1` / `QZKSYKG2` / `SLTSTLO2` / `DDZUPHJ` / `YIFVQDV_1`）、nli
 `nliRestFWGKMBZ`/`nliRest6096597438b`、PA25 `cc_bool_model_data`、PA15
 `MCELL_ID_MXI_2`/`MCELL_ID_OMEGA_LIST_N`/`DIHX_SYM` 与 PA11
@@ -29,8 +29,11 @@
 > 仍触达 PA18 既存 sorry，因此字面 `#print axioms cc_bool_model_data` 仍会
 > 打印 `sorryAx`；该类型债由 **`cc_pe_exists` 自身**作为独立 source 记账，
 > 未被掩盖。（**2026-10-23 晚更新：`cc_pe_exists` 已真证并入仓，此类型债
-> 随之清除；`cc_bool_model_data` 的 axiom 面是否已转净以 `#print axioms`
-> 实测为准。**）闸的 rule 5 自 2026-09-28 起本就允许 `sorryAx`。
+> 随之清除；2026-10-24 SF-50 又删去 PA18 唯一残余 private 假陈述
+> `pa18_ccCell_swap`（机检 4 片反例为假；根因 CFFONNL 前提误植，复 HOL 原序
+> 后 `absurd` 直闭），PA18 全模块 direct 源归零。`cc_bool_model_data` 的
+> axiom 面是否已转净以 `#print axioms` 实测为准。**）闸的 rule 5 自
+> 2026-09-28 起本就允许 `sorryAx`。
 
 ## 1. 债务源按模块
 
@@ -38,15 +41,15 @@
 |---|---:|---|
 | `Kepler.Assembly` | 81 | 77 个 `nli*`（57 个父为 `nliPackNonlinearRest`、8 个 `nliTskBank`、7 个 `nliCell3Bank`、5 个直挂 `nonlinearInequalities`）+ `fcdjdot` / `jcajydu` / `tameCorrespondenceIso`（父 `textCapstone`）+ `lpArchiveCertificatesDebt`（父 `lpArchiveCertificates`） |
 | `Kepler.Text.PackingAuto25` | 38 | 28 个 `real_model_*`（父 `pkrmQu/Qx/Qy` 等）+ `LEAF_RANK_PROPS` 4 + `MCELL4_FULL_WEDGE` 等 + `ox3q1hP25` |
-| `Kepler.Text.TameLp` | 5 | `fully_surrounded_perimeter_bound`、`ineq_tau{3,4,5,6}_tauVEF_std`（`sum_tauVEF_upper_bound` 2026-10-23 真证出列） |
-| `Kepler.Text.PackingAuto18` | 1 | private `pa18_ccCell_swap`（`cc_pe_exists` 2026-10-23 真证出列） |
+| `Kepler.Text.TameLp` | 4 | `fully_surrounded_perimeter_bound`、`ineq_tau{4,5,6}_tauVEF_std`（`sum_tauVEF_upper_bound` 2026-10-23、`ineq_tau3` 2026-10-24 随 y-kit W6 装配波真证出列） |
 | `Kepler.Text.PackingAuto3` | 1 | `GRHIDFA_concl` |
 | `Kepler.Text.PackingAuto21` | 1 | `TSKAJXY_034` |
 | `Kepler.Text.PackingAuto2` | 1 | `UPFZBZM_concl` |
 | `Kepler.Text.LocalAuto16` | 1 | `JEJTVGB_p16` |
 | `Kepler.Text.LocalAuto1` | 1 | `main_nonlinear_terminal_v11` |
 
-**零 direct 源的关键模块**：`ContraFan`（2026-10-24 `LEMMA_4_POINTS_FINAL` 四波真证 + W4 原子接线后全模块归零；`ContraFanDeep` 全程零 sorry）、
+**零 direct 源的关键模块**：`PackingAuto18`（2026-10-23 `cc_pe_exists` 真证 + 2026-10-24 SF-50 删假陈述 `pa18_ccCell_swap` 后全模块归零）、
+`ContraFan`（2026-10-24 `LEMMA_4_POINTS_FINAL` 四波真证 + W4 原子接线后全模块归零；`ContraFanDeep` 全程零 sorry）、
 `PackingAuto11`（LEPJBDJ 三私件后）、
 `PackingAuto15`（DIHX_SYM 后）、
 `PackingAuto17`（AJRIPQN 本体真装配）、

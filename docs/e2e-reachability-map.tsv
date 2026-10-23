@@ -1,6 +1,6 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 216234
-SORRIED 130
+TOTAL_REACHABLE_KEPLER_DECLS 216263
+SORRIED 128
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
@@ -94,7 +94,6 @@ Kepler.Text.PackingAuto25	Kepler.Text.MCELL4_AZIM_LT_PI	parent=Kepler.Text.c_4_a
 Kepler.Text.PackingAuto25	Kepler.Text.MCELL4_FULL_WEDGE	parent=Kepler.Text.cc_4_cc_ke4
 Kepler.Text.PackingAuto21	Kepler.Text.TSKAJXY_034	parent=Kepler.Text.TSKAJXY
 Kepler.Text.TameLp	Kepler.Text.TameLp.fully_surrounded_perimeter_bound	parent=Kepler.Text.TameLp.MQMSMAB
-Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau3_tauVEF_std	parent=Kepler.Text.TameLp.MQMSMAB_adm1
 Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau4_tauVEF_std	parent=Kepler.Text.TameLp.MQMSMAB_adm1
 Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau5_tauVEF_std	parent=Kepler.Text.TameLp.MQMSMAB_adm1
 Kepler.Text.TameLp	Kepler.Text.TameLp.ineq_tau6_tauVEF_std	parent=Kepler.Text.TameLp.MQMSMAB_adm1
@@ -132,7 +131,6 @@ Kepler.Text.PackingAuto25	Kepler.Text.real_model_sum_azim	parent=Kepler.Text.pkr
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_tew	parent=Kepler.Text.pkrmQy
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_txq	parent=Kepler.Text.pkrmQy
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_ztg4	parent=Kepler.Text.pkrmQu
-Kepler.Text.PackingAuto18	_private.Kepler.Text.PackingAuto18.0.Kepler.Text.pa18_ccCell_swap	parent=Kepler.Text.CFFONNL
 --- AXIOMS ---
 Kepler.Assembly.GoodListShardHex00	Kepler.Assembly.goodListHex00._native.native_decide.ax_1_1
 Kepler.Assembly.GoodListShardHex01	Kepler.Assembly.goodListHex01._native.native_decide.ax_1_1
