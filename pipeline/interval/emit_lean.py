@@ -675,19 +675,16 @@ def stream_cert(path):
     return root_box, gen()
 
 
-def sample_leaves(leaf_iter, rootfrac, limit, start=0):
-    """Prefix sample: skip `start` cert leaves, then take the next `limit`
-    leaves and shrink the root box to the smallest bisection-grid box
-    containing them.  Leaves before `start` are buffered and included when
-    they lie inside that grid box, so the sampled leaves still partition it
-    completely.  Returns (grid box, leaves in cert order)."""
+def sample_leaves(leaf_iter, rootfrac, limit):
+    """Prefix sample: the first `limit` cert leaves, the root box shrunk to
+    the smallest bisection-grid box containing them, then the sample
+    extended to ALL cert leaves inside that grid box.  The contained leaves
+    of a grid box partition it completely (every actual leaf is a grid box,
+    hence either inside or interior-disjoint), so tree reconstruction still
+    succeeds.  Returns (grid box, leaves in cert order)."""
     n = len(rootfrac)
     sample = []
-    skipped = []
-    for k, leaf in enumerate(leaf_iter):
-        if k < start:
-            skipped.append(leaf)
-            continue
+    for leaf in leaf_iter:
         sample.append(leaf)
         if len(sample) >= limit:
             break
@@ -718,7 +715,7 @@ def sample_leaves(leaf_iter, rootfrac, limit, start=0):
         return all(dcmp(b[d][0], cur[d][0]) >= 0 and dcmp(b[d][1], cur[d][1]) <= 0
                    for d in range(n))
 
-    leaves = [l for l in itertools.chain(skipped, sample, leaf_iter) if inside(l)]
+    leaves = [l for l in itertools.chain(sample, leaf_iter) if inside(l)]
     return cur, leaves
 
 
@@ -743,6 +740,13 @@ def stage_a_file(mod, n, expr, boxes_lean, nleaves, leaf0=0):
 LADDER = [(12, -64), (16, -64), (20, -64), (24, -64), (32, -64), (48, -64),
           (64, -64), (96, -64), (128, -64), (128, -80), (128, -100)]
 
+# nli2 landmine fix: the FillParams pipeline fixes closed trans nodes at
+# N=2048, out=-64.  For a closed `atan` at the literal 1 this leaves a
+# 2.4e-4 Taylor remainder, i.e. a coarse pi that destroys the certificate
+# margin under interval dependency.  `--fill-atan1-box` routes exactly the
+# closed atan(1) nodes through the certified `TKind.atan1K` (pi4D) box.
+fill_atan1_box = False
+
 
 def fill_goals(case):
     """Disjunctive stage-A goals (schema v2, wave-2 design D2/D3): the main
@@ -755,7 +759,8 @@ def fill_goals(case):
       manifest — per-goal JSON descriptors (kind/label/sqrt count or i,j).
     """
     rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
-              trans=lambda op, closed: ("2048", "(-64)") if closed else ("N", "out"))
+              trans=lambda op, closed: ("2048", "(-64)") if closed else ("N", "out"),
+              atan1_box=fill_atan1_box)
     mkexprs, terms, manifest = [], [], []
 
     def add_pos(prog, label):
@@ -1082,7 +1087,8 @@ def mkexpr_bbgd(prog, sj, rung):
     rpn = RPN(sqrt_slot=lambda i: (f"((ms[{i}]'(by decide)).1)",
                                    f"((ms[{i}]'(by decide)).2)"),
               trans=lambda op, closed: ("2048", "(-64)") if closed
-              else (str(N), f"({out})"))
+              else (str(N), f"({out})"),
+              atan1_box=fill_atan1_box)
     expr = rpn.emit(prog)
     if rpn.sqrt_count != sj:
         die(f"internal: sqrt count {rpn.sqrt_count} != manifest count {sj}")
@@ -3628,7 +3634,6 @@ def _parse_rung_arg(s, flag):
 def main():
     shard_leaves = 128
     sample_n = None
-    leaf_start = 0
     fill = False
     stage_a = False
     stage_a_shards = 1
@@ -3636,7 +3641,6 @@ def main():
     bbg = False
     disj_gd = False
     disj_dummy = False
-    mixed_tm = False
     hull = False
     gsplit = None
     gsplit_depth = 12
@@ -3661,6 +3665,8 @@ def main():
     # whose argument is the literal 1 is emitted as `atan1K`, whose library
     # wrapper returns the precomputed `pi4D` (π/4) box.
     atan1_box = False
+    global fill_atan1_box
+    fill_atan1_box = False
     # W8 gen-7: fixed split-node skeleton (the constructor takes box/d/l/r;
     # the splitOK proof is consumed by `covers`, not by the constructor).
     # OFF by default = byte-identical emission (the v2 5-arg skeleton is kept
@@ -3678,8 +3684,6 @@ def main():
             stage_a_shards = int(a.split("=", 1)[1])
         elif a.startswith("--leaves="):
             sample_n = int(a.split("=", 1)[1])
-        elif a.startswith("--leaf-start="):
-            leaf_start = int(a.split("=", 1)[1])
         elif a == "--mono":
             mono = True
         elif a == "--mono-lean":
@@ -3712,6 +3716,8 @@ def main():
                 die("--decide-mode: expected `kernel` or `native`")
         elif a == "--fill":
             fill = True
+        elif a == "--fill-atan1-box":
+            fill_atan1_box = True
         elif a == "--stage-a":
             stage_a = True
         elif a == "--stage-a-data":
@@ -3722,8 +3728,6 @@ def main():
             disj_gd = True
         elif a == "--disj-dummy":
             disj_dummy = True
-        elif a == "--mixed-tm":
-            mixed_tm = True
         elif a == "--hull":
             hull = True
         elif a == "--gsplit=a":
@@ -3841,8 +3845,7 @@ def main():
         if root_box_json != case["box"]:
             die("cert root_box != case box")
         rootfrac, leaves = sample_leaves(
-            leaf_iter, tuple(box_frac(iv) for iv in root_box_json), sample_n,
-            leaf_start)
+            leaf_iter, tuple(box_frac(iv) for iv in root_box_json), sample_n)
         prec = None
         extra = (f" — SAMPLE: smallest grid box over first {sample_n} cert leaves"
                  f" ({len(leaves)} leaves inside)")
@@ -3965,7 +3968,8 @@ def main():
             return
         if stage_a:
             rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
-                      trans=lambda op, closed: closed_params if closed else ("N", "out"))
+                      trans=lambda op, closed: closed_params if closed else ("N", "out"),
+                      atan1_box=fill_atan1_box)
             expr = rpn.emit(case["prog"])
             goals_manifest = [{"index": 0, "label": "main", "kind": "pos",
                                "sqrt": k}]
@@ -4033,7 +4037,8 @@ def main():
         (N, out_g), params = parse_params(params_file, len(leaves), k)
         rpn = RPN(sqrt_slot=lambda i: (f"((ms[{i}]'(by decide)).1)",
                                        f"((ms[{i}]'(by decide)).2)"),
-                  trans=lambda op, closed: closed_params if closed else (str(N), f"({out_g})"))
+                  trans=lambda op, closed: closed_params if closed else (str(N), f"({out_g})"),
+                  atan1_box=fill_atan1_box)
         expr = rpn.emit(case["prog"])
         if rpn.sqrt_count != k:
             die(f"internal: sqrt count {rpn.sqrt_count} != prog count {k}")
@@ -4057,14 +4062,7 @@ def main():
     else:
         rpn = RPN()
     expr = rpn.emit(case["prog"])
-    if sample_n is None:
-        box = box_lean(case["box"])
-    else:
-        # The sample path reconstructs a tree over the *shrunk* grid box
-        # (`rootfrac` is rewritten by sample_leaves), so the module's target
-        # box must be that same box; using the original case box makes the
-        # `_sub` decidability proof fail.
-        box = box_lit(rootfrac)
+    box = box_lean(case["box"])
 
     if case.get("disj"):
         goals_lean, goal_k = build_goals(case, rpn)
@@ -4092,18 +4090,10 @@ def main():
                 if npar:
                     die(f"hit branch {h} has {npar} parameterised node(s) "
                         f"(sqrt/trans): use --bbg --disj-gd, not --disj-dummy")
-    elif hits != {"main"} and not mixed_tm:
+    elif hits != {"main"}:
         die(f"cert hits {hits}: case is not disj but cert uses disjuncts")
 
     t = reconstruct(rootfrac, leafmap)
-
-    if mixed_tm:
-        if fill or hull or mono or bbg:
-            die("--mixed-tm is a standalone mode (no --fill/--hull/--mono/--bbg)")
-        if case.get("disj"):
-            die("--mixed-tm does not support disj cases")
-        emit_mixed_g(t, mod, n, expr, box, hdr, args[2], shard_leaves)
-        return
 
     if mode.disj:
         # validate var_lt leaf closures against the Fraction boxes
@@ -4214,148 +4204,6 @@ def pilot_single_leaf(mod, box):
                   f"theorem {mod}_covers : {mod}Tree.covers :=\n"
                   f"  trivial")
     return tree, cert_thm, covers_thm
-
-
-# ---------------------------------------------------------------------------
-# Mixed main/TM tree (BBTreeG): leaves closed either by plain interval
-# `checkPos` or by the Taylor-model checker `checkPosTM`.  This is the
-# kernel piece needed for `prep-2125338128` (plain 134,539 leaves vs TM
-# 46,099): `CertG.BBTreeG` already has both leaf constructors, so the
-# emitter only has to keep the per-leaf hit tag from the bb_arb cert.
-# ---------------------------------------------------------------------------
-
-def g_leaf(mod, box, hit, ps="TMParams.empty"):
-    if hit == "main":
-        return f"(.leaf {box} (by decide))"
-    if hit == "tm":
-        return f"(.taylorLeaf {box} {ps} (by decide))"
-    die(f"mixed-tm: unsupported leaf hit {hit!r} (need main/tm)")
-
-
-def emit_tree_g(t, mod, ps="TMParams.empty", depth=0):
-    if isinstance(t, Leaf):
-        return g_leaf(mod, box_lit(t.box), t.hit, ps)
-    pad = "  " * min(depth + 1, 20)
-    return (f"(.node {box_lit(t.box)} {t.d}\n{pad}"
-            f"{emit_tree_g(t.l, mod, ps, depth + 1)}\n"
-            f"{pad}{emit_tree_g(t.r, mod, ps, depth + 1)})")
-
-
-def mixed_g_base(mod, n, expr, box):
-    return (HDR + "import Kepler.Interval.CertMixed\n\n"
-            "namespace Kepler.Interval.Cases\n\n"
-            f"/-- The case expression (RPN prog mirrored as `IExpr`). -/\n"
-            f"def {mod}Expr : IExpr {n} :=\n  {expr}\n\n"
-            f"/-- The target box (dyadic q-expansion of the original decimal box). -/\n"
-            f"def {mod}Box : Fin {n} → DInterval :=\n  {box}\n\n"
-            "end Kepler.Interval.Cases\n")
-
-
-def mixed_g_shard(mod, k, sub, n):
-    return (HDR + f"import Kepler.Interval.Cases.{mod}.Base\n\n"
-            "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
-            "namespace Kepler.Interval.Cases\n\n"
-            f"/-- Shard {k} subtree (mixed main/TM leaf certs, inline `decide`). -/\n"
-            f"def {mod}Shard{k}Tree : BBTreeM {n} {mod}Expr :=\n  "
-            f"{emit_tree_g(sub, mod)}\n\n"
-            f"/-- Covering of shard {k}: one kernel `decide` via `CertMixed.coversB`. -/\n"
-            f"theorem {mod}Shard{k}Covers : {mod}Shard{k}Tree.covers :=\n"
-            f"  BBTreeM.coversB_sound _ (by decide)\n\n"
-            "end Kepler.Interval.Cases\n")
-
-
-def emit_mixed_g(t, mod, n, expr, box, hdr, outpath, shard_leaves):
-    """Write one module (or Base+Shard* for a large tree) whose leaves are
-    `.leaf` (main) / `.taylorLeaf` (tm) — the mixed BBTreeM kernel path."""
-    hits = {u.hit for u in iter_leaves(t)}
-    unknown = hits - {"main", "tm"}
-    if unknown:
-        die(f"mixed-tm: cert hits {unknown} not in {{main, tm}}")
-
-    def g_tree(u):
-        return emit_tree_g(u, mod)
-
-    def covers_proof(u):
-        return f"BBTreeM.coversB_sound _ (by decide)"
-
-    root_final = (
-        f"/-- End-to-end: the case expression is strictly positive on the whole box. -/\n"
-        f"theorem {mod}_pos (ρ : Fin {n} → ℝ) (hρ : boxMem {mod}Box ρ) :\n"
-        f"    0 < ({mod}Expr).evalReal ρ :=\n"
-        f"  bb_soundM {mod}Tree {mod}Box {mod}_covers {mod}_sub ρ hρ\n\n"
-        f"#print axioms {mod}_pos\n\nend Kepler.Interval.Cases\n")
-
-    if t.nleaves <= shard_leaves:
-        out = (HDR + "import Kepler.Interval.CertMixed\n\n"
-               "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
-               "namespace Kepler.Interval.Cases\n\n"
-               f"/-- The case expression (RPN prog mirrored as `IExpr`). -/\n"
-               f"def {mod}Expr : IExpr {n} :=\n  {expr}\n\n"
-               f"/-- The target box (dyadic q-expansion of the original decimal box). -/\n"
-               f"def {mod}Box : Fin {n} → DInterval :=\n  {box}\n\n"
-               f"/-- Mixed main/TM certificate tree. -/\n"
-               f"def {mod}Tree : BBTreeM {n} {mod}Expr :=\n  {g_tree(t)}\n\n"
-               f"/-- Covering of the whole tree, one kernel `decide`. -/\n"
-               f"theorem {mod}_covers : {mod}Tree.covers :=\n  "
-               f"{covers_proof(t)}\n\n"
-               f"/-- Box containment (tree root = target box). -/\n"
-               f"theorem {mod}_sub : boxSub {mod}Box {mod}Tree.box := by\n"
-               "  intro i\n  fin_cases i <;> exact ⟨by decide, by decide⟩\n\n"
-               + root_final)
-        open(outpath, "w").write(out.format(**hdr) if "{caseid}" in out else out)
-        print(f"emit_lean: wrote {outpath} (mixed main/TM BBTreeM, "
-              f"{t.nleaves} leaves)")
-        return
-
-    shards = cut_shards(t, shard_leaves)
-    shard_idx = {id(u): i + 1 for i, u in enumerate(shards)}
-    base = os.path.splitext(outpath)[0]
-    os.makedirs(base, exist_ok=True)
-    open(os.path.join(base, "Base.lean"), "w").write(
-        mixed_g_base(mod, n, expr, box).format(**hdr))
-    for i, u in enumerate(shards, 1):
-        open(os.path.join(base, f"Shard{i}.lean"), "w").write(
-            mixed_g_shard(mod, i, u, n).format(**hdr))
-
-    def skel_tree(u):
-        if id(u) in shard_idx:
-            return f"{mod}Shard{shard_idx[id(u)]}Tree"
-        if isinstance(u, Leaf):
-            return g_leaf(mod, box_lit(u.box), u.hit)
-        return f"(.node {box_lit(u.box)} {u.d} {skel_tree(u.l)} {skel_tree(u.r)})"
-
-    def skel_proof(u):
-        if id(u) in shard_idx:
-            return f"{mod}Shard{shard_idx[id(u)]}Covers"
-        if isinstance(u, Leaf):
-            return "trivial"
-        return (f"⟨splitOKB_sound (by decide), {skel_proof(u.l)}, "
-                f"{skel_proof(u.r)}⟩")
-
-    imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
-                        for i in range(1, len(shards) + 1))
-    root = (HDR + imports + "\n\nset_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
-            "namespace Kepler.Interval.Cases\n\n"
-            f"/-- Mixed main/TM certificate tree, assembled from {len(shards)} shards. -/\n"
-            f"def {mod}Tree : BBTreeM {n} {mod}Expr :=\n  {skel_tree(t)}\n\n"
-            f"/-- Covering: per-shard `coversB` certificates glued by `splitOKB`. -/\n"
-            f"theorem {mod}_covers : {mod}Tree.covers :=\n  {skel_proof(t)}\n\n"
-            f"/-- Box containment (tree root = target box). -/\n"
-            f"theorem {mod}_sub : boxSub {mod}Box {mod}Tree.box := by\n"
-            "  intro i\n  fin_cases i <;> exact ⟨by decide, by decide⟩\n\n"
-            + root_final)
-    open(outpath, "w").write(root.format(**hdr))
-    print(f"emit_lean: wrote {outpath} + Base/Shard1..{len(shards)} "
-          f"(mixed main/TM BBTreeM, {t.nleaves} leaves, {len(shards)} shards)")
-
-
-def iter_leaves(t):
-    if isinstance(t, Leaf):
-        yield t
-    else:
-        yield from iter_leaves(t.l)
-        yield from iter_leaves(t.r)
-
 
 
 if __name__ == "__main__":

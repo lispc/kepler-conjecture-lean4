@@ -41,6 +41,12 @@ import Kepler.Assembly.IneqPilot
 -- nli A1 车道（2026-10-22）：rest 20 `FWGKMBZ` 的在库 G4 证书（605 分片 + Base，
 -- 205,418 叶；导出 `CFWGKMBZ_pos`）。证书模块自包含，不依赖 Assembly。
 import Kepler.Interval.Cases.CFWGKMBZ
+-- nli N2 车道（2026-10-23）：rest 1 `6096597438 b` 的 G4 证书（78 叶；
+-- `BBTreeGD`/CertGD 路径，避开头条 CertG 的 SF-42 pilot 重编失败）。
+-- 表达式与原 case 数学恒等（sin 节点按
+-- `sin t = ite (t<3/4) (sin t) (cos |π/2−t|)` 编码，绕开 Trans.lean
+-- `sinGen` 在 (1,2.25) 的覆盖空洞）；closed atan(1) 走 `atan1K` pi4D。
+import Kepler.Interval.Cases.C6096597438b
 
 open Classical Metric Set
 open Kepler.Geom Kepler.Text Kepler.Text.Fan Kepler.Graphs
@@ -548,9 +554,121 @@ Interval/Cases.C1965189142x34 的 G4 证书在库冗余，其粘合引理归量�
 
 /-- rest 1/62：HOL ineq entry `6096597438 b`（ineq.hl:1661，盒
 [3,64]×[1,1]⁵；PA21 `bank_6096597438b` / `proj_bank_6096597438b`）。
-资产状态：deferred-compute（`asn797k` 实分析内容，证书不在库）。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRest6096597438b : bank_6096597438b := sorry
+已闭合：`Kepler.Interval.Cases.C6096597438b_pos`（78 叶，CertGD 证书）
+经 `evalReal` 恒等式粘合；sin 节点用数学恒等的 hybrid 编码
+`ite (t<3/4) (sin t) (cos |π/2−t|)`（Trans.lean `sinGen` 在 (1,2.25)
+无覆盖），closed `atan 1` 走 `atan1K` 的 pi4D。证书的 disj 列表是
+「主目标 ∨ 恒假目标」，证明体投影主目标（假目标由 `norm_num` 排除）。 -/
+private theorem nliRest6096597438b_hybrid_sin (t : ℝ) :
+    (if t - 3 / 4 < 0 then Real.sin t else Real.cos |Real.pi / 2 - t|) =
+      Real.sin t := by
+  by_cases h : t - 3 / 4 < 0
+  · simp [h]
+  · simp only [h, if_false, Real.cos_abs, Real.cos_pi_div_two_sub]
+
+/-- `arcsin u = 2 * arctan (u / (1 + sqrt (1 - u^2)))` on `(-1, 1)`
+(the emitter's half-angle form). -/
+private theorem nliRest6096597438b_two_atan (u : ℝ) (hu1 : -1 < u) (hu2 : u < 1) :
+    2 * Real.arctan (u / (1 + Real.sqrt (1 - u * u))) = Real.arcsin u := by
+  have hu2sq : u * u < 1 := by nlinarith
+  have h1mu : 0 < 1 - u * u := by linarith
+  have hs : 0 < Real.sqrt (1 - u * u) := Real.sqrt_pos.mpr h1mu
+  have hs2 : (Real.sqrt (1 - u * u)) ^ 2 = 1 - u * u :=
+    Real.sq_sqrt (le_of_lt h1mu)
+  set s := Real.sqrt (1 - u * u)
+  have h1s : 0 < 1 + s := by linarith
+  have hw1 : -1 < u / (1 + s) := by
+    rw [lt_div_iff₀ h1s]; nlinarith
+  have hw2 : u / (1 + s) < 1 := by
+    rw [div_lt_iff₀ h1s]; nlinarith
+  rw [Real.two_mul_arctan hw1 hw2]
+  have hden : 1 - (u / (1 + s)) ^ 2 = 2 * s / (1 + s) := by
+    field_simp [h1s.ne']; nlinarith [hs2]
+  have hw : 2 * (u / (1 + s)) / (1 - (u / (1 + s)) ^ 2) = u / s := by
+    rw [hden]; field_simp [h1s.ne', hs.ne']
+  rw [hw]
+  simpa [s, sq] using (Real.arcsin_eq_arctan ⟨hu1, hu2⟩).symm
+
+private theorem nliRest6096597438b_cos797_pos :
+    0 < Real.cos ((797 : ℝ) / 1000) := by
+  apply Real.cos_pos_of_mem_Ioo
+  constructor <;> nlinarith [Real.pi_gt_three]
+
+private theorem nliRest6096597438b_cos797_lt_one :
+    Real.cos ((797 : ℝ) / 1000) < 1 := by
+  have h := Real.cos_lt_one_div_sqrt_sq_add_one
+    (x := (797 : ℝ) / 1000)
+    (by nlinarith [Real.pi_gt_three]) (by nlinarith [Real.pi_gt_three])
+    (by norm_num)
+  have hpos : 0 < ((797 : ℝ) / 1000) ^ 2 + 1 := by positivity
+  have hlt : 1 / Real.sqrt (((797 : ℝ) / 1000) ^ 2 + 1) < 1 := by
+    rw [div_lt_one (Real.sqrt_pos.mpr hpos), Real.lt_sqrt (by norm_num)]
+    nlinarith [sq_nonneg ((797 : ℝ) / 1000)]
+  exact lt_trans h hlt
+
+theorem nliRest6096597438b : bank_6096597438b := by
+  intro x1 x2 x3 x4 x5 x6 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12
+  have hx2 : x2 = 1 := by linarith
+  have hx3 : x3 = 1 := by linarith
+  have hx4 : x4 = 1 := by linarith
+  have hx5 : x5 = 1 := by linarith
+  have hx6 : x6 = 1 := by linarith
+  subst hx2; subst hx3; subst hx4; subst hx5; subst hx6
+  let ρ : Fin 6 → ℝ := ![x1, 1, 1, 1, 1, 1]
+  have hmem : Kepler.Interval.boxMem Kepler.Interval.Cases.C6096597438bBox ρ := by
+    intro i
+    fin_cases i
+    · simp [Kepler.Interval.Cases.C6096597438bBox, Kepler.Interval.DInterval.mem, ρ]
+      constructor <;> norm_num <;> linarith
+    all_goals
+      simp [Kepler.Interval.Cases.C6096597438bBox, Kepler.Interval.DInterval.mem, ρ]
+  have hdisj := Kepler.Interval.Cases.C6096597438b_pos ρ hmem
+  rcases hdisj with ⟨g, hgmem, hgeval⟩
+  simp only [Kepler.Interval.Cases.C6096597438bGoals, List.mem_cons,
+    List.not_mem_nil, or_false] at hgmem
+  rcases hgmem with rfl | rfl
+  · simp only [Kepler.Interval.DisjGoal.eval] at hgeval
+    have hid : Kepler.Interval.Cases.C6096597438bExpr0.evalReal ρ =
+        2 * Real.pi - 2 * asn797k x1 1 1 1 1 1 -
+          (0.591 - 0.0331 * x1 + 0.506 * lfun 1 + 1) := by
+      dsimp only [Kepler.Interval.Cases.C6096597438bExpr0,
+        Kepler.Interval.Cases.C6096597438bMkExpr0,
+        Kepler.Interval.IExpr.evalReal, Kepler.Interval.transReal]
+      simp only [Kepler.Interval.Dyadic.toReal_def, Matrix.cons_val_zero,
+        Matrix.cons_val_succ, Matrix.cons_val_fin_one, Matrix.empty_val',
+        Fin.isValue, Fin.zero_eta, Fin.mk_one, pow_zero, mul_one, one_mul,
+        Int.cast_ofNat, Int.cast_one, Nat.cast_ofNat, zpow_zero, zpow_one,
+        zpow_neg, zpow_ofNat, ρ]
+      have hpi : (4 : ℝ) * Real.arctan 1 = Real.pi := by
+        rw [Real.arctan_one]; ring
+      rw [hpi]
+      have h34 : (3 : ℝ) * (2 ^ 2)⁻¹ = 3 / 4 := by norm_num
+      rw [h34]
+      rw [nliRest6096597438b_hybrid_sin]
+      have hc : |Real.cos ((797 : ℝ) / 1000)| < 1 := by
+        rw [abs_lt]
+        exact ⟨by linarith [nliRest6096597438b_cos797_pos],
+          nliRest6096597438b_cos797_lt_one⟩
+      have hs : |Real.sin (Real.pi / x1)| ≤ 1 :=
+        abs_le.mpr ⟨Real.neg_one_le_sin _, Real.sin_le_one _⟩
+      have hu : |Real.cos ((797 : ℝ) / 1000) * Real.sin (Real.pi / x1)| < 1 := by
+        rw [abs_mul]
+        calc |Real.cos ((797 : ℝ) / 1000)| * |Real.sin (Real.pi / x1)|
+            ≤ |Real.cos ((797 : ℝ) / 1000)| * 1 :=
+              mul_le_mul_of_nonneg_left hs (abs_nonneg _)
+          _ = |Real.cos ((797 : ℝ) / 1000)| := by rw [mul_one]
+          _ < 1 := hc
+      rw [nliRest6096597438b_two_atan _
+        (abs_lt.mp hu).1 (abs_lt.mp hu).2]
+      simp [asn797k, lfun, h0]
+      have h797 : (0.797 : ℝ) = 797 / 1000 := by norm_num
+      rw [h797]
+      norm_num
+    rw [hid] at hgeval
+    linarith
+  · simp only [Kepler.Interval.DisjGoal.eval, Kepler.Interval.Cases.C6096597438bExpr1,
+      Kepler.Interval.Cases.C6096597438bMkExpr1, Kepler.Interval.IExpr.evalReal] at hgeval
+    norm_num at hgeval
 
 /-- rest 2/62：HOL ineq entry `6096597438 a`（ineq.hl:1650，1 变量盒
 [1,1]；PA21 `bank_6096597438a` / `proj_bank_6096597438a`）。
