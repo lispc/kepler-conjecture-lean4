@@ -775,6 +775,603 @@ theorem iso_of_lpCondAssembly_nf {V : Set V3} {E : Set (Set V3)} {L : fgraph ℕ
   iso_of_lpCondAssembly hlpfan hgood hnodes
     (lpBijOnNodeOfIso hlpfan hnodes hdecomp hisoDart hisoComm) hdecomp hisoDart hisoComm
 
+
+/-! ## 件 4：`hdecomp` 深件（LP W6-B 第四件）
+
+HOL `hyp_iso_eq_fan_list_iso`（list_hypermap_iso.vhl:647）的完整直译。缺口 =
+σ_v 的**单循环性**（方位角序下降论证，NODE_HYPERMAP_OF_FAN_ALT
+hypermap_and_fan.hl:1545 的证明核）。本波重构比 HOL 链更短：绕开
+CYCLIC_SET_EDGE_FAN/PSUBSET/CARD 机制，直接用「方位角序 + 环回极小性」
+两案例矛盾（见 lpSigmaOrbitCovers 的 docstring）。依赖链：
+lpMonoAzimSigma（MONO_AZIM_SIGMA_FAN）→ lpSigmaFirstReturn（首回极小）→
+lpSigmaCycleDistinct → lpSigmaOrbitCovers（覆盖）→ lpFanNodeEqSetOfEdge
+（NODE_HYPERMAP_OF_FAN_ALT）→ lpExistsHdecomp（hdecomp）→
+contraveningLpCond（contravening_lp_cond，lp_ineqs_proofs.vhl:348）。
+
+list 侧 = lpPrevSndOfPairs / lpNListFst（n_list_ext_fst 的核心：face 表循环
+prevEl 保第二分量）→ lpNodeMapListFst（fst_n_list_ext_power，
+list_hypermap.vhl:742）。 -/
+
+open Kepler.Assembly (findFaceDarts nList prevEl)
+set_option maxHeartbeats 1000000 in
+/-- A1: HOL MONO_AZIM_SIGMA_FAN（topology.hl:29）。 -/
+theorem lpMonoAzimSigma {x : V3} (hfan : FAN x V E) (hu : {v, u} ∈ E)
+    (hw : {v, w} ∈ E) (hne : sigmaFan x V E v w ≠ u) :
+    azim x v u w ≤ azim x v u (sigmaFan x V E v w) := by
+  have huS : u ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v u hfan).mp hu
+  have hwS : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hw
+  rcases eq_or_ne u w with huw | huw
+  · -- u = w：目标 0 ≤ azim x v w σw
+    rw [huw, azim_self]
+    exact azim_nonneg x v w (sigmaFan x V E v w)
+  by_cases hsw : setOfEdge v V E = {w}
+  · exfalso
+    have huw2 : u = w := by
+      have hmem : u ∈ ({w} : Set V3) := hsw ▸ huS
+      simpa using hmem
+    exact huw huw2
+  obtain ⟨hσS, hσne, hmin⟩ := SIGMA_FAN hsw hfan hwS
+  have hσE : {v, sigmaFan x V E v w} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr hσS
+  by_contra hcon
+  have hgt : azim x v u (sigmaFan x V E v w) < azim x v u w := not_le.mp hcon
+  -- sum2：azim u w = azim u σ + azim σ w
+  have hsum : azim x v u w =
+      azim x v u (sigmaFan x V E v w) + azim x v (sigmaFan x V E v w) w :=
+    sum2_azim_fan hfan hu hσE hw hgt.le
+  -- azim w σ ≠ 0（否则 σ = w）
+  have hne0 : azim x v w (sigmaFan x V E v w) ≠ 0 := by
+    intro h0
+    exact hσne (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v) (u := w) (w := sigmaFan x V E v w) hfan hw hσE h0).symm
+  -- 补角（模板照 mono_sigma_fan：if 留在类型里，之后 if_neg 重写）
+  have hC1 : azim x v (sigmaFan x V E v w) w
+      = if azim x v w (sigmaFan x V E v w) = 0 then 0
+        else 2 * Real.pi - azim x v w (sigmaFan x V E v w) :=
+    azim_compl (z := x) (w := v) (w1 := w) (w2 := sigmaFan x V E v w)
+      (fan_not_collinear hfan hw) (fan_not_collinear hfan hσE)
+  rw [if_neg hne0] at hC1
+  have hwu0 : azim x v u w ≠ 0 := by
+    intro h0
+    exact huw (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v) (u := u) (w := w) hfan hu hw h0)
+  have hC2 : azim x v w u
+      = if azim x v u w = 0 then 0 else 2 * Real.pi - azim x v u w :=
+    azim_compl (z := x) (w := v) (w1 := u) (w2 := w)
+      (fan_not_collinear hfan hu) (fan_not_collinear hfan hw)
+  rw [if_neg hwu0] at hC2
+  -- 极小性：azim w σ ≤ azim w u
+  have hminw : azim x v w (sigmaFan x V E v w) ≤ azim x v w u := hmin u huS huw
+  -- 算术矛盾
+  have hnn : 0 ≤ azim x v u (sigmaFan x V E v w) :=
+    azim_nonneg x v u (sigmaFan x V E v w)
+  have hkey : azim x v u w = azim x v u (sigmaFan x V E v w) + azim x v u w := by
+    rw [hsum, hC1]
+    linarith [hminw, hC2]
+  have hzero : azim x v u (sigmaFan x V E v w) = 0 := by linarith
+  exact hne (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v) (u := u) (w := sigmaFan x V E v w) hfan hu hσE hzero).symm
+
+
+/-- A2：σ 的迭代在邻集上单射（mono_sigma_fan 的迭代化）。 -/
+theorem lpSigmaIterInject {x : V3} (hfan : FAN x V E) {v : V3} {a b : V3}
+    (ha : a ∈ setOfEdge v V E) (hb : b ∈ setOfEdge v V E) :
+    ∀ i : ℕ, (sigmaFan x V E v)^[i] a = (sigmaFan x V E v)^[i] b → a = b := by
+  intro i
+  induction i with
+  | zero => exact fun heq => heq
+  | succ i ih =>
+    intro heq
+    refine ih ?_
+    have haE : {v, a} ∈ E := (properties_of_setOfEdge_fan x V E v a hfan).mpr ha
+    have hbE : {v, b} ∈ E := (properties_of_setOfEdge_fan x V E v b hfan).mpr hb
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply'] at heq
+    exact mono_sigma_fan hfan (Kepler.Text.image_power_map_points hfan haE i)
+      (Kepler.Text.image_power_map_points hfan hbE i) heq
+
+/-- A3：σ-轨道首回存在且可取极小（鸽笼 + 迭代单射 + Nat.find）。 -/
+theorem lpSigmaFirstReturn {x : V3} (hfan : FAN x V E) (hV : V.Finite) {v u : V3}
+    (hu : {v, u} ∈ E) :
+    ∃ k : ℕ, 1 ≤ k ∧ (sigmaFan x V E v)^[k] u = u ∧
+      ∀ t : ℕ, 0 < t → t < k → (sigmaFan x V E v)^[t] u ≠ u := by
+  have hfin : (setOfEdge v V E).Finite := remark_finite_fan1 v V E hV
+  have hnotinj : ¬ Function.Injective (fun n : ℕ => (sigmaFan x V E v)^[n] u) := by
+    intro hinj
+    have h1 : (Set.range fun n : ℕ => (sigmaFan x V E v)^[n] u).Infinite :=
+      Set.infinite_range_of_injective hinj
+    have h2 : (Set.range fun n : ℕ => (sigmaFan x V E v)^[n] u).Finite :=
+      hfin.subset (fun y hy => by
+        obtain ⟨n, hn2⟩ := hy
+        exact hn2 ▸ Kepler.Text.image_power_map_points hfan hu n)
+    exact h2.not_infinite h1
+  obtain ⟨i, j, heq, hij⟩ := Function.not_injective_iff.mp hnotinj
+  -- 位移消去：i < j 时 σ^[j-i] u = u
+  have hshift : ∃ k : ℕ, 1 ≤ k ∧ (sigmaFan x V E v)^[k] u = u := by
+    rcases lt_or_gt_of_ne hij with h | h
+    · refine ⟨j - i, by omega, ?_⟩
+      have hidx : i + (j - i) = j := by omega
+      have hstep : (sigmaFan x V E v)^[i] ((sigmaFan x V E v)^[j - i] u)
+          = (sigmaFan x V E v)^[i] u := by
+        rw [← Function.iterate_add_apply, hidx, heq]
+      have huS : u ∈ setOfEdge v V E :=
+        (properties_of_setOfEdge_fan x V E v u hfan).mp hu
+      have hm1 : (sigmaFan x V E v)^[j - i] u ∈ setOfEdge v V E :=
+        Kepler.Text.image_power_map_points hfan hu (j - i)
+      exact lpSigmaIterInject hfan hm1 huS i hstep
+    · refine ⟨i - j, by omega, ?_⟩
+      have hjd : j + (i - j) = i := by omega
+      have hstep : (sigmaFan x V E v)^[j] ((sigmaFan x V E v)^[i - j] u)
+          = (sigmaFan x V E v)^[j] u := by
+        rw [← Function.iterate_add_apply, hjd, ← heq]
+      have huS : u ∈ setOfEdge v V E :=
+        (properties_of_setOfEdge_fan x V E v u hfan).mp hu
+      have hm1 : (sigmaFan x V E v)^[i - j] u ∈ setOfEdge v V E :=
+        Kepler.Text.image_power_map_points hfan hu (i - j)
+      exact lpSigmaIterInject hfan hm1 huS j hstep
+  obtain ⟨k0, hk01, hk0⟩ := hshift
+  have hex : ∃ n : ℕ, 1 ≤ n ∧ (sigmaFan x V E v)^[n] u = u := ⟨k0, hk01, hk0⟩
+  refine ⟨Nat.find hex, Nat.find_spec hex |>.1, Nat.find_spec hex |>.2, ?_⟩
+  intro t ht0 htk hcon
+  exact Nat.find_min hex htk ⟨ht0, hcon⟩
+
+
+/-- A5 前置：轨道点互异（首回极小性的直接推论）。 -/
+theorem lpSigmaCycleDistinct {x : V3} (hfan : FAN x V E) {v u : V3}
+    (hu : {v, u} ∈ E) {k : ℕ}
+    (hmin : ∀ t : ℕ, 0 < t → t < k → (sigmaFan x V E v)^[t] u ≠ u)
+    (t1 t2 : ℕ) (h12 : t1 < t2) (h2k : t2 < k) :
+    (sigmaFan x V E v)^[t1] u ≠ (sigmaFan x V E v)^[t2] u := by
+  intro heq
+  have huS : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hu
+  have hshift : (sigmaFan x V E v)^[t1] ((sigmaFan x V E v)^[t2 - t1] u)
+      = (sigmaFan x V E v)^[t1] u := by
+    rw [← Function.iterate_add_apply]
+    have : t1 + (t2 - t1) = t2 := by omega
+    rw [this, heq]
+  have huS2 : (sigmaFan x V E v)^[t2 - t1] u ∈ setOfEdge v V E :=
+    Kepler.Text.image_power_map_points hfan hu (t2 - t1)
+  exact hmin (t2 - t1) (by omega) (by omega)
+    (lpSigmaIterInject hfan huS2 huS t1 hshift)
+
+set_option maxHeartbeats 1000000 in
+/-- A5：σ-轨道覆盖整个邻集（单循环性；HOL key_lemma_cyclic_fan +
+ORBITS_EQ_SET_EDGE_FAN 的合并重构，两案例矛盾）。 -/
+theorem lpSigmaOrbitCovers {x : V3} (hfan : FAN x V E) (hV : V.Finite) {v w : V3}
+    (hw : {v, w} ∈ E) :
+    ∀ a ∈ setOfEdge v V E, ∃ n : ℕ, (sigmaFan x V E v)^[n] w = a := by
+  have hwS : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w hfan).mp hw
+  by_cases hSing : setOfEdge v V E = {w}
+  · intro a ha
+    have : a = w := by
+      have : a ∈ ({w} : Set V3) := hSing ▸ ha
+      simpa using this
+    exact ⟨0, this.symm⟩
+  intro a ha
+  by_contra haO
+  -- 记号：θ(t) = azim x v w (σ^[t] w)，θa = azim x v w a
+  have haE : {v, a} ∈ E := (properties_of_setOfEdge_fan x V E v a hfan).mpr ha
+  have haw : a ≠ w := fun he => haO ⟨0, he.symm⟩
+  obtain ⟨k, hk1, hkw, hmin⟩ := lpSigmaFirstReturn hfan hV hw
+  -- k = 1 时 σ w = w 与 S ≠ {w} 矛盾
+  have hk2 : 2 ≤ k := by
+    by_contra hk
+    have hk1' : k = 1 := by omega
+    have hσw : (sigmaFan x V E v)^[1] w = w := by
+      rw [← hk1']; exact hkw
+    exact (SIGMA_FAN hSing hfan hwS).2.1 (by simpa using hσw)
+  have hdist : ∀ (t1 t2 : ℕ), t1 < t2 → t2 < k →
+      (sigmaFan x V E v)^[t1] w ≠ (sigmaFan x V E v)^[t2] w :=
+    lpSigmaCycleDistinct (x := x) (V := V) (E := E) hfan hw hmin
+  -- 边形式转换（setOfEdge 成员 ↔ {v, ·} ∈ E）
+  have hEof : ∀ p : V3, p ∈ setOfEdge v V E → {v, p} ∈ E :=
+    fun p hp => (properties_of_setOfEdge_fan x V E v p hfan).mpr hp
+  -- θ-单射性：互异点角不同
+  have hinjθ : ∀ p q : V3, p ∈ setOfEdge v V E → q ∈ setOfEdge v V E → p ≠ q →
+      azim x v w p ≠ azim x v w q := by
+    intro p q hpS hqS hpq heq
+    exact hpq (unique_azim_point_fan (x := x) (V := V) (E := E) (v := v)
+      (u := w) (w := p) (w1 := q) hfan hw (hEof p hpS) (hEof q hqS) heq)
+  -- a 不在轨道上：∀ j < k, u_j ≠ a
+  have hacyc : ∀ j : ℕ, j < k → (sigmaFan x V E v)^[j] w ≠ a := by
+    intro j hj heqj
+    exact haO ⟨j, heqj⟩
+  have hpowS : ∀ j : ℕ, (sigmaFan x V E v)^[j] w ∈ setOfEdge v V E :=
+    Kepler.Text.image_power_map_points hfan hw
+  -- θ(1) < θ(a)：极小性 + 单射
+  have h1lt : azim x v w ((sigmaFan x V E v)^[1] w) < azim x v w a := by
+    have hmin1 : azim x v w (sigmaFan x V E v w)
+        ≤ azim x v w a := (SIGMA_FAN hSing hfan hwS).2.2 a ha haw
+    have hpq : sigmaFan x V E v w ≠ a := by
+      intro he
+      exact hacyc 1 (by omega) he
+    have hσwS : sigmaFan x V E v w ∈ setOfEdge v V E :=
+      sigma_fan_in_setOfEdge hfan hwS
+    have hneq : azim x v w (sigmaFan x V E v w) ≠ azim x v w a :=
+      fun he => hinjθ (sigmaFan x V E v w) a hσwS ha hpq he
+    have hσ1 : (sigmaFan x V E v)^[1] w = sigmaFan x V E v w := rfl
+    rw [hσ1]
+    exact lt_of_le_of_ne hmin1 hneq
+  -- 主案例
+  by_cases hA : azim x v w ((sigmaFan x V E v)^[k - 1] w) < azim x v w a
+  · -- 案例环回：θ(k-1) < θ(a)，用 u_{k-1} 处极小性 + 补角矛盾
+    exfalso
+    set uk1 := (sigmaFan x V E v)^[k - 1] w with huk1
+    have huk1S : uk1 ∈ setOfEdge v V E := hpowS (k - 1)
+    have hwuk1 : w ≠ uk1 := hdist 0 (k - 1) (by omega) (by omega)
+    have hauk1 : a ≠ uk1 := by
+      intro he
+      exact hacyc (k - 1) (by omega) he.symm
+    -- σ u_{k-1} = w
+    have hσk : (sigmaFan x V E v)^[k] w = sigmaFan x V E v uk1 := by
+      have hkeq : k = k - 1 + 1 := by omega
+      rw [hkeq, Function.iterate_succ_apply', huk1]
+    have hσkw : sigmaFan x V E v uk1 = w := by
+      have h1 := hkw
+      rw [hσk] at h1
+      exact h1
+    -- u_{k-1} 处极小性
+    have hSne : setOfEdge v V E ≠ {uk1} := by
+      intro he
+      have hac : a ∈ ({uk1} : Set V3) := by rw [← he]; exact ha
+      exact hauk1 (by simpa using hac)
+    have hminU := (SIGMA_FAN hSne hfan huk1S).2.2 a ha hauk1
+    rw [hσkw] at hminU
+    -- azim x v uk1 w = 2π − θ(k-1)
+    have hθk1 : azim x v w uk1 ≠ 0 := by
+      intro h0
+      exact hwuk1 (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v)
+        (u := w) (w := uk1) hfan hw (hEof uk1 huk1S) h0)
+    have hC1 : azim x v uk1 w
+        = if azim x v w uk1 = 0 then 0
+          else 2 * Real.pi - azim x v w uk1 :=
+      azim_compl (z := x) (w := v) (w1 := w) (w2 := uk1)
+        (fan_not_collinear hfan hw) (fan_not_collinear hfan (hEof uk1 huk1S))
+    rw [if_neg hθk1] at hC1
+    -- θ(a) = θ(k-1) + azim x v uk1 a（sum2，因 θ(k-1) ≤ θ(a)）
+    have hsumA : azim x v w a = azim x v w uk1 + azim x v uk1 a :=
+      sum2_azim_fan hfan hw (hEof uk1 huk1S) (hEof a ha) hA.le
+    -- 算术矛盾
+    have hlt2 : azim x v w a < 2 * Real.pi := azim_lt_two_pi x v w a
+    linarith
+  · -- 案例空隙：θ(a) ≤ θ(k-1) 且 ≠，取 j = max{t ∈ [1,k-1] | θ(t) < θ(a)} 矛盾
+    exfalso
+    have hBle : azim x v w a ≤ azim x v w ((sigmaFan x V E v)^[k - 1] w) :=
+      le_of_not_gt hA
+    have hauk1 : a ≠ (sigmaFan x V E v)^[k - 1] w := by
+      intro he
+      exact hacyc (k - 1) (by omega) he.symm
+    have hBne : azim x v w a ≠ azim x v w ((sigmaFan x V E v)^[k - 1] w) :=
+      fun he => hinjθ a ((sigmaFan x V E v)^[k - 1] w) ha
+        (hpowS (k - 1)) hauk1 he
+    have hB : azim x v w a < azim x v w ((sigmaFan x V E v)^[k - 1] w) :=
+      lt_of_le_of_ne hBle hBne
+    -- 最大下标集合
+    set T : Finset ℕ :=
+      (Finset.Icc 1 (k - 1)).filter
+        (fun j => decide (azim x v w ((sigmaFan x V E v)^[j] w) < azim x v w a))
+      with hT
+    have h1T : 1 ∈ T := by
+      rw [hT]
+      refine Finset.mem_filter.mpr ⟨Finset.mem_Icc.mpr (by omega), ?_⟩
+      have hσ1 : (sigmaFan x V E v)^[1] w = sigmaFan x V E v w := rfl
+      exact decide_eq_true (by rw [hσ1]; exact h1lt)
+    have hTne : T.Nonempty := ⟨1, h1T⟩
+    set jmax := T.max' hTne with hj
+    have hjmem := T.max'_mem hTne
+    obtain ⟨hjI, hjlt⟩ := Finset.mem_filter.mp hjmem
+    obtain ⟨hj1, hjk⟩ := Finset.mem_Icc.mp hjI
+    have hjltP : azim x v w ((sigmaFan x V E v)^[jmax] w) < azim x v w a :=
+      decide_eq_true_iff.mp hjlt
+    -- j < k-1（否则与案例 B 前提矛盾）
+    have hjk1 : jmax < k - 1 := by
+      by_contra hcon
+      have hjE : jmax = k - 1 := by omega
+      rw [hjE] at hjltP
+      exact absurd hjltP (not_lt.mpr hB.le)
+    -- maximality：θ(j+1) 不 < θ(a)
+    have hjmax : jmax + 1 ∉ T := by
+      intro hcon
+      have h2 := Finset.le_max' T (jmax + 1) hcon
+      omega
+    have hj1I : jmax + 1 ∈ Finset.Icc 1 (k - 1) := Finset.mem_Icc.mpr (by omega)
+    have hnotlt : ¬ (azim x v w ((sigmaFan x V E v)^[jmax + 1] w) < azim x v w a) := by
+      intro hcon
+      exact hjmax (Finset.mem_filter.mpr ⟨hj1I, decide_eq_true hcon⟩)
+    have hauj1 : a ≠ (sigmaFan x V E v)^[jmax + 1] w := by
+      intro he
+      exact hacyc (jmax + 1) (by omega) he.symm
+    have hge : azim x v w a ≤ azim x v w ((sigmaFan x V E v)^[jmax + 1] w) :=
+      le_of_not_gt hnotlt
+    have hgt : azim x v w a ≠ azim x v w ((sigmaFan x V E v)^[jmax + 1] w) :=
+      fun he => hinjθ a ((sigmaFan x V E v)^[jmax + 1] w) ha
+        (hpowS (jmax + 1)) hauj1 he
+    have hlt2 : azim x v w a < azim x v w ((sigmaFan x V E v)^[jmax + 1] w) :=
+      lt_of_le_of_ne hge hgt
+    -- u_j 处极小性
+    have hujS : (sigmaFan x V E v)^[jmax] w ∈ setOfEdge v V E := hpowS jmax
+    have hauj : a ≠ (sigmaFan x V E v)^[jmax] w := by
+      intro he
+      exact hacyc jmax (by omega) he.symm
+    have hSnej : setOfEdge v V E ≠ {(sigmaFan x V E v)^[jmax] w} := by
+      intro he
+      have hac : a ∈ ({(sigmaFan x V E v)^[jmax] w} : Set V3) := by rw [← he]; exact ha
+      exact hauj (by simpa using hac)
+    have hminJ := (SIGMA_FAN hSnej hfan hujS).2.2 a ha hauj
+    -- σ u_j = u_{j+1}
+    have hσJ : sigmaFan x V E v ((sigmaFan x V E v)^[jmax] w)
+        = (sigmaFan x V E v)^[jmax + 1] w := by
+      rw [Function.iterate_succ_apply']
+    rw [hσJ] at hminJ
+    -- A1：θ(j) ≤ θ(j+1)
+    have huju0 : (sigmaFan x V E v)^[jmax + 1] w ≠ w := by
+      intro he
+      exact hdist 0 (jmax + 1) (by omega) (by omega) he.symm
+    have hmono := lpMonoAzimSigma (x := x) (V := V) (E := E) hfan hw
+      (hEof _ hujS)
+      (show sigmaFan x V E v ((sigmaFan x V E v)^[jmax] w) ≠ w by
+        rw [hσJ]; exact huju0)
+    rw [hσJ] at hmono
+    -- sum2：θ(j+1) = θ(j) + azim u_j u_{j+1}
+    have hsumJ1 : azim x v w ((sigmaFan x V E v)^[jmax + 1] w)
+        = azim x v w ((sigmaFan x V E v)^[jmax] w)
+          + azim x v ((sigmaFan x V E v)^[jmax] w)
+            ((sigmaFan x V E v)^[jmax + 1] w) :=
+      sum2_azim_fan hfan hw (hEof _ hujS) (hEof _ (hpowS (jmax + 1))) hmono
+    -- sum2：θ(a) = θ(j) + azim u_j a
+    have hsumJa : azim x v w a = azim x v w ((sigmaFan x V E v)^[jmax] w)
+        + azim x v ((sigmaFan x V E v)^[jmax] w) a :=
+      sum2_azim_fan hfan hw (hEof _ hujS) (hEof a ha) hjltP.le
+    -- 算术矛盾
+    linarith
+
+
+/-- B1：fan 超映射的 node 轨道 = 第一分量不变的第二分量全体
+（HOL NODE_HYPERMAP_OF_FAN_ALT，经单循环覆盖件）。 -/
+theorem lpFanNodeEqSetOfEdge (hfan : FAN 0 V E) {v w : V3}
+    (hw : (v, w) ∈ dart1OfFan V E) :
+    (hypermapOfFanTl V E hfan).node (v, w) = {d | d.1 = v ∧ d.2 ∈ setOfEdge v V E} := by
+  have hwe : {v, w} ∈ E := hw
+  ext y
+  constructor
+  · rintro ⟨n, hn⟩
+    rw [Equiv.Perm.coe_pow] at hn
+    rw [nodeMapTl_iterate hw n] at hn
+    rw [← hn]
+    exact Set.mem_setOf.mpr ⟨rfl, Kepler.Text.image_power_map_points hfan hwe n⟩
+  · rintro ⟨hy1, hu⟩
+    obtain ⟨n, hn⟩ := lpSigmaOrbitCovers hfan hfan.2.2.1.1 hwe y.2 hu
+    refine ⟨n, ?_⟩
+    rw [Equiv.Perm.coe_pow, nodeMapTl_iterate hw n, hn]
+    exact Prod.ext hy1.symm rfl
+
+/-- C1 核心：prevEl 在循环 pair-表上保第二分量 = d.1（纯 zip 形态）。
+（HOL prev_el_list_pairs_general / n_list_ext_fst 的核心步。） -/
+private theorem lpPrevSndOfPairs {l : List ℕ}
+    (hN : (l.zip (l.drop 1 ++ l.take 1)).Nodup)
+    {d : ℕ × ℕ} (hd : d ∈ l.zip (l.drop 1 ++ l.take 1)) :
+    (prevEl (l.zip (l.drop 1 ++ l.take 1)) d).2 = d.1 := by
+  have hpos : 0 < (l.zip (l.drop 1 ++ l.take 1)).length := List.length_pos_of_mem hd
+  have hilt : (l.zip (l.drop 1 ++ l.take 1)).idxOf d
+      < (l.zip (l.drop 1 ++ l.take 1)).length := List.idxOf_lt_length_iff.mpr hd
+  obtain ⟨i, hi, hdi⟩ := List.mem_iff_getElem.mp hd
+  have hidx : (l.zip (l.drop 1 ++ l.take 1)).idxOf d = i := by
+    rw [← hdi]; exact idxOf_getElem hN hi
+  have hlenrot : (l.drop 1 ++ l.take 1).length = l.length := by
+    rw [List.length_append, List.length_drop, List.length_take]; omega
+  have hdlen : (l.drop 1).length = l.length - 1 := by rw [List.length_drop]
+  have hlenS : (l.zip (l.drop 1 ++ l.take 1)).length = l.length := by
+    rw [List.length_zip, hlenrot]; omega
+  have hltL : i < l.length := by omega
+  have hzipFst : ((l.zip (l.drop 1 ++ l.take 1))[i]'hi).1 = l[i]'hltL := by
+    rw [List.getElem_zip]
+  have hdx : d.1 = l[i]'hltL := by rw [← hdi]; exact hzipFst
+  -- prevEl 的 getD 形（照 nextEl_prevEl 的 hy_getD 模板）
+  have hpv : prevEl (l.zip (l.drop 1 ++ l.take 1)) d
+      = (l.zip (l.drop 1 ++ l.take 1)).getD
+        (((l.zip (l.drop 1 ++ l.take 1)).idxOf d
+          + (l.zip (l.drop 1 ++ l.take 1)).length - 1)
+          % (l.zip (l.drop 1 ++ l.take 1)).length) d := by
+    unfold prevEl
+    rw [if_neg (show ¬(d ∉ l.zip (l.drop 1 ++ l.take 1)) from not_not.mpr hd), li_idxOf_congr]
+    split
+    · rename_i h0
+      rw [h0, getD_wrap_prev hpos]
+      exact li_getLastD_getD hpos d
+    · rename_i hne
+      exact (getD_prev hilt hne d).symm
+  rw [hpv, hidx]
+  rcases Nat.eq_zero_or_pos i with hi0 | hipos
+  · -- i = 0：prevEl = 末位 (l[m-1], l[0])
+    subst hi0
+    rw [getD_wrap_prev hpos, getD_eq_getElem_of_lt (by omega)]
+    have hv : (l.zip (l.drop 1 ++ l.take 1)).length - 1
+        < (l.drop 1 ++ l.take 1).length := by omega
+    have hneg : ¬((l.zip (l.drop 1 ++ l.take 1)).length - 1 < (l.drop 1).length) := by
+      omega
+    have hzero : (l.zip (l.drop 1 ++ l.take 1)).length - 1 - (l.drop 1).length = 0 := by
+      omega
+    rw [List.getElem_zip, List.getElem_append hv, dif_neg hneg]
+    simp only [hzero, List.getElem_take]
+    show l[0] = d.1
+    exact hdx.symm
+  · -- i ≥ 1：prevEl = 前位 (l[i-1], l[i])
+    have hne0 : i ≠ 0 := by omega
+    have hlt2 : i - 1 < (l.zip (l.drop 1 ++ l.take 1)).length := by omega
+    rw [getD_prev (s := l.zip (l.drop 1 ++ l.take 1)) (j := i) hi hne0 d,
+      getD_eq_getElem_of_lt hlt2]
+    have hv : i - 1 < (l.drop 1 ++ l.take 1).length := by omega
+    have hcond : i - 1 < (l.drop 1).length := by omega
+    rw [List.getElem_zip, List.getElem_append hv, dif_pos hcond]
+    have hdrop : ((l.drop 1)[i - 1]'(by omega))
+        = l[1 + (i - 1)]'(by omega) := List.getElem_drop
+    simp only [hdrop, show 1 + (i - 1) = i from by omega]
+    show l[i]'hltL = d.1
+    exact hdx.symm
+
+/-- C1：list 侧 nodeMap 单步保第一分量（HOL n_list_ext_fst 的核心）。 -/
+private theorem lpNListFst {L : fgraph ℕ} (hL : GoodList L)
+    {d : ℕ × ℕ} (hd : d ∈ listOfDarts L) :
+    (nList L d).1 = d.1 := by
+  have hz : d ∈ findFaceDarts L d := (dart_in_face L d).mpr hd
+  obtain ⟨l, hll, hfind, hdin⟩ := findFaceDarts_ex_of_self hz
+  have hN : (l.zip (l.drop 1 ++ l.take 1)).Nodup := by
+    have hnod := findFaceDarts_nodup hL.1 d
+    rw [hfind] at hnod
+    exact hnod
+  have hdin' : d ∈ l.zip (l.drop 1 ++ l.take 1) := hdin
+  show (prevEl (findFaceDarts L d) d).2 = d.1
+  rw [hfind]
+  exact lpPrevSndOfPairs hN hdin'
+
+/-- C3：list 侧 nodeMap 迭代保第一分量（HOL fst_n_list_ext_power）。 -/
+private theorem lpNodeMapListFst {L : fgraph ℕ} (hL : GoodList L) {d : ℕ × ℕ}
+    (hd : d ∈ listOfDarts L) (n : ℕ) :
+    ((hypermapOfList L hL).nodeMap^[n] d).1 = d.1 := by
+  have hmem : ∀ k : ℕ, (hypermapOfList L hL).nodeMap^[k] d ∈ listOfDarts L := by
+    intro k
+    induction k with
+    | zero => exact hd
+    | succ k ih =>
+      rw [Function.iterate_succ_apply']
+      have hcur : (hypermapOfList L hL).nodeMap^[k] d ∈
+          (↑(hypermapOfList L hL).darts : Set (ℕ × ℕ)) := by
+        rw [darts_hypermapOfList]
+        exact ih
+      rw [nodeMap_hypermapOfList L hL hcur]
+      exact (bijOn_nList hL).mapsTo ih
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    rw [Function.iterate_succ_apply']
+    have hcur : (hypermapOfList L hL).nodeMap^[n] d ∈
+        (↑(hypermapOfList L hL).darts : Set (ℕ × ℕ)) := by
+      rw [darts_hypermapOfList]
+      exact hmem n
+    rw [nodeMap_hypermapOfList L hL hcur, lpNListFst hL (hmem n)]
+    exact ih
+
+
+theorem lpExistsHdecomp {V : Set V3} {E : Set (Set V3)} {L : fgraph ℕ}
+    {hL : GoodList L} {f : V3 × V3 → ℕ × ℕ}
+    (hlpfan : LpFan V E)
+    (hisoDart : Set.BijOn f ↑(hypermapOfFanTl V E hlpfan.1).darts
+        ↑(hypermapOfList L hL).darts)
+    (hisoComm : ∀ d ∈ (hypermapOfFanTl V E hlpfan.1).darts,
+        (hypermapOfList L hL).edgeMap (f d) =
+          f ((hypermapOfFanTl V E hlpfan.1).edgeMap d) ∧
+        (hypermapOfList L hL).nodeMap (f d) =
+          f ((hypermapOfFanTl V E hlpfan.1).nodeMap d) ∧
+        (hypermapOfList L hL).faceMap (f d) =
+          f ((hypermapOfFanTl V E hlpfan.1).faceMap d)) :
+    ∃ h' : V3 → ℕ, ∀ d ∈ dart1OfFan V E, f d = (h' d.1, h' d.2) := by
+  have hfan : FAN 0 V E := hlpfan.1
+  -- 全局见证函数
+  have hex : ∀ x : V3, ∃ wx : V3, x ∈ V → wx ∈ setOfEdge x V E := by
+    intro x
+    by_cases hx : x ∈ V
+    · obtain ⟨wv, hwv⟩ := Set.nonempty_iff_ne_empty.mpr (lpFan_setOfEdge_ne hlpfan hx)
+      exact ⟨wv, fun _ => hwv⟩
+    · exact ⟨x, fun hv => absurd hv hx⟩
+  choose w hw using hex
+  refine ⟨fun x => (f (x, w x)).1, ?_⟩
+  -- FST 半：node 轨道运输 + list 侧 FST 保持
+  have hFST : ∀ d ∈ dart1OfFan V E, (f d).1 = (f (d.1, w d.1)).1 := by
+    intro d hd
+    have hV := dart1OfFan_fst_snd_mem hfan hd
+    have hd1 : (d.1, w d.1) ∈ dart1OfFan V E := by
+      simp only [dart1OfFan, Set.mem_setOf_eq]
+      exact (properties_of_setOfEdge_fan 0 V E d.1 (w d.1) hfan).mpr (hw d.1 hV.1)
+    have hmem : (d.1, w d.1) ∈ {dd : V3 × V3 | dd.1 = d.1 ∧ dd.2 ∈ setOfEdge d.1 V E} :=
+      ⟨rfl, hw d.1 hV.1⟩
+    have hnode : (d.1, w d.1) ∈ (hypermapOfFanTl V E hfan).node d := by
+      rw [lpFanNodeEqSetOfEdge hfan hd]
+      exact hmem
+    have htrans : f (d.1, w d.1) ∈ (hypermapOfList L hL).node (f d) := by
+      have hT := lpOrbitTransport hfan hisoDart hisoComm hd
+      rw [← hT]
+      exact Set.mem_image_of_mem f hnode
+    obtain ⟨n, hn⟩ := (lpMemNodeIff (hypermapOfList L hL)).mp htrans
+    have hfd : f d ∈ listOfDarts L := by
+      have hm := hisoDart.mapsTo (Finset.mem_coe.mpr (mem_dartsTl hd))
+      rw [darts_hypermapOfList] at hm
+      exact hm
+    calc (f d).1
+        = ((hypermapOfList L hL).nodeMap^[n] (f d)).1 :=
+          (lpNodeMapListFst hL hfd n).symm
+      _ = (f (d.1, w d.1)).1 := by rw [hn]
+  -- SND 半：edge 映射两侧交换
+  have hSND : ∀ d ∈ dart1OfFan V E, (f d).2 = (f (d.2, w d.2)).1 := by
+    intro d hd
+    have hV := dart1OfFan_fst_snd_mem hfan hd
+    have hdmem : d ∈ (↑(hypermapOfFanTl V E hfan).darts : Set (V3 × V3)) :=
+      Finset.mem_coe.mpr (mem_dartsTl hd)
+    have hswapf : (hypermapOfFanTl V E hfan).edgeMap d = (d.2, d.1) := by
+      rw [edgeMapTl_apply hd]
+      rfl
+    have hcomm := (hisoComm d hdmem).1
+    rw [hswapf] at hcomm
+    -- hcomm : edgeMap_G (f d) = f (d.2, d.1)
+    have hfdG : f d ∈ (hypermapOfList L hL).darts := by
+      have hm := hisoDart.mapsTo hdmem
+      exact Finset.mem_coe.mp hm
+    have hEl : (hypermapOfList L hL).edgeMap (f d) = ((f d).2, (f d).1) := by
+      rw [edgeMap_hypermapOfList L hL hfdG]
+      rfl
+    rw [hEl] at hcomm
+    -- hcomm : ((f d).2, (f d).1) = f (d.2, d.1)
+    have hswapin : (d.2, d.1) ∈ dart1OfFan V E := by
+      simp only [dart1OfFan, Set.mem_setOf_eq]
+      rw [Set.pair_comm]
+      exact hd
+    have hFST2 := hFST (d.2, d.1) hswapin
+    calc (f d).2 = (f (d.2, d.1)).1 := congrArg Prod.fst hcomm
+      _ = (f (d.2, w d.2)).1 := hFST2
+  -- 装配
+  intro d hd
+  have h1 := hFST d hd
+  have h2 := hSND d hd
+  show f d = ((f (d.1, w d.1)).1, (f (d.2, w d.2)).1)
+  rw [← h1, ← h2]
+
+/-! ### 终装配：`contravening_lp_cond`（lp_ineqs_proofs.vhl:348）
+
+HOL `contravening_lp_cond L f: good_list L /\ good_list_nodes L /\
+hyp_iso f (hypermap_of_fan (V,ESTD V), hypermap_of_list L) ==> ?g h. lp_cond
+(L,g,h) (V,ESTD V)`：`contraveningLpFan`（件 2）+ `lpCondAssembly_nf`（件 3
+的无假设主件）+ `lpExistsHdecomp`（件 4，hdecomp 消掉）三步装配。结论与
+`lpCondAssembly_nf` 逐字同型（∃ g h 十一合取）。 -/
+theorem contraveningLpCond {V : Set V3} (hc : Contravening V) {L : fgraph ℕ}
+    {hL : GoodList L} {hnodes : GoodListNodesTl L hL} {f : V3 × V3 → ℕ × ℕ}
+    (hisoDart : Set.BijOn f
+        ↑(hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).darts
+        ↑(hypermapOfList L hL).darts)
+    (hisoComm : ∀ d ∈ (hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).darts,
+        (hypermapOfList L hL).edgeMap (f d) =
+          f ((hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).edgeMap d) ∧
+        (hypermapOfList L hL).nodeMap (f d) =
+          f ((hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).nodeMap d) ∧
+        (hypermapOfList L hL).faceMap (f d) =
+          f ((hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).faceMap d)) :
+    ∃ h' : V3 → ℕ, ∃ g : ℕ × ℕ → V3 × V3, ∃ h : ℕ → V3,
+      LpFan V (ESTD V) ∧ GoodList L ∧ GoodListNodesTl L hL ∧
+      Set.BijOn g ↑(hypermapOfList L hL).darts
+        ↑(hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).darts ∧
+      (∀ d ∈ (hypermapOfList L hL).darts,
+          (hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).edgeMap (g d) =
+            g ((hypermapOfList L hL).edgeMap d) ∧
+          (hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).nodeMap (g d) =
+            g ((hypermapOfList L hL).nodeMap d) ∧
+          (hypermapOfFanTl V (ESTD V) (contraveningLpFan V hc).1).faceMap (g d) =
+            g ((hypermapOfList L hL).faceMap d)) ∧
+      Set.BijOn h (elementsOfList L) V ∧
+      (∀ d : ℕ × ℕ, g d = (h d.1, h d.2)) ∧
+      (∀ x, x ∈ elementsOfList L ↔ h x ∈ V) ∧
+      (∀ x ∈ elementsOfList L, h' (h x) = x) ∧
+      (∀ v ∈ V, h (h' v) = v) ∧
+      (∀ x, x ∉ elementsOfList L → h x = 0) := by
+  have hlpfan : LpFan V (ESTD V) := contraveningLpFan V hc
+  obtain ⟨h', hdecomp⟩ := lpExistsHdecomp hlpfan hisoDart hisoComm
+  exact ⟨h', lpCondAssembly_nf hlpfan hL hnodes hdecomp hisoDart hisoComm⟩
+
 end LpCondLayer
 
 end Kepler.Text.LP.LpSemantics
