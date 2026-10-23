@@ -712,10 +712,11 @@ bare sorry 86→83；闸 PASS @`cc_bool_model_data`（PA25 单文件）。
   `QZKSYKG1`/`QZKSYKG2`/`AJRIPQN`/`LEFT_ACTION_LIST_*` + 有限置换鸽笼，
   未使用 `MCELL_ID_MXI`/`LEPJBDJ`/`HDTFNFZ`/`YNHYJIT`；新增 import
   `PackingAuto14`/`PackingAuto17`（无环）。值级 40,850/40,898 定理节点
-  标准三；PA15 源 3→1。**`DIHX_SYM` BLOCKED**：需从 `{u,v}∈edgeX` 造两方向
-  `cellParamsD` 见证，现有路径只有 `HDTFNFZ`（带 sorryAx）或 `LEPJBDJ`
-  （`k2Case`/`k3Subset` GIANT），还需 `LEFT_ACTION_LIST_2/3_EXISTS`
-  （PA15:3034/3040 仍 sorry）。
+  标准三；PA15 源 3→1。**`DIHX_SYM` 当时 BLOCKED**：需从 `{u,v}∈edgeX`
+  造两方向 `cellParamsD` 见证，旧路径只有 `HDTFNFZ`（带 sorryAx）或
+  `LEPJBDJ`（`k2Case`/`k3Subset` GIANT），还需 `LEFT_ACTION_LIST_2/3_EXISTS`
+  （PA15:3034/3040 当时仍 sorry）。**2026-10-23 已闭合**：witness-existence +
+  `DIHV_SYM` 路线，未调用 `HDTFNFZ`/`LEPJBDJ`，见文末 PA15 节。
 - **PA25 residue `MCELL4_REPARAM`**（+225/−1）：`mcell4` 等式由
   `setOfList`/`hl` 重写，`barV V 3 vl` 走 `QZKSYKG1` + 自建 `List.idxOf`
   索引置换，未用 `LEFT_ACTION_LIST_3_EXISTS`。值级 39,276 定理节点标准三。
@@ -729,10 +730,9 @@ bare sorry 86→83；闸 PASS @`cc_bool_model_data`（PA25 单文件）。
   P2 的 `--mixed-tm`/`--leaf-start`/采样盒修复；`b6ae7aee` 已恢复 P2 并在其上
   重叠 19 行 `--fill-atan1-box` 补丁。合并后文件与 P2 的 diff 恰为 19+/4−，
   不影响已闸的 N2 证书/Assembly。
-- **在飞**：prep P3 2125 全树已建 37/132 shards（batch 41-44 后因内存暂停，
-  已恢复）；剩余 ~95 shards，批次 4 个/批。下一波 Phase 5 候选：PA15
-  `DIHX_SYM`（先落 `LEFT_ACTION_LIST_2/3_EXISTS`）、PA25 `real_model_*`、
-  nli rest 10/62（需重新编码/求解，不是粘合问题）。
+- **后续（2026-10-23 更新）**：P3 2125 全树已 132/132 收官；PA15
+  `DIHX_SYM` 已闭（文末节）；R1 剩余 4 案在飞；PA25 `real_model_*`、
+  nli rest 10/62（需重新编码/求解，不是粘合问题）仍是候选。
 
 ## 2026-10-23 Phase 4 P3 节（2125 全树混合证书收官，`3f3c05a1`）
 
@@ -801,3 +801,29 @@ bare sorry 86→83；闸 PASS @`cc_bool_model_data`（PA25 单文件）。
 - **建议排序**：W1–W3（root，账本在库、sha 可复核）→ 并行启动 W6 覆盖桥 →
   W4/W5 重跑（等大磁盘/算力窗口）→ W7 终装配。W1–W5 只是"材料就绪"，
   不缩小主定理锥；不要在 W6 落地前声称 LP 已入 e2e。
+
+## 2026-10-23 Phase 5 PA15 节（`DIHX_SYM` + 两件 action-list 闭合）
+
+**投放**：`lean/Kepler/Text/PackingAuto15.lean` **+1018/−3**（仅此一文件），
+PA15 sorry **15→12**。三条删除行逐字为 `… := sorry` 尾式；冻结陈述前缀
+未动（`:= by` 行保留）。新增 29 个私件，新增行禁词扫描零
+（`sorry|admit|native_decide`）。
+
+- **`LEFT_ACTION_LIST_2_EXISTS` / `_3_EXISTS`**：通用 Nodup 索引置换引理 +
+  `p15_natPerm`；`permutes p (Set.Iic 2/3)`，末尾用
+  `p15_leftActionList_append` 拼接。两件 axioms 标准三（值级
+  `[propext, Quot.sound]`），off-path，不改变 e2e 源数。
+- **`DIHX_SYM`**：从 `{u,v}∈edgeX` 用 `p15_cellParamsD_exists_of_VX`
+  造两方向 `cellParamsD` 见证，`AJRIPQN` 对齐参数索引；k=3 复用 clean
+  `p15_trunc_set_eq`，k=4 新增 clean `p15_mcell4_verts_eq`
+  （`p15_rogers_common` + `TEZFFSK`）。**未消费 `HDTFNFZ`/`LEPJBDJ`**。
+  证明仅消费 clean 件（`AJRIPQN`/`QZKSYKG1`/`RVFXZBU_p14`/`TEZFFSK`/
+  `NJIUTIU`/`MCELL_ID_OMEGA_LIST_N`/`MCELL_ID_MXI_2`/`DIHV_SYM(_2)` 等）。
+- **闸**：`auto_gate.sh Kepler/Text/PackingAuto15.lean <THM>` 三次
+  **GATE-PASS**（`DIHX_SYM`、`LEFT_ACTION_LIST_2_EXISTS`、
+  `LEFT_ACTION_LIST_3_EXISTS`；rule 5 全部标准三）。
+- **地图重跑**：direct source **137→136**；`DIHX_SYM` 行消失；
+  可达声明 215,937→**216,018**（+81，证明体私件）；公理 **624 不变**。
+  `PackingAuto15` 进入零 direct 源模块名单。
+- **快照**：`~/c17_backup/lane_snapshots/pa15fin/`（含 diff、三次 build
+  日志、axioms 探针、`#valax3` 41,006 定理节点记录、MD5SUMS）。

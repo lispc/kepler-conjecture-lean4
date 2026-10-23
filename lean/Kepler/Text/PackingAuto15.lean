@@ -3517,19 +3517,369 @@ theorem DIHX_RANGE (V : Set V3) (X : Set V3) (u v : V3) :
 theorem DIHX_LE_PI (V : Set V3) (X : Set V3) (u v : V3) : dihX V X (u, v) ≤ Real.pi :=
   (DIHX_RANGE V X u v).2
 
+private theorem p15_natPerm_symm_apply_lt {n : ℕ} (σ : Equiv.Perm (Fin n)) (i : Fin n) :
+    (p15_natPerm σ).symm (i : ℕ) = (σ.symm i : ℕ) := by
+  have h1 : p15_natPerm σ ((σ.symm i : Fin n) : ℕ) = (i : ℕ) := by
+    rw [p15_natPerm_apply_lt, Equiv.apply_symm_apply]
+  have h2 := congrArg (p15_natPerm σ).symm h1
+  rw [Equiv.symm_apply_apply] at h2
+  exact h2.symm
+
+
+private theorem p15_card4_distinct {α : Type*} {a b c d : α}
+    (h4 : Nat.card ({a, b, c, d} : Set α) = 4) :
+    a ≠ b ∧ a ≠ c ∧ a ≠ d ∧ b ≠ c ∧ b ≠ d ∧ c ≠ d := by
+  have h3le : ∀ (q r s : α), Nat.card ({q, r, s} : Set α) ≤ 3 := by
+    intro q r s
+    have h1 : ({q, r, s} : Set α).ncard ≤ ({r, s} : Set α).ncard + 1 :=
+      Set.ncard_insert_le q _
+    have h2 : ({r, s} : Set α).ncard ≤ ({s} : Set α).ncard + 1 := Set.ncard_insert_le r _
+    have h3 : ({s} : Set α).ncard = 1 := Set.ncard_singleton s
+    have he : Nat.card ({q, r, s} : Set α) = ({q, r, s} : Set α).ncard := rfl
+    omega
+  have hdupe : ∀ (p q : α), p = q → ∀ (r s : α),
+      Nat.card ({p, q, r, s} : Set α) ≤ 3 := by
+    intro p q hpq r s
+    have hset : ({p, q, r, s} : Set α) = {q, r, s} := by
+      rw [← hpq]; ext t; simp; all_goals tauto
+    have hh := h3le q r s
+    rw [← hset] at hh
+    exact hh
+  refine ⟨fun hcon => absurd (hdupe a b hcon c d) (by omega),
+    fun hcon => by
+      have hh := hdupe a c hcon b d
+      have hperm : ({a, b, c, d} : Set α) = {a, c, b, d} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe a d hcon b c
+      have hperm : ({a, b, c, d} : Set α) = {a, d, b, c} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe b c hcon a d
+      have hperm : ({a, b, c, d} : Set α) = {b, c, a, d} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe b d hcon a c
+      have hperm : ({a, b, c, d} : Set α) = {b, d, a, c} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe c d hcon a b
+      have hperm : ({a, b, c, d} : Set α) = {c, d, a, b} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega)⟩
+
+private theorem p15_ncard_three_of_four {α : Type*} {a b c d : α}
+    (h : Nat.card ({a, b, c, d} : Set α) = 4) :
+    Nat.card ({a, b, c} : Set α) = 3 := by
+  have h1 : ({a, b, c} : Set α).ncard ≤ ({b, c} : Set α).ncard + 1 :=
+    Set.ncard_insert_le a _
+  have h2 : ({b, c} : Set α).ncard ≤ ({c} : Set α).ncard + 1 := Set.ncard_insert_le b _
+  have h3 : ({c} : Set α).ncard = 1 := Set.ncard_singleton c
+  have h4 : ({a, b, c, d} : Set α).ncard ≤ ({a, b, c} : Set α).ncard + 1 := by
+    have hset : ({a, b, c, d} : Set α) = insert d {a, b, c} := by
+      ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact Set.ncard_insert_le d _
+  have he : Nat.card ({a, b, c, d} : Set α) = ({a, b, c, d} : Set α).ncard := rfl
+  have he2 : Nat.card ({a, b, c} : Set α) = ({a, b, c} : Set α).ncard := rfl
+  omega
+
+private theorem p15_distinct_of_ncard3 {α : Type*} {x y z : α}
+    (h : Nat.card ({x, y, z} : Set α) = 3) : x ≠ y ∧ x ≠ z ∧ y ≠ z := by
+  have h2le : ∀ (p q : α), Nat.card ({p, q} : Set α) ≤ 2 := by
+    intro p q
+    have h1 : ({p, q} : Set α).ncard ≤ ({q} : Set α).ncard + 1 := Set.ncard_insert_le p _
+    have h2 : ({q} : Set α).ncard = 1 := Set.ncard_singleton q
+    have he : Nat.card ({p, q} : Set α) = ({p, q} : Set α).ncard := rfl
+    omega
+  refine ⟨?_, ?_, ?_⟩
+  · intro hxy
+    have hset : ({x, y, z} : Set α) = ({x, z} : Set α) := by
+      rw [hxy]; simp
+    have hEq : Nat.card ({x, z} : Set α) = 3 := by
+      rw [← hset]; exact h
+    have hh := h2le x z
+    omega
+  · intro hxz
+    have hset : ({x, y, z} : Set α) = ({y, z} : Set α) := by
+      rw [hxz]; simp
+    have hEq : Nat.card ({y, z} : Set α) = 3 := by
+      rw [← hset]; exact h
+    have hh := h2le y z
+    omega
+  · intro hyz
+    have hset : ({x, y, z} : Set α) = ({x, y} : Set α) := by
+      rw [hyz]; simp
+    have hEq : Nat.card ({x, y} : Set α) = 3 := by
+      rw [← hset]; exact h
+    have hh := h2le x y
+    omega
+
+/-! ### permutes helpers -/
+
+
+private theorem p15_permutes_swap {s : Set ℕ} {a b : ℕ} (ha : a ∈ s) (hb : b ∈ s) :
+    permutes (Equiv.swap a b) s := by
+  intro x
+  by_cases hxa : x = a
+  · subst hxa
+    rw [Equiv.swap_apply_left]
+    exact iff_of_true ha hb
+  by_cases hxb : x = b
+  · subst hxb
+    rw [Equiv.swap_apply_right]
+    exact iff_of_true hb ha
+  · rw [Equiv.swap_apply_of_ne_of_ne hxa hxb]
+
+private theorem p15_permutes_mul {s : Set ℕ} {p q : Equiv.Perm ℕ}
+    (hp : permutes p s) (hq : permutes q s) : permutes (p * q) s := by
+  intro x
+  rw [Equiv.Perm.mul_apply]
+  exact (hq x).trans (hp (q x))
+
+
+private theorem p15_leftActionList_length {α : Type*} [Inhabited α] (p : Equiv.Perm ℕ)
+    (ul : List α) : (leftActionList p ul).length = ul.length := by
+  simp [leftActionList]
+
+private theorem p15_leftActionList_getD {α : Type*} [Inhabited α] (p : Equiv.Perm ℕ)
+    (ul : List α) (i : ℕ) (hi : i < ul.length) :
+    (leftActionList p ul).getD i default = ul.getD (p.symm i) default := by
+  have h1 : i < (leftActionList p ul).length := by
+    rw [p15_leftActionList_length]; exact hi
+  rw [List.getD_eq_getElem (l := leftActionList p ul) (d := default) (n := i) h1]
+  unfold leftActionList
+  rw [List.getElem_map]
+  simp only [List.getElem_range]
+
+/-! ### Generic `leftActionList` realization -/
+
+private theorem p15_leftActionList_of_nodup {α : Type*} [Inhabited α] {ul vl : List α}
+    (hul : ul.Nodup) (hlen : vl.length = ul.length)
+    (hset : setOfList vl = setOfList ul) :
+    ∃ p : Equiv.Perm ℕ, (∀ j : ℕ, ul.length ≤ j → p j = j) ∧
+      permutes p {j : ℕ | j < ul.length} ∧ vl = leftActionList p ul := by
+  classical
+  -- index map: ul-index ↦ vl-index
+  have hex : ∀ i : Fin ul.length, ∃ j : ℕ, j < vl.length ∧
+      vl.getD j default = ul.getD i default := by
+    intro i
+    have hi : (i : ℕ) < ul.length := i.isLt
+    have hmem : ul.getD i default ∈ setOfList vl := by
+      rw [hset]
+      simp only [setOfList, Set.mem_setOf_eq, List.getD_eq_getElem ul default i.isLt]
+      exact List.getElem_mem i.isLt
+    simp only [setOfList, Set.mem_setOf_eq] at hmem
+    obtain ⟨j, hj⟩ := List.mem_iff_get.mp hmem
+    refine ⟨j.1, j.2, ?_⟩
+    have hj' : vl.get j = ul.get i := by
+      rw [List.getD_eq_getElem ul default i.isLt] at hj
+      exact hj
+    rw [List.getD_eq_get (l := vl) (d := default) j,
+      List.getD_eq_get (l := ul) (d := default) i]
+    exact hj'
+  choose f hfv hf using hex
+  have hf_inj : Function.Injective f := by
+    intro i j hij
+    apply Fin.ext
+    have h1 : ul.getD i.1 default = ul.getD j.1 default := by
+      rw [← hf i, ← hf j, hij]
+    have h2 : ul[i.1] = ul[j.1] := by
+      rw [List.getD_eq_getElem ul default i.isLt,
+        List.getD_eq_getElem ul default j.isLt] at h1
+      exact h1
+    exact (hul.getElem_inj_iff).mp h2
+  have hf_lt : ∀ i, f i < ul.length := fun i => hlen ▸ hfv i
+  let g : Fin ul.length → Fin ul.length := fun i => ⟨f i, hf_lt i⟩
+  have hg_inj : Function.Injective g := by
+    intro i j hij
+    have h : f i = f j := congrArg Fin.val hij
+    exact hf_inj h
+  let σ : Equiv.Perm (Fin ul.length) :=
+    Equiv.ofBijective g (Finite.injective_iff_bijective.mp hg_inj)
+  let p : Equiv.Perm ℕ := p15_natPerm σ
+  have hσg : ∀ i, σ i = g i := fun i => rfl
+  refine ⟨p, fun j hj => p15_natPerm_apply_ge σ hj, p15_natPerm_permutes σ, ?_⟩
+  apply List.ext_getElem?
+  intro n
+  by_cases hn : n < vl.length
+  · have hnu : n < ul.length := by omega
+    have hnu' : n < (leftActionList p ul).length := by
+      rw [p15_leftActionList_length]; exact hnu
+    rw [List.getElem?_eq_getElem hn, List.getElem?_eq_getElem hnu']
+    -- value equality
+    have hsymm : p.symm n = (σ.symm ⟨n, hnu⟩ : ℕ) :=
+      p15_natPerm_symm_apply_lt σ ⟨n, hnu⟩
+    have hval : vl[n] = (leftActionList p ul)[n] := by
+      have hll : n < (leftActionList p ul).length := by
+        rw [p15_leftActionList_length]; exact hnu
+      rw [← List.getD_eq_getElem (l := leftActionList p ul) (d := default) (n := n) hll,
+        p15_leftActionList_getD p ul n hnu, hsymm]
+      rw [← List.getD_eq_getElem (l := vl) (d := default) (n := n) hn]
+      have hσ : σ (σ.symm ⟨n, hnu⟩) = ⟨n, hnu⟩ := Equiv.apply_symm_apply σ _
+      have hg : g (σ.symm ⟨n, hnu⟩) = ⟨n, hnu⟩ := by
+        rw [← hσg (σ.symm ⟨n, hnu⟩)]
+        exact hσ
+      have hfn : f (σ.symm ⟨n, hnu⟩) = n := congrArg Fin.val hg
+      have h := hf (σ.symm ⟨n, hnu⟩)
+      rw [hfn] at h
+      exact h
+    exact congrArg some hval
+  · have hnle : vl.length ≤ n := Nat.le_of_not_lt hn
+    have hnle' : (leftActionList p ul).length ≤ n := by
+      rw [p15_leftActionList_length]; omega
+    rw [List.getElem?_eq_none hnle, List.getElem?_eq_none hnle']
+
+
+private theorem p15_symm_fix {n : ℕ} {p : Equiv.Perm ℕ} (h : ∀ j : ℕ, n ≤ j → p j = j) :
+    ∀ j : ℕ, n ≤ j → p.symm j = j := by
+  intro j hj
+  have h1 : p j = j := h j hj
+  calc p.symm j = p.symm (p j) := by rw [h1]
+    _ = j := Equiv.symm_apply_apply p j
+
+private theorem p15_leftActionList_append {α : Type*} [Inhabited α] (p : Equiv.Perm ℕ)
+    (ul : List α) (d : α) (hfix : ∀ j : ℕ, ul.length ≤ j → p j = j) :
+    leftActionList p (ul ++ [d]) = leftActionList p ul ++ [d] := by
+  have hsymm := p15_symm_fix hfix
+  apply List.ext_getElem?
+  intro n
+  by_cases hn : n < ul.length
+  · have hn1 : n < (ul ++ [d]).length := by simp; omega
+    have hn2 : n < (leftActionList p ul).length := by rw [p15_leftActionList_length]; exact hn
+    have hn2' : n < (leftActionList p ul ++ [d]).length := by
+      simp only [List.length_append, List.length_cons, List.length_nil]; omega
+    have hn3 : n < (leftActionList p (ul ++ [d])).length := by
+      rw [p15_leftActionList_length]; simp; omega
+    rw [List.getElem?_eq_getElem hn3, List.getElem?_eq_getElem hn2']
+    rw [← List.getD_eq_getElem (l := leftActionList p (ul ++ [d])) (d := default) (n := n) hn3]
+    rw [← List.getD_eq_getElem (l := leftActionList p ul ++ [d]) (d := default) (n := n) hn2']
+    rw [p15_leftActionList_getD p (ul ++ [d]) n hn1,
+      List.getD_append (leftActionList p ul) [d] default n hn2,
+      p15_leftActionList_getD p ul n hn]
+    have hps : p.symm n < ul.length := by
+      by_contra hcon
+      have hge : ul.length ≤ p.symm n := Nat.le_of_not_lt hcon
+      have h1 : p (p.symm n) = p.symm n := hfix _ hge
+      rw [Equiv.apply_symm_apply] at h1
+      omega
+    exact congrArg some (List.getD_append ul [d] default (p.symm n) hps)
+  · by_cases hne : n = ul.length
+    · subst hne
+      have hn1 : ul.length < (ul ++ [d]).length := by simp
+      have hn2' : ul.length < (leftActionList p ul ++ [d]).length := by
+        rw [List.length_append, p15_leftActionList_length]
+        simp only [List.length_cons, List.length_nil]; omega
+      have hn3 : ul.length < (leftActionList p (ul ++ [d])).length := by
+        rw [p15_leftActionList_length]; simp
+      rw [List.getElem?_eq_getElem hn3, List.getElem?_eq_getElem hn2']
+      rw [← List.getD_eq_getElem (l := leftActionList p (ul ++ [d])) (d := default) (n := ul.length) hn3]
+      rw [← List.getD_eq_getElem (l := leftActionList p ul ++ [d]) (d := default) (n := ul.length) hn2']
+      rw [p15_leftActionList_getD p (ul ++ [d]) ul.length hn1]
+      have hps : p.symm ul.length = ul.length := hsymm ul.length (le_refl _)
+      rw [hps, List.getD_append_right ul [d] default ul.length (le_refl _)]
+      rw [List.getD_append_right (leftActionList p ul) [d] default ul.length
+        (le_of_eq (p15_leftActionList_length p ul))]
+      rw [show ul.length - (leftActionList p ul).length = 0 by
+        rw [p15_leftActionList_length]; omega]
+      simp
+    · have hgt : ul.length < n := by omega
+      have hn1 : (ul ++ [d]).length ≤ n := by simp; omega
+      have hn2 : (leftActionList p ul ++ [d]).length ≤ n := by
+        rw [List.length_append, p15_leftActionList_length]; simp; omega
+      have hn3 : (leftActionList p (ul ++ [d])).length ≤ n := by
+        rw [p15_leftActionList_length]; simp; omega
+      rw [List.getElem?_eq_none hn3, List.getElem?_eq_none hn2]
+
+private theorem p15_nodup_three {α : Type*} {a b c : α}
+    (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c) : ([a, b, c] : List α).Nodup := by
+  refine List.nodup_cons.mpr ⟨?_, List.nodup_cons.mpr ⟨?_, ?_⟩⟩
+  · simp [hab, hac]
+  · simp [hbc]
+  · exact List.nodup_singleton c
+
+private theorem p15_nodup_four {α : Type*} {a b c d : α}
+    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d)
+    (hcd : c ≠ d) : ([a, b, c, d] : List α).Nodup := by
+  refine List.nodup_cons.mpr ⟨?_, ?_⟩
+  · simp [hab, hac, had]
+  · exact p15_nodup_three hbc hbd hcd
+
+
 /-- marchal3.hl:3670 `LEFT_ACTION_LIST_2_EXISTS` (HOL `0..2` ↔ `Set.Iic 2`;
 `permutes` is the PackingAuto2 pointwise-membership encoding). -/
 theorem LEFT_ACTION_LIST_2_EXISTS {α : Type*} [Inhabited α] (u0 u1 u2 d x y z : α)
     (hcard : Nat.card ({u0, u1, u2, d} : Set α) = 4) (hset : ({x, y, z} : Set α) = {u0, u1, u2}) :
     ∃ p : Equiv.Perm ℕ, permutes p (Set.Iic 2) ∧
-      [x, y, z, d] = leftActionList p [u0, u1, u2, d] := sorry
+      [x, y, z, d] = leftActionList p [u0, u1, u2, d] := by
+  have hd := p15_card4_distinct hcard
+  have hnodu : ([u0, u1, u2] : List α).Nodup :=
+    p15_nodup_three hd.1 hd.2.1 hd.2.2.2.1
+  have hsetL : setOfList [x, y, z] = setOfList [u0, u1, u2] := by
+    ext w
+    constructor
+    · intro hw
+      have h2 : w ∈ ({x, y, z} : Set α) := by simpa [setOfList] using hw
+      rw [hset] at h2
+      simpa [setOfList] using h2
+    · intro hw
+      have h2 : w ∈ ({u0, u1, u2} : Set α) := by simpa [setOfList] using hw
+      rw [← hset] at h2
+      simpa [setOfList] using h2
+  obtain ⟨p, hpfix, hpperm, hpeq⟩ :=
+    p15_leftActionList_of_nodup (ul := [u0, u1, u2]) (vl := [x, y, z]) hnodu rfl hsetL
+  refine ⟨p, ?_, ?_⟩
+  · have hI : Set.Iic 2 = {j : ℕ | j < [u0, u1, u2].length} := by
+      ext j
+      simp only [Set.mem_Iic, Set.mem_setOf_eq, List.length_cons, List.length_nil]
+      omega
+    rw [hI]
+    exact hpperm
+  · have happ := p15_leftActionList_append p ([u0, u1, u2] : List α) d hpfix
+    calc [x, y, z, d] = [x, y, z] ++ [d] := rfl
+      _ = leftActionList p [u0, u1, u2] ++ [d] := by rw [hpeq]
+      _ = leftActionList p ([u0, u1, u2] ++ [d]) := happ.symm
+      _ = leftActionList p [u0, u1, u2, d] := rfl
 
 /-- marchal3.hl:3838 `LEFT_ACTION_LIST_3_EXISTS` (HOL `0..3` ↔ `Set.Iic 3`). -/
 theorem LEFT_ACTION_LIST_3_EXISTS {α : Type*} [Inhabited α] (u0 u1 u2 u3 x y z t : α)
     (hcard : Nat.card ({u0, u1, u2, u3} : Set α) = 4)
     (hset : ({x, y, z, t} : Set α) = {u0, u1, u2, u3}) :
     ∃ p : Equiv.Perm ℕ, permutes p (Set.Iic 3) ∧
-      [x, y, z, t] = leftActionList p [u0, u1, u2, u3] := sorry
+      [x, y, z, t] = leftActionList p [u0, u1, u2, u3] := by
+  have hd := p15_card4_distinct hcard
+  have hnodu : ([u0, u1, u2, u3] : List α).Nodup :=
+    p15_nodup_four hd.1 hd.2.1 hd.2.2.1 hd.2.2.2.1 hd.2.2.2.2.1 hd.2.2.2.2.2
+  have hsetL : setOfList [x, y, z, t] = setOfList [u0, u1, u2, u3] := by
+    ext w
+    constructor
+    · intro hw
+      have h2 : w ∈ ({x, y, z, t} : Set α) := by simpa [setOfList] using hw
+      rw [hset] at h2
+      simpa [setOfList] using h2
+    · intro hw
+      have h2 : w ∈ ({u0, u1, u2, u3} : Set α) := by simpa [setOfList] using hw
+      rw [← hset] at h2
+      simpa [setOfList] using h2
+  obtain ⟨p, hpfix, hpperm, hpeq⟩ :=
+    p15_leftActionList_of_nodup (ul := [u0, u1, u2, u3]) (vl := [x, y, z, t])
+      hnodu rfl hsetL
+  refine ⟨p, ?_, hpeq⟩
+  have hI : Set.Iic 3 = {j : ℕ | j < [u0, u1, u2, u3].length} := by
+    ext j
+    simp only [Set.mem_Iic, Set.mem_setOf_eq, List.length_cons, List.length_nil]
+    omega
+  rw [hI]
+  exact hpperm
 
 /-- marchal3.hl:4135 `lmfun_bounded`. -/
 theorem lmfun_bounded {h : ℝ} (hh : 0 ≤ h) : lmfun h ≤ h0 / (h0 - 1) := by
@@ -3984,10 +4334,675 @@ theorem MCELL_ID_MXI_2 (V : Set V3) (i j : ℕ) (ul vl : List V3) (hp : Packing 
     mxi V ul = mxi V vl := by
   exact p15_mxi_2_main V i j ul vl hp hs hul hvl heq hnel hi hj
 
+private theorem p15_perm_two {k iu iv : ℕ} (hiu : iu < k) (hiv : iv < k) (hne : iu ≠ iv) :
+    ∃ p : Equiv.Perm ℕ, p.symm 0 = iu ∧ p.symm 1 = iv ∧
+      permutes p (Set.Icc 0 (k - 1)) ∧ ∀ j : ℕ, k ≤ j → p j = j := by
+  have hk2 : 2 ≤ k := by omega
+  have hmem : ∀ z : ℕ, z < k → z ∈ Set.Icc 0 (k - 1) := by
+    intro z hz
+    simp only [Set.mem_Icc]
+    omega
+  have hfix : ∀ a b : ℕ, a < k → b < k → ∀ j : ℕ, k ≤ j → Equiv.swap a b j = j := by
+    intro a b ha hb j hj
+    exact Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)
+  have mk : ∀ p : Equiv.Perm ℕ, p iu = 0 → p iv = 1 → p.symm 0 = iu ∧ p.symm 1 = iv := by
+    intro p h0 h1
+    constructor
+    · rw [← h0, Equiv.symm_apply_apply]
+    · rw [← h1, Equiv.symm_apply_apply]
+  by_cases hiu0 : iu = 0
+  · subst hiu0
+    by_cases hiv1 : iv = 1
+    · subst hiv1
+      obtain ⟨h0, h1⟩ := mk (Equiv.refl ℕ) (by rfl) (by rfl)
+      exact ⟨Equiv.refl ℕ, h0, h1, fun x => by rfl, fun j _ => by rfl⟩
+    · have hiv0 : iv ≠ 0 := by omega
+      obtain ⟨h0, h1⟩ := mk (Equiv.swap 1 iv)
+        (Equiv.swap_apply_of_ne_of_ne (by omega) (Ne.symm hiv0))
+        (Equiv.swap_apply_right 1 iv)
+      exact ⟨Equiv.swap 1 iv, h0, h1,
+        p15_permutes_swap (hmem 1 (by omega)) (hmem iv hiv),
+        hfix 1 iv (by omega) hiv⟩
+  · by_cases hiu1 : iu = 1
+    · subst hiu1
+      by_cases hiv0 : iv = 0
+      · subst hiv0
+        obtain ⟨h0, h1⟩ := mk (Equiv.swap 0 1)
+          (Equiv.swap_apply_right 0 1) (Equiv.swap_apply_left 0 1)
+        exact ⟨Equiv.swap 0 1, h0, h1,
+          p15_permutes_swap (hmem 0 (by omega)) (hmem 1 (by omega)),
+          hfix 0 1 (by omega) (by omega)⟩
+      · have hiv1 : iv ≠ 1 := by omega
+        obtain ⟨h0, h1⟩ := mk (Equiv.swap 0 iv * Equiv.swap 1 iv)
+          (by rw [Equiv.Perm.mul_apply, Equiv.swap_apply_left, Equiv.swap_apply_right])
+          (by rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right,
+            Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)])
+        exact ⟨Equiv.swap 0 iv * Equiv.swap 1 iv, h0, h1,
+          p15_permutes_mul (p15_permutes_swap (hmem 0 (by omega)) (hmem iv hiv))
+            (p15_permutes_swap (hmem 1 (by omega)) (hmem iv hiv)),
+          fun j hj => by
+            rw [Equiv.Perm.mul_apply, hfix 1 iv (by omega) hiv j hj,
+              hfix 0 iv (by omega) hiv j hj]⟩
+    · have hiu2 : 2 ≤ iu := by omega
+      by_cases hiv0 : iv = 0
+      · subst hiv0
+        obtain ⟨h0, h1⟩ := mk (Equiv.swap 1 iu * Equiv.swap 0 iu)
+          (by rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right,
+            Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)])
+          (by rw [Equiv.Perm.mul_apply, Equiv.swap_apply_left, Equiv.swap_apply_right])
+        exact ⟨Equiv.swap 1 iu * Equiv.swap 0 iu, h0, h1,
+          p15_permutes_mul (p15_permutes_swap (hmem 1 (by omega)) (hmem iu hiu))
+            (p15_permutes_swap (hmem 0 (by omega)) (hmem iu hiu)),
+          fun j hj => by
+            rw [Equiv.Perm.mul_apply, hfix 0 iu (by omega) hiu j hj,
+              hfix 1 iu (by omega) hiu j hj]⟩
+      · by_cases hiv1 : iv = 1
+        · subst hiv1
+          obtain ⟨h0, h1⟩ := mk (Equiv.swap 0 iu)
+            (Equiv.swap_apply_right 0 iu)
+            (Equiv.swap_apply_of_ne_of_ne (by omega) (by omega))
+          exact ⟨Equiv.swap 0 iu, h0, h1,
+            p15_permutes_swap (hmem 0 (by omega)) (hmem iu hiu),
+            hfix 0 iu (by omega) hiu⟩
+        · obtain ⟨h0, h1⟩ := mk (Equiv.swap 0 iu * Equiv.swap 1 iv)
+            (by rw [Equiv.Perm.mul_apply,
+              Equiv.swap_apply_of_ne_of_ne (a := 1) (b := iv) (x := iu)
+                (by omega) (by omega),
+              Equiv.swap_apply_right])
+            (by rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right,
+              Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)])
+          exact ⟨Equiv.swap 0 iu * Equiv.swap 1 iv, h0, h1,
+            p15_permutes_mul (p15_permutes_swap (hmem 0 (by omega)) (hmem iu hiu))
+              (p15_permutes_swap (hmem 1 (by omega)) (hmem iv hiv)),
+            fun j hj => by
+              rw [Equiv.Perm.mul_apply, hfix 1 iv (by omega) hiv j hj,
+                hfix 0 iu (by omega) hiu j hj]⟩
+
+
+private theorem p15_initialSublist_elV0 {u v : V3} {ul : List V3}
+    (h : initialSublist [u, v] ul) : elV ul 0 = u := by
+  obtain ⟨yl, rfl⟩ := h
+  rfl
+
+private theorem p15_initialSublist_elV1 {u v : V3} {ul : List V3}
+    (h : initialSublist [u, v] ul) : elV ul 1 = v := by
+  obtain ⟨yl, rfl⟩ := h
+  rfl
+
+private theorem p15_init_eq_uv {u v : V3} {ul : List V3}
+    (hinit : initialSublist [u, v] ul) (hlen : ul.length = 4) :
+    ul = [u, v, elV ul 2, elV ul 3] := by
+  obtain ⟨yl, rfl⟩ := hinit
+  have hyl : yl.length = 2 := by
+    simp only [List.length_append, List.length_cons, List.length_nil] at hlen
+    omega
+  obtain ⟨a, b, rfl⟩ := List.length_eq_two.mp hyl
+  rfl
+
+private theorem p15_elV_ne_of_barV {V : Set V3} {ul : List V3} (hp : Packing V)
+    (hbar : barV V 3 ul) {i j : ℕ} (hi : i < ul.length) (hj : j < ul.length)
+    (hij : i ≠ j) : elV ul i ≠ elV ul j := by
+  have hcard : Nat.card (setOfList ul) = ul.length := by
+    have h := (BARV_IMP_LENGTH_EQ_CARD V ul 3 hp hbar).2
+    rw [h, hbar.1]
+  exact CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT ul hcard i j hi hj hij
+
+private theorem p15_leftActionList_getD_zero (p : Equiv.Perm ℕ) (ul : List V3) (i : ℕ)
+    (hi : i < ul.length) :
+    (leftActionList p ul).getD i (0:V3) = ul.getD (p.symm i) (0:V3) := by
+  have h1 : i < (leftActionList p ul).length := by
+    rw [LENGTH_LEFT_ACTION_LIST]; exact hi
+  rw [List.getD_eq_getElem (l := leftActionList p ul) (d := (0:V3)) (n := i) h1]
+  unfold leftActionList
+  rw [List.getElem_map]
+  simp only [List.getElem_range]
+  rfl
+
+private theorem p15_leftActionList_initialSublist (p : Equiv.Perm ℕ) (ul : List V3)
+    {u v : V3} {iu iv : ℕ} (hlen : ul.length = 4)
+    (h0 : p.symm 0 = iu) (h1 : p.symm 1 = iv)
+    (hu : elV ul iu = u) (hv : elV ul iv = v) :
+    initialSublist [u, v] (leftActionList p ul) := by
+  have hlenlap : (leftActionList p ul).length = 4 := by
+    rw [LENGTH_LEFT_ACTION_LIST]; exact hlen
+  have h0' : (leftActionList p ul)[0] = u := by
+    rw [← List.getD_eq_getElem (l := leftActionList p ul) (d := (0:V3)) (n := 0) (by omega)]
+    have hgd : (leftActionList p ul).getD 0 (0:V3) = ul.getD (p.symm 0) (0:V3) :=
+      p15_leftActionList_getD_zero p ul 0 (by omega)
+    rw [hgd, h0]
+    exact hu
+  have h1' : (leftActionList p ul)[1] = v := by
+    rw [← List.getD_eq_getElem (l := leftActionList p ul) (d := (0:V3)) (n := 1) (by omega)]
+    have hgd : (leftActionList p ul).getD 1 (0:V3) = ul.getD (p.symm 1) (0:V3) :=
+      p15_leftActionList_getD_zero p ul 1 (by omega)
+    rw [hgd, h1]
+    exact hv
+  refine ⟨(leftActionList p ul).drop 2, ?_⟩
+  calc leftActionList p ul
+      = (leftActionList p ul).drop 0 := rfl
+    _ = (leftActionList p ul)[0] :: (leftActionList p ul).drop 1 :=
+        List.drop_eq_getElem_cons (l := leftActionList p ul) (i := 0) (by omega)
+    _ = u :: (leftActionList p ul).drop 1 := by rw [h0']
+    _ = u :: ((leftActionList p ul)[1] :: (leftActionList p ul).drop 2) := by
+        rw [List.drop_eq_getElem_cons (l := leftActionList p ul) (i := 1) (by omega)]
+    _ = [u, v] ++ (leftActionList p ul).drop 2 := by rw [h1']; rfl
+
+private theorem p15_pair_eq_of_insert_pair {u v a b c d : V3}
+    (hau : a ≠ u) (hav : a ≠ v) (hbu : b ≠ u) (hbv : b ≠ v)
+    (hcu : c ≠ u) (hcv : c ≠ v) (hdu : d ≠ u) (hdv : d ≠ v)
+    (h : ({u, v, a, b} : Set V3) = {u, v, c, d}) :
+    ({a, b} : Set V3) = {c, d} := by
+  ext x
+  constructor
+  · intro hx
+    have hx0 : x ∈ ({u, v, a, b} : Set V3) := by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+      tauto
+    have hx' : x ∈ ({u, v, c, d} : Set V3) := by rw [h] at hx0; exact hx0
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx hx'
+    rcases hx with rfl | rfl
+    · rcases hx' with h' | h' | h' | h'
+      · exact absurd h' hau
+      · exact absurd h' hav
+      · exact Or.inl h'
+      · exact Or.inr h'
+    · rcases hx' with h' | h' | h' | h'
+      · exact absurd h' hbu
+      · exact absurd h' hbv
+      · exact Or.inl h'
+      · exact Or.inr h'
+  · intro hx
+    have hx0 : x ∈ ({u, v, c, d} : Set V3) := by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+      tauto
+    have hx' : x ∈ ({u, v, a, b} : Set V3) := by rw [← h] at hx0; exact hx0
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx hx'
+    rcases hx with rfl | rfl
+    · rcases hx' with h' | h' | h' | h'
+      · exact absurd h' hcu
+      · exact absurd h' hcv
+      · exact Or.inl h'
+      · exact Or.inr h'
+    · rcases hx' with h' | h' | h' | h'
+      · exact absurd h' hdu
+      · exact absurd h' hdv
+      · exact Or.inl h'
+      · exact Or.inr h'
+
+
+
+private theorem p15_mcell4_verts_eq (V : Set V3) (ul vl : List V3)
+    (hp : Packing V) (hs : saturated V) (hul : barV V 3 ul) (hvl : barV V 3 vl)
+    (hcell : mcell 4 V ul = mcell 4 V vl) (hnull : ¬nullSet (mcell 4 V ul)) :
+    setOfList ul = setOfList vl := by
+  obtain ⟨u0, u1, u2, u3, hul4⟩ := BARV_3_EXPLICIT V ul hul
+  obtain ⟨v0, v1, v2, v3, hvl4⟩ := BARV_3_EXPLICIT V vl hvl
+  subst hul4
+  subst hvl4
+  have hne : mcell 4 V [u0, u1, u2, u3] ≠ ∅ := by
+    intro hc
+    exact hnull (by rw [hc]; exact measure_empty)
+  have hltu : hl (truncateSimplex 3 [u0, u1, u2, u3]) < Real.sqrt 2 := by
+    by_contra hc
+    have hE : mcell 4 V [u0, u1, u2, u3] = ∅ := by
+      rw [(MCELL_EXPLICIT 4 V [u0, u1, u2, u3]).2.2.2.2 (by norm_num), mcell4]
+      rw [if_neg]
+      intro h
+      exact hc (by rwa [TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 u2 u3])
+    exact hne hE
+  have hltu' : hl [u0, u1, u2, u3] < Real.sqrt 2 := by
+    have h := hltu
+    rw [TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 u2 u3] at h
+    exact h
+  obtain ⟨p, q, hperm_p, hfix_p, hperm_q, hfix_q, hbar_p, hbar_q, hrog, hdim⟩ :=
+    p15_rogers_common V 4 [u0, u1, u2, u3] [v0, v1, v2, v3] hp hs hul hvl
+      hcell hnull (by simp)
+  have hperm4p : permutes p {i : ℕ | i < 4} := by
+    have h := hperm_p
+    rw [p15_Icc_eq_Iio 4 (by norm_num)] at h
+    exact h
+  have hperm4q : permutes q {i : ℕ | i < 4} := by
+    have h := hperm_q
+    rw [p15_Icc_eq_Iio 4 (by norm_num)] at h
+    exact h
+  have hsetp : setOfList (leftActionList p [u0, u1, u2, u3]) = setOfList [u0, u1, u2, u3] :=
+    SET_OF_LIST_LEFT_ACTION_LIST [u0, u1, u2, u3] p hperm4p
+  have hsetq : setOfList (leftActionList q [v0, v1, v2, v3]) = setOfList [v0, v1, v2, v3] :=
+    SET_OF_LIST_LEFT_ACTION_LIST [v0, v1, v2, v3] q hperm4q
+  have hhlp : hl (leftActionList p [u0, u1, u2, u3]) = hl [u0, u1, u2, u3] := by
+    show radV (setOfList _) = radV (setOfList _)
+    rw [hsetp]
+  have htrp : truncateSimplex 3 (leftActionList p [u0, u1, u2, u3]) =
+      leftActionList p [u0, u1, u2, u3] :=
+    TRUNCATE_SIMPLEX_REFL 3 _ (by rw [LENGTH_LEFT_ACTION_LIST]; exact hul.1)
+  have htrq : truncateSimplex 3 (leftActionList q [v0, v1, v2, v3]) =
+      leftActionList q [v0, v1, v2, v3] :=
+    TRUNCATE_SIMPLEX_REFL 3 _ (by rw [LENGTH_LEFT_ACTION_LIST]; exact hvl.1)
+  have hlpu : hl (truncateSimplex 3 (leftActionList p [u0, u1, u2, u3])) < Real.sqrt 2 := by
+    rw [htrp, hhlp]
+    exact hltu'
+  have htr := TEZFFSK V (leftActionList p [u0, u1, u2, u3])
+    (leftActionList q [v0, v1, v2, v3]) 3 hs hp hbar_p hbar_q hrog hdim (by norm_num) hlpu
+  have hsetpq : setOfList (leftActionList p [u0, u1, u2, u3]) =
+      setOfList (leftActionList q [v0, v1, v2, v3]) := by
+    have h2 := congrArg setOfList htr
+    rwa [htrp, htrq] at h2
+  rw [← hsetp, hsetpq, hsetq]
+
+private theorem p15_cellParams_exists_of_mcellSet (V X : Set V3) (hm : mcellSet V X) :
+    (cellParams V X).1 ≤ 4 ∧ barV V 3 (cellParams V X).2 ∧
+      X = mcell (cellParams V X).1 V (cellParams V X).2 := by
+  have hcpex : ∃ q : ℕ × List V3, q.1 ≤ 4 ∧ barV V 3 q.2 ∧ X = mcell q.1 V q.2 := by
+    obtain ⟨i, ul, hX, hbar⟩ := Set.mem_setOf_eq.mp hm
+    refine ⟨(min i 4, ul), ?_, hbar, ?_⟩
+    · omega
+    · rw [hX]
+      rcases Nat.lt_or_ge i 4 with hlt | hle
+      · rw [min_eq_left (le_of_lt hlt)]
+      · rw [min_eq_right hle, (MCELL_EXPLICIT i V ul).2.2.2.2 hle,
+          (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+  exact Classical.epsilon_spec (p := fun q : ℕ × List V3 =>
+    q.1 ≤ 4 ∧ barV V 3 q.2 ∧ X = mcell q.1 V q.2) hcpex
+
+private theorem p15_cellParamsD_exists_of_VX (V X : Set V3) (u v : V3)
+    (hp : Packing V) (hs : saturated V) (hm : mcellSet V X)
+    (hn : ¬ nullSet X) (hu : u ∈ VX V X) (hv : v ∈ VX V X) (huv : u ≠ v) :
+    ∃ q : ℕ × List V3, q.1 ≤ 4 ∧ barV V 3 q.2 ∧ X = mcell q.1 V q.2 ∧
+      initialSublist [u, v] q.2 := by
+  classical
+  have hcp := p15_cellParams_exists_of_mcellSet V X hm
+  have hlen4 : (cellParams V X).2.length = 4 := by
+    have := hcp.2.1.1
+    omega
+  have hk0 : (cellParams V X).1 ≠ 0 := by
+    intro h0
+    unfold VX at hu
+    simp only [if_neg hn] at hu
+    rw [if_pos h0] at hu
+    simp at hu
+  have hu' : u ∈ setOfList (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+    unfold VX at hu
+    simp only [if_neg hn] at hu
+    rw [if_neg hk0] at hu
+    exact hu
+  have hv' : v ∈ setOfList (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+    unfold VX at hv
+    simp only [if_neg hn] at hv
+    rw [if_neg hk0] at hv
+    exact hv
+  have hk1 : (cellParams V X).1 ≠ 1 := by
+    intro h1
+    have htrlen : (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).length = 1 := by
+      rw [h1, show (1:ℕ) - 1 = 0 from rfl,
+        LENGTH_TRUNCATE_SIMPLEX 0 (cellParams V X).2 (by omega)]
+    have hmu : u ∈ (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+      simpa only [setOfList, Set.mem_setOf_eq] using hu'
+    have hmv : v ∈ (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+      simpa only [setOfList, Set.mem_setOf_eq] using hv'
+    obtain ⟨i, hi⟩ := List.mem_iff_get.mp hmu
+    obtain ⟨j, hj⟩ := List.mem_iff_get.mp hmv
+    have hij : i = j := by
+      apply Fin.ext
+      have hi0 : i.1 = 0 := by have := i.2; omega
+      have hj0 : j.1 = 0 := by have := j.2; omega
+      rw [hi0, hj0]
+    have hcancel : (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).get i =
+        (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).get j := by rw [hij]
+    exact huv (hi.symm.trans (hcancel.trans hj))
+  have hk234 : (cellParams V X).1 ∈ ({2, 3, 4} : Set ℕ) := by
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have htrlen : (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).length
+      = (cellParams V X).1 := by
+    have h := LENGTH_TRUNCATE_SIMPLEX ((cellParams V X).1 - 1) (cellParams V X).2 (by omega)
+    omega
+  have hu2 : u ∈ (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+    simpa only [setOfList, Set.mem_setOf_eq] using hu'
+  have hv2 : v ∈ (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+    simpa only [setOfList, Set.mem_setOf_eq] using hv'
+  obtain ⟨iu, hiu_lt, hiu_eq⟩ : ∃ i < (cellParams V X).1, elV (cellParams V X).2 i = u := by
+    obtain ⟨i, hi⟩ := List.mem_iff_get.mp hu2
+    refine ⟨i.1, by have := i.2; omega, ?_⟩
+    have hel := EL_TRUNCATE_SIMPLEX (cellParams V X).2 ((cellParams V X).1 - 1) i.1
+      (by omega) (by have := i.2; omega)
+    rw [← hel]
+    have hgd : elV (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) i.1
+        = (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).get i := by
+      rw [elV, List.getD_eq_get (l := _) (d := (0:V3)) i]
+    rw [hgd, hi]
+  obtain ⟨iv, hiv_lt, hiv_eq⟩ : ∃ i < (cellParams V X).1, elV (cellParams V X).2 i = v := by
+    obtain ⟨i, hi⟩ := List.mem_iff_get.mp hv2
+    refine ⟨i.1, by have := i.2; omega, ?_⟩
+    have hel := EL_TRUNCATE_SIMPLEX (cellParams V X).2 ((cellParams V X).1 - 1) i.1
+      (by omega) (by have := i.2; omega)
+    rw [← hel]
+    have hgd : elV (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) i.1
+        = (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).get i := by
+      rw [elV, List.getD_eq_get (l := _) (d := (0:V3)) i]
+    rw [hgd, hi]
+  have hiuv : iu ≠ iv := by
+    intro h
+    exact huv (hiu_eq.symm.trans (by rw [h]; exact hiv_eq))
+  obtain ⟨p, hp0, hp1, hpperm, hpfix⟩ := p15_perm_two hiu_lt hiv_lt hiuv
+  have hkmem : (cellParams V X).1 ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hne : mcell (cellParams V X).1 V (cellParams V X).2 ≠ ∅ := by
+    intro hc
+    exact hn (by rw [hcp.2.2, hc]; exact measure_empty)
+  have hbarp : barV V 3 (leftActionList p (cellParams V X).2) :=
+    QZKSYKG1 hs hp hcp.2.1 hkmem hne hpperm hpfix rfl
+  have hmcp : mcell (cellParams V X).1 V (leftActionList p (cellParams V X).2)
+      = mcell (cellParams V X).1 V (cellParams V X).2 :=
+    RVFXZBU_p14 hkmem hs hp hcp.2.1 hpperm hpfix
+  have hXp : X = mcell (cellParams V X).1 V (leftActionList p (cellParams V X).2) :=
+    hcp.2.2.trans hmcp.symm
+  have hinitp : initialSublist [u, v] (leftActionList p (cellParams V X).2) :=
+    p15_leftActionList_initialSublist p (cellParams V X).2 hlen4 hp0 hp1 hiu_eq hiv_eq
+  exact ⟨((cellParams V X).1, leftActionList p (cellParams V X).2), hcp.1, hbarp, hXp, hinitp⟩
+
+private theorem p15_paramsD_eq_params (V X : Set V3) (ul vl : List V3)
+    (hp : Packing V) (hs : saturated V)
+    (hbar : barV V 3 ul) (hX : X = mcell (cellParams V X).1 V ul)
+    (hk4 : (cellParams V X).1 ≤ 4) (hn : ¬nullSet X)
+    (hq4 : (cellParamsD V X vl).1 ≤ 4)
+    (hqbar : barV V 3 (cellParamsD V X vl).2)
+    (hqX : X = mcell (cellParamsD V X vl).1 V (cellParamsD V X vl).2) :
+    (cellParamsD V X vl).1 = (cellParams V X).1 ∧
+      mcell (cellParams V X).1 V (cellParamsD V X vl).2 = mcell (cellParams V X).1 V ul := by
+  have hkmem : (cellParams V X).1 ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hqmem : (cellParamsD V X vl).1 ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hvol : ¬nullSet (mcell (cellParamsD V X vl).1 V (cellParamsD V X vl).2 ∩
+      mcell (cellParams V X).1 V ul) := by
+    rw [← hqX, ← hX, Set.inter_self]
+    exact hn
+  have h := AJRIPQN V (cellParamsD V X vl).2 ul (cellParamsD V X vl).1 (cellParams V X).1
+    hs hp hqbar hbar hqmem hkmem hvol
+  refine ⟨h.1, ?_⟩
+  calc mcell (cellParams V X).1 V (cellParamsD V X vl).2
+      = mcell (cellParamsD V X vl).1 V (cellParamsD V X vl).2 := by rw [h.1]
+    _ = mcell (cellParams V X).1 V ul := h.2
+
+private theorem p15_dihX_zero_of_ne (V X : Set V3) (u v : V3) (hn : ¬nullSet X)
+    (h2 : (cellParamsD V X [u, v]).1 ≠ 2) (h3 : (cellParamsD V X [u, v]).1 ≠ 3)
+    (h4 : (cellParamsD V X [u, v]).1 ≠ 4) : dihX V X (u, v) = 0 := by
+  have hd : dihX V X (u, v) =
+      if nullSet X then 0
+      else if (cellParamsD V X [u, v]).1 = 2 then dihu2 V (cellParamsD V X [u, v]).2
+      else if (cellParamsD V X [u, v]).1 = 3 then dihu3 V (cellParamsD V X [u, v]).2
+      else if (cellParamsD V X [u, v]).1 = 4 then dihu4 (cellParamsD V X [u, v]).2
+      else 0 := by unfold dihX; rfl
+  rw [hd, if_neg hn, if_neg h2, if_neg h3, if_neg h4]
+
+private theorem p15_dihX_eq_dihu2 (V X : Set V3) (u v : V3) (hn : ¬nullSet X)
+    (h2 : (cellParamsD V X [u, v]).1 = 2) :
+    dihX V X (u, v) = dihu2 V (cellParamsD V X [u, v]).2 := by
+  have hd : dihX V X (u, v) =
+      if nullSet X then 0
+      else if (cellParamsD V X [u, v]).1 = 2 then dihu2 V (cellParamsD V X [u, v]).2
+      else if (cellParamsD V X [u, v]).1 = 3 then dihu3 V (cellParamsD V X [u, v]).2
+      else if (cellParamsD V X [u, v]).1 = 4 then dihu4 (cellParamsD V X [u, v]).2
+      else 0 := by unfold dihX; rfl
+  rw [hd, if_neg hn, if_pos h2]
+
+private theorem p15_dihX_eq_dihu3 (V X : Set V3) (u v : V3) (hn : ¬nullSet X)
+    (h2 : (cellParamsD V X [u, v]).1 ≠ 2) (h3 : (cellParamsD V X [u, v]).1 = 3) :
+    dihX V X (u, v) = dihu3 V (cellParamsD V X [u, v]).2 := by
+  have hd : dihX V X (u, v) =
+      if nullSet X then 0
+      else if (cellParamsD V X [u, v]).1 = 2 then dihu2 V (cellParamsD V X [u, v]).2
+      else if (cellParamsD V X [u, v]).1 = 3 then dihu3 V (cellParamsD V X [u, v]).2
+      else if (cellParamsD V X [u, v]).1 = 4 then dihu4 (cellParamsD V X [u, v]).2
+      else 0 := by unfold dihX; rfl
+  rw [hd, if_neg hn, if_neg h2, if_pos h3]
+
+private theorem p15_dihX_eq_dihu4 (V X : Set V3) (u v : V3) (hn : ¬nullSet X)
+    (h2 : (cellParamsD V X [u, v]).1 ≠ 2) (h3 : (cellParamsD V X [u, v]).1 ≠ 3)
+    (h4 : (cellParamsD V X [u, v]).1 = 4) :
+    dihX V X (u, v) = dihu4 (cellParamsD V X [u, v]).2 := by
+  have hd : dihX V X (u, v) =
+      if nullSet X then 0
+      else if (cellParamsD V X [u, v]).1 = 2 then dihu2 V (cellParamsD V X [u, v]).2
+      else if (cellParamsD V X [u, v]).1 = 3 then dihu3 V (cellParamsD V X [u, v]).2
+      else if (cellParamsD V X [u, v]).1 = 4 then dihu4 (cellParamsD V X [u, v]).2
+      else 0 := by unfold dihX; rfl
+  rw [hd, if_neg hn, if_neg h2, if_neg h3, if_pos h4]
+
 /-- marchal3.hl:4942 `DIHX_SYM`. -/
 theorem DIHX_SYM (V : Set V3) (X : Set V3) (u v : V3) (hp : Packing V) (hs : saturated V)
     (hm : mcellSet V X) (he : {u, v} ∈ edgeX V X) :
-    dihX V X (u, v) = dihX V X (v, u) := sorry
+    dihX V X (u, v) = dihX V X (v, u) := by
+  by_cases hn : nullSet X
+  · unfold dihX
+    rw [if_pos hn, if_pos hn]
+  obtain ⟨huVX, hvVX, huv⟩ : u ∈ VX V X ∧ v ∈ VX V X ∧ u ≠ v := by
+    obtain ⟨a, b, hab_eq, ha, hb, hab⟩ := Set.mem_setOf_eq.mp he
+    rcases Set.pair_eq_pair_iff.mp hab_eq with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+    · exact ⟨ha, hb, hab⟩
+    · exact ⟨hb, ha, hab.symm⟩
+  have hwit1 := p15_cellParamsD_exists_of_VX V X u v hp hs hm hn huVX hvVX huv
+  have hwit2 := p15_cellParamsD_exists_of_VX V X v u hp hs hm hn hvVX huVX (Ne.symm huv)
+  have hq1 : (cellParamsD V X [u, v]).1 ≤ 4 ∧
+      barV V 3 (cellParamsD V X [u, v]).2 ∧
+      X = mcell (cellParamsD V X [u, v]).1 V (cellParamsD V X [u, v]).2 ∧
+      initialSublist [u, v] (cellParamsD V X [u, v]).2 :=
+    Classical.epsilon_spec (p := fun q : ℕ × List V3 =>
+      q.1 ≤ 4 ∧ barV V 3 q.2 ∧ X = mcell q.1 V q.2 ∧ initialSublist [u, v] q.2) hwit1
+  have hq2 : (cellParamsD V X [v, u]).1 ≤ 4 ∧
+      barV V 3 (cellParamsD V X [v, u]).2 ∧
+      X = mcell (cellParamsD V X [v, u]).1 V (cellParamsD V X [v, u]).2 ∧
+      initialSublist [v, u] (cellParamsD V X [v, u]).2 :=
+    Classical.epsilon_spec (p := fun q : ℕ × List V3 =>
+      q.1 ≤ 4 ∧ barV V 3 q.2 ∧ X = mcell q.1 V q.2 ∧ initialSublist [v, u] q.2) hwit2
+  have hcp := p15_cellParams_exists_of_mcellSet V X hm
+  obtain ⟨hq1eq, hmq1⟩ := p15_paramsD_eq_params V X (cellParams V X).2 [u, v]
+    hp hs hcp.2.1 hcp.2.2 hcp.1 hn hq1.1 hq1.2.1 hq1.2.2.1
+  obtain ⟨hq2eq, hmq2⟩ := p15_paramsD_eq_params V X (cellParams V X).2 [v, u]
+    hp hs hcp.2.1 hcp.2.2 hcp.1 hn hq2.1 hq2.2.1 hq2.2.2.1
+  have hq1mX : mcell (cellParams V X).1 V (cellParamsD V X [u, v]).2 = X :=
+    hmq1.trans hcp.2.2.symm
+  have hq2mX : mcell (cellParams V X).1 V (cellParamsD V X [v, u]).2 = X :=
+    hmq2.trans hcp.2.2.symm
+  have heq12 : mcell (cellParams V X).1 V (cellParamsD V X [u, v]).2
+      = mcell (cellParams V X).1 V (cellParamsD V X [v, u]).2 :=
+    hq1mX.trans hq2mX.symm
+  have hnel : ¬nullSet (mcell (cellParams V X).1 V (cellParamsD V X [u, v]).2) := by
+    rw [hq1mX]
+    exact hn
+  have hk4 : (cellParams V X).1 ≤ 4 := hcp.1
+  rcases Nat.lt_or_ge (cellParams V X).1 2 with hlt2 | hge2
+  · have hq1n2 : (cellParamsD V X [u, v]).1 ≠ 2 := by rw [hq1eq]; omega
+    have hq1n3 : (cellParamsD V X [u, v]).1 ≠ 3 := by rw [hq1eq]; omega
+    have hq1n4 : (cellParamsD V X [u, v]).1 ≠ 4 := by rw [hq1eq]; omega
+    have hq2n2 : (cellParamsD V X [v, u]).1 ≠ 2 := by rw [hq2eq]; omega
+    have hq2n3 : (cellParamsD V X [v, u]).1 ≠ 3 := by rw [hq2eq]; omega
+    have hq2n4 : (cellParamsD V X [v, u]).1 ≠ 4 := by rw [hq2eq]; omega
+    rw [p15_dihX_zero_of_ne V X u v hn hq1n2 hq1n3 hq1n4,
+      p15_dihX_zero_of_ne V X v u hn hq2n2 hq2n3 hq2n4]
+  · have hk2or : (cellParams V X).1 = 2 ∨ (cellParams V X).1 = 3 ∨
+        (cellParams V X).1 = 4 := by omega
+    rcases hk2or with hk2 | hk3 | hk4'
+    · have hq1_2 : (cellParamsD V X [u, v]).1 = 2 := hq1eq.trans hk2
+      have hq2_2 : (cellParamsD V X [v, u]).1 = 2 := hq2eq.trans hk2
+      have heq12_2 : mcell 2 V (cellParamsD V X [u, v]).2
+          = mcell 2 V (cellParamsD V X [v, u]).2 := by
+        have h := heq12; rw [hk2] at h; exact h
+      have hnel_2 : ¬nullSet (mcell 2 V (cellParamsD V X [u, v]).2) := by
+        have h := hnel; rw [hk2] at h; exact h
+      have hmxi : mxi V (cellParamsD V X [u, v]).2 = mxi V (cellParamsD V X [v, u]).2 :=
+        MCELL_ID_MXI_2 V 2 2 (cellParamsD V X [u, v]).2 (cellParamsD V X [v, u]).2
+          hp hs hq1.2.1 hq2.2.1 heq12_2 hnel_2 (by simp) (by simp)
+      have homega : omegaListN V (cellParamsD V X [u, v]).2 3
+          = omegaListN V (cellParamsD V X [v, u]).2 3 :=
+        (MCELL_ID_OMEGA_LIST_N V 2 2 (cellParamsD V X [u, v]).2 (cellParamsD V X [v, u]).2
+          hp hs hq1.2.1 hq2.2.1 heq12_2 hnel_2 (by simp) (by simp)).2 3
+          ⟨by norm_num, by norm_num⟩
+      have hdihu : dihu2 V (cellParamsD V X [u, v]).2
+          = dihu2 V (cellParamsD V X [v, u]).2 := by
+        unfold dihu2
+        rw [p15_initialSublist_elV0 hq1.2.2.2, p15_initialSublist_elV1 hq1.2.2.2,
+          p15_initialSublist_elV0 hq2.2.2.2, p15_initialSublist_elV1 hq2.2.2.2,
+          hmxi, homega]
+        exact DIHV_SYM u v _ _
+      rw [p15_dihX_eq_dihu2 V X u v hn hq1_2, p15_dihX_eq_dihu2 V X v u hn hq2_2,
+        hdihu]
+    · have hq1_3 : (cellParamsD V X [u, v]).1 = 3 := hq1eq.trans hk3
+      have hq2_3 : (cellParamsD V X [v, u]).1 = 3 := hq2eq.trans hk3
+      have heq12_3 : mcell 3 V (cellParamsD V X [u, v]).2
+          = mcell 3 V (cellParamsD V X [v, u]).2 := by
+        have h := heq12; rw [hk3] at h; exact h
+      have hnel_3 : ¬nullSet (mcell 3 V (cellParamsD V X [u, v]).2) := by
+        have h := hnel; rw [hk3] at h; exact h
+      have hmxi : mxi V (cellParamsD V X [u, v]).2 = mxi V (cellParamsD V X [v, u]).2 :=
+        MCELL_ID_MXI_2 V 3 3 (cellParamsD V X [u, v]).2 (cellParamsD V X [v, u]).2
+          hp hs hq1.2.1 hq2.2.1 heq12_3 hnel_3 (by simp) (by simp)
+      have htrunc := p15_trunc_set_eq V 3 (cellParamsD V X [u, v]).2
+        (cellParamsD V X [v, u]).2 hp hs hq1.2.1 hq2.2.1 heq12_3 hnel_3 (by simp)
+      have hform1 := p15_init_eq_uv hq1.2.2.2 hq1.2.1.1
+      have hform2 := p15_init_eq_uv hq2.2.2.2 hq2.2.1.1
+      have htr1 : truncateSimplex 2 (cellParamsD V X [u, v]).2
+          = [u, v, elV (cellParamsD V X [u, v]).2 2] := by
+        nth_rewrite 1 [hform1]
+        exact (TRUNCATE_SIMPLEX_EXPLICIT_2 u v
+          (elV (cellParamsD V X [u, v]).2 2) (elV (cellParamsD V X [u, v]).2 3)).2
+      have htr2 : truncateSimplex 2 (cellParamsD V X [v, u]).2
+          = [v, u, elV (cellParamsD V X [v, u]).2 2] := by
+        nth_rewrite 1 [hform2]
+        exact (TRUNCATE_SIMPLEX_EXPLICIT_2 v u
+          (elV (cellParamsD V X [v, u]).2 2) (elV (cellParamsD V X [v, u]).2 3)).2
+      have hset1 : setOfList (truncateSimplex 2 (cellParamsD V X [u, v]).2)
+          = ({u, v, elV (cellParamsD V X [u, v]).2 2} : Set V3) := by
+        rw [htr1]; ext x; simp [setOfList]
+      have hset2 : setOfList (truncateSimplex 2 (cellParamsD V X [v, u]).2)
+          = ({v, u, elV (cellParamsD V X [v, u]).2 2} : Set V3) := by
+        rw [htr2]; ext x; simp [setOfList]
+      have hpair : ({u, v, elV (cellParamsD V X [u, v]).2 2} : Set V3)
+          = {u, v, elV (cellParamsD V X [v, u]).2 2} := by
+        rw [← hset1, htrunc, hset2, Set.insert_comm v u]
+      have h0u1 : elV (cellParamsD V X [u, v]).2 0 = u := p15_initialSublist_elV0 hq1.2.2.2
+      have h1v1 : elV (cellParamsD V X [u, v]).2 1 = v := p15_initialSublist_elV1 hq1.2.2.2
+      have hau : elV (cellParamsD V X [u, v]).2 2 ≠ u := by
+        have h := p15_elV_ne_of_barV hp hq1.2.1 (i := 2) (j := 0)
+          (by rw [hq1.2.1.1]; norm_num) (by rw [hq1.2.1.1]; norm_num) (by norm_num)
+        rwa [h0u1] at h
+      have hav : elV (cellParamsD V X [u, v]).2 2 ≠ v := by
+        have h := p15_elV_ne_of_barV hp hq1.2.1 (i := 2) (j := 1)
+          (by rw [hq1.2.1.1]; norm_num) (by rw [hq1.2.1.1]; norm_num) (by norm_num)
+        rwa [h1v1] at h
+      have hbu : elV (cellParamsD V X [v, u]).2 2 ≠ u := by
+        have h := p15_elV_ne_of_barV hp hq2.2.1 (i := 2) (j := 1)
+          (by rw [hq2.2.1.1]; norm_num) (by rw [hq2.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV1 hq2.2.2.2] at h
+      have hbv : elV (cellParamsD V X [v, u]).2 2 ≠ v := by
+        have h := p15_elV_ne_of_barV hp hq2.2.1 (i := 2) (j := 0)
+          (by rw [hq2.2.1.1]; norm_num) (by rw [hq2.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV0 hq2.2.2.2] at h
+      have haeq : elV (cellParamsD V X [u, v]).2 2
+          = elV (cellParamsD V X [v, u]).2 2 := by
+        have hb_mem : elV (cellParamsD V X [v, u]).2 2
+            ∈ ({u, v, elV (cellParamsD V X [u, v]).2 2} : Set V3) := by
+          rw [hpair]; simp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hb_mem
+        rcases hb_mem with h | h | h
+        · exact absurd h hbu
+        · exact absurd h hbv
+        · exact h.symm
+      have hdihu : dihu3 V (cellParamsD V X [u, v]).2
+          = dihu3 V (cellParamsD V X [v, u]).2 := by
+        unfold dihu3
+        rw [h0u1, h1v1, haeq, hmxi,
+          p15_initialSublist_elV0 hq2.2.2.2, p15_initialSublist_elV1 hq2.2.2.2]
+        exact DIHV_SYM u v _ _
+      rw [p15_dihX_eq_dihu3 V X u v hn (by rw [hq1eq, hk3]; omega) hq1_3,
+        p15_dihX_eq_dihu3 V X v u hn (by rw [hq2eq, hk3]; omega) hq2_3, hdihu]
+    · have hq1_4 : (cellParamsD V X [u, v]).1 = 4 := hq1eq.trans hk4'
+      have hq2_4 : (cellParamsD V X [v, u]).1 = 4 := hq2eq.trans hk4'
+      have heq12_4 : mcell 4 V (cellParamsD V X [u, v]).2
+          = mcell 4 V (cellParamsD V X [v, u]).2 := by
+        have h := heq12; rw [hk4'] at h; exact h
+      have hnel_4 : ¬nullSet (mcell 4 V (cellParamsD V X [u, v]).2) := by
+        have h := hnel; rw [hk4'] at h; exact h
+      have hverts := p15_mcell4_verts_eq V (cellParamsD V X [u, v]).2
+        (cellParamsD V X [v, u]).2 hp hs hq1.2.1 hq2.2.1 heq12_4 hnel_4
+      have hform1 := p15_init_eq_uv hq1.2.2.2 hq1.2.1.1
+      have hform2 := p15_init_eq_uv hq2.2.2.2 hq2.2.1.1
+      have hset1 : setOfList (cellParamsD V X [u, v]).2
+          = ({u, v, elV (cellParamsD V X [u, v]).2 2,
+              elV (cellParamsD V X [u, v]).2 3} : Set V3) := by
+        nth_rewrite 1 [hform1]
+        ext x; simp [setOfList]
+      have hset2 : setOfList (cellParamsD V X [v, u]).2
+          = ({v, u, elV (cellParamsD V X [v, u]).2 2,
+              elV (cellParamsD V X [v, u]).2 3} : Set V3) := by
+        nth_rewrite 1 [hform2]
+        ext x; simp [setOfList]
+      have hfull : ({u, v, elV (cellParamsD V X [u, v]).2 2,
+          elV (cellParamsD V X [u, v]).2 3} : Set V3) =
+          {u, v, elV (cellParamsD V X [v, u]).2 2,
+            elV (cellParamsD V X [v, u]).2 3} := by
+        rw [← hset1, hverts, hset2, Set.insert_comm v u]
+      have hau : elV (cellParamsD V X [u, v]).2 2 ≠ u := by
+        have h := p15_elV_ne_of_barV hp hq1.2.1 (i := 2) (j := 0)
+          (by rw [hq1.2.1.1]; norm_num) (by rw [hq1.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV0 hq1.2.2.2] at h
+      have hav : elV (cellParamsD V X [u, v]).2 2 ≠ v := by
+        have h := p15_elV_ne_of_barV hp hq1.2.1 (i := 2) (j := 1)
+          (by rw [hq1.2.1.1]; norm_num) (by rw [hq1.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV1 hq1.2.2.2] at h
+      have hbu : elV (cellParamsD V X [u, v]).2 3 ≠ u := by
+        have h := p15_elV_ne_of_barV hp hq1.2.1 (i := 3) (j := 0)
+          (by rw [hq1.2.1.1]; norm_num) (by rw [hq1.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV0 hq1.2.2.2] at h
+      have hbv : elV (cellParamsD V X [u, v]).2 3 ≠ v := by
+        have h := p15_elV_ne_of_barV hp hq1.2.1 (i := 3) (j := 1)
+          (by rw [hq1.2.1.1]; norm_num) (by rw [hq1.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV1 hq1.2.2.2] at h
+      have hcu : elV (cellParamsD V X [v, u]).2 2 ≠ u := by
+        have h := p15_elV_ne_of_barV hp hq2.2.1 (i := 2) (j := 1)
+          (by rw [hq2.2.1.1]; norm_num) (by rw [hq2.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV1 hq2.2.2.2] at h
+      have hcv : elV (cellParamsD V X [v, u]).2 2 ≠ v := by
+        have h := p15_elV_ne_of_barV hp hq2.2.1 (i := 2) (j := 0)
+          (by rw [hq2.2.1.1]; norm_num) (by rw [hq2.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV0 hq2.2.2.2] at h
+      have hdu : elV (cellParamsD V X [v, u]).2 3 ≠ u := by
+        have h := p15_elV_ne_of_barV hp hq2.2.1 (i := 3) (j := 1)
+          (by rw [hq2.2.1.1]; norm_num) (by rw [hq2.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV1 hq2.2.2.2] at h
+      have hdv : elV (cellParamsD V X [v, u]).2 3 ≠ v := by
+        have h := p15_elV_ne_of_barV hp hq2.2.1 (i := 3) (j := 0)
+          (by rw [hq2.2.1.1]; norm_num) (by rw [hq2.2.1.1]; norm_num) (by norm_num)
+        rwa [p15_initialSublist_elV0 hq2.2.2.2] at h
+      have hpair := p15_pair_eq_of_insert_pair hau hav hbu hbv hcu hcv hdu hdv hfull
+      have hcomm : dihV v u (elV (cellParamsD V X [u, v]).2 3)
+          (elV (cellParamsD V X [u, v]).2 2)
+          = dihV v u (elV (cellParamsD V X [v, u]).2 2)
+            (elV (cellParamsD V X [v, u]).2 3) := by
+        rcases Set.pair_eq_pair_iff.mp hpair with ⟨h1, h2⟩ | ⟨h1, h2⟩
+        · rw [h1, h2]
+          exact (DIHV_SYM_2 v u (elV (cellParamsD V X [v, u]).2 2)
+            (elV (cellParamsD V X [v, u]).2 3)).symm
+        · rw [h1, h2]
+      have hdihu : dihu4 (cellParamsD V X [u, v]).2
+          = dihu4 (cellParamsD V X [v, u]).2 := by
+        unfold dihu4
+        rw [p15_initialSublist_elV0 hq1.2.2.2, p15_initialSublist_elV1 hq1.2.2.2,
+          p15_initialSublist_elV0 hq2.2.2.2, p15_initialSublist_elV1 hq2.2.2.2]
+        calc dihV u v (elV (cellParamsD V X [u, v]).2 2) (elV (cellParamsD V X [u, v]).2 3)
+            = dihV v u (elV (cellParamsD V X [u, v]).2 2) (elV (cellParamsD V X [u, v]).2 3) :=
+              DIHV_SYM u v _ _
+          _ = dihV v u (elV (cellParamsD V X [u, v]).2 3) (elV (cellParamsD V X [u, v]).2 2) :=
+              DIHV_SYM_2 v u _ _
+          _ = dihV v u (elV (cellParamsD V X [v, u]).2 2) (elV (cellParamsD V X [v, u]).2 3) :=
+              hcomm
+      rw [p15_dihX_eq_dihu4 V X u v hn (by rw [hq1eq, hk4']; omega)
+          (by rw [hq1eq, hk4']; omega) hq1_4,
+        p15_dihX_eq_dihu4 V X v u hn (by rw [hq2eq, hk4']; omega)
+          (by rw [hq2eq, hk4']; omega) hq2_4, hdihu]
 
 /-! ## marchal3.hl:5833-6809: gammaY, beta bookkeeping, klemma counting kit -/
 
