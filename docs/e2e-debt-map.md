@@ -861,3 +861,38 @@ closed 候选（9424/14266/40785/49998/54771/75965/133228/154721 +
   Assembly/Text 根 import，**e2e 直源与公理数不变（136 / 624）**。
 - **快照**：`~/c17_backup/lane_snapshots/r1rest/`（19 MB，454 文件
   MD5SUMS 全验，含逐 shard 日志、失败存档、times TSV）。
+
+## 2026-10-23 LP W6 覆盖桥侦察节（组合层已真证，语义移植是多波项目）
+
+**车道 lpw6**（`/tmp/p4p12`，HEAD `4053ef5a`；未改 `Assembly`/`LPAll`/
+`LPLeaf*`/`LPSchema`/`LPCert`/`LPIds`；快照
+`~/c17_backup/lane_snapshots/lpw6/`，MD5SUMS 全验）。
+
+- **已完成（真证，快照 `LPCoverage.lean` 267 行，build EXIT=0）**：
+  DFS 终端序恰为 `0..count-1`（无重/全覆盖/`recordIdAt` 对齐）；注册表覆盖
+  ⟹ 每树终端认证（消费 `lpTerminalBoundAll` 42,889 + `lpAllInfeas` 189）；
+  HOL `tame_result_lemma` 镜像；顶层债点逐字同陈述副本 +
+  `hdata`/`hcov`/`hsem` 三接口归约 + `LinearProgrammingResults` 装配。
+  纯组合引理公理 `[propext, Quot.sound]`；依赖全局总量的引理带 `sorryAx`
+  是 42,889 未闭合叶的既有传递，非新增。
+- **真正缺口 = 终端 LP 语义**：HOL `prove_flyspeck_lp_step1` + `compute_all`/
+  `get_ineqs` + 127 族不等式数据库 + LP 数据对齐，约 **8,700–8,900 行 HOL**
+  （`prove_flyspeck_lp` 1,066 / `lp_ineqs_proofs` 3,162 /
+  `lp_main_estimate` 2,179 / `lp_ineqs_proofs2` 1,396 / `lp_gen_theory` 497 /
+  `prove_lp` 440 / `lp_certificate` 158），Lean 侧预估 **5k–10k 行**。
+  **不是 5h 量级，是独立多波项目**；W1–W5 数据灌装可并行。
+- **数据边界干净**：W6 只消费两条全局总量，不需逐叶证明；43k 叶闭合与
+  W6 可并行。**唯一语义风险**：`LpTerminalCertified` id 不敏感
+  （`LPCert.lean:61`），语义桥必须 id 敏感；`LpTerminalPin` 钉定形已在
+  `LPSchema` §2 就位。
+- **必须先裁决的定义对齐**：`GoodListNodes` 仍是 `True` 占位
+  （`Assembly.lean:1526`）；`LpIneqs` 空清单（`Assembly:249`）；
+  `hypermapOfList` 构造（P6-C）未落地；`LpGraphCert` 树数据未生成。
+- **第一波建议（按可机械性排序）**：
+  W6-A 证书树 light shape + archive 对齐（机械、产物小）；
+  W6-B `lp_fan`/`lp_cond`/`lp_tau` 定义 + `contravening_lp_fan`
+  （最小语义核）；W6-C `yeList`/`ynList` + `split218/236/225`、
+  `split4/5/6` 纯算术（`linarith`/`nlinarith`）。
+  **不要**先打 `prove_flyspeck_lp_step1`/`compute_all`（依赖 127 族数据库）。
+- **落库**：侦察报告 `docs/scouts/lp-w6-coverage-scout.md`；骨架与证据在
+  快照。骨架未入仓（import `Kepler.Assembly`，接线前需下沉共享类型拆环）。

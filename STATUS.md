@@ -177,6 +177,7 @@
 - [x] hard_1 偏差根因修复（`d5e32af`：branch.py 逐节点数值收紧重放）
 - [x] **全部 43,078 个终端 LP 内核验证通过**：SoPlex 数值放弃的 51 例全部经 glpsol 精确对偶通道闭合（`glpsol_dual.py`，glpsol --exact 最慢 13.5h/例 + 内核 decide ~245s/例）。账本 `~/lprun-logs/results.jsonl`（43,078/43,078 exit=0）——⚠️ **2026-10-23 审计：该 2026-09 账本与产物不在本机**，此 ✅ 是当时通道/账本口径；当前可复核证据仅 root 19,237（2026-10 账本）+ infeas 189（在库闭合）
 - [x] **root 区 LP 预灌装重跑收官 + 灌装审计（2026-10-23）**：root 19,237 条唯一 id **全部 exit=0**（残余失败 0/缺失 0；1,800 条失败尝试均为环境性且已有成功行，非"非 root 历史账"）；总 CPU 302.7 h；试点 4 条 build 全绿、axioms 标准三、Data.lean sha256 **5/5 逐字节复现**。计划见 `docs/e2e-debt-map.md` 2026-10-23 LP 节与 `lane_snapshots/lpaudit/IMPORT_PLAN.md`：W1–W3 root 分波灌装（≈6.3 天 @2 workers），W4/W5 easy 4,362 + hard 19,290 **必须重跑**（旧账丢失），W6 覆盖桥（叶全闭合也不自动清 `lpArchiveCertificatesDebt`）先于 W7 终装配（olean ≈0.9–1 TB，本机 181 GB free 不可行）
+- [x] **W6 覆盖桥侦察（2026-10-23）**：组合覆盖层已真证（DFS 终端序/注册表覆盖/tame_result_lemma 镜像/顶层三接口归约，快照 `LPCoverage.lean` 267 行 build 绿）；真正缺口是终端 LP 语义（HOL `prove_flyspeck_lp`/`lp_ineqs_proofs` 等 ~8,700 行，Lean 预估 5k–10k 行，多波）。第一波 W6-A 树数据/W6-B lp_fan/lp_cond/lp_tau/W6-C split 算术；报告 `docs/scouts/lp-w6-coverage-scout.md`，骨架在 `lane_snapshots/lpw6/`（未入仓，接线前需拆 Assembly 类型环）
 
 ## Phase 4 — 非线性不等式 🟡 求解层 68/176（39% 可信口径）/ 内核闭合 8 案端到端 + C1.7 收官（prep 重做已启动：812 队列 + R1 已闭 22 案）
 

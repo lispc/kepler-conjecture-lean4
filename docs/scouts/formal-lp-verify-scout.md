@@ -1,5 +1,9 @@
 # formal-lp-verify-scout — A12 `lpArchiveCertificates`（43,078 终端 LP）× formal_lp `verify_all` 移植侦察报告（零改动只读侦察）
 
+> **2026-10-23 更新**：覆盖桥的细化侦察与可编译接口骨架见
+> [`lp-w6-coverage-scout.md`](lp-w6-coverage-scout.md)（组合覆盖层已真证；
+> 剩余为终端 LP 语义移植，HOL ~8,700 行 / Lean 预估 5k–10k 行，多波）。
+
 > 2026-10-12 侦察 lane 交付。对象：HOL `reference/flyspeck/formal_lp/`（129 文件，
 > HL/ML 22,403 行 + C# LP-HL 求解器 + **404MB 二进制证书数据在库**）与 Lean
 > `lean/Kepler/Text/LP/`（177 模块）+ `lean/Kepler/LP/`（ColMajor checker +
