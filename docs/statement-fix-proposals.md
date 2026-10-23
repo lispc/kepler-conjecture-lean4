@@ -2219,3 +2219,110 @@ add
   （19 已解 / 22 无 case 模板 / 18 硬解）。
 - 本件在 e2e 锥内：`nliRestBIXPCGW9455898160`（Assembly:682）→
   `nliPackNonlinearRest` → 分量 1/6 `pack_nonlinear_non_ox3q1h`。
+
+## 50. PA18 `CFFONNL` 前提回归 HOL 原序（`hne : X ≠ ccCell V ul`；A7 `pa18_ccCell_swap` 假陈述整体删除）+ PA25 `MCELL4_LEAF_S_LEAF` 二分装配按 HOL 原文改回两支构造性 — 分级 A（statement 保真修正 · 假陈述修复）
+
+**立案：2026-10-23，lane pa18a7（T）反证钉死 A7 为假 + 本线（sfcffonnl）独立
+核对与执行版补丁草案，编排者→用户批准流程。** 对象 = PA18 冻结链
+`CFFONNL`（PA18:4623 现行行；proof 内部 step 10 消费假陈述 A7 的 sorry，
+sorryAx 由此流入）与其唯一项级消费者 PA25 `MCELL4_LEAF_S_LEAF`
+（PA25:2938 现行号）。T 的反证四件套（`pa18_ccCell_swap_ne` 等四件真证，
+axiom 标准三）已在树上，本 SF 保留为永久公共资产。
+
+(a) HOL：leaf_cell.hl:2178-2181 逐字 `let CFFONNL = prove_by_refinement(\`!V ul X. packing V /\ saturated V /\ leaf V ul /\ X IN mcell_set V /\ {EL 0 ul,EL 1 ul} IN edgeX V X /\ ~(X INTER cc_A0 ul = {}) /\ ~(X = cc_cell V ul) ==> (X = cc_cell V [EL 1 ul;EL 0 ul;EL 2 ul])\`)`——HOL 前提是不等式 **`~(X = cc_cell V ul)`（原序 ul）**，结论才是换位序 `[EL 1;EL 0;EL 2]`。Lean 移植把前提误植为换位序 `X ≠ ccCell V [EL 1, EL 0, EL 2]`（PA18 现行 :4628），与 HOL 唯一偏离点即此（he/hA 两前提逐字吻合）。HOL 证明的方向裁决步靠该前提直接矛盾闭合，全程不需要任何 swap 引理——A7（`ccCell V ul = ccCell V [u1,u0,u2]`）是被 T 的 `pa18_ccCell_swap_ne` 机器反证的**假陈述**（两取向 cc 胞分居茎平面两侧闭半空间：`chi_msb_swap_01` 反对称 + `cc_pe_exists` 特征性质选相反端点 + `CELL3_NONDEG`/`K4_CHI_MSB_POS`/`CC_CELL34` 半空间论证）。
+
+### (a2) 本线对 T 处方的唯一修正（PA25 消费侧）
+
+T DELIVERY §5.1 写"不等式支改供原序 hne（反得等式而爆炸）"。**静态核对
+判定 absurd 形对修复后形态不成立**：CFFONNL 结论在 HOL 与修复后的 Lean 中
+都是**换位序**等式，与原序 `hEq : ¬(mcell4 = ccCell [EL 0,EL 1,u])` 非同一
+命题，`absurd` 类型不合；且 `mcell4 = 换位胞` 与 `mcell4 ≠ 原序胞` 可同时
+为真（两胞不等正是反证内容），无矛盾可爆。正确装配 = HOL 原文
+OXLZLEZ3.hl:1980-2053 的**两支构造性**形态（:1990 把
+`premises ∧ ~d ==> e` 改写为 `premises ==> d ∨ e` 后 :2019 STRIP）：第一支
+（:2020-2032）原序等式 + AJRIPQN 原序钉 `cc_ke 原序 = 4`（s_leaf 左析取支）；
+第二支（:2034-2052）CFFONNL 给出换位序等式 + AJRIPQN 换位序（leaf 经
+ZASUVOR，:2041）钉 `cc_ke 换位 = 4`（右析取支）。Lean `s_leaf`
+（PA25:380-382）本就是对两茎序对称的析取定义（HOL OXLZLEZ3.hl:24-25 逐字），
+两支皆可直接闭合。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/50-cffonnl-hol-original-order.patch`
+（对基线工作树 dry-run 干净应用 + 往返字节一致已验；228 行，PA18 5 hunks
++ PA25 3 hunks；PA18 直 sorry 32→31，PA25 81 不变）：
+
+1. **PA18 `CFFONNL` 前提回归原序**（1 行）：`hne : X ≠ ccCell V ul`。
+   结论一字不动。保真说明：HOL :2181 前提逐字；换位只在结论，是 HOL 原文形。
+2. **PA18 证明体 3 行**：step 0 两行 `rw [e1,e0,e2] at hne ⊢` /
+   `rw [pa18_getD3_1,pa18_getD3_0,pa18_getD3_2] at hne ⊢` 去掉 hne 目标
+   （原序 hne 无需改写）；step 10 第一支 `rw [hXYc, pa18_ccCell_swap …]`
+   → `exact absurd hXYc hne`（`absurd` 为 core，本文件 :1090/:4786/:5194
+   多处既有同型使用；Ne/Not 通过 delta 互演，PA25:3014 既有先例）。
+   逐行依赖核对见 VERIFICATION.md §2。
+3. **PA18 A7 整体删除**：`pa18_ccCell_swap`（含 sorry）连同其旧
+   docstring 与编排者叠回的 `--` 注记段删除，换一段审计记账注释（保留反证结论与保留反证 kit 的
+   理由）；头部记账注记改 CLOSED；反证 kit 两处注释同步（纯注释）。
+   保真说明：删除假陈述 + 纯注释重写，零陈述面变化。
+4. **PA25 `MCELL4_LEAF_S_LEAF` 两支构造性重排**（见 (a2)）：by_cases 换
+   原序等式 1 行；第一支 = 原等式支逐字对称换序（ZASUVOR→hl'、
+   `Or.inr`→`Or.inl`、AJRIPQN/`cc_uh_exists`/`CC_KE_34`/hI 全部换原序列表）；
+   第二支 = `have hEq' := CFFONNL … hEq`（HOL 原序 hne 直接喂入）经
+   `EL_CC_UH` rw 桥转具体形后，**原等式支代码逐字**（ZASUVOR、AJRIPQN
+   换位序、`Or.inr`、hI/hn 闭环全保留）。docstring 同步改写为两支构造性
+   记账。保真说明：OXLZLEZ3.hl:1980-2053 逐支对应。
+
+### (c) 消费面影响清单（全树 grep `CFFONNL`，排除注释）
+
+项级消费点**唯一**：PA25:3015（MCELL4_LEAF_S_LEAF 不等式支，本 SF 同步
+重排）。其余全为注释/NEEDS 记账（PA25:232/2928/2933/2969/3007/3425/3484/
+3786/3827/3846/3860），其中 MCELL4_LEAF_S_LEAF docstring 与 PA25:232 头部
+注记随 diff 改写；PA25:3425/3484/3786/3827/3846/3860 为下游 sorry 件的
+NEEDS 注记（MCELL4_FI/LEAF_RANK4_CHI_MSB(_ALT)/CC_CELL_WEDGE_MATCH_UH 等），
+其"CFFONNL→pa18_ccCell_swap 值级债"表述随本 SF 应用转为过时，建议随应用
+批顺带刷新或留给下游填证波（由编排者决定，不进本 diff）。
+
+### (d) 验收与应用计划（gate 预演参数）
+
+两跑闸门（STATEMENT-FIX 多重集比对逐文件生效，本 patch 双文件节齐备）：
+
+- 跑 A：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/50-cffonnl-hol-original-order.patch SF_ITEM=50 GATE_ROOTS="Kepler.Text.PackingAuto18" lean/scripts/auto_gate.sh Kepler/Text/PackingAuto18.lean CFFONNL`
+- 跑 B：`GATE_MODE=STATEMENT-FIX SF_PATCH=… SF_ITEM=50 GATE_ROOTS="Kepler.Text.PackingAuto25" lean/scripts/auto_gate.sh Kepler/Text/PackingAuto25.lean MCELL4_LEAF_S_LEAF`
+
+预期：两 THM `#print axioms` = `[propext, Quot.sound, choice]` 标准三
+（CFFONNL 修复后证明闭包内全部真证：ZWVCBMN PA18:3787 已于 edge-rigidity
+波闭合、AJRIPQN_0 PA18:4507 真证、CONVEX_PLANE_INTER/CHI_MSB_POS2/
+CHI_MSB_AFF_GT_0/CONVEX_R3_INTER/CC_CELL34/CELL3_NONDEG/K4_CHI_MSB_POS
+皆已证；MCELL4_LEAF_S_LEAF 闭包 = CFFONNL + AJRIPQN PA17:931 真证 +
+MCELL4 卡具）。下游追加审计（不进闸）：`LEAF_RANK_ONTO → LEAF_IN_WEDGE_GE
+→ MCELL4_FI_EL → MCELL4_FI` 与 `MCELL4_AZIM_LT_PI →
+LEAF_RANK4_CHI_MSB(_ALT)`、`CC_CELL_WEDGE_MATCH_UH`（+其
+NOT_COPLANAR_AFF_3 本地复制）按 pa25wim/k3k4wim 草稿机械填——合计 5+ 枚
+e2e 直源入清偿射程（T §5.1 解锁面判定维持，路径 = 本 SF 而非填 A7）。
+
+### (e) 孤儿评估（A7 删除面）
+
+- A7 本体 proof 是 `sorry`，删除不孤儿化任何件。
+- `p18cc_*` 孪生 kit（PA18:217-1000，30 件）服务对象是 `cc_pe_exists`
+  （kit 头注记 :219-223），与 A7 无消费关系，**全部保留**。逐一 grep 引用
+  数后唯一零消费件 = `p18cc_dot_sub18`（PA18:575，仅定义行）——系**既有
+  孤儿**（其非孪生原件 `dot_sub18` :2395 才是在用版），非本 SF 造成；
+  是否随本 SF 顺手清理由编排者决定（删之为 −3 行纯减债，与本项目
+  反孪生纪律一致）。
+- 反证四件套（`pa18_chi_halfspace_convex`/`pa18_ccCell_apex_pos`/
+  `pa18_ccCell_chi_nonneg`/`pa18_ccCell_swap_ne`）：今日项级消费者仅 kit
+  内部，但 T §5.1 建议保留为永久公共资产（"两取向 cc 胞分居茎平面两侧"
+  是独立数学事实，WEDGE_UNIQUE_CC_CELL 类论证可消费）——本 SF 保留。
+
+### (f) 风险与回滚
+
+- 风险 1（基线漂移）：主仓 PA18 在本线工作期间两次并发变更
+  （361ef126 → b9ec957a → 555a3532，均注释区：后者为编排者把 REVERSED
+  VERDICT docstring 改写为 `--` 注释）。本 diff 以末态 555a3532 为基线；
+  闸门按逐行多重集比对，应用时若工作树 ≠ 本 diff 基线会被拦下；届时以
+  当时工作树重放核对即可（本 SF 改动面按文本锚定、无行号依赖）。
+- 风险 2（下游草稿过时）：pa25wim/k3k4wim 下游填证草稿若按"absurd 形"
+  预写 PA25 分支，须按 (a2) 修正为两支构造性（本 diff 已内联正确形态，
+  草稿仅余下游件的填充部分）。
+- 回滚：`git apply -R 50-cffonnl-hol-original-order.patch` 逐字节还原；
+  无 def/命名/记账结构变化；反证 kit 不受影响；CFFONNL 消费面唯一已证。

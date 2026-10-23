@@ -67,7 +67,13 @@ if [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
   [ -n "$sec" ] || fail "STATEMENT-FIX: patch section for lean/$FILE is empty"
   pdels=$(printf '%s\n' "$sec" | grep -E '^-' | grep -v -- '^--- a/' || true)
   padds=$(printf '%s\n' "$sec" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
-  diff <(printf '%s\n' "$dels" | sort) <(printf '%s\n' "$pdels" | sort) > /dev/null \
+  # EV31 (2026-10-24): the global $dels filter (`grep -v '^---'`, meant to drop
+  # the `--- a/…` file header) also drops DELETED lines whose content starts
+  # with `--`+dash (Lean `--- …` comments) — asymmetric with the patch-side
+  # filter here (only `^--- a/` excluded), so honest SF patches deleting such
+  # comment lines can never pass. Recompute symmetrically for this compare.
+  sfdels=$(git diff HEAD -- "$FILE" | grep -E '^-' | grep -v -- '^--- a/' || true)
+  diff <(printf '%s\n' "$sfdels" | sort) <(printf '%s\n' "$pdels" | sort) > /dev/null \
     || fail "STATEMENT-FIX: deletions differ from approved patch (see $SF_PATCH)"
   diff <(printf '%s\n' "$adds" | sort) <(printf '%s\n' "$padds" | sort) > /dev/null \
     || fail "STATEMENT-FIX: additions differ from approved patch (see $SF_PATCH)"

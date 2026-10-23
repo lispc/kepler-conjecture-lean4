@@ -1,0 +1,254 @@
+SF-50 提案 fix diff（草案，未应用；未过闸；基线 = 主仓**当前工作树**
+2026-10-23 快照：lean/Kepler/Text/PackingAuto18.lean md5
+555a353203c3cdbb5cdae04bbc04835e（= HEAD 34ea6b29 + 已暂存的 pa18a7 交付 +
+编排者把 A7 REVERSED VERDICT docstring 改写为 `--` 行注释后的当前态。注意
+主仓该文件在本线工作期间经历两次并发变更 361ef126 → b9ec957a → 555a3532，
+均为注释区；本 diff 以最终态为基线。应用时闸门按逐行多重集比对会钉死基线
+——若应用时工作树 md5 ≠ 上述值，须先重放本线核对），lean/Kepler/Text/
+PackingAuto25.lean md5 61cc793ee13ccb3e2cf2c1bf131ab4fe（= HEAD 34ea6b29，
+干净）。
+
+修法形态：前提回归 HOL 原序（leaf_cell.hl:2181 `~(X = cc_cell V ul)`），
+结论**一字不动**（换位序 `cc_cell V [EL 1;EL 0;EL 2]` 是 HOL 原文结论形）。
+CFFONNL 证明体 3 行机械改（step 0 两行 rw 去掉 hne 目标、step 10 第一支
+`absurd hXYc hne`）；A7 `pa18_ccCell_swap`（假陈述，sorry）连同其旧
+docstring/注记段整体删除，换一段审计记账注释；反证四件套
+（pa18_ccCell_swap_ne 等）原样保留为永久公共资产。PA25
+`MCELL4_LEAF_S_LEAF` 二分装配按 HOL 原文（OXLZLEZ3.hl:1980-2053）改回
+**两支构造性**形态：by_cases 换原序等式，第一支 AJRIPQN 原序钉 4（左析取
+支，leaf 直接用 hl'），第二支 CFFONNL 给出换位序等式后按原等式支逐字
+（ZASUVOR + AJRIPQN 换位序）钉 4（右析取支）。注意：pa18a7 DELIVERY §5.1
+所写"不等式支反得等式而爆炸"（absurd 形）对修复后形态**不成立**（结论仍是
+换位序，与原序 hEq 非同命题，absurd 类型不合）；本 diff 以 HOL 原文的
+构造性两支为准——这正是本线静态核对的一处修正。
+
+sorry 记账：PA18 直 sorry 32 → 31（A7 整体删除，零新增）；PA25 81 → 81 不变。
+
+--- a/lean/Kepler/Text/PackingAuto18.lean
++++ b/lean/Kepler/Text/PackingAuto18.lean
+@@ -141,15 +141,14 @@
+ coplanar-null content inlined, MHFTTZN1/COPLANAR_INSERT for the off-span
+ point, EDGEX_SUBSET_MCELL for the stem edge, the wl-orientation argument via
+ CHI_MSB_POS2/CHI_MSB_AFF_GT_0/CONVEX_R3_INTER, hull bookkeeping, AJRIPQN_0),
+-consuming ZWVCBMN (closed in the edge-rigidity wave below) plus one new
+-scoped debt `pa18_ccCell_swap`
+-(cc-cell insensitivity under the 0-1 stem swap; mathematically true but
+-blocked by the cc_pe1 Skolem root — see its NEEDS note).
+-(UPDATED 2026-10-23 lane pa18a7: the swap statement is FALSE — the two cc-cell
+-orientations live in opposite closed halfspaces of the stem plane, refuted by
+-`pa18_ccCell_swap_ne` below; the real debt is a CFFONNL hypothesis deviation
+-from its HOL original — see the reversed-verdict docstring on
+-`pa18_ccCell_swap` and the STATEMENT-FIX path recorded there).
++consuming ZWVCBMN (closed in the edge-rigidity wave below). (2026-10-23 lane
++pa18a7: the felt scoped debt `pa18_ccCell_swap` was FALSE — refuted by
++`pa18_ccCell_swap_ne` below — the real debt being a CFFONNL hypothesis
++deviation from its HOL original.) CLOSED by SF-50: the CFFONNL hypothesis is
++restored to the HOL original order (leaf_cell.hl:2181 `~(X = cc_cell V ul)`),
++`pa18_ccCell_swap` is deleted (the orientation dispatch closes by direct
++contradiction and no swap lemma is needed), and PA25 `MCELL4_LEAF_S_LEAF` is
++re-dispatched on the original-order equality; CFFONNL is sorryAx-clean.
+ -/
+ 
+ import Kepler.Text.PackingAuto13
+@@ -4579,51 +4578,22 @@
+   exact MeasureTheory.measure_mono_null (hsub.trans hsp)
+     (MeasureTheory.Measure.addHaar_affineSubspace MeasureTheory.volume _ hne)
+ 
+-/-- Cell-level insensitivity of the cc-construction under the 0-1 stem swap
+-(the positive-`chi_msb` branch of CFFONNL's final MESON uses exactly this
+-equality): mathematically `cc_pe1`/`cc_uh`/`cc_ke` depend on `ul` only through
+-the unordered stem `{EL 0 ul, EL 1 ul}` and `EL 2 ul`, both preserved by the
+-swap.
+-NEEDS (scoped CFFONNL debt, refreshed 2026-10-23 Wave-2): `cc_pe_exists` is
+-now discharged, so the Skolem constants sit behind a fully proven root; what
+-remains is the swap-insensitivity of the characterizing property itself
+-(neither `ccPe1 V [u0,u1,u2] = ccPe1 V [u1,u0,u2]` for the two
+-`Classical.choose` witnesses nor a uniqueness characterization of `ccCell`
+-is derivable from the current kit). True statement: both cells are the mcell
+-over a 4-list with the same point set `{u0, u1, u2, cc_pe1}`; needs a
+-dedicated scout (Skolem-coincidence or cell-uniqueness route). -/
+--- statement is FALSE** — refuted below by the fully proved `pa18_ccCell_swap_ne`.
+--- `chiMsb` is *antisymmetric* under the 0-1 stem swap (`chi_msb_swap_01`), so
+--- the characterizing property `0 < chiMsb ul p1` of `cc_pe_exists` selects the
+--- *opposite* endpoints of the Voronoi segment for the two orientations (the
+--- Skolem-coincidence route was never available), and the two cells live in
+--- opposite closed halfspaces of the stem plane: the apex of `ccCell V ul` has
+--- `0 < chiMsb ul apex` (`CELL3_NONDEG` / `K4_CHI_MSB_POS`, hull form
+--- `CC_CELL34`) while `ccCell V [u1,u0,u2] ⊆ {z | chiMsb [u0,u1,u2] z ≤ 0}`
+--- (`pa18_ccCell_chi_nonneg`).
+--- ROOT CAUSE of the felt need: the `CFFONNL` statement above deviates from its
+--- HOL original (leaf_cell.hl:2178-2514) — HOL assumes `¬(X = cc_cell V ul)`
+--- (original order), the Lean port assumes `X ≠ ccCell V [EL 1, EL 0, EL 2]`
+--- (swapped). With the HOL hypothesis the `wl = ul` branch of the orientation
+--- dispatch (step 10 of the CFFONNL proof) closes by *direct contradiction* with
+--- `hXYc : X = ccCell V ul`, and no swap lemma is ever needed.
+--- UNBLOCK PATH (STATEMENT-FIX, orchestrator-owned): restore `CFFONNL`'s
+--- hypothesis to the HOL form `X ≠ ccCell V ul` (then the `rw [e1, e0, e2] at
+--- hne` step in its proof is dropped and the `wl = [u0,u1,u2]` branch becomes
+--- `exact absurd hXYc hne`), delete this theorem, and switch PA25
+--- `MCELL4_LEAF_S_LEAF`'s `by_cases`/`hne` to the original-order equality — the
+--- AJRIPQN dispatch argument there is order-symmetric, so the ripple is
+--- mechanical. Kept here (statement frozen) purely as the audit anchor for the
+-private theorem pa18_ccCell_swap {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
+-    (hs : saturated V) (hl : leaf V [u0, u1, u2]) :
+-    ccCell V [u0, u1, u2] = ccCell V [u1, u0, u2] := by
+-  sorry
++/-! The scoped swap statement `pa18_ccCell_swap` that stood here (a frozen
++`sorry`) was REFUTED machine-checkably by `pa18_ccCell_swap_ne` below (the two
++cc-cell orientations live in opposite closed halfspaces of the stem plane,
++via `chi_msb_swap_01` antisymmetry + the `cc_pe_exists` characterization) and
++is deleted by SF-50: with the CFFONNL hypothesis restored to its HOL original
++order (leaf_cell.hl:2181 `~(X = cc_cell V ul)`), the orientation dispatch in
++CFFONNL's step 10 closes by direct contradiction and no swap lemma is ever
++needed. The refutation kit below is retained as a permanent public asset —
++any future cc-uniqueness/separation argument (e.g. WEDGE_UNIQUE_CC_CELL) can
++consume it. -/
+ 
+ /-- HOL `CFFONNL` (leaf_cell.hl:2178-2514). -/
+ theorem CFFONNL {V : Set V3} {ul : List V3} {X : Set V3} (hp : Packing V)
+     (hs : saturated V) (hl' : leaf V ul) (hX : X ∈ mcellSet V)
+     (he : {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0} ∈ edgeX V X)
+-    (hA : X ∩ ccA0 ul ≠ ∅) (hne : X ≠ ccCell V [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 2 0]) :
++    (hA : X ∩ ccA0 ul ≠ ∅) (hne : X ≠ ccCell V ul) :
+     X = ccCell V [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 2 0] := by
+   -- 0. reduce the cc_uh accessor syntax to the stem of `ul`
+   obtain ⟨e0, e1, e2⟩ := EL_CC_UH (V := V) (ul := ul) hp hs hl'
+@@ -4631,9 +4601,9 @@
+     ⟨_, _, _, list3_eq ul hl'.1.1⟩
+   subst hul
+   rw [e0, e1] at he
+-  rw [e1, e0, e2] at hne ⊢
++  rw [e1, e0, e2] at ⊢
+   rw [pa18_getD3_0, pa18_getD3_1] at he
+-  rw [pa18_getD3_1, pa18_getD3_0, pa18_getD3_2] at hne ⊢
++  rw [pa18_getD3_1, pa18_getD3_0, pa18_getD3_2] at ⊢
+   -- 1. distinctness of the stem triple (GBEWYFX), the mcell witness, and
+   --    non-nullness + non-coplanarity of X
+   have hcol0 := GBEWYFX (V := V) (ul := [u0, u1, u2]) hp hs hl'
+@@ -4906,14 +4876,14 @@
+     exact hres.symm
+   -- 10. resolve the orientation
+   rcases hwlcase with rfl | rfl
+-  · rw [hXYc, pa18_ccCell_swap hp hs hl']
++  · exact absurd hXYc hne
+   · exact hXYc
+ 
+ /-! ### Swap-refutation kit (2026-10-23, lane pa18a7): the two cc-cell
+-orientations are genuinely different sets. This block discharges the A7
+-re-evaluation: the scoped equality `ccCell V [u0,u1,u2] = ccCell V [u1,u0,u2]`
+-above is refuted machine-checkably, and the CFFONNL hypothesis deviation from
+-its HOL original is pinpointed as the real debt. -/
++orientations are genuinely different sets. This block discharged the A7
++re-evaluation: the former scoped statement `pa18_ccCell_swap` (deleted by
++SF-50) is refuted machine-checkably, and the CFFONNL hypothesis deviation
++from its HOL original — the real debt — is fixed by SF-50. -/
+ 
+ /-- `chiMsb ul ·` is affine in the point (`CHI_MSB_ADDITIVE`), so its
+ nonnegative halfspace is convex. -/
+@@ -4992,12 +4962,13 @@
+   rw [h34] at hz
+   exact convexHull_min hvtx (pa18_chi_halfspace_convex [u0, u1, u2]) hz
+ 
+-/-- **The machine-checked refutation of the scoped swap statement above**: the
+-two orientations of the cc-cell are different sets — the apex of each lies
+-strictly on its own side of the stem plane (`pa18_ccCell_apex_pos`), so the
+-cells sit in opposite closed halfspaces (`pa18_ccCell_chi_nonneg` composed
+-with `chi_msb_swap_01`). See the reversed-verdict docstring on
+-`pa18_ccCell_swap` for the CFFONNL root cause and the STATEMENT-FIX path. -/
++/-- **The machine-checked refutation of the former scoped swap statement
++`pa18_ccCell_swap` (deleted by SF-50)**: the two orientations of the cc-cell
++are different sets — the apex of each lies strictly on its own side of the
++stem plane (`pa18_ccCell_apex_pos`), so the cells sit in opposite closed
++halfspaces (`pa18_ccCell_chi_nonneg` composed with `chi_msb_swap_01`). The
++CFFONNL root cause (hypothesis order deviation from HOL leaf_cell.hl:2181)
++is fixed by SF-50. -/
+ theorem pa18_ccCell_swap_ne {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
+     (hs : saturated V) (hl : leaf V [u0, u1, u2]) :
+     ccCell V [u0, u1, u2] ≠ ccCell V [u1, u0, u2] := by
+--- a/lean/Kepler/Text/PackingAuto25.lean
++++ b/lean/Kepler/Text/PackingAuto25.lean
+@@ -2924,13 +2924,16 @@
+   all_goals tauto
+ 
+ /-- HOL `MCELL4_LEAF_S_LEAF`.
+-2026-10-13 转真（装配级，零新增记账行）：`u ∈ {EL 2, EL 3}` 先定型，然后按
+-PA18 冻结版 `CFFONNL`（leaf_cell.hl:2178-2514 真证；其内部经规则⑤白名单流动
+-`pa18_ccCell_swap`/`ZWVCBMN` 两笔已记账债）做二分装配——以 `X := mcell4 V ul`、
+-叶表 `ul := [EL 0 ul, EL 1 ul, u]` 实例化。PA18 冻结陈述的 `hne` 恰为结论之
+-否定，故：(a) `mcell4 = ccCell [EL 1 ul, EL 0 ul, u]` 成立时经 `AJRIPQN`
+-（PA17:929 真证）配 `CC_KE_34`/`ZASUVOR`/`cc_uh_exists` 把派单值钉到 4
+-（右析取支）；(b) 不成立时该不等式正是 CFFONNL 之 `hne`，反得等式而爆炸。
++2026-10-13 转真（装配级）；2026-10-23 SF-50 重定向：`u ∈ {EL 2, EL 3}` 先定
++型，然后按 PA18 `CFFONNL`（leaf_cell.hl:2178-2514；前提已回归 HOL 原序
++`~(X = cc_cell V ul)`，sorryAx 净）做二分装配——以 `X := mcell4 V ul`、叶表
++`ul := [EL 0 ul, EL 1 ul, u]` 实例化（同 HOL OXLZLEZ3.hl:1980-2053 的两支
++构造性装配）：(a) 原序等式 `mcell4 = ccCell [EL 0 ul, EL 1 ul, u]` 成立时经
++`AJRIPQN`（PA17:931 真证）配 `CC_KE_34`/`cc_uh_exists`（直接以 `hl'` 供
++leaf，ZASUVOR 不再需要）把派单值钉到 4（`s_leaf` 左析取支）；(b) 不成立时
++该不等式正是 CFFONNL 之 HOL 原序 `hne`，CFFONNL 反手给出换位序等式
++`mcell4 = ccCell [EL 1 ul, EL 0 ul, u]`，再经换位序 `AJRIPQN`（配
++`ZASUVOR`）钉 4（右析取支）。
+ 楔边证书 `stem ∈ edgeX` 由 `HDTFNFZ`+`LEPJBDJ`(k=4)+`MCELL4_CARD4` 内联
+ （`MCELL4_EDGE_EXPLICIT` 在本件之后，取其 VX 论证内联版）；`u ∈ ccA0` 走
+ `MCELL4_CONVEX_HULL`+`U2_IN_AFF_GT`（HOL Local_lemmas.DISJOINT_IMP_Z_IN_AFF_GT
+@@ -2986,10 +2989,34 @@
+       have hU := U2_IN_AFF_GT (V := V) (ul := [elV ul 0, elV ul 1, u]) hp hs hl'
+       rw [e0, e1, e2] at hU
+       exact hU
+-  by_cases hEq : mcell4 V ul = ccCell V [elV ul 1, elV ul 0, u]
+-  · -- 等式情形：AJRIPQN 钉出派单值 4（右析取支）
+-    refine Set.mem_setOf_eq.mpr ⟨hl', Or.inr ?_⟩
++  by_cases hEq : mcell4 V ul = ccCell V [elV ul 0, elV ul 1, u]
++  · -- 等式情形（HOL 第一支）：AJRIPQN 原序钉出派单值 4（左析取支）
++    refine Set.mem_setOf_eq.mpr ⟨hl', Or.inl ?_⟩
+     unfold ccCell at hEq
++    obtain ⟨hij, -⟩ := AJRIPQN V ul (ccUh V [elV ul 0, elV ul 1, u]) 4
++      (ccKe V [elV ul 0, elV ul 1, u]) hs hp hb
++      ((Classical.choose_spec (cc_uh_exists V [elV ul 0, elV ul 1, u]) hp hs
++        hl').1)
++      (by simp)
++      (by rcases CC_KE_34 V [elV ul 0, elV ul 1, u] with h | h <;> simp [h])
++      (by
++        intro hcon
++        have hI : mcell 4 V ul ∩ mcell (ccKe V [elV ul 0, elV ul 1, u])
++              V (ccUh V [elV ul 0, elV ul 1, u]) = mcell4 V ul := by
++          rw [← h4m, ← hEq, Set.inter_self]
++        rw [hI] at hcon
++        exact hn hcon)
++    exact hij.symm
++  · -- 不等式情形（HOL 第二支）：本支 hEq 正是 CFFONNL 的 HOL 原序 hne，
++    -- CFFONNL 反手给出换位序等式，随后换位序 AJRIPQN 派单值论证
++    -- （原等式支逐字，hEq 换名 hEq'）钉 4（右析取支）
++    have hEq' : mcell4 V ul = ccCell V [elV ul 1, elV ul 0, u] := by
++      have hEq0 := CFFONNL (V := V) (ul := [elV ul 0, elV ul 1, u])
++        (X := mcell4 V ul) hp hs hl' hX hedge hA hEq
++      rw [e1, e0, e2] at hEq0
++      exact hEq0
++    refine Set.mem_setOf_eq.mpr ⟨hl', Or.inr ?_⟩
++    unfold ccCell at hEq'
+     obtain ⟨hij, -⟩ := AJRIPQN V ul (ccUh V [elV ul 1, elV ul 0, u]) 4
+       (ccKe V [elV ul 1, elV ul 0, u]) hs hp hb
+       ((Classical.choose_spec (cc_uh_exists V [elV ul 1, elV ul 0, u]) hp hs
+@@ -3000,21 +3027,10 @@
+         intro hcon
+         have hI : mcell 4 V ul ∩ mcell (ccKe V [elV ul 1, elV ul 0, u])
+               V (ccUh V [elV ul 1, elV ul 0, u]) = mcell4 V ul := by
+-          rw [← h4m, ← hEq, Set.inter_self]
++          rw [← h4m, ← hEq', Set.inter_self]
+         rw [hI] at hcon
+         exact hn hcon)
+     exact hij.symm
+-  · -- 不等式情形：正是 PA18 冻结 CFFONNL 的 hne，反得等式而爆炸
+-    exfalso
+-    have hne : mcell4 V ul ≠ ccCell V [(ccUh V [elV ul 0, elV ul 1, u]).getD 1 0,
+-        (ccUh V [elV ul 0, elV ul 1, u]).getD 0 0,
+-        (ccUh V [elV ul 0, elV ul 1, u]).getD 2 0] := by
+-      rw [e1, e0, e2]
+-      exact hEq
+-    exact absurd
+-      (CFFONNL (V := V) (ul := [elV ul 0, elV ul 1, u]) (X := mcell4 V ul)
+-        hp hs hl' hX hedge hA hne)
+-      hne
+ 
+ /-- HOL `S_LEAF_CARD2`.
+ leaf-rank 波（2026-10-08）转真（装配级）：`{EL 2, EL 3}` 两点互异（`MCELL4_CARD4`

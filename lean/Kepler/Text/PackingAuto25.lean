@@ -2924,13 +2924,16 @@ private theorem p25m_card4_ne {a b c d : V3}
   all_goals tauto
 
 /-- HOL `MCELL4_LEAF_S_LEAF`.
-2026-10-13 转真（装配级，零新增记账行）：`u ∈ {EL 2, EL 3}` 先定型，然后按
-PA18 冻结版 `CFFONNL`（leaf_cell.hl:2178-2514 真证；其内部经规则⑤白名单流动
-`pa18_ccCell_swap`/`ZWVCBMN` 两笔已记账债）做二分装配——以 `X := mcell4 V ul`、
-叶表 `ul := [EL 0 ul, EL 1 ul, u]` 实例化。PA18 冻结陈述的 `hne` 恰为结论之
-否定，故：(a) `mcell4 = ccCell [EL 1 ul, EL 0 ul, u]` 成立时经 `AJRIPQN`
-（PA17:929 真证）配 `CC_KE_34`/`ZASUVOR`/`cc_uh_exists` 把派单值钉到 4
-（右析取支）；(b) 不成立时该不等式正是 CFFONNL 之 `hne`，反得等式而爆炸。
+2026-10-13 转真（装配级）；2026-10-23 SF-50 重定向：`u ∈ {EL 2, EL 3}` 先定
+型，然后按 PA18 `CFFONNL`（leaf_cell.hl:2178-2514；前提已回归 HOL 原序
+`~(X = cc_cell V ul)`，sorryAx 净）做二分装配——以 `X := mcell4 V ul`、叶表
+`ul := [EL 0 ul, EL 1 ul, u]` 实例化（同 HOL OXLZLEZ3.hl:1980-2053 的两支
+构造性装配）：(a) 原序等式 `mcell4 = ccCell [EL 0 ul, EL 1 ul, u]` 成立时经
+`AJRIPQN`（PA17:931 真证）配 `CC_KE_34`/`cc_uh_exists`（直接以 `hl'` 供
+leaf，ZASUVOR 不再需要）把派单值钉到 4（`s_leaf` 左析取支）；(b) 不成立时
+该不等式正是 CFFONNL 之 HOL 原序 `hne`，CFFONNL 反手给出换位序等式
+`mcell4 = ccCell [EL 1 ul, EL 0 ul, u]`，再经换位序 `AJRIPQN`（配
+`ZASUVOR`）钉 4（右析取支）。
 楔边证书 `stem ∈ edgeX` 由 `HDTFNFZ`+`LEPJBDJ`(k=4)+`MCELL4_CARD4` 内联
 （`MCELL4_EDGE_EXPLICIT` 在本件之后，取其 VX 论证内联版）；`u ∈ ccA0` 走
 `MCELL4_CONVEX_HULL`+`U2_IN_AFF_GT`（HOL Local_lemmas.DISJOINT_IMP_Z_IN_AFF_GT
@@ -2986,10 +2989,34 @@ theorem MCELL4_LEAF_S_LEAF (V : Set V3) (ul : List V3) (u : V3) (hp : Packing V)
       have hU := U2_IN_AFF_GT (V := V) (ul := [elV ul 0, elV ul 1, u]) hp hs hl'
       rw [e0, e1, e2] at hU
       exact hU
-  by_cases hEq : mcell4 V ul = ccCell V [elV ul 1, elV ul 0, u]
-  · -- 等式情形：AJRIPQN 钉出派单值 4（右析取支）
-    refine Set.mem_setOf_eq.mpr ⟨hl', Or.inr ?_⟩
+  by_cases hEq : mcell4 V ul = ccCell V [elV ul 0, elV ul 1, u]
+  · -- 等式情形（HOL 第一支）：AJRIPQN 原序钉出派单值 4（左析取支）
+    refine Set.mem_setOf_eq.mpr ⟨hl', Or.inl ?_⟩
     unfold ccCell at hEq
+    obtain ⟨hij, -⟩ := AJRIPQN V ul (ccUh V [elV ul 0, elV ul 1, u]) 4
+      (ccKe V [elV ul 0, elV ul 1, u]) hs hp hb
+      ((Classical.choose_spec (cc_uh_exists V [elV ul 0, elV ul 1, u]) hp hs
+        hl').1)
+      (by simp)
+      (by rcases CC_KE_34 V [elV ul 0, elV ul 1, u] with h | h <;> simp [h])
+      (by
+        intro hcon
+        have hI : mcell 4 V ul ∩ mcell (ccKe V [elV ul 0, elV ul 1, u])
+              V (ccUh V [elV ul 0, elV ul 1, u]) = mcell4 V ul := by
+          rw [← h4m, ← hEq, Set.inter_self]
+        rw [hI] at hcon
+        exact hn hcon)
+    exact hij.symm
+  · -- 不等式情形（HOL 第二支）：本支 hEq 正是 CFFONNL 的 HOL 原序 hne，
+    -- CFFONNL 反手给出换位序等式，随后换位序 AJRIPQN 派单值论证
+    -- （原等式支逐字，hEq 换名 hEq'）钉 4（右析取支）
+    have hEq' : mcell4 V ul = ccCell V [elV ul 1, elV ul 0, u] := by
+      have hEq0 := CFFONNL (V := V) (ul := [elV ul 0, elV ul 1, u])
+        (X := mcell4 V ul) hp hs hl' hX hedge hA hEq
+      rw [e1, e0, e2] at hEq0
+      exact hEq0
+    refine Set.mem_setOf_eq.mpr ⟨hl', Or.inr ?_⟩
+    unfold ccCell at hEq'
     obtain ⟨hij, -⟩ := AJRIPQN V ul (ccUh V [elV ul 1, elV ul 0, u]) 4
       (ccKe V [elV ul 1, elV ul 0, u]) hs hp hb
       ((Classical.choose_spec (cc_uh_exists V [elV ul 1, elV ul 0, u]) hp hs
@@ -3000,21 +3027,10 @@ theorem MCELL4_LEAF_S_LEAF (V : Set V3) (ul : List V3) (u : V3) (hp : Packing V)
         intro hcon
         have hI : mcell 4 V ul ∩ mcell (ccKe V [elV ul 1, elV ul 0, u])
               V (ccUh V [elV ul 1, elV ul 0, u]) = mcell4 V ul := by
-          rw [← h4m, ← hEq, Set.inter_self]
+          rw [← h4m, ← hEq', Set.inter_self]
         rw [hI] at hcon
         exact hn hcon)
     exact hij.symm
-  · -- 不等式情形：正是 PA18 冻结 CFFONNL 的 hne，反得等式而爆炸
-    exfalso
-    have hne : mcell4 V ul ≠ ccCell V [(ccUh V [elV ul 0, elV ul 1, u]).getD 1 0,
-        (ccUh V [elV ul 0, elV ul 1, u]).getD 0 0,
-        (ccUh V [elV ul 0, elV ul 1, u]).getD 2 0] := by
-      rw [e1, e0, e2]
-      exact hEq
-    exact absurd
-      (CFFONNL (V := V) (ul := [elV ul 0, elV ul 1, u]) (X := mcell4 V ul)
-        hp hs hl' hX hedge hA hne)
-      hne
 
 /-- HOL `S_LEAF_CARD2`.
 leaf-rank 波（2026-10-08）转真（装配级）：`{EL 2, EL 3}` 两点互异（`MCELL4_CARD4`

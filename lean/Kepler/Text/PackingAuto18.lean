@@ -141,15 +141,14 @@ assembled end-to-end (mcell dispatch via RIJRIED/EDGE_IMP_K2, the
 coplanar-null content inlined, MHFTTZN1/COPLANAR_INSERT for the off-span
 point, EDGEX_SUBSET_MCELL for the stem edge, the wl-orientation argument via
 CHI_MSB_POS2/CHI_MSB_AFF_GT_0/CONVEX_R3_INTER, hull bookkeeping, AJRIPQN_0),
-consuming ZWVCBMN (closed in the edge-rigidity wave below) plus one new
-scoped debt `pa18_ccCell_swap`
-(cc-cell insensitivity under the 0-1 stem swap; mathematically true but
-blocked by the cc_pe1 Skolem root — see its NEEDS note).
-(UPDATED 2026-10-23 lane pa18a7: the swap statement is FALSE — the two cc-cell
-orientations live in opposite closed halfspaces of the stem plane, refuted by
-`pa18_ccCell_swap_ne` below; the real debt is a CFFONNL hypothesis deviation
-from its HOL original — see the reversed-verdict docstring on
-`pa18_ccCell_swap` and the STATEMENT-FIX path recorded there).
+consuming ZWVCBMN (closed in the edge-rigidity wave below). (2026-10-23 lane
+pa18a7: the felt scoped debt `pa18_ccCell_swap` was FALSE — refuted by
+`pa18_ccCell_swap_ne` below — the real debt being a CFFONNL hypothesis
+deviation from its HOL original.) CLOSED by SF-50: the CFFONNL hypothesis is
+restored to the HOL original order (leaf_cell.hl:2181 `~(X = cc_cell V ul)`),
+`pa18_ccCell_swap` is deleted (the orientation dispatch closes by direct
+contradiction and no swap lemma is needed), and PA25 `MCELL4_LEAF_S_LEAF` is
+re-dispatched on the original-order equality; CFFONNL is sorryAx-clean.
 -/
 
 import Kepler.Text.PackingAuto13
@@ -4630,51 +4629,22 @@ private theorem pa18_coplanar_measure_null {s t : Set V3} (hcop : Coplanar s)
   exact MeasureTheory.measure_mono_null (hsub.trans hsp)
     (MeasureTheory.Measure.addHaar_affineSubspace MeasureTheory.volume _ hne)
 
-/-- Cell-level insensitivity of the cc-construction under the 0-1 stem swap
-(the positive-`chi_msb` branch of CFFONNL's final MESON uses exactly this
-equality): mathematically `cc_pe1`/`cc_uh`/`cc_ke` depend on `ul` only through
-the unordered stem `{EL 0 ul, EL 1 ul}` and `EL 2 ul`, both preserved by the
-swap.
-NEEDS (scoped CFFONNL debt, refreshed 2026-10-23 Wave-2): `cc_pe_exists` is
-now discharged, so the Skolem constants sit behind a fully proven root; what
-remains is the swap-insensitivity of the characterizing property itself
-(neither `ccPe1 V [u0,u1,u2] = ccPe1 V [u1,u0,u2]` for the two
-`Classical.choose` witnesses nor a uniqueness characterization of `ccCell`
-is derivable from the current kit). True statement: both cells are the mcell
-over a 4-list with the same point set `{u0, u1, u2, cc_pe1}`; needs a
-dedicated scout (Skolem-coincidence or cell-uniqueness route). -/
--- statement is FALSE** — refuted below by the fully proved `pa18_ccCell_swap_ne`.
--- `chiMsb` is *antisymmetric* under the 0-1 stem swap (`chi_msb_swap_01`), so
--- the characterizing property `0 < chiMsb ul p1` of `cc_pe_exists` selects the
--- *opposite* endpoints of the Voronoi segment for the two orientations (the
--- Skolem-coincidence route was never available), and the two cells live in
--- opposite closed halfspaces of the stem plane: the apex of `ccCell V ul` has
--- `0 < chiMsb ul apex` (`CELL3_NONDEG` / `K4_CHI_MSB_POS`, hull form
--- `CC_CELL34`) while `ccCell V [u1,u0,u2] ⊆ {z | chiMsb [u0,u1,u2] z ≤ 0}`
--- (`pa18_ccCell_chi_nonneg`).
--- ROOT CAUSE of the felt need: the `CFFONNL` statement above deviates from its
--- HOL original (leaf_cell.hl:2178-2514) — HOL assumes `¬(X = cc_cell V ul)`
--- (original order), the Lean port assumes `X ≠ ccCell V [EL 1, EL 0, EL 2]`
--- (swapped). With the HOL hypothesis the `wl = ul` branch of the orientation
--- dispatch (step 10 of the CFFONNL proof) closes by *direct contradiction* with
--- `hXYc : X = ccCell V ul`, and no swap lemma is ever needed.
--- UNBLOCK PATH (STATEMENT-FIX, orchestrator-owned): restore `CFFONNL`'s
--- hypothesis to the HOL form `X ≠ ccCell V ul` (then the `rw [e1, e0, e2] at
--- hne` step in its proof is dropped and the `wl = [u0,u1,u2]` branch becomes
--- `exact absurd hXYc hne`), delete this theorem, and switch PA25
--- `MCELL4_LEAF_S_LEAF`'s `by_cases`/`hne` to the original-order equality — the
--- AJRIPQN dispatch argument there is order-symmetric, so the ripple is
--- mechanical. Kept here (statement frozen) purely as the audit anchor for the
-private theorem pa18_ccCell_swap {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
-    (hs : saturated V) (hl : leaf V [u0, u1, u2]) :
-    ccCell V [u0, u1, u2] = ccCell V [u1, u0, u2] := by
-  sorry
+/-! The scoped swap statement `pa18_ccCell_swap` that stood here (a frozen
+`sorry`) was REFUTED machine-checkably by `pa18_ccCell_swap_ne` below (the two
+cc-cell orientations live in opposite closed halfspaces of the stem plane,
+via `chi_msb_swap_01` antisymmetry + the `cc_pe_exists` characterization) and
+is deleted by SF-50: with the CFFONNL hypothesis restored to its HOL original
+order (leaf_cell.hl:2181 `~(X = cc_cell V ul)`), the orientation dispatch in
+CFFONNL's step 10 closes by direct contradiction and no swap lemma is ever
+needed. The refutation kit below is retained as a permanent public asset —
+any future cc-uniqueness/separation argument (e.g. WEDGE_UNIQUE_CC_CELL) can
+consume it. -/
 
 /-- HOL `CFFONNL` (leaf_cell.hl:2178-2514). -/
 theorem CFFONNL {V : Set V3} {ul : List V3} {X : Set V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (hX : X ∈ mcellSet V)
     (he : {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0} ∈ edgeX V X)
-    (hA : X ∩ ccA0 ul ≠ ∅) (hne : X ≠ ccCell V [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 2 0]) :
+    (hA : X ∩ ccA0 ul ≠ ∅) (hne : X ≠ ccCell V ul) :
     X = ccCell V [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 2 0] := by
   -- 0. reduce the cc_uh accessor syntax to the stem of `ul`
   obtain ⟨e0, e1, e2⟩ := EL_CC_UH (V := V) (ul := ul) hp hs hl'
@@ -4682,9 +4652,9 @@ theorem CFFONNL {V : Set V3} {ul : List V3} {X : Set V3} (hp : Packing V)
     ⟨_, _, _, list3_eq ul hl'.1.1⟩
   subst hul
   rw [e0, e1] at he
-  rw [e1, e0, e2] at hne ⊢
+  rw [e1, e0, e2] at ⊢
   rw [pa18_getD3_0, pa18_getD3_1] at he
-  rw [pa18_getD3_1, pa18_getD3_0, pa18_getD3_2] at hne ⊢
+  rw [pa18_getD3_1, pa18_getD3_0, pa18_getD3_2] at ⊢
   -- 1. distinctness of the stem triple (GBEWYFX), the mcell witness, and
   --    non-nullness + non-coplanarity of X
   have hcol0 := GBEWYFX (V := V) (ul := [u0, u1, u2]) hp hs hl'
@@ -4957,14 +4927,14 @@ theorem CFFONNL {V : Set V3} {ul : List V3} {X : Set V3} (hp : Packing V)
     exact hres.symm
   -- 10. resolve the orientation
   rcases hwlcase with rfl | rfl
-  · rw [hXYc, pa18_ccCell_swap hp hs hl']
+  · exact absurd hXYc hne
   · exact hXYc
 
 /-! ### Swap-refutation kit (2026-10-23, lane pa18a7): the two cc-cell
-orientations are genuinely different sets. This block discharges the A7
-re-evaluation: the scoped equality `ccCell V [u0,u1,u2] = ccCell V [u1,u0,u2]`
-above is refuted machine-checkably, and the CFFONNL hypothesis deviation from
-its HOL original is pinpointed as the real debt. -/
+orientations are genuinely different sets. This block discharged the A7
+re-evaluation: the former scoped statement `pa18_ccCell_swap` (deleted by
+SF-50) is refuted machine-checkably, and the CFFONNL hypothesis deviation
+from its HOL original — the real debt — is fixed by SF-50. -/
 
 /-- `chiMsb ul ·` is affine in the point (`CHI_MSB_ADDITIVE`), so its
 nonnegative halfspace is convex. -/
@@ -5043,12 +5013,13 @@ theorem pa18_ccCell_chi_nonneg {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
   rw [h34] at hz
   exact convexHull_min hvtx (pa18_chi_halfspace_convex [u0, u1, u2]) hz
 
-/-- **The machine-checked refutation of the scoped swap statement above**: the
-two orientations of the cc-cell are different sets — the apex of each lies
-strictly on its own side of the stem plane (`pa18_ccCell_apex_pos`), so the
-cells sit in opposite closed halfspaces (`pa18_ccCell_chi_nonneg` composed
-with `chi_msb_swap_01`). See the reversed-verdict docstring on
-`pa18_ccCell_swap` for the CFFONNL root cause and the STATEMENT-FIX path. -/
+/-- **The machine-checked refutation of the former scoped swap statement
+`pa18_ccCell_swap` (deleted by SF-50)**: the two orientations of the cc-cell
+are different sets — the apex of each lies strictly on its own side of the
+stem plane (`pa18_ccCell_apex_pos`), so the cells sit in opposite closed
+halfspaces (`pa18_ccCell_chi_nonneg` composed with `chi_msb_swap_01`). The
+CFFONNL root cause (hypothesis order deviation from HOL leaf_cell.hl:2181)
+is fixed by SF-50. -/
 theorem pa18_ccCell_swap_ne {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
     (hs : saturated V) (hl : leaf V [u0, u1, u2]) :
     ccCell V [u0, u1, u2] ≠ ccCell V [u1, u0, u2] := by
