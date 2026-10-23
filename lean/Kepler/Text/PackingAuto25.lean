@@ -3605,7 +3605,79 @@ theorem JSPEVYT_EXPLICIT (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q1h)
     (hnc : ¬ Collinear3 u0 u1 u2) (hhl : hl [u0, u1, u2] ≤ 1.34)
     (h1 : 2 * hminus ≤ dist u0 u1) (h2 : 2 ≤ dist u0 u2) :
     dist u1 u2 < 2 * hminus := by
-  sorry
+  have h01 : u0 ≠ u1 := ne₁₂_of_not_collinear hnc
+  have h02 : u0 ≠ u2 := ne₁₃_of_not_collinear hnc
+  have h12 : u1 ≠ u2 := ne₂₃_of_not_collinear hnc
+  have haff : ¬ affineDependent ({u0, u1, u2} : Set V3) :=
+    p25_not_affdep3 h01 h02 h12 hnc
+  -- `hl ≤ 1.34` in `radV` form, then in `eta_y` form
+  have hset : setOfList [u0, u1, u2] = ({u0, u1, u2} : Set V3) := by
+    ext x; simp [setOfList]
+  have hhlr : radV ({u0, u1, u2} : Set V3) ≤ 1.34 := by
+    have h := hhl
+    rw [hl, hset] at h
+    exact h
+  have heta : eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) ≤ 1.34 := by
+    rw [← RADV_ETAY u0 u1 u2 hnc]
+    exact hhlr
+  -- each half-edge is at most the circumradius
+  have hmono01 : dist u0 u1 / 2 ≤ eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) := by
+    have h := RADV_MONO ({u0, u1, u2} : Set V3) ({u0, u1} : Set V3) haff ?_ (by
+      intro h
+      have hmem : u0 ∈ ({u0, u1} : Set V3) := by simp
+      rw [h] at hmem
+      exact hmem)
+    · rw [RADV2, RADV_ETAY u0 u1 u2 hnc] at h
+      linarith
+    · intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto
+  have hmono02 : dist u0 u2 / 2 ≤ eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) := by
+    have h := RADV_MONO ({u0, u1, u2} : Set V3) ({u0, u2} : Set V3) haff ?_ (by
+      intro h
+      have hmem : u0 ∈ ({u0, u2} : Set V3) := by simp
+      rw [h] at hmem
+      exact hmem)
+    · rw [RADV2, RADV_ETAY u0 u1 u2 hnc] at h
+      linarith
+    · intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto
+  have hmono12 : dist u1 u2 / 2 ≤ eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) := by
+    have h := RADV_MONO ({u0, u1, u2} : Set V3) ({u1, u2} : Set V3) haff ?_ (by
+      intro h
+      have hmem : u1 ∈ ({u1, u2} : Set V3) := by simp
+      rw [h] at hmem
+      exact hmem)
+    · rw [RADV2, RADV_ETAY u0 u1 u2 hnc] at h
+      linarith
+    · intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto
+  -- upper box bounds from the radius bound
+  have heta_nonneg : 0 ≤ eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) := by
+    unfold eta_y etaY etaX
+    exact Real.sqrt_nonneg _
+  have hsqrt8 : (2.68 : ℝ) ≤ Real.sqrt 8 := by
+    rw [← Real.sqrt_sq (by norm_num : (0 : ℝ) ≤ 2.68)]
+    exact Real.sqrt_le_sqrt (by norm_num)
+  have hupper : ∀ x : ℝ, x / 2 ≤ eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) →
+      x ≤ Real.sqrt 8 := by
+    intro x hx
+    linarith
+  -- contradiction: the certified JSPEVYT bank forces eta > 1.34
+  by_contra hcon
+  push_neg at hcon
+  have hbank := proj_bank_JSPEVYT hnl 1 1 1 (dist u0 u1) (dist u1 u2) (dist u0 u2)
+    (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num)
+    h1 (hupper _ hmono01) hcon (hupper _ hmono12) h2 (hupper _ hmono02)
+  have hsym : eta_y (dist u0 u1) (dist u1 u2) (dist u0 u2)
+      = eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) :=
+    (mi_eta_y_sym (dist u0 u1) (dist u1 u2) (dist u0 u2)).2
+  rw [hsym] at hbank
+  have hsq : eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) ^ 2 ≤ 1.34 ^ 2 := by
+    nlinarith
+  linarith
 
 /-- HOL `CELL_CLUSTER_ESTIMATE_REDUCE`: the per-edge statement implies the
 cell-cluster inequality. -/
@@ -3658,7 +3730,116 @@ theorem cc_bool_model_data (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (u0
     (h0 : u0 ∈ V) (h1 : u1 ∈ V) (hnc : ¬ Collinear3 u0 u1 w0)
     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
     cc_bool_model_v11 (cc_data_v8 V f u0 u1) := by
-  sorry
+  obtain ⟨hsub, hcrit, hsuper, hsmall, heta, h4c⟩ := cc_bool_data V f u0 u1
+  have hcard : cc_card_v11 (cc_data_v8 V f u0 u1) = n := by
+    rw [cc_card_data, hsize.2]
+  have hper : ∀ i, f (i + n) = f i := hr.2.1
+  have hcol : ∀ i, ¬ Collinear3 u0 u1 (f i) := fun i =>
+    LEAF_RANK_COLLINEAR V [u0, u1] w0 n f i hp hs hr
+  have hmV : ∀ i, f i ∈ V := fun i =>
+    S_LEAF_SUBSET_PACKING V [u0, u1] hp hs
+      (LEAF_RANK_S_LEAF V [u0, u1] w0 n f i hr)
+  have hmhp : 2 * hminus ≤ 2 * hplus := by
+    have h0lt : (1.26 : ℝ) < 1.3254 := by norm_num
+    have hh : hminus < (1.26 : ℝ) := mi_hminus_lt_h0
+    have hpl : hplus = 1.3254 := rfl
+    rw [hpl]
+    linarith
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [hcard]; omega
+  · rw [hsub, hcard]
+    intro i
+    change (dist (f (i + n)) (f (i + n + 1)) < 2 * hminus) =
+      (dist (f i) (f (i + 1)) < 2 * hminus)
+    rw [show i + n + 1 = (i + 1) + n by omega, hper (i + 1), hper i]
+  · rw [hcrit, hcard]
+    intro i
+    change (2 * hminus ≤ dist (f (i + n)) (f (i + n + 1)) ∧
+        dist (f (i + n)) (f (i + n + 1)) ≤ 2 * hplus) =
+      (2 * hminus ≤ dist (f i) (f (i + 1)) ∧
+        dist (f i) (f (i + 1)) ≤ 2 * hplus)
+    rw [show i + n + 1 = (i + 1) + n by omega, hper (i + 1), hper i]
+  · rw [hsuper, hcard]
+    intro i
+    change (2 * hplus < dist (f (i + n)) (f (i + n + 1))) =
+      (2 * hplus < dist (f i) (f (i + 1)))
+    rw [show i + n + 1 = (i + 1) + n by omega, hper (i + 1), hper i]
+  · rw [hsmall, hcard]
+    intro i
+    change (dist u0 (f (i + n)) < 2 * hminus ∧ dist u1 (f (i + n)) < 2 * hminus) =
+      (dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus)
+    rw [hper i]
+  · rw [heta, hcard]
+    intro i
+    change (hl [u0, u1, f (i + n)] < 1.34) = (hl [u0, u1, f i] < 1.34)
+    rw [hper i]
+  · rw [h4c, hcard]
+    intro i
+    change ((∃ ul, barV V 3 ul ∧ {u0, u1} ∈ edgeX V (mcell4 V ul) ∧
+        mcell4 V ul ⊆ wedgeGe u0 u1 (f (i + n)) (f (i + n + 1))) : Prop) =
+      (∃ ul, barV V 3 ul ∧ {u0, u1} ∈ edgeX V (mcell4 V ul) ∧
+        mcell4 V ul ⊆ wedgeGe u0 u1 (f i) (f (i + 1)))
+    rw [show i + n + 1 = (i + 1) + n by omega, hper (i + 1), hper i]
+  · intro i
+    rw [hcrit, hsuper]
+    rintro ⟨⟨-, hle⟩, hgt⟩
+    linarith
+  · intro i
+    rw [hcrit, hsub]
+    rintro ⟨⟨hge, -⟩, hlt⟩
+    linarith
+  · intro i
+    rw [hsuper, hsub]
+    rintro ⟨hgt, hlt⟩
+    linarith
+  · intro i _
+    rw [hsub, hcrit, hsuper]
+    change (2 * hminus ≤ dist (f i) (f (i + 1)) ∧
+        dist (f i) (f (i + 1)) ≤ 2 * hplus) ∨
+      (dist (f i) (f (i + 1)) < 2 * hminus) ∨
+      (2 * hplus < dist (f i) (f (i + 1)))
+    by_cases hlt : dist (f i) (f (i + 1)) < 2 * hminus
+    · exact Or.inr (Or.inl hlt)
+    · push_neg at hlt
+      by_cases hle : dist (f i) (f (i + 1)) ≤ 2 * hplus
+      · exact Or.inl ⟨hlt, hle⟩
+      · exact Or.inr (Or.inr (lt_of_not_ge hle))
+  · intro i hse
+    rw [heta] at hse
+    rw [hsmall]
+    have hnci : ¬ Collinear3 u0 u1 (f i) := hcol i
+    have hfiV : f i ∈ V := hmV i
+    have hne0i : u0 ≠ f i := ne₁₃_of_not_collinear hnci
+    have hne1i : u1 ≠ f i := ne₂₃_of_not_collinear hnci
+    have hd0i : 2 ≤ dist u0 (f i) := Packing.dist_ge_two hp h0 hfiV hne0i
+    have hd1i : 2 ≤ dist u1 (f i) := Packing.dist_ge_two hp h1 hfiV hne1i
+    have hle01 : hl [u0, u1, f i] ≤ 1.34 := le_of_lt hse
+    rcases le_total (dist u0 (f i)) (dist u1 (f i)) with hle | hge
+    · have hfar := JSPEVYT_EXPLICIT u0 u1 (f i) hnl hnci hle01 hcey.1 hd0i
+      exact ⟨lt_of_le_of_lt hle hfar, hfar⟩
+    · have hnci' : ¬ Collinear3 u1 u0 (f i) := by
+        intro h
+        exact hnci (by
+          show Collinear ℝ ({u0, u1, f i} : Set V3)
+          have h' : Collinear ℝ ({u1, u0, f i} : Set V3) := h
+          have hset : ({u1, u0, f i} : Set V3) = ({u0, u1, f i} : Set V3) := by
+            ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+          rwa [hset] at h')
+      have hhl' : hl [u1, u0, f i] ≤ 1.34 := by
+        have hset : setOfList [u1, u0, f i] = setOfList [u0, u1, f i] := by
+          ext x; simp [setOfList, or_comm, or_left_comm]
+        have h1r : radV (setOfList [u0, u1, f i]) ≤ 1.34 := by
+          have h := hle01
+          rw [hl] at h
+          exact h
+        have h2r : radV (setOfList [u1, u0, f i]) ≤ 1.34 := by
+          rw [hset]
+          exact h1r
+        rw [hl]
+        exact h2r
+      have hcey1 : 2 * hminus ≤ dist u1 u0 := by rw [dist_comm]; exact hcey.1
+      have hfar := JSPEVYT_EXPLICIT u1 u0 (f i) hnl hnci' hhl' hcey1 hd1i
+      exact ⟨hfar, lt_of_le_of_lt hge hfar⟩
 
 /-- HOL `cc_prep_model_data`. -/
 theorem cc_prep_model_data (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (u0 u1 : V3)
@@ -7392,7 +7573,30 @@ theorem JSP_BOUNDS (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q1h)
     (hnc : ¬ Collinear3 u0 u1 u2) (hhl : hl [u0, u1, u2] ≤ 1.34)
     (h1 : 2 * hminus ≤ dist u0 u1) (h2 : 2 ≤ dist u0 u2) (h3 : 2 ≤ dist u1 u2) :
     dist u0 u2 < 2 * hminus ∧ dist u1 u2 < 2 * hminus := by
-  sorry
+  have hb1 := JSPEVYT_EXPLICIT u0 u1 u2 hnl hnc hhl h1 h2
+  refine ⟨?_, hb1⟩
+  have hnc' : ¬ Collinear3 u1 u0 u2 := by
+    intro h
+    exact hnc (by
+      show Collinear ℝ ({u0, u1, u2} : Set V3)
+      have h' : Collinear ℝ ({u1, u0, u2} : Set V3) := h
+      have hset : ({u1, u0, u2} : Set V3) = ({u0, u1, u2} : Set V3) := by
+        ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at h')
+  have hhl' : hl [u1, u0, u2] ≤ 1.34 := by
+    have hset : setOfList [u1, u0, u2] = setOfList [u0, u1, u2] := by
+      ext x; simp [setOfList, or_comm, or_left_comm]
+    have h1r : radV (setOfList [u0, u1, u2]) ≤ 1.34 := by
+      have h := hhl
+      rw [hl] at h
+      exact h
+    have h2r : radV (setOfList [u1, u0, u2]) ≤ 1.34 := by
+      rw [hset]
+      exact h1r
+    rw [hl]
+    exact h2r
+  have h1' : 2 * hminus ≤ dist u1 u0 := by rw [dist_comm]; exact h1
+  exact JSPEVYT_EXPLICIT u1 u0 u2 hnl hnc' hhl' h1' h3
 
 /-- HOL `real_model_pema`. -/
 theorem real_model_pema (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
