@@ -209,19 +209,824 @@ noncomputable def cross3 (a b : V3) : V3 :=
 -- atn2-merge: `chiMsb` (leaf_cell.hl:781-782, the `chi_msb` signed volume
 -- functional) moved verbatim to Kepler.Text.SphereKit (same namespace).
 
+/-! ## p18cc_* twin kit (Wave-2, 2026-10-23)
+
+Private verbatim twins of the cc-chain closure (FACET_OF_SEGMENT ..
+JDWAWAY), needed because `cc_pe_exists` is declared at the top of this
+file while its whole kit is declared later (Lean forbids forward
+references). Each p18cc_X is the current X with the same proof, made
+private. DEDUP PATH: a future reordering wave may move the originals
+above `cc_pe_exists` and delete this whole block (pure block move).
+-/
+/-- HOL `p18cc_FACET_OF_SEGMENT` (leaf_cell.hl:1085-1104): the endpoints are the
+1-dimensional faces of the closed segment (via the extreme-point kit of
+Polytope and `affDim_segment`). -/
+private theorem p18cc_FACET_OF_SEGMENT (a b : V3) (h : a ≠ b) :
+    FacetOf {a} (segment ℝ a b) := by
+  refine ⟨faceOf_sing.2 ((EXTREME_POINT_OF_SEGMENT a b a).2 (Or.inl rfl)), by simp, ?_⟩
+  rw [affDim_singleton, (affDim_segment a b).2 h]
+  norm_num
+
+/-- HOL `p18cc_NWVRFMF` (leaf_cell.hl:342-359), a direct port over the Rogers
+`IDBEZAL` facet characterization and `OMEGA_LIST_IN_VORONOI_LIST`. -/
+private theorem p18cc_NWVRFMF {V : Set V3} {ul : List V3} {p : V3} (hp : Packing V)
+    (hs : saturated V) (hl' : leaf V ul)
+    (hf : FacetOf {p} (voronoiList V ul)) :
+    ∃ vl, barV V 3 vl ∧ truncateSimplex 2 vl = ul ∧ omegaList V vl = p := by
+  have hbar : barV V 2 ul := hl'.1
+  obtain ⟨vl, hF, hbar3, htr⟩ :=
+    (IDBEZAL V ul 2 {p} hs hp hbar (by norm_num)).1 hf
+  refine ⟨vl, hbar3, htr, ?_⟩
+  have hom : omegaList V vl ∈ voronoiList V vl := OMEGA_LIST_IN_VORONOI_LIST V vl 3 hbar3
+  rw [← hF] at hom
+  exact Set.mem_singleton_iff.1 hom
+
+/-- HOL `p18cc_AFF_DIM_3` (leaf_cell.hl:209-226 intermediate). -/
+private theorem p18cc_AFF_DIM_3 (a b c : V3) : affDim {a, b, c} ≤ 2 := by
+  rw [affDim]
+  split
+  · norm_num
+  · have hsub : vectorSpan ℝ {a, b, c} ≤ Submodule.span ℝ ({a - b, a - c} : Set V3) := by
+      rw [vectorSpan_eq_span_vsub_set_left (k := ℝ) (Set.mem_insert a ({b, c} : Set V3)),
+        Submodule.span_le]
+      rintro d ⟨x, hx, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with rfl | rfl | rfl
+      · show x -ᵥ x ∈ Submodule.span ℝ ({x - b, x - c} : Set V3)
+        rw [vsub_self]
+        exact Submodule.zero_mem _
+      · show a - x ∈ Submodule.span ℝ ({a - x, a - c} : Set V3)
+        exact Submodule.subset_span (Set.mem_insert (a - x) {a - c})
+      · show a - x ∈ Submodule.span ℝ ({a - b, a - x} : Set V3)
+        exact Submodule.subset_span (by
+          rw [Set.mem_insert_iff]
+          exact Or.inr (Set.mem_singleton _))
+    have hcard : (Module.finrank ℝ
+        (Submodule.span ℝ ({a - b, a - c} : Set V3))) ≤ 2 := by
+      refine le_trans (finrank_span_le_card (R := ℝ) (M := V3)
+        (s := ({a - b, a - c} : Set V3))) ?_
+      have hncard : ({a - b, a - c} : Set V3).toFinset.card
+          ≤ ({a - c} : Set V3).ncard + 1 := by
+        have h1 : ({a - b, a - c} : Set V3).ncard ≤ ({a - c} : Set V3).ncard + 1 :=
+          Set.ncard_insert_le (a - b) ({a - c} : Set V3)
+        have h2 : ({a - b, a - c} : Set V3).ncard = ({a - b, a - c} : Set V3).toFinset.card :=
+          Set.ncard_eq_toFinset_card' _
+        omega
+      have h3 : ({a - c} : Set V3).ncard = 1 := Set.ncard_singleton _
+      omega
+    have h1 : Module.finrank ℝ (vectorSpan ℝ {a, b, c})
+        ≤ Module.finrank ℝ (Submodule.span ℝ ({a - b, a - c} : Set V3)) :=
+      Submodule.finrank_mono hsub
+    linarith
+
+/-- HOL `p18cc_COPLANAR_IMP_AFF_DIM` (leaf_cell.hl:209-226): a coplanar set lives in
+a three-point affine span, whose direction has dimension at most 2. -/
+private theorem p18cc_COPLANAR_IMP_AFF_DIM {s : Set V3} (h : Coplanar s) : affDim s ≤ 2 := by
+  obtain ⟨u, v, w, hsub⟩ := h
+  by_cases hse : s = ∅
+  · rw [hse, affDim_empty]
+    norm_num
+  · have h3 : ({u, v, w} : Set V3) ≠ ∅ := fun hc =>
+      absurd (Set.mem_insert u ({v, w} : Set V3))
+        (by rw [hc]; simp)
+    have h2 := p18cc_AFF_DIM_3 u v w
+    rw [affDim, if_neg h3] at h2
+    have hspanne : ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ≠ ∅ := fun hc =>
+      absurd (SetLike.mem_coe.2
+        (mem_affineSpan ℝ (Set.mem_insert u ({v, w} : Set V3))))
+        (by rw [hc]; simp)
+    have hveq : vectorSpan ℝ ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3))
+        = vectorSpan ℝ ({u, v, w} : Set V3) := by
+      rw [← AffineSubspace.direction_eq_vectorSpan, direction_affineSpan]
+    have hmono : affDim s ≤ affDim ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) :=
+      affDim_mono hsub (Set.nonempty_iff_ne_empty.2 hse)
+    rw [affDim, if_neg hse] at hmono
+    have hspaneq : affDim ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3))
+        = (Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) : ℤ) := by
+      rw [affDim, if_neg hspanne]
+      congr 1
+      rw [hveq]
+    rw [affDim, if_neg hse]
+    rw [hspaneq] at hmono
+    exact hmono.trans h2
+
+/-- Re-splice of PackingAuto6's private `p6_affDim_insert` (HOL
+`AFF_DIM_INSERT` content): inserting a point outside the affine span raises
+the affine dimension by one. -/
+private theorem p18cc_pa18_affDim_insert (S : Set V3) (y : V3) (hne : S.Nonempty)
+    (hy : y ∉ (affineSpan ℝ S : Set V3)) :
+    affDim (insert y S) = affDim S + 1 := by
+  obtain ⟨y0, hy0⟩ := hne
+  have hy0S : y0 ∈ (affineSpan ℝ S : Set V3) := subset_affineSpan ℝ S hy0
+  set D := vectorSpan ℝ S with hD
+  have mD : ∀ a ∈ S, ∀ b ∈ S, (a - b) ∈ D := by
+    intro a ha b hb
+    rw [hD, vectorSpan_def]
+    exact Submodule.subset_span (Set.mem_vsub.2 ⟨a, ha, b, hb, rfl⟩)
+  have hvec : vectorSpan ℝ (insert y S) = D ⊔ Submodule.span ℝ {y - y0} := by
+    have hgen : (y - y0) ∈ vectorSpan ℝ (insert y S) := by
+      rw [vectorSpan_def]
+      exact Submodule.subset_span (Set.mem_vsub.2 ⟨y, Set.mem_insert _ _,
+        y0, Set.mem_insert_of_mem _ hy0, rfl⟩)
+    have hmono : vectorSpan ℝ S ≤ vectorSpan ℝ (insert y S) :=
+      vectorSpan_mono (k := ℝ) (Set.subset_insert y S)
+    have hsb : ∀ r ∈ Submodule.span ℝ {y - y0}, r ∈ vectorSpan ℝ (insert y S) := by
+      intro r hm
+      rw [Submodule.mem_span_singleton] at hm
+      obtain ⟨s, rfl⟩ := hm
+      exact Submodule.smul_mem _ s hgen
+    refine le_antisymm ?_ ?_
+    · rw [vectorSpan_def, Submodule.span_le]
+      intro g hg
+      obtain ⟨x, hx, x', hx', rfl⟩ := Set.mem_vsub.1 hg
+      rw [SetLike.mem_coe]
+      rcases Set.mem_insert_iff.1 hx with hxe | hx
+      · rcases Set.mem_insert_iff.1 hx' with hxe' | hx'
+        · rw [hxe, hxe', vsub_self]
+          exact Submodule.zero_mem _
+        · rw [hxe, vsub_eq_sub]
+          have hv : (y - x' : V3) = (y - y0) + -(x' - y0) := by abel
+          have hA : (x' - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_left (mD x' hx' y0 hy0)
+          have hC : (y - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_right (Submodule.subset_span
+              (Set.mem_singleton (y - y0)))
+          rw [hv]
+          exact Submodule.add_mem (D ⊔ Submodule.span ℝ {y - y0}) hC
+            (Submodule.neg_mem (D ⊔ Submodule.span ℝ {y - y0}) hA)
+      · rcases Set.mem_insert_iff.1 hx' with hxe' | hx'
+        · rw [hxe', vsub_eq_sub]
+          have hv : (x - y : V3) = (x - y0) + -(y - y0) := by abel
+          have hA : (x - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_left (mD x hx y0 hy0)
+          have hC : (y - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_right (Submodule.subset_span
+              (Set.mem_singleton (y - y0)))
+          rw [hv]
+          exact Submodule.add_mem (D ⊔ Submodule.span ℝ {y - y0}) hA
+            (Submodule.neg_mem (D ⊔ Submodule.span ℝ {y - y0}) hC)
+        · exact Submodule.mem_sup_left (mD x hx x' hx')
+    · intro w hw
+      rcases Submodule.mem_sup.1 hw with ⟨a, ha, b, hb, hab⟩
+      have haD : a ∈ vectorSpan ℝ (insert y S) := hmono ha
+      have hbD : b ∈ vectorSpan ℝ (insert y S) := hsb b hb
+      rw [← hab]
+      exact add_mem haD hbD
+  have hvD : y - y0 ∉ D := by
+    intro h
+    apply hy
+    have hmem : (y - y0) +ᵥ y0 ∈ (affineSpan ℝ S : Set V3) :=
+      AffineSubspace.vadd_mem_of_mem_direction
+        (by rw [direction_affineSpan]; exact h) hy0S
+    have h2 : (y - y0 : V3) +ᵥ y0 = y := by rw [vadd_eq_add]; abel
+    rw [h2] at hmem
+    exact hmem
+  have hinf : D ⊓ Submodule.span ℝ {y - y0} = ⊥ := by
+    rw [Submodule.eq_bot_iff]
+    intro w hw
+    have hwK : w ∈ D := (Submodule.mem_inf.1 hw).1
+    have hwS := (Submodule.mem_inf.1 hw).2
+    obtain ⟨s, rfl⟩ := Submodule.mem_span_singleton.1 hwS
+    have hs0 : s = 0 := by
+      by_contra hs0
+      have hinv : s⁻¹ * s = 1 := inv_mul_cancel₀ hs0
+      have h2 : (s⁻¹ • (s • (y - y0)) : V3) ∈ D := Submodule.smul_mem _ _ hwK
+      rw [smul_smul, hinv, one_smul] at h2
+      exact hvD h2
+    rw [hs0, zero_smul]
+  have hvyne : (y - y0 : V3) ≠ 0 := by
+    intro h0
+    rw [h0] at hvD
+    exact hvD (Submodule.zero_mem D)
+  have hfr : Module.finrank ℝ (vectorSpan ℝ (insert y S))
+      = Module.finrank ℝ (vectorSpan ℝ S) + 1 := by
+    have h2 := Submodule.finrank_sup_add_finrank_inf_eq D (Submodule.span ℝ {y - y0})
+    rw [hinf, finrank_bot] at h2
+    have h3 : Module.finrank ℝ (Submodule.span ℝ {y - y0}) = 1 :=
+      finrank_span_singleton hvyne
+    rw [h3] at h2
+    rw [hvec]
+    omega
+  have hneI : (insert y S).Nonempty := ⟨y0, Set.mem_insert_of_mem _ hy0⟩
+  have hneI' : insert y S ≠ ∅ := Set.nonempty_iff_ne_empty.mp hneI
+  simp only [affDim, if_neg hneI', if_neg (Set.nonempty_iff_ne_empty.mp ⟨y0, hy0⟩)]
+  rw [hfr]
+  omega
+
+/-- HOL `p18cc_COPLANAR_INSERT` (leaf_cell.hl:227-240): a point whose insertion
+stays coplanar already sits in the affine span (contrapositive of the
+`+1` dimension jump of `p18cc_pa18_affDim_insert`). -/
+private theorem p18cc_COPLANAR_INSERT {s : Set V3} (p : V3) (h : affDim s = 2)
+    (hc : Coplanar (insert p s)) : p ∈ affineSpan ℝ s := by
+  by_contra hcon
+  have hne : s.Nonempty := by
+    by_contra h0
+    by_cases h0' : s = ∅
+    · rw [affDim, h0'] at h
+      norm_num at h
+    · exact absurd (Set.nonempty_iff_ne_empty.2 h0') h0
+  have hins := p18cc_pa18_affDim_insert s p hne hcon
+  have hle := p18cc_COPLANAR_IMP_AFF_DIM hc
+  rw [hins, h] at hle
+  norm_num at hle
+
+/-- HOL `AFF_DIM_EQ_0`: a set of affine dimension 0 is a singleton.
+Reproved here because PA12's `p12_affDim_eq_zero` is private. -/
+private theorem p18cc_pa18_affDim_zero_sing {S : Set V3} (h : affDim S = 0) :
+    ∃ a : V3, S = {a} := by
+  have hne : S ≠ ∅ := by
+    intro he
+    rw [he, affDim_empty] at h
+    norm_num at h
+  obtain ⟨a, ha⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  refine ⟨a, ?_⟩
+  have hd : affDim S = ((Module.finrank ℝ (vectorSpan ℝ S) : ℕ) : ℤ) := if_neg hne
+  have hfr : (Module.finrank ℝ (vectorSpan ℝ S) : ℕ) = 0 := by omega
+  have hbot : vectorSpan ℝ S = ⊥ := (Submodule.finrank_eq_zero).mp hfr
+  ext b
+  simp only [Set.mem_singleton_iff]
+  constructor
+  · intro hb
+    have hdir : (b - a : V3) ∈ vectorSpan ℝ S := by
+      rw [vectorSpan_def]
+      exact Submodule.subset_span (Set.mem_vsub.2 ⟨b, hb, a, ha, rfl⟩)
+    rw [hbot] at hdir
+    have h0 : (b - a : V3) = 0 := Submodule.mem_bot ℝ |>.mp hdir
+    exact sub_eq_zero.mp h0
+  · intro hb
+    rw [hb]
+    exact ha
+
+/-- Facets of a nondegenerate closed segment are exactly its endpoints. -/
+private theorem p18cc_pa18_facet_segment {a b : V3} (hne : a ≠ b) {f : Set V3}
+    (hf : FacetOf f (segment ℝ a b)) : f = {a} ∨ f = {b} := by
+  have hdimseg : affDim (segment ℝ a b) = 1 := (affDim_segment a b).2 hne
+  have hfdim : affDim f = 0 := by
+    have h := hf.2.2
+    rw [hdimseg] at h
+    norm_num at h
+    exact h
+  obtain ⟨x, hx⟩ := p18cc_pa18_affDim_zero_sing hfdim
+  have hface : FaceOf {x} (segment ℝ a b) := by
+    rw [hx] at hf
+    exact hf.1
+  have hxext : x ∈ Set.extremePoints ℝ (segment ℝ a b) := faceOf_sing.1 hface
+  have hxab : x = a ∨ x = b := (EXTREME_POINT_OF_SEGMENT a b x).1 hxext
+  rcases hxab with h | h
+  · left; rw [hx, h]
+  · right; rw [hx, h]
+
+/-- HOL `p18cc_YBZFUPO` (leaf_cell.hl:360-423). Discharged 2026-10-23: a leaf
+Voronoi list is a 1-dimensional polytope (`AFF_DIM_VORONOI_LIST` +
+`POLYTOPE_VORONOI_LIST_BARV` + `CONVEX_VORONOI_LIST`), hence a segment by
+`EXPAND_EDGE_POLYTOPE` (PolyAuto7, proved); facets of a nondegenerate segment
+are its endpoints (`p18cc_pa18_facet_segment`). -/
+private theorem p18cc_YBZFUPO {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated V)
+    (hl' : leaf V ul) :
+    ∃ p1 p2 : V3, voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧ p1 ≠ p2 ∧
+      ∀ f, FacetOf f (voronoiList V ul) → f = {p1} ∨ f = {p2} := by
+  have hbar : barV V 2 ul := hl'.1
+  have hdim : affDim (voronoiList V ul) = 1 := by
+    have h := AFF_DIM_VORONOI_LIST V ul 2 hbar
+    norm_num at h ⊢
+    exact h
+  -- `polytope` in the exact shape EXPAND_EDGE_POLYTOPE expects
+  obtain ⟨F, hFfin, hFconv⟩ := POLYTOPE_VORONOI_LIST_BARV V ul 2 hp hs hbar
+  have hp7 : ∃ t : Set V3, t.Finite ∧ voronoiList V ul = convexHull ℝ t :=
+    ⟨F, hFfin, hFconv.symm⟩
+  -- `FaceOf` (public) and `FaceOf_p7` (PolyAuto7 copy) have identical bodies
+  have hface : FaceOf (voronoiList V ul) (voronoiList V ul) :=
+    FaceOf.refl (CONVEX_VORONOI_LIST V ul)
+  have hf7 : FaceOf_p7 (voronoiList V ul) (voronoiList V ul) :=
+    ⟨hface.1, hface.2.1, hface.2.2⟩
+  have hdim7 : affDim_p7 (voronoiList V ul) = 1 := by
+    simpa only [affDim_p7, affDim] using hdim
+  obtain ⟨a, b, hab⟩ := EXPAND_EDGE_POLYTOPE hp7 hf7 hdim7
+  have hne : a ≠ b := by
+    intro heq
+    subst heq
+    have h0 : affDim (segment ℝ a a) = 0 := by rw [segment_same, affDim_singleton]
+    rw [hab, h0] at hdim
+    norm_num at hdim
+  refine ⟨a, b, ?_, hne, ?_⟩
+  · rw [hab, convexHull_pair]
+  · intro f hf
+    rw [hab] at hf
+    exact p18cc_pa18_facet_segment hne hf
+
+/-- HOL `p18cc_truncate_set_of_list` (leaf_cell.hl:530-554). -/
+private theorem p18cc_truncate_set_of_list {vl : List V3} {k : ℕ}
+    (hk : 0 < k) (hlen : vl.length = k + 1) :
+    setOfList vl ⊆ setOfList (truncateSimplex (k - 1) vl) ∪ {vl.getD k 0} := by
+  have hle : (k - 1) + 1 ≤ vl.length := by omega
+  have hspec : ((truncateSimplex (k - 1) vl).length = (k - 1) + 1 ∧
+      initialSublist (truncateSimplex (k - 1) vl) vl) :=
+    Classical.epsilon_spec (p := fun xl : List V3 => xl.length = (k - 1) + 1 ∧ initialSublist xl vl)
+      ⟨vl.take ((k - 1) + 1), List.length_take_of_le (by omega),
+        ⟨vl.drop ((k - 1) + 1), (List.take_append_drop ((k - 1) + 1) vl).symm⟩⟩
+  obtain ⟨yl, hyl⟩ := hspec.2
+  have htrlen : (truncateSimplex (k - 1) vl).length = k := by omega
+  have hyl1 : yl.length = 1 := by
+    have hsum : vl.length = (truncateSimplex (k - 1) vl).length + yl.length := by
+      conv_lhs => rw [hyl]
+      rw [List.length_append]
+    rw [htrlen, hlen] at hsum
+    omega
+  obtain ⟨y, hyy⟩ : ∃ y, yl = [y] := by
+    cases yl with
+    | nil => exact absurd hyl1 (by simp)
+    | cons z t =>
+      cases t with
+      | nil => exact ⟨z, rfl⟩
+      | cons z2 t2 => exact absurd hyl1 (by simp)
+  have hyk : vl.getD k 0 = y := by
+    rw [hyy] at hyl
+    rw [hyl, List.getD_append_right _ _ _ _ (by rw [htrlen]), htrlen]
+    simp
+  intro x hx
+  rw [hyl] at hx
+  rcases List.mem_append.1 hx with hx' | hx'
+  · exact Set.mem_union_left _ hx'
+  · rw [Set.mem_union, Set.mem_singleton_iff, hyk]
+    rw [hyy] at hx'
+    simp at hx'
+    exact Or.inr hx'
+
+private theorem p18cc_list3_eq (ul : List V3) (h : ul.length = 3) :
+    ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := by
+  cases ul with
+  | nil => exact absurd h (by simp)
+  | cons a t =>
+    cases t with
+    | nil => exact absurd h (by simp)
+    | cons b t2 =>
+      cases t2 with
+      | nil => exact absurd h (by simp)
+      | cons c t3 =>
+        cases t3 with
+        | nil => rfl
+        | cons _ _ => exact absurd h (by simp)
+
+private theorem p18cc_dot_sub18 (a b c : V3) : a ⬝ᵥ (b - c) = a ⬝ᵥ b - a ⬝ᵥ c :=
+  dotProduct_sub (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem p18cc_coe_smul18 (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
+
+private theorem p18cc_coe_sub18 (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+/-- `chi_msb` on an explicit triple as a row determinant. -/
+private theorem p18cc_chiMsb_det (a b c d : V3) :
+    chiMsb [a, b, c] d
+      = Matrix.det ![((d - a : V3) : Fin 3 → ℝ), ((b - a : V3) : Fin 3 → ℝ),
+        ((c - a : V3) : Fin 3 → ℝ)] := by
+  have h1 : chiMsb [a, b, c] d
+      = ((d - a : V3) : Fin 3 → ℝ) ⬝ᵥ (crossProduct ((b - a : V3) : Fin 3 → ℝ)
+          ((c - a : V3) : Fin 3 → ℝ)) := by
+    simp only [chiMsb, List.getElem!_cons_succ, List.getElem!_cons_zero, List.getD_cons_succ,
+      List.getD_cons_zero]
+    exact dotProduct_comm _ _
+  rw [h1, triple_product_eq_det]
+
+private theorem p18cc_coe_add18 (a b : V3) :
+    ((a + b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) + (b : Fin 3 → ℝ) := rfl
+
+/-- norm-squares equal implies norms equal (helper for p18cc_DIST_EQ_HALF_PLANE). -/
+private theorem p18cc_norm_eq_of_sq_eq {u v : V3} (h : ‖u‖ ^ 2 = ‖v‖ ^ 2) : ‖u‖ = ‖v‖ := by
+  rcases (sq_eq_sq_iff_eq_or_eq_neg (R := ℝ)).1 h with h1 | h1
+  · exact h1
+  · have hnu : (0:ℝ) ≤ ‖u‖ := norm_nonneg u
+    have hnv : (0:ℝ) ≤ ‖v‖ := norm_nonneg v
+    have hu : ‖u‖ = 0 := by linarith
+    have hv : ‖v‖ = 0 := by linarith
+    rw [norm_eq_zero.1 hu, norm_eq_zero.1 hv]
+
+private theorem p18cc_dist_sq_diff (x a b : V3) :
+    (a - b) ⬝ᵥ (2 • x - (a + b)) = ‖x - b‖ ^ 2 - ‖x - a‖ ^ 2 := by
+  rw [Kepler.Geom.norm_sq_eq_dot (x - b), Kepler.Geom.norm_sq_eq_dot (x - a)]
+  simp only [p18cc_coe_sub18, p18cc_coe_add18, p18cc_coe_smul18, dotProduct_sub, sub_dotProduct,
+    dotProduct_sub, dotProduct_smul, dotProduct_add, dotProduct_comm]
+  ring
+
+/-- HOL `p18cc_DIST_LE_HALF_PLANE` (leaf_cell.hl:555-573). -/
+private theorem p18cc_DIST_LE_HALF_PLANE (x a b : V3) :
+    dist x a ≤ dist x b ↔ 0 ≤ (a - b) ⬝ᵥ (2 • x - (a + b)) := by
+  rw [dist_eq_norm, dist_eq_norm, p18cc_dist_sq_diff]
+  have h1 := norm_nonneg (x - a)
+  have h2 := norm_nonneg (x - b)
+  constructor <;> intro h <;> nlinarith
+
+/-- HOL `p18cc_DIST_EQ_HALF_PLANE` (leaf_cell.hl:574-780). -/
+private theorem p18cc_DIST_EQ_HALF_PLANE (x a b : V3) :
+    dist x a = dist x b ↔ (a - b) ⬝ᵥ (2 • x - (a + b)) = 0 := by
+  rw [dist_eq_norm, dist_eq_norm, p18cc_dist_sq_diff]
+  constructor
+  · intro h
+    rw [h]
+    linarith
+  · intro h
+    exact p18cc_norm_eq_of_sq_eq (u := x - a) (v := x - b) (by linarith)
+
+/-- Strict companion of `p18cc_DIST_LE_HALF_PLANE` (HOL `DIST_LT_HALF_PLANE`). -/
+private theorem p18cc_pa18_dist_lt_half_plane (x a b : V3) :
+    dist x a < dist x b ↔ 0 < (a - b) ⬝ᵥ (2 • x - (a + b)) := by
+  constructor
+  · intro h
+    have h' : ¬ dist x b ≤ dist x a := not_le_of_gt h
+    rw [p18cc_DIST_LE_HALF_PLANE] at h'
+    have hneg : (b - a) ⬝ᵥ (2 • x - (b + a)) < 0 := not_le.mp h'
+    rw [add_comm b.ofLp a.ofLp] at hneg
+    have heq : (a - b) ⬝ᵥ (2 • x - (a + b))
+        = -((b - a) ⬝ᵥ (2 • x - (a + b))) := by
+      rw [show a - b = -(b - a) by abel]
+      simp only [WithLp.ofLp_neg, neg_dotProduct]
+    rw [heq]
+    linarith
+  · intro h
+    by_contra hcon
+    push_neg at hcon
+    have hnn : 0 ≤ (b - a) ⬝ᵥ (2 • x - (b + a)) := (p18cc_DIST_LE_HALF_PLANE x b a).1 hcon
+    rw [add_comm b.ofLp a.ofLp] at hnn
+    have heq : (a - b) ⬝ᵥ (2 • x - (a + b))
+        = -((b - a) ⬝ᵥ (2 • x - (a + b))) := by
+      rw [show a - b = -(b - a) by abel]
+      simp only [WithLp.ofLp_neg, neg_dotProduct]
+    rw [heq] at h
+    linarith
+
+/-- HOL `p18cc_FUZBZGI_0` (leaf_cell.hl:781-835). Discharged 2026-10-23: the
+4-point witness from `p18cc_NWVRFMF` puts a fourth point `elV vl 3` outside the
+leaf; `XYOFCGX` (PackingAuto7, proved) gives a strict distance gap at the
+stem point, `HL_PROPERTIES`/`p18cc_DIST_EQ_HALF_PLANE` kill the `p1` coefficient
+and `VORONOI_LIST_SUBSET_VORONOI_CLOSED`/`p18cc_DIST_LE_HALF_PLANE` give
+`d2 ≥ 0`; dot-linearity under `hc`/`hts` then forces `0 < t2`. -/
+private theorem p18cc_FUZBZGI_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
+    (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
+    (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
+    (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
+    (hfac : ∀ f, FacetOf f (voronoiList V ul) → f = {p1} ∨ f = {p2}) :
+    0 < t2 := by
+  have hlen : ul.length = 3 := hl'.1.1
+  have hbar : barV V 2 ul := hl'.1
+  -- {p1} is a facet of the leaf cell (from the hull equation alone; the HOL
+  -- `hfac` iff is not needed in this direction)
+  have hfac1 : FacetOf {p1} (voronoiList V ul) := by
+    rw [hv, convexHull_pair]
+    exact p18cc_FACET_OF_SEGMENT p1 p2 hne
+  -- the 4-point witness `vl` above the leaf
+  obtain ⟨vl, hbar3, htr, hom⟩ := p18cc_NWVRFMF (V := V) (ul := ul) (p := p1) hp hs hl' hfac1
+  have hvl4 : vl.length = 4 := hbar3.1
+  have hsub : setOfList ul ⊆ setOfList vl := by
+    rw [← htr]
+    exact SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET vl 2 (by rw [hvl4]; norm_num)
+  have hhdvmem : hdV vl ∈ setOfList vl := HD_IN_SET_OF_LIST vl (by rw [hvl4]; norm_num)
+  have helV3mem : elV vl 3 ∈ setOfList vl := by
+    have h3lt : 3 < vl.length := by rw [hvl4]; norm_num
+    have h1 : elV vl 3 = vl[3] := List.getD_eq_getElem (l := vl) (0 : V3) h3lt
+    rw [h1]
+    exact List.getElem_mem h3lt
+  have helV3V : elV vl 3 ∈ V := BARV_SUBSET V 3 vl hbar3 helV3mem
+  -- the extra point is not one of the leaf's three points
+  have helV3notin : elV vl 3 ∉ setOfList ul := by
+    intro hmem
+    have hsub' : setOfList vl ⊆ setOfList ul := by
+      intro x hx
+      have h := p18cc_truncate_set_of_list (vl := vl) (k := 3) (by norm_num) hvl4 hx
+      have h' : x ∈ setOfList (truncateSimplex 2 vl) ∪ ({vl.getD 3 0} : Set V3) := by
+        simpa using h
+      rcases h' with h' | h'
+      · rw [htr] at h'
+        exact h'
+      · rw [Set.mem_singleton_iff] at h'
+        rw [h']
+        exact hmem
+    have heq : setOfList vl = setOfList ul := Set.Subset.antisymm hsub' hsub
+    have h1 := MHFTTZN1 V vl 3 hp hbar3
+    have h2 := MHFTTZN1 V ul 2 hp hbar
+    rw [heq] at h1
+    omega
+  -- `p1 = circumcenter (setOfList vl)` (the omega point of `vl`)
+  have hcirc : circumcenter (setOfList vl) = p1 := by
+    obtain ⟨a, hcell, hca, -⟩ := VORONOI_LIST_3_SINGLETON_EXPLICIT V vl hp hs hbar3
+    have hmem : omegaList V vl ∈ voronoiList V vl := by
+      have h3 : omegaList V vl = omegaListN V vl 3 := by
+        rw [omegaList, hvl4]
+      rw [h3]
+      have hmem0 := OMEGA_LIST_N_IN_VORONOI_LIST V vl 3 3 hbar3 (le_refl 3)
+      have htr3 : truncateSimplex 3 vl = vl := TRUNCATE_SIMPLEX_REFL 3 vl hvl4
+      rwa [htr3] at hmem0
+    have homp : omegaList V vl = a := by
+      rw [hcell] at hmem
+      exact Set.mem_singleton_iff.1 hmem
+    rw [← hca, ← homp, hom]
+  -- distance equality at `p1` between the two stem points of `vl`
+  have hdist : dist p1 (hdV ul) = dist p1 (elV vl 3) := by
+    have hH1 := HL_PROPERTIES V vl 3 hp hbar3 (hdV vl) hhdvmem
+    have hH2 := HL_PROPERTIES V vl 3 hp hbar3 (elV vl 3) helV3mem
+    have hhdveq : hdV vl = hdV ul := by
+      have h := HD_TRUNCATE_SIMPLEX vl 2 (by rw [hvl4]; norm_num)
+      rw [htr] at h
+      exact h.symm
+    rw [← hcirc, ← hhdveq]
+    exact hH1.trans hH2.symm
+  have hd1 : (hdV ul - elV vl 3) ⬝ᵥ (2 • p1 - (hdV ul + elV vl 3)) = 0 :=
+    (p18cc_DIST_EQ_HALF_PLANE p1 (hdV ul) (elV vl 3)).1 hdist
+  -- `p2` lies in the leaf cell, hence on the `p2` side of the bisector
+  have hp2mem : p2 ∈ voronoiList V ul := by
+    rw [hv]
+    exact IN_SET_IMP_IN_CONVEX_HULL_SET p2 {p1, p2} (by simp)
+  have hp2closed : p2 ∈ voronoiClosed V (hdV ul) :=
+    VORONOI_LIST_SUBSET_VORONOI_CLOSED V ul (by rw [hlen]; norm_num) hp2mem
+  have hle : dist p2 (hdV ul) ≤ dist p2 (elV vl 3) := hp2closed (elV vl 3) helV3V
+  have hd2 : 0 ≤ (hdV ul - elV vl 3) ⬝ᵥ (2 • p2 - (hdV ul + elV vl 3)) :=
+    (p18cc_DIST_LE_HALF_PLANE p2 (hdV ul) (elV vl 3)).1 hle
+  -- the XYOFCGX gap at the stem point `hdV ul`
+  have hind : ¬affineDependent (setOfList ul) := BARV_AFFINE_INDEPENDENT V ul 2 hp hbar
+  have hhdu : hdV ul ∈ setOfList ul := HD_IN_SET_OF_LIST ul (by rw [hlen]; norm_num)
+  have hXY := XYOFCGX V (setOfList ul) (circumcenter (setOfList ul)) hp
+    (BARV_SUBSET V 2 ul hbar) hind rfl hl'.2 (hdV ul) (elV vl 3) hhdu
+    ⟨helV3V, helV3notin⟩
+  have hlt : dist (circumcenter (setOfList ul)) (hdV ul)
+      < dist (circumcenter (setOfList ul)) (elV vl 3) := by
+    rw [dist_comm (circumcenter (setOfList ul)) (hdV ul),
+      dist_comm (circumcenter (setOfList ul)) (elV vl 3)]
+    exact hXY
+  have hposdot := (p18cc_pa18_dist_lt_half_plane (circumcenter (setOfList ul))
+    (hdV ul) (elV vl 3)).1 hlt
+  -- dot-linearity: the `p1` coefficient vanishes, leaving `t2 * d2 > 0`
+  have hvec : 2 • circumcenter (setOfList ul) - (hdV ul + elV vl 3)
+      = t1 • (2 • p1 - (hdV ul + elV vl 3))
+        + t2 • (2 • p2 - (hdV ul + elV vl 3)) := by
+    rw [hc]
+    have hsum : t1 • (hdV ul + elV vl 3) + t2 • (hdV ul + elV vl 3)
+        = hdV ul + elV vl 3 := by
+      rw [← add_smul, hts, one_smul]
+    calc
+      2 • (t1 • p1 + t2 • p2) - (hdV ul + elV vl 3)
+          = t1 • (2 • p1) + t2 • (2 • p2) - (hdV ul + elV vl 3) := by module
+      _ = t1 • (2 • p1) + t2 • (2 • p2)
+            - (t1 • (hdV ul + elV vl 3) + t2 • (hdV ul + elV vl 3)) := by rw [hsum]
+      _ = t1 • (2 • p1 - (hdV ul + elV vl 3))
+            + t2 • (2 • p2 - (hdV ul + elV vl 3)) := by module
+  have hvecPi : (2 • (circumcenter (setOfList ul)).ofLp - ((hdV ul).ofLp + (elV vl 3).ofLp))
+      = t1 • (2 • p1.ofLp - ((hdV ul).ofLp + (elV vl 3).ofLp))
+        + t2 • (2 • p2.ofLp - ((hdV ul).ofLp + (elV vl 3).ofLp)) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hvec
+    simpa using h
+  have hdot : (hdV ul - elV vl 3) ⬝ᵥ (2 • circumcenter (setOfList ul) - (hdV ul + elV vl 3))
+      = t1 * ((hdV ul - elV vl 3) ⬝ᵥ (2 • p1 - (hdV ul + elV vl 3)))
+        + t2 * ((hdV ul - elV vl 3) ⬝ᵥ (2 • p2 - (hdV ul + elV vl 3))) := by
+    rw [hvecPi, dotProduct_add, dotProduct_smul, dotProduct_smul, smul_eq_mul, smul_eq_mul]
+  have hpos : 0 < t2 * ((hdV ul - elV vl 3) ⬝ᵥ (2 • p2 - (hdV ul + elV vl 3))) := by
+    have h := hposdot
+    rw [hdot, hd1, mul_zero, zero_add] at h
+    exact h
+  have hd2_ne : ((hdV ul - elV vl 3) ⬝ᵥ (2 • p2 - (hdV ul + elV vl 3))) ≠ 0 := by
+    intro h0
+    rw [h0, mul_zero] at hpos
+    exact lt_irrefl 0 hpos
+  have hd2_pos : 0 < (hdV ul - elV vl 3) ⬝ᵥ (2 • p2 - (hdV ul + elV vl 3)) :=
+    lt_of_le_of_ne hd2 (Ne.symm hd2_ne)
+  rw [mul_comm t2 ((hdV ul - elV vl 3) ⬝ᵥ (2 • p2 - (hdV ul + elV vl 3)))] at hpos
+  exact pos_of_mul_pos_right hpos (le_of_lt hd2_pos)
+
+/-- HOL `p18cc_FUZBZGI_1` (leaf_cell.hl:781-835). Discharged 2026-10-23: `p18cc_YBZFUPO`
+gives the two endpoints, `MHFTTZN3` pins the circumcenter onto their affine
+span, and `p18cc_FUZBZGI_0` applied in both endpoint orders forces both
+coefficients positive. -/
+private theorem p18cc_FUZBZGI_1 {V : Set V3} {ul : List V3} (hp : Packing V)
+    (hs : saturated V) (hl' : leaf V ul) :
+    ∃ p1 p2 : V3, ∃ t1 t2 : ℝ, voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧
+      p1 ≠ p2 ∧ circumcenter (setOfList ul) = t1 • p1 + t2 • p2 ∧ t1 + t2 = 1 ∧
+      0 < t1 ∧ 0 < t2 := by
+  obtain ⟨p1, p2, hv, hne, hfac⟩ := p18cc_YBZFUPO hp hs hl'
+  -- the circumcenter lies in the affine span of the leaf cell
+  have hspan : (circumcenter (setOfList ul) : V3) ∈
+      (affineSpan ℝ (voronoiList V ul) : Set V3) := by
+    have h := MHFTTZN3 V ul 2 hp hl'.1
+    have h0 : (circumcenter (setOfList ul) : V3) ∈
+        ({circumcenter (setOfList ul)} : Set V3) :=
+      Set.mem_singleton_iff.2 rfl
+    rw [← h] at h0
+    exact h0.1
+  rw [hv, affineSpan_convexHull] at hspan
+  obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.1 hspan
+  have hcc : (circumcenter (setOfList ul) : V3) = (1 - r) • p1 + r • p2 := by
+    rw [← hr, AffineMap.lineMap_apply_module]
+  have htsum : (1 - r) + r = 1 := by ring
+  have hpos2 : 0 < r := p18cc_FUZBZGI_0 hp hs hl' hv hne hcc htsum hfac
+  -- the same argument with the endpoints swapped forces `0 < 1 - r`
+  have hv' : voronoiList V ul = convexHull ℝ ({p2, p1} : Set V3) := by
+    rw [hv, Set.pair_comm]
+  have hfac' : ∀ f, FacetOf f (voronoiList V ul) → f = {p2} ∨ f = {p1} := by
+    intro f hf
+    rcases hfac f hf with h | h
+    · exact Or.inr h
+    · exact Or.inl h
+  have hcc' : (circumcenter (setOfList ul) : V3) = r • p2 + (1 - r) • p1 := by
+    rw [hcc]
+    abel
+  have htsum' : r + (1 - r) = 1 := by ring
+  have hpos1 : 0 < 1 - r :=
+    p18cc_FUZBZGI_0 hp hs hl' hv' (Ne.symm hne) hcc' htsum' hfac'
+  exact ⟨p1, p2, 1 - r, r, hv, hne, hcc, htsum, hpos1, hpos2⟩
+
+/-- HOL `p18cc_CHI_MSB_ADDITIVE` (leaf_cell.hl:879-890). -/
+private theorem p18cc_CHI_MSB_ADDITIVE (ul : List V3) (p1 p2 : V3) (t1 t2 : ℝ) (ht : t1 + t2 = 1) :
+    chiMsb ul (t1 • p1 + t2 • p2)
+      = t1 * chiMsb ul p1 + t2 * chiMsb ul p2 := by
+  have key : ((t1 • p1 + t2 • p2 - ul[0]! : V3) : Fin 3 → ℝ)
+      = t1 • ((p1 - ul[0]! : V3) : Fin 3 → ℝ)
+        + t2 • ((p2 - ul[0]! : V3) : Fin 3 → ℝ) := by
+    simp only [p18cc_coe_sub18, p18cc_coe_add18, p18cc_coe_smul18]
+    funext i
+    simp only [Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
+    linear_combination ((ul[0]! : Fin 3 → ℝ) i) * ht
+  simp only [chiMsb]
+  rw [key, dotProduct_add, dotProduct_smul, dotProduct_smul]
+  ring
+
+/-- HOL `p18cc_AFFINE_IMP_CHI_MSB_0` (leaf_cell.hl:935-942): `chi_msb` is the signed
+volume over the stem triple, so it vanishes on the triple's affine span
+(linearity of the first determinant row + the two degenerate rows). -/
+private theorem p18cc_AFFINE_IMP_CHI_MSB_0 (ul : List V3) (p : V3) (hlen : ul.length = 3)
+    (hp : p ∈ affineSpan ℝ (setOfList ul)) : chiMsb ul p = 0 := by
+  obtain ⟨a, b, c, rfl⟩ : ∃ a b c, ul = [a, b, c] := ⟨_, _, _, p18cc_list3_eq ul hlen⟩
+  have hset : setOfList [a, b, c] = ({a, b, c} : Set V3) := by
+    ext t
+    simp [setOfList]
+    all_goals tauto
+  rw [hset] at hp
+  have hdir : (p -ᵥ a : V3) ∈ (affineSpan ℝ ({a, b, c} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction hp
+      (mem_affineSpan ℝ (Set.mem_insert a ({b, c} : Set V3)))
+  rw [direction_affineSpan] at hdir
+  have hsub : vectorSpan ℝ ({a, b, c} : Set V3) ≤
+      Submodule.span ℝ ({a - b, a - c} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_left (k := ℝ) (Set.mem_insert a ({b, c} : Set V3)),
+      Submodule.span_le]
+    rintro d ⟨x, hx, rfl⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with hx1 | hx1 | hx1
+    · rw [hx1]
+      show (a -ᵥ a : V3) ∈ Submodule.span ℝ ({a - b, a - c} : Set V3)
+      rw [vsub_self]
+      exact Submodule.zero_mem _
+    · rw [hx1]
+      exact Submodule.subset_span (Set.mem_insert (a - b) ({a - c} : Set V3))
+    · rw [hx1]
+      exact Submodule.subset_span (Or.inr (Set.mem_singleton (a - c)))
+  obtain ⟨r2, r3, hv2⟩ := Submodule.mem_span_pair.1 (hsub hdir)
+  have hpa : (p - a : V3) = p -ᵥ a := rfl
+  have hrow : ((p - a : V3) : Fin 3 → ℝ)
+      = (-r2) • ((b - a : V3) : Fin 3 → ℝ) + (-r3) • ((c - a : V3) : Fin 3 → ℝ) := by
+    rw [hpa, ← hv2, p18cc_coe_add18, p18cc_coe_smul18, p18cc_coe_smul18, p18cc_coe_sub18, p18cc_coe_sub18]
+    funext i
+    simp only [Pi.add_apply, Pi.smul_apply, Pi.sub_apply, smul_eq_mul, p18cc_coe_sub18]
+    ring
+  rw [p18cc_chiMsb_det, hrow]
+  simp only [Matrix.det_fin_three, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_succ, Matrix.cons_val',
+    p18cc_coe_sub18, Pi.sub_apply, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+  ring
+
+/-- `chi_msb` on a general list as the cross-dot of the `getD`-stem
+(case analysis on the list length; the degenerate tails give the zero vector). -/
+private theorem p18cc_pa18_chiMsb_getD (ul : List V3) (p : V3) :
+    chiMsb ul p = crossProduct ((ul.getD 1 0 - ul.getD 0 0 : V3) : Fin 3 → ℝ)
+      ((ul.getD 2 0 - ul.getD 0 0 : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((p - ul.getD 0 0 : V3) : Fin 3 → ℝ) := by
+  cases ul with
+  | nil => simp [chiMsb]
+  | cons a tl =>
+    cases tl with
+    | nil => simp [chiMsb]
+    | cons b tl2 =>
+      cases tl2 with
+      | nil =>
+        have hd : (default : V3) = 0 := rfl
+        simp [chiMsb, hd]
+      | cons c _ => simp [chiMsb]
+
+/-- HOL `p18cc_CHI_MSB_IMP_COPLANAR` (leaf_cell.hl:935-942): contrapositive of
+`coplanar_cross_dot` (PlanarityAuto12) at the stem triple. -/
+private theorem p18cc_CHI_MSB_IMP_COPLANAR (ul : List V3) (p : V3) (h : chiMsb ul p = 0) :
+    Coplanar ({ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, p} : Set V3) := by
+  rw [p18cc_pa18_chiMsb_getD] at h
+  by_contra hnc
+  exact (coplanar_cross_dot (ul.getD 0 0) (ul.getD 1 0) (ul.getD 2 0) p hnc) h
+
+/-- HOL `p18cc_JDHAWAY_0` (leaf_cell.hl:1012-1051). -/
+private theorem p18cc_JDHAWAY_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
+    (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
+    (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
+    (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
+    (hpos : 0 < t1 ∧ 0 < t2) : chiMsb ul p1 ≠ 0 := by
+  intro hchi
+  have h3 : ul.length = 3 := hl'.1.1
+  obtain ⟨a, b, c, rfl⟩ : ∃ a b c, ul = [a, b, c] := ⟨_, _, _, p18cc_list3_eq ul h3⟩
+  have hD0 : [a, b, c].getD 0 0 = a := rfl
+  have hD1 : [a, b, c].getD 1 0 = b := rfl
+  have hD2 : [a, b, c].getD 2 0 = c := rfl
+  have hins : insert p1 (setOfList [a, b, c])
+      = ({[a, b, c].getD 0 0, [a, b, c].getD 1 0, [a, b, c].getD 2 0, p1} : Set V3) := by
+    rw [hD0, hD1, hD2]
+    ext t
+    simp [setOfList]
+    all_goals tauto
+  have hcop : Coplanar (insert p1 (setOfList [a, b, c])) := by
+    rw [hins]
+    exact p18cc_CHI_MSB_IMP_COPLANAR [a, b, c] p1 hchi
+  have haff : p1 ∈ (affineSpan ℝ (setOfList [a, b, c]) : Set V3) :=
+    p18cc_COPLANAR_INSERT p1 (MHFTTZN1 V [a, b, c] 2 hp hl'.1) hcop
+  have hv2 : p1 ∈ (affineSpan ℝ (voronoiList V [a, b, c]) : Set V3) := by
+    rw [hv, affineSpan_convexHull]
+    exact mem_affineSpan ℝ (Set.mem_insert p1 ({p2} : Set V3))
+  have hmem : p1 ∈ (affineSpan ℝ (voronoiList V [a, b, c]) : Set V3) ∩
+      (affineSpan ℝ (setOfList [a, b, c]) : Set V3) := ⟨hv2, haff⟩
+  rw [MHFTTZN3 V [a, b, c] 2 hp hl'.1] at hmem
+  have hp1c : p1 = circumcenter (setOfList [a, b, c]) := Set.mem_singleton_iff.1 hmem
+  have hcp1 : p1 = t1 • p1 + t2 • p2 := hp1c.trans hc
+  have hprod : t1 • p1 + t2 • p2 = (t1 + t2) • p1 := by
+    calc t1 • p1 + t2 • p2 = p1 := hcp1.symm
+      _ = (t1 + t2) • p1 := by rw [hts, one_smul]
+  have hcancel : t1 • p1 + t2 • p1 = t1 • p1 + t2 • p2 := by
+    rw [← add_smul, hprod]
+  have hz2 : t2 • p1 = t2 • p2 := by
+    have h := congrArg (fun w : V3 => w - t1 • p1) hcancel
+    simpa using h
+  exact hne (smul_right_injective V3 (ne_of_gt hpos.2) hz2)
+
+/-- HOL `p18cc_JDHAWAY_1` (leaf_cell.hl:1012-1051): the circumcenter of the stem
+lies in the stem's affine span, where `chi_msb` vanishes. -/
+private theorem p18cc_JDHAWAY_1 {V : Set V3} {ul : List V3} (hp : Packing V)
+    (hs : saturated V) (hl' : leaf V ul) :
+    chiMsb ul (circumcenter (setOfList ul)) = 0 := by
+  have h3 : ul.length = 3 := hl'.1.1
+  have hmem : circumcenter (setOfList ul) ∈ (affineSpan ℝ (setOfList ul) : Set V3) :=
+    BARV_CIRCUMCENTER_EXISTS V ul 2 hp hl'.1
+  exact p18cc_AFFINE_IMP_CHI_MSB_0 ul (circumcenter (setOfList ul)) h3 hmem
+
+/-- HOL `p18cc_JDWAWAY` (leaf_cell.hl:1012-1051). -/
+private theorem p18cc_JDWAWAY {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
+    (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
+    (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
+    (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
+    (hpos : 0 < t1 ∧ 0 < t2) :
+    chiMsb ul p1 ≠ 0 ∧ chiMsb ul p2 ≠ 0 ∧ (chiMsb ul p1 < 0 ↔ 0 < chiMsb ul p2) := by
+  have h1 := p18cc_JDHAWAY_0 hp hs hl' hv hne hc hts hpos
+  -- the same argument with the endpoints swapped forces `chiMsb ul p2 ≠ 0`
+  have hv' : voronoiList V ul = convexHull ℝ ({p2, p1} : Set V3) := by
+    rw [hv, Set.pair_comm]
+  have hcc' : circumcenter (setOfList ul) = t2 • p2 + t1 • p1 := by
+    rw [hc]; abel
+  have hts' : t2 + t1 = 1 := by linarith
+  have h2 := p18cc_JDHAWAY_0 hp hs hl' hv' (Ne.symm hne) hcc' hts' ⟨hpos.2, hpos.1⟩
+  -- the circumcenter sits between the endpoints, so the signed volume vanishes
+  have hz : chiMsb ul (circumcenter (setOfList ul)) = 0 := p18cc_JDHAWAY_1 hp hs hl'
+  have hadd : chiMsb ul (t1 • p1 + t2 • p2) = t1 * chiMsb ul p1 + t2 * chiMsb ul p2 :=
+    p18cc_CHI_MSB_ADDITIVE ul p1 p2 t1 t2 hts
+  rw [← hc, hz] at hadd
+  refine ⟨h1, h2, ?_⟩
+  constructor
+  · intro hlt
+    have ha : t1 * chiMsb ul p1 < 0 := mul_neg_of_pos_of_neg hpos.1 hlt
+    have hb : 0 < t2 * chiMsb ul p2 := by linarith
+    rcases mul_pos_iff.1 hb with ⟨h, h'⟩ | ⟨h, h'⟩
+    · exact h'
+    · linarith
+  · intro hp2
+    have hb : 0 < t2 * chiMsb ul p2 := mul_pos hpos.2 hp2
+    have ha : t1 * chiMsb ul p1 < 0 := by linarith
+    rcases mul_neg_iff.1 ha with ⟨h, h'⟩ | ⟨h, h'⟩
+    · exact h'
+    · linarith
+
 /-- HOL `cc_pe_exists` (leaf_cell.hl:1052-1084), from `YBZFUPO`. -/
 theorem cc_pe_exists (V : Set V3) (ul : List V3) :
     ∃ p1 p2 : V3, Packing V → saturated V → leaf V ul →
       voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧ p1 ≠ p2 ∧
         0 < chiMsb ul p1 := by
--- NEEDS (GIANT root, 2026-10-10 wave): the whole ccPe1/ccUh/ccKe/ccCell
--- taint closure (280 downstream) now flows through THIS sorry alone.
--- HOL proof (leaf_cell.hl:1052-1084) = FUZBZGI_1 + JDWAWAY sign-split;
--- FUZBZGI_1 consumes PA7's still-sorry XYOFCGX (outside this file) and
--- YBZFUPO needs a 1-dim polytope = segment classification (no repo/Mathlib
--- lemma; cf. PolyAuto7's note on EXPAND_EDGE_POLYTOPE). Everything else in
--- the PA18 cc-chain is now derived.
-  sorry
+  -- Discharged 2026-10-23 (Wave-2): p18cc_FUZBZGI_1 supplies the segment endpoints
+  -- and the positive barycentric data; the sign split on `chiMsb` comes from
+  -- p18cc_JDHAWAY_0 (nonvanishing at p1) and p18cc_JDWAWAY (the iff with 0 < chiMsb at
+  -- the other endpoint). Vacuous hypothesis branches use dummy witnesses.
+  by_cases hp : Packing V
+  · by_cases hs : saturated V
+    · by_cases hhl : leaf V ul
+      · obtain ⟨q1, q2, t1, t2, hv, hne, hcc, hts, ht1, ht2⟩ := p18cc_FUZBZGI_1 hp hs hhl
+        by_cases hchi : 0 < chiMsb ul q1
+        · exact ⟨q1, q2, fun _ _ _ => ⟨hv, hne, hchi⟩⟩
+        · have hn0 : chiMsb ul q1 ≠ 0 := p18cc_JDHAWAY_0 hp hs hhl hv hne hcc hts ⟨ht1, ht2⟩
+          have hlt : chiMsb ul q1 < 0 := lt_of_le_of_ne (le_of_not_gt hchi) hn0
+          have hjd := p18cc_JDWAWAY hp hs hhl hv hne hcc hts ⟨ht1, ht2⟩
+          have hv' : voronoiList V ul = convexHull ℝ ({q2, q1} : Set V3) := by
+            rw [hv, Set.pair_comm]
+          exact ⟨q2, q1, fun _ _ _ => ⟨hv', Ne.symm hne, hjd.2.2.1 hlt⟩⟩
+      · exact ⟨(0:V3), (0:V3), fun _ _ hl' => absurd hl' hhl⟩
+    · exact ⟨(0:V3), (0:V3), fun _ hs' _ => absurd hs' hs⟩
+  · exact ⟨(0:V3), (0:V3), fun hp' _ _ => absurd hp' hp⟩
 
 /-- HOL `cc_pe1` (leaf_cell.hl:1082, `new_specification` via `SKOLEM_THM`). -/
 noncomputable def ccPe1 (V : Set V3) (ul : List V3) : V3 :=
@@ -2079,10 +2884,40 @@ theorem JDHAWAY_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
     (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
     (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
     (hpos : 0 < t1 ∧ 0 < t2) : chiMsb ul p1 ≠ 0 := by
--- NEEDS: waits on CHI_MSB_IMP_COPLANAR + CHI_MSB_ADDITIVE; the remaining
--- half (COPLANAR_INSERT now proved + MHFTTZN1/MHFTTZN3 +
--- BARV_CIRCUMCENTER_EXISTS) is mechanical.
-  sorry
+  intro hchi
+  have h3 : ul.length = 3 := hl'.1.1
+  obtain ⟨a, b, c, rfl⟩ : ∃ a b c, ul = [a, b, c] := ⟨_, _, _, list3_eq ul h3⟩
+  have hD0 : [a, b, c].getD 0 0 = a := rfl
+  have hD1 : [a, b, c].getD 1 0 = b := rfl
+  have hD2 : [a, b, c].getD 2 0 = c := rfl
+  have hins : insert p1 (setOfList [a, b, c])
+      = ({[a, b, c].getD 0 0, [a, b, c].getD 1 0, [a, b, c].getD 2 0, p1} : Set V3) := by
+    rw [hD0, hD1, hD2]
+    ext t
+    simp [setOfList]
+    all_goals tauto
+  have hcop : Coplanar (insert p1 (setOfList [a, b, c])) := by
+    rw [hins]
+    exact CHI_MSB_IMP_COPLANAR [a, b, c] p1 hchi
+  have haff : p1 ∈ (affineSpan ℝ (setOfList [a, b, c]) : Set V3) :=
+    COPLANAR_INSERT p1 (MHFTTZN1 V [a, b, c] 2 hp hl'.1) hcop
+  have hv2 : p1 ∈ (affineSpan ℝ (voronoiList V [a, b, c]) : Set V3) := by
+    rw [hv, affineSpan_convexHull]
+    exact mem_affineSpan ℝ (Set.mem_insert p1 ({p2} : Set V3))
+  have hmem : p1 ∈ (affineSpan ℝ (voronoiList V [a, b, c]) : Set V3) ∩
+      (affineSpan ℝ (setOfList [a, b, c]) : Set V3) := ⟨hv2, haff⟩
+  rw [MHFTTZN3 V [a, b, c] 2 hp hl'.1] at hmem
+  have hp1c : p1 = circumcenter (setOfList [a, b, c]) := Set.mem_singleton_iff.1 hmem
+  have hcp1 : p1 = t1 • p1 + t2 • p2 := hp1c.trans hc
+  have hprod : t1 • p1 + t2 • p2 = (t1 + t2) • p1 := by
+    calc t1 • p1 + t2 • p2 = p1 := hcp1.symm
+      _ = (t1 + t2) • p1 := by rw [hts, one_smul]
+  have hcancel : t1 • p1 + t2 • p1 = t1 • p1 + t2 • p2 := by
+    rw [← add_smul, hprod]
+  have hz2 : t2 • p1 = t2 • p2 := by
+    have h := congrArg (fun w : V3 => w - t1 • p1) hcancel
+    simpa using h
+  exact hne (smul_right_injective V3 (ne_of_gt hpos.2) hz2)
 
 /-- HOL `JDHAWAY_1` (leaf_cell.hl:1012-1051): the circumcenter of the stem
 lies in the stem's affine span, where `chi_msb` vanishes. -/
@@ -2101,9 +2936,33 @@ theorem JDWAWAY {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
     (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
     (hpos : 0 < t1 ∧ 0 < t2) :
     chiMsb ul p1 ≠ 0 ∧ chiMsb ul p2 ≠ 0 ∧ (chiMsb ul p1 < 0 ↔ 0 < chiMsb ul p2) := by
--- NEEDS: waits on JDHAWAY_0; the sign flip is JDHAWAY_1 +
--- CHI_MSB_ADDITIVE arithmetic (both proved).
-  sorry
+  have h1 := JDHAWAY_0 hp hs hl' hv hne hc hts hpos
+  -- the same argument with the endpoints swapped forces `chiMsb ul p2 ≠ 0`
+  have hv' : voronoiList V ul = convexHull ℝ ({p2, p1} : Set V3) := by
+    rw [hv, Set.pair_comm]
+  have hcc' : circumcenter (setOfList ul) = t2 • p2 + t1 • p1 := by
+    rw [hc]; abel
+  have hts' : t2 + t1 = 1 := by linarith
+  have h2 := JDHAWAY_0 hp hs hl' hv' (Ne.symm hne) hcc' hts' ⟨hpos.2, hpos.1⟩
+  -- the circumcenter sits between the endpoints, so the signed volume vanishes
+  have hz : chiMsb ul (circumcenter (setOfList ul)) = 0 := JDHAWAY_1 hp hs hl'
+  have hadd : chiMsb ul (t1 • p1 + t2 • p2) = t1 * chiMsb ul p1 + t2 * chiMsb ul p2 :=
+    CHI_MSB_ADDITIVE ul p1 p2 t1 t2 hts
+  rw [← hc, hz] at hadd
+  refine ⟨h1, h2, ?_⟩
+  constructor
+  · intro hlt
+    have ha : t1 * chiMsb ul p1 < 0 := mul_neg_of_pos_of_neg hpos.1 hlt
+    have hb : 0 < t2 * chiMsb ul p2 := by linarith
+    rcases mul_pos_iff.1 hb with ⟨h, h'⟩ | ⟨h, h'⟩
+    · exact h'
+    · linarith
+  · intro hp2
+    have hb : 0 < t2 * chiMsb ul p2 := mul_pos hpos.2 hp2
+    have ha : t1 * chiMsb ul p1 < 0 := by linarith
+    rcases mul_neg_iff.1 ha with ⟨h, h'⟩ | ⟨h, h'⟩
+    · exact h'
+    · linarith
 
 /-- HOL `CC_CELL4` (leaf_cell.hl:1143-?): the 4-case Marchal cell is the
 Delaunay tetrahedron over `cc_uh`. -/
@@ -3720,11 +4579,14 @@ private theorem pa18_coplanar_measure_null {s t : Set V3} (hcop : Coplanar s)
 equality): mathematically `cc_pe1`/`cc_uh`/`cc_ke` depend on `ul` only through
 the unordered stem `{EL 0 ul, EL 1 ul}` and `EL 2 ul`, both preserved by the
 swap.
-NEEDS (scoped CFFONNL debt): in PA18 the `cc_pe1`/`cc_uh` Skolem constants
-sit behind the `cc_pe_exists` root (YBZFUPO @PA7), and the swap-insensitivity
-of the characterizing property is not derivable from the current kit. True
-statement: both cells are the mcell over a 4-list with the same point set
-`{u0, u1, u2, cc_pe1}`. -/
+NEEDS (scoped CFFONNL debt, refreshed 2026-10-23 Wave-2): `cc_pe_exists` is
+now discharged, so the Skolem constants sit behind a fully proven root; what
+remains is the swap-insensitivity of the characterizing property itself
+(neither `ccPe1 V [u0,u1,u2] = ccPe1 V [u1,u0,u2]` for the two
+`Classical.choose` witnesses nor a uniqueness characterization of `ccCell`
+is derivable from the current kit). True statement: both cells are the mcell
+over a 4-list with the same point set `{u0, u1, u2, cc_pe1}`; needs a
+dedicated scout (Skolem-coincidence or cell-uniqueness route). -/
 private theorem pa18_ccCell_swap {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
     (hs : saturated V) (hl : leaf V [u0, u1, u2]) :
     ccCell V [u0, u1, u2] = ccCell V [u1, u0, u2] := by
