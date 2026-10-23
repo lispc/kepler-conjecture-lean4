@@ -1,6 +1,6 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 216018
-SORRIED 136
+TOTAL_REACHABLE_KEPLER_DECLS 216032
+SORRIED 133
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
@@ -135,9 +135,6 @@ Kepler.Text.PackingAuto25	Kepler.Text.real_model_sum_azim	parent=Kepler.Text.pkr
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_tew	parent=Kepler.Text.pkrmQy
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_txq	parent=Kepler.Text.pkrmQy
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_ztg4	parent=Kepler.Text.pkrmQu
-Kepler.Text.PackingAuto11	_private.Kepler.Text.PackingAuto11.0.Kepler.Text.k2Case	parent=Kepler.Text.LEPJBDJ
-Kepler.Text.PackingAuto11	_private.Kepler.Text.PackingAuto11.0.Kepler.Text.k3Subset	parent=_private.Kepler.Text.PackingAuto11.0.Kepler.Text.k3Case
-Kepler.Text.PackingAuto11	_private.Kepler.Text.PackingAuto11.0.Kepler.Text.rogersInterVLemma	parent=Kepler.Text.LEPJBDJ_0
 Kepler.Text.PackingAuto18	_private.Kepler.Text.PackingAuto18.0.Kepler.Text.pa18_ccCell_swap	parent=Kepler.Text.CFFONNL
 --- AXIOMS ---
 Kepler.Assembly.GoodListShardHex00	Kepler.Assembly.goodListHex00._native.native_decide.ax_1_1

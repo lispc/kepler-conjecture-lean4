@@ -233,6 +233,11 @@ orbit 传输 + LocalFan↔localFan_p3 数据桥）；裁定波 7——**7 枚移
 后口径）。2026-09-21/22 续：TameSpine 填证 T1-T4 波（`387f9047`/`2fea2def`：
 Assembly 秒填批 3 件闭合、JGTDEBU 全组/NODE_TYPE_lemma 真证明、CKQOWSA 章移植、
 CDTETAT/KCBLRQC 链真化——**TameLp 桥链全通**）。
+**2026-10-23 两波**：PA15 `DIHX_SYM` + `LEFT_ACTION_LIST_2/3_EXISTS` 闭合
+（+1018/−3，未消费 `HDTFNFZ`/`LEPJBDJ`）；PA11 `LEPJBDJ` 三私件
+`k2Case`/`k3Subset`/`rogersInterVLemma` 全闭（+434/−48，proof sorry 3→0，
+`LEPJBDJ`/`LEPJBDJ_0` 值级标准三）。e2e 直源 137→**133**，公理 624 不变；
+PA2 `LEPJBDJ_concl`/`_0_concl` 待 merge 换接。
 
 | 模块（HOL 源文件） | 行数 | 状态 | 完成度 |
 |---|---|---|---|

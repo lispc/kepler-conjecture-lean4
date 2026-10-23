@@ -896,3 +896,32 @@ closed 候选（9424/14266/40785/49998/54771/75965/133228/154721 +
   **不要**先打 `prove_flyspeck_lp_step1`/`compute_all`（依赖 127 族数据库）。
 - **落库**：侦察报告 `docs/scouts/lp-w6-coverage-scout.md`；骨架与证据在
   快照。骨架未入仓（import `Kepler.Assembly`，接线前需下沉共享类型拆环）。
+
+## 2026-10-23 Phase 5 PA11 节（`LEPJBDJ` 三私件全闭，+434/−48）
+
+**投放**：`lean/Kepler/Text/PackingAuto11.lean` **+434/−48**（仅此一文件），
+proof sorry **3→0**（文件内 `sorry` 提及 9→4，余下全在 PA2 接口 docstring）；
+新增行禁词扫描零；无新增 import（无环）。
+
+- **`rogersInterVLemma`**（marchal2.hl:626-667）：`GLTVHUM`（PA6 clean）+
+  `BARV_SUBSET` + `TRUNCATE_SIMPLEX_EXPLICIT_0`。
+- **`k3Subset`**（LEPJBDJ.hl:740-906）：**未消费 `mxiExplicit`**（其证明经
+  PA2 `MXI_EXISTS_concl` 带 sorryAx）；改用 clean PA7/PA8 kit 内联重推
+  MXI 几何（`WAUFCHE1`/`XNHPWAB1`/`HL_EQ_DIST0` + 新建
+  `p11_segmentInterCball` 跨球引理 + `Classical.epsilon_spec`）。
+- **`k2Case`**（LEPJBDJ.hl:126-656）：无投影版度量核心 `p11_k2_core`
+  （`t=A/L²`、`s=tL`、`w=(1-t)L`；两条 rcone 给 `s≥d0·a`、`w≥d1·a`、
+  `s+w=L`；packing `d0,d1≥2`、`a=L/(2√2)` 得 `L≥2L/√2` 矛盾），
+  忠实 HOL 数学但省略 between/Pythagoras 中间层。
+- **闸**：`auto_gate.sh Kepler/Text/PackingAuto11.lean LEPJBDJ` **GATE-PASS**。
+- **公理**：`LEPJBDJ`、`LEPJBDJ_0` 及五个新私件全部标准三；
+  `#valax3` 值级 `LEPJBDJ` 21,853 定理节点、`LEPJBDJ_0` 36,785 节点，
+  无 sorryAx。`mxiExplicit` 仍带 sorryAx 但已不在 `LEPJBDJ` 消费面。
+- **地图**：direct source **136→133**；PA11 三行消失，模块进入零源名单；
+  可达声明 216,018→216,032；公理 624 不变。
+- **后续**：PA2 `LEPJBDJ_concl`/`LEPJBDJ_0_concl` 的 `sorry` 体可在 merge
+  时换 `exact LEPJBDJ`/`exact LEPJBDJ_0`；PA25 `MCELL4_FI/AZIM_LT_PI/GG`
+  的旧 `LEPJBDJ` 路径自此解锁（不再带 sorryAx）。两处 `unused variable`
+  警告因陈述冻结保留。
+- **快照**：`~/c17_backup/lane_snapshots/pa11lep/`（SCOUT/PROGRESS/DELIVERY、
+  diff、build 日志、axioms/valax3 探针、MD5SUMS 全验）。
