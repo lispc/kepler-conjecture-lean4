@@ -2403,6 +2403,12 @@ theorem MCELL_IN_WEDGE (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ 
     (hr : leaf_rank V ul w0 n f) (hm : mcellSet V X) (hnn : ¬ nullSet X)
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X) :
     ∃ i, i < n ∧ X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 硬阻断 = BDXKHTW(PA18:6873, leaf_cell.hl
+  -- :3984-4166 GIANT ~180 行, 全 lane 命令别碰) + WEDGE_COMPLEMENT(PA18:6902,
+  -- azim_compl 逐点 ~40 行)。HOL 骨架 = MCELL_AVOID_LEAVES(已证)给一点 v +
+  -- BDXKHTW 降楔 + WEDGE_COMPLEMENT 顶片 + num_MAX 极径角论证。
+  -- 已就绪: LEAF_RANK_AZIM_NZ / LEAF_RANK_AZIM_INJ / AZIM_BASE_SHIFT_LE /
+  -- S_LEAF_IN_WEDGE_GE / CC_CELL_IN_MCELL_SET / CC_CELL_NOT_NULLSET / STEM_EDGEX。
   sorry
 
 /-- HOL `LEAF_RANK_REUHADY`. -/
@@ -2412,6 +2418,9 @@ theorem LEAF_RANK_REUHADY (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : �
     (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0) (hr : leaf_rank V ul w0 n f) :
     azim_mcell V f (elV ul 0) (elV ul 1) i =
       azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 唯一债 = REUHADY(本文件, REUHADY.hl lane
+  -- 拥有, 非机械)。其余已证: LEAF_RANK_PERIODIC / periodic_mod / f 落叶
+  -- (LEAF_RANK_S_LEAF) / LEAF_RANK_AZIM_NZ / AZIM_REFL。REUHADY 通即装配。
   sorry
 
 /-- HOL `LEAF_RANK_BIJ`. -/
@@ -2453,6 +2462,19 @@ theorem MCELL2_DIHX_POS (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated
     (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X) :
     0 < dihX V X (elV ul 0, elV ul 1) := by
+  -- NEEDS(2026-10-23 pa25wim 复评降档重开): 全部输入已证、证明骨架已写好
+  -- (4 次编译未收口, 按 2 次纪律回退, 处方存 lane_snapshots/pa25wim/DELIVERY.md §5):
+  -- ① 非零测: 茎边成员 he 经 RIJRIED(PA4:1224, mcell2/mcell 2 换形用 BumpP4.MCELL2)
+  -- 反证; ② MCELL2_DIHX(PA21:5906 已证)化归 dihV; ③ 0 ≤ dihV 内联两行
+  -- (simp only [dihV, Kepler.Geom.arcV]; exact Real.arccos_nonneg _, PA19
+  -- DIHV_LE_0 不在 import 闭包勿引); ④ ≠ 0 支: DIHV_EQ_0_PI_EQ_COPLANAR_ALT
+  -- (本文件 :8830 已证)需 ¬Coplanar {el0, el1, mxi, omega}——反证共面后
+  -- mcell2 ⊆ affGe ⊆ affineSpan 四点集(p25_affGe_subset_affineSpan +
+  -- MCELL2_SUBSET_AFF_GE + hdV/elV 具体列表换形用 p25m_list4_eq ul hb.1 先
+  -- cases 成具体四元表)再 Measure.addHaar_affineSubspace +
+  -- p25_affineSpan_three_ne_top 零测矛盾。工程坑: SetLike ≤ 的成员传输要
+  -- SetLike.le_def.mp(文件 :8906 有先例); List.getD 本版是 Option 链式实现,
+  -- headD/getD 换形勿用 rfl 用 simp。
   sorry
 
 /-- Helper: `truncateSimplex j ul` is the `j+1`-st prefix of `ul` whenever
@@ -2588,6 +2610,8 @@ theorem MCELL3_DIHX (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated V)
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X) (hn : ¬ nullSet X) :
     dihX V X (elV ul 0, elV ul 1) =
       dihV (elV ul 0) (elV ul 1) (elV ul 2) (mxi V ul) := by
+  -- NEEDS(2026-10-23 pa25wim): 无 PA21 对应桥(MCELL2_DIHX 有、MCELL3 无)——需
+  -- Tskajxy MCELL3_DIHX 移植侦察或 cellParams 路线; 下游 MCELL3_DIHX_POS 的卡点。
   sorry
 
 /-- HOL `MCELL3_DIHX_POS`. -/
@@ -2595,6 +2619,9 @@ theorem MCELL3_DIHX_POS (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated
     (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell3 V ul)
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X) :
     0 < dihX V X (elV ul 0, elV ul 1) := by
+  -- NEEDS(2026-10-23 pa25wim): 卡 MCELL3_DIHX(上一件, 无 PA21 桥)。装配骨架可照
+  -- MCELL2_DIHX_POS 的 NEEDS 处方(RIJRIED 非零测 + DIHV_LE_0 内联 +
+  -- DIHV_EQ_0_PI_EQ_COPLANAR_ALT 共面支, 后者走 MCELL3_SUBSET_AFF_GE 类引理需侦察)。
   sorry
 
 /-- HOL `MCELL3_DOMAIN`. -/
@@ -2608,6 +2635,8 @@ theorem MCELL3_DOMAIN (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packi
       dist (elV ul 0) (elV ul 1) < 2 * Real.sqrt 2 ∧
       eta_y (dist (elV ul 0) (elV ul 1)) (dist (elV ul 0) (elV ul 2))
           (dist (elV ul 1) (elV ul 2)) < Real.sqrt 2 := by
+  -- NEEDS(2026-10-23 pa25wim): 深域条件件(leaf_cell.hl 对应段), 2≤dist≤2√2 界 +
+  -- eta_y(纯实工具, PA21:166 已有 def)界属 non-mechanical 内容, 需独立侦察 lane。
   sorry
 
 /-- HOL `TSKAJXY_3` (the 3-cell case of the TSKAJXY bank; consumes
@@ -3305,6 +3334,13 @@ theorem MCELL4_AZIM_LT_PI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : �
     (hnn : ¬ nullSet (mcell4 V ul))
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) < Real.pi := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 唯一值级债 = MCELL4_FI(本文件) → CFFONNL
+  -- (PA18:4596) → pa18_ccCell_swap(PA18:4590, A7 侦察判真阻塞, Skolem 交换性
+  -- 80-200 行)。其余全就绪: LEAF_RANK_COLLINEAR / CONVEX_HULL_4_SUBSET_AFF_GE_2_2 /
+  -- AZIM_EQ_0_PI_IMP_COPLANAR / NULLSET_AFF_2_1 已证; WEDGE_GE_EQ_AFF_GE 不在
+  -- import 闭包(LocalAuto5), 用 Lane B 草稿 p25w_affGe22_subset_wedgeGe +
+  -- p25w_wedge_disjoint + p25w_wedge_ge_almost_disjoint 替代; COPLANAR_IMP_NEGLIGIBLE
+  -- 自建 10 行(PA18:4534 有同款)。pa18_ccCell_swap 落地即机械填(Lane B 已备草稿)。
   sorry
 
 /-- HOL `MCELL4_DIHX_AZIM`. -/
@@ -3316,6 +3352,9 @@ theorem MCELL4_DIHX_AZIM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : �
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     dihX V (mcell4 V ul) (elV ul 0, elV ul 1) =
       azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
+  -- NEEDS(2026-10-23 pa25wim): 卡 MCELL4_AZIM_LT_PI(上一件) + 两座不在闭包的桥:
+  -- AZIM_LE_PI_EQ_DIHV(LocalAuto5:7738)与 DIHV_EQ_DIH_Y 公开 wrapper
+  -- DIHV_EQ_DIH_Y_4PT(LocalAuto38:1440, LocalAuto38 不在 import 闭包)。
   sorry
 
 /-- HOL `LEAF_RANK_HAS_SIZE`.  Proof: the `n`-periodicity collapses the
@@ -3354,6 +3393,14 @@ theorem MCELL4_FULL_WEDGE (V : Set V3) (X : Set V3) (ul : List V3) (w0 : V3) (n 
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X)
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     X = mcell4 V ul := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 四重独立债——(i) MCELL4_FI(本文件) → CFFONNL →
+  -- pa18_ccCell_swap(PA18:4590); (ii) MCELL2/3_EDGE_FIRST(PA18:5254/5294,
+  -- leaf_cell.hl:3114-3374 GIANT 未移植); (iii) LEAF_RANK_REUHADY(本文件) →
+  -- REUHADY(本文件, REUHADY.hl lane 拥有); (iv) MCELL2/3_DIHX_POS(本文件,
+  -- MCELL2 骨架处方见该件 NEEDS, MCELL3 另卡 MCELL3_DIHX/MCELL3_DOMAIN)。
+  -- 另 SUM_SUBSET_SIMPLE 全树缺失需自建(HOL 通用件: 子集和 ≤ 全和)。
+  -- 已就绪(新增): MCELL4_EDGE_FIRST(PA18:6366 本波前已落)/FINITE_EDGE_X2/
+  -- DIHX_RANGE/MCELL4_CARD4/EDGE_IMP_K2。
   sorry
 
 /-! ### `MCELL4_REPARAM` kit: index permutation of two length-4 lists with the
@@ -3600,6 +3647,10 @@ theorem MCELL4_GG (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V
     gg_mcell V f (elV ul 0) (elV ul 1) i =
       gammaX V (mcell4 V ul) lmfun * criticalWeight V (mcell4 V ul) +
         betaBumpV1 V {elV ul 0, elV ul 1} (mcell4 V ul) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 唯一引用 MCELL4_FULL_WEDGE(本文件, 四重债见
+  -- 该件 NEEDS)。证法 = gg_mcell 展开 + 楔内胞唯一性(setSum 集 = {mcell4 V ul})
+  -- + SUM_SING; 顶点表刻画消费 MCELL4_CARD4/CARD4_IMP_DISTINCT/set_of_list4/
+  -- BARV_LENGTH_LEMMA(均已证)。
   sorry
 
 /-- HOL `LEAF_RANK_TRUNCATE`. -/
@@ -3624,6 +3675,12 @@ theorem CC_CELL_SUBSET_WEDGE (V : Set V3) (ul : List V3) (u0 u1 w0 : V3) (n : �
     ccCell V [u0, u1, f j] ⊆ wedgeGe (elV ul 0) (elV ul 1) (f j) (f (j + 1)) ∨
       ccCell V [u0, u1, f j] ⊆
         wedgeGe (elV ul 0) (elV ul 1) (f (j + (n - 1))) (f j) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 硬阻断 = MCELL_IN_WEDGE(本文件) ← BDXKHTW
+  -- (PA18:6873, leaf_cell.hl:3984-4166 GIANT ~180 行) + WEDGE_COMPLEMENT
+  -- (PA18:6902, azim_compl 逐点 ~40 行, PA18 侧不可本 lane 改)。
+  -- 其余链全已证: ZASUVOR / CC_CELL_IN_MCELL_SET / CC_CELL_NOT_NULLSET /
+  -- STEM_EDGEX / U2_IN_CC_CELL / S_LEAF_IN_WEDGE_GE / LEAF_RANK_AZIM_INJ /
+  -- LEAF_RANK_HAS_SIZE / MOD_INJ1_ALT_p25 / periodic_mod。
   sorry
 
 /-- HOL `WEDGE_UNIQUE_CC_CELL`: the two cc-cells never sit in the same
@@ -3636,6 +3693,11 @@ theorem WEDGE_UNIQUE_CC_CELL (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
           wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) ∧
         ccCell V [elV ul 1, elV ul 0, f j] ⊆
           wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 三重债——MCELL4_FULL_WEDGE(本文件, 四重债) +
+  -- FUEIMOV_4(PA18:5213, MXI_NOT_IN_V 链, 独立侦察 lane 建议) + MCELL4_FI
+  -- (CFFONNL 值级债)。已就绪(新增): MCELL4_EDGE_FIRST / STEM_EDGEX / EL_CC_UH /
+  -- CC_CELL_NOT_NULLSET / CC_CELL4 / CC_KE_34 / CC_CELL_IN_MCELL_SET 全真证;
+  -- 其余为 NEGLIGIBLE_AFFINE_HULL_3/SUBSET_P_HULL/CARD4_IN_PAIRS 常规装配。
   sorry
 
 /-- HOL `LEAF_RANK4_CHI_MSB`. -/
@@ -3646,6 +3708,10 @@ theorem LEAF_RANK4_CHI_MSB (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
     (hnn : ¬ nullSet (mcell4 V ul))
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     0 < chiMsb [elV ul 0, elV ul 1, f i] (f (i + 1)) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 唯一债 = MCELL4_AZIM_LT_PI(本文件)。其余就绪:
+  -- chiMsb 展开用 azim_sub_self(Planarity:2840, 闭包内) + JBDNJJB(Planarity:2702)
+  -- 替代 SIN_AZIM_MUTUAL_SROSS(Lane B 草稿方案); LEAF_RANK_AZIM_INJ /
+  -- MOD_INJ1_ALT_p25 / PERIODIC_REDUCE_MOD 已证。上件通即机械填。
   sorry
 
 /-- HOL `LEAF_RANK4_CHI_MSB_ALT`. -/
@@ -3656,6 +3722,8 @@ theorem LEAF_RANK4_CHI_MSB_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
     (hnn : ¬ nullSet (mcell4 V ul))
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     0 < chiMsb [elV ul 0, elV ul 1, f i] (f (i + 1)) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 直接上游 = LEAF_RANK4_CHI_MSB(本文件)。
+  -- PERIODIC_REDUCE_MOD / LEAF_RANK_PERIODIC 已证, 上件通即一行归约(j := i % n)。
   sorry
 
 /-- HOL `CC_CELL_WEDGE_MATCH_UH`. -/
@@ -3668,6 +3736,13 @@ theorem CC_CELL_WEDGE_MATCH_UH (V : Set V3) (ul : List V3) (u0 u1 w0 : V3) (n : 
       wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)))
     (hk : ccKe V [u0, u1, f j] = 4) :
     ({f j, (ccUh V [u0, u1, f j]).getD 3 0} : Set V3) = {f i, f (i + 1)} := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 值级债 = MCELL4_FI(→CFFONNL → pa18_ccCell_swap)。
+  -- 另缺 NOT_COPLANAR_AFF_3 前向引用(本文件后段, 需本地复制 ~70 行)与
+  -- COPLANAR_IMP_NEGLIGIBLE 本地件(PA18:4534 同款 10 行)。已就绪(新增):
+  -- MCELL4_EDGE_FIRST / STEM_EDGEX / EL_CC_UH / CC_CELL_NOT_NULLSET /
+  -- SET_OF_LIST_CC_UH / CC_CELL4 / CC_CELL_EXTREME_CARD / MCELL4_CARD4 全真证;
+  -- 收口走 CONVEX_HULL_EQ_EQ_SET_EQ(Packing3) + AFFINE_INDEPENDENT_IFF_CARD +
+  -- CARD4_IN_PAIRS + AFF_DIM_LE_CARD 装配。
   sorry
 
 /-- HOL `K4_CC_WI_ALT`. -/
@@ -3678,6 +3753,11 @@ theorem K4_CC_WI_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
     (hk : ccKe V [elV ul 0, elV ul 1, f i] = 4) :
     ccCell V [elV ul 0, elV ul 1, f i] ⊆
       wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 双链卡死——CC_CELL_SUBSET_WEDGE(本文件,
+  -- BDXKHTW 链) + LEAF_RANK4_CHI_MSB_ALT / CC_CELL_WEDGE_MATCH_UH(本文件,
+  -- CFFONNL 链)。已就绪: K4_CHI_MSB_POS(PA18:3319, cc_pe_exists 落地后本波已
+  -- 转真)/ chi_msb_swap_23(PA18:2671) / EL_CC_UH / F_SUC_PRE / MOD_INJ1_ALT /
+  -- LEAF_RANK_AZIM_INJ。HOL 证法 = 楔二择 + chi 双算撞符号, 三上游通即机械。
   sorry
 
 /-- HOL `K4_CC_WIM`. -/
@@ -3688,6 +3768,10 @@ theorem K4_CC_WIM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V
     (hk : ccKe V [elV ul 1, elV ul 0, f i] = 4) :
     ccCell V [elV ul 1, elV ul 0, f i] ⊆
       wedgeGe (elV ul 0) (elV ul 1) (f (i + (n - 1))) (f i) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 卡点同 K4_CC_WI_ALT(上一件)——BDXKHTW 链
+  -- (经 CC_CELL_SUBSET_WEDGE)+ CFFONNL 链(经 LEAF_RANK4_CHI_MSB_ALT /
+  -- CC_CELL_WEDGE_MATCH_UH)。已就绪: MCELL4_REPARAM(标准三)/ K4_CHI_MSB_POS
+  -- (已转真)/ chi_msb_swap_01 / CC_CELL_EXTREME_CARD / BARV3_SET_OF_LIST4。
   sorry
 
 /-- HOL `K3_CC_WI_ALT`. -/
@@ -3698,6 +3782,9 @@ theorem K3_CC_WI_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
     (hk : ccKe V [elV ul 0, elV ul 1, f i] = 3) :
     ccCell V [elV ul 0, elV ul 1, f i] ⊆
       wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 卡 CC_CELL_SUBSET_WEDGE(BDXKHTW 链) +
+  -- K4_CC_WIM + WEDGE_UNIQUE_CC_CELL(本文件, 各自 NEEDS)。HOL 证法 = 二择 + k=4
+  -- 归约爆炸, 上游通即机械。
   sorry
 
 /-- HOL `K3_CC_WIM_ALT`. -/
@@ -3708,6 +3795,8 @@ theorem K3_CC_WIM_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
     (hk : ccKe V [elV ul 1, elV ul 0, f i] = 3) :
     ccCell V [elV ul 1, elV ul 0, f i] ⊆
       wedgeGe (elV ul 0) (elV ul 1) (f (i + (n - 1))) (f i) := by
+  -- NEEDS(2026-10-23 pa25wim 复评): 卡 CC_CELL_SUBSET_WEDGE(BDXKHTW 链) +
+  -- K4_CC_WI_ALT + WEDGE_UNIQUE_CC_CELL(本文件)。同 K3_CC_WI_ALT, 上游通即机械。
   sorry
 
 /-- HOL `NO_4CELL_IMP_K3`: a wedge with no 4-cell carries two 3-cells.
