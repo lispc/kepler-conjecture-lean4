@@ -7420,4 +7420,555 @@ HOL LOCALIZE_PRESERVE_FACE，LVDUCXU.hl:460）在本框架下已归约为
 Dih2k checkpoint 3 前置另见 `yk2_dart1_ePrime_eq_union_swap`（已证；
 card = 2·K 还需 f ∩ reverse f = ∅ 与 HasOrders，同依赖 ② 的单圈性）。 -/
 
+-- §9h.1 NEEDS 处置（Lane AG 2026-10-23，ykit7）：下方 §9h.2 已消除 ②（σ′ 一致）。
+-- 路线勘误：② 不走 simple_hypermap（|N′(w)| = 2 / 面圈顶点两两相异不必先行），
+-- 直接复刻 HOL IN_FF_FACE_MAP_IDE（LVDUCXU.hl:191-459）核心：H.faceMap d = (c,t)
+-- ∈ f（轨道闭包）把 t 压进受限邻集，SIGMA_FAN 极小性嵌套互夹 + azim 唯一性
+-- 给 σ′_c t = σ_c t。simple_hypermap 路线在 HOL 原文也只服务其后的
+-- 2 < CARD FF（local_fan/Dih2k）合取，属 checkpoint 3。
+
+/-! #### 9h.2 checkpoint 2 残差消除（Lane AG 2026-10-24）：σ′ 一致 + 受限面轨道
+
+§9h.1 抽象骨架（`yk2_orbit_ext_of_agree`）的几何前提在此闭合：
+`yk7_hagree`（H′.faceMap 与 H.faceMap 在面轨道 f 上逐点一致）与
+`yk7_FF_eq_faceOrbit`（受限扇超图的 faceMap-轨道 = 全扇面轨道，
+HOL LOCALIZE_PRESERVE_FACE，LVDUCXU.hl:460 第一合取）。
+
+新件全 private、yk7_* 前缀、零消费者（除块内）。禁词自查：
+本块不含任何被禁构造（全部定理自身完全证明）。 -/
+
+/-! ### 抽屉原理（Fan.lean private finite_surjOf_inj 的 TameLp 副本，V3 具体化） -/
+
+private theorem yk7_finite_surjOf_inj {f : V3 → V3} {S : Set V3} (hfin : S.Finite)
+    (hmaps : ∀ a ∈ S, f a ∈ S) (hinj : ∀ a ∈ S, ∀ b ∈ S, f a = f b → a = b) :
+    ∀ b ∈ S, ∃ a ∈ S, f a = b := by
+  have hinj' : Set.InjOn f S := fun a ha b hb hab => hinj a ha b hb hab
+  have hcard : (f '' S).ncard = S.ncard := hinj'.ncard_image
+  have hle : f '' S ⊆ S := fun y hy => by
+    obtain ⟨a, ha, rfl⟩ := hy
+    exact hmaps a ha
+  intro b hb
+  by_contra hnb
+  have hsub2 : f '' S ⊆ S \ {b} := by
+    intro y hy
+    refine ⟨hle hy, ?_⟩
+    intro hyb
+    rw [Set.mem_singleton_iff] at hyb
+    obtain ⟨a, haS, hay⟩ := (Set.mem_image f S y).mp hy
+    rw [hyb] at hay
+    exact hnb ⟨a, haS, hay⟩
+  have hpsub : S \ {b} ⊂ S := by
+    refine ⟨fun y hy => hy.1, ?_⟩
+    intro heq
+    have hmem : b ∈ S \ {b} := heq hb
+    exact absurd hmem.2 (by simp)
+  have h2 : (S \ {b}).ncard < S.ncard := Set.ncard_lt_ncard hpsub hfin
+  have hfin2 : (S \ {b}).Finite := hfin.subset (fun y hy => hy.1)
+  have h3 : (f '' S).ncard ≤ (S \ {b}).ncard := Set.ncard_le_ncard hsub2 hfin2
+  omega
+
+/-! ### invFun 刻画（extensionSigmaFan 型置换：S 内单射、S 外恒等） -/
+
+/-- f 把 S 映入 S、S 上单射、S 外恒等，且 x ∈ S、y ∈ S、f x = y 时
+`Function.invFun f y = x`（y 的唯一 S 内前驱就是 invFun 的值）。 -/
+private theorem yk7_invFun_eq_of_apply {f : V3 → V3} {S : Set V3}
+    (hmaps : ∀ a ∈ S, f a ∈ S) (hinj : ∀ a ∈ S, ∀ b ∈ S, f a = f b → a = b)
+    (hout : ∀ a ∉ S, f a = a) {x y : V3} (hx : x ∈ S) (hy : y ∈ S)
+    (hfx : f x = y) : Function.invFun f y = x := by
+  have hfx' : f (Function.invFun f y) = y := Function.invFun_eq ⟨x, hfx⟩
+  have hmem : Function.invFun f y ∈ S := by
+    by_contra hcon
+    rw [hout (Function.invFun f y) hcon] at hfx'
+    apply hcon
+    rw [hfx']
+    exact hy
+  exact hinj _ hmem x hx (hfx'.trans hfx.symm)
+
+/-! ### 嵌套邻集 σ 一致（HOL IN_FF_FACE_MAP_IDE 尾段 IDENTIFY_AZIM_CYCLE 步） -/
+
+/-- 嵌套邻集的 σ 一致：受限扇 w-邻集 ⊆ 全扇 w-邻集，u 在受限邻集中，
+且全扇 σ_full(w) u 也落在受限邻集中，则两 σ 在 u 处取值相同。
+（两邻集皆非单点时 SIGMA_FAN 极小性互夹 + `unique_azim_point_fan`；
+单点情形按 sigmaFan 定义直接折叠。） -/
+private theorem yk7_sigma_agree {V' : Set V3} {E' : Set (Set V3)} {w u : V3}
+    (hfan : FAN x V E) (hfan' : FAN x V' E')
+    (hsub : ∀ p : V3, p ∈ setOfEdge w V' E' → p ∈ setOfEdge w V E)
+    (hu : u ∈ setOfEdge w V' E')
+    (hσ : sigmaFan x V E w u ∈ setOfEdge w V' E') :
+    sigmaFan x V E w u = sigmaFan x V' E' w u := by
+  by_cases hSfull : setOfEdge w V E = {u}
+  · -- 全扇邻集单点：两 σ 皆 = u
+    have hσu : sigmaFan x V E w u = u := by rw [sigmaFan, if_pos hSfull]
+    have huin : u ∈ setOfEdge w V' E' := by rw [← hσu]; exact hσ
+    have hSrst : setOfEdge w V' E' = {u} := by
+      apply Set.ext
+      intro a
+      constructor
+      · intro ha
+        have ha' : a ∈ setOfEdge w V E := hsub a ha
+        rw [hSfull] at ha'
+        simpa using ha'
+      · intro ha
+        rw [Set.mem_singleton_iff] at ha
+        rw [ha]
+        exact huin
+    rw [hσu, sigmaFan, if_pos hSrst]
+  · -- 全扇邻集非单点：极小性互夹 + azim 唯一性
+    obtain ⟨hσS, hσne, hσmin⟩ := SIGMA_FAN hSfull hfan (hsub u hu)
+    by_cases hSrst : setOfEdge w V' E' = {u}
+    · -- 受限邻集单点：σ_full u ∈ S_rst = {u} 与 σ_full ≠ u 矛盾
+      exfalso
+      have hmem : sigmaFan x V E w u = u := by
+        have h1 : sigmaFan x V E w u ∈ ({u} : Set V3) := hSrst ▸ hσ
+        simpa using h1
+      exact hσne hmem
+    · obtain ⟨hσS', hσne', hσmin'⟩ := SIGMA_FAN hSrst hfan' hu
+      have hwu : {w, u} ∈ E :=
+        (properties_of_setOfEdge_fan x V E w u hfan).mpr (hsub u hu)
+      have hfullE : {w, sigmaFan x V E w u} ∈ E :=
+        (properties_of_setOfEdge_fan x V E w _ hfan).mpr hσS
+      have hrstfull : sigmaFan x V' E' w u ∈ setOfEdge w V E := hsub _ hσS'
+      have hrstE : {w, sigmaFan x V' E' w u} ∈ E :=
+        (properties_of_setOfEdge_fan x V E w _ hfan).mpr hrstfull
+      have hle1 : azim x w u (sigmaFan x V E w u)
+          ≤ azim x w u (sigmaFan x V' E' w u) := hσmin _ hrstfull hσne'
+      have hle2 : azim x w u (sigmaFan x V' E' w u)
+          ≤ azim x w u (sigmaFan x V E w u) := hσmin' _ hσ hσne
+      exact unique_azim_point_fan hfan hwu hfullE hrstE (le_antisymm hle1 hle2)
+
+/-! ### 受限邻集 ⊆ 全邻集 -/
+
+/-- 受限扇（vPrime, ePrime）的 c-邻集 ⊆ 全扇 c-邻集
+（yk2_setOfEdge_ePrime_eq + 面轨道 ⊆ dart1）。 -/
+private theorem yk7_setOfEdge_rst_subset (hfan : FAN x V E) (b : V3 × V3)
+    (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) (c : V3) :
+    setOfEdge c (vPrime_p2 V f) (ePrime_p2 E f) ⊆ setOfEdge c V E := by
+  intro u hu
+  rw [yk2_setOfEdge_ePrime_eq hfan b hb f hf c] at hu
+  obtain ⟨_huV, hd | hd⟩ := Set.mem_setOf_eq.mp hu
+  · have hd1 : (c, u) ∈ dart1OfFan V E := yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd)
+    exact (properties_of_setOfEdge_fan x V E c u hfan).mp hd1
+  · have hd1 : (u, c) ∈ dart1OfFan V E := yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd)
+    have hucE : ({u, c} : Set V3) ∈ E := hd1
+    have hce : ({u, c} : Set V3) = ({c, u} : Set V3) := by
+      ext p; simp; tauto
+    rw [hce] at hucE
+    exact (properties_of_setOfEdge_fan x V E c u hfan).mp hucE
+
+/-! ### checkpoint 2 残差主件：σ′ 逐点一致 -/
+
+/-- **σ′ 逐点一致（HOL IN_FF_FACE_MAP_IDE 的 TameLp/y-kit 形式，
+LOCALIZE_PRESERVE_FACE 的 ②）**：受限扇超图 H′ 的 faceMap 与全扇超图 H 的
+faceMap 在面轨道 f 上逐点一致。核心：d = (a,c) ∈ f 时 H.faceMap d = (c,t)
+（t = σ_c⁻¹ a）且 (c,t) ∈ f（轨道闭包），由此 t ∈ 受限 c-邻集
+（yk2_setOfEdge_ePrime_eq）；σ_full c t = a ∈ 受限集，经 `yk7_sigma_agree`
+得 σ_rst c t = a，再由受限侧 invFun 唯一前驱刻画收口。 -/
+private theorem yk7_hagree (hfan : FAN x V E) (b : V3 × V3)
+    (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b)
+    (hfan' : FAN x (vPrime_p2 V f) (ePrime_p2 E f)) (d : V3 × V3)
+    (hd : d ∈ f) :
+    (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d
+      = (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x V E hfan)) d := by
+  obtain ⟨a, c⟩ := d
+  -- 全扇侧 faceMap 显式值
+  have hd1 : (a, c) ∈ dart1OfFan V E :=
+    yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd)
+  have hH : (@Hypermap.faceMap (V3 × V3) (fun a' b' => instDecidableEqProd a' b')
+      (hypermapOfFan x V E hfan)) (a, c) = (c, inverseSigmaFan x V E c a) := by
+    rw [yk2_apply_faceMap hfan (a, c), if_pos hd1]
+    rfl
+  -- (c, t) ∈ f（t := inverseSigmaFan x V E c a）：轨道闭包
+  have hct : (c, inverseSigmaFan x V E c a) ∈ f := by
+    rw [← hH, hf]
+    exact yk2_faceOrbit_closure hfan (hf ▸ hd)
+  have hct1 : (c, inverseSigmaFan x V E c a) ∈ dart1OfFan V E :=
+    yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hct)
+  -- t ∈ V、t ∈ 全扇 c-邻集、t ∈ 受限 c-邻集
+  have htinV : inverseSigmaFan x V E c a ∈ V :=
+    (yk2_dart_fst_snd_mem_V hfan hct1).2
+  have hctE : {c, inverseSigmaFan x V E c a} ∈ E := hct1
+  have htSfull : inverseSigmaFan x V E c a ∈ setOfEdge c V E :=
+    (properties_of_setOfEdge_fan x V E c _ hfan).mp hctE
+  have htSrst : inverseSigmaFan x V E c a
+      ∈ setOfEdge c (vPrime_p2 V f) (ePrime_p2 E f) := by
+    rw [yk2_setOfEdge_ePrime_eq hfan b hb f hf c]
+    exact Set.mem_setOf_eq.mpr ⟨htinV, Or.inl hct⟩
+  -- 全扇 σ_c t = a（invFun 谱：permutes_sigma_fan + 抽屉给存在性）
+  have hainV : a ∈ V := (yk2_dart_fst_snd_mem_V hfan hd1).1
+  have hacE : ({c, a} : Set V3) = ({a, c} : Set V3) := by
+    ext p; simp; tauto
+  have hcaE : ({c, a} : Set V3) ∈ E := by
+    rw [hacE]
+    exact hd1
+  have haSfull : a ∈ setOfEdge c V E :=
+    (properties_of_setOfEdge_fan x V E c a hfan).mp hcaE
+  have hpermF := permutes_sigma_fan hfan htSfull
+  obtain ⟨s, _hsS, hsf⟩ := yk7_finite_surjOf_inj
+    (remark_finite_fan1 c V E hfan.2.2.1.1) hpermF.1 hpermF.2.1 a haSfull
+  have hFt : extensionSigmaFan x V E c (inverseSigmaFan x V E c a) = a :=
+    Function.invFun_eq ⟨s, hsf⟩
+  -- a ∈ 受限 c-邻集（(a,c) ∈ f 本身给）
+  have haSrst : a ∈ setOfEdge c (vPrime_p2 V f) (ePrime_p2 E f) := by
+    rw [yk2_setOfEdge_ePrime_eq hfan b hb f hf c]
+    exact Set.mem_setOf_eq.mpr ⟨hainV, Or.inr hd⟩
+  -- σ′ 一致于 t（yk7_sigma_agree：σ_full c t = a 落在受限集）
+  have hσext : sigmaFan x V E c (inverseSigmaFan x V E c a)
+      = extensionSigmaFan x V E c (inverseSigmaFan x V E c a) := by
+    rw [extensionSigmaFan, if_neg (by simpa using htSfull)]
+  have hσagree : sigmaFan x V E c (inverseSigmaFan x V E c a)
+      = sigmaFan x (vPrime_p2 V f) (ePrime_p2 E f) c
+        (inverseSigmaFan x V E c a) := by
+    refine yk7_sigma_agree hfan hfan'
+      (yk7_setOfEdge_rst_subset hfan b hb f hf c) htSrst ?_
+    rw [hσext, hFt, yk2_setOfEdge_ePrime_eq hfan b hb f hf c]
+    exact Set.mem_setOf_eq.mpr ⟨hainV, Or.inr hd⟩
+  -- 受限侧：σ_rst c t = a ⟹ invFun（受限 extension）a = t
+  have ht' : inverseSigmaFan x V E c a
+      = inverseSigmaFan x (vPrime_p2 V f) (ePrime_p2 E f) c a := by
+    refine (yk7_invFun_eq_of_apply
+      ((permutes_sigma_fan hfan' htSrst).1)
+      ((permutes_sigma_fan hfan' htSrst).2.1)
+      ((permutes_sigma_fan hfan' htSrst).2.2) htSrst haSrst ?_).symm
+    rw [extensionSigmaFan, if_neg (by simpa using htSrst), ← hσagree, hσext, hFt]
+  -- 装配：H′.faceMap (a,c) = (c, t) = H.faceMap (a,c)
+  have hd1' : (a, c) ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := by
+    have hmemE : ({a, c} : Set V3) ∈ ePrime_p2 E f := by
+      have h0 := yk2_face_dart_mem_ePrime hfan b hb (hf ▸ hd)
+      rw [← hf] at h0
+      exact h0
+    exact hmemE
+  have hfinal : (@Hypermap.faceMap (V3 × V3) (fun a' b' => instDecidableEqProd a' b')
+      (hypermapOfFan x (vPrime_p2 V f) (ePrime_p2 E f) hfan')) (a, c)
+      = (c, inverseSigmaFan x (vPrime_p2 V f) (ePrime_p2 E f) c a) := by
+    rw [yk2_apply_faceMap hfan' (a, c), if_pos hd1']
+    rfl
+  rw [hfinal, hH, ht']
+
+/-! ### checkpoint 2 capstone：受限面轨道 = 全扇面轨道 -/
+
+/-- **受限面轨道 = 全扇面轨道（HOL LOCALIZE_PRESERVE_FACE，LVDUCXU.hl:460
+第一合取）**：受限扇超图 H′ 的 faceMap-基轨道 = 全扇 faceMap-轨道 f。
+装配 = `yk2_orbit_ext_of_agree`（hbf 定义性 + hagree = `yk7_hagree` +
+hclosed 随之）。checkpoint 2 闭环。 -/
+private theorem yk7_FF_eq_faceOrbit (hfan : FAN x V E) (b : V3 × V3)
+    (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) :
+    orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x (vPrime_p2 V f) (ePrime_p2 E f)
+          (yk2_FAN_vPrime_ePrime hfan b hb f hf))) b = f := by
+  refine @yk2_orbit_ext_of_agree (V3 × V3) (fun a b' => instDecidableEqProd a b')
+    (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan))
+    (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x (vPrime_p2 V f) (ePrime_p2 E f)
+        (yk2_FAN_vPrime_ePrime hfan b hb f hf))) f b ?_ ?_ ?_ ?_
+  · rw [hf]
+    rfl
+  · rw [hf]
+    exact mem_orbitMap_self _ _
+  · intro d hd
+    rw [yk7_hagree hfan b hb f hf (yk2_FAN_vPrime_ePrime hfan b hb f hf) d hd]
+  · intro d hd
+    rw [yk7_hagree hfan b hb f hf (yk2_FAN_vPrime_ePrime hfan b hb f hf) d hd, hf]
+    exact yk2_faceOrbit_closure hfan (hf ▸ hd)
+
+/-! ### 9i. y-kit W6（Lane AE 2026-10-23）：装配波不受阻子件（全 private、零消费者）。
+
+对应 lp_main_estimate-compiled.hl Face4/5/6 Std 装配波的五子项：
+① `packing_v_prime`（:119，packing 的子集遗传）；③ `local_std` 绕行（:598，
+Std 节边前提 = ESTD 定义性）+ 非边前提的 ¬E 情形（LpFan.3）；④ azim 桥
+（tau_fun_local :201 的绕行；核心 = Lvducxu.AZIM_IN_FAN_EQ_IZIM_E_PRIME 的
+V 线替代——LocalAuto10:579 sorried 巨件不再被消费）；⑤ tauFun↔tauVEF 帽石
+（W2 `wk_f_surr_tauFun_eq_tauVEF` 对任意 E 成立，此处接 ④ 成套）。
+②（4 ≤ ncard vPrime ≤ 6）上半 `ncard vPrime ≤ ncard f` 已落；下半
+4 ≤ ncard vPrime 依赖面圈顶点两两相异（单圈性，checkpoint 2/3 族）——
+不落，注记见块尾 NEEDS。
+
+④ 的证法（新路线，本波主件）：σ 往返 `yk_invFunFFanPairExt_apply` 给
+faceMap⁻¹ e = (σ_v w, v)，即 dart 的面前驱恰是 σ_v w（azim-后继）；
+FullySurrounded 排 1 价分支（azimDart < π ⟹ 邻数 ≥ 2 ⟹ σ ≠ 自身）⟹
+面前驱 ≠ e.2 且是 e'-邻域的合法候选；全扇侧 `SIGMA_FAN`（azim-min）与
+受限侧 ε-min 性质互夹出等值。零单圈性假设、零面圈计数假设。 -/
+
+variable {V : Set V3} {E : Set (Set V3)}
+
+/-- ① `v_prime` ⊆ V（localization.hl:97 定义自带；lp_main_estimate:126
+`v_prime_subset` 的内容）。 -/
+private theorem yk6_vPrime_subset (f : Set (V3 × V3)) : vPrime_p2 V f ⊆ V := by
+  intro v hv
+  exact (Set.mem_setOf_eq.mp hv).1
+
+/-- ① `packing_v_prime`（lp_main_estimate:119）：packing 对子集遗传
+（Rdwkarc.PACKING_SUBSET 的内容；`Packing` 是逐点距离条件，子集平凡继承）。 -/
+private theorem yk6_packing_vPrime (f : Set (V3 × V3)) (hpack : Packing V) :
+    Packing (vPrime_p2 V f) := fun u hu v2 hv2 hlt =>
+  hpack u (yk6_vPrime_subset f hu) v2 (yk6_vPrime_subset f hv2) hlt
+
+/-- 装配前提 3 的 vPrime 侧：`v_prime` ⊆ ballAnnulus（v_prime_subset +
+LpFan.4 的内容；`v_prime V f ⊆ V ⊆ ballAnnulus`）。 -/
+private theorem yk6_vPrime_sub_ballAnnulus (f : Set (V3 × V3)) (hsub : V ⊆ ballAnnulus) :
+    vPrime_p2 V f ⊆ ballAnnulus := fun v hv => hsub (yk6_vPrime_subset f hv)
+
+/-- `in_e_prime`（lp_main_estimate:133）：e_prime 的无向刻画（纯集合簿记，
+PER_SET2 路线）。 -/
+private theorem yk6_in_ePrime (f : Set (V3 × V3)) (v w : V3) :
+    {v, w} ∈ ePrime_p2 E f ↔ {v, w} ∈ E ∧ ((v, w) ∈ f ∨ (w, v) ∈ f) := by
+  constructor
+  · rintro ⟨a, c, heq, hEe, hac⟩
+    rcases Set.pair_eq_pair_iff.mp heq with ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · refine ⟨by rw [h1, h2]; exact hEe, Or.inl ?_⟩
+      rw [h1, h2]
+      exact hac
+    · refine ⟨by rw [h1, h2, Set.pair_comm c a]; exact hEe, Or.inr ?_⟩
+      rw [h1, h2]
+      exact hac
+  · rintro ⟨hEe, hd | hd⟩
+    · exact ⟨v, w, rfl, hEe, hd⟩
+    · refine ⟨w, v, (Set.pair_comm w v).symm, ?_, hd⟩
+      rw [Set.pair_comm w v]
+      exact hEe
+
+/-- e_prime ⊆ E（定义自带；local_diag/std 绕行的公共引道）。 -/
+private theorem yk6_ePrime_subset (f : Set (V3 × V3)) : ePrime_p2 E f ⊆ E := by
+  intro e he
+  obtain ⟨a, c, heq, hEe, -⟩ := Set.mem_setOf_eq.mp he
+  rw [heq]
+  exact hEe
+
+/-- ③ `local_std` 绕行（lp_main_estimate:598 的 Std 节内容）：e_prime 的边
+两端 `2 ≤ dist ≤ 2h0`（≥2 由 Packing + 两端 ∈ V，≤2h0 由 E = ESTD V 定义性）。
+HOL 一般形是轨道迭代 IFF（f_surr_in_e_prime + 逐 k 枚举），Std 节只需本形。
+~40 行内闭合，零阻塞。 -/
+private theorem yk6_local_std (hfan : FAN 0 V (ESTD V)) (hpack : Packing V)
+    (f : Set (V3 × V3)) {v w : V3} (he : {v, w} ∈ ePrime_p2 (ESTD V) f) :
+    2 ≤ dist v w ∧ dist v w ≤ 2 * h0 := by
+  obtain ⟨a, c, heq, hEe, hac⟩ := Set.mem_setOf_eq.mp he
+  have hd1 : (a, c) ∈ dart1OfFan V (ESTD V) := hEe
+  have hmemV := yk_in_dart_inV hfan hd1
+  have hne : a ≠ c := edge_ne_of_fan hfan hd1
+  have hge : 2 ≤ dist a c := Packing.dist_ge_two hpack hmemV.1 hmemV.2 hne
+  have hle := (wk_estd_dist_le hEe).2
+  rcases Set.pair_eq_pair_iff.mp heq with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · exact ⟨by rw [h1, h2]; exact hge, by rw [h1, h2]; exact hle⟩
+  · exact ⟨by rw [h1, h2, dist_comm]; exact hge,
+      by rw [h1, h2, dist_comm]; exact hle⟩
+
+/-- ③ 非边前提的 ¬E 情形（LpFan.3 路线）。{a,b} ∈ E 的 chord 情形 = 真
+blocked（HOL diag_not_in_dart:415 → fan_hypermaps_iso 链未移植），见块尾
+NEEDS 注记；本件是 local_diag 绕行可闭合的一半。 -/
+private theorem yk6_local_diag_notE (hlpfan : LpFan V E) (f : Set (V3 × V3))
+    {a b : V3} (ha : a ∈ vPrime_p2 V f) (hb2 : b ∈ vPrime_p2 V f) (hab : a ≠ b)
+    (hE : {a, b} ∉ E) : 2 * h0 ≤ dist a b := by
+  have h2 : (2:ℝ) * h0 = 2.52 := by norm_num [h0]
+  rw [h2]
+  exact hlpfan.2.2.1 a b (yk6_vPrime_subset f ha) (yk6_vPrime_subset f hb2) hab hE
+
+/-- FullySurrounded ⟹ dart 首∈点 ≥ 2 邻居（HOL
+fully_surrounded_card_set_of_edge1 的折算；azimDart < π 排除 1 价 2π 分支）。 -/
+private theorem yk6_fs_ncard_gt1 (hfan : FAN 0 V E) (hfs : FullySurrounded V E)
+    {d : V3 × V3} (hd : d ∈ dart1OfFan V E) : 1 < (setOfEdge d.1 V E).ncard := by
+  have hπ : azimDart V E d < Real.pi := hfs d (Set.mem_union_right _ hd)
+  by_cases hnc : (setOfEdge d.1 V E).ncard > 1
+  · exact hnc
+  · have h2pi : azimDart V E d = (2 : ℝ) * Real.pi := by
+      show (if d.1 = d.2 then (2 : ℝ) * Real.pi
+        else if (setOfEdge d.1 V E).ncard > 1
+          then azim 0 d.1 d.2 (sigmaFan 0 V E d.1 d.2) else 2 * Real.pi)
+        = (2 : ℝ) * Real.pi
+      rw [if_neg (edge_ne_of_fan hfan hd), if_neg hnc]
+    rw [h2pi] at hπ
+    linarith [Real.pi_pos]
+
+/-- σ 的 ε-witness 三条件（ee-邻域版，无 FAN 假设；有限性外给）。
+镜像 Fan.exists_sigmaFan + Fan.SIGMA_FAN（有限性来源不同：受限邻域 ⊆
+全扇邻域，不经 fan1）。 -/
+private theorem yk6_sigmaFan_min_ee {E' : Set (Set V3)} {v u : V3}
+    (hfin : (ee v E').Finite) (hu : u ∈ ee v E') (hne : ee v E' ≠ {u}) :
+    sigmaFan 0 Set.univ E' v u ∈ ee v E' ∧ sigmaFan 0 Set.univ E' v u ≠ u ∧
+      ∀ w1 ∈ ee v E', w1 ≠ u → azim 0 v u (sigmaFan 0 Set.univ E' v u) ≤ azim 0 v u w1 := by
+  have hsoe : setOfEdge v Set.univ E' = ee v E' := by
+    ext z
+    simp only [setOfEdge, ee, Set.mem_setOf_eq, Set.mem_univ, and_true]
+  have hne2 : (ee v E' \ {u}).Nonempty := by
+    by_contra hempty
+    apply hne
+    rw [Set.eq_singleton_iff_unique_mem]
+    refine ⟨hu, fun z hz => ?_⟩
+    by_contra hzu
+    exact hempty ⟨z, ⟨hz, by simp [hzu]⟩⟩
+  have hfin2 : (ee v E' \ {u}).Finite := hfin.subset fun w hw => hw.1
+  obtain ⟨p, hpmem, hpmin⟩ :=
+    Set.exists_min_image (ee v E' \ {u}) (fun z => azim 0 v u z) hfin2 hne2
+  rw [Set.mem_sdiff, Set.mem_singleton_iff] at hpmem
+  have hwit : ∃ w : V3, w ∈ ee v E' ∧ w ≠ u ∧
+      ∀ w1 ∈ ee v E', w1 ≠ u → azim 0 v u w ≤ azim 0 v u w1 :=
+    ⟨p, hpmem.1, hpmem.2, fun w1 hw1 hw1u => hpmin w1 ⟨hw1, by simp [hw1u]⟩⟩
+  unfold sigmaFan
+  rw [hsoe, if_neg hne]
+  exact Classical.epsilon_spec hwit
+
+/-- ② 上半：`ncard vPrime ≤ ncard f`（fst-像包含 + ncard 单调；零单圈性
+假设）。下半 `4 ≤ ncard vPrime` 依赖面圈顶点两两相异（单圈性，checkpoint
+2/3 族），不落——见块尾 NEEDS。 -/
+private theorem yk6_ncard_vPrime_le (hfan : FAN 0 V E) (b : V3 × V3)
+    (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) : (vPrime_p2 V f).ncard ≤ f.ncard := by
+  have hfin : f.Finite := by
+    rw [hf]
+    exact orbitMap_finite
+      (@Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 V E hfan)) b
+  have hsub : vPrime_p2 V f ⊆ (fun d : V3 × V3 => d.1) '' f := by
+    intro v hv
+    obtain ⟨-, w, hw⟩ := Set.mem_setOf_eq.mp hv
+    exact ⟨(v, w), hw, rfl⟩
+  have h1 : (vPrime_p2 V f).ncard ≤ ((fun d : V3 × V3 => d.1) '' f).ncard :=
+    Set.ncard_le_ncard hsub (Set.Finite.image (fun d : V3 × V3 => d.1) hfin)
+  have h2 : ((fun d : V3 × V3 => d.1) '' f).ncard ≤ f.ncard :=
+    Set.ncard_image_le hfin
+  exact h1.trans h2
+
+/-- ④ azim 桥（点态核心）：面轨道上 `azimInFan` 在 e' = ePrime E f 限制下
+不变。V 线替代 HOL `AZIM_IN_FAN_EQ_IZIM_E_PRIME`（Lvducxu，LocalAuto10:579
+sorried 巨件）——本波主件；零单圈性假设，唯一几何输入 = FullySurrounded
+排 1 价分支。 -/
+private theorem yk6_azimInFan_ePrime_eq (hfan : FAN 0 V E) (hfs : FullySurrounded V E)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) {e : V3 × V3} (he : e ∈ f) :
+    azimInFan e (ePrime_p2 E f) = azimInFan e E := by
+  have he' : e ∈ yk2_faceOrbit 0 V E hfan b := by rw [← hf]; exact he
+  have hd1 : e ∈ dart1OfFan V E := yk2_faceOrbit_subset_dart1 hfan b hb he'
+  -- σ 往返：faceMap⁻¹ e = (σ_v w, v)（yk_invFunFFanPairExt_apply 的显式形）
+  have hco : (⇑(@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan))) = fFanPairExt 0 V E :=
+    funext fun z => yk2_apply_faceMap hfan z
+  have hsymm_mem' : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan)).symm e ∈ yk2_faceOrbit 0 V E hfan b :=
+    yk2_faceOrbit_symm_closure hfan he'
+  have hsymm_mem : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan)).symm e ∈ f := by rw [hf]; exact hsymm_mem'
+  have hinv : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan)).symm e = Function.invFun (fFanPairExt 0 V E) e := by
+    have h0 : (⇑(@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 V E hfan)))
+        (Function.invFun (⇑(@Hypermap.faceMap (V3 × V3)
+          (fun a b' => instDecidableEqProd a b') (hypermapOfFan 0 V E hfan))) e) = e :=
+      Function.invFun_eq ⟨(@Hypermap.faceMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b') (hypermapOfFan 0 V E hfan)).symm e,
+        Equiv.apply_symm_apply _ _⟩
+    have h1 := (Equiv.apply_eq_iff_eq_symm_apply
+      (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 V E hfan))).mp h0
+    rw [hco] at h1
+    exact h1.symm
+  rw [hinv, yk_invFunFFanPairExt_apply hfan e, if_pos hd1] at hsymm_mem
+  rw [hinv, yk_invFunFFanPairExt_apply hfan e, if_pos hd1] at hsymm_mem'
+  -- hsymm_mem : (sigmaFan 0 V E e.1 e.2, e.1) ∈ f
+  have hsig_dart : (sigmaFan 0 V E e.1 e.2, e.1) ∈ dart1OfFan V E :=
+    yk2_faceOrbit_subset_dart1 hfan b hb hsymm_mem'
+  have hsigE : ({sigmaFan 0 V E e.1 e.2, e.1} : Set V3) ∈ E := hsig_dart
+  -- 受限邻域的两个相异元
+  have hN'e : e.2 ∈ ee e.1 (ePrime_p2 E f) :=
+    (yk6_in_ePrime f e.1 e.2).mpr ⟨hd1, Or.inl he⟩
+  have hN'σ : sigmaFan 0 V E e.1 e.2 ∈ ee e.1 (ePrime_p2 E f) :=
+    (yk6_in_ePrime f e.1 (sigmaFan 0 V E e.1 e.2)).mpr
+      ⟨by rw [Set.pair_comm e.1 (sigmaFan 0 V E e.1 e.2)]; exact hsigE,
+        Or.inr hsymm_mem⟩
+  -- σ ≠ e.2：全扇邻域 ≥ 2 排唯一邻居分支（FullySurrounded 的内容）
+  have hsoe_ne : setOfEdge e.1 V E ≠ {e.2} := by
+    intro hc
+    exact absurd (yk6_fs_ncard_gt1 hfan hfs hd1) (by rw [hc]; simp)
+  have hsigne : sigmaFan 0 V E e.1 e.2 ≠ e.2 := by
+    by_cases hsoe1 : setOfEdge e.1 V E = {e.2}
+    · exact absurd hsoe1 hsoe_ne
+    · exact (SIGMA_FAN hsoe1 hfan
+        (FAN_in_setOfEdge 0 V E e.1 e.2 hfan hd1).2.2.1).2.1
+  -- 分支条件
+  have hfinN' : (ee e.1 (ePrime_p2 E f)).Finite := by
+    have hfin0 : (setOfEdge e.1 V E).Finite := remark_finite_fan1 e.1 V E hfan.2.2.1.1
+    have hsub : ee e.1 (ePrime_p2 E f) ⊆ setOfEdge e.1 V E := by
+      intro z hz
+      have hz2 : {e.1, z} ∈ E := yk6_ePrime_subset f hz
+      exact ⟨hz2, FAN_EDGE_EL_V hfan hz2⟩
+    exact hfin0.subset hsub
+  have hpair2 : ({e.2, sigmaFan 0 V E e.1 e.2} : Set V3) ⊆ ee e.1 (ePrime_p2 E f) := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact hN'e
+    · rw [Set.mem_singleton_iff] at hz
+      exact hz ▸ hN'σ
+  have hn'E : 1 < (ee e.1 (ePrime_p2 E f)).ncard := by
+    have hc1 : ({e.2, sigmaFan 0 V E e.1 e.2} : Set V3).ncard
+        ≤ (ee e.1 (ePrime_p2 E f)).ncard := Set.ncard_le_ncard hpair2 hfinN'
+    have hc2 : ({e.2, sigmaFan 0 V E e.1 e.2} : Set V3).ncard = 2 :=
+      Set.ncard_pair hsigne.symm
+    omega
+  have hfullE : 1 < (ee e.1 E).ncard := by
+    rw [wk_ee_eq_setOfEdge hfan e.1]
+    exact yk6_fs_ncard_gt1 hfan hfs hd1
+  -- 值的计算：两侧分支进 azim 形，min 性质互夹
+  unfold azimInFan
+  rw [if_pos hn'E, if_pos hfullE, wk_sigmaFan_congr hfan]
+  have hsoe' : setOfEdge e.1 Set.univ (ePrime_p2 E f) = ee e.1 (ePrime_p2 E f) := by
+    ext z
+    simp only [setOfEdge, ee, Set.mem_setOf_eq, Set.mem_univ, and_true]
+  obtain ⟨hσ'1, hσ'2, hσ'3⟩ :=
+    yk6_sigmaFan_min_ee (E' := ePrime_p2 E f) (v := e.1) (u := e.2) hfinN' hN'e
+      (fun hc => by rw [hc] at hn'E; simp at hn'E)
+  have hle1 : azim 0 e.1 e.2 (sigmaFan 0 Set.univ (ePrime_p2 E f) e.1 e.2)
+      ≤ azim 0 e.1 e.2 (sigmaFan 0 V E e.1 e.2) := hσ'3 _ hN'σ hsigne
+  have hσ'insoe : sigmaFan 0 Set.univ (ePrime_p2 E f) e.1 e.2 ∈ setOfEdge e.1 V E := by
+    have hz2 : {e.1, sigmaFan 0 Set.univ (ePrime_p2 E f) e.1 e.2} ∈ E :=
+      yk6_ePrime_subset f hσ'1
+    exact ⟨hz2, FAN_EDGE_EL_V hfan hz2⟩
+  have hle2 : azim 0 e.1 e.2 (sigmaFan 0 V E e.1 e.2)
+      ≤ azim 0 e.1 e.2 (sigmaFan 0 Set.univ (ePrime_p2 E f) e.1 e.2) :=
+    (SIGMA_FAN hsoe_ne hfan (FAN_in_setOfEdge 0 V E e.1 e.2 hfan hd1).2.2.1).2.2 _
+      hσ'insoe hσ'2
+  exact le_antisymm hle1 hle2
+
+/-- ④ 装配形：`tauFun (vPrime, ePrime) f = tauFun V E f`（点态桥 + setSum
+congr；tauFun 的 V 槽不进 body，差只在逐 dart 的 azimInFan）。 -/
+private theorem yk6_tauFun_ePrime_eq (hfan : FAN 0 V E) (hfs : FullySurrounded V E)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) :
+    tauFun (vPrime_p2 V f) (ePrime_p2 E f) f = tauFun V E f := by
+  unfold tauFun
+  congr 1
+  exact wk_setSum_congr (fun d hd => by
+    rw [yk6_azimInFan_ePrime_eq hfan hfs b hb f hf hd])
+
+/-- ⑤ 帽石：`tauVEF V (ESTD V) f = tauFun (vPrime, ePrime) f`（④ + W2 ⑤ 桥
+`wk_f_surr_tauFun_eq_tauVEF`（对任意 E 成立）成套；FaceK Std 装配的回写形）。 -/
+private theorem yk6_tauVEF_eq_tauFun_ePrime (hlpfan : LpFan V (ESTD V))
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V (ESTD V)) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V (ESTD V) hlpfan.1 b) :
+    tauVEF_p2 V (ESTD V) f = tauFun (vPrime_p2 V f) (ePrime_p2 (ESTD V) f) f := by
+  have hfsin : f ∈ (hypermapOfFanTl V (ESTD V) hlpfan.1).faceSet := by
+    rw [hf, Hypermap.faceSet, setOfOrbits]
+    refine ⟨b, Finset.mem_coe.mpr (?_ : b ∈
+      (↑(hypermapOfFanTl V (ESTD V) hlpfan.1).darts : Set (V3 × V3))), rfl⟩
+    rw [dartsTl_coe]
+    exact hb
+  rw [yk6_tauFun_ePrime_eq hlpfan.1 hlpfan.2.1 b hb f hf]
+  exact (wk_f_surr_tauFun_eq_tauVEF hlpfan.1 hlpfan.2.1 hlpfan.2.2.2.1 hfsin).symm
+
+/-! **NEEDS（W6 不受阻子件之外的残差，Lane AE 2026-10-23 勘察）**：
+1. ② 下半 `4 ≤ ncard vPrime`（LOFA_IMP_CARD_FF_V_EQ）：面圈顶点两两相异
+   = 单圈性（W2a，checkpoint 2/3 族）——本波不落，随 W6 残差波收。
+2. ③ 非边前提的 chord 情形（{a,b} ∈ E、两向 dart 均不在 f）= 真 blocked：
+   HOL local_diag:581 第二支消费 `diag_not_in_dart`（lp_main_estimate:415），
+   后者走 `fan_hypermaps_iso_explicit2`（= Hypermap_iso.fan_hypermaps_iso +
+   Conforming.SRPRNPL，与 checkpoint 2 同源）+ PROPERTIES_TRIANGLE_FAN
+   （planarity 章）。**"local_diag 绕行 ~20 行"的原估漏了这一支**——装配波
+   供给 JEJTVGB_std_concl 前提 6 时，除 LpFan.3 外还需面无弦引理；两条路：
+   (a) planarity 章移植专项（PROPERTIES_TRIANGLE_FAN 组），(b) checkpoint 2
+   的 fan_hypermaps_iso 落地后抄 HOL 的 card_orbit 论证。
+3. 装配波的其余前置（ConvexLocalFan 合取支的 wedge 面 + LocalFan/Dih2k 面）
+   状态与 §9h.1 的施工图一致，本块未动。 -/
+
 end Kepler.Text.TameLp
