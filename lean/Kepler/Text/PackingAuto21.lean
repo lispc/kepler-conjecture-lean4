@@ -9213,4 +9213,787 @@ theorem TSKAJXY (V X : Set V3) (hnl : pack_nonlinear_non_ox3q1h)
 
 end WedgeClosedForms
 
+/-! ## TSKAJXY_034 W1: geometric shell of the 0/4-cell arms (Lane AL, 2026-10-23) -/
+
+namespace TSKAJXY034W1
+
+/-- `setSum` over the empty set is `0`. -/
+private theorem p21g_setSum_empty {α : Type*} (f : α → ℝ) : setSum ∅ f = 0 := by
+  unfold setSum
+  simp
+
+/-- HOL `HL` pair instance: `hl` of a two-point list is half the distance
+(reinstallation of PA13 `p13_hl_pair`, private there; `CIRCUMCENTER_2` route). -/
+private theorem p21g_hl2 (u v : V3) : hl [u, v] = dist u v / 2 := by
+  have hset : setOfList [u, v] = ({u, v} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hcc : circumcenter ({u, v} : Set V3) = midpoint ℝ u v := CIRCUMCENTER_2 u v
+  have hexi : ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w := by
+    refine ⟨dist (midpoint ℝ u v) u, ?_⟩
+    rw [hcc]
+    intro w hw
+    rcases Set.mem_insert_iff.mp hw with rfl | hw'
+    · rfl
+    · rcases Set.mem_singleton_iff.mp hw' with rfl
+      simp
+  have key : radV ({u, v} : Set V3) = dist (circumcenter ({u, v} : Set V3)) u :=
+    (Classical.epsilon_spec (p := fun c : ℝ => ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w) hexi) u (Set.mem_insert u {v})
+  have hhl : hl [u, v] = dist (circumcenter ({u, v} : Set V3)) u := by
+    show radV (setOfList [u, v]) = _
+    rw [hset, key]
+  rw [hhl, hcc]
+  simp
+  ring
+
+/-- affine-span membership from a spanning-vector hypothesis
+(PA25 `p25g_mem_affSpan3`, private there). -/
+private theorem p21g_mem_affSpan3 {a u v p : V3}
+    (hp : (p - a : V3) ∈ Submodule.span ℝ ({u - a, v - a} : Set V3)) :
+    p ∈ (affineSpan ℝ ({a, u, v} : Set V3) : Set V3) := by
+  have hpv : (p : V3) = (p -ᵥ a) +ᵥ a := (vsub_vadd p a).symm
+  rw [hpv]
+  refine AffineSubspace.vadd_mem_of_mem_direction ?_ (mem_affineSpan ℝ (by simp))
+  rw [direction_affineSpan,
+    vectorSpan_eq_span_vsub_set_right ℝ (show (a : V3) ∈ ({a, u, v} : Set V3) from by simp)]
+  have hsub : ({u - a, v - a} : Set V3) ⊆
+      ((fun q : V3 => (q -ᵥ a)) '' ({a, u, v} : Set V3)) := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact ⟨u, by simp, rfl⟩
+    · rcases Set.mem_singleton_iff.mp hz with rfl
+      exact ⟨v, by simp, rfl⟩
+  exact (Submodule.span_mono hsub) hp
+
+/-- affine-dependent 4-set is coplanar (PA25 `p25g_affdep4_coplanar`,
+private there). -/
+private theorem p21g_affdep4_coplanar {a b c d : V3}
+    (h : affineDependent ({a, b, c, d} : Set V3)) :
+    Coplanar ({a, b, c, d} : Set V3) := by
+  rcases eq_or_ne a b with hab | hab
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [hab]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  rcases eq_or_ne a c with hac | hac
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [hac]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  rcases eq_or_ne a d with had | had
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [had]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  have hmem_a : (a : V3) ∈ ({a, b, c, d} : Set V3) := by simp
+  have hdiff : (({a, b, c, d} : Set V3) \ {a}) = ({b, c, d} : Set V3) := by
+    ext z
+    by_cases hz : z = a
+    · subst hz; simp [hab, hac, had]
+    · simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff, hz,
+        not_false_iff]
+      tauto
+  have himg : ((fun p : V3 => (p -ᵥ a)) '' ({b, c, d} : Set V3))
+      = ({b - a, c - a, d - a} : Set V3) := by
+    rw [Set.image_insert_eq, Set.image_insert_eq, Set.image_singleton]
+    rfl
+  rw [affineDependent,
+    affineIndependent_set_iff_linearIndependent_vsub (k := ℝ) hmem_a, hdiff, himg] at h
+  have h' : ¬ LinearIndepOn ℝ id ({b - a, c - a, d - a} : Set V3) := h
+  by_cases hbb : (b - a : V3) ∈ Submodule.span ℝ ({c - a, d - a} : Set V3)
+  · refine ⟨a, c, d, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with he | he | he | he
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · rw [he]; exact p21g_mem_affSpan3 hbb
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+  · by_cases hcc : (c - a : V3) ∈ Submodule.span ℝ ({b - a, d - a} : Set V3)
+    · refine ⟨a, b, d, ?_⟩
+      intro p hp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+      rcases hp with he | he | he | he
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+      · rw [he]; exact p21g_mem_affSpan3 hcc
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · by_cases hdd : (d - a : V3) ∈ Submodule.span ℝ ({b - a, c - a} : Set V3)
+      · refine ⟨a, b, c, ?_⟩
+        intro p hp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+        rcases hp with he | he | he | he
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact p21g_mem_affSpan3 hdd
+      · exfalso
+        have hda : d ≠ a := fun heq => hdd (by rw [heq]; simp)
+        have hca : c ≠ a := fun heq => hcc (by rw [heq]; simp)
+        have s1 : LinearIndepOn ℝ id ({d - a} : Set V3) :=
+          LinearIndepOn.singleton (show (d - a : V3) ≠ 0 from sub_ne_zero.mpr hda)
+        have s2 : LinearIndepOn ℝ id ({c - a, d - a} : Set V3) :=
+          LinearIndepOn.id_insert (s := ({d - a} : Set V3)) s1
+            (fun hm => hcc (Submodule.span_mono (Set.subset_insert _ _) hm))
+        exact h' (LinearIndepOn.id_insert (s := ({c - a, d - a} : Set V3)) s2 hbb)
+
+set_option maxHeartbeats 25000000 in
+/-- HOL `GDRQXLGv2` x-space core, reinstalled from PA25 `GDRQXLGv3`
+(:1347, public there but this file cannot import PA25 — cycle): the squared
+circumradius of four non-coplanar points is `rad2_x` at the six squared
+pairwise distances (outer-center Cramer algebra, OAPVION2/3). -/
+private theorem p21g_radv_sq_rad2X (v0 v1 v2 v3 : V3)
+    (hnc : ¬ Coplanar ({v0, v1, v2, v3} : Set V3)) :
+    radV {v0, v1, v2, v3} ^ 2 =
+      rad2X (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+        (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
+  have haff : ¬ affineDependent ({v0, v1, v2, v3} : Set V3) :=
+    fun hd => hnc (p21g_affdep4_coplanar hd)
+  have hgram : ∀ x y : V3, inner ℝ (x - y) (x - y)
+      = inner ℝ x x + inner ℝ y y - 2 * inner ℝ x y := by
+    intro x y
+    rw [inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm y x]
+    ring
+  obtain ⟨ga, hga⟩ : ∃ x, x = inner ℝ (v1 - v0) (v1 - v0) := ⟨_, rfl⟩
+  obtain ⟨gb, hgb⟩ : ∃ x, x = inner ℝ (v2 - v0) (v2 - v0) := ⟨_, rfl⟩
+  obtain ⟨gc, hgc⟩ : ∃ x, x = inner ℝ (v3 - v0) (v3 - v0) := ⟨_, rfl⟩
+  obtain ⟨gab, hgab⟩ : ∃ x, x = inner ℝ (v1 - v0) (v2 - v0) := ⟨_, rfl⟩
+  obtain ⟨gac, hgac⟩ : ∃ x, x = inner ℝ (v1 - v0) (v3 - v0) := ⟨_, rfl⟩
+  obtain ⟨gbc, hgbc⟩ : ∃ x, x = inner ℝ (v2 - v0) (v3 - v0) := ⟨_, rfl⟩
+  obtain ⟨n1, hn1⟩ : ∃ x, x = ga * gb * gc - ga * (gbc * gbc)
+      - gb * (gab * gc) + gb * (gac * gbc) + gc * (gab * gbc)
+      - gc * (gac * gb) := ⟨_, rfl⟩
+  obtain ⟨n2, hn2⟩ : ∃ x, x = ga * gb * gc - ga * (gbc * gc)
+      - ga * (gab * gc) + ga * (gbc * gac) + gc * (gab * gac)
+      - gb * (gac * gac) := ⟨_, rfl⟩
+  obtain ⟨n3, hn3⟩ : ∃ x, x = ga * gb * gc - ga * (gb * gbc)
+      - ga * (gb * gac) + ga * (gab * gbc) + gb * (gab * gac)
+      - gc * (gab * gab) := ⟨_, rfl⟩
+  obtain ⟨dda, hdda⟩ : ∃ x, x = ga * gb * gc + 2 * (gbc * gac * gab)
+      - ga * (gbc * gbc) - gb * (gac * gac) - gc * (gab * gab) := ⟨_, rfl⟩
+  have hc1 : ga * n1 + gab * n2 + gac * n3 = ga * dda := by
+    rw [hn1, hn2, hn3, hdda]
+    ring
+  have hc2 : gab * n1 + gb * n2 + gbc * n3 = gb * dda := by
+    rw [hn1, hn2, hn3, hdda]
+    ring
+  have hc3 : gac * n1 + gbc * n2 + gc * n3 = gc * dda := by
+    rw [hn1, hn2, hn3, hdda]
+    ring
+  have hdelt : deltaX ga gb gc (gb + gc - 2 * gbc) (ga + gc - 2 * gac)
+      (ga + gb - 2 * gab) = 4 * dda := by
+    simp only [deltaX]
+    rw [hdda]
+    ring
+  have hrho : rhoX ga gb gc (gb + gc - 2 * gbc) (ga + gc - 2 * gac)
+      (ga + gb - 2 * gab) = 4 * (ga * n1 + gb * n2 + gc * n3) := by
+    simp only [rhoX]
+    rw [hn1, hn2, hn3]
+    ring
+  have dA : dist v0 v1 ^ 2 = ga := by
+    rw [hga, real_inner_self_eq_norm_sq, dist_eq_norm v0 v1,
+      show (v0 : V3) - v1 = -(v1 - v0) from by abel, norm_neg]
+  have dB : dist v0 v2 ^ 2 = gb := by
+    rw [hgb, real_inner_self_eq_norm_sq, dist_eq_norm v0 v2,
+      show (v0 : V3) - v2 = -(v2 - v0) from by abel, norm_neg]
+  have dC : dist v0 v3 ^ 2 = gc := by
+    rw [hgc, real_inner_self_eq_norm_sq, dist_eq_norm v0 v3,
+      show (v0 : V3) - v3 = -(v3 - v0) from by abel, norm_neg]
+  have d12 : dist v1 v2 ^ 2 = ga + gb - 2 * gab := by
+    rw [dist_eq_norm v1 v2, show (v1 : V3) - v2 = (v1 - v0) - (v2 - v0) from by abel,
+      ← real_inner_self_eq_norm_sq, hgram (v1 - v0) (v2 - v0), ← hga, ← hgb, ← hgab]
+  have d13 : dist v1 v3 ^ 2 = ga + gc - 2 * gac := by
+    rw [dist_eq_norm v1 v3, show (v1 : V3) - v3 = (v1 - v0) - (v3 - v0) from by abel,
+      ← real_inner_self_eq_norm_sq, hgram (v1 - v0) (v3 - v0), ← hga, ← hgc, ← hgac]
+  have d23 : dist v2 v3 ^ 2 = gb + gc - 2 * gbc := by
+    rw [dist_eq_norm v2 v3, show (v2 : V3) - v3 = (v2 - v0) - (v3 - v0) from by abel,
+      ← real_inner_self_eq_norm_sq, hgram (v2 - v0) (v3 - v0), ← hgb, ← hgc, ← hgbc]
+  have hDpos : 0 < dda := by
+    have hd : 0 < deltaX (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+        (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
+      rw [← delta_delta_x]
+      exact (POS_EQ_NOT_COPLANANR v0 v1 v2 v3).mpr
+        (fun hca => hnc (coplanar_eq_coplanar_alt.mpr hca))
+    rw [dA, dB, dC, d23, d13, d12, hdelt] at hd
+    linarith
+  obtain ⟨t1, ht1⟩ : ∃ x, x = n1 / (2 * dda) := ⟨_, rfl⟩
+  obtain ⟨t2, ht2⟩ : ∃ x, x = n2 / (2 * dda) := ⟨_, rfl⟩
+  obtain ⟨t3, ht3⟩ : ∃ x, x = n3 / (2 * dda) := ⟨_, rfl⟩
+  have hdda0 : dda ≠ 0 := ne_of_gt hDpos
+  have col1 : t1 * ga + t2 * gab + t3 * gac = ga / 2 := by
+    rw [ht1, ht2, ht3]
+    field_simp
+    linear_combination hc1
+  have col2 : t1 * gab + t2 * gb + t3 * gbc = gb / 2 := by
+    rw [ht1, ht2, ht3]
+    field_simp
+    linear_combination hc2
+  have col3 : t1 * gac + t2 * gbc + t3 * gc = gc / 2 := by
+    rw [ht1, ht2, ht3]
+    field_simp
+    linear_combination hc3
+  set q : V3 := (t1 • (v1 - v0) + t2 • (v2 - v0) + t3 • (v3 - v0)) +ᵥ v0 with hqdef
+  have hx0 : (q : V3) - v0 = t1 • (v1 - v0) + t2 • (v2 - v0) + t3 • (v3 - v0) := by
+    rw [hqdef, vadd_eq_add]
+    abel
+  have M1 : inner ℝ ((q : V3) - v0) (v1 - v0) = ga / 2 := by
+    rw [hx0]
+    simp only [inner_add_left, real_inner_smul_left]
+    rw [real_inner_comm (v1 - v0) (v2 - v0), real_inner_comm (v1 - v0) (v3 - v0),
+      ← hga, ← hgab, ← hgac]
+    exact col1
+  have M2 : inner ℝ ((q : V3) - v0) (v2 - v0) = gb / 2 := by
+    rw [hx0]
+    simp only [inner_add_left, real_inner_smul_left]
+    rw [real_inner_comm (v2 - v0) (v3 - v0), ← hgab, ← hgb, ← hgbc]
+    exact col2
+  have M3 : inner ℝ ((q : V3) - v0) (v3 - v0) = gc / 2 := by
+    rw [hx0]
+    simp only [inner_add_left, real_inner_smul_left, ← hgac, ← hgbc, ← hgc]
+    exact col3
+  have nA : ‖v1 - v0‖ ^ 2 = ga := by rw [hga, real_inner_self_eq_norm_sq]
+  have nB : ‖v2 - v0‖ ^ 2 = gb := by rw [hgb, real_inner_self_eq_norm_sq]
+  have nC : ‖v3 - v0‖ ^ 2 = gc := by rw [hgc, real_inner_self_eq_norm_sq]
+  have nrm1 : ‖(q : V3) - v1‖ ^ 2 = ‖(q : V3) - v0‖ ^ 2 := by
+    have e : ((q : V3) - v1) = ((q : V3) - v0) - (v1 - v0) := by abel
+    have e2 : ‖((q : V3) - v0) - (v1 - v0)‖ ^ 2
+        = ‖(q : V3) - v0‖ ^ 2 + ‖v1 - v0‖ ^ 2
+          - 2 * inner ℝ ((q : V3) - v0) (v1 - v0) := by
+      simp only [← real_inner_self_eq_norm_sq, hgram (q - v0) (v1 - v0)]
+    rw [e, e2, M1, nA]
+    ring
+  have nrm2 : ‖(q : V3) - v2‖ ^ 2 = ‖(q : V3) - v0‖ ^ 2 := by
+    have e : ((q : V3) - v2) = ((q : V3) - v0) - (v2 - v0) := by abel
+    have e2 : ‖((q : V3) - v0) - (v2 - v0)‖ ^ 2
+        = ‖(q : V3) - v0‖ ^ 2 + ‖v2 - v0‖ ^ 2
+          - 2 * inner ℝ ((q : V3) - v0) (v2 - v0) := by
+      simp only [← real_inner_self_eq_norm_sq, hgram (q - v0) (v2 - v0)]
+    rw [e, e2, M2, nB]
+    ring
+  have nrm3 : ‖(q : V3) - v3‖ ^ 2 = ‖(q : V3) - v0‖ ^ 2 := by
+    have e : ((q : V3) - v3) = ((q : V3) - v0) - (v3 - v0) := by abel
+    have e2 : ‖((q : V3) - v0) - (v3 - v0)‖ ^ 2
+        = ‖(q : V3) - v0‖ ^ 2 + ‖v3 - v0‖ ^ 2
+          - 2 * inner ℝ ((q : V3) - v0) (v3 - v0) := by
+      simp only [← real_inner_self_eq_norm_sq, hgram (q - v0) (v3 - v0)]
+    rw [e, e2, M3, nC]
+    ring
+  have dd1 : dist (q : V3) v1 = dist (q : V3) v0 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp nrm1
+  have dd2 : dist (q : V3) v2 = dist (q : V3) v0 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp nrm2
+  have dd3 : dist (q : V3) v3 = dist (q : V3) v0 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp nrm3
+  have hcd : ∃ c : ℝ, ∀ w ∈ ({v0, v1, v2, v3} : Set V3), dist (q : V3) w = c := by
+    refine ⟨dist (q : V3) v0, ?_⟩
+    rintro w (rfl | rfl | rfl | rfl)
+    · rfl
+    · exact dd1
+    · exact dd2
+    · exact dd3
+  have hdir : (affineSpan ℝ ({v0, v1, v2, v3} : Set V3)).direction
+      = Submodule.span ℝ ({v1 - v0, v2 - v0, v3 - v0} : Set V3) := by
+    rw [direction_affineSpan,
+      vectorSpan_eq_span_vsub_set_right ℝ (show v0 ∈ ({v0, v1, v2, v3} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨z, hz, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with hz | hz | hz | hz
+      · rw [hz]; simp
+      · rw [hz]; exact Submodule.subset_span (by simp)
+      · rw [hz]; exact Submodule.subset_span (by simp)
+      · rw [hz]; exact Submodule.subset_span (by simp)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl | rfl)
+      · exact Submodule.subset_span ⟨v1, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨v2, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨v3, by simp, rfl⟩
+  have h1m : t1 • (v1 - v0) ∈ Submodule.span ℝ ({v1 - v0, v2 - v0, v3 - v0} : Set V3) :=
+    Submodule.smul_mem _ t1 (Submodule.subset_span (by simp))
+  have h2m : t2 • (v2 - v0) ∈ Submodule.span ℝ ({v1 - v0, v2 - v0, v3 - v0} : Set V3) :=
+    Submodule.smul_mem _ t2 (Submodule.subset_span (by simp))
+  have h3m : t3 • (v3 - v0) ∈ Submodule.span ℝ ({v1 - v0, v2 - v0, v3 - v0} : Set V3) :=
+    Submodule.smul_mem _ t3 (Submodule.subset_span (by simp))
+  have hxmem : t1 • (v1 - v0) + t2 • (v2 - v0) + t3 • (v3 - v0)
+      ∈ (affineSpan ℝ ({v0, v1, v2, v3} : Set V3)).direction := by
+    rw [hdir]
+    exact Submodule.add_mem _ (Submodule.add_mem _ h1m h2m) h3m
+  have hqmem : (q : V3) ∈ (affineSpan ℝ ({v0, v1, v2, v3} : Set V3) : Set V3) :=
+    AffineSubspace.vadd_mem_of_mem_direction hxmem
+      (subset_affineSpan ℝ ({v0, v1, v2, v3} : Set V3) (by simp))
+  have hqcc : (q : V3) = circumcenter ({v0, v1, v2, v3} : Set V3) :=
+    OAPVION3_concl _ haff q hqmem hcd
+  have hR := OAPVION2_concl ({v0, v1, v2, v3} : Set V3) haff v0 (by simp)
+  rw [← hqcc] at hR
+  have Xinner : ∀ y : V3, inner ℝ ((q : V3) - v0) y
+      = t1 * inner ℝ (v1 - v0) y + t2 * inner ℝ (v2 - v0) y
+        + t3 * inner ℝ (v3 - v0) y := by
+    intro y
+    rw [hx0]
+    simp only [inner_add_left, real_inner_smul_left]
+  have M1' : inner ℝ (v1 - v0) ((q : V3) - v0) = ga / 2 := by
+    rw [real_inner_comm]
+    exact M1
+  have M2' : inner ℝ (v2 - v0) ((q : V3) - v0) = gb / 2 := by
+    rw [real_inner_comm]
+    exact M2
+  have M3' : inner ℝ (v3 - v0) ((q : V3) - v0) = gc / 2 := by
+    rw [real_inner_comm]
+    exact M3
+  have nfin : ‖(q : V3) - v0‖ ^ 2
+      = (ga * n1 + gb * n2 + gc * n3) / (4 * dda) := by
+    rw [← real_inner_self_eq_norm_sq, Xinner, M1', M2', M3', ht1, ht2, ht3]
+    ring
+  rw [hR, dist_eq_norm, nfin]
+  simp only [rad2X, dA, dB, dC, d23, d13, d12, hdelt, hrho]
+  ring
+
+open Module in
+/-- a 2-dimensional span is not the whole space (PA20
+`p20k_span_pair_ne_top`, private there). -/
+private theorem p21g_span_pair_ne_top (p q : V3) :
+    Submodule.span ℝ ({p, q} : Set V3) ≠ ⊤ := by
+  intro h
+  have hle : finrank ℝ (Submodule.span ℝ ({p, q} : Set V3)) ≤ 2 := by
+    have hh := finrank_span_finset_le_card (R := ℝ) ({p, q} : Finset V3)
+    unfold Set.finrank at hh
+    rw [show (({p, q} : Finset V3) : Set V3) = ({p, q} : Set V3) from by simp] at hh
+    have h2 : ({p, q} : Finset V3).card ≤ 2 := by
+      calc ({p, q} : Finset V3).card ≤ ({q} : Finset V3).card + 1 :=
+          Finset.card_insert_le p {q}
+        _ = 2 := by simp
+    omega
+  rw [h, finrank_top] at hle
+  have h3 : finrank ℝ V3 = 3 := by
+    simp [V3, finrank_euclideanSpace_fin]
+  omega
+
+/-- the translate of a 2-dimensional span is Lebesgue-null (PA20
+`p20k_plane_null`, private there) — the plane-null bridge. -/
+private theorem p21g_plane_null (v0 p q : V3) :
+    volume ((fun z : V3 => v0 + z) '' (Submodule.span ℝ ({p, q} : Set V3))) = 0 := by
+  have hpre : (fun z : V3 => v0 + z) '' (Submodule.span ℝ ({p, q} : Set V3))
+      = (fun z : V3 => -v0 + z) ⁻¹' (Submodule.span ℝ ({p, q} : Set V3)) := by
+    ext z
+    constructor
+    · rintro ⟨w, hw, rfl⟩
+      simpa using hw
+    · intro h
+      exact ⟨-v0 + z, by simpa using h, by abel⟩
+  rw [hpre, measure_preimage_add]
+  exact MeasureTheory.Measure.addHaar_submodule volume _ (p21g_span_pair_ne_top p q)
+
+/-- consecutive-barV length contradiction helper (PA20 `p20k_vn_contra`,
+private there). -/
+private theorem p21g_vn_contra {V : Set V3} {ul vm : List V3}
+    (h1 : voronoiNondg V ul) (h2 : voronoiNondg V vm)
+    (hset : setOfList ul = setOfList vm) (hlen : ul.length = vm.length + 1) : False := by
+  have e1 := h1.2.2
+  have e2 := h2.2.2
+  simp only [voronoiList] at e1 e2
+  rw [hset, hlen] at e1
+  omega
+
+/-- four-point barV distinctness (PA20 `p20k_barV_distinct`, private there)
+— the distinctness bridge. -/
+private theorem p21g_barV_distinct {V : Set V3} {x0 x1 x2 x3 : V3}
+    (hb : barV V 3 [x0, x1, x2, x3]) :
+    x0 ≠ x1 ∧ x0 ≠ x2 ∧ x0 ≠ x3 ∧ x1 ≠ x2 ∧ x1 ≠ x3 ∧ x2 ≠ x3 := by
+  have hv1 : voronoiNondg V [x0, x1] := hb.2 [x0, x1] ⟨⟨[x2, x3], rfl⟩, by simp⟩
+  have hv0 : voronoiNondg V [x0] := hb.2 [x0] ⟨⟨[x1, x2, x3], rfl⟩, by simp⟩
+  have hv2 : voronoiNondg V [x0, x1, x2] := hb.2 [x0, x1, x2] ⟨⟨[x3], rfl⟩, by simp⟩
+  have hv3 : voronoiNondg V [x0, x1, x2, x3] := hb.2 _ ⟨⟨[], rfl⟩, by simp⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · intro h
+    refine p21g_vn_contra hv1 hv0 ?_ ?_
+    · rw [← h]; ext z; simp only [setOfList, List.mem_cons, Set.mem_setOf_eq]; tauto
+    · simp
+  · intro h
+    refine p21g_vn_contra hv2 hv1 ?_ ?_
+    · rw [← h]; ext z; simp only [setOfList, List.mem_cons, Set.mem_setOf_eq]; tauto
+    · simp
+  · intro h
+    refine p21g_vn_contra hv3 hv2 ?_ ?_
+    · rw [← h]; ext z; simp only [setOfList, List.mem_cons, Set.mem_setOf_eq]; tauto
+    · simp
+  · intro h
+    refine p21g_vn_contra hv2 hv1 ?_ ?_
+    · rw [← h]; ext z; simp only [setOfList, List.mem_cons, Set.mem_setOf_eq]; tauto
+    · simp
+  · intro h
+    refine p21g_vn_contra hv3 hv2 ?_ ?_
+    · rw [← h]; ext z; simp only [setOfList, List.mem_cons, Set.mem_setOf_eq]; tauto
+    · simp
+  · intro h
+    refine p21g_vn_contra hv3 hv2 ?_ ?_
+    · rw [← h]; ext z; simp only [setOfList, List.mem_cons, Set.mem_setOf_eq]; tauto
+    · simp
+
+/-- PA20 `p20k_ne_empty` copy. -/
+private theorem p21g_ne_empty {X : Set V3} (hn : ¬ nullSet X) : X ≠ ∅ := by
+  intro h
+  apply hn
+  rw [h]
+  exact measure_empty
+
+/-- PA20 `p20k_mcell_ge4` copy. -/
+private theorem p21g_mcell_ge4 {i : ℕ} {V : Set V3} {ul : List V3} (hi : 4 ≤ i) :
+    mcell i V ul = mcell 4 V ul := by
+  show (if i = 0 then mcell0 V ul else if i = 1 then mcell1 V ul
+    else if i = 2 then mcell2 V ul else if i = 3 then mcell3 V ul
+    else mcell4 V ul) = mcell4 V ul
+  split_ifs with h1 h2 h3 h4
+  · exact absurd h1 (by omega)
+  · exact absurd h2 (by omega)
+  · exact absurd h3 (by omega)
+  · exact absurd h4 (by omega)
+  · rfl
+
+/-- PA20 `p20k_mcell4_hlt` copy: the `mcell 4` branch condition. -/
+private theorem p21g_mcell4_hlt {V : Set V3} {ul : List V3} (hne : mcell 4 V ul ≠ ∅) :
+    hl ul < Real.sqrt 2 := by
+  have hexp : mcell 4 V ul =
+      if hl ul < Real.sqrt 2 then convexHull ℝ (setOfList ul) else (∅ : Set V3) := rfl
+  rw [hexp] at hne
+  split_ifs at hne with h
+  · exact h
+  · exact absurd rfl hne
+
+/-- PA20 `p20k_mcell4_hull` copy: a nonempty `mcell 4` is the tetra hull. -/
+private theorem p21g_mcell4_hull {V : Set V3} {ul : List V3} (hne : mcell 4 V ul ≠ ∅) :
+    mcell 4 V ul = convexHull ℝ (setOfList ul) := by
+  have hexp : mcell 4 V ul =
+      if hl ul < Real.sqrt 2 then convexHull ℝ (setOfList ul) else (∅ : Set V3) := rfl
+  rw [hexp] at hne ⊢
+  split_ifs at hne ⊢ with h
+  · rfl
+  · exact absurd rfl hne
+
+/-- PA20 `p20k_VX_m4` copy: vertex set of a non-null `mcell 4`. -/
+private theorem p21g_VX_m4 (V : Set V3) (wl : List V3)
+    (hp : Packing V) (hs : saturated V) (hb : barV V 3 wl)
+    (hnull : ¬ nullSet (mcell 4 V wl)) :
+    VX V (mcell 4 V wl) = setOfList wl := by
+  have hne : mcell 4 V wl ≠ ∅ := by
+    intro h0
+    exact hnull (by rw [h0]; exact measure_empty)
+  have h1 : VX V (mcell 4 V wl) = V ∩ mcell 4 V wl :=
+    HDTFNFZ (v := 0) hs hp hb rfl hnull
+  rw [h1, LEPJBDJ V wl 4 hs hp hb (by omega) (by omega) hne]
+  have hts : truncateSimplex (4 - 1) wl = wl := by
+    have htsE : truncateSimplex (4 - 1) wl =
+        Classical.epsilon (fun vl : List V3 => vl.length = 3 + 1 ∧ initialSublist vl wl) := rfl
+    have hspec := Classical.epsilon_spec (p := fun vl : List V3 =>
+      vl.length = 3 + 1 ∧ initialSublist vl wl)
+      ⟨wl, hb.1, ⟨[], by simp⟩⟩
+    obtain ⟨yl, hy⟩ := hspec.2
+    have hyl : yl = [] := by
+      have h := congrArg List.length hy
+      rw [List.length_append, hspec.1, hb.1] at h
+      simp at h
+      omega
+    rw [htsE]
+    conv_rhs => rw [hy]
+    rw [hyl, List.append_nil]
+  rw [hts]
+
+/-- `gammaX` collapses to the volume term once the vertex set is empty
+(serves both the NULLSET branch and the 0-cell branch). -/
+private theorem p21g_gamma_of_VX_empty {V X : Set V3} (hVX : VX V X = (∅ : Set V3))
+    (hE : edgeX V X = (∅ : Set (Set V3))) :
+    gammaX V X lmfun = volume.real X := by
+  unfold gammaX totalSolid
+  rw [hVX, hE, p21g_setSum_empty, p21g_setSum_empty]
+  ring
+
+/-- `edgeX` is empty once `VX` is. -/
+private theorem p21g_edgeX_empty_of_VX {V X : Set V3} (hVX : VX V X = (∅ : Set V3)) :
+    edgeX V X = (∅ : Set (Set V3)) := by
+  ext e
+  simp only [edgeX, Set.mem_setOf_eq, Set.mem_empty_iff_false]
+  constructor
+  · rintro ⟨u, v, rfl, hu, -, -⟩
+    rw [hVX] at hu
+    exact absurd hu (Set.notMem_empty u)
+  · intro h
+    exact absurd h (Set.notMem_empty e)
+
+/-- HOL `TSKAJXY_034` step A (TSKAJXY2.hl:100-117): the NULLSET branch. -/
+private theorem p21g_null_branch {V X : Set V3} (hnull : nullSet X) :
+    gammaX V X lmfun ≥ 0 := by
+  have hVX : VX V X = (∅ : Set V3) := by
+    unfold VX
+    rw [if_pos hnull]
+  have hvol : volume.real X = 0 := by
+    rw [Measure.real_def, hnull]
+    simp
+  rw [p21g_gamma_of_VX_empty hVX (p21g_edgeX_empty_of_VX hVX), hvol]
+
+/-- HOL `TSKAJXY_034` steps B1+B2 (TSKAJXY2.hl:118-168): the `i ≥ 4`
+normalisation and the `gammaX_gamm4fgcy` application, in one shot (the PA20
+giant's statement is literally this). -/
+private theorem p21g_cell4_split (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3)
+    (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) (hs : saturated V) (hp : Packing V)
+    (hb : barV V 3 ul) (hi : 4 ≤ i) (hX : X = mcell i V ul) (hn : ¬ nullSet X)
+    (hul : ul = [u0, u1, u2, u3]) (hy1 : dist u0 u1 = y1) (hy2 : dist u0 u2 = y2)
+    (hy3 : dist u0 u3 = y3) (hy4 : dist u2 u3 = y4) (hy5 : dist u1 u3 = y5)
+    (hy6 : dist u1 u2 = y6) :
+    volume.real X = volY y1 y2 y3 y4 y5 y6 ∧
+      gammaX V X lmfun = gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun :=
+  gammaX_gamm4fgcy V X ul u0 u1 u2 u3 i y1 y2 y3 y4 y5 y6 hs hp hb hi hX hn hul
+    hy1 hy2 hy3 hy4 hy5 hy6
+
+/-- `edgeX` membership (HOL `edgeX` def, used by both B4 and B6). -/
+private theorem p21g_edgeX_mem {V X : Set V3} {u v : V3}
+    (hu : u ∈ VX V X) (hv : v ∈ VX V X) (hne : u ≠ v) : {u, v} ∈ edgeX V X := by
+  simp only [edgeX, Set.mem_setOf_eq]
+  exact ⟨u, v, rfl, hu, hv, hne⟩
+
+/-- critical-edge membership (HOL `critical_edgeX` def unfolding). -/
+private theorem p21g_critEdgeX_mem {V X : Set V3} {u v : V3}
+    (hu : u ∈ VX V X) (hv : v ∈ VX V X) (hne : u ≠ v)
+    (hlo : hminus ≤ hl [u, v]) (hhi : hl [u, v] ≤ hplus) :
+    {u, v} ∈ criticalEdgeX V X := by
+  simp only [criticalEdgeX, Set.mem_setOf_eq]
+  exact ⟨u, v, rfl, p21g_edgeX_mem hu hv hne, hlo, hhi⟩
+
+/-- HOL `TSKAJXY_034` step B4 (TSKAJXY2.hl:169-274), one parametric instance
+(the six pairs are instantiations): no edge of a cell with no critical edges
+is y-critical, since `hl` halves the length. -/
+private theorem p21g_not_critEdgeY {V X : Set V3} {u v : V3}
+    (hcrit : criticalEdgeX V X = ∅) (hu : u ∈ VX V X) (hv : v ∈ VX V X)
+    (hne : u ≠ v) : ¬ criticalEdgeY (dist u v) := by
+  intro hc
+  obtain ⟨h1, h2⟩ := hc
+  have hmem : {u, v} ∈ criticalEdgeX V X :=
+    p21g_critEdgeX_mem hu hv hne (by rw [p21g_hl2]; linarith)
+      (by rw [p21g_hl2]; linarith)
+  rw [hcrit] at hmem
+  exact Set.notMem_empty _ hmem
+
+/-- HOL `coplanar` ⟺ `delta_y = 0` direction needed by B5, reinstalled from
+PA25 `coplanar_delta_y` (:983, public there but unimportable here; proof is
+PA18-lemma-only). -/
+private theorem p21g_coplanar_delta_y (u0 u1 u2 u3 : V3) :
+    ¬ Coplanar ({u0, u1, u2, u3} : Set V3) ↔
+      0 < deltaY (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3)
+        (dist u1 u3) (dist u1 u2) := by
+  have hdelta : deltaY (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3)
+        (dist u1 u3) (dist u1 u2)
+      = deltaP (dist u0 u1 ^ 2) (dist u0 u2 ^ 2) (dist u0 u3 ^ 2)
+          (dist u1 u2 ^ 2) (dist u1 u3 ^ 2) (dist u2 u3 ^ 2) := by
+    simp only [deltaY, pow_two, delta_delta_x]
+  rw [hdelta, POS_EQ_NOT_COPLANANR, coplanar_eq_coplanar_alt]
+
+/-- HOL `TSKAJXY_034` step B6 (TSKAJXY2.hl:288-345): edge lengths of a 4-cell
+lie in `[2, √8]` — packing gives the lower bound, the circumradius (`hl`) the
+upper one via the triangle inequality. -/
+private theorem p21g_len_bounds {V : Set V3} (hp : Packing V)
+    {u0 u1 u2 u3 : V3} (hb : barV V 3 [u0, u1, u2, u3])
+    (hlt : hl [u0, u1, u2, u3] < Real.sqrt 2)
+    {u v : V3} (hu : u ∈ ({u0, u1, u2, u3} : Set V3))
+    (hv : v ∈ ({u0, u1, u2, u3} : Set V3)) (hne : u ≠ v) :
+    2 ≤ dist u v ∧ dist u v ≤ Real.sqrt 8 := by
+  have hset : setOfList [u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+    ext z; simp [setOfList]
+  have hvn : voronoiNondg V [u0, u1, u2, u3] := hb.2 _ ⟨⟨[], rfl⟩, by simp⟩
+  have hsub : ({u0, u1, u2, u3} : Set V3) ⊆ V := by
+    rw [← hset]
+    exact hvn.2.1
+  have haff : ¬ affineDependent ({u0, u1, u2, u3} : Set V3) := by
+    have hf := BARV_AFFINE_INDEPENDENT V [u0, u1, u2, u3] 3 hp hb
+    rwa [hset] at hf
+  have hlo : 2 ≤ dist u v := Packing.dist_ge_two hp (hsub hu) (hsub hv) hne
+  have hhl : hl [u0, u1, u2, u3] = radV ({u0, u1, u2, u3} : Set V3) := by
+    show radV (setOfList [u0, u1, u2, u3]) = _
+    rw [hset]
+  refine ⟨hlo, ?_⟩
+  have htri : dist u v ≤ dist (circumcenter ({u0, u1, u2, u3} : Set V3)) u
+      + dist (circumcenter ({u0, u1, u2, u3} : Set V3)) v := by
+    have ht := dist_triangle u (circumcenter ({u0, u1, u2, u3} : Set V3)) v
+    rw [dist_comm u (circumcenter ({u0, u1, u2, u3} : Set V3))] at ht
+    exact ht
+  have hu' : dist (circumcenter ({u0, u1, u2, u3} : Set V3)) u
+      = hl [u0, u1, u2, u3] := by
+    rw [hhl, OAPVION2 _ haff u hu]
+  have hv' : dist (circumcenter ({u0, u1, u2, u3} : Set V3)) v
+      = hl [u0, u1, u2, u3] := by
+    rw [hhl, OAPVION2 _ haff v hv]
+  rw [hu', hv'] at htri
+  calc dist u v ≤ hl [u0, u1, u2, u3] + hl [u0, u1, u2, u3] := htri
+    _ ≤ Real.sqrt 2 + Real.sqrt 2 := by linarith
+    _ = Real.sqrt 8 := by rw [mi_sqrt8_eq]; ring
+
+/-- HOL `TSKAJXY_034` step B7 (TSKAJXY2.hl:352-375), cardinality half:
+four pairwise-distinct points span a 4-element set. -/
+private theorem p21g_card4 {x0 x1 x2 x3 : V3} (h1 : x0 ≠ x1) (h2 : x0 ≠ x2)
+    (h3 : x0 ≠ x3) (h4 : x1 ≠ x2) (h5 : x1 ≠ x3) (h6 : x2 ≠ x3) :
+    ({x0, x1, x2, x3} : Set V3).ncard = 4 := by
+  have e1 : (x0 : V3) ∉ ({x1, x2, x3} : Set V3) := by simp [h1, h2, h3]
+  have e2 : (x1 : V3) ∉ ({x2, x3} : Set V3) := by simp [h4, h5]
+  have e3 : (x2 : V3) ∉ ({x3} : Set V3) := by simp [h6]
+  rw [Set.ncard_insert_of_notMem e1, Set.ncard_insert_of_notMem e2,
+    Set.ncard_insert_of_notMem e3, Set.ncard_singleton]
+
+/-- HOL `TSKAJXY_034` step B8b (TSKAJXY2.hl:427-456): the four vertices of a
+non-null 4-cell are not coplanar — else the cell would sit in a plane, a
+null set. -/
+private theorem p21g_not_coplanar_m4 {V : Set V3} {u0 u1 u2 u3 : V3}
+    (hX4 : mcell 4 V [u0, u1, u2, u3] = convexHull ℝ (setOfList [u0, u1, u2, u3]))
+    (hnl : ¬ nullSet (mcell 4 V [u0, u1, u2, u3])) :
+    ¬ Coplanar ({u0, u1, u2, u3} : Set V3) := by
+  have hset : setOfList [u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+    ext z; simp [setOfList]
+  rw [hset] at hX4
+  intro hcop
+  obtain ⟨p, q, r, hsub⟩ := hcop
+  have hsub2 : convexHull ℝ ({u0, u1, u2, u3} : Set V3)
+      ⊆ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := by
+    refine convexHull_min ?_ (affineSpan ℝ ({p, q, r} : Set V3)).convex
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]; exact hsub (by simp)
+    · rw [hz]; exact hsub (by simp)
+    · rw [hz]; exact hsub (by simp)
+    · rw [hz]; exact hsub (by simp)
+  have hspan : (affineSpan ℝ ({p, q, r} : Set V3) : Set V3)
+      ⊆ (fun z : V3 => p + z) '' (Submodule.span ℝ ({q - p, r - p} : Set V3)) := by
+    have hW : (affineSpan ℝ ({p, q, r} : Set V3))
+        ≤ AffineSubspace.mk' p (Submodule.span ℝ ({q - p, r - p} : Set V3)) := by
+      rw [affineSpan_le]
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with hz | hz | hz
+      · rw [hz]
+        exact AffineSubspace.mem_mk'.mpr
+          (by rw [vsub_self]; exact Submodule.zero_mem _)
+      · rw [hz]
+        exact AffineSubspace.mem_mk'.mpr
+          (Submodule.subset_span (by simp [vsub_eq_sub]))
+      · rw [hz]
+        exact AffineSubspace.mem_mk'.mpr
+          (Submodule.subset_span (by simp [vsub_eq_sub]))
+    intro z hz
+    have hz' := hW hz
+    exact ⟨z -ᵥ p, AffineSubspace.mem_mk'.mp hz', by simp⟩
+  have hv0 : volume (mcell 4 V [u0, u1, u2, u3]) ≤ 0 := by
+    rw [hX4]
+    calc volume (convexHull ℝ ({u0, u1, u2, u3} : Set V3))
+        ≤ volume ((affineSpan ℝ ({p, q, r} : Set V3) : Set V3)) := measure_mono hsub2
+      _ ≤ volume ((fun z : V3 => p + z) ''
+            (Submodule.span ℝ ({q - p, r - p} : Set V3))) := measure_mono hspan
+      _ = 0 := p21g_plane_null p (q - p) (r - p)
+  exact hnl (le_antisymm hv0 zero_le)
+
+/-- `radV` is nonnegative on affine-independent sets (via `OAPVION2`). -/
+private theorem p21g_radV_nonneg {S : Set V3} (haff : ¬ affineDependent S)
+    (w : V3) (hw : w ∈ S) : 0 ≤ radV S := by
+  rw [OAPVION2 S haff w hw]
+  exact dist_nonneg
+
+/-- HOL `TSKAJXY_034` step B8 (TSKAJXY2.hl:455-508): `rad2_x` of the six
+squared edge lengths equals the squared circumradius, which the `mcell 4`
+branch condition (`hl < √2`) forces below `2`. -/
+private theorem p21g_rad2_lt2 {u0 u1 u2 u3 : V3}
+    (hnc : ¬ Coplanar ({u0, u1, u2, u3} : Set V3))
+    (hlt : hl [u0, u1, u2, u3] < Real.sqrt 2) :
+    rad2X (dist u0 u1 ^ 2) (dist u0 u2 ^ 2) (dist u0 u3 ^ 2)
+        (dist u2 u3 ^ 2) (dist u1 u3 ^ 2) (dist u1 u2 ^ 2) < 2 := by
+  have hset : setOfList [u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+    ext z; simp [setOfList]
+  have haff : ¬ affineDependent ({u0, u1, u2, u3} : Set V3) :=
+    fun hd => hnc (p21g_affdep4_coplanar hd)
+  have hbr : rad2X (dist u0 u1 ^ 2) (dist u0 u2 ^ 2) (dist u0 u3 ^ 2)
+      (dist u2 u3 ^ 2) (dist u1 u3 ^ 2) (dist u1 u2 ^ 2)
+      = radV ({u0, u1, u2, u3} : Set V3) ^ 2 :=
+    (p21g_radv_sq_rad2X u0 u1 u2 u3 hnc).symm
+  have hhl : radV ({u0, u1, u2, u3} : Set V3) = hl [u0, u1, u2, u3] := by
+    have h0 : hl [u0, u1, u2, u3] = radV (setOfList [u0, u1, u2, u3]) := rfl
+    rw [h0, hset]
+  have hnn : 0 ≤ hl [u0, u1, u2, u3] := by
+    rw [← hhl]
+    exact p21g_radV_nonneg haff u0 (by simp)
+  rw [hbr, hhl]
+  have hsq : hl [u0, u1, u2, u3] ^ 2 < (Real.sqrt 2) ^ 2 :=
+    (sq_lt_sq₀ hnn (Real.sqrt_nonneg 2)).mpr hlt
+  rw [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by norm_num)] at hsq
+  exact hsq
+
+/-- HOL `TSKAJXY_034` step C (TSKAJXY2.hl:514-534): the 0-cell branch —
+`VX = ∅` by `LEPJBDJ_0`, so `gammaX` reduces to the (nonnegative) volume. -/
+private theorem p21g_cell0_branch {V X : Set V3} (hs : saturated V) (hp : Packing V)
+    {ul : List V3} (hb : barV V 3 ul) {i : ℕ} (hi : i = 0)
+    (hX : X = mcell i V ul) : gammaX V X lmfun ≥ 0 := by
+  by_cases hnull : nullSet X
+  · exact p21g_null_branch hnull
+  · have hX0 : X = mcell 0 V ul := by rw [hX, hi]
+    have hVX : VX V X = (∅ : Set V3) := by
+      rw [HDTFNFZ (v := 0) hs hp hb hX0 hnull, hX0, LEPJBDJ_0 V ul hs hp hb]
+    rw [p21g_gamma_of_VX_empty hVX (p21g_edgeX_empty_of_VX hVX), Measure.real_def]
+    exact ENNReal.toReal_nonneg
+
+/-- HOL `TSKAJXY_034` steps B3-B8 assembled (TSKAJXY2.hl:157-508): from the
+4-cell hypotheses, the full antecedent bundle of `TSKAJXY_DERIVED4`
+(edge boxes ×6, ¬criticalEdge_y ×6, `0 < delta_y`, `rad2_y < 2` — all at
+`y_k = dist`, the `gammaX_gamm4fgcy` convention).  W1 capstone, public so it
+can serve as the gate axiom-audit target; W4 consumes it verbatim. -/
+theorem p21g_cell4_antecedents {V X : Set V3} (hs : saturated V)
+    (hp : Packing V) {ul : List V3} (hb : barV V 3 ul) {i : ℕ} (hi : 4 ≤ i)
+    (hX : X = mcell i V ul) (hn : ¬ nullSet X) (hcrit : criticalEdgeX V X = ∅)
+    {u0 u1 u2 u3 : V3} (hul : ul = [u0, u1, u2, u3]) :
+    (2 ≤ dist u0 u1 ∧ dist u0 u1 ≤ Real.sqrt 8) ∧
+    (2 ≤ dist u0 u2 ∧ dist u0 u2 ≤ Real.sqrt 8) ∧
+    (2 ≤ dist u0 u3 ∧ dist u0 u3 ≤ Real.sqrt 8) ∧
+    (2 ≤ dist u2 u3 ∧ dist u2 u3 ≤ Real.sqrt 8) ∧
+    (2 ≤ dist u1 u3 ∧ dist u1 u3 ≤ Real.sqrt 8) ∧
+    (2 ≤ dist u1 u2 ∧ dist u1 u2 ≤ Real.sqrt 8) ∧
+    ¬ criticalEdgeY (dist u0 u1) ∧ ¬ criticalEdgeY (dist u0 u2) ∧
+    ¬ criticalEdgeY (dist u0 u3) ∧ ¬ criticalEdgeY (dist u2 u3) ∧
+    ¬ criticalEdgeY (dist u1 u3) ∧ ¬ criticalEdgeY (dist u1 u2) ∧
+    0 < deltaY (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3)
+        (dist u1 u3) (dist u1 u2) ∧
+    rad2X (dist u0 u1 ^ 2) (dist u0 u2 ^ 2) (dist u0 u3 ^ 2)
+        (dist u2 u3 ^ 2) (dist u1 u3 ^ 2) (dist u1 u2 ^ 2) < 2 := by
+  subst hul
+  have hX4 : X = mcell 4 V [u0, u1, u2, u3] := by rw [hX, p21g_mcell_ge4 hi]
+  have hnl4 : ¬ nullSet (mcell 4 V [u0, u1, u2, u3]) := by rw [← hX4]; exact hn
+  have hne4 : mcell 4 V [u0, u1, u2, u3] ≠ ∅ := p21g_ne_empty hnl4
+  have hb' : barV V 3 [u0, u1, u2, u3] := hb
+  have hset : setOfList [u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+    ext z; simp [setOfList]
+  have hVX : VX V X = ({u0, u1, u2, u3} : Set V3) := by
+    have g1 := p21g_VX_m4 V [u0, u1, u2, u3] hp hs hb' hnl4
+    rw [hX4, g1, hset]
+  have hhlt : hl [u0, u1, u2, u3] < Real.sqrt 2 := p21g_mcell4_hlt hne4
+  have hd := p21g_barV_distinct hb'
+  have nc := p21g_not_coplanar_m4 (p21g_mcell4_hull hne4) hnl4
+  have m0 : (u0 : V3) ∈ VX V X := by rw [hVX]; simp
+  have m1 : (u1 : V3) ∈ VX V X := by rw [hVX]; simp
+  have m2 : (u2 : V3) ∈ VX V X := by rw [hVX]; simp
+  have m3 : (u3 : V3) ∈ VX V X := by rw [hVX]; simp
+  have s0 : (u0 : V3) ∈ ({u0, u1, u2, u3} : Set V3) := by simp
+  have s1 : (u1 : V3) ∈ ({u0, u1, u2, u3} : Set V3) := by simp
+  have s2 : (u2 : V3) ∈ ({u0, u1, u2, u3} : Set V3) := by simp
+  have s3 : (u3 : V3) ∈ ({u0, u1, u2, u3} : Set V3) := by simp
+  refine ⟨p21g_len_bounds hp hb' hhlt s0 s1 hd.1,
+    p21g_len_bounds hp hb' hhlt s0 s2 hd.2.1,
+    p21g_len_bounds hp hb' hhlt s0 s3 hd.2.2.1,
+    p21g_len_bounds hp hb' hhlt s2 s3 hd.2.2.2.2.2,
+    p21g_len_bounds hp hb' hhlt s1 s3 hd.2.2.2.2.1,
+    p21g_len_bounds hp hb' hhlt s1 s2 hd.2.2.2.1,
+    p21g_not_critEdgeY hcrit m0 m1 hd.1,
+    p21g_not_critEdgeY hcrit m0 m2 hd.2.1,
+    p21g_not_critEdgeY hcrit m0 m3 hd.2.2.1,
+    p21g_not_critEdgeY hcrit m2 m3 hd.2.2.2.2.2,
+    p21g_not_critEdgeY hcrit m1 m3 hd.2.2.2.2.1,
+    p21g_not_critEdgeY hcrit m1 m2 hd.2.2.2.1,
+    (p21g_coplanar_delta_y u0 u1 u2 u3).mp nc,
+    p21g_rad2_lt2 nc hhlt⟩
+
+end TSKAJXY034W1
+
 end Kepler.Text
