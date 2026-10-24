@@ -10480,4 +10480,76 @@ theorem MQMSMAB (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
     JGTDEBU11 V hc hfan, SZIPOAS hineq V hc hfan, BDJYFFB1 V hc hmain hineq hfan,
     MQMSMAB_tame13a V hc hlpfan hmain hineq h9a⟩
 
+
+/-! ### 9m. ykit11 波（Lane AW 2026-10-23）：perimeter 精确降债波——
+`fully_surrounded_perimeter_bound` 的 WSEWPCH 核收敛桥落地（纯追加，
+yk11_* 前缀）。
+
+HOL 五步装配（`lp_main_estimate-compiled.hl` §PerimeterBound :1473-1543）
+在树内的对应物盘点与本波结论：
+  步 1（face 表示 f = face d）= `Hypermap.face_representation`
+    （hypermap.hl:2737 同名折算，树内真证）；
+  步 2/3（face 和到顶点轨道和的重表达：local_fan 版 lemma_face_representation +
+    sum_face_rho_node1 + `Polar_fan.FAN_PERIMETER`）= 本波**免除**：
+    §9l.4 `yk10_convexLocalFan` 已对每个 face 给出
+    `ConvexLocalFan (vPrime_p2, ePrime_p2, f)`，而周长和
+    `setSum f (fun d => arcV 0 d.1 d.2)` 本身就是 WSEWPCH 的内容对象，
+    `fanPerimeter`/rho_node1 轨道重表达可整体绕过——三桥自此不在依赖图上；
+  步 4/5 = WSEWPCH 核 + f_surr_localization_convex_local（后者已被
+    `yk10_convexLocalFan` 覆盖）。唯一残余锚 = **WSEWPCH 核**。
+
+WSEWPCH 核（polar_fan.hl:2213）的依赖树现状（CIZMRRH 三分 + CARD V 良基
+归纳三分支）：
+  - circular 分支：KCHMAMG（local_lemmas.hl:3197）⟹ 全顶点共面于过 0 平面 +
+    azim_cycle = rho_node1 + 逐点 azim = arcV，求和 = 2π 走
+    ORDER_AZIM_SUM2Pi0——**求和引擎已在树内真证**（PackingAuto25:8921
+    `ORDER_AZIM_SUM2Pi0`；PackingAuto22:7562 `ORDER_AZIM_SUM2Pi` 同）；
+    但 KCHMAMG 本身（LocalAuto5:5018 同名件为桩且 LA5 不可 import——
+    与 PackingAuto18 的 AFF_GE_MONO_TRANS 重名）与 CYCLIC_SET 词表桥未移植；
+  - lunar 分支：共线对劈半，周长和 = 两片平面扇 azim 望远镜和 ≤ π + π
+    （COLLINEAR_AZIM_0_OR_PI 收口）；依赖 HKIRPEP / CARD_IS_LEAST_CYCLE /
+    RHO_NODE1_MONO_WITH_AZIM（local_lemmas 章未移植）+ ITER 轨道 kit
+    （LocalAuto7:424-476 桩组）；
+  - generic 分支：内角全 < π 时走极扇 BGMIFTE（LocalAuto7:642 桩）+
+    polar_fan 构造（树内无定义）；存在平角（interior_angle1 = π）顶点时
+    直 dart 分裂成两小扇用归纳；依赖 GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE 等
+    LocalAuto7 桩组；
+  - 三分前提 CIZMRRH（WRGCVDR.hl:3056；LocalAuto3:1881 同名件为桩）。
+  即残余锚 = 极扇/局部扇深章整章（LocalAuto7 头注 DISCHARGES 契约本体），
+  非单波机械件，需专职 lane 多波推进。
+
+本波落地 `yk11_perimeterBound_of_core`：把 `PerimeterBound` 收敛为**单锚**
+hcore（WSEWPCH 核的 Lean 渲染，face-和形，与 fanPerimeter 表达解耦）。
+原位 `fully_surrounded_perimeter_bound` 及其 NEEDS 注记按纪律未动；下一波
+真证 hcore 后，以 `exact yk11_perimeterBound_of_core V hlpfan
+yk11_WSEWPCH_core` 一类单行装配即可闭合（建议新核心件命名
+yk11_WSEWPCH_core，陈述逐字同 hcore）。 -/
+
+/-- **PerimeterBound ⟸ WSEWPCH 核**（ykit11 装配桥）。hcore 即 HOL
+`WSEWPCH`（polar_fan.hl:2213，`convex_local_fan ⟹ fan_perimeter ≤ 2π`）的
+Lean 渲染：Content 对象直接取面-和 `setSum g (fun d => arcV 0 d.1 d.2)`
+（对 LocalFan 面，此和与 fanPerimeter 经 FAN_PERIMETER 轨道重表达相等，
+本桥无需该方向）。装配 = HOL 五步的树内对应：face 表示 =
+`Hypermap.face_representation`；face ≥ 3 元 = `CARD_FACE_GE_3_TL` +
+`SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL`（FullySurrounded 逐 dart 供给）；
+ConvexLocalFan 面 = §9l.4 `yk10_convexLocalFan`；末端 = hcore 在
+`(vPrime_p2 V g, ePrime_p2 (ESTD V) g, g)` 上的实例。 -/
+private theorem yk11_perimeterBound_of_core (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    (hcore : ∀ (U : Set V3) (E' : Set (Set V3)) (g : Set (V3 × V3)),
+      ConvexLocalFan U E' g → setSum g (fun d => arcV (0 : V3) d.1 d.2) ≤ 2 * Real.pi) :
+    PerimeterBound V (ESTD V) hlpfan.1 := by
+  have hfan : FAN 0 V (ESTD V) := hlpfan.1
+  have hsurr : FullySurrounded V (ESTD V) := hlpfan.2.1
+  intro f hfset
+  obtain ⟨d, hd, rfl⟩ := Hypermap.face_representation _ hfset
+  have hd1 : d ∈ dart1OfFan V (ESTD V) := dartsTl_mem hd
+  have hcard : ∀ v ∈ V, 3 ≤ (setOfEdge v V (ESTD V)).ncard := fun v hv =>
+    SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hv (fun e he _ => hsurr e he)
+  have h3 : 3 ≤ ((hypermapOfFanTl V (ESTD V) hfan).face d).ncard :=
+    CARD_FACE_GE_3_TL hfan hd1 hcard
+  have hfo : ((hypermapOfFanTl V (ESTD V) hfan).face d)
+      = yk2_faceOrbit 0 V (ESTD V) hfan d := rfl
+  have hcl := yk10_convexLocalFan V hlpfan hd1 hfo (by omega)
+  exact hcore _ _ _ hcl
+
 end Kepler.Text.TameLp
