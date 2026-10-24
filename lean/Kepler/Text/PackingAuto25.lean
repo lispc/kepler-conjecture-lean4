@@ -4626,12 +4626,98 @@ theorem K4_CC_WI_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
     (hk : ccKe V [elV ul 0, elV ul 1, f i] = 4) :
     ccCell V [elV ul 0, elV ul 1, f i] ⊆
       wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
-  -- NEEDS(2026-10-23 pa25wim 复评): 双链卡死——CC_CELL_SUBSET_WEDGE(本文件,
-  -- BDXKHTW 链) + LEAF_RANK4_CHI_MSB_ALT / CC_CELL_WEDGE_MATCH_UH(本文件,
-  -- CFFONNL 链)。已就绪: K4_CHI_MSB_POS(PA18:3319, cc_pe_exists 落地后本波已
-  -- 转真)/ chi_msb_swap_23(PA18:2671) / EL_CC_UH / F_SUC_PRE / MOD_INJ1_ALT /
-  -- LEAF_RANK_AZIM_INJ。HOL 证法 = 楔二择 + chi 双算撞符号, 三上游通即机械。
-  sorry
+  -- 2026-10-23 poola-k3k4 原位真证（HOL OXLZLEZ3.hl:3451-3520 镜像）：
+  -- CC_CELL_SUBSET_WEDGE 给相邻楔二择，反支由 chi 双算撞符号——
+  -- LEAF_RANK4_CHI_MSB_ALT（胞 = ccUh 载体置于反楔）给
+  -- 0 < chi[uh0,uh1,f(i+n-1)](f i)，K4_CHI_MSB_POS 给 0 < chi[el0,el1,f i](uh3)；
+  -- CC_CELL_WEDGE_MATCH_UH 钉 uh3 ∈ {f(i+n-1), f i}：uh3 = f(i+n-1) 支经
+  -- chi_msb_swap_23 反号相撞；f(i+n-1) = f i 支经 LEAF_RANK_AZIM_INJ +
+  -- MOD_INJ1_ALT_p25（n-1 为非法周期）爆炸。
+  classical
+  have hn0 : n ≠ 0 := by omega
+  have hper : periodic f n := LEAF_RANK_PERIODIC V [elV ul 0, elV ul 1] w0 n f hr
+  have hfpre : f (i + (n - 1) + 1) = f i := by
+    rw [show i + (n - 1) + 1 = i + n - 1 + 1 from by omega]
+    exact F_SUC_PRE hn0 hper i
+  rcases CC_CELL_SUBSET_WEDGE V ul (elV ul 0) (elV ul 1) w0 n f i hp hs hr hn rfl hnc with
+    hgoal | hB
+  · exact hgoal
+  · exfalso
+    have hleafk : ∀ k : ℕ, leaf V [elV ul 0, elV ul 1, f k] := fun k =>
+      s_leaf_leaf V [elV ul 0, elV ul 1] (f k)
+        (LEAF_RANK_S_LEAF V [elV ul 0, elV ul 1] w0 n f k hr)
+    have hlL : leaf V [elV ul 0, elV ul 1, f i] := hleafk i
+    have hbuh : barV V 3 (ccUh V [elV ul 0, elV ul 1, f i]) :=
+      (Classical.choose_spec (cc_uh_exists V [elV ul 0, elV ul 1, f i])) hp hs hlL |>.1
+    obtain ⟨e0, e1, -⟩ := EL_CC_UH (V := V) (ul := [elV ul 0, elV ul 1, f i]) hp hs hlL
+    have h0' : elV (ccUh V [elV ul 0, elV ul 1, f i]) 0 = elV ul 0 := e0
+    have h1' : elV (ccUh V [elV ul 0, elV ul 1, f i]) 1 = elV ul 1 := e1
+    have hcc : ccCell V [elV ul 0, elV ul 1, f i] =
+        mcell4 V (ccUh V [elV ul 0, elV ul 1, f i]) := by
+      show mcell (ccKe V [elV ul 0, elV ul 1, f i]) V (ccUh V [elV ul 0, elV ul 1, f i]) = _
+      rw [hk]
+      simp [mcell]
+    have hnnuh : ¬ nullSet (mcell4 V (ccUh V [elV ul 0, elV ul 1, f i])) := by
+      rw [← hcc]
+      exact CC_CELL_NOT_NULLSET hp hs hlL
+    -- chi #1: the uh carrier sits in the backward wedge (LEAF_RANK4_CHI_MSB_ALT)
+    have hruh : leaf_rank V [elV (ccUh V [elV ul 0, elV ul 1, f i]) 0,
+        elV (ccUh V [elV ul 0, elV ul 1, f i]) 1] w0 n f := by
+      rw [h0', h1']
+      exact hr
+    have hncuh : ¬ Collinear3 (elV (ccUh V [elV ul 0, elV ul 1, f i]) 0)
+        (elV (ccUh V [elV ul 0, elV ul 1, f i]) 1) w0 := by
+      rw [h0', h1']
+      exact hnc
+    have hw1 : mcell4 V (ccUh V [elV ul 0, elV ul 1, f i]) ⊆
+        wedgeGe (elV ul 0) (elV ul 1) (f (i + (n - 1))) (f i) := by
+      rw [← hcc]
+      exact hB
+    have hw2 : mcell4 V (ccUh V [elV ul 0, elV ul 1, f i]) ⊆
+        wedgeGe (elV (ccUh V [elV ul 0, elV ul 1, f i]) 0)
+          (elV (ccUh V [elV ul 0, elV ul 1, f i]) 1)
+          (f (i + (n - 1))) (f (i + (n - 1) + 1)) := by
+      rw [h0', h1', hfpre]
+      exact hw1
+    have hchi1 : 0 < chiMsb [elV ul 0, elV ul 1, f (i + (n - 1))] (f i) := by
+      have h := LEAF_RANK4_CHI_MSB_ALT (V := V) (ul := ccUh V [elV ul 0, elV ul 1, f i])
+        (w0 := w0) (n := n) (f := f) (i := i + (n - 1)) hp hs hbuh hruh hncuh hn hnnuh hw2
+      rw [h0', h1', hfpre] at h
+      exact h
+    -- chi #2: the 4-cell itself carries positive chi on its fourth vertex
+    have hchi2 : 0 < chiMsb [elV ul 0, elV ul 1, f i]
+        ((ccUh V [elV ul 0, elV ul 1, f i]).getD 3 0) :=
+      K4_CHI_MSB_POS (V := V) (ul := [elV ul 0, elV ul 1, f i]) hp hs hlL hk
+    -- the backward wedge pins the carrier's fourth vertex
+    have hwM : ccCell V [elV ul 0, elV ul 1, f i] ⊆
+        wedgeGe (elV ul 0) (elV ul 1) (f (i + (n - 1))) (f (i + (n - 1) + 1)) := by
+      rw [hfpre]
+      exact hB
+    have hm := CC_CELL_WEDGE_MATCH_UH (V := V) (ul := ul) (u0 := elV ul 0) (u1 := elV ul 1)
+      (w0 := w0) (n := n) (f := f) (i := i + (n - 1)) (j := i) hp hs hr hnc hn rfl hwM hk
+    rw [hfpre] at hm
+    have hmem : f (i + (n - 1)) ∈
+        ({f i, (ccUh V [elV ul 0, elV ul 1, f i]).getD 3 0} : Set V3) := by
+      have hx : f (i + (n - 1)) ∈ ({f (i + (n - 1)), f i} : Set V3) :=
+        Set.mem_insert _ _
+      rw [← hm] at hx
+      exact hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with hA' | hB'
+    · -- f (i+n-1) = f i: the azimuthal injection explodes
+      have haz : azim (elV ul 0) (elV ul 1) (f i) (f (i + (n - 1))) = 0 := by
+        rw [hA']
+        exact azim_self _ _ _
+      have himod := (LEAF_RANK_AZIM_INJ V [elV ul 0, elV ul 1] w0 n f i (i + (n - 1)) hs hp
+        hn0 hnc hr).1 haz
+      exact MOD_INJ1_ALT_p25 hn0 (by omega) (by omega) i himod
+    · -- uh3 = f (i+n-1): the two chi computations collide in sign
+      have hchi2' : 0 < chiMsb [elV ul 0, elV ul 1, f i] (f (i + (n - 1))) := by
+        rw [hB']
+        exact hchi2
+      have hswap := chi_msb_swap_23 (elV ul 0) (elV ul 1) (f i) (f (i + (n - 1)))
+      rw [hswap] at hchi2'
+      linarith
 
 /-- HOL `K4_CC_WIM`. -/
 theorem K4_CC_WIM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -4641,11 +4727,132 @@ theorem K4_CC_WIM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V
     (hk : ccKe V [elV ul 1, elV ul 0, f i] = 4) :
     ccCell V [elV ul 1, elV ul 0, f i] ⊆
       wedgeGe (elV ul 0) (elV ul 1) (f (i + (n - 1))) (f i) := by
-  -- NEEDS(2026-10-23 pa25wim 复评): 卡点同 K4_CC_WI_ALT(上一件)——BDXKHTW 链
-  -- (经 CC_CELL_SUBSET_WEDGE)+ CFFONNL 链(经 LEAF_RANK4_CHI_MSB_ALT /
-  -- CC_CELL_WEDGE_MATCH_UH)。已就绪: MCELL4_REPARAM(标准三)/ K4_CHI_MSB_POS
-  -- (已转真)/ chi_msb_swap_01 / CC_CELL_EXTREME_CARD / BARV3_SET_OF_LIST4。
-  sorry
+  -- 2026-10-23 poola-k3k4 原位真证（HOL OXLZLEZ3.hl:3521-3618 镜像）：b-侧胞的
+  -- 相邻楔二择取反支（前楔支需否定）。MCELL4_REPARAM 把 b-侧胞载体重根到 ul 茎
+  -- 序表 [el0,el1,f i,uh3]（card 由 CC_CELL_EXTREME_CARD + BARV3_SET_OF_LIST4，
+  -- 非零测随 reparam 搬运），LEAF_RANK4_CHI_MSB_ALT 在该表上给
+  -- 0 < chi[el0,el1,f i](f(i+1))，K4_CHI_MSB_POS + chi_msb_swap_01 给
+  -- chi[el0,el1,f i](uh3) < 0；CC_CELL_WEDGE_MATCH_UH 钉 uh3 ∈ {f i, f(i+1)}：
+  -- uh3 = f(i+1) 支反号相撞；uh3 = f i 支推 f(i+1) = f i，LEAF_RANK_AZIM_INJ +
+  -- MOD_INJ1_ALT_p25（1 为非法周期）爆炸。
+  classical
+  have hn0 : n ≠ 0 := by omega
+  have hper : periodic f n := LEAF_RANK_PERIODIC V [elV ul 0, elV ul 1] w0 n f hr
+  have hfpre : f (i + (n - 1) + 1) = f i := by
+    rw [show i + (n - 1) + 1 = i + n - 1 + 1 from by omega]
+    exact F_SUC_PRE hn0 hper i
+  have hpair : ({elV ul 1, elV ul 0} : Set V3) = {elV ul 0, elV ul 1} := by
+    rw [Set.pair_comm]
+  rcases CC_CELL_SUBSET_WEDGE V ul (elV ul 1) (elV ul 0) w0 n f i hp hs hr hn hpair hnc with
+    hA | hgoal
+  · exfalso
+    have hleafk : ∀ k : ℕ, leaf V [elV ul 0, elV ul 1, f k] := fun k =>
+      s_leaf_leaf V [elV ul 0, elV ul 1] (f k)
+        (LEAF_RANK_S_LEAF V [elV ul 0, elV ul 1] w0 n f k hr)
+    have hlLb : leaf V [elV ul 1, elV ul 0, f i] := (ZASUVOR hp hs (hleafk i)).1
+    obtain ⟨g0, g1, g2⟩ := EL_CC_UH (V := V) (ul := [elV ul 1, elV ul 0, f i]) hp hs hlLb
+    have g0' : elV (ccUh V [elV ul 1, elV ul 0, f i]) 0 = elV ul 1 := g0
+    have g1' : elV (ccUh V [elV ul 1, elV ul 0, f i]) 1 = elV ul 0 := g1
+    have g2' : elV (ccUh V [elV ul 1, elV ul 0, f i]) 2 = f i := g2
+    have hbuh : barV V 3 (ccUh V [elV ul 1, elV ul 0, f i]) :=
+      (Classical.choose_spec (cc_uh_exists V [elV ul 1, elV ul 0, f i])) hp hs hlLb |>.1
+    have hcc : ccCell V [elV ul 1, elV ul 0, f i] =
+        mcell4 V (ccUh V [elV ul 1, elV ul 0, f i]) := by
+      show mcell (ccKe V [elV ul 1, elV ul 0, f i]) V (ccUh V [elV ul 1, elV ul 0, f i]) = _
+      rw [hk]
+      simp [mcell]
+    have hnnuh : ¬ nullSet (mcell4 V (ccUh V [elV ul 1, elV ul 0, f i])) := by
+      rw [← hcc]
+      exact CC_CELL_NOT_NULLSET hp hs hlLb
+    -- reparametrize the b-side carrier onto the ul stem in order
+    have hk3 : ¬ (ccKe V [elV ul 1, elV ul 0, f i] = 3) := by
+      intro hc
+      rw [hc] at hk
+      norm_num at hk
+    have hcard := CC_CELL_EXTREME_CARD (V := V) (ul := [elV ul 1, elV ul 0, f i])
+      (pp := (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0) hp hs hlLb (by rw [if_neg hk3])
+    have hsetuh : setOfList (ccUh V [elV ul 1, elV ul 0, f i]) =
+        {elV (ccUh V [elV ul 1, elV ul 0, f i]) 0, elV (ccUh V [elV ul 1, elV ul 0, f i]) 1,
+          elV (ccUh V [elV ul 1, elV ul 0, f i]) 2, elV (ccUh V [elV ul 1, elV ul 0, f i]) 3} :=
+      BARV3_SET_OF_LIST4 V _ hp hbuh
+    have hcard' : Set.ncard (setOfList (ccUh V [elV ul 1, elV ul 0, f i])) = 4 := by
+      rw [hsetuh]
+      exact hcard
+    have hsE : setOfList (ccUh V [elV ul 1, elV ul 0, f i]) =
+        setOfList [elV ul 0, elV ul 1, f i,
+          (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0] := by
+      rw [hsetuh, g0', g1', g2']
+      ext q
+      simp only [setOfList, List.mem_cons, Set.mem_insert_iff, Set.mem_singleton_iff,
+        Set.mem_setOf_eq, List.not_mem_nil]
+      tauto
+    have hrep := MCELL4_REPARAM (V := V) (ul := ccUh V [elV ul 1, elV ul 0, f i])
+      (vl := [elV ul 0, elV ul 1, f i, (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0]) hp hs
+      hcard' hsE rfl hnnuh hbuh
+    obtain ⟨hrep1, hrep2⟩ := hrep
+    -- chi #1: the re-rooted carrier sits in the forward wedge
+    have e0v : elV [elV ul 0, elV ul 1, f i, (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0] 0
+        = elV ul 0 := rfl
+    have e1v : elV [elV ul 0, elV ul 1, f i, (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0] 1
+        = elV ul 1 := rfl
+    have hnnvl : ¬ nullSet (mcell4 V [elV ul 0, elV ul 1, f i,
+        (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0]) := by
+      rw [← hrep1]
+      exact hnnuh
+    have hwvl : mcell4 V [elV ul 0, elV ul 1, f i,
+        (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0] ⊆
+        wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
+      rw [← hrep1, ← hcc]
+      exact hA
+    have hchi1 : 0 < chiMsb [elV ul 0, elV ul 1, f i] (f (i + 1)) :=
+      LEAF_RANK4_CHI_MSB_ALT (V := V)
+        (ul := [elV ul 0, elV ul 1, f i, (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0])
+        (w0 := w0) (n := n) (f := f) (i := i) hp hs hrep2 (by rw [e0v, e1v]; exact hr) hnc hn
+        hnnvl hwvl
+    -- chi #2: the b-side 4-cell itself carries chi on its fourth vertex
+    have hchi2 : 0 < chiMsb [elV ul 1, elV ul 0, f i]
+        ((ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0) :=
+      K4_CHI_MSB_POS (V := V) (ul := [elV ul 1, elV ul 0, f i]) hp hs hlLb hk
+    -- the forward wedge pins the carrier's fourth vertex
+    have hm := CC_CELL_WEDGE_MATCH_UH (V := V) (ul := ul) (u0 := elV ul 1) (u1 := elV ul 0)
+      (w0 := w0) (n := n) (f := f) (i := i) (j := i) hp hs hr hnc hn hpair hA hk
+    have hlast : f (i + 1) = f i → False := by
+      intro hfi
+      have haz : azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) = 0 := by
+        rw [hfi]
+        exact azim_self _ _ _
+      have himod := (LEAF_RANK_AZIM_INJ V [elV ul 0, elV ul 1] w0 n f i (i + 1) hs hp hn0 hnc
+        hr).1 haz
+      exact MOD_INJ1_ALT_p25 hn0 (by omega) (by omega) i himod
+    have hmem : (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0 ∈
+        ({f i, f (i + 1)} : Set V3) := by
+      have hx : (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0 ∈
+          ({f i, (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0} : Set V3) :=
+        Set.mem_insert_of_mem _ (Set.mem_singleton _)
+      rw [hm] at hx
+      exact hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with hu | hu
+    · -- uh3 = f i: then f (i+1) also lies in {f i, uh3}, forcing a repeat leaf
+      have hmem2 : f (i + 1) ∈
+          ({f i, (ccUh V [elV ul 1, elV ul 0, f i]).getD 3 0} : Set V3) := by
+        have hx : f (i + 1) ∈ ({f i, f (i + 1)} : Set V3) :=
+          Set.mem_insert_of_mem _ (Set.mem_singleton _)
+        rw [← hm] at hx
+        exact hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem2
+      rcases hmem2 with h2' | h2'
+      · exact hlast h2'
+      · rw [hu] at h2'
+        exact hlast h2'
+    · -- uh3 = f (i+1): the two chi computations collide in sign
+      have hchi2' : 0 < chiMsb [elV ul 1, elV ul 0, f i] (f (i + 1)) := by
+        rw [← hu]
+        exact hchi2
+      have hswap := chi_msb_swap_01 (elV ul 1) (elV ul 0) (f i) (f (i + 1))
+      rw [hswap] at hchi2'
+      linarith
+  · exact hgoal
 
 /-- HOL `K3_CC_WI_ALT`. -/
 theorem K3_CC_WI_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
