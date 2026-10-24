@@ -9996,4 +9996,782 @@ theorem p21g_cell4_antecedents {V X : Set V3} (hs : saturated V)
 
 end TSKAJXY034W1
 
+/-! ## TSKAJXY034W2: the `i = 3` (mcell3) arm of `TSKAJXY_034`
+
+Wave-2 deliverable (lane TSKAJXY, wave W2).  The W1 capstone
+`p21g_cell0_branch` closed the `i = 0` arm; this block closes the `i = 3`
+arm as a standalone true theorem `p21h_cell3_branch`, same statement shape
+(mcell3 premise bundle → `gammaX ≥ 0`), carrying the analytic leaf
+`cell3_from_ineq` as an explicit hypothesis — exactly the slot
+`tsk_hyp_new.2.1` feeds it at the `TSKAJXY_034` capstone (HOL
+TSKAJXY2.hl runs the same 3-cell case under hypothesis `cell3_hyp`).
+
+Route (keys verified at W1 handoff):
+1. `mcell 3 V ul` nonempty (via ¬ nullSet) splits the mcell3 branch condition
+   `hl (truncateSimplex 2 ul) < sqrt 2` + `sqrt 2 <= hl ul` (PA12
+   `MCELL_EXPLICIT` 4th component / PA2 `mcell3` body).
+2. `barV V 3 ul` gives `ul = [u0,u1,u2,u3]`; the triangle
+   `truncateSimplex 2 ul = [u0,u1,u2]` carries `barV V 2` (PA5
+   `TRUNCATE_SIMPLEX_BARV`), hence affine independence (PA7
+   `BARV_AFFINE_INDEPENDENT`).
+3. `PA20 gammaX_gamma3f` (public) reads the cell's gamma at the three base
+   edges `y4 = dist u1 u2`, `y5 = dist u0 u2`, `y6 = dist u0 u1`.
+4. The eta bridge `eta_y y4 y5 y6 = hl [u0,u1,u2]` (triangle circumradius =
+   Heron form) is reinstalled from PA25 `p25_radv_etay_core` (private there,
+   and PA25 imports this file, so no import edge is possible).  The
+   non-collinearity hypothesis of the PA25 original is traded for a direct
+   non-parallelism premise, discharged here from affine independence via the
+   W1 rewrite chain + `linearIndepOn_id_insert`.
+5. Edge bounds `2 <= y_k <= 2 sqrt 2`: lower from `Packing.dist_ge_two`,
+   upper from the circumcenter chord bound `dist a b <= 2 * hl [u0,u1,u2]`.
+
+Note: D2 (`MXI_EXPLICIT`) and D3 (`OMEGA_LIST_N_IN_VORONOI_LIST_GEN` /
+`CONVEX_VORONOI_LIST`) are not needed as separate keys at this layer — the
+PA20 giant `gammaX_gamma3f` encapsulates the whole Voronoi/mxi structure of
+the mcell3 vertex set. -/
+
+namespace TSKAJXY034W2
+
+/-- `setOfList` ↔ set-literal bridge for triples. -/
+private theorem p21h_set3 {α : Type*} (a b c : α) :
+    setOfList [a, b, c] = ({a, b, c} : Set α) := by
+  ext z
+  simp [setOfList]
+
+/-- `etaX` is invariant under swapping the outer arguments (`upsX` is
+symmetric in its first and last slot). -/
+private theorem p21h_etaX_swap (a b c : ℝ) : etaX a b c = etaX c b a := by
+  have hu : upsX a b c = upsX c b a := by
+    simp only [upsX]
+    ring
+  simp only [etaX]
+  rw [hu]
+  exact congrArg Real.sqrt (by ring)
+
+/-- `eta_y` is invariant under reversing its arguments. -/
+private theorem p21h_eta_y_swap (a b c : ℝ) : eta_y a b c = eta_y c b a := by
+  show etaY a b c = etaY c b a
+  simp only [etaY]
+  rw [p21h_etaX_swap]
+
+/-- Triangle circumradius in Heron form — reinstall of PA25
+`p25_radv_etay_core` (:999, private there; PA25 imports this file so no
+import edge is possible).  Adaptation: the original's non-collinearity
+hypothesis is used exactly once, to rule out parallelism of the two edge
+vectors `u1 - u0`, `u2 - u0`; we take that non-parallelism directly as `hnp`
+(the span-membership form `u2 - u0 = t • (u1 - u0)` is refuted for every
+`t`).  The explicit circumcenter witness
+`q = (α•a + β•b) +ᵥ u0` is certified equidistant from the three points via
+the Gram relations and recognized as `circumcenter` by `OAPVION3_concl`;
+`OAPVION2_concl` then gives `radV = dist q u0` and the squared-norm
+computation closes. -/
+private theorem p21h_radv_sqrt (u0 u1 u2 : V3)
+    (haff : ¬ affineDependent ({u0, u1, u2} : Set V3))
+    (hnp : ∀ t : ℝ, (u2 - u0 : V3) ≠ t • (u1 - u0))
+    (h01 : u0 ≠ u1) (h02 : u0 ≠ u2) :
+    radV ({u0, u1, u2} : Set V3) =
+      Real.sqrt ((dist u0 u1 * dist u0 u1) * (dist u0 u2 * dist u0 u2)
+          * (dist u1 u2 * dist u1 u2)
+        / upsX (dist u0 u1 * dist u0 u1) (dist u0 u2 * dist u0 u2)
+          (dist u1 u2 * dist u1 u2)) := by
+  -- inner-product algebra helpers (atomic args; no vector collapse)
+  have hgram : ∀ x y : V3, inner ℝ (x - y) (x - y)
+      = inner ℝ x x + inner ℝ y y - 2 * inner ℝ x y := by
+    intro x y
+    rw [inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm y x]
+    ring
+  have hgram2 : ∀ (x y : V3) (t : ℝ), inner ℝ (x - t • y) (x - t • y)
+      = inner ℝ x x - 2 * t * inner ℝ x y + t * t * inner ℝ y y := by
+    intro x y t
+    have e : (x - t • y : V3) = x + (-t) • y := by
+      rw [neg_smul]; abel
+    rw [e]
+    simp only [inner_add_left, inner_add_right, real_inner_smul_left,
+      real_inner_smul_right, real_inner_comm y x]
+    ring
+  have hexpI : ∀ (r s : ℝ) (x y : V3),
+      inner ℝ (r • x + s • y) (r • x + s • y)
+        = r * r * inner ℝ x x + 2 * r * s * inner ℝ x y + s * s * inner ℝ y y := by
+    intro r s x y
+    simp only [inner_add_left, inner_add_right, real_inner_smul_left,
+      real_inner_smul_right, real_inner_comm y x]
+    ring
+  -- Gram atoms
+  obtain ⟨gaa, hga⟩ : ∃ x, x = inner ℝ (u1 - u0) (u1 - u0) := ⟨_, rfl⟩
+  obtain ⟨gbb, hgb⟩ : ∃ x, x = inner ℝ (u2 - u0) (u2 - u0) := ⟨_, rfl⟩
+  obtain ⟨gab, hgc⟩ : ∃ x, x = inner ℝ (u1 - u0) (u2 - u0) := ⟨_, rfl⟩
+  obtain ⟨gde, hgd⟩ : ∃ x, x = gaa * gbb - gab * gab := ⟨_, rfl⟩
+  -- links to distances
+  have dA : gaa = dist u0 u1 * dist u0 u1 := by
+    rw [hga, real_inner_self_eq_norm_sq, dist_eq_norm u0 u1,
+      show (u0 : V3) - u1 = -(u1 - u0) from by abel, norm_neg, pow_two]
+  have dB : gbb = dist u0 u2 * dist u0 u2 := by
+    rw [hgb, real_inner_self_eq_norm_sq, dist_eq_norm u0 u2,
+      show (u0 : V3) - u2 = -(u2 - u0) from by abel, norm_neg, pow_two]
+  have hCc : dist u1 u2 * dist u1 u2 = gaa + gbb - 2 * gab := by
+    have h1 : dist u1 u2 * dist u1 u2
+        = inner ℝ ((u1 - u0) - (u2 - u0)) ((u1 - u0) - (u2 - u0)) := by
+      rw [real_inner_self_eq_norm_sq, dist_eq_norm u1 u2,
+        show (u1 : V3) - u2 = (u1 - u0) - (u2 - u0) from by abel, pow_two]
+    rw [h1, hgram, ← hga, ← hgb, ← hgc]
+  -- positivity of the Gram determinant
+  have hApos : 0 < gaa := by
+    rw [dA]; exact mul_pos (dist_pos.2 h01) (dist_pos.2 h01)
+  have hDpos : 0 < gde := by
+    have hbna : ((u2 - u0 : V3) - (gab / gaa) • (u1 - u0)) ≠ 0 := fun hz =>
+      hnp (gab / gaa) (sub_eq_zero.mp hz)
+    have hpos : 0 < inner ℝ ((u2 - u0) - (gab / gaa) • (u1 - u0))
+        ((u2 - u0) - (gab / gaa) • (u1 - u0)) := by
+      rw [real_inner_self_eq_norm_sq]
+      exact sq_pos_iff.2 (norm_ne_zero_iff.mpr hbna)
+    have hexpD : inner ℝ ((u2 - u0) - (gab / gaa) • (u1 - u0))
+        ((u2 - u0) - (gab / gaa) • (u1 - u0)) = gbb - gab * gab / gaa := by
+      rw [hgram2, real_inner_comm (u1 - u0) (u2 - u0), ← hgb, ← hgc, ← hga]
+      field_simp
+      ring
+    rw [hexpD] at hpos
+    have h2 : gab * gab / gaa < gbb := by linarith
+    have h3 : gab * gab < gaa * gbb := by
+      have h3' : gab * gab < gbb * gaa := (div_lt_iff₀ hApos).mp h2
+      rwa [mul_comm gbb gaa] at h3'
+    rw [hgd]; linarith
+  have hDne : gde ≠ 0 := ne_of_gt hDpos
+  -- explicit circumcenter witness: q = (al•a + be•b) +ᵥ u0
+  obtain ⟨al, hal⟩ : ∃ x, x = gbb * (gaa - gab) / (2 * gde) := ⟨_, rfl⟩
+  obtain ⟨be, hbe⟩ : ∃ x, x = gaa * (gbb - gab) / (2 * gde) := ⟨_, rfl⟩
+  have k1 : 2 * (gaa * al + gab * be) = gaa := by
+    rw [hal, hbe]; field_simp; rw [hgd]; ring
+  have k2 : 2 * (gab * al + gbb * be) = gbb := by
+    rw [hal, hbe]; field_simp; rw [hgd]; ring
+  set q : V3 := (al • (u1 - u0) + be • (u2 - u0)) +ᵥ u0 with hqdef
+  -- q is on the affine hull
+  have hdir : (affineSpan ℝ ({u0, u1, u2} : Set V3)).direction
+      = Submodule.span ℝ ({u1 - u0, u2 - u0} : Set V3) := by
+    rw [direction_affineSpan,
+      vectorSpan_eq_span_vsub_set_right ℝ (show u0 ∈ ({u0, u1, u2} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨z, hz, rfl⟩
+      rcases hz with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by simp)
+      · exact Submodule.subset_span (by simp)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨u1, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨u2, by simp, rfl⟩
+  have hxmem : al • (u1 - u0) + be • (u2 - u0)
+      ∈ (affineSpan ℝ ({u0, u1, u2} : Set V3)).direction := by
+    rw [hdir]
+    exact Submodule.mem_span_pair.mpr ⟨al, be, by abel⟩
+  have hqmem : q ∈ (affineSpan ℝ ({u0, u1, u2} : Set V3) : Set V3) :=
+    AffineSubspace.vadd_mem_of_mem_direction hxmem
+      (subset_affineSpan ℝ ({u0, u1, u2} : Set V3) (by simp))
+  -- key distances
+  have hx0 : (q : V3) - u0 = al • (u1 - u0) + be • (u2 - u0) := by
+    rw [hqdef, vadd_eq_add]; abel
+  have hx1 : (q : V3) - u1 = (al - 1) • (u1 - u0) + be • (u2 - u0) := by
+    have hu1 : (u1 : V3) = (u1 - u0) + u0 := by abel
+    rw [hqdef, vadd_eq_add, hu1]
+    module
+  have hx2 : (q : V3) - u2 = al • (u1 - u0) + (be - 1) • (u2 - u0) := by
+    have hu2 : (u2 : V3) = (u2 - u0) + u0 := by abel
+    rw [hqdef, vadd_eq_add, hu2]
+    module
+  have n0 : ‖(q : V3) - u0‖ ^ 2
+      = al * (gaa * al + gab * be) + be * (gab * al + gbb * be) := by
+    rw [hx0, ← real_inner_self_eq_norm_sq, hexpI, ← hga, ← hgb, ← hgc]
+    ring
+  have n1 : ‖(q : V3) - u1‖ ^ 2
+      = al * (gaa * al + gab * be) + be * (gab * al + gbb * be) := by
+    rw [hx1, ← real_inner_self_eq_norm_sq, hexpI, ← hga, ← hgb, ← hgc]
+    have hstep : ((al - 1) * (al - 1) * gaa + 2 * (al - 1) * be * gab
+          + be * be * gbb)
+        = al * (gaa * al + gab * be) + be * (gab * al + gbb * be)
+          - (2 * (gaa * al + gab * be) - gaa) := by ring
+    rw [hstep, k1]; ring
+  have n2 : ‖(q : V3) - u2‖ ^ 2
+      = al * (gaa * al + gab * be) + be * (gab * al + gbb * be) := by
+    rw [hx2, ← real_inner_self_eq_norm_sq, hexpI, ← hga, ← hgb, ← hgc]
+    have hstep : (al * al * gaa + 2 * al * (be - 1) * gab
+          + (be - 1) * (be - 1) * gbb)
+        = al * (gaa * al + gab * be) + be * (gab * al + gbb * be)
+          - (2 * (gab * al + gbb * be) - gbb) := by ring
+    rw [hstep, k2]; ring
+  have d01 : dist q u0 = dist q u1 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp
+      (by rw [n0, n1])
+  have d02 : dist q u0 = dist q u2 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp
+      (by rw [n0, n2])
+  -- q is THE circumcenter
+  have hcd : ∃ c : ℝ, ∀ w ∈ ({u0, u1, u2} : Set V3), dist q w = c := by
+    refine ⟨dist q u0, ?_⟩
+    rintro w (rfl | rfl | rfl)
+    · rfl
+    · exact d01.symm
+    · exact d02.symm
+  have hqcc : q = circumcenter ({u0, u1, u2} : Set V3) :=
+    OAPVION3_concl _ haff q hqmem hcd
+  have hR := OAPVION2_concl ({u0, u1, u2} : Set V3) haff u0 (by simp)
+  rw [← hqcc] at hR
+  -- final computation
+  have hups : upsX gaa gbb (gaa + gbb - 2 * gab) = 4 * gde := by
+    simp only [upsX]
+    rw [hgd]
+    ring
+  have hfin : ‖(q : V3) - u0‖ ^ 2
+      = (gaa * gbb * (gaa + gbb - 2 * gab)) / (4 * gde) := by
+    rw [n0, hal, hbe]
+    field_simp
+    rw [hgd]
+    ring
+  rw [hR, dist_eq_norm, ← Real.sqrt_sq (norm_nonneg _)]
+  congr 1
+  rw [← dA, ← dB, hCc, hups, hfin]
+
+/-- The eta bridge: `eta_y` of the three base edges of a triangle equals the
+circumradius `hl [u0,u1,u2]` (D5 of the wave plan). -/
+private theorem p21h_eta_bridge (u0 u1 u2 : V3)
+    (haff : ¬ affineDependent ({u0, u1, u2} : Set V3))
+    (hnp : ∀ t : ℝ, (u2 - u0 : V3) ≠ t • (u1 - u0))
+    (h01 : u0 ≠ u1) (h02 : u0 ≠ u2) :
+    eta_y (dist u1 u2) (dist u0 u2) (dist u0 u1) = hl [u0, u1, u2] := by
+  have hcore := p21h_radv_sqrt u0 u1 u2 haff hnp h01 h02
+  rw [p21h_eta_y_swap (dist u1 u2) (dist u0 u2) (dist u0 u1), eta_y, etaY,
+    etaX, ← hcore]
+  exact congrArg radV (p21h_set3 u0 u1 u2).symm
+
+/-- HOL `TSKAJXY_034` 3-cell case (TSKAJXY2.hl within :92-722).  W2
+capstone, same statement shape as W1's `p21g_cell0_branch`: from the mcell3
+premise bundle the cell's gamma is nonnegative.  The analytic leaf
+`cell3_from_ineq` (the certified `gamma3f ≥ 0` dispatcher of the merge-ineq
+channel) enters as an explicit hypothesis — precisely the `tsk_hyp_new.2.1`
+slot at the `TSKAJXY_034` capstone; the geometry-to-inequality reduction
+performed here is complete. -/
+theorem p21h_cell3_branch {V X : Set V3} (hs : saturated V) (hp : Packing V)
+    (hc3 : cell3_from_ineq)
+    {ul : List V3} (hb : barV V 3 ul) {i : ℕ} (hi : i = 3)
+    (hX : X = mcell i V ul) : gammaX V X lmfun ≥ 0 := by
+  by_cases hnull : nullSet X
+  · exact TSKAJXY034W1.p21g_null_branch hnull
+  · have hX3 : X = mcell 3 V ul := by rw [hX, hi]
+    have hne3 : mcell 3 V ul ≠ ∅ := by
+      rw [← hX3]
+      exact TSKAJXY034W1.p21g_ne_empty hnull
+    have hbody : mcell 3 V ul =
+        if hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul then
+          convexHull ℝ (setOfList (truncateSimplex 2 ul) ∪ {mxi V ul})
+        else (∅ : Set V3) := rfl
+    rw [hbody] at hne3
+    split_ifs at hne3 with hcond
+    · -- nonempty branch: decompose the bar list into four points
+      obtain ⟨u0, u1, u2, u3, hul⟩ : ∃ a b c d : V3, ul = [a, b, c, d] := by
+        have hlen : ul.length = 4 := hb.1
+        cases ul with
+        | nil => exact absurd hlen (by simp)
+        | cons a t1 =>
+          cases t1 with
+          | nil => exact absurd hlen (by simp)
+          | cons b t2 =>
+            cases t2 with
+            | nil => exact absurd hlen (by simp)
+            | cons c t3 =>
+              cases t3 with
+              | nil => exact absurd hlen (by simp)
+              | cons d t4 =>
+                cases t4 with
+                | nil => exact ⟨a, b, c, d, rfl⟩
+                | cons e t5 => exact absurd hlen (by simp)
+      subst hul
+      -- the base triangle and its bar structure
+      have hT2 : truncateSimplex 2 [u0, u1, u2, u3] = [u0, u1, u2] :=
+        (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2
+      rw [hT2] at hcond
+      have hRlt : hl [u0, u1, u2] < Real.sqrt 2 := hcond.1
+      have hbar2 : barV V 2 [u0, u1, u2] := by
+        have h := TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, u2, u3] hb (by omega)
+        rwa [hT2] at h
+      have hsettri : ({u0, u1, u2} : Set V3) = setOfList [u0, u1, u2] := by
+        ext x; simp [setOfList]
+      have haff3 : ¬ affineDependent ({u0, u1, u2} : Set V3) := by
+        have h := BARV_AFFINE_INDEPENDENT V [u0, u1, u2] 2 hp hbar2
+        rwa [hsettri]
+      have hdis := TSKAJXY034W1.p21g_barV_distinct hb
+      have h01 := hdis.1
+      have h02 := hdis.2.1
+      have h12 := hdis.2.2.2.1
+      -- linear independence of the two edge vectors (W1 rewrite chain)
+      have hdiff : (({u0, u1, u2} : Set V3) \ {u0}) = ({u1, u2} : Set V3) := by
+        ext z
+        by_cases hz : z = u0
+        · subst hz; simp [h01, h02]
+        · simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff,
+            hz, not_false_iff]
+          tauto
+      have himg : ((fun p : V3 => (p -ᵥ u0)) '' ({u1, u2} : Set V3))
+          = ({u1 - u0, u2 - u0} : Set V3) := by
+        rw [Set.image_insert_eq, Set.image_singleton]
+        rfl
+      have hLI : LinearIndepOn ℝ id ({u1 - u0, u2 - u0} : Set V3) := by
+        have hAI : AffineIndependent ℝ
+            (fun x : ({u0, u1, u2} : Set V3) => (x : V3)) := by
+          by_contra hcc0
+          exact haff3 (fun hAI' => hcc0 hAI')
+        rw [affineIndependent_set_iff_linearIndependent_vsub (k := ℝ)
+          (show (u0 : V3) ∈ ({u0, u1, u2} : Set V3) from by simp), hdiff,
+          himg] at hAI
+        exact hAI
+      -- non-parallelism of the two edge vectors
+      have hnp : ∀ t : ℝ, (u2 - u0 : V3) ≠ t • (u1 - u0) := by
+        intro t ht
+        by_cases ht0 : t = 0
+        · rw [ht0, zero_smul] at ht
+          exact h02 (sub_eq_zero.mp ht).symm
+        · have hns : (u1 - u0 : V3) ∉ Submodule.span ℝ ({u2 - u0} : Set V3) :=
+            (linearIndepOn_id_insert (K := ℝ) (x := (u1 - u0 : V3))
+              (s := ({u2 - u0} : Set V3))
+              (fun hmem => by
+                have he : u1 - u0 = u2 - u0 := Set.mem_singleton_iff.mp hmem
+                exact h12 (by
+                  have h1 : u1 - u0 + u0 = u2 - u0 + u0 := by rw [he]
+                  simpa using h1))).mp hLI |>.2
+          refine hns (Submodule.mem_span_singleton.mpr ⟨t⁻¹, ?_⟩)
+          rw [ht, smul_smul, inv_mul_cancel₀ ht0, one_smul]
+      -- eta bridge: eta_y of the three edges = the triangle circumradius
+      have heta : eta_y (dist u1 u2) (dist u0 u2) (dist u0 u1)
+          = hl [u0, u1, u2] :=
+        p21h_eta_bridge u0 u1 u2 haff3 hnp h01 h02
+      -- circumcenter chord bound: every triangle edge < 2 sqrt 2
+      have hrad : radV ({u0, u1, u2} : Set V3) = hl [u0, u1, u2] :=
+        congrArg radV (p21h_set3 u0 u1 u2).symm
+      have hcc : ∀ w ∈ ({u0, u1, u2} : Set V3),
+          dist (circumcenter ({u0, u1, u2} : Set V3)) w = hl [u0, u1, u2] := by
+        intro w hw
+        rw [← hrad]
+        exact (OAPVION2 ({u0, u1, u2} : Set V3) haff3 w hw).symm
+      have hup : ∀ a b : V3, a ∈ ({u0, u1, u2} : Set V3) →
+          b ∈ ({u0, u1, u2} : Set V3) → dist a b ≤ 2 * Real.sqrt 2 := by
+        intro a b ha hbb
+        have ht : dist a b ≤ dist (circumcenter ({u0, u1, u2} : Set V3)) a
+            + dist (circumcenter ({u0, u1, u2} : Set V3)) b := by
+          have h := dist_triangle a (circumcenter ({u0, u1, u2} : Set V3)) b
+          rwa [dist_comm a (circumcenter ({u0, u1, u2} : Set V3))] at h
+        rw [hcc a ha, hcc b hbb] at ht
+        calc dist a b ≤ hl [u0, u1, u2] + hl [u0, u1, u2] := ht
+          _ ≤ 2 * Real.sqrt 2 := by linarith [hRlt]
+      -- membership in V and the packing lower bounds
+      have hmem : ({u0, u1, u2} : Set V3) ⊆ V := by
+        rw [hsettri]
+        have hvn : voronoiNondg V [u0, u1, u2] := hbar2.2 _ ⟨⟨[], rfl⟩, by simp⟩
+        exact hvn.2.1
+      have m0 : (u0 : V3) ∈ ({u0, u1, u2} : Set V3) := by simp
+      have m1 : (u1 : V3) ∈ ({u0, u1, u2} : Set V3) := by simp
+      have m2 : (u2 : V3) ∈ ({u0, u1, u2} : Set V3) := by simp
+      have hlo01 : 2 ≤ dist u0 u1 := Packing.dist_ge_two hp (hmem m0) (hmem m1) h01
+      have hlo02 : 2 ≤ dist u0 u2 := Packing.dist_ge_two hp (hmem m0) (hmem m2) h02
+      have hlo12 : 2 ≤ dist u1 u2 := Packing.dist_ge_two hp (hmem m1) (hmem m2) h12
+      -- the PA20 giant reads the cell's gamma at the three base edges
+      have hgam := gammaX_gamma3f V X [u0, u1, u2, u3] u0 u1 u2 u3 (dist u1 u2)
+        (dist u0 u2) (dist u0 u1) hs hp hb hX3 hnull rfl rfl rfl rfl
+      rw [hgam.2.2.2.2.2.2.2]
+      exact hc3 (dist u1 u2) (dist u0 u2) (dist u0 u1) hlo12 hlo02 hlo01
+        (hup u1 u2 m1 m2) (hup u0 u2 m0 m2) (hup u0 u1 m0 m1)
+        (by rw [heta]; exact hRlt)
+    · -- empty branch: the if-condition failed, so mcell 3 V ul is empty
+      exact absurd rfl hne3
+
+/- Axiom audit of the W2 block (house style, cf. the `#print axioms`
+checks noted in the file header): the two private helpers and the three
+consumed W1 helpers sit on the standard three axioms; the capstone carries
+one extra inherited axiom whose sole entry path is the PA20 key
+`gammaX_gamma3f` (documented band at the PA20 giant's docstring: the
+omega-tower base, live residue the PA2 `RVFXZBU` concl shims) - no taint
+is introduced by this wave's own code. -/
+#print axioms TSKAJXY034W2.p21h_radv_sqrt
+#print axioms TSKAJXY034W2.p21h_eta_bridge
+#print axioms TSKAJXY034W2.p21h_cell3_branch
+#print axioms TSKAJXY034W1.p21g_null_branch
+#print axioms TSKAJXY034W1.p21g_barV_distinct
+#print axioms TSKAJXY034W1.p21g_ne_empty
+#print axioms Kepler.Text.gammaX_gamma3f
+
+end TSKAJXY034W2
+
+namespace TSKAJXY034W3
+/-! ## TSKAJXY034W3: the `i ≥ 4` analytic core (`tsk_derived4`)
+
+Wave-3 deliverable (lane TSKAJXY, wave W3).  W1's public capstone
+`p21g_cell4_antecedents` packs the full geometric antecedent bundle of the
+HOL 4-cell analytic statement `TSKAJXY-DERIVED` (ineq.hl:94-111: six edge
+boxes `2 ≤ y_k ≤ sqrt8`, six `¬ criticalEdgeY`, `0 < delta_y`,
+`rad2_y < 2`, all at the `gammaX_gamm4fgcy` convention `y_k = dist …`), and
+the PA20 giant `gammaX_gamm4fgcy` reduces the arm's goal to
+`0 ≤ gamma4fgcy y1 … y6 lmfun`.  This block supplies that analytic step.
+
+Fidelity map (HOL sources read at reference/flyspeck/text_formalization):
+the 3-cell leaf `cell3_from_ineq` (TSKAJXY2.hl:61, tree PA21:154) is
+discharged by `cell3_from_ineq_thm : cell3_bank → cell3_from_ineq`
+(merge_ineq.hl:3507, tree PA21:4094); the 4-cell sibling is discharged by
+`TSKAJXY_DERIVED4 : tsk_hyp → TSKAJXY-DERIVED.ineq` (merge_ineq.hl:1674),
+where `tsk_hyp` is the ten-entry assumption bank = `tsk_bank` (tree
+PA21:393), i.e. the `tsk_hyp_new.2.2` slot with named projection
+`proj_tsk_bank` (PA21:975).  The leaf def below mirrors `cell3_from_ineq`
+at the 4-cell face; the capstone consumes it exactly the way W2's
+`p21h_cell3_branch` consumes `cell3_from_ineq`.
+
+Honest-gap bookkeeping (W2 precedent, recorded truthfully): the tree has no
+discharge piece of the shape `tsk_bank → <4-cell analytic face>` — the
+`bank_TSKAJXY*` defs are assumption leaves, no proved `gamma4fgcy`
+nonnegativity lemma exists anywhere in the module closure (the PA25 twin
+`gamma4fgcy_POS` is an unproved stub there, and PA25 imports PA21, so
+nothing can be borrowed across the cycle).  The port of
+merge_ineq.hl:1160-1753 (`gamma4fgcy_div_sqrtdelta` + `tsk_lemma1` + WLOG +
+CRIT interval bash, the largest analytic chain of the program) is the single
+recorded analytic debt; it enters here as the explicit hypothesis slot
+`h4 : cell4_from_ineq` of the capstone — never as an extra axiom — so the
+capstone's own axiom face stays the standard three (probe at the block
+tail).  What this wave proves outright (all private, all standard-three):
+the two combinatorial engines of the future discharge bash — the
+critical-edge dichotomy and its interval glue (merge_ineq.hl:1620
+`ineq_critical_edge` kernels) — plus the y-space symmetry kit the WLOG
+stage runs on: the `deltaX`/`deltaX4`/`rhoX`/`rad2X`/`deltaY` relabeling
+symmetries and the `gamma4fgcy` symmetries `sym12/sym23/sym03`
+(merge_ineq.hl:1247-1370, reinstalled from the PA25 template). -/
+
+/-- HOL `TSKAJXY-DERIVED` leaf (ineq.hl:94), the 4-cell sibling of
+`cell3_from_ineq` (PA21:154): a Marchal 4-cell without critical edges has
+nonnegative compensation, from the y-space edge data.  Downstream discharge
+(face `cell4_from_ineq_thm : tsk_bank → cell4_from_ineq`, the port of
+merge_ineq.hl:1674) is a recorded analytic debt, mirroring how
+`cell3_from_ineq_thm` discharges the 3-cell leaf from `cell3_bank`.  The
+rad2 slot sits at the canonical `rad2X`-at-squared-lengths form, matching
+the W1 bundle. -/
+def cell4_from_ineq : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    2 ≤ y1 → y1 ≤ Real.sqrt 8 → 2 ≤ y2 → y2 ≤ Real.sqrt 8 →
+    2 ≤ y3 → y3 ≤ Real.sqrt 8 → 2 ≤ y4 → y4 ≤ Real.sqrt 8 →
+    2 ≤ y5 → y5 ≤ Real.sqrt 8 → 2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    ¬ criticalEdgeY y1 → ¬ criticalEdgeY y2 → ¬ criticalEdgeY y3 →
+    ¬ criticalEdgeY y4 → ¬ criticalEdgeY y5 → ¬ criticalEdgeY y6 →
+    0 < deltaY y1 y2 y3 y4 y5 y6 →
+    rad2X (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 2 →
+    0 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun
+
+/-- W3 capstone: the analytic step of the `i ≥ 4` arm.  Statement shape =
+the exact antecedent bundle of W1's `p21g_cell4_antecedents` (read at
+`y1 = dist u0 u1, …, y6 = dist u1 u2`, the `gammaX_gamm4fgcy` convention)
+plus the analytic leaf slot `h4 : cell4_from_ineq`; conclusion =
+`0 ≤ gamma4fgcy …`.  W4 wiring (per the W1 delivery sketch, after
+`p21g_cell4_split.2` rewires the goal and `p21g_cell4_antecedents` gives
+`Hant`): `exact TSKAJXY034W3.p21i_derived4 y1 … y6 h4 Hant`, then
+`rw [← hgamma.2]` closes the arm.  Downstream, `h4` is fed from
+`tsk_hyp_new.2.2 : tsk_bank` (named projection `proj_tsk_bank`) by the
+future `cell4_from_ineq_thm` — the W2 pattern with the gap kept explicit. -/
+theorem p21i_derived4 (y1 y2 y3 y4 y5 y6 : ℝ) (h4 : cell4_from_ineq)
+    (Hant : (2 ≤ y1 ∧ y1 ≤ Real.sqrt 8) ∧ (2 ≤ y2 ∧ y2 ≤ Real.sqrt 8) ∧
+      (2 ≤ y3 ∧ y3 ≤ Real.sqrt 8) ∧ (2 ≤ y4 ∧ y4 ≤ Real.sqrt 8) ∧
+      (2 ≤ y5 ∧ y5 ≤ Real.sqrt 8) ∧ (2 ≤ y6 ∧ y6 ≤ Real.sqrt 8) ∧
+      ¬ criticalEdgeY y1 ∧ ¬ criticalEdgeY y2 ∧ ¬ criticalEdgeY y3 ∧
+      ¬ criticalEdgeY y4 ∧ ¬ criticalEdgeY y5 ∧ ¬ criticalEdgeY y6 ∧
+      0 < deltaY y1 y2 y3 y4 y5 y6 ∧
+      rad2X (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 2) :
+    0 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun := by
+  obtain ⟨b1, b2, b3, b4, b5, b6, nc1, nc2, nc3, nc4, nc5, nc6, hd, hr⟩ := Hant
+  exact h4 y1 y2 y3 y4 y5 y6 b1.1 b1.2 b2.1 b2.2 b3.1 b3.2 b4.1 b4.2 b5.1
+    b5.2 b6.1 b6.2 nc1 nc2 nc3 nc4 nc5 nc6 hd hr
+
+/-- merge_ineq.hl:1620 `ineq_critical_edge` kernel: an edge length in
+`[2, √8]` outside the critical band lies in one of the two outer critical
+sub-boxes (`criticalEdgeY y = 2*hminus ≤ y ≤ 2*hplus`, PA2:496). -/
+private theorem p21i_not_critEdgeY_dichotomy {y : ℝ} (hnc : ¬ criticalEdgeY y)
+    (hlo : 2 ≤ y) (hhi : y ≤ Real.sqrt 8) : y ≤ 2 * hminus ∨ 2 * hplus ≤ y := by
+  by_cases h : 2 * hminus ≤ y
+  · right
+    by_cases h2 : y ≤ 2 * hplus
+    · exact absurd ⟨h, h2⟩ hnc
+    · exact le_of_lt (not_le.mp h2)
+  · exact Or.inl (le_of_lt (not_le.mp h))
+
+/-- merge_ineq.hl:1620 `ineq_critical_edge` at full strength: an inequality
+known on the two outer critical sub-boxes of `[2, √8]` holds on the whole
+box once the critical band is excluded — the glue the future
+`cell4_from_ineq_thm` interval bash runs on. -/
+private theorem p21i_critEdge_glue {Q : ℝ → Prop}
+    (h1 : ∀ z, 2 ≤ z → z ≤ 2 * hminus → Q z)
+    (h2 : ∀ z, 2 * hplus ≤ z → z ≤ Real.sqrt 8 → Q z)
+    {y : ℝ} (hnc : ¬ criticalEdgeY y) (hlo : 2 ≤ y) (hhi : y ≤ Real.sqrt 8) :
+    Q y := by
+  rcases p21i_not_critEdgeY_dichotomy hnc hlo hhi with h | h
+  · exact h1 y hlo h
+  · exact h2 y h hhi
+
+/-! ### The y-space symmetry kit (WLOG engines; merge_ineq.hl:1247-1370)
+
+All identities are ring-level on the paired-slot polynomial bodies of
+`deltaX`/`deltaX4`/`rhoX` (reinstalling the PA25 `gamma4fgcy_sym26`
+template, whose two invariance maps are the `sym23` entries below).  The
+three relabelings are those of the HOL WLOG:
+`sym12 = (1 2)(4 5)`, `sym23 = (2 3)(5 6)`, `sym03 = (1 5)(2 4)`. -/
+
+private theorem p21i_deltaX_sym12 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x1 x2 x3 x4 x5 x6 = deltaX x2 x1 x3 x5 x4 x6 := by
+  unfold deltaX; ring
+
+private theorem p21i_deltaX_sym23 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := by
+  unfold deltaX; ring
+
+private theorem p21i_deltaX_sym03 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x1 x2 x3 x4 x5 x6 = deltaX x5 x4 x3 x2 x1 x6 := by
+  unfold deltaX; ring
+
+/-- PA25 `hD1` kernel: the opposite-pair reversal `(2 6)(3 5)`. -/
+private theorem p21i_deltaX_sym26 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x6 x5 x4 x3 x2 := by
+  unfold deltaX; ring
+
+private theorem p21i_deltaX4_sym23 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x3 x2 x4 x6 x5 := by
+  unfold deltaX4; ring
+
+/-- PA25 `hD3` kernel: the opposite-pair reversal `(2 6)(3 5)`. -/
+private theorem p21i_deltaX4_sym26 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x6 x5 x4 x3 x2 := by
+  unfold deltaX4; ring
+
+private theorem p21i_rhoX_sym12 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rhoX x1 x2 x3 x4 x5 x6 = rhoX x2 x1 x3 x5 x4 x6 := by
+  unfold rhoX; ring
+
+private theorem p21i_rhoX_sym23 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rhoX x1 x2 x3 x4 x5 x6 = rhoX x1 x3 x2 x4 x6 x5 := by
+  unfold rhoX; ring
+
+private theorem p21i_rhoX_sym03 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rhoX x1 x2 x3 x4 x5 x6 = rhoX x5 x4 x3 x2 x1 x6 := by
+  unfold rhoX; ring
+
+private theorem p21i_rad2X_sym12 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rad2X x1 x2 x3 x4 x5 x6 = rad2X x2 x1 x3 x5 x4 x6 := by
+  unfold rad2X
+  rw [p21i_deltaX_sym12, p21i_rhoX_sym12]
+
+private theorem p21i_rad2X_sym23 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rad2X x1 x2 x3 x4 x5 x6 = rad2X x1 x3 x2 x4 x6 x5 := by
+  unfold rad2X
+  rw [p21i_deltaX_sym23, p21i_rhoX_sym23]
+
+private theorem p21i_rad2X_sym03 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rad2X x1 x2 x3 x4 x5 x6 = rad2X x5 x4 x3 x2 x1 x6 := by
+  unfold rad2X
+  rw [p21i_deltaX_sym03, p21i_rhoX_sym03]
+
+private theorem p21i_deltaY_sym12 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y1 y2 y3 y4 y5 y6 = deltaY y2 y1 y3 y5 y4 y6 :=
+  p21i_deltaX_sym12 _ _ _ _ _ _
+
+private theorem p21i_deltaY_sym23 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y1 y2 y3 y4 y5 y6 = deltaY y1 y3 y2 y4 y6 y5 :=
+  p21i_deltaX_sym23 _ _ _ _ _ _
+
+private theorem p21i_deltaY_sym03 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y1 y2 y3 y4 y5 y6 = deltaY y5 y4 y3 y2 y1 y6 :=
+  p21i_deltaX_sym03 _ _ _ _ _ _
+
+/-- `dihY` face swap: invariance under `(2 3)(5 6)` on slots 2,3,5,6
+(PA25 `hdy23`). -/
+private theorem p21i_dihY_symA (a b c d e g : ℝ) :
+    dihY a b c d e g = dihY a c b d g e := by
+  unfold dihY dihXf
+  rw [p21i_deltaX_sym23, p21i_deltaX4_sym23]
+
+/-- `dihY` double face reversal: invariance under `(2 6)(3 5)` on slots
+2,3,5,6 (PA25 `hdy26`). -/
+private theorem p21i_dihY_symB (a b c d e g : ℝ) :
+    dihY a b c d e g = dihY a g e d c b := by
+  unfold dihY dihXf
+  rw [p21i_deltaX_sym26, p21i_deltaX4_sym26]
+
+/-- `dihY` composition kernel `(2 5)(3 6)`: `symB ∘ symA`. -/
+private theorem p21i_dihY_symC (a b c d e g : ℝ) :
+    dihY a b c d e g = dihY a e g d b c :=
+  (p21i_dihY_symB a b c d e g).trans (p21i_dihY_symA a g e d c b)
+
+/-- merge_ineq.hl:1247 `gamma4fgcy_sym12`: the relabeling `(1 2)(4 5)` —
+the volume term through the `deltaX` invariance, the solid-angle 4-sum and
+the six weighted dihedral terms by slot matching (`symA`/`symB` kernels).
+The sol matching below is the 12-atom pairwise reduction; every `rw`
+instance maps one new-tuple atom onto its original-tuple partner and
+`ring` closes the four `π` constants. -/
+private theorem p21i_gamma4fgcy_sym12 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) :
+    gamma4fgcy y1 y2 y3 y4 y5 y6 f = gamma4fgcy y2 y1 y3 y5 y4 y6 f := by
+  have hV : volY y1 y2 y3 y4 y5 y6 = volY y2 y1 y3 y5 y4 y6 := by
+    unfold volY volXf
+    rw [p21i_deltaX_sym12]
+  have hS : solY y2 y1 y3 y5 y4 y6 + solY y2 y4 y6 y5 y1 y3 +
+      solY y5 y4 y3 y2 y1 y6 + solY y5 y1 y6 y2 y4 y3 =
+    solY y1 y2 y3 y4 y5 y6 + solY y1 y5 y6 y4 y2 y3 +
+      solY y4 y5 y3 y1 y2 y6 + solY y4 y2 y6 y1 y5 y3 := by
+    unfold solY
+    rw [p21i_dihY_symA y2 y1 y3 y5 y4 y6, p21i_dihY_symA y1 y3 y2 y4 y6 y5,
+      p21i_dihY_symA y3 y2 y1 y6 y5 y4, p21i_dihY_symA y2 y4 y6 y5 y1 y3,
+      p21i_dihY_symA y4 y6 y2 y1 y3 y5, p21i_dihY_symB y6 y2 y4 y3 y5 y1,
+      p21i_dihY_symA y5 y4 y3 y2 y1 y6, p21i_dihY_symA y4 y3 y5 y1 y6 y2,
+      p21i_dihY_symA y3 y5 y4 y6 y2 y1, p21i_dihY_symA y5 y1 y6 y2 y4 y3,
+      p21i_dihY_symA y1 y6 y5 y4 y3 y2, p21i_dihY_symB y6 y5 y1 y3 y2 y4]
+    ring
+  unfold gamma4fgcy vol4f
+  rw [hV, hS, p21i_dihY_symA y1 y2 y3 y4 y5 y6, p21i_dihY_symA y2 y3 y1 y5 y6 y4,
+    p21i_dihY_symA y3 y1 y2 y6 y4 y5, p21i_dihY_symB y4 y3 y5 y1 y6 y2,
+    p21i_dihY_symB y5 y1 y6 y2 y4 y3, p21i_dihY_symB y6 y1 y5 y3 y4 y2]
+  ring
+
+/-- merge_ineq.hl:1268 `gamma4fgcy_sym23`: the vertex relabeling `(2 3)`
+— five of the six dihedral terms match through `symA`, the sixth is
+fixed. -/
+private theorem p21i_gamma4fgcy_sym23 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) :
+    gamma4fgcy y1 y2 y3 y4 y5 y6 f = gamma4fgcy y1 y3 y2 y4 y6 y5 f := by
+  have hV : volY y1 y2 y3 y4 y5 y6 = volY y1 y3 y2 y4 y6 y5 := by
+    unfold volY volXf
+    rw [p21i_deltaX_sym23]
+  have hS : solY y1 y3 y2 y4 y6 y5 + solY y1 y6 y5 y4 y3 y2 +
+      solY y4 y6 y2 y1 y3 y5 + solY y4 y3 y5 y1 y6 y2 =
+    solY y1 y2 y3 y4 y5 y6 + solY y1 y5 y6 y4 y2 y3 +
+      solY y4 y5 y3 y1 y2 y6 + solY y4 y2 y6 y1 y5 y3 := by
+    unfold solY
+    rw [p21i_dihY_symA y1 y3 y2 y4 y6 y5, p21i_dihY_symA y3 y2 y1 y6 y5 y4,
+      p21i_dihY_symA y2 y1 y3 y5 y4 y6, p21i_dihY_symA y1 y6 y5 y4 y3 y2,
+      p21i_dihY_symA y6 y5 y1 y3 y2 y4, p21i_dihY_symA y5 y1 y6 y2 y4 y3,
+      p21i_dihY_symA y4 y6 y2 y1 y3 y5, p21i_dihY_symA y6 y2 y4 y3 y5 y1,
+      p21i_dihY_symA y2 y4 y6 y5 y1 y3, p21i_dihY_symA y4 y3 y5 y1 y6 y2,
+      p21i_dihY_symA y3 y5 y4 y6 y2 y1, p21i_dihY_symA y5 y4 y3 y2 y1 y6]
+    ring
+  unfold gamma4fgcy vol4f
+  rw [hV, hS, p21i_dihY_symA y1 y2 y3 y4 y5 y6, p21i_dihY_symA y2 y3 y1 y5 y6 y4,
+    p21i_dihY_symA y3 y1 y2 y6 y4 y5, p21i_dihY_symB y4 y3 y5 y1 y6 y2]
+  ring
+
+/-- merge_ineq.hl:1290 `gamma4fgcy_sym03`: the vertex relabeling `(1 3)`
+— the `(1 5)(2 4)` slot map on the tuple. -/
+private theorem p21i_gamma4fgcy_sym03 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) :
+    gamma4fgcy y1 y2 y3 y4 y5 y6 f = gamma4fgcy y5 y4 y3 y2 y1 y6 f := by
+  have hV : volY y1 y2 y3 y4 y5 y6 = volY y5 y4 y3 y2 y1 y6 := by
+    unfold volY volXf
+    rw [p21i_deltaX_sym03]
+  have hS : solY y5 y4 y3 y2 y1 y6 + solY y5 y1 y6 y2 y4 y3 +
+      solY y2 y1 y3 y5 y4 y6 + solY y2 y4 y6 y5 y1 y3 =
+    solY y1 y2 y3 y4 y5 y6 + solY y1 y5 y6 y4 y2 y3 +
+      solY y4 y5 y3 y1 y2 y6 + solY y4 y2 y6 y1 y5 y3 := by
+    unfold solY
+    rw [p21i_dihY_symA y5 y4 y3 y2 y1 y6, p21i_dihY_symA y4 y3 y5 y1 y6 y2,
+      p21i_dihY_symA y3 y5 y4 y6 y2 y1, p21i_dihY_symA y5 y1 y6 y2 y4 y3,
+      p21i_dihY_symA y1 y6 y5 y4 y3 y2, p21i_dihY_symA y6 y5 y1 y3 y2 y4,
+      p21i_dihY_symA y2 y1 y3 y5 y4 y6, p21i_dihY_symA y1 y3 y2 y4 y6 y5,
+      p21i_dihY_symA y3 y2 y1 y6 y5 y4, p21i_dihY_symA y2 y4 y6 y5 y1 y3,
+      p21i_dihY_symA y4 y6 y2 y1 y3 y5, p21i_dihY_symA y6 y2 y4 y3 y5 y1]
+    ring
+  unfold gamma4fgcy vol4f
+  rw [hV, hS, p21i_dihY_symC y1 y2 y3 y4 y5 y6, p21i_dihY_symB y3 y1 y2 y6 y4 y5,
+    p21i_dihY_symC y5 y1 y6 y2 y4 y3, p21i_dihY_symA y6 y1 y5 y3 y4 y2]
+  ring
+
+/- Axiom audit of the W3 block (house style, cf. the file header): the
+capstone is pure first-order plumbing over the explicit `cell4_from_ineq`
+slot, and the symmetry kit is ring-level, so everything here must sit on
+the standard three axioms — no inherited band may enter. -/
+#print axioms TSKAJXY034W3.p21i_derived4
+#print axioms TSKAJXY034W3.cell4_from_ineq
+#print axioms TSKAJXY034W3.p21i_not_critEdgeY_dichotomy
+#print axioms TSKAJXY034W3.p21i_critEdge_glue
+#print axioms TSKAJXY034W3.p21i_gamma4fgcy_sym12
+#print axioms TSKAJXY034W3.p21i_gamma4fgcy_sym23
+#print axioms TSKAJXY034W3.p21i_gamma4fgcy_sym03
+#print axioms TSKAJXY034W3.p21i_rad2X_sym23
+#print axioms TSKAJXY034W3.p21i_deltaY_sym03
+
+end TSKAJXY034W3
+
+/-! ## TSKAJXY034W4: the `TSKAJXY_034` final assembly (three branches)
+
+Wave-4 deliverable (lane TSKAJXY, wave W4).  This block is the pure
+first-order assembly of the `TSKAJXY_034` capstone out of the three wave
+blocks: the `i = 0` arm (W1 `p21g_cell0_branch`), the `i = 3` arm (W2
+`p21h_cell3_branch` fed at the `tsk_hyp_new.2.1` slot), the `i = 1` /
+`i = 2` arms (excluded by the `TSKAJXY_statement_special_case` hypothesis)
+and the `i ≥ 4` arm (W1 `p21g_cell4_split` normalisation + W1
+`p21g_cell4_antecedents` bundle + W3 `p21i_derived4` analytic core).
+
+The assembly runs on one explicit analytic slot `h4 : cell4_from_ineq` —
+the W2/W3 explicit-premise pattern.  Its discharge face
+`cell4_from_ineq_thm : tsk_bank → cell4_from_ineq` (the port of
+merge_ineq.hl:1674; the recorded analytic debt of the W3 delivery, absent
+from the tree at assembly time) applies to the frozen `TSKAJXY_034`
+hypothesis bundle directly, since `tsk_hyp_new.2.2 : tsk_hyp` is by
+definition `tsk_bank`; the flip of the `TSKAJXY_034` body is then the
+one-liner recorded here for the analytic lane:
+
+`exact TSKAJXY034W4.p21j_tskajxy034 hyp (cell4_from_ineq_thm hyp.2.2)`
+-/
+
+namespace TSKAJXY034W4
+
+/-- Wave-4 capstone: the complete three-branch `TSKAJXY_034` assembly,
+modulo the single explicit analytic slot `h4` (see the block header). -/
+theorem p21j_tskajxy034 (hyp : tsk_hyp_new)
+    (h4 : TSKAJXY034W3.cell4_from_ineq) : TSKAJXY_statement_special_case := by
+  intro V X hs hp hm h12 hcrit
+  obtain ⟨i, ul, hX, hb⟩ := hm
+  by_cases hi4 : 4 ≤ i
+  · -- —— the `i ≥ 4` arm: W1 normalisation + antecedent bundle, W3 core
+    by_cases hn : nullSet X
+    · exact TSKAJXY034W1.p21g_null_branch hn
+    · obtain ⟨u0, u1, u2, u3, hul⟩ : ∃ a b c d : V3, ul = [a, b, c, d] := by
+        have hlen : ul.length = 4 := hb.1
+        cases ul with
+        | nil => exact absurd hlen (by simp)
+        | cons a t1 =>
+          cases t1 with
+          | nil => exact absurd hlen (by simp)
+          | cons b t2 =>
+            cases t2 with
+            | nil => exact absurd hlen (by simp)
+            | cons c t3 =>
+              cases t3 with
+              | nil => exact absurd hlen (by simp)
+              | cons d t4 =>
+                cases t4 with
+                | nil => exact ⟨a, b, c, d, rfl⟩
+                | cons e t5 => exact absurd hlen (by simp)
+      obtain ⟨-, hgamma⟩ := TSKAJXY034W1.p21g_cell4_split V X ul u0 u1 u2 u3 i
+        (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3) (dist u1 u3)
+        (dist u1 u2) hs hp hb hi4 hX hn hul rfl rfl rfl rfl rfl rfl
+      have Hant := TSKAJXY034W1.p21g_cell4_antecedents hs hp hb hi4 hX hn hcrit hul
+      rw [hgamma]
+      exact TSKAJXY034W3.p21i_derived4 (dist u0 u1) (dist u0 u2) (dist u0 u3)
+        (dist u2 u3) (dist u1 u3) (dist u1 u2) h4 Hant
+  · by_cases hi0 : i = 0
+    · -- —— the `i = 0` arm (W1 step C)
+      exact TSKAJXY034W1.p21g_cell0_branch hs hp hb hi0 hX
+    · by_cases hi3 : i = 3
+      · -- —— the `i = 3` arm (W2 capstone at the `tsk_hyp_new.2.1` slot)
+        exact TSKAJXY034W2.p21h_cell3_branch hs hp hyp.2.1 hb hi3 hX
+      · -- —— the `i = 1` / `i = 2` arms are excluded by the hypothesis
+        exact absurd (⟨i, ul, hb, by omega, hX⟩ : ∃ i ul, barV V 3 ul ∧
+          (i = 1 ∨ i = 2) ∧ X = mcell i V ul) h12
+
+/- Axiom audit of the W4 block (house style, cf. the file header): the
+capstone consumes the W2 capstone (whose audit face is the PA20
+`gammaX_gamma3f` band recorded in the W2 delivery) and the W1 split (PA20
+`gammaX_gamm4fgcy`); the probes pin the assembled faces into the build log
+so the residual band of the future flip is readable from it. -/
+#print axioms TSKAJXY034W4.p21j_tskajxy034
+#print axioms Kepler.Text.gammaX_gamm4fgcy
+#print axioms Kepler.Text.TSKAJXY034W1.p21g_cell0_branch
+#print axioms Kepler.Text.TSKAJXY034W1.p21g_cell4_split
+
+end TSKAJXY034W4
+
 end Kepler.Text
