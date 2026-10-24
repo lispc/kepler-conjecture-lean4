@@ -10774,4 +10774,789 @@ so the residual band of the future flip is readable from it. -/
 
 end TSKAJXY034W4
 
+/-! ## TSKAJXY034W5: the analytic half-wave (`cell4_from_ineq_thm` port)
+
+Wave-5 deliverable (lane TSKAJXY, wave W5): the port of the HOL
+`TSKAJXY_DERIVED4` four-piece set (merge_ineq.hl:1674, with its three
+components `gamma4fgcy_div_sqrtdelta` :1160-1233, `tsk_lemma1`
+:1383-1457 and the `REAL_WLOG_SIMPLEX` six-argument reduction + CRIT/BRANCH
+interval bash :1468-1809) down to the discharge face of the W3 leaf:
+
+`p21k_cell4_from_ineq_of_euler : p21k_euler_anchor → tsk_bank →
+  TSKAJXY034W3.cell4_from_ineq`.
+
+Honest-gap bookkeeping (recorded truthfully, W2/W4 explicit-premise
+pattern): the full discharge face `cell4_from_ineq_thm : tsk_bank →
+cell4_from_ineq` is NOT closable in this wave.  The `gamma4fgcy_div_sqrtdelta`
+bridge consumes, at full six-argument generality, Euler's solid-angle
+theorem `sol_x = sol_euler_x` (merge_ineq.hl:841 `sol_x_sol_euler_x`, backed
+by `Euler_main_theorem.EULER_TRIANGLE`, euler_main_theorem.hl:514, whose
+Flyspeck proof chain runs through `euler_complement.hl` +
+`euler_multivariate.hl`, ~4.5k lines of W-product/real-interval machinery).
+The tree carries only the `(u^2, v^2, 2, 2, 2, w^2)`-pinned specialization
+(`mi_p21e_euler`, the wave-2a EULER lane) — the 3-cell slice — and nothing
+at 6-ary generality, so the anchor is stated as an explicit hypothesis
+`p21k_euler_anchor` and threaded through every piece below.  No gap is
+closed by an axiom or an unproved stub; when the general Euler port lands,
+the flip is the one-liner
+
+`cell4_from_ineq_thm bank := p21k_cell4_from_ineq_of_euler <euler_thm> bank`.
+
+Everything under the anchor is fully built and closed here: the two
+`lmfun` branch kernels, the `ups_x` positivity kernel (`ups_x_pos24`,
+merge_ineq.hl:651), the generic dihedral bridge
+`dih_x = sqrt(delta_x) * dih_x_div_sqrtdelta_posbranch`
+(merge_ineq.hl:920, via the wave-2a `mi_p21e_dih_atn`/`mi_p21e_dihalg`
+kernels), the full `gamma4fgcy_div_sqrtdelta` identity modulo the anchor
+(the four `sol_y` terms routed through the anchor at the
+identity/`rotate5`/`rotate6`/`rotate4` shapes after the `sol_x` 3-cycle
+pre-rewrites, the six `dih_y` terms through the generic dihedral bridge at
+the four surviving slots, the two `2*h0` slots killed by `lmfun0`), the
+narrow-box lemma `tsk_lemma1` (bank GXSA/delta_x4/eulerA instantiations at
+the four box-matching permutations + `ups_x_pos24`), the six-argument WLOG
+(`REAL_WLOG_SIMPLEX` two-stage max argument; the slot-`{2,3,5,6}` reversal
+derived from the three relabelings by the group word sym12 sym23 sym03
+sym23 sym12), and the ordered-case interval bash (the CRIT/BRANCH tree:
+TADIAMB kills the double-big corner, RIBCYXU/IYOUOBF/XLLIPLS/WKGUESB cover
+the outer boxes, tsk_lemma1 the narrow box). -/
+namespace TSKAJXY034W5
+
+/-! ### §1: the `lmfun` branch kernels (Nonlinear_lemma.hl:753-771) -/
+
+/-- HOL `Nonlinear_lemma.lmfun0`: past the `h0` cut the weight vanishes
+(both `y/2 = h0` and `y/2 > h0` die the same way). -/
+private theorem p21k_lmfun_big {y : ℝ} (h : 2 * h0 ≤ y) : lmfun (y / 2) = 0 := by
+  unfold lmfun
+  by_cases hy : y / 2 ≤ h0
+  · rw [if_pos hy, le_antisymm hy (by linarith), sub_self, zero_div]
+  · rw [if_neg hy]
+
+/-- HOL `Nonlinear_lemma.lmfun_lfun`: below the cut `lmfun` is `lfun`. -/
+private theorem p21k_lmfun_small {y : ℝ} (h : y ≤ 2 * h0) : lmfun (y / 2) = lfun (y / 2) := by
+  unfold lmfun
+  rw [if_pos (by linarith)]
+  rfl
+
+/-! ### §2: box arithmetic kernels -/
+
+private theorem p21k_sq_mono {x y : ℝ} (hx : 0 ≤ x) (hxy : x ≤ y) : x * x ≤ y * y := by
+  have hp : 0 ≤ (y - x) * (y + x) := mul_nonneg (by linarith) (by linarith)
+  have hrw : (y - x) * (y + x) = y * y - x * x := by ring
+  linarith [hrw ▸ hp]
+
+private theorem p21k_sq_mono2 {x y : ℝ} (hx : 0 ≤ x) (hxy : x ≤ y) : x ^ 2 ≤ y ^ 2 := by
+  rw [pow_two, pow_two]
+  exact p21k_sq_mono hx hxy
+
+/-- `ups_x` is symmetric in all three arguments (Gram-form). -/
+private theorem p21k_upsX_swap (a b c : ℝ) : upsX a b c = upsX a c b := by
+  simp only [upsX]; ring
+
+private theorem p21k_upsX_rot (a b c : ℝ) : upsX a b c = upsX c a b := by
+  simp only [upsX]; ring
+
+private theorem p21k_upsX_rot' (a b c : ℝ) : upsX a b c = upsX b c a := by
+  simp only [upsX]; ring
+
+/-- HOL `ups_x_pos24` (merge_ineq.hl:651 via `TRI_UPS_X_STRICT_POS`): on
+`[2, 4)³` the Gram minor is positive (Heron factorization; each factor is
+positive since every component lies in `[2, 4)`). -/
+private theorem p21k_upsX_pos {a b c : ℝ} (h2 : 2 ≤ a) (h4 : a < 4) (h2' : 2 ≤ b)
+    (h4' : b < 4) (h2'' : 2 ≤ c) (h4'' : c < 4) : 0 < upsX (a * a) (b * b) (c * c) := by
+  have hfac : upsX (a * a) (b * b) (c * c)
+      = (a + b + c) * (b + c - a) * (a + c - b) * (a + b - c) := by
+    unfold upsX; ring
+  rw [hfac]
+  exact mul_pos (mul_pos (mul_pos (by linarith) (by linarith)) (by linarith))
+    (by linarith)
+
+private theorem p21k_sqrt8_lt_four : Real.sqrt 8 < 4 := by
+  by_contra h
+  push_neg at h
+  have hkey := mul_le_mul h h (by norm_num : (0 : ℝ) ≤ 4) (Real.sqrt_nonneg 8)
+  rw [Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 8), show (4 : ℝ) * 4 = 16 from by norm_num] at hkey
+  norm_num at hkey
+
+/-! ### §3: permutation ring kernels at the shapes the bridges consume -/
+
+private theorem p21k_deltaX_S2 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x6 x1 x5 x3 x4 x2 = deltaX x1 x2 x3 x4 x5 x6 := by
+  simp only [deltaX]; ring
+
+private theorem p21k_deltaX_S3 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x5 x3 x4 x2 x6 x1 = deltaX x1 x2 x3 x4 x5 x6 := by
+  simp only [deltaX]; ring
+
+private theorem p21k_deltaX_S4 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x4 x2 x6 x1 x5 x3 = deltaX x1 x2 x3 x4 x5 x6 := by
+  simp only [deltaX]; ring
+
+private theorem p21k_deltaX_U2 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x2 x3 x1 x5 x6 x4 = deltaX x1 x2 x3 x4 x5 x6 := by
+  simp only [deltaX]; ring
+
+private theorem p21k_deltaX_U3 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x3 x1 x2 x6 x4 x5 = deltaX x1 x2 x3 x4 x5 x6 := by
+  simp only [deltaX]; ring
+
+private theorem p21k_deltaX_U6 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x6 x1 x5 x3 x4 x2 = deltaX x1 x2 x3 x4 x5 x6 := by
+  simp only [deltaX]; ring
+
+/-- The `sol_x` vertex 3-cycle: pure summand permutation (the three
+`dih_x` summands are exactly the `rotate2`/`rotate3` orbit). -/
+private theorem p21k_solX_c (x1 x2 x3 x4 x5 x6 : ℝ) :
+    solX x1 x2 x3 x4 x5 x6 = solX x2 x3 x1 x5 x6 x4 := by
+  simp only [solX]; ring
+
+/-- `eulerA_x` ring kernel, the `(1 3)(4 6)` slot swap of the HOL discharge
+(merge_ineq.hl:1438): the apex polynomial is invariant under the face
+relabeling. -/
+private theorem p21k_eulerAX_e13 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    eulerAX x1 x2 x3 x4 x5 x6 = eulerAX x3 x2 x1 x6 x5 x4 := by
+  unfold eulerAX; ring
+
+/-- `eulerA_x` ring kernel, the apex 3-cycle (`rotate2` shape). -/
+private theorem p21k_eulerAX_rot2 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    eulerAX x1 x2 x3 x4 x5 x6 = eulerAX x2 x3 x1 x5 x6 x4 := by
+  unfold eulerAX; ring
+
+/-! ### §4: the sqrt-rescaling bridges -/
+
+private theorem p21k_dihY_sqrt {x1 x2 x3 x4 x5 x6 : ℝ} (h1 : 0 < x1) (h2 : 0 < x2)
+    (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6) :
+    dihY (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x4) (Real.sqrt x5)
+        (Real.sqrt x6) = dihXf x1 x2 x3 x4 x5 x6 := by
+  unfold dihY
+  rw [Real.mul_self_sqrt (le_of_lt h1), Real.mul_self_sqrt (le_of_lt h2),
+    Real.mul_self_sqrt (le_of_lt h3), Real.mul_self_sqrt (le_of_lt h4),
+    Real.mul_self_sqrt (le_of_lt h5), Real.mul_self_sqrt (le_of_lt h6)]
+
+private theorem p21k_solY_sqrt {x1 x2 x3 x4 x5 x6 : ℝ} (h1 : 0 < x1) (h2 : 0 < x2)
+    (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6) :
+    solY (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x4) (Real.sqrt x5)
+        (Real.sqrt x6) = solX x1 x2 x3 x4 x5 x6 := by
+  unfold solY
+  rw [p21k_dihY_sqrt h1 h2 h3 h4 h5 h6, p21k_dihY_sqrt h2 h3 h1 h5 h6 h4,
+    p21k_dihY_sqrt h3 h1 h2 h6 h4 h5]
+  unfold solX
+  rfl
+
+/-- Generic dihedral bridge (merge_ineq.hl:920
+`dih_x_dih_x_div_sqrtdelta_posbranch`): on the `delta_x4 > 0` branch,
+`dih_x = sqrt(delta_x) * dih_x_div_sqrtdelta_posbranch`.  Assembled from the
+wave-2a kernels `mi_p21e_dih_atn` (the `atn2` half-angle form) and
+`mi_p21e_dihalg` (the `matan`/`arctan` algebra). -/
+private theorem p21k_dih_bridge (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
+    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) (hd4 : 0 < deltaX4 x1 x2 x3 x4 x5 x6) :
+    dihXf x1 x2 x3 x4 x5 x6
+      = Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * dihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 := by
+  rw [mi_p21e_dih_atn x1 x2 x3 x4 x5 x6 hx1 hd]
+  unfold dihXDivSqrtdeltaPosbranch
+  dsimp only
+  exact mi_p21e_dihalg x1 (deltaX x1 x2 x3 x4 x5 x6) (deltaX4 x1 x2 x3 x4 x5 x6)
+    (deltaX x1 x2 x3 x4 x5 x6) hx1 hd hd4 rfl
+
+/-! ### §5: the external anchor (the one recorded gap of this wave) -/
+
+/-- **The Euler solid-angle anchor** (the recorded external anchor of the
+TSKAJXY discharge; NOT proved in this wave — explicit-hypothesis pattern).
+Combined form of merge_ineq.hl:841 `sol_x_sol_euler_x` (Euler's closed form
+for the solid angle of a tetrahedron vertex from the six edge-squared data,
+backed by `Euler_main_theorem.EULER_TRIANGLE`, euler_main_theorem.hl:514)
+and merge_ineq.hl:1060 `sol_x_sol_x_sqrtdelta` (the `atn2`-to-`matan`
+rescaling).  The tree's only coverage is the wave-2a
+`(u^2, v^2, 2, 2, 2, w^2)`-pinned specialization `mi_p21e_euler` +
+`mi_p21e_sol_bridge` (the 3-cell slice); the six-argument form is absent
+from the module closure, so it enters here as an explicit hypothesis and is
+threaded through `p21k_gamma4fgcy_div_sqrtdelta` and everything above it. -/
+def p21k_euler_anchor : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+    0 < x1 → 0 < upsX x1 x2 x6 → 0 < upsX x2 x3 x4 → 0 < upsX x1 x3 x5 →
+    0 < eulerAX x1 x2 x3 x4 x5 x6 → 0 < deltaX x1 x2 x3 x4 x5 x6 →
+    solX x1 x2 x3 x4 x5 x6 =
+      Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * solEulerXDivSqrtdelta x1 x2 x3 x4 x5 x6
+
+/-- The HOL-faithful `TSKAJXY-GXSABWC DIV` leaf (ineq.hl:359): the bracket
+`1/12 - ((2*mm1/pi)*sols - (8*mm2/pi)*ldihs)` keeps the ldih block **inside**
+the inner parenthesis, i.e. distributed it is `1/12 - (2*mm1/pi)*sols +
+(8*mm2/pi)*ldihs`.  RECORDED STATEMENT DEFECT (SF channel, this wave): the
+in-tree `bank_TSKAJXYGXSA` (PA21:267) transcribed the leaf with the inner
+parenthesis dropped (`1/12 - (2*mm1/pi)*sols - (8*mm2/pi)*ldihs`), flipping
+the sign of the ldih block against the HOL original — corroborated by the
+3-cell precedent `mi_gamma3fXDivSqrtdelta_unfold` (PA21, same bracket shape,
+ldih block added).  Statements are frozen, so the corrected leaf enters this
+wave as the explicit premise `p21k_glsa_correct` next to the Euler anchor;
+`bank_TSKAJXYGXSA` itself is untouched. -/
+def p21k_glsa_correct : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+    (2.8 : ℝ) ^ 2 ≤ x1 → x1 ≤ 8 → 4 ≤ x2 → x2 ≤ 2.01 ^ 2 → 4 ≤ x3 → x3 ≤ 2.01 ^ 2 →
+    (2.8 : ℝ) ^ 2 ≤ x4 → x4 ≤ 8 → 4 ≤ x5 → x5 ≤ 2.01 ^ 2 → 4 ≤ x6 → x6 ≤ 2.01 ^ 2 →
+    1 / 12 - (2 * mm1 / Real.pi) *
+        (solEulerXDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+          solEuler345XDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+          solEuler156XDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+          solEuler246XDivSqrtdelta x1 x2 x3 x4 x5 x6) +
+      (8 * mm2 / Real.pi) *
+        (ldih2XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+          ldih3XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+          ldih5XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+          ldih6XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6) ≥ 0 ∨
+      deltaX x1 x2 x3 x4 x5 x6 < 0
+
+/-! ### §6: `gamma4fgcy_div_sqrtdelta` (merge_ineq.hl:1160-1233) -/
+
+/-- HOL `gamma4fgcy_div_sqrtdelta`: on the narrow-type box (with the two
+`2*h0` slots pushed up and the four small slots pulled under `2*h0`), the
+4-cell compensation unpacks as `sqrt(delta_x)` times the GXSA kernel —
+the four solid-angle terms via the Euler anchor (after `sol_x` 3-cycle
+pre-rewrites landing on the `identity`/`rotate6`/`rotate5`/`rotate4`
+shapes) and the four surviving dihedral terms via the generic dihedral
+bridge (slots `1`/`4` die by `lmfun0`). -/
+private theorem p21k_gamma4fgcy_div_sqrtdelta (hE : p21k_euler_anchor)
+    (x1 x2 x3 x4 x5 x6 : ℝ) (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3)
+    (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6)
+    (hb1 : 2 * h0 ≤ Real.sqrt x1) (hb4 : 2 * h0 ≤ Real.sqrt x4)
+    (hb2 : Real.sqrt x2 ≤ 2 * h0) (hb3 : Real.sqrt x3 ≤ 2 * h0)
+    (hb5 : Real.sqrt x5 ≤ 2 * h0) (hb6 : Real.sqrt x6 ≤ 2 * h0)
+    (hu1 : 0 < upsX x1 x2 x6) (hu2 : 0 < upsX x2 x3 x4)
+    (hu3 : 0 < upsX x1 x3 x5) (hu4 : 0 < upsX x4 x5 x6)
+    (he1 : 0 < eulerAX x1 x2 x3 x4 x5 x6) (he2 : 0 < eulerAX x4 x2 x6 x1 x5 x3)
+    (he3 : 0 < eulerAX x5 x3 x4 x2 x6 x1) (he4 : 0 < eulerAX x6 x1 x5 x3 x4 x2)
+    (hw1 : 0 < deltaX4 x5 x3 x4 x2 x6 x1) (hw2 : 0 < deltaX4 x3 x2 x1 x6 x5 x4)
+    (hw3 : 0 < deltaX4 x2 x3 x1 x5 x6 x4) (hw4 : 0 < deltaX4 x6 x5 x1 x3 x2 x4)
+    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) :
+    gamma4fgcy (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x4)
+        (Real.sqrt x5) (Real.sqrt x6) lmfun
+      = Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) *
+          (1 / 12 - (2 * mm1 / Real.pi) *
+              (solEulerXDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+                solEuler345XDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+                solEuler156XDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+                solEuler246XDivSqrtdelta x1 x2 x3 x4 x5 x6) +
+            (8 * mm2 / Real.pi) *
+              (ldih2XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+                ldih3XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+                ldih5XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+                ldih6XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6)) := by
+  -- the four `deltaX`-at-permutation facts for the dihedral bridge
+  have hdU2 : 0 < deltaX x2 x3 x1 x5 x6 x4 := by rw [p21k_deltaX_U2]; exact hd
+  have hdU3 : 0 < deltaX x3 x1 x2 x6 x4 x5 := by rw [p21k_deltaX_U3]; exact hd
+  have hdU6 : 0 < deltaX x6 x1 x5 x3 x4 x2 := by rw [p21k_deltaX_U6]; exact hd
+  -- the `delta_x4` facts at the bridge shapes, via the W3 ring kernels
+  have hwU3 : 0 < deltaX4 x3 x1 x2 x6 x4 x5 := by
+    rw [← TSKAJXY034W3.p21i_deltaX4_sym23 x3 x2 x1 x6 x5 x4]; exact hw2
+  have hwU6 : 0 < deltaX4 x6 x1 x5 x3 x4 x2 := by
+    rw [← TSKAJXY034W3.p21i_deltaX4_sym23 x6 x5 x1 x3 x2 x4]; exact hw4
+  -- anchor side-conditions at the three rotated shapes
+  have huS2a : 0 < upsX x6 x1 x2 := by rw [← p21k_upsX_rot x1 x2 x6]; exact hu1
+  have huS2b : 0 < upsX x1 x5 x3 := by rw [← p21k_upsX_swap x1 x3 x5]; exact hu3
+  have huS2c : 0 < upsX x6 x5 x4 := by
+    rw [← p21k_upsX_rot' x4 x6 x5, ← p21k_upsX_swap x4 x5 x6]; exact hu4
+  have huS3a : 0 < upsX x5 x3 x1 := by
+    rw [← p21k_upsX_swap x5 x1 x3, ← p21k_upsX_rot x1 x3 x5]; exact hu3
+  have huS3b : 0 < upsX x3 x4 x2 := by rw [← p21k_upsX_rot' x2 x3 x4]; exact hu2
+  have huS3c : 0 < upsX x5 x4 x6 := by
+    rw [← p21k_upsX_swap x5 x6 x4, ← p21k_upsX_rot' x4 x5 x6]; exact hu4
+  have huS4a : 0 < upsX x4 x2 x3 := by rw [← p21k_upsX_rot x2 x3 x4]; exact hu2
+  have huS4b : 0 < upsX x2 x6 x1 := by rw [← p21k_upsX_rot' x1 x2 x6]; exact hu1
+  have huS4c : 0 < upsX x4 x6 x5 := by rw [← p21k_upsX_swap x4 x5 x6]; exact hu4
+  have hdS2 : 0 < deltaX x6 x1 x5 x3 x4 x2 := by rw [p21k_deltaX_S2]; exact hd
+  have hdS3 : 0 < deltaX x5 x3 x4 x2 x6 x1 := by rw [p21k_deltaX_S3]; exact hd
+  have hdS4 : 0 < deltaX x4 x2 x6 x1 x5 x3 := by rw [p21k_deltaX_S4]; exact hd
+  unfold gamma4fgcy volY vol4f
+  simp only [volXf]
+  rw [Real.mul_self_sqrt (le_of_lt h1), Real.mul_self_sqrt (le_of_lt h2),
+    Real.mul_self_sqrt (le_of_lt h3), Real.mul_self_sqrt (le_of_lt h4),
+    Real.mul_self_sqrt (le_of_lt h5), Real.mul_self_sqrt (le_of_lt h6)]
+  rw [p21k_solY_sqrt h1 h2 h3 h4 h5 h6, p21k_solY_sqrt h1 h5 h6 h4 h2 h3,
+    p21k_solY_sqrt h4 h5 h3 h1 h2 h6, p21k_solY_sqrt h4 h2 h6 h1 h5 h3]
+  -- slot 5: the vol4f face order `(x5,x1,x6,x2,x4,x3)` meets the GXSA
+  -- `rotate5` shape through the W3 `dihY_symB` face swap
+  rw [TSKAJXY034W3.p21i_dihY_symB (Real.sqrt x5) (Real.sqrt x1) (Real.sqrt x6)
+    (Real.sqrt x2) (Real.sqrt x4) (Real.sqrt x3)]
+  rw [p21k_dihY_sqrt h1 h2 h3 h4 h5 h6, p21k_dihY_sqrt h2 h3 h1 h5 h6 h4,
+    p21k_dihY_sqrt h3 h1 h2 h6 h4 h5, p21k_dihY_sqrt h4 h3 h5 h1 h6 h2,
+    p21k_dihY_sqrt h5 h3 h4 h2 h6 h1, p21k_dihY_sqrt h6 h1 h5 h3 h4 h2]
+  rw [(p21k_lmfun_big (y := Real.sqrt x1) hb1), (p21k_lmfun_big (y := Real.sqrt x4) hb4),
+    (p21k_lmfun_small (y := Real.sqrt x2) hb2), (p21k_lmfun_small (y := Real.sqrt x3) hb3),
+    (p21k_lmfun_small (y := Real.sqrt x5) hb5), (p21k_lmfun_small (y := Real.sqrt x6) hb6)]
+  simp only [zero_mul, zero_add, add_zero]
+  -- the four solid-angle terms through the anchor
+  rw [hE x1 x2 x3 x4 x5 x6 h1 hu1 hu2 hu3 he1 hd]
+  rw [p21k_solX_c x1 x5 x6 x4 x2 x3, p21k_solX_c x5 x6 x1 x2 x3 x4,
+    hE x6 x1 x5 x3 x4 x2 h6 huS2a huS2b huS2c he4 hdS2]
+  rw [p21k_solX_c x4 x5 x3 x1 x2 x6,
+    hE x5 x3 x4 x2 x6 x1 h5 huS3a huS3b huS3c he3 hdS3]
+  rw [hE x4 x2 x6 x1 x5 x3 h4 huS4a huS4b huS4c he2 hdS4]
+  -- the four surviving dihedral terms through the generic bridge
+  rw [p21k_dih_bridge x2 x3 x1 x5 x6 x4 h2 hdU2 hw3,
+    p21k_dih_bridge x3 x1 x2 x6 x4 x5 h3 hdU3 hwU3,
+    p21k_dih_bridge x5 x3 x4 x2 x6 x1 h5 hdS3 hw1,
+    p21k_dih_bridge x6 x1 x5 x3 x4 x2 h6 hdU6 hwU6]
+  simp only [solEuler345XDivSqrtdelta, rotate5, solEuler156XDivSqrtdelta, rotate6,
+    solEuler246XDivSqrtdelta, rotate4, ldih2XDivSqrtdeltaPosbranch, rotate2,
+    ldih3XDivSqrtdeltaPosbranch, rotate3, ldih5XDivSqrtdeltaPosbranch, rotate5,
+    ldih6XDivSqrtdeltaPosbranch, rotate6, ldihXDivSqrtdeltaPosbranch]
+  -- normalize the six bridge sqrt-arguments to the identity shape (the
+  -- `S2` instance also covers `U6`, whose LHS is the same concrete term)
+  rw [p21k_deltaX_S2 x1 x2 x3 x4 x5 x6, p21k_deltaX_S3 x1 x2 x3 x4 x5 x6,
+    p21k_deltaX_S4 x1 x2 x3 x4 x5 x6, p21k_deltaX_U2 x1 x2 x3 x4 x5 x6,
+    p21k_deltaX_U3 x1 x2 x3 x4 x5 x6]
+  ring
+
+/-! ### §7: `tsk_lemma1` (merge_ineq.hl:1383-1457) -/
+
+/-- HOL `tsk_lemma1`: the narrow-box face
+`[2.8,√8]×[2,2.01]²×[2.8,√8]×[2,2.01]²` of the 4-cell compensation, from
+the bank entries `TSKAJXY-GXSABWC DIV` (at the identity shape, with its
+`delta_x < 0` disjunct killed by the antecedent), `TSKAJXY-delta_x4` and
+`TSKAJXY-eulerA` (at the four box-matching permutations) plus the
+`ups_x_pos24` kernel — through `p21k_gamma4fgcy_div_sqrtdelta`. -/
+private theorem p21k_tsk_lemma1 (hE : p21k_euler_anchor) (hg : p21k_glsa_correct)
+    (bank : tsk_bank) (y1 y2 y3 y4 y5 y6 : ℝ) (ha1 : (2.8 : ℝ) ≤ y1) (ha1' : y1 ≤ Real.sqrt 8)
+    (hb1 : 2 ≤ y2) (hb1' : y2 ≤ 2.01) (hc1 : 2 ≤ y3) (hc1' : y3 ≤ 2.01)
+    (hd1 : (2.8 : ℝ) ≤ y4) (hd1' : y4 ≤ Real.sqrt 8)
+    (he1 : 2 ≤ y5) (he1' : y5 ≤ 2.01) (hf1 : 2 ≤ y6) (hf1' : y6 ≤ 2.01)
+    (hdel : 0 < deltaY y1 y2 y3 y4 y5 y6) :
+    0 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun := by
+  obtain ⟨-, -, -, -, -, -, -, -, hdx4, heul⟩ := bank
+  have hp1 : 0 < y1 := by linarith
+  have hp2 : 0 < y2 := by linarith
+  have hp3 : 0 < y3 := by linarith
+  have hp4 : 0 < y4 := by linarith
+  have hp5 : 0 < y5 := by linarith
+  have hp6 : 0 < y6 := by linarith
+  have q1 : (2.8 : ℝ) ^ 2 ≤ y1 * y1 := by
+    have h := p21k_sq_mono2 (x := 2.8) (by norm_num) ha1
+    rwa [show y1 ^ 2 = y1 * y1 from by ring] at h
+  have q1' : y1 * y1 ≤ 8 := by
+    have h := p21k_sq_mono2 hp1.le ha1'
+    rwa [show y1 ^ 2 = y1 * y1 from by ring, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 8)] at h
+  have q2 : (4 : ℝ) ≤ y2 * y2 := by
+    have h := p21k_sq_mono2 (x := 2) (by norm_num) hb1
+    rwa [show y2 ^ 2 = y2 * y2 from by ring, show (2 : ℝ) ^ 2 = 4 from by norm_num] at h
+  have q2' : y2 * y2 ≤ 2.01 ^ 2 := by
+    have h := p21k_sq_mono2 hp2.le hb1'
+    rwa [show y2 ^ 2 = y2 * y2 from by ring] at h
+  have q3 : (4 : ℝ) ≤ y3 * y3 := by
+    have h := p21k_sq_mono2 (x := 2) (by norm_num) hc1
+    rwa [show y3 ^ 2 = y3 * y3 from by ring, show (2 : ℝ) ^ 2 = 4 from by norm_num] at h
+  have q3' : y3 * y3 ≤ 2.01 ^ 2 := by
+    have h := p21k_sq_mono2 hp3.le hc1'
+    rwa [show y3 ^ 2 = y3 * y3 from by ring] at h
+  have q4 : (2.8 : ℝ) ^ 2 ≤ y4 * y4 := by
+    have h := p21k_sq_mono2 (x := 2.8) (by norm_num) hd1
+    rwa [show y4 ^ 2 = y4 * y4 from by ring] at h
+  have q4' : y4 * y4 ≤ 8 := by
+    have h := p21k_sq_mono2 hp4.le hd1'
+    rwa [show y4 ^ 2 = y4 * y4 from by ring, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 8)] at h
+  have q5 : (4 : ℝ) ≤ y5 * y5 := by
+    have h := p21k_sq_mono2 (x := 2) (by norm_num) he1
+    rwa [show y5 ^ 2 = y5 * y5 from by ring, show (2 : ℝ) ^ 2 = 4 from by norm_num] at h
+  have q5' : y5 * y5 ≤ 2.01 ^ 2 := by
+    have h := p21k_sq_mono2 hp5.le he1'
+    rwa [show y5 ^ 2 = y5 * y5 from by ring] at h
+  have q6 : (4 : ℝ) ≤ y6 * y6 := by
+    have h := p21k_sq_mono2 (x := 2) (by norm_num) hf1
+    rwa [show y6 ^ 2 = y6 * y6 from by ring, show (2 : ℝ) ^ 2 = 4 from by norm_num] at h
+  have q6' : y6 * y6 ≤ 2.01 ^ 2 := by
+    have h := p21k_sq_mono2 hp6.le hf1'
+    rwa [show y6 ^ 2 = y6 * y6 from by ring] at h
+  have sq1 : Real.sqrt (y1 * y1) = y1 := by
+    rw [show y1 * y1 = y1 ^ 2 by ring]; exact Real.sqrt_sq hp1.le
+  have sq2 : Real.sqrt (y2 * y2) = y2 := by
+    rw [show y2 * y2 = y2 ^ 2 by ring]; exact Real.sqrt_sq hp2.le
+  have sq3 : Real.sqrt (y3 * y3) = y3 := by
+    rw [show y3 * y3 = y3 ^ 2 by ring]; exact Real.sqrt_sq hp3.le
+  have sq4 : Real.sqrt (y4 * y4) = y4 := by
+    rw [show y4 * y4 = y4 ^ 2 by ring]; exact Real.sqrt_sq hp4.le
+  have sq5 : Real.sqrt (y5 * y5) = y5 := by
+    rw [show y5 * y5 = y5 ^ 2 by ring]; exact Real.sqrt_sq hp5.le
+  have sq6 : Real.sqrt (y6 * y6) = y6 := by
+    rw [show y6 * y6 = y6 ^ 2 by ring]; exact Real.sqrt_sq hp6.le
+  have h2h0 : (2 : ℝ) * h0 = 2.52 := by norm_num [h0]
+  have t1 : 2 * h0 ≤ Real.sqrt (y1 * y1) := by rw [sq1]; linarith
+  have t4 : 2 * h0 ≤ Real.sqrt (y4 * y4) := by rw [sq4]; linarith
+  have t2 : Real.sqrt (y2 * y2) ≤ 2 * h0 := by rw [sq2]; linarith
+  have t3 : Real.sqrt (y3 * y3) ≤ 2 * h0 := by rw [sq3]; linarith
+  have t5 : Real.sqrt (y5 * y5) ≤ 2 * h0 := by rw [sq5]; linarith
+  have t6 : Real.sqrt (y6 * y6) ≤ 2 * h0 := by rw [sq6]; linarith
+  have u1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6) :=
+    p21k_upsX_pos (by linarith) (by linarith [p21k_sqrt8_lt_four, hb1'])
+      hb1 (by linarith) hf1 (by linarith)
+  have u2 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4) :=
+    p21k_upsX_pos hb1 (by linarith) hc1 (by linarith)
+      (by linarith) (by linarith [p21k_sqrt8_lt_four, hd1'])
+  have u3 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5) :=
+    p21k_upsX_pos (by linarith) (by linarith [p21k_sqrt8_lt_four, hb1'])
+      hc1 (by linarith) he1 (by linarith)
+  have u4 : 0 < upsX (y4 * y4) (y5 * y5) (y6 * y6) :=
+    p21k_upsX_pos (by linarith) (by linarith [p21k_sqrt8_lt_four, hd1'])
+      he1 (by linarith) hf1 (by linarith)
+  have e1 : 0 < eulerAX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) :=
+    heul (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+      q1 q1' q2 q2' q3 q3' q4 q4' q5 q5' q6 q6'
+  have e2 : 0 < eulerAX (y4 * y4) (y2 * y2) (y6 * y6) (y1 * y1) (y5 * y5) (y3 * y3) :=
+    heul (y4 * y4) (y2 * y2) (y6 * y6) (y1 * y1) (y5 * y5) (y3 * y3)
+      q4 q4' q2 q2' q6 q6' q1 q1' q5 q5' q3 q3'
+  have e3 : 0 < eulerAX (y5 * y5) (y3 * y3) (y4 * y4) (y2 * y2) (y6 * y6) (y1 * y1) := by
+    rw [p21k_eulerAX_e13]
+    exact heul (y4 * y4) (y3 * y3) (y5 * y5) (y1 * y1) (y6 * y6) (y2 * y2)
+      q4 q4' q3 q3' q5 q5' q1 q1' q6 q6' q2 q2'
+  have e4 : 0 < eulerAX (y6 * y6) (y1 * y1) (y5 * y5) (y3 * y3) (y4 * y4) (y2 * y2) := by
+    rw [p21k_eulerAX_rot2]
+    exact heul (y1 * y1) (y5 * y5) (y6 * y6) (y4 * y4) (y2 * y2) (y3 * y3)
+      q1 q1' q5 q5' q6 q6' q4 q4' q2 q2' q3 q3'
+  have w1 : 0 < deltaX4 (y5 * y5) (y3 * y3) (y4 * y4) (y2 * y2) (y6 * y6) (y1 * y1) :=
+    hdx4 (y5 * y5) (y3 * y3) (y4 * y4) (y2 * y2) (y6 * y6) (y1 * y1)
+      q5 q5' q3 q3' q4 q4' q2 q2' q6 q6' q1 q1'
+  have w2 : 0 < deltaX4 (y3 * y3) (y2 * y2) (y1 * y1) (y6 * y6) (y5 * y5) (y4 * y4) :=
+    hdx4 (y3 * y3) (y2 * y2) (y1 * y1) (y6 * y6) (y5 * y5) (y4 * y4)
+      q3 q3' q2 q2' q1 q1' q6 q6' q5 q5' q4 q4'
+  have w3 : 0 < deltaX4 (y2 * y2) (y3 * y3) (y1 * y1) (y5 * y5) (y6 * y6) (y4 * y4) :=
+    hdx4 (y2 * y2) (y3 * y3) (y1 * y1) (y5 * y5) (y6 * y6) (y4 * y4)
+      q2 q2' q3 q3' q1 q1' q5 q5' q6 q6' q4 q4'
+  have w4 : 0 < deltaX4 (y6 * y6) (y5 * y5) (y1 * y1) (y3 * y3) (y2 * y2) (y4 * y4) :=
+    hdx4 (y6 * y6) (y5 * y5) (y1 * y1) (y3 * y3) (y2 * y2) (y4 * y4)
+      q6 q6' q5 q5' q1 q1' q3 q3' q2 q2' q4 q4'
+  have dd : 0 < deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) :=
+    hdel
+  obtain hgx | hgx := hg (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+    q1 q1' q2 q2' q3 q3' q4 q4' q5 q5' q6 q6'
+  · have step := p21k_gamma4fgcy_div_sqrtdelta hE (y1 * y1) (y2 * y2) (y3 * y3)
+      (y4 * y4) (y5 * y5) (y6 * y6) (by positivity) (by positivity) (by positivity)
+      (by positivity) (by positivity) (by positivity) t1 t4 t2 t3 t5 t6
+      u1 u2 u3 u4 e1 e2 e3 e4 w1 w2 w3 w4 dd
+    rw [sq1, sq2, sq3, sq4, sq5, sq6] at step
+    rw [step]
+    exact mul_nonneg (Real.sqrt_nonneg _) hgx
+  · exact absurd hgx (not_lt.mpr dd.le)
+
+
+/-! ### §8: the package `P` and its invariance Iffs -/
+
+/-- The per-tuple face of `TSKAJXY034W3.cell4_from_ineq` (the HOL
+`TSKAJXY-DERIVED` package, Ineq.hl:94 — boxes, critical-edge exclusions,
+`delta_y` / `rad2` conditions, compensation nonnegativity). -/
+private def p21k_P (y1 y2 y3 y4 y5 y6 : ℝ) : Prop :=
+  2 ≤ y1 → y1 ≤ Real.sqrt 8 → 2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 → 2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    ¬ criticalEdgeY y1 → ¬ criticalEdgeY y2 → ¬ criticalEdgeY y3 →
+    ¬ criticalEdgeY y4 → ¬ criticalEdgeY y5 → ¬ criticalEdgeY y6 →
+    0 < deltaY y1 y2 y3 y4 y5 y6 →
+    rad2X (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 2 →
+    0 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun
+
+/-- The relabeling `(1 2)(4 5)` invariance of the package (boxes and
+critical-edge conjuncts permute slotwise; `deltaY`/`rad2X`/`gamma4fgcy`
+through the W3 symmetry kit). -/
+private theorem p21k_P_sym12 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    p21k_P y1 y2 y3 y4 y5 y6 ↔ p21k_P y2 y1 y3 y5 y4 y6 := by
+  constructor
+  · intro H b2 b2' b1 b1' b3 b3' b5 b5' b4 b4' b6 b6' j2 j1 j3 j5 j4 j6 hdel hrad
+    have hdel' : 0 < deltaY y1 y2 y3 y4 y5 y6 := by
+      rw [← TSKAJXY034W3.p21i_deltaY_sym12 y2 y1 y3 y5 y4 y6]; exact hdel
+    have hrad' : rad2X (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 2 := by
+      rw [← TSKAJXY034W3.p21i_rad2X_sym12 (y2 ^ 2) (y1 ^ 2) (y3 ^ 2) (y5 ^ 2) (y4 ^ 2)
+        (y6 ^ 2)]
+      exact hrad
+    rw [TSKAJXY034W3.p21i_gamma4fgcy_sym12 y2 y1 y3 y5 y4 y6]
+    exact H b1 b1' b2 b2' b3 b3' b4 b4' b5 b5' b6 b6' j1 j2 j3 j4 j5 j6 hdel' hrad'
+  · intro H o1 o1' o2 o2' o3 o3' o4 o4' o5 o5' o6 o6' k1 k2 k3 k4 k5 k6 hdel hrad
+    have hdel' : 0 < deltaY y2 y1 y3 y5 y4 y6 := by
+      rw [TSKAJXY034W3.p21i_deltaY_sym12]; exact hdel
+    have hrad' : rad2X (y2 ^ 2) (y1 ^ 2) (y3 ^ 2) (y5 ^ 2) (y4 ^ 2) (y6 ^ 2) < 2 := by
+      rw [TSKAJXY034W3.p21i_rad2X_sym12]; exact hrad
+    rw [TSKAJXY034W3.p21i_gamma4fgcy_sym12]
+    exact H o2 o2' o1 o1' o3 o3' o5 o5' o4 o4' o6 o6' k2 k1 k3 k5 k4 k6 hdel' hrad'
+
+/-- The relabeling `(2 3)(5 6)` invariance. -/
+private theorem p21k_P_sym23 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    p21k_P y1 y2 y3 y4 y5 y6 ↔ p21k_P y1 y3 y2 y4 y6 y5 := by
+  constructor
+  · intro H b1 b1' b3 b3' b2 b2' b4 b4' b6 b6' b5 b5' j1 j3 j2 j4 j6 j5 hdel hrad
+    have hdel' : 0 < deltaY y1 y2 y3 y4 y5 y6 := by
+      rw [← TSKAJXY034W3.p21i_deltaY_sym23 y1 y3 y2 y4 y6 y5]; exact hdel
+    have hrad' : rad2X (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 2 := by
+      rw [← TSKAJXY034W3.p21i_rad2X_sym23 (y1 ^ 2) (y3 ^ 2) (y2 ^ 2) (y4 ^ 2) (y6 ^ 2)
+        (y5 ^ 2)]
+      exact hrad
+    rw [TSKAJXY034W3.p21i_gamma4fgcy_sym23 y1 y3 y2 y4 y6 y5]
+    exact H b1 b1' b2 b2' b3 b3' b4 b4' b5 b5' b6 b6' j1 j2 j3 j4 j5 j6 hdel' hrad'
+  · intro H o1 o1' o2 o2' o3 o3' o4 o4' o5 o5' o6 o6' k1 k2 k3 k4 k5 k6 hdel hrad
+    have hdel' : 0 < deltaY y1 y3 y2 y4 y6 y5 := by
+      rw [TSKAJXY034W3.p21i_deltaY_sym23]; exact hdel
+    have hrad' : rad2X (y1 ^ 2) (y3 ^ 2) (y2 ^ 2) (y4 ^ 2) (y6 ^ 2) (y5 ^ 2) < 2 := by
+      rw [TSKAJXY034W3.p21i_rad2X_sym23]; exact hrad
+    rw [TSKAJXY034W3.p21i_gamma4fgcy_sym23]
+    exact H o1 o1' o3 o3' o2 o2' o4 o4' o6 o6' o5 o5' k1 k3 k2 k4 k6 k5 hdel' hrad'
+
+/-- The relabeling `(1 5)(2 4)` invariance. -/
+private theorem p21k_P_sym03 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    p21k_P y1 y2 y3 y4 y5 y6 ↔ p21k_P y5 y4 y3 y2 y1 y6 := by
+  constructor
+  · intro H b5 b5' b4 b4' b3 b3' b2 b2' b1 b1' b6 b6' j5 j4 j3 j2 j1 j6 hdel hrad
+    have hdel' : 0 < deltaY y1 y2 y3 y4 y5 y6 := by
+      rw [← TSKAJXY034W3.p21i_deltaY_sym03 y5 y4 y3 y2 y1 y6]; exact hdel
+    have hrad' : rad2X (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 2 := by
+      rw [← TSKAJXY034W3.p21i_rad2X_sym03 (y5 ^ 2) (y4 ^ 2) (y3 ^ 2) (y2 ^ 2) (y1 ^ 2)
+        (y6 ^ 2)]
+      exact hrad
+    rw [TSKAJXY034W3.p21i_gamma4fgcy_sym03 y5 y4 y3 y2 y1 y6]
+    exact H b1 b1' b2 b2' b3 b3' b4 b4' b5 b5' b6 b6' j1 j2 j3 j4 j5 j6 hdel' hrad'
+  · intro H o1 o1' o2 o2' o3 o3' o4 o4' o5 o5' o6 o6' k1 k2 k3 k4 k5 k6 hdel hrad
+    have hdel' : 0 < deltaY y5 y4 y3 y2 y1 y6 := by
+      rw [TSKAJXY034W3.p21i_deltaY_sym03]; exact hdel
+    have hrad' : rad2X (y5 ^ 2) (y4 ^ 2) (y3 ^ 2) (y2 ^ 2) (y1 ^ 2) (y6 ^ 2) < 2 := by
+      rw [TSKAJXY034W3.p21i_rad2X_sym03]; exact hrad
+    rw [TSKAJXY034W3.p21i_gamma4fgcy_sym03]
+    exact H o5 o5' o4 o4' o3 o3' o2 o2' o1 o1' o6 o6' k5 k4 k3 k2 k1 k6 hdel' hrad'
+
+/-- The slot-`{2,3,5,6}` reversal `(2 6)(3 5)` (fixing the apex pair
+`{y1, y4}`), derived from the three relabelings by the group word
+sym12 sym23 sym03 sym23 sym12 (the `REAL_WLOG_SIMPLEX_SYM` step). -/
+private theorem p21k_P_rev (y1 y2 y3 y4 y5 y6 : ℝ) :
+    p21k_P y1 y2 y3 y4 y5 y6 ↔ p21k_P y1 y6 y5 y4 y3 y2 := by
+  have hdy : deltaY y1 y2 y3 y4 y5 y6 = deltaY y1 y6 y5 y4 y3 y2 :=
+    TSKAJXY034W3.p21i_deltaX_sym26 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
+      (y6 * y6)
+  have hradr : rad2X (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2)
+      = rad2X (y1 ^ 2) (y6 ^ 2) (y5 ^ 2) (y4 ^ 2) (y3 ^ 2) (y2 ^ 2) := by
+    rw [TSKAJXY034W3.p21i_rad2X_sym12 (y1 ^ 2) (y6 ^ 2) (y5 ^ 2) (y4 ^ 2) (y3 ^ 2) (y2 ^ 2),
+      TSKAJXY034W3.p21i_rad2X_sym23 (y6 ^ 2) (y1 ^ 2) (y5 ^ 2) (y3 ^ 2) (y4 ^ 2) (y2 ^ 2),
+      TSKAJXY034W3.p21i_rad2X_sym03 (y6 ^ 2) (y5 ^ 2) (y1 ^ 2) (y3 ^ 2) (y2 ^ 2) (y4 ^ 2),
+      TSKAJXY034W3.p21i_rad2X_sym23 (y2 ^ 2) (y3 ^ 2) (y1 ^ 2) (y5 ^ 2) (y6 ^ 2) (y4 ^ 2),
+      TSKAJXY034W3.p21i_rad2X_sym12 (y2 ^ 2) (y1 ^ 2) (y3 ^ 2) (y5 ^ 2) (y4 ^ 2) (y6 ^ 2)]
+  have hgamr : gamma4fgcy y1 y6 y5 y4 y3 y2 lmfun = gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun := by
+    rw [TSKAJXY034W3.p21i_gamma4fgcy_sym12 y1 y6 y5 y4 y3 y2,
+      TSKAJXY034W3.p21i_gamma4fgcy_sym23 y6 y1 y5 y3 y4 y2,
+      TSKAJXY034W3.p21i_gamma4fgcy_sym03 y6 y5 y1 y3 y2 y4,
+      TSKAJXY034W3.p21i_gamma4fgcy_sym23 y2 y3 y1 y5 y6 y4,
+      TSKAJXY034W3.p21i_gamma4fgcy_sym12 y2 y1 y3 y5 y4 y6]
+  constructor
+  · intro H b1 b1' b6 b6' b5 b5' b4 b4' b3 b3' b2 b2' j1 j6 j5 j4 j3 j2 hdel hrad
+    have hdel' : 0 < deltaY y1 y2 y3 y4 y5 y6 := by rw [hdy]; exact hdel
+    have hrad' : rad2X (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 2 := by
+      rw [hradr]; exact hrad
+    rw [hgamr]
+    exact H b1 b1' b2 b2' b3 b3' b4 b4' b5 b5' b6 b6' j1 j2 j3 j4 j5 j6 hdel' hrad'
+  · intro H o1 o1' o2 o2' o3 o3' o4 o4' o5 o5' o6 o6' k1 k2 k3 k4 k5 k6 hdel hrad
+    have hdel2 : 0 < deltaY y1 y6 y5 y4 y3 y2 := by rw [← hdy]; exact hdel
+    have hrad2 : rad2X (y1 ^ 2) (y6 ^ 2) (y5 ^ 2) (y4 ^ 2) (y3 ^ 2) (y2 ^ 2) < 2 := by
+      rw [← hradr]; exact hrad
+    rw [← hgamr]
+    exact H o1 o1' o6 o6' o5 o5' o4 o4' o3 o3' o2 o2' k1 k6 k5 k4 k3 k2 hdel2 hrad2
+
+/-! ### §9: the six-argument WLOG (merge_ineq.hl:1468-1553) -/
+
+/-- HOL `REAL_WLOG_SIMPLEX`: from the three relabeling invariances plus the
+slot-`{2,3,5,6}` reversal it suffices to prove `P` on the ordered cone
+`y3, y5, y6 ≤ y2` and `y2, y3, y4, y5, y6 ≤ y1` — the two-stage max
+argument (`REAL_WLOG_SIMPLEX_LEMMA`/`LEMMA2`): the slot-1 stage moves the
+global maximum into slot 1, the slot-2 stage the maximum of
+`{y2, y3, y5, y6}` into slot 2. -/
+private theorem p21k_wlog {P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → Prop}
+    (h1 : ∀ a b c d e g : ℝ, P a b c d e g ↔ P b a c e d g)
+    (h2 : ∀ a b c d e g : ℝ, P a b c d e g ↔ P a c b d g e)
+    (h3 : ∀ a b c d e g : ℝ, P a b c d e g ↔ P e d c b a g)
+    (h4 : ∀ a b c d e g : ℝ, P a b c d e g ↔ P a g e d c b)
+    (hord : ∀ a b c d e g : ℝ, c ≤ b → e ≤ b → g ≤ b →
+      b ≤ a → c ≤ a → d ≤ a → e ≤ a → g ≤ a → P a b c d e g)
+    (y1 y2 y3 y4 y5 y6 : ℝ) : P y1 y2 y3 y4 y5 y6 := by
+  have key2 : (∀ a b c d e g : ℝ, c ≤ b → e ≤ b → g ≤ b →
+      b ≤ a → c ≤ a → d ≤ a → e ≤ a → g ≤ a → P a b c d e g) →
+      ∀ a b c d e g : ℝ, b ≤ a → c ≤ a → d ≤ a → e ≤ a → g ≤ a → P a b c d e g := by
+    intro hmax a b c d e g hba hca hda hea hga
+    rcases le_total c b with hcb | hbc
+    · rcases le_total e b with heb | hbe
+      · rcases le_total g b with hgb | hbg
+        · exact hmax a b c d e g hcb heb hgb hba hca hda hea hga
+        · rw [h4]
+          exact hmax a g e d c b (le_trans heb hbg) (le_trans hcb hbg) hbg hga hea hda
+            hca hba
+      · rcases le_total g e with hge | heg
+        · rw [h4, h2]
+          exact hmax a e g d b c hge hbe (le_trans hcb hbe) hea hga hda hba hca
+        · rw [h4]
+          exact hmax a g e d c b heg (le_trans (le_trans hcb hbe) heg)
+            (le_trans hbe heg) hga hea hda hca hba
+    · rcases le_total e c with hec | hce
+      · rcases le_total g c with hgc | hcg
+        · rw [h2]
+          exact hmax a c b d g e hbc hgc hec hca hba hda hga hea
+        · rw [h4]
+          exact hmax a g e d c b (le_trans hec hcg) hcg (le_trans hbc hcg) hga hea hda
+            hca hba
+      · rcases le_total g e with hge | heg
+        · rw [h4, h2]
+          exact hmax a e g d b c hge (le_trans hbc hce) hce hea hga hda hba hca
+        · rw [h4]
+          exact hmax a g e d c b heg (le_trans hce heg) (le_trans (le_trans hbc hce) heg)
+            hga hea hda hca hba
+  have key1 : (∀ a b c d e g : ℝ, b ≤ a → c ≤ a → d ≤ a → e ≤ a → g ≤ a → P a b c d e g) →
+      ∀ a b c d e g : ℝ, P a b c d e g := by
+    intro hmax a b c d e g
+    obtain ⟨m, hm, hle⟩ : ∃ m : ℝ, m ∈ ({a, b, c, d, e, g} : Finset ℝ) ∧
+        ∀ x ∈ ({a, b, c, d, e, g} : Finset ℝ), x ≤ m := by
+      refine ⟨Finset.max' _ (by simp), Finset.max'_mem _ (by simp), fun x hx => ?_⟩
+      exact Finset.le_max' _ x hx
+    rcases Finset.mem_insert.mp hm with hm' | hm
+    · rw [hm'] at hle
+      exact hmax a b c d e g (hle b (by simp)) (hle c (by simp)) (hle d (by simp))
+        (hle e (by simp)) (hle g (by simp))
+    rcases Finset.mem_insert.mp hm with hm' | hm
+    · rw [hm'] at hle
+      rw [h1]
+      exact hmax b a c e d g (hle a (by simp)) (hle c (by simp)) (hle e (by simp))
+        (hle d (by simp)) (hle g (by simp))
+    rcases Finset.mem_insert.mp hm with hm' | hm
+    · rw [hm'] at hle
+      rw [h2, h1]
+      exact hmax c a b g d e (hle a (by simp)) (hle b (by simp)) (hle g (by simp))
+        (hle d (by simp)) (hle e (by simp))
+    rcases Finset.mem_insert.mp hm with hm' | hm
+    · rw [hm'] at hle
+      rw [h3, h1]
+      exact hmax d e c a b g (hle e (by simp)) (hle c (by simp)) (hle a (by simp))
+        (hle b (by simp)) (hle g (by simp))
+    rcases Finset.mem_insert.mp hm with hm' | hm
+    · rw [hm'] at hle
+      rw [h3]
+      exact hmax e d c b a g (hle d (by simp)) (hle c (by simp)) (hle b (by simp))
+        (hle a (by simp)) (hle g (by simp))
+    rw [Finset.mem_singleton.mp hm] at hle
+    rw [h2, h3]
+    exact hmax g d b c a e (hle d (by simp)) (hle b (by simp)) (hle c (by simp))
+      (hle a (by simp)) (hle e (by simp))
+  exact key1 (key2 hord) y1 y2 y3 y4 y5 y6
+
+/-! ### §10: the ordered-case interval bash (merge_ineq.hl:1606-1809) -/
+
+/-- The CRIT/BRANCH bash on the ordered cone.  Top split: `a` across the
+critical band (`p21i_not_critEdgeY_dichotomy`).  Under `a ≤ 2*hminus` all
+six edges are subcritical and the `RIBCYXU` pair covers (`sharp` below
+2.001, `sym` above, its ordering tail dead).  Over `2*hplus` the
+double-big corner `b ≥ 2*hplus` dies against `TADIAMB` (`2 < rad2`),
+`d ≥ 2*hplus` splits at `2.01` (WKGUESB above, then `tsk_lemma1` / XLLIPLS
+below, split at 2.8), and `d ≤ 2*hminus` splits at `2.001` (IYOUOBF `sym`
+above, `sharp v2` below). -/
+private theorem p21k_ordered_core (hE : p21k_euler_anchor) (hg : p21k_glsa_correct)
+    (hbank : tsk_bank) (a b c d e g : ℝ) (hcb : c ≤ b) (heb : e ≤ b) (hgb : g ≤ b)
+    (hba : b ≤ a) (hca : c ≤ a) (hda : d ≤ a) (hea : e ≤ a) (hga : g ≤ a)
+    (lo1 : 2 ≤ a) (lo2 : 2 ≤ b) (lo3 : 2 ≤ c) (lo4 : 2 ≤ d) (lo5 : 2 ≤ e) (lo6 : 2 ≤ g)
+    (hi1 : a ≤ Real.sqrt 8) (hi2 : b ≤ Real.sqrt 8) (hi3 : c ≤ Real.sqrt 8)
+    (hi4 : d ≤ Real.sqrt 8) (hi5 : e ≤ Real.sqrt 8) (hi6 : g ≤ Real.sqrt 8)
+    (n1 : ¬ criticalEdgeY a) (n2 : ¬ criticalEdgeY b) (n4 : ¬ criticalEdgeY d)
+    (hd : 0 < deltaY a b c d e g)
+    (hr : rad2X (a ^ 2) (b ^ 2) (c ^ 2) (d ^ 2) (e ^ 2) (g ^ 2) < 2) :
+    0 ≤ gamma4fgcy a b c d e g lmfun := by
+  -- the narrow-box face, hoisted before the case bash (and before the bank
+  -- unpack below: `obtain … := hbank` consumes the hypothesis)
+  have hnarrow : ∀ b' d' : ℝ, (2.8 : ℝ) ≤ a → 2 ≤ b' → b' ≤ 2.01 → 2 ≤ c → c ≤ 2.01 →
+      2.8 ≤ d' → d' ≤ Real.sqrt 8 → 2 ≤ e → e ≤ 2.01 → 2 ≤ g → g ≤ 2.01 →
+      0 < deltaY a b' c d' e g → 0 ≤ gamma4fgcy a b' c d' e g lmfun := by
+    intro b' d' hbig hlo hb201' lo3 hcc' hd28 hi4 lo5 heb' lo6 hgb' hdel'
+    obtain ⟨-, -, -, -, -, -, -, -, hdx4, heul⟩ := id hbank
+    exact p21k_tsk_lemma1 hE hg hbank a b' c d' e g hbig hi1 hlo hb201'
+      lo3 hcc' hd28 hi4 lo5 heb' lo6 hgb' hdel'
+  obtain ⟨-, hiyuv2, hiyusym, hrib0, hrib5, htadi, hwkg, hxll, -, -⟩ := hbank
+  rcases TSKAJXY034W3.p21i_not_critEdgeY_dichotomy n1 lo1 hi1 with hA1 | hA2
+  · -- —— `a ≤ 2*hminus`: the all-subcritical cone
+    rcases le_total (2.001 : ℝ) a with ha2001 | ha2001'
+    · obtain h | h | h | h | h | h | h | h | h :=
+        hrib5 a b c d e g ha2001 hA1 lo2 (le_trans hba hA1) lo3 (le_trans hca hA1) lo4
+          (le_trans hda hA1) lo5 (le_trans hea hA1) lo6 (le_trans hga hA1)
+      · exact le_of_lt h
+      · exact absurd h (not_lt.mpr hba)
+      · exact absurd h (not_lt.mpr hca)
+      · exact absurd h (not_lt.mpr hda)
+      · exact absurd h (not_lt.mpr hea)
+      · exact absurd h (not_lt.mpr hga)
+      · exact absurd h (not_lt.mpr hcb)
+      · exact absurd h (not_lt.mpr heb)
+      · exact absurd h (not_lt.mpr hgb)
+    · exact hrib0 a b c d e g lo1 ha2001' lo2 (le_trans hba ha2001') lo3
+        (le_trans hca ha2001') lo4 (le_trans hda ha2001') lo5 (le_trans hea ha2001')
+        lo6 (le_trans hga ha2001')
+  · -- —— `a ≥ 2*hplus`
+    rcases TSKAJXY034W3.p21i_not_critEdgeY_dichotomy n2 lo2 hi2 with hBsmall | hBbig
+    · -- —— `b ≤ 2*hminus`: split d at the critical band
+      rcases TSKAJXY034W3.p21i_not_critEdgeY_dichotomy n4 lo4 hi4 with hDsmall | hDbig
+      · -- —— `d ≤ 2*hminus`: split b at 2.001
+        rcases le_total (2.001 : ℝ) b with hb2001 | hb2001'
+        · -- b ≥ 2.001: IYOUOBF sym (tail dead by the ordering)
+          obtain h | h | h | h :=
+            hiyusym a b c d e g hA2 hi1 hb2001 hBsmall lo3 (le_trans hcb hBsmall) lo4
+              hDsmall lo5 (le_trans heb hBsmall) lo6 (le_trans hgb hBsmall)
+          · exact h
+          · exact absurd h (not_lt.mpr hcb)
+          · exact absurd h (not_lt.mpr heb)
+          · exact absurd h (not_lt.mpr hgb)
+        · -- b ≤ 2.001: IYOUOBF sharp v2
+          exact hiyuv2 a b c d e g hA2 hi1 lo2 hb2001' lo3 (le_trans hcb hb2001') lo4
+            hDsmall lo5 (le_trans heb hb2001') lo6 (le_trans hgb hb2001')
+      · -- —— `d ≥ 2*hplus`
+        rcases le_total (2.01 : ℝ) b with hb201 | hb201'
+        · -- b ≥ 2.01: WKGUESB (tail dead by the ordering)
+          obtain h | h | h | h | h :=
+            hwkg a b c d e g hA2 hi1 hb201 hBsmall lo3 (le_trans hcb hBsmall) hDbig hi4
+              lo5 (le_trans heb hBsmall) lo6 (le_trans hgb hBsmall)
+          · exact le_of_lt h
+          · exact absurd h (not_lt.mpr hcb)
+          · exact absurd h (not_lt.mpr heb)
+          · exact absurd h (not_lt.mpr hgb)
+          · exact absurd h (not_lt.mpr hda)
+        · -- b ≤ 2.01: split d at 2.8
+          rcases le_total (2.8 : ℝ) d with hd28 | hd28'
+          · -- d ≥ 2.8 (so a ≥ 2.8): the narrow box — tsk_lemma1
+            exact hnarrow b d (le_trans hd28 hda) lo2 hb201' lo3 (le_trans hcb hb201')
+              hd28 hi4 lo5 (le_trans heb hb201') lo6 (le_trans hgb hb201') hd
+          · -- d ≤ 2.8: XLLIPLS
+            exact le_of_lt (hxll a b c d e g hA2 hi1 lo2 hb201' lo3
+              (le_trans hcb hb201') hDbig hd28' lo5 (le_trans heb hb201') lo6
+              (le_trans hgb hb201'))
+    · -- the double-big corner: TADIAMB forces `rad2 ≥ 2`
+      have ht : 2 < rad2X (a ^ 2) (b ^ 2) (c ^ 2) (d ^ 2) (e ^ 2) (g ^ 2) := by
+        have ht' : 2 < rad2X (a * a) (b * b) (c * c) (d * d) (e * e) (g * g) :=
+          htadi a b c d e g hA2 hi1 hBbig hi2 lo3 hi3 lo4 hi4 lo5 hi5 lo6 hi6
+        rw [show a * a = a ^ 2 from by ring, show b * b = b ^ 2 from by ring,
+          show c * c = c ^ 2 from by ring, show d * d = d ^ 2 from by ring,
+          show e * e = e ^ 2 from by ring, show g * g = g ^ 2 from by ring] at ht'
+        exact ht'
+      exact absurd hr (not_lt.mpr (le_of_lt ht))
+
+/-! ### §11: the assembly -/
+
+/-- **The wave-5 assembly**: the discharge face of the W3 leaf, one Euler
+anchor plus one corrected GXSA leaf away from `cell4_from_ineq_thm`.
+Consumes the corrected GXSA leaf (`p21k_glsa_correct`, see the recorded
+statement defect) and the remaining bank slots through the bash.  When the
+general Euler solid-angle port (merge_ineq.hl:841, backed by
+`Euler_main_theorem.EULER_TRIANGLE`) and the GXSA sign fix land, the flip
+is `cell4_from_ineq_thm bank := p21k_cell4_from_ineq_of_euler <euler_thm>
+<glsa_thm> bank`. -/
+theorem p21k_cell4_from_ineq_of_euler (hE : p21k_euler_anchor) (hg : p21k_glsa_correct)
+    (bank : tsk_bank) : TSKAJXY034W3.cell4_from_ineq := by
+  intro y1 y2 y3 y4 y5 y6 o1 o1' o2 o2' o3 o3' o4 o4' o5 o5' o6 o6' k1 k2 k3 k4 k5 k6
+    hdel hrad
+  exact p21k_wlog (P := p21k_P) p21k_P_sym12 p21k_P_sym23 p21k_P_sym03 p21k_P_rev
+    (fun a b c d e g hcb heb hgb hba hca hda hea hga q1 q1' q2 q2' q3 q3' q4 q4' q5 q5'
+        q6 q6' j1 j2 j3 j4 j5 j6 hd' hr' =>
+      p21k_ordered_core hE hg bank a b c d e g hcb heb hgb hba hca hda hea hga
+        q1 q2 q3 q4 q5 q6 q1' q2' q3' q4' q5' q6' j1 j2 j4 hd' hr')
+    y1 y2 y3 y4 y5 y6 o1 o1' o2 o2' o3 o3' o4 o4' o5 o5' o6 o6' k1 k2 k3 k4 k5 k6 hdel hrad
+
+/- Axiom audit of the W5 block (house style): everything under the two
+explicit premises must sit on the standard three — no new debt enters the
+analytic chain. -/
+#print axioms TSKAJXY034W5.p21k_cell4_from_ineq_of_euler
+#print axioms TSKAJXY034W5.p21k_gamma4fgcy_div_sqrtdelta
+#print axioms TSKAJXY034W5.p21k_tsk_lemma1
+#print axioms TSKAJXY034W5.p21k_dih_bridge
+#print axioms TSKAJXY034W5.p21k_wlog
+
+end TSKAJXY034W5
+
+
 end Kepler.Text
