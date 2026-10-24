@@ -7335,6 +7335,558 @@ theorem ADD_NN_ZERO (a b x y : ℝ) (ha : 0 < a) (hb : 0 < b) (hx : 0 ≤ x)
       · exact absurd h7 hb.ne'
       · exact h7⟩
 
+/-! ### PA18 pool-B W4 kernel (azim local control) — lane AN, wave W4 -/
+
+/-- re/im of the horizontal coordinate. -/
+private theorem pa18w4_zOf_re (f1 f2 w u0 : V3) :
+    (zOf f1 f2 (w - u0)).re = (w - u0) ⬝ᵥ f1 := by
+  rw [zOf, Complex.add_re]
+  simp
+
+private theorem pa18w4_zOf_im (f1 f2 w u0 : V3) :
+    (zOf f1 f2 (w - u0)).im = (w - u0) ⬝ᵥ f2 := by
+  rw [zOf, Complex.add_im]
+  simp
+
+/-- The azimuth is locally under uniform control off the axis: around any
+point `z` off the stem line with azimuth in `(0, 2π)`, all nearby points stay
+off-axis and keep their azimuth in the prescribed window `(A, B)`. -/
+private theorem pa18w4_azim_loc (u0 u1 v z : V3) (h1 : ¬Collinear3 u0 u1 v)
+    (hz : ¬Collinear3 u0 u1 z) (hθ0 : 0 < azim u0 u1 v z)
+    (hθ1 : azim u0 u1 v z < 2 * Real.pi) (A B : ℝ)
+    (hA : A < azim u0 u1 v z) (hB : azim u0 u1 v z < B) (hB2 : B ≤ 2 * Real.pi) :
+    ∃ ε > 0, ∀ w, dist w z < ε → ¬Collinear3 u0 u1 w ∧
+      A < azim u0 u1 v w ∧ azim u0 u1 v w < B := by
+  set θ₀ := azim u0 u1 v z with hθ₀def
+  have hwv : u1 ≠ u0 := fun he => h1 (collinear3_of_eq he)
+  -- a right-handed orthonormal frame along the axis
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (u1 - u0) (sub_ne_zero.mpr hwv)
+  have hax : (u1 - u0 : V3) = dist u1 u0 • f3 := by rw [dist_eq_norm]; exact halign
+  obtain ⟨hon1, hon2, hon3, hon12, hon13, hon23, -⟩ := id hon
+  -- the global phase ψ, fixed by the reference pair (v, z)
+  obtain ⟨ψ, ρ₁, ρz, hρ₁, hρz, hspec, hzz⟩ := azim_frame_spec h1 hz hon hax hwv
+  -- every off-axis point shares the phase ψ, up to the phase period
+  have key : ∀ w : V3, ¬Collinear3 u0 u1 w →
+      zOf f1 f2 (w - u0)
+        = (‖zOf f1 f2 (w - u0)‖ : ℝ) * Complex.exp (((ψ + azim u0 u1 v w : ℝ) : ℂ) * Complex.I) := by
+    intro w hnc
+    obtain ⟨ψ', t₁, tw, ht₁, htw, hw1, hww⟩ := azim_frame_spec h1 hnc hon hax hwv
+    have hphase : Complex.exp (((ψ' : ℝ) : ℂ) * Complex.I)
+        = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I) :=
+      exp_pos_mul_eq ht₁ hρ₁ (hw1.symm.trans hspec)
+    have htwn : ‖zOf f1 f2 (w - u0)‖ = tw := by
+      rw [hww, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_pos htw,
+        exp_unit_norm, mul_one]
+    calc zOf f1 f2 (w - u0)
+        = ((tw : ℝ) : ℂ) * (Complex.exp (((ψ' : ℝ) : ℂ) * Complex.I)
+          * Complex.exp (((azim u0 u1 v w : ℝ) : ℂ) * Complex.I)) := by
+          rw [hww, exp_add_I]
+      _ = ((tw : ℝ) : ℂ) * Complex.exp (((ψ + azim u0 u1 v w : ℝ) : ℂ) * Complex.I) := by
+          rw [hphase, exp_add_I]
+      _ = (‖zOf f1 f2 (w - u0)‖ : ℝ) * Complex.exp (((ψ + azim u0 u1 v w : ℝ) : ℂ) * Complex.I) := by
+          rw [htwn]
+  -- the two rotated real coordinates (the frame constants are folded in)
+  set cR : ℝ := (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I)).re with hcRdef
+  set cI : ℝ := (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I)).im with hcIdef
+  have hcunit : cR * cR + cI * cI = 1 := by
+    have h2 : Complex.normSq (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I))
+        = ‖Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I)‖ ^ 2 := by
+      rw [Complex.norm_def]
+      exact (Real.sq_sqrt (Complex.normSq_nonneg _)).symm
+    have h3 : (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I)).re
+        * (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I)).re
+        + (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I)).im
+          * (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I)).im = 1 := by
+      rw [← Complex.normSq_apply, h2, exp_unit_norm, one_pow]
+    rw [hcRdef, hcIdef]
+    exact h3
+  set P : V3 → ℝ := fun w => (w - u0) ⬝ᵥ f1 * cR + (w - u0) ⬝ᵥ f2 * cI with hPdef
+  set Q : V3 → ℝ := fun w => (w - u0) ⬝ᵥ f2 * cR - (w - u0) ⬝ᵥ f1 * cI with hQdef
+  -- the rotated coordinate equality
+  have hrot : ∀ w : V3, (P w : ℂ) + (Q w : ℂ) * Complex.I
+      = zOf f1 f2 (w - u0)
+        * conj (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I)) := by
+    intro w
+    have hre : ((P w : ℂ) + (Q w : ℂ) * Complex.I).re
+        = (zOf f1 f2 (w - u0)
+          * conj (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I))).re := by
+      simp only [hPdef, hQdef, zOf, Complex.add_re, Complex.mul_re, Complex.add_im,
+        Complex.mul_im, Complex.conj_re, Complex.conj_im, Complex.ofReal_re,
+        Complex.ofReal_im, Complex.I_re, Complex.I_im]
+      ring
+    have him : ((P w : ℂ) + (Q w : ℂ) * Complex.I).im
+        = (zOf f1 f2 (w - u0)
+          * conj (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I))).im := by
+      simp only [hPdef, hQdef, zOf, Complex.add_re, Complex.mul_re, Complex.add_im,
+        Complex.mul_im, Complex.conj_re, Complex.conj_im, Complex.ofReal_re,
+        Complex.ofReal_im, Complex.I_re, Complex.I_im]
+      ring
+    exact Complex.ext hre him
+  -- continuity of P, Q
+  have hac : Continuous fun w : V3 => (w - u0) ⬝ᵥ f1 := by
+    have h : Continuous fun w : V3 => inner ℝ (w - u0) f1 :=
+      (continuous_id.sub continuous_const).inner continuous_const
+    simpa only [inner_eq_dot] using h
+  have hbc : Continuous fun w : V3 => (w - u0) ⬝ᵥ f2 := by
+    have h : Continuous fun w : V3 => inner ℝ (w - u0) f2 :=
+      (continuous_id.sub continuous_const).inner continuous_const
+    simpa only [inner_eq_dot] using h
+  have hPcont : Continuous P := by
+    simp only [hPdef]
+    exact (hac.mul continuous_const).add (hbc.mul continuous_const)
+  have hQcont : Continuous Q := by
+    simp only [hQdef]
+    exact (hbc.mul continuous_const).sub (hac.mul continuous_const)
+  -- at z the rotated coordinate is the positive real number ρz
+  have hzzre : (zOf f1 f2 (z - u0)).re = (ρz : ℝ) * cR ∧
+      (zOf f1 f2 (z - u0)).im = (ρz : ℝ) * cI := by
+    rw [hzz, Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+      ← hcRdef, ← hcIdef]
+    exact ⟨by ring, by ring⟩
+  have hPz : P z = ρz := by
+    simp only [hPdef]
+    rw [(pa18w4_zOf_re f1 f2 z u0).symm, (pa18w4_zOf_im f1 f2 z u0).symm, hzzre.1, hzzre.2]
+    linear_combination (ρz : ℝ) * hcunit
+  have hQz : Q z = 0 := by
+    simp only [hQdef]
+    rw [(pa18w4_zOf_re f1 f2 z u0).symm, (pa18w4_zOf_im f1 f2 z u0).symm, hzzre.1, hzzre.2]
+    ring
+  -- the margin and the good neighbourhood
+  set μ : ℝ :=
+    min (θ₀ - A) (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1))) / 2 with hμdef
+  have hμpos : 0 < μ := by
+    rw [hμdef]
+    refine div_pos (lt_min (by linarith) (lt_min (by linarith) (lt_min hθ0
+      (lt_min (by linarith) (by norm_num))))) zero_lt_two
+  have hμhalf : μ < Real.pi / 2 := by
+    have h1 : μ ≤ 1 := by
+      rw [hμdef, div_le_iff₀ (show (0:ℝ) < 2 from by norm_num)]
+      have hminle : min (θ₀ - A) (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))
+          ≤ 1 := by
+        refine le_trans (min_le_right _ _) ?_
+        refine le_trans (min_le_right _ _) ?_
+        refine le_trans (min_le_right _ _) ?_
+        exact min_le_right _ _
+      linarith
+    have h2 : (2 : ℝ) < Real.pi := lt_trans (by norm_num) Real.pi_gt_three
+    linarith
+  have hminA : min (θ₀ - A) (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))
+      ≤ θ₀ - A := min_le_left _ _
+  have hminB : min (θ₀ - A) (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))
+      ≤ B - θ₀ := by
+    refine le_trans (min_le_right (θ₀ - A)
+      (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))) ?_
+    exact min_le_left (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1))
+  have hminC : min (θ₀ - A) (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))
+      ≤ θ₀ := by
+    refine le_trans (min_le_right (θ₀ - A)
+      (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))) ?_
+    refine le_trans (min_le_right (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1))) ?_
+    refine le_trans (min_le_left θ₀ (min (2 * Real.pi - θ₀) 1)) ?_
+    exact le_refl θ₀
+  have hminD : min (θ₀ - A) (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))
+      ≤ 2 * Real.pi - θ₀ := by
+    refine le_trans (min_le_right (θ₀ - A)
+      (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))) ?_
+    refine le_trans (min_le_right (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1))) ?_
+    refine le_trans (min_le_right θ₀ (min (2 * Real.pi - θ₀) 1)) ?_
+    exact min_le_left (2 * Real.pi - θ₀) 1
+  have hminE : min (θ₀ - A) (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))
+      ≤ 1 := by
+    refine le_trans (min_le_right (θ₀ - A)
+      (min (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1)))) ?_
+    refine le_trans (min_le_right (B - θ₀) (min θ₀ (min (2 * Real.pi - θ₀) 1))) ?_
+    refine le_trans (min_le_right θ₀ (min (2 * Real.pi - θ₀) 1)) ?_
+    exact min_le_right (2 * Real.pi - θ₀) 1
+  have htanpos : 0 < Real.tan μ :=
+    Real.tan_pos_of_pos_of_lt_pi_div_two (by linarith) hμhalf
+  have hmemN : P ⁻¹' (Set.Ioi (ρz / 2))
+      ∩ (Q ⁻¹' (Set.Iio ((ρz / 2) * Real.tan μ))
+        ∩ Q ⁻¹' (Set.Ioi (-(ρz / 2) * Real.tan μ))) ∈ (nhds z) := by
+    have h1 : P ⁻¹' (Set.Ioi (ρz / 2)) ∈ (nhds z) := by
+      refine hPcont.continuousAt.preimage_mem_nhds ?_
+      rw [mem_nhds_iff]
+      exact ⟨Set.Ioi (ρz / 2), subset_rfl, isOpen_Ioi, by
+        rw [Set.mem_Ioi, hPz]; linarith⟩
+    have h2 : Q ⁻¹' (Set.Iio ((ρz / 2) * Real.tan μ)) ∈ (nhds z) := by
+      refine hQcont.continuousAt.preimage_mem_nhds ?_
+      rw [mem_nhds_iff]
+      exact ⟨Set.Iio ((ρz / 2) * Real.tan μ), subset_rfl, isOpen_Iio, by
+        rw [Set.mem_Iio, hQz]; exact mul_pos (div_pos hρz (show (0:ℝ) < 2 from by norm_num)) htanpos⟩
+    have h3 : Q ⁻¹' (Set.Ioi (-(ρz / 2) * Real.tan μ)) ∈ (nhds z) := by
+      refine hQcont.continuousAt.preimage_mem_nhds ?_
+      rw [mem_nhds_iff]
+      exact ⟨Set.Ioi (-(ρz / 2) * Real.tan μ), subset_rfl, isOpen_Ioi, by
+        rw [Set.mem_Ioi, hQz, neg_mul]
+        exact neg_lt_zero.2 (mul_pos (div_pos hρz (show (0:ℝ) < 2 from by norm_num)) htanpos)⟩
+    exact Filter.inter_mem h1 (Filter.inter_mem h2 h3)
+  obtain ⟨ε, hε, hball⟩ := (Metric.eventually_nhds_iff_ball).mp hmemN
+  refine ⟨ε, hε, fun w hw => ?_⟩
+  obtain ⟨hPw, hQw1, hQw2⟩ : (P ⁻¹' (Set.Ioi (ρz / 2))
+      ∩ (Q ⁻¹' (Set.Iio ((ρz / 2) * Real.tan μ))
+        ∩ Q ⁻¹' (Set.Ioi (-(ρz / 2) * Real.tan μ)))) w :=
+    hball w (Metric.mem_ball.mpr hw)
+  rw [Set.mem_preimage, Set.mem_Ioi] at hPw
+  rw [neg_mul] at hQw2
+  rw [Set.mem_preimage, Set.mem_Iio] at hQw1
+  rw [Set.mem_preimage, Set.mem_Ioi] at hQw2
+  -- w is off the axis
+  have hncw : ¬Collinear3 u0 u1 w := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hwv).1 hcol
+    have ha0 : (w - u0) ⬝ᵥ f1 = 0 := by
+      have hstep1 : ((c : ℝ) • (u1 - u0) : V3) ⬝ᵥ f1 = c * ((u1 - u0 : V3) ⬝ᵥ f1) := by
+        rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left]
+      have hstep2 : ((dist u1 u0 : ℝ) • f3 : V3) ⬝ᵥ f1 = dist u1 u0 * (f3 ⬝ᵥ f1) := by
+        rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left, inner_eq_dot]
+      rw [hc, hstep1, hax, hstep2, dotProduct_comm, hon13]
+      ring
+    have hb0 : (w - u0) ⬝ᵥ f2 = 0 := by
+      have hstep1 : ((c : ℝ) • (u1 - u0) : V3) ⬝ᵥ f2 = c * ((u1 - u0 : V3) ⬝ᵥ f2) := by
+        rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left]
+      have hstep2 : ((dist u1 u0 : ℝ) • f3 : V3) ⬝ᵥ f2 = dist u1 u0 * (f3 ⬝ᵥ f2) := by
+        rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left, inner_eq_dot]
+      rw [hc, hstep1, hax, hstep2, dotProduct_comm, hon23]
+      ring
+    simp only [hPdef] at hPw
+    rw [ha0, hb0] at hPw
+    linarith
+  -- the recovered angle Θ
+  have hPne : (0 : ℝ) < P w := lt_of_le_of_lt (by linarith [hρz]) hPw
+  set Θ := Real.arctan (Q w / P w) with hΘdef
+  have hΘbound : |Θ| < μ := by
+    have hquot : |Q w / P w| < Real.tan μ := by
+      rw [abs_div, abs_of_pos hPne]
+      have h1q : |Q w| < (ρz / 2) * Real.tan μ := abs_lt.mpr ⟨hQw2, hQw1⟩
+      have h3 : (ρz / 2) ≤ P w := le_of_lt (by linarith)
+      calc |Q w| / P w < (ρz / 2) * Real.tan μ / P w :=
+            div_lt_div_of_pos_right h1q hPne
+        _ ≤ Real.tan μ := by
+            rw [div_le_iff₀ hPne, mul_comm]
+            exact mul_le_mul_of_nonneg_left h3 (le_of_lt htanpos)
+    have hm : μ ∈ Set.Ioo (-(Real.pi / 2)) (Real.pi / 2) := ⟨by linarith, hμhalf⟩
+    rw [hΘdef, abs_lt]
+    constructor
+    · rw [show (-μ : ℝ) = Real.arctan (-(Real.tan μ)) from by
+        rw [Real.arctan_neg, Real.arctan_tan hm.1 hm.2]]
+      exact Real.arctan_lt_arctan_iff.2 (by
+        linarith [abs_lt.mp hquot |>.1, le_abs_self (Q w / P w)])
+    · rw [show (μ : ℝ) = Real.arctan (Real.tan μ) from by
+        rw [Real.arctan_tan hm.1 hm.2]]
+      exact Real.arctan_lt_arctan_iff.2 (by
+        linarith [abs_lt.mp hquot |>.2, le_abs_self (Q w / P w)])
+  have hΘbounds : 0 < θ₀ + Θ ∧ θ₀ + Θ < 2 * Real.pi := by
+    rw [hμdef] at hΘbound
+    have h1 : μ ≤ (θ₀ - A) / 2 := by
+      rw [hμdef, div_le_iff₀ (show (0:ℝ) < 2 from by norm_num)]
+      linarith [show 2 * ((θ₀ - A) / 2) = (θ₀ - A) from by ring]
+    have h2 : μ ≤ (B - θ₀) / 2 := by
+      rw [hμdef, div_le_iff₀ (show (0:ℝ) < 2 from by norm_num)]
+      linarith [show 2 * ((B - θ₀) / 2) = (B - θ₀) from by ring]
+    have h3 : μ ≤ θ₀ / 2 := by
+      rw [hμdef, div_le_iff₀ (show (0:ℝ) < 2 from by norm_num)]
+      linarith [show 2 * (θ₀ / 2) = θ₀ from by ring]
+    have h4 : μ ≤ (2 * Real.pi - θ₀) / 2 := by
+      rw [hμdef, div_le_iff₀ (show (0:ℝ) < 2 from by norm_num)]
+      linarith [show 2 * ((2 * Real.pi - θ₀) / 2) = 2 * Real.pi - θ₀ from by ring]
+    rw [abs_lt] at hΘbound
+    exact ⟨by linarith, by linarith⟩
+  -- the unit-rotation identity for Θ
+  have hden : (0 : ℝ) < 1 + (Q w / P w) ^ 2 := by positivity
+  have hABne : Real.sqrt (1 + (Q w / P w) ^ 2) ≠ 0 :=
+    (Real.sqrt_pos.mpr hden).ne'
+  have hroot : P w * Real.sqrt (1 + (Q w / P w) ^ 2)
+      = Real.sqrt (P w ^ 2 + Q w ^ 2) := by
+    rw [show Real.sqrt (P w ^ 2 + Q w ^ 2)
+        = Real.sqrt ((1 + (Q w / P w) ^ 2) * P w ^ 2) from by
+      rw [Real.sqrt_mul (le_of_lt hden)]
+      congr 1
+      field_simp
+      rw [Real.sqrt_div (show (0:ℝ) ≤ P w ^ 2 + Q w ^ 2 from by positivity),
+        Real.sqrt_sq (show (0:ℝ) ≤ P w from by positivity)]
+      exact (div_mul_cancel₀ (a := Real.sqrt (P w ^ 2 + Q w ^ 2)) hPne.ne').symm,
+      Real.sqrt_mul (le_of_lt hden),
+      Real.sqrt_sq (show (0:ℝ) ≤ P w from by positivity),
+      mul_comm]
+  have hApos : (0:ℝ) < P w ^ 2 + Q w ^ 2 := by
+    have h1 : (0:ℝ) < P w ^ 2 := by
+      rw [pow_two]
+      exact mul_pos hPne hPne
+    linarith [sq_nonneg (Q w)]
+  have hcostheta : (Real.sqrt (P w ^ 2 + Q w ^ 2) : ℝ) * Real.cos Θ = P w := by
+    rw [hΘdef, Real.cos_arctan,
+      ← mul_div_assoc (Real.sqrt (P w ^ 2 + Q w ^ 2)), mul_one,
+      div_eq_iff hABne]
+    first | exact hroot | exact hroot.symm
+  have hsinform : Real.sin Θ = Real.tan Θ * Real.cos Θ := by
+    have hcosne : Real.cos Θ ≠ 0 := by
+      intro hcon
+      exact absurd (Real.cos_arctan_pos (Q w / P w)) (by rw [hcon]; exact fun h => lt_irrefl 0 h)
+    rw [Real.tan_eq_sin_div_cos, div_mul_cancel₀ (Real.sin Θ) hcosne]
+  have hsintheta : (Real.sqrt (P w ^ 2 + Q w ^ 2) : ℝ) * Real.sin Θ = Q w := by
+    rw [hsinform, hΘdef, Real.tan_arctan, Real.cos_arctan,
+      show (Q w / P w) * (1 / Real.sqrt (1 + (Q w / P w) ^ 2))
+        = Q w / (P w * Real.sqrt (1 + (Q w / P w) ^ 2)) from by field_simp,
+      ← mul_div_assoc, hroot]
+    field_simp [(Real.sqrt_pos.mpr hApos).ne']
+  have hΘexp : (Real.sqrt (P w ^ 2 + Q w ^ 2) : ℝ) * Complex.exp ((Θ : ℝ) * Complex.I)
+      = ((P w : ℂ) + (Q w : ℂ) * Complex.I) := by
+    have hAne : Real.sqrt (P w ^ 2 + Q w ^ 2) ≠ 0 := (Real.sqrt_pos.mpr hApos).ne'
+    have h1 : Real.cos Θ = P w / Real.sqrt (P w ^ 2 + Q w ^ 2) := by
+      rw [eq_div_iff (Real.sqrt_pos.mpr hApos).ne', mul_comm]
+      exact hcostheta
+    have h2 : Real.sin Θ = Q w / Real.sqrt (P w ^ 2 + Q w ^ 2) := by
+      rw [eq_div_iff (Real.sqrt_pos.mpr hApos).ne', mul_comm]
+      exact hsintheta
+    rw [Complex.exp_mul_I, ← Complex.ofReal_cos, ← Complex.ofReal_sin, h1, h2]
+    push_cast [hAne]
+    field_simp [hAne]
+
+  -- combine everything: exp(i azim w) = exp(i (θ₀ + Θ))
+  set N := Real.sqrt (P w ^ 2 + Q w ^ 2) with hNdef
+  have hNpos : 0 < N := Real.sqrt_pos.mpr (by positivity)
+  have hzOfne : zOf f1 f2 (w - u0) ≠ 0 := (zOf_ne_zero_iff hon hax hwv w).mpr hncw
+  have hNzOf : (N : ℝ) = ‖zOf f1 f2 (w - u0)‖ := by
+    have hid : P w ^ 2 + Q w ^ 2 = ((w - u0) ⬝ᵥ f1) ^ 2 + ((w - u0) ⬝ᵥ f2) ^ 2 := by
+      simp only [hPdef, hQdef]
+      linear_combination (norm := ring_nf)
+        (((w - u0) ⬝ᵥ f1) ^ 2 + ((w - u0) ⬝ᵥ f2) ^ 2) * hcunit
+    rw [hNdef, hid, Complex.norm_def, Complex.normSq_apply, pa18w4_zOf_re, pa18w4_zOf_im]
+    congr 1
+    ring
+  have hNcn : ((N : ℝ) : ℂ) ≠ 0 := fun h => hNpos.ne' (Complex.ofReal_inj.mp h)
+  have hcomb : Complex.exp (((ψ + azim u0 u1 v w : ℝ) : ℂ) * Complex.I)
+      * conj (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I))
+      = Complex.exp (((Θ : ℝ) : ℂ) * Complex.I) := by
+    have h1 : ((P w : ℂ) + (Q w : ℂ) * Complex.I)
+        = ((N : ℝ) : ℂ) * (Complex.exp (((ψ + azim u0 u1 v w : ℝ) : ℂ) * Complex.I)
+          * conj (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I))) := by
+      rw [hrot w, key w hncw, ← hNzOf, mul_assoc]
+    exact mul_left_cancel₀ hNcn (h1.symm.trans hΘexp.symm)
+  have hcore : Complex.exp (((azim u0 u1 v w : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((θ₀ + Θ : ℝ) : ℂ) * Complex.I) := by
+    have hconjexp : conj (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I))
+        = Complex.exp ((-((ψ + θ₀ : ℝ)) : ℂ) * Complex.I) := by
+      rw [← Complex.exp_conj]
+      congr 1
+      rw [map_mul (starRingEnd ℂ), Complex.conj_ofReal, Complex.conj_I]
+      ring
+    have hstep1 : Complex.exp (((ψ + azim u0 u1 v w : ℝ) : ℂ) * Complex.I)
+        * conj (Complex.exp (((ψ + θ₀ : ℝ) : ℂ) * Complex.I))
+        = Complex.exp (((Θ : ℝ) : ℂ) * Complex.I) := hcomb
+    rw [hconjexp, ← Complex.exp_add] at hstep1
+    rw [show ((ψ + azim u0 u1 v w : ℝ) : ℂ) * Complex.I
+        + ((-((ψ + θ₀ : ℝ)) : ℂ) * Complex.I)
+        = (((azim u0 u1 v w - θ₀ : ℝ)) : ℂ) * Complex.I from by
+      push_cast [mul_sub]
+      ring] at hstep1
+    obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hstep1
+    have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+    have hc2 : (((azim u0 u1 v w - θ₀ : ℝ)) : ℂ) * Complex.I
+        = (((Θ + (n:ℝ) * (2 * Real.pi) : ℝ)) : ℂ) * Complex.I := by
+      rw [hn]
+      push_cast
+      ring
+    have hc3 : (azim u0 u1 v w - θ₀ : ℝ) = Θ + (n:ℝ) * (2 * Real.pi) := by
+      rw [mul_comm (↑((azim u0 u1 v w - θ₀ : ℝ)) : ℂ) Complex.I,
+        mul_comm (↑(((Θ + (n:ℝ) * (2 * Real.pi) : ℝ)) : ℂ)) Complex.I] at hc2
+      have h3 := mul_left_cancel₀ (a := (Complex.I : ℂ)) (show (Complex.I : ℂ) ≠ 0 from Complex.I_ne_zero) hc2
+      exact_mod_cast h3
+    have haeq : azim u0 u1 v w = θ₀ + Θ := by
+      rcases Int.lt_trichotomy n 0 with hnn | hnn | hnn
+      · exfalso
+        have h1k : (n:ℝ) * (2 * Real.pi) ≤ -2 * Real.pi := by
+          have h1z : (n:ℝ) ≤ ↑((-1 : ℤ)) := by exact_mod_cast (Int.le_sub_one_of_lt hnn)
+          have h2 : (n:ℝ) * (2 * Real.pi) ≤ ↑((-1 : ℤ)) * (2 * Real.pi) :=
+            mul_le_mul_of_nonneg_right h1z h2pi.le
+          have h3c : (↑((-1 : ℤ)) : ℝ) * (2 * Real.pi) = -2 * Real.pi := by norm_num
+          rwa [h3c] at h2
+        linarith [hc3, h1k, hΘbounds.2, azim_nonneg u0 u1 v w]
+      · -- n = 0
+        have hn0 : (n:ℤ) = 0 := hnn
+        rw [hn0] at hc3
+        norm_num at hc3
+        linarith
+      · exfalso
+        have h1k : (2:ℝ) * Real.pi ≤ (n:ℝ) * (2 * Real.pi) := by
+          have h1z : (1:ℝ) ≤ ↑n := by exact_mod_cast (by linarith [hnn] : (1 : ℤ) ≤ n)
+          have h2 : (1:ℝ) * (2 * Real.pi) ≤ ↑n * (2 * Real.pi) :=
+            mul_le_mul_of_nonneg_right h1z h2pi.le
+          linarith
+        linarith [hc3, h1k, hΘbounds.1, azim_lt_two_pi u0 u1 v w]
+    rw [haeq]
+
+  refine ⟨hncw, ?_, ?_⟩
+  · have := angle_eq_of_exp_eq (azim_nonneg u0 u1 v w) (azim_lt_two_pi u0 u1 v w)
+      hΘbounds.1.le hΘbounds.2 hcore
+    rw [this]
+    rw [hμdef] at hΘbound
+    have h1 : μ ≤ (θ₀ - A) / 2 := by
+      rw [div_le_iff₀ (show (0:ℝ) < 2 from by norm_num)]
+      linarith [hminA, show 2 * ((θ₀ - A) / 2) = (θ₀ - A) from by ring]
+    rw [abs_lt] at hΘbound
+    linarith
+  · have := angle_eq_of_exp_eq (azim_nonneg u0 u1 v w) (azim_lt_two_pi u0 u1 v w)
+      hΘbounds.1.le hΘbounds.2 hcore
+    rw [this]
+    rw [hμdef] at hΘbound
+    have h2 : μ ≤ (B - θ₀) / 2 := by
+      rw [div_le_iff₀ (show (0:ℝ) < 2 from by norm_num)]
+      linarith [hminB, show 2 * ((B - θ₀) / 2) = (B - θ₀) from by ring]
+    have h4 : μ ≤ (2 * Real.pi - θ₀) / 2 := by
+      rw [div_le_iff₀ (show (0:ℝ) < 2 from by norm_num)]
+      linarith [hminD, show 2 * ((2 * Real.pi - θ₀) / 2) = 2 * Real.pi - θ₀ from by ring]
+    rw [abs_lt] at hΘbound
+    linarith
+
+/-- The open wedge is open. -/
+private theorem pa18w4_isOpen_wedge (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
+    (h2 : ¬Collinear3 u0 u1 v2) : IsOpen (wedge u0 u1 v1 v2) := by
+  refine Metric.isOpen_iff.2 fun w hw => ?_
+  rw [wedge, Set.mem_setOf_eq] at hw
+  obtain ⟨ε, hε, hball⟩ := pa18w4_azim_loc u0 u1 v1 w h1 hw.1 hw.2.1
+    (azim_lt_two_pi u0 u1 v1 w) 0 (azim u0 u1 v1 v2) hw.2.1 hw.2.2
+    (azim_lt_two_pi u0 u1 v1 v2).le
+  refine ⟨ε, hε, fun m hm => ?_⟩
+  rw [Metric.mem_ball] at hm
+  exact hball m hm
+
+/-- The complement of the closed wedge is open. -/
+private theorem pa18w4_isOpen_compl_wedgeGe (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
+    (h2 : ¬Collinear3 u0 u1 v2) : IsOpen ((Set.univ : Set V3) \ wedgeGe u0 u1 v1 v2) := by
+  refine Metric.isOpen_iff.2 fun w hw => ?_
+  rw [Set.mem_diff] at hw
+  simp only [Set.mem_univ, true_and] at hw
+  rw [wedgeGe, Set.mem_setOf_eq] at hw
+  by_cases h : azim u0 u1 v1 w ≤ azim u0 u1 v1 v2
+  · exact absurd ⟨azim_nonneg u0 u1 v1 w, h⟩ hw
+  push_neg at h
+  have hgt : azim u0 u1 v1 v2 < azim u0 u1 v1 w := h
+  have hnc : ¬Collinear3 u0 u1 w := by
+    intro hcol
+    rw [show azim u0 u1 v1 w = 0 from by rw [azim, if_pos (Or.inr hcol)]] at hgt
+    exact absurd hgt (not_lt.mpr (azim_nonneg u0 u1 v1 v2))
+  obtain ⟨ε, hε, hball⟩ := pa18w4_azim_loc u0 u1 v1 w h1 hnc
+    (by linarith [azim_nonneg u0 u1 v1 v2, hgt]) (azim_lt_two_pi u0 u1 v1 w)
+    (azim u0 u1 v1 v2) (2 * Real.pi) hgt (azim_lt_two_pi u0 u1 v1 w) le_rfl
+  refine ⟨ε, hε, fun m hm => ?_⟩
+  rw [Metric.mem_ball] at hm
+  obtain ⟨hcol, hgtm, hlt⟩ := hball m hm
+  rw [Set.mem_diff]
+  simp only [Set.mem_univ, true_and]
+  rw [wedgeGe, Set.mem_setOf_eq]
+  exact fun hcon => absurd hgtm (not_lt.mpr hcon.2)
+
+private theorem pa18w4_affsign_mem_affSpan {s t : Set V3} {sgn : ℝ → Prop} {v : V3}
+    (hv : Affsign sgn s t v) : v ∈ (affineSpan ℝ (s ∪ t) : Set V3) := by
+  obtain ⟨f, hfin, hvec, -, hone⟩ := hv
+  by_cases hF : hfin.toFinset = ∅
+  · rw [hF, Finset.sum_empty] at hone
+    norm_num at hone
+  · obtain ⟨w₀, hw₀F⟩ := Finset.nonempty_iff_ne_empty.2 hF
+    have hw₀S : w₀ ∈ (s ∪ t : Set V3) := (Set.Finite.mem_toFinset hfin).1 hw₀F
+    -- rewrite the combination as an affine telescoping sum around `w₀`
+    have key : v - w₀ = ∑ w ∈ hfin.toFinset, f w • (w - w₀) := by
+      have h1 : (∑ w ∈ hfin.toFinset, f w • (w - w₀) : V3)
+          = (∑ w ∈ hfin.toFinset, f w • w) - (∑ w ∈ hfin.toFinset, f w) • w₀ := by
+        rw [Finset.sum_smul, ← Finset.sum_sub_distrib]
+        exact Finset.sum_congr rfl fun w _ => by rw [smul_sub]
+      rw [h1, hvec, hone, one_smul]
+    have hd : (v - w₀ : V3) ∈ vectorSpan ℝ (s ∪ t : Set V3) := by
+      rw [vectorSpan_def, key]
+      refine Submodule.sum_mem _ fun w hw => ?_
+      exact Submodule.smul_mem _ _ (Submodule.subset_span (Set.mem_vsub.2
+        ⟨w, (Set.Finite.mem_toFinset hfin).1 hw, w₀, hw₀S, rfl⟩))
+    have hvv : v = (v -ᵥ w₀) +ᵥ w₀ := by rw [vsub_vadd]
+    rw [SetLike.mem_coe, hvv,
+      AffineSubspace.vadd_mem_iff_mem_direction (v -ᵥ w₀)
+        (subset_affineSpan ℝ (s ∪ t : Set V3) hw₀S),
+      direction_affineSpan]
+    exact hd
+
+/-- HOL `AFF_GT_SUBSET_AFFINE_HULL` (Collect_geom). -/
+private theorem pa18w4_AFF_GT_SUBSET_AFFINE_HULL (s t : Set V3) :
+    affGt s t ⊆ (affineSpan ℝ (s ∪ t) : Set V3) := by
+  intro v hv
+  have hv' : Affsign (fun w => 0 < w) s t v := Set.mem_setOf_eq.mp hv
+  exact pa18w4_affsign_mem_affSpan hv'
+
+/-- A collinear third point sits on the two-point affine span (W4-local copy
+of the W1 micro kit's `pa18_collinear3_affSpan2`, which sits below the
+`BDXKHTW` consumption point). -/
+private theorem pa18w4_collinear3_affSpan2 {u0 u1 x : V3} (h01 : u0 ≠ u1)
+    (hcol : Collinear3 u0 u1 x) : x ∈ (affineSpan ℝ ({u0, u1} : Set V3) : Set V3) := by
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (Ne.symm h01)).1 hcol
+  refine (mem_affineSpan_pair_iff_exists_lineMap_eq (p := x) (p₁ := u0)
+    (p₂ := u1)).2 ⟨c, ?_⟩
+  show AffineMap.lineMap u0 u1 c = x
+  rw [AffineMap.lineMap_apply]
+  simp only [vsub_eq_sub]
+  rw [← hc, vadd_eq_add]
+  abel
+
+/-- The upgrade from the closed to the strict half-plane off the axis line
+(the `IN_AFF_GE_INTERPRET_TO_AFF_GT_AND_AFF` content). -/
+private theorem pa18w4_affGe_affGt {u0 u1 v x : V3} (hv : ¬Collinear3 u0 u1 v)
+    (hx : x ∈ affGe ({u0, u1} : Set V3) ({v} : Set V3))
+    (hline : x ∉ (affineSpan ℝ ({u0, u1} : Set V3) : Set V3)) :
+    x ∈ affGt ({u0, u1} : Set V3) ({v} : Set V3) := by
+  obtain ⟨f, hfin, hvec, hsgn, hone⟩ := hx
+  have h01 : u0 ≠ u1 := ne₁₂_of_not_collinear hv
+  have h0v : u0 ≠ v := ne₁₃_of_not_collinear hv
+  have h1v : u1 ≠ v := ne₂₃_of_not_collinear hv
+  by_cases hfv : f v = 0
+  · exfalso
+    apply hline
+    have hF := pa18_toFinset3 h01 h0v h1v hfin
+    have hsum' := hone
+    rw [hF, Finset.sum_insert (by
+      intro hcon
+      simp only [Finset.mem_insert, Finset.mem_singleton] at hcon
+      rcases hcon with h | h
+      · exact h01 h
+      · exact h0v h), Finset.sum_insert (by
+        intro hcon
+        simp only [Finset.mem_insert, Finset.mem_singleton] at hcon
+        exact h1v hcon), Finset.sum_singleton] at hsum' hvec
+    rw [hfv, zero_smul, add_zero] at hvec
+    have h1 : f u0 + f u1 = 1 := by linarith [hsum', hfv]
+    have h1a : f u0 = 1 - f u1 := by linarith [h1]
+    have h1' : f u0 • u0 = u0 - f u1 • u0 := by
+      rw [h1a, sub_smul, one_smul]
+    have hx2 : x = u0 + f u1 • (u1 - u0) := by
+      rw [hvec, h1', smul_sub]
+      module
+    rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+    refine ⟨f u1, ?_⟩
+    rw [AffineMap.lineMap_apply_module, hx2]
+    module
+  · refine ⟨f, hfin, hvec, fun z hz => ?_, hone⟩
+    rw [Set.mem_singleton_iff.1 hz]
+    exact lt_of_le_of_ne (hsgn v (Set.mem_singleton v)) (Ne.symm hfv)
+
+/-- The CFFONNL dichotomy step: a non-cc-cell `X` touching the strict
+half-plane equals the cc-cell over the swapped stem orientation. -/
+private theorem pa18w4_swap_via_CFFONNL {V : Set V3} {X : Set V3} {u0 u1 v : V3}
+    (hp : Packing V) (hs : saturated V) (hl' : leaf V [u0, u1, v])
+    (hX : X ∈ mcellSet V) (he : {u0, u1} ∈ edgeX V X)
+    (x : V3) (hxX : x ∈ X) (hxaffGt : x ∈ affGt ({u0, u1} : Set V3) ({v} : Set V3))
+    (hne : X ≠ ccCell V [u0, u1, v]) :
+    X = ccCell V [u1, u0, v] := by
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH (V := V) (ul := [u0, u1, v]) hp hs hl'
+  have hA : X ∩ ccA0 [u0, u1, v] ≠ ∅ := by
+    rw [← Set.nonempty_iff_ne_empty]
+    refine ⟨x, hxX, ?_⟩
+    show x ∈ ccA0 [u0, u1, v]
+    simp only [ccA0, List.getElem!_cons_zero, List.getElem!_cons_succ]
+    exact hxaffGt
+  have hE : {(ccUh V [u0, u1, v]).getD 0 0, (ccUh V [u0, u1, v]).getD 1 0} ∈ edgeX V X := by
+    rw [e0, e1, pa18_getD3_0, pa18_getD3_1]
+    exact he
+  have hcc := CFFONNL (V := V) (ul := [u0, u1, v]) hp hs hl' hX hE hA hne
+  rw [e1, e0, e2, pa18_getD3_1, pa18_getD3_0, pa18_getD3_2] at hcc
+  exact hcc
+
 /-- HOL `BDXKHTW` (leaf_cell.hl:3984-4166). -/
 theorem BDXKHTW {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
     (hs : saturated V) (hp : Packing V)
@@ -7343,12 +7895,186 @@ theorem BDXKHTW {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
     (haz : azim u0 u1 v1 v2 ≠ 0)
     (hy : ∃ y, y ∈ X ∩ wedge u0 u1 v1 v2) :
     X ⊆ wedgeGe u0 u1 v1 v2 := by
-  -- NEEDS (W4 status check 2026-10-23): sole remaining blocker is the pool-A
-  -- CFFONNL statement fix (orchestrator-owned); BDXKHTW_PREP_LEMMA is now
-  -- proven in place above, so once the fix lands this closes by contradiction
-  -- + PREP quadruple + the two-line interpret wiring
-  -- (pa18_affSpan2_collinear contrapositive, then pa18_affGe_affGt_of_ncol).
-  sorry
+  intro x₀ hx₀
+  by_contra hx₀out
+  -- PREP quadruple
+  obtain ⟨hconv, h01, hn1, hn2, p, q, hpw, hqX, hcopq, hpC, hqC⟩ :=
+    BDXKHTW_PREP_LEMMA hs hp hl1 hl2 hX he haz hy ⟨x₀, hx₀, hx₀out⟩
+  -- open sets and disjointness for the segment-crossing
+  have hopenW : IsOpen (wedge u0 u1 v1 v2) := pa18w4_isOpen_wedge u0 u1 v1 v2 hn1 hn2
+  have hopenO : IsOpen ((Set.univ : Set V3) \ wedgeGe u0 u1 v1 v2) :=
+    pa18w4_isOpen_compl_wedgeGe u0 u1 v1 v2 hn1 hn2
+  have hdisj : (wedge u0 u1 v1 v2) ∩ ((Set.univ : Set V3) \ wedgeGe u0 u1 v1 v2) = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    intro t ht
+    rw [Set.mem_inter_iff, Set.mem_diff] at ht
+    obtain ⟨ht1, -, ht2⟩ := ht
+    exact absurd (WEDGE_SUBSET_WEDGE_GE u0 u1 v1 v2 ht1) ht2
+  -- the crossing point on the stem-azimuth boundary
+  obtain ⟨x, hxseg, hxW, hxO⟩ := CONNECTED_SEGMENT_NOT_COVERED hopenW hopenO hpw.2
+    ⟨Set.mem_univ q, hqX.2⟩ hdisj
+  have hxWG : x ∈ wedgeGe u0 u1 v1 v2 := by
+    by_contra hcon
+    refine hxO ⟨Set.mem_univ x, hcon⟩
+  -- one of the two bounding half-planes
+  obtain ⟨v, hncv, hleafv, hxC, hpC', hqC'⟩ :
+      ∃ v : V3, ¬Collinear3 u0 u1 v ∧ leaf V [u0, u1, v] ∧
+        x ∈ affGe ({u0, u1} : Set V3) ({v} : Set V3) ∧
+        p ∉ affGe ({u0, u1} : Set V3) ({v} : Set V3) ∧
+        q ∉ affGe ({u0, u1} : Set V3) ({v} : Set V3) := by
+    have hww : wedgeGe u0 u1 v1 v2 ⊆ wedge u0 u1 v1 v2
+        ∪ affGe ({u0, u1} : Set V3) ({v1} : Set V3)
+        ∪ affGe ({u0, u1} : Set V3) ({v2} : Set V3) :=
+      WEDGE_WEDGE_GE u0 u1 v1 v2 hn1 hn2
+    have hmemw : x ∈ wedge u0 u1 v1 v2
+        ∪ affGe ({u0, u1} : Set V3) ({v1} : Set V3)
+        ∪ affGe ({u0, u1} : Set V3) ({v2} : Set V3) :=
+      (WEDGE_WEDGE_GE u0 u1 v1 v2 hn1 hn2) hxWG
+    rw [Set.mem_union] at hmemw
+    rcases hmemw with h | h
+    · rw [Set.mem_union] at h
+      rcases h with h | h
+      · exact absurd h hxW
+      · exact ⟨v1, hn1, hl1, h, fun hp => hpC (Set.mem_union_left _ hp),
+          fun hq => hqC (Set.mem_union_left _ hq)⟩
+    · exact ⟨v2, hn2, hl2, h, fun hp => hpC (Set.mem_union_right _ hp),
+        fun hq => hqC (Set.mem_union_right _ hq)⟩
+  -- x is a genuine interior segment point
+  have hxX : x ∈ X := hconv.segment_subset hpw.1 hqX.1 hxseg
+  have hxp : x ≠ p := fun heq => hpC' (heq ▸ hxC)
+  have hxq : x ≠ q := fun heq => hqC' (heq ▸ hxC)
+  obtain ⟨c, d, hc0, hd0, hcd, hxdef⟩ := hxseg
+  have hcp : c ≠ 0 := by
+    intro h0
+    rw [h0, zero_smul, zero_add] at hxdef
+    have hd1 : d = 1 := by linarith
+    rw [hd1, one_smul] at hxdef
+    exact hxq hxdef.symm
+  have hdp : d ≠ 0 := by
+    intro h0
+    rw [h0, zero_smul, add_zero] at hxdef
+    have hc1 : c = 1 := by linarith
+    rw [hc1, one_smul] at hxdef
+    exact hxp hxdef.symm
+  have hcpos : 0 < c := lt_of_le_of_ne hc0 (Ne.symm hcp)
+  have hdpos : 0 < d := lt_of_le_of_ne hd0 (Ne.symm hdp)
+  -- x sits off the stem line, hence in the strict half-plane
+  have hxspanpq : x ∈ (affineSpan ℝ ({p, q} : Set V3) : Set V3) :=
+    mem_affineSpan_pair_iff_exists_lineMap_eq.2 ⟨d, by
+      rw [AffineMap.lineMap_apply_module, show (1 - d : ℝ) = c from by linarith]
+      rw [← hxdef]⟩
+  have hxnotline : x ∉ (affineSpan ℝ ({u0, u1} : Set V3) : Set V3) := by
+    intro hcon
+    exact hcopq (AFF_INTER_IMP_COPLANAR p q u0 u1
+      (Set.nonempty_iff_ne_empty.mp
+        (Set.nonempty_of_mem (Set.mem_inter hxspanpq hcon))))
+  have hxaffGt : x ∈ affGt ({u0, u1} : Set V3) ({v} : Set V3) :=
+    pa18w4_affGe_affGt hncv hxC hxnotline
+  -- the CFFONNL dichotomy over the two orientations
+  -- the CFFONNL dichotomy over the two stem orientations; each branch runs the
+  -- signed-volume (chi) argument on its cc-list
+  have hsetu01v : ({u0, u1, v} : Set V3) = ({u1, u0, v} : Set V3) := by
+    ext t
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hmemu0 : u0 ∈ (affineSpan ℝ ({u1, u0, v} : Set V3) : Set V3) :=
+    mem_affineSpan ℝ (Set.mem_insert_of_mem u1 (Set.mem_insert u0 (Set.singleton v)))
+  have hmemu1 : u1 ∈ (affineSpan ℝ ({u1, u0, v} : Set V3) : Set V3) :=
+    mem_affineSpan ℝ (Set.mem_insert u1 (Set.insert u0 (Set.singleton v)))
+  have hmemv : v ∈ (affineSpan ℝ ({u1, u0, v} : Set V3) : Set V3) :=
+    mem_affineSpan ℝ (by simp)
+  have ha0 : u0 ∈ (affineSpan ℝ ({u0, u1, v} : Set V3) : Set V3) :=
+    mem_affineSpan ℝ (by simp)
+  have ha1 : u1 ∈ (affineSpan ℝ ({u0, u1, v} : Set V3) : Set V3) :=
+    mem_affineSpan ℝ (by simp)
+  by_cases hXYc : X = ccCell V [u0, u1, v]
+  · -- orientation [u0, u1, v]
+    have hχp : 0 ≤ chiMsb [u0, u1, v] p := CELL_NN hp hs hleafv (by rw [← hXYc]; exact hpw.1)
+    have hχq : 0 ≤ chiMsb [u0, u1, v] q := CELL_NN hp hs hleafv (by rw [← hXYc]; exact hqX.1)
+    have hχx : chiMsb [u0, u1, v] (c • p + d • q) = 0 := by
+      refine AFFINE_IMP_CHI_MSB_0 [u0, u1, v] (c • p + d • q) (by simp) ?_
+      have hsub := pa18w4_AFF_GT_SUBSET_AFFINE_HULL ({u0, u1} : Set V3) ({v} : Set V3)
+      have hseteq : ({u0, u1} ∪ {v} : Set V3) = ({u0, u1, v} : Set V3) := by
+        ext t
+        simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hseteq] at hsub
+      rw [pa18_set3, hxdef]
+      exact hsub hxaffGt
+    rw [CHI_MSB_ADDITIVE [u0, u1, v] p q c d hcd] at hχx
+    obtain ⟨hχp0, hχq0⟩ := ADD_NN_ZERO c d _ _ hcpos hdpos hχp hχq hχx
+    have hdimv : affDim ({u0, u1, v} : Set V3) = 2 := NOT_COLLINEAR_AFF_DIM2 u0 u1 v hncv
+    have hpspan : p ∈ (affineSpan ℝ ({u0, u1, v} : Set V3) : Set V3) := by
+      have hc := (CHI_MSB_COPLANAR u0 u1 v p).2 hχp0
+      have heq : ({u0, u1, v, p} : Set V3) = insert p ({u0, u1, v} : Set V3) := by
+        ext t; simp only [Set.mem_insert_iff]; tauto
+      rw [heq] at hc
+      exact COPLANAR_INSERT p hdimv hc
+    have hqspan : q ∈ (affineSpan ℝ ({u0, u1, v} : Set V3) : Set V3) := by
+      have hc := (CHI_MSB_COPLANAR u0 u1 v q).2 hχq0
+      have heq : ({u0, u1, v, q} : Set V3) = insert q ({u0, u1, v} : Set V3) := by
+        ext t; simp only [Set.mem_insert_iff]; tauto
+      rw [heq] at hc
+      exact COPLANAR_INSERT q hdimv hc
+    exact hcopq ⟨u0, u1, v, by
+      intro t ht
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      rcases ht with heq | heq | heq | heq
+      · rw [heq]
+        exact hpspan
+      · rw [heq]
+        exact hqspan
+      · rw [heq]
+        exact ha0
+      · rw [heq]
+        exact ha1⟩
+  · -- orientation [u1, u0, v]: CFFONNL at the original order produces the swap
+    have hsw := pa18w4_swap_via_CFFONNL hp hs hleafv hX he x hxX hxaffGt hXYc
+    have hleafsw : leaf V [u1, u0, v] := (ZASUVOR hp hs hleafv).1
+    have hncsw : ¬Collinear3 u1 u0 v := by
+      intro hcol
+      apply hncv
+      show Collinear ℝ ({u0, u1, v} : Set V3)
+      rw [hsetu01v]
+      exact hcol
+    have hχp : 0 ≤ chiMsb [u1, u0, v] p := CELL_NN hp hs hleafsw (by rw [← hsw]; exact hpw.1)
+    have hχq : 0 ≤ chiMsb [u1, u0, v] q := CELL_NN hp hs hleafsw (by rw [← hsw]; exact hqX.1)
+    have hχx : chiMsb [u1, u0, v] (c • p + d • q) = 0 := by
+      refine AFFINE_IMP_CHI_MSB_0 [u1, u0, v] (c • p + d • q) (by simp) ?_
+      have hsub := pa18w4_AFF_GT_SUBSET_AFFINE_HULL ({u0, u1} : Set V3) ({v} : Set V3)
+      have hseteq : ({u0, u1} ∪ {v} : Set V3) = ({u1, u0, v} : Set V3) := by
+        ext t
+        simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hseteq] at hsub
+      rw [pa18_set3, hxdef]
+      exact hsub hxaffGt
+    rw [CHI_MSB_ADDITIVE [u1, u0, v] p q c d hcd] at hχx
+    obtain ⟨hχp0, hχq0⟩ := ADD_NN_ZERO c d _ _ hcpos hdpos hχp hχq hχx
+    have hdimsw : affDim ({u1, u0, v} : Set V3) = 2 := NOT_COLLINEAR_AFF_DIM2 u1 u0 v hncsw
+    have hpspan : p ∈ (affineSpan ℝ ({u1, u0, v} : Set V3) : Set V3) := by
+      have hc := (CHI_MSB_COPLANAR u1 u0 v p).2 hχp0
+      have heq : ({u1, u0, v, p} : Set V3) = insert p ({u1, u0, v} : Set V3) := by
+        ext t; simp only [Set.mem_insert_iff]; tauto
+      rw [heq] at hc
+      exact COPLANAR_INSERT p hdimsw hc
+    have hqspan : q ∈ (affineSpan ℝ ({u1, u0, v} : Set V3) : Set V3) := by
+      have hc := (CHI_MSB_COPLANAR u1 u0 v q).2 hχq0
+      have heq : ({u1, u0, v, q} : Set V3) = insert q ({u1, u0, v} : Set V3) := by
+        ext t; simp only [Set.mem_insert_iff]; tauto
+      rw [heq] at hc
+      exact COPLANAR_INSERT q hdimsw hc
+    exact hcopq ⟨u1, u0, v, fun t ht => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      rcases ht with heq | heq | heq | heq
+      · rw [heq]
+        exact hpspan
+      · rw [heq]
+        exact hqspan
+      · rw [heq]
+        exact hmemu0
+      · rw [heq]
+        exact hmemu1⟩
 
 /-- HOL `AZIM_POS_IMP_SUM_2PI_ALT` (leaf_cell.hl:4167-?), from the Geom
 complement formula `azim_compl` (`azim z w w2 w1 = 2π - azim z w w1 w2` off
@@ -7466,7 +8192,27 @@ theorem EWYBJUA {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
     (hX : X ∈ mcellSet V) (he : {u0, u1} ∈ edgeX V X)
     (haz : azim u0 u1 v1 v2 ≠ 0) :
     X ⊆ wedgeGe u0 u1 v1 v2 ∨ X ⊆ wedgeGe u0 u1 v2 v1 := by
-  sorry
+  by_cases hsub : X ⊆ wedgeGe u0 u1 v2 v1
+  · exact Or.inr hsub
+  · rw [Set.not_subset] at hsub
+    obtain ⟨z, hzX, hz⟩ := hsub
+    have hncpair : ¬Collinear3 u0 u1 v1 ∧ ¬Collinear3 u0 u1 v2 := by
+      by_cases hc : Collinear3 u0 u1 v1 ∨ Collinear3 u0 u1 v2
+      · exfalso
+        rw [azim, if_pos hc] at haz
+        exact haz rfl
+      · exact ⟨fun h1 => hc (Or.inl h1), fun h2 => hc (Or.inr h2)⟩
+    have h' : azim u0 u1 v2 v1 ≠ 0 := by
+      intro h0
+      have hsum := azim_compl hncpair.2 hncpair.1
+      rw [if_pos h0] at hsum
+      exact haz hsum
+    have hzw : z ∈ wedge u0 u1 v1 v2 := by
+      have hz' : z ∈ (Set.univ : Set V3) \ wedgeGe u0 u1 v2 v1 :=
+        ⟨Set.mem_univ z, hz⟩
+      rw [WEDGE_GE_COMPLEMENT u0 u1 v2 v1 h'] at hz'
+      exact hz'
+    exact Or.inl (BDXKHTW hs hp hl1 hl2 hX he haz ⟨z, Set.mem_inter hzX hzw⟩)
 
 
 /-! ### setSum arithmetic kit (p16-shape copies; PA16's are private) -/
