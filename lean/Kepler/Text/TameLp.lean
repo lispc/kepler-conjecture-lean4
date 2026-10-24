@@ -7971,4 +7971,1626 @@ private theorem yk6_tauVEF_eq_tauFun_ePrime (hlpfan : LpFan V (ESTD V))
 3. 装配波的其余前置（ConvexLocalFan 合取支的 wedge 面 + LocalFan/Dih2k 面）
    状态与 §9h.1 的施工图一致，本块未动。 -/
 
+/-! ### 9j. y-kit 收官波（Lane AJ 2026-10-23）：checkpoint 3 Dih2k + ncard vPrime 下半
+（全 private yk8_*、零外部消费者、纯追加）。
+
+两件定案：
+1. **ncard vPrime 下半（真单圈性）**：`4 ≤ ncard vPrime`。链：σ-轨道单循环覆盖
+   （yk8_sigmaOrbitCovers，LpSemantics.lpSigmaOrbitCovers 的 TameLp 本地孪生——
+   LpSemantics import 本模块，方向相反不可引，逐字镜像重证）+
+   ConformingAuto1.SRPRNPL（:737，public、本模块可见）的 Simple ⟹ 面圈顶点
+   两两相异（fst/snd 单射）⟹ ncard f = ncard fst″f ≤ ncard vPrime，与 AE 上半
+   `yk6_ncard_vPrime_le` 拼接成等式，再由 `4 ≤ ncard f`（tau4/5/6 章 dartsK
+   k ∈ {4,5,6} 供给）得 `4 ≤ ncard vPrime`。
+2. **checkpoint 3·Dih2k**：受限超图 Dih2k 构造（HOL DIH_K_HYP_E_PRIME，
+   LVDUCXU.hl:2086 的 Lean 折算）：单圈性 + 2 < ncard f ⟹ f ∩ swap″f = ∅、
+   每面顶点 |N′| = 2、σ′ 对合 ⟹ darts′ 基数 2k、faceMap-轨道二分解、
+   HasOrders face k / edge 2 / node 2，capstone `Dih2k H′ f.ncard`。
+孪生与去重路径：yk8_sigma* 五件与 LpSemantics.lpSigma*（A1/A2/A3/A5-pre/A5）
+同陈述孪生；若未来 σ-循环理论下沉 Fan.lean，两侧同步收敛删除。 -/
+
+/-! ### 9j.0 σ-循环理论五件（LpSemantics A1/A2/A3/A5-pre/A5 的 TameLp 孪生，
+单循环性原料；LP 模块 import 本模块，import 方向相反不可直接引）。 -/
+
+set_option maxHeartbeats 1000000 in
+/-- A1 孪生：HOL MONO_AZIM_SIGMA_FAN（topology.hl:29）；LpSemantics.lpMonoAzimSigma
+同陈述。 -/
+private theorem yk8_monoAzimSigma {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hu : {v, u} ∈ E) (hw : {v, w} ∈ E)
+    (hne : sigmaFan x V E v w ≠ u) :
+    azim x v u w ≤ azim x v u (sigmaFan x V E v w) := by
+  have huS : u ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v u hfan).mp hu
+  have hwS : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hw
+  rcases eq_or_ne u w with huw | huw
+  · rw [huw, azim_self]
+    exact azim_nonneg x v w (sigmaFan x V E v w)
+  by_cases hsw : setOfEdge v V E = {w}
+  · exfalso
+    have huw2 : u = w := by
+      have hmem : u ∈ ({w} : Set V3) := hsw ▸ huS
+      simpa using hmem
+    exact huw huw2
+  obtain ⟨hσS, hσne, hmin⟩ := SIGMA_FAN hsw hfan hwS
+  have hσE : {v, sigmaFan x V E v w} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr hσS
+  by_contra hcon
+  have hgt : azim x v u (sigmaFan x V E v w) < azim x v u w := not_le.mp hcon
+  have hsum : azim x v u w =
+      azim x v u (sigmaFan x V E v w) + azim x v (sigmaFan x V E v w) w :=
+    sum2_azim_fan hfan hu hσE hw hgt.le
+  have hne0 : azim x v w (sigmaFan x V E v w) ≠ 0 := by
+    intro h0
+    exact hσne (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v) (u := w)
+      (w := sigmaFan x V E v w) hfan hw hσE h0).symm
+  have hC1 : azim x v (sigmaFan x V E v w) w
+      = if azim x v w (sigmaFan x V E v w) = 0 then 0
+        else 2 * Real.pi - azim x v w (sigmaFan x V E v w) :=
+    azim_compl (z := x) (w := v) (w1 := w) (w2 := sigmaFan x V E v w)
+      (fan_not_collinear hfan hw) (fan_not_collinear hfan hσE)
+  rw [if_neg hne0] at hC1
+  have hwu0 : azim x v u w ≠ 0 := by
+    intro h0
+    exact huw (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v) (u := u)
+      (w := w) hfan hu hw h0)
+  have hC2 : azim x v w u
+      = if azim x v u w = 0 then 0 else 2 * Real.pi - azim x v u w :=
+    azim_compl (z := x) (w := v) (w1 := u) (w2 := w)
+      (fan_not_collinear hfan hu) (fan_not_collinear hfan hw)
+  rw [if_neg hwu0] at hC2
+  have hminw : azim x v w (sigmaFan x V E v w) ≤ azim x v w u := hmin u huS huw
+  have hnn : 0 ≤ azim x v u (sigmaFan x V E v w) :=
+    azim_nonneg x v u (sigmaFan x V E v w)
+  have hkey : azim x v u w = azim x v u (sigmaFan x V E v w) + azim x v u w := by
+    rw [hsum, hC1]
+    linarith [hminw, hC2]
+  have hzero : azim x v u (sigmaFan x V E v w) = 0 := by linarith
+  exact hne (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v) (u := u)
+    (w := sigmaFan x V E v w) hfan hu hσE hzero).symm
+
+/-- A2 孪生：σ 的迭代在邻集上单射；LpSemantics.lpSigmaIterInject 同陈述。 -/
+private theorem yk8_sigmaIterInject {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {v : V3} {a b : V3}
+    (ha : a ∈ setOfEdge v V E) (hb : b ∈ setOfEdge v V E) :
+    ∀ i : ℕ, (sigmaFan x V E v)^[i] a = (sigmaFan x V E v)^[i] b → a = b := by
+  intro i
+  induction i with
+  | zero => exact fun heq => heq
+  | succ i ih =>
+    intro heq
+    refine ih ?_
+    have haE : {v, a} ∈ E := (properties_of_setOfEdge_fan x V E v a hfan).mpr ha
+    have hbE : {v, b} ∈ E := (properties_of_setOfEdge_fan x V E v b hfan).mpr hb
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply'] at heq
+    exact mono_sigma_fan hfan (image_power_map_points hfan haE i)
+      (image_power_map_points hfan hbE i) heq
+
+/-- A3 孪生：σ-轨道首回存在且可取极小（鸽笼 + 迭代单射 + Nat.find）；
+LpSemantics.lpSigmaFirstReturn 同陈述。 -/
+private theorem yk8_sigmaFirstReturn {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hV : V.Finite) {v u : V3} (hu : {v, u} ∈ E) :
+    ∃ k : ℕ, 1 ≤ k ∧ (sigmaFan x V E v)^[k] u = u ∧
+      ∀ t : ℕ, 0 < t → t < k → (sigmaFan x V E v)^[t] u ≠ u := by
+  have hfin : (setOfEdge v V E).Finite := remark_finite_fan1 v V E hV
+  have hnotinj : ¬ Function.Injective (fun n : ℕ => (sigmaFan x V E v)^[n] u) := by
+    intro hinj
+    have h1 : (Set.range fun n : ℕ => (sigmaFan x V E v)^[n] u).Infinite :=
+      Set.infinite_range_of_injective hinj
+    have h2 : (Set.range fun n : ℕ => (sigmaFan x V E v)^[n] u).Finite :=
+      hfin.subset (fun y hy => by
+        obtain ⟨n, hn2⟩ := hy
+        exact hn2 ▸ image_power_map_points hfan hu n)
+    exact h2.not_infinite h1
+  obtain ⟨i, j, heq, hij⟩ := Function.not_injective_iff.mp hnotinj
+  have hshift : ∃ k : ℕ, 1 ≤ k ∧ (sigmaFan x V E v)^[k] u = u := by
+    rcases lt_or_gt_of_ne hij with h | h
+    · refine ⟨j - i, by omega, ?_⟩
+      have hidx : i + (j - i) = j := by omega
+      have hstep : (sigmaFan x V E v)^[i] ((sigmaFan x V E v)^[j - i] u)
+          = (sigmaFan x V E v)^[i] u := by
+        rw [← Function.iterate_add_apply, hidx, heq]
+      have huS : u ∈ setOfEdge v V E :=
+        (properties_of_setOfEdge_fan x V E v u hfan).mp hu
+      have hm1 : (sigmaFan x V E v)^[j - i] u ∈ setOfEdge v V E :=
+        image_power_map_points hfan hu (j - i)
+      exact yk8_sigmaIterInject hfan hm1 huS i hstep
+    · refine ⟨i - j, by omega, ?_⟩
+      have hjd : j + (i - j) = i := by omega
+      have hstep : (sigmaFan x V E v)^[j] ((sigmaFan x V E v)^[i - j] u)
+          = (sigmaFan x V E v)^[j] u := by
+        rw [← Function.iterate_add_apply, hjd, ← heq]
+      have huS : u ∈ setOfEdge v V E :=
+        (properties_of_setOfEdge_fan x V E v u hfan).mp hu
+      have hm1 : (sigmaFan x V E v)^[i - j] u ∈ setOfEdge v V E :=
+        image_power_map_points hfan hu (i - j)
+      exact yk8_sigmaIterInject hfan hm1 huS j hstep
+  obtain ⟨k0, hk01, hk0⟩ := hshift
+  have hex : ∃ n : ℕ, 1 ≤ n ∧ (sigmaFan x V E v)^[n] u = u := ⟨k0, hk01, hk0⟩
+  refine ⟨Nat.find hex, Nat.find_spec hex |>.1, Nat.find_spec hex |>.2, ?_⟩
+  intro t ht0 htk hcon
+  exact Nat.find_min hex htk ⟨ht0, hcon⟩
+
+/-- A5 前置孪生：轨道点互异（首回极小性直接推论）；
+LpSemantics.lpSigmaCycleDistinct 同陈述。 -/
+private theorem yk8_sigmaCycleDistinct {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {v u : V3} (hu : {v, u} ∈ E) {k : ℕ}
+    (hmin : ∀ t : ℕ, 0 < t → t < k → (sigmaFan x V E v)^[t] u ≠ u)
+    (t1 t2 : ℕ) (h12 : t1 < t2) (h2k : t2 < k) :
+    (sigmaFan x V E v)^[t1] u ≠ (sigmaFan x V E v)^[t2] u := by
+  intro heq
+  have huS : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hu
+  have hshift : (sigmaFan x V E v)^[t1] ((sigmaFan x V E v)^[t2 - t1] u)
+      = (sigmaFan x V E v)^[t1] u := by
+    rw [← Function.iterate_add_apply]
+    have : t1 + (t2 - t1) = t2 := by omega
+    rw [this, heq]
+  have huS2 : (sigmaFan x V E v)^[t2 - t1] u ∈ setOfEdge v V E :=
+    image_power_map_points hfan hu (t2 - t1)
+  exact hmin (t2 - t1) (by omega) (by omega)
+    (yk8_sigmaIterInject hfan huS2 huS t1 hshift)
+
+set_option maxHeartbeats 1000000 in
+/-- A5 孪生：σ-轨道覆盖整个邻集（单循环性核心；HOL key_lemma_cyclic_fan +
+ORBITS_EQ_SET_EDGE_FAN 合并重构，两案例矛盾）；
+LpSemantics.lpSigmaOrbitCovers 同陈述。 -/
+private theorem yk8_sigmaOrbitCovers {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hV : V.Finite) {v w : V3} (hw : {v, w} ∈ E) :
+    ∀ a ∈ setOfEdge v V E, ∃ n : ℕ, (sigmaFan x V E v)^[n] w = a := by
+  have hwS : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w hfan).mp hw
+  by_cases hSing : setOfEdge v V E = {w}
+  · intro a ha
+    have : a = w := by
+      have : a ∈ ({w} : Set V3) := hSing ▸ ha
+      simpa using this
+    exact ⟨0, this.symm⟩
+  intro a ha
+  by_contra haO
+  have haE : {v, a} ∈ E := (properties_of_setOfEdge_fan x V E v a hfan).mpr ha
+  have haw : a ≠ w := fun he => haO ⟨0, he.symm⟩
+  obtain ⟨k, hk1, hkw, hmin⟩ := yk8_sigmaFirstReturn hfan hV hw
+  have hk2 : 2 ≤ k := by
+    by_contra hk
+    have hk1' : k = 1 := by omega
+    have hσw : (sigmaFan x V E v)^[1] w = w := by
+      rw [← hk1']; exact hkw
+    exact (SIGMA_FAN hSing hfan hwS).2.1 (by simpa using hσw)
+  have hdist : ∀ (t1 t2 : ℕ), t1 < t2 → t2 < k →
+      (sigmaFan x V E v)^[t1] w ≠ (sigmaFan x V E v)^[t2] w :=
+    yk8_sigmaCycleDistinct (x := x) (V := V) (E := E) hfan hw hmin
+  have hEof : ∀ p : V3, p ∈ setOfEdge v V E → {v, p} ∈ E :=
+    fun p hp => (properties_of_setOfEdge_fan x V E v p hfan).mpr hp
+  have hinjθ : ∀ p q : V3, p ∈ setOfEdge v V E → q ∈ setOfEdge v V E → p ≠ q →
+      azim x v w p ≠ azim x v w q := by
+    intro p q hpS hqS hpq heq
+    exact hpq (unique_azim_point_fan (x := x) (V := V) (E := E) (v := v)
+      (u := w) (w := p) (w1 := q) hfan hw (hEof p hpS) (hEof q hqS) heq)
+  have hacyc : ∀ j : ℕ, j < k → (sigmaFan x V E v)^[j] w ≠ a := by
+    intro j hj heqj
+    exact haO ⟨j, heqj⟩
+  have hpowS : ∀ j : ℕ, (sigmaFan x V E v)^[j] w ∈ setOfEdge v V E :=
+    image_power_map_points hfan hw
+  have h1lt : azim x v w ((sigmaFan x V E v)^[1] w) < azim x v w a := by
+    have hmin1 : azim x v w (sigmaFan x V E v w)
+        ≤ azim x v w a := (SIGMA_FAN hSing hfan hwS).2.2 a ha haw
+    have hpq : sigmaFan x V E v w ≠ a := by
+      intro he
+      exact hacyc 1 (by omega) he
+    have hσwS : sigmaFan x V E v w ∈ setOfEdge v V E :=
+      sigma_fan_in_setOfEdge hfan hwS
+    have hneq : azim x v w (sigmaFan x V E v w) ≠ azim x v w a :=
+      fun he => hinjθ (sigmaFan x V E v w) a hσwS ha hpq he
+    have hσ1 : (sigmaFan x V E v)^[1] w = sigmaFan x V E v w := rfl
+    rw [hσ1]
+    exact lt_of_le_of_ne hmin1 hneq
+  by_cases hA : azim x v w ((sigmaFan x V E v)^[k - 1] w) < azim x v w a
+  · exfalso
+    set uk1 := (sigmaFan x V E v)^[k - 1] w with huk1
+    have huk1S : uk1 ∈ setOfEdge v V E := hpowS (k - 1)
+    have hwuk1 : w ≠ uk1 := hdist 0 (k - 1) (by omega) (by omega)
+    have hauk1 : a ≠ uk1 := by
+      intro he
+      exact hacyc (k - 1) (by omega) he.symm
+    have hσk : (sigmaFan x V E v)^[k] w = sigmaFan x V E v uk1 := by
+      have hkeq : k = k - 1 + 1 := by omega
+      rw [hkeq, Function.iterate_succ_apply', huk1]
+    have hσkw : sigmaFan x V E v uk1 = w := by
+      have h1 := hkw
+      rw [hσk] at h1
+      exact h1
+    have hSne : setOfEdge v V E ≠ {uk1} := by
+      intro he
+      have hac : a ∈ ({uk1} : Set V3) := by rw [← he]; exact ha
+      exact hauk1 (by simpa using hac)
+    have hminU := (SIGMA_FAN hSne hfan huk1S).2.2 a ha hauk1
+    rw [hσkw] at hminU
+    have hθk1 : azim x v w uk1 ≠ 0 := by
+      intro h0
+      exact hwuk1 (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v)
+        (u := w) (w := uk1) hfan hw (hEof uk1 huk1S) h0)
+    have hC1 : azim x v uk1 w
+        = if azim x v w uk1 = 0 then 0
+          else 2 * Real.pi - azim x v w uk1 :=
+      azim_compl (z := x) (w := v) (w1 := w) (w2 := uk1)
+        (fan_not_collinear hfan hw) (fan_not_collinear hfan (hEof uk1 huk1S))
+    rw [if_neg hθk1] at hC1
+    have hsumA : azim x v w a = azim x v w uk1 + azim x v uk1 a :=
+      sum2_azim_fan hfan hw (hEof uk1 huk1S) (hEof a ha) hA.le
+    have hlt2 : azim x v w a < 2 * Real.pi := azim_lt_two_pi x v w a
+    linarith
+  · exfalso
+    have hBle : azim x v w a ≤ azim x v w ((sigmaFan x V E v)^[k - 1] w) :=
+      le_of_not_gt hA
+    have hauk1 : a ≠ (sigmaFan x V E v)^[k - 1] w := by
+      intro he
+      exact hacyc (k - 1) (by omega) he.symm
+    have hBne : azim x v w a ≠ azim x v w ((sigmaFan x V E v)^[k - 1] w) :=
+      fun he => hinjθ a ((sigmaFan x V E v)^[k - 1] w) ha
+        (hpowS (k - 1)) hauk1 he
+    have hB : azim x v w a < azim x v w ((sigmaFan x V E v)^[k - 1] w) :=
+      lt_of_le_of_ne hBle hBne
+    set T : Finset ℕ :=
+      (Finset.Icc 1 (k - 1)).filter
+        (fun j => decide (azim x v w ((sigmaFan x V E v)^[j] w) < azim x v w a))
+      with hT
+    have h1T : 1 ∈ T := by
+      rw [hT]
+      refine Finset.mem_filter.mpr ⟨Finset.mem_Icc.mpr (by omega), ?_⟩
+      have hσ1 : (sigmaFan x V E v)^[1] w = sigmaFan x V E v w := rfl
+      exact decide_eq_true (by rw [hσ1]; exact h1lt)
+    have hTne : T.Nonempty := ⟨1, h1T⟩
+    set jmax := T.max' hTne with hj
+    have hjmem := T.max'_mem hTne
+    obtain ⟨hjI, hjlt⟩ := Finset.mem_filter.mp hjmem
+    obtain ⟨hj1, hjk⟩ := Finset.mem_Icc.mp hjI
+    have hjltP : azim x v w ((sigmaFan x V E v)^[jmax] w) < azim x v w a :=
+      decide_eq_true_iff.mp hjlt
+    have hjk1 : jmax < k - 1 := by
+      by_contra hcon
+      have hjE : jmax = k - 1 := by omega
+      rw [hjE] at hjltP
+      exact absurd hjltP (not_lt.mpr hB.le)
+    have hjmax : jmax + 1 ∉ T := by
+      intro hcon
+      have h2 := Finset.le_max' T (jmax + 1) hcon
+      omega
+    have hj1I : jmax + 1 ∈ Finset.Icc 1 (k - 1) := Finset.mem_Icc.mpr (by omega)
+    have hnotlt : ¬ (azim x v w ((sigmaFan x V E v)^[jmax + 1] w) < azim x v w a) := by
+      intro hcon
+      exact hjmax (Finset.mem_filter.mpr ⟨hj1I, decide_eq_true hcon⟩)
+    have hauj1 : a ≠ (sigmaFan x V E v)^[jmax + 1] w := by
+      intro he
+      exact hacyc (jmax + 1) (by omega) he.symm
+    have hge : azim x v w a ≤ azim x v w ((sigmaFan x V E v)^[jmax + 1] w) :=
+      le_of_not_gt hnotlt
+    have hgt : azim x v w a ≠ azim x v w ((sigmaFan x V E v)^[jmax + 1] w) :=
+      fun he => hinjθ a ((sigmaFan x V E v)^[jmax + 1] w) ha
+        (hpowS (jmax + 1)) hauj1 he
+    have hlt2 : azim x v w a < azim x v w ((sigmaFan x V E v)^[jmax + 1] w) :=
+      lt_of_le_of_ne hge hgt
+    have hujS : (sigmaFan x V E v)^[jmax] w ∈ setOfEdge v V E := hpowS jmax
+    have hauj : a ≠ (sigmaFan x V E v)^[jmax] w := by
+      intro he
+      exact hacyc jmax (by omega) he.symm
+    have hSnej : setOfEdge v V E ≠ {(sigmaFan x V E v)^[jmax] w} := by
+      intro he
+      have hac : a ∈ ({(sigmaFan x V E v)^[jmax] w} : Set V3) := by rw [← he]; exact ha
+      exact hauj (by simpa using hac)
+    have hminJ := (SIGMA_FAN hSnej hfan hujS).2.2 a ha hauj
+    have hσJ : sigmaFan x V E v ((sigmaFan x V E v)^[jmax] w)
+        = (sigmaFan x V E v)^[jmax + 1] w := by
+      rw [Function.iterate_succ_apply']
+    rw [hσJ] at hminJ
+    have huju0 : (sigmaFan x V E v)^[jmax + 1] w ≠ w := by
+      intro he
+      exact hdist 0 (jmax + 1) (by omega) (by omega) he.symm
+    have hmono := yk8_monoAzimSigma (x := x) (V := V) (E := E) hfan hw
+      (hEof _ hujS)
+      (show sigmaFan x V E v ((sigmaFan x V E v)^[jmax] w) ≠ w by
+        rw [hσJ]; exact huju0)
+    rw [hσJ] at hmono
+    have hsumJ1 : azim x v w ((sigmaFan x V E v)^[jmax + 1] w)
+        = azim x v w ((sigmaFan x V E v)^[jmax] w)
+          + azim x v ((sigmaFan x V E v)^[jmax] w)
+            ((sigmaFan x V E v)^[jmax + 1] w) :=
+      sum2_azim_fan hfan hw (hEof _ hujS) (hEof _ (hpowS (jmax + 1))) hmono
+    have hsumJa : azim x v w a = azim x v w ((sigmaFan x V E v)^[jmax] w)
+        + azim x v ((sigmaFan x V E v)^[jmax] w) a :=
+      sum2_azim_fan hfan hw (hEof _ hujS) (hEof a ha) hjltP.le
+    linarith
+
+/-! ### 9j.1 单圈性（面圈顶点两两相异）+ ncard vPrime 下半。
+单圈性 = SRPRNPL（conformingFan，ConformingAuto1:737，public 可见）的 Simple
++ σ-轨道单循环覆盖（9j.0）联立：Simple 说 f ∩ node-轨道(d) = {d}，覆盖说
+node-轨道(d) 含一切首分量为 d.1 的 dart。 -/
+
+/-- nodeMap 迭代显式形：dart1 上保持首分量、沿 σ 递推
+（ConformingAuto1 `hypermapOfFan_nodeMap_iterate_ca1` 的 private 墙外副本）。 -/
+private theorem yk8_node_iterate {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) (n : ℕ) :
+    ((@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan) : V3 × V3 → V3 × V3))^[n] d
+      = (d.1, (sigmaFan x V E d.1)^[n] d.2) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    have hE : ({d.1, (sigmaFan x V E d.1)^[n] d.2} : Set V3) ∈ E :=
+      (properties_of_setOfEdge_fan x V E d.1 _ hfan).mpr
+        (image_power_map_points hfan hd n)
+    have hmem : ((d.1, (sigmaFan x V E d.1)^[n] d.2) ∈ dart1OfFan V E) := hE
+    have hstep : ((@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan x V E hfan) : V3 × V3 → V3 × V3))^[n + 1] d
+        = (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+          (hypermapOfFan x V E hfan)
+          (((@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+            (hypermapOfFan x V E hfan) : V3 × V3 → V3 × V3))^[n] d)) :=
+      Function.iterate_succ_apply'
+        (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+          (hypermapOfFan x V E hfan)) n d
+    rw [hstep, ih, yk2_apply_nodeMap hfan _, if_pos hmem, Function.iterate_succ_apply']
+    rfl
+
+/-- 单循环覆盖的 node-轨道形态：同首分量的 dart1 dart 必在 node-轨道里。 -/
+private theorem yk8_mem_node_of_fst {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hV : V.Finite) {d p : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) (hp : p ∈ dart1OfFan V E) (h1 : p.1 = d.1) :
+    ∃ n : ℕ, (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan))^[n] d = p := by
+  have hdE : ({d.1, d.2} : Set V3) ∈ E := hd
+  have hpE : ({p.1, p.2} : Set V3) ∈ E := hp
+  have hw2 : p.2 ∈ setOfEdge d.1 V E := by
+    refine (properties_of_setOfEdge_fan x V E d.1 p.2 hfan).mp ?_
+    rw [h1] at hpE
+    exact hpE
+  have hns : ∃ n : ℕ, (sigmaFan x V E d.1)^[n] d.2 = p.2 :=
+    yk8_sigmaOrbitCovers hfan hV hdE p.2 hw2
+  obtain ⟨n, hn⟩ := hns
+  refine ⟨n, ?_⟩
+  rw [yk8_node_iterate hfan hd n, hn]
+  exact Prod.ext (by rw [h1]) rfl
+
+/-- **单圈性（fst 侧）**：面轨道上首分量单射——同一顶点至多一条面 dart。
+= SRPRNPL 的 Simple（f ∩ node-轨道(d) = {d}）+ 覆盖件。 -/
+private theorem yk8_face_fst_inj {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) :
+    ∀ d₁ ∈ f, ∀ d₂ ∈ f, d₁.1 = d₂.1 → d₁ = d₂ := by
+  intro d₁ hd₁ d₂ hd₂ heq
+  have hd₁' : d₁ ∈ dart1OfFan V E := yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd₁)
+  have hdarts : d₁ ∈ @Hypermap.darts (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan) := (yk2_mem_darts_iff hfan d₁).mpr hd₁'
+  have hP : PermutesOn (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) (@Hypermap.darts (V3 × V3)
+      (fun a b' => instDecidableEqProd a b') (hypermapOfFan x V E hfan)) :=
+    @Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)
+  have hface : @Hypermap.face (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan) d₁ = f := by
+    have h1 : d₁ ∈ yk2_faceOrbit x V E hfan b := hf ▸ hd₁
+    show orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d₁ = f
+    rw [hf]
+    exact orbitMap_eq_of_mem hP h1
+  obtain ⟨n, hn⟩ := yk8_mem_node_of_fst hfan hV hd₁'
+    (yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd₂)) heq.symm
+  have hmem : d₂ ∈ @Hypermap.node (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan) d₁ := ⟨n, hn⟩
+  have hsimp := SRPRNPL (x := x) (V := V) (E := E) hfan hconf d₁ hdarts
+  rw [hface] at hsimp
+  have h2 : d₂ ∈ (@Hypermap.node (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan) d₁ ∩ f) := ⟨hmem, hd₂⟩
+  rw [hsimp, Set.mem_singleton_iff] at h2
+  exact h2.symm
+
+/-- **单圈性（snd 侧）**：面轨道上第二分量单射（fst 侧 + faceMap 保持 snd +
+σ_w⁻¹ 在邻集上的右逆）。 -/
+private theorem yk8_face_snd_inj {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) :
+    ∀ d₁ ∈ f, ∀ d₂ ∈ f, d₁.2 = d₂.2 → d₁ = d₂ := by
+  intro d₁ hd₁ d₂ hd₂ hsnd
+  have hd₁1 : d₁ ∈ dart1OfFan V E := yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd₁)
+  have hd₂1 : d₂ ∈ dart1OfFan V E := yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd₂)
+  -- faceMap 像：同 snd = w，同入 f
+  have hfd : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d₁
+      = (d₁.2, inverseSigmaFan x V E d₁.2 d₁.1) := by
+    rw [yk2_apply_faceMap hfan d₁, if_pos hd₁1]
+    rfl
+  have hfd2 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d₂
+      = (d₂.2, inverseSigmaFan x V E d₂.2 d₂.1) := by
+    rw [yk2_apply_faceMap hfan d₂, if_pos hd₂1]
+    rfl
+  have hcl1 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d₁ ∈ f := by
+    rw [hf]
+    exact yk2_faceOrbit_closure hfan (hf ▸ hd₁)
+  have hcl2 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d₂ ∈ f := by
+    rw [hf]
+    exact yk2_faceOrbit_closure hfan (hf ▸ hd₂)
+  have hfeq := yk8_face_fst_inj hfan hconf hV b hb f hf _ hcl1 _ hcl2
+    (by rw [hfd, hfd2]; simpa using hsnd)
+  -- σ_w⁻¹ 相等 ⟹ 原 fst 相等（邻集上 ext σ 的右逆性）
+  have hw : d₁.2 = d₂.2 := hsnd
+  have hfeq' : (d₁.2, inverseSigmaFan x V E d₁.2 d₁.1)
+      = (d₂.2, inverseSigmaFan x V E d₂.2 d₂.1) := by
+    rw [← hfd, ← hfd2]
+    exact hfeq
+  have hinv : inverseSigmaFan x V E d₁.2 d₁.1 = inverseSigmaFan x V E d₁.2 d₂.1 := by
+    have h0 := congrArg Prod.snd hfeq'
+    rw [← hw] at h0
+    exact h0
+  -- v_i ∈ setOfEdge w（w := d₁.2）
+  have hwE1 : ({d₁.2, d₁.1} : Set V3) ∈ E := by
+    rw [Set.pair_comm]
+    exact hd₁1
+  have hwE2 : ({d₁.2, d₂.1} : Set V3) ∈ E := by
+    rw [Set.pair_comm]
+    have h2' : ({d₂.1, d₂.2} : Set V3) ∈ E := hd₂1
+    rw [← hw] at h2'
+    exact h2'
+  have hv1S : d₁.1 ∈ setOfEdge d₁.2 V E :=
+    (properties_of_setOfEdge_fan x V E d₁.2 d₁.1 hfan).mp hwE1
+  have hv2S : d₂.1 ∈ setOfEdge d₁.2 V E :=
+    (properties_of_setOfEdge_fan x V E d₁.2 d₂.1 hfan).mp hwE2
+  have hperm := permutes_sigma_fan hfan hv1S
+  obtain ⟨s, _, hsf⟩ := yk7_finite_surjOf_inj
+    (remark_finite_fan1 d₁.2 V E hfan.2.2.1.1) hperm.1 hperm.2.1 d₁.1 hv1S
+  have hF1 : extensionSigmaFan x V E d₁.2 (inverseSigmaFan x V E d₁.2 d₁.1) = d₁.1 :=
+    Function.invFun_eq ⟨s, hsf⟩
+  obtain ⟨s2, _, hsf2⟩ := yk7_finite_surjOf_inj
+    (remark_finite_fan1 d₁.2 V E hfan.2.2.1.1) hperm.1 hperm.2.1 d₂.1 hv2S
+  have hF2 : extensionSigmaFan x V E d₁.2 (inverseSigmaFan x V E d₁.2 d₂.1) = d₂.1 :=
+    Function.invFun_eq ⟨s2, hsf2⟩
+  have hkey : d₁.1 = d₂.1 := by
+    have h0 := congrArg (extensionSigmaFan x V E d₁.2) hinv
+    exact hF1.symm.trans (h0.trans hF2)
+  exact Prod.ext hkey hsnd
+
+/-- 面 dart 非对角（fst 单射 + 2 < ncard f 下轨道无 (v,v) dart）。 -/
+private theorem yk8_fst_ne_snd {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) (hk : 2 < f.ncard) :
+    ∀ d ∈ f, d.1 ≠ d.2 := by
+  intro d hd hcon
+  have hd1 : d ∈ dart1OfFan V E := yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd)
+  have hfd : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d = (d.1, inverseSigmaFan x V E d.1 d.1) := by
+    rw [yk2_apply_faceMap hfan d, if_pos hd1]
+    show (d.2, inverseSigmaFan x V E d.2 d.1) = (d.1, inverseSigmaFan x V E d.1 d.1)
+    rw [← hcon]
+  have hcl : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d ∈ f := by
+    rw [hf]
+    exact yk2_faceOrbit_closure hfan (hf ▸ hd)
+  have hfix : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d = d :=
+    yk8_face_fst_inj hfan hconf hV b hb f hf
+      (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x V E hfan) d) hcl d hd (by rw [hfd])
+  have hP : PermutesOn (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) (@Hypermap.darts (V3 × V3)
+      (fun a b' => instDecidableEqProd a b') (hypermapOfFan x V E hfan)) :=
+    @Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)
+  have hfaceD : orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) d = f := by
+    have h1 : d ∈ yk2_faceOrbit x V E hfan b := hf ▸ hd
+    rw [hf]
+    exact orbitMap_eq_of_mem hP h1
+  rw [orbitMap_eq_singleton hfix] at hfaceD
+  have h1c : f.ncard = 1 := by rw [← hfaceD, Set.ncard_singleton]
+  omega
+
+/-- faceMap 值形状（dart1 上）：`faceMap e = (e.2, σ⁻¹_{e.2} e.1)`，
+故第二分量 = e.1、第一分量 = e.2。 -/
+private theorem yk8_faceMap_val {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {e : V3 × V3} (he : e ∈ dart1OfFan V E) :
+    (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) e
+      = (e.2, inverseSigmaFan x V E e.2 e.1) := by
+  rw [yk2_apply_faceMap hfan e, if_pos he]
+  rfl
+
+/-- 面轨道内 dart 的 faceMap-逆：仍在面轨道，且第二分量 = 原 dart 的第一分量。 -/
+private theorem yk8_symm_snd {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) {d : V3 × V3} (hd : d ∈ f) :
+    (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x V E hfan)).symm d ∈ f
+      ∧ ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x V E hfan)).symm d).2 = d.1 := by
+  have hs1 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)).symm d ∈ f := by
+    rw [hf]
+    exact yk2_faceOrbit_symm_closure hfan (hf ▸ hd)
+  have he1 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)).symm d ∈ dart1OfFan V E :=
+    yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hs1)
+  refine ⟨hs1, ?_⟩
+  have happ : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) ((@Hypermap.faceMap (V3 × V3)
+      (fun a b' => instDecidableEqProd a b') (hypermapOfFan x V E hfan)).symm d) = d :=
+    Equiv.apply_symm_apply _ _
+  rw [yk8_faceMap_val hfan he1] at happ
+  exact (congrArg Prod.fst happ.symm).symm
+
+/-- **f 与 reverse f 不交**（checkpoint 3 前置①；单圈性两侧 + 2 < ncard f）。 -/
+private theorem yk8_face_inter_swap {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) (hk : 2 < f.ncard) :
+    f ∩ (fun d : V3 × V3 => (d.2, d.1)) '' f = ∅ := by
+  by_contra hcon
+  obtain ⟨z, hz⟩ := Set.nonempty_iff_ne_empty.mpr hcon
+  have hz2 : z ∈ (fun d : V3 × V3 => (d.2, d.1)) '' f := hz.2
+  simp only [Set.mem_image] at hz2
+  obtain ⟨y, hy, hd⟩ := hz2
+  have hdF : (y.2, y.1) ∈ f := by
+    rw [hd]
+    exact hz.1
+  by_cases hdiag : y.1 = y.2
+  · exact yk8_fst_ne_snd hfan hconf hV b hb f hf hk y hy hdiag
+  -- 前驱 dart 的第二分量 = (y.2,y.1).1 = y.2 = y 的第二分量 ⟹ 前驱 = y
+  have hsy := yk8_symm_snd hfan b hb f hf hdF
+  have hinv : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)).symm (y.2, y.1) = y := by
+    refine yk8_face_snd_inj hfan hconf hV b hb f hf _ hsy.1 y hy ?_
+    rw [hsy.2]
+  have hstep : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) y = (y.2, y.1) := by
+    have h0 := congrArg (@Hypermap.faceMap (V3 × V3)
+      (fun a b' => instDecidableEqProd a b') (hypermapOfFan x V E hfan)) hinv
+    rw [Equiv.apply_symm_apply] at h0
+    exact h0.symm
+  -- faceMap (y.2,y.1) 与 y 同首分量 y.1 ⟹ faceMap² y = y
+  have hP : PermutesOn (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) (@Hypermap.darts (V3 × V3)
+      (fun a b' => instDecidableEqProd a b') (hypermapOfFan x V E hfan)) :=
+    @Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)
+  have hcl2 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) (y.2, y.1) ∈ f := by
+    rw [hf]
+    exact yk2_faceOrbit_closure hfan (hf ▸ hdF)
+  have hfix2 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) (y.2, y.1) = y :=
+    yk8_face_fst_inj hfan hconf hV b hb f hf _ hcl2 y hy (by
+      have hdF1 : (y.2, y.1) ∈ dart1OfFan V E :=
+        yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hdF)
+      rw [yk8_faceMap_val hfan hdF1])
+  have hfix : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) ((@Hypermap.faceMap (V3 × V3)
+      (fun a b' => instDecidableEqProd a b') (hypermapOfFan x V E hfan)) y) = y := by
+    rw [hstep]
+    exact hfix2
+  have hpow2 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan) ^ 2) y = y := by
+    rw [pow_two, Equiv.Perm.mul_apply]
+    exact hfix
+  have hyc : y ∈ f := hy
+  have horb : orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) y = f := by
+    have h1 : y ∈ yk2_faceOrbit x V E hfan b := hf ▸ hyc
+    rw [hf]
+    exact orbitMap_eq_of_mem hP h1
+  have h2orb : orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) y = {y, (y.2, y.1)} := by
+    rw [orbit_cyclic (f := @Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)) (x := y) (m := 2) (by decide) hpow2]
+    ext w
+    simp only [Set.mem_image, Set.mem_singleton_iff, Set.mem_insert_iff,
+      Finset.mem_coe, Finset.mem_range]
+    constructor
+    · rintro ⟨k, hk, hke⟩
+      rcases Nat.lt_or_ge k 2 with h2k | h2k
+      · rcases Nat.lt_or_ge k 1 with h1k | h1k
+        · have hk0 : k = 0 := by omega
+          rw [hk0] at hke
+          simp only [pow_zero, Equiv.Perm.one_apply] at hke
+          left
+          exact hke.symm
+        · have hk1 : k = 1 := by omega
+          rw [hk1, pow_one] at hke
+          right
+          exact hke.symm.trans hstep
+      · exact absurd hk (by omega)
+    · rintro (rfl | rfl)
+      · exact ⟨0, by simp, rfl⟩
+      · exact ⟨1, by simp, by rw [pow_one]; exact hstep⟩
+  have hyd : y ≠ (y.2, y.1) := by
+    intro he
+    exact hdiag (congrArg Prod.snd he).symm
+  have hcard2 : f.ncard = 2 := by
+    rw [← horb, h2orb, Set.ncard_insert_of_notMem
+      (by intro hme; exact hyd (Set.mem_singleton_iff.mp hme)),
+      Set.ncard_singleton]
+  omega
+
+/-- **ncard vPrime 下半**：`ncard f ≤ ncard vPrime`（fst 单射下 f = fst″f ⊆
+vPrime）。与 AE 上半 `yk6_ncard_vPrime_le` 拼接成等式。 -/
+private theorem yk8_ncard_f_le_vPrime {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) : f.ncard ≤ (vPrime_p2 V f).ncard := by
+  have hfin : f.Finite := by
+    rw [hf]
+    exact orbitMap_finite
+      (@Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x V E hfan)) b
+  have hsub1 : Set.InjOn (fun d : V3 × V3 => d.1) f :=
+    fun c hc e he heq => yk8_face_fst_inj hfan hconf hV b hb f hf c hc e he heq
+  have hcard : ((fun d : V3 × V3 => d.1) '' f).ncard = f.ncard :=
+    Set.InjOn.ncard_image hsub1
+  have hsub2 : (fun d : V3 × V3 => d.1) '' f ⊆ vPrime_p2 V f := by
+    rintro v ⟨w, hw, hwv⟩
+    rw [← hwv]
+    exact ⟨(yk2_dart_fst_snd_mem_V hfan
+      (yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hw))).1, ⟨w.2, hf ▸ hw⟩⟩
+  have h2 : ((fun d : V3 × V3 => d.1) '' f).ncard ≤ (vPrime_p2 V f).ncard :=
+    Set.ncard_le_ncard hsub2
+      (Set.Finite.subset hV (yk6_vPrime_subset (V := V) f))
+  rw [hcard] at h2
+  exact h2
+
+/-- ncard vPrime = ncard f（单圈性下的 LOFA_IMP_CARD_FF_V_EQ 内容：
+AE 上半 + 本波下半）。 -/
+private theorem yk8_ncard_vPrime_eq {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN 0 V E) (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) :
+    (vPrime_p2 V f).ncard = f.ncard :=
+  le_antisymm (yk6_ncard_vPrime_le hfan b hb f hf)
+    (yk8_ncard_f_le_vPrime hfan hconf hV b hb f hf)
+
+/-- **ncard vPrime 下半（装配形）**：`4 ≤ ncard f`（tau4/5/6 章 dartsK 供给）
+时 `4 ≤ ncard vPrime`。 -/
+private theorem yk8_four_le_ncard_vPrime {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN 0 V E) (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 4 ≤ f.ncard) :
+    4 ≤ (vPrime_p2 V f).ncard := by
+  rw [yk8_ncard_vPrime_eq hfan hconf hV b hb f hf]
+  exact hk
+
+/-! ### 9j.2 checkpoint 3 前置：受限邻域恰二元素、σ′ 对合、darts′ 基数 2k。
+（HOL DIH_K_HYP_E_PRIME / FF_DISJOINT_ITS_IMAGE_CARD_EQ 的 Lean 折算原料：
+单圈性 + 2 < ncard f 之后全部为轨道簿记。） -/
+
+/-- 受限邻域恰两元素：每个面顶点 v 的 N′(v) = {succ_v, pred_v}，succ ≠ pred
+（单圈性两侧 + 2 < ncard f）。 -/
+private theorem yk8_setOfEdge_ePrime_two {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) (hk : 2 < f.ncard)
+    (v : V3) (hv : v ∈ vPrime_p2 V f) :
+    ∃ p s : V3, p ≠ s ∧ p ∈ setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f)
+      ∧ s ∈ setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f)
+      ∧ ∀ u ∈ setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f), u = p ∨ u = s := by
+  obtain ⟨-, w, hw⟩ := Set.mem_setOf_eq.mp hv
+  have hd : (v, w) ∈ f := hw
+  have hsy := yk8_symm_snd hfan b hb f hf hd
+  have hwV : w ∈ V :=
+    (yk2_dart_fst_snd_mem_V hfan
+      (yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd))).2
+  have hsV : ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)).symm (v, w)).1 ∈ V :=
+    (yk2_dart_fst_snd_mem_V hfan
+      (yk2_faceOrbit_subset_dart1 hfan b hb
+        (by exact yk2_faceOrbit_symm_closure hfan (hf ▸ hd)))).1
+  -- 前驱 dart 的显式形：(s, v) ∈ f，其中 s := (faceMap⁻¹ (v,w)).1
+  have hsdart : (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)).symm (v, w)).1, v) ∈ f := by
+    have hpair : (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x V E hfan)).symm (v, w)).1, v)
+        = (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan x V E hfan)).symm (v, w) := by
+      apply Prod.ext
+      · rfl
+      · exact hsy.2.symm
+    rw [hpair]
+    exact hsy.1
+  -- succ ≠ pred：相等时 (v,w) 与 (w,v) 同在 f，落入 f ∩ swap″f
+  have hpne : w ≠ ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x V E hfan)).symm (v, w)).1 := by
+    intro heq
+    have hsw' : ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x V E hfan)).symm (v, w)).1 = w := heq.symm
+    have hwv : (w, v) ∈ f := by
+      rw [← hsw']
+      exact hsdart
+    have hdis := yk8_face_inter_swap hfan hconf hV b hb f hf hk
+    have hmem : (v, w) ∈ f ∩ ((fun d : V3 × V3 => (d.2, d.1)) '' f) :=
+      Set.mem_inter hd (show (v, w) ∈ (fun d : V3 × V3 => (d.2, d.1)) '' f from
+        ⟨(w, v), hwv, rfl⟩)
+    rw [hdis] at hmem
+    exact (Set.mem_empty_iff_false _).mp hmem
+  have hch := yk2_setOfEdge_ePrime_eq hfan b hb f hf v
+  refine ⟨w, ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+    (hypermapOfFan x V E hfan)).symm (v, w)).1, hpne, ?_, ?_, ?_⟩
+  · rw [hch]
+    exact ⟨hwV, Or.inl hd⟩
+  · rw [hch]
+    exact ⟨hsV, Or.inr hsdart⟩
+  · intro u hu
+    obtain ⟨-, hd'⟩ := Set.mem_setOf_eq.mp (hch ▸ hu)
+    rcases hd' with hd' | hd'
+    · have h2 := yk8_face_fst_inj hfan hconf hV b hb f hf (v, u) hd' (v, w) hd rfl
+      exact Or.inl (congrArg Prod.snd h2)
+    · have h2 := yk8_face_snd_inj hfan hconf hV b hb f hf (u, v) hd'
+        ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan x V E hfan)).symm (v, w)) hsy.1 (by rw [hsy.2])
+      exact Or.inr (congrArg Prod.fst h2)
+
+/-- σ′ 在面顶点的受限邻域上为二元交换：σ′ u ≠ u 且 σ′(σ′ u) = u
+（SIGMA_FAN + 二元素集）。 -/
+private theorem yk8_sigmaPrime_swap {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN x (vPrime_p2 V f) (ePrime_p2 E f))
+    (v : V3) (hv : v ∈ vPrime_p2 V f) (u : V3)
+    (hu : u ∈ setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f)) :
+    sigmaFan x (vPrime_p2 V f) (ePrime_p2 E f) v u ≠ u
+      ∧ sigmaFan x (vPrime_p2 V f) (ePrime_p2 E f) v
+          (sigmaFan x (vPrime_p2 V f) (ePrime_p2 E f) v u) = u := by
+  obtain ⟨p, s, hps, hpS, hsS, htwo⟩ :=
+    yk8_setOfEdge_ePrime_two hfan hconf hV b hb f hf hk v hv
+  have hneP : setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) ≠ {p} := by
+    intro hcon
+    have h1 : s ∈ ({p} : Set V3) := hcon ▸ hsS
+    exact hps (Set.mem_singleton_iff.mp h1).symm
+  have hneS : setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) ≠ {s} := by
+    intro hcon
+    have h1 : p ∈ ({s} : Set V3) := hcon ▸ hpS
+    exact hps.symm (Set.mem_singleton_iff.mp h1).symm
+  -- σ′ p = s、σ′ s = p
+  have hσp : sigmaFan x (vPrime_p2 V f) (ePrime_p2 E f) v p = s := by
+    obtain ⟨hσS, hσne, -⟩ := SIGMA_FAN hneP hfan' hpS
+    rcases htwo _ hσS with h | h
+    · exact absurd h hσne
+    · exact h
+  have hσs : sigmaFan x (vPrime_p2 V f) (ePrime_p2 E f) v s = p := by
+    obtain ⟨hσS, hσne, -⟩ := SIGMA_FAN hneS hfan' hsS
+    rcases htwo _ hσS with h | h
+    · exact h
+    · exact absurd h hσne
+  rcases htwo u hu with hu' | hu'
+  · refine ⟨by rw [hu', hσp]; exact Ne.symm hps, ?_⟩
+    rw [hu', hσp, hσs]
+  · refine ⟨by rw [hu', hσs]; exact hps, ?_⟩
+    rw [hu', hσs, hσp]
+
+/-- swap 像的基数 = f 的基数。 -/
+private theorem yk8_swap_image_ncard {f : Set (V3 × V3)} :
+    ((fun d : V3 × V3 => (d.2, d.1)) '' f).ncard = f.ncard :=
+  Set.InjOn.ncard_image
+    (fun a _ b _ heq => Prod.ext (congrArg Prod.snd heq) (congrArg Prod.fst heq))
+
+/-- **受限 dartset 基数**：dart1(vPrime, ePrime) 的 ncard = 2 · ncard f
+（f ⊔ swap″f 不交分解，checkpoint 3 的 card = 2k 合取）。 -/
+private theorem yk8_dart1_ePrime_ncard {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) (hk : 2 < f.ncard) :
+    (dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)).ncard = 2 * f.ncard := by
+  have hU : dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)
+      = f ∪ (fun d : V3 × V3 => (d.2, d.1)) '' f :=
+    yk2_dart1_ePrime_eq_union_swap hfan b hb f hf
+  have hdisj : f ∩ (fun d : V3 × V3 => (d.2, d.1)) '' f = ∅ :=
+    yk8_face_inter_swap hfan hconf hV b hb f hf hk
+  have hfin : f.Finite := by
+    rw [hf]
+    exact orbitMap_finite
+      (@Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan x V E hfan)) b
+  have hfin2 : ((fun d : V3 × V3 => (d.2, d.1)) '' f).Finite :=
+    Set.Finite.image (fun d : V3 × V3 => (d.2, d.1)) hfin
+  have hdisj' : Disjoint f ((fun d : V3 × V3 => (d.2, d.1)) '' f) := by
+    rw [Set.disjoint_left]
+    intro a ha hab
+    have h2 : a ∈ f ∩ ((fun d : V3 × V3 => (d.2, d.1)) '' f) := Set.mem_inter ha hab
+    rw [hdisj] at h2
+    exact (Set.mem_empty_iff_false a).mp h2
+  have hkey : ((f ∪ (fun d : V3 × V3 => (d.2, d.1)) '' f)).encard
+      = f.encard + ((fun d : V3 × V3 => (d.2, d.1)) '' f).encard := by
+    rw [Set.encard_union_eq hdisj']
+  calc (dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)).ncard
+      = ENat.toNat (f ∪ (fun d : V3 × V3 => (d.2, d.1)) '' f).encard := by
+        rw [hU, Set.ncard_def]
+    _ = ENat.toNat (f.encard + ((fun d : V3 × V3 => (d.2, d.1)) '' f).encard) := by
+        rw [hkey]
+    _ = ENat.toNat f.encard + ENat.toNat ((fun d : V3 × V3 => (d.2, d.1)) '' f).encard := by
+        refine ENat.toNat_add ?_ ?_
+        · exact ne_of_eq_of_ne (Set.Finite.cast_ncard_eq hfin).symm
+            (ENat.coe_ne_top f.ncard)
+        · exact ne_of_eq_of_ne (Set.Finite.cast_ncard_eq hfin2).symm
+            (ENat.coe_ne_top ((fun d : V3 × V3 => (d.2, d.1)) '' f).ncard)
+    _ = f.ncard + ((fun d : V3 × V3 => (d.2, d.1)) '' f).ncard := by
+        rw [Set.ncard_def, Set.ncard_def]
+    _ = f.ncard + f.ncard := by rw [yk8_swap_image_ncard]
+    _ = 2 * f.ncard := by ring
+
+/-- 受限超图的 dart 集基数（Finset 层）。 -/
+private theorem yk8_Hdarts_card {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit x V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN x (vPrime_p2 V f) (ePrime_p2 E f)) :
+    (@Hypermap.darts (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x (vPrime_p2 V f) (ePrime_p2 E f) hfan')).card
+      = 2 * f.ncard := by
+  have hcoe : (↑(@Hypermap.darts (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan x (vPrime_p2 V f) (ePrime_p2 E f) hfan')) : Set (V3 × V3))
+      = dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := yk2_darts_coe hfan'
+  rw [← Set.ncard_coe_finset, hcoe, yk8_dart1_ePrime_ncard hfan hconf hV b hb f hf hk]
+
+/-! ### 9j.3 checkpoint 3 · Dih2k 帽石波（受限超图 H′ 的轨道结构与 HasOrders）。
+本波钉定 x := 0（装配上下文 LocalFan 的 apex）。 -/
+
+variable {V : Set V3} {E : Set (Set V3)}
+
+/-- N′ 上 invFun(ext σ′) 的显式值 = σ′（σ′ 二元交换 + ext-on-N +
+yk7_invFun_eq_of_apply 值形式）。 -/
+private theorem yk8_invFun_eq_sigmaPrime (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    (v : V3) (hv : v ∈ vPrime_p2 V f) (u : V3)
+    (hu : u ∈ setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f)) :
+    inverseSigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) v u
+      = sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) v u := by
+  obtain ⟨hσne, hσσ⟩ := yk8_sigmaPrime_swap hfan hconf hV b hb f hf hk hfan' v hv u hu
+  have hperm := permutes_sigma_fan hfan' hu
+  have hmem : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) v u
+      ∈ setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) := sigma_fan_in_setOfEdge hfan' hu
+  have hext : extensionSigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) v
+      (sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) v u) = u := by
+    rw [extensionSigmaFan, if_neg (not_not.mpr hmem)]
+    exact hσσ
+  exact yk7_invFun_eq_of_apply hperm.1 hperm.2.1 hperm.2.2 hmem hu hext
+
+/-- 受限 dart 的面 Map 值（dart1′ 上）。 -/
+private theorem yk8_HfaceMap_val (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    {d : V3 × V3} (hd : d ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)) :
+    (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d
+      = (d.2, inverseSigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.2 d.1) := by
+  rw [yk2_apply_faceMap hfan' d, if_pos hd]
+  rfl
+
+/-- 受限 dart 的 node Map 值（dart1′ 上）。 -/
+private theorem yk8_HnodeMap_val (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    {d : V3 × V3} (hd : d ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)) :
+    (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d
+      = (d.1, sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1 d.2) := by
+  rw [yk2_apply_nodeMap hfan' d, if_pos hd]
+  rfl
+
+/-- **checkpoint 3 前置②**：受限 node Map 在面轨道上的像 = swap 像
+（nodeMap(f d) = swap(f′⁻¹ d) 双向；单圈性 + 2 < ncard f）。 -/
+private theorem yk8_nodePrime_image_swap (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f)) :
+    (fun d : V3 × V3 => (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d) '' f
+      = (fun d : V3 × V3 => (d.2, d.1)) '' f := by
+  have hbb : b ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := by
+    have hbE : ({b.1, b.2} : Set V3) ∈ E := hb
+    have hbf : (b.1, b.2) ∈ f := by
+      have h0 : b ∈ yk2_faceOrbit 0 V E hfan b := mem_orbitMap_self _ _
+      exact hf ▸ h0
+    exact Set.mem_setOf_eq.mpr ⟨b.1, b.2, rfl, hbE, hbf⟩
+  have hf' : f = yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
+  have hiff' : ∀ z : V3 × V3, z ∈ f ↔ z ∈ yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    fun z => ⟨fun hz => hf' ▸ hz, fun hz => hf'.symm ▸ hz⟩
+  -- 面轨道 dart 落在 dart1′
+  have hsub1 : ∀ d ∈ f, d ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := fun d hd =>
+    yk2_faceOrbit_subset_dart1 hfan' b hbb ((hiff' d).mp hd)
+  have hfclosure : ∀ d ∈ f, (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d ∈ f := by
+    intro d hd
+    exact (hiff' _).mpr (yk2_faceOrbit_closure hfan' ((hiff' d).mp hd))
+  refine Set.Subset.antisymm (Set.image_subset_iff.2 fun d hd => ?_)
+    (Set.image_subset_iff.2 fun y hy => ?_)
+  · -- ⊆：nodeMap d = swap(faceMap⁻¹ d)（前驱第一分量 = σ′ 后继）
+    have hd1 := hsub1 d hd
+    have hvN : d.2 ∈ setOfEdge d.1 (vPrime_p2 V f) (ePrime_p2 E f) :=
+      (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1 d.2 hfan').mp hd1
+    have hvV : d.1 ∈ vPrime_p2 V f := ⟨(yk2_dart_fst_snd_mem_V hfan
+      (yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hd))).1, ⟨d.2, hf ▸ hd⟩⟩
+    have hsym := yk8_symm_snd hfan' b hbb f hf' hd
+    have hsym1 := hsub1 _ hsym.1
+    have hfaceEq : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+        ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d) = d :=
+      Equiv.apply_symm_apply _ _
+    rw [yk8_HfaceMap_val hfan' (hsub1 _ hsym.1), hsym.2] at hfaceEq
+    -- hfaceEq : (d.1, invFun-ext(σ′_{d.1}) (symm d).1) = d
+    have hprod := congrArg Prod.snd hfaceEq
+    -- invFun-ext(σ′_{d.1}) (symm d).1 = d.2
+    have hzN : ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).1
+        ∈ setOfEdge d.1 (vPrime_p2 V f) (ePrime_p2 E f) := by
+      refine (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1
+        ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).1 hfan').mp ?_
+      have h2 : ({((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+            (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).1,
+            ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+              (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).2} : Set V3)
+          ∈ ePrime_p2 E f := hsub1 _ hsym.1
+      rw [Set.pair_comm, hsym.2] at h2
+      exact h2
+    have hvalZ := yk8_invFun_eq_sigmaPrime hfan hconf hV b hb f hf hk hfan' d.1 hvV
+      ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).1 hzN
+    -- hprod 经右逆值化：σFan d.1 ((symm d).1) = d.2；与 σ′ 对合夹出 (symm d).1 = σFan d.1 d.2
+    have hprod2 : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1
+        (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).1) = d.2 := by
+      rw [← hvalZ]; exact hprod
+    have hswapd2 : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1
+        (sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1 d.2) = d.2 :=
+      (yk8_sigmaPrime_swap hfan hconf hV b hb f hf hk hfan' d.1 hvV d.2 hvN).2
+    have hN1 : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1 d.2
+        ∈ setOfEdge d.1 (vPrime_p2 V f) (ePrime_p2 E f) := sigma_fan_in_setOfEdge hfan' hvN
+    have hkey : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1 d.2
+        = (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).1) :=
+      mono_sigma_fan hfan' hN1 hzN (hswapd2.trans hprod2.symm)
+    refine ⟨(@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d, hsym.1, ?_⟩
+    show (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).2,
+        ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm d).1)
+        = (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d
+    rw [hsym.2, ← hkey, yk8_HnodeMap_val hfan' hd1]
+  · -- ⊇：swap y = nodeMap(faceMap y)（σ′∘invFun-ext 右逆于 N′）
+    have hy1 := hsub1 y hy
+    have hyV : y.2 ∈ vPrime_p2 V f := by
+      rw [hf]
+      exact yk2_face_snd_mem_vPrime hfan b hb (hf ▸ hy)
+    have hyN : y.1 ∈ setOfEdge y.2 (vPrime_p2 V f) (ePrime_p2 E f) := by
+      refine (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.2 y.1 hfan').mp ?_
+      rw [Set.pair_comm]
+      exact hy1
+    have hinv := yk8_invFun_eq_sigmaPrime hfan hconf hV b hb f hf hk hfan' y.2 hyV y.1 hyN
+    have hσσ : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.2
+        (sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.2 y.1) = y.1 :=
+      (yk8_sigmaPrime_swap hfan hconf hV b hb f hf hk hfan' y.2 hyV y.1 hyN).2
+    have hcl := hfclosure y hy
+    have hcl1 := hsub1 _ hcl
+    have h2 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) y
+        = (y.2, sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.2 y.1) := by
+      rw [yk8_HfaceMap_val hfan' hy1, hinv]
+    refine ⟨(@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) y, hcl, ?_⟩
+    show (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+        ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) y) = (y.2, y.1)
+    rw [yk8_HnodeMap_val hfan' hcl1, h2, hσσ]
+
+/-! ### 9j.4 checkpoint 3 · Dih2k 收口：前驱值、交换关系、HasOrders×3、合取二、帽石。 -/
+
+/-- 受限面轨道 dart 的前驱第一分量 = σ′ 后继（单圈性 + 2 < ncard f）。 -/
+private theorem yk8_symm_fst_eq (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    {y : V3 × V3} (hy : y ∈ f) :
+    ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).1
+      = sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.1 y.2 := by
+  have hbb : b ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := by
+    have hbE : ({b.1, b.2} : Set V3) ∈ E := hb
+    have hbf : (b.1, b.2) ∈ f := by
+      have h0 : b ∈ yk2_faceOrbit 0 V E hfan b := mem_orbitMap_self _ _
+      exact hf ▸ h0
+    exact Set.mem_setOf_eq.mpr ⟨b.1, b.2, rfl, hbE, hbf⟩
+  have hfe : f = yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
+  have hiff' : ∀ z : V3 × V3, z ∈ f ↔ z ∈ yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    fun z => ⟨fun hz => hfe ▸ hz, fun hz => hfe.symm ▸ hz⟩
+  have hy1 : y ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) :=
+    yk2_faceOrbit_subset_dart1 hfan' b hbb ((hiff' y).mp hy)
+  have hyV : y.2 ∈ vPrime_p2 V f := by
+    rw [hf]
+    exact yk2_face_snd_mem_vPrime hfan b hb (hf ▸ hy)
+  have hyN1 : y.2 ∈ setOfEdge y.1 (vPrime_p2 V f) (ePrime_p2 E f) :=
+    (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.1 y.2 hfan').mp hy1
+  have hvY : y.1 ∈ vPrime_p2 V f :=
+    ⟨(yk2_dart_fst_snd_mem_V hfan (yk2_faceOrbit_subset_dart1 hfan b hb (hf ▸ hy))).1,
+      ⟨y.2, hf ▸ hy⟩⟩
+  have hsym1 : ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y)
+      ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) :=
+    yk2_faceOrbit_subset_dart1 hfan' b hbb
+      (yk2_faceOrbit_symm_closure hfan' ((hiff' y).mp hy))
+  have hsy2 : ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).2 = y.1 :=
+    (yk8_symm_snd hfan' b hbb f hfe hy).2
+  have hzN : ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).1
+      ∈ setOfEdge y.1 (vPrime_p2 V f) (ePrime_p2 E f) := by
+    refine (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.1
+      ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).1 hfan').mp ?_
+    have h2 : ({((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).1,
+          ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+            (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).2} : Set V3)
+        ∈ ePrime_p2 E f := hsym1
+    rw [hsy2, Set.pair_comm] at h2
+    exact h2
+  have hvalY := yk8_invFun_eq_sigmaPrime hfan hconf hV b hb f hf hk hfan' y.1 hvY
+    ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).1 hzN
+  have hfaceEq : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+      ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y) = y :=
+    Equiv.apply_symm_apply _ _
+  rw [yk8_HfaceMap_val hfan' hsym1, hsy2, hvalY] at hfaceEq
+  -- hfaceEq : (y.1, σFan y.1 ((symm y).1)) = y
+  have hsnd : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.1
+      (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).1) = y.2 :=
+    congrArg Prod.snd hfaceEq
+  have hswap2 : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.1
+      (sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.1 y.2) = y.2 :=
+    (yk8_sigmaPrime_swap hfan hconf hV b hb f hf hk hfan' y.1 hvY y.2 hyN1).2
+  have hN1 : sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.1 y.2
+      ∈ setOfEdge y.1 (vPrime_p2 V f) (ePrime_p2 E f) := sigma_fan_in_setOfEdge hfan' hyN1
+  exact mono_sigma_fan hfan' hzN hN1 (hsnd.trans hswap2.symm)
+
+/-- 交换关系（面轨道上）：faceMap′(swap y) = swap(faceMap′⁻¹ y)。 -/
+private theorem yk8_comm_swap (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    {y : V3 × V3} (hy : y ∈ f) :
+    (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+        ((fun z : V3 × V3 => (z.2, z.1)) y)
+      = (fun z : V3 × V3 => (z.2, z.1))
+        ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y) := by
+  have hy1 : y ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := by
+    have h0 : y ∈ yk2_faceOrbit 0 V E hfan b := hf ▸ hy
+    have h1 := yk2_face_dart_mem_ePrime hfan b hb h0
+    rw [← hf] at h1
+    exact h1
+  have hswapd : ((fun z : V3 × V3 => (z.2, z.1)) y)
+      ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := yk2_mem_dart1_pair_comm hy1
+  have hyN1 : y.2 ∈ setOfEdge y.1 (vPrime_p2 V f) (ePrime_p2 E f) :=
+    (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) y.1 y.2 hfan').mp hy1
+  have hval := yk8_invFun_eq_sigmaPrime hfan hconf hV b hb f hf hk hfan' y.1
+    (by
+      rw [hf]
+      exact yk2_face_fst_mem_vPrime hfan b hb (hf ▸ hy)) y.2 hyN1
+  have hsfst := yk8_symm_fst_eq hfan hconf hV b hb f hf hk hfan' hy
+  show (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+      ((fun z : V3 × V3 => (z.2, z.1)) y)
+      = (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).2,
+        ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).1)
+  rw [yk8_HfaceMap_val hfan' hswapd,
+    show ((fun z : V3 × V3 => (z.2, z.1)) y).2 = y.1 from rfl, hval,
+    show ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm y).2 = y.1 from
+      (yk8_symm_snd hfan' b
+        (by
+          have h1 : b ∈ yk2_faceOrbit 0 V E hfan b := mem_orbitMap_self _ _
+          have h0 := yk2_face_dart_mem_ePrime hfan b hb h1
+          exact hf ▸ h0) f
+        (yk7_FF_eq_faceOrbit hfan b hb f hf).symm hy).2,
+    hsfst]
+
+/-! **NEEDS（9j.4 残差，Lane AJ 2026-10-23 诚实止步记账）**：Dih2k 帽石
+`Dih2k (hypermapOfFan 0 vPrime ePrime hfan') f.ncard` 尚差四件簿记：
+①HasOrders edge 2：e′² = 1（yk2_edgeMap_involutive hfan' 直接给）+ e′ ≠ 1
+（b ∈ 受限 dart1 非对角——b.1 ≠ b.2 由 yk8_face_fst_inj + 2 < ncard f 的
+对角-排除论证：b 对角 ⟹ faceMap b = b（fst 单射）⟹ orbit(b) = {b} ⟹
+ncard f = 1 矛盾）；②HasOrders node 2：n′² = 1（d ∈ dart1′ 处
+yk8_HnodeMap_val 两次 + yk8_sigmaPrime_swap.2；d ∉ 处 if_neg 两次）+
+n′ ≠ 1（nodeMap b = (b.1, σFan b.1 b.2) ≠ b ⟸ sigmaPrime_swap.1）；
+③orbit′(swap b) = swap″f（⊆：swap″f 的 f′-不变性 f′(swap y) =
+swap(faceMap′⁻¹ y)（faceMap′⁻¹ y = symm y 由 preimage 唯一性）+
+⊇：swap(f′^m b) = (f′⁻¹)^m(swap b) 归纳）；④HasOrders face k：
+f′^k = 1（d ∈ f 轨道平移 + d ∈ swap″f 经 ③；f′^i ≠ 1 经
+orbitMap_pow_inj 于 ncard(orbit′ b) = k）与 union-合取二
+（d ∈ f 支已由 yk7_FF_eq_faceOrbit + yk8_nodePrime_image_swap +
+yk2_dart1_ePrime_eq_union_swap 就绪；d ∈ swap″f 支经 ③）。
+全部为 9j.0-9j.3 已证件的纯簿记拼装，无新几何。 -/
+
+/-! ### 9k. ykit9 波（Lane AQ 2026-10-23）：9j.4 四件簿记残差收官。
+
+AJ 记账的四件（上方 9j.4 块尾 NEEDS ①-④）逐条闭合：
+①HasOrders edge 2（yk9_edge_hasOrders）；
+②HasOrders node 2（yk9_node_sq_apply + yk9_node_hasOrders）；
+③orbit′(swap y) = swap″f（yk9_iterate_swap_abstract + yk9_face_swap_iterate +
+yk9_orbit_swap_image）；
+④HasOrders face k + 合取二 + 帽石（yk9_face_hasOrders +
+yk9_nodePrime_image_swapImage + yk9_dih2k_union + yk9_Dih2k）。
+全部为 §9j.0-9j.4 已证件的纯簿记拼装，无新几何。记号：V′ := vPrime_p2 V f、
+E′ := ePrime_p2 E f、H′ := hypermapOfFan 0 V′ E′ hfan′、fc := H′.faceMap、
+n′ := H′.nodeMap、e′ := H′.edgeMap、swap d = (d.2, d.1)。
+
+关键簿记路线（沉淀）：
+- n′² = 1 的中间 dart 留域由 nodeMap_permutes（PermutesOn.apply_mem）白给；
+- ③⊇ 走 swap∘fc = fc⁻¹∘swap（yk8_comm_swap 在 fc z 处的换位形）的望远镜
+  + PermutesOn.orbitMap_symm（逆生成同轨道）；
+- ④ f′^k = 1 逐点走 PermutesOn.pow_ncard_orbitMap_apply_self 于
+  orbit(fc·) = f / = swap″f（后者经 ③ + yk8_swap_image_ncard）；
+  f′^i ≠ 1 走 orbitMap_pow_inj 于 orbit′ b = f（yk7_FF_eq_faceOrbit）；
+- 合取二 swap 侧 n′″swap″f = f 经 yk8_nodePrime_image_swap +
+  Set.image_image + n′² = 1 的像-回卷。
+装配注意（对齐 AJ §4）：SRPRNPL 消费 conformingFan，LpFan 只有
+FullySurrounded——fully_surrounded_imp_conforming 桥移植仍是装配前置
+（不在本波范围）。 -/
+
+/-- 基 dart b 的落位簿记：b ∈ 受限 dart1、(b.1, b.2) ∈ f、b.1 ∈ vPrime、
+b.2 ∈ 受限邻集（①② 的共同前置）。 -/
+private theorem yk9_base_ctx (hfan : FAN 0 V E)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f)) :
+    b ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)
+      ∧ (b.1, b.2) ∈ f
+      ∧ b.1 ∈ vPrime_p2 V f
+      ∧ b.2 ∈ setOfEdge b.1 (vPrime_p2 V f) (ePrime_p2 E f) := by
+  have hbE : ({b.1, b.2} : Set V3) ∈ E := hb
+  have hbf : (b.1, b.2) ∈ f := by
+    have h0 : b ∈ yk2_faceOrbit 0 V E hfan b := mem_orbitMap_self _ _
+    exact hf ▸ h0
+  have hbb : b ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) :=
+    Set.mem_setOf_eq.mpr ⟨b.1, b.2, rfl, hbE, hbf⟩
+  have hbV := yk2_dart_fst_snd_mem_V hfan hb
+  refine ⟨hbb, hbf, ⟨hbV.1, ⟨b.2, hbf⟩⟩, ?_⟩
+  exact (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) b.1 b.2 hfan').mp hbb
+
+/-- 受限 dart 的两端落位：d ∈ dart1′ → d.1 ∈ vPrime ∧ d.2 ∈ setOfEdge d.1 V′ E′
+（② 的 σ′-前提；第一支经面轨道两端簿记，第二支经 swap-分支）。 -/
+private theorem yk9_dart1_ctx (hfan : FAN 0 V E)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    {d : V3 × V3} (hd : d ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)) :
+    d.1 ∈ vPrime_p2 V f ∧ d.2 ∈ setOfEdge d.1 (vPrime_p2 V f) (ePrime_p2 E f) := by
+  have hbb : b ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) :=
+    (yk9_base_ctx hfan b hb f hf hfan').1
+  have hU := yk2_dart1_ePrime_eq_union_swap hfan b hb f hf
+  refine ⟨?_, (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1 d.2
+    hfan').mp hd⟩
+  have hd2 : d ∈ f ∪ ((fun z : V3 × V3 => (z.2, z.1)) '' f) := by
+    rw [← hU]
+    exact hd
+  rcases hd2 with hdm | ⟨y, hy, hdy⟩
+  · exact (yk2_dart_fst_snd_mem_V hfan' hd).1
+  · rw [hf, ← hdy]
+    exact yk2_face_snd_mem_vPrime hfan b hb (hf ▸ hy)
+
+/-- 件① HasOrders edge 2：e′² = 1（edgeMap 对合）且 e′ ≠ 1（基 dart 非对角：
+e′ b = (b.2, b.1) ≠ b 由单圈性对角-排除 yk8_fst_ne_snd）。 -/
+private theorem yk9_edge_hasOrders (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f)) :
+    HasOrders (@Hypermap.edgeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) 2 := by
+  obtain ⟨hbb, hbf, -, -⟩ := yk9_base_ctx hfan b hb f hf hfan'
+  refine ⟨?_, ?_⟩
+  · intro i h0i hik
+    have hi : i = 1 := by omega
+    rw [hi, pow_one]
+    intro hcon
+    have hap : (@Hypermap.edgeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) b = (b.2, b.1) := by
+      rw [yk2_apply_edgeMap hfan' b, if_pos hbb]
+      rfl
+    have h1 : b = (b.2, b.1) := by
+      rw [← hap, hcon]
+      exact (Equiv.Perm.one_apply b).symm
+    exact (yk8_fst_ne_snd hfan hconf hV b hb f hf hk b hbf)
+      (congrArg Prod.snd h1.symm)
+  · rw [pow_two]
+    exact yk2_edgeMap_involutive hfan'
+
+/-- 件② 主步：n′(n′ d) = d（d ∈ 受限 dart1；中间 dart 留域经
+nodeMap_permutes 白给，两次 HnodeMap_val + σ′ 对合）。 -/
+private theorem yk9_node_sq_apply (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    {d : V3 × V3} (hd : d ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)) :
+    (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+        ((@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d) = d := by
+  have hN' := @Hypermap.nodeMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+    (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')
+  have hdarts : d ∈ @Hypermap.darts (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan') :=
+    (yk2_mem_darts_iff hfan' d).mpr hd
+  have hdn : (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d
+      ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) :=
+    (yk2_mem_darts_iff hfan' _).mp (PermutesOn.apply_mem hN' hdarts)
+  obtain ⟨hvN, hdN⟩ := yk9_dart1_ctx hfan b hb f hf hfan' hd
+  obtain ⟨-, hσσ⟩ := yk8_sigmaPrime_swap hfan hconf hV b hb f hf hk hfan' d.1 hvN d.2 hdN
+  rw [yk8_HnodeMap_val hfan' hdn, yk8_HnodeMap_val hfan' hd]
+  show (d.1, sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1
+    (sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) d.1 d.2)) = d
+  rw [hσσ]
+
+/-- 件② HasOrders node 2：n′² = 1（平方件）且 n′ ≠ 1（n′ b =
+(b.1, σ′ b.1 b.2) ≠ b ⟸ σ′ 非平凡）。 -/
+private theorem yk9_node_hasOrders (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f)) :
+    HasOrders (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) 2 := by
+  obtain ⟨hbb, -, hb1v, hb2N⟩ := yk9_base_ctx hfan b hb f hf hfan'
+  refine ⟨?_, Equiv.Perm.ext fun d => ?_⟩
+  · intro i h0i hik
+    have hi : i = 1 := by omega
+    rw [hi, pow_one]
+    intro hcon
+    have hap := yk8_HnodeMap_val hfan' hbb
+    have h1 : b = (b.1, sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) b.1 b.2) := by
+      rw [← hap, hcon]
+      exact (Equiv.Perm.one_apply b).symm
+    exact (yk8_sigmaPrime_swap hfan hconf hV b hb f hf hk hfan' b.1 hb1v b.2 hb2N).1
+      (congrArg Prod.snd h1.symm)
+  · show (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+        ((@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d) = d
+    by_cases hd : d ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)
+    · exact yk9_node_sq_apply hfan hconf hV b hb f hf hk hfan' hd
+    · rw [yk2_apply_nodeMap hfan' d, if_neg hd]
+      rw [yk2_apply_nodeMap hfan' d, if_neg hd]
+
+/-- 抽象望远镜：sw∘fc = fc⁻¹∘sw 于 fc-封闭集 f 上时
+sw(fc^j y) = fc⁻ʲ(sw y)（任意置换 fc 与映射 sw）。 -/
+private theorem yk9_iterate_swap_abstract {α : Type*} [DecidableEq α]
+    {fc : Equiv.Perm α} {f : Set α} {sw : α → α} {y : α}
+    (hy : y ∈ f) (hcl : ∀ z ∈ f, fc z ∈ f)
+    (hcomm : ∀ z ∈ f, sw (fc z) = fc.symm (sw z)) (j : ℕ) :
+    sw ((fc ^ j) y) = (fc.symm ^ j) (sw y) := by
+  have hmem : ∀ m : ℕ, (fc ^ m) y ∈ f := by
+    intro m
+    induction m with
+    | zero => exact hy
+    | succ k ih =>
+      rw [pow_succ', Equiv.Perm.mul_apply]
+      exact hcl _ ih
+  induction j with
+  | zero => simp
+  | succ m ih =>
+    calc sw ((fc ^ (m + 1)) y) = sw (fc ((fc ^ m) y)) := by
+          rw [pow_succ', Equiv.Perm.mul_apply]
+      _ = fc.symm (sw ((fc ^ m) y)) := hcomm _ (hmem m)
+      _ = (fc.symm ^ (m + 1)) (sw y) := by
+          rw [pow_succ', Equiv.Perm.mul_apply, ih]
+
+/-- ③ 主步（望远镜）：swap(fc^j y) = fc⁻ʲ(swap y)（y ∈ f；交换关系
+yk8_comm_swap 在 fc z 处的换位形）。 -/
+private theorem yk9_face_swap_iterate (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    {y : V3 × V3} (hy : y ∈ f) (j : ℕ) :
+    ((fun z : V3 × V3 => (z.2, z.1))
+        (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) ^ j) y)
+      = (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm ^ j)
+        ((fun z : V3 × V3 => (z.2, z.1)) y))) := by
+  have hfe : f = yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
+  have hiff' : ∀ z : V3 × V3, z ∈ f ↔ z ∈ yk2_faceOrbit 0 (vPrime_p2 V f)
+      (ePrime_p2 E f) hfan' b :=
+    fun z => ⟨fun hz => hfe ▸ hz, fun hz => hfe.symm ▸ hz⟩
+  have hcl : ∀ z ∈ f, (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) z ∈ f := fun z hz =>
+    (hiff' _).mpr (yk2_faceOrbit_closure hfan' ((hiff' z).mp hz))
+  have hcomm : ∀ z ∈ f, ((fun t : V3 × V3 => (t.2, t.1))
+        ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) z))
+      = (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm
+        ((fun t : V3 × V3 => (t.2, t.1)) z) := by
+    intro z hz
+    have h1 := yk8_comm_swap hfan hconf hV b hb f hf hk hfan'
+      (hcl z hz)
+    apply Equiv.injective
+    rw [h1, Equiv.apply_symm_apply]
+    rw [show (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm
+      ((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) z) = z from
+      Equiv.apply_symm_apply _ z]
+  exact yk9_iterate_swap_abstract (fc := @Hypermap.faceMap (V3 × V3)
+    (fun a b' => instDecidableEqProd a b')
+    (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) (f := f)
+    (sw := fun z : V3 × V3 => (z.2, z.1)) hy hcl hcomm j
+
+/-- 件③ 受限面轨道的 swap 像 = 反向轨道：orbit′(swap y) = swap″f（y ∈ f）。
+⊆ 走 swap″f 的 fc-封闭性（交换关系 + yk8_symm_snd 前驱回 f）；
+⊇ 走望远镜 + PermutesOn.orbitMap_symm。 -/
+private theorem yk9_orbit_swap_image (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    {y : V3 × V3} (hy : y ∈ f) :
+    orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+      ((fun z : V3 × V3 => (z.2, z.1)) y)
+      = (fun z : V3 × V3 => (z.2, z.1)) '' f := by
+  have hbb : b ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) :=
+    (yk9_base_ctx hfan b hb f hf hfan').1
+  have hfe : f = yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
+  have hP := @Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+    (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')
+  refine Set.Subset.antisymm ?_ ?_
+  · -- ⊆：swap″f fc-封闭 + swap y ∈ swap″f
+    have hmem0 : ((fun z : V3 × V3 => (z.2, z.1)) y)
+        ∈ ((fun z : V3 × V3 => (z.2, z.1)) '' f) := ⟨y, hy, rfl⟩
+    have hcl' : ∀ d ∈ ((fun z : V3 × V3 => (z.2, z.1)) '' f),
+        (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d
+          ∈ ((fun z : V3 × V3 => (z.2, z.1)) '' f) := by
+      rintro d ⟨w, hw, rfl⟩
+      have hs := yk8_symm_snd hfan' b hbb f hfe hw
+      exact ⟨(@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm w, hs.1,
+        (yk8_comm_swap hfan hconf hV b hb f hf hk hfan' hw).symm⟩
+    intro z hz
+    obtain ⟨n, hn⟩ := hz
+    rw [← hn]
+    exact yk2_orbit_subset_of_closed hmem0 hcl' n
+  · -- ⊇：swap(fc^m y) = fc⁻ᵐ(swap y) ∈ orbit fc⁻¹ = orbit fc
+    have h2 : y ∈ yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+      hfe ▸ hy
+    have horbY : orbitMap (@Hypermap.faceMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) y = f := by
+      have h3 : orbitMap (@Hypermap.faceMap (V3 × V3)
+          (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) y
+          = yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+        orbitMap_eq_of_mem hP h2
+      rw [← hfe] at h3
+      exact h3
+    have hsymm := PermutesOn.orbitMap_symm hP
+      ((fun z : V3 × V3 => (z.2, z.1)) y)
+    intro w hw
+    obtain ⟨y', hy', hdy'⟩ := hw
+    obtain ⟨m, hm⟩ : y' ∈ orbitMap (@Hypermap.faceMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) y := by
+      rw [horbY]
+      exact hy'
+    rw [← hdy', ← hm, yk9_face_swap_iterate hfan hconf hV b hb f hf hk hfan' hy m]
+    rw [← hsymm]
+    exact pow_apply_mem_orbitMap
+      (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')).symm m
+      ((fun z : V3 × V3 => (z.2, z.1)) y)
+
+/-- 件④ HasOrders face k：f′^k = 1（d ∈ f 走 pow_ncard 于 orbit = f；
+d ∈ swap″f 走 ③ + yk8_swap_image_ncard；d ∉ dart1′ 走恒等）且
+f′^i ≠ 1（0 < i < k；orbitMap_pow_inj 于 orbit′ b = f）。 -/
+private theorem yk9_face_hasOrders (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f)) :
+    HasOrders (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) f.ncard := by
+  have hfe : f = yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
+  have hP := @Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+    (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')
+  have horbb : orbitMap (@Hypermap.faceMap (V3 × V3)
+      (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) b = f := hfe.symm
+  refine ⟨?_, Equiv.Perm.ext fun d => ?_⟩
+  · intro i h0i hik hcon
+    have hnc : i < (orbitMap (@Hypermap.faceMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) b).ncard := by
+      rw [horbb]
+      exact hik
+    exact orbitMap_pow_inj hP (x := b) (a := 0) (b := i) h0i hnc
+      (by rw [hcon]; simp)
+  · show (((@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) ^ f.ncard) d) = d
+    by_cases hd : d ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f)
+    · have hU := yk2_dart1_ePrime_eq_union_swap hfan b hb f hf
+      have hdU : d ∈ f ∪ ((fun z : V3 × V3 => (z.2, z.1)) '' f) := by
+        rw [← hU]
+        exact hd
+      rcases hdU with hdm | ⟨y, hy, hdy⟩
+      · have hdb : d ∈ orbitMap (@Hypermap.faceMap (V3 × V3)
+            (fun a b' => instDecidableEqProd a b')
+            (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) b := by
+          rw [horbb]
+          exact hdm
+        have hpow := PermutesOn.pow_ncard_orbitMap_apply_self hP d
+        rwa [orbitMap_eq_of_mem hP hdb, horbb] at hpow
+      · have hnc : (orbitMap (@Hypermap.faceMap (V3 × V3)
+              (fun a b' => instDecidableEqProd a b')
+              (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+              ((fun z : V3 × V3 => (z.2, z.1)) y)).ncard = f.ncard := by
+          rw [yk9_orbit_swap_image hfan hconf hV b hb f hf hk hfan' hy,
+            yk8_swap_image_ncard]
+        have hpow := PermutesOn.pow_ncard_orbitMap_apply_self hP
+          ((fun z : V3 × V3 => (z.2, z.1)) y)
+        rwa [hnc, hdy] at hpow
+    · have h1 : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d = d := by
+        rw [yk2_apply_faceMap hfan' d, if_neg hd]
+      have hrec : ∀ n : ℕ, ((@Hypermap.faceMap (V3 × V3)
+          (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) ^ n) d = d := by
+        intro n
+        induction n with
+        | zero => rfl
+        | succ m ih =>
+          rw [pow_succ, Equiv.Perm.mul_apply, h1, ih]
+      exact hrec _
+
+/-- 合取二 swap 侧：n′″swap″f = f（n′″f = swap″f 平方回卷经 n′² = 1）。 -/
+private theorem yk9_nodePrime_image_swapImage (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f)) :
+    ((fun d : V3 × V3 => (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d)
+      '' ((fun z : V3 × V3 => (z.2, z.1)) '' f)) = f := by
+  have hbb : b ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) :=
+    (yk9_base_ctx hfan b hb f hf hfan').1
+  have hfe : f = yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
+  have hiff' : ∀ z : V3 × V3, z ∈ f ↔ z ∈ yk2_faceOrbit 0 (vPrime_p2 V f)
+      (ePrime_p2 E f) hfan' b :=
+    fun z => ⟨fun hz => hfe ▸ hz, fun hz => hfe.symm ▸ hz⟩
+  have hsq : ∀ d ∈ f, (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+      ((@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d) = d := by
+    intro d hd
+    exact yk9_node_sq_apply hfan hconf hV b hb f hf hk hfan'
+      (yk2_faceOrbit_subset_dart1 hfan' b hbb ((hiff' d).mp hd))
+  have himg : ((fun d : V3 × V3 => (@Hypermap.nodeMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d)
+      '' ((fun d : V3 × V3 => (@Hypermap.nodeMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d) '' f))
+      = ((fun d : V3 × V3 => (@Hypermap.nodeMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+        ((@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d)) '' f) :=
+    Set.image_image _ _ _
+  rw [← yk8_nodePrime_image_swap hfan hconf hV b hb f hf hk hfan', himg]
+  ext z
+  constructor
+  · rintro ⟨d, hd, hrfl⟩
+    have hrfl' : (@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+        ((@Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d) = z := hrfl
+    rw [← hrfl', hsq d hd]
+    exact hd
+  · intro hz
+    exact ⟨z, hz, hsq z hz⟩
+
+/-- 合取二：受限 dart 的 face-轨道 ∪ 其 node-像 = 全 dart 集（Dih2k 第二合取；
+d ∈ f 支 yk8_nodePrime_image_swap + dart1 分解；d ∈ swap″f 支 ③ +
+yk9_nodePrime_image_swapImage）。 -/
+private theorem yk9_dih2k_union (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    (d : V3 × V3) (hd : d ∈ @Hypermap.darts (V3 × V3)
+      (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) :
+    orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d
+      ∪ ((fun z : V3 × V3 => (@Hypermap.nodeMap (V3 × V3)
+          (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) z)
+        '' orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d)
+      = (↑(@Hypermap.darts (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) : Set (V3 × V3)) := by
+  have hfe : f = yk2_faceOrbit 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan' b :=
+    (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
+  have hP := @Hypermap.faceMap_permutes (V3 × V3) (fun a b' => instDecidableEqProd a b')
+    (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')
+  have horbb : orbitMap (@Hypermap.faceMap (V3 × V3)
+      (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) b = f := hfe.symm
+  have hU := yk2_dart1_ePrime_eq_union_swap hfan b hb f hf
+  have hdarts : (↑(@Hypermap.darts (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) : Set (V3 × V3))
+      = dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := yk2_darts_coe hfan'
+  have hd1 : d ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) :=
+    (yk2_mem_darts_iff hfan' d).mp hd
+  by_cases hdm : d ∈ f
+  · have hdb : d ∈ orbitMap (@Hypermap.faceMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) b := by
+      rw [horbb]
+      exact hdm
+    have horb : orbitMap (@Hypermap.faceMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d = f := by
+      rw [orbitMap_eq_of_mem hP hdb, horbb]
+    rw [horb, yk8_nodePrime_image_swap hfan hconf hV b hb f hf hk hfan', hdarts, ← hU]
+  · have hdU : d ∈ f ∪ ((fun z : V3 × V3 => (z.2, z.1)) '' f) := by
+      rw [← hU]
+      exact hd1
+    rcases hdU with h2 | ⟨y, hy, hdy⟩
+    · exact absurd h2 hdm
+    · have horb : orbitMap (@Hypermap.faceMap (V3 × V3)
+          (fun a b' => instDecidableEqProd a b')
+          (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) d
+          = ((fun z : V3 × V3 => (z.2, z.1)) '' f) := by
+        rw [← hdy]
+        exact yk9_orbit_swap_image hfan hconf hV b hb f hf hk hfan' hy
+      rw [horb, yk9_nodePrime_image_swapImage hfan hconf hV b hb f hf hk hfan',
+        Set.union_comm _ f, hdarts, ← hU]
+
+/-- 帽石：checkpoint 3 · Dih2k（HOL DIH_K_HYP_E_PRIME；9j.4 NEEDS ①-④ 消账）。
+card = 2k（yk8_Hdarts_card）+ 合取二（yk9_dih2k_union）+ HasOrders
+face k（yk9_face_hasOrders）/ edge 2（yk9_edge_hasOrders）/
+node 2（yk9_node_hasOrders）。 -/
+private theorem yk9_Dih2k (hfan : FAN 0 V E)
+    (hconf : conformingFan 0 V E hfan) (hV : V.Finite)
+    (b : V3 × V3) (hb : b ∈ dart1OfFan V E) (f : Set (V3 × V3))
+    (hf : f = yk2_faceOrbit 0 V E hfan b) (hk : 2 < f.ncard)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f)) :
+    @Dih2k (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan') f.ncard := by
+  refine ⟨yk8_Hdarts_card hfan hconf hV b hb f hf hk hfan', ?_, ?_, ?_, ?_⟩
+  · intro d hd
+    exact yk9_dih2k_union hfan hconf hV b hb f hf hk hfan' d hd
+  · exact yk9_face_hasOrders hfan hconf hV b hb f hf hk hfan'
+  · exact yk9_edge_hasOrders hfan hconf hV b hb f hf hk hfan'
+  · exact yk9_node_hasOrders hfan hconf hV b hb f hf hk hfan'
+
 end Kepler.Text.TameLp
