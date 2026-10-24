@@ -40,6 +40,7 @@ import Kepler.Text.TopologyFan
 import Kepler.Text.PackingAuto2
 import Kepler.Text.LocalAuto2
 import Kepler.Text.LocalAuto16
+import Kepler.Geom.AzimLemmas
 import Kepler.Text.ConformingDefs
 import Kepler.Text.ConformingAuto1
 import Kepler.Text.ConformingAuto21
@@ -2072,70 +2073,6 @@ private theorem wk_dtame5 : dTame 5 = 0.4819 := rfl
 /-- `dTame 6 = 0.712`. -/
 private theorem wk_dtame6 : dTame 6 = 0.712 := rfl
 
-/-- HOL `ineq_tau4_tauVEF_std`（`lp_main_estimate-compiled.hl:796-817`）。
-DISCHARGES：骨架占位（同上群）。 -/
-theorem ineq_tau4_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
-    (hineq : JEJTVGB_std_concl) (d : V3 × V3)
-    (hd : d ∈ dartsK 4 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
-    0.206 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
-  -- NEEDS（Lane V 侦察结案 2026-10-23）：Std 装配绕不开 ConvexLocalFan 桥，
-  -- 但真卡点比原先估计窄：tau_fun_local/local_diag/local_std 三件均有绕行，
-  -- 唯一真墙 = HOL `f_surr_localization_convex_local`（RNSYJXM-compiled.hl:327，
-  -- wdart/conforming 章未移植）。
-  -- 消费链：目标 ⟸ dTame 4 ≤ tauFun V (ESTD V) f（经 wk_f_surr_tauFun_eq_tauVEF
-  -- 反向 + wk_dtame4）；hineq 唯一声音实例化 = (vPrime V f, ePrime (ESTD V) f, f)
-  -- （(V,ESTD V,f) 形的 wedge 前提 V ⊆ wedgeInFanGe x E 几何为假——扇面 sector
-  -- 装不下全 V；LocalFan 要求 ⋃₀E' ⊆ V' 又排除其余形状）。
-  -- HOL Face4 忠实链（ineq_tau4_tauVEF :739）逐件对应：
-  -- ① f_surr_localization_convex_local【墙，见下】；② packing_v_prime/
-  -- v_prime_subset = def 级（vPrime ⊆ V 定义自带）；③ 4 ≤ CARD ≤ 6 =
-  -- LOFA_IMP_CARD_FF_V_EQ / vPrime.ncard = k（面圈顶点两两相异：σ⁻¹ 在 N(v)
-  -- 上单射 + 反向归纳）；④ 非边前提 = LpFan.3 + ePrime ⊆ E + vPrime ⊆ V
-  -- （local_diag 绕行，~20 行）；⑤ 边前提 = Packing V + wk_estd_dist_le
-  -- （local_std 绕行——Std 节 E = ESTD V 时距离界是定义性的）；⑥
-  -- tau_fun_local 绕行 = azim 桥：faceMap 圈的定义性形状给
-  -- σ⁻¹(E)_{v_i}(v_{i-1}) = v_{i+1}，σ 往返得 σ(E)_{v_i}(v_{i+1}) = v_{i-1}，
-  -- e' 侧 N_{e'}(v_i) = {v_{i-1}, v_{i+1}} 唯一候选 ε 同值（v_{i-1} ≠ v_{i+1}
-  -- 由轨道计数 k ≥ 3）。
-  -- 墙的分解（W4 施工图）：ConvexLocalFan (vPrime,ePrime,f) = LocalFan +
-  -- azim ≤ π + wedge。fan1/2/6/7 从 FAN 0 V E 逐条继承（ePrime ⊆ E 且
-  -- singletons(vPrime) ⊆ singletons(V)，fan6/fan7 陈述逐字相同）；azimInFan
-  -- x e' ≤ π = FullySurrounded + azim 桥；LocalFan 的 FAN 0 vPrime ePrime 同上
-  -- 继承，f = 受限超图 face = 轨道簿记（dart1(v',e') = f ∪ reverse f，2k 元），
-  -- Dih2k 同为簿记；唯一实质几何 = wedge 前提 vPrime ⊆ wedgeInFanGe x e'
-  -- （HOL 证明链：f_surr_localization ← fully_surrounded_imp_conforming +
-  -- Conforming.DARTSET_LEADS_INTO_SUBSET_WDART_FAN + Cfyxfty.
-  -- AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN）。
-  -- W4 具名缺件清单：vPrime/ePrime defs（localization.hl:97/100 逐字移植，
-  -- e_prime = 面 dart 的 underlying 边集，无弦问题）；vPrime.ncard = k；
-  -- azim 桥；受限超图 Dih2k；wedge。本波新增：wk_dtame4/5/6（§3b）。
-  sorry
-
-/-- HOL `ineq_tau5_tauVEF_std`（`lp_main_estimate-compiled.hl:889-915`）。
-DISCHARGES：骨架占位（同上群）。 -/
-theorem ineq_tau5_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
-    (hineq : JEJTVGB_std_concl) (d : V3 × V3)
-    (hd : d ∈ dartsK 5 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
-    0.4819 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
-  -- NEEDS（Lane V 侦察结案 2026-10-23）：同 tau4 处的结案注记（唯一真墙 =
-  -- f_surr_localization_convex_local 的移植；tau_fun_local/local_diag/local_std
-  -- 均有绕行，施工图见 tau4 注记）。K=5 差分：HOL Face5 节 :827-922
-  -- （ineq_tau5_tauVEF :831，Std :893 消费 y5/y6/y8/y9_hi_std 系）；bank 结论
-  -- dTame 5 = 0.4819（wk_dtame5 已备）；vPrime.ncard = 5 轨道计数同构递推。
-  sorry
-
-/-- HOL `ineq_tau6_tauVEF_std`（`lp_main_estimate-compiled.hl:988-1015`）。
-DISCHARGES：骨架占位（同上群）。 -/
-theorem ineq_tau6_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
-    (hineq : JEJTVGB_std_concl) (d : V3 × V3)
-    (hd : d ∈ dartsK 6 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
-    0.712 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
-  -- NEEDS（Lane V 侦察结案 2026-10-23）：同 tau4 处的结案注记（唯一真墙 =
-  -- f_surr_localization_convex_local 的移植；tau_fun_local/local_diag/local_std
-  -- 均有绕行，施工图见 tau4 注记）。K=6 差分：HOL Face6 节 :925-1022
-  -- （ineq_tau6_tauVEF :929，Std :992 消费 y5/y6/y8/y9_hi_std 系）；bank 结论
-  -- dTame 6 = 0.712（wk_dtame6 已备）；vPrime.ncard = 6 轨道计数同构递推。
-  sorry
 
 /-! ## 4. JGTDEBU 群（tame/JGTDEBU.hl，"general properties of a
 contravening packing"，Solovyev 2013）。
@@ -6333,39 +6270,6 @@ theorem setSum_setOfTrianglesMeetingNode_eq {α : Type*} [DecidableEq α]
       exact ⟨⟨y, hy, rfl, hyn⟩, hcard⟩
   rw [hset]
 
-/-- MQMSMAB 步 21-41（adm_1）：`w f = tauVEF` 时 adm_1 成立——tame_9a 给
-`3 ≤ card(face d) ≤ 6`，枚举 {3,4,5,6} 各引 `ineq_tauK_tauVEF_std`
-（JEJTVGB 前提由 `hmain.2.1`/`hmain.1` 分量直接供给，= HOL :60-64 的
-h_main 重写步）。 -/
-theorem MQMSMAB_adm1 (V : Set V3) (hlpfan : LpFan V (ESTD V))
-    (hmain : lp_main_estimate)
-    (h9a : Tame9a (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
-    Adm1 (hypermapOfFanTl V (ESTD V) hlpfan.1) (fun f => tauVEF_p2 V (ESTD V) f) := by
-  intro d hd
-  obtain ⟨h3, h6⟩ := h9a d hd
-  by_cases hn3 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 3
-  · rw [hn3]
-    show (0 : ℝ) ≤ tauVEF_p2 V (ESTD V)
-      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
-    exact ineq_tau3_tauVEF_std V hlpfan hmain.2.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn3⟩)
-  by_cases hn4 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 4
-  · rw [hn4]
-    show (0.206 : ℝ) ≤ tauVEF_p2 V (ESTD V)
-      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
-    exact ineq_tau4_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn4⟩)
-  by_cases hn5 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 5
-  · rw [hn5]
-    show (0.4819 : ℝ) ≤ tauVEF_p2 V (ESTD V)
-      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
-    exact ineq_tau5_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn5⟩)
-  by_cases hn6 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 6
-  · rw [hn6]
-    show (0.712 : ℝ) ≤ tauVEF_p2 V (ESTD V)
-      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
-    exact ineq_tau6_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn6⟩)
-  · have hb := h3
-    have hb2 := h6
-    omega
 
 /-- MQMSMAB 步 42-47（adm_2 的 r=0 分支）：`set_of_exceptional_meeting_node`
 基数为零时引 `KCBLRQC`（let-形以 defeq 断言展开消费），`0 < r` 支与 r=0
@@ -6400,40 +6304,6 @@ theorem MQMSMAB_adm3 (V : Set V3) (hc : Contravening V) (hlpfan : LpFan V (ESTD 
   rw [← setSum_setOfTrianglesMeetingNode_eq]
   exact le_of_lt h
 
-/-- MQMSMAB 步 15-20（tame_13a）：见证 `w f = tauVEF`，adm_1/2/3 三分量
-+ `sum_tauVEF_upper_bound`（≤ 4π−20sol0）+ Flyspeck 常数算术收
-`total_weight < tgt`（步 18-19：12 ≤ scriptL V 由 contravening 第三合取项）。 -/
-theorem MQMSMAB_tame13a (V : Set V3) (hc : Contravening V) (hlpfan : LpFan V (ESTD V))
-    (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef)
-    (h9a : Tame9a (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
-    Tame13a (hypermapOfFanTl V (ESTD V) hlpfan.1) := by
-  refine ⟨fun f => tauVEF_p2 V (ESTD V) f, ⟨MQMSMAB_adm1 V hlpfan hmain h9a,
-    MQMSMAB_adm2 V hc hlpfan hmain hineq, MQMSMAB_adm3 V hc hlpfan hmain hineq⟩, ?_⟩
-  have hscript : (12 : ℝ) ≤ scriptL V := le_of_lt hc.2.2.1
-  have hsum := sum_tauVEF_upper_bound V (ESTD V) hlpfan.1 hlpfan.2.1 hscript
-  show setSum (hypermapOfFanTl V (ESTD V) hlpfan.1).faceSet
-      (fun f => tauVEF_p2 V (ESTD V) f) < tgt
-  exact lt_of_le_of_lt hsum four_pi_sub_20_sol0_lt_tgt
-
-/-- HOL `Mqmsmab.MQMSMAB`（MQMSMAB-compiled.hl:30-80）本章帽石（`hypermapOfFanTl`
-折算版）：`contravening V` + `FAN 0 V (ESTD V)` + `lp_main_estimate` +
-`kcblrqc_ineq_def` 消费切片 ⟹ `tame_planar_hypermap`。十二合取逐项：tame_1 ←
-JGTDEBU2（plain）+JGTDEBU1（planar）；tame_2 ← JGTDEBU3+JGTDEBU4；tame_3/4/5a/8 ←
-JGTDEBU5/6/7/8；tame_9a ← **CRTTXAT**（消费点，HOL 步 5：
-`CRTTXAT (JGTDEBU4 contrV) (fully_surrounded_perimeter_bound fanV f_surr)`）；
-tame_10/11a ← JGTDEBU10/11；tame_11b/12o ← SZIPOAS/BDJYFFB1；tame_13a ←
-`MQMSMAB_tame13a`。Assembly 侧 `mqmsmab` 消费时经 §0b congr 家族换实例。 -/
-theorem MQMSMAB (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
-    (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef) :
-    TamePlanarHypermap (hypermapOfFanTl V (ESTD V) hfan) := by
-  have hlpfan : LpFan V (ESTD V) := contravening_lp_fan V hc
-  have h9a := CRTTXAT (fun V' hfan' hc' => JGTDEBU4 V' hc' hfan') V hc hfan
-    (fully_surrounded_perimeter_bound V (ESTD V) hlpfan.1 hlpfan.2.1)
-  exact ⟨⟨JGTDEBU2 V hc hfan, JGTDEBU1 V hc hfan⟩,
-    ⟨JGTDEBU3 V hc hfan, JGTDEBU4 V hc hfan⟩, JGTDEBU5 V hc hfan, JGTDEBU6 V hc hfan,
-    JGTDEBU7 V hc hfan, JGTDEBU8 V hc hfan, h9a, JGTDEBU10 V hc hfan,
-    JGTDEBU11 V hc hfan, SZIPOAS hineq V hc hfan, BDJYFFB1 V hc hmain hineq hfan,
-    MQMSMAB_tame13a V hc hlpfan hmain hineq h9a⟩
 
 /-! ## 9. y-kit 定义层（lp_ineqs_proofs Fan 节 Dart/DartMore/StdDart/Nonlinear-Y
 小节 + lp_ineqs_defs.hl y_fan 定义族；2026-10-23 Lane N W1）
@@ -9592,5 +9462,1022 @@ private theorem yk9_Dih2k (hfan : FAN 0 V E)
   · exact yk9_face_hasOrders hfan hconf hV b hb f hf hk hfan'
   · exact yk9_edge_hasOrders hfan hconf hV b hb f hf hk hfan'
   · exact yk9_node_hasOrders hfan hconf hV b hb f hf hk hfan'
+/-! ### 9l. ykit10 波（Lane AT 2026-10-23）：解析装配波——tau4/5/6 三枚
+e2e 直源闭合 + perimeter 接线图刷新。全 private（yk10_*），纯追加。
+
+前置桥盘点（AJ/AQ 两波记账的"装配前置"）：`fully_surrounded_imp_conforming`
+在本文件内**早已真证**——§4 `p6g_fullySurrounded_conforming`（FullySurrounded
+直接输入，证明体 = PIIJBJK 消费），本波直接消费，无缺口。
+
+消费链（三枚 tau 同构，一枚共享 aux）：
+  目标 `tauVEF f` ⟸ `yk6_tauVEF_eq_tauFun_ePrime`（AE 波已备）；
+  `dTame k ≤ tauFun (vPrime, ePrime) f` ⟸ `hineq : JEJTVGB_std_concl` 在
+  `(vPrime_p2 V f, ePrime_p2 (ESTD V) f, f)` 上的实例，七前提：
+  ① ConvexLocalFan = 本波 `yk10_convexLocalFan`——LocalFan 面 = §9k
+    `yk9_Dih2k`（实例转移件 yk10_Dih2k_congr）+ `yk7_FF_eq_faceOrbit` +
+    `yk2_FAN_vPrime_ePrime`；azim≤π 面 = `yk6_azimInFan_ePrime_eq` +
+    `wk_azimInFan_eq_azimDart` + FullySurrounded；wedge 面 = 本波
+    `yk10_vPrime_subset_wedgeInFanGe`：§9g 锚3（AFF_GT_SUBSET_…_tl）+
+    PlanarityAuto13 POINT_IN_CLOSURE_AFF_GT_1_2 + ConformingAuto1 锚2
+    （DARTSET_LEADS_INTO_SUBSET_WDART_FAN，conformingHalfSpace 支）+
+    w_dart = 开 wedge（FullySurrounded 给 CARD>1）+ 闭扇收口
+    `yk10_closure_wedge_subset_wedgeGe`（HOL CLOSED_WEDGE_LT_PI 的 Lean
+    折算；PackingAuto18:5631-5644 同名件为未证桩，本波自证——路线：
+    wedge ⊆ aff_ge 2+2（wedge_eq_affGt + affGt⊆affGe）+ aff_ge 2+2 闭
+    （= aff_ge 1+3 两片之并，各片 = 平移闭锥 yk10_cone3）+ aff_ge 2+2 ⊆
+    wedge_ge（azim_eq_azim_iff 逐射线等值 + wedge_eq_affGt 严格内侧；
+    = LocalAuto5 WEDGE_GE_EQ_AFF_GE ←方向的轻量重组——LA5 与 PackingAuto18
+    声明重名（AFF_GE_MONO_TRANS）不可 import，故不引）；
+  ② Packing vPrime / ③ vPrime ⊆ ballAnnulus = yk6（AE 波）；
+  ④ 4 ≤ ncard vPrime = yk8（AJ 波，消费 p6g 桥的 conformingFan + V.Finite
+    ——V 有限由 Packing + annulus 有界，本波 yk10_packingFinite；
+    Assembly 同名件 private 且本模块不 import Assembly，机械复制）；
+  ⑤ ncard vPrime ≤ 6 = yk6_ncard_vPrime_le + ncard f = k ≤ 6；
+  ⑥ 非边前提 = 本波 `yk10_diag`：{a,b} ∉ E 支 = LpFan.3（yk6 路线）；
+    chord 支 = conforming_diagonal 合取支消费（hconf.2.2.2.2.2；上游
+    GGZWYRM 已在 ConformingAuto20 真证）——f1Fan 两分支出 (a,b)/(b,a) ∈ f
+    与 {a,b} ∉ ePrime 矛盾；第三支 affGt {0} {a,b} ⊆ dartsetLeadsIntoFan f
+    与 (a,b) ∈ dart1 给出的 affGt ⊆ affGe ⊆ xfan（PlanarityAuto13
+    AFF_GE_SUBSET_XFAN）、dartsetLeadsInto ⊆ yfan（PlanarityComponent
+    dartset_leads_into_subset_yfan）夹逼出 affGt ∋ 中点 ∈ xfan ∩ yfan = ∅
+    矛盾（= HOL diag_not_in_dart lp_main_estimate:415 的 pair-dart 重装，
+    超图同构步消失）；
+  ⑦ 边前提 = yk6_local_std。
+import 变更：本波在文件头追加 `import Kepler.Geom.AzimLemmas`
+（azim_eq_azim_iff / azim_eq_zero_iff_alt 所在；只依赖 Geom.Azim/Aff，
+与本模块无环）。 -/
+
+/-! #### 9l.0 杂件 -/
+
+/-- V 有限（Packing + annulus 有界）。Assembly.packingFiniteOfBallAnnulus
+（:3643，private）的 TameLp 本地副本——本模块不 import Assembly（会环），
+11 行机械复制。 -/
+private theorem yk10_packingFinite (hV : Packing V) (hsub : V ⊆ ballAnnulus) :
+    V.Finite := by
+  have hVb : V ⊆ Metric.ball 0 3 := by
+    intro v hv
+    have hmem : ‖v‖ ≤ 2 * h0 := by
+      have hp := hsub hv
+      simp only [ballAnnulus, Set.mem_sdiff] at hp
+      have h'd := Metric.mem_closedBall.mp hp.1
+      rw [dist_zero_right] at h'd
+      exact h'd
+    have hh0 : (2 : ℝ) * h0 < 3 := by
+      show (2 : ℝ) * 1.26 < 3
+      norm_num
+    rw [Metric.mem_ball, dist_zero_right]
+    linarith [hmem]
+  have hveq : V = V ∩ Metric.ball 0 3 := (Set.inter_eq_left.mpr hVb).symm
+  rw [hveq]
+  exact hV.finite_inter_ball 3
+
+/-- affGt ⊆ affGe（Affsign 见证 0 < ⟹ 0 ≤ 的两行提升）。 -/
+private theorem yk10_affGt_subset_affGe {s t : Set V3} :
+    affGt s t ⊆ affGe s t := by
+  intro y hy
+  obtain ⟨g, hfin, hsum, hpos, hone⟩ := hy
+  exact ⟨g, hfin, hsum, fun w hw => le_of_lt (hpos w hw), hone⟩
+
+/-! #### 9l.1 闭扇 kit（HOL CLOSED_WEDGE_LT_PI，leaf_cell.hl:3659 的 Lean 折算；
+PackingAuto18:5631-5644 的同名件为未证桩，本波自证）。
+
+路线：closure(开 wedge) ⊆ aff_ge 2+2（wedge = affGt 2+2，wedge_eq_affGt）
+⊇ 闭（aff_ge 2+2 = aff_ge 1+3 两片之并，每片 = 平移 yk10_cone3 闭锥——
+PlanarityAuto12 coneF 机器的 yk10 本地副本）⊆ wedge_ge（yk10 轻量 ← 方向）。
+`wedge_ge` 的 0 ≤ 侧由 `azim_nonneg` 无条件白给。 -/
+
+private def yk10_cone1 (a : V3) : Set V3 :=
+  {z : V3 | ∃ s : ℝ, 0 ≤ s ∧ z = s • a}
+
+private def yk10_cone2 (a b : V3) : Set V3 :=
+  {z : V3 | ∃ s t : ℝ, 0 ≤ s ∧ 0 ≤ t ∧ z = s • a + t • b}
+
+private def yk10_cone3 (a b c : V3) : Set V3 :=
+  {z : V3 | ∃ s t r : ℝ, 0 ≤ s ∧ 0 ≤ t ∧ 0 ≤ r ∧ z = s • a + t • b + r • c}
+
+private def yk10_coneF {n : ℕ} (v : Fin n → V3) : Set V3 :=
+  {z : V3 | ∃ c : Fin n → ℝ, (∀ j, 0 ≤ c j) ∧ z = ∑ j, c j • v j}
+
+/-- 有限生成非负锥闭（线性独立情形 = 闭嵌入像；PlanarityAuto12
+isClosed_coneF 的本地副本）。 -/
+private theorem yk10_isClosed_coneF {n : ℕ} {v : Fin n → V3}
+    (hli : LinearIndependent ℝ v) : IsClosed (yk10_coneF v) := by
+  let L : (Fin n → ℝ) →ₗ[ℝ] V3 :=
+    { toFun := fun c => ∑ j, c j • v j
+      map_add' := by
+        intro c d
+        simp only [Pi.add_apply, add_smul, Finset.sum_add_distrib]
+      map_smul' := by
+        intro r c
+        simp [Finset.smul_sum, mul_smul] }
+  have hker : LinearMap.ker L = ⊥ := by
+    rw [LinearMap.ker_eq_bot]
+    intro c d hcd
+    funext j
+    have h0 : ∑ k, (c k - d k) • v k = 0 := by
+      have h1 : L (c - d) = 0 := by rw [map_sub, hcd, sub_self]
+      change (∑ k, (c - d) k • v k) = 0 at h1
+      simpa only [Pi.sub_apply] using h1
+    have := Fintype.linearIndependent_iff.mp hli (fun k => c k - d k) h0 j
+    linarith
+  have hemb : Topology.IsClosedEmbedding L := L.isClosedEmbedding_of_injective hker
+  set O : Set (Fin n → ℝ) := {c : Fin n → ℝ | ∀ j, 0 ≤ c j} with hOdef
+  have hO : IsClosed O := by
+    rw [show O = ⋂ j, {c : Fin n → ℝ | 0 ≤ c j} by
+      ext c; simp [hOdef]]
+    exact isClosed_iInter (fun j => isClosed_Ici.preimage (continuous_apply j))
+  have hset : yk10_coneF v = L '' O := by
+    ext z; constructor
+    · rintro ⟨c, hc, hz⟩; exact ⟨c, hc, by rw [hz]; rfl⟩
+    · rintro ⟨c, hc, rfl⟩; exact ⟨c, hc, rfl⟩
+  rw [hset]
+  exact hemb.isClosedMap O hO
+
+private theorem yk10_cone2_eq_coneF (a b : V3) : yk10_cone2 a b = yk10_coneF ![a, b] := by
+  ext z; constructor
+  · rintro ⟨s, t, hs, ht, rfl⟩
+    refine ⟨![s, t], fun j => by fin_cases j <;> simp [hs, ht], ?_⟩
+    simp [Fin.sum_univ_two]
+  · rintro ⟨f, hf, hz⟩
+    exact ⟨f 0, f 1, hf 0, hf 1, by rw [hz]; simp [Fin.sum_univ_two]⟩
+
+private theorem yk10_cone3_eq_coneF (a b c : V3) :
+    yk10_cone3 a b c = yk10_coneF ![a, b, c] := by
+  ext z; constructor
+  · rintro ⟨s, t, r, hs, ht, hr, rfl⟩
+    refine ⟨![s, t, r], fun j => by fin_cases j <;> simp [hs, ht, hr], ?_⟩
+    simp [Fin.sum_univ_three]
+  · rintro ⟨f, hf, hz⟩
+    exact ⟨f 0, f 1, f 2, hf 0, hf 1, hf 2, by rw [hz]; simp [Fin.sum_univ_three]⟩
+
+private theorem yk10_isClosed_cone1 (a : V3) : IsClosed (yk10_cone1 a) := by
+  by_cases ha : a = 0
+  · have h0 : yk10_cone1 a = {0} := by
+      ext z; constructor
+      · rintro ⟨s, _, rfl⟩; rw [ha, smul_zero]; simp
+      · intro hz; rw [hz]; exact ⟨0, le_refl 0, by rw [ha, smul_zero]⟩
+    rw [h0]; exact isClosed_singleton
+  · have hset : yk10_cone1 a = (fun t : ℝ => t • a) '' Set.Ici (0 : ℝ) := by
+      ext z; constructor
+      · rintro ⟨s, hs, rfl⟩; exact ⟨s, hs, rfl⟩
+      · rintro ⟨t, ht, rfl⟩; exact ⟨t, ht, rfl⟩
+    rw [hset]
+    exact (isClosedEmbedding_smul_left ha).isClosedMap (Set.Ici (0 : ℝ)) isClosed_Ici
+
+/-- 锥的 Carathéodory 降元（PlanarityAuto12 exists_nonneg_rep_with_zero
+本地副本）。 -/
+private theorem yk10_exists_nonneg_rep_with_zero {n : ℕ}
+    {v : Fin n → V3} {coef : Fin n → ℝ}
+    (hrel : ∃ g : Fin n → ℝ, (∑ j, g j • v j = 0) ∧ (∃ j, g j ≠ 0))
+    (hcoef : ∀ j, 0 ≤ coef j) :
+    ∃ coef' : Fin n → ℝ, (∀ j, 0 ≤ coef' j) ∧ (∃ j, coef' j = 0) ∧
+      (∑ j, coef' j • v j = ∑ j, coef j • v j) := by
+  obtain ⟨g, hgsum, j, hgj⟩ := hrel
+  have hrel' : ∃ g' : Fin n → ℝ, (∑ k, g' k • v k = 0) ∧ (∃ k, 0 < g' k) := by
+    by_cases h : ∃ k, 0 < g k
+    · obtain ⟨k, hk⟩ := h; exact ⟨g, hgsum, k, hk⟩
+    · push Not at h
+      refine ⟨-g, ?_, j, ?_⟩
+      · have : ∑ k, (-g) k • v k = -∑ k, g k • v k := by
+          rw [← Finset.sum_neg_distrib]
+          apply Finset.sum_congr rfl
+          intro k _
+          rw [Pi.neg_apply, neg_smul]
+        rw [this, hgsum, neg_zero]
+      · have : g j < 0 := lt_of_le_of_ne (h j) hgj
+        simpa using neg_pos.mpr this
+  obtain ⟨g', hg'sum, j, hg'j⟩ := hrel'
+  set S : Finset (Fin n) := Finset.univ.filter (fun k => 0 < g' k) with hSdef
+  have hSne : S.Nonempty := ⟨j, by simp [hSdef, hg'j]⟩
+  obtain ⟨j0, hj0S, hj0min⟩ := Finset.exists_min_image S (fun k => coef k / g' k) hSne
+  have hg'j0 : 0 < g' j0 := (Finset.mem_filter.mp hj0S).2
+  set lam : ℝ := coef j0 / g' j0 with hlam
+  have hlam_nonneg : 0 ≤ lam := by
+    rw [hlam]; exact div_nonneg (hcoef j0) (le_of_lt hg'j0)
+  refine ⟨fun k => coef k - lam * g' k, ?_, ⟨j0, ?_⟩, ?_⟩
+  · intro k
+    by_cases hk : k ∈ S
+    · have hg'k : 0 < g' k := (Finset.mem_filter.mp hk).2
+      have hle : lam ≤ coef k / g' k := by rw [hlam]; exact hj0min k hk
+      have h1 : lam * g' k ≤ coef k := by
+        have := mul_le_mul_of_nonneg_right hle (le_of_lt hg'k)
+        rwa [div_mul_cancel₀ _ (ne_of_gt hg'k)] at this
+      linarith
+    · have hg'k : g' k ≤ 0 := by
+        have := Finset.mem_filter.not.mp hk
+        simp only [Finset.mem_univ, true_and] at this
+        exact not_lt.mp this
+      have h2 : lam * g' k ≤ 0 := mul_nonpos_of_nonneg_of_nonpos hlam_nonneg hg'k
+      linarith [hcoef k]
+  · simp only [hlam]
+    rw [div_mul_cancel₀ _ (ne_of_gt hg'j0), sub_self]
+  · have hsum_eq : ∑ k, (coef k - lam * g' k) • v k =
+        ∑ k, coef k • v k - lam • ∑ k, g' k • v k := by
+      rw [Finset.smul_sum, ← Finset.sum_sub_distrib]
+      apply Finset.sum_congr rfl
+      intro k _
+      rw [sub_smul, mul_smul]
+    rw [hsum_eq, hg'sum, smul_zero, sub_zero]
+
+private theorem yk10_cone2_eq_union_single (a b : V3)
+    (hdep : ¬ LinearIndependent ℝ ![a, b]) :
+    yk10_cone2 a b = yk10_cone1 a ∪ yk10_cone1 b := by
+  ext z; constructor
+  · rintro ⟨s, t, hs, ht, rfl⟩
+    obtain ⟨coef', hcoef', hzero, hsum⟩ :=
+      yk10_exists_nonneg_rep_with_zero (v := ![a, b]) (coef := ![s, t])
+        (Fintype.not_linearIndependent_iff.mp hdep)
+        (by intro j; fin_cases j <;> simp [hs, ht])
+    obtain ⟨j0, hj0⟩ := hzero
+    have hsum2 : s • a + t • b = coef' 0 • a + coef' 1 • b := by
+      simpa [Fin.sum_univ_two] using hsum.symm
+    rw [hsum2]
+    have hj01 : j0 = 0 ∨ j0 = 1 := by fin_cases j0 <;> simp
+    rcases hj01 with rfl | rfl
+    · right
+      refine ⟨coef' 1, hcoef' 1, ?_⟩
+      rw [hj0, zero_smul, zero_add]
+    · left
+      refine ⟨coef' 0, hcoef' 0, ?_⟩
+      rw [hj0, zero_smul, add_zero]
+  · rintro (h | h)
+    · obtain ⟨s, hs, rfl⟩ := h
+      exact ⟨s, 0, hs, le_refl 0, by rw [zero_smul, add_zero]⟩
+    · obtain ⟨t, ht, rfl⟩ := h
+      exact ⟨0, t, le_refl 0, ht, by rw [zero_smul, zero_add]⟩
+
+private theorem yk10_cone3_eq_union_pair (a b c : V3)
+    (hdep : ¬ LinearIndependent ℝ ![a, b, c]) :
+    yk10_cone3 a b c = yk10_cone2 a b ∪ yk10_cone2 a c ∪ yk10_cone2 b c := by
+  ext z; constructor
+  · rintro ⟨s, t, r, hs, ht, hr, rfl⟩
+    obtain ⟨coef', hcoef', hzero, hsum⟩ :=
+      yk10_exists_nonneg_rep_with_zero (v := ![a, b, c]) (coef := ![s, t, r])
+        (Fintype.not_linearIndependent_iff.mp hdep)
+        (by intro j; fin_cases j <;> simp [hs, ht, hr])
+    obtain ⟨j0, hj0⟩ := hzero
+    have hsum2 : s • a + t • b + r • c = coef' 0 • a + coef' 1 • b + coef' 2 • c := by
+      simpa [Fin.sum_univ_three] using hsum.symm
+    rw [hsum2]
+    have hj01 : j0 = 0 ∨ j0 = 1 ∨ j0 = 2 := by fin_cases j0 <;> simp
+    rcases hj01 with rfl | rfl | rfl
+    · right
+      refine ⟨coef' 1, coef' 2, hcoef' 1, hcoef' 2, ?_⟩
+      rw [hj0, zero_smul, zero_add]
+    · left; right
+      refine ⟨coef' 0, coef' 2, hcoef' 0, hcoef' 2, ?_⟩
+      rw [hj0, zero_smul, add_zero]
+    · left; left
+      refine ⟨coef' 0, coef' 1, hcoef' 0, hcoef' 1, ?_⟩
+      rw [hj0, zero_smul, add_zero]
+  · rintro ((h | h) | h)
+    · obtain ⟨s, t, hs, ht, rfl⟩ := h
+      exact ⟨s, t, 0, hs, ht, le_refl 0, by rw [zero_smul, add_zero]⟩
+    · obtain ⟨s, r, hs, hr, rfl⟩ := h
+      exact ⟨s, 0, r, hs, le_refl 0, hr, by simp⟩
+    · obtain ⟨t, r, ht, hr, rfl⟩ := h
+      exact ⟨0, t, r, le_refl 0, ht, hr, by simp⟩
+
+private theorem yk10_isClosed_cone2 (a b : V3) : IsClosed (yk10_cone2 a b) := by
+  by_cases hli : LinearIndependent ℝ ![a, b]
+  · rw [yk10_cone2_eq_coneF]; exact yk10_isClosed_coneF hli
+  · rw [yk10_cone2_eq_union_single a b hli]
+    exact (yk10_isClosed_cone1 a).union (yk10_isClosed_cone1 b)
+
+private theorem yk10_isClosed_cone3 (a b c : V3) : IsClosed (yk10_cone3 a b c) := by
+  by_cases hli : LinearIndependent ℝ ![a, b, c]
+  · rw [yk10_cone3_eq_coneF]; exact yk10_isClosed_coneF hli
+  · rw [yk10_cone3_eq_union_pair a b c hli]
+    exact ((yk10_isClosed_cone2 a b).union (yk10_isClosed_cone2 a c)).union
+      (yk10_isClosed_cone2 b c)
+
+/-- 四点并集的求和分裂（去重 toFinset = 显式四元；pairwise distinct 前提）。 -/
+private theorem yk10_sum4 {g : V3 → ℝ} {a b c d : V3} (hab : a ≠ b) (hac : a ≠ c)
+    (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d)
+    (hfin : ({a, b} ∪ {c, d} : Set V3).Finite) :
+    ∑ w ∈ hfin.toFinset, g w = g a + g b + g c + g d ∧
+      ∑ w ∈ hfin.toFinset, g w • w = g a • a + g b • b + g c • c + g d • d := by
+  have h4 : hfin.toFinset = ({a, b, c, d} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [h4]
+  constructor
+  · rw [Finset.sum_insert (by simp [hab, hac, had]),
+      Finset.sum_insert (by simp [hbc, hbd]),
+      Finset.sum_insert (by simp [hcd]), Finset.sum_singleton]
+    ring
+  · rw [Finset.sum_insert (by simp [hab, hac, had]),
+      Finset.sum_insert (by simp [hbc, hbd]),
+      Finset.sum_insert (by simp [hcd]), Finset.sum_singleton]
+    abel
+
+/-- aff_ge {u0,u1} {u2,u3} 的显式系数刻画（AFF_GE_1_3 的 2+2 伙伴）。 -/
+private theorem yk10_mem_affGe22_iff {u0 u1 u2 u3 : V3} (h01 : u0 ≠ u1)
+    (h02 : u2 ≠ u0) (h03 : u3 ≠ u0) (h12 : u2 ≠ u1) (h13 : u3 ≠ u1) (h23 : u2 ≠ u3)
+    {y : V3} :
+    y ∈ affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3) ↔
+      ∃ t1 t2 t3 t4 : ℝ, 0 ≤ t3 ∧ 0 ≤ t4 ∧ t1 + t2 + t3 + t4 = 1 ∧
+        y = t1 • u0 + t2 • u1 + t3 • u2 + t4 • u3 := by
+  have hfin : ({u0, u1} ∪ {u2, u3} : Set V3).Finite :=
+    ((Set.finite_singleton u1).insert u0).union ((Set.finite_singleton u3).insert u2)
+  unfold affGe Affsign
+  constructor
+  · intro h
+    obtain ⟨f, hfin, hp⟩ := Set.mem_setOf_eq.mp h
+    have hsum : y = ∑ w ∈ hfin.toFinset, f w • w := hp.1
+    have hpos : ∀ w ∈ ({u2, u3} : Set V3), 0 ≤ f w := hp.2.1
+    have hone : ∑ w ∈ hfin.toFinset, f w = 1 := hp.2.2
+    have hs := yk10_sum4 (g := f) (a := u0) (b := u1) (c := u2) (d := u3) h01
+      h02.symm h03.symm h12.symm h13.symm h23 hfin
+    refine ⟨f u0, f u1, f u2, f u3, hpos u2 (by simp), hpos u3 (by simp), ?_, ?_⟩
+    · linarith [hone, hs.1]
+    · exact hsum.trans hs.2
+  · rintro ⟨t1, t2, t3, t4, ht3, ht4, hsum4, hyeq⟩
+    set g : V3 → ℝ := fun z => if z = u0 then t1 else if z = u1 then t2
+      else if z = u2 then t3 else t4 with hgd
+    have hs := yk10_sum4 (g := g) (a := u0) (b := u1) (c := u2) (d := u3) h01
+      h02.symm h03.symm h12.symm h13.symm h23 hfin
+    have hg0 : g u0 = t1 := by simp [hgd]
+    have hg1 : g u1 = t2 := by simp [hgd, h01.symm, h12.symm]
+    have hg2 : g u2 = t3 := by simp [hgd, h02, h12]
+    have hg3 : g u3 = t4 := by simp [hgd, h03, h13, h23.symm]
+    refine ⟨g, hfin, ?_, ?_, ?_⟩
+    · -- y = ∑ g w • w（第一合取）
+      rw [hs.2, hg0, hg1, hg2, hg3]
+      exact hyeq
+    · -- u2/u3 侧系数非负
+      intro w hw
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+      rcases hw with hw | hw
+      · rw [hw]
+        have hgu2 : g u2 = t3 := hg2
+        rw [hgu2]
+        exact ht3
+      · rw [hw]
+        have hgu3 : g u3 = t4 := hg3
+        rw [hgu3]
+        exact ht4
+    · -- ∑ g w = 1（第三合取）
+      rw [hs.1, hg0, hg1, hg2, hg3]
+      exact hsum4
+
+/-- aff_ge 1+3 = 平移闭锥（PlanarityAuto12 affGe_triple_eq_cone 的本地副本）。 -/
+private theorem yk10_affGe_triple_eq_cone (x v u w : V3)
+    (hdis : Disjoint ({x} : Set V3) ({v, u, w} : Set V3)) :
+    affGe ({x} : Set V3) ({v, u, w} : Set V3) =
+      {y : V3 | (y - x) ∈ yk10_cone3 (v - x) (u - x) (w - x)} := by
+  rw [AFF_GE_1_3 x v u w hdis]
+  ext y; constructor
+  · rintro ⟨t1, t2, t3, t4, ht2, ht3, ht4, hsum, hy⟩
+    exact ⟨t2, t3, t4, ht2, ht3, ht4, by
+      rw [hy, show t1 = 1 - t2 - t3 - t4 from by linarith]; module⟩
+  · rintro ⟨t2, t3, t4, ht2, ht3, ht4, hy⟩
+    refine ⟨1 - t2 - t3 - t4, t2, t3, t4, ht2, ht3, ht4, by ring, ?_⟩
+    rw [show y = (y - x) + x from (sub_add_cancel y x).symm, hy]
+    module
+
+/-- aff_ge {u0,u1} {u2,u3} = 两个平移闭锥之并（u1-系数变号 → 沿 u1−u0
+轴线的正/负两侧；cone3 = 有限生成闭锥）。 -/
+private theorem yk10_affGe22_eq_union {u0 u1 u2 u3 : V3}
+    (h01 : u0 ≠ u1) (h02 : u2 ≠ u0) (h03 : u3 ≠ u0) (h12 : u2 ≠ u1)
+    (h13 : u3 ≠ u1) (h23 : u2 ≠ u3) :
+    affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3) =
+      {y : V3 | y - u0 ∈ yk10_cone3 (u1 - u0) (u2 - u0) (u3 - u0)} ∪
+        {y : V3 | y - u0 ∈ yk10_cone3 (u0 - u1) (u2 - u0) (u3 - u0)} := by
+  ext y
+  constructor
+  · intro hy
+    obtain ⟨t1, t2, t3, t4, ht3, ht4, hsum4, hyeq⟩ :=
+      (yk10_mem_affGe22_iff h01 h02 h03 h12 h13 h23 (y := y)).mp hy
+    have ht1 : t1 = 1 - t2 - t3 - t4 := by linarith
+    have hcombo : y - u0 = t2 • (u1 - u0) + t3 • (u2 - u0) + t4 • (u3 - u0) := by
+      rw [hyeq, ht1]
+      module
+    by_cases hsign : 0 ≤ t2
+    · left
+      exact ⟨t2, t3, t4, hsign, ht3, ht4, hcombo⟩
+    · right
+      have ht2neg : t2 < 0 := by
+        by_contra hc
+        exact hsign (le_of_not_gt hc)
+      have ht2n : 0 ≤ -t2 := by linarith
+      exact ⟨-t2, t3, t4, ht2n, ht3, ht4, by rw [hcombo]; module⟩
+  · intro hy
+    rcases Set.mem_union _ _ _ |>.mp hy with h | h
+    · obtain ⟨c1, c2, c3, hc1, hc2, hc3, hyeq⟩ := Set.mem_setOf_eq.mp h
+      refine (yk10_mem_affGe22_iff h01 h02 h03 h12 h13 h23 (y := y)).mpr
+        ⟨1 - c1 - c2 - c3, c1, c2, c3, hc2, hc3, by ring, ?_⟩
+      conv_lhs => rw [show y = (y - u0) + u0 from (sub_add_cancel y u0).symm]
+      rw [hyeq]
+      module
+    · obtain ⟨c1, c2, c3, hc1, hc2, hc3, hyeq⟩ := Set.mem_setOf_eq.mp h
+      refine (yk10_mem_affGe22_iff h01 h02 h03 h12 h13 h23 (y := y)).mpr
+        ⟨1 + c1 - c2 - c3, -c1, c2, c3, hc2, hc3, by ring, ?_⟩
+      conv_lhs => rw [show y = (y - u0) + u0 from (sub_add_cancel y u0).symm]
+      rw [hyeq]
+      module
+
+/-- aff_ge 2+2 闭（= CLOSED_AFF_GE 的 2+2 形；两平移闭锥之并）。 -/
+private theorem yk10_isClosed_affGe22 {u0 u1 u2 u3 : V3}
+    (h01 : u0 ≠ u1) (h02 : u2 ≠ u0) (h03 : u3 ≠ u0) (h12 : u2 ≠ u1)
+    (h13 : u3 ≠ u1) (h23 : u2 ≠ u3) :
+    IsClosed (affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3)) := by
+  have hcont1 : Continuous (fun y : V3 => y - u0) :=
+    continuous_id.sub continuous_const
+  rw [yk10_affGe22_eq_union h01 h02 h03 h12 h13 h23]
+  refine IsClosed.union
+    ((yk10_isClosed_cone3 (u1 - u0) (u2 - u0) (u3 - u0)).preimage hcont1) ?_
+  exact ((yk10_isClosed_cone3 (u0 - u1) (u2 - u0) (u3 - u0)).preimage hcont1)
+
+/-- HOL WEDGE_GE_EQ_AFF_GE 的 ← 方向（azim < π 时 aff_ge 2+2 ⊆ wedge_ge）
+的轻量重组：轴上 azim = 0（退化支）；单射线侧 azim_eq_azim_iff 逐射线等值；
+严格内侧 wedge_eq_affGt。 -/
+private theorem yk10_affGe22_subset_wedgeGe {u0 u1 u2 u3 : V3}
+    (h2 : ¬ Collinear3 u0 u1 u2) (h3 : ¬ Collinear3 u0 u1 u3)
+    (h23 : u2 ≠ u3) (hπ : azim u0 u1 u2 u3 < Real.pi) :
+    affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3) ⊆ wedgeGe u0 u1 u2 u3 := by
+  have h01 : u0 ≠ u1 := fun he => h2 (by rw [he]; exact collinear3_of_eq rfl)
+  have hu2v0 : u2 ≠ u0 := fun he => h2 (collinear3_pair_left he)
+  have hu2v1 : u2 ≠ u1 := fun he => h2 (collinear3_pair_right he)
+  have hu3v0 : u3 ≠ u0 := fun he => h3 (collinear3_pair_left he)
+  have hu3v1 : u3 ≠ u1 := fun he => h3 (collinear3_pair_right he)
+  intro y hy
+  obtain ⟨t1, t2, t3, t4, ht3, ht4, hsum4, hyeq⟩ :=
+    (yk10_mem_affGe22_iff h01 hu2v0 hu3v0 hu2v1 hu3v1 h23 (y := y)).mp hy
+  have ht1 : t1 = 1 - t2 - t3 - t4 := by linarith
+  have hcombo : y - u0 = t2 • (u1 - u0) + t3 • (u2 - u0) + t4 • (u3 - u0) := by
+    rw [hyeq, ht1]
+    module
+  by_cases hcoly : Collinear3 u0 u1 y
+  · -- 轴上：azim 退化支 = 0
+    refine ⟨azim_nonneg u0 u1 u2 y, ?_⟩
+    show (if Collinear3 u0 u1 u2 ∨ Collinear3 u0 u1 y then (0 : ℝ)
+      else Classical.epsilon (AzimSpec u0 u1 u2 y)) ≤ azim u0 u1 u2 u3
+    rw [if_pos (Or.inr hcoly)]
+    exact azim_nonneg u0 u1 u2 u3
+  · have hncz : ¬ Collinear3 u0 u1 y := hcoly
+    by_cases ht3z : t3 = 0
+    · rw [ht3z] at hcombo ht3
+      simp only [zero_smul, add_zero, zero_add] at hcombo
+      by_cases ht4z : t4 = 0
+      · -- t3 = t4 = 0：y 在 u0u1 线上，与 hcoly 矛盾
+        rw [ht4z] at hcombo
+        simp only [zero_smul, add_zero] at hcombo
+        exact absurd ((collinear3_iff_smul h01.symm).mpr ⟨t2, hcombo⟩) hcoly
+      · -- 仅 u3：azim y = azim u3 = C
+        have ht4p : 0 < t4 := lt_of_le_of_ne ht4 (Ne.symm ht4z)
+        refine ⟨azim_nonneg u0 u1 u2 y, ?_⟩
+        have hymem : y ∈ affGt ({u0, u1} : Set V3) ({u3} : Set V3) :=
+          (affGt_pair_iff h01 hu3v0 hu3v1).mpr ⟨t4, ht4p, t2,
+            show y - u0 = t4 • (u3 - u0) + t2 • (u1 - u0) from by rw [hcombo]; module⟩
+        rw [(azim_eq_azim_iff h2 h3 hncz).mpr hymem]
+    · have ht3p : 0 < t3 := lt_of_le_of_ne ht3 (Ne.symm ht3z)
+      by_cases ht4z : t4 = 0
+      · -- 仅 u2：azim y = 0
+        rw [ht4z] at hcombo ht4
+        simp only [zero_smul, add_zero, zero_add] at hcombo
+        refine ⟨azim_nonneg u0 u1 u2 y, ?_⟩
+        have hymem : y ∈ affGt ({u0, u1} : Set V3) ({u2} : Set V3) :=
+          (affGt_pair_iff h01 hu2v0 hu2v1).mpr ⟨t3, ht3p, t2,
+            show y - u0 = t3 • (u2 - u0) + t2 • (u1 - u0) from by rw [hcombo]; module⟩
+        have hzero : azim u0 u1 u2 y = 0 := by
+          have h1 := (azim_eq_azim_iff h2 h2 hncz).mpr hymem
+          rw [azim_self u0 u1 u2] at h1
+          exact h1.symm
+        rw [hzero]
+        exact azim_nonneg u0 u1 u2 u3
+      · -- 双严格：t3, t4 > 0
+        have ht4p : 0 < t4 := lt_of_le_of_ne ht4 (Ne.symm ht4z)
+        by_cases hz0 : azim u0 u1 u2 u3 = 0
+        · -- u3 退到 u2 射线上：y 折进 u2 射线，azim y = 0
+          have hu3in : u3 ∈ affGt ({u0, u1} : Set V3) ({u2} : Set V3) :=
+            (azim_eq_zero_iff_alt h2 h3).mp hz0
+          obtain ⟨c, hc, h, hcombo3⟩ :=
+            (affGt_pair_iff h01 hu2v0 hu2v1).mp hu3in
+          have hcombo' : y - u0 = t2 • (u1 - u0) + t3 • (u2 - u0)
+              + t4 • (c • (u2 - u0) + h • (u1 - u0)) := by
+            rw [hcombo, ← hcombo3]
+          have hy2 : y - u0 = (t3 + t4 * c) • (u2 - u0)
+              + (t2 + t4 * h) • (u1 - u0) := by
+            rw [hcombo']
+            module
+          have hcpos : 0 < t3 + t4 * c := by nlinarith
+          have hymem : y ∈ affGt ({u0, u1} : Set V3) ({u2} : Set V3) :=
+            (affGt_pair_iff h01 hu2v0 hu2v1).mpr ⟨t3 + t4 * c, hcpos, t2 + t4 * h,
+              hy2⟩
+          have heq := (azim_eq_azim_iff h2 h2 hncz).mpr hymem
+          refine ⟨azim_nonneg u0 u1 u2 y, ?_⟩
+          have hzero : azim u0 u1 u2 y = 0 := by
+            have h1 := heq
+            rw [azim_self u0 u1 u2] at h1
+            exact h1.symm
+          rw [hzero]
+          exact azim_nonneg u0 u1 u2 u3
+        · -- 0 < azim u3 < π：wedge_eq_affGt 严格内侧
+          have h0w2 : 0 < azim u0 u1 u2 u3 :=
+            lt_of_le_of_ne (azim_nonneg u0 u1 u2 u3) (Ne.symm hz0)
+          have hdisj22 : Disjoint ({u0, u1} : Set V3) ({u2, u3} : Set V3) := by
+            rw [Set.disjoint_left]
+            intro a ha
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha
+            rcases ha with rfl | rfl
+            · intro hb
+              simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hb
+              rcases hb with rfl | rfl
+              · exact hu2v0 rfl
+              · exact hu3v0 rfl
+            · intro hb
+              simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hb
+              rcases hb with rfl | rfl
+              · exact hu2v1 rfl
+              · exact hu3v1 rfl
+          have hyGt : y ∈ affGt ({u0, u1} : Set V3) ({u2, u3} : Set V3) := by
+            rw [affGt2_2 hdisj22]
+            simp only [Set.mem_setOf_eq]
+            exact ⟨t1, t2, t3, t4, ht3p, ht4p, hsum4, hyeq⟩
+          have hwEq := wedge_eq_affGt h2 h3 h0w2 hπ
+          rw [← hwEq] at hyGt
+          simp only [Kepler.Geom.wedge, Set.mem_setOf_eq] at hyGt
+          exact ⟨le_of_lt hyGt.2.1, le_of_lt hyGt.2.2⟩
+
+/-- HOL CLOSED_WEDGE_LT_PI（leaf_cell.hl:3659）的闭包-包含折算：
+closure(开 wedge) ⊆ wedge_ge。路线 = wedge ⊆ aff_ge 2+2（wedge_eq_affGt +
+affGt⊆affGe）+ aff_ge 2+2 闭（yk10_isClosed_affGe22）+ aff_ge ⊆ wedge_ge
+（yk10_affGe22_subset_wedgeGe）。 -/
+private theorem yk10_closure_wedge_subset_wedgeGe (u0 u1 u2 u3 : V3)
+    (h2 : ¬ Collinear3 u0 u1 u2) (h3 : ¬ Collinear3 u0 u1 u3)
+    (h23 : u2 ≠ u3) (hπ : azim u0 u1 u2 u3 < Real.pi) :
+    closure (Kepler.Geom.wedge u0 u1 u2 u3) ⊆ wedgeGe u0 u1 u2 u3 := by
+  have h01 : u0 ≠ u1 := fun he => h2 (by rw [he]; exact collinear3_of_eq rfl)
+  have hu2v0 : u2 ≠ u0 := fun he => h2 (collinear3_pair_left he)
+  have hu2v1 : u2 ≠ u1 := fun he => h2 (collinear3_pair_right he)
+  have hu3v0 : u3 ≠ u0 := fun he => h3 (collinear3_pair_left he)
+  have hu3v1 : u3 ≠ u1 := fun he => h3 (collinear3_pair_right he)
+  have hclosed : IsClosed (affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3)) :=
+    yk10_isClosed_affGe22 h01 hu2v0 hu3v0 hu2v1 hu3v1 h23
+  have hsub1 : Kepler.Geom.wedge u0 u1 u2 u3
+      ⊆ affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3) := by
+    intro y hy
+    have hC0 : 0 < azim u0 u1 u2 u3 :=
+      lt_of_le_of_lt (azim_nonneg u0 u1 u2 y) hy.2.2
+    exact yk10_affGt_subset_affGe (wedge_eq_affGt h2 h3 hC0 hπ ▸ hy)
+  have hsub2 : affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3)
+      ⊆ wedgeGe u0 u1 u2 u3 := yk10_affGe22_subset_wedgeGe h2 h3 h23 hπ
+  intro z hz
+  have hz2 : z ∈ closure (affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3)) :=
+    closure_mono hsub1 hz
+  rw [hclosed.closure_eq] at hz2
+  exact hsub2 hz2
+
+/-! #### 9l.2 受限邻域基数下界（wedgeInFanGe 分支条件） -/
+
+/-- `1 < ncard (ee e.1 (ePrime E f))`（yk6_azimInFan_ePrime_eq 证明内
+hn'E 段的独立抽取：e.2 与全扇后继两个相异 e'-邻居；唯一几何输入 =
+FullySurrounded 排 1 价分支）。 -/
+private theorem yk10_one_lt_ee_ePrime {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN 0 V E) (hfs : FullySurrounded V E)
+    {b : V3 × V3} (hb : b ∈ dart1OfFan V E) {f : Set (V3 × V3)}
+    (hf : f = yk2_faceOrbit 0 V E hfan b) {e : V3 × V3} (he : e ∈ f) :
+    1 < (ee e.1 (ePrime_p2 E f)).ncard := by
+  have hd1 : e ∈ dart1OfFan V E :=
+    yk2_faceOrbit_subset_dart1 hfan b hb (by rw [← hf]; exact he)
+  have hco : (⇑(@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan))) = fFanPairExt 0 V E :=
+    funext fun z => yk2_apply_faceMap hfan z
+  have hsymm_mem' : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan)).symm e ∈ yk2_faceOrbit 0 V E hfan b :=
+    yk2_faceOrbit_symm_closure hfan (by rw [← hf]; exact he)
+  have hsymm_mem : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan)).symm e ∈ f := by rw [hf]; exact hsymm_mem'
+  have hinv : (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan)).symm e = Function.invFun (fFanPairExt 0 V E) e := by
+    have h0 : (⇑(@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 V E hfan)))
+        (Function.invFun (⇑(@Hypermap.faceMap (V3 × V3)
+          (fun a b' => instDecidableEqProd a b') (hypermapOfFan 0 V E hfan))) e) = e :=
+      Function.invFun_eq ⟨(@Hypermap.faceMap (V3 × V3)
+        (fun a b' => instDecidableEqProd a b') (hypermapOfFan 0 V E hfan)).symm e,
+        Equiv.apply_symm_apply _ _⟩
+    have h1 := (Equiv.apply_eq_iff_eq_symm_apply
+      (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 V E hfan))).mp h0
+    rw [hco] at h1
+    exact h1.symm
+  rw [hinv, yk_invFunFFanPairExt_apply hfan e, if_pos hd1] at hsymm_mem
+  rw [hinv, yk_invFunFFanPairExt_apply hfan e, if_pos hd1] at hsymm_mem'
+  have hsig_dart : (sigmaFan 0 V E e.1 e.2, e.1) ∈ dart1OfFan V E :=
+    yk2_faceOrbit_subset_dart1 hfan b hb hsymm_mem'
+  have hsigE : ({sigmaFan 0 V E e.1 e.2, e.1} : Set V3) ∈ E := hsig_dart
+  have hN'e : e.2 ∈ ee e.1 (ePrime_p2 E f) :=
+    (yk6_in_ePrime f e.1 e.2).mpr ⟨hd1, Or.inl he⟩
+  have hN'σ : sigmaFan 0 V E e.1 e.2 ∈ ee e.1 (ePrime_p2 E f) :=
+    (yk6_in_ePrime f e.1 (sigmaFan 0 V E e.1 e.2)).mpr
+      ⟨by rw [Set.pair_comm e.1 (sigmaFan 0 V E e.1 e.2)]; exact hsigE,
+        Or.inr hsymm_mem⟩
+  have hsigne : sigmaFan 0 V E e.1 e.2 ≠ e.2 := by
+    by_cases hsoe1 : setOfEdge e.1 V E = {e.2}
+    · exfalso
+      exact absurd (yk6_fs_ncard_gt1 hfan hfs hd1) (by rw [hsoe1]; simp)
+    · exact (SIGMA_FAN hsoe1 hfan
+        (FAN_in_setOfEdge 0 V E e.1 e.2 hfan hd1).2.2.1).2.1
+  have hfinN' : (ee e.1 (ePrime_p2 E f)).Finite := by
+    have hfin0 : (setOfEdge e.1 V E).Finite := remark_finite_fan1 e.1 V E hfan.2.2.1.1
+    have hsub : ee e.1 (ePrime_p2 E f) ⊆ setOfEdge e.1 V E := by
+      intro z hz
+      have hz2 : {e.1, z} ∈ E := yk6_ePrime_subset f hz
+      exact ⟨hz2, FAN_EDGE_EL_V hfan hz2⟩
+    exact hfin0.subset hsub
+  have hpair2 : ({e.2, sigmaFan 0 V E e.1 e.2} : Set V3) ⊆ ee e.1 (ePrime_p2 E f) := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact hN'e
+    · rw [Set.mem_singleton_iff] at hz
+      exact hz ▸ hN'σ
+  have hc1 : ({e.2, sigmaFan 0 V E e.1 e.2} : Set V3).ncard
+      ≤ (ee e.1 (ePrime_p2 E f)).ncard := Set.ncard_le_ncard hpair2 hfinN'
+  have hc2 : ({e.2, sigmaFan 0 V E e.1 e.2} : Set V3).ncard = 2 :=
+    Set.ncard_pair hsigne.symm
+  omega
+
+/-! #### 9l.3 W1 wedge 主件（ConvexLocalFan 的 wedge 合取支） -/
+
+/-- 面 f 的顶点集 vPrime 含于每条面 dart 的 wedge_in_fan_ge（e' 渲染）。
+链：vPrime 元 z = 某 (z,w) ∈ f 的首端 ⟹ z ∈ closure(affGt {0} {z,w})
+（POINT_IN_CLOSURE_AFF_GT_1_2）⟹ affGt ⊆ closure(dartsetLeadsIntoFan f)
+（锚3）⟹ dartsetLeadsInto ⊆ w_dart_fan（锚2，conformingHalfSpace 支）
+⟹ w_dart = 开 wedge（FullySurrounded 给 CARD>1）⟹ closure ⊆ wedge_ge
+（9l.1 闭扇）⟹ σ 换回受限 σ（yk6 azim 桥）。 -/
+private theorem yk10_vPrime_subset_wedgeInFanGe (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    {b : V3 × V3} (hb : b ∈ dart1OfFan V (ESTD V)) {f : Set (V3 × V3)}
+    (hf : f = yk2_faceOrbit 0 V (ESTD V) hlpfan.1 b) {x : V3 × V3} (hx : x ∈ f) :
+    vPrime_p2 V f ⊆ wedgeInFanGe x (ePrime_p2 (ESTD V) f) := by
+  have hfan : FAN 0 V (ESTD V) := hlpfan.1
+  have hfs : FullySurrounded V (ESTD V) := hlpfan.2.1
+  have hconf := p6g_fullySurrounded_conforming V (ESTD V) hfan hfs
+  have hcard : ∀ v ∈ V, 1 < (setOfEdge v V (ESTD V)).ncard := hconf.1
+  have hfan80 : fan80 0 V (ESTD V) := hconf.2.1
+  have hx1 : x ∈ dart1OfFan V (ESTD V) :=
+    yk2_faceOrbit_subset_dart1 hfan b hb (by rw [← hf]; exact hx)
+  have hbr : 1 < (ee x.1 (ePrime_p2 (ESTD V) f)).ncard :=
+    yk10_one_lt_ee_ePrime hfan hfs hb hf hx
+  have hfullE : 1 < (ee x.1 (ESTD V)).ncard := by
+    rw [wk_ee_eq_setOfEdge hfan x.1]
+    exact yk6_fs_ncard_gt1 hfan hfs hx1
+  have hncard1 : 1 < (setOfEdge x.1 V (ESTD V)).ncard := yk6_fs_ncard_gt1 hfan hfs hx1
+  have hπ : azim 0 x.1 x.2 (sigmaFan 0 V (ESTD V) x.1 x.2) < Real.pi := by
+    have h1 : azimDart V (ESTD V) x < Real.pi := hfs x (Set.mem_union_right _ hx1)
+    have h2 : azimDart V (ESTD V) x = azim 0 x.1 x.2 (sigmaFan 0 V (ESTD V) x.1 x.2) := by
+      show (if x.1 = x.2 then (2 : ℝ) * Real.pi
+        else if (setOfEdge x.1 V (ESTD V)).ncard > 1
+          then azim 0 x.1 x.2 (sigmaFan 0 V (ESTD V) x.1 x.2) else 2 * Real.pi) = _
+      rw [if_neg (edge_ne_of_fan hfan hx1), if_pos hncard1]
+    rw [← h2]; exact h1
+  have hvwE : ({x.1, x.2} : Set V3) ∈ ESTD V := hx1
+  have hnc2 : ¬ Collinear3 0 x.1 x.2 := fan_not_collinear hfan hvwE
+  have hσmem : sigmaFan 0 V (ESTD V) x.1 x.2 ∈ setOfEdge x.1 V (ESTD V) :=
+    sigma_fan_in_setOfEdge hfan
+      ((properties_of_setOfEdge_fan 0 V (ESTD V) x.1 x.2 hfan).mp hx1)
+  have hσE : ({x.1, sigmaFan 0 V (ESTD V) x.1 x.2} : Set V3) ∈ ESTD V :=
+    (properties_of_setOfEdge_fan 0 V (ESTD V) x.1
+      (sigmaFan 0 V (ESTD V) x.1 x.2) hfan).mpr hσmem
+  have hncσ : ¬ Collinear3 0 x.1 (sigmaFan 0 V (ESTD V) x.1 x.2) :=
+    fan_not_collinear hfan hσE
+  have hσb : sigmaFan 0 V (ESTD V) x.1 x.2 ≠ x.2 := by
+    by_cases hsoe1 : setOfEdge x.1 V (ESTD V) = {x.2}
+    · exact absurd hsoe1 (fun hc => absurd hncard1 (by rw [hc]; simp))
+    · exact (SIGMA_FAN hsoe1 hfan
+        (FAN_in_setOfEdge 0 V (ESTD V) x.1 x.2 hfan hx1).2.2.1).2.1
+  -- σ 值桥：受限 σ 的方位角值 = 全扇 σ
+  have hσeq : azim 0 x.1 x.2 (sigmaFan 0 Set.univ (ePrime_p2 (ESTD V) f) x.1 x.2)
+      = azim 0 x.1 x.2 (sigmaFan 0 V (ESTD V) x.1 x.2) := by
+    have h := yk6_azimInFan_ePrime_eq hfan hfs b hb f hf hx
+    unfold azimInFan at h
+    rw [if_pos hbr, if_pos hfullE, wk_sigmaFan_congr hfan] at h
+    exact h
+  have hσ'trans : wedgeGe 0 x.1 x.2 (sigmaFan 0 Set.univ (ePrime_p2 (ESTD V) f) x.1 x.2)
+      = wedgeGe 0 x.1 x.2 (sigmaFan 0 V (ESTD V) x.1 x.2) := by
+    unfold wedgeGe
+    rw [hσeq]
+  intro z hz
+  unfold wedgeInFanGe
+  rw [if_pos hbr, hσ'trans]
+  obtain ⟨w, hwf⟩ := hz.2
+  have hzw : (z, w) ∈ dart1OfFan V (ESTD V) :=
+    yk2_faceOrbit_subset_dart1 hfan b hb (by rw [← hf]; exact hwf)
+  have hne : z ≠ w := edge_ne_of_fan hfan hzw
+  have h0V : (0 : V3) ∉ V := hfan.2.2.2.1
+  have hz0 : (0 : V3) ≠ z := fun he => h0V (he ▸ hz.1)
+  have hw0 : (0 : V3) ≠ w := fun he => h0V (he ▸ (yk2_dart_fst_snd_mem_V hfan hzw).2)
+  have hface : ((hypermapOfFanTl V (ESTD V) hfan).face b) = f := by
+    rw [hf]; rfl
+  have hfs_face : f ∈ (hypermapOfFanTl V (ESTD V) hfan).faceSet := by
+    rw [← hface]
+    exact wk_face_mem_faceSet (mem_dartsTl hb)
+  have hfsTl : (hypermapOfFanTl V (ESTD V) hfan).faceSet =
+      @Hypermap.faceSet (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan 0 V (ESTD V) hfan) := by
+    unfold Hypermap.faceSet
+    rw [dartsTl_eq, faceMapTl_eq]
+  -- z ∈ closure(affGt {0} {z,w})
+  have hpc : z ∈ closure (affGt ({0} : Set V3) ({z, w} : Set V3)) :=
+    POINT_IN_CLOSURE_AFF_GT_1_2 0 z w hz0 hw0 hne
+  -- 锚3
+  have hA3 : affGt ({0} : Set V3) ({z, w} : Set V3)
+      ⊆ closure (dartsetLeadsIntoFan 0 V (ESTD V) f) :=
+    AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN_tl V (ESTD V) f (z, w) hfan hcard
+      hfan80 (hfsTl ▸ hfs_face) hwf
+  -- 锚2
+  have hA2 : dartsetLeadsIntoFan 0 V (ESTD V) f
+      ⊆ wDartFan 0 V (ESTD V) (0, x.1, x.2, sigmaFan 0 V (ESTD V) x.1 x.2) :=
+    DARTSET_LEADS_INTO_SUBSET_WDART_FAN hfan (hfsTl ▸ hfs_face) hx hconf
+  -- w_dart = 开 wedge（CARD > 1 支）
+  have hwd : wDartFan 0 V (ESTD V) (0, x.1, x.2, sigmaFan 0 V (ESTD V) x.1 x.2)
+      = Kepler.Geom.wedge 0 x.1 x.2 (sigmaFan 0 V (ESTD V) x.1 x.2) := by
+    simp only [wDartFan, if_pos hncard1]
+  -- 闭扇收口
+  have hchain : dartsetLeadsIntoFan 0 V (ESTD V) f
+      ⊆ Kepler.Geom.wedge 0 x.1 x.2 (sigmaFan 0 V (ESTD V) x.1 x.2) := by
+    intro y hy
+    rw [← hwd]
+    exact hA2 hy
+  have hwedge_sub : affGt ({0} : Set V3) ({z, w} : Set V3)
+      ⊆ closure (Kepler.Geom.wedge 0 x.1 x.2 (sigmaFan 0 V (ESTD V) x.1 x.2)) :=
+    fun u hu => closure_mono hchain (hA3 hu)
+  have hz3 : z ∈ closure (Kepler.Geom.wedge 0 x.1 x.2
+      (sigmaFan 0 V (ESTD V) x.1 x.2)) := by
+    have h1 : z ∈ closure (closure (Kepler.Geom.wedge 0 x.1 x.2
+        (sigmaFan 0 V (ESTD V) x.1 x.2))) := closure_mono hwedge_sub hpc
+    rwa [closure_closure] at h1
+  exact yk10_closure_wedge_subset_wedgeGe 0 x.1 x.2
+    (sigmaFan 0 V (ESTD V) x.1 x.2) hnc2 hncσ
+    (fun he => hσb he.symm) hπ hz3
+
+/-! #### 9l.4 Dih2k 实例转移 + ConvexLocalFan 装配 -/
+
+/-- **ConvexLocalFan (vPrime, ePrime, f) 装配**（JEJTVGB_std_concl 前提①）。
+LocalFan 面 = §9k 三件（yk9_Dih2k / yk7_FF_eq_faceOrbit / yk2_FAN_vPrime_ePrime）；
+azim≤π 面 = yk6 桥 + FullySurrounded；wedge 面 = 9l.3 主件。 -/
+private theorem yk10_convexLocalFan (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    {b : V3 × V3} (hb : b ∈ dart1OfFan V (ESTD V)) {f : Set (V3 × V3)}
+    (hf : f = yk2_faceOrbit 0 V (ESTD V) hlpfan.1 b) (hk : 2 < f.ncard) :
+    ConvexLocalFan (vPrime_p2 V f) (ePrime_p2 (ESTD V) f) f := by
+  have hfan : FAN 0 V (ESTD V) := hlpfan.1
+  have hfs : FullySurrounded V (ESTD V) := hlpfan.2.1
+  have hconf := p6g_fullySurrounded_conforming V (ESTD V) hfan hfs
+  have hV : V.Finite := yk10_packingFinite hlpfan.2.2.2.2 hlpfan.2.2.2.1
+  have hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 (ESTD V) f) :=
+    yk2_FAN_vPrime_ePrime hfan b hb f hf
+  refine ⟨⟨hfan', b, ?_, ?_, ?_⟩, ?_⟩
+  · -- b ∈ 受限 darts
+    exact Finset.mem_coe.mpr
+      ((yk2_mem_darts_iff hfan' b).mpr (yk9_base_ctx hfan b hb f hf hfan').1)
+  · -- f = orbitMap faceMap' b
+    exact (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
+  · -- Dih2k（LocalFan 体的 Dih2k 实例即 hypermapOfFan 烤定 instProd 味，
+    -- 与 yk9_Dih2k 结论同实例，直接衔接）
+    exact yk9_Dih2k hfan hconf hV b hb f hf hk hfan'
+  · intro y hy
+    refine ⟨?_, yk10_vPrime_subset_wedgeInFanGe V hlpfan hb hf hy⟩
+    have hy1 : y ∈ dart1OfFan V (ESTD V) :=
+      yk2_faceOrbit_subset_dart1 hfan b hb (by rw [← hf]; exact hy)
+    rw [yk6_azimInFan_ePrime_eq hfan hfs b hb f hf hy,
+      wk_azimInFan_eq_azimDart hfan hy1]
+    exact le_of_lt (hfs y (Set.mem_union_right _ hy1))
+
+/-! #### 9l.5 chord 件（JEJTVGB_std_concl 前提⑥ = HOL local_diag:581） -/
+
+/-- 非边前提：vPrime 内不构成面边的点对，距离 ≥ 2h0。{a,b} ∉ E 支 =
+LpFan.3；chord 支 = conforming_diagonal 合取支（GGZWYRM 上游）——
+= HOL `diag_not_in_dart`（lp_main_estimate:415）的 pair-dart 重装。 -/
+private theorem yk10_diag (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    {b : V3 × V3} (hb : b ∈ dart1OfFan V (ESTD V)) {f : Set (V3 × V3)}
+    (hf : f = yk2_faceOrbit 0 V (ESTD V) hlpfan.1 b)
+    {a c : V3} (ha : a ∈ vPrime_p2 V f) (hc : c ∈ vPrime_p2 V f) (hac : a ≠ c)
+    (hne' : {a, c} ∉ ePrime_p2 (ESTD V) f) :
+    2 * h0 ≤ dist a c := by
+  by_cases hE : {a, c} ∈ ESTD V
+  · exfalso
+    have hfan : FAN 0 V (ESTD V) := hlpfan.1
+    have hfs : FullySurrounded V (ESTD V) := hlpfan.2.1
+    have hconf := p6g_fullySurrounded_conforming V (ESTD V) hfan hfs
+    have hcard : ∀ v ∈ V, 1 < (setOfEdge v V (ESTD V)).ncard := hconf.1
+    have hfan80 : fan80 0 V (ESTD V) := hconf.2.1
+    obtain ⟨-, a', haa'⟩ := Set.mem_setOf_eq.mp ha
+    obtain ⟨-, c', hcc'⟩ := Set.mem_setOf_eq.mp hc
+    have hfsTl : (hypermapOfFanTl V (ESTD V) hfan).faceSet =
+        @Hypermap.faceSet (V3 × V3) (fun a b => instDecidableEqProd a b)
+          (hypermapOfFan 0 V (ESTD V) hfan) := by
+      unfold Hypermap.faceSet
+      rw [dartsTl_eq, faceMapTl_eq]
+    have hface : ((hypermapOfFanTl V (ESTD V) hfan).face b) = f := by
+      rw [hf]; rfl
+    have hfs_face : f ∈ @Hypermap.faceSet (V3 × V3)
+        (fun a b => instDecidableEqProd a b) (hypermapOfFan 0 V (ESTD V) hfan) := by
+      rw [← hface]
+      exact wk_face_mem_faceSet (mem_dartsTl hb)
+    have hne : (a, a') ≠ (c, c') := by
+      intro he
+      exact hac (congrArg Prod.fst he)
+    obtain ⟨hncol, h3way⟩ :=
+      hconf.2.2.2.2.2 f hfs_face (a, a') haa' (c, c') hcc' hne
+    rcases h3way with h1 | h1 | h1
+    · -- (a,a') = f1Fan (c,c') = (c', …) ⟹ a = c' ⟹ (c,a) = (c,c') ∈ f
+      have ha2 : a = c' := by
+        have h5 := congrArg Prod.fst h1
+        simpa [f1Fan] using h5
+      exact hne' ((yk6_in_ePrime f a c).mpr ⟨hE, Or.inr (by rw [ha2]; exact hcc')⟩)
+    · -- (c,c') = f1Fan (a,a') = (a', …) ⟹ c = a' ⟹ (a,c) = (a,a') ∈ f
+      have hc2 : c = a' := by
+        have h5 := congrArg Prod.fst h1
+        simpa [f1Fan] using h5
+      exact hne' ((yk6_in_ePrime f a c).mpr ⟨hE, Or.inl (by rw [hc2]; exact haa')⟩)
+    · -- affGt {0} {a,c} ⊆ dartsetLeadsIntoFan f：与 (a,c) ∈ dart1 的 xfan-包含夹逼
+      have h0V : (0 : V3) ∉ V := hfan.2.2.2.1
+      have haV : a ∈ V := ha.1
+      have hcV : c ∈ V := hc.1
+      have hz0 : (0 : V3) ≠ a := fun he => h0V (he ▸ haV)
+      have hzc : (0 : V3) ≠ c := fun he => h0V (he ▸ hcV)
+      have hdis : Disjoint ({0} : Set V3) ({a, c} : Set V3) := by
+        rw [Set.disjoint_left]
+        intro u hu1 hu2
+        rw [Set.mem_singleton_iff] at hu1
+        subst hu1
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu2
+        rcases hu2 with h | h
+        · exact hz0 h
+        · exact hzc h
+      -- 中点 ∈ affGt
+      have hmid : ((1 / 2 : ℝ) • a + (1 / 2 : ℝ) • c)
+          ∈ affGt ({0} : Set V3) ({a, c} : Set V3) := by
+        rw [aff_gt_1_2 hdis]
+        refine ⟨0, 1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+        module
+      -- affGt ⊆ affGe ⊆ xfan
+      have hge : affGt ({0} : Set V3) ({a, c} : Set V3)
+          ⊆ affGe ({0} : Set V3) ({a, c} : Set V3) := yk10_affGt_subset_affGe
+      have hxfan : affGe ({0} : Set V3) ({a, c} : Set V3) ⊆ xfan 0 V (ESTD V) :=
+        AFF_GE_SUBSET_XFAN 0 V (ESTD V) a c hE
+      -- dartsetLeadsInto ⊆ yfan
+      have hyfan : dartsetLeadsIntoFan 0 V (ESTD V) f ⊆ yfan 0 V (ESTD V) :=
+        dartset_leads_into_subset_yfan hfan hcard hfan80 hfs_face
+      have hmid2 : (1 / 2 : ℝ) • a + (1 / 2 : ℝ) • c
+          ∈ dartsetLeadsIntoFan 0 V (ESTD V) f := h1 hmid
+      have hmid3 : (1 / 2 : ℝ) • a + (1 / 2 : ℝ) • c ∈ yfan 0 V (ESTD V) :=
+        hyfan hmid2
+      have hmid4 : (1 / 2 : ℝ) • a + (1 / 2 : ℝ) • c ∈ xfan 0 V (ESTD V) :=
+        hxfan (hge hmid)
+      unfold yfan at hmid3
+      exact hmid3.2 hmid4
+  · -- {a,c} ∉ E：LpFan.3
+    exact yk6_local_diag_notE hlpfan f ha hc hac hE
+
+/-! #### 9l.6 tauK 共享装配 + 三枚 e2e -/
+
+/-- tau4/5/6 共享装配：dTame k ≤ tauVEF（面 d）。 -/
+private theorem yk10_tauK_aux (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    (hineq : JEJTVGB_std_concl) {k : ℕ} (hk4 : 4 ≤ k) (hk6 : k ≤ 6)
+    {d : V3 × V3} (hd1 : d ∈ dart1OfFan V (ESTD V))
+    (hcard : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = k) :
+    dTame k ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
+  have hfan : FAN 0 V (ESTD V) := hlpfan.1
+  have hfs : FullySurrounded V (ESTD V) := hlpfan.2.1
+  have hsub : V ⊆ ballAnnulus := hlpfan.2.2.2.1
+  have hpack : Packing V := hlpfan.2.2.2.2
+  have hconf := p6g_fullySurrounded_conforming V (ESTD V) hfan hfs
+  have hV : V.Finite := yk10_packingFinite hpack hsub
+  have hfo : (hypermapOfFanTl V (ESTD V) hfan).face d
+      = yk2_faceOrbit 0 V (ESTD V) hfan d := rfl
+  set f := (hypermapOfFanTl V (ESTD V) hfan).face d with hfd
+  have hk2 : 2 < f.ncard := by rw [hcard]; omega
+  have hk4' : 4 ≤ f.ncard := by rw [hcard]; exact hk4
+  have hcl := yk10_convexLocalFan V hlpfan hd1 hfo hk2
+  have h4le : 4 ≤ (vPrime_p2 V f).ncard :=
+    yk8_four_le_ncard_vPrime hfan hconf hV d hd1 f hfo hk4'
+  have h6le : (vPrime_p2 V f).ncard ≤ 6 := by
+    have hle := yk6_ncard_vPrime_le hfan d hd1 f hfo
+    rw [hcard] at hle
+    exact le_trans hle hk6
+  have hdiag : ∀ v w : V3, v ≠ w → v ∈ vPrime_p2 V f → w ∈ vPrime_p2 V f →
+      {v, w} ∉ ePrime_p2 (ESTD V) f → 2 * h0 ≤ dist v w :=
+    fun v w hvw hv hw hne => yk10_diag V hlpfan hd1 hfo hv hw hvw hne
+  have hstd : ∀ v w : V3, {v, w} ∈ ePrime_p2 (ESTD V) f →
+      2 ≤ dist v w ∧ dist v w ≤ 2 * h0 := fun v w hw => yk6_local_std hfan hpack f hw
+  have hkey := hineq (vPrime_p2 V f) (ePrime_p2 (ESTD V) f) f hcl
+    (yk6_packing_vPrime f hpack) (yk6_vPrime_sub_ballAnnulus f hsub) h4le h6le
+    hdiag hstd
+  rw [yk8_ncard_vPrime_eq hfan hconf hV d hd1 f hfo, hcard] at hkey
+  rw [yk6_tauVEF_eq_tauFun_ePrime hlpfan d hd1 f hfo]
+  exact hkey
+
+
+/-! ### 9l.6b —— 三枚 ineq_tauK_tauVEF_std（原 :2075-2138）（原行位搬迁至此，陈述逐字节未改，占位行已收口删除） -/
+/-- HOL `ineq_tau4_tauVEF_std`（`lp_main_estimate-compiled.hl:796-817`）。
+真证明 2026-10-23（Lane AT，§9l）：JEJTVGB_std_concl 在 (vPrime, ePrime, f)
+上的实例（ConvexLocalFan = §9l.4 装配；ncard 界 = §9j/§9i 件；非边前提 =
+§9l.5 chord 件；边前提 = yk6_local_std），经 yk6_tauVEF_eq_tauFun_ePrime 回写。 -/
+theorem ineq_tau4_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    (hineq : JEJTVGB_std_concl) (d : V3 × V3)
+    (hd : d ∈ dartsK 4 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
+    0.206 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
+  obtain ⟨hdarts, hcard⟩ := hd
+  rw [← wk_dtame4]
+  exact yk10_tauK_aux V hlpfan hineq (le_refl 4) (by omega) (dartsTl_mem hdarts) hcard
+
+/-- HOL `ineq_tau5_tauVEF_std`（`lp_main_estimate-compiled.hl:889-915`）。
+真证明 2026-10-23（Lane AT，§9l）：同 tau4 装配（K=5 差分仅在 dTame 5 =
+0.4819 的数值件与 ncard f = 5）。 -/
+theorem ineq_tau5_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    (hineq : JEJTVGB_std_concl) (d : V3 × V3)
+    (hd : d ∈ dartsK 5 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
+    0.4819 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
+  obtain ⟨hdarts, hcard⟩ := hd
+  rw [← wk_dtame5]
+  exact yk10_tauK_aux V hlpfan hineq (by omega) (by omega) (dartsTl_mem hdarts) hcard
+
+/-- HOL `ineq_tau6_tauVEF_std`（`lp_main_estimate-compiled.hl:988-1015`）。
+真证明 2026-10-23（Lane AT，§9l）：同 tau4 装配（K=6 差分仅在 dTame 6 =
+0.712 的数值件与 ncard f = 6）。 -/
+theorem ineq_tau6_tauVEF_std (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    (hineq : JEJTVGB_std_concl) (d : V3 × V3)
+    (hd : d ∈ dartsK 6 (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
+    0.712 ≤ tauVEF_p2 V (ESTD V) ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d) := by
+  obtain ⟨hdarts, hcard⟩ := hd
+  rw [← wk_dtame6]
+  exact yk10_tauK_aux V hlpfan hineq (by omega) (le_refl 6) (dartsTl_mem hdarts) hcard
+
+
+/-! ### 9l.6c —— MQMSMAB_adm1（原 :6336-6368，消费上方三枚 tau）（原行位搬迁至此，陈述逐字节未改，占位行已收口删除） -/
+/-- MQMSMAB 步 21-41（adm_1）：`w f = tauVEF` 时 adm_1 成立——tame_9a 给
+`3 ≤ card(face d) ≤ 6`，枚举 {3,4,5,6} 各引 `ineq_tauK_tauVEF_std`
+（JEJTVGB 前提由 `hmain.2.1`/`hmain.1` 分量直接供给，= HOL :60-64 的
+h_main 重写步）。 -/
+theorem MQMSMAB_adm1 (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    (hmain : lp_main_estimate)
+    (h9a : Tame9a (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
+    Adm1 (hypermapOfFanTl V (ESTD V) hlpfan.1) (fun f => tauVEF_p2 V (ESTD V) f) := by
+  intro d hd
+  obtain ⟨h3, h6⟩ := h9a d hd
+  by_cases hn3 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 3
+  · rw [hn3]
+    show (0 : ℝ) ≤ tauVEF_p2 V (ESTD V)
+      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
+    exact ineq_tau3_tauVEF_std V hlpfan hmain.2.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn3⟩)
+  by_cases hn4 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 4
+  · rw [hn4]
+    show (0.206 : ℝ) ≤ tauVEF_p2 V (ESTD V)
+      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
+    exact ineq_tau4_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn4⟩)
+  by_cases hn5 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 5
+  · rw [hn5]
+    show (0.4819 : ℝ) ≤ tauVEF_p2 V (ESTD V)
+      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
+    exact ineq_tau5_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn5⟩)
+  by_cases hn6 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 6
+  · rw [hn6]
+    show (0.712 : ℝ) ≤ tauVEF_p2 V (ESTD V)
+      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
+    exact ineq_tau6_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn6⟩)
+  · have hb := h3
+    have hb2 := h6
+    omega
+
+
+/-! ### 9l.6d —— MQMSMAB_tame13a + MQMSMAB（原 :6403-6436，消费 adm1）（原行位搬迁至此，陈述逐字节未改，占位行已收口删除） -/
+/-- MQMSMAB 步 15-20（tame_13a）：见证 `w f = tauVEF`，adm_1/2/3 三分量
++ `sum_tauVEF_upper_bound`（≤ 4π−20sol0）+ Flyspeck 常数算术收
+`total_weight < tgt`（步 18-19：12 ≤ scriptL V 由 contravening 第三合取项）。 -/
+theorem MQMSMAB_tame13a (V : Set V3) (hc : Contravening V) (hlpfan : LpFan V (ESTD V))
+    (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef)
+    (h9a : Tame9a (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
+    Tame13a (hypermapOfFanTl V (ESTD V) hlpfan.1) := by
+  refine ⟨fun f => tauVEF_p2 V (ESTD V) f, ⟨MQMSMAB_adm1 V hlpfan hmain h9a,
+    MQMSMAB_adm2 V hc hlpfan hmain hineq, MQMSMAB_adm3 V hc hlpfan hmain hineq⟩, ?_⟩
+  have hscript : (12 : ℝ) ≤ scriptL V := le_of_lt hc.2.2.1
+  have hsum := sum_tauVEF_upper_bound V (ESTD V) hlpfan.1 hlpfan.2.1 hscript
+  show setSum (hypermapOfFanTl V (ESTD V) hlpfan.1).faceSet
+      (fun f => tauVEF_p2 V (ESTD V) f) < tgt
+  exact lt_of_le_of_lt hsum four_pi_sub_20_sol0_lt_tgt
+
+/-- HOL `Mqmsmab.MQMSMAB`（MQMSMAB-compiled.hl:30-80）本章帽石（`hypermapOfFanTl`
+折算版）：`contravening V` + `FAN 0 V (ESTD V)` + `lp_main_estimate` +
+`kcblrqc_ineq_def` 消费切片 ⟹ `tame_planar_hypermap`。十二合取逐项：tame_1 ←
+JGTDEBU2（plain）+JGTDEBU1（planar）；tame_2 ← JGTDEBU3+JGTDEBU4；tame_3/4/5a/8 ←
+JGTDEBU5/6/7/8；tame_9a ← **CRTTXAT**（消费点，HOL 步 5：
+`CRTTXAT (JGTDEBU4 contrV) (fully_surrounded_perimeter_bound fanV f_surr)`）；
+tame_10/11a ← JGTDEBU10/11；tame_11b/12o ← SZIPOAS/BDJYFFB1；tame_13a ←
+`MQMSMAB_tame13a`。Assembly 侧 `mqmsmab` 消费时经 §0b congr 家族换实例。 -/
+theorem MQMSMAB (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
+    (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef) :
+    TamePlanarHypermap (hypermapOfFanTl V (ESTD V) hfan) := by
+  have hlpfan : LpFan V (ESTD V) := contravening_lp_fan V hc
+  have h9a := CRTTXAT (fun V' hfan' hc' => JGTDEBU4 V' hc' hfan') V hc hfan
+    (fully_surrounded_perimeter_bound V (ESTD V) hlpfan.1 hlpfan.2.1)
+  exact ⟨⟨JGTDEBU2 V hc hfan, JGTDEBU1 V hc hfan⟩,
+    ⟨JGTDEBU3 V hc hfan, JGTDEBU4 V hc hfan⟩, JGTDEBU5 V hc hfan, JGTDEBU6 V hc hfan,
+    JGTDEBU7 V hc hfan, JGTDEBU8 V hc hfan, h9a, JGTDEBU10 V hc hfan,
+    JGTDEBU11 V hc hfan, SZIPOAS hineq V hc hfan, BDJYFFB1 V hc hmain hineq hfan,
+    MQMSMAB_tame13a V hc hlpfan hmain hineq h9a⟩
 
 end Kepler.Text.TameLp
