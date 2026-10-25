@@ -5385,8 +5385,111 @@ theorem FUEIMOV_4 {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packin
     (hst : stem ul = stem vl) (h4 : ccKe V ul = 4) (hne : ul ≠ vl) :
     ccUh V vl = [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 3 0,
       (ccUh V ul).getD 2 0] := by
--- NEEDS (GIANT): leaf_cell.hl:2810-2894 stem-swap rigidity.
-  sorry
+-- leaf_cell.hl:2810-2894: stem-swap rigidity, two orderings of the stem pair.
+  have h4v : ccKe V vl = 4 := (FUEIMOV_K hs hp hl1 hl2 heq).symm.trans h4
+  have hset : setOfList (ccUh V ul) = setOfList (ccUh V vl) :=
+    MCELL4_EXTREME_POINT hs hp hl1 hl2 heq h4
+  have hset4 : ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
+      (ccUh V ul).getD 3 0} : Set V3) = {(ccUh V vl).getD 0 0, (ccUh V vl).getD 1 0,
+      (ccUh V vl).getD 2 0, (ccUh V vl).getD 3 0} := by
+    rw [← SET_OF_LIST_CC_UH hs hp hl1, ← SET_OF_LIST_CC_UH hs hp hl2]
+    exact hset
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH hp hs hl1
+  obtain ⟨f0, f1, f2⟩ := EL_CC_UH hp hs hl2
+  have hnu3 : ¬(ccKe V ul = 3) := by omega
+  have hcard4 : Nat.card ({ul.getD 0 0, ul.getD 1 0, ul.getD 2 0,
+      (ccUh V ul).getD 3 0} : Set V3) = 4 := by
+    rw [← e0, ← e1, ← e2]
+    exact CC_CELL_EXTREME_CARD (V := V) (ul := ul) (pp := (ccUh V ul).getD 3 0) hp hs hl1
+      (by rw [if_neg hnu3])
+  have hul3 : ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := list3_eq ul hl1.1.1
+  have hvl3 : vl = [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0] := list3_eq vl hl2.1.1
+  have hchiU : 0 < chiMsb ul ((ccUh V ul).getD 3 0) := K4_CHI_MSB_POS hp hs hl1 h4
+  have hchiV : 0 < chiMsb vl ((ccUh V vl).getD 3 0) := K4_CHI_MSB_POS hp hs hl2 h4v
+  -- transport `chiMsb` onto the explicit leaf triples (second argument kept
+  -- abstract so the rewrite cannot enter `ccUh V ul`)
+  have hUstep : ∀ q : V3, chiMsb ul q
+      = chiMsb [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] q := by
+    intro q
+    conv_lhs => rw [hul3]
+  have hVstep : ∀ q : V3, chiMsb vl q
+      = chiMsb [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0] q := by
+    intro q
+    conv_lhs => rw [hvl3]
+  have hU3 : 0 < chiMsb [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0]
+      ((ccUh V ul).getD 3 0) := by
+    rw [← hUstep]
+    exact hchiU
+  have hV3 : 0 < chiMsb [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0]
+      ((ccUh V vl).getD 3 0) := by
+    rw [← hVstep]
+    exact hchiV
+  have sol4 : ∀ (a b c d : V3), ({a, b, c, d} : Set V3) = setOfList [a, b, c, d] := by
+    intro a b c d
+    apply Set.ext (fun t => ?_)
+    simp [setOfList]
+  have hstem : ({ul.getD 0 0, ul.getD 1 0} : Set V3) = {vl.getD 0 0, vl.getD 1 0} := by
+    rw [← STEM_OF_LEAF hl1, ← STEM_OF_LEAF hl2]
+    exact hst
+  have hpair : (vl.getD 0 0 = ul.getD 0 0 ∧ vl.getD 1 0 = ul.getD 1 0)
+      ∨ (vl.getD 0 0 = ul.getD 1 0 ∧ vl.getD 1 0 = ul.getD 0 0) := by
+    have h1 : vl.getD 0 0 ∈ ({ul.getD 0 0, ul.getD 1 0} : Set V3) := by
+      rw [hstem]; simp
+    have h2 : vl.getD 1 0 ∈ ({ul.getD 0 0, ul.getD 1 0} : Set V3) := by
+      rw [hstem]; simp
+    have h3 : ul.getD 0 0 ∈ ({vl.getD 0 0, vl.getD 1 0} : Set V3) := by
+      rw [← hstem]; simp
+    have h4m : ul.getD 1 0 ∈ ({vl.getD 0 0, vl.getD 1 0} : Set V3) := by
+      rw [← hstem]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h1 h2 h3 h4m
+    rcases h1 with e01 | e02 <;> rcases h2 with e11 | e12
+    · rcases h4m with hd1 | hd2
+      · exact Or.inr ⟨hd1.symm, e11⟩
+      · exact Or.inr ⟨e01.trans (e11.symm.trans hd2.symm), e11⟩
+    · exact Or.inl ⟨e01, e12⟩
+    · exact Or.inr ⟨e02, e11⟩
+    · rcases h3 with gc1 | gc2
+      · exact Or.inl ⟨gc1.symm, e12⟩
+      · exact Or.inl ⟨e02.trans (e12.symm.trans gc2.symm), e12⟩
+  rcases hpair with ⟨hv0, hv1⟩ | ⟨hv0, hv1⟩
+  · -- first branch: the stems agree coordinatewise
+    have hsetB : setOfList [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, (ccUh V ul).getD 3 0]
+        = setOfList [ul.getD 0 0, ul.getD 1 0, vl.getD 2 0, (ccUh V vl).getD 3 0] := by
+      have h' := hset4
+      rw [e0, e1, e2, f0, f1, f2, hv0, hv1] at h'
+      rw [← sol4, ← sol4]
+      exact h'
+    obtain ⟨he1, he2⟩ | ⟨he1, he2⟩ := LENGTH4_SET2 hcard4 hsetB
+    · -- matching third coordinates force the two leaves to coincide
+      exact (hne (by rw [hul3, hvl3, hv0, hv1, he1])).elim
+    · -- the crossed matching is the swap-23 rearrangement: the two positive
+      -- `chi_msb` readings differ by a sign
+      exfalso
+      have hU := hU3
+      rw [chi_msb_swap_23 (ul.getD 0 0) (ul.getD 1 0) (ul.getD 2 0)
+        ((ccUh V ul).getD 3 0)] at hU
+      have hV := hV3
+      rw [hv0, hv1, he1, he2] at hV
+      linarith
+  · -- second branch: the stems are swapped
+    have hsetB : setOfList [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, (ccUh V ul).getD 3 0]
+        = setOfList [ul.getD 1 0, ul.getD 0 0, vl.getD 2 0, (ccUh V vl).getD 3 0] := by
+      have h' := hset4
+      rw [e0, e1, e2, f0, f1, f2, hv0, hv1] at h'
+      rw [← sol4, ← sol4]
+      exact h'
+    obtain ⟨he1, he2⟩ | ⟨he1, he2⟩ := LENGTH4_SET2_SWAP01 hcard4 hsetB
+    · -- the matching-order rearrangement is the swap-01 one: the two positive
+      -- `chi_msb` readings differ by a sign
+      exfalso
+      have hU := hU3
+      rw [chi_msb_swap_01 (ul.getD 0 0) (ul.getD 1 0) (ul.getD 2 0)
+        ((ccUh V ul).getD 3 0)] at hU
+      have hV := hV3
+      rw [hv0, hv1, he1, he2] at hV
+      linarith
+    · -- the crossed rearrangement assembles the claimed list
+      rw [LIST_OF_CC_UH hs hp hl2, f0.trans hv0, f1.trans hv1, f2.trans he1, he2, e1, e0, e2]
 
 /-- HOL `MXI_NOT_IN_V` (leaf_cell.hl:2894-2948). -/
 theorem MXI_NOT_IN_V {V : Set V3} {ul : List V3} (hs : saturated V) (hp : Packing V)
