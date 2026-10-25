@@ -1031,4 +1031,993 @@ theorem p3g_SUM_NUMSEG4 (f : ℕ → ℝ) (m : ℕ) :
     ∑ i ∈ Finset.Icc m (m + 3), f i = f m + f (m + 1) + f (m + 2) + f (m + 3) :=
   p3g_SUM_NUMSEG44 f m
 
+
+/-! ## OXLZLEZ2: intra-chapter summary (OXLZLEZ2.hl:403-1734; GRHIDFA wave plan W2)
+
+Port of the W2 wave (WAVES §W2): the seven intra-chapter rows consumed by the
+OXLZLEZ2 conclusion ladder — `LXDEYBO`, `MTMLSRF` (the largest single block of
+the whole lane, HOL 510 lines), `WKR_COMPTED`, `oxl6142` (= `CHQSQEY`),
+`THREE_LE_CC_CARD` and `UNPNFVW`.  Rows are inserted in dependency order (the
+HOL order LXDEYBO, MTMLSRF, WKR_COMPTED, oxl6142, CHQSQEY, THREE_LE_CC_CARD,
+UNPNFVW is respected; WKR_COMPTED comes after MTMLSRF because the HOL proof
+consumes it).  The `MTMLSRF_concl`/`UNPNFVW_concl` statement stubs above (W5
+scope) are not touched.  All rows below are fully proved, with no unproved
+placeholders.  Pointwise access to the 33 conjuncts of `cc_real_model_v11`
+goes through the `p3h_rm_*` accessors, mirroring the HOL `ASM_SEARCH`
+retrievals. -/
+
+/-- `SUM_SUBSET_SIMPLE` (OXLZLEZ2 tactic kit): summing over a sub-`Finset` is
+monotone when the summand is nonnegative on the difference. -/
+private theorem p3h_sum_le_sum_of_subset {f : ℕ → ℝ} {t u : Finset ℕ}
+    (hsub : t ⊆ u) (hpos : ∀ x ∈ u, x ∉ t → 0 ≤ f x) :
+    ∑ x ∈ t, f x ≤ ∑ x ∈ u, f x := by
+  have h1 : ∑ x ∈ u \ t, f x + ∑ x ∈ t, f x = ∑ x ∈ u, f x := Finset.sum_sdiff hsub
+  have h2 : 0 ≤ ∑ x ∈ u \ t, f x := by
+    refine Finset.sum_nonneg fun x hx => ?_
+    obtain ⟨hx1, hx2⟩ := Finset.mem_sdiff.mp hx
+    exact hpos x hx1 hx2
+  rw [← h1]
+  linarith
+
+/-- `SUM_CONST` specialised to `ℝ` (HOL `SUM_CONST` gives `card • a`). -/
+private theorem p3h_sum_const_real (s : Finset ℕ) (a : ℝ) : ∑ i ∈ s, a = s.card * a := by
+  rw [Finset.sum_const, nsmul_eq_mul]
+
+/-- `cc_real_model_v11` conjunct 1: `periodic (cc_azim_v11 cc) (cc_card_v11 cc)`. -/
+private theorem p3h_rm_periodic_azim {cc : CcV11} (hr : cc_real_model_v11 cc) :
+    periodic (cc_azim_v11 cc) (cc_card_v11 cc) := by
+  obtain ⟨h1, -⟩ := hr
+  exact h1
+
+/-- `cc_real_model_v11` conjunct 2. -/
+private theorem p3h_rm_periodic_gg {cc : CcV11} (hr : cc_real_model_v11 cc) :
+    periodic (cc_gg_v11 cc) (cc_card_v11 cc) := by
+  obtain ⟨-, h2, -⟩ := hr
+  exact h2
+
+/-- `cc_real_model_v11` conjunct 3. -/
+private theorem p3h_rm_periodic_gg3a {cc : CcV11} (hr : cc_real_model_v11 cc) :
+    periodic (cc_gg3a_v11 cc) (cc_card_v11 cc) := by
+  obtain ⟨-, -, h3, -⟩ := hr
+  exact h3
+
+/-- `cc_real_model_v11` conjunct 4. -/
+private theorem p3h_rm_periodic_gg3b {cc : CcV11} (hr : cc_real_model_v11 cc) :
+    periodic (cc_gg3b_v11 cc) (cc_card_v11 cc) := by
+  obtain ⟨-, -, -, h4, -⟩ := hr
+  exact h4
+
+/-- `cc_real_model_v11` conjunct 5. -/
+private theorem p3h_rm_azim_lb {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ) :
+    (0.606 : ℝ) ≤ cc_azim_v11 cc i := by
+  obtain ⟨-, -, -, -, h5, -⟩ := hr
+  exact h5 i
+
+/-- `cc_real_model_v11` conjunct 6. -/
+private theorem p3h_rm_azim_4cell {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h : cc_4cell_v11 cc i) : cc_azim_v11 cc i < 2.8 := by
+  obtain ⟨-, -, -, -, -, h6, -⟩ := hr
+  exact h6 i h
+
+/-- `cc_real_model_v11` conjunct 7. -/
+private theorem p3h_rm_sum_azim {cc : CcV11} (hr : cc_real_model_v11 cc) :
+    ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_azim_v11 cc i = 2 * Real.pi := by
+  obtain ⟨-, -, -, -, -, -, h7, -⟩ := hr
+  exact h7
+
+/-- `cc_real_model_v11` conjunct 12. -/
+private theorem p3h_rm_qu_qy_next {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h1 : cc_qu_v11 cc i) (h2 : cc_qy_v11 cc (i + 1)) :
+    (0 : ℝ) ≤ cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1) := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, h12, -⟩ := hr
+  exact h12 i ⟨h1, h2⟩
+
+/-- `cc_real_model_v11` conjunct 13. -/
+private theorem p3h_rm_qu_next_qy {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h1 : cc_qu_v11 cc (i + 1)) (h2 : cc_qy_v11 cc i) :
+    (0 : ℝ) ≤ cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, h13, -⟩ := hr
+  exact h13 i ⟨h1, h2⟩
+
+/-- `cc_real_model_v11` conjunct 14. -/
+private theorem p3h_rm_4cell_spine {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h : cc_4cell_v11 cc i) : a_spine5 + b_spine5 * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, h14, -⟩ := hr
+  exact h14 i h
+
+/-- `cc_real_model_v11` conjunct 18. -/
+private theorem p3h_rm_qx_nn {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h : cc_qx_v11 cc i) : (0 : ℝ) ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, h18, -⟩ := hr
+  exact h18 i h
+
+/-- `cc_real_model_v11` conjunct 26. -/
+private theorem p3h_rm_qy_le {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h : cc_qy_v11 cc i) : cc_gg3a_v11 cc i + cc_gg3b_v11 cc i ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+    h26, -⟩ := hr
+  exact h26 i h
+
+/-- `cc_real_model_v11` conjunct 27. -/
+private theorem p3h_rm_qy_gg3a {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h : cc_qy_v11 cc i) : (0 : ℝ) ≤ cc_gg3a_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+    h27, -⟩ := hr
+  exact h27 i h
+
+/-- `cc_real_model_v11` conjunct 28. -/
+private theorem p3h_rm_qy_gg3b {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h : cc_qy_v11 cc i) : (0 : ℝ) ≤ cc_gg3b_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+    h28, -⟩ := hr
+  exact h28 i h
+
+/-- `cc_real_model_v11` conjunct 29. -/
+private theorem p3h_rm_qy_azim {cc : CcV11} (hr : cc_real_model_v11 cc) {i : ℕ}
+    (h : cc_qy_v11 cc i) : (0.008 : ℝ) * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+    -, h29, -⟩ := hr
+  exact h29 i h
+
+/-- `cc_bool_model_v11` conjunct 7. -/
+private theorem p3h_bm_periodic_4cell {cc : CcV11} (hb : cc_bool_model_v11 cc) :
+    periodic (cc_4cell_v11 cc) (cc_card_v11 cc) := by
+  obtain ⟨-, -, -, -, -, -, h7, -⟩ := hb
+  exact h7
+
+/-- `periodic_fn` (OXLZLEZ1.hl:347) consequence: `periodic (cc_qu_v11 cc)`. -/
+private theorem p3h_pf_qu {cc : CcV11} (hb : cc_bool_model_v11 cc) :
+    periodic (cc_qu_v11 cc) (cc_card_v11 cc) := by
+  obtain ⟨-, hq, -, -⟩ := periodic_fn hb
+  exact hq
+
+/-- `periodic_fn` consequence: `periodic (cc_qy_v11 cc)`. -/
+private theorem p3h_pf_qy {cc : CcV11} (hb : cc_bool_model_v11 cc) :
+    periodic (cc_qy_v11 cc) (cc_card_v11 cc) := by
+  obtain ⟨-, -, -, hqy⟩ := periodic_fn hb
+  exact hqy
+
+/-- OXLZLEZ2.hl:564 (`MTMLSRF`, proving `MTMLSRF_concl` OXLZLEZ1.hl:138) —
+checkpoint 2a of WAVES §W2.  The proof is the HOL partition argument: under
+the negation of the conclusion, the index circle `1..nn` splits into
+`ss` (negative-gg `qu` indices), `sab` (their `qy` successors/predecessors'
+shifted partners, covered by the `gg3a`/`gg3b` nonnegativity rows), and a
+residual with `gg ≥ 0`; the two cyclic-shift correspondences
+(`∑ saa gg3a = ∑ sa (gg3a (i+1))`, `∑ sbb gg3b = ∑ sb (gg3b (i-1))`) reduce
+the shifted sums to the rows 12/13 of `cc_real_model_v11`, forcing
+`0 ≤ ∑₁..nn gg = ∑₀..nn-1 gg < 0`. -/
+theorem p3h_MTMLSRF (cc : CcV11) (_hp : cc_bool_prep_v11 cc) (hb : cc_bool_model_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    ∃ i, 0 < i ∧ cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧
+      cc_4cell_v11 cc (i + 1) ∧ cc_4cell_v11 cc (i - 1) := by
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have h2nn : 2 ≤ cc_card_v11 cc := CC_CARD2 hb hr hsum
+  set nn := cc_card_v11 cc with hnn_def
+  -- periodicity, re-typed at nn
+  have hpgg : periodic (cc_gg_v11 cc) nn := p3h_rm_periodic_gg hr
+  have hpgg3a : periodic (cc_gg3a_v11 cc) nn := p3h_rm_periodic_gg3a hr
+  have hpgg3b : periodic (cc_gg3b_v11 cc) nn := p3h_rm_periodic_gg3b hr
+  have hpqu : periodic (cc_qu_v11 cc) nn := p3h_pf_qu hb
+  have hpqy : periodic (cc_qy_v11 cc) nn := p3h_pf_qy hb
+  have e_gg_nn0 : cc_gg_v11 cc nn = cc_gg_v11 cc 0 := by
+    have h := hpgg 0; rwa [Nat.zero_add] at h
+  have e_gg_nn1 : cc_gg_v11 cc (nn + 1) = cc_gg_v11 cc 1 := by
+    have h := hpgg 1; rwa [Nat.add_comm] at h
+  have e_qu_nn0 : cc_qu_v11 cc nn = cc_qu_v11 cc 0 := by
+    have h := hpqu 0; rwa [Nat.zero_add] at h
+  have e_qu_nn1 : cc_qu_v11 cc (nn + 1) = cc_qu_v11 cc 1 := by
+    have h := hpqu 1; rwa [Nat.add_comm] at h
+  have e_qy_nn0 : cc_qy_v11 cc nn = cc_qy_v11 cc 0 := by
+    have h := hpqy 0; rwa [Nat.zero_add] at h
+  have e_qy_nn1 : cc_qy_v11 cc (nn + 1) = cc_qy_v11 cc 1 := by
+    have h := hpqy 1; rwa [Nat.add_comm] at h
+  have e_gg3a_nn1 : cc_gg3a_v11 cc (nn + 1) = cc_gg3a_v11 cc 1 := by
+    have h := hpgg3a 1; rwa [Nat.add_comm] at h
+  have e_gg3b_nn0 : cc_gg3b_v11 cc nn = cc_gg3b_v11 cc 0 := by
+    have h := hpgg3b 0; rwa [Nat.zero_add] at h
+  by_cases hfull : ∃ i, 0 < i ∧ cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧
+      cc_4cell_v11 cc (i + 1) ∧ cc_4cell_v11 cc (i - 1)
+  · exact hfull
+  · push_neg at hfull
+    -- hfull : ∀ i, 0 < i → gg i < 0 → qu i → ¬(4cell (i+1) ∧ 4cell (i-1))
+    have H : ∀ i, 0 < i → cc_gg_v11 cc i < 0 → cc_qu_v11 cc i →
+        cc_4cell_v11 cc (i + 1) → ¬ cc_4cell_v11 cc (i - 1) := hfull
+    set S : Finset ℕ := Finset.Icc 1 nn with hS_def
+    set u : ℕ → ℕ := fun i => if i = nn then 1 else i + 1 with hu_def
+    have hmemS : ∀ i, i ∈ S ↔ 1 ≤ i ∧ i ≤ nn := fun i => by
+      rw [hS_def]; simp only [Finset.mem_Icc]
+    have hnnS : nn ∈ S := (hmemS nn).mpr ⟨by omega, le_refl nn⟩
+    -- the six sets of the HOL proof
+    set sa : Finset ℕ :=
+      S.filter (fun i => cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧ cc_qy_v11 cc (i + 1)) with hsa_def
+    set sb : Finset ℕ :=
+      S.filter (fun i => cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧ cc_qy_v11 cc (i - 1)) with hsb_def
+    set ss : Finset ℕ :=
+      S.filter (fun i => cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i) with hss_def
+    set saa : Finset ℕ :=
+      S.filter (fun x => cc_qy_v11 cc x ∧ cc_gg_v11 cc (x - 1) < 0 ∧ cc_qu_v11 cc (x - 1))
+        with hsaa_def
+    set sbb : Finset ℕ :=
+      S.filter (fun x => cc_qy_v11 cc x ∧ cc_gg_v11 cc (x + 1) < 0 ∧ cc_qu_v11 cc (x + 1))
+        with hsbb_def
+    set sab : Finset ℕ :=
+      S.filter (fun x => cc_qy_v11 cc x ∧
+        ((cc_gg_v11 cc (x + 1) < 0 ∧ cc_qu_v11 cc (x + 1)) ∨
+          (cc_gg_v11 cc (x - 1) < 0 ∧ cc_qu_v11 cc (x - 1)))) with hsab_def
+    -- membership characterisations
+    have msa : ∀ i, i ∈ sa ↔ (i ∈ S ∧ cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧
+        cc_qy_v11 cc (i + 1)) := fun i => by
+      rw [hsa_def]; simp only [Finset.mem_filter]
+    have msb : ∀ i, i ∈ sb ↔ (i ∈ S ∧ cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧
+        cc_qy_v11 cc (i - 1)) := fun i => by
+      rw [hsb_def]; simp only [Finset.mem_filter]
+    have mss : ∀ i, i ∈ ss ↔ (i ∈ S ∧ cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i) := fun i => by
+      rw [hss_def]; simp only [Finset.mem_filter]
+    have msaa : ∀ x, x ∈ saa ↔ (x ∈ S ∧ cc_qy_v11 cc x ∧ cc_gg_v11 cc (x - 1) < 0 ∧
+        cc_qu_v11 cc (x - 1)) := fun x => by
+      rw [hsaa_def]; simp only [Finset.mem_filter]
+    have msbb : ∀ x, x ∈ sbb ↔ (x ∈ S ∧ cc_qy_v11 cc x ∧ cc_gg_v11 cc (x + 1) < 0 ∧
+        cc_qu_v11 cc (x + 1)) := fun x => by
+      rw [hsbb_def]; simp only [Finset.mem_filter]
+    have msab : ∀ x, x ∈ sab ↔ (x ∈ S ∧ cc_qy_v11 cc x ∧
+        ((cc_gg_v11 cc (x + 1) < 0 ∧ cc_qu_v11 cc (x + 1)) ∨
+          (cc_gg_v11 cc (x - 1) < 0 ∧ cc_qu_v11 cc (x - 1)))) := fun x => by
+      rw [hsab_def]; simp only [Finset.mem_filter]
+    -- basic inclusions and disjointness
+    have hsa_ss : sa ⊆ ss := by
+      intro x hx
+      rw [msa x] at hx
+      rw [mss x]
+      exact ⟨hx.1, hx.2.1, hx.2.2.1⟩
+    have hssS : ss ⊆ S := Finset.filter_subset _ _
+    have hsabS : sab ⊆ S := Finset.filter_subset _ _
+    have hdisj : Disjoint ss sab := by
+      rw [Finset.disjoint_left]
+      intro a ha hab
+      rw [mss a] at ha
+      rw [msab a] at hab
+      exact hab.2.1 ha.2.2.2.1
+    have hsaa_sab : saa ⊆ sab := by
+      intro x hx
+      rw [msaa x] at hx
+      rw [msab x]
+      exact ⟨hx.1, hx.2.1, Or.inr ⟨hx.2.2.1, hx.2.2.2⟩⟩
+    have hsbb_sab : sbb ⊆ sab := by
+      intro x hx
+      rw [msbb x] at hx
+      rw [msab x]
+      exact ⟨hx.1, hx.2.1, Or.inl ⟨hx.2.2.1, hx.2.2.2⟩⟩
+    have hss_sa_sb : ss \ sa ⊆ sb := by
+      intro x hx
+      obtain ⟨hix, hnx⟩ := Finset.mem_sdiff.mp hx
+      rw [mss x] at hix
+      obtain ⟨hxS, hxg, hxu⟩ := hix
+      have hnotsa : ¬ (cc_gg_v11 cc x < 0 ∧ cc_qu_v11 cc x ∧ cc_qy_v11 cc (x + 1)) :=
+        fun hc => hnx ((msa x).mpr ⟨hxS, hc⟩)
+      have h4next : cc_4cell_v11 cc (x + 1) := by
+        by_contra hcon
+        exact hnotsa ⟨hxg, hxu, hcon⟩
+      have hx0 : 0 < x := by have h := (hmemS x).mp hxS; omega
+      have hn4m : ¬ cc_4cell_v11 cc (x - 1) := H x hx0 hxg hxu h4next
+      rw [msb x]
+      exact ⟨hxS, hxg, hxu, hn4m⟩
+    -- the cyclic successor `u` on {1..nn} and its two shift identities
+    have hu_of_ne : ∀ i, i ≠ nn → u i = i + 1 := by
+      intro i hi; simp only [hu_def, if_neg hi]
+    have hu_nn : u nn = 1 := by simp only [hu_def, if_pos rfl]
+    have hu_inj : ∀ i ∈ S, ∀ j ∈ S, u i = u j → i = j := by
+      intro i hi j hj hij
+      rw [hmemS] at hi hj
+      rcases eq_or_ne i nn with hin | hin
+      · subst hin
+        rw [hu_nn] at hij
+        rcases eq_or_ne j nn with hjn | hjn
+        · exact hjn.symm
+        · rw [hu_of_ne j hjn] at hij; omega
+      · rcases eq_or_ne j nn with hjn | hjn
+        · subst hjn
+          rw [hu_of_ne i hin, hu_nn] at hij; omega
+        · rw [hu_of_ne i hin, hu_of_ne j hjn] at hij; omega
+    have himg_saa : saa = sa.image u := by
+      ext x
+      rw [msaa x, Finset.mem_image]
+      constructor
+      · rintro ⟨hxS, hqyx, hcbg, hcbq⟩
+        obtain ⟨hx1, hx2⟩ := (hmemS x).mp hxS
+        rcases Nat.lt_or_ge x 2 with hxlt | hxge
+        · have hxe : x = 1 := by omega
+          subst hxe
+          exact ⟨nn, (msa nn).mpr ⟨hnnS, by rw [e_gg_nn0]; exact hcbg,
+            by rw [e_qu_nn0]; exact hcbq, by rw [e_qy_nn1]; exact hqyx⟩, hu_nn⟩
+        · refine ⟨x - 1, (msa (x - 1)).mpr ⟨(hmemS (x - 1)).mpr ⟨by omega, by omega⟩,
+            hcbg, hcbq, ?_⟩, ?_⟩
+          · rw [show (x - 1) + 1 = x from by omega]
+            exact hqyx
+          · rw [hu_of_ne (x - 1) (by omega)]
+            omega
+      · rintro ⟨i, hi, rfl⟩
+        rw [msa i] at hi
+        obtain ⟨hiS, hgi, hqui, hqyi1⟩ := hi
+        obtain ⟨hi1, hi2⟩ := (hmemS i).mp hiS
+        rcases eq_or_ne i nn with hin | hin
+        · subst hin
+          rw [hu_nn]
+          refine ⟨(hmemS 1).mpr ⟨le_refl 1, by omega⟩, ?_, ?_, ?_⟩
+          · rw [← e_qy_nn1]; exact hqyi1
+          · show cc_gg_v11 cc 0 < 0
+            rw [← e_gg_nn0]; exact hgi
+          · show cc_qu_v11 cc 0
+            rw [← e_qu_nn0]; exact hqui
+        · rw [hu_of_ne i hin]
+          refine ⟨(hmemS (i + 1)).mpr ⟨by omega, by omega⟩, hqyi1, ?_, ?_⟩
+          · show cc_gg_v11 cc i < 0
+            exact hgi
+          · show cc_qu_v11 cc i
+            exact hqui
+    have himg_sb : sb = sbb.image u := by
+      ext y
+      rw [msb y, Finset.mem_image]
+      constructor
+      · rintro ⟨hyS, hgy, hquy, hqym⟩
+        obtain ⟨hy1, hy2⟩ := (hmemS y).mp hyS
+        rcases Nat.lt_or_ge y 2 with hylt | hyge
+        · have hye : y = 1 := by omega
+          subst hye
+          exact ⟨nn, (msbb nn).mpr ⟨hnnS, by rw [e_qy_nn0]; exact hqym,
+            by rw [e_gg_nn1]; exact hgy, by rw [e_qu_nn1]; exact hquy⟩, hu_nn⟩
+        · refine ⟨y - 1, (msbb (y - 1)).mpr ⟨(hmemS (y - 1)).mpr ⟨by omega, by omega⟩,
+            hqym, ?_, ?_⟩, ?_⟩
+          · rw [show (y - 1) + 1 = y from by omega]; exact hgy
+          · rw [show (y - 1) + 1 = y from by omega]; exact hquy
+          · rw [hu_of_ne (y - 1) (by omega)]
+            omega
+      · rintro ⟨x, hx, rfl⟩
+        rw [msbb x] at hx
+        obtain ⟨hxS, hqyx, hgx1, hqux1⟩ := hx
+        obtain ⟨hx1, hx2⟩ := (hmemS x).mp hxS
+        rcases eq_or_ne x nn with hxn | hxn
+        · subst hxn
+          rw [hu_nn]
+          refine ⟨(hmemS 1).mpr ⟨le_refl 1, by omega⟩, ?_, ?_, ?_⟩
+          · show cc_gg_v11 cc 1 < 0
+            rw [← e_gg_nn1]; exact hgx1
+          · show cc_qu_v11 cc 1
+            rw [← e_qu_nn1]; exact hqux1
+          · show cc_qy_v11 cc 0
+            rw [← e_qy_nn0]; exact hqyx
+        · rw [hu_of_ne x hxn]
+          refine ⟨(hmemS (x + 1)).mpr ⟨by omega, by omega⟩, hgx1, hqux1, ?_⟩
+          show cc_qy_v11 cc x
+          exact hqyx
+    -- the two shift sums
+    have hshift1 : ∑ x ∈ saa, cc_gg3a_v11 cc x = ∑ i ∈ sa, cc_gg3a_v11 cc (i + 1) := by
+      rw [himg_saa, Finset.sum_image (fun i hi j hj hij =>
+        hu_inj i ((msa i).mp hi).1 j ((msa j).mp hj).1 hij)]
+      refine Finset.sum_congr rfl fun i hi => ?_
+      rcases eq_or_ne i nn with hin | hin
+      · subst hin
+        rw [hu_nn, e_gg3a_nn1]
+      · rw [hu_of_ne i hin]
+    have hshift2 : ∑ x ∈ sbb, cc_gg3b_v11 cc x = ∑ i ∈ sb, cc_gg3b_v11 cc (i - 1) := by
+      rw [himg_sb, Finset.sum_image (fun x hx y hy hxy =>
+        hu_inj x ((msbb x).mp hx).1 y ((msbb y).mp hy).1 hxy)]
+      refine Finset.sum_congr rfl fun x hx => ?_
+      rcases eq_or_ne x nn with hxn | hxn
+      · subst hxn
+        rw [hu_nn]
+        show cc_gg3b_v11 cc nn = cc_gg3b_v11 cc 0
+        rw [e_gg3b_nn0]
+      · rw [hu_of_ne x hxn]
+        rfl
+    -- the nonnegative pieces of the partition
+    have hsa_pos : (0 : ℝ) ≤ ∑ i ∈ sa, (cc_gg3a_v11 cc (i + 1) + cc_gg_v11 cc i) := by
+      refine Finset.sum_nonneg fun i hi => ?_
+      rw [msa i] at hi
+      obtain ⟨-, hgi, hqui, hqyi1⟩ := hi
+      linarith [p3h_rm_qu_qy_next hr hqui hqyi1]
+    have hssa_pos : (0 : ℝ) ≤ ∑ i ∈ ss \ sa, (cc_gg3b_v11 cc (i - 1) + cc_gg_v11 cc i) := by
+      refine Finset.sum_nonneg fun i hi => ?_
+      obtain ⟨hiss, hnsa⟩ := Finset.mem_sdiff.mp hi
+      rw [mss i] at hiss
+      obtain ⟨hiS, hgi, hqui⟩ := hiss
+      have hnotsa : ¬ (cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧ cc_qy_v11 cc (i + 1)) :=
+        fun hc => hnsa ((msa i).mpr ⟨hiS, hc⟩)
+      have h4next : cc_4cell_v11 cc (i + 1) := by
+        by_contra hcon
+        exact hnotsa ⟨hgi, hqui, hcon⟩
+      have hi0 : 0 < i := by have h := (hmemS i).mp hiS; omega
+      have hn4m : ¬ cc_4cell_v11 cc (i - 1) := H i hi0 hgi hqui h4next
+      have hqi1 : (i - 1) + 1 = i := by have h := (hmemS i).mp hiS; omega
+      have hkey := p3h_rm_qu_next_qy (i := i - 1) hr (by rw [hqi1]; exact hqui) hn4m
+      rw [hqi1] at hkey
+      linarith
+    have hss_split : ∑ i ∈ ss, cc_gg_v11 cc i
+        = ∑ i ∈ ss \ sa, cc_gg_v11 cc i + ∑ i ∈ sa, cc_gg_v11 cc i := by
+      have h1 : ∑ i ∈ ss \ sa, cc_gg_v11 cc i + ∑ i ∈ sa, cc_gg_v11 cc i
+          = ∑ i ∈ ss, cc_gg_v11 cc i := Finset.sum_sdiff hsa_ss
+      linarith
+    have hsb_ge : ∑ i ∈ ss \ sa, cc_gg3b_v11 cc (i - 1)
+        ≤ ∑ i ∈ sb, cc_gg3b_v11 cc (i - 1) := by
+      refine p3h_sum_le_sum_of_subset hss_sa_sb ?_
+      intro x hx _hnot
+      rw [msb x] at hx
+      exact p3h_rm_qy_gg3b hr hx.2.2.2
+    have hmain : (0 : ℝ) ≤ ∑ x ∈ saa, cc_gg3a_v11 cc x + ∑ x ∈ sbb, cc_gg3b_v11 cc x
+        + ∑ i ∈ ss, cc_gg_v11 cc i := by
+      have e1 := hshift1
+      have e2 := hshift2
+      have e3 := hss_split
+      have e4 := hsa_pos
+      have e5 := hssa_pos
+      have e6 := hsb_ge
+      have ed1 : ∑ i ∈ sa, cc_gg3a_v11 cc (i + 1) + ∑ i ∈ sa, cc_gg_v11 cc i
+          = ∑ i ∈ sa, (cc_gg3a_v11 cc (i + 1) + cc_gg_v11 cc i) := by
+        rw [Finset.sum_add_distrib]
+      have ed2 : ∑ i ∈ ss \ sa, cc_gg3b_v11 cc (i - 1) + ∑ i ∈ ss \ sa, cc_gg_v11 cc i
+          = ∑ i ∈ ss \ sa, (cc_gg3b_v11 cc (i - 1) + cc_gg_v11 cc i) := by
+        rw [Finset.sum_add_distrib]
+      linarith
+    -- the sab cover
+    have hsg : ∑ i ∈ ss ∪ sab, cc_gg_v11 cc i
+        = ∑ i ∈ ss, cc_gg_v11 cc i + ∑ i ∈ sab, cc_gg_v11 cc i :=
+      Finset.sum_union hdisj
+    have hA1 : ∑ x ∈ saa, cc_gg3a_v11 cc x ≤ ∑ x ∈ sab, cc_gg3a_v11 cc x := by
+      refine p3h_sum_le_sum_of_subset hsaa_sab ?_
+      intro x hx _hnot
+      rw [msab x] at hx
+      exact p3h_rm_qy_gg3a hr hx.2.1
+    have hB1 : ∑ x ∈ sbb, cc_gg3b_v11 cc x ≤ ∑ x ∈ sab, cc_gg3b_v11 cc x := by
+      refine p3h_sum_le_sum_of_subset hsbb_sab ?_
+      intro x hx _hnot
+      rw [msab x] at hx
+      exact p3h_rm_qy_gg3b hr hx.2.1
+    have hAB : ∑ x ∈ sab, cc_gg3a_v11 cc x + ∑ x ∈ sab, cc_gg3b_v11 cc x
+        ≤ ∑ x ∈ sab, cc_gg_v11 cc x := by
+      have h1 : ∑ x ∈ sab, cc_gg3a_v11 cc x + ∑ x ∈ sab, cc_gg3b_v11 cc x
+          = ∑ x ∈ sab, (cc_gg3a_v11 cc x + cc_gg3b_v11 cc x) := by
+        rw [Finset.sum_add_distrib]
+      have h2 : ∑ x ∈ sab, (cc_gg3a_v11 cc x + cc_gg3b_v11 cc x)
+          ≤ ∑ x ∈ sab, cc_gg_v11 cc x := by
+        refine Finset.sum_le_sum fun x hx => ?_
+        rw [msab x] at hx
+        exact p3h_rm_qy_le hr hx.2.1
+      linarith
+    have hsgS : ss ∪ sab ⊆ S := Finset.union_subset hssS hsabS
+    have hS_split : ∑ i ∈ S \ (ss ∪ sab), cc_gg_v11 cc i + ∑ i ∈ ss ∪ sab, cc_gg_v11 cc i
+        = ∑ i ∈ S, cc_gg_v11 cc i := Finset.sum_sdiff hsgS
+    have hdiff_pos : (0 : ℝ) ≤ ∑ i ∈ S \ (ss ∪ sab), cc_gg_v11 cc i := by
+      refine Finset.sum_nonneg fun x hx => ?_
+      obtain ⟨hxS, hnot⟩ := Finset.mem_sdiff.mp hx
+      have hnotss : x ∉ ss := fun hc => hnot (Finset.mem_union_left _ hc)
+      by_cases hgx : cc_gg_v11 cc x < 0
+      · exfalso
+        have hnqu : ¬ cc_qu_v11 cc x := fun hqu => hnotss ((mss x).mpr ⟨hxS, hgx, hqu⟩)
+        rcases QY_QX_QU hb x with hqu | hqy | hqx
+        · exact hnqu hqu
+        · linarith [p3g_QY_NN0 hb hr hqy, hgx]
+        · linarith [p3h_rm_qx_nn hr hqx, hgx]
+      · exact le_of_not_gt hgx
+    have hSpos : (0 : ℝ) ≤ ∑ i ∈ S, cc_gg_v11 cc i := by
+      have h1 := hmain
+      have h2 := hsg
+      have h3 := hA1
+      have h4 := hB1
+      have h5 := hAB
+      have h6 := hS_split
+      have h7 := hdiff_pos
+      linarith
+    -- ∑₀..nn-1 gg = ∑₁..nn gg (periodic_sum with i = 1)
+    have hper : ∑ i ∈ Finset.Icc 0 (nn - 1), cc_gg_v11 cc i
+        = ∑ i ∈ S, cc_gg_v11 cc i := by
+      have h2 : Finset.Icc 1 (nn - 1 + 1) = Finset.Icc 1 nn := by
+        ext x
+        simp only [Finset.mem_Icc]
+        omega
+      have h3 : Finset.Icc 0 (nn - 1) = Finset.range nn := by
+        ext x
+        simp only [Finset.mem_Icc, Finset.mem_range]
+        omega
+      rw [h3]
+      have h1 := periodic_sum hpgg hnn0 1
+      rw [h2] at h1
+      rw [hS_def]
+      exact h1.symm
+    exfalso
+    linarith
+
+/-- OXLZLEZ2.hl:1100 (`WKR_COMPTED`).  The HOL row carries the explicit
+hypothesis `indSet = 0..cc_card_v11 cc - 1`, a pure abbreviation consumed to
+read `i IN indSet`; here the `Finset` is written out directly. -/
+theorem p3h_WKR_COMPTED (cc : CcV11) (_hp : cc_bool_prep_v11 cc) (hb : cc_bool_model_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    ∃ i j k, ¬(i = j ∨ j = k ∨ k = i) ∧
+      i ∈ Finset.Icc 0 (cc_card_v11 cc - 1) ∧ j ∈ Finset.Icc 0 (cc_card_v11 cc - 1) ∧
+        k ∈ Finset.Icc 0 (cc_card_v11 cc - 1) ∧
+        cc_4cell_v11 cc i ∧ cc_4cell_v11 cc j ∧ cc_4cell_v11 cc k := by
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have h2nn : 2 ≤ cc_card_v11 cc := CC_CARD2 hb hr hsum
+  have hper4 : periodic (cc_4cell_v11 cc) (cc_card_v11 cc) := p3h_bm_periodic_4cell hb
+  have hperazim : periodic (cc_azim_v11 cc) (cc_card_v11 cc) := p3h_rm_periodic_azim hr
+  have hmod4 : ∀ x, cc_4cell_v11 cc (x % cc_card_v11 cc) = cc_4cell_v11 cc x :=
+    fun x => (periodic_mod hper4 hnn0 x).symm
+  obtain ⟨i, hi0, higi, hqui, h4p, h4m⟩ := p3h_MTMLSRF cc _hp hb hr hsum
+  have h4i : cc_4cell_v11 cc i := hqui.2.1
+  by_cases hnn2 : cc_card_v11 cc = 2
+  · -- card = 2 is impossible: both azim values are 4cell-bounded by 2.8, but sum to 2π
+    exfalso
+    have hsumazim := p3h_rm_sum_azim hr
+    rw [hnn2] at hsumazim
+    have h01 : ∑ j ∈ Finset.Icc 0 1, cc_azim_v11 cc j = cc_azim_v11 cc 0 + cc_azim_v11 cc 1 :=
+      p3g_SUM_NUMSEG2 _ 0
+    have ha1 : cc_azim_v11 cc i < 2.8 := p3h_rm_azim_4cell hr h4i
+    have ha2 : cc_azim_v11 cc (i + 1) < 2.8 := p3h_rm_azim_4cell hr h4p
+    have m1 : cc_azim_v11 cc (i % 2) = cc_azim_v11 cc i := by
+      have h := periodic_mod hperazim hnn0 i
+      rw [hnn2] at h
+      exact h.symm
+    have m2 : cc_azim_v11 cc ((i + 1) % 2) = cc_azim_v11 cc (i + 1) := by
+      have h := periodic_mod hperazim hnn0 (i + 1)
+      rw [hnn2] at h
+      exact h.symm
+    have hne : i % 2 ≠ (i + 1) % 2 :=
+      p3g_MOD_INJ11 2 1 (by omega) (by omega) (by omega) i
+    have hmod2 : ∀ k : ℕ, k % 2 = 0 ∨ k % 2 = 1 := fun k => by omega
+    rcases hmod2 i with r1 | r1 <;> rcases hmod2 (i + 1) with r2 | r2
+    · exact absurd (show i % 2 = (i + 1) % 2 from by rw [r1, r2]) hne
+    · have hchain : 2 * Real.pi = cc_azim_v11 cc i + cc_azim_v11 cc (i + 1) := by
+        rw [← hsumazim, h01, ← m1, ← m2, r1, r2]
+      have hpi : (2 : ℝ) * Real.pi > 5.6 := by linarith [p3g_PI_BOUNDS.1]
+      linarith
+    · have hchain : 2 * Real.pi = cc_azim_v11 cc i + cc_azim_v11 cc (i + 1) := by
+        rw [← hsumazim, h01, ← m1, ← m2, r1, r2, add_comm]
+      have hpi : (2 : ℝ) * Real.pi > 5.6 := by linarith [p3g_PI_BOUNDS.1]
+      linarith
+    · exact absurd (show i % 2 = (i + 1) % 2 from by rw [r1, r2]) hne
+  · -- card ≥ 3: the three cyclic residues of the MTMLSRF witness are distinct 4cells
+    have h3nn : 3 ≤ cc_card_v11 cc := by omega
+    refine ⟨(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc,
+      p3g_THREE_MOD_CONSECUTIVES i (cc_card_v11 cc) hi0 h3nn, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · exact MOD_IN_NUMSEG hnn0
+    · exact MOD_IN_NUMSEG hnn0
+    · exact MOD_IN_NUMSEG hnn0
+    · rw [hmod4 (i - 1)]; exact h4m
+    · rw [hmod4 i]; exact h4i
+    · rw [hmod4 (i + 1)]; exact h4p
+
+/-- OXLZLEZ2.hl:1195 (`oxl6142`, proving `CHQSQEY_concl` OXLZLEZ1.hl:135):
+three pairwise-distinct 4cell indices force the 4cell count up to 3. -/
+theorem p3h_oxl6142 (cc : CcV11) (hb : cc_bool_model_v11 cc) (hp : cc_bool_prep_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    3 ≤ cc_size_v11 cc (cc_4cell_v11 cc) := by
+  obtain ⟨a, b, c, habc, ha, hbb, hc, h4a, h4b, h4c⟩ := p3h_WKR_COMPTED cc hp hb hr hsum
+  have hsub : ({a, b, c} : Finset ℕ) ⊆
+      Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1)) := by
+    intro x hx
+    simp only [Finset.mem_insert, Finset.mem_singleton, Finset.mem_filter] at hx ⊢
+    rcases hx with rfl | rfl | rfl
+    · exact ⟨ha, h4a⟩
+    · exact ⟨hbb, h4b⟩
+    · exact ⟨hc, h4c⟩
+  have hbne : a ∉ ({b, c} : Finset ℕ) := by
+    simp only [Finset.mem_insert, Finset.mem_singleton]
+    rintro (rfl | rfl)
+    · exact habc (Or.inl rfl)
+    · exact habc (Or.inr (Or.inr rfl))
+  have hcne : b ∉ ({c} : Finset ℕ) := by
+    simp only [Finset.mem_singleton]
+    intro hbc
+    exact habc (Or.inr (Or.inl hbc))
+  have hcard3 : ({a, b, c} : Finset ℕ).card = 3 := by
+    rw [Finset.card_insert_of_notMem hbne, Finset.card_insert_of_notMem hcne,
+      Finset.card_singleton]
+  have hsize : cc_size_v11 cc (cc_4cell_v11 cc)
+      = (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  rw [hsize]
+  calc 3 = ({a, b, c} : Finset ℕ).card := hcard3.symm
+    _ ≤ (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card :=
+      Finset.card_le_card hsub
+
+/-- OXLZLEZ2.hl:1225 (`CHQSQEY = oxl6142`). -/
+theorem p3h_CHQSQEY (cc : CcV11) (hb : cc_bool_model_v11 cc) (hp : cc_bool_prep_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    3 ≤ cc_size_v11 cc (cc_4cell_v11 cc) := p3h_oxl6142 cc hb hp hr hsum
+
+/-- OXLZLEZ2.hl:1228 (`THREE_LE_CC_CARD`) — the WAVES §W2 acceptance anchor
+(common predecessor of the `IPVICGW` and `UTEOITF` ladders). -/
+theorem p3h_THREE_LE_CC_CARD (cc : CcV11) (hb : cc_bool_model_v11 cc)
+    (hp : cc_bool_prep_v11 cc) (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    3 ≤ cc_card_v11 cc := by
+  have h3 := p3h_oxl6142 cc hb hp hr hsum
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have hcard : (Finset.Icc 0 (cc_card_v11 cc - 1)).card = cc_card_v11 cc := by
+    have h : Finset.Icc 0 (cc_card_v11 cc - 1) = Finset.range (cc_card_v11 cc) := by
+      ext x
+      simp only [Finset.mem_Icc, Finset.mem_range]
+      omega
+    rw [h, Finset.card_range]
+  calc 3 ≤ (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card :=
+      by exact h3
+    _ ≤ (Finset.Icc 0 (cc_card_v11 cc - 1)).card :=
+      Finset.card_le_card (Finset.filter_subset _ _)
+    _ = cc_card_v11 cc := hcard
+
+/-- OXLZLEZ2.hl:403 (`LXDEYBO`, proving `LXDEYBO_concl` OXLZLEZ1.hl:142).  The
+`cc_bool_prep_v11` hypothesis is present in the frozen conclusion but unused
+by the proof (as in HOL). -/
+theorem p3h_LXDEYBO (cc : CcV11) (_hp : cc_bool_prep_v11 cc) (hb : cc_bool_model_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    cc_size_v11 cc (cc_4cell_v11 cc) ≤ 4 := by
+  set nn := cc_card_v11 cc with hnn_def
+  have h7 : ∑ i ∈ Finset.Icc 0 (nn - 1), cc_azim_v11 cc i = 2 * Real.pi :=
+    p3h_rm_sum_azim hr
+  set S : Finset ℕ := Finset.Icc 0 (nn - 1) with hS_def
+  set ss : Finset ℕ := S.filter (cc_4cell_v11 cc) with hss_def
+  have hsize : cc_size_v11 cc (cc_4cell_v11 cc) = ss.card := rfl
+  by_cases hcd : 4 < ss.card
+  · exfalso
+    have h5cd : 5 ≤ ss.card := by omega
+    -- ∑ ss gg ≤ ∑ S gg (the complement is qy, with gg ≥ 0 there)
+    have hc1 : ∑ i ∈ ss, cc_gg_v11 cc i ≤ ∑ i ∈ S, cc_gg_v11 cc i := by
+      refine p3h_sum_le_sum_of_subset (Finset.filter_subset _ _) ?_
+      intro x hx hnotin
+      have hx4 : ¬ cc_4cell_v11 cc x := fun h4 => hnotin (Finset.mem_filter.mpr ⟨hx, h4⟩)
+      exact p3g_QY_NN0 hb hr hx4
+    -- pointwise spine bound on ss
+    have hpoint : ∀ x ∈ ss, a_spine5 + b_spine5 * cc_azim_v11 cc x ≤ cc_gg_v11 cc x := by
+      intro x hx
+      exact p3h_rm_4cell_spine hr (Finset.mem_filter.mp hx).2
+    have hc2 : ∑ i ∈ ss, (a_spine5 + b_spine5 * cc_azim_v11 cc i)
+        ≤ ∑ i ∈ ss, cc_gg_v11 cc i := Finset.sum_le_sum hpoint
+    -- ∑ ss (a + b·azim) = card(ss) · a + b · ∑ ss azim
+    have hc3 : ∑ i ∈ ss, (a_spine5 + b_spine5 * cc_azim_v11 cc i)
+        = ss.card * a_spine5 + b_spine5 * ∑ i ∈ ss, cc_azim_v11 cc i := by
+      rw [Finset.sum_add_distrib, p3h_sum_const_real, Finset.mul_sum]
+    -- ∑ ss azim ≤ ∑ S azim = 2π
+    have hc4 : ∑ i ∈ ss, cc_azim_v11 cc i ≤ 2 * Real.pi := by
+      have h1 : ∑ i ∈ ss, cc_azim_v11 cc i ≤ ∑ i ∈ S, cc_azim_v11 cc i := by
+        refine p3h_sum_le_sum_of_subset (Finset.filter_subset _ _) ?_
+        intro x hx hnotin
+        have hx4 : ¬ cc_4cell_v11 cc x := fun h4 => hnotin (Finset.mem_filter.mpr ⟨hx, h4⟩)
+        linarith [p3h_rm_azim_lb hr x]
+      linarith [h1, h7]
+    -- numerics: 5 · a_spine5 + b_spine5 · 2π > 0 (uses π < 3.1416)
+    have hb5 : b_spine5 < 0 := by norm_num [b_spine5]
+    have hpi : Real.pi < 3.1416 := p3g_PI_BOUNDS.2
+    have h2pi : (2 : ℝ) * Real.pi < 6.2832 := by linarith
+    have hkey : (0 : ℝ) < 5 * a_spine5 + b_spine5 * (2 * Real.pi) := by
+      have h3 : b_spine5 * (6.2832 : ℝ) < b_spine5 * (2 * Real.pi) :=
+        mul_lt_mul_of_neg_left h2pi hb5
+      have h4 : (0 : ℝ) < 5 * a_spine5 + b_spine5 * (6.2832 : ℝ) := by
+        norm_num [a_spine5, b_spine5]
+      linarith
+    have hsspos : (0 : ℝ) < ∑ i ∈ ss, cc_gg_v11 cc i := by
+      have hcard5 : ((5 : ℕ) : ℝ) ≤ ss.card := by exact_mod_cast h5cd
+      have hb2 : b_spine5 * (2 * Real.pi) ≤ b_spine5 * ∑ i ∈ ss, cc_azim_v11 cc i :=
+        mul_le_mul_of_nonpos_left hc4 hb5.le
+      have hc5 : (5 : ℝ) * a_spine5 ≤ ss.card * a_spine5 :=
+        mul_le_mul_of_nonneg_right hcard5 (by norm_num [a_spine5])
+      linarith
+    linarith
+  · -- the wanted bound
+    rw [hsize]
+    exact le_of_not_gt hcd
+
+/-- OXLZLEZ2.hl:1322 (`UNPNFVW`, proving `UNPNFVW_concl` OXLZLEZ1.hl:145) —
+the closing row of WAVES §W2.  Split on the 4cell count `sz`: if `sz = 3`
+the three cyclic residues of the MTMLSRF witness exhaust the 4cell set and a
+further 4cell residue forces `card = 3` (all residues 4cell) or `card = 4`
+(with `cc_bool_prep_v11` giving exactly one `qy` residue); if `sz = 4` the
+two-element `qy` subset contributes at least `2·0.606·0.008` to the gg-sum
+while the four 4cells, weighted by the spine bound against the azim sum
+`2π`, stay above zero — contradicting `∑ gg < 0`. -/
+theorem p3h_UNPNFVW (cc : CcV11) (hp : cc_bool_prep_v11 cc) (hb : cc_bool_model_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    cc_size_v11 cc (cc_qy_v11 cc) ≤ 1 := by
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have h3nn : 3 ≤ cc_card_v11 cc := p3h_THREE_LE_CC_CARD cc hb hp hr hsum
+  have h3size := p3h_CHQSQEY cc hb hp hr hsum
+  have h4size := p3h_LXDEYBO cc hp hb hr hsum
+  have hper4 : periodic (cc_4cell_v11 cc) (cc_card_v11 cc) := p3h_bm_periodic_4cell hb
+  have hpqy : periodic (cc_qy_v11 cc) (cc_card_v11 cc) := p3h_pf_qy hb
+  have hmod4 : ∀ x, cc_4cell_v11 cc (x % cc_card_v11 cc) = cc_4cell_v11 cc x :=
+    fun x => (periodic_mod hper4 hnn0 x).symm
+  have hmodqy : ∀ x, cc_qy_v11 cc (x % cc_card_v11 cc) = cc_qy_v11 cc x :=
+    fun x => (periodic_mod hpqy hnn0 x).symm
+  have hsize4 : cc_size_v11 cc (cc_4cell_v11 cc)
+      = (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  have hsizeqy : cc_size_v11 cc (cc_qy_v11 cc)
+      = (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  have hcard_ind : (Finset.Icc 0 (cc_card_v11 cc - 1)).card = cc_card_v11 cc := by
+    have h : Finset.Icc 0 (cc_card_v11 cc - 1) = Finset.range (cc_card_v11 cc) := by
+      ext x
+      simp only [Finset.mem_Icc, Finset.mem_range]
+      omega
+    rw [h, Finset.card_range]
+  obtain ⟨i, hi0, higi, hqui, h4p, h4m⟩ := p3h_MTMLSRF cc hp hb hr hsum
+  have h4i : cc_4cell_v11 cc i := hqui.2.1
+  -- the three cyclic residues of the witness
+  have hthree : ¬((i - 1) % cc_card_v11 cc = i % cc_card_v11 cc ∨
+      i % cc_card_v11 cc = (i + 1) % cc_card_v11 cc ∨
+      (i + 1) % cc_card_v11 cc = (i - 1) % cc_card_v11 cc) :=
+    p3g_THREE_MOD_CONSECUTIVES i (cc_card_v11 cc) hi0 h3nn
+  have h4ia : cc_4cell_v11 cc ((i - 1) % cc_card_v11 cc) := by
+    rw [hmod4 (i - 1)]; exact h4m
+  have h4ib : cc_4cell_v11 cc (i % cc_card_v11 cc) := by
+    rw [hmod4 i]; exact h4i
+  have h4ic : cc_4cell_v11 cc ((i + 1) % cc_card_v11 cc) := by
+    rw [hmod4 (i + 1)]; exact h4p
+  by_cases hsz3 : cc_size_v11 cc (cc_4cell_v11 cc) = 3
+  · -- the three residues exhaust the 4cell set
+    have hbne : (i - 1) % cc_card_v11 cc ∉
+        ({i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc} : Finset ℕ) := by
+      simp only [Finset.mem_insert, Finset.mem_singleton]
+      rintro (h | h)
+      · exact hthree (Or.inl h)
+      · exact hthree (Or.inr (Or.inr h.symm))
+    have hcne : i % cc_card_v11 cc ∉ ({(i + 1) % cc_card_v11 cc} : Finset ℕ) := by
+      simp only [Finset.mem_singleton]
+      intro h
+      exact hthree (Or.inr (Or.inl h))
+    have hcard3set : ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc,
+        (i + 1) % cc_card_v11 cc} : Finset ℕ).card = 3 := by
+      rw [Finset.card_insert_of_notMem hbne, Finset.card_insert_of_notMem hcne,
+        Finset.card_singleton]
+    have hsub1 : ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc,
+        (i + 1) % cc_card_v11 cc} : Finset ℕ) ⊆
+        Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1)) := by
+      intro x hx
+      simp only [Finset.mem_insert, Finset.mem_singleton, Finset.mem_filter] at hx ⊢
+      rcases hx with rfl | rfl | rfl
+      · exact ⟨MOD_IN_NUMSEG hnn0, h4ia⟩
+      · exact ⟨MOD_IN_NUMSEG hnn0, h4ib⟩
+      · exact ⟨MOD_IN_NUMSEG hnn0, h4ic⟩
+    have hcell_eq : Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))
+        = ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc} :
+          Finset ℕ) := by
+      refine (Finset.eq_of_subset_of_card_le hsub1 ?_).symm
+      rw [hcard3set, ← hsize4, hsz3]
+    by_cases h4n2 : cc_4cell_v11 cc ((i + 2) % cc_card_v11 cc)
+    · -- a fourth 4cell residue in the 3-set forces card = 3, hence no qy at all
+      have hmem : (i + 2) % cc_card_v11 cc ∈
+          ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc} :
+            Finset ℕ) := by
+        rw [← hcell_eq]
+        exact Finset.mem_filter.mpr ⟨MOD_IN_NUMSEG hnn0, h4n2⟩
+      simp only [Finset.mem_insert, Finset.mem_singleton] at hmem
+      have hnn3 : cc_card_v11 cc = 3 := by
+        rcases hmem with heq | heq | heq
+        · have hd : cc_card_v11 cc ∣ (i + 2) - (i - 1) :=
+            (Nat.modEq_iff_dvd' (by omega)).mp heq.symm
+          have h := Nat.le_of_dvd (by omega) hd
+          omega
+        · exfalso
+          have hd : cc_card_v11 cc ∣ (i + 2) - i :=
+            (Nat.modEq_iff_dvd' (by omega)).mp heq.symm
+          have h := Nat.le_of_dvd (by omega) hd
+          omega
+        · exfalso
+          have hd : cc_card_v11 cc ∣ (i + 2) - (i + 1) :=
+            (Nat.modEq_iff_dvd' (by omega)).mp heq.symm
+          have h := Nat.le_of_dvd (by omega) hd
+          omega
+      have hind_eq : Finset.Icc 0 (cc_card_v11 cc - 1)
+          = Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1)) := by
+        refine (Finset.eq_of_subset_of_card_le (Finset.filter_subset _ _) ?_).symm
+        rw [hcard_ind, ← hsize4, hsz3]
+        omega
+      have hqy_empty : (Finset.Icc 0 (cc_card_v11 cc - 1)).filter (cc_qy_v11 cc) = ∅ := by
+        rw [hind_eq]
+        ext x
+        constructor
+        · intro hx
+          obtain ⟨hx1, hxq⟩ := Finset.mem_filter.mp hx
+          obtain ⟨-, hx4⟩ := Finset.mem_filter.mp hx1
+          exact (hxq hx4).elim
+        · intro h
+          exact absurd h (Finset.notMem_empty x)
+      rw [hsizeqy, hqy_empty, Finset.card_empty]
+      exact Nat.zero_le 1
+    · -- cc_bool_prep_v11 propagates ¬4cell to (i+3), bounding card by 4
+      have hqy2 : cc_qy_v11 cc (i + 2) := by
+        rw [← hmodqy (i + 2)]
+        exact h4n2
+      have h4i3 : cc_4cell_v11 cc (i + 3) := by
+        have hn : ¬ cc_qy_v11 cc (i + 3) := hp (i + 2) hqy2
+        by_contra hcon
+        exact hn hcon
+      have h4n3 : cc_4cell_v11 cc ((i + 3) % cc_card_v11 cc) := by
+        rw [hmod4 (i + 3)]
+        exact h4i3
+      have hmem3 : (i + 3) % cc_card_v11 cc ∈
+          ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc} :
+            Finset ℕ) := by
+        rw [← hcell_eq]
+        exact Finset.mem_filter.mpr ⟨MOD_IN_NUMSEG hnn0, h4n3⟩
+      simp only [Finset.mem_insert, Finset.mem_singleton] at hmem3
+      have hnn4le : cc_card_v11 cc ≤ 4 := by
+        rcases hmem3 with heq | heq | heq
+        · have hd : cc_card_v11 cc ∣ (i + 3) - (i - 1) :=
+            (Nat.modEq_iff_dvd' (by omega)).mp heq.symm
+          have h := Nat.le_of_dvd (by omega) hd
+          omega
+        · have hd : cc_card_v11 cc ∣ (i + 3) - i :=
+            (Nat.modEq_iff_dvd' (by omega)).mp heq.symm
+          have h := Nat.le_of_dvd (by omega) hd
+          omega
+        · exfalso
+          have hd : cc_card_v11 cc ∣ (i + 3) - (i + 1) :=
+            (Nat.modEq_iff_dvd' (by omega)).mp heq.symm
+          have h := Nat.le_of_dvd (by omega) hd
+          omega
+      have hie_not : (i + 2) % cc_card_v11 cc ∉
+          ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc} :
+            Finset ℕ) := by
+        rw [← hcell_eq]
+        intro hm
+        exact h4n2 (Finset.mem_filter.mp hm).2
+      have hset_card : (insert ((i + 2) % cc_card_v11 cc)
+          ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc} :
+            Finset ℕ)).card = 4 := by
+        rw [Finset.card_insert_of_notMem hie_not, hcard3set]
+      have hset_sub : (insert ((i + 2) % cc_card_v11 cc)
+          ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc} :
+            Finset ℕ)) ⊆ Finset.Icc 0 (cc_card_v11 cc - 1) := by
+        intro x hx
+        simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+        rcases hx with rfl | hx
+        · exact MOD_IN_NUMSEG hnn0
+        · rcases hx with rfl | rfl | rfl
+          · exact MOD_IN_NUMSEG hnn0
+          · exact MOD_IN_NUMSEG hnn0
+          · exact MOD_IN_NUMSEG hnn0
+      have hind_eq2 : Finset.Icc 0 (cc_card_v11 cc - 1)
+          = insert ((i + 2) % cc_card_v11 cc)
+            ({(i - 1) % cc_card_v11 cc, i % cc_card_v11 cc, (i + 1) % cc_card_v11 cc} :
+              Finset ℕ) := by
+        refine (Finset.eq_of_subset_of_card_le hset_sub ?_).symm
+        rw [hcard_ind, hset_card]
+        omega
+      have hqy_eq : (Finset.Icc 0 (cc_card_v11 cc - 1)).filter (cc_qy_v11 cc)
+          = ({(i + 2) % cc_card_v11 cc} : Finset ℕ) := by
+        ext x
+        simp only [Finset.mem_filter, Finset.mem_singleton]
+        constructor
+        · rintro ⟨hxind, hxqy⟩
+          rw [hind_eq2] at hxind
+          simp only [Finset.mem_insert, Finset.mem_singleton] at hxind
+          rcases hxind with rfl | hxind
+          · exact rfl
+          · rcases hxind with rfl | rfl | rfl
+            · exact (hxqy h4ia).elim
+            · exact (hxqy h4ib).elim
+            · exact (hxqy h4ic).elim
+        · rintro rfl
+          exact ⟨MOD_IN_NUMSEG hnn0, h4n2⟩
+      rw [hsizeqy, hqy_eq, Finset.card_singleton]
+  · -- sz = 4: the numeric contradiction
+    push_neg at hsz3
+    have hsz4 : cc_size_v11 cc (cc_4cell_v11 cc) = 4 := by omega
+    by_contra hcon
+    push_neg at hcon
+    set qyset : Finset ℕ :=
+      (Finset.Icc 0 (cc_card_v11 cc - 1)).filter (cc_qy_v11 cc) with hqyset_def
+    set cells : Finset ℕ :=
+      (Finset.Icc 0 (cc_card_v11 cc - 1)).filter (cc_4cell_v11 cc) with hcells_def
+    have hcardqy : qyset.card = cc_size_v11 cc (cc_qy_v11 cc) := rfl
+    have hcardcells : cells.card = cc_size_v11 cc (cc_4cell_v11 cc) := rfl
+    obtain ⟨t, htsub, htcard⟩ :=
+      Finset.exists_subset_card_eq (show 2 ≤ qyset.card by omega)
+    obtain ⟨x, y, hxy, htx⟩ := Finset.card_eq_two.mp htcard
+    subst htx
+    have hxq : cc_qy_v11 cc x := (Finset.mem_filter.mp (htsub (by simp))).2
+    have hyq : cc_qy_v11 cc y := (Finset.mem_filter.mp (htsub (by simp))).2
+    -- the qy side of the gg-sum carries at least 2 · 0.606 · 0.008
+    have hqy_lb : (0.009696 : ℝ) ≤ ∑ i ∈ qyset, cc_gg_v11 cc i := by
+      have hsplit : ∑ i ∈ qyset \ {x, y}, cc_gg_v11 cc i + ∑ i ∈ {x, y}, cc_gg_v11 cc i
+          = ∑ i ∈ qyset, cc_gg_v11 cc i := Finset.sum_sdiff htsub
+      have hpos : (0 : ℝ) ≤ ∑ i ∈ qyset \ {x, y}, cc_gg_v11 cc i := by
+        refine Finset.sum_nonneg fun a ha => ?_
+        obtain ⟨ha1, -⟩ := Finset.mem_sdiff.mp ha
+        exact p3g_QY_NN0 hb hr (Finset.mem_filter.mp ha1).2
+      have hpair : ∑ i ∈ ({x, y} : Finset ℕ), cc_gg_v11 cc i
+          = cc_gg_v11 cc x + cc_gg_v11 cc y := by
+        rw [Finset.sum_insert (show x ∉ ({y} : Finset ℕ) from fun h => hxy (Finset.mem_singleton.mp h)),
+          Finset.sum_singleton]
+      have hgx := p3h_rm_qy_azim hr hxq
+      have hgy := p3h_rm_qy_azim hr hyq
+      have hax := p3h_rm_azim_lb hr x
+      have hay := p3h_rm_azim_lb hr y
+      have hcx : (0.004848 : ℝ) ≤ 0.008 * cc_azim_v11 cc x := by nlinarith
+      have hcy : (0.004848 : ℝ) ≤ 0.008 * cc_azim_v11 cc y := by nlinarith
+      linarith
+    have hqy_azim_lb : (1.212 : ℝ) ≤ ∑ i ∈ qyset, cc_azim_v11 cc i := by
+      have hsplit : ∑ i ∈ qyset \ {x, y}, cc_azim_v11 cc i
+          + ∑ i ∈ {x, y}, cc_azim_v11 cc i = ∑ i ∈ qyset, cc_azim_v11 cc i :=
+        Finset.sum_sdiff htsub
+      have hpos : (0 : ℝ) ≤ ∑ i ∈ qyset \ {x, y}, cc_azim_v11 cc i := by
+        refine Finset.sum_nonneg fun a ha => ?_
+        obtain ⟨ha1, -⟩ := Finset.mem_sdiff.mp ha
+        linarith [p3h_rm_azim_lb hr a]
+      have hpair : ∑ i ∈ ({x, y} : Finset ℕ), cc_azim_v11 cc i
+          = cc_azim_v11 cc x + cc_azim_v11 cc y := by
+        rw [Finset.sum_insert (show x ∉ ({y} : Finset ℕ) from fun h => hxy (Finset.mem_singleton.mp h)),
+          Finset.sum_singleton]
+      linarith [hsplit, hpos, hpair, p3h_rm_azim_lb hr x, p3h_rm_azim_lb hr y]
+    -- the 4cell side stays above the spine-weighted azim bound
+    have hcellpoint : ∀ j ∈ cells, a_spine5 + b_spine5 * cc_azim_v11 cc j
+        ≤ cc_gg_v11 cc j := by
+      intro j hj
+      exact p3h_rm_4cell_spine hr (Finset.mem_filter.mp hj).2
+    have hcells_lb : (4 : ℝ) * a_spine5 + b_spine5 * ∑ i ∈ cells, cc_azim_v11 cc i
+        ≤ ∑ i ∈ cells, cc_gg_v11 cc i := by
+      have h1 : ∑ i ∈ cells, (a_spine5 + b_spine5 * cc_azim_v11 cc i)
+          ≤ ∑ i ∈ cells, cc_gg_v11 cc i := Finset.sum_le_sum hcellpoint
+      have h2 : ∑ i ∈ cells, (a_spine5 + b_spine5 * cc_azim_v11 cc i)
+          = (4 : ℝ) * a_spine5 + b_spine5 * ∑ i ∈ cells, cc_azim_v11 cc i := by
+        have h2' : ∑ i ∈ cells, (a_spine5 + b_spine5 * cc_azim_v11 cc i)
+            = (cells.card : ℝ) * a_spine5 + b_spine5 * ∑ i ∈ cells, cc_azim_v11 cc i := by
+          rw [Finset.sum_add_distrib, p3h_sum_const_real, Finset.mul_sum]
+        rw [hsz4] at hcardcells
+        have hcc : ((cells.card : ℕ) : ℝ) = (4 : ℝ) := by exact_mod_cast hcardcells
+        rw [hcc] at h2'
+        exact h2'
+      linarith
+    -- the azim sum splits over qyset ∪ cells
+    have hunion : Finset.Icc 0 (cc_card_v11 cc - 1) = qyset ∪ cells := by
+      ext x
+      simp only [Finset.mem_filter, Finset.mem_union]
+      constructor
+      · intro hx
+        by_cases h4 : cc_4cell_v11 cc x
+        · exact Or.inr (Finset.mem_filter.mpr ⟨hx, h4⟩)
+        · exact Or.inl (Finset.mem_filter.mpr ⟨hx, h4⟩)
+      · rintro (hx | hx)
+        · exact (Finset.mem_filter.mp hx).1
+        · exact (Finset.mem_filter.mp hx).1
+    have hdisj2 : Disjoint qyset cells := by
+      rw [Finset.disjoint_left]
+      intro a ha hc
+      exact (Finset.mem_filter.mp ha).2 (Finset.mem_filter.mp hc).2
+    have hsumazim := p3h_rm_sum_azim hr
+    have hpart : ∑ i ∈ qyset, cc_azim_v11 cc i + ∑ i ∈ cells, cc_azim_v11 cc i
+        = 2 * Real.pi := by
+      have h1 : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_azim_v11 cc i
+          = ∑ i ∈ qyset, cc_azim_v11 cc i + ∑ i ∈ cells, cc_azim_v11 cc i := by
+        rw [hunion, Finset.sum_union hdisj2]
+      rw [← h1]
+      exact hsumazim
+    have hsumsplit : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i
+        = ∑ i ∈ qyset, cc_gg_v11 cc i + ∑ i ∈ cells, cc_gg_v11 cc i := by
+      rw [hunion, Finset.sum_union hdisj2]
+    have hb5 : b_spine5 < 0 := by norm_num [b_spine5]
+    have hpi : Real.pi < 3.1416 := p3g_PI_BOUNDS.2
+    have hkey : (0 : ℝ) < 0.009696 + (4 * a_spine5
+        + b_spine5 * ((2 : ℝ) * Real.pi - 1.212)) := by
+      have h2 : (2 : ℝ) * Real.pi - 1.212 < 5.0712 := by linarith
+      have h3 : b_spine5 * (5.0712 : ℝ) < b_spine5 * ((2 : ℝ) * Real.pi - 1.212) :=
+        mul_lt_mul_of_neg_left h2 hb5
+      have h4 : (0 : ℝ) < 0.009696 + (4 * a_spine5 + b_spine5 * (5.0712 : ℝ)) := by
+        norm_num [a_spine5, b_spine5]
+      linarith
+    have hfinal : (0 : ℝ) < ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i := by
+      have h1 := hcells_lb
+      have h2 : ∑ i ∈ cells, cc_azim_v11 cc i
+          = 2 * Real.pi - ∑ i ∈ qyset, cc_azim_v11 cc i := by linarith [hpart]
+      have h3 : b_spine5 * ((2 : ℝ) * Real.pi - 1.212)
+          ≤ b_spine5 * ∑ i ∈ cells, cc_azim_v11 cc i := by
+        have hle : ∑ i ∈ cells, cc_azim_v11 cc i ≤ (2 : ℝ) * Real.pi - 1.212 := by
+          linarith [h2, hqy_azim_lb]
+        exact mul_le_mul_of_nonpos_left hle hb5.le
+      have h4 : (0 : ℝ) ≤ ∑ i ∈ qyset, cc_gg_v11 cc i := by linarith [hqy_lb]
+      have h5 := hkey
+      linarith
+    linarith
+
 end Kepler.Text
