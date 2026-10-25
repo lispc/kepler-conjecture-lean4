@@ -30,7 +30,8 @@
 | FCHKUGT-W4 | ✅ **完成**（`fff95dbc`，FUEIMOV_3 一次迭代通过，标准三，bare sorry 16→15；**W5 前置 W1-W4 全齐，本体 :7432 装配解锁**） | PackingAuto18.lean | 零计分资产，W5 前置 |
 | A2-W2a | ✅ **完成**（`3fab5ee1`，选项 A 重烤成功：exGTMP/exTM1BP mantissa 照 C549Mono 先例重烤，CertG build 绿 8665 jobs，两 demo end-to-end 标准三；Base/Shard1/Shard2 三连 EXIT=0 = **rest 9 构建链阻断解除**；8 demo 全保留零删除） | Kepler/Interval/CertG.lean | 40h 构建的第 0 步 |
 | **A2-W2b** | **40h 分段构建进行中**（编排者后台：`/tmp/a2-rest9w2` 克隆，断点续跑，olean 计数 3→2776）+ 完工后 olean 回灌主仓 → 粘合落库 **−1 源** | 后台构建 | rest 9 = 59 条 nli rest 最大单件 |
-| GRHIDFA-W4 | RSIWAMP（一行式）+ UTEOITF（nn=3/4/5 三支分类件） | PackingAuto3.lean | 零计分，W5 前置 |
+| GRHIDFA-W4 | ✅ **完成**（`173e18e2`，RSIWAMP+UTEOITF + 5 私件，双件标准三，+218/−0；勘误：UTEOITF 实为 nn=3/≠3 两支非三支，card=5 已被 RSIWAMP 灭） | PackingAuto3.lean | 零计分，W5 前置 |
+| FCHKUGT-W5 | **本体四分支装配（:7432，收官波）**——W1-W4 前置全齐 | PackingAuto18.lean | 收官解锁 PA25 侧 WEDGE_UNIQUE_CC_CELL |
 
 > **A2-W1 已完成（2026-10-25，关键事实翻案）**：rest 9 证书源 **2,777 文件全部
 > tracked 在库**（`CQITNPEAx3725403817`，964,984 叶 prec 64 bb_arb）——**无需 G4
