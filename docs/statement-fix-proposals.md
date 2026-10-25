@@ -2326,3 +2326,74 @@ e2e 直源入清偿射程（T §5.1 解锁面判定维持，路径 = 本 SF 而�
   草稿仅余下游件的填充部分）。
 - 回滚：`git apply -R 50-cffonnl-hol-original-order.patch` 逐字节还原；
   无 def/命名/记账结构变化；反证 kit 不受影响；CFFONNL 消费面唯一已证。
+
+## 51. PA21 `bank_TSKAJXYGXSA` 内括号符号回归 HOL 原文（`1/12 − (X − Y)`，Lean 误植为 `1/12 − X − Y`）— 分级 A（statement 保真修正 · nli 叶陈述误植）
+
+**立案：2026-10-24，lane tskajxy-w5（AS，解析半波）移植 `TSKAJXY_DERIVED4`
+四件套时发现并以 HOL 忠实叶 `p21k_glsa_correct` 显式前提绕行；编排者独立
+核对 HOL 原文 + 消费面后立案，编排者→用户批准流程。** 对象 = PA21 冻结
+nli 叶 `bank_TSKAJXYGXSA`（PA21:267，`def … : Prop`），HOL ineq.hl:359
+`TSKAJXY-GXSABWC DIV` 的 x-空间转录。
+
+(a) HOL（ineq.hl:357-383 逐字）：
+```
+((&1 / &12 -
+  (
+    (&2 * mm1 / pi) * (sol_euler_x_div_sqrtdelta … + … + … + …) -
+    (&8 * mm2 / pi) * (ldih2_x_div_sqrtdelta_posbranch … + … + … + …)
+  ) >= &0) \/ (delta_x x1 x2 x3 x4 x5 x6 < &0)
+```
+即 `1/12 − (X − Y) ≥ 0`，其中 X = (2mm1/π)·Σsol、Y = (8mm2/π)·Σldih。
+Lean（PA21:271-285 现行）转录为 `1/12 − X − Y ≥ 0`：内括号丢失，
+Y 项符号由 + 变 −。Y 的四个 `ldih*XDivSqrtdeltaPosbranch` 在盒上非负
+（posbranch 分支），故 Lean 版**严格强于** HOL 证书所证——HOL 的
+nonlinear 证书证不出 Lean 叶，而 `gamma4fgcy_div_sqrtdelta`
+（merge_ineq.hl:1160）恒等式右端 Y 项带 + 号，与 Lean 叶直接不合。
+3 胞先例 `mi_gamma3fXDivSqrtdelta_unfold`（PA21）的 ldih 块已是加号，
+佐证本叶应为 + 号。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/51-tskajxygxsa-hol-sign.patch`：
+
+1. **PA21 `bank_TSKAJXYGXSA` 一处符号**：`-\n      (8 * mm2 / Real.pi) *`
+   → `+\n      (8 * mm2 / Real.pi) *`（1 行）。盒、量词、deltaX 析取支
+   一字不动。保真说明：HOL :357-383 逐字；变化仅内括号展开后的 Y 项符号。
+2. **docstring 补一句记账**（纯注释）：注明 2026-10-24 SF-51 回归 HOL
+   内括号形。
+
+### (c) 消费面影响清单（全树 grep `TSKAJXYGXSA`，排除注释）
+
+- `lean/Kepler/Assembly.lean:398` `theorem nliTskGXSA : bank_TSKAJXYGXSA := sorry`
+  （e2e 直源之一，父 `nliTskBank`）——**sorried，证明体不受影响**；其陈述
+  含义随 def 修正为 HOL 证书真正证明的命题（原 Lean 形本就不可被该证书
+  放电）。
+- `lean/Kepler/Text/PackingAuto21.lean:394` `tsk_bank` 合取（十叶之一）——
+  bundle 含义同步修正；`TSKAJXY_034`（:4168）的假设 `hyp : tsk_hyp_new`
+  经 `.2.2 : tsk_bank` 含此叶，其假设面随之变为 HOL 原形（更弱、正确）。
+- `lean/Kepler/Text/PackingAuto21.lean` TSKAJXY034W5 区 `p21k_glsa_correct`
+  （public def，AS 交付）= 修正后 `bank_TSKAJXYGXSA` 逐字同体——SF 应用后
+  可由 `hyp.2.2` 对应分量直接放电（后续收编波一行），该 def 转为可回收
+  的过渡资产（不删，纯追加纪律）。
+- 无任何证明体 unfold 此 def（全树 grep 仅上述三处 + AS 注释记账）。
+
+### (d) 验收与应用计划（gate 预演参数）
+
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/51-tskajxygxsa-hol-sign.patch SF_ITEM=51`，
+`LANE_FILES="Kepler/Text/PackingAuto21.lean"`，闸 1 `GATE_ROOTS=Kepler.Text.PackingAuto21`
+THM=`Kepler.Text.bank_TSKAJXYGXSA`（def，axiom 面空/标准三）；闸 2
+`GATE_ROOTS=Kepler.Assembly` THM=`Kepler.Assembly.nliTskGXSA`（预期标准三 +
+sorryAx，sorried 源本身）。预期：PA21 直 sorry 计数不变（1）；Assembly
+不变；e2e 直源数不变（128→ 本 SF 零变化，仅陈述面保真）。
+
+### (e) 孤儿评估
+
+无删除；无新增孤儿。`p21k_glsa_correct` 由"外部锚"降级为"可一行放电的
+过渡 def"，建议随 :4168 收编波回收（纯追加纪律下保留 def 本体）。
+
+### (f) 风险与回滚
+
+单符号修正，def 无 unfold 消费者，编译零风险。回滚 = 反向 1 行。
+**不批准的后果**：`nliTskGXSA` 永不可被 HOL 证书放电（Lean 叶更强），
+且 `cell4_from_ineq_thm`（:4168 翻除的最后一块）必须永久携带
+`p21k_glsa_correct` 显式前提。

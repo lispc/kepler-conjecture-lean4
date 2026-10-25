@@ -273,13 +273,17 @@ def bank_TSKAJXYGXSA : Prop :=
         (solEulerXDivSqrtdelta x1 x2 x3 x4 x5 x6 +
           solEuler345XDivSqrtdelta x1 x2 x3 x4 x5 x6 +
           solEuler156XDivSqrtdelta x1 x2 x3 x4 x5 x6 +
-          solEuler246XDivSqrtdelta x1 x2 x3 x4 x5 x6) -
+          solEuler246XDivSqrtdelta x1 x2 x3 x4 x5 x6) +
       (8 * mm2 / Real.pi) *
         (ldih2XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
           ldih3XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
           ldih5XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
           ldih6XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6) ≥ 0 ∨
       deltaX x1 x2 x3 x4 x5 x6 < 0
+-- SF-51 (2026-10-24): inner-parenthesis sign restored to HOL ineq.hl:359
+-- `1/12 - ((2 mm1/π)·Σsol - (8 mm2/π)·Σldih)`; the earlier transcription dropped the
+-- parenthesis (`1/12 - X - Y`), a strictly stronger leaf the HOL certificate does not
+-- prove and inconsistent with the `+` sign in `gamma4fgcy_div_sqrtdelta` (merge_ineq.hl:1160).
 
 /-- HOL ineq entry `TSKAJXY-delta_x4` (ineq.hl:341).  x-space entry.  Box
 [4,2.01²]×[4,2.01²]×[2.8²,8]×[4,2.01²]×[4,2.01²]×[2.8²,8]. -/
