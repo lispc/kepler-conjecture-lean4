@@ -1,0 +1,111 @@
+# WSEWPCH 依赖测绘 DEP_MAP — Lane BH 2026-10-23（只读侦察，基线 HEAD 9ba6beea + 工作区三未提交件与本核无关）
+# 列: 件名	HOL锚(文件:行)	HOL行数	Lean锚(文件:行)	Lean状态	词表/谓词	缺口类别	备注(可复核的判定依据)
+## A. 终点锚
+WSEWPCH	polar_fan.hl:2213	1148(至:3360)	LocalAuto7.lean:698	SORRY	LA1.ConvexLocalFan	LA7桩	Lean陈述=HOL逐字(convex_local_fan⟹fan_perimeter≤2π); fanPerimeter=IQCPCGW折算(:651-656)
+yk11_perimeterBound_of_core	lp_main_estimate-compiled.hl:1522-1542	—	TameLp.lean:10496-10519	TRUE(标准三)	TameLp.PerimeterBound	已证	yk11装配桥; hcore=单锚假设索取形
+yk11锚 hcore	同上(重构形)	—	TameLp.lean:10500-10504	(锚待证=LA7.WSEWPCH+FAN_PERIMETER+dart-transport)	LA1.ConvexLocalFan	桥	WSEWPCH核的Lean渲染; 非HOL逐字(见SCOUT §3误植判定)
+PerimeterBound(Lean)	tame_defs.hl:295-297 perimeterbound	3	TameLp.lean:357	TRUE(定义)	—	无误植	HOL=sum f (v,w). arcV 0 v w≤2π ∀f∈face_set_of_fan; Lean逐字对齐
+## B. LA7 纯几何桩(无 LocalFan 前提, 独立可证)
+AFFINE_HULL_3_GENERATED	polar_fan.hl:46	17	LocalAuto7.lean:235	SORRY	纯V3	机械移植	HOL 17行 hull-生成集
+COLLINEAR_AZIM_0_OR_PI	polar_fan.hl:63	11	LocalAuto7.lean:241	SORRY	纯V3	机械移植	azim∈{0,π}; 月形收口用
+ANGLES_ADD_AFF_GE	polar_fan.hl:74	28	LocalAuto7.lean:246	SORRY	纯V3	机械移植	HOL经ANGLES_ADD_BETWEEN(树内缺, Mathlib EuclideanGeometry.angle 需核或补)
+AFF_GE_SCALE_LEMMA	polar_fan.hl:102	18	LocalAuto7.lean:255	SORRY	纯V3	机械移植
+AZIM_SAME_WITHIN_AFF_GE	polar_fan.hl:120	28	LocalAuto7.lean:260	SORRY	纯V3	机械移植
+AZIM_SAME_WITHIN_AFF_GE_ALT	polar_fan.hl:148	13	LocalAuto7.lean:266	SORRY	纯V3	机械移植
+COLLINEAR_WITHIN_AFF_GE_COLLINEAR	polar_fan.hl:161	27	LocalAuto7.lean:272	SORRY	纯V3	机械移植
+GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE	polar_fan.hl:188	38	LocalAuto7.lean:277	SORRY	纯V3	机械移植	平角直 dart 分裂关键件(generic分支)
+UNION_AFF_GE_1_2	polar_fan.hl:226	53	LocalAuto7.lean:285	SORRY	纯V3	机械移植	极扇E'子集引理5的一半
+ORDER_AZIM_SUM2Pi_0	polar_fan.hl:488	23	LocalAuto7.lean:498	SORRY	纯V3	★树内已有(PA25)	PA25:10090 ORDER_AZIM_SUM2Pi0 真证, n↦n+1 指标平移~30行
+SIN_AZIM_MUTUAL_CROSS	polar_fan.hl:532	9	LocalAuto7.lean:520	SORRY	纯V3	机械移植	5合取 sin↔cross 符号
+CROSS_POSITIVE_MULTIPLE_AZIM_AXIS	polar_fan.hl:541	16	LocalAuto7.lean:529	SORRY	纯V3	机械移植	circular分支法向构造用
+CROSS_POSITIVE_MULTIPLE_AZIM_AXIS_ALT	polar_fan.hl:557	15	LocalAuto7.lean:536	SORRY	纯V3	机械移植	WSEWPCH circular分支:2338 消费 ALT 形
+GMLWKPK	polar_fan.hl:572	36	LocalAuto7.lean:551	SORRY	纯V3(恒等)	机械移植	fan7特征; LA17:1239 GMLWKPK_p17 同桩(双份)
+GMLWKPK_ALT	polar_fan.hl:608	33	LocalAuto7.lean:562	SORRY	纯V3	机械移植
+FAN7_AFF_GT_CONDITION	polar_fan.hl:812	20	LocalAuto7.lean:587	SORRY	纯V3	机械移植
+FAN_AFF_GT_CONDITION	polar_fan.hl:832	191(至:1023)	LocalAuto7.lean:597	SORRY	纯V3	机械移植	HOL体长但为分情形重写噪声
+GMLWKPK_SIMPLE	polar_fan.hl:832	191	LocalAuto7.lean:607	SORRY	纯V3	机械移植	同上区段伴生
+## C. LA7 LocalFan-世界桩(需foundation桥, 见D)
+RHO_NODE1_INJECTIVE	polar_fan.hl:318	6	LocalAuto7.lean:427	SORRY	LA1.LocalFan	★树内已有(换形)	HOL=MESON[IVS_RHO_IDD]; LA5:7578 IVS_RHO_IDD 真证(_p2)
+IVS_RHO_NODE1_IN_V	polar_fan.hl:325	5	LocalAuto7.lean:432	SORRY	LA1.LocalFan	★树内已有(换形)	HOL=MESON[LOCAL_FAN_ITER_RHO_NODE_IN_V,ITER_CARD_MINUS1_EQ_IVS_RN1]; LA5:1238/:8026 双真
+LOCAL_FAN_ITER_IVS_RHO_NODE_IN_V	polar_fan.hl:330	6	LocalAuto7.lean:438	SORRY	LA1.LocalFan	换形	同上组合
+LOCAL_FAN_ORBIT_MAP_EXPLICIT	polar_fan.hl:336	45	LocalAuto7.lean:444	SORRY	LA1.LocalFan	真移植	★与LA2:1488同名桩=LA7唯一撞名(词表不同: LocalFan vs localFan_p2); HOL local_lemmas.hl:618同族
+LOCAL_FAN_ORBIT_MAP_EXPLICIT_IVS	polar_fan.hl:360	21	LocalAuto7.lean:450	SORRY	LA1.LocalFan	真移植
+ITER_IVS_RHO_IDD	polar_fan.hl:381	11	LocalAuto7.lean:456	SORRY	LA1.LocalFan	换形	LA5 kit(ITER_CARD_MINUS1_EQ_IVS_RN1真)上重推
+ITER_RHO_IVS_IDD	polar_fan.hl:392	10	LocalAuto7.lean:462	SORRY	LA1.LocalFan	换形	同上
+LOFA_IMP_ITER_IVS_RHO_NODE_ID	polar_fan.hl:402	6	LocalAuto7.lean:468	SORRY	LA1.LocalFan	换形	同上
+GENERIC_LOCAL_FAN_AZIM_POS	polar_fan.hl:408	63	LocalAuto7.lean:476	SORRY	LA1.ConvexLocalFan	真移植	极扇BGMIFTE的sin>0引擎; 消费LOCAL_FAN_ORBIT_MAP_EXPLICIT+IN_V_IMP_AZIM_LESS_PI(树内缺, LA38:2669为ALT桩)
+LOCAL_FAN_NOT_EMPTY_FF	polar_fan.hl:511	11	LocalAuto7.lean:510	SORRY	LA1.LocalFan	换形
+LOCAL_FAN_NOT_CARD_FF_GE_2	polar_fan.hl:521	11	LocalAuto7.lean:515	SORRY	LA1.LocalFan	换形
+FAN_PERIMETER_INVARIANT	polar_fan.hl:2122	49	LocalAuto7.lean:680	SORRY	LA1.LocalFan	真移植	SUM_EQ_GENERAL轨道重排
+FAN_PERIMETER_INVARIANT_CARD_V	polar_fan.hl:2171	13	LocalAuto7.lean:688	SORRY	LA1.LocalFan	★树内已有(换形)	=INVARIANT+LOFA_IMP_CARD_FF_V_EQ(LA5:6041真)
+FAN_PERIMETER	polar_fan.hl:2184	29	LocalAuto7.lean:694	SORRY	LA1.LocalFan	真移植	=SUM_EQ_GENERAL(ITER轨道=V); POINT_PRESENTED_IN_RHOND1+LT_CARD_MONO_LOFA喂入
+BGMIFTE	polar_fan.hl:1065	1050(至:2115)	LocalAuto7.lean:662	SORRY	LA1.ConvexLocalFan+Generic	真数学缺口(最大)	polar_fan对偶: V',E',FF'=polarFan; arcV↔interior_angle1双向; 消费GENERIC_LOCAL_FAN_AZIM_POS/RHO_NODE1_INJECTIVE/JNVXCRC展开
+## D. foundation 桥(词表迁移, LA1.LocalFan ↔ _p3 ↔ _p2)
+localFan_data(正向抽取)	AzimBridge版	—	AzimBridge.lean:660	TRUE	AzimBridge	已证	LocalFan→FAN+FF=orbitF_p3(ffOfHyp_p3)+card+hasOrders 全数据
+LocalFan.of_localFan_p3(反向)	WRGCVDR HYP_LEMMA族	—	AzimBridge.lean:739	TRUE	AzimBridge	已证	localFan_p3→LocalFan(无孤立前提hno)
+localFan_p3.of_LocalFan(正向打包)	WRGCVDR.hl HYP_LEMMA	—	(缺)	缺失	—	桥(新装)	由localFan_data+§2主桥+Dih2k双向桥(AzimBridge:682/:710全真)+hno装配; ~60-150行; hno在yk10面上自动(见SCOUT §5)
+_p2↔_p3 词表rfl桥	—	—	(缺; AzimBridge§1 _p4↔_p3 同配方)	缺失	—	桥(机械)	ordPairs/selfPairs/dartsOfHyp/ee/nn/ff/azimCycle/ivsAzimCycle/EE/dih2k/hasOrders 逐对rfl; ~80-150行
+HYP_LEMMA族(LA3:1293-1310)	WRGCVDR.hl:~340-430	—	LocalAuto3.lean:1293/1302/1310	SORRY×3	localFan_p3	真移植	HS.edgeMap∘edgeMap=id等 hypermap 打包
+CIZMRRH	WRGCVDR.hl:3056	275(至EOF:3331)	LocalAuto3.lean:1881	SORRY	localFan_p3+generic_p3/circular_p3/lunar_p3	真移植	三分 exclusive-or; 消费hypermap_lemma(Hypermap:789真)+DIH2K_IMP_NODE_MAP_X_DIFF_X+FAN_IMP_NOT_EMPTY_DARTS
+## E. LA5 _p2 章: WSEWPCH 直接消费件(状态)
+LOCAL_FAN_ITER_RHO_NODE_IN_V	local_lemmas.hl:652	—	LocalAuto5.lean:1238	TRUE	_p2	已证
+LOFA_IMP_CARD_FF_V_EQ	local_lemmas.hl:4415	8	LocalAuto5.lean:6041	TRUE	_p2	已证	BIJ fst: FF→V
+LOFA_IMP_BIJ_FF_V	同上	—	LocalAuto5.lean:6037	TRUE	_p2	已证	dart-和↔fanPerimeter桥的射影双射
+LOCAL_FAN_CHARACTER_OF_RHO_NODE	local_lemmas.hl:~860	—	LocalAuto5.lean:875	TRUE	_p2	已证
+LOCAL_FAN_CHARACTER_OF_RHO_NODE2	local_lemmas.hl	—	LocalAuto5.lean:6359	TRUE	_p2	已证
+LOCAL_FAN_IMP_NOT_SEMI_IDE	local_lemmas.hl	—	LocalAuto5.lean:1278	TRUE	_p2	已证
+LOFA_IN_V_SO_DO_RHO_NODE_V	local_lemmas.hl:1776	—	LocalAuto5.lean:3135	TRUE	_p2	已证
+LOFA_IMP_NOT_COLL_IVS	local_lemmas.hl	—	LocalAuto5.lean:7752	TRUE	_p2	已证
+LOFA_IMP_AZIM_RHO_NODE_ST	local_lemmas.hl:4517	40	LocalAuto5.lean:6128	TRUE	_p2	已证
+LOFA_IMP_DIS_ELMS2	local_lemmas.hl	—	LocalAuto5.lean:6157	TRUE	_p2	已证
+LOFA_IMP_DIS_ELMS23	local_lemmas.hl	—	LocalAuto5.lean:6263	TRUE	_p2	已证	CARD_IS_LEAST_CYCLE唯一实质前提
+SEQUENCE_OF_RHO_NODE_IS_SUC	local_lemmas.hl	—	LocalAuto5.lean:2552	TRUE	_p2	已证
+FIRST_AZIM_CYCLE_EQ_RHO_NODE	local_lemmas.hl:1204	—	LocalAuto5.lean:2509	TRUE	_p2	已证
+AZIM_LAST_POINT_IN_RHO_SET(2)	local_lemmas.hl:1566/1684	—	LocalAuto5.lean:2668/:3040	TRUE×2	_p2	已证
+V_AZIM_SMALLEST_ELMS	local_lemmas.hl	—	LocalAuto5.lean:2624	TRUE	_p2	已证
+KOMWBWC	local_lemmas.hl	—	LocalAuto5.lean:3054	TRUE	_p2	已证
+LOCAL_FAN_ORBIT_MAP_V	local_lemmas.hl	—	LocalAuto5.lean:1038	TRUE	_p2	已证
+LOOP_SET_DETER_FIRTS_ELMS	local_lemmas.hl	—	LocalAuto5.lean:4998	TRUE	_p2	已证	LOFA_IMP_ITER_RHO_NODE_ID推导主料
+CARD_RECUSIVE_EQ	local_lemmas.hl:3101	—	LocalAuto5.lean:4921	TRUE	_p2	已证
+LE_CARDV_IMP_CARD_DETERED	local_lemmas.hl:3129	—	LocalAuto5.lean:4966	TRUE	_p2	已证
+ITER_CARD_MINUS1_EQ_IVS_RN1	local_lemmas.hl:6106	—	LocalAuto5.lean:8026	TRUE	_p2	已证
+IVS_RHO_IDD	local_lemmas.hl	—	LocalAuto5.lean:7578	TRUE	_p2	已证
+DETER_RHO_NODE	local_lemmas.hl	—	LocalAuto5.lean:4909	TRUE	_p2	已证
+LOCAL_FAN_RHO_NODE_PROS	local_lemmas.hl	—	LocalAuto5.lean:186	TRUE	_p2	已证
+LOCAL_FAN_IN_FF_NOT_COLLINEAR	local_lemmas.hl	—	LocalAuto5.lean:868	TRUE	_p2	已证
+LOCAL_FAN_IMP_IN_V	local_lemmas.hl	—	LocalAuto5.lean:162	TRUE	_p2	已证
+CONVEX_LOFA_IMP_INANGLE_LE_PI	local_lemmas.hl	—	LocalAuto5.lean:7677	TRUE	_p2	已证
+INTERIOR_ANGLE1_POS	local_lemmas.hl	—	LocalAuto5.lean:5442	TRUE	_p2	已证
+AZIM_RANGE	local_lemmas.hl	—	LocalAuto5.lean:1549	TRUE	_p2	已证
+ARCV_BOUNDS	local_lemmas1.hl	—	LocalAuto6.lean:373	TRUE	_p2	已证
+LUNAR_IMP_INTERIOR_ANGLE_EQQ	local_lemmas.hl:5915	—	LocalAuto5.lean:7905	TRUE	_p2	已证
+LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI	local_lemmas.hl	—	LocalAuto5.lean:5773	TRUE	_p2	已证
+AFF_IVS_RHO_NODE_EQQ	local_lemmas.hl	—	LocalAuto5.lean:7599	TRUE	_p2	已证
+LUNAR_COMM	local_lemmas.hl	—	LocalAuto5.lean:7161	TRUE	_p2	已证
+LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT	local_lemmas.hl:4726	—	LocalAuto5.lean:6552	TRUE	_p2	已证
+sum4_azim_fan	Fan.hl	—	TopologyFan.lean:1105	TRUE	FAN	已证	月形望远镜和
+azim_lt_two_pi / azim_nonneg	Azim.hl	—	Geom/Azim.lean:956/:947	TRUE	Geom	已证
+hypermap_lemma	WRGCVDR.hl	—	Hypermap.lean:789	TRUE	泛型	已证
+CYCLIC_SET_IMP_NOT_COLLINEAR	WRGCVDR.hl:796	77	LocalAuto3.lean:761	TRUE	cyclicSet_p3	已证
+## F. 五名桩(任务点名的五枚)
+CIZMRRH	WRGCVDR.hl:3056	275	LocalAuto3.lean:1881	SORRY	localFan_p3	真移植	见D
+KCHMAMG	local_lemmas.hl:3197	280	LocalAuto5.lean:5018	SORRY	convexLocalFan_p2+circular_p2	真数学缺口	circular支主件: interior_angle1=π全称+平面A∋0+V⊆A+cyclic_set+azim_cycle=rho_node1+azim=arcV<π; Lean陈述与HOL逐前提一致(7前提/6合取对齐)
+HKIRPEP	local_lemmas.hl:6027	45	LocalAuto5.lean:7986	SORRY	convexLocalFan_p2+lunar_p2	真移植(上游1件)	HOL=MESON[HALP_CIRCLE_IS_INTERSECTION×2+角迁移kit(全真LA5)]; Lean陈述逐前提一致(2前提/5合取对齐)
+HALP_CIRCLE_IS_INTERSECTION	local_lemmas.hl:5653	165	LocalAuto5.lean:7670	SORRY	convexLocalFan_p2+lunar_p2	真数学缺口	HKIRPEP唯一实质上游
+CARD_IS_LEAST_CYCLE	local_lemmas1.hl:3056	21	LocalAuto6.lean:831	SORRY	localFan_p2	★近机械	唯一实质前提LOFA_IMP_DIS_ELMS23已真(LA5:6263); HOL 21行
+BGMIFTE	polar_fan.hl:1065	1050	LocalAuto7.lean:662	SORRY	LA1.ConvexLocalFan	真数学缺口	见C; LA7陈述与HOL逐前提一致(4前提/5合取对齐, prime' v=cross3 v (rhoNode1 FF v), prime'(r v)=cross3 (r v) (r (r v)) 逐字)
+RHO_NODE1_MONO_WITH_AZIM	local_lemmas.hl:4557	144	(全树缺)	缺失	localFan_p2	真移植	circular+月形两支都用; 依赖全真(SEQUENCE_OF_RHO_NODE_IS_SUC/LOFA_IMP_AZIM_RHO_NODE_ST/AZIM_RANGE/LOFA_IMP_DIS_ELMS2)
+## G. generic 支 SOL kit
+NKEZBFC	localization.hl:1502	—	LocalAuto2.lean:1606	SORRY	convexLocalFan_p2	真移植	0≤solLocal; LA9:955 NKEZBFC_PREP_p9 同族桩
+SOL_LOFA_EQ_SUM_INANGLE	Nkezbfc.hl:75	—	LocalAuto9.lean:747	SORRY	convexLocalFan_p2(solLocal_p9)	真移植	WSEWPCH:2567 消费
+CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS	Nkezbfc.hl:214	—	LocalAuto9.lean:768	SORRY	convexLocalFan_p2	真移植	WSEWPCH:2690-2698 消费
+IN_V_IMP_AZIM_LESS_PI	local_lemmas.hl:6247	28	(非ALT版缺; LA38:2669为ALT桩)	缺失	localFan_p2	真移植
+## H. 2π 求和引擎(已真证, 全部可复用)
+ORDER_AZIM_SUM2Pi0	counting_spheres.hl族	—	PackingAuto25.lean:10090	TRUE	纯V3	已证	azim链望远镜; 环卷补角
+ORDER_AZIM_SUM2Pi	counting_spheres.hl:2633	—	PackingAuto22.lean:7562	TRUE(体全证非桩)	纯V3	已证	1-index版
+SUM_AZIM_FAN_OF_NODE_EQ_2PI_I_FAN	HOL pack_conforming族	—	ConformingAuto7.lean:543	TRUE	FAN+azimFan	已证(邻族)	node-和2π; sum_azims_eq_2pi(TopologyFan:679)
+LA7.DISCHARGES契约	—	—	LocalAuto7.lean:81-83	34桩	—	—	15机械件已真(DIHV_ARCV…FAN_ECONOMIZED_SIMPLE)
+## I. 消费面
+TameLp.fully_surrounded_perimeter_bound	lp_main_estimate-compiled.hl:1530-1543	—	TameLp.lean:835-848	SORRY(文件唯一残源)	—	终点	闭合=yk11_WSEWPCH_core单行装配(:848)
+MQMSMAB(经CRTTXAT)	—	—	TameLp.lean:10479	(消费)	—	下游	经fully_surrounded_perimeter_bound间接
+e2e reachability map:49	—	—	docs/e2e-reachability-map.md:49	记录	—	—	TameLp=唯一残源, 单锚WSEWPCH核
