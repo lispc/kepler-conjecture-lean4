@@ -102,6 +102,7 @@ import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
 import Kepler.Text.LocalAuto2
 import Kepler.Text.LocalAuto4
+import Kepler.Text.LocalAuto5
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -737,18 +738,132 @@ lineage), `azim_in_fan` ↦ `azimInFan_p2`, `interior_angle1` ↦
 `ivsRhoNode1_p2`, `generic` ↦ `generic_p2`, `wedge_in_fan_gt` ↦
 `wedgeInFanGt_p2`, `wedge` ↦ `Kepler.Geom.wedge`. -/
 
+/-- LA9 support: congruence of `setSum` over a finite set (HOL `SUM_EQ`;
+`setSumCongr_p2` of PackingAuto2 is private, re-derived here). -/
+private theorem p9_setSum_congr {α : Type*} {s : Set α} {f g : α → ℝ}
+    (hf : s.Finite) (h : ∀ x ∈ s, f x = g x) : setSum s f = setSum s g := by
+  rw [setSum, dif_pos hf, setSum, dif_pos hf]
+  exact Finset.sum_congr rfl fun x hx => h x (hf.mem_toFinset.mp hx)
+
+/-- LA9 support: transport of a `setSum` along a bijection `ab : A → B`
+(the `SUM_EQ_GENERAL` shape; mirrors `setSumBijOn_p22` of PackingAuto22,
+which is not visible from LocalAuto9). -/
+private theorem p9_setSum_reindex {α ι : Type*} {A : Set α} {B : Set ι}
+    (hA : A.Finite) (hB : B.Finite) (ab : α → ι) (g : ι → ℝ)
+    (h : Set.BijOn ab A B) : setSum A (fun x => g (ab x)) = setSum B g := by
+  classical
+  rw [setSum, dif_pos hA, setSum, dif_pos hB]
+  have hinj : ∀ x ∈ hA.toFinset, ∀ y ∈ hA.toFinset, ab x = ab y → x = y :=
+    fun x hx y hy he => h.injOn (hA.mem_toFinset.mp hx) (hA.mem_toFinset.mp hy) he
+  have himg : hA.toFinset.image ab = hB.toFinset := by
+    ext y
+    simp only [Finset.mem_image, hA.mem_toFinset, hB.mem_toFinset]
+    constructor
+    · rintro ⟨x, hx, rfl⟩
+      exact h.mapsTo hx
+    · intro hy
+      obtain ⟨x, hx, hex⟩ := h.surjOn hy
+      exact ⟨x, hx, hex⟩
+  rw [← Finset.sum_image hinj, himg]
+
+/-- LA9 support: the pointwise companion of `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM`
+(HOL Nkezbfc.hl:39), read off the LA5 EE-kit: `LOFA_DETERMINE_AZIM_IN_FA`
+identifies `azim_in_fan` with the `azim_cycle` azimuth, which on the
+two-point set `EE v E = {rho_node1 v, vv}` (`LOFA_IMP_EE_TWO_ELMS`,
+`AZIM_CYCLE_TWO_POINT_SET`) is the rho-predecessor `vv`, and
+`RHO_NODE_INVERSE_POINT` identifies `vv` with `ivs_rho_node1 v`. -/
+private theorem p9_inangle_eq_azimInFan {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hlf : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    interiorAngle1_p2 0 FF v = azimInFan_p2 (v, rhoNode1_p2 FF v) E := by
+  have hpro := LOCAL_FAN_RHO_NODE_PROS2 hlf
+  have hdart : (v, rhoNode1_p2 FF v) ∈ FF := hpro.2 v hv
+  obtain ⟨vv, hvv, hrv⟩ := EXISTS_INVERSE_OF_V hlf hv
+  have hEE : EE_p2 v E = {rhoNode1_p2 FF v, vv} := LOFA_IMP_EE_TWO_ELMS hlf hvv hrv
+  have hcyc : azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v) = vv := by
+    rw [hEE]
+    exact AZIM_CYCLE_TWO_POINT_SET (rhoNode1_p2 FF v) vv 0 v
+  have hinj : Set.InjOn (rhoNode1_p2 FF) V :=
+    (SELF_CYCLIC_IMP_BIJ (rhoNode1_p2 FF) V
+      (fun x hx => (LOCAL_FAN_ORBIT_MAP_V hlf hx).symm)).2.1
+  have hpre : (vv, v) ∈ FF := by rw [← hrv]; exact hpro.2 vv hvv
+  have hivs : ivsRhoNode1_p2 FF v = vv := by
+    refine RHO_NODE_INVERSE_POINT hpre fun ww hw => ?_
+    have hv' : v = rhoNode1_p2 FF ww :=
+      congrArg Prod.snd (hpro.1 (ww, v) hw)
+    exact hinj (LOCAL_FAN_IMP_IN_V2 hlf hw).1 hvv (hv'.symm.trans hrv.symm)
+  show azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v)
+      = azimInFan_p2 (v, rhoNode1_p2 FF v) E
+  rw [hivs]
+  have h2 : azimInFan_p2 (v, rhoNode1_p2 FF v) E
+      = azim 0 v (rhoNode1_p2 FF v) vv := by
+    rw [LOFA_DETERMINE_AZIM_IN_FA hlf hdart]
+    exact congrArg (azim 0 (v, rhoNode1_p2 FF v).1 (v, rhoNode1_p2 FF v).2) hcyc
+  rw [h2]
+
+/-- HOL `IN_V_IMP_AZIM_LESS_PI` (Local_lemmas.hl:6247): on a convex local
+fan the azimuth from `v` to its rho-successor bounds by `pi` every azimuth
+from `v`'s rho-successor to a fan vertex (PRIOR_TO_LESS_THAN_PI_LEMMA route:
+`V ⊆ wedge_in_fan_ge (v, rho_node1 v) E` = `wedge_ge`, plus the convexity
+bound on `azim_in_fan (v, rho_node1 v) E` = the `azim_cycle` azimuth). -/
+theorem IN_V_IMP_AZIM_LESS_PI {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) (v : V3) (hv : v ∈ V) :
+    ∀ w ∈ V, azim 0 v (rhoNode1_p2 FF v) w ≤ Real.pi := by
+  obtain ⟨hlf, hconv⟩ := h
+  have hpro := LOCAL_FAN_RHO_NODE_PROS2 hlf
+  have hdart : (v, rhoNode1_p2 FF v) ∈ FF := hpro.2 v hv
+  have hwedge := hconv (v, rhoNode1_p2 FF v) hdart
+  have hcycPi : azim 0 v (rhoNode1_p2 FF v)
+      (azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v)) ≤ Real.pi := by
+    have h1 := hwedge.1
+    rwa [LOFA_DETERMINE_AZIM_IN_FA hlf hdart] at h1
+  intro w hwv
+  have hmem : w ∈ wedgeGe_p2 0 v (rhoNode1_p2 FF v)
+      (azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v)) := by
+    have h2 : w ∈ wedgeInFanGe_p2 (v, rhoNode1_p2 FF v) E := hwedge.2 hwv
+    rwa [DETERMINE_WEDGE_IN_FAN hlf hdart] at h2
+  have hle : azim 0 v (rhoNode1_p2 FF v) w ≤ azim 0 v (rhoNode1_p2 FF v)
+      (azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v)) := hmem.2
+  exact hle.trans hcycPi
+
 /-- HOL `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM` (Nkezbfc.hl:39). -/
 theorem CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_p9 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) :
     ∀ v ∈ V, interiorAngle1_p2 0 FF v = azimInFan_p2 (v, rhoNode1_p2 FF v) E := by
-  sorry
+  intro v hv
+  exact p9_inangle_eq_azimInFan h.1 hv
 
 /-- HOL `SOL_LOFA_EQ_SUM_INANGLE` (Nkezbfc.hl:75). -/
 theorem SOL_LOFA_EQ_SUM_INANGLE_p9 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) :
     solLocal_p9 E FF =
       2 * Real.pi + setSum V (fun v => interiorAngle1_p2 0 FF v - Real.pi) := by
-  sorry
+  obtain ⟨hlf, hconv⟩ := h
+  have hpro := LOCAL_FAN_RHO_NODE_PROS2 hlf
+  have hpoint := CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_p9 ⟨hlf, hconv⟩
+  have hfinFF : FF.Finite := by
+    obtain ⟨H, hd, -, -, -, -, ⟨z, hzd, hFF⟩, -⟩ := hlf
+    refine (H.darts.finite_toSet).subset fun d hdF => hd ▸ ?_
+    have hsub := H.face_subset_darts hzd (hFF ▸ hdF)
+    rw [hd] at hsub
+    exact hsub
+  have hfinV : V.Finite := LOCAL_FAN_FINITE_V hlf
+  -- every dart is `(FST d, rho_node1 (FST d))`; read the integrand on `V`
+  have hstep1 : setSum FF (fun e => azimInFan_p2 e E - Real.pi)
+      = setSum FF (fun e => interiorAngle1_p2 0 FF e.1 - Real.pi) := by
+    refine p9_setSum_congr hfinFF fun e he => ?_
+    have heV : e.1 ∈ V := (LOCAL_FAN_IMP_IN_V2 hlf he).1
+    have h1 : azimInFan_p2 e E
+        = azimInFan_p2 (e.1, rhoNode1_p2 FF e.1) E :=
+      congrArg (fun d => azimInFan_p2 d E) (hpro.1 e he)
+    rw [h1, hpoint e.1 heV]
+  -- reindex along the WRGCVDR bijection `FST : FF → V`
+  have hstep2 : setSum FF (fun e => interiorAngle1_p2 0 FF e.1 - Real.pi)
+      = setSum V (fun v => interiorAngle1_p2 0 FF v - Real.pi) :=
+    p9_setSum_reindex hfinFF hfinV Prod.fst
+      (fun v => interiorAngle1_p2 0 FF v - Real.pi) (WRGCVDR_BIJ hlf)
+  show 2 * Real.pi + setSum FF (fun e => azimInFan_p2 e E - Real.pi) =
+      2 * Real.pi + setSum V (fun v => interiorAngle1_p2 0 FF v - Real.pi)
+  rw [hstep1, hstep2]
 
 /-- HOL `CARD_VERTEX_GE_3_LOCAL_FAN` (Nkezbfc.hl:103). -/
 theorem CARD_VERTEX_GE_3_LOCAL_FAN_p9 {V : Set V3} {E : Set (Set V3)}
@@ -769,7 +884,8 @@ theorem CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p9 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) :
     ∀ v ∈ V, interiorAngle1_p2 0 FF v =
       azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v) := by
-  sorry
+  intro v _
+  rfl
 
 /-- HOL `SOL_LOCAL_FAN_POS_CASE3` (Nkezbfc.hl:248). -/
 theorem SOL_LOCAL_FAN_POS_CASE3_p9 {V : Set V3} {E : Set (Set V3)}
