@@ -1,4 +1,8 @@
-# e2e-debt-map — 主定理端到端可达债务图（M5′ 现行度量文件）
+# e2e-debt-map — 主定理端到端可达债务图（历史快照）
+
+> **〔2026-10-25 存档标记〕本文件是 2026-09-29 时点的 M5′ 度量快照，已被
+> `docs/e2e-reachability-map.md` + `.tsv`（声明级 proof-term 遍历、每次落库重生成）
+> 取代；保留仅作历史对照，勿据其排序车道。**
 
 > 2026-09-29 快照 v2（wave3 收官更新；自动探针本机不可用，见 DEBT.md
 > 脊柱节说明）。目标定理：`Kepler.Assembly.the_kepler_conjecture_from_interfaces`。
