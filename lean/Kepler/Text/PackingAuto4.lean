@@ -400,7 +400,7 @@ theorem FINITE_INITIAL_SEG2 (n : ℕ) : {i : ℕ | i < n}.Finite := by
 
 /-- OXLZLEZ2.hl:1768. -/
 theorem CARD_MOD_NUMSEG (n m i : ℕ) (_hm : m ≤ n) :
-    Nat.card {x : ℕ | ∃ k < m, x = (i + k) % n} = m := by sorry
+    Nat.card {x : ℕ | ∃ k < m, x = (i + k) % n} = m := p3g_CARD_MOD_NUMSEG n m i _hm
 
 /-- OXLZLEZ2.hl:1805. -/
 theorem MOD_NUMSEG (n i : ℕ) (hn : n ≠ 0) :
@@ -645,7 +645,7 @@ bank these rows will be discharged from. -/
 theorem CHQSQEY_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    3 ≤ cc_size_v11 cc (cc_4cell_v11 cc) := by sorry
+    3 ≤ cc_size_v11 cc (cc_4cell_v11 cc) := CHQSQEY_concl cc _hb _hp _hr _hsum
 
 /-- OXLZLEZ1.hl:138-140 (`MTMLSRF_concl`); public `CcV11` twin of
 `MTMLSRF` above. -/
@@ -653,56 +653,218 @@ theorem MTMLSRF_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
     ∃ i, 0 < i ∧ cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧
-      cc_4cell_v11 cc (i + 1) ∧ cc_4cell_v11 cc (i - 1) := by sorry
+      cc_4cell_v11 cc (i + 1) ∧ cc_4cell_v11 cc (i - 1) := MTMLSRF_concl cc _hb _hp _hr _hsum
 
 /-- OXLZLEZ1.hl:142-143 (`LXDEYBO_concl`); public `CcV11` twin of
 `LXDEYBO` above. -/
 theorem LXDEYBO_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    cc_size_v11 cc (cc_4cell_v11 cc) ≤ 4 := by sorry
+    cc_size_v11 cc (cc_4cell_v11 cc) ≤ 4 := LXDEYBO_concl cc _hb _hp _hr _hsum
 
 /-- OXLZLEZ1.hl:145-146 (`UNPNFVW_concl`); public `CcV11` twin of
 `UNPNFVW` above. -/
 theorem UNPNFVW_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    cc_size_v11 cc (cc_qy_v11 cc) ≤ 1 := by sorry
+    cc_size_v11 cc (cc_qy_v11 cc) ≤ 1 := UNPNFVW_concl cc _hb _hp _hr _hsum
 
 /-- OXLZLEZ1.hl:156-157 (`IPVICGW_concl`); public `CcV11` twin of
 `IPVICGW` above. -/
 theorem IPVICGW_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    ∀ i, cc_small_v11 cc i := by sorry
+    ∀ i, cc_small_v11 cc i := IPVICGW_concl cc _hb _hp _hr _hsum
 
 /-- OXLZLEZ1.hl:159-160 (`RSIWAMP_concl`); public `CcV11` twin of
 `RSIWAMP` above. -/
 theorem RSIWAMP_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    cc_card_v11 cc ≤ 4 := by sorry
+    cc_card_v11 cc ≤ 4 := RSIWAMP_concl cc _hb _hp _hr _hsum
 
 /-- OXLZLEZ1.hl:167-168 (`UTEOITF_concl`); public `CcV11` twin of
 `UTEOITF` above. -/
 theorem UTEOITF_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    ∀ i, cc_4cell_v11 cc i := by sorry
+    ∀ i, cc_4cell_v11 cc i := UTEOITF_concl cc _hb _hp _hr _hsum
 
 /-- OXLZLEZ1.hl:170-171 (`LUIKGMH_concl`); public `CcV11` twin of
 `LUIKGMH` above. -/
 theorem LUIKGMH_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    4 ≤ cc_card_v11 cc := by sorry
+    4 ≤ cc_card_v11 cc := LUIKGMH_concl cc _hb _hp _hr _hsum
 
 /-- OXLZLEZ1.hl:173-174 (`GRHIDFA_concl`); public `CcV11` twin of
 `GRHIDFA` above: the D-case capstone `False`. -/
 theorem GRHIDFA_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    False := by sorry
+    False := GRHIDFA_concl cc _hb _hp _hr _hsum
+
+/-! ## 2c. `CC4P4` → `CcV11` bridge (GRHIDFA W6 lane)
+
+`toV11` realizes the file-private `CC4P4` record as a public
+`PackingAuto3.CcV11` cell: the four real arrays / six bool predicates become
+literal lists, so every `cc_*_v11` accessor iota-collapses on indices 0-3
+(reals) / 0-5 (bools) and the accessor lemmas below are `rfl` / `Iff.rfl`.
+The bool model transfers through `toV11` via `propext` (the six periodicity
+conjuncts switch the `Eq`/`Iff` rendering); `ccBoolPrepP4` is definitional.
+
+STATEMENT-FIX note (W6 finding): the frozen `ccRealModelP4` azim-sum
+conjunct and the frozen `CARD5_1074_LE_QYI` `_hsum` premise both sum over
+`Finset.Icc 0 (ccCardP4 cc)` = {0,…,card}, while the HOL original
+(OXLZLEZ1.hl general bounds; OXLZLEZ2.hl:2527 premise) and the proved
+`PackingAuto3.cc_real_model_v11` both use `0..card-1`.  By periodicity
+`sum_{0..card} azim = sum_{0..card-1} azim + azim 0` with `0.606 ≤ azim i`,
+the two encodings are inequivalent (explicit refuting cells exist in both
+directions), so the 20 model-consuming `CC4P4` stubs of section 2 cannot be
+discharged from the proved PA3 ladder until those two frozen lines are
+corrected.  `p4_real_model_of_sumfix` / `p4_model4_of_sumfix` carry the
+HOL-faithful conjunct as an explicit premise slot, so after the fix every
+section-2 stub discharge is one line through this bridge. -/
+
+
+/-- Bridge: periodic at Prop-valued functions, `Eq` rendering (PA3) vs
+`Iff` rendering (PA4 `periodicPropP4`). -/
+private theorem p4_periodic_prop_eq_iff {f : ℕ → Prop} {n : ℕ} :
+    periodic f n ↔ periodicPropP4 f n := by
+  constructor
+  · intro h i
+    show f (i + n) ↔ f i
+    rw [h i]
+  · intro h i
+    show f (i + n) = f i
+    rw [h i]
+
+/-- Bridge object: realize a private `CC4P4` record as a `CcV11` cell
+(OXLZLEZ1.hl:25-27).  The literal lists make every `cc_*_v11` accessor
+iota-collapse on indices 0-3 (reals) / 0-5 (bools). -/
+private def toV11 (cc : CC4P4) : CcV11 where
+  ccReals := [cc.reals 0, cc.reals 1, cc.reals 2, cc.reals 3]
+  ccBools := [fun i => cc.bools 0 i = true, fun i => cc.bools 1 i = true,
+    fun i => cc.bools 2 i = true, fun i => cc.bools 3 i = true,
+    fun i => cc.bools 4 i = true, fun i => cc.bools 5 i = true]
+  ccCard := cc.cardA
+
+/-- Bridge accessor: `cc_card_v11` (definitional). -/
+private theorem p4_card_v11 (cc : CC4P4) : cc_card_v11 (toV11 cc) = ccCardP4 cc := rfl
+
+/-- Bridge accessor: `cc_azim_v11` (definitional). -/
+private theorem p4_azim_v11 (cc : CC4P4) (i : ℕ) :
+    cc_azim_v11 (toV11 cc) i = ccAzimP4 cc i := rfl
+
+/-- Bridge accessor: `cc_gg_v11` (definitional). -/
+private theorem p4_gg_v11 (cc : CC4P4) (i : ℕ) :
+    cc_gg_v11 (toV11 cc) i = ccGgP4 cc i := rfl
+
+/-- Bridge accessor: `cc_gg3a_v11` (definitional). -/
+private theorem p4_gg3a_v11 (cc : CC4P4) (i : ℕ) :
+    cc_gg3a_v11 (toV11 cc) i = ccGg3aP4 cc i := rfl
+
+/-- Bridge accessor: `cc_gg3b_v11` (definitional). -/
+private theorem p4_gg3b_v11 (cc : CC4P4) (i : ℕ) :
+    cc_gg3b_v11 (toV11 cc) i = ccGg3bP4 cc i := rfl
+
+/-- Bridge accessor: `cc_subcrit_v11` (definitional). -/
+private theorem p4_subcrit_v11 (cc : CC4P4) (i : ℕ) :
+    cc_subcrit_v11 (toV11 cc) i ↔ ccSubcritP4 cc i := Iff.rfl
+
+/-- Bridge accessor: `cc_crit_v11` (definitional). -/
+private theorem p4_crit_v11 (cc : CC4P4) (i : ℕ) :
+    cc_crit_v11 (toV11 cc) i ↔ ccCritP4 cc i := Iff.rfl
+
+/-- Bridge accessor: `cc_supercrit_v11` (definitional). -/
+private theorem p4_supercrit_v11 (cc : CC4P4) (i : ℕ) :
+    cc_supercrit_v11 (toV11 cc) i ↔ ccSupercritP4 cc i := Iff.rfl
+
+/-- Bridge accessor: `cc_small_v11` (definitional). -/
+private theorem p4_small_v11 (cc : CC4P4) (i : ℕ) :
+    cc_small_v11 (toV11 cc) i ↔ ccSmallP4 cc i := Iff.rfl
+
+/-- Bridge accessor: `cc_small_eta_v11` (definitional). -/
+private theorem p4_small_eta_v11 (cc : CC4P4) (i : ℕ) :
+    cc_small_eta_v11 (toV11 cc) i ↔ ccSmallEtaP4 cc i := Iff.rfl
+
+/-- Bridge accessor: `cc_4cell_v11` (definitional). -/
+private theorem p4_4cell_v11 (cc : CC4P4) (i : ℕ) :
+    cc_4cell_v11 (toV11 cc) i ↔ cc4CellP4 cc i := Iff.rfl
+
+/-- Bridge: the two size renderings agree (OXLZLEZ1.hl:56:
+`Finset.filter`-card vs `Nat.card` of the same initial segment). -/
+private theorem p4_cc_size_nat (cc : CC4P4) (p : ℕ → Prop)
+    (hcard : ccCardP4 cc ≠ 0) :
+    cc_size_v11 (toV11 cc) p = Nat.card {i : ℕ | i < ccCardP4 cc ∧ p i} := by
+  have hc : cc_card_v11 (toV11 cc) = ccCardP4 cc := rfl
+  rw [hc] at *
+  have hset : {i : ℕ | i < ccCardP4 cc ∧ p i}
+      = ((Finset.filter p (Finset.Icc 0 (ccCardP4 cc - 1)) : Finset ℕ) : Set ℕ) := by
+    ext i
+    simp only [Set.mem_setOf_eq, Finset.mem_filter, Finset.mem_coe, Finset.mem_Icc]
+    constructor
+    · rintro ⟨hlt, hp⟩
+      exact ⟨⟨Nat.zero_le i, Nat.le_sub_one_of_lt hlt⟩, hp⟩
+    · rintro ⟨⟨-, hle⟩, hp⟩
+      exact ⟨Nat.lt_iff_le_pred (Nat.pos_of_ne_zero hcard) |>.mpr hle, hp⟩
+  rw [hset, Nat.card_coe_set_eq, Set.ncard_coe_finset]
+  rfl
+
+/-- Bridge: the `ℝ`-cast rendering used by `ccSizeP4`. -/
+private theorem p4_cc_size_cast (cc : CC4P4) (p : ℕ → Prop)
+    (hcard : ccCardP4 cc ≠ 0) :
+    (cc_size_v11 (toV11 cc) p : ℝ) = ccSizeP4 cc p := by
+  unfold ccSizeP4
+  exact congrArg (fun n : ℕ => (n : ℝ)) (p4_cc_size_nat cc p hcard)
+
+/-- Bridge: the bool model transfers through `toV11` (the six periodicity
+conjuncts switch the `Eq`/`Iff` rendering via `propext`; every other
+conjunct is definitional). -/
+private theorem p4_bool_model_iff (cc : CC4P4) :
+    cc_bool_model_v11 (toV11 cc) ↔ ccBoolModelP4 cc := by
+  constructor
+  · rintro ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩
+    exact ⟨h1, p4_periodic_prop_eq_iff.1 h2, p4_periodic_prop_eq_iff.1 h3,
+      p4_periodic_prop_eq_iff.1 h4, p4_periodic_prop_eq_iff.1 h5,
+      p4_periodic_prop_eq_iff.1 h6, p4_periodic_prop_eq_iff.1 h7, h8, h9, h10, h11, h12⟩
+  · rintro ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩
+    exact ⟨h1, p4_periodic_prop_eq_iff.2 h2, p4_periodic_prop_eq_iff.2 h3,
+      p4_periodic_prop_eq_iff.2 h4, p4_periodic_prop_eq_iff.2 h5,
+      p4_periodic_prop_eq_iff.2 h6, p4_periodic_prop_eq_iff.2 h7, h8, h9, h10, h11, h12⟩
+
+/-- Bridge: `ccBoolPrepP4` is the same statement as `cc_bool_prep_v11`
+over `toV11` (definitional). -/
+private theorem p4_bool_prep_iff (cc : CC4P4) :
+    cc_bool_prep_v11 (toV11 cc) ↔ ccBoolPrepP4 cc := Iff.rfl
+
+/-- Bridge (premise-slot engine): the real model transfers through `toV11`
+given the HOL-faithful azim-sum conjunct `sum (0..card-1) azim = 2π` as an
+explicit premise.  Every other conjunct is definitional, so the post-fix
+discharge of the section-2 `CC4P4` stubs is one line per stub. -/
+private theorem p4_real_model_of_sumfix (cc : CC4P4) (hr : ccRealModelP4 cc)
+    (hfix : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccAzimP4 cc) = 2 * Real.pi) :
+    cc_real_model_v11 (toV11 cc) := by
+  obtain ⟨h1, h2, h3, h4, h5, h6, -, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17,
+    h18, h19, h20, h21, h22, h23, h24, h25, h26, h27, h28, h29, h30, h31, h32, h33⟩ := hr
+  have h3lit : (3 : ℝ) = 3.0 := by norm_num
+  refine ⟨h1, h2, h3, h4, h5, h6, hfix, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17,
+    h18, h19, h20, h21, h22, h23, h24, h25, h26, h27, h28, h29, h30, h31, h32, ?_⟩
+  intro i hq
+  have htxq := h33 i hq
+  rw [h3lit]
+  exact htxq
+
+/-- Bridge (premise-slot engine) for the four-hypothesis stub shape. -/
+private theorem p4_model4_of_sumfix (cc : CC4P4)
+    (h : ccBoolModelP4 cc ∧ ccBoolPrepP4 cc ∧ ccRealModelP4 cc ∧
+      Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0)
+    (hfix : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccAzimP4 cc) = 2 * Real.pi) :
+    cc_bool_model_v11 (toV11 cc) ∧ cc_bool_prep_v11 (toV11 cc) ∧
+      cc_real_model_v11 (toV11 cc) ∧
+      (∑ i ∈ Finset.Icc 0 (cc_card_v11 (toV11 cc) - 1), cc_gg_v11 (toV11 cc) i) < (0 : ℝ) :=
+  ⟨(p4_bool_model_iff cc).mpr h.1, h.2.1, p4_real_model_of_sumfix cc h.2.2.1 hfix, h.2.2.2⟩
+
 
 /-! ## 3. `betaBump` and the `bump.hl` calculus
 
