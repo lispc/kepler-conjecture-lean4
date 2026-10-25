@@ -27,8 +27,9 @@
 | 车道 | 任务 | 文件 | 计分属性 |
 |---|---|---|---|
 | GRHIDFA-W3 | ✅ **完成**（`bef9abae`，IPVICGW 支 10 行 + 14 私件，十件标准三，+814/−0） | PackingAuto3.lean | 零计分（W5 才回填九桩），W4 前置 |
-| FCHKUGT-W4 | FUEIMOV_3（ke=3 引子 + MXI kit 剥层 + 茎对二择；:5605） | PackingAuto18.lean | 零计分资产，W5 前置 |
+| FCHKUGT-W4 | ✅ **完成**（`fff95dbc`，FUEIMOV_3 一次迭代通过，标准三，bare sorry 16→15；**W5 前置 W1-W4 全齐，本体 :7432 装配解锁**） | PackingAuto18.lean | 零计分资产，W5 前置 |
 | A2-W2a | CertG 重烤（两枚 TM demo decide=false 阻断，照 C549Mono 先例）+ 链通验证 Base/Shard1/2 + segbuild.sh | Kepler/Interval/CertG.lean | 40h 构建的第 0 步 |
+| GRHIDFA-W4 | RSIWAMP（一行式）+ UTEOITF（nn=3/4/5 三支分类件） | PackingAuto3.lean | 零计分，W5 前置 |
 
 > **A2-W1 已完成（2026-10-25，关键事实翻案）**：rest 9 证书源 **2,777 文件全部
 > tracked 在库**（`CQITNPEAx3725403817`，964,984 叶 prec 64 bb_arb）——**无需 G4
@@ -41,14 +42,14 @@
 
 ## 2. 排队（按序补位）
 
-1. `就绪` **GRHIDFA W4**：RSIWAMP（= CC_CARD_LESS_THAN_5 + PRE_IPVICGW 一行式）+ UTEOITF（首步 `fun hqy => hqy (p3i_IPVICGW …)`）；W3 交付 14 私件同文件可用。
-2. `排队` **A2-W2**（编排者排期）：G4 发射 cert.json → 本机 40h 分段构建 → olean 回灌 → 落库 **−1 源**。
+1. `就绪` **FCHKUGT W5**：本体四分支装配（:7432；W1-W4 前置全齐 `fff95dbc`，k=4 支 d 已由 FUEIMOV_4 解锁）——FCHKUGT 全链收官波。
+2. `排队` **GRHIDFA W5**（待 W4）：NOT_QY_LEM + LUIKGMH + GRHIDFA_ALT + GRHIDFA 本体 + 九桩回填（**−9 计分时刻**）。
+3. `排队` **A2-W2b**（待 W2a）：编排者跑 40h 分段构建（segbuild.sh 断点续跑）→ olean 回灌 → 粘合落库 **−1 源**。
 4. `排队` **WSEWPCH W2**：BN W1 已落库（`20ff16c3`，锥 kit + azim 平移不变 kit 遗产就位）；余两件路线已入档（UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE，~200 行）。
 5. `排队` **WSEWPCH W3-W5a**：核四真缺口（BGMIFTE 1050 / KCHMAMG 280 / CIZMRRH 275 / HALP 165——注意 HALP_CIRCLE_IS_INTERSECTION 实为 LA5:7670 桩，LA5 不可 import，需编排者单独立项）。
-6. `排队` **FCHKUGT W5**：本体四分支装配（k=4 支 d 已由 FUEIMOV_4 解锁）。
-7. `排队` **BO LA1 注册表侦察**（只读）：JEJTVGB 暴露的 22+ 条 `*_concl` 箭头族 + LA2x 机器——B 类最大单块，预判多为 scs 记录展开。
-8. `排队` **池C MCELL4_FULL_WEDGE**：等 FCHKUGT 全清（楔二择支解锁）。
-9. `排队` **GRHIDFA W5→W6**：九桩回填（**−9 计分时刻**）+ PA4 CC4P4→CcV11 桥（−30）。
+6. `排队` **BO LA1 注册表侦察**（只读）：JEJTVGB 暴露的 22+ 条 `*_concl` 箭头族 + LA2x 机器——B 类最大单块，预判多为 scs 记录展开。
+7. `排队` **池C MCELL4_FULL_WEDGE**：等 FCHKUGT 全清（楔二择支解锁）。
+8. `排队` **GRHIDFA W6**：PA4 CC4P4→CcV11 桥（−30）+ PackingConcl 九连转净。
 
 ## 3. 两周战术排序（2026-10-25 战略备忘录定稿）
 
