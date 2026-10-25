@@ -2867,7 +2867,12 @@ private theorem p12_mxi_leftAction {V : Set V3} {ul xl : List V3}
 `left_action_list p ul` preserves `barV V 3`, the omega points 2 and 3, and
 `mxi`. The HOL `permutes` is complement-fixing; the Lean encoding takes the
 tail-fixedness as the explicit hypothesis `hfix` (SF-48, approved 2026-10-22). -/
-theorem LEFT_ACTION_LIST_PROPERTIES {V : Set V3} {ul xl : List V3} {p : Equiv.Perm ℕ}
+-- Orchestrator merge-conflict hotfix (2026-10-25): PackingAuto10 (imported here) now
+-- declares a byte-identical public `LEFT_ACTION_LIST_PROPERTIES` (06f1cee5, Lane BA),
+-- so this earlier copy (ae475e70) is renamed `_p12` to avoid the duplicate-declaration
+-- error. Proof kept verbatim; all bare-name consumers (PackingAuto14 ×4) resolve to the
+-- upstream PackingAuto10 statement, which is identical.
+theorem LEFT_ACTION_LIST_PROPERTIES_p12 {V : Set V3} {ul xl : List V3} {p : Equiv.Perm ℕ}
     (hpack : Packing V) (hsat : saturated V) (hbar : barV V 3 ul)
     (h1 : hl (truncateSimplex 2 ul) < Real.sqrt 2)
     (h2 : Real.sqrt 2 ≤ hl ul)
