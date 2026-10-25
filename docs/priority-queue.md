@@ -28,7 +28,16 @@
 |---|---|---|---|
 | GRHIDFA-W3 | ✅ **完成**（`bef9abae`，IPVICGW 支 10 行 + 14 私件，十件标准三，+814/−0） | PackingAuto3.lean | 零计分（W5 才回填九桩），W4 前置 |
 | FCHKUGT-W4 | FUEIMOV_3（ke=3 引子 + MXI kit 剥层 + 茎对二择；:5605） | PackingAuto18.lean | 零计分资产，W5 前置 |
-| A2-W1 | nli rest 9 粘合波：dihY 超越 glue（QITNPEA3725403817_pos 处留显式前提槽）+ G4 发射交接书 | scratch（不改主仓） | 接线预备，落库在 G4 发射 + 本机 40h 分段构建之后 |
+| A2-W2a | CertG 重烤（两枚 TM demo decide=false 阻断，照 C549Mono 先例）+ 链通验证 Base/Shard1/2 + segbuild.sh | Kepler/Interval/CertG.lean | 40h 构建的第 0 步 |
+
+> **A2-W1 已完成（2026-10-25，关键事实翻案）**：rest 9 证书源 **2,777 文件全部
+> tracked 在库**（`CQITNPEAx3725403817`，964,984 叶 prec 64 bb_arb）——**无需 G4
+> 发射**；prog 超越节点 ↔ kit 对照**无缺口**（atan×7/sqrt×4/ite×3 全支持，dihY 展开
+> 与 prog 语义零分歧，400+64 点数值对证 max 误差 0.0）；glue 三件手写引理标准三，
+> 终局形状 = 前提槽一行代入。**新阻断：CertG.lean:248/:420 两枚 TM 教学 demo
+> decide=false（CertTM 语义演进未重烤，SF-42 已知尾波债）**——A2-W2a 处理中。
+> 交付物：Glue.lean / RUNBOOK-G4.md（发射 CLI 勘误 + 分段构建 + 回灌 + 落库全流程）/
+> APPLY-DRAFT.md / prog 节点清单，存 `lane_snapshots/a2-rest9-w1/`。
 
 ## 2. 排队（按序补位）
 
