@@ -29,6 +29,11 @@
 | GRHIDFA-W3 | IPVICGW 支 10 行（3a：C33/UNIQUE_QY(2)/C43_C44；3b：CARD5 双件/PRE_IPVICGW/CC_CARD_LESS_THAN_5/IPVICGW） | PackingAuto3.lean | 零计分（W5 才回填九桩），W4 前置 |
 | FCHKUGT-W3 | FUEIMOV_4 茎对二择双支（:5383；FUEIMOV_3 归 W4 勿动） | PackingAuto18.lean | 零计分资产，W4 前置 |
 
+> **A2-W1（nli rest 9 粘合波）已整装待发**：任务书已写入
+> `~/c17_backup/lane_snapshots/a2-rest9-w1/TASK.md`，工作区克隆已建（`/tmp/a2-rest9`）。
+> 并发上限实测已收紧到 2（第三次发车被拒），**两子在飞车道任一收工即 1:1 补位发车
+> A2-W1（队首置顶，用户 2026-10-25 指令）**，其余排队项顺延。
+
 ## 2. 排队（按序补位）
 
 1. `就绪` **WSEWPCH W2**：BN W1 已落库（`20ff16c3`，锥 kit + azim 平移不变 kit 遗产就位）；余两件路线已入档（UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE，~200 行）。
