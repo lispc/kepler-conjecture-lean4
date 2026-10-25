@@ -54,6 +54,7 @@ REMAINING (precise gaps left for the giant family):
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto2
 import Kepler.Text.LocalAuto3
 import Kepler.Text.LocalAuto4
 import Kepler.Text.SphereKit
@@ -804,5 +805,159 @@ The component-level data they reduce to is fully proved in the bridges
 above; the remaining work is `@`-explicit `Hypermap` projection pinning.
 
 -/
+
+/-! ## §8 `_p2`↔`_p3` vocabulary bridges and the packaged `localFan_p3.of_LocalFan` -/
+
+-- (a) the 11 pairwise bridges
+
+/-- LA2's `azimCycle_p2` body = LA3's `azimCycle_p3` (verbatim twins). -/
+theorem azimCycle_p2_eq_azimCycle_p3 (W : Set V3) (v w p : V3) :
+    azimCycle_p2 W v w p = azimCycle_p3 W v w p := rfl
+
+/-- LA2's `ivsAzimCycle_p2` body = LA3's `ivsAzimCycle_p3`. -/
+theorem ivsAzimCycle_p2_eq_ivsAzimCycle_p3 (W : Set V3) (v0 v w : V3) :
+    ivsAzimCycle_p2 W v0 v w = ivsAzimCycle_p3 W v0 v w := rfl
+
+/-- LA2's `EE_p2` body = LA3's `EE_p3`. -/
+theorem EE_p2_eq_EE_p3 {α : Type*} (v : α) (S : Set (Set α)) : EE_p2 v S = EE_p3 v S := rfl
+
+/-- LA2's `ordPairs_p2` body = LA3's `ordPairs_p3`. -/
+theorem ordPairs_p2_eq_ordPairs_p3 {α : Type*} (E : Set (Set α)) :
+    ordPairs_p2 E = ordPairs_p3 E := rfl
+
+/-- LA2's `selfPairs_p2` body = LA3's `selfPairs_p3`. -/
+theorem selfPairs_p2_eq_selfPairs_p3 {α : Type*} (E : Set (Set α)) (V : Set α) :
+    selfPairs_p2 E V = selfPairs_p3 E V := rfl
+
+/-- LA2's `dartsOfHyp_p2` body = LA3's `dartsOfHyp_p3`. -/
+theorem dartsOfHyp_p2_eq_dartsOfHyp_p3 {α : Type*} (E : Set (Set α)) (V : Set α) :
+    dartsOfHyp_p2 E V = dartsOfHyp_p3 E V := rfl
+
+/-- LA2's `eeOfHyp_p2` body = LA3's `eeOfHyp_p3`. -/
+theorem eeOfHyp_p2_eq_eeOfHyp_p3 (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
+    eeOfHyp_p2 x V E d = eeOfHyp_p3 x V E d := rfl
+
+/-- LA2's `nnOfHyp_p2` body = LA3's `nnOfHyp_p3`. -/
+theorem nnOfHyp_p2_eq_nnOfHyp_p3 (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
+    nnOfHyp_p2 x V E d = nnOfHyp_p3 x V E d := rfl
+
+/-- LA2's `ffOfHyp_p2` body = LA3's `ffOfHyp_p3`. -/
+theorem ffOfHyp_p2_eq_ffOfHyp_p3 (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
+    ffOfHyp_p2 x V E d = ffOfHyp_p3 x V E d := rfl
+
+/-- LA2's `hasOrders_p2` body = LA3's `hasOrders_p3`. -/
+theorem hasOrders_p2_iff_hasOrders_p3 {α : Type*} (f : α → α) (k : ℕ) :
+    hasOrders_p2 f k ↔ hasOrders_p3 f k := Iff.rfl
+
+/-- LA2's `dih2k_p2` body = LA3's `dih2k_p3` (same hypermap `H`). -/
+theorem dih2k_p2_iff_dih2k_p3 {α : Type*} [DecidableEq α] (H : Hypermap α) (k : ℕ) :
+    dih2k_p2 H k ↔ dih2k_p3 H k := Iff.rfl
+
+/-- The no-isolated hypothesis in its natural form (every vertex lies on
+an edge) gives the §6 no-isolated premise `hno`; no `FAN` needed (the
+`ordPairs`/`selfPairs` union decomposition is unconditional). -/
+theorem hno_of_no_isolated {V : Set V3} {E : Set (Set V3)}
+    (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) : dartsOfHyp_p3 E V = dart1OfFan V E := by
+  ext d
+  simp only [dartsOfHyp_p3, ordPairs_p3, selfPairs_p3, dart1OfFan, Set.mem_union,
+    Set.mem_setOf_eq]
+  constructor
+  · rintro (h | ⟨h12, hd1V, hE⟩)
+    · exact h
+    · obtain ⟨w, hw⟩ := hedge d.1 hd1V
+      have hw' : w ∈ EE_p3 d.1 E := hw
+      rw [hE] at hw'
+      exact (hw' : False).elim
+  · exact fun h => Or.inl h
+
+/-- The `_p2`-world form of the no-isolated premise (LA2's consumers). -/
+theorem hno_p2_of_no_isolated {V : Set V3} {E : Set (Set V3)}
+    (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) : dartsOfHyp_p2 E V = dart1OfFan V E :=
+  dartsOfHyp_p2_eq_dartsOfHyp_p3 (α := V3) E V |>.trans (hno_of_no_isolated hedge)
+
+/-- **MASTER (forward, packaged)**: LA1's `LocalFan` gives LA3's
+`localFan_p3`, the packaged HYP-hypermap form, provided the isolated
+self-pair darts are absent (`dartsOfHyp_p3 E V = dart1OfFan V E`; see
+`hno_of_no_isolated` for the natural hypothesis producing it). The
+witness hypermap is the HYP hypermap of the fan (`exists_hypHyp_of_fan`),
+whose darts match the fan darts by `hno` and whose components are the raw
+of-hyp maps by construction. -/
+theorem localFan_p3.of_LocalFan {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) (hno : dartsOfHyp_p3 E V = dart1OfFan V E) :
+    localFan_p3 V E FF := by
+  have hld := localFan_data h
+  obtain ⟨hfan, x, hx, hFF, hD⟩ := h
+  obtain ⟨hfandata, d, hd1, hFFo, hFFm, hsub, hfin, hcard, hoff, hofe, honn, horb⟩ := hld
+  have hpi : hfan = hfandata := rfl
+  subst hpi
+  obtain ⟨H, hdarts, hedge, hnode, hface⟩ := exists_hypHyp_of_fan hfan
+  have hcoe : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := hdarts.trans hno
+  have hfaceOrb : ∀ y : V3 × V3, H.face y = orbitF_p3 (ffOfHyp_p3 0 V E) y := by
+    intro y
+    show orbitMap H.faceMap y = orbitF_p3 (ffOfHyp_p3 0 V E) y
+    unfold orbitMap orbitF_p3
+    ext z
+    simp only [Equiv.Perm.coe_pow, hface]
+  refine ⟨H, hdarts, hedge, hnode, hface, hfan, ?_, ?_⟩
+  · have hdart : d ∈ (↑H.darts : Set (V3 × V3)) := by
+      rw [hdarts]
+      exact Set.mem_union_left _ hd1
+    refine ⟨d, Finset.mem_coe.mpr hdart, ?_⟩
+    rw [hfaceOrb d, hFFo]
+  · refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · have hHeq : H.darts =
+          (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+            (hypermapOfFan 0 V E hfan)) :=
+        Finset.coe_injective (hcoe.trans (dartsLA1 0 V E hfan).symm)
+      rw [hHeq]
+      exact hD.1
+    · intro y hy
+      have hy1 : y ∈ dart1OfFan V E := by rw [← hcoe]; exact hy
+      have hny : (H.nodeMap : V3 × V3 → V3 × V3) '' H.face y =
+          (nnOfHyp_p3 0 V E) '' orbitF_p3 (ffOfHyp_p3 0 V E) y := by
+        rw [hnode, hfaceOrb y]
+      rw [hcoe, hny, hfaceOrb y]
+      exact (horb y hy1).symm
+    · rw [hface]; exact hoff
+    · rw [hedge]; exact hofe
+    · rw [hnode]; exact honn
+
+/-- LA2's `localFan_p2` and LA3's `localFan_p3` are the same proposition:
+the two encodings quantify over `Hypermap (V3 × V3)` at `dartDecEq2` resp.
+`dartDecEq3`, which both unfold to `Classical.decEq _`, so the existentials
+are definitionally equal. -/
+theorem localFan_p2_iff_localFan_p3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} :
+    localFan_p2 V E FF ↔ localFan_p3 V E FF := Iff.rfl
+
+/-- LA3's `localFan_p3` gives LA2's `localFan_p2` (definitional; see
+`localFan_p2_iff_localFan_p3`). -/
+theorem localFan_p2.of_localFan_p3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p3 V E FF) : localFan_p2 V E FF := h
+
+/-- LA2's `localFan_p2` gives LA3's `localFan_p3` (definitional; see
+`localFan_p2_iff_localFan_p3`). -/
+theorem localFan_p3.of_localFan_p2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) : localFan_p3 V E FF := h
+
+/-- The packaged forward transport into LA2's `localFan_p2` encoding
+(mirror of `localFan_p3.of_LocalFan` via the `_p2`↔`_p3` vocabulary
+bridges). -/
+theorem localFan_p2.of_LocalFan {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) (hno : dartsOfHyp_p3 E V = dart1OfFan V E) :
+    localFan_p2 V E FF :=
+  localFan_p2.of_localFan_p3 (localFan_p3.of_LocalFan h hno)
+
+/-- The natural downstream (W6) interface: `LocalFan` + every vertex of
+`V` lies on an edge (no isolated vertices) gives LA3's `localFan_p3`
+directly, with the `hno` premise discharged by `hno_of_no_isolated`. -/
+theorem localFan_p3.of_LocalFan_noIso {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) : localFan_p3 V E FF :=
+  localFan_p3.of_LocalFan h (hno_of_no_isolated hedge)
+
+/-- Mirror of `localFan_p3.of_LocalFan_noIso` in LA2's `localFan_p2`
+encoding. -/
+theorem localFan_p2.of_LocalFan_noIso {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) : localFan_p2 V E FF :=
+  localFan_p2.of_LocalFan h (hno_of_no_isolated hedge)
 
 end Kepler.Text
