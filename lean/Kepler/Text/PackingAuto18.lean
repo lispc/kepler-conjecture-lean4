@@ -5393,7 +5393,37 @@ theorem MXI_NOT_IN_V {V : Set V3} {ul : List V3} (hs : saturated V) (hp : Packin
     (hl' : leaf V ul) (h3 : ccKe V ul = 3) : mxi V (ccUh V ul) ∉ V := by
 -- NEEDS: leaf_cell.hl:2894-2948; needs the mxi sqrt-2 distance vs the
 -- packing-ball separation kit.
-  sorry
+  have hbar0 := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  have hbar : barV V 3 (ccUh V ul) := hbar0.1
+  have htr : truncateSimplex 2 (ccUh V ul) = ul := hbar0.2.1
+  have hle : Real.sqrt 2 ≤ hl (ccUh V ul) := by
+    unfold ccKe at h3
+    by_contra hcon
+    rw [if_pos (lt_of_not_ge hcon)] at h3
+    norm_num at h3
+  have hlt : hl (truncateSimplex 2 (ccUh V ul)) < Real.sqrt 2 := by
+    rw [htr]
+    exact hl'.2
+  have hdist : dist ((ccUh V ul).getD 0 0) (mxi V (ccUh V ul)) = Real.sqrt 2 :=
+    (MXI_IN_VORONOI_LIST hp hs hbar hle hlt).2
+  have hsubU : setOfList (ccUh V ul) ⊆ V := BARV_SUBSET V 3 (ccUh V ul) hbar
+  have hdIn : (ccUh V ul).getD 0 0 ∈ V := by
+    have hmem : (ccUh V ul).getD 0 0 ∈ setOfList (ccUh V ul) := by
+      rw [SET_OF_LIST_CC_UH hs hp hl']
+      simp
+    exact hsubU hmem
+  have hsq2pos : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+  have hne : (ccUh V ul).getD 0 0 ≠ mxi V (ccUh V ul) := by
+    intro he
+    rw [he, dist_self] at hdist
+    exact absurd hdist.symm (ne_of_gt hsq2pos)
+  have hsq2 : Real.sqrt 2 < 2 :=
+    (Real.sqrt_lt' (by norm_num : (0:ℝ) < 2)).2 (by norm_num : (2:ℝ) < 2 ^ 2)
+  intro hIn
+  have h2le : (2:ℝ) ≤ dist ((ccUh V ul).getD 0 0) (mxi V (ccUh V ul)) :=
+    Packing.dist_ge_two hp hdIn hIn hne
+  rw [hdist] at h2le
+  exact absurd h2le (not_le.2 hsq2)
 
 /-- HOL `MCELL_V_INTER_EXTREME` (leaf_cell.hl:2949-2976). -/
 theorem MCELL_V_INTER_EXTREME {V : Set V3} {ul : List V3} (hs : saturated V)
@@ -5401,7 +5431,37 @@ theorem MCELL_V_INTER_EXTREME {V : Set V3} {ul : List V3} (hs : saturated V)
     V ∩ {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
         mxi V (ccUh V ul)} = setOfList ul := by
 -- NEEDS: leaf_cell.hl:2949-2976; waits on MXI_NOT_IN_V.
-  sorry
+  have h3l : ul.length = 3 := hl'.1.1
+  have hul3 : ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := list3_eq ul h3l
+  have hmem0 : ul.getD 0 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hmem1 : ul.getD 1 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hmem2 : ul.getD 2 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hsubV : setOfList ul ⊆ V := BARV_SUBSET V 2 ul hl'.1
+  obtain ⟨f0, f1, f2⟩ := EL_CC_UH hp hs hl'
+  ext q
+  constructor
+  · intro hq
+    have hqV : q ∈ V := Set.mem_of_mem_inter_left hq
+    have hqset : q ∈ {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0,
+        (ccUh V ul).getD 2 0, mxi V (ccUh V ul)} := Set.mem_of_mem_inter_right hq
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hqset
+    rcases hqset with rfl | rfl | rfl | hqset
+    · rw [f0]; exact hmem0
+    · rw [f1]; exact hmem1
+    · rw [f2]; exact hmem2
+    · rw [hqset] at hqV
+      exact absurd hqV (MXI_NOT_IN_V hs hp hl' h3)
+  · intro hq
+    refine Set.mem_inter (hsubV hq) ?_
+    rw [f0, f1, f2]
+    have hd : q = ul.getD 0 0 ∨ q = ul.getD 1 0 ∨ q = ul.getD 2 0 := by
+      rw [hul3] at hq
+      simp only [setOfList, Set.mem_setOf_eq] at hq
+      simpa using hq
+    rcases hd with h0 | h1 | h2
+    · rw [h0]; simp
+    · rw [h1]; simp
+    · rw [h2]; simp
 
 /-- HOL `MCELL_EXTREME_DIFF_V` (leaf_cell.hl:2977-3337). -/
 theorem MCELL_EXTREME_DIFF_V {V : Set V3} {ul : List V3} (hs : saturated V)
@@ -5409,7 +5469,34 @@ theorem MCELL_EXTREME_DIFF_V {V : Set V3} {ul : List V3} (hs : saturated V)
     ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
         mxi V (ccUh V ul)} : Set V3) \ V = {mxi V (ccUh V ul)} := by
 -- NEEDS: leaf_cell.hl:2977-3000; waits on MXI_NOT_IN_V.
-  sorry
+  have h3l : ul.length = 3 := hl'.1.1
+  have hul3 : ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := list3_eq ul h3l
+  have hmem0 : ul.getD 0 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hmem1 : ul.getD 1 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hmem2 : ul.getD 2 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hsubV : setOfList ul ⊆ V := BARV_SUBSET V 2 ul hl'.1
+  obtain ⟨f0, f1, f2⟩ := EL_CC_UH hp hs hl'
+  ext q
+  constructor
+  · intro hq
+    obtain ⟨hqset, hqV⟩ := (Set.mem_sdiff q).mp hq
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hqset
+    rcases hqset with rfl | rfl | rfl | hqset
+    · rw [f0] at hqV
+      exact absurd (hsubV hmem0) hqV
+    · rw [f1] at hqV
+      exact absurd (hsubV hmem1) hqV
+    · rw [f2] at hqV
+      exact absurd (hsubV hmem2) hqV
+    · rw [hqset]
+      simp
+  · intro hq
+    simp only [Set.mem_singleton_iff] at hq
+    refine (Set.mem_sdiff q).mpr ⟨?_, ?_⟩
+    · rw [hq]
+      simp
+    · rw [hq]
+      exact MXI_NOT_IN_V hs hp hl' h3
 
 /-- HOL `FUEIMOV_3` (leaf_cell.hl:2977-3337). -/
 theorem FUEIMOV_3 {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packing V)
