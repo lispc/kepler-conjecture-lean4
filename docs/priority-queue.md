@@ -31,7 +31,8 @@
 | A2-W2a | ✅ **完成**（`3fab5ee1`，选项 A 重烤成功：exGTMP/exTM1BP mantissa 照 C549Mono 先例重烤，CertG build 绿 8665 jobs，两 demo end-to-end 标准三；Base/Shard1/Shard2 三连 EXIT=0 = **rest 9 构建链阻断解除**；8 demo 全保留零删除） | Kepler/Interval/CertG.lean | 40h 构建的第 0 步 |
 | FCHKUGT-W5 | ✅ **完成（落库 `43bde50e`，闸 PASS）**（+210/−2，FCHKUGT 本体标准三，bare sorry 15→14；**FCHKUGT 全链 W1-W5 收官**；PA25 LEAF_RANKING_LEMMA 零编辑重建自动转净 = p25_leaf_azim_inj+FCHKUGT 链实测成立；REUHADY 楔二择支解锁，其债面收窄至 REUHADY1+EWYBJUA 两锚） | PackingAuto18.lean | 收官；池C 解锁 |
 | **A2-W2b** | **40h 分段构建进行中**（编排者后台：`/tmp/a2-rest9w2` 克隆，断点续跑，olean 计数 3→2776）+ 完工后 olean 回灌主仓 → 粘合落库 **−1 源** | 后台构建 | rest 9 = 59 条 nli rest 最大单件 |
-| GRHIDFA-W5 | **capstone 装配 + 九桩回填（−9 计分时刻）**：p3k_NOT_QY_LEM/LUIKGMH/GRHIDFA_ALT/GRHIDFA + 九桩真证体 | PackingAuto3.lean | **PA3 9→0，地图预期 −9** |
+| GRHIDFA-W5 | ✅ **完成（落库 `cc3cb531`，闸 PASS）**：capstone 四件 + 九桩回填，十三件标准三，+551/−55，**PA3 bare sorry 9→0 全模块归零**；GRHIDFA 主链 W1-W5 收官。披露：车道 agent 收尾文书阶段被配额上限中断，源文件已成品，编排者独立重建+探针+冻结核对后代补交付 | PackingAuto3.lean | **−9 计分（地图重生成中）** |
+| WSEWPCH-W3a | LA6 近机械轨道件 6-7 枚（CARD_IS_LEAST_CYCLE / POINT_PRESENTED_IN_RHOND1 / LT_CARD_MONO_LOFA / …）；文书先行纪律（每 2 件快照） | LocalAuto6.lean | WSEWPCH 核前置，LA6 60→54± |
 | GRHIDFA-W4 | ✅ **完成**（`173e18e2`，RSIWAMP+UTEOITF + 5 私件，双件标准三，+218/−0；勘误：UTEOITF 实为 nn=3/≠3 两支非三支，card=5 已被 RSIWAMP 灭） | PackingAuto3.lean | 零计分，W5 前置 |
 | FCHKUGT-W5 | **本体四分支装配（:7432，收官波）**——W1-W4 前置全齐 | PackingAuto18.lean | 收官解锁 PA25 侧 WEDGE_UNIQUE_CC_CELL |
 
@@ -47,13 +48,13 @@
 ## 2. 排队（按序补位）
 
 1. `就绪` **FCHKUGT W5**：本体四分支装配（:7432；W1-W4 前置全齐 `fff95dbc`，k=4 支 d 已由 FUEIMOV_4 解锁）——FCHKUGT 全链收官波。
-2. `排队` **GRHIDFA W5**（待 W4）：NOT_QY_LEM + LUIKGMH + GRHIDFA_ALT + GRHIDFA 本体 + 九桩回填（**−9 计分时刻**）。
+2. `就绪` **GRHIDFA W6**：PA4 CC4P4→CcV11 桥（1 桥件 + periodic Prop/Eq 引理）+ 30 桩 discharge（21 CC4P4 经桥 + 9 `_v11` 孪生 `:= PA3.同名_concl`）+ PackingConcl 九连 #print axioms 复核（−30）。
 3. `排队` **A2-W2b**（待 W2a）：编排者跑 40h 分段构建（segbuild.sh 断点续跑）→ olean 回灌 → 粘合落库 **−1 源**。
-4. `排队` **WSEWPCH W2**：BN W1 已落库（`20ff16c3`，锥 kit + azim 平移不变 kit 遗产就位）；余两件路线已入档（UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE，~200 行）。
+4. `排队` **WSEWPCH W2（词表桥波）**：`_p2`↔`_p3` rfl 桥 + localFan_p3.of_LocalFan 正向打包（撞 AzimBridge 无主文件，需编排者确认归属）；另 LA7 余两件 UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE（~200 行，路线已入档）可作 W1b 小波。
 5. `排队` **WSEWPCH W3-W5a**：核四真缺口（BGMIFTE 1050 / KCHMAMG 280 / CIZMRRH 275 / HALP 165——注意 HALP_CIRCLE_IS_INTERSECTION 实为 LA5:7670 桩，LA5 不可 import，需编排者单独立项）。
 6. `排队` **BO LA1 注册表侦察**（只读）：JEJTVGB 暴露的 22+ 条 `*_concl` 箭头族 + LA2x 机器——B 类最大单块，预判多为 scs 记录展开。
 7. `排队` **池C MCELL4_FULL_WEDGE**：等 FCHKUGT 全清（楔二择支解锁）。
-8. `排队` **GRHIDFA W6**：PA4 CC4P4→CcV11 桥（−30）+ PackingConcl 九连转净。
+8. `排队` **WSEWPCH W3b**：CIZMRRH（LA3:1881，HOL 275 行三分 exclusive-or）。
 
 ## 3. 两周战术排序（2026-10-25 战略备忘录定稿）
 
