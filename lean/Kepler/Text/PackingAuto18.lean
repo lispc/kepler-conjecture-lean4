@@ -7428,12 +7428,220 @@ theorem STEM_EDGEX {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated 
     · exact Or.inl rfl
     · exact Or.inr (Or.inl rfl)
 
+/-- W5 micro kit: `Affsign` membership transports into the affine hull
+(local copy of the shared `affsign_mem_affSpan` transport; the in-file
+siblings `pa18w3_affsign_mem_affSpan`/`pa18w4_affsign_mem_affSpan` and the
+public `AFF_GT_SUBSET_AFFINE_HULL` all sit below the `FCHKUGT` consumption
+point, and LocalAuto5 is not in this module's import closure). -/
+private theorem pa18w5_affsign_mem_affSpan {s t : Set V3} {sgn : ℝ → Prop} {v : V3}
+    (hv : Affsign sgn s t v) : v ∈ (affineSpan ℝ (s ∪ t) : Set V3) := by
+  obtain ⟨f, hfin, hvec, -, hone⟩ := hv
+  by_cases hF : hfin.toFinset = ∅
+  · rw [hF, Finset.sum_empty] at hone
+    norm_num at hone
+  · obtain ⟨w₀, hw₀F⟩ := Finset.nonempty_iff_ne_empty.2 hF
+    have hw₀S : w₀ ∈ (s ∪ t : Set V3) := (Set.Finite.mem_toFinset hfin).1 hw₀F
+    have key : v - w₀ = ∑ w ∈ hfin.toFinset, f w • (w - w₀) := by
+      have h1 : (∑ w ∈ hfin.toFinset, f w • (w - w₀) : V3)
+          = (∑ w ∈ hfin.toFinset, f w • w) - (∑ w ∈ hfin.toFinset, f w) • w₀ := by
+        rw [Finset.sum_smul, ← Finset.sum_sub_distrib]
+        exact Finset.sum_congr rfl fun w _ => by rw [smul_sub]
+      rw [h1, hvec, hone, one_smul]
+    have hd : (v - w₀ : V3) ∈ vectorSpan ℝ (s ∪ t : Set V3) := by
+      rw [vectorSpan_def, key]
+      refine Submodule.sum_mem _ fun w hw => ?_
+      exact Submodule.smul_mem _ _ (Submodule.subset_span (Set.mem_vsub.2
+        ⟨w, (Set.Finite.mem_toFinset hfin).1 hw, w₀, hw₀S, rfl⟩))
+    have hvv : v = (v -ᵥ w₀) +ᵥ w₀ := by rw [vsub_vadd]
+    rw [SetLike.mem_coe, hvv,
+      AffineSubspace.vadd_mem_iff_mem_direction (v -ᵥ w₀)
+        (subset_affineSpan ℝ (s ∪ t : Set V3) hw₀S),
+      direction_affineSpan]
+    exact hd
+
+/-- HOL `AFF_GT_SUBSET_AFFINE_HULL` (Collect_geom), W5 local copy (the public
+copy lives at the file tail, below this consumption point). -/
+private theorem pa18w5_AFF_GT_SUBSET_AFFINE_HULL (s t : Set V3) :
+    affGt s t ⊆ (affineSpan ℝ (s ∪ t) : Set V3) := by
+  intro v hv
+  have hv' : Affsign (fun w => 0 < w) s t v := Set.mem_setOf_eq.mp hv
+  exact pa18w5_affsign_mem_affSpan hv'
+
+/-- HOL `X_IN_AFF_GT_X` (local_lemmas.hl:5860), W5 local copy. Deviation
+note: `hS` is required by the Lean `Affsign` encoding. -/
+private theorem pa18w5_X_IN_AFF_GT_X {S : Set V3} (hS : S.Finite) (x : V3) :
+    x ∈ affGt S ({x} : Set V3) := by
+  have hfin : (((S ∪ {x}) : Set V3) : Set V3).Finite := by simp [hS]
+  have hmem : x ∈ hfin.toFinset := by simp [Set.Finite.mem_toFinset]
+  unfold affGt
+  refine ⟨fun w => if w = x then 1 else 0, hfin, ?_, ?_, ?_⟩
+  · rw [Finset.sum_eq_single_of_mem x hmem (fun u _ hu => by simp [hu])]
+    simp
+  · intro w hw
+    have hw2 : w = x := by simpa using hw
+    rw [hw2]
+    simp
+  · rw [Finset.sum_eq_single_of_mem x hmem (fun u _ hu => by simp [hu])]
+    simp
+
 /-- HOL `FCHKUGT` (leaf_cell.hl:3432-3528). -/
 theorem FCHKUGT {V : Set V3} {u0 u1 u2 u2' : V3} (hs : saturated V) (hp : Packing V)
     (hA : ccA0 [u0, u1, u2] = ccA0 [u0, u1, u2'])
     (hl1 : leaf V [u0, u1, u2]) (hl2 : leaf V [u0, u1, u2']) : u2 = u2' := by
--- NEEDS (GIANT): leaf_cell.hl:3432-3528 cc_A0 injectivity.
-  sorry
+  -- 0. the frozen premise is the cone equality over the shared stem (key rewrite)
+  have hA' : affGt ({u0, u1} : Set V3) ({u2} : Set V3)
+      = affGt ({u0, u1} : Set V3) ({u2'} : Set V3) := by
+    have e1 : ccA0 [u0, u1, u2] = affGt ({u0, u1} : Set V3) ({u2} : Set V3) := by
+      simp only [ccA0, List.getElem!_cons_zero, List.getElem!_cons_succ]
+    have e2 : ccA0 [u0, u1, u2'] = affGt ({u0, u1} : Set V3) ({u2'} : Set V3) := by
+      simp only [ccA0, List.getElem!_cons_zero, List.getElem!_cons_succ]
+    rw [← e1, ← e2]
+    exact hA
+  -- 1. the stem is non-degenerate (GBEWYFX on the first leaf)
+  have hne01 : u0 ≠ u1 := by
+    have hcol := GBEWYFX (V := V) (ul := [u0, u1, u2]) hp hs hl1
+    simp only [List.getElem!_cons_zero, List.getElem!_cons_succ] at hcol
+    exact ne₁₂_of_not_collinear hcol
+  -- 2. the stem-swapped leaf (crossed branches)
+  obtain ⟨hl1s, -⟩ := ZASUVOR hp hs hl1
+  -- 3. cc_uh accessors: EL 0/1/2 of each leaf through EL_CC_UH
+  obtain ⟨f0, f1, f2⟩ := EL_CC_UH (V := V) (ul := [u0, u1, u2]) hp hs hl1
+  rw [pa18_getD3_0] at f0
+  rw [pa18_getD3_1] at f1
+  rw [pa18_getD3_2] at f2
+  obtain ⟨g0, g1, g2⟩ := EL_CC_UH (V := V) (ul := [u0, u1, u2']) hp hs hl2
+  rw [pa18_getD3_0] at g0
+  rw [pa18_getD3_1] at g1
+  rw [pa18_getD3_2] at g2
+  obtain ⟨w0, w1, w2⟩ := EL_CC_UH (V := V) (ul := [u1, u0, u2]) hp hs hl1s
+  rw [pa18_getD3_0] at w0
+  rw [pa18_getD3_1] at w1
+  rw [pa18_getD3_2] at w2
+  -- stem readings for the FUEIMOV_4 applications
+  have sV : stem [u0, u1, u2'] = ({u0, u1} : Set V3) := by
+    rw [STEM_OF_LEAF hl2, pa18_getD3_0 u0 u1 u2', pa18_getD3_1 u0 u1 u2']
+  have sU : stem [u0, u1, u2] = ({u0, u1} : Set V3) := by
+    rw [STEM_OF_LEAF hl1, pa18_getD3_0 u0 u1 u2, pa18_getD3_1 u0 u1 u2]
+  have sW : stem [u1, u0, u2] = ({u1, u0} : Set V3) := by
+    rw [STEM_OF_LEAF hl1s, pa18_getD3_0 u1 u0 u2, pa18_getD3_1 u1 u0 u2]
+  have hpair : ({u0, u1} : Set V3) = ({u1, u0} : Set V3) := by
+    ext t
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  -- 4. the CFFONNL dichotomy on the second cell
+  have hX : ccCell V [u0, u1, u2'] ∈ mcellSet V := CC_CELL_IN_MCELL_SET hs hp hl2
+  have he : {(ccUh V [u0, u1, u2]).getD 0 0, (ccUh V [u0, u1, u2]).getD 1 0}
+      ∈ edgeX V (ccCell V [u0, u1, u2']) := by
+    have h0 := STEM_EDGEX (V := V) (ul := [u0, u1, u2']) hp hs hl2
+    have hset : ({(ccUh V [u0, u1, u2]).getD 0 0, (ccUh V [u0, u1, u2]).getD 1 0} : Set V3)
+        = ({(ccUh V [u0, u1, u2']).getD 0 0, (ccUh V [u0, u1, u2']).getD 1 0} : Set V3) := by
+      rw [f0, f1, g0, g1]
+    rw [← hset] at h0
+    exact h0
+  have hnA : ccCell V [u0, u1, u2'] ∩ ccA0 [u0, u1, u2] ≠ ∅ := by
+    have h0 := NUNRRDS_0 (V := V) (ul := [u0, u1, u2']) hp hs hl2
+    rw [← hA] at h0
+    intro hc
+    refine h0 ?_
+    rwa [Set.inter_comm] at hc
+  have hdich : ccCell V [u0, u1, u2'] = ccCell V [u0, u1, u2]
+      ∨ ccCell V [u0, u1, u2'] = ccCell V [u1, u0, u2] := by
+    by_cases hne : ccCell V [u0, u1, u2'] = ccCell V [u0, u1, u2]
+    · exact Or.inl hne
+    · right
+      have h := CFFONNL (V := V) (ul := [u0, u1, u2]) (X := ccCell V [u0, u1, u2'])
+        hp hs hl1 hX he hnA hne
+      rw [f1, f0, f2] at h
+      exact h
+  -- 5. case ccKe V [u0,u1,u2'] = 3: FUEIMOV_3 on both dichotomy branches
+  rcases CC_KE_34 V [u0, u1, u2'] with h3 | h4
+  · rcases hdich with hc | hd
+    · have hst : ({(ccUh V [u0, u1, u2']).getD 0 0, (ccUh V [u0, u1, u2']).getD 1 0} : Set V3)
+        = ({(ccUh V [u0, u1, u2]).getD 0 0, (ccUh V [u0, u1, u2]).getD 1 0} : Set V3) := by
+        rw [g0, g1, f0, f1]
+      have hF := FUEIMOV_3 (V := V) (ul := [u0, u1, u2']) (vl := [u0, u1, u2])
+        hs hp hl2 hl1 h3 hst hc
+      exact (by
+        have h := congrArg (fun L : List V3 => L.getD 2 0) hF
+        exact h.symm)
+    · have hst : ({(ccUh V [u0, u1, u2']).getD 0 0, (ccUh V [u0, u1, u2']).getD 1 0} : Set V3)
+        = ({(ccUh V [u1, u0, u2]).getD 0 0, (ccUh V [u1, u0, u2]).getD 1 0} : Set V3) := by
+        rw [g0, g1, w0, w1]
+        exact hpair
+      have hF := FUEIMOV_3 (V := V) (ul := [u0, u1, u2']) (vl := [u1, u0, u2])
+        hs hp hl2 hl1s h3 hst hd
+      exact (by
+        have h := congrArg (fun L : List V3 => L.getD 2 0) hF
+        exact h.symm)
+  · -- 6. case ccKe V [u0,u1,u2'] = 4: both dichotomy branches are contradictory
+    by_contra hne22
+    rcases hdich with hc | hd
+    · have hneL : [u0, u1, u2'] ≠ [u0, u1, u2] := by
+        intro hL2
+        exact hne22 (by
+          have h := congrArg (fun L : List V3 => L.getD 2 0) hL2
+          exact h.symm)
+      have hst : stem [u0, u1, u2'] = stem [u0, u1, u2] := sV.trans sU.symm
+      have hF := FUEIMOV_4 (V := V) (ul := [u0, u1, u2']) (vl := [u0, u1, u2])
+        hs hp hl2 hl1 hc hst h4 hneL
+      rw [g1, g0, g2] at hF
+      have hL := LIST_OF_CC_UH (V := V) (ul := [u0, u1, u2]) hs hp hl1
+      rw [f0, f1, f2] at hL
+      rw [hL] at hF
+      exact hne01 (by
+        have h := congrArg (fun L : List V3 => L.getD 0 0) hF
+        exact h)
+    · have hneL : [u0, u1, u2'] ≠ [u1, u0, u2] := by
+        intro hL2
+        exact hne01 (by
+          have h := congrArg (fun L : List V3 => L.getD 0 0) hL2
+          exact h)
+      have hst : stem [u0, u1, u2'] = stem [u1, u0, u2] := sV.trans (hpair.trans sW.symm)
+      have hF := FUEIMOV_4 (V := V) (ul := [u0, u1, u2']) (vl := [u1, u0, u2])
+        hs hp hl2 hl1s hd hst h4 hneL
+      rw [g1, g0, g2] at hF
+      have hL := LIST_OF_CC_UH (V := V) (ul := [u1, u0, u2]) hs hp hl1s
+      rw [w0, w1, w2] at hL
+      rw [hL] at hF
+      have hget : u2 = (ccUh V [u0, u1, u2']).getD 3 0 := by
+        have h := congrArg (fun L : List V3 => L.getD 2 0) hF
+        exact h
+      -- 7. the four extreme points are non-coplanar, yet u2' sits in the
+      -- cone over {u0, u1, u2} (the hA rewrite), contradiction
+      have hnu3 : ¬(ccKe V [u0, u1, u2'] = 3) := by omega
+      have hpp : u2 = if ccKe V [u0, u1, u2'] = 3 then mxi V (ccUh V [u0, u1, u2'])
+          else (ccUh V [u0, u1, u2']).getD 3 0 := by
+        rw [if_neg hnu3]
+        exact hget
+      have hnc := CC_CELL_NOT_COPLANAR_EXTREME (V := V) (ul := [u0, u1, u2']) (pp := u2)
+        hp hs hl2 hpp
+      rw [g0, g1, g2] at hnc
+      refine hnc ⟨u0, u1, u2, fun t ht => ?_⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      rcases ht with ht0 | ht1
+      · rw [ht0]
+        exact subset_affineSpan ℝ ({u0, u1, u2} : Set V3)
+          (by simp : u0 ∈ ({u0, u1, u2} : Set V3))
+      rcases ht1 with ht1 | ht2
+      · rw [ht1]
+        exact subset_affineSpan ℝ ({u0, u1, u2} : Set V3)
+          (by simp : u1 ∈ ({u0, u1, u2} : Set V3))
+      rcases ht2 with ht2 | ht3
+      · rw [ht2]
+        have hx : u2' ∈ affGt ({u0, u1} : Set V3) ({u2'} : Set V3) :=
+          pa18w5_X_IN_AFF_GT_X (S := ({u0, u1} : Set V3))
+            (Set.Finite.insert u0 (Set.finite_singleton u1)) u2'
+        rw [← hA'] at hx
+        have hmem := pa18w5_AFF_GT_SUBSET_AFFINE_HULL ({u0, u1} : Set V3)
+          ({u2} : Set V3) hx
+        have heq : (({u0, u1} : Set V3) ∪ {u2}) = ({u0, u1, u2} : Set V3) := by
+          ext t
+          simp
+          tauto
+        rwa [heq] at hmem
+      · rw [ht3]
+        exact subset_affineSpan ℝ ({u0, u1, u2} : Set V3)
+          (by simp : u2 ∈ ({u0, u1, u2} : Set V3))
 
 /-- HOL `AZIM_BASE_SHIFT_LE` (leaf_cell.hl:3529-3547), via two applications of
 fan.hl:1698 `sum4_azim_fan` (the three-point azimuth addition) and linear
