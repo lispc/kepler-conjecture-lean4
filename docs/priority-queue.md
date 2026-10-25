@@ -27,22 +27,19 @@
 | 车道 | 任务 | 文件 | 计分属性 |
 |---|---|---|---|
 | GRHIDFA-W3 | IPVICGW 支 10 行（3a：C33/UNIQUE_QY(2)/C43_C44；3b：CARD5 双件/PRE_IPVICGW/CC_CARD_LESS_THAN_5/IPVICGW） | PackingAuto3.lean | 零计分（W5 才回填九桩），W4 前置 |
-| FCHKUGT-W3 | FUEIMOV_4 茎对二择双支（:5383；FUEIMOV_3 归 W4 勿动） | PackingAuto18.lean | 零计分资产，W4 前置 |
-
-> **A2-W1（nli rest 9 粘合波）已整装待发**：任务书已写入
-> `~/c17_backup/lane_snapshots/a2-rest9-w1/TASK.md`，工作区克隆已建（`/tmp/a2-rest9`）。
-> 并发上限实测已收紧到 2（第三次发车被拒），**两子在飞车道任一收工即 1:1 补位发车
-> A2-W1（队首置顶，用户 2026-10-25 指令）**，其余排队项顺延。
+| A2-W1 | nli rest 9 粘合波：dihY 超越 glue（QITNPEA3725403817_pos 处留显式前提槽）+ G4 发射交接书 | scratch（不改主仓） | 接线预备，落库在 G4 发射 + 本机 40h 分段构建之后 |
 
 ## 2. 排队（按序补位）
 
-1. `就绪` **WSEWPCH W2**：BN W1 已落库（`20ff16c3`，锥 kit + azim 平移不变 kit 遗产就位）；余两件路线已入档（UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE，~200 行）。
+1. `就绪` **FCHKUGT W4**：FUEIMOV_3（W1+W2+W3 前置全齐，`ef96e0eb`；W4 换序支需 EL_CC_UH 换边，ke=3 支走 MXI kit 剥层）。
 2. `排队` **GRHIDFA W4**：RSIWAMP + UTEOITF（吃 W3 的 IPVICGW）。
-3. `排队` **FCHKUGT W4→W5**：FUEIMOV_3 → 本体四分支装配（W5 收官解锁 PA25 侧）。
-4. `排队` **WSEWPCH W3-W5a**：核四真缺口（BGMIFTE 1050 / KCHMAMG 280 / CIZMRRH 275 / HALP 165——注意 HALP_CIRCLE_IS_INTERSECTION 实为 LA5:7670 桩，LA5 不可 import，需编排者单独立项）。
-5. `排队` **BO LA1 注册表侦察**（只读）：JEJTVGB 暴露的 22+ 条 `*_concl` 箭头族 + LA2x 机器——B 类最大单块，预判多为 scs 记录展开。
-6. `排队` **池C MCELL4_FULL_WEDGE**：等 FCHKUGT 全清（楔二择支解锁）。
-7. `排队` **GRHIDFA W5→W6**：九桩回填（**−9 计分时刻**）+ PA4 CC4P4→CcV11 桥（−30）。
+3. `排队` **A2-W2**（编排者排期）：G4 发射 cert.json → 本机 40h 分段构建 → olean 回灌 → 落库 **−1 源**。
+4. `排队` **WSEWPCH W2**：BN W1 已落库（`20ff16c3`，锥 kit + azim 平移不变 kit 遗产就位）；余两件路线已入档（UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE，~200 行）。
+5. `排队` **WSEWPCH W3-W5a**：核四真缺口（BGMIFTE 1050 / KCHMAMG 280 / CIZMRRH 275 / HALP 165——注意 HALP_CIRCLE_IS_INTERSECTION 实为 LA5:7670 桩，LA5 不可 import，需编排者单独立项）。
+6. `排队` **FCHKUGT W5**：本体四分支装配（k=4 支 d 已由 FUEIMOV_4 解锁）。
+7. `排队` **BO LA1 注册表侦察**（只读）：JEJTVGB 暴露的 22+ 条 `*_concl` 箭头族 + LA2x 机器——B 类最大单块，预判多为 scs 记录展开。
+8. `排队` **池C MCELL4_FULL_WEDGE**：等 FCHKUGT 全清（楔二择支解锁）。
+9. `排队` **GRHIDFA W5→W6**：九桩回填（**−9 计分时刻**）+ PA4 CC4P4→CcV11 桥（−30）。
 
 ## 3. 两周战术排序（2026-10-25 战略备忘录定稿）
 
@@ -101,7 +98,9 @@
 
 - **2026-10-25（晚）**：建档并首轮更新。落库：GRHIDFA W2（`9f4df3d1`，PA3 +989）、
   FCHKUGT W2（`60753fd6`，PA18 三件标准三）、WSEWPCH W1（`20ff16c3`，LA7 十件标准三，
-  零计分资产，TSV 实测不变）。发车：GRHIDFA-W3、FCHKUGT-W3。文档卫生：
-  e2e-debt-map.md 打存档标记；勘误两条——e2e-reachability-map.md 头版实为最新
-  （156，先前"漂移 128"系压缩前旧读取所致，收回）；HALP_CIRCLE_IS_INTERSECTION
-  实为 LA5:7670 桩（侦察误记为 LA7 W1 件），已按编排者单独立项处理。
+  零计分资产，TSV 实测不变）、FCHKUGT W3（`ef96e0eb`，FUEIMOV_4 标准三，bare sorry
+  17→16）。发车：GRHIDFA-W3、A2-W1（rest 9 粘合波，用户指令，第三次发车才成功——
+  并发上限实测收紧至 2）。文档卫生：e2e-debt-map.md 打存档标记；勘误三条——
+  e2e-reachability-map.md 头版实为最新（156，先前"漂移 128"系压缩前旧读取所致，
+  收回）；HALP_CIRCLE_IS_INTERSECTION 实为 LA5:7670 桩（侦察误记为 LA7 W1 件）；
+  新雷区：Lean `--` 注记行在闸门 `^---` 过滤器中伪装 diff 头（删除行假阴性）。
