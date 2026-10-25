@@ -1,4 +1,4 @@
-# 主定理 e2e 可达性地图（2026-10-24 重跑；pa18_ccCell_swap 出列后）
+# 主定理 e2e 可达性地图（2026-10-25 重跑；JEJTVGB_p16 翻除暴露 LA1/LA2x 上游链后）
 
 > 根 = `Kepler.Assembly.the_kepler_conjecture_from_interfaces`（即
 > `Kepler.Final.the_kepler_conjecture_e2e` 的直接证明项）。
@@ -10,13 +10,13 @@
 
 ## 0. 头版
 
-| 指标 | 2026-10-22 | 2026-10-24 | 变化 |
+| 指标 | 2026-10-22 | 2026-10-25 | 变化 |
 |---|---:|---:|---|
-| 可达 Kepler 声明 | 8,305 | **216,263** | +207,958（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25/PA15/PA11/N2 证明体；2026-10-23/24 填证连带 +231 私有 kit 声明入锥。全部内核检查、零新公理） |
-| 直接 sorryAx 债务源 | 149 | **128** | −21（日间 −16：euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`、nli N2 `nliRest6096597438b`、PA15 `MCELL_ID_MXI_2`+`MCELL_ID_OMEGA_LIST_N`+`DIHX_SYM`、PA11 `k2Case`+`k3Subset`+`rogersInterVLemma`；**−2：TameLp `sum_tauVEF_upper_bound`、PA18 `cc_pe_exists`；−1：ContraFan `LEMMA_4_POINTS_FINAL`（四波真证+原子接线，ContraFan 全模块归零，diff 仅此一行删除、零新增零搬家）；−2（10-24）：TameLp `ineq_tau3_tauVEF_std`（随 y-kit W6 装配波 87c6435a 闭）、PA18 `pa18_ccCell_swap`（SF-50 删假陈述：CFFONNL 前提复 HOL 原序后 `absurd` 直闭，diff 仅此一行删除、零新增）**） |
+| 可达 Kepler 声明 | 8,305 | **216,857** | +208,552（nli A1 把 CFWGKMBZ 证书接入 Assembly，证书闭包 ~206k 声明进锥；另加 PA25/PA15/PA11/N2 证明体；2026-10-23/25 填证连带 +825 私有 kit 声明入锥。全部内核检查、零新公理） |
+| 直接 sorryAx 债务源 | 149 | **157** | 净 +8 = **真闭 −28 / 暴露 +36**。真闭：日间 −16（euler PA21 `mi_gamma3f`、P0 PA10 `RVFXZBU`、B3 `YIFVQDV_1`+`QZKSYKG1`、B4 `QZKSYKG2`、B7 `DDZUPHJ`、B8f `SLTSTLO2`、nli A1 `nliRestFWGKMBZ`、PA25 `cc_bool_model_data`、nli N2 `nliRest6096597438b`、PA15 `MCELL_ID_MXI_2`+`MCELL_ID_OMEGA_LIST_N`+`DIHX_SYM`、PA11 `k2Case`+`k3Subset`+`rogersInterVLemma`）；−2 TameLp `sum_tauVEF_upper_bound`、PA18 `cc_pe_exists`；−1 ContraFan `LEMMA_4_POINTS_FINAL`；−2（10-24）TameLp `ineq_tau3`、PA18 `pa18_ccCell_swap`（SF-50）；**−7（10-25）：TameLp `ineq_tau{4,5,6}_tauVEF_std`（ykit10 装配）、PA25 `K4_CC_WI_ALT` / `MCELL4_AZIM_LT_PI` / `CC_CELL_WEDGE_MATCH_UH`（池A/池B 收割）、LA16 `JEJTVGB_p16`（三件套 HOL 忠实装配）**。**暴露 +36（10-25）：`JEJTVGB_p16` 翻除后其证明体消费 LA1 注册表 22 条 `*_concl` 条件箭头（全部 `:= sorry` shim）+ LA20 `AQICLXA`/`FZIOTEF`/`SCS_6I1_BERAK_BY_CSTAB` + LA22 `OCBICBY_p22`/`is_scs_3{M1,T1,T5}_p22` + LA23 `LFLACKU_p23`/`s_init_list_alt_p23` + LA24 `XWITCCN_CASE_{3,4,5,6}_IS_SCS_p24` + LA27 `EAPGLE_p27` + LA1 `WKEIDFT_concl`——这些债此前全被单个 shim `JEJTVGB_p16` 遮蔽，现按真实粒度入账（四单源侦察 §3.5 预判"只是把 SORRIED 换了个名字"，实测是换成了 36 个名字）。** |
 | 可达 Kepler 公理 | 624 | **624** | 0（全部 `native_decide` 图 shard；interval 证书用内核 decide，不新增公理） |
 
-**结论：主定理当前的实际债务源是 128 个声明（2026-10-24 SF-50 落库后地图重生成）。** AJRIPQN 的五个名字
+**结论：主定理当前的实际债务源是 157 个声明（2026-10-25 LA16 JEJTVGB 翻除 + 池A/B 收割 + ykit10 后地图重生成）。等效口径：若不计 JEJTVGB 翻除暴露的 36 个上游 shim，与前版可比的数字是 128 − 7 = 121。** AJRIPQN 的五个名字
 （`QZKSYKG1` / `QZKSYKG2` / `SLTSTLO2` / `DDZUPHJ` / `YIFVQDV_1`）、nli
 `nliRestFWGKMBZ`/`nliRest6096597438b`、PA25 `cc_bool_model_data`、PA15
 `MCELL_ID_MXI_2`/`MCELL_ID_OMEGA_LIST_N`/`DIHX_SYM` 与 PA11
@@ -40,15 +40,20 @@
 | 模块 | direct sorry 源 | 代表声明 |
 |---|---:|---|
 | `Kepler.Assembly` | 81 | 77 个 `nli*`（57 个父为 `nliPackNonlinearRest`、8 个 `nliTskBank`、7 个 `nliCell3Bank`、5 个直挂 `nonlinearInequalities`）+ `fcdjdot` / `jcajydu` / `tameCorrespondenceIso`（父 `textCapstone`）+ `lpArchiveCertificatesDebt`（父 `lpArchiveCertificates`） |
-| `Kepler.Text.PackingAuto25` | 38 | 28 个 `real_model_*`（父 `pkrmQu/Qx/Qy` 等）+ `LEAF_RANK_PROPS` 4 + `MCELL4_FULL_WEDGE` 等 + `ox3q1hP25` |
-| `Kepler.Text.TameLp` | 4 | `fully_surrounded_perimeter_bound`、`ineq_tau{4,5,6}_tauVEF_std`（`sum_tauVEF_upper_bound` 2026-10-23、`ineq_tau3` 2026-10-24 随 y-kit W6 装配波真证出列） |
+| `Kepler.Text.PackingAuto25` | 35 | 28 个 `real_model_*`（父 `pkrmQu/Qx/Qy` 等）+ `LEAF_RANK_PROPS` 3（`cc_prep_model_data`/`pkLeafRankAzimPointwise`/`pkLeafRankCriticalEdge`）+ `K3_CC_WI_ALT`（残 `WEDGE_UNIQUE_CC_CELL` 一债）+ `MCELL4_FULL_WEDGE` + `LEAF_RANK_REUHADY` + `ox3q1hP25`（10-25 出列：`K4_CC_WI_ALT` / `MCELL4_AZIM_LT_PI` / `CC_CELL_WEDGE_MATCH_UH`） |
+| `Kepler.Text.LocalAuto1` | 23 | `main_nonlinear_terminal_v11`（109 条 Main_estimate 合取的 deliberate 外部锚）+ **22 条注册表条件箭头 `*_concl`**（`ARDBZYE`/`AUEAHEH`/`BNAWVNH`/`CNICGSF1-5`/`FYSSVEV`/`HIJQAHA`/`MFKLVDK`/`MIQMCSN`/`NWDGKXH`/`OTMTOTJ1-4`/`RAWZDIB`/`RYPDIXT`/`VQFYMZY`/`YOBIMPP`，父 `JEJTVGB_p16`；`WKEIDFT_concl` 父 `EQ_DIAG_STAB_6I1_03`）——10-25 随 `JEJTVGB_p16` 翻除暴露，均为 `(h : main_nonlinear_terminal_v11) → scsArrow …` 的 `:= sorry` shim，HOL 证体在 appendix.hl/hexagons.hl 等 |
+| `Kepler.Text.LocalAuto24` | 4 | `XWITCCN_CASE_{3,4,5,6}_IS_SCS_p24`（父 `UXCKFPE_p24`，10-25 暴露） |
+| `Kepler.Text.LocalAuto22` | 4 | `OCBICBY_p22`（父 `JEJTVGB_case_breakdown_p16`）+ `is_scs_3{M1,T1,T5}_p22`（父 `BKOSSGE_p16`，10-25 暴露） |
+| `Kepler.Text.LocalAuto20` | 3 | `AQICLXA`/`FZIOTEF`（父 `OEHDBEN`）+ `SCS_6I1_BERAK_BY_CSTAB`（父 `OEHDBEN_PRIME`，10-25 暴露） |
+| `Kepler.Text.LocalAuto23` | 2 | `LFLACKU_p23`/`s_init_list_alt_p23`（父 `JEJTVGB_case_breakdown_p16`，10-25 暴露） |
+| `Kepler.Text.TameLp` | 1 | `fully_surrounded_perimeter_bound`（唯一残源，单锚 WSEWPCH 核；`ineq_tau{3,4,5,6}` / `sum_tauVEF_upper_bound` 10-23～25 全部真证出列） |
 | `Kepler.Text.PackingAuto3` | 1 | `GRHIDFA_concl` |
-| `Kepler.Text.PackingAuto21` | 1 | `TSKAJXY_034` |
-| `Kepler.Text.PackingAuto2` | 1 | `UPFZBZM_concl` |
-| `Kepler.Text.LocalAuto16` | 1 | `JEJTVGB_p16` |
-| `Kepler.Text.LocalAuto1` | 1 | `main_nonlinear_terminal_v11` |
+| `Kepler.Text.PackingAuto21` | 1 | `TSKAJXY_034`（五波就绪：差 Euler 锚 W4/W5 + SF-51 已批） |
+| `Kepler.Text.PackingAuto2` | 1 | `UPFZBZM_concl`（架构性：PA2 被反向 import，F1 重接线已批） |
+| `Kepler.Text.LocalAuto27` | 1 | `EAPGLE_p27`（父 `JEJTVGB_case_breakdown_p16`，10-25 暴露） |
 
-**零 direct 源的关键模块**：`PackingAuto18`（2026-10-23 `cc_pe_exists` 真证 + 2026-10-24 SF-50 删假陈述 `pa18_ccCell_swap` 后全模块归零）、
+**零 direct 源的关键模块**：`LocalAuto16`（2026-10-25 `JEJTVGB_p16` 三件套 HOL 忠实装配后归零，债务下沉到 LA1 注册表与 LA20-27 scs 机器）、
+`PackingAuto18`（2026-10-23 `cc_pe_exists` 真证 + 2026-10-24 SF-50 删假陈述 `pa18_ccCell_swap` 后全模块归零；10-25 `BDXKHTW`/`EWYBJUA` 双闭）、
 `ContraFan`（2026-10-24 `LEMMA_4_POINTS_FINAL` 四波真证 + W4 原子接线后全模块归零；`ContraFanDeep` 全程零 sorry）、
 `PackingAuto11`（LEPJBDJ 三私件后）、
 `PackingAuto15`（DIHX_SYM 后）、
