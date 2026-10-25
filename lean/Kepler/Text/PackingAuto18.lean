@@ -5607,8 +5607,117 @@ theorem FUEIMOV_3 {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packin
     (hst : ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0} : Set V3)
         = {(ccUh V vl).getD 0 0, (ccUh V vl).getD 1 0})
     (heq : ccCell V ul = ccCell V vl) : ul = vl := by
--- NEEDS (GIANT): leaf_cell.hl:3000-3114.
-  sorry
+-- leaf_cell.hl:3000-3114: peel the ke=3 apex through the MXI kit, then the
+-- stem-pair dichotomy; the swap branch is killed by `chi_msb_swap_01`.
+  have h3v : ccKe V vl = 3 := by
+    rcases CC_KE_34 V vl with h | h
+    · exact h
+    · have hk := FUEIMOV_K hs hp hl2 hl1 heq.symm
+      omega
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH hp hs hl1
+  obtain ⟨f0, f1, f2⟩ := EL_CC_UH hp hs hl2
+  have hset4 : ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
+      mxi V (ccUh V ul)} : Set V3) = {(ccUh V vl).getD 0 0, (ccUh V vl).getD 1 0,
+      (ccUh V vl).getD 2 0, mxi V (ccUh V vl)} :=
+    CC_CELL_CONVEX_HULL_INJ (V := V) (ul := ul) (vl := vl) (pu := mxi V (ccUh V ul))
+      (pv := mxi V (ccUh V vl)) hp hs hl1 hl2 (by rw [if_pos h3]) (by rw [if_pos h3v]) heq
+  have hdu := MCELL_EXTREME_DIFF_V (V := V) (ul := ul) hs hp hl1 h3
+  have hdv := MCELL_EXTREME_DIFF_V (V := V) (ul := vl) hs hp hl2 h3v
+  have hmdiff : ({mxi V (ccUh V ul)} : Set V3) = {mxi V (ccUh V vl)} := by
+    rw [← hdu, ← hdv, hset4]
+  have hmxi : mxi V (ccUh V ul) = mxi V (ccUh V vl) := by
+    have hmx : mxi V (ccUh V ul) ∈ ({mxi V (ccUh V vl)} : Set V3) := by
+      rw [← hmdiff]; simp
+    exact Set.mem_singleton_iff.1 hmx
+  have hiu := MCELL_V_INTER_EXTREME (V := V) (ul := ul) hs hp hl1 h3
+  have hiv := MCELL_V_INTER_EXTREME (V := V) (ul := vl) hs hp hl2 h3v
+  have hsl : setOfList ul = setOfList vl := by
+    rw [← hiu, ← hiv, hset4]
+  have hul3 : ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := list3_eq ul hl1.1.1
+  have hvl3 : vl = [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0] := list3_eq vl hl2.1.1
+  have hsl3 : setOfList [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0]
+      = setOfList [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0] := by
+    rw [hul3] at hsl
+    rw [hvl3] at hsl
+    exact hsl
+  have sol3 : ∀ (a b c : V3), ({a, b, c} : Set V3) = setOfList [a, b, c] := by
+    intro a b c
+    apply Set.ext (fun t => ?_)
+    simp [setOfList]
+  have htri : ({ul.getD 0 0, ul.getD 1 0, ul.getD 2 0} : Set V3)
+      = {vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} := by
+    rw [sol3, sol3]
+    exact hsl3
+  have hcard : Nat.card ({ul.getD 0 0, ul.getD 1 0, ul.getD 2 0,
+      mxi V (ccUh V ul)} : Set V3) = 4 := by
+    rw [← e0, ← e1, ← e2]
+    exact CC_CELL_EXTREME_CARD (V := V) (ul := ul) (pp := mxi V (ccUh V ul)) hp hs hl1
+      (by rw [if_pos h3])
+  obtain ⟨d01, d02, -, d12, -, -⟩ := CARD4_ALL_DISTINCT hcard
+  have hstem : ({ul.getD 0 0, ul.getD 1 0} : Set V3) = {vl.getD 0 0, vl.getD 1 0} := by
+    rw [← e0, ← e1, ← f0, ← f1]
+    exact hst
+  have hpair : (vl.getD 0 0 = ul.getD 0 0 ∧ vl.getD 1 0 = ul.getD 1 0)
+      ∨ (vl.getD 0 0 = ul.getD 1 0 ∧ vl.getD 1 0 = ul.getD 0 0) := by
+    have m1 : vl.getD 0 0 ∈ ({ul.getD 0 0, ul.getD 1 0} : Set V3) := by
+      rw [hstem]; simp
+    have m2 : vl.getD 1 0 ∈ ({ul.getD 0 0, ul.getD 1 0} : Set V3) := by
+      rw [hstem]; simp
+    have m3 : ul.getD 0 0 ∈ ({vl.getD 0 0, vl.getD 1 0} : Set V3) := by
+      rw [← hstem]; simp
+    have m4 : ul.getD 1 0 ∈ ({vl.getD 0 0, vl.getD 1 0} : Set V3) := by
+      rw [← hstem]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at m1 m2 m3 m4
+    rcases m1 with e01 | e02 <;> rcases m2 with e11 | e12
+    · rcases m4 with hd1 | hd2
+      · exact Or.inr ⟨hd1.symm, e11⟩
+      · exact Or.inr ⟨e01.trans (e11.symm.trans hd2.symm), e11⟩
+    · exact Or.inl ⟨e01, e12⟩
+    · exact Or.inr ⟨e02, e11⟩
+    · rcases m3 with gc1 | gc2
+      · exact Or.inl ⟨gc1.symm, e12⟩
+      · exact Or.inl ⟨e02.trans (e12.symm.trans gc2.symm), e12⟩
+  have hu2m : ul.getD 2 0 ∈ ({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3) := by
+    rw [← htri]; simp
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu2m
+  have hchiU : 0 < chiMsb ul (mxi V (ccUh V ul)) := (CELL3_NONDEG hp hs hl1 h3).2
+  have hchiV : 0 < chiMsb vl (mxi V (ccUh V vl)) := (CELL3_NONDEG hp hs hl2 h3v).2
+  have hUstep : ∀ q : V3, chiMsb ul q
+      = chiMsb [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] q := by
+    intro q
+    conv_lhs => rw [hul3]
+  have hVstep : ∀ q : V3, chiMsb vl q
+      = chiMsb [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0] q := by
+    intro q
+    conv_lhs => rw [hvl3]
+  have hU3 : 0 < chiMsb [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0]
+      (mxi V (ccUh V ul)) := by
+    rw [← hUstep]
+    exact hchiU
+  have hV3 : 0 < chiMsb [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0]
+      (mxi V (ccUh V vl)) := by
+    rw [← hVstep]
+    exact hchiV
+  rcases hpair with ⟨hv0, hv1⟩ | ⟨hv0, hv1⟩
+  · -- first branch: the stems agree coordinatewise
+    rw [hv0, hv1] at hu2m
+    rcases hu2m with hc | hc | hc
+    · exact absurd hc d02.symm
+    · exact absurd hc d12.symm
+    · rw [hul3, hvl3, hv0, hv1, hc.symm]
+  · -- second branch: the stems are swapped; the two positive chi_msb readings
+    -- differ by a sign
+    rw [hv0, hv1] at hu2m
+    rcases hu2m with hc | hc | hc
+    · exact absurd hc d12.symm
+    · exact absurd hc d02.symm
+    · exfalso
+      have hV := hV3
+      rw [hv0, hv1, hc.symm] at hV
+      rw [chi_msb_swap_01 (ul.getD 1 0) (ul.getD 0 0) (ul.getD 2 0)
+        (mxi V (ccUh V vl))] at hV
+      rw [← hmxi] at hV
+      linarith
 
 /-! ## PA18 pool-C edge-first wave (lane BG): mcell edge-rigidity kit
 
