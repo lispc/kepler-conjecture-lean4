@@ -236,11 +236,14 @@ theorem exGExprTM_same : exGExprTM.evalReal = exGExpr.evalReal := by
   ring
 
 /-- TM certificate bundle for the sqrt node on `[1,2]` (center `3/2`, center
-enclosure the point `⟨3,-1⟩`, envelope `1/2`, certified lower bound `c = 1`):
-`√(3·2⁻¹)` mantissa `2 = ⌊√6⌋` (used twice — point enclosure), `√1` mantissa
-`2 = ⌊√4⌋`, recip granularities `2⁻³` (slope `1/(2√(3/2))`) and `2⁻²`
-(curvature `1/(8·1·1)`). -/
-def exGTMP : TMParams := ⟨[⟨2, 2, 2, -3, -2⟩], [], []⟩
+enclosure the point `⟨3,-1⟩`, envelope `1/2`, certified lower bound `c = 1`).
+SF-42 re-bake (`sqrtMantissaRel`, fixed `2⁻⁸⁰` relative granularity —
+mantissas are `⌊√(d.m·2¹⁶⁰·2^(d.e%2))⌋` on the radicand sub-model's actual
+dyadic representations): `slo = shi = ⌊√(3·2¹⁶¹)⌋ = ⌊√6·2⁸⁰⌋` (point
+enclosure `⟨3,-1⟩` value-shifted by `2¹⁶⁰`), `sc = 2⁸¹` (`c = 1` arrives
+unnormalized as `⟨2,-1⟩`); recip granularities `2⁻³` (slope `1/(2√(3/2))`)
+and `2⁻²` (curvature `1/(8·c·√c)`) unchanged. -/
+def exGTMP : TMParams := ⟨[⟨2961251394931780780844082, 2961251394931780780844082, 2417851639229258349412352, -3, -2⟩], [], []⟩
 
 /-- The single-leaf TM tree closes the whole box `[1,2]` at the root — the
 two-leaf bare-interval bisection of `exGTree` is unnecessary here (kernel
@@ -403,8 +406,10 @@ theorem exTM1A_end_to_end (x y : ℝ) (hx0 : 15 / 16 ≤ x) (hx1 : x ≤ 17 / 16
 interval sqrt certificate at the root box's scale (`⌊√62⌋ = 7` at `2⁻³`) is
 too coarse (lo = `7/8 − 15/16 < 0`); the TM's center evaluation is a point
 (`√1 = 1`) and the remainder is `≈ 0.018 < 1/16`, so the root closes.  The
-bundle: `√(256·2⁻⁸)` mantissa `16`, `√(248·2⁻⁸)` mantissa `15`, recip
-granularities `2⁻⁴`/`2⁻¹²`. -/
+bundle (SF-42 re-bake, `sqrtMantissaRel` fixed `2⁻⁸⁰` relative granularity):
+`slo = shi = 2⁸⁴` (center enclosure the point `⟨256,-8⟩` = 1, value-shifted),
+`sc = ⌊√(992·2¹⁶⁰)⌋` (certified lower bound `c = 31/32 = ⟨992,-10⟩`); recip
+granularities `2⁻⁴`/`2⁻¹²` unchanged. -/
 def exTM1BExpr : IExpr 3 :=
   .sub (.sqrt (.add (.add (.mul (.var 0) (.var 0)) (.mul (.var 1) (.var 1))) (.const ⟨1, 0⟩)) 7 8)
     (.var 2)
@@ -413,8 +418,9 @@ def exTM1BExpr : IExpr 3 :=
 def exTM1BBox : Fin 3 → DInterval := fun i =>
   if i = 2 then ⟨⟨7, -3⟩, ⟨15, -4⟩⟩ else ⟨⟨-1, -3⟩, ⟨1, -3⟩⟩
 
-/-- TM certificates for B's sqrt node. -/
-def exTM1BP : TMParams := ⟨[⟨16, 16, 31, -4, -12⟩], [], []⟩
+/-- TM certificates for B's sqrt node (SF-42 re-bake, `sqrtMantissaRel`
+fixed `2⁻⁸⁰` relative granularity; `o1`/`o2` unchanged). -/
+def exTM1BP : TMParams := ⟨[⟨19342813113834066795298816, 19342813113834066795298816, 38076365690967089655519065, -4, -12⟩], [], []⟩
 
 theorem exTM1B_bare_root : checkPos exTM1BExpr exTM1BBox = false := by decide
 theorem exTM1B_cert : checkPosTM exTM1BExpr exTM1BBox exTM1BP = true := by decide
