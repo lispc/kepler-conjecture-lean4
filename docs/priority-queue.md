@@ -29,7 +29,9 @@
 | GRHIDFA-W3 | ✅ **完成**（`bef9abae`，IPVICGW 支 10 行 + 14 私件，十件标准三，+814/−0） | PackingAuto3.lean | 零计分（W5 才回填九桩），W4 前置 |
 | FCHKUGT-W4 | ✅ **完成**（`fff95dbc`，FUEIMOV_3 一次迭代通过，标准三，bare sorry 16→15；**W5 前置 W1-W4 全齐，本体 :7432 装配解锁**） | PackingAuto18.lean | 零计分资产，W5 前置 |
 | A2-W2a | ✅ **完成**（`3fab5ee1`，选项 A 重烤成功：exGTMP/exTM1BP mantissa 照 C549Mono 先例重烤，CertG build 绿 8665 jobs，两 demo end-to-end 标准三；Base/Shard1/Shard2 三连 EXIT=0 = **rest 9 构建链阻断解除**；8 demo 全保留零删除） | Kepler/Interval/CertG.lean | 40h 构建的第 0 步 |
+| FCHKUGT-W5 | ✅ **完成（落库 `43bde50e`，闸 PASS）**（+210/−2，FCHKUGT 本体标准三，bare sorry 15→14；**FCHKUGT 全链 W1-W5 收官**；PA25 LEAF_RANKING_LEMMA 零编辑重建自动转净 = p25_leaf_azim_inj+FCHKUGT 链实测成立；REUHADY 楔二择支解锁，其债面收窄至 REUHADY1+EWYBJUA 两锚） | PackingAuto18.lean | 收官；池C 解锁 |
 | **A2-W2b** | **40h 分段构建进行中**（编排者后台：`/tmp/a2-rest9w2` 克隆，断点续跑，olean 计数 3→2776）+ 完工后 olean 回灌主仓 → 粘合落库 **−1 源** | 后台构建 | rest 9 = 59 条 nli rest 最大单件 |
+| GRHIDFA-W5 | **capstone 装配 + 九桩回填（−9 计分时刻）**：p3k_NOT_QY_LEM/LUIKGMH/GRHIDFA_ALT/GRHIDFA + 九桩真证体 | PackingAuto3.lean | **PA3 9→0，地图预期 −9** |
 | GRHIDFA-W4 | ✅ **完成**（`173e18e2`，RSIWAMP+UTEOITF + 5 私件，双件标准三，+218/−0；勘误：UTEOITF 实为 nn=3/≠3 两支非三支，card=5 已被 RSIWAMP 灭） | PackingAuto3.lean | 零计分，W5 前置 |
 | FCHKUGT-W5 | **本体四分支装配（:7432，收官波）**——W1-W4 前置全齐 | PackingAuto18.lean | 收官解锁 PA25 侧 WEDGE_UNIQUE_CC_CELL |
 
