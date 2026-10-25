@@ -12,7 +12,7 @@
 
 | 里程碑 | 定义 | 现状（2026-10-25） |
 |---|---|---|
-| **M0** 主定理锥直源清零 | e2e TSV 直接 sorryAx 源 = 0 | **156**（Assembly 81 / Text 散布 74+1 / TameLp 1；TSV `becc223e`，后续 `9f4df3d1`/`60753fd6` 两波未动锥内面） |
+| **M0** 主定理锥直源清零 | e2e TSV 直接 sorryAx 源 = 0 | **155**（TSV `67788c99`，2026-10-26：GRHIDFA_concl 出列；Assembly 81 / Text 散布 73+1 / TameLp 1） |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 624 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -31,7 +31,7 @@
 | A2-W2a | ✅ **完成**（`3fab5ee1`，选项 A 重烤成功：exGTMP/exTM1BP mantissa 照 C549Mono 先例重烤，CertG build 绿 8665 jobs，两 demo end-to-end 标准三；Base/Shard1/Shard2 三连 EXIT=0 = **rest 9 构建链阻断解除**；8 demo 全保留零删除） | Kepler/Interval/CertG.lean | 40h 构建的第 0 步 |
 | FCHKUGT-W5 | ✅ **完成（落库 `43bde50e`，闸 PASS）**（+210/−2，FCHKUGT 本体标准三，bare sorry 15→14；**FCHKUGT 全链 W1-W5 收官**；PA25 LEAF_RANKING_LEMMA 零编辑重建自动转净 = p25_leaf_azim_inj+FCHKUGT 链实测成立；REUHADY 楔二择支解锁，其债面收窄至 REUHADY1+EWYBJUA 两锚） | PackingAuto18.lean | 收官；池C 解锁 |
 | **A2-W2b** | **40h 分段构建进行中**（编排者后台：`/tmp/a2-rest9w2` 克隆，断点续跑，olean 计数 3→2776）+ 完工后 olean 回灌主仓 → 粘合落库 **−1 源** | 后台构建 | rest 9 = 59 条 nli rest 最大单件 |
-| GRHIDFA-W5 | ✅ **完成（落库 `cc3cb531`，闸 PASS）**：capstone 四件 + 九桩回填，十三件标准三，+551/−55，**PA3 bare sorry 9→0 全模块归零**；GRHIDFA 主链 W1-W5 收官。披露：车道 agent 收尾文书阶段被配额上限中断，源文件已成品，编排者独立重建+探针+冻结核对后代补交付 | PackingAuto3.lean | **−9 计分（地图重生成中）** |
+| GRHIDFA-W5 | ✅ **完成（落库 `cc3cb531`，闸 PASS）**：capstone 四件 + 九桩回填，十三件标准三，+551/−55，**PA3 bare sorry 9→0 全模块归零**；GRHIDFA 主链 W1-W5 收官。披露：车道 agent 收尾文书阶段被配额上限中断，源文件已成品，编排者独立重建+探针+冻结核对后代补交付 | PackingAuto3.lean | **锥 −1（GRHIDFA_concl 出列；PA3 文件级 9→0。地图 `67788c99` 实测 156→155）** |
 | WSEWPCH-W3a | LA6 近机械轨道件 6-7 枚（CARD_IS_LEAST_CYCLE / POINT_PRESENTED_IN_RHOND1 / LT_CARD_MONO_LOFA / …）；文书先行纪律（每 2 件快照） | LocalAuto6.lean | WSEWPCH 核前置，LA6 60→54± |
 | GRHIDFA-W4 | ✅ **完成**（`173e18e2`，RSIWAMP+UTEOITF + 5 私件，双件标准三，+218/−0；勘误：UTEOITF 实为 nn=3/≠3 两支非三支，card=5 已被 RSIWAMP 灭） | PackingAuto3.lean | 零计分，W5 前置 |
 | FCHKUGT-W5 | **本体四分支装配（:7432，收官波）**——W1-W4 前置全齐 | PackingAuto18.lean | 收官解锁 PA25 侧 WEDGE_UNIQUE_CC_CELL |
@@ -48,7 +48,7 @@
 ## 2. 排队（按序补位）
 
 1. `就绪` **FCHKUGT W5**：本体四分支装配（:7432；W1-W4 前置全齐 `fff95dbc`，k=4 支 d 已由 FUEIMOV_4 解锁）——FCHKUGT 全链收官波。
-2. `就绪` **GRHIDFA W6**：PA4 CC4P4→CcV11 桥（1 桥件 + periodic Prop/Eq 引理）+ 30 桩 discharge（21 CC4P4 经桥 + 9 `_v11` 孪生 `:= PA3.同名_concl`）+ PackingConcl 九连 #print axioms 复核（−30）。
+2. `就绪` **GRHIDFA W6**：PA4 CC4P4→CcV11 桥（1 桥件 + periodic Prop/Eq 引理）+ 30 桩 discharge（21 CC4P4 经桥 + 9 `_v11` 孪生 `:= PA3.同名_concl`）+ PackingConcl 九连 #print axioms 复核（PA4 文件级 −30；**锥刻度预期 0**——PA4/PackingConcl 不在 e2e 锥内，属邻近层资产）。
 3. `排队` **A2-W2b**（待 W2a）：编排者跑 40h 分段构建（segbuild.sh 断点续跑）→ olean 回灌 → 粘合落库 **−1 源**。
 4. `排队` **WSEWPCH W2（词表桥波）**：`_p2`↔`_p3` rfl 桥 + localFan_p3.of_LocalFan 正向打包（撞 AzimBridge 无主文件，需编排者确认归属）；另 LA7 余两件 UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE（~200 行，路线已入档）可作 W1b 小波。
 5. `排队` **WSEWPCH W3-W5a**：核四真缺口（BGMIFTE 1050 / KCHMAMG 280 / CIZMRRH 275 / HALP 165——注意 HALP_CIRCLE_IS_INTERSECTION 实为 LA5:7670 桩，LA5 不可 import，需编排者单独立项）。
@@ -110,6 +110,8 @@
   phase 系列随归档处理，不再更新。
 
 ## 8. 变更日志
+
+- **2026-10-26（凌晨）**：GRHIDFA W5 落库 `cc3cb531`（PA3 归零，主链收官）；地图重生成 `67788c99` 直源 **156→155**；**口径更正**：此前把 PA3 文件级 −9 误写为锥计分 −9——锥只记 GRHIDFA_concl 单源，实际 −1；今后计分预告一律区分「文件级 sorry」与「锥直源」两种刻度。FCHKUGT W5 落库 `43bde50e`（全链收官，锥 0——FCHKUGT 不在锥，收益为 PA25 侧转净）。A2-W2a CertG 重烤热修 `3fab5ee1`，A2-W2b 40h 分段构建启动。WSEWPCH W3a 发车。
 
 - **2026-10-25（晚）**：建档并首轮更新。落库：GRHIDFA W2（`9f4df3d1`，PA3 +989）、
   FCHKUGT W2（`60753fd6`，PA18 三件标准三）、WSEWPCH W1（`20ff16c3`，LA7 十件标准三，
