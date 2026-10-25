@@ -1,0 +1,47 @@
+HOL引理	HOL行号	分类	Lean对应	估Lean行数	备注
+FCHKUGT	leaf_cell.hl:3432-3528 (97)	b机械	PA18:6685 (sorry)	60-160	陈述零误植(5/5前提+结论); 骨架=hA⇒affGt{u0,u1}{u2}={u0,u1}{u2'} + ke'=3支FUEIMOV_3×2 + ke'=4支FUEIMOV_4×2+CC_CELL_NOT_COPLANAR_EXTREME共面反证; ≥60%为EL/HD/TL/CONS_11改写噪声
+FUEIMOV_3	leaf_cell.hl:3000-3103 (104)	b机械	PA18:5396 (sorry)	110-260	集合/列表记账链+chi_msb_swap_01符号收口; 无新数学; FCHKUGT case k=3 硬前置
+FUEIMOV_4	leaf_cell.hl:2810-2894 (85)	b机械	PA18:5364 (sorry)	90-200	LENGTH4_SET2/SWAP01记账+chi_msb_swap_23/01符号; 第二下游=PA25:4377 WEDGE_UNIQUE_CC_CELL; FCHKUGT case k=4 硬前置
+FUEIMOV_K	leaf_cell.hl:2732-2749 (18)	b机械(闸)	PA18:5334 (sorry)	10-25	NEEDS注"等PA17.AJRIPQN"已过时: AJRIPQN PA17:931真证(2026-10-12关账)且PA18 import PA17(:155)闭包内; 装配=AJRIPQN+CC_CELL_NOT_NULLSET(:5185)+CC_KE_34+barV(cc_uh)(cc_uh_exists:1080); ⚠️标准-三闸:首建#print axioms AJRIPQN实测(AR车道实测PA2 XNHPWAB1_concl:5405/MXI_EXISTS_concl:5484在册sorry经PA12流入含PA17闭包,子树是否污染无法纯静态判定)
+MCELL4_EXTREME_POINT	leaf_cell.hl:2779-2810 (21)	b机械	PA18:5342 (sorry)	10-25	NEEDS注"EDGE_FIRST-style rigidity kit"是误导: HOL实体只要FUEIMOV_K+CC_CELL_CONVEX_HULL_INJ(:5311已证)+SET_OF_LIST_CC_UH(:3323已证); 与BG的EDGE_FIRST无关
+MXI_NOT_IN_V	leaf_cell.hl:2894-2948 (55)	b机械	PA18:5376 (sorry)	40-100	MXI_IN_VORONOI_LIST(:3884已证)+EL_CC_UH(:3220)+sqrt2<2实数算术+packing球分离定义+DIST_REFL; 无新数学("sqrt-2距离vs packing球分离"即MXI_IN_VORONOI_LIST供点+packing定义反证)
+MCELL_V_INTER_EXTREME	leaf_cell.hl:2949-2976 (28)	b机械	PA18:5385 (sorry)	20-50	waits on MXI_NOT_IN_V(注记属实); 集合论推论
+MCELL_EXTREME_DIFF_V	leaf_cell.hl:2977-3000 (24)	b机械	PA18:5392 (sorry)	10-30	waits on MXI_NOT_IN_V(注记属实); 集合论推论
+STEM_EDGEX	leaf_cell.hl:3375-3431	a已证	PA18:6641 PROVEN	0	FCHKUGT前件(紧邻); 消费BumpP4.MCELL3_EDGE(PA4:1549)/MCELL4_EDGE(PA4:1533)均PROVEN
+ZASUVOR	leaf_cell.hl:530-?	a已证	PA18:2345 PROVEN	0	leaf[u1,u0,u2]∧stem不变; FUEIMOV_3分支d的hl2供给
+CFFONNL	leaf_cell.hl:2178-2514	a已证(SF-50后)	PA18:4638 PROVEN	0	已修复为HOL原序(hne : X ≠ ccCell V ul); FCHKUGT经TAUT改写直接消费二择形; 无需接线工作
+CC_CELL_IN_MCELL_SET	leaf_cell.hl	a已证	PA18:5015 PROVEN	0	CFFONNL的hX前提供给
+NUNRRDS_0	leaf_cell.hl:1295-1300	a已证	PA18:3236 PROVEN	0	ccA0 ul ∩ ccCell V ul ≠ ∅; CFFONNL的hA前提供给
+CC_KE_34	leaf_cell.hl:1188-?	a已证	PA18:3038 PROVEN	0	ke=3∨4二分
+LIST_OF_CC_UH	leaf_cell.hl:2750-2764	a已证	PA18:3315 PROVEN	0	ccUh=[getD0;getD1;getD2;getD3]; case k=4两支的收口件
+SET_OF_LIST_CC_UH	leaf_cell.hl:2765-2792	a已证	PA18:3323 PROVEN	0	MCELL4_EXTREME_POINT用
+STEM_OF_LEAF	leaf_cell.hl:2803-2809	a已证	PA18:~5346 PROVEN	0	stem={getD0,getD1}
+CC_CELL_NOT_COPLANAR_EXTREME	leaf_cell.hl:2622-2640	a已证	PA18:5193 PROVEN	0	条件pp形(if ccKe=3 then mxi else getD3)与HOL一致; case k=4收口主力
+CC_CELL_EXTREME_CARD	leaf_cell.hl:2662-2678	a已证	PA18:5269 PROVEN	0	Nat.card{4极点}=4
+CC_CELL_CONVEX_HULL_INJ	leaf_cell.hl:2709-2731	a已证	PA18:5311 PROVEN	0	FUEIMOV_3/MCELL4_EXTREME_POINT共用
+CC_CELL_NOT_NULLSET	leaf_cell.hl:2641-2661	a已证	PA18:5185 PROVEN	0	FUEIMOV_K的hvol供给
+K4_CHI_MSB_POS	leaf_cell.hl	a已证	PA18:3374 PROVEN	0	第4极点chi>0; FUEIMOV_4双支用
+chi_msb_swap_01	leaf_cell.hl系	a已证	PA18:2717 PROVEN	0	FUEIMOV_3/FUEIMOV_4符号排除
+chi_msb_swap_23	leaf_cell.hl系	a已证	PA18:2726 PROVEN	0	FUEIMOV_4分支1符号排除
+CELL3_NONDEG	leaf_cell.hl	a已证	PA18:3443 PROVEN	0	FUEIMOV_3第二支排除
+MXI_IN_VORONOI_LIST	leaf_cell.hl	a已证	PA18:3884 PROVEN	0	MXI_NOT_IN_V的核心供点件
+EL_CC_UH	leaf_cell.hl	a已证	PA18:3220 PROVEN	0	getD↔EL记法桥
+LENGTH4_SET2	leaf_cell.hl	a已证	PA18:5095 PROVEN	0	FUEIMOV_4分支1
+LENGTH4_SET2_SWAP01	leaf_cell.hl	a已证	PA18:5143 PROVEN	0	FUEIMOV_4分支2
+GBEWYFX	leaf_cell.hl	a已证	PA18:2053 PROVEN	0	茎两两不等; CARD4_IMP_DISTINCT的替代品
+AJRIPQN	Ajripqn(HOL库)	a已证(闭包内)	PA17:931 PROVEN (PA18 import :155)	0	五阶段装配2026-10-12关账; 链=p17_ajripqn_of_pieces(:682)+p17_ajripqn_of_tailfix(:827)+qzksykg1/2_p17(shim→PA14.QZKSYKG1:1936真证/QZKSYKG2:3034真证,:3034后全文件零sorry)+TIWWFYQ(PA5:847真证,PA17 docstring"PA5:581 sorry"过时)+KIUMVTC(PA5:817真证); PA17全文件零代码sorry; ⚠️axiom洁净度实测闸见FUEIMOV_K行
+CARD4_IMP_DISTINCT	Marchal_cells_2_new	b微件(可免)	缺名(PA12:36 docstring系计划清单;PA25:4228注"已证"失真,grep无名)	0-10	FUEIMOV_3茎两两不等用; 直接GBEWYFX+Nat.card记账替代
+X_IN_AFF_GT_X	local_lemmas.hl:5860	c桥(闭包外)	LocalAuto5:7702 PROVEN 但LocalAuto5无人import不在任何闭包	5-10	本地复制; =conv0{x}⊆affGt推论(HOL原形即derived rule); 用法=u2'∈affGt{u0,u1}{u2'}经hA改写到{u2}
+AFF_GT_SUBSET_AFFINE_HULL	Collect_geom	c桥(后位)	PA18:9812 PROVEN 但在本体:6685之后(私有孪生:7808同在后)	10-25	本地复制(连pa18_affsign_mem_affSpan体~:9790一起); affGt s t ⊆ affineSpan(s∪t)
+BARV_SUBSET	Packing3	b微件	缺名; PA2私有孪生p2g_BARV_SUBSET:716/p3a_BARV_SUBSET:4982	3-5	MXI_NOT_IN_V用; def级(barV→setOfList⊆V)
+BARV_IMP_HD_IN_SET_OF_LIST	Packing3	b微件	缺名	3-5	MXI_NOT_IN_V用; def级
+Packing3.IN_TRANS/HULL_SUBSET/PAIR_EQ_EXPAND/LENGTH3/SET_TAC	HOL库	a已证/平凡	Mathlib(Set.In.trans等)	0	-
+TWO_REARRANGEMENT_LEMMA_ALT	leaf_cell.hl:3104-3111	不消费	-	0	实测=QZKSYKG.hl:131的MESON薄壳(任务书":3114-3374"实为MCELL2_EDGE_FIRST区间); FCHKUGT及全部依赖零引用; BG件,本车道不重复规划不构成接口
+MCELL2_EDGE_FIRST/MCELL3_EDGE_FIRST	leaf_cell.hl:3114-3196/:3197-3337	不消费(BG在飞)	PA18:5405/:5445 (BG施工区)	0	HOL体依赖(QZKSYKG1/RVFXZBU/LEFT_ACTION_LIST_2/3_EXISTS/MCELL2/3/4_EDGE/TWO_REARR_ALT)无FUEIMOV/FCHKUGG边; 与本车道双向独立
+pa18w4_azim_loc	-	不消费	PA18:7354 (private)	0	方位角局部窗口件; FCHKUGT链无方位角连续性内容; azim侧工作在消费者(PA25已自备azim_eq_azim_iff_alt)
+p25_leaf_azim_inj	-	消费(直接)	PA25:1963 调用点:1987	0	零裸sorry吃FCHKUGT sorryAx; FCHKUGT落证零编辑自动转净; 下游LEAF_RANKING_LEMMA(PA25:1992)同
+REUHADY	OXLZLEZ3.hl:820-884	消费(直接)	PA25:1797 (sorry)	-	azim≠0 wedge-二择支消费FCHKUGT(OXLZLEZ3:863)+EWYBJUA终步(:880)+REUHADY1(PA24污染闸,AR车道在记); FCHKUGT只解楔二择支
+LEAF_RANK_REUHADY	OXLZLEZ3.hl	消费(间接)	PA25:2611 (sorry)	-	e2e-reachability-map.tsv行102(AR车道写map:92已漂),parent=c_4_azim_mcell_dih_y; NEEDS"唯一债=REUHADY"
+CC_3_AZIM_LT_PI_COPLANAR	OXLZLEZ3.hl:8667-?	消费(直接)	PA25:9444 (sorry :9452)	-	HOL体OXLZLEZ3:8704消费FCHKUGT; PA25 real_model bank区
+WEDGE_UNIQUE_CC_CELL	-	消费(FUEIMOV_4)	PA25:4377 (sorry)	-	三重债之一=FUEIMOV_4(注记PA18:5213已漂至:5364,"独立侦察lane建议"即本车道); 另两债MCELL4_FULL_WEDGE/MCELL4_FI非本lane
+PA24孪生注记	-	历史记账	PA24:116/:13006-13145	0	p24_REUHADY_nondeg两支已于2026-10-08..12绕开FCHKUGT真证; PA24无现役消费; 勿当现役债
