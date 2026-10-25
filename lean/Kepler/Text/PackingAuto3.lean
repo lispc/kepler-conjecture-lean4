@@ -2020,4 +2020,818 @@ theorem p3h_UNPNFVW (cc : CcV11) (hp : cc_bool_prep_v11 cc) (hb : cc_bool_model_
       linarith
     linarith
 
+/-! ## OXLZLEZ2 W3: IPVICGW 支 (OXLZLEZ2.hl:1830-3315; GRHIDFA wave plan W3)
+
+Port of the W3 wave (WAVES §W3, 10 rows): the `IPVICGW` ladder — `IPVICGW_C33`,
+`UNIQUE_QY`, `UNIQUE_QY2`, `IPVICGW_C43_C44`, `EXISTS_QY_CARD5`,
+`CARD5_1074_LE_QYI`, `CARD5_LT_1074_QYI`, `PRE_IPVICGW`,
+`CC_CARD_LESS_THAN_5` and `IPVICGW`, all consuming the W1 kit (`p3g_*`) and the
+W2 block (`p3h_*`).  Rows are inserted in dependency order (the HOL order
+C33, UNIQUE_QY, UNIQUE_QY2, C43_C44, EXISTS_QY_CARD5, CARD5_1074_LE_QYI,
+CARD5_LT_1074_QYI, PRE_IPVICGW, CC_CARD_LESS_THAN_5, IPVICGW is respected).
+`CARD5_LT_1074_QYI` is a new row without a PA4 stub: its statement is frozen
+verbatim from the HOL goal OXLZLEZ2.hl:2811-2825 (see DELIVERY.md for the
+premise table).  All rows below are fully proved, with no unproved
+placeholders.  The nine conclusion stubs above are not touched. -/
+
+/-- `Finset.Icc 0 (n-1) = Finset.range n` for `n ≠ 0` (W2 inline step,
+factored out; used by every `periodic_sum` consumer below). -/
+private theorem p3i_Icc0_eq_range (n : ℕ) (hn : n ≠ 0) :
+    Finset.Icc 0 (n - 1) = Finset.range n := by
+  ext x
+  simp only [Finset.mem_Icc, Finset.mem_range]
+  omega
+
+/-- `cc_real_model_v11` conjunct 9. -/
+private theorem p3i_rm_qu_neg_eps {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h : cc_qu_v11 cc i) : (-cc_eps : ℝ) ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, h9, -⟩ := hr
+  exact h9 i h
+
+/-- `cc_real_model_v11` conjunct 10. -/
+private theorem p3i_rm_qu_eta_eps {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h1 : cc_qu_v11 cc i) (h2 : ¬cc_small_eta_v11 cc i) : (cc_eps : ℝ) ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, h10, -⟩ := hr
+  exact h10 i ⟨h1, h2⟩
+
+/-- `cc_real_model_v11` conjunct 11. -/
+private theorem p3i_rm_qu_eta_next_eps {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h1 : cc_qu_v11 cc i) (h2 : ¬cc_small_eta_v11 cc (i + 1)) :
+    (cc_eps : ℝ) ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, h11, -⟩ := hr
+  exact h11 i ⟨h1, h2⟩
+
+/-- `cc_real_model_v11` conjunct 20. -/
+private theorem p3i_rm_qx_hassmall_qy_next_eps {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ) (h1 : cc_qx_v11 cc i) (h2 : cc_hassmall_v11 cc i) (h3 : cc_qy_v11 cc (i + 1)) :
+    (cc_eps : ℝ) ≤ cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1) := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, h20, -⟩ := hr
+  exact h20 i ⟨h1, h2, h3⟩
+
+/-- `cc_real_model_v11` conjunct 21. -/
+private theorem p3i_rm_qx_next_hassmall_qy_eps {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ) (h1 : cc_qx_v11 cc (i + 1)) (h2 : cc_hassmall_v11 cc (i + 1))
+    (h3 : cc_qy_v11 cc i) : (cc_eps : ℝ) ≤ cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, h21, -⟩ := hr
+  exact h21 i ⟨h1, h2, h3⟩
+
+/-- `cc_real_model_v11` conjunct 22. -/
+private theorem p3i_rm_qx_small_eps {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h1 : cc_qx_v11 cc i) (h2 : cc_small_v11 cc i) (h3 : ¬cc_small_v11 cc (i + 1)) :
+    (cc_eps : ℝ) ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, h22, -⟩ := hr
+  exact h22 i ⟨h1, h2, h3⟩
+
+/-- `cc_real_model_v11` conjunct 23. -/
+private theorem p3i_rm_qx_small_next_eps {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h1 : cc_qx_v11 cc i) (h2 : cc_small_v11 cc (i + 1)) (h3 : ¬cc_small_v11 cc i) :
+    (cc_eps : ℝ) ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, h23, -⟩ := hr
+  exact h23 i ⟨h1, h2, h3⟩
+
+/-- `cc_real_model_v11` conjunct 30. -/
+private theorem p3i_rm_qy_eta_prev_spine {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h1 : cc_qy_v11 cc i) (h2 : cc_small_eta_v11 cc i) (h3 : ¬cc_small_eta_v11 cc (i + 1))
+    (h4 : cc_azim_v11 cc i < 1.074) :
+    a_spine5 + b_spine5 * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+    -, h30, -⟩ := hr
+  exact h30 i ⟨h1, h2, h3, h4⟩
+
+/-- `cc_real_model_v11` conjunct 31. -/
+private theorem p3i_rm_qy_eta_next_spine {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h1 : cc_qy_v11 cc i) (h2 : ¬cc_small_eta_v11 cc i) (h3 : cc_small_eta_v11 cc (i + 1))
+    (h4 : cc_azim_v11 cc i < 1.074) :
+    a_spine5 + b_spine5 * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+    -, -, h31, -⟩ := hr
+  exact h31 i ⟨h1, h2, h3, h4⟩
+
+/-- `cc_real_model_v11` conjunct 32. -/
+private theorem p3i_rm_qy_eta_both_spine {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h1 : cc_qy_v11 cc i) (h2 : cc_small_eta_v11 cc i) (h3 : cc_small_eta_v11 cc (i + 1)) :
+    a_spine5 + b_spine5 * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+    -, -, -, h32, -⟩ := hr
+  exact h32 i ⟨h1, h2, h3⟩
+
+/-- Every index carries `gg ≥ -cc_eps`: rows 9/18 of `cc_real_model_v11`
+plus `QY_NN`, split by `QU_OR_QXY` (HOL subgoal of CARD5_LT_1074_QYI). -/
+private theorem p3i_gg_ge_neg_eps {cc : CcV11} (hb : cc_bool_model_v11 cc)
+    (hr : cc_real_model_v11 cc) (i : ℕ) : (-cc_eps : ℝ) ≤ cc_gg_v11 cc i := by
+  rcases p3g_QU_OR_QXY cc i with h | h | h
+  · exact p3i_rm_qu_neg_eps hr i h
+  · exact le_trans (by norm_num [cc_eps]) (p3h_rm_qx_nn hr h)
+  · exact le_trans (by norm_num [cc_eps]) (p3g_QY_NN00 cc hb hr i h)
+
+/-- The index circle `0..card-1` splits into the `qy` and the `4cell` indices
+(the HOL `SET_RULE`/`CARD_UNION` steps of EXISTS_QY_CARD5 and
+CC_CARD_LESS_THAN_5). -/
+private theorem p3i_split_qy_4cell (cc : CcV11) (hb : cc_bool_model_v11 cc) :
+    (Finset.Icc 0 (cc_card_v11 cc - 1)).card
+      = (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card
+        + (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := by
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have hcardIcc : (Finset.Icc 0 (cc_card_v11 cc - 1)).card = cc_card_v11 cc := by
+    rw [p3i_Icc0_eq_range _ hnn0, Finset.card_range]
+  have hunion : Finset.Icc 0 (cc_card_v11 cc - 1)
+      = Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))
+        ∪ Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1)) := by
+    ext x
+    simp only [Finset.mem_filter, Finset.mem_union]
+    constructor
+    · intro hx
+      by_cases h4 : cc_4cell_v11 cc x
+      · exact Or.inr ⟨hx, h4⟩
+      · exact Or.inl ⟨hx, h4⟩
+    · rintro (hx | hx)
+      · exact hx.1
+      · exact hx.1
+  have hdisj : Disjoint (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1)))
+      (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))) := by
+    rw [Finset.disjoint_left]
+    intro a ha hc'
+    exact (Finset.mem_filter.mp ha).2 (Finset.mem_filter.mp hc').2
+  have h1 : (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card
+      + (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card
+      = (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))
+          ∪ Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card :=
+    (Finset.card_union_of_disjoint hdisj).symm
+  rw [h1, ← hunion, hcardIcc]
+
+/-- OXLZLEZ2.hl:1830 (`IPVICGW_C33`). -/
+theorem p3i_IPVICGW_C33 (cc : CcV11)
+    (h : cc_bool_model_v11 cc ∧ cc_bool_prep_v11 cc ∧ cc_real_model_v11 cc ∧
+      ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ))
+    (hc : cc_card_v11 cc = 3) (i : ℕ) : cc_small_v11 cc i := by
+  obtain ⟨hb, hp, hr, hsum⟩ := h
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have hbk := hb
+  obtain ⟨-, -, -, -, hpsmall, -, hp4, -⟩ := hbk
+  rw [hc] at hpsmall
+  have hn3 : (3 : ℕ) ≠ 0 := by omega
+  have h3sz := p3h_CHQSQEY cc hb hp hr hsum
+  have hsize4 : cc_size_v11 cc (cc_4cell_v11 cc)
+      = (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  have hcardIcc : (Finset.Icc 0 (cc_card_v11 cc - 1)).card = cc_card_v11 cc := by
+    rw [p3i_Icc0_eq_range _ hnn0, Finset.card_range]
+  have hfil3 : (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card
+      = 3 := by
+    have hle : (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card
+        ≤ (Finset.Icc 0 (cc_card_v11 cc - 1)).card :=
+      Finset.card_le_card
+        (Finset.filter_subset (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1)))
+    rw [hcardIcc] at hle
+    rw [← hsize4]
+    omega
+  have hIcc4 : Finset.Icc 0 (cc_card_v11 cc - 1)
+      = Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1)) := by
+    have hsub : Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))
+        ⊆ Finset.Icc 0 (cc_card_v11 cc - 1) :=
+      Finset.filter_subset (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))
+    refine (Finset.eq_of_subset_of_card_le hsub ?_).symm
+    rw [hcardIcc, ← hsize4]
+    omega
+  have h4all : ∀ j ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_4cell_v11 cc j := by
+    intro j hj
+    have hj2 : j ∈ Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1)) := by
+      rw [← hIcc4]
+      exact hj
+    exact (Finset.mem_filter.mp hj2).2
+  by_cases hqx : ∀ j ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_qx_v11 cc j
+  · exfalso
+    have hpos : (0 : ℝ) ≤ ∑ j ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc j :=
+      Finset.sum_nonneg fun j hj => p3g_QX_NN00 cc hb hr j (hqx j hj)
+    linarith
+  · push_neg at hqx
+    obtain ⟨i', hi'c, hi'qx⟩ := hqx
+    have h4i' : cc_4cell_v11 cc i' := h4all i' hi'c
+    have hqui' : cc_qu_v11 cc i' := by
+      by_cases hq : cc_qu_v11 cc i'
+      · exact hq
+      · exact absurd (show cc_qx_v11 cc i' from ⟨h4i', hq⟩) hi'qx
+    have hs1 : cc_small_v11 cc i' := hqui'.1.1
+    have hs2 : cc_small_v11 cc (i' + 1) := hqui'.1.2
+    by_cases hs3 : cc_small_v11 cc (i' + 2)
+    · -- residues of i', i'+1, i'+2 cover ℤ/3, so small propagates everywhere
+      have hd1 : i' % 3 ≠ (i' + 1) % 3 :=
+        MOD_INJ1_ALT hn3 (show (1 : ℕ) < 3 by omega) (show (1 : ℕ) ≠ 0 by omega) i'
+      have hd2 : i' % 3 ≠ (i' + 2) % 3 :=
+        MOD_INJ1_ALT hn3 (show (2 : ℕ) < 3 by omega) (show (2 : ℕ) ≠ 0 by omega) i'
+      have hd3 : (i' + 1) % 3 ≠ (i' + 2) % 3 :=
+        MOD_INJ1_ALT hn3 (show (1 : ℕ) < 3 by omega) (show (1 : ℕ) ≠ 0 by omega) (i' + 1)
+      rw [periodic_mod hpsmall hn3 i]
+      rcases (show i % 3 = i' % 3 ∨ i % 3 = (i' + 1) % 3 ∨ i % 3 = (i' + 2) % 3 from by omega) with
+        r | r | r
+      · rw [r, ← periodic_mod hpsmall hn3 i']
+        exact hs1
+      · rw [r, ← periodic_mod hpsmall hn3 (i' + 1)]
+        exact hs2
+      · rw [r, ← periodic_mod hpsmall hn3 (i' + 2)]
+        exact hs3
+    · -- everything is 4cell, (i'+1) and (i'+2) are qx, and the gg-sum over one
+      -- period is a sum of three nonneg terms
+      have h4allx : ∀ x, cc_4cell_v11 cc x := by
+        intro x
+        rw [periodic_mod hp4 hnn0 x]
+        exact h4all _ (MOD_IN_NUMSEG hnn0)
+      have hnq1 : ¬ cc_qu_v11 cc (i' + 1) := fun hq => hs3 hq.1.2
+      have hnq2 : ¬ cc_qu_v11 cc (i' + 2) := fun hq => hs3 hq.1.1
+      have hqx1 : cc_qx_v11 cc (i' + 1) := ⟨h4allx (i' + 1), hnq1⟩
+      have hqx2 : cc_qx_v11 cc (i' + 2) := ⟨h4allx (i' + 2), hnq2⟩
+      have hg1 : (cc_eps : ℝ) ≤ cc_gg_v11 cc (i' + 1) :=
+        p3i_rm_qx_small_eps hr (i' + 1) hqx1 hs2 hs3
+      have hg2 : (0 : ℝ) ≤ cc_gg_v11 cc (i' + 2) := p3h_rm_qx_nn hr hqx2
+      have hg0 : (-cc_eps : ℝ) ≤ cc_gg_v11 cc i' := p3i_rm_qu_neg_eps hr i' hqui'
+      have hpgg : periodic (cc_gg_v11 cc) (cc_card_v11 cc) := p3h_rm_periodic_gg hr
+      have htop : cc_card_v11 cc - 1 + i' = i' + 2 := by omega
+      have h1 := periodic_sum hpgg hnn0 i'
+      rw [htop] at h1
+      rw [p3i_Icc0_eq_range _ hnn0, ← h1, p3g_SUM_NUMSEG3] at hsum
+      linarith
+
+/-- OXLZLEZ2.hl:2009 (`UNIQUE_QY`). -/
+theorem p3i_UNIQUE_QY (cc : CcV11) (_hb : cc_bool_model_v11 cc) (hp : cc_bool_prep_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    ∀ j, cc_qy_v11 cc j ∧ j ∈ (Finset.Icc 0 (cc_card_v11 cc - 1) : Set ℕ) →
+      ∀ k, k ≠ j ∧ k ∈ (Finset.Icc 0 (cc_card_v11 cc - 1) : Set ℕ) →
+        ¬cc_qy_v11 cc k := by
+  intro j hj k hk hqk
+  obtain ⟨hjy, hjm⟩ := hj
+  obtain ⟨hkj, hkm⟩ := hk
+  have hjm' : j ∈ Finset.Icc 0 (cc_card_v11 cc - 1) := Finset.mem_coe.mp hjm
+  have hkm' : k ∈ Finset.Icc 0 (cc_card_v11 cc - 1) := Finset.mem_coe.mp hkm
+  have hcard2 : (insert j ({k} : Finset ℕ)).card = 2 := by
+    rw [Finset.card_insert_of_notMem
+      (show j ∉ ({k} : Finset ℕ) from fun h => hkj (Finset.mem_singleton.mp h).symm),
+      Finset.card_singleton]
+  have hle : (insert j ({k} : Finset ℕ)).card
+      ≤ (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := by
+    refine Finset.card_le_card ?_
+    intro x hx
+    simp only [Finset.mem_insert, Finset.mem_singleton, Finset.mem_filter] at hx
+    rcases hx with rfl | rfl
+    · exact Finset.mem_filter.mpr ⟨hjm', hjy⟩
+    · exact Finset.mem_filter.mpr ⟨hkm', hqk⟩
+  have hsize : cc_size_v11 cc (cc_qy_v11 cc)
+      = (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  have h1 := p3h_UNPNFVW cc hp _hb hr hsum
+  omega
+
+/-- OXLZLEZ2.hl:2052 (`UNIQUE_QY2`). -/
+theorem p3i_UNIQUE_QY2 (cc : CcV11) (_hb : cc_bool_model_v11 cc) (hp : cc_bool_prep_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    ∀ j, cc_qy_v11 cc j ∧ j ∈ (Finset.Icc 0 (cc_card_v11 cc - 1) : Set ℕ) →
+      ∀ k, cc_qy_v11 cc k ∧ k ∈ (Finset.Icc 0 (cc_card_v11 cc - 1) : Set ℕ) →
+        k = j := by
+  intro j hj k hk
+  by_cases hne : k = j
+  · exact hne
+  · exact absurd hk.1 (p3i_UNIQUE_QY cc _hb hp hr hsum j hj k ⟨hne, hk.2⟩)
+
+/-- `UNIQUE_QY2` in residue form: two `qy` indices agree modulo
+`cc_card_v11 cc` (HOL `MOD_INJ11` assembly of UNIQUE_QY2). -/
+private theorem p3i_qy_unique_mod {cc : CcV11} (hb : cc_bool_model_v11 cc)
+    (hp : cc_bool_prep_v11 cc) (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ))
+    (w : ℕ) (hw : cc_qy_v11 cc w) (x : ℕ) (hx : cc_qy_v11 cc x) :
+    x % cc_card_v11 cc = w % cc_card_v11 cc := by
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have hpqy : periodic (cc_qy_v11 cc) (cc_card_v11 cc) := p3h_pf_qy hb
+  exact p3i_UNIQUE_QY2 cc hb hp hr hsum (w % cc_card_v11 cc)
+    ⟨by rw [← periodic_mod hpqy hnn0 w]; exact hw, Finset.mem_coe.mpr (MOD_IN_NUMSEG hnn0)⟩
+    (x % cc_card_v11 cc)
+    ⟨by rw [← periodic_mod hpqy hnn0 x]; exact hx, Finset.mem_coe.mpr (MOD_IN_NUMSEG hnn0)⟩
+
+/-- OXLZLEZ2.hl:2068 (`IPVICGW_C43_C44`).  With `cc_card_v11 cc = 4` and a
+witness `i` that is not small, the residues `i, i+1, i+2, i+3` carry at most
+one `qy` (UNIQUE_QY2 + `MOD_INJ1`), and on each configuration of the
+`qu`/`qx`/`qy` types the four gg-values combine with rows 9/12/13/18/22/23 and
+the QY/QX nonnegativity to `0 ≤ ∑ gg` — contradicting `∑ gg < 0`. -/
+theorem p3i_IPVICGW_C43_C44 (cc : CcV11)
+    (h : cc_bool_model_v11 cc ∧ cc_bool_prep_v11 cc ∧ cc_real_model_v11 cc ∧
+      ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ))
+    (hc : cc_card_v11 cc = 4) (i : ℕ) : cc_small_v11 cc i := by
+  obtain ⟨hb, hp, hr, hsum⟩ := h
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have hbk := hb
+  obtain ⟨-, -, -, -, hpsmall, -, -, -⟩ := hbk
+  have hpqy : periodic (cc_qy_v11 cc) (cc_card_v11 cc) := p3h_pf_qy hb
+  have hpgg : periodic (cc_gg_v11 cc) (cc_card_v11 cc) := p3h_rm_periodic_gg hr
+  by_contra hns
+  have hs4eq : cc_small_v11 cc (i + 3 + 1) = cc_small_v11 cc i := by
+    have h := periodic_nk hpsmall (Nat.pos_of_ne_zero hnn0) i 1
+    rw [Nat.one_mul, hc] at h
+    exact h
+  have hnqu : ¬ cc_qu_v11 cc i := fun hq => hns hq.1.1
+  have hnqu3 : ¬ cc_qu_v11 cc (i + 3) := by
+    intro hq
+    have hh : cc_hassmall_v11 cc (i + 3) := hq.1
+    have h34 : cc_small_v11 cc (i + 3 + 1) := hh.2
+    rw [hs4eq] at h34
+    exact hns h34
+  have hsum4 : ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x
+      = cc_gg_v11 cc i + cc_gg_v11 cc (i + 1) + cc_gg_v11 cc (i + 2)
+        + cc_gg_v11 cc (i + 3) := by
+    have htop : cc_card_v11 cc - 1 + i = i + 3 := by omega
+    have h1 := periodic_sum hpgg hnn0 i
+    rw [htop] at h1
+    rw [p3i_Icc0_eq_range _ hnn0, ← h1, p3g_SUM_NUMSEG4]
+  -- rows 22/23 specialised at the witness and at i+3 (via small (i+4) = small i)
+  have hR23 : cc_qx_v11 cc i → cc_small_v11 cc (i + 1) →
+      (cc_eps : ℝ) ≤ cc_gg_v11 cc i :=
+    fun hqx hs => p3i_rm_qx_small_next_eps hr i hqx hs hns
+  have hR22 : cc_qx_v11 cc (i + 3) → cc_small_v11 cc (i + 3) →
+      (cc_eps : ℝ) ≤ cc_gg_v11 cc (i + 3) :=
+    fun hqx hs => p3i_rm_qx_small_eps hr (i + 3) hqx hs (by intro h34; rw [hs4eq] at h34; exact hns h34)
+  -- the two adjacent-pair arguments (rows 13+26+27 and 12+26+28)
+  have hpairAB : ∀ x, cc_qy_v11 cc x → cc_qu_v11 cc (x + 1) →
+      (0 : ℝ) ≤ cc_gg_v11 cc x + cc_gg_v11 cc (x + 1) := by
+    intro x hqy hqu
+    have h1 := p3h_rm_qu_next_qy hr hqu hqy
+    have h2 := p3h_rm_qy_le hr hqy
+    have h3 := p3h_rm_qy_gg3a hr hqy
+    linarith
+  have hpairCD : ∀ x, cc_qu_v11 cc x → cc_qy_v11 cc (x + 1) →
+      (0 : ℝ) ≤ cc_gg_v11 cc x + cc_gg_v11 cc (x + 1) := by
+    intro x hqu hqy
+    have h1 := p3h_rm_qu_qy_next hr hqu hqy
+    have h2 := p3h_rm_qy_le hr hqy
+    have h3 := p3h_rm_qy_gg3b hr hqy
+    linarith
+  have hqx0 : ∀ x, cc_qx_v11 cc x → (0 : ℝ) ≤ cc_gg_v11 cc x := fun x hx => p3h_rm_qx_nn hr hx
+  have hqy0 : ∀ x, cc_qy_v11 cc x → (0 : ℝ) ≤ cc_gg_v11 cc x :=
+    fun x hx => p3g_QY_NN00 cc hb hr x hx
+  have hquE : ∀ x, cc_qu_v11 cc x → (-cc_eps : ℝ) ≤ cc_gg_v11 cc x :=
+    fun x hx => p3i_rm_qu_neg_eps hr x hx
+  have hi_case : cc_qx_v11 cc i ∨ cc_qy_v11 cc i := by
+    rcases p3g_QU_OR_QXY cc i with h | h | h
+    · exact absurd h hnqu
+    · exact Or.inl h
+    · exact Or.inr h
+  have hi3_case : cc_qx_v11 cc (i + 3) ∨ cc_qy_v11 cc (i + 3) := by
+    rcases p3g_QU_OR_QXY cc (i + 3) with h | h | h
+    · exact absurd h hnqu3
+    · exact Or.inl h
+    · exact Or.inr h
+  rcases hi_case with hqi | hqi <;> rcases hi3_case with hq3 | hq3
+  · -- Case BB: qx i (hqi), qx (i+3) (hq3)
+    by_cases hq1 : cc_qy_v11 cc (i + 1)
+    · -- qy (i+1) is the unique qy residue, so (i+2) is 4cell
+      have hnq2 : ¬ cc_qy_v11 cc (i + 2) := fun hq2 =>
+        (MOD_INJ1_ALT hnn0 (show (1 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+          (show (1 : ℕ) ≠ 0 by omega) (i + 1))
+          (p3i_qy_unique_mod hb hp hr hsum (i + 1) hq1 (i + 2) hq2).symm
+      have h4c2 : cc_4cell_v11 cc (i + 2) := not_not.mp hnq2
+      rcases (p3g_CC_4CELL_QUQX cc (i + 2)).mp h4c2 with hq2' | hq2'
+      · -- qu (i+2): the pair (i+1, i+2) is nonnegative by rows 13/26/27
+        have hp := hpairAB (i + 1) hq1 hq2'
+        linarith [hsum4, hsum, hp, hqy0 (i + 1) hq1, hqx0 i hqi, hqx0 (i + 3) hq3]
+      · linarith [hsum4, hsum, hqy0 (i + 1) hq1, hqx0 (i + 2) hq2', hqx0 i hqi,
+          hqx0 (i + 3) hq3]
+    · by_cases hq2 : cc_qy_v11 cc (i + 2)
+      · -- qy (i+2) with ¬qy (i+1): the pair (i+1, i+2) is nonnegative by rows 12/26/28
+        have h4c1 : cc_4cell_v11 cc (i + 1) := not_not.mp hq1
+        rcases (p3g_CC_4CELL_QUQX cc (i + 1)).mp h4c1 with hq1' | hq1'
+        · have hp := hpairCD (i + 1) hq1' hq2
+          linarith [hsum4, hsum, hp, hqy0 (i + 2) hq2, hqx0 i hqi, hqx0 (i + 3) hq3]
+        · linarith [hsum4, hsum, hqx0 (i + 1) hq1', hqy0 (i + 2) hq2, hqx0 i hqi,
+            hqx0 (i + 3) hq3]
+      · -- no qy among (i+1), (i+2): four qu/qx configurations
+        have h4c1 : cc_4cell_v11 cc (i + 1) := not_not.mp hq1
+        have h4c2 : cc_4cell_v11 cc (i + 2) := not_not.mp hq2
+        rcases (p3g_CC_4CELL_QUQX cc (i + 1)).mp h4c1 with hq1' | hq1' <;>
+          rcases (p3g_CC_4CELL_QUQX cc (i + 2)).mp h4c2 with hq2' | hq2'
+        · -- qu (i+1), qu (i+2): rows 23 and 22 give cc_eps at i and i+3
+          have hs1 : cc_small_v11 cc (i + 1) := hq1'.1.1
+          have hh2 : cc_hassmall_v11 cc (i + 2) := hq2'.1
+          have hs3 : cc_small_v11 cc (i + 3) := hh2.2
+          have hgi := hR23 hqi hs1
+          have hg3 := hR22 hq3 hs3
+          linarith [hsum4, hsum, hgi, hg3, hquE (i + 1) hq1', hquE (i + 2) hq2']
+        · have hs1 : cc_small_v11 cc (i + 1) := hq1'.1.1
+          have hgi := hR23 hqi hs1
+          linarith [hsum4, hsum, hgi, hquE (i + 1) hq1', hqx0 (i + 2) hq2',
+            hqx0 (i + 3) hq3]
+        · have hh2 : cc_hassmall_v11 cc (i + 2) := hq2'.1
+          have hs3 : cc_small_v11 cc (i + 3) := hh2.2
+          have hg3 := hR22 hq3 hs3
+          linarith [hsum4, hsum, hg3, hquE (i + 2) hq2', hqx0 (i + 1) hq1', hqx0 i hqi]
+        · linarith [hsum4, hsum, hqx0 (i + 1) hq1', hqx0 (i + 2) hq2', hqx0 i hqi,
+            hqx0 (i + 3) hq3]
+  · -- Case AC: qx i (hqi), qy (i+3) (hq3): qy (i+3) is the unique qy residue
+    have hnq1 : ¬ cc_qy_v11 cc (i + 1) := fun hq1 =>
+      (MOD_INJ1_ALT hnn0 (show (2 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (2 : ℕ) ≠ 0 by omega) (i + 1))
+        (p3i_qy_unique_mod hb hp hr hsum (i + 3) hq3 (i + 1) hq1)
+    have hnq2 : ¬ cc_qy_v11 cc (i + 2) := fun hq2 =>
+      (MOD_INJ1_ALT hnn0 (show (1 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (1 : ℕ) ≠ 0 by omega) (i + 2))
+        (p3i_qy_unique_mod hb hp hr hsum (i + 3) hq3 (i + 2) hq2)
+    have h4c1 : cc_4cell_v11 cc (i + 1) := not_not.mp hnq1
+    have h4c2 : cc_4cell_v11 cc (i + 2) := not_not.mp hnq2
+    rcases (p3g_CC_4CELL_QUQX cc (i + 1)).mp h4c1 with hq1' | hq1' <;>
+      rcases (p3g_CC_4CELL_QUQX cc (i + 2)).mp h4c2 with hq2' | hq2'
+    · -- qu (i+1), qu (i+2): row 23 at i and the pair (i+2, i+3) by rows 12/26/28
+      have hs1 : cc_small_v11 cc (i + 1) := hq1'.1.1
+      have hgi := hR23 hqi hs1
+      have hp := hpairCD (i + 2) hq2' hq3
+      linarith [hsum4, hsum, hgi, hquE (i + 1) hq1', hp]
+    · have hs1 : cc_small_v11 cc (i + 1) := hq1'.1.1
+      have hgi := hR23 hqi hs1
+      linarith [hsum4, hsum, hgi, hquE (i + 1) hq1', hqx0 (i + 2) hq2', hqy0 (i + 3) hq3]
+    · have hp := hpairCD (i + 2) hq2' hq3
+      linarith [hsum4, hsum, hp, hqx0 (i + 1) hq1', hqx0 i hqi]
+    · linarith [hsum4, hsum, hqx0 (i + 1) hq1', hqx0 (i + 2) hq2', hqx0 i hqi,
+        hqy0 (i + 3) hq3]
+
+  · -- Case AB: qy i (hqi), qx (i+3) (hq3): qy i is the unique qy residue
+    have hnq1 : ¬ cc_qy_v11 cc (i + 1) := fun hq1 =>
+      (MOD_INJ1_ALT hnn0 (show (1 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (1 : ℕ) ≠ 0 by omega) i)
+        (p3i_qy_unique_mod hb hp hr hsum i hqi (i + 1) hq1).symm
+    have hnq2 : ¬ cc_qy_v11 cc (i + 2) := fun hq2 =>
+      (MOD_INJ1_ALT hnn0 (show (2 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (2 : ℕ) ≠ 0 by omega) i)
+        (p3i_qy_unique_mod hb hp hr hsum i hqi (i + 2) hq2).symm
+    have h4c1 : cc_4cell_v11 cc (i + 1) := not_not.mp hnq1
+    have h4c2 : cc_4cell_v11 cc (i + 2) := not_not.mp hnq2
+    rcases (p3g_CC_4CELL_QUQX cc (i + 1)).mp h4c1 with hq1' | hq1' <;>
+      rcases (p3g_CC_4CELL_QUQX cc (i + 2)).mp h4c2 with hq2' | hq2'
+    · -- qu (i+1), qu (i+2)
+      have hs1 : cc_small_v11 cc (i + 1) := hq1'.1.1
+      have hh2 : cc_hassmall_v11 cc (i + 2) := hq2'.1
+      have hs3 : cc_small_v11 cc (i + 3) := hh2.2
+      have hp := hpairAB i hqi hq1'
+      have hg3 := hR22 hq3 hs3
+      linarith [hsum4, hsum, hp, hquE (i + 2) hq2', hg3]
+    · -- qu (i+1), qx (i+2)
+      have hp := hpairAB i hqi hq1'
+      linarith [hsum4, hsum, hp, hqx0 (i + 2) hq2', hqx0 (i + 3) hq3]
+    · -- qx (i+1), qu (i+2)
+      have hh2 : cc_hassmall_v11 cc (i + 2) := hq2'.1
+      have hs3 : cc_small_v11 cc (i + 3) := hh2.2
+      have hg3 := hR22 hq3 hs3
+      linarith [hsum4, hsum, hqy0 i hqi, hqx0 (i + 1) hq1', hquE (i + 2) hq2', hg3]
+    · linarith [hsum4, hsum, hqy0 i hqi, hqx0 (i + 1) hq1', hqx0 (i + 2) hq2',
+        hqx0 (i + 3) hq3]
+  · -- Case: qy i (hqi), qy (i+3) (hq3): two distinct qy residues contradict UNIQUE_QY2
+    exact absurd ((p3i_qy_unique_mod hb hp hr hsum i hqi (i + 3) hq3).symm)
+      (MOD_INJ1_ALT hnn0 (show (3 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (3 : ℕ) ≠ 0 by omega) i)
+/-- OXLZLEZ2.hl:2464 (`EXISTS_QY_CARD5`). -/
+theorem p3i_EXISTS_QY_CARD5 (cc : CcV11)
+    (h : cc_bool_model_v11 cc ∧ cc_bool_prep_v11 cc ∧ cc_real_model_v11 cc ∧
+      ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ))
+    (hc : cc_card_v11 cc = 5) : ∃ i, i < 5 ∧ cc_qy_v11 cc i := by
+  obtain ⟨hb, hp, hr, hsum⟩ := h
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have hqy1 := p3h_UNPNFVW cc hp hb hr hsum
+  have h4le := p3h_LXDEYBO cc hp hb hr hsum
+  have hsizeqy : cc_size_v11 cc (cc_qy_v11 cc)
+      = (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  have hsize4 : cc_size_v11 cc (cc_4cell_v11 cc)
+      = (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  have hcardIcc : (Finset.Icc 0 (cc_card_v11 cc - 1)).card = cc_card_v11 cc := by
+    rw [p3i_Icc0_eq_range _ hnn0, Finset.card_range]
+  have hsplit := p3i_split_qy_4cell cc hb
+  have hqycard : 1 ≤ (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := by
+    rw [← hsizeqy]
+    omega
+  obtain ⟨x, hx⟩ := Finset.one_le_card.mp hqycard
+  refine ⟨x, ?_, (Finset.mem_filter.mp hx).2⟩
+  obtain ⟨h1, h2⟩ := Finset.mem_Icc.mp (Finset.mem_filter.mp hx).1
+  omega
+
+/-- OXLZLEZ2.hl:2527 (`CARD5_1074_LE_QYI`).  The 4cell part of one
+card-period window around `i` is spine-bounded, the `qy` witness contributes
+`0.008·azim i`, and the azim sums reassemble to `2π` — the numeric key is
+`0.008·1.074 + 4·a_spine5 + b_spine5·(2π - 1.074) > 0` via `π < 3.1416`. -/
+theorem p3i_CARD5_1074_LE_QYI (cc : CcV11) (i : ℕ)
+    (h : cc_bool_model_v11 cc ∧ cc_bool_prep_v11 cc ∧ cc_real_model_v11 cc ∧
+      ∑ k ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc k < (0 : ℝ))
+    (h4c : ∀ j, cc_4cell_v11 cc j → a_spine5 + b_spine5 * cc_azim_v11 cc j ≤ cc_gg_v11 cc j)
+    (hqy : ∀ j, cc_qy_v11 cc j → (0.008 : ℝ) * cc_azim_v11 cc j ≤ cc_gg_v11 cc j)
+    (hqyi : cc_qy_v11 cc i) (hc : cc_card_v11 cc = 5)
+    (hper : periodic (cc_gg_v11 cc) (cc_card_v11 cc))
+    (hgb : ∀ j, (0.606 : ℝ) ≤ cc_azim_v11 cc j)
+    (hsum : ∑ k ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_azim_v11 cc k = (2 : ℝ) * Real.pi)
+    (h1074 : (1.074 : ℝ) ≤ cc_azim_v11 cc i) :
+    (0 : ℝ) ≤ ∑ k ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc k := by
+  obtain ⟨hb, hp, hr, hggsum⟩ := h
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have h5 : (5 : ℕ) ≠ 0 := by omega
+  have huniq := p3i_qy_unique_mod hb hp hr hggsum i hqyi
+  have hnotqy : ∀ k : ℕ, 0 < k → k < 5 → ¬ cc_qy_v11 cc (i + k) := by
+    intro k hk0 hk5 hq
+    have h1 := huniq (i + k) hq
+    rw [hc] at h1
+    exact (p3g_MOD_INJ11 5 k h5 (by omega) (by omega) i) h1.symm
+  have h4w : ∀ k : ℕ, 0 < k → k < 5 → cc_4cell_v11 cc (i + k) := fun k hk0 hk5 =>
+    not_not.mp (hnotqy k hk0 hk5)
+  have hpergg5 : periodic (cc_gg_v11 cc) 5 := by rw [← hc]; exact hper
+  have hpazim5 : periodic (cc_azim_v11 cc) 5 := by
+    rw [← hc]; exact p3h_rm_periodic_azim hr
+  have htop : (5 : ℕ) - 1 + i = i + 4 := by omega
+  have hWgg : ∑ x ∈ Finset.Icc i (i + 4), cc_gg_v11 cc x
+      = ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x := by
+    rw [← htop, periodic_sum hpergg5 h5 i, p3i_Icc0_eq_range _ hnn0, hc]
+  have hWazim : ∑ x ∈ Finset.Icc i (i + 4), cc_azim_v11 cc x
+      = ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_azim_v11 cc x := by
+    rw [← htop, periodic_sum hpazim5 h5 i, p3i_Icc0_eq_range _ hnn0, hc]
+  have hsplit : Finset.Icc i (i + 4) = insert i (Finset.Icc (i + 1) (i + 4)) := by
+    ext x
+    simp only [Finset.mem_Icc, Finset.mem_insert]
+    constructor
+    · rintro ⟨h1, h2⟩
+      omega
+    · rintro (h | ⟨h1, h2⟩)
+      · omega
+      · omega
+  have hmem : i ∉ Finset.Icc (i + 1) (i + 4) := by
+    simp only [Finset.mem_Icc]
+    omega
+  have hWgg2 : ∑ x ∈ Finset.Icc i (i + 4), cc_gg_v11 cc x
+      = cc_gg_v11 cc i + ∑ x ∈ Finset.Icc (i + 1) (i + 4), cc_gg_v11 cc x := by
+    rw [hsplit, Finset.sum_insert hmem]
+  have hWazim2 : ∑ x ∈ Finset.Icc i (i + 4), cc_azim_v11 cc x
+      = cc_azim_v11 cc i + ∑ x ∈ Finset.Icc (i + 1) (i + 4), cc_azim_v11 cc x := by
+    rw [hsplit, Finset.sum_insert hmem]
+  have hSS4 : ∀ x ∈ Finset.Icc (i + 1) (i + 4), cc_4cell_v11 cc x := by
+    intro x hx
+    obtain ⟨h1, h2⟩ := Finset.mem_Icc.mp hx
+    have hk0 : 0 < x - i := by omega
+    have hk5 : x - i < 5 := by omega
+    have h3 := h4w (x - i) hk0 hk5
+    rw [show x = i + (x - i) from by omega]
+    exact h3
+  have hSSgg : ∑ x ∈ Finset.Icc (i + 1) (i + 4), cc_gg_v11 cc x
+      ≥ ∑ x ∈ Finset.Icc (i + 1) (i + 4), (a_spine5 + b_spine5 * cc_azim_v11 cc x) :=
+    Finset.sum_le_sum fun x hx => h4c x (hSS4 x hx)
+  have hcardSS : (Finset.Icc (i + 1) (i + 4)).card = 4 := by
+    have hSS : Finset.Icc (i + 1) (i + 4) = (Finset.range 4).image (fun k => i + 1 + k) := by
+      ext x
+      simp only [Finset.mem_Icc, Finset.mem_image, Finset.mem_range]
+      constructor
+      · rintro ⟨h1, h2⟩
+        exact ⟨x - (i + 1), by omega, by omega⟩
+      · rintro ⟨k, hk, rfl⟩
+        omega
+    rw [hSS, Finset.card_image_of_injOn fun k _ l _ hkl => by simpa using Nat.add_left_cancel hkl,
+      Finset.card_range]
+  have hSSexpand : ∑ x ∈ Finset.Icc (i + 1) (i + 4), (a_spine5 + b_spine5 * cc_azim_v11 cc x)
+      = (4 : ℝ) * a_spine5 + b_spine5 * ∑ x ∈ Finset.Icc (i + 1) (i + 4), cc_azim_v11 cc x := by
+    rw [Finset.sum_add_distrib, Finset.sum_const, nsmul_eq_mul, hcardSS, Finset.mul_sum]
+    ring
+  have hSSazim : ∑ x ∈ Finset.Icc (i + 1) (i + 4), cc_azim_v11 cc x
+      = (2 : ℝ) * Real.pi - cc_azim_v11 cc i := by
+    linarith [hWazim, hWazim2, hsum]
+  rw [hSSazim] at hSSexpand
+  have hgi : (0.008 : ℝ) * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := hqy i hqyi
+  have hb5 : b_spine5 < 0 := by norm_num [b_spine5]
+  have hpi : Real.pi < 3.1416 := p3g_PI_BOUNDS.2
+  have hle : (2 : ℝ) * Real.pi - cc_azim_v11 cc i ≤ 5.2092 := by linarith
+  have hkey : b_spine5 * 5.2092 ≤ b_spine5 * ((2 : ℝ) * Real.pi - cc_azim_v11 cc i) :=
+    mul_le_mul_of_nonpos_left hle hb5.le
+  have h1074le : (0.008 : ℝ) * 1.074 ≤ 0.008 * cc_azim_v11 cc i :=
+    mul_le_mul_of_nonneg_left h1074 (by norm_num)
+  have hfinal : (0 : ℝ) < (0.008 : ℝ) * 1.074 + (4 : ℝ) * a_spine5 + b_spine5 * 5.2092 := by
+    norm_num [a_spine5, b_spine5]
+  rw [← hWgg, hWgg2]
+  linarith [hSSgg, hSSexpand, hkey, hgi, h1074le, hfinal]
+
+/-- OXLZLEZ2.hl:2811 (`CARD5_LT_1074_QYI`; PA4 has no stub row — new row,
+statement frozen verbatim from the HOL goal, see DELIVERY.md).  If some
+`small_eta` flag holds at `i` or `i+1`, rows 30/31/32 give the spine bound at
+`i` and all five window gg's are spine-bounded (`5·a_spine5 + b_spine5·2π > 0`);
+otherwise rows 20/21/22/23 and the -cc_eps floor split the gg-sum into
+`gg i - (gg3a i + gg3b i)` plus two nonnegative triples, and row 26 closes. -/
+theorem p3i_CARD5_LT_1074_QYI (cc : CcV11) (i : ℕ)
+    (h : cc_bool_model_v11 cc ∧ cc_bool_prep_v11 cc ∧ cc_real_model_v11 cc ∧
+      ∑ k ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc k < (0 : ℝ))
+    (hqyi : cc_qy_v11 cc i) (hc : cc_card_v11 cc = 5)
+    (hlt : cc_azim_v11 cc i < (1.074 : ℝ)) :
+    (0 : ℝ) ≤ ∑ k ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc k := by
+  obtain ⟨hb, hp, hr, hggsum⟩ := h
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have h5 : (5 : ℕ) ≠ 0 := by omega
+  have hneg : ∀ x, (-cc_eps : ℝ) ≤ cc_gg_v11 cc x := fun x => p3i_gg_ge_neg_eps hb hr x
+  have huniq := p3i_qy_unique_mod hb hp hr hggsum i hqyi
+  have hnotqy : ∀ k : ℕ, 0 < k → k < 5 → ¬ cc_qy_v11 cc (i + k) := by
+    intro k hk0 hk5 hq
+    have h1 := huniq (i + k) hq
+    rw [hc] at h1
+    exact (p3g_MOD_INJ11 5 k h5 (by omega) (by omega) i) h1.symm
+  by_cases heta : cc_small_eta_v11 cc i ∨ cc_small_eta_v11 cc (i + 1)
+  · -- spine bound at i, then the five-window spine sum
+    have hspine : a_spine5 + b_spine5 * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := by
+      by_cases he1 : cc_small_eta_v11 cc i
+      · by_cases he2 : cc_small_eta_v11 cc (i + 1)
+        · exact p3i_rm_qy_eta_both_spine hr i hqyi he1 he2
+        · exact p3i_rm_qy_eta_prev_spine hr i hqyi he1 he2 hlt
+      · rcases heta with h | h
+        · exact absurd h he1
+        · exact p3i_rm_qy_eta_next_spine hr i hqyi he1 h hlt
+    have h4w : ∀ k : ℕ, 0 < k → k < 5 → cc_4cell_v11 cc (i + k) := fun k hk0 hk5 =>
+      not_not.mp (hnotqy k hk0 hk5)
+    have hpergg5 : periodic (cc_gg_v11 cc) 5 := by rw [← hc]; exact p3h_rm_periodic_gg hr
+    have hpazim5 : periodic (cc_azim_v11 cc) 5 := by
+      rw [← hc]; exact p3h_rm_periodic_azim hr
+    have htop : (5 : ℕ) - 1 + i = i + 4 := by omega
+    have hWgg : ∑ x ∈ Finset.Icc i (i + 4), cc_gg_v11 cc x
+        = ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x := by
+      rw [← htop, periodic_sum hpergg5 h5 i, p3i_Icc0_eq_range _ hnn0, hc]
+    have hWazim : ∑ x ∈ Finset.Icc i (i + 4), cc_azim_v11 cc x
+        = ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_azim_v11 cc x := by
+      rw [← htop, periodic_sum hpazim5 h5 i, p3i_Icc0_eq_range _ hnn0, hc]
+    have hpt : ∀ x ∈ Finset.Icc i (i + 4),
+        a_spine5 + b_spine5 * cc_azim_v11 cc x ≤ cc_gg_v11 cc x := by
+      intro x hx
+      obtain ⟨h1, h2⟩ := Finset.mem_Icc.mp hx
+      by_cases hxi : x = i
+      · rw [hxi]
+        exact hspine
+      · have hk0 : 0 < x - i := by omega
+        have hk5 : x - i < 5 := by omega
+        have h3 := p3h_rm_4cell_spine hr (h4w (x - i) hk0 hk5)
+        rw [show x = i + (x - i) from by omega]
+        exact h3
+    have hlb : ∑ x ∈ Finset.Icc i (i + 4), (a_spine5 + b_spine5 * cc_azim_v11 cc x)
+        ≤ ∑ x ∈ Finset.Icc i (i + 4), cc_gg_v11 cc x := Finset.sum_le_sum hpt
+    have hcardW : (Finset.Icc i (i + 4)).card = 5 := by
+      have hW : Finset.Icc i (i + 4) = (Finset.range 5).image (fun k => i + k) := by
+        ext x
+        simp only [Finset.mem_Icc, Finset.mem_image, Finset.mem_range]
+        constructor
+        · rintro ⟨h1, h2⟩
+          exact ⟨x - i, by omega, by omega⟩
+        · rintro ⟨k, hk, rfl⟩
+          omega
+      rw [hW, Finset.card_image_of_injOn fun k _ l _ hkl => by simpa using Nat.add_left_cancel hkl,
+        Finset.card_range]
+    have hexpand : ∑ x ∈ Finset.Icc i (i + 4), (a_spine5 + b_spine5 * cc_azim_v11 cc x)
+        = (5 : ℝ) * a_spine5 + b_spine5 * ∑ x ∈ Finset.Icc i (i + 4), cc_azim_v11 cc x := by
+      rw [Finset.sum_add_distrib, Finset.sum_const, nsmul_eq_mul, hcardW, Finset.mul_sum]
+      ring
+    have hsumazim := p3h_rm_sum_azim hr
+    rw [hWazim, hsumazim] at hexpand
+    have hb5 : b_spine5 < 0 := by norm_num [b_spine5]
+    have hpi : Real.pi < 3.1416 := p3g_PI_BOUNDS.2
+    have hkey : (0 : ℝ) < (5 : ℝ) * a_spine5 + b_spine5 * ((2 : ℝ) * Real.pi) := by
+      have h2 : (2 : ℝ) * Real.pi < 6.2832 := by linarith
+      have h3 : b_spine5 * (6.2832 : ℝ) < b_spine5 * ((2 : ℝ) * Real.pi) :=
+        mul_lt_mul_of_neg_left h2 hb5
+      have h4 : (0 : ℝ) < (5 : ℝ) * a_spine5 + b_spine5 * 6.2832 := by
+        norm_num [a_spine5, b_spine5]
+      linarith
+    linarith [hWgg, hlb, hexpand, hkey]
+  · -- no small_eta flag at i or i+1: the combinatorial triple decomposition
+    push_neg at heta
+    obtain ⟨he1, he2⟩ := heta
+    have hq1n : ¬ cc_qy_v11 cc (i + 1) := fun hq1 =>
+      (p3g_MOD_INJ11 (cc_card_v11 cc) 1 hnn0
+        (show (1 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (1 : ℕ) ≠ 0 by omega) i)
+        (huniq (i + 1) hq1).symm
+    have hq2n : ¬ cc_qy_v11 cc (i + 2) := fun hq2 =>
+      (p3g_MOD_INJ11 (cc_card_v11 cc) 2 hnn0
+        (show (2 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (2 : ℕ) ≠ 0 by omega) i)
+        (huniq (i + 2) hq2).symm
+    have hq3n : ¬ cc_qy_v11 cc (i + 3) := fun hq3 =>
+      (p3g_MOD_INJ11 (cc_card_v11 cc) 3 hnn0
+        (show (3 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (3 : ℕ) ≠ 0 by omega) i)
+        (huniq (i + 3) hq3).symm
+    have hq4n : ¬ cc_qy_v11 cc (i + 4) := fun hq4 =>
+      (p3g_MOD_INJ11 (cc_card_v11 cc) 4 hnn0
+        (show (4 : ℕ) < cc_card_v11 cc by rw [hc]; omega)
+        (show (4 : ℕ) ≠ 0 by omega) i)
+        (huniq (i + 4) hq4).symm
+    have h4c1 : cc_4cell_v11 cc (i + 1) := not_not.mp hq1n
+    have h4c2 : cc_4cell_v11 cc (i + 2) := not_not.mp hq2n
+    have h4c3 : cc_4cell_v11 cc (i + 3) := not_not.mp hq3n
+    have h4c4 : cc_4cell_v11 cc (i + 4) := not_not.mp hq4n
+    have hA : (0 : ℝ) ≤ cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) + cc_gg_v11 cc (i + 2) := by
+      have hg3b : (0 : ℝ) ≤ cc_gg3b_v11 cc i := p3h_rm_qy_gg3b hr hqyi
+      by_cases hs2 : cc_small_v11 cc (i + 2)
+      · rcases (p3g_CC_4CELL_QUQX cc (i + 1)).mp h4c1 with hqu1 | hqx1
+        · have h10 := p3i_rm_qu_eta_eps hr (i + 1) hqu1 he2
+          linarith [h10, hneg (i + 2), hg3b]
+        · by_cases hs1 : cc_small_v11 cc (i + 1)
+          · have h21 := p3i_rm_qx_next_hassmall_qy_eps hr i hqx1 ⟨hs1, hs2⟩ hqyi
+            linarith [h21, hneg (i + 2), hg3b]
+          · have h23 := p3i_rm_qx_small_next_eps hr (i + 1) hqx1 hs2 hs1
+            linarith [h23, hneg (i + 2), hg3b]
+      · have hnqu1 : ¬ cc_qu_v11 cc (i + 1) := fun hq => hs2 hq.1.2
+        have hnqu2 : ¬ cc_qu_v11 cc (i + 2) := fun hq => hs2 hq.1.1
+        have hqx1 : cc_qx_v11 cc (i + 1) := ⟨h4c1, hnqu1⟩
+        have hqx2 : cc_qx_v11 cc (i + 2) := ⟨h4c2, hnqu2⟩
+        have hg1 := p3h_rm_qx_nn hr hqx1
+        have hg2 := p3h_rm_qx_nn hr hqx2
+        linarith [hg1, hg2, hg3b]
+    have hB : (0 : ℝ) ≤ cc_gg3a_v11 cc i + cc_gg_v11 cc (i + 3) + cc_gg_v11 cc (i + 4) := by
+      have hg3a : (0 : ℝ) ≤ cc_gg3a_v11 cc i := p3h_rm_qy_gg3a hr hqyi
+      have hmod5 : (i + 5) % cc_card_v11 cc = i % cc_card_v11 cc := by
+        rw [hc]; exact Nat.add_mod_right i 5
+      have hbk2 := hb
+      obtain ⟨-, -, -, -, -, hpeta, -⟩ := hbk2
+      have heta5 : ¬ cc_small_eta_v11 cc (i + 5) := by
+        rw [periodic_mod hpeta hnn0 (i + 5), hmod5, ← periodic_mod hpeta hnn0 i]
+        exact he1
+      have hpqy : periodic (cc_qy_v11 cc) (cc_card_v11 cc) := p3h_pf_qy hb
+      have hp3a : periodic (cc_gg3a_v11 cc) (cc_card_v11 cc) := p3h_rm_periodic_gg3a hr
+      by_cases hs4 : cc_small_v11 cc (i + 4)
+      · rcases (p3g_CC_4CELL_QUQX cc (i + 4)).mp h4c4 with hqu4 | hqx4
+        · have h11 := p3i_rm_qu_eta_next_eps hr (i + 4) hqu4 heta5
+          linarith [h11, hneg (i + 3), hg3a]
+        · by_cases hs5 : cc_small_v11 cc (i + 5)
+          · have hqy5 : cc_qy_v11 cc (i + 5) := by
+              rw [periodic_mod hpqy hnn0 (i + 5), hmod5, ← periodic_mod hpqy hnn0 i]
+              exact hqyi
+            have h20 := p3i_rm_qx_hassmall_qy_next_eps hr (i + 4) hqx4 ⟨hs4, hs5⟩ hqy5
+            have hga5 : cc_gg3a_v11 cc (i + 5) = cc_gg3a_v11 cc i := by
+              rw [periodic_mod hp3a hnn0 (i + 5), hmod5, ← periodic_mod hp3a hnn0 i]
+            rw [hga5] at h20
+            linarith [h20, hneg (i + 3), hg3a]
+          · have h22 := p3i_rm_qx_small_eps hr (i + 4) hqx4 hs4 hs5
+            linarith [h22, hneg (i + 3), hg3a]
+      · have hnqu3 : ¬ cc_qu_v11 cc (i + 3) := fun hq => hs4 (hq.1).2
+        have hnqu4 : ¬ cc_qu_v11 cc (i + 4) := fun hq => hs4 hq.1.1
+        have hqx3 : cc_qx_v11 cc (i + 3) := ⟨h4c3, hnqu3⟩
+        have hqx4 : cc_qx_v11 cc (i + 4) := ⟨h4c4, hnqu4⟩
+        have hg3 := p3h_rm_qx_nn hr hqx3
+        have hg4 := p3h_rm_qx_nn hr hqx4
+        linarith [hg3, hg4, hg3a]
+    have hgi0 : (0 : ℝ) ≤ cc_gg_v11 cc i := p3g_QY_NN00 cc hb hr i hqyi
+    have hle26 : cc_gg3a_v11 cc i + cc_gg3b_v11 cc i ≤ cc_gg_v11 cc i := p3h_rm_qy_le hr hqyi
+    have hpergg5 : periodic (cc_gg_v11 cc) 5 := by rw [← hc]; exact p3h_rm_periodic_gg hr
+    have htop : (5 : ℕ) - 1 + i = i + 4 := by omega
+    have hsplit : Finset.Icc i (i + 4) = insert i (Finset.Icc (i + 1) (i + 4)) := by
+      ext x
+      simp only [Finset.mem_Icc, Finset.mem_insert]
+      constructor
+      · rintro ⟨h1, h2⟩
+        omega
+      · rintro (h | ⟨h1, h2⟩)
+        · omega
+        · omega
+    have hmem : i ∉ Finset.Icc (i + 1) (i + 4) := by
+      simp only [Finset.mem_Icc]
+      omega
+    have hsum5 : ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x
+        = cc_gg_v11 cc i + cc_gg_v11 cc (i + 1) + cc_gg_v11 cc (i + 2)
+          + cc_gg_v11 cc (i + 3) + cc_gg_v11 cc (i + 4) := by
+      have h1 := periodic_sum hpergg5 h5 i
+      rw [htop] at h1
+      rw [p3i_Icc0_eq_range _ hnn0, hc, ← h1, hsplit, Finset.sum_insert hmem, p3g_SUM_NUMSEG4]
+      ring
+    rw [hsum5]
+    linarith [hA, hB, hgi0, hle26]
+
+/-- OXLZLEZ2.hl:3229 (`PRE_IPVICGW`). -/
+theorem p3i_PRE_IPVICGW (cc : CcV11)
+    (h : cc_bool_model_v11 cc ∧ cc_bool_prep_v11 cc ∧ cc_real_model_v11 cc ∧
+      ∑ k ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc k < (0 : ℝ))
+    (hc : cc_card_v11 cc = 5) :
+    (0 : ℝ) ≤ ∑ k ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc k := by
+  obtain ⟨j, -, hjqy⟩ := p3i_EXISTS_QY_CARD5 cc h hc
+  by_cases hlt : cc_azim_v11 cc j < (1.074 : ℝ)
+  · exact p3i_CARD5_LT_1074_QYI cc j h hjqy hc hlt
+  · exact p3i_CARD5_1074_LE_QYI cc j h (fun k hk => p3h_rm_4cell_spine h.2.2.1 hk)
+      (fun k hk => p3h_rm_qy_azim h.2.2.1 hk) hjqy hc (p3h_rm_periodic_gg h.2.2.1)
+      (fun k => p3h_rm_azim_lb h.2.2.1 k) (p3h_rm_sum_azim h.2.2.1) (le_of_not_gt hlt)
+
+/-- OXLZLEZ2.hl:3264 (`CC_CARD_LESS_THAN_5`). -/
+theorem p3i_CC_CARD_LESS_THAN_5 (cc : CcV11) (hb : cc_bool_model_v11 cc)
+    (hp : cc_bool_prep_v11 cc) (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    cc_card_v11 cc ≤ 5 := by
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have hqy1 := p3h_UNPNFVW cc hp hb hr hsum
+  have h4le := p3h_LXDEYBO cc hp hb hr hsum
+  have hsizeqy : cc_size_v11 cc (cc_qy_v11 cc)
+      = (Finset.filter (cc_qy_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  have hsize4 : cc_size_v11 cc (cc_4cell_v11 cc)
+      = (Finset.filter (cc_4cell_v11 cc) (Finset.Icc 0 (cc_card_v11 cc - 1))).card := rfl
+  have hcardIcc : (Finset.Icc 0 (cc_card_v11 cc - 1)).card = cc_card_v11 cc := by
+    rw [p3i_Icc0_eq_range _ hnn0, Finset.card_range]
+  have hsplit := p3i_split_qy_4cell cc hb
+  omega
+
+/-- OXLZLEZ2.hl:3308 (`IPVICGW`, proving `IPVICGW_concl` OXLZLEZ1.hl:548). -/
+theorem p3i_IPVICGW (cc : CcV11) (hb : cc_bool_model_v11 cc) (hp : cc_bool_prep_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ))
+    (i : ℕ) : cc_small_v11 cc i := by
+  by_cases hc3 : cc_card_v11 cc = 3
+  · exact p3i_IPVICGW_C33 cc ⟨hb, hp, hr, hsum⟩ hc3 i
+  by_cases hc4 : cc_card_v11 cc = 4
+  · exact p3i_IPVICGW_C43_C44 cc ⟨hb, hp, hr, hsum⟩ hc4 i
+  have h3 : 3 ≤ cc_card_v11 cc := p3h_THREE_LE_CC_CARD cc hb hp hr hsum
+  have h5le : cc_card_v11 cc ≤ 5 := p3i_CC_CARD_LESS_THAN_5 cc hb hp hr hsum
+  have hnn5 : cc_card_v11 cc = 5 := by omega
+  have hcon := p3i_PRE_IPVICGW cc ⟨hb, hp, hr, hsum⟩ hnn5
+  linarith
+
 end Kepler.Text
