@@ -956,13 +956,15 @@ private theorem ynhyjit_p14 {V : Set V3} {ul vl : List V3} {i : ℕ} {p : Equiv.
       · exact hw1
       · exact hw2
       · exact hw3
-  · -- i = 3: the S₃-action case.
-    -- NEEDS: port `LEFT_ACTION_LIST_PROPERTIES` (marchal2.hl:4460). The
-    -- rotations of `{0,1,2}` require `voronoiNondg` for the non-initial
-    -- pairs `{u0,u2}`/`{u1,u2}` (facet dimensions of the truncated voronoi
-    -- complex), a genuine geometry bite beyond the 01-swap kit. Blocks only
-    -- the i = 3 instances; the i = 2 bridge above is fully closed.
-    sorry
+  · -- i = 3: the S₃ left-action kit — direct projection of the public
+    -- `LEFT_ACTION_LIST_PROPERTIES` (marchal2.hl:4460), the same `barV` +
+    -- ω₂/ω₃ conjunct projection as `ynhyjit_i3_p14` below.
+    obtain ⟨hbarV, hω2, hω3, -⟩ :=
+      LEFT_ACTION_LIST_PROPERTIES hpack hsat hbar h1 h2 hperm hfix rfl
+    refine ⟨hbarV, fun j hj1 hj2 => ?_⟩
+    interval_cases j
+    · exact hω2
+    · exact hω3
   · -- i = 4: hypotheses contradictory (`hl (truncate 3 ul) < √2` vs `√2 ≤ hl ul`)
     exfalso
     obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
