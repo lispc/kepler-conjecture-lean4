@@ -2438,3 +2438,48 @@ THM=`Kepler.Text.p24_edgeX_of_leaf23`（rule 5：修复后须 sorryAx-free，BF 
 
 ### (f) 风险与回滚
 证明体重接线，陈述零变化；双重克隆验证；回滚 = 反向 patch。
+
+## 53. PA4 azim 求和区间两处误植：`ccRealModelP4`（:197）与 `CARD5_1074_LE_QYI`（:519）的 `∑ Icc 0 card` → `∑ Icc 0 (card - 1)`，恢复 HOL 正本区间 — 分级 A（移植误植 · 两行修正）
+
+提案日期 2026-10-26。提案人：编排者（依据 GRHIDFA-W6 车道发现，编排者独立复核实锤）。
+
+### (a) HOL 引文
+- `reference/flyspeck` 移植源 `lean/scripts/packing/OXLZLEZ1.hl:90`：
+  `(sum (0..(cc_card_v11 cc - 1)) (cc_azim_v11 cc) = &2 * pi)`。
+- `lean/scripts/packing/OXLZLEZ2.hl:2527`（CARD5_1074_LE_QYI 前提行）：
+  `sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0)`。
+- 树内已证同构：PA3:163（`cc_real_model_v11` 同合取项 `Icc 0 (cc_card_v11 cc - 1)`）、
+  PA3:2462（`p3i_CARD5_1074_LE_QYI` 的 `_hsum` 同为 `0..card-1`）。
+- PA4 现行（误植）：`PackingAuto4.lean:197` 与 `:519` 均为 `Finset.Icc 0 (ccCardP4 cc)`。
+
+### (b) 修复补丁
+存档 `docs/statement-fix-proposals-patches/53-pa4-azim-sum-range.patch`（+4/−4，单文件
+PA4，两行各一删一加，`Icc 0 (ccCardP4 cc)` → `Icc 0 (ccCardP4 cc - 1)`）。
+验证：patch 可贴；修复后 `lake build Kepler.Text.PackingAuto4` EXIT=0（8695 jobs，0 error，
+W6 工作区实测）。
+
+### (c) 消费面影响清单
+- 语义变化（车道双向显式反例已核）：周期性下 `∑_{0..card} = ∑_{0..card-1} + azim 0` 且
+  `azim ≥ 0.606 > 0`，故 PA4 现行 `= 2π`（card+1 项）与 HOL `= 2π`（card 项）**互不蕴含**
+  ——现行 PA4 陈述强于 HOL，真证不可能，属移植误植非语义等价变体。
+- 受阻消费面：PA4 §2 的 **20 枚 CC4P4 私有桩**（LXDEYBO…GRHIDFA 全列）结构性无法经 PA3
+  阶梯闭合（W6 已备 139 行全真证桥 `toV11` + accessor + iff + 前提槽引擎
+  `p4_real_model_of_sumfix`/`p4_model4_of_sumfix`，修复后每桩 1-3 行 discharge）。
+- e2e 锥：PA4/PackingConcl 不在锥内，本修复**锥直源 0 变化**；收益 = 邻近层
+  （PackingConcl 九连已由 W6 清净，OXLZLEZ 波 30 桩全链可达真证）。
+- PackingConcl 消费的 `*_v11` 九孪生不依赖两误植行（其陈述用 `0..card-1`，本就正确）。
+
+### (d) 验收与应用计划
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/53-pa4-azim-sum-range.patch
+SF_ITEM=53`，`LANE_FILES="Kepler/Text/PackingAuto4.lean"`，闸
+`GATE_ROOTS="Kepler.Text.PackingAuto4 Kepler.Text.PackingConcl"`，
+THM=`Kepler.Text.p4_real_model_of_sumfix`（rule 5：修复后该件 sorryAx-free——
+其为纯前提槽引擎，W6 已实测全真证；修复后另开收尾车道把 20 桩逐枚 discharge，
+PA4 文件级预期 29→9）。
+
+### (e) 孤儿评估
+无删除；无孤儿。
+
+### (f) 风险与回滚
+两行陈述修正，语义向 HOL 回归（同 SF-51 符号回归先例）；下游 20 桩为 sorry 桩、
+九孪生与 PackingConcl 链不受影响；回滚 = 反向 patch。

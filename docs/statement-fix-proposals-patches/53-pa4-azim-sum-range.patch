@@ -1,0 +1,20 @@
+--- a/lean/Kepler/Text/PackingAuto4.lean	2026-10-26 04:06:54
++++ b/lean/Kepler/Text/PackingAuto4.lean	2026-10-26 04:06:54
+@@ -194,7 +194,7 @@
+   -- general bounds
+   (∀ i, 0.606 ≤ ccAzimP4 cc i) ∧ -- gckb
+   (∀ i, cc4CellP4 cc i → ccAzimP4 cc i < 2.8) ∧ -- azim_c4
+-  (Finset.sum (Finset.Icc 0 (ccCardP4 cc)) (ccAzimP4 cc) = 2 * Real.pi) ∧
++  (Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccAzimP4 cc) = 2 * Real.pi) ∧
+   ((ccCardP4 cc = 4 ∧ ∃ i, cc4CellP4 cc i ∧ ccCritP4 cc i ∧
+       ccQuP4 cc (i + 1) ∧ ccQuP4 cc (i + 2) ∧ ccQuP4 cc (i + 3)) →
+     0 ≤ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc)) ∧ -- ox3q1h
+@@ -516,7 +516,7 @@
+     (_hqyi : ccQyP4 cc i) (_hc : ccCardP4 cc = 5)
+     (_hper : periodicP4 (ccGgP4 cc) (ccCardP4 cc))
+     (_hgb : ∀ j, 0.606 ≤ ccAzimP4 cc j)
+-    (_hsum : Finset.sum (Finset.Icc 0 (ccCardP4 cc)) (ccAzimP4 cc) = 2 * Real.pi)
++    (_hsum : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccAzimP4 cc) = 2 * Real.pi)
+     (_h1074 : 1.074 ≤ ccAzimP4 cc i) :
+     0 ≤ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) := by sorry
+ 
