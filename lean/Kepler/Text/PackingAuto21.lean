@@ -130,6 +130,7 @@ import Kepler.Text.SphereKit
 import Kepler.Text.IneqClosureDefs
 import Kepler.Text.Polytope
 import Kepler.Text.ConicCapVolume
+import Kepler.Text.EulerAssembly
 import Kepler.Geom.WedgeVolume
 import Kepler.Geom.LuneVolume
 import Mathlib
@@ -4165,11 +4166,9 @@ def TSKAJXY_statement_special_case : Prop :=
     ¬(∃ i ul, barV V 3 ul ∧ (i = 1 ∨ i = 2) ∧ X = mcell i V ul) →
     criticalEdgeX V X = ∅ → gammaX V X lmfun ≥ 0
 
-/-- HOL `TSKAJXY_034` (TSKAJXY2.hl:92-722; giant: 0-cell, 4-cell and
-3-cell cases, ~600 refinement steps). -/
-theorem TSKAJXY_034 : tsk_hyp_new → TSKAJXY_statement_special_case := by
-  -- NEEDS: TSKAJXY2.hl:92-722（0/3/4 胞巨案，~600 步 refinement）；路线：G 轨 cell3_bank/tsk_bank 切片 + cell3_from_ineq 链，capstone 仍假设叶喂入
-  sorry
+/- `TSKAJXY_034` is assembled at the foot of this file (Euler W5 wiring,
+after the TSKAJXY034W4/W5 blocks; single-file declaration order forbids the
+forward reference at this site). -/
 
 /-! ## Dot-algebra bridges (V3 = WithLp 2 (Fin 3 → ℝ)) -/
 
@@ -9184,36 +9183,9 @@ def tsk_required_ineq : List String :=
   let grk := ["GRKIBMP A V2", "GRKIBMP B V2"]
   cell3Hyp ++ tsk ++ grk
 
-/-- HOL `TSKAJXY` (TSKAJXY3.hl:2251): CAPSTONE of the chain. Combines
-`TSKAJXY_034` (0/3/4 cells) with `TSKAJXY_1`/`TSKAJXY_2` (1/2 cells).
-DISCHARGES: the `pack_nonlinear_non_ox3q1h` antecedent is the Merge_ineq
-bank, so the conclusion implies but does not verbatim-match
-`Kepler.Text.TSKAJXY_statement` (PackingAuto2.lean:845); no `pack_concl`
-interface is discharged here. -/
-theorem TSKAJXY (V X : Set V3) (hnl : pack_nonlinear_non_ox3q1h)
-    (hs : saturated V) (hp : Packing V) (hm : mcellSet V X)
-    (hcrit : criticalEdgeX V X = ∅) : gammaX V X lmfun ≥ 0 := by
-  by_cases hcase : ∃ i ul, barV V 3 ul ∧ (i = 1 ∨ i = 2) ∧ X = mcell i V ul
-  · obtain ⟨i, ul, hb, hi12, hX⟩ := hcase
-    rcases hi12 with hi | hi
-    · cases hi
-      have hX' : X = mcell1 V ul := by
-        rw [hX]
-        unfold mcell
-        simp
-      rw [hX']
-      exact TSKAJXY_1 V ul hs hp hb
-    · cases hi
-      have hX' : X = mcell2 V ul := by
-        rw [hX]
-        unfold mcell
-        simp
-      exact TSKAJXY_2 V X ul hnl hs hp hb hX'
-  · -- the 0/3/4-cell arm: the Merge_ineq bank slices (grk/cell3/tsk) feed
-    -- TSKAJXY_034 via GRKIBMP (wave 1) and cell3_from_ineq_thm (wave 2b).
-    have hgrk : GRKIBMP_concl := GRKIBMP (proj_grk_bank hnl)
-    have hc3 : cell3_from_ineq := cell3_from_ineq_thm (proj_cell3_bank hnl)
-    exact TSKAJXY_034 ⟨hgrk, hc3, proj_tsk_bank hnl⟩ V X hs hp hm hcase hcrit
+/- The `TSKAJXY` capstone is assembled at the foot of this file (Euler W5
+wiring; it consumes `TSKAJXY_034`, which itself is stated after the
+TSKAJXY034W4/W5 blocks). -/
 
 end WedgeClosedForms
 
@@ -11561,6 +11533,71 @@ analytic chain. -/
 #print axioms TSKAJXY034W5.p21k_wlog
 
 end TSKAJXY034W5
+
+
+/-! ## Euler W5 wiring: the anchor flip + the `TSKAJXY_034`/`TSKAJXY` assembly
+
+`p21k_euler_anchor` (the §5 external anchor above) is the verbatim mirror of
+`ea1_euler_anchor6` (EulerAtn2Kit), which the W4 assembly `ea4_euler_anchor6`
+(`Kepler.Text.EulerAssembly`) proves; the `eulerAX` (:192) and `ea1_eulerAX`
+def bodies are token-identical, so the anchor assignment below typechecks
+definitionally.  `bank_TSKAJXYGXSA` was sign-corrected in tree (SF-51) to the
+HOL bracket and is now verbatim `p21k_glsa_correct`, so slot 1 of
+`hyp.2.2 : tsk_bank` discharges `hg`.
+
+Layout note (Euler W5 lane): `TSKAJXY_034` and the `TSKAJXY` capstone are
+relocated here verbatim from their upstream sites (:4168 resp. the end of
+`section WedgeClosedForms`) — a single Lean file cannot reference the
+TSKAJXY034W4/W5 blocks from above them, and the capstone consumes
+`TSKAJXY_034`.  Statements are unchanged; only the former placeholder body
+of `TSKAJXY_034` is replaced by the recorded flip line. -/
+
+/-- The Euler anchor, proved: `p21k_euler_anchor` is `ea4_euler_anchor6`
+(defeq assignment; the only statement delta is `eulerAX` ↔ `ea1_eulerAX`,
+token-identical bodies). -/
+theorem p21k_euler_anchor_true : TSKAJXY034W5.p21k_euler_anchor :=
+  ea4_euler_anchor6
+
+/-- HOL `TSKAJXY_034` (TSKAJXY2.hl:92-722; giant: 0-cell, 4-cell and
+3-cell cases, ~600 refinement steps). -/
+theorem TSKAJXY_034 : tsk_hyp_new → TSKAJXY_statement_special_case := by
+  intro hyp
+  -- SF-51 (in-tree fix): `bank_TSKAJXYGXSA` = `p21k_glsa_correct` verbatim,
+  -- so the first conjunct slot of `hyp.2.2 : tsk_bank` discharges `hg`.
+  have hg : TSKAJXY034W5.p21k_glsa_correct := hyp.2.2.1
+  exact TSKAJXY034W4.p21j_tskajxy034 hyp
+    (TSKAJXY034W5.p21k_cell4_from_ineq_of_euler p21k_euler_anchor_true hg hyp.2.2)
+
+/-- HOL `TSKAJXY` (TSKAJXY3.hl:2251): CAPSTONE of the chain. Combines
+`TSKAJXY_034` (0/3/4 cells) with `TSKAJXY_1`/`TSKAJXY_2` (1/2 cells).
+DISCHARGES: the `pack_nonlinear_non_ox3q1h` antecedent is the Merge_ineq
+bank, so the conclusion implies but does not verbatim-match
+`Kepler.Text.TSKAJXY_statement` (PackingAuto2.lean:845); no `pack_concl`
+interface is discharged here. -/
+theorem TSKAJXY (V X : Set V3) (hnl : pack_nonlinear_non_ox3q1h)
+    (hs : saturated V) (hp : Packing V) (hm : mcellSet V X)
+    (hcrit : criticalEdgeX V X = ∅) : gammaX V X lmfun ≥ 0 := by
+  by_cases hcase : ∃ i ul, barV V 3 ul ∧ (i = 1 ∨ i = 2) ∧ X = mcell i V ul
+  · obtain ⟨i, ul, hb, hi12, hX⟩ := hcase
+    rcases hi12 with hi | hi
+    · cases hi
+      have hX' : X = mcell1 V ul := by
+        rw [hX]
+        unfold mcell
+        simp
+      rw [hX']
+      exact TSKAJXY_1 V ul hs hp hb
+    · cases hi
+      have hX' : X = mcell2 V ul := by
+        rw [hX]
+        unfold mcell
+        simp
+      exact TSKAJXY_2 V X ul hnl hs hp hb hX'
+  · -- the 0/3/4-cell arm: the Merge_ineq bank slices (grk/cell3/tsk) feed
+    -- TSKAJXY_034 via GRKIBMP (wave 1) and cell3_from_ineq_thm (wave 2b).
+    have hgrk : GRKIBMP_concl := GRKIBMP (proj_grk_bank hnl)
+    have hc3 : cell3_from_ineq := cell3_from_ineq_thm (proj_cell3_bank hnl)
+    exact TSKAJXY_034 ⟨hgrk, hc3, proj_tsk_bank hnl⟩ V X hs hp hm hcase hcrit
 
 
 end Kepler.Text
