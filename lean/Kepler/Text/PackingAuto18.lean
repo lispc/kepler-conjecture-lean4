@@ -5334,18 +5334,37 @@ theorem CC_CELL_CONVEX_HULL_INJ {V : Set V3} {ul vl : List V3} {pu pv : V3}
 theorem FUEIMOV_K {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packing V)
     (hl1 : leaf V ul) (hl2 : leaf V vl) (heq : ccCell V ul = ccCell V vl) :
     ccKe V ul = ccKe V vl := by
--- NEEDS: waits on CC_CELL_NOT_NULLSET; the other half is PA17.AJRIPQN
--- (still sorry in PackingAuto17, out of PA18 scope).
-  sorry
+  have hb1 : barV V 3 (ccUh V ul) :=
+    (Classical.choose_spec (cc_uh_exists V ul) hp hs hl1).1
+  have hb2 : barV V 3 (ccUh V vl) :=
+    (Classical.choose_spec (cc_uh_exists V vl) hp hs hl2).1
+  have hi : ccKe V ul ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+    rcases CC_KE_34 V ul with h | h <;> simp [h]
+  have hj : ccKe V vl ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+    rcases CC_KE_34 V vl with h | h <;> simp [h]
+  have hvol : ¬nullSet (ccCell V ul ∩ ccCell V vl) := by
+    rw [heq, Set.inter_self]
+    exact CC_CELL_NOT_NULLSET hp hs hl2
+  exact (AJRIPQN V (ccUh V ul) (ccUh V vl) (ccKe V ul) (ccKe V vl) hs hp hb1 hb2 hi
+    hj hvol).1
 
 /-- HOL `MCELL4_EXTREME_POINT` (leaf_cell.hl:2793-?). -/
 theorem MCELL4_EXTREME_POINT {V : Set V3} {ul vl : List V3} (hs : saturated V)
     (hp : Packing V) (hl1 : leaf V ul) (hl2 : leaf V vl)
     (heq : ccCell V ul = ccCell V vl) (h4 : ccKe V ul = 4) :
     setOfList (ccUh V ul) = setOfList (ccUh V vl) := by
--- NEEDS: leaf_cell.hl:2779-2810; needs the EDGE_FIRST-style rigidity kit
--- plus CC_CELL_CONVEX_HULL_INJ (proved).
-  sorry
+  have h4v : ccKe V vl = 4 := (FUEIMOV_K hs hp hl1 hl2 heq).symm.trans h4
+  have hnu : ¬(ccKe V ul = 3) := by omega
+  have hnv : ¬(ccKe V vl = 3) := by omega
+  have hpu : (ccUh V ul).getD 3 0
+      = if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0 := by
+    rw [if_neg hnu]
+  have hpv : (ccUh V vl).getD 3 0
+      = if ccKe V vl = 3 then mxi V (ccUh V vl) else (ccUh V vl).getD 3 0 := by
+    rw [if_neg hnv]
+  rw [SET_OF_LIST_CC_UH hs hp hl1, SET_OF_LIST_CC_UH hs hp hl2]
+  exact CC_CELL_CONVEX_HULL_INJ (V := V) (ul := ul) (vl := vl)
+    (pu := (ccUh V ul).getD 3 0) (pv := (ccUh V vl).getD 3 0) hp hs hl1 hl2 hpu hpv heq
 
 
 /-- HOL `STEM_OF_LEAF` (leaf_cell.hl:2793-?). -/
