@@ -5401,13 +5401,411 @@ theorem FUEIMOV_3 {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packin
 -- NEEDS (GIANT): leaf_cell.hl:3000-3114.
   sorry
 
+/-! ## PA18 pool-C edge-first wave (lane BG): mcell edge-rigidity kit
+
+Ports `TWO_REARRANGEMENT_LEMMA_ALT` (leaf_cell.hl:3104-3112) and builds the
+tail-fixed left-action realizability consumed by `MCELL2_EDGE_FIRST` /
+`MCELL3_EDGE_FIRST` (leaf_cell.hl:3114-3374) through the PA10 `RVFXZBU` and
+PA14 `QZKSYKG1` interfaces (both closed, standard three; reached via PA18's
+PA15/PA17 imports). -/
+
+/-- HOL `Geomdetail.PAIR_EQ_EXPAND`, used at leaf_cell.hl:3338: a two-element
+set equality splits into the two orderings. -/
+private theorem pa18c_pair_eq_cases {a b c d : V3} (h : ({a, b} : Set V3) = {c, d}) :
+    (a = c ∧ b = d) ∨ (a = d ∧ b = c) := by
+  have h1 : a ∈ ({c, d} : Set V3) := by rw [← h]; simp
+  have h2 : b ∈ ({c, d} : Set V3) := by rw [← h]; simp
+  have h3 : c ∈ ({a, b} : Set V3) := by rw [h]; simp
+  have h4 : d ∈ ({a, b} : Set V3) := by rw [h]; simp
+  have hm : ∀ t : V3, t ∈ ({c, d} : Set V3) ↔ t = c ∨ t = d := by intro t; simp
+  have hmb : ∀ t : V3, t ∈ ({a, b} : Set V3) ↔ t = a ∨ t = b := by intro t; simp
+  rcases (hm a).1 h1 with hac | had
+  · rcases (hm b).1 h2 with hbc | hbd
+    · -- a = c, b = c: d collapses onto the pair as well
+      refine Or.inr ⟨?_, hbc⟩
+      rcases (hmb d).1 h4 with hd1 | hd1
+      · exact hd1.symm
+      · exact (hbc.trans hac.symm).symm.trans hd1.symm
+    · exact Or.inl ⟨hac, hbd⟩
+  · rcases (hm b).1 h2 with hbc | hbd
+    · exact Or.inr ⟨had, hbc⟩
+    · -- a = d, b = d: c collapses onto the pair as well
+      refine Or.inl ⟨?_, hbd⟩
+      rcases (hmb c).1 h3 with hc1 | hc1
+      · exact hc1.symm
+      · exact had.trans (hbd.symm.trans hc1.symm)
+
+/-- Index-level expansion of `leftActionList` on a length-4 list: entry `i`
+reads the source at `p.symm i` (PA2 `leftActionList` definition). -/
+private theorem pa18c_leftActionList_four {α : Type*} [Inhabited α] (p : Equiv.Perm ℕ)
+    (a b c e : α) :
+    leftActionList p [a, b, c, e] =
+      [[a, b, c, e].getD (p.symm 0) default, [a, b, c, e].getD (p.symm 1) default,
+        [a, b, c, e].getD (p.symm 2) default, [a, b, c, e].getD (p.symm 3) default] := by
+  show (List.range [a, b, c, e].length).map
+    (fun i => [a, b, c, e].getD (p.symm i) default) = _
+  rw [show [a, b, c, e].length = 4 from rfl, show List.range 4 = [0, 1, 2, 3] from rfl]
+  simp only [List.map_cons, List.map_nil]
+
+private theorem pa18c_leftActionList_swap01 {α : Type*} [Inhabited α] (a b c e : α) :
+    leftActionList (Equiv.swap 0 1) [a, b, c, e] = [b, a, c, e] := by
+  rw [pa18c_leftActionList_four]
+  have hs0 : (Equiv.swap 0 1).symm 0 = 1 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_right]
+  have hs1 : (Equiv.swap 0 1).symm 1 = 0 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_left]
+  have hs2 : (Equiv.swap 0 1).symm 2 = 2 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)]
+  have hs3 : (Equiv.swap 0 1).symm 3 = 3 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)]
+  rw [hs0, hs1, hs2, hs3]
+  simp
+
+private theorem pa18c_leftActionList_swap12 {α : Type*} [Inhabited α] (a b c e : α) :
+    leftActionList (Equiv.swap 1 2) [a, b, c, e] = [a, c, b, e] := by
+  rw [pa18c_leftActionList_four]
+  have hs0 : (Equiv.swap 1 2).symm 0 = 0 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)]
+  have hs1 : (Equiv.swap 1 2).symm 1 = 2 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_right]
+  have hs2 : (Equiv.swap 1 2).symm 2 = 1 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_left]
+  have hs3 : (Equiv.swap 1 2).symm 3 = 3 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)]
+  rw [hs0, hs1, hs2, hs3]
+  simp
+
+private theorem pa18c_leftActionList_swap02 {α : Type*} [Inhabited α] (a b c e : α) :
+    leftActionList (Equiv.swap 0 2) [a, b, c, e] = [c, b, a, e] := by
+  rw [pa18c_leftActionList_four]
+  have hs0 : (Equiv.swap 0 2).symm 0 = 2 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_right]
+  have hs1 : (Equiv.swap 0 2).symm 1 = 1 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)]
+  have hs2 : (Equiv.swap 0 2).symm 2 = 0 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_left]
+  have hs3 : (Equiv.swap 0 2).symm 3 = 3 := by
+    rw [Equiv.symm_apply_eq, Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)]
+  rw [hs0, hs1, hs2, hs3]
+  simp
+
+/-- The 3-cycle `0 ↦ 2, 1 ↦ 0, 2 ↦ 1` (`x ↦ swap12 (swap01 x)`). -/
+private theorem pa18c_leftActionList_cycle1 {α : Type*} [Inhabited α] (a b c e : α) :
+    leftActionList (Equiv.swap 1 2 * Equiv.swap 0 1) [a, b, c, e] = [b, c, a, e] := by
+  rw [pa18c_leftActionList_four]
+  have h0 : ((Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ)) 0 = 2 := by
+    rw [Equiv.Perm.mul_apply, Equiv.swap_apply_left, Equiv.swap_apply_left]
+  have h1 : ((Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ)) 1 = 0 := by
+    have hi : (Equiv.swap 0 1 : Equiv.Perm ℕ) 1 = 0 := by rw [Equiv.swap_apply_right]
+    rw [Equiv.Perm.mul_apply, hi]
+    exact Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)
+  have h2 : ((Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ)) 2 = 1 := by
+    have hi : (Equiv.swap 0 1 : Equiv.Perm ℕ) 2 = 2 :=
+      Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)
+    rw [Equiv.Perm.mul_apply, hi]
+    rw [Equiv.swap_apply_right]
+  have h3 : ((Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ)) 3 = 3 := by
+    have hi : (Equiv.swap 0 1 : Equiv.Perm ℕ) 3 = 3 :=
+      Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)
+    rw [Equiv.Perm.mul_apply, hi]
+    exact Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)
+  have hs0 : (Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ).symm 0 = 1 := by
+    rw [Equiv.symm_apply_eq, h1]
+  have hs1 : (Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ).symm 1 = 2 := by
+    rw [Equiv.symm_apply_eq, h2]
+  have hs2 : (Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ).symm 2 = 0 := by
+    rw [Equiv.symm_apply_eq, h0]
+  have hs3 : (Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ).symm 3 = 3 := by
+    rw [Equiv.symm_apply_eq, h3]
+  rw [hs0, hs1, hs2, hs3]
+  simp
+
+/-- The 3-cycle `0 ↦ 1, 1 ↦ 2, 2 ↦ 0` (`x ↦ swap01 (swap12 x)`). -/
+private theorem pa18c_leftActionList_cycle2 {α : Type*} [Inhabited α] (a b c e : α) :
+    leftActionList (Equiv.swap 0 1 * Equiv.swap 1 2) [a, b, c, e] = [c, a, b, e] := by
+  rw [pa18c_leftActionList_four]
+  have h0 : ((Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ)) 0 = 1 := by
+    have hi : (Equiv.swap 1 2 : Equiv.Perm ℕ) 0 = 0 :=
+      Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)
+    rw [Equiv.Perm.mul_apply, hi]
+    rw [Equiv.swap_apply_left]
+  have h1 : ((Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ)) 1 = 2 := by
+    have hi : (Equiv.swap 1 2 : Equiv.Perm ℕ) 1 = 2 := by rw [Equiv.swap_apply_left]
+    rw [Equiv.Perm.mul_apply, hi]
+    exact Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)
+  have h2 : ((Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ)) 2 = 0 := by
+    rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right, Equiv.swap_apply_right]
+  have h3 : ((Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ)) 3 = 3 := by
+    have hi : (Equiv.swap 1 2 : Equiv.Perm ℕ) 3 = 3 :=
+      Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)
+    rw [Equiv.Perm.mul_apply, hi]
+    exact Equiv.swap_apply_of_ne_of_ne (by decide) (by decide)
+  have hs0 : (Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ).symm 0 = 2 := by
+    rw [Equiv.symm_apply_eq, h2]
+  have hs1 : (Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ).symm 1 = 0 := by
+    rw [Equiv.symm_apply_eq, h0]
+  have hs2 : (Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ).symm 2 = 1 := by
+    rw [Equiv.symm_apply_eq, h1]
+  have hs3 : (Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ).symm 3 = 3 := by
+    rw [Equiv.symm_apply_eq, h3]
+  rw [hs0, hs1, hs2, hs3]
+  simp
+
+private theorem pa18c_fix_swap01 : ∀ j : ℕ, 2 ≤ j → (Equiv.swap 0 1) j = j :=
+  fun j hj => Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)
+
+private theorem pa18c_fix_swap12 : ∀ j : ℕ, 3 ≤ j → (Equiv.swap 1 2) j = j :=
+  fun j hj => Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)
+
+private theorem pa18c_fix_swap02 : ∀ j : ℕ, 3 ≤ j → (Equiv.swap 0 2) j = j :=
+  fun j hj => Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)
+
+private theorem pa18c_fix_cycle1 :
+    ∀ j : ℕ, 3 ≤ j → ((Equiv.swap 1 2 * Equiv.swap 0 1 : Equiv.Perm ℕ)) j = j :=
+  fun j hj => by
+    have hi : (Equiv.swap 0 1 : Equiv.Perm ℕ) j = j :=
+      Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)
+    rw [Equiv.Perm.mul_apply, hi]
+    exact Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)
+
+private theorem pa18c_fix_cycle2 :
+    ∀ j : ℕ, 3 ≤ j → ((Equiv.swap 0 1 * Equiv.swap 1 2 : Equiv.Perm ℕ)) j = j :=
+  fun j hj => by
+    have hi : (Equiv.swap 1 2 : Equiv.Perm ℕ) j = j :=
+      Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)
+    rw [Equiv.Perm.mul_apply, hi]
+    exact Equiv.swap_apply_of_ne_of_ne (by omega) (by omega)
+
+/-- Weak-`permutes` membership on `Icc 0 m` follows from bounds on `p 0, p 1`
+plus tail-fixedness beyond `m` (injectivity kills the stray-image case). -/
+private theorem pa18c_permutes_of_bounds {p : Equiv.Perm ℕ} {m : ℕ}
+    (h0 : p 0 ≤ m) (h1 : p 1 ≤ m) (hfix : ∀ j : ℕ, m + 1 ≤ j → p j = j) :
+    permutes p (Set.Icc 0 m) := by
+  intro x
+  have hinj := Equiv.injective p
+  constructor
+  · intro hx
+    simp only [Set.mem_Icc] at hx ⊢
+    rcases Nat.lt_or_ge x (m + 1) with hx3 | hx3
+    · rcases Nat.lt_or_ge (p x) (m + 1) with hy | hy
+      · omega
+      · exfalso
+        have hpy := hfix (p x) hy
+        have hpx : p x = x := hinj hpy
+        omega
+    · rw [hfix x hx3]
+      omega
+  · intro hx
+    simp only [Set.mem_Icc] at hx ⊢
+    rcases Nat.lt_or_ge x (m + 1) with hx3 | hx3
+    · omega
+    · rw [hfix x hx3] at hx
+      omega
+
+private theorem pa18c_permutes_swap01 : permutes (Equiv.swap 0 1) (Set.Icc 0 1) :=
+  pa18c_permutes_of_bounds (by decide) (by decide) pa18c_fix_swap01
+
+private theorem pa18c_ncard_pair_le {α : Type*} (p q : α) : ({p, q} : Set α).ncard ≤ 2 := by
+  have h1 := Set.ncard_insert_le p ({q} : Set α)
+  have h2 : ({q} : Set α).ncard = 1 := Set.ncard_singleton q
+  omega
+
+private theorem pa18c_card3_of_distinct {α : Type*} {a b c : α}
+    (h1 : a ≠ b) (h2 : a ≠ c) (h3 : b ≠ c) : Nat.card ({a, b, c} : Set α) = 3 := by
+  have e1 : ({a, b, c} : Set α).ncard = ({b, c} : Set α).ncard + 1 :=
+    Set.ncard_insert_of_notMem (by simp; tauto)
+  have e2 : ({b, c} : Set α).ncard = ({c} : Set α).ncard + 1 :=
+    Set.ncard_insert_of_notMem (by simp; tauto)
+  have e3 : ({c} : Set α).ncard = 1 := Set.ncard_singleton c
+  have he : Nat.card ({a, b, c} : Set α) = ({a, b, c} : Set α).ncard := rfl
+  omega
+
+/-- From a 4-element point set: the first three entries are pairwise distinct. -/
+private theorem pa18c_card4_distinct3 {α : Type*} {a b c d : α}
+    (h4 : Nat.card ({a, b, c, d} : Set α) = 4) : a ≠ b ∧ a ≠ c ∧ b ≠ c := by
+  have h3le : ∀ (q r s : α), Nat.card ({q, r, s} : Set α) ≤ 3 := by
+    intro q r s
+    have k1 : ({q, r, s} : Set α).ncard ≤ ({r, s} : Set α).ncard + 1 :=
+      Set.ncard_insert_le q ({r, s} : Set α)
+    have k2 : ({r, s} : Set α).ncard ≤ ({s} : Set α).ncard + 1 :=
+      Set.ncard_insert_le r ({s} : Set α)
+    have k3 : ({s} : Set α).ncard = 1 := Set.ncard_singleton s
+    have ke : Nat.card ({q, r, s} : Set α) = ({q, r, s} : Set α).ncard := rfl
+    omega
+  have hdupe : ∀ (p q : α), p = q → ∀ (r s : α), Nat.card ({p, q, r, s} : Set α) ≤ 3 := by
+    intro p q hpq r s
+    have hset : ({p, q, r, s} : Set α) = ({q, r, s} : Set α) := by
+      rw [← hpq]; ext t; simp; all_goals tauto
+    have hh := h3le q r s
+    have ke : Nat.card ({q, r, s} : Set α) = ({q, r, s} : Set α).ncard := rfl
+    have kg : Nat.card ({p, q, r, s} : Set α) = Nat.card ({q, r, s} : Set α) := by rw [hset]
+    omega
+  refine ⟨fun hcon => absurd (hdupe a b hcon c d) (by omega),
+    fun hcon => by
+      have hh := hdupe a c hcon b d
+      have hperm : ({a, b, c, d} : Set α) = ({a, c, b, d} : Set α) := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe b c hcon a d
+      have hperm : ({a, b, c, d} : Set α) = ({b, c, a, d} : Set α) := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega)⟩
+
+/-- Tail-fixed realizability of an arbitrary reordering of the first three
+entries of a 4-element list: the `MCELL3_EDGE_FIRST` workhorse (cf. PA15
+`LEFT_ACTION_LIST_2_EXISTS`, whose existential permutation carries no
+tail-fixedness, which the `RVFXZBU`/`QZKSYKG1` interfaces require). -/
+private theorem pa18c_leftActionList2ExistsFix {α : Type*} [Inhabited α]
+    (u0 u1 u2 d x y z : α) (hset : ({x, y, z} : Set α) = {u0, u1, u2})
+    (hcard : Nat.card ({u0, u1, u2, d} : Set α) = 4) :
+    ∃ p : Equiv.Perm ℕ, permutes p (Set.Icc 0 2) ∧ (∀ j : ℕ, 3 ≤ j → p j = j) ∧
+      [x, y, z, d] = leftActionList p [u0, u1, u2, d] := by
+  obtain ⟨h01, h02, h12⟩ := pa18c_card4_distinct3 hcard
+  have h3u : Nat.card ({u0, u1, u2} : Set α) = 3 := pa18c_card3_of_distinct h01 h02 h12
+  have hmR : ∀ t : α, t ∈ ({u0, u1, u2} : Set α) ↔ t = u0 ∨ t = u1 ∨ t = u2 := by
+    intro t; simp
+  have hx : x = u0 ∨ x = u1 ∨ x = u2 := (hmR x).1 (by rw [← hset]; simp)
+  have hy : y = u0 ∨ y = u1 ∨ y = u2 := (hmR y).1 (by rw [← hset]; simp)
+  have hz : z = u0 ∨ z = u1 ∨ z = u2 := (hmR z).1 (by rw [← hset]; simp)
+  have h3xyz : Nat.card ({x, y, z} : Set α) = 3 := by rw [hset]; exact h3u
+  have hxy : x ≠ y := by
+    intro hcon
+    have k1 : ({x, y, z} : Set α) = ({x, z} : Set α) := by
+      rw [← hcon]; ext t; simp; all_goals tauto
+    have k2 := pa18c_ncard_pair_le (α := α) x z
+    have kg : Nat.card ({x, y, z} : Set α) = Nat.card ({x, z} : Set α) := by rw [k1]
+    have kb : Nat.card ({x, z} : Set α) = ({x, z} : Set α).ncard := rfl
+    omega
+  have hxz : x ≠ z := by
+    intro hcon
+    have k1 : ({x, y, z} : Set α) = ({x, y} : Set α) := by
+      rw [← hcon]; ext t; simp; all_goals tauto
+    have k2 := pa18c_ncard_pair_le (α := α) x y
+    have kg : Nat.card ({x, y, z} : Set α) = Nat.card ({x, y} : Set α) := by rw [k1]
+    have kb : Nat.card ({x, y} : Set α) = ({x, y} : Set α).ncard := rfl
+    omega
+  have hyz : y ≠ z := by
+    intro hcon
+    have k1 : ({x, y, z} : Set α) = ({x, y} : Set α) := by
+      rw [← hcon]; ext t; simp; all_goals tauto
+    have k2 := pa18c_ncard_pair_le (α := α) x y
+    have kg : Nat.card ({x, y, z} : Set α) = Nat.card ({x, y} : Set α) := by rw [k1]
+    have kb : Nat.card ({x, y} : Set α) = ({x, y} : Set α).ncard := rfl
+    omega
+  rcases hx with hxe | hxe | hxe
+  · rcases hy with hye | hye | hye
+    · exact absurd (hxe.trans hye.symm) hxy
+    · rcases hz with hze | hze | hze
+      · exact absurd (hxe.trans hze.symm) hxz
+      · exact absurd (hye.trans hze.symm) hyz
+      · -- (x, y, z) = (u0, u1, u2)
+        refine ⟨Equiv.refl ℕ, pa18c_permutes_of_bounds (m := 2) (by decide) (by decide)
+          fun _ _ => rfl, fun _ _ => rfl, ?_⟩
+        rw [hxe, hye, hze, pa18c_leftActionList_four]
+        simp
+    · rcases hz with hze | hze | hze
+      · exact absurd (hxe.trans hze.symm) hxz
+      · -- (x, y, z) = (u0, u2, u1)
+        refine ⟨Equiv.swap 1 2, pa18c_permutes_of_bounds (m := 2) (by decide) (by decide)
+          pa18c_fix_swap12, pa18c_fix_swap12, ?_⟩
+        rw [hxe, hye, hze, pa18c_leftActionList_swap12]
+      · exact absurd (hye.trans hze.symm) hyz
+  · rcases hy with hye | hye | hye
+    · rcases hz with hze | hze | hze
+      · exact absurd (hye.trans hze.symm) hyz
+      · exact absurd (hxe.trans hze.symm) hxz
+      · -- (x, y, z) = (u1, u0, u2)
+        refine ⟨Equiv.swap 0 1, pa18c_permutes_of_bounds (m := 2) (by decide) (by decide)
+          (fun j hj => pa18c_fix_swap01 j (by omega)),
+          fun j hj => pa18c_fix_swap01 j (by omega), ?_⟩
+        rw [hxe, hye, hze, pa18c_leftActionList_swap01]
+    · exact absurd (hxe.trans hye.symm) hxy
+    · rcases hz with hze | hze | hze
+      · -- (x, y, z) = (u1, u2, u0)
+        refine ⟨Equiv.swap 1 2 * Equiv.swap 0 1, pa18c_permutes_of_bounds (m := 2)
+          (by decide) (by decide) pa18c_fix_cycle1, pa18c_fix_cycle1, ?_⟩
+        rw [hxe, hye, hze, pa18c_leftActionList_cycle1]
+      · exact absurd (hxe.trans hze.symm) hxz
+      · exact absurd (hye.trans hze.symm) hyz
+  · rcases hy with hye | hye | hye
+    · rcases hz with hze | hze | hze
+      · exact absurd (hye.trans hze.symm) hyz
+      · -- (x, y, z) = (u2, u0, u1)
+        refine ⟨Equiv.swap 0 1 * Equiv.swap 1 2, pa18c_permutes_of_bounds (m := 2)
+          (by decide) (by decide) pa18c_fix_cycle2, pa18c_fix_cycle2, ?_⟩
+        rw [hxe, hye, hze, pa18c_leftActionList_cycle2]
+      · exact absurd (hxe.trans hze.symm) hxz
+    · rcases hz with hze | hze | hze
+      · -- (x, y, z) = (u2, u1, u0)
+        refine ⟨Equiv.swap 0 2, pa18c_permutes_of_bounds (m := 2) (by decide) (by decide)
+          pa18c_fix_swap02, pa18c_fix_swap02, ?_⟩
+        rw [hxe, hye, hze, pa18c_leftActionList_swap02]
+      · exact absurd (hye.trans hze.symm) hyz
+      · exact absurd (hxe.trans hze.symm) hxz
+    · exact absurd (hxe.trans hye.symm) hxy
+
+/-- HOL `TWO_REARRANGEMENT_LEMMA_ALT` (leaf_cell.hl:3104-3112): the 01-swap of
+a `barV V 3` list is realized by the left action of a permutation of `0..1`
+(HL proof: one `MESON_TAC` off `Qzksykg.TWO_REARRANGEMENT_LEMMA`; the
+realizer here is the explicit transposition, which also fixes the tail). -/
+theorem pa18c_two_rearrangement_lemma_alt {V : Set V3} {ul : List V3}
+    {u0 u1 u2 u3 : V3} (_hp : Packing V) (_hs : saturated V) (_hb : barV V 3 ul)
+    (hul : ul = [u0, u1, u2, u3]) :
+    ∃ p : Equiv.Perm ℕ, permutes p (Set.Icc 0 1) ∧
+      [u1, u0, u2, u3] = leftActionList p ul := by
+  refine ⟨Equiv.swap 0 1, pa18c_permutes_swap01, ?_⟩
+  rw [hul]
+  exact pa18c_leftActionList_swap01 u0 u1 u2 u3
+
+/-- PA18 `SET2_INSERT1` (leaf_cell.hl:3375-?), prefixed copy placed ahead of
+the declaration-order wall (the canonical one stands between the two edge-first
+targets; `MCELL3_EDGE_FIRST` consumes it earlier). -/
+private theorem pa18c_set2_insert1 {a b x y z : V3} (hsub : ({a, b} : Set V3) ⊆ {x, y, z})
+    (hne : a ≠ b) : ∃ c : V3, ({a, b, c} : Set V3) = {x, y, z} := by
+  have hm : ∀ t : V3, t ∈ ({x, y, z} : Set V3) ↔ t = x ∨ t = y ∨ t = z := by
+    intro t; simp
+  have ha := (hm a).1 (hsub (Set.mem_insert_iff.2 (Or.inl rfl)))
+  have hb := (hm b).1 (hsub (Set.mem_insert_iff.2 (Or.inr rfl)))
+  rcases ha with rfl | rfl | rfl
+  · rcases hb with rfl | rfl | rfl
+    · exact absurd rfl hne
+    · exact ⟨z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨y, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+  · rcases hb with rfl | rfl | rfl
+    · exact ⟨z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact absurd rfl hne
+    · exact ⟨x, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+  · rcases hb with rfl | rfl | rfl
+    · exact ⟨y, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨x, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact absurd rfl hne
+
 /-- HOL `MCELL2_EDGE_FIRST` (leaf_cell.hl:3338-3374). -/
 theorem MCELL2_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 ul)
     (he : {u, v} ∈ edgeX V (mcell2 V ul)) :
     ∃ vl, barV V 3 vl ∧ u = vl.getD 0 0 ∧ v = vl.getD 1 0 ∧ mcell2 V ul = mcell2 V vl := by
--- NEEDS (GIANT): leaf_cell.hl:3114-3374 mcell edge-rigidity kit.
-  sorry
+  have hne : mcell 2 V ul ≠ ∅ := by
+    intro hc
+    have hnull : nullSet (mcell 2 V ul) := by rw [hc]; exact MeasureTheory.measure_empty
+    rw [BumpP4.MCELL2 V ul] at he
+    rw [BumpP4.RIJRIED V ul 2 hnull] at he
+    simpa using he
+  have hab := BumpP4.MCELL2_EDGE V ul ({u, v} : Set V3) hs hp hb he
+  rcases pa18c_pair_eq_cases hab with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  · exact ⟨ul, hb, rfl, rfl, rfl⟩
+  · -- stem-swapped edge: the 01-swap left action carries the same cell
+    refine ⟨leftActionList (Equiv.swap 0 1) ul, QZKSYKG1 hs hp hb (by simp) hne
+      pa18c_permutes_swap01 pa18c_fix_swap01 rfl, ?_, ?_, ?_⟩
+    · rw [list4_eq ul hb.1, pa18c_leftActionList_swap01]
+      simp [elV]
+    · rw [list4_eq ul hb.1, pa18c_leftActionList_swap01]
+      simp [elV]
+    · rw [BumpP4.MCELL2 V ul, BumpP4.MCELL2 V (leftActionList (Equiv.swap 0 1) ul)]
+      exact (RVFXZBU (by simp) hs hp hb pa18c_permutes_swap01 pa18c_fix_swap01).symm
 
 /-- HOL `FINITE_CARD1_IMP_SINGLETON` (leaf_cell.hl:3338-3374). -/
 theorem FINITE_CARD1_IMP_SINGLETON {α : Type*} {S : Set α}
@@ -5446,8 +5844,39 @@ theorem MCELL3_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated
     (hp : Packing V) (hb : barV V 3 ul)
     (he : {u, v} ∈ edgeX V (mcell3 V ul)) :
     ∃ vl, barV V 3 vl ∧ u = vl.getD 0 0 ∧ v = vl.getD 1 0 ∧ mcell3 V ul = mcell3 V vl := by
--- NEEDS (GIANT): leaf_cell.hl:3197-3281 mcell edge-rigidity kit.
-  sorry
+  have hnull : ¬nullSet (mcell3 V ul) := by
+    intro hcon
+    have hrij := BumpP4.RIJRIED V ul 3 (by rw [← BumpP4.MCELL3 V ul]; exact hcon)
+    rw [BumpP4.MCELL3 V ul, hrij] at he
+    simpa using he
+  have hne : mcell 3 V ul ≠ ∅ := by
+    intro hc
+    refine hnull ?_
+    rw [BumpP4.MCELL3 V ul, hc]
+    exact MeasureTheory.measure_empty
+  obtain ⟨huv, hsub⟩ := (BumpP4.MCELL3_EDGE V ul u v hp hs hnull hb).mp he
+  have hle : 3 ≤ ul.length := by have := hb.1; omega
+  rw [BumpP4.SET_OF_LIST_TRUNCATE_2 ul hle] at hsub
+  obtain ⟨c, hc⟩ := pa18c_set2_insert1 hsub huv
+  have hb4 : ul.length = 4 := hb.1
+  have hcard4 : Nat.card ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3) = 4 := by
+    have hcard := (BARV_IMP_LENGTH_EQ_CARD V ul 3 hp hb).2
+    rw [list4_eq ul hb4, BumpP4.set_of_list4_explicit] at hcard
+    rw [list4_eq ul hb4]
+    simp only [elV, List.getD_cons_zero, List.getD_cons_succ]
+    exact hcard
+  -- the edge endpoints and the leftover stem point reorder the stem triple
+  obtain ⟨p, hperm, hfix, hlist⟩ := pa18c_leftActionList2ExistsFix
+    (elV ul 0) (elV ul 1) (elV ul 2) (elV ul 3) u v c hc hcard4
+  rw [list4_eq ul hb4] at hlist
+  simp only [elV, List.getD_cons_zero, List.getD_cons_succ] at hlist
+  refine ⟨leftActionList p ul, QZKSYKG1 hs hp hb (by simp) hne hperm hfix rfl, ?_, ?_, ?_⟩
+  · rw [list4_eq ul hb4, ← hlist]
+    simp
+  · rw [list4_eq ul hb4, ← hlist]
+    simp
+  · rw [BumpP4.MCELL3 V ul, BumpP4.MCELL3 V (leftActionList p ul)]
+    exact (RVFXZBU (by simp) hs hp hb hperm hfix).symm
 
 /-- HOL `SET2_INSERT2` (leaf_cell.hl:3375-?). -/
 theorem SET2_INSERT2 {a b w x y z : V3} (hsub : ({a, b} : Set V3) ⊆ {w, x, y, z})
