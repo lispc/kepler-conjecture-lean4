@@ -719,4 +719,316 @@ theorem GRHIDFA_concl (cc : CcV11) (_hb : cc_bool_model_v11 cc) (_hp : cc_bool_p
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
     False := by sorry
 
+/-! ## OXLZLEZ2: shared kit (OXLZLEZ2.hl:183-3451; GRHIDFA wave plan W1)
+
+Port of the tactical-infrastructure / intra-chapter kit consumed by the
+OXLZLEZ2 conclusion ladder (WAVES §4 W1 task list, 17 items).  Encoding
+differences from the PA4 reference rows (PackingAuto4.lean §2, CC4P4): the
+`getD` accessors `cc_azim_v11`/`cc_gg_v11`/`cc_gg3a_v11`/`cc_gg3b_v11` stand in
+for `cc.reals k i`, the Prop predicates `cc_small_v11` etc. stand in for
+`cc.bools k i = true`, and `periodic` (equality of predicates) replaces
+`periodicPropP4` (Iff).  All rows below are fully proved, with no unproved
+placeholders.  Rows are ordered by their OXLZLEZ2.hl anchor. -/
+
+/-- OXLZLEZ2.hl:183.  PA4 reference: PackingAuto4.lean:257 (proven). -/
+theorem p3g_QU_OR_QXY (cc : CcV11) (i : ℕ) :
+    cc_qu_v11 cc i ∨ cc_qx_v11 cc i ∨ cc_qy_v11 cc i := by
+  by_cases h : cc_4cell_v11 cc i
+  · by_cases hq : cc_qu_v11 cc i
+    · exact Or.inl hq
+    · exact Or.inr (Or.inl (show cc_4cell_v11 cc i ∧ ¬cc_qu_v11 cc i from ⟨h, hq⟩))
+  · exact Or.inr (Or.inr h)
+
+/-- OXLZLEZ2.hl:186.  `QX_NN` with the `#0.0 = &0` rewrite applied; the numeral
+distinction does not exist in Lean, so this row is an alias of `QX_NN`. -/
+theorem p3g_QX_NN0 {cc : CcV11} (hb : cc_bool_model_v11 cc) (hr : cc_real_model_v11 cc)
+    {i : ℕ} (h : cc_qx_v11 cc i) : (0 : ℝ) ≤ cc_gg_v11 cc i := QX_NN hb hr h
+
+/-- OXLZLEZ2.hl:187.  Alias of `QY_NN`, same reading as `p3g_QX_NN0`. -/
+theorem p3g_QY_NN0 {cc : CcV11} (hb : cc_bool_model_v11 cc) (hr : cc_real_model_v11 cc)
+    {i : ℕ} (h : cc_qy_v11 cc i) : (0 : ℝ) ≤ cc_gg_v11 cc i := QY_NN hb hr h
+
+/-- OXLZLEZ2.hl:193.  PA4 reference: PackingAuto4.lean:266 (proven). -/
+theorem p3g_SUM_POS_LT_NUMSEG (m n : ℕ) (f : ℕ → ℝ) (hmn : m ≤ n)
+    (h : ∀ p, m ≤ p → p ≤ n → 0 < f p) :
+    0 < Finset.sum (Finset.Icc m n) f :=
+  Finset.sum_pos (fun p hp => h p (Finset.mem_Icc.mp hp).1 (Finset.mem_Icc.mp hp).2)
+    ⟨m, Finset.mem_Icc.mpr ⟨le_refl m, hmn⟩⟩
+
+/-- OXLZLEZ2.hl:398.  HOL states the row for the set-sum `sum S`; PA3 sums over
+`Finset.Icc`, so the carrier is rendered as a `Finset` (form note, not a
+statement change: β-contraction under the sum is definitional). -/
+theorem p3g_SUM_BETA {α : Type*} (S : Finset α) (f : α → ℝ) :
+    Finset.sum S (fun x => f x) = Finset.sum S f := rfl
+
+/-- OXLZLEZ2.hl:1255.  PA4 reference: PackingAuto4.lean:321 (proven). -/
+theorem p3g_THREE_MOD_CONSECUTIVES (i n : ℕ) (hi : 0 < i) (hn : 3 ≤ n) :
+    ¬((i - 1) % n = i % n ∨ i % n = (i + 1) % n ∨ (i + 1) % n = (i - 1) % n) := by
+  intro h
+  rcases h with h | h | h
+  · have hd : n ∣ i - (i - 1) := (Nat.modEq_iff_dvd' (by omega)).mp h
+    have hle := Nat.le_of_dvd (show 0 < i - (i - 1) from by omega) hd
+    omega
+  · have hd : n ∣ (i + 1) - i := (Nat.modEq_iff_dvd' (by omega)).mp h
+    have hle := Nat.le_of_dvd (show 0 < (i + 1) - i from by omega) hd
+    omega
+  · have hd : n ∣ (i + 1) - (i - 1) := (Nat.modEq_iff_dvd' (by omega)).mp h.symm
+    have hle := Nat.le_of_dvd (show 0 < (i + 1) - (i - 1) from by omega) hd
+    omega
+
+/-- OXLZLEZ2.hl:1281.  PA4 reference: PackingAuto4.lean:336 (proven). -/
+theorem p3g_MOD_PERIOD_BOUNDED (n k : ℕ) (hn : n ≠ 0) (hk : k ≠ 0) (x : ℕ) :
+    (x + k) % n = x % n → n ≤ k := by
+  intro heq
+  have hd : n ∣ (x + k) - x := (Nat.modEq_iff_dvd' (Nat.le_add_right x k)).mp heq.symm
+  rw [Nat.add_sub_cancel_left] at hd
+  exact Nat.le_of_dvd (show 0 < k from by omega) hd
+
+/-- OXLZLEZ2.hl:1293.  PA4 reference: PackingAuto4.lean:344 (proven). -/
+theorem p3g_MOD_PERIOD_BOUNDED2 (nn m i k : ℕ) (hnn : nn ≠ 0) (hmk : m ≤ k)
+    (h : (i + k) % nn ∈ (fun x => (i + x) % nn) '' {x | x < m}) : nn ≤ k := by
+  simp only [Set.mem_image, Set.mem_setOf_eq] at h
+  obtain ⟨x, hxm, hx⟩ := h
+  have hxi : i + x ≤ i + k := by omega
+  have hd : nn ∣ (i + k) - (i + x) :=
+    (Nat.modEq_iff_dvd' hxi).mp hx
+  rw [show i + k - (i + x) = k - x from by omega] at hd
+  have hle := Nat.le_of_dvd (show 0 < k - x from by omega) hd
+  omega
+
+/-- OXLZLEZ2.hl:1735.  PA4 reference: PackingAuto4.lean:362 (proven). -/
+theorem p3g_CC_4CELL_QUQX (cc : CcV11) (i : ℕ) :
+    cc_4cell_v11 cc i ↔ cc_qu_v11 cc i ∨ cc_qx_v11 cc i := by
+  constructor
+  · intro h
+    by_cases hq : cc_qu_v11 cc i
+    · exact Or.inl hq
+    · exact Or.inr ⟨h, hq⟩
+  · rintro (h | h)
+    · exact h.2.1
+    · exact h.1
+
+/-- OXLZLEZ2.hl:1740.  PA4 reference: PackingAuto4.lean:374 (proven); HOL closes
+by `ASM_SIMP_TAC[QX_NN0]`, mirrored here via the PA3 `QX_NN`. -/
+theorem p3g_QX_NN00 (cc : CcV11) (_hb : cc_bool_model_v11 cc) (hr : cc_real_model_v11 cc)
+    (i : ℕ) (hqx : cc_qx_v11 cc i) : (0 : ℝ) ≤ cc_gg_v11 cc i :=
+  QX_NN _hb hr hqx
+
+/-- OXLZLEZ2.hl:1745.  PA4 reference: PackingAuto4.lean:380 (proven); HOL closes
+by `ASM_SIMP_TAC[QY_NN0]`, mirrored here via the PA3 `QY_NN`. -/
+theorem p3g_QY_NN00 (cc : CcV11) (_hb : cc_bool_model_v11 cc) (hr : cc_real_model_v11 cc)
+    (i : ℕ) (hqy : cc_qy_v11 cc i) : (0 : ℝ) ≤ cc_gg_v11 cc i :=
+  QY_NN _hb hr hqy
+
+/-- OXLZLEZ2.hl:1752.  PA4 reference: PackingAuto4.lean:390 (proven). -/
+theorem p3g_NUMSEG_SET_VER (m : ℕ) : (Finset.Icc 0 m : Set ℕ) = {i | i ≤ m} := by
+  ext i
+  simp only [Finset.mem_coe, Finset.mem_Icc, Set.mem_setOf_eq]
+  omega
+
+/-- OXLZLEZ2.hl:1758 (`REWRITE_RULE[NUMSEG_SET_VER]` of `FINITE_NUMSEG`
+specialized at `0`). -/
+theorem p3g_FINITE_INITIAL_SEG (m : ℕ) : {i : ℕ | i ≤ m}.Finite := by
+  rw [← p3g_NUMSEG_SET_VER m]
+  exact (Finset.Icc 0 m).finite_toSet
+
+/-- OXLZLEZ2.hl:1761.  PA4 reference: PackingAuto4.lean:396 (proven); HOL closes
+by `FINITE_SUBSET` against `FINITE_INITIAL_SEG`, mirrored here. -/
+theorem p3g_FINITE_INITIAL_SEG2 (n : ℕ) : {i : ℕ | i < n}.Finite := by
+  refine Set.Finite.subset (p3g_FINITE_INITIAL_SEG n) ?_
+  intro i hi
+  exact le_of_lt (Set.mem_setOf_eq.mp hi)
+
+/-- OXLZLEZ2.hl:1768.  The one W1 row without a proven PA4 reference
+(PA4:402 is a stub): finiteness of the `m`-block of residues.  Lean proof:
+the residue set is the image of `Finset.range m` under `fun k => (i + k) % n`,
+with injectivity on the range from `Nat.modEq_iff_dvd'` and `m ≤ n` (HOL
+routes the same argument through `FINITE_IMAGE`/`CARD_INSERT`). -/
+theorem p3g_CARD_MOD_NUMSEG (n m i : ℕ) (hm : m ≤ n) :
+    Nat.card {x : ℕ | ∃ k < m, x = (i + k) % n} = m := by
+  have hinj : Set.InjOn (fun k => (i + k) % n) (Finset.range m) := by
+    intro k hk l hl hkl
+    simp only [Finset.mem_coe, Finset.mem_range] at hk hl
+    have hkn : k < n := lt_of_lt_of_le hk hm
+    have hln : l < n := lt_of_lt_of_le hl hm
+    have hmod : (i + k) % n = (i + l) % n := hkl
+    rcases le_total k l with hkle | hlle
+    · have hd : n ∣ (i + l) - (i + k) := (Nat.modEq_iff_dvd' (by omega)).mp hmod
+      rw [show (i + l) - (i + k) = l - k from by omega] at hd
+      have hd0 : l - k = 0 := Nat.eq_zero_of_dvd_of_lt hd (by omega)
+      omega
+    · have hd : n ∣ (i + k) - (i + l) := (Nat.modEq_iff_dvd' (by omega)).mp hmod.symm
+      rw [show (i + k) - (i + l) = k - l from by omega] at hd
+      have hd0 : k - l = 0 := Nat.eq_zero_of_dvd_of_lt hd (by omega)
+      omega
+  have hset : {x : ℕ | ∃ k < m, x = (i + k) % n}
+      = ((Finset.range m).image (fun k => (i + k) % n) : Set ℕ) := by
+    ext x
+    simp only [Set.mem_setOf_eq, Finset.mem_image, Finset.mem_coe,
+      Finset.mem_range, eq_comm]
+  have hfin : (((Finset.range m).image (fun k => (i + k) % n) : Finset ℕ) : Set ℕ).Finite :=
+    ((Finset.range m).image (fun k => (i + k) % n)).finite_toSet
+  rw [hset, Nat.card_coe_set_eq, Set.ncard_eq_toFinset_card _ hfin,
+    Set.Finite.toFinset_eq_toFinset hfin, Finset.toFinset_coe,
+    Finset.card_image_of_injOn hinj, Finset.card_range]
+
+/-- OXLZLEZ2.hl:1805.  PA4 reference: PackingAuto4.lean:406 (proven, direct
+`ext` in place of the HOL `CARD_SUBSET_EQ` detour). -/
+theorem p3g_MOD_NUMSEG (n i : ℕ) (hn : n ≠ 0) :
+    (Finset.Icc 0 (n - 1) : Set ℕ) = (fun x => (i + x) % n) '' {x | x < n} := by
+  ext x
+  simp only [Finset.mem_coe, Finset.mem_Icc, Set.mem_image, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨-, hx⟩
+    have hx' : x < n := by omega
+    refine ⟨(x + n - i % n) % n, Nat.mod_lt _ (by omega), ?_⟩
+    calc (i + (x + n - i % n) % n) % n
+        = (i % n + (x + n - i % n) % n) % n := (Nat.mod_add_mod i n _).symm
+      _ = ((x + n - i % n) % n + i % n) % n := by rw [Nat.add_comm]
+      _ = ((x + n - i % n) + i % n) % n := Nat.mod_add_mod _ _ _
+      _ = (i % n + (x + n - i % n)) % n := by rw [Nat.add_comm]
+      _ = (x + n) % n := by
+        have him : i % n < n := Nat.mod_lt i (by omega)
+        have hle : i % n ≤ x + n := le_trans (le_of_lt him) (by omega)
+        rw [Nat.add_sub_cancel' hle]
+      _ = x % n := Nat.add_mod_right x n
+      _ = x := Nat.mod_eq_of_lt hx'
+  · rintro ⟨k, hk, rfl⟩
+    have hlt : (i + k) % n < n := Nat.mod_lt (i + k) (by omega)
+    exact ⟨by omega, by omega⟩
+
+/-- OXLZLEZ2.hl:2803: curried `MOD_INJ1` (`REWRITE_RULE[GSYM
+RIGHT_FORALL_IMP_THM]`); PA3 already carries the same statement as
+`MOD_INJ1_ALT` (OXLZLEZ1.hl:263), so the row is a one-line bridge. -/
+theorem p3g_MOD_INJ11 (n k : ℕ) (hn : n ≠ 0) (hk : k < n) (hk0 : k ≠ 0) (x : ℕ) :
+    x % n ≠ (x + k) % n := MOD_INJ1_ALT hn hk hk0 x
+
+/-- OXLZLEZ2.hl:2806 (proved in HOL from `Flyspeck_constants.bounds`).  Lean
+takes the same decimal bounds from Mathlib's `π` bounds
+(Mathlib/Analysis/Real/Pi/Bounds.lean: `pi_gt_d6`/`pi_lt_d4`). -/
+theorem p3g_PI_BOUNDS : (3.14159 : ℝ) < Real.pi ∧ Real.pi < 3.1416 := by
+  constructor
+  · exact lt_trans (by norm_num : (3.14159 : ℝ) < 3.141592) Real.pi_gt_d6
+  · exact Real.pi_lt_d4
+
+/-- OXLZLEZ2.hl:3341.  PA4 reference: PackingAuto4.lean:548 (proven). -/
+theorem p3g_LEAST_BOUND_CC_GG (cc : CcV11)
+    (h1 : ∀ i, cc_qu_v11 cc i → -cc_eps ≤ cc_gg_v11 cc i)
+    (h2 : ∀ i, cc_qx_v11 cc i → (0 : ℝ) ≤ cc_gg_v11 cc i)
+    (h3 : ∀ i, cc_qy_v11 cc i → (0 : ℝ) ≤ cc_gg_v11 cc i) (i : ℕ) :
+    -cc_eps ≤ cc_gg_v11 cc i := by
+  rcases p3g_QU_OR_QXY cc i with h | h | h
+  · exact h1 i h
+  · exact le_trans (by norm_num [cc_eps]) (h2 i h)
+  · exact le_trans (by norm_num [cc_eps]) (h3 i h)
+
+/-- OXLZLEZ2.hl:3354: `periodic_mod` with the inner `!m` curried out
+(`RIGHT_FORALL_IMP_THM`); PA3's `periodic_mod` is already in that curried
+shape, so the row is an alias. -/
+theorem p3g_periodic_mod1 {α : Type*} {f : ℕ → α} {n : ℕ} (h : periodic f n)
+    (hn : n ≠ 0) (m : ℕ) : f m = f (m % n) := periodic_mod h hn m
+
+/-- OXLZLEZ2.hl:3361.  PA4 reference: PackingAuto4.lean:559 (proven). -/
+theorem p3g_LITTLE_CC_GG3BB (cc : CcV11) (i : ℕ)
+    (h1 : ∀ j, cc_qy_v11 cc j → (0 : ℝ) ≤ cc_gg3b_v11 cc j)
+    (h2 : ∀ j, cc_qu_v11 cc (j + 1) ∧ cc_qy_v11 cc j →
+      (0 : ℝ) ≤ cc_gg3b_v11 cc j + cc_gg_v11 cc (j + 1))
+    (h3 : ∀ j, cc_qy_v11 cc j → (0 : ℝ) ≤ cc_gg_v11 cc j)
+    (h4 : ∀ j, cc_qx_v11 cc j → (0 : ℝ) ≤ cc_gg_v11 cc j)
+    (h5 : cc_qy_v11 cc i) : (0 : ℝ) ≤ cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) := by
+  rcases p3g_QU_OR_QXY cc (i + 1) with h | h | h
+  · exact h2 i ⟨h, h5⟩
+  · have hg := h4 (i + 1) h
+    have hb := h1 i h5
+    linarith
+  · have hg := h3 (i + 1) h
+    have hb := h1 i h5
+    linarith
+
+/-- OXLZLEZ2.hl:3373 (`SPEC 1 MOD_MULT_ADD` with `1 * n + p` normalised to
+`p + n`); identical to Lean-core `Nat.add_mod_right`. -/
+theorem p3g_MOD_ADD_CANCEL (p n : ℕ) : (p + n) % n = p % n := Nat.add_mod_right p n
+
+/-- OXLZLEZ2.hl:3379.  PA4 reference: PackingAuto4.lean:576 (proven), with the
+PA3 `periodic` (equality of predicates) replacing `periodicPropP4` (Iff). -/
+theorem p3g_LITTLE_CC_GG3AA (cc : CcV11) (nn : ℕ) (i : ℕ)
+    (h1 : ∀ j, cc_qy_v11 cc j → (0 : ℝ) ≤ cc_gg3a_v11 cc j)
+    (h2 : ∀ j, cc_qu_v11 cc j ∧ cc_qy_v11 cc (j + 1) →
+      (0 : ℝ) ≤ cc_gg_v11 cc j + cc_gg3a_v11 cc (j + 1))
+    (h3 : ∀ j, cc_qy_v11 cc j → (0 : ℝ) ≤ cc_gg_v11 cc j)
+    (h4 : ∀ j, cc_qx_v11 cc j → (0 : ℝ) ≤ cc_gg_v11 cc j)
+    (hpqy : periodic (cc_qy_v11 cc) nn)
+    (hpgg3a : periodic (cc_gg3a_v11 cc) nn)
+    (hnn : nn ≠ 0)
+    (h5 : cc_qy_v11 cc i) : (0 : ℝ) ≤ cc_gg_v11 cc (i + nn - 1) + cc_gg3a_v11 cc i := by
+  have hj : i + nn - 1 + 1 = i + nn := by omega
+  rcases p3g_QU_OR_QXY cc (i + nn - 1) with hq | hx | hy
+  · have hbound := h2 (i + nn - 1) ⟨hq, by rw [hj, hpqy i]; exact h5⟩
+    rw [hj] at hbound
+    rw [← hpgg3a i]
+    exact hbound
+  · have hg := h4 (i + nn - 1) hx
+    have ha := h1 i h5
+    linarith
+  · have hg := h3 (i + nn - 1) hy
+    have ha := h1 i h5
+    linarith
+
+/-- OXLZLEZ2.hl:3431 (`SIMP_RULE[...] (SPEC (m+1) SUM_CLAUSES_LEFT)`). -/
+theorem p3g_SUM_NUMSEG2 (f : ℕ → ℝ) (m : ℕ) :
+    ∑ i ∈ Finset.Icc m (m + 1), f i = f m + f (m + 1) := by
+  have hIcc : Finset.Icc m (m + 1) = insert m (Finset.Icc (m + 1) (m + 1)) := by
+    ext k
+    simp only [Finset.mem_Icc, Finset.mem_insert]
+    constructor
+    · rintro ⟨h1, h2⟩
+      omega
+    · rintro (h | h)
+      · omega
+      · omega
+  rw [hIcc, Finset.sum_insert (by simp only [Finset.mem_Icc]; omega), Finset.Icc_self,
+    Finset.sum_singleton]
+
+/-- OXLZLEZ2.hl:3434 (`SIMP_RULE[...] (SPEC (m+2) SUM_CLAUSES_LEFT)`, consuming
+`SUM_NUMSEG2`). -/
+theorem p3g_SUM_NUMSEG33 (f : ℕ → ℝ) (m : ℕ) :
+    ∑ i ∈ Finset.Icc m (m + 2), f i = f m + f (m + 1) + f (m + 2) := by
+  have hIcc : Finset.Icc m (m + 2) = insert m (Finset.Icc (m + 1) (m + 2)) := by
+    ext k
+    simp only [Finset.mem_Icc, Finset.mem_insert]
+    constructor
+    · rintro ⟨h1, h2⟩
+      omega
+    · rintro (h | h)
+      · omega
+      · omega
+  rw [hIcc, Finset.sum_insert (by simp only [Finset.mem_Icc]; omega), p3g_SUM_NUMSEG2]
+  ring
+
+/-- OXLZLEZ2.hl:3438 (`REWRITE_RULE[(a+1)+1 = a+2] SUM_NUMSEG33`). -/
+theorem p3g_SUM_NUMSEG3 (f : ℕ → ℝ) (m : ℕ) :
+    ∑ i ∈ Finset.Icc m (m + 2), f i = f m + f (m + 1) + f (m + 2) :=
+  p3g_SUM_NUMSEG33 f m
+
+/-- OXLZLEZ2.hl:3442 (`SIMP_RULE[...] (SPEC (m+3) SUM_CLAUSES_LEFT)`, consuming
+`SUM_NUMSEG3`). -/
+theorem p3g_SUM_NUMSEG44 (f : ℕ → ℝ) (m : ℕ) :
+    ∑ i ∈ Finset.Icc m (m + 3), f i = f m + f (m + 1) + f (m + 2) + f (m + 3) := by
+  have hIcc : Finset.Icc m (m + 3) = insert m (Finset.Icc (m + 1) (m + 3)) := by
+    ext k
+    simp only [Finset.mem_Icc, Finset.mem_insert]
+    constructor
+    · rintro ⟨h1, h2⟩
+      omega
+    · rintro (h | h)
+      · omega
+      · omega
+  rw [hIcc, Finset.sum_insert (by simp only [Finset.mem_Icc]; omega), p3g_SUM_NUMSEG3]
+  ring
+
+/-- OXLZLEZ2.hl:3445 (`REWRITE_RULE[...] SUM_NUMSEG44`). -/
+theorem p3g_SUM_NUMSEG4 (f : ℕ → ℝ) (m : ℕ) :
+    ∑ i ∈ Finset.Icc m (m + 3), f i = f m + f (m + 1) + f (m + 2) + f (m + 3) :=
+  p3g_SUM_NUMSEG44 f m
+
 end Kepler.Text
