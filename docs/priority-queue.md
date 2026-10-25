@@ -28,7 +28,8 @@
 |---|---|---|---|
 | GRHIDFA-W3 | ✅ **完成**（`bef9abae`，IPVICGW 支 10 行 + 14 私件，十件标准三，+814/−0） | PackingAuto3.lean | 零计分（W5 才回填九桩），W4 前置 |
 | FCHKUGT-W4 | ✅ **完成**（`fff95dbc`，FUEIMOV_3 一次迭代通过，标准三，bare sorry 16→15；**W5 前置 W1-W4 全齐，本体 :7432 装配解锁**） | PackingAuto18.lean | 零计分资产，W5 前置 |
-| A2-W2a | CertG 重烤（两枚 TM demo decide=false 阻断，照 C549Mono 先例）+ 链通验证 Base/Shard1/2 + segbuild.sh | Kepler/Interval/CertG.lean | 40h 构建的第 0 步 |
+| A2-W2a | ✅ **完成**（`3fab5ee1`，选项 A 重烤成功：exGTMP/exTM1BP mantissa 照 C549Mono 先例重烤，CertG build 绿 8665 jobs，两 demo end-to-end 标准三；Base/Shard1/Shard2 三连 EXIT=0 = **rest 9 构建链阻断解除**；8 demo 全保留零删除） | Kepler/Interval/CertG.lean | 40h 构建的第 0 步 |
+| **A2-W2b** | **40h 分段构建进行中**（编排者后台：`/tmp/a2-rest9w2` 克隆，断点续跑，olean 计数 3→2776）+ 完工后 olean 回灌主仓 → 粘合落库 **−1 源** | 后台构建 | rest 9 = 59 条 nli rest 最大单件 |
 | GRHIDFA-W4 | RSIWAMP（一行式）+ UTEOITF（nn=3/4/5 三支分类件） | PackingAuto3.lean | 零计分，W5 前置 |
 
 > **A2-W1 已完成（2026-10-25，关键事实翻案）**：rest 9 证书源 **2,777 文件全部
