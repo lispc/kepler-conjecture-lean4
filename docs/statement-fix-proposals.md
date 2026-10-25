@@ -2397,3 +2397,44 @@ sorryAx，sorried 源本身）。预期：PA21 直 sorry 计数不变（1）；A
 **不批准的后果**：`nliTskGXSA` 永不可被 HOL 证书放电（Lean 叶更强），
 且 `cell4_from_ineq_thm`（:4168 翻除的最后一块）必须永久携带
 `p21k_glsa_correct` 显式前提。
+
+## 52. PA24 换接去 shim：`p24_edgeX_of_leaf23` 不再消费 PA2 sorried 桩 `RVFXZBU2_concl`，改由树内真证 AJRIPQN+LEPJBDJ 链直接供给（新增 private 真证 `p24_rvfxzbu2_prefix`）— 分级 A（证明体重接线 · 恢复 HOL 直接结构）
+
+**立案：2026-10-25，Lane BF（pa2-rvfxzbu2）路线 B 交付，双重克隆验证（工作区 +
+独立净版克隆）；编排者按用户批准的重接线程序（F1 UPFZBZM 重接线 + "都批"，2026-10-25）
+走本通道应用。** 对象 = PA24:4688（现行号）`p24_edgeX_of_leaf23` 证明体内对
+PA2:5496 `RVFXZBU2_concl := sorry` 的唯一活消费。
+
+### (a) HOL 对位与 shim 溯源
+HOL pack_concl.hl:145-147 逐字 `RVFXZBU2_concl` 仅有语句绑定——本地 flyspeck 全量
+reference 实测**无任何 HL 证明体、无任何 HL 消费者**；Lean 侧该 shim 是 SF-20 家族
+冻结占位。HOL 的 REUHADY 装配链由已证的 AJRIPQN（PA17:931 真证）/LEPJBDJ 覆盖理论
+直接导出 edgeX 事实，不经任何 RVFXZBU2 形语句。本重接线在 PA24 内新增 private 真证
+`p24_rvfxzbu2_prefix`（AJRIPQN 胞相等 + LEPJBDJ 顶点抽取，~20 行核心，#print axioms
+= 标准三）并换接消费点，恢复 HOL 的直接结构。
+
+### (b) 修复补丁
+存档 `docs/statement-fix-proposals-patches/52-pa24-rvfxzbu2-rewire.patch`（+47/−20，
+单文件 PA24）：新增 `p24_rvfxzbu2_prefix`；`p24_edgeX_of_leaf23` 内换接（消费面实测
+只需首段集合形；`p`/`hpIcc`/`hvleq` 仅用于导出 `htr'`）；PA2 桩原位不动（删除归用户保留）。
+验证：patch 可贴、PA24 编译绿（8701 jobs）、`p24_edgeX_of_leaf23` axiom 面
+sorryAx → 标准三、**`REUHADY1` → 标准三全净**（该链对 PA13 URRPHBZ2/QZYZMJC 无活依赖）。
+
+### (c) 消费面影响清单
+- PA24:4688 唯一活消费被换接；`RVFXZBU2_concl` 转**零活消费沉睡态**（PA2 bare sorry
+  计数不变；e2e 直源数不变——`p24_edgeX_of_leaf23` 与 `REUHADY1` 本就不是 direct source，
+  本 SF 减少的是间接 taint 跳数）。
+- 连带：REUHADY1 链转净后，PA25 `LEAF_RANK_REUHADY` 对 FCHKUGT 之外的债面收窄。
+- 遗留（不在本 SF）：PackingConcl:388 孪生 `_discharged` 链；PA2 桩族
+  （RVFXZBU1/SLTSTLO2/LEPJBDJ_concl）与 PA10 RVFXZBU 非推论关系（BF 勘误，DEP_MAP 第 24 行前提不成立）。
+
+### (d) 验收与应用计划
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/52-pa24-rvfxzbu2-rewire.patch SF_ITEM=52`，
+`LANE_FILES="Kepler/Text/PackingAuto24.lean"`，闸 `GATE_ROOTS=Kepler.Text.PackingAuto24`
+THM=`Kepler.Text.p24_edgeX_of_leaf23`（rule 5：修复后须 sorryAx-free，BF 实测标准三）。
+
+### (e) 孤儿评估
+无删除；`RVFXZBU2_concl` 成孤儿（零活消费）但保留在册（删除归用户裁决）。
+
+### (f) 风险与回滚
+证明体重接线，陈述零变化；双重克隆验证；回滚 = 反向 patch。

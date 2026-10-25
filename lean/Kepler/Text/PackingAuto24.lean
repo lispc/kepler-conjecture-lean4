@@ -4556,13 +4556,15 @@ scaffold 3 覆盖结论按 SF-46 恢复为 HL 忠实测度级形（`nullSet (E \
    `Icc 0 m` 上的双射性，后者由 `permutes` 给出）。
 4. `p24_edgeX_of_leaf23`：k∈{2,3} 叶表胞在**非零测假设下**的 edgeX 指认——
    cellParams ε-见证（自选谓词直接给叶表形）+ PA17 `AJRIPQN` 指标归一（R3
-   inherited）+ PA2 `RVFXZBU2_concl` 同指标胞重合的置换结构（R3 类 SF-20
-   shim，逐件记账）+ 件 3 首段集合不变性 ⟹ `{u0,u1} ⊆ VX`。
+   inherited）+ `p24_rvfxzbu2_prefix` 同指标胞重合的首段顶点集一致（BF 波
+   2026-10-23 起替换原 PA2 `RVFXZBU2_concl` shim 消费，见 5）⟹ `{u0,u1} ⊆ VX`。
+5. `p24_rvfxzbu2_prefix`（BF 波 2026-10-23 增）：同指标胞非零测重合 ⟹ 首段
+   顶点集一致（AJRIPQN + PA11 `LEPJBDJ`，标准三）；完整置换形仍冻结于 PA2 桩。
    k = 4 已由十二发波 `p24_edgeX_of_leaf4` 真证（R3 一路）；k∈{2,3} 的
    **无条件**非零测性 = 墙 A（R1-GIANT），测度级形下不再需要——非零测性是
    零迹自毁二分的**假设侧**（HL 原生同构：REUHADY.hl:7628+ 的
    HDTFNFZ+LEPJBDJ 段在 `¬NULLSET (X INTER E)` 门下运行，本件以
-   AJRIPQN+RVFXZBU2 替换该两 R1 件的指认步，保持覆盖链 R1-free）。 -/
+   AJRIPQN+LEPJBDJ 替换该两 R1 件的指认步，保持覆盖链 R1-free）。 -/
 
 /-- **sUnion-image 成员范式**（十三发波装配辅助；HL REUHADY.hl:7507 的
 `UNIONS {y | ?x. x IN s ∧ y = x INTER E}` 成员形的展开）：`⋃₀ (f '' s)` 的
@@ -4651,12 +4653,42 @@ private theorem p24_setOfList_trunc_leftAction (ul : List V3) (m : ℕ)
       omega
     · rw [Equiv.symm_apply_apply]; exact hfl
 
+/-- **RVFXZBU2 树内替件（BF 波 2026-10-23；SF 提案草案，随 lane 快照交付）**：
+同指标胞非零测重合 ⟹ 两参数表的首段顶点集一致。这是 HL REUHADY.hl:7628-7745
+（HDTFNFZ+LEPJBDJ 段）在 `¬NULLSET (X INTER E)` 门下指认步的树内映射：
+`AJRIPQN`（同指标胞非零测重合 ⟹ 胞作为集合相等）+ `LEPJBDJ`（非空胞的
+V 点恰为首段顶点集）直接串联。`p24_edgeX_of_leaf23`（k∈{2,3} 臂）原经
+PA2 `RVFXZBU2_concl` 的置换结构间接获得同一首段集合形——本件按其真实
+消费面就地闭合；完整置换形（`∃ p, permutes p (Set.Icc 0 (i - 1)) ∧
+vl = leftActionList p ul`，pack_concl.hl:145-147）仍冻结于 PA2 桩，本件不触。 -/
+private theorem p24_rvfxzbu2_prefix (V : Set V3) (ul vl : List V3) (k : ℕ)
+    (hs : saturated V) (hp : Packing V) (hbu : barV V 3 ul) (hbv : barV V 3 vl)
+    (hk1 : 1 ≤ k) (hk4 : k ≤ 4)
+    (hnn : ¬nullSet (mcell k V ul ∩ mcell k V vl)) :
+    setOfList (truncateSimplex (k - 1) ul) = setOfList (truncateSimplex (k - 1) vl) := by
+  have hvne : volume (mcell k V ul ∩ mcell k V vl) ≠ 0 := hnn
+  have hneu : mcell k V ul ≠ ∅ := by
+    intro he
+    exact hvne (by rw [he, Set.empty_inter]; exact measure_empty)
+  obtain ⟨-, hcell⟩ := AJRIPQN V ul vl k k hs hp hbu hbv
+    (by simp; omega) (by simp; omega) hnn
+  have hneu' : mcell k V vl ≠ ∅ := by
+    rw [hcell] at hneu
+    exact hneu
+  have hVu : V ∩ mcell k V ul = setOfList (truncateSimplex (k - 1) ul) :=
+    LEPJBDJ V ul k hs hp hbu hk1 hk4 hneu
+  have hVv : V ∩ mcell k V vl = setOfList (truncateSimplex (k - 1) vl) :=
+    LEPJBDJ V vl k hs hp hbv hk1 hk4 hneu'
+  rw [← hVu, ← hVv, hcell]
+
 /-- k∈{2,3} 叶表胞在非零测假设下的 edgeX 指认（SF-46 测度级收口 k∈{2,3} 臂
-的缺口件；链 = cellParams ε-见证 + AJRIPQN 指标归一（R3）+ RVFXZBU2_concl
-置换结构（R3-class shim）+ 首段集合不变性 ⟹ `{u0,u1} ⊆ VX`。HL 锚点 =
+的缺口件；链 = cellParams ε-见证 + AJRIPQN 指标归一（R3）+ 同指标胞重合的
+首段顶点集一致 `p24_rvfxzbu2_prefix`（AJRIPQN+PA11 `LEPJBDJ`，标准三；
+BF 波 2026-10-23 起替换原 PA2 `RVFXZBU2_concl` shim，见 lane 快照 SF 草案）
+⟹ `{u0,u1} ⊆ VX`。HL 锚点 =
 REUHADY.hl:7628-7745（HDTFNFZ+LEPJBDJ 段）在 `¬NULLSET (X INTER E)` 门下的
-k∈{2,3} 臂；本件以 AJRIPQN+RVFXZBU2 替换 HDTFNFZ/LEPJBDJ（R1-GIANT open），
-保持覆盖链 R1-free。 -/
+k∈{2,3} 臂；本件以 AJRIPQN+LEPJBDJ 替换 HDTFNFZ/LEPJBDJ 的 R1 形（指认步
+同构），保持覆盖链 R1-free。 -/
 private theorem p24_edgeX_of_leaf23 (V : Set V3) (u0 u1 : V3) (e : Set V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
     (he : e = {u0, u1})
@@ -4684,23 +4716,20 @@ private theorem p24_edgeX_of_leaf23 (V : Set V3) (u0 u1 : V3) (e : Set V3)
     exact hnn
   obtain ⟨hk'k, -⟩ := AJRIPQN V (cellParams V (mcell k V vl)).2 vl
     (cellParams V (mcell k V vl)).1 k hs hp hcp.2.1 hbar hk'4i hk4 hvol
-  -- 同指标胞重合的置换结构（RVFXZBU2_concl，R3-class shim，如实记账）
-  obtain ⟨p, hpIcc, hvleq⟩ := RVFXZBU2_concl V (cellParams V (mcell k V vl)).2 vl
-    (cellParams V (mcell k V vl)).1 hs hp hcp.2.1 hbar (by
-      rw [← hcp.2.2, hk'k, Set.inter_self]
-      exact hnn)
-  rw [hk'k] at hpIcc
-  -- 首段集合不变性（件 3；← hvleq 只折左行动外层，不触 cellParams 内层）
-  have hlen4 : (cellParams V (mcell k V vl)).2.length = 4 := by
-    obtain ⟨a, b, c, dd, hvul⟩ := BARV_3_EXPLICIT V (cellParams V (mcell k V vl)).2 hcp.2.1
-    rw [hvul]; rfl
+  -- 同指标胞重合 ⟹ 首段顶点集一致（p24_rvfxzbu2_prefix：AJRIPQN 胞同 +
+  -- LEPJBDJ 顶点抽取；BF 波 2026-10-23 替换原 PA2 RVFXZBU2_concl 置换
+  -- 结构提取——本件消费面只需首段集合形，完整置换形仍冻结于 PA2 桩）
+  have htr'p : setOfList (truncateSimplex ((cellParams V (mcell k V vl)).1 - 1)
+      (cellParams V (mcell k V vl)).2)
+      = setOfList (truncateSimplex ((cellParams V (mcell k V vl)).1 - 1) vl) :=
+    p24_rvfxzbu2_prefix V (cellParams V (mcell k V vl)).2 vl
+      (cellParams V (mcell k V vl)).1 hs hp hcp.2.1 hbar
+      (by rw [hk'k]; rcases hk with _ | _ <;> omega)
+      (by rw [hk'k]; rcases hk with _ | _ <;> omega)
+      (by rw [← hcp.2.2, hk'k, Set.inter_self]; exact hnn)
+  rw [hk'k] at htr'p
   have htr' : setOfList (truncateSimplex (k - 1) (cellParams V (mcell k V vl)).2)
-      = setOfList (truncateSimplex (k - 1) vl) := by
-    have h1 := p24_setOfList_trunc_leftAction (cellParams V (mcell k V vl)).2 (k - 1) p hpIcc
-      (by rw [show (k - 1) + 1 = k from by omega, hlen4]
-          rcases hk with _ | _ <;> omega)
-    rw [← hvleq] at h1
-    exact h1.symm
+      = setOfList (truncateSimplex (k - 1) vl) := htr'p
   -- VX 展开（null 分支排除 + k = k' 归一）
   have hk0 : (cellParams V (mcell k V vl)).1 ≠ 0 := by
     rw [hk'k]; rcases hk with _ | _ <;> omega
