@@ -95,6 +95,12 @@ this file.  All other items here discharge nothing yet.
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto20
+import Kepler.Text.LocalAuto22
+import Kepler.Text.LocalAuto23
+import Kepler.Text.LocalAuto26
+import Kepler.Text.LocalAuto27
+import Kepler.Text.LocalAuto28
 import Kepler.Text.SphereKit
 import Kepler.Geom.Aff
 import Kepler.Geom.Azim
@@ -108,11 +114,166 @@ open Kepler.Geom Set Classical
 
 /-! ## Section A: JEJTVGB.hl (appendix, main estimate, check completeness) -/
 
+/-! ### p16h_* helper block (JEJTVGB wave; pure addition, zero-taint kit)
+
+Assembly kit closing `BKOSSGE_p16`, `JEJTVGB_case_breakdown_p16` and
+`JEJTVGB_p16` (HOL BKOSSGE.hl:304-396 / JEJTVGB.hl:23-230).  Every item
+here is self-contained: no `main_nonlinear_terminal_v11` premise, no
+sorried upstream arrow is *declared* here (the sorried arrows are only
+*consumed* at the assembly sites, as the ledger allows).  Consumed
+upstream (assembly level): LocalAuto20.OEHDBEN (the hexagons.hl:2135
+form, which settles the SF OEHDBEN drift by plan (a) — import of the
+existing port, no twin), LocalAuto22.OCBICBY_p22 / scs_arrow_sing_empty_p22 /
+is_scs_3{M1,T1,T5}_p22, LocalAuto23.s_init_list_alt_p23 / LFLACKU_p23,
+LocalAuto26.XWNHLMD_MM_p26, LocalAuto27.EAPGLE_p27, LocalAuto28.MMS_IMP_BBS_p28. -/
+
+/-- `scsBasicV39` holds for every `mkUnadornedV39` system: it is plainly
+unadorned (`a = am`, `b = bm`, `lo = hi = str = False`) and its `J` is
+everywhere `False`. -/
+theorem p16h_basic_mk (k : ℕ) (d : ℝ) (a b : ℕ → ℕ → ℝ) :
+    scsBasicV39 (mkUnadornedV39 k d a b) :=
+  ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+
+/-- Residues mod 3 exhaust the three classes. -/
+theorem p16h_mod3_cases (n : ℕ) : n % 3 = 0 ∨ n % 3 = 1 ∨ n % 3 = 2 := by
+  omega
+
+/-- Periodicity transport for the 3-systems: a 3-periodic list is a
+function of its residue. -/
+theorem p16h_periodic3 {v : ℕ → V3} (hp : Periodic v 3) (i : ℕ) :
+    v i = v (i % 3) := by
+  have step : ∀ n m : ℕ, v (m + n * 3) = v m := by
+    intro n
+    induction n with
+    | zero => intro m; simp
+    | succ k ih =>
+        intro m
+        have he : m + (k + 1) * 3 = (m + k * 3) + 3 := by
+          rw [Nat.succ_mul, Nat.add_assoc]
+        rw [he, hp]
+        exact ih m
+  have hstep := step (i / 3) (i % 3)
+  have he : i % 3 + (i / 3) * 3 = i := by
+    rw [Nat.mul_comm]
+    exact Nat.mod_add_div i 3
+  rw [he] at hstep
+  exact hstep
+
+/-- Slot table of `scs3M1`'s lower matrix (`funlist [(0,1) ↦ 2*h0] 2 3`). -/
+theorem p16h_a_3M1 (i j : ℕ) : scs3M1.a i j =
+    (if i % 3 = j % 3 then 0
+      else if psort 3 (i, j) = psort 3 (0, 1) then 2 * h0 else 2) := rfl
+
+/-- Slot table of `scs3M1`'s upper matrix (`funlist [(0,1) ↦ cstab] (2*h0) 3`). -/
+theorem p16h_b_3M1 (i j : ℕ) : scs3M1.b i j =
+    (if i % 3 = j % 3 then 0
+      else if psort 3 (i, j) = psort 3 (0, 1) then cstab else 2 * h0) := rfl
+
+/-- Slot table of `scs3T1`'s lower matrix (`funlist [(0,1) ↦ sqrt8] 2 3`). -/
+theorem p16h_a_3T1 (i j : ℕ) : scs3T1.a i j =
+    (if i % 3 = j % 3 then 0
+      else if psort 3 (i, j) = psort 3 (0, 1) then Real.sqrt 8 else 2) := rfl
+
+/-- Slot table of `scs3T5`'s upper matrix (`funlist [(0,1) ↦ sqrt8] (2*h0) 3`). -/
+theorem p16h_b_3T5 (i j : ℕ) : scs3T5.b i j =
+    (if i % 3 = j % 3 then 0
+      else if psort 3 (i, j) = psort 3 (0, 1) then Real.sqrt 8 else 2 * h0) := rfl
+
+/-- The `(0, 1)`-class of `psort 3` spelled out. -/
+theorem p16h_psort01 (i j : ℕ) :
+    (psort 3 (i, j) = psort 3 (0, 1) ↔
+      i % 3 = 0 ∧ j % 3 = 1 ∨ i % 3 = 1 ∧ j % 3 = 0) := by
+  show (if i % 3 ≤ j % 3 then (i % 3, j % 3) else (j % 3, i % 3)) =
+      (if (0:ℕ) % 3 ≤ 1 % 3 then (0 % 3, 1 % 3) else (1 % 3, 0 % 3)) ↔ _
+  by_cases h : i % 3 ≤ j % 3
+  · rw [if_pos h, if_pos (by omega), Prod.mk.injEq]
+    constructor
+    · rintro ⟨h1, h2⟩
+      exact Or.inl ⟨h1, h2⟩
+    · rintro (⟨h1, h2⟩ | ⟨h1, h2⟩)
+      · exact ⟨h1, h2⟩
+      · omega
+  · push_neg at h
+    rw [if_neg (by omega), if_pos (by omega), Prod.mk.injEq]
+    constructor
+    · rintro ⟨h1, h2⟩
+      exact Or.inr ⟨h2, h1⟩
+    · rintro (⟨h1, h2⟩ | ⟨h1, h2⟩)
+      · omega
+      · exact ⟨h2, h1⟩
+
+/-- BBs transport `scs3M1 → scs3T5` on the `dist(v 0, v 1) ≤ sqrt8` branch:
+the two systems share `k`, `d` and the whole `a` matrix, and their `b`
+matrices agree off the `(0, 1)` class (HOL BKOSSGE.hl:326-374). -/
+theorem p16h_bbs_3T5 {v : ℕ → V3} (hv : BBsV39 scs3M1 v)
+    (hd : dist (v 0) (v 1) ≤ Real.sqrt 8) : BBsV39 scs3T5 v := by
+  have hper : ∀ i : ℕ, v i = v (i % 3) := fun i => p16h_periodic3 hv.2.1 i
+  have hub : ∀ i j, dist (v i) (v j) ≤ scs3T5.b i j := by
+    intro i j
+    rcases p16h_mod3_cases i with hi | hi | hi <;>
+      rcases p16h_mod3_cases j with hj | hj | hj <;>
+      rw [p16h_b_3T5, hper i, hper j] <;>
+      simp only [p16h_psort01, hi, hj, reduceIte] <;>
+      first
+        | exact hd
+        | (rw [dist_comm]; exact hd)
+        | exact (hv.2.2.1 0 2).2
+        | exact (hv.2.2.1 1 2).2
+        | exact (hv.2.2.1 2 0).2
+        | exact (hv.2.2.1 2 1).2
+        | simp
+  exact ⟨hv.1, hv.2.1, fun i j => And.intro (hv.2.2.1 i j).1 (hub i j),
+    Or.inl (le_refl _)⟩
+
+/-- BBs transport `scs3M1 → scs3T1` on the `sqrt8 ≤ dist(v 0, v 1)` branch:
+the two systems share `k` and the whole `b` matrix, and their `a` matrices
+agree off the `(0, 1)` class (HOL BKOSSGE.hl:376-395). -/
+theorem p16h_bbs_3T1 {v : ℕ → V3} (hv : BBsV39 scs3M1 v)
+    (hd : Real.sqrt 8 ≤ dist (v 0) (v 1)) : BBsV39 scs3T1 v := by
+  have hper : ∀ i : ℕ, v i = v (i % 3) := fun i => p16h_periodic3 hv.2.1 i
+  have hlo : ∀ i j, scs3T1.a i j ≤ dist (v i) (v j) := by
+    intro i j
+    rcases p16h_mod3_cases i with hi | hi | hi <;>
+      rcases p16h_mod3_cases j with hj | hj | hj <;>
+      rw [p16h_a_3T1, hper i, hper j] <;>
+      simp only [p16h_psort01, hi, hj, reduceIte] <;>
+      first
+        | exact hd
+        | (rw [dist_comm]; exact hd)
+        | exact (hv.2.2.1 0 2).1
+        | exact (hv.2.2.1 1 2).1
+        | exact (hv.2.2.1 2 0).1
+        | exact (hv.2.2.1 2 1).1
+        | simp
+  exact ⟨hv.1, hv.2.1, fun i j => And.intro (hlo i j) ((hv.2.2.1 i j).2),
+    Or.inl (le_refl _)⟩
+
 /-- HOL `BKOSSGE` (BKOSSGE.hl:304), stated here because `JEJTVGB_p16`
 consumes it; the proof body sits in Section C.  Verbatim
 `LocalAuto1.BKOSSGE_concl` (appendix.hl:1564). -/
 theorem BKOSSGE_p16 : scsArrowV39 {scs3M1} {scs3T1, scs3T5} := by
-  sorry
+  refine ⟨fun s hs => ?_, ?_⟩
+  · simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hs
+    rcases hs with rfl | rfl
+    · exact is_scs_3T1_p22
+    · exact is_scs_3T5_p22
+  · rcases Classical.em (MMsV39 scs3M1 = ∅) with hE | hNE
+    · refine Or.inl (fun s' hs' => ?_)
+      simp only [Set.mem_singleton_iff] at hs'
+      subst hs'
+      exact hE
+    · obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hNE
+      have hbb : BBsV39 scs3M1 v := MMS_IMP_BBS_p28 scs3M1 v hv
+      rcases le_or_gt (dist (v 0) (v 1)) (Real.sqrt 8) with hle | hlt
+      · refine Or.inr ⟨scs3T5, by simp, ?_⟩
+        exact XWNHLMD_MM_p26 scs3M1 scs3T5 v is_scs_3M1_p22 is_scs_3T5_p22
+          (p16h_basic_mk _ _ _ _) (p16h_basic_mk _ _ _ _) rfl hv
+          (p16h_bbs_3T5 hbb hle) (le_refl _)
+      · refine Or.inr ⟨scs3T1, by simp, ?_⟩
+        exact XWNHLMD_MM_p26 scs3M1 scs3T1 v is_scs_3M1_p22 is_scs_3T1_p22
+          (p16h_basic_mk _ _ _ _) (p16h_basic_mk _ _ _ _) rfl hv
+          (p16h_bbs_3T1 hbb (le_of_lt hlt))
+          (show ((0.103:ℝ) ≤ 0.11) by norm_num)
 
 /-- HOL `SCS_ARROW_TRANS_SING` (JEJTVGB.hl:14): one-step transitivity of
 `scs_arrow_v39` into the empty target. -/
@@ -130,6 +291,89 @@ theorem scsArrowTransSing_p16 (a : ScsV39) (S : Set ScsV39)
   rcases (hS x hxS).2 with h3 | h3
   · exact hms (h3 x (by simp))
   · exact absurd h3 (by simp)
+
+/-- One-step transitivity through a one-element target list. -/
+theorem p16h_kill1 (a x1 : ScsV39) (h : scsArrowV39 {a} ({x1} : Set ScsV39))
+    (h1 : scsArrowV39 {x1} (∅ : Set ScsV39)) : scsArrowV39 {a} (∅ : Set ScsV39) :=
+  scsArrowTransSing_p16 a _ h (by
+    rintro x hx
+    simp only [Set.mem_singleton_iff] at hx
+    subst hx
+    exact h1)
+
+/-- One-step transitivity through a two-element target list. -/
+theorem p16h_kill2 (a x1 x2 : ScsV39)
+    (h : scsArrowV39 {a} ({x1, x2} : Set ScsV39))
+    (h1 : scsArrowV39 {x1} (∅ : Set ScsV39)) (h2 : scsArrowV39 {x2} (∅ : Set ScsV39)) :
+    scsArrowV39 {a} (∅ : Set ScsV39) :=
+  scsArrowTransSing_p16 a _ h (by
+    rintro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl
+    · exact h1
+    · exact h2)
+
+/-- One-step transitivity through a three-element target list. -/
+theorem p16h_kill3 (a x1 x2 x3 : ScsV39)
+    (h : scsArrowV39 {a} ({x1, x2, x3} : Set ScsV39))
+    (h1 : scsArrowV39 {x1} (∅ : Set ScsV39)) (h2 : scsArrowV39 {x2} (∅ : Set ScsV39))
+    (h3 : scsArrowV39 {x3} (∅ : Set ScsV39)) : scsArrowV39 {a} (∅ : Set ScsV39) :=
+  scsArrowTransSing_p16 a _ h (by
+    rintro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl
+    · exact h1
+    · exact h2
+    · exact h3)
+
+/-- One-step transitivity through a four-element target list. -/
+theorem p16h_kill4 (a x1 x2 x3 x4 : ScsV39)
+    (h : scsArrowV39 {a} ({x1, x2, x3, x4} : Set ScsV39))
+    (h1 : scsArrowV39 {x1} (∅ : Set ScsV39)) (h2 : scsArrowV39 {x2} (∅ : Set ScsV39))
+    (h3 : scsArrowV39 {x3} (∅ : Set ScsV39)) (h4 : scsArrowV39 {x4} (∅ : Set ScsV39)) :
+    scsArrowV39 {a} (∅ : Set ScsV39) :=
+  scsArrowTransSing_p16 a _ h (by
+    rintro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl | rfl
+    · exact h1
+    · exact h2
+    · exact h3
+    · exact h4)
+
+/-- One-step transitivity through a ten-element target list (the `HIJQAHA`
+slot). -/
+theorem p16h_kill10 (a x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 : ScsV39)
+    (h : scsArrowV39 {a} ({x1, x2, x3, x4, x5, x6, x7, x8, x9, x10} : Set ScsV39))
+    (h1 : scsArrowV39 {x1} (∅ : Set ScsV39)) (h2 : scsArrowV39 {x2} (∅ : Set ScsV39))
+    (h3 : scsArrowV39 {x3} (∅ : Set ScsV39)) (h4 : scsArrowV39 {x4} (∅ : Set ScsV39))
+    (h5 : scsArrowV39 {x5} (∅ : Set ScsV39)) (h6 : scsArrowV39 {x6} (∅ : Set ScsV39))
+    (h7 : scsArrowV39 {x7} (∅ : Set ScsV39)) (h8 : scsArrowV39 {x8} (∅ : Set ScsV39))
+    (h9 : scsArrowV39 {x9} (∅ : Set ScsV39))
+    (h10 : scsArrowV39 {x10} (∅ : Set ScsV39)) : scsArrowV39 {a} (∅ : Set ScsV39) :=
+  scsArrowTransSing_p16 a _ h (by
+    rintro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    · exact h1
+    · exact h2
+    · exact h3
+    · exact h4
+    · exact h5
+    · exact h6
+    · exact h7
+    · exact h8
+    · exact h9
+    · exact h10)
+
+/-- Arrow transport along set equalities (the `_concl` registry sometimes
+enumerates an arrow's target set in a different order than the frozen
+breakdown slots). -/
+theorem p16h_arrow_congr {S1 S2 S1' S2' : Set ScsV39}
+    (ha : scsArrowV39 S1 S2) (h1 : S1 = S1') (h2 : S2 = S2') :
+    scsArrowV39 S1' S2' := by
+  rw [← h1, ← h2]; exact ha
+
 
 /-- HOL `JEJTVGB_case_breakdown` (JEJTVGB.hl:23): the terminal arrow
 case breakdown — 23 single arrows (annotated in the source by their
@@ -166,7 +410,71 @@ theorem JEJTVGB_case_breakdown_p16 (h : main_nonlinear_terminal_v11)
     (a22 : scsArrowV39 {scs4M8} {scs4M6', scs3T7, scs3T4})                      -- MIQMCSN
     (a23 : scsArrowV39 {scs3M1} {scs3T1, scs3T5}) :                             -- BKOSSGE
     JEJTVGB_assume_v39 := by
-  sorry
+  -- OCBICBY: the 14 T-row systems arrow to the empty system (HOL JEJTVGB.hl:62).
+  obtain ⟨o61, o51, o41, o42, o43, o44, o45, o31, -, o33, o34, o35, o36, o37⟩ :=
+    OCBICBY_p22 h
+  -- The SCS_ARROW_TRANS_SING walk (HOL JEJTVGB.hl:64-215), bottoms up.
+  have e3M1 : scsArrowV39 {scs3M1} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a23 o31 o35
+  have e46 : scsArrowV39 {scs4M6'} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a20 o43 o45
+  have e47 : scsArrowV39 {scs4M7} (∅ : Set ScsV39) :=
+    p16h_kill4 _ _ _ _ _ a21 e46 o33 e3M1 o34
+  have e48 : scsArrowV39 {scs4M8} (∅ : Set ScsV39) :=
+    p16h_kill3 _ _ _ _ a22 e46 o37 o34
+  have e45 : scsArrowV39 {scs4M5'} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a19 e48 o34
+  have e44 : scsArrowV39 {scs4M4'} (∅ : Set ScsV39) :=
+    p16h_kill4 _ _ _ _ _ a18 e47 o33 e3M1 o34
+  have e43 : scsArrowV39 {scs4M3'} (∅ : Set ScsV39) :=
+    p16h_kill3 _ _ _ _ a17 e46 o31 o36
+  have e42 : scsArrowV39 {scs4M2} (∅ : Set ScsV39) :=
+    p16h_kill3 _ _ _ _ a16 e46 e3M1 o34
+  have e4I3 : scsArrowV39 {scs4I3} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a15 e46 o44
+  have eSD41 : scsArrowV39 {scsStabDiagV39 scs4I1 0 2} (∅ : Set ScsV39) :=
+    p16h_kill1 _ _ a14 e3M1
+  have e4I2 : scsArrowV39 {scs4I2} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a13 o41 o42
+  have e4I1 : scsArrowV39 {scs4I1} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a12 e4I2 eSD41
+  have eSD52 : scsArrowV39 {scsStabDiagV39 scs5M1 2 4} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a11 e3M1 e45
+  have eSD53 : scsArrowV39 {scsStabDiagV39 scs5M1 0 3} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a10 e44 e3M1
+  have eSD51 : scsArrowV39 {scsStabDiagV39 scs5M1 0 2} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a09 o34 e42
+  have eSDI52 : scsArrowV39 {scsStabDiagV39 scs5I2 0 2} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a08 o31 e43
+  have eSDI51 : scsArrowV39 {scsStabDiagV39 scs5I1 0 2} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a07 e3M1 e42
+  have e5M2 : scsArrowV39 {scs5M2} (∅ : Set ScsV39) :=
+    p16h_kill10 _ _ _ _ _ _ _ _ _ _ _ a06 o51 eSDI52 eSD51 eSD53 eSD52 e46 e47 e48
+      o31 o34
+  have e5M1 : scsArrowV39 {scs5M1} (∅ : Set ScsV39) :=
+    p16h_kill4 _ _ _ _ _ a05 eSD51 eSD53 eSD52 e5M2
+  have e5I3 : scsArrowV39 {scs5I3} (∅ : Set ScsV39) :=
+    p16h_kill4 _ _ _ _ _ a04 eSD51 eSD53 eSD52 e5M2
+  have e5I2 : scsArrowV39 {scs5I2} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a03 eSDI52 e5M2
+  have e5I1 : scsArrowV39 {scs5I1} (∅ : Set ScsV39) :=
+    p16h_kill2 _ _ _ a02 eSDI51 e5M2
+  have e6I1 : scsArrowV39 {scs6I1} (∅ : Set ScsV39) :=
+    p16h_kill4 _ _ _ _ _ a01 o61 e5M1 e42 e3M1
+  -- Final kill (HOL JEJTVGB.hl:217): EAPGLE + s_init_list_alt + LFLACKU.
+  refine EAPGLE_p27 ?_
+  intro s hs
+  rw [s_init_list_alt_p23] at hs
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at hs
+  rcases hs with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  · exact (scs_arrow_sing_empty_p22 scs6I1).1 e6I1
+  · exact (scs_arrow_sing_empty_p22 scs5I1).1 e5I1
+  · exact (scs_arrow_sing_empty_p22 scs4I1).1 e4I1
+  · exact (scs_arrow_sing_empty_p22 scs3I1).1 (LFLACKU_p23 h)
+  · exact (scs_arrow_sing_empty_p22 scs5I2).1 e5I2
+  · exact (scs_arrow_sing_empty_p22 scs4I2).1 e4I2
+  · exact (scs_arrow_sing_empty_p22 scs5I3).1 e5I3
+  · exact (scs_arrow_sing_empty_p22 scs4I3).1 e4I3
 
 /-- HOL `JEJTVGB` (JEJTVGB.hl:218): `main_nonlinear_terminal_v11` implies
 `JEJTVGB_assume_v39`.
@@ -178,7 +486,23 @@ the older `{..., scs3T1}` form, so the mechanical assembly
 `BKOSSGE_p16`) is short exactly that one theorem.  In HOL the step is
 pure rewriting (`REWRITE_TAC (map UNDISCH2 [...])`). -/
 theorem JEJTVGB_p16 (h : main_nonlinear_terminal_v11) : JEJTVGB_assume_v39 := by
-  sorry
+  exact JEJTVGB_case_breakdown_p16 h (OEHDBEN h) OTMTOTJ1_concl OTMTOTJ2_concl
+    OTMTOTJ3_concl OTMTOTJ4_concl
+    (p16h_arrow_congr HIJQAHA_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF1_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF2_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF3_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    CNICGSF4_concl
+    (p16h_arrow_congr CNICGSF5_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    FYSSVEV_concl ARDBZYE_concl AUEAHEH_concl
+    (p16h_arrow_congr VQFYMZY_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr BNAWVNH_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr RAWZDIB_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr MFKLVDK_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr RYPDIXT_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    NWDGKXH_concl
+    (p16h_arrow_congr YOBIMPP_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    MIQMCSN_concl BKOSSGE_p16
 
 /-- HOL `lp_main_estimate` (JEJTVGB.hl:232, `new_definition` of the
 equation with `Appendix.JEJTVGB_concl`). -/
