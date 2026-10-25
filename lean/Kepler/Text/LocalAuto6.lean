@@ -36,6 +36,7 @@ Encoding (HOL → Lean):
 
 import Kepler.Text.LocalAuto2
 import Kepler.Text.LocalAuto3
+import Kepler.Text.LocalAuto5
 import Kepler.Text.Polytope
 import Kepler.Text.Fan
 import Mathlib
@@ -714,8 +715,9 @@ theorem IN_DARTS_EXTENSION {x y : V3} {E S : Set (Set V3)} (h : {x, y} ∈ E) :
 
 /-- HOL `LOCAL_RHO_NODE_PAIR_E` (local_lemmas1.hl:1857) — giant. -/
 theorem LOCAL_RHO_NODE_PAIR_E (h : localFan_p2 V E FF) (hv : v ∈ V) :
-    {v, rhoNode1_p2 FF v} ∈ E :=
-  sorry
+    {v, rhoNode1_p2 FF v} ∈ E := by
+  have hd : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS2 h).2 v hv
+  exact LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hd
 
 /-- HOL `CROSS_PAIR_NOT_IN_FF` (local_lemmas1.hl:2088) — giant. -/
 theorem CROSS_PAIR_NOT_IN_FF (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
@@ -727,7 +729,7 @@ theorem CROSS_PAIR_NOT_IN_FF (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈
 `Local_lemmas.LOFA_IMP_ITER_RHO_NODE_ID` is external, not ported) — giant. -/
 theorem LOFA_IMP_ITER_RHO_NODE_ID2 (h : localFan_p2 V E FF) (hv : v ∈ V) :
     (rhoNode1_p2 FF)^[V.ncard] v = v :=
-  sorry
+  LOFA_IMP_ITER_RHO_NODE_ID h hv
 
 /-! ## Slicing chapter: the local-fan half-circle kit (giants, stated
 verbatim over the `_p2` kit) -/
@@ -829,8 +831,12 @@ theorem DETERMINE_FV (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
 
 /-- HOL `CARD_IS_LEAST_CYCLE` (local_lemmas1.hl:3056) — giant. -/
 theorem CARD_IS_LEAST_CYCLE (h : localFan_p2 V E FF) (hv : v ∈ V) (n : ℕ)
-    (hn : (rhoNode1_p2 FF)^[n] v = v) (hnz : n ≠ 0) : V.ncard ≤ n :=
-  sorry
+    (hn : (rhoNode1_p2 FF)^[n] v = v) (hnz : n ≠ 0) : V.ncard ≤ n := by
+  by_contra hc
+  have hlt : n < V.ncard := by omega
+  have hp : 0 < n := by omega
+  have hne := LOFA_IMP_DIS_ELMS23 h hv 0 n hp hlt
+  exact hne (by rw [hn]; rfl)
 
 /-- HOL `HAFL_CIRCLE_FORM_LOCAL_FAN` (local_lemmas1.hl:3077) — giant. -/
 theorem HAFL_CIRCLE_FORM_LOCAL_FAN (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
@@ -858,8 +864,23 @@ theorem HAFL_CIRCLE_FORM_LOCAL_FAN2 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw 
 
 /-- HOL `LOCAL_FAN_RHO_NODE_IVS` (local_lemmas1.hl:3768) — giant. -/
 theorem LOCAL_FAN_RHO_NODE_IVS (h : localFan_p2 V E FF) (hv : v ∈ V) :
-    rhoNode1_p2 FF (ivsRhoNode1_p2 FF v) = v :=
-  sorry
+    rhoNode1_p2 FF (ivsRhoNode1_p2 FF v) = v := by
+  have hpos : 0 < V.ncard := by
+    by_contra hcon
+    have h0 : V.ncard = 0 := by omega
+    have hV0 : V = ∅ := Set.ncard_eq_zero (hs := LOCAL_FAN_FINITE_V h) |>.mp h0
+    rw [hV0] at hv
+    exact absurd hv (by simp)
+  obtain ⟨c, hc⟩ : ∃ c : ℕ, V.ncard = c + 1 := ⟨V.ncard - 1, by omega⟩
+  have hivs : (rhoNode1_p2 FF)^[c] v = ivsRhoNode1_p2 FF v := by
+    have hit := ITER_CARD_MINUS1_EQ_IVS_RN1 h hv
+    rw [hc] at hit
+    exact hit
+  have hstep : rhoNode1_p2 FF ((rhoNode1_p2 FF)^[c] v)
+      = (rhoNode1_p2 FF)^[c + 1] v :=
+    (Function.iterate_succ_apply' (rhoNode1_p2 FF) c v).symm
+  rw [← hivs, hstep, ← hc]
+  exact LOFA_IMP_ITER_RHO_NODE_ID h hv
 
 /-- HOL `LOCAL_FAN_IVS_IN_V` (local_lemmas1.hl:3797) — giant. -/
 theorem LOCAL_FAN_IVS_IN_V (h : localFan_p2 V E FF) (hv : v ∈ V) :
@@ -890,14 +911,26 @@ theorem WEDGE_IN_FAN_RHOND_IVS_RHOND (h : localFan_p2 V E FF) (hv : v ∈ V) :
 
 /-- HOL `IVS_RHO_NODE_DIFF_ID` (local_lemmas1.hl:3866) — giant. -/
 theorem IVS_RHO_NODE_DIFF_ID (h : localFan_p2 V E FF) (hv : v ∈ V) :
-    ivsRhoNode1_p2 FF v ≠ v :=
-  sorry
+    ivsRhoNode1_p2 FF v ≠ v := by
+  have hit := ITER_CARD_MINUS1_EQ_IVS_RN1 h hv
+  have hmem := LOCAL_FAN_ITER_RHO_NODE_IN_V h hv (V.ncard - 1)
+  rw [hit] at hmem
+  obtain ⟨hne, -, -⟩ := LOCAL_FAN_CHARACTER_OF_RHO_NODE h hmem
+  have hid : rhoNode1_p2 FF (ivsRhoNode1_p2 FF v) = v := LOCAL_FAN_RHO_NODE_IVS h hv
+  rw [hid] at hne
+  exact Ne.symm hne
 
 /-- HOL `POINT_PRESENTED_IN_RHOND1` (local_lemmas1.hl:3877) — giant. -/
 theorem POINT_PRESENTED_IN_RHOND1 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V) :
     ∃ n : ℕ, n < V.ncard ∧ (rhoNode1_p2 FF)^[n] v = w ∧
-      (∀ m : ℕ, m < n → ¬((rhoNode1_p2 FF)^[m] v = w)) :=
-  sorry
+      (∀ m : ℕ, m < n → ¬((rhoNode1_p2 FF)^[m] v = w)) := by
+  have hset := LOFA_IMP_LT_CARD_SET_V h hv
+  have hmem : w ∈ {(rhoNode1_p2 FF)^[n] v | n < V.ncard} := by
+    rw [hset]; exact hw
+  obtain ⟨n, hnlt, hnw⟩ := hmem
+  refine ⟨n, hnlt, hnw, ?_⟩
+  intro m hm hmeq
+  exact LOFA_IMP_DIS_ELMS23 h hv m n hm hnlt (hnw.trans hmeq.symm)
 
 /-- HOL `POINTS_IN_HAFL_CIRCLE` (local_lemmas1.hl:3894) — giant. -/
 theorem POINTS_IN_HAFL_CIRCLE (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
@@ -952,8 +985,12 @@ theorem DIFFERENCE_IMP_LT_CARDV (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w 
 /-- HOL `LT_CARD_MONO_LOFA` (local_lemmas1.hl:4746) — giant. -/
 theorem LT_CARD_MONO_LOFA (h : localFan_p2 V E FF) (hv : v ∈ V) :
     ∀ i j : ℕ, i < V.ncard ∧ j < V.ncard ∧ (rhoNode1_p2 FF)^[i] v = (rhoNode1_p2 FF)^[j] v →
-      i = j :=
-  sorry
+      i = j := by
+  intro i j ⟨hilt, hjlt, hij⟩
+  by_contra hne
+  rcases Nat.lt_or_gt_of_ne hne with hlt | hgt
+  · exact (LOFA_IMP_DIS_ELMS23 h hv i j hlt hjlt).symm hij
+  · exact LOFA_IMP_DIS_ELMS23 h hv j i hgt hilt hij
 
 /-- HOL `CONDS_IN_V_PRIME_NUM` (local_lemmas1.hl:4759) — giant. -/
 theorem CONDS_IN_V_PRIME_NUM (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
