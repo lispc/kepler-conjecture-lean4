@@ -2834,4 +2834,222 @@ theorem p3i_IPVICGW (cc : CcV11) (hb : cc_bool_model_v11 cc) (hp : cc_bool_prep_
   have hcon := p3i_PRE_IPVICGW cc ⟨hb, hp, hr, hsum⟩ hnn5
   linarith
 
+/-! ## OXLZLEZ2 W4: RSIWAMP + UTEOITF (OXLZLEZ2.hl:3320 & 3457-3918; GRHIDFA
+wave plan W4)
+
+`RSIWAMP` is the one-line assembly of `CC_CARD_LESS_THAN_5` with `PRE_IPVICGW`
+(the card = 5 disjunct collapses against the negative sum).  `UTEOITF` is the
+HOL `ASM_CASES_TAC` classification over `nn = cc_card_v11 cc` (RSIWAMP bounds
+`nn ≤ 4`, THREE_LE_CC_CARD gives `3 ≤ nn`, so the case split is `nn = 3` vs
+`nn = 4`): the `qy` witness `i` is residue-unique (UNIQUE_QY2 + MOD_INJ11), the
+`nn = 3` arm closes through rows 26/27/28 and LITTLE_CC_GG3AA/BB, and the
+`nn = 4` arm walks the `qu`/`qx` configurations of `i+1, i+2, i+3` — algebraic
+leaves through rows 12/13/18/20/21/26/27/28, numeric leaves through rows
+15/17/29 with the azim window `= 2 * pi` and PI_BOUNDS, eta leaves through
+rows 10/11/33.  Each arm derives `0 ≤ ∑ gg` against `hsum`. -/
+
+/-- `cc_real_model_v11` conjunct 15. -/
+private theorem p3j_rm_qu_azim15 {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h : cc_qu_v11 cc i) : (-0.0659 : ℝ) + 0.042 * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, h15, -, -, -, -, -, -, -, -, -, -, -, -,
+    -, -, -, -, -, -⟩ := hr
+  exact h15 i h
+
+/-- `cc_real_model_v11` conjunct 17. -/
+private theorem p3j_rm_qu_azim17 {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h : cc_qu_v11 cc i) : (0.161517 : ℝ) - 0.119482 * cc_azim_v11 cc i ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, h17, -, -, -, -, -, -, -, -, -, -,
+    -, -, -, -, -⟩ := hr
+  exact h17 i h
+
+/-- `cc_real_model_v11` conjunct 33. -/
+private theorem p3j_rm_qy_eta33 {cc : CcV11} (hr : cc_real_model_v11 cc) (i : ℕ)
+    (h1 : cc_qy_v11 cc i) (h2 : cc_small_eta_v11 cc i) (h3 : cc_small_eta_v11 cc (i + 1))
+    (h4 : (1.946 : ℝ) ≤ cc_azim_v11 cc i) (h5 : cc_azim_v11 cc i ≤ (2.089 : ℝ)) :
+    (3 : ℝ) * cc_eps ≤ cc_gg_v11 cc i := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+    -, -, -, -, h33⟩ := hr
+  exact h33 i ⟨h1, h2, h3, h4, h5⟩
+
+/-- OXLZLEZ2.hl:3320 (`RSIWAMP`, proving `RSIWAMP_concl` OXLZLEZ1.hl:159-160):
+the card = 5 disjunct of `CC_CARD_LESS_THAN_5` is killed by `PRE_IPVICGW`
+(`0 ≤ ∑ gg` against `∑ gg < 0`). -/
+theorem p3j_RSIWAMP (cc : CcV11) (hb : cc_bool_model_v11 cc) (hp : cc_bool_prep_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    cc_card_v11 cc ≤ 4 := by
+  have h5 : cc_card_v11 cc ≤ 5 := p3i_CC_CARD_LESS_THAN_5 cc hb hp hr hsum
+  by_cases he : cc_card_v11 cc = 5
+  · exfalso
+    linarith [p3i_PRE_IPVICGW cc ⟨hb, hp, hr, hsum⟩ he]
+  · omega
+
+/-- OXLZLEZ2.hl:3484-3531: the `nn = 3` arm of `UTEOITF` — a `qy` witness `i`
+under a compressed 3-card model forces `0 ≤ ∑ gg` (rows 26/27/28 at `i`, rows
+12/13 packaged by `LITTLE_CC_GG3AA`/`LITTLE_CC_GG3BB`, periodic window shift). -/
+private theorem p3j_uteoitf_arm3 (cc : CcV11) (hb : cc_bool_model_v11 cc)
+    (hp : cc_bool_prep_v11 cc) (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ))
+    (hn3 : cc_card_v11 cc = 3) (i : ℕ) (hiqy : cc_qy_v11 cc i) :
+    (0 : ℝ) ≤ ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x := by
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have h3n0 : (3 : ℕ) ≠ 0 := by omega
+  have d26 : cc_gg3a_v11 cc i + cc_gg3b_v11 cc i ≤ cc_gg_v11 cc i := p3h_rm_qy_le hr hiqy
+  have hpqy3 : periodic (cc_qy_v11 cc) 3 := by rw [← hn3]; exact p3h_pf_qy hb
+  have hpgg3a3 : periodic (cc_gg3a_v11 cc) 3 := by rw [← hn3]; exact p3h_rm_periodic_gg3a hr
+  have hA : (0 : ℝ) ≤ cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) :=
+    p3g_LITTLE_CC_GG3BB cc i (fun j hj => p3h_rm_qy_gg3b hr hj)
+      (fun j hj => p3h_rm_qu_next_qy hr hj.1 hj.2) (p3g_QY_NN00 cc hb hr)
+      (p3g_QX_NN00 cc hb hr) hiqy
+  have hC : (0 : ℝ) ≤ cc_gg_v11 cc (i + 3 - 1) + cc_gg3a_v11 cc i :=
+    p3g_LITTLE_CC_GG3AA cc 3 i (fun j hj => p3h_rm_qy_gg3a hr hj)
+      (fun j hj => p3h_rm_qu_qy_next hr hj.1 hj.2) (p3g_QY_NN00 cc hb hr)
+      (p3g_QX_NN00 cc hb hr) hpqy3 hpgg3a3 h3n0 hiqy
+  have hC' : (0 : ℝ) ≤ cc_gg_v11 cc (i + 2) + cc_gg3a_v11 cc i := by
+    have hsub : i + 3 - 1 = i + 2 := by omega
+    rwa [hsub] at hC
+  have hshift : ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x
+      = cc_gg_v11 cc i + cc_gg_v11 cc (i + 1) + cc_gg_v11 cc (i + 2) := by
+    have h1 : ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x
+        = ∑ x ∈ Finset.range (cc_card_v11 cc), cc_gg_v11 cc x := by
+      rw [p3i_Icc0_eq_range _ hnn0]
+    rw [h1, ← periodic_sum (p3h_rm_periodic_gg hr) hnn0 i]
+    have he : cc_card_v11 cc - 1 + i = i + 2 := by rw [hn3]; omega
+    rw [he, p3g_SUM_NUMSEG3]
+  linarith
+
+/-- OXLZLEZ2.hl:3532-3918: the `nn = 4` arm of `UTEOITF` — the `qy` witness is
+residue-unique, so `i+1, i+2, i+3` are `qu`/`qx`; each configuration combines
+into `0 ≤ ∑ gg` (algebraic leaves: rows 12/13/18/20/21/26/27/28; numeric
+leaves: rows 15/17/29 + azim window + PI_BOUNDS; eta leaves: rows 10/11/33). -/
+private theorem p3j_uteoitf_arm4 (cc : CcV11) (hb : cc_bool_model_v11 cc)
+    (hp : cc_bool_prep_v11 cc) (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ))
+    (hn4 : cc_card_v11 cc = 4) (i : ℕ) (hiqy : cc_qy_v11 cc i) :
+    (0 : ℝ) ≤ ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x := by
+  have hnn0 : cc_card_v11 cc ≠ 0 := hb.1
+  have hi4 : i + 3 + 1 = i + 4 := by omega
+  have hsmall : ∀ j, cc_small_v11 cc j := fun j => p3i_IPVICGW cc hb hp hr hsum j
+  have hleast : ∀ j, (-cc_eps : ℝ) ≤ cc_gg_v11 cc j := fun j => p3i_gg_ge_neg_eps hb hr j
+  have e1 : (0 : ℝ) ≤ cc_gg3a_v11 cc i := p3h_rm_qy_gg3a hr hiqy
+  have e2 : (0 : ℝ) ≤ cc_gg3b_v11 cc i := p3h_rm_qy_gg3b hr hiqy
+  have d26 : cc_gg3a_v11 cc i + cc_gg3b_v11 cc i ≤ cc_gg_v11 cc i := p3h_rm_qy_le hr hiqy
+  have hpqy4 : ∀ j, cc_qy_v11 cc (j + 4) = cc_qy_v11 cc j := by
+    intro j
+    have h := p3h_pf_qy hb j
+    rwa [hn4] at h
+  have hpgg3a4 : ∀ j, cc_gg3a_v11 cc (j + 4) = cc_gg3a_v11 cc j := by
+    intro j
+    have h := p3h_rm_periodic_gg3a hr j
+    rwa [hn4] at h
+  have hqy4 : cc_qy_v11 cc (i + 4) := by rw [hpqy4]; exact hiqy
+  have hnqy : ∀ k : ℕ, 1 ≤ k → k ≤ 3 → ¬cc_qy_v11 cc (i + k) := by
+    intro k hk1 hk3 hq
+    have hmod : (i + k) % cc_card_v11 cc = i % cc_card_v11 cc :=
+      p3i_qy_unique_mod hb hp hr hsum i hiqy (i + k) hq
+    have hklt : k < cc_card_v11 cc := by rw [hn4]; omega
+    have hk0 : k ≠ 0 := by omega
+    have hinj : i % cc_card_v11 cc ≠ (i + k) % cc_card_v11 cc :=
+      p3g_MOD_INJ11 (cc_card_v11 cc) k hnn0 hklt hk0 i
+    rw [hmod] at hinj
+    exact hinj rfl
+  have hnqy2 : ¬cc_qy_v11 cc (i + 2) := hnqy 2 (by omega) (by omega)
+  have hnqy3 : ¬cc_qy_v11 cc (i + 3) := hnqy 3 (by omega) (by omega)
+  have hshift : ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x
+      = cc_gg_v11 cc i + cc_gg_v11 cc (i + 1) + cc_gg_v11 cc (i + 2)
+        + cc_gg_v11 cc (i + 3) := by
+    have h1 : ∑ x ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc x
+        = ∑ x ∈ Finset.range (cc_card_v11 cc), cc_gg_v11 cc x := by
+      rw [p3i_Icc0_eq_range _ hnn0]
+    rw [h1, ← periodic_sum (p3h_rm_periodic_gg hr) hnn0 i]
+    have he : cc_card_v11 cc - 1 + i = i + 3 := by rw [hn4]; omega
+    rw [he]
+    exact p3g_SUM_NUMSEG4 _ i
+  have hwina : cc_azim_v11 cc i + cc_azim_v11 cc (i + 1) + cc_azim_v11 cc (i + 2)
+      + cc_azim_v11 cc (i + 3) = 2 * Real.pi := by
+    have h2 : (2 : ℝ) * Real.pi
+        = ∑ x ∈ Finset.range (cc_card_v11 cc), cc_azim_v11 cc x := by
+      rw [← p3h_rm_sum_azim hr, p3i_Icc0_eq_range _ hnn0]
+    have h3 := periodic_sum (p3h_rm_periodic_azim hr) hnn0 i
+    rw [← h2] at h3
+    have he : cc_card_v11 cc - 1 + i = i + 3 := by rw [hn4]; omega
+    rw [he] at h3
+    rwa [p3g_SUM_NUMSEG4] at h3
+  have hB0 : (0 : ℝ) ≤ cc_gg_v11 cc (i + 3) + cc_gg3a_v11 cc i := by
+    rcases p3g_QU_OR_QXY cc (i + 3) with hq | hx | hqy
+    · have h := p3h_rm_qu_qy_next hr hq hqy4
+      rwa [hi4, hpgg3a4] at h
+    · linarith [p3h_rm_qx_nn hr hx, e1]
+    · exact absurd hqy hnqy3
+  rcases p3g_QU_OR_QXY cc (i + 1) with hq1 | hx1 | hqy1
+  · -- qu (i + 1)
+    have hA0 : (0 : ℝ) ≤ cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) :=
+      p3h_rm_qu_next_qy hr hq1 hiqy
+    rcases p3g_QU_OR_QXY cc (i + 2) with hq2 | hx2 | hqy2
+    · -- qu (i + 2)
+      rcases p3g_QU_OR_QXY cc (i + 3) with hq3 | hx3 | hqy3
+      · -- qu (i + 3): the numeric arm (rows 15/17/29, azim window, PI_BOUNDS, eta rows)
+        by_cases haz1 : (2.089 : ℝ) ≤ cc_azim_v11 cc i
+        · linarith [hshift, hwina, p3j_rm_qu_azim17 hr (i + 1) hq1,
+            p3j_rm_qu_azim17 hr (i + 2) hq2, p3j_rm_qu_azim17 hr (i + 3) hq3,
+            p3h_rm_qy_azim hr hiqy, haz1, p3g_PI_BOUNDS.2]
+        by_cases haz2 : cc_azim_v11 cc i ≤ (1.946 : ℝ)
+        · linarith [hshift, hwina, p3j_rm_qu_azim15 hr (i + 1) hq1,
+            p3j_rm_qu_azim15 hr (i + 2) hq2, p3j_rm_qu_azim15 hr (i + 3) hq3,
+            p3h_rm_qy_azim hr hiqy, haz2, p3g_PI_BOUNDS.1]
+        · have h1946 : (1.946 : ℝ) ≤ cc_azim_v11 cc i := le_of_lt (not_le.mp haz2)
+          have h2089 : cc_azim_v11 cc i < (2.089 : ℝ) := not_le.mp haz1
+          by_cases heta : (cc_small_eta_v11 cc i ∧ cc_small_eta_v11 cc (i + 1))
+          · linarith [hshift, p3j_rm_qy_eta33 hr i hiqy heta.1 heta.2 h1946
+              (le_of_lt h2089), hleast (i + 1), hleast (i + 2), hleast (i + 3)]
+          · have hdem : ¬cc_small_eta_v11 cc i ∨ ¬cc_small_eta_v11 cc (i + 1) := by
+              by_cases m1 : cc_small_eta_v11 cc i
+              · exact Or.inr (fun m2 => heta ⟨m1, m2⟩)
+              · exact Or.inl m1
+            rcases hdem with mn1 | mn2
+            · have heta4 : ¬cc_small_eta_v11 cc (i + 4) := by
+                obtain ⟨-, -, -, -, -, h6, -, -, -, -, -, -⟩ := hb
+                have h := h6 i
+                rw [hn4] at h
+                rw [h]
+                exact mn1
+              linarith [hshift, d26, hA0, p3i_rm_qu_eta_next_eps hr (i + 3) hq3 heta4,
+                hleast (i + 2), e1]
+            · have b12 := p3h_rm_qu_qy_next hr hq3 hqy4
+              rw [hi4, hpgg3a4] at b12
+              linarith [hshift, d26, p3i_rm_qu_eta_eps hr (i + 1) hq1 mn2,
+                hleast (i + 2), b12, e2]
+      · -- qx (i + 3)
+        have hBp : (cc_eps : ℝ) ≤ cc_gg_v11 cc (i + 3) + cc_gg3a_v11 cc i := by
+          have h := p3i_rm_qx_hassmall_qy_next_eps hr (i + 3) hx3
+            ⟨hsmall (i + 3), hsmall (i + 4)⟩ hqy4
+          rwa [hi4, hpgg3a4] at h
+        linarith [hshift, d26, hA0, hBp, hleast (i + 2)]
+      · exact absurd hqy3 hnqy3
+    · -- qx (i + 2)
+      linarith [hshift, d26, hA0, hB0, p3h_rm_qx_nn hr hx2]
+    · exact absurd hqy2 hnqy2
+  · -- qx (i + 1)
+    have hAp : (cc_eps : ℝ) ≤ cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) :=
+      p3i_rm_qx_next_hassmall_qy_eps hr i hx1 ⟨hsmall (i + 1), hsmall (i + 2)⟩ hiqy
+    linarith [hshift, d26, hAp, hB0, hleast (i + 2)]
+  · exact absurd hqy1 (hp i hiqy)
+
+/-- OXLZLEZ2.hl:3457 (`UTEOITF`, proving `UTEOITF_concl` OXLZLEZ1.hl:167-168):
+the HOL `ASM_CASES_TAC` skeleton over `nn = cc_card_v11 cc` — RSIWAMP bounds
+`nn ≤ 4` and THREE_LE_CC_CARD gives `3 ≤ nn`, so a `qy` witness forces
+`nn ∈ {3, 4}` and each arm derives `0 ≤ ∑ gg` against `hsum`. -/
+theorem p3j_UTEOITF (cc : CcV11) (hb : cc_bool_model_v11 cc) (hp : cc_bool_prep_v11 cc)
+    (hr : cc_real_model_v11 cc)
+    (hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ))
+    (i : ℕ) : cc_4cell_v11 cc i := by
+  by_contra h4
+  have hiqy : cc_qy_v11 cc i := h4
+  have h3le : 3 ≤ cc_card_v11 cc := p3h_THREE_LE_CC_CARD cc hb hp hr hsum
+  have h4le : cc_card_v11 cc ≤ 4 := p3j_RSIWAMP cc hb hp hr hsum
+  by_cases hn3 : cc_card_v11 cc = 3
+  · exact absurd (p3j_uteoitf_arm3 cc hb hp hr hsum hn3 i hiqy) (not_le.mpr hsum)
+  · have hn4 : cc_card_v11 cc = 4 := by omega
+    exact absurd (p3j_uteoitf_arm4 cc hb hp hr hsum hn4 i hiqy) (not_le.mpr hsum)
+
 end Kepler.Text
