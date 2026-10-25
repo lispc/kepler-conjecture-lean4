@@ -32,7 +32,8 @@
 | FCHKUGT-W5 | ✅ **完成（落库 `43bde50e`，闸 PASS）**（+210/−2，FCHKUGT 本体标准三，bare sorry 15→14；**FCHKUGT 全链 W1-W5 收官**；PA25 LEAF_RANKING_LEMMA 零编辑重建自动转净 = p25_leaf_azim_inj+FCHKUGT 链实测成立；REUHADY 楔二择支解锁，其债面收窄至 REUHADY1+EWYBJUA 两锚） | PackingAuto18.lean | 收官；池C 解锁 |
 | **A2-W2b** | **40h 分段构建进行中**（编排者后台：`/tmp/a2-rest9w2` 克隆，断点续跑，olean 计数 3→2776）+ 完工后 olean 回灌主仓 → 粘合落库 **−1 源** | 后台构建 | rest 9 = 59 条 nli rest 最大单件 |
 | GRHIDFA-W5 | ✅ **完成（落库 `cc3cb531`，闸 PASS）**：capstone 四件 + 九桩回填，十三件标准三，+551/−55，**PA3 bare sorry 9→0 全模块归零**；GRHIDFA 主链 W1-W5 收官。披露：车道 agent 收尾文书阶段被配额上限中断，源文件已成品，编排者独立重建+探针+冻结核对后代补交付 | PackingAuto3.lean | **锥 −1（GRHIDFA_concl 出列；PA3 文件级 9→0。地图 `67788c99` 实测 156→155）** |
-| WSEWPCH-W3a | LA6 近机械轨道件 6-7 枚（CARD_IS_LEAST_CYCLE / POINT_PRESENTED_IN_RHOND1 / LT_CARD_MONO_LOFA / …）；文书先行纪律（每 2 件快照） | LocalAuto6.lean | WSEWPCH 核前置，LA6 60→54± |
+| WSEWPCH-W3a | ✅ **完成（落库 `209b1bbd`，闸 PASS）**：LA6 七件标准三，+50/−13，裸 sorry 60→53；新增 import LA5（无环、LA6 零下游）；LA5 主料 12 枚探针均标准三 | LocalAuto6.lean | 文件级 −7；锥 0（LA6 不在锥） |
+| GRHIDFA-W6 | PA4 桥波：九 `_v11` 孪生一行式 + CC4P4→CcV11 桥 + 21 CC4P4 桩 discharge + PackingConcl 零编辑复核 | PackingAuto4.lean | 文件级 −30±；锥 0（邻近层） |
 | GRHIDFA-W4 | ✅ **完成**（`173e18e2`，RSIWAMP+UTEOITF + 5 私件，双件标准三，+218/−0；勘误：UTEOITF 实为 nn=3/≠3 两支非三支，card=5 已被 RSIWAMP 灭） | PackingAuto3.lean | 零计分，W5 前置 |
 | FCHKUGT-W5 | **本体四分支装配（:7432，收官波）**——W1-W4 前置全齐 | PackingAuto18.lean | 收官解锁 PA25 侧 WEDGE_UNIQUE_CC_CELL |
 
@@ -48,7 +49,7 @@
 ## 2. 排队（按序补位）
 
 1. `就绪` **FCHKUGT W5**：本体四分支装配（:7432；W1-W4 前置全齐 `fff95dbc`，k=4 支 d 已由 FUEIMOV_4 解锁）——FCHKUGT 全链收官波。
-2. `就绪` **GRHIDFA W6**：PA4 CC4P4→CcV11 桥（1 桥件 + periodic Prop/Eq 引理）+ 30 桩 discharge（21 CC4P4 经桥 + 9 `_v11` 孪生 `:= PA3.同名_concl`）+ PackingConcl 九连 #print axioms 复核（PA4 文件级 −30；**锥刻度预期 0**——PA4/PackingConcl 不在 e2e 锥内，属邻近层资产）。
+2. `在飞` **GRHIDFA W6**：PA4 CC4P4→CcV11 桥（1 桥件 + periodic Prop/Eq 引理）+ 30 桩 discharge（21 CC4P4 经桥 + 9 `_v11` 孪生 `:= PA3.同名_concl`）+ PackingConcl 九连 #print axioms 复核（PA4 文件级 −30；**锥刻度预期 0**——PA4/PackingConcl 不在 e2e 锥内，属邻近层资产）。
 3. `排队` **A2-W2b**（待 W2a）：编排者跑 40h 分段构建（segbuild.sh 断点续跑）→ olean 回灌 → 粘合落库 **−1 源**。
 4. `排队` **WSEWPCH W2（词表桥波）**：`_p2`↔`_p3` rfl 桥 + localFan_p3.of_LocalFan 正向打包（撞 AzimBridge 无主文件，需编排者确认归属）；另 LA7 余两件 UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE（~200 行，路线已入档）可作 W1b 小波。
 5. `排队` **WSEWPCH W3-W5a**：核四真缺口（BGMIFTE 1050 / KCHMAMG 280 / CIZMRRH 275 / HALP 165——注意 HALP_CIRCLE_IS_INTERSECTION 实为 LA5:7670 桩，LA5 不可 import，需编排者单独立项）。
