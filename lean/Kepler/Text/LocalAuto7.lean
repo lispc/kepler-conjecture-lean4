@@ -1040,6 +1040,33 @@ theorem IVS_AZIM_CYCLE_TWO_POINT_SET_ALT {W : Set V3} {x u v w : V3} (hW : W = {
   subst hW
   exact IVS_AZIM_CYCLE_TWO_POINT_SET v w x u
 
+/-! ## W5b face kit (polar_fan.hl face-consumers; W6a partial prepayment) -/
+
+section W5bFace
+
+/-- `hypermapOfFan` 的 dart 集合即 `dart1OfFan`（coe 传输）。 -/
+private theorem p7w2_coe_darts {x : V3} {V : Set V3} {E : Set (Set V3)} (hfan : FAN x V E) :
+    ((hypermapOfFan x V E hfan).darts : Set (V3 × V3)) = dart1OfFan V E := by
+  show ((finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+  exact (finite_dart1_fan hfan).coe_toFinset
+
+/-- `hypermapOfFan` 的 faceMap 在 dart 上即 `fFanPair`（AzimBridge 同款技术）。 -/
+private theorem p7w2_apply_faceMap {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (d : V3 × V3) :
+    (hypermapOfFan x V E hfan).faceMap d =
+      if d ∈ dart1OfFan V E then fFanPair x V E d else d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [(finite_dart1_fan hfan).coe_toFinset]
+
+private theorem p7w2_mem_dart1 {x : V3} {V : Set V3} {E : Set (Set V3)} (hfan : FAN x V E)
+    {d : V3 × V3} (hd : d ∈ (hypermapOfFan x V E hfan).darts) : d ∈ dart1OfFan V E := by
+  have h : d ∈ ((hypermapOfFan x V E hfan).darts : Set (V3 × V3)) := Finset.mem_coe.mpr hd
+  rwa [p7w2_coe_darts hfan] at h
+
+end W5bFace
+
 /-! ## rho_node1 orbit (polar_fan.hl:318-469) -/
 
 /-- HOL `RHO_NODE1_INJECTIVE` (polar_fan.hl:318). -/
@@ -1182,12 +1209,39 @@ theorem ORDER_AZIM_SUM2Pi_0 {x y z : V3} {n : ℕ} {g : ℕ → V3}
 /-- HOL `LOCAL_FAN_NOT_EMPTY_FF` (polar_fan.hl:511). -/
 theorem LOCAL_FAN_NOT_EMPTY_FF {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) : FF ≠ ∅ := by
-  sorry
+  obtain ⟨hfan, x, hx, hFF, -⟩ := h
+  intro h0
+  have hx' : x ∈ FF := by rw [hFF]; exact mem_orbitMap_self _ x
+  rw [h0] at hx'
+  exact absurd hx' (by simp)
 
 /-- HOL `LOCAL_FAN_NOT_CARD_FF_GE_2` (polar_fan.hl:521). -/
 theorem LOCAL_FAN_NOT_CARD_FF_GE_2 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : LocalFan V E FF) : 2 ≤ FF.ncard := by
-  sorry
+  obtain ⟨hfan, x, hx, hFF, hD⟩ := h
+  have hxFF : x ∈ FF := by rw [hFF]; exact mem_orbitMap_self _ x
+  have hsub : FF ⊆ dart1OfFan V E := by
+    rw [hFF]
+    exact (orbitMap_subset_of_permutesOn (hypermapOfFan 0 V E hfan).faceMap_permutes hx).trans
+      (p7w2_coe_darts hfan).subset
+  have hfin : FF.Finite := (finite_dart1_fan hfan).subset hsub
+  have hcard : (dart1OfFan V E).ncard = 2 * FF.ncard := by
+    rw [← p7w2_coe_darts hfan, Set.ncard_coe_finset]
+    exact hD.1
+  have h1le : 0 < FF.ncard := (Set.ncard_pos hfin).mpr ⟨x, hxFF⟩
+  by_contra hlt
+  push_neg at hlt
+  have h1 : FF.ncard = 1 := by omega
+  obtain ⟨y, hy⟩ := Set.ncard_eq_one.mp h1
+  have hxy : x = y := by
+    rw [hy] at hxFF
+    exact Set.mem_singleton_iff.mp hxFF
+  have hfix : (hypermapOfFan 0 V E hfan).faceMap x = x := by
+    have hmem := pow_apply_mem_orbitMap (hypermapOfFan 0 V E hfan).faceMap 1 x
+    rw [← hFF, hy, ← hxy] at hmem
+    simpa using hmem
+  rw [p7w2_apply_faceMap hfan x, if_pos (p7w2_mem_dart1 hfan hx)] at hfix
+  exact f_fan_no_fix hfan x (p7w2_mem_dart1 hfan hx) hfix
 
 /-! ## Sin/cross sign kit (polar_fan.hl:532-566) -/
 
@@ -1433,6 +1487,189 @@ theorem FAN_ECONOMIZED_SIMPLE (x : V3) (V : Set V3) (E : Set (Set V3)) :
     exact ⟨hun, hg, hf1, hf2, hf6, (GMLWKPK_SIMPLE x V E hun hg hf6
       (fun e he hxe => hf2 (hun (Set.mem_sUnion_of_mem hxe he)))).mpr he⟩
 
+/-! ## W5b: BGMIFTE arc-half kit (Hvihvec duality + polar arc half) -/
+
+section W5bKit
+
+private theorem p7w2_coe_neg (a : V3) : ((-a : V3) : Fin 3 → ℝ) = -((a : V3) : Fin 3 → ℝ) := rfl
+
+/-- 复合 V3 项的 coe 展开（折叠形匹配）。 -/
+private theorem p7w2_coe_lin (k c : ℝ) (v u : V3) :
+    ((k • v - c • u : V3) : Fin 3 → ℝ)
+      = k • ((v : V3) : Fin 3 → ℝ) - c • ((u : V3) : Fin 3 → ℝ) := by
+  rw [coe_subP, coe_smulP, coe_smulP]
+
+/-- Fin3 层左减法点积。 -/
+private theorem p7w2_sub_dotF (a b c : Fin 3 → ℝ) : (a - b) ⬝ᵥ c = a ⬝ᵥ c - b ⬝ᵥ c := by
+  rw [dotProduct, dotProduct, dotProduct, ← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun x _ => by rw [Pi.sub_apply, sub_mul]
+
+/-- Fin3 层右减法点积。 -/
+private theorem p7w2_dot_subF (a b c : Fin 3 → ℝ) : a ⬝ᵥ (b - c) = a ⬝ᵥ b - a ⬝ᵥ c := by
+  rw [dotProduct, dotProduct, dotProduct, ← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun x _ => by rw [Pi.sub_apply, mul_sub]
+
+/-- `cross3` 反交换。 -/
+private theorem p7w2_cross3_anticomm (a b : V3) : cross3 a b = -(cross3 b a) := by
+  refine p7w_v3_eq ?_
+  simp only [coe_cross3P, p7w2_coe_neg, cross_anticomm]
+
+/-- `cross3` 零积 ⇒ 与 0 共线（第一变元非零情形）。 -/
+private theorem p7w2_cross3_zero_collinear {a b : V3} (ha : a ≠ 0)
+    (h : cross3 a b = 0) : Collinear3 (0:V3) a b := by
+  have haF : ((a:V3):Fin 3 → ℝ) ≠ 0 := fun he => ha (p7w_v3_eq he)
+  have hdep : ¬ LinearIndependent ℝ ![((a:V3):Fin 3 → ℝ), ((b:V3):Fin 3 → ℝ)] := by
+    intro hli
+    have hne : crossProduct ((a:V3):Fin 3 → ℝ) ((b:V3):Fin 3 → ℝ) ≠ 0 :=
+      (crossProduct_ne_zero_iff_linearIndependent (v := ((a:V3):Fin 3 → ℝ))
+        (w := ((b:V3):Fin 3 → ℝ))).mpr hli
+    exact hne (by rw [← coe_cross3P]; exact congrArg (fun v : V3 => ((v:V3):Fin 3 → ℝ)) h)
+  rw [LinearIndependent.pair_iff' haF] at hdep
+  push_neg at hdep
+  obtain ⟨c, hc⟩ := hdep
+  have hbeq : b = c • a := p7w_v3_eq hc.symm
+  exact (collinear3_iff_smul ha).mpr ⟨c, by simp [hbeq]⟩
+
+/-- Lagrange 恒等式（V3 级，经 coe）。 -/
+private theorem p7w2_dot_cross_cross (u v w : V3) :
+    (cross3 u v) ⬝ᵥ (cross3 u w) = (u ⬝ᵥ u) * (v ⬝ᵥ w) - (u ⬝ᵥ w) * (v ⬝ᵥ u) := by
+  rw [p7w_dot_coe, coe_cross3P, coe_cross3P]
+  have h := cross_dot_cross ((u:V3):Fin 3 → ℝ) ((v:V3):Fin 3 → ℝ) ((u:V3):Fin 3 → ℝ)
+    ((w:V3):Fin 3 → ℝ)
+  rw [p7w_dot_coe, p7w_dot_coe, p7w_dot_coe, p7w_dot_coe]
+  linarith [h]
+
+/-- Fin3 层数值核：投影点积 = k × 叉点积（标量为 coe 点积形）。 -/
+private theorem p7w2_num_id (U V W : Fin 3 → ℝ) (k c d : ℝ) (hk : k = U ⬝ᵥ U)
+    (hc : c = V ⬝ᵥ U) (hd : d = W ⬝ᵥ U) :
+    (k • V - c • U) ⬝ᵥ (k • W - d • U) = k * (crossProduct U V ⬝ᵥ crossProduct U W) := by
+  subst hk; subst hc; subst hd
+  rw [p7w2_sub_dotF, p7w2_dot_subF, p7w2_dot_subF]
+  simp only [dot_smulP, smul_dotP, cross_dot_cross U V U W]
+  ring
+
+/-- V3 层范数核：投影向量范数 = ‖u‖·‖u×v‖（标量为 coe 点积形）。 -/
+private theorem p7w2_norm_id (u v : V3) :
+    ‖(((((u:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) • v
+        - (((v:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) • u : V3))‖
+      = ‖u‖ * ‖cross3 u v‖ := by
+  refine (sq_eq_sq₀ (norm_nonneg _) (mul_nonneg (norm_nonneg _) (norm_nonneg _))).mp ?_
+  have h1 : ‖(((((u:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) • v
+        - (((v:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) • u : V3))‖ ^ 2
+      = ((((u:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) • v
+        - (((v:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) • u : V3) ⬝ᵥ
+        ((((u:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) • v
+        - (((v:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) • u : V3) :=
+    norm_sq_eq_dot _
+  have h2 : ‖cross3 u v‖ ^ 2 = (cross3 u v) ⬝ᵥ (cross3 u v) := norm_sq_eq_dot (cross3 u v)
+  have h3 : ‖u‖ ^ 2 = u ⬝ᵥ u := norm_sq_eq_dot u
+  have hpair : (‖u‖ * ‖cross3 u v‖) ^ 2 = ‖u‖ ^ 2 * ‖cross3 u v‖ ^ 2 := by
+    rw [pow_two, pow_two, pow_two]; ring
+  rw [h1, hpair, h3, h2, p7w_dot_coe, p7w2_coe_lin]
+  simp only [p7w2_sub_dotF, p7w2_dot_subF, dot_smulP, smul_dotP, p7w2_dot_cross_cross]
+  ring
+
+/-- **HVIHVEC**（Hvihvec.hl:34 的 0 心形式）：`dihV 0 u v w` 即 `u×v` 与
+`u×w` 在原点处的夹角。退化支两侧同为 `arccos 0`，故对一切 `v w` 成立。
+BGMIFTE 的 arc↔角对偶两 half 的共同引擎。 -/
+private theorem p7w2_hvihvec {u : V3} (hu : u ≠ 0) (v w : V3) :
+    dihV 0 u v w = arcV 0 (cross3 u v) (cross3 u w) := by
+  have hknorm : (0:ℝ) < dotV u u := by
+    rw [show dotV u u = ‖(u:V3)‖ ^ 2 from (norm_sq_eq_dot (u:V3)).symm]
+    exact pow_pos (norm_pos_iff.mpr hu) 2
+  unfold dihV
+  dsimp only
+  simp only [sub_zero]
+  unfold arcV
+  simp only [coe_zeroV, sub_zero, dist_eq_norm, p7w2_coe_lin]
+  refine congrArg Real.arccos ?_
+  rw [p7w2_num_id ((u:V3):Fin 3 → ℝ) ((v:V3):Fin 3 → ℝ) ((w:V3):Fin 3 → ℝ)
+      (((u:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ))
+      (((v:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ))
+      (((w:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ)) rfl rfl rfl,
+    p7w2_norm_id u v, p7w2_norm_id u w]
+  simp only [coe_cross3P]
+  rw [mul_mul_mul_comm ‖u‖ ‖cross3 u v‖ ‖u‖ ‖cross3 u w‖,
+    show ‖u‖ * ‖u‖ = ‖u‖ ^ 2 from (pow_two ‖u‖).symm, norm_sq_eq_dot (u:V3), p7w_dot_coe]
+  have hkF : ((u:V3):Fin 3 → ℝ) ⬝ᵥ ((u:V3):Fin 3 → ℝ) ≠ 0 := ne_of_gt hknorm
+  field_simp [hkF]
+
+/-- `arcV 0` 对称。 -/
+private theorem p7w2_arcV_comm (a b : V3) : arcV 0 a b = arcV 0 b a := by
+  unfold arcV
+  simp only [coe_zeroV, sub_zero, dist_eq_norm]
+  refine congrArg Real.arccos ?_
+  rw [p7w_dot_coe, p7w_dot_coe, dotProduct_comm, mul_comm]
+
+/-- `arcV 0` 第二变元取负 = π 减角。 -/
+private theorem p7w2_arcV_neg (a b : V3) :
+    arcV 0 a (-b) = Real.pi - arcV 0 a b := by
+  unfold arcV
+  simp only [coe_zeroV, sub_zero, dist_eq_norm]
+  rw [show (-b : V3) = (-1 : ℝ) • b by module]
+  rw [p7w_dot_coe, p7w_dot_coe, coe_smulP, dot_smulP, norm_smul, Real.norm_eq_abs,
+    abs_neg, abs_one, one_mul]
+  have hneg2 : (-1 : ℝ) * (((a : V3) : Fin 3 → ℝ) ⬝ᵥ ((b : V3) : Fin 3 → ℝ))
+      / (‖a‖ * ‖b‖) = -(((a : V3) : Fin 3 → ℝ) ⬝ᵥ ((b : V3) : Fin 3 → ℝ)
+      / (‖a‖ * ‖b‖)) := by ring
+  rw [hneg2, Real.arccos_neg]
+
+/-- 0 心三点集交换的共线传输。 -/
+private theorem p7w2_collinear_swap01 {a v : V3} (h : ¬ Collinear ℝ (({0, v, a} : Set V3))) :
+    ¬ Collinear ℝ (({0, a, v} : Set V3)) := by
+  intro hc
+  apply h
+  have hset : ({0, a, v} : Set V3) = ({0, v, a} : Set V3) := by
+    ext t
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rwa [hset] at hc
+
+/-- **W5b 主件（BGMIFTE 极扇弧 half，逐点前提形式）**：极点 `a = ρ v`、
+`b = ρ a` 处，极扇弧 `arcV 0 (v×a) (a×b)` 等于 `π` 减原扇内角
+`interiorAngle1 0 FF a = azim 0 a b (ivs a)`。
+- `h3` = IVS_RHO_IDD 逐点形（`ivs (ρ v) = v`）；
+- `h4/h5` = 非共线，即 LOCAL_FAN_CHARACTER_OF_RHO_NODE 第三合取（fan6 型）
+  在 `a`、`v` 处的逐点形；
+- `hia/hpos` = 内角界：`hia` 即 BGMIFTE 前提在 `ρ v` 处的实例，`hpos` 即
+  INTERIOR_ANGLE1_POS（LA5:5442）逐点形。
+W6c 装配时以 ρ 轨道 foundation 逐点供件即可；退化侧由逐点前提挡住。 -/
+private theorem p7w2_half_polar_arc {V : Set V3} {FF : Set (V3 × V3)}
+    {v a b : V3} (ha : a = rhoNode1 FF v) (hb : b = rhoNode1 FF a)
+    (h3 : ivsRhoNode1 FF a = v)
+    (h4 : ¬ Collinear ℝ (({0, a, b} : Set V3)))
+    (h5 : ¬ Collinear ℝ (({0, v, a} : Set V3)))
+    (hia : interiorAngle1 (0:V3) FF a < Real.pi)
+    (hpos : 0 < interiorAngle1 (0:V3) FF a) :
+    arcV (0:V3) (cross3 v a) (cross3 a b)
+        = Real.pi - interiorAngle1 (0:V3) FF a
+      ∧ 0 < arcV (0:V3) (cross3 v a) (cross3 a b)
+      ∧ arcV (0:V3) (cross3 v a) (cross3 a b) < Real.pi := by
+  have ncol4 : ¬ Collinear3 (0:V3) a b := h4
+  have ncol5 : ¬ Collinear3 (0:V3) a v := p7w2_collinear_swap01 h5
+  have ha0 : a ≠ 0 := fun he => ncol4 (by rw [he]; exact collinear3_of_eq rfl)
+  have hv0 : v ≠ 0 := fun he => ncol5 (by rw [he]; exact p7w_col_131 0 a)
+  have hp0 : cross3 v a ≠ 0 := fun he => h5 (p7w2_cross3_zero_collinear hv0 he)
+  have hq0 : cross3 a b ≠ 0 := fun he => h4 (p7w2_cross3_zero_collinear ha0 he)
+  have hint : interiorAngle1 (0:V3) FF a = azim (0:V3) a b v := by
+    show azim (0:V3) a (rhoNode1 FF a) (ivsRhoNode1 FF a) = _
+    rw [← hb, h3]
+  have hlt : azim (0:V3) a b v < Real.pi := by rw [← hint]; exact hia
+  have had : azim (0:V3) a b v = dihV 0 a b v := azim_dihv_same ncol4 ncol5 hlt
+  have hdual : dihV 0 a b v = arcV 0 (cross3 a b) (cross3 a v) := p7w2_hvihvec ha0 b v
+  have hskew : cross3 a v = -(cross3 v a) := p7w2_cross3_anticomm a v
+  have hcomm : arcV 0 (cross3 v a) (cross3 a b) = arcV 0 (cross3 a b) (cross3 v a) :=
+    p7w2_arcV_comm _ _
+  have hneg : arcV 0 (cross3 a b) (-(cross3 a v))
+      = Real.pi - arcV 0 (cross3 a b) (cross3 a v) :=
+    p7w2_arcV_neg _ _
+  have hmain : arcV 0 (cross3 v a) (cross3 a b)
+      = Real.pi - interiorAngle1 (0:V3) FF a := by
+    rw [hcomm, hint, had, hdual, ← hneg, hskew, neg_neg]
+  exact ⟨hmain, by rw [hmain]; linarith, by rw [hmain]; linarith⟩
+
+end W5bKit
+
 /-! ## Definition of the polar fan (polar_fan.hl:1053) -/
 
 /-- HOL `JNVXCRC` (polar_fan.hl:1053): the polar fan of `(V,E,FF)` —
@@ -1471,6 +1708,22 @@ theorem BGMIFTE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {V' : Set 
             = Real.pi - interiorAngle1 (0 : V3) FF' (cross3 v (rhoNode1 FF v)) ∧
           0 < arcV (0 : V3) v (rhoNode1 FF v) ∧
           arcV (0 : V3) v (rhoNode1 FF v) < Real.pi) := by
+  -- NEEDS（wsewpch-w5b 侦察+部分填证 2026-10-23；三缺口，剩余为 W6c 装配件）：
+  -- (1) 结论 4（第一 arc half）已闭合：私件 `p7w2_half_polar_arc`（本文件，
+  --     逐点前提形式；引擎 = `p7w2_hvihvec`，即 Hvihvec.hl:34 的 0 心移植）。
+  --     W6c 装配：foundation 供 (v, ρv) 轨道点、IVS_RHO_IDD、非共线（fan6 型，
+  --     LOCAL_FAN_CHARACTER_OF_RHO_NODE 第三合取逐点形）、INTERIOR_ANGLE1_POS
+  --     逐点形 + 本文件前提 hia 即可逐 v 实例化。
+  -- (2) 结论 1（ConvexLocalFan V' E' FF'）+ 结论 3（CARD V' = CARD V）：
+  --     HOL polar_fan.hl:1217-2050 的 FAN_AFF_GT_CONDITION 路线 + local_fan/dih2k
+  --     装配，~600 行，未移植。
+  -- (3) 结论 2（Generic V' E'）：**外部锚阻塞** —— HOL 经 CIZMRRH
+  --     （LA3:1881，未证，W3b）三分 + KCHMAMG（LA5:5018，未证）排除
+  --     circular/lunar 支；CIZMRRH/KCHMAMG 落地后机械装配。
+  -- 另两枚 SF 立案（见交付 DELIVERY.md）：LA1 `Generic`（affGt）与 HOL generic
+  -- （aff_ge，LA2 generic_p2 忠实）不一致；LA1 `LocalFan` 世界允许孤立顶点
+  -- （HOL local_fan 不允许），foundation 桩 RHO_NODE1_INJECTIVE 等在此弱编码下
+  -- 疑似假（junk ε），本 lane 的 :1093-1121 桩维持待证状态并等待 SF 裁决。
   sorry
 
 /-! ## Perimeter and its bound of 2 pi (polar_fan.hl:2115-3362) -/
