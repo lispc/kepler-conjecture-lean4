@@ -2559,5 +2559,8 @@ STATEMENT-FIX 闸（默认七根，THM=`Kepler.Text.FAN_EDGE_EL_V` 已验标准�
 ### (f) 风险与回滚
 方向安全；回滚 = 反向 patch。
 
+### (e') SF-55/56 应用记录（2026-10-26）
+用户批准（「都批准」）；应用窗口 = w6b 落库后（已满足）。串行 STATEMENT-FIX 闸双 PASS（LA1 `b8154a64` THM=scs_k_v39_explicit / LA2 `d90caf69` THM=FAN_EDGE_EL_V，默认七根），patch 归档 55/56 两件。雷区：STATEMENT-FIX 闸另要求提案文档含显式 (a)–(f) 节（压缩格式被拒）。交叉镜像误植就此归正：LA1 `Generic`=affGe、LA1 `Circular`=affGt、LA2 `generic_p2`=affGe、LA2 `circular_p2`=affGt，与 HOL localization.hl:103/107 逐字对齐。
+
 ### (e') SF-54 应用记录（2026-10-26）
 用户批准（2026-10-26「都批准」）。五文件串行 STATEMENT-FIX 闸全 PASS（每文件单文件工作树不变式；THM：LA7=LOCAL_FAN_NOT_CARD_FF_GE_2 免疫件 / LA14=azim_cross_0_p14 / LA35=SCS_K_LE_6_p35 / LA36=csAdj_mod_p36 / LA37=SET2_DETER_p37，全部标准三）：`47467b90`(LA7, 14 桩 hedge + LOCAL_FAN_ORBIT_MAP_EXPLICIT→_LA7 改名) / `88785e39`(LA14×3) / `2bacab43`(LA35×2) / `3c8b0c11`(LA36×1) / `119a10c5`(LA37×2)。改名零涟漪实核（LA2 无 _IVS 孪生、LA7 零 importer、LocalConcl 仅注释提及）。受害桩本体仍为 sorry（本 SF 只修陈述）；W6a 解锁。雷区新入册：闸 LANE_FILES 为单路径不拆空格，STATEMENT-FIX 一次一文件；闸须在工作树唯一改动状态下运行。
