@@ -1864,17 +1864,311 @@ theorem FAN_IMP_DIFF {x : V3} {V : Set V3} {E : Set (Set V3)} (hfan : FAN x V E)
     subst he
     exact hfan.2.2.2.1 (hfan.1 h)
 
+/-! ### Private kit for the trichotomy block (wsewpch-w3b lane) -/
+
+/-- `aff_gt s t ⊆ aff_ge s t`（sgn `0 < x` 蕴含 `0 ≤ x`）。 -/
+private theorem w3b_affGt_sub_affGe {s t : Set V3} : affGt s t ⊆ affGe s t := by
+  intro z hz
+  simp only [affGt, affGe, Set.mem_setOf_eq, Affsign] at hz ⊢
+  obtain ⟨f, hfin, hv, hpos, hone⟩ := hz
+  exact ⟨f, hfin, hv, fun w hw => le_of_lt (hpos w hw), hone⟩
+
+/-- `aff_ge {x} ∅ = {x}`。 -/
+private theorem w3b_affGe_empty (x : V3) : affGe {x} (∅ : Set V3) = {x} := by
+  ext y
+  simp only [affGe, Set.mem_setOf_eq, Affsign, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have hTeq : hfin.toFinset = ({x} : Finset V3) := by ext z; simp
+    rw [hTeq, Finset.sum_singleton] at hsum hone
+    rw [hsum, hone, one_smul]
+  · intro heq
+    rw [heq]
+    have hfin : ({x} ∪ (∅ : Set V3)).Finite :=
+      (Set.finite_singleton x).union Set.finite_empty
+    have hTeq : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [hTeq]
+      simp
+    · intro z hz
+      simp at hz
+    · rw [hTeq]
+      simp
+
+/-- `aff_ge {x} {v}` 的带号射线提取（系数 `t ≥ 0`）。 -/
+private theorem w3b_affGe_single_ray {x v z : V3} (hxv : x ≠ v) (hmem : z ∈ affGe {x} {v}) :
+    ∃ t : ℝ, 0 ≤ t ∧ z = (1 - t) • x + t • v := by
+  obtain ⟨f, hfin, hvz, hpos, hone⟩ := hmem
+  rw [sum_insert_single_s hfin hxv] at hone
+  rw [sum_insert_single_v hfin hxv] at hvz
+  refine ⟨f v, hpos v (Set.mem_singleton_iff.mpr rfl), ?_⟩
+  have hfx : f x = 1 - f v := by linarith
+  rw [hvz, hfx]
+
+/-- `aff_lt {x} {v}` 的带号射线提取（系数 `t < 0`）。 -/
+private theorem w3b_affLt_single_ray {x v z : V3} (hxv : x ≠ v) (hmem : z ∈ affLt {x} {v}) :
+    ∃ t : ℝ, t < 0 ∧ z = (1 - t) • x + t • v := by
+  obtain ⟨f, hfin, hvz, hneg, hone⟩ := hmem
+  rw [sum_insert_single_s hfin hxv] at hone
+  rw [sum_insert_single_v hfin hxv] at hvz
+  refine ⟨f v, hneg v (Set.mem_singleton_iff.mpr rfl), ?_⟩
+  have hfx : f x = 1 - f v := by linarith
+  rw [hvz, hfx]
+
+/-- `aff_ge {x} {v}` 的组合成员构造。 -/
+private theorem w3b_affGe_single_intro {x v z : V3} (hxv : x ≠ v) (t : ℝ) (ht : 0 ≤ t)
+    (hy : z = (1 - t) • x + t • v) : z ∈ affGe {x} {v} := by
+  have hfin : ({x} ∪ {v} : Set V3).Finite :=
+    (Set.finite_singleton x).union (Set.finite_singleton v)
+  refine ⟨fun w => if w = v then t else 1 - t, hfin, ?_, ?_, ?_⟩
+  · rw [sum_insert_single_v hfin hxv]
+    simp only [if_neg hxv, if_pos rfl, if_true]
+    exact hy
+  · intro w hw
+    simp only [Set.mem_singleton_iff] at hw
+    simp only [hw, if_pos rfl, if_true]
+    exact ht
+  · rw [sum_insert_single_s hfin hxv]
+    simp only [if_neg hxv, if_pos rfl, if_true]
+    ring
+
+/-- `aff_lt {x} {v}` 的组合成员构造。 -/
+private theorem w3b_affLt_single_intro {x v z : V3} (hxv : x ≠ v) (t : ℝ) (ht : t < 0)
+    (hy : z = (1 - t) • x + t • v) : z ∈ affLt {x} {v} := by
+  have hfin : ({x} ∪ {v} : Set V3).Finite :=
+    (Set.finite_singleton x).union (Set.finite_singleton v)
+  refine ⟨fun w => if w = v then t else 1 - t, hfin, ?_, ?_, ?_⟩
+  · rw [sum_insert_single_v hfin hxv]
+    simp only [if_neg hxv, if_pos rfl, if_true]
+    exact hy
+  · intro w hw
+    simp only [Set.mem_singleton_iff] at hw
+    simp only [hw, if_pos rfl, if_true]
+    exact ht
+  · rw [sum_insert_single_s hfin hxv]
+    simp only [if_neg hxv, if_pos rfl, if_true]
+    ring
+
+/-- 两点锥成员的三系数提取。 -/
+private theorem w3b_affGe_pair_ray {x u v z : V3} (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v)
+    (hmem : z ∈ affGe {x} {u, v}) :
+    ∃ a b c : ℝ, a + b + c = 1 ∧ 0 ≤ b ∧ 0 ≤ c ∧ z = a • x + b • u + c • v := by
+  obtain ⟨f, hfin, hvz, hsign, hone⟩ := hmem
+  have hT : hfin.toFinset = ({x, u, v} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    try tauto
+  rw [hT, Finset.sum_insert (by simp [hxu, hxv]), Finset.sum_insert (by simp [huv]),
+    Finset.sum_singleton] at hone
+  rw [hT, Finset.sum_insert (by simp [hxu, hxv]), Finset.sum_insert (by simp [huv]),
+    Finset.sum_singleton] at hvz
+  rw [← add_assoc] at hone hvz
+  exact ⟨f x, f u, f v, hone, hsign u (by simp), hsign v (by simp), hvz⟩
+
+/-- 两点锥成员的三系数构造。 -/
+private theorem w3b_affGe_pair_intro {x u v z : V3} (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v)
+    {a b c : ℝ} (habc : a + b + c = 1) (hb : 0 ≤ b) (hc : 0 ≤ c)
+    (hz : z = a • x + b • u + c • v) : z ∈ affGe {x} {u, v} := by
+  show Affsign (fun r => (0:ℝ) ≤ r) ({x} : Set V3) ({u, v} : Set V3) z
+  refine Affsign.of_triple (x := x) (v := u) (u := v) (y := z) b c hb hc ?_ hxu hxv huv
+  have h1 : 1 - b - c = a := by linarith
+  rw [h1]
+  exact hz
+
+/-- `Collinear3 a b c → Collinear3 a c b`。 -/
+private theorem w3b_col3_swap {a b c : V3} (h : Collinear3 a b c) : Collinear3 a c b := by
+  have hset : ({a, c, b} : Set V3) = {a, b, c} := by
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  show Collinear ℝ ({a, c, b} : Set V3)
+  rw [hset]
+  exact h
+
+
 /-! ## Affine-sign lemmas and the generic/circular/lunar trichotomy
 (WRGCVDR.hl:2954–3328) -/
 
 /-- WRGCVDR.hl:2954 `AFF_GE_TO_AFF_GT2_GE1`. -/
 theorem AFF_GE_TO_AFF_GT2_GE1 {x u v : V3} (hu : u ≠ x) (hv : v ≠ x) :
-    affGe {x} {u, v} = affGt {x} {u, v} ∪ affGe {x} {u} ∪ affGe {x} {v} := sorry
+    affGe {x} {u, v} = affGt {x} {u, v} ∪ affGe {x} {u} ∪ affGe {x} {v} := by
+  by_cases huv : u = v
+  · rw [huv]
+    have hset : ({v, v} : Set V3) = {v} := by ext z; simp
+    rw [hset]
+    ext z
+    constructor
+    · intro hz
+      exact Set.mem_union_right (affGt {x} {v} ∪ affGe {x} {v}) hz
+    · intro hz
+      rcases (Set.mem_union _ _ _).mp hz with h | h
+      · rcases (Set.mem_union _ _ _).mp h with h | h
+        · exact w3b_affGt_sub_affGe h
+        · exact h
+      · exact h
+  · have hxu : x ≠ u := Ne.symm hu
+    have hxv : x ≠ v := Ne.symm hv
+    ext z
+    constructor
+    · intro hz
+      obtain ⟨a, b, c, habc, hb, hc, hzabc⟩ := w3b_affGe_pair_ray hxu hxv huv hz
+      rcases lt_trichotomy b 0 with hb0 | hb0 | hb0
+      · exact absurd hb0 (by linarith)
+      · rw [hb0] at habc hzabc
+        simp only [add_zero, zero_smul] at habc hzabc
+        have ha : a = 1 - c := by linarith
+        rw [ha] at hzabc
+        exact Set.mem_union_right (affGt {x} {u, v} ∪ affGe {x} {u})
+          (w3b_affGe_single_intro hxv c hc hzabc)
+      · rcases lt_trichotomy c 0 with hc0 | hc0 | hc0
+        · exact absurd hc0 (by linarith)
+        · rw [hc0] at habc hzabc
+          simp only [add_zero, zero_smul] at habc hzabc
+          have ha : a = 1 - b := by linarith
+          rw [ha] at hzabc
+          exact Set.mem_union_left (affGe {x} {v})
+            (Set.mem_union_right (affGt {x} {u, v})
+              (w3b_affGe_single_intro hxu b hb hzabc))
+        · have hz' : z = (1 - b - c) • x + b • u + c • v := by
+            have h1 : 1 - b - c = a := by linarith
+            rw [h1]
+            exact hzabc
+          exact Set.mem_union_left (affGe {x} {v})
+            (Set.mem_union_left (affGe {x} {u})
+              (Affsign.of_triple (x := x) (v := u) (u := v) (y := z) b c hb0 hc0 hz'
+                hxu hxv huv))
+    · intro hz
+      rcases (Set.mem_union _ _ _).mp hz with h | h
+      · rcases (Set.mem_union _ _ _).mp h with h | h
+        · exact w3b_affGt_sub_affGe h
+        · obtain ⟨t, ht, hzt⟩ := w3b_affGe_single_ray hxu h
+          have habc : (1 - t) + t + 0 = 1 := by ring
+          have hz' : z = (1 - t) • x + t • u + (0:ℝ) • v := by
+            rw [zero_smul, add_zero]
+            exact hzt
+          exact w3b_affGe_pair_intro hxu hxv huv habc ht (le_refl 0) hz'
+      · obtain ⟨t, ht, hzt⟩ := w3b_affGe_single_ray hxv h
+        have habc : (1 - t) + 0 + t = 1 := by ring
+        have hz' : z = (1 - t) • x + (0:ℝ) • u + t • v := by
+          rw [zero_smul, add_zero]
+          exact hzt
+        exact w3b_affGe_pair_intro hxu hxv huv habc (le_refl 0) ht hz'
+
 
 /-- WRGCVDR.hl:3011 `AFF_GE_INTER_AFF_LT_IMP_NOT_EQ_COL`. -/
 theorem AFF_GE_INTER_AFF_LT_IMP_NOT_EQ_COL {u v : V3} (hv : v ≠ 0) (hu : u ≠ 0)
     (hne : affGe {0} {v} ∩ affLt {0} {u} ≠ ∅) :
-    u ≠ v ∧ Collinear3 0 u v := sorry
+    u ≠ v ∧ Collinear3 0 u v := by
+  obtain ⟨z, hz12⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  obtain ⟨hz1, hz2⟩ := (mem_inter_iff z _ _).mp hz12
+  obtain ⟨t, ht, hzt⟩ := w3b_affGe_single_ray (x := (0:V3)) (v := v) (Ne.symm hv) hz1
+  obtain ⟨s, hs, hzs⟩ := w3b_affLt_single_ray (x := (0:V3)) (v := u) (Ne.symm hu) hz2
+  rw [smul_zero, zero_add] at hzt hzs
+  have huvne : u ≠ v := by
+    intro heq
+    rw [heq] at hzs
+    have hts : (t - s) • v = (0:V3) := by
+      rw [sub_smul, ← hzt, hzs, sub_self]
+    rcases smul_eq_zero.mp hts with h1 | h1
+    · rw [← sub_eq_zero.mp h1] at hs
+      linarith
+    · exact hv h1
+  refine ⟨huvne, ?_⟩
+  have ht0 : t ≠ 0 := by
+    intro h0
+    rw [h0, zero_smul] at hzt
+    have hz0 : s • u = (0:V3) := by rw [← hzs, hzt]
+    rcases smul_eq_zero.mp hz0 with h1 | h1
+    · exact absurd h1 (by linarith)
+    · exact hu h1
+  have hveq : v = (s / t) • u := by
+    apply smul_right_injective V3 ht0
+    show t • v = t • ((s / t) • u)
+    rw [← hzt, smul_smul]
+    rw [show t * (s / t) = s from by field_simp]
+    exact hzs
+  exact (collinear3_iff_smul (v := (0:V3)) (w := u) (w1 := v) hu).mpr
+    ⟨s / t, by rw [sub_zero, sub_zero]; exact hveq⟩
+
+/-- 探针辅助：generic 臂的 lunar 排除内核。 -/
+private theorem w3b_lunar_absent {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : localFan_p3 V E FF) (hgen : generic_p3 V E) {p q : V3}
+    (hsub : {p, q} ⊆ V) (hpq : p ≠ q) (hcol : Collinear3 0 p q) : False := by
+  obtain ⟨H, hdarts, -, hnode, -, hfan, -, hdih⟩ := hlf
+  have hf2 : (0:V3) ∉ V := hfan.2.2.2.1
+  have hpV : p ∈ V := hsub (Set.mem_insert p {q})
+  have hqV : q ∈ V := hsub (by simp)
+  have hp0 : p ≠ 0 := fun he => hf2 (by rw [← he]; exact hpV)
+  have hq0 : q ≠ 0 := fun he => hf2 (by rw [← he]; exact hqV)
+  have hdne : dartsOfHyp_p3 E V ≠ ∅ := FAN_IMP_NOT_EMPTY_DARTS hfan
+  have hk0 : FF.ncard ≠ 0 := by
+    intro h0
+    rw [h0] at hdih
+    have hc0 : H.darts.card = 0 := by rw [hdih.1]
+    have hE : H.darts = ∅ := Finset.card_eq_zero.mp hc0
+    exact hdne (by rw [← hdarts, hE]; simp)
+  obtain ⟨q', hq'V, hdart⟩ := IN_V_OF_FAN_EXISTS_DART hfan.1 hpV
+  have hq'0 : q' ≠ 0 := fun he => hf2 (by rw [← he]; exact hq'V)
+  have hdartH : (p, q') ∈ H.darts := Finset.mem_coe.mp (by rw [hdarts]; exact hdart)
+  rcases (Set.mem_union _ _ _).mp hdart with hord | hself
+  · -- 真边（ord-pair）
+    have hE : {p, q'} ∈ E := hord
+    have hpq'ne : p ≠ q' := by
+      intro he
+      obtain ⟨hfin, hcard⟩ := hfan.2.1 {p, q'} hE
+      have hset : ({p, q'} : Set V3) = {q'} := by
+        rw [he]; ext z; simp
+      have hc1 : hfin.toFinset = ({q'} : Finset V3) := by
+        ext z
+        simp only [Set.Finite.mem_toFinset, hset, Set.mem_singleton_iff,
+          Finset.mem_singleton]
+      rw [hc1, Finset.card_singleton] at hcard
+      exact absurd hcard (by norm_num)
+    obtain ⟨t, ht⟩ := (collinear3_iff_smul (v := (0:V3)) (w := p) (w1 := q) hp0).mp hcol
+    simp only [sub_zero] at ht
+    rcases lt_trichotomy t 0 with ht0 | ht0 | ht0
+    · -- t < 0：-q ∈ aff_ge {0} {p,q'} ∩ aff_lt {0} {q}
+      have hnegq : -q = (1 - (-t) - 0) • (0:V3) + (-t) • p + (0:ℝ) • q' := by
+        rw [smul_zero, zero_smul, add_zero, zero_add, neg_smul, ← ht]
+      have hge : (-q) ∈ affGe ({0} : Set V3) {p, q'} :=
+        Affsign.of_triple (x := (0:V3)) (v := p) (u := q') (y := -q) (-t) 0
+          (by linarith) (le_refl 0) hnegq (Ne.symm hp0) (Ne.symm hq'0) hpq'ne
+      have hlt : (-q) ∈ affLt ({0} : Set V3) {q} :=
+        w3b_affLt_single_intro (x := (0:V3)) (v := q) (z := -q) (Ne.symm hq0) (-1)
+          (by norm_num) (by rw [smul_zero, zero_add, neg_one_smul])
+      have hmem : (-q) ∈ affGe ({0} : Set V3) {p, q'} ∩ affLt ({0} : Set V3) {q} :=
+        Set.mem_inter hge hlt
+      rw [hgen p q' q hE hqV] at hmem
+      exact hmem
+    · -- t = 0：q = 0
+      rw [ht0, zero_smul] at ht
+      exact hq0 ht
+    · -- 0 < t：同射线矛盾（fan7）
+      have hqp : q ∈ affGe {0} {p} :=
+        w3b_affGe_single_intro (x := (0:V3)) (v := p) (z := q) (Ne.symm hp0) t
+          (le_of_lt ht0) (by rw [smul_zero, zero_add]; exact ht)
+      have hqq : q ∈ affGe {0} {q} :=
+        w3b_affGe_single_intro (x := (0:V3)) (v := q) (z := q) (Ne.symm hq0) 1
+          (by norm_num) (by rw [smul_zero, zero_add, one_smul])
+      have h12 := FAN7_SIMPLE hfan.2.2.2.2.2 p q hpV hqV
+      rw [Set.singleton_inter_of_notMem (fun hm => hpq (Set.mem_singleton_iff.mp hm)),
+        w3b_affGe_empty] at h12
+      have hmem : q ∈ ({0} : Set V3) := by rw [← h12]; exact mem_inter hqp hqq
+      exact hq0 (Set.mem_singleton_iff.mp hmem)
+  · -- 自配对：node 映射不动点
+    obtain ⟨-, -, hEE0⟩ := hself
+    have hEE : EE_p3 p E = ∅ := hEE0
+    have hfix : (H.nodeMap : V3 × V3 → V3 × V3) (p, q') ≠ (p, q') :=
+      DIH2K_IMP_NODE_MAP_X_DIFF_X hdih hk0 _ hdartH
+    refine hfix ?_
+    rw [hnode]
+    simp only [nnOfHyp_p3, if_pos hdart]
+    simp only [hEE, W_SUBSET_SINGLETON_IMP_IDE (Set.empty_subset {q'})]
+
 
 /-- WRGCVDR.hl:3056 `CIZMRRH`: a local fan is generically placed, or
 circular, or lunar — exclusively. -/
@@ -1882,4 +2176,74 @@ theorem CIZMRRH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (_hlf : localFan_p3 V E FF) :
     generic_p3 V E ∧ ¬(circular_p3 V E ∨ ∃ v w, lunar_p3 (v, w) V E) ∨
       circular_p3 V E ∧ ¬(generic_p3 V E ∨ ∃ v w, lunar_p3 (v, w) V E) ∨
-      (∃ v w, lunar_p3 (v, w) V E) ∧ ¬(generic_p3 V E ∨ circular_p3 V E) := sorry
+      (∃ v w, lunar_p3 (v, w) V E) ∧ ¬(generic_p3 V E ∨ circular_p3 V E) := by
+  by_cases hgen : generic_p3 V E
+  · refine Or.inl ⟨hgen, ?_⟩
+    intro hneg
+    rcases hneg with hc | hd0
+    · have hc' : ∃ a b c : V3, {a, b} ∈ E ∧ c ∈ V ∧
+          ¬(affGt ({0} : Set V3) {a, b} ∩ affLt ({0} : Set V3) {c} = ∅) := hc
+      obtain ⟨a, b, c, he, hu, hgt⟩ := hc'
+      obtain ⟨z, hz12⟩ := Set.nonempty_iff_ne_empty.mpr hgt
+      obtain ⟨hz1, hz2⟩ := (mem_inter_iff z _ _).mp hz12
+      have hmem : z ∈ affGe ({0} : Set V3) {a, b} ∩ affLt ({0} : Set V3) {c} :=
+        Set.mem_inter (w3b_affGt_sub_affGe hz1) hz2
+      rw [hgen a b c he hu] at hmem
+      exact hmem
+    · obtain ⟨d, e, hd⟩ := hd0
+      have hd' : ¬circular_p3 V E ∧ {d, e} ⊆ V ∧ d ≠ e ∧ Collinear3 0 d e := hd
+      exact w3b_lunar_absent _hlf hgen hd'.2.1 hd'.2.2.1 hd'.2.2.2
+  · by_cases hcirc : circular_p3 V E
+    · refine Or.inr (Or.inl ⟨hcirc, ?_⟩)
+      intro hneg
+      rcases hneg with hg | hd0
+      · exact hgen hg
+      · obtain ⟨d, e, hd⟩ := hd0
+        have hd' : ¬circular_p3 V E ∧ {d, e} ⊆ V ∧ d ≠ e ∧ Collinear3 0 d e := hd
+        exact hd'.1 hcirc
+    · have hgen' : ¬∀ v w u : V3, {v, w} ∈ E → u ∈ V →
+          affGe ({0} : Set V3) {v, w} ∩ affLt ({0} : Set V3) {u} = ∅ := hgen
+      push_neg at hgen'
+      obtain ⟨v, w, u, he, hu, hne⟩ := hgen'
+      obtain ⟨z, hz12⟩ := hne
+      obtain ⟨hz1, hz2⟩ := (mem_inter_iff z _ _).mp hz12
+      obtain ⟨-, -, -, -, -, hfan, -, -⟩ := _hlf
+      have hsubU : ⋃₀ E ⊆ V := hfan.1
+      have hvE : v ∈ ⋃₀ E := Set.mem_sUnion.mpr ⟨{v, w}, he, Set.mem_insert v {w}⟩
+      have hwE : w ∈ ⋃₀ E := Set.mem_sUnion.mpr ⟨{v, w}, he, Set.mem_insert_of_mem v rfl⟩
+      have hv0 : v ≠ 0 := FAN_IMP_DIFF hfan v (Or.inr hvE)
+      have hw0 : w ≠ 0 := FAN_IMP_DIFF hfan w (Or.inr hwE)
+      have hu0 : u ≠ 0 := FAN_IMP_DIFF hfan u (Or.inl hu)
+      have hz1' : z ∈ affGe ({0} : Set V3) {v, w} := hz1
+      refine Or.inr (Or.inr ⟨?_, ?_⟩)
+      · rw [AFF_GE_TO_AFF_GT2_GE1 (x := (0:V3)) hv0 hw0] at hz1
+        rcases (Set.mem_union _ _ _).mp hz1 with hzgt | hzw
+        · rcases (Set.mem_union _ _ _).mp hzgt with hzgt' | hzv
+          · exact absurd ⟨v, w, u, he, hu,
+              Set.nonempty_iff_ne_empty.mp ⟨z, hzgt', hz2⟩⟩ hcirc
+          · obtain ⟨hne2, hcol⟩ :=
+              AFF_GE_INTER_AFF_LT_IMP_NOT_EQ_COL (u := u) (v := v) hv0 hu0
+                (Set.nonempty_iff_ne_empty.mp ⟨z, hzv, hz2⟩)
+            refine ⟨v, u, ?_⟩
+            refine ⟨hcirc, ?_, Ne.symm hne2, w3b_col3_swap hcol⟩
+            intro z2 hz2'
+            rcases Set.mem_insert_iff.mp hz2' with rfl | hz2'
+            · exact hsubU hvE
+            · rw [Set.mem_singleton_iff.mp hz2']
+              exact hu
+        · obtain ⟨hne2, hcol⟩ :=
+            AFF_GE_INTER_AFF_LT_IMP_NOT_EQ_COL (u := u) (v := w) hw0 hu0
+              (Set.nonempty_iff_ne_empty.mp ⟨z, hzw, hz2⟩)
+          refine ⟨w, u, ?_⟩
+          refine ⟨hcirc, ?_, Ne.symm hne2, w3b_col3_swap hcol⟩
+          intro z2 hz2'
+          rcases Set.mem_insert_iff.mp hz2' with rfl | hz2'
+          · exact hsubU hwE
+          · rw [Set.mem_singleton_iff.mp hz2']
+            exact hu
+      · rintro (hg | hc)
+        · have hmem : z ∈ affGe ({0} : Set V3) {v, w} ∩ affLt ({0} : Set V3) {u} :=
+            Set.mem_inter hz1' hz2
+          rw [hg v w u he hu] at hmem
+          exact hmem
+        · exact hcirc hc
