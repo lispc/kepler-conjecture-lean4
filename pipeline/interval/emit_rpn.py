@@ -1018,7 +1018,10 @@ def translate_record(rec, defs, darts, qexp):
     for expr, op in targets:
         if expr[0] == "sub" and expr[1][0] == "var" and expr[2][0] == "var":
             if op in ("<", "<="):
-                var_lts.append((expr[1][1], expr[2][1]))
+                # orient_cmp("<",a,b) = sub(b,a)：lo=a=expr[2], hi=b=expr[1]。
+                # 2026-10-23 nli-b-toolchain 修正：原 (expr[1],expr[2]) 把 `<`
+                #   析取项端点写反（与 ">" 分支恰反），case var_lt 与 bank 对反。
+                var_lts.append((expr[2][1], expr[1][1]))
                 continue
             if op in (">", ">="):
                 var_lts.append((expr[2][1], expr[1][1]))
