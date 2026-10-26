@@ -271,7 +271,7 @@ def generic_p2 (V : Set V3) (E : Set (Set V3)) : Prop :=
 /-- HOL `circular` (localization.hl:107). NEEDS: merge with
 `LocalAnchors.Circular`. -/
 def circular_p2 (V : Set V3) (E : Set (Set V3)) : Prop :=
-  ∃ v w u : V3, {v, w} ∈ E ∧ u ∈ V ∧ ¬(affGe ({0} : Set V3) {v, w} ∩ affLt ({0} : Set V3) {u} = ∅)
+  ∃ v w u : V3, {v, w} ∈ E ∧ u ∈ V ∧ ¬(affGt ({0} : Set V3) {v, w} ∩ affLt ({0} : Set V3) {u} = ∅)
 
 /-- HOL `lunar` (localization.hl:111). NEEDS: merge with
 `LocalAnchors.Lunar`. -/
