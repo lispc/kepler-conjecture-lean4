@@ -693,7 +693,7 @@ theorem WNWSHJT_p14 (w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
 /-- HOL `LOFA_IMP_INANGLE_EQ_AZIM` (hl:1325).  NEEDS: fan structure
 (`LocalFan` is the LocalAuto1 skeleton). -/
 theorem LOFA_IMP_INANGLE_EQ_AZIM_p14 (V : Set V3) (E : Set (Set V3))
-    (FF : Set (V3 × V3)) (v : V3) (h1 : LocalFan V E FF) (h2 : v ∈ V) :
+    (FF : Set (V3 × V3)) (v : V3) (h1 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (h2 : v ∈ V) :
     interiorAngle1 0 FF v = azimInFan (v, rhoNode1 FF v) E := by
   sorry
 
@@ -701,7 +701,7 @@ theorem LOFA_IMP_INANGLE_EQ_AZIM_p14 (V : Set V3) (E : Set (Set V3))
 structure + deformation theory. -/
 theorem deformation_rho_node1_equivariant1_p14 (f : V3 → ℝ → V3) (V : Set V3)
     (E : Set (Set V3)) (FF : Set (V3 × V3)) (a b : ℝ) (v : V3) (t : ℝ)
-    (h1 : Deformation f V a b) (h2 : LocalFan V E FF)
+    (h1 : Deformation f V a b) (h2 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
     (h3 : LocalFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E)
       ((fun d => (f d.1 t, f d.2 t)) '' FF)) (h4 : v ∈ V) :
     f (rhoNode1 FF v) t =
@@ -712,7 +712,7 @@ theorem deformation_rho_node1_equivariant1_p14 (f : V3 → ℝ → V3) (V : Set 
 structure + deformation theory. -/
 theorem deformation_ivs_rho_node1_equivariant1_p14 (f : V3 → ℝ → V3) (V : Set V3)
     (E : Set (Set V3)) (FF : Set (V3 × V3)) (a b : ℝ) (v : V3) (t : ℝ)
-    (h1 : Deformation f V a b) (h2 : LocalFan V E FF)
+    (h1 : Deformation f V a b) (h2 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
     (h3 : LocalFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E)
       ((fun d => (f d.1 t, f d.2 t)) '' FF)) (h4 : v ∈ V) :
     f (ivsRhoNode1 FF v) t =
