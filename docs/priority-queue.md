@@ -28,11 +28,11 @@
 |---|---|---|---|
 | **wsewpch-w5b** | **BGMIFTE**（LA7:1454，HOL polar_fan.hl:1065 约 1050 行，本核最大单件；拆极扇凸性 half / arc↔角对偶 half）；同文件 GENERIC_LOCAL_FAN_AZIM_POS(:1093) / RHO_NODE1_INJECTIVE(:1046) 若为桩且必需可一并闭合；可白拿 W5a LA9 kit + W2 AzimBridge 桥（import 前核无环）；LA7:1063 同名桩**不改名** | LocalAuto7.lean | 锥 0；WSEWPCH generic 支主件 |
 | **poolc-w2** | PA25 续波：MCELL3_DIHX（恒等式，池C 同款 kit）→ CC_CELL_SUBSET_WEDGE（BDXKHTW 链）→ WEDGE_UNIQUE_CC_CELL(:≈4377) → **K3_CC_WI_ALT**(:≈4858, 锥源) / K3_CC_WIM_ALT；基线 `db3ae79f` | PackingAuto25.lean | **锥直源 −1**（K3_CC_WI_ALT） |
-| **lp-design-scout** | 只读侦察：`lpArchiveCertificatesDebt`（Assembly:6224）精确语义 + HOL 保真对照、LP 证书数据现状、三条移植路线成本/风险、可排期波次计划、两份旧 LP 侦察的过时清单 → `docs/scouts/lp-design-scout.md` | 新文档（不碰 .lean、不构建） | 锥 0；hLP 单源的路线图 |
+| **wsewpch-w4** | lunar 支：**HALP_CIRCLE_IS_INTERSECTION**（LA5:7670，半圆–仿射锥交刻画，真数学中等）→ **HKIRPEP**（LA5:7986，MESON 装配）；前置 RHO_NODE1_MONO_WITH_AZIM（LA5:6163）已真（侦察「全树缺」过时）；不碰 :4156 / :5026(KCHMAMG)；LA5 不得 import LA6/LA9/AzimBridge/LA7 | LocalAuto5.lean | 锥 0；W6c lunar 支前置 |
 | **wsewpch-w3b** | LA3 同节三件：AFF_GE_TO_AFF_GT2_GE1(:1871, HOL WRGCVDR.hl:2954) / AFF_GE_INTER_AFF_LT_IMP_NOT_EQ_COL(:1875, :3011) / **CIZMRRH**(:1881, :3056, 275 行三分 exclusive-or；TameLp ×2 + LA31 消费) | LocalAuto3.lean | 锥 0；W6c 三分支装配核心前提 |
 | **A2-W2b** | 分段构建进行中（`/tmp/a2-rest9w2`，olean ~190/2776，单片 3,000–7,000 s，剩 ~10 天）。**根因已查明并实测可提速 ~40×**（§6 第 6 项）：Base 表达式把常数 π/4 编成 1024 项 Leibniz 级数 `(.trans .arctanK (.const 1) 1024)` ×4，每叶重算；kit 已有 `TKind.atan1K`（返回预证 `pi4D` 盒）但 emitter 默认 OFF。3 叶基准：现状 10.3 s/叶 → `.atan1K` + `decide +kernel` **0.26 s/叶**。等用户裁决是否中断重跑 | 后台构建 | rest 9 粘合落库 **−1 源** |
 
-已并网车道不再逐行保留（详见 §8 日志）：GRHIDFA W2–W6（PA3 归零 `cc3cb531`、PA4 桥 `09674a65`）、FCHKUGT W2–W5（全链收官 `43bde50e`）、WSEWPCH W1 `20ff16c3` / W3a `209b1bbd` / W5a `b1e1224d` / **W2 `057a0683`**（AzimBridge 20 件，11 对桥全 rfl 级）、**池C `db3ae79f`**（PA25 五件，**锥 −2** 实测 155→153）、**fidelity-v1**（本提交：`lean/scripts/fidelity_check.py` 自检 PASS，配对率 69.4%，HEAD 全量 H 级恰为 SF-53 两处）、A2-W1 / W2a `3fab5ee1`。
+已并网车道不再逐行保留（详见 §8 日志）：GRHIDFA W2–W6（PA3 归零 `cc3cb531`、PA4 桥 `09674a65`）、FCHKUGT W2–W5（全链收官 `43bde50e`）、WSEWPCH W1 `20ff16c3` / W3a `209b1bbd` / W5a `b1e1224d` / **W2 `057a0683`**（AzimBridge 20 件，11 对桥全 rfl 级）、**池C `db3ae79f`**（PA25 五件，**锥 −2** 实测 155→153）、**fidelity-v1 `fc4afc08`**（`lean/scripts/fidelity_check.py` 自检 PASS，配对率 69.4%，HEAD 全量 H 级恰为 SF-53 两处）、**lp-design-scout**（本提交，`docs/scouts/lp-design-scout.md`）、A2-W1 / W2a `3fab5ee1`。
 
 > **A2-W1 已完成（2026-10-25，关键事实翻案）**：rest 9 证书源 **2,777 文件全部
 > tracked 在库**（`CQITNPEAx3725403817`，964,984 叶 prec 64 bb_arb）——**无需 G4
@@ -46,13 +46,13 @@
 ## 2. 排队（按序补位）
 
 1. `新立` **NKEZBFC_PREP GIANT 波**：`NKEZBFC_PREP_p9`（LA9:1071，HOL 900 行 CARD V−3 归纳：凸 local fan 内角和 ≥ (n−2)π）+ `EJRCFJD_ALT2`（LA2:1589，正本 EJRCFJD LA6:1135）→ 之后 `NKEZBFC`（LA2:1606）一行装配。注意 LA2 import LA5/LA9 均成环，装配层需走 LA9 侧或桥文件。非初等，建议拆 2–3 波。
-2. `就绪` **WSEWPCH W4 lunar**：RHO_NODE1_MONO_WITH_AZIM（全树缺，依赖全真）→ HALP_CIRCLE_IS_INTERSECTION（LA5:7670 桩）→ HKIRPEP（LA5:7986 桩）；LA5 体量大、下游多，开波前编排者先核 LA5 无人占用。
+2. `在飞` **WSEWPCH W4 lunar**（见 §1 wsewpch-w4）。
 3. `待批` **SF-53 应用 + CC4P4 discharge 波**：用户批准后 STATEMENT-FIX 闸（patch 53，THM=`p4_real_model_of_sumfix`）→ PA4 20 桩 discharge（PA4 29→9，锥 0）。
 4. `待 A2-W2b` **A2 落地波**：探针 `CQITNPEAx3725403817_pos` 标准三 → olean 回灌（RUNBOOK-G4 §4）→ 新建 `A2QITNPEAGlue.lean` + Assembly:739 替换 → **−1 源**。
-5. `就绪` **LP 设计侦察**（只读）：hLP 单源 `lpArchiveCertificatesDebt`（Assembly:6224）终端语义移植路线（W6 覆盖桥侦察已定为多波项目）。
+5. `已侦察，待批开波` **hLP 终端语义移植**（`docs/scouts/lp-design-scout.md`，2026-10-26）：债点 `lpArchiveCertificatesDebt` = HOL `linear_programming_results` 逐字镜像，保真核对 F1–F7 **无新误植**；数据面：Flyspeck 二进制证书 404 MB 全 tracked（19,715 图 / 43,078 终端记录），**189 条 infeasible 产物模块已落库叶全闭合**（`lean/Kepler/LP/T*.lean` 41,440 行，`7ba6b5b7`），42,889 bound 叶全开（root 19,237 有账本、sha 5/5 复现、p50 49.2 s/条；easy 4,362 + hard 19,290 账本丢失须重跑）。路线判定：(a) 逐记录 Farkas 证书 + decide checker 最稳；(b) 127 族查表独立路线不成立（并入 (a) 作 W6-D）；(c) 重接线最便宜零保真风险。**推荐首波**：W1 root 首批灌装 ~5,000 条（零手写 Lean，磁盘 ~110 GB/批）‖ W6-A 19,715 图证书树 light 数据（本机机械生成）。三件待用户裁决见 §6 第 8 项。
 6. `就绪` **BO LA1 注册表侦察**（只读）：JEJTVGB 暴露的 22+ 条 `*_concl` 箭头族 + LA2x 机器——B 类最大单块，预判多为 scs 记录展开。
 7. `已批` **F1 UPFZBZM 改线**（见 §3）。
-8. `就绪` **WSEWPCH W5b BGMIFTE**（LA7:662，HOL 1050 行，本核最大单件）：W5a 已落库，LA7 加 `import LocalAuto9` 即可消费（车道实核无环）；可白拿 IN_V_IMP_AZIM_LESS_PI + inangle≡azimInFan 字典 + sol_local↔Σ interior_angle 重指数；**不可依赖** NKEZBFC 链。另 **W6a/b/c 收官三波**（待 W2 / W3b / W4）、**W1b 小波** LA7 UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE（~200 行）。
+8. `在飞` **WSEWPCH W5b BGMIFTE**（见 §1 wsewpch-w5b）。另 **W6a/b/c 收官三波**（待 W2 ✅ / W3b / W4）、**W1b 小波** LA7 UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE（~200 行，待 w5b 释放 LA7）。
 9. `待 G4 一步` **nli B 批（rest 10 `RQWUDDU` 46 叶 + rest 62 `QITNPEAv2_4003532128` 16 叶）**：G4 已解出（`bbarb_results` rc=0），但证书 JSON 未导出进仓（`out/cert/`、`out/cases/` 被 gitignore；`nli2/certs/` 只有已闭合的 6096597438_b）。用户在 G4 上导出两份 cert JSON（或直接 `emit_lean.py` 发射 Lean 源提交）后，本机 Lean 批 ~200–300 行、构建秒级 → **锥 −2**。这是 nli 剩余 57 件里最便宜的一步。
    > 勘误（10-26）：此前此项写作「nli A1 批 待 A2 完工再开」——**A1（rest 20 FWGKMBZ）早已于 2026-10-22 落库 `286d11b8`**（Assembly:805–8xx 真证，606 olean 在主仓，今日探针标准三），系沿用 10-22 侦察报告建议未核对所致。
 10. `排队` **WSEWPCH W2(c)** LA2:1488 / LA7:444 双桩统一小波（待 w5a 释放 LA2）。
@@ -64,12 +64,8 @@
 2. **nli A2 攻坚**（hNL 技术闸）：rest 9 的 sqrt/atan/ite 区间编码 + 预构建
    oleans/分机（冷构建外推 40-45h）。**过了它，57 条 rest 是 A1 模板（CFWGKMBZ，
    `286d11b8`）的流水线复制**——这是 156 直源里最大单簇（58 条）的总闸。
-3. **保真度全库审计 v1**（`scripts/fidelity_check.py`）：解析全部 `.hl` 定理语句 ↔ Lean
-   冻结签名做规范化结构比对（前提序/符号/槽形/量词序），先报告不拦截。已实锤 3 起
-   misplant（CFFONNL 前提序 / bank_TSKAJXYGXSA 符号 / OEHDBEN 注册表形）。
-   **必须在 nli 批量接线之前出第一版**——防模板带隐性 misplant 复制 58 次。
-4. **LP 终端语义移植设计侦察**（hLP 先行设计，只读）：LP 树/分裂/numerics 的 Lean
-   对象模型方案与波次拆分（`5d57f21e` 定性为多波项目，波次尚未拆）。
+3. **保真度全库审计 v1**（`scripts/fidelity_check.py`）：✅ **已落库 `fc4afc08`**（2026-10-26，自检 PASS，配对率 69.4%，HEAD 全量 H 级恰为 SF-53 两处；Top-5 人审入 §6 第 7 项；v2 = 接入 881 条 NEEDS 指针提配对率）。
+4. **LP 终端语义移植设计侦察**：✅ **已落库**（`docs/scouts/lp-design-scout.md`，2026-10-26；波次计划与三件裁决入 §2 第 5 项 / §6 第 8 项）。
 5. **`scripts/integrate_lane.sh` 固化**：md5 校验 → cp → diff 断言（纯追加/预期删除
    模式）→ 闸 → 消息模板 → push → 地图重生成提醒。背景：编排者人肉链已踩
    后台 shell cwd 重置（闸 127 空跑 ×3）与提交相对路径两坑。
@@ -105,17 +101,19 @@
 5. **A2-W2b 算力去向**：实测单分片 3,000–7,000 s（远超计划口径），本机 nice 19 续跑预计还要 **~2 周**；可选 (a) 本机继续（零额外成本，期间其他车道照常）、(b) 迁 G4/Linux 多核机重跑（RUNBOOK-G4 §3 分段命令可直接复用，olean 回灌流程不变）、(c) 两边并跑，先到先用。编排者默认 (a) 不中断；用户若选 (b)/(c) 告知即可。**→ 已被第 6 项取代：先提速再谈算力。**
 6. **A2 提速方案（编排者建议批准）**。根因：Base 表达式把常数 π/4 编成 1024 项 Leibniz 级数 `(.trans .arctanK (.const ⟨1,0⟩) 1024 (-64))` ×4，每叶重算 4096 项高精度级数（x=1 处只以 1/(2N+1) 收敛，emitter 自己的注释承认此事）；外加 `decide` 默认 Meta whnf + 内核两遍求值。kit 已有 W8 gen-10 `TKind.atan1K`（精确点 [1,1] 直接返回预证 `pi4D` 盒，宽 2⁻⁶⁴，语义仍 `Real.arctan x`），emitter 开关默认 OFF。**3 叶受控基准（同负载，扣 import 基线）**：现状 10.3 s/叶；仅 `+kernel` 6.2；Euler `arctan(1/2)+arctan(1/3)` N=16 + `+kernel` 0.35；**`.atan1K` + `+kernel` 0.26 s/叶（~40×）**，三叶全部仍判定通过。方案：(a) `Base.lean` 4 处 `.arctanK`→`.atan1K`（`_sem` 仍 `rfl`，Glue 与 2,775 分片文本零改动）；(b) 可选 sed 分片 `(by decide)`→`(by decide +kernel)` 再省 ~2×；(c) emitter `atan1K` 开关默认 ON（惠及后续所有含 π 的 nli 证书）；(d) 中断当前构建、丢弃 ~190 olean（~90 CPU-h 沉没）重跑，预计 **<1 天** vs 现口径 ~10 天。风险极低：更紧的 π/4 盒只会让区间更窄（包含单调）；全量重跑即最终确认。nice 19 已排除（CPU 秒数不变）；`exponentiation.threshold` 已排除（无差）。
 7. **fidelity-v1 Top-5 可疑项人审**（编排者先人审，涉陈述改动再走 SF）：SphereKit:144 `num1` 重建体与正本差交叉项且符号布局不同；ContraFanDeep:3598 `cf4_etaP_box` 正本指针与 Lean 盒形态不符疑引错条目；LocalAuto11:192 `dartStd4_p11` 正本三常数在 Lean 陈述中缺失疑截断移植；PA21:599 `bank_BIXPCGW9455898160` docstring 与已修陈述自相矛盾（注释级）；SF-53 两处被独立复现（HEAD 全量 H 级恰为此两处）。
+8. **hLP 开波三件**（`docs/scouts/lp-design-scout.md` §4）：(i) `GoodListNodes := True` 占位真化（陈述/定义变更）；(ii) W6-PIN 冻结面钉定升级；(iii) W5/W7 算力与磁盘窗口——bound 叶灌装每批 ~110 GB olean，终装配 **≥ 1.5 TB**（旧侦察「[360,7,800] 核时」头号风险已被 root 实测推翻，新瓶颈是磁盘）。编排者建议：先批 W6-A（本机机械生成、零磁盘风险）与 W1 root 首批 5,000 条（需 ~110 GB 空闲盘）。
 
 ## 7. 文档/代码卫生（2026-10-25 盘点）
 
 - ~~e2e-debt-map.md 自称"现行度量文件"~~ → 已加存档标记（本日）。
 - module-map.md / packing-manifest.md / local-manifest.md 的进度勾选滞后 → 列入周对表项。
-- scouts/ 与 handoffs/ 为归档区，不维护（天然历史）。
+- scouts/ 与 handoffs/ 为归档区，不维护（天然历史）。**例外标注**（2026-10-26）：`formal-lp-verify-scout.md` 七处过时（核心是「编译 [360,7,800] 核时」风险已被 root 实测推翻，新瓶颈为磁盘 860–940 GB oleans；189 infeasible 模块已落库未反映）、`lp-w6-coverage-scout.md` infeas 半边 sorryAx 一句失效——以 `lp-design-scout.md` §5 为准。
 - phase6-spine.md 保留（§6 仍是里程碑定义源）；phase5-worker-template.md 等
   phase 系列随归档处理，不再更新。
 
 ## 8. 变更日志
 
+- **2026-10-26（上午，续 3）**：lp-design-scout 落库（`docs/scouts/lp-design-scout.md` 291 行）：hLP 债点保真核对无新误植；发现 189 infeasible LP 模块早已落库（`7ba6b5b7`）而两份旧侦察未反映；42,889 bound 叶开放、磁盘为新瓶颈（终装配 ≥1.5 TB）；三条路线判定 + W1/W6-A 推荐首波入 §2 第 5 项，三件用户裁决入 §6 第 8 项。补位发车 **wsewpch-w4**（LA5 HALP_CIRCLE_IS_INTERSECTION → HKIRPEP；勘误：RHO_NODE1_MONO_WITH_AZIM 已真非「全树缺」）。§3 第 3/4 项（保真审计 v1、LP 设计侦察）标记完成。
 - **2026-10-26（上午，续 2）**：三波落库——WSEWPCH W2 `057a0683`（AzimBridge +155，20 件标准三，11 对桥全 rfl 级，新 import LA2）、**池C `db3ae79f`**（PA25 +380/−22，五件标准三含任务书外 MCELL4_DIHX_AZIM，新 import PA24，**锥 −2**：地图重生成 TSV `09f84c2e` 实测 155→153，可达 218,297）、fidelity-v1（`lean/scripts/fidelity_check.py` 1,235 行 + 审计报告/TSV，自检 PASS，发现 SF-49 已在 HEAD 修复）。补位发车 wsewpch-w5b（LA7 BGMIFTE）、lp-design-scout（只读）、poolc-w2（PA25 K3_CC_WI_ALT 锥链）。**A2 慢因调研收口**（§6 第 6 项）：非固有，π/4 常数的 1024 项级数编码 + decide 双遍求值；`.atan1K` + `+kernel` 实测 ~40×，待用户批准重跑。§0 勘误：nliRest 开放数 58→57（TSV 实数）。
 - **2026-10-26（上午，续）**：WSEWPCH W5a 落库 `b1e1224d`（LA9 +119/−3，四件标准三，36→33，新 import LA5 无环实核；NKEZBFC 阻于 NKEZBFC_PREP_p9 900 行 GIANT + EJRCFJD_ALT2，LA2 零改动）；1:1 补位发车 **wsewpch-w3b**（LA3 CIZMRRH + 同节两枚仿射引理）。雷区入册：闸命令 `GATE_ROOTS` 不接受速记 `[Kepler.Text.Downstream]`（unknown target），省略即用脚本默认七根（Hypermap/PackingConcl/LocalConcl/LocalBridge/TameLp/AzimBridge/ContraFan）。
 - **2026-10-26（上午）**：应用户「再起三四条」指令，**四车道同发**（poolc-wedge / wsewpch-w2 / wsewpch-w5a / fidelity-v1），全部启动成功——并发上限实测已不再是 2。两项编排者裁定入档：PA25 加 import PA24 预批准（无环实核）；AzimBridge 无主→W2 直接追加。侦察发现 **A2-W2b 吞吐远低于计划**（Shard54–100 单片 3,000–7,000 s，184/2776，剩余 ~2 周）→ 列入 §6 用户裁决第 5 项，默认本机续跑不中断；nli A1 批据此改为「待 A2 完工再开」。§1 表清理：已并网行收进一句摘要，不再逐行保留。**同日勘误**：§2 第 9 项「nli A1 待 A2 完工」有误——A1 早已落库（`286d11b8`，10-22），改为 nli B 批（rest 10 + rest 62，待 G4 导出两份 cert JSON，锥 −2）。nli 现况：62 具名 / 已闭 5（rest 2、4、60 真算术 + A1 rest 20 + N2 rest 1）/ 开放 57（含 A2 在飞）；rest 57 中证书 Lean 源在库的只剩 rest 9。
