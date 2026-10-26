@@ -1,0 +1,201 @@
+diff --git a/lean/Kepler/Text/LocalAuto14.lean b/lean/Kepler/Text/LocalAuto14.lean
+index 0c5660f0..039f23d2 100644
+--- a/lean/Kepler/Text/LocalAuto14.lean
++++ b/lean/Kepler/Text/LocalAuto14.lean
+@@ -693,7 +693,7 @@ theorem WNWSHJT_p14 (w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
+ /-- HOL `LOFA_IMP_INANGLE_EQ_AZIM` (hl:1325).  NEEDS: fan structure
+ (`LocalFan` is the LocalAuto1 skeleton). -/
+ theorem LOFA_IMP_INANGLE_EQ_AZIM_p14 (V : Set V3) (E : Set (Set V3))
+-    (FF : Set (V3 × V3)) (v : V3) (h1 : LocalFan V E FF) (h2 : v ∈ V) :
++    (FF : Set (V3 × V3)) (v : V3) (h1 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (h2 : v ∈ V) :
+     interiorAngle1 0 FF v = azimInFan (v, rhoNode1 FF v) E := by
+   sorry
+ 
+@@ -701,7 +701,7 @@ theorem LOFA_IMP_INANGLE_EQ_AZIM_p14 (V : Set V3) (E : Set (Set V3))
+ structure + deformation theory. -/
+ theorem deformation_rho_node1_equivariant1_p14 (f : V3 → ℝ → V3) (V : Set V3)
+     (E : Set (Set V3)) (FF : Set (V3 × V3)) (a b : ℝ) (v : V3) (t : ℝ)
+-    (h1 : Deformation f V a b) (h2 : LocalFan V E FF)
++    (h1 : Deformation f V a b) (h2 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+     (h3 : LocalFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E)
+       ((fun d => (f d.1 t, f d.2 t)) '' FF)) (h4 : v ∈ V) :
+     f (rhoNode1 FF v) t =
+@@ -712,7 +712,7 @@ theorem deformation_rho_node1_equivariant1_p14 (f : V3 → ℝ → V3) (V : Set
+ structure + deformation theory. -/
+ theorem deformation_ivs_rho_node1_equivariant1_p14 (f : V3 → ℝ → V3) (V : Set V3)
+     (E : Set (Set V3)) (FF : Set (V3 × V3)) (a b : ℝ) (v : V3) (t : ℝ)
+-    (h1 : Deformation f V a b) (h2 : LocalFan V E FF)
++    (h1 : Deformation f V a b) (h2 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+     (h3 : LocalFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E)
+       ((fun d => (f d.1 t, f d.2 t)) '' FF)) (h4 : v ∈ V) :
+     f (ivsRhoNode1 FF v) t =
+diff --git a/lean/Kepler/Text/LocalAuto35.lean b/lean/Kepler/Text/LocalAuto35.lean
+index 4d197d56..191215aa 100644
+--- a/lean/Kepler/Text/LocalAuto35.lean
++++ b/lean/Kepler/Text/LocalAuto35.lean
+@@ -1154,7 +1154,7 @@ theorem SUM_AZIM_EQ_ANGLE_EQ4_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+ /-- HOL `CARD_FF_EQ_CARD_SLICE_FF` (QKNVMLB.hl:9059). -/
+ theorem CARD_FF_EQ_CARD_SLICE_FF_p35 (V : Set V3) (E : Set (Set V3))
+     (FF : Set (V3 × V3)) (v w : V3) (HS : Hypermap (V3 × V3))
+-    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
++    (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+     (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+     (hHS : IsHypE_p35 V E HS)
+     (fv : Set (V3 × V3)) (hfv : fv = HS.face (v, rhoNode1 FF v))
+@@ -1168,7 +1168,7 @@ theorem CARD_FF_EQ_CARD_SLICE_FF_p35 (V : Set V3) (E : Set (Set V3))
+ /-- HOL `CARD_SLICE_FF_LE_3` (QKNVMLB.hl:9122). -/
+ theorem CARD_SLICE_FF_LE_3_p35 (V : Set V3) (E : Set (Set V3))
+     (FF : Set (V3 × V3)) (v w : V3) (HS : Hypermap (V3 × V3))
+-    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
++    (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+     (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+     (hHS : IsHypE_p35 V E HS)
+     (fv : Set (V3 × V3)) (hfv : fv = HS.face (v, rhoNode1 FF v))
+diff --git a/lean/Kepler/Text/LocalAuto36.lean b/lean/Kepler/Text/LocalAuto36.lean
+index 96180082..35f1529e 100644
+--- a/lean/Kepler/Text/LocalAuto36.lean
++++ b/lean/Kepler/Text/LocalAuto36.lean
+@@ -802,7 +802,7 @@ def slicev_p36 (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3) : Set V3 :=
+ 
+ /-- HOL `CARD_SLICE_EQ` (XWITCCN.hl:63). -/
+ theorem CARD_SLICE_EQ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3)
+-    (hfan : ConvexLocalFan V E FF) (hvw : v ≠ w) (hv : v ∈ V) (hw : w ∈ V)
++    (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hvw : v ≠ w) (hv : v ∈ V) (hw : w ∈ V)
+     (hcol : ∀ u ∈ ({v, w} : Set V3), ∀ u1 ∈ V, u ≠ u1 → ¬Collinear ℝ {0, u, u1})
+     (hwedge : ∀ e ∈ FF, affGt {0} {v, w} ⊆ wedgeInFanGt_p36 e E) :
+     Nat.card V = Nat.card (slicev_p36 E FF v w) + Nat.card (slicev_p36 E FF w v) - 2 := by
+diff --git a/lean/Kepler/Text/LocalAuto37.lean b/lean/Kepler/Text/LocalAuto37.lean
+index adf450a3..89c61cf7 100644
+--- a/lean/Kepler/Text/LocalAuto37.lean
++++ b/lean/Kepler/Text/LocalAuto37.lean
+@@ -219,7 +219,7 @@ theorem EDGE_FORM_IN_LOCAL_FAN_p37 {V : Set V3} {E : Set (Set V3)}
+ `Local_lemmas.LOFA_IN_E_IMP_IN_FF` + `Local_lemmas.DETER_RHO_NODE` twins
+ (still `sorry` in LocalAuto5). -/
+ theorem EDGE_IN_LOCAL_FAN_DET_RHO_NODE_p37 {V : Set V3} {E : Set (Set V3)}
+-    {FF : Set (V3 × V3)} {x : Set V3} (h : LocalFan V E FF) (hx : x ∈ E) :
++    {FF : Set (V3 × V3)} {x : Set V3} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hx : x ∈ E) :
+     ∃ v ∈ V, {v, rhoNode1 FF v} = x := by
+   sorry
+ 
+@@ -395,7 +395,7 @@ theorem SUB_LUNAR_DEFORM_LEMMA_p37 {a b : ℝ} {V : Set V3} {E : Set (Set V3)}
+ (`Local_lemmas1.LOCAL_RHO_NODE_PAIR_E` + `EDGE_IN_LOCAL_FAN_DET_RHO_NODE`);
+ the registry `LocalFan` stub carries no `E` data. -/
+ theorem LOCAL_FAN_SET_E_p37 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+-    (_h : LocalFan V E FF) :
++    (_h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
+     {p : Set V3 | ∃ v ∈ V, p = {v, rhoNode1 FF v}} = E := by
+   sorry
+ 
+diff --git a/lean/Kepler/Text/LocalAuto7.lean b/lean/Kepler/Text/LocalAuto7.lean
+index b487393d..b7a72a32 100644
+--- a/lean/Kepler/Text/LocalAuto7.lean
++++ b/lean/Kepler/Text/LocalAuto7.lean
+@@ -1071,54 +1071,54 @@ end W5bFace
+ 
+ /-- HOL `RHO_NODE1_INJECTIVE` (polar_fan.hl:318). -/
+ theorem RHO_NODE1_INJECTIVE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+-    (h : LocalFan V E FF) :
++    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
+     ∀ v ∈ V, ∀ w ∈ V, (rhoNode1 FF v = rhoNode1 FF w ↔ v = w) := by
+   sorry
+ 
+ /-- HOL `IVS_RHO_NODE1_IN_V` (polar_fan.hl:325). -/
+ theorem IVS_RHO_NODE1_IN_V {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+-    (h : LocalFan V E FF) : ∀ v ∈ V, ivsRhoNode1 FF v ∈ V := by
++    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) : ∀ v ∈ V, ivsRhoNode1 FF v ∈ V := by
+   sorry
+ 
+ /-- HOL `LOCAL_FAN_ITER_IVS_RHO_NODE_IN_V` (polar_fan.hl:330). -/
+ theorem LOCAL_FAN_ITER_IVS_RHO_NODE_IN_V {V : Set V3} {E : Set (Set V3)}
+-    {FF : Set (V3 × V3)} (h : LocalFan V E FF) {v : V3} (hv : v ∈ V) (i : ℕ) :
++    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) {v : V3} (hv : v ∈ V) (i : ℕ) :
+     (ivsRhoNode1 FF)^[i] v ∈ V := by
+   sorry
+ 
+ /-- HOL `LOCAL_FAN_ORBIT_MAP_EXPLICIT` (polar_fan.hl:336). -/
+-theorem LOCAL_FAN_ORBIT_MAP_EXPLICIT {V : Set V3} {E : Set (Set V3)}
+-    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (v w : V3) (hv : v ∈ V) (hw : w ∈ V) :
++theorem LOCAL_FAN_ORBIT_MAP_EXPLICIT_LA7 {V : Set V3} {E : Set (Set V3)}
++    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v w : V3) (hv : v ∈ V) (hw : w ∈ V) :
+     ∃ i, i < V.ncard ∧ w = (rhoNode1 FF)^[i] v := by
+   sorry
+ 
+ /-- HOL `LOCAL_FAN_ORBIT_MAP_EXPLICIT_IVS` (polar_fan.hl:360). -/
+ theorem LOCAL_FAN_ORBIT_MAP_EXPLICIT_IVS {V : Set V3} {E : Set (Set V3)}
+-    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (v w : V3) (hv : v ∈ V) (hw : w ∈ V) :
++    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v w : V3) (hv : v ∈ V) (hw : w ∈ V) :
+     ∃ i, i < V.ncard ∧ w = (ivsRhoNode1 FF)^[i] v := by
+   sorry
+ 
+ /-- HOL `ITER_IVS_RHO_IDD` (polar_fan.hl:381). -/
+ theorem ITER_IVS_RHO_IDD {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+-    (h : LocalFan V E FF) (v : V3) (hv : v ∈ V) (n : ℕ) :
++    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) (n : ℕ) :
+     (ivsRhoNode1 FF)^[n] ((rhoNode1 FF)^[n] v) = v := by
+   sorry
+ 
+ /-- HOL `ITER_RHO_IVS_IDD` (polar_fan.hl:392). -/
+ theorem ITER_RHO_IVS_IDD {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+-    (h : LocalFan V E FF) (v : V3) (hv : v ∈ V) (n : ℕ) :
++    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) (n : ℕ) :
+     (rhoNode1 FF)^[n] ((ivsRhoNode1 FF)^[n] v) = v := by
+   sorry
+ 
+ /-- HOL `LOFA_IMP_ITER_IVS_RHO_NODE_ID` (polar_fan.hl:402). -/
+ theorem LOFA_IMP_ITER_IVS_RHO_NODE_ID {V : Set V3} {E : Set (Set V3)}
+-    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (v : V3) (hv : v ∈ V) :
++    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) :
+     (ivsRhoNode1 FF)^[V.ncard] v = v := by
+   sorry
+ 
+ /-- HOL `GENERIC_LOCAL_FAN_AZIM_POS` (polar_fan.hl:408). -/
+ theorem GENERIC_LOCAL_FAN_AZIM_POS {V : Set V3} {E : Set (Set V3)}
+-    {FF : Set (V3 × V3)} (h : ConvexLocalFan V E FF) (hg : Generic V E)
++    {FF : Set (V3 × V3)} (h : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+     (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
+     (v w : V3) (hv : v ∈ V) (hw : w ∈ V) (hwv : w ≠ v) (hwr : w ≠ rhoNode1 FF v) :
+     0 < Real.sin (azim (0 : V3) v (rhoNode1 FF v) w) := by
+@@ -1691,7 +1691,7 @@ vertices via `arcV = π - interior_angle1` in both directions. -/
+ theorem BGMIFTE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {V' : Set V3}
+     {E' : Set (Set V3)}
+     {FF' : Set (V3 × V3)}
+-    (hcl : ConvexLocalFan V E FF) (hg : Generic V E)
++    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+     (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
+     (hp : polarFan V E FF = (V', E', FF')) :
+     ConvexLocalFan V' E' FF' ∧ Generic V' E' ∧ V'.ncard = V.ncard ∧
+@@ -1738,7 +1738,7 @@ noncomputable def fanPerimeter (V : Set V3) (_E : Set (Set V3)) (FF : Set (V3 ×
+ 
+ /-- HOL `FAN_PERIMETER_INVARIANT` (polar_fan.hl:2122). -/
+ theorem FAN_PERIMETER_INVARIANT {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+-    (h : LocalFan V E FF) (v : V3) (hv : v ∈ V) :
++    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) :
+     fanPerimeter V E FF =
+       ∑ i ∈ Finset.range ((FF.ncard - 1 : ℕ) + 1),
+         arcV (0 : V3) ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) := by
+@@ -1746,7 +1746,7 @@ theorem FAN_PERIMETER_INVARIANT {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 ×
+ 
+ /-- HOL `FAN_PERIMETER_INVARIANT_CARD_V` (polar_fan.hl:2171). -/
+ theorem FAN_PERIMETER_INVARIANT_CARD_V {V : Set V3} {E : Set (Set V3)}
+-    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (v : V3) (hv : v ∈ V) :
++    {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) :
+     fanPerimeter V E FF =
+       ∑ i ∈ Finset.range ((V.ncard - 1 : ℕ) + 1),
+         arcV (0 : V3) ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) := by
+@@ -1754,14 +1754,14 @@ theorem FAN_PERIMETER_INVARIANT_CARD_V {V : Set V3} {E : Set (Set V3)}
+ 
+ /-- HOL `FAN_PERIMETER` (polar_fan.hl:2184). -/
+ theorem FAN_PERIMETER {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+-    (h : LocalFan V E FF) :
++    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
+     fanPerimeter V E FF = setSum V (fun v : V3 => arcV (0 : V3) v (rhoNode1 FF v)) := by
+   sorry
+ 
+ /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
+ local fan is at most `2 * pi`. -/
+ theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+-    (h : ConvexLocalFan V E FF) : fanPerimeter V E FF ≤ 2 * Real.pi := by
++    (h : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) : fanPerimeter V E FF ≤ 2 * Real.pi := by
+   sorry
+ 
+ end Kepler.Text
