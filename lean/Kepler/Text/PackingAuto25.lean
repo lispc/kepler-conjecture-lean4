@@ -3008,9 +3008,77 @@ theorem MCELL3_DIHX (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated V)
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X) (hn : ¬ nullSet X) :
     dihX V X (elV ul 0, elV ul 1) =
       dihV (elV ul 0) (elV ul 1) (elV ul 2) (mxi V ul) := by
-  -- NEEDS(2026-10-23 pa25wim): 无 PA21 对应桥(MCELL2_DIHX 有、MCELL3 无)——需
-  -- Tskajxy MCELL3_DIHX 移植侦察或 cellParams 路线; 下游 MCELL3_DIHX_POS 的卡点。
-  sorry
+  -- HOL OXLZLEZ3.hl:1645 镜像：dihX 在 k = 3 支读出 cellParamsD 见证表的
+  -- dihu3；见证表经 MCELL_PARAM_D_UL（内含 AJRIPQN 唯一性）复现同一胞且共享
+  -- ul 茎，于是两侧极点四元组凸包相等、非共面 + CARD4_IN_PAIRS 刚性配对，
+  -- DIHV_SYM_2 收掉换位支（同 MCELL3_DIHX_POS 的 cellParamsD 开局）。
+  subst hX
+  have hlen : ul.length = 4 := hb.1
+  have hini : initialSublist [elV ul 0, elV ul 1] ul := INITIAL_SUBLIST_2 ul hlen
+  have hq1 : (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).1 = 3 :=
+    MCELL_CELL_PARAMETERS_D_EXIST V ul [elV ul 0, elV ul 1] 3 (mcell3 V ul)
+      (by norm_num) hp hs (BumpP4.MCELL3 V ul) hb hini hn
+  rw [dihX, if_neg hn]
+  simp only [hq1, if_true, dihu3]
+  -- the cellParamsD witness reproduces the same cell with the same stem
+  obtain ⟨hXw, hbw, hisw⟩ := MCELL_PARAM_D_UL V ul [elV ul 0, elV ul 1]
+    (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).2 (mcell3 V ul) 3
+    (by norm_num) hp hs (BumpP4.MCELL3 V ul) hb hn hini rfl
+  generalize hw : (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).2 = w
+  rw [hw] at hXw hbw hisw
+  have hn' : ¬ nullSet (mcell3 V w) := by
+    rw [BumpP4.MCELL3, ← hXw]
+    exact hn
+  -- stem entries of the witness coincide with the ul stem
+  obtain ⟨yl, hyl⟩ := hisw
+  have e0 : elV w 0 = elV ul 0 := by rw [hyl]; simp [elV]
+  have e1 : elV w 1 = elV ul 1 := by rw [hyl]; simp [elV]
+  -- both cells are hulls of their extreme quadruples over the common stem
+  have hcvw := MCELL3_CONVEX_HULL V w hp hs hbw hn'
+  have hvul := MCELL3_CONVEX_HULL V ul hp hs hb hn
+  rw [e0, e1] at hcvw
+  have hcal : convexHull ℝ ({elV ul 0, elV ul 1, elV w 2, mxi V w} : Set V3)
+      = convexHull ℝ ({elV ul 0, elV ul 1, elV ul 2, mxi V ul} : Set V3) := by
+    rw [← hcvw, ← hvul, hXw, BumpP4.MCELL3]
+  -- affineness of both quadruples from non-nullity (coplanar hulls are null)
+  have hnullhull : ∀ S : Set V3, Coplanar S → nullSet (convexHull ℝ S) := by
+    intro S hcp
+    obtain ⟨a, b, c, hsub⟩ := hcp
+    exact measure_mono_null (convexHull_min hsub (AffineSubspace.convex _))
+      (Measure.addHaar_affineSubspace volume (affineSpan ℝ ({a, b, c} : Set V3))
+        (p25_affineSpan_three_ne_top a b c))
+  have haffw : ¬ affineDependent ({elV ul 0, elV ul 1, elV w 2, mxi V w} : Set V3) := by
+    intro haff
+    refine hn' ?_
+    rw [hcvw]
+    exact hnullhull _ (p25g_affdep4_coplanar haff)
+  have haffu : ¬ affineDependent ({elV ul 0, elV ul 1, elV ul 2, mxi V ul} : Set V3) := by
+    intro haff
+    refine hn ?_
+    rw [hvul]
+    exact hnullhull _ (p25g_affdep4_coplanar haff)
+  have hseteq := (CONVEX_HULL_EQ_EQ_SET_EQ _ _ haffw haffu).mp hcal
+  -- pair rigidity of the off-stem extremes
+  have hcardw : Set.ncard ({elV ul 0, elV ul 1, elV w 2, mxi V w} : Set V3) = 4 := by
+    have h4 := MCELL3_EXTREME_CARD V w hp hs hbw hn'
+    rwa [e0, e1] at h4
+  have hcardu : Set.ncard ({elV ul 0, elV ul 1, elV ul 2, mxi V ul} : Set V3) = 4 :=
+    MCELL3_EXTREME_CARD V ul hp hs hb hn
+  have hsol4 : ∀ (x0 x1 x2 x3 : V3), ({x0, x1, x2, x3} : Set V3)
+      = setOfList [x0, x1, x2, x3] := by
+    intro x0 x1 x2 x3
+    apply Set.ext (fun t => ?_)
+    simp [setOfList]
+  have hset' : setOfList [elV ul 0, elV ul 1, elV w 2, mxi V w]
+      = setOfList [elV ul 0, elV ul 1, elV ul 2, mxi V ul] := by
+    rw [← hsol4, ← hsol4]
+    exact hseteq
+  rw [e0, e1]
+  rcases LENGTH4_SET2 hcardw hset' with hev | hev
+  · rw [← hev.1, ← hev.2]
+    rfl
+  · rw [hev.1, hev.2]
+    exact DIHV_SYM_2 _ _ _ _
 
 /-- HOL `MCELL3_DIHX_POS`. -/
 theorem MCELL3_DIHX_POS (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated V)
@@ -4740,12 +4808,121 @@ theorem WEDGE_UNIQUE_CC_CELL (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
           wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) ∧
         ccCell V [elV ul 1, elV ul 0, f j] ⊆
           wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) := by
-  -- NEEDS(2026-10-23 pa25wim 复评): 三重债——MCELL4_FULL_WEDGE(本文件, 四重债) +
-  -- FUEIMOV_4(PA18:5213, MXI_NOT_IN_V 链, 独立侦察 lane 建议) + MCELL4_FI
-  -- (CFFONNL 值级债)。已就绪(新增): MCELL4_EDGE_FIRST / STEM_EDGEX / EL_CC_UH /
-  -- CC_CELL_NOT_NULLSET / CC_CELL4 / CC_KE_34 / CC_CELL_IN_MCELL_SET 全真证;
-  -- 其余为 NEGLIGIBLE_AFFINE_HULL_3/SUBSET_P_HULL/CARD4_IN_PAIRS 常规装配。
-  sorry
+  -- HOL OXLZLEZ3.hl:3101 镜像（装配级，三重债均已落库：MCELL4_FULL_WEDGE
+  -- poolc-wedge 波 / FUEIMOV_4 PA18 / MCELL4_FI 本文件）。核心：把 ke = 4 侧的
+  -- ccUh 载体经 MCELL4_EDGE_FIRST 重根到 ul 规范茎序得 vl，MCELL4_FULL_WEDGE
+  -- 在规范楔里把另一侧 cc 胞钉到同一 mcell4 V vl（胞等式）；FUEIMOV_4 给换位
+  -- 载体，其第 3 分量既是 EL_CC_UH 的 f j 又等于 4 侧载体的第 4 分量，而后者由
+  -- CC_CELL_EXTREME_CARD + CARD4_ALL_DISTINCT 强制异于 f j——撞车。
+  intro hconj
+  obtain ⟨hA, hB⟩ := hconj
+  classical
+  have h01 : elV ul 0 ≠ elV ul 1 := fun hcon => hnc (collinear3_of_eq hcon.symm)
+  -- shared core: with u0 u1 the stem order carrying ke = 4, both cells live in
+  -- the canonical ul-wedge, which forces them to be the same 4-cell and the
+  -- carriers collide
+  have core : ∀ u0 u1 : V3, ({u0, u1} : Set V3) = {elV ul 0, elV ul 1} →
+      leaf V [u0, u1, f j] → ccKe V [u0, u1, f j] = 4 →
+      ccCell V [u0, u1, f j] ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) →
+      ccCell V [u1, u0, f j] ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) →
+      False := by
+    intro u0 u1 hpair hlf hke4 hsub1 hsub2
+    have hu01 : u0 ≠ u1 := by
+      intro hcon
+      have hm0 : elV ul 0 ∈ ({u0, u1} : Set V3) := by rw [hpair]; simp
+      have hm1 : elV ul 1 ∈ ({u0, u1} : Set V3) := by rw [hpair]; simp
+      subst hcon
+      have k0 : elV ul 0 = u0 := by simpa using hm0
+      have k1 : elV ul 1 = u0 := by simpa using hm1
+      exact h01 (k0.trans k1.symm)
+    have hleafB : leaf V [u1, u0, f j] := (ZASUVOR hp hs hlf).1
+    -- canonical re-rooting of the ke = 4 carrier
+    obtain ⟨e0, e1, e2⟩ := EL_CC_UH (V := V) (ul := [u0, u1, f j]) hp hs hlf
+    have g0 : (ccUh V [u0, u1, f j]).getD 0 0 = u0 := by rw [e0]; simp
+    have g1 : (ccUh V [u0, u1, f j]).getD 1 0 = u1 := by rw [e1]; simp
+    have hbaruh : barV V 3 (ccUh V [u0, u1, f j]) :=
+      (Classical.choose_spec (cc_uh_exists V [u0, u1, f j])) hp hs hlf |>.1
+    have hccA : ccCell V [u0, u1, f j] = mcell4 V (ccUh V [u0, u1, f j]) := by
+      show mcell (ccKe V [u0, u1, f j]) V (ccUh V [u0, u1, f j]) = _
+      rw [hke4]
+      simp [mcell]
+    have hnn : ¬ nullSet (mcell4 V (ccUh V [u0, u1, f j])) := by
+      rw [← hccA]
+      exact CC_CELL_NOT_NULLSET hp hs hlf
+    have hstemE : ({u0, u1} : Set V3) ∈ edgeX V (mcell4 V (ccUh V [u0, u1, f j])) := by
+      have hsE := STEM_EDGEX (V := V) (ul := [u0, u1, f j]) hp hs hlf
+      rw [hccA, g0, g1] at hsE
+      exact hsE
+    obtain ⟨vl, hbv, he0, he1, heq4⟩ := MCELL4_EDGE_FIRST (V := V)
+      (ul := ccUh V [u0, u1, f j]) (u := elV ul 0) (v := elV ul 1) hs hp hbaruh
+      (by rw [← hpair]; exact hstemE)
+    -- canonical-order facts of vl
+    have c0 : elV vl 0 = elV ul 0 := he0.symm
+    have c1 : elV vl 1 = elV ul 1 := he1.symm
+    have hrv : leaf_rank V [elV vl 0, elV vl 1] w0 n f := by rw [c0, c1]; exact hr
+    have hncl : ¬ Collinear3 (elV vl 0) (elV vl 1) w0 := by rw [c0, c1]; exact hnc
+    have hnnv : ¬ nullSet (mcell4 V vl) := by rw [← heq4]; exact hnn
+    have hXv : ccCell V [u1, u0, f j] ⊆
+        wedgeGe (elV vl 0) (elV vl 1) (f i) (f (i + 1)) := by
+      rw [c0, c1]; exact hsub2
+    have hEv : ({elV vl 0, elV vl 1} : Set V3) ∈ edgeX V (ccCell V [u1, u0, f j]) := by
+      have hEB := STEM_EDGEX (V := V) (ul := [u1, u0, f j]) hp hs hleafB
+      obtain ⟨f0, f1, -⟩ := EL_CC_UH (V := V) (ul := [u1, u0, f j]) hp hs hleafB
+      have k0 : (ccUh V [u1, u0, f j]).getD 0 0 = u1 := by rw [f0]; simp
+      have k1 : (ccUh V [u1, u0, f j]).getD 1 0 = u0 := by rw [f1]; simp
+      rw [k0, k1] at hEB
+      have eswap : ({elV vl 0, elV vl 1} : Set V3) = ({u1, u0} : Set V3) := by
+        rw [c0, c1, ← hpair, Set.pair_comm]
+      rw [eswap]
+      exact hEB
+    have hWv : mcell4 V vl ⊆ wedgeGe (elV vl 0) (elV vl 1) (f i) (f (i + 1)) := by
+      have h1 : mcell4 V vl = ccCell V [u0, u1, f j] := heq4.symm.trans hccA.symm
+      rw [c0, c1, h1]
+      exact hsub1
+    have hBW := MCELL4_FULL_WEDGE (V := V) (X := ccCell V [u1, u0, f j]) (ul := vl)
+      (w0 := w0) (n := n) (f := f) (i := i) hp hs hrv hbv hncl hn hnnv
+      (CC_CELL_IN_MCELL_SET hs hp hleafB) hXv hEv hWv
+    -- the two cc cells coincide, so FUEIMOV_4 swaps the carriers
+    have heq : ccCell V [u0, u1, f j] = ccCell V [u1, u0, f j] := by
+      rw [hccA, hBW]
+      exact heq4
+    have hfue := FUEIMOV_4 (V := V) (ul := [u0, u1, f j]) (vl := [u1, u0, f j])
+      hs hp hlf hleafB heq (ZASUVOR hp hs hlf).2 hke4
+      (by
+        intro hcon
+        injection hcon with hcons _
+        exact hu01 hcons)
+    -- the swapped carrier's third slot is f j, and so is the ke = 4 carrier's
+    -- fourth slot; the latter must differ from f j by extreme rigidity
+    have hB2 := EL_CC_UH (V := V) (ul := [u1, u0, f j]) hp hs hleafB
+    rw [hfue] at hB2
+    have h3c : (ccUh V [u0, u1, f j]).getD 3 0 = f j := by
+      simpa using hB2.2.2
+    have h2c : (ccUh V [u0, u1, f j]).getD 2 0 = f j := by
+      simpa using e2
+    have hk3 : ¬ (ccKe V [u0, u1, f j] = 3) := by
+      intro hc
+      rw [hc] at hke4
+      norm_num at hke4
+    have hcard := CC_CELL_EXTREME_CARD (V := V) (ul := [u0, u1, f j])
+      (pp := (ccUh V [u0, u1, f j]).getD 3 0) hp hs hlf (by rw [if_neg hk3])
+    have hdist := CARD4_ALL_DISTINCT (a := (ccUh V [u0, u1, f j]).getD 0 0)
+      (b := (ccUh V [u0, u1, f j]).getD 1 0) (c := (ccUh V [u0, u1, f j]).getD 2 0)
+      (d := (ccUh V [u0, u1, f j]).getD 3 0) hcard
+    rw [h2c] at hdist
+    exact hdist.2.2.2.2.2 h3c.symm
+  -- the s_leaf dichotomy picks the ke = 4 order; run the core
+  have hmem : f j ∈ s_leaf V [elV ul 0, elV ul 1] :=
+    LEAF_RANK_S_LEAF V [elV ul 0, elV ul 1] w0 n f j hr
+  rw [S_LEAF_SET, Set.mem_setOf_eq] at hmem
+  obtain ⟨-, hd⟩ := hmem
+  have hleafA : leaf V [elV ul 0, elV ul 1, f j] :=
+    s_leaf_leaf V [elV ul 0, elV ul 1] (f j)
+      (LEAF_RANK_S_LEAF V [elV ul 0, elV ul 1] w0 n f j hr)
+  rcases hd with hd | hd
+  · exact core (elV ul 0) (elV ul 1) rfl hleafA hd hA hB
+  · exact core (elV ul 1) (elV ul 0) (by rw [Set.pair_comm])
+      ((ZASUVOR hp hs hleafA).1) hd hB hA
 
 /-- Copy of Planarity's private `collinear3_zero_sub` (Planarity:2822):
 collinearity is translation-invariant down to the origin frame. -/
@@ -5220,10 +5397,29 @@ theorem K3_CC_WI_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
     (hk : ccKe V [elV ul 0, elV ul 1, f i] = 3) :
     ccCell V [elV ul 0, elV ul 1, f i] ⊆
       wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
-  -- NEEDS(2026-10-23 pa25wim 复评): 卡 CC_CELL_SUBSET_WEDGE(BDXKHTW 链) +
-  -- K4_CC_WIM + WEDGE_UNIQUE_CC_CELL(本文件, 各自 NEEDS)。HOL 证法 = 二择 + k=4
-  -- 归约爆炸, 上游通即机械。
-  sorry
+  -- HOL OXLZLEZ3.hl:3620 镜像：相邻楔二择（CC_CELL_SUBSET_WEDGE），反支由
+  -- s_leaf 二择 + hk 推出换位茎 ke = 4（K4_CC_WIM 把 b-侧胞送入回卷楔），
+  -- WEDGE_UNIQUE_CC_CELL 在回卷指标 i + (n-1) 处给出 False。
+  rcases CC_CELL_SUBSET_WEDGE V ul (elV ul 0) (elV ul 1) w0 n f i hp hs hr hn rfl hnc with
+    hgoal | hB
+  · exact hgoal
+  · exfalso
+    have hn0 : n ≠ 0 := by omega
+    have hper : periodic f n := LEAF_RANK_PERIODIC V [elV ul 0, elV ul 1] w0 n f hr
+    have hmem : f i ∈ s_leaf V [elV ul 0, elV ul 1] :=
+      LEAF_RANK_S_LEAF V [elV ul 0, elV ul 1] w0 n f i hr
+    rw [S_LEAF_SET, Set.mem_setOf_eq] at hmem
+    obtain ⟨-, hd⟩ := hmem
+    rcases hd with hd | hd
+    · have hd' : ccKe V [elV ul 0, elV ul 1, f i] = 4 := hd
+      rw [hd'] at hk
+      norm_num at hk
+    · have hfpre : f (i + (n - 1) + 1) = f i := by
+        rw [show i + (n - 1) + 1 = i + n - 1 + 1 from by omega]
+        exact F_SUC_PRE hn0 hper i
+      have h4s := K4_CC_WIM V ul w0 n f i hp hs hr hnc hn hd
+      exact (WEDGE_UNIQUE_CC_CELL V ul w0 n f (i + (n - 1)) i hp hs hr hn hnc)
+        ⟨by rw [hfpre]; exact hB, by rw [hfpre]; exact h4s⟩
 
 /-- HOL `K3_CC_WIM_ALT`. -/
 theorem K3_CC_WIM_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -5233,9 +5429,25 @@ theorem K3_CC_WIM_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
     (hk : ccKe V [elV ul 1, elV ul 0, f i] = 3) :
     ccCell V [elV ul 1, elV ul 0, f i] ⊆
       wedgeGe (elV ul 0) (elV ul 1) (f (i + (n - 1))) (f i) := by
-  -- NEEDS(2026-10-23 pa25wim 复评): 卡 CC_CELL_SUBSET_WEDGE(BDXKHTW 链) +
-  -- K4_CC_WI_ALT + WEDGE_UNIQUE_CC_CELL(本文件)。同 K3_CC_WI_ALT, 上游通即机械。
-  sorry
+  -- HOL OXLZLEZ3.hl:3665 镜像：换位茎二择（CC_CELL_SUBSET_WEDGE，前楔支为反
+  -- 支），反支由 s_leaf 二择 + hk 推出规范茎 ke = 4（K4_CC_WI_ALT 把 a-侧胞送
+  -- 入前楔），WEDGE_UNIQUE_CC_CELL 在 (i, i) 处给出 False。
+  have hpair : ({elV ul 1, elV ul 0} : Set V3) = {elV ul 0, elV ul 1} := by
+    rw [Set.pair_comm]
+  rcases CC_CELL_SUBSET_WEDGE V ul (elV ul 1) (elV ul 0) w0 n f i hp hs hr hn hpair hnc with
+    hA | hgoal
+  · exfalso
+    have hmem : f i ∈ s_leaf V [elV ul 0, elV ul 1] :=
+      LEAF_RANK_S_LEAF V [elV ul 0, elV ul 1] w0 n f i hr
+    rw [S_LEAF_SET, Set.mem_setOf_eq] at hmem
+    obtain ⟨-, hd⟩ := hmem
+    rcases hd with hd | hd
+    · have h4s := K4_CC_WI_ALT V ul w0 n f i hp hs hr hnc hn hd
+      exact (WEDGE_UNIQUE_CC_CELL V ul w0 n f i i hp hs hr hn hnc) ⟨h4s, hA⟩
+    · have hd' : ccKe V [elV ul 1, elV ul 0, f i] = 4 := hd
+      rw [hd'] at hk
+      norm_num at hk
+  · exact hgoal
 
 /-- HOL `NO_4CELL_IMP_K3`: a wedge with no 4-cell carries two 3-cells.
 楔形 3-cell 面 2026-10-13 波转真（装配级）：HOL OXLZLEZ3.hl:3705 逐支移植——
