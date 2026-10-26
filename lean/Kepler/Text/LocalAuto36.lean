@@ -802,7 +802,7 @@ def slicev_p36 (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3) : Set V3 :=
 
 /-- HOL `CARD_SLICE_EQ` (XWITCCN.hl:63). -/
 theorem CARD_SLICE_EQ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3)
-    (hfan : ConvexLocalFan V E FF) (hvw : v ≠ w) (hv : v ∈ V) (hw : w ∈ V)
+    (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hvw : v ≠ w) (hv : v ∈ V) (hw : w ∈ V)
     (hcol : ∀ u ∈ ({v, w} : Set V3), ∀ u1 ∈ V, u ≠ u1 → ¬Collinear ℝ {0, u, u1})
     (hwedge : ∀ e ∈ FF, affGt {0} {v, w} ⊆ wedgeInFanGt_p36 e E) :
     Nat.card V = Nat.card (slicev_p36 E FF v w) + Nat.card (slicev_p36 E FF w v) - 2 := by
