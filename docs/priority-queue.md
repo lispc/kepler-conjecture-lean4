@@ -49,11 +49,11 @@
 2. `在飞` **WSEWPCH W4 lunar**（见 §1 wsewpch-w4）。
 3. `已完成` **SF-53 应用**（`b30bad76`，STATEMENT-FIX 闸 PASS）：cc4p4-discharge 车道接棒（§1）。
 4. `待 A2-W2b` **A2 落地波**：探针 `CQITNPEAx3725403817_pos` 标准三 → olean 回灌（RUNBOOK-G4 §4）→ 新建 `A2QITNPEAGlue.lean` + Assembly:739 替换 → **−1 源**。
-5. `已侦察，待批开波` **hLP 终端语义移植**（`docs/scouts/lp-design-scout.md`，2026-10-26）：债点 `lpArchiveCertificatesDebt` = HOL `linear_programming_results` 逐字镜像，保真核对 F1–F7 **无新误植**；数据面：Flyspeck 二进制证书 404 MB 全 tracked（19,715 图 / 43,078 终端记录），**189 条 infeasible 产物模块已落库叶全闭合**（`lean/Kepler/LP/T*.lean` 41,440 行，`7ba6b5b7`），42,889 bound 叶全开（root 19,237 有账本、sha 5/5 复现、p50 49.2 s/条；easy 4,362 + hard 19,290 账本丢失须重跑）。路线判定：(a) 逐记录 Farkas 证书 + decide checker 最稳；(b) 127 族查表独立路线不成立（并入 (a) 作 W6-D）；(c) 重接线最便宜零保真风险。**推荐首波**：W1 root 首批灌装 ~5,000 条（零手写 Lean，磁盘 ~110 GB/批）‖ W6-A 19,715 图证书树 light 数据（本机机械生成）。三件待用户裁决见 §6 第 8 项。
+5. `已批·分波执行` **hLP 终端语义移植**（`docs/scouts/lp-design-scout.md`）：用户 2026-10-26 批准 **W6-A**（在飞，§1）与 **W1 root 首批**。**W1 执行口径（磁盘闸）**：本机仅 113 GB 空闲 < 110 GB/批，故先以 1,000–2,000 条子批开工（`df` 硬闸：余量 <30 GB 即停），待 A2 完工清理 `/tmp/a2-rest9w2` 工作区后放大到 5,000 条/批；`enqueue`。W6-B/C 可随后开（W6-B 仍待 GoodListNodes 裁决；W6-C 无前置）。其余见 §6 第 8 项。
 6. `就绪` **BO LA1 注册表侦察**（只读）：JEJTVGB 暴露的 22+ 条 `*_concl` 箭头族 + LA2x 机器——B 类最大单块，预判多为 scs 记录展开。
 7. `已批` **F1 UPFZBZM 改线**（见 §3）。
 8. `在飞` **WSEWPCH W5b BGMIFTE**（见 §1 wsewpch-w5b）。另 **W6a/b/c 收官三波**（待 W2 ✅ / W3b / W4）、**W1b 小波** LA7 UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE（~200 行，待 w5b 释放 LA7）。
-9. `算力缺失` **nli B 批（rest 10 `RQWUDDU` + rest 62 `QITNPEAv2_4003532128`）**：**2026-10-26 用户告知 G4 机器已坏、证书随机器丢失**。两件需在带 FLINT/Arb（可选 dReal）的 Linux 环境重解（16+46 叶，求解本身很便宜；瓶颈是工具链环境）。同此命运：17 条 b1 重发射证书与 18 条硬解的 G4 侧数据。**nli 农场的真前置 = 复活一套 pipeline 工具链**（候选：本机 Docker/Linux arm64 + Homebrew flint/arb；待侦察）。在工具链复活前，nli 剩余 57 件（除 A2 在飞的 rest 9）全部排队。
+9. `在飞` **nli B 批工具链复活**（用户 2026-10-26「有空闲 lane 就开始试试」→ nli-b-toolchain 车道已发车）：Homebrew flint 3.6.0 已在（FLINT 3 单库含 Arb），本机 clang 复活 `bb_arb.c` → 重解 RQWUDDU(46 叶) + QITNPEAv2_4003532128(16 叶) → emit_lean(gen-11) → 构建+探针 → APPLY-DRAFT（A1 模板 `286d11b8`）。成功则 B 批 **锥 −2**，且为 17 条重发射 + 18 条硬解铺路。
    > 勘误（10-26）：此前此项写作「nli A1 批 待 A2 完工再开」——**A1（rest 20 FWGKMBZ）早已于 2026-10-22 落库 `286d11b8`**（Assembly:805–8xx 真证，606 olean 在主仓，今日探针标准三），系沿用 10-22 侦察报告建议未核对所致。
 10. `排队` **WSEWPCH W2(c)** LA2:1488 / LA7:444 双桩统一小波（待 w5a 释放 LA2）。
 
@@ -101,7 +101,7 @@
 5. ~~**A2-W2b 算力去向**~~ → 已被第 6 项取代。
 6. ~~**A2 提速方案**~~ → **已批准（2026-10-26 用户）并执行**（`8f789c60`：atan1K + decide +kernel + emitter gen-11；构建重启，分片 181–512 s 实测，预计 ~1 天完工）。
 7. **fidelity-v1 Top-5 可疑项人审**（编排者先人审，涉陈述改动再走 SF）：SphereKit:144 `num1` 重建体与正本差交叉项且符号布局不同；ContraFanDeep:3598 `cf4_etaP_box` 正本指针与 Lean 盒形态不符疑引错条目；LocalAuto11:192 `dartStd4_p11` 正本三常数在 Lean 陈述中缺失疑截断移植；PA21:599 `bank_BIXPCGW9455898160` docstring 与已修陈述自相矛盾（注释级）；SF-53 两处被独立复现（HEAD 全量 H 级恰为此两处）。
-8. **hLP 开波三件**（`docs/scouts/lp-design-scout.md` §4）：(i) `GoodListNodes := True` 占位真化（陈述/定义变更）；(ii) W6-PIN 冻结面钉定升级；(iii) W5/W7 算力与磁盘窗口——bound 叶灌装每批 ~110 GB olean，终装配 **≥ 1.5 TB**（旧侦察「[360,7,800] 核时」头号风险已被 root 实测推翻，新瓶颈是磁盘）。编排者建议：先批 W6-A（本机机械生成、零磁盘风险）与 W1 root 首批 5,000 条（需 ~110 GB 空闲盘）。
+8. **hLP 剩余两件 + 磁盘窗口**（`docs/scouts/lp-design-scout.md` §4）：W6-A、W1 已批（见 §2 第 5 项执行口径）。仍待：(i) `GoodListNodes := True` 占位真化（陈述/定义变更，W6-B 前置）；(ii) W6-PIN 冻结面钉定升级（statement-fix 流程）；(iii) W5/W7 算力与磁盘窗口——bound 叶全量灌装 olean 860–940 GB、终装配 **≥ 1.5 TB**，本机 460 GB 盘承载不了，届时需外置盘/多机策略。
 
 ## 7. 文档/代码卫生（2026-10-25 盘点）
 
@@ -113,6 +113,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-26（上午，续 7）**：用户三项裁决落地——(1) nli B 批工具链复活试local：**nli-b-toolchain 发车**（flint 3.6.0 已在 Homebrew，bb_arb.c 本机 clang 复活 → 重解两案 → gen-11 发射 → A1 模板粘合草案）；(2) **W6-A 批准并发车**（hlp-w6a：19,715 图证书树 light 数据 + 族名普查）；(3) **W1 批准入队**，执行口径改子批 + 磁盘硬闸（本机 113 GB 空闲 < 110 GB/批；A2 完工清理工作区后放大）。§2 第 5/9 项、§6 第 8 项改写。
 - **2026-10-26（上午，续 6）**：连落四波——**SF-53 应用 `b30bad76`**（闸 PASS；首轮 FAIL 系 patch 头带 diff -u 时间戳，归档规范化后重跑，雷区入册）、**池C-W2 `621a7566`**（PA25 四件含锥源 K3_CC_WI_ALT，**地图实测 153→152**，TSV `bfe278b5`，可达 218,326）、**W5b `79586134`**（LA7 +255/−2：arc half p7w2_half_polar_arc + 对偶引擎 p7w2_hvihvec + W6a 预支两枚 foundation 件；BGMIFTE 本体留待；**新地图死角**：LA2:1488/LA7:1063 同名桩致 LA7 不得 import 任何传递达 LA2 的模块；两枚 SF 提案）。补位发车 cc4p4-discharge（PA4）+ la1-localfan-scout（只读）。A2 重建 169/2776、分片 146–954 s。
 - **2026-10-26（上午，续 5）**：用户裁决三项——**A2 提速批准并执行**（`8f789c60`：Base atan1K ×4、2,775 分片 967,759 处 `+kernel`、emitter gen-11；旧构建中止，重启后**分片单墙钟实测 181–512 s（原 3,000–7,000 s）**，118/2776，预计 ~1 天完工）；**SF-53 批准**（patch 已贴工作树，STATEMENT-FIX 闸跑中；首轮闸 FAIL 系 patch 头带 diff -u 时间戳致 awk 全等提取落空，归档已规范化后重跑——雷区入册）；**nli B 批证书随 G4 机器损坏丢失**（§2 第 9 项改写：nli 农场真前置 = 复活 pipeline 工具链，候选本机 Docker+flint/arb，待侦察）。WSEWPCH W4 落库 `1043a77e`（LA5 lunar 两件 6→4），补位发车 wsewpch-w6b（LA5 KCHMAMG）。
 - **2026-10-26（上午，续 4）**：WSEWPCH W3b 落库 `9d08844d`（LA3 +367/−3，AFF_GE_TO_AFF_GT2_GE1 / AFF_GE_INTER_AFF_LT_IMP_NOT_EQ_COL / **CIZMRRH** 三件标准三，11→8，import 零变动；W6c 三臂互斥已装进 `hneg`）。披露：车道以字面 `~` 路径在主仓 `lean/` 下误建草稿副本目录（未追踪、已比对后删除、追踪文件零污染）——后续任务书改用绝对路径。补位发车 **nkezbfc-giant-w1**（LA9）。WSEWPCH 现况：W1/W2/W3a/W3b/W5a 五波落库，W4/W5b 在飞，余 W6a（待 LA7 释放）/ W6b KCHMAMG（待 LA5 释放）/ W6c 装配 + NKEZBFC 链。
