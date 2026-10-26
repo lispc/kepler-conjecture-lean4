@@ -7671,7 +7671,90 @@ theorem HALP_CIRCLE_IS_INTERSECTION (h : convexLocalFan_p2 V E FF)
     (hl : lunar_p2 v w V E) :
     ∃ i : ℕ, i < V.ncard ∧ ¬(i = 0) ∧ ¬(i = 1) ∧ w = (rhoNode1_p2 FF)^[i] v ∧
       ((fun l => (rhoNode1_p2 FF)^[l] v) '' {l : ℕ | 0 < l ∧ l < i}) =
-        affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3) ∩ V := sorry
+        affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3) ∩ V := by
+  -- Filled (W4 lunar lane 2026-10-23) on the HOL 5653 route: witness `i'`
+  -- from LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100; the orbit arc is inside the
+  -- cone (half-circle) and inside V (LOCAL_FAN_ORBIT_MAP_VITER); conversely a
+  -- point of the cone in V is read off the orbit decomposition
+  -- (LOFA_IMP_LT_CARD_SET_V) and splits on n = 0 (v is on the line {0, v}),
+  -- n = i' (x = w is excluded by NOT_COLL_RHONODE_SND_POINT +
+  -- AFF_GT_SAME_WITH_ENDS on the swapped lunar), i' < n (shift through
+  -- w = ρ^[i'] v: the w-arc lands in the disjoint cone
+  -- NOT_INTERSECTION_BWT_AFF_GTS, and a too-long shift closes the cycle early
+  -- against LOFA_IMP_DIS_ELMS23), and finally 0 < n < i' (done directly).
+  obtain ⟨hlo, -⟩ := CVLF_LF_F h
+  have hlswap : lunar_p2 w v V E := (LUNAR_COMM v w V E).mp hl
+  have hvV : v ∈ V := hl.2.1 (Set.mem_insert v ({w} : Set V3))
+  obtain ⟨i', hiV', hi0', hi1', hiw', harc'⟩ := LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100 h hl
+  obtain ⟨i, hiV, hi0, hi1, hiw, harc⟩ :=
+    LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100 h hlswap
+  refine ⟨i', hiV', hi0', hi1', hiw', ?_⟩
+  refine Set.eq_of_subset_of_subset ?_ ?_
+  · -- the orbit arc sits in the cone and in V
+    rintro x ⟨l, ⟨h0l, hli'⟩, hlx⟩
+    have hxinV : x ∈ V := by
+      rw [← hlx]
+      exact LOCAL_FAN_ORBIT_MAP_VITER hlo hvV l
+    exact ⟨harc' ⟨l, ⟨h0l, hli'⟩, hlx⟩, hxinV⟩
+  · -- conversely: a point of the cone in V is an arc point
+    intro x hx
+    have hxgt : x ∈ affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3) := hx.1
+    have hxV : x ∈ V := hx.2
+    have hset := LOFA_IMP_LT_CARD_SET_V hlo hvV
+    have hxmem : x ∈ ({(rhoNode1_p2 FF)^[n] v | n < V.ncard} : Set V3) := by
+      rw [hset]; exact hxV
+    obtain ⟨n, hnV, hnx⟩ := hxmem
+    by_cases hn0 : n = 0
+    · -- n = 0 forces x = v against v outside the open cone
+      exfalso
+      have hvx : v = x := by rw [hn0] at hnx; simpa using hnx
+      rw [← hvx] at hxgt
+      exact (NOT_COLL_IMP_NOT_AFF_SUB (LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlo hvV)
+        (mem_affineSpan _ (by simp))) hxgt
+    · by_cases hni : n = i'
+      · -- n = i' forces x = w against w outside affGt {0, w} {ρ v}
+        exfalso
+        have hxw : x = w := by
+          rw [hni] at hnx
+          exact hnx.symm.trans hiw'.symm
+        rw [hxw] at hxgt
+        have hnc : ¬ Collinear ℝ ({0, w, rhoNode1_p2 FF v} : Set V3) :=
+          NOT_COLL_RHONODE_SND_POINT h hlswap
+        have hnot : ¬ (w ∈ affGt ({0, w} : Set V3) ({rhoNode1_p2 FF v} : Set V3)) :=
+          NOT_COLL_IMP_NOT_AFF_SUB hnc (mem_affineSpan _ (by simp))
+        rw [← AFF_GT_SAME_WITH_ENDS h hlswap] at hxgt
+        exact hnot hxgt
+      · by_cases hbig : i' < n
+        · -- i' < n: split the remaining orbit point through w
+          exfalso
+          have hni' : i' < n := hbig
+          have hstep : (rhoNode1_p2 FF)^[n] v = (rhoNode1_p2 FF)^[n - i'] w := by
+            conv_lhs => rw [show n = n - i' + i' from by omega]
+            rw [Function.iterate_add_apply, ← hiw']
+          rw [hstep] at hnx
+          by_cases hlt : n - i' < i
+          · -- x lies on the w-arc, i.e. in both disjoint cones
+            have hmemarc : (n - i') ∈ ({l : ℕ | 0 < l ∧ l < i} : Set ℕ) := by
+              simp only [Set.mem_setOf_eq]; omega
+            have hxarc : x ∈ affGt ({0, w} : Set V3) ({rhoNode1_p2 FF w} : Set V3) :=
+              harc ⟨n - i', hmemarc, hnx⟩
+            have hcap : x ∈ (affGt ({0, v} : Set V3) ({rhoNode1_p2 FF w} : Set V3) ∩
+                affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3)) := by
+              refine ⟨?_, hxgt⟩
+              rw [AFF_GT_SAME_WITH_ENDS h hl]
+              exact hxarc
+            rw [NOT_INTERSECTION_BWT_AFF_GTS h hl] at hcap
+            exact Set.notMem_empty x hcap
+          · -- i ≤ n - i': the cycle closes too early against DIS_ELMS23
+            have hdis := LOFA_IMP_DIS_ELMS23 hlo hvV 0 (i + i') (by omega) (by omega)
+            have hiter : (rhoNode1_p2 FF)^[i + i'] v = v := by
+              rw [Function.iterate_add_apply, ← hiw']
+              exact hiw.symm
+            exact hdis hiter
+        · -- 0 < n < i': x is already an arc point
+          have hmemarc : n ∈ ({l : ℕ | 0 < l ∧ l < i'} : Set ℕ) := by
+            simp only [Set.mem_setOf_eq]; omega
+          exact ⟨n, hmemarc, hnx⟩
 
 /-- HOL `CONVEX_LOFA_IMP_INANGLE_LE_PI` (local_lemmas.hl:5818). -/
 theorem CONVEX_LOFA_IMP_INANGLE_LE_PI (h : convexLocalFan_p2 V E FF) {v : V3}
@@ -7993,7 +8076,25 @@ theorem HKIRPEP (h : convexLocalFan_p2 V E FF) (hl : lunar_p2 v w V E) :
           affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3) ∩ V) ∧
       (∃ j : ℕ, j < V.ncard ∧ ¬(j = 0) ∧ ¬(j = 1) ∧ v = (rhoNode1_p2 FF)^[j] w ∧
         ((fun l => (rhoNode1_p2 FF)^[l] w) '' {l : ℕ | 0 < l ∧ l < j}) =
-          affGt ({0, v} : Set V3) ({ivsRhoNode1_p2 FF v} : Set V3) ∩ V) := sorry
+          affGt ({0, v} : Set V3) ({ivsRhoNode1_p2 FF v} : Set V3) ∩ V) := by
+  -- Filled (W4 lunar lane 2026-10-23): the HOL 6027 MESON assembly over the
+  -- real lunar kit — LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI for the flat remaining
+  -- vertices, INTERIOR_ANGLE1_POS + CONVEX_LOFA_IMP_INANGLE_LE_PI for the
+  -- angle bounds, LUNAR_IMP_INTERIOR_ANGLE_EQQ for the v/w angle equality,
+  -- HALP_CIRCLE_IS_INTERSECTION on both lunar orientations for the two arc
+  -- descriptions, and AFF_IVS_RHO_NODE_EQQ re-expressing the w-arc cone as
+  -- affGt {0, v} {ivs v}.
+  have hvV : v ∈ V := hl.2.1 (Set.mem_insert v ({w} : Set V3))
+  have hlswap : lunar_p2 w v V E := (LUNAR_COMM v w V E).mp hl
+  refine ⟨fun u hu => ((LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI h hl).2 u hu).1,
+    INTERIOR_ANGLE1_POS (CVLF_LF_F h).1 hvV,
+    CONVEX_LOFA_IMP_INANGLE_LE_PI h hvV,
+    LUNAR_IMP_INTERIOR_ANGLE_EQQ h hl,
+    HALP_CIRCLE_IS_INTERSECTION h hl, ?_⟩
+  obtain ⟨j, hjV, hj0, hj1, hjw, hjarc⟩ := HALP_CIRCLE_IS_INTERSECTION h hlswap
+  refine ⟨j, hjV, hj0, hj1, hjw, ?_⟩
+  rw [← AFF_IVS_RHO_NODE_EQQ h hl]
+  exact hjarc
 
 /-- HOL `FINITE_CARD1_IMP_SINGLETON` (local_lemmas.hl:6072). -/
 theorem FINITE_CARD1_IMP_SINGLETON {α : Type*} {S : Set α} (hS : S.Finite)
