@@ -69,6 +69,7 @@ import Kepler.Text.PackingAuto3
 import Kepler.Text.PackingAuto4
 import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
+import Kepler.Text.PackingAuto24
 import Kepler.Text.SphereKit
 import Kepler.Statement
 import Mathlib
@@ -1792,6 +1793,77 @@ theorem GAMMAX_NO_BETA (V : Set V3) (ul : List V3) (X : Set V3) (e : Set V3) (k 
   rw [hbb]
   exact add_nonneg (mul_nonneg hg (CRITICAL_WEIGHT_POS_LE V X)) (by simp)
 
+/-- Helper (2026-10-23 poolc-wedge): `hl` of the stem pair is bounded by `hl`
+of any leaf triple via `HL_DECREASE` + `truncateSimplex1_pair` + `HL_2`,
+giving the `dist u0 u1 < sqrt 8` input of `REUHADY_p24`
+(HOL OXLZLEZ3.hl:839-846, the `XNHPWAB4` subderivation). -/
+private theorem p25w_dist_lt_sqrt8 {V : Set V3} {u0 u1 v : V3} (hp : Packing V)
+    (hbar : barV V 2 [u0, u1, v]) (hlt : hl [u0, u1, v] < Real.sqrt 2) :
+    dist u0 u1 < Real.sqrt 8 := by
+  have hlen : 2 ≤ [u0, u1, v].length := by simp
+  have hdec := HL_DECREASE V [u0, u1, v] 2 1 hp hbar (by omega)
+  have htrL : truncateSimplex 1 [u0, u1, v] = [u0, u1] := by
+    rw [truncateSimplex1_pair [u0, u1, v] hlen]
+    rfl
+  rw [htrL, HL_2] at hdec
+  have h82 : (Real.sqrt 8 : ℝ) = 2 * Real.sqrt 2 := by
+    rw [show (8 : ℝ) = 4 * 2 from by norm_num, Real.sqrt_mul (by norm_num)]
+    norm_num
+  linarith
+
+/-- Helper (2026-10-23 poolc-wedge): two distinct leaves on the same stem have
+nonvanishing azimuth (HOL OXLZLEZ3.hl:860-877, the inline `FCHKUGT` segment of
+`REUHADY`): `azim = 0` puts `v2` in the flat cone `affGt {u0,u1} {v1}`
+(`azim_eq_zero_iff`), the cone equality transfers to `ccA0` (ray
+re-recombination, `affGt_pair_iff`), and `FCHKUGT` collapses `v2 = v1`. -/
+private theorem p25w_azim_ne_of_leaves {V : Set V3} {u0 u1 v1 v2 : V3}
+    (hp : Packing V) (hs : saturated V)
+    (hl1 : leaf V [u0, u1, v1]) (hl2 : leaf V [u0, u1, v2]) (hv : v1 ≠ v2) :
+    azim u0 u1 v1 v2 ≠ 0 := by
+  intro h0
+  have hnc1 := GBEWYFX (V := V) (ul := [u0, u1, v1]) hp hs hl1
+  simp only [List.getElem!_cons_zero, List.getElem!_cons_succ] at hnc1
+  have hnc2 := GBEWYFX (V := V) (ul := [u0, u1, v2]) hp hs hl2
+  simp only [List.getElem!_cons_zero, List.getElem!_cons_succ] at hnc2
+  have hmem : v2 ∈ affGt ({u0, u1} : Set V3) ({v1} : Set V3) :=
+    (azim_eq_zero_iff_alt hnc1 hnc2).mp h0
+  have hv0v1 : (u0 : V3) ≠ u1 := fun he => hnc1 (collinear3_of_eq he.symm)
+  have hv10 : (v1 : V3) ≠ u0 := fun he => hnc1 (collinear3_pair_left he)
+  have hv11 : (v1 : V3) ≠ u1 := fun he => hnc1 (collinear3_pair_right he)
+  have hv20 : (v2 : V3) ≠ u0 := fun he => hnc2 (collinear3_pair_left he)
+  have hv21 : (v2 : V3) ≠ u1 := fun he => hnc2 (collinear3_pair_right he)
+  -- cone equality from the ray representation (verbatim `affGt_pair_iff`
+  -- re-recombination, cf. the `COLL_IN_AFF_GT_AFF_GT_EQ` route)
+  have hiffz : ∀ q : V3, q ∈ affGt ({u0, u1} : Set V3) ({v1} : Set V3) ↔
+      ∃ c : ℝ, 0 < c ∧ ∃ h : ℝ, q - u0 = c • (v1 - u0) + h • (u1 - u0) :=
+    fun q => affGt_pair_iff hv0v1 hv10 hv11
+  have hiffa : ∀ q : V3, q ∈ affGt ({u0, u1} : Set V3) ({v2} : Set V3) ↔
+      ∃ c : ℝ, 0 < c ∧ ∃ h : ℝ, q - u0 = c • (v2 - u0) + h • (u1 - u0) :=
+    fun q => affGt_pair_iff hv0v1 hv20 hv21
+  obtain ⟨c, hc, h, hray⟩ := (hiffz v2).mp hmem
+  have hray' : c • (v1 - u0) = (v2 - u0) - h • (u1 - u0) := by
+    rw [hray]; module
+  have key : (v1 - u0 : V3) = (1 / c) • ((v2 - u0) - h • (u1 - u0)) := by
+    have h1 : (v1 - u0 : V3) = (1 / c) • (c • (v1 - u0)) := by
+      rw [smul_smul, show ((1 : ℝ) / c) * c = 1 from by field_simp, one_smul]
+    rw [h1, hray']
+  have hcone : affGt ({u0, u1} : Set V3) ({v1} : Set V3)
+      = affGt ({u0, u1} : Set V3) ({v2} : Set V3) := by
+    ext q
+    constructor
+    · intro hq
+      obtain ⟨c2, hc2, h2, hq2⟩ := (hiffz q).mp hq
+      refine (hiffa q).mpr ⟨c2 / c, by positivity, h2 - c2 * h / c, ?_⟩
+      rw [hq2, key]
+      module
+    · intro hq
+      obtain ⟨c3, hc3, h3, hq3⟩ := (hiffa q).mp hq
+      refine (hiffz q).mpr ⟨c3 * c, by positivity, c3 * h + h3, ?_⟩
+      rw [hq3, hray]
+      module
+  exact hv (FCHKUGT hs hp (show ccA0 [u0, u1, v1] = ccA0 [u0, u1, v2] from
+    hcone) hl1 hl2)
+
 /-- HOL `REUHADY` (owned by the REUHADY.hl lane — PackingAuto24; the copy
 here is the form consumed by `LEAF_RANK_REUHADY` below). -/
 theorem REUHADY (V : Set V3) (u0 u1 v1 v2 : V3) (hs : saturated V) (hp : Packing V)
@@ -1799,7 +1871,33 @@ theorem REUHADY (V : Set V3) (u0 u1 v1 v2 : V3) (hs : saturated V) (hp : Packing
     setSum {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧ X ⊆ wedgeGe u0 u1 v1 v2}
         (fun t => dihX V t (u0, u1)) =
       azim u0 u1 v1 v2 := by
-  sorry
+  -- leaf content (leaf = barV V 2 ∧ hl < sqrt 2, PackingAuto18)
+  have hbar1 : barV V 2 [u0, u1, v1] := hl1.1
+  have hlt1 : hl [u0, u1, v1] < Real.sqrt 2 := hl1.2
+  have hbar2 : barV V 2 [u0, u1, v2] := hl2.1
+  have hlt2 : hl [u0, u1, v2] < Real.sqrt 2 := hl2.2
+  -- stem pair bound (XNHPWAB4 route)
+  have hd8 : dist u0 u1 < Real.sqrt 8 := p25w_dist_lt_sqrt8 hp hbar1 hlt1
+  -- azimuth exclusion (FCHKUGT route)
+  have hnz : azim u0 u1 v1 v2 ≠ 0 := p25w_azim_ne_of_leaves hp hs hl1 hl2 hv
+  -- truncate images
+  have htrL1 : truncateSimplex 1 [u0, u1, v1] = [u0, u1] := by
+    rw [truncateSimplex1_pair [u0, u1, v1] (by simp)]
+    rfl
+  have htr1 : setOfList (truncateSimplex 1 [u0, u1, v1]) = ({u0, u1} : Set V3) := by
+    rw [htrL1]
+    ext q
+    simp [setOfList]
+  have htrL2 : truncateSimplex 1 [u0, u1, v2] = [u0, u1] := by
+    rw [truncateSimplex1_pair [u0, u1, v2] (by simp)]
+    rfl
+  have htr2 : setOfList (truncateSimplex 1 [u0, u1, v2]) = ({u0, u1} : Set V3) := by
+    rw [htrL2]
+    ext q
+    simp [setOfList]
+  refine REUHADY_p24 V u0 u1 [u0, u1, v1] [u0, u1, v2] v1 v2 {u0, u1} v1 v2 hs hp
+    hd8 rfl hnz ⟨hlt1, hlt2⟩ ⟨hbar1, hbar2⟩ ⟨htr1, htr2, rfl, rfl,
+    fun X hX => EWYBJUA hs hp hl1 hl2 hX.1 hX.2 hnz⟩
 
 /-- HOL `s_leaf_leaf`. -/
 theorem s_leaf_leaf (V : Set V3) (ul : List V3) (x : V3) (hx : x ∈ s_leaf V ul) :
@@ -2614,10 +2712,26 @@ theorem LEAF_RANK_REUHADY (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : �
     (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0) (hr : leaf_rank V ul w0 n f) :
     azim_mcell V f (elV ul 0) (elV ul 1) i =
       azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
-  -- NEEDS(2026-10-23 pa25wim 复评): 唯一债 = REUHADY(本文件, REUHADY.hl lane
-  -- 拥有, 非机械)。其余已证: LEAF_RANK_PERIODIC / periodic_mod / f 落叶
-  -- (LEAF_RANK_S_LEAF) / LEAF_RANK_AZIM_NZ / AZIM_REFL。REUHADY 通即装配。
-  sorry
+  -- every `f j` is a leaf on the stem (the image condition of `leaf_rank`;
+  -- inline of `LEAF_RANK_S_LEAF`, which sits below in this file)
+  have hm : ∀ j, f j ∈ s_leaf V ul := by
+    intro j
+    have h1 : f j ∈ f '' (Set.univ : Set ℕ) := ⟨j, Set.mem_univ _, rfl⟩
+    rw [hr.1] at h1
+    exact h1
+  have hleaf : ∀ j, leaf V [elV ul 0, elV ul 1, f j] := fun j => (hm j).1
+  have hnz := LEAF_RANK_AZIM_NZ V ul w0 n f i hs hp hr hn hnc
+  have hvne : f i ≠ f (i + 1) := by
+    intro h
+    rw [h] at hnz
+    exact hnz (azim_self _ _ _)
+  show setSum
+      {X | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+        X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))}
+      (fun X => dihX V X (elV ul 0, elV ul 1)) =
+    azim (elV ul 0) (elV ul 1) (f i) (f (i + 1))
+  exact REUHADY V (elV ul 0) (elV ul 1) (f i) (f (i + 1)) hs hp (hleaf i)
+    (hleaf (i + 1)) hvne
 
 /-- HOL `LEAF_RANK_BIJ`. -/
 theorem LEAF_RANK_BIJ (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -2903,10 +3017,62 @@ theorem MCELL3_DIHX_POS (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated
     (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell3 V ul)
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X) :
     0 < dihX V X (elV ul 0, elV ul 1) := by
-  -- NEEDS(2026-10-23 pa25wim): 卡 MCELL3_DIHX(上一件, 无 PA21 桥)。装配骨架可照
-  -- MCELL2_DIHX_POS 的 NEEDS 处方(RIJRIED 非零测 + DIHV_LE_0 内联 +
-  -- DIHV_EQ_0_PI_EQ_COPLANAR_ALT 共面支, 后者走 MCELL3_SUBSET_AFF_GE 类引理需侦察)。
-  sorry
+  subst hX
+  -- non-null: an empty cell carries no edge (`BumpP4.RIJRIED`), the
+  -- MCELL2_DIHX_POS opening
+  have hn : ¬ nullSet (mcell3 V ul) := by
+    intro hnull
+    rw [BumpP4.MCELL3] at hnull
+    have hempt := BumpP4.RIJRIED V ul 3 hnull
+    rw [← BumpP4.MCELL3] at hempt
+    rw [hempt] at he
+    exact Set.notMem_empty _ he
+  -- the stem edge endpoints head a cell list for `mcell3` (PA18 k = 3 slice
+  -- of the YIFVQDV rigidity kit — replaces the unavailable MCELL3_DIHX bridge)
+  obtain ⟨vl, hbv, hu0, hu1, hXv⟩ := MCELL3_EDGE_FIRST hs hp hb he
+  have hn3 : ¬ nullSet (mcell3 V vl) := by rw [← hXv]; exact hn
+  have hini : initialSublist [elV vl 0, elV vl 1] vl :=
+    INITIAL_SUBLIST_2 vl (by simpa using hbv.1)
+  have e0 : elV ul 0 = elV vl 0 := hu0
+  have e1 : elV ul 1 = elV vl 1 := hu1
+  have hpre : [elV ul 0, elV ul 1] = [elV vl 0, elV vl 1] := by rw [e0, e1]
+  have hini' : initialSublist [elV ul 0, elV ul 1] vl := by rw [hpre]; exact hini
+  -- the cellParamsD witness of the stem pair: first component 3 (PA20
+  -- uniqueness kit) and itself a barV list reproducing the same cell
+  have hXeq : mcell3 V ul = mcell 3 V vl := by rw [hXv, BumpP4.MCELL3]
+  have hq1 : (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).1 = 3 :=
+    MCELL_CELL_PARAMETERS_D_EXIST V vl [elV ul 0, elV ul 1] 3 (mcell3 V ul)
+      (by norm_num) hp hs hXeq hbv hini' hn
+  have heps := Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ mcell3 V ul = mcell p.1 V p.2 ∧
+      initialSublist [elV ul 0, elV ul 1] p.2)
+    ⟨(3, vl), by norm_num, hbv, hXeq, hini'⟩
+  have hb1 : barV V 3 (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).2 := heps.2.1
+  have hXw : mcell3 V ul = mcell (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).1
+      V (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).2 := heps.2.2.1
+  rw [hq1] at hXw
+  have hnq : ¬ nullSet
+      (mcell 3 V (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).2) := by
+    rw [← hXw]; exact hn
+  have hnq2 : ¬ nullSet
+      (mcell3 V (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).2) := by
+    rw [BumpP4.MCELL3]; exact hnq
+  rw [dihX, if_neg hn]
+  simp only [hq1, if_true, dihu3]
+  refine lt_of_le_of_ne ?_ ?_
+  · simp only [dihV, Kepler.Geom.arcV]
+    exact Real.arccos_nonneg _
+  · -- ≠ 0: the witness quadruple is non-coplanar, else its hull (= the cell,
+    -- MCELL3_CONVEX_HULL) would be a null set
+    refine (p25_dihV_ne_zero_of_not_coplanar _ _ _ _ ?_).symm
+    intro hcp
+    obtain ⟨a, b, c, hsub⟩ := hcp
+    refine hnq2 ?_
+    rw [MCELL3_CONVEX_HULL V (cellParamsD V (mcell3 V ul) [elV ul 0, elV ul 1]).2 hp hs
+      hb1 hnq2]
+    exact measure_mono_null (convexHull_min hsub (AffineSubspace.convex _))
+      (Measure.addHaar_affineSubspace volume (affineSpan ℝ ({a, b, c} : Set V3))
+        (p25_affineSpan_three_ne_top a b c))
 
 /-- HOL `MCELL3_DOMAIN`. -/
 theorem MCELL3_DOMAIN (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
@@ -3928,10 +4094,29 @@ theorem MCELL4_DIHX_AZIM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : �
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     dihX V (mcell4 V ul) (elV ul 0, elV ul 1) =
       azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
-  -- NEEDS(2026-10-23 pa25wim): 卡 MCELL4_AZIM_LT_PI(上一件) + 两座不在闭包的桥:
-  -- AZIM_LE_PI_EQ_DIHV(LocalAuto5:7738)与 DIHV_EQ_DIH_Y 公开 wrapper
-  -- DIHV_EQ_DIH_Y_4PT(LocalAuto38:1440, LocalAuto38 不在 import 闭包)。
-  sorry
+  -- the two leaves are non-collinear with the stem and the wedge angle < π
+  -- (ascriptions normalize `elV [elV ul 0, elV ul 1] j` to `elV ul j`)
+  have hnc1 : ¬ Collinear3 (elV ul 0) (elV ul 1) (f i) :=
+    LEAF_RANK_COLLINEAR V [elV ul 0, elV ul 1] w0 n f i hp hs hr
+  have hnc2 : ¬ Collinear3 (elV ul 0) (elV ul 1) (f (i + 1)) :=
+    LEAF_RANK_COLLINEAR V [elV ul 0, elV ul 1] w0 n f (i + 1) hp hs hr
+  have hlt : azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) < Real.pi :=
+    MCELL4_AZIM_LT_PI V ul w0 n f i hp hs hr hb hnc hn hnn hw
+  -- the witness list [u0, u1, f i, f (i+1)] reproduces the cell (with barV
+  -- data, MCELL4_BARV_FI), so dihX dispatches on it (PA20 DIHX_DIH_Y_lemma)
+  have hbarFI := MCELL4_BARV_FI V ul w0 n f i hp hs hr hb hnc hn hnn hw
+  have hX4 : mcell4 V ul = mcell 4 V [elV ul 0, elV ul 1, f i, f (i + 1)] := by
+    rw [hbarFI.2, BumpP4.MCELL4]
+  have hD1 := (DIHX_DIH_Y_lemma V (mcell4 V ul) [elV ul 0, elV ul 1, f i, f (i + 1)]
+      (elV ul 0) (elV ul 1) (f i) (f (i + 1)) 4
+      (dist (elV ul 0) (elV ul 1)) (dist (elV ul 0) (f i))
+      (dist (elV ul 0) (f (i + 1))) (dist (f i) (f (i + 1)))
+      (dist (elV ul 1) (f (i + 1))) (dist (elV ul 1) (f i)) hs hp hbarFI.1
+      (by norm_num) hX4 hnn rfl rfl rfl rfl rfl rfl rfl).1
+  -- and the analytic dihedral folds back to the azimuth below π
+  have hD2 := DIHV_EQ_DIH_Y_4PT_B (elV ul 0) (elV ul 1) (f i) (f (i + 1)) hnc1 hnc2
+  have hD3 := azim_dihv_same hnc1 hnc2 hlt
+  rw [hD1, ← hD2, ← hD3]
 
 /-- HOL `LEAF_RANK_HAS_SIZE`.  Proof: the `n`-periodicity collapses the
 surjective image `f '' univ` to `f '' {i | i < n}` (PERIODIC_IMAGE), and the
@@ -3959,6 +4144,36 @@ theorem LEAF_RANK_HAS_SIZE (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : 
     rw [← himg, Set.InjOn.ncard_image hinj]
     exact Set.ncard_Iio_nat n
 
+/-- Helper (2026-10-23 poolc-wedge): `SUM_SUBSET_SIMPLE` in `setSum` form
+(the summand is nonnegative on the larger set); verbatim copy of PA16's
+private `p16_setSum_le_of_subset`, which is not visible from this file. -/
+private theorem p25_sum_le_of_subset {α : Type*} {s t : Set α} (hs : s.Finite)
+    (ht : t.Finite) (hsub : s ⊆ t) (f : α → ℝ)
+    (hnn : ∀ a ∈ t, 0 ≤ f a) : setSum s f ≤ setSum t f := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos ht]
+  have hss : hs.toFinset ⊆ ht.toFinset := fun a ha =>
+    (Set.Finite.mem_toFinset ht).mpr (hsub ((Set.Finite.mem_toFinset hs).mp ha))
+  have hsplit : ∑ x ∈ ht.toFinset \ hs.toFinset, f x + ∑ x ∈ hs.toFinset, f x
+      = ∑ x ∈ ht.toFinset, f x := Finset.sum_sdiff hss
+  have hdiffnn : 0 ≤ ∑ x ∈ ht.toFinset \ hs.toFinset, f x :=
+    Finset.sum_nonneg fun x hx => hnn x
+      ((Set.Finite.mem_toFinset ht).mp (Finset.mem_sdiff.mp hx).1)
+  linarith [hsplit, hdiffnn]
+
+/-- Helper (2026-10-23 poolc-wedge): HOL `SUM_DIS2` in `setSum` form — the sum
+over a two-point set splits into the two values. -/
+private theorem p25_setSum_pair {α : Type*} {a b : α} (hab : a ≠ b) (f : α → ℝ) :
+    setSum {a, b} f = f a + f b := by
+  have hfin : ({a, b} : Set α).Finite := Set.Finite.insert a (Set.finite_singleton b)
+  have hI : hfin.toFinset = insert a ({(b : α)} : Finset α) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_insert_iff, Set.mem_singleton_iff,
+      Finset.mem_insert, Finset.mem_singleton]
+  unfold setSum
+  rw [dif_pos hfin, hI, Finset.sum_insert (fun hcon => hab (Finset.mem_singleton.mp hcon)),
+    Finset.sum_singleton]
+
 /-- HOL `MCELL4_FULL_WEDGE`: the 4-cell is the unique cell in its wedge. -/
 theorem MCELL4_FULL_WEDGE (V : Set V3) (X : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
     (f : ℕ → V3) (i : ℕ) (hp : Packing V) (hs : saturated V)
@@ -3969,15 +4184,158 @@ theorem MCELL4_FULL_WEDGE (V : Set V3) (X : Set V3) (ul : List V3) (w0 : V3) (n 
     (he : {elV ul 0, elV ul 1} ∈ edgeX V X)
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     X = mcell4 V ul := by
-  -- NEEDS(2026-10-23 pa25wim 复评): 四重独立债——(i) MCELL4_FI(本文件) → CFFONNL →
-  -- pa18_ccCell_swap(PA18:4590); (ii) MCELL2/3_EDGE_FIRST(PA18:5254/5294,
-  -- leaf_cell.hl:3114-3374 GIANT 未移植); (iii) LEAF_RANK_REUHADY(本文件) →
-  -- REUHADY(本文件, REUHADY.hl lane 拥有); (iv) MCELL2/3_DIHX_POS(本文件,
-  -- MCELL2 骨架处方见该件 NEEDS, MCELL3 另卡 MCELL3_DIHX/MCELL3_DOMAIN)。
-  -- 另 SUM_SUBSET_SIMPLE 全树缺失需自建(HOL 通用件: 子集和 ≤ 全和)。
-  -- 已就绪(新增): MCELL4_EDGE_FIRST(PA18:6366 本波前已落)/FINITE_EDGE_X2/
-  -- DIHX_RANGE/MCELL4_CARD4/EDGE_IMP_K2。
-  sorry
+  classical
+  have hm0 := hm
+  simp only [mcellSet, Set.mem_setOf_eq] at hm
+  obtain ⟨k, ul', hXk, hbul'⟩ := hm
+  by_contra hne
+  -- k = 0/1: the cell carries no edge at all (EDGE_IMP_K2)
+  rcases Nat.lt_or_ge k 2 with hkle | _
+  · have hempt : edgeX V (mcell k V ul') = ∅ :=
+      BumpP4.EDGE_IMP_K2 V ul' k hs hp hbul' (by omega)
+    rw [hXk, hempt] at he
+    exact Set.notMem_empty _ he
+  -- common to k = 2 and k = 3: LEAF_RANK_REUHADY turns the wedge azimuth into
+  -- the dihedral sum over the wedge cells; the two-point family
+  -- {X, mcell4 V ul} sits inside it, forcing dihX V X ≤ 0
+  have h04 : (0 : ℕ) < ul.length := by have := hb.1; omega
+  have h14 : (1 : ℕ) < ul.length := by have := hb.1; omega
+  have hmem0 : elV ul 0 ∈ setOfList ul := by
+    show ul.getD 0 0 ∈ ul
+    rw [List.getD_eq_getElem _ _ h04]
+    exact List.getElem_mem h04
+  have hmem1 : elV ul 1 ∈ setOfList ul := by
+    show ul.getD 1 0 ∈ ul
+    rw [List.getD_eq_getElem _ _ h14]
+    exact List.getElem_mem h14
+  have hms : ∀ j, f j ∈ s_leaf V [elV ul 0, elV ul 1] := by
+    intro j
+    have h1 : f j ∈ f '' (Set.univ : Set ℕ) := ⟨j, Set.mem_univ _, rfl⟩
+    rw [hr.1] at h1
+    exact h1
+  have hnz := LEAF_RANK_AZIM_NZ V [elV ul 0, elV ul 1] w0 n f i hs hp hr hn hnc
+  have hvne : f i ≠ f (i + 1) := by
+    intro hcon
+    rw [hcon] at hnz
+    exact hnz (azim_self _ _ _)
+  have hsize : HasSizeP25 (s_leaf V [elV ul 0, elV ul 1]) n :=
+    LEAF_RANK_HAS_SIZE V [elV ul 0, elV ul 1] w0 n f (by omega) hp hs hr hnc
+  have hreu : setSum
+      {Y | mcellSet V Y ∧ {elV ul 0, elV ul 1} ∈ edgeX V Y ∧
+        Y ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))}
+      (fun Y => dihX V Y (elV ul 0, elV ul 1)) =
+      azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) :=
+    LEAF_RANK_REUHADY V [elV ul 0, elV ul 1] w0 n f i hn hp hs hsize hnc hr
+  have hM4in : mcell4 V ul ∈ {Y | mcellSet V Y ∧ {elV ul 0, elV ul 1} ∈ edgeX V Y ∧
+      Y ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))} :=
+    ⟨⟨4, ul, BumpP4.MCELL4 V ul, hb⟩,
+      (BumpP4.MCELL4_EDGE V ul (elV ul 0) (elV ul 1) hp hs hnn hb).2
+        ⟨ne₁₂_of_not_collinear hnc, fun z hz => by
+          rcases Set.mem_insert_iff.mp hz with rfl | hz2
+          · exact hmem0
+          · rcases Set.mem_singleton_iff.mp hz2 with rfl
+            exact hmem1⟩,
+      hw⟩
+  have hAfin : ({Y | mcellSet V Y ∧ {elV ul 0, elV ul 1} ∈ edgeX V Y ∧
+      Y ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))} : Set (Set V3)).Finite :=
+    Set.Finite.subset
+      (FINITE_EDGE_X2 V {elV ul 0, elV ul 1} (elV ul 0) (elV ul 1) hp hs rfl)
+      (fun z hz => ⟨hz.1, hz.2.1⟩)
+  have hle0 : dihX V X (elV ul 0, elV ul 1) ≤ 0 := by
+    have hchain := p25_sum_le_of_subset
+      (s := ({X, mcell4 V ul} : Set (Set V3)))
+      (t := {Y | mcellSet V Y ∧ {elV ul 0, elV ul 1} ∈ edgeX V Y ∧
+        Y ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))})
+      (Set.Finite.insert X (Set.finite_singleton (mcell4 V ul))) hAfin
+      (fun z hz => by
+        rcases Set.mem_insert_iff.mp hz with rfl | hz2
+        · exact ⟨hm0, he, hX⟩
+        · rcases Set.mem_singleton_iff.mp hz2 with rfl
+          exact hM4in)
+      (fun Y => dihX V Y (elV ul 0, elV ul 1))
+      (fun z _ => (DIHX_RANGE V z (elV ul 0) (elV ul 1)).1)
+    rw [p25_setSum_pair hne (fun Y => dihX V Y (elV ul 0, elV ul 1)), hreu,
+      MCELL4_DIHX_AZIM V ul w0 n f i hp hs hr hb hnc hn hnn hw] at hchain
+    linarith
+  -- k = 2 : MCELL2_EDGE_FIRST transports the edge to a witness list and
+  -- MCELL2_DIHX_POS gives the strict positivity
+  rcases Nat.lt_or_ge k 3 with hk3 | hk3ge
+  · have hk2 : k = 2 := by omega
+    have hX2 : X = mcell2 V ul' := by
+      rw [hk2] at hXk
+      exact hXk.trans (BumpP4.MCELL2 V ul').symm
+    have he' : {elV ul 0, elV ul 1} ∈ edgeX V (mcell2 V ul') := by
+      rw [← hX2]; exact he
+    obtain ⟨vl, hbv, hu0, hu1, hxv⟩ := MCELL2_EDGE_FIRST hs hp hbul' he'
+    have e0 : elV vl 0 = elV ul 0 := hu0.symm
+    have e1 : elV vl 1 = elV ul 1 := hu1.symm
+    have hpairv : ({elV vl 0, elV vl 1} : Set V3) = ({elV ul 0, elV ul 1} : Set V3) := by
+      rw [e0, e1]
+    have hpairP : (elV ul 0, elV ul 1) = (elV vl 0, elV vl 1) := by rw [e0, e1]
+    have hev : {elV vl 0, elV vl 1} ∈ edgeX V (mcell2 V vl) := by
+      rw [hpairv, ← hxv]; exact he'
+    have hpos : 0 < dihX V X (elV ul 0, elV ul 1) := by
+      rw [hX2, hxv, hpairP]
+      exact MCELL2_DIHX_POS V (mcell2 V vl) vl hs hp hbv rfl hev
+    exact absurd hpos (not_lt.mpr hle0)
+  -- k = 3 : same transport through MCELL3_EDGE_FIRST / MCELL3_DIHX_POS
+  rcases Nat.lt_or_ge k 4 with hk4 | hk4ge
+  · have hk3 : k = 3 := by omega
+    have hX3 : X = mcell3 V ul' := by
+      rw [hk3] at hXk
+      exact hXk.trans (BumpP4.MCELL3 V ul').symm
+    have he' : {elV ul 0, elV ul 1} ∈ edgeX V (mcell3 V ul') := by
+      rw [← hX3]; exact he
+    obtain ⟨vl, hbv, hu0, hu1, hxv⟩ := MCELL3_EDGE_FIRST hs hp hbul' he'
+    have e0 : elV vl 0 = elV ul 0 := hu0.symm
+    have e1 : elV vl 1 = elV ul 1 := hu1.symm
+    have hpairv : ({elV vl 0, elV vl 1} : Set V3) = ({elV ul 0, elV ul 1} : Set V3) := by
+      rw [e0, e1]
+    have hpairP : (elV ul 0, elV ul 1) = (elV vl 0, elV vl 1) := by rw [e0, e1]
+    have hev : {elV vl 0, elV vl 1} ∈ edgeX V (mcell3 V vl) := by
+      rw [hpairv, ← hxv]; exact he'
+    have hpos : 0 < dihX V X (elV ul 0, elV ul 1) := by
+      rw [hX3, hxv, hpairP]
+      exact MCELL3_DIHX_POS V (mcell3 V vl) vl hs hp hbv rfl hev
+    exact absurd hpos (not_lt.mpr hle0)
+  -- k ≥ 4 : the cell is the 4-cell, and MCELL4_FI identifies both witness
+  -- lists' 4-cells with the same hull {u0, u1, f i, f (i+1)}
+  have hX4ge : mcell k V ul' = mcell4 V ul' := by
+    unfold mcell
+    split_ifs with h0 h1 h2 h3
+    · omega
+    · omega
+    · omega
+    · omega
+    · rfl
+  have hX4 : X = mcell4 V ul' := hXk.trans hX4ge
+  have he4 : {elV ul 0, elV ul 1} ∈ edgeX V (mcell4 V ul') := by
+    rw [← hX4]; exact he
+  have hnn4 : ¬ nullSet (mcell4 V ul') := by
+    intro hnull
+    rw [BumpP4.MCELL4] at hnull
+    have hempt := BumpP4.RIJRIED V ul' 4 hnull
+    rw [← BumpP4.MCELL4] at hempt
+    rw [hempt] at he4
+    exact Set.notMem_empty _ he4
+  obtain ⟨vl, hbv, hu0, hu1, hxv⟩ := MCELL4_EDGE_FIRST hs hp hbul' he4
+  have e0 : elV vl 0 = elV ul 0 := hu0.symm
+  have e1 : elV vl 1 = elV ul 1 := hu1.symm
+  have hnnv : ¬ nullSet (mcell4 V vl) := by rw [← hxv]; exact hnn4
+  have hstem : [elV vl 0, elV vl 1] = [elV ul 0, elV ul 1] := by rw [e0, e1]
+  have hrvl : leaf_rank V [elV vl 0, elV vl 1] w0 n f := by rw [hstem]; exact hr
+  have hncvl : ¬ Collinear3 (elV vl 0) (elV vl 1) w0 := by rw [e0, e1]; exact hnc
+  have hw4 : mcell4 V ul' ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
+    rw [← hX4]; exact hX
+  have hwv : mcell4 V vl ⊆ wedgeGe (elV vl 0) (elV vl 1) (f i) (f (i + 1)) := by
+    rw [e0, e1, ← hxv]; exact hw4
+  have hfiul := MCELL4_FI V ul w0 n f i hp hs hr hb hnc hn hnn hw
+  have hfivl := MCELL4_FI V vl w0 n f i hp hs hrvl hbv hncvl hn hnnv hwv
+  have hset : ({elV vl 0, elV vl 1, f i, f (i + 1)} : Set V3)
+      = ({elV ul 0, elV ul 1, f i, f (i + 1)} : Set V3) := by
+    rw [e0, e1]
+  have hkey : mcell4 V vl = mcell4 V ul := by rw [hfivl, hfiul, hset]
+  exact hne (hX4.trans (hxv.trans hkey))
 
 /-! ### `MCELL4_REPARAM` kit: index permutation of two length-4 lists with the
 same point set.  Builds the permutation constructively from `List.idxOf`
