@@ -865,10 +865,60 @@ theorem SOL_LOFA_EQ_SUM_INANGLE_p9 {V : Set V3} {E : Set (Set V3)}
       2 * Real.pi + setSum V (fun v => interiorAngle1_p2 0 FF v - Real.pi)
   rw [hstep1, hstep2]
 
+/-- LA9 support (wave 1): the first three rho-orbit points of any local-fan
+vertex are pairwise distinct members of `V` (HOL preamble of
+`CARD_VERTEX_GE_3_LOCAL_FAN` / `REP_VERTEX_3_LOCAL_FAN`), via
+`LOCAL_FAN_CHARACTER_OF_RHO_NODE` at `v` and at `rho v` plus
+`LOCAL_FAN_IMP_NOT_SEMI_IDE`. -/
+private theorem p9_rho_triple {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : convexLocalFan_p2 V E FF) :
+    ∃ v : V3, v ∈ V ∧ rhoNode1_p2 FF v ∈ V ∧
+      rhoNode1_p2 FF (rhoNode1_p2 FF v) ∈ V ∧
+      v ≠ rhoNode1_p2 FF v ∧
+      rhoNode1_p2 FF v ≠ rhoNode1_p2 FF (rhoNode1_p2 FF v) ∧
+      rhoNode1_p2 FF (rhoNode1_p2 FF v) ≠ v := by
+  obtain ⟨hlf, -⟩ := h
+  obtain ⟨HS, hd, he, hn, hf, hfan, hface, hd2⟩ := hlf
+  have hlf' : localFan_p2 V E FF := ⟨HS, hd, he, hn, hf, hfan, hface, hd2⟩
+  have hvne : V.Nonempty := Set.nonempty_iff_ne_empty.mpr hfan.2.2.1.2
+  obtain ⟨v, hv⟩ := hvne
+  have hchar := LOCAL_FAN_CHARACTER_OF_RHO_NODE hlf' hv
+  have hrV : rhoNode1_p2 FF v ∈ V := by
+    have hdart : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS hlf').1 v hv
+    exact (LOCAL_FAN_IMP_IN_V2 hlf' hdart).2
+  have hchar2 := LOCAL_FAN_CHARACTER_OF_RHO_NODE hlf' hrV
+  have hr2V : rhoNode1_p2 FF (rhoNode1_p2 FF v) ∈ V := by
+    have hdart : (rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)) ∈ FF :=
+      (LOCAL_FAN_RHO_NODE_PROS hlf').1 _ hrV
+    exact (LOCAL_FAN_IMP_IN_V2 hlf' hdart).2
+  exact ⟨v, hv, hrV, hr2V, fun hh => hchar.1 hh.symm, hchar2.1.symm,
+    LOCAL_FAN_IMP_NOT_SEMI_IDE hlf' hv⟩
+
 /-- HOL `CARD_VERTEX_GE_3_LOCAL_FAN` (Nkezbfc.hl:103). -/
 theorem CARD_VERTEX_GE_3_LOCAL_FAN_p9 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) : 3 ≤ V.ncard := by
-  sorry
+  obtain ⟨v, hv, hrV, hr2V, hne01, hne12, hne02⟩ := p9_rho_triple h
+  have hsub : ({v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3) ⊆ V := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact hv
+    · exact hrV
+    · exact hr2V
+  have htriple :
+      ({rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3).ncard = 2 := by
+    rw [Set.ncard_insert_of_notMem (a := rhoNode1_p2 FF v)
+      (s := ({rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3)) (by simp [hne12])]
+    rw [Set.ncard_singleton]
+  have hcard : ({v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3).ncard = 3 := by
+    have hvnot : v ∉ ({rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3) := by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      exact ⟨hne01, Ne.symm hne02⟩
+    rw [Set.ncard_insert_of_notMem hvnot, htriple]
+  obtain ⟨hlf, -⟩ := h
+  calc (3 : ℕ) = ({v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3).ncard :=
+      hcard.symm
+    _ ≤ V.ncard := Set.ncard_le_ncard hsub (LOCAL_FAN_FINITE_V hlf)
 
 /-- HOL `REP_VERTEX_3_LOCAL_FAN` (Nkezbfc.hl:157). -/
 theorem REP_VERTEX_3_LOCAL_FAN_p9 {V : Set V3} {E : Set (Set V3)}
@@ -877,7 +927,29 @@ theorem REP_VERTEX_3_LOCAL_FAN_p9 {V : Set V3} {E : Set (Set V3)}
       v ≠ rhoNode1_p2 FF v ∧
       rhoNode1_p2 FF v ≠ rhoNode1_p2 FF (rhoNode1_p2 FF v) ∧
       rhoNode1_p2 FF (rhoNode1_p2 FF v) ≠ v := by
-  sorry
+  obtain ⟨v, hv, hrV, hr2V, hne01, hne12, hne02⟩ := p9_rho_triple h
+  have hsub : ({v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3) ⊆ V := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact hv
+    · exact hrV
+    · exact hr2V
+  have htriple :
+      ({rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3).ncard = 2 := by
+    rw [Set.ncard_insert_of_notMem (a := rhoNode1_p2 FF v)
+      (s := ({rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3)) (by simp [hne12])]
+    rw [Set.ncard_singleton]
+  have hcard3 : ({v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3).ncard = 3 := by
+    have hvnot : v ∉ ({rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3) := by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      exact ⟨hne01, Ne.symm hne02⟩
+    rw [Set.ncard_insert_of_notMem hvnot, htriple]
+  obtain ⟨hlf, -⟩ := h
+  have heq : ({v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3) = V := by
+    refine Set.eq_of_subset_of_ncard_le hsub ?_ (LOCAL_FAN_FINITE_V hlf)
+    rw [hcard3, hcard]
+  exact ⟨v, heq.symm, hne01, hne12, hne02⟩
 
 /-- HOL `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS` (Nkezbfc.hl:214). -/
 theorem CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p9 {V : Set V3} {E : Set (Set V3)}
@@ -887,29 +959,404 @@ theorem CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p9 {V : Set V3} {E : Set (Set V3)}
   intro v _
   rfl
 
-/-- HOL `SOL_LOCAL_FAN_POS_CASE3` (Nkezbfc.hl:248). -/
+/-- LA9 support (wave 1): the solid angle density is nonnegative — it is
+either `0` (no radial radius) or `3 * volume.real (C ∩ ball x r) / r³` with
+`r > 0` (`Kepler.Geom.sol` definition split; `measureReal_nonneg`). -/
+private theorem p9_sol_nonneg (x : V3) (C : Set V3) : 0 ≤ sol x C := by
+  classical
+  by_cases hex : ∃ r : ℝ, 0 < r ∧ MeasurableSet (C ∩ Metric.ball x r) ∧
+      radialNorm r x (C ∩ Metric.ball x r)
+  · rw [sol, dif_pos hex]
+    have hr' : 0 < Classical.choose hex := (Classical.choose_spec hex).1
+    have hv : 0 ≤ MeasureTheory.volume.real
+        (C ∩ Metric.ball x (Classical.choose hex)) :=
+      MeasureTheory.measureReal_nonneg
+    exact div_nonneg (mul_nonneg zero_le_three hv) (pow_pos hr' 3).le
+  · rw [sol, dif_neg hex]
+
+/-- LA9 support (wave 1): the `toLp`-wrapped cross product dots the same as
+its `Fin 3 → ℝ` projection (definitional). -/
+private theorem p9_dot_toLp {p : Fin 3 → ℝ} {c : V3} :
+    ((WithLp.toLp 2 p : V3) ⬝ᵥ c) = p ⬝ᵥ ((c : V3) : Fin 3 → ℝ) := by
+  rfl
+
+/-- LA9 support (wave 1): collinearity of a triple at `0` is invariant under
+swapping the last two points. -/
+private theorem p9_reord01 {a b : V3} (hnc : ¬ Collinear ℝ ({0, a, b} : Set V3)) :
+    ¬ Collinear ℝ ({0, b, a} : Set V3) := by
+  intro hcon
+  apply hnc
+  have he : ({0, b, a} : Set V3) = {0, a, b} := by
+    ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  rwa [he] at hcon
+
+/-- HOL `SOL_LOCAL_FAN_POS_CASE3` (Nkezbfc.hl:248): the base case of the
+`NKEZBFC_PREP` induction. On a 3-vertex convex local fan the rho-orbit is the
+3-cycle `v ↦ u ↦ w ↦ v`; the identity `sol = sum of the three azimuths − π`
+(`SOL_SOLID_TRIANGLE`, nonnegative by `p9_sol_nonneg`) gives the trihedral
+inequality `azim 0 v u w + azim 0 u w v + azim 0 w v u ≥ π`, while
+`SOL_LOFA_EQ_SUM_INANGLE_p9` rewrites `solLocal_p9` into the same three
+interior angles. Non-coplanarity of `{0, v, u, w}` is read off from
+`sin (azim 0 v u w) ≠ 0` via `JBDNJJB` + `CROSS_DOT_COPLANAR`. -/
 theorem SOL_LOCAL_FAN_POS_CASE3_p9 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) (hcard : V.ncard = 3) :
     0 ≤ solLocal_p9 E FF := by
-  sorry
+  obtain ⟨hlf, hconv⟩ := h
+  rw [SOL_LOFA_EQ_SUM_INANGLE_p9 ⟨hlf, hconv⟩]
+  obtain ⟨v, hVeq, hne01, hne12, hne02⟩ := REP_VERTEX_3_LOCAL_FAN_p9 hcard ⟨hlf, hconv⟩
+  -- memberships
+  have hvV : v ∈ V := by rw [hVeq]; simp
+  have huV : rhoNode1_p2 FF v ∈ V := by rw [hVeq]; simp
+  have hwV : rhoNode1_p2 FF (rhoNode1_p2 FF v) ∈ V := by rw [hVeq]; simp
+  -- rho injectivity on V
+  have hinj : Set.InjOn (rhoNode1_p2 FF) V :=
+    (SELF_CYCLIC_IMP_BIJ (rhoNode1_p2 FF) V
+      (fun x hx => (LOCAL_FAN_ORBIT_MAP_V hlf hx).symm)).2.1
+  -- rho³ v = v (3-cycle closure)
+  have hr3V : rhoNode1_p2 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v)) ∈ V := by
+    have hd : (rhoNode1_p2 FF (rhoNode1_p2 FF v),
+        rhoNode1_p2 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v))) ∈ FF :=
+      (LOCAL_FAN_RHO_NODE_PROS hlf).1 _ hwV
+    exact (LOCAL_FAN_IMP_IN_V2 hlf hd).2
+  have hr3ne : rhoNode1_p2 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v)) ≠
+      rhoNode1_p2 FF (rhoNode1_p2 FF v) :=
+    (LOCAL_FAN_CHARACTER_OF_RHO_NODE hlf hwV).1
+  have hr3u : rhoNode1_p2 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v)) ≠ rhoNode1_p2 FF v := by
+    intro hh
+    exact hne02 (hinj hwV hvV hh)
+  have hr3eq : rhoNode1_p2 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v)) = v := by
+    rw [hVeq] at hr3V
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hr3V
+    rcases hr3V with h | h | h
+    · exact h
+    · exact absurd h hr3u
+    · exact absurd h hr3ne
+  -- the ivs identifications
+  have hdwu : (rhoNode1_p2 FF (rhoNode1_p2 FF v), v) ∈ FF := by
+    have hd : (rhoNode1_p2 FF (rhoNode1_p2 FF v),
+        rhoNode1_p2 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v))) ∈ FF :=
+      (LOCAL_FAN_RHO_NODE_PROS hlf).1 _ hwV
+    rwa [hr3eq] at hd
+  have hdvu : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS hlf).1 v hvV
+  have hduw : (rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)) ∈ FF :=
+    (LOCAL_FAN_RHO_NODE_PROS hlf).1 _ huV
+  have hivsV : ivsRhoNode1_p2 FF v = rhoNode1_p2 FF (rhoNode1_p2 FF v) :=
+    IVS_RHO_NODE1_DETE hlf hdwu
+  have hivsU : ivsRhoNode1_p2 FF (rhoNode1_p2 FF v) = v :=
+    IVS_RHO_NODE1_DETE hlf hdvu
+  have hivsW : ivsRhoNode1_p2 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v)) =
+      rhoNode1_p2 FF v := IVS_RHO_NODE1_DETE hlf hduw
+  -- the three interior angles as azimuths
+  have hθ := CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p9 ⟨hlf, hconv⟩
+  have hθv : interiorAngle1_p2 0 FF v =
+      azim 0 v (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) := by
+    rw [hθ v hvV, hivsV]
+  have hθu : interiorAngle1_p2 0 FF (rhoNode1_p2 FF v) =
+      azim 0 (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v := by
+    rw [hθ _ huV, hivsU]
+  have hθw : interiorAngle1_p2 0 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v)) =
+      azim 0 (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v (rhoNode1_p2 FF v) := by
+    rw [hθ _ hwV, hivsW, hr3eq]
+  -- positivity
+  have hposv := INTERIOR_ANGLE1_POS hlf hvV
+  have hposu := INTERIOR_ANGLE1_POS hlf huV
+  have hposw := INTERIOR_ANGLE1_POS hlf hwV
+  -- split the setSum over the 3-element vertex set
+  have hfinV : V.Finite := LOCAL_FAN_FINITE_V hlf
+  rw [setSum, dif_pos hfinV]
+  have htf : hfinV.toFinset =
+      ({v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Finset V3) := by
+    ext z
+    simp only [hfinV.mem_toFinset, Finset.mem_insert, Finset.mem_singleton]
+    rw [hVeq]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  have hvnot : v ∉ ({rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Finset V3) := by
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
+    exact ⟨hne01, Ne.symm hne02⟩
+  have hunot : rhoNode1_p2 FF v ∉ ({rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Finset V3) :=
+    Finset.notMem_singleton.mpr hne12
+  rw [htf, Finset.sum_insert hvnot, Finset.sum_insert hunot, Finset.sum_singleton]
+  by_cases hbig : ∃ z ∈ V, Real.pi ≤ interiorAngle1_p2 0 FF z
+  · -- some angle already fills the `π` budget
+    obtain ⟨z, hzV, hzπ⟩ := hbig
+    rw [hVeq] at hzV
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hzV
+    rcases hzV with hz | hz | hz
+    · rw [hz] at hzπ
+      linarith
+    · rw [hz] at hzπ
+      linarith
+    · rw [hz] at hzπ
+      linarith
+  · push_neg at hbig
+    -- all three angles are in (0, π)
+    have hbp : 0 < azim 0 v (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) := by
+      rw [← hθv]; exact hposv
+    have hbu : azim 0 v (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) < Real.pi := by
+      rw [← hθv]; exact hbig v hvV
+    have hbp2 : 0 < azim 0 (rhoNode1_p2 FF v)
+        (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v := by
+      rw [← hθu]; exact hposu
+    have hbu2 : azim 0 (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v < Real.pi := by
+      rw [← hθu]; exact hbig _ huV
+    have hbp3 : 0 < azim 0 (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v (rhoNode1_p2 FF v) := by
+      rw [← hθw]; exact hposw
+    have hbu3 : azim 0 (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v (rhoNode1_p2 FF v) < Real.pi := by
+      rw [← hθw]; exact hbig _ hwV
+    -- non-collinearity facts
+    have hnc01 : ¬ Collinear ℝ ({0, v, rhoNode1_p2 FF v} : Set V3) :=
+      LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf hvV
+    have hnc12 : ¬ Collinear ℝ ({0, rhoNode1_p2 FF v,
+        rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3) :=
+      LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf huV
+    have hncW : ¬ Collinear ℝ ({0, rhoNode1_p2 FF (rhoNode1_p2 FF v),
+        rhoNode1_p2 FF (rhoNode1_p2 FF (rhoNode1_p2 FF v))} : Set V3) :=
+      LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf hwV
+    have hncW' : ¬ Collinear ℝ ({0, rhoNode1_p2 FF (rhoNode1_p2 FF v), v} : Set V3) := by
+      rw [hr3eq] at hncW
+      exact hncW
+    have hncVW : ¬ Collinear ℝ ({0, v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3) :=
+      p9_reord01 hncW'
+    -- sin (azim 0 v u w) > 0, so (v × u) ⬝ w ≠ 0, so {0, v, u, w} is not coplanar
+    obtain ⟨t, -, hsin⟩ := JBDNJJB (u := v) (v := rhoNode1_p2 FF v)
+      (w := rhoNode1_p2 FF (rhoNode1_p2 FF v)) hnc01 hncVW
+    have hsinpos : 0 < Real.sin (azim 0 v (rhoNode1_p2 FF v)
+        (rhoNode1_p2 FF (rhoNode1_p2 FF v))) :=
+      Real.sin_pos_of_pos_of_lt_pi hbp hbu
+    have hdot : (crossProduct ((v : V3) : Fin 3 → ℝ)
+        ((rhoNode1_p2 FF v : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((rhoNode1_p2 FF (rhoNode1_p2 FF v) : V3) : Fin 3 → ℝ) ≠ 0 := by
+      intro h0
+      rw [h0] at hsin
+      rw [hsin] at hsinpos
+      norm_num at hsinpos
+    have hncop : ¬ Coplanar ({0, v, rhoNode1_p2 FF v,
+        rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3) := by
+      intro hcop
+      have hcross := CROSS_DOT_COPLANAR (x := v) (y := rhoNode1_p2 FF v)
+        (z := rhoNode1_p2 FF (rhoNode1_p2 FF v))
+      apply hdot
+      have h1 := p9_dot_toLp (p := crossProduct ((v : V3) : Fin 3 → ℝ)
+        ((rhoNode1_p2 FF v : V3) : Fin 3 → ℝ)) (c := rhoNode1_p2 FF (rhoNode1_p2 FF v))
+      rw [h1, hcross.mpr hcop]
+    -- the dihedral (trihedral) sum identification
+    have hd1 : azim 0 v (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v))
+        = dihV 0 v (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) :=
+      azim_dihv_same (v := 0) (w := v) (v1 := rhoNode1_p2 FF v)
+        (v2 := rhoNode1_p2 FF (rhoNode1_p2 FF v)) hnc01 hncVW hbu
+    have hd2 : azim 0 (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v
+        = dihV 0 (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v := by
+      have hncuv : ¬ Collinear ℝ ({0, rhoNode1_p2 FF v, v} : Set V3) :=
+        p9_reord01 hnc01
+      exact azim_dihv_same (v := 0) (w := rhoNode1_p2 FF v)
+        (v1 := rhoNode1_p2 FF (rhoNode1_p2 FF v)) (v2 := v) hnc12 hncuv hbu2
+    have hd3 : azim 0 (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v (rhoNode1_p2 FF v)
+        = dihV 0 (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v (rhoNode1_p2 FF v) := by
+      have hncwu : ¬ Collinear ℝ ({0, rhoNode1_p2 FF (rhoNode1_p2 FF v),
+          rhoNode1_p2 FF v} : Set V3) := p9_reord01 hnc12
+      exact azim_dihv_same (v := 0) (w := rhoNode1_p2 FF (rhoNode1_p2 FF v))
+        (v1 := v) (v2 := rhoNode1_p2 FF v) hncW' hncwu hbu3
+    -- the trihedral inequality via SOL_SOLID_TRIANGLE + sol ≥ 0
+    have htri := SOL_SOLID_TRIANGLE (v0 := (0:V3)) (v1 := v)
+      (v2 := rhoNode1_p2 FF v) (v3 := rhoNode1_p2 FF (rhoNode1_p2 FF v))
+      (a := dihV 0 v (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)))
+      (b := dihV 0 (rhoNode1_p2 FF v) (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v)
+      (c := dihV 0 (rhoNode1_p2 FF (rhoNode1_p2 FF v)) v (rhoNode1_p2 FF v))
+      hncop rfl rfl rfl
+    have hsol := p9_sol_nonneg 0
+      (convexHull ℝ ({0, v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} : Set V3))
+    rw [htri] at hsol
+    rw [← hd1, ← hd2, ← hd3] at hsol
+    rw [hθv, hθu, hθw]
+    linarith
 
 /-- HOL `AFF_LT_1_1` (Nkezbfc.hl:360). -/
 theorem AFF_LT_1_1_p9 (x w : V3) (hxw : x ≠ w) :
     affLt {x} {w} =
       {y | ∃ t1 t2 : ℝ, t2 < 0 ∧ t1 + t2 = 1 ∧ y = t1 • x + t2 • w} := by
-  sorry
+  ext y
+  simp only [affLt, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨f, hfin, hsum, hpos, hone⟩
+    rw [sum_insert_single_v (f := f) hfin hxw] at hsum
+    rw [sum_insert_single_s (f := f) hfin hxw] at hone
+    exact ⟨f x, f w, hpos w (Set.mem_singleton w), hone, hsum⟩
+  · rintro ⟨t1, t2, ht2, hsum, hy⟩
+    have hfin : (({x} ∪ {w} : Set V3) : Set V3).Finite :=
+      (Set.finite_singleton x).union (Set.finite_singleton w)
+    refine ⟨fun z => if z = w then t2 else t1, hfin, ?_, ?_, ?_⟩
+    · rw [sum_insert_single_v (f := fun z => if z = w then t2 else t1) hfin hxw]
+      simp [hxw, hy]
+    · intro z hz
+      simp only [Set.mem_singleton_iff] at hz
+      rcases hz with rfl
+      simpa using ht2
+    · rw [sum_insert_single_s (f := fun z => if z = w then t2 else t1) hfin hxw]
+      simp only [hxw]
+      exact hsum
+
+/-- LA9 support (wave 1): the `{0}`-apex ray cone over a singleton, member
+form (from `AFF_GE11`, LocalAuto5). -/
+private theorem p9_mem_affGe_ray0 {a y : V3} (ha : a ≠ 0) :
+    y ∈ affGe ({0} : Set V3) ({a} : Set V3) ↔ ∃ t : ℝ, 0 ≤ t ∧ y = t • a := by
+  rw [AFF_GE11 0 a (Ne.symm ha)]
+  simp only [Set.mem_setOf_eq, zero_smul, add_zero]
+  constructor
+  · rintro ⟨t1, t2, ht2, -, rfl⟩
+    exact ⟨t2, ht2, by simp⟩
+  · rintro ⟨t, ht, rfl⟩
+    exact ⟨1 - t, t, ht, by ring, by simp⟩
+
+/-- LA9 support (wave 1): the `{0}`-apex opposite ray, member form (from
+`AFF_LT_1_1_p9`). -/
+private theorem p9_mem_affLt_ray0 {a y : V3} (ha : a ≠ 0) :
+    y ∈ affLt ({0} : Set V3) ({a} : Set V3) ↔ ∃ t : ℝ, t < 0 ∧ y = t • a := by
+  rw [AFF_LT_1_1_p9 0 a (Ne.symm ha)]
+  simp only [Set.mem_setOf_eq, zero_smul, add_zero]
+  constructor
+  · rintro ⟨t1, t2, ht2, -, rfl⟩
+    exact ⟨t2, ht2, by simp⟩
+  · rintro ⟨t, ht, rfl⟩
+    exact ⟨1 - t, t, ht, by ring, by simp⟩
+
+/-- LA9 support (wave 1): `affGe {0} ∅` is the singleton origin (the sign
+condition is vacuous, the affine condition forces the barycenter to be `0`). -/
+private theorem p9_affGe_empty0 : affGe ({0} : Set V3) (∅ : Set V3) = {(0:V3)} := by
+  ext y
+  simp only [affGe, Set.mem_setOf_eq, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have h0 : hfin.toFinset = ({0} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false, false_and, Finset.mem_singleton]
+      tauto
+    rw [h0] at hsum
+    rw [Finset.sum_singleton] at hsum
+    simp at hsum
+    exact hsum
+  · intro hy
+    have hfin0 : (({0} : Set V3) ∪ (∅ : Set V3)).Finite :=
+      (Set.finite_singleton 0).union Set.finite_empty
+    have h0 : hfin0.toFinset = ({0} : Finset V3) := by
+      ext z
+      simp [Set.mem_union]
+    refine ⟨fun _ => 1, hfin0, ?_, fun z hz => absurd hz (Set.notMem_empty z), ?_⟩
+    · rw [h0]
+      simp [hy]
+    · rw [h0]
+      simp
 
 /-- HOL `PROPERTIES_GENERIC_LOCAL_FAN` (Nkezbfc.hl:370). -/
 theorem PROPERTIES_GENERIC_LOCAL_FAN_p9 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : localFan_p2 V E FF) (hv0 : ∀ v0 ∈ V, True)
     (hg : generic_p2 V E) (v0 : V3) (hv0V : v0 ∈ V) :
     ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3) := by
-  sorry
+  intro v hvv hvv0 hcol
+  obtain ⟨HS, hd, he, hn, hf, hfan, hface, hd2⟩ := h
+  have hlf : localFan_p2 V E FF := ⟨HS, hd, he, hn, hf, hfan, hface, hd2⟩
+  have hf2 : (0:V3) ∉ V := hfan.2.2.2.1
+  have hf7 := hfan.2.2.2.2.2
+  have hnc0v0 : (0:V3) ≠ v0 := fun hh => hf2 (hh ▸ hv0V)
+  have hrV : rhoNode1_p2 FF v0 ∈ V := by
+    have hdart : (v0, rhoNode1_p2 FF v0) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS hlf).1 v0 hv0V
+    exact (LOCAL_FAN_IMP_IN_V2 hlf hdart).2
+  have h0rho : (0:V3) ≠ rhoNode1_p2 FF v0 := fun hh => hf2 (hh ▸ hrV)
+  have hchar := LOCAL_FAN_CHARACTER_OF_RHO_NODE hlf hv0V
+  have hrne : v0 ≠ rhoNode1_p2 FF v0 := Ne.symm hchar.1
+  have hedge : ({v0, rhoNode1_p2 FF v0} : Set V3) ∈ E := by
+    have hdart : (v0, rhoNode1_p2 FF v0) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS hlf).1 v0 hv0V
+    exact LOCAL_FAN_IN_FF_IN_ORD_PAIRS hlf hdart
+  have hgen := hg v0 (rhoNode1_p2 FF v0) v hedge hvv
+  have hmem : v ∈ (affineSpan ℝ ({(0:V3), v0} : Set V3) : Set V3) := by
+    rcases (collinear_triple_iff (x := (0:V3)) (v := v0) (u := v)).mp hcol with h1 | h1
+    · exact h1
+    · exact absurd h1 hnc0v0
+  obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hmem
+  have hrv : v = r • v0 := by
+    rw [← hr, AffineMap.lineMap_apply]
+    simp
+  have hvne0 : v ≠ 0 := fun hh => hf2 (hh ▸ hvv)
+  rcases lt_or_ge r 0 with hneg | hnonneg
+  · -- `v` on the opposite ray of `v0`: `v0` lies in `affLt {0} {v}`, and `v0`
+    -- lies in the `affGe` cone of the edge `{v0, rho v0}` — contradicting
+    -- genericity at the member `v`.
+    have hrne0 : r ≠ 0 := fun hh => by rw [hh] at hneg; exact absurd hneg (by norm_num)
+    have hv0lt : v0 ∈ affLt ({0} : Set V3) ({v} : Set V3) := by
+      rw [p9_mem_affLt_ray0 hvne0]
+      refine ⟨r⁻¹, by rwa [inv_lt_zero], ?_⟩
+      rw [hrv, smul_smul, inv_mul_cancel₀ hrne0, one_smul]
+    have hv0ge : v0 ∈ affGe ({0} : Set V3) ({v0, rhoNode1_p2 FF v0} : Set V3) := by
+      rw [mem_affGe_singleton_pair (x := (0:V3)) (v := v0) (w := rhoNode1_p2 FF v0)
+        (Set.disjoint_singleton_left.mpr (by simp [hnc0v0, h0rho])) hrne]
+      refine ⟨0, 1, 0, by norm_num, by norm_num, by norm_num, by simp⟩
+    have hcontra : v0 ∈ (affGe ({0} : Set V3) ({v0, rhoNode1_p2 FF v0} : Set V3) ∩
+        affLt ({0} : Set V3) ({v} : Set V3)) := Set.mem_inter hv0ge hv0lt
+    rw [hgen] at hcontra
+    exact absurd hcontra (Set.notMem_empty v0)
+  · -- `v` on the `v0`-ray side: `v ∈ affGe {0} {v0} ∩ affGe {0} {v}`, and the
+    -- fan7 singleton intersection collapses to `{0}` — contradicting `0 ∉ V`.
+    have hvge1 : v ∈ affGe ({0} : Set V3) ({v0} : Set V3) := by
+      rw [p9_mem_affGe_ray0 (Ne.symm hnc0v0)]
+      exact ⟨r, hnonneg, hrv⟩
+    have hvge2 : v ∈ affGe ({0} : Set V3) ({v} : Set V3) := by
+      rw [p9_mem_affGe_ray0 hvne0]
+      exact ⟨1, by norm_num, by simp⟩
+    have hint : affGe ({0} : Set V3) ({v} : Set V3) ∩ affGe ({0} : Set V3) ({v0} : Set V3)
+        = affGe ({0} : Set V3) (({v} : Set V3) ∩ ({v0} : Set V3)) :=
+      hf7 {v} (Set.mem_union_right _ ⟨v, hvv, rfl⟩) {v0}
+        (Set.mem_union_right _ ⟨v0, hv0V, rfl⟩)
+    have hcap : (({v} : Set V3) ∩ ({v0} : Set V3)) = (∅ : Set V3) := by
+      ext z
+      simp only [Set.mem_inter_iff, Set.mem_singleton_iff, Set.mem_empty_iff_false,
+        iff_false, not_and]
+      intro h1 h2
+      rw [h2] at h1
+      exact hvv0 h1.symm
+    rw [hcap, p9_affGe_empty0] at hint
+    have hvi : v ∈ (affGe ({0} : Set V3) ({v} : Set V3) ∩
+        affGe ({0} : Set V3) ({v0} : Set V3)) := Set.mem_inter hvge2 hvge1
+    rw [hint] at hvi
+    simp only [Set.mem_singleton_iff] at hvi
+    exact hvne0 hvi
 
 /-- HOL `AZIM_PI_WEDGE_SIN` (Nkezbfc.hl:473). -/
 theorem AZIM_PI_WEDGE_SIN_p9 (u v w ww : V3) (h : azim u v w ww = Real.pi) :
     wedge u v w ww = {x | 0 < Real.sin (azim u v w x)} := by
-  sorry
+  ext x
+  simp only [wedge, Set.mem_setOf_eq, h]
+  obtain ⟨hrlo, hrhi⟩ := AZIM_RANGE u v w x
+  constructor
+  · rintro ⟨-, hpos, hlt⟩
+    exact Real.sin_pos_of_pos_of_lt_pi hpos hlt
+  · intro hsin
+    have hA0 : azim u v w x ≠ 0 := by
+      intro h0
+      rw [h0] at hsin
+      simp at hsin
+    have hAπ : azim u v w x ≠ Real.pi := by
+      intro h0
+      rw [h0] at hsin
+      simp at hsin
+    have hA2 : ¬ (Real.pi ≤ azim u v w x) := by
+      intro hge
+      have hd : azim u v w x - Real.pi ≥ 0 := by linarith
+      have hdlt : azim u v w x - Real.pi ≤ Real.pi := by linarith
+      have hneg : Real.sin (azim u v w x)
+          = -Real.sin (azim u v w x - Real.pi) := by
+        have hsplit : azim u v w x = Real.pi + (azim u v w x - Real.pi) := by ring
+        rw [hsplit, Real.sin_add]
+        norm_num
+      rw [hneg] at hsin
+      have : 0 ≤ Real.sin (azim u v w x - Real.pi) :=
+        Real.sin_nonneg_of_nonneg_of_le_pi hd hdlt
+      linarith
+    have hpos : 0 < azim u v w x := lt_of_le_of_ne hrlo (Ne.symm hA0)
+    refine ⟨?_, hpos, by linarith⟩
+    intro hc
+    apply hA0
+    show (if Collinear3 u v w ∨ Collinear3 u v x then (0:ℝ) else _) = 0
+    rw [if_pos (Or.inr hc)]
 
 /-- HOL `AZIM_PI_WEDGE_CROSS_DOT` (Nkezbfc.hl:517). -/
 theorem AZIM_PI_WEDGE_CROSS_DOT_p9 (u v w ww : V3) (h : azim u v w ww = Real.pi) :
@@ -948,7 +1395,7 @@ theorem AFF_GE_2_2_p9 (x u v w : V3) (hd : Disjoint ({x, u} : Set V3) {v, w}) :
     affGe {x, u} {v, w} =
       {y | ∃ t1 t2 t3 t4 : ℝ, 0 ≤ t3 ∧ 0 ≤ t4 ∧ t1 + t2 + t3 + t4 = 1 ∧
         y = t1 • x + t2 • u + t3 • v + t4 • w} := by
-  sorry
+  exact AFF_GE22 x u v w hd
 
 /-- HOL `inter_aff_ge_3_1_is_aff_ge_2_2` (Nkezbfc.hl:610). -/
 theorem inter_aff_ge_3_1_is_aff_ge_2_2_p9 (x v u w : V3)
@@ -975,6 +1422,144 @@ theorem PROPERTIES_AFF_GT_SUBSET_WEDGE_p9 {V : Set V3} {E : Set (Set V3)}
 /-- HOL `lemma` (Nkezbfc.hl:842). -/
 theorem nkezLemma_p9 (A : Prop) : A ∨ ¬A := Classical.em A
 
+/-- LA9 support (wave 1): the open `{x}`-apex cone over two tip points,
+member form, valid also for degenerate `a = b` (HOL `AFF_GT_1_2` content;
+cf. `affGt_pair_iff` and `mem_affGe_singleton_pair`, both of which need the
+nondegenerate case). -/
+private theorem p9_affGt_cone2 {x a b v1 : V3}
+    (hdisj : Disjoint ({x} : Set V3) {a, b}) :
+    v1 ∈ affGt ({x} : Set V3) {a, b} ↔
+      ∃ p q : ℝ, 0 < p ∧ 0 < q ∧ v1 - x = p • (a - x) + q • (b - x) := by
+  have hxa : x ≠ a := Set.disjoint_iff_forall_ne.mp hdisj rfl (Or.inl rfl)
+  have hxb : x ≠ b := Set.disjoint_iff_forall_ne.mp hdisj rfl (Or.inr rfl)
+  by_cases hab : a = b
+  · subst hab
+    have hset : (({a, a} : Set V3)) = ({a} : Set V3) := by
+      ext z; simp
+    rw [hset]
+    constructor
+    · rintro ⟨f, hfin, hsum, hpos, hone⟩
+      rw [sum_insert_single_v (f := f) hfin hxa] at hsum
+      rw [sum_insert_single_s (f := f) hfin hxa] at hone
+      refine ⟨f a / 2, f a / 2, div_pos (hpos a (Set.mem_singleton a)) (by norm_num),
+        div_pos (hpos a (Set.mem_singleton a)) (by norm_num), ?_⟩
+      rw [hsum]
+      have hfx : f x = 1 - f a := by linarith
+      rw [hfx]
+      module
+    · rintro ⟨p, q, hp, hq, hv1⟩
+      have hfin0 : (({x} ∪ {a} : Set V3) : Set V3).Finite :=
+        (Set.finite_singleton x).union (Set.finite_singleton a)
+      refine ⟨fun z => if z = a then p + q else 1 - p - q, hfin0, ?_, ?_, ?_⟩
+      · rw [sum_insert_single_v (f := fun z => if z = a then p + q else 1 - p - q)
+          hfin0 hxa]
+        simp only [if_neg hxa, eq_self_iff_true, if_true]
+        have hv' : v1 = x + (p • (a - x) + q • (a - x)) := by
+          rw [← hv1]; module
+        rw [hv']
+        module
+      · intro z hz
+        rw [Set.mem_singleton_iff.mp hz]
+        simp only [eq_self_iff_true, if_true]
+        linarith
+      · rw [sum_insert_single_s (f := fun z => if z = a then p + q else 1 - p - q)
+          hfin0 hxa]
+        simp only [if_neg hxa, eq_self_iff_true, if_true]
+        ring
+  · constructor
+    · rintro ⟨f, hfin, hsum, hpos, hone⟩
+      rw [sum_insert_pair_v (f := f) hfin hxa hxb hab] at hsum
+      rw [sum_insert_pair_s (f := f) hfin hxa hxb hab] at hone
+      refine ⟨f a, f b, hpos a (Set.mem_insert a {b}), hpos b (Set.mem_insert_of_mem a
+        (Set.mem_singleton b)), ?_⟩
+      rw [hsum]
+      have hfx : f x = 1 - f a - f b := by linarith
+      rw [hfx]
+      module
+    · rintro ⟨p, q, hp, hq, hv1⟩
+      have hfin0 : (({x} ∪ {a, b} : Set V3) : Set V3).Finite :=
+        (Set.finite_singleton x).union ((Set.finite_singleton b).insert a)
+      refine ⟨fun z => if z = a then p else if z = b then q else 1 - p - q, hfin0, ?_, ?_, ?_⟩
+      · rw [sum_insert_pair_v (f := fun z => if z = a then p else if z = b then q
+          else 1 - p - q) hfin0 hxa hxb hab]
+        simp only [if_neg hxa, if_neg hxb, eq_self_iff_true, if_true, if_neg hab,
+          if_neg (Ne.symm hab)]
+        have hv' : v1 = x + (p • (a - x) + q • (b - x)) := by
+          rw [← hv1]; module
+        rw [hv']
+        module
+      · intro z hz
+        rcases hz with hz | hz
+        · rw [hz]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hab)]
+          exact hp
+        · rw [Set.mem_singleton_iff.mp hz]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hab)]
+          exact hq
+      · rw [sum_insert_pair_s (f := fun z => if z = a then p else if z = b then q
+          else 1 - p - q) hfin0 hxa hxb hab]
+        simp only [if_neg hxa, if_neg hxb, eq_self_iff_true, if_true, if_neg (Ne.symm hab)]
+        ring
+
+/-- LA9 support (wave 1): the closed `{x}`-apex cone over two tip points,
+member form, valid also for degenerate `a = b` (HOL `AFF_GE_1_2` content;
+cf. `mem_affGe_singleton_pair`, which needs the nondegenerate case). -/
+private theorem p9_affGe_cone2 {x a b y : V3}
+    (hdisj : Disjoint ({x} : Set V3) {a, b}) :
+    y ∈ affGe ({x} : Set V3) {a, b} ↔
+      ∃ p q : ℝ, 0 ≤ p ∧ 0 ≤ q ∧ y - x = p • (a - x) + q • (b - x) := by
+  have hxa : x ≠ a := Set.disjoint_iff_forall_ne.mp hdisj rfl (Or.inl rfl)
+  have hxb : x ≠ b := Set.disjoint_iff_forall_ne.mp hdisj rfl (Or.inr rfl)
+  by_cases hab : a = b
+  · subst hab
+    have hset : (({a, a} : Set V3)) = ({a} : Set V3) := by
+      ext z; simp
+    rw [hset, AFF_GE11 x a hxa]
+    simp only [Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨t1, t2, ht2, hsum, rfl⟩
+      refine ⟨t2, 0, ht2, by norm_num, ?_⟩
+      have hfx : t1 = 1 - t2 := by linarith
+      rw [hfx]
+      module
+    · rintro ⟨p, q, hp, hq, hy⟩
+      have hv' : y = x + (p • (a - x) + q • (a - x)) := by rw [← hy]; module
+      exact ⟨1 - p - q, p + q, by linarith, by ring, by rw [hv']; module⟩
+  · constructor
+    · rintro ⟨f, hfin, hsum, hpos, hone⟩
+      rw [sum_insert_pair_v (f := f) hfin hxa hxb hab] at hsum
+      rw [sum_insert_pair_s (f := f) hfin hxa hxb hab] at hone
+      refine ⟨f a, f b, hpos a (Set.mem_insert a {b}), hpos b (Set.mem_insert_of_mem a
+        (Set.mem_singleton b)), ?_⟩
+      rw [hsum]
+      have hfx : f x = 1 - f a - f b := by linarith
+      rw [hfx]
+      module
+    · rintro ⟨p, q, hp, hq, hv1⟩
+      have hfin0 : (({x} ∪ {a, b} : Set V3) : Set V3).Finite :=
+        (Set.finite_singleton x).union ((Set.finite_singleton b).insert a)
+      refine ⟨fun z => if z = a then p else if z = b then q else 1 - p - q, hfin0, ?_, ?_, ?_⟩
+      · rw [sum_insert_pair_v (f := fun z => if z = a then p else if z = b then q
+          else 1 - p - q) hfin0 hxa hxb hab]
+        simp only [if_neg hxa, if_neg hxb, eq_self_iff_true, if_true, if_neg hab,
+          if_neg (Ne.symm hab)]
+        have hv' : y = x + (p • (a - x) + q • (b - x)) := by
+          rw [← hv1]; module
+        rw [hv']
+        module
+      · intro z hz
+        rcases hz with hz | hz
+        · rw [hz]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hab)]
+          exact hp
+        · rw [Set.mem_singleton_iff.mp hz]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hab)]
+          exact hq
+      · rw [sum_insert_pair_s (f := fun z => if z = a then p else if z = b then q
+          else 1 - p - q) hfin0 hxa hxb hab]
+        simp only [if_neg hxa, if_neg hxb, eq_self_iff_true, if_true, if_neg (Ne.symm hab)]
+        ring
+
 /-- HOL `AFF_GE_SUBSET_AFF_GE_UNION` (Nkezbfc.hl:1236). -/
 theorem AFF_GE_SUBSET_AFF_GE_UNION_p9 (x v u v1 : V3)
     (h1 : Disjoint ({x} : Set V3) {v, u})
@@ -982,7 +1567,56 @@ theorem AFF_GE_SUBSET_AFF_GE_UNION_p9 (x v u v1 : V3)
     (h3 : Disjoint ({x} : Set V3) {v1, u})
     (h4 : v1 ∈ affGt {x} {v, u}) :
     affGe {x} {v, u} ⊆ affGe {x} {v, v1} ∪ affGe {x} {v1, u} := by
-  sorry
+  intro y hy
+  obtain ⟨p, q, hp, hq, hyv⟩ := (p9_affGe_cone2 h1).mp hy
+  obtain ⟨s, t, hs, ht, hv1⟩ := (p9_affGt_cone2 h1).mp h4
+  by_cases hcmp : q * s ≤ p * t
+  · have hA : 0 ≤ p - q * s / t := by
+      have h1 : q * s / t ≤ p := (div_le_iff₀ ht).mpr hcmp
+      linarith
+    refine Set.mem_union_left _ ((p9_affGe_cone2 h2).mpr
+      ⟨p - q * s / t, q / t, hA, div_nonneg hq (le_of_lt ht), ?_⟩)
+    rw [hv1]
+    have e1 : (p - q * s / t) • (v - x) + (q / t) • (s • (v - x) + t • (u - x))
+        = ((p - q * s / t) + (q / t) * s) • (v - x) + ((q / t) * t) • (u - x) := by
+      conv_lhs =>
+        rw [smul_add]
+        rw [smul_smul]
+        rw [smul_smul]
+      conv_rhs => rw [add_smul]
+      rw [add_assoc]
+    have e3 : ((p - q * s / t) + (q / t) * s) = p := by
+      have h2 : (q / t) * s = q * s / t := by ring
+      linarith
+    have e4 : (q / t) * t = q := by
+      have ht0 : t ≠ 0 := ne_of_gt ht
+      field_simp
+    rw [e1, e3, e4]
+    rw [hyv]
+  · have hB : 0 ≤ q - p * t / s := by
+      have h2 : p * t < q * s := by
+        by_contra hcon
+        exact hcmp (not_lt.mp hcon)
+      have h1 : p * t / s ≤ q := (div_le_iff₀ hs).mpr (le_of_lt h2)
+      linarith
+    refine Set.mem_union_right _ ((p9_affGe_cone2 h3).mpr
+      ⟨p / s, q - p * t / s, div_nonneg hp (le_of_lt hs), hB, ?_⟩)
+    rw [hv1]
+    have e1 : (p / s) • (s • (v - x) + t • (u - x)) + (q - p * t / s) • (u - x)
+        = ((p / s) * s) • (v - x) + ((p / s) * t + (q - p * t / s)) • (u - x) := by
+      conv_lhs =>
+        rw [smul_add]
+        rw [smul_smul]
+        rw [smul_smul]
+      conv_rhs => rw [add_smul]
+      rw [add_assoc]
+    have e3 : (p / s) * s = p := by
+      field_simp
+    have e4 : ((p / s) * t + (q - p * t / s)) = q := by
+      have h2 : (p / s) * t = p * t / s := by ring
+      linarith
+    rw [e1, e3, e4]
+    rw [hyv]
 
 /-- HOL `aff_ge_subset3_aff_ge` (Nkezbfc.hl:1298). -/
 theorem aff_ge_subset3_aff_ge_p9 (x v u v1 : V3)
@@ -990,7 +1624,12 @@ theorem aff_ge_subset3_aff_ge_p9 (x v u v1 : V3)
     (h2 : Disjoint ({x} : Set V3) {v, v1})
     (h3 : v1 ∈ affGt {x} {v, u}) :
     affGe {x} {v, v1} ⊆ affGe {x} {v, u} := by
-  sorry
+  intro y hy
+  obtain ⟨p, q, hp, hq, hyv⟩ := (p9_affGe_cone2 h2).mp hy
+  obtain ⟨s, t, hs, ht, hv1⟩ := (p9_affGt_cone2 h1).mp h3
+  refine (p9_affGe_cone2 h1).mpr ⟨p + q * s, q * t, by nlinarith, by nlinarith, ?_⟩
+  rw [hyv, hv1]
+  module
 
 /-- HOL `AFF_GE_EQ_AFF_GE_UNION` (Nkezbfc.hl:1326). -/
 theorem AFF_GE_EQ_AFF_GE_UNION_p9 (x v u v1 : V3)
@@ -999,7 +1638,34 @@ theorem AFF_GE_EQ_AFF_GE_UNION_p9 (x v u v1 : V3)
     (h3 : Disjoint ({x} : Set V3) {v1, u})
     (h4 : v1 ∈ affGt {x} {v, u}) :
     affGe {x} {v, u} = affGe {x} {v, v1} ∪ affGe {x} {v1, u} := by
-  sorry
+  refine Set.Subset.antisymm (AFF_GE_SUBSET_AFF_GE_UNION_p9 x v u v1 h1 h2 h3 h4) ?_
+  intro y hy
+  simp only [Set.mem_union] at hy
+  rcases hy with hy | hy
+  · exact aff_ge_subset3_aff_ge_p9 x v u v1 h1 h2 h4 hy
+  · -- the symmetric instance: affGe {x} {u, v1} ⊆ affGe {x} {u, v} = affGe {x} {v, u}
+    have h1' : Disjoint ({x} : Set V3) {u, v} := by
+      refine Set.disjoint_singleton_left.mpr ?_
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      exact ⟨Set.disjoint_iff_forall_ne.mp h1 rfl (Or.inr rfl),
+        Set.disjoint_iff_forall_ne.mp h1 rfl (Or.inl rfl)⟩
+    have h3' : Disjoint ({x} : Set V3) {u, v1} := by
+      refine Set.disjoint_singleton_left.mpr ?_
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      exact ⟨Set.disjoint_iff_forall_ne.mp h1 rfl (Or.inr rfl),
+        Set.disjoint_iff_forall_ne.mp h3 rfl (Or.inl rfl)⟩
+    have h4' : v1 ∈ affGt ({x} : Set V3) {u, v} := by
+      have heq : (({u, v} : Set V3)) = ({v, u} : Set V3) := by
+        ext z; simp; tauto
+      rwa [heq]
+    have hsub := aff_ge_subset3_aff_ge_p9 x u v v1 h1' h3' h4'
+    have heq2 : (({u, v} : Set V3)) = ({v, u} : Set V3) := by
+      ext z; simp; tauto
+    rw [heq2] at hsub
+    have heq3 : (({v1, u} : Set V3)) = ({u, v1} : Set V3) := by
+      ext z; simp; tauto
+    rw [heq3] at hy
+    exact hsub hy
 
 /-- HOL `ORDER` (Nkezbfc.hl:1363). -/
 theorem ORDER_p9 {α : Type*} (f : α → α) (x y : α) (n : ℕ)
@@ -1064,6 +1730,97 @@ def EJRCFJD_concl_p9 : Prop :=
                     (generic_p2 V E →
                       generic_p2 (slicev_p9 E FF v w) (slicee_p9 E FF v w) ∧
                         generic_p2 (slicev_p9 E FF w v) (slicee_p9 E FF w v))
+
+/-- LA9 support (wave 1, HOL Nkezbfc.hl:1751-1800): the chord case of the
+`NKEZBFC_PREP` induction — when a slice chord `{v, w}` exists
+(`∀ e ∈ FF, aff_gt {0} {v,w} ⊆ wedge_in_fan_gt e E`), `EJRCFJD_concl` cuts the
+fan into two strictly smaller convex local fans whose solid angles sum to
+`sol_local E FF`, so the strong induction hypothesis at both slices gives
+nonnegativity. -/
+private theorem p9_chord_case (h : EJRCFJD_concl_p9) (N : ℕ)
+    (IH : ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)),
+      convexLocalFan_p2 V E FF → generic_p2 V E → V.ncard < N → 0 ≤ solLocal_p9 E FF)
+    (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hlf : convexLocalFan_p2 V E FF) (hg : generic_p2 V E) (hN : V.ncard = N)
+    (v w : V3) (hv : v ∈ V) (hw : w ∈ V)
+    (hchord : ∀ e ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 e E) :
+    0 ≤ solLocal_p9 E FF := by
+  have hgen0 : generic_p2 V E → ∀ u u1 : V3, u ∈ ({v, w} : Set V3) → u1 ∈ V → u ≠ u1 →
+      ¬ Collinear ℝ ({0, u, u1} : Set V3) := by
+    intro hgu u u1 hu hu1 hne
+    rcases Set.mem_insert_iff.mp hu with heq | heq
+    · rw [heq]
+      exact PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf.1 (fun z _ => trivial) hgu v hv u1 hu1
+        (fun hh => hne (heq.trans hh.symm))
+    · rw [heq]
+      exact PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf.1 (fun z _ => trivial) hgu w hw u1 hu1
+        (fun hh => hne (heq.trans hh.symm))
+  have h2 : ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3),
+      convexLocalFan_p2 V E FF → v ∈ V → w ∈ V →
+      (∀ u u1 : V3, u ∈ ({v, w} : Set V3) → u1 ∈ V → u ≠ u1 →
+        ¬ Collinear ℝ ({0, u, u1} : Set V3)) →
+      (∀ e ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 e E) →
+      convexLocalFan_p2 (slicev_p9 E FF v w) (slicee_p9 E FF v w)
+          (slicef_p9 E FF v w) ∧
+        convexLocalFan_p2 (slicev_p9 E FF w v) (slicee_p9 E FF w v)
+            (slicef_p9 E FF w v) ∧
+          tauFun_p9 V E FF ≥
+              tauFun_p9 (slicev_p9 E FF v w) (slicee_p9 E FF v w)
+                (slicef_p9 E FF v w) +
+              tauFun_p9 (slicev_p9 E FF w v) (slicee_p9 E FF w v)
+                (slicef_p9 E FF w v) ∧
+            solLocal_p9 E FF =
+                solLocal_p9 (slicee_p9 E FF v w) (slicef_p9 E FF v w) +
+                  solLocal_p9 (slicee_p9 E FF w v) (slicef_p9 E FF w v) ∧
+              (slicev_p9 E FF v w).ncard < V.ncard ∧
+                (slicev_p9 E FF w v).ncard < V.ncard ∧
+                  (generic_p2 V E →
+                    generic_p2 (slicev_p9 E FF v w) (slicee_p9 E FF v w) ∧
+                      generic_p2 (slicev_p9 E FF w v) (slicee_p9 E FF w v)) := h
+  obtain ⟨hcf1, hcf2, -, hsol, hnc1, hnc2, hgen⟩ :=
+    h2 V E FF v w hlf hv hw (hgen0 hg) hchord
+  have hg1 : generic_p2 (slicev_p9 E FF v w) (slicee_p9 E FF v w) := (hgen hg).1
+  have hg2 : generic_p2 (slicev_p9 E FF w v) (slicee_p9 E FF w v) := (hgen hg).2
+  have hs1 := IH (slicev_p9 E FF v w) (slicee_p9 E FF v w) (slicef_p9 E FF v w) hcf1 hg1
+    (hnc1.trans_le hN.le)
+  have hs2 := IH (slicev_p9 E FF w v) (slicee_p9 E FF w v) (slicef_p9 E FF w v) hcf2 hg2
+    (hnc2.trans_le hN.le)
+  rw [hsol]
+  linarith
+
+/-- LA9 support (wave 1): the strong-induction skeleton of `NKEZBFC_PREP`
+(HOL Nkezbfc.hl:1718-1800). With `stepB` — the no-chord branch, which needs
+the `EGHNAVX` orbit-ordering kit and is the second-wave target — this
+assembles the full theorem: base case `CARD V = 3`
+(`SOL_LOCAL_FAN_POS_CASE3_p9`), chord case (`p9_chord_case`), no-chord case
+(`stepB`). -/
+private theorem p9_main_induction (h : EJRCFJD_concl_p9)
+    (stepB : ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)),
+      convexLocalFan_p2 V E FF → generic_p2 V E →
+      (¬ ∃ v w : V3, v ∈ V ∧ w ∈ V ∧
+        ∀ e ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 e E) →
+      0 ≤ solLocal_p9 E FF)
+    (N : ℕ) :
+    ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)),
+      convexLocalFan_p2 V E FF → generic_p2 V E → V.ncard = N → 0 ≤ solLocal_p9 E FF := by
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro V E FF hlf hg hN
+    have h3 := CARD_VERTEX_GE_3_LOCAL_FAN_p9 hlf
+    rw [hN] at h3
+    rcases lt_or_ge N 3 with hN3 | hNge
+    · omega
+    · rcases eq_or_lt_of_le hNge with hNeq | hNgt
+      · have hV3 : V.ncard = 3 := by
+          rw [hN]
+          exact hNeq.symm
+        exact SOL_LOCAL_FAN_POS_CASE3_p9 hlf hV3
+      · by_cases hex : ∃ v w : V3, v ∈ V ∧ w ∈ V ∧
+          ∀ e ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 e E
+        · obtain ⟨v, w, hv, hw, hchord⟩ := hex
+          exact p9_chord_case h N (fun V E FF hlf hg hlt => ih _ hlt V E FF hlf hg rfl)
+            V E FF hlf hg hN v w hv hw hchord
+        · exact stepB V E FF hlf hg hex
 
 /-- HOL `NKEZBFC_PREP` (Nkezbfc.hl:1718): `EJRCFJD_concl` implies the
 non-negativity of `sol_local` for generic convex local fans. Giant
