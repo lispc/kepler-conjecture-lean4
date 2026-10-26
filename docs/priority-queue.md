@@ -45,6 +45,8 @@
 
 ## 2. 排队（按序补位）
 
+0. `已批·提级首发` **nli-prep-w1 切界层数学预处理波**（用户 2026-10-26 提级）：QITNPEAv2 主攻——rad2X 纯多项式支样板链先行（一行级粘合）→ 切界叶 prep 剖分（沿 disj 曲面加人工分割面）/ 单调性通道（HOL doc 自注 rad2 单调）双路试闭；任务书已立 `lane_snapshots/nli-prep-w1/TASK.md`；RQWUDDU 留下一波复用通道。预期样板链 + 部分切界叶 = 锥 −2 的一半。
+
 1. `在飞` **NKEZBFC_PREP GIANT 第二波（主石 stepB）**（见 §1 nkezbfc-giant-w2；第一波已落库 `3034e8f7`，LA9 NKEZBFC 节 19→9，`p9_main_induction` 骨架就位）；之后 `EJRCFJD_ALT2`（LA2:1589，正本 EJRCFJD LA6:1135）+ `NKEZBFC`（LA2:1606）一行装配——注意 LA2 import LA5/LA9 均成环，装配层需走 LA9 侧或桥文件。
 2. `在飞` **WSEWPCH W4 lunar**（见 §1 wsewpch-w4）。
 3. `已完成` **SF-53 应用 + CC4P4 discharge**（`b30bad76` + `e2c636ec`）：20 桩全闭，PA4 文件级 29→9，探针 20/20 标准三，锥 0；余 9 枚 §4/§5 cellParams/bump 桩另行排队。
@@ -92,17 +94,15 @@
 
 ## 6. 等用户裁决（编排者不单方面动）
 
-1. **PA2 桩族去留**：26 处 sorried 桩中已实锤死代码/沉睡件（XNHPWAB1/4 已退役、
-   `MXI_EXISTS_concl` 消费者已断、`GRUTOTI1_concl` 沉睡）——删除可减文件噪声，
-   但删除类保留用户。
-2. **PA24 / PackingConcl 整合时机**（全仓零 importer 的邻近层，终局绕不开）。
-3. **终局 native_decide 政策**（见 §5）。
+1. `已裁` **PA2 桩族去留**（用户 2026-10-26「现在先不删」）：删除暂缓，死代码/沉睡件记账留 M1 终审一并处理。
+2. `已裁·时点编排者定` **PA24 / PackingConcl 整合**（用户 2026-10-26「可以整合，时机你定」）：编排者定时点 = **WSEWPCH 链收官（W6a/W6b/W6c 全落库）时正式整合**，整合前一批次发 M0 口径预公告（预计锥直源 +84 跳涨，PA24 52 + PackingConcl 32）。
+3. `已裁·暂缓` **终局 native_decide 政策**（用户 2026-10-26「不急着决定，以后再讨论」）：维持现状；编排者已呈报关键事实——A2 的 `decide +kernel` 实测证明全 vanilla 化性能可行，北极星公理三条要求终局转换，待用户重启讨论时按 (a) 全 vanilla / (c) 可达链 vanilla 两案重呈。
 4. ~~**SF-53**~~ → **已批准并应用**（`b30bad76`，闸 PASS；patch 归档已规范化）。
 5. ~~**A2-W2b 算力去向**~~ → 已被第 6 项取代。
 6. ~~**A2 提速方案**~~ → **已批准（2026-10-26 用户）并执行**（`8f789c60`：atan1K + decide +kernel + emitter gen-11；构建重启，分片 181–512 s 实测，预计 ~1 天完工）。
 7. **fidelity-v1 Top-5 可疑项人审**（编排者先人审，涉陈述改动再走 SF）：SphereKit:144 `num1` 重建体与正本差交叉项且符号布局不同；ContraFanDeep:3598 `cf4_etaP_box` 正本指针与 Lean 盒形态不符疑引错条目；LocalAuto11:192 `dartStd4_p11` 正本三常数在 Lean 陈述中缺失疑截断移植；PA21:599 `bank_BIXPCGW9455898160` docstring 与已修陈述自相矛盾（注释级）；SF-53 两处被独立复现（HEAD 全量 H 级恰为此两处）。
 9. `已完成` **SF-54/55/56 全部应用**（用户 2026-10-26「都批准」）：**54** 五文件（`47467b90`…`119a10c5`）22 桩加 hedge + LA7 改名 `_LA7`，W6a 已解锁并发车；**55** `b8154a64`（LA1 `Generic` affGt→affGe）/ **56** `d90caf69`（LA2 `circular_p2` affGe→affGt）于 w6b 落库窗口串行双 PASS——交叉镜像误植归正，四定义与 HOL localization.hl:103/107 逐字对齐。应用记录见 proposals §54(e')/§55–56(e')。KCHMAMG 等消费件在后续灌证波按新陈述施工。
-8. **hLP 剩余两件 + 磁盘窗口**（`docs/scouts/lp-design-scout.md` §4）：W6-A、W1 已批（见 §2 第 5 项执行口径）。仍待：(i) `GoodListNodes := True` 占位真化（陈述/定义变更，W6-B 前置）；(ii) W6-PIN 冻结面钉定升级（statement-fix 流程）；(iii) W5/W7 算力与磁盘窗口——bound 叶全量灌装 olean 860–940 GB、终装配 **≥ 1.5 TB**，本机 460 GB 盘承载不了，届时需外置盘/多机策略。
+8. `已裁` **hLP 三件**（用户 2026-10-26）：**(i) GoodListNodes 真化批准**（W6-B 开波第一口执行，含 P6-C 构造连带）；**(ii) W6-PIN 钉定升级批准**（与数据波并行排期，lpAllInfeas 189 模块全链重绿）；**(iii) 磁盘窗口缓议**（W1 首批跑通后重呈，选项 = 外置盘 / G4 大盘机 / 云机）。
 
 ## 7. 文档/代码卫生（2026-10-25 盘点）
 
@@ -114,6 +114,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-26（傍晚）**：用户五项裁决入档——hLP (i) GoodListNodes 真化**批**（W6-B 首口）+ (ii) W6-PIN**批**（并行排期）+ (iii) 磁盘窗口**缓议**；PA2 桩族**暂不删**（留 M1）；PA24/PackingConcl 整合**批**（时点编排者定 = WSEWPCH 链收官，预公告 +84）；native_decide 政策**暂缓**（呈报过全 vanilla 已性能可行）。**nli-prep-w1 提级为补位首发**：切界层数学预处理波（QITNPEAv2 主攻，rad2X 样板链 + prep 剖分/单调性双路），任务书已立。
 - **2026-10-26（午后）**：**wsewpch-w6b 落库 `03e04319`**（部分交付：件4 `WHEN_A_B_POS_ARCV_STABLE` 真证 + KCHMAMG 装配施工图注释入原位；四银行桩未闭诚实转交，遗留 `DEV_PROBE_p_int_core.lean` 700 行骨架；闸 PASS 默认七根）。**wsewpch-w6a 补位发车**（LA7 foundation 九桩灌证，SF-54 后陈述就绪；在飞回到 5）。**SF-55/56 应用落库**：首跑被闸拒于提案文档格式（STATEMENT-FIX 要求显式 (a)–(f) 节——第三条闸雷区），文档扩全格式后双 PASS：`b8154a64`（LA1 Generic affGt→affGe）/ `d90caf69`（LA2 circular_p2 affGe→affGt），交叉镜像误植归正；收尾 `3f0bd74d`。
 - **2026-10-26（午，续 4）**：**nli-b-toolchain 落库**（车道零 Lean 改动；`emit_rpn.py` var_lt 端点写反 2 行修复随本提交入库）：①工具链复活成功——flint 3.6.0 直配 `bb_arb.c` 无需 shim，gen-11 发射-构建-探针全链即到即用（TSKAJXY-delta_x4 E2E 探针标准三）；②**B 批历史证书证伪**——0/46、0/16 精确有理复核不通过（spbug2 前 disj 假命中，G4 rc=0 假绿），原「G4 导出 cert → 锥 −2」口径作废；③真残叶阻于切界层，需 prep/单调性预处理新波；④varlt 中招 7+ case 数据但**零已落地污染**（nliTsk* 全 sorry 桩；CTSKAJXY_delta_x4 精确复核 sound）。车道数降至 5（nli-b-toolchain 完工不补位，执行新政策）。交付七件在快照目录（含 oldnew.diff/varlt-fix/e2e_probe 证据链）。
 - **2026-10-26（午，续 3）**：用户裁决两项——**SF-54/55/56 全部批准**；**车道政策改维持 5**（当前 6 在飞，下一个完成不补位降至 5，此后 1:1）。**SF-54 即刻应用**：五文件（LA7/LA14/LA35/LA36/LA37）22 桩加 `hedge` 前提 + LA7 `LOCAL_FAN_ORBIT_MAP_EXPLICIT`→`_LA7` 改名（解 LA2:1488 同名死角，LA7 从此可 import 达 LA2 模块 = W6a 施工路径畅通），串行 STATEMENT-FIX 闸 5/5 PASS（五提交 `47467b90`…`119a10c5`，patch 已归档 54-la1-localfan-hedge.patch，应用记录入 proposals §54(e')）；受害桩本体仍 sorry（W6a 负责灌证）。闸双雷区入册：LANE_FILES 单路径不拆分；须工作树唯一改动。**SF-55/56 推迟**至 w6b 落库后（SF-55 是其在飞 KCHMAMG 的消费前提，提前应用会使车道工作区失效）。W6a 转已解锁·按新政策排队（5 时机首发）。
