@@ -119,7 +119,7 @@ def Circular (V : Set V3) (E : Set (Set V3)) : Prop :=
 
 /-- HOL `generic V E` (localization.hl:103). -/
 def Generic (V : Set V3) (E : Set (Set V3)) : Prop :=
-  ∀ v w u : V3, {v, w} ∈ E → u ∈ V → affGt {0} {v, w} ∩ affLt {0} {u} = ∅
+  ∀ v w u : V3, {v, w} ∈ E → u ∈ V → affGe {0} {v, w} ∩ affLt {0} {u} = ∅
 
 /-- HOL `lunar (v,w) V E` (localization.hl:111). -/
 def Lunar (v w : V3) (V : Set V3) (E : Set (Set V3)) : Prop :=
