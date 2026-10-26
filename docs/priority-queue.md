@@ -28,7 +28,7 @@
 |---|---|---|---|
 | **poolc-w3** | PA25 锥源收割：TSV 盘点 **32 枚锥直源**（最大 Text 簇）三族——`real_model_*` 28 枚（汇入 pkrmQu/Qx/Qy/Azim/Quarter 五枢纽，先勘枢纽与共享结构定波界）+ LEAF_RANK_PROPS 族 3 枚（cc_prep_model_data / pkLeafRankAzimPointwise / pkLeafRankCriticalEdge）+ `ox3q1hP25` 1 枚（直挂 textCapstone）；基线 `e2c636ec` | PackingAuto25.lean | **锥直源最多 −32**（按实际闭合计） |
 | **wsewpch-w6b** | **KCHMAMG**（LA5:5026，HOL ~280 行，circular 支主件）+ LA5 余三枚银行桩：INTERSECTION_LEMMA(:4156) → EXISTS_INTERSECTION_PROPERPLY(:4886) / LOFA_V_SUBSET_AFF_HULL(:4900) → 新增 WHEN_A_B_POS_ARCV_STABLE（全树缺）；W4 查明 :4886/:4900 被 :4156 传递阻塞 | LocalAuto5.lean | 锥 0；W6c circular 支前置 |
-| **nkezbfc-giant-w1** | `NKEZBFC_PREP_p9`（LA9:1071，HOL NKEZBFC.hl:1718 约 900 行 CARD V−3 强归纳）**第一波**：盘点 LA9 NKEZBFC 节切片桩依赖图 → 闭机械件 → 搭 `V.ncard` 归纳骨架 + 基例 → 主件本波允许不闭；EJRCFJD 已是显式前提槽 `h`，不碰 | LocalAuto9.lean | 锥 0；解锁 NKEZBFC → W6c generic 支 |
+| **nkezbfc-giant-w2** | `NKEZBFC_PREP_p9` 主石波（总装已就位 `exact p9_main_induction h stepB`）：stepB 无弦分支（EGHNAVX 300–450 行，拆 EG-1/EG-2）+ AZIM_EQ（先查 Geom.AzimLemmas 拼装）+ 机械余料；COMPATIBLE_BW_TWO_LEMMAS 编排者裁决 = 先查消费面，需要则 p9_* 孪生，未经双核禁 import LA6。任务书 `lane_snapshots/nkezbfc-giant-w2/TASK.md` | LocalAuto9.lean | 锥 0；闭 PREP 后解锁 NKEZBFC → W6c generic 支 |
 | **la1-localfan-scout** | 只读核查 W5b 两枚 SF 提案：A 级 LA1 `LocalFan` 弱编码（hypermapOfFan 不排孤立点 ⇒ LA7:1046–1121 foundation 桩疑似假，含机器反例试验）+ B 级 `Generic` affGt 偏弱 → `docs/scouts/la1-localfan-scout.md` | 新文档（不碰 .lean、不构建） | 防 foundation 波建在假桩上 |
 | **A2-W2b′** | **提速已执行（用户批准，`8f789c60`）**：Base 4× `.arctanK(1)×1024` → `.atan1K`（pi4D 盒）+ 2,775 分片 967,759 处 `(by decide)` → `(by decide +kernel)` + emitter gen-11（atan1K 默认 ON、判定统一 `DECIDE_TAC`）。构建 09:18 重启：**分片单墙钟实测 181–512 s（原 3,000–7,000 s，提速 6–20×）**。**勘误（午）**：早前「118/2776、~123 片/时、~1 天」系把提速前残留 olean 误计（盘上 109 枚旧残件）；真实口径 **92/2776 @ 1h51m，~50 片/时（仍为旧吞吐 ~4.8×）→ ETA ~2–2.5 天**；完工后探针 → olean 回灌 → Glue 粘合落库 **−1 源** | 后台构建 | rest 9 粘合落库 **−1 源** |
 
@@ -45,7 +45,7 @@
 
 ## 2. 排队（按序补位）
 
-1. `在飞` **NKEZBFC_PREP GIANT 第一波**（见 §1 nkezbfc-giant-w1）；第二/三波待其交付的任务书草稿；最后 `EJRCFJD_ALT2`（LA2:1589，正本 EJRCFJD LA6:1135）+ `NKEZBFC`（LA2:1606）一行装配——注意 LA2 import LA5/LA9 均成环，装配层需走 LA9 侧或桥文件。
+1. `在飞` **NKEZBFC_PREP GIANT 第二波（主石 stepB）**（见 §1 nkezbfc-giant-w2；第一波已落库 `3034e8f7`，LA9 NKEZBFC 节 19→9，`p9_main_induction` 骨架就位）；之后 `EJRCFJD_ALT2`（LA2:1589，正本 EJRCFJD LA6:1135）+ `NKEZBFC`（LA2:1606）一行装配——注意 LA2 import LA5/LA9 均成环，装配层需走 LA9 侧或桥文件。
 2. `在飞` **WSEWPCH W4 lunar**（见 §1 wsewpch-w4）。
 3. `已完成` **SF-53 应用 + CC4P4 discharge**（`b30bad76` + `e2c636ec`）：20 桩全闭，PA4 文件级 29→9，探针 20/20 标准三，锥 0；余 9 枚 §4/§5 cellParams/bump 桩另行排队。
 4. `待 A2-W2b` **A2 落地波**：探针 `CQITNPEAx3725403817_pos` 标准三 → olean 回灌（RUNBOOK-G4 §4）→ 新建 `A2QITNPEAGlue.lean` + Assembly:739 替换 → **−1 源**。
@@ -113,6 +113,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-26（午，续）**：**nkezbfc-giant-w1 落库 `3034e8f7`**（LA9 +768/−11，闸 PASS @SOL_LOCAL_FAN_POS_CASE3_p9 默认七根：归纳基例 + 有弦分支全闭 + `p9_main_induction` 骨架，NKEZBFC 节 19→9 桩，LA9 32→22；import 零变动，探针 6 枚标准三；移交警告 env-lean 假绿 11 处实证 → 波 2 每 3–4 枚终验）。1:1 补位发车 **nkezbfc-giant-w2**（主石 stepB + AZIM_EQ + 机械余料；编排者裁决 COMPATIBLE_BW_TWO_LEMMAS：先查消费面，需要则 p9_* 孪生，未经无环+撞名双核禁 import LA6——LA6 零下游 importer 是既成格局）。
 - **2026-10-26（午）**：**cc4p4-discharge 落库 `e2c636ec`**（PA4 +171/−20，闸 PASS @GRHIDFA 默认七根：SF-53 解锁的 20 枚 CC4P4 桩全数 discharge，PA4 29→9，主仓复核探针 20/20 标准三；新增 §2 首桩前 7 枚 p4a* 前向私件——Lean 无前向引用，§2c 桥在桩位后不可见；雷区入册：陈旧 olean 假 sorryAx，必须先 build 再 probe）。la1-localfan-scout 首航 API 故障（EPIPE）零产出中断，原任务书补发（新基线 aff2188a）。**A2 口径勘误**：重启实为今日 09:18，盘上 109 枚旧残件曾被误计进度；真实 92/2776 @ 1h51m、~50 片/时、ETA ~2–2.5 天。1:1 补位发车 **poolc-w3**（PA25 锥源收割：TSV 盘点 32 枚锥直源为最大 Text 簇——real_model_* 28 汇入 pkrm* 五枢纽 + LEAF_RANK_PROPS 族 3 + ox3q1hP25 直挂终端）。§0 口径微校（Assembly 81 非 80）。
 - **2026-10-26（上午，续 7）**：用户三项裁决落地——(1) nli B 批工具链复活试local：**nli-b-toolchain 发车**（flint 3.6.0 已在 Homebrew，bb_arb.c 本机 clang 复活 → 重解两案 → gen-11 发射 → A1 模板粘合草案）；(2) **W6-A 批准并发车**（hlp-w6a：19,715 图证书树 light 数据 + 族名普查）；(3) **W1 批准入队**，执行口径改子批 + 磁盘硬闸（本机 113 GB 空闲 < 110 GB/批；A2 完工清理工作区后放大）。§2 第 5/9 项、§6 第 8 项改写。
 - **2026-10-26（上午，续 6）**：连落四波——**SF-53 应用 `b30bad76`**（闸 PASS；首轮 FAIL 系 patch 头带 diff -u 时间戳，归档规范化后重跑，雷区入册）、**池C-W2 `621a7566`**（PA25 四件含锥源 K3_CC_WI_ALT，**地图实测 153→152**，TSV `bfe278b5`，可达 218,326）、**W5b `79586134`**（LA7 +255/−2：arc half p7w2_half_polar_arc + 对偶引擎 p7w2_hvihvec + W6a 预支两枚 foundation 件；BGMIFTE 本体留待；**新地图死角**：LA2:1488/LA7:1063 同名桩致 LA7 不得 import 任何传递达 LA2 的模块；两枚 SF 提案）。补位发车 cc4p4-discharge（PA4）+ la1-localfan-scout（只读）。A2 重建 169/2776、分片 146–954 s。
