@@ -219,7 +219,7 @@ theorem EDGE_FORM_IN_LOCAL_FAN_p37 {V : Set V3} {E : Set (Set V3)}
 `Local_lemmas.LOFA_IN_E_IMP_IN_FF` + `Local_lemmas.DETER_RHO_NODE` twins
 (still `sorry` in LocalAuto5). -/
 theorem EDGE_IN_LOCAL_FAN_DET_RHO_NODE_p37 {V : Set V3} {E : Set (Set V3)}
-    {FF : Set (V3 × V3)} {x : Set V3} (h : LocalFan V E FF) (hx : x ∈ E) :
+    {FF : Set (V3 × V3)} {x : Set V3} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hx : x ∈ E) :
     ∃ v ∈ V, {v, rhoNode1 FF v} = x := by
   sorry
 
@@ -395,7 +395,7 @@ theorem SUB_LUNAR_DEFORM_LEMMA_p37 {a b : ℝ} {V : Set V3} {E : Set (Set V3)}
 (`Local_lemmas1.LOCAL_RHO_NODE_PAIR_E` + `EDGE_IN_LOCAL_FAN_DET_RHO_NODE`);
 the registry `LocalFan` stub carries no `E` data. -/
 theorem LOCAL_FAN_SET_E_p37 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
-    (_h : LocalFan V E FF) :
+    (_h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
     {p : Set V3 | ∃ v ∈ V, p = {v, rhoNode1 FF v}} = E := by
   sorry
 
