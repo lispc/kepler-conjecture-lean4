@@ -1,4 +1,4 @@
-# 主定理 e2e 可达性地图（2026-10-25 晚重跑；TSKAJXY_034 翻除、PA21 归零后）
+# 主定理 e2e 可达性地图（2026-10-26 上午重跑；池C 两枚锥源出列后）
 
 > 根 = `Kepler.Assembly.the_kepler_conjecture_from_interfaces`（即
 > `Kepler.Final.the_kepler_conjecture_e2e` 的直接证明项）。
@@ -10,7 +10,18 @@
 
 ## 0. 头版
 
-### 2026-10-26 刻度（TSV `cc3cb531` 后重生成）
+### 2026-10-26（上午）刻度（池C 落库 `db3ae79f` 后重生成，TSV `09f84c2e`）
+
+| 指标 | 值 | 变化 |
+|---|---:|---|
+| 直接 sorryAx 债务源 | **153** | −2：PA25 `LEAF_RANK_REUHADY`（parent `c_4_azim_mcell_dih_y`）、`MCELL4_FULL_WEDGE`（parent `cc_4_cc_ke4`）出列——池C 五件标准三（REUHADY / MCELL3_DIHX_POS / LEAF_RANK_REUHADY / MCELL4_DIHX_AZIM / MCELL4_FULL_WEDGE）。diff 恰为此两行删除、零新增 |
+| 可达 Kepler 声明 | 218,297 | +654（池C 新证明体 + PA24 `REUHADY_p24` 闭包入锥；W5a LA9 / W2 AzimBridge 不在锥内，零影响） |
+| 可达 Kepler 公理 | 624 | 0 |
+
+> 本日同批落库但**锥刻度 0** 的波：WSEWPCH W5a（LA9 四件，`b1e1224d`）、W2（AzimBridge 20 件，`057a0683`）——
+> 它们是 W6 收官的前置资产，锥 +1 要等 TameLp 处 WSEWPCH 本体闭合才兑现。
+
+### 2026-10-26（凌晨）刻度（TSV `cc3cb531` 后重生成）
 
 | 指标 | 值 | 变化 |
 |---|---:|---|
