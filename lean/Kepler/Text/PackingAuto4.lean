@@ -273,18 +273,112 @@ theorem SUM_POS_LT_NUMSEG (m n : ℕ) (f : ℕ → ℝ) (hmn : m ≤ n)
 theorem SUM_BETA {α : Type*} (S : Set α) (f : α → ℝ) :
     setSum S (fun x => f x) = setSum S f := rfl
 
+/-! ### Section-2 discharge kit (`CC4P4` → `CcV11`, forward copy of §2c)
+
+The section-2 stubs sit textually before the §2c bridge (`toV11`,
+`p4_real_model_of_sumfix`, ...), and Lean has no forward references, so the
+kit is mirrored here under `p4a*` names.  Every `cc_*_v11` accessor over
+`p4aToV11` iota-collapses exactly as in §2c (same literal lists), so
+pointwise accessor transport needs no named lemmas; only the two model
+transports and the size cast are proved. -/
+
+private def p4aToV11 (cc : CC4P4) : CcV11 where
+  ccReals := [cc.reals 0, cc.reals 1, cc.reals 2, cc.reals 3]
+  ccBools := [fun i => cc.bools 0 i = true, fun i => cc.bools 1 i = true,
+    fun i => cc.bools 2 i = true, fun i => cc.bools 3 i = true,
+    fun i => cc.bools 4 i = true, fun i => cc.bools 5 i = true]
+  ccCard := cc.cardA
+
+private theorem p4aPeriodicIff {f : ℕ → Prop} {n : ℕ} :
+    periodic f n ↔ periodicPropP4 f n := by
+  constructor
+  · intro h i
+    show f (i + n) ↔ f i
+    rw [h i]
+  · intro h i
+    show f (i + n) = f i
+    rw [h i]
+
+private theorem p4aRealModel (cc : CC4P4) (hr : ccRealModelP4 cc)
+    (hfix : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccAzimP4 cc) = 2 * Real.pi) :
+    cc_real_model_v11 (p4aToV11 cc) := by
+  obtain ⟨h1, h2, h3, h4, h5, h6, -, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17,
+    h18, h19, h20, h21, h22, h23, h24, h25, h26, h27, h28, h29, h30, h31, h32, h33⟩ := hr
+  have h3lit : (3 : ℝ) = 3.0 := by norm_num
+  refine ⟨h1, h2, h3, h4, h5, h6, hfix, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17,
+    h18, h19, h20, h21, h22, h23, h24, h25, h26, h27, h28, h29, h30, h31, h32, ?_⟩
+  intro i hq
+  have htxq := h33 i hq
+  rw [h3lit]
+  exact htxq
+
+private theorem p4aBoolModel (cc : CC4P4) :
+    cc_bool_model_v11 (p4aToV11 cc) ↔ ccBoolModelP4 cc := by
+  constructor
+  · rintro ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩
+    exact ⟨h1, p4aPeriodicIff.1 h2, p4aPeriodicIff.1 h3, p4aPeriodicIff.1 h4,
+      p4aPeriodicIff.1 h5, p4aPeriodicIff.1 h6, p4aPeriodicIff.1 h7,
+      h8, h9, h10, h11, h12⟩
+  · rintro ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩
+    exact ⟨h1, p4aPeriodicIff.2 h2, p4aPeriodicIff.2 h3, p4aPeriodicIff.2 h4,
+      p4aPeriodicIff.2 h5, p4aPeriodicIff.2 h6, p4aPeriodicIff.2 h7,
+      h8, h9, h10, h11, h12⟩
+
+private theorem p4aModel4 (cc : CC4P4)
+    (h : ccBoolModelP4 cc ∧ ccBoolPrepP4 cc ∧ ccRealModelP4 cc ∧
+      Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0)
+    (hfix : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccAzimP4 cc) = 2 * Real.pi) :
+    cc_bool_model_v11 (p4aToV11 cc) ∧ cc_bool_prep_v11 (p4aToV11 cc) ∧
+      cc_real_model_v11 (p4aToV11 cc) ∧
+      (∑ i ∈ Finset.Icc 0 (cc_card_v11 (p4aToV11 cc) - 1), cc_gg_v11 (p4aToV11 cc) i) <
+        (0 : ℝ) :=
+  ⟨(p4aBoolModel cc).mpr h.1, h.2.1, p4aRealModel cc h.2.2.1 hfix, h.2.2.2⟩
+
+private theorem p4aSizeNat (cc : CC4P4) (p : ℕ → Prop)
+    (hcard : ccCardP4 cc ≠ 0) :
+    cc_size_v11 (p4aToV11 cc) p = Nat.card {i : ℕ | i < ccCardP4 cc ∧ p i} := by
+  have hc : cc_card_v11 (p4aToV11 cc) = ccCardP4 cc := rfl
+  rw [hc] at *
+  have hset : {i : ℕ | i < ccCardP4 cc ∧ p i}
+      = ((Finset.filter p (Finset.Icc 0 (ccCardP4 cc - 1)) : Finset ℕ) : Set ℕ) := by
+    ext i
+    simp only [Set.mem_setOf_eq, Finset.mem_filter, Finset.mem_coe, Finset.mem_Icc]
+    constructor
+    · rintro ⟨hlt, hp⟩
+      exact ⟨⟨Nat.zero_le i, Nat.le_sub_one_of_lt hlt⟩, hp⟩
+    · rintro ⟨⟨-, hle⟩, hp⟩
+      exact ⟨Nat.lt_iff_le_pred (Nat.pos_of_ne_zero hcard) |>.mpr hle, hp⟩
+  rw [hset, Nat.card_coe_set_eq, Set.ncard_coe_finset]
+  rfl
+
+private theorem p4aSizeCast (cc : CC4P4) (p : ℕ → Prop)
+    (hcard : ccCardP4 cc ≠ 0) :
+    (cc_size_v11 (p4aToV11 cc) p : ℝ) = ccSizeP4 cc p := by
+  unfold ccSizeP4
+  exact congrArg (fun n : ℕ => (n : ℝ)) (p4aSizeNat cc p hcard)
+
 /-- OXLZLEZ2.hl:403 (`LXDEYBO_concl`, OXLZLEZ1.hl:142). -/
 theorem LXDEYBO (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    ccSizeP4 cc (cc4CellP4 cc) ≤ 4 := by sorry
+    ccSizeP4 cc (cc4CellP4 cc) ≤ 4 := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      have hle := LXDEYBO_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
+      rw [← p4aSizeCast cc (cc4CellP4 cc) hv.1.1]
+      exact_mod_cast hle
 
 /-- OXLZLEZ2.hl:564 (`MTMLSRF_concl`, OXLZLEZ1.hl:135). -/
 theorem MTMLSRF (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
     ∃ i, 0 < i ∧ ccGgP4 cc i < 0 ∧ ccQuP4 cc i ∧
-      cc4CellP4 cc (i + 1) ∧ cc4CellP4 cc (i - 1) := by sorry
+      cc4CellP4 cc (i + 1) ∧ cc4CellP4 cc (i - 1) := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      obtain ⟨i, h0, h1, h2, h3, h4⟩ :=
+        MTMLSRF_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
+      exact ⟨i, h0, h1, h2, h3, h4⟩
 
 /-- OXLZLEZ2.hl:1074. -/
 theorem MOD_INJ1 (n k : ℕ) (hn : n ≠ 0) (hk : k < n) (hk0 : k ≠ 0) (x : ℕ) :
@@ -302,20 +396,34 @@ theorem WKR_COMPTED (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc
       i ∈ (Finset.Icc 0 (ccCardP4 cc - 1) : Set ℕ) ∧
       j ∈ (Finset.Icc 0 (ccCardP4 cc - 1) : Set ℕ) ∧
       k ∈ (Finset.Icc 0 (ccCardP4 cc - 1) : Set ℕ) ∧
-      cc4CellP4 cc i ∧ cc4CellP4 cc j ∧ cc4CellP4 cc k := by sorry
+      cc4CellP4 cc i ∧ cc4CellP4 cc j ∧ cc4CellP4 cc k := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      obtain ⟨i, j, k, hd, hi, hj, hk, h4i, h4j, h4k⟩ :=
+        p3h_WKR_COMPTED (p4aToV11 cc) hv.2.1 hv.1 hv.2.2.1 hv.2.2.2
+      exact ⟨i, j, k, hd, Finset.mem_coe.mpr hi, Finset.mem_coe.mpr hj,
+        Finset.mem_coe.mpr hk, h4i, h4j, h4k⟩
 
 /-- OXLZLEZ2.hl:1195/1225 (`oxl6142`, alias `CHQSQEY`; `CHQSQEY_concl`,
 OXLZLEZ1.hl:135). -/
 theorem CHQSQEY (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    3 ≤ ccSizeP4 cc (cc4CellP4 cc) := by sorry
+    3 ≤ ccSizeP4 cc (cc4CellP4 cc) := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      have hle := CHQSQEY_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
+      rw [← p4aSizeCast cc (cc4CellP4 cc) hv.1.1]
+      exact_mod_cast hle
 
 /-- OXLZLEZ2.hl:1228. -/
 theorem THREE_LE_CC_CARD (cc : CC4P4) (_h1 : ccBoolModelP4 cc)
     (_h2 : ccBoolPrepP4 cc) (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    3 ≤ ccCardP4 cc := by sorry
+    3 ≤ ccCardP4 cc := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact p3h_THREE_LE_CC_CARD (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
 
 /-- OXLZLEZ2.hl:1255. -/
 theorem THREE_MOD_CONSECUTIVES (i n : ℕ) (hi : 0 < i) (hn : 3 ≤ n) :
@@ -356,7 +464,12 @@ theorem MOD_PERIOD_BOUNDED2 (nn m i k : ℕ) (hnn : nn ≠ 0) (hmk : m ≤ k)
 theorem UNPNFVW (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    ccSizeP4 cc (ccQyP4 cc) ≤ 1 := by sorry
+    ccSizeP4 cc (ccQyP4 cc) ≤ 1 := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      have hle := UNPNFVW_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
+      rw [← p4aSizeCast cc (ccQyP4 cc) hv.1.1]
+      exact_mod_cast hle
 
 /-- OXLZLEZ2.hl:1735. -/
 theorem CC_4CELL_QUQX (cc : CC4P4) (i : ℕ) :
@@ -429,7 +542,9 @@ theorem MOD_NUMSEG (n i : ℕ) (hn : n ≠ 0) :
 /-- OXLZLEZ2.hl:1830. -/
 theorem IPVICGW_C33 (cc : CC4P4) (h : ccBoolModelP4 cc ∧ ccBoolPrepP4 cc ∧
     ccRealModelP4 cc ∧ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0)
-    (_hc : ccCardP4 cc = 3) (i : ℕ) : ccSmallP4 cc i := by sorry
+    (_hc : ccCardP4 cc = 3) (i : ℕ) : ccSmallP4 cc i := by
+      exact p3i_IPVICGW_C33 (p4aToV11 cc)
+        (p4aModel4 cc h h.2.2.1.2.2.2.2.2.2.1) _hc i
 
 /-- OXLZLEZ2.hl:2009. -/
 theorem UNIQUE_QY (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
@@ -437,7 +552,10 @@ theorem UNIQUE_QY (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
     ∀ j, ccQyP4 cc j ∧ j ∈ (Finset.Icc 0 (ccCardP4 cc - 1) : Set ℕ) →
       ∀ k, k ≠ j ∧ k ∈ (Finset.Icc 0 (ccCardP4 cc - 1) : Set ℕ) →
-        ¬ccQyP4 cc k := by sorry
+        ¬ccQyP4 cc k := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact p3i_UNIQUE_QY (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
 
 /-- OXLZLEZ2.hl:2052. -/
 theorem UNIQUE_QY2 (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
@@ -445,17 +563,24 @@ theorem UNIQUE_QY2 (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
     ∀ j, ccQyP4 cc j ∧ j ∈ (Finset.Icc 0 (ccCardP4 cc - 1) : Set ℕ) →
       ∀ k, ccQyP4 cc k ∧ k ∈ (Finset.Icc 0 (ccCardP4 cc - 1) : Set ℕ) →
-        k = j := by sorry
+        k = j := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact p3i_UNIQUE_QY2 (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
 
 /-- OXLZLEZ2.hl:2068. -/
 theorem IPVICGW_C43_C44 (cc : CC4P4) (h : ccBoolModelP4 cc ∧ ccBoolPrepP4 cc ∧
     ccRealModelP4 cc ∧ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0)
-    (_hc : ccCardP4 cc = 4) (i : ℕ) : ccSmallP4 cc i := by sorry
+    (_hc : ccCardP4 cc = 4) (i : ℕ) : ccSmallP4 cc i := by
+      exact p3i_IPVICGW_C43_C44 (p4aToV11 cc)
+        (p4aModel4 cc h h.2.2.1.2.2.2.2.2.2.1) _hc i
 
 /-- OXLZLEZ2.hl:2464. -/
 theorem EXISTS_QY_CARD5 (cc : CC4P4) (h : ccBoolModelP4 cc ∧ ccBoolPrepP4 cc ∧
     ccRealModelP4 cc ∧ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0)
-    (_hc : ccCardP4 cc = 5) : ∃ i, i < 5 ∧ ccQyP4 cc i := by sorry
+    (_hc : ccCardP4 cc = 5) : ∃ i, i < 5 ∧ ccQyP4 cc i := by
+      exact p3i_EXISTS_QY_CARD5 (p4aToV11 cc)
+        (p4aModel4 cc h h.2.2.1.2.2.2.2.2.2.1) _hc
 
 /-- OXLZLEZ2.hl:2500. -/
 theorem NUMSEG_INTER_22 (nn i x : ℕ) (hnn : nn ≠ 0) :
@@ -518,31 +643,45 @@ theorem CARD5_1074_LE_QYI (cc : CC4P4) (i : ℕ)
     (_hgb : ∀ j, 0.606 ≤ ccAzimP4 cc j)
     (_hsum : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccAzimP4 cc) = 2 * Real.pi)
     (_h1074 : 1.074 ≤ ccAzimP4 cc i) :
-    0 ≤ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) := by sorry
+    0 ≤ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) := by
+      exact p3i_CARD5_1074_LE_QYI (p4aToV11 cc) i
+        (p4aModel4 cc h h.2.2.1.2.2.2.2.2.2.1) _h4c _hqy _hqyi _hc
+        _hper _hgb _hsum _h1074
 
 /-- OXLZLEZ2.hl:3229. -/
 theorem PRE_IPVICGW (cc : CC4P4) (h : ccBoolModelP4 cc ∧ ccBoolPrepP4 cc ∧
     ccRealModelP4 cc ∧ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0)
     (_hc : ccCardP4 cc = 5) :
-    0 ≤ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) := by sorry
+    0 ≤ Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) := by
+      exact p3i_PRE_IPVICGW (p4aToV11 cc)
+        (p4aModel4 cc h h.2.2.1.2.2.2.2.2.2.1) _hc
 
 /-- OXLZLEZ2.hl:3264. -/
 theorem CC_CARD_LESS_THAN_5 (cc : CC4P4) (_h1 : ccBoolModelP4 cc)
     (_h2 : ccBoolPrepP4 cc) (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    ccCardP4 cc ≤ 5 := by sorry
+    ccCardP4 cc ≤ 5 := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact p3i_CC_CARD_LESS_THAN_5 (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
 
 /-- OXLZLEZ2.hl:3308 (`IPVICGW_concl`, OXLZLEZ1.hl:548). -/
 theorem IPVICGW (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0)
-    (i : ℕ) : ccSmallP4 cc i := by sorry
+    (i : ℕ) : ccSmallP4 cc i := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact IPVICGW_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2 i
 
 /-- OXLZLEZ2.hl:3320 (`RSIWAMP_concl`, OXLZLEZ1.hl:554). -/
 theorem RSIWAMP (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    ccCardP4 cc ≤ 4 := by sorry
+    ccCardP4 cc ≤ 4 := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact RSIWAMP_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
 
 /-- OXLZLEZ2.hl:3341. -/
 theorem LEAST_BOUND_CC_GG (cc : CC4P4)
@@ -600,13 +739,19 @@ theorem LITTLE_CC_GG3AA (cc : CC4P4) (nn : ℕ) (i : ℕ)
 theorem UTEOITF (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0)
-    (i : ℕ) : cc4CellP4 cc i := by sorry
+    (i : ℕ) : cc4CellP4 cc i := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact UTEOITF_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2 i
 
 /-- OXLZLEZ2.hl:3919. -/
 theorem GRHIDFA_ALT (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    ccCardP4 cc ≠ 4 := by sorry
+    ccCardP4 cc ≠ 4 := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact p3k_GRHIDFA_ALT (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
 
 /-- OXLZLEZ2.hl:4241. -/
 theorem NOT_QY_LEM (cc : CC4P4) (h1 : ccBoolModelP4 cc) (h2 : ccBoolPrepP4 cc)
@@ -619,7 +764,10 @@ theorem NOT_QY_LEM (cc : CC4P4) (h1 : ccBoolModelP4 cc) (h2 : ccBoolPrepP4 cc)
 theorem LUIKGMH (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    4 ≤ ccCardP4 cc := by sorry
+    4 ≤ ccCardP4 cc := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact LUIKGMH_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
 
 /-- OXLZLEZ2.hl:4512 (`GRHIDFA_concl`, OXLZLEZ1.hl:~4236): the D-case
 capstone — a negative `sum cc_gg_v11` over a compressed model is
@@ -627,7 +775,10 @@ impossible. -/
 theorem GRHIDFA (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
-    False := by sorry
+    False := by
+      have hfix := _h3.2.2.2.2.2.2.1
+      have hv := p4aModel4 cc ⟨_h1, _h2, _h3, _h4⟩ hfix
+      exact GRHIDFA_concl (p4aToV11 cc) hv.1 hv.2.1 hv.2.2.1 hv.2.2.2
 
 /-! ## 2b. Public `CcV11` twins of the nine OXLZLEZ1 conclusions
 
