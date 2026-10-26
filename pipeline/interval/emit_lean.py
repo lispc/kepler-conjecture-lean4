@@ -190,6 +190,15 @@ def box_frac(b):
             frac_dyadic(Fraction(b[1]["num"], b[1]["den"])))
 
 
+# W8 gen-11 (2026-10-26): decision tactic for leaf / cover / split proofs.
+# Default `decide +kernel` = kernel-only evaluation; plain `decide` first runs
+# a Meta-level whnf pass over the same term (needs maxRecDepth 1e6 for the
+# taylorIter fuel) and then the kernel re-checks it, so every leaf was being
+# evaluated twice.  `--decide-mode=elab` restores plain `decide` (gen-10
+# byte-identical output); `native` is DEV ONLY (Lean.ofReduceBool).
+DECIDE_TAC = "decide +kernel"
+
+
 def box_lit(box):
     """Dyadic-pair box tuple -> Lean `(Fin n -> DInterval)` literal."""
     ivs = []
@@ -204,9 +213,9 @@ def emit_tree(t, goal_k=None, depth=0):
     indices and leaves carry the `Fin goals.length` selector."""
     if isinstance(t, Leaf):
         if goal_k is None:
-            return f"(.leaf {box_lit(t.box)} (by decide))"
+            return f"(.leaf {box_lit(t.box)} (by {DECIDE_TAC}))"
         k = goal_k[t.hit]
-        return f"(.leaf {box_lit(t.box)} ⟨{k}, by decide⟩ (by decide))"
+        return f"(.leaf {box_lit(t.box)} ⟨{k}, by decide⟩ (by {DECIDE_TAC}))"
     pad = "  " * min(depth + 1, 20)
     return (f"(.node {box_lit(t.box)} {t.d}\n{pad}{emit_tree(t.l, goal_k, depth + 1)}\n"
             f"{pad}{emit_tree(t.r, goal_k, depth + 1)})")
@@ -635,7 +644,7 @@ def shard_file(mod, k, sub, n, mode):
             f"def {mod}Shard{k}Tree : {mode.tree_type(mod, n)} :=\n  {emit_tree(sub, mode.goal_k)}\n\n"
             f"/-- Covering of shard {k}: one kernel `decide` via `CertBool.coversB`. -/\n"
             f"theorem {mod}Shard{k}Covers : {mod}Shard{k}Tree.covers :=\n"
-            f"  {mode.covers_sound()} _ (by decide)\n\n"
+            f"  {mode.covers_sound()} _ (by {DECIDE_TAC})\n\n"
             "end Kepler.Interval.Cases\n")
 
 
@@ -749,7 +758,7 @@ LADDER = [(12, -64), (16, -64), (20, -64), (24, -64), (32, -64), (48, -64),
 # 2.4e-4 Taylor remainder, i.e. a coarse pi that destroys the certificate
 # margin under interval dependency.  `--fill-atan1-box` routes exactly the
 # closed atan(1) nodes through the certified `TKind.atan1K` (pi4D) box.
-fill_atan1_box = False
+fill_atan1_box = True
 
 
 def fill_goals(case):
@@ -879,7 +888,7 @@ def emit_tree_bbg(u, mod, params_by_box, depth=0):
     inline kernel `decide` cert."""
     if isinstance(u, Leaf):
         return (f"(.leaf {box_lit(u.box)} ({mod}MkExpr {ms_vec(params_by_box[u.cert_box])}) "
-                f"({mod}_sem _) (by decide))")
+                f"({mod}_sem _) (by {DECIDE_TAC}))")
     pad = "  " * min(depth + 1, 20)
     return (f"(.node {box_lit(u.box)} {u.d}\n{pad}{emit_tree_bbg(u.l, mod, params_by_box, depth + 1)}\n"
             f"{pad}{emit_tree_bbg(u.r, mod, params_by_box, depth + 1)})")
@@ -916,7 +925,7 @@ def shard_file_bbg(mod, i, sub, n, params_by_box):
             f"  {emit_tree_bbg(sub, mod, params_by_box)}\n\n"
             f"/-- Covering of shard {i}: one kernel `decide` via `BBTreeG.coversB`. -/\n"
             f"theorem {mod}Shard{i}Covers : {mod}Shard{i}Tree.covers :=\n"
-            f"  BBTreeG.coversB_sound _ (by decide)\n\n"
+            f"  BBTreeG.coversB_sound _ (by {DECIDE_TAC})\n\n"
             "end Kepler.Interval.Cases\n")
 
 
@@ -940,7 +949,7 @@ def emit_sharded_bbg(t, mod, n, k, expr, box, hdr, outpath, shard_leaves, params
             return f"{mod}Shard{shard_idx[id(u)]}Tree"
         if isinstance(u, Leaf):
             return (f"(.leaf {box_lit(u.box)} ({mod}MkExpr {ms_vec(params_by_box[u.cert_box])}) "
-                    f"({mod}_sem _) (by decide))")
+                    f"({mod}_sem _) (by {DECIDE_TAC}))")
         return f"(.node {box_lit(u.box)} {u.d} {skel_tree(u.l)} {skel_tree(u.r)})"
 
     def skel_proof(u):
@@ -948,7 +957,7 @@ def emit_sharded_bbg(t, mod, n, k, expr, box, hdr, outpath, shard_leaves, params
             return f"{mod}Shard{shard_idx[id(u)]}Covers"
         if isinstance(u, Leaf):
             return "trivial"
-        return (f"⟨splitOKB_sound (by decide), {skel_proof(u.l)}, "
+        return (f"⟨splitOKB_sound (by {DECIDE_TAC}), {skel_proof(u.l)}, "
                 f"{skel_proof(u.r)}⟩")
 
     imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
@@ -1144,10 +1153,10 @@ def emit_leaf_bbgd(mod, box, hit):
     one-shot semantics bridge; varLt hits are plain box checks."""
     kl = f"⟨{hit[1]}, by decide⟩"
     if hit[0] == "varLt":
-        return f"(.varLtLeaf {box_lit(box)} {kl} (by decide))"
+        return f"(.varLtLeaf {box_lit(box)} {kl} (by {DECIDE_TAC}))"
     k, pairs = hit[1], hit[2]
     return (f"(.posLeaf {box_lit(box)} {kl} {mod}Expr{k} "
-            f"({mod}MkExpr{k} {ms_vec(pairs)}) rfl ({mod}Sem{k} _) (by decide))")
+            f"({mod}MkExpr{k} {ms_vec(pairs)}) rfl ({mod}Sem{k} _) (by {DECIDE_TAC}))")
 
 
 def emit_tree_bbgd(u, mod, hits_by_box, depth=0):
@@ -1172,7 +1181,7 @@ def shard_file_bbgd(mod, i, sub, n, hits_by_box):
             f"  {emit_tree_bbgd(sub, mod, hits_by_box)}\n\n"
             f"/-- Covering of shard {i}: one kernel `decide` via `BBTreeGD.coversB`. -/\n"
             f"theorem {mod}Shard{i}Covers : {mod}Shard{i}Tree.covers :=\n"
-            f"  BBTreeGD.coversB_sound _ (by decide)\n\n"
+            f"  BBTreeGD.coversB_sound _ (by {DECIDE_TAC})\n\n"
             "end Kepler.Interval.Cases\n")
 
 
@@ -1204,7 +1213,7 @@ def emit_sharded_bbgd(t, mod, n, goals, exprs, box, hdr, outpath, shard_leaves,
             return f"{mod}Shard{shard_idx[id(u)]}Covers"
         if isinstance(u, Leaf):
             return "trivial"
-        return (f"⟨splitOKB_sound (by decide), {skel_proof(u.l)}, "
+        return (f"⟨splitOKB_sound (by {DECIDE_TAC}), {skel_proof(u.l)}, "
                 f"{skel_proof(u.r)}⟩")
 
     imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
@@ -2743,7 +2752,7 @@ def mono_lean_main(case, cid, n, args, mono_json, pad_bits=None):
                 f"![" + ", ".join(sgn_vec) + "]", "",
                 f"theorem sb{k}_safe : sb{k}F.derivSafe = true := by decide",
                 f"theorem sb{k}_dom : DomOK sb{k}Box sb{k}F :=",
-                f"  domOK_of_domTrivial _ _ (by decide)"]
+                f"  domOK_of_domTrivial _ _ (by {DECIDE_TAC})"]
         for j in dims:
             body.append(
                 f"theorem sb{k}_df{j} : checkPosTMHull "
@@ -3137,7 +3146,7 @@ def monotree_main(case, cid, n, args, spec, params_file,
     # "native" (DEV SPEED ONLY: every emitted decision tactic becomes
     # `native_decide`, which introduces the Lean.ofReduceBool axiom — never
     # a gate artifact; the gate lane stays kernel + axiom whitelist).
-    dt = "native_decide" if decide_mode == "native" else "decide"
+    dt = {"native": "native_decide", "elab": "decide"}.get(decide_mode, "decide +kernel")
     # W8 witness-position rung lowering (flag-gated; absent = v2 identical).
     # A `None` out component resolves to the spec's rung_out.
     marks = None
@@ -3666,13 +3675,15 @@ def main():
     dom_rung = None
     witness_rung = None
     keepconst_rung = None
-    # W8 gen-10: opt-in `TKind.atan1K` emission (default OFF = byte-identical
-    # emission: every trans stays `arctanK`).  When on, a closed `atan` node
-    # whose argument is the literal 1 is emitted as `atan1K`, whose library
-    # wrapper returns the precomputed `pi4D` (π/4) box.
-    atan1_box = False
-    global fill_atan1_box
-    fill_atan1_box = False
+    # W8 gen-10 `TKind.atan1K` emission; gen-11 (2026-10-26) flips the default
+    # to ON: a closed `atan` node whose argument is the literal 1 is emitted as
+    # `atan1K`, whose library wrapper returns the precomputed `pi4D` (π/4) box.
+    # The gen-10 default (`arctanK`, N=1024/2048 at x=1) made every A2 leaf
+    # re-sum a 1024-term Leibniz series 4x (~40x slower per leaf, measured).
+    # `--no-atan1-box` / `--no-fill-atan1-box` restore gen-10 byte-identical output.
+    atan1_box = True
+    global fill_atan1_box, DECIDE_TAC
+    fill_atan1_box = True
     # W8 gen-7: fixed split-node skeleton (the constructor takes box/d/l/r;
     # the splitOK proof is consumed by `covers`, not by the constructor).
     # OFF by default = byte-identical emission (the v2 5-arg skeleton is kept
@@ -3718,14 +3729,20 @@ def main():
             split_fix = True
         elif a == "--mono-atan1-box":
             atan1_box = True
+        elif a == "--no-atan1-box":
+            atan1_box = False
         elif a.startswith("--decide-mode="):
             decide_mode = a.split("=", 1)[1]
-            if decide_mode not in ("kernel", "native"):
-                die("--decide-mode: expected `kernel` or `native`")
+            if decide_mode not in ("kernel", "elab", "native"):
+                die("--decide-mode: expected `kernel`, `elab` or `native`")
+            DECIDE_TAC = {"native": "native_decide", "elab": "decide"}.get(
+                decide_mode, "decide +kernel")
         elif a == "--fill":
             fill = True
         elif a == "--fill-atan1-box":
             fill_atan1_box = True
+        elif a == "--no-fill-atan1-box":
+            fill_atan1_box = False
         elif a == "--stage-a":
             stage_a = True
         elif a == "--stage-a-data":
@@ -4148,7 +4165,7 @@ def main():
         covers_thm = (f"/-- Covering of the whole tree, one kernel `decide`\n"
                       f"through the Bool checker (`CertBool.coversB`). -/\n"
                       f"theorem {mod}_covers : {mod}Tree.covers :=\n"
-                      f"  {mode.covers_sound()} _ (by decide)")
+                      f"  {mode.covers_sound()} _ (by {DECIDE_TAC})")
 
     out = (HDR + "import Kepler.Interval.CertBool\n\nset_option maxHeartbeats 0\n\n"
            "namespace Kepler.Interval.Cases\n\n"
@@ -4190,8 +4207,8 @@ def emit_sharded(t, mod, n, expr, box, hdr, outpath, shard_leaves, mode):
         if isinstance(u, Leaf):
             if mode.disj:
                 k = mode.goal_k[u.hit]
-                return f"(.leaf {box_lit(u.box)} ⟨{k}, by decide⟩ (by decide))"
-            return f"(.leaf {box_lit(u.box)} (by decide))"
+                return f"(.leaf {box_lit(u.box)} ⟨{k}, by decide⟩ (by {DECIDE_TAC}))"
+            return f"(.leaf {box_lit(u.box)} (by {DECIDE_TAC}))"
         return f"(.node {box_lit(u.box)} {u.d} {skel_tree(u.l)} {skel_tree(u.r)})"
 
     def skel_proof(u):
@@ -4199,7 +4216,7 @@ def emit_sharded(t, mod, n, expr, box, hdr, outpath, shard_leaves, mode):
             return f"{mod}Shard{shard_idx[id(u)]}Covers"
         if isinstance(u, Leaf):
             return "trivial"
-        return (f"⟨splitOKB_sound (by decide), {skel_proof(u.l)}, "
+        return (f"⟨splitOKB_sound (by {DECIDE_TAC}), {skel_proof(u.l)}, "
                 f"{skel_proof(u.r)}⟩")
 
     imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
@@ -4242,9 +4259,9 @@ def pilot_single_leaf(mod, box):
 
 def g_leaf(mod, box, hit, ps="TMParams.empty"):
     if hit == "main":
-        return f"(.leaf {box} (by decide))"
+        return f"(.leaf {box} (by {DECIDE_TAC}))"
     if hit == "tm":
-        return f"(.taylorLeaf {box} {ps} (by decide))"
+        return f"(.taylorLeaf {box} {ps} (by {DECIDE_TAC}))"
     die(f"mixed-tm: unsupported leaf hit {hit!r} (need main/tm)")
 
 
@@ -4276,7 +4293,7 @@ def mixed_g_shard(mod, k, sub, n):
             f"{emit_tree_g(sub, mod)}\n\n"
             f"/-- Covering of shard {k}: one kernel `decide` via `CertMixed.coversB`. -/\n"
             f"theorem {mod}Shard{k}Covers : {mod}Shard{k}Tree.covers :=\n"
-            f"  BBTreeM.coversB_sound _ (by decide)\n\n"
+            f"  BBTreeM.coversB_sound _ (by {DECIDE_TAC})\n\n"
             "end Kepler.Interval.Cases\n")
 
 
@@ -4292,7 +4309,7 @@ def emit_mixed_g(t, mod, n, expr, box, hdr, outpath, shard_leaves):
         return emit_tree_g(u, mod)
 
     def covers_proof(u):
-        return f"BBTreeM.coversB_sound _ (by decide)"
+        return f"BBTreeM.coversB_sound _ (by {DECIDE_TAC})"
 
     root_final = (
         f"/-- End-to-end: the case expression is strictly positive on the whole box. -/\n"
@@ -4345,7 +4362,7 @@ def emit_mixed_g(t, mod, n, expr, box, hdr, outpath, shard_leaves):
             return f"{mod}Shard{shard_idx[id(u)]}Covers"
         if isinstance(u, Leaf):
             return "trivial"
-        return (f"⟨splitOKB_sound (by decide), {skel_proof(u.l)}, "
+        return (f"⟨splitOKB_sound (by {DECIDE_TAC}), {skel_proof(u.l)}, "
                 f"{skel_proof(u.r)}⟩")
 
     imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
