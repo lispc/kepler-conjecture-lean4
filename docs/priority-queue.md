@@ -45,13 +45,13 @@
 
 ## 2. 排队（按序补位）
 
-0. `已批·提级首发` **nli-prep-w1 切界层数学预处理波**（用户 2026-10-26 提级）：QITNPEAv2 主攻——rad2X 纯多项式支样板链先行（一行级粘合）→ 切界叶 prep 剖分（沿 disj 曲面加人工分割面）/ 单调性通道（HOL doc 自注 rad2 单调）双路试闭；任务书已立 `lane_snapshots/nli-prep-w1/TASK.md`；RQWUDDU 留下一波复用通道。预期样板链 + 部分切界叶 = 锥 −2 的一半。
+0. `已批·提级首发` **nli-prep-w1 切界层数学预处理波**（在飞，§1）（用户 2026-10-26 提级）：QITNPEAv2 主攻——rad2X 纯多项式支样板链先行（一行级粘合）→ 切界叶 prep 剖分（沿 disj 曲面加人工分割面）/ 单调性通道（HOL doc 自注 rad2 单调）双路试闭；任务书已立 `lane_snapshots/nli-prep-w1/TASK.md`；RQWUDDU 留下一波复用通道。预期样板链 + 部分切界叶 = 锥 −2 的一半。
 
 1. `在飞` **NKEZBFC_PREP GIANT 第二波（主石 stepB）**（见 §1 nkezbfc-giant-w2；第一波已落库 `3034e8f7`，LA9 NKEZBFC 节 19→9，`p9_main_induction` 骨架就位）；之后 `EJRCFJD_ALT2`（LA2:1589，正本 EJRCFJD LA6:1135）+ `NKEZBFC`（LA2:1606）一行装配——注意 LA2 import LA5/LA9 均成环，装配层需走 LA9 侧或桥文件。
 2. `在飞` **WSEWPCH W4 lunar**（见 §1 wsewpch-w4）。
 3. `已完成` **SF-53 应用 + CC4P4 discharge**（`b30bad76` + `e2c636ec`）：20 桩全闭，PA4 文件级 29→9，探针 20/20 标准三，锥 0；余 9 枚 §4/§5 cellParams/bump 桩另行排队。
 4. `待 A2-W2b` **A2 落地波**：探针 `CQITNPEAx3725403817_pos` 标准三 → olean 回灌（RUNBOOK-G4 §4）→ 新建 `A2QITNPEAGlue.lean` + Assembly:739 替换 → **−1 源**。
-5. `已批·分波执行` **hLP 终端语义移植**（`docs/scouts/lp-design-scout.md`）：用户 2026-10-26 批准 **W6-A**（在飞，EPIPE 后已续跑）与 **W1 root 首批 5,000 条**（已发车 §1——磁盘闸解除：经用户确认清理 34 个已结车道工作区回收 132 GB，空闲 235 GB）。W6-B/C 可随后开（W6-B 仍待 GoodListNodes 裁决；W6-C 无前置）。其余见 §6 第 8 项。
+5. `已批·分波执行` **hLP 终端语义移植**（`docs/scouts/lp-design-scout.md`）：**W6-A 已交付**（续跑收工 2026-10-26：19,715 条逐图对齐定理 24 文件 `W6Align*` + 根定理 `w6align`，五停批门槛全绿，两次停批事件如实留档；**性能确诊与修复：Lean 4.32 String.toList 内核 O(n²) → 字节级单遍解码器，19,715 串语义对拍 0 失配**；族普查 182 族与 127 条 lpIneqsIds 交集=0，TSV 入 docs/scouts/）。**落库待验收构建**（锁被 lp-w1 长占；车道无人值守链将在工作区自动构建+验收，产物 build_w6align.log/accept_followup.log 同步快照——编排者轮询后落库）。**W6-B 已解锁**（GoodListNodes 真化已批，用户 2026-10-26；开波第一口，注意 P6-C 构造连带规模未知，开波先勘）。**W1 root 首批 5,000 条**在飞（§1）。W6-PIN 已批待排。磁盘窗口缓议（§6 第 8 项）。
 6. `就绪` **BO LA1 注册表侦察**（只读）：JEJTVGB 暴露的 22+ 条 `*_concl` 箭头族 + LA2x 机器——B 类最大单块，预判多为 scs 记录展开。
 7. `已批` **F1 UPFZBZM 改线**（见 §3）。
 8. `已解锁·按新车道政策排队` **WSEWPCH W6a foundation**（LA7:1073–1128 块 9 桩 + FAN_PERIMETER 族 + BGMIFTE 结论 1/3）：SF-54 已应用（陈述带 hedge，LA7 同名桩已改名 `_LA7`，LA7 现可 import 达 LA2 模块）——施工路径畅通 = `localFan_p3.of_LocalFan_noIso` 桥（AzimBridge:953）→ LA5 p2-kit（LOCAL_FAN_RHO_NODE_PROS / LOCAL_FAN_CHARACTER_OF_RHO_NODE 已真）。**发车时点**：新车道政策（维持 5）下，当前 6 在飞→下一完成不补位降至 5，W6a 为降至 5 后的补位首发。**W6b**（KCHMAMG 在飞）/ **W6c**（装配，待 W6a/W6b）。**W1b 小波** LA7 UNION_AFF_GE_1_2 / ANGLES_ADD_AFF_GE（~200 行）。
@@ -114,6 +114,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-26（晚）**：**hlp-w6a 续跑收工**（两次 EPIPE 不死）：19,715 条对齐定理全量发射（24 文件，违禁词 CLEAN，tracked 零改动），五停批门槛全绿 + 两次停批事件如实处理（读序 bug/正则锚 bug）；**确诊并修复 Lean 4.32 String.toList O(n²) 内核病根**（字节级单遍解码器，全库 19,715 串语义对拍 0 失配）；族普查 182 族 ↔ 127 lpIneqsIds 精确交集=0（两命名空间，W6-D 勿混用）。落库押后至验收构建（锁队列；车道无人值守链自动补跑）。**la5-bank-w1 补位发车**（w6b 遗留四银行桩：INTERSECTION_LEMMA→KCHMAMG，DEV_PROBE 700 行骨架 + 施工图现成；警告 SF-55/56 后骨架须对当前 HEAD 复核）。
 - **2026-10-26（傍晚）**：用户五项裁决入档——hLP (i) GoodListNodes 真化**批**（W6-B 首口）+ (ii) W6-PIN**批**（并行排期）+ (iii) 磁盘窗口**缓议**；PA2 桩族**暂不删**（留 M1）；PA24/PackingConcl 整合**批**（时点编排者定 = WSEWPCH 链收官，预公告 +84）；native_decide 政策**暂缓**（呈报过全 vanilla 已性能可行）。**nli-prep-w1 提级为补位首发**：切界层数学预处理波（QITNPEAv2 主攻，rad2X 样板链 + prep 剖分/单调性双路），任务书已立。
 - **2026-10-26（午后）**：**wsewpch-w6b 落库 `03e04319`**（部分交付：件4 `WHEN_A_B_POS_ARCV_STABLE` 真证 + KCHMAMG 装配施工图注释入原位；四银行桩未闭诚实转交，遗留 `DEV_PROBE_p_int_core.lean` 700 行骨架；闸 PASS 默认七根）。**wsewpch-w6a 补位发车**（LA7 foundation 九桩灌证，SF-54 后陈述就绪；在飞回到 5）。**SF-55/56 应用落库**：首跑被闸拒于提案文档格式（STATEMENT-FIX 要求显式 (a)–(f) 节——第三条闸雷区），文档扩全格式后双 PASS：`b8154a64`（LA1 Generic affGt→affGe）/ `d90caf69`（LA2 circular_p2 affGe→affGt），交叉镜像误植归正；收尾 `3f0bd74d`。
 - **2026-10-26（午，续 4）**：**nli-b-toolchain 落库**（车道零 Lean 改动；`emit_rpn.py` var_lt 端点写反 2 行修复随本提交入库）：①工具链复活成功——flint 3.6.0 直配 `bb_arb.c` 无需 shim，gen-11 发射-构建-探针全链即到即用（TSKAJXY-delta_x4 E2E 探针标准三）；②**B 批历史证书证伪**——0/46、0/16 精确有理复核不通过（spbug2 前 disj 假命中，G4 rc=0 假绿），原「G4 导出 cert → 锥 −2」口径作废；③真残叶阻于切界层，需 prep/单调性预处理新波；④varlt 中招 7+ case 数据但**零已落地污染**（nliTsk* 全 sorry 桩；CTSKAJXY_delta_x4 精确复核 sound）。车道数降至 5（nli-b-toolchain 完工不补位，执行新政策）。交付七件在快照目录（含 oldnew.diff/varlt-fix/e2e_probe 证据链）。
