@@ -2477,6 +2477,9 @@ THM=`Kepler.Text.p4_real_model_of_sumfix`（rule 5：修复后该件 sorryAx-fre
 其为纯前提槽引擎，W6 已实测全真证；修复后另开收尾车道把 20 桩逐枚 discharge，
 PA4 文件级预期 29→9）。
 
+### (e') 应用记录（2026-10-26）
+用户批准（2026-10-26）。patch 已应用并通过 STATEMENT-FIX 闸（THM=`Kepler.Text.p4_real_model_of_sumfix`，GATE_ROOTS=PA4+PackingConcl，GATE-PASS）。雷区入册：patch 归档头两行不得带 `diff -u` 时间戳后缀（闸门 awk 以 `+++ b/<path>` 全等提取，带后缀则 section 提取为空）。
+
 ### (e) 孤儿评估
 无删除；无孤儿。
 
