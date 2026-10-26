@@ -4154,6 +4154,17 @@ theorem INTERSECTION_LEMMA {x z u v w : V3} (hxz : z ≠ x)
     ∃ a b t : V3, ({a, b} : Set V3) ⊆ ({u, v, w} : Set V3) ∧
       t ∈ ((affineSpan ℝ ({x, z} : Set V3) : Set V3) ∩
         conv0_p2 ({a, b} : Set V3)) := sorry
+  -- NEEDS (wsewpch-w6b recon 2026-10-23): the crossing data gives
+  -- d1•(v-x)+d2•(w-x) = s•(u-x) with 0 < d1,d2 and s < 0; write z-x = β•(v-x)+γ•(w-x).
+  -- Case analysis: β,γ same sign → pair {v,w}, t := (β/(β+γ))•v+(γ/(β+γ))•w ∈
+  -- aff{x,z} ∩ conv0{v,w}; β = 0 → pair {u,v}, t := (s/(s-d1))•u+(-d1/(s-d1))•v;
+  -- γ = 0 → pair {u,w} symmetric; mixed signs → t := (tu•u+tw•w)/(tu+tw) with
+  -- tu = βs/d1, tw = γ-βd2/d1 (pair {u,w}) resp. tu = γs/d2, tw = β-γd1/d2 (pair {u,v}).
+  -- All identities are linear; reusable kits: la5_affGt_extract (LA5:2879),
+  -- la5_affLt_extract (LA5:2958), la5_seg_member (LA5:2812). For
+  -- EXISTS_INTERSECTION_PROPERPLY additionally a ∉ aff{x,z}: in every case the first
+  -- element is off the line (hinde-style: v-x is not a multiple of w-x under
+  -- ¬Collinear {x,v,w}; see collinear_triple_iff LA5:123).
 
 /-- HOL `CVX_LO_IMP_LO` (local_lemmas.hl:2531). -/
 theorem CVX_LO_IMP_LO (h : convexLocalFan_p2 V E FF) : localFan_p2 V E FF := h.1
@@ -5014,6 +5025,25 @@ theorem SIN_SUB_PERIODIC (x : ℝ) : Real.sin x = -Real.sin (x - Real.pi) := by
   rw [Real.sin_sub]
   simp [Real.cos_pi, Real.sin_pi]
 
+/-- HOL `WHEN_A_B_POS_ARCV_STABLE` (Trigonometry2, trig2.hl:2665):
+`!a b (x:real^N) y. &0 < a /\ &0 < b ==> arcV (vec 0) x y = arcV (vec 0) (a % x) (b % y)`.
+Proof = the `la5_arcV_scale2` route (positive rescaling of either argument
+cancels in `arcV 0 _ _` because `norm_smul` with a positive scalar is the
+scalar itself). -/
+theorem WHEN_A_B_POS_ARCV_STABLE {a b : ℝ} {x y : V3} (ha : 0 < a) (hb : 0 < b) :
+    arcV 0 x y = arcV 0 (a • x) (b • y) := by
+  have dot_smul_l : ∀ (t : ℝ) (p q : V3), (t • p).ofLp ⬝ᵥ q.ofLp = t * (p.ofLp ⬝ᵥ q.ofLp) :=
+    fun t p q => smul_dotProduct t (p : Fin 3 → ℝ) (q : Fin 3 → ℝ)
+  have dot_smul_r : ∀ (p : V3) (t : ℝ) (q : V3),
+      p.ofLp ⬝ᵥ (t • q).ofLp = t * (p.ofLp ⬝ᵥ q.ofLp) := by
+    intro p t q
+    rw [show (t • q).ofLp = t • (q : Fin 3 → ℝ) from rfl, dotProduct_smul, smul_eq_mul]
+  rw [arcV, arcV]
+  have coez : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+  simp only [coez, sub_zero, dist_eq_norm, dot_smul_l, dot_smul_r, norm_smul,
+    Real.norm_eq_abs, abs_of_pos ha, abs_of_pos hb]
+  field_simp
+
 /-- HOL `KCHMAMG` (local_lemmas.hl:3197): the circular-fan characterization. -/
 theorem KCHMAMG (h : convexLocalFan_p2 V E FF) (hc : circular_p2 V E) :
     (∀ v ∈ V, interiorAngle1_p2 0 FF v = Real.pi) ∧
@@ -5024,6 +5054,23 @@ theorem KCHMAMG (h : convexLocalFan_p2 V E FF) (hc : circular_p2 V E) :
             azim 0 e v (rhoNode1_p2 FF v) = dihV 0 e v (rhoNode1_p2 FF v) ∧
             azim 0 e v (rhoNode1_p2 FF v) = arcV 0 v (rhoNode1_p2 FF v) ∧
             azim 0 e v (rhoNode1_p2 FF v) < Real.pi))) := sorry
+  -- NEEDS (wsewpch-w6b recon 2026-10-23): assembly plan for the next lane.
+  -- (1) Interior angles: `∀ v ∈ V, interiorAngle1_p2 0 FF v = Real.pi` follows from
+  --     OZQVSFF (LA5:3772, real) applied on the rho-orbit with P := affineSpan {v,w,0}.
+  -- (2) Plane part: `plane_p2 (affineSpan ℝ {v,w,0})` from LOCAL_FAN_IN_FF_NOT_COLLINEAR
+  --     (LA5:868); `V ⊆ affineSpan {v,w,0}` by orbit induction over
+  --     LOCAL_FAN_ORBIT_MAP_V (LA5:1038) with EXISTS_INTERSECTION_PROPERPLY (LA5:4878)
+  --     at each step (LA5:4895 LOFA_V_SUBSET_AFF_HULL is exactly this induction).
+  -- (3) Witness e := v cross (rhoNode1_p2 FF v); `∀ x ∈ A, e ⬝ᵥ x = 0` by the
+  --     Gram/cross identities already used in LA5:7897ff.
+  -- (4) azim_cycle part: FIRST_AZIM_CYCLE_EQ_RHO_NODE (LA5:2509) + KOMWBWC (LA5:3054)
+  --     + LOOP_SET_DETER_FIRTS_ELMS (LA5:4998); azim = dihV by AZIM_DIHV_SAME kit,
+  --     azim = arcV via WHEN_A_B_POS_ARCV_STABLE (above) + the positivity
+  --     `0 < sin (azim …)` route (HOL trig2.JBDNJJB).
+  -- Blocked upstream: INTERSECTION_LEMMA (LA5:4149) — full case map in DELIVERY of
+  -- lane wsewpch-w6b: cases on the barycentric coordinates β γ of z w.r.t. (x,v,w):
+  -- pair {v,w} (βγ same sign), {u,v} (β=0 or γ<0<β), {u,w} (γ=0 or β<0<γ); the
+  -- crossing data is d1•(v-x)+d2•(w-x) = s•(u-x) with 0<d1,d2 and s<0.
 
 -- HOL `AZIM_EQ_0_GE_ALT2` (local_lemmas.hl:3477) 与 `WEDGE_GE_EQ_AFF_GE`
 -- (local_lemmas.hl:3498) 已上移至 RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT 之前
