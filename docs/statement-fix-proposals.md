@@ -2519,18 +2519,45 @@ localization.hl:66 `local_fan`；local_lemmas.hl:1967（每顶点度数 2）；�
 
 HOL `localization.hl:103` 用 `aff_ge`；Lean 侧写成 `affGt`，前提变弱 ⇒ 消费定理结论变强 ⇒ 有假风险。probeE 机器证 `affGt ⊊ affGe`（0 ∈ affGe\affGt）。波及 `scsGeneric` → 8 文件与 KCHMAMG（LA5:5018，w6b 车道在飞件）。**勿动** LA1:118 `Circular` 行（忠实无病）。
 
-### (a)–(d)
-HOL 引文如上；补丁待批；验收走 STATEMENT-FIX 闸 + scsGeneric 下游探针。
+### (a) HOL 引文
+HOL `localization.hl:103`：`generic V E` 用 `aff_ge`（`affGe {0} {v,w} ∩ affLt {0} {u} = ∅` 型）；Lean LA1:122 现为 `affGt`。probeE（la1-localfan-scout）机器证 `affGt {0} {v,w} ⊊ affGe {0} {v,w}`（0 ∈ affGe\affGt），两编码互不蕴含。
 
-### (e) 孤儿评估 / (f) 风险与回滚
-无删除；回滚 = 反向 patch。前提加强方向，安全。
+### (b) 修复补丁
+LA1:122 单词替换 `affGt {0} {v, w}` → `affGe {0} {v, w}`（`Generic` 定义体；**勿动** LA1:118 `Circular` 行——HOL circular 用 aff_gt，忠实无病）。归档：`docs/statement-fix-proposals-patches/55-la1-generic-affge.patch`。
+
+### (c) 消费面影响清单
+`Generic` 全部为假设槽式消费：LA1:1064（scs 区）、LA14 变形块 7 处（全 sorry 桩）、LA28:2272、LA31:872/888（hypothesis 形，倾向无病）；下游 scsGeneric→8 文件与 KCHMAMG（LA5:5048，sorry）。无已证链展开定义体。
+
+### (d) 验收与应用计划
+STATEMENT-FIX 闸（默认七根，THM=`Kepler.Text.scs_k_v39_explicit` 已验标准三）；应用窗口 = wsewpch-w6b 落库后（SF-55 为其在飞 KCHMAMG 的消费前提，已满足）。
+
+### (e) 孤儿评估
+无删除；前提加强方向，无孤儿。
+
+### (f) 风险与回滚
+方向安全（假设加强不会使已证结论变假——结论陈述未动）；回滚 = 反向 patch。
 
 ## 56. LA2:273 `circular_p2` 的 `affGe` → `affGt` — 分级 B（移植误植 · 单词修正，方向危险）
 
-HOL `localization.hl:107` 用 `aff_gt`；Lean 侧写成 `affGe`，同 55 为危险方向。连带核查已完成：LA6:473 消费平凡、lunar_p2 内部一致。
+HOL `localization.hl:107` 用 `aff_gt`；Lean 侧写成 `affGe`，与 SF-55 交叉镜像误植。
 
-### (a)–(f)
-同 55 格式；补丁待批；回滚 = 反向 patch。
+### (a) HOL 引文
+HOL `localization.hl:107`：`circular V E` 用 `aff_gt`；Lean LA2:274 现为 `affGe`。同一 probeE 证据（两集互不蕴含）。
+
+### (b) 修复补丁
+LA2:274 单词替换 `affGe ({0} : Set V3) {v, w}` → `affGt ({0} : Set V3) {v, w}`（`circular_p2` 定义体；**勿动** LA2:270 `generic_p2` 行——HOL generic 用 aff_ge，忠实）。归档：`docs/statement-fix-proposals-patches/56-la2-circular-p2-affgt.patch`。
+
+### (c) 消费面影响清单
+`lunar_p2`（LA2:279，定义内 ¬circular_p2，语义随定义体一致平移，scout 核查内部自洽）；LA6:473–475（`by_cases` 对任意 Prop 编译中性，消费平凡）；LA5:5048 KCHMAMG（sorry 桩）。
+
+### (d) 验收与应用计划
+STATEMENT-FIX 闸（默认七根，THM=`Kepler.Text.FAN_EDGE_EL_V` 已验标准三）；与 SF-55 同窗口应用。
+
+### (e) 孤儿评估
+无删除；无孤儿。
+
+### (f) 风险与回滚
+方向安全；回滚 = 反向 patch。
 
 ### (e') SF-54 应用记录（2026-10-26）
 用户批准（2026-10-26「都批准」）。五文件串行 STATEMENT-FIX 闸全 PASS（每文件单文件工作树不变式；THM：LA7=LOCAL_FAN_NOT_CARD_FF_GE_2 免疫件 / LA14=azim_cross_0_p14 / LA35=SCS_K_LE_6_p35 / LA36=csAdj_mod_p36 / LA37=SET2_DETER_p37，全部标准三）：`47467b90`(LA7, 14 桩 hedge + LOCAL_FAN_ORBIT_MAP_EXPLICIT→_LA7 改名) / `88785e39`(LA14×3) / `2bacab43`(LA35×2) / `3c8b0c11`(LA36×1) / `119a10c5`(LA37×2)。改名零涟漪实核（LA2 无 _IVS 孪生、LA7 零 importer、LocalConcl 仅注释提及）。受害桩本体仍为 sorry（本 SF 只修陈述）；W6a 解锁。雷区新入册：闸 LANE_FILES 为单路径不拆空格，STATEMENT-FIX 一次一文件；闸须在工作树唯一改动状态下运行。
