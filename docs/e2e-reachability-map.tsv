@@ -1,6 +1,6 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 218297
-SORRIED 153
+TOTAL_REACHABLE_KEPLER_DECLS 218326
+SORRIED 152
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
@@ -97,7 +97,6 @@ Kepler.Text.LocalAuto27	Kepler.Text.EAPGLE_p27	parent=Kepler.Text.JEJTVGB_case_b
 Kepler.Text.LocalAuto1	Kepler.Text.FYSSVEV_concl	parent=Kepler.Text.JEJTVGB_p16
 Kepler.Text.LocalAuto20	Kepler.Text.FZIOTEF	parent=Kepler.Text.OEHDBEN
 Kepler.Text.LocalAuto1	Kepler.Text.HIJQAHA_concl	parent=Kepler.Text.JEJTVGB_p16
-Kepler.Text.PackingAuto25	Kepler.Text.K3_CC_WI_ALT	parent=Kepler.Text.cc_4_cc_ke4
 Kepler.Text.LocalAuto23	Kepler.Text.LFLACKU_p23	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
 Kepler.Text.LocalAuto1	Kepler.Text.MFKLVDK_concl	parent=Kepler.Text.JEJTVGB_p16
 Kepler.Text.LocalAuto1	Kepler.Text.MIQMCSN_concl	parent=Kepler.Text.JEJTVGB_p16

@@ -10,6 +10,14 @@
 
 ## 0. 头版
 
+### 2026-10-26（上午，续 5）刻度（池C-W2 落库 `621a7566` 后重生成，TSV `bfe278b5`）
+
+| 指标 | 值 | 变化 |
+|---|---:|---|
+| 直接 sorryAx 债务源 | **152** | −1：PA25 `K3_CC_WI_ALT`（parent `cc_4_cc_ke4`）出列——池C-W2 四件标准三（MCELL3_DIHX / WEDGE_UNIQUE_CC_CELL / K3_CC_WI_ALT / K3_CC_WIM_ALT）。diff 恰此一行删除、零新增 |
+| 可达 Kepler 声明 | 218,326 | +29 |
+| 可达 Kepler 公理 | 624 | 0 |
+
 ### 2026-10-26（上午）刻度（池C 落库 `db3ae79f` 后重生成，TSV `09f84c2e`）
 
 | 指标 | 值 | 变化 |
