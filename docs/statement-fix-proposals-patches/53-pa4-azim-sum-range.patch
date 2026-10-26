@@ -1,5 +1,5 @@
---- a/lean/Kepler/Text/PackingAuto4.lean	2026-10-26 04:06:54
-+++ b/lean/Kepler/Text/PackingAuto4.lean	2026-10-26 04:06:54
+--- a/lean/Kepler/Text/PackingAuto4.lean
++++ b/lean/Kepler/Text/PackingAuto4.lean
 @@ -194,7 +194,7 @@
    -- general bounds
    (∀ i, 0.606 ≤ ccAzimP4 cc i) ∧ -- gckb
