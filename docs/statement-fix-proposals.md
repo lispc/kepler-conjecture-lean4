@@ -2486,3 +2486,48 @@ PA4 文件级预期 29→9）。
 ### (f) 风险与回滚
 两行陈述修正，语义向 HOL 回归（同 SF-51 符号回归先例）；下游 20 桩为 sorry 桩、
 九孪生与 PackingConcl 链不受影响；回滚 = 反向 patch。
+
+## 54. LA1 `LocalFan` 弱编码 foundation 桩族加 `hedge` 前提 — 分级 A（编码缺前提 · 机器反例实锤）
+
+**证据链**：`docs/scouts/la1-localfan-scout.md`（2026-10-26，含机器探针 probeA/B/E 与 PROBE_OUTPUT）。LA1 `LocalFan`（LocalAuto1.lean:157）dart 底座 = `dart1OfFan`（纯边对，不排孤立顶点），HOL `local_fan`（localization.hl:66 = `ord_pairs ∪ self_pairs` 含自环、内部可证每顶点度数恰 2 local_lemmas.hl:1967）——LA1 编码拿不到该事实。junk ε 下（本 toolchain 实证 `Classical.epsilon` 空分支值 = `choice h`，ε junk-collapse 是定理，probeA）：
+
+- **6 枚机器反例可闭合**：RHO_NODE1_INJECTIVE、ITER_IVS_RHO_IDD、ITER_RHO_IVS_IDD、LOFA_IMP_ITER_IVS_RHO_NODE_ID、LOCAL_FAN_ORBIT_MAP_EXPLICIT(_IVS)（probeB 双点夹逼链）；LA37:398 **无条件假**（孤立点给 `{v, junk} ∈ LHS\E`）。
+- **需新前提**：IVS_IN_V 族、GENERIC_LOCAL_FAN_AZIM_POS、FAN_PERIMETER 族 4 枚（LA7:1741-1764）、BGMIFTE 结论 1/3。
+- **受害面**：LA7:1073-1128 九桩 + 上述跨文件 8 枚（LA14×3、LA35×2、LA36:805、LA37:222/:398）。**已落地传染 = 零**（受害者全为 sorry；w5b 闭合两枚免疫）。
+
+**修复**：各受害桩加前提 `hedge : ∀ v ∈ V, ∃ w, {v,w} ∈ E`（陈述冻结豁免流程）。修复后 W6a 施工路径 = 陈述替换 → `localFan_p3.of_LocalFan_noIso` 桥（AzimBridge:953 已真）→ LA5 p2-kit。**W6a（LA7 foundation 波）在 SF-54 拍板前不可开填**。同名冲突（LA2:1488/LA7:1063/1090）建议随本件打包裁决（LA7 侧改名 `_LA7` 后缀）。
+
+### (a) HOL 引文
+localization.hl:66 `local_fan`；local_lemmas.hl:1967（每顶点度数 2）；对照 LA1:157。
+
+### (b) 修复补丁
+待批准后由编排者生成（受害桩逐枚加 hedge 前提；涉及 5 文件 ~22 陈述）。
+
+### (c) 消费面影响清单
+见证据链受害面；下游 W6a/BGMIFTE 全部在 sorry 桩之后，零落地传染。
+
+### (d) 验收与应用计划
+批准后 STATEMENT-FIX 闸逐文件走；W6a 随后开波。
+
+### (e) 孤儿评估
+无删除；加前提可能使个别桩变平凡前提复合，逐枚在 patch 中标注。
+
+### (f) 风险与回滚
+方向安全（前提加强不会造假）；回滚 = 反向 patch。
+
+## 55. LA1:121 `Generic` 的 `affGt` → `affGe` — 分级 B（移植误植 · 单词修正，方向危险）
+
+HOL `localization.hl:103` 用 `aff_ge`；Lean 侧写成 `affGt`，前提变弱 ⇒ 消费定理结论变强 ⇒ 有假风险。probeE 机器证 `affGt ⊊ affGe`（0 ∈ affGe\affGt）。波及 `scsGeneric` → 8 文件与 KCHMAMG（LA5:5018，w6b 车道在飞件）。**勿动** LA1:118 `Circular` 行（忠实无病）。
+
+### (a)–(d)
+HOL 引文如上；补丁待批；验收走 STATEMENT-FIX 闸 + scsGeneric 下游探针。
+
+### (e) 孤儿评估 / (f) 风险与回滚
+无删除；回滚 = 反向 patch。前提加强方向，安全。
+
+## 56. LA2:273 `circular_p2` 的 `affGe` → `affGt` — 分级 B（移植误植 · 单词修正，方向危险）
+
+HOL `localization.hl:107` 用 `aff_gt`；Lean 侧写成 `affGe`，同 55 为危险方向。连带核查已完成：LA6:473 消费平凡、lunar_p2 内部一致。
+
+### (a)–(f)
+同 55 格式；补丁待批；回滚 = 反向 patch。
