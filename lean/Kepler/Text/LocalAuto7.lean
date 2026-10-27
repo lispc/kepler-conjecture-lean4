@@ -89,9 +89,17 @@ import Kepler.Geom.LuneVolume
 import Kepler.Text.Fan
 import Kepler.Text.LocalAuto1
 import Kepler.Text.PackingAuto5
+import Kepler.Text.AzimBridge
 import Mathlib
 
 set_option maxHeartbeats 5000000
+
+-- W6a (SF-54 import of AzimBridge/LA3): keep the pre-import `DecidableEq
+-- (V3 × V3)` resolution.  LA3's global `dartDecEq3` (`Classical.decEq`, not
+-- defeq to Mathlib's product instance) would otherwise win synthesis and
+-- change the meaning of the already-proved `hypermapOfFan` code below; the
+-- local priority boost restores the old-instance behavior file-wide.
+attribute [local instance 2000] instDecidableEqProd
 
 namespace Kepler.Text
 
@@ -1069,54 +1077,439 @@ end W5bFace
 
 /-! ## rho_node1 orbit (polar_fan.hl:318-469) -/
 
+/-! ### W6a p2-bridge kit (SF-54 construction path; private support for the
+nine foundation stubs below)
+
+Construction path (la1-localfan-scout §6): `hedge` + LA1 `LocalFan` →
+`localFan_p2.of_LocalFan_noIso` (AzimBridge, already real) lands in the
+faithful `_p2` world, where LA2's `WRGCVDR` kit applies.  `rhoNode1` /
+`ivsRhoNode1` (LA1) and `rhoNode1_p2` / `ivsRhoNode1_p2` (LA2) are the same
+`Classical.epsilon` construction (defeq), so the p2 facts transfer verbatim.
+NOTE: `LocalAuto5` is NOT importable next to `LocalAuto1` (both environments
+declare `AFF_GE_MONO_TRANS`, via `PackingAuto18` resp. locally), so the
+p2-spine lemmas (`IVS_RHO_IDD`, `LOFA_IMP_ITER_RHO_NODE_ID`, the orbit-cycle
+engine, ...) are rebuilt here from LA2's real `WRGCVDR_BIJ` / `WRGCVDR_ORBIT`
+instead of imported. -/
+
+/-- SF-54 bridge: `LocalFan` + hedge lands in the faithful `_p2` world. -/
+private theorem w6a_to_p2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) : localFan_p2 V E FF :=
+  localFan_p2.of_LocalFan_noIso h hedge
+
+/-- `Classical.epsilon` collapse when the predicate holds at one point only
+(LA5 `epsilonFixed` copy; renders HOL `(@w. P w)` under a uniqueness
+hypothesis). -/
+private theorem w6a_epsilon_fixed {α : Type*} [Nonempty α] {p : α → Prop} {a : α} (hpa : p a)
+    (huniq : ∀ y, p y → y = a) : Classical.epsilon p = a := by
+  by_contra hne
+  exact hne (huniq _ (Classical.epsilon_spec ⟨a, hpa⟩))
+
+/-- Lane support (LA5 r3 copy): `q`-periodic points stay fixed under multiples
+of the period. -/
+private theorem w6a_period_mul {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (k : ℕ) : f^[k * q] x = x := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [Nat.succ_mul, Function.iterate_add_apply, hqx, ih]
+
+/-- Lane support (LA5 r3 copy): index reduction modulo a period. -/
+private theorem w6a_period_mod {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (n : ℕ) : f^[n] x = f^[n % q] x := by
+  have hsplit : n / q * q + n % q = n := Nat.div_add_mod' n q
+  have hqx' : f^[q] (f^[n % q] x) = f^[n % q] x := by
+    rw [← Function.iterate_add_apply, Nat.add_comm, Function.iterate_add_apply, hqx]
+  calc f^[n] x = f^[n / q * q + n % q] x := by rw [hsplit]
+    _ = f^[n / q * q] (f^[n % q] x) := Function.iterate_add_apply f (n / q * q) (n % q) x
+    _ = f^[n % q] x := w6a_period_mul f hqx' (n / q)
+
+/-- Lane support (LA5 r3 copy): under the orbit condition, coinciding iterates
+of a point force it to be periodic with the index difference. -/
+private theorem w6a_orbit_key {α : Type*} {f : α → α} {V : Set α}
+    (horb : ∀ x ∈ V, orbitF_p2 f x = V) {x : α} (hx : x ∈ V) {i j : ℕ}
+    (hij2 : i ≤ j) (hij : f^[i] x = f^[j] x) : f^[j - i] x = x := by
+  have hEq : j - i + i = j := by omega
+  have hy : f^[j] x = f^[j - i] (f^[i] x) := by
+    have h := Function.iterate_add_apply f (j - i) i x
+    rwa [hEq] at h
+  have hmem : ∀ n : ℕ, f^[n] x ∈ V := by
+    intro n
+    rw [← horb x hx]
+    exact ⟨n, rfl⟩
+  have hyV : f^[i] x ∈ V := hmem i
+  have hxO : x ∈ orbitF_p2 f (f^[i] x) := by rw [horb (f^[i] x) hyV]; exact hx
+  obtain ⟨t, hxt⟩ := hxO
+  have hfix : f^[j - i] (f^[i] x) = f^[i] x := hy.symm.trans hij.symm
+  calc f^[j - i] x = f^[j - i] (f^[t] (f^[i] x)) := by rw [hxt]
+    _ = f^[(j - i) + t] (f^[i] x) := (Function.iterate_add_apply f (j - i) t (f^[i] x)).symm
+    _ = f^[t + (j - i)] (f^[i] x) := by rw [Nat.add_comm]
+    _ = f^[t] (f^[j - i] (f^[i] x)) := Function.iterate_add_apply f t (j - i) (f^[i] x)
+    _ = f^[t] (f^[i] x) := by rw [hfix]
+    _ = x := hxt
+
+/-- Lane support (LA5 r3 copy): the orbit condition makes `V` a finite cycle;
+`p` is a common period with `0 < p`, the first `p` iterates are pairwise
+distinct and exhaust `V`, and `V.ncard = p`. -/
+private theorem w6a_orbit_cycle {α : Type*} {f : α → α} {V : Set α}
+    (horb : ∀ x ∈ V, orbitF_p2 f x = V) {x : α} (hx : x ∈ V) :
+    ∃ p : ℕ, 0 < p ∧ f^[p] x = x ∧
+      (∀ i j : ℕ, i < j → j < p → f^[i] x ≠ f^[j] x) ∧
+      ({f^[n] x | n < p} : Set α) = V ∧ V.ncard = p := by
+  have hmem : ∀ n : ℕ, f^[n] x ∈ V := by
+    intro n
+    rw [← horb x hx]
+    exact ⟨n, rfl⟩
+  have hper : ∃ p : ℕ, 0 < p ∧ f^[p] x = x := by
+    have hfx : f x ∈ V := hmem 1
+    have hxO : x ∈ orbitF_p2 f (f x) := by rw [horb (f x) hfx]; exact hx
+    obtain ⟨n, hn⟩ := hxO
+    exact ⟨n + 1, Nat.succ_pos n, by rw [Function.iterate_succ_apply f n x]; exact hn⟩
+  have hex : ∃ n, 0 < n ∧ f^[n] x = x := hper
+  have hp0 : 0 < Nat.find hex := (Nat.find_spec hex).1
+  have hpx : f^[Nat.find hex] x = x := (Nat.find_spec hex).2
+  have hmin : ∀ m : ℕ, 0 < m → m < Nat.find hex → f^[m] x ≠ x :=
+    fun m hm0 hmlt hcon => Nat.find_min hex hmlt ⟨hm0, hcon⟩
+  have hkey : ∀ i j : ℕ, i ≤ j → f^[i] x = f^[j] x → f^[j - i] x = x :=
+    fun i j hle hij' => w6a_orbit_key horb hx hle hij'
+  have hdis : ∀ i j : ℕ, i < j → j < Nat.find hex → f^[i] x ≠ f^[j] x := by
+    intro i j hij hjp hcon
+    exact hmin (j - i) (by omega) (by omega) (hkey i j (Nat.le_of_lt hij) hcon)
+  have hset : ({f^[n] x | n < Nat.find hex} : Set α) = V := by
+    ext y
+    constructor
+    · rintro ⟨n, -, rfl⟩
+      exact hmem n
+    · intro hy
+      have hYO : y ∈ orbitF_p2 f x := by rw [horb x hx]; exact hy
+      obtain ⟨m, hm⟩ := hYO
+      refine ⟨m % Nat.find hex, Nat.mod_lt _ hp0, ?_⟩
+      rw [← w6a_period_mod f hpx m]
+      exact hm
+  have hcard : V.ncard = Nat.find hex := by
+    have himage : ({f^[n] x | n < Nat.find hex} : Set α) =
+        (fun n : ℕ => f^[n] x) '' Set.Iio (Nat.find hex) := rfl
+    rw [← hset, himage]
+    have hInj : Set.InjOn (fun n : ℕ => f^[n] x) (Set.Iio (Nat.find hex)) := by
+      intro i hi j hj hcon
+      rcases Nat.lt_trichotomy i j with h | h | h
+      · exact absurd hcon (hdis i j h (Set.mem_Iio.mp hj))
+      · exact h
+      · exact absurd hcon.symm (hdis j i h (Set.mem_Iio.mp hi))
+    rw [Set.InjOn.ncard_image hInj]
+    exact Set.ncard_Iio_nat _
+  exact ⟨Nat.find hex, hp0, hpx, hdis, hset, hcard⟩
+
+/-- The rho-node sends every dart to its second component (LA5
+`DETER_RHO_NODE` copy; `WRGCVDR_BIJ` makes the first components of darts
+injective, so the epsilon is determined). -/
+private theorem w6a_deter {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v w : V3} (hw : (v, w) ∈ FF) : rhoNode1_p2 FF v = w := by
+  have huniq : ∀ y : V3, (v, y) ∈ FF → y = w := fun y hy =>
+    (congrArg Prod.snd ((WRGCVDR_BIJ h).2.1 hw hy rfl)).symm
+  exact w6a_epsilon_fixed hw huniq
+
+/-- `(v, rho v)` is a dart for every vertex (LA5 `LOCAL_FAN_RHO_NODE_PROS`
+first half; from the `WRGCVDR_BIJ` surjectivity). -/
+private theorem w6a_rho_pros_left {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {x : V3} (hx : x ∈ V) : (x, rhoNode1_p2 FF x) ∈ FF := by
+  obtain ⟨-, -, hsurj⟩ := WRGCVDR_BIJ h
+  obtain ⟨d, hd, hfd⟩ := hsurj hx
+  have hdeq : (x, d.2) = d := Prod.ext hfd.symm rfl
+  have hmemFF : (x, d.2) ∈ FF := by
+    rw [hdeq]
+    exact hd
+  exact Classical.epsilon_spec (p := fun w => (x, w) ∈ FF) ⟨d.2, hmemFF⟩
+
+/-- All rho-iterates stay in `V` (LA5 `LOCAL_FAN_ITER_RHO_NODE_IN_V` copy). -/
+private theorem w6a_iter_rho_mem {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    ∀ i : ℕ, (rhoNode1_p2 FF)^[i] v ∈ V := by
+  intro i
+  have h1 : (rhoNode1_p2 FF)^[i] v ∈ orbitF_p2 (rhoNode1_p2 FF) v := ⟨i, rfl⟩
+  rwa [WRGCVDR_ORBIT h v hv] at h1
+
+/-- HOL `LOFA_IMP_ITER_RHO_NODE_ID` (p2 world). -/
+private theorem w6a_iter_rho_card {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    (rhoNode1_p2 FF)^[V.ncard] v = v := by
+  obtain ⟨p, hp0, hpx, -, -, hcard⟩ := w6a_orbit_cycle (fun x hx => WRGCVDR_ORBIT h x hx) hv
+  rw [hcard]
+  exact hpx
+
+/-- `V.ncard` is positive on a local fan. -/
+private theorem w6a_vcard_pos {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) : 0 < V.ncard := by
+  obtain ⟨p, hp0, -, -, -, hcard⟩ := w6a_orbit_cycle (fun x hx => WRGCVDR_ORBIT h x hx) hv
+  rwa [hcard]
+
+/-- `rho` is injective on `V` (LA5 `LOFA_IMP_BIJ_VV` InjOn half; reads
+`rho a = rho b` through the minimal cycle). -/
+private theorem w6a_injOn_rho {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {a b : V3} (ha : a ∈ V) (hb : b ∈ V)
+    (hab : rhoNode1_p2 FF a = rhoNode1_p2 FF b) : a = b := by
+  have horb : ∀ x ∈ V, orbitF_p2 (rhoNode1_p2 FF) x = V :=
+    fun x hx => WRGCVDR_ORBIT h x hx
+  obtain ⟨p, hp0, hpx, hdis, hcover, -⟩ := w6a_orbit_cycle horb ha
+  rw [← hcover] at hb
+  obtain ⟨ib, hiblt, hib⟩ := hb
+  by_cases hib0 : ib = 0
+  · rw [hib0, Function.iterate_zero_apply] at hib
+    exact hib
+  · have hp1 : 1 ≤ ib := by omega
+    have hap : (rhoNode1_p2 FF)^[ib + 1] a
+        = rhoNode1_p2 FF ((rhoNode1_p2 FF)^[ib] a) :=
+      Function.iterate_succ_apply' _ _ _
+    have hstep : rhoNode1_p2 FF a = (rhoNode1_p2 FF)^[ib + 1] a := by
+      rw [hap]
+      rw [← hib] at hab
+      exact hab
+    by_cases hlt : ib + 1 < p
+    · exact absurd hstep (hdis 1 (ib + 1) (by omega) hlt)
+    · have heqp : ib + 1 = p := by omega
+      rw [heqp, hpx] at hstep
+      have hq1 : (rhoNode1_p2 FF)^[1] a = a := hstep
+      have h9 : (rhoNode1_p2 FF)^[ib] a
+          = (rhoNode1_p2 FF)^[ib % 1] a := w6a_period_mod _ hq1 ib
+      rw [← hib, h9, Nat.mod_one, Function.iterate_zero_apply]
+
+/-- On the fan the ivs-node is the `(CARD V - 1)`-th rho iterate (the
+predecessor on the cycle). -/
+private theorem w6a_ivs_eq_rho_pred {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {u : V3} (hu : u ∈ V) :
+    ivsRhoNode1_p2 FF u = (rhoNode1_p2 FF)^[V.ncard - 1] u := by
+  have hp0 := w6a_vcard_pos h hu
+  have hzV : (rhoNode1_p2 FF)^[V.ncard - 1] u ∈ V := w6a_iter_rho_mem h hu (V.ncard - 1)
+  have hru : rhoNode1_p2 FF ((rhoNode1_p2 FF)^[V.ncard - 1] u) = u := by
+    have hiter : (rhoNode1_p2 FF)^[(V.ncard - 1) + 1] u
+        = rhoNode1_p2 FF ((rhoNode1_p2 FF)^[V.ncard - 1] u) :=
+      Function.iterate_succ_apply' _ _ _
+    have hsum : (V.ncard - 1) + 1 = V.ncard := by omega
+    rw [hsum, w6a_iter_rho_card h hu] at hiter
+    exact hiter.symm
+  have hpro : ((rhoNode1_p2 FF)^[V.ncard - 1] u,
+      rhoNode1_p2 FF ((rhoNode1_p2 FF)^[V.ncard - 1] u)) ∈ FF :=
+    w6a_rho_pros_left h hzV
+  rw [hru] at hpro
+  have huniq : ∀ ww : V3, (ww, u) ∈ FF → ww = (rhoNode1_p2 FF)^[V.ncard - 1] u := by
+    intro ww hww
+    have hwv : ww ∈ V := (WRGCVDR_BIJ h).1 hww
+    have hd1 : rhoNode1_p2 FF ww = u := w6a_deter h hww
+    exact w6a_injOn_rho h hwv hzV (hd1.trans hru.symm)
+  exact w6a_epsilon_fixed hpro huniq
+
+/-- HOL `IVS_RHO_IDD` (p2 world). -/
+private theorem w6a_ivs_idd {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    ivsRhoNode1_p2 FF (rhoNode1_p2 FF v) = v := by
+  have hrV : rhoNode1_p2 FF v ∈ V := w6a_iter_rho_mem h hv 1
+  have h1 := w6a_ivs_eq_rho_pred h hrV
+  have hsplit := Function.iterate_add_apply (rhoNode1_p2 FF) (V.ncard - 1) 1 v
+  have hone : (rhoNode1_p2 FF)^[1] v = rhoNode1_p2 FF v := rfl
+  have hp0 := w6a_vcard_pos h hv
+  have hsum : (V.ncard - 1) + 1 = V.ncard := by omega
+  rw [hone, hsum] at hsplit
+  rw [h1, ← hsplit]
+  exact w6a_iter_rho_card h hv
+
+/-- `ivs v` lies in `V`. -/
+private theorem w6a_ivs_mem {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) : ivsRhoNode1_p2 FF v ∈ V := by
+  rw [w6a_ivs_eq_rho_pred h hv]
+  exact w6a_iter_rho_mem h hv (V.ncard - 1)
+
+/-- HOL `RHO_IVS_IDD` (mirror of `IVS_RHO_IDD`, p2 world). -/
+private theorem w6a_rho_ivs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    rhoNode1_p2 FF (ivsRhoNode1_p2 FF v) = v := by
+  rw [w6a_ivs_eq_rho_pred h hv]
+  have hp0 := w6a_vcard_pos h hv
+  have hsucc := Function.iterate_succ_apply' (rhoNode1_p2 FF) (V.ncard - 1) v
+  have hsum : (V.ncard - 1) + 1 = V.ncard := by omega
+  rw [Nat.succ_eq_add_one, hsum] at hsucc
+  rw [← hsucc, w6a_iter_rho_card h hv]
+
+/-- ivs-iterates are rho-iterates: `(ivs)^[n] u = rho^[n * (p - 1)] u`. -/
+private theorem w6a_iter_ivs_eq {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {u : V3} (hu : u ∈ V) (n : ℕ) :
+    (ivsRhoNode1_p2 FF)^[n] u = (rhoNode1_p2 FF)^[n * (V.ncard - 1)] u := by
+  induction n with
+  | zero => simp
+  | succ k ih =>
+    have hcur : (ivsRhoNode1_p2 FF)^[k] u ∈ V := by
+      rw [ih]
+      exact w6a_iter_rho_mem h hu (k * (V.ncard - 1))
+    have hstep : (ivsRhoNode1_p2 FF)^[k + 1] u
+        = ivsRhoNode1_p2 FF ((ivsRhoNode1_p2 FF)^[k] u) :=
+      Function.iterate_succ_apply' _ _ _
+    rw [hstep, w6a_ivs_eq_rho_pred h hcur, ih]
+    rw [← Function.iterate_add_apply (rhoNode1_p2 FF) (V.ncard - 1) (k * (V.ncard - 1)) u]
+    have hexp : (V.ncard - 1) + k * (V.ncard - 1) = (k + 1) * (V.ncard - 1) := by ring
+    rw [hexp]
+
+/-- iterates of ivs stay in `V`. -/
+private theorem w6a_iter_ivs_mem {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    ∀ i : ℕ, (ivsRhoNode1_p2 FF)^[i] v ∈ V := by
+  intro i
+  rw [w6a_iter_ivs_eq h hv i]
+  exact w6a_iter_rho_mem h hv (i * (V.ncard - 1))
+
+/-- HOL `ITER_IVS_RHO_IDD` (p2 world). -/
+private theorem w6a_iter_ivs_rho {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    ∀ n : ℕ, (ivsRhoNode1_p2 FF)^[n] ((rhoNode1_p2 FF)^[n] v) = v := by
+  intro n
+  have hrnV : (rhoNode1_p2 FF)^[n] v ∈ V := w6a_iter_rho_mem h hv n
+  have hshift := w6a_iter_ivs_eq h hrnV n
+  rw [hshift]
+  rw [← Function.iterate_add_apply (rhoNode1_p2 FF) (n * (V.ncard - 1)) n v]
+  have hp0 := w6a_vcard_pos h hv
+  have hp1 : (V.ncard - 1) + 1 = V.ncard := by omega
+  have h2 : n * ((V.ncard - 1) + 1) = n * (V.ncard - 1) + n := by
+    rw [Nat.mul_add, Nat.mul_one]
+  have hmul : n * (V.ncard - 1) + n = n * V.ncard := by
+    rw [← h2, hp1]
+  rw [hmul]
+  exact w6a_period_mul _ (w6a_iter_rho_card h hv) n
+
+/-- HOL `ITER_RHO_IVS_IDD` (p2 world). -/
+private theorem w6a_iter_rho_ivs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    ∀ n : ℕ, (rhoNode1_p2 FF)^[n] ((ivsRhoNode1_p2 FF)^[n] v) = v := by
+  intro n
+  have hshift := w6a_iter_ivs_eq h hv n
+  rw [hshift]
+  rw [← Function.iterate_add_apply (rhoNode1_p2 FF) n (n * (V.ncard - 1)) v]
+  have hp0 := w6a_vcard_pos h hv
+  have hp1 : (V.ncard - 1) + 1 = V.ncard := by omega
+  have h2 : n * ((V.ncard - 1) + 1) = n * (V.ncard - 1) + n := by
+    rw [Nat.mul_add, Nat.mul_one]
+  have hmul : n + n * (V.ncard - 1) = n * V.ncard := by
+    rw [Nat.add_comm, ← h2, hp1]
+  rw [hmul]
+  exact w6a_period_mul _ (w6a_iter_rho_card h hv) n
+
+/-- `rho` is injective on `V` (telescope form via `IVS_RHO_IDD`). -/
+private theorem w6a_rho_inj {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v w : V3} (hv : v ∈ V) (hw : w ∈ V)
+    (hcon : rhoNode1_p2 FF v = rhoNode1_p2 FF w) : v = w := by
+  have h1 : ivsRhoNode1_p2 FF (rhoNode1_p2 FF v) = ivsRhoNode1_p2 FF (rhoNode1_p2 FF w) := by
+    rw [hcon]
+  rwa [w6a_ivs_idd h hv, w6a_ivs_idd h hw] at h1
+
+/-- HOL `LOCAL_FAN_ORBIT_MAP_EXPLICIT` (p2 world): the rho orbit of `v` is
+all of `V`, with the index bounded by `V.ncard`. -/
+private theorem w6a_orbit_index {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) {w : V3} (hw : w ∈ V) :
+    ∃ i : ℕ, i < V.ncard ∧ w = (rhoNode1_p2 FF)^[i] v := by
+  obtain ⟨p, hp0, hpx, -, hset, hcard⟩ :=
+    w6a_orbit_cycle (fun x hx => WRGCVDR_ORBIT h x hx) hv
+  have hmem : w ∈ ({(rhoNode1_p2 FF)^[n] v | n < p} : Set V3) := by rw [hset]; exact hw
+  obtain ⟨n, hn, hn'⟩ := hmem
+  refine ⟨n, ?_, hn'.symm⟩
+  rw [hcard]
+  exact hn
+
+/-- `(ivs)^[k] u = rho^[p - k] u` for `k ≤ p`. -/
+private theorem w6a_ivs_iter_eq_rho {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {u : V3} (hu : u ∈ V) {k : ℕ} (hk : k ≤ V.ncard) :
+    (ivsRhoNode1_p2 FF)^[k] u = (rhoNode1_p2 FF)^[V.ncard - k] u := by
+  have hshift := w6a_iter_ivs_eq h hu k
+  have hper : (rhoNode1_p2 FF)^[V.ncard] ((ivsRhoNode1_p2 FF)^[k] u)
+      = (ivsRhoNode1_p2 FF)^[k] u := w6a_iter_rho_card h (w6a_iter_ivs_mem h hu k)
+  have htel : (rhoNode1_p2 FF)^[k] ((ivsRhoNode1_p2 FF)^[k] u) = u := w6a_iter_rho_ivs h hu k
+  have hsplit : (rhoNode1_p2 FF)^[(V.ncard - k) + k] ((ivsRhoNode1_p2 FF)^[k] u)
+      = (rhoNode1_p2 FF)^[V.ncard - k] ((rhoNode1_p2 FF)^[k] ((ivsRhoNode1_p2 FF)^[k] u)) :=
+    Function.iterate_add_apply (rhoNode1_p2 FF) (V.ncard - k) k ((ivsRhoNode1_p2 FF)^[k] u)
+  have hsum : (V.ncard - k) + k = V.ncard := by omega
+  rw [hsum, htel] at hsplit
+  calc (ivsRhoNode1_p2 FF)^[k] u = (rhoNode1_p2 FF)^[V.ncard] ((ivsRhoNode1_p2 FF)^[k] u) :=
+      hper.symm
+    _ = (rhoNode1_p2 FF)^[V.ncard - k] u := hsplit
+
+/-- HOL `LOCAL_FAN_ORBIT_MAP_EXPLICIT_IVS` (p2 world). -/
+private theorem w6a_orbit_index_ivs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) {w : V3} (hw : w ∈ V) :
+    ∃ i : ℕ, i < V.ncard ∧ w = (ivsRhoNode1_p2 FF)^[i] v := by
+  obtain ⟨j, hj, hwj⟩ := w6a_orbit_index h hv hw
+  rcases Nat.eq_zero_or_pos j with hj0 | hjpos
+  · subst hj0
+    refine ⟨0, w6a_vcard_pos h hv, ?_⟩
+    exact hwj
+  · have hi : V.ncard - j < V.ncard := by omega
+    refine ⟨V.ncard - j, hi, ?_⟩
+    have heq := w6a_ivs_iter_eq_rho h hv (Nat.le_of_lt hi)
+    rw [heq]
+    have hdiff : V.ncard - (V.ncard - j) = j := by omega
+    rw [hdiff]
+    exact hwj
+
 /-- HOL `RHO_NODE1_INJECTIVE` (polar_fan.hl:318). -/
 theorem RHO_NODE1_INJECTIVE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
     ∀ v ∈ V, ∀ w ∈ V, (rhoNode1 FF v = rhoNode1 FF w ↔ v = w) := by
-  sorry
+  intro v hv w hw
+  constructor
+  · exact w6a_rho_inj (w6a_to_p2 h hedge) hv hw
+  · intro he; rw [he]
 
 /-- HOL `IVS_RHO_NODE1_IN_V` (polar_fan.hl:325). -/
 theorem IVS_RHO_NODE1_IN_V {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) : ∀ v ∈ V, ivsRhoNode1 FF v ∈ V := by
-  sorry
+  intro v hv
+  exact w6a_ivs_mem (w6a_to_p2 h hedge) hv
 
 /-- HOL `LOCAL_FAN_ITER_IVS_RHO_NODE_IN_V` (polar_fan.hl:330). -/
 theorem LOCAL_FAN_ITER_IVS_RHO_NODE_IN_V {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) {v : V3} (hv : v ∈ V) (i : ℕ) :
     (ivsRhoNode1 FF)^[i] v ∈ V := by
-  sorry
+  exact w6a_iter_ivs_mem (w6a_to_p2 h hedge) hv i
 
 /-- HOL `LOCAL_FAN_ORBIT_MAP_EXPLICIT` (polar_fan.hl:336). -/
 theorem LOCAL_FAN_ORBIT_MAP_EXPLICIT_LA7 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v w : V3) (hv : v ∈ V) (hw : w ∈ V) :
     ∃ i, i < V.ncard ∧ w = (rhoNode1 FF)^[i] v := by
-  sorry
+  exact w6a_orbit_index (w6a_to_p2 h hedge) hv hw
 
 /-- HOL `LOCAL_FAN_ORBIT_MAP_EXPLICIT_IVS` (polar_fan.hl:360). -/
 theorem LOCAL_FAN_ORBIT_MAP_EXPLICIT_IVS {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v w : V3) (hv : v ∈ V) (hw : w ∈ V) :
     ∃ i, i < V.ncard ∧ w = (ivsRhoNode1 FF)^[i] v := by
-  sorry
+  exact w6a_orbit_index_ivs (w6a_to_p2 h hedge) hv hw
 
 /-- HOL `ITER_IVS_RHO_IDD` (polar_fan.hl:381). -/
 theorem ITER_IVS_RHO_IDD {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) (n : ℕ) :
     (ivsRhoNode1 FF)^[n] ((rhoNode1 FF)^[n] v) = v := by
-  sorry
+  exact w6a_iter_ivs_rho (w6a_to_p2 h hedge) hv n
 
 /-- HOL `ITER_RHO_IVS_IDD` (polar_fan.hl:392). -/
 theorem ITER_RHO_IVS_IDD {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) (n : ℕ) :
     (rhoNode1 FF)^[n] ((ivsRhoNode1 FF)^[n] v) = v := by
-  sorry
+  exact w6a_iter_rho_ivs (w6a_to_p2 h hedge) hv n
 
 /-- HOL `LOFA_IMP_ITER_IVS_RHO_NODE_ID` (polar_fan.hl:402). -/
 theorem LOFA_IMP_ITER_IVS_RHO_NODE_ID {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) :
     (ivsRhoNode1 FF)^[V.ncard] v = v := by
-  sorry
+  have h1 := w6a_iter_ivs_rho (w6a_to_p2 h hedge) hv V.ncard
+  rw [w6a_iter_rho_card (w6a_to_p2 h hedge) hv] at h1
+  exact h1
 
 /-- HOL `GENERIC_LOCAL_FAN_AZIM_POS` (polar_fan.hl:408). -/
+-- NEEDS (wsewpch-w6a 2026-10-26): honest block, do not force-fill.  The HOL
+-- route (polar_fan.hl:408-465) goes through `EGHNAVX` (local_lemmas.hl:7170,
+-- prove_by_refinement: strict azimuth monotonicity `bta i <= bta j` along the
+-- rho orbit under convexity + non-collinearity, plus Nkezbfc
+-- `PROPERTIES_GENERIC1`).  EGHNAVX is unported anywhere in the tree; two
+-- in-place BLOCKED notes already record this (LA38:2634 EGHNAVX1_ALT,
+-- LA18:510 EGHNAVX_SCS_p18).  The remaining hypotheses are portable
+-- (AZIM_RANGE = LA5:1549, IN_V_IMP_AZIM_LESS_PI = LA9:808, both camp-B but
+-- low-depth), but the `0 < azim` branch has no substitute without EGHNAVX:
+-- w on the ray through `rhoNode1 FF v` with w ≠ rhoNode1 FF v must be
+-- excluded by the strict-monotonicity content itself.  Grading: dedicated
+-- GIANT port wave (EGHNAVX ~ proven_by_refinement chain), not lane-sized.
 theorem GENERIC_LOCAL_FAN_AZIM_POS {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
     (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
