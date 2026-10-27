@@ -1,0 +1,28 @@
+diff --git a/lean/Kepler/Assembly.lean b/lean/Kepler/Assembly.lean
+--- a/lean/Kepler/Assembly.lean
++++ b/lean/Kepler/Assembly.lean
+@@ -1523,9 +1523,21 @@ def GoodFacesV3 (_ : Graph) : Prop := True
+ /-- PLACEHOLDER(tame章)（`vertices_set2 g = elements_of_list (fgraph g)`）。 -/
+ def VerticesSet2Eq (_ : Graph) : Prop := True
+ 
+-/-- HOL `good_list_nodes`（tame_defs'）。本体依赖 `hypermapOfList` 构造
+-（P6-C 未落地），骨架期为形状占位。 -/
+-def GoodListNodes (_ : fgraph ℕ) : Prop := True
++/-- HOL `good_list_nodes`（tame_defs2.hl:33-36；SF-57 真化）：
++`node_set (hypermap_of_list L) = set_of_list (nodes_of_list L)`。
++arity 折算：占位形无 `GoodList` 前提，而 Lean 构造 `hypermapOfList` 是
++依赖式的（proof 参数），以 `∀ hL : GoodList L` 内量化保持 arity 不变，
++下游合取项 `GoodListNodes g.fgraph` 文本零改动。junk 语义差异：非 good
++`L` 时 HOL 计算 junk 超映射的 node_set（可假），此形空洞为真；全部消费
++语境（`GoodGraphV4` 首合取 `GoodList g.fgraph`、`lp_cond` 槽）都携带
++`GoodList L`，分歧不可达（GoodGraph.lean:100-102 同款论证）。
++flip 源：`Kepler.Text.TameSpine.GoodListNodesSpine`（同体）；实例形孪生
++`Kepler.Text.TameLp.GoodListNodesTl`（`goodListNodesSpine_iff_tameLp`
++桥衔接）。 -/
++def GoodListNodes (L : fgraph ℕ) : Prop :=
++  ∀ hL : GoodList L,
++    (Kepler.Text.TameLp.hypermapOfList L hL).nodeSet =
++      Kepler.Text.TameLp.nodesOfListSet L
+ 
+ /-- HOL `good_graph_v4`（tame_defs2.hl）。后四合取项为骨架占位（见上）。 -/
+ def GoodGraphV4 (g : Graph) : Prop :=
