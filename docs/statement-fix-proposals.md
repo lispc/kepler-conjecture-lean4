@@ -2589,3 +2589,25 @@ LA22:393 `derived_form_num1_p22`（已证）与 :407 `derived_form_dnum1_p22`（
 
 ### (f) 风险与回滚
 低风险：已证两件自适配；假桩 → 真桩；无当前 e2e 消费展开其体。回滚 = 反向 patch。
+
+## 57. `Assembly.GoodListNodes` 占位真化（`:1528` `True` → Spine 同体真形）— 分级 B（占位真化 · 假设侧强化，junk 分歧不可达）
+
+HOL 正本 `tame_defs2.hl:33-36`：`good_list_nodes L <=> node_set (hypermap_of_list L) = set_of_list (nodes_of_list L)`。Lean 占位 `True`（:1528，自注"P6-C 未落地"）——该阻塞已消失（Assembly:34 已 import TameLp，hypermapOfList/nodesOfListSet 可点名）。**flip 源无须新造**：`TameSpine.GoodListNodesSpine`（arity `∀ hL` 保持形）+ `TameLp.GoodListNodesTl`（实例形）+ 桥 `goodListNodesSpine_iff_tameLp` 俱在。全树唯一硬破点 = `goodGraphV4Spine_implies` 第二槽 `trivial`（一行 `h.2` 同车）。草案：`lane_snapshots/hlp-w6b/SF-57-goodlistnodes.md`（车道 hlp-w6b，2026-10-27；用户已批）。
+
+### (a) HOL 引文
+`reference/flyspeck/text_formalization/tame/tame_defs2.hl:33-36`（`new_definition'`）：`!(L:((A)list)list). good_list_nodes L <=> node_set (hypermap_of_list L) = set_of_list (nodes_of_list L)`。组件链全函数（`list_hypermap-compiled.hl:60-62`/`:30-32`）。HOL 消费面（good_graph_v4 第二合取支 tame_defs2.hl:56-63；lp_cond 第三合取支 lp_ineqs_proofs-compiled.hl:14-21；lp_cond_lemma/contravening_lp_cond 前提 :186-189/:394-403）全部携带 `good_list L`——junk 分歧不可达。
+
+### (b) 修复补丁
+① `lean/Kepler/Assembly.lean:1526-1528`：占位三行 → 真形（`∀ hL : GoodList L, (Kepler.Text.TameLp.hypermapOfList L hL).nodeSet = Kepler.Text.TameLp.nodesOfListSet L`，flip 源 = GoodListNodesSpine 体逐字；docstring 记 arity 折算与 junk 空洞化）。② `lean/Kepler/Text/TameSpine/GoodGraph.lean:128-130` `goodGraphV4Spine_implies` 第二槽 `trivial` → `h.2`（全树唯一硬破点，与①同一逻辑提交）。patch 归档于应用时生成（58-spherekit 例）。
+
+### (c) 消费面影响清单
+12 项逐件行锚见草案 (d) 表。要点：`GoodGraphV4`（:1531-1533）自动变强零改动；`jcajydu`/`tameCorrespondenceIso`（:1737-1746）sorry 占位不破、清偿义务升级（出料口 `goodGraphV4Spine_witness` + hypermapOfList 构造现成）；`textCapstone` 位置消费不破（`hgg4.2` 未被消费）；`LpCond` 槽两形互通无损；其余四占位（FinalGraph/AllUniq/GoodFacesV3/VerticesSet2Eq）不在本提案范围。
+
+### (d) 验收与应用计划
+**用户已批（2026-10-27「SF-57 批准」）**。闸① Assembly（STATEMENT-FIX，THM=`GoodGraphV4`——被强化 def 本身；LANE_FILES 逗号含 GoodGraph.lean 同车件）→ 提交；闸② GoodGraph.lean（patch ②，THM=`goodGraphV4Spine_implies`——被修定理本名在本文件）→ 提交。执行须在 hlp-w6b 落库闸完成后的工作树窗口（闸串行纪律）。
+
+### (e) 孤儿评估
+无删除；方向 = 假设侧强化（GoodGraphV4 第二合取支 True → 真形），结论侧 jcajydu 清偿义务升级（NEEDS 记账，非阻塞）。无孤儿件。
+
+### (f) 风险与回滚
+junk 语义空洞化（非 good L 上真形空洞为真）——全库消费语境携带 GoodList，分歧不可达（(a) 逐锚）；落库后 `GoodListNodesSpine L ↔ Assembly.GoodListNodes L` 退化为 Iff.rfl（GoodGraph.lean:26-29 预言）。回滚 = 反向双 patch。
