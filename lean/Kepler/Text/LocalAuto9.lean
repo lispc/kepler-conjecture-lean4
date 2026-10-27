@@ -1358,10 +1358,189 @@ theorem AZIM_PI_WEDGE_SIN_p9 (u v w ww : V3) (h : azim u v w ww = Real.pi) :
     show (if Collinear3 u v w ∨ Collinear3 u v x then (0:ℝ) else _) = 0
     rw [if_pos (Or.inr hc)]
 
+/-- LA9 support (wave 2): the coe of a scalar multiple of `V3` vectors is the
+scalar multiple of the coes (definitional). -/
+private theorem p9_coe_smul (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
+
+/-- LA9 support (wave 2): `Collinear3` is invariant under adding a common
+point (the map `x ↦ a + x` is an affine bijection). -/
+private theorem p9_collinear3_translate' (a x y z : V3) :
+    Collinear3 (a + x) (a + y) (a + z) ↔ Collinear3 x y z := by
+  by_cases hyx : y = x
+  · subst hyx
+    exact ⟨fun _ => collinear3_of_eq rfl, fun _ => collinear3_of_eq rfl⟩
+  · have hyx' : (a + y) ≠ (a + x) := by
+      intro hcon
+      exact hyx (add_left_cancel hcon)
+    have h1 : Collinear3 (a + x) (a + y) (a + z) ↔
+        ∃ c : ℝ, (a + z) - (a + x) = c • ((a + y) - (a + x)) :=
+      collinear3_iff_smul hyx'
+    have h2 : Collinear3 x y z ↔ ∃ c : ℝ, z - x = c • (y - x) :=
+      collinear3_iff_smul hyx
+    rw [h1, h2]
+    constructor
+    · rintro ⟨c, hc⟩
+      refine ⟨c, ?_⟩
+      have e1 : (a + z) - (a + x) = (z - x : V3) := by module
+      have e2 : (a + y) - (a + x) = (y - x : V3) := by module
+      rw [e2] at hc
+      rw [← e1]
+      exact hc
+    · rintro ⟨c, hc⟩
+      refine ⟨c, ?_⟩
+      have e1 : (a + z) - (a + x) = (z - x : V3) := by module
+      have e2 : (a + y) - (a + x) = (y - x : V3) := by module
+      rw [e1, e2]
+      exact hc
+
+/-- LA9 support (wave 2): `Collinear3` is invariant under subtracting a
+common point (HOL translation-invariance of collinearity). -/
+private theorem p9_collinear3_translate (c p q r : V3) :
+    Collinear3 p q r ↔ Collinear3 (p - c) (q - c) (r - c) := by
+  have h := p9_collinear3_translate' c (p - c) (q - c) (r - c)
+  simpa using h
+
+/-- LA9 support (wave 2): the `AzimSpec` predicate is translation covariant
+(its body only involves differences of the four points). -/
+private theorem p9_azimSpec_translate (a v w w1 w2 : V3) (θ : ℝ)
+    (h : AzimSpec v w w1 w2 θ) : AzimSpec (a + v) (a + w) (a + w1) (a + w2) θ := by
+  obtain ⟨h0, h2pi, h1v, h2v, hframes⟩ := h
+  refine ⟨h0, h2pi, h1v, h2v, ?_⟩
+  intro e1 e2 e3 hon hax hwv
+  have hsub : (a + w) - (a + v) = (w - v : V3) := by module
+  have hdist : dist (a + w) (a + v) = dist w v := by
+    rw [dist_eq_norm, dist_eq_norm, hsub]
+  have hax' : (w - v : V3) = dist w v • e3 := by rw [← hdist, ← hsub]; exact hax
+  have hwv' : w ≠ v := by
+    intro hcon
+    exact hwv (by rw [hcon])
+  obtain ⟨psi, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframes e1 e2 e3 hon hax' hwv'
+  refine ⟨psi, r1, r2, ?_, ?_, hr1, hr2⟩
+  · have hnorm1 : (a + w1) - (a + v) = (w1 - v : V3) := by module
+    have hnorm3 : (a + w) - (a + v) = (w - v : V3) := by module
+    rw [hnorm1, hnorm3]
+    exact hrep1
+  · have hnorm2 : (a + w2) - (a + v) = (w2 - v : V3) := by module
+    have hnorm3 : (a + w) - (a + v) = (w - v : V3) := by module
+    rw [hnorm2, hnorm3]
+    exact hrep2
+
+/-- LA9 support (wave 2): the core translation identity in the additive
+form (HOL `AZIM_TRANSLATION`, flyspeck.ml). -/
+private theorem p9_azim_translation (a v w w1 w2 : V3) :
+    azim (a + v) (a + w) (a + w1) (a + w2) = azim v w w1 w2 := by
+  have ht := p9_collinear3_translate' a
+  by_cases hd : Collinear3 (a + v) (a + w) (a + w1) ∨ Collinear3 (a + v) (a + w) (a + w2)
+  · rw [azim, if_pos hd]
+    rw [azim, if_pos ?_]
+    rcases hd with h | h
+    · exact Or.inl ((ht v w w1).mp h)
+    · exact Or.inr ((ht v w w2).mp h)
+  · have hn1 : ¬ Collinear3 (a + v) (a + w) (a + w1) := fun hc => hd (Or.inl hc)
+    have hn2 : ¬ Collinear3 (a + v) (a + w) (a + w2) := fun hc => hd (Or.inr hc)
+    have hm1 : ¬ Collinear3 v w w1 := fun hc => hn1 ((ht v w w1).mpr hc)
+    have hm2 : ¬ Collinear3 v w w2 := fun hc => hn2 ((ht v w w2).mpr hc)
+    have hR : azim v w w1 w2 = Classical.epsilon (AzimSpec v w w1 w2) := by
+      rw [azim, if_neg (show ¬ (Collinear3 v w w1 ∨ Collinear3 v w w2) from by
+        rintro (h | h); exacts [hm1 h, hm2 h])]
+    have hspec0 : AzimSpec v w w1 w2 (Classical.epsilon (AzimSpec v w w1 w2)) :=
+      Classical.epsilon_spec (azimSpec_exists hm1 hm2)
+    refine azim_eq_of_spec hn1 hn2 ?_
+    rw [hR]
+    exact p9_azimSpec_translate a v w w1 w2 _ hspec0
+
+/-- LA9 support (wave 2): azimuth is translation invariant (HOL
+`AZIM_TRANSLATION`): subtracting a common point from apex, axis and rays. -/
+private theorem p9_azim_translate (c apex axis ref tgt : V3) :
+    azim apex axis ref tgt = azim (apex - c) (axis - c) (ref - c) (tgt - c) := by
+  have hmain : azim (c + (apex - c)) (c + (axis - c)) (c + (ref - c)) (c + (tgt - c))
+      = azim (apex - c) (axis - c) (ref - c) (tgt - c) :=
+    p9_azim_translation c (apex - c) (axis - c) (ref - c) (tgt - c)
+  simpa using hmain
+
+/-- LA9 support (wave 2): the cross product annihilates its first factor
+under the `dot3_p9` pairing. -/
+private theorem p9_dot_cross3_self (A B : V3) : dot3_p9 (cross3_p9 A B) A = 0 := by
+  rw [cross3_p9, dot3_p9, coe_toLp, ← cross_anticomm, neg_dotProduct, dotProduct_comm,
+    dot_cross_self, neg_zero]
+
+/-- LA9 support (wave 2): `dot3_p9` is linear in its second argument over
+scalar multiples. -/
+private theorem p9_dot_cross3_smul (Z A : V3) (r : ℝ) :
+    dot3_p9 Z (r • A) = r * dot3_p9 Z A := by
+  rw [dot3_p9, dot3_p9, p9_coe_smul, dotProduct_smul, smul_eq_mul]
+
+/-- LA9 support (wave 2): a target ray collinear (at the apex) with the axis
+gives zero cross-dot. -/
+private theorem p9_dot_cross3_collinear {A B X : V3} (hcol : Collinear3 0 A X) :
+    dot3_p9 (cross3_p9 A B) X = 0 := by
+  by_cases hA0 : A = 0
+  · rw [hA0]
+    simp [cross3_p9, dot3_p9]
+  · obtain ⟨r, hr⟩ := (collinear3_iff_smul (v := (0:V3)) (w := A) (w1 := X)
+      (show A ≠ 0 from hA0)).mp hcol
+    have hXv : X = r • A := by simpa using hr
+    rw [hXv, p9_dot_cross3_smul, p9_dot_cross3_self]
+    ring
+
+/-- LA9 support (wave 2): `dot3_p9` is additive in its second argument. -/
+private theorem p9_dot_cross3_add (Z A B : V3) :
+    dot3_p9 Z (A + B) = dot3_p9 Z A + dot3_p9 Z B := by
+  rw [dot3_p9, dot3_p9, dot3_p9]
+  exact dotProduct_add ((Z : V3) : Fin 3 → ℝ) ((A : V3) : Fin 3 → ℝ)
+    ((B : V3) : Fin 3 → ℝ)
+
+/-- LA9 support (wave 2): the cross product annihilates its second factor
+under the `dot3_p9` pairing. -/
+private theorem p9_dot_cross3_self2 (A B : V3) : dot3_p9 (cross3_p9 A B) B = 0 := by
+  rw [cross3_p9, dot3_p9, coe_toLp, dotProduct_comm, dot_cross_self]
+
 /-- HOL `AZIM_PI_WEDGE_CROSS_DOT` (Nkezbfc.hl:517). -/
 theorem AZIM_PI_WEDGE_CROSS_DOT_p9 (u v w ww : V3) (h : azim u v w ww = Real.pi) :
     wedge u v w ww = {x | 0 < dot3_p9 (cross3_p9 (v - u) (w - u)) (x - u)} := by
-  sorry
+  rw [AZIM_PI_WEDGE_SIN_p9 u v w ww h]
+  ext x
+  simp only [Set.mem_setOf_eq]
+  have hnc : ¬ Collinear3 u v w := by
+    intro hcon
+    rw [azim, if_pos (Or.inl hcon)] at h
+    exact Real.pi_ne_zero h.symm
+  have htrans : azim u v w x = azim 0 (v - u) (w - u) (x - u) := by
+    have ht := p9_azim_translate u u v w x
+    simpa using ht
+  have hABnc : ¬ Collinear3 0 (v - u) (w - u) := by
+    intro hcon
+    refine hnc ?_
+    have hstep : Collinear3 (u - u) (v - u) (w - u) := by
+      rw [sub_self]
+      exact hcon
+    exact (p9_collinear3_translate u u v w).mpr hstep
+  rw [htrans]
+  by_cases hx : Collinear3 0 (v - u) (x - u)
+  · rw [azim, if_pos (Or.inr hx)]
+    have hxdot : dot3_p9 (cross3_p9 (v - u) (w - u)) (x - u) = 0 :=
+      p9_dot_cross3_collinear hx
+    rw [hxdot]
+    norm_num
+  · obtain ⟨t, ht0, hsin⟩ :=
+      JBDNJJB (u := (v - u)) (v := (w - u)) (w := (x - u)) hABnc (fun hc => hx hc)
+    have hsin' : Real.sin (azim 0 (v - u) (w - u) (x - u))
+        = t * dot3_p9 (cross3_p9 (v - u) (w - u)) (x - u) := by
+      rw [hsin, dot3_p9, cross3_p9, coe_toLp]
+    constructor
+    · intro hs
+      rw [hsin'] at hs
+      by_contra hcon
+      push_neg at hcon
+      have hle : t * dot3_p9 (cross3_p9 (v - u) (w - u)) (x - u) ≤ 0 := by
+        calc t * dot3_p9 (cross3_p9 (v - u) (w - u)) (x - u)
+            ≤ t * 0 := mul_le_mul_of_nonneg_left hcon ht0.le
+          _ = 0 := mul_zero t
+      linarith
+    · intro hd
+      rw [hsin']
+      exact mul_pos ht0 hd
 
 /-- HOL `AFF_GT_SUBSET_WEDGE_IMP_VERTEX` (Nkezbfc.hl:530). -/
 theorem AFF_GT_SUBSET_WEDGE_IMP_VERTEX_p9 (x v w y z : V3)
@@ -1370,7 +1549,18 @@ theorem AFF_GT_SUBSET_WEDGE_IMP_VERTEX_p9 (x v w y z : V3)
     (h3 : ¬ Collinear ℝ ({x, v, z} : Set V3))
     (h4 : affGt {x} {v, w} ⊆ wedge x v y z) :
     w ∈ wedge x v y z := by
-  sorry
+  obtain ⟨y', hy'⟩ := exists_in_aff_gt h1
+  have hy'w : y' ∈ wedge x v y z := h4 hy'
+  simp only [wedge, Set.mem_setOf_eq] at hy'w
+  obtain ⟨-, hpos, hlt⟩ := hy'w
+  rw [aff_gt_inter_aff_gt h1] at hy'
+  obtain ⟨hy'v, -⟩ := hy'
+  have hncy' : ¬ Collinear3 x v y' :=
+    aff_gt_imp_not_collinear (hnc := h1) (hw := hy'v)
+  have heq : azim x v y w = azim x v y y' :=
+    (azim_eq_azim_iff (v0 := x) (v1 := v) (w := y) (x := w) (y := y') h2 h1
+      hncy').mpr hy'v
+  exact ⟨h1, by rw [heq]; exact hpos, by rw [heq]; exact hlt⟩
 
 /-- HOL `CONDITION_INANGLE_CROSS_DOT` (Nkezbfc.hl:548). -/
 theorem CONDITION_INANGLE_CROSS_DOT_p9 (x v w y z : V3)
@@ -1381,15 +1571,316 @@ theorem CONDITION_INANGLE_CROSS_DOT_p9 (x v w y z : V3)
     (h5 : azim x v y z < Real.pi) :
     0 < dot3_p9 (cross3_p9 (v - x) (y - x)) (w - x) ∧
       0 < dot3_p9 (cross3_p9 (v - x) (w - x)) (z - x) := by
-  sorry
+  have hw := AFF_GT_SUBSET_WEDGE_IMP_VERTEX_p9 x v w y z h2 h3 h4 h1
+  simp only [wedge, Set.mem_setOf_eq] at hw
+  obtain ⟨-, hpos, hlt⟩ := hw
+  have hsum : azim x v y z = azim x v y w + azim x v w z :=
+    sum4_azim_fan (v := v) (x := x) (u := y) (w1 := w) (w2 := z)
+      (fun he => h2 (by rw [he]; exact collinear3_of_eq rfl)) h3 h2 h4 (le_of_lt hlt)
+  have hltπ : azim x v y w < Real.pi := by linarith
+  -- translate the two azimuths to the origin
+  have ht1 : azim x v y w = azim 0 (v - x) (y - x) (w - x) := by
+    have ht := p9_azim_translate x x v y w
+    simpa using ht
+  have ht2 : azim x v w z = azim 0 (v - x) (w - x) (z - x) := by
+    have ht := p9_azim_translate x x v w z
+    simpa using ht
+  have hc1 : ¬ Collinear3 0 (v - x) (y - x) := fun hcon => by
+    have h' : Collinear3 (x - x) (v - x) (y - x) := by rw [sub_self]; exact hcon
+    exact h3 ((p9_collinear3_translate x x v y).mpr h')
+  have hc2 : ¬ Collinear3 0 (v - x) (w - x) := fun hcon => by
+    have h' : Collinear3 (x - x) (v - x) (w - x) := by rw [sub_self]; exact hcon
+    exact h2 ((p9_collinear3_translate x x v w).mpr h')
+  have hc3 : ¬ Collinear3 0 (v - x) (z - x) := fun hcon => by
+    have h' : Collinear3 (x - x) (v - x) (z - x) := by rw [sub_self]; exact hcon
+    exact h4 ((p9_collinear3_translate x x v z).mpr h')
+  constructor
+  · have hs0 : 0 < azim 0 (v - x) (y - x) (w - x) := by rw [← ht1]; exact hpos
+    have hspi : azim 0 (v - x) (y - x) (w - x) < Real.pi := by rw [← ht1]; exact hltπ
+    obtain ⟨t, ht0, hsin⟩ := JBDNJJB (u := (v - x)) (v := (y - x)) (w := (w - x)) hc1 hc2
+    have hsin' : Real.sin (azim 0 (v - x) (y - x) (w - x))
+        = t * dot3_p9 (cross3_p9 (v - x) (y - x)) (w - x) := by
+      rw [hsin, dot3_p9, cross3_p9, coe_toLp]
+    have hspos : 0 < Real.sin (azim 0 (v - x) (y - x) (w - x)) :=
+      Real.sin_pos_of_pos_of_lt_pi hs0 hspi
+    rw [hsin'] at hspos
+    by_contra hcon
+    push_neg at hcon
+    have hle : t * dot3_p9 (cross3_p9 (v - x) (y - x)) (w - x) ≤ 0 := by
+      calc t * dot3_p9 (cross3_p9 (v - x) (y - x)) (w - x)
+          ≤ t * 0 := mul_le_mul_of_nonneg_left hcon ht0.le
+        _ = 0 := mul_zero t
+    linarith
+  · have hs0 : 0 < azim 0 (v - x) (w - x) (z - x) := by
+      rw [← ht2]
+      linarith
+    have hspi : azim 0 (v - x) (w - x) (z - x) < Real.pi := by
+      rw [← ht2]
+      linarith
+    obtain ⟨t, ht0, hsin⟩ := JBDNJJB (u := (v - x)) (v := (w - x)) (w := (z - x)) hc2 hc3
+    have hsin' : Real.sin (azim 0 (v - x) (w - x) (z - x))
+        = t * dot3_p9 (cross3_p9 (v - x) (w - x)) (z - x) := by
+      rw [hsin, dot3_p9, cross3_p9, coe_toLp]
+    have hspos : 0 < Real.sin (azim 0 (v - x) (w - x) (z - x)) :=
+      Real.sin_pos_of_pos_of_lt_pi hs0 hspi
+    rw [hsin'] at hspos
+    by_contra hcon
+    push_neg at hcon
+    have hle : t * dot3_p9 (cross3_p9 (v - x) (w - x)) (z - x) ≤ 0 := by
+      calc t * dot3_p9 (cross3_p9 (v - x) (w - x)) (z - x)
+          ≤ t * 0 := mul_le_mul_of_nonneg_left hcon ht0.le
+        _ = 0 := mul_zero t
+    linarith
 
 /-- HOL `AFF_GE_3_1` (Nkezbfc.hl:587). -/
 theorem AFF_GE_3_1_p9 (x v u w : V3) (hd : Disjoint ({x, v, u} : Set V3) {w}) :
     affGe {x, v, u} {w} =
       {y | ∃ t1 t2 t3 t4 : ℝ, 0 ≤ t4 ∧ t1 + t2 + t3 + t4 = 1 ∧
         y = t1 • x + t2 • v + t3 • u + t4 • w} := by
-  sorry
-
+  have hd' := Set.disjoint_left.mp hd
+  have hxw : x ≠ w := fun he => hd' (Set.mem_insert _ _) (by rw [he]; simp)
+  have hvw : v ≠ w := fun he =>
+    hd' (Set.mem_insert_of_mem _ (Set.mem_insert _ _)) (by rw [he]; simp)
+  have huw : u ≠ w := fun he =>
+    hd' (Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _ (Set.mem_singleton u)))
+      (by rw [he]; simp)
+  ext z
+  simp only [affGe, Set.mem_setOf_eq, Affsign]
+  constructor
+  · rintro ⟨f, hfin, hval, hpos, hone⟩
+    by_cases hxv : x = v
+    · by_cases hxu : x = u
+      · -- x = v = u: support {x, w}
+        subst hxv
+        subst hxu
+        have hset : (({x, x, x} : Set V3) ∪ {w} : Set V3) = ({x, w} : Set V3) := by
+          ext p
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto
+        have hT : hfin.toFinset = ({x, w} : Finset V3) := by
+          ext p
+          rw [hfin.mem_toFinset, hset]
+          simp
+        rw [hT, Finset.sum_insert (by simp [hxw]), Finset.sum_singleton] at hval hone
+        refine ⟨f x, 0, 0, f w, hpos w (by simp), by linarith, ?_⟩
+        rw [hval]
+        module
+      · -- x = v ≠ u: support {x, u, w}
+        subst hxv
+        have hset : (({x, x, u} : Set V3) ∪ {w} : Set V3) = ({x, u, w} : Set V3) := by
+          ext p
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto
+        have hT : hfin.toFinset = ({x, u, w} : Finset V3) := by
+          ext p
+          rw [hfin.mem_toFinset, hset]
+          simp
+        rw [hT, Finset.sum_insert (by simp [hxw, hxu] : x ∉ ({u, w} : Finset V3)),
+          Finset.sum_insert (by simp [huw]), Finset.sum_singleton] at hval hone
+        refine ⟨f x, 0, f u, f w, hpos w (by simp), by linarith, ?_⟩
+        rw [hval]
+        module
+    · by_cases hxu : x = u
+      · -- x = u ≠ v: support {x, v, w}
+        subst hxu
+        have hset : (({x, v, x} : Set V3) ∪ {w} : Set V3) = ({x, v, w} : Set V3) := by
+          ext p
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto
+        have hT : hfin.toFinset = ({x, v, w} : Finset V3) := by
+          ext p
+          rw [hfin.mem_toFinset, hset]
+          simp
+        rw [hT, Finset.sum_insert (by simp [hxv, hxw] : x ∉ ({v, w} : Finset V3)),
+          Finset.sum_insert (by simp [hvw]), Finset.sum_singleton] at hval hone
+        refine ⟨f x, f v, 0, f w, hpos w (by simp), by linarith, ?_⟩
+        rw [hval]
+        module
+      · by_cases hvu : v = u
+        · -- v = u ≠ x: support {x, v, w}
+          subst hvu
+          have hset : (({x, v, v} : Set V3) ∪ {w} : Set V3) = ({x, v, w} : Set V3) := by
+            ext p
+            simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+            tauto
+          have hT : hfin.toFinset = ({x, v, w} : Finset V3) := by
+            ext p
+            rw [hfin.mem_toFinset, hset]
+            simp
+          rw [hT, Finset.sum_insert (by simp [hxv, hxw] : x ∉ ({v, w} : Finset V3)),
+            Finset.sum_insert (by simp [hvw]), Finset.sum_singleton] at hval hone
+          refine ⟨f x, f v, 0, f w, hpos w (by simp), by linarith, ?_⟩
+          rw [hval]
+          module
+        · -- all four distinct: support {x, v, u, w}
+          have hset : (({x, v, u} : Set V3) ∪ {w} : Set V3) = ({x, v, u, w} : Set V3) := by
+            ext p
+            simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+            tauto
+          have hT : hfin.toFinset = ({x, v, u, w} : Finset V3) := by
+            ext p
+            rw [hfin.mem_toFinset, hset]
+            simp
+          rw [hT, Finset.sum_insert
+                (by simp [hxv, hxu, hxw] : x ∉ ({v, u, w} : Finset V3)),
+            Finset.sum_insert (by simp [hxu, hvu, hvw] : v ∉ ({u, w} : Finset V3)),
+            Finset.sum_insert (by simp [huw] : u ∉ ({w} : Finset V3)),
+            Finset.sum_singleton] at hval hone
+          refine ⟨f x, f v, f u, f w, hpos w (by simp), by linarith, ?_⟩
+          rw [hval]
+          abel
+  · rintro ⟨t1, t2, t3, t4, ht4, hone, hy⟩
+    by_cases hxv : x = v
+    · by_cases hxu : x = u
+      · -- x = v = u: support {x, w}
+        subst hxv
+        subst hxu
+        have hset : (({x, x, x} : Set V3) ∪ {w} : Set V3) = ({x, w} : Set V3) := by
+          ext p
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto
+        have hfin : (({x, x, x} : Set V3) ∪ {w} : Set V3).Finite := by simp
+        have hT : hfin.toFinset = ({x, w} : Finset V3) := by
+          ext p
+          rw [hfin.mem_toFinset, hset]
+          simp
+        refine ⟨fun p => if p = x then t1 + t2 + t3 else t4, hfin, ?_, ?_, ?_⟩
+        · rw [hT, Finset.sum_insert (by simp [hxw]), Finset.sum_singleton]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxw)]
+          rw [hy]
+          module
+        · intro p hp
+          simp only [Set.mem_singleton_iff] at hp
+          rw [hp]
+          simp only [if_neg (Ne.symm hxw)]
+          exact ht4
+        · rw [hT, Finset.sum_insert (by simp [hxw]), Finset.sum_singleton]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxw)]
+          linarith
+      · -- x = v ≠ u: support {x, u, w}
+        subst hxv
+        have hset : (({x, x, u} : Set V3) ∪ {w} : Set V3) = ({x, u, w} : Set V3) := by
+          ext p
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto
+        have hfin : (({x, x, u} : Set V3) ∪ {w} : Set V3).Finite := by simp
+        have hT : hfin.toFinset = ({x, u, w} : Finset V3) := by
+          ext p
+          rw [hfin.mem_toFinset, hset]
+          simp
+        refine ⟨fun p => if p = x then t1 + t2 else if p = u then t3 else t4, hfin, ?_, ?_, ?_⟩
+        · rw [hT, Finset.sum_insert (by simp [hxw, hxu] : x ∉ ({u, w} : Finset V3)),
+            Finset.sum_insert (by simp [huw]), Finset.sum_singleton]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxu),
+            if_neg (Ne.symm hxw), if_neg (Ne.symm huw)]
+          rw [hy]
+          module
+        · intro p hp
+          simp only [Set.mem_singleton_iff] at hp
+          rw [hp]
+          simp only [if_neg (Ne.symm hxw), if_neg (Ne.symm huw)]
+          exact ht4
+        · rw [hT, Finset.sum_insert (by simp [hxw, hxu] : x ∉ ({u, w} : Finset V3)),
+            Finset.sum_insert (by simp [huw]), Finset.sum_singleton]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxu),
+            if_neg (Ne.symm hxw), if_neg (Ne.symm huw)]
+          linarith
+    · by_cases hxu : x = u
+      · -- x = u ≠ v: support {x, v, w}
+        subst hxu
+        have hset : (({x, v, x} : Set V3) ∪ {w} : Set V3) = ({x, v, w} : Set V3) := by
+          ext p
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto
+        have hfin : (({x, v, x} : Set V3) ∪ {w} : Set V3).Finite := by simp
+        have hT : hfin.toFinset = ({x, v, w} : Finset V3) := by
+          ext p
+          rw [hfin.mem_toFinset, hset]
+          simp
+        refine ⟨fun p => if p = x then t1 + t3 else if p = v then t2 else t4, hfin, ?_, ?_, ?_⟩
+        · rw [hT, Finset.sum_insert (by simp [hxv, hxw] : x ∉ ({v, w} : Finset V3)),
+            Finset.sum_insert (by simp [hvw]), Finset.sum_singleton]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxv),
+            if_neg (Ne.symm hxw), if_neg (Ne.symm hvw)]
+          rw [hy]
+          module
+        · intro p hp
+          simp only [Set.mem_singleton_iff] at hp
+          rw [hp]
+          simp only [if_neg (Ne.symm hxw), if_neg (Ne.symm hvw)]
+          exact ht4
+        · rw [hT, Finset.sum_insert (by simp [hxv, hxw] : x ∉ ({v, w} : Finset V3)),
+            Finset.sum_insert (by simp [hvw]), Finset.sum_singleton]
+          simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxv),
+            if_neg (Ne.symm hxw), if_neg (Ne.symm hvw)]
+          linarith
+      · by_cases hvu : v = u
+        · -- v = u ≠ x: support {x, v, w}
+          subst hvu
+          have hset : (({x, v, v} : Set V3) ∪ {w} : Set V3) = ({x, v, w} : Set V3) := by
+            ext p
+            simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+            tauto
+          have hfin : (({x, v, v} : Set V3) ∪ {w} : Set V3).Finite := by simp
+          have hT : hfin.toFinset = ({x, v, w} : Finset V3) := by
+            ext p
+            rw [hfin.mem_toFinset, hset]
+            simp
+          refine ⟨fun p => if p = x then t1 else if p = v then t2 + t3 else t4, hfin,
+            ?_, ?_, ?_⟩
+          · rw [hT, Finset.sum_insert (by simp [hxv, hxw] : x ∉ ({v, w} : Finset V3)),
+              Finset.sum_insert (by simp [hvw]), Finset.sum_singleton]
+            simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxv),
+              if_neg (Ne.symm hxw), if_neg (Ne.symm hvw)]
+            rw [hy]
+            module
+          · intro p hp
+            simp only [Set.mem_singleton_iff] at hp
+            rw [hp]
+            simp only [if_neg (Ne.symm hxw), if_neg (Ne.symm hvw)]
+            exact ht4
+          · rw [hT, Finset.sum_insert (by simp [hxv, hxw] : x ∉ ({v, w} : Finset V3)),
+              Finset.sum_insert (by simp [hvw]), Finset.sum_singleton]
+            simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxv),
+              if_neg (Ne.symm hxw), if_neg (Ne.symm hvw)]
+            linarith
+        · -- all four distinct: support {x, v, u, w}
+          have hset : (({x, v, u} : Set V3) ∪ {w} : Set V3) = ({x, v, u, w} : Set V3) := by
+            ext p
+            simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+            tauto
+          have hfin : (({x, v, u} : Set V3) ∪ {w} : Set V3).Finite := by simp
+          have hT : hfin.toFinset = ({x, v, u, w} : Finset V3) := by
+            ext p
+            rw [hfin.mem_toFinset, hset]
+            simp
+          refine ⟨fun p => if p = x then t1 else if p = v then t2 else if p = u then t3
+            else t4, hfin, ?_, ?_, ?_⟩
+          · rw [hT, Finset.sum_insert
+                (by simp [hxv, hxu, hxw] : x ∉ ({v, u, w} : Finset V3)),
+              Finset.sum_insert (by simp [hxu, hvu, hvw] : v ∉ ({u, w} : Finset V3)),
+              Finset.sum_insert (by simp [huw] : u ∉ ({w} : Finset V3)),
+              Finset.sum_singleton]
+            simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxv),
+              if_neg (Ne.symm hxu), if_neg (Ne.symm hvu), if_neg (Ne.symm hxw),
+              if_neg (Ne.symm hvw), if_neg (Ne.symm huw)]
+            rw [hy]
+            abel
+          · intro p hp
+            simp only [Set.mem_singleton_iff] at hp
+            rw [hp]
+            simp only [if_neg (Ne.symm hxw), if_neg (Ne.symm hvw),
+              if_neg (Ne.symm huw)]
+            exact ht4
+          · rw [hT, Finset.sum_insert
+                (by simp [hxv, hxu, hxw] : x ∉ ({v, u, w} : Finset V3)),
+              Finset.sum_insert (by simp [hxu, hvu, hvw] : v ∉ ({u, w} : Finset V3)),
+              Finset.sum_insert (by simp [huw] : u ∉ ({w} : Finset V3)),
+              Finset.sum_singleton]
+            simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxv),
+              if_neg (Ne.symm hxu), if_neg (Ne.symm hvu), if_neg (Ne.symm hxw),
+              if_neg (Ne.symm hvw), if_neg (Ne.symm huw)]
+            linarith
 /-- HOL `AFF_GE_2_2` (Nkezbfc.hl:598). -/
 theorem AFF_GE_2_2_p9 (x u v w : V3) (hd : Disjoint ({x, u} : Set V3) {v, w}) :
     affGe {x, u} {v, w} =
@@ -1397,11 +1888,305 @@ theorem AFF_GE_2_2_p9 (x u v w : V3) (hd : Disjoint ({x, u} : Set V3) {v, w}) :
         y = t1 • x + t2 • u + t3 • v + t4 • w} := by
   exact AFF_GE22 x u v w hd
 
+/-- LA9 support (wave 2): membership in a span-as-set, via the `SetLike` coe
+(the `Coplanar.lean` helper, private there). -/
+private theorem p9_mem_affineSpan_coe {p : V3} {s : Set V3} (hp : p ∈ s) :
+    p ∈ (affineSpan ℝ s : Set V3) :=
+  SetLike.mem_coe.mpr (mem_affineSpan ℝ hp)
+
+/-- LA9 support (wave 2): an affine combination of three points lies in their
+affine span (the LuneVolume `mem_affineSpan_triple_of_eq` route). -/
+private theorem p9_mem_affineSpan_triple {p q r s : V3} {α β γ : ℝ}
+    (hsum : α + β + γ = 1) (hv : s = α • p + β • q + γ • r) :
+    s ∈ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := by
+  have hpS : p ∈ affineSpan ℝ ({p, q, r} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hqS : q ∈ affineSpan ℝ ({p, q, r} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hrS : r ∈ affineSpan ℝ ({p, q, r} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hd2 : β • (q -ᵥ p) ∈ (affineSpan ℝ ({p, q, r} : Set V3)).direction :=
+    Submodule.smul_mem _ β (AffineSubspace.vsub_mem_direction hqS hpS)
+  have hd3 : γ • (r -ᵥ p) ∈ (affineSpan ℝ ({p, q, r} : Set V3)).direction :=
+    Submodule.smul_mem _ γ (AffineSubspace.vsub_mem_direction hrS hpS)
+  have hdd : β • (q -ᵥ p) + γ • (r -ᵥ p) ∈
+      (affineSpan ℝ ({p, q, r} : Set V3)).direction := Submodule.add_mem _ hd2 hd3
+  have hval : s = β • (q - p) + γ • (r - p) + p := by
+    have hα : α = 1 - β - γ := by linarith
+    rw [hv, hα]
+    module
+  have hmem2 : β • (q - p) + γ • (r - p) + p ∈
+      (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := by
+    have hv2 := AffineSubspace.vadd_mem_of_mem_direction hdd hpS
+    rwa [vadd_eq_add, vsub_eq_sub] at hv2
+  rw [hval]
+  exact hmem2
+
+/-- LA9 support (wave 2): a nontrivial affine dependence of four points (with
+nonzero coefficient on the last one) makes them coplanar (Mathlib root
+`Coplanar ℝ`, the reading of the frozen `NKEZBFC` statements). -/
+private theorem p9_coplanar_of_affine_dep {a b c d : V3} {α β γ δ : ℝ}
+    (hsum : α + β + γ + δ = 0) (hvec : α • a + β • b + γ • c + δ • d = 0)
+    (hδ : δ ≠ 0) : Coplanar ℝ ({a, b, c, d} : Set V3) := by
+  have hδd : d = (-α / δ) • a + (-β / δ) • b + (-γ / δ) • c := by
+    have hcoef : ∀ s : ℝ, (δ * (s / δ) : ℝ) = s := fun s => by field_simp
+    have h1 : δ • d = -(α • a + β • b + γ • c) :=
+      eq_neg_of_add_eq_zero_right hvec
+    refine smul_right_injective (M := V3) hδ ?_
+    show δ • d = δ • ((-α / δ) • a + (-β / δ) • b + (-γ / δ) • c)
+    rw [smul_add, smul_add, smul_smul, smul_smul, smul_smul, hcoef (-α),
+      hcoef (-β), hcoef (-γ), neg_smul, neg_smul, neg_smul, ← neg_add, ← neg_add]
+    exact h1
+  have hpos : (-α / δ) + (-β / δ) + (-γ / δ) = 1 := by
+    have key : ((-α / δ) + (-β / δ) + (-γ / δ)) * δ = (1 : ℝ) * δ := by
+      rw [one_mul]
+      field_simp
+      linarith
+    exact mul_right_cancel₀ hδ key
+  have hmem : d ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) :=
+    p9_mem_affineSpan_triple hpos hδd
+  have hset : (insert d ({a, b, c} : Set V3)) = ({a, b, c, d} : Set V3) := by
+    ext p
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    constructor
+    · rintro (h1 | h2 | h3 | h4)
+      · exact Or.inr (Or.inr (Or.inr h1))
+      · exact Or.inl h2
+      · exact Or.inr (Or.inl h3)
+      · exact Or.inr (Or.inr (Or.inl h4))
+    · rintro (h1 | h2 | h3 | h4)
+      · exact Or.inr (Or.inl h1)
+      · exact Or.inr (Or.inr (Or.inl h2))
+      · exact Or.inr (Or.inr (Or.inr h3))
+      · exact Or.inl h4
+  rw [← hset]
+  exact (coplanar_insert_iff_of_mem_affineSpan hmem).mpr
+    (coplanar_triple (k := ℝ) a b c)
+
+/-- LA9 support (wave 2): the four-point set is invariant under cyclic
+rotation of its enumeration (explicit casework; `simp`/`tauto` miss the
+four-way disjunct permutation). -/
+private theorem p9_set4_rot (a b c d : V3) :
+    ({b, c, d, a} : Set V3) = ({a, b, c, d} : Set V3) := by
+  ext p
+  constructor
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inr (Or.inl h1)
+    · exact Or.inr (Or.inr (Or.inl h2))
+    · exact Or.inr (Or.inr (Or.inr h3))
+    · exact Or.inl h4
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inr (Or.inr (Or.inr h1))
+    · exact Or.inl h2
+    · exact Or.inr (Or.inl h3)
+    · exact Or.inr (Or.inr (Or.inl h4))
+
+/-- LA9 support (wave 2): four-point set invariant under swapping the middle
+two enumeration entries. -/
+private theorem p9_set4_swap23 (a b c d : V3) :
+    ({a, c, b, d} : Set V3) = ({a, b, c, d} : Set V3) := by
+  ext p
+  constructor
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inl h1
+    · exact Or.inr (Or.inr (Or.inl h2))
+    · exact Or.inr (Or.inl h3)
+    · exact Or.inr (Or.inr (Or.inr h4))
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inl h1
+    · exact Or.inr (Or.inr (Or.inl h2))
+    · exact Or.inr (Or.inl h3)
+    · exact Or.inr (Or.inr (Or.inr h4))
+
+/-- LA9 support (wave 2): four-point set invariant under swapping the last
+two enumeration entries. -/
+private theorem p9_set4_swap34 (a b c d : V3) :
+    ({a, b, d, c} : Set V3) = ({a, b, c, d} : Set V3) := by
+  ext p
+  constructor
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inl h1
+    · exact Or.inr (Or.inl h2)
+    · exact Or.inr (Or.inr (Or.inr h3))
+    · exact Or.inr (Or.inr (Or.inl h4))
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inl h1
+    · exact Or.inr (Or.inl h2)
+    · exact Or.inr (Or.inr (Or.inr h3))
+    · exact Or.inr (Or.inr (Or.inl h4))
+
+/-- LA9 support (wave 2): four-point set invariant under inserting the first
+enumeration entry last (explicit casework). -/
+private theorem p9_set4_ins (a b c d : V3) :
+    (insert d ({a, b, c} : Set V3)) = ({a, b, c, d} : Set V3) := by
+  ext p
+  constructor
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inr (Or.inr (Or.inr h1))
+    · exact Or.inl h2
+    · exact Or.inr (Or.inl h3)
+    · exact Or.inr (Or.inr (Or.inl h4))
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inr (Or.inl h1)
+    · exact Or.inr (Or.inr (Or.inl h2))
+    · exact Or.inr (Or.inr (Or.inr h3))
+    · exact Or.inl h4
+
+/-- LA9 support (wave 2): subset into a folded three-insert, by the member
+enumeration `z = p ∨ z = a ∨ z = b ∨ z = c`. -/
+private theorem p9_subset_ins {S : Set V3} {p a b c : V3}
+    (hS : ∀ z ∈ S, z = p ∨ z = a ∨ z = b ∨ z = c) :
+    S ⊆ (insert p (insert a (insert b ({c} : Set V3)) : Set V3)) := by
+  intro z hz
+  rcases hS z hz with h1 | h2 | h3 | h4
+  · exact Or.inl h1
+  · exact Or.inr (Or.inl h2)
+  · exact Or.inr (Or.inr (Or.inl h3))
+  · exact Or.inr (Or.inr (Or.inr h4))
+
+/-- LA9 support (wave 2): four-point set invariant under moving the last
+enumeration entry to the middle. -/
+private theorem p9_set4_rot3 (a b c d : V3) :
+    ({a, c, d, b} : Set V3) = ({a, b, c, d} : Set V3) := by
+  ext p
+  constructor
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inl h1
+    · exact Or.inr (Or.inr (Or.inl h2))
+    · exact Or.inr (Or.inr (Or.inr h3))
+    · exact Or.inr (Or.inl h4)
+  · rintro (h1 | h2 | h3 | h4)
+    · exact Or.inl h1
+    · exact Or.inr (Or.inr (Or.inr h2))
+    · exact Or.inr (Or.inl h3)
+    · exact Or.inr (Or.inr (Or.inl h4))
+
+/-- LA9 support (wave 2): every coefficient of an affine dependence over a
+non-coplanar quadruple is zero (HOL `INDEPENDENT_3` content; root `Coplanar ℝ`
+reading). -/
+private theorem p9_comb_zero_of_not_coplanar {x v u w : V3}
+    (h : ¬ Coplanar ℝ ({x, v, u, w} : Set V3)) {c0 c1 c2 c3 : ℝ}
+    (hsum : c0 + c1 + c2 + c3 = 0)
+    (hvec : c0 • x + c1 • v + c2 • u + c3 • w = 0) :
+    c0 = 0 ∧ c1 = 0 ∧ c2 = 0 ∧ c3 = 0 := by
+  have hnot : ∀ (S : Set V3), S = ({x, v, u, w} : Set V3) → ¬ Coplanar ℝ S :=
+    fun S hS hc => h (hS ▸ hc)
+  have h3 : c3 = 0 := by
+    by_contra hc3
+    exact h (p9_coplanar_of_affine_dep hsum hvec hc3)
+  have h0 : c0 = 0 := by
+    by_contra hc0
+    refine hnot ({v, u, w, x} : Set V3) (p9_set4_rot x v u w)
+      (p9_coplanar_of_affine_dep (by linarith)
+        (show c1 • v + c2 • u + c3 • w + c0 • x = 0 from by rw [← hvec]; abel) hc0)
+  have h1 : c1 = 0 := by
+    by_contra hc1
+    refine hnot ({x, u, w, v} : Set V3) (p9_set4_rot3 x v u w)
+      (p9_coplanar_of_affine_dep (by linarith)
+        (show c0 • x + c2 • u + c3 • w + c1 • v = 0 from by rw [← hvec]; abel) hc1)
+  have h2 : c2 = 0 := by
+    by_contra hc2
+    refine hnot ({x, v, w, u} : Set V3) (p9_set4_swap34 x v u w)
+      (p9_coplanar_of_affine_dep (by linarith)
+        (show c0 • x + c1 • v + c3 • w + c2 • u = 0 from by rw [← hvec]; abel) hc2)
+  exact ⟨h0, h1, h2, h3⟩
+
+/-- LA9 support (wave 2): a 4-point set with a coincidence among its members
+lies inside the remaining triple (kills the pairwise-distinctness obligations
+of `inter_aff_ge_3_1_is_aff_ge_2_2_p9` without manual permutation casework). -/
+private theorem p9_subset3_of_eq {x v u w a b c : V3}
+    (hx : x ∈ ({a, b, c} : Set V3)) (hv : v ∈ ({a, b, c} : Set V3))
+    (hu : u ∈ ({a, b, c} : Set V3)) (hw : w ∈ ({a, b, c} : Set V3)) :
+    ({x, v, u, w} : Set V3) ⊆ ({a, b, c} : Set V3) := by
+  intro z hz
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with h1 | h2 | h3 | h4
+  · rw [h1]
+    exact hx
+  · rw [h2]
+    exact hv
+  · rw [h3]
+    exact hu
+  · rw [h4]
+    exact hw
+
 /-- HOL `inter_aff_ge_3_1_is_aff_ge_2_2` (Nkezbfc.hl:610). -/
 theorem inter_aff_ge_3_1_is_aff_ge_2_2_p9 (x v u w : V3)
     (h : ¬ Coplanar ℝ ({x, v, u, w} : Set V3)) :
     affGe {x, v, u} {w} ∩ affGe {x, u, w} {v} = affGe {x, u} {v, w} := by
-  sorry
+  -- any coincidence of two of the four points collapses the set to a triple
+  have hcol : ∀ a b c : V3, ({x, v, u, w} : Set V3) ⊆ ({a, b, c} : Set V3) → False := by
+    intro a b c hsub
+    exact h (Coplanar.subset hsub (coplanar_triple (k := ℝ) a b c))
+  have hxw : x ≠ w := fun hew =>
+    hcol x v u (p9_subset3_of_eq (a := x) (b := v) (c := u) (hx := by simp)
+      (hv := by simp) (hu := by simp) (hw := by rw [hew.symm]; simp))
+  have hvw : v ≠ w := fun hew =>
+    hcol x v u (p9_subset3_of_eq (a := x) (b := v) (c := u) (hx := by simp)
+      (hv := by simp) (hu := by simp) (hw := by rw [hew.symm]; simp))
+  have huw : u ≠ w := fun hew =>
+    hcol x v u (p9_subset3_of_eq (a := x) (b := v) (c := u) (hx := by simp)
+      (hv := by simp) (hu := by simp) (hw := by rw [hew.symm]; simp))
+  have hxv : x ≠ v := fun hev =>
+    hcol x u w (p9_subset3_of_eq (a := x) (b := u) (c := w) (hx := by simp)
+      (hv := by rw [← hev]; simp) (hu := by simp) (hw := by simp))
+  have hxu : x ≠ u := fun heu =>
+    hcol x v w (p9_subset3_of_eq (a := x) (b := v) (c := w) (hx := by simp)
+      (hv := by simp) (hu := by rw [← heu]; simp) (hw := by simp))
+  have hvu : v ≠ u := fun heu =>
+    hcol x v w (p9_subset3_of_eq (a := x) (b := v) (c := w) (hx := by simp)
+      (hv := by simp) (hu := by rw [heu]; simp) (hw := by simp))
+  have hd1 : Disjoint ({x, v, u} : Set V3) {w} :=
+    Set.disjoint_left.mpr fun a ha haw =>
+      hcol x v u (p9_subset3_of_eq (a := x) (b := v) (c := u) (hx := by simp)
+        (hv := by simp) (hu := by simp) (hw := by rw [← haw]; exact ha))
+  have hd2 : Disjoint ({x, u, w} : Set V3) {v} :=
+    Set.disjoint_left.mpr fun a ha haw =>
+      hcol x u w (p9_subset3_of_eq (a := x) (b := u) (c := w) (hx := by simp)
+        (hv := by rw [← haw]; exact ha) (hu := by simp) (hw := by simp))
+  have hd3 : Disjoint ({x, u} : Set V3) {v, w} := by
+    refine Set.disjoint_left.mpr fun a ha haw => ?_
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha haw
+    rcases ha with ha1 | ha2
+    · rcases haw with haw1 | haw2
+      · exact hxv (ha1.symm.trans haw1)
+      · exact hxw (ha1.symm.trans haw2)
+    · rcases haw with haw1 | haw2
+      · exact hvu (Eq.trans (Eq.symm haw1) ha2)
+      · exact huw (ha2.symm.trans haw2)
+  ext y
+  constructor
+  · rintro ⟨hy1, hy2⟩
+    rw [AFF_GE_3_1_p9 x v u w hd1] at hy1
+    rw [AFF_GE_3_1_p9 x u w v hd2] at hy2
+    rw [AFF_GE_2_2_p9 x u v w hd3]
+    simp only [Set.mem_setOf_eq] at hy1 hy2 ⊢
+    obtain ⟨a, b, c, d, hd0, hs1, hv1⟩ := hy1
+    obtain ⟨a', b', c', d', hd0', hs1', hv1'⟩ := hy2
+    have he : a • x + b • v + c • u + d • w = a' • x + b' • u + c' • w + d' • v :=
+      hv1.symm.trans hv1'
+    have hdep : (a - a') • x + (b - d') • v + (c - b') • u + (d - c') • w = 0 := by
+      linear_combination (norm := module) he
+    have hsum : (a - a') + (b - d') + (c - b') + (d - c') = 0 := by linarith
+    obtain ⟨h0, h1c, h2c, h3c⟩ := p9_comb_zero_of_not_coplanar h hsum hdep
+    refine ⟨a', b', d', c', hd0', by linarith, by linarith, ?_⟩
+    have hv2 : y = a' • x + b' • u + d' • v + c' • w := by
+      rw [hv1']
+      abel
+    exact hv2
+  · intro hy
+    rw [AFF_GE_2_2_p9 x u v w hd3] at hy
+    simp only [Set.mem_setOf_eq] at hy
+    obtain ⟨t1, t2, t3, t4, ht3, ht4, hs, hyv⟩ := hy
+    rw [AFF_GE_3_1_p9 x v u w hd1, AFF_GE_3_1_p9 x u w v hd2]
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq]
+    refine ⟨⟨t1, t3, t2, t4, ht4, by linarith, ?_⟩, ⟨t1, t2, t4, t3, ht3, by linarith,
+      ?_⟩⟩
+    · have hv2 : y = t1 • x + t3 • v + t2 • u + t4 • w := by
+        rw [hyv]
+        abel
+      exact hv2
+    · have hv2 : y = t1 • x + t2 • u + t4 • w + t3 • v := by
+        rw [hyv]
+        abel
+      exact hv2
 
 /-- HOL `aff_ge_3_1_rep_cross_dot` (Nkezbfc.hl:656). -/
 theorem aff_ge_3_1_rep_cross_dot_p9 (x v u w : V3)
@@ -2084,3 +2869,12 @@ theorem COMPATIBLE_BW_TWO_LEMMAS2_p9 {V : Set V3} {E : Set (Set V3)}
         (ePrime_p2 (E ∪ {{w, v}}) fw = slicee_p9 E FF w v) ∧
         (fw = slicef_p9 E FF w v)) := by
   sorry
+
+#print axioms p9_collinear3_translate
+#print axioms p9_azim_translate
+#print axioms p9_comb_zero_of_not_coplanar
+#print axioms p9_mem_affineSpan_triple
+#print axioms p9_dot_cross3_add
+#print axioms p9_set4_rot
+#print axioms p9_subset3_of_eq
+#print axioms p9_subset_ins
