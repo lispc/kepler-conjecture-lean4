@@ -4637,6 +4637,31 @@ theorem MCELL4_REPARAM (V : Set V3) (ul vl : List V3) (hp : Packing V)
     mcell4 V ul = mcell4 V vl ∧ barV V 3 vl := by
   exact p25r_mcell4_reparam V ul vl hp hs hc hs' hl hnn hb
 
+/-- Helper (poolc-w3 W1): `setSum` 单点求和。PA25 既有私件 `p25_setSum_pair`
+位于本件之后不可前引，同型重镜像。 -/
+private theorem p25w3_setSum_sing {α : Type*} {c : α} (g : α → ℝ) :
+    setSum ({c} : Set α) g = g c := by
+  unfold setSum
+  have hI : (Set.finite_singleton c).toFinset = ({c} : Finset α) := by
+    ext z
+    simp [Set.Finite.mem_toFinset]
+  rw [dif_pos (Set.finite_singleton c), hI, Finset.sum_singleton]
+
+/-- Helper (poolc-w3 W1): `setSum` 集相等搬运（`p25_setSum_congr` 同型重镜像）。 -/
+private theorem p25w3_setSum_congr {α : Type*} {s t : Set α} {g : α → ℝ} (h : s = t) :
+    setSum s g = setSum t g := by
+  unfold setSum
+  rw [h]
+
+/-- Helper (poolc-w3 W1): 集合对相等 → 距离相等。 -/
+private theorem p25w3_dist_of_pair {a b c d : V3}
+    (h : ({a, b} : Set V3) = ({c, d} : Set V3)) : dist a b = dist c d := by
+  have hp := Set.pair_eq_pair_iff.mp h
+  rcases hp with hc | hc
+  · rw [hc.1, hc.2]
+  · rw [hc.1, hc.2]
+    exact dist_comm d c
+
 /-- HOL `MCELL4_GG`: for the unique wedge cell, `gg_mcell` collapses to the
 single cell weight. -/
 theorem MCELL4_GG (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -4649,11 +4674,38 @@ theorem MCELL4_GG (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V
     gg_mcell V f (elV ul 0) (elV ul 1) i =
       gammaX V (mcell4 V ul) lmfun * criticalWeight V (mcell4 V ul) +
         betaBumpV1 V {elV ul 0, elV ul 1} (mcell4 V ul) := by
-  -- NEEDS(2026-10-23 pa25wim 复评): 唯一引用 MCELL4_FULL_WEDGE(本文件, 四重债见
-  -- 该件 NEEDS)。证法 = gg_mcell 展开 + 楔内胞唯一性(setSum 集 = {mcell4 V ul})
-  -- + SUM_SING; 顶点表刻画消费 MCELL4_CARD4/CARD4_IMP_DISTINCT/set_of_list4/
-  -- BARV_LENGTH_LEMMA(均已证)。
-  sorry
+  -- poolc-w3 W1 真证（2026-10-27）：解锁者 `MCELL4_FULL_WEDGE`（2026-10-23
+  -- poolc-wedge 已落）——楔内胞唯一性给出 setSum 集 = {mcell4 V ul}，
+  -- 单点 setSum 收口。
+  have h04 : (0 : ℕ) < ul.length := by have := hb.1; omega
+  have h14 : (1 : ℕ) < ul.length := by have := hb.1; omega
+  have hmem0 : elV ul 0 ∈ setOfList ul := by
+    show ul.getD 0 0 ∈ ul
+    rw [List.getD_eq_getElem _ _ h04]
+    exact List.getElem_mem h04
+  have hmem1 : elV ul 1 ∈ setOfList ul := by
+    show ul.getD 1 0 ∈ ul
+    rw [List.getD_eq_getElem _ _ h14]
+    exact List.getElem_mem h14
+  have hm4 : mcell4 V ul ∈ mcellSet V := ⟨4, ul, BumpP4.MCELL4 V ul, hb⟩
+  have he4 : ({elV ul 0, elV ul 1} : Set V3) ∈ edgeX V (mcell4 V ul) :=
+    (BumpP4.MCELL4_EDGE V ul (elV ul 0) (elV ul 1) hp hs hnn hb).2
+      ⟨ne₁₂_of_not_collinear hnc, fun z hz => by
+        rcases Set.mem_insert_iff.mp hz with rfl | hz2
+        · exact hmem0
+        · rcases Set.mem_singleton_iff.mp hz2 with rfl
+          exact hmem1⟩
+  unfold gg_mcell
+  have hset : ({Y | mcellSet V Y ∧ {elV ul 0, elV ul 1} ∈ edgeX V Y ∧
+        Y ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))} : Set (Set V3))
+      = {mcell4 V ul} := by
+    ext Y
+    constructor
+    · rintro ⟨hm, he, hsub⟩
+      exact MCELL4_FULL_WEDGE V Y ul w0 n f i hp hs hr hb hnc hn hnn hm hsub he hw
+    · rintro rfl
+      exact ⟨hm4, he4, hw⟩
+  rw [p25w3_setSum_congr hset, p25w3_setSum_sing]
 
 /-- HOL `LEAF_RANK_TRUNCATE`. -/
 theorem LEAF_RANK_TRUNCATE (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3) :
@@ -7601,6 +7653,290 @@ theorem CC_4_PROPS (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : 
     simp only [elV, e0, e1] at hbar
     exact hbar.1
 
+/-- 私件（poolc-w3 W1）：cc_4 情形 betaBumpV1 的定义性展开（条件 ↔ 六重合取，值 = 两 bump 差） -/
+private theorem p25w3_betaBumpV1_cc4 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
+    (hp : Packing V) (hs : saturated V) (hr : leaf_rank V [u0, u1] w0 n f)
+    (hnc : ¬ Collinear3 u0 u1 w0) (hn : 1 < n) (h4 : cc_4 V u0 u1 f i) :
+    betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) =
+      if criticalEdgeY (dist u0 u1) ∧ criticalEdgeY (dist (f i) (f (i + 1))) ∧
+          dist u0 (f i) < 2 * hminus ∧ dist u0 (f (i + 1)) < 2 * hminus ∧
+          dist u1 (f i) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus then
+        bump (dist u0 u1 / 2) - bump (dist (f i) (f (i + 1)) / 2)
+      else 0 := by
+  obtain ⟨hke, hhl4, hcvx, hncop, hwsub, hcc4, hcolA, hcolB, hleafA, hleafB, hnull,
+    hbar4⟩ := CC_4_PROPS V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hnn : ¬ nullSet (mcell4 V [u0, u1, f i, f (i + 1)]) := by
+    rw [← hcc4]; exact hnull
+  have hmsC : ccCell V [u0, u1, f i] ∈ mcellSet V := by
+    rw [hcc4]
+    exact ⟨4, [u0, u1, f i, f (i + 1)],
+      BumpP4.MCELL4 V [u0, u1, f i, f (i + 1)], hbar4⟩
+  have hnnC : ¬ nullSet (ccCell V [u0, u1, f i]) := hnull
+  -- 六点互异（LEAF_DOMAIN 距离下界 + 非共线 + azim）
+  have h01 : u0 ≠ u1 := by
+    intro he
+    apply hnc
+    show Collinear ℝ ({u0, u1, w0} : Set V3)
+    rw [he, Set.insert_eq_of_mem (Set.mem_insert u1 ({w0} : Set V3))]
+    exact collinear_pair ℝ u1 w0
+  have hd02 : 2 ≤ dist u0 (f i) := (LEAF_DOMAIN V [u0, u1, f i] hs hp hleafA).2.2.1
+  have hd12 : 2 ≤ dist u1 (f i) := (LEAF_DOMAIN V [u0, u1, f i] hs hp hleafA).2.1
+  have hd03 : 2 ≤ dist u0 (f (i + 1)) :=
+    (LEAF_DOMAIN V [u0, u1, f (i + 1)] hs hp hleafB).2.2.1
+  have hd13 : 2 ≤ dist u1 (f (i + 1)) :=
+    (LEAF_DOMAIN V [u0, u1, f (i + 1)] hs hp hleafB).2.1
+  have hne02 : u0 ≠ f i := by intro hc; rw [hc] at hd02; simp only [dist_self] at hd02; linarith
+  have hne03 : u0 ≠ f (i + 1) := by intro hc; rw [hc] at hd03; simp only [dist_self] at hd03; linarith
+  have hne12 : u1 ≠ f i := by intro hc; rw [hc] at hd12; simp only [dist_self] at hd12; linarith
+  have hne13 : u1 ≠ f (i + 1) := by intro hc; rw [hc] at hd13; simp only [dist_self] at hd13; linarith
+  have hvne : f i ≠ f (i + 1) := by
+    have hnz := LEAF_RANK_AZIM_NZ V [u0, u1] w0 n f i hs hp hr hn hnc
+    intro hcon
+    rw [hcon] at hnz
+    exact hnz (azim_self _ _ _)
+  -- 四点集成员
+  have hM1 : u0 ∈ ({u0, u1, f i, f (i + 1)} : Set V3) := by simp
+  have hM2 : u1 ∈ ({u0, u1, f i, f (i + 1)} : Set V3) := by simp
+  have hM3 : f i ∈ ({u0, u1, f i, f (i + 1)} : Set V3) := by simp
+  have hM4 : f (i + 1) ∈ ({u0, u1, f i, f (i + 1)} : Set V3) := by simp
+  -- 顶点集四点刻画
+  have hne0 : mcell 4 V [u0, u1, f i, f (i + 1)] ≠ ∅ := by
+    intro h0
+    apply hnn
+    rw [BumpP4.MCELL4 V [u0, u1, f i, f (i + 1)], h0]
+    exact measure_empty
+  have hVX4 : VX V (mcell4 V [u0, u1, f i, f (i + 1)])
+      = ({u0, u1, f i, f (i + 1)} : Set V3) := by
+    have h1 : VX V (mcell4 V [u0, u1, f i, f (i + 1)])
+        = V ∩ mcell4 V [u0, u1, f i, f (i + 1)] :=
+      HDTFNFZ (v := u0) (k := 4) hs hp hbar4
+        (BumpP4.MCELL4 V [u0, u1, f i, f (i + 1)]) hnn
+    rw [h1, BumpP4.MCELL4 V [u0, u1, f i, f (i + 1)],
+      LEPJBDJ V [u0, u1, f i, f (i + 1)] 4 hs hp hbar4 (by omega) (by omega) hne0,
+      TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 (f i) (f (i + 1))]
+    ext q
+    simp only [setOfList, List.mem_cons, List.not_mem_nil, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Set.mem_setOf_eq]
+    tauto
+  have hVXc : VX V (ccCell V [u0, u1, f i]) = ({u0, u1, f i, f (i + 1)} : Set V3) := by
+    rw [hcc4]; exact hVX4
+  have heqVXd : VX V (ccCell V [u0, u1, f i]) \ ({u0, u1} : Set V3)
+      = ({f i, f (i + 1)} : Set V3) := by
+    rw [hVXc]
+    ext q
+    simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨h, h2⟩
+      rcases h with h | h | h | h
+      · exact absurd (Or.inl h) h2
+      · exact absurd (Or.inr h) h2
+      · exact Or.inl h
+      · exact Or.inr h
+    · rintro (h | h)
+      · exact ⟨Or.inr (Or.inr (Or.inl h)), fun hh => by
+          rcases hh with hh | hh
+          · exact absurd (hh.symm.trans h) hne02
+          · exact absurd (hh.symm.trans h) hne12⟩
+      · exact ⟨Or.inr (Or.inr (Or.inr h)), fun hh => by
+          rcases hh with hh | hh
+          · exact absurd (hh.symm.trans h) hne03
+          · exact absurd (hh.symm.trans h) hne13⟩
+  -- 边成员构造器（四点集内任意互异对）
+  have hedge : ∀ (a b : V3), a ≠ b → a ∈ ({u0, u1, f i, f (i + 1)} : Set V3) →
+      b ∈ ({u0, u1, f i, f (i + 1)} : Set V3) →
+      ({a, b} : Set V3) ∈ edgeX V (mcell4 V [u0, u1, f i, f (i + 1)]) := by
+    intro a b hab ha hb
+    refine (BumpP4.MCELL4_EDGE V [u0, u1, f i, f (i + 1)] a b hp hs hnn hbar4).mpr
+      ⟨hab, fun z hz => ?_⟩
+    rcases Set.mem_insert_iff.mp hz with h | h
+    · rw [Set.mem_singleton_iff.mp h]; simpa [setOfList] using ha
+    · rw [Set.mem_singleton_iff.mp h]; simpa [setOfList] using hb
+  -- 枚举引理：四点集内任一边 = 茎 / 对边 / 跨边（后者距离 < 2·hminus，由六重合取供）
+  have hpair : criticalEdgeY (dist u0 u1) → criticalEdgeY (dist (f i) (f (i + 1))) →
+      dist u0 (f i) < 2 * hminus → dist u0 (f (i + 1)) < 2 * hminus →
+      dist u1 (f i) < 2 * hminus → dist u1 (f (i + 1)) < 2 * hminus →
+      ∀ u v : V3, u ≠ v →
+        ({u, v} : Set V3) ∈ edgeX V (mcell4 V [u0, u1, f i, f (i + 1)]) →
+        ({u, v} : Set V3) = ({u0, u1} : Set V3) ∨
+          ({u, v} : Set V3) = ({f i, f (i + 1)} : Set V3) ∨
+          (dist u v < 2 * hminus ∧ dist v u < 2 * hminus) := by
+    intro h6a h6b h6c h6d h6e h6f u v hne hg
+    have hm := (BumpP4.MCELL4_EDGE V [u0, u1, f i, f (i + 1)] u v hp hs hnn hbar4).mp hg
+    have hu4 : u = u0 ∨ u = u1 ∨ u = f i ∨ u = f (i + 1) := by
+      simpa [setOfList] using hm.2 (Set.mem_insert_iff.mpr (Or.inl rfl))
+    have hv4 : v = u0 ∨ v = u1 ∨ v = f i ∨ v = f (i + 1) := by
+      simpa [setOfList] using hm.2 (Set.mem_insert_iff.mpr (Or.inr (Set.mem_singleton_iff.mpr rfl)))
+    rcases hu4 with hu | hu | hu | hu
+    · rcases hv4 with hv | hv | hv | hv
+      · exact absurd (hu.trans hv.symm) hne
+      · exact Or.inl (by rw [hu, hv])
+      · exact Or.inr (Or.inr (by rw [hu, hv, dist_comm (f i) u0]; exact ⟨h6c, h6c⟩))
+      · exact Or.inr (Or.inr (by rw [hu, hv, dist_comm (f (i + 1)) u0]; exact ⟨h6d, h6d⟩))
+    · rcases hv4 with hv | hv | hv | hv
+      · exact Or.inl (Set.pair_eq_pair_iff.mpr (Or.inr ⟨hu, hv⟩))
+      · exact absurd (hu.trans hv.symm) hne
+      · exact Or.inr (Or.inr (by rw [hu, hv, dist_comm (f i) u1]; exact ⟨h6e, h6e⟩))
+      · exact Or.inr (Or.inr (by rw [hu, hv, dist_comm (f (i + 1)) u1]; exact ⟨h6f, h6f⟩))
+    · rcases hv4 with hv | hv | hv | hv
+      · exact Or.inr (Or.inr (by rw [hu, hv, dist_comm (f i) u0]; exact ⟨h6c, h6c⟩))
+      · exact Or.inr (Or.inr (by rw [hu, hv, dist_comm (f i) u1]; exact ⟨h6e, h6e⟩))
+      · exact absurd (hu.trans hv.symm) hne
+      · exact Or.inr (Or.inl (by rw [hu, hv]))
+    · rcases hv4 with hv | hv | hv | hv
+      · exact Or.inr (Or.inr (by rw [hu, hv, dist_comm (f (i + 1)) u0]; exact ⟨h6d, h6d⟩))
+      · exact Or.inr (Or.inr (by rw [hu, hv, dist_comm (f (i + 1)) u1]; exact ⟨h6f, h6f⟩))
+      · exact Or.inr (Or.inl (Set.pair_eq_pair_iff.mpr (Or.inr ⟨hu, hv⟩)))
+      · exact absurd (hu.trans hv.symm) hne
+  -- 关键等价：betaBumpV1 条件 ↔ 六重合取
+  have key : (ccCell V [u0, u1, f i] ∈ mcellSet V ∧
+      ¬nullSet (ccCell V [u0, u1, f i]) ∧
+      ({u0, u1} : Set V3) ∈ criticalEdgeX V (ccCell V [u0, u1, f i]) ∧
+      VX V (ccCell V [u0, u1, f i]) \ ({u0, u1} : Set V3)
+        ∈ criticalEdgeX V (ccCell V [u0, u1, f i]) ∧
+      ∀ g ∈ edgeX V (ccCell V [u0, u1, f i]),
+        g = ({u0, u1} : Set V3) ∨
+          g = VX V (ccCell V [u0, u1, f i]) \ ({u0, u1} : Set V3) ∨
+          g ∈ subcriticalEdgeX V (ccCell V [u0, u1, f i])) ↔
+      (criticalEdgeY (dist u0 u1) ∧ criticalEdgeY (dist (f i) (f (i + 1))) ∧
+        dist u0 (f i) < 2 * hminus ∧ dist u0 (f (i + 1)) < 2 * hminus ∧
+        dist u1 (f i) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus) := by
+    constructor
+    · rintro ⟨-, -, he, he', hall⟩
+      rw [heqVXd] at he' hall
+      unfold criticalEdgeX at he he'
+      obtain ⟨p, q, hpq, -, hlo, hhi⟩ := Set.mem_setOf_eq.mp he
+      have hHL : hl [p, q] = dist p q / 2 := HL_2 p q
+      obtain ⟨p', q', hpq', -, hlo', hhi'⟩ := Set.mem_setOf_eq.mp he'
+      have hHL' : hl [p', q'] = dist p' q' / 2 := HL_2 p' q'
+      refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+      · rw [p25w3_dist_of_pair hpq]; exact ⟨by linarith, by linarith⟩
+      · rw [p25w3_dist_of_pair hpq']; exact ⟨by linarith, by linarith⟩
+      · -- {u0, f i}
+        have hmem02 : ({u0, f i} : Set V3) ∈ edgeX V (ccCell V [u0, u1, f i]) := by
+          rw [hcc4]
+          exact hedge u0 (f i) hne02 hM1 hM3
+        rcases hall {u0, f i} hmem02 with h | h | h
+        · rcases Set.pair_eq_pair_iff.mp h with ⟨h1, h2⟩ | ⟨h1, h2⟩
+          · exact absurd h2.symm hne12
+          · exact absurd h1 h01
+        · rcases Set.pair_eq_pair_iff.mp h with ⟨h1, -⟩ | ⟨h1, -⟩
+          · exact absurd h1 hne02
+          · exact absurd h1 hne03
+        · unfold subcriticalEdgeX at h
+          obtain ⟨a, b, hab, -, hlo2⟩ := Set.mem_setOf_eq.mp h
+          have hHL2 : hl [a, b] = dist a b / 2 := HL_2 a b
+          rw [(p25w3_dist_of_pair hab.symm).symm]
+          linarith
+      · -- {u0, f (i+1)}
+        have hmem03 : ({u0, f (i + 1)} : Set V3) ∈ edgeX V (ccCell V [u0, u1, f i]) := by
+          rw [hcc4]
+          exact hedge u0 (f (i + 1)) hne03 hM1 hM4
+        rcases hall {u0, f (i + 1)} hmem03 with h | h | h
+        · rcases Set.pair_eq_pair_iff.mp h with ⟨h1, h2⟩ | ⟨h1, h2⟩
+          · exact absurd h2.symm hne13
+          · exact absurd h1 h01
+        · rcases Set.pair_eq_pair_iff.mp h with ⟨h1, -⟩ | ⟨h1, -⟩
+          · exact absurd h1 hne02
+          · exact absurd h1 hne03
+        · unfold subcriticalEdgeX at h
+          obtain ⟨a, b, hab, -, hlo2⟩ := Set.mem_setOf_eq.mp h
+          have hHL2 : hl [a, b] = dist a b / 2 := HL_2 a b
+          rw [(p25w3_dist_of_pair hab.symm).symm]
+          linarith
+      · -- {u1, f i}
+        have hmem12 : ({u1, f i} : Set V3) ∈ edgeX V (ccCell V [u0, u1, f i]) := by
+          rw [hcc4]
+          exact hedge u1 (f i) hne12 hM2 hM3
+        rcases hall {u1, f i} hmem12 with h | h | h
+        · rcases Set.pair_eq_pair_iff.mp h with ⟨h1, h2⟩ | ⟨h1, h2⟩
+          · exact absurd h2.symm hne12
+          · exact absurd h2.symm hne02
+        · rcases Set.pair_eq_pair_iff.mp h with ⟨h1, -⟩ | ⟨h1, -⟩
+          · exact absurd h1 hne12
+          · exact absurd h1 hne13
+        · unfold subcriticalEdgeX at h
+          obtain ⟨a, b, hab, -, hlo2⟩ := Set.mem_setOf_eq.mp h
+          have hHL2 : hl [a, b] = dist a b / 2 := HL_2 a b
+          rw [(p25w3_dist_of_pair hab.symm).symm]
+          linarith
+      · -- {u1, f (i+1)}
+        have hmem13 : ({u1, f (i + 1)} : Set V3) ∈ edgeX V (ccCell V [u0, u1, f i]) := by
+          rw [hcc4]
+          exact hedge u1 (f (i + 1)) hne13 hM2 hM4
+        rcases hall {u1, f (i + 1)} hmem13 with h | h | h
+        · rcases Set.pair_eq_pair_iff.mp h with ⟨h1, h2⟩ | ⟨h1, h2⟩
+          · exact absurd h2.symm hne13
+          · exact absurd h2.symm hne03
+        · rcases Set.pair_eq_pair_iff.mp h with ⟨h1, -⟩ | ⟨h1, -⟩
+          · exact absurd h1 hne12
+          · exact absurd h1 hne13
+        · unfold subcriticalEdgeX at h
+          obtain ⟨a, b, hab, -, hlo2⟩ := Set.mem_setOf_eq.mp h
+          have hHL2 : hl [a, b] = dist a b / 2 := HL_2 a b
+          rw [(p25w3_dist_of_pair hab.symm).symm]
+          linarith
+    · rintro ⟨s1, s2, s3, s4, s5, s6⟩
+      obtain ⟨s1l, s1r⟩ := s1
+      obtain ⟨s2l, s2r⟩ := s2
+      refine ⟨hmsC, hnnC, ?_, ?_, ?_⟩
+      · refine Set.mem_setOf_eq.mpr ⟨u0, u1, rfl, ?_, ?_, ?_⟩
+        · rw [hcc4]
+          exact hedge u0 u1 h01 hM1 hM2
+        · rw [HL_2 u0 u1]; linarith
+        · rw [HL_2 u0 u1]; linarith
+      · refine Set.mem_setOf_eq.mpr ⟨f i, f (i + 1), heqVXd, ?_, ?_, ?_⟩
+        · rw [heqVXd, hcc4]
+          exact hedge (f i) (f (i + 1)) hvne hM3 hM4
+        · rw [HL_2 (f i) (f (i + 1))]; linarith
+        · rw [HL_2 (f i) (f (i + 1))]; linarith
+      · intro g hg
+        obtain ⟨u, v, huv, huX, hvX, huvne⟩ := Set.mem_setOf_eq.mp hg
+        rw [huv, heqVXd]
+        have hpt : ∀ z : V3, z ∈ ({u0, u1, f i, f (i + 1)} : Set V3) →
+            z = u0 ∨ z = u1 ∨ z = f i ∨ z = f (i + 1) := by
+          intro z hz
+          rcases Set.mem_insert_iff.mp hz with h | h
+          · exact Or.inl h
+          · rcases Set.mem_insert_iff.mp h with h | h
+            · exact Or.inr (Or.inl h)
+            · rcases Set.mem_insert_iff.mp h with h | h
+              · exact Or.inr (Or.inr (Or.inl h))
+              · exact Or.inr (Or.inr (Or.inr (Set.mem_singleton_iff.mp h)))
+        rw [hVXc] at huX hvX
+        have hu4 := hpt u huX
+        have hv4 := hpt v hvX
+        have hg4 : ({u, v} : Set V3) ∈ edgeX V (mcell4 V [u0, u1, f i, f (i + 1)]) := by
+          rw [← hcc4]
+          rw [huv] at hg
+          exact hg
+        rcases hpair ⟨s1l, s1r⟩ ⟨s2l, s2r⟩ s3 s4 s5 s6 u v huvne hg4 with h | h | h
+        · exact Or.inl h
+        · exact Or.inr (Or.inl h)
+        · obtain ⟨hd1, -⟩ := h
+          refine Or.inr (Or.inr (Set.mem_setOf_eq.mpr ⟨u, v, rfl, ?_, ?_⟩))
+          · rw [hcc4]; exact hg4
+          · rw [HL_2 u v]; linarith
+  -- 装配：按六重合取分支展开
+  unfold betaBumpV1
+  simp only []
+  by_cases hS : criticalEdgeY (dist u0 u1) ∧ criticalEdgeY (dist (f i) (f (i + 1))) ∧
+      dist u0 (f i) < 2 * hminus ∧ dist u0 (f (i + 1)) < 2 * hminus ∧
+      dist u1 (f i) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus
+  · rw [if_pos (key.mpr hS), if_pos hS, heqVXd, RADV2 u0 u1, RADV2 (f i) (f (i + 1))]
+    unfold bump
+    ring
+  · have hK : ¬ (ccCell V [u0, u1, f i] ∈ mcellSet V ∧
+        ¬nullSet (ccCell V [u0, u1, f i]) ∧
+        ({u0, u1} : Set V3) ∈ criticalEdgeX V (ccCell V [u0, u1, f i]) ∧
+        VX V (ccCell V [u0, u1, f i]) \ ({u0, u1} : Set V3)
+          ∈ criticalEdgeX V (ccCell V [u0, u1, f i]) ∧
+        ∀ g ∈ edgeX V (ccCell V [u0, u1, f i]),
+          g = ({u0, u1} : Set V3) ∨
+            g = VX V (ccCell V [u0, u1, f i]) \ ({u0, u1} : Set V3) ∨
+            g ∈ subcriticalEdgeX V (ccCell V [u0, u1, f i])) :=
+      fun hK => hS (key.mp hK)
+    rw [if_neg hK, if_neg hS]
+
 /-- HOL `CC_4_BETA_BUMP_EXPLICIT`. -/
 theorem CC_4_BETA_BUMP_EXPLICIT (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i : ℕ) (hp : Packing V) (hs : saturated V)
@@ -7611,7 +7947,10 @@ theorem CC_4_BETA_BUMP_EXPLICIT (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ 
     (hd3 : dist u1 (f i) < 2 * hminus) (hd4 : dist u1 (f (i + 1)) < 2 * hminus) :
     betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) =
       bump (dist u0 u1 / 2) - bump (dist (f i) (f (i + 1)) / 2) := by
-  sorry
+  -- poolc-w3 W1 真证（2026-10-27）：`p25w3_betaBumpV1_cc4` 定义性展开后
+  -- 六重合取全部在库（hcey/hcey' 为假设，四跨边距离 < 2·hminus 即非临界）。
+  rw [p25w3_betaBumpV1_cc4 V u0 u1 w0 n f i hp hs hr hnc hn h4]
+  exact if_pos ⟨hcey, hcey', hd1, hd2, hd3, hd4⟩
 
 /-- HOL `CC_4_BETA_BUMP_0`. -/
 theorem CC_4_BETA_BUMP_0 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -7622,7 +7961,9 @@ theorem CC_4_BETA_BUMP_0 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
       dist u0 (f i) < 2 * hminus ∧ dist u0 (f (i + 1)) < 2 * hminus ∧
       dist u1 (f i) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus)) :
     betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) = 0 := by
-  sorry
+  -- poolc-w3 W1 真证（2026-10-27）：`p25w3_betaBumpV1_cc4` 展开后 hnot 即 ¬六重合取。
+  rw [p25w3_betaBumpV1_cc4 V u0 u1 w0 n f i hp hs hr hnc hn h4]
+  exact if_neg hnot
 
 /-- HOL `critical_edgeX_critical_edge_y`. -/
 theorem critical_edgeX_critical_edge_y (V : Set V3) (X : Set V3) (u v : V3) :
@@ -8304,7 +8645,28 @@ theorem GG_MCELL_BETA (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i
       gamma4fgcyP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
           (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun / 2 +
         bump (dist u0 u1 / 2) - bump (dist (f i) (f (i + 1)) / 2) := by
-  sorry
+  -- poolc-w3 W1 真证（2026-10-27）：cc_4_cc_cell 塌缩 + critical_weight_wtcount6_y
+  -- + p25w3_betaBumpV1_cc4（全临界支）+ gammaX_gamma4fgcy_ALT + wtcount6 = 2 算术。
+  have hl' : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+  obtain ⟨hke, hhl4, hcvx, hncop, hwsub, hcc4, hcolA, hcolB, hleafA, hleafB, hnull,
+    hbar4⟩ := CC_4_PROPS V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hn2 : ¬ criticalEdgeY (dist u0 (f i)) := fun hc => absurd hd1.1 (not_lt.mpr hc.1)
+  have hn3 : ¬ criticalEdgeY (dist u0 (f (i + 1))) := fun hc => absurd hd2 (not_lt.mpr hc.1)
+  have hn5 : ¬ criticalEdgeY (dist u1 (f (i + 1))) := fun hc => absurd hd3 (not_lt.mpr hc.1)
+  have hn6 : ¬ criticalEdgeY (dist u1 (f i)) := fun hc => absurd hd1.2 (not_lt.mpr hc.1)
+  have hwb : betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) =
+      bump (dist u0 u1 / 2) - bump (dist (f i) (f (i + 1)) / 2) := by
+    rw [p25w3_betaBumpV1_cc4 V u0 u1 w0 n f i hp hs hr hnc hn h4]
+    exact if_pos ⟨hcey, hcey', hd1.1, hd2, hd1.2, hd3⟩
+  have hwt : wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) = 2 := by
+    unfold wtcount6Y wtcount3Y
+    rw [if_pos hcey, if_neg hn2, if_neg hn3, if_pos hcey', if_neg hn5, if_neg hn6]
+  rw [cc_4_cc_cell V u0 u1 w0 n f i hp hs hper hl' hr hnc hn h4,
+    critical_weight_wtcount6_y V u0 u1 w0 n f i hp hs hr hnc hn h4 hcey,
+    gammaX_gamma4fgcy_ALT V (ccCell V [u0, u1, f i]) u0 u1 (f i) (f (i + 1)) hs hp hbar4
+      hcc4 hnull, hwb, hwt]
+  ring
 
 /-- HOL `GG_MCELL_NONBETA`. -/
 theorem GG_MCELL_NONBETA (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -8321,7 +8683,23 @@ theorem GG_MCELL_NONBETA (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
           (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun /
         (wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
           (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))) := by
-  sorry
+  -- poolc-w3 W1 真证（2026-10-27）：cc_4_cc_cell 塌缩 + critical_weight_wtcount6_y
+  -- + p25w3_betaBumpV1_cc4（非临界支，hnot + hcey 给 ¬六重合取）
+  -- + gammaX_gamma4fgcy_ALT。
+  have hl' : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+  obtain ⟨hke, hhl4, hcvx, hncop, hwsub, hcc4, hcolA, hcolB, hleafA, hleafB, hnull,
+    hbar4⟩ := CC_4_PROPS V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hwb : betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) = 0 := by
+    rw [p25w3_betaBumpV1_cc4 V u0 u1 w0 n f i hp hs hr hnc hn h4]
+    rw [if_neg (by
+      intro hc
+      obtain ⟨-, h2, h3, h4', h5, h6⟩ := hc
+      exact hnot ⟨⟨h3, h5⟩, h4', h6, h2⟩)]
+  rw [cc_4_cc_cell V u0 u1 w0 n f i hp hs hper hl' hr hnc hn h4,
+    critical_weight_wtcount6_y V u0 u1 w0 n f i hp hs hr hnc hn h4 hcey,
+    gammaX_gamma4fgcy_ALT V (ccCell V [u0, u1, f i]) u0 u1 (f i) (f (i + 1)) hs hp hbar4
+      hcc4 hnull, hwb]
+  ring
 
 /-- HOL `GG_MCELL_GENERAL`. -/
 theorem GG_MCELL_GENERAL (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -8407,7 +8785,60 @@ theorem real_model_fhbv2 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
           dist (f i) (f (i + 1)) < 2 * hminus) ∧
         ¬ (hl [u0, u1, f (i + 1)] < 1.34) →
       0.0057 ≤ gg_mcell V f u0 u1 i := by
-  sorry
+  -- poolc-w3 W3 真证（2026-10-27）：GG_MCELL_QUARTER（wtcount = 1 塌缩）+
+  -- bank_FHBVYXZv2a（proj_bank，盒 12 参由 MCELL4_DOMAIN + 本案四距离供）+
+  -- 两逃逸反驳：rad2 > 2 ↔ MCELL4_DOMAIN 的 rad2YP25 < 2 合取支；
+  -- eta_y y1 y3 y5 < 1.34² ↔ 本案假设 ¬(hl [u0,u1,f (i+1)] < 1.34)
+  -- （经 hl = radV setOfList + RADV_ETAY + sq_le_sq₀）。
+  intro i hcase
+  obtain ⟨⟨h4, ⟨hd02, hd12⟩, hd03, hd13, hd23⟩, heta⟩ := hcase
+  -- gg 塌缩（quarter 模式，wtcount = 1）
+  have hgg := GG_MCELL_QUARTER V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey h4
+    ⟨hd02, hd12⟩ hd03 hd13 hd23 hr
+  -- 盒约束（茎 + 通用上界 + rad2 < 2）
+  have hbox := MCELL4_DOMAIN V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey hr h4
+  have hbank := proj_bank_FHBVYXZv2a hnl
+  -- eta 逃逸反驳：hl [u0,u1,f (i+1)] = eta_y du01 du0f(i+1) du1f(i+1)（RADV_ETAY）
+  obtain ⟨hke, hhl4, hcvx, hncop, hwsub, hcc4, hcolA, hcolB, hleafA, hleafB, hnull,
+    hbar4⟩ := CC_4_PROPS V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hsetl : setOfList [u0, u1, f (i + 1)] = ({u0, u1, f (i + 1)} : Set V3) := by
+    ext q; simp [setOfList]
+  have hhlE : hl [u0, u1, f (i + 1)]
+      = eta_y (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1))) := by
+    unfold hl
+    rw [hsetl, RADV_ETAY u0 u1 (f (i + 1)) hcolB]
+  have hETAge : (1.34 : ℝ) ≤ eta_y (dist u0 u1) (dist u0 (f (i + 1)))
+      (dist u1 (f (i + 1))) := by
+    rw [← hhlE]
+    exact le_of_not_gt heta
+  -- 银行应用（盒 12 参 + 两逃逸反驳）
+  have hgamma : (0.0057 : ℝ) < gamma4fgcyP25 (dist u0 u1) (dist u0 (f i))
+      (dist u0 (f (i + 1))) (dist (f i) (f (i + 1))) (dist u1 (f (i + 1)))
+      (dist u1 (f i)) lmfun := by
+    rcases hbank (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+        hbox.1 hbox.2.1 hbox.2.2.1 (le_of_lt hd02) hbox.2.2.2.2.1 (le_of_lt hd03)
+        hbox.2.2.2.2.2.2.1 (le_of_lt hd23) hbox.2.2.2.2.2.2.2.2.2.2.1 (le_of_lt hd13)
+        hbox.2.2.2.2.2.2.2.2.1 (le_of_lt hd12) with hdisj | hdisj | hdisj
+    · exact hdisj
+    · exact absurd hdisj (by
+        -- hdisj : yOfX rad2X (dist u0 u1) ... > 2，与 hbox 的 rad2YP25 < 2 矛盾
+        have h2 : yOfX rad2X (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+            (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+            = rad2YP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+              (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := rfl
+        rw [h2] at hdisj
+        exact absurd hdisj (not_lt.mpr (le_of_lt hbox.2.2.2.2.2.2.2.2.2.2.2.2.1)))
+    · exact absurd hdisj (not_lt.mpr
+        ((sq_le_sq₀ (by norm_num : (0 : ℝ) ≤ 1.34)
+            (ETA_Y_POS_LE_ALT _ _ _)).mpr hETAge))
+  -- gamma4fgcyP25 与 PA20 gamma4fgcy 同体（vol4fP25 = PA20:105 逐字）
+  have hgam : gamma4fgcyP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun
+      = gamma4fgcy (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun := rfl
+  rw [hgg, hgam]
+  linarith
 
 /-- HOL `real_model_fhbv2_sym`. -/
 theorem real_model_fhbv2_sym (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
