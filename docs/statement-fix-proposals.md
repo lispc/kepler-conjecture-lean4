@@ -2598,7 +2598,7 @@ HOL 正本 `tame_defs2.hl:33-36`：`good_list_nodes L <=> node_set (hypermap_of_
 `reference/flyspeck/text_formalization/tame/tame_defs2.hl:33-36`（`new_definition'`）：`!(L:((A)list)list). good_list_nodes L <=> node_set (hypermap_of_list L) = set_of_list (nodes_of_list L)`。组件链全函数（`list_hypermap-compiled.hl:60-62`/`:30-32`）。HOL 消费面（good_graph_v4 第二合取支 tame_defs2.hl:56-63；lp_cond 第三合取支 lp_ineqs_proofs-compiled.hl:14-21；lp_cond_lemma/contravening_lp_cond 前提 :186-189/:394-403）全部携带 `good_list L`——junk 分歧不可达。
 
 ### (b) 修复补丁
-① `lean/Kepler/Assembly.lean:1526-1528`：占位三行 → 真形（`∀ hL : GoodList L, (Kepler.Text.TameLp.hypermapOfList L hL).nodeSet = Kepler.Text.TameLp.nodesOfListSet L`，flip 源 = GoodListNodesSpine 体逐字；docstring 记 arity 折算与 junk 空洞化）。② `lean/Kepler/Text/TameSpine/GoodGraph.lean:128-130` `goodGraphV4Spine_implies` 第二槽 `trivial` → `h.2`（全树唯一硬破点，与①同一逻辑提交）。patch 归档于应用时生成（58-spherekit 例）。
+① `lean/Kepler/Assembly.lean:1526-1528`：占位三行 → 真形（`∀ hL : GoodList L, (Kepler.Text.TameLp.hypermapOfList L hL).nodeSet = Kepler.Text.TameLp.nodesOfListSet L`，flip 源 = GoodListNodesSpine 体逐字；docstring 记 arity 折算与 junk 空洞化）。② `lean/Kepler/Text/TameSpine/GoodGraph.lean:128-130` `goodGraphV4Spine_implies` 第二槽 `trivial` → `h.2.1`（Spine 为右嵌套 And，第二槽 = h.2.1；草案初稿 h.2 经闸①后编译实证为类型错，勘误归档）。patch 归档于应用时生成（58-spherekit 例）。
 
 ### (c) 消费面影响清单
 12 项逐件行锚见草案 (d) 表。要点：`GoodGraphV4`（:1531-1533）自动变强零改动；`jcajydu`/`tameCorrespondenceIso`（:1737-1746）sorry 占位不破、清偿义务升级（出料口 `goodGraphV4Spine_witness` + hypermapOfList 构造现成）；`textCapstone` 位置消费不破（`hgg4.2` 未被消费）；`LpCond` 槽两形互通无损；其余四占位（FinalGraph/AllUniq/GoodFacesV3/VerticesSet2Eq）不在本提案范围。
