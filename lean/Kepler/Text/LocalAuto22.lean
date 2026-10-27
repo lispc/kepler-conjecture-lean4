@@ -396,7 +396,8 @@ theorem derived_form_num1_p22 (x4 x5 x6 e1 e2 e3 : ℝ) :
   intro _
   have e : (fun q => num1 e1 e2 e3 q x5 x6) = fun q =>
       (-(4 * e1)) * (q * q)
-        + ((64 * e1 + 4 * (x5 - 8) * e2 + 4 * (x6 - 8) * e3) * q + 0) := by
+        + ((64 * e1 + 4 * (x5 - 8) * e2 + 4 * (x6 - 8) * e3) * q
+          - 32 * (x5 - x6) * (e2 - e3)) := by
     funext q; unfold num1; ring
   rw [e]
   refine HasDerivWithinAt.congr_deriv
@@ -410,7 +411,8 @@ theorem derived_form_dnum1_p22 (x4 x5 x6 e1 e2 e3 : ℝ) :
   intro _
   have e : (fun q => num1 e1 e2 e3 q x5 x6) = fun q =>
       (-(4 * e1)) * (q * q)
-        + ((64 * e1 + 4 * (x5 - 8) * e2 + 4 * (x6 - 8) * e3) * q + 0) := by
+        + ((64 * e1 + 4 * (x5 - 8) * e2 + 4 * (x6 - 8) * e3) * q
+          - 32 * (x5 - x6) * (e2 - e3)) := by
     funext q; unfold num1; ring
   rw [e]
   refine HasDerivWithinAt.congr_deriv
