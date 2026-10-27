@@ -138,10 +138,12 @@ noncomputable def quadraticRootPlus (a b c : ℝ) : ℝ :=
 
 /-! ## Terminal.hl: num1/dnum1 and the truncated tau kit -/
 
-/-- HOL `num1` (Terminal.hl, body reconstructed from its uses). Verbatim =
+/-- HOL `num1` (sphere.hl:821; the copy consumed by OCBICBY
+`derived_form_*`). Verbatim =
 `num1_p22` (LocalAuto22.lean:136, the only copy). -/
 noncomputable def num1 (e1 e2 e3 x4 x5 x6 : ℝ) : ℝ :=
-  4 * ((16 * x4 - x4 * x4) * e1 + (x5 - 8) * x4 * e2 + (x6 - 8) * x4 * e3)
+  -4 * (x4 ^ 2 * e1 + 8 * (x5 - x6) * (e2 - e3)
+    - x4 * (16 * e1 + (x5 - 8) * e2 + (x6 - 8) * e3))
 
 /-- HOL `dnum1` (Terminal.hl, reconstructed; derivative of `num1`). Verbatim =
 `dnum1_p22` (LocalAuto22.lean:140, the only copy). -/
