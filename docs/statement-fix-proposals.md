@@ -2564,3 +2564,25 @@ STATEMENT-FIX 闸（默认七根，THM=`Kepler.Text.FAN_EDGE_EL_V` 已验标准�
 
 ### (e') SF-54 应用记录（2026-10-26）
 用户批准（2026-10-26「都批准」）。五文件串行 STATEMENT-FIX 闸全 PASS（每文件单文件工作树不变式；THM：LA7=LOCAL_FAN_NOT_CARD_FF_GE_2 免疫件 / LA14=azim_cross_0_p14 / LA35=SCS_K_LE_6_p35 / LA36=csAdj_mod_p36 / LA37=SET2_DETER_p37，全部标准三）：`47467b90`(LA7, 14 桩 hedge + LOCAL_FAN_ORBIT_MAP_EXPLICIT→_LA7 改名) / `88785e39`(LA14×3) / `2bacab43`(LA35×2) / `3c8b0c11`(LA36×1) / `119a10c5`(LA37×2)。改名零涟漪实核（LA2 无 _IVS 孪生、LA7 零 importer、LocalConcl 仅注释提及）。受害桩本体仍为 sorry（本 SF 只修陈述）；W6a 解锁。雷区新入册：闸 LANE_FILES 为单路径不拆空格，STATEMENT-FIX 一次一文件；闸须在工作树唯一改动状态下运行。
+
+## 58. SphereKit:143 `num1` 定义体缺 `−32(x5−x6)(e2−e3)` 项 — 分级 A（移植误植 · 定义体修正）
+
+HOL 正本 sphere.hl:821 的 `num1` 含 `&8*(b2-c2)*(e2-e3)` 项（展开差 = `−32(x5−x6)(e2−e3)`）；Lean SphereKit:143 当年"按用途重建"的体丢了该项，且 docstring 锚引错（Terminal.hl 全文无 num1）。后果：LA22 三枚 sorry 桩（`derived_form_sum_dih444_p22`/`_sum_dih444sub_p22`/`_tau2D_p22`）在错体下是**假命题**（OCBICBY.hl:534 用全量 num1 证同一形状语句），OCBICBY 波卸桩时必撞雷。fidelity-audit Top-30 #3 人读复核发现（2026-10-27，编排者）；审计原配锚 azure test_flyspeck.hl:95 为同体副本，非反证。
+
+### (a) HOL 引文
+`reference/flyspeck/text_formalization/general/sphere.hl:821`：`num1 e1 e2 e3 a2 b2 c2 = -- &4*((a2 pow 2)*e1 + &8*(b2-c2)*(e2-e3) - a2*(&16*e1 + (b2-&8)*e2 + (c2-&8)*e3))`，展开 = `4(16a2−a2²)e1 + 4a2(b2−8)e2 + 4a2(c2−8)e3 − 32(b2−c2)(e2−e3)`。消费正本：`local/OCBICBY.hl:439-460`（derived_form_num1/dnum1，`REWRITE_TAC[Sphere.num1]`）、`:534`（sum_dih444 链）；`nonlin_def.hl:443` `dnum1 = (&16−&2x4)e1 + (x5−&8)e2 + (x6−&8)e3`（Lean 已忠实，勿动）。同体副本 `azure/test_flyspeck.hl:95`。
+
+### (b) 修复补丁
+SphereKit:141-144：docstring 锚 `Terminal.hl, body reconstructed from its uses` → `sphere.hl:821; the copy consumed by OCBICBY derived_form_*`；定义体 → HOL 保形直译 `-4 * (x4 ^ 2 * e1 + 8 * (x5 - x6) * (e2 - e3) - x4 * (16 * e1 + (x5 - 8) * e2 + (x6 - 8) * e3))`。归档：`docs/statement-fix-proposals-patches/58-spherekit-num1.patch`。**连带证明体适配（非语句变更）**：LA22:397-399 与 :411-413 两处 `have e` 展开把常数项硬编码为 `+ 0`（旧体无常数项；新体带 `−32(x5−x6)(e2−e3)`），须改为 `... * q - 32 * (x5 - x6) * (e2 - e3)`，随批一并应用（第二 patch 58-localauto22-proofadapt，批后生成）；两证明的导数形式 `4 * dnum1` 与收尾 `ring` 不受影响（常数在求导中消失）。
+
+### (c) 消费面影响清单
+LA22:393 `derived_form_num1_p22`（已证）与 :407 `derived_form_dnum1_p22`（已证）：缺项是 q-常数，q-导数不变，两语句错体/对体下同真，proof `unfold num1; ring` 自适配零改动；LA22 三 sorry 桩（:437/:448/:461）：错体下假命题 → 对体下恢复为 OCBICBY 原件真命题；全仓 num1 消费仅 SphereKit（定义）+ LA22（上列），grep 实证，无 e2e 已证链展开其定义体。
+
+### (d) 验收与应用计划
+**待用户批准**（SF 渠道纪律：陈述/定义变更先呈后批）。批后：闸① SphereKit（STATEMENT-FIX，SF_PATCH=58-spherekit-num1.patch，THM=`Kepler.Text.derived_form_dnum1_p22`）→ 提交；闸② LA22 证明体适配（同 THM，证明体 patch 复核）→ 提交；随后 OCBICBY 波解锁三真桩。
+
+### (e) 孤儿评估
+无删除；方向 = 补回丢失负项（截断 → 全量），无孤儿件。
+
+### (f) 风险与回滚
+低风险：已证两件自适配；假桩 → 真桩；无当前 e2e 消费展开其体。回滚 = 反向 patch。
