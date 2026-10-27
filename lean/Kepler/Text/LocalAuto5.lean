@@ -4145,6 +4145,553 @@ theorem IN_CONV0 {x y : V3} {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
       simp [hxy, hxN]
       field_simp
 
+/-! ## Lane support (la5-bank-w1): shared core for INTERSECTION_LEMMA /
+EXISTS_INTERSECTION_PROPERPLY (local_lemmas.hl:2261/:2897). -/
+
+/-- barycentric extraction from the affine span of a triple. -/
+private theorem la5_span3_extract {x v w z : V3}
+    (hz : z ∈ affineSpan ℝ ({x, v, w} : Set V3)) :
+    ∃ β γ : ℝ, z - x = β • (v - x) + γ • (w - x) := by
+  rw [mem_affineSpan_iff_exists] at hz
+  obtain ⟨p₁, hp₁, uu, hu, hpe⟩ := hz
+  have hv1mem : x ∈ ({x, v, w} : Set V3) := Set.mem_insert x _
+  have hvspeq : vectorSpan ℝ ({x, v, w} : Set V3)
+      = Submodule.span ℝ ((fun y : V3 => x -ᵥ y) '' ({x, v, w} : Set V3)) :=
+    vectorSpan_eq_span_vsub_set_left ℝ hv1mem
+  rw [hvspeq] at hu
+  have himg_le : (fun y : V3 => x -ᵥ y) '' ({x, v, w} : Set V3) ⊆
+      Submodule.span ℝ ({v - x, w - x} : Set V3) := by
+    intro u2 hu2
+    rw [Set.mem_image] at hu2
+    obtain ⟨y, hy, hyu⟩ := hu2
+    rw [← hyu]
+    show x -ᵥ y ∈ Submodule.span ℝ ({v - x, w - x} : Set V3)
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+    rcases hy with hy0 | hyv | hyw
+    · rw [hy0, vsub_self]
+      exact Submodule.zero_mem _
+    · rw [hyv, vsub_eq_sub, show (x:V3) - v = -(v - x) from (neg_sub v x).symm]
+      exact Submodule.neg_mem _ (Submodule.subset_span (Set.mem_insert _ _))
+    · rw [hyw, vsub_eq_sub, show (x:V3) - w = -(w - x) from (neg_sub w x).symm]
+      exact Submodule.neg_mem _
+        (Submodule.subset_span (Set.mem_insert_of_mem _ (Set.mem_singleton _)))
+  have hu' : uu ∈ Submodule.span ℝ ({v - x, w - x} : Set V3) :=
+    Submodule.span_le.mpr himg_le hu
+  obtain ⟨β, γ, hcoef⟩ := Submodule.mem_span_pair.mp hu'
+  have key : z - x = (p₁ - x) + uu := by
+    rw [hpe, vadd_eq_add]
+    abel
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp₁
+  rcases hp₁ with hp0 | hpv | hpw
+  · rw [hp0, sub_self, zero_add, ← hcoef] at key
+    exact ⟨β, γ, key⟩
+  · rw [hpv, ← hcoef] at key
+    refine ⟨1 + β, γ, ?_⟩
+    rw [key]
+    module
+  · rw [hpw, ← hcoef] at key
+    refine ⟨β, 1 + γ, ?_⟩
+    rw [key]
+    module
+
+/-- line membership from a scalar multiple of the direction. -/
+private theorem la5_line_intro {x z p : V3} {r : ℝ} (hp : p - x = r • (z - x)) :
+    p ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3) := by
+  rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+  refine ⟨r, ?_⟩
+  rw [AffineMap.lineMap_apply_module, sub_eq_iff_eq_add.mp hp]
+  module
+
+/-- scalar-multiple extraction from line membership. -/
+private theorem la5_line_extract {x z p : V3}
+    (hp : p ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3)) :
+    ∃ r : ℝ, p - x = r • (z - x) := by
+  rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq] at hp
+  obtain ⟨r, hr⟩ := hp
+  refine ⟨r, ?_⟩
+  rw [← hr, AffineMap.lineMap_apply_module]
+  module
+
+
+/-- splitting a normalized two-point combination minus the base point. -/
+private theorem la5_seg_split {x u v : V3} {A B : ℝ} (h : A + B = 1) :
+    (A • u + B • v) - x = A • (u - x) + B • (v - x) := by
+  rw [smul_sub, smul_sub]
+  have hx : x = (A + B) • x := by rw [h, one_smul]
+  nth_rewrite 1 [hx]
+  rw [add_smul]
+  abel
+
+
+private theorem la5_int_core {x z u v w : V3} (hxz : z ≠ x)
+    (hdis : Disjoint ({x} : Set V3) ({v, w} : Set V3)) (hxu : x ≠ u)
+    (hne : ¬ (affGt ({x} : Set V3) ({v, w} : Set V3) ∩
+      affLt ({x} : Set V3) ({u} : Set V3) = ∅))
+    (hz : z ∈ affineSpan ℝ ({x, v, w} : Set V3)) :
+    ∃ a b t : V3, ({a, b} : Set V3) ⊆ ({u, v, w} : Set V3) ∧
+      t ∈ ((affineSpan ℝ ({x, z} : Set V3) : Set V3) ∩ conv0_p2 ({a, b} : Set V3)) ∧
+      (¬ Collinear ℝ ({x, v, w} : Set V3) →
+        ¬(a ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3))) := by
+  obtain ⟨tt, htt⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  obtain ⟨d1, d2, hd1, hd2, hray⟩ := la5_affGt_extract htt.1
+  obtain ⟨s, hs, hsu⟩ := la5_affLt_extract htt.2
+  have hkey : s • (u - x) = d1 • (v - x) + d2 • (w - x) := by rw [← hray, hsu]
+  obtain ⟨β, γ, hzdec⟩ := la5_span3_extract hz
+  have hs0 : s ≠ 0 := ne_of_lt hs
+  have hucoe : u - x = (d1 / s) • (v - x) + (d2 / s) • (w - x) := by
+    apply smul_right_injective V3 hs0
+    show s • (u - x) = s • ((d1 / s) • (v - x) + (d2 / s) • (w - x))
+    rw [smul_add, smul_smul, smul_smul, mul_div_cancel₀ d1 hs0, mul_div_cancel₀ d2 hs0]
+    exact hkey
+  have hxv : x ≠ v := by
+    intro hcon
+    have hmem : x ∈ ({v, w} : Set V3) := by
+      rw [hcon]
+      exact Set.mem_insert_iff.mpr (Or.inl rfl)
+    exact Set.disjoint_left.mp hdis (Set.mem_singleton x) hmem
+  have hxw : x ≠ w := by
+    intro hcon
+    have hmem : x ∈ ({v, w} : Set V3) := by
+      rw [hcon]
+      exact Set.mem_insert_of_mem v (Set.mem_singleton w)
+    exact Set.disjoint_left.mp hdis (Set.mem_singleton x) hmem
+  -- non-collinearity as non-multiplicity, both directions
+  have hinde : ¬ Collinear ℝ ({x, v, w} : Set V3) → ∀ μ : ℝ, v - x ≠ μ • (w - x) := by
+    intro hcol μ hcon
+    rcases eq_or_ne μ 0 with h0 | h0
+    · rw [h0, zero_smul] at hcon
+      exact hxv (sub_eq_zero.mp hcon).symm
+    · refine hcol (collinear_triple_iff.mpr (Or.inl ?_))
+      rw [mem_affineSpan_pair_iff_exists_lineMap_eq]
+      refine ⟨1 / μ, ?_⟩
+      rw [AffineMap.lineMap_apply_module]
+      have hw' : w - x = (1 / μ) • (v - x) := by
+        apply smul_right_injective V3 h0
+        show μ • (w - x) = μ • ((1 / μ) • (v - x))
+        rw [smul_smul, show μ * (1 / μ) = 1 from by field_simp, one_smul]
+        exact hcon.symm
+      rw [sub_eq_iff_eq_add.mp hw']
+      module
+  have hinde2 : ¬ Collinear ℝ ({x, v, w} : Set V3) → ∀ μ : ℝ, w - x ≠ μ • (v - x) := by
+    intro hcol μ hcon
+    rcases eq_or_ne μ 0 with h0 | h0
+    · rw [h0, zero_smul] at hcon
+      exact hxw (sub_eq_zero.mp hcon).symm
+    · refine hcol (collinear_triple_iff.mpr (Or.inl ?_))
+      rw [mem_affineSpan_pair_iff_exists_lineMap_eq]
+      refine ⟨μ, ?_⟩
+      rw [AffineMap.lineMap_apply_module]
+      rw [sub_eq_iff_eq_add.mp hcon]
+      module
+  -- when the crossing has mixed sign w.r.t. (d1γ, d2β), u is off the line {x, z}
+  have hoppo : ¬ Collinear ℝ ({x, v, w} : Set V3) → (d1: ℝ) * γ * (d2 * β) < 0 →
+      ¬(u ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3)) := by
+    intro hcol hsign huin
+    obtain ⟨r2, hr2⟩ := la5_line_extract huin
+    rw [hzdec, smul_add, smul_smul, smul_smul] at hr2
+    rcases eq_or_ne (d1 / s) (r2 * β) with he12 | he12
+    · rcases eq_or_ne (d2 / s) (r2 * γ) with he13 | he13
+      · have key : (d1: ℝ) * γ = d2 * β := by
+          have m1 : (d1: ℝ) / s * γ = (d2: ℝ) / s * β := by rw [he12, he13]; ring
+          rw [div_mul_eq_mul_div, div_mul_eq_mul_div] at m1
+          rw [div_eq_div_iff hs0 hs0] at m1
+          exact mul_right_cancel₀ hs0 m1
+        rw [← key] at hsign
+        exact absurd hsign (not_lt.mpr (mul_self_nonneg (d1 * γ)))
+      · have hucoe' := hucoe
+        rw [he12] at hucoe'
+        have step1 : (r2 * γ) • (w - x) = (u:V3) - x - (r2 * β) • (v - x) := by
+          rw [hr2]
+          abel
+        have step2 : (u:V3) - x - (r2 * β) • (v - x) = (d2 / s) • (w - x) := by
+          rw [hucoe']
+          abel
+        have hd : (r2 * γ - d2 / s) • (w - x) = (0:V3) := by
+          rw [sub_smul, step1, step2, sub_self]
+        rcases smul_eq_zero.mp hd with h5 | h5
+        · exact he13 (by linarith)
+        · exact hxw (sub_eq_zero.mp h5).symm
+    · have hd : (d1 / s - r2 * β) • (v - x) = (r2 * γ - d2 / s) • (w - x) := by
+        have t1 : (d1 / s) • (v - x) = (u:V3) - x - (d2 / s) • (w - x) := by
+          rw [hucoe]
+          abel
+        have t2 : (r2 * β) • (v - x) = (u:V3) - x - (r2 * γ) • (w - x) := by
+          rw [hr2]
+          abel
+        rw [sub_smul, t1, t2]
+        module
+      refine hinde hcol ((r2 * γ - d2 / s) / (d1 / s - r2 * β)) ?_
+      apply smul_right_injective V3 (sub_ne_zero.mpr he12)
+      show (d1 / s - r2 * β) • (v - x)
+          = (d1 / s - r2 * β) • (((r2 * γ - d2 / s) / (d1 / s - r2 * β)) • (w - x))
+      rw [smul_smul, show (d1 / s - r2 * β) * ((r2 * γ - d2 / s) / (d1 / s - r2 * β))
+          = r2 * γ - d2 / s from by
+            rw [mul_div_assoc']
+            exact mul_div_cancel_left₀ _ (sub_ne_zero.mpr he12)]
+      exact hd
+  -- when β and γ are both nonzero, v cannot be on the line {x, z}
+  have hvsameline : β ≠ 0 → γ ≠ 0 → ¬ Collinear ℝ ({x, v, w} : Set V3) →
+      ¬(v ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3)) := by
+    intro hβ0 hγ0 hcol hvlin
+    obtain ⟨r, hr⟩ := la5_line_extract hvlin
+    have h2 : v - x = (r * β) • (v - x) + (r * γ) • (w - x) := by
+      nth_rewrite 1 [hr]
+      rw [hzdec, smul_add, smul_smul, smul_smul]
+    have h1 : (1 - r * β) • (v - x) = (r * γ) • (w - x) := by
+      rw [show (1 - r * β) • (v - x) = v - x - (r * β) • (v - x) from by
+        rw [sub_smul, one_smul]]
+      nth_rewrite 1 [h2]
+      abel
+    rcases eq_or_ne (1 - r * β) 0 with h0 | h0
+    · have hzero : (r * γ) • (w - x) = (0:V3) := by
+        rw [← h1, h0, zero_smul]
+      rcases smul_eq_zero.mp hzero with h' | h'
+      · have hr0 : r = 0 := by
+          rcases mul_eq_zero.mp h' with h'' | h''
+          · exact h''
+          · exact absurd h'' hγ0
+        have hrb : r * β = 0 := by rw [hr0, zero_mul]
+        rw [hrb] at h0
+        exact absurd h0 (by norm_num)
+      · exact absurd (sub_eq_zero.mp h') (Ne.symm hxw)
+    · have hvx : v - x = ((r * γ) / (1 - r * β)) • (w - x) := by
+        apply smul_right_injective V3 h0
+        show (1 - r * β) • (v - x)
+            = (1 - r * β) • (((r * γ) / (1 - r * β)) • (w - x))
+        rw [smul_smul, mul_div_assoc', mul_div_cancel_left₀ _ h0]
+        exact h1
+      exact hinde hcol _ hvx
+  -- basic memberships in the line {x, z}
+  have hxmem : (x:V3) ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3) := by
+    rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+    refine ⟨0, ?_⟩
+    simp
+  have hzmem : (z:V3) ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3) := by
+    rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+    refine ⟨1, ?_⟩
+    simp
+  -- dispatch on the barycentric coordinates of z
+  rcases eq_or_ne β 0 with hβ0 | hβne
+  · rcases eq_or_ne γ 0 with hγ0 | hγne
+    · rw [hβ0, hγ0] at hzdec
+      simp only [zero_smul, zero_add] at hzdec
+      exact absurd (sub_eq_zero.mp hzdec) hxz
+    · -- case B: z on the line {x, w}; pair (u, v)
+      rw [hβ0, zero_smul, zero_add] at hzdec
+      have hsd1 : s - d1 ≠ 0 := by linarith
+      refine ⟨u, v, (s / (s - d1)) • u + (-d1 / (s - d1)) • v, ?_, ?_, ?_⟩
+      · intro q hq
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+        rcases hq with h1 | h1
+        · rw [h1]; exact Set.mem_insert u ({v, w} : Set V3)
+        · rw [h1]; exact Set.mem_insert_of_mem u (Set.mem_insert v ({w} : Set V3))
+      · refine ⟨?_, ?_⟩
+        · apply la5_line_intro
+          apply smul_right_injective V3 hsd1
+          show (s - d1) • (((s / (s - d1)) • u + (-d1 / (s - d1)) • v) - x)
+              = (s - d1) • ((d2 / (γ * (s - d1))) • (z - x))
+          rw [smul_smul, show (s - d1) * (d2 / (γ * (s - d1))) = d2 / γ
+            from by field_simp [hγne, hsd1],
+            show (d2 / γ) • (z - x) = (d2 / γ) • (γ • (w - x)) from by rw [hzdec],
+            smul_smul, show (d2 / γ) * γ = d2 from by field_simp [hγne]]
+          have htx : ((s / (s - d1)) • u + (-d1 / (s - d1)) • v) - x
+              = (s / (s - d1)) • (u - x) + (-d1 / (s - d1)) • (v - x) := by
+            apply smul_right_injective V3 hsd1
+            show (s - d1) • (((s / (s - d1)) • u + (-d1 / (s - d1)) • v) - x)
+                = (s - d1) • ((s / (s - d1)) • (u - x) + (-d1 / (s - d1)) • (v - x))
+            simp only [smul_sub, smul_add, smul_smul]
+            rw [show (s - d1) * (s / (s - d1)) = s from by field_simp [hsd1],
+              show (s - d1) * (-d1 / (s - d1)) = -d1 from by field_simp [hsd1]]
+            module
+          rw [htx, smul_add, smul_smul, show (s - d1) * (s / (s - d1)) = s
+            from by field_simp [hsd1],
+            smul_smul, show (s - d1) * (-d1 / (s - d1)) = -d1
+            from by field_simp [hsd1], hkey]
+          module
+        · refine la5_seg_member (a := (s:ℝ) / (s - d1))
+              (b := -d1 / (s - d1)) ?_ ?_ ?_
+          · exact div_pos_of_neg_of_neg hs (by linarith)
+          · exact div_pos_of_neg_of_neg (neg_lt_zero.mpr hd1) (by linarith)
+          · show ((s: ℝ) / (s - d1) + -d1 / (s - d1))
+                • ((s / (s - d1)) • u + (-d1 / (s - d1)) • v)
+              = (s / (s - d1)) • u + (-d1 / (s - d1)) • v
+            rw [show (s: ℝ) / (s - d1) + -d1 / (s - d1) = 1
+              from by
+                rw [← add_div]
+                have h9 : (s:ℝ) + -d1 = s - d1 := by ring
+                rw [h9, div_self hsd1], one_smul]
+      · intro hcol huin
+        obtain ⟨r, hr⟩ := la5_line_extract huin
+        have hsr : s • (u - x) = (s * (r * γ)) • (w - x) := by
+          rw [hr, hzdec, smul_smul, smul_smul, mul_assoc]
+        have h2 : (s * (r * γ) - d2) • (w - x) = d1 • (v - x) := by
+          have h3 : d1 • (v - x) + d2 • (w - x) = (s * (r * γ)) • (w - x) := by
+            rw [← hkey]; exact hsr
+          have h4 : (s * (r * γ)) • (w - x) - d2 • (w - x) = d1 • (v - x) := by
+            rw [← h3]
+            abel
+          rw [← sub_smul] at h4
+          exact h4
+        have hvx : v - x = ((s * (r * γ) - d2) / d1) • (w - x) := by
+          apply smul_right_injective V3 (ne_of_gt hd1)
+          show d1 • (v - x) = d1 • (((s * (r * γ) - d2) / d1) • (w - x))
+          rw [smul_smul, mul_div_assoc', mul_div_cancel_left₀ _ (ne_of_gt hd1)]
+          exact h2.symm
+        exact hinde hcol _ hvx
+  · rcases eq_or_ne γ 0 with hγ0 | hγne
+    · -- case C: z on the line {x, v}; pair (u, w)
+      rw [hγ0, zero_smul, add_zero] at hzdec
+      have hsd2 : s - d2 ≠ 0 := by linarith
+      refine ⟨u, w, (s / (s - d2)) • u + (-d2 / (s - d2)) • w, ?_, ?_, ?_⟩
+      · intro q hq
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+        rcases hq with h1 | h1
+        · rw [h1]; exact Set.mem_insert u ({v, w} : Set V3)
+        · rw [h1]; exact Set.mem_insert_of_mem u
+            (Set.mem_insert_of_mem v (Set.mem_singleton w))
+      · refine ⟨?_, ?_⟩
+        · apply la5_line_intro
+          apply smul_right_injective V3 hsd2
+          show (s - d2) • (((s / (s - d2)) • u + (-d2 / (s - d2)) • w) - x)
+              = (s - d2) • ((d1 / (β * (s - d2))) • (z - x))
+          rw [smul_smul, show (s - d2) * (d1 / (β * (s - d2))) = d1 / β
+            from by field_simp [hβne, hsd2],
+            show (d1 / β) • (z - x) = (d1 / β) • (β • (v - x)) from by rw [hzdec],
+            smul_smul, show (d1 / β) * β = d1 from by field_simp [hβne]]
+          have htx : ((s / (s - d2)) • u + (-d2 / (s - d2)) • w) - x
+              = (s / (s - d2)) • (u - x) + (-d2 / (s - d2)) • (w - x) := by
+            apply smul_right_injective V3 hsd2
+            show (s - d2) • (((s / (s - d2)) • u + (-d2 / (s - d2)) • w) - x)
+                = (s - d2) • ((s / (s - d2)) • (u - x) + (-d2 / (s - d2)) • (w - x))
+            simp only [smul_sub, smul_add, smul_smul]
+            rw [show (s - d2) * (s / (s - d2)) = s from by field_simp [hsd2],
+              show (s - d2) * (-d2 / (s - d2)) = -d2 from by field_simp [hsd2]]
+            module
+          rw [htx, smul_add, smul_smul, show (s - d2) * (s / (s - d2)) = s
+            from by field_simp [hsd2],
+            smul_smul, show (s - d2) * (-d2 / (s - d2)) = -d2
+            from by field_simp [hsd2], hkey]
+          module
+        · refine la5_seg_member (a := (s:ℝ) / (s - d2))
+              (b := -d2 / (s - d2)) ?_ ?_ ?_
+          · exact div_pos_of_neg_of_neg hs (by linarith)
+          · exact div_pos_of_neg_of_neg (neg_lt_zero.mpr hd2) (by linarith)
+          · show ((s: ℝ) / (s - d2) + -d2 / (s - d2))
+                • ((s / (s - d2)) • u + (-d2 / (s - d2)) • w)
+              = (s / (s - d2)) • u + (-d2 / (s - d2)) • w
+            rw [show (s: ℝ) / (s - d2) + -d2 / (s - d2) = 1
+              from by
+                rw [← add_div]
+                have h9 : (s:ℝ) + -d2 = s - d2 := by ring
+                rw [h9, div_self hsd2], one_smul]
+      · intro hcol huin
+        obtain ⟨r, hr⟩ := la5_line_extract huin
+        have hsr : s • (u - x) = (s * (r * β)) • (v - x) := by
+          rw [hr, hzdec, smul_smul, smul_smul, mul_assoc]
+        have h2 : (s * (r * β) - d1) • (v - x) = d2 • (w - x) := by
+          have h3 : d1 • (v - x) + d2 • (w - x) = (s * (r * β)) • (v - x) := by
+            rw [← hkey]; exact hsr
+          have h4 : (s * (r * β)) • (v - x) - d1 • (v - x) = d2 • (w - x) := by
+            rw [← h3]
+            abel
+          rw [← sub_smul] at h4
+          exact h4
+        have hwx : w - x = ((s * (r * β) - d1) / d2) • (v - x) := by
+          apply smul_right_injective V3 (ne_of_gt hd2)
+          show d2 • (w - x) = d2 • (((s * (r * β) - d1) / d2) • (v - x))
+          rw [smul_smul, mul_div_assoc', mul_div_cancel_left₀ _ (ne_of_gt hd2)]
+          exact h2.symm
+        exact hinde2 hcol _ hwx
+    · -- mixed signs: β and γ nonzero with opposite signs
+      rcases lt_or_ge 0 β with hβp | hβn
+      · rcases lt_or_ge 0 γ with hγp | hγn
+        · -- same-sign (both positive): pair (v, w)
+          have hbpos : 0 < β / (β + γ) := div_pos hβp (by linarith)
+          have hcpos : 0 < γ / (β + γ) := div_pos hγp (by linarith)
+          have hbγ : (β:ℝ) + γ ≠ 0 := by linarith
+          have hsum1 : (β:ℝ) / (β + γ) + γ / (β + γ) = 1 := by
+            rw [← add_div]
+            exact div_self hbγ
+          have hscal1 : ((β:ℝ) + γ) * (β / (β + γ)) = β := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hbγ]
+          have hscal2 : ((β:ℝ) + γ) * (γ / (β + γ)) = γ := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hbγ]
+          have hscal3 : ((β:ℝ) + γ) * (1 / (β + γ)) = 1 := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hbγ]
+          refine ⟨v, w, (β / (β + γ)) • v + (γ / (β + γ)) • w, ?_, ?_, ?_⟩
+          · intro q hq
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+            rcases hq with h1 | h1
+            · rw [h1]; exact Set.mem_insert_of_mem u (Set.mem_insert v ({w} : Set V3))
+            · rw [h1]; exact Set.mem_insert_of_mem u
+                (Set.mem_insert_of_mem v (Set.mem_singleton w))
+          · refine ⟨?_, ?_⟩
+            · apply la5_line_intro
+              apply smul_right_injective V3 hbγ
+              show (β + γ) • (((β / (β + γ)) • v + (γ / (β + γ)) • w) - x)
+                  = (β + γ) • ((1 / (β + γ)) • (z - x))
+              rw [smul_sub, smul_add, smul_smul, hscal1, smul_smul, hscal2, add_smul,
+                smul_smul, hscal3, one_smul, hzdec, smul_sub, smul_sub]
+              abel
+            · refine la5_seg_member hbpos hcpos ?_
+              rw [hsum1, one_smul]
+          · exact hvsameline (ne_of_gt hβp) hγne
+        · -- β > 0, γ < 0: pair (u, v)
+          have hγnn : γ < 0 := lt_of_le_of_ne hγn hγne
+          have htu : 0 < γ * s / d2 := by
+            have h9 : (-γ) * (-s) = γ * s := by ring
+            rw [← h9]
+            exact div_pos (mul_pos (neg_pos.mpr hγnn) (neg_pos.mpr hs)) hd2
+          have hcn : (γ:ℝ) * d1 / d2 < 0 :=
+            div_neg_of_neg_of_pos (mul_neg_of_neg_of_pos hγnn hd1) hd2
+          have htw : 0 < β - γ * d1 / d2 := by linarith
+          have hS : 0 < γ * s / d2 + (β - γ * d1 / d2) := by linarith [htu, htw]
+          have hSnz : (γ:ℝ) * s / d2 + (β - γ * d1 / d2) ≠ 0 := ne_of_gt hS
+          have hcore : ((γ:ℝ) * s / d2) • (u - x)
+                + (β - γ * d1 / d2) • (v - x) = z - x := by
+            apply smul_right_injective V3 (ne_of_gt hd2)
+            show (d2:ℝ) • ((γ * s / d2) • (u - x) + (β - γ * d1 / d2) • (v - x))
+                = (d2:ℝ) • (z - x)
+            rw [smul_add, smul_smul, smul_smul, mul_div_assoc',
+              mul_div_cancel_left₀ _ (ne_of_gt hd2), mul_sub, mul_div_assoc',
+              mul_div_cancel_left₀ _ (ne_of_gt hd2), ← smul_smul, hkey, smul_add,
+              smul_smul, smul_smul, hzdec, smul_add, smul_smul, smul_smul]
+            module
+          have hsum1 : (γ:ℝ) * s / d2 / (γ * s / d2 + (β - γ * d1 / d2))
+                + (β - γ * d1 / d2) / (γ * s / d2 + (β - γ * d1 / d2)) = 1 := by
+            rw [← add_div]
+            exact div_self hSnz
+          have hS2 : ((γ:ℝ) * s / d2 + (β - γ * d1 / d2))
+                * (γ * s / d2 / (γ * s / d2 + (β - γ * d1 / d2))) = γ * s / d2 := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hSnz]
+          have hS3 : ((γ:ℝ) * s / d2 + (β - γ * d1 / d2))
+                * ((β - γ * d1 / d2) / (γ * s / d2 + (β - γ * d1 / d2)))
+              = β - γ * d1 / d2 := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hSnz]
+          have hS4 : ((γ:ℝ) * s / d2 + (β - γ * d1 / d2))
+                * (1 / (γ * s / d2 + (β - γ * d1 / d2))) = 1 := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hSnz]
+          refine ⟨u, v, (γ * s / d2 / (γ * s / d2 + (β - γ * d1 / d2))) • u
+              + ((β - γ * d1 / d2) / (γ * s / d2 + (β - γ * d1 / d2))) • v, ?_, ?_, ?_⟩
+          · intro q hq
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+            rcases hq with h1 | h1
+            · rw [h1]; exact Set.mem_insert u ({v, w} : Set V3)
+            · rw [h1]; exact Set.mem_insert_of_mem u (Set.mem_insert v ({w} : Set V3))
+          · refine ⟨?_, ?_⟩
+            · apply la5_line_intro
+              apply smul_right_injective V3 hSnz
+              show (γ * s / d2 + (β - γ * d1 / d2))
+                    • (((γ * s / d2 / (γ * s / d2 + (β - γ * d1 / d2))) • u
+                      + ((β - γ * d1 / d2) / (γ * s / d2 + (β - γ * d1 / d2))) • v) - x)
+                  = (γ * s / d2 + (β - γ * d1 / d2))
+                    • ((1 / (γ * s / d2 + (β - γ * d1 / d2))) • (z - x))
+              rw [smul_smul, hS4, one_smul, la5_seg_split hsum1, smul_add, smul_smul,
+                smul_smul, hS2, hS3, hcore]
+            · refine la5_seg_member htu htw ?_
+              rw [smul_add, smul_smul, smul_smul, hS2, hS3]
+          · intro hcol2
+            refine hoppo hcol2 ?_
+            have hq : (γ:ℝ) * d1 * (d2 * β) < 0 :=
+              mul_neg_of_neg_of_pos (mul_neg_of_neg_of_pos hγnn hd1) (mul_pos hd2 hβp)
+            rw [mul_comm (γ:ℝ) d1] at hq
+            exact hq
+      · have hβnn : β < 0 := lt_of_le_of_ne hβn hβne
+        rcases lt_or_ge 0 γ with hγp | hγn
+        · -- β < 0, γ > 0: pair (u, w)
+          have htu : 0 < β * s / d1 := by
+            have h9 : (-β) * (-s) = β * s := by ring
+            rw [← h9]
+            exact div_pos (mul_pos (neg_pos.mpr hβnn) (neg_pos.mpr hs)) hd1
+          have hcn : (β:ℝ) * d2 / d1 < 0 :=
+            div_neg_of_neg_of_pos (mul_neg_of_neg_of_pos hβnn hd2) hd1
+          have htw : 0 < γ - β * d2 / d1 := by linarith
+          have hS : 0 < β * s / d1 + (γ - β * d2 / d1) := by linarith [htu, htw]
+          have hSnz : (β:ℝ) * s / d1 + (γ - β * d2 / d1) ≠ 0 := ne_of_gt hS
+          have hcore : ((β:ℝ) * s / d1) • (u - x)
+                + (γ - β * d2 / d1) • (w - x) = z - x := by
+            apply smul_right_injective V3 (ne_of_gt hd1)
+            show (d1:ℝ) • ((β * s / d1) • (u - x) + (γ - β * d2 / d1) • (w - x))
+                = (d1:ℝ) • (z - x)
+            rw [smul_add, smul_smul, smul_smul, mul_div_assoc',
+              mul_div_cancel_left₀ _ (ne_of_gt hd1), mul_sub, mul_div_assoc',
+              mul_div_cancel_left₀ _ (ne_of_gt hd1), ← smul_smul, hkey, smul_add,
+              smul_smul, smul_smul, hzdec, smul_add, smul_smul, smul_smul]
+            module
+          have hsum1 : (β:ℝ) * s / d1 / (β * s / d1 + (γ - β * d2 / d1))
+                + (γ - β * d2 / d1) / (β * s / d1 + (γ - β * d2 / d1)) = 1 := by
+            rw [← add_div]
+            exact div_self hSnz
+          have hS2 : ((β:ℝ) * s / d1 + (γ - β * d2 / d1))
+                * (β * s / d1 / (β * s / d1 + (γ - β * d2 / d1))) = β * s / d1 := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hSnz]
+          have hS3 : ((β:ℝ) * s / d1 + (γ - β * d2 / d1))
+                * ((γ - β * d2 / d1) / (β * s / d1 + (γ - β * d2 / d1)))
+              = γ - β * d2 / d1 := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hSnz]
+          have hS4 : ((β:ℝ) * s / d1 + (γ - β * d2 / d1))
+                * (1 / (β * s / d1 + (γ - β * d2 / d1))) = 1 := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hSnz]
+          refine ⟨u, w, (β * s / d1 / (β * s / d1 + (γ - β * d2 / d1))) • u
+              + ((γ - β * d2 / d1) / (β * s / d1 + (γ - β * d2 / d1))) • w, ?_, ?_, ?_⟩
+          · intro q hq
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+            rcases hq with h1 | h1
+            · rw [h1]; exact Set.mem_insert u ({v, w} : Set V3)
+            · rw [h1]; exact Set.mem_insert_of_mem u
+                (Set.mem_insert_of_mem v (Set.mem_singleton w))
+          · refine ⟨?_, ?_⟩
+            · apply la5_line_intro
+              apply smul_right_injective V3 hSnz
+              show (β * s / d1 + (γ - β * d2 / d1))
+                    • (((β * s / d1 / (β * s / d1 + (γ - β * d2 / d1))) • u
+                      + ((γ - β * d2 / d1) / (β * s / d1 + (γ - β * d2 / d1))) • w) - x)
+                  = (β * s / d1 + (γ - β * d2 / d1))
+                    • ((1 / (β * s / d1 + (γ - β * d2 / d1))) • (z - x))
+              rw [smul_smul, hS4, one_smul, la5_seg_split hsum1, smul_add, smul_smul,
+                smul_smul, hS2, hS3, hcore]
+            · refine la5_seg_member htu htw ?_
+              rw [smul_add, smul_smul, smul_smul, hS2, hS3]
+          · exact fun hcol2 => hoppo hcol2
+              (mul_neg_of_pos_of_neg (mul_pos hd1 hγp)
+                (mul_neg_of_pos_of_neg hd2 hβnn))
+        · -- same sign, both negative: pair (v, w)
+          have hγnn : γ < 0 := lt_of_le_of_ne hγn hγne
+          have hbpos : 0 < β / (β + γ) := by
+            rw [← neg_div_neg_eq]
+            exact div_pos (neg_pos.mpr hβnn) (neg_pos.mpr (by linarith))
+          have hcpos : 0 < γ / (β + γ) := by
+            rw [← neg_div_neg_eq]
+            exact div_pos (neg_pos.mpr hγnn) (neg_pos.mpr (by linarith))
+          have hbγ : (β:ℝ) + γ ≠ 0 := by linarith
+          have hsum1 : (β:ℝ) / (β + γ) + γ / (β + γ) = 1 := by
+            rw [← add_div]
+            exact div_self hbγ
+          have hscal1 : ((β:ℝ) + γ) * (β / (β + γ)) = β := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hbγ]
+          have hscal2 : ((β:ℝ) + γ) * (γ / (β + γ)) = γ := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hbγ]
+          have hscal3 : ((β:ℝ) + γ) * (1 / (β + γ)) = 1 := by
+            rw [mul_div_assoc', mul_div_cancel_left₀ _ hbγ]
+          refine ⟨v, w, (β / (β + γ)) • v + (γ / (β + γ)) • w, ?_, ?_, ?_⟩
+          · intro q hq
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+            rcases hq with h1 | h1
+            · rw [h1]; exact Set.mem_insert_of_mem u (Set.mem_insert v ({w} : Set V3))
+            · rw [h1]; exact Set.mem_insert_of_mem u
+                (Set.mem_insert_of_mem v (Set.mem_singleton w))
+          · refine ⟨?_, ?_⟩
+            · apply la5_line_intro
+              apply smul_right_injective V3 hbγ
+              show (β + γ) • (((β / (β + γ)) • v + (γ / (β + γ)) • w) - x)
+                  = (β + γ) • ((1 / (β + γ)) • (z - x))
+              rw [smul_sub, smul_add, smul_smul, hscal1, smul_smul, hscal2, add_smul,
+                smul_smul, hscal3, one_smul, hzdec, smul_sub, smul_sub]
+              abel
+            · refine la5_seg_member hbpos hcpos ?_
+              rw [hsum1, one_smul]
+          · exact hvsameline (ne_of_lt hβnn) hγne
+
 /-- HOL `INTERSECTION_LEMMA` (local_lemmas.hl:2261). -/
 theorem INTERSECTION_LEMMA {x z u v w : V3} (hxz : z ≠ x)
     (hdis : Disjoint ({x} : Set V3) ({v, w} : Set V3)) (hxu : x ≠ u)
@@ -4153,18 +4700,12 @@ theorem INTERSECTION_LEMMA {x z u v w : V3} (hxz : z ≠ x)
     (hz : z ∈ affineSpan ℝ ({x, v, w} : Set V3)) :
     ∃ a b t : V3, ({a, b} : Set V3) ⊆ ({u, v, w} : Set V3) ∧
       t ∈ ((affineSpan ℝ ({x, z} : Set V3) : Set V3) ∩
-        conv0_p2 ({a, b} : Set V3)) := sorry
-  -- NEEDS (wsewpch-w6b recon 2026-10-23): the crossing data gives
-  -- d1•(v-x)+d2•(w-x) = s•(u-x) with 0 < d1,d2 and s < 0; write z-x = β•(v-x)+γ•(w-x).
-  -- Case analysis: β,γ same sign → pair {v,w}, t := (β/(β+γ))•v+(γ/(β+γ))•w ∈
-  -- aff{x,z} ∩ conv0{v,w}; β = 0 → pair {u,v}, t := (s/(s-d1))•u+(-d1/(s-d1))•v;
-  -- γ = 0 → pair {u,w} symmetric; mixed signs → t := (tu•u+tw•w)/(tu+tw) with
-  -- tu = βs/d1, tw = γ-βd2/d1 (pair {u,w}) resp. tu = γs/d2, tw = β-γd1/d2 (pair {u,v}).
-  -- All identities are linear; reusable kits: la5_affGt_extract (LA5:2879),
-  -- la5_affLt_extract (LA5:2958), la5_seg_member (LA5:2812). For
-  -- EXISTS_INTERSECTION_PROPERPLY additionally a ∉ aff{x,z}: in every case the first
-  -- element is off the line (hinde-style: v-x is not a multiple of w-x under
-  -- ¬Collinear {x,v,w}; see collinear_triple_iff LA5:123).
+        conv0_p2 ({a, b} : Set V3)) := by
+  obtain ⟨a, b, t, hsub, hmem, -⟩ := la5_int_core hxz hdis hxu hne hz
+  exact ⟨a, b, t, hsub, hmem⟩
+  -- DISCHARGED (la5-bank-w1 2026-10-27): via the private core `la5_int_core`
+  -- (six-case witness tree on the barycentric coordinates β γ of z w.r.t.
+  -- (x, v, w); construction map preserved in the lane delivery notes).
 
 /-- HOL `CVX_LO_IMP_LO` (local_lemmas.hl:2531). -/
 theorem CVX_LO_IMP_LO (h : convexLocalFan_p2 V E FF) : localFan_p2 V E FF := h.1
@@ -4894,13 +5435,11 @@ theorem EXISTS_INTERSECTION_PROPERPLY {x z u v w : V3} (hxz : z ≠ x)
     (hcol : ¬ Collinear ℝ ({x, v, w} : Set V3)) :
     ∃ a b t : V3, ({a, b} : Set V3) ⊆ ({u, v, w} : Set V3) ∧
       t ∈ ((affineSpan ℝ ({x, z} : Set V3) : Set V3) ∩ conv0_p2 ({a, b} : Set V3)) ∧
-      ¬(a ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3)) := sorry
-  -- NEEDS (LA5 recon 2026-10-12): the HOL 2897 proof consumes
-  -- `INTERSECTION_LEMMA` (hl:2261) at step 1; that bank item is the same-file
-  -- placeholder at INTERSECTION_LEMMA below (GIANT per lane order). Once it
-  -- lands, the remainder is mechanical: INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0 +
-  -- AFF2_ITR_CONV0_IMP_SAME_ENDS + AFF2_DET_BY_TWO_POINTS + SUBSET_AFF2_IMP_COLL
-  -- + AFF_GT_LT_INTER_SYM, three cases on `a ∈ {v, w}`.
+      ¬(a ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3)) := by
+  obtain ⟨a, b, t, hsub, hmem, hoff⟩ := la5_int_core hxz hdis hxu hne hz
+  exact ⟨a, b, t, hsub, hmem, hoff hcol⟩
+  -- DISCHARGED (la5-bank-w1 2026-10-27): same private core `la5_int_core`;
+  -- the third output is exactly the `a ∉ aff{x,z}` conclusion under hcol.
 
 /-- HOL `LOFA_V_SUBSET_AFF_HULL` (local_lemmas.hl:2990). -/
 theorem LOFA_V_SUBSET_AFF_HULL {v w u : V3} (hFF : (v, w) ∈ FF)
@@ -4908,12 +5447,151 @@ theorem LOFA_V_SUBSET_AFF_HULL {v w u : V3} (hFF : (v, w) ∈ FF)
     (hne : ¬ (affGt ({0} : Set V3) ({v, w} : Set V3) ∩
       affLt ({0} : Set V3) ({u} : Set V3) = ∅)) :
     V ⊆ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) ∧
-      ¬ Collinear ℝ ({0, v, w} : Set V3) := sorry
-  -- NEEDS (LA5 recon 2026-10-12): HOL 2990 is an orbit induction — per step
-  -- it instantiates EXISTS_INTERSECTION_PROPERPLY (above; blocked by the
-  -- INTERSECTION_LEMMA bank item) and OZQVSFF (placeholder) for the plane
-  -- bookkeeping, plus IN_AFF_HULL_3 for `{a,b} ⊆ aff {v,w,0}`. Not attackable
-  -- before those two upstream items land.
+      ¬ Collinear ℝ ({0, v, w} : Set V3) := by
+  have hkeep := h
+  obtain ⟨hlo, -⟩ := h
+  have hnc := LOCAL_FAN_IN_FF_NOT_COLLINEAR hlo hFF
+  refine ⟨?_, hnc⟩
+  -- basic fan facts
+  have hbij : Set.BijOn Prod.fst FF V := WRGCVDR_BIJ hlo
+  have hv : v ∈ V := hbij.1 hFF
+  have hrw : rhoNode1_p2 FF v = w := by
+    have huniq : ∀ y : V3, (v, y) ∈ FF → y = w := fun y hy =>
+      (congrArg Prod.snd ((WRGCVDR_BIJ hlo).2.1 hFF hy rfl)).symm
+    exact epsilonFixed hFF huniq
+  have hw : w ∈ V := by
+    rw [← hrw]
+    exact LOCAL_FAN_ORBIT_MAP_VITER hlo hv 1
+  have horb : orbitF_p2 (rhoNode1_p2 FF) v = V := LOCAL_FAN_ORBIT_MAP_V hlo hv
+  have hlokeep := hlo
+  obtain ⟨H, hdart, -, -, -, hfan, -, -⟩ := hlo
+  have h0V : (0:V3) ∉ V := hfan.2.2.2.1
+  -- the target plane
+  have hset3 : ({0, v, w} : Set V3) = ({v, w, 0} : Set V3) := by
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hP : plane_p2 (affineSpan ℝ ({v, w, 0} : Set V3)) := by
+    refine ⟨0, v, w, hnc, ?_⟩
+    rw [hset3]
+  have h0mem : (0:V3) ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) :=
+    subset_affineSpan ℝ _ (by simp)
+  have hvmem : v ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) :=
+    subset_affineSpan ℝ _ (by simp)
+  have hwmem : w ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) :=
+    subset_affineSpan ℝ _ (by simp)
+  have huP : u ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) := by
+    obtain ⟨x', hx'⟩ := Set.nonempty_iff_ne_empty.mpr hne
+    have hu3 := IN_AFF_HULL_3 (x := (0:V3)) hx'
+    rw [← hset3]
+    exact hu3
+  have hsub3 : ({u, v, w} : Set V3) ⊆ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with h1 | h1
+    · rw [h1]; exact huP
+    · rcases h1 with h2 | h2
+      · rw [h2]; exact hvmem
+      · rw [h2]; exact hwmem
+  have hsubV : ({u, v, w} : Set V3) ⊆ V := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with h1 | h1
+    · rw [h1]; exact hu
+    · rcases h1 with h2 | h2
+      · rw [h2]; exact hv
+      · rw [h2]; exact hw
+  -- the orbit induction
+  intro y hy
+  rw [← horb] at hy
+  obtain ⟨n, hn⟩ := hy
+  subst hn
+  induction n with
+  | zero => exact hvmem
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      have hxV : (rhoNode1_p2 FF)^[n] v ∈ V := LOCAL_FAN_ORBIT_MAP_VITER hlokeep hv n
+      have hx0 : (rhoNode1_p2 FF)^[n] v ≠ 0 := fun hcon => h0V (hcon ▸ hxV)
+      have hdis0 : Disjoint ({0} : Set V3) ({v, w} : Set V3) := by
+        rw [Set.disjoint_left]
+        intro t ht1 ht2
+        simp only [Set.mem_singleton_iff] at ht1
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht2
+        rcases ht2 with h2 | h2
+        · rw [h2] at ht1
+          exact h0V (ht1 ▸ hv)
+        · rw [h2] at ht1
+          exact h0V (ht1 ▸ hw)
+      have hxu0 : (0:V3) ≠ u := by
+        intro hcon
+        rw [hcon] at h0V
+        exact h0V hu
+      have hzh : (rhoNode1_p2 FF)^[n] v ∈
+          (affineSpan ℝ ({0, v, w} : Set V3) : Set V3) := by
+        rw [hset3]
+        exact ih
+      obtain ⟨a, b, t, hsubab, htmem, haint⟩ :=
+        EXISTS_INTERSECTION_PROPERPLY (x := (0:V3)) (z := (rhoNode1_p2 FF)^[n] v)
+          hx0 hdis0 hxu0 hne hzh hnc
+      have haV : a ∈ V :=
+        hsubV (hsubab (Set.mem_insert a _))
+      have hbV : b ∈ V :=
+        hsubV (hsubab (Set.mem_insert_of_mem a (Set.mem_singleton b)))
+      have hnotline : ¬(b ∈ (affineSpan ℝ ({0, (rhoNode1_p2 FF)^[n] v} : Set V3) : Set V3)) := by
+        intro hbm
+        refine haint ?_
+        exact (AFF2_ITR_CONV0_IMP_SAME_ENDS
+          (x := (0:V3)) (y := (rhoNode1_p2 FF)^[n] v) htmem).2 hbm
+      have hdisOZ : (({a, b} : Set V3) ∩
+          (affineSpan ℝ ({0, (rhoNode1_p2 FF)^[n] v} : Set V3) : Set V3)) = ∅ := by
+        ext t
+        simp only [Set.mem_inter_iff, SetLike.mem_coe, Set.mem_insert_iff,
+          Set.mem_singleton_iff, Set.mem_empty_iff_false]
+        refine ⟨fun hpair => ?_, fun hcon => hcon.elim⟩
+        obtain ⟨hza | hzb, hline⟩ := hpair
+        · rw [hza] at hline
+          exact haint hline
+        · rw [hzb] at hline
+          exact hnotline hline
+      have ht1 : t ∈ (affineSpan ℝ ({(rhoNode1_p2 FF)^[n] v, 0} : Set V3) : Set V3) := by
+        rw [Set.pair_comm]
+        exact htmem.1
+      have ht2 : t ∈ conv0_p2 ({b, a} : Set V3) := by
+        have h2 : conv0_p2 ({b, a} : Set V3) = conv0_p2 ({a, b} : Set V3) := by
+          rw [Set.pair_comm b a]
+        rw [h2]
+        exact htmem.2
+      have hneOZ : ¬ (((affineSpan ℝ ({(rhoNode1_p2 FF)^[n] v, 0} : Set V3) : Set V3) ∩
+          conv0_p2 ({b, a} : Set V3)) = ∅) :=
+        Set.nonempty_iff_ne_empty.mp ⟨t, ht1, ht2⟩
+      have hsubax : ({a, (rhoNode1_p2 FF)^[n] v, b} : Set V3) ⊆ V := by
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with h1 | h1
+        · rw [h1]; exact haV
+        · rcases h1 with h2 | h2
+          · rw [h2]; exact hxV
+          · rw [h2]; exact hbV
+      have hsub2 : ({0, a, (rhoNode1_p2 FF)^[n] v, b} : Set V3)
+          ⊆ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) := by
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with h1 | h1
+        · rw [h1]; exact h0mem
+        · rcases h1 with h2 | h2
+          · rw [h2]; exact hsub3 (hsubab (Set.mem_insert a ({b} : Set V3)))
+          · rcases h2 with h3 | h3
+            · rw [h3]; exact ih
+            · rw [h3]
+              exact hsub3 (hsubab (Set.mem_insert_of_mem a (Set.mem_singleton b)))
+      exact (OZQVSFF (u := a) (v := (rhoNode1_p2 FF)^[n] v) (w := b)
+        (P := affineSpan ℝ ({v, w, 0} : Set V3)) hkeep hsubax hP hsub2 hdisOZ
+        hneOZ).2.1
+  -- DISCHARGED (la5-bank-w1 2026-10-27): HOL 2990 orbit induction — the
+  -- rho-orbit covers V (LOCAL_FAN_ORBIT_MAP_V); each step instantiates
+  -- EXISTS_INTERSECTION_PROPERPLY with x := 0, z := ρ^[n] v (nonzero since
+  -- 0 ∉ V) and folds OZQVSFF with P := aff {v, w, 0}; the second conjunct is
+  -- LOCAL_FAN_IN_FF_NOT_COLLINEAR.
 
 /-- HOL `DETER_RHO_NODE` (local_lemmas.hl:3093): the rho-node is determined
 by the dart. -/
@@ -5044,6 +5722,113 @@ theorem WHEN_A_B_POS_ARCV_STABLE {a b : ℝ} {x y : V3} (ha : 0 < a) (hb : 0 < b
     Real.norm_eq_abs, abs_of_pos ha, abs_of_pos hb]
   field_simp
 
+/-! ## Lane support (la5-bank-w1): circular-fan assembly for KCHMAMG
+(local_lemmas.hl:3197). -/
+
+/-- `dihV` at the origin with a base vector orthogonal to the two points is
+the plane angle (HOL Trigonometry2.DIHV_FORMULAR at `vec 0`). -/
+private theorem la5_dihv_eq_arcv {Ex x y : V3}
+    (hxe : x ⬝ᵥ Ex = 0) (hye : y ⬝ᵥ Ex = 0)
+    (hE : 0 < ((Ex : V3) : Fin 3 → ℝ) ⬝ᵥ ((Ex : V3) : Fin 3 → ℝ)) :
+    dihV 0 Ex x y = arcV 0 x y := by
+  unfold dihV
+  simp only []
+  simp only [sub_zero, hxe, hye, zero_smul, sub_zero]
+  exact (WHEN_A_B_POS_ARCV_STABLE
+    (a := ((Ex : V3) : Fin 3 → ℝ) ⬝ᵥ ((Ex : V3) : Fin 3 → ℝ))
+    (b := ((Ex : V3) : Fin 3 → ℝ) ⬝ᵥ ((Ex : V3) : Fin 3 → ℝ)) hE hE).symm
+
+/-- Interior-angle half of the circular-fan assembly. -/
+private theorem la5_interior_angle_pi {u v w z : V3}
+    (h : convexLocalFan_p2 V E FF) (hFF : (v, w) ∈ FF)
+    (hdis : Disjoint ({0} : Set V3) ({v, w} : Set V3))
+    (h0u : (0:V3) ≠ u)
+    (hne : ¬(affGt ({0} : Set V3) ({v, w} : Set V3) ∩
+      affLt ({0} : Set V3) ({u} : Set V3) = ∅))
+    (hcol : ¬ Collinear ℝ ({0, v, w} : Set V3))
+    (hsubV : ({u, v, w} : Set V3) ⊆ V)
+    (hzV : z ∈ V) (hz0 : z ≠ 0)
+    (hzP : z ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3))
+    (hzline : z ∈ (affineSpan ℝ ({0, v, w} : Set V3) : Set V3)) :
+    interiorAngle1_p2 0 FF z = Real.pi := by
+  have hkeep := h
+  obtain ⟨hlo, hcvx⟩ := h
+  obtain ⟨x', hx'⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  have hset3 : ({0, v, w} : Set V3) = ({v, w, 0} : Set V3) := by
+    ext z2; simp; tauto
+  have h0mem : (0:V3) ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) :=
+    subset_affineSpan ℝ _ (by simp)
+  have hvP : v ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) :=
+    subset_affineSpan ℝ _ (by simp)
+  have hwP : w ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) :=
+    subset_affineSpan ℝ _ (by simp)
+  have huP : u ∈ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) := by
+    have hu3 := IN_AFF_HULL_3 (x := (0:V3)) hx'
+    rw [hset3] at hu3
+    exact hu3
+  have hP : plane_p2 (affineSpan ℝ ({v, w, 0} : Set V3)) := by
+    refine ⟨0, v, w, hcol, ?_⟩
+    rw [hset3]
+  have hsubP : ({u, v, w} : Set V3) ⊆ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) := by
+    intro t ht
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+    rcases ht with h1 | h1
+    · rw [h1]; exact huP
+    · rcases h1 with h2 | h2
+      · rw [h2]; exact hvP
+      · rw [h2]; exact hwP
+  obtain ⟨a, b, t, hsubab, htmem, haint⟩ :=
+    EXISTS_INTERSECTION_PROPERPLY (x := (0:V3)) (z := z) hz0 hdis h0u hne hzline hcol
+  have haV : a ∈ V := hsubV (hsubab (Set.mem_insert a ({b} : Set V3)))
+  have hbV : b ∈ V := hsubV (hsubab (Set.mem_insert_of_mem a (Set.mem_singleton b)))
+  have hnotb : ¬(b ∈ (affineSpan ℝ ({0, z} : Set V3) : Set V3)) := by
+    intro hbm
+    exact haint ((AFF2_ITR_CONV0_IMP_SAME_ENDS (x := (0:V3)) (y := z) htmem).2 hbm)
+  have hdisOZ : (({a, b} : Set V3) ∩
+      (affineSpan ℝ ({0, z} : Set V3) : Set V3)) = ∅ := by
+    ext t2
+    simp only [Set.mem_inter_iff, SetLike.mem_coe, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Set.mem_empty_iff_false]
+    refine ⟨fun hpair => ?_, fun hcon => hcon.elim⟩
+    obtain ⟨hza | hzb, hline⟩ := hpair
+    · rw [hza] at hline; exact haint hline
+    · rw [hzb] at hline; exact hnotb hline
+  have ht1 : t ∈ (affineSpan ℝ ({z, 0} : Set V3) : Set V3) := by
+    rw [Set.pair_comm]
+    exact htmem.1
+  have ht2 : t ∈ conv0_p2 ({b, a} : Set V3) := by
+    have h2 : conv0_p2 ({b, a} : Set V3) = conv0_p2 ({a, b} : Set V3) := by
+      rw [Set.pair_comm b a]
+    rw [h2]
+    exact htmem.2
+  have hneOZ : ¬ (((affineSpan ℝ ({z, 0} : Set V3) : Set V3) ∩
+      conv0_p2 ({b, a} : Set V3)) = ∅) :=
+    Set.nonempty_iff_ne_empty.mp ⟨t, ht1, ht2⟩
+  have hsubax : ({a, z, b} : Set V3) ⊆ V := by
+    intro t2 ht2'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht2'
+    rcases ht2' with h1 | h1
+    · rw [h1]; exact haV
+    · rcases h1 with h2 | h2
+      · rw [h2]; exact hzV
+      · rw [h2]; exact hbV
+  have hsub2 : ({0, a, z, b} : Set V3)
+      ⊆ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) := by
+    intro t2 ht2'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht2'
+    rcases ht2' with h1 | h1
+    · rw [h1]; exact h0mem
+    · rcases h1 with h2 | h2
+      · rw [h2]; exact hsubP (hsubab (Set.mem_insert a ({b} : Set V3)))
+      · rcases h2 with h3 | h3
+        · rw [h3]; exact hzP
+        · rw [h3]
+          exact hsubP (hsubab (Set.mem_insert_of_mem a (Set.mem_singleton b)))
+  exact (OZQVSFF (u := a) (v := z) (w := b)
+    (P := affineSpan ℝ ({v, w, 0} : Set V3)) hkeep hsubax hP hsub2 hdisOZ hneOZ).1
+
+
+
 /-- HOL `KCHMAMG` (local_lemmas.hl:3197): the circular-fan characterization. -/
 theorem KCHMAMG (h : convexLocalFan_p2 V E FF) (hc : circular_p2 V E) :
     (∀ v ∈ V, interiorAngle1_p2 0 FF v = Real.pi) ∧
@@ -5053,24 +5838,185 @@ theorem KCHMAMG (h : convexLocalFan_p2 V E FF) (hc : circular_p2 V E) :
           (∀ v ∈ V, azimCycle_p2 V 0 e v = rhoNode1_p2 FF v ∧
             azim 0 e v (rhoNode1_p2 FF v) = dihV 0 e v (rhoNode1_p2 FF v) ∧
             azim 0 e v (rhoNode1_p2 FF v) = arcV 0 v (rhoNode1_p2 FF v) ∧
-            azim 0 e v (rhoNode1_p2 FF v) < Real.pi))) := sorry
-  -- NEEDS (wsewpch-w6b recon 2026-10-23): assembly plan for the next lane.
-  -- (1) Interior angles: `∀ v ∈ V, interiorAngle1_p2 0 FF v = Real.pi` follows from
-  --     OZQVSFF (LA5:3772, real) applied on the rho-orbit with P := affineSpan {v,w,0}.
-  -- (2) Plane part: `plane_p2 (affineSpan ℝ {v,w,0})` from LOCAL_FAN_IN_FF_NOT_COLLINEAR
-  --     (LA5:868); `V ⊆ affineSpan {v,w,0}` by orbit induction over
-  --     LOCAL_FAN_ORBIT_MAP_V (LA5:1038) with EXISTS_INTERSECTION_PROPERPLY (LA5:4878)
-  --     at each step (LA5:4895 LOFA_V_SUBSET_AFF_HULL is exactly this induction).
-  -- (3) Witness e := v cross (rhoNode1_p2 FF v); `∀ x ∈ A, e ⬝ᵥ x = 0` by the
-  --     Gram/cross identities already used in LA5:7897ff.
-  -- (4) azim_cycle part: FIRST_AZIM_CYCLE_EQ_RHO_NODE (LA5:2509) + KOMWBWC (LA5:3054)
-  --     + LOOP_SET_DETER_FIRTS_ELMS (LA5:4998); azim = dihV by AZIM_DIHV_SAME kit,
-  --     azim = arcV via WHEN_A_B_POS_ARCV_STABLE (above) + the positivity
-  --     `0 < sin (azim …)` route (HOL trig2.JBDNJJB).
-  -- Blocked upstream: INTERSECTION_LEMMA (LA5:4149) — full case map in DELIVERY of
-  -- lane wsewpch-w6b: cases on the barycentric coordinates β γ of z w.r.t. (x,v,w):
-  -- pair {v,w} (βγ same sign), {u,v} (β=0 or γ<0<β), {u,w} (γ=0 or β<0<γ); the
-  -- crossing data is d1•(v-x)+d2•(w-x) = s•(u-x) with 0<d1,d2 and s<0.
+            azim 0 e v (rhoNode1_p2 FF v) < Real.pi))) := by
+  obtain ⟨v₀, w₀, u₀, hE₀, hu₀V, hne₀⟩ := hc
+  have hkeep := h
+  obtain ⟨hlo, hcvx⟩ := h
+  have main : ∀ p q : V3, convexLocalFan_p2 V E FF → (p, q) ∈ FF →
+      ¬(affGt ({0} : Set V3) ({p, q} : Set V3) ∩
+        affLt ({0} : Set V3) ({u₀} : Set V3) = ∅) →
+      (∀ z ∈ V, interiorAngle1_p2 0 FF z = Real.pi) ∧
+      (∃ A : Set V3, plane_p2 A ∧ (0:V3) ∈ A ∧ V ⊆ A ∧
+        (∃ e : V3, (∀ x ∈ A, e ⬝ᵥ x = 0) ∧
+          cyclicSet_p3 V 0 e ∧
+          (∀ z ∈ V, azimCycle_p2 V 0 e z = rhoNode1_p2 FF z ∧
+            azim 0 e z (rhoNode1_p2 FF z) = dihV 0 e z (rhoNode1_p2 FF z) ∧
+            azim 0 e z (rhoNode1_p2 FF z) = arcV 0 z (rhoNode1_p2 FF z) ∧
+            azim 0 e z (rhoNode1_p2 FF z) < Real.pi))) := by
+    intro p q hcl hFF hne'
+    obtain ⟨hVsubA, hnc⟩ := LOFA_V_SUBSET_AFF_HULL hFF hcl hu₀V hne'
+    have hclkeep := hcl
+    obtain ⟨hlo, hcvx⟩ := hclkeep
+    have hbij : Set.BijOn Prod.fst FF V := WRGCVDR_BIJ hlo
+    have hp : p ∈ V := hbij.1 hFF
+    have hrq : rhoNode1_p2 FF p = q := by
+      have huniq : ∀ y : V3, (p, y) ∈ FF → y = q := fun y hy =>
+        (congrArg Prod.snd ((WRGCVDR_BIJ hlo).2.1 hFF hy rfl)).symm
+      exact epsilonFixed hFF huniq
+    have hq : q ∈ V := by
+      rw [← hrq]
+      exact LOCAL_FAN_ORBIT_MAP_VITER hlo hp 1
+    have hlokeep := hlo
+    obtain ⟨-, -, -, -, -, hfan, -, -⟩ := hlokeep
+    have h0V : (0:V3) ∉ V := hfan.2.2.2.1
+    have horb : orbitF_p2 (rhoNode1_p2 FF) p = V := LOCAL_FAN_ORBIT_MAP_V hlo hp
+    have hset3 : ({0, p, q} : Set V3) = ({p, q, 0} : Set V3) := by
+      ext z2; simp; tauto
+    have h0mem : (0:V3) ∈ (affineSpan ℝ ({p, q, 0} : Set V3) : Set V3) :=
+      subset_affineSpan ℝ _ (by simp)
+    have hdis0 : Disjoint ({0} : Set V3) ({p, q} : Set V3) := by
+      rw [Set.disjoint_left]
+      intro t ht1 ht2
+      simp only [Set.mem_singleton_iff] at ht1
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht2
+      rcases ht2 with h2 | h2
+      · rw [h2] at ht1
+        exact h0V (ht1 ▸ hp)
+      · rw [h2] at ht1
+        exact h0V (ht1 ▸ hq)
+    have h0u0 : (0:V3) ≠ u₀ := by
+      intro hcon
+      rw [hcon] at h0V
+      exact h0V hu₀V
+    have hsubV0 : ({u₀, p, q} : Set V3) ⊆ V := by
+      intro t ht
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      rcases ht with h1 | h1
+      · rw [h1]; exact hu₀V
+      · rcases h1 with h2 | h2
+        · rw [h2]; exact hp
+        · rw [h2]; exact hq
+    have hang : ∀ z ∈ V, interiorAngle1_p2 0 FF z = Real.pi := by
+      intro z hzV
+      exact la5_interior_angle_pi hcl hFF hdis0 h0u0 hne' hnc hsubV0 hzV
+        (fun hcon => h0V (by rw [← hcon]; exact hzV)) (hVsubA hzV)
+        (by rw [hset3]; exact hVsubA hzV)
+    obtain ⟨e, he0⟩ : ∃ e : V3, (WithLp.toLp 2 (crossProduct ((p : V3) : Fin 3 → ℝ)
+        (((rhoNode1_p2 FF) p : V3) : Fin 3 → ℝ)) : V3) = e := ⟨_, rfl⟩
+    have hecoe : ((e : V3) : Fin 3 → ℝ)
+        = crossProduct ((p : V3) : Fin 3 → ℝ) ((q : V3) : Fin 3 → ℝ) := by
+      rw [← he0, hrq]
+    have hne0 : e ≠ 0 := by
+      intro hcon
+      have h2 : (WithLp.toLp 2 (crossProduct ((p : V3) : Fin 3 → ℝ)
+          ((q : V3) : Fin 3 → ℝ)) : V3) = 0 := by rw [← he0, hrq] at hcon; exact hcon
+      exact hnc (COLLINEAR_CROSS_0.mpr (by simpa [sub_zero] using h2))
+    have h2e : 0 < ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) := by
+      have h1 : (0:ℝ) < inner ℝ (e : V3) (e : V3) := by
+        rw [real_inner_self_eq_norm_sq]
+        exact sq_pos_iff.mpr (fun hcon => hne0 (norm_eq_zero.mp hcon))
+      rw [inner_eq_dot] at h1
+      exact h1
+    have hdotA : ∀ x ∈ (affineSpan ℝ ({p, q, 0} : Set V3) : Set V3), e ⬝ᵥ x = 0 := by
+      intro x hx
+      obtain ⟨β, γ, hxβγ⟩ := la5_span3_extract (x := (0:V3)) (v := p) (w := q)
+        (z := x) (by rw [hset3]; exact hx)
+      have hx' : x = β • p + γ • q := by
+        have h2 := hxβγ
+        simp only [sub_zero] at h2
+        rw [← h2]
+      show ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0
+      rw [hecoe, hx']
+      show (crossProduct ((p : V3) : Fin 3 → ℝ) ((q : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        (β • ((p : V3) : Fin 3 → ℝ) + γ • ((q : V3) : Fin 3 → ℝ)) = 0
+      rw [dotProduct_add, dotProduct_smul, dotProduct_smul]
+      have hpp : (crossProduct ((p : V3) : Fin 3 → ℝ) ((q : V3) : Fin 3 → ℝ))
+          ⬝ᵥ ((p : V3) : Fin 3 → ℝ) = 0 :=
+        (dotProduct_comm _ _).trans (dot_self_cross p q)
+      have hqq : (crossProduct ((p : V3) : Fin 3 → ℝ) ((q : V3) : Fin 3 → ℝ))
+          ⬝ᵥ ((q : V3) : Fin 3 → ℝ) = 0 :=
+        (dotProduct_comm _ _).trans (dot_cross_self p q)
+      rw [hpp, hqq]
+      ring
+    have hVset : {(rhoNode1_p2 FF)^[n0] p | n0 < V.ncard} = V :=
+      LOOP_SET_DETER_FIRTS_ELMS (f := rhoNode1_p2 FF) (V := V)
+        (fun y hy => LOCAL_FAN_ORBIT_MAP_V hlo hy) p hp
+    have hiterC : (rhoNode1_p2 FF)^[V.ncard] p ∈ V :=
+      LOCAL_FAN_ORBIT_MAP_VITER hlo hp _
+    have hUinsert : {(rhoNode1_p2 FF)^[n0] p | n0 ≤ V.ncard}
+        = insert ((rhoNode1_p2 FF)^[V.ncard] p)
+          {(rhoNode1_p2 FF)^[n0] p | n0 < V.ncard} := by
+      ext z
+      simp only [Set.mem_setOf_eq, Set.mem_insert_iff]
+      constructor
+      · rintro ⟨n, hn, rfl⟩
+        rcases Nat.lt_or_ge n V.ncard with h | h
+        · exact Or.inr ⟨n, h, rfl⟩
+        · have hnn : n = V.ncard := by omega
+          rw [hnn]
+          exact Or.inl rfl
+      · rintro (hz | ⟨n, hn, hzn⟩)
+        · exact ⟨V.ncard, by omega, hz.symm⟩
+        · exact ⟨n, by omega, hzn⟩
+    have hU : {(rhoNode1_p2 FF)^[n0] p | n0 ≤ V.ncard} = V := by
+      rw [hUinsert, hVset, Set.insert_eq_of_mem hiterC]
+    have hP0 : plane_p2 (affineSpan ℝ ({p, q, 0} : Set V3)) := by
+      refine ⟨0, p, q, hnc, ?_⟩
+      rw [← hset3]
+    obtain ⟨hcyc, hpos, hcycaz, -⟩ := KOMWBWC (v := p) (l := V.ncard) (U := V)
+      (P := affineSpan ℝ ({p, q, 0} : Set V3)) (e := e) (ls := q) hlo hp hU hP0
+      h0mem hVsubA he0
+    refine ⟨hang, ⟨affineSpan ℝ ({p, q, 0} : Set V3), ⟨0, p, q, hnc, by rw [← hset3]⟩,
+      h0mem, hVsubA, e, hdotA, hcyc, ?_⟩⟩
+    intro z hzV
+    have hncE : ∀ y ∈ V, ¬ Collinear3 0 e y := by
+      intro y hy hc2
+      exact CYCLIC_SET_IMP_NOT_COLLINEAR hcyc y hy
+        ((la5_collinear3_rotate (a := y) (b := (0:V3)) (c := e)).mpr hc2)
+    have hzV' : z ∈ {(rhoNode1_p2 FF)^[n0] p | n0 < V.ncard} := hVset.symm ▸ hzV
+    obtain ⟨n, hn, hzn⟩ := hzV'
+    have hrz : rhoNode1_p2 FF z = (rhoNode1_p2 FF)^[n + 1] p := by
+      rw [Function.iterate_succ_apply', ← hzn]
+    have hmix : 0 < (WithLp.toLp 2 (crossProduct ((e : V3) : Fin 3 → ℝ)
+        ((z : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (rhoNode1_p2 FF z : V3) := by
+      show (((WithLp.toLp 2 (crossProduct ((e : V3) : Fin 3 → ℝ)
+          ((z : V3) : Fin 3 → ℝ)) : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((rhoNode1_p2 FF z : V3) : Fin 3 → ℝ) > 0
+      rw [la5_dot_cross_cyclic, dotProduct_comm, hrz, ← hzn]
+      exact hpos n hn
+    have hpair := MIXED_PROD_POS_IMP_RANGE_AZIM (u := e) (v := z)
+      (w := rhoNode1_p2 FF z) (hncE z hzV)
+      (hncE _ (LOFA_IN_V_SO_DO_RHO_NODE_V hlo hzV)) hmix
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · exact hcycaz z n hzn.symm hn
+    · exact azim_dihv_same (hncE z hzV)
+        (hncE _ (LOFA_IN_V_SO_DO_RHO_NODE_V hlo hzV)) hpair.2
+    · have hzP : z ∈ (affineSpan ℝ ({p, q, 0} : Set V3) : Set V3) := hVsubA hzV
+      have hsP : rhoNode1_p2 FF z ∈ (affineSpan ℝ ({p, q, 0} : Set V3) : Set V3) :=
+        hVsubA (LOFA_IN_V_SO_DO_RHO_NODE_V hlo hzV)
+      have hve' : z ⬝ᵥ e = 0 := by
+        rw [dotProduct_comm]
+        exact hdotA z hzP
+      have hrve' : rhoNode1_p2 FF z ⬝ᵥ e = 0 := by
+        rw [dotProduct_comm]
+        exact hdotA _ hsP
+      rw [azim_dihv_same (hncE z hzV)
+          (hncE _ (LOFA_IN_V_SO_DO_RHO_NODE_V hlo hzV)) hpair.2]
+      exact la5_dihv_eq_arcv hve' hrve' h2e
+    · exact hpair.2
+  rcases LOFA_IN_E_IMP_IN_FF hlo hE₀ with hF | hF
+  · exact main v₀ w₀ hkeep hF hne₀
+  · refine main w₀ v₀ hkeep hF ?_
+    rw [Set.pair_comm w₀ v₀]
+    exact hne₀
+  -- DISCHARGED (la5-bank-w1 2026-10-27): assembly per the NEEDS map —
+  -- (1) angles: la5_interior_angle_pi (EIP + OZQVSFF per V-point); (2) plane:
+  -- LOFA_V_SUBSET_AFF_HULL + LOCAL_FAN_IN_FF_NOT_COLLINEAR; (3) e := p × q
+  -- (dotA by la5_span3_extract + dot_self_cross/dot_cross_self); (4) azim cycle:
+  -- KOMWBWC (U := V via LOOP_SET_DETER_FIRTS_ELMS + the ≤-insert lemma),
+  -- azim < π via MIXED_PROD_POS_IMP_RANGE_AZIM + hpos cycling (la5_dot_cross_cyclic),
+  -- azim = dihV via azim_dihv_same, dihV = arcV via la5_dihv_eq_arcv
+  -- (WHEN_A_B_POS_ARCV_STABLE).
 
 -- HOL `AZIM_EQ_0_GE_ALT2` (local_lemmas.hl:3477) 与 `WEDGE_GE_EQ_AFF_GE`
 -- (local_lemmas.hl:3498) 已上移至 RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT 之前
