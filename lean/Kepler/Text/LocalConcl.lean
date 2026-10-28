@@ -1480,8 +1480,8 @@ theorem QKNVMLB2_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
 concludes `{scs6T1, scs5M1, scs4M2, scs3M1}` — the registry wants `scs3T1`
 in the last slot; `scs3M1` (d = 0.103, funlist edge table) and `scs3T1`
 (d = 0.11) are genuinely different systems, so no set bridge exists. -/
-theorem OEHDBEN_discharged :
-    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3T1} := by
+theorem OEHDBEN_discharged : main_nonlinear_terminal_v11 →
+    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1} := by
   sorry
 
 /-- HOLD (d) `TBRMXRZ1_concl`: the proved `TBRMXRZ1_p22` composes in the

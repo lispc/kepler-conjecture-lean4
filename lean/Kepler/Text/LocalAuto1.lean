@@ -2505,9 +2505,13 @@ theorem FUNOUYH_concl :
     scsArrowV39 {scsStabDiagV39 scs6I1 0 3} {scs4M2} := by
   sorry
 
-/-- HOL `OEHDBEN_concl` (appendix.hl:1394). Proof pending. -/
-theorem OEHDBEN_concl :
-    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3T1} := by
+/-- HOL `OEHDBEN_concl` (SF-73 真化：改采 corpus 正本 hexagons.hl:2135-2136
+形——mnt11 前提 + 尾槽 `scs3M1`（d = 0.103）。appendix.hl:1394 摘要形
+尾槽 3T1（d = 0.11）异系且 corpus 无原证；{6I1}→{…3T1} 如需须经
+BKOSSGE（{3M1}→{3T1,3T5}）另立名目，不冒名 OEHDBEN。携前提先例
+= CUXVZOZ_concl。) -/
+theorem OEHDBEN_concl : main_nonlinear_terminal_v11 →
+    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1} := by
   sorry
 
 /-- HOL `OTMTOTJ1_concl` (appendix.hl:1396). Proof pending. -/
