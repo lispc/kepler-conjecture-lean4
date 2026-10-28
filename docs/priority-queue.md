@@ -69,7 +69,7 @@
 2. **nli A2 攻坚**（hNL 技术闸）：rest 9 的 sqrt/atan/ite 区间编码 + 预构建
    oleans/分机（冷构建外推 40-45h）。**过了它，57 条 rest 是 A1 模板（CFWGKMBZ，
    `286d11b8`）的流水线复制**——这是 156 直源里最大单簇（58 条）的总闸。
-3. **保真度全库审计 v1**（`scripts/fidelity_check.py`）：✅ **已落库 `fc4afc08`**（2026-10-26，自检 PASS，配对率 69.4%，HEAD 全量 H 级恰为 SF-53 两处；Top-5 人审入 §6 第 7 项；v2 = 接入 881 条 NEEDS 指针提配对率）。
+3. **保真度全库审计 v1**（`scripts/fidelity_check.py`）：✅ **已落库 `fc4afc08`**（2026-10-26，自检 PASS，配对率 69.4%，HEAD 全量 H 级恰为 SF-53 两处；Top-5 人审入 §6 第 7 项）。**v2 完成落库（2026-10-28，本提交）**：接入 NEEDS 指针后配对率 68.9%（7811/11331，仅 +5 件）——「~90%+」预估不成立（882 条 NEEDS 提及仅 604 带行号指针且大多躺在已配对件 docstring；3525 未配对件中 2987 无任何指针线索；宽松归属 ~67 对经核验多为假配对，按规则全排除）；**全库 H 级清零**；NEEDS 解析率 88.7%（167 UNRESOLVED + 5 AMBIGUOUS 入册不假配对）；166 条配对冲突另指清单供下轮人判。
 4. **LP 终端语义移植设计侦察**：✅ **已落库**（`docs/scouts/lp-design-scout.md`，2026-10-26；波次计划与三件裁决入 §2 第 5 项 / §6 第 8 项）。
 5. **`scripts/integrate_lane.sh` 固化**：✅ **已落库（2026-10-28，本提交，tooling-w1 车道交付）**：307 行 bash 六步流水线（MD5→cp+add→diff 断言→闸→pathspec 提交→push+收尾清单），`--dry-run`/`--docs-only` 支持；沙盒 33/33 断言 + 真实快照演练 13/13；坑①（cwd 重置）以零 cd + `git -C` + 闸子壳紧邻根除，坑②（裸 commit 误提）以 `-F -- <targets>` 根除；顺带修掉 bash 3.2 中文吞变量新坑（README 留注）。未测边界：真闸调用（首轮实跑编排者盯）；STATEMENT-FIX 专用链不在范围。
 
@@ -101,7 +101,7 @@
 4. ~~**SF-53**~~ → **已批准并应用**（`b30bad76`，闸 PASS；patch 归档已规范化）。
 5. ~~**A2-W2b 算力去向**~~ → 已被第 6 项取代。
 6. ~~**A2 提速方案**~~ → **已批准（2026-10-26 用户）并执行**（`8f789c60`：atan1K + decide +kernel + emitter gen-11；构建重启，分片 181–512 s 实测，预计 ~1 天完工）。
-7. **fidelity-v1 Top-5 可疑项人审**（编排者先人审，涉陈述改动再走 SF）：SphereKit:144 `num1` 重建体与正本差交叉项且符号布局不同；ContraFanDeep:3598 `cf4_etaP_box` 正本指针与 Lean 盒形态不符疑引错条目；LocalAuto11:192 `dartStd4_p11` 正本三常数在 Lean 陈述中缺失疑截断移植；PA21:599 `bank_BIXPCGW9455898160` docstring 与已修陈述自相矛盾（注释级）；SF-53 两处被独立复现（HEAD 全量 H 级恰为此两处）。
+7. ~~**fidelity-v1 Top-5 可疑项人审**~~ → **v2 终审完毕（2026-10-28，全 H 清零后无遗留）**：num1 = RESOLVED（SF-58 `956d75ec`，HEAD 现文与 HOL 逐项同号、v2 零发现）；cf4_etaP_box = FALSE-POSITIVE（机理修正：引用条目本正确，Lean 件系 ETA_Y_4_POINTS_INEQ 的证明内核重述）；dartStd4_p11 = 截断嫌疑不成立（刻意不透明签名桩 + v1 docname 错配伪影）；PA21 bank_BIXPCGW9455898160 = 确认仅注释级（陈述与 HOL 一致；docstring「双重负号 = 0.00569」仍错，注释勘误 SF 候选随 PA21 波顺带）。
 9. `已完成` **SF-54/55/56 全部应用**（用户 2026-10-26「都批准」）：**54** 五文件（`47467b90`…`119a10c5`）22 桩加 hedge + LA7 改名 `_LA7`，W6a 已解锁并发车；**55** `b8154a64`（LA1 `Generic` affGt→affGe）/ **56** `d90caf69`（LA2 `circular_p2` affGe→affGt）于 w6b 落库窗口串行双 PASS——交叉镜像误植归正，四定义与 HOL localization.hl:103/107 逐字对齐。应用记录见 proposals §54(e')/§55–56(e')。KCHMAMG 等消费件在后续灌证波按新陈述施工。
 8. `已裁` **hLP 三件**（用户 2026-10-26）：**(i) GoodListNodes 真化批准**（W6-B 开波第一口执行，含 P6-C 构造连带）；**(ii) W6-PIN 钉定升级批准**（与数据波并行排期，lpAllInfeas 189 模块全链重绿）；**(iii) 磁盘窗口缓议**（W1 首批跑通后重呈，选项 = 外置盘 / G4 大盘机 / 云机）。
 10. `待批` **SF-59..62 GoodGraph 四槽真化**（sfprep-w1 车道 2026-10-28 交付草案，呈用户裁决）：`FinalGraph`（:1518）/`AllUniq`（:1520）/`GoodFacesV3`（:1522）/`VerticesSet2Eq`（:1524）四个 True 占位逐槽 flip——flip 源 = `GoodGraph.lean` Spine 对应分量体逐字可用（Zero junk 分歧、无 arity 折算）；每槽捆绑 `goodGraphV4Spine_implies` 同车一行（选择子推定 `h.2.2.1`/`h.2.2.2.1`/`h.2.2.2.2.1`/末支整体退化 `h`，以闸实测为准，沿 SF-57② 先例）；**SF-61 须捆绑两支撑 def（`verticesSet2`/`facesAtV2`）逐字随迁**（GoodGraph 反向 import Assembly 不可达，唯一结构折算）；**SF-62 硬依赖 61 先行**。闸序 59→60→61→62 串行，双文件 hunk 同一提交。落定后 `GoodGraphV4Spine ↔ Assembly.GoodGraphV4` 全五槽 `Iff.rfl`；`textCapstone` 零触碰实证（只消费 `hgg4.1`）；`jcajydu` 四槽见证清偿义务记账 NEEDS。草案+补丁：`lane_snapshots/sfprep-w1/`（patches/ 8/8 hunk 自检 OK）。
@@ -116,6 +116,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-28（晨，续 5）**：**fidelity-v2 完工落库**（脚本 808 行入 lean/scripts/，报告+TSV 入 docs/scouts/）：**诚实的否定性结果**——NEEDS 指针接入仅 +5 件（69% 配对天花板系 docstring 驱动，3525 未配对件中 2987 无指针线索；~67 宽松对判假配对全排除，零假配对纪律守住）；换来**全库 H 级清零** + Top-5 四案终审（num1 RESOLVED / cf4 机理修正维持 FALSE-POSITIVE / dartStd4 嫌疑不成立 / PA21 确认注释级）；166 配对冲突清单移交。1:1 补位发车 **fidconf-w1**（166 冲突静态分诊：伪影/指针朽坏/内核重述/真问题四分，真问题喂 SF 渠道）。
 - **2026-10-28（晨，续 4）**：**w1asm-w1 完工**（施工图 22 节入快照，零正本改动）：绿 7/黄 11/红 4，编译窗估 35–50h；草案 4 件未编译可追；新 SF 候选 LKGRQUI 前提缺失（已喂 fixscout-w1 并案）；LA20 注记过时与 BKOSSGE_p16 两翻案记档。1:1 补位发车 **w0prep-w1**（W0 桌审静态预分析：62 条 WIRE 的 taint 预测表 + 探针脚本备跑，窗口期分钟级确认）。
 - **2026-10-28（晨，续 3）**：**tooling-w1 完工落库**（§3 第 5 项 ✅）：`scripts/integrate_lane.sh` 307 行六步流水线，沙盒 33/33 + 演练 13/13 全过，编排者通读验收（闸子壳紧邻 cd / pathspec 铁律 / cp 前五重漂移预检均在位）；新坑入册：macOS bash 3.2 + C.UTF-8 下 `$VAR` 后紧跟中文被吞进变量名，全脚本花括号化。1:1 补位发车 **fixscout-w1**（LA1 HOLD 28 条中形状差 10–12 条的 SF 勘察，bola1 dep-map 为底稿）。
 - **2026-10-28（晨，续 2）**：**bola1-scout 完工入档**（98 项注册表全量表 + 216 行报告，零正本改动）：LocalConcl.lean 装配出口翻案（90/90 重暴露 = 62 WIRE / 28 HOLD，真实待施工 ≈40）；预判部分成立（R+S 44%，SCS 记录半侧 16 条已证）；对 triage W1 波三点修正（孪生已证 −5+ / 空半侧真数学 / transferV39 缺口仅 YXIONXL2 k=3）随 §2 第 11 项修订入档；波次方案 W0 桌审 + 3 波 + FIX 线。1:1 补位发车 **w1asm-w1**（波 1 施工图 + 高置信模板片草案，快照交付待编译窗验证）。
