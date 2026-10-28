@@ -73,7 +73,8 @@ LA33 −11、LA17 −1、mnt11_anchor −1、WKEIDFT 须 phase-2）每闭一根 
 ## 1. 注册表 concl（LA1 22 件，e2e 锥内直源）
 
 > LA1 在 151 口径共 23 行 = 本表 22 件 + `main_nonlinear_terminal_v11`（109 合取 deliberate
-> 外部锚，在账不动，非本台账债面）。21 件 parent=`JEJTVGB_p16`（LA16:488 证明项实参）、
+> 外部锚，在账不动，非本台账债面；**常量级污染口径见 §2.3a**，2026-10-28 mnt11-anchor-w1 补记）。
+> 21 件 parent=`JEJTVGB_p16`（LA16:488 证明项实参）、
 > `WKEIDFT_concl` parent=`EQ_DIAG_STAB_6I1_03`（LA20:1311/1326 消费）。axiom 面均
 > sorryAx（注册表 shim `:= sorry` 本体）；各行污染根 = 其孪生/上游根（RR §2 逐位映射 +
 > TP 源1 同名 `_discharged` 行）。**不做 (c1) 重排，上游灌证单独发生时这 22 个名字一个也不会出 151。**
@@ -215,8 +216,54 @@ LA33 −11、LA17 −1、mnt11_anchor −1、WKEIDFT 须 phase-2）每闭一根 
 
 | 声明全名 | 文件:行 | 类别 | axiom 面 | 污染根/缺口 | 判词 | 备注 | 台账来源 |
 |---|---|---|---|---|---|---|---|
-| Kepler.Text.mnt11_anchor（非出口-在账） | LocalConcl.lean:487 | 装配出口 | sorryAx 直 | 接口锚服务已接线 WIRE 件（mnt11 E 件 LA1:815 的装配面镜像），随 LA1 mnt11 根闭合 | 非出口·在账锚 | —；同形？— | m1asm-w1/CLASSIFY |
+| Kepler.Text.mnt11_anchor（非出口-在账） | LocalConcl.lean:487 | 装配出口 | sorryAx 直 | 接口锚服务已接线 WIRE 件（mnt11 E 件 LA1:815 的装配面镜像），随 LA1 mnt11 根闭合；**2026-10-28 mnt11-anchor-w1 补记：LA1:975 为常量级污染（§2.3a），本行 sorryAx 与全部陈述级提及者的 sorryAx 同此一根，真闭合口径 = 各行体零债 + 树内 sorryAx 仅剩本锚单根** | 非出口·在账锚 | —；同形？— | m1asm-w1/CLASSIFY |
 | Kepler.Text.p21_anchor（非出口-在账） | LocalConcl.lean:493 | 装配出口 | sorryAx 直 | 同上（LA21 p21 银行锚，服务 CUXVZOZ/CJBDXXN 已接线件） | 非出口·在账锚 | —；同形？— | m1asm-w1/CLASSIFY |
+
+### 2.3a mnt11 常量级污染口径（2026-10-28，mnt11-anchor-w1 补记）
+
+> **口径**：`main_nonlinear_terminal_v11`（LA1:975，`def … : Prop := sorry`；triage 151 口径
+> E1）是**常量级污染**——污染在**常量本身**不在任何证明体：凡**陈述**（含
+> `(h : main_nonlinear_terminal_v11)` 前提形）提及它的定理，`#print axioms` **必含 sorryAx，
+> 与证明体全净与否无关**。机检证据：la22c-port-w1 `drafts/probe1d_taint.lean/.out`，
+> `tiny_probe (_h : main_nonlinear_terminal_v11) : True := trivial`（体 trivial）实测面 =
+> `[propext, sorryAx, Classical.choice, Quot.sound]`。故解读本表各行时：**axiom 面含 sorryAx
+> 且陈述提及 mnt11 的行，其 sorryAx 不得按「自体证明债」读**。**「真闭合」记法 = 该行证明体
+> 零自体债（自体 sorry = 0）+ 树内 axiom 面 sorryAx 仅剩锚单根**（mnt11_anchor
+> LocalConcl:487 / Assembly nliMainNonlinearTerminalV11 :1221 与 LA1:975 同根）。与 SF-C2
+> （LA23:232 `StableSyP23.stable := sorry` 字段，§81 立案 sffile-w1）同构——全库第二个已立案
+> 常量级污染点位。锚本体规模与既有结论：terminal11-scout 109 条 Main_estimate 机器聚合
+> （**不在发射集**；farm 可发射 89 未发 + 证书在库 20；总量 ≈500-700 机器时 / 人工 3-6 人周，
+> 见 terminal11-scout/DELIVERY）。
+
+**陈述级提及者普查**（mnt11-anchor-w1 机检：`grep` 全 `lean/Kepler` 树的声明行/
+前提行，剔除注释行；「提及」= 陈述形携带该常量）：
+
+| 文件 | 提及声明行数 | 行号（LocalAuto*.lean 省名） | 本台账在案行 |
+|---|---:|---|---|
+| LocalAuto32 | 23 | 832/842/851/859/869（NWDGKXH 链）、957-1001（YOBIMPP 链）、1080-1258（MIQMCSN 链）、1377 | §2.1 行 102-104（mnt11 列为传递债） |
+| LocalAuto22 | 15 | 179、1466、1481、1494、1516、1522、1528、1533、1549、1557、1570、1592、1629、1640、1930（OCBICBY_p22） | §4.3（LA22 行）；la22c-port §1 表 |
+| LocalAuto33 | 15 | 1014、1176、1202、1208、1215、1222、1240、1247、1254、1261、1269、1277、1283、1311、1505 | §2.1 行 94-95；§4.2 LA33 行 |
+| LocalAuto38 | 14 | 3037、3046、3057、3066、3076、3085、3104、3111、3206、3376、3393、3411、3429、3439 | §4.3（LA38 无单列；y1..y6 盒族本体） |
+| LocalAuto23 | 13 | 278、287、299、310（LFLACKU_p23）、329、458、472、487、502、519、538、547、565 | §2.2 行 210（LFLACKU_discharged）；§4.3 |
+| LocalAuto1 | 6 + def 本体 | 975（def `:= sorry`，污染根本体）、1991、2261、2513、2716、2721、2739（SYNQIWN/CQAOQLR/OEHDBEN/LFLACKU/CUXVZOZ/CJBDXXN `_concl`） | §1 行 75（23 行口径）；triage §1.2 LA1 行 28 |
+| LocalConcl | 7 | 487（mnt11_anchor `:= sorry`，LocalConcl 侧单根）、1026、1056、1378、1398、1428、1489（`*_discharged` 前提形） | §2.2 行 151-166（注入面）与 171/172/207/208/210（前提形各行）；§2.3 行 218 |
+| LocalAuto16 | 6 陈述 + 1 项层 | 384、488、608、619、628、908（:517 为 `lp_main_estimate := fun h =>` 项层消费） | §2.4 CQAOQLR 链行 |
+| LocalAuto29 | 5 | 2476、2490、2540、2550、2562（HIJQAHA 链） | §2.1 行 88 |
+| LocalAuto20 | 5 | 1198、1209、1218（SCS_6I1_BERAK_BY_CSTAB mnt11 银行）、1462、1480 | §2.4 SF-73 链行；§4.3 行 408 |
+| LocalAuto25 | 4 | 1231、1241、1252、1286（TUAPYYU 面） | §4.3（LA25:1165 ASSWPOW 另根） |
+| LocalAuto27 | 4 | 292、312、476、523 | §4.3（LA27 行） |
+| LocalBridge | 3 | 143、213、232（`hterm` 桥参数形） | —（桥件层） |
+| Assembly | 2 | 292（`.2.2.1` 投影）、1221（`nliMainNonlinearTerminalV11 := sorry`，与 LA1:975 同根双闭） | §1.2 Assembly 行（E77）；triage 行 80 |
+| LocalAuto26 | 1 | 337 | §2.2 行 151（RRCWNSJ 注入面） |
+
+> 合计 **123 处陈述级提及**（15 文件；另有 LA11:84、LA18:92/192/201、LA19:8/75、LA21、
+> LA23:39/308、LA32:27/44 等注释级引用不计）。LA18 侧另有**裸 Prop 孪生 def**
+> `mainNonlinearTerminalV11_p18`（LA18:201，`∀ y, MainNonlinearTerminalV11_p18 y` 盒形状可见形，
+> LocalAnchors §1 记录）——污染面独立记账，不与本锚混算。全部提及者按本口径在 mnt11 锚灌证前
+> axiom 面不可能达标准三；各行的证明级动作（填体/搬债）照常进行，锚闭合后**下游零改动自动转净**
+>（cone 自愈）。邻接顺手件：LA38 `taustar_taum`/`taustar_taum_dfun`（:1577/:1612）2 处自体
+> tactic 级 sorry 已由 mnt11-anchor-w1 出 kit（其两腿 `taustar3`/`tau3_taum_d(_dfun)` 均净，
+> 合成后标准三 /tmp 实证；kit 在 `c17_backup/lane_snapshots/mnt11-anchor-w1/`），待编译窗落。
 
 ### 2.4 SF-63/69/71/73 已落库接线 4 件（孪生面复核，TP 种子）
 
