@@ -1488,18 +1488,17 @@ theorem TBRMXRZ1_discharged : ∀ (f : ℝ → ℝ) (f' : ℝ) (g : ℝ → ℝ)
 bounds form and lacks the registry concl's `2 < dist` strictness (not
 derivable from the `≤ 1+sqrt 5` bounds) and the distinctness witness
 conjuncts. -/
-theorem VPWSHTO_discharged : ∀ v x u w w1 : V3,
-    ({v, x, u, w, w1} : Set V3) ⊆ ballAnnulus →
-    Kepler.Packing ({v, x, u, w, w1} : Set V3) →
-    v ≠ x → v ≠ u → v ≠ w → v ≠ w1 → x ≠ u → x ≠ w → x ≠ w1 → u ≠ w → u ≠ w1 →
-    w ≠ w1 →
-    norm (v - x) = 2 → norm (x - u) = 2 → norm (u - w) = 2 →
-    norm (w - w1) = 2 → norm (w1 - v) = 2 →
-    ∃ v1 u1 w2 : V3,
-      u1 ∈ ({v, x, u, w, w1} : Set V3) ∧ u1 ∈ ({v, x, u, w, w1} : Set V3) ∧
-      w2 ∈ ({v, x, u, w, w1} : Set V3) ∧ v1 ≠ u1 ∧ u1 ≠ w2 ∧ v1 ≠ w2 ∧
-      2 < dist v1 u1 ∧ 2 < dist v1 w2 ∧
-      dist v1 u1 ≤ 1 + Real.sqrt 5 ∧ dist v1 w2 ≤ 1 + Real.sqrt 5 := by
+theorem VPWSHTO_discharged : ∀ vv : ℕ → V3,
+    ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) ⊆ ballAnnulus →
+    Kepler.Packing ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) →
+    vv 0 ≠ vv 1 → vv 0 ≠ vv 1 → vv 0 ≠ vv 2 → vv 0 ≠ vv 3 →
+    vv 0 ≠ vv 4 → vv 1 ≠ vv 2 → vv 1 ≠ vv 3 → vv 1 ≠ vv 4 →
+    vv 2 ≠ vv 3 → vv 2 ≠ vv 4 → vv 3 ≠ vv 4 →
+    norm (vv 0 - vv 1) = 2 → norm (vv 1 - vv 2) = 2 → norm (vv 2 - vv 3) = 2 →
+    norm (vv 3 - vv 4) = 2 → norm (vv 4 - vv 0) = 2 →
+    ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
+      norm (vv i - vv ((i + 2) % 5)) ≤ 1 + Real.sqrt 5 ∧
+      norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5 := by
   sorry
 
 /-- HOLD (d) `XWNHLMD_concl`: the proved `XWNHLMD_p26` keeps the extra
