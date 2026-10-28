@@ -4823,7 +4823,9 @@ la23prereq 施工图不涉 LA26/LA36。
 立案。全部机检证据与编译账见 `lane_snapshots/sfc1c2draft-w1/VALIDATION.md`。
 **用户裁决 2026-10-28 深夜（三项合呈「全部按推荐批」）：案①（81a）定案，与 §82（同 def 的
 d 槽保真）并案执行，执行件 = `docs/statement-fix-proposals-patches/81a-82-combined-stablesy.patch`
-（闸命令与 LA23 四方铁序见 §82 (f)）；案②（81b）归档不落，下文 81b 闸命令仅存档。**
+（闸命令与 LA23 四方铁序见 §82 (f)）；案②（81b）归档不落，下文 81b 闸命令仅存档。
+勘误：上文「债归属在册 M0 件 `IS_SCS_STABLE_SYSTEM_p23`」应为 **M1 件**（m1-ledger.tsv:43441；
+不在 151 直源账），其填体为文件级清洁，不降 M0——账面以 §82 (f) 为准。**
 **在册未落**，apply + STATEMENT-FIX 闸待编译窗；落库次序建议：与 SF-80
 （§80）同窗（81a 不触 LA24；81b 触 tri_sy_explicit，同 LA24 文件需 rebase
 协调），并先于 la23prereq-w1 的桥填体落。两文件/四文件 patch 的闸覆盖
@@ -4935,6 +4937,9 @@ kit（LA24，+import LA36）。combined 触 LA23 + LA36 两文件，须以各文
 闸两次（同 §78 (f) 口径；闸脚本只比对 `+++ b/lean/$FILE` 节），闸命令（lean/ 下）：
 `GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/81a-82-combined-stablesy.patch SF_ITEM=82 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto36.lean THM=TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23`
 （第二闸覆盖 LA36 节：同 env 下 `bash scripts/auto_gate.sh Kepler/Text/LocalAuto36.lean taustar_eq_tauStar_gen_p36`；两闸 PASS 后两文件同一提交（pathspec 数组），commit message 标「SF-81a+§82 并案」、授权依据与用户裁决。）
-**账面**：def 体 sorry −2（LA23:232 / LA36:441，经 81a 转由在册 M0 件
-`IS_SCS_STABLE_SYSTEM_p23` 承载，不计直源）；当日 M0 直源 −0；后续 la23prereq
-填体（−8 / 两 NEEDS 件入树 +2）、三桥（−3）、CASE_4/5/6（−3）均以本案为前置。
+**账面**：def 体 sorry −2（LA23:232 / LA36:441，经 81a 转由 `IS_SCS_STABLE_SYSTEM_p23`
+承载——该件 **不在 151 直源账**（direct-source-triage.tsv：LA23 仅 `LFLACKU_p23` / `s_init_list_alt_p23`
+两行；m1-ledger.tsv:43441 归 M1），不计直源）；当日 M0 直源 −0。后续 LA23 四方序列的 **M0 净 −1**
+（`XWITCCN_CASE_4/5/6_IS_SCS_p24` 出列 −3 + HDPLYGY 两 NEEDS 件入锥 +2；la23prereq 填体 −8 与
+TAUSTAR 三桥 −3 为**文件级** sorry 净，不在直源账——cwplan-v2 勘误，编排者按 triage TSV 核实采信），
+均以本案为前置；重扫断言 R6=144 见 `lane_snapshots/cwplan-v2/MASTER-PLAN-v2.md` §7。
