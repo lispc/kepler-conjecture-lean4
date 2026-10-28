@@ -70,9 +70,7 @@
    `286d11b8`）的流水线复制**——这是 156 直源里最大单簇（58 条）的总闸。
 3. **保真度全库审计 v1**（`scripts/fidelity_check.py`）：✅ **已落库 `fc4afc08`**（2026-10-26，自检 PASS，配对率 69.4%，HEAD 全量 H 级恰为 SF-53 两处；Top-5 人审入 §6 第 7 项；v2 = 接入 881 条 NEEDS 指针提配对率）。
 4. **LP 终端语义移植设计侦察**：✅ **已落库**（`docs/scouts/lp-design-scout.md`，2026-10-26；波次计划与三件裁决入 §2 第 5 项 / §6 第 8 项）。
-5. **`scripts/integrate_lane.sh` 固化**：md5 校验 → cp → diff 断言（纯追加/预期删除
-   模式）→ 闸 → 消息模板 → push → 地图重生成提醒。背景：编排者人肉链已踩
-   后台 shell cwd 重置（闸 127 空跑 ×3）与提交相对路径两坑。
+5. **`scripts/integrate_lane.sh` 固化**：✅ **已落库（2026-10-28，本提交，tooling-w1 车道交付）**：307 行 bash 六步流水线（MD5→cp+add→diff 断言→闸→pathspec 提交→push+收尾清单），`--dry-run`/`--docs-only` 支持；沙盒 33/33 断言 + 真实快照演练 13/13；坑①（cwd 重置）以零 cd + `git -C` + 闸子壳紧邻根除，坑②（裸 commit 误提）以 `-F -- <targets>` 根除；顺带修掉 bash 3.2 中文吞变量新坑（README 留注）。未测边界：真闸调用（首轮实跑编排者盯）；STATEMENT-FIX 专用链不在范围。
 
 ## 4. 中期（1-2 月）
 
@@ -117,6 +115,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-28（晨，续 3）**：**tooling-w1 完工落库**（§3 第 5 项 ✅）：`scripts/integrate_lane.sh` 307 行六步流水线，沙盒 33/33 + 演练 13/13 全过，编排者通读验收（闸子壳紧邻 cd / pathspec 铁律 / cp 前五重漂移预检均在位）；新坑入册：macOS bash 3.2 + C.UTF-8 下 `$VAR` 后紧跟中文被吞进变量名，全脚本花括号化。1:1 补位发车 **fixscout-w1**（LA1 HOLD 28 条中形状差 10–12 条的 SF 勘察，bola1 dep-map 为底稿）。
 - **2026-10-28（晨，续 2）**：**bola1-scout 完工入档**（98 项注册表全量表 + 216 行报告，零正本改动）：LocalConcl.lean 装配出口翻案（90/90 重暴露 = 62 WIRE / 28 HOLD，真实待施工 ≈40）；预判部分成立（R+S 44%，SCS 记录半侧 16 条已证）；对 triage W1 波三点修正（孪生已证 −5+ / 空半侧真数学 / transferV39 缺口仅 YXIONXL2 k=3）随 §2 第 11 项修订入档；波次方案 W0 桌审 + 3 波 + FIX 线。1:1 补位发车 **w1asm-w1**（波 1 施工图 + 高置信模板片草案，快照交付待编译窗验证）。
 - **2026-10-28（晨，续）**：**sfprep-w1 完工**（四槽 SF-59..62 草案 + 补丁 8/8 hunk 自检，零正本改动；编号 59..62 全库 grep 零占用实证）：唯一结构折算 = SF-61 两支撑 def（`verticesSet2`/`facesAtV2`）随迁；SF-62 硬依赖 61；`textCapstone` 零触碰实证（只消费 `hgg4.1`，`hgg4` 整体透传）；WMLNYMD.hl:257/:341 实证 `REWRITE_TAC[good_graph;good_faces]` 拆支消费 = `tameCorrespondenceIso` 清偿内容来源；三处过时注记刷新清单随草案。四案呈批入 §6 第 10 项。1:1 补位发车 **tooling-w1**（`scripts/integrate_lane.sh` 固化，§3 第 5 项：md5→cp→diff 断言→闸→pathspec 提交→push→地图提醒，防 cwd 重置与误提交两坑）。
 - **2026-10-28（晨）**：**SF-57 全链闭合推送**（① `a08b2459` GoodListNodes 真化、② `4ff27ac1` GoodGraph 桥第二槽同车件；闸② 07:33 PASS @goodGraphV4Spine_implies 默认七根；草案 h.2 误写经闸实测勘误 `81e027c9`）。调度窗口四阶段收口：w2 闸 PASS（→`8aa1f2c0` 已落）/ lp-w1 冒烟 5/5 / hlp-w6a 验收构建+探针全绿（→`cef05bb7` 已落）/ A2 续跑宿主（14 路在编；上轮 Shard2682/2683 残件 137 系开窗 kill 非病）。**triage-w1 完工入档**（快照交付，零正本改动）：151 直源全量分诊 **A3/B28/C14/D0/E106/F0**，对账零实质差异，两处 §0 记档级勘误随本提交（~74→70、lpDebt 行号漂）；77 条 nli 桩形状逐字同一（A1 模板压成发射-粘合两步）；首发建议 **W1 银行·装配波 30 件**入 §2 第 11 项。同晨发三条文本车道：bola1-scout（§2 第 6 项就绪件首发）/ sfprep-w1（GoodGraph 四槽 SF-59..62 草案预备）/ triage-w1。nli-prep-w2 GiFactorization（370 行零真 sorry）已 staged，闸循环在 A2 锁后排队抢窗。
