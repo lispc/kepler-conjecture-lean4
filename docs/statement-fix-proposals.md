@@ -4218,7 +4218,15 @@ real_model_ztg4 闭合 = e2e 直源 −1（父 pkrmQu，tsv :155）。GG_MCELL_G
 最大缺口 = HOL ztg4 体 320 行 REAL_WLOG_SIMPLEX_LEMMA2_LE + 19-shard 覆盖
 胶合无 Lean 引擎对应（预期内实质债）：已落 sorried 骨架 + 四步期望战术 +
 胶合钥匙五件真证 + 两枚代表支全真收口。编译窗预估 6-9h（草案一 <1 fix
-循环；草案二 ztg4_ALT 胶合 4-7 循环）。
+循环；草案二 ztg4_ALT 胶合 4-7 循环）。**fix 循环一轮收敛（sf76fix-w1，
+2026-10-28）**：13 处 elaborator 错全修（split_ifs 序改 by_cases 阶梯 /
+MCELL4_DOMAIN 14 分量拍平 / p25w5_bump_mem 就地内联 / div_le_div_iff₀ /
+linarith 补事实 / ztg4_ALT 前向引用重排），`lake env lean` 零 error。
+**诚实披露**：`ztg4_shard_finish_m0/m1` 两条新收口引理语句新增显式盒下界
+假设 h2lo..h6lo（原语句在给定假设下不可证，数学性修正；二引理系本条
+自带新件，不涉存量陈述；未来 ztg4_ALT step 4 由 16-shard 二分支直接
+供给这些界）。归档 patch 已重规范化为修复后真实 diff（reverse-check
+验证忠实于应用态）。
 
 ### (f) 状态
 
