@@ -1535,8 +1535,8 @@ theorem QKNVMLB3_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (s', s'') = scsSliceV39 s p q d' d'' mkj →
     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     s.d ≤ d' + d'' →
-    taustarV39 s' (fun i => vv ((i + p) % s'.k)) +
-      taustarV39 s'' (fun i => vv ((i + q) % s''.k)) ≤ taustarV39 s vv := by
+    taustarV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      taustarV39 s'' (fun i => vv (i % s''.k + q % s.k)) ≤ taustarV39 s vv := by
   sorry
 
 /-! ## Debt ledger (`#print axioms` ground truth)
