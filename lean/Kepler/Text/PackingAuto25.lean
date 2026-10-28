@@ -8712,6 +8712,7 @@ theorem GG_MCELL_NONBETA (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
   ring
 
 /-- HOL `GG_MCELL_GENERAL`. -/
+
 theorem GG_MCELL_GENERAL (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
     (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
@@ -8725,7 +8726,82 @@ theorem GG_MCELL_GENERAL (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
           (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))) +
         beta_bumpA_yP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
           (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := by
-  sorry
+  -- HOL :5674 `TYPIFY … ASM_CASES_TAC`：六重临界合取二分。
+  -- 合取项序按 beta_bumpA_yP25 实参序：y1 = d01 临界、y4 = d(i,i+1) 临界、
+  -- y2 = d02、y3 = d03、y6 = d16、y5 = d15 均 < 2·hminus。
+  by_cases hfull : criticalEdgeY (dist u0 u1) ∧
+      criticalEdgeY (dist (f i) (f (i + 1))) ∧
+      dist u0 (f i) < 2 * hminus ∧ dist u0 (f (i + 1)) < 2 * hminus ∧
+      dist u1 (f i) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus
+  · -- ── 正支（HOL :5675-5683）＝ GG_MCELL_BETA ──
+    obtain ⟨hc1, hc4, hd02, hd03, hd16, hd15⟩ := hfull
+    have hl' : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+    -- 四条非临界（临界 = 2hminus ≤ y，与 < 2hminus 矛盾；QUARTER :8612 同型）
+    have hn2 : ¬ criticalEdgeY (dist u0 (f i)) :=
+      fun hc => absurd hd02 (not_lt.mpr hc.1)
+    have hn3 : ¬ criticalEdgeY (dist u0 (f (i + 1))) :=
+      fun hc => absurd hd03 (not_lt.mpr hc.1)
+    have hn5 : ¬ criticalEdgeY (dist u1 (f (i + 1))) :=
+      fun hc => absurd hd15 (not_lt.mpr hc.1)
+    have hn6 : ¬ criticalEdgeY (dist u1 (f i)) :=
+      fun hc => absurd hd16 (not_lt.mpr hc.1)
+    -- wtcount6 = 2（茎临界 + 对边临界，其余四边非临界；BETA :8657 同型）
+    have hwt : wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) = 2 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_pos hc4, if_neg hn5, if_neg hn6]
+    -- beta_bumpA_yP25 全临界支展开（SF-75 乘积形体六 if 全真 → 两 bump 差）
+    have hb : beta_bumpA_yP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+        = bump (dist u0 u1 / 2) - bump (dist (f i) (f (i + 1)) / 2) := by
+      simp only [beta_bumpA_yP25]
+      rw [if_pos hc1, if_pos hd02, if_pos hd03, if_pos hc4, if_pos hd15, if_pos hd16]
+      ring
+    -- GG_MCELL_BETA（:8635 真证）给出 γ/2 + bump 差；hwt 把分母对齐、hb 把
+    -- beta 项对齐，算术收口（即 HOL REWRITE[arith] + REAL_ARITH_TAC）。
+    rw [GG_MCELL_BETA V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey h4
+      ⟨hd02, hd16⟩ hd03 hd15 hc4 hr, hwt, hb]
+    ring
+  · -- ── 负支（HOL :5684-5713）＝ GG_MCELL_NONBETA ──
+    have hl' : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+    -- 由 ¬六重合取 + hcey 得 NONBETA 之 ¬五重合取（顺序重排即得）
+    have h5 : ¬ ((dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus) ∧
+        dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus ∧
+        criticalEdgeY (dist (f i) (f (i + 1)))) := fun hc =>
+      hfull ⟨hcey, hc.2.2.2, hc.1.1, hc.2.1, hc.1.2, hc.2.2.1⟩
+    rw [GG_MCELL_NONBETA V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey h4
+      h5 hr]
+    -- beta_bumpA_yP25 = 0：乘积形体 split_ifs，非全真支含 0 因子（ring 吃），
+    -- 全真支与 hfull 矛盾。（若 split_ifs 目标序与预期不符——首个非全真支——
+    -- 把两行收口换成 `all_goals { first | ring | exact absurd ⟨k1, k4, k2, k3,
+    -- k6, k5⟩ hfull }` 即可，无需改结构。）
+    have hb0 : beta_bumpA_yP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) = 0 := by
+      -- SF-76 fix：split_ifs 绑定序对目标不稳定，改六重 by_cases 阶梯（每步
+      -- 显式命名，全真支 = hfull 矛盾、假支含 0 因子 ring 收口；if_pos/if_neg
+      -- rw 先例 = 本定理正支/QUARTER/BETA/NONBETA）。
+      simp only [beta_bumpA_yP25]
+      by_cases e1 : criticalEdgeY (dist u0 u1)
+      · rw [if_pos e1]
+        by_cases e2 : dist u0 (f i) < 2 * hminus
+        · rw [if_pos e2]
+          by_cases e3 : dist u0 (f (i + 1)) < 2 * hminus
+          · rw [if_pos e3]
+            by_cases e4 : criticalEdgeY (dist (f i) (f (i + 1)))
+            · rw [if_pos e4]
+              by_cases e5 : dist u1 (f (i + 1)) < 2 * hminus
+              · rw [if_pos e5]
+                by_cases e6 : dist u1 (f i) < 2 * hminus
+                · rw [if_pos e6]
+                  exact absurd ⟨e1, e4, e2, e3, e6, e5⟩ hfull
+                · rw [if_neg e6]; ring
+              · rw [if_neg e5]; ring
+            · rw [if_neg e4]; ring
+          · rw [if_neg e3]; ring
+        · rw [if_neg e2]; ring
+      · rw [if_neg e1]; ring
+    rw [hb0]
+    ring
 
 /-- HOL `real_model_gamma_qu`. -/
 theorem real_model_gamma_qu (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -9513,15 +9589,15 @@ theorem real_model_quqy_sym (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → 
         gg_mcell V f u0 u1 (i + 1) := by
   sorry
 
-/-- HOL `real_model_ztg4`. -/
-theorem real_model_ztg4 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
-    (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
-    (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
-    (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
-    (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
-    ∀ i, cc_4 V u0 u1 f i →
-      a_spine5 + b_spine5 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
-  sorry
+/-! ## 编译窗预估
+
+真证行 : sorry 行 = 233 : 2（两处 sorry：ztg4_ALT 本体 + gamma4fgcy_sym23P25；
+前者是唯一实质债）。fix 循环预估：
+- Part A sym 六件 + Part B 桥五件 + 两代表支：机械，≤ 1 循环（< 1.5 小时）；
+- ztg4_ALT 四步胶合：WLOG 骨架 1-2 循环、step 2/3 对偶否证 1-2 循环、
+  step 4 的 16-shard 逐支展开机械但量大（建议 meta 程序化生成）、
+  GLFVCVK4 norm2hh 链 1 循环——合计 4-7 循环（5-10 小时）。
+合计预估 6-9 小时编译窗。 -/
 
 /-- HOL `real_model_azim1`. -/
 theorem real_model_azim1 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -9607,6 +9683,389 @@ theorem beta_bumpA_y_sym23 (y1 y2 y3 y4 y5 y6 : ℝ) :
     beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = beta_bumpA_yP25 y1 y3 y2 y4 y6 y5 := by
   simp only [beta_bumpA_yP25]
   ring
+
+/-! ## Part A：sym 补件（WLOG 引擎所需；PA21 同名件全 `private` 不可见，
+PA25 侧按 `gamma4fgcy_sym26`（:9650 真证）模板重装——全部 unfold+ring 级） -/
+
+/-- `rhoX` 在 (2 3)(5 6) 下的不变量（Gram 二次型对换对称；PA21
+`p21i_rhoX_sym23` 私件的 PA25 重装）。 -/
+theorem rhoX_sym23P25 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rhoX x1 x2 x3 x4 x5 x6 = rhoX x1 x3 x2 x4 x6 x5 := by
+  unfold rhoX; ring
+
+/-- `rhoX` 在 (2 6)(3 5) 下的不变量。 -/
+theorem rhoX_sym26P25 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rhoX x1 x2 x3 x4 x5 x6 = rhoX x1 x6 x5 x4 x3 x2 := by
+  unfold rhoX; ring
+
+/-- `deltaX` 在 (2 3)(5 6) 下的不变量（PA25 `gamma4fgcy_sym26` 证内 `hD2`
+同名件的具名化）。 -/
+theorem deltaX_sym23P25 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := by
+  unfold deltaX; ring
+
+/-- `rad2_y` 在 (2 3)(5 6) 下的不变量（HOL `rad2_y_sym` 的 sym23 半边；
+PA21 `p21i_rad2X_sym23` 私件的 PA25 重装）。 -/
+theorem rad2YP25_sym23P25 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    rad2YP25 y1 y2 y3 y4 y5 y6 = rad2YP25 y1 y3 y2 y4 y6 y5 := by
+  show rad2X (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+      = rad2X (y1 * y1) (y3 * y3) (y2 * y2) (y4 * y4) (y6 * y6) (y5 * y5)
+  unfold rad2X
+  rw [rhoX_sym23P25, deltaX_sym23P25]
+
+/-- `rad2_y` 在 (2 6)(3 5) 下的不变量（sym26 半边；deltaX 半边即
+`gamma4fgcy_sym26` 证内 `hD1`）。 -/
+theorem rad2YP25_sym26P25 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    rad2YP25 y1 y2 y3 y4 y5 y6 = rad2YP25 y1 y6 y5 y4 y3 y2 := by
+  have hD1 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x6 x5 x4 x3 x2 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX; ring
+  show rad2X (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+      = rad2X (y1 * y1) (y6 * y6) (y5 * y5) (y4 * y4) (y3 * y3) (y2 * y2)
+  unfold rad2X
+  rw [rhoX_sym26P25, hD1]
+
+/-- `dih_y` 在 (2 3)(5 6) 下的不变量（PA25 `gamma4fgcy_sym26` 证内 `hdy23`
+的具名化；模板逐字）。 -/
+theorem dihY_sym23P25 (a b c d e g : ℝ) :
+    dihY a b c d e g = dihY a c b d g e := by
+  have hD2 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX; ring
+  have hD4 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x3 x2 x4 x6 x5 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX4; ring
+  show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (g * g)
+      = dihXf (a * a) (c * c) (b * b) (d * d) (g * g) (e * e)
+  unfold dihXf
+  rw [hD2 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g),
+    hD4 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g)]
+
+/-- `dih_y` 在 (2 6)(3 5) 下的不变量（同上，`hdy26` 的具名化）。 -/
+theorem dihY_sym26P25 (a b c d e g : ℝ) :
+    dihY a b c d e g = dihY a g e d c b := by
+  have hD1 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x6 x5 x4 x3 x2 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX; ring
+  have hD3 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x6 x5 x4 x3 x2 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX4; ring
+  show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (g * g)
+      = dihXf (a * a) (g * g) (e * e) (d * d) (c * c) (b * b)
+  unfold dihXf
+  rw [hD1 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g),
+    hD3 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g)]
+
+/-- `beta_bumpA_y_sym26`（HOL ztg4 WLOG 第二支所需；SF-75 只带 sym23。
+乘积形下同为乘法 AC，与 sym23 两行同型——SF-75 落库后即真）。 -/
+theorem beta_bumpA_y_sym26 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = beta_bumpA_yP25 y1 y6 y5 y4 y3 y2 := by
+  simp only [beta_bumpA_yP25]
+  ring
+
+/-- `gamma4fgcy_sym23`（PA25 只有 sym26；PA21 `p21i_gamma4fgcy_sym23` 私件
+不可见）。 -/  -- SORRY 占位：期望战术 = 按 PA25 `gamma4fgcy_sym26`（:9650
+-- 真证）模板对 (2 3)(5 6) 置换重排：volY 经 hD2 一发、solY 12 项经
+-- dihY_sym23P25/dihY_sym26P25 逐项 rw、vol4f 的 dihY 边 4 项经 hdy23、
+-- 末 ring。模板同构机械活，但 solY 置换链索引须编译窗实测。
+theorem gamma4fgcy_sym23P25 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) :
+    gamma4fgcyP25 y1 y2 y3 y4 y5 y6 f = gamma4fgcyP25 y1 y3 y2 y4 y6 y5 f := by
+  sorry
+
+/-! ## Part B1：beta 桥三件（real，无 sorry） -/
+
+/-- poolc-w5 私件（SF-76 fix 就地内联，原批未落库）：`bump` 在临界半长区间
+[hminus, hplus] 的值域 0 ≤ bump ≤ 0.005（左端由 2h0 − hplus = 1.1946 < 1.2 ≤
+hminus 供给；右端平方非负恒成立）. -/
+private theorem p25w5_bump_mem (h : ℝ) (hlo : hminus ≤ h) (hhi : h ≤ hplus) :
+    (0:ℝ) ≤ bump h ∧ bump h ≤ 0.005 := by
+  have h12 : (1.2:ℝ) ≤ hminus := mi_hminus_prop.1
+  have hhp : hplus = 1.3254 := rfl
+  have hh0 : h0 = 1.26 := rfl
+  have hE : hplus - h0 = 0.0654 := by norm_num [hhp, hh0]
+  have hp2 : (0:ℝ) < (hplus - h0) ^ 2 := by norm_num [hE]
+  have h1 : -(hplus - h0) ≤ h - h0 := by
+    have h19 : (2:ℝ) * h0 - hplus = 1.1946 := by norm_num [hh0, hhp]
+    linarith
+  have h2 : h - h0 ≤ hplus - h0 := by linarith
+  have hsq : (h - h0) ^ 2 ≤ (hplus - h0) ^ 2 := by
+    have k1 : (0:ℝ) ≤ (hplus - h0) - (h - h0) := by linarith
+    have k2 : (0:ℝ) ≤ (hplus - h0) + (h - h0) := by linarith
+    have hp0 : (0:ℝ) ≤ ((hplus - h0) - (h - h0)) * ((hplus - h0) + (h - h0)) :=
+      mul_nonneg k1 k2
+    have e2 : ((hplus - h0) - (h - h0)) * ((hplus - h0) + (h - h0))
+        = (hplus - h0) ^ 2 - (h - h0) ^ 2 := by ring
+    have hfin : (0:ℝ) ≤ (hplus - h0) ^ 2 - (h - h0) ^ 2 := by rw [← e2]; exact hp0
+    linarith
+  have ht0 : (0:ℝ) ≤ (h - h0) ^ 2 / (hplus - h0) ^ 2 :=
+    div_nonneg (sq_nonneg _) (le_of_lt hp2)
+  have ht1 : (h - h0) ^ 2 / (hplus - h0) ^ 2 ≤ 1 := div_le_one hp2 |>.mpr hsq
+  constructor
+  · unfold bump; linarith
+  · unfold bump; linarith
+
+/-- HOL `beta_bumpA_y_lb`（merge_ineq.hl:1915-1926）的 Lean 化：无条件
+`betaBumpLb ≤ beta_bumpA_yP25`（COND_CASES ×6 → split_ifs 64 支：非全临界支
+乘积含 0 因子，norm_num 收口；全临界支 `bump(y1/2) − bump(y4/2) ≥ 0 − 0.005`
+由 `p25w5_bump_mem` 值域 0 ≤ bump ≤ 0.005 直供——即 HOL `beta_sub` 一步的
+Lean 化替代）。`p25w5_bump_mem` 系 poolc-w5 私件：本草案按同文件插入落位，
+私件可见；若独立成探针文件编译则须内联其 15 行体（见 gaps #4）。 -/
+theorem betaBumpLb_le_beta_bumpA_yP25 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 := by
+  simp only [beta_bumpA_yP25]
+  split_ifs with k1 k2 k3 k4 k5 k6
+  · -- 全临界支：y1, y4 ∈ 临界带 ⟹ y1/2, y4/2 ∈ [hminus, hplus]
+    obtain ⟨c1l, c1h⟩ := k1
+    obtain ⟨c4l, c4h⟩ := k4
+    have b1 := p25w5_bump_mem (y1 / 2) (by linarith) (by linarith)
+    have b4 := p25w5_bump_mem (y4 / 2) (by linarith) (by linarith)
+    have hlb : betaBumpLb = -0.005 := rfl
+    linarith
+  all_goals norm_num [betaBumpLb]
+
+/-- HOL `beta_bumpA_lb0`（merge_ineq.hl:2108-2133）的 Lean 化：六支析取下
+`0 ≤ beta_bumpA_yP25`（m = 0 桥；非全临界支含 0 因子，全临界支与析取矛盾）。 -/
+theorem beta_bumpA_lb0P25 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hdisj : ¬ criticalEdgeY y1 ∨ criticalEdgeY y2 ∨ criticalEdgeY y3 ∨
+      criticalEdgeY y5 ∨ criticalEdgeY y6 ∨ ¬ criticalEdgeY y4) :
+    (0 : ℝ) ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 := by
+  simp only [beta_bumpA_yP25]
+  split_ifs with k1 k2 k3 k4 k5 k6
+  · -- 全临界支：y1 临界、y4 临界、y2,y3,y5,y6 < 2·hminus 非临界 ⟹ 六支全假
+    exfalso
+    rcases hdisj with d | d | d | d | d | d
+    · exact d k1
+    · exact absurd k2 (not_lt.mpr d.1)
+    · exact absurd k3 (not_lt.mpr d.1)
+    · exact absurd k5 (not_lt.mpr d.1)
+    · exact absurd k6 (not_lt.mpr d.1)
+    · exact d k4
+  all_goals norm_num
+
+/-- HOL `ineq_approxA_ztg4`（merge_ineq.hl:2040-2078）的 Lean 化（消 `ineq`
+列表机，直写在盒式前提上）：γ/w ≤ γ/t ∧ m·lb ≤ bumpA ∧ (γ/w + m·lb > 脊 ∨
+rad2 > 2) ⟹ γ/t + bumpA > 脊 ∨ rad2 > 2。纯实数算术（HOL 证体 = ineq_MP +
+REAL_ARITH；g/t + bumpA ≥ g/w + m·lb 由两前提相加）。 -/
+theorem ineq_approxA_ztg4P25 (g : ℝ) (w t : ℕ) (m spine betaA rad2 : ℝ)
+    (hgw : g / (w : ℝ) ≤ g / (t : ℝ))
+    (hbm : m * betaBumpLb ≤ betaA)
+    (hcase : g / (w : ℝ) + m * betaBumpLb > spine ∨ rad2 > 2) :
+    g / (t : ℝ) + betaA > spine ∨ rad2 > 2 := by
+  rcases hcase with h | h
+  · exact Or.inl (by linarith)
+  · exact Or.inr h
+
+/-- HOL `gamma_wt`（merge_ineq.hl:2229-2246）的 Lean 化：γ ≥ 0 ∧ t ≤ w ∧
+0 < t ⟹ γ/w ≤ γ/t（分母 ℕ-cast；`div_le_div_iff` + 单调乘）。 -/
+theorem gamma_wtP25 (g : ℝ) (w t : ℕ) (hg : 0 ≤ g) (ht : t ≤ w) (htp : 0 < t) :
+    g / (w : ℝ) ≤ g / (t : ℝ) := by
+  have hw : (0 : ℝ) < w := by exact_mod_cast lt_of_lt_of_le htp ht
+  rw [div_le_div_iff₀ hw (by exact_mod_cast htp)]
+  exact mul_le_mul_of_nonneg_left (by exact_mod_cast ht) hg
+
+/-! ## Part B2：覆盖胶合钥匙（real，无 sorry） -/
+
+/-- wtcount6 展带式：y1 临界恒真、y2 < 2·hminus 非临界（ZTGIJCF4 shard
+前提）时 wtcount6Y = 1 + y3..y6 四临界指示（16-shard 逐支权账的钥匙；
+PA21:899-907 抽查锚的同型推广）。 -/
+theorem wtcount6Y_unfold_band (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hc1 : criticalEdgeY y1) (h2 : y2 < 2 * hminus) :
+    wtcount6Y y1 y2 y3 y4 y5 y6 =
+      1 + (if criticalEdgeY y3 then 1 else 0) + (if criticalEdgeY y4 then 1 else 0) +
+        (if criticalEdgeY y5 then 1 else 0) + (if criticalEdgeY y6 then 1 else 0) := by
+  unfold wtcount6Y wtcount3Y
+  rw [if_pos hc1, if_neg (fun d => absurd h2 (not_lt.mpr d.1))]
+  ring
+
+/-! ## Part B3：代表支收口两枚（real，无 sorry；其余 14 支同型机械重复，
+唯 w'/m 字面量与临界析取支不同——见各支注记） -/
+
+/-- 代表支 m = 1（HOL idv `ZTGIJCF4 0 1 0 0`：恰 y4 落 [2hmin,√8]，
+w' = 2、m = 1）：shard 左支 + wtcount6 = 2 + 全 lb 桥 + rad2 否证。
+「归序区域」前提 h4'（y4 ≤ 2·hplus，即 y4 临界）由 WLOG 对偶支的 rad2
+否证供给（HOL 证体 `SUBGOAL (y3 ≤ 2*hplus ∧ y5 ≤ 2*hplus ∧ y6 ≤ 2*hplus)`
+同型，见 ztg4_ALT 分支图 step 3）。 -/
+theorem ztg4_shard_finish_m1 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hc1 : criticalEdgeY y1) (h2 : y2 < 2 * hminus) (h3 : y3 < 2 * hminus)
+    (h2lo : (2 : ℝ) ≤ y2) (h3lo : (2 : ℝ) ≤ y3)
+    (h4lo : 2 * hminus ≤ y4) (h4' : y4 ≤ 2 * hplus) (h5 : y5 < 2 * hminus)
+    (h5lo : (2 : ℝ) ≤ y5) (h6 : y6 < 2 * hminus) (h6lo : (2 : ℝ) ≤ y6)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2)
+    (hshard : bank_ZTGIJCF4_0_1_0_0) :
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+        beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 := by
+  -- 盒边界换算（mi_two_hplus_le_two_sqrt2 : 2hplus ≤ 2√2、mi_sqrt8_eq : √8 = 2√2，
+  -- 均 PA21 真证；下界 2 ≤ y2/y3/y5/y6 由显式盒假设供给——从 y < 2hminus
+  -- 与 2 ≤ 2hminus 线性算术不可导，SF-76 fix 改语句补界）
+  have h2hi : y2 ≤ 2 * hminus := le_of_lt h2
+  have h3hi : y3 ≤ 2 * hminus := le_of_lt h3
+  have h4hi : y4 ≤ Real.sqrt 8 := by linarith [mi_two_hplus_le_two_sqrt2, mi_sqrt8_eq]
+  have h5hi : y5 ≤ 2 * hminus := le_of_lt h5
+  have h6hi : y6 ≤ 2 * hminus := le_of_lt h6
+  -- shard 实例化（bank_ZTGIJCF4lo/hi 字面量归约与 PA21:899-907 锚同型）
+  have hin := hshard y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 h2lo h2hi
+    (by norm_num [bank_ZTGIJCF4lo]; linarith) (by norm_num [bank_ZTGIJCF4hi]; linarith)
+    h4lo h4hi (by norm_num [bank_ZTGIJCF4lo]; linarith) (by norm_num [bank_ZTGIJCF4hi]; linarith)
+    (by norm_num [bank_ZTGIJCF4lo]; linarith) (by norm_num [bank_ZTGIJCF4hi]; linarith)
+  -- wtcount6 = 2（y1 茎临界 + y4 临界 + 四非临界）
+  have hwt : wtcount6Y y1 y2 y3 y4 y5 y6 = 2 := by
+    have hn2 : ¬ criticalEdgeY y2 := fun d => absurd h2 (not_lt.mpr d.1)
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    unfold wtcount6Y wtcount3Y
+    rw [if_pos hc1, if_neg hn2, if_neg hn3, if_pos ⟨h4lo, h4'⟩, if_neg hn5, if_neg hn6]
+  -- 分母的 ℝ-cast 版（rw [hwt] 后 ↑2 与 h 内字面量 2 对齐）
+  have hwt' : ((wtcount6Y y1 y2 y3 y4 y5 y6 : ℕ) : ℝ) = 2 := by
+    rw [hwt]; norm_cast
+  -- w' = 2、m = 1 的字面量归约（PA21:899-907 锚同款 norm_num）
+  have w2v : (1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 : ℝ) = 2 := by
+    norm_num [bankGenMid]
+  have m1v : (if 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 = 2 ∧
+      (1 : ℕ) = 1 then 1 else 0 : ℝ) = 1 := by
+    norm_num [bankGenMid]
+  rcases hin with h | hrad2
+  · rw [m1v, w2v] at h
+    norm_num at h
+    rw [hwt']; norm_num
+    -- m = 1 桥：lb ≤ bumpA（无条件 lb 桥直供，即 HOL beta_bumpA_lb1）
+    have hbm := betaBumpLb_le_beta_bumpA_yP25 y1 y2 y3 y4 y5 y6
+    linarith
+  · -- rad2 否证支：rad2YP25 = yOfX rad2X 为 rfl（rad2XP25 重指向先例）
+    have heq : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+    rw [heq] at hrad
+    linarith
+
+/-- 代表支 m = 0（HOL idv `ZTGIJCF4 0 0 0 0`：四边全 < 2hmin，w' = 1、
+m = 0）：shard 左支 + wtcount6 = 1 + lb0 析取桥 + rad2 否证。 -/
+theorem ztg4_shard_finish_m0 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hc1 : criticalEdgeY y1) (h2 : y2 < 2 * hminus) (h3 : y3 < 2 * hminus)
+    (h4 : y4 < 2 * hminus) (h5 : y5 < 2 * hminus) (h6 : y6 < 2 * hminus)
+    (h2lo : (2 : ℝ) ≤ y2) (h3lo : (2 : ℝ) ≤ y3) (h4lo : (2 : ℝ) ≤ y4)
+    (h5lo : (2 : ℝ) ≤ y5) (h6lo : (2 : ℝ) ≤ y6)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2)
+    (hshard : bank_ZTGIJCF4_0_0_0_0) :
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+        beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 := by
+  have h2hi : y2 ≤ 2 * hminus := le_of_lt h2
+  have h3hi : y3 ≤ 2 * hminus := le_of_lt h3
+  have h4hi : y4 ≤ 2 * hminus := le_of_lt h4
+  have h5hi : y5 ≤ 2 * hminus := le_of_lt h5
+  have h6hi : y6 ≤ 2 * hminus := le_of_lt h6
+  have hin := hshard y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 h2lo h2hi
+    h3lo h3hi h4lo h4hi h5lo h5hi h6lo h6hi
+  have hwt : wtcount6Y y1 y2 y3 y4 y5 y6 = 1 := by
+    have hn2 : ¬ criticalEdgeY y2 := fun d => absurd h2 (not_lt.mpr d.1)
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    unfold wtcount6Y wtcount3Y
+    rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hn4, if_neg hn5, if_neg hn6]
+  have hwt' : ((wtcount6Y y1 y2 y3 y4 y5 y6 : ℕ) : ℝ) = 1 := by
+    rw [hwt]; norm_cast
+  have w1v : (1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 : ℝ) = 1 := by
+    norm_num [bankGenMid]
+  have m0v : (if 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 = 2 ∧
+      (0 : ℕ) = 1 then 1 else 0 : ℝ) = 0 := by
+    norm_num [bankGenMid]
+  rcases hin with h | hrad2
+  · rw [m0v, w1v] at h
+    norm_num at h
+    rw [hwt']; norm_num
+    -- m = 0 桥：0 ≤ bumpA（lb0 析取：y4 < 2hminus ⟹ ¬临界 = 第六支）
+    have hbm : (0 : ℝ) ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 :=
+      beta_bumpA_lb0P25 y1 y2 y3 y4 y5 y6
+        (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+          (fun d => absurd h4 (not_lt.mpr d.1)))))))
+    linarith
+  · have heq : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+    rw [heq] at hrad
+    linarith
+
+/-! ## Part B4：ztg4_ALT（statement 真；体 = 本草案唯一硬 sorry） -/
+
+/-- HOL `ztg4_ALT`（merge_ineq.hl:2632-2646）Lean 化：statement =
+`ztg4_concl`（:2267-2276）的显式盒式展开（消 `ineq` 列表机；γ 项用 PA20
+`gamma4fgcy`，与 PA21 各 bank shard 同名同体）。19 张证书全在库：
+`proj_bank_GLFVCVK4`/`proj_bank_MKFKQWUhalfwt`/`proj_bank_MKFKQWU`/
+`proj_bank_ZTGIJCF4_*`（PA21:3740-3905，全部 `h.2.2.2.<…>` 具名投影）。 -/
+theorem ztg4_ALT (hnl : pack_nonlinear_non_ox3q1h) (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hb1 : 2 * hminus ≤ y1) (hb1' : y1 ≤ 2 * hplus)
+    (hb2 : 2 ≤ y2) (hb2' : y2 ≤ Real.sqrt 8)
+    (hb3 : 2 ≤ y3) (hb3' : y3 ≤ Real.sqrt 8)
+    (hb4 : 2 ≤ y4) (hb4' : y4 ≤ Real.sqrt 8)
+    (hb5 : 2 ≤ y5) (hb5' : y5 ≤ Real.sqrt 8)
+    (hb6 : 2 ≤ y6) (hb6' : y6 ≤ Real.sqrt 8)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2) :
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+        beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 := by
+  -- 期望战术（HOL merge_ineq.hl:2310-2631 逐段对照；编译窗按此分四步走）：
+  -- step 1（WLOG 骨架，HOL :2316-2351 REAL_WLOG_SIMPLEX_LEMMA2_LE 两支）：
+  --   不失一般性设 (y2,y3) 按 sym23=(1,3,2,4,6,5)、(y5,y6) 按
+  --   sym26=(1,6,5,4,3,2) 归序——所需 sym 件已由 Part A 供给：
+  --   rad2YP25_sym23P25/sym26P25、beta_bumpA_y_sym23（SF-75）/
+  --   beta_bumpA_y_sym26、wtcount6_y_sym23/sym26（PA25 :9582/:9588 真证）、
+  --   dihY_sym23P25/sym26P25、gamma4fgcy_sym23P25（Part A 唯一 sorried 件）/
+  --   gamma4fgcy_sym26（PA25 :9650 真证）。Lean 化可用数学归纳式 wlog 或
+  --   直接 by_cases y3 ≤ y6 等 + 对偶调用（HOL 引擎体即两支 meson）。
+  -- step 2（y2 定界，HOL :2385-2392 + :2402-2427）：y2 ≥ 2hminus 时
+  --   proj_bank_MKFKQWU 实例化（盒前提 y3,y5,y6 ≥ 2hminus 由 step 3 的对偶
+  --   rad2 否证回填），其单支结论 yOfX rad2X > 2 与 hrad 矛盾 ⟹ y2 < 2hminus。
+  --   y2 ≤ 2hminus 且 y2 < 2 的平凡边界由盒前提吃。
+  -- step 3（超临界排除，HOL :2414-2440 三连对偶）：由 sym 置换处的 16-shard
+  --   实例（ISPECL [y1;y3;y2;y4;y6;y5] 等三组）的 rad2 支分别否证
+  --   y3 > 2hplus / y5 > 2hplus / y6 > 2hplus ⟹ y3,y5,y6 ≤ 2hplus。
+  -- step 4（GLFVCVK4 quarter 支，HOL :2380-2384 + :2441 起逐支）：
+  --   proj_bank_GLFVCVK4 三支——rad2 支否证；norm2hh 支经 quarter_norm2hh
+  --   （Lean 化 = norm2hh unfold +平方放缩链，PA25 可仿 IneqClosureDefs
+  --   quarter_lemma 系）得六重临界 ⟹ beta 项 = bump 差、wtcount = 2；
+  --   gamma > 0 支 + ZTGIJCF4 ×16 的 2hmin 二分（by_cases 四连 = 16 支），
+  --   每支按 ztg4_shard_finish_m1/m0 两代表同型收口（w' 字面量归约
+  --   norm_num [bankGenMid]；m = 1 支用 betaBumpLb_le_beta_bumpA_yP25，
+  --   m = 0 支用 beta_bumpA_lb0P25——析取支由 y4 < 2hminus / y4 临界 /
+  --   step 3 的 y_k ≤ 2hplus 组合给出）；GLFVCVK4y4crit/supercrit/subcrit
+  --   三张 y4 专用 shard 在 y4 三段二分处消费（eta_y 支否证链沿用 HOL
+  --   beta_bumpA_lb0 消费位）。收口统一走 ineq_approxA_ztg4P25。
+  sorry
+
+/-- HOL `real_model_ztg4`（OXLZLEZ3.hl:6666-6707）：GG_MCELL_GENERAL +
+c_4_azim_mcell_dih_y + ztg4_ALT + MCELL4_DOMAIN 四件串联。语句与 PA25:9507
+stub 逐字一致（零改动），证体为四件消费 + 盒迁移。（SF-76 fix：移至
+ztg4_ALT 声明之后——Lean 4 不可前向引用。） -/
+theorem real_model_ztg4 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+    (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
+    (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
+    (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+    (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+    ∀ i, cc_4 V u0 u1 f i →
+      a_spine5 + b_spine5 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
+  intro i h4
+  -- 四件套（草案一供给 GG_MCELL_GENERAL；其余三件 PA25 在库真证）
+  have hgg := GG_MCELL_GENERAL V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey h4 hr
+  have haz := c_4_azim_mcell_dih_y V u0 u1 w0 n f i hn hp hs hsize h0 h1 hper hnc
+    hcey hr h4
+  obtain ⟨hb01, hb01', hb02, hlt02, hb03, hlt03, hb04, hlt04, hb06, hlt06, hb05,
+    hlt05, hrad13, -⟩ := MCELL4_DOMAIN V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1
+    hper hnc hcey hr h4
+  rw [hgg, haz]
+  -- 盒迁移：2√2 → √8（mi_sqrt8_eq）；y 番序与 GG_MCELL_GENERAL/c_4_azim 一致
+  have le8 : ∀ q : ℝ, q < 2 * Real.sqrt 2 → q ≤ Real.sqrt 8 := by
+    intro q hq; rw [mi_sqrt8_eq]; linarith
+  have hz := ztg4_ALT hnl (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+    (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+    hb01 hb01' hb02 (le8 _ hlt02) hb03 (le8 _ hlt03) hb04 (le8 _ hlt04)
+    hb05 (le8 _ hlt05) hb06 (le8 _ hlt06) hrad13
+  -- γ 双名桥：a_spine5/b_spine5 = aSpine5/bSpine5 为 rfl（PA3 重指向先例，
+  -- TEWNSCJ_MERGED 同款）；gamma4fgcyP25 与 PA20 gamma4fgcy 同体（PA25:124
+  -- def 逐字），exact 级 defeq（gammaX_gamma4fgcy_ALT 先例）；若 elaborator
+  -- 拒绝，前补 `show` 桥（gaps #6）。
+  rw [show a_spine5 = aSpine5 from rfl, show b_spine5 = bSpine5 from rfl]
+  exact le_of_lt hz
 
 /-- HOL `real_model_gamma10`. -/
 theorem real_model_gamma10 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
