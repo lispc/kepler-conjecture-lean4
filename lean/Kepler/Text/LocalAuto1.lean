@@ -2797,14 +2797,15 @@ theorem QKNVMLB1_concl : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
       (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) := by
   sorry
 
-/-- HOL `QKNVMLB2_concl` (appendix.hl:1064). Proof pending. -/
+/-- HOL `QKNVMLB2_concl` (SF-65 真化：双半片实现约定改采 corpus 正本
+QKNVMLB.hl:5525/:5527 形——RULING 2026-09-21 IV 判孪生侧忠实)。 -/
 theorem QKNVMLB2_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
     (vv : ℕ → V3),
     (s', s'') = scsSliceV39 s p q d' d'' mkj →
     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     s.d ≤ d' + d'' →
-    dsvV39 s vv ≤ dsvV39 s' (fun i => vv ((i + p) % s'.k)) +
-      dsvV39 s'' (fun i => vv ((i + q) % s''.k)) := by
+    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) := by
   sorry
 
 /-- HOL `QKNVMLB3_concl` (appendix.hl:1075). Proof pending. -/

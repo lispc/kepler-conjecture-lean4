@@ -1457,8 +1457,8 @@ theorem QKNVMLB2_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (s', s'') = scsSliceV39 s p q d' d'' mkj →
     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     s.d ≤ d' + d'' →
-    dsvV39 s vv ≤ dsvV39 s' (fun i => vv ((i + p) % s'.k)) +
-      dsvV39 s'' (fun i => vv ((i + q) % s''.k)) := by
+    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) := by
   sorry
 
 /-! ### (d) Twin proved but the shape delta is not bridgeable (5) -/
