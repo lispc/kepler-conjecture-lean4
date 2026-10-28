@@ -60,6 +60,7 @@
 10. `排队` **WSEWPCH W2(c)** LA2:1488 / LA7:444 双桩统一小波（待 w5a 释放 LA2）。
 11. `就绪·待编译窗` **W1 银行·装配波（30 件）**（triage-w1 首发建议 2026-10-28）：分诊 A3+B27 = LA1 registry 22 箭头 + LA20 3 + LA22 is_scs 3 + LA27 1 + PA2 1——全树剩余唯一大面机械/装配区，kit `is_scs_funlist_basic_p22` + `transferV39` 孪生补齐即批量闭，零 farm 依赖，顺带扫清 EAPGLE 所需注册表面。底账 `docs/scouts/direct-source-triage.tsv`。排序：nli-prep-w2 / poolc-w6 PA25 / tamespine 落库序列之后，占下一个编译窗。
    > **bola1-scout 修正（2026-10-28，§7 交叉结论）**：装配级大方向一致，但——①CNICGSF1-5 与 LA33 六箭头孪生**已证**，W0 审计后直源立减 5+；②OTMTOTJ1-4/NWDGKXH/YOBIMPP/MIQMCSN 空半侧**非**纯记录展开；③transferV39 缺口仅 YXIONXL2 的 k=3（≤200 行），EAPGLE 表面 = ZITHLQN 装配（LA25 八件 CASE 已证）。**波 1 = 装配收尾（R/S，~1,200–1,800 行）**：LKGRQUI→AQICLXA/FUNOUYH、SET_EQ_DIAG_STAB_5I1/5I2/5M1（6I1 镜像模板）→OTMTOTJ1-4 R 半、HIJQAHA 5M3 slice 6 件、FEKTYIY 等 9 件、ZITHLQN→EAPGLE；施工法 = 报告 §8 五模板函数。W0 桌审（62 条 WIRE taint 审计）为前置小窗作业。
+   > **w1asm-w1 施工图（2026-10-28，`lane_snapshots/w1asm-w1/`，22 节全量）**：风险分布 **绿 7 / 黄 11 / 红 4**（红 = OTMTOTJ1-4 本体，被 BERAK×4 mnt11 门死滑波 3；HIJQAHA/JLXFDMJ 同门并入黄节）；编译窗估计 **35–50h**（绿 7 件 8–12h + 黄 11 件含 fix 循环 25–40h）；草案 4 件（5I1/5I2/5M1 + LKGRQUI→AQICLXA/FUNOUYH）未编译、逐行模板可追。**新 SF 候选**：LKGRQUI 注册表陈述缺 `scsDiag`+`isScsSliceV39` 前提（HOL LKGRQUI.hl:87 现形不可证）→ 已喂 fixscout-w1 并入勘察。**两翻案**：LA20 四处 NEEDS 注记过时（YXIONXL3/PROP_EQU_IS_SCS 已证于 LA12，AQICLXA/FUNOUYH 装配层转绿）；BKOSSGE_p16 本体已无 sorry（连线降绿）。
 
 ## 3. 两周战术排序（2026-10-25 战略备忘录定稿）
 
@@ -115,6 +116,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-28（晨，续 4）**：**w1asm-w1 完工**（施工图 22 节入快照，零正本改动）：绿 7/黄 11/红 4，编译窗估 35–50h；草案 4 件未编译可追；新 SF 候选 LKGRQUI 前提缺失（已喂 fixscout-w1 并案）；LA20 注记过时与 BKOSSGE_p16 两翻案记档。1:1 补位发车 **w0prep-w1**（W0 桌审静态预分析：62 条 WIRE 的 taint 预测表 + 探针脚本备跑，窗口期分钟级确认）。
 - **2026-10-28（晨，续 3）**：**tooling-w1 完工落库**（§3 第 5 项 ✅）：`scripts/integrate_lane.sh` 307 行六步流水线，沙盒 33/33 + 演练 13/13 全过，编排者通读验收（闸子壳紧邻 cd / pathspec 铁律 / cp 前五重漂移预检均在位）；新坑入册：macOS bash 3.2 + C.UTF-8 下 `$VAR` 后紧跟中文被吞进变量名，全脚本花括号化。1:1 补位发车 **fixscout-w1**（LA1 HOLD 28 条中形状差 10–12 条的 SF 勘察，bola1 dep-map 为底稿）。
 - **2026-10-28（晨，续 2）**：**bola1-scout 完工入档**（98 项注册表全量表 + 216 行报告，零正本改动）：LocalConcl.lean 装配出口翻案（90/90 重暴露 = 62 WIRE / 28 HOLD，真实待施工 ≈40）；预判部分成立（R+S 44%，SCS 记录半侧 16 条已证）；对 triage W1 波三点修正（孪生已证 −5+ / 空半侧真数学 / transferV39 缺口仅 YXIONXL2 k=3）随 §2 第 11 项修订入档；波次方案 W0 桌审 + 3 波 + FIX 线。1:1 补位发车 **w1asm-w1**（波 1 施工图 + 高置信模板片草案，快照交付待编译窗验证）。
 - **2026-10-28（晨，续）**：**sfprep-w1 完工**（四槽 SF-59..62 草案 + 补丁 8/8 hunk 自检，零正本改动；编号 59..62 全库 grep 零占用实证）：唯一结构折算 = SF-61 两支撑 def（`verticesSet2`/`facesAtV2`）随迁；SF-62 硬依赖 61；`textCapstone` 零触碰实证（只消费 `hgg4.1`，`hgg4` 整体透传）；WMLNYMD.hl:257/:341 实证 `REWRITE_TAC[good_graph;good_faces]` 拆支消费 = `tameCorrespondenceIso` 清偿内容来源；三处过时注记刷新清单随草案。四案呈批入 §6 第 10 项。1:1 补位发车 **tooling-w1**（`scripts/integrate_lane.sh` 固化，§3 第 5 项：md5→cp→diff 断言→闸→pathspec 提交→push→地图提醒，防 cwd 重置与误提交两坑）。
