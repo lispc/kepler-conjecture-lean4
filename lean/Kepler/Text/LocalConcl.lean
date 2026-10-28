@@ -1485,18 +1485,16 @@ theorem OEHDBEN_discharged : main_nonlinear_terminal_v11 →
     scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1} := by
   sorry
 
-/-- HOLD (d) `TBRMXRZ1_concl`: the proved `TBRMXRZ1_p22` composes in the
-opposite order (`g ∘ f`, needs the inner slope `0 < f'`, concludes
-`reEqvl h' g'`) where the registry carries `f ∘ g` and wants `reEqvl f' h'`;
-the registry hypotheses carry no information about the inner g-slope sign,
-so no witness term exists (the registry statement is in fact not provable
-from its own hypotheses). -/
+/-- WIRE `LocalAuto1.TBRMXRZ1_concl` <- `TBRMXRZ1_p22` (verbatim twin;
+SF-69: registry re-based onto the corpus original form — `(g ∘ f)` order,
+inner-slope `0 < f'`, concl `reEqvl h' g'`; the appendix's `f ∘ g` shape
+is a false proposition, unfixedable). -/
 theorem TBRMXRZ1_discharged : ∀ (f g : ℝ → ℝ) (f' g' h' x y : ℝ),
     derivedForm True f f' x (Set.univ : Set ℝ) →
     derivedForm True g g' y (Set.univ : Set ℝ) →
     derivedForm True (g ∘ f) h' x (Set.univ : Set ℝ) →
-    0 < f' → f x = y → reEqvl h' g' := by
-  sorry
+    0 < f' → f x = y → reEqvl h' g' :=
+  TBRMXRZ1_p22
 
 /-- HOLD (d) `VPWSHTO_concl`: master `VPWSHTO_p15` still sorried;
 `VPWSHTO_PRIME_p15` is proved but concludes the `∃ i ∈ Icc 0 4` diagonal-
