@@ -18,9 +18,9 @@
 
 三接口独立债量（Assembly 81 的分解）：**hNL（非线性不等式）= 77 条 nli\***（57
 `nliPackNonlinearRest`（TSV 实数，含 A2 在飞的 rest 9）+ 8 `nliTskBank` + 7 `nliCell3Bank` + 直挂若干）；**hLP（线性规划）
-= 1 条**（`lpArchiveCertificatesDebt`，Assembly:6224，纯逻辑部分已真推导）；**hTC
+= 1 条**（`lpArchiveCertificatesDebt`，Assembly:6236（triage-w1 2026-10-28 实测行漂，原记 6224），纯逻辑部分已真推导）；**hTC
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
-~74 条。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
+~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
 ## 1. 在飞（**车道政策更新 2026-10-26 午：用户令维持 5 条**——当前 6 在飞，下一个完成不补位降至 5，此后 1:1 补位维持 5）
 
@@ -58,6 +58,7 @@
 9. `重写` **nli B 批（RQWUDDU 46 叶 + QITNPEAv2_4003532128 16 叶）——原口径作废**（nli-b-toolchain 车道 2026-10-26 结论）：工具链复活**成功**（Homebrew flint 3.6.0 直配 `bb_arb.c` 无需 shim，gen-11 发射-构建-探针全链本机即到即用，TSKAJXY-delta_x4 E2E 实证）；但**历史 G4 证书 0/46、0/16 通过精确有理复核——从来就不健全**（2026-09-20 spbug2 修复前 disj 判据读被污染的 `stk[0]`，任意盒假命中，G4 rc=0 假绿）。两案真残叶（15/19）根因 = 主目标与 disj 曲面切界层，纯二分无望，**需 prep 剖分/单调性数学预处理通道（新波）**。配套：`emit_rpn.py` var_lt 端点写反已修（在库 7+ case 数据中招但**零已落地污染**——nliTsk* 全是 sorry 桩，唯一入库 case 文件 CTSKAJXY_delta_x4 已精确复核 sound）；**农场纪律：9-20 前旧证书一律按不健全重验，重发射必须用修复后发射器**。
    > 勘误（10-26）：此前此项写作「nli A1 批 待 A2 完工再开」——**A1（rest 20 FWGKMBZ）早已于 2026-10-22 落库 `286d11b8`**（Assembly:805–8xx 真证，606 olean 在主仓，今日探针标准三），系沿用 10-22 侦察报告建议未核对所致。
 10. `排队` **WSEWPCH W2(c)** LA2:1488 / LA7:444 双桩统一小波（待 w5a 释放 LA2）。
+11. `就绪·待编译窗` **W1 银行·装配波（30 件）**（triage-w1 首发建议 2026-10-28）：分诊 A3+B27 = LA1 registry 22 箭头 + LA20 3 + LA22 is_scs 3 + LA27 1 + PA2 1——全树剩余唯一大面机械/装配区，kit `is_scs_funlist_basic_p22` + `transferV39` 孪生补齐即批量闭，零 farm 依赖，顺带扫清 EAPGLE 所需注册表面。LA1-22 部分由 bola1-scout（在飞）细化波次与施工图；底账 `docs/scouts/direct-source-triage.tsv`。排序：nli-prep-w2 / poolc-w6 PA25 / tamespine 落库序列之后，占下一个编译窗。
 
 ## 3. 两周战术排序（2026-10-25 战略备忘录定稿）
 
@@ -114,6 +115,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-28（晨）**：**SF-57 全链闭合推送**（① `a08b2459` GoodListNodes 真化、② `4ff27ac1` GoodGraph 桥第二槽同车件；闸② 07:33 PASS @goodGraphV4Spine_implies 默认七根；草案 h.2 误写经闸实测勘误 `81e027c9`）。调度窗口四阶段收口：w2 闸 PASS（→`8aa1f2c0` 已落）/ lp-w1 冒烟 5/5 / hlp-w6a 验收构建+探针全绿（→`cef05bb7` 已落）/ A2 续跑宿主（14 路在编；上轮 Shard2682/2683 残件 137 系开窗 kill 非病）。**triage-w1 完工入档**（快照交付，零正本改动）：151 直源全量分诊 **A3/B28/C14/D0/E106/F0**，对账零实质差异，两处 §0 记档级勘误随本提交（~74→70、lpDebt 行号漂）；77 条 nli 桩形状逐字同一（A1 模板压成发射-粘合两步）；首发建议 **W1 银行·装配波 30 件**入 §2 第 11 项。同晨发三条文本车道：bola1-scout（§2 第 6 项就绪件首发）/ sfprep-w1（GoodGraph 四槽 SF-59..62 草案预备）/ triage-w1。nli-prep-w2 GiFactorization（370 行零真 sorry）已 staged，闸循环在 A2 锁后排队抢窗。
 - **2026-10-27（上午）**：**10-26 18:00 机器死机重启**（spindump 实证系统级 hang；当时 39 lean 进程 + 高负载，判定过载）。损失：/tmp 全清（A2 工作区+~400 olean、五车道工作区、锁脚本）。完好：全部已推送落库 + 187 快照（w2 件 MD5 复验一致）。**恢复五件**：① **wsewpch-w6a 死后遗产落库 `2cee47ad`**——车道 14:58 已完工（8/9 真证 + GENERIC_LOCAL_FAN_AZIM_POS 凸世界诚实开桩，LA7 22→14），完工通知被重启吞没，快照经验收闸 PASS 补落；新增 import AzimBridge 三重核验（第三雷 = LA3:96 DecidableEq 实例冲突，实测踩中修复）；② 构建锁正本收进仓 `lean/scripts/kepler_build_lock.sh`（防再毁）；③ A2 构建重启（新 clone @`2cee47ad`，提速代码全在 git，进度归零重跑 ETA ~55h）；④ 四车道补发：la5-bank-w1 / nli-prep-w1 重启、poolc-w3 重启（零快照全损失）、lp-w1-root 续作（sb00–sb02 发射源码快照幸存，免重发；**改 60 条/段放锁轮转**——上轮单次长持锁堵死他人验收闸的教训）；⑤ 车道任务书全面新增「每 60 分钟强制快照」纪律。nkezbfc-giant-w2 验收闸被死机打断，其快照完好待重闸（落库序列在 w6a 之后）。负载防护：死机后先起 A2+2 车道，随稳定逐个回 5。
 - **2026-10-26（晚）**：**hlp-w6a 续跑收工**（两次 EPIPE 不死）：19,715 条对齐定理全量发射（24 文件，违禁词 CLEAN，tracked 零改动），五停批门槛全绿 + 两次停批事件如实处理（读序 bug/正则锚 bug）；**确诊并修复 Lean 4.32 String.toList O(n²) 内核病根**（字节级单遍解码器，全库 19,715 串语义对拍 0 失配）；族普查 182 族 ↔ 127 lpIneqsIds 精确交集=0（两命名空间，W6-D 勿混用）。落库押后至验收构建（锁队列；车道无人值守链自动补跑）。**la5-bank-w1 补位发车**（w6b 遗留四银行桩：INTERSECTION_LEMMA→KCHMAMG，DEV_PROBE 700 行骨架 + 施工图现成；警告 SF-55/56 后骨架须对当前 HEAD 复核）。
 - **2026-10-26（傍晚）**：用户五项裁决入档——hLP (i) GoodListNodes 真化**批**（W6-B 首口）+ (ii) W6-PIN**批**（并行排期）+ (iii) 磁盘窗口**缓议**；PA2 桩族**暂不删**（留 M1）；PA24/PackingConcl 整合**批**（时点编排者定 = WSEWPCH 链收官，预公告 +84）；native_decide 政策**暂缓**（呈报过全 vanilla 已性能可行）。**nli-prep-w1 提级为补位首发**：切界层数学预处理波（QITNPEAv2 主攻，rad2X 样板链 + prep 剖分/单调性双路），任务书已立。

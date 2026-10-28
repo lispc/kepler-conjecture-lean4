@@ -1,0 +1,152 @@
+name	file	line	级	理由	HOL锚或阻塞件	建议波
+nliCell3QZECFICwt0	lean/Kepler/Assembly.lean	348	E	cell3 bank 叶，deferred-compute（gamma3fXDivSqrtdelta 实分析内容，证书不在库）；形状 `: bank_QZECFICwt0 := sorry`	ineq.hl:1372；G4 证书发射+§2a 查表粘合	W4-farm
+nliCell3QZECFICwt0corner	lean/Kepler/Assembly.lean	354	E	cell3 bank 叶，deferred-compute	ineq.hl:1389；G4 证书+粘合	W4-farm
+nliCell3QZECFICwt0sqrt8	lean/Kepler/Assembly.lean	360	E	cell3 bank 叶，deferred-compute（析取第二支 eta_y^2>2）	ineq.hl:1406；G4 证书+粘合	W4-farm
+nliCell3QZECFICwt1	lean/Kepler/Assembly.lean	366	E	cell3 bank 叶，deferred-compute（h0cut 参数化双支）	ineq.hl:1425；G4 证书+粘合	W4-farm
+nliCell3QZECFICwt2A	lean/Kepler/Assembly.lean	372	E	cell3 bank 叶，deferred-compute（h0cut y4/y5 双支）	ineq.hl:1443；G4 证书+粘合	W4-farm
+nliCell3CIHTIUM	lean/Kepler/Assembly.lean	378	E	cell3 bank 叶，deferred-compute	ineq.hl:1462；G4 证书+粘合	W4-farm
+nliCell3CJFZZDW	lean/Kepler/Assembly.lean	384	E	cell3 bank 叶，deferred-compute	ineq.hl:1479；G4 证书+粘合	W4-farm
+nliTskGXSA	lean/Kepler/Assembly.lean	398	E	nliTsk bank 叶，deferred-compute（x-空间盒，析取第二支 deltaX<0）	ineq.hl:359；G4 证书+粘合	W4-farm
+nliTskIYOUOBFsharpv2	lean/Kepler/Assembly.lean	404	E	nliTsk bank 叶，deferred-compute	ineq.hl:242；G4 证书+粘合	W4-farm
+nliTskIYOUOBFsym	lean/Kepler/Assembly.lean	410	E	nliTsk bank 叶，deferred-compute（析取三排序支）	ineq.hl:223；G4 证书+粘合	W4-farm
+nliTskRIBCYXUsharp	lean/Kepler/Assembly.lean	415	E	nliTsk bank 叶，deferred-compute	ineq.hl:165；G4 证书+粘合	W4-farm
+nliTskRIBCYXUsym	lean/Kepler/Assembly.lean	421	E	nliTsk bank 叶，deferred-compute（析取八排序支）	ineq.hl:183；G4 证书+粘合	W4-farm
+nliTskTADIAMB	lean/Kepler/Assembly.lean	427	E	nliTsk bank 叶，deferred-compute（外接半径平方结论）	ineq.hl:127；G4 证书+粘合	W4-farm
+nliTskWKGUESBsym	lean/Kepler/Assembly.lean	433	E	nliTsk bank 叶，deferred-compute（析取四排序支）	ineq.hl:281；G4 证书+粘合	W4-farm
+nliTskXLLIPLS	lean/Kepler/Assembly.lean	439	E	nliTsk bank 叶，deferred-compute	ineq.hl:304；G4 证书+粘合	W4-farm
+nliRest1965189142a	lean/Kepler/Assembly.lean	691	E	rest 叶，deferred-compute（asnFnhk 实分析内容，证书不在库）	ineq.hl:1598；G4 证书+粘合	W4-farm
+nliRestJSPEVYT	lean/Kepler/Assembly.lean	711	E	rest 叶，deferred-compute	ineq.hl:1495；G4 证书+粘合	W4-farm
+nliRestQITNPEA4003532128a	lean/Kepler/Assembly.lean	717	E	rest 叶，deferred-compute	ineq.hl:1290；G4 证书+粘合	W4-farm
+nliRestIXPOTPA	lean/Kepler/Assembly.lean	724	E	rest 叶，deferred-compute（PA25 IXPOTPA_MERGED 已消费投影）	ineq.hl:1265；G4 证书+粘合	W4-farm
+nliRestTXQTPVC	lean/Kepler/Assembly.lean	731	E	rest 叶，deferred-compute（PA25 TXQTPVC_MERGED 已消费）	ineq.hl:1241；G4 证书+粘合	W4-farm
+nliRestQITNPEA3725403817	lean/Kepler/Assembly.lean	739	B	A2 在飞（CQITNPEAx3725403817，964,984 叶内核闭合证书在库外）：A2-W2b′ 完工→Glue 粘合落库即闭（任务书示例件）	证书内核已闭合（2026-09-18，公理标准三）；阻塞件=A2 构建+回灌+Glue	W2-A2完工
+nliRestQITNPEAv24003532128	lean/Kepler/Assembly.lean	746	E	rest 叶，deferred-compute；切界层数学预处理通道候选（nli-prep-w1 口径）	ineq.hl:1193；G4 证书+粘合	W4-farm
+nliRestPEMKWU	lean/Kepler/Assembly.lean	752	E	rest 叶，deferred-compute	ineq.hl:1169；G4 证书+粘合	W4-farm
+nliRestTEWNSCJ	lean/Kepler/Assembly.lean	759	E	rest 叶，deferred-compute（PA25 TEWNSCJ_MERGED 桥 p25_gamma23Full8X_yOfX_eq 就位）	ineq.hl:1146；G4 证书+粘合	W4-farm
+nliRestQITNPEA5400790175b	lean/Kepler/Assembly.lean	766	E	rest 叶，deferred-compute	ineq.hl:1121；G4 证书+粘合	W4-farm
+nliRestQITNPEA5400790175a	lean/Kepler/Assembly.lean	772	E	rest 叶，deferred-compute（盒同 rest13）	ineq.hl:1103；G4 证书+粘合	W4-farm
+nliRestQITNPEA3848804089	lean/Kepler/Assembly.lean	778	E	rest 叶，deferred-compute	ineq.hl:1059；G4 证书+粘合	W4-farm
+nliRestQITNPEA5814748276	lean/Kepler/Assembly.lean	784	E	rest 叶，deferred-compute（盒同 rest15）	ineq.hl:1041；G4 证书+粘合	W4-farm
+nliRestQITNPEA6206775865	lean/Kepler/Assembly.lean	790	E	rest 叶，deferred-compute（盒同 rest15）	ineq.hl:1023；G4 证书+粘合	W4-farm
+nliRestQITNPEA5653753305	lean/Kepler/Assembly.lean	796	E	rest 叶，deferred-compute	ineq.hl:1004；G4 证书+粘合	W4-farm
+nliRestBIXPCGW9455898160	lean/Kepler/Assembly.lean	803	E	rest 叶，deferred-compute（HOL 字面 --#0.00569 双重负号，SF-Top5 已注 docstring 级疑点不阻证）	ineq.hl:985；G4 证书+粘合	W4-farm
+nliRestFHBVYXZb	lean/Kepler/Assembly.lean	877	E	rest 叶，deferred-compute	ineq.hl:942；G4 证书+粘合	W4-farm
+nliRestFHBVYXZa	lean/Kepler/Assembly.lean	882	E	rest 叶，deferred-compute	ineq.hl:914；G4 证书+粘合	W4-farm
+nliRestFHBVYXZv2a	lean/Kepler/Assembly.lean	888	E	rest 叶，deferred-compute	ineq.hl:888；G4 证书+粘合	W4-farm
+nliRestQITNPEA2134082733	lean/Kepler/Assembly.lean	895	E	rest 叶，deferred-compute	ineq.hl:864；G4 证书+粘合	W4-farm
+nliRestQITNPEA1_2_2	lean/Kepler/Assembly.lean	901	E	rest idv 模板叶（make_F4/add_QITNPEA1 循环），deferred-compute	ineq.hl:845-862；G4 证书+粘合	W4-farm
+nliRestQITNPEA1_2_1	lean/Kepler/Assembly.lean	907	E	rest idv 模板叶，deferred-compute	ineq.hl:845-862 循环；G4 证书+粘合	W4-farm
+nliRestQITNPEA1_2_0	lean/Kepler/Assembly.lean	913	E	rest idv 模板叶，deferred-compute	ineq.hl:845-862 循环；G4 证书+粘合	W4-farm
+nliRestQITNPEA1_1_2	lean/Kepler/Assembly.lean	919	E	rest idv 模板叶，deferred-compute	ineq.hl:845-862 循环；G4 证书+粘合	W4-farm
+nliRestQITNPEA1_1_1	lean/Kepler/Assembly.lean	925	E	rest idv 模板叶，deferred-compute	ineq.hl:845-862 循环；G4 证书+粘合	W4-farm
+nliRestQITNPEA1_1_0	lean/Kepler/Assembly.lean	931	E	rest idv 模板叶，deferred-compute	ineq.hl:845-862 循环；G4 证书+粘合	W4-farm
+nliRestQITNPEA9939613598	lean/Kepler/Assembly.lean	938	E	rest 叶，deferred-compute	ineq.hl:798；G4 证书+粘合	W4-farm
+nliRestBIXPCGW7274157868a	lean/Kepler/Assembly.lean	944	E	rest 叶，deferred-compute（盒同 rest31）	ineq.hl:776；G4 证书+粘合	W4-farm
+nliRestBIXPCGWb	lean/Kepler/Assembly.lean	950	E	rest 叶，deferred-compute	ineq.hl:758；G4 证书+粘合	W4-farm
+nliRestBIXPCGW1738910218a2	lean/Kepler/Assembly.lean	956	E	rest 叶，deferred-compute（盒同 rest33）	ineq.hl:739；G4 证书+粘合	W4-farm
+nliRestBIXPCGW7080972881a2	lean/Kepler/Assembly.lean	962	E	rest 叶，deferred-compute	ineq.hl:721；G4 证书+粘合	W4-farm
+nliRestBIXPCGW6652007036a2	lean/Kepler/Assembly.lean	968	E	rest 叶，deferred-compute	ineq.hl:701；G4 证书+粘合	W4-farm
+nliRestGLFVCVK4y4subcrit	lean/Kepler/Assembly.lean	975	E	rest 叶，deferred-compute	ineq.hl:675；G4 证书+粘合	W4-farm
+nliRestGLFVCVK4y4supercrit	lean/Kepler/Assembly.lean	982	E	rest 叶，deferred-compute	ineq.hl:649；G4 证书+粘合	W4-farm
+nliRestGLFVCVK4y4crit	lean/Kepler/Assembly.lean	989	E	rest 叶，deferred-compute	ineq.hl:623；G4 证书+粘合	W4-farm
+nliRestGLFVCVK4a8328676778	lean/Kepler/Assembly.lean	996	E	rest 叶，deferred-compute	ineq.hl:586；G4 证书+粘合	W4-farm
+nliRestGLFVCVK4	lean/Kepler/Assembly.lean	1002	E	rest 叶，deferred-compute	ineq.hl:559；G4 证书+粘合	W4-farm
+nliRestMKFKQWUhalfwt	lean/Kepler/Assembly.lean	1009	E	rest 叶，deferred-compute	ineq.hl:523；G4 证书+粘合	W4-farm
+nliRestMKFKQWU	lean/Kepler/Assembly.lean	1015	E	rest 叶，deferred-compute	ineq.hl:502；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_1_1_1_1	lean/Kepler/Assembly.lean	1021	E	rest idv 模板叶（bank_ZTGIJCF4tmpl 1 1 1 1），deferred-compute	ineq.hl:486-499；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_1_1_1_0	lean/Kepler/Assembly.lean	1027	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_1_1_0_1	lean/Kepler/Assembly.lean	1033	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_1_1_0_0	lean/Kepler/Assembly.lean	1039	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_1_0_1_1	lean/Kepler/Assembly.lean	1045	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_1_0_1_0	lean/Kepler/Assembly.lean	1051	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_1_0_0_1	lean/Kepler/Assembly.lean	1057	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_1_0_0_0	lean/Kepler/Assembly.lean	1063	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_0_1_1_1	lean/Kepler/Assembly.lean	1069	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_0_1_1_0	lean/Kepler/Assembly.lean	1075	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_0_1_0_1	lean/Kepler/Assembly.lean	1081	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_0_1_0_0	lean/Kepler/Assembly.lean	1087	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_0_0_1_1	lean/Kepler/Assembly.lean	1093	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_0_0_1_0	lean/Kepler/Assembly.lean	1099	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_0_0_0_1	lean/Kepler/Assembly.lean	1105	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestZTGIJCF4_0_0_0_0	lean/Kepler/Assembly.lean	1111	E	rest idv 模板叶，deferred-compute	ineq.hl:486-499 循环；G4 证书+粘合	W4-farm
+nliRestGCKBQEA	lean/Kepler/Assembly.lean	1130	E	rest 叶，deferred-compute；RQWUDDU 同族留 nli-prep 复用通道	ineq.hl:1352；G4 证书+粘合	W4-farm
+nliRestRQWUDDU	lean/Kepler/Assembly.lean	1136	E	rest 叶，deferred-compute；切界层 prep/单调性通道候选（nli-prep-w1 RQWUDDU 留下一波）	ineq.hl:1332；G4 证书+粘合	W4-farm
+nliOx3q1h	lean/Kepler/Assembly.lean	1199	E	直挂·语句级真缺口：ox3q1hP25 本体即 sorry 型 def；须先移植 Oxl_def.hl 本体再接 230 条证书	Oxl_def.hl；阻塞件=PA25.lean:90 ox3q1hP25 回填+注册表桥	W4-farm
+nliMainNonlinearTerminalV11	lean/Kepler/Assembly.lean	1221	E	直挂·语句级+证书级双缺口：terminal.hl 按 109 条清单展开（取代 LA1:975 opaque def）+109 条证书（4717061266 在库优先粘合）	terminal.hl:24-44；阻塞件=LA1.lean:975 同根	W4-farm
+nliLpIneqs	lean/Kepler/Assembly.lean	1239	E	直挂·占位空洞（idsLpIneqs=[]）：真化=lpIneqsIds 127 条代入+逐条证书；禁经空清单/回落分支平凡闭合	the_main_statement.hl:29-45；阻塞件=lp-w1/w6 系产能	W4-farm
+nliPackIneqDefA	lean/Kepler/Assembly.lean	1259	E	直挂·占位（:=True 形语义待真化）：packIneqDefAIds 5 条接线+证书；1965189142x34 证书已在库（C1965189142x34）	YSSKQOY.hl:24-28；最小阻塞	W4-farm
+nliKcblrqcIneqDef	lean/Kepler/Assembly.lean	1274	E	直挂·占位：kcblrqcIneqDefIds 28 条接线+证书；3253650737/5490182221/2570626711 三证书在库	tame_lemmas-compiled.hl:34-46	W4-farm
+jcajydu	lean/Kepler/Assembly.lean	1749	C	textCapstone 真推导脊柱件：JCAJYDU 章 capstone（restricted→图对应）；TameSpine 移植过半（余约 14 桩：TameList16×10、TameList34×2、TameList59/68 各 1），余桩清后为装配	Jcajydu.JCAJYDU（tame_list 章）；阻塞件=TameSpine 余桩	W5-C尾
+tameCorrespondenceIso	lean/Kepler/Assembly.lean	1755	C	textCapstone 真推导脊柱件：WMLNYMD 章零移植（全树无对应物），需真移植后按前提装配	Wmlnymd.tame_correspondence_iso（WMLNYMD.hl）	W5-C尾
+fcdjdot	lean/Kepler/Assembly.lean	3540	C	textCapstone 前提件：FCDJDOT 四柱仅柱①（scriptLAttainsMaxInBallAnnulus）已落；柱② FNJLBXS 归一化 ~215 行+柱③ DLWCHEM/XULJEPR 计数深 GIANT 未移植	FNJLBXS-compiled.hl:1766（section :1543-1806）	W5-C尾
+lpArchiveCertificatesDebt	lean/Kepler/Assembly.lean	6236	E	hLP 唯一直源：42,889 bound 叶转发+189 infeasible 通道+覆盖桥（formal_lp verify_all 链移植）；纯逻辑部分已真推导	lp_main_estimate-compiled.hl；阻塞件=lp-w1 root/W6-B/W6-PIN 产能	W4-farm
+ox3q1hP25	lean/Kepler/Text/PackingAuto25.lean	90	E	语句级：`def : Prop := sorry` 型 opaque，Oxl_def.hl 本体未回填（230 record×5 支）；回填后与 nliOx3q1hIds 注册表桥接	Oxl_def.hl；同根 nliOx3q1h（Assembly:1199）	W3-poolc
+cc_prep_model_data	lean/Kepler/Text/PackingAuto25.lean	5860	C	LEAF_RANK 会师叶：cc_bool_prep_v11（qy 模式非邻接 ∀i, qy i → ¬qy (i+1)）对 cc_data_v8 的核验，需 leaf 结构展开（规模待勘）	OXLZLEZ1.hl:76；poolc-w3 在飞目标	W3-poolc
+pkLeafRankCriticalEdge	lean/Kepler/Text/PackingAuto25.lean	9025	C	T4 骨架 W1：临界边见证+负 gg 和；上游两件（CELL_CLUSTER_ESTIMATE_REDUCE :2286 / CELL_CLUSTER_N_LE_1 :2449）落证后经 LEAF_RANKING_LEMMA（已真）参数化	Oxl_real.hl CELL_CLUSTER_ESTIMATE 段；poolc-w3 在飞目标	W3-poolc
+pkLeafRankAzimPointwise	lean/Kepler/Text/PackingAuto25.lean	9041	C	T4 骨架 W2：楔形塌缩 azim_mcell=azim；三件 wedge 结构（MCELL_WEDGE_UNIQUE :1512 / c_4_azim_mcell_dih_y :2484 / CC_3_PROPS :2853）落证后 60-100 行分案装配	Oxl_real.hl；poolc-w3 在飞目标	W3-poolc
+real_model_ox3q1h_merge	lean/Kepler/Text/PackingAuto25.lean	9082	E	bank 叶：消费 ox3q1hP25 外部锚；hub pkrmQuarter 已真推导（合取重排）；闭=ox3q1hP25 回填+证书 farm	Oxl_def.hl；同根 nliOx3q1h	W3-poolc
+real_model_gckb	lean/Kepler/Text/PackingAuto25.lean	8970	E	bank 叶：0.606≤azim_mcell（wedge 下界），deferred-compute 外部认证锚；汇入 pkrmAzim 合取5	Oxl_real.hl/Merge_ineq.hl；G4 证书粘合	W3-poolc
+real_model_sum_azim	lean/Kepler/Text/PackingAuto25.lean	8979	E	bank 叶：楔形二面角和=2π，deferred-compute（G4/Flyspeck_constants.calc 认证口径）；pkrmAzim 合取7+LEAF_RANK_PROPS 会师位	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gamma_qu	lean/Kepler/Text/PackingAuto25.lean	8721	E	bank 叶：-0.0057≤gg_mcell（qu 盒），deferred-compute；pkrmQu 合取族	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_fhbv2_sym	lean/Kepler/Text/PackingAuto25.lean	8844	E	bank 叶：0.0057≤gg_mcell（fhbv2 镜像支；同胞 fhbv2 已由 poolc-w3 430d1f48 闭，模板现成）	Oxl_real.hl；G4 证书粘合（fhbv2 模板复制）	W3-poolc
+real_model_quqy	lean/Kepler/Text/PackingAuto25.lean	9474	E	bank 叶：qu-qy 配对和，deferred-compute；pkrmQu 合取族	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_quqy_sym	lean/Kepler/Text/PackingAuto25.lean	9490	E	bank 叶：quqy 镜像支，deferred-compute	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_ztg4	lean/Kepler/Text/PackingAuto25.lean	9507	E	bank 叶：deferred-compute；pkrmQu 合取族	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_azim1	lean/Kepler/Text/PackingAuto25.lean	9517	E	bank 叶：azim 线性族，deferred-compute；pkrmQu 合取族	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gaz4	lean/Kepler/Text/PackingAuto25.lean	9530	E	bank 叶：azim 线性族，deferred-compute	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gaz6	lean/Kepler/Text/PackingAuto25.lean	9543	E	bank 叶：azim 线性族，deferred-compute	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gamma_qx	lean/Kepler/Text/PackingAuto25.lean	9556	E	bank 叶：deferred-compute；pkrmQx 合取族	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_g_qxd	lean/Kepler/Text/PackingAuto25.lean	9569	E	bank 叶：deferred-compute；pkrmQx	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gamma10	lean/Kepler/Text/PackingAuto25.lean	9599	E	bank 叶：deferred-compute；pkrmQx	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gamma11	lean/Kepler/Text/PackingAuto25.lean	9619	E	bank 叶：deferred-compute；pkrmQx	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gamma8	lean/Kepler/Text/PackingAuto25.lean	9711	E	bank 叶：deferred-compute；pkrmQx	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gamma8b	lean/Kepler/Text/PackingAuto25.lean	9727	E	bank 叶：deferred-compute；pkrmQx	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gaz9	lean/Kepler/Text/PackingAuto25.lean	9743	E	bank 叶：deferred-compute；pkrmQx	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_azim2	lean/Kepler/Text/PackingAuto25.lean	9759	E	bank 叶：deferred-compute；pkrmQx	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_cell23	lean/Kepler/Text/PackingAuto25.lean	9879	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_3a	lean/Kepler/Text/PackingAuto25.lean	9934	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_3b	lean/Kepler/Text/PackingAuto25.lean	9945	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_gr	lean/Kepler/Text/PackingAuto25.lean	9956	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_pema	lean/Kepler/Text/PackingAuto25.lean	9996	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_pemb	lean/Kepler/Text/PackingAuto25.lean	10008	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_txq	lean/Kepler/Text/PackingAuto25.lean	10456	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
+real_model_tew	lean/Kepler/Text/PackingAuto25.lean	10468	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
+main_nonlinear_terminal_v11	lean/Kepler/Text/LocalAuto1.lean	975	E	opaque def `: Prop := sorry`（109 条 Main_estimate 合取整章债）；与 Assembly nliMainNonlinearTerminalV11 同根，terminal.hl 展开即双闭	terminal.hl:24-44；外部锚定性 def	W4-farm
+OTMTOTJ1_concl	lean/Kepler/Text/LocalAuto1.lean	2481	B	scsArrowV39 箭头注册表：scs 记录展开+transferV39 孪生装配；先例 YXIONXL1_discharged 已闭（LocalConcl:500）；BO LA1 注册表侦察就绪	appendix.hl:1396；阻塞件=p1x lane 对应孪生	W1-银行装配
+OTMTOTJ2_concl	lean/Kepler/Text/LocalAuto1.lean	2486	B	同上箭头族	appendix.hl:1398；同上	W1-银行装配
+OTMTOTJ3_concl	lean/Kepler/Text/LocalAuto1.lean	2491	B	同上箭头族（三 stab 目标）	appendix.hl:1400；同上	W1-银行装配
+OTMTOTJ4_concl	lean/Kepler/Text/LocalAuto1.lean	2497	B	同上箭头族（OTMTOTJ.hl:1520 主箭头同形）	appendix.hl:1403；同上	W1-银行装配
+HIJQAHA_concl	lean/Kepler/Text/LocalAuto1.lean	2503	B	同上箭头族（11 目标大扇出）	appendix.hl:1406；同上	W1-银行装配
+CNICGSF1_concl	lean/Kepler/Text/LocalAuto1.lean	2510	B	同上箭头族	appendix.hl:1410；同上	W1-银行装配
+CNICGSF2_concl	lean/Kepler/Text/LocalAuto1.lean	2515	B	同上箭头族	appendix.hl:1413；同上	W1-银行装配
+CNICGSF3_concl	lean/Kepler/Text/LocalAuto1.lean	2520	B	同上箭头族	appendix.hl:1416；同上	W1-银行装配
+CNICGSF4_concl	lean/Kepler/Text/LocalAuto1.lean	2525	B	同上箭头族	appendix.hl:1419；同上	W1-银行装配
+CNICGSF5_concl	lean/Kepler/Text/LocalAuto1.lean	2530	B	同上箭头族	appendix.hl:1422；同上	W1-银行装配
+ARDBZYE_concl	lean/Kepler/Text/LocalAuto1.lean	2535	B	同上箭头族（4I2→4T1,4T2）	appendix.hl:1425；同上	W1-银行装配
+FYSSVEV_concl	lean/Kepler/Text/LocalAuto1.lean	2539	B	同上箭头族	appendix.hl:1427；同上	W1-银行装配
+AUEAHEH_concl	lean/Kepler/Text/LocalAuto1.lean	2544	B	同上箭头族	appendix.hl:1429；同上	W1-银行装配
+VQFYMZY_concl	lean/Kepler/Text/LocalAuto1.lean	2554	B	同上箭头族	appendix.hl:1433；同上	W1-银行装配
+BNAWVNH_concl	lean/Kepler/Text/LocalAuto1.lean	2558	B	同上箭头族	appendix.hl:1437；同上	W1-银行装配
+RAWZDIB_concl	lean/Kepler/Text/LocalAuto1.lean	2563	B	同上箭头族	appendix.hl:1439；同上	W1-银行装配
+MFKLVDK_concl	lean/Kepler/Text/LocalAuto1.lean	2568	B	同上箭头族	appendix.hl:1441；同上	W1-银行装配
+RYPDIXT_concl	lean/Kepler/Text/LocalAuto1.lean	2573	B	同上箭头族	appendix.hl:1443；同上	W1-银行装配
+NWDGKXH_concl	lean/Kepler/Text/LocalAuto1.lean	2650	B	同上箭头族（4M6'→4T3,4T5）	appendix.hl:1498；同上	W1-银行装配
+YOBIMPP_concl	lean/Kepler/Text/LocalAuto1.lean	2660	B	同上箭头族（4M7 扇出；或需 MMs 非空见证，参照 EFLYGAU 前提形）	appendix.hl:1504；同上	W1-银行装配
+MIQMCSN_concl	lean/Kepler/Text/LocalAuto1.lean	2671	B	同上箭头族（4M8 扇出）	appendix.hl:1510；同上	W1-银行装配
+WKEIDFT_concl	lean/Kepler/Text/LocalAuto1.lean	2253	B	stab-diag 箭头搬运（近 C）：同族 PEDSLGV1_concl 已于 2026-10-08 闭（BBs/taustar 点等搬运套路现成）；LA24 头注记其为轻变体	appendix.hl:1368 / WKEIDFT.hl:570,793；阻塞件=taustar 搬迁论证	W1-银行装配
+AQICLXA	lean/Kepler/Text/LocalAuto20.lean	984	B	箭头装配：AQICLXA_SLICE（funlist 表匹配已具名在文件内）+ FZIOTEF_TRANS/UNION 代数；阻塞件=LA1 YXIONXL3_concl + PROP_EQU_IS_SCS（LocalAuto12:424，待闭小件）	hexagons.hl:1449	W1-银行装配
+FZIOTEF	lean/Kepler/Text/LocalAuto20.lean	1006	B	箭头装配：FUNOUYH_SLICE+FZIOTEF_TRANS+propEqu 幂等；阻塞件同上（YXIONXL3_concl/PROP_EQU_IS_SCS）	hexagons.hl:1592	W1-银行装配
+SCS_6I1_BERAK_BY_CSTAB	lean/Kepler/Text/LocalAuto20.lean	1218	B	箭头组合装配（STAB_MOD/SET_STAB_6I1 均已真）；阻塞件=SCS_6I1_IMP_SCS_6T1 ← mnt11 lane 四 concl + PEDSLGV2（mnt11 波落地后即装配）	hexagons.hl:1831；阻塞件=main_nonlinear_terminal_v11 波	W1-银行装配
+is_scs_3T1_p22	lean/Kepler/Text/LocalAuto22.lean	1668	A	机械：显式 funlist 表逐格求值+基数计数（decide 级，k=3 有限模类）；先例 SCS_6I1_IS_SCS 真证；kit is_scs_funlist_basic_p22 为捷径非必需	is_scs_3T1（hexagons/appendix is_scs 注册表）	W1-银行装配
+is_scs_3T5_p22	lean/Kepler/Text/LocalAuto22.lean	1688	A	同上机械求值（k=3）	is_scs_3T5；同上	W1-银行装配
+is_scs_3M1_p22	lean/Kepler/Text/LocalAuto22.lean	1703	A	同上机械求值（k=3）	is_scs_3M1；同上	W1-银行装配
+OCBICBY_p22	lean/Kepler/Text/LocalAuto22.lean	1930	C	14 支 T-系统 BBs→taustar≥0 箭头（pos_imp_scs_arrow_empty_p23 模板已真，缺逐系统正性=证书级内容，mnt11/empty lane 同族）	empty_* lane；阻塞件=mnt11 波+逐 T-系统正性	W5-C尾
+LFLACKU_p23	lean/Kepler/Text/LocalAuto23.lean	310	C	{3I1}→∅ 空枝：需 taustar_taum_dfun/FUNLIST_EXPLICIT 桥（未移植）+TAUM_STD_POS_p23（阻 mnt11 终端条目 5541487347/OMKYNLT）	JOTSWIX.hl:191；阻塞件=mnt11 波	W5-C尾
+s_init_list_alt_p23	lean/Kepler/Text/LocalAuto23.lean	318	C	清单等式：前六项 rfl，5I3/4I3 两项需 a_pro↔funlist_v39 periodic-2 mod 归约（HOL JOTSWIX.hl:241-257 已给证明脚本，小件移植）	JOTSWIX.hl:216-257	W5-C尾
+XWITCCN_CASE_3_IS_SCS_p24	lean/Kepler/Text/LocalAuto24.lean	1383	C	k=3 tri_sy capstone 支：DISCHARGES 链 6 件（NOT_EMPTY_CASE_3+IN_B_SY1_COLLINEAR+HDPLYGY_CASE_30+IN_NOT_EMPTY_B1_SY_3+TAUSTAR_EQ_TAU_STAR_3+tri stable kit）	UXCKFPE.hl:2495（tri_sy 章 :1488-2597）	W5-C尾
+XWITCCN_CASE_4_IS_SCS_p24	lean/Kepler/Text/LocalAuto24.lean	1124	C	k=4 支：DISCHARGES 链 5 件（stable system+NOT_EMPTY_CASE_4+HDPLYGY/B_SY1 极小化+IN_NOT_EMPTY_B1_SY_4+taustar 负性转移）	UXCKFPE.hl:432	W5-C尾
+XWITCCN_CASE_5_IS_SCS_p24	lean/Kepler/Text/LocalAuto24.lean	1159	C	k=5 支：同 CASE_4 结构（UXCKFPE.hl:547-995 见证层）	UXCKFPE.hl:889	W5-C尾
+XWITCCN_CASE_6_IS_SCS_p24	lean/Kepler/Text/LocalAuto24.lean	1192	C	k=6 支：同 CASE_4 结构（UXCKFPE.hl:1003-1483 见证层）	UXCKFPE.hl:1374	W5-C尾
+EAPGLE_p27	lean/Kepler/Text/LocalAuto27.lean	867	B	装配：MMs 全空前提→JEJTVGB_assume_v39 = 注册表箭头机械组合（FZIOTEF_TRANS/UNION 代数）；阻塞件=LA1 registry 波 + LA22 is_scs 注册表族（多枚场外桩将被拉入锥）	AYQJTMD.hl:222；AYQJTMD 本体已真	W1-银行装配
+UPFZBZM_concl	lean/Kepler/Text/PackingAuto2.lean	5565	B	装配：PA19.UPFZBZM 真件已在 PackingConcl 桥接线；F1 改线波（已批）以 PA2 _p2 kit 重推 RDWKARC 臂 ~80-140 行	pack_concl.hl:233-237；阻塞件=F1 波落地	W1-银行装配
+TameLp.fully_surrounded_perimeter_bound	lean/Kepler/Text/TameLp.lean	840	C	MQMSMAB 前提件：三桥（LA7 周长 lane WSEWPCH/FAN_PERIMETER/BGMIFTE——w6a 已闭 8/9 + Local_lemmas 章 f_surr_localization_convex_local/lemma_face_representation/sum_face_rho_node1 未移植）齐后按 HOL 五步机械装配	lp_main_estimate-compiled.hl:1530-1543；阻塞件=W6b/W6c+Local_lemmas 三件	W5-C尾
