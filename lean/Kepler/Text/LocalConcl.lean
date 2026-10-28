@@ -1395,11 +1395,17 @@ combined diag form `a ≤ cstab ∧ cstab < dist ∧ 4*h0 < b`, plus `2 < b` on
 two edges and strict `a < b` on two further edges; the registry carries
 neither the `4*h0` conjunct nor those strict edge facts (only
 `b i (i+1) = 2*h0`). -/
-theorem CQAOQLR_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
-    v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
-    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
-    s.a i (i + 1) = 2 → s.b i (i + 1) = 2 * h0 →
-    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) = 2 * h0 →
+theorem CQAOQLR_discharged : main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
+    3 < s.k →
+    isScsV39 s → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j) →
+    2 < s.b i (i + 1) → 2 < s.b (i + 1) (i + 2) →
+    s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) →
+    s.a (i + s.k - 1) i < s.b (i + s.k - 1) i →
+    s.a i (i + 1) = 2 → s.b i (i + 1) ≤ 2 * h0 →
+    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
     (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
   sorry
 
