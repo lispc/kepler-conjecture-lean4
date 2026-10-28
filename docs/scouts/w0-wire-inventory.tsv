@@ -1,0 +1,67 @@
+# w0-wire-inventory — W0 桌审 62 条 WIRE 静态 taint 预测表（w0prep-w1 车道）
+# 基线: c200dac9 (2026-10-28) | 口径: LocalConcl.lean 尾部 #print axioms debt ledger 的 62 行 = 全部 WIRE (16 classic + 46 assembly)
+# 列: name(wire 全名省略 _discharged 后缀同 LocalConcl)	wire锚(LocalConcl.lean:行)	孪生锚(文件:行)	预测	污染源/依据
+# 预测: CLEAN=预测无 sorryAx 传递 | TAINTED=预测 sorryAx 传递 | 预测仅为先验, 窗口期 #print axioms 是金标准 (run_w0.sh)
+# CLEAN 的公理口径: propext/Classical.choice/Quot.sound 为 Mathlib 标准公理, 不算污染; 出现 sorryAx 即 TAINTED
+YXIONXL1	LocalConcl.lean:499	LocalAuto12.lean:297 (YXIONXL1)	TAINTED	sgtrnaf_p12 (LocalAuto12.lean:278-280 sorry锚) 经 NOT_EMPETY_MMS_TRANSFER(LocalAuto12.lean:284); 尾注ledger"十条classic吃波内sorry输入"点名例
+YXIONXL3	LocalConcl.lean:580	LocalAuto12.lean:1220 (YXIONXL3)	CLEAN	闭包=PROP_EQU_IS_SCS(LocalAuto12.lean:579)+TRANS_MMS_SUBSET(LocalAuto12.lean:1195)均已证; LA12唯一真sorry=sgtrnaf_p12:280不在闭包; 尾注ledger六条sorry-free之一
+EYYPQDW	LocalConcl.lean:587	LocalAuto17.lean:706 (EYYPQDW_p17)	CLEAN	LA17:706-1033已证区; 闭包=Cayley-norm恒等式kit; LA17真sorry(1036起)不在闭包; 尾注ledger六条sorry-free之一
+EYYPQDW2	LocalConcl.lean:605	LocalConcl.lean自证体+LocalAuto17.lean:791	CLEAN	自证体只吃MK_PLANAR_V3_DEFOR_V1_FUN_p17(LA17:791已证)+v3DeforV1_p17(纯def)+continuousAt_sqrt_upsX_mid(LocalConcl:473已证); 尾注ledger六条sorry-free之一
+EYYPQDW3	LocalConcl.lean:508	LocalConcl.lean自证体+LocalAuto17.lean:823	CLEAN	自证体只吃MK_PLANAR_V3_DEFOR_V2_FUN_p17(LA17:823已证)+continuousAt_cross3_right_lc(LocalConcl:439已证); 尾注ledger六条sorry-free之一
+unadorned_MMs	LocalConcl.lean:639	LocalAuto27.lean:826 (unadorned_MMs_p27)	CLEAN	定义性证明(False-空str/lo/hi+defeq场界), 无外部引用; 尾注ledger六条sorry-free之一
+HXHYTIJ	LocalConcl.lean:645	LocalAuto27.lean:595 (HXHYTIJ_p27)	CLEAN	自包含min-num论证(Classical.epsilon+BBindex定义展开), 闭包无sorry; LA27:533-868无sorry区; 尾注ledger六条sorry-free之一
+PQCSXWG2	LocalConcl.lean:655	LocalAuto11.lean:1430 (PQCSXWG2_p11)	TAINTED	PQCSXWG2_WITHINREAL_p11 (LocalAuto11.lean:1381, sorry:1397); 尾注ledger点名例"PQCSXWG2 via PQCSXWG2_ATREAL_p11"
+GSXRFWM	LocalConcl.lean:529	LocalAuto33.lean:534 (GSXRFWM_p33)	TAINTED	GSXRFWM1_p33 (LocalAuto33.lean:523-524 sorry, k=4 genericity案例库); LocalConcl docstring自注"modulo the wave's own sorried GSXRFWM1_p33 input"
+AUEAHEH	LocalConcl.lean:536	LocalAuto33.lean:1521 (AUEAHEH_p33)	TAINTED	SCS_4I1_SLICE_02_p33 (LocalAuto33.lean:1515-1516 sorry); docstring自注"modulo the wave's sorried slice identity"
+ZNLLLDL	LocalConcl.lean:542	LocalAuto33.lean:1782 (ZNLLLDL_p33)	TAINTED	SCS_4I3_ARROW_4T4_p33/STAB_4I3_02_ARROW_4I3_13_p33 (LA33:1773-1781)→OPP_IS_SCS_p33 (LA33:126 sorry); 注: BB_4I3_IMP_4T4_p33已于09-20闭(docstring的sorried注记过时,但OPP链仍在)
+VQFYMZY	LocalConcl.lean:548	LocalAuto33.lean:1871 (VQFYMZY_p33)	TAINTED	闭包显式含ZNLLLDL_p33与SCS_4I3_ARROW_4T4_p33→OPP_IS_SCS_p33(LA33:126 sorry); arrowSetRight置换shim本身干净
+BNAWVNH	LocalConcl.lean:554	LocalAuto33.lean:2037 (BNAWVNH_p33)	TAINTED	4M2-slice件 (LocalAuto33.lean:2032 sorry)
+RAWZDIB	LocalConcl.lean:560	LocalAuto33.lean:2218 (RAWZDIB_p33)	TAINTED	4M3'-slice件 (LocalAuto33.lean:2213 sorry)
+MFKLVDK	LocalConcl.lean:567	LocalAuto33.lean:2359 (MFKLVDK_p33)	TAINTED	两个4M4'-slice件 (LocalAuto33.lean:2347/2354 sorry)
+RYPDIXT	LocalConcl.lean:573	LocalAuto33.lean:2541 (RYPDIXT_p33)	TAINTED	4M5'-slice件 (LocalAuto33.lean:2536 sorry)
+XWITCCN	LocalConcl.lean:676	LocalAuto36.lean:2522 (XWITCCN master)	TAINTED	孪生直接sorry (LocalAuto36.lean:2524); docstring自注"still sorried — debt flows"
+XWITCCN2	LocalConcl.lean:681	LocalAuto27.lean:817 (XWITCCN2_p27)	TAINTED	孪生已证但闭包含UXCKFPE2_p27(LA27:546)→UXCKFPE_p24(LA24:1395)→XWITCCN_CASE_3/4/5/6_IS_SCS_p24(LA24:1387/1128/1163/1196全sorry); TSV"已证"乐观注记被推翻——已证≠sorry-free
+AYQJTMD	LocalConcl.lean:686	LocalAuto27.lean:861 (AYQJTMD_p27)	TAINTED	SGTRNAF_p27(LA27:564)→UXCKFPE2_p27(LA27:546)→UXCKFPE_p24(LA24:1395)→k-case bank(4×sorry); s_init_scs_p27八初始系统is_scs记录全已证(LA22:994-1049生成器+LA20:403+LA27:730), 非污染源; 污染唯LA24 case bank
+EAPGLE	LocalConcl.lean:691	LocalAuto27.lean:866 (EAPGLE_p27)	TAINTED	孪生直接sorry (LocalAuto27.lean:869, NEEDS JEJTVGB registry)
+JKQEWGV1	LocalConcl.lean:790	LocalAuto23.lean:944 (JKQEWGV1_p23)	TAINTED	孪生直接sorry (LocalAuto23.lean:948)
+JKQEWGV2	LocalConcl.lean:798	LocalAuto23.lean:952 (JKQEWGV2_p23)	TAINTED	孪生直接sorry (LocalAuto23.lean:956)
+JKQEWGV3	LocalConcl.lean:807	LocalAuto23.lean:961 (JKQEWGV3_p23)	TAINTED	孪生直接sorry (LocalAuto23.lean:968)
+ZLZTHIC	LocalConcl.lean:697	LocalAuto14.lean:1057 (ZLZTHIC_p14)	TAINTED	孪生直接sorry (LocalAuto14.lean:1068, lunar-deformation车道)
+UAGHHBM	LocalConcl.lean:823	LocalAuto30.lean:1204 (UAGHHBM_p30)	TAINTED	孪生直接sorry (LocalAuto30.lean:1212, restriction-isScs fork)
+LKGRQUI	LocalConcl.lean:714	LocalAuto27.lean:887 (LKGRQUI_p27)	TAINTED	孪生直接sorry (LocalAuto27.lean:896); 本体LKGRQUI_concl亦sorry — W1头号解锁件
+ODXLSTCv2	LocalConcl.lean:837	LocalAuto28.lean:2344 (ODXLSTCv2_p28)	TAINTED	孪生直接sorry (LocalAuto28.lean:2354)
+IMJXPHRv2	LocalConcl.lean:850	LocalAuto28.lean:2325 (IMJXPHRv2_p28)	TAINTED	孪生直接sorry (LocalAuto28.lean:2340)
+NUXCOEAv2	LocalConcl.lean:871	LocalAuto28.lean:2306 (NUXCOEAv2_p28)	TAINTED	孪生直接sorry (LocalAuto28.lean:2321)
+PQCSXWG1	LocalConcl.lean:896	LocalAuto11.lean:1359 (PQCSXWG1_p11)	TAINTED	孪生直接sorry (LocalAuto11.lean:1360); 无已证mkSimplex1距离恒等式
+FEKTYIY	LocalConcl.lean:721	LocalAuto27.lean:877 (FEKTYIY_p27)	TAINTED	孪生直接sorry (LocalAuto27.lean:880, ball-annulus非共面)
+AURSIPD	LocalConcl.lean:727	LocalAuto18.lean:1001 (AURSIPD_p18)	TAINTED	孪生直接sorry (LocalAuto18.lean:1004, stratum计数的RRCWNSJ式案例库)
+PPBTYDQ	LocalConcl.lean:733	LocalAuto26.lean:775 (PPBTYDQ_p26)	TAINTED	孪生直接sorry (LocalAuto26.lean:779)
+MXQTIED	LocalConcl.lean:913	LocalAuto26.lean:758 (MXQTIED_p26)	TAINTED	孪生直接sorry (LocalAuto26.lean:764, d-等式shim); 注: LA1本体MXQTIED_concl已证(2026-09-30), e2e若改道本体出口可脱taint — W0可裁
+AXJRPNC	LocalConcl.lean:924	LocalAuto26.lean:559 (AXJRPNC_p26)	TAINTED	孪生直接sorry (LocalAuto26.lean:565)
+RRCWNSJ	LocalConcl.lean:935	LocalAuto26.lean:336 (RRCWNSJ_p26)	TAINTED	孪生直接sorry (LocalAuto26.lean:343) + 注入mnt11_anchor (LocalConcl.lean:487 sorry) — 双重污染
+JCYFMRP	LocalConcl.lean:947	LocalAuto27.lean:475 (JCYFMRP_p27)	TAINTED	孪生直接sorry (LocalAuto27.lean:483, NEEDS CUXVZOZ) + 注入mnt11_anchor(LocalConcl.lean:487 sorry)
+TFITSKC	LocalConcl.lean:961	LocalAuto27.lean:311 (TFITSKC_p27)	TAINTED	孪生直接sorry (LocalAuto27.lean:321) + 注入mnt11_anchor(LocalConcl.lean:487 sorry)
+AQICLXA	LocalConcl.lean:977	LocalAuto20.lean:984 (AQICLXA)	TAINTED	孪生直接sorry (LocalAuto20.lean:986, NEEDS LKGRQUI_concl+AQICLXA_SLICE sorry:957)
+FUNOUYH	LocalConcl.lean:753	LocalAuto20.lean:1006 (FZIOTEF)	TAINTED	孪生直接sorry (LocalAuto20.lean:1008, NEEDS FUNOUYH_SLICE sorry:1001)
+HIJQAHA	LocalConcl.lean:984	LocalAuto29.lean:2562 (HIJQAHA_p29)	TAINTED	孪生直接sorry (LocalAuto29.lean:2567, 缺SCS_5M3_SLICE/ARROW 6件) + 注入mnt11_anchor(LocalConcl.lean:487 sorry)
+CNICGSF1	LocalConcl.lean:765	LocalAuto18.lean:1158 (CNICGSF1_p18)	TAINTED	SCS_5I1_SLICE_02_p18 (LocalAuto18.lean:1047-1053 sorry, LKGRQUI lane巨件) + LA1本体YXIONXL3_concl (LocalAuto1.lean:1683-1685 sorry); 双 sorried 输入 — bola1立减5的5条之一, W0不闭
+CNICGSF2	LocalConcl.lean:771	LocalAuto18.lean:1179 (CNICGSF2_p18)	TAINTED	SCS_5I2_SLICE_02_p18 (LocalAuto18.lean:1056-1062 sorry) + LA1.YXIONXL3_concl(LocalAuto1.lean:1683 sorry); 同上
+CNICGSF3	LocalConcl.lean:777	LocalAuto18.lean:1198 (CNICGSF3_p18)	TAINTED	SCS_5M1_SLICE_02_p18 (LocalAuto18.lean:1064-1070 sorry) + LA1.YXIONXL3_concl; 同上
+CNICGSF4	LocalConcl.lean:759	LocalAuto18.lean:1216 (CNICGSF4_p18)	TAINTED	SCS_5M1_SLICE_03_p18 (LocalAuto18.lean:1072-1078 sorry) + LA1.YXIONXL3_concl; 同上
+CNICGSF5	LocalConcl.lean:783	LocalAuto18.lean:1235 (CNICGSF5_p18)	TAINTED	SCS_5M1_SLICE_24_p18 (LocalAuto18.lean:1080-1086 sorry) + LA1.YXIONXL3_concl; 同上
+ARDBZYE	LocalConcl.lean:992	LocalAuto33.lean:1283 (ARDBZYE_p33)	TAINTED	孪生直接sorry (LocalAuto33.lean:1285, NEEDS SCS_4I2_IMP_SCS_4T1+MM_4I2_IMP_4T2_4T1) + 注入mnt11_anchor(LocalConcl.lean:487 sorry); LocalConcl docstring"PROVED ARDBZYE_p33"已过时
+FYSSVEV	LocalConcl.lean:997	LocalAuto33.lean:1502 (FYSSVEV_p33)	TAINTED	孪生直接sorry (LocalAuto33.lean:1506) + 注入mnt11_anchor; docstring"PROVED"同样过时
+NWDGKXH	LocalConcl.lean:1004	LocalAuto32.lean:868 (NWDGKXH_p32)	TAINTED	孪生直接sorry (LocalAuto32.lean:870, MM_4M6_IMP_MM_4T3链) + 注入mnt11_anchor
+YOBIMPP	LocalConcl.lean:1011	LocalAuto32.lean:1079 (YOBIMPP_p32)	TAINTED	孪生直接sorry (LocalAuto32.lean:1082, MM_4M7→4M6两方向) + 注入mnt11_anchor
+MIQMCSN	LocalConcl.lean:1018	LocalAuto32.lean:1376 (MIQMCSN_p32)	TAINTED	孪生直接sorry (LocalAuto32.lean:1379, MM_4M8→4M6/4M8_02/13) + 注入mnt11_anchor
+BKOSSGE	LocalConcl.lean:740	LocalAuto16.lean:254 (BKOSSGE_p16)	TAINTED	本体真证(无sorry, w1asm翻案属实)但闭包含is_scs_3T1_p22/is_scs_3T5_p22/is_scs_3M1_p22 (LocalAuto22.lean:1668/1688/1703全sorry); "本体已证≠cone-clean"的典型
+YRTAFYH	LocalConcl.lean:745	LocalAuto17.lean:1034 (YRTAFYH_p17)	TAINTED	孪生直接sorry (LocalAuto17.lean:1036, 巨型case树); 注: LA1本体YRTAFYH_concl已证(2026-09-30), e2e若改道本体出口可脱taint — W0可裁
+MHAEYJN	LocalConcl.lean:1354	LocalAuto37.lean:1041 (MHAEYJN_p37)	TAINTED	孪生直接sorry (LocalAuto37.lean:1042; 逐字Prop-def MHAEYJN_prop_p37已建未灌)
+CUXVZOZ	LocalConcl.lean:1026	LocalAuto21.lean:1186 (CUXVZOZ_p21)	TAINTED	注入p21_anchor (LocalConcl.lean:493 sorry) + 引擎general_482_deformation_p21 (LocalAuto21.lean:1161 sorry巨件); 孪生本体已证但双重taint
+CJBDXXN	LocalConcl.lean:1056	LocalAuto21.lean:1210 (CJBDXXN_p21)	TAINTED	同CUXVZOZ: p21_anchor(LocalConcl.lean:493 sorry) + general_482_deformation_p21(LA21:1161 sorry); mirror-index搬运shim干净
+OTMTOTJ1	LocalConcl.lean:1198	LocalAuto24.lean:1043 (OTMTOTJ1)	TAINTED	孪生直接sorry (LocalAuto24.lean:1045, 骨架占位; HOL链=BERAK_5I1(mnt11)+SET_EQ_DIAG_STAB_5I1+FZIOTEF kit)
+OTMTOTJ2	LocalConcl.lean:1205	LocalAuto24.lean:1051 (OTMTOTJ2)	TAINTED	孪生直接sorry (LocalAuto24.lean:1053); 同上(5I2)
+OTMTOTJ3	LocalConcl.lean:1212	LocalAuto24.lean:1058 (OTMTOTJ3)	TAINTED	孪生直接sorry (LocalAuto24.lean:~1060); 同上(5I3, 三stab目标)
+OTMTOTJ4	LocalConcl.lean:1220	LocalAuto24.lean:1067 (OTMTOTJ4)	TAINTED	孪生直接sorry (LocalAuto24.lean:~1069); 同上(5M1)
+ASSWPOW	LocalConcl.lean:1165	LocalAuto25.lean:1161 (ASSWPOW_p25)	TAINTED	孪生直接sorry (LocalAuto25.lean:1165); HOL原证VASYYAU.hl:154(BBS_IMP_CONVEX_LOCAL_FAN kit+arclength_lt_1553)未移植
+DRNDRDV	LocalConcl.lean:1153	LocalAuto22.lean:260 (derived_form_xrr_p22)	CLEAN	孪生已证且闭包干净: 只吃hasDerivWithinAt_quad_p22(LocalAuto22.lean:197-207已证)+ring; LA22其余sorry(xrr_wrt_y1:275等)不在闭包; docstring自注"twin's proof is sorry-free"
