@@ -1,0 +1,41 @@
+--- a/lean/Kepler/Text/PackingAuto25.lean
++++ b/lean/Kepler/Text/PackingAuto25.lean
+@@ -103,9 +103,19 @@
+ noncomputable def rad2YP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+   rad2XP25 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+ 
+-/-- HOL `beta_bumpA_y` (Merge_ineq.hl): the y-space bump correction of
+-GG_MCELL_GENERAL.  NEEDS: exact Merge_ineq.hl body. -/
+-noncomputable def beta_bumpA_yP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := sorry
++/-- HOL `beta_bumpA_y` (sphere.hl:605-612; SF-75 真化，原注 Merge_ineq.hl
++系消费桥归属不准)：六个 0/1 临界因子乘积 × 两 bump 差。乘积形（非嵌套
++if）与 HOL 逐字同构，为 sym23 实数乘法 AC 一发铺路（OXLZLEZ3.hl:6942
++REWRITE_TAC + REAL_ARITH_TAC 同型）。常数件：bump / criticalEdgeY
++(PA2:492/496)、hminus (PA2:473)，全已真。 -/
++noncomputable def beta_bumpA_yP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
++  (if criticalEdgeY y1 then (1:ℝ) else 0) *
++  (if y2 < 2 * hminus then (1:ℝ) else 0) *
++  (if y3 < 2 * hminus then (1:ℝ) else 0) *
++  (if criticalEdgeY y4 then (1:ℝ) else 0) *
++  (if y5 < 2 * hminus then (1:ℝ) else 0) *
++  (if y6 < 2 * hminus then (1:ℝ) else 0) *
++  (bump (y1 / 2) - bump (y4 / 2))
+ 
+ /-- HOL `vol4f` (sphere.hl:568); PackingAuto20.lean:105 verbatim. -/
+ noncomputable def vol4fP25 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) : ℝ :=
+@@ -9590,10 +9600,13 @@
+   unfold wtcount6Y wtcount3Y
+   ring
+ 
+-/-- HOL `beta_bumpA_y_sym23`. -/
++/-- HOL `beta_bumpA_y_sym23` (OXLZLEZ3.hl:6937-6945; SF-75 证填)。
++乘积形下即实数乘法 AC（换位 (1,3,2,4,6,5) 不动因子集合，bump 项不动）；
++ztg4 (merge_ineq.hl:2310-2337) 与 gamma10 (OXLZLEZ3.hl:6990) 的实际配件。 -/
+ theorem beta_bumpA_y_sym23 (y1 y2 y3 y4 y5 y6 : ℝ) :
+     beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = beta_bumpA_yP25 y1 y3 y2 y4 y6 y5 := by
+-  sorry
++  simp only [beta_bumpA_yP25]
++  ring
+ 
+ /-- HOL `real_model_gamma10`. -/
+ theorem real_model_gamma10 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)

@@ -4133,3 +4133,52 @@ LocalConcl.lean :1415-1417 出口陈述同款替换。
 3. 回滚 = 反向 patch。
 
 ### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 75. PA25 `beta_bumpA_yP25` def 填体 + `beta_bumpA_y_sym23` 证填（合并单 patch 双 hunk，一闸 THM=`beta_bumpA_y_sym23`）— 分级 B（占位真化 · 纯证填，零方向翻转）
+
+### (a) HOL 裁决
+
+定义正本 = `reference/flyspeck/text_formalization/general/sphere.hl:605-612`
+（六 0/1 临界因子乘积 × `bump (y1/2) − bump (y4/2)`；`critical_edge_y`
+sphere.hl:604、`bump` sphere.hl:601、`beta_bump_lb` sphere.hl:636、无条件
+下界 `beta_bumpA_y_lb` merge_ineq.hl:1915-1926）。sym23 正本 =
+`OXLZLEZ3.hl:6937-6945`（`beta_bumpA_y y1..y6 = beta_bumpA_y y1 y3 y2 y4 y6 y5`，
+证 REWRITE_TAC + REAL_ARITH_TAC——乘积形下即乘法 AC，换位 (1,3,2,4,6,5)
+不动因子集合）。消费桥 `ineq_approxA_ztg4` merge_ineq.hl:2037-2056。
+（w5sf-prep 勘误：原提案引 Merge_ineq.hl 为定义正本，实为消费桥；
+sphere.hl 才是定义锚。）
+
+### (b) Lean 诊断
+
+PA25 :106-108 def 无体 sorry（NEEDS 注记自认）；:9593-9596 sym23 语句与
+HOL 逐字同构但 `sorry`（opaque stub 等式不可证，local-manifest:222 同判）。
+常数件七件全真：bump (PA2:492) / criticalEdgeY (PA2:496) / hminus (PA2:473) /
+betaBumpLb (IneqClosureDefs:493) / h0, hplus, hminus 常数 (PA2:463/436/473)。
+if 形先例 = PA2:505 wtcount3Y。乘积形（非嵌套 if）为 sym23 AC 一发铺路。
+
+### (c) 补丁
+
+`docs/statement-fix-proposals-patches/75-pa25-betabump.patch`：PA25 单文件
+双 hunk（def 填体按 sphere.hl:605 乘积形逐字 + sym23 `sorry` →
+`simp only [beta_bumpA_yP25]; ring`）。difflib 生成、无时间戳、
+content-anchored，`git apply --check` 实测通过。
+
+### (d) 消费面
+
+零跨文件消费（爆炸半径限 PA25）。收益口径（w5sf-prep 核验修正）：
+GG_MCELL_GENERAL 塌缩链七件全真（PA25 :8111-8672），ztg4 的 19 张 bank
+全在 PA21——**两案落地后即时净收割 = ztg4 一枚（e2e 直源 −1，父 pkrmQu）**；
+原口径「解锁 8+」不成立（gamma_qx 缺 bank，gamma10/11 缺 critical_weight1a
++ bank）。GG_MCELL_GENERAL 证填（估 30-60 行连接）+ ztg4 收割另立 SF-76。
+
+### (e) 风险
+
+低（纯占位真化，def 类型冻结、零方向翻转）。基线态声明：主仓 PA25
+(MD5 a94ecc87) 未吸收 poolc-w5 字节，patch content-anchored 不依赖行号。
+PA25 本体重编分钟级。
+
+### (f) 状态
+
+依用户 SF 通道常态化授权（2026-10-28），编排者裁决立案执行
+（w5sf-prep 车道核验简报 lane_snapshots/w5sf-prep/ 全过，两案均低风险）。
+执行序列：SF-64..74 链毕后走闸（工作树单态约束）。
