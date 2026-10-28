@@ -1,0 +1,34 @@
+diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+--- a/lean/Kepler/Text/LocalAuto1.lean
++++ b/lean/Kepler/Text/LocalAuto1.lean
+@@ -1687,5 +1687,8 @@
+-/-- HOL `LKGRQUI_concl` (appendix.hl:1144). Proof pending. -/
++/-- HOL `LKGRQUI_concl` (SF-68 真化：改采 corpus 正本 LKGRQUI.hl:86-89
++三前提形 `scs_diag` + `is_scs_slice_v39`；appendix.hl:1144 摘要形以纯
++元组方程替代两前提，从自身前提不可证。与 w1asm 车道
++`LKGRQUI_faithful_w1asm` 装配草案同签名)。 -/
+ theorem LKGRQUI_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop),
+-    isScsV39 s → (s', s'') = scsSliceV39 s p q d' d'' mkj →
++    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+     scsArrowV39 {s} {s', s''} := by
+   sorry
+diff --git a/lean/Kepler/Text/LocalAuto27.lean b/lean/Kepler/Text/LocalAuto27.lean
+--- a/lean/Kepler/Text/LocalAuto27.lean
++++ b/lean/Kepler/Text/LocalAuto27.lean
+@@ -892,5 +892,5 @@
+ /-- HOL `LKGRQUI` (LKGRQUI.hl:87). -/
+ theorem LKGRQUI_p27 : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop),
+-    isScsV39 s → (s', s'') = scsSliceV39 s p q d' d'' mkj →
++    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+     scsArrowV39 {s} {s', s''} := by
+   sorry
+diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+--- a/lean/Kepler/Text/LocalConcl.lean
++++ b/lean/Kepler/Text/LocalConcl.lean
+@@ -714,5 +714,5 @@
+ theorem LKGRQUI_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+     (mkj : Prop),
+-    isScsV39 s → (s', s'') = scsSliceV39 s p q d' d'' mkj →
++    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+     scsArrowV39 {s} {s', s''} :=
+   LKGRQUI_p27

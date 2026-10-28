@@ -1,0 +1,56 @@
+diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+--- a/lean/Kepler/Text/LocalAuto1.lean
++++ b/lean/Kepler/Text/LocalAuto1.lean
+@@ -2233,9 +2233,19 @@
+-/-- HOL `CQAOQLR_concl` (appendix.hl:1349). Proof pending. -/
+-theorem CQAOQLR_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
+-    v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+-    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
+-    s.a i (i + 1) = 2 → s.b i (i + 1) = 2 * h0 →
+-    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) = 2 * h0 →
+-    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
+-  sorry
++/-- HOL `CQAOQLR_concl` (SF-72 真化：改采 corpus 文件级注册表
++CQAOQLR.hl:233-243 形——mnt11 前提 + `3 < s.k` + diag 组 `4*h0 < b`
++合取 + 两条 `2 < b` 与两条 `a < b` 严格边前提，`b ≤ 2*h0` 上界形。与
++LA16 `CQAOQLR_concl_p16` 逐字同形；appendix.hl:1349 摘要形为其失真
++缩写)。 -/
++theorem CQAOQLR_concl : main_nonlinear_terminal_v11 →
++    ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
++    3 < s.k →
++    isScsV39 s → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
++    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
++      4 * h0 < s.b i j) →
++    2 < s.b i (i + 1) → 2 < s.b (i + 1) (i + 2) →
++    s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) →
++    s.a (i + s.k - 1) i < s.b (i + s.k - 1) i →
++    s.a i (i + 1) = 2 → s.b i (i + 1) ≤ 2 * h0 →
++    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
++    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
++  sorry
+ 
+diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+--- a/lean/Kepler/Text/LocalConcl.lean
++++ b/lean/Kepler/Text/LocalConcl.lean
+@@ -1391,8 +1391,14 @@
+-theorem CQAOQLR_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
+-    v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+-    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
+-    s.a i (i + 1) = 2 → s.b i (i + 1) = 2 * h0 →
+-    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) = 2 * h0 →
+-    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
+-  sorry
++theorem CQAOQLR_discharged : main_nonlinear_terminal_v11 →
++    ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
++    3 < s.k →
++    isScsV39 s → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
++    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
++      4 * h0 < s.b i j) →
++    2 < s.b i (i + 1) → 2 < s.b (i + 1) (i + 2) →
++    s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) →
++    s.a (i + s.k - 1) i < s.b (i + s.k - 1) i →
++    s.a i (i + 1) = 2 → s.b i (i + 1) ≤ 2 * h0 →
++    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
++    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
++  sorry
+ 

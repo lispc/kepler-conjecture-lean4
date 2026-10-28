@@ -3236,3 +3236,900 @@ SF-59 (c)）。**以闸实测为准**。末支落定后匿名构造子六分量�
   `GoodGraphV4Spine ↔ Assembly.GoodGraphV4` 的 `Iff.rfl` 退化成立，hTC
   终局（`jcajydu`/`tameCorrespondenceIso` 消费 `GoodGraphV4`）的清偿波
   自此对接真形。
+
+## 63. `VPWSHTO_concl` 结论槽幻影 ∃v1u1w2 形 → PRIME 的 ∃i 对角上界形（LA15 已证孪生同形） — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/63-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1 产出，2026-10-28）。本文件只进快照
+> 目录，不改 `docs/statement-fix-proposals.md` 正本；由编排者走
+> STATEMENT-FIX 闸落库。基线主仓 `3d22d928`；HOL 正本 `reference/flyspeck`。
+> 三元对账全量逐字见同目录 `fixscout-report.md` §1。
+
+### (a) HOL 裁决
+
+- appendix.hl:62-73 摘要 let（Lean 现形的来源）：结论 `?v1 u1 w2. u1 IN
+  {v,x,u,w,w1} /\ u1 IN {v,x,u,w,w1} /\ w2 IN {v,x,u,w,w1} /\ ~(v1=u1) /\
+  ~(u1=w2) /\ ~(v1=w2) /\ &2 < norm(v1-u1) /\ &2 < norm(v1-w2) /\
+  norm(v1-u1) <= &1 + sqrt(&5) /\ norm(v1-w2) <= &1 + sqrt(&5)`（`u1 IN`
+  连抄两遍、`v1` 无成员前提）。
+- **corpus 正本**：`VPWSHTO.hl:2867` `VPWSHTO_PRIME`（前提块与摘要逐字
+  同构：ball_annulus + packing + 10 个 `~(=)` + 5 边长=2；结论
+  `?i. i IN 0..4 /\ norm(vv i - vv ((i+2) MOD 5)) <= &1 + sqrt(&5) /\
+  norm(vv i - vv ((i+3) MOD 5)) <= &1 + sqrt(&5)`）；内版 `VPWSHTO`
+  （VPWSHTO.hl:1978）结论同 `?i` 形。
+- 全树 grep `?v1 u1 w2`：仅 appendix.hl:70（摘要自身）——摘要结论形在
+  corpus **零原证**。
+
+### (b) Lean 诊断
+
+`lean/Kepler/Text/LocalAuto1.lean:1078-1090` 注册表 = 摘要形；
+`lean/Kepler/Text/LocalConcl.lean:1491-1505` 出口同形 sorry；
+孪生 `LocalAuto15.lean:487-517` `VPWSHTO_PRIME_p15`（**已证**）= corpus
+PRIME 形。flip 源已备好，无须新造。差槽：结论槽整块换形（∃三点严格形 ↔
+∃i∈0..4 对角上界形）。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :1076-1090 替换为（= LA15 孪生逐字形）：
+
+```lean
+/-- HOL `VPWSHTO_concl` (SF-63 真化：appendix.hl:62 摘要结论形在 corpus
+无原证；改采 corpus 正本 VPWSHTO.hl:2867 `VPWSHTO_PRIME` 形，与 LA15
+已证孪生 `VPWSHTO_PRIME_p15` 逐字同形)。 -/
+theorem VPWSHTO_concl : ∀ vv : ℕ → V3,
+    ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) ⊆ ballAnnulus →
+    Kepler.Packing ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) →
+    vv 0 ≠ vv 1 → vv 0 ≠ vv 1 → vv 0 ≠ vv 2 → vv 0 ≠ vv 3 →
+    vv 0 ≠ vv 4 → vv 1 ≠ vv 2 → vv 1 ≠ vv 3 → vv 1 ≠ vv 4 →
+    vv 2 ≠ vv 3 → vv 2 ≠ vv 4 → vv 3 ≠ vv 4 →
+    norm (vv 0 - vv 1) = 2 → norm (vv 1 - vv 2) = 2 → norm (vv 2 - vv 3) = 2 →
+    norm (vv 3 - vv 4) = 2 → norm (vv 4 - vv 0) = 2 →
+    ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
+      norm (vv i - vv ((i + 2) % 5)) ≤ 1 + Real.sqrt 5 ∧
+      norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5 := by
+  sorry
+```
+
+LocalConcl.lean :1491-1505 出口陈述同款替换（body 留 sorry；落库可选
+接线 `:= VPWSHTO_PRIME_p15` 转 PROVED）。原 `∃v1 u1 w2` 严格形如未来
+终端剪枝真需要，另立 NEEDS（新数学，非移植债）。
+
+补丁文件：`patches/63-vpwshto-concl.patch`（LA1 + LocalConcl 两 hunk）。
+
+### (d) 消费面影响清单（全树 grep `VPWSHTO_concl`，2026-10-28 实证）
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:1078-1090 | 注册表本体 | 换形 | 本补丁 |
+| 2 | LocalConcl.lean:1491-1505 `VPWSHTO_discharged` | 出口陈述同形 | 换形 | 本补丁 |
+| 3 | LocalAuto15.lean:487-517 `VPWSHTO_PRIME_p15` | 已证孪生（独立签名） | 不变；反为接线源 | 无 |
+| 4 | LocalAuto15.lean `VPWSHTO_p15` 等族 | 异名族（对角上界母件） | 不变 | 无 |
+| 5 | docs（bola1-dep-map.tsv:16、fidelity-audit-v1.tsv、local-manifest.md） | 记档行 | 编排者批量刷新 | 可选 |
+
+### (e) 风险
+
+1. 12 件中唯一变量词壳者（`∀ v x u w w1` → `∀ vv : ℕ → V3`）；闸上核对
+   `Set.Icc (0 : ℕ) 4`、`((i + 2) % 5)` 的 elaboration 与 LA15 孪生逐字
+   一致。
+2. 陈述变更走 STATEMENT-FIX 豁免；出口 hunk 陈述与注册表同车，否则
+   LocalConcl 语义漂移（不破编译，破诚实口径）。
+3. 消费面零代码消费者，无破网面；回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+落库后建议：`VPWSHTO_discharged := VPWSHTO_PRIME_p15` 一行接线（已证
+孪生），该出口退出 HOLD 名录；e2e 直源 −1。
+
+## 64. `QKNVMLB1_concl` 索引约定 `(i+p)%k'` → `i%k'+p%k`（RULING 孪生忠实先例） — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/64-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §2。
+
+### (a) HOL 裁决
+
+- appendix.hl:1055-1062 摘要 let：`vv' = (\i. vv ((i+p) MOD
+  (scs_k_v39 s')))`。
+- **corpus 正本** QKNVMLB.hl:5222-5230（逐字）：`vv' = (\i. vv (i MOD
+  (scs_k_v39 s') + p MOD (scs_k_v39 s)))`；组件原证
+  `QKNVMLB1_LE4F`（:4838）/`QKNVMLB1_EQ4F`（:5064）同约定。
+- 两约定在 mod 边界外不等（k=6, p=2, q=0, i=4 ⇒ `vv 0` vs `vv 3`；
+  LocalConcl.lean:1430-1432 实证 k=6,p=2,i=4 形），`Periodic vv` 不可调和。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:2790-2796` 注册表 = 摘要形
+`(fun i => vv ((i + p) % (scsHalfSliceV39 s p q d' mkj).k))`；
+孪生 `LocalAuto35.lean:634-648` `QKNVMLB1_p35`（sorry，Eq4F/LE4F 分支债）
+= 忠实形 `hvv' : vv' = fun i => vv (i % s'.k + p % s.k)`；
+RULING 2026-09-21 IV（LocalAuto35.lean:874-877 记档）：**孪生侧忠实**。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :2790-2796 仅换结论 lambda（前提块零触碰）：
+
+```lean
+/-- HOL `QKNVMLB1_concl` (SF-64 真化：索引约定改采 corpus 正本
+QKNVMLB.hl:5222-5230 形 `vv (i % s'.k + p % s.k)`——RULING 2026-09-21 IV
+判孪生侧忠实；appendix.hl:1055 摘要形 `(i+p) % s'.k` 在 corpus 无原证)。 -/
+theorem QKNVMLB1_concl : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+    (vv : ℕ → V3),
+    MMsV39 s vv → s.bm p q < 4 → (s.k = 4 ∨ s.bm p q ≤ cstab) → isScsV39 s →
+    d' < 0.9 → scsDiag s.k p q →
+    BBsV39 (scsHalfSliceV39 s p q d' mkj)
+      (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) := by
+  sorry
+```
+
+LocalConcl.lean :1439-1445 出口 lambda 同款替换。落库后注册表 = 孪生
+`QKNVMLB1_p35` 在 `s' := scsHalfSliceV39 …`、`vv' := lambda`（方程 rfl）
+处的特化，W2 装配波接线直通。
+
+补丁文件：`patches/64-qknvmlb1-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:2790-2796 | 注册表本体 | 换 lambda | 本补丁 |
+| 2 | LocalConcl.lean:1439-1445 `QKNVMLB1_discharged` | 出口同形 | 换 lambda | 本补丁 |
+| 3 | LocalAuto35.lean:634-648 `QKNVMLB1_p35` | 孪生（忠实形、独立签名） | 不变；接线源 | 无 |
+| 4 | LocalConcl.lean:1418-1438 出口 docstring | HOLD 记档注 | 陈述修后过时 | 随闸刷新（可选） |
+| 5 | docs（bola1-dep-map.tsv:91、fidelity-audit-v1.tsv） | 记档行 | 同上 | 可选 |
+
+### (e) 风险
+
+1. 纯 lambda 槽替换，arity/前提零变，闸面最小。
+2. 剩余债：`QKNVMLB1_LE4F_p35`/`QKNVMLB1_EQ4F_p35` 两分支 sorried——
+   陈述修正不消债，W2 认证链波清偿（dep-map FIX→W2 口径不变）。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 65. `QKNVMLB2_concl` 索引约定 `(i+p)%k'` → `i%k'+p%k`（同上） — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/65-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §2（QKNVMLB 族合并节）。
+
+### (a) HOL 裁决
+
+- appendix.hl:1064-1073 摘要 let：`vv' = (\i. vv ((i+p) MOD k'))`、
+  `vv'' = (\i. vv ((i+q) MOD k''))`。
+- **corpus 正本** QKNVMLB.hl:5522-5533（逐字）：`vv' = (\i. vv (i MOD
+  (scs_k_v39 s') + p MOD (scs_k_v39 s)))`、`vv'' = (\i. vv (i MOD
+  (scs_k_v39 s'') + q MOD (scs_k_v39 s)))`；前提为两半片方程
+  `scs_half_slice_v39 s p q d' mkj = s' /\ scs_half_slice_v39 s q p d'' mkj
+  = s''`。
+- **元组前提保留记档**：摘要/注册表的 `(s',s'') = scs_slice_v39 …` 与
+  原证两半片方程可桥——`scs_slice_v39`（appendix.hl:788-790）是半片对的
+  纯配对（Lean `LocalAuto1.lean:869-872` 同构），`Prod.mk.injEq` 展开
+  即得（w1asm 草案实证同款展开；LocalConcl.lean:1519-1520 成文记档
+  「bridgeable via the scsSliceV39 def」）。本 SF **只换 lambda，前提零触碰**。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:2799-2806` 注册表 = 摘要形双 lambda；
+孪生 `LocalAuto35.lean:878-890` `QKNVMLB2_p35`（sorry，~2215 行原证债）
+= 忠实形（`hvv'/hvv''` 方程前提）；RULING 2026-09-21 IV
+（LocalAuto35.lean:874-877 + LocalConcl.lean:1448-1451 记档）：孪生侧忠实。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :2799-2806 仅换结论双 lambda：
+
+```lean
+/-- HOL `QKNVMLB2_concl` (SF-65 真化：双半片实现约定改采 corpus 正本
+QKNVMLB.hl:5525/:5527 形 `vv (i % s'.k + p % s.k)` /
+`vv (i % s''.k + q % s.k)`——RULING 2026-09-21 IV 判孪生侧忠实)。 -/
+theorem QKNVMLB2_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (vv : ℕ → V3),
+    (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    s.d ≤ d' + d'' →
+    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) := by
+  sorry
+```
+
+LocalConcl.lean :1455-1463 出口双 lambda 同款替换。
+
+补丁文件：`patches/65-qknvmlb2-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:2799-2806 | 注册表本体 | 换双 lambda | 本补丁 |
+| 2 | LocalConcl.lean:1455-1463 `QKNVMLB2_discharged` | 出口同形 | 换双 lambda | 本补丁 |
+| 3 | LocalAuto35.lean:878-890 `QKNVMLB2_p35` | 孪生（忠实形、独立签名） | 不变；接线源 | 无 |
+| 4 | docs（bola1-dep-map.tsv:92、fidelity-audit-v1.tsv） | 记档行 | 随闸刷新 | 可选 |
+
+### (e) 风险
+
+1. 纯 lambda 槽替换 ×2；元组前提不动，桥已有成文记档。
+2. 剩余债：原证 ~2215 行（QKNVMLB.hl:5533-7736）为 W2 大件，本 SF 不消债。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 66. `QKNVMLB3_concl` 索引约定 `(i+p)%k'` → `i%k'+p%k`（同上） — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/66-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §2（QKNVMLB 族合并节）。
+
+### (a) HOL 裁决
+
+- appendix.hl:1075-1084 摘要 let：`vv' = (\i. vv ((i+p) MOD k'))`、
+  `vv'' = (\i. vv ((i+q) MOD k''))`（taustar 加法结论）。
+- **corpus 正本** QKNVMLB.hl:10663-10675 `QKNVMLB3`（逐字）：
+  `vv' = (\i. vv (i MOD (scs_k_v39 s') + p MOD (scs_k_v39 s)))`、
+  `vv'' = (\i. vv (i MOD (scs_k_v39 s'') + q MOD (scs_k_v39 s)))`；
+  原证 = `QKNVMLB3_LE4` + `QKNVMLB3_Eq4`（:10198，~470 行）二支拆分。
+- LocalConcl.lean:1524-1532 出口 docstring 成文记档：「RULING 2026-09-21
+  IV: on the index convention the TWIN side is the faithful one -- the
+  proved HOL master QKNVMLB3 (QKNVMLB.hl:10665-10675) realises vv'/vv''
+  as vv (i MOD s'.k + p MOD s.k) (:10667) and vv (i MOD s''.k + q MOD
+  s.k) (:10669)」。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:2809-2816` 注册表 = 摘要形双 lambda（taustar 版）；
+孪生 `LocalAuto35.lean:1285-1298` `QKNVMLB3_p35`（已证**但经
+`QKNVMLB3_Eq4_p35`/`QKNVMLB3_LE4_p35` 两 sorry 分支拆分**）= 忠实形。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :2809-2816 仅换结论双 lambda：
+
+```lean
+/-- HOL `QKNVMLB3_concl` (SF-66 真化：双半片实现约定改采 corpus 正本
+QKNVMLB.hl:10667/:10669 形——RULING 2026-09-21 IV 判孪生侧忠实；
+Eq4/LE4 分支债见 LA35)。 -/
+theorem QKNVMLB3_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (vv : ℕ → V3),
+    (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    s.d ≤ d' + d'' →
+    taustarV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      taustarV39 s'' (fun i => vv (i % s''.k + q % s.k)) ≤ taustarV39 s vv := by
+  sorry
+```
+
+LocalConcl.lean :1534-1541 出口双 lambda 同款替换。
+
+补丁文件：`patches/66-qknvmlb3-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:2809-2816 | 注册表本体 | 换双 lambda | 本补丁 |
+| 2 | LocalConcl.lean:1534-1541 `QKNVMLB3_discharged` | 出口同形 | 换双 lambda | 本补丁 |
+| 3 | LocalAuto35.lean:1285-1298 `QKNVMLB3_p35`（+Eq4/LE4 分支） | 孪生（忠实形） | 不变；接线源 | 无 |
+| 4 | docs（bola1-dep-map.tsv:93） | 记档行 | 随闸刷新 | 可选 |
+
+### (e) 风险
+
+1. **NEEDS 记账（判 A 件内残余债）**：修后 `QKNVMLB3_discharged` 的接线
+   仍被 `QKNVMLB3_Eq4_p35`（QKNVMLB.hl:10198，~470 行）/`_LE4_p35` 两
+   巨型分支挡住——清偿路线 = W2/W3 认证链波直译两分支（dep-map
+   FIX→W2/W3 口径不变）；陈述修正使 W1 装配（HIJQAHA 等消费方）不再被
+   索引约定卡死。
+2. 纯 lambda 槽替换 ×2，元组前提不动（桥记档同 SF-65）。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 67. `YXIONXL2_concl` 补原证 `3<s.k` 前提 — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/67-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §3。
+
+### (a) HOL 裁决
+
+- appendix.hl:1138-1139 摘要 let（逐字）：
+  `!s. is_scs_v39 s ==> scs_arrow_v39 {s} {scs_opp_v39 s}`。
+- **corpus 正本** YXIONXL2.hl:3501-3502（逐字）：
+  ```hol
+  let YXIONXL2=prove_by_refinement( `!s.
+    is_scs_v39 s /\ scs_k_v39 s=k /\ ~(k<=3) ==> scs_arrow_v39 {s} {scs_opp_v39 s}`,
+  ```
+  ——原证带 `¬(k ≤ 3)` 限制。OCBICBY.hl 无同名件（LA33:116 注记称
+  Ocbicby.hl 属陈旧误记，grep 证伪）。
+- k=3 支在 corpus 零原证，真值状态未知（scs_opp 在 k=3 的 MMs 搬运未建）。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:1385-1387` 注册表 = 摘要形（无 k 限制）；
+孪生 `LocalAuto33.lean:119-120` `YXIONXL2_p33` = `(hk : 3 < s.k)` 忠实形
+（sorry）；LocalConcl 出口 :1346-1348 摘要形 sorry。差槽：前提缺失。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :1385-1387 加前提：
+
+```lean
+/-- HOL `YXIONXL2_concl` (SF-67 真化：补 corpus 正本 YXIONXL2.hl:3501-3502
+的 `¬(k≤3)` 前提，与 LA33 孪生 `YXIONXL2_p33` 同形；appendix.hl:1138
+摘要形在 corpus 无 k=3 原证)。 -/
+theorem YXIONXL2_concl : ∀ s : ScsV39, isScsV39 s → 3 < s.k →
+    scsArrowV39 {s} {scsOppV39 s} := by
+  sorry
+```
+
+LocalConcl.lean :1346-1348 出口同款加前提。
+
+补丁文件：`patches/67-yxionxl2-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:1385-1387 | 注册表本体 | 加前提 | 本补丁 |
+| 2 | LocalConcl.lean:1346-1348 `YXIONXL2_discharged` | 出口同形 | 加前提 | 本补丁 |
+| 3 | LocalAuto33.lean:119-120 `YXIONXL2_p33` | 孪生（忠实形） | 不变；接线源 | 无 |
+| 4 | LocalConcl.lean:172-173/219-220 记档注 | HOLD 说明 | 过时（转「已对齐」） | 随闸刷新（可选） |
+| 5 | docs（bola1-dep-map.tsv:21） | 记档行 | 同上 | 可选 |
+
+### (e) 风险
+
+1. **对 dep-map「W1(k=3补)」路线的更正**：补 k=3 是超出 corpus 的新数学
+  （原证作者显式排除 k=3），修后**无需** k=3 补件；若未来终端论证确需
+  k=3 的 opp 箭头，另立 NEEDS（新数学）。本 SF 消除的是「p13 孪生错车道
+  类型 ScsV39P13」这一接线缺口——修后 LA33 `YXIONXL2_p33` 即同形接线源。
+2. 加前提 = 陈述变弱，属 STATEMENT-FIX 豁免常规操作；消费面零代码消费者。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 68. `LKGRQUI_concl` 补 `scsDiag`+`isScsSlice` 前提（三文件同车，与 w1asm 装配同签名） — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/68-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28；编排者增派件，
+> w1asm-w1 交叉情报并入）。基线主仓 `3d22d928`。三元对账全量见
+> `fixscout-report.md` §4。
+
+### (a) HOL 裁决
+
+- appendix.hl:1144-1145 摘要 let（逐字）：
+  `is_scs_v39 s /\ (s',s'') = scs_slice_v39 s p q d' d'' mkj ==> scs_arrow_v39 {s} {s',s''}`。
+- **corpus 正本** LKGRQUI.hl:86-89（逐字）：
+  ```hol
+  let LKGRQUI= prove_by_refinement(
+  `	is_scs_v39 s /\ scs_diag (scs_k_v39 s) p q /\
+	  is_scs_slice_v39 s s' s'' p q 
+	 ==> scs_arrow_v39 {s} {s',s''}`,
+  ```
+- 差异实质：`scs_slice_v39` 是全函数（无前提返回 junk 对），纯方程前提
+  零约束力；且缺 `scs_diag` 后原证的 `SCS_K_PRIME_CASE` 类分解无米下锅。
+  摘要形从自身前提不可证。
+
+### (b) Lean 诊断
+
+- `LocalAuto1.lean:1688-1691` 注册表 = 摘要形；
+- **孪生 `LocalAuto27.lean:893-895` `LKGRQUI_p27` 同为摘要形**（docstring
+  自锚 LKGRQUI.hl:87 却没抄对前提——名实不符，sorry）；LocalConcl 出口
+  :714-718 逐字转发该孪生；
+- w1asm 草案 `LKGRQUI_faithful_w1asm`（lane_snapshots/w1asm-w1/drafts/
+  LkgrquiAqiclxaFunouyh.lean:71-）已按忠实形装配（前提序
+  `isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q`）。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :1688-1691 替换（= w1asm 忠实形签名）：
+
+```lean
+/-- HOL `LKGRQUI_concl` (SF-68 真化：改采 corpus 正本 LKGRQUI.hl:86-89
+三前提形 `scs_diag` + `is_scs_slice_v39`；appendix.hl:1144 摘要形以纯
+元组方程替代两前提，从自身前提不可证。与 w1asm 车道
+`LKGRQUI_faithful_w1asm` 装配草案同签名。) -/
+theorem LKGRQUI_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop),
+    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    scsArrowV39 {s} {s', s''} := by
+  sorry
+```
+
+**协同 hunk 1**（LA27 孪生同车，同一误植形）：LocalAuto27.lean :893-895
+陈述两行同款替换（body `sorry` + DISCHARGES 注记行不动）。
+
+**协同 hunk 2**：LocalConcl.lean :714-718 出口陈述同款替换（转发体
+`LKGRQUI_p27` 行不动，三处同形后仍编译）。
+
+补丁文件：`patches/68-lkgrqui-concl.patch`（三文件 hunk）。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:1688-1691 | 注册表本体 | 换前提组 | 本补丁 |
+| 2 | LocalAuto27.lean:893-895 `LKGRQUI_p27` | 孪生（同误植形） | 换前提组（同车） | 本补丁 |
+| 3 | LocalConcl.lean:714-718 `LKGRQUI_discharged` | 出口（转发 LKGRQUI_p27） | 换前提组 | 本补丁 |
+| 4 | LocalAuto20.lean（AQICLXA/FUNOUYH 装配注记）| 注记级 | 注记过时 | 随波刷新（可选） |
+| 5 | LocalAuto29.lean（HIJQAHA 注记） | 注记级 | 同上 | 可选 |
+| 6 | w1asm 草案 `LKGRQUI_faithful_w1asm` | 装配证明体（未落库） | 同签名直供 | w1asm 波落地 |
+| 7 | docs（local-manifest.md、bola1-dep-map.tsv:23） | 记档行 | 随闸刷新 | 可选 |
+
+### (e) 风险
+
+1. LA27 孪生陈述与 LA1 注册表、LocalConcl 出口三处必须**同提交**改齐，
+   否则转发链语义漂移（编译不破——出口转发体是孪生本身）。
+2. 与 w1asm 波分工：本 SF 只动陈述；`LKGRQUI_faithful_w1asm` 证明体归
+   w1asm 落库。落库序建议 SF-68 先行（陈述先到位，装配随后 1 行转发）。
+3. AQICLXA/FUNOUYH（LA20:984/1006，w1asm 草案改证中）消费的是忠实形——
+   本 SF 是波 1 装配的前置，dep-map「S W1(解锁AQICLXA/FUNOUYH)」兑现点。
+4. 回滚 = 反向 patch（三文件）。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 69. `TBRMXRZ1_concl` 摘要形为假命题，四槽复合差 → OCBICBY.hl:1158 原证形（闸上以 LA22 已证孪生逐字复核） — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/69-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §5。**12 件中风险最高件**：
+> 四槽复合差，摘要形为假命题。
+
+### (a) HOL 裁决
+
+- appendix.hl:1216-1218 摘要 let（逐字）：
+  ```hol
+  let TBRMXRZ1_concl = `!f f' g h' x y.
+    derived_form T f f' y (:real) /\
+    derived_form T (f o g) h' x (:real) /\
+    g x = y ==> re_eqvl f' h'`;;
+  ```
+- **corpus 正本** OCBICBY.hl:1158-1164（逐字）：
+  ```hol
+  let TBRMXRZ1 = prove_by_refinement(
+  `!f f' g g' h' x y.
+    derived_form T f f' x (:real) /\
+    derived_form T g g' y (:real) /\
+    derived_form T (g o f) h' x (:real) /\
+    &0 < f' /\
+    f x = y ==> re_eqvl h' g'`,
+  ```
+- `re_eqvl` 正本（trig2.hl:4238-4240）：`a re_eqvl b <=> (? t. &0 < t /\
+  a = t * b)`——正比例相等；Lean 同构 `PackingAuto18.lean:203`
+  `def reEqvl (a b : ℝ) : Prop := ∃ t : ℝ, 0 < t ∧ a = t * b`
+  （LA1:1803 docstring 写 PackingAuto18:79，行号陈旧）。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:1805-1809` 注册表 = 摘要形（`(fun z => f (g z))`、缺 g'
+与 `0 < f'`、结论 `reEqvl f' h'`）；孪生 `LocalAuto22.lean:659-667`
+`TBRMXRZ1_p22`（**已证**，witness `⟨f', hpos, …⟩`）= 原证忠实形；
+LocalConcl 出口 :1480-1485 摘要形 sorry。差槽五处：①复合序 f∘g↔g∘f；
+②缺 `derivedForm True g g' y`；③缺 `0 < f'`；④结论槽对调
+`reEqvl f' h'`↔`reEqvl h' g'`；⑤求导点簿记 y↔x。
+
+**摘要形为假**（反例）：f(z) = (z−y)²（f'(y) = 0），g 在 x 处不可导但使
+f∘g 在 x 近旁为恒等（√ 型折线）——满足摘要全部前提而 `reEqvl 0 1` 假
+（`∃ t > 0, 0 = t * 1` 不可能）。摘要形不可证亦不可救。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :1805-1809 替换（= LA22 已证孪生逐字形）：
+
+```lean
+/-- HOL `TBRMXRZ1_concl` (SF-69 真化：改采 corpus 正本 OCBICBY.hl:1158-1164
+链式复合形 `g ∘ f` + 外函数斜率前提 + `0 < f'`，结论 `reEqvl h' g'`——
+与 LA22 已证孪生 `TBRMXRZ1_p22` 逐字同形。appendix.hl:1216 摘要形为假
+命题（无 g 可导前提时 f∘g 可在 f'(y)=0 处有非零导数）。) -/
+theorem TBRMXRZ1_concl : ∀ (f g : ℝ → ℝ) (f' g' h' x y : ℝ),
+    derivedForm True f f' x (Set.univ : Set ℝ) →
+    derivedForm True g g' y (Set.univ : Set ℝ) →
+    derivedForm True (g ∘ f) h' x (Set.univ : Set ℝ) →
+    0 < f' → f x = y → reEqvl h' g' := by
+  sorry
+```
+
+LocalConcl.lean :1480-1485 出口陈述同款替换。
+
+补丁文件：`patches/69-tbrmxrz1-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:1805-1809 | 注册表本体 | 换形（五槽） | 本补丁 |
+| 2 | LocalConcl.lean:1480-1485 `TBRMXRZ1_discharged` | 出口同形 | 换形 | 本补丁 |
+| 3 | LocalAuto22.lean:659-667 `TBRMXRZ1_p22` | 已证孪生 | 不变；接线源 | 无 |
+| 4 | LocalConcl.lean:1474-1479 出口 docstring | HOLD 记档注 | 过时 | 随闸刷新（可选） |
+| 5 | docs（bola1-dep-map.tsv:29、fidelity-audit-v1.tsv、la1-handoff.md） | 记档行 | 同上 | 可选 |
+
+### (e) 风险
+
+1. **闸面复核点**：`(g ∘ f)` 与 `fun z => g (f z)` elaboration 应等价
+  （`Function.comp` 可折叠）；闸若报差，以 LA22 孪生逐字形为准。
+2. `reEqvl` 在 LA1 的解析（现陈述已用同名，PackingAuto18:203 def）零变。
+3. 修后出口 1 行接线 `:= TBRMXRZ1_p22 f g f' g' h' x y` 转 PROVED
+  （建议随闸）；该出口退出 HOLD 名录。
+4. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 70. `SYNQIWN_concl` k=3 残影 → mnt11+6 路 hears 原证形 — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/70-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §6。
+
+### (a) HOL 裁决
+
+- appendix.hl:1296-1300 摘要 let：k=3 特化残影（i+2 槽、2 路 or hears、
+  无 mnt11、azim 角点 v(i+1)）。
+- **corpus 正本** OCBICBY.hl:2506-2520 `SYNQIWN`（逐字）：
+  `main_nonlinear_terminal_v11 ==> (!s v i k. is_scs_v39 s /\ BBs_v39 s v
+  /\ scs_k_v39 s = k /\ 3 < k /\ (6 路 hears or) /\ dist(v i,v(SUC i)) <=
+  &2*h0 /\ dist(v i,v(i+k-1)) <= &2*h0 /\ cstab <= dist(v(SUC i),v(i+k-1))
+  ==> pi/&2 < azim (vec 0) (v i) (v (SUC i)) (v (i+k-1)))`。
+- SYNQIWN 无同名 .hl 文件；corpus 唯一原证即上处。HOL 侧消费（JCYFMRP.hl/
+  RRCWNSJ.hl/TFITSKC.hl）均按原证形消费。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:1978-1984` 注册表 = 摘要形；孪生 `LocalAuto22.lean:
+1466-1480` `SYNQIWN_p22`（sorry，食 mnt11 → W3 银行阴影）= 原证忠实形；
+LocalConcl 出口 :1378-1384 摘要形 sorry。差槽六处（mnt11 / k 簿记+3<k /
+hears 套件 2↔6 路 / 两条 ≤2h0 边 / cstab 槽换位 / azim 角点+索引 i+2↔
+i+k-1）。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :1978-1984 替换（= LA22 孪生逐字形）：
+
+```lean
+/-- HOL `SYNQIWN_concl` (SF-70 真化：改采 corpus 正本 OCBICBY.hl:2506-2520
+形——mnt11 前提 + k 簿记 `s.k = k ∧ 3 < k` + 6 路 hears 套件 + 两条
+`≤ 2*h0` 边前提，结论角点 `azim 0 (v i) (v (i+1)) (v (i+k-1))`。与 LA22
+孪生 `SYNQIWN_p22` 逐字同形。appendix.hl:1296 摘要形为 k=3 特化残影，
+corpus 无原证。) -/
+theorem SYNQIWN_concl : main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (v : ℕ → V3) (i k : ℕ), isScsV39 s → BBsV39 s v →
+    s.k = k → 3 < k →
+    (norm (v (i + 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2 ∨
+      (norm (v (i + k - 1)) = 2 ∧ dist (v i) (v (i + 1)) = 2) ∨
+      (norm (v (i + 1)) = 2 ∧ norm (v (i + k - 1)) = 2) ∨
+      (dist (v i) (v (i + 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2) ∨
+      (norm (v (i + 1)) = 2 ∧ dist (v i) (v (i + 1)) = 2) ∨
+      (norm (v (i + k - 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2)) →
+    dist (v i) (v (i + 1)) ≤ 2 * h0 →
+    dist (v i) (v (i + k - 1)) ≤ 2 * h0 →
+    cstab ≤ dist (v (i + 1)) (v (i + k - 1)) →
+    Real.pi / 2 < azim 0 (v i) (v (i + 1)) (v (i + k - 1)) := by
+  sorry
+```
+
+LocalConcl.lean :1378-1384 出口陈述同款替换。
+
+补丁文件：`patches/70-synqiwn-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:1978-1984 | 注册表本体 | 换形（六槽） | 本补丁 |
+| 2 | LocalConcl.lean:1378-1384 `SYNQIWN_discharged` | 出口同形 | 换形 | 本补丁 |
+| 3 | LocalAuto22.lean:1466-1480 `SYNQIWN_p22` | 孪生（忠实形、独立签名） | 不变；接线源 | 无 |
+| 4 | LocalConcl.lean:174-176 记档注 | HOLD 说明 | 过时 | 随闸刷新（可选） |
+| 5 | docs（bola1-dep-map.tsv:39、la1-handoff.md、la22_handoff.md） | 记档行 | 同上 | 可选 |
+
+### (e) 风险
+
+1. 六路 or 的括号层级以 LA22 孪生逐字为准（`(A ∧ B) ∨ (C ∧ D) ∨ …`），
+   闸上 elaboration 与孪生同形即可。
+2. 剩余债：孪生本体 sorry（原证食 mnt11 → W3 银行波）；本 SF 不消债，
+   只消除「陈述对不齐」锁。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 71. `XWNHLMD_concl` 补原证 `s.d≤s'.d` 前提 — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/71-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §7。12 件中最干净的一件。
+
+### (a) HOL 裁决
+
+- appendix.hl:1303-1306 摘要 let：**缺** `scs_d_v39 s <= scs_d_v39 s'`。
+- **corpus 正本** PPBTYDQ.hl:574-581（逐字）：
+  ```hol
+  let XWNHLMD_concl = `!s s' v.
+    is_scs_v39 s /\ is_scs_v39 s' /\ scs_basic_v39 s /\ scs_basic_v39 s' /\
+    scs_k_v39 s = scs_k_v39 s' /\ scs_d_v39 s<= scs_d_v39 s' /\
+    v IN MMs_v39 s /\ v IN BBs_v39 s' ==>
+    scs_arrow_v39 {s} {s'}`;;
+  ```
+  且 :583 `XWNHLMD=prove_by_refinement(XWNHLMD_concl,…)` 直接以该 let 为
+  证明目标——corpus 文件内**同名 let** 含前提，appendix 摘要同名丢了它。
+- 前提不可省：`isScsV39` 只钉 `s.d < 0.9`（无 dTame 方程），序关系不可
+  推导（LocalConcl.lean:1506-1507 成文记档）。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:1987-1990` 注册表 = 摘要形（缺前提）；孪生
+`LocalAuto26.lean:795-809` `XWNHLMD_p26`（**已证**，kernel
+`XWNHLMD_MM_p26`/`TAUSTAR_LE_0_XWNHLMD_p26` 均已证）= 原证形（含
+`hds : s.d ≤ s'.d`）；LocalConcl 出口 :1509-1514 摘要形 sorry。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :1987-1990 加一行前提：
+
+```lean
+/-- HOL `XWNHLMD_concl` (SF-71 真化：补 corpus 正本 PPBTYDQ.hl:574-581
+的 `s.d ≤ s'.d` 前提——appendix.hl:1303 摘要同名 let 丢了它；与 LA26
+已证孪生 `XWNHLMD_p26` 逐字同形。) -/
+theorem XWNHLMD_concl : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s → isScsV39 s' →
+    scsBasicV39 s → scsBasicV39 s' → s.k = s'.k → s.d ≤ s'.d →
+    v ∈ MMsV39 s → BBsV39 s' v →
+    scsArrowV39 {s} {s'} := by
+  sorry
+```
+
+LocalConcl.lean :1509-1514 出口同款加前提。
+
+补丁文件：`patches/71-xwnhlmd-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:1987-1990 | 注册表本体 | 加前提 | 本补丁 |
+| 2 | LocalConcl.lean:1509-1514 `XWNHLMD_discharged` | 出口同形 | 加前提 | 本补丁 |
+| 3 | LocalAuto26.lean:696-809（TAUSTAR_LE_0/MM_p26/XWNHLMD_p26） | 已证孪生族 | 不变；接线源 | 无 |
+| 4 | LocalConcl.lean:1505-1508 出口 docstring | HOLD 记档注 | 过时 | 随闸刷新（可选） |
+| 5 | docs（bola1-dep-map.tsv:40、fidelity-audit-v1.tsv） | 记档行 | 同上 | 可选 |
+
+### (e) 风险
+
+1. 单前提插入，arity 顺序沿 corpus（置于 `s.k = s'.k` 后，与 LA26 孪生
+   `hk`/`hds` 相邻序一致）；闸上以孪生逐字序核对。
+2. 修后出口 1 行接线 `:= XWNHLMD_p26 …` 转 PROVED（建议随闸）；
+   e2e 直源 −1。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 72. `CQAOQLR_concl` → CQAOQLR.hl:233 文件级注册表形 — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/72-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §8。
+
+### (a) HOL 裁决
+
+- appendix.hl:1349-1355 摘要 let：无 mnt11、无 `3 < k`、diag 前提无
+  `4*h0 < b`、无 `2 < b`/`a < b` 严格边、`b = 2*h0` 等式形。
+- **corpus 文件级注册表与原证** CQAOQLR.hl:233-243（逐字，被该文件
+  11 定理机器消费的形态）：`main_nonlinear_terminal_v11 ==> (!s v i.
+  3 < scs_k_v39 s /\ … (!i j. scs_diag … ==> (a ≤ cstab ∧ cstab < dist ∧
+  &4*h0 < b)) /\ &2 < b i(i+1) /\ &2 < b(i+1)(i+2) /\ a(i+2)(i+3) <
+  b(i+2)(i+3) /\ a(i+k-1) i < b(i+k-1) i ==> a i(i+1)=2 /\ b i(i+1) <=
+  &2*h0 /\ a(i+1)(i+2)=2 /\ b(i+1)(i+2) <= &2*h0 ==> (dist = 2 <=> dist
+  = 2))`。
+- LA16 孪生 `CQAOQLR_concl_p16`（LocalAuto16.lean:907-920）docstring 自锚
+  CQAOQLR.hl:233——即文件级注册表形。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:2234-2240` 注册表 = appendix 摘要形；孪生 LA16 = 文件级
+形（`CQAOQLR_p16` sorry，清偿需 TFITSKC/MM_SCS_OPP/OPP_IS_SCS，见
+LocalAuto16.lean:88 记档）；LocalConcl 出口 :1391-1398 摘要形 sorry。
+差槽六处（mnt11 / 3<k / 4h0 合取 / 2<b ×2 / a<b ×2 / b 等式↔上界）。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :2234-2240 替换（= LA16 孪生逐字形）：
+
+```lean
+/-- HOL `CQAOQLR_concl` (SF-72 真化：改采 corpus 文件级注册表
+CQAOQLR.hl:233-243 形——mnt11 前提 + `3 < s.k` + diag 组 `4*h0 < b`
+合取 + 两条 `2 < b` 与两条 `a < b` 严格边前提，`b ≤ 2*h0` 上界形。与
+LA16 `CQAOQLR_concl_p16` 逐字同形。appendix.hl:1349 摘要形为其失真
+缩写。) -/
+theorem CQAOQLR_concl : main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
+    3 < s.k →
+    isScsV39 s → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j) →
+    2 < s.b i (i + 1) → 2 < s.b (i + 1) (i + 2) →
+    s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) →
+    s.a (i + s.k - 1) i < s.b (i + s.k - 1) i →
+    s.a i (i + 1) = 2 → s.b i (i + 1) ≤ 2 * h0 →
+    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
+    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
+  sorry
+```
+
+LocalConcl.lean :1391-1398 出口陈述同款替换。
+
+补丁文件：`patches/72-cqaoqlr-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:2234-2240 | 注册表本体 | 换形（六槽） | 本补丁 |
+| 2 | LocalConcl.lean:1391-1398 `CQAOQLR_discharged` | 出口同形 | 换形 | 本补丁 |
+| 3 | LocalAuto16.lean:907-920 `CQAOQLR_concl_p16` / :1001 `CQAOQLR_p16` | 孪生 def+定理（忠实形） | 不变；接线源 | 无 |
+| 4 | LocalConcl.lean:178-180 记档注 | HOLD 说明 | 过时 | 随闸刷新（可选） |
+| 5 | docs（bola1-dep-map.tsv:46、fidelity-audit-v1.tsv） | 记档行 | 同上 | 可选 |
+
+### (e) 风险
+
+1. 前提序沿 LA16 孪生逐字（`3 < s.k` 在量词后首位）；闸上同形核对。
+2. 剩余债：`CQAOQLR_p16` sorry（W1 装配波：TFITSKC/MM_SCS_OPP 等）；
+   本 SF 只消除形状锁，dep-map「S+FIX W1(FIX后装配)」兑现。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 73. `OEHDBEN_concl` 尾槽 3T1→3M1 + 补 mnt11 — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/73-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §9。
+
+### (a) HOL 裁决
+
+- appendix.hl:1394 摘要 let（逐字）：
+  `scs_arrow_v39 { scs_6I1 } { scs_6T1, scs_5M1, scs_4M2, scs_3T1 }`
+  （无条件、尾槽 3T1）。
+- **corpus 正本** hexagons.hl:2135-2136 `OEHDBEN`（逐字）：
+  ```hol
+  let OEHDBEN= prove(`main_nonlinear_terminal_v11
+  ==>
+  scs_arrow_v39 { scs_6I1 } { scs_6T1, scs_5M1, scs_4M2, scs_3M1 }`,
+  ```
+  证明体 = `FZIOTEF_TRANS` 过 `OEHDBEN_PRIME`（:2117）中间集 +
+  `FZIOTEF_UNION (FZIOTEF_REFL scs_6T1) (FZIOTEF_UNION AQICLXA FZIOTEF)`；
+  尾槽 3M1 来自 AQICLXA（hexagons.hl:1449 `{stab 6I1 0 2} → {3M1, 5M1}`）。
+- 系差实质：scs3M1（d = 0.103，funlist 边表）与 scs3T1（d = 0.11）异系，
+  无集合桥（LocalConcl.lean:1466-1469 成文记档）。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:2476-2478` 注册表 = 摘要形（scs3T1、无前提）；
+孪生 `LocalAuto20.lean:1477-1505` `OEHDBEN`（**已证**）= 原证形
+（`(hmn : main_nonlinear_terminal_v11) → scsArrowV39 {scs6I1}
+{scs6T1, scs5M1, scs4M2, scs3M1}`）；LocalConcl 出口 :1470-1472 摘要形
+sorry。差槽两处：尾槽异系 + 缺 mnt11 前提。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :2476-2478 替换（= LA20 已证孪生逐字形；携前提惯例先例
+= `CUXVZOZ_concl`，LA1:2679）：
+
+```lean
+/-- HOL `OEHDBEN_concl` (SF-73 真化：改采 corpus 正本 hexagons.hl:2135-2136
+形——mnt11 前提 + 尾槽 `scs3M1`（d = 0.103）。appendix.hl:1394 摘要形
+尾槽 3T1（d = 0.11）异系且 corpus 无原证；{6I1}→{…3T1} 如需须经
+BKOSSGE（{3M1}→{3T1,3T5}）另立名目，不冒名 OEHDBEN。) -/
+theorem OEHDBEN_concl : main_nonlinear_terminal_v11 →
+    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1} := by
+  sorry
+```
+
+LocalConcl.lean :1470-1472 出口陈述同款替换。
+
+补丁文件：`patches/73-oehdben-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:2476-2478 | 注册表本体 | 换尾槽+加前提 | 本补丁 |
+| 2 | LocalConcl.lean:1470-1472 `OEHDBEN_discharged` | 出口同形 | 同上 | 本补丁 |
+| 3 | LocalAuto20.lean:1462-1505 `OEHDBEN_PRIME`/`OEHDBEN` | 已证孪生对 | 不变；接线源 | 无 |
+| 4 | LocalAuto16.lean（BKOSSGE_p16 已证，相邻注记） | 注记级 | 不变 | 无 |
+| 5 | LocalConcl.lean:1466-1469 出口 docstring、:237/243 记档 | HOLD 说明 | 过时 | 随闸刷新（可选） |
+| 6 | docs（bola1-dep-map.tsv:53、four-singles-scout.md） | 记档行 | 同上 | 可选 |
+
+### (e) 风险
+
+1. 修后出口 1 行接线 `:= LocalAuto20.OEHDBEN` 转 PROVED（建议随闸）；
+   e2e 直源 −1；mnt11 桩（LA1:974-975 不透明 Prop）不染出口——前提保持
+   假设地位，sorryAx 零 taint。
+2. `{…3T1}` 幻影目标的下游诉求（若有）应转 BKOSSGE 链另立名目；
+   消费面普查未见任何此类真实消费者。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）
+
+## 74. `LFLACKU_concl` 幻影形 → JOTSWIX `{3I1}→∅` 正本形 — 分级 B（移植误植 · 语句修正 · fixscout-w1 判 A）
+
+> 来源：fixscout-w1 车道勘察（2026-10-28，12 件全判 A——「形状差」系 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，裁决一律以 corpus 证明文件为准）；依用户 SF 通道常态化授权（2026-10-28），编排者裁决直接执行。63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。补丁：`docs/statement-fix-proposals-patches/74-*.patch`（12/12 已过 `git apply --check` 只读实测）。
+
+
+> 状态：**草案待审**（车道 fixscout-w1，2026-10-28）。基线主仓 `3d22d928`。
+> 三元对账全量见 `fixscout-report.md` §10。
+
+### (a) HOL 裁决
+
+- appendix.hl:1512 摘要 let（逐字）：
+  `scs_arrow_v39 {scs_3T1} {scs_3T2,scs_3T5}`——**幻影形**：全树 grep
+  `{scs_3T1}` 为源的箭头仅 OCBICBY.hl:4765 一处 `{scs_3T1} → {}`（别的
+  定理的合取支）；`{scs_3T1}→{scs_3T2,scs_3T5}` corpus 零出现。
+- **corpus 正本** JOTSWIX.hl:191-193 `LFLACKU`（逐字）：
+  ```hol
+  let LFLACKU = prove_by_refinement(
+    (* main_work4 ==> *) ` main_nonlinear_terminal_v11 ==>
+     scs_arrow_v39 {scs_3I1} {}`,
+  ```
+- 误植来源可考：BKOSSGE_concl（appendix.hl:1564-1565）=
+  `{scs_3M1} {scs_3T1,scs_3T5}`（LA16 `BKOSSGE_p16` **已证**）——摘要行
+  疑为 BKOSSGE 行的串抄变位（源系 3M1→3T1、目标 3T1→3T2），与 OEHDBEN
+  尾槽同款 M/T 系混淆。
+
+### (b) Lean 诊断
+
+`LocalAuto1.lean:2676` 注册表 = 摘要幻影形；孪生 `LocalAuto23.lean:
+310-312` `LFLACKU_p23` = 原证形（`mnt11 → scsArrowV39 {scs3I1} ∅`，
+sorry，清偿路线 = `taustar_taum_dfun`/`FUNLIST_EXPLICIT` 桥 →
+`TAUM_STD_POS_p23`，LA23:307-309 头注已给）；LocalConcl 出口 :1415-1417
+幻影形 sorry。差槽：整句异件（源系/目标集/前提全不同）。
+
+### (c) 修复补丁（草案文本）
+
+LocalAuto1.lean :2675-2677 替换（= LA23 孪生逐字形）：
+
+```lean
+/-- HOL `LFLACKU_concl` (SF-74 真化：改采 corpus 正本 JOTSWIX.hl:191-193
+形——`mnt11 → scsArrowV39 {scs3I1} ∅`。appendix.hl:1512 摘要形
+`{3T1}→{3T2,3T5}` 在 corpus 零出现（疑为 BKOSSGE 行串抄变位），
+无原证无孪生。) -/
+theorem LFLACKU_concl : main_nonlinear_terminal_v11 →
+    scsArrowV39 {scs3I1} ∅ := by
+  sorry
+```
+
+LocalConcl.lean :1415-1417 出口陈述同款替换。
+
+补丁文件：`patches/74-lflacku-concl.patch`。
+
+### (d) 消费面影响清单
+
+| # | 位置 | 性质 | flip 后果 | 需动作 |
+|---|---|---|---|---|
+| 1 | LocalAuto1.lean:2676 | 注册表本体 | 整句换形 | 本补丁 |
+| 2 | LocalConcl.lean:1415-1417 `LFLACKU_discharged` | 出口同形 | 整句换形 | 本补丁 |
+| 3 | LocalAuto23.lean:307-312 `LFLACKU_p23` | 孪生（原证形） | 不变；接线源 | 无 |
+| 4 | LocalConcl.lean:185-187/:231/:310 记档注 | HOLD 说明 | 过时 | 随闸刷新（可选） |
+| 5 | docs（bola1-dep-map.tsv:86、four-singles-scout.md） | 记档行 | 同上 | 可选 |
+
+### (e) 风险
+
+1. **对 dep-map「W1(新证)」路线的更正**：幻影形无 corpus 根据，不可
+   「新证」；正本形才有移植清偿路线（LA23 taum 桥，W1/Terminal 车道）。
+2. `∅` 目标集的 elaboration 与 LA23 孪生同形（`scsArrowV39 {scs3I1} ∅`）；
+   闸上核对 `Set.empty` 推断为 `Set ScsV39`。
+3. 回滚 = 反向 patch。
+
+### (f) 状态：草案待审（2026-10-28，车道 fixscout-w1）

@@ -1,0 +1,28 @@
+diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+--- a/lean/Kepler/Text/LocalAuto1.lean
++++ b/lean/Kepler/Text/LocalAuto1.lean
+@@ -2798,9 +2798,10 @@
+-/-- HOL `QKNVMLB2_concl` (appendix.hl:1064). Proof pending. -/
++/-- HOL `QKNVMLB2_concl` (SF-65 真化：双半片实现约定改采 corpus 正本
++QKNVMLB.hl:5525/:5527 形——RULING 2026-09-21 IV 判孪生侧忠实)。 -/
+ theorem QKNVMLB2_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+     (vv : ℕ → V3),
+     (s', s'') = scsSliceV39 s p q d' d'' mkj →
+     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+     s.d ≤ d' + d'' →
+-    dsvV39 s vv ≤ dsvV39 s' (fun i => vv ((i + p) % s'.k)) +
+-      dsvV39 s'' (fun i => vv ((i + q) % s''.k)) := by
++    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
++      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) := by
+   sorry
+diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+--- a/lean/Kepler/Text/LocalConcl.lean
++++ b/lean/Kepler/Text/LocalConcl.lean
+@@ -1461,5 +1461,5 @@
+     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+     s.d ≤ d' + d'' →
+-    dsvV39 s vv ≤ dsvV39 s' (fun i => vv ((i + p) % s'.k)) +
+-      dsvV39 s'' (fun i => vv ((i + q) % s''.k)) := by
++    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
++      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) := by
+   sorry

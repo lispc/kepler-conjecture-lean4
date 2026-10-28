@@ -1,0 +1,20 @@
+diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+--- a/lean/Kepler/Text/LocalAuto1.lean
++++ b/lean/Kepler/Text/LocalAuto1.lean
+@@ -1384,4 +1384,6 @@
+-/-- HOL `YXIONXL2_concl` (appendix.hl:1138). Proof pending. -/
++/-- HOL `YXIONXL2_concl` (SF-67 真化：补 corpus 正本 YXIONXL2.hl:3501-3502
++的 `¬(k≤3)` 前提，与 LA33 孪生 `YXIONXL2_p33` 同形；appendix.hl:1138
++摘要形在 corpus 无 k=3 原证)。 -/
+ theorem YXIONXL2_concl : ∀ s : ScsV39, isScsV39 s →
+-    scsArrowV39 {s} {scsOppV39 s} := by
++    3 < s.k → scsArrowV39 {s} {scsOppV39 s} := by
+   sorry
+diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+--- a/lean/Kepler/Text/LocalConcl.lean
++++ b/lean/Kepler/Text/LocalConcl.lean
+@@ -1346,3 +1346,3 @@
+ theorem YXIONXL2_discharged : ∀ s : ScsV39, isScsV39 s →
+-    scsArrowV39 {s} {scsOppV39 s} := by
++    3 < s.k → scsArrowV39 {s} {scsOppV39 s} := by
+   sorry

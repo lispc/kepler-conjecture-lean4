@@ -106,6 +106,7 @@
 9. `已完成` **SF-54/55/56 全部应用**（用户 2026-10-26「都批准」）：**54** 五文件（`47467b90`…`119a10c5`）22 桩加 hedge + LA7 改名 `_LA7`，W6a 已解锁并发车；**55** `b8154a64`（LA1 `Generic` affGt→affGe）/ **56** `d90caf69`（LA2 `circular_p2` affGe→affGt）于 w6b 落库窗口串行双 PASS——交叉镜像误植归正，四定义与 HOL localization.hl:103/107 逐字对齐。应用记录见 proposals §54(e')/§55–56(e')。KCHMAMG 等消费件在后续灌证波按新陈述施工。
 8. `已裁` **hLP 三件**（用户 2026-10-26）：**(i) GoodListNodes 真化批准**（W6-B 开波第一口执行，含 P6-C 构造连带）；**(ii) W6-PIN 钉定升级批准**（与数据波并行排期，lpAllInfeas 189 模块全链重绿）；**(iii) 磁盘窗口缓议**（W1 首批跑通后重呈，选项 = 外置盘 / G4 大盘机 / 云机）。
 10. `已批·执行中` **SF-59..62 GoodGraph 四槽真化**（**用户 2026-10-28 批准**「按 59→60→61→62 串行走 STATEMENT-FIX 闸」，同日授权 **SF 通道常态化**：分级 A/B 误植修正与占位真化由编排者判定合理即直接执行，充分披露、可随时叫停——已记 proposals 正本头部）：`FinalGraph`（:1518）/`AllUniq`（:1520）/`GoodFacesV3`（:1522）/`VerticesSet2Eq`（:1524）四个 True 占位逐槽 flip；每槽捆绑 `goodGraphV4Spine_implies` 同车一行；**SF-61 捆绑两支撑 def 随迁，SF-62 硬依赖 61 先行**；落定后全五槽 `Iff.rfl`。立案+补丁归档随本日提交；串行链驱动后台执行（每槽闸 PASS 即 pathspec 双文件提交）。
+11. `已批·排队` **SF-63..74 LA1 注册表误植十二连修**（fixscout-w1 勘察 2026-10-28，编排者依 SF 常态化授权裁决 **12/12 判 A** 直接执行）：定性翻案——「形状差」非 Lean 侧误植，而是 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，归正一律以 corpus 证明文件为准（VPWSHTO/QKNVMLB×3/YXIONXL2/LKGRQUI/TBRMXRZ1/SYNQIWN/XWNHLMD/CQAOQLR/OEHDBEN/LFLACKU）；63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。**执行序列：SF-59..62 链毕后接 63..74 串行链**（工作树单态约束；链毕先 apply --check 复验行锚）；SF-69（TBRMXRZ1）误判风险最高，闸上以 LA22 已证孪生逐字复核。patches 12/12 过 apply --check。
 
 ## 7. 文档/代码卫生（2026-10-25 盘点）
 
@@ -117,6 +118,7 @@
 
 ## 8. 变更日志
 
+- **2026-10-28（午，续）**：**fixscout-w1 完工**（12 件勘察全判 A，19.3M token 大案）：定性翻案——LA1「形状差」非 Lean 侧误植，系 HOL 语料内部 appendix 摘要与 corpus 原证的转写漂移；SF-63..74 十二连案立案归档并依授权裁决直接执行（§6-11），63/69/71/73 修后一行接线转 PROVED；patches 12/12 过 apply --check。1:1 补位发车 **nli-glue-template-w1**（57 rest 的 A1 粘合模板参数化——全局规划②，A2 过关后 farm 变流水线）。
 - **2026-10-28（午）**：**两项用户裁决**——① **SF-59..62 批准**（「按 59→60→61→62 串行走 STATEMENT-FIX 闸」）；② **SF 通道常态化授权**（编排者判定合理即直接执行，无须逐案呈批；记 proposals 头部）。SF-59..62 随即立案归档（proposals §59–62 + 四补丁）并发串行链驱动（apply→闸→pathspec 双文件提交 ×4，A2 锁后抢窗）；nli-w2 闸让位（GiFactorization 转 untracked 保留，链毕复位）。**下一批全局规划入档**：SF 自主执行首批 = 裁决 poolc-w5 两候选（beta_bumpA_yP25 链，解锁 PA25 剩余 ~20 直源收割）；新车道 nli-glue-template-w1（57 rest 的 A1 模板参数化，A2 过关后 farm 变流水线——151 里最大簇从等机器变等模板）。
 - **2026-10-28（晨，续 6）**：**w0prep-w1 完工入档**（62 条 WIRE 预测表 CLEAN 7/TAINTED 55 + 探针备跑，零正本改动）：**修正 bola1「W0 后立减 5+」——W0 先验立减 0**（CNICGSF1-5 消费面仍 sorried + YXIONXL3_concl 第二污染源；LA33 六箭头全 TAINTED），立减 5 改挂波 1 闸（LKGRQUI slice + YXIONXL3_concl 灌证后 23→18）；附赠翻案 ARDBZYE/FYSSVEV「PROVED」docstring 过时、XWITCCN2/AYQJTMD「已证 ≠ sorry-free」形态。探针脚本快照备跑，下窗口与 nli-w2 闸同窗执行。**车道决策：暂不再 1:1 补位**（在飞 2：fixscout-w1/fidconf-w1）——瓶颈已明确移到编译窗（A2 后排队：nli-w2 闸→W0 探针→poolc-w6→SF-59..62→tamespine→波 1），文本车道边际收益下降，空槽留给编译型车道。
 - **2026-10-28（晨，续 5）**：**fidelity-v2 完工落库**（脚本 808 行入 lean/scripts/，报告+TSV 入 docs/scouts/）：**诚实的否定性结果**——NEEDS 指针接入仅 +5 件（69% 配对天花板系 docstring 驱动，3525 未配对件中 2987 无指针线索；~67 宽松对判假配对全排除，零假配对纪律守住）；换来**全库 H 级清零** + Top-5 四案终审（num1 RESOLVED / cf4 机理修正维持 FALSE-POSITIVE / dartStd4 嫌疑不成立 / PA21 确认注释级）；166 配对冲突清单移交。1:1 补位发车 **fidconf-w1**（166 冲突静态分诊：伪影/指针朽坏/内核重述/真问题四分，真问题喂 SF 渠道）。

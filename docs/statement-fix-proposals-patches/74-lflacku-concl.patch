@@ -1,0 +1,23 @@
+diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+--- a/lean/Kepler/Text/LocalAuto1.lean
++++ b/lean/Kepler/Text/LocalAuto1.lean
+@@ -2675,4 +2675,8 @@
+-/-- HOL `LFLACKU_concl` (appendix.hl:1512). Proof pending. -/
+-theorem LFLACKU_concl : scsArrowV39 {scs3T1} {scs3T2, scs3T5} := by
+-  sorry
++/-- HOL `LFLACKU_concl` (SF-74 真化：改采 corpus 正本 JOTSWIX.hl:191-193
++形——`mnt11 → scsArrowV39 {scs3I1} ∅`。appendix.hl:1512 摘要形
++`{3T1}→{3T2,3T5}` 在 corpus 零出现（疑为 BKOSSGE 行串抄变位），
++无原证无孪生。) -/
++theorem LFLACKU_concl : main_nonlinear_terminal_v11 →
++    scsArrowV39 {scs3I1} ∅ := by
++  sorry
+ 
+diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+--- a/lean/Kepler/Text/LocalConcl.lean
++++ b/lean/Kepler/Text/LocalConcl.lean
+@@ -1415,2 +1415,3 @@
+-theorem LFLACKU_discharged : scsArrowV39 {scs3T1} {scs3T2, scs3T5} := by
++theorem LFLACKU_discharged : main_nonlinear_terminal_v11 →
++    scsArrowV39 {scs3I1} ∅ := by
+   sorry
