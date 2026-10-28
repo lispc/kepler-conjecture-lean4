@@ -4821,6 +4821,9 @@ la23prereq 施工图不涉 LA26/LA36。
 清单在册）；**案②（81b）归档为备选**（四文件结构面、立即净但子类型
 语义降格），**apply 前可改向**），依用户 SF 通道常态化授权（2026-10-28）
 立案。全部机检证据与编译账见 `lane_snapshots/sfc1c2draft-w1/VALIDATION.md`。
+**用户裁决 2026-10-28 深夜（三项合呈「全部按推荐批」）：案①（81a）定案，与 §82（同 def 的
+d 槽保真）并案执行，执行件 = `docs/statement-fix-proposals-patches/81a-82-combined-stablesy.patch`
+（闸命令与 LA23 四方铁序见 §82 (f)）；案②（81b）归档不落，下文 81b 闸命令仅存档。**
 **在册未落**，apply + STATEMENT-FIX 闸待编译窗；落库次序建议：与 SF-80
 （§80）同窗（81a 不触 LA24；81b 触 tri_sy_explicit，同 LA24 文件需 rebase
 协调），并先于 la23prereq-w1 的桥填体落。两文件/四文件 patch 的闸覆盖
@@ -4828,3 +4831,110 @@ la23prereq 施工图不涉 LA26/LA36。
 LANE_FILES 互白名单）。81a 闸命令（lean/ 下，措辞沿 §77）：
 `GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/81a-stablesy-hs-param.patch SF_ITEM=81 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto36.lean THM=TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23`
 （同窗第二闸覆盖 LA36 节：`bash scripts/auto_gate.sh Kepler/Text/LocalAuto36.lean taustar_eq_tauStar_gen_p36`。81b 备选闸（若 apply 前改向）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/81b-stablesy-drop-field.patch SF_ITEM=81 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto24.lean,Kepler/Text/LocalAuto26.lean,Kepler/Text/LocalAuto36.lean THM=TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23`，四文件节各闸一次；81a/81b 互斥不可同 apply。）
+
+## 82. `scsToStableSy_p23` 的 `d := 0` 槽失真（LA23 def :224 区域，SF-81a 修后形）— 分级 **B**（def 移植失真 · d 槽保真，判 A′；**与 SF-81 案① 并案执行，用户裁决 2026-10-28 深夜**）
+
+### (a) HOL 裁决
+
+正本三处同证：
+
+- `UXCKFPE.hl:450`（XWITCCN_CASE_4_IS_SCS 的 ABBREV，:547/:1003 的 k=5/6
+  姊妹块同形）：
+  `s1 = stable_sy((scs_k_v39 s),(scs_d_v39 s),(0..scs_k_v39 s - 1),
+  (change_type_v3 (scs_a_v39 s)),(change_type_v3 (scs_b_v39 s)),
+  (change_type_v2 (scs_J_v39 s) (scs_k_v39 s)),(\i. (1 + i) MOD scs_k_v39 s))`
+  —— **d 槽 = `scs_d_v39 s`**；
+- `XWITCCN.hl:2772`（TAUSTAR_EQ_TAU_STAR_4 的 record 假设）同形，d 槽同上；
+- 在库修复样板：LA36 `scsToStableSyD_p36`（LocalAuto36:433，**FIDELITY-FIX
+  2026-09-17**，docstring 自认「the earlier rendering via `scsToStableSy_p23`
+  (which fixes `d := 0`) made every `k ≥ 4` TAUSTAR_EQ_TAU_STAR_* false,
+  since `taustar_v39` subtracts `dsv_v39 = scs_d_v39 s` while `tau_star s1`
+  subtracted `0 ≠ d_tame k`」）。
+
+即：HOL 桥携带的记录 d 槽是 **s 本身的 d**，不是 0。
+
+### (b) Lean 诊断（三元对账 + 机检）
+
+| 方 | d 槽 | 机检 |
+|---|---|---|
+| LA23 `scsToStableSy_p23`（修前，LA23:224） | **`d := 0`** | `(scsToStableSy_p23 s).d = 0 := rfl`（la23prereq probe6） |
+| HOL 桥记录（UXCKFPE.hl:450） | `scs_d_v39 s` | — |
+| LA36 `scsToStableSyD_p36`（在库修复形） | **`d := s.d`** | `(scsToStableSyD_p36 s).d = s.d := rfl`（probe6；casebank-close probe B 例 2 复证） |
+
+1. **桥仅在 d 部分数值巧合时成立**：`taustarV39`（LA1:432）的 k ≥ 4 支减
+   `dsvV39 s vv = s.d + 0.1·ε·Σ{i<k ∧ J i (i+1)}(cstab − dist …)`，而
+   `tauStar_p23 s1`（LA23）减 `dFun_p23 s1 l = s1.d + 0.1·ε'·Σ{J1_SY}(cstab −
+   ‖row…‖)`。冻结桥的 `scsToStableSy_p23 s = s1` 强制 d=0 记录 ⇒ 两侧 d 部分
+   差 `s.d`；`isScsV39` 只锁 `s.d < 0.9`（LA1:355 第一合取支），不锁数值。
+   probe6（J 空 + J 索引集空对照）：`dFun = 0`、`dsv = s.d`、两侧 ear 符号同
+   为 −1 ⇒ 差 `s.d`。**判级 A′ · def 移植失真**（陈述冻结的桥在前提可
+   满足时为假——LA36 docstring 已在库自证同一结论；`k ≥ 4` 三桥即 LA23:712/
+   768/815）。
+2. **修后判定 = def 级**：把 `d := 0` 改 `d := s.d` 后，记录与
+   `scsToStableSyD_p36 s` 逐字段相等（k/I/a/b/J/f 六槽 rfl 相等；stable 槽
+   同占位——SF-81a 落地后两者同喂 `IS_SCS_STABLE_SYSTEM_p23`）。
+3. **可证性实证**（casebank-close-w1，超越 la23prereq 的「估 ~100 行」）：修后形
+   下，通用 d 部分恒等式（J1_SY 和 ↔ dsv 的 {i<k ∧ J i (i+1)} 和，周期性
+   对账 + j=0↦i=k 环回二象性）约 190 行一次成形，三桥各 3 行收口，**全部
+   标准三**（probe A：bridgeA_4/5/6 axiom 面
+   = [propext, Classical.choice, Quot.sound]；probe B 复证）。
+
+### (c) 消费面普查（全树 grep，2026-10-28 基线）
+
+- `scsToStableSy_p23` 代码消费者 = **LA23 四桥**（TAUSTAR ×3 + IS_EAR，
+  :712/:719/:768/:815，全 sorry，三桥修后形已 /tmp 验净；IS_EAR 桥
+  不受本条影响——ear 判定不动 d 槽）；LA24:1131 仅注释提及。
+- **`.d` 投影使用点**：全树零处（LA23/LA24/LA26/LA36 均无对
+  `scsToStableSy_p23 … .d` 的证明消费；probe6 的 `= 0` 是取证件不落库）。
+- `.stable` 字段消费（SF-C2 = §81 面，不受本条影响）= LA26 十三处（在册）；
+  LA8 `StableSy` 孪生不涉本条。
+- **修后谁受影响**：桥的 hs1 实例化点（SF-81a 已改陈述形，本条只动 def
+  体值）+ casebank-close-w1 的 CASE_4/5/6 装配 kit（已按修后形写并验）。
+  **已证件会被改坏的可能 = 零**：修前 def 无任何已证消费者（四桥全 sorry、
+  全仓无 `.d`/投影证明），81a 的 /tmp 全文件编译 + 本条修后形全文件编译均 exit 0。
+
+### (d) 补丁（两形态，互斥；规范化 cp→diff -u，头部无时间戳）
+
+| 形态 | 归档路径 | 用时 |
+|---|---|---|
+| standalone（+31/−14，仅 LA23；hunk 基于 81a 修后形，沙箱 81a 态 `git apply --check` PASS） | `docs/statement-fix-proposals-patches/82-stablesy-d-fidelity.patch` | 仅当 SF-81a 已单独落库时取用（归档备用） |
+| **combined（= 81a 原版 + d 槽/文档三处折入；LA23 + LA36 两文件；编排者实测 `git apply --numstat`：LA23 +44/−22、LA36 +26/−22，对 pristine HEAD `2fc6d6e3` `git apply --check` PASS）** | `docs/statement-fix-proposals-patches/81a-82-combined-stablesy.patch` | **并案执行件（用户裁决）** |
+
+**互斥关系**：两 patch 触同一 def 区域，不可先后叠加。依用户裁决取 combined
+一步落（la23prereq-w1 建议「81a 与 C3 并案」，本形态即该建议的执行件）。
+**§82 内容**（相对 81a 修后形）：① def `d := 0 → d := s.d`；② def
+docstring FIDELITY-FIX 段（对账 UXCKFPE.hl:450 / XWITCCN.hl:2772 / LA36
+先例）；③ FILE MAP 行 + 头部 ENCODING 行同步（原「carried as `0`」表述
+更正）。
+
+### (e) 风险
+
+- **低**：def 体值变化零陈述面（SF-81a 已把签名变化立案）；修前零证明
+  消费者 ⇒ 无已证件破坏面；k=3 链不经此 def（CASE_3 用 dFun3 直形，零波
+  及）；A2/Assembly 零触碰；LA8 孪生不动。
+- 残余：LA36 `scsToStableSyD_p36` 的 stable 槽是 SF-81 面的另一半
+  （81a/combined 已含 LA36 半边）；本条 d 槽修复不动 LA36（其 d 已正确）。
+- 诚实注记：d 槽修复只解决桥的**可证性**；CASE_4/5/6 装配的 axiom 面仍
+  经 HDPLYGY-kit 两条 NEEDS 件（`continuousOn_tauFun_p23` / `bodyClosed_p23`）
+  传递 sorryAx（巨人根 LA11:1489 / LA9:568-660 / LA18:236，另工单），
+  见 `lane_snapshots/casebank-close-w1/CLOSE-PLAN.md` M0 口径段。
+
+### (f) 状态
+
+**立案 2026-10-28 深夜**（编排者复核：判 A′ · 分级 B；来源 la23prereq-w1 提报
+SF-C3，casebank-close-w1 补全三元对账 / 消费面普查 / 两形态 patch / 修后形可证性
+实证——TAUSTAR 三桥在修后形下全部填体且 axiom 面标准三，证据见
+`lane_snapshots/casebank-close-w1/CLOSE-PLAN.md` §2-3 与 drafts/ probeA 全档），
+依用户 SF 通道常态化授权立案。**用户裁决（2026-10-28 深夜，三项合呈「全部按推荐批」）：
+与 §81 案①（81a）并案执行**——执行件 = `81a-82-combined-stablesy.patch`（编排者独立
+复核对 pristine HEAD `git apply --check` PASS）；standalone `82-stablesy-d-fidelity.patch`
+归档备用，二者互斥。**在册未落**，apply + STATEMENT-FIX 闸待编译窗。
+**LA23 四方铁序（禁同窗并行闸 LA23）**：本案（含 81a）→ la23prereq-w1 填体
+（LA23:597/:688/:745/:790）→ TAUSTAR 三桥桥体（casebank-close-w1 drafts）→ CASE_4/5/6
+kit（LA24，+import LA36）。combined 触 LA23 + LA36 两文件，须以各文件为 `$FILE`
+闸两次（同 §78 (f) 口径；闸脚本只比对 `+++ b/lean/$FILE` 节），闸命令（lean/ 下）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/81a-82-combined-stablesy.patch SF_ITEM=82 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto36.lean THM=TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23`
+（第二闸覆盖 LA36 节：同 env 下 `bash scripts/auto_gate.sh Kepler/Text/LocalAuto36.lean taustar_eq_tauStar_gen_p36`；两闸 PASS 后两文件同一提交（pathspec 数组），commit message 标「SF-81a+§82 并案」、授权依据与用户裁决。）
+**账面**：def 体 sorry −2（LA23:232 / LA36:441，经 81a 转由在册 M0 件
+`IS_SCS_STABLE_SYSTEM_p23` 承载，不计直源）；当日 M0 直源 −0；后续 la23prereq
+填体（−8 / 两 NEEDS 件入树 +2）、三桥（−3）、CASE_4/5/6（−3）均以本案为前置。

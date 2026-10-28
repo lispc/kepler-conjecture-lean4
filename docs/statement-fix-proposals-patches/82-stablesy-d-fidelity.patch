@@ -1,0 +1,54 @@
+diff --git a/lean/Kepler/Text/LocalAuto23.lean b/lean/Kepler/Text/LocalAuto23.lean
+index f73ffa6..e47ca17 100644
+--- a/lean/Kepler/Text/LocalAuto23.lean
++++ b/lean/Kepler/Text/LocalAuto23.lean
+@@ -34,7 +34,8 @@ FILE MAP
+     (`change_type_v2 (scs_J_v39 s) k`), `scsToStableSy_p23` (the
+     `stable_sy (...) = s1` record; SF-81 案①: moved to Section B — it cites
+     `IS_SCS_STABLE_SYSTEM_p23` as its `stable` field evidence, so it postdates
+-    that theorem), `ballAnnulus_ne_0_p23`,
++    that theorem; SF-C3: the `d` slot carries `s.d` (FIDELITY-FIX, see the
++    def docstring)), `ballAnnulus_ne_0_p23`,
+     `periodic_mod_eq_p23`, `range_periodic_image_p23`.
+   Section A (JOTSWIX): `taum_attains_inf_p23`, `TAUM_EXTREMAL_p23`,
+     `TAUM_STD_POS_p23`, `LFLACKU_p23` (sorry; need the
+@@ -89,9 +90,10 @@ ENCODING NOTES
+     flattening `vecmats_p4 (cycRow_p23 vv k)` plays the role of `a`).
+   - HOL `change_type_v3` is the identity on `ℕ → ℕ → ℝ` functions and is
+     dropped; HOL `change_type_v2 (scs_J_v39 s) k` is `scsJSet_p23 s`.
+-  - HOL `stable_sy`/`stable_system` dummy field `d` (unused in dih2k.hl)
+-    is carried as `0` in `scsToStableSy_p23` / the `stableSystem_p23`
+-    calls (LocalAuto8 typed it `ℕ`).
++  - HOL `stable_sy`/`stable_system` dummy field `d` (unused in dih2k.hl):
++    `stableSystem_p23` keeps the `0` dummy (LocalAuto8 typed it `ℕ`);
++    `scsToStableSy_p23` carries `s.d` since SF-C3 (FIDELITY-FIX 2026-10-28,
++    the record's `d` slot is `scs_d_v39 s` — see the def docstring).
+   - HOL `dist(x,y)` ↦ `dist x y`; `norm x` ↦ `norm x`; `vec 0` ↦ `0`;
+     `collinear` ↦ `Collinear ℝ`; `interior_angle1` ↦ `interiorAngle1`;
+     `sol_local` ↦ `solLocal`; `circular` ↦ `Circular`; `lunar` ↦ `Lunar`;
+@@ -604,12 +606,22 @@ as parameters and feeds it from `IS_SCS_STABLE_SYSTEM_p23` — the def-body
+ `sorry` placeholder is gone and the taint is carried by that TRACKED M0
+ theorem instead (it self-heals when the torsor unpacking lands).  Position:
+ after `IS_SCS_STABLE_SYSTEM_p23` (SF-81 moved the def here from Section 0 —
+-it cites that theorem, so it must postdate it).  The unused dih2k dummy `d`
+-is carried as `0` (LocalAuto8 `StableSy.d : ℕ`). -/
++it cites that theorem, so it must postdate it).
++
++FIDELITY-FIX (SF-C3, 2026-10-28): the HOL record's `d` slot is
++`scs_d_v39 s` (UXCKFPE.hl:450, `stable_sy ((scs_k_v39 s),(scs_d_v39 s),...)`;
++also XWITCCN.hl:2772), NOT `0`.  The `d := 0` rendering made every `k ≥ 4`
++`TAUSTAR_EQ_TAU_STAR_*` bridge false: `taustar_v39` subtracts
++`dsv_v39 = scs_d_v39 s + 0.1*eps*Σ{J-edges}` while `tau_star s1` subtracted
++`0 + 0.1*eps'*Σ{J1_SY}` (the two d-parts then differ by `scs_d_v39 s`, which
++`isScsV39` does not pin — it only bounds `s.d < 0.9`).  This is the same
++defect LA36 repaired on 2026-09-17 as `scsToStableSyD_p36` (`d := s.d`);
++the fix is now applied here, so the record is field-for-field the LA36 twin
++(except the `stable` slot, which keeps the SF-81 案① evidence parameter). -/
+ noncomputable def scsToStableSy_p23 (s : ScsV39) (hs : isScsV39 s)
+     (hk : 3 < s.k) : StableSyP23 where
+   k := s.k
+-  d := 0
++  d := s.d
+   I := Set.Iic (s.k - 1)
+   a := s.a
+   b := s.b
