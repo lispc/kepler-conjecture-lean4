@@ -1535,8 +1535,35 @@ tame_defs2.hl:58 一处；WMLNYMD 经 `REWRITE_TAC[good_graph]` 拆支）。flip
 源：`Kepler.Text.TameSpine.AllUniqSpine`（GoodGraph.lean:74，体逐字
 同体）。 -/
 def AllUniq (g : Graph) : Prop := ∀ l ∈ g.fgraph, l.Nodup
-/-- PLACEHOLDER(tame章)（`good_faces_v3`）。 -/
-def GoodFacesV3 (_ : Graph) : Prop := True
+/-- HOL `vertices_set2`（tame_defs.hl:392-394 `set_of_list (vertices_graph g)`；
+SF-61 同车支撑 def）。`vertices_graph g = upt 0 (countVertices g)`（:389）↦
+AFP `Graph.vertices g = List.range g.countVertices`（Graph.lean:98，
+`Vertex = ℕ`，Graph.lean:24）。 -/
+def verticesSet2 (g : Graph) : Set Vertex := {v | v ∈ g.vertices}
+
+/-- HOL `facesAt_v2`（tame_defs2.hl:45-46
+`facesAt_v2 g v = FILTER (λf. MEM v (FST f)) (faces g)`；SF-61 同车支撑 def）。
+`FST f` ↦ `Face.vertices`；`faces g` ↦ `g.faces`。 -/
+def facesAtV2 (g : Graph) (v : Vertex) : List Face :=
+  g.faces.filter (fun f => v ∈ f.vertices)
+
+/-- HOL `good_faces_v3`（tame_defs2.hl:48-51；SF-61 真化）：
+`!v. v IN vertices_set2 g ==> perm_eq (facesAt_v2 g v) (facesAt g v)`。
+`perm_eq` 折算：math-comp `perm_eq s t`（逐元素 count 相等，seq2-compiled.hl
+`perm_eq_cat`/`perm_eq0r` 定理族同源）↦ Mathlib `List.Perm`
+（`List.perm_iff_count`；逆向 count 相等 ⟹ Perm 亦真）。
+`facesAt g v = EL v (faceListAt g)`（tame_defs.hl:399）↦ `g.facesAt v`
+（越界约定：Isabelle `undefined` ↦ `getD []`，Graph.lean:103，生成器内
+`v < countVertices g` 恒不触发）。全函数陈述（任意 `g`/`v` 有定义），无
+junk 分歧。HOL 消费面：`good_graph_v4` 第五合取支（tame_defs2.hl:59）、
+`generatePolygon_reduction_v7` 前提双处（:743/:757 归纳步保持语境）、
+reduction1.hl 匹配/商机器 def 前提族、WMLNYMD:257/:341
+`REWRITE_TAC[good_graph;good_faces]` 拆支。flip 源：
+`Kepler.Text.TameSpine.GoodFacesV3Spine`（GoodGraph.lean:83-84，体逐字同体；
+支撑件 verticesSet2/facesAtV2 逐字随迁——GoodGraph 反向 import Assembly，
+复用不可达，双份镜像异 namespace 不冲突）。 -/
+def GoodFacesV3 (g : Graph) : Prop :=
+  ∀ v ∈ verticesSet2 g, (facesAtV2 g v).Perm (g.facesAt v)
 /-- PLACEHOLDER(tame章)（`vertices_set2 g = elements_of_list (fgraph g)`）。 -/
 def VerticesSet2Eq (_ : Graph) : Prop := True
 
