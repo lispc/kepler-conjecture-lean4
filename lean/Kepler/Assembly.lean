@@ -1525,8 +1525,16 @@ def oppositeHypermap (H : Hypermap α) : Hypermap α where
 前提（tame_defs2.hl:741）。flip 源：`Kepler.Text.TameSpine.FinalGraphSpine`
 （GoodGraph.lean:71，体逐字同体）。 -/
 def FinalGraph (g : Graph) : Prop := g.final = true
-/-- PLACEHOLDER(tame章)（`all uniq`）。 -/
-def AllUniq (_ : Graph) : Prop := True
+/-- HOL `all uniq (fgraph g)`（tame_defs2.hl:58 合取项；SF-60 真化）：
+`!l. MEM l (fgraph g) ==> uniq l`。折算：`fgraph g = MAP FST (faces g)`
+（tame_defs.hl:433）↦ `Graph.fgraph g = g.faces.map Face.vertices`
+（RelativeCompleteness.lean:40）；math-comp `uniq` ↦ Mathlib `List.Nodup`
+（逐元素不重复）。全函数陈述（任意 `g`/`l` 有定义），无 junk 分歧。HOL
+消费面：全库唯一出现即 `good_graph_v4` 第四合取支（grep `all uniq` 实证
+tame_defs2.hl:58 一处；WMLNYMD 经 `REWRITE_TAC[good_graph]` 拆支）。flip
+源：`Kepler.Text.TameSpine.AllUniqSpine`（GoodGraph.lean:74，体逐字
+同体）。 -/
+def AllUniq (g : Graph) : Prop := ∀ l ∈ g.fgraph, l.Nodup
 /-- PLACEHOLDER(tame章)（`good_faces_v3`）。 -/
 def GoodFacesV3 (_ : Graph) : Prop := True
 /-- PLACEHOLDER(tame章)（`vertices_set2 g = elements_of_list (fgraph g)`）。 -/
