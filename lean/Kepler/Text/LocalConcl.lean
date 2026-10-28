@@ -1375,12 +1375,19 @@ k-general statement — `azim 0 (v i) (v (i+1)) (v (i+k-1))` conclusion
 disjunction kit with `he1/he2 : dist ≤ 2*h0` and
 `cstab ≤ dist (v (i+1)) (v (i+k-1))` — none of which the registry carries
 (its `cstab ≤` edge is `dist (v i) (v (i+2))`); also mnt11-consuming. -/
-theorem SYNQIWN_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
-    BBsV39 s v →
-    (norm (v i) = 2 ∨ dist (v i) (v (i + 1)) = 2) →
-    (norm (v (i + 2)) = 2 ∨ dist (v (i + 1)) (v (i + 2)) = 2) →
-    cstab ≤ dist (v i) (v (i + 2)) →
-    Real.pi / 2 < azim 0 (v (i + 1)) (v (i + 2)) (v i) := by
+theorem SYNQIWN_discharged : main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (v : ℕ → V3) (i k : ℕ), isScsV39 s → BBsV39 s v →
+    s.k = k → 3 < k →
+    (norm (v (i + 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2 ∨
+      (norm (v (i + k - 1)) = 2 ∧ dist (v i) (v (i + 1)) = 2) ∨
+      (norm (v (i + 1)) = 2 ∧ norm (v (i + k - 1)) = 2) ∨
+      (dist (v i) (v (i + 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2) ∨
+      (norm (v (i + 1)) = 2 ∧ dist (v i) (v (i + 1)) = 2) ∨
+      (norm (v (i + k - 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2)) →
+    dist (v i) (v (i + 1)) ≤ 2 * h0 →
+    dist (v i) (v (i + k - 1)) ≤ 2 * h0 →
+    cstab ≤ dist (v (i + 1)) (v (i + k - 1)) →
+    Real.pi / 2 < azim 0 (v i) (v (i + 1)) (v (i + k - 1)) := by
   sorry
 
 /-- HOLD (c) `CQAOQLR_concl`: the LA16 twin `CQAOQLR_p16` consumes the

@@ -1983,13 +1983,24 @@ theorem MXQTIED_concl : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s → isS
     exact h5
   exact Nat.le_antisymm h3 hle
 
-/-- HOL `SYNQIWN_concl` (appendix.hl:1296). Proof pending. -/
-theorem SYNQIWN_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
-    BBsV39 s v →
-    (norm (v i) = 2 ∨ dist (v i) (v (i + 1)) = 2) →
-    (norm (v (i + 2)) = 2 ∨ dist (v (i + 1)) (v (i + 2)) = 2) →
-    cstab ≤ dist (v i) (v (i + 2)) →
-    Real.pi / 2 < azim 0 (v (i + 1)) (v (i + 2)) (v i) := by
+/-- HOL `SYNQIWN_concl` (SF-70 真化：改采 corpus 正本 OCBICBY.hl:2506-2520
+形——mnt11 前提 + k 簿记 `s.k = k ∧ 3 < k` + 6 路 hears 套件 + 两条
+`≤ 2*h0` 边前提，结论角点 `azim 0 (v i) (v (i+1)) (v (i+k-1))`。与 LA22
+孪生 `SYNQIWN_p22` 逐字同形；appendix.hl:1296 摘要形为 k=3 特化残影，
+corpus 无原证)。 -/
+theorem SYNQIWN_concl : main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (v : ℕ → V3) (i k : ℕ), isScsV39 s → BBsV39 s v →
+    s.k = k → 3 < k →
+    (norm (v (i + 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2 ∨
+      (norm (v (i + k - 1)) = 2 ∧ dist (v i) (v (i + 1)) = 2) ∨
+      (norm (v (i + 1)) = 2 ∧ norm (v (i + k - 1)) = 2) ∨
+      (dist (v i) (v (i + 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2) ∨
+      (norm (v (i + 1)) = 2 ∧ dist (v i) (v (i + 1)) = 2) ∨
+      (norm (v (i + k - 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2)) →
+    dist (v i) (v (i + 1)) ≤ 2 * h0 →
+    dist (v i) (v (i + k - 1)) ≤ 2 * h0 →
+    cstab ≤ dist (v (i + 1)) (v (i + k - 1)) →
+    Real.pi / 2 < azim 0 (v i) (v (i + 1)) (v (i + k - 1)) := by
   sorry
 
 /-- HOL `XWNHLMD_concl` (appendix.hl:1303). Proof pending. -/
