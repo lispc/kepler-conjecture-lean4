@@ -1477,13 +1477,18 @@ theorem QKNVMLB2_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
 
 /-! ### (d) Twin proved but the shape delta is not bridgeable (5) -/
 
-/-- HOLD (d) `OEHDBEN_concl`: LA20 `OEHDBEN` (proved, mnt11-consuming)
-concludes `{scs6T1, scs5M1, scs4M2, scs3M1}` — the registry wants `scs3T1`
-in the last slot; `scs3M1` (d = 0.103, funlist edge table) and `scs3T1`
-(d = 0.11) are genuinely different systems, so no set bridge exists. -/
+/-- WIRE `LocalAuto1.OEHDBEN_concl` <- `OEHDBEN` (verbatim twin; SF-73
+rebased this exit onto the corpus original form -- mnt11 antecedent, tail
+slot `scs3M1`).  Debt-consolidating wiring, sorryAx standing: the twin's
+body is a pure `FZIOTEF_TRANS`/`FZIOTEF_REFL`/`FZIOTEF_UNION` combination
+(combinators clean); the axiom arrives from `AQICLXA` (LA20:986),
+`FZIOTEF` (LA20:1008) and `SCS_6I1_BERAK_BY_CSTAB` (LA20:1221) in the
+mnt11 bank (deep roots `AQICLXA_SLICE` LA20:957 / `FUNOUYH_SLICE`
+LA20:999); the debt has those known roots and self-clears when they
+close. -/
 theorem OEHDBEN_discharged : main_nonlinear_terminal_v11 →
-    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1} := by
-  sorry
+    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1} :=
+  OEHDBEN
 
 /-- WIRE `LocalAuto1.TBRMXRZ1_concl` <- `TBRMXRZ1_p22` (verbatim twin;
 SF-69: registry re-based onto the corpus original form — `(g ∘ f)` order,
