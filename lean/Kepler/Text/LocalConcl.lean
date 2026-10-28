@@ -1496,11 +1496,12 @@ theorem TBRMXRZ1_discharged : ∀ (f g : ℝ → ℝ) (f' g' h' x y : ℝ),
     0 < f' → f x = y → reEqvl h' g' :=
   TBRMXRZ1_p22
 
-/-- HOLD (d) `VPWSHTO_concl`: master `VPWSHTO_p15` still sorried;
-`VPWSHTO_PRIME_p15` is proved but concludes the `∃ i ∈ Icc 0 4` diagonal-
-bounds form and lacks the registry concl's `2 < dist` strictness (not
-derivable from the `≤ 1+sqrt 5` bounds) and the distinctness witness
-conjuncts. -/
+/-- WIRE `LocalAuto1.VPWSHTO_concl` <- `VPWSHTO_PRIME_p15` (verbatim twin;
+SF-63 rebased this exit onto the corpus original `VPWSHTO_PRIME` form).
+Debt-consolidating wiring, sorryAx standing: the twin's body refines to the
+still-sorried master `VPWSHTO_p15` (LA15:409), so this exit still shows
+`sorryAx`; the debt has that single known root and self-clears when the
+root is filled. -/
 theorem VPWSHTO_discharged : ∀ vv : ℕ → V3,
     ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) ⊆ ballAnnulus →
     Kepler.Packing ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) →
@@ -1511,8 +1512,8 @@ theorem VPWSHTO_discharged : ∀ vv : ℕ → V3,
     norm (vv 3 - vv 4) = 2 → norm (vv 4 - vv 0) = 2 →
     ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
       norm (vv i - vv ((i + 2) % 5)) ≤ 1 + Real.sqrt 5 ∧
-      norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5 := by
-  sorry
+      norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5 :=
+  VPWSHTO_PRIME_p15
 
 /-- HOLD (d) `XWNHLMD_concl`: the proved `XWNHLMD_p26` keeps the extra
 `s.d ≤ s'.d` antecedent (consumed by `SCS_BASIC_TAUSTAR_p26`);
