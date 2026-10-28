@@ -891,7 +891,7 @@ theorem SLICE_IS_UNADORNED_p27 :
 
 /-- HOL `LKGRQUI` (LKGRQUI.hl:87). -/
 theorem LKGRQUI_p27 : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop),
-    isScsV39 s → (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     scsArrowV39 {s} {s', s''} := by
   sorry
     -- DISCHARGES: NEEDS `SLICE_IS_UNADORNED` fold of `scs_arrow_v39` +

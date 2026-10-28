@@ -1686,9 +1686,12 @@ theorem YXIONXL3_concl : ∀ (s : ScsV39) (i : ℕ), isScsV39 s →
     scsArrowV39 {s} {scsPropEquV39 s i} := by
   sorry
 
-/-- HOL `LKGRQUI_concl` (appendix.hl:1144). Proof pending. -/
+/-- HOL `LKGRQUI_concl` (SF-68 真化：改采 corpus 正本 LKGRQUI.hl:86-89
+三前提形 `scs_diag` + `is_scs_slice_v39`；appendix.hl:1144 摘要形以纯
+元组方程替代两前提，从自身前提不可证。与 w1asm 车道
+`LKGRQUI_faithful_w1asm` 装配草案同签名)。 -/
 theorem LKGRQUI_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop),
-    isScsV39 s → (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     scsArrowV39 {s} {s', s''} := by
   sorry
 

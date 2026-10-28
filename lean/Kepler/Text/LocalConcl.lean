@@ -713,7 +713,7 @@ theorem ZLZTHIC_discharged :
 /-- WIRE `LocalAuto1.LKGRQUI_concl` <- `LKGRQUI_p27` (verbatim twin). -/
 theorem LKGRQUI_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (mkj : Prop),
-    isScsV39 s → (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     scsArrowV39 {s} {s', s''} :=
   LKGRQUI_p27
 
