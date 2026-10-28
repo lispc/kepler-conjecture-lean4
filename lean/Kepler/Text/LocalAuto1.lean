@@ -2003,9 +2003,12 @@ theorem SYNQIWN_concl : main_nonlinear_terminal_v11 →
     Real.pi / 2 < azim 0 (v i) (v (i + 1)) (v (i + k - 1)) := by
   sorry
 
-/-- HOL `XWNHLMD_concl` (appendix.hl:1303). Proof pending. -/
+/-- HOL `XWNHLMD_concl` (SF-71 真化：补 corpus 正本 PPBTYDQ.hl:574-581
+的 `s.d ≤ s'.d` 前提——appendix.hl:1303 摘要同名 let 丢了它；与 LA26
+已证孪生 `XWNHLMD_p26` 逐字同形)。 -/
 theorem XWNHLMD_concl : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s → isScsV39 s' →
-    scsBasicV39 s → scsBasicV39 s' → s.k = s'.k → v ∈ MMsV39 s → BBsV39 s' v →
+    scsBasicV39 s → scsBasicV39 s' → s.k = s'.k → s.d ≤ s'.d →
+    v ∈ MMsV39 s → BBsV39 s' v →
     scsArrowV39 {s} {s'} := by
   sorry
 

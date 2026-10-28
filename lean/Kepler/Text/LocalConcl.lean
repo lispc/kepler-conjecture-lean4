@@ -1515,6 +1515,7 @@ theorem VPWSHTO_discharged : ∀ vv : ℕ → V3,
 not derivable from the registry hypotheses. -/
 theorem XWNHLMD_discharged : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s →
     isScsV39 s' → scsBasicV39 s → scsBasicV39 s' → s.k = s'.k →
+    s.d ≤ s'.d →
     v ∈ MMsV39 s → BBsV39 s' v →
     scsArrowV39 {s} {s'} := by
   sorry
