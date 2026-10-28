@@ -4233,3 +4233,137 @@ linarith 补事实 / ztg4_ALT 前向引用重排），`lake env lean` 零 error�
 依用户 SF 通道常态化授权（2026-10-28）立案；草案齐（sf76draft-w1 车道，
 基线 1bd6a3fd）；执行序列 = SF-64..74 链毕 → SF-75 闸 → 本条 patch 构建
 → 本条闸。
+
+## 77. `is_scs_funlist_basic_p22` 单-d 有损陈述 → HOL 双表 da/db 正本形（OCBICBY.hl:2101 = terminal.hl:1002 空 J 特化）— 分级 B（移植误植 · 语句修正 · w1asm-w2 取证判 A）
+
+### (a) HOL 裁决
+
+正本 = `reference/flyspeck/text_formalization/local/OCBICBY.hl:2101`
+`is_scs_funlist_basic`，即 `terminal.hl:1002` `Terminal.is_scs_funlist` 的空 J
+特化（证：`ONCE_REWRITE_TAC[GSYM Terminal.funlistA_empty]; MATCH_MP_TAC
+Terminal.is_scs_funlist; ASM_REWRITE_TAC[Appendix.periodic_empty]`）。两处量化
+头均为**双表形**，两 funlist 默认值是两个独立 real：
+
+- terminal.hl:1002（逐字，量化头 + 假设 + 结论）：
+
+```hol
+!k d a0 b0 j0 a b j1 u u' u''. d < #0.9 /\ 3 <= k /\ k <= 6 /\
+  periodic u k /\ periodic u' k /\ periodic u'' k /\
+  (!i j. i < j /\ j < k ==> funlist_v39 a a0 k i j <= funlist_v39 b b0 k i j) /\
+  (!i j. i < j /\ j < k  ==> &2 <= funlist_v39 a a0 k i j) /\
+  (!i. i < 3 /\ k = 3 ==> funlist_v39 b b0 k i (SUC i) < &4) /\
+  (!i. i < k /\ 3 < k ==> funlist_v39 b b0 k i (SUC i) <= cstab) /\
+  (... funlistA_v39 j1 F j0 k i j 两前提 ...) /\
+  CARD {i | i < k /\ (&2 * h0 < funlist_v39 b b0 k i (SUC i) \/
+       &2 < funlist_v39 a a0 k i (SUC i))} + k <= 6 ==>
+  is_scs_v39 (scs_v39 (k,d,
+      funlist_v39 a a0 k,funlist_v39 a a0 k,
+      funlist_v39 b b0 k,funlist_v39 b b0 k,
+      funlistA_v39 j1 F j0 k,u,u',u''))
+```
+
+- OCBICBY.hl:2101 特化形（逐字头）：`!k d a0 b0 a b . d < #0.9 /\ 3 <= k /\
+  k <= 6 /\ (同五前提，无 funlistA/periodic 项) ==> is_scs_v39 (scs_v39 (k,d,
+  funlist_v39 a a0 k,funlist_v39 a a0 k,funlist_v39 b b0 k,funlist_v39 b b0 k,
+  (\i j. F),{},{},{}))`。
+- 语义锚：`funlist_v39 data dflt k i j`（appendix.hl:469）第二参即**默认值**
+  （表查不到时 `ASSOCD_v39`（appendix.hl:465）兜底返回 dflt）——即 a-表与
+  b-表各带各的兜底 real。
+- 实例锚（appendix.hl:948，`scs_3T1`）：`mk_unadorned_v39 3 (#0.11)
+  (funlist_v39 [(0,1),sqrt8] (&2) 3) (funlist_v39 [(0,1),cstab] (&2*h0) 3)`
+  —— 打包 d=0.11、a-默认 2、b-默认 2*h0，**三值独立**。
+
+### (b) Lean 诊断（差槽清单）
+
+现形 = `lean/Kepler/Text/LocalAuto22.lean:1333`（自体显式 sorry :1347；
+twinprobe-w1 翻案实录）。对正本逐槽对账，三差槽、其余全忠实：
+
+1. **默认值塌缩（主槽）**：现形结论
+   `isScsV39 (mkUnadornedV39 k d (funlistV39 a0 d k) (funlistV39 b0 d k))`——
+   两表默认与打包 d **一值三用**；HOL 是 d / a-默认 / b-默认三独立 real。
+2. **尾参幻影**：现形带 `(a b : ℕ × ℕ → ℝ)` 摆设参数（正文零引用）；HOL 语句
+   无对应（`funlist_v39` 默认是 real 非函数），系移植时对 HOL 默认值参的
+   失真记法。
+3. **七条假设同染**：hchain/ha/hb3/hbk/hcard 五条全读
+   `funlistV39 a0 d` / `funlistV39 b0 d`（随槽 1 一并修复）。
+
+**为何判移植失真（判 A）**：注册表全量普查（appendix.hl:900-1050）23 件
+funlist 系：a-默认 ∈ {2, 2*h0}、b-默认 ∈ {2, 2*h0, cstab}，**全部 ≥ 2 > 0.9 ≥
+打包 d**（w1asm-w2 判词「b 表默认含 6」经普查精化为：6 是 b-表**条目值**，
+非默认）；20/23 件 a-默认 ≠ b-默认，3 件（3T2/3T7/4T3）a=b=2 但 ≠ 打包
+d。故单 d 形与 23 件**零统一**：d 同时充当默认需 =2，而 `hd : d < 0.9` 恒假
+——不是前提难满足，是结论槽不可统一。取证探针 `w1kit_route_a_dead`
+（w1asm-w2，/tmp 验净）：`funlistV39 [((0,1),2*h0)] 0.103 3 1 2 ≠
+funlistV39 [((0,1),2*h0)] (2*h0) 3 1 2`——同一张表换默认即值变。
+
+忠实槽（不动）：空 J 特化形（无 funlistA/periodic 前提）= OCBICBY 形逐字
+同构；`d < 0.9`、`3 ≤ k ≤ 6`、链前提、a-≥2、b-(SUC i)<4（k=3）、b-(SUC i)
+≤cstab（k>3）、card+k≤6 逐条对上。
+
+### (c) 补丁
+
+`lane_snapshots/sf77draft-w1/patches/77-funlist-dual-table.patch`：LA22 单文件
+单 hunk（+13/−9）——docstring 翻新（标明 OCBICBY/terminal 出处与双表语义）；
+`(a b : ℕ × ℕ → ℝ)` → `(da db : ℝ)`；五条假设表项 `a0 d`→`a0 da`、
+`b0 d`→`b0 db`；结论 → `mkUnadornedV39 k d (funlistV39 a0 da k)
+(funlistV39 b0 db k)`。**`sorry` 暂留**（本提案只修陈述形）。worktree
+规范化（`/tmp/sf77wt` @aacaf3e5：apply → `git diff` → 反向 `git apply
+--check` 实测过；无时间戳、content-anchored、主仓 tracked 零改动）。
+
+**证明体现成（kit4 前置）**：w1asm-w2 `kits/w1asm_w2_funlist.lean` 的单-d
+全 kit 证明体（helper 九件 + 20 合取装配）对修后陈述**机械改名即插**（五条
+假设表项 + 结论槽 d→da/db，helper 逐字）。本车道 /tmp 仿真探针已验净：
+`sf77_da_db_statement` exit 0 零 error，`#print axioms` = 标准三
+`[propext, Classical.choice, Quot.sound]`（`drafts/SF77-da-db-fill-probe.lean`，
+VALIDATION.md 有全程）。立案时编排者二选一：**单闸合并**（拆分+灌证一个
+patch，即日文件级 sorry 89→88）或**双闸串行**（先本 patch，kit4 改名体随后）。
+修后语义严格泛化（旧形 = 新形取 da=db=d 的特例），零翻案风险。
+
+### (d) 消费面
+
+全树 grep `is_scs_funlist_basic`：**代码消费者 = 声明本体一处**（LA22:1333；
+自体 sorry :1347）；其余全为 LA22:1652-1762 的 case-bank docstring NEEDS
+注记（23 条），无跨文件引用。kit1（3M1，LA20 移植路）与 kit3（3T1/3T5，LA20
+直证路 (b)）经核实**零引用现名**（绕开成立，w1 已排波件不受本提案影响）；
+`is_scs_examples_p22`（:1767）经 case-bank 间接受益。
+
+修后解锁名单 **23 件** = trio 3 + 兄弟 20。w1asm-w2/la2027-scout 的
+「trio+16」口径经全量普查**修正为 trio+20**——la2027 §4 原文是「等 16 条」
+（非全量），漏计 5I3/5M1/5M2/4M2 四件：
+
+- **trio（生成器路，w1 波 1 改道三件）**：`is_scs_3T1_p22`（:1668）、
+  `is_scs_3T5_p22`（:1688）、`is_scs_3M1_p22`（:1703）；
+- **兄弟 20**：`is_scs_4T3_p22`（:1653）、`4T4`（:1658）、`4T5`（:1663）、
+  `3T2`（:1673）、`3T3`（:1678）、`3T4`（:1683）、`3T6`（:1693）、`3T7`
+  （:1698）、`5I3`（:1708）、`4I3`（:1713）、`5M1`（:1718）、`5M2`（:1723）、
+  `4M1`（:1728）、`4M2`（:1733）、`4M3`（:1738）、`4M4`（:1743）、`4M5`
+  （:1748）、`4M6`（:1753）、`4M7`（:1758）、`4M8`（:1763）。
+
+注意口径：修后 23 件**并不自动 PROVED**（仍是各自 sorry）；解锁的是「生成器
++ HOL 23 连脚本（MATCH_MP_TAC is_scs_funlist_basic + NUM_REDUCE +
+FUNLIST_EXPLICIT 级，OCBICBY.hl 全体实证过此路）」的批量灌证路线，其中 trio
+已被 la2027-scout 逐件确认 HOL 脚本在。
+
+### (e) 风险
+
+低。改动半径 = LA22 单文件单声明，零跨文件代码消费者（22 处纯注释不随语句
+形失效，NEEDS 指引仍准确）；修后为旧形的严格泛化（da=db=d 还原旧形）；
+d<0.9 与 k 范围两前提不动。会话纪律披露：本车道曾以 `.lake` symlink 接
+worktree 触发 lake 重取依赖、连带删除主仓 mathlib 包目录（**非 tracked**，
+现已被并行过程重建完好，本车道补修 checkout 残留一处；全程实录见
+VALIDATION.md）——结论：**worktree 内禁跑 lake**，探针一律 LEAN_PATH +
+直 lean。
+
+### (f) 状态
+
+**立案 2026-10-28 傍晚**（编排者复核三语义点通过：① 幻影尾参 `(a b : ℕ×ℕ→ℝ)`
+→ `(da db : ℝ)` 位次不变；② 五条假设表项 d→da/db；③ 结论两 funlist 槽换默认、
+打包槽 d 不动；体仍 sorry、docstring 补 HOL 锚），依用户 SF 通道常态化授权
+（分级 B · 判 A）。草案与验证：`lane_snapshots/sf77draft-w1/`（探针 A 改后 LA22
+typecheck 0 错；探针 B kit4 体 da/db 改名即插 + 3T1 witness 标准三；修后形为
+旧形严格泛化 da=db=d）。**在册未落**：apply + STATEMENT-FIX 闸待编译窗（或
+A2 暂停窗，用户待裁）。闸命令（lean/ 下）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/77-funlist-dual-table.patch SF_ITEM=77 LANE_FILES=Kepler/Text/LocalAuto22.lean THM=is_scs_funlist_basic_p22 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto22.lean is_scs_funlist_basic_p22`
+（二选一：此为拆分单闸；合并闸 = 同车灌 w1asm-w2 kit4 证明体，即日 LA22 文件级
+sorry 89→88，但 patch 须重规范化为含证体的真实 diff）。与波 1 kit1/kit3 无冲突
+（零共享名）；影响面 23 件（trio + 20 兄弟）在 §(d)。

@@ -1,0 +1,35 @@
+diff --git a/lean/Kepler/Text/LocalAuto22.lean b/lean/Kepler/Text/LocalAuto22.lean
+index 143dc2eb..3c776c0f 100644
+--- a/lean/Kepler/Text/LocalAuto22.lean
++++ b/lean/Kepler/Text/LocalAuto22.lean
+@@ -1329,17 +1329,21 @@ theorem stab_diag_basic_p22 (s : ScsV39) (i j : ℕ)
+     (h : scsBasicV39 s) (hne : ¬ (i = j)) : scsBasicV39 (scsStabDiagV39 s i j) := by
+   sorry
+ 
+-/-- HOL `is_scs_funlist_basic` (NEEDS the funlist periodicity/symmetry kit). -/
++/-- HOL `is_scs_funlist_basic` (OCBICBY.hl:2101, the empty-J specialization of
++terminal.hl:1002 `is_scs_funlist`). Faithful dual-table form: the a/b funlist
++defaults `da`/`db` are independent reals, disjoint from the packing `d` (in HOL
++the two defaults are quantified separately, and every registry system has both
++defaults `≥ 2` while `d < 0.9`). NEEDS the funlist periodicity/symmetry kit. -/
+ theorem is_scs_funlist_basic_p22 (k : ℕ) (d : ℝ) (a0 b0 : List ((ℕ × ℕ) × ℝ))
+-    (a b : ℕ × ℕ → ℝ) (hd : d < 0.9) (hk1 : 3 ≤ k) (hk2 : k ≤ 6)
++    (da db : ℝ) (hd : d < 0.9) (hk1 : 3 ≤ k) (hk2 : k ≤ 6)
+     (hchain : ∀ i j, i < j ∧ j < k →
+-      funlistV39 a0 d k i j ≤ funlistV39 b0 d k i j)
+-    (ha : ∀ i j, i < j ∧ j < k → 2 ≤ funlistV39 a0 d k i j)
+-    (hb3 : ∀ i, i < 3 ∧ k = 3 → funlistV39 b0 d k i (Nat.succ i) < 4)
+-    (hbk : ∀ i, i < k ∧ 3 < k → funlistV39 b0 d k i (Nat.succ i) ≤ cstab)
+-    (hcard : {i | i < k ∧ (2 * h0 < funlistV39 b0 d k i (Nat.succ i) ∨
+-        2 < funlistV39 a0 d k i (Nat.succ i))}.ncard + k ≤ 6) :
+-    isScsV39 (mkUnadornedV39 k d (funlistV39 a0 d k) (funlistV39 b0 d k)) := by
++      funlistV39 a0 da k i j ≤ funlistV39 b0 db k i j)
++    (ha : ∀ i j, i < j ∧ j < k → 2 ≤ funlistV39 a0 da k i j)
++    (hb3 : ∀ i, i < 3 ∧ k = 3 → funlistV39 b0 db k i (Nat.succ i) < 4)
++    (hbk : ∀ i, i < k ∧ 3 < k → funlistV39 b0 db k i (Nat.succ i) ≤ cstab)
++    (hcard : {i | i < k ∧ (2 * h0 < funlistV39 b0 db k i (Nat.succ i) ∨
++        2 < funlistV39 a0 da k i (Nat.succ i))}.ncard + k ≤ 6) :
++    isScsV39 (mkUnadornedV39 k d (funlistV39 a0 da k) (funlistV39 b0 db k)) := by
+   sorry
+ 
+ /-- HOL `azim_in_fan_azim` (NEEDS the sigmaFan/ee localization kit). -/
