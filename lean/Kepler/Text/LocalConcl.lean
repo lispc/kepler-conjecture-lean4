@@ -1344,7 +1344,7 @@ theorem OIQKKEP_discharged : ∀ (u v : V3) (c : ℝ), u ∈ ballAnnulus →
 `3 ≤ s.k`; the s.k = 3 case is uncovered; `YXIONXL2_p13` lives on the wrong
 lane type `ScsV39P13`). -/
 theorem YXIONXL2_discharged : ∀ s : ScsV39, isScsV39 s →
-    scsArrowV39 {s} {scsOppV39 s} := by
+    3 < s.k → scsArrowV39 {s} {scsOppV39 s} := by
   sorry
 
 /-- WIRE `LocalAuto1.MHAEYJN_concl` <- `MHAEYJN_p37` (the twin is typed by

@@ -1381,9 +1381,11 @@ theorem YXIONXL1_concl : ∀ s t : ScsV39, isScsV39 s → transferV39 s t →
     scsArrowV39 {s} {t} := by
   sorry
 
-/-- HOL `YXIONXL2_concl` (appendix.hl:1138). Proof pending. -/
+/-- HOL `YXIONXL2_concl` (SF-67 真化：补 corpus 正本 YXIONXL2.hl:3501-3502
+的 `¬(k≤3)` 前提，与 LA33 孪生 `YXIONXL2_p33` 同形；appendix.hl:1138
+摘要形在 corpus 无 k=3 原证)。 -/
 theorem YXIONXL2_concl : ∀ s : ScsV39, isScsV39 s →
-    scsArrowV39 {s} {scsOppV39 s} := by
+    3 < s.k → scsArrowV39 {s} {scsOppV39 s} := by
   sorry
 
 /-! ### Residue-shift toolkit for `YXIONXL3` (`scs_prop_equ_v39`)
