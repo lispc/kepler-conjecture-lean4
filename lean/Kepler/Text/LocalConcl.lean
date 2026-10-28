@@ -1425,7 +1425,8 @@ theorem JLXFDMJ_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV
 /-- HOLD (c) `LFLACKU_concl`: the ledger's LA23 twin is a DIFFERENT
 statement (`mnt11 → scsArrowV39 {scs3I1} ∅`, LA23:310); no twin of the
 registry's `{scs3T1} → {scs3T2, scs3T5}` exists in any lane. -/
-theorem LFLACKU_discharged : scsArrowV39 {scs3T1} {scs3T2, scs3T5} := by
+theorem LFLACKU_discharged : main_nonlinear_terminal_v11 →
+    scsArrowV39 {scs3I1} ∅ := by
   sorry
 
 /-- HOLD (c) `QKNVMLB1_concl`: the LA35 twin concludes on the index

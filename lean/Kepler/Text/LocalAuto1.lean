@@ -2709,8 +2709,12 @@ theorem MIQMCSN_concl :
     scsArrowV39 {scs4M8} {scs4M6', scs3T7, scs3T4} := by
   sorry
 
-/-- HOL `LFLACKU_concl` (appendix.hl:1512). Proof pending. -/
-theorem LFLACKU_concl : scsArrowV39 {scs3T1} {scs3T2, scs3T5} := by
+/-- HOL `LFLACKU_concl` (SF-74 真化：改采 corpus 正本 JOTSWIX.hl:191-193
+形——`mnt11 → scsArrowV39 {scs3I1} ∅`。appendix.hl:1512 摘要形
+`{3T1}→{3T2,3T5}` 在 corpus 零出现（疑为 BKOSSGE 行串抄变位），
+无原证无孪生。) -/
+theorem LFLACKU_concl : main_nonlinear_terminal_v11 →
+    scsArrowV39 {scs3I1} ∅ := by
   sorry
 
 /-- HOL `CUXVZOZ_concl` (appendix.hl:1514). Proof pending. -/
