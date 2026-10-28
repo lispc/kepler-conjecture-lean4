@@ -1477,10 +1477,11 @@ opposite order (`g ∘ f`, needs the inner slope `0 < f'`, concludes
 the registry hypotheses carry no information about the inner g-slope sign,
 so no witness term exists (the registry statement is in fact not provable
 from its own hypotheses). -/
-theorem TBRMXRZ1_discharged : ∀ (f : ℝ → ℝ) (f' : ℝ) (g : ℝ → ℝ) (h' x y : ℝ),
-    derivedForm True f f' y (Set.univ : Set ℝ) →
-    derivedForm True (fun z => f (g z)) h' x (Set.univ : Set ℝ) →
-    g x = y → reEqvl f' h' := by
+theorem TBRMXRZ1_discharged : ∀ (f g : ℝ → ℝ) (f' g' h' x y : ℝ),
+    derivedForm True f f' x (Set.univ : Set ℝ) →
+    derivedForm True g g' y (Set.univ : Set ℝ) →
+    derivedForm True (g ∘ f) h' x (Set.univ : Set ℝ) →
+    0 < f' → f x = y → reEqvl h' g' := by
   sorry
 
 /-- HOLD (d) `VPWSHTO_concl`: master `VPWSHTO_p15` still sorried;

@@ -1805,12 +1805,16 @@ theorem DRNDRDV_concl : ∀ y1 y2 y6 : ℝ,
 -- within s)`) admits the same counterexample, so the flyspeck item itself
 -- needs an extra slope-proportionality hypothesis (e.g. 0 < g' x) before it
 -- can be discharged.
-/-- HOL `TBRMXRZ1_concl` (appendix.hl:1216); `re_eqvl` at the slope values
-via `reEqvl` (PackingAuto18:79). Proof pending. -/
-theorem TBRMXRZ1_concl : ∀ (f : ℝ → ℝ) (f' : ℝ) (g : ℝ → ℝ) (h' x y : ℝ),
-    derivedForm True f f' y (Set.univ : Set ℝ) →
-    derivedForm True (fun z => f (g z)) h' x (Set.univ : Set ℝ) →
-    g x = y → reEqvl f' h' := by
+/-- HOL `TBRMXRZ1_concl` (SF-69 真化：改采 corpus 正本 OCBICBY.hl:1158-1164
+链式复合形 `g ∘ f` + 外函数斜率前提 + `0 < f'`，结论 `reEqvl h' g'`——
+与 LA22 已证孪生 `TBRMXRZ1_p22` 逐字同形。appendix.hl:1216 摘要形为假
+命题：无 g 可导前提时 f∘g 可在 f'(y) = 0 处有非零导数，而 `reEqvl a b`
+= `∃ t > 0, a = t * b`。 -/
+theorem TBRMXRZ1_concl : ∀ (f g : ℝ → ℝ) (f' g' h' x y : ℝ),
+    derivedForm True f f' x (Set.univ : Set ℝ) →
+    derivedForm True g g' y (Set.univ : Set ℝ) →
+    derivedForm True (g ∘ f) h' x (Set.univ : Set ℝ) →
+    0 < f' → f x = y → reEqvl h' g' := by
   sorry
 
 /-- HOL `PQCSXWG1_concl` (appendix.hl:1221). Proof pending. -/
