@@ -127,7 +127,7 @@ def GoodGraphV4Spine (g : Graph) : Prop :=
 经本桥满足现编码的通道在 flip 前后无断裂。 -/
 theorem goodGraphV4Spine_implies {g : Graph} (h : GoodGraphV4Spine g) :
     Kepler.Assembly.GoodGraphV4 g :=
-  ⟨h.1, h.2.1, trivial, trivial, trivial, trivial⟩
+  ⟨h.1, h.2.1, h.2.2.1, trivial, trivial, trivial⟩
 
 /-- **S11 孪生衔接**：flip-ready 形 ↔ TameLp `GoodListNodesTl` 孪生
 （TameLp.lean:2637-2638，同一 nodeSet 等式的显式前提形）——∀/→ 一身两形，

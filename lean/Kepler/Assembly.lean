@@ -1514,8 +1514,17 @@ def oppositeHypermap (H : Hypermap α) : Hypermap α where
     have hff : H.faceMap * H.faceMap.symm = 1 := mul_inv_cancel H.faceMap
     rw [mul_assoc H.faceMap H.nodeMap H.nodeMap.symm, hnn, mul_one, hff]
 
-/-- PLACEHOLDER(tame章)（tame_defs2.hl `finalGraph`）。 -/
-def FinalGraph (_ : Graph) : Prop := True
+/-- HOL `finalGraph`（tame_defs.hl:419；SF-59 真化）：
+`finalGraph g = (nonFinals g = [])`。折算：AFP `Graph.final g =
+(nonFinals g).isEmpty`（Graph.lean:125；`nonFinals` =
+`g.faces.filter (fun f => !f.final)`，Graph.lean:119）；`bool` 判空等式
+`nonFinals g = []` ↦ `.isEmpty = true` 同判据。全函数陈述（`nonFinals`
+/`isEmpty` 对任意 `g` 有定义），无 junk 分歧。HOL 消费面：`good_graph_v4`
+第三合取支（tame_defs2.hl:57）、`planeGraphsP`（tame_defs2.hl:420；Lean
+镜像 Plane1.lean:28 已同款用 `g.final`）、`generatePolygon_reduction_v7`
+前提（tame_defs2.hl:741）。flip 源：`Kepler.Text.TameSpine.FinalGraphSpine`
+（GoodGraph.lean:71，体逐字同体）。 -/
+def FinalGraph (g : Graph) : Prop := g.final = true
 /-- PLACEHOLDER(tame章)（`all uniq`）。 -/
 def AllUniq (_ : Graph) : Prop := True
 /-- PLACEHOLDER(tame章)（`good_faces_v3`）。 -/
