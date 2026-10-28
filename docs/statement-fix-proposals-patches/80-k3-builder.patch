@@ -1,0 +1,162 @@
+--- a/lean/Kepler/Text/LocalAuto24.lean
++++ b/lean/Kepler/Text/LocalAuto24.lean
+@@ -1199,22 +1199,38 @@
+ /-! ### C4. The k = 3 `tri_sy` capstone (UXCKFPE.hl:1488-2597)
+ 
+ The k = 3 body set (no `CONDITION2_SY` at k = 3, verbatim HOL): the
+-`CONDITION1_SY_p4` bounds on the cyclic row vector `cycRow_p23 vv 3`. -/
++`CONDITION1_SY_p4` bounds on the member's own rows.
+ 
++SF-80 (2026-10-28): the four body-set builders below were restated from the
++lossy `{l | (V i, cycRow_p23 vv 3 i IN ballAnnulus) /\ C1 (cycRow_p23 vv 3)}`
++(membership did not constrain `l`: machine-refutable at the zero matrix /
++vacuous, see lane_snapshots/sfc1c2draft-w1) to the row-indexed form
++`{l | (V i, rowSy_p23 l i IN ballAnnulus) /\ C1 (fun i => rowSy_p23 l i)}` —
++the HOL set `{matvec v | (!i. 1<=i <= dimindex(:M) ==> row i v IN
++ball_annulus) /\ CONDITION1_SY a b v}` (UXCKFPE.hl:1878/:1926) constrains
++the rows of the MEMBER's matvec pre-image.  `IN_NOT_EMPTY_B1_SY_3_IS_SCS_p24`
++keeps the cycRow form: its hypotheses are about the specific realisation
++`v` (HOL `row i v` of the abbreviated `v = vector[vv 1; vv 2; vv 0]`), not a
++set membership.  Statements only — the `sorry` bodies are untouched. -/
++
+ /-- HOL `IN_IS_SCS_CASE_3` (UXCKFPE.hl:1502): the k = 3 flattening
+-`matvec (vector[vv 1; vv 2; vv 0])` lies in the (CONDITION2-free) body. -/
++`matvec (vector[vv 1; vv 2; vv 0])` lies in the (CONDITION2-free) body.
++SF-80: membership constrains the member's own rows, as in HOL. -/
+ theorem IN_IS_SCS_CASE_3_p24 (s : ScsV39) (vv : ℕ → V3)
+     (hs : isScsV39 s) (hk : s.k = 3) (hBB : BBsV39 s vv) :
+     flattenRow_p23 vv 3 ∈
+       {l : FinVec 3 3 |
+-        (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
++        (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+           CONDITION1_SY_p4
+             (fun i j : Fin 3 => s.a (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+             (fun i j : Fin 3 => s.b (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+-            (cycRow_p23 vv 3)} := by
++            (fun i : Fin 3 => rowSy_p23 l i)} := by
+   sorry
+-  -- DISCHARGES: rows-in-annulus (IS_SCS_IN_BALL_ANNULUS via hBB.1) + the
+-  -- BBsV39 a/b bounds at the cyclic rows (no fan conjunct needed at k = 3).
++  -- DISCHARGES: rows-in-annulus via `vecmatsV3_flattenRow_p36` (rows of the
++  -- flattening ARE the cyclic row vector: `rowSy_p23 (flattenRow_p23 vv 3) i
++  -- = cycRow_p23 vv 3 i`, probe-validated CLEAN in sfc1c2draft-w1
++  -- probe80_fix.lean `flattenRow_mem_B3fix`) + the BBsV39 a/b bounds at the
++  -- cyclic rows (no fan conjunct needed at k = 3).
+ 
+ /-- HOL `IN_NOT_EMPTY_B1_SY_3_IS_SCS` (UXCKFPE.hl:1701). -/
+ theorem IN_NOT_EMPTY_B1_SY_3_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+@@ -1229,15 +1245,16 @@
+   -- DISCHARGES: BBsV39 conjunct walk at k = 3 (the `k ≤ 3` fan disjunct
+   -- makes CONDITION2 unnecessary, as in the HOL source).
+ 
+-/-- HOL `NOT_EMPTY_CASE_3_IS_SCS` (UXCKFPE.hl:1775). -/
++/-- HOL `NOT_EMPTY_CASE_3_IS_SCS` (UXCKFPE.hl:1775).  SF-80: row-indexed
++body set. -/
+ theorem NOT_EMPTY_CASE_3_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+     (hs : isScsV39 s) (hk : s.k = 3) (hBB : BBsV39 s vv) :
+     ({l : FinVec 3 3 |
+-        (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
++        (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+           CONDITION1_SY_p4
+             (fun i j : Fin 3 => s.a (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+             (fun i j : Fin 3 => s.b (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+-            (cycRow_p23 vv 3)} : Set (FinVec 3 3)) ≠ ∅ := by
++            (fun i : Fin 3 => rowSy_p23 l i)} : Set (FinVec 3 3)) ≠ ∅ := by
+   sorry
+   -- DISCHARGES: IN_IS_SCS_CASE_3_p24 (witness `flattenRow_p23 vv 3`).
+ 
+@@ -1268,18 +1285,19 @@
+   rw [show i - 1 + 1 = i from by omega]
+ 
+ /-- HOL `CONTINUOUS_ON_D_FUN3` (UXCKFPE.hl:1813): `d_fun3` is continuous
+-on the k = 3 body set (sum over the finite `J1_TS_p24` of row differences). -/
++on the k = 3 body set (sum over the finite `J1_TS_p24` of row differences).
++SF-80: row-indexed body set. -/
+ theorem CONTINUOUS_ON_D_FUN3_p24 (s : ScsV39) (hk : s.k = 3)
+     (vv : ℕ → V3) :
+     ContinuousOn
+       (fun l : FinVec 3 3 =>
+         dFun3_p24 s.d (isEarV39 s) (scsJSet_p23 s) (fun i => (1 + i) % s.k) l)
+       {l : FinVec 3 3 |
+-        (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
++        (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+           CONDITION1_SY_p4
+             (fun i j : Fin 3 => s.a (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+             (fun i j : Fin 3 => s.b (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+-            (cycRow_p23 vv 3)} := by
++            (fun i : Fin 3 => rowSy_p23 l i)} := by
+   sorry
+   -- DISCHARGES: setSum over the 3-point FINITE_J1_TS_p24 set of
+   -- `cstab - ‖rowSy_p23 l _ - rowSy_p23 l _‖` (continuous in `l`), the
+@@ -1307,15 +1325,18 @@
+ 
+ /-- HOL `IN_B_SY1_COLLINEAR_CASE_3_IS_SCS` (UXCKFPE.hl:1878): the rows of
+ any k = 3 body point form three non-collinear triples with the origin
+-(HOL rows `1,2,3` ↦ the `rowSy_p23 l` indices `0,1,2`). -/
++(HOL rows `1,2,3` ↦ the `rowSy_p23 l` indices `0,1,2`).  SF-80: the body-set
++membership premise is row-indexed — it constrains the member `l` itself, so
++the zero-matrix instantiation is excluded (`rowSy_p23 0 i = 0 ∉
++ballAnnulus`; probe80_refute_fixed.lean: the old counterexample dies). -/
+ theorem IN_B_SY1_COLLINEAR_CASE_3_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+     (hs : isScsV39 s) (hk : s.k = 3) (hBB : BBsV39 s vv) :
+     ∀ l : FinVec 3 3,
+-      (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
++      (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+         CONDITION1_SY_p4
+           (fun i j : Fin 3 => s.a (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+           (fun i j : Fin 3 => s.b (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+-          (cycRow_p23 vv 3) →
++          (fun i : Fin 3 => rowSy_p23 l i) →
+       ¬ Collinear ℝ ({0, rowSy_p23 l 0, rowSy_p23 l 1} : Set V3) ∧
+         ¬ Collinear ℝ ({0, rowSy_p23 l 0, rowSy_p23 l 2} : Set V3) ∧
+         ¬ Collinear ℝ ({0, rowSy_p23 l 1, rowSy_p23 l 2} : Set V3) := by
+@@ -1324,38 +1345,40 @@
+   -- point are a BBs realisation) + IS_SCS_NOT_COLLINEAR_BBs_CASE_3_p23.
+ 
+ /-- HOL `HDPLYGY_CASE_30` (UXCKFPE.hl:1926): the k = 3 minimizer of
+-`tau3 - d_fun3` over the (compact, nonempty) body set. -/
++`tau3 - d_fun3` over the (compact, nonempty) body set.  SF-80: row-indexed
++body set — `hne`/`hnc` are no longer jointly contradictory, the statement
++carries real minimizer content. -/
+ theorem HDPLYGY_CASE_30_p24 (s : ScsV39) (vv : ℕ → V3)
+     (hs : isScsV39 s) (hk : s.k = 3)
+     (hne : ({l : FinVec 3 3 |
+-        (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
++        (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+           CONDITION1_SY_p4
+             (fun i j : Fin 3 => s.a (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+             (fun i j : Fin 3 => s.b (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+-            (cycRow_p23 vv 3)} : Set (FinVec 3 3)) ≠ ∅)
++            (fun i : Fin 3 => rowSy_p23 l i)} : Set (FinVec 3 3)) ≠ ∅)
+     (hnc : ∀ l : FinVec 3 3,
+-        (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
++        (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+           CONDITION1_SY_p4
+             (fun i j : Fin 3 => s.a (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+             (fun i j : Fin 3 => s.b (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+-            (cycRow_p23 vv 3) →
++            (fun i : Fin 3 => rowSy_p23 l i) →
+         ¬ Collinear ℝ ({0, rowSy_p23 l 0, rowSy_p23 l 1} : Set V3) ∧
+           ¬ Collinear ℝ ({0, rowSy_p23 l 0, rowSy_p23 l 2} : Set V3) ∧
+           ¬ Collinear ℝ ({0, rowSy_p23 l 1, rowSy_p23 l 2} : Set V3)) :
+     ∃ x : FinVec 3 3,
+       (x ∈ ({l : FinVec 3 3 |
+-        (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
++        (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+           CONDITION1_SY_p4
+             (fun i j : Fin 3 => s.a (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+             (fun i j : Fin 3 => s.b (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+-            (cycRow_p23 vv 3)} : Set (FinVec 3 3))) ∧
++            (fun i : Fin 3 => rowSy_p23 l i)} : Set (FinVec 3 3))) ∧
+       ∀ y : FinVec 3 3,
+         y ∈ ({l : FinVec 3 3 |
+-        (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
++        (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+           CONDITION1_SY_p4
+             (fun i j : Fin 3 => s.a (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+             (fun i j : Fin 3 => s.b (((i : ℕ) + 1) % 3) (((j : ℕ) + 1) % 3))
+-            (cycRow_p23 vv 3)} : Set (FinVec 3 3)) →
++            (fun i : Fin 3 => rowSy_p23 l i)} : Set (FinVec 3 3)) →
+         tau3 (rowSy_p23 x 0) (rowSy_p23 x 1) (rowSy_p23 x 2) -
+             dFun3_p24 s.d (isEarV39 s) (scsJSet_p23 s)
+               (fun i => (1 + i) % s.k) x ≤

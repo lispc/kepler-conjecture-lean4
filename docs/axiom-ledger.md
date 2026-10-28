@@ -27,9 +27,9 @@
 | sf6373debt-w1 | kits ×3 | 3 件 | `8c451a6d` | SF-63/71/73 搬债式接线 kit 预验证通过（在册待裁决） |
 | sf77draft-w1 | patch 77 | 1 件 | `aacaf3e5` | §77 LA22 funlist 双表化（判 A·B 级），patch 在册未落 |
 | sf78draft-w1 | patch 78+79 | 2 件 | `3f31e839` | §78 XYOFCGX / §79 IVFICRK TWIN MISMATCH 判 A′，patch 在册未落 |
-| sfc1c2draft-w1 | patch 80+81a/81b | 3 件 | UNRESOLVED（无 DELIVERY，基线未自报） | SF-80（k=3 builder 行索引化）+ SF-81 两案（81a 加参 / 81b 删字段），patches 在册未落 |
+| sfc1c2draft-w1 | patch 80+81a/81b | 3 件 | `9cd305ad` | SF-80（k=3 builder 行索引化）+ SF-81 两案（81a 加参 / 81b 删字段），patches 在册未落 |
 | w1asm-w2 | REVISED-PLAN + kits ×4 | 4 件 | `8c451a6d` | 波 1 修订：4 kit 全部 /tmp 验净（标准三）、3T1/3T5 改道路线 (b)、funlist 降级 |
-| la24casebank-w1 | PORT-PLAN + probes ×6 | 6 探针 | `851e1b49` | LA24 case bank 四件部分闭合 + HDPLYGY 分层移植 + SF-80/81 取证立案 |
+| la24casebank-w1 | PORT-PLAN + probes ×6 | 6 探针 | `851e1b49` | LA24 case bank 四件部分闭合 + HDPLYGY 分层移植 + SF-80/81 取证（立案见 sffile-w1） |
 
 > 缩写：TP=twinprobe-w1、W2P=la2027-w2prep、M1=m1asm-w1、RR=la1reroute-w1、CB=la24casebank-w1、W1A=w1asm-w2。
 >
@@ -60,7 +60,7 @@ LA33 −11、LA17 −1、mnt11_anchor −1、WKEIDFT 须 phase-2）每闭一根 
 - **编译窗其他在册**：m1asm B 批 7 kit（搬债，LocalConcl 单文件，§2.2 判 B 行）、RR C1→C4
   （§0.3①）、CB HDPLYGY 节 + CASE_4/5/6 体（§3.2）、poolc-w6-replay / A2 落地波（本台账面外）。
 
-**③ SF 在册未落清单（patch 全部在册未落，零消费者零穿参）。**
+**③ SF 已立案未落清单（§77-81，立案 commit 见本提交）（patch 全部在册未落，零消费者零穿参）。**
 
 | SF | 对象 | 判 | 修后 axiom 面 | 状态 |
 |---|---|---|---|---|

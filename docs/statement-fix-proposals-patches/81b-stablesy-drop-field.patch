@@ -1,0 +1,330 @@
+--- a/lean/Kepler/Text/LocalAuto23.lean
++++ b/lean/Kepler/Text/LocalAuto23.lean
+@@ -147,7 +147,11 @@
+     (∀ i j, {i, j} ∈ J → a i j = Real.sqrt 8 ∧ b i j = cstab)
+ 
+ /-- HOL `stable_sy` (HDPLYGY.hl:204): the 7-tuple record of stable
+-systems. Verbatim twin of LocalAuto8 `StableSy`. NEEDS: merge. -/
++systems. Verbatim twin of LocalAuto8 `StableSy`. NEEDS: merge.
++SF-81 案②: the former `stable : stableSystem_p23 k 0 I a b J f` field is
++deleted — the record is the raw 7-tuple, and stability travels as an
++explicit `stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f` hypothesis at the use
++sites (HOL `stable_sy_lemma` users re-expose it). -/
+ structure StableSyP23 where
+   k : ℕ
+   d : ℝ
+@@ -156,7 +160,6 @@
+   b : ℕ → ℕ → ℝ
+   J : Set (Set ℕ)
+   f : ℕ → ℕ
+-  stable : stableSystem_p23 k 0 I a b J f
+ 
+ /-- HOL `a_ear0` (HDPLYGY.hl:35 = localization.hl:135). Twin of LocalAuto8
+ `aEar0_p8`. NEEDS: merge. -/
+@@ -218,8 +221,10 @@
+   {e | ∃ i j, i < s.k ∧ j < s.k ∧ s.J i j ∧ e = {i, j}}
+ 
+ /-- The `stable_sy ((k),(d),(0..k-1),(a),(b),(J),(\i. (1+i) MOD k)) = s1`
+-record of the JKQEWGV hypotheses, built from `s`. The `stable` field is the
+-`IS_SCS_STABLE_SYSTEM_p23` unpacking (NEEDS). The unused dih2k dummy `d`
++record of the JKQEWGV hypotheses, built from `s`.  SF-81 案②: the `stable`
++field is gone (7-tuple record) — the def is total and contains no `sorry`;
++stability of the built record is the separate hypothesis
++`IS_SCS_STABLE_SYSTEM_p23 s` at the use sites.  The unused dih2k dummy `d`
+ is carried as `0` (LocalAuto8 `StableSy.d : ℕ`). -/
+ noncomputable def scsToStableSy_p23 (s : ScsV39) : StableSyP23 where
+   k := s.k
+@@ -229,7 +234,6 @@
+   b := s.b
+   J := scsJSet_p23 s
+   f := fun i => (1 + i) % s.k
+-  stable := sorry -- NEEDS: IS_SCS_STABLE_SYSTEM_p23 (torsor over Iic (k-1))
+ 
+ /-- Every point of the ball annulus is nonzero (`dist ≥ 2` from the origin). -/
+ theorem ballAnnulus_ne_0_p23 (x : V3) (hx : x ∈ ballAnnulus) : x ≠ 0 := by
+--- a/lean/Kepler/Text/LocalAuto24.lean
++++ b/lean/Kepler/Text/LocalAuto24.lean
+@@ -1286,23 +1286,24 @@
+   -- constant `d`/ear terms (HOL CONTINUOUS_ON_ADD/VSUM/ROW kit).
+ 
+ /-- HOL `tri_sy_explicit` (UXCKFPE.hl:1856): the projections of the
+-`tri_sy (k,d,s,a,b,J,f)` record (↦ `StableSyP23`) return its components. -/
++`tri_sy (k,d,s,a,b,J,f)` record (↦ `StableSyP23`) return its components.
++SF-81 案②: 7-field record — the former stability parameter is gone. -/
+ theorem tri_sy_explicit_p24 (k : ℕ) (d : ℝ) (s : Set ℕ) (a b : ℕ → ℕ → ℝ)
+-    (J : Set (Set ℕ)) (f : ℕ → ℕ) (hs : stableSystem_p23 k 0 s a b J f) :
+-    ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f,
+-        stable := hs } : StableSyP23).k = k ∧
+-      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f,
+-          stable := hs } : StableSyP23).d = d ∧
+-      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f,
+-          stable := hs } : StableSyP23).a = a ∧
+-      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f,
+-          stable := hs } : StableSyP23).b = b ∧
+-      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f,
+-          stable := hs } : StableSyP23).J = J ∧
+-      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f,
+-          stable := hs } : StableSyP23).I = s ∧
+-      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f,
+-          stable := hs } : StableSyP23).f = f :=
++    (J : Set (Set ℕ)) (f : ℕ → ℕ) :
++    ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f } :
++        StableSyP23).k = k ∧
++      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f } :
++        StableSyP23).d = d ∧
++      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f } :
++        StableSyP23).a = a ∧
++      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f } :
++        StableSyP23).b = b ∧
++      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f } :
++        StableSyP23).J = J ∧
++      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f } :
++        StableSyP23).I = s ∧
++      ({ k := k, d := d, I := s, a := a, b := b, J := J, f := f } :
++        StableSyP23).f = f :=
+   ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+ 
+ /-- HOL `IN_B_SY1_COLLINEAR_CASE_3_IS_SCS` (UXCKFPE.hl:1878): the rows of
+--- a/lean/Kepler/Text/LocalAuto26.lean
++++ b/lean/Kepler/Text/LocalAuto26.lean
+@@ -830,11 +830,12 @@
+ 
+ /-- HOL `PROPERTIES_EAR_SY` (GBYCPXS.hl:178): an ear stable system has a
+ singleton `J_SY` of the form `{i, f_sy s i}` with `i IN I_SY s`. -/
+-theorem PROPERTIES_EAR_SY_p26 (s : StableSyP23) (h : earSy_p23 s) :
++theorem PROPERTIES_EAR_SY_p26 (s : StableSyP23)
++    (hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f) (h : earSy_p23 s) :
+     ∃ i, s.J = {({i, s.f i} : Set ℕ)} ∧ i ∈ s.I := by
+   have hcard : s.J.ncard = 1 := h.2.2.1
+   obtain ⟨e, he⟩ := Set.ncard_eq_one.mp hcard
+-  have hJsub : s.J ⊆ {e | ∃ i ∈ s.I, e = {i, s.f i}} := s.stable.1.2.2.2.2.2.1
++  have hJsub : s.J ⊆ {e | ∃ i ∈ s.I, e = {i, s.f i}} := hst.1.2.2.2.2.2.1
+   have heJ : e ∈ s.J := by simp [he]
+   obtain ⟨i, hi, hie⟩ := hJsub heJ
+   refine ⟨i, ?_, hi⟩
+@@ -903,11 +904,12 @@
+ /-- HOL `SING_J1_SY` (GBYCPXS.hl:202): an ear stable system has `J1_SY s`
+ a singleton `(i, SUC (i MOD k))` and `J_SY s = {{i MOD k, f_sy s i}}` with
+ `1 <= i <= k`. -/
+-theorem SING_J1_SY_p26 (s : StableSyP23) (h : earSy_p23 s)
++theorem SING_J1_SY_p26 (s : StableSyP23)
++    (hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f) (h : earSy_p23 s)
+     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k) :
+     ∃ i, J1_SY_p23 s = {(i, i % s.k + 1)} ∧
+       s.J = {({i % s.k, s.f (i % s.k)} : Set ℕ)} ∧ i ≤ s.k ∧ 1 ≤ i := by
+-  obtain ⟨c, hJc, hcI⟩ := PROPERTIES_EAR_SY_p26 s h
++  obtain ⟨c, hJc, hcI⟩ := PROPERTIES_EAR_SY_p26 s hst h
+   have hck : c < s.k := by
+     rw [hI] at hcI
+     exact hcI
+@@ -926,10 +928,11 @@
+ /-- HOL `CARD_F_SY_IN_B_SY` (GBYCPXS.hl:43).
+ DISCHARGED: the 1-based-row / 0-based-vertex bridge (`rowId_p26`, the local
+ stand-in for the `INJ_ROW_B_SY` kit) shows distinct rows; `CONDITION1_SY_p4`
+-with the stable system's off-diagonal bound `2 ≤ a i j` (`s.stable.2.1`,
++with the stable system's off-diagonal bound `2 ≤ a i j` (`hst.2.1`,
+ indices shifted by one via `aSyRow_p26`) gives row injectivity, and the
+ proved LocalAuto4 `CARD_F_SY_EQ` counts the `k` cyclic darts. -/
+-theorem CARD_F_SY_IN_B_SY_p26 (s : StableSyP23) (l : FinVec s.k 3)
++theorem CARD_F_SY_IN_B_SY_p26 (s : StableSyP23)
++    (hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f) (l : FinVec s.k 3)
+     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
+     (hl : l ∈ B_SY1_p4 (aSyRow_p26 s) (bSyRow_p26 s)) :
+     (F_SY_p4 (vecmatsV3_p4 l)).ncard = s.k := by
+@@ -939,13 +942,13 @@
+     rw [hI]; exact hu
+   have hk0 : 0 < s.k := by omega
+   have h2off : ∀ x y : ℕ, x < s.k → y < s.k → x ≠ y → 2 ≤ s.a x y :=
+-    fun x y hx hy hne => s.stable.2.1 x (hmemI x hx) y (hmemI y hy) hne
++    fun x y hx hy hne => hst.2.1 x (hmemI x hx) y (hmemI y hy) hne
+   -- the wrap row `s.k` reduces to row `0` by symmetry + `f^[s.k]`-periodicity
+   have hwrap : ∀ x : ℕ, 1 ≤ x → x < s.k → 2 ≤ s.a x s.k := by
+     intro x hx1 hx
+     have hper : ∀ u w : ℕ, s.a u w = s.a u (s.f^[s.k] w) :=
+-      fun u w => (s.stable.1.2.2.2.2.1 u w).1
+-    have hsym : ∀ u w : ℕ, s.a u w = s.a w u := fun u w => (s.stable.1.2.2.2.1 u w).1
++      fun u w => (hst.1.2.2.2.2.1 u w).1
++    have hsym : ∀ u w : ℕ, s.a u w = s.a w u := fun u w => (hst.1.2.2.2.1 u w).1
+     have hzero : s.f^[s.k] s.k = 0 := by
+       rw [fIterateSuccMod_p26 hf hk0 s.k]
+       simp
+@@ -977,12 +980,12 @@
+           exact hwrap ((i : ℕ) + 1) (by omega) hix
+         linarith
+     · have hik2 : ((i : ℕ) + 1) = s.k := le_antisymm (by omega) hix
+-      have hsym : ∀ u w : ℕ, s.a u w = s.a w u := fun u w => (s.stable.1.2.2.2.1 u w).1
++      have hsym : ∀ u w : ℕ, s.a u w = s.a w u := fun u w => (hst.1.2.2.2.1 u w).1
+       have hper : ∀ u w : ℕ, s.a u w = s.a u (s.f^[s.k] w) :=
+-        fun u w => (s.stable.1.2.2.2.2.1 u w).1
++        fun u w => (hst.1.2.2.2.2.1 u w).1
+       rcases Nat.lt_or_ge ((j : ℕ) + 1) s.k with hjy | hjy
+       · have h0I : (0 : ℕ) ∈ s.I := hmemI 0 (by omega)
+-        have h2j0 := s.stable.2.1 ((j : ℕ) + 1) (hmemI _ hjy) 0 h0I (by omega)
++        have h2j0 := hst.2.1 ((j : ℕ) + 1) (hmemI _ hjy) 0 h0I (by omega)
+         have ha2' : 2 ≤ s.a ((i : ℕ) + 1) ((j : ℕ) + 1) := by
+           rw [hik2, hsym _ _, hper _ _, hzero]
+           exact h2j0
+@@ -999,7 +1002,8 @@
+ bound transported by `fIterateSuccMod_p26` + symmetry; the two out-of-range
+ cyclic indices (`i = s.k` resp. `i = s.k - 1`) fall back to the ball-annulus
+ upper bound `‖v‖ ≤ 2*h0 < cstab`. -/
+-theorem B_SY_LE_CSTAB_p26 (s : StableSyP23) (l : FinVec s.k 3)
++theorem B_SY_LE_CSTAB_p26 (s : StableSyP23)
++    (hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f) (l : FinVec s.k 3)
+     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
+     (hl : l ∈ B_SY1_p4 (aSyRow_p26 s) (bSyRow_p26 s)) :
+     ∀ i, 1 ≤ i → i ≤ s.k →
+@@ -1014,11 +1018,11 @@
+     have hk0 : 0 < s.k := by omega
+     have hmemI : ∀ w : ℕ, w < s.k → w ∈ s.I := fun w hw => by rw [hI]; exact hw
+     have hper : ∀ u w : ℕ, s.b u w = s.b u (s.f^[s.k] w) :=
+-      fun u w => (s.stable.1.2.2.2.2.1 u w).2
++      fun u w => (hst.1.2.2.2.2.1 u w).2
+     have hsym : ∀ u w : ℕ, s.b u w = s.b w u :=
+-      fun u w => (s.stable.1.2.2.2.1 u w).2.1
++      fun u w => (hst.1.2.2.2.1 u w).2.1
+     have hfit : (u % s.k) ∈ s.I := hmemI _ (Nat.mod_lt _ hk0)
+-    have hle := (s.stable.2.2.1 (u % s.k) hfit).2
++    have hle := (hst.2.2.1 (u % s.k) hfit).2
+     rw [hf] at hle
+     have hf1 : s.f^[s.k] u = u % s.k := fIterateSuccMod_p26 hf hk0 u
+     have hf2 : s.f^[s.k] (u % s.k + 1) = (u % s.k + 1) % s.k := fIterateSuccMod_p26 hf hk0 _
+@@ -1089,7 +1093,8 @@
+ `b j (f j) ≤ cstab` bound).  Ear case: `SING_J1_SY_p26` collapses `J1_SY` to
+ a singleton and `d = 0.11`, so `d_fun ≤ 0.11 + 0.1*cstab ≤ 0.92`; otherwise
+ the `-1` coefficient makes `d_fun ≤ d ≤ 0.9`. -/
+-theorem D_FUN_LE_p26 (s : StableSyP23) (l : FinVec s.k 3)
++theorem D_FUN_LE_p26 (s : StableSyP23)
++    (hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f) (l : FinVec s.k 3)
+     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
+     (hd : s.d ≤ 0.9)
+     (hsol : Real.pi ≤ solLocal (E_SY_p4 (vecmatsV3_p4 l)) (F_SY_p4 (vecmatsV3_p4 l)))
+@@ -1102,11 +1107,11 @@
+     have hk0 : 0 < s.k := by omega
+     have hmemI : ∀ w : ℕ, w < s.k → w ∈ s.I := fun w hw => by rw [hI]; exact hw
+     have hper : ∀ u w : ℕ, s.b u w = s.b u (s.f^[s.k] w) :=
+-      fun u w => (s.stable.1.2.2.2.2.1 u w).2
++      fun u w => (hst.1.2.2.2.2.1 u w).2
+     have hsym : ∀ u w : ℕ, s.b u w = s.b w u :=
+-      fun u w => (s.stable.1.2.2.2.1 u w).2.1
++      fun u w => (hst.1.2.2.2.1 u w).2.1
+     have hfit : (u % s.k) ∈ s.I := hmemI _ (Nat.mod_lt _ hk0)
+-    have hle := (s.stable.2.2.1 (u % s.k) hfit).2
++    have hle := (hst.2.2.1 (u % s.k) hfit).2
+     rw [hf] at hle
+     have hf1 : s.f^[s.k] u = u % s.k := fIterateSuccMod_p26 hf hk0 u
+     have hf2 : s.f^[s.k] (u % s.k + 1) = (u % s.k + 1) % s.k := fIterateSuccMod_p26 hf hk0 _
+@@ -1152,7 +1157,7 @@
+         (fun x => cstab - ‖rowSy_p23 l (x.1 - 1) - rowSy_p23 l (x.2 - 1)‖) ≤ 0.92
+   by_cases hear : earSy_p23 s
+   · -- ear: singleton sum, d = 0.11
+-    have hsing := SING_J1_SY_p26 s hear hI hf hk
++    have hsing := SING_J1_SY_p26 s hst hear hI hf hk
+     obtain ⟨-, hdd, -, -, -⟩ := id hear
+     obtain ⟨w, hJ1, -, -⟩ := hsing
+     have hcst : (cstab : ℝ) = 3.01 := by norm_num [cstab]
+@@ -1187,14 +1192,15 @@
+ 
+ /-- HOL `TAU_STAR_POS` (GBYCPXS.hl:578): `tau_star = tau_fun - d_fun` is
+ positive, by `TAU_FUN_LE` (`#0.92 <`) and `D_FUN_LE` (`d_fun <= #0.92`). -/
+-theorem TAU_STAR_POS_p26 (s : StableSyP23) (l : FinVec s.k 3)
++theorem TAU_STAR_POS_p26 (s : StableSyP23)
++    (hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f) (l : FinVec s.k 3)
+     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
+     (hd : s.d ≤ 0.9)
+     (hsol : Real.pi ≤ solLocal (E_SY_p4 (vecmatsV3_p4 l)) (F_SY_p4 (vecmatsV3_p4 l)))
+     (hl : l ∈ B_SY1_p4 (aSyRow_p26 s) (bSyRow_p26 s)) :
+     0 < tauStar_p23 s l := by
+   have htf := TAU_FUN_LE_p26 s l hI hf hk hsol hl
+-  have hdf := D_FUN_LE_p26 s l hI hf hk hd hsol hl
++  have hdf := D_FUN_LE_p26 s hst l hI hf hk hd hsol hl
+   unfold tauStar_p23
+   linarith
+ 
+@@ -1208,7 +1214,8 @@
+ /-- HOL `NOT_CIRCULAR_SY` (GBYCPXS.hl:621): `tau_star s l <= 0` forces the
+ fan of `l` to be non-circular, since circularity would give
+ `sol_local = 2*pi >= pi`, hence `tau_star > 0` by `TAU_STAR_POS`. -/
+-theorem NOT_CIRCULAR_SY_p26 (s : StableSyP23) (l : FinVec s.k 3)
++theorem NOT_CIRCULAR_SY_p26 (s : StableSyP23)
++    (hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f) (l : FinVec s.k 3)
+     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
+     (hd : s.d ≤ 0.9) (htau : tauStar_p23 s l ≤ 0)
+     (hl : l ∈ B_SY1_p4 (aSyRow_p26 s) (bSyRow_p26 s)) :
+@@ -1222,12 +1229,13 @@
+   have hpi : Real.pi ≤ solLocal (E_SY_p4 (vecmatsV3_p4 l)) (F_SY_p4 (vecmatsV3_p4 l)) := by
+     rw [h2pi]
+     linarith [Real.pi_pos]
+-  exact absurd (TAU_STAR_POS_p26 s l hI hf hk hd hpi hl) (not_lt.mpr htau)
++  exact absurd (TAU_STAR_POS_p26 s hst l hI hf hk hd hpi hl) (not_lt.mpr htau)
+ 
+ /-- HOL `GBYCPXS` (GBYCPXS.hl:668): the main stable-system disjunct — under
+ `l IN B_SY1 (a_sy s) (b_sy s)`, either `tau_star` is positive, or the fan is
+ not circular. -/
+-theorem GBYCPXS_p26 (s : StableSyP23) (l : FinVec s.k 3)
++theorem GBYCPXS_p26 (s : StableSyP23)
++    (hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f) (l : FinVec s.k 3)
+     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
+     (hl : l ∈ B_SY1_p4 (aSyRow_p26 s) (bSyRow_p26 s)) :
+     (s.d ≤ 0.9 →
+@@ -1235,5 +1243,5 @@
+         0 < tauStar_p23 s l) ∧
+       (s.d ≤ 0.9 → tauStar_p23 s l ≤ 0 →
+         ¬ Circular (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))) := by
+-  refine ⟨fun hd hsol => TAU_STAR_POS_p26 s l hI hf hk hd hsol hl, fun hd htau => ?_⟩
+-  exact NOT_CIRCULAR_SY_p26 s l hI hf hk hd htau hl
++  refine ⟨fun hd hsol => TAU_STAR_POS_p26 s hst l hI hf hk hd hsol hl, fun hd htau => ?_⟩
++  exact NOT_CIRCULAR_SY_p26 s hst l hI hf hk hd htau hl
+--- a/lean/Kepler/Text/LocalAuto36.lean
++++ b/lean/Kepler/Text/LocalAuto36.lean
+@@ -193,16 +193,17 @@
+ 
+ /-- HOL `stable_sy_explicit` (XWITCCN.hl:1271): the projections of the
+ `stable_sy (k,d,s,a,b,J,f)` record. The unused HOL reals dummy `d` is the
+-`0` of the LocalAuto23 kit. -/
+-theorem stable_sy_explicit {k : ℕ} {I : Set ℕ} {a b : ℕ → ℕ → ℝ}
+-    {J : Set (Set ℕ)} {f : ℕ → ℕ} (hs : stableSystem_p23 k 0 I a b J f) :
+-    (StableSyP23.k ⟨k, 0, I, a, b, J, f, hs⟩ : ℕ) = k ∧
+-    (StableSyP23.d ⟨k, 0, I, a, b, J, f, hs⟩ : ℝ) = 0 ∧
+-    (StableSyP23.I ⟨k, 0, I, a, b, J, f, hs⟩ : Set ℕ) = I ∧
+-    (StableSyP23.a ⟨k, 0, I, a, b, J, f, hs⟩) = a ∧
+-    (StableSyP23.b ⟨k, 0, I, a, b, J, f, hs⟩) = b ∧
+-    (StableSyP23.J ⟨k, 0, I, a, b, J, f, hs⟩ : Set (Set ℕ)) = J ∧
+-    (StableSyP23.f ⟨k, 0, I, a, b, J, f, hs⟩) = f :=
++`0` of the LocalAuto23 kit.  SF-81 案②: 7-field record — the former
++stability parameter is gone. -/
++theorem stable_sy_explicit (k : ℕ) (I : Set ℕ) (a b : ℕ → ℕ → ℝ)
++    (J : Set (Set ℕ)) (f : ℕ → ℕ) :
++    (StableSyP23.k ⟨k, 0, I, a, b, J, f⟩ : ℕ) = k ∧
++    (StableSyP23.d ⟨k, 0, I, a, b, J, f⟩ : ℝ) = 0 ∧
++    (StableSyP23.I ⟨k, 0, I, a, b, J, f⟩ : Set ℕ) = I ∧
++    (StableSyP23.a ⟨k, 0, I, a, b, J, f⟩) = a ∧
++    (StableSyP23.b ⟨k, 0, I, a, b, J, f⟩) = b ∧
++    (StableSyP23.J ⟨k, 0, I, a, b, J, f⟩ : Set (Set ℕ)) = J ∧
++    (StableSyP23.f ⟨k, 0, I, a, b, J, f⟩) = f :=
+   ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+ 
+ /-- Mod bookkeeping: `(n % k + 1) % k = (n + 1) % k`. -/
+@@ -427,9 +428,11 @@
+ (XWITCCN.hl:2772), NOT `0`.  The earlier rendering via `scsToStableSy_p23`
+ (which fixes `d := 0`) made every `k ≥ 4` `TAUSTAR_EQ_TAU_STAR_*` false,
+ since `taustar_v39` subtracts `dsv_v39 = scs_d_v39 s` while
+-`tau_star s1` subtracted `0 ≠ d_tame k`.  The `stable` field keeps the
+-LocalAuto23 `IS_SCS_STABLE_SYSTEM_p23` placeholder, as in
+-`scsToStableSy_p23`. -/
++`tau_star s1` subtracted `0 ≠ d_tame k`.
++
++SF-81 案②: the `stable` field is gone (7-tuple record) — the def is total
++and contains no `sorry`; stability travels as the explicit
++`IS_SCS_STABLE_SYSTEM_p23` hypothesis at the use sites. -/
+ noncomputable def scsToStableSyD_p36 (s : ScsV39) : StableSyP23 where
+   k := s.k
+   d := s.d
+@@ -438,7 +441,6 @@
+   b := s.b
+   J := scsJSet_p23 s
+   f := fun i => (1 + i) % s.k
+-  stable := sorry
+ 
+ /-- `setSum` over the empty set is `0`. -/
+ private theorem setSum_empty_p36 {α : Type*} (f : α → ℝ) : setSum (∅ : Set α) f = 0 := by

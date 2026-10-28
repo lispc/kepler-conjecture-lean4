@@ -1,0 +1,143 @@
+--- a/lean/Kepler/Text/PackingAuto2.lean
++++ b/lean/Kepler/Text/PackingAuto2.lean
+@@ -4791,8 +4791,15 @@
+ 
+ /-- HOL `XYOFCGX_concl` (pack_concl.hl:61-64): a point of `V \ S` is farther
+ from the circumcenter than every point of `S` once the circumradius is below
+-`sqrt 2`. -/
+-theorem XYOFCGX_concl : ∀ (V S : Set V3) (p : V3), S ⊆ V → ¬affineDependent S →
++`sqrt 2`.  STATEMENT-FIX item 78 (draft sf78draft-w1, judged toward the proved
++original): the pack_concl.hl interface lacks `packing V`, but the proved HOL
++carrier (Rogers.hl:6559 `XYOFCGX`) requires it and the packing-free form is
++false (an arbitrary superset `V` may place a point of `V \ S` closer to the
++circumcenter than a point of `S`).  Statement aligned to the Rogers.hl:6559
++form; body stays `sorry` (PA2 cannot import PA7 — cycle; the export layer
++`PackingConcl` performs the discharge). -/
++theorem XYOFCGX_concl : ∀ (V S : Set V3) (p : V3), Packing V → S ⊆ V →
++    ¬affineDependent S →
+     p = circumcenter S → radV S < Real.sqrt 2 →
+     ∀ u v : V3, u ∈ S → v ∈ V \ S → dist v p > dist u p := by
+   sorry
+@@ -5451,14 +5458,20 @@
+ /-- HOL `IVFICRK_concl` (pack_concl.hl:110-113): an explicit bijection
+ giving the action of a permutation on the list with one element dropped.
+ (HL leaves `i σ` free inside the second conjunct — implicitly generalized;
+-bound explicitly here. Generic in the element type `A`, as in HL.) -/
++bound explicitly here. Generic in the element type `A`, as in HL.)
++STATEMENT-FIX item 79 (draft sf78draft-w1, judged toward the proved original):
++the proved HOL carrier (Rogers.hl:9929 `IVFICRK`) restricts the pointwise
++identity to `i ∈ 0..(k+1)` and `sigma permutes (0..k)`; the free-`i σ`
++interface form is not derivable from that carrier.  Second conjunct aligned
++to the Rogers.hl:9929 form; body stays `sorry` (PA2 cannot import PA7 —
++cycle; the export layer `PackingConcl` performs the discharge). -/
+ theorem IVFICRK_concl : ∀ {A : Type} [Inhabited A] (k : ℕ),
+     ∃ g : ℕ × Equiv.Perm ℕ → Equiv.Perm ℕ,
+       Set.BijOn g {q : ℕ × Equiv.Perm ℕ | q.1 ∈ Set.Icc 0 (k + 1) ∧
+           permutes q.2 (Set.Icc 0 k)}
+         {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k + 1))} ∧
+       ∀ (ul : List A) (i : ℕ) (σ : Equiv.Perm ℕ) (j : ℕ), ul.length = k + 2 →
+-        j ≤ k →
++        j ≤ k → i ∈ Set.Icc 0 (k + 1) → permutes σ (Set.Icc 0 k) →
+         (leftActionList (g (i, σ)) ul).getD j default =
+           (leftActionList σ (dropIth ul i)).getD j default := by
+   sorry
+--- a/lean/Kepler/Text/PackingConcl.lean
++++ b/lean/Kepler/Text/PackingConcl.lean
+@@ -33,10 +33,11 @@
+       publicly as `GRUTOTI1_concl_p24_pub`; accounted by the GRUTOTI1
+       entry below — 61 explicit entries + this 1 accounted copy = 62)
+   WIRED here (`exact twin ...`, sorryAx flows through where the twin or
+-  a bank antecedent is sorried) ........................ 54
+-    verbatim twin (term-level `:= twin` / eta) ........... 49
++  a bank antecedent is sorried) ........................ 56
++    verbatim twin (term-level `:= twin` / eta) ........... 51
+       (DUUNHOR joined in the 2026-10-08 r2 wave; recount also fixes the
+-      former 47+5≠53 arithmetic — 49 + 5 = 54.  The 9 Auto3
++      former 47+5≠53 arithmetic — 49 + 5 = 54; XYOFCGX and IVFICRK join
++      via STATEMENT-FIX 78/79 — 51 + 5 = 56.  The 9 Auto3
+       OXLZLEZ1-family rows went verbatim in the CC4P4-exposure wave: PA4
+       now states public `*_v11` twins over PA3's `CcV11`, so the
+       parallel-private-encoding block is gone)
+@@ -55,17 +56,16 @@
+         here, so the twin's REAL by_contra kernel
+         (CELL_CLUSTER_ESTIMATE_PROPS + GRHIDFA_concl) is on the
+         reachable path)
+-  BLOCKED ............................................... 8, reasons:
++  BLOCKED ............................................... 6, reasons:
+ 
+   (a) Twin does not exist: 2
+       RVFXZBU1_concl, RVFXZBU2_concl (Auto2:743,750; no twin anywhere
+       in Auto3-25).
+ 
+   (b) Twin exists but is NOT statement-compatible (shape mismatch,
+-      documented at the entry): 5
+-      XYOFCGX (twin needs `Packing V`, interface has none);
+-      IVFICRK (twin's second conjunct has two extra antecedents
+-        `i ∈ Icc 0 (k+1)`, `permutes σ (Icc 0 k)`);
++      documented at the entry): 3
++      (was 5: XYOFCGX and IVFICRK resolved by STATEMENT-FIX 78/79,
++      judged toward the proved Rogers.hl originals)
+       RVFXZBU3 (twin PA10.RVFXZBU is restricted to `i ∈ {0,1,2,3,4}`,
+         interface quantifies over all `i`);
+       MXI_EXISTS (PA12.MXI_EXPLICIT consumes this very interface —
+@@ -220,14 +220,19 @@
+   fun V ul k u v q _ _ hP hbar hq hu hv => by
+     rw [hq]; exact MHFTTZN4 V ul k u v hP hbar hu hv
+ 
+-/-- `PackingAuto2.XYOFCGX_concl` (Auto2:621).  TWIN MISMATCH:
+-`PackingAuto7.XYOFCGX` (Rogers.hl:6559) requires `Packing V`, which the
+-interface does not carry (nor do the `XYOFCGX_*_0` case lemmas). -/
+-theorem XYOFCGX_concl_discharged :
+-    ∀ (V S : Set V3) (p : V3), S ⊆ V → ¬affineDependent S →
++/-- `PackingAuto2.XYOFCGX_concl` (Auto2:621), discharged by
++`PackingAuto7.XYOFCGX` (Rogers.hl:6559).  STATEMENT-FIX item 78 (draft
++sf78draft-w1, judged toward the proved original): the pack_concl.hl:61-64
++interface lacks the `Packing V` antecedent that the proved HOL carrier
++carries — the packing-free form is FALSE (an arbitrary superset `V` may
++place a point of `V \ S` closer to the circumcenter than a point of `S`).
++Registry (`PackingAuto2.XYOFCGX_concl`) and this export both adopt the
++Rogers.hl:6559 form; discharge is term-level from the fully proved twin. -/
++theorem XYOFCGX_concl_discharged :
++    ∀ (V S : Set V3) (p : V3), Packing V → S ⊆ V → ¬affineDependent S →
+       p = circumcenter S → radV S < Real.sqrt 2 →
+-      ∀ u v : V3, u ∈ S → v ∈ V \ S → dist v p > dist u p := by
+-  sorry
++      ∀ u v : V3, u ∈ S → v ∈ V \ S → dist v p > dist u p :=
++  fun V S p hV hSV hind hp hr => XYOFCGX V S p hV hSV hind hp hr
+ 
+ /-- `PackingAuto2.XNHPWAB1_concl` (Auto2:629), discharged by
+ `PackingAuto7.XNHPWAB1` (Rogers.hl:7194) — the twin needs neither `k ≤ 3`
+@@ -300,11 +305,14 @@
+   fun V ul p k _ hP hbar hl2 hperm hpout hrog =>
+     KSOQKWL V ul p k hP hbar hl2 hperm hpout hrog
+ 
+-/-- `PackingAuto2.IVFICRK_concl` (Auto2:684).  TWIN MISMATCH:
+-`PackingAuto7.IVFICRK` (Rogers.hl:9929) carries the same BijOn witness
+-but its second conjunct has two EXTRA antecedents (`i ∈ Icc 0 (k+1)`,
+-`permutes σ (Icc 0 k)`) that the interface's pointwise statement does
+-not allow — the twin is strictly weaker than the interface. -/
++/-- `PackingAuto2.IVFICRK_concl` (Auto2:684), discharged by
++`PackingAuto7.IVFICRK` (Rogers.hl:9929).  STATEMENT-FIX item 79 (draft
++sf78draft-w1, judged toward the proved original): the proved HOL carrier
++restricts the pointwise identity to `i ∈ Icc 0 (k+1)` and
++`permutes σ (Icc 0 k)`; the free-`i σ` interface form is not derivable from
++that carrier.  Registry and this export both adopt the Rogers.hl:9929 form.
++Debt-consolidating wiring, sorryAx standing: root = `PackingAuto7.IVFICRK`
++own `sorry` (PA7:3953, GIANT Rogers bijection chain). -/
+ theorem IVFICRK_concl_discharged :
+     ∀ {A : Type} [Inhabited A] (k : ℕ),
+       ∃ g : ℕ × Equiv.Perm ℕ → Equiv.Perm ℕ,
+@@ -312,10 +320,10 @@
+             permutes q.2 (Set.Icc 0 k)}
+           {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k + 1))} ∧
+         ∀ (ul : List A) (i : ℕ) (σ : Equiv.Perm ℕ) (j : ℕ), ul.length = k + 2 →
+-          j ≤ k →
++          j ≤ k → i ∈ Set.Icc 0 (k + 1) → permutes σ (Set.Icc 0 k) →
+           (leftActionList (g (i, σ)) ul).getD j default =
+-            (leftActionList σ (dropIth ul i)).getD j default := by
+-  sorry
++            (leftActionList σ (dropIth ul i)).getD j default :=
++  IVFICRK
+ 
+ /-- `PackingAuto2.WQPRRDY_concl` (Auto2:699), discharged by
+ `PackingAuto7.WQPRRDY` (Rogers.hl:10534). -/

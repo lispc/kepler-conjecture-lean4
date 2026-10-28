@@ -4367,3 +4367,464 @@ A2 暂停窗，用户待裁）。闸命令（lean/ 下）：
 （二选一：此为拆分单闸；合并闸 = 同车灌 w1asm-w2 kit4 证明体，即日 LA22 文件级
 sorry 89→88，但 patch 须重规范化为含证体的真实 diff）。与波 1 kit1/kit3 无冲突
 （零共享名）；影响面 23 件（trio + 20 兄弟）在 §(d)。
+
+## 78. `XYOFCGX_concl` 接口缺 `Packing V` → 向已证正本 Rogers.hl:6559 归正（出口 PackingConcl:226 ↔ 注册表 PA2:4795 ↔ 孪生 PA7:1234）— 分级 B（TWIN MISMATCH · 语句修正 · sf78draft-w1 取证判 A′）
+
+### (a) HOL 裁决
+
+- **接口正本** = `lean/scripts/packing/pack_concl.hl:61-64`（与
+  `reference/flyspeck/text_formalization/packing/pack_concl.hl` 逐字节相同）：
+  `!V S (p:real^3). S SUBSET V /\ ~affine_dependent S /\ (p = circumcenter S)
+  /\ (radV S < sqrt(&2)) ==> (!u v. u IN S /\ v IN (V DIFF S) ==> dist(v,p) >
+  dist(u,p))` —— **无 `packing V`**。
+- **已证正本** = `Rogers.hl:6559`（两份拷贝逐字节相同）：同一蕴含链
+  **多一个前件 `packing V`**，HOL 侧真证（完整脚本）。
+- 即：**错位在 HOL 本体就存在**——pack_concl.hl 是接口规格（let 项，无证），
+  它与 Rogers.hl 已证形差一个前提。Lean 两侧都是忠实移植，谁也没有移植失真。
+
+### (b) Lean 诊断（差槽清单）
+
+| 槽 | 出口/注册表 | 孪生 PA7:1234 | 判 |
+|---|---|---|---|
+| binder | `∀ (V S : Set V3) (p : V3)` | 同 | 忠实 |
+| 前提 1 | `S ⊆ V` | **`Packing V`**（新增） | **唯一差槽** |
+| 前提 2-4 | `¬affineDependent S` / `p = circumcenter S` / `radV S < √2` | 同 | 忠实 |
+| 结论 | `∀ u v, u ∈ S → v ∈ V \ S → dist v p > dist u p` | 同 | 忠实 |
+
+其余零差（无量词序漂移、无编码差）。孪生**严格弱于**接口。
+
+**判定：A′ 接口侧缺陷，向已证正本形归正**（SF-15/SF-74 同款先例）。判 A′
+而非 C 的依据：packing-free 形**数学上为假**，不是"难证"——反例（标准模型）：
+`S = {0, e₁}`，`p = circumcenter S = (1/2,0,0)`，`radV S = 1/2 < √2`；取
+`V = S ∪ {(1/2,1/10,0)}`，则全部接口前提成立而结论假（`dist(v,p) = 1/10 <
+1/2 = dist(u,p)`，取 `u = 0`）。`V` 无任何约束时可任意向 circumcenter 挤点，
+缺口陈述不可救。故唯一自洽修法 = 接口加 `Packing V`（= 已证正本
+Rogers.hl:6559 形），孪生侧零改动。
+
+### (c) 补丁
+
+`docs/statement-fix-proposals-patches/78-79-twin-mismatch-packingconcl.patch`
+（与 §79 共用同一 patch；两文件五 hunk：PA2 注册表 docstring+陈述、PC 出口
+docstring+陈述+term 接线、PC 头部 LEDGER recount WIRED 54→56 / verbatim
+49→51 / BLOCKED 8→6 / (b) 5→3）。`git apply --check` 主仓工作树 PASS
+（+48/−27）；修后文件整编 exit 0（见 (e)）。
+
+### (d) 消费面
+
+全树 grep（含 Assembly/Final/Statement/Geom/LP）：`XYOFCGX_concl` 代码消费者
+= 声明本体两处（PA2:4795 注册表 + PackingConcl:226 出口），**零跨文件引用**；
+`XYOFCGX_concl_discharged` 同样零消费者。陈述改动半径 = 两个声明 + 出口接线，
+零调用点穿参。
+
+### (e) 探针（/tmp，LEAN_PATH 直调 lean，exit 0；`lane_snapshots/sf78draft-w1/probes/`）
+
+`probes/sf78draft_probe1.lean`：
+
+- `PA7.XYOFCGX` 本体 axiom = **`[propext, Classical.choice, Quot.sound]`**
+  ——Rogers 全链（lemma0/_1/_2/_3_0/_4_0，PA7:899-1260 区零 sorry）**已净**。
+- 修后形即插探针 `kit_check_xyofcgx_fixed : <接口+Packing V> :=
+  fun V S p hV hSV hind hp hr => XYOFCGX V S p hV hSV hind hp hr` typecheck 过，
+  axiom = **标准三**。即修后出口**真接线转 PROVED**（非搬债）。
+- 修后 PackingConcl 整文件编译：`probes/PC_patched_compile.log` exit 0，
+  文件级 sorry 警告 9→7（XYOFCGX/IVFICRK 两出口的 `sorry` 消失），其余
+  BLOCKED 件原样。
+
+### (f) 状态
+
+**立案 2026-10-28 深夜**（编排者复核：判 A′ · 分级 B——接口缺 `Packing V`
+而已证正本 Rogers.hl:6559 带之、packing-free 形反例在案；修后出口真接线转
+PROVED、探针 `#print axioms` 标准三），依用户 SF 通道常态化授权
+（2026-10-28）立案。**在册未落**，apply + STATEMENT-FIX 闸待编译窗。账面
+预期：e2e 151 / M0 151 **不动**（两 Concl 文件不在 e2e 锥）；M1 装配桶
+PackingConcl 9 处 → 7 处（−2 出口 sorry，其一真消债）；
+`#print axioms XYOFCGX_concl_discharged` = 标准三。**同 patch 两 item
+（§78+§79），闸时 SF_ITEM 取首条 78，SF 多集合比较覆盖全 patch**（闸兼容性
+实测 `lean/scripts/auto_gate.sh`：STATEMENT-FIX 并非逐 item 比较——SF_ITEM
+仅作 (a) HOL 在册检查，multiset 比较按 patch 内 `+++ b/lean/$FILE` 文件节
+整体进行，故两 item 共 patch 兼容；注意单次闸只比对 `$FILE` 一个文件的节、
+LANE_FILES 其余文件仅放脏不比对 → 两文件 patch 须各以 `$FILE` 闸一次方全
+覆盖。若需逐 item 独立闸（78 先落、79 后落），拆 patch **非纯 hunk 机械
+拆分**：PC LEDGER recount hunk 一次合计两 item（WIRED 54→56、BLOCKED 8→6），
+拆分须把该 hunk 改写为两步 recount（78: 54→55、79: 55→56）再各自
+`git apply --check` 规范化，拆分后以两份归档
+（78-xyofcgx-packingconcl.patch / 79-ivficrk-packingconcl.patch）为准）。
+闸命令（lean/ 下，措辞沿 §77）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/78-79-twin-mismatch-packingconcl.patch SF_ITEM=78 LANE_FILES=Kepler/Text/PackingAuto2.lean,Kepler/Text/PackingConcl.lean THM=XYOFCGX_concl lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/PackingAuto2.lean XYOFCGX_concl`
+（同窗第二闸覆盖 PC 节：同 patch 同 SF_ITEM=78，`bash scripts/auto_gate.sh Kepler/Text/PackingConcl.lean XYOFCGX_concl_discharged`——修后应标准三，真接线 PROVED 的闸收点。）
+
+## 79. `IVFICRK_concl` 第二合取支缺两前提 → 向已证正本 Rogers.hl:9929 归正（出口 PackingConcl:308 ↔ 注册表 PA2:5462 ↔ 孪生 PA7:3945）— 分级 B（TWIN MISMATCH · 语句修正 · sf78draft-w1 取证判 A′）
+
+### (a) HOL 裁决
+
+- **接口正本** = `pack_concl.hl:110-113`：`!k. ?g. (BIJ g
+  {(i,sigma)| i IN 0..(k+1) /\ sigma permutes (0..k)} {p | p permutes
+  (0..(k+1))}) /\ (!(ul:(A)list) j. (LENGTH ul = k+2) /\ j <= k ==> (EL j
+  (left_action_list (g(i,sigma)) ul) = EL j (left_action_list sigma (DROP ul
+  i))))` —— **`i sigma` 在第二合取支内自由**（HOL 隐式全泛化，无约束）。
+- **已证正本** = `Rogers.hl:9929`：同一 BIJ 前件逐字，第二合取支
+  `!(ul) i sigma j. LENGTH ul = k+2 /\ j <= k /\ **i IN 0..(k+1) /\ sigma
+  permutes (0..k)** ==> ...` —— **多两前件**。HOL 侧真证（f/fi 显式构造）。
+- 又是 HOL 本体自带的错位：接口规格把已证形里受约束的 `i σ` 无界化了。
+  Lean 两侧均忠实移植。
+
+### (b) Lean 诊断（差槽清单）
+
+| 槽 | 出口/注册表 | 孪生 PA7:3945 | 判 |
+|---|---|---|---|
+| `{A : Type} [Inhabited A] (k : ℕ)` / `∃ g` / BIJ 前件 | 逐字 | 逐字 | 忠实 |
+| 第二合取支前件 | `ul.length = k+2 → j ≤ k →` | 同 + **`i ∈ Icc 0 (k+1) →`、`permutes σ (Icc 0 k) →`** | **唯一差槽（两前提）** |
+| 结论恒等式 | `getD j default` 两式 | 逐字 | 忠实 |
+
+孪生**严格弱于**接口。孪生体 = `by sorry`（PA7:3953，GIANT bijection 链未
+移植）。
+
+**判定：A′ 同款（向已证正本形归正）+ C-残余 NEEDS 附注**。主判 A′：接口
+自由 `i σ` 形**从孪生定理不可达**（孪生的 `∃g` 对域外对的 `g(i,σ)` 行为零
+承诺；弱陈述证不出强陈述）——修正方向只能向已证正本形（Rogers.hl:9929）
+收，SF-15（KSOQKWL 补 `hpout`）/SF-74 先例同款。
+**C-残余 NEEDS 附注（记录，不在本提案施工）**：自由 `i σ` 形是否数学为真
+是独立问题。车道侦察级分析（**未探针验证，不得径信**）：因左项只读
+`ul.getD (h.symm j)`、右项只读 `σ.symm j` 经 dropIth 的保形移位，对每个
+域外对可解出有限偏约束 `h.symm j = φ_{i,σ}(j)`（φ 在 `0..k` 上分支值域
+互斥故内射），似存在统一 `g` 同时满足 BIJ 与无界恒等式——若成立则是
+**HOL 没有的新数学**，须独立小证填 kit（全新 `∃g` 构造），与孪生证无关。
+若未来出现无界形消费者，先立 NEEDS 条目再排产。
+
+### (c) 补丁
+
+`docs/statement-fix-proposals-patches/78-79-twin-mismatch-packingconcl.patch`
+（与 §78 共用同一 patch，本 item 占 PA2 第二 hunk + PC 出口接线 hunk）。
+`git apply --check` 主仓工作树 PASS；修后文件整编 exit 0（见 (e)）。
+docstring 措辞按 m1asm BATCH-PLAN §2 铁律：`Debt-consolidating wiring,
+sorryAx standing: root = PackingAuto7.IVFICRK own sorry (PA7:3953)`，不得
+出现 PROVED 字样（§78 件不受此限，其为真消债）。
+
+### (d) 消费面
+
+全树 grep：`IVFICRK_concl` 代码消费者 = 声明本体两处（PA2:5462 +
+PackingConcl:308），零跨文件引用（PA2:95 为 docstring 提及）；`PA7.IVFICRK`
+被 `IVFICRK_real3`（PA7:3961）消费——不动孪生故零影响。陈述改动半径 =
+两声明 + 出口接线。
+
+### (e) 探针（同 §78 probe1）
+
+- `PA7.IVFICRK` 本体 axiom = **`[propext, sorryAx, Quot.sound]`**（自体
+  sorry，PA7:3953）。
+- 修后形即插 `kit_check_ivficrk_fixed := IVFICRK` typecheck 过，axiom =
+  `[propext, sorryAx, Quot.sound]` —— **搬债口径成立**（债根单点化至
+  PA7:3953；根已在 m1-ledger M1 面，M1 计数不增）。
+- 整文件编译同 §78 (e)：exit 0。
+
+### (f) 状态
+
+**立案 2026-10-28 深夜**（编排者复核：判 A′ · 分级 B——接口自由 `i σ` 形
+从孪生定理不可达，修法向已证正本 Rogers.hl:9929 收；修后搬债、债根单点化
+PA7:3953，无界形另挂 C-残余 NEEDS 附注见 (b)），依用户 SF 通道常态化授权
+（2026-10-28）立案。**在册未落**，apply + STATEMENT-FIX 闸待编译窗。账面
+预期：e2e/M0 不动；PackingConcl 出口面 BLOCKED 8→6；IVFICRK 出口由
+「own sorry」变「WIRE（sorryAx 经 PA7:3953）」——债不消失但根单点化，且
+TWIN MISMATCH 摘牌。**同 patch 两 item，闸时 SF_ITEM 取首条 78，SF 多集合
+比较覆盖全 patch**（兼容性与两闸覆盖注意同 §78 (f)；SF_ITEM=78/79 皆过
+(a) HOL 检查，multiset 比较与 item 取值无关——本 item 的 PA2 hunk 与 §78
+hunk 同节，闸 PA2 时工作树须两 hunk 同在）。闸命令（lean/ 下，措辞沿 §77）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/78-79-twin-mismatch-packingconcl.patch SF_ITEM=79 LANE_FILES=Kepler/Text/PackingAuto2.lean,Kepler/Text/PackingConcl.lean THM=IVFICRK_concl lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/PackingAuto2.lean IVFICRK_concl`
+（同窗第二闸覆盖 PC 节：`bash scripts/auto_gate.sh Kepler/Text/PackingConcl.lean IVFICRK_concl_discharged`——修后 sorryAx 在册（经 PA7:3953），闸白名单含 sorryAx 故过。）
+
+## 80. LA24 k=3 体集 builder 有损陈述 → HOL 成员行索引正本形（UXCKFPE.hl:1878/:1926）— 分级 B（移植误植 · 语句修正 · sfc1c2draft-w1 机检复现判 A）
+
+### (a) HOL 裁决
+
+正本 = `lean/scripts/local/UXCKFPE.hl`，k=3 体集在四处均为**对成员自身的
+行约束**形（`v` 是成员 `a` 的 matvec 原像，被全称量化吸收进集合归纳）：
+
+- UXCKFPE.hl:1878 `IN_B_SY1_COLLINEAR_CASE_3_IS_SCS`（逐字，量化头 + 体集）：
+
+```hol
+is_scs_v39 s /\ scs_k_v39 s = 3 /\ dimindex(:M) = scs_k_v39 s ==>
+ (!a. a IN {matvec(v:real^3^M) |
+     (!i. 1<=i /\ i <= dimindex(:M) ==> row i v IN ball_annulus) /\
+     CONDITION1_SY (change_type_v3 (scs_a_v39 s)) (change_type_v3 (scs_b_v39 s)) v}
+  ==> ~collinear{vec 0, row 1 (vecmats a), row 2 (vecmats a)} /\
+      ~collinear{vec 0, row 1 (vecmats a), row 3 (vecmats a)} /\
+      ~collinear{vec 0, row 2 (vecmats a), row 3 (vecmats a)})
+```
+
+- UXCKFPE.hl:1926 `HDPLYGY_CASE_30`：极小化器三处（hne 前提、hnc 前提、
+  ∃x/∀y 结论）读同一集合 `{matvec(v) | (!i. row i v IN ball_annulus) /\
+  CONDITION1_SY a b v}`——成员资格约束成员，`tau3 (row 1 (vecmats x)) ... -
+  d_fun3 s1 (s,x)` 逐点比较；
+- UXCKFPE.hl:1502 `IN_IS_SCS_CASE_3`（结论 `a IN {matvec(v) | ...}`）与
+  :1775 `NOT_EMPTY_CASE_3_IS_SCS`（同一集合非空）同形；
+- :1701 `IN_NOT_EMPTY_B1_SY_3_IS_SCS` **不同形**：其 annulus/C1 前提是对
+  特定实现 `v`（`ABBREV v = vector[vv 1; vv 2; vv 0]`）的假设，不是集合
+  成员资格——对应 Lean 现形的 `cycRow_p23 vv 3` 假设形，**忠实，不动**。
+
+语义锚：成员资格 ⟺ 「成员的行（`vecmats a` 原像的 row）入环 + C1 作用于
+该行向量」；结论的 collinear 也读成员自身的行。`matvec ∘ vecmats = id`
+（VECMATS_MATVEC_ID 族），像形式与行索引形式逐点等价。
+
+### (b) Lean 诊断（差槽清单）
+
+现形 = `lean/Kepler/Text/LocalAuto24.lean`（基线 9cd305ad）四处 body-set
+builder（:1206 `IN_IS_SCS_CASE_3_p24` 结论、:1233 `NOT_EMPTY_CASE_3_IS_SCS_p24`、
+:1311 `IN_B_SY1_COLLINEAR_CASE_3_IS_SCS_p24` 前提、:1328
+`HDPLYGY_CASE_30_p24` hne/hnc/结论三处）把「成员的行」写成「外层 `vv` 的
+cycRow」：
+
+```lean
+{l : FinVec 3 3 |
+  (∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus) ∧
+    CONDITION1_SY_p4 (...) (...) (cycRow_p23 vv 3)}   -- l 零约束！
+```
+
+**主槽**：成员资格与 `l` 完全脱钩——集合非全空间即空集；由此连锁：
+`IN_B_SY1_COLLINEAR` 的 hnc 对任意 `l` 成立（含零矩阵）⇒ 该件在其前提
+（isScsV39 + k=3 + BBs，可满足）下**可反驳**；`HDPLYGY_CASE_30` 的
+hne+hnc **联合矛盾**（hne 抽出条件成立，hnc 0 给 ¬Collinear{0,0,0}）⇒
+被空真，极小化器内容全失。**阻塞** `XWITCCN_CASE_3_IS_SCS_p24`
+（:1383）的六件装配链。
+
+**为何判移植误植（判 A）**：HOL 正本把 `v` 量化进集合（成员原像约束），
+移植时误把外层实现向量 `cycRow_p23 vv 3`（= 特定实现 v 的行）固化进
+builder——同文件 `IN_NOT_EMPTY_B1_SY_3_IS_SCS_p24`（:1220）对同一素材
+用的是正确的「特定实现假设」形，证明作者并非系统性误解行编码，而是
+builder 处槽位错置。且 k=4/5/6 的对照件 `B_SY1_p4`（LocalAuto4:922）用
+像形式 `{flatten v | rows v ∈ ann ∧ C1 v ∧ C2 v}` 同样约束成员。
+
+**机检取证（/tmp 直调 lean，LEAN_PATH 配方，探针全文
+`lane_snapshots/sfc1c2draft-w1/drafts/`）**：
+
+| 探针 | 内容 | 结果 |
+|---|---|---|
+| `probe80_base.lean` | 现形复现：`k3_collinear_frozen_refuted`（冻结 collinear 件 + 任一 k=3 BBs 实例 ⇒ False，l:=0 实例化）+ `k3_hdplygy_frozen_vacuous`（hne+hnc ⇒ False） | exit 0，两件 CLEAN（标准三），**反例复现** |
+| `probe80_fix.lean` | 改述形四件 elaborate（statement-only）+ 真内容 `flattenRow_mem_B3fix`（flattenRow ∈ 改述体集，行恒等 `rowSy_p23 (flattenRow_p23 vv 3) i = cycRow_p23 vv 3 i`）+ `zero_not_mem_B3fix`（零矩阵被改述体集排除） | exit 0，三件 CLEAN |
+| `probe80_refute_fixed.lean` | **负控**：旧反例策略回放改述形 | exit 1，双类型错——ann 移植需 `rowSy_p23 0 i ∈ ballAnnulus`（假）、C1 槽需成员自身行；**反例策略死亡** |
+
+**k=3 BBs 实例存在性（立案论据，解析论证沿 la24casebank-w1，未机建）**：
+取 vv₀=(2/√3,0,2√6/3)、vv₁=(−1/√3,1,2√6/3)、vv₂=(−1/√3,−1,2√6/3)
+（纬度构造）：‖vv i‖=2∈[2,2h0]、pairwise dist=2；表 a=2/am=2/bm=2h0/
+b=2h0（i≠j）、0/0/0/0（i=j）、J=∅、d=0、k=3 满足 isScsV39 全部合取
+（2h0=2.52<4 ✓；ncard∅+3≤6 ✓）与 BBsV39（k≤3 扇支 ✓）。即冻结件的
+前提非空，可反驳性是实质缺陷而非空口。
+
+### (c) 补丁
+
+`docs/statement-fix-proposals-patches/80-k3-builder.patch`：LA24 单文件
+5 hunk（+46/−24，hunk 区 :1199-1362），规范化 `cp` 整文件 → /tmp 改后
+`diff -u`（无时间戳、content-anchored），`git apply --check` 过（基线
+9cd305ad）：
+
+1. `IN_IS_SCS_CASE_3_p24`（:1206）结论体集 → 行索引形
+   `{l | (∀ i : Fin 3, rowSy_p23 l i ∈ ballAnnulus) ∧
+   CONDITION1_SY_p4 aR bR (fun i => rowSy_p23 l i)}`；DISCHARGES 注记翻新
+   （行恒等经 `vecmatsV3_flattenRow_p36`，探针已验该推导 CLEAN）；
+2. `NOT_EMPTY_CASE_3_IS_SCS_p24`（:1233）同形；
+3. `CONTINUOUS_ON_D_FUN3_p24`（:1272）ContinuousOn 定义域集合同形；
+4. `IN_B_SY1_COLLINEAR_CASE_3_IS_SCS_p24`（:1311）成员资格前提同形；
+5. `HDPLYGY_CASE_30_p24`（:1328）hne/hnc/∃x∈/∀y∈ 四处同形；
+6. C4 节头注记（SF-80 出处 + 行索引语义 + IN_NOT_EMPTY 保留理由）。
+
+**`sorry` 体全部暂留**（本提案只修陈述形；逐件证填另窗，六个 sorry 计数
+不变）。`IN_NOT_EMPTY_B1_SY_3_IS_SCS_p24`（:1220）**不动**（HOL 对应前提
+是对特定实现的假设，现形忠实）。`TAUSTAR_EQ_TAU_STAR_3_IS_SCS_p24`、
+`tri_sy_explicit_p24`、`J1_TS_p24`/`dFun3_p24`/`FINITE_J1_TS_p24` 不涉体
+集，不动。
+
+**修后 /tmp 全文件编译**：`p80/LocalAuto24.lean` 直调 lean 全文件编译通过
+（batch1，见 VALIDATION.md；其 import 面零改动）。
+
+### (d) 消费面
+
+全树 grep 六件件名：**代码消费者 = `XWITCCN_CASE_3_IS_SCS_p24`（:1383，
+自体 sorry）与 `UXCKFPE_p24` case split（:1401 按名调用）**，后者引用的是
+CASE_3 顶层陈述（结论 BBprimeV39 ≠ ∅，不涉体集，零改动）——即修后
+**无任何调用点改写**。DISCHARGES 注记（:1388-1390）列举的六件链在修后
+全部良置：反例障碍消除后，CASE_3 证填通路打开（HOL UXCKFPE.hl:2495
+对译）。`IN_NOT_EMPTY_B1_SY_3` 的 cycRow 假设形与改述体的对接属证填期
+行恒等 bookkeeping（probe80_fix 已验 `rowSy_flattenRow` CLEAN）。
+同文件 CASE_4/5/6（:1128/:1163/:1196，la23prereq-w1 在飞）零交集。
+
+### (e) 风险
+
+低。改动半径 = LA24 单文件、纯 k=3 节（:1199-1379）、statement-only、
+`git apply --check` 实测过；修后各件语义为「真内容严格化」——改述件蕴含
+且强于旧件在体集非空有意义实例上的内容；旧件的机检反例在改述形上死亡
+（负控探针）。无已证件被改坏（六件全部自体 sorry，唯一调用点 CASE_3
+亦 sorry，`UXCKFPE_p24` case split 陈述不动）。与 la23prereq-w1 同文件
+避让：本 patch 触 **:1199-1379（k=3 节）**，la23prereq 施工图为
+:1124-1196（CASE_4/5/6 体）与 :44-48（import），hunk 区域不交，但同文件
+落库需后落方 rebase。
+
+### (f) 状态
+
+**立案 2026-10-28 深夜**（编排者复核：判 A · 分级 B——陈述失真机检钉死
+（可反驳 + 被空真：反例复现 + 负控探针死亡），修复纯改述、零证填负担、
+解锁 CASE_3 阻塞；车道建议分级 A，编排者复核定分级 B），依用户 SF 通道
+常态化授权（2026-10-28）立案。机检全程 + 反例复现 + 改述验证 + 负控四件
+探针在 `lane_snapshots/sfc1c2draft-w1/`（VALIDATION.md 有逐条配方与输出
+摘要）。**在册未落**，apply + STATEMENT-FIX 闸待编译窗；与 la23prereq-w1
+同文件避让见 (e)（hunk 不交、后落方 rebase）。闸命令（lean/ 下，措辞沿
+§77；单文件单闸全覆盖）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/80-k3-builder.patch SF_ITEM=80 LANE_FILES=Kepler/Text/LocalAuto24.lean THM=IN_B_SY1_COLLINEAR_CASE_3_IS_SCS_p24 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto24.lean IN_B_SY1_COLLINEAR_CASE_3_IS_SCS_p24`
+
+## 81. `StableSyP23` 的 `stable := sorry` 常量级污染（`scsToStableSy_p23` LA23:232 + 孪生 `scsToStableSyD_p36` LA36:441）— 分级 B（def 编码 · 常量级 taint 根除，两路线）
+
+### (a) HOL 裁决
+
+正本 = `lean/scripts/local/HDPLYGY.hl:200-205`：`stable_sy` 是**子类型**
+（不是裸七元组）——
+
+```hol
+let exist_stable_system = prove_by_refinement(
+  `?s:(num#real#(num->bool)#(num#num->real)#(num#num->real)#
+      ((num->bool)->bool)#(num->num)).
+   stable_system (FST s) (FST (SND s)) ... (SND(SND(SND(SND(SND(SND s))))))`, ...);;
+let stable_sy_tybij = new_type_definition "stable_sy" (...exist_stable_system);;
+let stable_sy_lemma = prove(`!s:stable_sy. stable_system (k_sy s) (d_sy s)
+  (I_SY s) (a_sy s) (b_sy s) (J_SY s) (f_sy s)`, ...);;
+```
+
+即：**类型本身只含满足 `stable_system` 的七元组**；`stable_sy_lemma` 从
+类型（零假设）给出七分量的稳定性。HOL 侧 scs → `stable_sy` 的构造恒在
+`is_scs_v39` 假设下进行（`JKQEWGV.hl:65 IS_SCS_STABLE_SYSTEM`）。因此：
+
+- HOL 语义 = 「每个 stable_sy 携带稳定性」；Lean 的 8 字段 record
+  （`stable : stableSystem_p23 k 0 I a b J f` 作依赖字段）是子类型的
+  **合法渲染**——字段本身不是缺陷；
+- **缺陷在两个 total def**：`scsToStableSy_p23 (s : ScsV39)`（LA23:224，
+  `stable := sorry` :232）与孪生 `scsToStableSyD_p36 (s : ScsV39)`（LA36:433，
+  `stable := sorry` :441）——对**任意** `ScsV39`（无 isScs 证据）构造
+  `StableSyP23`，而 `stable` 字段对垃圾输入必然为假 ⇒ 只能 sorry 占位。
+
+### (b) Lean 诊断（差槽清单 + 污染机制）
+
+1. **常量级污染**：def 体含 `sorryAx` ⇒ `#print axioms` 传递收集下，
+   **仅提及该常量的任何定理都带 sorryAx**。机检（probe81_mech.lean，
+   exit 0）：`t1 : scsToStableSy_p23 s = scsToStableSy_p23 s := rfl` →
+   `[propext, sorryAx, Classical.choice, Quot.sound]`（la24casebank probe4/4b
+   结论复现）；statement-mention-only（trivial 体）同理。
+2. **波及面**：LA23 三条 TAUSTAR_EQ 桥（:712/:768/:815）+ IS_EAR 桥
+   （:719）的陈述含 `scsToStableSy_p23 s = s1`；LA24 四 case 装配（经
+   TAUSTAR 桥）⇒ 即使四件全填，`UXCKFPE_p24` 及 cone
+   （UXCKFPE2_p27/SGTRNAF_p27/…/EAPGLE 闸、XWNHLMD 链）的 SORRYAX 面
+   不净——la24casebank 的「−4 = M0 −4 + cone 自愈」主张须打此折扣。
+3. **孪生同病**：`scsToStableSyD_p36`（LA36:433，`d := s.d` 修正版）带
+   同一 placeholder（LA36 header 自认「+1 placeholder」）；其八条
+   TAUSTAR_EQ_TAU_STAR_* 桥（LA36:491 通用 + :1569/:1744/:2076/:2199/
+   :2287/:2375/:2462 七特化）全部经它染污。
+4. **消费面普查（全树 grep）**：`scsToStableSy_p23` 代码消费者 = LA23 四
+   桥（LA24:1131 仅注释提及）；`scsToStableSyD_p36` 代码消费者 = LA36 八
+   桥（本文件内，零跨文件）；`StableSyP23` 构造面 = LA24:1290
+   `tri_sy_explicit_p24`、LA36:197 `stable_sy_explicit`（两者零代码消费
+   者）；**`.stable` 字段的证明体使用 = LA26 十三处**（:837/:942/:947/
+   :948/:980/:982/:985/:1017/:1019/:1021/:1105/:1107/:1109，分属 4 条已证
+   定理），LA8 的 `s.stable` 属其自有孪生结构 `StableSy`，不涉本案。
+   `IS_SCS_STABLE_SYSTEM_p23`（LA23:597，sorry，**已在 la23prereq-w1 填体
+   清单**）正是喂字段所需的证据定理。
+
+### (c) 补丁（两路线，均规范化 `cp`→`diff -u`、`git apply --check` 过、无时间戳；**两案互斥不可同 apply**）
+
+#### 案① `docs/statement-fix-proposals-patches/81a-stablesy-hs-param.patch`（+53/−40，LA23+LA36 两文件）
+
+def 保留字段但改为**携带证据的构造器**：`(s : ScsV39) (hs : isScsV39 s)
+(hk : 3 < s.k)`，`stable := IS_SCS_STABLE_SYSTEM_p23 s hs hk`——def 体
+`sorry` 消失，taint 转由**在册 M0 定理**承载。
+
+- LA23：def 移位（:220-232 → IS_SCS_STABLE_SYSTEM_p23 之后，:615 起——
+  def 引用该定理必须后置；机检首发前向引用错，移位后全文件编译过）；
+  四桥陈述 `(hs1 : scsToStableSy_p23 s hs (by omega) = s1)`（IS_EAR 桥用
+  既有 `(hk : 3 < s.k)`）；FILE MAP 注记；
+- LA36：def 同参同喂；通用桥 `taustar_eq_tauStar_gen_p36` 增
+  `(hsS : isScsV39 s) (h3k : 3 < s.k)`，七特化桥增 `(hsS : isScsV39 s)`
+  并穿参（refine 处 `hsS (by omega)`）；**零新增 import**（证据由调用方
+  供给；registry 条目的 isScs 现成于 LA22 案行 is_scs_*_p22）；
+- /tmp 全文件编译：p81a/LA23 ✓ exit 0、p81a/LA36 ✓ exit 0（stock oleans，
+  机制探针 probe81_mech `convHs`/`t1a` 同形验证）。
+
+#### 案② `docs/statement-fix-proposals-patches/81b-stablesy-drop-field.patch`（+77/−63，LA23+LA24+LA26+LA36 四文件，归档备选）
+
+删字段对齐「裸七元组」，def 无 sorry、立即净化；稳定性在使用点作独立
+假设重曝。
+
+- LA23：结构 8→7 字段；def 删 `stable := sorry` 行；
+- LA24：`tri_sy_explicit_p24` 删 `(hs : stableSystem_p23 …)` 参、构造器
+  字面量 7 字段（零代码消费者）；
+- LA26：8 条定理增 `(hst : stableSystem_p23 s.k 0 s.I s.a s.b s.J s.f)`
+  （位次 = s 后第二参），13 处 `s.stable` → `hst`，6 个内部调用点穿参
+  （PROPERTIES→SING_J1、D_FUN_LE→TAU_STAR_POS→NOT_CIRCULAR→GBYCPXS 两
+  链）；/tmp 全文件编译 ✓ exit 0；
+- LA36：`stable_sy_explicit` 改显式参 + 匿名 7 元构造；def 删字段行；
+- /tmp 编译账：p81b/LA23 ✓、p81b/LA26 ✓（standalone，构造面不涉新结构
+  之文件均可 standalone 验）；LA24/LA36 两文件的构造器改形经
+  probe81_mech 匿名/命名字段 7 元构造样例机制验证（跨文件全链编译受
+  `lean -o` 单根限制未跑，立案后由编译窗闸收口——两处改形均零代码消费
+  者，风险面见 (e)）。
+
+#### 两案对照
+
+| 维度 | 案①（hs 参喂字段） | 案②（删字段七元组） |
+|---|---|---|
+| patch | 81a，2 文件，+53/−40 | 81b，4 文件，+77/−63 |
+| LA26 已证件 | **零触碰**（13 处 `s.stable` 照用） | 8 陈述 + 13 证点 + 6 调用点重穿 |
+| 立即 SORRYAX 面 | 仍 sorryAx，但**重归属**到在册 M0 件 IS_SCS_STABLE_SYSTEM_p23（probe81_mech `t1a` 实证） | **立即净**（`t7` 实证：无 sorryAx）；LA36 八桥随之转净 |
+| 自愈时点 | IS_SCS_STABLE_SYSTEM_p23 落库时（la23prereq 清单项，两案同需——CASE_4/5/6 general-s 证填内容本就需它） | 立即，但该定理仍是后续 JKQEWGV 链证填必需件 |
+| HOL 保真 | **记录级**：stable_sy=子类型，字段=子类型谓词；`stable_sy_lemma` 仍可从 `s.stable` 读出——LA26 十二处已证推导零改 | 语句级：`!s:stable_sy` ⟶ `(s)(hst)` 双量词；子类型谓词降为使用点假设，未来消费者永久带 hst 穿参税 |
+| sorry 计数 | def 体 sorry −2（LA23:232/LA36:441），零新增 | 同 −2，零新增 |
+| 下游消费者影响 | LA36 八桥 +1 isScsV39 假设（现况零消费者；未来 XWITCCN 装配 HOL 本就带 is_scs_v39） | LA26 八件 +hst（现况零外部消费者）；四文件 statement/结构面全动 |
+| 风险 | def 签名变（SF 纪律立案 ✓）；k=3 侧不经此 def（CASE_3 链用 dFun3 直形，零波及） | 4 文件结构面改动；`StableSy` 孪生（LA8）将来 merge 时两案各自自洽 |
+
+**推荐：案①**。理由：① HOL `stable_sy` 本是子类型，字段即该子类型谓词
+的 Lean 渲染——案①保真度更高，LA26 的十二条已证推导（`stable_sy_lemma`
+消费者）零改；② 两案对 cone 净化的最终时点相同（都等
+IS_SCS_STABLE_SYSTEM_p23 落库——它是 CASE_4/5/6 general-s 装配的内容必
+需件，非案①人为制造）；案②「立即净」的实际受益者（LA36 八桥）现况
+零消费者，收益暂为账面；③ 案②把污染从 def 体抹掉的同时把子类型语义
+降格为散布假设，LA26 之外一切未来 StableSyP23 定理永久多穿一参；④ 案
+①改动半径小一半（2 文件 vs 4 文件），且把一个**普查不可见的 def 体
+sorry** 转成**定理账面在册的 M0 依赖**——可见性即治理。案②保留为备选：
+若编排者优先「cone 立即净化 + 不等 la23prereq」的排程面，案②可直接落
+（已过 apply-check + 内部编译）。
+
+### (d) 消费面
+
+见 (b)4 普查。补充：两案对 `UXCKFPE_p24` 链的装配影响——LA24 四 case
+的装配胶合（la24casebank probe3/probe5）**不经** `scsToStableSy*`（各
+自 CLEAN，taint 仅经 TAUSTAR 桥进入）：案①落库后装配桥调用点需在既有
+`hs : isScsV39 s` 处传参（桥陈述变化随案①落地，装配体写法照 probe3 映
+射表 + 传 `hs`）；案②落库后桥调用点零变化。LA23/LA24 与 la23prereq-w1
+的避让：两案都触 **LA23:220-232（def 区，案①再+移位）与 LA23:712-823
+（四桥 hs1 陈述行）**——la23prereq 填体目标是同四桥的 `sorry` 体
+（LA23:716/:725/:774/:821）与其前置件，**hunk 行不相交但同文件**，立案
+落地需协调先后（建议 SF-81 先落陈述形，la23prereq 在新陈述上填体）；
+案②另触 LA24:1288-1306（tri_sy_explicit）与 LA26 全文件、LA36 两处，
+la23prereq 施工图不涉 LA26/LA36。
+
+### (e) 风险
+
+- 案①：低-中。def 签名变化是陈述面 SF（立案即合规）；四桥+八桥现况
+  零外部代码消费者，穿参无连锁；机检已验两文件全文件编译（含 LA36 的
+  refine 穿参——首发漏传 `h3k` 位参已被编译抓出修正）。残余风险 = LA36
+  未来消费者需供 registry isScs 证据（LA22 案行引理在，部分为 sorry 态
+  ——引用 sorry 引理的装配件将带该件 taint，与现况同水平不倒退）。
+- 案②：中。四文件结构面 + LA26 十三处证点重穿（机械、已编译验）；结构
+  变更后 8→7 元匿名/命名字段构造的形状已探针验证，但 LA24/LA36 两文件
+  的跨链全编译未跑（工具限制，见 (c)）；语义降格（子类型谓词 → 使用点
+  假设）是永久性取向选择，立案时须明示。
+- 共同：k=3 链（SF-80）不涉本案件；A2/Assembly 零触碰；LA8 的 `StableSy`
+  孪生不动。
+
+### (f) 状态
+
+**立案 2026-10-28 深夜**（编排者复核：判 B · 分级 B。立案口径 = **案①
+（81a）为推荐案**——LA26 已证件零触碰、HOL `stable_sy` 子类型记录级
+保真、债归属在册 M0 件 `IS_SCS_STABLE_SYSTEM_p23`（la23prereq-w1 填体
+清单在册）；**案②（81b）归档为备选**（四文件结构面、立即净但子类型
+语义降格），**apply 前可改向**），依用户 SF 通道常态化授权（2026-10-28）
+立案。全部机检证据与编译账见 `lane_snapshots/sfc1c2draft-w1/VALIDATION.md`。
+**在册未落**，apply + STATEMENT-FIX 闸待编译窗；落库次序建议：与 SF-80
+（§80）同窗（81a 不触 LA24；81b 触 tri_sy_explicit，同 LA24 文件需 rebase
+协调），并先于 la23prereq-w1 的桥填体落。两文件/四文件 patch 的闸覆盖
+注意同 §78 (f)（单次闸只比对 `$FILE` 节，全 patch 覆盖须逐文件各闸一次，
+LANE_FILES 互白名单）。81a 闸命令（lean/ 下，措辞沿 §77）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/81a-stablesy-hs-param.patch SF_ITEM=81 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto36.lean THM=TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23`
+（同窗第二闸覆盖 LA36 节：`bash scripts/auto_gate.sh Kepler/Text/LocalAuto36.lean taustar_eq_tauStar_gen_p36`。81b 备选闸（若 apply 前改向）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/81b-stablesy-drop-field.patch SF_ITEM=81 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto24.lean,Kepler/Text/LocalAuto26.lean,Kepler/Text/LocalAuto36.lean THM=TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23`，四文件节各闸一次；81a/81b 互斥不可同 apply。）
