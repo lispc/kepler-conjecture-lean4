@@ -4943,3 +4943,70 @@ kit（LA24，+import LA36）。combined 触 LA23 + LA36 两文件，须以各文
 （`XWITCCN_CASE_4/5/6_IS_SCS_p24` 出列 −3 + HDPLYGY 两 NEEDS 件入锥 +2；la23prereq 填体 −8 与
 TAUSTAR 三桥 −3 为**文件级** sorry 净，不在直源账——cwplan-v2 勘误，编排者按 triage TSV 核实采信），
 均以本案为前置；重扫断言 R6=144 见 `lane_snapshots/cwplan-v2/MASTER-PLAN-v2.md` §7。
+
+## 83. LA35 `CARD_FF_EQ_CARD_SLICE_FF_p35` / `CARD_SLICE_FF_LE_3_p35` 的冻结假设丢对角增广（HEAD :1155/:1169；HOL QKNVMLB.hl:9065/:9128 为 `E ∪ {{v, w}}`）— 分级 **A**（移植误植 · 陈述为假 · 判 A：冻结前提可满足时 EQ 件为假）
+
+### (a) HOL 裁决
+
+正本 `QKNVMLB.hl`（`lean/scripts/local/` 与 `reference/flyspeck/text_formalization/local/` 两拷贝 `cmp` 逐字节相同）两件同构：
+
+- `CARD_FF_EQ_CARD_SLICE_FF`（:9059）第 6 合取支 **`HS = hypermap (HYP (vec 0,V,E UNION {{v, w}}))`**（:9065），结论 `CARD FF = CARD fv + CARD fw - 2`；
+- `CARD_SLICE_FF_LE_3`（:9122）同一 HYP 支（:9128），结论 `3<= CARD fv /\ 3<= CARD fw`。
+
+即 HOL 的超图载体 HS 冻结在**对角增广边集 `E ∪ {{v, w}}`** 上，不是纯 `E`。裁决佐证三重：
+
+1. **消费点实参**：`QKNVMLB3` 证明体内四处实例化（:9868-9870、:9954-9956、:10056-10058、:10133-10135，`MRESA_TAC (GEN_ALL CARD_FF_EQ_CARD_SLICE_FF)` 与 `CARD_SLICE_FF_LE_3` 成对）传入的 HS 实参一律是字面 `hypermap (HYP (vec 0,V,(E UNION {{u, w}})))`——HOL 消费世界就建立在增广形上；
+2. **同族姊妹件**：`Local_lemmas1.EJRCFJD`（local_lemmas1.hl:5967-6001）与 `THE_SLICING_INTO_2_LEMMA`（:5580）的 HS 槽同为增广形（EJRCFJD 的结论里连 `e_prime` 槽也取 `e_prime (E UNION {{v, w}}) fv`）；
+3. **在库样板**：LA9 `COMPATIBLE_BW_TWO_LEMMAS_p9`（LocalAuto9:2622，Nkezbfc.hl:1413）与 LA2 `EJRCFJD_ALT`（LocalAuto2:1449，localization.hl:422）两同族件的超图冻结均取 `IsHyp_p2 0 V (E ∪ {{v, w}}) HS`——p2 世界从未用过纯 E 形。
+
+### (b) Lean 诊断（逐槽对账 + 机检）
+
+LA35 两件（HEAD :1155/:1169，假设行 :1159/:1173；四层叠加态 /tmp/LA35_stack7.lean :4415/:4429，假设行 :4419/:4433）逐槽对照 HOL 八支（HOL 变量 `v w` ↔ Lean 绑定 `v w : V3`，同名同序）：
+
+| HOL 合取支 | Lean binder | 判 |
+|---|---|---|
+| `convex_local_fan (V,E,FF)` | `hfan : ConvexLocalFan V E FF` | ✓ |
+| `v IN V` / `w IN V` / `~(v = w)` | `hv` / `hw` / `hwv` | ✓ |
+| `!x. x IN FF ==> aff_gt {vec 0} {v,w} SUBSET wedge_in_fan_gt x E` | `hsub`（`wedgeInFanGt_p3`） | ✓ |
+| **`HS = hypermap (HYP (vec 0,V,E UNION {{v,w}}))`** | **`hHS : IsHypE_p35 V E HS`** | **✗ 唯一漂移槽** |
+| `fv = face HS (v,rho_node1 FF v)` / `fw = face HS (w,rho_node1 FF w)` | `hfv` / `hfw`（`HS.face (v, rhoNode1 FF v)` 等） | ✓ |
+| 结论 | `Set.ncard FF = Set.ncard fv + Set.ncard fw - 2` / `3 ≤ Set.ncard fv ∧ 3 ≤ Set.ncard fw` | ✓ |
+
+后果：`IsHypE_p35`（LA35:103-107）把 HS 的 darts/edgeMap/nodeMap/faceMap 四槽钉死为**纯 E** 超图（`dartsOfHyp_p3 E V`、`eeOfHyp_p3 0 V E`、`nnOfHyp_p3 0 V E`、`ffOfHyp_p3 0 V E`）。纯 E 载体下 fv/fw 不再是 {v,w}-对角劈出的两 slice 面：EQ 件结论退化（发现源 `$S/lkgrqui-cardff-fin-w2/PLAN.md` §0 论证：塌缩为 k = 2k−2 一型，k ≥ 4 为假）；LE_3 件退化为 `3 ≤ ncard FF` 换皮（真但非 HOL 内容）。**判 A（误植，陈述为假）**。
+
+同文件不一致自证：HEAD 全文件 `(hHS : IsHypE_p35 V E HS)` 仅 :1159/:1173 两处（即本案两件）；其余五处同形 kit（HEAD :555/:575/:594；叠加态 :1242/:1277/:1974/:2310/:2333，另 :2556 存在式用 `{{v, w}}`）全部增广——两件是全文件仅有的纯 E 例外，属漏改而非口径分歧。
+
+机检（sf83-draft-w1，2026-10-29）：修后两基线全文件直译 **exit 0**（探针 `/tmp/sf83-w1-check-head.lean`、`/tmp/sf83-w1-check-stack7.lean`，尾部 `#check @CARD_FF_EQ_CARD_SLICE_FF_p35` / `#check @CARD_SLICE_FF_LE_3_p35` 打印出新形 `IsHypE_p35 V (E ∪ {{v, w}}) HS → …`）；`sorry` 计数不变（head 27→27、stack7 12→12）。
+
+### (c) 补丁（两形态，互斥；规范化 diff -u，头部无时间戳；仅动两条陈述的 hHS 槽 + docstring FIDELITY 注，体保持 sorry，各 +8/−4、两 hunk）
+
+| 形态 | 归档路径 | 基线 | apply-check |
+|---|---|---|---|
+| HEAD 版（先于叠加） | `docs/statement-fix-proposals-patches/83-cardff-ishype.patch`（**执行件**） | pristine 主仓（收工 HEAD `01840d09`，勘误见 (f)） | **PASS**（`git apply --check` 实测，不落盘） |
+| stack7 版（叠加窗内） | `docs/statement-fix-proposals-patches/83-cardff-ishype-stack7.patch`（备用，互斥） | `/tmp/LA35_stack7.lean` 复刻目录（`sf83-draft-w1/stack7-check/`） | **PASS**（实测） |
+
+两 patch 除 hunk 行号偏移（+3260）外上下文逐字节同形（叠加层不触该带）；推荐取 HEAD 版，理由与互斥约束见 `DELIVERY.md` ④。
+
+### (d) 消费面
+
+- **Lean 代码外部消费者 = 零**：全树 grep（lean/ + docs/，2026-10-29）两件名仅 LA35 自身（:44 头注、:1155/:1169 定义、:1179 交叉提及）与文档提及（`docs/priority-queue.md`、`docs/scouts/m1-ledger.tsv`、`docs/scouts/fidelity-audit-v2.tsv`、`patches/54` 注记）及构建产物 `.ilean`——与编排者核实一致，本次复核再证。
+- **HOL 消费者**：(a)1 四处，全部传增广超图实参。
+- **修后破坏面 = 零**：两件体全 sorry、无已证件消费其结论；修后形是 HOL 消费点的对齐形，未来 `QKNVMLB3_LE4_p35` / `QKNVMLB3_Eq4_p35` 填体（scsHalfSlice 装配链）将按 HOL 形喂增广 HS——重冻结正是填体的前置扫障。
+
+### (e) 风险
+
+- **低**：纯假设槽修正，体保持 sorry，触面 2 hunk 全在两条陈述带内，零已证消费者；闸走 STATEMENT-FIX 单件路径。
+- 同文件五处（+1 存在式）增广写法不动；LA2/LA9 的 p2 世界同族件不动；A2/Assembly 零触碰。
+- 残余：无方向性风险——修正方向与 HOL 正本及全部消费点一致；唯一约束是两 patch 触同一带、叠加序二选一（DELIVERY ④）。
+
+### (f) 状态
+
+**立案 2026-10-29 清晨**（编排者复核：判 A · 分级 A——误植、EQ 件陈述为假；发现源 lkgrqui-cardff-fin-w2，起草 sf83-draft-w1：
+逐槽对账 + 两基线机检 + 两 patch；编排者独立核实全树零外部消费者、归档 patch 对 HEAD `git apply --check` PASS、**并干跑
+「SF-83 先打 → LA35 五 kit + 三层叠加」全部 plain apply 零冲突，重冻结存活**），依用户 SF 通道常态化授权立案。
+**在册未落**，apply + STATEMENT-FIX 闸待编译窗；**叠加序：HEAD 版先于一切 LA35 kit**（执行件 `83-cardff-ishype.patch`；
+stack7 版仅当 LA35 栈已先落时取用，二者互斥）。闸命令（lean/ 下，`$FILE` 单文件节）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/83-cardff-ishype.patch SF_ITEM=83 LANE_FILES=Kepler/Text/LocalAuto35.lean THM=CARD_FF_EQ_CARD_SLICE_FF_p35 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto35.lean CARD_FF_EQ_CARD_SLICE_FF_p35`
+（两件体仍 sorry，rule 5 白名单放行；可对 `CARD_SLICE_FF_LE_3_p35` 复闸一次。）账面：M0 直源 −0、文件级 sorry 不变；价值 = 陈述由假转真，
+为 `QKNVMLB3_LE4/Eq4` 填体与 CARD_FF 对的 ladder（≈750-900 行，前置 EJRCFJD）扫障。EJRCFJD 定尺见 `lane_snapshots/sf83-draft-w1/EJRCFJD-SIZING.md`
+（HOL 34 行但调用 PROVE_THE_SLICE_ASSUMPTION / THE_SLICING_INTO_2_LEMMA 两件无移植重件，真证路径估 400-800 行）。

@@ -1,0 +1,36 @@
+--- a/lean/Kepler/Text/LocalAuto35.lean
++++ b/lean/Kepler/Text/LocalAuto35.lean
+@@ -4411,12 +4411,14 @@
+   -- SCS_HALF_SLICE_IS_A_SCS_p35 + the local-fan azimuth sum identity
+   -- (SUM_AZIM over the diag-closed slice face).
+ 
+-/-- HOL `CARD_FF_EQ_CARD_SLICE_FF` (QKNVMLB.hl:9059). -/
++/-- HOL `CARD_FF_EQ_CARD_SLICE_FF` (QKNVMLB.hl:9059).
++FIDELITY (SF-83): HOL freezes `HS = hypermap (HYP (vec 0,V,E UNION {{v, w}}))`
++(QKNVMLB.hl:9065); the frozen hypothesis keeps the diag-augmented edge. -/
+ theorem CARD_FF_EQ_CARD_SLICE_FF_p35 (V : Set V3) (E : Set (Set V3))
+     (FF : Set (V3 × V3)) (v w : V3) (HS : Hypermap (V3 × V3))
+     (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+     (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+-    (hHS : IsHypE_p35 V E HS)
++    (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+     (fv : Set (V3 × V3)) (hfv : fv = HS.face (v, rhoNode1 FF v))
+     (fw : Set (V3 × V3)) (hfw : fw = HS.face (w, rhoNode1 FF w)) :
+     Set.ncard FF = Set.ncard fv + Set.ncard fw - 2 := by
+@@ -4425,12 +4427,14 @@
+   -- slice faces sharing exactly the {v,w}-edge (PROVE_THE_SLICE_ASSUMPTION
+   -- + COMPATIBLE_BW_TWO_LEMMAS of Local_lemmas/Nkezbfc_local).
+ 
+-/-- HOL `CARD_SLICE_FF_LE_3` (QKNVMLB.hl:9122). -/
++/-- HOL `CARD_SLICE_FF_LE_3` (QKNVMLB.hl:9122).
++FIDELITY (SF-83): HOL freezes `HS = hypermap (HYP (vec 0,V,E UNION {{v, w}}))`
++(QKNVMLB.hl:9128); the frozen hypothesis keeps the diag-augmented edge. -/
+ theorem CARD_SLICE_FF_LE_3_p35 (V : Set V3) (E : Set (Set V3))
+     (FF : Set (V3 × V3)) (v w : V3) (HS : Hypermap (V3 × V3))
+     (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+     (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+-    (hHS : IsHypE_p35 V E HS)
++    (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+     (fv : Set (V3 × V3)) (hfv : fv = HS.face (v, rhoNode1 FF v))
+     (fw : Set (V3 × V3)) (hfw : fw = HS.face (w, rhoNode1 FF w)) :
+     3 ≤ Set.ncard fv ∧ 3 ≤ Set.ncard fw := by
