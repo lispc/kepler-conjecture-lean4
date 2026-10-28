@@ -1,0 +1,102 @@
+# bola1-dep-map — LA1 JEJTVGB 注册表 98 项全量表（基线 4ff27ac1，只读侦察）
+# 列: 名称	类别	HOL锚(appendix.hl)	HOL证明文件(行数)	LA1本体状态	LocalConcl出口	孪生模块:状态	消费文件数	分级	建议波
+# 分级: R=记录展开 S=重写链/装配 M=真数学 X=外部依赖(mnt11/陈述修正) | 波: W0=审计即净 W1=装配收尾 W2=认证链 W3=mnt11银行 FIX=陈述修正
+ZITHLQN_concl	thm	652	ZITHLQN.hl(3202)	sorry	HOLD(b)循环	LA25 ZITHLQN_p25=ZITHLQN_concl h(循环);CASE_3/4/5/6+pro_cs/sqrt8/4_3 全已证	12	S(M)	W1→解锁EAPGLE
+unadorned_MMs_concl	thm	676	AYQJTMD.hl(161)	PROVED(2026-09-30)	WIRE classic, sorry-free	LA27 unadorned_MMs_p27 已证	14	R(已完成)	W0
+XWITCCN_concl	thm	679	XWITCCN.hl(8020)	sorry	WIRE(c)	LA36 master sorry;CASE_3/4/5/6+sqrt8/pro_cs/4_3 全 sorry;LA24 CASE_* sorry	6	M	W2
+XWITCCN2_concl	thm	682	UXCKFPE.hl(2648内)	sorry	WIRE(c)	LA27 XWITCCN2_p27 已证(经UXCKFPE2_p27已证)	5	S	W0/W1
+AYQJTMD_concl	thm	685	AYQJTMD.hl(237)	sorry	WIRE(c)	LA27 AYQJTMD_p27 已证	5	R/S	W0/W1
+EAPGLE_concl	thm	688	AYQJTMD.hl(222,8行胶合)	sorry	WIRE(c)	LA27 EAPGLE_p27 sorry;输入=ZITHLQN(circular)+AYQJTMD_p27(已证)	6	S	W1(随ZITHLQN)
+JKQEWGV1_concl	thm	690	JKQEWGV.hl(3307)	sorry	WIRE(c)	LA23 JKQEWGV1_p23+CASE_4/5/6 全 sorry	6	M	W2
+JKQEWGV2_concl	thm	695	JKQEWGV.hl(3307)	sorry	WIRE(c)	LA23 JKQEWGV2_p23+CASE_4/5/6 全 sorry	7	M	W2
+JKQEWGV3_concl	thm	702	JKQEWGV.hl(3307)	sorry	WIRE(c)	LA23 JKQEWGV3_p23 sorry	6	M	W2
+HFNXPZA_concl	thm	710	无(仅注册let,corpus-missing)	sorry	HOLD(a)无孪生	—	5	M(无正本)	W3/backlog
+MHAEYJN_concl	thm	25	NUXCOEA/ODXLSTC/IMJXPHR内已证	sorry	WIRE(c)	LA37 MHAEYJN_p37 sorry(逐字Prop-def已建)	50	S/M	W2
+ZLZTHIC_concl	thm	45	ZLZTHIC.hl(3781)	sorry	WIRE(c)	LA14 ZLZTHIC_p14 sorry(lunar-deformation车道)	53	M/X	W3
+VPWSHTO_concl	thm	62	VPWSHTO.hl(2925)	sorry	HOLD(d)	LA15 master sorry;PRIME已证但缺strict 2<dist与distinctness共轭	7	M+FIX	W2(FIX先行)
+EQTTNZI1_concl	thm	1110	无(仅注册let)	PROVED(2026-09-30)	HOLD(a)条目已过时	—	5	R(已完成)	W0
+EQTTNZI2_concl	thm	1115	无(仅注册let)	PROVED(2026-10-08)	HOLD(a)条目已过时	—	6	R(已完成)	W0
+UAGHHBM_concl	thm	1122	UAGHHBM.hl(4106)	sorry	WIRE(c)	LA30 UAGHHBM_p30 sorry(restriction-isScs fork)	5	S/M	W2
+YXIONXL1_concl	thm	1134	YXIONXL.hl(2610)	sorry	WIRE classic	LA12 YXIONXL1 已证(verbatim;波输入或有taint)	4	S	W0
+YXIONXL2_concl	thm	1138	YXIONXL2.hl(3528)	sorry	HOLD(c)	LA33孪生多3<s.k前提;k=3缺口;p13孪生错车道类型ScsV39P13	4	S+FIX	W1(k=3补)
+YXIONXL3_concl	thm	1141	YXIONXL2.hl内	sorry	WIRE classic sorry-free	LA12 YXIONXL3 已证(PROP_EQU链)	28	S	W0
+LKGRQUI_concl	thm	1144	LKGRQUI.hl(269)	sorry	WIRE(c)	LA27 LKGRQUI_p27 sorry	11	S	W1(解锁AQICLXA/FUNOUYH)
+HXHYTIJ_concl	thm	1147	HXHYTIJ.hl(131)	PROVED(2026-09-30)	WIRE classic sorry-free	LA27 HXHYTIJ_p27 已证	6	R(已完成)	W0
+ODXLSTCv2_concl	thm	1154	ODXLSTC.hl(3689)	sorry	WIRE(c)	LA28/LA31 ODXLSTCv2 sorry	20	M	W3
+IMJXPHRv2_concl	thm	1168	IMJXPHR.hl(11028)	sorry	WIRE(c)	LA28 IMJXPHRv2_p28 sorry;LA34 master亦sorry	13	M/X	W3
+NUXCOEAv2_concl	thm	1188	NUXCOEA.hl(7741)	sorry	WIRE(c)	LA28 NUXCOEAv2_p28 sorry	6	M/X	W3
+DRNDRDV_concl	thm	1212	OCBICBY.hl(766=derived_form_xrr)	sorry	WIRE sorry-free	LA22 derived_form_xrr_p22 已证	5	R	W0
+TBRMXRZ1_concl	thm	1216	OCBICBY内(TBRMXRZ1_p22已证反向)	sorry	HOLD(d)	孪生g∘f序相反,注册表陈述自身前提不可证	8	X(陈述不可证)	FIX(必改)
+PQCSXWG1_concl	thm	1221	PQCSXWG.hl(320)	sorry	WIRE(c)	LA11 PQCSXWG1_p11 sorry;无已证mkSimplex1距离恒等式	16	S/M	W1
+PQCSXWG2_concl	thm	1234	PQCSXWG.hl(320)	sorry	WIRE classic(shim)	LA11 PQCSXWG2_p11 已证;taint=ATREAL_p11	16	S	W0/W1
+EYYPQDW_concl	thm	1244	EYYPQDW.hl(517)	sorry	WIRE classic sorry-free	LA17 EYYPQDW_p17 已证	8	S	W0
+EYYPQDW2_concl	thm	1259	EYYPQDW.hl	sorry	WIRE classic sorry-free(shim连续性)	LA17 kit 已证	9	S	W0
+EYYPQDW3_concl	thm	1268	EYYPQDW.hl	sorry	WIRE classic sorry-free(shim连续性)	LA17 kit 已证	9	S	W0
+FEKTYIY_concl	thm	1277	FEKTYIY.hl(212)	sorry	WIRE(c)	LA27 FEKTYIY_p27 sorry	7	S	W1
+AURSIPD_concl	thm	1281	AURSIPD.hl(1850)	sorry	WIRE(c)	LA18 AURSIPD_p18 sorry	7	M	W2
+PPBTYDQ_concl	thm	1285	PPBTYDQ.hl(614)	sorry	WIRE(c)	LA26 PPBTYDQ_p26 sorry	7	S/M	W1
+MXQTIED_concl	thm	1288	PPBTYDQ.hl内已证	PROVED	WIRE(c)(本体已闭)	LA26 MXQTIED_p26 sorry(无妨)	10	R(已完成)	W0
+SYNQIWN_concl	thm	1296	无同名证明(LA22孪生为异陈述)	sorry	HOLD(c)	azim变元序+hears套件+cstab边全不同;亦食mnt11	5	X(陈述对不齐)	FIX→W2
+XWNHLMD_concl	thm	1303	—(SGTRNAF/OCBICBY链)	sorry	HOLD(d)	LA26 XWNHLMD_p26+MM_p26已证但多s.d≤s'.d前提	7	S+FIX	W1(FIX后装配)
+OIQKKEP_concl	thm	1309	PPBTYDQ.hl内已证	sorry	HOLD(b)循环	LA26 OIQKKEP_p26=exact OIQKKEP_concl	11	S	W1(独立证)
+AXJRPNC_concl	thm	1313	AXJRPNC.hl(1058)	sorry	WIRE(c)	LA26 AXJRPNC_p26 sorry	8	M	W2
+RRCWNSJ_concl	thm	1321	RRCWNSJ.hl(878)	sorry	WIRE(c)	LA26 RRCWNSJ_p26 sorry	11	M/X	W3
+JCYFMRP_concl	thm	1329	JCYFMRP.hl(625)	sorry	WIRE(c)	LA27 JCYFMRP_p27 sorry(_V2/_V3_p29亦sorry)	13	M/X	W3
+TFITSKC_concl	thm	1337	TFITSKC.hl(673)	sorry	WIRE(c)	LA27 TFITSKC_p27 sorry(v1亦sorry)	12	M/X	W3
+CQAOQLR_concl	thm	1349	CQAOQLR.hl(335)	sorry	HOLD(c)	LA16孪生需4h0+strict边事实,注册表无	18	S+FIX	W1(FIX后装配)
+JLXFDMJ_concl	thm	1357	JLXFDMJ.hl(825)	sorry	HOLD(c)	LA27孪生需j%s.k∉scsM;mod跨界搬运是真活	12	S	W1
+WKEIDFT_concl	thm	1368	WKEIDFT.hl(834)	sorry	HOLD(b)循环	LA24 WKEIDFT_concl_p24=WKEIDFT_concl;v2两件sorry;PEDSLGV轻变体	27	S/M	W1
+PEDSLGV1_concl	thm	1379	PEDSLGV.hl	PROVED(2026-10-08)	HOLD(b)条目已过时(本体已闭)	LA20 PEDSLGV1 循环(无妨)	10	M见证(已完成)	W0
+PEDSLGV2_concl	thm	1385	PEDSLGV.hl	PROVED(2026-10-08)	HOLD(b)条目已过时(本体已闭)	LA20 PEDSLGV2 循环(无妨)	9	M见证(已完成)	W0
+AQICLXA_concl	thm	1390	hexagons.hl(2171)	sorry	WIRE(c)	LA20 AQICLXA sorry;NEED LKGRQUI+YXIONXL3+PROP_EQU_IS_SCS	4	S	W1
+FUNOUYH_concl	thm	1392	hexagons.hl	sorry	WIRE(c)	LA20 FZIOTEF sorry;NEED同上	4	S	W1
+OEHDBEN_concl	thm	1394	hexagons.hl(2135)	sorry	HOLD(d)	LA20 OEHDBEN已证但尾槽scs3M1≠注册表scs3T1(d 0.103/0.11异系)	8	X(陈述修正)	FIX→W3
+OTMTOTJ1_concl	thm	1396	OTMTOTJ.hl(1156,共1542)	sorry	WIRE(LA24骨架sorry)	链=BERAK_5I1(sorry,mnt11)+SET_EQ_DIAG_STAB_5I1(sorry,R)+FZIOTEF kit(已证)	6	S+X	W1(R半)/W3(BERAK)
+OTMTOTJ2_concl	thm	1398	OTMTOTJ.hl(1169)	sorry	WIRE(LA24骨架sorry)	同上(5I2)	6	S+X	W1(R半)/W3(BERAK)
+OTMTOTJ3_concl	thm	1400	OTMTOTJ.hl(1500)	sorry	WIRE(LA24骨架sorry)	同上(5I3,三stab目标)	6	S+X	W1(R半)/W3(BERAK)
+OTMTOTJ4_concl	thm	1403	OTMTOTJ.hl(1520)	sorry	WIRE(LA24骨架sorry)	同上(5M1)	6	S+X	W1(R半)/W3(BERAK)
+HIJQAHA_concl	thm	1406	HIJQAHA.hl(4145)	sorry	WIRE(c)	LA29 HIJQAHA finale sorry;缺SCS_5M3_SLICE/ARROW 6件(slice kit+PROP_OPP已证)	6	S	W1
+CNICGSF1_concl	thm	1410	CNICGSF.hl(908)	sorry	WIRE	LA18 CNICGSF1_p18 已证	6	R/S	W0(审计taint)
+CNICGSF2_concl	thm	1413	CNICGSF.hl	sorry	WIRE	LA18 CNICGSF2_p18 已证	6	R/S	W0
+CNICGSF3_concl	thm	1416	CNICGSF.hl	sorry	WIRE	LA18 CNICGSF3_p18 已证	6	R/S	W0
+CNICGSF4_concl	thm	1419	CNICGSF.hl	sorry	WIRE	LA18 CNICGSF4_p18 已证	6	R/S	W0
+CNICGSF5_concl	thm	1422	CNICGSF.hl	sorry	WIRE	LA18 CNICGSF5_p18 已证	6	R/S	W0
+ARDBZYE_concl	thm	1425	ARDBZYE.hl(2907)	sorry	WIRE(c)	LA33 ARDBZYE_p33 sorry;缺SCS_4I2_IMP_SCS_4T1/STRAIGHT链	6	S/M	W2
+FYSSVEV_concl	thm	1427	ARDBZYE.hl	sorry	WIRE(c)	LA33 FYSSVEV_p33 sorry;缺SCS_4I1_IMP_SCS_4I2+SLICE_02	6	S	W2
+AUEAHEH_concl	thm	1429	AUEAHEH.hl(2960)	sorry	WIRE	LA33 AUEAHEH_p33 已证	6	R/S	W0(审计taint)
+ZNLLLDL_concl	thm	1431	AUEAHEH.hl	sorry	WIRE	LA33 ZNLLLDL_p33 已证	4	R/S	W0
+VQFYMZY_concl	thm	1433	AUEAHEH.hl	sorry	WIRE(置换shim)	LA33 VQFYMZY_p33 已证	6	R/S	W0
+BNAWVNH_concl	thm	1437	AUEAHEH.hl	sorry	WIRE(置换shim)	LA33 BNAWVNH_p33 已证	6	R/S	W0
+RAWZDIB_concl	thm	1439	AUEAHEH.hl	sorry	WIRE(置换shim)	LA33 RAWZDIB_p33 已证	6	R/S	W0
+MFKLVDK_concl	thm	1441	AUEAHEH.hl	sorry	WIRE(置换shim)	LA33 MFKLVDK_p33 已证	6	R/S	W0
+RYPDIXT_concl	thm	1443	AUEAHEH.hl	sorry	WIRE(置换shim)	LA33 RYPDIXT_p33 已证	6	R/S	W0
+GSXRFWM_concl	thm	1445	AUEAHEH.hl?	sorry	WIRE	LA33 GSXRFWM_p33 已证;GSXRFWM1_p33 sorry(taint待查)	5	R/S	W0
+WGDHPPI_concl	thm	1448	无同名文件(VASYYAU/ZITHLQN链)	sorry	HOLD(b)循环	LA25 WGDHPPI_p25=WGDHPPI_concl	9	M	W3
+ASSWPOW_concl	thm	1452	VASYYAU.hl(154)已证	sorry	WIRE	LA25 ASSWPOW_p25 骨架sorry(逐字重述已建)	7	S	W1(移植154行原证)
+YEBWJNG_concl	thm	1457	VASYYAU.hl	sorry	HOLD(b)循环	LA25 YEBWJNG_p25=YEBWJNG_concl	8	M	W3
+TUAPYYU_concl	thm	1465	VASYYAU.hl(2861)	sorry	HOLD(b)循环	LA25 TUAPYYU_p25=fun _=>TUAPYYU_concl	26	M	W3
+WKZZEEH_concl	thm	1473	VASYYAU.hl	sorry	HOLD(b)循环	LA25 WKZZEEH_p25=WKZZEEH_concl	8	M	W3
+PWEIWBZ_concl	thm	1481	VASYYAU.hl	sorry	HOLD(b)循环	LA25 PWEIWBZ_p25=PWEIWBZ_concl	8	M	W3
+VASYYAU_concl	thm	1489	VASYYAU.hl	sorry	HOLD(b)循环	LA25 VASYYAU_p25=VASYYAU_concl;LA32仅NEEDS注	8	M	W3
+NWDGKXH_concl	thm	1498	MIQMCSN.hl内	sorry	WIRE(c)	LA32 NWDGKXH_p32 sorry;MM_4M6_IMP_MM_4T3 sorry	6	S+M/X	W1(半)/W3(半)
+EFLYGAU_concl	thm	1500	无(仅注册let,corpus-missing)	sorry	HOLD(a)	MM_4M7_IMP_STAB_4M7_p32亦sorry	4	M(无正本)	W3/backlog
+YOBIMPP_concl	thm	1504	MIQMCSN.hl(3469)	sorry	WIRE(c)	LA32 YOBIMPP_p32 sorry;MM_4M7→4M6两方向sorry	6	M/X	W3
+BJTDWPS_concl	thm	1506	无(仅注册let,corpus-missing)	sorry	HOLD(a)	MM_4M8_IMP_STAB_4M8_p32亦sorry	4	M(无正本)	W3/backlog
+MIQMCSN_concl	thm	1510	MIQMCSN.hl(3469)	sorry	WIRE(c)	LA32 MIQMCSN_p32 sorry;MM_4M8→4M6/4M8_02/13 sorry	6	M/X	W3
+LFLACKU_concl	thm	1512	JOTSWIX.hl(3922)内链	sorry	HOLD(c)	LA23孪生为异陈述(mnt11→{3I1}∅);注册表{3T1}→{3T2,3T5}无孪生	5	S/M	W1(新证)
+CUXVZOZ_concl	thm	1514	CUXVZOZ.hl(4348)	sorry	WIRE(p21_anchor注入)	LA21孪生已证(引擎general_482_deformation_p21 sorry)	8	M/X	W3
+CJBDXXN_concl	thm	1534	CUXVZOZ.hl	sorry	WIRE(p21_anchor注入)	同上(mirror-index搬运)	6	M/X	W3
+YRTAFYH_concl	thm	1554	YRTAFYH.hl(520)	PROVED(2026-09-30)	WIRE(c)(本体已闭)	LA17 YRTAFYH_p17 sorry(无妨)	10	M案例树(已完成)	W0
+BKOSSGE_concl	thm	1564	BKOSSGE.hl(396)	sorry	WIRE(c)	LA16 BKOSSGE_p16 sorry	8	S/M	W1
+QKNVMLB1_concl	thm	1055	QKNVMLB.hl(5223,共10699)	sorry	HOLD(c)索引约定	注册表用(i+p)%s'.k,HOL已证形用i%s'.k+p%s.k;RULING:孪生忠实	7	X(注册表改)	FIX→W2
+QKNVMLB2_concl	thm	1064	QKNVMLB.hl(5522)	sorry	HOLD(c)索引约定	同上(双半片)	6	X(注册表改)	FIX→W2
+QKNVMLB3_concl	thm	1075	QKNVMLB.hl(10665)	sorry	HOLD(d)索引+Eq4/LE4	LA35孪生已证但分支Eq4/LE4_p35 sorry;约定同上	6	X+M	FIX→W2/W3
+JEJTVGB_std_concl	def	116	JEJTVGB.hl(253)	def(Prop,无证)	—	—	24	M	W3(随JEJTVGB)
+JEJTVGB_std3_concl	def	126	JEJTVGB.hl	def(Prop)	—	—	15	M	W3
+JEJTVGB_pent_diag_concl	def	142	JEJTVGB.hl	def(Prop)	—	—	11	M	W3
+JEJTVGB_pent_pro_concl	def	152	JEJTVGB.hl	def(Prop)	—	—	11	M	W3
+JEJTVGB_quad_pro_concl	def	166	JEJTVGB.hl	def(Prop)	—	—	11	M	W3
+JEJTVGB_quad_diag_concl	def	180	JEJTVGB.hl	def(Prop,0.467=2013-06-03校正)	—	—	10	M	W3
+JEJTVGB_concl	def	190	JEJTVGB.hl	def(六项list_mk_conj)	—	—	20	胶合	W3
+JEJTVGB_assume_v39	def	195	JEJTVGB.hl(new_definition)	def(Prop)	—	—	53	胶合	W3
+main_nonlinear_terminal_v11	def	terminal.hl:24-44	terminal.hl	def:=sorry(不透明Prop)	—	LA21 mainNonlinearTerminalV11_p21(异锚,无桥)	—	X(整章债,109条Main_estimate)	W3
