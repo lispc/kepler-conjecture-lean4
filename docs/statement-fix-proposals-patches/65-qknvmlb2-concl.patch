@@ -1,7 +1,11 @@
 diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+index 83fd2b35..d8a0700e 100644
 --- a/lean/Kepler/Text/LocalAuto1.lean
 +++ b/lean/Kepler/Text/LocalAuto1.lean
-@@ -2798,9 +2798,10 @@
+@@ -2795,14 +2795,15 @@ theorem QKNVMLB1_concl : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+       (fun i => vv ((i + p) % (scsHalfSliceV39 s p q d' mkj).k)) := by
+   sorry
+ 
 -/-- HOL `QKNVMLB2_concl` (appendix.hl:1064). Proof pending. -/
 +/-- HOL `QKNVMLB2_concl` (SF-65 真化：双半片实现约定改采 corpus 正本
 +QKNVMLB.hl:5525/:5527 形——RULING 2026-09-21 IV 判孪生侧忠实)。 -/
@@ -15,10 +19,14 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 +    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
 +      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) := by
    sorry
+ 
+ /-- HOL `QKNVMLB3_concl` (appendix.hl:1075). Proof pending. -/
 diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+index 059be714..8212f41a 100644
 --- a/lean/Kepler/Text/LocalConcl.lean
 +++ b/lean/Kepler/Text/LocalConcl.lean
-@@ -1461,5 +1461,5 @@
+@@ -1457,8 +1457,8 @@ theorem QKNVMLB2_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+     (s', s'') = scsSliceV39 s p q d' d'' mkj →
      MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
      s.d ≤ d' + d'' →
 -    dsvV39 s vv ≤ dsvV39 s' (fun i => vv ((i + p) % s'.k)) +
@@ -26,3 +34,5 @@ diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
 +    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
 +      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) := by
    sorry
+ 
+ /-! ### (d) Twin proved but the shape delta is not bridgeable (5) -/

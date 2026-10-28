@@ -1,7 +1,11 @@
 diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+index 83fd2b35..5ce1a4ec 100644
 --- a/lean/Kepler/Text/LocalAuto1.lean
 +++ b/lean/Kepler/Text/LocalAuto1.lean
-@@ -1803,7 +1803,11 @@
+@@ -1800,12 +1800,16 @@ theorem DRNDRDV_concl : ∀ y1 y2 y6 : ℝ,
+ -- within s)`) admits the same counterexample, so the flyspeck item itself
+ -- needs an extra slope-proportionality hypothesis (e.g. 0 < g' x) before it
+ -- can be discharged.
 -/-- HOL `TBRMXRZ1_concl` (appendix.hl:1216); `re_eqvl` at the slope values
 -via `reEqvl` (PackingAuto18:79). Proof pending. -/
 -theorem TBRMXRZ1_concl : ∀ (f : ℝ → ℝ) (f' : ℝ) (g : ℝ → ℝ) (h' x y : ℝ),
@@ -19,10 +23,16 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 +    derivedForm True (g ∘ f) h' x (Set.univ : Set ℝ) →
 +    0 < f' → f x = y → reEqvl h' g' := by
    sorry
+ 
+ /-- HOL `PQCSXWG1_concl` (appendix.hl:1221). Proof pending. -/
 diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+index 059be714..50637e30 100644
 --- a/lean/Kepler/Text/LocalConcl.lean
 +++ b/lean/Kepler/Text/LocalConcl.lean
-@@ -1480,5 +1480,6 @@
+@@ -1477,10 +1477,11 @@ opposite order (`g ∘ f`, needs the inner slope `0 < f'`, concludes
+ the registry hypotheses carry no information about the inner g-slope sign,
+ so no witness term exists (the registry statement is in fact not provable
+ from its own hypotheses). -/
 -theorem TBRMXRZ1_discharged : ∀ (f : ℝ → ℝ) (f' : ℝ) (g : ℝ → ℝ) (h' x y : ℝ),
 -    derivedForm True f f' y (Set.univ : Set ℝ) →
 -    derivedForm True (fun z => f (g z)) h' x (Set.univ : Set ℝ) →
@@ -33,3 +43,5 @@ diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
 +    derivedForm True (g ∘ f) h' x (Set.univ : Set ℝ) →
 +    0 < f' → f x = y → reEqvl h' g' := by
    sorry
+ 
+ /-- HOLD (d) `VPWSHTO_concl`: master `VPWSHTO_p15` still sorried;

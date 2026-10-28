@@ -1,7 +1,11 @@
 diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+index 83fd2b35..c7c273b9 100644
 --- a/lean/Kepler/Text/LocalAuto1.lean
 +++ b/lean/Kepler/Text/LocalAuto1.lean
-@@ -1384,4 +1384,6 @@
+@@ -1381,9 +1381,11 @@ theorem YXIONXL1_concl : ∀ s t : ScsV39, isScsV39 s → transferV39 s t →
+     scsArrowV39 {s} {t} := by
+   sorry
+ 
 -/-- HOL `YXIONXL2_concl` (appendix.hl:1138). Proof pending. -/
 +/-- HOL `YXIONXL2_concl` (SF-67 真化：补 corpus 正本 YXIONXL2.hl:3501-3502
 +的 `¬(k≤3)` 前提，与 LA33 孪生 `YXIONXL2_p33` 同形；appendix.hl:1138
@@ -10,11 +14,18 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 -    scsArrowV39 {s} {scsOppV39 s} := by
 +    3 < s.k → scsArrowV39 {s} {scsOppV39 s} := by
    sorry
+ 
+ /-! ### Residue-shift toolkit for `YXIONXL3` (`scs_prop_equ_v39`)
 diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+index 059be714..eeb7ae68 100644
 --- a/lean/Kepler/Text/LocalConcl.lean
 +++ b/lean/Kepler/Text/LocalConcl.lean
-@@ -1346,3 +1346,3 @@
+@@ -1344,7 +1344,7 @@ theorem OIQKKEP_discharged : ∀ (u v : V3) (c : ℝ), u ∈ ballAnnulus →
+ `3 ≤ s.k`; the s.k = 3 case is uncovered; `YXIONXL2_p13` lives on the wrong
+ lane type `ScsV39P13`). -/
  theorem YXIONXL2_discharged : ∀ s : ScsV39, isScsV39 s →
 -    scsArrowV39 {s} {scsOppV39 s} := by
 +    3 < s.k → scsArrowV39 {s} {scsOppV39 s} := by
    sorry
+ 
+ /-- WIRE `LocalAuto1.MHAEYJN_concl` <- `MHAEYJN_p37` (the twin is typed by

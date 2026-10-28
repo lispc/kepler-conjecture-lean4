@@ -1,15 +1,17 @@
 diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+index 83fd2b35..9775c758 100644
 --- a/lean/Kepler/Text/LocalAuto1.lean
 +++ b/lean/Kepler/Text/LocalAuto1.lean
-@@ -2233,9 +2233,19 @@
+@@ -2230,12 +2230,22 @@ theorem TFITSKC_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s
+     dist (v (i + 1)) (v (i + 2)) = 2 := by
+   sorry
+ 
 -/-- HOL `CQAOQLR_concl` (appendix.hl:1349). Proof pending. -/
 -theorem CQAOQLR_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
 -    v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
 -    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
 -    s.a i (i + 1) = 2 → s.b i (i + 1) = 2 * h0 →
 -    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) = 2 * h0 →
--    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
--  sorry
 +/-- HOL `CQAOQLR_concl` (SF-72 真化：改采 corpus 文件级注册表
 +CQAOQLR.hl:233-243 形——mnt11 前提 + `3 < s.k` + diag 组 `4*h0 < b`
 +合取 + 两条 `2 < b` 与两条 `a < b` 严格边前提，`b ≤ 2*h0` 上界形。与
@@ -26,20 +28,22 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 +    s.a (i + s.k - 1) i < s.b (i + s.k - 1) i →
 +    s.a i (i + 1) = 2 → s.b i (i + 1) ≤ 2 * h0 →
 +    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
-+    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
-+  sorry
+     (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
+   sorry
  
 diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+index 059be714..e7a2ff70 100644
 --- a/lean/Kepler/Text/LocalConcl.lean
 +++ b/lean/Kepler/Text/LocalConcl.lean
-@@ -1391,8 +1391,14 @@
+@@ -1388,11 +1388,17 @@ combined diag form `a ≤ cstab ∧ cstab < dist ∧ 4*h0 < b`, plus `2 < b` on
+ two edges and strict `a < b` on two further edges; the registry carries
+ neither the `4*h0` conjunct nor those strict edge facts (only
+ `b i (i+1) = 2*h0`). -/
 -theorem CQAOQLR_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
 -    v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
 -    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
 -    s.a i (i + 1) = 2 → s.b i (i + 1) = 2 * h0 →
 -    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) = 2 * h0 →
--    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
--  sorry
 +theorem CQAOQLR_discharged : main_nonlinear_terminal_v11 →
 +    ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
 +    3 < s.k →
@@ -51,6 +55,6 @@ diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
 +    s.a (i + s.k - 1) i < s.b (i + s.k - 1) i →
 +    s.a i (i + 1) = 2 → s.b i (i + 1) ≤ 2 * h0 →
 +    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
-+    (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
-+  sorry
+     (dist (v i) (v (i + 1)) = 2 ↔ dist (v (i + 1)) (v (i + 2)) = 2) := by
+   sorry
  

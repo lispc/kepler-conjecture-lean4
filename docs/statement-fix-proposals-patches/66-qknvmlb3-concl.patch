@@ -1,7 +1,11 @@
 diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+index 83fd2b35..0bc7b11c 100644
 --- a/lean/Kepler/Text/LocalAuto1.lean
 +++ b/lean/Kepler/Text/LocalAuto1.lean
-@@ -2808,9 +2808,11 @@
+@@ -2805,14 +2805,16 @@ theorem QKNVMLB2_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj
+       dsvV39 s'' (fun i => vv ((i + q) % s''.k)) := by
+   sorry
+ 
 -/-- HOL `QKNVMLB3_concl` (appendix.hl:1075). Proof pending. -/
 +/-- HOL `QKNVMLB3_concl` (SF-66 真化：双半片实现约定改采 corpus 正本
 +QKNVMLB.hl:10667/:10669 形——RULING 2026-09-21 IV 判孪生侧忠实；
@@ -16,10 +20,14 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 +    taustarV39 s' (fun i => vv (i % s'.k + p % s.k)) +
 +      taustarV39 s'' (fun i => vv (i % s''.k + q % s.k)) ≤ taustarV39 s vv := by
    sorry
+ 
+ /-! Coverage note: every appendix.hl item is carried above except the pure
 diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+index 059be714..39deea91 100644
 --- a/lean/Kepler/Text/LocalConcl.lean
 +++ b/lean/Kepler/Text/LocalConcl.lean
-@@ -1540,5 +1540,5 @@
+@@ -1536,8 +1536,8 @@ theorem QKNVMLB3_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+     (s', s'') = scsSliceV39 s p q d' d'' mkj →
      MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
      s.d ≤ d' + d'' →
 -    taustarV39 s' (fun i => vv ((i + p) % s'.k)) +
@@ -27,3 +35,5 @@ diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
 +    taustarV39 s' (fun i => vv (i % s'.k + p % s.k)) +
 +      taustarV39 s'' (fun i => vv (i % s''.k + q % s.k)) ≤ taustarV39 s vv := by
    sorry
+ 
+ /-! ## Debt ledger (`#print axioms` ground truth)

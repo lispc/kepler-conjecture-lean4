@@ -1,7 +1,11 @@
 diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+index 83fd2b35..9599cefd 100644
 --- a/lean/Kepler/Text/LocalAuto1.lean
 +++ b/lean/Kepler/Text/LocalAuto1.lean
-@@ -1986,5 +1986,8 @@
+@@ -1983,9 +1983,12 @@ theorem SYNQIWN_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s
+     Real.pi / 2 < azim 0 (v (i + 1)) (v (i + 2)) (v i) := by
+   sorry
+ 
 -/-- HOL `XWNHLMD_concl` (appendix.hl:1303). Proof pending. -/
 +/-- HOL `XWNHLMD_concl` (SF-71 真化：补 corpus 正本 PPBTYDQ.hl:574-581
 +的 `s.d ≤ s'.d` 前提——appendix.hl:1303 摘要同名 let 丢了它；与 LA26
@@ -12,14 +16,16 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 +    v ∈ MMsV39 s → BBsV39 s' v →
      scsArrowV39 {s} {s'} := by
    sorry
+ 
 diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+index 059be714..595fd24c 100644
 --- a/lean/Kepler/Text/LocalConcl.lean
 +++ b/lean/Kepler/Text/LocalConcl.lean
-@@ -1509,5 +1509,6 @@
+@@ -1508,6 +1508,7 @@ theorem VPWSHTO_discharged : ∀ v x u w w1 : V3,
+ not derivable from the registry hypotheses. -/
  theorem XWNHLMD_discharged : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s →
      isScsV39 s' → scsBasicV39 s → scsBasicV39 s' → s.k = s'.k →
--    v ∈ MMsV39 s → BBsV39 s' v →
 +    s.d ≤ s'.d →
-+    v ∈ MMsV39 s → BBsV39 s' v →
+     v ∈ MMsV39 s → BBsV39 s' v →
      scsArrowV39 {s} {s'} := by
    sorry

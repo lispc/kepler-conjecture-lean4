@@ -1,7 +1,10 @@
 diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+index 83fd2b35..7c2c071f 100644
 --- a/lean/Kepler/Text/LocalAuto1.lean
 +++ b/lean/Kepler/Text/LocalAuto1.lean
-@@ -1075,18 +1075,18 @@
+@@ -1073,20 +1073,20 @@ theorem ZLZTHIC_concl :
+           ((fun e => (fun v => f v t) '' e) '' E) := by
+   sorry
  
 -/-- HOL `VPWSHTO_concl` (appendix.hl:62; the duplicated `u1 IN ...` conjunct
 -is verbatim from the source). Proof pending. -/
@@ -17,7 +20,6 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 -      w2 ∈ ({v, x, u, w, w1} : Set V3) ∧ v1 ≠ u1 ∧ u1 ≠ w2 ∧ v1 ≠ w2 ∧
 -      2 < dist v1 u1 ∧ 2 < dist v1 w2 ∧
 -      dist v1 u1 ≤ 1 + Real.sqrt 5 ∧ dist v1 w2 ≤ 1 + Real.sqrt 5 := by
--  sorry
 +/-- HOL `VPWSHTO_concl` (SF-63 真化：appendix.hl:62 摘要结论形在 corpus
 +无原证；改采 corpus 正本 VPWSHTO.hl:2867 `VPWSHTO_PRIME` 形，与 LA15
 +已证孪生 `VPWSHTO_PRIME_p15` 逐字同形)。 -/
@@ -32,13 +34,16 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 +    ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
 +      norm (vv i - vv ((i + 2) % 5)) ≤ 1 + Real.sqrt 5 ∧
 +      norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5 := by
-+  sorry
+   sorry
  
  /-- HOL `EQTTNZI1_concl` (appendix.hl:1110). Discharged 2026-09-30
 diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+index 059be714..5b02933d 100644
 --- a/lean/Kepler/Text/LocalConcl.lean
 +++ b/lean/Kepler/Text/LocalConcl.lean
-@@ -1490,15 +1490,14 @@
+@@ -1488,18 +1488,17 @@ theorem TBRMXRZ1_discharged : ∀ (f : ℝ → ℝ) (f' : ℝ) (g : ℝ → ℝ)
+ bounds form and lacks the registry concl's `2 < dist` strictness (not
+ derivable from the `≤ 1+sqrt 5` bounds) and the distinctness witness
  conjuncts. -/
 -theorem VPWSHTO_discharged : ∀ v x u w w1 : V3,
 -    ({v, x, u, w, w1} : Set V3) ⊆ ballAnnulus →
@@ -52,7 +57,6 @@ diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
 -      w2 ∈ ({v, x, u, w, w1} : Set V3) ∧ v1 ≠ u1 ∧ u1 ≠ w2 ∧ v1 ≠ w2 ∧
 -      2 < dist v1 u1 ∧ 2 < dist v1 w2 ∧
 -      dist v1 u1 ≤ 1 + Real.sqrt 5 ∧ dist v1 w2 ≤ 1 + Real.sqrt 5 := by
--  sorry
 +theorem VPWSHTO_discharged : ∀ vv : ℕ → V3,
 +    ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) ⊆ ballAnnulus →
 +    Kepler.Packing ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) →
@@ -64,5 +68,6 @@ diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
 +    ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
 +      norm (vv i - vv ((i + 2) % 5)) ≤ 1 + Real.sqrt 5 ∧
 +      norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5 := by
-+  sorry
+   sorry
  
+ /-- HOLD (d) `XWNHLMD_concl`: the proved `XWNHLMD_p26` keeps the extra

@@ -1,7 +1,11 @@
 diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
+index 83fd2b35..780c37cc 100644
 --- a/lean/Kepler/Text/LocalAuto1.lean
 +++ b/lean/Kepler/Text/LocalAuto1.lean
-@@ -1687,5 +1687,8 @@
+@@ -1684,9 +1684,12 @@ theorem YXIONXL3_concl : ∀ (s : ScsV39) (i : ℕ), isScsV39 s →
+     scsArrowV39 {s} {scsPropEquV39 s i} := by
+   sorry
+ 
 -/-- HOL `LKGRQUI_concl` (appendix.hl:1144). Proof pending. -/
 +/-- HOL `LKGRQUI_concl` (SF-68 真化：改采 corpus 正本 LKGRQUI.hl:86-89
 +三前提形 `scs_diag` + `is_scs_slice_v39`；appendix.hl:1144 摘要形以纯
@@ -12,23 +16,30 @@ diff --git a/lean/Kepler/Text/LocalAuto1.lean b/lean/Kepler/Text/LocalAuto1.lean
 +    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
      scsArrowV39 {s} {s', s''} := by
    sorry
+ 
 diff --git a/lean/Kepler/Text/LocalAuto27.lean b/lean/Kepler/Text/LocalAuto27.lean
+index 3e6f8d90..2d7c56a2 100644
 --- a/lean/Kepler/Text/LocalAuto27.lean
 +++ b/lean/Kepler/Text/LocalAuto27.lean
-@@ -892,5 +892,5 @@
+@@ -891,7 +891,7 @@ theorem SLICE_IS_UNADORNED_p27 :
+ 
  /-- HOL `LKGRQUI` (LKGRQUI.hl:87). -/
  theorem LKGRQUI_p27 : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop),
 -    isScsV39 s → (s', s'') = scsSliceV39 s p q d' d'' mkj →
 +    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
      scsArrowV39 {s} {s', s''} := by
    sorry
+     -- DISCHARGES: NEEDS `SLICE_IS_UNADORNED` fold of `scs_arrow_v39` +
 diff --git a/lean/Kepler/Text/LocalConcl.lean b/lean/Kepler/Text/LocalConcl.lean
+index 059be714..fd5a3d2a 100644
 --- a/lean/Kepler/Text/LocalConcl.lean
 +++ b/lean/Kepler/Text/LocalConcl.lean
-@@ -714,5 +714,5 @@
+@@ -713,7 +713,7 @@ theorem ZLZTHIC_discharged :
+ /-- WIRE `LocalAuto1.LKGRQUI_concl` <- `LKGRQUI_p27` (verbatim twin). -/
  theorem LKGRQUI_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
      (mkj : Prop),
 -    isScsV39 s → (s', s'') = scsSliceV39 s p q d' d'' mkj →
 +    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
      scsArrowV39 {s} {s', s''} :=
    LKGRQUI_p27
+ 
