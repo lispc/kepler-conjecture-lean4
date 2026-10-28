@@ -2786,13 +2786,15 @@ theorem BKOSSGE_concl : scsArrowV39 {scs3M1} {scs3T1, scs3T5} := by
 
 /-! ## Conclusions, part 5: the QKNVMLB slicing trio (appendix.hl:1055-1084) -/
 
-/-- HOL `QKNVMLB1_concl` (appendix.hl:1055). Proof pending. -/
+/-- HOL `QKNVMLB1_concl` (SF-64 真化：索引约定改采 corpus 正本
+QKNVMLB.hl:5222-5230 形 `vv (i % s'.k + p % s.k)`——RULING 2026-09-21 IV
+判孪生侧忠实；appendix.hl:1055 摘要形在 corpus 无原证)。 -/
 theorem QKNVMLB1_concl : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
     (vv : ℕ → V3),
     MMsV39 s vv → s.bm p q < 4 → (s.k = 4 ∨ s.bm p q ≤ cstab) → isScsV39 s →
     d' < 0.9 → scsDiag s.k p q →
     BBsV39 (scsHalfSliceV39 s p q d' mkj)
-      (fun i => vv ((i + p) % (scsHalfSliceV39 s p q d' mkj).k)) := by
+      (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) := by
   sorry
 
 /-- HOL `QKNVMLB2_concl` (appendix.hl:1064). Proof pending. -/

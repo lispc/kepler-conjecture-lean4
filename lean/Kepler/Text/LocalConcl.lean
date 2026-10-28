@@ -1441,7 +1441,7 @@ theorem QKNVMLB1_discharged : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Pro
     MMsV39 s vv → s.bm p q < 4 → (s.k = 4 ∨ s.bm p q ≤ cstab) → isScsV39 s →
     d' < 0.9 → scsDiag s.k p q →
     BBsV39 (scsHalfSliceV39 s p q d' mkj)
-      (fun i => vv ((i + p) % (scsHalfSliceV39 s p q d' mkj).k)) := by
+      (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) := by
   sorry
 
 /-- HOLD (c) `QKNVMLB2_concl`: same index-convention mismatch on both
