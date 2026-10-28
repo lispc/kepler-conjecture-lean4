@@ -4203,8 +4203,9 @@ MKFKQWU halfwt + MKFKQWU + ZTGIJCF4 ×16，PA21 proj_bank 全在库）。
 草案两件：`lane_snapshots/sf76draft-w1/drafts/SF76-GgMcellGeneral.lean`
 （122 行全真证零 sorry）+ `drafts/SF76-ztg4.lean`（391 行，真证 233 :
 sorry 2——`ztg4_ALT` 本体 + `gamma4fgcy_sym23P25` 模板件）。**正式 patch
-待 SF-75 落定后按 PA25 锚位构建**（本条立案时归档草案，构建后本节更新
-patch 路径）。
+已构建**：`docs/statement-fix-proposals-patches/76-pa25-ztg4.patch`
+（content-anchored 三处编辑 = GG 证体替换 / Part A+B 插入 / ztg4 证体替换，
+5 hunks +416/−3，`git apply --check` 实测过；SF-75 已落库 f7d0a27a）。
 
 ### (d) 消费面
 
