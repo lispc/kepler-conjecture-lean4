@@ -1,0 +1,67 @@
+# rest-params.tsv — nliPackNonlinearRest 簇 57 条粘合参数表（lane nli-glue-template-w1）
+# 基线 6fd47a5c 工作树；口径 = nliPackNonlinearRest（Assembly:1142-1167）62 员 − 5 条已闭合
+# （6096597438b:609 / 6096597438a:677 / 1965189142x34:699 / FWGKMBZ:812 / ZTGIJCF0:1118）= 57 个 sorry 骨架。
+# 含 rest 9（A2 在飞，triage 判 B）；triage E 类 nliRest = 56 行，第 57 行 = rest 9。
+# est_glue_lines = 单条 Assembly 侧粘合实例行数（A1 实测 63 行 = 基准 55 + √8 桥 8）；
+# 共享族桥引理（B1/B2/B3/B4/B6）按族一次性计费，入 GlueTemplate §例外表，不重复计入本表。
+# 桥类：B0=simp-only 同构(A1 型) B1=dihY/atn2 桥(A2 型) B2=eta_y 根式桥 B3=gamma4fgcy 体积复合桥
+#       B4=spine 线性组合/gamma23 桥(P25 先例 p25_gamma23Full8X_yOfX_eq) B6=asnFnhk/arcsin 桥(6096597438b 先例)
+# 路径相对主仓根；MISSING = 本盘无 case JSON（不得臆造，发射时需生成器或 G4 侧补齐）。
+stub	asm_anchor	bank_def	target_thm（目标语句）	box_special（对 A1 盒 [2hmin,2hplus]×[2,√8]⁵ 的差异）	cert_case_json（盘上）	cert_in_lib（库内 Cases 模块）	slot_delta_vs_A1（S1 常数桥/S3 桥类/S5 终局）	est_glue_lines
+nliRest1965189142a	Assembly.lean:691	PA21:437	bank_1965189142a：2π−2·asnFnhk > 0.591−0.0331·x2+0.506·lfunY1（x-空间）	常数盒 [1,1.26]×[3,34]×[1,1]⁴，无 hminus/√8 → S1 免；变量名 x1..x6	pipeline/interval/out/cases/1965189142_a.json	无	S1 免；S3=B6 arcsin 桥（6096597438b 先例在库，hybrid sin ~90 行按例改写）；S5 单目标 simpa	60
+nliRestJSPEVYT	Assembly.lean:711	PA21:452	bank_JSPEVYT：eta_y y4 y5 y6 ^ 2 > 1.34 ^ 2	[1,1]³ 退化三维 + [2hmin,√8]²×[2,√8]	pipeline/interval/out/cases/JSPEVYT.json	无	S1=√8 桥（A1 同款）+退化维常数端点 norm_num；S3=B2 eta_y 根式桥（~25 行一次性）；S5 单目标	65
+nliRestQITNPEA4003532128a	Assembly.lean:717	PA21:460	bank_QITNPEA4003532128a：delta4Y>25 ∨ deltaY>0.14 ∨ deltaY<0	[2hmin,2hplus]×[2,√8]×[√2,√2]³×[2,√8]	pipeline/interval/out/cases/QITNPEA_4003532128_a.json	无	S1=√8 桥+√2 点桥（上下同界，hsqrt8 模式复制）；S3=B0 候选（deltaY/delta4Y=deltaX 平方复合，simp-only 待构建验证）；S5=disj3 投影	75
+nliRestIXPOTPA	Assembly.lean:724	PA21:470	bank_IXPOTPA：deltaY<0 ∨ delta4Y>0 ∨ 4·x1DeltaX<3.07·delta4SquaredX ∨ 4·x1DeltaX>6.45·delta4SquaredX ∨ eta_y×2 ∨ gamma23Full8X(h0cut y1)>3·0.0057（7 支）	[2hmin,2hplus]×[2,2hmin]²×[√8,4hmin]×[2,2hmin]²	pipeline/interval/out/cases/IXPOTPA.json	无	S1=√8 桥+4hmin 下桥（mi_hminus_prop 线性组合）；S3=B0 候选+B4（gamma23Full8X，P25 先例）；S5=disj7 投影（最重析取）	85
+nliRestTXQTPVC	Assembly.lean:731	PA21:485	bank_TXQTPVC：gamma23Full8X(h0cut y1)>3·0.0057 ∨ rad2X<2 ∨ dihY>2.089 ∨ dihY<1.946 ∨ eta_y×2（6 支）	[2hmin,2hplus]×[2,2hmin]²×[2,√8]×[2,2hmin]²（=A1 型换位）	pipeline/interval/out/cases/TXQTPVC.json	无	S1=√8 桥；S3=B4+B1+B2 调用；S5=disj6	75
+nliRestQITNPEA3725403817（A2 在飞）	Assembly.lean:739	PA21:498	bank_QITNPEA3725403817：dihY < 1.56（=39/25）	[2hmin,2hplus]×[2,2hmin]³×[2,2.1]×[2,2hmin]²	pipeline/interval/out/cases/QITNPEA_3725403817.json	lean/Kepler/Interval/Cases/CQITNPEAx3725403817（964,984 叶/2,775 分片，prec 64 bb_arb）	S1=2.1 十进制桥（A2 已解，dyadic 2254857831·2⁻³⁰）；S3=B1 atn2 桥（A2 Glue.lean 已写 iteTree_eq_atn2+evalReal_eq_dihY ~45 行）；S5 单目标；落库=APPLY-DRAFT 一行前提槽代入	60
+nliRestQITNPEAv24003532128	Assembly.lean:746	PA21:506	bank_QITNPEAv24003532128：eta_y×2 ∨ rad2X<2 ∨ y2<y3 ∨ y2<y5 ∨ y2<y6 ∨ gamma23Full8X−0.00457511−0.00609451·dihY>0（6 支）	[2hmin,2hplus]×[2,2hmin]³×[2,√8]×[2,2hmin]²（=A1 型换位）	pipeline/interval/out/cases/QITNPEAv2_4003532128.json	无	S1=√8 桥；S3=B4+B1+B2；S5=disj6（含自由变量比较支 y2<y·，投影后由证书支给出，终局需选支说明）	80
+nliRestPEMKWU	Assembly.lean:752	PA21:518	bank_PEMKWU：gamma23Keep135X(h0cut y1)>aSpine5+bSpine5·dihY ∨ rad2X<2 ∨ dihY>1.074 ∨ eta_y×3（6 支）	[2hmin,2hplus]×[2,√8]×[2,2hmin]×[2,√8]×[2,2hmin]×[2,√8]	pipeline/interval/out/cases/PEMKWKU.json（id 漂移：桩 PEMKWU ↔ case PEMKWKU，orig_op=disj；发射前一行核对）	无	S1=√8 桥；S3=B4（Keep135 变体）+B1+B2；S5=disj6；另加 id 漂移核对项	80
+nliRestTEWNSCJ	Assembly.lean:759	PA21:531	bank_TEWNSCJ：gamma23Full8X(h0cut y1)>aSpine5+bSpine5·dihY ∨ rad2X<2 ∨ eta_y×2（4 支）	[2hmin,2hplus]×[2,2hmin]³×[2,√8]×[2,2hmin]²（=A1 型换位）	pipeline/interval/out/cases/TEWNSCJ.json	无	S1=√8 桥；S3=B4（P25 p25_gamma23Full8X_yOfX_eq 先例，PA25:10261 private 需复用/改公开）+B2；S5=disj4	70
+nliRestQITNPEA5400790175b	Assembly.lean:766	PA21:543	bank_QITNPEA5400790175b：gamma4fgcy/2+betaBumpLb+gamma3f(y1,y2,y6,√2)>0.0057 ∨ rad2X>2 ∨ eta_y>（3 支）	[2hmin,2hplus]×[2,2hmin]²×[2hmin,√8]×[2,2hmin]²	pipeline/interval/out/cases/QITNPEA_5400790175_b.json	无	S1=√8 桥；S3=B3（gamma4fgcy 首例族桥，~60-80 行一次性）+B2；S5=disj3	70
+nliRestQITNPEA5400790175a	Assembly.lean:772	PA21:553	bank_QITNPEA5400790175a：gamma4fgcy/2+betaBumpLb>0.0057 ∨ rad2X>2 ∨ eta_y<（3 支）	[2hmin,2hplus]×[2,2hmin]²×[2hmin,√8]×[2,2hmin]²	pipeline/interval/out/cases/QITNPEA_5400790175_a.json	无	S1=√8 桥；S3=B3+B2；S5=disj3	70
+nliRestQITNPEA3848804089	Assembly.lean:778	PA21:563	bank_QITNPEA3848804089：gamma4fgcy−0.161517+0.119482·dihY>0（单目标）	[2hmin,2hplus]×[2,2hmin]⁵（无 √8 → S1 免）	pipeline/interval/out/cases/QITNPEA_3848804089.json	无	S1 免；S3=B3+B1（gamma4fgcy±常数±c·dihY 线性 spine 组合）；S5 单目标	60
+nliRestQITNPEA5814748276	Assembly.lean:784	PA21:572	bank_QITNPEA5814748276：gamma4fgcy−0.00127562+0.00522841·dihY>0（单目标）	[2hmin,2hplus]×[2,2hmin]⁵	pipeline/interval/out/cases/QITNPEA_5814748276.json	无	同上（B3+B1 单目标族，与 3848804089 同模板复制）	60
+nliRestQITNPEA6206775865	Assembly.lean:790	PA21:581	bank_QITNPEA6206775865：gamma4fgcy+0.0142852−0.00609451·dihY>0（单目标）	[2hmin,2hplus]×[2,2hmin]⁵	pipeline/interval/out/cases/QITNPEA_6206775865.json	无	同上	60
+nliRestQITNPEA5653753305	Assembly.lean:796	PA21:591	bank_QITNPEA5653753305：gamma4fgcy+0.0659−0.042·dihY>0（单目标）	[2hmin,2hplus]×[2,2hmin]⁵	pipeline/interval/out/cases/QITNPEA_5653753305.json	无	同上	60
+nliRestBIXPCGW9455898160	Assembly.lean:803	PA21:601	bank_BIXPCGW9455898160：gamma4fgcy > −0.00569（单目标，HOL 字面 --#0.00569 双重负号）	[2hmin,2hplus]×[2,2hmin]⁵	pipeline/interval/out/cases/BIXPCGW_9455898160.json	无	S1 免；S3=B3 纯 gamma4fgcy（族内最简实例——建议作 B3 桥的首例校准件）；S5 单目标	60
+nliRestFHBVYXZb	Assembly.lean:877	PA21:619	bank_FHBVYXZb：gamma4fgcy+gamma3f(y1,y2,y6,√2)>0 ∨ rad2X>2 ∨ eta_y>（3 支）	[2hmin,2hplus]×[2,2hmin]⁵	pipeline/interval/out/cases/FHBVYXZ_b.json	无	S1 免；S3=B3+B2（gamma3f 桥并入 B3 族）；S5=disj3	70
+nliRestFHBVYXZa	Assembly.lean:882	PA21:629	bank_FHBVYXZa：gamma4fgcy>0 ∨ rad2X>2 ∨ eta_y<（3 支）	[2hmin,2hplus]×[2,2hmin]⁵	pipeline/interval/out/cases/FHBVYXZ_a.json	无	S1 免；S3=B3+B2；S5=disj3	70
+nliRestFHBVYXZv2a	Assembly.lean:888	PA21:638	bank_FHBVYXZv2a：gamma4fgcy>0.0057 ∨ rad2X>2 ∨ eta_y(y1,y3,y5)<（3 支）	[2hmin,2hplus]×[2,2hmin]⁵	pipeline/interval/out/cases/FHBVYXZv2_a.json	无	S1 免；S3=B3+B2（eta_y 槽位 135 变体）；S5=disj3	70
+nliRestQITNPEA2134082733	Assembly.lean:895	PA21:648	bank_QITNPEA2134082733：gamma4fgcy/2+betaBumpLb−0.213849+0.119482·dihY>0 ∨ rad2X>2（2 支）	[2hmin,2hplus]×[2,2hmin]²×[2hmin,√8]×[2,2hmin]²	pipeline/interval/out/cases/QITNPEA_2134082733.json	无	S1=√8 桥；S3=B3+B4+B1；S5=disj2	65
+nliRestQITNPEA1_2_2	Assembly.lean:901	PA21:692（=bank_QITNPEA1tmpl 2 2）	bank_QITNPEA1tmpl：gamma4fgcy/(1+genMid i3+genMid i4)>0.0057 ∨ rad2X>2（2 支）	tmpl 盒：y3∈[lo 2,hi 2]=[2hplus,2hmin→见 lo/hi def]，y4 同构（PA21:670-678：lo∈{2,2hmin,2hplus}，hi∈{2hmin,2hminus,√8} 逐 i 分支）	MISSING（make_F4/add_QITNPEA1 循环生成，ineq.hl:845-862；需生成器式 case 发射）	无	S1=tmpl 端点桥（simp [bank_QITNPEA1lo,hi,bankGenMid] 数值化，i3=2/i4=2 字面）；S3=B3（rad2X 支为 B0 候选）；S5=disj2；S2 加权 tmpl unfold	75
+nliRestQITNPEA1_2_1	Assembly.lean:907	PA21:694（tmpl 2 1）	同上	i3=2,i4=1 字面实例	MISSING（同 QITNPEA1 族）	无	同上	75
+nliRestQITNPEA1_2_0	Assembly.lean:913	PA21:696（tmpl 2 0）	同上	i3=2,i4=0	MISSING（同族）	无	同上	75
+nliRestQITNPEA1_1_2	Assembly.lean:919	PA21:698（tmpl 1 2）	同上	i3=1,i4=2	MISSING（同族）	无	同上	75
+nliRestQITNPEA1_1_1	Assembly.lean:925	PA21:700（tmpl 1 1）	同上	i3=1,i4=1	MISSING（同族）	无	同上	75
+nliRestQITNPEA1_1_0	Assembly.lean:931	PA21:702（tmpl 1 0）	同上	i3=1,i4=0	MISSING（同族）	无	同上	75
+nliRestQITNPEA9939613598	Assembly.lean:938	PA21:711	bank_QITNPEA9939613598：gamma4fgcy−0.00457511−0.00609451·dihY>0 ∨ rad2X>2（2 支）	[2hmin,2hplus]×[2,2hmin]²×[2hplus,√8]×[2,2hmin]²	pipeline/interval/out/cases/QITNPEA_9939613598.json	无	S1=√8 桥+2hplus 下桥（mi_hminus_prop 分量扩展）；S3=B3+B4+B1；S5=disj2	70
+nliRestBIXPCGW7274157868a	Assembly.lean:944	PA21:722	bank_BIXPCGW7274157868a：gamma4fgcy>0.0057 ∨ dihY<2.3（2 支）	[2hmin,2hplus]×[2,2hmin]²×[2hplus,√8]×[2,2hmin]²	pipeline/interval/out/cases/BIXPCGW_7274157868_a.json	无	S1=√8 桥+2hplus 下桥；S3=B3+B1；S5=disj2	65
+nliRestBIXPCGWb	Assembly.lean:950	PA21:732	bank_BIXPCGWb：delta4Y>0 ∨ deltaY>60 ∨ deltaY<0（3 支）	[2hmin,2hplus]×[2,√8]²×[2,2hplus]×[2,√8]²	pipeline/interval/out/cases/BIXPCGW_b.json	无	S1=√8 桥+2hplus 上桥；S3=B0 候选（deltaY/delta4Y deltaX 族，simp-only 待验证）；S5=disj3	70
+nliRestBIXPCGW1738910218a2	Assembly.lean:956	PA21:741	bank_BIXPCGW1738910218a2：dihY<2.3（单目标）	[2hmin,2hplus]×[2,√8]²×[2,2hplus]×[2,√8]²	pipeline/interval/out/cases/BIXPCGW_1738910218_a2.json	无	S1=√8 桥+2hplus 上桥；S3=B1；S5 单目标	60
+nliRestBIXPCGW7080972881a2	Assembly.lean:962	PA21:750	bank_BIXPCGW7080972881a2：dihY<2.3（单目标）	[2hmin,2hplus]×[2hmin,√8]×[2,√8]⁴	pipeline/interval/out/cases/BIXPCGW_7080972881_a2.json	无	S1=√8 桥（多维）；S3=B1；S5 单目标	60
+nliRestBIXPCGW6652007036a2	Assembly.lean:968	PA21:759	bank_BIXPCGW6652007036a2：dihY<2.8（单目标）	[2hmin,2hplus]×[2,√8]⁵（=A1 盒）	pipeline/interval/out/cases/BIXPCGW_6652007036_a2.json	无	S1=√8 桥（A1 同款）；S3=B1（阈值 2.8，atn2 桥逐臂对照需重核 3 ite 臂）；S5 单目标	60
+nliRestGLFVCVK4y4subcrit	Assembly.lean:975	PA21:768	bank_GLFVCVK4y4subcrit：gamma4fgcy/2>0.0057 ∨ eta_y(y1,y2,y6)<1.34² ∨ rad2X>2（3 支）	[2hmin,2hplus]×[2hmin,√8]×[2,2hmin]⁴	pipeline/interval/out/cases/GLFVCVK4_2477216213_y4subcrit.json	无	S1=√8 桥；S3=B3+B2；S5=disj3	75
+nliRestGLFVCVK4y4supercrit	Assembly.lean:982	PA21:778	bank_GLFVCVK4y4supercrit：gamma4fgcy/2>0.0057 ∨ eta_y< ∨ rad2X>2（3 支）	[2hmin,2hplus]×[2,h0]×[2,2hmin]×[2hplus,√8]×[2,2hmin]²（h0 端点）	pipeline/interval/out/cases/GLFVCVK4_2477216213_y4supercrit.json	无	S1=h0 桥（2·h0=2.52，norm_num [h0] 一步，PA21:1463 先例）+√8+2hplus 下桥；S3=B3+B2；S5=disj3	80
+nliRestGLFVCVK4y4crit	Assembly.lean:989	PA21:788	bank_GLFVCVK4y4crit：gamma4fgcy/3>0.0057 ∨ eta_y< ∨ rad2X>2（3 支）	[2hmin,2hplus]×[2hmin,2hplus]×[2,2hmin]×[2hmin,2hplus]×[2,2hmin]²	pipeline/interval/out/cases/GLFVCVK4_2477216213_y4crit.json	无	S1=hminus/hplus 多维端点（mi_hminus_prop 分量扩展）；S3=B3（/3 变体）+B2；S5=disj3	75
+nliRestGLFVCVK4a8328676778	Assembly.lean:996	PA21:798	bank_GLFVCVK4a8328676778：gamma4fgcy/2+betaBumpForceY>0 ∨ rad2X>2（2 支）	[2hmin,2hplus]×[2,2hmin]²×[2hmin,2hplus]×[2,2hmin]²	pipeline/interval/out/cases/GLFVCVK4a_8328676778.json	无	S1=多维端点；S3=B3+betaBumpForceY（IneqClosureDefs:485，桥并入 B3 族）；S5=disj2	65
+nliRestGLFVCVK4	Assembly.lean:1002	PA21:808	bank_GLFVCVK4：gamma4fgcy>0 ∨ norm2hh<(hplus−hminus)² ∨ rad2X>2（3 支）	[2hmin,2hplus]×[2,√8]⁵（=A1 盒）	pipeline/interval/out/cases/GLFVCVK4_2477216213.json（按命名约定映射 base 分支，内容核对项）	无	S1=√8 桥；S3=B3+B0（norm2hh 多项式，IneqClosureDefs:335，simp-only 候选）；S5=disj3	70
+nliRestMKFKQWUhalfwt	Assembly.lean:1009	PA21:819	bank_MKFKQWUhalfwt：yOfX rad2X > 2（单目标）	[2hmin,2hplus]×[2hplus,√8]×[2,√8]×[2hmin,√8]×[2,√8]²	pipeline/interval/out/cases/MKFKQWU_halfwt.json	无	S1=√8 桥+2hplus/2hmin 下桥；S3=B0 候选（rad2X=rhoX/(4·deltaX)，IneqClosureDefs:628，若发射 prog 字面编译则 simp-only=与 A1 同构）；S5 单目标——**与 A1 签名同构的最优先校准件**	55
+nliRestMKFKQWU	Assembly.lean:1015	PA21:828	bank_MKFKQWU：yOfX rad2X > 2（单目标）	[2hmin,2hplus]×[2hmin,√8]²×[2,√8]×[2hmin,√8]²	pipeline/interval/out/cases/MKFKQWU.json	无	同上（多维端点扩展）；**A1 同构候选第二件**	55
+nliRestZTGIJCF4_1_1_1_1	Assembly.lean:1021	PA21:865（=bank_ZTGIJCF4tmpl 1 1 1 1）	bank_ZTGIJCF4tmpl：gamma4fgcy/(1+ΣgenMid)+cond·betaBumpLb > aSpine5+bSpine5·dihY ∨ rad2X>2（2 支）	tmpl 4 维盒（i3..i6∈{0,1}：lo/hi ∈ {2↔2hminus, 2hminus↔√8}，PA21:844-847）	MISSING（add 循环生成，ineq.hl:486-499；需生成器式 case 发射）	无	S1=tmpl 端点桥（simp [bank_ZTGIJCF4lo,hi,bankGenMid]）；S3=B3+B4（spine 右端 aSpine5+bSpine5·dihY）+条件乘子（if Σ=2∧i4=1，本实例 =0，simp 闭）；S5=disj2；S2 加权 tmpl unfold；**全簇最重例外**	85
+nliRestZTGIJCF4_1_1_1_0	Assembly.lean:1027	PA21:867（tmpl 1 1 1 0）	同上	i4=0 → 条件乘子 if 分支仍需 simp 求值	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_1_1_0_1	Assembly.lean:1033	PA21:869（tmpl 1 1 0 1）	同上	i3=1,i4=0,i5=1,i6=1	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_1_1_0_0	Assembly.lean:1039	PA21:871（tmpl 1 1 0 0）	同上	i3=1,i4=0,i5=0,i6=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_1_0_1_1	Assembly.lean:1045	PA21:873（tmpl 1 0 1 1）	同上	i4=1 → Σ=1+0+1+1=3≠2，条件乘子=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_1_0_1_0	Assembly.lean:1051	PA21:875（tmpl 1 0 1 0）	同上	i4=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_1_0_0_1	Assembly.lean:1057	PA21:877（tmpl 1 0 0 1）	同上	i3=1,i4=0,i5=0,i6=1	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_1_0_0_0	Assembly.lean:1063	PA21:879（tmpl 1 0 0 0）	同上	i3=1,i4=0,i5=0,i6=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_0_1_1_1	Assembly.lean:1069	PA21:881（tmpl 0 1 1 1）	同上	i3=0,i4=1 → Σ=1+1+1+1=4≠2，乘子=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_0_1_1_0	Assembly.lean:1075	PA21:883（tmpl 0 1 1 0）	同上	i3=0,i4=1,i5=1,i6=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_0_1_0_1	Assembly.lean:1081	PA21:885（tmpl 0 1 0 1）	同上	i3=0,i4=1,i5=0,i6=1	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_0_1_0_0	Assembly.lean:1087	PA21:887（tmpl 0 1 0 0）	同上	i3=0,i4=1,i5=0,i6=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_0_0_1_1	Assembly.lean:1093	PA21:889（tmpl 0 0 1 1）	同上	i4=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_0_0_1_0	Assembly.lean:1099	PA21:891（tmpl 0 0 1 0）	同上	i4=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_0_0_0_1	Assembly.lean:1105	PA21:893（tmpl 0 0 0 1）	同上	i4=0	MISSING（同族）	无	同上	85
+nliRestZTGIJCF4_0_0_0_0	Assembly.lean:1111	PA21:895（tmpl 0 0 0 0）	同上	i3=0,i4=0,i5=0,i6=0 → 盒全 [2,2hminus]，Σ=0，分母 1	MISSING（同族）	无	同上（本实例条件乘子=0 恒成立，最简）	85
+nliRestGCKBQEA	Assembly.lean:1130	PA21:920	bank_GCKBQEA：dihY > 0.606（单目标，下界方向）	[2hmin,2hplus]×[2,√8]⁵（=A1 盒）	pipeline/interval/out/cases/GCKBQEA.json	无	S1=√8 桥（A1 同款）；S3=B1（A2 型 atn2 桥，下界方向）；S5 单目标	60
+nliRestRQWUDDU	Assembly.lean:1136	PA21:928	bank_RQWUDDU：dihY>0.76 ∨ eta_y(y1,y2,y6)²>2 ∨ eta_y(y1,y3,y5)²>2（3 支）	[2hmin,2hplus]×[2,√8]⁵（=A1 盒）	pipeline/interval/out/cases/RQWUDDU.json	无	S1=√8 桥；S3=B1+B2；S5=disj3	70
