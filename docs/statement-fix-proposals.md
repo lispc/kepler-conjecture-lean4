@@ -4182,3 +4182,45 @@ PA25 本体重编分钟级。
 依用户 SF 通道常态化授权（2026-10-28），编排者裁决立案执行
 （w5sf-prep 车道核验简报 lane_snapshots/w5sf-prep/ 全过，两案均低风险）。
 执行序列：SF-64..74 链毕后走闸（工作树单态约束）。
+
+## 76. PA25 `GG_MCELL_GENERAL` 证填 + `real_model_ztg4` 收割装配（SF-75 落定后串行）— 分级 B（证填 · 塌缩链连接，零陈述改动）
+
+### (a) HOL 裁决
+
+GG_MCELL_GENERAL 正本 = `OXLZLEZ3.hl:5630-5713`（六重合取 rcases +
+BETA/NONBETA 二分 + def 展开）；ztg4 正本 = `OXLZLEZ3.hl:6666-6707`
+（= GG_MCELL_GENERAL + c_4_azim_mcell_dih_y + ztg4_ALT + MCELL4_DOMAIN）；
+ztg4_ALT 19 张 bank = merge_ineq.hl:2295-2337（GLFVCVK4 2477216213 +
+MKFKQWU halfwt + MKFKQWU + ZTGIJCF4 ×16，PA21 proj_bank 全在库）。
+
+### (b) Lean 诊断
+
+塌缩链七件全真即插即用、签名差槽 0（PA25 :8111/:8222/:8455/:8572/:8588/
+:8635/:8672，sf76draft-w1 逐件核对）。硬依赖 SF-75（beta_bumpA_yP25 有体）。
+
+### (c) 补丁
+
+草案两件：`lane_snapshots/sf76draft-w1/drafts/SF76-GgMcellGeneral.lean`
+（122 行全真证零 sorry）+ `drafts/SF76-ztg4.lean`（391 行，真证 233 :
+sorry 2——`ztg4_ALT` 本体 + `gamma4fgcy_sym23P25` 模板件）。**正式 patch
+待 SF-75 落定后按 PA25 锚位构建**（本条立案时归档草案，构建后本节更新
+patch 路径）。
+
+### (d) 消费面
+
+real_model_ztg4 闭合 = e2e 直源 −1（父 pkrmQu，tsv :155）。GG_MCELL_GENERAL
+本体不在锥内（零 Lean 消费者），填证后成为 ztg4/gamma_qx/gamma10/gamma11
+的可用件。
+
+### (e) 风险
+
+最大缺口 = HOL ztg4 体 320 行 REAL_WLOG_SIMPLEX_LEMMA2_LE + 19-shard 覆盖
+胶合无 Lean 引擎对应（预期内实质债）：已落 sorried 骨架 + 四步期望战术 +
+胶合钥匙五件真证 + 两枚代表支全真收口。编译窗预估 6-9h（草案一 <1 fix
+循环；草案二 ztg4_ALT 胶合 4-7 循环）。
+
+### (f) 状态
+
+依用户 SF 通道常态化授权（2026-10-28）立案；草案齐（sf76draft-w1 车道，
+基线 1bd6a3fd）；执行序列 = SF-64..74 链毕 → SF-75 闸 → 本条 patch 构建
+→ 本条闸。
