@@ -1515,16 +1515,19 @@ theorem VPWSHTO_discharged : ∀ vv : ℕ → V3,
       norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5 :=
   VPWSHTO_PRIME_p15
 
-/-- HOLD (d) `XWNHLMD_concl`: the proved `XWNHLMD_p26` keeps the extra
-`s.d ≤ s'.d` antecedent (consumed by `SCS_BASIC_TAUSTAR_p26`);
-`isScsV39` pins only `s.d < 0.9` (no dTame equation), so the antecedent is
-not derivable from the registry hypotheses. -/
+/-- WIRE `LocalAuto1.XWNHLMD_concl` <- `XWNHLMD_p26` (verbatim twin; SF-71
+added the corpus `s.d ≤ s'.d` antecedent).  Debt-consolidating wiring,
+sorryAx standing: the twin's own body is clean, but the axiom arrives via
+`XWNHLMD_MM_p26` -> `SGTRNAF_p27` -> `UXCKFPE2_p27` -> `UXCKFPE_p24` from
+the LA24 case bank (`XWITCCN_CASE_3/4/5/6_IS_SCS_p24`, sorries at
+LA24:1387/1128/1163/1196); the debt has that single known root bank and
+self-clears when the four cases close. -/
 theorem XWNHLMD_discharged : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s →
     isScsV39 s' → scsBasicV39 s → scsBasicV39 s' → s.k = s'.k →
     s.d ≤ s'.d →
     v ∈ MMsV39 s → BBsV39 s' v →
-    scsArrowV39 {s} {s'} := by
-  sorry
+    scsArrowV39 {s} {s'} :=
+  XWNHLMD_p26
 
 /-- HOLD (d) `QKNVMLB3_concl`: the proved `QKNVMLB3_p35` case-splits onto
 the still-sorried `QKNVMLB3_Eq4/LE4_p35` branches AND its realisation
