@@ -1564,8 +1564,18 @@ reduction1.hl 匹配/商机器 def 前提族、WMLNYMD:257/:341
 复用不可达，双份镜像异 namespace 不冲突）。 -/
 def GoodFacesV3 (g : Graph) : Prop :=
   ∀ v ∈ verticesSet2 g, (facesAtV2 g v).Perm (g.facesAt v)
-/-- PLACEHOLDER(tame章)（`vertices_set2 g = elements_of_list (fgraph g)`）。 -/
-def VerticesSet2Eq (_ : Graph) : Prop := True
+/-- HOL `vertices_set2 g = elements_of_list (fgraph g)`（tame_defs2.hl:60
+合取项；SF-62 真化）。`elements_of_list`（list_hypermap-compiled.hl:29）↦
+`Kepler.Text.TameLp.elementsOfList`（`listOfElements L = L.flatten.eraseDups`
+的集合形，TameLp.lean:5179-5182 逐字镜像）。左支 `verticesSet2` 为 SF-61
+同车支撑件（GoodGraph.lean:59 同体镜像）。全函数陈述（集合等式，任意
+`g` 有定义），无 junk 分歧。HOL 消费面：`good_graph_v4` 第六合取支
+（tame_defs2.hl:60）、`generatePolygon_reduction_v7` 前提（:744/:758，
+与 `good_faces_v3` 成对）；`lp_cond` 的 `BIJ h (elements_of_list L) V`
+消费的是 elements_of_list 函数本身，非本槽等式。flip 源：
+`Kepler.Text.TameSpine.VerticesSet2EqSpine`（GoodGraph.lean:89-90，同体）。 -/
+def VerticesSet2Eq (g : Graph) : Prop :=
+  verticesSet2 g = Kepler.Text.TameLp.elementsOfList g.fgraph
 
 /-- HOL `good_list_nodes`（tame_defs2.hl:33-36；SF-57 真化）：
 `node_set (hypermap_of_list L) = set_of_list (nodes_of_list L)`。
