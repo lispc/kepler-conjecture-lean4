@@ -5010,3 +5010,71 @@ stack7 版仅当 LA35 栈已先落时取用，二者互斥）。闸命令（lean
 （两件体仍 sorry，rule 5 白名单放行；可对 `CARD_SLICE_FF_LE_3_p35` 复闸一次。）账面：M0 直源 −0、文件级 sorry 不变；价值 = 陈述由假转真，
 为 `QKNVMLB3_LE4/Eq4` 填体与 CARD_FF 对的 ladder（≈750-900 行，前置 EJRCFJD）扫障。EJRCFJD 定尺见 `lane_snapshots/sf83-draft-w1/EJRCFJD-SIZING.md`
 （HOL 34 行但调用 PROVE_THE_SLICE_ASSUMPTION / THE_SLICING_INTO_2_LEMMA 两件无移植重件，真证路径估 400-800 行）。
+
+## 84. LA24 Section B B1 `MM_5Ix_IMP_MM_5M2` 四件结论槽成员式↛正本非空式（HEAD :338/:352/:366/:380 结论行；HOL OTMTOTJ.hl:223/:337/:462/:535 均为 `~(MMs_v39 scs_5M2 = {})`）— 分级 **A**（移植误植 · 结论槽非 HOL 内容 · 语义不等价且单向）
+
+### (a) HOL 裁决
+
+正本 `lean/scripts/local/OTMTOTJ.hl`（与 `reference/flyspeck/text_formalization/local/OTMTOTJ.hl` 两拷贝）四件同构，:223/:337/:462/:535 逐字：
+
+```
+MMs_v39 scs_5Ix v /\ (!i j. scs_diag 5 i j ==> cstab <= dist(v i,v j)) ==> ~(MMs_v39 scs_5M2 ={})
+```
+
+即假设槽 = 「v ∈ MMs(5Ix) + 对角 cstab 下界」（与 Lean 冻结假设逐字对应），**结论槽 = 集合非空式 `~(MMs_v39 scs_5M2 = {})`**。裁决佐证三重：
+
+1. **定义语义**：`MMs_v39`（appendix.hl:668）= `BBprime2_v39`（BBindex_v39 达到 BBindex_min_v39，appendix.hl:665）+ str/lo/hi/am/bm 侧条件。成员式 = 「**该特定 v** 是 BBprime 上的 BBindex 最小点」，非空式 = 「最小点**存在**（存在量化，witness 可异于 v）」。两形只有 Lean⇒HOL 单向（`⟨v, h⟩` 即得）；HOL 只证存在、从未断言原 v 仍是 5M2 世界的最小点——`BBs(5M2) ⊃ BBs(5Ix)`（b 放至 3.01 的 (0,1) 类，d 0.616 vs 0.4819），5Ix 最小点在更大系统下无理由仍达 min。
+2. **消费点实参**：HOL 四处消费（OTMTOTJ.hl:733/797/862/925，`SCS_5Ix_BERAK` 四证明，即 B3 带 hl:699/761/826/890）一律 `MP_TAC MM_5Ix_IMP_MM_5M2 THEN RESA_TAC` 后以 `SET_RULE ~(A={}) <=> ?v. v IN A` **存在式解构**——下游引入的是新 witness，不必是原 v。HOL 消费世界钉死在非空式上。
+3. **在库样板**：同文件 `MM_5I3_IMP_MM_5M1`（LA24:991，正本 OTMTOTJ.hl:1238 同型 `MMs_v39 (stab_diag 5I3 i j) v ==> ~(MMs_v39 (stab_diag 5M1 i j) = {})`）正确冻结为 `(MMsV39 (…) : Set (ℕ → V3)) ≠ ∅`；LA29（:578/:625/:1979/:2102/:2124/:2162/:2184/:2213/:2543）、LA33（:152/:268/:332/:454/:498）全族 MM 件结论一律 `≠ ∅`，且假设一律成员式。四件 B1 MM 件是全族仅有的成员式结论例外。
+
+**判定：移植误植成立**——非等价改写（单向蕴含，反方向不通），Lean 冻结形是正本没有的内容（更强断言），且族内无任何先例支持成员式结论。
+
+### (b) Lean 诊断（逐槽对账 + 机检）
+
+LA24 HEAD :335-388 四件同构，逐槽对照（HOL `scs_5Ix` ↔ Lean `scs5Ix`，`v:num->real^3` ↔ `v : ℕ → V3`）：
+
+| HOL 合取支 | Lean binder | 判 |
+|---|---|---|
+| `MMs_v39 scs_5Ix v` | `h : v ∈ MMsV39 scs5Ix` | ✓ |
+| `!i j. scs_diag 5 i j ==> cstab <= dist(v i,v j)` | `hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)` | ✓ |
+| **`~(MMs_v39 scs_5M2 = {})`** | **`v ∈ MMsV39 scs5M2`** | **✗ 唯一漂移槽（结论槽）** |
+
+后果：Lean 形严格强于正本——「任一 5Ix 最小点 + 对角界 ⇒ 它仍是 5M2 最小点」。正本只承诺 5M2 最小点存在；w2 车道几何判读（la24-otmtotj-w2 PLAN §B1）：v 只极小化 taustar 于更紧的 `BBs(5I1)`（b=2 紧边更多、d=0.4819），推不出其在 `(0,1)` 类放至 3.01 的 `BBs(5M2)` 下仍达 min——冻结形疑假未机检（本案不依赖疑假判定，非 HOL 内容已足立案；真证路径不存在，体不得填）。**判：陈述级误植，结论槽须回归非空式。**
+
+机检（sf84-draft-w1，2026-10-29 上午）：HEAD + 本案 patch 修后**全文件直译 exit 0**（探针 `/tmp/sf84-probe.lean` = 修后全文件 + 尾部 `#check @MM_5Ix_IMP_MM_5M2` ×4，单进程 `LEAN_PATH=/tmp/leanpath.txt lean` 实跑，墙钟 4:17），四个 `#check` 打出新形
+
+```
+MM_5Ix_IMP_MM_5M2 : ∀ v ∈ MMsV39 scs5Ix, (∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) → MMsV39 scs5M2 ≠ ∅
+```
+
+（Ix ∈ {5I1, 5I2, 5I3, 5M1}）；源级 `sorry` 计数不变（58→58，四件体保持 sorry）。
+
+### (c) 补丁（两形态，互斥；规范化 diff -u，头部无时间戳；仅动四条陈述的结论槽 + docstring FIDELITY 注，体保持 sorry，各 +20/−8、4 hunk；两版 ± 行多重集逐字同形，仅 hunk 行号/上下文偏移）
+
+| 形态 | 归档路径 | 基线 | apply-check | 取用 |
+|---|---|---|---|---|
+| **stack 版（执行件）** | `docs/statement-fix-proposals-patches/84-la24-mm-nonempty-stack.patch` | HEAD + `kit-la24-B1.diff`（la24-otmtotj-w2/kits；其后 B5easy / SF-80 / CASE import 段可有可无、任意序） | **PASS**（车道 /tmp/sf84-verify 复刻态实测；编排者沙箱复验：仅 kit-B1 后 PASS、B1+B5easy+SF-80 后 PASS、B1+B5easy+SF-84+SF-80 亦 PASS） | **窗内落库用此版**：kit-la24-B1 过闸提交之后打 |
+| HEAD 版（备用） | `docs/statement-fix-proposals-patches/84-la24-mm-nonempty.patch` | pristine 主仓（HEAD `a3575c98`） | **PASS**（`git apply --check` 实测） | 仅当 kit-la24-B1 **不落库或重新生成**时取用 |
+
+**叠加序勘误（编排者干跑 2026-10-29 上午，`/tmp/sf84ord` git 沙箱，取代车道「HEAD 版先于一切 la24 kit」的原推荐）**：HEAD 版与 `kit-la24-B1.diff` **双向互斥**——kit-B1 hunk1（`@@ -322,14 +322,163 @@`，填 `BB_5I1_IS_BB_5M2` 体）的尾部上下文恰含 `/-- HOL \`MM_5I1_IMP_MM_5M2\` (OTMTOTJ.hl:223). -/` 一行，正是本案 hunk1 要改写的 docstring 行。实测：序 A「SF-80 → SF-84 HEAD → kit-B1」在 kit-B1 处 `patch failed: …:322`；车道原测「kit-B1 → SF-84 HEAD」亦 FAIL（:332）。可行序 C「kit-B1 → kit-B5easy → SF-80 → SF-84 stack」、D「kit-B1 → kit-B5easy → SF-84 stack → SF-80」、E「kit-B1 → SF-84 stack」全 PASS，修后 LA24 sorry 52、四新形落位 :490/:539/:598/:657。故**执行件 = stack 版，窗序位置 = kit-la24-B1 过闸提交之后**（kit-B1 自带闸 + 提交，使 `git diff HEAD` 仅含本案 ± 行，STATEMENT-FIX 多重集比对才能过）。
+
+### (d) 消费面
+
+- **Lean 代码外部消费者 = 零**：全树 grep（排除 `.lake`/`.git`，编排者 2026-10-29 复核）四件名仅两处命中——HOL 正本文件 `OTMTOTJ.hl`（:223/:337/:462/:535 定义 + :733/:797/:862/:925 HOL 消费）与 `LocalAuto24.lean` 自身（:335-388 定义带 + :713 DISCHARGES 注记提及 `MM_5I1_IMP_MM_5M2`，纯注释）。无任何 term 级消费，与 la24-otmtotj-w2 判读一致。
+- **HOL 消费者**：(a)2 四处（B3 BERAK 带），全部以非空式吃入并存在式解构。
+- **修后破坏面 = 零**：四件体全 sorry、无已证件消费其结论；修后形正是 HOL 消费点的对齐形——未来 B3 BERAK 四根与 B5-root（`STAB_5I3_ARROW_STAB_5M1` 经 `MM_5I3_IMP_MM_5M1` 非空式）填体将按非空式喂入，重冻结是填体前置扫障。
+
+### (e) 风险
+
+- **低**：纯结论槽修正，体保持 sorry，触面 4 hunk 全在陈述带内，零已证消费者；闸走 STATEMENT-FIX 单件路径。
+- **顺序约束（硬）**：stack 版须在 kit-la24-B1 提交之后打；HEAD 版与 kit-B1 双向互斥（见 (c) 勘误）。两版除上下文外改动逐字同形。
+- 四件的 `-- DISCHARGES: BB_5Ix_IS_BB_5M2 + MM unfold` 注记在修后语义下过时（HOL 真路线 = `XWNHLMD_MM` + `MMS_IMP_BBS` + `BB_5Ix_IS_BB_5M2` + SCS basics/K 件）——本案不动（patch 最小化、缩冲突面），随未来填体改写。
+- 填体面前瞻：非空式填体走 `XWNHLMD_MM` 链（`XWNHLMD_MM_p26` LA26:786、`TAUSTAR_LE_0_XWNHLMD_p26` LA26:697 等 case-bank 债根）——与 B3/B5-root ladder 同根，非本案新增债；成员式冻结形则**不可证**，填体永久被扫。
+- A2/Assembly/其他文件零触碰。
+
+### (f) 状态
+
+**立案 2026-10-29 上午**（la24-otmtotj-w2 交付判「疑似陈述级误植」→ sf84-draft-w1 起草（≈28 调用 / 55 分）→ 编排者复核：HOL 正本四件结论行 `sed` 逐字核实为 `~(MMs_v39 scs_5M2 ={})`、Lean HEAD :335-388 四件结论核实为 `v ∈ MMsV39 scs5M2`、全树 term 级消费者零（仅 :713 注释）、LA24:991 `MM_5I3_IMP_MM_5M1` 族内样板 `≠ ∅`、HOL 四消费点 `MP_TAC … THEN RESA_TAC` 吃非空式、两 patch ± 多重集逐字同形、HEAD 版 apply-check PASS；**判 A · 分级 A 核准**，依用户 SF 通道常态化授权（2026-10-28）立案）。
+**在册未落**，apply + STATEMENT-FIX 闸待编译窗；**叠加序：kit-la24-B1 过闸提交 → 本案 stack 版**（执行件 `84-la24-mm-nonempty-stack.patch`；HEAD 版 `84-la24-mm-nonempty.patch` 仅当 kit-B1 不落时取用，二者互斥，见 (c) 勘误）。闸命令（lean/ 下，`$FILE` 单文件节，THM 可换四件之任意一）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/84-la24-mm-nonempty-stack.patch SF_ITEM=84 LANE_FILES=Kepler/Text/LocalAuto24.lean THM=MM_5I1_IMP_MM_5M2 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto24.lean MM_5I1_IMP_MM_5M2`
+（四件体仍 sorry，rule 5 白名单放行；可对 `MM_5I2_IMP_MM_5M2`/`MM_5I3_IMP_MM_5M2`/`MM_5M1_IMP_MM_5M2` 复闸三次。）账面：M0 直源 −0、文件级 sorry 不变；价值 = 四件陈述由非 HOL 内容（更强断言、疑假）回归正本非空式，为 B3 BERAK 四根与 B5-root 填体（XWNHLMD_MM 链）扫障。车道全文见 `lane_snapshots/sf84-draft-w1/PROPOSAL-84.md`。

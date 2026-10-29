@@ -1,0 +1,66 @@
+--- a/lean/Kepler/Text/LocalAuto24.lean
++++ b/lean/Kepler/Text/LocalAuto24.lean
+@@ -332,10 +332,13 @@
+   sorry
+   -- DISCHARGES: pentagons.hl `SCS_TAC` case work on `scs_5I1`/`scs_5M2`.
+ 
+-/-- HOL `MM_5I1_IMP_MM_5M2` (OTMTOTJ.hl:223). -/
++/-- HOL `MM_5I1_IMP_MM_5M2` (OTMTOTJ.hl:223).
++FIDELITY (SF-84): HOL concludes `~(MMs_v39 scs_5M2 = {})` (hl:223),
++the nonempty form; per-`v` membership in `MMsV39 scs5M2` is not HOL
++content (`XWNHLMD_MM` route yields an existential witness). -/
+ theorem MM_5I1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I1)
+     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+-    v ∈ MMsV39 scs5M2 := by
++    (MMsV39 scs5M2 : Set (ℕ → V3)) ≠ ∅ := by
+   sorry
+   -- DISCHARGES: `BB_5I1_IS_BB_5M2` + `MM` unfold.
+ 
+@@ -346,10 +349,13 @@
+   sorry
+   -- DISCHARGES: pentagons.hl `SCS_TAC` case work on `scs_5I2`/`scs_5M2`.
+ 
+-/-- HOL `MM_5I2_IMP_MM_5M2` (OTMTOTJ.hl:337). -/
++/-- HOL `MM_5I2_IMP_MM_5M2` (OTMTOTJ.hl:337).
++FIDELITY (SF-84): HOL concludes `~(MMs_v39 scs_5M2 = {})` (hl:337),
++the nonempty form; per-`v` membership in `MMsV39 scs5M2` is not HOL
++content (`XWNHLMD_MM` route yields an existential witness). -/
+ theorem MM_5I2_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I2)
+     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+-    v ∈ MMsV39 scs5M2 := by
++    (MMsV39 scs5M2 : Set (ℕ → V3)) ≠ ∅ := by
+   sorry
+   -- DISCHARGES: `BB_5I2_IS_BB_5M2` + `MM` unfold.
+ 
+@@ -360,10 +366,13 @@
+   sorry
+   -- DISCHARGES: pentagons.hl `SCS_TAC` case work on `scs_5I3`/`scs_5M2`.
+ 
+-/-- HOL `MM_5I3_IMP_MM_5M2` (OTMTOTJ.hl:462). -/
++/-- HOL `MM_5I3_IMP_MM_5M2` (OTMTOTJ.hl:462).
++FIDELITY (SF-84): HOL concludes `~(MMs_v39 scs_5M2 = {})` (hl:462),
++the nonempty form; per-`v` membership in `MMsV39 scs5M2` is not HOL
++content (`XWNHLMD_MM` route yields an existential witness). -/
+ theorem MM_5I3_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I3)
+     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+-    v ∈ MMsV39 scs5M2 := by
++    (MMsV39 scs5M2 : Set (ℕ → V3)) ≠ ∅ := by
+   sorry
+   -- DISCHARGES: `BB_5I3_IS_BB_5M2` + `MM` unfold.
+ 
+@@ -374,10 +383,13 @@
+   sorry
+   -- DISCHARGES: pentagons.hl `SCS_TAC` case work on `scs_5M1`/`scs_5M2`.
+ 
+-/-- HOL `MM_5M1_IMP_MM_5M2` (OTMTOTJ.hl:535). -/
++/-- HOL `MM_5M1_IMP_MM_5M2` (OTMTOTJ.hl:535).
++FIDELITY (SF-84): HOL concludes `~(MMs_v39 scs_5M2 = {})` (hl:535),
++the nonempty form; per-`v` membership in `MMsV39 scs5M2` is not HOL
++content (`XWNHLMD_MM` route yields an existential witness). -/
+ theorem MM_5M1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5M1)
+     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+-    v ∈ MMsV39 scs5M2 := by
++    (MMsV39 scs5M2 : Set (ℕ → V3)) ≠ ∅ := by
+   sorry
+   -- DISCHARGES: `BB_5M1_IS_BB_5M2` + `MM` unfold.
+ 
