@@ -5078,3 +5078,36 @@ MM_5Ix_IMP_MM_5M2 : ∀ v ∈ MMsV39 scs5Ix, (∀ i j : ℕ, scsDiag 5 i j → c
 **在册未落**，apply + STATEMENT-FIX 闸待编译窗；**叠加序：kit-la24-B1 过闸提交 → 本案 stack 版**（执行件 `84-la24-mm-nonempty-stack.patch`；HEAD 版 `84-la24-mm-nonempty.patch` 仅当 kit-B1 不落时取用，二者互斥，见 (c) 勘误）。闸命令（lean/ 下，`$FILE` 单文件节，THM 可换四件之任意一）：
 `GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/84-la24-mm-nonempty-stack.patch SF_ITEM=84 LANE_FILES=Kepler/Text/LocalAuto24.lean THM=MM_5I1_IMP_MM_5M2 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto24.lean MM_5I1_IMP_MM_5M2`
 （四件体仍 sorry，rule 5 白名单放行；可对 `MM_5I2_IMP_MM_5M2`/`MM_5I3_IMP_MM_5M2`/`MM_5M1_IMP_MM_5M2` 复闸三次。）账面：M0 直源 −0、文件级 sorry 不变；价值 = 四件陈述由非 HOL 内容（更强断言、疑假）回归正本非空式，为 B3 BERAK 四根与 B5-root 填体（XWNHLMD_MM 链）扫障。车道全文见 `lane_snapshots/sf84-draft-w1/PROPOSAL-84.md`。
+
+## 85. LA1 `WKEIDFT_concl`（HEAD :2286，**M0 在册行**，triage :136）冻结陈述丢四组 guard（corpus 正本 `WKEIDFT.hl:793` 有 `scs_diag k p q` / `scs_diag k p' q'` / `3 < k` / `(!i. scs_b_v39 s i i = b1)`，`b1` 为隐式全称）— 分级 **A**（移植误植 · 陈述为假 · SF-83 同型）
+
+### (a) HOL 裁决
+
+corpus 正本 `lean/scripts/local/WKEIDFT.hl:793`（:813 `prove` 起证，经 `WKEIDFT_EQU_V2` + `YXIONXL3` 等真证链）四件 guard 逐字：`scs_diag k p q`、`scs_diag k p' q'`、`3 < k`、`(!i. scs_b_v39 s i i = b1)`——`b1` 在该 let 表达中为**自由变量（隐式全称）**，Lean 移植须显式 `(b1 : ℝ)` binder。注册源 `appendix.hl:1368` 的摘要形恰缺此四支（`sed` 两处逐字对照）。判：appendix 摘要为有损转录，corpus 形为唯一权威。
+
+### (b) Lean 诊断（证伪 + 机检）
+
+LA1:2286 忠实移植了 appendix 摘要形（丢 guard 后陈述为假）。证伪（wkeidft-w3，编排者复跑）：`$S/wkeidft-w3/probes/sf_probe_wkeidft.lean`（141 行，0 sorry）构造 k=3 反例——`scsDiag 3` 恒假 ⇒ 三条 diag 前提全真空；a-行 3.5 > cstab=3.01 覆盖后 stab 的 `am=3.5 ≤ bm=cstab` 链爆炸而 card `6≤6` 合法——标准三证明 `冻结陈述 → False`（`counterexample` depends on `[propext, Classical.choice, Quot.sound]`）。机检（sf85-draft-w1）：修后 LA1 全文件 7.7s / LA20 17.0s / LA24 260.7s 各 **exit 0**；`#check` 打出含 `b1` + 四 guard 新形；三文件 `sorry` 计数修前后不变（88/11/58，体全保持 sorry）。
+
+### (c) 补丁（三文件一 patch、5 hunks、+43/−13；归档 `docs/statement-fix-proposals-patches/85-wkeidft-guards.patch`）
+
+- **LA1** `@@ -2282,13 +2282,20`：陈述插回四 guard + `(b1 : ℝ)` binder，docstring FIDELITY 注（appendix 摘要有损、k=3 反例），体保持 sorry。
+- **LA20** `@@ -1302` + `@@ -1323`：两处已证消费点补供——新公开件 `diag6_add2_p20` / `diag6_add3_p20`（`scsDiag 6 i (i+2/3)`，unfold+omega×3）与 `b_diag_6I1_p20`（`simp [scs6I1, mkUnadornedV39, csAdj]`，主对角槽=0），各 ≤3 行；`EQ_DIAG_STAB_6I1_02`（:1311）/`EQ_DIAG_STAB_6I1_03`（:1326，**起草车道新发现的第二处消费，不补则 LA20 不编译**）的 `have h := WKEIDFT_concl …` 各插入 b1 实参与四 guard 实参，其余体零改动。
+- **LA24** `@@ -8`（头注 FILE MAP 更新）+ `@@ -138`（`WKEIDFT_concl_p24` 同步加 binder 与四 guard，委托 `WKEIDFT_concl` 不变）。
+- apply-check：HEAD `e77006da` 与 `09c68883`（docs-only 前进，三目标文件逐字节同）双 PASS；**LA24 叠加态**（`/tmp/LA24_stack6.lean` = HEAD+五 kit 样本）PASS——LA24 :141-155 区无任何 kit 触碰，天然全栈适用；LA20 无 kit 链。
+
+### (d) 消费面
+
+全树 grep：term 级消费仅 LA20 两处（:1311/:1326，已证，patch 内补供）与 LA24:146 委托（同步）；LocalConcl :156/:312/:1305-1307 均注释；LA24 Section A 七件 `WKEIDFT_A/B/EQU(_V2)/arrow` 本就是 corpus 逐字 guard 形，不动。修后破坏面 = 零；修后形是 corpus 消费世界（`WKEIDFT` 主件经 `YXIONXL3`）的对齐形，未来 `WKEIDFT_concl` 真化（sizing ≈600-800 行：scsDiag 平移不变 + a/b 行常平移 + `la1shift_*` 工具箱 + `EQTTNZI2` 式 BBindexMin 达成）按 corpus 形填。
+
+### (e) 风险
+
+- **低**：三处陈述级修正 + 两处消费 supply（supply 三件为 ≤3 行真证公开新件）；体保持 sorry，M0 账 **−0**（该行不可填状态不变，价值 = M0 在册行由假回真，扫除真化前置）。
+- **闸机制（本案特殊点）**：LA20 已证体内添行，普通闸规则 2 会拒——**须走 STATEMENT-FIX 模式**（auto_gate.sh:50-79 以 patch 多重集比对替换规则 2；sorryAx 白名单实装 :593-604，:50 注释为旧文案），SF-78/79 多文件判例。三文件一 patch，**闸三次**、各以一文件为 `$FILE`、其余两文件入 `LANE_FILES`。
+- A2/Assembly/其它文件零触碰。技术注（跨文件直译法）：APFS clonefile 镜像 + 单换 LA1 olean（`LEAN_PATH` 前置被 `Kepler/` 命名空间权威遮蔽、拼接文件被传递 import 重名击落，两失败形态存档于车道 checklog）。
+
+### (f) 状态
+
+**立案 2026-10-29 上午**（la24-b4-w3 发现头注「PROVED twin」不实 → wkeidft-w3 探针证伪（标准三，编排者复跑）→ sf85-draft-w1 起草三文件 patch + 机检全通 → 编排者复核（HOL 两处逐字对照、patch 五 hunk 内容、HEAD+stack6 apply-check、guard-supply 探针复跑）**判 A · 分级 A 核准**，依用户 SF 通道常态化授权（2026-10-28）立案）。**在册未落**，apply + 三次 STATEMENT-FIX 闸待编译窗；闸命令（lean/ 下）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/85-wkeidft-guards.patch SF_ITEM=85 LANE_FILES=Kepler/Text/LocalAuto20.lean,Kepler/Text/LocalAuto24.lean THM=WKEIDFT_concl lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto1.lean WKEIDFT_concl`
+（二闸 `$FILE`=LA20 `THM=EQ_DIAG_STAB_6I1_02`、三闸 `$FILE`=LA24 `THM=WKEIDFT_concl_p24`，`LANE_FILES` 相应轮换。）真化移植（≈600-800 行，M0 −1）待本案落库后重投车道。车道全文见 `lane_snapshots/sf85-draft-w1/PROPOSAL-85.md`。

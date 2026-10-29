@@ -1,0 +1,125 @@
+--- a/lean/Kepler/Text/LocalAuto1.lean
++++ b/lean/Kepler/Text/LocalAuto1.lean
+@@ -2282,13 +2282,20 @@
+     ∀ j, j ∉ scsM s → dist (v j) (v (j + 1)) = 2 := by
+   sorry
+ 
+-/-- HOL `WKEIDFT_concl` (appendix.hl:1368). Proof pending. -/
+-theorem WKEIDFT_concl : ∀ (s : ScsV39) (a b a' b' : ℝ) (p q p' q' : ℕ),
++/-- HOL `WKEIDFT_concl` (WKEIDFT.hl:793, PROVED at :813). FIDELITY fix
++(SF-85): the frozen appendix.hl:1368 summary form dropped the four guards
++`scs_diag k p q`, `scs_diag k p' q'`, `3 < k` and `(!i. scs_b_v39 s i i =
++b1)` of the corpus original (there `b1` is an implicit universal, bound
++here as an explicit `(b1 : ℝ)`); the unguarded appendix form is false
++(k = 3 counterexample, wkeidft-w3 lane probe). Proof pending. -/
++theorem WKEIDFT_concl : ∀ (s : ScsV39) (a b a' b' b1 : ℝ) (p q p' q' : ℕ),
+     isScsV39 s → scsBasicV39 s →
+     (∀ i, s.a i (i + 1) = a) → (∀ i, s.b i (i + 1) = b) → p' + q = p + q' →
++    scsDiag s.k p q → scsDiag s.k p' q' → 3 < s.k →
+     (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab) →
+     (∀ i j, scsDiag s.k i j → s.a i j = a') →
+     (∀ i j, scsDiag s.k i j → s.b i j = b') →
++    (∀ i, s.b i i = b1) →
+     scsArrowV39 {scsStabDiagV39 s p q} {scsStabDiagV39 s p' q'} := by
+   sorry
+ 
+--- a/lean/Kepler/Text/LocalAuto20.lean
++++ b/lean/Kepler/Text/LocalAuto20.lean
+@@ -1302,19 +1302,36 @@
+       · rw [Nat.mod_eq_of_lt hi]
+         exact (stab_mod_lt_p20 (i + 3) i (Nat.mod_eq_of_lt hi)).symm
+ 
++/-- Guard supply for the corpus form of `WKEIDFT_concl` (SF-85): every
++offset-2 (resp. offset-3) pair is a `6I1` diagonal. -/
++theorem diag6_add2_p20 (i : ℕ) : scsDiag 6 i (i + 2) := by
++  unfold scsDiag
++  exact ⟨by omega, by omega, by omega⟩
++
++theorem diag6_add3_p20 (i : ℕ) : scsDiag 6 i (i + 3) := by
++  unfold scsDiag
++  exact ⟨by omega, by omega, by omega⟩
++
++/-- Diagonal entries of `scs_6I1` vanish (main-diagonal slot of `csAdj`),
++so the corpus `b1` guard instantiates with `scs6I1.b 0 0`. -/
++theorem b_diag_6I1_p20 (i : ℕ) : scs6I1.b i i = scs6I1.b 0 0 := by
++  simp [scs6I1, mkUnadornedV39, csAdj]
++
+ /-- HOL `EQ_DIAG_STAB_6I1_02` (hexagons.hl:1994). `WKEIDFT` at
+ `(p, q) = (i, i+2)`, `(p', q') = (0, 2)` (so `p' + q = p + q'`), with the
+ `(i+2, i)` source re-oriented by `STAB_SYM`. -/
+ theorem EQ_DIAG_STAB_6I1_02 (i : ℕ) :
+     scsArrowV39 {scsStabDiagV39 scs6I1 (i + 2) i}
+       {scsStabDiagV39 scs6I1 0 2} := by
+-  have h := WKEIDFT_concl scs6I1 2 (2 * h0) (2 * h0) 6 i (i + 2) 0 2
++  have h := WKEIDFT_concl scs6I1 2 (2 * h0) (2 * h0) 6 (scs6I1.b 0 0) i (i + 2) 0 2
+     SCS_6I1_IS_SCS SCS_6I1_BASIC
+     (fun x => a_edge_6I1_p20 x) (fun x => b_edge_6I1_p20 x)
+     (by simp)
++    (diag6_add2_p20 i) (diag6_add2_p20 0) (by norm_num [scs6I1, mkUnadornedV39])
+     (fun x y hxy => (h0_EQ_B_SCS_6I1.2 x y hxy).trans_le two_h0_le_cstab_p20)
+     (fun x y hxy => h0_EQ_B_SCS_6I1.2 x y hxy)
+     (fun x y hxy => h0_EQ_B_SCS_6I1.1 x y hxy)
++    (fun x => b_diag_6I1_p20 x)
+   rw [← STAB_SYM scs6I1 i (i + 2)]
+   exact h
+ 
+@@ -1323,13 +1340,15 @@
+ theorem EQ_DIAG_STAB_6I1_03 (i : ℕ) :
+     scsArrowV39 {scsStabDiagV39 scs6I1 (i + 3) i}
+       {scsStabDiagV39 scs6I1 0 3} := by
+-  have h := WKEIDFT_concl scs6I1 2 (2 * h0) (2 * h0) 6 i (i + 3) 0 3
++  have h := WKEIDFT_concl scs6I1 2 (2 * h0) (2 * h0) 6 (scs6I1.b 0 0) i (i + 3) 0 3
+     SCS_6I1_IS_SCS SCS_6I1_BASIC
+     (fun x => a_edge_6I1_p20 x) (fun x => b_edge_6I1_p20 x)
+     (by simp)
++    (diag6_add3_p20 i) (diag6_add3_p20 0) (by norm_num [scs6I1, mkUnadornedV39])
+     (fun x y hxy => (h0_EQ_B_SCS_6I1.2 x y hxy).trans_le two_h0_le_cstab_p20)
+     (fun x y hxy => h0_EQ_B_SCS_6I1.2 x y hxy)
+     (fun x y hxy => h0_EQ_B_SCS_6I1.1 x y hxy)
++    (fun x => b_diag_6I1_p20 x)
+   rw [← STAB_SYM scs6I1 i (i + 3)]
+   exact h
+ 
+--- a/lean/Kepler/Text/LocalAuto24.lean
++++ b/lean/Kepler/Text/LocalAuto24.lean
+@@ -8,9 +8,10 @@
+     `A_EQ_PSORT`, `B_EQ_PSORT`, `PROPERTY_OF_K_SCS`) is re-exported as
+     `_p24` one-line twins from the PROVED `_p17` copies in
+     `Kepler.Text.LocalAuto17`; `SCS_K_D_A_STAB_EQ` likewise from
+-    `Kepler.Text.LocalAuto20`; `WKEIDFT_concl` (the LocalAuto1:1384
+-    appendix variant of HOL `WKEIDFT.hl:570/:793`) is re-exported
+-    unchanged (FILE MAP note: it is a light variant, not the verbatim v1).
++    `Kepler.Text.LocalAuto20`; `WKEIDFT_concl` (the LocalAuto1 corpus
++    form of HOL `WKEIDFT.hl:570/:793`) is re-exported unchanged (FILE MAP
++    note: since SF-85 it carries the four guards of the verbatim v1, with
++    `b1` bound explicitly; it is no longer the light appendix variant).
+     The seven genuine conclusions `WKEIDFT_A`/`WKEIDFT_B` (diagonal data),
+     `WKEIDFT_EQU` (prop-eq witness), `WKEIDFT_A_V2`/`WKEIDFT_B_V2`
+     (stabilised, `(i+p) MOD k = p' MOD k`), `WKEIDFT_EQU_V2` and the arrow
+@@ -138,17 +139,20 @@
+       ∀ i' j', (scsStabDiagV39 s i j).a i' j' = s.a i' j' :=
+   ⟨rfl, rfl, fun _ _ => rfl⟩
+ 
+-/-- HOL `WKEIDFT_concl` (appendix.hl / LocalAuto1:1384 variant). Re-export
+-unchanged. FILE MAP note: this is the *light* appendix variant (no
+-`scs_diag k p q`, no `b1`); the verbatim HOL v1 (`WKEIDFT.hl:570`)
+-`scs_arrow {s} {s'}` statement is covered by `WKEIDFT` below in its v2
+-stabilised form. -/
+-theorem WKEIDFT_concl_p24 : ∀ (s : ScsV39) (a b a' b' : ℝ) (p q p' q' : ℕ),
++/-- HOL `WKEIDFT_concl` (WKEIDFT.hl:793 corpus form, via LocalAuto1).
++Re-export unchanged. FIDELITY fix (SF-85): the corpus guards `scsDiag s.k
++p q`, `scsDiag s.k p' q'`, `3 < s.k`, `∀ i, s.b i i = b1` (with `b1 : ℝ` an
++explicit binder) now ride on the delegated statement. The verbatim HOL v1
++(`WKEIDFT.hl:570`) `scs_arrow {s} {s'}` statement is covered by `WKEIDFT`
++below in its v2 stabilised form. -/
++theorem WKEIDFT_concl_p24 : ∀ (s : ScsV39) (a b a' b' b1 : ℝ) (p q p' q' : ℕ),
+     isScsV39 s → scsBasicV39 s →
+     (∀ i, s.a i (i + 1) = a) → (∀ i, s.b i (i + 1) = b) → p' + q = p + q' →
++    scsDiag s.k p q → scsDiag s.k p' q' → 3 < s.k →
+     (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab) →
+     (∀ i j, scsDiag s.k i j → s.a i j = a') →
+     (∀ i j, scsDiag s.k i j → s.b i j = b') →
++    (∀ i, s.b i i = b1) →
+     scsArrowV39 {scsStabDiagV39 s p q} {scsStabDiagV39 s p' q'} :=
+   WKEIDFT_concl
+ 
