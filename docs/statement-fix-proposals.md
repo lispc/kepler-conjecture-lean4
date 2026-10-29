@@ -5111,3 +5111,64 @@ LA1:2286 忠实移植了 appendix 摘要形（丢 guard 后陈述为假）。证
 **立案 2026-10-29 上午**（la24-b4-w3 发现头注「PROVED twin」不实 → wkeidft-w3 探针证伪（标准三，编排者复跑）→ sf85-draft-w1 起草三文件 patch + 机检全通 → 编排者复核（HOL 两处逐字对照、patch 五 hunk 内容、HEAD+stack6 apply-check、guard-supply 探针复跑）**判 A · 分级 A 核准**，依用户 SF 通道常态化授权（2026-10-28）立案）。**在册未落**，apply + 三次 STATEMENT-FIX 闸待编译窗；闸命令（lean/ 下）：
 `GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/85-wkeidft-guards.patch SF_ITEM=85 LANE_FILES=Kepler/Text/LocalAuto20.lean,Kepler/Text/LocalAuto24.lean THM=WKEIDFT_concl lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto1.lean WKEIDFT_concl`
 （二闸 `$FILE`=LA20 `THM=EQ_DIAG_STAB_6I1_02`、三闸 `$FILE`=LA24 `THM=WKEIDFT_concl_p24`，`LANE_FILES` 相应轮换。）真化移植（≈600-800 行，M0 −1）待本案落库后重投车道。车道全文见 `lane_snapshots/sf85-draft-w1/PROPOSAL-85.md`。
+
+## 86. LA35 `SUM_AZIM_EQ_ANGLE_EQ4_p35` 冻结丢 `IsHypE_p35` 载体（EQ4 根陈述为假，1 行修复 + 孪生闭根，M0 −1）
+
+### (a) HOL 裁决
+
+corpus 正本 `lean/scripts/local/QKNVMLB.hl:8445`：假设面钉死 canonical hypermap
+`hypermap (HYP (vec 0,V,E UNION {{u, w}}))`（`face`/`v_prime`/`e_prime` 三处逐字）。
+Lean 冻结把 hypermap 抽象为 `HS : Hypermap (V3 × V3)` 却只保留 `hfan`，丢了其自身
+DISCHARGES 配方（`V/E/F_PRIME_EQ_*_p35`）所需的载体 `IsHypE_p35 V (E ∪ {{u, w}}) HS`。
+旁证：同批冻结的 `CARD_FF_EQ_CARD_SLICE_FF_p35`（QKNVMLB.hl:9059）保留了
+`hHS : IsHypE_p35 V E HS`——同车不同命，即冻结漏行。
+
+### (b) Lean 诊断（证伪）
+
+车道 lkgrqui-eq4-w3 提出、编排者独立复核（冻结陈述逐字 + HOL 正本逐字）：唯一约束
+`HS` 的假设是 `hfan`；取 `HS := hypermapOfFan 0 V E`（Fan.lean:1169，合法
+`Hypermap`）则全扇 dart 不实现 diag `{u, w}` ⇒ `vPrime_p3 V (HS.face (u, rhoNode1 FF u)) = V`、
+`ePrime_p3 (E ∪ {{u, w}}) (…) = E`，`hfan` 退化为 `hMM` 给出的全扇
+`ConvexLocalFan V E FF`；而 `HS.face (u, rhoNode1 FF u)` 是全 dart 闭圈，其上 RHS 内角
+≠ 切片分裂角（i = 0 项 `azim 0 u u1 (全扇 pred u)` 严格大于切片项 `azim 0 u u1 w`）。
+判：**冻结陈述为假（A 级）**。修复后闭合件前提全核：`eq4Core_p35`/`face3Rho_p35`/
+`face3Ivs_p35`/`modPeel_p35` 标准三；孪生 `SUM_AZIM_EQ_ANGLE_EQ4_HS_p35` 已证
+（sorryAx 经 `F_PRIME_EQ_F_vv_p35` ⟵ `TECOXBMv2_p35` ⟵ `pmPlaneCrowding_p35` :2690 继承）。
+
+### (c) 补丁（两件两闸；归档 `docs/statement-fix-proposals-patches/86-eq4-kit-additive.diff` + `86-eq4-hhs-closure.diff`）
+
+- **件一（additive，359 行）**：`eq4Core_p35` + `face3Rho_p35`/`face3Ivs_p35`/`modPeel_p35`
+  （全 private `_p35` 新名）+ 修后孪生 `SUM_AZIM_EQ_ANGLE_EQ4_HS_p35`（= 冻结陈述 +
+  `hHS`，已证）+ 根尾证伪审计注释。apply-check **HEAD 与 stack16 双 PASS**（编排者实测
+  /tmp/eq4head）；全文件编译 **exit 0 ×2**（车道）；sorry 5→5。
+- **件二（收口，+60/−48，对件一后状态）**：根声明块（docstring+定理+尾注）整体平移至
+  EOF 孪生之后（EV11 块平移先例，LA24 masters B7/B8 同型；全树 grep 零 term 级消费者），
+  陈述插 `(hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)`（hnorm 与 hfan 之间，与孪生同位），体
+  `sorry` → `exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 s s' s'' p q d' d'' mkj k k' u w V E FF
+  vv vv' vv'' HS hk' hs' hs'' hvv' hvv'' hMM hscs hdiag hsl hk's' hk hp hq hV hE hFF
+  hnorm hHS hfan`。编排者机检：全文件 lean **exit 0**（LEAN_PATH 探针口径），
+  reverse-check PASS，sorry **5→4**，`#print axioms Kepler.Text.SUM_AZIM_EQ_ANGLE_EQ4_p35`
+  = `[propext, sorryAx, Classical.choice, Quot.sound]`——**sorryAx 为继承**（pmPlaneCrowding
+  链，其闭合后自动升标准三）。诚实口径：按 direct-sorry 计 **M0 −1**（LA35 五根→四根），
+  非标准三。
+
+### (d) 消费面
+
+全树 grep：`SUM_AZIM_EQ_ANGLE_EQ4_p35` 在 LA35 之外零出现；LA35 内仅注释三处
+（:43 / :1279 / :8427 区）。修后破坏面 = 零。
+
+### (e) 风险
+
+件二必须在件一之后（依赖孪生/eq4Core）；件二 hunk 只触根区与 EOF 两域，行 7 v4/v5
+各段插点均不在此两域，叠加态预期无冲突（窗内复闸再验）；移位后根位于 `slots3_le4`/
+`tausplit_le4` 之后，依赖序正确。多集比对以件二为准。
+
+### (f) 状态
+
+**立案 2026-10-29 傍晚**（eq4-w3 证伪 + 全套证料 → 编排者独立复核：HOL 正本逐字、
+冻结陈述逐字、kit apply/cmp/sorry 计数、收口件编译 exit 0）**判 A · A 级核准**，依用户
+SF 通道常态化授权（2026-10-28）立案。**在册未落**，两闸待编译窗（lean/ 下）：
+闸一（normal，additive）：`lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto35.lean SUM_AZIM_EQ_ANGLE_EQ4_p35`
+闸二（STATEMENT-FIX）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/86-eq4-hhs-closure.diff SF_ITEM=86 THM=SUM_AZIM_EQ_ANGLE_EQ4_p35 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto35.lean SUM_AZIM_EQ_ANGLE_EQ4_p35`
+闸二落库即 **M0 −1 兑现**。车道全文见 `lane_snapshots/lkgrqui-eq4-w3/`
+（PLAN/DELIVERY/kit/drafts/probes）。
