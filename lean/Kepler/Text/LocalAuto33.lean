@@ -101,8 +101,17 @@ DISCHARGES (2026-10-28, la33-ab-w1; 2 of the remaining 25): `OPP_IS_SCS_p33`
   `MM_SCS_OPP`, i.e. the fan/hypermap foundation deferred with
   `hypermapOfFan` (LocalAuto13 Section 6 block), not the fan-free sweep —
   see its docstring.
+
+DISCHARGES (2026-10-28, la33yx2-w1; 1 more): `YXIONXL2_p33` closed — the
+  `MM_SCS_OPP` slot is supplied by the fan-base module `Kepler.Text.FanBaseKit`
+  (new `+import Kepler.Text.FanBaseKit` at the head; `MM_SCS_OPP_fb` delivers
+  the `MMs`-transport of the negative-`peropp` realisation, standard three),
+  and the `is_scs` slot by the la33-ab `OPP_IS_SCS_p33`.  The theorem now
+  stands after `OPP_IS_SCS_p33` (its body consumes it; no forward refs) —
+  see its docstring.
 -/
 
+import Kepler.Text.FanBaseKit
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto12
 import Kepler.Text.LocalAuto17
@@ -122,21 +131,6 @@ namespace Kepler.Text
 open Kepler.Geom Set Classical
 
 /-! ## Section 0: shared kit (`_p33`) -/
-
-/-- HOL `YXIONXL2` (Ocbicby.hl; the terminal arrow to the opposite system).
-NEEDS: the `ScsV39` twin of `LocalAuto13.YXIONXL2_p13` (the peropp
-re-indexing transports `BBprime`/`MMs` for `3 < k`).
-LANE NOTE 2026-10-28 (la33-ab-w1): the closure reduces to a `ScsV39`
-`MM_SCS_OPP` (YXIONXL2.hl:3370 — the `MMs`-nonemptiness witness of the
-`scs_arrow_v39` disjunction); that HOL body leans on `BBPRIME2_SYM_0`
-(:3355) and `LOCAL_FAN_DUAL_SYM_0` (:1558) — the fan/hypermap foundation
-deferred with `hypermapOfFan` (the all-`sorry` LocalAuto13 Section 6
-block, plus the pending `azim`-negation kit).  This is the fan-heavy half
-of the Ocbicby pair; the fan-free half `OPP_IS_SCS_p33` below is
-discharged in this lane. -/
-theorem YXIONXL2_p33 (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k) :
-    scsArrowV39 {s} {scsOppV39 s} := sorry
-  -- DISCHARGES: NEEDS Ocbicby.hl `YXIONXL2` over `ScsV39`.
 
 /- HOL `OPP_IS_SCS` (Ocbicby.hl:2536 / YXIONXL2.hl:2536).
 DISCHARGED 2026-10-28 (la33-ab-w1): fan-free.  The 21-conjunct `is_scs_v39`
@@ -420,6 +414,60 @@ theorem OPP_IS_SCS_p33 (s : ScsV39) (hs : isScsV39 s) : isScsV39 (scsOppV39 s) :
     exact hcard
   -- DISCHARGES: NEEDS Ocbicby.hl `OPP_IS_SCS` over `ScsV39`
   -- (2026-10-28, la33-ab-w1: fan-free sweep, no `sorry` upstream).
+
+/-- The `MMs`-nonemptiness slot of `YXIONXL2_p33` (HOL `MM_SCS_OPP`,
+YXIONXL2.hl:3370): any `MMs`-realisation `vv` of `s` transports, via the
+negative `peropp` re-indexation, to a realisation of `scsOppV39 s`.
+DISCHARGED 2026-10-28 (la33yx2-w1): wired to `FanBaseKit.MM_SCS_OPP_fb`
+(`BBprime2` slot = `BBPRIME2_SYM_0_fb`, str slot = fan non-collinearity +
+`AZIM_NEG_fb` + flip re-indexation + periodic transfer; standard three).
+The `scsOppV39` involution (`FanBaseKit.SCS_OPP_REFL_fb`) is not needed at
+this slot: `MM_SCS_OPP_fb` states the transport in the direct `s → scsOppV39 s`
+direction. -/
+private theorem mmOpp_ne_p33 (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k)
+    {v : ℕ → V3} (hmm : MMsV39 s v) : MMsV39 (scsOppV39 s) ≠ ∅ := by
+  have hw' : MMsV39 (scsOppV39 s) (fun i => -(peropp v s.k i)) :=
+    MM_SCS_OPP_fb s v s.k rfl hs (by omega) hmm
+  intro hcon
+  rw [hcon] at hw'
+  exact hw'
+
+/-- HOL `YXIONXL2` (Ocbicby.hl; the terminal arrow to the opposite system).
+NEEDS: the `ScsV39` twin of `LocalAuto13.YXIONXL2_p13` (the peropp
+re-indexing transports `BBprime`/`MMs` for `3 < k`).
+LANE NOTE 2026-10-28 (la33-ab-w1): the closure reduces to a `ScsV39`
+`MM_SCS_OPP` (YXIONXL2.hl:3370 — the `MMs`-nonemptiness witness of the
+`scs_arrow_v39` disjunction); that HOL body leans on `BBPRIME2_SYM_0`
+(:3355) and `LOCAL_FAN_DUAL_SYM_0` (:1558) — the fan/hypermap foundation
+deferred with `hypermapOfFan` (the all-`sorry` LocalAuto13 Section 6
+block, plus the pending `azim`-negation kit).  This is the fan-heavy half
+of the Ocbicby pair; the fan-free half `OPP_IS_SCS_p33` is discharged in
+the preceding block.
+DISCHARGED 2026-10-28 (la33yx2-w1): the deferred `MM_SCS_OPP` slot is now
+supplied by the FanBaseKit lemma `MM_SCS_OPP_fb` (the `BBprime2`-symmetry +
+str/lo/hi/am/bm transports of the negative-`peropp` realisation
+`fun i => -(peropp vv k i)`), the `is_scs` slot by `OPP_IS_SCS_p33` above,
+and the `3 < k` gate is the hypothesis `hk` verbatim (HOL `~(k<=3)`).
+Position note: this theorem now stands after `OPP_IS_SCS_p33`, which its
+body consumes (Lean has no forward references).
+Standard three. -/
+theorem YXIONXL2_p33 (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k) :
+    scsArrowV39 {s} {scsOppV39 s} := by
+  refine ⟨fun t ht => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at ht
+    subst ht
+    exact OPP_IS_SCS_p33 s hs
+  · by_cases hex : (MMsV39 s).Nonempty
+    · obtain ⟨v, hv⟩ := hex
+      exact Or.inr ⟨scsOppV39 s, rfl, mmOpp_ne_p33 s hs hk hv⟩
+    · refine Or.inl fun t ht => ?_
+      rw [Set.mem_singleton_iff] at ht
+      subst ht
+      exact Set.not_nonempty_iff_eq_empty.mp hex
+  -- DISCHARGES: NEEDS Ocbicby.hl `YXIONXL2` over `ScsV39`
+  -- (2026-10-28, la33yx2-w1: `MMs` slot = `FanBaseKit.MM_SCS_OPP_fb` via the
+  -- private `mmOpp_ne_p33`, `is_scs` slot = `OPP_IS_SCS_p33` (la33-ab-w1),
+  -- `3 < k` gate = hypothesis; standard three).
 
 /-- HOL `PROP_EQU_IS_SCS` (YXIONXL.hl:589).  DISCHARGED 2026-09-19: verbatim
 `LocalAuto12.PROP_EQU_IS_SCS` (proved there; the heavy conjunct is the
