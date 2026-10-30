@@ -1398,6 +1398,228 @@ theorem E_PRIME_EQ_E_vv_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj 
 
 /-! ## BBs transport / taustar bank opens (source order: 4838-5312) -/
 
+/-! ## BBs transport head (engine-w1 E2 sub-lemma reuse; internals of
+HOL QKNVMLB.hl:4838-5223) -/
+
+/-- HOL `periodic` mod-normalisation: a `k`-periodic function is `mod k`-blind. -/
+theorem per_mod_p35 {α : Sort u} {f : ℕ → α} {k : ℕ} (hper : Periodic f k)
+    (i : ℕ) : f i = f (i % k) := by
+  have key : ∀ t x, f (t * k + x) = f x := by
+    intro t
+    induction t with
+    | zero => intro x; simp
+    | succ n ih =>
+        intro x
+        have e : (n + 1) * k + x = n * k + x + k := by ring
+        rw [e, hper, ih]
+  have e : i = i / k * k + i % k := (Nat.div_add_mod' i k).symm
+  conv_lhs => rw [e]
+  exact key (i / k) (i % k)
+
+/-- Two-argument mod-normalisation from `Periodic2`. -/
+theorem per2_mod_p35 {α : Sort u} {f : ℕ → ℕ → α} {k : ℕ}
+    (hper : Periodic2 f k) (i j : ℕ) : f i j = f (i % k) (j % k) := by
+  have key1 : ∀ t x y, f (t * k + x) y = f x y := by
+    intro t
+    induction t with
+    | zero => intro x y; simp
+    | succ n ih =>
+        intro x y
+        have e : (n + 1) * k + x = n * k + x + k := by ring
+        rw [e, (hper (n * k + x) y).1, ih]
+  have key2 : ∀ t x y, f x (t * k + y) = f x y := by
+    intro t
+    induction t with
+    | zero => intro x y; simp
+    | succ n ih =>
+        intro x y
+        have e : (n + 1) * k + y = n * k + y + k := by ring
+        rw [e, (hper x (n * k + y)).2, ih]
+  conv_lhs => rw [← (Nat.div_add_mod' i k)]
+  rw [key1 (i / k) (i % k) j]
+  conv_lhs => rw [← (Nat.div_add_mod' j k)]
+  rw [key2 (j / k) (i % k) (j % k)]
+
+/-- A two-element set of naturals with distinct sides: two pairings only. -/
+theorem pair_cases_p35 {a b c d : ℕ} (hab : a ≠ b)
+    (h : ({a, b} : Set ℕ) = {c, d}) : (a = c ∧ b = d) ∨ (a = d ∧ b = c) := by
+  have hmem1 : a ∈ ({c, d} : Set ℕ) := by rw [← h]; simp
+  have hmem2 : b ∈ ({c, d} : Set ℕ) := by rw [← h]; simp
+  rcases Set.mem_insert_iff.mp hmem1 with hac | hac
+  · rcases Set.mem_insert_iff.mp hmem2 with hbc | hbc
+    · exact absurd (by rw [hac, hbc]) hab
+    · exact Or.inl ⟨hac, hbc⟩
+  · rcases Set.mem_insert_iff.mp hmem2 with hbc | hbc
+    · exact Or.inr ⟨hac, hbc⟩
+    · exact absurd (by rw [hac, hbc]) hab
+
+/-- HOL QKNVMLB1 circuit identity (QKNVMLB.hl:4930 area): walking
+`(k'-1) + p%k` lands back on `q%k` where `k' = (q + 1 + (k - t)) % k`
+(the `scsHalfSliceV39` index circuit). -/
+theorem circuit_p35 (k t q : ℕ) (hk0 : 0 < k) (htk : t ≤ k)
+    (hk1 : 1 ≤ (q + 1 + (k - t)) % k) :
+    ((q + 1 + (k - t)) % k - 1 + t) % k = q % k := by
+  obtain ⟨m, hmv⟩ : ∃ m, (q + 1 + (k - t)) % k = m := ⟨_, rfl⟩
+  rw [hmv]
+  have hmk : m < k := by rw [← hmv]; exact Nat.mod_lt _ hk0
+  have hm1 : 1 ≤ m := by rw [← hmv]; exact hk1
+  have hX1 : 1 ≤ q + 1 + (k - t) := by omega
+  have hXt : (q + 1 + (k - t)) - 1 + t = q + k := by omega
+  have hmeq : m % k = (q + 1 + (k - t)) % k := by
+    conv_lhs => rw [← hmv]
+    exact Nat.mod_mod_of_dvd _ (Nat.dvd_refl k)
+  have hsub := Nat.ModEq.sub_right (by omega) (by omega) hmeq
+  have hadd := Nat.ModEq.add_right t hsub
+  rw [hXt] at hadd
+  rw [hadd, Nat.add_mod, Nat.mod_self, Nat.add_zero,
+    Nat.mod_mod_of_dvd _ (Nat.dvd_refl k)]
+
+/-- BBsV39 component 1 through the half-slice re-indexing: ballAnnulus. -/
+theorem q1_range_ball_p35 (vv : ℕ → V3) (k' t : ℕ)
+    (h : Set.range vv ⊆ ballAnnulus) :
+    Set.range (fun i => vv (i % k' + t)) ⊆ ballAnnulus := by
+  intro x hx
+  obtain ⟨i, rfl⟩ := hx
+  exact h ⟨i % k' + t, rfl⟩
+
+/-- BBsV39 component 2 through the half-slice re-indexing: Periodicity. -/
+theorem q1_periodic_p35 (vv : ℕ → V3) (k' t : ℕ) :
+    Periodic (fun i => vv (i % k' + t)) k' := by
+  intro i
+  show vv ((i + k') % k' + t) = vv (i % k' + t)
+  rw [Nat.add_mod, Nat.mod_self, Nat.add_zero,
+    Nat.mod_mod_of_dvd _ (Nat.dvd_refl k')]
+
+/-- BBsV39 component 3 (the `a`/`b` window) through the half-slice
+re-indexing, including the `{0, k'-1}` diagonal override fed by the
+`MMs` bounds at `(p % k, q % k)` (engine-w1 `q1_window_draft` verbatim;
+QKNVMLB.hl:4946-5060 segment). -/
+theorem q1_window_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop) (vv : ℕ → V3)
+    (hper : Periodic vv s.k) (hk0 : 0 < s.k)
+    (hper2am : Periodic2 s.am s.k) (hper2bm : Periodic2 s.bm s.k)
+    (ham : ∀ i j, s.am i j ≤ dist (vv i) (vv j))
+    (hbm : ∀ i j, dist (vv i) (vv j) ≤ s.bm i j)
+    -- the a ≤ am ≤ bm ≤ b chain of isScsV39 s (components 14 of the conjunct)
+    (haw : ∀ i j, s.a i j ≤ s.am i j) (hbw : ∀ i j, s.bm i j ≤ s.b i j)
+    (hk'1 : 2 ≤ (q + 1 + (s.k - p % s.k)) % s.k) :
+    ∀ i j, (scsHalfSliceV39 s p q d' mkj).a i j ≤
+        dist (vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k))
+             (vv (j % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) ∧
+      dist (vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k))
+             (vv (j % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) ≤
+        (scsHalfSliceV39 s p q d' mkj).b i j := by
+  obtain ⟨k', hk'eq⟩ : ∃ k', (q + 1 + (s.k - p % s.k)) % s.k = k' := ⟨_, rfl⟩
+  have hkP : (scsHalfSliceV39 s p q d' mkj).k = k' := by
+    simp only [scsHalfSliceV39]
+    rw [← hk'eq]
+  have hA : ∀ x y, (scsHalfSliceV39 s p q d' mkj).a x y =
+      if ({x % k', y % k'} : Set ℕ) = {0, k' - 1} then s.am p q
+      else s.a (x % k' + p % s.k) (y % k' + p % s.k) := by
+    intro x y
+    simp only [scsHalfSliceV39]
+    rw [← hk'eq]
+  have hB : ∀ x y, (scsHalfSliceV39 s p q d' mkj).b x y =
+      if ({x % k', y % k'} : Set ℕ) = {0, k' - 1} then s.bm p q
+      else s.b (x % k' + p % s.k) (y % k' + p % s.k) := by
+    intro x y
+    simp only [scsHalfSliceV39]
+    rw [← hk'eq]
+  have hksk : p % s.k ≤ s.k := Nat.le_of_lt (Nat.mod_lt p hk0)
+  -- MMs bounds at (p % k, q % k), folded to the mod-normal form
+  have core : s.am p q ≤ dist (vv (p % s.k)) (vv (q % s.k)) ∧
+      dist (vv (p % s.k)) (vv (q % s.k)) ≤ s.bm p q := by
+    constructor
+    · rw [per2_mod_p35 hper2am]; exact ham _ _
+    · rw [per2_mod_p35 hper2bm]; exact hbm _ _
+  have hcircuit : (k' - 1 + p % s.k) % s.k = q % s.k := by
+    rw [← hk'eq]
+    exact circuit_p35 s.k (p % s.k) q hk0 hksk (by omega)
+  intro i j
+  by_cases hov : ({i % k', j % k'} : Set ℕ) = {0, k' - 1}
+  · rw [hA i j, hB i j, if_pos hov, if_pos hov]
+    have hne : i % k' ≠ j % k' := by
+      intro he
+      rw [he] at hov
+      have hsing : ({j % k', j % k'} : Set ℕ) = {j % k'} := by simp
+      rw [hsing] at hov
+      have m1 : (0 : ℕ) ∈ ({j % k'} : Set ℕ) := by rw [hov]; simp
+      have m2 : (k' - 1 : ℕ) ∈ ({j % k'} : Set ℕ) := by rw [hov]; simp
+      simp only [Set.mem_singleton_iff] at m1 m2
+      omega
+    rcases pair_cases_p35 hne hov with ⟨hi0, hjk⟩ | ⟨hik, hj0⟩
+    · rw [hkP, hi0, hjk, zero_add,
+        per_mod_p35 hper (k' - 1 + p % s.k), hcircuit]
+      exact core
+    · rw [hkP, hik, hj0, zero_add,
+        per_mod_p35 hper (k' - 1 + p % s.k), hcircuit, dist_comm]
+      exact core
+  · rw [hA i j, hB i j, if_neg hov, if_neg hov, hkP]
+    exact ⟨(haw _ _).trans (ham _ _), (hbm _ _).trans (hbw _ _)⟩
+
+/-- The first three `BBsV39` components of the half-slice realisation
+(range/periodicity/window), bundled once for the LE4F/EQ4F twins
+(HOL QKNVMLB.hl:4873-4946 segment). -/
+theorem q1_head_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop) (vv : ℕ → V3)
+    (hBB : BBsV39 s vv) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hMM : vv ∈ MMsV39 s) :
+    Set.range (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) ⊆ ballAnnulus ∧
+    Periodic (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k))
+      (scsHalfSliceV39 s p q d' mkj).k ∧
+    (∀ i j, (scsHalfSliceV39 s p q d' mkj).a i j ≤
+        dist (vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k))
+             (vv (j % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) ∧
+      dist (vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k))
+             (vv (j % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) ≤
+        (scsHalfSliceV39 s p q d' mkj).b i j) := by
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hP2am : Periodic2 s.am s.k := hscs.2.2.2.2.2.2.2.2.1
+  have hP2bm : Periodic2 s.bm s.k := hscs.2.2.2.2.2.2.2.2.2.1
+  have hab := hscs.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+  exact ⟨q1_range_ball_p35 vv _ (p % s.k) hBB.1, q1_periodic_p35 vv _ (p % s.k),
+    q1_window_p35 s p q d' mkj vv hBB.2.1 hk0 hP2am hP2bm hMM.2.2.2.2.1
+      hMM.2.2.2.2.2 (fun i j => (hab i j).1) (fun i j => (hab i j).2.2)
+      (by have h := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag _ rfl
+          simp only [scsHalfSliceV39] at h
+          omega)⟩
+
+/-- HOL SUBGOAL of the LE4F segment: `norm (u - w) <= cstab`, from the
+`bm p q <= cstab` hypothesis through the MMs bound and `periodic2`
+(QKNVMLB.hl LE4F second script block). -/
+theorem q1_norm_diag_p35 (s : ScsV39) (p q : ℕ) (vv : ℕ → V3)
+    (hP2bm : Periodic2 s.bm s.k) (hMM : vv ∈ MMsV39 s) (hc : s.bm p q ≤ cstab) :
+    norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab := by
+  have h1 : dist (vv (p % s.k)) (vv (q % s.k)) ≤ s.bm (p % s.k) (q % s.k) :=
+    hMM.2.2.2.2.2 _ _
+  rw [per2_mod_p35 hP2bm p q] at hc
+  rw [← dist_eq_norm]
+  exact h1.trans hc
+
+/-- HOL `EJRCFJD` (Local_lemmas1.hl:5967): the diag-slicing
+convex-local-fan lemma, rendered in the `IsHypE_p35` carrier form (the HOL
+`HS = hypermap (HYP (vec 0,V,E UNION {{v,w}}))` equation becomes the
+existential `HS`; cf. the encoding notes at the `V/E/F_PRIME` trio).
+NEEDS: `THE_SLICING_INTO_2_LEMMA` + `PROVE_THE_SLICE_ASSUMPTION`
+(Local_lemmas1 -- LocalAuto2-importing world, unreachable from LA35
+imports) -- bridge wave, same home as `F_PRIME_EQ_F_vv_p35` (estimate and
+plan: lkgrqui-qknv2-w2 DELIVERY §3.3).  `EJRCFJD_p8` (LocalAuto8) is the
+NKEZBFC.hl:1685 `slicev/slicee/slicef` rendering of the same HOL family;
+this `_p35` form is the Local_lemmas1.hl:5967 one consumed by
+`QKNVMLB1_LE4F/EQ4F` (the `!x. x IN FF ==> aff_gt {vec 0} {v, w} SUBSET
+wedge_in_fan_gt x E` hypothesis is `TECOXBMv2_p35`'s conclusion). -/
+theorem EJRCFJD_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E) :
+    ∃ HS : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HS ∧
+      ConvexLocalFan (vPrime_p3 V (HS.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
+        (HS.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HS.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
+        (HS.face (w, rhoNode1 FF w)) := by
+  sorry
+  -- DISCHARGES: local_lemmas1.hl:5967 (bridge wave; THE_SLICING_INTO_2_LEMMA
+  -- + PROVE_THE_SLICE_ASSUMPTION unreachable from the LA35 import face).
+
 /-- HOL `QKNVMLB1_LE4F` (QKNVMLB.hl:4838, proof ~225 ln). -/
 theorem QKNVMLB1_LE4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
     (vv vv' : ℕ → V3)
@@ -1407,7 +1629,62 @@ theorem QKNVMLB1_LE4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop
     (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hd' : d' < 0.9)
     (h4 : 4 < s.k ∧ s.bm p q ≤ cstab) (hMM : vv ∈ MMsV39 s) :
     BBsV39 s' vv' := by
-  sorry
+  subst hs'
+  subst hvv'
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hBB : BBsV39 s vv := hMM.1.1.1
+  -- HOL script blocks 2-4: range / periodicity / a-b window through the
+  -- half-slice re-indexing (QKNVMLB.hl:4873-5060, engine-w1 sub-lemmas).
+  obtain ⟨h1, h2, h3⟩ := q1_head_p35 s p q d' mkj vv hBB hscs hdiag hMM
+  refine ⟨h1, h2, h3, ?_⟩
+  -- component 4 (HOL: cases on `3 <= k' ==> k' <= 3 \/ ~(k' <= 3)`).
+  have hP2bm : Periodic2 s.bm s.k := hscs.2.2.2.2.2.2.2.2.2.1
+  rcases Nat.lt_or_ge (scsHalfSliceV39 s p q d' mkj).k 4 with hk'3 | hk'4
+  · -- k' <= 3: the fan disjunct is trivial.
+    exact Or.inl (by omega)
+  · -- 4 <= k': the half slice is a genuine diag slice of the s-fan
+    -- (HOL final script block, QKNVMLB.hl:5040-5064).
+    refine Or.inr ?_
+    have hfan0 : ConvexLocalFan (Set.range vv)
+        (Set.range fun i => {vv i, vv (i + 1)})
+        (Set.range fun i => (vv i, vv (i + 1))) := by
+      rcases hBB.2.2.2 with hle | hfan
+      · omega
+      · exact hfan
+    -- HOL SUBGOAL norm (u - w) <= cstab from the bm p q <= cstab hypothesis.
+    have hnorm : norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab :=
+      q1_norm_diag_p35 s p q vv hP2bm hMM h4.2
+    have huw : vv (p % s.k) ≠ vv (q % s.k) :=
+      NOT_EQ_DIAG_p35 s p q _ _ vv hscs hdiag hnorm rfl rfl hBB
+    -- TECOXBMv2: the diag wedge contains every fan face wedge.
+    have hwedge := TECOXBMv2_p35 s p q (vv (p % s.k)) (vv (q % s.k))
+      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) vv hscs hdiag hnorm rfl rfl rfl rfl rfl hBB
+    -- EJRCFJD: the diag slice of the s-fan is again a convex local fan.
+    obtain ⟨HS, hHS, hfanU, -⟩ :=
+      EJRCFJD_p35 (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+        (Set.range fun i => (vv i, vv (i + 1))) (vv (p % s.k)) (vv (q % s.k))
+        hfan0 (IN_IMAGE_VV_p35 vv (p % s.k)) (IN_IMAGE_VV_p35 vv (q % s.k)) huw hwedge
+    -- the V/E/F_PRIME re-labelling trio identifies the re-indexed sets with
+    -- the slice face's vertex/edge/dart sets.
+    have hVp := V_PRIME_EQ_V_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
+      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
+      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
+      hnorm hscs hdiag hBB hHS
+    have hEp := E_PRIME_EQ_E_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
+      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
+      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
+      hnorm hscs hdiag hBB hHS
+    have hFp := F_PRIME_EQ_F_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
+      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
+      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
+      hnorm hscs hdiag hBB hHS
+    rw [hVp, hEp, hFp]
+    exact hfanU
+
   -- DISCHARGES: source 4838-5064; MMs → BBs transport along the slice
   -- (a/b-window re-indexing through scsHalfSliceV39).
 
@@ -1420,7 +1697,20 @@ theorem QKNVMLB1_EQ4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop
     (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hd' : d' < 0.9)
     (h4 : 4 = s.k ∧ s.bm p q ≤ 4) (hMM : vv ∈ MMsV39 s) :
     BBsV39 s' vv' := by
-  sorry
+  subst hs'
+  subst hvv'
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hBB : BBsV39 s vv := hMM.1.1.1
+  -- HOL script blocks 2-4: range / periodicity / a-b window through the
+  -- half-slice re-indexing (QKNVMLB.hl:5085-5185; same sub-lemmas as LE4F).
+  obtain ⟨h1, h2, h3⟩ := q1_head_p35 s p q d' mkj vv hBB hscs hdiag hMM
+  refine ⟨h1, h2, h3, ?_⟩
+  -- component 4: k = 4 forces s'.k = 3 (SCS_K_PRIME_CASE_4), so the fan
+  -- disjunct is trivial (HOL final script block, QKNVMLB.hl:5186-5223).
+  have hk3 : (scsHalfSliceV39 s p q d' mkj).k = 3 :=
+    SCS_K_PRIME_CASE_4_p35 s _ p q d' mkj rfl hscs h4.1.symm hdiag
+  exact Or.inl (by omega)
+
   -- DISCHARGES: source 5064-5223; k = 4 twin of QKNVMLB1_LE4F.
 
 /-- HOL `QKNVMLB1` (QKNVMLB.hl:5223).  RULING 2026-09-21 IV: this twin's
@@ -1437,7 +1727,20 @@ theorem QKNVMLB1_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop) (vv : ℕ 
     (hs' : s' = scsHalfSliceV39 s p q d' mkj) (vv' : ℕ → V3)
     (hvv' : vv' = fun i => vv (i % s'.k + p % s.k)) :
     BBsV39 s' vv' := by
-  sorry
+  -- engine-w1 E2 assembly (verified real-form body): k = 4 -> EQ4F;
+  -- else bm <= cstab with 4 < k -> LE4F (the k = 4 + bm <= cstab corner
+  -- also goes to EQ4F via cstab < 4).
+  have h3k : 3 < s.k := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
+  have hc4 : cstab ≤ 4 := by norm_num [cstab]
+  rcases h4 with hk4 | hcstab
+  · exact QKNVMLB1_EQ4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
+      hs' rfl hvv' hscs hdiag hd' ⟨hk4.symm, le_of_lt hbm⟩ hMM
+  · rcases Nat.eq_or_lt_of_le (by omega : 4 ≤ s.k) with he4 | hk4
+    · exact QKNVMLB1_EQ4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
+        hs' rfl hvv' hscs hdiag hd' ⟨he4, by linarith⟩ hMM
+    · exact QKNVMLB1_LE4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
+        hs' rfl hvv' hscs hdiag hd' ⟨hk4, hcstab⟩ hMM
+
   -- DISCHARGES: composes QKNVMLB1_EQ4F_p35 (k = 4) / QKNVMLB1_LE4F_p35
   -- (4 < k, via SCS_K_PRIME_CASE_3_p35) on the bm < 4 / bm ≤ cstab split;
   -- blocked by QKNVMLB1_LE4F/EQ4F.
