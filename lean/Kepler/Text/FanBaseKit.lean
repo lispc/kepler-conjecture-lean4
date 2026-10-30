@@ -1414,4 +1414,1059 @@ theorem NODE_POWER_MAP_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Se
         = (fun p : V3 × V3 => (-p.1, -p.2)) ((nnOfHyp_p3 0 V E)^[n] x) := by
   intro n x
   exact iterCommFb (NODE_MAP_SYM_0_fb s vv k V E FF hk hV hE hFF hiscs hk3 hbb) n x
+
+
+/-! ## F3（fanbase-f3-w1）：FACE_DUAL → LOCAL_FAN_DUAL → CONVEX_LOCAL_FAN
+
+HOL 锚（YXIONXL2.hl）：`FACE_DUAL_SYM_0` :1505-1556、`LOCAL_FAN_DUAL_SYM_0`
+:1558-1882、`CONVEX_LOCAL_FAN_SYM_0` :2029-2182。P13 孪生 =
+/tmp/LA13_f0b_aff_azn.lean :2332/:2343/:2357。
+
+陈述槽照 HOL 正本（P13 孪生转录缺陷注记：`FACE_DUAL_SYM_0_p13` 的 face 槽写
+`hypFaceP13 0 V E x`，而 HOL 正本（:1505 假设块 `SND x,FST x = v1`，结论
+`face … v1`）取的是 backward dart `(SND x, FST x)`；forward dart 的 ff-轨道
+含 forward dart 本身（n=0）而 backward dart 像集不含它（`vv i ≠ vv (i+1)` 且
+`2 < k` 时无指标回绕），故孪生形在 k ≥ 4 下不成立，本件按 HOL 取 `(x.2, x.1)`。
+
+证法（FAN-free，同 F2 口径）：FACE_DUAL = `FF_OF_HYP_ITER_VV_fb` 闭式 + 轨道
+extensionality；迭代次数取 `n = i * (k - 1) + m`（免减法消去：`A = n*(k-1)+m`
+满足 `A + n = n*k + m`、`i + n = i*k + m`，两侧同加 `n` 后模 `k` 相消）。-/
+
+/-- `Periodic vv k` 下同余指标的点值相等（FACE_DUAL 消用）。 -/
+private theorem vvModEqFb {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k) {a b : ℕ}
+    (h : a % k = b % k) : vv a = vv b := by
+  rw [← periodicModFb hper a, ← periodicModFb hper b, h]
+
+/-- 有界消去：`(a + c) ≡ (b + c) (mod k) → a ≡ b (mod k)`。 -/
+private theorem modAddCancelFb {k a b c : ℕ} (_hkpos : 0 < k)
+    (h : (a + c) % k = (b + c) % k) : a % k = b % k := by
+  have hz : ((a:ℤ) + c) % (k:ℤ) = ((b:ℤ) + c) % (k:ℤ) := by exact_mod_cast h
+  have h1 : (((a:ℤ) + c) - ((b:ℤ) + c)) % (k:ℤ) = 0 :=
+    Int.emod_eq_emod_iff_emod_sub_eq_zero.mp hz
+  have h2 : ((a:ℤ) - (b:ℤ)) % (k:ℤ) = 0 := by
+    rw [show ((a:ℤ) - (b:ℤ)) = ((a:ℤ) + c - ((b:ℤ) + c)) from by ring]
+    exact h1
+  have h3 := (Int.emod_eq_emod_iff_emod_sub_eq_zero (m := (a:ℤ)) (k := (b:ℤ))
+    (n := (k:ℤ))).mpr h2
+  exact_mod_cast h3
+
+/-- 轨道命中模核（无减法形；`t + 1` 为模）：迭代次数 `n = i * t + m` 时
+`n * t + m ≡ i (mod t + 1)`。 -/
+private theorem orbitHitModCoreFb (i m : ℕ) {t : ℕ} :
+    ((i * t + m) * t + m) % (t + 1) = i % (t + 1) := by
+  have hB1 : (i * t + m) * t + (i * t + m) = (i * t + m) * (t + 1) := by ring
+  have hB2 : i + (i * t + m) = i * (t + 1) + m := by ring
+  have e1 : ((i * t + m) * t + m + (i * t + m)) % (t + 1)
+      = (i + (i * t + m)) % (t + 1) := by
+    rw [Nat.add_assoc, Nat.add_comm m (i * t + m), ← Nat.add_assoc, hB1, hB2]
+    simp [Nat.add_mod, Nat.mul_mod]
+  exact modAddCancelFb (by omega) e1
+
+/-- `k > 0` 时迭代次数 `n = i * (k - 1) + m` 给出 backward 轨道命中：模 `k` 有
+`n * (k - 1) + m ≡ i`。 -/
+private theorem orbitHitModFb {k : ℕ} (hkpos : 0 < k) (i m : ℕ) :
+    ((i * (k - 1) + m) * (k - 1) + m) % k = i % k := by
+  have h := orbitHitModCoreFb i m (t := k - 1)
+  rwa [show (k - 1) + 1 = k from by omega] at h
+
+/-- FACE_DUAL 内核：任一 backward dart 的 ff-轨道 = 全体 backward dart 集。 -/
+private theorem faceBackwardFb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3)) (m : ℕ)
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    hypFaceFb 0 V E (vv (m + 1), vv m)
+      = Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ := by
+  have hiter := FF_OF_HYP_ITER_VV_fb s vv k V E FF m hk hV hE hFF hiscs hk3 hbb
+  obtain ⟨hge, -, hper, -, -, -, -, -⟩ :=
+    fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  have hkpos : 0 < k := by omega
+  unfold hypFaceFb
+  ext y
+  simp only [Set.mem_setOf_eq, Set.mem_image]
+  constructor
+  · rintro ⟨n, hn⟩
+    rw [hiter n] at hn
+    exact ⟨n * (k - 1) + m, Set.mem_univ _, hn⟩
+  · rintro ⟨i, -, hi⟩
+    refine ⟨i * (k - 1) + m, ?_⟩
+    rw [hiter (i * (k - 1) + m)]
+    have hmod := orbitHitModFb hkpos i m
+    rw [vvModEqFb hper hmod, vvModEqFb hper (modSuccFb hmod), hi]
+
+/-- HOL `FACE_DUAL_SYM_0`（YXIONXL2.hl:1505-1556）；LA13 孪生
+`FACE_DUAL_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2332，face 槽转录缺陷见块注）。
+证体 = `x ∈ FF` 的 vv-原像 + `faceBackwardFb` 闭式收口（替代 HOL 的
+ELMS_OF_HYPERMAP_HYP 刻画 + FF_OF_HYP_ITER_VV + DUAL_EXISTS_MOD +
+PERIODIC_PROPERTY + MOD_LT/MOD_ADD_MOD 链）。 -/
+theorem FACE_DUAL_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3)) (x : V3 × V3)
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv)
+    (hxFF : x ∈ FF) :
+    Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ
+      = hypFaceFb 0 V E (x.2, x.1) := by
+  rw [← hFF, Set.mem_image] at hxFF
+  obtain ⟨j, -, hj⟩ := hxFF
+  have hx2 : (x.2, x.1) = (vv (j + 1), vv j) := by rw [← hj]
+  rw [hx2]
+  exact (faceBackwardFb s vv k V E FF j hk hV hE hFF hiscs hk3 hbb).symm
+
+
+/-! ## F3 支撑层 A：取反传输链（f0b 草案 §0-§3 同证移植，P13→Fb 改名）
+
+供 `LOCAL_FAN_DUAL_SYM_0_fb` 消费：FAN 六合取在点取反下的逐条传输
+（HOL `FAN_SYM_0` src:336 内容）+ aff_ge 取反传输（HOL `AFF_GE_VEC0_SYM_0`
+src:315 内容）。全部 private。 -/
+
+private theorem negInjFb : Function.Injective (fun x : V3 => -x) :=
+  fun _ _ h => by simpa using h
+
+private theorem imageUnivCongrFb {α β} {f g : α → β} (h : ∀ i, f i = g i) :
+    Set.image f Set.univ = Set.image g Set.univ :=
+  congrArg (Set.image · Set.univ) (funext h)
+
+private theorem inSymFb {a : V3} {A : Set V3} (h : a ∈ A) :
+    -a ∈ Set.image (fun x : V3 => -x) A :=
+  ⟨a, h, rfl⟩
+
+private theorem subsetSymFb {A B : Set V3} (h : A ⊆ B) :
+    Set.image (fun x : V3 => -x) A ⊆ Set.image (fun x : V3 => -x) B :=
+  fun x hx => let ⟨y, hy, hyx⟩ := hx; ⟨y, h hy, hyx⟩
+
+private theorem imageVSymFb (vv : ℕ → V3) :
+    Set.image (fun i : ℕ => -(vv i)) Set.univ
+      = Set.image (fun x : V3 => -x) (Set.image vv Set.univ) := by
+  ext x
+  simp only [Set.mem_image, Set.mem_univ, true_and]
+  constructor
+  · rintro ⟨i, rfl⟩
+    exact ⟨vv i, ⟨i, rfl⟩, rfl⟩
+  · rintro ⟨y, ⟨i, rfl⟩, rfl⟩
+    exact ⟨i, rfl⟩
+
+private theorem unionsImageFanFb (vv : ℕ → V3) :
+    ⋃₀ (Set.image (fun i : ℕ => {-(vv i), -(vv (i + 1))}) Set.univ)
+      = Set.image (fun x : V3 => -x)
+          (⋃₀ (Set.image (fun i : ℕ => {vv i, vv (i + 1)}) Set.univ)) := by
+  ext x
+  constructor
+  · rintro ⟨t, ht, hx⟩
+    obtain ⟨i, -, rfl⟩ := ht
+    rcases Set.mem_insert_iff.mp hx with rfl | rfl
+    · exact ⟨vv i, ⟨{vv i, vv (i + 1)}, ⟨i, Set.mem_univ _, rfl⟩,
+        Set.mem_insert _ _⟩, rfl⟩
+    · exact ⟨vv (i + 1), ⟨{vv i, vv (i + 1)}, ⟨i, Set.mem_univ _, rfl⟩,
+        Set.mem_insert_of_mem _ (Set.mem_singleton _)⟩, rfl⟩
+  · rintro ⟨y, hy, hyx⟩
+    obtain ⟨t', ht', hy'⟩ := hy
+    obtain ⟨i, -, rfl⟩ := ht'
+    subst hyx
+    rcases Set.mem_insert_iff.mp hy' with rfl | rfl
+    · exact ⟨{-(vv i), -(vv (i + 1))}, ⟨i, Set.mem_univ _, rfl⟩,
+        Set.mem_insert _ _⟩
+    · exact ⟨{-(vv i), -(vv (i + 1))}, ⟨i, Set.mem_univ _, rfl⟩,
+        Set.mem_insert_of_mem _ (Set.mem_singleton _)⟩
+
+private theorem finiteSymFb {A : Set V3} (h : A.Finite) :
+    (Set.image (fun x : V3 => -x) A).Finite := h.image _
+
+private theorem element2SymFb (a b : V3) :
+    ({-a, -b} : Set V3) = Set.image (fun x : V3 => -x) ({a, b} : Set V3) := by
+  ext x
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_image]
+  constructor
+  · rintro (rfl | rfl)
+    · exact ⟨a, Or.inl rfl, rfl⟩
+    · exact ⟨b, Or.inr rfl, rfl⟩
+  · rintro ⟨y, (rfl | rfl), rfl⟩
+    · exact Or.inl rfl
+    · exact Or.inr rfl
+
+private theorem graphSymFb (vv : ℕ → V3)
+    (h : Fan.Graph (Set.image (fun i : ℕ => {vv i, vv (i + 1)}) Set.univ)) :
+    Fan.Graph (Set.image (fun i : ℕ => {-(vv i), -(vv (i + 1))}) Set.univ) := by
+  intro e he
+  obtain ⟨x, -, rfl⟩ := he
+  obtain ⟨hf, hc⟩ := h {vv x, vv (x + 1)} ⟨x, Set.mem_univ _, rfl⟩
+  have hne : vv x ≠ vv (x + 1) := by
+    intro hcon
+    have h1 : hf.toFinset.card ≤ 1 := by
+      refine Finset.card_le_one.mpr ?_
+      intro a ha b hb
+      have ha' : a ∈ ({vv x, vv (x + 1)} : Set V3) := by simpa using ha
+      have hb' : b ∈ ({vv x, vv (x + 1)} : Set V3) := by simpa using hb
+      rw [hcon] at ha' hb'
+      rcases ha' with rfl | rfl <;> rcases hb' with rfl | rfl <;> simp
+    omega
+  have hne' : -(vv x) ≠ -(vv (x + 1)) := fun hcc => hne (by simpa using hcc)
+  have hset : ({-(vv x), -(vv (x + 1))} : Set V3)
+      = Set.image (fun y : V3 => -y) ({vv x, vv (x + 1)} : Set V3) := by
+    rw [← element2SymFb]
+  have hf2 : (Set.image (fun y : V3 => -y) ({vv x, vv (x + 1)} : Set V3)).Finite :=
+    hf.image _
+  have hfin : ({-(vv x), -(vv (x + 1))} : Set V3).Finite := by
+    rw [hset]
+    exact hf2
+  have hcard : hfin.toFinset.card = 2 := by
+    have h2 : ({vv x, vv (x + 1)} : Set V3).ncard = 2 :=
+      (Set.ncard_eq_toFinset_card _ hf).trans hc
+    have h3 : ({-(vv x), -(vv (x + 1))} : Set V3).ncard = 2 := by
+      rw [hset, Set.ncard_image_of_injective _ negInjFb]
+      exact h2
+    exact (Set.ncard_eq_toFinset_card _ hfin).symm.trans h3
+  exact ⟨hfin, hcard⟩
+
+private theorem reflSymFb (A : Set V3) :
+    Set.image (fun x : V3 => -x) (Set.image (fun x : V3 => -x) A) = A := by
+  simp
+
+private theorem imageESymFb (vv : ℕ → V3) {e : Set V3}
+    (h : e ∈ Set.image (fun i : ℕ => {-(vv i), -(vv (i + 1))}) Set.univ) :
+    Set.image (fun x : V3 => -x) e
+      ∈ Set.image (fun i : ℕ => {vv i, vv (i + 1)}) Set.univ := by
+  obtain ⟨x, -, rfl⟩ := h
+  have himg : Set.image (fun x : V3 => -x) {-(vv x), -(vv (x + 1))}
+      = {vv x, vv (x + 1)} := by
+    rw [← element2SymFb (-(vv x)) (-(vv (x + 1)))]
+    simp
+  rw [himg]
+  exact ⟨x, Set.mem_univ _, rfl⟩
+
+private theorem collinearSymFb {e : Set V3} (h : Collinear ℝ e) :
+    Collinear ℝ (Set.image (fun x : V3 => -x) e) := by
+  by_cases he : e = ∅
+  · rw [he, Set.image_empty]
+    exact @collinear_empty ℝ V3 V3 _ _ _ _
+  · obtain ⟨p₀, hp₀⟩ := Set.nonempty_iff_ne_empty.mpr he
+    rw [collinear_iff_of_mem (Set.mem_image_of_mem _ hp₀)]
+    obtain ⟨v, hv⟩ := (collinear_iff_of_mem hp₀).mp h
+    refine ⟨v, ?_⟩
+    rintro p ⟨x, hx, rfl⟩
+    obtain ⟨r, hr⟩ := hv x hx
+    refine ⟨-r, ?_⟩
+    have hx2 : (-x : V3) = -(r • v +ᵥ p₀) := by rw [hr]
+    show (-x : V3) = (-r) • v +ᵥ (-p₀)
+    rw [hx2, vadd_eq_add, vadd_eq_add, neg_add, neg_smul]
+
+private theorem unionSymFb (s e : Set V3) :
+    Set.image (fun x : V3 => -x) (s ∪ e)
+      = Set.image (fun x : V3 => -x) s ∪ Set.image (fun x : V3 => -x) e :=
+  Set.image_union _ _ _
+
+private theorem vec0SymFb :
+    Set.image (fun x : V3 => -x) ({0} : Set V3) = ({0} : Set V3) := by
+  ext x
+  simp
+
+private theorem vec0UnionSymFb (e : Set V3) :
+    Set.image (fun x : V3 => -x) (({0} : Set V3) ∪ e)
+      = ({0} : Set V3) ∪ Set.image (fun x : V3 => -x) e := by
+  rw [unionSymFb, vec0SymFb]
+
+private theorem notCollinearSymFb {e : Set V3} (h : ¬Collinear ℝ e) :
+    ¬Collinear ℝ (Set.image (fun x : V3 => -x) e) := fun hc =>
+  h (by rw [← reflSymFb e]; exact collinearSymFb hc)
+
+private theorem vec0NotCollinearSymFb {e : Set V3}
+    (h : ¬Collinear ℝ (({0} : Set V3) ∪ e)) :
+    ¬Collinear ℝ (({0} : Set V3) ∪ Set.image (fun x : V3 => -x) e) := fun hc =>
+  h (by
+    have h1 := collinearSymFb hc
+    rw [unionSymFb, vec0SymFb, reflSymFb e] at h1
+    exact h1)
+
+private theorem interSymFb (e1 e2 : Set V3) :
+    Set.image (fun x : V3 => -x) (e1 ∩ e2)
+      = Set.image (fun x : V3 => -x) e1 ∩ Set.image (fun x : V3 => -x) e2 := by
+  ext x
+  simp only [Set.mem_inter_iff, Set.mem_image]
+  constructor
+  · rintro ⟨y, ⟨hy1, hy2⟩, rfl⟩
+    exact ⟨⟨y, hy1, rfl⟩, ⟨y, hy2, rfl⟩⟩
+  · rintro ⟨⟨y1, hy1, rfl⟩, ⟨y2, hy2, hy12⟩⟩
+    have hyy : y1 = y2 := neg_inj.mp hy12.symm
+    exact ⟨y1, ⟨hy1, hyy ▸ hy2⟩, rfl⟩
+
+private theorem insertUnionFb (a : V3) (s : Set V3) :
+    insert a s = ({a} : Set V3) ∪ s := by
+  ext z
+  simp only [Set.mem_insert_iff, Set.mem_union, Set.mem_singleton_iff]
+
+private theorem affGeNegPtFb {e : Set V3} {w : V3}
+    (hw : w ∈ affGe ({0} : Set V3) (Set.image (fun x : V3 => -x) e)) :
+    -w ∈ affGe ({0} : Set V3) e := by
+  obtain ⟨f, hfin, hwv, hfp, hfsum⟩ := hw
+  have hU : Set.image (fun x : V3 => -x) (({0} : Set V3) ∪ e)
+      = ({0} : Set V3) ∪ Set.image (fun x : V3 => -x) e := by
+    rw [Set.image_union, vec0SymFb]
+  have hfinA : ((({0} : Set V3) ∪ e : Set V3)).Finite :=
+    (Set.finite_image_iff negInjFb.injOn).mp (by rw [hU]; exact hfin)
+  have heq : hfin.toFinset = hfinA.toFinset.image (fun x : V3 => -x) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_image,
+      Set.mem_union, Set.mem_singleton_iff]
+    constructor
+    · rintro (rfl | ⟨y, hy, rfl⟩)
+      · exact ⟨0, Or.inl rfl, by simp⟩
+      · exact ⟨y, Or.inr hy, rfl⟩
+    · rintro ⟨a, (rfl | hy), rfl⟩
+      · exact Or.inl (by simp)
+      · exact Or.inr ⟨a, hy, rfl⟩
+  refine ⟨fun y => f (-y), hfinA, ?_, ?_, ?_⟩
+  · calc -w = ∑ x ∈ hfin.toFinset, f x • (-x) := by
+          rw [hwv]
+          simp only [Finset.sum_neg_distrib, smul_neg]
+      _ = ∑ x ∈ hfinA.toFinset.image (fun x : V3 => -x), f x • (-x) := by rw [heq]
+      _ = ∑ y ∈ hfinA.toFinset, f (-y) • y := by
+          simp only [Finset.sum_image (f := fun z : V3 => f z • (-z))
+            (g := fun x : V3 => -x) negInjFb.injOn, neg_neg]
+  · intro z hz
+    exact hfp (-z) ⟨z, hz, rfl⟩
+  · show (∑ y ∈ hfinA.toFinset, f (-y)) = 1
+    rw [← Finset.sum_image (f := f) (g := fun x : V3 => -x) negInjFb.injOn, ← heq]
+    exact hfsum
+
+private theorem affGeNegFb (e : Set V3) :
+    affGe ({0} : Set V3) (Set.image (fun x : V3 => -x) e)
+      = Set.image (fun x : V3 => -x) (affGe ({0} : Set V3) e) := by
+  ext v
+  constructor
+  · intro hv
+    exact ⟨-v, affGeNegPtFb hv, by simp⟩
+  · rintro ⟨u, hu, rfl⟩
+    refine affGeNegPtFb (e := Set.image (fun x : V3 => -x) e) ?_
+    rw [reflSymFb e]
+    exact hu
+
+private theorem affGeNeg2Fb (e : Set V3) :
+    affGe ({0} : Set V3) e
+      = Set.image (fun x : V3 => -x)
+          (affGe ({0} : Set V3) (Set.image (fun x : V3 => -x) e)) := by
+  have h := affGeNegFb (Set.image (fun x : V3 => -x) e)
+  rw [reflSymFb e] at h
+  exact h
+
+/-- FAN 六合取的逐条取反传输（HOL `FAN_SYM_0` src:336 证体内容；
+f0b 草案 `fanNegCoreP13` 的 ScsV39 世界同证移植）。 -/
+private theorem fanNegCoreFb (vv : ℕ → V3)
+    (hf : Fan.FAN 0 (Set.image vv Set.univ)
+      (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)) :
+    Fan.FAN 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+      (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ) := by
+  have hV : Set.image (fun i : ℕ => -(vv i)) Set.univ
+      = Set.image (fun x : V3 => -x) (Set.image vv Set.univ) := imageVSymFb vv
+  refine ⟨?_, graphSymFb vv hf.2.1, ?_, ?_, ?_, ?_⟩
+  · rw [unionsImageFanFb vv, hV]
+    exact subsetSymFb hf.1
+  · rw [hV]
+    refine ⟨finiteSymFb hf.2.2.1.1, fun hempty => ?_⟩
+    rw [Set.image_eq_empty] at hempty
+    exact hf.2.2.1.2 hempty
+  · intro h0
+    rw [hV, Set.mem_image] at h0
+    obtain ⟨y, hy, hneg⟩ := h0
+    have hy0 : y = 0 := by simpa using hneg
+    rw [hy0] at hy
+    exact hf.2.2.2.1 hy
+  · intro e he
+    obtain ⟨i, -, rfl⟩ := he
+    show ¬Collinear ℝ (insert 0 ({-(vv i), -(vv (i + 1))} : Set V3))
+    rw [element2SymFb (vv i) (vv (i + 1)), insertUnionFb]
+    exact vec0NotCollinearSymFb
+      (hf.2.2.2.2.1 ({vv i, vv (i + 1)} : Set V3) ⟨i, Set.mem_univ _, rfl⟩)
+  · intro e1 he1 e2 he2
+    have hmem : ∀ e : Set V3,
+        e ∈ Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ
+          ∪ {s : Set V3 | ∃ v ∈ Set.image (fun i : ℕ => -(vv i)) Set.univ, s = {v}} →
+        Set.image (fun x : V3 => -x) e
+          ∈ Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ
+            ∪ {s : Set V3 | ∃ v ∈ Set.image vv Set.univ, s = {v}} := by
+      intro e he
+      rcases (Set.mem_union _ _ _).mp he with he | he
+      · exact Or.inl (imageESymFb vv he)
+      · obtain ⟨v, hv, rfl⟩ := he
+        obtain ⟨i, -, rfl⟩ := hv
+        refine Or.inr ⟨vv i, ⟨i, Set.mem_univ _, rfl⟩, ?_⟩
+        rw [Set.image_singleton, neg_neg]
+    have key := hf.2.2.2.2.2 (Set.image (fun x : V3 => -x) e1) (hmem e1 he1)
+      (Set.image (fun x : V3 => -x) e2) (hmem e2 he2)
+    rw [affGeNeg2Fb e1, affGeNeg2Fb e2, ← interSymFb, key, ← interSymFb,
+      ← affGeNeg2Fb (e1 ∩ e2)]
+
+/-! ## F3 支撑层 B：重指标像桥（f0b 草案 §2 同证移植）
+
+`k - (i % k + 1)` 重指标像 = 平取负像的桥（HOL `OPP_IMAGE_V/E/F2_EQ_NEG`
+src:885/:902/:991）。 -/
+
+private theorem oppSucModFb {k x : ℕ} (hk : k ≠ 0) :
+    k - ((k - (x % k + 1)) % k + 1) = x % k := by
+  have h1 : x % k < k := Nat.mod_lt x (Nat.pos_of_ne_zero hk)
+  have h2 : (k - (x % k + 1)) % k = k - (x % k + 1) := Nat.mod_eq_of_lt (by omega)
+  rw [h2]
+  omega
+
+private theorem modSucModFb {k x : ℕ} (hk : 1 < k) :
+    (x % k + 1) % k = (x + 1) % k := by
+  have h1 : 1 % k = 1 := Nat.mod_eq_of_lt (by omega)
+  rw [show (x + 1) % k = (x % k + 1 % k) % k from Nat.add_mod x 1 k, h1]
+
+private theorem sucModEqModSucFb {k x : ℕ} (hk : 1 < k) :
+    (k - (x % k + 1)) % k = (k - ((x + 1) % k)) % k := by
+  have h1 : x % k < k := Nat.mod_lt x (by omega)
+  by_cases hlt : x % k + 1 < k
+  · rw [(modSucModFb (x := x) hk).symm, Nat.mod_eq_of_lt hlt]
+  · have heq : x % k + 1 = k := by omega
+    have h0 : (x + 1) % k = 0 := by
+      rw [(modSucModFb (x := x) hk).symm, heq, Nat.mod_self]
+    rw [heq, Nat.sub_self, Nat.zero_mod, h0, Nat.sub_zero, Nat.mod_self]
+
+private theorem pairSetEqFb {a b c d : V3} :
+    ({a, b} : Set V3) = {c, d} ↔ (a = c ∧ b = d) ∨ (a = d ∧ b = c) := by
+  constructor
+  · intro h
+    have h1 : a ∈ ({c, d} : Set V3) := by rw [← h]; simp
+    have h2 : b ∈ ({c, d} : Set V3) := by rw [← h]; simp
+    have h3 : d ∈ ({a, b} : Set V3) := by rw [h]; simp
+    have h4 : c ∈ ({a, b} : Set V3) := by rw [h]; simp
+    rcases Set.mem_insert_iff.mp h1 with hac | had
+    · rcases Set.mem_insert_iff.mp h2 with hbc | hbd
+      · rcases Set.mem_insert_iff.mp h3 with hda | hdb
+        · exact Or.inr ⟨hda.symm, hbc⟩
+        · exact Or.inl ⟨hac, hdb.symm⟩
+      · exact Or.inl ⟨hac, hbd⟩
+    · rcases Set.mem_insert_iff.mp h2 with hbc | hbd
+      · exact Or.inr ⟨had, hbc⟩
+      · rcases Set.mem_insert_iff.mp h4 with hca | hcb
+        · exact Or.inl ⟨hca.symm, hbd⟩
+        · exact Or.inr ⟨had, hcb.symm⟩
+  · rintro (h | h)
+    · rw [h.1, h.2]
+    · rw [h.1, h.2]
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+
+private theorem dartEqFb {a b c d : V3} (h1 : a = c) (h2 : b = d) :
+    ((a, b) : V3 × V3) = (c, d) := by rw [h1, h2]
+
+private theorem oppImageVEqFb (vv : ℕ → V3) {k : ℕ} (hper : Periodic vv k)
+    (hk : k ≠ 0) :
+    Set.image (fun i : ℕ => vv (k - (i % k + 1))) Set.univ
+      = Set.image vv Set.univ := by
+  ext x
+  simp only [Set.mem_image, Set.mem_univ, true_and]
+  constructor
+  · rintro ⟨i, rfl⟩
+    exact ⟨k - (i % k + 1), rfl⟩
+  · rintro ⟨j, rfl⟩
+    have hjk : j % k < k := Nat.mod_lt j (Nat.pos_of_ne_zero hk)
+    have h1 : (k - (j % k + 1)) % k = k - (j % k + 1) := Nat.mod_eq_of_lt (by omega)
+    have h2 : k - ((k - (j % k + 1)) % k + 1) = j % k := oppSucModFb hk
+    rw [h1] at h2
+    exact ⟨k - (j % k + 1), by rw [h1, h2, periodicModFb hper j]⟩
+
+private theorem oppImageEEqFb (vv : ℕ → V3) {k : ℕ} (hper : Periodic vv k)
+    (hk : 1 < k) :
+    Set.image (fun i : ℕ => ({vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1))} : Set V3))
+        Set.univ
+      = Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ := by
+  have hk0 : (0:ℕ) < k := by omega
+  have hv0 : vv k = vv 0 := by
+    have h := hper 0
+    rwa [Nat.zero_add] at h
+  have key : ∀ j, j < k → ({vv j, vv (j + 1)} : Set V3)
+      ∈ Set.image
+          (fun i : ℕ => ({vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1))} : Set V3))
+          Set.univ := by
+    intro j hj
+    rcases Nat.lt_or_ge (j + 1) k with hlt | heq
+    · refine ⟨k - (j + 2), Set.mem_univ _, ?_⟩
+      show ({vv (k - ((k - (j + 2)) % k + 1)),
+             vv (k - ((k - (j + 2) + 1) % k + 1))} : Set V3)
+          = {vv j, vv (j + 1)}
+      rw [Nat.mod_eq_of_lt (by omega : k - (j + 2) < k),
+          Nat.mod_eq_of_lt (by omega : k - (j + 2) + 1 < k),
+          show k - (k - (j + 2) + 1 + 1) = j from by omega,
+          show k - (k - (j + 2) + 1) = j + 1 from by omega,
+          pairSetCommFb]
+    · have heq' : j + 1 = k := by omega
+      refine ⟨k - 1, Set.mem_univ _, ?_⟩
+      show ({vv (k - ((k - 1) % k + 1)),
+             vv (k - ((k - 1 + 1) % k + 1))} : Set V3)
+          = {vv j, vv (j + 1)}
+      rw [Nat.mod_eq_of_lt (by omega : k - 1 < k),
+        show k - 1 + 1 = k from by omega, Nat.mod_self, heq', hv0,
+        show j = k - 1 from by omega,
+        show k - (0 + 1) = k - 1 from by omega, Nat.sub_self, pairSetCommFb]
+  ext e
+  constructor
+  · intro he
+    obtain ⟨i, -, hFe⟩ := he
+    subst hFe
+    have hu : (i + 1) % k = (i % k + 1) % k := (Nat.mod_add_mod i k 1).symm
+    have hk1 : i % k < k := Nat.mod_lt i hk0
+    by_cases hlt : i % k + 1 < k
+    · rw [Set.mem_image]
+      show ∃ x ∈ Set.univ, ({vv x, vv (x + 1)} : Set V3)
+          = {vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1))}
+      rw [hu, Nat.mod_eq_of_lt hlt]
+      refine ⟨k - (i % k + 2), Set.mem_univ _, ?_⟩
+      rw [pairSetCommFb,
+        show k - (i % k + 2) + 1 = k - (i % k + 1) from by omega,
+        show k - (i % k + 2) = k - (i % k + 1 + 1) from by omega]
+    · rw [Set.mem_image]
+      show ∃ x ∈ Set.univ, ({vv x, vv (x + 1)} : Set V3)
+          = {vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1))}
+      have heq : i % k + 1 = k := by omega
+      rw [hu, heq, Nat.mod_self, Nat.sub_self]
+      refine ⟨k - 1, Set.mem_univ _, ?_⟩
+      rw [show k - 1 + 1 = k from by omega, hv0,
+        show k - (0 + 1) = k - 1 from by omega, pairSetCommFb]
+  · intro he
+    obtain ⟨j, -, hjF⟩ := he
+    subst hjF
+    rw [Set.mem_image]
+    rcases Nat.lt_or_ge j k with hjk | hjk
+    · exact key j hjk
+    · show ({vv j, vv (j + 1)} : Set V3)
+          ∈ Set.image
+              (fun i : ℕ =>
+                ({vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1))} : Set V3))
+              Set.univ
+      have h1 : vv (j % k + 1) = vv (j + 1) := by
+        rw [← periodicModFb hper (j % k + 1), Nat.mod_add_mod j k 1,
+          ← periodicModFb hper (j + 1)]
+      have heqset : (({vv j, vv (j + 1)} : Set V3) =
+          {vv (j % k), vv (j % k + 1)}) := by
+        rw [← periodicModFb hper j, ← h1]
+      rw [heqset]
+      exact key (j % k) (Nat.mod_lt j hk0)
+
+private theorem oppImageFEq2Fb (vv : ℕ → V3) {k : ℕ} (hper : Periodic vv k)
+    (hk : 1 < k) :
+    Set.image
+        (fun i : ℕ => (vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1)))) Set.univ
+      = Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ := by
+  have hk0 : (0:ℕ) < k := by omega
+  have hv0 : vv k = vv 0 := by
+    have h := hper 0
+    rwa [Nat.zero_add] at h
+  have key : ∀ j, j < k → (vv (j + 1), vv j)
+      ∈ Set.image
+          (fun i : ℕ => (vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1))))
+          Set.univ := by
+    intro j hj
+    rcases Nat.lt_or_ge (j + 1) k with hlt | heq
+    · refine ⟨k - (j + 2), Set.mem_univ _, ?_⟩
+      have hA : k - ((k - (j + 2)) % k + 1) = j + 1 := by
+        rw [Nat.mod_eq_of_lt (by omega : k - (j + 2) < k)]
+        omega
+      have hB : k - ((k - (j + 2) + 1) % k + 1) = j := by
+        rw [Nat.mod_eq_of_lt (by omega : k - (j + 2) + 1 < k)]
+        omega
+      exact dartEqFb (congrArg vv hA) (congrArg vv hB)
+    · have heq' : j + 1 = k := by omega
+      refine ⟨k - 1, Set.mem_univ _, ?_⟩
+      show ((vv (k - ((k - 1) % k + 1)), vv (k - ((k - 1 + 1) % k + 1))) : V3 × V3)
+          = (vv (j + 1), vv j)
+      rw [Nat.mod_eq_of_lt (by omega : k - 1 < k), show k - 1 + 1 = k from by omega,
+        Nat.mod_self, Nat.sub_self, heq', hv0, show j = k - 1 from by omega]
+  ext d
+  constructor
+  · intro hd
+    obtain ⟨i, -, hdi⟩ := hd
+    subst hdi
+    rw [Set.mem_image]
+    have hu : (i + 1) % k = (i % k + 1) % k := (Nat.mod_add_mod i k 1).symm
+    have hk1 : i % k < k := Nat.mod_lt i hk0
+    by_cases hlt : i % k + 1 < k
+    · show ∃ x ∈ Set.univ, (vv (x + 1), vv x)
+          = (vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1)))
+      rw [hu, Nat.mod_eq_of_lt hlt]
+      refine ⟨k - (i % k + 2), Set.mem_univ _, ?_⟩
+      exact dartEqFb (congrArg vv (by omega)) (congrArg vv (by omega))
+    · show ∃ x ∈ Set.univ, (vv (x + 1), vv x)
+          = (vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1)))
+      have heq : i % k + 1 = k := by omega
+      rw [hu, heq, Nat.mod_self]
+      refine ⟨k - 1, Set.mem_univ _, ?_⟩
+      exact dartEqFb
+        (by rw [show k - 1 + 1 = k from by omega, hv0, Nat.sub_self])
+        (by rw [show k - (0 + 1) = k - 1 from by omega])
+  · intro hd
+    obtain ⟨j, -, hjd⟩ := hd
+    subst hjd
+    rw [Set.mem_image]
+    rcases Nat.lt_or_ge j k with hjk | hjk
+    · exact key j hjk
+    · show ∃ x ∈ Set.univ, (vv (k - (x % k + 1)), vv (k - ((x + 1) % k + 1)))
+          = (vv (j + 1), vv j)
+      have h1 : vv (j % k + 1) = vv (j + 1) := by
+        rw [← periodicModFb hper (j % k + 1), Nat.mod_add_mod j k 1,
+          ← periodicModFb hper (j + 1)]
+      have h0 : ((vv (j + 1), vv j) : V3 × V3) = (vv (j % k + 1), vv (j % k)) :=
+        dartEqFb h1.symm (periodicModFb hper j).symm
+      rw [h0]
+      exact key (j % k) (Nat.mod_lt j hk0)
+
+private theorem imageNegCompUnivFb {f : ℕ → V3} :
+    Set.image (fun i : ℕ => -(f i)) Set.univ
+      = Set.image (fun x : V3 => -x) (Set.image f Set.univ) := by
+  rw [Set.image_image, imageUnivCongrFb (fun _ => rfl)]
+
+private theorem imageNegDartCompUnivFb {f g : ℕ → V3} :
+    Set.image (fun i : ℕ => (-(f i), -(g i))) Set.univ
+      = Set.image (fun p : V3 × V3 => (-p.1, -p.2))
+          (Set.image (fun i : ℕ => (f i, g i)) Set.univ) := by
+  rw [Set.image_image, imageUnivCongrFb (fun _ => rfl)]
+
+private theorem imageNegPairCompUnivFb {f g : ℕ → V3} :
+    Set.image (fun i : ℕ => ({-(f i), -(g i)} : Set V3)) Set.univ
+      = Set.image (fun S : Set V3 => Set.image (fun x : V3 => -x) S)
+          (Set.image (fun i : ℕ => ({f i, g i} : Set V3)) Set.univ) := by
+  ext S
+  simp only [Set.mem_image, Set.mem_univ, true_and]
+  constructor
+  · rintro ⟨i, rfl⟩
+    exact ⟨{f i, g i}, ⟨i, rfl⟩, by rw [← element2SymFb (f i) (g i)]⟩
+  · rintro ⟨T, ⟨i, rfl⟩, hT⟩
+    have h2 : Set.image (fun x : V3 => -x) ({f i, g i} : Set V3)
+        = {-(f i), -(g i)} := by
+      rw [← element2SymFb (f i) (g i)]
+    rw [h2] at hT
+    exact ⟨i, hT⟩
+
+private theorem oppImageVEqNegFb (vv : ℕ → V3) {k : ℕ} (hper : Periodic vv k)
+    (hk : k ≠ 0) :
+    Set.image (fun i : ℕ => -(vv (k - (i % k + 1)))) Set.univ
+      = Set.image (fun i : ℕ => -(vv i)) Set.univ := by
+  rw [imageNegCompUnivFb (f := fun i => vv (k - (i % k + 1))),
+    oppImageVEqFb vv hper hk, imageNegCompUnivFb (f := vv)]
+
+private theorem oppImageEEqNegFb (vv : ℕ → V3) {k : ℕ} (hper : Periodic vv k)
+    (hk : 1 < k) :
+    Set.image (fun i : ℕ =>
+        ({-(vv (k - (i % k + 1))), -(vv (k - ((i + 1) % k + 1)))} : Set V3))
+        Set.univ
+      = Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ := by
+  rw [imageNegPairCompUnivFb
+      (f := fun i => vv (k - (i % k + 1)))
+      (g := fun i => vv (k - ((i + 1) % k + 1))),
+    oppImageEEqFb vv hper hk, imageNegPairCompUnivFb]
+
+private theorem oppImageFEq2NegFb (vv : ℕ → V3) {k : ℕ} (hper : Periodic vv k)
+    (hk : 1 < k) :
+    Set.image (fun i : ℕ =>
+        (-(vv (k - (i % k + 1))), -(vv (k - ((i + 1) % k + 1))))) Set.univ
+      = Set.image (fun i : ℕ => (-(vv (i + 1)), -(vv i))) Set.univ := by
+  have hfun : ((fun p : V3 × V3 => (-p.1, -p.2)) ∘
+      fun i : ℕ => (vv (i + 1), vv i))
+      = (fun i : ℕ => (-(vv (i + 1)), -(vv i))) := funext fun i => by simp [Function.comp]
+  rw [imageNegDartCompUnivFb
+      (f := fun i => vv (k - (i % k + 1)))
+      (g := fun i => vv (k - ((i + 1) % k + 1))),
+    oppImageFEq2Fb vv hper hk, ← Set.image_comp, hfun]
+
+
+/-! ## F3 支撑层 C1：canonical 族的 dart 层闭式（localFan_p3 主装配前置）
+
+对任意满足七槽像形 + 二元邻域展开 + 三个不退化条件的族 `vv`：ff/nn/ee 在
+forward/backward dart 上的一步与 n 步闭式、dart 集两分、轨道集两分。
+全部 private；替代 HOL 的 ELMS_OF_HYPERMAP_HYP / DART_OF_HYP_VV 刻画链。 -/
+
+section FanDartLayer
+
+variable {vv : ℕ → V3} {k : ℕ} {V : Set V3} {E : Set (Set V3)}
+
+/-- backward dart 上 ff 一步：`(vv (m+1), vv m) ↦ (vv m, vv (m + (k-1)))`。 -/
+private theorem fdffValBFb (hper : Periodic vv k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hne2 : ∀ j, vv (j + 1) ≠ vv (j + k - 1)) (m : ℕ) :
+    ffOfHyp_p3 0 V E (vv (m + 1), vv m) = (vv (m + (k - 1) + 1), vv (m + (k - 1))) := by
+  have hd : (vv (m + 1), vv m) ∈ dartsOfHyp_p3 E V := by
+    refine ordMemDartsFb (vv := vv) ?_
+    rw [pairSetCommFb]
+    exact edgeMemFb hE m
+  rw [ffMemEqFb hd]
+  show (vv m, ivsAzimCycle_p3 (EE_p3 (vv m) E) 0 (vv m) (vv (m + 1)))
+      = (vv (m + (k - 1) + 1), vv (m + (k - 1)))
+  have hE2 : EE_p3 (vv m) E = ({vv (m + 1), vv (m + k - 1)} : Set V3) := hEE m
+  rw [hE2, pairSetCommFb, ivsTwoNeFb (hne2 m).symm,
+    show vv m = vv (m + (k - 1) + 1) from by
+      rw [show m + (k - 1) + 1 = m + k from by omega]; exact (hper m).symm,
+    show (m:Nat) + k - 1 = m + (k - 1) from by omega]
+
+/-- forward dart 上 ff 一步：`(vv m, vv (m+1)) ↦ (vv (m+1), vv (m+2))`。 -/
+private theorem fdffValFFb (hper : Periodic vv k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hshift2 : ∀ j, vv (j + 2) ≠ vv j) (m : ℕ) :
+    ffOfHyp_p3 0 V E (vv m, vv (m + 1)) = (vv (m + 1), vv (m + 2)) := by
+  have hd : (vv m, vv (m + 1)) ∈ dartsOfHyp_p3 E V :=
+    ordMemDartsFb (vv := vv) (edgeMemFb hE m)
+  rw [ffMemEqFb hd]
+  show (vv (m + 1), ivsAzimCycle_p3 (EE_p3 (vv (m + 1)) E) 0 (vv (m + 1)) (vv m))
+      = (vv (m + 1), vv (m + 2))
+  have hE2 : EE_p3 (vv (m + 1)) E = ({vv (m + 2), vv m} : Set V3) := by
+    have h := hEE (m + 1)
+    rw [show (vv (m + 1 + k - 1) : V3) = vv m from by
+      rw [show (m + 1 + k - 1) = m + k from by omega, hper m]] at h
+    exact h
+  rw [hE2, ivsTwoNeFb (hshift2 m)]
+
+/-- forward dart 上 nn 一步：`(vv m, vv (m+1)) ↦ (vv m, vv (m + (k-1)))`。 -/
+private theorem fdnnValFFb (hper : Periodic vv k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hne2 : ∀ j, vv (j + 1) ≠ vv (j + k - 1)) (hk1 : 1 ≤ k) (m : ℕ) :
+    nnOfHyp_p3 0 V E (vv m, vv (m + 1)) = (vv m, vv (m + (k - 1))) := by
+  have hd : (vv m, vv (m + 1)) ∈ dartsOfHyp_p3 E V :=
+    ordMemDartsFb (vv := vv) (edgeMemFb hE m)
+  rw [nnMemEqFb hd]
+  show (vv m, azimCycle_p3 (EE_p3 (vv m) E) 0 (vv m) (vv (m + 1)))
+      = (vv m, vv (m + (k - 1)))
+  have hE2 : EE_p3 (vv m) E = ({vv (m + 1), vv (m + k - 1)} : Set V3) := hEE m
+  rw [hE2, pairSetCommFb, azimCycleTwoSwapFb (hne2 m).symm,
+    show (m:Nat) + k - 1 = m + (k - 1) from by omega]
+
+/-- backward dart 上 nn 一步：`(vv (m+1), vv m) ↦ (vv (m+1), vv (m+2))`。 -/
+private theorem fdnnValBFb (hper : Periodic vv k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hshift2 : ∀ j, vv (j + 2) ≠ vv j) (m : ℕ) :
+    nnOfHyp_p3 0 V E (vv (m + 1), vv m) = (vv (m + 1), vv (m + 2)) := by
+  have hd : (vv (m + 1), vv m) ∈ dartsOfHyp_p3 E V := by
+    refine ordMemDartsFb (vv := vv) ?_
+    rw [pairSetCommFb]
+    exact edgeMemFb hE m
+  rw [nnMemEqFb hd]
+  show (vv (m + 1), azimCycle_p3 (EE_p3 (vv (m + 1)) E) 0 (vv (m + 1)) (vv m))
+      = (vv (m + 1), vv (m + 2))
+  have hE2 : EE_p3 (vv (m + 1)) E = ({vv (m + 2), vv m} : Set V3) := by
+    have h := hEE (m + 1)
+    rw [show (vv (m + 1 + k - 1) : V3) = vv m from by
+      rw [show (m + 1 + k - 1) = m + k from by omega, hper m]] at h
+    exact h
+  rw [hE2, azimCycleTwoSwapFb (hshift2 m)]
+
+/-- backward dart 的 ff n 步闭式。 -/
+private theorem fdffIterBFb (hper : Periodic vv k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hne2 : ∀ j, vv (j + 1) ≠ vv (j + k - 1)) (m : ℕ) :
+    ∀ n : ℕ, (ffOfHyp_p3 0 V E)^[n] (vv (m + 1), vv m)
+      = (vv (m + n * (k - 1) + 1), vv (m + n * (k - 1))) := by
+  intro n
+  induction n generalizing m with
+  | zero => simp
+  | succ n ih =>
+      rw [Function.iterate_succ_apply', ih,
+        fdffValBFb hper hk1 hE hEE hne2 (m + n * (k - 1)),
+        show m + Nat.succ n * (k - 1) = m + n * (k - 1) + (k - 1) from by
+          rw [Nat.succ_mul]; ring]
+
+/-- forward dart 的 ff n 步闭式。 -/
+private theorem fdffIterFFb (hper : Periodic vv k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hshift2 : ∀ j, vv (j + 2) ≠ vv j) (m : ℕ) :
+    ∀ n : ℕ, (ffOfHyp_p3 0 V E)^[n] (vv m, vv (m + 1))
+      = (vv (m + n), vv (m + n + 1)) := by
+  intro n
+  induction n generalizing m with
+  | zero => simp
+  | succ n ih =>
+      rw [Function.iterate_succ_apply', ih, fdffValFFb hper hk1 hE hEE hshift2 (m + n),
+        show m + Nat.succ n = m + n + 1 from by omega,
+        show m + n + 2 = m + n + 1 + 1 from rfl]
+
+/-- self_pairs 为空（每点邻域非空）。 -/
+private theorem fdselfPairsEmptyFb
+    (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E) :
+    selfPairs_p3 E V = ∅ := by
+  refine Set.eq_empty_iff_forall_notMem.mpr fun p hp => ?_
+  obtain ⟨h12, hv, hev⟩ := hp
+  rw [← hV, Set.mem_image] at hv
+  obtain ⟨i, -, hi⟩ := hv
+  have hmemb : vv (i + 1) ∈ EE_p3 p.1 E := by
+    show ({p.1, vv (i + 1)} : Set V3) ∈ E
+    rw [show ({p.1, vv (i + 1)} : Set V3) = ({vv i, vv (i + 1)} : Set V3) from by rw [hi]]
+    exact edgeMemFb hE i
+  rw [hev] at hmemb
+  exact Set.notMem_empty _ hmemb
+
+/-- ord_pairs 两分：forward ∪ backward。 -/
+private theorem fdordPairsFb (hne : ∀ j, vv j ≠ vv (j + 1))
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E) :
+    ordPairs_p3 E
+        = Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ
+          ∪ Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ := by
+  ext p
+  simp only [ordPairs_p3, Set.mem_setOf_eq]
+  constructor
+  · intro hp
+    rw [← hE, Set.mem_image] at hp
+    obtain ⟨i, -, he⟩ := hp
+    rw [pairSetEqFb] at he
+    rcases he with (⟨h1, h2⟩ | ⟨h1, h2⟩)
+    · exact Set.mem_union_left _ ⟨i, Set.mem_univ _, by show (vv i, vv (i + 1)) = p; rw [h1, h2]⟩
+    · exact Set.mem_union_right _ ⟨i, Set.mem_univ _, by show (vv (i + 1), vv i) = p; rw [h1, h2]⟩
+  · intro he
+    rcases (Set.mem_union _ _ _).mp he with he | he
+    · obtain ⟨i, -, hie⟩ := he
+      rw [← hie]
+      exact Set.mem_setOf_eq.mpr (edgeMemFb hE i)
+    · obtain ⟨i, -, hie⟩ := he
+      rw [← hie]
+      exact Set.mem_setOf_eq.mpr (by
+        show ({vv (i + 1), vv i} : Set V3) ∈ E
+        rw [pairSetCommFb]
+        exact edgeMemFb hE i)
+
+/-- dart 集两分。 -/
+private theorem fddartsEqFb (hV : Set.image vv Set.univ = V)
+    (hne : ∀ j, vv j ≠ vv (j + 1))
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E) :
+    dartsOfHyp_p3 E V
+      = Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ
+        ∪ Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ := by
+  simp only [dartsOfHyp_p3, fdselfPairsEmptyFb hV hE, Set.union_empty,
+    fdordPairsFb hne hE]
+
+/-- dart 两分到朝向。 -/
+private theorem fddartCasesFb (hV : Set.image vv Set.univ = V)
+    (hne : ∀ j, vv j ≠ vv (j + 1))
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    {x : V3 × V3} (hx : x ∈ dartsOfHyp_p3 E V) :
+    (∃ m : ℕ, x = (vv m, vv (m + 1))) ∨ (∃ m : ℕ, x = (vv (m + 1), vv m)) := by
+  have hord := dartInvFb (fun z hz => vvmemFb hV hz) (edgeMemFb hE) hne hx
+  rw [← hE, Set.mem_image] at hord
+  obtain ⟨j, -, hj'⟩ := hord
+  have hjeq : ({x.1, x.2} : Set V3) = {vv j, vv (j + 1)} := hj'.symm
+  rcases dartOrientFb (hne j) hjeq with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · exact Or.inl ⟨j, Prod.ext h1 h2⟩
+  · exact Or.inr ⟨j, Prod.ext h1 h2⟩
+
+/-- 周期族的「下标平移一」像不变。 -/
+private theorem fdimageShiftFb {F : ℕ → V3 × V3} (hk0 : 0 < k) (hper : Periodic F k) :
+    Set.image (fun i : ℕ => F (i + 1)) Set.univ = Set.image F Set.univ := by
+  ext z
+  simp only [Set.mem_image, Set.mem_univ, true_and]
+  constructor
+  · rintro ⟨i, rfl⟩
+    exact ⟨i + 1, rfl⟩
+  · rintro ⟨i, rfl⟩
+    refine ⟨i + k - 1, ?_⟩
+    show F ((i + k - 1) + 1) = F i
+    rw [show (i + k - 1) + 1 = i + k from by omega, hper]
+
+end FanDartLayer
+
+
+/-! ## F3 支撑层 C2：轨道集 / nn 像 / 卡片 / 全局对合（localFan_p3 主装配前置） -/
+
+section FanOrbitLayer
+
+variable {vv : ℕ → V3} {k : ℕ} {V : Set V3} {E : Set (Set V3)}
+
+/-- 周期族的 forward 像有限。 -/
+private theorem foimgFiniteFb (hk0 : 0 < k) (hper : Periodic vv k) :
+    (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ).Finite := by
+  refine Set.Finite.subset (Finset.finite_toSet (Finset.univ.image
+    (fun i : Fin k => (vv (i : ℕ), vv ((i : ℕ) + 1))))) ?_
+  rintro x ⟨i, -, rfl⟩
+  refine Finset.mem_image.mpr ⟨⟨i % k, Nat.mod_lt _ hk0⟩, Finset.mem_univ _, ?_⟩
+  show (vv (i % k), vv (i % k + 1)) = (vv i, vv (i + 1))
+  rw [periodicModFb hper i, vvModEqFb hper
+    (modSuccFb (Nat.mod_mod_of_dvd i (dvd_refl k)))]
+
+/-- backward 像基数 = k（forward 形参数化）。 -/
+private theorem fdbwdCardFb (hk0 : 0 < k) (hper : Periodic vv k)
+    (hinjv : ∀ i j, vv i = vv j → i % k = j % k)
+    (F : ℕ → V3 × V3) (hF : ∀ t, F t = (vv t, vv (t + 1))) :
+    (Set.image F Set.univ).ncard = k := by
+  have hperF : Periodic F k := by
+    intro t
+    rw [hF t, hF (t + k), hper t,
+      show (t:Nat) + k + 1 = t + 1 + k from by omega, hper (t + 1)]
+  have hfin : (Set.image F Set.univ).Finite := by
+    have h0 : Set.image F Set.univ
+        = Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ :=
+      imageUnivCongrFb (fun i => by rw [hF i])
+    rw [h0]
+    exact foimgFiniteFb hk0 hper
+  have hcoeeq : Set.image F Set.univ
+      = ((Finset.univ.image (fun i : Fin k => F (i : ℕ))) : Set (V3 × V3)) := by
+    ext x
+    simp only [Set.mem_image, Set.mem_univ, true_and, Finset.mem_coe, Finset.mem_image]
+    constructor
+    · rintro ⟨i, rfl⟩
+      exact ⟨⟨i % k, Nat.mod_lt _ hk0⟩, Finset.mem_univ _, by
+        show F (i % k) = F i
+        rw [periodicModFb hperF i]⟩
+    · rintro ⟨i, -, rfl⟩
+      exact ⟨i, rfl⟩
+  have hSfin : ((Finset.univ.image (fun i : Fin k => F (i : ℕ))) : Set (V3 × V3)).Finite := by
+    rw [← hcoeeq]
+    exact hfin
+  have hinj : Function.Injective (fun i : Fin k => F (i : ℕ)) := by
+    intro i j hij
+    have hF1 : (F ↑i).1 = vv ↑i := by rw [hF ↑i]
+    have hF2 : (F ↑j).1 = vv ↑j := by rw [hF ↑j]
+    have h1 : vv ↑i = vv ↑j := by
+      rw [← hF1, ← hF2]
+      exact congrArg Prod.fst hij
+    have hik : (i : ℕ) % k = (j : ℕ) % k := hinjv _ _ h1
+    rw [Fin.ext ((Nat.mod_eq_of_lt i.isLt).symm.trans
+      (hik.trans (Nat.mod_eq_of_lt j.isLt)))]
+  have hT : hSfin.toFinset = Finset.univ.image (fun i : Fin k => F (i : ℕ)) := by
+    ext x
+    simp only [Set.Finite.mem_toFinset hSfin, Finset.mem_coe, Finset.mem_image, Set.mem_univ,
+      true_and, exists_prop]
+  rw [hcoeeq, Set.ncard_eq_toFinset_card _ hSfin, hT,
+    Finset.card_image_of_injective Finset.univ hinj, Finset.card_univ, Fintype.card_fin]
+
+/-- forward ∩ backward = ∅。 -/
+private theorem fddisjFb (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinjv : ∀ i j, vv i = vv j → i % k = j % k) :
+    Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ
+      ∩ Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ = ∅ := by
+  refine Set.eq_empty_iff_forall_notMem.mpr fun p hp => ?_
+  rw [Set.mem_inter_iff, Set.mem_image, Set.mem_image] at hp
+  obtain ⟨⟨i, -, hi⟩, ⟨j, -, hj⟩⟩ := hp
+  have hpe : (vv i, vv (i + 1)) = (vv (j + 1), vv j) := hi.trans hj.symm
+  have h1 : i % k = (j + 1) % k := hinjv i (j + 1) (congrArg Prod.fst hpe)
+  have h2 : (i + 1) % k = j % k := hinjv (i + 1) j (congrArg Prod.snd hpe)
+  have hj2 : (j + 1 + 1) % k = j % k := by
+    rw [← modSuccFb h1, h2]
+  exact modNeAddltFb (a := j) (c := 2) (by omega) (by omega) (by omega) hj2.symm
+
+/-- 像 c 平移（c := k - 1 特化）：F 周期 k 时 +（k-1） 平移像不变。 -/
+private theorem fdimageShiftK1Fb {F : ℕ → V3 × V3} (hk1 : 1 ≤ k) (hperF : Periodic F k) :
+    Set.image (fun i : ℕ => F (i + (k - 1))) Set.univ = Set.image F Set.univ := by
+  ext x
+  simp only [Set.mem_image, Set.mem_univ, true_and]
+  constructor
+  · rintro ⟨i, rfl⟩
+    exact ⟨i + (k - 1), rfl⟩
+  · rintro ⟨i, rfl⟩
+    refine ⟨i + 1, ?_⟩
+    show F (i + 1 + (k - 1)) = F i
+    rw [show (i:Nat) + 1 + (k - 1) = i + k from by omega]
+    exact hperF i
+
+/-- 周期族的 forward 像基数 = k。 -/
+private theorem fdfwdCardFb (hk0 : 0 < k) (hper : Periodic vv k)
+    (hinjv : ∀ i j, vv i = vv j → i % k = j % k) :
+    (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ).ncard = k :=
+  fdbwdCardFb hk0 hper hinjv (fun i => (vv i, vv (i + 1))) (fun _ => rfl)
+
+/-- backward 像基数 = k。 -/
+private theorem fdbwdNcardFb (hk0 : 0 < k) (hper : Periodic vv k)
+    (hinjv : ∀ i j, vv i = vv j → i % k = j % k) :
+    (Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ).ncard = k := by
+  have hfin : (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ).Finite :=
+    foimgFiniteFb hk0 hper
+  have hs : Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ
+      = Prod.swap '' (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ) := by
+    rw [← Set.image_comp, imageUnivCongrFb (f := Prod.swap ∘ fun i : ℕ => (vv i, vv (i + 1))) (g := fun i : ℕ => (vv (i + 1), vv i)) (fun i : ℕ => by show Prod.swap (vv i, vv (i + 1)) = (vv (i + 1), vv i); rfl)]
+  have hswap : Function.Injective (Prod.swap : V3 × V3 → V3 × V3) := by
+    intro a b h
+    exact Prod.ext (congrArg Prod.snd h) (congrArg Prod.fst h)
+  rw [hs, Set.ncard_image_of_injective
+    (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ) hswap]
+  exact fdfwdCardFb hk0 hper hinjv
+
+/-- nn 像：backward 像 ↦ forward 像。 -/
+private theorem fdnnImageBFb (hper : Periodic vv k) (hk0 : 0 < k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hshift2 : ∀ j, vv (j + 2) ≠ vv j) :
+    Set.image (nnOfHyp_p3 0 V E) (Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ)
+      = Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ := by
+  rw [← Set.image_comp, imageUnivCongrFb (f := nnOfHyp_p3 0 V E ∘ fun i : ℕ => (vv (i + 1), vv i))
+      (g := fun i : ℕ => (vv (i + 1), vv (i + 2)))
+      (fun i : ℕ => by show nnOfHyp_p3 0 V E (vv (i + 1), vv i) = (vv (i + 1), vv (i + 2)); exact fdnnValBFb hper hk1 hE hEE hshift2 i)]
+  exact fdimageShiftFb hk0
+    (F := fun i : ℕ => (vv i, vv (i + 1)))
+    (fun t => by show (vv (t + k), vv (t + k + 1)) = (vv t, vv (t + 1)); rw [hper t, show (t:Nat) + k + 1 = t + 1 + k from by omega, hper (t + 1)])
+
+/-- nn 像：forward 像 ↦ backward 像。 -/
+private theorem fdnnImageFFb (hper : Periodic vv k) (hk0 : 0 < k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hne2 : ∀ j, vv (j + 1) ≠ vv (j + k - 1)) :
+    Set.image (nnOfHyp_p3 0 V E) (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ)
+      = Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ := by
+  have hval : ∀ i : ℕ, (nnOfHyp_p3 0 V E ∘ fun i : ℕ => (vv i, vv (i + 1))) i
+      = (vv i, vv (i + (k - 1))) := fun i => fdnnValFFb hper hE hEE hne2 hk1 i
+  have hval2 : Set.image (fun i : ℕ => (vv i, vv (i + (k - 1)))) Set.univ
+      = Set.image (fun i : ℕ => (vv (i + (k - 1) + 1), vv (i + (k - 1)))) Set.univ := by
+    have hG : ∀ i : ℕ, (vv i, vv (i + (k - 1))) = (vv (i + (k - 1) + 1), vv (i + (k - 1))) := by
+      intro i
+      rw [show (i:Nat) + (k - 1) + 1 = i + k from by omega, hper i]
+    rw [imageUnivCongrFb (f := fun i : ℕ => (vv i, vv (i + (k - 1)))) (g := fun i : ℕ => (vv (i + (k - 1) + 1), vv (i + (k - 1)))) hG]
+  rw [← Set.image_comp, imageUnivCongrFb (f := nnOfHyp_p3 0 V E ∘ fun i : ℕ => (vv i, vv (i + 1)))
+      (g := fun i : ℕ => (vv i, vv (i + (k - 1)))) hval, hval2]
+  exact fdimageShiftK1Fb (hk1 := hk1) (F := fun i : ℕ => (vv (i + 1), vv i)) (fun t : ℕ => by show (vv (t + k + 1), vv (t + k)) = (vv (t + 1), vv t); rw [show (t:Nat) + k + 1 = t + 1 + k from by omega, hper (t + 1), hper t])
+
+/-- backward dart 的 ff 轨道集 = backward 像。 -/
+private theorem fdorbitBFb (hper : Periodic vv k) (hk0 : 0 < k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hne2 : ∀ j, vv (j + 1) ≠ vv (j + k - 1)) (m : ℕ) :
+    {y | ∃ n : ℕ, (ffOfHyp_p3 0 V E)^[n] (vv (m + 1), vv m) = y}
+      = Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ := by
+  ext y
+  simp only [Set.mem_setOf_eq, Set.mem_image]
+  constructor
+  · rintro ⟨n, hn⟩
+    rw [fdffIterBFb hper hk1 hE hEE hne2 m n] at hn
+    exact ⟨m + n * (k - 1), Set.mem_univ _, hn⟩
+  · rintro ⟨i, ⟨-, hi⟩⟩
+    refine ⟨i * (k - 1) + m, ?_⟩
+    have hb := orbitHitModFb hk0 i m
+    rw [fdffIterBFb hper hk1 hE hEE hne2 m (i * (k - 1) + m),
+        show m + (i * (k - 1) + m) * (k - 1) + 1 = (i * (k - 1) + m) * (k - 1) + m + 1 from by ring,
+        show m + (i * (k - 1) + m) * (k - 1) = (i * (k - 1) + m) * (k - 1) + m from by ring,
+        vvModEqFb hper (modSuccFb hb), vvModEqFb hper hb]
+    exact hi
+
+/-- forward dart 的 ff 轨道集 = forward 像。 -/
+private theorem fdorbitFFb (hper : Periodic vv k) (hk1 : 1 ≤ k)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hshift2 : ∀ j, vv (j + 2) ≠ vv j) (m : ℕ) :
+    {y | ∃ n : ℕ, (ffOfHyp_p3 0 V E)^[n] (vv m, vv (m + 1)) = y}
+      = Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ := by
+  ext y
+  simp only [Set.mem_setOf_eq, Set.mem_image]
+  constructor
+  · rintro ⟨n, hn⟩
+    rw [fdffIterFFb hper hk1 hE hEE hshift2 m n] at hn
+    exact ⟨m + n, Set.mem_univ _, hn⟩
+  · rintro ⟨i, ⟨-, hi⟩⟩
+    refine ⟨m * (k - 1) + i, ?_⟩
+    have hmk : (m:Nat) + m * (k - 1) = m * k := by
+      have h1 : (1:ℕ) + (k - 1) = k := by omega
+      rw [show (m:Nat) * k = m * (1 + (k - 1)) from by rw [h1]]
+      have h2 := Nat.mul_add m 1 (k - 1)
+      rw [Nat.mul_one] at h2
+      exact h2.symm
+    have hE1 : (m:Nat) + (m * (k - 1) + i) = i + m * k := by
+      rw [← Nat.add_assoc m (m * (k - 1)) i, hmk]; ring
+    rw [fdffIterFFb hper hk1 hE hEE hshift2 m (m * (k - 1) + i), hE1,
+        vvModEqFb hper (show (i + m * k) % k = i % k from by simp [Nat.add_mod, Nat.mul_mod]),
+        vvModEqFb hper (show (i + m * k + 1) % k = (i + 1) % k from by
+          simp [Nat.add_mod, Nat.mul_mod])]
+    exact hi
+
+end FanOrbitLayer
+
 end Kepler.Text
