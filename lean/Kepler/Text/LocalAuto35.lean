@@ -4498,6 +4498,1600 @@ theorem CARD_FF_EQ_SCS_K_3_p35 (s : ScsV39) (k : ℕ) (FF : Set (V3 × V3))
   rw [hFF', Set.ncard_range_of_injective hinj, Nat.card_eq_fintype_card,
     Fintype.card_fin]
 
+/-! ## lkgrqui-le4eq4-fin-w2: the le4eq4-w2 helper kit (26 private pieces) inlined verbatim, plus the final bookkeeping assembly `tausplit_le4` and the window azimuth-sum identity `winSum_le4`. -/
+/-! ## Azimuth three-point addition (verbatim port of TopologyFan.lean
+`azim_sum_core` / `sum4_azim_fan`; only `Kepler.Geom` primitives of
+`AzimLemmas.lean` are used, which are on this file's import face). -/
+
+private theorem azimSumCore_le4 {x v u w1 w2 : V3} (hxv : v ≠ x)
+    (hncu : ¬ Collinear3 x v u) (hnc1 : ¬ Collinear3 x v w1)
+    (hnc2 : ¬ Collinear3 x v w2) :
+    ∃ n : ℤ, azim x v u w2 =
+      azim x v u w1 + azim x v w1 w2 + (n : ℝ) * (2 * Real.pi) := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - x)
+    (sub_ne_zero.mpr (fun he => hxv he))
+  have hax : (v - x : V3) = dist v x • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, ru, r1, hru, hr1, hzu, hzw1⟩ := azim_frame_spec hncu hnc1 hon hax hxv
+  obtain ⟨ψ2, ru2, r2, hru2, hr2, hzu2, hzw2⟩ := azim_frame_spec hncu hnc2 hon hax hxv
+  obtain ⟨ψ', r1', r2', hr1', hr2', hzw1', hzw2'⟩ :=
+    azim_frame_spec hnc1 hnc2 hon hax hxv
+  have hψu : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ2 : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hru hru2 (hzu.symm.trans hzu2)
+  have hE2 : Complex.exp ((((ψ + azim x v u w1 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp (((ψ' : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hr1 hr1' (hzw1.symm.trans hzw1')
+  have hE1' : Complex.exp ((((ψ2 + azim x v u w2 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp ((((ψ' + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) :=
+    exp_pos_mul_eq hr2 hr2' (hzw2.symm.trans hzw2')
+  rw [exp_add_I, exp_add_I] at hE1'
+  rw [exp_add_I] at hE2
+  rw [hψu.symm] at hE1'
+  rw [← hE2] at hE1'
+  have hE3 : Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+    have hkey : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+      rw [hE1', mul_assoc, ← exp_add_I]
+    exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hE3
+  refine ⟨n, ?_⟩
+  have hc2 : ((azim x v u w2 : ℝ) : ℂ) * Complex.I
+      = ((((azim x v u w1 + azim x v w1 w2 : ℝ)
+          + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
+    rw [hn]
+    push_cast
+    ring
+  exact_mod_cast mul_right_cancel₀ Complex.I_ne_zero hc2
+
+private theorem azimSplit_le4 {x v u w1 w2 : V3} (hxv : v ≠ x)
+    (hncu : ¬ Collinear3 x v u) (hnc1 : ¬ Collinear3 x v w1)
+    (hnc2 : ¬ Collinear3 x v w2)
+    (hle : azim x v u w1 ≤ azim x v u w2) :
+    azim x v u w2 = azim x v u w1 + azim x v w1 w2 := by
+  obtain ⟨n, hc3⟩ := azimSumCore_le4 hxv hncu hnc1 hnc2
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hr1'0 : (0:ℝ) ≤ azim x v u w1 := azim_nonneg x v u w1
+  have hr2'0 : (0:ℝ) ≤ azim x v w1 w2 := azim_nonneg x v w1 w2
+  have hr3'0 : (0:ℝ) ≤ azim x v u w2 := azim_nonneg x v u w2
+  have hr3'1 : azim x v u w2 < 2 * Real.pi := azim_lt_two_pi x v u w2
+  have hφ1 : azim x v w1 w2 < 2 * Real.pi := azim_lt_two_pi x v w1 w2
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+  · exfalso
+    have hle2 : ((n:ℤ) : ℝ) ≤ -1 := by
+      have := (by omega : (n : ℤ) ≤ -1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hle2 h2pi.le
+    linarith
+  · rw [hzero] at hc3
+    simp only [Int.cast_zero, zero_mul, add_zero] at hc3
+    exact hc3
+  · exfalso
+    have hge : ((n:ℤ) : ℝ) ≥ 1 := by
+      have := (by omega : (n : ℤ) ≥ 1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≥ (1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hge h2pi.le
+    linarith
+
+/-! ## Annulus chord separation, `dist < 4` variant (LocalAuto4
+`nonparallel_ball_annulus_aux` with the bound generalized to `< 4`; the
+`≤ cstab`/`≤ 3.62` variants are LocalAuto4, the `< 4` one only LocalAuto38). -/
+
+private theorem noncollAnnulus4_le4 {v w : V3} (hv : v ∈ ballAnnulus)
+    (hw : w ∈ ballAnnulus) (h2 : 2 ≤ dist v w) (h4 : dist v w < 4) :
+    ¬ Collinear3 (0:V3) v w := by
+  obtain ⟨hv2, hvu⟩ := ballAnnulus_norm_bounds hv
+  obtain ⟨hw2, hwu⟩ := ballAnnulus_norm_bounds hw
+  have hvne : v ≠ 0 := by
+    intro h; rw [h] at hv2; norm_num at hv2
+  have h0126 : h0 = 1.26 := rfl
+  intro hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul hvne).mp hcol
+  have hwv : w = c • v := by simpa using hc
+  have e2 : ‖w‖ = |c| * ‖v‖ := by rw [hwv, norm_smul, Real.norm_eq_abs]
+  by_cases hc0 : 0 ≤ c
+  · have e3 : ‖w‖ = c * ‖v‖ := by rw [e2, abs_of_nonneg hc0]
+    have e1 : ‖v - w‖ = |(1 - c) * ‖v‖| := by
+      rw [hwv]
+      have hs : v - c • v = (1 - c) • v := by module
+      rw [hs, norm_smul, Real.norm_eq_abs, abs_mul,
+        abs_of_nonneg (by linarith : (0:ℝ) ≤ ‖v‖)]
+    have habs : (1 - c) * ‖v‖ = ‖v‖ - c * ‖v‖ := by ring
+    have e4 : ‖v - w‖ = |‖v‖ - ‖w‖| := by
+      rw [e1, habs, e3]
+    have hb : |‖v‖ - ‖w‖| ≤ 2 * h0 - 2 := abs_le.mpr ⟨by linarith, by linarith⟩
+    have h02 : h0 < 2 := by norm_num [h0126]
+    rw [dist_eq_norm] at h2
+    rw [e4] at h2
+    linarith
+  · have e1 : ‖v - w‖ = ‖v‖ + ‖w‖ := by
+      rw [hwv]
+      have hs : v - c • v = (1 - c) • v := by module
+      rw [hs, norm_smul, Real.norm_eq_abs, abs_of_pos (by linarith : (0:ℝ) < 1 - c)]
+      rw [norm_smul, Real.norm_eq_abs, abs_of_neg (by linarith : c < 0)]
+      ring
+    rw [dist_eq_norm] at h4
+    rw [e1] at h4
+    linarith
+
+/-! ## Cyclic-fan dart kit (the mid-w2 private helpers, duplicated here:
+they are `private` in LocalAuto35 and not importable). -/
+
+private theorem epsFixed_le4 {α : Type*} [Nonempty α] {pr : α → Prop} {a : α}
+    (hpa : pr a) (huniq : ∀ y, pr y → y = a) : Classical.epsilon pr = a := by
+  by_contra hne
+  exact hne (huniq _ (Classical.epsilon_spec ⟨a, hpa⟩))
+
+private theorem pairMem_le4 {a w b c : V3} (h : ({a, w} : Set V3) = {b, c}) :
+    (a = b ∨ a = c) ∧ (w = b ∨ w = c) := by
+  have m1 : a ∈ ({b, c} : Set V3) := by rw [← h]; simp
+  have m2 : w ∈ ({b, c} : Set V3) := by rw [← h]; simp
+  refine ⟨?_, ?_⟩
+  · rcases Set.mem_insert_iff.mp m1 with h1 | h1
+    · exact Or.inl h1
+    · exact Or.inr (Set.mem_singleton_iff.mp h1)
+  · rcases Set.mem_insert_iff.mp m2 with h2 | h2
+    · exact Or.inl h2
+    · exact Or.inr (Set.mem_singleton_iff.mp h2)
+
+private theorem modEqAddCancel_le4 {k i t : ℕ} (hk0 : 0 < k) (h : i % k = (i + t) % k) :
+    t % k = 0 := by
+  have h1 : (i % k + t % k) % k = i % k := by
+    have e : (i % k + t % k) % k = (i + t) % k := by rw [Nat.add_mod i t k]
+    rw [e, h]
+  have hik : i % k < k := Nat.mod_lt i hk0
+  have htk : t % k < k := Nat.mod_lt t hk0
+  have d : (i % k + t % k) % k = i % k + t % k ∨
+      (i % k + t % k) % k + k = i % k + t % k := by
+    rcases Nat.lt_or_ge (i % k + t % k) k with hlt | hge
+    · exact Or.inl (Nat.mod_eq_of_lt hlt)
+    · refine Or.inr (by
+        have hX : i % k + t % k = (i % k + t % k - k) + k * 1 := by omega
+        rw [hX, Nat.add_mul_mod_self_left,
+          Nat.mod_eq_of_lt (show i % k + t % k - k < k by omega)]
+        omega)
+  rcases d with d | d <;> omega
+
+private theorem modOneZero_le_le4 {k : ℕ} (h : (1:ℕ) % k = 0) : k ≤ 1 := by
+  rcases Nat.lt_or_ge k 2 with h2 | h2
+  · omega
+  · have h1 : (1:ℕ) % k = 1 := Nat.mod_eq_of_lt (by omega)
+    omega
+
+private theorem vvAddK_le4 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k) (i : ℕ) :
+    vv (i + k) = vv i := by
+  rw [← periodic_mod_eq_p23 hper (i + k), Nat.add_mod_right]
+  exact periodic_mod_eq_p23 hper i
+
+private theorem vvModEq_le4 {vv : ℕ → V3} {k : ℕ} (hk0 : 0 < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) {i j : ℕ} (h : vv i = vv j) :
+    i % k = j % k := by
+  by_contra hne
+  have h1 : vv (i % k) = vv (j % k) := by
+    rw [periodic_mod_eq_p23 hper i, periodic_mod_eq_p23 hper j, h]
+  exact hinj (i % k) (j % k) (Nat.mod_lt i hk0) (Nat.mod_lt j hk0) hne h1
+
+private theorem vvStep_le4 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k) {i j : ℕ}
+    (h : i % k = j % k) : vv (i + 1) = vv (j + 1) := by
+  have e1 : (i + 1) % k = (i % k + 1) % k := by simp [Nat.add_mod]
+  have e2 : (j + 1) % k = (j % k + 1) % k := by simp [Nat.add_mod]
+  rw [← periodic_mod_eq_p23 hper (i + 1), ← periodic_mod_eq_p23 hper (j + 1), e1, e2, h]
+
+private theorem vvModPred_le4 {k : ℕ} {i j : ℕ} (hk0 : 0 < k)
+    (h : (i + 1) % k = (j + 1) % k) : i % k = j % k := by
+  have hik : i % k < k := Nat.mod_lt i hk0
+  have hjk : j % k < k := Nat.mod_lt j hk0
+  have e1 : (i + 1) % k = (i % k + 1) % k := by simp [Nat.add_mod]
+  have e2 : (j + 1) % k = (j % k + 1) % k := by simp [Nat.add_mod]
+  rw [e1, e2] at h
+  have hs : i % k + 1 = j % k + 1 ∨ (i % k + 1 = k ∧ j % k + 1 = k) := by
+    rcases Nat.lt_or_ge (i % k + 1) k with hlt | hge
+    · rw [Nat.mod_eq_of_lt hlt] at h
+      rcases Nat.lt_or_ge (j % k + 1) k with hlt2 | hge2
+      · rw [Nat.mod_eq_of_lt hlt2] at h
+        exact Or.inl h
+      · have h2 : j % k + 1 = k := by omega
+        rw [h2, Nat.mod_self] at h
+        exact absurd h (by omega)
+    · have h2 : i % k + 1 = k := by omega
+      rw [h2, Nat.mod_self] at h
+      rcases Nat.lt_or_ge (j % k + 1) k with hlt2 | hge2
+      · rw [Nat.mod_eq_of_lt hlt2] at h
+        exact absurd h (by omega)
+      · have h3 : j % k + 1 = k := by omega
+        exact Or.inr ⟨h2, h3⟩
+  omega
+
+private theorem modAddCancel_le4 {k a b c : ℕ} (h : (a + c) % k = (b + c) % k) :
+    a % k = b % k := by
+  rcases Nat.eq_zero_or_pos k with hk0 | hk0
+  · rw [hk0] at h ⊢
+    simpa [Nat.mod_zero] using h
+  have hak : a % k < k := Nat.mod_lt a hk0
+  have hbk : b % k < k := Nat.mod_lt b hk0
+  have hck : c % k < k := Nat.mod_lt c hk0
+  have e1 : (a + c) % k = (a % k + c % k) % k := by rw [Nat.add_mod]
+  have e2 : (b + c) % k = (b % k + c % k) % k := by rw [Nat.add_mod]
+  rw [e1, e2] at h
+  have d1 : (a % k + c % k) % k = a % k + c % k ∨
+      (a % k + c % k) % k + k = a % k + c % k := by
+    rcases Nat.lt_or_ge (a % k + c % k) k with hlt | hge
+    · exact Or.inl (Nat.mod_eq_of_lt hlt)
+    · refine Or.inr (by
+        have hX : a % k + c % k = (a % k + c % k - k) + k * 1 := by omega
+        rw [hX, Nat.add_mul_mod_self_left,
+          Nat.mod_eq_of_lt (show a % k + c % k - k < k by omega)]
+        omega)
+  have d2 : (b % k + c % k) % k = b % k + c % k ∨
+      (b % k + c % k) % k + k = b % k + c % k := by
+    rcases Nat.lt_or_ge (b % k + c % k) k with hlt | hge
+    · exact Or.inl (Nat.mod_eq_of_lt hlt)
+    · refine Or.inr (by
+        have hY : b % k + c % k = (b % k + c % k - k) + k * 1 := by omega
+        rw [hY, Nat.add_mul_mod_self_left,
+          Nat.mod_eq_of_lt (show b % k + c % k - k < k by omega)]
+        omega)
+  rcases d1 with d1 | d1 <;> rcases d2 with d2 | d2 <;> omega
+
+private theorem vvNeStep_le4 {vv : ℕ → V3} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (i : ℕ) :
+    vv i ≠ vv (i + 1) := by
+  intro hh
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have h := modEqAddCancel_le4 hk0 (i := i) (t := 1) (vvModEq_le4 hk0 hper hinj hh)
+  exact absurd hk3 (by have := modOneZero_le_le4 h; omega)
+
+private theorem vvNePred_le4 {vv : ℕ → V3} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (i : ℕ) :
+    vv i ≠ vv (i + k - 1) := by
+  intro hh
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hh2 : vv i = vv (i + (k - 1)) := by
+    have hsub : (i + k) - 1 = i + (k - 1) := by omega
+    calc vv i = vv (i + k - 1) := hh
+      _ = vv ((i + k) - 1) := rfl
+      _ = vv (i + (k - 1)) := by rw [hsub]
+  have h := modEqAddCancel_le4 hk0 (i := i) (t := k - 1) (vvModEq_le4 hk0 hper hinj hh2)
+  have hmod : (k - 1) % k = k - 1 := Nat.mod_eq_of_lt (by omega)
+  omega
+
+private theorem vvMemEdge_le4 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ} (hk3 : 3 ≤ k)
+    (hper : Periodic vv k) (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) (w : V3) :
+    w ∈ ee (vv i) E ↔ w = vv (i + k - 1) ∨ w = vv (i + 1) := by
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hnosing : ∀ j : ℕ, vv j ≠ vv (j + 1) := fun j => vvNeStep_le4 hk3 hper hinj j
+  show {vv i, w} ∈ E ↔ _
+  constructor
+  · intro hw
+    rw [← hE] at hw
+    obtain ⟨j, hj⟩ := hw
+    obtain ⟨ha, hwbc⟩ := pairMem_le4 hj.symm
+    rcases ha with hai | hai
+    · have hmod : i % k = j % k := vvModEq_le4 hk0 hper hinj hai
+      rcases hwbc with hw1 | hw1
+      · exfalso
+        have hsucc : vv j = vv (j + 1) := by
+          have m : vv (j + 1) ∈ ({vv i, w} : Set V3) := by rw [← hj]; simp
+          rw [hw1, hai] at m
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at m
+          exact m.elim (fun h => h.symm) (fun h => h.symm)
+        exact absurd hsucc (hnosing j)
+      · refine Or.inr ?_
+        rw [hw1, vvStep_le4 hper hmod]
+    · have hmod1 : i % k = (j + 1) % k := vvModEq_le4 hk0 hper hinj hai
+      rcases hwbc with hw1 | hw1
+      · refine Or.inl ?_
+        have hpred : (i + k - 1) % k = j % k := by
+          have hstep : (i + k - 1 + 1) % k = (j + 1) % k := by
+            rw [show i + k - 1 + 1 = i + k from by omega, Nat.add_mod_right]
+            exact hmod1
+          exact vvModPred_le4 hk0 hstep
+        rw [hw1, ← periodic_mod_eq_p23 hper j, ← hpred,
+          periodic_mod_eq_p23 hper (i + k - 1)]
+      · exfalso
+        rw [← hai] at hw1
+        have m : vv j ∈ ({vv i, w} : Set V3) := by rw [← hj]; simp
+        rw [hw1] at m
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at m
+        have hvj : vv j = vv i := m.elim id id
+        exact absurd (hvj.trans hai) (hnosing j)
+  · rintro (rfl | rfl)
+    · show {vv i, vv (i + k - 1)} ∈ E
+      rw [← hE]
+      exact Set.mem_range.mpr ⟨i + k - 1, by
+        show {vv (i + k - 1), vv (i + k - 1 + 1)} = {vv i, vv (i + k - 1)}
+        rw [show i + k - 1 + 1 = i + k from by omega, vvAddK_le4 hper i]
+        ext z
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto⟩
+    · show {vv i, vv (i + 1)} ∈ E
+      rw [← hE]
+      exact Set.mem_range.mpr ⟨i, rfl⟩
+
+/-- The fan successor at a cyclic-fan dart is the cyclic predecessor. -/
+private theorem sigmaFanVal_le4 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) :
+    Kepler.Text.Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1)) = vv (i + k - 1) := by
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hstep : vv (i + k - 1) ≠ vv (i + 1) := by
+    intro hh
+    have hmod := vvModEq_le4 hk0 hper hinj hh
+    have hplus : ((i + k - 1) + 1) % k = ((i + 1) + 1) % k := by
+      have g1 : ((i + k - 1) + 1) % k = ((i + k - 1) % k + 1 % k) % k := by
+        rw [Nat.add_mod]
+      have g2 : ((i + 1) + 1) % k = ((i + 1) % k + 1 % k) % k := by rw [Nat.add_mod]
+      rw [g1, g2, hmod]
+    rw [show (i + k - 1) + 1 = i + k from by omega, Nat.add_mod_right] at hplus
+    have h3 := modEqAddCancel_le4 hk0 (i := i) (t := 2) hplus
+    have h4 : (2:ℕ) % k = 2 := Nat.mod_eq_of_lt (by omega)
+    omega
+  have hee : ee (vv i) E = {vv (i + k - 1), vv (i + 1)} := by
+    ext w
+    exact vvMemEdge_le4 hk3 hper hinj hE i w
+  have hnc : (ee (vv i) E).ncard = 2 := by
+    rw [hee, Set.ncard_insert_of_notMem
+      (show vv (i + k - 1) ∉ ({vv (i + 1)} : Set V3) from by simp [hstep])]
+    simp
+  have hcond : 1 < (ee (vv i) E).ncard := by rw [hnc]; omega
+  have hsoe : Kepler.Text.Fan.setOfEdge (vv i) Set.univ E = ee (vv i) E := by
+    ext z
+    show ({vv i, z} ∈ E ∧ z ∈ (Set.univ : Set V3)) ↔ {vv i, z} ∈ E
+    simp
+  have hne2 : Kepler.Text.Fan.setOfEdge (vv i) Set.univ E ≠ {vv (i + 1)} := by
+    intro hc
+    have hmem : vv (i + k - 1) ∈ Kepler.Text.Fan.setOfEdge (vv i) Set.univ E := by
+      rw [hsoe, hee]
+      simp
+    rw [hc, Set.mem_singleton_iff] at hmem
+    exact hstep hmem
+  simp only [Kepler.Text.Fan.sigmaFan, if_neg hne2]
+  refine epsFixed_le4 ?_ ?_
+  · refine ⟨?_, hstep, ?_⟩
+    · rw [hsoe, hee]
+      simp
+    · intro w1 hw1 hw1ne
+      rw [hsoe, hee] at hw1
+      rcases Set.mem_insert_iff.mp hw1 with h | h
+      · rw [h]
+      · exact absurd h hw1ne
+  · intro z hz
+    obtain ⟨hz1, hz2, -⟩ := hz
+    rw [hsoe, hee] at hz1
+    rcases Set.mem_insert_iff.mp hz1 with h | h
+    · exact h
+    · exact absurd (Set.mem_singleton_iff.mp h) hz2
+
+/-- The fan azimuth of a cyclic dart is the three-point azimuth to the cyclic
+predecessor (cyclic-fan specialization of HOL `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM`,
+Nkezbfc.hl:39, via the two-point neighbour set). -/
+private theorem azimInFanVal_le4 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) :
+    azimInFan (vv i, vv (i + 1)) E = azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
+  have hsucc := sigmaFanVal_le4 hk3 hper hinj hE i
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hstep : vv (i + k - 1) ≠ vv (i + 1) := by
+    intro hh
+    have hmod := vvModEq_le4 hk0 hper hinj hh
+    have hplus : ((i + k - 1) + 1) % k = ((i + 1) + 1) % k := by
+      have g1 : ((i + k - 1) + 1) % k = ((i + k - 1) % k + 1 % k) % k := by
+        rw [Nat.add_mod]
+      have g2 : ((i + 1) + 1) % k = ((i + 1) % k + 1 % k) % k := by rw [Nat.add_mod]
+      rw [g1, g2, hmod]
+    rw [show (i + k - 1) + 1 = i + k from by omega, Nat.add_mod_right] at hplus
+    have h3 := modEqAddCancel_le4 hk0 (i := i) (t := 2) hplus
+    have h4 : (2:ℕ) % k = 2 := Nat.mod_eq_of_lt (by omega)
+    omega
+  have hee : ee (vv i) E = {vv (i + k - 1), vv (i + 1)} := by
+    ext w
+    exact vvMemEdge_le4 hk3 hper hinj hE i w
+  have hnc : (ee (vv i) E).ncard = 2 := by
+    rw [hee, Set.ncard_insert_of_notMem
+      (show vv (i + k - 1) ∉ ({vv (i + 1)} : Set V3) from by simp [hstep])]
+    simp
+  have hcond : 1 < (ee (vv i) E).ncard := by rw [hnc]; omega
+  rw [azimInFan, if_pos hcond, hsucc]
+
+/-- The closed fan wedge at a cyclic dart, definitionally. -/
+private theorem wedgeMem_le4 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) {i : ℕ} {z : V3}
+    (hz : z ∈ wedgeInFanGe (vv i, vv (i + 1)) E) :
+    0 ≤ azim 0 (vv i) (vv (i + 1)) z ∧
+      azim 0 (vv i) (vv (i + 1)) z ≤ azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hstep : vv (i + k - 1) ≠ vv (i + 1) := by
+    intro hh
+    have hmod := vvModEq_le4 hk0 hper hinj hh
+    have hplus : ((i + k - 1) + 1) % k = ((i + 1) + 1) % k := by
+      have g1 : ((i + k - 1) + 1) % k = ((i + k - 1) % k + 1 % k) % k := by
+        rw [Nat.add_mod]
+      have g2 : ((i + 1) + 1) % k = ((i + 1) % k + 1 % k) % k := by rw [Nat.add_mod]
+      rw [g1, g2, hmod]
+    rw [show (i + k - 1) + 1 = i + k from by omega, Nat.add_mod_right] at hplus
+    have h3 := modEqAddCancel_le4 hk0 (i := i) (t := 2) hplus
+    have h4 : (2:ℕ) % k = 2 := Nat.mod_eq_of_lt (by omega)
+    omega
+  have hee : ee (vv i) E = {vv (i + k - 1), vv (i + 1)} := by
+    ext w
+    exact vvMemEdge_le4 hk3 hper hinj hE i w
+  have hnc : (ee (vv i) E).ncard = 2 := by
+    rw [hee, Set.ncard_insert_of_notMem
+      (show vv (i + k - 1) ∉ ({vv (i + 1)} : Set V3) from by simp [hstep])]
+    simp
+  have hcond : 1 < (ee (vv i) E).ncard := by rw [hnc]; omega
+  have hsucc := sigmaFanVal_le4 hk3 hper hinj hE i
+  have hw : wedgeInFanGe (vv i, vv (i + 1)) E
+      = wedgeGe 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
+    rw [wedgeInFanGe, if_pos hcond, hsucc]
+  rw [hw, wedgeGe, Set.mem_setOf_eq] at hz
+  exact hz
+
+
+/-! ## `setSum` / cardinality of the cyclic dart set, window periodicity and
+injectivity, and the window-sum split (mid-w2 `setSum_FF_p35` /
+`CARD_FF_EQ_SCS_K_3_p35` generalized to arbitrary `k ≥ 3`). -/
+
+/-- `setSum` over `{i | i < k}` folds to a `Finset.range k` sum. -/
+private theorem setSumIio_le4 (f : ℕ → ℝ) (k : ℕ) :
+    setSum {i | i < k} f = ∑ i ∈ Finset.range k, f i := by
+  rw [setSum]
+  have hfin : {i | i < k}.Finite := Set.finite_Iio k
+  rw [dif_pos hfin]
+  have hEq : hfin.toFinset = Finset.range k := by
+    ext i
+    simp [Set.mem_toFinset, Finset.mem_range]
+  rw [hEq]
+
+/-- The cyclic dart set folds to a `Finset.range k` sum. -/
+private theorem setSumDarts_le4 (vv : ℕ → V3) (g : V3 × V3 → ℝ) (k : ℕ) (hk0 : 0 < k)
+    (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) :
+    setSum (Set.range (fun i => (vv i, vv (i + 1)))) g
+      = ∑ i ∈ Finset.range k, g (vv i, vv (i + 1)) := by
+  have hperd : Periodic (fun i => (vv i, vv (i + 1))) k := by
+    intro i
+    show (vv (i + k), vv (i + k + 1)) = (vv i, vv (i + 1))
+    rw [hper i, Nat.add_right_comm i k 1, hper (i + 1)]
+  have hrange : Set.range (fun i => (vv i, vv (i + 1)))
+      = (fun i => (vv i, vv (i + 1))) '' Set.Iio k :=
+    range_periodic_image_p23 _ k hk0 hperd
+  have hfin : ((fun i => (vv i, vv (i + 1))) '' Set.Iio k).Finite :=
+    Set.Finite.image _ (Set.finite_Iio k)
+  have hinj3 : ∀ x ∈ (Set.Finite.toFinset (Set.finite_Iio k)),
+      ∀ y ∈ (Set.Finite.toFinset (Set.finite_Iio k)),
+      (vv x, vv (x + 1)) = (vv y, vv (y + 1)) → x = y := by
+    intro x hx y hy hxy
+    have hxk : x < k := by simpa [Set.mem_toFinset, Set.mem_Iio] using hx
+    have hyk : y < k := by simpa [Set.mem_toFinset, Set.mem_Iio] using hy
+    by_contra hne
+    have hfst : vv x = vv y := congrArg Prod.fst hxy
+    exact hinj x y hxk hyk hne hfst
+  have hEq2 : hfin.toFinset =
+      (Set.Finite.toFinset (Set.finite_Iio k)).image (fun i => (vv i, vv (i + 1))) := by
+    ext x
+    simp [Set.mem_image, Set.Finite.mem_toFinset, Set.mem_Iio]
+  have hEq3 : (Set.Finite.toFinset (Set.finite_Iio k)) = Finset.range k := by
+    ext i
+    simp [Set.mem_toFinset, Finset.mem_range]
+  rw [hrange, setSum, dif_pos hfin, hEq2, Finset.sum_image hinj3, hEq3]
+
+/-- The cyclic dart set has cardinality `k` (generalized
+`CARD_FF_EQ_SCS_K_3_p35`). -/
+private theorem ncardDarts_le4 (vv : ℕ → V3) (k : ℕ) (hk0 : 0 < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) :
+    (Set.range fun i => (vv i, vv (i + 1))).ncard = k := by
+  have hperd : Periodic (fun i => (vv i, vv (i + 1))) k := by
+    intro i
+    show (vv (i + k), vv (i + k + 1)) = (vv i, vv (i + 1))
+    rw [hper i, Nat.add_right_comm i k 1, hper (i + 1)]
+  rw [range_periodic_image_p23 _ k hk0 hperd, Set.InjOn.ncard_image]
+  · rw [Set.ncard_Iio_nat]
+  · intro i hi j hj hne
+    have hik : i < k := hi
+    have hjk : j < k := hj
+    have hmod : i % k = j % k :=
+      vvModEq_le4 hk0 hper hinj (congrArg Prod.fst hne)
+    rw [Nat.mod_eq_of_lt hik, Nat.mod_eq_of_lt hjk] at hmod
+    exact hmod
+
+/-- The half-slice vertex map is `k'`-periodic. -/
+private theorem perWin_le4 {vv : ℕ → V3} {k k' p : ℕ} (hk'0 : 0 < k')
+    (hper : Periodic vv k) : Periodic (fun i => vv (i % k' + p % k)) k' := by
+  intro i
+  show vv ((i + k') % k' + p % k) = vv (i % k' + p % k)
+  rw [Nat.add_mod_right]
+
+/-- The half-slice vertex map is injective on the window (`k' < k`). -/
+private theorem injWin_le4 {vv : ℕ → V3} {k k' p : ℕ} (hk0 : 0 < k) (hk'0 : 0 < k')
+    (hk'k : k' < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    {i j : ℕ} (hi : i < k') (hj : j < k')
+    (h : vv (i % k' + p % k) = vv (j % k' + p % k)) : i = j := by
+  have hmod : (i % k' + p % k) % k = (j % k' + p % k) % k := vvModEq_le4 hk0 hper hinj h
+  have h1 : i % k' % k = j % k' % k := modAddCancel_le4 hmod
+  have hik : i % k' < k' := Nat.mod_lt i hk'0
+  have hjk : j % k' < k' := Nat.mod_lt j hk'0
+  have e1 : i % k' % k = i % k' :=
+    Nat.mod_eq_of_lt (lt_of_lt_of_le hik (Nat.le_of_lt hk'k))
+  have e2 : j % k' % k = j % k' :=
+    Nat.mod_eq_of_lt (lt_of_lt_of_le hjk (Nat.le_of_lt hk'k))
+  rw [e1, e2, Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] at h1
+  exact h1
+
+/-- A window sum starts with its first term (`m ≥ 1`). -/
+private theorem windowSumSucc_le4 (G : ℕ → ℝ) (c : ℕ) : ∀ m, 0 < m →
+    ∑ t ∈ Finset.range m, G (c + t) = G c + ∑ t ∈ Finset.range (m - 1), G (c + 1 + t) := by
+  intro m
+  induction m with
+  | zero => intro h; omega
+  | succ n ih =>
+    intro hm
+    rcases Nat.eq_zero_or_pos n with h0 | hn
+    · subst h0
+      simp
+    · have hm1 : n + 1 - 1 = n := by omega
+      rw [hm1, Finset.sum_range_succ']
+      have hcongr : ∑ t ∈ Finset.range n, G (c + (t + 1))
+          = ∑ t ∈ Finset.range n, G (c + 1 + t) :=
+        Finset.sum_congr rfl fun t _ => by ring
+      have hz : G (c + 0) = G c := by rw [Nat.add_zero]
+      linarith
+
+/-- The two window arcs of a cycle cover it with exactly the two endpoints
+double-counted. -/
+private theorem sumSplit_le4 (G : ℕ → ℝ) (k a b : ℕ) (hk0 : 0 < k)
+    (hGper : Periodic G k) (hab : a < b) (hbk : b < k) :
+    ∑ i ∈ Finset.range k, G i + G a + G b
+      = ∑ i ∈ Finset.range (b + 1 - a), G (a + i)
+        + ∑ j ∈ Finset.range (k + a + 1 - b), G (b + j) := by
+  have hkb1 : 0 < k - b := by omega
+  have hL1 : ∑ i ∈ Finset.range k, G i
+      = ∑ i ∈ Finset.range (b + 1), G i + ∑ i ∈ Finset.range (k - b - 1), G (b + 1 + i) := by
+    have hk : k = (b + 1) + (k - b - 1) := by omega
+    conv_lhs => rw [hk]
+    rw [Finset.sum_range_add]
+  have hL2 : ∑ i ∈ Finset.range (b + 1), G i
+      = ∑ i ∈ Finset.range a, G i
+        + (G a + ∑ i ∈ Finset.range (b - a), G (a + 1 + i)) := by
+    have h1 : b + 1 = a + (b + 1 - a) := by omega
+    conv_lhs => rw [h1]
+    rw [Finset.sum_range_add, windowSumSucc_le4 G a (b + 1 - a) (by omega)]
+    have h2 : b - a = b + 1 - a - 1 := by omega
+    rw [h2]
+  have hR1 : ∑ i ∈ Finset.range (b + 1 - a), G (a + i)
+      = G a + ∑ i ∈ Finset.range (b - a), G (a + 1 + i) := by
+    have h := windowSumSucc_le4 G a (b + 1 - a) (by omega)
+    have hba : b + 1 - a - 1 = b - a := by omega
+    rw [h, hba]
+  have hR2 : ∑ j ∈ Finset.range (k + a + 1 - b), G (b + j)
+      = ∑ t ∈ Finset.range (k - b), G (b + t) + ∑ j ∈ Finset.range (a + 1), G j := by
+    have hk2 : k + a + 1 - b = (k - b) + (a + 1) := by omega
+    conv_lhs => rw [hk2]
+    rw [Finset.sum_range_add]
+    have hR2b : ∑ x ∈ Finset.range (a + 1), G (b + ((k - b) + x))
+        = ∑ x ∈ Finset.range (a + 1), G x := by
+      refine Finset.sum_congr rfl fun j hj => ?_
+      have hje : b + ((k - b) + j) = k + j := by omega
+      rw [hje, Nat.add_comm k j, hGper j]
+    rw [hR2b]
+  have hR3 : ∑ t ∈ Finset.range (k - b), G (b + t)
+      = G b + ∑ t ∈ Finset.range (k - b - 1), G (b + 1 + t) :=
+    windowSumSucc_le4 G b (k - b) hkb1
+  have hR4 : ∑ j ∈ Finset.range (a + 1), G j = ∑ j ∈ Finset.range a, G j + G a :=
+    Finset.sum_range_succ _ a
+  linarith
+
+/-- The half-slice window sizes add up to `k + 2` (diag boundaries excluded by
+`scs_diag`). -/
+private theorem hksum_le4 (k a b k' k'' : ℕ) (hk4 : 4 ≤ k)
+    (ha : a < k) (hb : b < k) (hd1 : ¬(a = b))
+    (hd2 : (a + 1) % k ≠ b) (hd3 : a ≠ (b + 1) % k)
+    (e1 : k' = (b + 1 + (k - a)) % k) (e2 : k'' = (a + 1 + (k - b)) % k) :
+    k' + k'' = k + 2 := by
+  rcases Nat.lt_or_ge a b with hlt | hge
+  · have hb1 : 0 < b + 1 - a := by omega
+    have hlt1 : b + 1 - a < k := by
+      rcases Nat.eq_zero_or_pos a with ha0 | hap
+      · subst ha0
+        rcases Nat.lt_or_ge (b + 1) k with h | h2
+        · omega
+        · have hb1k : (b + 1) % k = 0 := by
+            have hbe : b + 1 = k := by omega
+            subst hbe
+            exact Nat.mod_self _
+          exact absurd hb1k.symm hd3
+      · omega
+    have hb2 : a + 1 < b := by
+      rcases Nat.lt_or_ge (a + 1) b with h | h
+      · exact h
+      · have hbe : b = a + 1 := by omega
+        have hlt : (a + 1) % k = a + 1 := Nat.mod_eq_of_lt (by omega)
+        rw [hbe] at hd2
+        exact absurd hlt hd2
+    have hk'v : k' = b + 1 - a := by
+      have h1 : b + 1 + (k - a) = (b + 1 - a) + k := by omega
+      rw [e1, h1, Nat.add_mod_right, Nat.mod_eq_of_lt hlt1]
+    have hk''v : k'' = k + a + 1 - b := by
+      have h2 : a + 1 + (k - b) = k + a + 1 - b := by omega
+      rw [e2, h2, Nat.mod_eq_of_lt (by omega)]
+    omega
+  · have hab1 : 0 < a + 1 - b := by omega
+    have hlt2 : a + 1 - b < k := by
+      rcases Nat.eq_zero_or_pos b with hb0 | hbp
+      · subst hb0
+        rcases Nat.lt_or_ge (a + 1) k with h | h2
+        · omega
+        · have ha1k : (a + 1) % k = 0 := by
+            have hae : a + 1 = k := by omega
+            subst hae
+            exact Nat.mod_self _
+          exact absurd ha1k hd2
+      · omega
+    have hb1 : b + 1 < a := by
+      rcases Nat.lt_or_ge (b + 1) a with h | h
+      · exact h
+      · have hae : a = b + 1 := by omega
+        have hlt : (b + 1) % k = b + 1 := Nat.mod_eq_of_lt (by omega)
+        rw [hae] at hd3
+        exact absurd hlt.symm hd3
+    have hk'v : k' = k + b + 1 - a := by
+      have h1 : b + 1 + (k - a) = k + b + 1 - a := by omega
+      rw [e1, h1, Nat.mod_eq_of_lt (by omega)]
+    have hk''v : k'' = a + 1 - b := by
+      have h2 : a + 1 + (k - b) = (a + 1 - b) + k := by omega
+      rw [e2, h2, Nat.add_mod_right, Nat.mod_eq_of_lt hlt2]
+    omega
+
+
+/-! ## C3③c/③d main-kit: tau decomposition of a window system, the
+`azim ≤ π → dihV` bridge (LocalAuto38 `p38_azim_eq_dihV` copy; LuneVolume's
+`azim_dihv_same`/`azim_dihv_compl` are public and on the import face), and
+the two distance bound helpers. -/
+
+/-- On `azim ≤ π` the azimuth equals the geometric dihedral (copy of
+LocalAuto38 `p38_azim_eq_dihV`). -/
+private theorem azimEqDihv_le4 {v w v1 v2 : V3} (h1 : ¬ Collinear3 v w v1)
+    (h2 : ¬ Collinear3 v w v2) (hp : azim v w v1 v2 ≤ Real.pi) :
+    azim v w v1 v2 = dihV v w v1 v2 := by
+  rcases lt_or_eq_of_le hp with hlt | heq
+  · exact azim_dihv_same h1 h2 hlt
+  · have hle : Real.pi ≤ azim v w v1 v2 := by rw [heq]
+    have hc := azim_dihv_compl h1 h2 hle
+    rw [heq]
+    linarith
+
+/-- Edge-adjacent window vertices are at distance `≤ cstab` (the `3 < k`
+`b`-bound of `isScsV39` transported through `BBs`). -/
+private theorem distPairCstab_le4 {s : ScsV39} {vv : ℕ → V3} {k : ℕ} (hk : s.k = k)
+    (hscs : isScsV39 s) (hBB : BBsV39 s vv) (hk3 : 3 < k) (i : ℕ) :
+    dist (vv i) (vv (i + 1)) ≤ cstab := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, hchain, -, -, -, hbc, -, -, -⟩ := hscs
+  have hk3s : 3 < s.k := by rw [hk]; exact hk3
+  have hd1 : dist (vv i) (vv (i + 1)) ≤ s.b i (i + 1) := (hBB.2.2.1 i (i + 1)).2
+  have hbb : s.b i (i + 1) ≤ cstab := hbc i hk3s
+  exact hd1.trans hbb
+
+/-- Residue form of the edge distance bound. -/
+private theorem distPairCstabMod_le4 {s : ScsV39} {vv : ℕ → V3} {k : ℕ} (hk : s.k = k)
+    (hscs : isScsV39 s) (hBB : BBsV39 s vv) (hk3 : 3 < k) (hper : Periodic vv k) (i : ℕ) :
+    dist (vv (i % k)) (vv ((i + 1) % k)) ≤ cstab := by
+  have hd := distPairCstab_le4 hk hscs hBB hk3 (i % k)
+  have hcong : ((i % k) + 1) % k = (i + 1) % k := by
+    rw [@Nat.add_mod i 1 k, show (1:ℕ) % k = 1 from Nat.mod_eq_of_lt (show (1:ℕ) < k from by omega)]
+  have he : vv ((i % k) + 1) = vv ((i + 1) % k) := by
+    rw [← periodic_mod_eq_p23 hper (i % k + 1), ← hcong]
+  rw [he] at hd
+  exact hd
+
+/-- The diagonal pair of the slice is at distance `< 4` (`bm p q < 4` of
+`isScsSliceV39` + the `MMs` `bm`-upper bound, transported to the residues). -/
+private theorem distDiag4_le4 {s : ScsV39} {vv : ℕ → V3} {k p q : ℕ} (hk : s.k = k)
+    (hscs : isScsV39 s) (hMM : vv ∈ MMsV39 s) (hk0 : 0 < k) (hbm : s.bm p q < 4) :
+    dist (vv (p % k)) (vv (q % k)) < 4 := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, hpbm, -, -, -, -, -, -, -, -, -, -, -⟩ := hscs
+  rw [hk] at hpbm
+  simp only [MMsV39, Set.mem_setOf_eq] at hMM
+  obtain ⟨-, -, -, -, -, hbmle⟩ := hMM
+  have hp' : p % k < k := Nat.mod_lt _ hk0
+  have hq' : q % k < k := Nat.mod_lt _ hk0
+  have hres : s.bm (p % k) (q % k) = s.bm p q := by
+    have hper1 : Periodic (fun z => s.bm z (q % k)) k := fun t => (hpbm t (q % k)).1
+    have hper2 : Periodic (fun z => s.bm p z) k := fun t => (hpbm p t).2
+    calc s.bm (p % k) (q % k) = s.bm p (q % k) := periodic_mod_eq_p23 hper1 p
+      _ = s.bm p q := periodic_mod_eq_p23 hper2 q
+  have hd : dist (vv (p % k)) (vv (q % k)) ≤ s.bm (p % k) (q % k) :=
+    hbmle (p % k) (q % k)
+  rw [hres] at hd
+  exact lt_of_le_of_lt hd hbm
+
+/-- The taustar of a `k'`-window system, in azimuth-sum form (`k' ≥ 3`; the
+`k' = 3` branch consumes the tau3-azimuth transport `hslot`). -/
+private theorem halfTau_le4 (w : ℕ → V3) (k' : ℕ) (E' : Set (Set V3)) (FF' : Set (V3 × V3))
+    (s' : ScsV39) (hk's' : s'.k = k')
+    (hk'3 : 3 ≤ k') (hper' : Periodic w k')
+    (hinj' : ∀ i j, i < k' → j < k' → i ≠ j → w i ≠ w j)
+    (hE' : Set.range (fun i => {w i, w (i + 1)}) = E')
+    (hFF' : Set.range (fun i => (w i, w (i + 1))) = FF')
+    (hslot : k' = 3 → tau3 (w 0) (w 1) (w 2)
+      = ∑ i ∈ Finset.range k', rhoFun (norm (w i)) * azimInFan (w i, w (i + 1)) E'
+        - (Real.pi + sol0)) :
+    taustarV39 s' w = ∑ i ∈ Finset.range k', rhoFun (norm (w i)) * azimInFan (w i, w (i + 1)) E'
+      - (Real.pi + sol0) * ((k' - 2 : ℕ) : ℝ) - dsvV39 s' w := by
+  rcases Nat.eq_or_lt_of_le hk'3 with h3 | h3
+  · rw [taustarV39, if_pos (by rw [hk's']; omega), hslot h3.symm, h3.symm]
+    simp
+  · have hk'0 : 0 < k' := by omega
+    have hns : ¬(s'.k ≤ 3) := Nat.not_le.mpr (by rw [hk's']; omega)
+    rw [taustarV39, if_neg hns, tauFun,
+      setSumDarts_le4 w _ k' hk'0 hper' hinj',
+      ncardDarts_le4 w k' hk'0 hper' hinj', hE']
+
+
+/-- A nonzero residue-step separates residues (wrapper). -/
+private theorem stepNe_le4 {k i t : ℕ} (hk3 : 3 ≤ k) (ht : t % k ≠ 0) :
+    ¬(i % k = (i + t) % k) := fun hh => ht (modEqAddCancel_le4 (by omega) hh)
+
+/-! ## The diagonal azimuth split at a dart (the corner identity closing the
+window bookkeeping: the fan azimuth at `(i, i+1)` splits at the diagonal ray
+`j` because the wedge at the dart contains every vertex — the definitional
+convexity conjunct of `ConvexLocalFan`). -/
+
+private theorem splitDart_le4 {s : ScsV39} {vv : ℕ → V3} {k i j : ℕ}
+    (hk : s.k = k) (hscs : isScsV39 s) (hBB : BBsV39 s vv) (hk3 : 3 < k)
+    (hconv : ConvexLocalFan (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))))
+    (hper : Periodic vv k)
+    (hinjM : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hij4 : dist (vv i) (vv j) < 4) (hij2 : 2 ≤ dist (vv i) (vv j))
+    (hijne : ¬(i % k = j % k)) :
+    azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1))
+      = azim 0 (vv i) (vv (i + 1)) (vv j)
+        + azim 0 (vv i) (vv j) (vv (i + k - 1)) := by
+  have hk0 : 0 < k := by omega
+  have hsub : Set.range vv ⊆ ballAnnulus := hBB.1
+  have hvne : ∀ x, vv x ≠ 0 := by
+    intro x hx
+    obtain ⟨h2, -⟩ := ballAnnulus_norm_bounds (hsub (Set.mem_range_self x))
+    rw [hx, norm_zero] at h2
+    exact absurd h2 (by norm_num)
+  have hlem : (1:ℕ) % k = 1 := Nat.mod_eq_of_lt (by omega)
+  have hne1 : ¬(i % k = (i + 1) % k) :=
+    stepNe_le4 (k := k) (i := i) (t := 1) (by omega)
+      (by
+        intro hh
+        rw [Nat.mod_eq_of_lt (by omega)] at hh
+        omega)
+  have hnekm1 : ¬(i % k = (i + k - 1) % k) := by
+    have h := stepNe_le4 (k := k) (i := i) (t := k - 1) (by omega)
+      (by
+        have hkm1 : (k - 1) % k = k - 1 := Nat.mod_eq_of_lt (by omega)
+        rw [hkm1]
+        omega)
+    exact fun hh =>
+      h (hh.trans (congrArg (fun n : ℕ => n % k)
+        (show i + k - 1 = i + (k - 1) from by omega)))
+  have twoLe : ∀ x y : ℕ, ¬(x % k = y % k) → 2 ≤ dist (vv x) (vv y) := by
+    obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hdiag2, -, -, -, -, -⟩ := hscs
+    rw [hk] at hdiag2
+    intro x y hne
+    have hxk : x % k < k := Nat.mod_lt x hk0
+    have hyk : y % k < k := Nat.mod_lt y hk0
+    have h1 : (2 : ℝ) ≤ s.a (x % k) (y % k) := hdiag2 (x % k) (y % k) ⟨hxk, hyk, hne⟩
+    have h2 : s.a (x % k) (y % k) ≤ dist (vv (x % k)) (vv (y % k)) :=
+      (hBB.2.2.1 (x % k) (y % k)).1
+    have h3 : dist (vv (x % k)) (vv (y % k)) = dist (vv x) (vv y) := by
+      rw [periodic_mod_eq_p23 hper x, periodic_mod_eq_p23 hper y]
+    rw [← h3]
+    exact h1.trans h2
+  have ann : ∀ x : ℕ, vv x ∈ ballAnnulus := fun x => hsub (Set.mem_range_self x)
+  have dist362 : ∀ x : ℕ, ‖vv x - vv (x + 1)‖ ≤ 3.62 := by
+    intro x
+    have hd := distPairCstab_le4 hk hscs hBB hk3 x
+    rw [dist_eq_norm] at hd
+    have hc : (cstab:ℝ) = 3.01 := rfl
+    exact le_trans (hd.trans (by rw [hc])) (by norm_num)
+  have hxv : vv i ≠ 0 := hvne i
+  have hncu : ¬ Collinear3 0 (vv i) (vv (i + 1)) :=
+    NONPARALLEL_BALL_ANNULUS362 (ann i) (ann (i + 1)) (twoLe i (i + 1) hne1) (dist362 i)
+  have hnc1 : ¬ Collinear3 0 (vv i) (vv j) :=
+    noncollAnnulus4_le4 (ann i) (ann j) hij2 hij4
+  have hd2 : dist (vv (i + k - 1)) (vv (i + k)) ≤ cstab := by
+    have hd := distPairCstabMod_le4 hk hscs hBB hk3 hper (i + k - 1)
+    rw [show i + k - 1 + 1 = i + k from by omega,
+      periodic_mod_eq_p23 hper (i + k - 1), periodic_mod_eq_p23 hper (i + k)] at hd
+    exact hd
+  have hvk : vv (i + k) = vv i := vvAddK_le4 hper i
+  have hd2' : dist (vv i) (vv (i + k - 1)) ≤ cstab := by
+    rw [dist_comm] at hd2
+    rw [hvk] at hd2
+    exact hd2
+  have hnc2 : ¬ Collinear3 0 (vv i) (vv (i + k - 1)) :=
+    NONPARALLEL_BALL_ANNULUS362 (ann i) (ann (i + k - 1)) (twoLe i (i + k - 1) hnekm1)
+      (by
+        rw [dist_eq_norm] at hd2'
+        exact le_trans hd2' (by norm_num [cstab]))
+  have hdart : (vv i, vv (i + 1)) ∈ (Set.range fun i => (vv i, vv (i + 1))) :=
+    Set.mem_range.mpr ⟨i, rfl⟩
+  have hwedge := by
+    rcases hconv with ⟨-, hconv2⟩
+    have hm := hconv2 (vv i, vv (i + 1)) hdart
+    have hm2 := hm.2 (Set.mem_range_self j)
+    exact wedgeMem_le4 (hk3 := by omega) hper hinjM rfl (hz := hm2)
+  exact azimSplit_le4 hxv hncu hnc1 hnc2 hwedge.2
+
+/-- `Collinear3` argument swap (the underlying set is the same). -/
+private theorem coll3_swap_le4 {a b c : V3} (h : Collinear3 a b c) : Collinear3 a c b := by
+  unfold Collinear3 at h ⊢
+  have hset : ({a, c, b} : Set V3) = {a, b, c} := by
+    ext x
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [hset]
+  exact h
+
+/-! ## The `k' = 3` tau3-azimuth transport (window specialization of HOL
+8445-9059 `SUM_AZIM_EQ_ANGLE_EQ4`; the slot pi-bounds come from the
+definitional convexity conjuncts plus the diagonal azimuth split). -/
+
+private theorem slots3_le4 {s : ScsV39} {vv : ℕ → V3} {k p q : ℕ}
+    (hk : s.k = k) (hscs : isScsV39 s) (hBB : BBsV39 s vv) (hk3 : 3 < k)
+    (hconv : ConvexLocalFan (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))))
+    (hper : Periodic vv k)
+    (hinjM : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hMM : vv ∈ MMsV39 s) (hbm4 : s.bm p q < 4)
+    (hd1 : ¬(p % k = q % k)) (hd2 : ¬((p + 1) % k = q % k))
+    (hpq2 : (p % k + 2) % k = q % k)
+    (E' : Set (Set V3))
+    (hE' : Set.range (fun i => {vv (i % 3 + p % k), vv ((i + 1) % 3 + p % k)}) = E') :
+    tau3 (vv (p % k)) (vv (1 % 3 + p % k)) (vv (2 % 3 + p % k))
+      = ∑ i ∈ Finset.range 3, rhoFun (norm (vv (i % 3 + p % k))) *
+          azimInFan (vv (i % 3 + p % k), vv ((i + 1) % 3 + p % k)) E'
+        - (Real.pi + sol0) := by
+  have hk0 : 0 < k := by omega
+  have hq' : q % k < k := Nat.mod_lt q hk0
+  have hsub : Set.range vv ⊆ ballAnnulus := hBB.1
+  -- the three window vertices and the master transports
+  have hw1 : vv (1 % 3 + p % k) = vv (p % k + 1) := by
+    rw [show (1:ℕ) % 3 = 1 from rfl, Nat.add_comm]
+  have hw2 : vv (2 % 3 + p % k) = vv (q % k) := by
+    rw [show (2:ℕ) % 3 = 2 from rfl, Nat.add_comm,
+      ← periodic_mod_eq_p23 hper (p % k + 2), hpq2]
+  have hw3 : vv (3 % 3 + p % k) = vv (p % k) := by
+    rw [show (3:ℕ) % 3 = 0 from rfl, Nat.zero_add]
+  have hw4 : vv (4 % 3 + p % k) = vv (p % k + 1) := by
+    rw [show (4:ℕ) % 3 = 1 from rfl, Nat.add_comm]
+  -- distance facts
+  have twoLe : ∀ x y : ℕ, ¬(x % k = y % k) → 2 ≤ dist (vv x) (vv y) := by
+    obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hdiag2, -, -, -, -, -⟩ := hscs
+    rw [hk] at hdiag2
+    intro x y hne
+    have hxk : x % k < k := Nat.mod_lt x hk0
+    have hyk : y % k < k := Nat.mod_lt y hk0
+    have h1 : (2 : ℝ) ≤ s.a (x % k) (y % k) := hdiag2 (x % k) (y % k) ⟨hxk, hyk, hne⟩
+    have h2 : s.a (x % k) (y % k) ≤ dist (vv (x % k)) (vv (y % k)) :=
+      (hBB.2.2.1 (x % k) (y % k)).1
+    have h3 : dist (vv (x % k)) (vv (y % k)) = dist (vv x) (vv y) := by
+      rw [periodic_mod_eq_p23 hper x, periodic_mod_eq_p23 hper y]
+    rw [← h3]
+    exact h1.trans h2
+  have hduv1 : dist (vv (p % k)) (vv (p % k + 1)) ≤ cstab :=
+    distPairCstab_le4 hk hscs hBB hk3 (p % k)
+  have hdv1w : dist (vv (p % k + 1)) (vv (p % k + 2)) ≤ cstab :=
+    distPairCstab_le4 hk hscs hBB hk3 (p % k + 1)
+  have hduw : dist (vv (p % k)) (vv (q % k)) < 4 :=
+    distDiag4_le4 hk hscs hMM hk0 hbm4
+  have hne01 : ¬((p % k) % k = (p % k + 1) % k) :=
+    stepNe_le4 (k := k) (i := p % k) (t := 1) (by omega)
+      (by rw [Nat.mod_eq_of_lt (by omega)]; omega)
+  -- non-collinearity kit (Collinear3 is set-based, so argument swaps are rfl)
+  have hnorm362 : ∀ x : ℕ, ‖vv x - vv (x + 1)‖ ≤ 3.62 := by
+    intro x
+    have hd := distPairCstab_le4 hk hscs hBB hk3 x
+    rw [dist_eq_norm] at hd
+    have hc : (cstab:ℝ) = 3.01 := rfl
+    exact hd.trans (by rw [hc]; norm_num)
+  have hnc01 : ¬ Collinear3 0 (vv (p % k)) (vv (p % k + 1)) :=
+    NONPARALLEL_BALL_ANNULUS362 (hsub (Set.mem_range_self (p % k)))
+      (hsub (Set.mem_range_self (p % k + 1))) (twoLe (p % k) (p % k + 1) hne01)
+      (hnorm362 (p % k))
+  have hnc0w : ¬ Collinear3 0 (vv (p % k)) (vv (q % k)) :=
+    noncollAnnulus4_le4 (hsub (Set.mem_range_self (p % k)))
+      (hsub (Set.mem_range_self (q % k)))
+      (twoLe (p % k) (q % k) (fun hh => hd1 (by
+        rw [Nat.mod_eq_of_lt (Nat.mod_lt p hk0), Nat.mod_eq_of_lt hq'] at hh
+        exact hh)))
+      hduw
+  have hnc1w : ¬ Collinear3 0 (vv (p % k + 1)) (vv (q % k)) := by
+    have hd : dist (vv (p % k + 1)) (vv (q % k)) ≤ cstab := by
+      have h2 := hdv1w
+      have hq2 : vv (p % k + 2) = vv (q % k) := by
+        rw [← periodic_mod_eq_p23 hper (p % k + 2), hpq2]
+      rw [hq2] at h2
+      exact h2
+    have hne1w : ¬((p % k + 1) % k = q % k) := by
+      have htr : (p + 1) % k = (p % k + 1) % k := by
+        rw [Nat.add_mod, Nat.mod_eq_of_lt (show (1:ℕ) < k from by omega)]
+      rw [← htr]
+      exact hd2
+    have h2 := twoLe (p % k + 1) (q % k) (fun hh => hne1w
+      (by rw [Nat.mod_eq_of_lt hq'] at hh; exact hh))
+    have hd3 : ‖vv (p % k + 1) - vv (q % k)‖ ≤ 3.62 := by
+      rw [dist_eq_norm] at hd
+      exact le_trans hd (by norm_num [cstab])
+    exact NONPARALLEL_BALL_ANNULUS362 (hsub (Set.mem_range_self (p % k + 1)))
+      (hsub (Set.mem_range_self (q % k))) h2 hd3
+  -- master darts and their azimuth values
+  have hdart0 : (vv (p % k), vv (p % k + 1)) ∈
+      (Set.range fun i => (vv i, vv (i + 1))) := Set.mem_range.mpr ⟨p % k, rfl⟩
+  have hdart1 : (vv (p % k + 1), vv (p % k + 2)) ∈
+      (Set.range fun i => (vv i, vv (i + 1))) := Set.mem_range.mpr ⟨p % k + 1, rfl⟩
+  have hdartq : (vv (q % k), vv (q % k + 1)) ∈
+      (Set.range fun i => (vv i, vv (i + 1))) := Set.mem_range.mpr ⟨q % k, rfl⟩
+  have hval0 : azimInFan (vv (p % k), vv (p % k + 1))
+      (Set.range fun i => {vv i, vv (i + 1)})
+      = azim 0 (vv (p % k)) (vv (p % k + 1)) (vv (p % k + k - 1)) :=
+    azimInFanVal_le4 (by omega) hper hinjM rfl (p % k)
+  have hval1 : azimInFan (vv (p % k + 1), vv (p % k + 2))
+      (Set.range fun i => {vv i, vv (i + 1)})
+      = azim 0 (vv (p % k + 1)) (vv (q % k)) (vv (p % k)) := by
+    have hin := azimInFanVal_le4 (by omega) hper hinjM rfl (p % k + 1)
+    have hvt2 : vv (p % k + 2) = vv (q % k) := by
+      rw [← periodic_mod_eq_p23 hper (p % k + 2), hpq2]
+    have hvt3 : vv (p % k + 1 + k - 1) = vv (p % k) := by
+      rw [show p % k + 1 + k - 1 = p % k + k from by omega, vvAddK_le4 hper (p % k)]
+    rw [hin, hvt2, hvt3]
+  have hvalq : azimInFan (vv (q % k), vv (q % k + 1))
+      (Set.range fun i => {vv i, vv (i + 1)})
+      = azim 0 (vv (q % k)) (vv (q % k + 1)) (vv (q % k + k - 1)) :=
+    azimInFanVal_le4 (by omega) hper hinjM rfl (q % k)
+  -- the diagonal azimuth splits at the two diag darts
+  have htr : ∀ hh : (p % k) % k = (q % k) % k, p % k = q % k :=
+    fun hh => (Nat.mod_eq_of_lt (Nat.mod_lt p hk0)).symm.trans
+      (hh.trans (Nat.mod_eq_of_lt hq'))
+  have hduws : dist (vv (q % k)) (vv (p % k)) < 4 := by
+    rw [dist_comm]
+    exact hduw
+  have hsplitu := by
+    refine splitDart_le4 hk hscs hBB hk3 hconv hper hinjM hduw
+      (twoLe (p % k) (q % k) (fun hh => hd1 (htr hh)))
+      (fun hh => hd1 (htr hh))
+  have hsplitq := by
+    refine splitDart_le4 hk hscs hBB hk3 hconv hper hinjM hduws
+      (twoLe (q % k) (p % k) (fun hh => hd1 (htr hh.symm)))
+      (fun hh => hd1 (htr hh.symm))
+  -- slot bounds
+  have hpiA : azim 0 (vv (p % k)) (vv (p % k + 1)) (vv (q % k)) ≤ Real.pi := by
+    obtain ⟨-, hconv2⟩ := hconv
+    have hwedge := (wedgeMem_le4 (hk3 := by omega) hper hinjM rfl
+      (hz := (hconv2 (vv (p % k), vv (p % k + 1)) hdart0).2
+        (Set.mem_range_self (q % k)))).2
+    have hpi := (hconv2 (vv (p % k), vv (p % k + 1)) hdart0).1
+    rw [hval0] at hpi
+    exact le_trans hwedge hpi
+  have hpiB : azim 0 (vv (p % k + 1)) (vv (q % k)) (vv (p % k)) ≤ Real.pi := by
+    obtain ⟨-, hconv2⟩ := hconv
+    have hpi := (hconv2 (vv (p % k + 1), vv (p % k + 2)) hdart1).1
+    rw [hval1] at hpi
+    exact hpi
+  have hpiC : azim 0 (vv (q % k)) (vv (p % k)) (vv (p % k + 1)) ≤ Real.pi := by
+    have hsplit := hsplitq
+    obtain ⟨-, hconv2⟩ := hconv
+    have hwedge := (wedgeMem_le4 (hk3 := by omega) hper hinjM rfl
+      (hz := (hconv2 (vv (q % k), vv (q % k + 1)) hdartq).2
+        (Set.mem_range_self (p % k)))).2
+    have hvtq : vv (q % k + k - 1) = vv (p % k + 1) := by
+      have hpredq : (q % k + k - 1) % k = (p % k + 1) % k := by
+        have hstep : (q % k + k - 1 + 1) % k = (p % k + 1 + 1) % k := by
+          have e1 : q % k + k - 1 + 1 = q % k + k := by omega
+          have e2 : (q % k + k) % k = q % k := by
+            rw [Nat.add_mod_right, Nat.mod_eq_of_lt hq']
+          have e3 : (p % k + 1 + 1) % k = (p % k + 2) % k := rfl
+          rw [e1, e2, e3, hpq2]
+        exact vvModPred_le4 hk0 hstep
+      rw [← periodic_mod_eq_p23 hper (q % k + k - 1), hpredq,
+        periodic_mod_eq_p23 hper (p % k + 1)]
+    rw [hvtq] at hsplit
+    have hge : (0:ℝ) ≤ azim 0 (vv (q % k)) (vv (q % k + 1)) (vv (p % k)) :=
+      azim_nonneg _ _ _ _
+    have hL : azim 0 (vv (q % k)) (vv (q % k + 1)) (vv (q % k + k - 1)) ≤ Real.pi := by
+      rw [← hvalq]
+      exact (hconv2 (vv (q % k), vv (q % k + 1)) hdartq).1
+    have hL' : azim 0 (vv (q % k)) (vv (q % k + 1)) (vv (p % k + 1)) ≤ Real.pi := by
+      rw [← hvtq]
+      exact hL
+    linarith
+  -- the dihV = azim bridges
+  have hslotA : azim 0 (vv (p % k)) (vv (p % k + 1)) (vv (q % k))
+      = dihV 0 (vv (p % k)) (vv (p % k + 1)) (vv (q % k)) :=
+    azimEqDihv_le4 hnc01 hnc0w hpiA
+  have hslotB : azim 0 (vv (p % k + 1)) (vv (q % k)) (vv (p % k))
+      = dihV 0 (vv (p % k + 1)) (vv (q % k)) (vv (p % k)) :=
+    azimEqDihv_le4 hnc1w (fun hh => hnc01 (coll3_swap_le4 hh)) hpiB
+  have hslotC : azim 0 (vv (q % k)) (vv (p % k)) (vv (p % k + 1))
+      = dihV 0 (vv (q % k)) (vv (p % k)) (vv (p % k + 1)) :=
+    azimEqDihv_le4 (fun hh => hnc0w (coll3_swap_le4 hh))
+      (fun hh => hnc1w (coll3_swap_le4 hh)) hpiC
+  -- the window sum in azimuth form
+  have hwper : Periodic (fun i => vv (i % 3 + p % k)) 3 := perWin_le4 (by norm_num) hper
+  have hwinj : ∀ i j : ℕ, i < 3 → j < 3 → i ≠ j →
+      vv (i % 3 + p % k) ≠ vv (j % 3 + p % k) := by
+    intro i j hi hj hne he
+    exact hne (injWin_le4 hk0 (by norm_num) (by omega) hper hinjM hi hj he)
+  have hvalw0 : rhoFun (norm (vv (0 % 3 + p % k))) *
+      azimInFan (vv (0 % 3 + p % k), vv ((0 + 1) % 3 + p % k)) E'
+      = rhoFun (norm (vv (p % k))) * azim 0 (vv (p % k)) (vv (p % k + 1)) (vv (q % k)) := by
+    have hin := azimInFanVal_le4 (by norm_num) hwper hwinj hE' 0
+    have hw0 : vv (0 % 3 + p % k) = vv (p % k) := by
+      rw [show (0:ℕ) % 3 = 0 from rfl, Nat.zero_add]
+    have hwt1 : vv ((0 + 1) % 3 + p % k) = vv (p % k + 1) := by
+      rw [show (0:ℕ) + 1 = 1 from rfl, Nat.add_comm]
+    have hwt2 : vv ((0 + 3 - 1) % 3 + p % k) = vv (q % k) := by
+      rw [show (0 + 3 - 1) % 3 = 2 from rfl]
+      exact hw2
+    rw [hin, hw0, hwt1, hwt2]
+  have hvalw1 : rhoFun (norm (vv (1 % 3 + p % k))) *
+      azimInFan (vv (1 % 3 + p % k), vv ((1 + 1) % 3 + p % k)) E'
+      = rhoFun (norm (vv (p % k + 1))) * azim 0 (vv (p % k + 1)) (vv (q % k)) (vv (p % k)) := by
+    have hin := azimInFanVal_le4 (by norm_num) hwper hwinj hE' 1
+    have hwt1 : vv ((1 + 1) % 3 + p % k) = vv (q % k) := by
+      rw [show (1 + 1) % 3 = 2 from rfl]
+      exact hw2
+    have hwt2 : vv ((1 + 3 - 1) % 3 + p % k) = vv (p % k) := by
+      rw [show (1 + 3 - 1) % 3 = 0 from rfl]
+      exact hw3
+    rw [hin, hw1, hwt1, hwt2]
+  have hvalw2 : rhoFun (norm (vv (2 % 3 + p % k))) *
+      azimInFan (vv (2 % 3 + p % k), vv ((2 + 1) % 3 + p % k)) E'
+      = rhoFun (norm (vv (q % k))) * azim 0 (vv (q % k)) (vv (p % k)) (vv (p % k + 1)) := by
+    have hin := azimInFanVal_le4 (by norm_num) hwper hwinj hE' 2
+    have hwt1 : vv ((2 + 1) % 3 + p % k) = vv (p % k) := by
+      rw [show (2 + 1) % 3 = 0 from rfl]
+      exact hw3
+    have hwt2 : vv ((2 + 3 - 1) % 3 + p % k) = vv (p % k + 1) := by
+      rw [show (2 + 3 - 1) % 3 = 1 from rfl]
+      exact hw4
+    rw [hin, hw2, hwt1, hwt2]
+  have hsum : ∑ i ∈ Finset.range 3, rhoFun (norm (vv (i % 3 + p % k))) *
+        azimInFan (vv (i % 3 + p % k), vv ((i + 1) % 3 + p % k)) E'
+      = rhoFun (norm (vv (p % k))) * azim 0 (vv (p % k)) (vv (p % k + 1)) (vv (q % k))
+        + rhoFun (norm (vv (p % k + 1))) * azim 0 (vv (p % k + 1)) (vv (q % k)) (vv (p % k))
+        + rhoFun (norm (vv (q % k))) * azim 0 (vv (q % k)) (vv (p % k)) (vv (p % k + 1)) := by
+    rw [SUM_NUMSEG2_p35]
+    rw [hvalw0, hvalw1, hvalw2]
+  -- final assembly: tau3 unfold + the three bridges
+  rw [hw1, hw2, SUM_NUMSEG2_p35, hvalw0, hvalw1, hvalw2, tau3,
+    hslotA, hslotB, hslotC, rho_rho_fun, rho_rho_fun, rho_rho_fun]
+
+private theorem winSum_le4 (vv : ℕ → V3) (G : ℕ → ℝ) (k a b k' : ℕ)
+    (E' : Set (Set V3))
+    (hk0 : 0 < k) (hk2 : 2 ≤ k) (ha : a < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hk'3 : 3 ≤ k') (hk'v : k' = (b + 1 + (k - a)) % k)
+    (hb : b < k)
+    (hE' : Set.range (fun i => ({vv (i % k' + a), vv ((i + 1) % k' + a)} : Set V3)) = E')
+    (hGper : Periodic G k)
+    (hGdef : ∀ i, G i = rhoFun (norm (vv i)) * azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1))) :
+    (∑ i ∈ Finset.range k',
+        rhoFun (norm (vv (i % k' + a))) *
+          azimInFan (vv (i % k' + a), vv ((i + 1) % k' + a)) E')
+      = rhoFun (norm (vv a)) * azim 0 (vv a) (vv (a + 1)) (vv b)
+        + (∑ t ∈ Finset.range (k' - 2), G (a + 1 + t)
+          + rhoFun (norm (vv b)) * azim 0 (vv b) (vv a) (vv (b + k - 1))) := by
+  have hk'0 : 0 < k' := lt_of_le_of_lt (by norm_num) hk'3
+  have hp' : Periodic (fun i => vv (i % k' + a)) k' := by
+    intro i
+    show vv ((i + k') % k' + a) = vv (i % k' + a)
+    rw [Nat.add_mod_right]
+  -- the window size is one of the two arc lengths
+  have hcaseA : a < b → k' = b + 1 - a := by
+    intro hlt
+    have hdegen : ¬(a = 0 ∧ b = k - 1) := by
+      rintro ⟨ha0, hb1⟩
+      rw [ha0, hb1] at hk'v
+      rw [show k - 1 + 1 + (k - 0) = k + k from by omega, Nat.add_mod_right,
+        Nat.mod_self] at hk'v
+      omega
+    have hv : b + 1 + (k - a) = (b + 1 - a) + k := by omega
+    rw [hk'v, hv, Nat.add_mod_right]
+    refine Nat.mod_eq_of_lt ?_
+    rcases Nat.lt_or_ge (b + 1 - a) k with hlt2 | hge2
+    · exact hlt2
+    · exact absurd (by omega : a = 0 ∧ b = k - 1) hdegen
+  have hcaseB : ¬(b ≤ a ∧ a ≤ b + 1) := by
+    rintro ⟨h1, h2⟩
+    have hv : b + 1 + (k - a) = k ∨ b + 1 + (k - a) = k + 1 := by omega
+    rcases hv with hv | hv
+    · rw [hv] at hk'v
+      rw [Nat.mod_self] at hk'v
+      omega
+    · rw [hv, show k + 1 = 1 + k from by omega, Nat.add_mod_right,
+        Nat.mod_eq_of_lt (by omega : (1:ℕ) < k)] at hk'v
+      omega
+  have hcaseC : b + 2 ≤ a → k' = k + b + 1 - a := by
+    intro hbig
+    have hvlt : b + 1 + (k - a) < k := by omega
+    rw [hk'v, Nat.mod_eq_of_lt hvlt]
+    omega
+  have hk'c : k' = b + 1 - a ∨ k' = k + b + 1 - a := by
+    rcases Nat.lt_or_ge a b with hlt | hge
+    · exact Or.inl (hcaseA hlt)
+    · rcases Nat.lt_or_ge b (a - 1) with h2 | h2
+      · exact Or.inr (hcaseC (by omega))
+      · have h3 : a ≤ b + 1 := by omega
+        exact absurd ⟨hge, h3⟩ hcaseB
+  have hndegen : ¬(k' = b + 1 - a ∧ a = 0 ∧ b = k - 1) := by
+    have hkpos : 0 < k := lt_of_le_of_lt (Nat.zero_le b) hb
+    have hmodlt := Nat.mod_lt (b + 1 + (k - a)) hkpos
+    rintro ⟨h1, ha0, hb1⟩
+    omega
+  have hk'k : k' < k := by
+    rcases hk'c with h | h
+    · by_contra hge
+      exact hndegen ⟨h, by omega, by omega⟩
+    · omega
+  have hinj' : ∀ i j : ℕ, i < k' → j < k' → i ≠ j →
+      vv (i % k' + a) ≠ vv (j % k' + a) := by
+    intro i j hi hj hne he
+    refine hne ?_
+    have hmod : (i % k' + a) % k = (j % k' + a) % k := vvModEq_le4 hk0 hper hinj he
+    have h1 : i % k' % k = j % k' % k := modAddCancel_le4 hmod
+    have hik : i % k' < k' := Nat.mod_lt i hk'0
+    have hjk : j % k' < k' := Nat.mod_lt j hk'0
+    have e1 : i % k' % k = i % k' := Nat.mod_eq_of_lt (lt_of_lt_of_le hik (Nat.le_of_lt hk'k))
+    have e2 : j % k' % k = j % k' := Nat.mod_eq_of_lt (lt_of_lt_of_le hjk (Nat.le_of_lt hk'k))
+    rw [e1, e2, Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] at h1
+    exact h1
+  have hpk : ∀ i : ℕ, vv ((i + k) % k) = vv i := by
+    intro i
+    rw [Nat.add_mod_right]
+    exact periodic_mod_eq_p23 hper i
+  have hpk2 : ∀ i : ℕ, vv (i + k) = vv i := fun i =>
+    (periodic_mod_eq_p23 hper (i + k)).symm.trans (hpk i)
+  -- the two residue transports
+  have t1 : vv (a + k' - 1) = vv b := by
+    rcases hk'c with hk'c | hk'c
+    · rw [hk'c, show a + (b + 1 - a) - 1 = b from by omega]
+    · rw [hk'c, show a + (k + b + 1 - a) - 1 = b + k from by omega, hpk2 b]
+  have t3 : vv (a + k' - 2) = vv (b + k - 1) := by
+    rcases hk'c with hk'c | hk'c
+    · rw [hk'c, show a + (b + 1 - a) - 2 = b - 1 from by omega,
+        show b + k - 1 = b - 1 + k from by omega, hpk2 (b - 1)]
+    · rw [hk'c, show a + (k + b + 1 - a) - 2 = b + k - 1 from by omega]
+  -- index reductions inside the window
+  have hred1 : ∀ t : ℕ, t < k' - 2 → (1 + t) % k' = 1 + t := fun t ht =>
+    Nat.mod_eq_of_lt (by omega)
+  have hred2 : ∀ t : ℕ, t < k' - 2 → (1 + t + 1) % k' = 2 + t := fun t ht => by
+    rw [show 1 + t + 1 = 2 + t from by ring]
+    exact Nat.mod_eq_of_lt (by omega)
+  have hred3 : ∀ t : ℕ, t < k' - 2 → t % k' = t := fun t ht =>
+    Nat.mod_eq_of_lt (by omega)
+  have hred4 : ∀ t : ℕ, t < k' - 2 → (1 + t + k' - 1) % k' = t := by
+    intro t ht
+    rw [show 1 + t + k' - 1 = t + k' from by omega, Nat.add_mod_right]
+    exact hred3 t ht
+  set f : ℕ → ℝ := fun i => rhoFun (norm (vv (i % k' + a))) *
+    azimInFan (vv (i % k' + a), vv ((i + 1) % k' + a)) E' with hfdef
+  have peel : ∀ (g : ℕ → ℝ) (m : ℕ), 2 ≤ m →
+      ∑ i ∈ Finset.range m, g i = g 0 + (∑ i ∈ Finset.range (m - 2), g (1 + i) + g (m - 1)) := by
+    intro g m hm2
+    have e1 : m = 1 + (m - 1) := by omega
+    conv_lhs => rw [e1]
+    rw [Finset.sum_range_add, Finset.sum_range_one]
+    have e2 : m - 1 = (m - 2) + 1 := by omega
+    rw [e2, Finset.sum_range_succ]
+    try rw [show 1 + (m - 2) = m - 1 from by omega]
+    try rw [show m - 2 + 1 = m - 1 from by omega]
+  have hf0 : f 0 = rhoFun (norm (vv a)) * azim 0 (vv a) (vv (a + 1)) (vv b) := by
+    show rhoFun (norm (vv (0 % k' + a))) *
+        azimInFan (vv (0 % k' + a), vv ((0 + 1) % k' + a)) E'
+      = rhoFun (norm (vv a)) * azim 0 (vv a) (vv (a + 1)) (vv b)
+    rw [azimInFanVal_le4 hk'3 hp' hinj' hE' 0]
+    simp only [Nat.zero_mod, Nat.zero_add]
+    rw [Nat.mod_eq_of_lt (show (1:ℕ) < k' by omega),
+      Nat.mod_eq_of_lt (show k' - 1 < k' by omega),
+      Nat.add_comm 1 a, Nat.add_comm (k' - 1) a,
+      show a + (k' - 1) = a + k' - 1 from by omega, t1]
+  have hfl : f (k' - 1) = rhoFun (norm (vv b)) * azim 0 (vv b) (vv a) (vv (b + k - 1)) := by
+    show rhoFun (norm (vv ((k' - 1) % k' + a))) *
+        azimInFan (vv ((k' - 1) % k' + a), vv ((k' - 1 + 1) % k' + a)) E'
+      = rhoFun (norm (vv b)) * azim 0 (vv b) (vv a) (vv (b + k - 1))
+    rw [azimInFanVal_le4 hk'3 hp' hinj' hE' (k' - 1),
+      show (k' - 1) % k' = k' - 1 from Nat.mod_eq_of_lt (by omega),
+      show (k' - 1 + 1) % k' = 0 from by rw [show k' - 1 + 1 = k' from by omega, Nat.mod_self],
+      Nat.zero_add,
+      show (k' - 1 + k' - 1) % k' = k' - 2 from by
+        rw [show k' - 1 + k' - 1 = (k' - 2) + k' from by omega, Nat.add_mod_right,
+          Nat.mod_eq_of_lt (by omega)],
+      Nat.add_comm (k' - 1) a, show a + (k' - 1) = a + k' - 1 from by omega, t1,
+      Nat.add_comm (k' - 2) a, show a + (k' - 2) = a + k' - 2 from by omega, t3]
+  have hfi : ∀ t : ℕ, t < k' - 2 → f (1 + t) = G (a + 1 + t) := by
+    intro t ht
+    show rhoFun (norm (vv ((1 + t) % k' + a))) *
+        azimInFan (vv ((1 + t) % k' + a), vv ((1 + t + 1) % k' + a)) E'
+      = G (a + 1 + t)
+    rw [azimInFanVal_le4 hk'3 hp' hinj' hE' (1 + t), hred1 t ht, hred2 t ht, hred4 t ht,
+      hGdef (a + 1 + t),
+      show 1 + t + a = a + 1 + t from by ring,
+      show 2 + t + a = a + 1 + t + 1 from by omega,
+      show a + 1 + t + k - 1 = a + t + k from by omega, vvAddK_le4 hper (a + t),
+      Nat.add_comm t a]
+  have hint : ∑ i ∈ Finset.range (k' - 2), f (1 + i)
+      = ∑ i ∈ Finset.range (k' - 2), G (a + 1 + i) :=
+    Finset.sum_congr rfl fun t ht => hfi t (Finset.mem_range.mp ht)
+  rw [peel f k' (by omega), hf0, hfl, hint]
+
+/-- The final assembly: `tausplit_le4`.  The two giants are this with the
+branch flag `hj` dropped (it is not consumed). -/
+private theorem tausplit_le4 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (vv vv' vv'' : ℕ → V3)
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+    (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hsl : isScsSliceV39 s s' s'' p q) (hd : s.d ≤ d' + d'') :
+    taustarV39 s' vv' + taustarV39 s'' vv'' ≤ taustarV39 s vv := by
+  subst hvv'
+  subst hvv''
+  have hsl0 := hsl
+  simp only [isScsSliceV39] at hsl
+  obtain ⟨hpair, hd1, hd2, hds, hbm, hk4, hear⟩ := hsl
+  -- master facts
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hk3s : 3 < s.k := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
+  have hdiag0 := hdiag
+  obtain ⟨hdiagA, hdiagB, hdiagC⟩ := hdiag0
+  have hBB : BBsV39 s vv := hMM.1.1.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hdiag1 : ¬(p % s.k = q % s.k) := hdiagA
+  have hdiag2 : ¬((p + 1) % s.k = q % s.k) := hdiagB
+  have hdiag3 : ¬(p % s.k = (q + 1) % s.k) := hdiagC
+  have hinjM : ∀ i j, i < s.k → j < s.k → i ≠ j → vv i ≠ vv j := fun i j hi hj hne he =>
+    vvInjAux_p35 s vv hscs hBB i j hi hj hne he
+  have hconv : ConvexLocalFan (Set.range vv)
+      (Set.range fun i => ({vv i, vv (i + 1)} : Set V3))
+      (Set.range fun i => (vv i, vv (i + 1))) := by
+    rcases hBB.2.2.2 with hle | hfan
+    · exact absurd hle (by omega)
+    · exact hfan
+  have hp'k : p % s.k < s.k := Nat.mod_lt _ hk0
+  have hq'k : q % s.k < s.k := Nat.mod_lt _ hk0
+  set E : Set (Set V3) := Set.range fun i => ({vv i, vv (i + 1)} : Set V3) with hEdef
+  set FF : Set (V3 × V3) := Set.range fun i => (vv i, vv (i + 1)) with hFFdef
+  set G : ℕ → ℝ := fun i => rhoFun (norm (vv i)) * azim 0 (vv i) (vv (i + 1))
+    (vv (i + s.k - 1)) with hGdef
+  have hGdefi : ∀ i, G i = rhoFun (norm (vv i)) * azim 0 (vv i) (vv (i + 1))
+      (vv (i + s.k - 1)) := fun i => by rw [hGdef]
+  have hGper : Periodic G s.k := by
+    intro i
+    show rhoFun (norm (vv (i + s.k))) * azim 0 (vv (i + s.k)) (vv (i + s.k + 1))
+        (vv (i + s.k + s.k - 1))
+      = rhoFun (norm (vv i)) * azim 0 (vv i) (vv (i + 1)) (vv (i + s.k - 1))
+    rw [show i + s.k + s.k - 1 = i + s.k - 1 + s.k from by omega,
+      vvAddK_le4 hper (i + s.k - 1),
+      show i + s.k + 1 = i + 1 + s.k from by omega, vvAddK_le4 hper (i + 1),
+      vvAddK_le4 hper i]
+  -- window sizes and residue normalizations
+  have hsk' : s'.k = (q + 1 + (s.k - p % s.k)) % s.k := by rw [← hs']; simp only [scsHalfSliceV39]
+  have hsk'' : s''.k = (p + 1 + (s.k - q % s.k)) % s.k := by
+    rw [← hs'']; simp only [scsHalfSliceV39]
+  have e1' : (q % s.k + 1 + (s.k - p % s.k)) % s.k = (q + 1 + (s.k - p % s.k)) % s.k := by
+    have hL : (q % s.k + (1 + (s.k - p % s.k))) % s.k
+        = (q % s.k % s.k + (1 + (s.k - p % s.k)) % s.k) % s.k := Nat.add_mod _ _ _
+    have hR : (q + (1 + (s.k - p % s.k))) % s.k
+        = (q % s.k + (1 + (s.k - p % s.k)) % s.k) % s.k := Nat.add_mod _ _ _
+    rw [Nat.add_assoc, Nat.add_assoc, hL, hR, Nat.mod_mod]
+  have e2' : (p % s.k + 1 + (s.k - q % s.k)) % s.k = (p + 1 + (s.k - q % s.k)) % s.k := by
+    have hL : (p % s.k + (1 + (s.k - q % s.k))) % s.k
+        = (p % s.k % s.k + (1 + (s.k - q % s.k)) % s.k) % s.k := Nat.add_mod _ _ _
+    have hR : (p + (1 + (s.k - q % s.k))) % s.k
+        = (p % s.k + (1 + (s.k - q % s.k)) % s.k) % s.k := Nat.add_mod _ _ _
+    rw [Nat.add_assoc, Nat.add_assoc, hL, hR, Nat.mod_mod]
+  have hsk'q : s'.k = (q % s.k + 1 + (s.k - p % s.k)) % s.k := by rw [hsk', ← e1']
+  have hsk''q : s''.k = (p % s.k + 1 + (s.k - q % s.k)) % s.k := by rw [hsk'', ← e2']
+  have hge' := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hge'' := SCS_K_PRIME_LE_GE_p35 s q p d'' mkj hscs
+    (⟨fun h => hdiag.1 h.symm, fun h => hdiag.2.2 h.symm, fun h => hdiag.2.1 h.symm⟩ :
+      scsDiag s.k q p) s'' hs''.symm
+  have hk'0 : 0 < s'.k := lt_of_le_of_lt (by norm_num) hge'.1
+  have hk'k : s'.k < s.k := hge'.2.2
+  have hk''0 : 0 < s''.k := lt_of_le_of_lt (by norm_num) hge''.1
+  have hk''k : s''.k < s.k := hge''.2.2
+  have hsumkk : s'.k + s''.k = s.k + 2 := by
+    have hk6 : s.k ≤ 6 := hscs.2.2.1
+    rcases (by omega : s.k = 4 ∨ s.k = 5 ∨ s.k = 6) with hk | hk | hk
+    · rw [hk] at hdiagA hdiagB hdiagC hsk'q hsk''q ⊢
+      have e1 : (p + 1) % 4 = (p % 4 + 1) % 4 := by simp [Nat.add_mod]
+      have e2 : (q + 1) % 4 = (q % 4 + 1) % 4 := by simp [Nat.add_mod]
+      rw [e1] at hdiagB
+      rw [e2] at hdiagC
+      have hb1 : p % 4 < 4 := Nat.mod_lt _ (by omega)
+      have hb2 : q % 4 < 4 := Nat.mod_lt _ (by omega)
+      interval_cases p % 4 <;> interval_cases q % 4 <;> omega
+    · rw [hk] at hdiagA hdiagB hdiagC hsk'q hsk''q ⊢
+      have e1 : (p + 1) % 5 = (p % 5 + 1) % 5 := by simp [Nat.add_mod]
+      have e2 : (q + 1) % 5 = (q % 5 + 1) % 5 := by simp [Nat.add_mod]
+      rw [e1] at hdiagB
+      rw [e2] at hdiagC
+      have hb1 : p % 5 < 5 := Nat.mod_lt _ (by omega)
+      have hb2 : q % 5 < 5 := Nat.mod_lt _ (by omega)
+      interval_cases p % 5 <;> interval_cases q % 5 <;> omega
+    · rw [hk] at hdiagA hdiagB hdiagC hsk'q hsk''q ⊢
+      have e1 : (p + 1) % 6 = (p % 6 + 1) % 6 := by simp [Nat.add_mod]
+      have e2 : (q + 1) % 6 = (q % 6 + 1) % 6 := by simp [Nat.add_mod]
+      rw [e1] at hdiagB
+      rw [e2] at hdiagC
+      have hb1 : p % 6 < 6 := Nat.mod_lt _ (by omega)
+      have hb2 : q % 6 < 6 := Nat.mod_lt _ (by omega)
+      interval_cases p % 6 <;> interval_cases q % 6 <;> omega
+  have hcast : (Real.pi + sol0) * ((s'.k - 2 : ℕ) : ℝ)
+      + (Real.pi + sol0) * ((s''.k - 2 : ℕ) : ℝ)
+      = (Real.pi + sol0) * ((s.k - 2 : ℕ) : ℝ) := by
+    have hn2 : s'.k - 2 + (s''.k - 2) = s.k - 2 := by omega
+    rw [← mul_add, ← Nat.cast_add, hn2]
+  -- window periodicity / injectivity / edge-dart sets
+  have hper' : Periodic (fun i => vv (i % s'.k + p % s.k)) s'.k := perWin_le4 hk'0 hper
+  have hinj' : ∀ i j : ℕ, i < s'.k → j < s'.k → i ≠ j →
+      vv (i % s'.k + p % s.k) ≠ vv (j % s'.k + p % s.k) := fun i j hi hj hne he =>
+    hne (injWin_le4 hk0 hk'0 hk'k hper hinjM hi hj he)
+  have hper'' : Periodic (fun i => vv (i % s''.k + q % s.k)) s''.k := perWin_le4 hk''0 hper
+  have hinj'' : ∀ i j : ℕ, i < s''.k → j < s''.k → i ≠ j →
+      vv (i % s''.k + q % s.k) ≠ vv (j % s''.k + q % s.k) := fun i j hi hj hne he =>
+    hne (injWin_le4 hk0 hk''0 hk''k hper hinjM hi hj he)
+  set E' : Set (Set V3) := Set.range fun i =>
+    ({vv (i % s'.k + p % s.k), vv ((i + 1) % s'.k + p % s.k)} : Set V3) with hE'def
+  set FF' : Set (V3 × V3) := Set.range fun i =>
+    (vv (i % s'.k + p % s.k), vv ((i + 1) % s'.k + p % s.k)) with hFF'def
+  set E'' : Set (Set V3) := Set.range fun i =>
+    ({vv (i % s''.k + q % s.k), vv ((i + 1) % s''.k + q % s.k)} : Set V3) with hE''def
+  set FF'' : Set (V3 × V3) := Set.range fun i =>
+    (vv (i % s''.k + q % s.k), vv ((i + 1) % s''.k + q % s.k)) with hFF''def
+  -- the k' = 3 slot transports (slots3)
+  have hslot' : s'.k = 3 → tau3 (vv (0 % s'.k + p % s.k)) (vv (1 % s'.k + p % s.k))
+      (vv (2 % s'.k + p % s.k))
+      = ∑ i ∈ Finset.range s'.k, rhoFun (norm (vv (i % s'.k + p % s.k))) *
+          azimInFan (vv (i % s'.k + p % s.k), vv ((i + 1) % s'.k + p % s.k)) E'
+        - (Real.pi + sol0) := by
+    intro hk'3
+    have hpq2 : (p % s.k + 2) % s.k = q % s.k := by
+      have hk3' : (q % s.k + 1 + (s.k - p % s.k)) % s.k = 3 := by rw [← hsk'q, hk'3]
+      rcases Nat.lt_or_ge (q % s.k + 1) (p % s.k) with hlt | hge
+      · have hvlt : q % s.k + 1 + (s.k - p % s.k) < s.k := by omega
+        rw [Nat.mod_eq_of_lt hvlt] at hk3'
+        rw [show p % s.k + 2 = q % s.k + s.k from by omega, Nat.add_mod_right,
+          Nat.mod_eq_of_lt hq'k]
+      · rcases Nat.eq_or_lt_of_le hge with heq | hlt
+        · rw [show q % s.k + 1 + (s.k - p % s.k) = s.k from by omega, Nat.mod_self] at hk3'
+          omega
+        · have hv2 : q % s.k + 1 + (s.k - p % s.k)
+              = (q % s.k + 1 - p % s.k) + s.k := by omega
+          rw [hv2, Nat.add_mod_right] at hk3'
+          rcases (by omega :
+              q % s.k + 1 - p % s.k < s.k ∨ q % s.k + 1 - p % s.k = s.k) with hc | hc
+          · rw [Nat.mod_eq_of_lt hc] at hk3'
+            rw [show p % s.k + 2 = q % s.k from by omega,
+              Nat.mod_eq_of_lt hq'k]
+          · rw [hc, Nat.mod_self] at hk3'
+            omega
+    rw [hk'3, Nat.zero_mod, Nat.zero_add]
+    refine slots3_le4 rfl hscs hBB hk3s hconv hper hinjM hMM hbm hdiag1 hdiag2 hpq2 E' ?_
+    rw [hE'def]
+    funext i
+    rw [hk'3]
+  have hslot'' : s''.k = 3 → tau3 (vv (0 % s''.k + q % s.k)) (vv (1 % s''.k + q % s.k))
+      (vv (2 % s''.k + q % s.k))
+      = ∑ i ∈ Finset.range s''.k, rhoFun (norm (vv (i % s''.k + q % s.k))) *
+          azimInFan (vv (i % s''.k + q % s.k), vv ((i + 1) % s''.k + q % s.k)) E''
+        - (Real.pi + sol0) := by
+    intro hk''3
+    have hpq2 : (q % s.k + 2) % s.k = p % s.k := by
+      have hk3'' : (p % s.k + 1 + (s.k - q % s.k)) % s.k = 3 := by rw [← hsk''q, hk''3]
+      rcases Nat.lt_or_ge (p % s.k + 1) (q % s.k) with hlt | hge
+      · have hvlt : p % s.k + 1 + (s.k - q % s.k) < s.k := by omega
+        rw [Nat.mod_eq_of_lt hvlt] at hk3''
+        rw [show q % s.k + 2 = p % s.k + s.k from by omega, Nat.add_mod_right,
+          Nat.mod_eq_of_lt hp'k]
+      · rcases Nat.eq_or_lt_of_le hge with heq | hlt
+        · rw [show p % s.k + 1 + (s.k - q % s.k) = s.k from by omega, Nat.mod_self] at hk3''
+          omega
+        · have hv2 : p % s.k + 1 + (s.k - q % s.k)
+              = (p % s.k + 1 - q % s.k) + s.k := by omega
+          rw [hv2, Nat.add_mod_right] at hk3''
+          rcases (by omega :
+              p % s.k + 1 - q % s.k < s.k ∨ p % s.k + 1 - q % s.k = s.k) with hc | hc
+          · rw [Nat.mod_eq_of_lt hc] at hk3''
+            rw [show q % s.k + 2 = p % s.k from by omega,
+              Nat.mod_eq_of_lt hp'k]
+          · rw [hc, Nat.mod_self] at hk3''
+            omega
+    have hsyml : s.bm q p = s.bm p q := by
+      obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, hsym, -, -, -, -, -, -, -, -⟩ := hscs
+      exact (hsym q p).2.2.1
+    rw [hk''3, Nat.zero_mod, Nat.zero_add]
+    refine slots3_le4 rfl hscs hBB hk3s hconv hper hinjM hMM (by rw [hsyml]; exact hbm)
+      (fun h => hdiag1 h.symm) (fun h => hdiag3 h.symm) hpq2 E'' ?_
+    rw [hE''def]
+    funext i
+    rw [hk''3]
+  -- the three halfTau instances
+  have hm : taustarV39 s vv
+      = ∑ i ∈ Finset.range s.k, rhoFun (norm (vv i)) * azimInFan (vv i, vv (i + 1)) E
+        - (Real.pi + sol0) * ((s.k - 2 : ℕ) : ℝ) - dsvV39 s vv :=
+    halfTau_le4 vv s.k E FF s rfl (le_of_lt hk3s) hper hinjM rfl rfl
+      (fun h3 => absurd h3 (by omega))
+  have hmsum : ∑ i ∈ Finset.range s.k, rhoFun (norm (vv i)) * azimInFan (vv i, vv (i + 1)) E
+      = ∑ i ∈ Finset.range s.k, G i :=
+    Finset.sum_congr rfl fun i _ => by
+      rw [azimInFanVal_le4 (le_of_lt hk3s) hper hinjM rfl i]
+  have hm' : taustarV39 s' (fun i => vv (i % s'.k + p % s.k))
+      = ∑ i ∈ Finset.range s'.k, rhoFun (norm (vv (i % s'.k + p % s.k))) *
+          azimInFan (vv (i % s'.k + p % s.k), vv ((i + 1) % s'.k + p % s.k)) E'
+        - (Real.pi + sol0) * ((s'.k - 2 : ℕ) : ℝ)
+        - dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) :=
+    halfTau_le4 (fun i => vv (i % s'.k + p % s.k)) s'.k E' FF' s' rfl hge'.1 hper' hinj'
+      rfl rfl hslot'
+  have hm'' : taustarV39 s'' (fun i => vv (i % s''.k + q % s.k))
+      = ∑ i ∈ Finset.range s''.k, rhoFun (norm (vv (i % s''.k + q % s.k))) *
+          azimInFan (vv (i % s''.k + q % s.k), vv ((i + 1) % s''.k + q % s.k)) E''
+        - (Real.pi + sol0) * ((s''.k - 2 : ℕ) : ℝ)
+        - dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) :=
+    halfTau_le4 (fun i => vv (i % s''.k + q % s.k)) s''.k E'' FF'' s'' rfl hge''.1 hper''
+      hinj'' rfl rfl hslot''
+  -- the two diagonal corner splits
+  have hduw4 : dist (vv (p % s.k)) (vv (q % s.k)) < 4 := distDiag4_le4 rfl hscs hMM hk0 hbm
+  have h2pq : 2 ≤ dist (vv (p % s.k)) (vv (q % s.k)) := by
+    obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hdiag2, -, -, -, -, -⟩ := hscs
+    have h1 : (2 : ℝ) ≤ s.a (p % s.k) (q % s.k) :=
+      hdiag2 (p % s.k) (q % s.k) ⟨hp'k, hq'k, fun h => hdiag1 h⟩
+    have h2 := (hBB.2.2.1 (p % s.k) (q % s.k)).1
+    exact h1.trans h2
+  have hne2 : ¬((p % s.k) % s.k = (q % s.k) % s.k) := by
+    intro h
+    refine hdiag.1 ?_
+    rwa [Nat.mod_eq_of_lt hp'k, Nat.mod_eq_of_lt hq'k] at h
+  have hspl_p := splitDart_le4 rfl hscs hBB hk3s hconv hper hinjM hduw4 h2pq hne2
+  have hduw4' : dist (vv (q % s.k)) (vv (p % s.k)) < 4 := by rw [dist_comm]; exact hduw4
+  have h2qp : 2 ≤ dist (vv (q % s.k)) (vv (p % s.k)) := by rw [dist_comm]; exact h2pq
+  have hne2' : ¬((q % s.k) % s.k = (p % s.k) % s.k) := by
+    intro h
+    refine hdiag1 ?_
+    rw [Nat.mod_eq_of_lt hp'k, Nat.mod_eq_of_lt hq'k] at h
+    exact h.symm
+  have hspl_q := splitDart_le4 rfl hscs hBB hk3s hconv hper hinjM hduw4' h2qp hne2'
+  have hGa' : G (p % s.k)
+      = rhoFun (norm (vv (p % s.k))) * azim 0 (vv (p % s.k)) (vv (p % s.k + 1)) (vv (q % s.k))
+        + rhoFun (norm (vv (p % s.k))) * azim 0 (vv (p % s.k)) (vv (q % s.k))
+          (vv (p % s.k + s.k - 1)) := by
+    rw [hGdefi (p % s.k), hspl_p, mul_add]
+  have hGb' : G (q % s.k)
+      = rhoFun (norm (vv (q % s.k))) * azim 0 (vv (q % s.k)) (vv (q % s.k + 1)) (vv (p % s.k))
+        + rhoFun (norm (vv (q % s.k))) * azim 0 (vv (q % s.k)) (vv (p % s.k))
+          (vv (q % s.k + s.k - 1)) := by
+    rw [hGdefi (q % s.k), hspl_q, mul_add]
+  -- the window azimuth-sum identities
+  have hw' := winSum_le4 vv G s.k (p % s.k) (q % s.k) s'.k E' hk0 (by omega) hp'k hper
+    hinjM hge'.1 (by rw [hsk', ← e1']) hq'k (by rw [hE'def]) hGper hGdefi
+  have hw'' := winSum_le4 vv G s.k (q % s.k) (p % s.k) s''.k E'' hk0 (by omega) hq'k hper
+    hinjM hge''.1 (by rw [hsk'', ← e2']) hp'k (by rw [hE''def]) hGper hGdefi
+  -- dsv superadditivity and the metric bookkeeping
+  have hq2 := QKNVMLB2_p35 s s' s'' p q d' d'' mkj vv (fun i => vv (i % s'.k + p % s.k))
+    (fun i => vv (i % s''.k + q % s.k)) hs' hs'' rfl rfl hMM hscs hdiag hsl0 hd
+  have hS' : (∑ i ∈ Finset.range s'.k, rhoFun (norm (vv (i % s'.k + p % s.k))) *
+        azimInFan (vv (i % s'.k + p % s.k), vv ((i + 1) % s'.k + p % s.k)) E')
+      + (∑ i ∈ Finset.range s''.k, rhoFun (norm (vv (i % s''.k + q % s.k))) *
+        azimInFan (vv (i % s''.k + q % s.k), vv ((i + 1) % s''.k + q % s.k)) E'')
+      = ∑ i ∈ Finset.range s.k, G i := by
+    have peelG : ∀ (c m : ℕ), 2 ≤ m →
+        ∑ i ∈ Finset.range m, G (c + i)
+          = G c + (∑ i ∈ Finset.range (m - 2), G (c + 1 + i) + G (c + (m - 1))) := by
+      intro c m hm2
+      have e1 : m = 1 + (m - 1) := by omega
+      conv_lhs => rw [e1]
+      rw [Finset.sum_range_add, Finset.sum_range_one, Nat.add_zero]
+      have e2 : m - 1 = (m - 2) + 1 := by omega
+      rw [e2, Finset.sum_range_succ, show 1 + (m - 2) = m - 1 from by omega, Nat.add_zero]
+      rw [show m - 2 + 1 = m - 1 from by omega,
+        Finset.sum_congr rfl fun x _ =>
+          (by rw [← Nat.add_assoc] : G (c + (1 + x)) = G (c + 1 + x))]
+    rcases Nat.lt_or_ge (p % s.k) (q % s.k) with hlt | hge
+    · -- p-window is the short arc: k' = q' + 1 - p', k'' = p' + 1 + (s.k - q')
+      have hv : q % s.k + 1 + (s.k - p % s.k) = (q % s.k + 1 - p % s.k) + s.k := by omega
+      have hk'c : s'.k = q % s.k + 1 - p % s.k := by
+        have h5 : s'.k = (q % s.k + 1 - p % s.k) % s.k := by
+          rw [hsk', ← e1', hv, Nat.add_mod_right]
+        have hdegen1 : ¬(p % s.k = 0 ∧ q % s.k = s.k - 1) := by
+          rintro ⟨h1, h2⟩
+          have hq1 : (q % s.k + 1) % s.k = (q + 1) % s.k := Nat.mod_add_mod q s.k 1
+          have h9 : (q % s.k + 1) % s.k = 0 := by
+            rw [h2, show s.k - 1 + 1 = s.k from by omega, Nat.mod_self]
+          refine hdiagC ?_
+          rw [h1]
+          exact (hq1.symm.trans h9).symm
+        have h6 : (q % s.k + 1 - p % s.k) % s.k = q % s.k + 1 - p % s.k :=
+          Nat.mod_eq_of_lt (by omega)
+        rw [h5, h6]
+      have hgap1 : p % s.k + 2 ≤ q % s.k := by omega
+      have hv2 : p % s.k + 1 + (s.k - q % s.k) < s.k := by omega
+      have hk''c : s''.k = s.k + p % s.k + 1 - q % s.k := by
+        rw [hsk'', ← e2', Nat.mod_eq_of_lt hv2]
+        omega
+      have arc1 : ∑ i ∈ Finset.range s'.k, G (p % s.k + i)
+          = G (p % s.k) + (∑ t ∈ Finset.range (s'.k - 2), G (p % s.k + 1 + t)
+            + G (q % s.k)) := by
+        rw [hk'c, peelG (p % s.k) _ (by omega),
+          show p % s.k + (q % s.k + 1 - p % s.k - 1) = q % s.k from by omega]
+      have arc2 : ∑ j ∈ Finset.range s''.k, G (q % s.k + j)
+          = G (q % s.k) + (∑ t ∈ Finset.range (s''.k - 2), G (q % s.k + 1 + t)
+            + G (p % s.k)) := by
+        rw [hk''c, peelG (q % s.k) _ (by omega),
+          show q % s.k + (s.k + p % s.k + 1 - q % s.k - 1) = p % s.k + s.k from by omega,
+          hGper (p % s.k)]
+      have hspl := sumSplit_le4 G s.k (p % s.k) (q % s.k) hk0 hGper hlt hq'k
+      rw [← hk'c, ← hk''c] at hspl
+      rw [hw', hw'']
+      linarith
+    · -- q-window is the short arc: k'' = p' + 1 - q', k' = s.k + q' + 1 - p'
+      rcases Nat.lt_or_ge (p % s.k) (q % s.k + 2) with h12 | h12
+      · -- p' = q' + 1 forces k' = 0, contradicting 3 ≤ k'
+        have hp12 : p % s.k = q % s.k + 1 := by omega
+        rw [show q % s.k + 1 + (s.k - p % s.k) = s.k from by omega,
+          Nat.mod_self] at hsk'q
+        exact absurd hsk'q.symm (by have hk3 := hge'.1; omega)
+      · have hv : q % s.k + 1 + (s.k - p % s.k) < s.k := by omega
+        have hk'c : s'.k = s.k + q % s.k + 1 - p % s.k := by
+          rw [hsk', ← e1', Nat.mod_eq_of_lt hv]
+          omega
+        have hp20 : ¬(p % s.k = s.k - 1 ∧ q % s.k = 0) := by
+          rintro ⟨h1, h2⟩
+          have h3 : s''.k = (p % s.k + 1 + (s.k - q % s.k)) % s.k := hsk''q
+          rw [show p % s.k + 1 + (s.k - q % s.k) = s.k + s.k from by omega,
+            Nat.add_mod_right, Nat.mod_self] at h3
+          omega
+        have hdegen2 : ¬(q % s.k = 0 ∧ p % s.k = s.k - 1) := by
+          rintro ⟨h2, h1⟩
+          have hp1 : (p % s.k + 1) % s.k = 0 := by
+            rw [h1, show s.k - 1 + 1 = s.k from by omega, Nat.mod_self]
+          have hp1' : (p % s.k + 1) % s.k = (p + 1) % s.k := Nat.mod_add_mod p s.k 1
+          refine hdiagB ?_
+          rw [← hp1', hp1]
+          exact h2.symm
+        have hlt2k : p % s.k + 1 - q % s.k < s.k := by omega
+        have hv2 : p % s.k + 1 + (s.k - q % s.k) = (p % s.k + 1 - q % s.k) + s.k := by omega
+        have hk''c : s''.k = p % s.k + 1 - q % s.k := by
+          rw [hsk'', ← e2', hv2, Nat.add_mod_right, Nat.mod_eq_of_lt hlt2k]
+        have arc1 : ∑ j ∈ Finset.range s''.k, G (q % s.k + j)
+            = G (q % s.k) + (∑ t ∈ Finset.range (s''.k - 2), G (q % s.k + 1 + t)
+              + G (p % s.k)) := by
+          rw [hk''c, peelG (q % s.k) _ (by omega),
+            show q % s.k + (p % s.k + 1 - q % s.k - 1) = p % s.k from by omega]
+        have arc2 : ∑ i ∈ Finset.range s'.k, G (p % s.k + i)
+            = G (p % s.k) + (∑ t ∈ Finset.range (s'.k - 2), G (p % s.k + 1 + t)
+              + G (q % s.k)) := by
+          rw [hk'c, peelG (p % s.k) _ (by omega),
+            show p % s.k + (s.k + q % s.k + 1 - p % s.k - 1) = q % s.k + s.k from by omega,
+            hGper (q % s.k)]
+        have hspl := sumSplit_le4 G s.k (q % s.k) (p % s.k) hk0 hGper
+          (by omega) hp'k
+        rw [← hk''c, ← hk'c] at hspl
+        rw [hw', hw'']
+        linarith
+  -- the giants
+  rw [hm', hm'', hm, hmsum]
+  linarith
+
 /-- HOL `QKNVMLB3_LE4` (QKNVMLB.hl:9215, proof ~965 ln — giant). -/
 theorem QKNVMLB3_LE4_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
     (vv vv' vv'' : ℕ → V3)
@@ -4509,8 +6103,8 @@ theorem QKNVMLB3_LE4_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : P
     (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
     (hsl : isScsSliceV39 s s' s'' p q) (hd : s.d ≤ d' + d'') :
     taustarV39 s' vv' + taustarV39 s'' vv'' ≤ taustarV39 s vv := by
-  sorry
-  -- DISCHARGES: source 9215-10180; k ≠ (4, non-ear-flag) branch of the
+  exact tausplit_le4 s s' s'' p q d' d'' mkj vv vv' vv'' hs' hs'' hvv' hvv''
+      hMM hscs hdiag hsl hd
   -- master inequality: tauFun additivity over QKNVMLB2_p35 + the k'/k''
   -- case tree from SCS_K_PRIME_CASE_5/6_p35 + TECOXBMv2/DIST_DIAG kit.
 
@@ -4537,8 +6131,8 @@ theorem QKNVMLB3_Eq4_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : P
     (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
     (hsl : isScsSliceV39 s s' s'' p q) (hd : s.d ≤ d' + d'') :
     taustarV39 s' vv' + taustarV39 s'' vv'' ≤ taustarV39 s vv := by
-  sorry
-  -- DISCHARGES: source 10198-10665; k = 4 non-ear-flag branch: both halves
+  exact tausplit_le4 s s' s'' p q d' d'' mkj vv vv' vv'' hs' hs'' hvv' hvv''
+      hMM hscs hdiag hsl hd
   -- have k' = 3 (SCS_K_PRIME_CASE_4_p35), tau3-tau3 ≤ tauFun via the
   -- slice-face azimuth identity SUM_AZIM_EQ_ANGLE_EQ4_p35 + DIAGE_VAL_P_Q.
 
