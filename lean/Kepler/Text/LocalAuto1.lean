@@ -2282,13 +2282,20 @@ theorem JLXFDMJ_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s 
     ∀ j, j ∉ scsM s → dist (v j) (v (j + 1)) = 2 := by
   sorry
 
-/-- HOL `WKEIDFT_concl` (appendix.hl:1368). Proof pending. -/
-theorem WKEIDFT_concl : ∀ (s : ScsV39) (a b a' b' : ℝ) (p q p' q' : ℕ),
+/-- HOL `WKEIDFT_concl` (WKEIDFT.hl:793, PROVED at :813). FIDELITY fix
+(SF-85): the frozen appendix.hl:1368 summary form dropped the four guards
+`scs_diag k p q`, `scs_diag k p' q'`, `3 < k` and `(!i. scs_b_v39 s i i =
+b1)` of the corpus original (there `b1` is an implicit universal, bound
+here as an explicit `(b1 : ℝ)`); the unguarded appendix form is false
+(k = 3 counterexample, wkeidft-w3 lane probe). Proof pending. -/
+theorem WKEIDFT_concl : ∀ (s : ScsV39) (a b a' b' b1 : ℝ) (p q p' q' : ℕ),
     isScsV39 s → scsBasicV39 s →
     (∀ i, s.a i (i + 1) = a) → (∀ i, s.b i (i + 1) = b) → p' + q = p + q' →
+    scsDiag s.k p q → scsDiag s.k p' q' → 3 < s.k →
     (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab) →
     (∀ i j, scsDiag s.k i j → s.a i j = a') →
     (∀ i j, scsDiag s.k i j → s.b i j = b') →
+    (∀ i, s.b i i = b1) →
     scsArrowV39 {scsStabDiagV39 s p q} {scsStabDiagV39 s p' q'} := by
   sorry
 

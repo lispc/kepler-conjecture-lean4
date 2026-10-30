@@ -1302,19 +1302,36 @@ theorem EXPAND_STAB_DIAG :
       · rw [Nat.mod_eq_of_lt hi]
         exact (stab_mod_lt_p20 (i + 3) i (Nat.mod_eq_of_lt hi)).symm
 
+/-- Guard supply for the corpus form of `WKEIDFT_concl` (SF-85): every
+offset-2 (resp. offset-3) pair is a `6I1` diagonal. -/
+theorem diag6_add2_p20 (i : ℕ) : scsDiag 6 i (i + 2) := by
+  unfold scsDiag
+  exact ⟨by omega, by omega, by omega⟩
+
+theorem diag6_add3_p20 (i : ℕ) : scsDiag 6 i (i + 3) := by
+  unfold scsDiag
+  exact ⟨by omega, by omega, by omega⟩
+
+/-- Diagonal entries of `scs_6I1` vanish (main-diagonal slot of `csAdj`),
+so the corpus `b1` guard instantiates with `scs6I1.b 0 0`. -/
+theorem b_diag_6I1_p20 (i : ℕ) : scs6I1.b i i = scs6I1.b 0 0 := by
+  simp [scs6I1, mkUnadornedV39, csAdj]
+
 /-- HOL `EQ_DIAG_STAB_6I1_02` (hexagons.hl:1994). `WKEIDFT` at
 `(p, q) = (i, i+2)`, `(p', q') = (0, 2)` (so `p' + q = p + q'`), with the
 `(i+2, i)` source re-oriented by `STAB_SYM`. -/
 theorem EQ_DIAG_STAB_6I1_02 (i : ℕ) :
     scsArrowV39 {scsStabDiagV39 scs6I1 (i + 2) i}
       {scsStabDiagV39 scs6I1 0 2} := by
-  have h := WKEIDFT_concl scs6I1 2 (2 * h0) (2 * h0) 6 i (i + 2) 0 2
+  have h := WKEIDFT_concl scs6I1 2 (2 * h0) (2 * h0) 6 (scs6I1.b 0 0) i (i + 2) 0 2
     SCS_6I1_IS_SCS SCS_6I1_BASIC
     (fun x => a_edge_6I1_p20 x) (fun x => b_edge_6I1_p20 x)
     (by simp)
+    (diag6_add2_p20 i) (diag6_add2_p20 0) (by norm_num [scs6I1, mkUnadornedV39])
     (fun x y hxy => (h0_EQ_B_SCS_6I1.2 x y hxy).trans_le two_h0_le_cstab_p20)
     (fun x y hxy => h0_EQ_B_SCS_6I1.2 x y hxy)
     (fun x y hxy => h0_EQ_B_SCS_6I1.1 x y hxy)
+    (fun x => b_diag_6I1_p20 x)
   rw [← STAB_SYM scs6I1 i (i + 2)]
   exact h
 
@@ -1323,13 +1340,15 @@ theorem EQ_DIAG_STAB_6I1_02 (i : ℕ) :
 theorem EQ_DIAG_STAB_6I1_03 (i : ℕ) :
     scsArrowV39 {scsStabDiagV39 scs6I1 (i + 3) i}
       {scsStabDiagV39 scs6I1 0 3} := by
-  have h := WKEIDFT_concl scs6I1 2 (2 * h0) (2 * h0) 6 i (i + 3) 0 3
+  have h := WKEIDFT_concl scs6I1 2 (2 * h0) (2 * h0) 6 (scs6I1.b 0 0) i (i + 3) 0 3
     SCS_6I1_IS_SCS SCS_6I1_BASIC
     (fun x => a_edge_6I1_p20 x) (fun x => b_edge_6I1_p20 x)
     (by simp)
+    (diag6_add3_p20 i) (diag6_add3_p20 0) (by norm_num [scs6I1, mkUnadornedV39])
     (fun x y hxy => (h0_EQ_B_SCS_6I1.2 x y hxy).trans_le two_h0_le_cstab_p20)
     (fun x y hxy => h0_EQ_B_SCS_6I1.2 x y hxy)
     (fun x y hxy => h0_EQ_B_SCS_6I1.1 x y hxy)
+    (fun x => b_diag_6I1_p20 x)
   rw [← STAB_SYM scs6I1 i (i + 3)]
   exact h
 
