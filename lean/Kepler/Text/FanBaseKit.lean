@@ -3760,4 +3760,660 @@ theorem PEROPP_IN_BB_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
 end SOppChain
 
 
+/-! ### S.5 W2：TAUSTAR_EQ_SYM_0 / BBPRIME_EQ_OPP_SYM_0（HOL :2374 / :3154）-/
+
+-- 本节 helper 同样需要古典可判定（fan 层 if 形 + toFinset）；仅 local 作用域。
+attribute [local instance] Classical.propDecidable
+
+/-- `(i+1) % k = (j+1) % k` 且 `i, j < k` 蕴含 `i = j`。 -/
+private theorem succModInjFb {k i j : ℕ} (h : (i + 1) % k = (j + 1) % k)
+    (hi : i < k) (hj : j < k) : i = j := by
+  rcases Nat.lt_or_ge i j with hlt | hge
+  · exfalso
+    have h1 : (i + 1) % k = i + 1 := Nat.mod_eq_of_lt (by omega)
+    rcases Nat.lt_or_ge (j + 1) k with h2 | h2
+    · have h3 : (j + 1) % k = j + 1 := Nat.mod_eq_of_lt (by omega)
+      omega
+    · have h3 : (j + 1) % k = 0 := by
+        rw [show j + 1 = k from by omega, Nat.mod_self]
+      omega
+  · rcases Nat.eq_or_lt_of_le hge with heq | hlt
+    · exact heq.symm
+    · exfalso
+      have h1 : (j + 1) % k = j + 1 := Nat.mod_eq_of_lt (by omega)
+      rcases Nat.lt_or_ge (i + 1) k with h2 | h2
+      · have h3 : (i + 1) % k = i + 1 := Nat.mod_eq_of_lt (by omega)
+        omega
+      · have h3 : (i + 1) % k = 0 := by
+          rw [show i + 1 = k from by omega, Nat.mod_self]
+        omega
+
+/-- `peropp2` 保 Periodic2。 -/
+private theorem peropp2PeriodicFb {α : Sort*} {a : ℕ → ℕ → α} {k : ℕ}
+    (hper : Periodic2 a k) : Periodic2 (peropp2 a k) k := by
+  intro i j
+  show a (k - ((i + k) % k + 1)) (k - (j % k + 1))
+      = a (k - (i % k + 1)) (k - (j % k + 1)) ∧
+    a (k - (i % k + 1)) (k - ((j + k) % k + 1))
+      = a (k - (i % k + 1)) (k - (j % k + 1))
+  rw [Nat.add_mod_right, Nat.add_mod_right]
+  exact ⟨rfl, rfl⟩
+
+/-- 边端相邻关系：`flip(m) = k-(m%k+1)` 与 `flip(m+1)` 满足 `q+1 = p` 或 `q+1 = p+k`。 -/
+private theorem flipAdjFb {k m : ℕ} (hk1 : 1 ≤ k) :
+    (k - ((m + 1) % k + 1)) + 1 = k - (m % k + 1) ∨
+      (k - ((m + 1) % k + 1)) + 1 = k - (m % k + 1) + k := by
+  have hmlt : m % k < k := Nat.mod_lt m (by omega)
+  rcases Nat.lt_or_ge (m % k) (k - 1) with h | h
+  · left
+    have h1 : (m + 1) % k = (m % k + 1) % k :=
+      Nat.ModEq.add_right 1 (Nat.ModEq.symm (Nat.mod_modEq m k))
+    rw [h1, Nat.mod_eq_of_lt (by omega)]
+    omega
+  · right
+    have hmk : m % k = k - 1 := by omega
+    have h1 : (m + 1) % k = (m % k + 1) % k :=
+      Nat.ModEq.add_right 1 (Nat.ModEq.symm (Nat.mod_modEq m k))
+    rw [h1, hmk, show k - 1 + 1 = k from by omega, Nat.mod_self]
+    omega
+
+/-- 边端传输：`q + 1 = p` 或 `q + 1 = p + k` 时 `a p q = a q (q + 1)`
+（对称 + Periodic2 传输）。 -/
+private theorem oppEdgeAdjFb {α : Sort*} {a : ℕ → ℕ → α} {k : ℕ}
+    (hper : Periodic2 a k) (hsym : ∀ i j, a i j = a j i) {p q : ℕ} (hqk : q < k)
+    (hq : q + 1 = p ∨ q + 1 = p + k) : a p q = a q (q + 1) := by
+  rcases hq with h | h
+  · rw [← h, hsym]
+  · have hp0 : p = 0 := by omega
+    have hstep : a (k - 1) k = a (k - 1) 0 := by
+      have h2 := (periodicAdd2Fb hper 1 (k - 1) 0).2
+      rw [Nat.zero_add, Nat.one_mul] at h2
+      exact h2
+    show a p q = a q (q + 1)
+    rw [hp0, show q + 1 = k from by omega, show q = k - 1 from by omega, hsym 0 (k - 1)]
+    exact hstep.symm
+
+/-- `flip (m+1) = dsvReidxFb k m`（m < k）。 -/
+private theorem flipDsvFb {k m : ℕ} (hik : m < k) (hk2 : 2 ≤ k) :
+    k - ((m + 1) % k + 1) = dsvReidxFb k m := by
+  by_cases hlast : m = k - 1
+  · subst hlast
+    rw [dsvReidxLastFb (by omega)]
+    rw [show k - 1 + 1 = k from by omega, Nat.mod_self]
+  · rw [dsvReidxSqFb hik (by omega) hk2, Nat.mod_eq_of_lt (by omega : m + 1 < k)]
+    omega
+
+/-- 边端重指标（i 形）：`peropp2 a k i (i+1) = a (σ i) (σ i + 1)`。 -/
+private theorem oppEdgeAtFb' {α : Sort*} {a : ℕ → ℕ → α} {k : ℕ}
+    (hper : Periodic2 a k) (hsym : ∀ i j, a i j = a j i) (hk2 : 2 ≤ k) (i : ℕ)
+    (hik : i < k) : peropp2 a k i (i + 1) = a (dsvReidxFb k i) (dsvReidxFb k i + 1) := by
+  show a (k - (i % k + 1)) (k - ((i + 1) % k + 1))
+      = a (dsvReidxFb k i) (dsvReidxFb k i + 1)
+  have hf := flipAdjFb (k := k) (m := i) (by omega)
+  rw [flipDsvFb hik hk2] at hf ⊢
+  exact oppEdgeAdjFb hper hsym (dsvReidxLtFb hik hk2) hf
+
+/-- 边端重指标（σ 形）：`peropp2 a k (σ i) (σ i + 1) = a i (i+1)`。 -/
+private theorem oppEdgeAtFb {α : Sort*} {a : ℕ → ℕ → α} {k : ℕ}
+    (hper : Periodic2 a k) (hsym : ∀ i j, a i j = a j i) (hk2 : 2 ≤ k) (i : ℕ)
+    (hik : i < k) :
+    peropp2 a k (dsvReidxFb k i) (dsvReidxFb k i + 1) = a i (i + 1) := by
+  have hik2 : dsvReidxFb k i < k := dsvReidxLtFb hik hk2
+  have h := oppEdgeAtFb' hper hsym hk2 _ hik2
+  rwa [dsvReidxInvFb hik hk2] at h
+
+/-- HOL `OPP_IS_SCS`（YXIONXL2.hl:2536）：`scs_opp_v39` 保 is_scs_v39。 -/
+private theorem isScsOppFb (s : ScsV39) (hiscs : isScsV39 s) : isScsV39 (scsOppV39 s) := by
+  cases s with
+  | mk k d a am bm b J lo hi str =>
+    obtain ⟨hd, hk3, hk6, hlo, hhi, hstr, -, hpa, hpam, hpbm, hpb, hpJ, hsym5, hch, hdiag0,
+      hdiag, hb3, hbc, hjn, hjab, hcard⟩ := hiscs
+    have hk3' : 3 ≤ k := hk3
+    have hk6' : k ≤ 6 := hk6
+    have hpa' : Periodic2 a k := hpa
+    have hpb' : Periodic2 b k := hpb
+    have hsymA : ∀ i j, a i j = a j i := fun i j => (hsym5 i j).1
+    have hsymB : ∀ i j, b i j = b j i := fun i j => (hsym5 i j).2.2.2.1
+    have hjn' : ∀ i j, J i j → j % k = (i + 1) % k ∨ i % k = (j + 1) % k := hjn
+    have hjab' : ∀ i j, J i j → a i j = Real.sqrt 8 ∧ b i j = cstab := hjab
+    have hcard' : {i | i < k ∧ (2 * h0 < b i (i + 1) ∨ 2 < a i (i + 1))}.ncard + k ≤ 6 := hcard
+    have hk0 : k ≠ 0 := by omega
+    have hmodlt : ∀ i : ℕ, i % k < k := fun i => Nat.mod_lt i (by omega)
+    have hlt : ∀ i, k - (i % k + 1) < k := by
+      intro i
+      have := hmodlt i
+      omega
+    have hflipinj : ∀ i j, i < k → j < k → k - (i % k + 1) = k - (j % k + 1) → i = j := by
+      intro i j hi hj hc
+      have h4 : i % k = j % k := by
+        have h2 := hmodlt i
+        have h3 := hmodlt j
+        omega
+      rw [Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] at h4
+      exact h4
+    have key : ∀ y x : ℕ, y < k → x < k → k - (x + 1) = (k - y) % k → y = (x + 1) % k := by
+      intro y x hy hx hc
+      have hs : (x + 1) % k = (x % k + 1) % k :=
+        Nat.ModEq.add_right 1 (Nat.ModEq.symm (Nat.mod_modEq x k))
+      rw [hs, Nat.mod_eq_of_lt hx]
+      -- （y = (x + 1) % k）
+      rcases Nat.eq_zero_or_pos y with h0 | h0
+      · subst h0
+        rw [Nat.sub_zero, Nat.mod_self] at hc
+        have hxy : x + 1 = k := by omega
+        rw [hxy, Nat.mod_self]
+      · rw [Nat.mod_eq_of_lt (by omega)] at hc
+        have hxy : x + 1 = y := by omega
+        rw [hxy, Nat.mod_eq_of_lt hy]
+    show isScsV39 (ScsV39.mk k d (peropp2 a k) (peropp2 am k) (peropp2 bm k) (peropp2 b k)
+      (peropp2 J k) (peropp lo k) (peropp hi k) (peropp str k))
+    refine ⟨hd, hk3, hk6, peropp_periodic lo k, peropp_periodic hi k, peropp_periodic str k,
+      peropp_periodic str k, peropp2PeriodicFb hpa, peropp2PeriodicFb hpam,
+      peropp2PeriodicFb hpbm, peropp2PeriodicFb hpb, peropp2PeriodicFb hpJ, ?_, ?_, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_⟩
+    · intro i j
+      exact ⟨(hsym5 _ _).1, (hsym5 _ _).2.1, (hsym5 _ _).2.2.1, (hsym5 _ _).2.2.2.1,
+        (hsym5 _ _).2.2.2.2⟩
+    · intro i j
+      exact ⟨(hch _ _).1, (hch _ _).2.1, (hch _ _).2.2⟩
+    · intro i
+      exact hdiag0 _
+    · intro i j hi
+      refine hdiag _ _ ⟨hlt i, hlt j, ?_⟩
+      intro hc
+      exact hi.2.2 (hflipinj i j hi.1 hi.2.1 hc)
+    · intro i hi3
+      have hf := flipAdjFb (k := k) (m := i) (by omega)
+      show b (k - (i % k + 1)) (k - ((i + 1) % k + 1)) < 4
+      rw [oppEdgeAdjFb hpb' hsymB (by have := hmodlt (i + 1); omega) hf]
+      exact hb3 _ hi3
+    · intro i hik4
+      have hf := flipAdjFb (k := k) (m := i) (by omega)
+      show b (k - (i % k + 1)) (k - ((i + 1) % k + 1)) ≤ cstab
+      rw [oppEdgeAdjFb hpb' hsymB (by have := hmodlt (i + 1); omega) hf]
+      exact hbc _ hik4
+    · intro i j hJ
+      have hJ' : J (k - (i % k + 1)) (k - (j % k + 1)) := hJ
+      have hjm : (j + 1) % k = (j % k + 1) % k :=
+        Nat.ModEq.add_right 1 (Nat.ModEq.symm (Nat.mod_modEq j k))
+      have him : (i + 1) % k = (i % k + 1) % k :=
+        Nat.ModEq.add_right 1 (Nat.ModEq.symm (Nat.mod_modEq i k))
+      rcases hjn' _ _ hJ' with h | h
+      · rw [Nat.mod_eq_of_lt (hlt j), show k - (i % k + 1) + 1 = k - i % k from by
+          have := hmodlt i; omega] at h
+        refine Or.inr ?_
+        rw [hjm]
+        exact key (i % k) (j % k) (hmodlt i) (hmodlt j) h
+      · rw [Nat.mod_eq_of_lt (hlt i), show k - (j % k + 1) + 1 = k - j % k from by
+          have := hmodlt j; omega] at h
+        refine Or.inl ?_
+        rw [him]
+        exact key (j % k) (i % k) (hmodlt j) (hmodlt i) h
+    · intro i j hJ
+      have hJ' : J (k - (i % k + 1)) (k - (j % k + 1)) := hJ
+      exact ⟨(hjab' _ _ hJ').1, (hjab' _ _ hJ').2⟩
+    · -- 第 21 槽：σ 重指标 + ncard 传输
+      have hk2' : 2 ≤ k := by omega
+      have hfin : {i | i < k ∧ (2 * h0 < b i (i + 1) ∨ 2 < a i (i + 1))}.Finite :=
+        Set.Finite.subset (Set.finite_Iio k) (fun i hi => hi.1)
+      have hsetEq : {i | i < k ∧ (2 * h0 < peropp2 b k i (i + 1) ∨ 2 < peropp2 a k i (i + 1))}
+          = dsvReidxFb k '' {i | i < k ∧ (2 * h0 < b i (i + 1) ∨ 2 < a i (i + 1))} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_image]
+        constructor
+        · rintro ⟨hik, hP⟩
+          rw [oppEdgeAtFb' hpa' hsymA hk2' i hik,
+            oppEdgeAtFb' hpb' hsymB hk2' i hik] at hP
+          exact ⟨dsvReidxFb k i, ⟨dsvReidxLtFb hik hk2', hP⟩, dsvReidxInvFb hik hk2'⟩
+        · rintro ⟨m, ⟨hmik, hmP⟩, hmi⟩
+          have hikm : dsvReidxFb k m < k := dsvReidxLtFb hmik hk2'
+          refine ⟨by rw [← hmi]; exact hikm, ?_⟩
+          rw [← hmi, oppEdgeAtFb hpa' hsymA hk2' m hmik,
+            oppEdgeAtFb hpb' hsymB hk2' m hmik]
+          exact hmP
+      have hN : (dsvReidxFb k ''
+          {i | i < k ∧ (2 * h0 < b i (i + 1) ∨ 2 < a i (i + 1))}).ncard
+          = {i | i < k ∧ (2 * h0 < b i (i + 1) ∨ 2 < a i (i + 1))}.ncard := by
+        rw [Set.ncard_image_iff hfin]
+        intro x hx y hy hxy
+        exact dsvReidxInjFb hxy hx.1 hy.1 hk2'
+      show {i | i < k ∧ (2 * h0 < peropp2 b k i (i + 1) ∨ 2 < peropp2 a k i (i + 1))}.ncard
+        + k ≤ 6
+      rw [hsetEq, hN]
+      exact hcard'
+
+/-- HOL `DSV_EQ_SYM_0` 的全分支形（去 `¬ k ≤ 3`，耳记号以 IFF 假设显式给出）。 -/
+private theorem dsvOppEqAllFb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hbb : BBsV39 s vv)
+    (he : isEarV39 s ↔ isEarV39 (scsOppV39 s)) :
+    dsvV39 (scsOppV39 s) (fun i => -(peropp vv k i)) = dsvV39 s vv := by
+  obtain ⟨-, hk3s, -, -, -, -, -, -, -, -, -, hpJ, hsym5, -, -, -, -, -, -, -, -⟩ := hiscs
+  have hJsym : ∀ i j, s.J i j = s.J j i := fun i j => (hsym5 i j).2.2.2.2
+  have hper : Periodic vv k := by
+    have h := hbb.2.1
+    rw [hk] at h
+    exact h
+  have hk2 : 2 ≤ k := by omega
+  have hK : (scsOppV39 s).k = k := by show s.k = k; exact hk
+  have hdop : (scsOppV39 s).d = s.d := rfl
+  have hJop : ∀ i j : ℕ, (scsOppV39 s).J i j
+      = s.J (k - (i % k + 1)) (k - (j % k + 1)) := by
+    intro i j
+    have hJd : (scsOppV39 s).J i j
+        = s.J (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1)) := rfl
+    rw [hJd, hk]
+  have hS1set : {i | i < k ∧ (scsOppV39 s).J i (i + 1)}
+      = {i | i < k ∧ s.J (k - (i % k + 1)) (k - ((i + 1) % k + 1))} := by
+    ext i
+    exact ⟨fun h => ⟨h.1, hJop i (i + 1) ▸ h.2⟩,
+      fun h => ⟨h.1, (hJop i (i + 1)).symm ▸ h.2⟩⟩
+  unfold dsvV39
+  rw [← he, hdop, hK, hk, hS1set]
+  simp only [peropp, distNegNegFb]
+  have hfin1 : {i | i < k ∧ s.J (k - (i % k + 1)) (k - ((i + 1) % k + 1))}.Finite :=
+    Set.Finite.subset (Set.finite_Iio k) (fun i hi => hi.1)
+  have hfin2 : {i | i < k ∧ s.J i (i + 1)}.Finite :=
+    Set.Finite.subset (Set.finite_Iio k) (fun i hi => hi.1)
+  rw [setSumFiniteFb _ _ hfin1, setSumFiniteFb _ _ hfin2]
+  refine congrArg
+    (fun r : ℝ => s.d + (0.1:ℝ) * (if isEarV39 s then (1:ℝ) else -1) * r) ?_
+  refine Finset.sum_nbij (fun (i : ℕ) => dsvReidxFb k i) ?_ ?_ ?_ ?_
+  · intro a ha
+    have ha2 : a < k ∧ s.J (k - (a % k + 1)) (k - ((a + 1) % k + 1)) :=
+      hfin1.mem_toFinset.mp ha
+    have hlt := dsvReidxLtFb ha2.1 hk2
+    refine hfin2.mem_toFinset.mpr ⟨hlt, ?_⟩
+    exact (dsvKeyFb s hpJ hJsym hk ha2.1 hk2).mp ha2.2
+  · intro a ha b hb hab
+    exact dsvReidxInjFb hab (hfin1.mem_toFinset.mp ha).1
+      (hfin1.mem_toFinset.mp hb).1 hk2
+  · intro m hm
+    have hm2 : m < k ∧ s.J m (m + 1) := hfin2.mem_toFinset.mp hm
+    have hlt := dsvReidxLtFb hm2.1 hk2
+    have hkey := dsvKeyFb s hpJ hJsym hk hlt hk2
+    rw [dsvReidxInvFb hm2.1 hk2] at hkey
+    refine ⟨dsvReidxFb k m, hfin1.mem_toFinset.mpr ⟨hlt, hkey.mpr hm2.2⟩, ?_⟩
+    show dsvReidxFb k (dsvReidxFb k m) = m
+    rw [dsvReidxInvFb hm2.1 hk2]
+  · intro a ha
+    have ha2 : a < k := (hfin1.mem_toFinset.mp ha).1
+    show cstab - dist (vv (k - (a % k + 1))) (vv (k - ((a + 1) % k + 1)))
+      = cstab - dist (vv (dsvReidxFb k a)) (vv (dsvReidxFb k a + 1))
+    rw [Nat.mod_eq_of_lt ha2]
+    by_cases hlast : a = k - 1
+    · subst hlast
+      have hL := dsvReidxLastFb (k := k) (by omega)
+      have hE2 : k - ((k - 1 + 1) % k + 1) = k - 1 := by
+        rw [show k - 1 + 1 = k from by omega, Nat.mod_self]
+      have hE4 : k - 1 + 1 = k := by omega
+      have hE5 : (vv k : V3) = vv 0 := by simpa using hper 0
+      rw [show k - ((k - 1) + 1) = 0 from by omega, hE2, hL, hE4, hE5, dist_comm]
+    · have hb2 : k - ((a + 1) % k + 1) = k - 2 - a := by
+        rw [Nat.mod_eq_of_lt (by omega : a + 1 < k)]
+        omega
+      rw [show k - (a + 1) = k - 1 - a from by omega, hb2,
+        dsvReidxSqFb ha2 (by omega) hk2,
+        show (k - 2 - a) + 1 = k - 1 - a from by omega, dist_comm]
+
+/-- HOL `is_ear_v39 (scs_opp_v39 t)` ↔ `is_ear_v39 t`（耳记号经 σ 重指标传输）。 -/
+private theorem isEarOppIffFb (s : ScsV39) (hiscs : isScsV39 s) :
+    isEarV39 s ↔ isEarV39 (scsOppV39 s) := by
+  have hfwd : ∀ t : ScsV39, isScsV39 t → isEarV39 t → isEarV39 (scsOppV39 t) := by
+    intro t hT hE
+    have hTfull := hT
+    obtain ⟨-, -, -, -, -, -, -, hpaT, -, -, hpbT, hpJT, hsym5T, -, -, -, -, -, -, -, -⟩ := hT
+    obtain ⟨-, hunadT, hk3, hd011, hbii, j0, hset, haj0, hbj0, hother⟩ := hE
+    have hk2T : 2 ≤ t.k := by omega
+    have hJsym : ∀ i j, t.J i j = t.J j i := fun i j => (hsym5T i j).2.2.2.2
+    have hasymA : ∀ i j, t.a i j = t.a j i := fun i j => (hsym5T i j).1
+    have hasymB : ∀ i j, t.b i j = t.b j i := fun i j => (hsym5T i j).2.2.2.1
+    have hlt3 : ∀ i, i < 3 → i < t.k := by
+      intro i hi
+      rw [hk3]
+      exact hi
+    have hj03 : j0 < 3 ∧ t.J j0 (j0 + 1) := by
+      have hm : j0 ∈ ({j0} : Set ℕ) := Set.mem_singleton j0
+      rw [← hset] at hm
+      exact hm
+    unfold isEarV39
+    refine ⟨isScsOppFb t hTfull, ?_, ?_, ?_, ?_, ?_⟩
+    · obtain ⟨hlo, hhi, hstr, haa, hbbm⟩ := hunadT
+      refine ⟨?_, ?_, ?_, ?_, ?_⟩
+      · funext i
+        show t.lo (t.k - (i % t.k + 1)) = False
+        rw [hlo]
+      · funext i
+        show t.hi (t.k - (i % t.k + 1)) = False
+        rw [hhi]
+      · funext i
+        show t.str (t.k - (i % t.k + 1)) = False
+        rw [hstr]
+      · show peropp2 t.a t.k = peropp2 t.am t.k
+        rw [haa]
+      · show peropp2 t.b t.k = peropp2 t.bm t.k
+        rw [hbbm]
+    · exact hk3
+    · exact hd011
+    · intro i
+      show t.b (t.k - (i % t.k + 1)) (t.k - (i % t.k + 1)) = 0
+      exact hbii _
+    · have hjlt : dsvReidxFb t.k j0 < t.k := dsvReidxLtFb (hlt3 j0 hj03.1) hk2T
+      have hjlt3 : dsvReidxFb t.k j0 < 3 := by
+        have hh : dsvReidxFb t.k j0 < t.k := hjlt
+        rw [hk3] at hh ⊢
+        exact hh
+      refine ⟨dsvReidxFb t.k j0, ?_, ?_, ?_, ?_⟩
+      · ext j
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨hj3, hJopp⟩
+          have hjk : j < t.k := hlt3 j hj3
+          have hmem : t.J (dsvReidxFb t.k j) (dsvReidxFb t.k j + 1) :=
+            (dsvKeyFb t hpJT hJsym rfl hjk hk2T).mp hJopp
+          have hjl : dsvReidxFb t.k j < 3 := by
+            have hh := dsvReidxLtFb hjk hk2T
+            rw [hk3] at hh ⊢
+            exact hh
+          have hval : dsvReidxFb t.k j ∈ ({j | j < 3 ∧ t.J j (j + 1)} : Set ℕ) :=
+            ⟨hjl, hmem⟩
+          rw [hset, Set.mem_singleton_iff] at hval
+          rw [Set.mem_singleton_iff]
+          have hinv := dsvReidxInvFb hjk hk2T
+          rw [← hinv, hval]
+        · rintro rfl
+          refine ⟨hjlt3, ?_⟩
+          show t.J (t.k - (dsvReidxFb t.k j0 % t.k + 1))
+            (t.k - ((dsvReidxFb t.k j0 + 1) % t.k + 1))
+          have hj := dsvKeyFb t hpJT hJsym rfl hjlt hk2T
+          rw [dsvReidxInvFb (hlt3 j0 hj03.1) hk2T] at hj
+          exact hj.mpr hj03.2
+      · show peropp2 t.a t.k (dsvReidxFb t.k j0) (dsvReidxFb t.k j0 + 1) = Real.sqrt 8
+        rw [oppEdgeAtFb hpaT hasymA hk2T j0 (hlt3 j0 hj03.1)]
+        exact haj0
+      · show peropp2 t.b t.k (dsvReidxFb t.k j0) (dsvReidxFb t.k j0 + 1) = cstab
+        rw [oppEdgeAtFb hpbT hasymB hk2T j0 (hlt3 j0 hj03.1)]
+        exact hbj0
+      · intro j hj
+        obtain ⟨hj3, hjne⟩ := hj
+        have hjk : j < t.k := hlt3 j hj3
+        have hjne0 : dsvReidxFb t.k j ≠ j0 := by
+          intro hc
+          apply hjne
+          have hinv := dsvReidxInvFb hjk hk2T
+          rw [← hinv, hc]
+        have hjlt3j : dsvReidxFb t.k j < 3 := by
+          have hh := dsvReidxLtFb hjk hk2T
+          rw [hk3] at hh ⊢
+          exact hh
+        refine ⟨?_, ?_⟩
+        · show peropp2 t.a t.k j (j + 1) = 2
+          rw [oppEdgeAtFb' hpaT hasymA hk2T j hjk]
+          exact (hother (dsvReidxFb t.k j) ⟨hjlt3j, hjne0⟩).1
+        · show peropp2 t.b t.k j (j + 1) = 2 * h0
+          rw [oppEdgeAtFb' hpbT hasymB hk2T j hjk]
+          exact (hother (dsvReidxFb t.k j) ⟨hjlt3j, hjne0⟩).2
+  refine ⟨fun hE => hfwd s hiscs hE, fun hEopp => ?_⟩
+  have h := hfwd (scsOppV39 s) (isScsOppFb s hiscs) hEopp
+  rwa [SCS_OPP_REFL_fb s hiscs] at h
+
+/-- `Finset` 余集上的 setSum。 -/
+private theorem setSumCoeFb {β : Type*} (S : Finset β) (g : β → ℝ) :
+    setSum (↑S : Set β) g = ∑ x ∈ S, g x := by
+  have hfin : (↑S : Set β).Finite := S.finite_toSet
+  rw [setSumFiniteFb _ _ hfin]
+  have hT : hfin.toFinset = S := Finset.ext fun x => by
+    simp [Set.Finite.mem_toFinset]
+  rw [hT]
+
+/-- `Iio k` 像上的 setSum 折叠为 range-k 和（InjOn 下）。 -/
+private theorem setSumImageIioFb {β : Type*} [DecidableEq β] {f : ℕ → β} {g : β → ℝ}
+    {k : ℕ} (hinj : ∀ i j, i < k → j < k → f i = f j → i = j) :
+    setSum (Set.image f (Set.Iio k)) g = ∑ i ∈ Finset.range k, g (f i) := by
+  have hcoe : Set.image f (Set.Iio k) = ↑(Finset.image f (Finset.range k)) := by
+    ext x
+    simp [Set.mem_image, Set.mem_Iio, Finset.mem_coe, Finset.mem_image, Finset.mem_range]
+  rw [hcoe]
+  refine (setSumCoeFb _ g).trans ?_
+  rw [Finset.sum_image]
+  intro i hi j hj hij
+  exact hinj i j (Finset.mem_range.mp hi) (Finset.mem_range.mp hj) hij
+
+/-- 周期像展开到 `Iio k`。 -/
+private theorem imageUnivEqIioFb {α : Type*} {f : ℕ → α} {k : ℕ} (hk0 : 0 < k)
+    (hper : Periodic f k) : Set.image f Set.univ = Set.image f (Set.Iio k) := by
+  ext x
+  constructor
+  · rintro ⟨i, -, rfl⟩
+    exact ⟨i % k, Nat.mod_lt _ hk0, periodicModFb hper i⟩
+  · rintro ⟨i, -, rfl⟩
+    exact ⟨i, Set.mem_univ _, rfl⟩
+
+/-- range-k 和的循环移位。 -/
+private theorem sumSuccModFb (φ : ℕ → ℝ) (k : ℕ) (hk0 : 0 < k) :
+    ∑ i ∈ Finset.range k, φ ((i + 1) % k) = ∑ i ∈ Finset.range k, φ i := by
+  refine Finset.sum_nbij (fun i => (i + 1) % k) ?_ ?_ ?_ ?_
+  · intro i _
+    exact Finset.mem_range.mpr (Nat.mod_lt _ hk0)
+  · intro a ha b hb hab
+    exact succModInjFb hab (Finset.mem_range.mp ha) (Finset.mem_range.mp hb)
+  · intro m hm
+    refine ⟨(m + k - 1) % k, Finset.mem_range.mpr (Nat.mod_lt _ hk0), ?_⟩
+    show ((m + k - 1) % k + 1) % k = m
+    have h1 : ((m + k - 1) % k + 1) % k = (m + k - 1 + 1) % k :=
+      Nat.ModEq.add_right 1 (Nat.mod_modEq (m + k - 1) k)
+    rw [h1, show m + k - 1 + 1 = m + k from by omega, Nat.add_mod_right,
+      Nat.mod_eq_of_lt (Finset.mem_range.mp (Finset.mem_coe.mp hm))]
+  · intro i _
+    rfl
+
+/-- `tauFun` 对平取负像三件套（V/E/FF）的不变性（k>3 taustar 槽的几何核心）。 -/
+private theorem tauFunNegImageFb (vv : ℕ → V3) {k : ℕ} (hper : Periodic vv k) (hk3 : 3 ≤ k)
+    (hEE : ∀ i, ee (vv i) (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+        = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hEEN : ∀ i, ee (-(vv i))
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        = ({-(vv (i + 1)), -(vv (i + k - 1))} : Set V3))
+    (hcol : ∀ i, ¬ Collinear ℝ (insert 0 ({vv i, vv (i + 1)} : Set V3)))
+    (hne2 : ∀ j, vv (j + 2) ≠ vv (j + k))
+    (hinj : ∀ i j, vv i = vv j → i % k = j % k) :
+    tauFun (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        (Set.image (fun i : ℕ => (-(vv (i + 1)), -(vv i))) Set.univ)
+      = tauFun (Set.image vv Set.univ)
+          (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+          (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ) := by
+  have hfk0 : 0 < k := by omega
+  have hperF : Periodic (fun i : ℕ => (vv i, vv (i + 1))) k := fun i => by
+    show (vv (i + k), vv (i + k + 1)) = (vv i, vv (i + 1))
+    rw [show vv (i + k + 1) = vv (i + 1 + k) from by congr 1; omega, hper (i + 1), hper i]
+  have hperFN : Periodic (fun i : ℕ => (-(vv (i + 1)), -(vv i))) k := fun i => by
+    show (-(vv (i + k + 1)), -(vv (i + k))) = (-(vv (i + 1)), -(vv i))
+    rw [show vv (i + k + 1) = vv (i + 1 + k) from by congr 1; omega, hper (i + 1), hper i]
+  have hinjF : ∀ i j, i < k → j < k →
+      (fun i : ℕ => (vv i, vv (i + 1))) i = (fun i : ℕ => (vv i, vv (i + 1))) j → i = j := by
+    intro i j hi hj hc
+    have hc' := hc
+    simp only [Prod.mk.injEq] at hc'
+    have h2 := hinj i j hc'.1
+    rw [Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] at h2
+    exact h2
+  have hinjFN : ∀ i j, i < k → j < k →
+      (fun i : ℕ => (-(vv (i + 1)), -(vv i))) i
+        = (fun i : ℕ => (-(vv (i + 1)), -(vv i))) j → i = j := by
+    intro i j hi hj hc
+    have hc' := hc
+    simp only [Prod.mk.injEq] at hc'
+    have h1 : vv (i + 1) = vv (j + 1) := by
+      simpa using congrArg Neg.neg hc'.1
+    exact succModInjFb (hinj (i + 1) (j + 1) h1) hi hj
+  unfold tauFun
+  have hcardN : (Set.image (fun i : ℕ => (-(vv (i + 1)), -(vv i))) Set.univ).ncard
+      = (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ).ncard := by
+    rw [imageUnivEqIioFb hfk0 hperFN, imageUnivEqIioFb hfk0 hperF]
+    have hcoN : Set.image (fun i : ℕ => (-(vv (i + 1)), -(vv i))) (Set.Iio k)
+        = ↑(Finset.image (fun i : ℕ => (-(vv (i + 1)), -(vv i))) (Finset.range k)) := by
+      ext x
+      simp [Set.mem_image, Set.mem_Iio, Finset.mem_coe, Finset.mem_image, Finset.mem_range]
+    have hcoP : Set.image (fun i : ℕ => (vv i, vv (i + 1))) (Set.Iio k)
+        = ↑(Finset.image (fun i : ℕ => (vv i, vv (i + 1))) (Finset.range k)) := by
+      ext x
+      simp [Set.mem_image, Set.mem_Iio, Finset.mem_coe, Finset.mem_image, Finset.mem_range]
+    have hinj1 : Set.InjOn (fun i : ℕ => (-(vv (i + 1)), -(vv i)))
+        ((Finset.range k : Finset ℕ) : Set ℕ) := by
+      intro a ha b hb hab
+      exact hinjFN a b (Finset.mem_range.mp (Finset.mem_coe.mp ha))
+        (Finset.mem_range.mp (Finset.mem_coe.mp hb)) hab
+    have hinj2 : Set.InjOn (fun i : ℕ => (vv i, vv (i + 1)))
+        ((Finset.range k : Finset ℕ) : Set ℕ) := by
+      intro a ha b hb hab
+      exact hinjF a b (Finset.mem_range.mp (Finset.mem_coe.mp ha))
+        (Finset.mem_range.mp (Finset.mem_coe.mp hb)) hab
+    rw [hcoN, hcoP, Set.ncard_coe_finset, Set.ncard_coe_finset,
+      Finset.card_image_of_injOn hinj1, Finset.card_image_of_injOn hinj2, Finset.card_range]
+  rw [hcardN]
+  refine congrArg (fun r : ℝ => r - (Real.pi + sol0) *
+    (((Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ).ncard - 2 : ℕ) : ℝ)) ?_
+  rw [imageUnivEqIioFb hfk0 hperFN, setSumImageIioFb hinjFN,
+    imageUnivEqIioFb hfk0 hperF, setSumImageIioFb hinjF]
+  rw [← sumSuccModFb
+    (fun j : ℕ => rhoFun (norm (vv j, vv (j + 1)).1) *
+      azimInFan (vv j, vv (j + 1))
+        (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)) k hfk0]
+  refine Finset.sum_congr rfl fun i hi => ?_
+  have hterm : rhoFun (norm (-(vv (i + 1)))) *
+      azimInFan (-(vv (i + 1)), -(vv i))
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+    = rhoFun (norm (vv (i + 1))) *
+      azimInFan (vv (i + 1), vv (i + 2))
+        (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ) := by
+    have hEi : ee (-(vv (i + 1)))
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+      = ({-(vv (i + 2)), -(vv (i + k))} : Set V3) := by
+      have h := hEEN (i + 1)
+      rw [show ((i:Nat) + 1 + k - 1) = i + k from by omega] at h
+      exact h
+    have hne : -(vv (i + 2)) ≠ -(vv (i + k)) := fun hc => hne2 i (negInjFb hc)
+    have hneP : vv (i + 2) ≠ vv (i + k) := fun hc => hne2 i hc
+    have hneR : vv (i + k) ≠ vv (i + 2) := fun hc => hne2 i hc.symm
+    have hcard : 1 < (ee (-(vv (i + 1)))
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)).ncard := by
+      rw [hEi, Set.ncard_pair hne]
+      norm_num
+    have hcol1 : ¬ Collinear ℝ ({0, vv (i + 1), vv i} : Set V3) := by
+      show ¬ Collinear ℝ (insert 0 (insert (vv (i + 1)) ({vv i} : Set V3)))
+      have h := hcol i
+      rw [pairSetCommFb] at h
+      exact h
+    have hcol2 : ¬ Collinear ℝ ({0, vv (i + 1), vv (i + 2)} : Set V3) :=
+      hcol (i + 1)
+    have hEr : ee (vv (i + 1))
+        (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+      = ({vv (i + 2), vv (i + k)} : Set V3) := by
+      have h := hEE (i + 1)
+      rw [show ((i:Nat) + 1 + k - 1) = i + k from by omega] at h
+      exact h
+    have hcardr : 1 < (ee (vv (i + 1))
+        (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)).ncard := by
+      rw [hEr, Set.ncard_pair hneP]
+      norm_num
+    have hEr' : ee (vv (i + 1))
+        (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+      = ({vv (i + k), vv (i + 2)} : Set V3) := by
+      rw [hEr]
+      exact pairSetCommFb _ _
+    simp only [azimInFan, norm_neg]
+    rw [if_pos hcard, sigmaFanTwoFb hEi hne (congrArg Neg.neg (hper i).symm),
+      AZIM_NEG_fb hcol1 hcol2, if_pos hcardr, sigmaFanTwoFb hEr' hneR rfl, hper i]
+  exact hterm.trans (congrArg (fun e : V3 × V3 => rhoFun (norm e.1) *
+    azimInFan e (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ))
+    (periodicModFb hperF (i + 1))).symm
+
+/-- 全 k 形的 `PEROPP_IN_BB`（k ≤ 3 时 fan 槽走左支，纯算术槽）。 -/
+private theorem peroppInBbAllFb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hbb : BBsV39 s vv) :
+    BBsV39 (scsOppV39 s) (fun i => -(peropp vv k i)) := by
+  rcases Nat.lt_or_ge k 4 with hk4 | hk4
+  · have hk33 : k = 3 := by have := hiscs.2.1; omega
+    subst hk33
+    have hK : (scsOppV39 s).k = 3 := by show s.k = 3; exact hk
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · rintro x ⟨i, rfl⟩
+      exact ballAnnulusNegFb _ (hbb.1 ⟨3 - (i % 3 + 1), rfl⟩)
+    · intro i
+      show -(peropp vv 3 (i + (scsOppV39 s).k)) = -(peropp vv 3 i)
+      rw [hK]
+      simp only [peropp, Nat.add_mod_right]
+    · intro i j
+      have h3 : (scsOppV39 s).a i j
+          = s.a (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1)) := rfl
+      have h4 : (scsOppV39 s).b i j
+          = s.b (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1)) := rfl
+      rw [h3, h4, hk]
+      show s.a (3 - (i % 3 + 1)) (3 - (j % 3 + 1))
+        ≤ dist (-(peropp vv 3 i)) (-(peropp vv 3 j)) ∧
+        dist (-(peropp vv 3 i)) (-(peropp vv 3 j)) ≤ s.b (3 - (i % 3 + 1)) (3 - (j % 3 + 1))
+      rw [distNegNegFb]
+      exact hbb.2.2.1 _ _
+    · rw [hK]
+      exact Or.inl (by omega)
+  · exact PEROPP_IN_BB_SYM_0_fb s vv k hk hiscs (by have := hiscs.2.1; omega) hbb
+
+/-- HOL `TAUSTAR_EQ_SYM_0`（YXIONXL2.hl:2374）。 -/
+theorem TAUSTAR_EQ_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    taustarV39 (scsOppV39 s) (fun i => -(peropp vv k i)) = taustarV39 s vv := by
+  have hK : (scsOppV39 s).k = k := by show s.k = k; exact hk
+  have hper : Periodic vv k := by
+    have h := hbb.2.1
+    rw [hk] at h
+    exact h
+  have hctx := fanbaseCtxFb s vv k (Set.image vv Set.univ)
+    (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+    (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ)
+    hk rfl rfl rfl hiscs hk3 hbb
+  have hconv0 : ConvexLocalFan (Set.image vv Set.univ)
+      (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ) := by
+    rcases hbb.2.2.2 with h3 | hcf
+    · rw [hk] at h3
+      exact absurd h3 hk3
+    · simpa only [Set.image_univ] using hcf
+  obtain ⟨hlf0, -⟩ := hconv0
+  obtain ⟨hfan0, -, -⟩ := hlf0
+  have hcol : ∀ i, ¬ Collinear ℝ (insert 0 ({vv i, vv (i + 1)} : Set V3)) := fun i =>
+    hfan0.2.2.2.2.1 _ ⟨i, Set.mem_univ _, rfl⟩
+  simp only [taustarV39]
+  rw [if_neg (by rw [hK]; exact hk3), if_neg (by rw [hk]; exact hk3)]
+  rw [DSV_EQ_SYM_0_fb s vv k hk hiscs hk3 hbb]
+  simp only [← Set.image_univ, peropp]
+  rw [oppImageVEqNegFb vv hper (by omega), oppImageEEqNegFb vv hper (by omega),
+    oppImageFEq2NegFb vv hper (by omega)]
+  exact congrArg (fun r : ℝ => r - dsvV39 s vv) (tauFunNegImageFb vv hper (by omega)
+    hctx.2.2.2.1 hctx.2.2.2.2.1 hcol hctx.2.2.2.2.2.2.2
+    (fun i j hc => vvInjModFb hk (by omega) hctx.1 hctx.2.1 hctx.2.2.1 hc))
+
+/-- HOL `BBPRIME_EQ_OPP_SYM_0`（YXIONXL2.hl:3154）。 -/
+theorem BBPRIME_EQ_OPP_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbp : BBprimeV39 s vv) :
+    BBprimeV39 (scsOppV39 s) (fun i => -(peropp vv k i)) := by
+  have hK : (scsOppV39 s).k = k := by show s.k = k; exact hk
+  have hiscsO : isScsV39 (scsOppV39 s) := isScsOppFb s hiscs
+  have hbbO : BBsV39 (scsOppV39 s) (fun i => -(peropp vv k i)) :=
+    PEROPP_IN_BB_SYM_0_fb s vv k hk hiscs hk3 hbp.1
+  simp only [BBprimeV39, Set.mem_setOf_eq]
+  refine ⟨hbbO, ?_, ?_⟩
+  · intro ww hww
+    have hBBs : BBsV39 s (fun i => -(peropp ww k i)) := by
+      have h := PEROPP_IN_BB_SYM_0_fb (scsOppV39 s) ww k hK hiscsO hk3 hww
+      rwa [SCS_OPP_REFL_fb s hiscs] at h
+    have htw : taustarV39 (scsOppV39 s) ww
+        = taustarV39 s (fun i => -(peropp ww k i)) := by
+      have h := TAUSTAR_EQ_SYM_0_fb (scsOppV39 s) ww k hK hiscsO hk3 hww
+      rw [SCS_OPP_REFL_fb s hiscs] at h
+      exact h.symm
+    rw [htw, TAUSTAR_EQ_SYM_0_fb s vv k hk hiscs hk3 hbp.1]
+    exact hbp.2.1 _ hBBs
+  · rw [TAUSTAR_EQ_SYM_0_fb s vv k hk hiscs hk3 hbp.1]
+    exact hbp.2.2
+
 end Kepler.Text
