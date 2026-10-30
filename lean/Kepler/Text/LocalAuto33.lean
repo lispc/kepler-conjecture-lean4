@@ -92,6 +92,15 @@ DISCHARGES (2026-09-20, 23 of 48 sorries filled; 0 errors, 25 remaining):
   the half-slice identities (`SCS_*_SLICE_*`), `YXIONXL2/OPP_IS_SCS_p33`,
   `XWNHLMD_MM_p33`, `GSXRFWM1_p33` — real math downstream of still-`sorry`
   giants (`main_nonlinear_terminal_v11`, `YRTAFYH_p17`, Ocbicby twins).
+
+DISCHARGES (2026-10-28, la33-ab-w1; 2 of the remaining 25): `OPP_IS_SCS_p33`
+  (fan-free residue-involution sweep, standard-three axioms) and
+  `XWNHLMD_MM_p33` (debt-consolidating wiring to the discharged
+  `LocalAuto26.XWNHLMD_MM_p26` twin — sorryAx standing via the LA24 case
+  bank, no new row).  `YXIONXL2_p33` stays: its closure needs a `ScsV39`
+  `MM_SCS_OPP`, i.e. the fan/hypermap foundation deferred with
+  `hypermapOfFan` (LocalAuto13 Section 6 block), not the fan-free sweep —
+  see its docstring.
 -/
 
 import Kepler.Text.LocalAuto1
@@ -100,6 +109,7 @@ import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto20
 import Kepler.Text.LocalAuto22
+import Kepler.Text.LocalAuto26
 import Kepler.Text.LocalAuto29
 import Kepler.Text.SphereKit
 import Mathlib
@@ -115,16 +125,301 @@ open Kepler.Geom Set Classical
 
 /-- HOL `YXIONXL2` (Ocbicby.hl; the terminal arrow to the opposite system).
 NEEDS: the `ScsV39` twin of `LocalAuto13.YXIONXL2_p13` (the peropp
-re-indexing transports `BBprime`/`MMs` for `3 < k`). -/
+re-indexing transports `BBprime`/`MMs` for `3 < k`).
+LANE NOTE 2026-10-28 (la33-ab-w1): the closure reduces to a `ScsV39`
+`MM_SCS_OPP` (YXIONXL2.hl:3370 — the `MMs`-nonemptiness witness of the
+`scs_arrow_v39` disjunction); that HOL body leans on `BBPRIME2_SYM_0`
+(:3355) and `LOCAL_FAN_DUAL_SYM_0` (:1558) — the fan/hypermap foundation
+deferred with `hypermapOfFan` (the all-`sorry` LocalAuto13 Section 6
+block, plus the pending `azim`-negation kit).  This is the fan-heavy half
+of the Ocbicby pair; the fan-free half `OPP_IS_SCS_p33` below is
+discharged in this lane. -/
 theorem YXIONXL2_p33 (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k) :
     scsArrowV39 {s} {scsOppV39 s} := sorry
   -- DISCHARGES: NEEDS Ocbicby.hl `YXIONXL2` over `ScsV39`.
 
-/-- HOL `OPP_IS_SCS` (Ocbicby.hl:2536).  NEEDS: the `ScsV39` twin of
-`LocalAuto13.OPP_IS_SCS_p13` (the 20-conjunct `is_scs_v39` check of
-`peropp2 s.a k` records). -/
-theorem OPP_IS_SCS_p33 (s : ScsV39) (hs : isScsV39 s) : isScsV39 (scsOppV39 s) := sorry
-  -- DISCHARGES: NEEDS Ocbicby.hl `OPP_IS_SCS` over `ScsV39`.
+/- HOL `OPP_IS_SCS` (Ocbicby.hl:2536 / YXIONXL2.hl:2536).
+DISCHARGED 2026-10-28 (la33-ab-w1): fan-free.  The 21-conjunct `is_scs_v39`
+check of the `peropp2 s.a k` records goes through the residue involution
+`φ x = k - (x % k + 1)` (HOL `OPP_SUC_MOD`), the reversed adjacency
+`φ i = (φ (i + 1) + 1) % k` for the `b i (i + 1)`-shaped bounds, the
+orientation swap on the `J`-adjacency, and the bad-set re-indexing
+`i ↦ k - 1 - ((i + 1) % k)` for the ncard bound (the HOL
+`CARD_IMAGE_INJ_EQ` block); standard-three axioms, no `sorry` upstream. -/
+
+section OppKit
+
+/-- Residue `φ x = k - (x % k + 1)` is below `k` for `1 ≤ k`. -/
+private theorem la33opp_phi_lt {k : ℕ} (hk : 1 ≤ k) (x : ℕ) :
+    k - (x % k + 1) < k := by
+  have h : x % k < k := Nat.mod_lt x (by omega)
+  omega
+
+/-- Equal residues below `k` give equal indices. -/
+private theorem la33opp_mod_eq {k p q : ℕ} (h : p % k = q % k) (hp : p < k)
+    (hq : q < k) : p = q := by
+  have h1 : p % k = p := Nat.mod_eq_of_lt hp
+  have h2 : q % k = q := Nat.mod_eq_of_lt hq
+  omega
+
+/-- HOL `OPP_SUC_MOD` (YXIONXL2.hl:381): `φ` is an involution on residues. -/
+private theorem la33opp_phi_inv {k : ℕ} (hk : k ≠ 0) (x : ℕ) :
+    k - ((k - (x % k + 1)) % k + 1) = x % k := by
+  have hlt : x % k < k := Nat.mod_lt x (by omega)
+  have h1 : (k - (x % k + 1)) % k = k - (x % k + 1) :=
+    Nat.mod_eq_of_lt (by have := hlt; omega)
+  rw [h1]
+  omega
+
+/-- The `φ`-pair `(φ i, φ (i + 1))` is a reversed adjacent pair modulo `k`:
+`φ i = (φ (i + 1) + 1) % k`. -/
+private theorem la33opp_pair_adj {k : ℕ} (hk : 1 ≤ k) (i : ℕ) :
+    k - (i % k + 1) = (k - ((i + 1) % k + 1) + 1) % k := by
+  have hi : i % k < k := Nat.mod_lt i (by omega)
+  by_cases hlt : i % k + 1 < k
+  · have hw1 : (i + 1) % k = i % k + 1 := by
+      rw [← Nat.mod_add_mod i k 1]
+      exact Nat.mod_eq_of_lt hlt
+    rw [hw1]
+    have hR : k - (i % k + 1 + 1) + 1 < k := by have := hi; omega
+    rw [Nat.mod_eq_of_lt hR]
+    omega
+  · have heq : i % k + 1 = k := by omega
+    have hw1 : (i + 1) % k = 0 := by
+      rw [← Nat.mod_add_mod i k 1, heq, Nat.mod_self]
+    rw [hw1, heq, Nat.sub_self]
+    have hR : k - (0 + 1 : ℕ) + 1 = k := by omega
+    rw [hR, Nat.mod_self]
+
+/-- Orientation swap: if the `φ`-pair satisfies `φ y % k = (φ x + 1) % k`
+then `x % k = (y + 1) % k` (transports the `s.J`-adjacency through the
+opposite re-indexing, orientations swapped). -/
+private theorem la33opp_adj_swap {k : ℕ} (hk : 1 ≤ k) {x y : ℕ}
+    (h : (k - (y % k + 1)) % k = (k - (x % k + 1) + 1) % k) :
+    x % k = (y + 1) % k := by
+  have hx : x % k < k := Nat.mod_lt x (by omega)
+  have hy : y % k < k := Nat.mod_lt y (by omega)
+  have hmod : (k - (y % k + 1)) % k = k - (y % k + 1) :=
+    Nat.mod_eq_of_lt (by have := hy; omega)
+  rw [hmod] at h
+  have hrhs : (k - (x % k + 1) + 1) % k = (k - x % k) % k := by
+    have hsh : k - (x % k + 1) + 1 = k - x % k := by have := hx; omega
+    rw [hsh]
+  rw [hrhs] at h
+  rw [(Nat.mod_add_mod y k 1).symm]
+  by_cases hx0 : x % k = 0
+  · have h2 : (k - x % k) % k = 0 := by rw [hx0, Nat.sub_zero, Nat.mod_self]
+    rw [h2] at h
+    have hyk : y % k + 1 = k := by have := h; have := hy; omega
+    rw [hx0, hyk, Nat.mod_self]
+  · have h2 : (k - x % k) % k = k - x % k :=
+      Nat.mod_eq_of_lt (by have := hx; omega)
+    rw [h2] at h
+    have hxy : y % k + 1 = x % k := by
+      have h3 := h; have := hy; have := hx; omega
+    rw [hxy]
+    exact (Nat.mod_modEq x k).symm
+
+/-- Adjacent-pair value transport: `x % k = (y + 1) % k` makes the value
+`b x y` an adjacent value `b m (m + 1)` with `m = y % k` (the HOL shape
+used throughout `OPP_IS_SCS`; residue reduction via the LocalAuto12 public
+`periodic2Mod1/2` kit). -/
+private theorem la33opp_b_adj {k : ℕ} {b : ℕ → ℕ → ℝ}
+    (hk : 1 ≤ k) (hper : Periodic2 b k) (hsymg : ∀ i j, b i j = b j i)
+    {x y : ℕ} (h : x % k = (y + 1) % k) :
+    b x y = b (y % k) (y % k + 1) := by
+  have hk0 : k ≠ 0 := by omega
+  have hylt : y % k < k := Nat.mod_lt y (by omega)
+  have hyk : (y + 1) % k = (y % k + 1) % k := (Nat.mod_add_mod y k 1).symm
+  rw [hyk] at h
+  have hred : b (x % k) (y % k) = b x y :=
+    (periodic2Mod1 hk0 hper x (y % k)).trans (periodic2Mod2 hk0 hper x y)
+  rw [← hred]
+  by_cases hlt : y % k + 1 < k
+  · have hxk : x % k = y % k + 1 := by rw [h, Nat.mod_eq_of_lt hlt]
+    rw [hxk, hsymg (y % k + 1) (y % k)]
+  · have heq : y % k + 1 = k := by omega
+    have hxk : x % k = 0 := by rw [h, heq, Nat.mod_self]
+    rw [hxk, hsymg 0 (y % k)]
+    exact (hper (y % k) 0).2.symm.trans
+      (congrArg (b (y % k)) (show (0 : ℕ) + k = y % k + 1 from by rw [Nat.zero_add, heq]))
+
+/-- Pointwise key: the `(i, i + 1)`-value of the opposite re-indexing is
+the reversed adjacent value at the successor representative
+`m = k - 1 - ((i + 1) % k)`. -/
+private theorem la33opp_key {k : ℕ} {g : ℕ → ℕ → ℝ}
+    (hk : 1 ≤ k) (hper : Periodic2 g k) (hsymg : ∀ i j, g i j = g j i) (i : ℕ) :
+    g (k - (i % k + 1)) (k - ((i + 1) % k + 1))
+      = g (k - 1 - ((i + 1) % k)) (k - 1 - ((i + 1) % k) + 1) := by
+  have htr := la33opp_b_adj (b := g) hk hper hsymg
+    (x := k - (i % k + 1)) (y := k - ((i + 1) % k + 1))
+    (by rw [Nat.mod_eq_of_lt (la33opp_phi_lt hk i)]; exact la33opp_pair_adj hk i)
+  rw [htr, Nat.mod_eq_of_lt (la33opp_phi_lt hk (i + 1))]
+  rw [show k - ((i + 1) % k + 1) = k - 1 - ((i + 1) % k) from by
+    have hw : (i + 1) % k < k := Nat.mod_lt (i + 1) (by omega)
+    omega]
+
+end OppKit
+
+/-- HOL `OPP_IS_SCS` (Ocbicby.hl:2536 / YXIONXL2.hl:2536).  See the
+docstring above for the discharge note. -/
+theorem OPP_IS_SCS_p33 (s : ScsV39) (hs : isScsV39 s) : isScsV39 (scsOppV39 s) := by
+  obtain ⟨hd, h3, hk6, hplo, hphi, hpstr, -, hpa, hpam, hpbm, hpb, hpJ, hsym,
+    hch, hdiag0, hdiag, hb3, hbc, hJstruct, hJab, hcard⟩ := hs
+  have hk0 : s.k ≠ 0 := by omega
+  have hk1 : 1 ≤ s.k := by omega
+  have hsymb : ∀ x y, s.b x y = s.b y x := fun x y => (hsym x y).2.2.2.1
+  have hsymbA : ∀ x y, s.a x y = s.a y x := fun x y => (hsym x y).1
+  refine ⟨hd, h3, hk6, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact peropp_periodic s.lo s.k
+  · exact peropp_periodic s.hi s.k
+  · exact peropp_periodic s.str s.k
+  · exact peropp_periodic s.str s.k
+  · intro p q
+    show s.a (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.a (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.am (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.am (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.am (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.am (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.bm (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.bm (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.bm (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.bm (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.b (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.b (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.J (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.J (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    exact ⟨(hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.2.2⟩
+  · intro p q
+    exact hch (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+  · intro p
+    exact hdiag0 (s.k - (p % s.k + 1))
+  · intro p q hpq
+    have hne : s.k - (p % s.k + 1) ≠ s.k - (q % s.k + 1) := by
+      intro hcon
+      have e1 : s.k - ((s.k - (p % s.k + 1)) % s.k + 1) = p % s.k := la33opp_phi_inv hk0 p
+      have e2 : s.k - ((s.k - (q % s.k + 1)) % s.k + 1) = q % s.k := la33opp_phi_inv hk0 q
+      rw [Nat.mod_eq_of_lt (la33opp_phi_lt hk1 p)] at e1
+      rw [Nat.mod_eq_of_lt (la33opp_phi_lt hk1 q)] at e2
+      exact hpq.2.2 (la33opp_mod_eq (k := s.k) (by rw [← e1, ← e2, hcon]) hpq.1 hpq.2.1)
+    show 2 ≤ s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    exact hdiag _ _ ⟨la33opp_phi_lt hk1 p, la33opp_phi_lt hk1 q, hne⟩
+  · intro p hp3
+    show s.b (s.k - (p % s.k + 1)) (s.k - ((p + 1) % s.k + 1)) < 4
+    rw [la33opp_key hk1 hpb hsymb p]
+    exact hb3 _ hp3
+  · intro p hp6
+    show s.b (s.k - (p % s.k + 1)) (s.k - ((p + 1) % s.k + 1)) ≤ cstab
+    rw [la33opp_key hk1 hpb hsymb p]
+    exact hbc _ hp6
+  · intro p q hpq
+    show q % s.k = (p + 1) % s.k ∨ p % s.k = (q + 1) % s.k
+    have hJs : s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) := hpq
+    rcases hJstruct _ _ hJs with h | h
+    · exact Or.inr (la33opp_adj_swap hk1 h)
+    · exact Or.inl (la33opp_adj_swap hk1 h)
+  · intro p q hpq
+    show s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) = Real.sqrt 8 ∧
+      s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) = cstab
+    exact hJab _ _ hpq
+  · -- the ncard bound: the bad set of the opposite reindexes to the bad
+    -- set of `s` along the successor representative `i ↦ k - 1 - ((i+1)%k)`
+    show {i | i < s.k ∧ (2 * h0 < s.b (s.k - (i % s.k + 1))
+        (s.k - ((i + 1) % s.k + 1)) ∨
+        2 < s.a (s.k - (i % s.k + 1)) (s.k - ((i + 1) % s.k + 1)))}.ncard + s.k ≤ 6
+    have hcardT : {i | i < s.k ∧ (2 * h0 < s.b (s.k - (i % s.k + 1))
+          (s.k - ((i + 1) % s.k + 1)) ∨
+        2 < s.a (s.k - (i % s.k + 1)) (s.k - ((i + 1) % s.k + 1)))}.ncard
+        = {j | j < s.k ∧ (2 * h0 < s.b j (j + 1) ∨ 2 < s.a j (j + 1))}.ncard := by
+      refine Set.ncard_congr
+        (f := fun i (_ : i ∈ (_ : Set ℕ)) => s.k - 1 - ((i + 1) % s.k)) ?_ ?_ ?_
+      · rintro i ⟨hi, hbad | hbad⟩
+        · have hlt : (i + 1) % s.k < s.k := Nat.mod_lt (i + 1) (by omega)
+          refine ⟨by omega, ?_⟩
+          rw [la33opp_key hk1 hpb hsymb i] at hbad
+          exact Or.inl hbad
+        · have hlt : (i + 1) % s.k < s.k := Nat.mod_lt (i + 1) (by omega)
+          refine ⟨by omega, ?_⟩
+          rw [la33opp_key hk1 hpa hsymbA i] at hbad
+          exact Or.inr hbad
+      · rintro i j hi hb hcon
+        obtain ⟨hi, -⟩ := hi
+        obtain ⟨hj, -⟩ := hb
+        have hcon' : s.k - 1 - ((i + 1) % s.k) = s.k - 1 - ((j + 1) % s.k) := hcon
+        by_cases hik : i + 1 < s.k
+        · by_cases hjk : j + 1 < s.k
+          · have e1 : (i + 1) % s.k = i + 1 := Nat.mod_eq_of_lt hik
+            have e2 : (j + 1) % s.k = j + 1 := Nat.mod_eq_of_lt hjk
+            rw [e1, e2] at hcon'
+            omega
+          · have e1 : (i + 1) % s.k = i + 1 := Nat.mod_eq_of_lt hik
+            have hjk1 : j + 1 = s.k := by omega
+            have e2 : (j + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            rw [e1, e2] at hcon'
+            omega
+        · by_cases hjk : j + 1 < s.k
+          · have hjk1 : i + 1 = s.k := by omega
+            have e1 : (i + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            have e2 : (j + 1) % s.k = j + 1 := Nat.mod_eq_of_lt hjk
+            rw [e1, e2] at hcon'
+            omega
+          · have hik1 : i + 1 = s.k := by omega
+            have hjk1 : j + 1 = s.k := by omega
+            have e1 : (i + 1) % s.k = 0 := by rw [hik1, Nat.mod_self]
+            have e2 : (j + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            rw [e1, e2] at hcon'
+            omega
+      · rintro j ⟨hj, hbad⟩
+        set i := (2 * s.k - 2 - j) % s.k with hiv
+        have hi : i < s.k := by rw [hiv]; exact Nat.mod_lt _ (by omega)
+        have hi1 : (i + 1) % s.k = (2 * s.k - 1 - j) % s.k := by
+          rw [hiv, Nat.mod_add_mod (2 * s.k - 2 - j) s.k 1,
+            show 2 * s.k - 2 - j + 1 = 2 * s.k - 1 - j from by omega]
+        have hfi : s.k - 1 - ((i + 1) % s.k) = j := by
+          rw [hi1]
+          by_cases hjk1 : j = s.k - 1
+          · rw [hjk1, show 2 * s.k - 1 - (s.k - 1) = s.k from by omega, Nat.mod_self]
+            omega
+          · have hmod : (2 * s.k - 1 - j) % s.k = s.k - 1 - j := by
+              have hj2 : j ≤ s.k - 2 := by omega
+              rw [show 2 * s.k - 1 - j = s.k + (s.k - 1 - j) from by omega,
+                Nat.add_mod, Nat.mod_self, Nat.zero_add, Nat.mod_modEq _ _,
+                Nat.mod_eq_of_lt (by omega)]
+            rw [hmod]
+            omega
+        refine ⟨i, ⟨hi, ?_⟩, hfi⟩
+        rw [la33opp_key hk1 hpb hsymb i, la33opp_key hk1 hpa hsymbA i, hfi]
+        exact hbad
+    rw [hcardT]
+    exact hcard
+  -- DISCHARGES: NEEDS Ocbicby.hl `OPP_IS_SCS` over `ScsV39`
+  -- (2026-10-28, la33-ab-w1: fan-free sweep, no `sorry` upstream).
 
 /-- HOL `PROP_EQU_IS_SCS` (YXIONXL.hl:589).  DISCHARGED 2026-09-19: verbatim
 `LocalAuto12.PROP_EQU_IS_SCS` (proved there; the heavy conjunct is the
@@ -144,13 +439,24 @@ prop-equation re-indexing.  DISCHARGED 2026-09-19: verbatim
 theorem PRO_EQU_ID1_p33 {s : ScsV39} {k : ℕ} (hk : s.k = k) (hs : isScsV39 s)
     (i : ℕ) : s = scsPropEquV39 (scsPropEquV39 s i) (k - i % k) := PRO_EQU_ID1 hk hs i
 
-/-- HOL `XWNHLMD_MM` (PPBTYDQ.hl:560; `LocalAuto26.XWNHLMD_MM_p26` is the
-same statement).  NEEDS: `XWITCCN` / `MMS_NONEMPTY` from taustar < 0. -/
+/-- WIRE `LocalAuto26.XWNHLMD_MM_p26` (verbatim twin; printed types equal,
+probe-checked).  Debt-consolidating wiring, sorryAx standing: the twin is
+discharged (2026-09-20, `TAUSTAR_LE_0_XWNHLMD_p26` + `SGTRNAF_p27`), but
+the axiom arrives via `SGTRNAF_p27` -> `UXCKFPE2_p27` -> `UXCKFPE_p24`
+from the LA24 case bank (`XWITCCN_CASE_3/4/5/6_IS_SCS_p24`, sorries at
+LA24:1387/1128/1163/1196 — the same single root bank as the SF-71
+`XWNHLMD_discharged` exit, already inside the 151-cone; no new row); the
+debt has that known root bank and self-clears when the four cases close.
+(Supersedes the stale NEEDS `XWITCCN`/`MMS_NONEMPTY` note: the discharged
+LocalAuto26 twin is directly wirable.) -/
 theorem XWNHLMD_MM_p33 (s s' : ScsV39) (v : ℕ → V3) (hs : isScsV39 s)
     (hs' : isScsV39 s') (hb : scsBasicV39 s) (hb' : scsBasicV39 s')
     (hk : s.k = s'.k) (hv : v ∈ MMsV39 s) (hv' : BBsV39 s' v)
-    (hds : s.d ≤ s'.d) : MMsV39 s' ≠ ∅ := sorry
-  -- DISCHARGES: NEEDS PPBTYDQ.hl XWNHLMD_MM.
+    (hds : s.d ≤ s'.d) : MMsV39 s' ≠ ∅ :=
+  XWNHLMD_MM_p26 s s' v hs hs' hb hb' hk hv hv' hds
+  -- DISCHARGES: NEEDS PPBTYDQ.hl `XWNHLMD_MM`
+  -- (2026-10-28, la33-ab-w1: wired to the discharged LocalAuto26 twin —
+  -- SF-71 sibling, debt-consolidating, sorryAx standing at the LA24 bank).
 
 theorem stab_d_eq_p33 (s : ScsV39) (i j : ℕ) : (scsStabDiagV39 s i j).d = s.d := rfl
 
