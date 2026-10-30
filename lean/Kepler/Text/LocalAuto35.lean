@@ -11729,6 +11729,23 @@ theorem SUM_AZIM_EQ_ANGLE_EQ4_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
   -- SUM_NUMSEG2_p35/NUMSEG_2_p35 + V/E/F_PRIME_EQ_*_p35 +
   -- SCS_HALF_SLICE_IS_A_SCS_p35 + the local-fan azimuth sum identity
   -- (SUM_AZIM over the diag-closed slice face).
+  -- lkgrqui-eq4-w3 2026-10-28: this frozen statement is NOT provable as
+  -- stated. The only hypothesis constraining `HS` is `hfan`, and
+  -- `HS := hypermapOfFan 0 V E` (the FULL-fan hypermap, Fan.lean:1169)
+  -- satisfies it: then `vPrime_p3 V (HS.face (u, rhoNode1 FF u)) = V` and
+  -- `ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)) = E` (the diag
+  -- `{u, w}` is realized by no full-fan dart), so `hfan` reduces to the
+  -- full-fan `ConvexLocalFan V E FF` from `hMM`, while
+  -- `HS.face (u, rhoNode1 FF u)` is the full dart cycle on which the RHS
+  -- interior angles differ from the slice-face split (e.g. the i = 0 term
+  -- is `azim 0 u u1 (full-fan pred of u)`, strictly larger than the slice
+  -- term `azim 0 u u1 w` by the diag split). HOL is safe because it pins the
+  -- hypermap to the canonical `hypermap (HYP (vec 0, V, E UNION {{u, w}}))`;
+  -- the Lean freezing abstracted `HS` and dropped exactly that carrier
+  -- (`IsHypE_p35 V (E ∪ {{u, w}}) HS`) that its own DISCHARGES recipe
+  -- (V/E/F_PRIME_EQ_*_p35) consumes. Closing needs a statement ruling: add
+  -- that one hypothesis, then `exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 ...`
+  -- (below, fully proved, standard three).
 
 /-- HOL `CARD_FF_EQ_CARD_SLICE_FF` (QKNVMLB.hl:9059).
 FIDELITY (SF-83): HOL freezes `HS = hypermap (HYP (vec 0,V,E UNION {{v, w}}))`
@@ -13473,3 +13490,332 @@ theorem QKNVMLB3_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
       hMM hscs hdiag hsl hd
   · exact QKNVMLB3_LE4_p35 s s' s'' p q d' d'' mkj vv vv' vv'' h hs' hs'' hvv' hvv''
       hMM hscs hdiag hsl hd
+
+/-! ## lkgrqui-eq4-w3 (2026-10-28): 3-window face determinations and the
+      corrected `SUM_AZIM_EQ_ANGLE_EQ4` twin.  The frozen root
+      `SUM_AZIM_EQ_ANGLE_EQ4_p35` above is unprovable as stated (missing
+      `IsHypE_p35` carrier; see the DISCHARGES note there); this wave proves
+      the full content under the corrected statement. -/
+
+/-- Peel an additive `c` out of a residue equality of small indices. -/
+private theorem modPeel_p35 {k a b c : ℕ} (ha : a < k) (hb : b < k)
+    (h : (a + c) % k = (b + c) % k) : a = b := by
+  have e1 : (a % k + c % k) % k = (a + c) % k := by rw [← Nat.add_mod]
+  have e2 : (b % k + c % k) % k = (b + c) % k := by rw [← Nat.add_mod]
+  have h1 : (a % k + c % k) % k = (b % k + c % k) % k := by rw [e1, e2, h]
+  have h2 := modAddCancel_p35 (k := k) (a := a % k) (b := b % k) (c := c % k) h1
+  rw [Nat.mod_eq_of_lt ha, Nat.mod_eq_of_lt hb, Nat.mod_eq_of_lt ha,
+    Nat.mod_eq_of_lt hb] at h2
+  exact h2
+
+/-- The out-dart of a 3-window face vertex (epsilon determined by window
+injectivity): the slice-face specialization of HOL `DETER_RHO_NODE`
+(local_lemmas.hl:3093) over the `F_PRIME_EQ_F_vv_p35` face description. -/
+private theorem face3Rho_p35 {vv : ℕ → V3} {k p : ℕ} {Ff : Set (V3 × V3)}
+    (hk0 : 0 < k) (hk3 : 3 < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hFf : Set.range (fun i => (vv (i % 3 + p), vv ((i + 1) % 3 + p))) = Ff)
+    (i : ℕ) (hi : i < 3) :
+    rhoNode1 Ff (vv (p + i)) = vv ((i + 1) % 3 + p) := by
+  have hmem : (vv (p + i), vv ((i + 1) % 3 + p)) ∈ Ff := by
+    rw [← hFf]
+    refine Set.mem_range.mpr ⟨i, ?_⟩
+    rw [Nat.mod_eq_of_lt hi, Nat.add_comm i p]
+  refine epsFixed_p35 hmem ?_
+  intro y hy
+  rw [← hFf] at hy
+  obtain ⟨j, hj⟩ := hy
+  have h1 : vv (j % 3 + p) = vv (p + i) := congrArg Prod.fst hj
+  have h2 : vv ((j + 1) % 3 + p) = y := congrArg Prod.snd hj
+  have hmod : (j % 3 + p) % k = (p + i) % k := vvModEq_p35 hk0 hper hinj h1
+  rw [Nat.add_comm p i] at hmod
+  have hpeel : j % 3 = i :=
+    modPeel_p35 (show j % 3 < k by omega) (show i < k by omega) hmod
+  have e3 : (j + 1) % 3 = (i + 1) % 3 := by
+    rw [Nat.add_mod, Nat.add_mod, hpeel, Nat.mod_eq_of_lt (show (1:ℕ) < 3 by omega),
+      Nat.mod_eq_of_lt hi]
+  rw [← h2, e3]
+
+/-- The in-dart of a 3-window face vertex (mirror of `face3Rho_p35`,
+HOL `DETER_IVS_RHO_NODE` specialization). -/
+private theorem face3Ivs_p35 {vv : ℕ → V3} {k p : ℕ} {Ff : Set (V3 × V3)}
+    (hk0 : 0 < k) (hk3 : 3 < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hFf : Set.range (fun i => (vv (i % 3 + p), vv ((i + 1) % 3 + p))) = Ff)
+    (i : ℕ) (hi : i < 3) :
+    ivsRhoNode1 Ff (vv (p + i)) = vv ((i + 2) % 3 + p) := by
+  have hi2 : (i + 2) % 3 < 3 := Nat.mod_lt _ (by omega)
+  have e7 : ((i + 2) % 3 + 1) % 3 = i := by interval_cases i <;> norm_num
+  have hmem : (vv ((i + 2) % 3 + p), vv (p + i)) ∈ Ff := by
+    rw [← hFf]
+    refine Set.mem_range.mpr ⟨(i + 2) % 3, ?_⟩
+    rw [show ((i + 2) % 3) % 3 = (i + 2) % 3 from Nat.mod_eq_of_lt hi2,
+      Nat.add_comm ((i + 2) % 3) p, e7, Nat.add_comm i p]
+  refine epsFixed_p35 hmem ?_
+  intro c hc
+  rw [← hFf] at hc
+  obtain ⟨j, hj⟩ := hc
+  have h1 : vv (j % 3 + p) = c := congrArg Prod.fst hj
+  have h2 : vv ((j + 1) % 3 + p) = vv (p + i) := congrArg Prod.snd hj
+  have hmod : ((j + 1) % 3 + p) % k = (p + i) % k := vvModEq_p35 hk0 hper hinj h2
+  rw [Nat.add_comm p i] at hmod
+  have hpeel : (j + 1) % 3 = i :=
+    modPeel_p35 (show (j + 1) % 3 < k by omega) (show i < k by omega) hmod
+  have hjm : j % 3 = (i + 2) % 3 := by interval_cases i <;> omega
+  rw [← h1, hjm]
+
+/-- Core of the corrected HOL `SUM_AZIM_EQ_ANGLE_EQ4` (QKNVMLB.hl:8445)
+rendering: everything except the face re-labelling, which enters as the
+hypothesis `hF` (discharged below by `F_PRIME_EQ_F_vv_p35`). -/
+private theorem eq4Core_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hsl : isScsSliceV39 s s' s'' p q) (hk'3 : s'.k = 3)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hV : Set.range vv = V)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hnorm : norm (u - w) ≤ cstab)
+    (hF : Set.range (fun i => (vv (i % 3 + p % s.k), vv ((i + 1) % 3 + p % s.k))) =
+      HS.face (u, rhoNode1 FF u)) :
+    tau3 (vv (0 % 3 + p % s.k)) (vv (1 % 3 + p % s.k)) (vv (2 % 3 + p % s.k)) =
+      setSum {i | i < 3}
+          (fun i => rhoFun (norm (vv (i + p % s.k))) *
+            interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u)) -
+        (Real.pi + sol0) := by
+  -- numerics
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hk3s : 3 < s.k := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
+  have hq'k : q % s.k < s.k := Nat.mod_lt q hk0
+  have hp'k : p % s.k < s.k := Nat.mod_lt p hk0
+  have hBB : BBsV39 s vv := hMM.1.1.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj : ∀ i j, i < s.k → j < s.k → i ≠ j → vv i ≠ vv j := fun i j hi hj hne he =>
+    vvInjAux_p35 s vv hscs hBB i j hi hj hne he
+  have hk'3 : s'.k = 3 := hk'3
+  obtain ⟨hdiagA, hdiagB, hdiagC⟩ := hdiag
+  have hsl0 := hsl
+  simp only [isScsSliceV39] at hsl0
+  obtain ⟨-, -, -, -, hbm4, -, -⟩ := hsl0
+  -- the k' = 3 residue identity (window closes at the diagonal)
+  have hsk' : s'.k = (q + 1 + (s.k - p % s.k)) % s.k := by
+    rw [← hs']; simp only [scsHalfSliceV39]
+  have e1' : (q % s.k + 1 + (s.k - p % s.k)) % s.k
+      = (q + 1 + (s.k - p % s.k)) % s.k := by
+    have hL : (q % s.k + (1 + (s.k - p % s.k))) % s.k
+        = (q % s.k % s.k + (1 + (s.k - p % s.k)) % s.k) % s.k := Nat.add_mod _ _ _
+    have hR : (q + (1 + (s.k - p % s.k))) % s.k
+        = (q % s.k + (1 + (s.k - p % s.k)) % s.k) % s.k := Nat.add_mod _ _ _
+    rw [Nat.add_assoc, Nat.add_assoc, hL, hR, Nat.mod_mod]
+  have hsk'q : s'.k = (q % s.k + 1 + (s.k - p % s.k)) % s.k := by rw [hsk', ← e1']
+  have hpq2 : (p % s.k + 2) % s.k = q % s.k := by
+    have hk3' : (q % s.k + 1 + (s.k - p % s.k)) % s.k = 3 := by rw [← hsk'q, hk'3]
+    rcases Nat.lt_or_ge (q % s.k + 1) (p % s.k) with hlt | hge
+    · have hvlt : q % s.k + 1 + (s.k - p % s.k) < s.k := by omega
+      rw [Nat.mod_eq_of_lt hvlt] at hk3'
+      rw [show p % s.k + 2 = q % s.k + s.k from by omega, Nat.add_mod_right,
+        Nat.mod_eq_of_lt hq'k]
+    · rcases Nat.eq_or_lt_of_le hge with heq | hlt
+      · rw [show q % s.k + 1 + (s.k - p % s.k) = s.k from by omega, Nat.mod_self] at hk3'
+        omega
+      · have hv2 : q % s.k + 1 + (s.k - p % s.k)
+            = (q % s.k + 1 - p % s.k) + s.k := by omega
+        rw [hv2, Nat.add_mod_right] at hk3'
+        rcases (by omega :
+            q % s.k + 1 - p % s.k < s.k ∨ q % s.k + 1 - p % s.k = s.k) with hc | hc
+        · rw [Nat.mod_eq_of_lt hc] at hk3'
+          rw [show p % s.k + 2 = q % s.k from by omega,
+            Nat.mod_eq_of_lt hq'k]
+        · rw [hc, Nat.mod_self] at hk3'
+          omega
+  -- window-slot normalizations
+  have vmod0 : vv (0 % 3 + p % s.k) = vv (p % s.k) := by rw [Nat.zero_mod, Nat.zero_add]
+  have vmod1 : vv (1 % 3 + p % s.k) = vv (p % s.k + 1) := by
+    rw [show (1:ℕ) % 3 = 1 from rfl, Nat.add_comm]
+  have vmod2 : vv (2 % 3 + p % s.k) = vv (p % s.k + 2) := by
+    rw [show (2:ℕ) % 3 = 2 from rfl, Nat.add_comm]
+  have vwt1 : vv ((0 + 1) % 3 + p % s.k) = vv (p % s.k + 1) := by
+    rw [show ((0:ℕ) + 1) % 3 = 1 from rfl, Nat.add_comm]
+  have vwt2 : vv ((1 + 1) % 3 + p % s.k) = vv (p % s.k + 2) := by
+    rw [show ((1:ℕ) + 1) % 3 = 2 from rfl, Nat.add_comm]
+  have vwt3 : vv ((2 + 1) % 3 + p % s.k) = vv (p % s.k) := by
+    rw [show ((2:ℕ) + 1) % 3 = 0 from rfl, Nat.zero_add]
+  have vwt4 : vv ((0 + 3 - 1) % 3 + p % s.k) = vv (p % s.k + 2) := by
+    rw [show ((0:ℕ) + 3 - 1) % 3 = 2 from rfl, Nat.add_comm]
+  have vwt5 : vv ((1 + 3 - 1) % 3 + p % s.k) = vv (p % s.k) := by
+    rw [show ((1:ℕ) + 3 - 1) % 3 = 0 from rfl, Nat.zero_add]
+  have vwt6 : vv ((2 + 3 - 1) % 3 + p % s.k) = vv (p % s.k + 1) := by
+    rw [show ((2:ℕ) + 3 - 1) % 3 = 1 from rfl, Nat.add_comm]
+  have vwt7 : vv ((1 + 2) % 3 + p % s.k) = vv (p % s.k) := by
+    rw [show ((1:ℕ) + 2) % 3 = 0 from rfl, Nat.zero_add]
+  have vwt8 : vv ((2 + 2) % 3 + p % s.k) = vv (p % s.k + 1) := by
+    rw [show ((2:ℕ) + 2) % 3 = 1 from rfl, Nat.add_comm]
+  -- the full fan
+  have hconv : ConvexLocalFan (Set.range vv)
+      (Set.range fun i => ({vv i, vv (i + 1)} : Set V3))
+      (Set.range fun i => (vv i, vv (i + 1))) := by
+    rcases hBB.2.2.2 with hle | hfan0
+    · exact absurd hle (by omega)
+    · exact hfan0
+  -- window periodicity / injectivity
+  have hwper : Periodic (fun i => vv (i % 3 + p % s.k)) 3 := perWin_le4 (by norm_num) hper
+  have hwinj : ∀ i j : ℕ, i < 3 → j < 3 → i ≠ j →
+      vv (i % 3 + p % s.k) ≠ vv (j % 3 + p % s.k) := fun i j hi hj hne he =>
+    hne (injWin_le4 hk0 (by norm_num) hk3s hper hinj hi hj he)
+  -- the window edge set and the slots3 transport
+  set E'w : Set (Set V3) :=
+    Set.range fun i => ({vv (i % 3 + p % s.k), vv ((i + 1) % 3 + p % s.k)} : Set V3) with hEw
+  have hslot := slots3_le4 rfl hscs hBB hk3s hconv hper hinj hMM hbm4 hdiagA hdiagB hpq2 E'w
+    hEw.symm
+  -- window azimuth values in three-point form
+  have hav0 : azimInFan (vv (p % s.k), vv (p % s.k + 1)) E'w
+      = azim 0 (vv (p % s.k)) (vv (p % s.k + 1)) (vv (p % s.k + 2)) := by
+    have h0 := azimInFanVal_le4 (vv := fun t => vv (t % 3 + p % s.k)) (E := E'w) (k := 3)
+      (by norm_num) hwper hwinj hEw.symm 0
+    rw [vmod0, vwt1, vwt4] at h0
+    exact h0
+  have hav1 : azimInFan (vv (p % s.k + 1), vv (p % s.k + 2)) E'w
+      = azim 0 (vv (p % s.k + 1)) (vv (p % s.k + 2)) (vv (p % s.k)) := by
+    have h1 := azimInFanVal_le4 (vv := fun t => vv (t % 3 + p % s.k)) (E := E'w) (k := 3)
+      (by norm_num) hwper hwinj hEw.symm 1
+    rw [vmod1, vwt2, vwt5] at h1
+    exact h1
+  have hav2 : azimInFan (vv (p % s.k + 2), vv (p % s.k)) E'w
+      = azim 0 (vv (p % s.k + 2)) (vv (p % s.k)) (vv (p % s.k + 1)) := by
+    have h2 := azimInFanVal_le4 (vv := fun t => vv (t % 3 + p % s.k)) (E := E'w) (k := 3)
+      (by norm_num) hwper hwinj hEw.symm 2
+    rw [vmod2, vwt3, vwt6] at h2
+    exact h2
+  -- the interior angles at the three window vertices of the face
+  have hia0 : interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k))
+      = azim 0 (vv (p % s.k)) (vv (p % s.k + 1)) (vv (p % s.k + 2)) := by
+    show azim 0 (vv (p % s.k))
+      (rhoNode1 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k)))
+      (ivsRhoNode1 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k))) = _
+    rw [show vv (p % s.k) = vv (p % s.k + 0) from by rw [Nat.add_zero],
+      face3Rho_p35 hk0 hk3s hper hinj hF 0 (by omega),
+      face3Ivs_p35 hk0 hk3s hper hinj hF 0 (by omega), Nat.add_zero, vwt1, vwt4]
+  have hia1 : interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k + 1))
+      = azim 0 (vv (p % s.k + 1)) (vv (p % s.k + 2)) (vv (p % s.k)) := by
+    show azim 0 (vv (p % s.k + 1))
+      (rhoNode1 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k + 1)))
+      (ivsRhoNode1 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k + 1))) = _
+    rw [face3Rho_p35 hk0 hk3s hper hinj hF 1 (by omega),
+      face3Ivs_p35 hk0 hk3s hper hinj hF 1 (by omega), vwt2, vwt7]
+  have hia2 : interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k + 2))
+      = azim 0 (vv (p % s.k + 2)) (vv (p % s.k)) (vv (p % s.k + 1)) := by
+    show azim 0 (vv (p % s.k + 2))
+      (rhoNode1 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k + 2)))
+      (ivsRhoNode1 (HS.face (u, rhoNode1 FF u)) (vv (p % s.k + 2))) = _
+    rw [face3Rho_p35 hk0 hk3s hper hinj hF 2 (by omega),
+      face3Ivs_p35 hk0 hk3s hper hinj hF 2 (by omega), vwt3, vwt8]
+  -- orbit normalizations
+  have horbit := vvOrbit_p35 hk0 hper hinj hFF u (p % s.k) hp
+  have ho0 : (rhoNode1 FF)^[0] u = vv (p % s.k) := by rw [horbit 0, Nat.zero_add]
+  have ho1 : (rhoNode1 FF)^[1] u = vv (p % s.k + 1) := by rw [horbit 1, Nat.add_comm]
+  have ho2 : (rhoNode1 FF)^[2] u = vv (p % s.k + 2) := by rw [horbit 2, Nat.add_comm]
+  -- left side in three-point form
+  have eL : tau3 (vv (p % s.k)) (vv (p % s.k + 1)) (vv (p % s.k + 2))
+      = rhoFun (norm (vv (p % s.k))) * azim 0 (vv (p % s.k)) (vv (p % s.k + 1)) (vv (p % s.k + 2))
+        + rhoFun (norm (vv (p % s.k + 1))) * azim 0 (vv (p % s.k + 1)) (vv (p % s.k + 2)) (vv (p % s.k))
+        + rhoFun (norm (vv (p % s.k + 2))) * azim 0 (vv (p % s.k + 2)) (vv (p % s.k)) (vv (p % s.k + 1))
+        - (Real.pi + sol0) := by
+    have h1 := slots3_le4 rfl hscs hBB hk3s hconv hper hinj hMM hbm4 hdiagA hdiagB hpq2 E'w
+      hEw.symm
+    rw [SUM_NUMSEG2_p35, vmod0, vmod1, vmod2, hav0, hav1, hav2] at h1
+    exact h1
+  -- right side in three-point form
+  have eR : setSum {i | i < 3}
+          (fun i => rhoFun (norm (vv (i + p % s.k))) *
+            interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u))
+      - (Real.pi + sol0)
+      = rhoFun (norm (vv (p % s.k))) * azim 0 (vv (p % s.k)) (vv (p % s.k + 1)) (vv (p % s.k + 2))
+        + rhoFun (norm (vv (p % s.k + 1))) * azim 0 (vv (p % s.k + 1)) (vv (p % s.k + 2)) (vv (p % s.k))
+        + rhoFun (norm (vv (p % s.k + 2))) * azim 0 (vv (p % s.k + 2)) (vv (p % s.k)) (vv (p % s.k + 1))
+        - (Real.pi + sol0) := by
+    rw [setSum_Iio_p35, SUM_NUMSEG2_p35, ho0, ho1, ho2, Nat.zero_add,
+      Nat.add_comm 1 (p % s.k), Nat.add_comm 2 (p % s.k), hia0, hia1, hia2]
+  rw [vmod0, vmod1, vmod2]
+  exact eL.trans eR.symm
+  -- DISCHARGES (lkgrqui-eq4-w3 2026-10-28): source 8445-9059 with the face
+  -- re-labelling factored out as `hF`.  Route: slots3_le4 (the tau3 →
+  -- window-azimInFan transport, the k' = 3 slot of the HOL NUMSEG_2/
+  -- SUM_NUMSEG2 decomposition) + azimInFanVal_le4 (the two-point-neighbour
+  -- specialization of CONVEX_LOFA_IMP_INANGLE_EQ_AZIM) + face3Rho/face3Ivs
+  -- (the DETER_RHO_NODE/IVS pair on the `hF` face) + vvOrbit_p35 (VV_SUC_EQ_
+  -- RHO_NODE) + setSum_Iio_p35/SUM_NUMSEG2_p35 re-indexing.
+
+/-- Corrected rendering of HOL `SUM_AZIM_EQ_ANGLE_EQ4` (QKNVMLB.hl:8445):
+identical to `SUM_AZIM_EQ_ANGLE_EQ4_p35` plus the carrier hypothesis
+`hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS`.  The frozen root dropped exactly this
+hypothesis when abstracting the canonical hypermap
+`hypermap (HYP (vec 0, V, E UNION {{u, w}}))`; without it the statement has
+countermodels (HS := the full-fan hypermap `hypermapOfFan 0 V E` satisfies
+`hfan`, while `HS.face (u, rhoNode1 FF u)` is the full dart cycle, on which
+the goal's RHS interior angles differ from the slice-face split).  With the
+ruling that adds `hHS` to the frozen root, closing it is
+`exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 ...` on the unchanged statement body. -/
+theorem SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop) (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (vv vv' vv'' : ℕ → V3) (HS : Hypermap (V3 × V3))
+    (hk' : k' = 3)
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+    (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hsl : isScsSliceV39 s s' s'' p q) (hk's' : s'.k = k') (hk : s.k = k)
+    (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+    (hV : Set.range vv = V)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hnorm : norm (u - w) ≤ cstab)
+    (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+    (hfan : ConvexLocalFan
+      (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+      (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+      (HS.face (u, rhoNode1 FF u))) :
+    tau3 (vv (0 % k' + p % k)) (vv (1 % k' + p % k)) (vv (2 % k' + p % k)) =
+      setSum {i | i < k'}
+          (fun i => rhoFun (norm (vv (i + p % k))) *
+            interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u)) -
+        (Real.pi + sol0) := by
+  subst hk'
+  subst hk
+  refine eq4Core_p35 s s' s'' p q d' d'' mkj u w V E FF vv HS hs' hMM hscs hdiag hsl
+    hk's' hp hq hV hE hFF hnorm ?_
+  exact F_PRIME_EQ_F_vv_p35 s s' s'' p q d' d'' mkj s.k 3 u w V E FF vv HS hs' hs''
+    hk's' rfl hp hq hV hE hFF hnorm hscs hdiag hMM.1.1.1 hHS
+  -- DISCHARGES (lkgrqui-eq4-w3 2026-10-28): composes eq4Core_p35 with the
+  -- face re-labelling F_PRIME_EQ_F_vv_p35 under the IsHypE_p35 carrier —
+  -- the faithful rendering of the HOL canonical hypermap
+  -- `hypermap (HYP (vec 0, V, E UNION {{u, w}}))`.
+
+end Kepler.Text
+
+-- lkgrqui-eq4-w3 axiom audit (mandate premise ① + ladder; full names,
+-- outside the namespace).  Expected standard three for every entry.
+#print axioms Kepler.Text.SUM_AZIM_EQ_ANGLE_EQ4_HS_p35
+#print axioms Kepler.Text.eq4Core_p35
+#print axioms Kepler.Text.face3Rho_p35
+#print axioms Kepler.Text.face3Ivs_p35
+#print axioms Kepler.Text.modPeel_p35
+#print axioms Kepler.Text.QKNVMLB3_LE4_p35
+#print axioms Kepler.Text.QKNVMLB1_LE4F_p35
+#print axioms Kepler.Text.QKNVMLB1_EQ4F_p35
+#print axioms Kepler.Text.SUM_AZIM_EQ_ANGLE_LE4_p35
+#print axioms Kepler.Text.tausplit_le4
+#print axioms Kepler.Text.slots3_le4
+#print axioms Kepler.Text.F_PRIME_EQ_F_vv_p35
+#print axioms Kepler.Text.V_PRIME_EQ_V_vv_p35
+#print axioms Kepler.Text.E_PRIME_EQ_E_vv_p35
+#print axioms Kepler.Text.TRIO_V_OF_FACE_p35
+#print axioms Kepler.Text.TRIO_E_OF_FACE_p35
+#print axioms Kepler.Text.TECOXBMv2_p35
+#print axioms Kepler.Text.pmPlaneCrowding_p35
+#print axioms Kepler.Text.EJRCFJD_p35
+#print axioms Kepler.Text.SCS_HALF_SLICE_IS_A_SCS_p35
+#print axioms Kepler.Text.VV_INJ_p35
+-- sorry-slot census (expected 5 = the five LA35 roots, unchanged)
