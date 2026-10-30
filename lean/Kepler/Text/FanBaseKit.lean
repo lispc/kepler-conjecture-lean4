@@ -4752,4 +4752,168 @@ theorem MM_SCS_OPP_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
     rw [hk, distNegNegFb]
     exact hbm0 (k - (i % k + 1)) (k - (j % k + 1))
 
+
+/-! ## S 链波四（fanbase-s4-w1）：k≤3（tau3 槽）支闭——TAUSTAR/BBPRIME 全 k 形
+
+`TAUSTAR_EQ_SYM_0_ALL_fb` / `BBPRIME_EQ_OPP_SYM_0_ALL_fb` = s2 两主件的去
+`¬(k ≤ 3)` 形（HOL YXIONXL2.hl:2374/:3154 的 k≤3 支补全）。k ≤ 3 时 isScsV39
+的 `3 ≤ s.k` 槽钉死 k = 3，taustar 走 `tau3` 槽；几何核心 = `dihVNegFb`
+（dihV 全变元取负不变，s2 撞墙件的完成）：dihV 体的投影向量整取负
+（V3 级 smul/sub 线性）+ `arcV` 对末两点同时取负不变（arcV 体只展一次，
+ofLp 形状逐项显式化 —— s2 PLAN 踩坑记的「勿用 simp only [dihV, arcV]
+大批次」纪律的落地），全程不触 azim（k≤3 时 BBsV39 第 4 槽走左支，无
+非共线性可消费）。dsv 槽 = s2 储备件 `dsvOppEqAllFb` + `isEarOppIffFb`；
+BBs 槽 = s2 储备件 `peroppInBbAllFb`。k > 3 支原样委托 s2 主件。 -/
+
+attribute [local instance] Classical.propDecidable
+
+/-- V3 级点积交换（LuneVolume `dot_comm` 同款 Pi 项）。 -/
+private theorem dotV3CommFb (x y : V3) : x ⬝ᵥ y = y ⬝ᵥ x :=
+  dotProduct_comm (x : Fin 3 → ℝ) (y : Fin 3 → ℝ)
+
+/-- ofLp 散开件（rfl 形）。 -/
+private theorem ofLpSubFb (a b : V3) :
+    WithLp.ofLp (a - b) = WithLp.ofLp a - WithLp.ofLp b := rfl
+
+/-- ofLp/toLp 往返。 -/
+private theorem ofLpToLpFb (f : Fin 3 → ℝ) :
+    WithLp.ofLp (WithLp.toLp 2 f) = f := rfl
+
+/-- ofLp 后取负散开。 -/
+private theorem ofLpNegFb (a : V3) : WithLp.ofLp (-a) = -WithLp.ofLp a := rfl
+
+/-- ofLp 内 V3 级减零。 -/
+private theorem ofLpSubZeroFb (z : V3) : WithLp.ofLp (z - (0:V3)) = WithLp.ofLp z :=
+  congrArg WithLp.ofLp (sub_zero z)
+
+/-- Pi 级减 ofLp 零（负端；arcV 体第二操作数形状）。 -/
+private theorem piSubOfLpZeroFb (z : V3) :
+    (WithLp.ofLp (-z) - WithLp.ofLp (0:V3)) = WithLp.ofLp (-z) := by
+  rw [show WithLp.ofLp (0:V3) = (0 : Fin 3 → ℝ) from rfl, sub_zero]
+
+/-- Pi 级减 ofLp 零（正端）。 -/
+private theorem piSubOfLpZeroPosFb (z : V3) :
+    (WithLp.ofLp z - WithLp.ofLp (0:V3)) = WithLp.ofLp z := by
+  rw [show WithLp.ofLp (0:V3) = (0 : Fin 3 → ℝ) from rfl, sub_zero]
+
+/-- 显式 ofLp 形双负点积（rw 键控；经 `dotPi_neg_negFb`）。 -/
+private theorem dotOfLpNegNegFb (x y : V3) :
+    WithLp.ofLp (-x) ⬝ᵥ WithLp.ofLp (-y) = WithLp.ofLp x ⬝ᵥ WithLp.ofLp y := by
+  rw [ofLpNegFb, ofLpNegFb]
+  exact dotPi_neg_negFb _ _
+
+/-- 单端取负 dist 不变。 -/
+private theorem distNegZeroFb (x : V3) : dist (-x) (0:V3) = dist x (0:V3) := by
+  simp [dist_eq_norm]
+
+/-- V3 级「负减负」的句法制（rw 不重排键控）。 -/
+private theorem negSubNegFb (P Q : V3) : (-P) - (-Q) = -(P - Q) := by abel
+
+/-- `arcV` 对末两点对称（dot 交换 + 分母交换）。 -/
+private theorem arcVSymFb (u v w : V3) : arcV u v w = arcV u w v := by
+  unfold arcV
+  rw [dotV3CommFb, ofLpToLpFb, ofLpSubFb, ofLpSubFb, mul_comm]
+
+/-- `arcV` 对末两点同时取负不变。 -/
+private theorem arcVNegNegFb (x y : V3) : arcV 0 (-x) (-y) = arcV 0 x y := by
+  unfold arcV
+  rw [ofLpSubZeroFb (-x), piSubOfLpZeroFb y, ofLpSubZeroFb x, piSubOfLpZeroPosFb y,
+    dotOfLpNegNegFb, distNegZeroFb, distNegZeroFb]
+
+/-- `dihV` 末两点半平面交换（投影向量互换，arcV 对称）。 -/
+private theorem dihVSwapFb (a b c : V3) : dihV 0 a b c = dihV 0 a c b := by
+  unfold dihV
+  dsimp only
+  rw [arcVSymFb]
+
+/-- `dihV` 全变元取负不变（s2 撞墙件完成）：投影向量整取负 +
+`arcVNegNegFb`；不展 arcV 于 dihV 体内。 -/
+private theorem dihVNegFb (v1 v2 v3 : V3) : dihV 0 (-v1) (-v2) (-v3) = dihV 0 v1 v2 v3 := by
+  unfold dihV
+  dsimp only
+  simp only [sub_zero, dotOfLpNegNegFb, smul_neg]
+  rw [negSubNegFb, negSubNegFb, arcVNegNegFb]
+
+/-- `tau3` 全变元取负不变。 -/
+private theorem tau3NegFb (a b c : V3) : tau3 (-a) (-b) (-c) = tau3 a b c := by
+  unfold tau3
+  rw [norm_neg, norm_neg, norm_neg, dihVNegFb, dihVNegFb, dihVNegFb]
+
+/-- `tau3` 反序不变（dihV 末两点交换三次归位）。 -/
+private theorem tau3RevFb (a b c : V3) : tau3 a b c = tau3 c b a := by
+  unfold tau3
+  rw [dihVSwapFb c b a, dihVSwapFb b a c, dihVSwapFb a c b]
+  ring
+
+/-- HOL `TAUSTAR_EQ_SYM_0`（YXIONXL2.hl:2374）全 k 形：s2
+`TAUSTAR_EQ_SYM_0_fb` 的去 `¬(k ≤ 3)` 形。k ≤ 3 时 k = 3，tau3 槽经
+`tau3NegFb` + `tau3RevFb`（peropp 反序）+ dsv 槽 `dsvOppEqAllFb`
+（耳记号经 `isEarOppIffFb`）；k > 3 支原样委托 s2 主件。 -/
+theorem TAUSTAR_EQ_SYM_0_ALL_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hbb : BBsV39 s vv) :
+    taustarV39 (scsOppV39 s) (fun i => -(peropp vv k i)) = taustarV39 s vv := by
+  rcases Nat.lt_or_ge k 4 with hk4 | hk4
+  · have hk33 : k = 3 := by
+      have h3 := hiscs.2.1
+      omega
+    subst hk33
+    have hK3 : (scsOppV39 s).k ≤ 3 := by
+      show s.k ≤ 3
+      omega
+    have hK3' : s.k ≤ 3 := by omega
+    simp only [taustarV39]
+    rw [if_pos hK3, if_pos hK3']
+    show tau3 (-(peropp vv 3 0)) (-(peropp vv 3 1)) (-(peropp vv 3 2))
+      - dsvV39 (scsOppV39 s) (fun i => -(peropp vv 3 i))
+      = tau3 (vv 0) (vv 1) (vv 2) - dsvV39 s vv
+    have hp0 : peropp vv 3 0 = vv 2 := by
+      show vv (3 - (0 % 3 + 1)) = vv 2
+      rw [Nat.mod_eq_of_lt (by omega : 0 < 3)]
+    have hp1 : peropp vv 3 1 = vv 1 := by
+      show vv (3 - (1 % 3 + 1)) = vv 1
+      rw [Nat.mod_eq_of_lt (by omega : 1 < 3)]
+    have hp2 : peropp vv 3 2 = vv 0 := by
+      show vv (3 - (2 % 3 + 1)) = vv 0
+      rw [Nat.mod_eq_of_lt (by omega : 2 < 3)]
+    have htau : tau3 (-(peropp vv 3 0)) (-(peropp vv 3 1)) (-(peropp vv 3 2))
+        = tau3 (vv 0) (vv 1) (vv 2) := by
+      rw [hp0, hp1, hp2, tau3NegFb, tau3RevFb]
+    rw [htau, dsvOppEqAllFb s vv 3 hk hiscs hbb (isEarOppIffFb s hiscs)]
+  · exact TAUSTAR_EQ_SYM_0_fb s vv k hk hiscs (by omega) hbb
+
+/-- HOL `BBPRIME_EQ_OPP_SYM_0`（YXIONXL2.hl:3154）全 k 形：s2
+`BBPRIME_EQ_OPP_SYM_0_fb` 的去 `¬(k ≤ 3)` 形。BBs 槽 = 储备件
+`peroppInBbAllFb`；min/tustar<0 槽 = `TAUSTAR_EQ_SYM_0_ALL_fb` 于 s 与
+`scsOppV39 s` 双侧 + `SCS_OPP_REFL_fb` 对合归位；k > 3 支原样委托 s2 主件。 -/
+theorem BBPRIME_EQ_OPP_SYM_0_ALL_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hbp : BBprimeV39 s vv) :
+    BBprimeV39 (scsOppV39 s) (fun i => -(peropp vv k i)) := by
+  rcases Nat.lt_or_ge k 4 with hk4 | hk4
+  · have hk33 : k = 3 := by
+      have h3 := hiscs.2.1
+      omega
+    subst hk33
+    have hiscsO : isScsV39 (scsOppV39 s) := isScsOppFb s hiscs
+    have hK : (scsOppV39 s).k = 3 := by
+      show s.k = 3
+      exact hk
+    have hbbO : BBsV39 (scsOppV39 s) (fun i => -(peropp vv 3 i)) :=
+      peroppInBbAllFb s vv 3 hk hiscs hbp.1
+    simp only [BBprimeV39, Set.mem_setOf_eq]
+    refine ⟨hbbO, ?_, ?_⟩
+    · intro ww hww
+      have hBBs : BBsV39 s (fun i => -(peropp ww 3 i)) := by
+        have h := peroppInBbAllFb (scsOppV39 s) ww 3 hK hiscsO hww
+        rwa [SCS_OPP_REFL_fb s hiscs] at h
+      have htw : taustarV39 (scsOppV39 s) ww
+          = taustarV39 s (fun i => -(peropp ww 3 i)) := by
+        have h := TAUSTAR_EQ_SYM_0_ALL_fb (scsOppV39 s) ww 3 hK hiscsO hww
+        rw [SCS_OPP_REFL_fb s hiscs] at h
+        exact h.symm
+      rw [htw, TAUSTAR_EQ_SYM_0_ALL_fb s vv 3 hk hiscs hbp.1]
+      exact hbp.2.1 _ hBBs
+    · rw [TAUSTAR_EQ_SYM_0_ALL_fb s vv 3 hk hiscs hbp.1]
+      exact hbp.2.2
+  · exact BBPRIME_EQ_OPP_SYM_0_fb s vv k hk hiscs (by omega) hbp
+
 end Kepler.Text
