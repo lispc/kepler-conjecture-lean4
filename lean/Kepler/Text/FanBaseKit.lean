@@ -19,6 +19,15 @@ HOL 锚与 LA13 `_p13` 孪生（逐槽对照见 PLAN.md）：
 - `REMOVE_NEG_AZIM1_SYM_0` HOL :1961；LA13 :1533
 - `AZIM_NEG`               HOL :2014；LA13 :1540
 
+F1 增补（fanbase-f1-w1，FAN-free 机械五件，同世界 ScsV39 + LA3 `_p3` def）：
+- `IVS_AZIM_CYCLE_SYM_0`   HOL :749；P13 孪生 LA13-f0b-draft :2169（LHS 缺负像集，按 HOL 落槽）
+- `SYM_AZIM_CYCLE_SYM_0`   HOL :1104；P13 孪生 :2237（3 参 azim 不合型，按 HOL 落槽 azimCycle 形）
+- `ff_FUN_COMMUTATIVE_SYM_0` HOL :787；P13 孪生 :2181
+- `ff_POWER_COMMUTATIVE_SYM_0` HOL :823；P13 孪生 :2195
+- `FF_OF_HYP_ITER_VV`      HOL :1417；P13 孪生 :2320
+根输入 = `EE_EXPAND_BB_VV`（证体内核化为 `eeExpandCoreFb`，负向系统同喂）；
+二元 azimCycle/ivsAzimCycle 显式值 = 私有微件（epsilon 唯一性，零 azim 计算）。
+
 证法说明（陈述逐槽同 `_p13` 孪生，证体比 HOL 短，零新数学）：
 - EE_EXPAND_BB_VV：HOL 走 local_fan σ-轨道（LOFA_IMP_EE_TWO_ELMS_INS_ND +
   CARD_V_EQ_SCS_K1 + VV_SUC_EQ_RHO_NODE_PRIME + ITER_CARD_MINUS1_EQ_IVS_RN1）。
@@ -34,6 +43,7 @@ HOL 锚与 LA13 `_p13` 孪生（逐槽对照见 PLAN.md）：
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto3
 import Kepler.Geom.AzimLemmas
 import Mathlib
 
@@ -575,21 +585,18 @@ private theorem vvSuccNeFb {s : ScsV39} {vv : ℕ → V3} {k : ℕ} (hk : s.k = 
   rw [hEq, dist_self] at hd2
   linarith
 
-/-- HOL `EE_EXPAND_BB_VV`（YXIONXL2.hl:714-748）；LA13 孪生
-`EE_EXPAND_BB_VV_p13`（LocalAuto13.lean:1555，`ScsV39P13` 型）。本件为
-LA1 `ScsV39` 型 —— 家族总根，HOL 内被 IVS/SYM_AZIM/FF_ITER/CONVEX/TAUSTAR
-五处直接引用。证体走纯组合路线（周期性 + 模 k 单射 + 无自环），不经 HOL 的
-local_fan σ-轨道；hV/hFF 与 fan 合取按孪生保留、证体不需。 -/
-theorem EE_EXPAND_BB_VV_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
-    (E : Set (Set V3)) (FF : Set (V3 × V3)) (i : ℕ)
-    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+/-- F0-a `EE_EXPAND_BB_VV_fb` 的内核化证体（fanbase-f1-w1 抽取）：只吃
+周期性 + isScsV39 的 `a`-下界 + BBsV39 的 dist 界，不含 fan 合取——使 F1 的
+负向系统（`vv := fun i => -(vv i)`）可以绕开 `BBsV39` 第 4 合取支的
+`ConvexLocalFan`（LA1:411）直接复用同一展开。 -/
+private theorem eeExpandCoreFb {s : ScsV39} {vv : ℕ → V3} {k : ℕ} {E : Set (Set V3)}
+    (hk : s.k = k)
     (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
-    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
-    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    (hper : Periodic vv k)
+    (hge : ∀ i j, i < s.k ∧ j < s.k ∧ i ≠ j → 2 ≤ s.a i j)
+    (hdist : ∀ i j, s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j)
+    (hk3 : ¬(k ≤ 3)) (i : ℕ) :
     ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3) := by
-  obtain ⟨-, hper0, hdist, -⟩ := hbb
-  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hge, -, -, -, -, -⟩ := hiscs
-  have hper : Periodic vv k := by rw [← hk]; exact hper0
   have hmod : ∀ n, vv (n % k) = vv n := fun n => periodicModFb hper n
   have hk4 : 4 ≤ k := by omega
   have hk2 : 2 ≤ k := by omega
@@ -663,5 +670,483 @@ theorem EE_EXPAND_BB_VV_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
       rw [hstep] at hmem
       rw [← hper i, pairSetCommFb]
       exact hmem
+
+/-! ## F1（fanbase-f1-w1）：FAN-free 机械五件 + 二元 azimCycle 微件
+
+HOL 锚（YXIONXL2.hl）：`IVS_AZIM_CYCLE_SYM_0` :749、`ff_FUN_COMMUTATIVE_SYM_0`
+:787、`ff_POWER_COMMUTATIVE_SYM_0` :823、`SYM_AZIM_CYCLE_SYM_0` :1104、
+`FF_OF_HYP_ITER_VV` :1417。P13 孪生 = /tmp/LA13_f0b_aff_azn.lean
+:2169/:2237/:2320/:2181/:2195。路线：EE_EXPAND 二元邻域 + azimCycle/ivs
+二元显式值（epsilon 唯一性，fprime `azimCycle2_p35` 同内容）+ dart 资格
+取负桥。 -/
+
+/-- fprime-bridge `epsFixed_p35`（LA35_stack12.lean:976，private）孪生：
+epsilon 的唯一见证固定。 -/
+private theorem epsFixedFb {α : Sort*} [Nonempty α] {pr : α → Prop} {a : α}
+    (hpa : pr a) (huniq : ∀ y, pr y → y = a) : Classical.epsilon pr = a := by
+  by_contra hne
+  exact hne (huniq _ (Classical.epsilon_spec ⟨a, hpa⟩))
+
+/-- dist 在两端同时取负下不变。 -/
+private theorem distNegNegFb (a b : V3) : dist (-a) (-b) = dist a b := by
+  have h : ((-a) - (-b) : V3) = -(a - b) := by abel
+  rw [dist_eq_norm, h, norm_neg, ← dist_eq_norm]
+
+/-- `c ∈ (0, k)` 时 `a` 与 `a + c` 模 `k` 不同余。 -/
+private theorem modNeAddltFb {k a c : ℕ} (hk0 : 0 < k) (hck : c < k) (hc0 : 0 < c) :
+    a % k ≠ (a + c) % k := by
+  intro h
+  have hd : k ∣ a + c - a := Nat.modEq_iff_dvd' (by omega) |>.mp h
+  rw [Nat.add_sub_cancel_left] at hd
+  have hd2 : c % k = 0 := Nat.dvd_iff_mod_eq_zero.mp hd
+  rw [Nat.mod_eq_of_lt hck] at hd2
+  omega
+
+/-- 二元 azimCycle（fprime-bridge `azimCycle2_p35`（LA35_stack12.lean:2314，
+private）同内容）：邻域集 `{p, q}`（`p ≠ q`）上从 `p` 出发的 cycle 后继 =
+「另」元素 `q`；纯 epsilon 唯一性，零 azim 计算。 -/
+private theorem azimCycleTwoFb {p q v : V3} (hne : p ≠ q) :
+    azimCycle_p3 ({p, q} : Set V3) 0 v p = q := by
+  have hsub : ¬(({p, q} : Set V3) ⊆ ({p} : Set V3)) := by
+    intro hc
+    exact hne (Set.mem_singleton_iff.mp
+      (hc (Set.mem_insert_iff.mpr (Or.inr rfl)))).symm
+  unfold azimCycle_p3
+  rw [if_neg hsub]
+  refine epsFixedFb ⟨Ne.symm hne, Set.mem_insert_iff.mpr (Or.inr rfl), ?_⟩ ?_
+  · intro r hr hrp
+    rcases Set.mem_insert_iff.mp hr with hrr | hrr
+    · exact absurd hrr hrp
+    · rw [hrr]
+      exact Or.inr ⟨rfl, le_refl _⟩
+  · intro y hy
+    rcases Set.mem_insert_iff.mp hy.2.1 with hy2 | hy2
+    · exact absurd hy2 hy.1
+    · exact hy2
+
+private theorem azimCycleTwoSwapFb {p q v : V3} (hne : p ≠ q) :
+    azimCycle_p3 ({p, q} : Set V3) 0 v q = p := by
+  rw [pairSetCommFb]
+  exact azimCycleTwoFb hne.symm
+
+/-- 二元 ivs_azim_cycle：`{p, q}`（`p ≠ q`）上从 `q` 出发的一步 = `p`。 -/
+private theorem ivsTwoNeFb {p q v : V3} (hne : p ≠ q) :
+    ivsAzimCycle_p3 ({p, q} : Set V3) 0 v q = p := by
+  have hne0 : ¬(({p, q} : Set V3) = ∅) := by
+    intro hc
+    have hp : p ∈ ({p, q} : Set V3) := Set.mem_insert_iff.mpr (Or.inl rfl)
+    rw [hc] at hp
+    simp at hp
+  unfold ivsAzimCycle_p3
+  rw [if_neg hne0]
+  refine epsFixedFb ⟨Set.mem_insert_iff.mpr (Or.inl rfl), azimCycleTwoFb hne⟩ ?_
+  intro y hy
+  rcases Set.mem_insert_iff.mp hy.1 with hy1 | hy1
+  · exact hy1
+  · have hy1' : y = q := Set.mem_singleton_iff.mp hy1
+    rw [hy1'] at hy
+    rw [azimCycleTwoSwapFb hne] at hy
+    exact absurd hy.2 hne
+
+private theorem ivsTwoSwapFb {p q v : V3} (hne : p ≠ q) :
+    ivsAzimCycle_p3 ({p, q} : Set V3) 0 v p = q := by
+  rw [pairSetCommFb]
+  exact ivsTwoNeFb hne.symm
+
+/-- HOL `EE_EXPAND_BB_VV`（YXIONXL2.hl:714-748）；LA13 孪生
+`EE_EXPAND_BB_VV_p13`（LocalAuto13.lean:1555，`ScsV39P13` 型）。f0a 七件之一，
+签名逐字不动；本车道把其证体抽取为 `eeExpandCoreFb` 供负向系统复用。 -/
+theorem EE_EXPAND_BB_VV_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3)) (i : ℕ)
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3) := by
+  obtain ⟨-, hper0, hdist, -⟩ := hbb
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hge, -, -, -, -, -⟩ := hiscs
+  exact eeExpandCoreFb hk hE (by rw [← hk]; exact hper0) hge hdist hk3 i
+
+/-- 正向：循环序对是 dart（ordPairs 成员，与 V 无关）。 -/
+private theorem ordMemDartsFb {vv : ℕ → V3} {V : Set V3} {E : Set (Set V3)} {u w : V3}
+    (h : ({u, w} : Set V3) ∈ E) : (u, w) ∈ dartsOfHyp_p3 E V := by
+  simp only [dartsOfHyp_p3, ordPairs_p3, selfPairs_p3, Set.mem_union, Set.mem_setOf_eq]
+  exact Or.inl h
+
+/-- `z ∈ V` 的 vv-原像（正向族）。 -/
+private theorem vvmemFb {vv : ℕ → V3} {V : Set V3} (hV : Set.image vv Set.univ = V) {z : V3}
+    (hz : z ∈ V) : ∃ m, z = vv m := by
+  rw [← hV] at hz
+  obtain ⟨m, -, hm⟩ := hz
+  exact ⟨m, hm.symm⟩
+
+/-- 第 `m` 条边属于 `E`（正向族）。 -/
+private theorem edgeMemFb {vv : ℕ → V3} {E : Set (Set V3)}
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E) (m : ℕ) :
+    ({vv m, vv (m + 1)} : Set V3) ∈ E := by
+  rw [← hE]
+  exact ⟨m, Set.mem_univ _, rfl⟩
+
+/-- `z ∈ V'` 的负向 vv-原像（负向族）。 -/
+private theorem negVmemFb (vv : ℕ → V3) {z : V3}
+    (hz : z ∈ Set.image (fun i : ℕ => -(vv i)) Set.univ) : ∃ m, z = -(vv m) := by
+  rw [Set.mem_image] at hz
+  obtain ⟨m, -, hm⟩ := hz
+  exact ⟨m, hm.symm⟩
+
+/-- 第 `m` 条负向边属于 `NEGE`。 -/
+private theorem negEdgeMemFb (vv : ℕ → V3) (m : ℕ) :
+    ({-(vv m), -(vv (m + 1))} : Set V3) ∈
+      Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ :=
+  ⟨m, Set.mem_univ _, rfl⟩
+
+/-- dart 拆解（世界无关形）：无自环 dart 的无序对必在 `E` 中（selfPairs 一侧
+因邻域非空被排除）。 -/
+private theorem dartInvFb {vv : ℕ → V3} {V : Set V3} {E : Set (Set V3)}
+    (hVmem : ∀ z : V3, z ∈ V → ∃ m, z = vv m)
+    (hEw : ∀ m, ({vv m, vv (m + 1)} : Set V3) ∈ E)
+    (hne : ∀ j, vv j ≠ vv (j + 1)) {x : V3 × V3} (hx : x ∈ dartsOfHyp_p3 E V) :
+    ({x.1, x.2} : Set V3) ∈ E := by
+  simp only [dartsOfHyp_p3, ordPairs_p3, selfPairs_p3, Set.mem_union, Set.mem_setOf_eq] at hx
+  rcases hx with h | hs
+  · exact h
+  · exfalso
+    obtain ⟨-, hVin, hEEempty⟩ := hs
+    obtain ⟨m, hm⟩ := hVmem x.1 hVin
+    rw [hm] at hEEempty
+    have hineE : vv (m + 1) ∈ EE_p3 (vv m) E := by
+      show ({vv m, vv (m + 1)} : Set V3) ∈ E
+      exact hEw m
+    rw [hEEempty] at hineE
+    exact absurd hineE (by simp)
+
+/-- 无序对朝向：`{x.1, x.2} = {p, q}`（`p ≠ q`）给出两个朝向之一。 -/
+private theorem dartOrientFb {p q : V3} {x : V3 × V3} (hne : p ≠ q)
+    (hjeq : ({x.1, x.2} : Set V3) = ({p, q} : Set V3)) :
+    (x.1 = p ∧ x.2 = q) ∨ (x.1 = q ∧ x.2 = p) := by
+  have h1 : x.1 = p ∨ x.1 = q := by
+    have hx1 : x.1 ∈ ({x.1, x.2} : Set V3) := Set.mem_insert_iff.mpr (Or.inl rfl)
+    rw [hjeq] at hx1
+    simpa using hx1
+  have h2 : x.2 = p ∨ x.2 = q := by
+    have hx2 : x.2 ∈ ({x.1, x.2} : Set V3) := Set.mem_insert_iff.mpr (Or.inr rfl)
+    rw [hjeq] at hx2
+    simpa using hx2
+  rcases h1 with h1 | h1 <;> rcases h2 with h2 | h2
+  · exfalso
+    have hq : q ∈ ({x.1, x.2} : Set V3) := by rw [hjeq]; simp
+    rw [h1, h2] at hq
+    simp at hq
+    exact hne hq.symm
+  · exact Or.inl ⟨h1, h2⟩
+  · exact Or.inr ⟨h1, h2⟩
+  · exfalso
+    have hp : p ∈ ({x.1, x.2} : Set V3) := by rw [hjeq]; simp
+    rw [h1, h2] at hp
+    simp at hp
+    exact hne hp
+
+/-- 边集取负桥：`{u, w} ∈ E ↔ {-u, -w} ∈ NEGE`（双向都走 image 成员展开 +
+`neg_neg`）。 -/
+private theorem memNegEFb {vv : ℕ → V3} {E : Set (Set V3)}
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    {u w : V3} :
+    ({u, w} : Set V3) ∈ E ↔
+      ({-u, -w} : Set V3) ∈
+        Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ := by
+  constructor
+  · intro h
+    rw [← hE] at h
+    obtain ⟨j, -, hj⟩ := h
+    refine ⟨j, Set.mem_univ _, ?_⟩
+    have himg : Set.image (fun z : V3 => -z) ({u, w} : Set V3) = ({-u, -w} : Set V3) := by
+      simp
+    rw [← himg, ← hj]
+    simp
+  · intro h
+    rw [← hE]
+    obtain ⟨j, -, hj⟩ := h
+    refine ⟨j, Set.mem_univ _, ?_⟩
+    have hj' : ({-vv j, -vv (j + 1)} : Set V3) = {-u, -w} := hj
+    have h2 : Set.image (fun z : V3 => -z) ({-vv j, -vv (j + 1)} : Set V3)
+        = Set.image (fun z : V3 => -z) ({-u, -w} : Set V3) := by
+      rw [hj']
+    simp at h2
+    exact h2
+
+/-- HOL `FUN_COMMUTATIVE`（YXIONXL2.hl:833-843）孪生：逐点交换的 n 步迭代。 -/
+private theorem iterCommFb {α : Type*} {f g h : α → α} (hcomm : ∀ x, f (g x) = g (h x)) :
+    ∀ n x, f^[n] (g x) = g (h^[n] x) := by
+  intro n
+  induction n with
+  | zero => intro x; simp
+  | succ n ih =>
+      intro x
+      rw [Function.iterate_succ_apply, hcomm, ih (h x), Function.iterate_succ_apply]
+
+/-- `ff_of_hyp` 在 dart 上的显式值。 -/
+private theorem ffMemEqFb {x : V3} {V : Set V3} {E : Set (Set V3)} {d : V3 × V3}
+    (hmem : d ∈ dartsOfHyp_p3 E V) :
+    ffOfHyp_p3 x V E d = (d.2, ivsAzimCycle_p3 (EE_p3 d.2 E) x d.2 d.1) := by
+  unfold ffOfHyp_p3
+  rw [if_pos hmem]
+
+/-- `ff_of_hyp` 在非 dart 上恒等。 -/
+private theorem ffNotMemEqFb {x : V3} {V : Set V3} {E : Set (Set V3)} {d : V3 × V3}
+    (hmem : d ∉ dartsOfHyp_p3 E V) : ffOfHyp_p3 x V E d = d := by
+  unfold ffOfHyp_p3
+  rw [if_neg hmem]
+
+/-- F1 块共享语境：从 scs 七槽假设块读出 hge/hdist/周期性/邻域展开（正向 +
+负向；负向走 `eeExpandCoreFb`，绕开 fan 合取）+ 三条模 k 不等。 -/
+private theorem fanbaseCtxFb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    (∀ i j, i < s.k ∧ j < s.k ∧ i ≠ j → 2 ≤ s.a i j) ∧
+      (∀ i j, s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j) ∧
+      Periodic vv k ∧
+      (∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3)) ∧
+      (∀ i, ee (-(vv i))
+            (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          = ({-(vv (i + 1)), -(vv (i + k - 1))} : Set V3)) ∧
+      (∀ j, vv j ≠ vv (j + 1)) ∧
+      (∀ j, vv (j + 1) ≠ vv (j + k - 1)) ∧
+      (∀ j, vv (j + 2) ≠ vv (j + k)) := by
+  obtain ⟨-, hper0, hdist, -⟩ := hbb
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hge, -, -, -, -, -⟩ := hiscs
+  have hper : Periodic vv k := by rw [← hk]; exact hper0
+  have hkpos : 0 < k := by omega
+  have hk2 : 2 ≤ k := by omega
+  have hperN : Periodic (fun i : ℕ => -(vv i)) k := fun t => by simpa using hper t
+  have hdistN : ∀ i j, s.a i j ≤ dist (-(vv i)) (-(vv j)) ∧ dist (-(vv i)) (-(vv j)) ≤ s.b i j := by
+    intro i j
+    constructor
+    · rw [distNegNegFb]; exact (hdist i j).1
+    · rw [distNegNegFb]; exact (hdist i j).2
+  refine ⟨hge, hdist, hper, ?_, ?_, ?_, ?_, ?_⟩
+  · exact fun i => eeExpandCoreFb hk hE hper hge hdist hk3 i
+  · exact fun i => eeExpandCoreFb hk rfl hperN hge hdistN hk3 i
+  · exact fun j => vvSuccNeFb hk hk2 hge hdist hper j
+  · intro j hcon
+    have hm : (j + 1) % k = (j + k - 1) % k := vvInjModFb hk hkpos hge hdist hper hcon
+    rw [show (j + k - 1 : ℕ) = (j + 1) + (k - 2) from by omega] at hm
+    exact modNeAddltFb hkpos (by omega) (by omega) hm
+  · intro j hcon
+    have hm : (j + 2) % k = (j + k) % k := vvInjModFb hk hkpos hge hdist hper hcon
+    rw [show (j + k : ℕ) = (j + 2) + (k - 2) from by omega] at hm
+    exact modNeAddltFb hkpos (by omega) (by omega) hm
+
+/-- backward dart 上 ff 的一步：`(vv (m+1), vv m) ↦ (vv m, vv (m + (k-1)))`。 -/
+private theorem ffStepFb {s : ScsV39} {vv : ℕ → V3} {k : ℕ} {V : Set V3} {E : Set (Set V3)}
+    (hk : s.k = k) (hk4 : 4 ≤ k)
+    (hge : ∀ i j, i < s.k ∧ j < s.k ∧ i ≠ j → 2 ≤ s.a i j)
+    (hdist : ∀ i j, s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hEE : ∀ i, ee (vv i) E = ({vv (i + 1), vv (i + k - 1)} : Set V3))
+    (hper : Periodic vv k) (m : ℕ) :
+    ffOfHyp_p3 0 V E (vv (m + 1), vv m) = (vv m, vv (m + (k - 1))) := by
+  have hkpos : 0 < k := by omega
+  have hneSuccPred : vv (m + 1) ≠ vv (m + k - 1) := by
+    intro hcon
+    have hm : (m + 1) % k = (m + k - 1) % k := vvInjModFb hk hkpos hge hdist hper hcon
+    rw [show (m + k - 1 : ℕ) = (m + 1) + (k - 2) from by omega] at hm
+    exact modNeAddltFb hkpos (by omega) (by omega) hm
+  have hmem : ((vv (m + 1), vv m) : V3 × V3) ∈ dartsOfHyp_p3 E V :=
+    ordMemDartsFb (vv := vv) (by rw [← hE]; exact ⟨m, Set.mem_univ _, by rw [pairSetCommFb]⟩)
+  rw [ffMemEqFb hmem, show EE_p3 ((vv (m + 1), vv m)).2 E = ee (vv m) E from rfl, hEE m,
+    ivsTwoSwapFb (p := vv (m + 1)) (q := vv (m + k - 1)) hneSuccPred,
+    show (m + k - 1 : ℕ) = m + (k - 1) from by omega]
+
+/-- HOL `IVS_AZIM_CYCLE_SYM_0`（YXIONXL2.hl:749-786）；LA13 孪生
+`IVS_AZIM_CYCLE_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2169；其 LHS 首参误写
+`eeP13 (-(x.2)) E` 丢了负像边集——本件按 HOL 正本落槽为
+`EE (--SND x) (IMAGE …{--vv i,--vv (SUC i)}…)`）。 -/
+theorem IVS_AZIM_CYCLE_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3)) (x : V3 × V3)
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv)
+    (hx : x ∈ dartsOfHyp_p3 E V) :
+    ivsAzimCycle_p3
+        (ee (-(x.2))
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))
+        0 (-(x.2)) (-(x.1))
+      = -(ivsAzimCycle_p3 (ee (x.2) E) 0 (x.2) (x.1)) := by
+  obtain ⟨hge, hdist, hper, hEE, hEEN, hne, hneE, hneD⟩ :=
+    fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  have hkpos : 0 < k := by omega
+  have hord := dartInvFb (fun z hz => vvmemFb hV hz) (edgeMemFb hE) hne hx
+  rw [← hE] at hord
+  obtain ⟨j, -, hjeq⟩ := hord
+  rcases dartOrientFb (hne j) hjeq.symm with ⟨hj1, hj2⟩ | ⟨hj1, hj2⟩
+  · rw [hj2, hj1]
+    have hsetR : ee (vv (j + 1)) E = ({vv (j + 2), vv (j + k)} : Set V3) := by
+      rw [hEE (j + 1)]
+      have e1 : (j + 1 + 1 : ℕ) = j + 2 := by omega
+      have e2 : (j + 1 + k - 1 : ℕ) = j + k := by omega
+      rw [e1, e2]
+    have hsetL : ee (-(vv (j + 1)))
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        = ({-(vv (j + 2)), -(vv (j + k))} : Set V3) := by
+      rw [hEEN (j + 1)]
+      have e1 : (j + 1 + 1 : ℕ) = j + 2 := by omega
+      have e2 : (j + 1 + k - 1 : ℕ) = j + k := by omega
+      rw [e1, e2]
+    rw [hsetL, hsetR, ← hper j,
+      ivsTwoNeFb (p := -(vv (j + 2))) (q := -(vv (j + k))) (v := -(vv (j + 1)))
+        (fun hc => hneD j (by simpa using hc)),
+      ivsTwoNeFb (p := vv (j + 2)) (q := vv (j + k)) (v := vv (j + 1)) (hneD j)]
+  · rw [hj2, hj1, hEEN j, hEE j,
+      ivsTwoSwapFb (p := -(vv (j + 1))) (q := -(vv (j + k - 1))) (v := -(vv j))
+        (fun hc => hneE j (by simpa using hc)),
+      ivsTwoSwapFb (p := vv (j + 1)) (q := vv (j + k - 1)) (v := vv j) (hneE j)]
+
+/-- HOL `SYM_AZIM_CYCLE_SYM_0`（YXIONXL2.hl:1104-1142）；LA13 孪生
+`SYM_AZIM_CYCLE_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2237；其结论槽误把
+`azim_cycle` 摊平成 3 参 `azim`（不完全应用，不合型）——本件按 HOL 正本落槽：
+`azim_cycle (EE (--FST x) NEGE) 0 (--FST x) (--SND x)
+ = -- azim_cycle (EE (FST x) E) 0 (FST x) (SND x)`）。 -/
+theorem SYM_AZIM_CYCLE_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3)) (x : V3 × V3)
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv)
+    (hx : x ∈ dartsOfHyp_p3 E V) :
+    azimCycle_p3
+        (ee (-(x.1))
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))
+        0 (-(x.1)) (-(x.2))
+      = -(azimCycle_p3 (ee (x.1) E) 0 (x.1) (x.2)) := by
+  obtain ⟨hge, hdist, hper, hEE, hEEN, hne, hneE, hneD⟩ :=
+    fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  have hkpos : 0 < k := by omega
+  have hord := dartInvFb (fun z hz => vvmemFb hV hz) (edgeMemFb hE) hne hx
+  rw [← hE] at hord
+  obtain ⟨j, -, hjeq⟩ := hord
+  rcases dartOrientFb (hne j) hjeq.symm with ⟨hj1, hj2⟩ | ⟨hj1, hj2⟩
+  · rw [hj1, hj2, hEEN j, hEE j,
+      azimCycleTwoFb (p := -(vv (j + 1))) (q := -(vv (j + k - 1))) (v := -(vv j))
+        (fun hc => hneE j (by simpa using hc)),
+      azimCycleTwoFb (p := vv (j + 1)) (q := vv (j + k - 1)) (v := vv j) (hneE j)]
+  · rw [hj1, hj2]
+    have hsetR : ee (vv (j + 1)) E = ({vv (j + 2), vv (j + k)} : Set V3) := by
+      rw [hEE (j + 1)]
+      have e1 : (j + 1 + 1 : ℕ) = j + 2 := by omega
+      have e2 : (j + 1 + k - 1 : ℕ) = j + k := by omega
+      rw [e1, e2]
+    have hsetL : ee (-(vv (j + 1)))
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        = ({-(vv (j + 2)), -(vv (j + k))} : Set V3) := by
+      rw [hEEN (j + 1)]
+      have e1 : (j + 1 + 1 : ℕ) = j + 2 := by omega
+      have e2 : (j + 1 + k - 1 : ℕ) = j + k := by omega
+      rw [e1, e2]
+    rw [hsetL, hsetR, ← hper j,
+      azimCycleTwoSwapFb (p := -(vv (j + 2))) (q := -(vv (j + k))) (v := -(vv (j + 1)))
+        (fun hc => hneD j (by simpa using hc)),
+      azimCycleTwoSwapFb (p := vv (j + 2)) (q := vv (j + k)) (v := vv (j + 1)) (hneD j)]
+
+/-- HOL `ff_FUN_COMMUTATIVE_SYM_0`（YXIONXL2.hl:787-822）；LA13 孪生
+`ff_FUN_COMMUTATIVE_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2181）。证体 = HOL
+同款：dart 资格取负桥 + `IVS_AZIM_CYCLE_SYM_0_fb` 逐点代入。 -/
+theorem ff_FUN_COMMUTATIVE_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ x : V3 × V3,
+      ffOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          ((fun p : V3 × V3 => (-p.1, -p.2)) x)
+        = (fun p : V3 × V3 => (-p.1, -p.2)) (ffOfHyp_p3 0 V E x) := by
+  obtain ⟨hge, hdist, hper, hEE, -, hne, -, -⟩ :=
+    fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  have hneN : ∀ j, -(vv j) ≠ -(vv (j + 1)) := fun j hc => hne j (by simpa using hc)
+  intro x
+  by_cases hx : x ∈ dartsOfHyp_p3 E V
+  · have hneg : ((-x.1, -x.2) : V3 × V3) ∈
+        dartsOfHyp_p3
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          (Set.image (fun i : ℕ => -(vv i)) Set.univ) := by
+      have hord := dartInvFb (fun z hz => vvmemFb hV hz) (edgeMemFb hE) hne hx
+      exact ordMemDartsFb (vv := fun i : ℕ => -(vv i)) ((memNegEFb hE).mp hord)
+    rw [ffMemEqFb hneg, ffMemEqFb hx]
+    show (-(x.2),
+            ivsAzimCycle_p3
+              (EE_p3 (-(x.2))
+                (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))
+              0 (-(x.2)) (-(x.1)))
+        = (-(x.2),
+            -(ivsAzimCycle_p3 (EE_p3 (x.2) E) 0 (x.2) (x.1)))
+    rw [show EE_p3 (-(x.2))
+            (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          = ee (-(x.2))
+              (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ) from rfl,
+      show EE_p3 (x.2) E = ee (x.2) E from rfl,
+      IVS_AZIM_CYCLE_SYM_0_fb s vv k V E FF x hk hV hE hFF hiscs hk3 hbb hx]
+  · have hnegout : ((-x.1, -x.2) : V3 × V3) ∉
+        dartsOfHyp_p3
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          (Set.image (fun i : ℕ => -(vv i)) Set.univ) := by
+      intro hmem
+      refine hx ?_
+      have hord := dartInvFb (fun z hz => negVmemFb vv hz) (negEdgeMemFb vv) hneN hmem
+      exact ordMemDartsFb (vv := fun i : ℕ => -(vv i)) ((memNegEFb hE).mpr hord)
+    rw [ffNotMemEqFb hnegout, ffNotMemEqFb hx]
+
+/-- HOL `ff_POWER_COMMUTATIVE_SYM_0`（YXIONXL2.hl:823-845）；LA13 孪生
+`ff_POWER_COMMUTATIVE_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2195）。证体 =
+HOL 同款 `FUN_COMMUTATIVE` 迭代转移（`iterCommFb`）。 -/
+theorem ff_POWER_COMMUTATIVE_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ (n : ℕ) (x : V3 × V3),
+      (ffOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+            (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))^[n]
+          ((fun p : V3 × V3 => (-p.1, -p.2)) x)
+        = (fun p : V3 × V3 => (-p.1, -p.2))
+            ((ffOfHyp_p3 0 V E)^[n] x) := by
+  intro n x
+  exact iterCommFb (ff_FUN_COMMUTATIVE_SYM_0_fb s vv k V E FF hk hV hE hFF hiscs hk3 hbb) n x
+
+/-- HOL `FF_OF_HYP_ITER_VV`（YXIONXL2.hl:1417-1452）；LA13 孪生
+`FF_OF_HYP_ITER_VV_p13`（/tmp/LA13_f0b_aff_azn.lean:2320）。证体 = `ffStepFb`
+（backward dart 一步闭式）+ 归纳 + 周期性，替代 HOL 的
+ITER_CARD_MINUS1_EQ_IVS_RN1 σ-轨道四件套。 -/
+theorem FF_OF_HYP_ITER_VV_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3)) (i : ℕ)
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ n : ℕ,
+      (ffOfHyp_p3 0 V E)^[n] (vv (i + 1), vv i)
+        = (vv (n * (k - 1) + i + 1), vv (n * (k - 1) + i)) := by
+  obtain ⟨hge, hdist, hper, hEE, -, -, -, -⟩ :=
+    fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  have hk4 : 4 ≤ k := by omega
+  intro n
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [Function.iterate_succ_apply', ih,
+        ffStepFb hk hk4 hge hdist hE hEE hper (n * (k - 1) + i)]
+      have h1 : n.succ * (k - 1) + i + 1 = n * (k - 1) + i + k := by
+        have hke : k - 1 + 1 = k := by omega
+        have hr : n * (k - 1) + (k - 1) + i + 1 = n * (k - 1) + i + ((k - 1) + 1) := by
+          ring
+        rw [Nat.succ_mul, hr, hke]
+      have h2 : n.succ * (k - 1) + i = n * (k - 1) + i + (k - 1) := by
+        rw [Nat.succ_mul]; ring
+      rw [h1, h2, hper]
 
 end Kepler.Text
