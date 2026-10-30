@@ -28,6 +28,21 @@ F1 增补（fanbase-f1-w1，FAN-free 机械五件，同世界 ScsV39 + LA3 `_p3`
 根输入 = `EE_EXPAND_BB_VV`（证体内核化为 `eeExpandCoreFb`，负向系统同喂）；
 二元 azimCycle/ivsAzimCycle 显式值 = 私有微件（epsilon 唯一性，零 azim 计算）。
 
+F2 增补（fanbase-f2-w1，hypermap 对称/记账七件，同世界 ScsV39 + LA3 `_p3` def）：
+- `FACE_SYM_0`             HOL :846-880；P13 孪生 LA13-f0b-draft :2220
+- `FACE_ALL_SYM_0`         HOL :1056-1090；P13 孪生 :2234
+- `NODE_MAP_SYM_0`         HOL :1143-1184；P13 孪生 :2260
+- `IMAGE_NODE_SYM_0`       HOL :1188-1229；P13 孪生 :2275
+- `EDGE_MAP_SYM_0`         HOL :1242-1281；P13 孪生 :2289
+- `EDGE_POWER_MAP_SYM_0`   HOL :1285-1300；P13 孪生 :2303
+- `NODE_POWER_MAP_SYM_0`   HOL :1303-1318；P13 孪生 :2317
+根输入 = F1 五件（dart 负像桥自 `ff_FUN_COMMUTATIVE_SYM_0_fb` 证体提为
+`dartNegMemFb`/`dartNegNotFb`）；face = canonical def `hypFaceFb`（ff-轨道集，
+`hypFaceP13` 的 ScsV39 世界孪生；LA3 无 face def）。FAN-free：HOL 七件的
+`FAN_SYM_0` 输入只经 ELMS_OF_HYPERMAP_HYP / DART_OF_HYP_VV（hypermap 型编码的
+face/dart 刻画）进入，本编码 face/dart 资格皆 defining，刻画步消失；F0-b 依赖
+裁定 = 跳过（不 import LocalAuto13），详见快照 PLAN.md。
+
 证法说明（陈述逐槽同 `_p13` 孪生，证体比 HOL 短，零新数学）：
 - EE_EXPAND_BB_VV：HOL 走 local_fan σ-轨道（LOFA_IMP_EE_TWO_ELMS_INS_ND +
   CARD_V_EQ_SCS_K1 + VV_SUC_EQ_RHO_NODE_PRIME + ITER_CARD_MINUS1_EQ_IVS_RN1）。
@@ -1149,4 +1164,254 @@ theorem FF_OF_HYP_ITER_VV_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V
         rw [Nat.succ_mul]; ring
       rw [h1, h2, hper]
 
+
+/-! ## F2（fanbase-f2-w1）：hypermap 对称/记账七件
+
+HOL 锚（YXIONXL2.hl）：`FACE_SYM_0` :846-880、`FACE_ALL_SYM_0` :1056-1090、
+`NODE_MAP_SYM_0` :1143-1184、`IMAGE_NODE_SYM_0` :1188-1229、`EDGE_MAP_SYM_0`
+:1242-1281、`EDGE_POWER_MAP_SYM_0` :1285-1300、`NODE_POWER_MAP_SYM_0`
+:1303-1318。P13 孪生 = /tmp/LA13_f0b_aff_azn.lean
+:2220/:2234/:2260/:2275/:2289/:2303/:2317（结论槽逐字对照 HOL 无转录缺陷；
+`hypFaceP13` 之外的三个 map 直接用 LA3 canonical def `nnOfHyp_p3`/`eeOfHyp_p3`
+/`ffOfHyp_p3`）。face 用本文件 canonical def `hypFaceFb`（LA13 草案 :151
+`hypFaceP13` 的 ScsV39 世界孪生）。
+
+证法（陈述逐槽同 HOL/孪生，证体零新数学，FAN-free）：HOL 七件的 `FAN_SYM_0`
+输入只经 `ELMS_OF_HYPERMAP_HYP` / `DART_OF_HYP_VV`（hypermap 型编码下的
+face/dart 刻画）进入；本编码 face = ff-轨道集（defining）、dart 资格 = if-
+判据（defining），刻画步消失，七件归约为 F1 机械：
+- FACE_SYM_0 / FACE_ALL_SYM_0 = `ff_POWER_COMMUTATIVE_SYM_0_fb` + 轨道集
+  extensionality（迭代次数 n 双向搬运）；
+- NODE_MAP / EDGE_MAP = dart 负像桥（`dartNegMemFb`/`dartNegNotFb`，F1
+  `ff_FUN_COMMUTATIVE_SYM_0_fb` 证体内同一构造提为私件）+ dart 点值 +
+  `SYM_AZIM_CYCLE_SYM_0_fb`（仅 nn 有 azim 内容）；EDGE_POWER / NODE_POWER =
+  `iterCommFb`（HOL 同款 FUN_COMMUTATIVE，EDGE/NODE_MAP 逐点版）；
+- IMAGE_NODE = NODE_MAP 逐点 funext + `Set.image_image`。
+故 F0-b 依赖裁定 = 跳过（不 import LocalAuto13、不重刻 `fanNegCoreP13`），
+详见快照 PLAN.md。 -/
+
+/-- HOL `face (hypermap (HYP (x,V,E))) d`：`ff_of_hyp` 的轨道集（Hypermap
+`orbit_map` 约定；LA13 草案 `hypFaceP13`（/tmp/LA13_f0b_aff_azn.lean:151）的
+ScsV39 世界孪生，组装自 LA3 canonical def `ffOfHyp_p3`）。 -/
+def hypFaceFb (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
+    Set (V3 × V3) := {y | ∃ n : ℕ, (ffOfHyp_p3 x V E)^[n] d = y}
+
+/-- `ee_of_hyp` 在 dart 上的显式值。 -/
+private theorem eeMemEqFb {x : V3} {V : Set V3} {E : Set (Set V3)} {d : V3 × V3}
+    (hmem : d ∈ dartsOfHyp_p3 E V) : eeOfHyp_p3 x V E d = (d.2, d.1) := by
+  unfold eeOfHyp_p3
+  rw [if_pos hmem]
+
+/-- `ee_of_hyp` 在非 dart 上恒等。 -/
+private theorem eeNotMemEqFb {x : V3} {V : Set V3} {E : Set (Set V3)} {d : V3 × V3}
+    (hmem : d ∉ dartsOfHyp_p3 E V) : eeOfHyp_p3 x V E d = d := by
+  unfold eeOfHyp_p3
+  rw [if_neg hmem]
+
+/-- `nn_of_hyp` 在 dart 上的显式值。 -/
+private theorem nnMemEqFb {x : V3} {V : Set V3} {E : Set (Set V3)} {d : V3 × V3}
+    (hmem : d ∈ dartsOfHyp_p3 E V) :
+    nnOfHyp_p3 x V E d = (d.1, azimCycle_p3 (EE_p3 d.1 E) x d.1 d.2) := by
+  unfold nnOfHyp_p3
+  rw [if_pos hmem]
+
+/-- `nn_of_hyp` 在非 dart 上恒等。 -/
+private theorem nnNotMemEqFb {x : V3} {V : Set V3} {E : Set (Set V3)} {d : V3 × V3}
+    (hmem : d ∉ dartsOfHyp_p3 E V) : nnOfHyp_p3 x V E d = d := by
+  unfold nnOfHyp_p3
+  rw [if_neg hmem]
+
+/-- dart 负像桥（正向）：`x` 是 `(V,E)`-dart ⇒ 负像是负向族 dart（F1
+`ff_FUN_COMMUTATIVE_SYM_0_fb` 证体内同一构造提为私件）。 -/
+private theorem dartNegMemFb {vv : ℕ → V3} {V : Set V3} {E : Set (Set V3)}
+    (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hne : ∀ j, vv j ≠ vv (j + 1)) {x : V3 × V3}
+    (hx : x ∈ dartsOfHyp_p3 E V) :
+    ((fun p : V3 × V3 => (-p.1, -p.2)) x) ∈
+      dartsOfHyp_p3
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        (Set.image (fun i : ℕ => -(vv i)) Set.univ) := by
+  have hord := dartInvFb (fun z hz => vvmemFb hV hz) (edgeMemFb hE) hne hx
+  exact ordMemDartsFb (vv := fun i : ℕ => -(vv i)) ((memNegEFb hE).mp hord)
+
+/-- dart 负像桥（反向）：`x` 非 `(V,E)`-dart ⇒ 负像非负向族 dart。 -/
+private theorem dartNegNotFb {vv : ℕ → V3} {V : Set V3} {E : Set (Set V3)}
+    (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hne : ∀ j, vv j ≠ vv (j + 1)) {x : V3 × V3}
+    (hx : x ∉ dartsOfHyp_p3 E V) :
+    ((fun p : V3 × V3 => (-p.1, -p.2)) x) ∉
+      dartsOfHyp_p3
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        (Set.image (fun i : ℕ => -(vv i)) Set.univ) := by
+  have hneN : ∀ j, -(vv j) ≠ -(vv (j + 1)) := fun j hc => hne j (by simpa using hc)
+  intro hmem
+  refine hx ?_
+  have hord := dartInvFb (fun z hz => negVmemFb vv hz) (negEdgeMemFb vv) hneN hmem
+  exact ordMemDartsFb (vv := fun i : ℕ => -(vv i)) ((memNegEFb hE).mpr hord)
+
+/-- HOL `FACE_SYM_0`（YXIONXL2.hl:846-880）；LA13 孪生 `FACE_SYM_0_p13`
+（/tmp/LA13_f0b_aff_azn.lean:2220）。证体 = `ff_POWER_COMMUTATIVE_SYM_0_fb`
++ 轨道集 extensionality（替代 HOL 的 ELMS_OF_HYPERMAP_HYP 刻画步）。 -/
+theorem FACE_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3)) (x : V3 × V3)
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    hypFaceFb 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        ((fun p : V3 × V3 => (-p.1, -p.2)) x)
+      = Set.image (fun p : V3 × V3 => (-p.1, -p.2)) (hypFaceFb 0 V E x) := by
+  have hpc := ff_POWER_COMMUTATIVE_SYM_0_fb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  unfold hypFaceFb
+  ext y
+  simp only [Set.mem_setOf_eq, Set.mem_image]
+  constructor
+  · rintro ⟨n, hn⟩
+    refine ⟨(ffOfHyp_p3 0 V E)^[n] x, ⟨n, rfl⟩, ?_⟩
+    exact (hpc n x).symm.trans hn
+  · rintro ⟨z, ⟨n, hz⟩, hy⟩
+    refine ⟨n, ?_⟩
+    rw [hpc n x, hz]
+    exact hy
+
+/-- HOL `FACE_ALL_SYM_0`（YXIONXL2.hl:1056-1090，族根）；LA13 孪生
+`FACE_ALL_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2234）。 -/
+theorem FACE_ALL_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ x : V3 × V3,
+      hypFaceFb 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          ((fun p : V3 × V3 => (-p.1, -p.2)) x)
+        = Set.image (fun p : V3 × V3 => (-p.1, -p.2)) (hypFaceFb 0 V E x) := by
+  intro x
+  exact FACE_SYM_0_fb s vv k V E FF x hk hV hE hFF hiscs hk3 hbb
+
+/-- HOL `NODE_MAP_SYM_0`（YXIONXL2.hl:1143-1184）；LA13 孪生
+`NODE_MAP_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2260）。证体 = dart 负像桥 +
+dart 点值 + `SYM_AZIM_CYCLE_SYM_0_fb`（替代 HOL 的 ELMS_OF_HYPERMAP_HYP +
+DART_OF_HYP_VV + SYM_AZIM_CYCLE_SYM_0 链）。 -/
+theorem NODE_MAP_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ x : V3 × V3,
+      nnOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          ((fun p : V3 × V3 => (-p.1, -p.2)) x)
+        = (fun p : V3 × V3 => (-p.1, -p.2)) (nnOfHyp_p3 0 V E x) := by
+  obtain ⟨-, -, -, -, -, hne, -, -⟩ :=
+    fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  intro x
+  by_cases hx : x ∈ dartsOfHyp_p3 E V
+  · rw [nnMemEqFb (dartNegMemFb hV hE hne hx), nnMemEqFb hx]
+    show (-(x.1),
+            azimCycle_p3
+              (EE_p3 (-(x.1))
+                (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))
+              0 (-(x.1)) (-(x.2)))
+        = (-(x.1),
+            -(azimCycle_p3 (EE_p3 (x.1) E) 0 (x.1) (x.2)))
+    rw [show EE_p3 (-(x.1))
+            (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          = ee (-(x.1))
+              (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ) from rfl,
+      show EE_p3 (x.1) E = ee (x.1) E from rfl,
+      SYM_AZIM_CYCLE_SYM_0_fb s vv k V E FF x hk hV hE hFF hiscs hk3 hbb hx]
+  · rw [nnNotMemEqFb (dartNegNotFb hV hE hne hx), nnNotMemEqFb hx]
+
+/-- HOL `IMAGE_NODE_SYM_0`（YXIONXL2.hl:1188-1229）；LA13 孪生
+`IMAGE_NODE_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2275）。证体 = NODE_MAP
+逐点 funext + `Set.image_image`（替代 HOL 的 IMAGE/IN_ELIM 展开）。 -/
+theorem IMAGE_NODE_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ A : Set (V3 × V3),
+      Set.image (nnOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))
+          (Set.image (fun p : V3 × V3 => (-p.1, -p.2)) A)
+        = Set.image (fun p : V3 × V3 => (-p.1, -p.2))
+            (Set.image (nnOfHyp_p3 0 V E) A) := by
+  have hfun : (fun y : V3 × V3 =>
+        nnOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          ((fun p : V3 × V3 => (-p.1, -p.2)) y))
+      = (fun y : V3 × V3 =>
+        (fun p : V3 × V3 => (-p.1, -p.2)) (nnOfHyp_p3 0 V E y)) :=
+    funext (NODE_MAP_SYM_0_fb s vv k V E FF hk hV hE hFF hiscs hk3 hbb)
+  intro A
+  have h1 : Set.image
+        (nnOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))
+        (Set.image (fun p : V3 × V3 => (-p.1, -p.2)) A)
+      = Set.image (fun y : V3 × V3 =>
+          (fun p : V3 × V3 => (-p.1, -p.2)) (nnOfHyp_p3 0 V E y)) A := by
+    rw [Set.image_image, hfun]
+  rw [h1, Set.image_image]
+
+/-- HOL `EDGE_MAP_SYM_0`（YXIONXL2.hl:1242-1281）；LA13 孪生
+`EDGE_MAP_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2289）。证体 = dart 负像桥 +
+dart 点值（ee 是换位，无 azim 内容）。 -/
+theorem EDGE_MAP_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ x : V3 × V3,
+      eeOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          ((fun p : V3 × V3 => (-p.1, -p.2)) x)
+        = (fun p : V3 × V3 => (-p.1, -p.2)) (eeOfHyp_p3 0 V E x) := by
+  obtain ⟨-, -, -, -, -, hne, -, -⟩ :=
+    fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  intro x
+  by_cases hx : x ∈ dartsOfHyp_p3 E V
+  · rw [eeMemEqFb (dartNegMemFb hV hE hne hx), eeMemEqFb hx]
+  · rw [eeNotMemEqFb (dartNegNotFb hV hE hne hx), eeNotMemEqFb hx]
+
+/-- HOL `EDGE_POWER_MAP_SYM_0`（YXIONXL2.hl:1285-1300）；LA13 孪生
+`EDGE_POWER_MAP_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2303）。证体 = HOL 同款
+`FUN_COMMUTATIVE` 迭代转移（`iterCommFb`，EDGE_MAP 逐点版）。 -/
+theorem EDGE_POWER_MAP_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ (n : ℕ) (x : V3 × V3),
+      (eeOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+            (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))^[n]
+          ((fun p : V3 × V3 => (-p.1, -p.2)) x)
+        = (fun p : V3 × V3 => (-p.1, -p.2)) ((eeOfHyp_p3 0 V E)^[n] x) := by
+  intro n x
+  exact iterCommFb (EDGE_MAP_SYM_0_fb s vv k V E FF hk hV hE hFF hiscs hk3 hbb) n x
+
+/-- HOL `NODE_POWER_MAP_SYM_0`（YXIONXL2.hl:1303-1318）；LA13 孪生
+`NODE_POWER_MAP_SYM_0_p13`（/tmp/LA13_f0b_aff_azn.lean:2317）。证体 = HOL 同款
+`FUN_COMMUTATIVE` 迭代转移（`iterCommFb`，NODE_MAP 逐点版）。 -/
+theorem NODE_POWER_MAP_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    ∀ (n : ℕ) (x : V3 × V3),
+      (nnOfHyp_p3 0 (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+            (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))^[n]
+          ((fun p : V3 × V3 => (-p.1, -p.2)) x)
+        = (fun p : V3 × V3 => (-p.1, -p.2)) ((nnOfHyp_p3 0 V E)^[n] x) := by
+  intro n x
+  exact iterCommFb (NODE_MAP_SYM_0_fb s vv k V E FF hk hV hE hFF hiscs hk3 hbb) n x
 end Kepler.Text
