@@ -533,8 +533,8 @@ else
   [ "$other_new" -le "$nsorry_dels" ] \
     || fail "new sorry lines added ($other_new > $nsorry_dels)"
 fi
-printf '%s\n' "$adds" | grep -qE '\b(admit|native_decide)\b' \
-  && fail "banned token in added lines"
+printf '%s\n' "$adds" | filter_not_in "$wcmt" | grep -qE '\b(admit|native_decide)\b' \
+  && fail "banned token in added lines"  # EV26a: code-only (prose hits the token too)
 
 # 4. build green (timeout => fail, safe direction; errors in log => fail)
 if ! timeout 3600 lake build "$MODULE" > /tmp/auto_gate_build.log 2>&1; then
