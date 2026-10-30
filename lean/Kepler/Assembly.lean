@@ -41,6 +41,13 @@ import Kepler.Assembly.IneqPilot
 -- nli A1 车道（2026-10-22）：rest 20 `FWGKMBZ` 的在库 G4 证书（605 分片 + Base，
 -- 205,418 叶；导出 `CFWGKMBZ_pos`）。证书模块自包含，不依赖 Assembly。
 import Kepler.Interval.Cases.CFWGKMBZ
+-- nli A2-W2 车道（2026-10-30）：rest 9 `QITNPEA 3725403817` 的 G4 证书粘合
+--（964,984 叶 / 2,775 分片 + Base；`A2QITNPEAGlue`：ite 树 = atn2 逐臂桥 +
+-- `39/25 − dihY` 恒等式；导出 `nliRestQITNPEA3725403817_slot` 前提槽）。
+import Kepler.A2QITNPEAGlue
+-- 证书顶模块（olean 回灌自 A2 车道克隆，源 md5 一致）；`_pos` 在下方代入点填充，
+-- 照 A1 `CFWGKMBZ` 先例直接 import 顶模块。
+import Kepler.Interval.Cases.CQITNPEAx3725403817
 -- nli N2 车道（2026-10-23）：rest 1 `6096597438 b` 的 G4 证书（78 叶；
 -- `BBTreeGD`/CertGD 路径，避开头条 CertG 的 SF-42 pilot 重编失败）。
 -- 表达式与原 case 数学恒等（sin 节点按
@@ -733,10 +740,13 @@ theorem nliRestTXQTPVC : bank_TXQTPVC := sorry
 /-- rest 9/62：HOL ineq entry `QITNPEA 3725403817`（ineq.hl:1221，盒
 [2hmin,2hplus]×[2,2hmin]³×[2,2.1]×[2,2hmin]²；PA21
 `bank_QITNPEA3725403817` / `proj_bank_QITNPEA3725403817`）。
-资产状态：内核闭合证书在库外（964,984 叶，2026-09-18，公理标准三），
-本仓无证书件。
--- NEEDS: 在库外证书移植或重发射 + 粘合引理入 §2a 查表（量产主波）。 -/
-theorem nliRestQITNPEA3725403817 : bank_QITNPEA3725403817 := sorry
+已闭合：在库 G4 证书 `Kepler.Interval.Cases.CQITNPEAx3725403817`
+（964,984 叶 / 2,775 分片，prec 64 bb_arb）经 `evalReal` 恒等式粘合
+（`A2QITNPEAGlue`：ite 树 = atn2 逐臂桥 + `39/25 − dihY` 恒等式）+
+端点嵌入（`mi_hminus_prop`/`hplus` 十进制原盒 ⊆ dyadic 外扩盒）。 -/
+theorem nliRestQITNPEA3725403817 : bank_QITNPEA3725403817 :=
+  A2Rest9W1.nliRestQITNPEA3725403817_slot
+    Kepler.Interval.Cases.CQITNPEAx3725403817_pos
 
 /-- rest 10/62：HOL ineq entry `QITNPEAv2 4003532128`（ineq.hl:1193，盒
 [2hmin,2hplus]×[2,2hmin]³×[2,√8]×[2,2hmin]²；PA21

@@ -19,7 +19,6 @@ nliRestJSPEVYT	lean/Kepler/Assembly.lean	711	E	rest 叶，deferred-compute	ineq.
 nliRestQITNPEA4003532128a	lean/Kepler/Assembly.lean	717	E	rest 叶，deferred-compute	ineq.hl:1290；G4 证书+粘合	W4-farm
 nliRestIXPOTPA	lean/Kepler/Assembly.lean	724	E	rest 叶，deferred-compute（PA25 IXPOTPA_MERGED 已消费投影）	ineq.hl:1265；G4 证书+粘合	W4-farm
 nliRestTXQTPVC	lean/Kepler/Assembly.lean	731	E	rest 叶，deferred-compute（PA25 TXQTPVC_MERGED 已消费）	ineq.hl:1241；G4 证书+粘合	W4-farm
-nliRestQITNPEA3725403817	lean/Kepler/Assembly.lean	739	B	A2 在飞（CQITNPEAx3725403817，964,984 叶内核闭合证书在库外）：A2-W2b′ 完工→Glue 粘合落库即闭（任务书示例件）	证书内核已闭合（2026-09-18，公理标准三）；阻塞件=A2 构建+回灌+Glue	W2-A2完工
 nliRestQITNPEAv24003532128	lean/Kepler/Assembly.lean	746	E	rest 叶，deferred-compute；切界层数学预处理通道候选（nli-prep-w1 口径）	ineq.hl:1193；G4 证书+粘合	W4-farm
 nliRestPEMKWU	lean/Kepler/Assembly.lean	752	E	rest 叶，deferred-compute	ineq.hl:1169；G4 证书+粘合	W4-farm
 nliRestTEWNSCJ	lean/Kepler/Assembly.lean	759	E	rest 叶，deferred-compute（PA25 TEWNSCJ_MERGED 桥 p25_gamma23Full8X_yOfX_eq 就位）	ineq.hl:1146；G4 证书+粘合	W4-farm
