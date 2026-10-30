@@ -164,10 +164,10 @@ elif [ "${GATE_MODE:-}" = "DEF-FIX" ]; then
   # / CURRENT file (add side) — covers interior rewording whose opener/closer
   # are unchanged context lines.
   dint=$(git show HEAD:"./$FILE" | awk '
-    !incmt && /^\/(-!)?/ { incmt = 1; next }
+    !incmt && /^\/(-!)?/ { if ($0 !~ /-\//) incmt = 1; next }
     incmt { print; if ($0 ~ /-\//) incmt = 0; next }' | sort -u)
   cint=$(awk '
-    !incmt && /^\/(-!)?/ { incmt = 1; next }
+    !incmt && /^\/(-!)?/ { if ($0 !~ /-\//) incmt = 1; next }
     incmt { print; if ($0 ~ /-\//) incmt = 0; next }' "$FILE" | sort -u)
   headmap=$(git show HEAD:"./$FILE" | awk "$declmap")
   rest=""
@@ -201,7 +201,7 @@ $xadds
 EOF3
   # added docstring interiors (e.g. hunk 6 ENCODING NOTES rewording)
   rest=$(printf '%s\n' "$rest" | awk '
-    !incmt && /^[+]\/(-!)?/ { incmt = 1; next }
+    !incmt && /^[+]\/(-!)?/ { if ($0 !~ /-\//) incmt = 1; next }
     incmt { if ($0 ~ /^[+]-</ || $0 ~ /-\/[[:space:]]*$/) incmt = 0; next }
     { print }')
   [ -z "$rest" ] || fail "DEF-FIX: addition outside charter+refill markers: $(printf '%s' "$rest" | head -3)"
@@ -244,7 +244,7 @@ END {
 # keyword (live case: PA23 "lemma. Route: split on ..." inside the
 # grutoti_pivot docstring → G3 docstring deletions misclassified as code).
 cmt=$(git show HEAD:"./$FILE" | awk '
-  !incmt && /^\/(-!)?/ { incmt = 1; next }
+  !incmt && /^\/(-!)?/ { if ($0 !~ /-\//) incmt = 1; next }
   incmt {
     print
     if ($0 ~ /-\//) incmt = 0
@@ -457,6 +457,13 @@ fi # STATEMENT-FIX else
 #    NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
 #    (silently empty adds => check void) while GNU grep accepts it.
 adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
+# EVOLUTION 26 (2026-10-30): comment scanners (all five awk sites) must not
+# enter `incmt` on a SINGLE-LINE block comment/docstring (`/-- … -/` on one
+# line): the opener line was `next`-ed before the closer check, so every
+# one-line docstring flipped incmt on permanently and swallowed real code
+# (live case: LA35 has 111 one-line docstrings; the HEAD-side set then held
+# the bare "  sorry" body of TECOXBMv2, filter_not_in dropped the genuine
+# deletion, and the row-7 kit's sorry MOVE read as adds=1 > dels=0).
 # EVOLUTION 21 (2026-10-12): sorry-line counting is CODE-only. Docstring
 # interiors that merely start with the word "sorry" (prose such as
 # "sorry 计数不增" bookkeeping notes) must not count as tactic lines on
@@ -464,7 +471,7 @@ adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
 # false positive into other_new (live case: PA24 4th wave, file-level sorry
 # flat 2→2 but gate read adds=2>dels=1). $wcmt mirrors HEAD-side $cmt above.
 wcmt=$(awk '
-  !incmt && /^\/(-!)?/ { incmt = 1; next }
+  !incmt && /^\/(-!)?/ { if ($0 !~ /-\//) incmt = 1; next }
   incmt {
     print
     if ($0 ~ /-\//) incmt = 0
