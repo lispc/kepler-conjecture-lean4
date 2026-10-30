@@ -1125,6 +1125,7307 @@ private theorem vvOrbit_p35 {vv : ℕ → V3} {FF : Set (V3 × V3)} {k : ℕ}
         rw [Nat.add_right_comm n p1 1]
       exact vvRhoDet_p35 hk0 hper hinj hFF hdart
 
+/-! ### TECOXBMv2 step ladder (lkgrqui-tecoxbm-w2; QKNVMLB.hl 3730-4024)
+
+Six-step ladder along the HOL `prove_by_refinement` subgoals: step01 the
+k-case split, step02 the diagonal distance lower bound, step03 the window
+membership, step04/05 the per-case wedge coverage (k = 4 resp. k = 5/6;
+FROZEN RESIDUALS — blocked on the TECOXBM giant, see DISCHARGES), step06 the
+final assembly (closed from step01 + the residuals' conclusions). -/
+
+/-- step01 (HOL 3743-3772): a diagonal of a conforming system forces
+`k ∈ {4,5,6}` (`SCS_K_PRIME_CASE_3` + `SCS_K_LE_6` + arithmetic). -/
+theorem TECOXBMv2_step01_p35 (s : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
+    (hdiag : scsDiag s.k p q) : s.k = 4 ∨ s.k = 5 ∨ s.k = 6 := by
+  have h3 : 3 < s.k := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
+  have h6 : s.k ≤ 6 := hscs.2.2.1
+  omega
+
+/-! ### Sector-triangle kit (lkgrqui-tecoxbm3-w2; TECOXBM1 as the
+sector-triangle core, TECOXBM.hl:1456)
+
+Premise verification (this lane, 2026-10-28; full-tree grep + `#check`
+probes, see probes/): `Kepler.Geom.wedge_eq_affGt` — the open lune
+`wedge v0 v1 w1 w2 = affGt {v0,v1} {w1,w2}` (HOL `WEDGE_LUNE_GT`,
+flyspeck.ml:3805) — is PROVED in `Kepler/Geom/LuneVolume.lean`, which
+LocalAuto1 imports, hence in scope here.  The wedgeGe↔affGe bridge
+re-carving budgeted at ≈300 ln by lkgrqui-tecoxbm2-w2 is therefore
+unnecessary on the open-sector side; the closed-sector side needs no bridge
+either: `wedgeGe` (Kepler.Text.wedgeGe, PackingAuto2:271) is by DEFINITION
+the azimuth sandwich, so `wedgeSectorMem_p35` already gives the per-vertex
+azimuth bounds.  The strictness engine below is a private copy of the
+slicingfan azimuth-addition lemma (declared later in the file).
+
+Ladder after this kit (PLAN.md §1): L0/L1 (open-triangle membership,
+consecutive-vertex non-collinearity), L2 (lune rewrite), L5 (cone transfer),
+L6 (strict azimuth sandwich) are CLOSED here, zero sorry.  L3 (flat-dart and
+diag same-azimuth exclusions) and L4 (θ = π branch bookkeeping) remain ROOTs
+and are collected in the single named residual `sectorTriCore_p35`, which
+replaces the two per-case step04/05 residuals. -/
+
+/-- The `{v0}`-singleton twin of `affGt_pair_iff`: open-triangle membership
+(the LuneVolume `mem_affGt_two_pairs_iff` is private and unreachable). -/
+private theorem triMemAffGt_p35 {v0 x y z : V3} (hx0 : x ≠ v0) (hy0 : y ≠ v0)
+    (hxy : x ≠ y) :
+    z ∈ affGt ({v0} : Set V3) {x, y} ↔
+      ∃ β γ : ℝ, 0 < β ∧ 0 < γ ∧ z - v0 = β • (x - v0) + γ • (y - v0) := by
+  have hfin : ({v0} ∪ {x, y} : Set V3).Finite :=
+    Set.Finite.insert v0 (Set.Finite.insert x (Set.finite_singleton y))
+  have h3 : hfin.toFinset = ({v0, x, y} : Finset V3) := by
+    ext w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  have hsum : ∀ f : V3 → ℝ, ∑ w ∈ hfin.toFinset, f w = f v0 + f x + f y := by
+    intro f
+    simp only [h3]
+    rw [Finset.sum_insert
+        (show v0 ∉ (({x, y} : Finset V3)) from by simp [Ne.symm hx0, Ne.symm hy0])]
+    rw [Finset.sum_insert
+        (show x ∉ (({y} : Finset V3)) from by simp [hxy])]
+    rw [Finset.sum_singleton]
+    ring
+  have hsumv : ∀ f : V3 → ℝ, ∑ w ∈ hfin.toFinset, f w • w
+      = f v0 • v0 + f x • x + f y • y := by
+    intro f
+    simp only [h3]
+    rw [Finset.sum_insert
+        (show v0 ∉ (({x, y} : Finset V3)) from by simp [Ne.symm hx0, Ne.symm hy0])]
+    rw [Finset.sum_insert
+        (show x ∉ (({y} : Finset V3)) from by simp [hxy])]
+    rw [Finset.sum_singleton]
+    abel
+  unfold affGt Affsign
+  constructor
+  · rintro ⟨f, hf, hz, hpos, hone⟩
+    rw [hsumv f] at hz
+    rw [hsum f] at hone
+    have hfx : 0 < f x := hpos x (by simp)
+    have hfy : 0 < f y := hpos y (by simp)
+    refine ⟨f x, f y, hfx, hfy, ?_⟩
+    have hf0 : f v0 = 1 - f x - f y := by linarith
+    rw [hz, hf0]
+    module
+  · rintro ⟨β, γ, hβ, hγ, hz⟩
+    refine ⟨fun v => if v = x then β else if v = y then γ else 1 - β - γ, hfin,
+      ?_, ?_, ?_⟩
+    · rw [hsumv _]
+      rw [show z = (z - v0) + v0 from (sub_add_cancel z v0).symm, hz]
+      simp only [if_neg (Ne.symm hx0), if_neg (Ne.symm hy0),
+        if_neg (Ne.symm hxy), if_true, if_false]
+      module
+    · intro w hw
+      simp only []
+      rcases Set.mem_insert_iff.mp hw with h | h
+      · rw [if_pos h]; exact hβ
+      · have h2 : w = y := Set.mem_singleton_iff.mp h
+        rw [if_neg (fun he => hxy (he.symm.trans h2)), if_pos h2]
+        exact hγ
+    · rw [hsum _]
+      simp only [if_neg (Ne.symm hx0), if_neg (Ne.symm hy0),
+        if_neg (Ne.symm hxy), if_true, if_false]
+      ring
+
+/-- The two-pair twin (`mem_affGt_two_pairs_iff` shape): membership in
+`affGt {v0, v1} {x, y}` with strictly positive `x`/`y` coefficients and a
+free axis coefficient. -/
+private theorem pairMemAffGt_p35 {v0 v1 x y z : V3} (hv01 : v0 ≠ v1)
+    (hx0 : x ≠ v0) (hx1 : x ≠ v1) (hy0 : y ≠ v0) (hy1 : y ≠ v1) (hxy : x ≠ y) :
+    z ∈ affGt ({v0, v1} : Set V3) {x, y} ↔
+      ∃ β γ δ : ℝ, 0 < β ∧ 0 < γ ∧
+        z - v0 = β • (x - v0) + γ • (y - v0) + δ • (v1 - v0) := by
+  have hfin : ({v0, v1} ∪ {x, y} : Set V3).Finite :=
+    (Set.Finite.insert v0 (Set.finite_singleton v1)).union
+      (Set.Finite.insert x (Set.finite_singleton y))
+  have h3 : hfin.toFinset = ({v0, v1, x, y} : Finset V3) := by
+    ext w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  have hsum : ∀ f : V3 → ℝ, ∑ w ∈ hfin.toFinset, f w
+      = f v0 + f v1 + f x + f y := by
+    intro f
+    simp only [h3]
+    rw [Finset.sum_insert
+        (show v0 ∉ (({v1, x, y} : Finset V3)) from by
+          simp [hv01, Ne.symm hx0, Ne.symm hy0])]
+    rw [Finset.sum_insert
+        (show v1 ∉ (({x, y} : Finset V3)) from by simp [Ne.symm hx1, Ne.symm hy1])]
+    rw [Finset.sum_insert
+        (show x ∉ (({y} : Finset V3)) from by simp [hxy])]
+    rw [Finset.sum_singleton]
+    ring
+  have hsumv : ∀ f : V3 → ℝ, ∑ w ∈ hfin.toFinset, f w • w
+      = f v0 • v0 + f v1 • v1 + f x • x + f y • y := by
+    intro f
+    simp only [h3]
+    rw [Finset.sum_insert
+        (show v0 ∉ (({v1, x, y} : Finset V3)) from by
+          simp [hv01, Ne.symm hx0, Ne.symm hy0])]
+    rw [Finset.sum_insert
+        (show v1 ∉ (({x, y} : Finset V3)) from by simp [Ne.symm hx1, Ne.symm hy1])]
+    rw [Finset.sum_insert
+        (show x ∉ (({y} : Finset V3)) from by simp [hxy])]
+    rw [Finset.sum_singleton]
+    abel
+  unfold affGt Affsign
+  constructor
+  · rintro ⟨f, hf, hz, hpos, hone⟩
+    rw [hsumv f] at hz
+    rw [hsum f] at hone
+    have hfx : 0 < f x := hpos x (by simp)
+    have hfy : 0 < f y := hpos y (by simp)
+    refine ⟨f x, f y, f v1, hfx, hfy, ?_⟩
+    have hf0 : f v0 = 1 - f v1 - f x - f y := by linarith
+    rw [hz, hf0]
+    module
+  · rintro ⟨β, γ, δ, hβ, hγ, hz⟩
+    refine ⟨fun v => if v = x then β else if v = y then γ else
+      if v = v1 then δ else 1 - β - γ - δ, hfin, ?_, ?_, ?_⟩
+    · rw [hsumv _]
+      rw [show z = (z - v0) + v0 from (sub_add_cancel z v0).symm, hz]
+      simp only [if_neg (Ne.symm hx0), if_neg (Ne.symm hy0), if_neg hv01,
+        if_neg (Ne.symm hx1), if_neg (Ne.symm hy1), if_neg (Ne.symm hxy),
+        if_true, if_false]
+      module
+    · intro w hw
+      simp only []
+      rcases Set.mem_insert_iff.mp hw with h | h
+      · rw [if_pos h]; exact hβ
+      · have h2 : w = y := Set.mem_singleton_iff.mp h
+        rw [if_neg (fun he => hxy (he.symm.trans h2)), if_pos h2]
+        exact hγ
+    · rw [hsum _]
+      simp only [if_neg (Ne.symm hx0), if_neg (Ne.symm hy0), if_neg hv01,
+        if_neg (Ne.symm hx1), if_neg (Ne.symm hy1), if_neg (Ne.symm hxy),
+        if_true, if_false]
+      ring
+
+/-- A successor residue is a different residue once `2 ≤ k` (private twin;
+the later `wedgeModEqAddCancel_p35` cannot be referenced here). -/
+private theorem triModNe_p35 {k a : ℕ} (hk2 : 2 ≤ k) : a % k ≠ (a + 1) % k := by
+  intro he
+  have hmod : (a + 1) % k = (a % k + 1) % k := by
+    rw [Nat.add_mod, Nat.mod_eq_of_lt (show (1:ℕ) < k by omega)]
+  rw [hmod] at he
+  have hlt : a % k < k := Nat.mod_lt a (by omega)
+  rcases Nat.lt_or_ge (a % k + 1) k with h | h
+  · rw [Nat.mod_eq_of_lt h] at he
+    omega
+  · have h1 : a % k + 1 = k := by omega
+    rw [h1, Nat.mod_self] at he
+    omega
+
+/-- Ladder L1: consecutive window vertices are never collinear with the
+origin.  Distance bounds are exactly the `NONPARALLEL_BALL_ANNULUS` inputs:
+annulus norms (`hBB.1`), `2 ≤ dist` (the a-bound at residue indices, so no
+`Periodic2` transport of `s.a` is needed) and `dist ≤ cstab` (the `isScsV39`
+consecutive b-bound, direct at `(j, j+1)`). -/
+private theorem vvNonCollStep_p35 {s : ScsV39} {vv : ℕ → V3} (hscs : isScsV39 s)
+    (hBB : BBsV39 s vv) (hk3 : 3 < s.k) (i : ℕ) :
+    ¬ Collinear3 0 (vv i) (vv (i + 1)) ∧
+      ¬ Collinear3 0 (vv (i + s.k - 1)) (vv i) := by
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hk2 : 2 ≤ s.k := by omega
+  have hper : Periodic vv s.k := hBB.2.1
+  have hann : ∀ j : ℕ, vv j ∈ ballAnnulus := fun j =>
+    hBB.1 (Set.mem_range.mpr ⟨j, rfl⟩)
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hage, -, hbc, -, -, -⟩ := hscs
+  have hstep : ∀ j : ℕ, ¬ Collinear3 0 (vv j) (vv (j + 1)) := by
+    intro j
+    have hres := hage (j % s.k) ((j + 1) % s.k)
+      ⟨Nat.mod_lt _ hk0, Nat.mod_lt _ hk0, triModNe_p35 hk2⟩
+    have hab := (hBB.2.2.1 (j % s.k) ((j + 1) % s.k)).1
+    have hab2 := (hBB.2.2.1 j (j + 1)).2
+    have hveq : dist (vv (j % s.k)) (vv ((j + 1) % s.k))
+        = dist (vv j) (vv (j + 1)) := by
+      rw [periodic_mod_eq_p23 hper j, periodic_mod_eq_p23 hper (j + 1)]
+    exact NONPARALLEL_BALL_ANNULUS (hann j) (hann (j + 1))
+      (by
+        calc (2:ℝ) ≤ s.a (j % s.k) ((j + 1) % s.k) := hres
+          _ ≤ dist (vv (j % s.k)) (vv ((j + 1) % s.k)) := hab
+          _ = dist (vv j) (vv (j + 1)) := hveq
+          _ = ‖vv j - vv (j + 1)‖ := dist_eq_norm _ _)
+      (hab2.trans (hbc j hk3))
+  refine ⟨hstep i, ?_⟩
+  have hpred := hstep (i + s.k - 1)
+  have hik : vv (i + s.k - 1 + 1) = vv i := by
+    rw [show i + s.k - 1 + 1 = i + s.k from by omega]
+    rw [← periodic_mod_eq_p23 hper (i + s.k), Nat.add_mod_right]
+    exact periodic_mod_eq_p23 hper i
+  rw [hik] at hpred
+  exact hpred
+
+/-- FAN-free azimuth addition (private copy of the slicingfan
+`azimAddTriple_p35`, which is declared later in the file; proof verbatim,
+with the FAN hypothesis replaced by the three fan6-type non-collinearity
+facts, which is all it consumes). -/
+private theorem triAzimAdd_p35 {x v u w1 w2 : V3} (hxv : v ≠ x)
+    (hu : ¬ Collinear3 x v u) (h1 : ¬ Collinear3 x v w1) (h2 : ¬ Collinear3 x v w2)
+    (hle : azim x v u w1 ≤ azim x v u w2) :
+    azim x v u w2 = azim x v u w1 + azim x v w1 w2 := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - x)
+    (sub_ne_zero.mpr hxv)
+  have hax : (v - x : V3) = dist v x • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, ru, r1, hru, hr1, hzu, hzw1⟩ := azim_frame_spec hu h1 hon hax hxv
+  obtain ⟨ψ2, ru2, r2, hru2, hr2, hzu2, hzw2⟩ := azim_frame_spec hu h2 hon hax hxv
+  obtain ⟨ψ', r1', r2', hr1', hr2', hzw1', hzw2'⟩ :=
+    azim_frame_spec h1 h2 hon hax hxv
+  have hψu : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ2 : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hru hru2 (hzu.symm.trans hzu2)
+  have hE2 : Complex.exp ((((ψ + azim x v u w1 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp (((ψ' : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hr1 hr1' (hzw1.symm.trans hzw1')
+  have hE1' : Complex.exp ((((ψ2 + azim x v u w2 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp ((((ψ' + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) :=
+    exp_pos_mul_eq hr2 hr2' (hzw2.symm.trans hzw2')
+  rw [exp_add_I, exp_add_I] at hE1'
+  rw [exp_add_I] at hE2
+  rw [hψu.symm] at hE1'
+  rw [← hE2] at hE1'
+  have hE3 : Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+    have hkey : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+      rw [hE1', mul_assoc, ← exp_add_I]
+    exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hE3
+  have hc2 : ((azim x v u w2 : ℝ) : ℂ) * Complex.I
+      = ((((azim x v u w1 + azim x v w1 w2 : ℝ)
+          + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
+    rw [hn]
+    push_cast
+    ring
+  have hc3 : azim x v u w2
+      = azim x v u w1 + azim x v w1 w2 + (n:ℝ) * (2 * Real.pi) := by
+    exact_mod_cast mul_right_cancel₀ Complex.I_ne_zero hc2
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hr1'0 : (0:ℝ) ≤ azim x v u w1 := azim_nonneg x v u w1
+  have hr2'0 : (0:ℝ) ≤ azim x v w1 w2 := azim_nonneg x v w1 w2
+  have hr3'0 : (0:ℝ) ≤ azim x v u w2 := azim_nonneg x v u w2
+  have hr3'1 : azim x v u w2 < 2 * Real.pi := azim_lt_two_pi x v u w2
+  have hφ1 : azim x v w1 w2 < 2 * Real.pi := azim_lt_two_pi x v w1 w2
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hnpos
+  · exfalso
+    have hle2 : ((n:ℤ) : ℝ) ≤ -1 := by
+      have := (by omega : (n : ℤ) ≤ -1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hle2 h2pi.le
+    linarith
+  · rw [hzero] at hc3
+    simp only [Int.cast_zero, zero_mul, add_zero] at hc3
+    exact hc3
+  · exfalso
+    have hge : ((n:ℤ) : ℝ) ≥ 1 := by
+      have := (by omega : (n : ℤ) ≥ 1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≥ (1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hge h2pi.le
+    linarith
+
+/-- Ladder L5 (cone transfer): a positive combination of the two diag rays
+lies in the open wedge they span with the axis, once the ray pair is
+strictly placed (`0 < azim < π`); the lune rewrite is the imported
+`Kepler.Geom.wedge_eq_affGt` (HOL `WEDGE_LUNE_GT`) and the membership the
+two-pair characterization with zero axis coefficient. -/
+private theorem coneMem_p35 {v0 ax u w t : V3} (haxu : ¬ Collinear3 v0 ax u)
+    (haxw : ¬ Collinear3 v0 ax w) (huw : u ≠ w)
+    (hθ0 : 0 < azim v0 ax u w) (hθπ : azim v0 ax u w < Real.pi)
+    (β γ : ℝ) (hβ : 0 < β) (hγ : 0 < γ)
+    (ht : t - v0 = β • (u - v0) + γ • (w - v0)) :
+    t ∈ wedge v0 ax u w := by
+  have hv01 : v0 ≠ ax := fun he => haxu (collinear3_of_eq he.symm)
+  have hrew : wedge v0 ax u w = affGt ({v0, ax} : Set V3) {u, w} :=
+    wedge_eq_affGt haxu haxw hθ0 hθπ
+  rw [hrew]
+  refine (pairMemAffGt_p35 (v0 := v0) (v1 := ax) (x := u) (y := w) (z := t)
+    hv01 (fun he => haxu (collinear3_pair_left he))
+    (fun he => haxu (collinear3_pair_right he))
+    (fun he => haxw (collinear3_pair_left he))
+    (fun he => haxw (collinear3_pair_right he)) huw).mpr
+    ⟨β, γ, 0, hβ, hγ, by rw [ht]; module⟩
+
+/-- Ladder L6 (strict azimuth sandwich): with `p` at positive azimuth from
+the sector start ray `b`, `q` further counterclockwise at total angle ≤ π,
+and `r` strictly between `p` and `q` as seen from the ray through `p`, `r`
+is strictly between `b` and `q`.  Route: two azimuth-addition instances
+(the private copy `triAzimAdd_p35`) with the counterclockwise order resolved
+by `azim_compl` — the reversed order would force `azim(b,p) > π` while
+`azim(b,p) ≤ azim(b,q) ≤ π`. -/
+private theorem azimSandwich_p35 {v0 ax b p q r : V3}
+    (hvb : v0 ≠ ax) (haxb : ¬ Collinear3 v0 ax b) (haxp : ¬ Collinear3 v0 ax p)
+    (haxq : ¬ Collinear3 v0 ax q) (haxr : ¬ Collinear3 v0 ax r)
+    (hbp : 0 < azim v0 ax b p)
+    (hbpq : azim v0 ax b p ≤ azim v0 ax b q)
+    (hbqπ : azim v0 ax b q ≤ Real.pi)
+    (hpr0 : 0 < azim v0 ax p r) (hprq : azim v0 ax p r < azim v0 ax p q) :
+    0 < azim v0 ax b r ∧ azim v0 ax b r < azim v0 ax b q := by
+  have hbp0 : 0 ≤ azim v0 ax b p := azim_nonneg v0 ax b p
+  have hprne : azim v0 ax p r ≠ 0 := ne_of_gt hpr0
+  have haddq : azim v0 ax b q = azim v0 ax b p + azim v0 ax p q :=
+    triAzimAdd_p35 (Ne.symm hvb) haxb haxp haxq hbpq
+  have horder : azim v0 ax b p ≤ azim v0 ax b r := by
+    rcases lt_or_ge (azim v0 ax b r) (azim v0 ax b p) with hlt | hge
+    · exfalso
+      have haddr : azim v0 ax b p = azim v0 ax b r + azim v0 ax r p :=
+        triAzimAdd_p35 (Ne.symm hvb) haxb haxr haxp hlt.le
+      have hcompl : azim v0 ax r p = 2 * Real.pi - azim v0 ax p r := by
+        rw [azim_compl haxp haxr, if_neg hprne]
+      have hbr0 : (0:ℝ) ≤ azim v0 ax b r := azim_nonneg v0 ax b r
+      have hbpπ : Real.pi < azim v0 ax b p := by
+        rw [haddr, hcompl]
+        linarith
+      linarith
+    · exact hge
+  have haddr : azim v0 ax b r = azim v0 ax b p + azim v0 ax p r :=
+    triAzimAdd_p35 (Ne.symm hvb) haxb haxp haxr horder
+  refine ⟨by rw [haddr]; linarith, ?_⟩
+  rw [haddr, haddq]
+  linarith
+
+/-- Pair-set enumeration (local copy of the mid-kit `pairMem_p35`; the mid
+helper is declared later in the file and cannot be referenced here). -/
+private theorem wedgePairMem_p35 {a w b c : V3} (h : ({a, w} : Set V3) = {b, c}) :
+    (a = b ∨ a = c) ∧ (w = b ∨ w = c) := by
+  have m1 : a ∈ ({b, c} : Set V3) := by rw [← h]; simp
+  have m2 : w ∈ ({b, c} : Set V3) := by rw [← h]; simp
+  refine ⟨?_, ?_⟩
+  · rcases Set.mem_insert_iff.mp m1 with h1 | h1
+    · exact Or.inl h1
+    · exact Or.inr (Set.mem_singleton_iff.mp h1)
+  · rcases Set.mem_insert_iff.mp m2 with h2 | h2
+    · exact Or.inl h2
+    · exact Or.inr (Set.mem_singleton_iff.mp h2)
+
+/-- Mod-k cancellation of a common summand (local copy of the mid-kit
+`modEqAddCancel_p35`, which is declared later in the file). -/
+private theorem wedgeModEqAddCancel_p35 {k i t : ℕ} (hk0 : 0 < k)
+    (h : i % k = (i + t) % k) : t % k = 0 := by
+  have h1 : (i % k + t % k) % k = i % k := by
+    have e : (i % k + t % k) % k = (i + t) % k := by rw [Nat.add_mod i t k]
+    rw [e, h]
+  have hik : i % k < k := Nat.mod_lt i hk0
+  have htk : t % k < k := Nat.mod_lt t hk0
+  have d : (i % k + t % k) % k = i % k + t % k ∨
+      (i % k + t % k) % k + k = i % k + t % k := by
+    rcases Nat.lt_or_ge (i % k + t % k) k with hlt | hge
+    · exact Or.inl (Nat.mod_eq_of_lt hlt)
+    · refine Or.inr (by
+        have hX : i % k + t % k = (i % k + t % k - k) + k * 1 := by omega
+        rw [hX, Nat.add_mul_mod_self_left,
+          Nat.mod_eq_of_lt (show i % k + t % k - k < k by omega)]
+        omega)
+  rcases d with d | d <;> omega
+
+/-- `k`-shifted indices carry the same `vv`-value (local copy of
+`vvAddK_p35`, declared later in the file). -/
+private theorem wedgeVvAddK_p35 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (i : ℕ) : vv (i + k) = vv i := by
+  rw [← periodic_mod_eq_p23 hper (i + k), Nat.add_mod_right]
+  exact periodic_mod_eq_p23 hper i
+
+/-- The vertex and its cyclic successor differ once `3 ≤ k` (local copy of
+`vvNeStep_p35`, declared later in the file). -/
+private theorem wedgeVvNeStep_p35 {vv : ℕ → V3} {k : ℕ} (hk3 : 3 ≤ k)
+    (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (i : ℕ) :
+    vv i ≠ vv (i + 1) := by
+  intro hh
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have h := wedgeModEqAddCancel_p35 hk0 (i := i) (t := 1) (vvModEq_p35 hk0 hper hinj hh)
+  have h1 : (1:ℕ) % k = 1 := Nat.mod_eq_of_lt (by omega)
+  omega
+
+/-- Edge membership in the cyclic edge set: the two neighbours (local copy
+of `vvMemEdge_p35`, declared later in the file, routed through the wedge
+copies above and the preceding `vvModEq_p35`/`vvStep_p35`/`vvModPred_p35`). -/
+private theorem wedgeVvMemEdge_p35 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) (w : V3) :
+    w ∈ ee (vv i) E ↔ w = vv (i + k - 1) ∨ w = vv (i + 1) := by
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hnosing : ∀ j : ℕ, vv j ≠ vv (j + 1) := fun j => wedgeVvNeStep_p35 hk3 hper hinj j
+  show {vv i, w} ∈ E ↔ _
+  constructor
+  · intro hw
+    rw [← hE] at hw
+    obtain ⟨j, hj⟩ := hw
+    obtain ⟨ha, hwbc⟩ := wedgePairMem_p35 hj.symm
+    rcases ha with hai | hai
+    · have hmod : i % k = j % k := vvModEq_p35 hk0 hper hinj hai
+      rcases hwbc with hw1 | hw1
+      · exfalso
+        have hsucc : vv j = vv (j + 1) := by
+          have m : vv (j + 1) ∈ ({vv i, w} : Set V3) := by rw [← hj]; simp
+          rw [hw1, hai] at m
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at m
+          exact m.elim (fun h => h.symm) (fun h => h.symm)
+        exact absurd hsucc (hnosing j)
+      · refine Or.inr ?_
+        rw [hw1, vvStep_p35 hper hmod]
+    · have hmod1 : i % k = (j + 1) % k := vvModEq_p35 hk0 hper hinj hai
+      rcases hwbc with hw1 | hw1
+      · refine Or.inl ?_
+        have hpred : (i + k - 1) % k = j % k := by
+          have hstep : (i + k - 1 + 1) % k = (j + 1) % k := by
+            rw [show i + k - 1 + 1 = i + k from by omega, Nat.add_mod_right]
+            exact hmod1
+          exact vvModPred_p35 hk0 hstep
+        rw [hw1, ← periodic_mod_eq_p23 hper j, ← hpred,
+          periodic_mod_eq_p23 hper (i + k - 1)]
+      · exfalso
+        rw [← hai] at hw1
+        have m : vv j ∈ ({vv i, w} : Set V3) := by rw [← hj]; simp
+        rw [hw1] at m
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at m
+        have hvj : vv j = vv i := m.elim id id
+        exact absurd (hvj.trans hai) (hnosing j)
+  · rintro (rfl | rfl)
+    · show {vv i, vv (i + k - 1)} ∈ E
+      rw [← hE]
+      exact Set.mem_range.mpr ⟨i + k - 1, by
+        show {vv (i + k - 1), vv (i + k - 1 + 1)} = {vv i, vv (i + k - 1)}
+        rw [show i + k - 1 + 1 = i + k from by omega, wedgeVvAddK_p35 hper i]
+        ext z
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto⟩
+    · show {vv i, vv (i + 1)} ∈ E
+      rw [← hE]
+      exact Set.mem_range.mpr ⟨i, rfl⟩
+
+/-- The two-element `azimCycle`: on a neighbour set `{a, p}` (with `a ≠ p`)
+the cycle successor of `p` is `a` (local copy of the bridge kit's
+`azimCycle2_p35`, declared later in the file). -/
+private theorem wedgeAzimCycle2_p35 {a p : V3} {W : Set V3} (v w : V3) (hap : a ≠ p)
+    (hW : W = {a, p}) : azimCycle_p3 W v w p = a := by
+  have hsub : ¬(W ⊆ {p}) := by
+    intro hc
+    exact hap (hc (by rw [hW]; simp))
+  rw [azimCycle_p3, if_neg hsub]
+  refine epsFixed_p35 ?_ ?_
+  · rw [hW]
+    refine ⟨hap, by simp, ?_⟩
+    intro q hq hqp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+    rcases hq with h | h
+    · subst h
+      exact Or.inr ⟨rfl, le_refl _⟩
+    · exact absurd h hqp
+  · intro y hy
+    rw [hW] at hy
+    obtain ⟨hy1, hy2, -⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy2
+    rcases hy2 with h | h
+    · exact h
+    · exact absurd h hy1
+
+/-- The cyclic predecessor and successor of `vv i` differ once `3 ≤ k`
+(predecessor step of `vvInangleEq_p35`, split out for reuse). -/
+private theorem wedgeCyclicNC_p35 {vv : ℕ → V3} {k : ℕ} (hk3 : 3 ≤ k)
+    (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (i : ℕ) :
+    vv (i + k - 1) ≠ vv (i + 1) := by
+  intro hh
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hmod := vvModEq_p35 hk0 hper hinj hh
+  have hplus : ((i + k - 1) + 1) % k = ((i + 1) + 1) % k := by
+    have g1 : ((i + k - 1) + 1) % k = ((i + k - 1) % k + 1 % k) % k := by
+      rw [Nat.add_mod]
+    have g2 : ((i + 1) + 1) % k = ((i + 1) % k + 1 % k) % k := by
+      rw [Nat.add_mod]
+    rw [g1, g2, hmod]
+  rw [show (i + k - 1) + 1 = i + k from by omega, Nat.add_mod_right] at hplus
+  have h3 := wedgeModEqAddCancel_p35 hk0 (i := i) (t := 2) hplus
+  have h4 : (2:ℕ) % k = 2 := Nat.mod_eq_of_lt (by omega)
+  omega
+
+/-- The two-point neighbour set at `vv i` (the `EE_p3` rendering of
+`vvMemEdge_p35`). -/
+private theorem wedgeCyclicEE_p35 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) :
+    EE_p3 (vv i) E = {vv (i + k - 1), vv (i + 1)} := by
+  ext w
+  exact wedgeVvMemEdge_p35 hk3 hper hinj hE i w
+
+/-- The fan successor at a cyclic dart is the cyclic predecessor
+(`sigmaFan` rendering of the `azimCycle2_p35` two-point cycle; twin of the
+`hsucc` step inside `vvInangleEq_p35`). -/
+private theorem wedgeCyclicSigma_p35 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) :
+    Kepler.Text.Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1)) = vv (i + k - 1) := by
+  have hstep : vv (i + k - 1) ≠ vv (i + 1) := wedgeCyclicNC_p35 hk3 hper hinj i
+  have hee : ee (vv i) E = {vv (i + k - 1), vv (i + 1)} := by
+    ext w
+    exact wedgeVvMemEdge_p35 hk3 hper hinj hE i w
+  have hsoe : Kepler.Text.Fan.setOfEdge (vv i) Set.univ E = ee (vv i) E := by
+    ext z
+    show ({vv i, z} ∈ E ∧ z ∈ (Set.univ : Set V3)) ↔ {vv i, z} ∈ E
+    simp
+  have hne2 : Kepler.Text.Fan.setOfEdge (vv i) Set.univ E ≠ {vv (i + 1)} := by
+    intro hc
+    have hmem : vv (i + k - 1) ∈ Kepler.Text.Fan.setOfEdge (vv i) Set.univ E := by
+      rw [hsoe, hee]
+      simp
+    rw [hc, Set.mem_singleton_iff] at hmem
+    exact hstep hmem
+  simp only [Kepler.Text.Fan.sigmaFan, if_neg hne2]
+  refine epsFixed_p35 ?_ ?_
+  · refine ⟨?_, hstep, ?_⟩
+    · rw [hsoe, hee]
+      simp
+    · intro w1 hw1 hw1ne
+      rw [hsoe, hee] at hw1
+      rcases Set.mem_insert_iff.mp hw1 with h | h
+      · rw [h]
+      · exact absurd h hw1ne
+  · intro z hz
+    obtain ⟨hz1, hz2, -⟩ := hz
+    rw [hsoe, hee] at hz1
+    rcases Set.mem_insert_iff.mp hz1 with h | h
+    · exact h
+    · exact absurd (Set.mem_singleton_iff.mp h) hz2
+
+/-- The cyclic dart's open fan wedge, concretized: at every dart of the
+`k`-window cycle the `wedgeInFanGt_p3` case split resolves through the
+two-point neighbour set (`TECOXBM.hl` wedge machinery specialized to the
+cyclic fan; k ≥ 3). -/
+theorem wedgeCyclic_p35 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ} (hk3 : 3 ≤ k)
+    (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) :
+    wedgeInFanGt_p3 (vv i, vv (i + 1)) E =
+      Kepler.Geom.wedge 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
+  have hstep : vv (i + k - 1) ≠ vv (i + 1) := wedgeCyclicNC_p35 hk3 hper hinj i
+  have hee : EE_p3 (vv i) E = {vv (i + k - 1), vv (i + 1)} :=
+    wedgeCyclicEE_p35 hk3 hper hinj hE i
+  have hncard : 1 < (EE_p3 (vv i) E).ncard := by
+    rw [hee, Set.ncard_insert_of_notMem
+      (show vv (i + k - 1) ∉ ({vv (i + 1)} : Set V3) from by simp [hstep])]
+    simp
+  simp only [wedgeInFanGt_p3]
+  rw [if_pos hncard, wedgeAzimCycle2_p35 (v := 0) (w := vv i) hstep hee]
+
+/-- The closed-sector side of the convex local fan at a cyclic dart: every
+window vertex lies in the closed azimuth sector at the dart, and the sector
+angle is at most `π` (the `ConvexLocalFan` conjuncts with the two-point
+neighbour resolution of `azimInFan`/`wedgeInFanGe`). -/
+theorem wedgeSectorMem_p35 {vv : ℕ → V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hfan : ConvexLocalFan (Set.range vv) E FF) (i : ℕ) :
+    (∀ x ∈ Set.range vv, x ∈ wedgeGe 0 (vv i) (vv (i + 1)) (vv (i + k - 1))) ∧
+      azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) ≤ Real.pi := by
+  have hstep : vv (i + k - 1) ≠ vv (i + 1) := wedgeCyclicNC_p35 hk3 hper hinj i
+  have hee : ee (vv i) E = {vv (i + k - 1), vv (i + 1)} := by
+    ext w
+    exact wedgeVvMemEdge_p35 hk3 hper hinj hE i w
+  have hncard : 1 < (ee (vv i) E).ncard := by
+    rw [hee, Set.ncard_insert_of_notMem
+      (show vv (i + k - 1) ∉ ({vv (i + 1)} : Set V3) from by simp [hstep])]
+    simp
+  have hsig : Kepler.Text.Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1))
+      = vv (i + k - 1) := wedgeCyclicSigma_p35 hk3 hper hinj hE i
+  obtain ⟨-, hsec⟩ := hfan
+  obtain ⟨hsigaz, hsige⟩ := hsec (vv i, vv (i + 1))
+    (by rw [← hFF]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+  constructor
+  · intro x hx
+    have hx2 := hsige hx
+    rw [wedgeInFanGe, if_pos hncard, hsig] at hx2
+    exact hx2
+  · rw [azimInFan, if_pos hncard, hsig] at hsigaz
+    exact hsigaz
+
+/-! ## sector-triangle residual kit (lkgrqui-sectortri-w2, 2026-10-28)
+
+The fan-theory input is ALREADY a hypothesis: `BBsV39` (LocalAuto1:411)
+carries `(s.k ≤ 3 ∨ ConvexLocalFan (range vv) edges darts)` as its last
+conjunct, and the Kepler.Text.Fan chapter (in the import closure via
+LocalAuto1/3/4/PackingAuto2; `#print axioms` standard three, probe
+lkgrqui-sectortri-w2/probes/probe1_fanvis.lean) supplies the neighbor
+azimuth injectivity that kills the flat-dart branch. -/
+
+/-- Unordered pair swap. -/
+private theorem pairSwap_p35 {α : Type*} [DecidableEq α] (x y : α) :
+    {x, y} = ({y, x} : Set α) := by
+  ext z
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  tauto
+
+/-- F0a: a diagonal forces `4 ≤ s.k` (for `k = 3` the three forbidden
+residue equalities of `scsDiag` exhaust all residues). -/
+private theorem diagKGe4_p35 {s : ScsV39} {p q : ℕ} (hscs : isScsV39 s)
+    (hdiag : scsDiag s.k p q) : 4 ≤ s.k := by
+  by_cases hk : s.k ≤ 3
+  · exfalso
+    have hk3 : 3 ≤ s.k := hscs.2.1
+    have h3 : s.k = 3 := by omega
+    rw [h3] at hdiag
+    obtain ⟨h1, h2, h3'⟩ := hdiag
+    have hp3 : p % 3 < 3 := Nat.mod_lt p (by omega)
+    have hq3 : q % 3 < 3 := Nat.mod_lt q (by omega)
+    have hpv : p % 3 = 0 ∨ p % 3 = 1 ∨ p % 3 = 2 := by omega
+    have hqv : q % 3 = 0 ∨ q % 3 = 1 ∨ q % 3 = 2 := by omega
+    rcases hpv with hp' <;> rcases hqv with hq' <;> omega
+  · omega
+
+/-- F0b: the fan structure extracted from `BBsV39`'s last conjunct for
+`k ≥ 4` (the `s.k ≤ 3` guard is excluded by the diagonal). -/
+private theorem fanOfBB_p35 {s : ScsV39} {vv : ℕ → V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hk4 : 4 ≤ s.k) (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF) :
+    Kepler.Text.Fan.FAN 0 (Set.range vv) E := by
+  rcases hBB.2.2.2 with hle | hcl
+  · omega
+  · subst hE
+    subst hFF
+    exact hcl.1.1
+
+/-- F0c: both dart edges at dart `i` (the second via periodicity). -/
+private theorem dartEdgeMems_p35 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) :
+    {vv i, vv (i + 1)} ∈ E ∧ {vv i, vv (i + k - 1)} ∈ E := by
+  have h1 : ({vv i, vv (i + 1)} : Set V3) ∈
+      Set.range (fun j => ({vv j, vv (j + 1)} : Set V3)) := ⟨i, rfl⟩
+  have h2 : ({vv i, vv (i + k - 1)} : Set V3) ∈
+      Set.range (fun j => ({vv j, vv (j + 1)} : Set V3)) := by
+    refine ⟨i + k - 1, ?_⟩
+    show ({vv (i + k - 1), vv (i + k - 1 + 1)} : Set V3) = {vv i, vv (i + k - 1)}
+    have hk1 : (i + k - 1) + 1 = i + k := by omega
+    have hk : vv ((i + k - 1) + 1) = vv i := by rw [hk1]; exact hper i
+    rw [pairSwap_p35 (vv (i + k - 1)) (vv ((i + k - 1) + 1)), hk]
+  rw [hE] at h1 h2
+  exact ⟨h1, h2⟩
+
+/-- L3a (flat-dart exclusion, CLOSED): the sector angle at every dart of
+the cyclic fan is nonzero — the two dart neighbors would otherwise be
+distinct neighbors at azimuth 0, contradicting the fan's neighbor
+azimuth injectivity (`Fan.unique_azim0_point_fan`). -/
+private theorem dartSpanNeCyc_p35 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ)
+    (hfan : Kepler.Text.Fan.FAN 0 (Set.range vv) E) :
+    azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) ≠ 0 := by
+  obtain ⟨hab, hac⟩ := dartEdgeMems_p35 hk3 hper hE i
+  intro h0
+  exact wedgeCyclicNC_p35 hk3 hper hinj i
+    (Kepler.Text.Fan.unique_azim0_point_fan (x := 0) (v := vv i)
+      (u := vv (i + 1)) (w := vv (i + k - 1)) (V := Set.range vv) (E := E)
+      hfan hab hac h0).symm
+
+/-- Azimuth-of-axis-point vanishes (the collinear disjunct of `azim`). -/
+private theorem azimAxis_p35 {a b x : V3} (h : Collinear3 0 a x) :
+    azim 0 a b x = 0 := by
+  rw [azim, if_pos (Or.inr h)]
+
+/-! ## PlaneMiss corner kit (lkgrqui-planemiss-w3, 2026-10-28)
+
+Shared closed core for the four azimuth corners of `sectorTriPlaneMiss_p35`
+(HOL TECOXBM.hl:311 `AFF_GT_INTER_AFF_SY` strictness core).  The corners
+render as: C1/C3/C4 put both diagonal endpoints in the dart face plane
+`aff {0, vv i, vv (i+1)}`, C2 in the span face plane `aff {0, vv i, vv (i+k-1)}`
+(Kepler `azim` vanishes on the whole axis line, so the = 0 rendering is a
+plane span, not a ray); and the whole ring sits in the closed half-space of
+the dart face (azimuth sandwich `[0, θ] ⊆ [0, π]` through the sin bridge).
+The residual exclusion (`planeCrowding`: two distinct, mutually non-adjacent
+ring vertices inside one dart-face side) is the remaining named root —
+cf. HOL `WEDGE_GE_EQ_AFF_GE` + `CROSS_DOT_POS_SY` σ-cycle iteration. -/
+
+/-- dot with a right smul factor (local bridge for the cross-pairing). -/
+private theorem pmDotSmul_p35 (c : ℝ) (f g : Fin 3 → ℝ) :
+    g ⬝ᵥ (c • f) = c * (g ⬝ᵥ f) := by
+  unfold dotProduct
+  rw [Finset.mul_sum]
+  exact Finset.sum_congr rfl fun i _ => by
+    rw [Pi.smul_apply, smul_eq_mul]
+    ring
+
+/-- The cross pairing vanishes along the axis line. -/
+private theorem pmCrossAxisZero_p35 {a b x : V3} (hx : ∃ c : ℝ, x - 0 = c • (a - 0)) :
+    (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) = 0 := by
+  obtain ⟨c, hc⟩ := hx
+  have h2 : x - 0 = c • (a - 0) := hc
+  simp only [sub_zero] at h2
+  have hcoe : ((x : V3) : Fin 3 → ℝ) = c • ((a : V3) : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) h2
+  rw [hcoe, pmDotSmul_p35, dotProduct_comm,
+    show crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+        = -(crossProduct (b : Fin 3 → ℝ) (a : Fin 3 → ℝ)) from
+      (cross_anticomm (b : Fin 3 → ℝ) (a : Fin 3 → ℝ)).symm,
+    dotProduct_neg, dot_cross_self (b : Fin 3 → ℝ) (a : Fin 3 → ℝ)]
+  simp
+
+/-- Half-space bound at a dart (open-sector case; sin bridge). -/
+private theorem pmCrossGe_p35 {y z x : V3} (hcolx : ¬ Collinear3 0 y x)
+    (hnc : ¬ Collinear3 0 y z)
+    (h0 : 0 ≤ azim 0 y z x) (hπ : azim 0 y z x ≤ Real.pi) :
+    0 ≤ (crossProduct (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) := by
+  have h := cross_dot_fully_surrounded_ge_fan (x := 0) (v1 := y) (v := z) (u1 := x)
+    hcolx hnc h0 hπ
+  simpa [sub_zero] using h
+
+/-- Half-space bound at a dart (combined, collinear fallback included):
+every point whose azimuth from the dart lies in `[0, π]` sits in the closed
+`{y × z ≥ 0}` half-space. -/
+private theorem pmCrossGeAll_p35 {y z x : V3} (hvi0 : y ≠ 0)
+    (hnc : ¬ Collinear3 0 y z)
+    (h0 : 0 ≤ azim 0 y z x) (hπ : azim 0 y z x ≤ Real.pi) :
+    0 ≤ (crossProduct (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) := by
+  by_cases hcol : Collinear3 0 y x
+  · obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := y) (w1 := x) hvi0).mp hcol
+    have h2 : x - 0 = c • (y - 0) := hc
+    simp only [sub_zero] at h2
+    rw [show ((x : V3) : Fin 3 → ℝ) = c • ((y : V3) : Fin 3 → ℝ) from
+      congrArg (fun w : V3 => (w : Fin 3 → ℝ)) h2, pmDotSmul_p35, dotProduct_comm,
+      show crossProduct (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)
+          = -(crossProduct (z : Fin 3 → ℝ) (y : Fin 3 → ℝ)) from
+        (cross_anticomm (z : Fin 3 → ℝ) (y : Fin 3 → ℝ)).symm,
+      dotProduct_neg, dot_cross_self (z : Fin 3 → ℝ) (y : Fin 3 → ℝ)]
+    simp
+  · exact pmCrossGe_p35 hcol hnc h0 hπ
+
+/-- Azimuth zero at a dart renders the point in the dart face plane span. -/
+private theorem pmRender0_p35 {y z x : V3} (hy0 : y ≠ 0) (hz0 : z ≠ 0)
+    (hnc : ¬ Collinear3 0 y z) (h : azim 0 y z x = 0) :
+    ∃ s t : ℝ, x - 0 = s • (y - 0) + t • (z - 0) := by
+  by_cases hcol : Collinear3 0 y x
+  · obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := y) (w1 := x) hy0).mp hcol
+    exact ⟨c, 0, by rw [hc, zero_smul, add_zero]⟩
+  · obtain ⟨c, hc, h2, hh⟩ :=
+      (affGt_pair_iff (v0 := 0) (v1 := y) (x := z) (y := x) (Ne.symm hy0) hz0
+        (fun he => hnc (by rw [he]; exact collinear3_pair_right rfl))).mp
+      ((azim_eq_zero_iff_alt (v0 := 0) (v1 := y) (w := z) (x := x) hnc hcol).mp h)
+    exact ⟨h2, c, by rw [hh]; module⟩
+
+/-- Azimuth equal to the sector span renders the point in the span face
+plane span (HOL `AZIM_EQ`-route through `azim_eq_azim_iff`). -/
+private theorem pmRenderSpan_p35 {y z sg x : V3} (hy0 : y ≠ 0) (hsg0 : sg ≠ 0)
+    (hncz : ¬ Collinear3 0 y z) (hncsg : ¬ Collinear3 0 y sg)
+    (h : azim 0 y z x = azim 0 y z sg) :
+    ∃ s t : ℝ, x - 0 = s • (y - 0) + t • (sg - 0) := by
+  by_cases hcol : Collinear3 0 y x
+  · obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := y) (w1 := x) hy0).mp hcol
+    exact ⟨c, 0, by rw [hc, zero_smul, add_zero]⟩
+  · obtain ⟨c, hc, h2, hh⟩ :=
+      (affGt_pair_iff (v0 := 0) (v1 := y) (x := sg) (y := x) (Ne.symm hy0) hsg0
+        (fun he => hncsg (by rw [he]; exact collinear3_pair_right rfl))).mp
+      ((azim_eq_azim_iff (v0 := 0) (v1 := y) (w := z) (x := sg) (y := x)
+        hncz hncsg hcol).mp h.symm)
+    exact ⟨h2, c, by rw [hh]; module⟩
+
+/-- Two distinct fan vertices on the same positive ray from the fan center
+contradict `fan7` (singleton instance `affGe {0} {v} ∩ affGe {0} {u} =
+affGe {0} ∅` while the ray `v ≠ 0` sits on the left). -/
+private theorem pmSameRayKill_p35 {v u : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : Kepler.Text.Fan.FAN 0 V E) (hv : v ∈ V) (hu : u ∈ V)
+    (hvu : v ≠ u) (hv0 : v ≠ 0)
+    (h : ∃ t : ℝ, 0 < t ∧ u - 0 = t • (v - 0)) : False := by
+  obtain ⟨t, ht, hue⟩ := h
+  have h7 : Kepler.Text.Fan.fan7 0 V E := hfan.2.2.2.2.2
+  have he1 : ({v} : Set V3) ∈ E ∪ {s : Set V3 | ∃ w ∈ V, s = {w}} :=
+    Set.mem_union_right _ (Set.mem_setOf.mpr ⟨v, hv, rfl⟩)
+  have he2 : ({u} : Set V3) ∈ E ∪ {s : Set V3 | ∃ w ∈ V, s = {w}} :=
+    Set.mem_union_right _ (Set.mem_setOf.mpr ⟨u, hu, rfl⟩)
+  have hEq := h7 {v} he1 {u} he2
+  have htne : t ≠ 0 := ne_of_gt ht
+  have hve : v - 0 = t⁻¹ • (u - 0) := by
+    rw [hue, smul_smul, inv_mul_cancel₀ htne, one_smul]
+  have hm1 : v ∈ affGe ({0} : Set V3) ({v} : Set V3) := by
+    refine ⟨fun z => if z = v then 1 else 0, by simp, ?_, ?_, ?_⟩
+    · simp [hv0]
+    · intro w hw
+      simp only [Set.mem_singleton_iff] at hw
+      rw [hw]; simp
+    · simp
+  have hv2 : v = t⁻¹ • u := by simpa using hve
+  have hu0u : u ≠ 0 := by
+    intro hz
+    apply hv0
+    rw [hv2, hz, smul_zero]
+  have hfinU : (({0} ∪ {u} : Set V3)).Finite := by simp
+  have htf2 : hfinU.toFinset = ({0, u} : Finset V3) := by
+    ext z
+    simp
+    tauto
+  have hmem0 : (0:V3) ∉ ({u} : Finset V3) := fun h =>
+    hu0u (Finset.mem_singleton.mp h).symm
+  have hne0 : ¬ ((0:V3) = u) := fun h => hu0u h.symm
+  have hb0 : (fun z : V3 => if z = u then t⁻¹ else 1 - t⁻¹) 0 = 1 - t⁻¹ := by
+    show (if (0:V3) = u then (t⁻¹:ℝ) else (1 - t⁻¹:ℝ)) = 1 - t⁻¹
+    rw [if_neg hne0]
+  have hbu : (fun z : V3 => if z = u then t⁻¹ else 1 - t⁻¹) u = t⁻¹ := by
+    show (if (u:V3) = u then (t⁻¹:ℝ) else (1 - t⁻¹:ℝ)) = t⁻¹
+    rw [if_pos rfl]
+  have hm2 : v ∈ affGe ({0} : Set V3) ({u} : Set V3) := by
+    refine ⟨fun z => if z = u then t⁻¹ else 1 - t⁻¹, hfinU, ?_, ?_, ?_⟩
+    · rw [htf2, Finset.sum_insert hmem0, Finset.sum_singleton,
+        hb0, hbu, smul_zero, zero_add]
+      exact hv2
+    · intro w hw
+      simp only [Set.mem_singleton_iff] at hw
+      rw [hw]
+      have hbe : (fun z : V3 => if z = u then t⁻¹ else 1 - t⁻¹) u = t⁻¹ := by simp
+      rw [hbe]
+      exact le_of_lt (inv_pos.mpr ht)
+    · rw [htf2, Finset.sum_insert hmem0, if_neg hne0, Finset.sum_singleton,
+        if_pos (rfl : u = u)]
+      field_simp
+      ring
+  have hint0 : v ∈ affGe ({0} : Set V3) {v} ∩ affGe ({0} : Set V3) {u} :=
+    ⟨hm1, hm2⟩
+  rw [hEq] at hint0
+  have hcap : ({v} ∩ {u} : Set V3) = (∅ : Set V3) := by
+    ext z
+    simp [hvu]
+  rw [hcap] at hint0
+  obtain ⟨f, hfin, hsum, -, -⟩ := hint0
+  have htf : hfin.toFinset = ({(0:V3)} : Finset V3) := by
+    ext z
+    simp
+  rw [htf] at hsum
+  simp at hsum
+  exact hv0 hsum
+
+/-- Ring-level packaging of the `fan7` same-ray kill. -/
+private theorem pmRingRayKill_p35 {vv : ℕ → V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : Kepler.Text.Fan.FAN 0 V E) (hV : V = Set.range vv) (i j : ℕ)
+    (hj0 : vv j ≠ 0) (hij : vv i ≠ vv j)
+    (h : ∃ t : ℝ, 0 < t ∧ vv i - 0 = t • (vv j - 0)) : False :=
+  pmSameRayKill_p35 hfan (by rw [hV]; exact Set.mem_range.mpr ⟨j, rfl⟩)
+    (by rw [hV]; exact Set.mem_range.mpr ⟨i, rfl⟩) (Ne.symm hij) hj0 h
+
+/-- Ring-level: at every dart the whole ring sits in the closed half-space
+`{vv i × vv (i+1) ≥ 0}` of the dart face (closed-sector azimuth sandwich
+through the sin bridge; the collinear-on-axis-line case contributes `= 0`). -/
+private theorem pmCrossGeDart_p35 {vv : ℕ → V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hfan : ConvexLocalFan (Set.range vv) E FF) (i : ℕ) (x : V3)
+    (hx : x ∈ Set.range vv) :
+    0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) := by
+  obtain ⟨hsand, hθ⟩ := wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan i
+  obtain ⟨h0le, hle⟩ := hsand x hx
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := hfan.1.1
+  have hnc : ¬ Collinear3 0 (vv i) (vv (i + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+  have hvi0 : vv i ≠ (0:V3) := fun hj =>
+    hfan'.2.2.2.1 (hj ▸ (Set.mem_range.mpr ⟨i, rfl⟩ : vv i ∈ Set.range vv))
+  by_cases hcol : Collinear3 0 (vv i) x
+  · obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := vv i) (w1 := x) hvi0).mp hcol
+    rw [pmCrossAxisZero_p35 (b := (vv (i + 1) : V3)) ⟨c, hc⟩]
+  · exact pmCrossGe_p35 hcol hnc h0le (le_trans hle hθ)
+
+/-- Corner C1 rendering (closed conditional): the C1 equalities put both
+diagonal endpoints in the dart face plane, with the whole ring in the closed
+face half-space.  The remaining exclusion (two mutually non-adjacent ring
+vertices inside one face side, with `dist u w ≤ cstab`) is the named
+`planeCrowding` residual. -/
+private theorem pmC1Render_p35 {vv : ℕ → V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hfan : ConvexLocalFan (Set.range vv) E FF) (i : ℕ) (u w : V3)
+    (_huR : u ∈ Set.range vv) (_hwR : w ∈ Set.range vv)
+    (hu0 : azim 0 (vv i) (vv (i + 1)) u = 0)
+    (hw0 : azim 0 (vv i) (vv (i + 1)) w = 0) :
+    (∃ s t : ℝ, u - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (∃ s t : ℝ, w - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (∀ y ∈ Set.range vv, 0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+  have hvne : ∀ j : ℕ, vv j ≠ (0:V3) := by
+    intro j hj
+    have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := hfan.1.1
+    exact hfan'.2.2.2.1 (hj ▸ (Set.mem_range.mpr ⟨j, rfl⟩ : vv j ∈ Set.range vv))
+  have hnc : ¬ Collinear3 0 (vv i) (vv (i + 1)) := by
+    have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := hfan.1.1
+    exact Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+  refine ⟨pmRender0_p35 (hvne i) (hvne (i + 1)) hnc hu0,
+    pmRender0_p35 (hvne i) (hvne (i + 1)) hnc hw0,
+    fun y hy => pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan i y hy⟩
+
+/-- Corner C2 rendering (closed conditional): the C2 equalities put both
+diagonal endpoints in the span face plane `aff {0, vv i, vv (i+k-1)}`, with
+the whole ring in the closed dart-face half-space. -/
+private theorem pmC2Render_p35 {vv : ℕ → V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hfan : ConvexLocalFan (Set.range vv) E FF) (i : ℕ) (u w : V3)
+    (_huR : u ∈ Set.range vv) (_hwR : w ∈ Set.range vv)
+    (huθ : azim 0 (vv i) (vv (i + 1)) u = azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)))
+    (hwθ : azim 0 (vv i) (vv (i + 1)) w = azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1))) :
+    (∃ s t : ℝ, u - 0 = s • (vv i - 0) + t • (vv (i + k - 1) - 0)) ∧
+    (∃ s t : ℝ, w - 0 = s • (vv i - 0) + t • (vv (i + k - 1) - 0)) ∧
+    (∀ y ∈ Set.range vv, 0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+  have hvne : ∀ j : ℕ, vv j ≠ (0:V3) := by
+    intro j hj
+    have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := hfan.1.1
+    exact hfan'.2.2.2.1 (hj ▸ (Set.mem_range.mpr ⟨j, rfl⟩ : vv j ∈ Set.range vv))
+  have hnc : ¬ Collinear3 0 (vv i) (vv (i + 1)) := by
+    have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := hfan.1.1
+    exact Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+  have hncsg : ¬ Collinear3 0 (vv i) (vv (i + k - 1)) := by
+    have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := hfan.1.1
+    exact Kepler.Text.Fan.fan_not_collinear hfan' (dartEdgeMems_p35 hk3 hper hE i).2
+  refine ⟨pmRenderSpan_p35 (hvne i) (hvne (i + k - 1)) hnc hncsg huθ,
+    pmRenderSpan_p35 (hvne i) (hvne (i + k - 1)) hnc hncsg hwθ,
+    fun y hy => pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan i y hy⟩
+
+/-- Corner C1 at the theorem level: `isScsV39`/`BBsV39` boilerplate
+extraction (`diagKGe4` gives `k ≥ 4`, so the fan disjunct resolves) plus the
+C1 azimuth equalities render into the closed `pmC1Render_p35` conclusion. -/
+private theorem pmC1AtDart_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (i : ℕ) (hu0 : azim 0 (vv i) (vv (i + 1)) u = 0)
+    (hw0 : azim 0 (vv i) (vv (i + 1)) w = 0) :
+    (∃ s t : ℝ, u - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (∃ s t : ℝ, w - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (∀ y ∈ Set.range vv, 0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  exact pmC1Render_p35 hk3 hper hinj hE hFF hfan i u w
+    (Set.mem_range.mpr ⟨p % s.k, hp⟩) (Set.mem_range.mpr ⟨q % s.k, hq⟩) hu0 hw0
+
+/-- Corner C2 at the theorem level: same boilerplate, span-face rendering. -/
+private theorem pmC2AtDart_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (i : ℕ)
+    (huθ : azim 0 (vv i) (vv (i + 1)) u = azim 0 (vv i) (vv (i + 1)) (vv (i + s.k - 1)))
+    (hwθ : azim 0 (vv i) (vv (i + 1)) w = azim 0 (vv i) (vv (i + 1)) (vv (i + s.k - 1))) :
+    (∃ c d : ℝ, u - 0 = c • (vv i - 0) + d • (vv (i + s.k - 1) - 0)) ∧
+    (∃ c d : ℝ, w - 0 = c • (vv i - 0) + d • (vv (i + s.k - 1) - 0)) ∧
+    (∀ y ∈ Set.range vv, 0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  exact pmC2Render_p35 hk3 hper hinj hE hFF hfan i u w
+    (Set.mem_range.mpr ⟨p % s.k, hp⟩) (Set.mem_range.mpr ⟨q % s.k, hq⟩) huθ hwθ
+
+/-! ## PlaneMiss π-corner kit (lkgrqui-planemiss2-w3, 2026-10-28)
+
+The C3/C4 π-side rendering: `azim = π` puts the point in the dart face
+plane span (frame route through `rep_smul_of_zOf`, the reverse of
+`azimPlanePlace_p35`); the C3/C4 corner equalities therefore also collapse
+to both diagonal endpoints lying in one dart face plane, additionally
+forcing the flat sector span `θ_j = π` (when `θ_j < π` the corner is killed
+outright by `wedgeSectorMem_p35`).  All four corners C1–C4 reduce to the
+single named residual `pmPlaneCrowding_p35`. -/
+
+/-- Azimuth `π` renders the point into the dart face plane span (HOL
+`AZIM_EQ_0_PI_EQ_COPLANAR`-flavored; frame route). -/
+private theorem pmRenderPi_p35 {a b x : V3} (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hnc : ¬ Collinear3 0 a b) (h : azim 0 a b x = Real.pi) :
+    ∃ s t : ℝ, x - 0 = s • (a - 0) + t • (b - 0) := by
+  by_cases hcolx : Collinear3 0 a x
+  · obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := a) (w1 := x) ha0).mp hcolx
+    exact ⟨c, 0, by rw [hc, zero_smul, add_zero]⟩
+  · obtain ⟨e1, e2, e3, hon, hal⟩ := exists_on3_eq_smul (a - 0) (sub_ne_zero.mpr ha0)
+    have hax : (a - 0 : V3) = dist a 0 • e3 := by rw [dist_eq_norm]; exact hal
+    obtain ⟨ψ, r1, r2, hr1, hr2, hzb, hzx⟩ := azim_frame_spec hnc hcolx hon hax
+      (by simpa using ha0)
+    rw [h] at hzx
+    have hsplit : (((ψ + Real.pi : ℝ):ℂ) * Complex.I)
+        = ((ψ:ℝ):ℂ) * Complex.I + ((Real.pi:ℝ):ℂ) * Complex.I := by
+      rw [Complex.ofReal_add]; ring
+    have hr1c : ((r1:ℝ):ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr (ne_of_gt hr1)
+    have hzx' : zOf e1 e2 (x - 0) = (((-(r2 / r1) : ℝ):ℂ)) * zOf e1 e2 (b - 0) := by
+      rw [hzx, hzb, hsplit, Complex.exp_add, Complex.exp_pi_mul_I]
+      push_cast
+      field_simp [hr1c]
+    obtain ⟨h1, hh⟩ := rep_smul_of_zOf hon hax ha0 b x (-(r2 / r1)) hzx'
+    exact ⟨h1, -(r2 / r1), by rw [hh]; exact add_comm _ _⟩
+
+/-- Corner C3 rendering (closed conditional): `φ_u(j) = 0 ∧ φ_w(j) = π`
+puts both diagonal endpoints in the dart face plane, forces the flat sector
+span `θ_j = π` (the `π > θ_j` case is killed by the sector bound), and
+keeps the whole ring in the closed face half-space. -/
+private theorem pmC3Render_p35 {vv : ℕ → V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hfan : ConvexLocalFan (Set.range vv) E FF) (i : ℕ) (u w : V3)
+    (_huR : u ∈ Set.range vv) (hwR : w ∈ Set.range vv)
+    (hu0 : azim 0 (vv i) (vv (i + 1)) u = 0)
+    (hwπ : azim 0 (vv i) (vv (i + 1)) w = Real.pi) :
+    (∃ s t : ℝ, u - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (∃ s t : ℝ, w - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) = Real.pi) ∧
+    (∀ y ∈ Set.range vv, 0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+  have hvne : ∀ j : ℕ, vv j ≠ (0:V3) := by
+    intro j hj
+    have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := hfan.1.1
+    exact hfan'.2.2.2.1 (hj ▸ (Set.mem_range.mpr ⟨j, rfl⟩ : vv j ∈ Set.range vv))
+  have hnc : ¬ Collinear3 0 (vv i) (vv (i + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan.1.1
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+  obtain ⟨hθ0, hθle⟩ := (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan i).1 w hwR
+  refine ⟨pmRender0_p35 (hvne i) (hvne (i + 1)) hnc hu0,
+    pmRenderPi_p35 (hvne i) (hvne (i + 1)) hnc hwπ,
+    le_antisymm (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan i).2
+      (by rw [← hwπ]; exact hθle),
+    fun y hy => pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan i y hy⟩
+
+/-- Corner C4 rendering (closed conditional): mirror of `pmC3Render_p35`
+with the π-side on `u`. -/
+private theorem pmC4Render_p35 {vv : ℕ → V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hfan : ConvexLocalFan (Set.range vv) E FF) (i : ℕ) (u w : V3)
+    (huR : u ∈ Set.range vv) (_hwR : w ∈ Set.range vv)
+    (huπ : azim 0 (vv i) (vv (i + 1)) u = Real.pi)
+    (hw0 : azim 0 (vv i) (vv (i + 1)) w = 0) :
+    (∃ s t : ℝ, u - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (∃ s t : ℝ, w - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) = Real.pi) ∧
+    (∀ y ∈ Set.range vv, 0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+  have hvne : ∀ j : ℕ, vv j ≠ (0:V3) := by
+    intro j hj
+    have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := hfan.1.1
+    exact hfan'.2.2.2.1 (hj ▸ (Set.mem_range.mpr ⟨j, rfl⟩ : vv j ∈ Set.range vv))
+  have hnc : ¬ Collinear3 0 (vv i) (vv (i + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan.1.1
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+  obtain ⟨hθ0, hθle⟩ := (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan i).1 u huR
+  refine ⟨pmRenderPi_p35 (hvne i) (hvne (i + 1)) hnc huπ,
+    pmRender0_p35 (hvne i) (hvne (i + 1)) hnc hw0,
+    le_antisymm (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan i).2
+      (by rw [← huπ]; exact hθle),
+    fun y hy => pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan i y hy⟩
+
+/-- Corner C3 at the theorem level: `isScsV39`/`BBsV39` boilerplate
+extraction (`diagKGe4` gives `k ≥ 4`, so the fan disjunct resolves) plus
+the C3 equalities render into the closed `pmC3Render_p35` conclusion. -/
+private theorem pmC3AtDart_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (i : ℕ) (hu0 : azim 0 (vv i) (vv (i + 1)) u = 0)
+    (hwπ : azim 0 (vv i) (vv (i + 1)) w = Real.pi) :
+    (∃ s t : ℝ, u - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (∃ s t : ℝ, w - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (azim 0 (vv i) (vv (i + 1)) (vv (i + s.k - 1)) = Real.pi) ∧
+    (∀ y ∈ Set.range vv, 0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  exact pmC3Render_p35 hk3 hper hinj hE hFF hfan i u w
+    (Set.mem_range.mpr ⟨p % s.k, hp⟩) (Set.mem_range.mpr ⟨q % s.k, hq⟩) hu0 hwπ
+
+/-- Corner C4 at the theorem level: same boilerplate, π-side on `u`. -/
+private theorem pmC4AtDart_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (i : ℕ) (huπ : azim 0 (vv i) (vv (i + 1)) u = Real.pi)
+    (hw0 : azim 0 (vv i) (vv (i + 1)) w = 0) :
+    (∃ s t : ℝ, u - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (∃ s t : ℝ, w - 0 = s • (vv i - 0) + t • (vv (i + 1) - 0)) ∧
+    (azim 0 (vv i) (vv (i + 1)) (vv (i + s.k - 1)) = Real.pi) ∧
+    (∀ y ∈ Set.range vv, 0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)) := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  exact pmC4Render_p35 hk3 hper hinj hE hFF hfan i u w
+    (Set.mem_range.mpr ⟨p % s.k, hp⟩) (Set.mem_range.mpr ⟨q % s.k, hq⟩) huπ hw0
+
+/-! ## PlaneMiss endgame ladder (lkgrqui-planemiss3-w3, 2026-10-28)
+
+Terminal-squeeze pieces staged above the `pmPlaneCrowding_p35` residual.
+Rung 1 = scalar triple product algebra; rung 2 = the propagation
+dichotomy (HOL TECOXBM.hl:311 CROSS_TRIPLE/SKEW segment: a ring vertex
+inside the dart-`j` face plane propagates that plane to at least one of
+its two ring neighbours — the σ-cycle iteration seed); rung 3 = the
+annulus chord–cosine bridge with the exact winding constants
+`2719/3969 = 1 - 1250/3969` (angle ≥ 2·arcsin(1/(2·h0)) ≈ 46.74°, the
+k = 6 step lower bound) and `1031/5000` (angle ≤ 2·arcsin((2·h0)/4) ≈
+78.15°, the k = 6 step upper bound), feeding the planar winding + metric
+squeeze endgame (k ∈ {4,5,6}; k=6 diagonal-2 squeeze: min far chord
+3.1065 > cstab, see DELIVERY numerics). -/
+
+/-- Triple product cyclic permutation (Mathlib
+`triple_product_permutation` + `dotProduct_comm`). -/
+private theorem pmTripleCyc_p35 (f g h : Fin 3 → ℝ) :
+    (crossProduct f g) ⬝ᵥ h = (crossProduct g h) ⬝ᵥ f := by
+  rw [dotProduct_comm (crossProduct f g) h, triple_product_permutation h f g,
+    dotProduct_comm (crossProduct g h) f]
+
+/-- crossProduct additivity in the first slot. -/
+private theorem pmCrossAddL_p35 (p q r : Fin 3 → ℝ) :
+    crossProduct (p + q) r = crossProduct p r + crossProduct q r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.add_apply]
+
+/-- crossProduct linearity in the first slot (`smul`). -/
+private theorem pmCrossSmulL_p35 (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct (t • p) r = t • crossProduct p r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply]
+
+/-- crossProduct additivity in the second slot. -/
+private theorem pmCrossAddR_p35 (p q r : Fin 3 → ℝ) :
+    crossProduct p (q + r) = crossProduct p q + crossProduct p r := by
+  rw [← cross_anticomm (q + r) p, ← cross_anticomm q p, ← cross_anticomm r p,
+    pmCrossAddL_p35, neg_add]
+
+/-- crossProduct linearity in the second slot (`smul`). -/
+private theorem pmCrossSmulR_p35 (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct p (t • r) = t • crossProduct p r := by
+  rw [← cross_anticomm (t • r) p, pmCrossSmulL_p35, ← cross_anticomm p r,
+    smul_neg, neg_neg]
+
+/-- dotProduct additivity in the first slot. -/
+private theorem pmDotAddL_p35 (p q r : Fin 3 → ℝ) :
+    (p + q) ⬝ᵥ r = p ⬝ᵥ r + q ⬝ᵥ r := by
+  unfold dotProduct
+  simp only [Pi.add_apply, add_mul, Finset.sum_add_distrib]
+
+/-- dotProduct additivity in the second slot. -/
+private theorem pmDotAddR_p35 (p q r : Fin 3 → ℝ) :
+    p ⬝ᵥ (q + r) = p ⬝ᵥ q + p ⬝ᵥ r := by
+  rw [dotProduct_comm p (q + r), pmDotAddL_p35, dotProduct_comm q p,
+    dotProduct_comm r p]
+
+/-- dotProduct linearity in the first slot (`smul`). -/
+private theorem pmDotSmulL_p35 (t : ℝ) (p r : Fin 3 → ℝ) :
+    (t • p) ⬝ᵥ r = t * (p ⬝ᵥ r) := by
+  unfold dotProduct
+  rw [Finset.mul_sum]
+  exact Finset.sum_congr rfl fun i _ => by
+    rw [Pi.smul_apply, smul_eq_mul]
+    ring
+
+/-- dotProduct oddness in the first slot. -/
+private theorem pmDotNegL_p35 (p r : Fin 3 → ℝ) : (-p) ⬝ᵥ r = -(p ⬝ᵥ r) := by
+  unfold dotProduct
+  simp only [Pi.neg_apply]
+  rw [← Finset.sum_neg_distrib]
+  exact Finset.sum_congr rfl fun i _ =>
+    (neg_mul_eq_neg_mul (p i) (r i)).symm
+
+/-- dotProduct oddness in the second slot. -/
+private theorem pmDotNegR_p35 (p r : Fin 3 → ℝ) : p ⬝ᵥ (-r) = -(p ⬝ᵥ r) := by
+  rw [dotProduct_comm p (-r), pmDotNegL_p35, dotProduct_comm r p]
+
+/-- V3 face-span rendering lifted to the pi layer (the V3 `smul`/`add`
+coes are `rfl` type-synonym equalities). -/
+private theorem pmSpanCoe_p35 {x b c : V3}
+    (hu : ∃ α β : ℝ, x - 0 = α • (b - 0) + β • (c - 0)) :
+    ∃ α β : ℝ, (x : Fin 3 → ℝ) = α • (b : Fin 3 → ℝ) + β • (c : Fin 3 → ℝ) := by
+  obtain ⟨α, β, hx⟩ := hu
+  simp only [sub_zero] at hx
+  exact ⟨α, β, congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hx⟩
+
+/-- Norm-square bridge: `‖v‖² = v ⬝ᵥ v` on `V3`. -/
+private theorem pmNormSqDot_p35 (v : V3) :
+    ‖v‖ ^ 2 = (v : Fin 3 → ℝ) ⬝ᵥ (v : Fin 3 → ℝ) := by
+  rw [EuclideanSpace.norm_sq_eq]
+  unfold dotProduct
+  refine Finset.sum_congr rfl fun i _ => ?_
+  have hvi : (v : Fin 3 → ℝ) i = v i := rfl
+  rw [hvi, Real.norm_eq_abs, sq_abs, pow_two]
+
+/-- The dot–norm–dist identity `x ⬝ᵥ y = (‖x‖² + ‖y‖² − dist x y²)/2`. -/
+private theorem pmDotNormDist_p35 (x y : V3) :
+    (x : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ)
+      = (‖x‖ ^ 2 + ‖y‖ ^ 2 - dist x y ^ 2) / 2 := by
+  have hdist : dist x y = ‖x - y‖ := dist_eq_norm x y
+  have hns : dist x y ^ 2
+      = ((x - y : V3) : Fin 3 → ℝ) ⬝ᵥ ((x - y : V3) : Fin 3 → ℝ) := by
+    rw [hdist]
+    exact pmNormSqDot_p35 (x - y)
+  have hcoe : ((x - y : V3) : Fin 3 → ℝ) = (x : Fin 3 → ℝ) - (y : Fin 3 → ℝ) := rfl
+  have hA : ((x : Fin 3 → ℝ) - (y : Fin 3 → ℝ))
+        ⬝ᵥ ((x : Fin 3 → ℝ) - (y : Fin 3 → ℝ))
+      = (x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ)
+        - 2 * ((x : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ))
+        + (y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ) := by
+    have e0 : ((x : Fin 3 → ℝ) - (y : Fin 3 → ℝ))
+        = (x : Fin 3 → ℝ) + -(y : Fin 3 → ℝ) := sub_eq_add_neg _ _
+    rw [e0]
+    simp only [pmDotAddL_p35, pmDotAddR_p35, pmDotNegR_p35, pmDotNegL_p35,
+      neg_neg, dotProduct_comm (y : Fin 3 → ℝ) (x : Fin 3 → ℝ)]
+    ring
+  rw [hcoe] at hns
+  rw [pmNormSqDot_p35 x, pmNormSqDot_p35 y, hns, hA]
+  linarith
+
+/-- **Propagation dichotomy core** (HOL TECOXBM.hl:311 CROSS_TRIPLE/SKEW):
+`x` sits in the `(b, c)` face span, `D± = (b×c)·x± ≥ 0` (the `(b,c)`
+half-space at the ring neighbours of `x`), and the two flanking darts at
+`x` carry their closed half-space bounds against `b` and `c`.  Then the
+`(b, c)` plane reaches `x⁺` or `x⁻`: if it reaches neither, the sign
+algebra `0 ≤ β·D⁺`, `0 ≤ −α·D⁺`, `0 ≤ −β·D⁻`, `0 ≤ α·D⁻` (from
+`x = α·b + β·c` and the triple product expansion) forces `α = β = 0`,
+i.e. `x = 0`. -/
+private theorem pmPropDichCore_p35 {x xp xm b c : V3}
+    (hu : ∃ α β : ℝ, (x : Fin 3 → ℝ) = α • (b : Fin 3 → ℝ) + β • (c : Fin 3 → ℝ))
+    (hDp : 0 ≤ (crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (xp : Fin 3 → ℝ))
+    (hDm : 0 ≤ (crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (xm : Fin 3 → ℝ))
+    (h1 : 0 ≤ (crossProduct (x : Fin 3 → ℝ) (xp : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ))
+    (h2 : 0 ≤ (crossProduct (x : Fin 3 → ℝ) (xp : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ))
+    (h3 : 0 ≤ (crossProduct (xm : Fin 3 → ℝ) (x : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ))
+    (h4 : 0 ≤ (crossProduct (xm : Fin 3 → ℝ) (x : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ))
+    (hx0 : (x : Fin 3 → ℝ) ≠ 0) :
+    (crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (xp : Fin 3 → ℝ) = 0 ∨
+    (crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (xm : Fin 3 → ℝ) = 0 := by
+  obtain ⟨α, β, hx⟩ := hu
+  have hDp' : 0 ≤ (xp : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ) := by
+    rw [dotProduct_comm]; exact hDp
+  have hDm' : 0 ≤ (xm : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ) := by
+    rw [dotProduct_comm]; exact hDm
+  -- dart-(x, x⁺) against b: β·D⁺ ≥ 0
+  have e1 : (crossProduct (x : Fin 3 → ℝ) (xp : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)
+      = β * ((xp : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) := by
+    rw [hx, pmCrossAddL_p35, pmCrossSmulL_p35, pmCrossSmulL_p35, pmDotAddL_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35]
+    have hb : (crossProduct (b : Fin 3 → ℝ) (xp : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm (crossProduct (b : Fin 3 → ℝ) (xp : Fin 3 → ℝ))
+        (b : Fin 3 → ℝ)]
+      exact dot_self_cross (b : Fin 3 → ℝ) (xp : Fin 3 → ℝ)
+    have hc : (crossProduct (c : Fin 3 → ℝ) (xp : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)
+        = (xp : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ) := by
+      rw [dotProduct_comm (crossProduct (c : Fin 3 → ℝ) (xp : Fin 3 → ℝ))
+        (b : Fin 3 → ℝ),
+        ← triple_product_permutation (xp : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+          (c : Fin 3 → ℝ)]
+    rw [hb, hc]; ring
+  -- dart-(x, x⁺) against c: −α·D⁺ ≥ 0
+  have e2 : (crossProduct (x : Fin 3 → ℝ) (xp : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ)
+      = -α * ((xp : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) := by
+    rw [hx, pmCrossAddL_p35, pmCrossSmulL_p35, pmCrossSmulL_p35, pmDotAddL_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35]
+    have hb : (crossProduct (b : Fin 3 → ℝ) (xp : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ)
+        = -((xp : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) := by
+      rw [dotProduct_comm (crossProduct (b : Fin 3 → ℝ) (xp : Fin 3 → ℝ))
+        (c : Fin 3 → ℝ), triple_product_permutation (c : Fin 3 → ℝ)
+        (b : Fin 3 → ℝ) (xp : Fin 3 → ℝ), ← cross_anticomm (c : Fin 3 → ℝ)
+        (xp : Fin 3 → ℝ), dotProduct_neg,
+        ← triple_product_permutation (xp : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+          (c : Fin 3 → ℝ)]
+    have hc : (crossProduct (c : Fin 3 → ℝ) (xp : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm (crossProduct (c : Fin 3 → ℝ) (xp : Fin 3 → ℝ))
+        (c : Fin 3 → ℝ)]
+      exact dot_self_cross (c : Fin 3 → ℝ) (xp : Fin 3 → ℝ)
+    rw [hb, hc]; ring
+  -- dart-(x⁻, x) against b: −β·D⁻ ≥ 0
+  have e3 : (crossProduct (xm : Fin 3 → ℝ) (x : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)
+      = -β * ((xm : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) := by
+    rw [hx, pmCrossAddR_p35, pmCrossSmulR_p35, pmCrossSmulR_p35, pmDotAddL_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35]
+    have hb : (crossProduct (xm : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm (crossProduct (xm : Fin 3 → ℝ) (b : Fin 3 → ℝ))
+        (b : Fin 3 → ℝ)]
+      exact dot_cross_self (xm : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+    have hc : (crossProduct (xm : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)
+        = -((xm : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) := by
+      rw [dotProduct_comm (crossProduct (xm : Fin 3 → ℝ) (c : Fin 3 → ℝ))
+        (b : Fin 3 → ℝ), ← cross_anticomm (c : Fin 3 → ℝ) (xm : Fin 3 → ℝ),
+        dotProduct_neg,
+        ← triple_product_permutation (xm : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+          (c : Fin 3 → ℝ)]
+    rw [hb, hc]; ring
+  -- dart-(x⁻, x) against c: α·D⁻ ≥ 0
+  have e4 : (crossProduct (xm : Fin 3 → ℝ) (x : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ)
+      = α * ((xm : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) := by
+    rw [hx, pmCrossAddR_p35, pmCrossSmulR_p35, pmCrossSmulR_p35, pmDotAddL_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35]
+    have hb : (crossProduct (xm : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ)
+        = (xm : Fin 3 → ℝ) ⬝ᵥ crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ) := by
+      rw [dotProduct_comm (crossProduct (xm : Fin 3 → ℝ) (b : Fin 3 → ℝ))
+        (c : Fin 3 → ℝ), triple_product_permutation (c : Fin 3 → ℝ)
+        (xm : Fin 3 → ℝ) (b : Fin 3 → ℝ)]
+    have hc : (crossProduct (xm : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm (crossProduct (xm : Fin 3 → ℝ) (c : Fin 3 → ℝ))
+        (c : Fin 3 → ℝ)]
+      exact dot_cross_self (xm : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+    rw [hb, hc]; ring
+  rcases le_iff_eq_or_lt.mp hDp' with hDp0 | hDppos
+  · refine Or.inl ?_
+    rw [dotProduct_comm (crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ))
+      (xp : Fin 3 → ℝ)]
+    exact hDp0.symm
+  rcases le_iff_eq_or_lt.mp hDm' with hDm0 | hDmpos
+  · refine Or.inr ?_
+    rw [dotProduct_comm (crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ))
+      (xm : Fin 3 → ℝ)]
+    exact hDm0.symm
+  exfalso
+  rw [e1] at h1; rw [e2] at h2; rw [e3] at h3; rw [e4] at h4
+  have hβ : 0 ≤ β := by
+    by_contra hneg
+    push_neg at hneg
+    exact absurd h1 (not_le.mpr (by nlinarith [hneg, hDppos]))
+  have hα : α ≤ 0 := by
+    by_contra hpos
+    push_neg at hpos
+    exact absurd h2 (not_le.mpr (by nlinarith [hpos, hDppos]))
+  have hβ' : β ≤ 0 := by
+    by_contra hpos
+    push_neg at hpos
+    exact absurd h3 (not_le.mpr (by nlinarith [hpos, hDmpos]))
+  have hα' : 0 ≤ α := by
+    by_contra hneg
+    push_neg at hneg
+    exact absurd h4 (not_le.mpr (by nlinarith [hneg, hDmpos]))
+  have hα0 : α = 0 := le_antisymm hα hα'
+  have hβ0 : β = 0 := le_antisymm hβ' hβ
+  rw [hα0, hβ0, zero_smul, zero_smul, add_zero] at hx
+  exact hx0 hx
+
+/-- **Propagation dichotomy at the ring** (theorem level, `pmPlaneCrowding`
+hypotheses): with `u` in the `j`-th dart face span, the dart-`j` plane
+reaches the ring successor or the ring predecessor of `u`.  This is the
+σ-cycle seed of the HOL `AFF_GT_INTER_AFF_SY` endgame. -/
+private theorem pmPropDichotomyAt_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (_hdist : dist u w ≤ cstab)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (j : ℕ)
+    (hu : ∃ c d : ℝ, u - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0)) :
+    (crossProduct ((vv j : V3) : Fin 3 → ℝ) ((vv (j + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((vv (p % s.k + 1) : V3) : Fin 3 → ℝ) = 0 ∨
+    (crossProduct ((vv j : V3) : Fin 3 → ℝ) ((vv (j + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((vv (p % s.k + (s.k - 1)) : V3) : Fin 3 → ℝ) = 0 := by
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  have huB : u ∈ ballAnnulus := hBB.1 (Set.mem_range.mpr ⟨p % s.k, hp⟩)
+  have hu2 : (2:ℝ) ≤ ‖u‖ := by
+    have h1 : ¬ (dist u (0:V3) < 2) := huB.2
+    have h3 : dist u (0:V3) = ‖u‖ := by
+      simp [dist_eq_norm]
+    linarith
+  have hucoe : ((u : V3) : Fin 3 → ℝ) ≠ 0 := by
+    have h4 : (4:ℝ) ≤ ‖u‖ ^ 2 := by nlinarith [hu2]
+    intro hzero
+    have hsq : ‖u‖ ^ 2 = ((u : V3) : Fin 3 → ℝ) ⬝ᵥ ((u : V3) : Fin 3 → ℝ) :=
+      pmNormSqDot_p35 u
+    rw [hzero] at hsq
+    have h0 : ((0 : Fin 3 → ℝ)) ⬝ᵥ (0 : Fin 3 → ℝ) = 0 := by
+      unfold dotProduct
+      simp
+    rw [h0] at hsq
+    linarith
+  have hge : ∀ i : ℕ, ∀ y : V3, y ∈ Set.range vv →
+      0 ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ) ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        (y : Fin 3 → ℝ) :=
+    fun i y hy => pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan i y hy
+  have hr1 : vv j ∈ Set.range vv := Set.mem_range.mpr ⟨j, rfl⟩
+  have hr2 : vv (j + 1) ∈ Set.range vv := Set.mem_range.mpr ⟨j + 1, rfl⟩
+  have hrp : vv (p % s.k + 1) ∈ Set.range vv := Set.mem_range.mpr ⟨p % s.k + 1, rfl⟩
+  have hrpp : vv (p % s.k + (s.k - 1)) ∈ Set.range vv :=
+    Set.mem_range.mpr ⟨p % s.k + (s.k - 1), rfl⟩
+  have hDp := hge j _ hrp
+  have hDm := hge j _ hrpp
+  have h1 := hge (p % s.k) (vv j) hr1
+  have h2 := hge (p % s.k) (vv (j + 1)) hr2
+  have h3 := hge (p % s.k + (s.k - 1)) (vv j) hr1
+  have h4 := hge (p % s.k + (s.k - 1)) (vv (j + 1)) hr2
+  have hpk : vv (p % s.k + s.k) = u := by rw [hper, hp]
+  have hplus : p % s.k + (s.k - 1) + 1 = p % s.k + s.k := by omega
+  rw [hplus, hpk] at h3 h4
+  rw [hp] at h1 h2
+  refine pmPropDichCore_p35 (pmSpanCoe_p35 hu) hDp hDm h1 h2 h3 h4 hucoe
+
+/-- Annulus cosine upper bound at `a`-pairs (the k = 6 winding step
+constant): two annulus vectors at chord ≥ 2 meet under a vector angle
+whose cosine is at most `2719/3969 = 1 - 1250/3969`, i.e. the angle is ≥
+`2·arcsin(1/(2·h0)) ≈ 46.74°`. -/
+private theorem pmCosLe46_p35 {x y : V3} (hx2 : 2 ≤ ‖x‖) (hx : ‖x‖ ≤ 2 * h0)
+    (hy2 : 2 ≤ ‖y‖) (hy : ‖y‖ ≤ 2 * h0) (hd : 2 ≤ dist x y) :
+    (x : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ) ≤ (2719 / 3969) * (‖x‖ * ‖y‖) := by
+  have h02 : (2 : ℝ) * h0 = 63 / 25 := by norm_num [h0]
+  rw [h02] at hx hy
+  have hG : (2:ℝ) * (2719 / 3969) * (‖x‖ * ‖y‖) - ‖x‖ ^ 2 - ‖y‖ ^ 2 + 4 ≥ 0 := by
+    have e : (2:ℝ) * (2719 / 3969) * (‖x‖ * ‖y‖) - ‖x‖ ^ 2 - ‖y‖ ^ 2 + 4
+        = (63 / 25 - ‖x‖) * (63 / 25 + ‖x‖ - 2 * (2719 / 3969) * ‖y‖)
+          + (63 / 25 - ‖y‖) * (63 / 25 + ‖y‖ - 2 * (2719 / 3969) * (63 / 25)) := by
+      ring
+    rw [e]
+    have p1 : 0 ≤ (63 / 25 - ‖x‖) * (63 / 25 + ‖x‖ - 2 * (2719 / 3969) * ‖y‖) :=
+      mul_nonneg (by linarith) (by linarith)
+    have p2 : 0 ≤ (63 / 25 - ‖y‖) * (63 / 25 + ‖y‖ - 2 * (2719 / 3969) * (63 / 25)) :=
+      mul_nonneg (by linarith) (by linarith)
+    linarith
+  have hd2 : (4:ℝ) ≤ dist x y ^ 2 := by nlinarith [hd]
+  have hid := pmDotNormDist_p35 x y
+  linarith
+
+/-- Annulus cosine lower bound at `b`-pairs (the k = 6 winding step
+constant): two annulus vectors at chord ≤ `2·h0` meet under a vector
+angle whose cosine is at least `1031/5000 = 0.2062`, i.e. the angle is ≤
+`2·arcsin((2·h0)/4) ≈ 78.15°`. -/
+private theorem pmCosGe78_p35 {x y : V3} (hx2 : 2 ≤ ‖x‖) (hx : ‖x‖ ≤ 2 * h0)
+    (hy2 : 2 ≤ ‖y‖) (hy : ‖y‖ ≤ 2 * h0) (hd : dist x y ≤ 2 * h0) :
+    (1031 / 5000) * (‖x‖ * ‖y‖) ≤ (x : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ) := by
+  have h02 : (2 : ℝ) * h0 = 63 / 25 := by norm_num [h0]
+  rw [h02] at hx hy hd
+  have hG : ‖x‖ ^ 2 + ‖y‖ ^ 2 - (63 / 25) ^ 2
+      - 2 * (1031 / 5000) * (‖x‖ * ‖y‖) ≥ 0 := by
+    have e : ‖x‖ ^ 2 + ‖y‖ ^ 2 - (63 / 25) ^ 2
+        - 2 * (1031 / 5000) * (‖x‖ * ‖y‖)
+        = (‖x‖ - 2) * (‖x‖ + 2 - 2 * (1031 / 5000) * ‖y‖)
+          + (‖y‖ - 2) * (‖y‖ + 2 - 2 * (1031 / 5000) * 2) := by
+      ring
+    rw [e]
+    have p1 : 0 ≤ (‖x‖ - 2) * (‖x‖ + 2 - 2 * (1031 / 5000) * ‖y‖) :=
+      mul_nonneg (by linarith) (by linarith)
+    have p2 : 0 ≤ (‖y‖ - 2) * (‖y‖ + 2 - 2 * (1031 / 5000) * 2) :=
+      mul_nonneg (by linarith) (by linarith)
+    linarith
+  have hd2 : dist x y ^ 2 ≤ (63 / 25) ^ 2 :=
+    by nlinarith [hd, (dist_nonneg : (0:ℝ) ≤ dist x y)]
+  have hid := pmDotNormDist_p35 x y
+  linarith
+/-! ## planemiss4 rungs (lkgrqui-planemiss4-w3, 2026-10-28) -/
+
+/-- Height-squared bound over a chord ray (k = 6 diagonal-2 analytic core):
+for two annulus vectors at chord in `[2, 2·h0]`, the squared height of `x`
+over the `y`-ray obeys `4‖x‖²‖y‖² − (‖x‖²+‖y‖²−dist²)² ≥ (5776/625)·‖y‖²`,
+i.e. the height itself is `≥ 38/25 = 1.52` (so `2h > cstab`). -/
+private theorem pmHeightSq_p35 {x y : V3} (hx2 : (2:ℝ) ≤ ‖x‖) (hx : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hy : ‖y‖ ≤ 2 * h0)
+    (hd2 : (2:ℝ) ≤ dist x y) (hd : dist x y ≤ 2 * h0) :
+    (4:ℝ) * ‖x‖ ^ 2 * ‖y‖ ^ 2 - (‖x‖ ^ 2 + ‖y‖ ^ 2 - dist x y ^ 2) ^ 2
+      ≥ (5776 / 625) * ‖y‖ ^ 2 := by
+  have h02 : (2:ℝ) * h0 = 63 / 25 := by norm_num [h0]
+  rw [h02] at hx hy hd
+  have hf : (4:ℝ) * ‖x‖ ^ 2 * ‖y‖ ^ 2 - (‖x‖ ^ 2 + ‖y‖ ^ 2 - dist x y ^ 2) ^ 2
+      = ((‖x‖ + ‖y‖) ^ 2 - dist x y ^ 2) * (dist x y ^ 2 - (‖x‖ - ‖y‖) ^ 2) := by ring
+  rw [hf]
+  have hd4 : (4:ℝ) ≤ dist x y ^ 2 := by nlinarith
+  have hpos : 2 * ‖x‖ ^ 2 + 2 * ‖y‖ ^ 2 - dist x y ^ 2 - 4 ≥ 0 := by nlinarith
+  have hstep : ((‖x‖ + ‖y‖) ^ 2 - dist x y ^ 2) * (dist x y ^ 2 - (‖x‖ - ‖y‖) ^ 2)
+      ≥ ((‖x‖ + ‖y‖) ^ 2 - 4) * (4 - (‖x‖ - ‖y‖) ^ 2) := by
+    have idty : ((‖x‖ + ‖y‖) ^ 2 - dist x y ^ 2) * (dist x y ^ 2 - (‖x‖ - ‖y‖) ^ 2)
+        = ((‖x‖ + ‖y‖) ^ 2 - 4) * (4 - (‖x‖ - ‖y‖) ^ 2)
+          + (dist x y ^ 2 - 4) * (2 * ‖x‖ ^ 2 + 2 * ‖y‖ ^ 2 - dist x y ^ 2 - 4) := by ring
+    rw [idty]
+    have t1 : (0:ℝ) ≤ (dist x y ^ 2 - 4) * (2 * ‖x‖ ^ 2 + 2 * ‖y‖ ^ 2 - dist x y ^ 2 - 4) :=
+      mul_nonneg (by linarith) hpos
+    linarith
+  -- key: (‖y‖+4)(4-(‖x‖-‖y‖)²) ≥ (5776/625)·‖y‖
+  have key : (‖y‖ + 4) * (4 - (‖x‖ - ‖y‖) ^ 2) ≥ (5776 / 625) * ‖y‖ := by
+    rcases le_or_gt (‖x‖ - 2) (‖y‖ - 2) with hst | hst
+    · have hcross : (‖y‖ + 4) * (4 - (‖x‖ - ‖y‖) ^ 2)
+          = (‖y‖ + 4) * (4 - (‖y‖ - 2) ^ 2)
+            + (‖x‖ - 2) * ((‖y‖ + 4) * (2 * (‖y‖ - 2) - (‖x‖ - 2))) := by ring
+      have hc0 : 0 ≤ (‖x‖ - 2) * ((‖y‖ + 4) * (2 * (‖y‖ - 2) - (‖x‖ - 2))) :=
+        mul_nonneg (by linarith) (mul_nonneg (by linarith) (by linarith))
+      have hq0 : 0 ≤ (‖y‖ - 2) ^ 2 + (13 / 25) * (‖y‖ - 2) + (13 / 25) ^ 2 := by nlinarith
+      have hq1 : 0 ≤ 6 * ((‖y‖ - 2) + 13 / 25) := by nlinarith
+      have hprod : 0 ≤ (‖y‖ - 2 - 13 / 25) *
+          (-1 * ((‖y‖ - 2) ^ 2 + (13 / 25) * (‖y‖ - 2) + (13 / 25) ^ 2)
+            - 6 * ((‖y‖ - 2) + 13 / 25) + 4 - 5776 / 625) := by
+        refine mul_nonneg_of_nonpos_of_nonpos (by linarith) ?_
+        have h4 : (4:ℝ) - 5776 / 625 < 0 := by norm_num
+        linarith
+      have hD : (‖y‖ + 4) * (4 - (‖y‖ - 2) ^ 2) - (5776 / 625) * ‖y‖ ≥ 16065 / 15625 := by
+        have e : (‖y‖ + 4) * (4 - (‖y‖ - 2) ^ 2) - (5776 / 625) * ‖y‖
+            = 16065 / 15625 + (‖y‖ - 2 - 13 / 25) *
+              (-1 * ((‖y‖ - 2) ^ 2 + (13 / 25) * (‖y‖ - 2) + (13 / 25) ^ 2)
+                - 6 * ((‖y‖ - 2) + 13 / 25) + 4 - 5776 / 625) := by ring
+        rw [e]
+        exact le_add_of_nonneg_right hprod
+      linarith
+    · have hsb : (‖x‖ - 2) ≤ 21 / 25 := by linarith
+      have hstep1 : (‖y‖ + 4) * (4 - (‖x‖ - ‖y‖) ^ 2)
+          - (‖y‖ + 4) * (4 - (‖y‖ - 71 / 25) ^ 2) ≥ 0 := by
+        have e : (‖y‖ + 4) * (4 - (‖x‖ - ‖y‖) ^ 2) - (‖y‖ + 4) * (4 - (‖y‖ - 71 / 25) ^ 2)
+            = (‖y‖ + 4) * ((‖x‖ - 2) - 21 / 25)
+              * (2 * (‖y‖ - 2) - (‖x‖ - 2) - 21 / 25) := by ring
+        have hA0 : ((‖x‖ - 2) - 21 / 25) ≤ 0 := by linarith
+        have hB0 : (2 * (‖y‖ - 2) - (‖x‖ - 2) - 21 / 25) ≤ 0 := by linarith
+        have hAB : 0 ≤ ((‖x‖ - 2) - 21 / 25) * (2 * (‖y‖ - 2) - (‖x‖ - 2) - 21 / 25) :=
+          mul_nonneg_of_nonpos_of_nonpos hA0 hB0
+        rw [e]
+        exact mul_nonneg_of_nonpos_of_nonpos
+          (mul_nonpos_of_nonneg_of_nonpos (by linarith) hA0) hB0
+      have hsq : (‖y‖ - 2 - 21 / 25) ^ 2 ≤ (21 / 25) ^ 2 := by nlinarith
+      have hstep2 : (‖y‖ + 4) * (4 - (‖y‖ - 71 / 25) ^ 2) - (5776 / 625) * ‖y‖
+          ≥ (6 * (4 - (21 / 25) ^ 2) - (5776 / 625) * 2) := by
+        have e : (‖y‖ + 4) * (4 - (‖y‖ - 71 / 25) ^ 2) - (5776 / 625) * ‖y‖
+            = (6 * (4 - (21 / 25) ^ 2) - (5776 / 625) * 2)
+              + (‖y‖ - 2) * ((4 - (‖y‖ - 71 / 25) ^ 2) - 6 * (‖y‖ - 2) + 252 / 25 - 5776 / 625) := by
+          ring
+        rw [e]
+        have hbr : (4 - (‖y‖ - 71 / 25) ^ 2) - 6 * (‖y‖ - 2) + 252 / 25 - 5776 / 625 ≥ 0 := by
+          nlinarith [hsq, show (‖y‖ - 2) ^ 2 ≤ (13 / 25) * (‖y‖ - 2) from by nlinarith]
+        exact le_add_of_nonneg_right (mul_nonneg (by linarith) hbr)
+      have hval : (6:ℝ) * (4 - (21 / 25) ^ 2) - (5776 / 625) * 2 > 0 := by norm_num
+      linarith
+  -- first factor: (‖x‖+‖y‖-2)(‖x‖+‖y‖+2) ≥ ‖y‖(‖y‖+4)
+  have hA1 : (‖x‖ + ‖y‖ - 2) * (‖x‖ + ‖y‖ + 2) ≥ ‖y‖ * (‖y‖ + 4) := by
+    have e : (‖x‖ + ‖y‖ - 2) * (‖x‖ + ‖y‖ + 2) = ‖y‖ * (‖y‖ + 4)
+        + (‖x‖ - 2) * (2 * (‖y‖ - 2) + (‖x‖ - 2) + 8) := by ring
+    rw [e]; nlinarith
+  have hB0 : (0:ℝ) ≤ 4 - (‖x‖ - ‖y‖) ^ 2 := by nlinarith
+  have h1 : (‖x‖ + ‖y‖) ^ 2 - 4 ≥ ‖y‖ * (‖y‖ + 4) := by
+    have e : (‖x‖ + ‖y‖) ^ 2 - 4 = (‖x‖ + ‖y‖ - 2) * (‖x‖ + ‖y‖ + 2) := by ring
+    linarith [hA1, e]
+  have hF : ((‖x‖ + ‖y‖) ^ 2 - 4) * (4 - (‖x‖ - ‖y‖) ^ 2)
+      ≥ (‖y‖ * (‖y‖ + 4)) * (4 - (‖x‖ - ‖y‖) ^ 2) :=
+    mul_le_mul_of_nonneg_right h1 hB0
+  have hmul : (‖y‖ * (‖y‖ + 4)) * (4 - (‖x‖ - ‖y‖) ^ 2)
+      ≥ (5776 / 625) * (‖y‖ * ‖y‖) := by
+    have h2 : (‖y‖ * (‖y‖ + 4)) * (4 - (‖x‖ - ‖y‖) ^ 2)
+        = ‖y‖ * ((‖y‖ + 4) * (4 - (‖x‖ - ‖y‖) ^ 2)) := by ring
+    have h3 : (5776 / 625) * (‖y‖ * ‖y‖) = ‖y‖ * ((5776 / 625) * ‖y‖) := by ring
+    rw [h2, h3]
+    exact mul_le_mul_of_nonneg_left key (by linarith)
+  linarith
+
+/-- Far-diagonal cosine bridge: two annulus vectors at chord ≤ `cstab` meet
+under an angle whose cosine is `≥ −10601/80000` scaled by the radii product,
+i.e. the vector angle is `≤ 2·arcsin(cstab/4) ≈ 97.63°`. -/
+private theorem pmFarCos_p35 {x y : V3} (hx2 : (2:ℝ) ≤ ‖x‖) (hx : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hy : ‖y‖ ≤ 2 * h0) (hd : dist x y ≤ cstab) :
+    -(10601 / 80000) * (‖x‖ * ‖y‖) ≤ (x : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ) := by
+  have h02 : (2:ℝ) * h0 = 63 / 25 := by norm_num [h0]
+  have hc : cstab = 301 / 100 := by norm_num [cstab]
+  rw [h02] at hx hy
+  rw [hc] at hd
+  have hG : ‖x‖ ^ 2 + ‖y‖ ^ 2 + (10601 / 40000) * (‖x‖ * ‖y‖) - (90601 / 10000) ≥ 0 := by
+    have e : ‖x‖ ^ 2 + ‖y‖ ^ 2 + (10601 / 40000) * (‖x‖ * ‖y‖) - (90601 / 10000)
+        = (‖x‖ - 2) * (‖x‖ + 2 + (10601 / 40000) * ‖y‖)
+          + (‖y‖ - 2) * (‖y‖ + 2 + (10601 / 40000) * 2) := by ring
+    rw [e]
+    have p1 : 0 ≤ (‖x‖ - 2) * (‖x‖ + 2 + (10601 / 40000) * ‖y‖) :=
+      mul_nonneg (by linarith) (by linarith)
+    have p2 : 0 ≤ (‖y‖ - 2) * (‖y‖ + 2 + (10601 / 40000) * 2) :=
+      mul_nonneg (by linarith) (by linarith)
+    linarith
+  have hd2 : dist x y ^ 2 ≤ (301 / 100) ^ 2 :=
+    by nlinarith [hd, (dist_nonneg : (0:ℝ) ≤ dist x y)]
+  have hid := pmDotNormDist_p35 x y
+  linarith
+
+/-- Same-ray kill: two distinct annulus points on one ray (`c ≥ 0`) have
+chord `|‖x‖ − ‖y‖| ≤ 2·h0 − 2 = 13/25 < 2`, contradicting the a-bound. -/
+private theorem pmNotSameRay_p35 {x y : V3} {c : ℝ} (hx2 : (2:ℝ) ≤ ‖x‖) (hx : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hy : ‖y‖ ≤ 2 * h0) (hc : 0 ≤ c) (hxy : x - 0 = c • (y - 0))
+    (hge : (2:ℝ) ≤ dist x y) : False := by
+  have h02 : (2:ℝ) * h0 = 63 / 25 := by norm_num [h0]
+  rw [h02] at hx hy
+  have h1 : x = c • y := by simpa using hxy
+  have hnym : ‖x‖ = c * ‖y‖ := by
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_nonneg hc]
+  have h2 : x - y = (c - 1) • y := by rw [h1]; module
+  have h3 : dist x y = ‖x - y‖ := by simp [dist_eq_norm]
+  have hdist : dist x y = |(c:ℝ) - 1| * ‖y‖ := by
+    rw [h3, h2, norm_smul, Real.norm_eq_abs]
+  rcases le_or_gt c 1 with hc1 | hc1
+  · have hAbs : |(c:ℝ) - 1| = 1 - c :=
+      (abs_of_nonpos (by linarith : c - 1 ≤ 0)).trans (neg_sub c 1)
+    have hEq : dist x y = ‖y‖ - ‖x‖ := by rw [hdist, hAbs, hnym]; ring
+    linarith [hEq, hx2, hy]
+  · have hAbs : |(c:ℝ) - 1| = c - 1 := abs_of_nonneg (show (0:ℝ) ≤ c - 1 by linarith)
+    have hEq : dist x y = ‖x‖ - ‖y‖ := by rw [hdist, hAbs, hnym]; ring
+    linarith [hEq, hx, hy2]
+
+/-- Basis-swap: two linearly independent vectors of the plane `span(a, b)`
+regenerate `a` and `b` (the "adjacent double-P-point ⟹ equal dart planes"
+rung of the winding skeleton). -/
+private theorem pmSpanEq_p35 {a b u v : V3}
+    (hu : ∃ c d : ℝ, u - 0 = c • (a - 0) + d • (b - 0))
+    (hv : ∃ c d : ℝ, v - 0 = c • (a - 0) + d • (b - 0))
+    (hnu : (0:V3) ≠ u) (hdep : ∀ c : ℝ, v - 0 ≠ c • (u - 0)) :
+    (∃ e f : ℝ, a - 0 = e • (u - 0) + f • (v - 0)) ∧
+      (∃ e f : ℝ, b - 0 = e • (u - 0) + f • (v - 0)) := by
+  obtain ⟨α, β, hu'⟩ := hu
+  obtain ⟨γ, δ, hv'⟩ := hv
+  simp only [sub_zero] at hu' hv'
+  have hkey : α * δ - β * γ ≠ 0 := by
+    intro hzero
+    rcases eq_or_ne α 0 with hα0 | hα0
+    · have hub : u = β • b := by rw [hu', hα0]; simp
+      have hβ0 : β ≠ 0 := by
+        intro hβ0
+        rw [hβ0] at hub
+        exact hnu (by simpa using hub.symm)
+      rcases eq_or_ne γ 0 with hγ0 | hγ0
+      · have hv0 : v = δ • b := by rw [hv', hγ0]; simp
+        refine hdep (δ / β) ?_
+        rw [hv0, hub]
+        simp only [sub_zero, smul_smul]
+        field_simp
+      · exfalso
+        have hbc : β * γ = 0 := by
+          rw [hα0, zero_mul] at hzero
+          linarith
+        rcases mul_eq_zero.mp hbc with h | h
+        · exact hβ0 h
+        · exact hγ0 h
+    · refine hdep (γ / α) ?_
+      have hv2 : v = (γ / α) • u := by
+        have e1 : (γ / α) • u = (γ / α) • (α • a + β • b) := by rw [hu']
+        have hδ : δ = β * γ / α := by
+          field_simp
+          linarith [hzero]
+        have e2 : (γ / α) • (α • a + β • b) = γ • a + δ • b := by
+          rw [smul_add, smul_smul, div_mul_cancel₀ _ hα0, hδ]
+          module
+        rw [e1, e2, hv']
+      simpa using hv2
+  refine ⟨?_, ?_⟩
+  · refine ⟨δ / (α * δ - β * γ), -(β / (α * δ - β * γ)), ?_⟩
+    have h1 : (α * δ - β * γ) • (a - 0) = δ • (u - 0) - β • (v - 0) := by
+      rw [hu', hv']
+      module
+    suffices h : (α * δ - β * γ) • (a - 0)
+        = (α * δ - β * γ) • ((δ / (α * δ - β * γ)) • (u - 0)
+          + (-(β / (α * δ - β * γ))) • (v - 0)) by
+      exact smul_right_injective V3 hkey h
+    rw [h1, smul_add, smul_smul, smul_smul, mul_div_cancel₀ _ hkey, mul_neg,
+      mul_div_cancel₀ _ hkey]
+    all_goals module
+  · refine ⟨-(γ / (α * δ - β * γ)), α / (α * δ - β * γ), ?_⟩
+    have h1 : (α * δ - β * γ) • (b - 0) = -(γ) • (u - 0) + α • (v - 0) := by
+      rw [hu', hv']
+      module
+    suffices h : (α * δ - β * γ) • (b - 0)
+        = (α * δ - β * γ) • ((-(γ / (α * δ - β * γ))) • (u - 0)
+          + (α / (α * δ - β * γ)) • (v - 0)) by
+      exact smul_right_injective V3 hkey h
+    rw [h1, smul_add, smul_smul, smul_smul, mul_div_cancel₀ _ hkey, mul_neg,
+      mul_div_cancel₀ _ hkey]
+    all_goals module
+
+/-! ## rung 5: the k = 6 diagonal-2 squeeze package -/
+
+/-- Right-smul for the file's dot product (twin of `pmDotSmulL_p35`). -/
+private theorem pmDotSmulR_p35 (t : ℝ) (p r : Fin 3 → ℝ) :
+    p ⬝ᵥ (t • r) = t * (r ⬝ᵥ p) := by
+  rw [dotProduct_comm, pmDotSmulL_p35]
+
+
+
+/-- The k = 6 diagonal-2 squeeze (conditional package): with `x1` a ring
+vertex, `ν` a unit in-plane normal of the `x1`-ray, and `u`, `w` two annulus
+points at chord in `[2, 2·h0]` from `x1`, decomposed on opposite sides of the
+`x1`-ray (`u = a•x1 + h1•ν`, `w = b•x1 + h2•ν`, `h1 ≤ 0 ≤ h2`), the height
+core `pmHeightSq_p35` forces `dist u w > cstab`. -/
+private theorem pmDiag2Squeeze_p35 {u x1 w ν : V3} {a b h1 h2 : ℝ}
+    (hn : ‖ν‖ = 1) (hnx : (ν : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ) = 0)
+    (hucoe : u - 0 = a • (x1 - 0) + h1 • (ν - 0))
+    (hwcoe : w - 0 = b • (x1 - 0) + h2 • (ν - 0))
+    (hsg1 : h1 ≤ 0) (hsg2 : 0 ≤ h2)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hux : ‖u‖ ≤ 2 * h0) (hx12 : (2:ℝ) ≤ ‖x1‖)
+    (hx1 : ‖x1‖ ≤ 2 * h0) (hw2 : (2:ℝ) ≤ ‖w‖) (hwx : ‖w‖ ≤ 2 * h0)
+    (hdu : (2:ℝ) ≤ dist u x1) (hdu' : dist u x1 ≤ 2 * h0)
+    (hdw : (2:ℝ) ≤ dist w x1) (hdw' : dist w x1 ≤ 2 * h0) :
+    cstab < dist u w := by
+  have hH1raw : (4:ℝ) * ‖u‖ ^ 2 * ‖x1‖ ^ 2 - (‖u‖ ^ 2 + ‖x1‖ ^ 2 - dist u x1 ^ 2) ^ 2
+      ≥ (5776 / 625) * ‖x1‖ ^ 2 := pmHeightSq_p35 hu2 hux hx12 hx1 hdu hdu'
+  have hH2raw : (4:ℝ) * ‖w‖ ^ 2 * ‖x1‖ ^ 2 - (‖w‖ ^ 2 + ‖x1‖ ^ 2 - dist w x1 ^ 2) ^ 2
+      ≥ (5776 / 625) * ‖x1‖ ^ 2 := pmHeightSq_p35 hw2 hwx hx12 hx1 hdw hdw'
+  have h02 : (2:ℝ) * h0 = 63 / 25 := by norm_num [h0]
+  rw [h02] at hux hx1 hdu' hdw' hwx
+  simp only [sub_zero] at hucoe hwcoe
+  have hucoe' : (u : Fin 3 → ℝ) = a • (x1 : Fin 3 → ℝ) + h1 • (ν : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hucoe
+  have hwcoe' : (w : Fin 3 → ℝ) = b • (x1 : Fin 3 → ℝ) + h2 • (ν : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hwcoe
+  have hnn : (ν : Fin 3 → ℝ) ⬝ᵥ (ν : Fin 3 → ℝ) = 1 := by
+    rw [← pmNormSqDot_p35 ν, hn]
+    norm_num
+  have hnvx : (x1 : Fin 3 → ℝ) ⬝ᵥ (ν : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm, hnx]
+  -- scalar coordinates
+  have hux1d : (u : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)
+      = a * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) := by
+    rw [hucoe', pmDotAddL_p35, pmDotSmulL_p35, pmDotSmulL_p35, hnx]
+    ring
+  have hun : (u : Fin 3 → ℝ) ⬝ᵥ (ν : Fin 3 → ℝ) = h1 := by
+    rw [hucoe', pmDotAddL_p35, pmDotSmulL_p35, pmDotSmulL_p35, hnvx, hnn]
+    ring
+  have hu2d : ‖u‖ ^ 2
+      = a ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) + h1 ^ 2 := by
+    rw [pmNormSqDot_p35 u, hucoe', pmDotAddL_p35, pmDotAddR_p35, pmDotAddR_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35,
+      pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35,
+      hnvx, hnx, hnn]
+    ring
+  have hsubu : ((u - x1 : V3) : Fin 3 → ℝ)
+      = (a - 1) • (x1 : Fin 3 → ℝ) + h1 • (ν : Fin 3 → ℝ) := by
+    show (u : Fin 3 → ℝ) - (x1 : Fin 3 → ℝ) = _
+    rw [hucoe']
+    module
+  have hddu : dist u x1 ^ 2
+      = (a - 1) ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) + h1 ^ 2 := by
+    have h1 : dist u x1 = ‖u - x1‖ := dist_eq_norm u x1
+    have h2 := pmNormSqDot_p35 (u - x1)
+    rw [h1, h2, hsubu, pmDotAddL_p35, pmDotAddR_p35, pmDotAddR_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35,
+      pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35,
+      hnvx, hnx, hnn]
+    ring
+  have hwx1d : (w : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)
+      = b * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) := by
+    rw [hwcoe', pmDotAddL_p35, pmDotSmulL_p35, pmDotSmulL_p35, hnx]
+    ring
+  have hw2d : ‖w‖ ^ 2
+      = b ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) + h2 ^ 2 := by
+    rw [pmNormSqDot_p35 w, hwcoe', pmDotAddL_p35, pmDotAddR_p35, pmDotAddR_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35,
+      pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35,
+      hnvx, hnx, hnn]
+    ring
+  have hsubw : ((w - x1 : V3) : Fin 3 → ℝ)
+      = (b - 1) • (x1 : Fin 3 → ℝ) + h2 • (ν : Fin 3 → ℝ) := by
+    show (w : Fin 3 → ℝ) - (x1 : Fin 3 → ℝ) = _
+    rw [hwcoe']
+    module
+  have hddw : dist w x1 ^ 2
+      = (b - 1) ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) + h2 ^ 2 := by
+    have h1 : dist w x1 = ‖w - x1‖ := dist_eq_norm w x1
+    have h2 := pmNormSqDot_p35 (w - x1)
+    rw [h1, h2, hsubw, pmDotAddL_p35, pmDotAddR_p35, pmDotAddR_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35,
+      pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35,
+      hnvx, hnx, hnn]
+    ring
+  -- height core consumption
+  have hx1n : ‖x1‖ ^ 2 = (x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ) := pmNormSqDot_p35 x1
+  have hx1p : (0:ℝ) < (x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ) := by
+    have h4 : (4:ℝ) ≤ ‖x1‖ ^ 2 := by nlinarith [hx12]
+    rw [← pmNormSqDot_p35 x1]
+    linarith
+  have hH1' : (4:ℝ) * h1 ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ))
+      ≥ (5776 / 625) * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) := by
+    have e : (4:ℝ) * ‖u‖ ^ 2 * ‖x1‖ ^ 2 - (‖u‖ ^ 2 + ‖x1‖ ^ 2 - dist u x1 ^ 2) ^ 2
+        = (4:ℝ) * h1 ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) := by
+      rw [hu2d, hx1n, hddu]
+      ring
+    rw [e, hx1n] at hH1raw
+    exact hH1raw
+  have hAb1 : (1444 / 625) ≤ h1 ^ 2 := by
+    have hprod : (0:ℝ) ≤ ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ))
+        * (4 * h1 ^ 2 - 5776 / 625) := by
+      have e : ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ))
+          * (4 * h1 ^ 2 - 5776 / 625)
+          = (4:ℝ) * h1 ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ))
+            - (5776 / 625) * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) := by ring
+      rw [e]
+      linarith [hH1', hx1p.le]
+    rcases lt_or_ge (4 * h1 ^ 2) (5776 / 625) with hc | hc
+    · exact absurd (mul_neg_of_pos_of_neg hx1p (by linarith)) (not_lt.mpr hprod)
+    · linarith [hc]
+  have hneg1 : h1 ≤ -(38 / 25) := by
+    by_contra hcon
+    have h1b : h1 > -(38 / 25) := by linarith
+    have hprod : (0:ℝ) < h1 * (h1 + 38 / 25) := by
+      have e : h1 * (h1 + 38 / 25) = h1 ^ 2 + (38 / 25) * h1 := by ring
+      rw [e]
+      linarith [hAb1, h1b]
+    have hprod2 : h1 * (h1 + 38 / 25) ≤ 0 := by
+      have h2n : (0:ℝ) ≤ h1 + 38 / 25 := by linarith
+      have e : h1 * (h1 + 38 / 25) ≤ 0 * (h1 + 38 / 25) :=
+        mul_le_mul_of_nonneg_right hsg1 h2n
+      linarith [e]
+    linarith
+  have hH2' : (4:ℝ) * h2 ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ))
+      ≥ (5776 / 625) * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) := by
+    have e : (4:ℝ) * ‖w‖ ^ 2 * ‖x1‖ ^ 2 - (‖w‖ ^ 2 + ‖x1‖ ^ 2 - dist w x1 ^ 2) ^ 2
+        = (4:ℝ) * h2 ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) := by
+      rw [hw2d, hx1n, hddw]
+      ring
+    rw [e, hx1n] at hH2raw
+    exact hH2raw
+  have hAb2 : (1444 / 625) ≤ h2 ^ 2 := by
+    have hprod : (0:ℝ) ≤ ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ))
+        * (4 * h2 ^ 2 - 5776 / 625) := by
+      have e : ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ))
+          * (4 * h2 ^ 2 - 5776 / 625)
+          = (4:ℝ) * h2 ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ))
+            - (5776 / 625) * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) := by ring
+      rw [e]
+      linarith [hH2', hx1p.le]
+    rcases lt_or_ge (4 * h2 ^ 2) (5776 / 625) with hc | hc
+    · exact absurd (mul_neg_of_pos_of_neg hx1p (by linarith)) (not_lt.mpr hprod)
+    · linarith [hc]
+  have hpos2 : (38 / 25 : ℝ) ≤ h2 := by
+    rcases lt_or_ge h2 (38 / 25) with hc | hc
+    · have t : (0:ℝ) < (38 / 25 - h2) * (38 / 25 + h2) := mul_pos (by linarith) (by linarith)
+      nlinarith [hAb2, t]
+    · exact hc
+  -- squeeze
+  have hsubw2 : ((u - w : V3) : Fin 3 → ℝ)
+      = (a - b) • (x1 : Fin 3 → ℝ) + (h1 - h2) • (ν : Fin 3 → ℝ) := by
+    show (u : Fin 3 → ℝ) - (w : Fin 3 → ℝ) = _
+    rw [hucoe', hwcoe']
+    module
+  have hd2c : dist u w ^ 2
+      = (a - b) ^ 2 * ((x1 : Fin 3 → ℝ) ⬝ᵥ (x1 : Fin 3 → ℝ)) + (h1 - h2) ^ 2 := by
+    have h1 : dist u w = ‖u - w‖ := dist_eq_norm u w
+    have h2 := pmNormSqDot_p35 (u - w)
+    rw [h1, h2, hsubw2, pmDotAddL_p35, pmDotAddR_p35, pmDotAddR_p35,
+      pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmDotSmulL_p35,
+      pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35, pmDotSmulR_p35,
+      hnvx, hnx, hnn]
+    ring
+  have hcstab : cstab = 301 / 100 := by norm_num [cstab]
+  rw [hcstab]
+  have hdiff : (76 / 25 : ℝ) ≤ h2 - h1 := by linarith
+  have hsq76 : (h2 - h1) ^ 2 ≥ (76 / 25) ^ 2 := by nlinarith
+  have hstep1 : (h1 - h2) ^ 2 ≤ dist u w ^ 2 := by
+    rw [hd2c]
+    exact le_add_of_nonneg_left (mul_nonneg (sq_nonneg (a - b)) (le_of_lt hx1p))
+  have hstep2 : (h1 - h2) ^ 2 = (h2 - h1) ^ 2 := by ring
+  have hsq301 : (301 / 100 : ℝ) ^ 2 < (76 / 25) ^ 2 := by norm_num
+  rcases le_or_gt (dist u w) (301 / 100) with hd | hd
+  · exfalso
+    have hd2le : dist u w ^ 2 ≤ (301 / 100) ^ 2 := by
+      nlinarith [hd, (dist_nonneg : (0:ℝ) ≤ dist u w)]
+    linarith [hstep1, hstep2, hsq76, hsq301, hd2le]
+  · exact hd
+/-- Unordered collinearity swap (second and third point commute). -/
+private theorem coll3swap_p35 {v w1 w2 : V3} : Collinear3 v w1 w2 ↔ Collinear3 v w2 w1 := by
+  show Collinear ℝ ({v, w1, w2} : Set V3) ↔ Collinear ℝ ({v, w2, w1} : Set V3)
+  rw [show ({v, w1, w2} : Set V3) = ({v, w2, w1} : Set V3) from by
+    ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+
+/-- In-plane azimuth placement (new kit item, lkgrqui-sectortri-asm-w3): a
+point of the plane through `0`, `a`, `b` lies at azimuth `0` (positive
+`b`-side, including the axis) or `π` (negative `b`-side). -/
+private theorem azimPlanePlace_p35 {a b x : V3} (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hnc : ¬ Collinear3 0 a b) (hx : ∃ s t : ℝ, x - 0 = s • (a - 0) + t • (b - 0)) :
+    azim 0 a b x = 0 ∨ azim 0 a b x = Real.pi := by
+  obtain ⟨s, t, hx'⟩ := hx
+  by_cases hcolx : Collinear3 0 a x
+  · exact Or.inl (by rw [azim, if_pos (Or.inr hcolx)])
+  rcases lt_trichotomy t 0 with ht0 | ht00 | ht1
+  · -- negative side: azimuth π (frame computation)
+    have hge : (0:ℝ) ≤ azim 0 a b x := azim_nonneg 0 a b x
+    have hlt : azim 0 a b x < 2 * Real.pi := azim_lt_two_pi 0 a b x
+    obtain ⟨e1, e2, e3, hon, hal⟩ := exists_on3_eq_smul (a - 0) (sub_ne_zero.mpr ha0)
+    have hax : (a - 0 : V3) = dist a 0 • e3 := by rw [dist_eq_norm]; exact hal
+    obtain ⟨ψ, r1, r2, hr1, hr2, hzb, hzx⟩ := azim_frame_spec hnc hcolx hon hax
+      (by simpa using ha0)
+    have hza : zOf e1 e2 (a - 0) = 0 := zOf_axis hax hon
+    have hlin : zOf e1 e2 (x - 0) = (t:ℂ) * zOf e1 e2 (b - 0) := by
+      rw [hx', zOf_add, zOf_smul, zOf_smul, hza, mul_zero, zero_add]
+    have hexp : Complex.exp (((Real.pi:ℝ):ℂ) * Complex.I) = -1 := Complex.exp_pi_mul_I
+    have hkey : (r2:ℂ) * Complex.exp (((ψ + azim 0 a b x : ℝ):ℂ) * Complex.I)
+        = (((-t) * r1 : ℝ):ℂ) * Complex.exp (((ψ + Real.pi : ℝ):ℂ) * Complex.I) := by
+      have hex : Complex.exp (((ψ + Real.pi : ℝ):ℂ) * Complex.I)
+          = Complex.exp (((ψ:ℝ):ℂ) * Complex.I) * (-1) := by
+        have hsplit : ((ψ + Real.pi : ℝ):ℂ) * Complex.I
+            = ((ψ:ℝ):ℂ) * Complex.I + ((Real.pi:ℝ):ℂ) * Complex.I := by
+          rw [Complex.ofReal_add]
+          ring
+        rw [hsplit, Complex.exp_add, hexp]
+      rw [← hzx, hlin, hzb, hex]
+      push_cast
+      ring
+    have hexeq : Complex.exp (((ψ + azim 0 a b x : ℝ):ℂ) * Complex.I)
+        = Complex.exp (((ψ + Real.pi : ℝ):ℂ) * Complex.I) :=
+      exp_pos_mul_eq hr2 (mul_pos (by linarith : (0:ℝ) < -t) hr1) hkey
+    obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hexeq
+    -- hn : (ψ + θ) * I = (ψ + π) * I + n * (2 * π * I)
+    have hθ : azim 0 a b x = Real.pi + (n:ℝ) * (2 * Real.pi) := by
+      have h4 := hn
+      push_cast at h4
+      rw [add_mul, add_mul] at h4
+      have h5 : ((azim 0 a b x : ℝ):ℂ) * Complex.I
+          = ((Real.pi:ℝ):ℂ) * Complex.I
+            + ((n:ℂ) * (2 * ((Real.pi:ℝ):ℂ) * Complex.I)) := by
+        linear_combination h4
+      have h6 : (((azim 0 a b x : ℝ) - Real.pi : ℝ):ℂ) * Complex.I
+          = ((n:ℂ) * (2 * ((Real.pi:ℝ):ℂ))) * Complex.I := by
+        rw [Complex.ofReal_sub]
+        linear_combination h5
+      have h10 := mul_right_cancel₀ Complex.I_ne_zero h6
+      have h11 := congrArg Complex.re h10
+      simp only [Complex.ofReal_re, Complex.mul_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im, mul_zero, sub_zero] at h11
+      norm_num at h11
+      linarith
+    have hπ0 : (0:ℝ) < Real.pi := Real.pi_pos
+    have h2π : (0:ℝ) < 2 * Real.pi := by linarith
+    rcases Int.lt_trichotomy n 0 with hn0 | hn00 | hn1
+    · exfalso
+      have hnle : ((n:ℤ):ℝ) ≤ ((-1:ℤ):ℝ) := Int.cast_le.mpr (by omega)
+      simp only [Int.cast_neg, Int.cast_one] at hnle
+      have hmul : (2:ℝ) * Real.pi * ((n:ℤ):ℝ) ≤ (2:ℝ) * Real.pi * (-1) :=
+        mul_le_mul_of_nonneg_left hnle h2π.le
+      rw [hθ] at hge
+      nlinarith [hmul, hπ0]
+    · refine Or.inr ?_
+      rw [hθ, hn00]
+      push_cast
+      ring
+    · exfalso
+      have hnge : ((1:ℤ):ℝ) ≤ ((n:ℤ):ℝ) := Int.cast_le.mpr (by omega)
+      simp only [Int.cast_one] at hnge
+      have hmul : (2:ℝ) * Real.pi * 1 ≤ (2:ℝ) * Real.pi * ((n:ℤ):ℝ) :=
+        mul_le_mul_of_nonneg_left hnge h2π.le
+      rw [hθ] at hlt
+      nlinarith [hmul, hπ0]
+  · -- t = 0: x on the axis
+    exfalso
+    simp only [ht00, zero_smul, add_zero] at hx'
+    exact hcolx ((collinear3_iff_smul ha0).mpr ⟨s, hx'⟩)
+  · -- positive side: azimuth 0
+    refine Or.inl ((azim_eq_zero_iff_alt hnc hcolx).mpr ?_)
+    refine (affGt_pair_iff (v0 := (0:V3)) (v1 := a) (x := b) (y := x)
+      (Ne.symm ha0) hb0 (fun he => hnc (by rw [he]; exact collinear3_pair_right rfl))).mpr
+      ⟨t, ht1, s, by rw [hx']; module⟩
+
+/-! ## planemiss5 rungs (lkgrqui-planemiss5-w3, 2026-10-28)
+
+The (A)-winding ladder pieces, all conditional (private, `_p35` new names):
+the in-plane azimuth sign bridge, the double-face cone packaging, the
+below-π sector collapse, the axis-line pair kill, and the flat-run normal
+parallelism.  Insertion point: after `azimPlanePlace_p35`. -/
+
+/-- Plane-coordinate uniqueness: the `(a, b)`-coordinates of a plane vector
+are unique (`a`, `b` independent at `0`). -/
+private theorem pmPlaneCoordUnique_p35 {a b : V3} (ha0 : a ≠ 0)
+    (hnc : ¬ Collinear3 0 a b) {s1 t1 s2 t2 : ℝ}
+    (h : s1 • (a - 0) + t1 • (b - 0) = s2 • (a - 0) + t2 • (b - 0)) :
+    s1 = s2 ∧ t1 = t2 := by
+  have hz : (s1 - s2) • (a - 0) + (t1 - t2) • (b - 0) = (0:V3) := by
+    have e : (s1 • (a - 0) + t1 • (b - 0)) - (s2 • (a - 0) + t2 • (b - 0))
+        = (s1 - s2) • (a - 0) + (t1 - t2) • (b - 0) := by
+      rw [sub_smul, sub_smul]
+      module
+    rw [← e, h]
+    simp
+  rcases eq_or_ne (t1 - t2) 0 with h0 | h0
+  · rw [h0, zero_smul, add_zero] at hz
+    have hs : s1 - s2 = 0 := by
+      by_contra hc
+      refine ha0 ?_
+      apply smul_right_injective V3 hc
+      show (s1 - s2) • (a:V3) = (s1 - s2) • (0:V3)
+      rw [show (s1 - s2) • (a:V3) = (s1 - s2) • (a - 0) from by rw [sub_zero],
+        hz, smul_zero]
+    exact ⟨by linarith, by linarith⟩
+  · exfalso
+    refine hnc ((collinear3_iff_smul (v := (0:V3)) (w := a) (w1 := b) ha0).mpr
+      ⟨-(s1 - s2) / (t1 - t2), ?_⟩)
+    apply smul_right_injective V3 h0
+    show (t1 - t2) • (b - 0) = (t1 - t2) • ((-(s1 - s2) / (t1 - t2)) • (a - 0))
+    rw [smul_smul, mul_comm, div_mul_cancel₀ _ h0, neg_smul]
+    exact (neg_eq_of_add_eq_zero_right hz).symm
+
+/-- Plane-coordinate vanishing: `(s, t) = (0, 0)` is the only vanishing
+combination of two independent plane vectors. -/
+private theorem pmPlaneCoordZero_p35 {a b : V3} (ha0 : a ≠ 0)
+    (hnc : ¬ Collinear3 0 a b) {s t : ℝ} (h : s • (a - 0) + t • (b - 0) = (0:V3)) :
+    s = 0 ∧ t = 0 := by
+  rcases eq_or_ne t 0 with ht | ht
+  · rw [ht, zero_smul, add_zero] at h
+    have hs : s = 0 := by
+      by_contra hc
+      refine ha0 ?_
+      apply smul_right_injective V3 hc
+      show s • (a:V3) = s • (0:V3)
+      rw [show s • (a:V3) = s • (a - 0) from by rw [sub_zero], h, smul_zero]
+    exact ⟨hs, ht⟩
+  · exfalso
+    refine hnc ((collinear3_iff_smul (v := (0:V3)) (w := a) (w1 := b) ha0).mpr
+      ⟨-s / t, ?_⟩)
+    apply smul_right_injective V3 ht
+    show t • (b - 0) = t • ((-s / t) • (a - 0))
+    rw [smul_smul, mul_comm, div_mul_cancel₀ _ ht, neg_smul]
+    exact (neg_eq_of_add_eq_zero_right h).symm
+
+/-- **(A)-rung A1 (pm5)**: in-plane azimuth sign bridge, positive side — a
+plane point `x = s•a + t•b` with `t ≥ 0` sits at azimuth `0`. -/
+private theorem pmAzimPlanePos_p35 {a b x : V3} {s t : ℝ} (ha0 : a ≠ 0)
+    (hb0 : b ≠ 0) (hnc : ¬ Collinear3 0 a b)
+    (hx : x - 0 = s • (a - 0) + t • (b - 0)) (ht : 0 ≤ t) :
+    azim 0 a b x = 0 := by
+  by_cases hcolx : Collinear3 0 a x
+  · exact azimAxis_p35 hcolx
+  · have htp : 0 < t := by
+      rcases lt_trichotomy t 0 with htn | ht00 | htp
+      · exact absurd htn (not_lt.mpr ht)
+      · refine absurd ((collinear3_iff_smul
+          (v := (0:V3)) (w := a) (w1 := x) ha0).mpr ⟨s, ?_⟩) hcolx
+        rw [ht00, zero_smul, add_zero] at hx
+        exact hx
+      · exact htp
+    exact (azim_eq_zero_iff_alt hnc hcolx).mpr
+      ((affGt_pair_iff (v0 := (0:V3)) (v1 := a) (x := b) (y := x)
+        (Ne.symm ha0) hb0 (fun he => hnc (by rw [he]; exact collinear3_pair_right rfl))).mpr
+        ⟨t, htp, s, by rw [hx, add_comm]⟩)
+
+/-- **(A)-rung A2 (pm5)**: in-plane azimuth sign bridge, negative side — a
+plane point `x = s•a + t•b` with `t < 0` sits at azimuth `π`. -/
+private theorem pmAzimPlaneNeg_p35 {a b x : V3} {s t : ℝ} (ha0 : a ≠ 0)
+    (hb0 : b ≠ 0) (hnc : ¬ Collinear3 0 a b)
+    (hx : x - 0 = s • (a - 0) + t • (b - 0)) (ht : t < 0) :
+    azim 0 a b x = Real.pi := by
+  have hcolx : ¬ Collinear3 0 a x := by
+    intro hcol
+    obtain ⟨lam, hlam⟩ := (collinear3_iff_smul
+      (v := (0:V3)) (w := a) (w1 := x) ha0).mp hcol
+    have h2 : t • (b - 0) + s • (a - 0) = lam • (a - 0) := by
+      rw [add_comm, ← hx, hlam]
+    have htb : t • (b - 0) = (lam - s) • (a - 0) := by
+      rw [sub_smul, ← h2]
+      module
+    have ht0 : t ≠ 0 := ne_of_lt ht
+    refine hnc ((collinear3_iff_smul (v := (0:V3)) (w := a) (w1 := b) ha0).mpr
+      ⟨(lam - s) / t, ?_⟩)
+    apply smul_right_injective V3 ht0
+    show t • (b - 0) = t • (((lam - s) / t) • (a - 0))
+    rw [smul_smul, mul_comm, div_mul_cancel₀ _ ht0]
+    exact htb
+  rcases azimPlanePlace_p35 ha0 hb0 hnc ⟨s, t, hx⟩ with h0 | hpi
+  · exfalso
+    obtain ⟨c, hc, e, he⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := a) (x := b) (y := x)
+        (Ne.symm ha0) hb0 (fun heq => hnc (by rw [heq]; exact collinear3_pair_right rfl))).mp
+        ((azim_eq_zero_iff_alt hnc hcolx).mp h0)
+    have hcoord : e • (a - 0) + c • (b - 0) = s • (a - 0) + t • (b - 0) := by
+      rw [add_comm (e • (a - 0)) (c • (b - 0)), ← he, ← hx]
+    have hct : c = t := (pmPlaneCoordUnique_p35 ha0 hnc hcoord).2
+    linarith
+  · exact hpi
+
+
+/-! ## planemiss6 rungs (lkgrqui-planemiss6-w3, 2026-10-28)
+
+The (A)-winding Fork-2 package: with `e := vv (j+2)` strictly off the dart
+face plane `P := {x | ∃ s t, x - 0 = s • (vv j - 0) + t • (vv (j + 1) - 0)}`
+and the sector span at dart `j` strictly below `π`, the two diagonal
+endpoints `u`, `w` (which sit in `P`) are trapped in the closed positive cone
+`affGe {0} {vv j, vv (j+1)}` (the b-coefficient bound from the dart-`(j+1)`
+half-space and the c-coefficient bound from the dart-`(j+k-1)` half-space),
+so the `fan7` cone-disjointness (`affGe` half-space distributivity, part of
+`FAN 0 (Set.range vv) E`) forces each endpoint into the cone of its own
+dart; the residue bookkeeping then contradicts `scsDiag` (distinct
+non-adjacent residues) or the annulus (a cone point would be `0`).
+Insertion point: after `pmAzimPlaneNeg_p35`, before `pmTwoFaceCone_p35`. -/
+
+/-- Successor residues lift through the mod. -/
+private theorem pmSuccMod_p35 {k : ℕ} (hk0 : 0 < k) (a : ℕ) :
+    (a + 1) % k = (a % k + 1) % k := by
+  by_cases hk1 : k = 1
+  · subst hk1; simp
+  · rw [Nat.add_mod, Nat.mod_eq_of_lt (show (1:ℕ) < k by omega)]
+
+/-- `(m + 1 + (k - 1)) % k = m % k` (predecessor collapse). -/
+private theorem pmModSuccPred_p35 {k : ℕ} (hk0 : 0 < k) (m : ℕ) :
+    (m + 1 + (k - 1)) % k = m % k := by
+  rw [Nat.add_assoc]
+  have h1 : 1 + (k - 1) = k := by omega
+  rw [h1, Nat.add_mod, Nat.mod_self, Nat.add_zero,
+    Nat.mod_eq_of_lt (Nat.mod_lt _ hk0)]
+
+/-- Scalar triple product, cyclic invariance. -/
+private theorem pmDetCyc_p35 (p q r : Fin 3 → ℝ) :
+    (crossProduct p q) ⬝ᵥ r = (crossProduct q r) ⬝ᵥ p := by
+  rw [dotProduct_comm (crossProduct p q) r, dotProduct_comm (crossProduct q r) p]
+  exact triple_product_permutation r p q
+
+/-- The closed `{0}`-cone over a pair: membership from nonnegative plane
+coordinates (via the `Affsign.of_triple` witness). -/
+private theorem pmConeMem_p35 {b c x : V3} (hb0 : b ≠ 0) (hc0 : c ≠ 0)
+    (hbc : b ≠ c) {α β : ℝ} (hα : 0 ≤ α) (hβ : 0 ≤ β)
+    (hx : x - 0 = α • (b - 0) + β • (c - 0)) :
+    x ∈ affGe ({0} : Set V3) {b, c} := by
+  simp only [sub_zero] at hx
+  exact Affsign.of_triple (sgn := fun r => 0 ≤ r) α β hα hβ
+    (by rw [hx]; simp) (Ne.symm hb0) (Ne.symm hc0) hbc
+
+/-- Self-cone membership: `x` sits in the closed cone over its own dart. -/
+private theorem pmSelfCone_p35 {x y : V3} (hx0 : x ≠ 0) (hy0 : y ≠ 0) (hxy : x ≠ y) :
+    x ∈ affGe ({0} : Set V3) {x, y} :=
+  Affsign.of_triple (sgn := fun r => 0 ≤ r) 1 0 (by norm_num) (by norm_num)
+    (by simp) (Ne.symm hx0) (Ne.symm hy0) hxy
+
+/-- **(A)-rung B1 (pm6)**: the b-coefficient bound — a plane point `y =
+α•b + β•c` with the dart-`(j+1)` half-space against a strictly positive
+`(b × c) ⬝ᵥ e` has `0 ≤ α`. -/
+private theorem pmAlphaGe_p35 {b c e y : V3} {α β : ℝ}
+    (hhs : 0 ≤ (crossProduct (c : Fin 3 → ℝ) (e : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ))
+    (hy : y - 0 = α • (b - 0) + β • (c - 0))
+    (heh : 0 < (crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (e : Fin 3 → ℝ)) :
+    0 ≤ α := by
+  simp only [sub_zero] at hy
+  have hycoe : (y : Fin 3 → ℝ) = α • (b : Fin 3 → ℝ) + β • (c : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hy
+  have hsplit : (crossProduct (c : Fin 3 → ℝ) (e : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)
+      = α * ((crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (e : Fin 3 → ℝ)) := by
+    rw [hycoe, pmDotAddR_p35, pmDotSmulR_p35, pmDotSmulR_p35,
+      dot_self_cross c e, mul_zero, add_zero,
+      dotProduct_comm b (crossProduct c e), pmDetCyc_p35 c e b, pmDetCyc_p35 e b c]
+  rw [hsplit] at hhs
+  by_cases hα0 : 0 ≤ α
+  · exact hα0
+  · exfalso
+    exact absurd (mul_neg_of_neg_of_pos (lt_of_not_ge hα0) heh) (not_lt.mpr hhs)
+
+/-- **(A)-rung B2 (pm6)**: the c-coefficient bound — a plane point `y =
+α•b + β•c` with the dart-`(j+k-1)` half-space against a strictly positive
+`(b × c) ⬝ᵥ d` has `0 ≤ β`. -/
+private theorem pmBetaGe_p35 {b c d y : V3} {α β : ℝ}
+    (hhs : 0 ≤ (crossProduct (d : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ))
+    (hy : y - 0 = α • (b - 0) + β • (c - 0))
+    (hdh : 0 < (crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (d : Fin 3 → ℝ)) :
+    0 ≤ β := by
+  simp only [sub_zero] at hy
+  have hycoe : (y : Fin 3 → ℝ) = α • (b : Fin 3 → ℝ) + β • (c : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hy
+  have hsplit : (crossProduct (d : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ)
+      = β * ((crossProduct (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)) ⬝ᵥ (d : Fin 3 → ℝ)) := by
+    rw [hycoe, pmDotAddR_p35, pmDotSmulR_p35, pmDotSmulR_p35,
+      dot_cross_self d b, mul_zero, zero_add,
+      dotProduct_comm c (crossProduct d b), pmDetCyc_p35 d b c]
+  rw [hsplit] at hhs
+  by_cases hβ0 : 0 ≤ β
+  · exact hβ0
+  · exfalso
+    exact absurd (mul_neg_of_neg_of_pos (lt_of_not_ge hβ0) hdh) (not_lt.mpr hhs)
+
+/-- **(A)-rung B3 (pm6): the Fork-2 kill** — with `vv (j+2)` strictly off
+the dart-`j` face plane and the sector span at dart `j` strictly below `π`,
+the two plane-trapped diagonal endpoints die. -/
+private theorem pmFork2Kill_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (j : ℕ)
+    (hu : ∃ c d : ℝ, u - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0))
+    (hw : ∃ c d : ℝ, w - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0))
+    (heP : ¬ ∃ c d : ℝ, vv (j + 1 + 1) - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0))
+    (hθlt : azim 0 (vv j) (vv (j + 1)) (vv (j + s.k - 1)) < Real.pi) : False := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  have hf7 := hfan'.2.2.2.2.2
+  have hvne : ∀ i : ℕ, vv i ≠ (0:V3) := by
+    intro i hi
+    exact hfan'.2.2.2.1 (hi ▸ (Set.mem_range.mpr ⟨i, rfl⟩ : vv i ∈ Set.range vv))
+  have hncbc : ¬ Collinear3 0 (vv j) (vv (j + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨j, rfl⟩)
+  have hb0 : vv j ≠ (0:V3) := hvne j
+  have hc0 : vv (j + 1) ≠ (0:V3) := hvne (j + 1)
+  have hbc : vv j ≠ vv (j + 1) := by
+    intro he
+    exact hncbc (by rw [he]; exact collinear3_pair_right rfl)
+  have hθne : azim 0 (vv j) (vv (j + 1)) (vv (j + s.k - 1)) ≠ 0 :=
+    dartSpanNeCyc_p35 hk3 hper hinj hE j hfan'
+  have hdP : ¬ ∃ c₁ d₁ : ℝ, vv (j + s.k - 1) - 0
+        = c₁ • (vv j - 0) + d₁ • (vv (j + 1) - 0) := by
+    rintro ⟨c₁, d₁, hco⟩
+    rcases azimPlanePlace_p35 hb0 hc0 hncbc ⟨c₁, d₁, hco⟩ with h0 | hπ
+    · exact hθne h0
+    · rw [hπ] at hθlt
+      exact lt_irrefl _ hθlt
+  obtain ⟨hsand, hθle⟩ := wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan j
+  obtain ⟨h0e, hle⟩ := hsand (vv (j + 1 + 1))
+    (Set.mem_range.mpr ⟨j + 1 + 1, rfl⟩)
+  have hncbe : ¬ Collinear3 0 (vv j) (vv (j + 1 + 1)) := by
+    intro hcol
+    obtain ⟨t, ht⟩ := (collinear3_iff_smul (v := (0:V3)) (w := vv j)
+      (w1 := vv (j + 1 + 1)) hb0).mp hcol
+    exact heP ⟨t, 0, by rw [ht]; simp⟩
+  have h0ne : azim 0 (vv j) (vv (j + 1)) (vv (j + 1 + 1)) ≠ 0 := by
+    intro h0
+    obtain ⟨c₁, hc1, d₁, hd1⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := vv j) (x := vv (j + 1))
+        (y := vv (j + 1 + 1)) (Ne.symm hb0) hc0
+        (fun heq => hbc heq.symm)).mp
+        ((azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := vv j)
+          (w := vv (j + 1)) hncbc hncbe).mp h0)
+    exact heP ⟨d₁, c₁, by rw [hd1]; exact add_comm _ _⟩
+  have hbed : (0:ℝ) < (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ
+      (vv (j + 1 + 1) : Fin 3 → ℝ) := by
+    simpa [sub_zero] using cross_dot_fully_surrounded_fan (x := 0)
+      (v1 := vv j) (v := vv (j + 1)) (u1 := vv (j + 1 + 1)) hncbe hncbc
+      (lt_of_le_of_ne h0e (Ne.symm h0ne)) (lt_of_le_of_lt hle hθlt)
+  obtain ⟨h0d, -⟩ := hsand (vv (j + s.k - 1))
+    (Set.mem_range.mpr ⟨j + s.k - 1, rfl⟩)
+  have hncbd : ¬ Collinear3 0 (vv j) (vv (j + s.k - 1)) := by
+    intro hcol
+    exact hθne (azimAxis_p35 (a := vv j) (b := vv (j + 1))
+      (x := vv (j + s.k - 1)) hcol)
+  have h0d' : 0 < azim 0 (vv j) (vv (j + 1)) (vv (j + s.k - 1)) :=
+    lt_of_le_of_ne h0d (fun hh => hθne hh.symm)
+  have hbcd : (0:ℝ) < (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ
+      (vv (j + s.k - 1) : Fin 3 → ℝ) := by
+    simpa [sub_zero] using cross_dot_fully_surrounded_fan (x := 0) (v1 := vv j)
+      (v := vv (j + 1)) (u1 := vv (j + s.k - 1)) hncbd hncbc h0d' hθlt
+  have hhse : ∀ y ∈ Set.range vv,
+      0 ≤ (crossProduct (vv (j + 1) : Fin 3 → ℝ) (vv (j + 1 + 1) : Fin 3 → ℝ)) ⬝ᵥ
+        (y : Fin 3 → ℝ) := fun y hy =>
+    pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (j + 1) y hy
+  have hhsd : ∀ y ∈ Set.range vv,
+      0 ≤ (crossProduct (vv (j + s.k - 1) : Fin 3 → ℝ) (vv j : Fin 3 → ℝ)) ⬝ᵥ
+        (y : Fin 3 → ℝ) := by
+    intro y hy
+    have h1 := pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (j + s.k - 1) y hy
+    have hvsi : vv ((j + s.k - 1) + 1) = vv j := by
+      rw [show (j + s.k - 1) + 1 = j + s.k from by omega]
+      exact wedgeVvAddK_p35 hper j
+    rw [hvsi] at h1
+    exact h1
+  obtain ⟨αu, βu, hucoe⟩ := hu
+  obtain ⟨αw, βw, hwcoe⟩ := hw
+  have hαu : 0 ≤ αu := pmAlphaGe_p35
+    (hhse u (Set.mem_range.mpr ⟨p % s.k, hp⟩)) hucoe hbed
+  have hαw : 0 ≤ αw := pmAlphaGe_p35
+    (hhse w (Set.mem_range.mpr ⟨q % s.k, hq⟩)) hwcoe hbed
+  have hβu : 0 ≤ βu := pmBetaGe_p35 (hhsd u (Set.mem_range.mpr ⟨p % s.k, hp⟩)) hucoe hbcd
+  have hβw : 0 ≤ βw := pmBetaGe_p35 (hhsd w (Set.mem_range.mpr ⟨q % s.k, hq⟩)) hwcoe hbcd
+  have huCone : u ∈ affGe ({0} : Set V3) {vv j, vv (j + 1)} :=
+    pmConeMem_p35 hb0 hc0 hbc hαu hβu hucoe
+  have hwCone : w ∈ affGe ({0} : Set V3) {vv j, vv (j + 1)} :=
+    pmConeMem_p35 hb0 hc0 hbc hαw hβw hwcoe
+  have hpm : vv p = u := by rw [← hp]; exact (periodic_mod_eq_p23 hper p).symm
+  have hqm : vv q = w := by rw [← hq]; exact (periodic_mod_eq_p23 hper q).symm
+  have hEj : ({vv j, vv (j + 1)} : Set V3) ∈ E := (dartEdgeMems_p35 hk3 hper hE j).1
+  have hdisj : ∀ (i : ℕ), vv i ∈ affGe ({0} : Set V3) {vv j, vv (j + 1)} →
+      vv i ≠ vv j → vv i ≠ vv (j + 1) →
+      vv (i + 1) ≠ vv j → vv (i + 1) ≠ vv (j + 1) → False := by
+    intro i hzC h1 h2 h3 h4
+    have hncdi : ¬ Collinear3 0 (vv i) (vv (i + 1)) :=
+      Kepler.Text.Fan.fan_not_collinear hfan'
+        (by rw [← hE]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+    have hz2 : vv i ∈ affGe ({0} : Set V3) {vv i, vv (i + 1)} :=
+      pmSelfCone_p35 (hvne i) (hvne (i + 1)) (fun he =>
+        hncdi (by rw [he]; exact collinear3_pair_right rfl))
+    have hEi : ({vv i, vv (i + 1)} : Set V3) ∈ E := (dartEdgeMems_p35 hk3 hper hE i).1
+    have hempty : ({vv j, vv (j + 1)} ∩ {vv i, vv (i + 1)} : Set V3) = ∅ := by
+      ext z'
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff,
+        Set.notMem_empty, iff_false]
+      intro hcon
+      obtain ⟨hA, hB⟩ := hcon
+      rcases hA with hA' | hA' <;> rcases hB with hB' | hB'
+      · exact h1 (hB'.symm.trans hA')
+      · exact h3 (hB'.symm.trans hA')
+      · exact h2 (hB'.symm.trans hA')
+      · exact h4 (hB'.symm.trans hA')
+    have hz0 := hf7 {vv j, vv (j + 1)}
+      (Set.mem_union_left {s | ∃ v ∈ Set.range vv, s = {v}} hEj) {vv i, vv (i + 1)}
+      (Set.mem_union_left {s | ∃ v ∈ Set.range vv, s = {v}} hEi)
+    rw [hempty] at hz0
+    have hmem : vv i ∈ (affGe ({0} : Set V3) (∅ : Set V3)) := by
+      rw [← hz0]
+      exact Set.mem_inter hzC hz2
+    have hmem' : vv i ∈ affGe ({0} : Set V3) (∅ : Set V3) := hmem
+    simp only [affGe, Affsign, Set.mem_setOf_eq] at hmem'
+    rw [Set.union_empty] at hmem'
+    obtain ⟨f, hf, hz, -, -⟩ := hmem'
+    have hto : hf.toFinset = {0} := Set.Finite.toFinset_singleton
+    rw [hto] at hz
+    simp at hz
+    exact hvne i hz
+  -- successor = vv m transport: from `vv (i + 1) = vv m` get `vv i = vv (m + s.k - 1)`
+  have hsuccpred : ∀ (i m : ℕ), vv (i + 1) = vv m → vv i = vv (m + s.k - 1) := by
+    intro i m hiz
+    have hstep := vvModEq_p35 hk0 hper hinj hiz
+    have hsk1 : 1 ≤ s.k := by omega
+    have h1 : (i + 1) + (s.k - 1) = i + s.k := by omega
+    have e1 : ((i + 1) + (s.k - 1)) % s.k = (m + (s.k - 1)) % s.k :=
+      Nat.ModEq.add_right (s.k - 1) hstep
+    rw [h1, show (i:ℕ) + s.k = i + s.k * 1 from by rw [Nat.mul_one],
+      Nat.add_mul_mod_self_left, ← Nat.add_sub_assoc hsk1 m] at e1
+    have key : i % s.k = (m + s.k - 1) % s.k := e1
+    rw [← periodic_mod_eq_p23 hper i, key, periodic_mod_eq_p23 hper (m + s.k - 1)]
+  -- successor-on-d killer: x's successor is d and x carries plane coords
+  have hsuccd : ∀ (i : ℕ) (x : V3), vv (i + 1) = vv j →
+      (∃ c₁ d₁ : ℝ, x - 0 = c₁ • (vv j - 0) + d₁ • (vv (j + 1) - 0)) →
+      vv i = x → False := by
+    intro i x hiz hco hix
+    have htr := hsuccpred i j hiz
+    obtain ⟨c₁, d₁, hco'⟩ := hco
+    rw [← hix, htr] at hco'
+    exact hdP ⟨c₁, d₁, hco'⟩
+  by_cases hu1 : u = vv j
+  · have hpj : p % s.k = j % s.k :=
+      vvModEq_p35 hk0 hper hinj (by rw [hpm, hu1])
+    by_cases hw1 : w = vv j
+    · exact hdiag.1 (by
+        rw [hpj, vvModEq_p35 hk0 hper hinj (by rw [hqm, hw1])])
+    by_cases hw2 : w = vv (j + 1)
+    · refine hdiag.2.1 ?_
+      have hqj : q % s.k = (j + 1) % s.k :=
+        vvModEq_p35 hk0 hper hinj (by rw [hqm, hw2])
+      rw [pmSuccMod_p35 hk0 p, hpj, hqj, ← pmSuccMod_p35 hk0 j]
+    by_cases hw3 : vv (q % s.k + 1) = vv j
+    · exact hsuccd (q % s.k) w hw3 ⟨αw, βw, hwcoe⟩ hq
+    by_cases hw4 : vv (q % s.k + 1) = vv (j + 1)
+    · have hqj : q % s.k = j % s.k := by
+        have heq := vvModPred_p35 hk0 (vvModEq_p35 hk0 hper hinj hw4)
+        rw [Nat.mod_eq_of_lt (Nat.mod_lt _ hk0)] at heq
+        exact heq
+      exact hw1 (by rw [← hq, hqj, ← periodic_mod_eq_p23 hper j])
+    · exact hdisj (q % s.k) (by rw [hq]; exact hwCone)
+        (by rw [hq]; exact hw1) (by rw [hq]; exact hw2) hw3 hw4
+  by_cases hu2 : u = vv (j + 1)
+  · have hpj : p % s.k = (j + 1) % s.k :=
+      vvModEq_p35 hk0 hper hinj (by rw [hpm, hu2])
+    by_cases hw1 : w = vv j
+    · refine hdiag.2.2 ?_
+      have hqj : q % s.k = j % s.k :=
+        vvModEq_p35 hk0 hper hinj (by rw [hqm, hw1])
+      rw [hpj, pmSuccMod_p35 hk0 q, hqj, pmSuccMod_p35 hk0 j]
+    by_cases hw2 : w = vv (j + 1)
+    · exact hdiag.1 (by
+        rw [hpj, vvModEq_p35 hk0 hper hinj (by rw [hqm, hw2])])
+    by_cases hw3 : vv (q % s.k + 1) = vv j
+    · exact hsuccd (q % s.k) w hw3 ⟨αw, βw, hwcoe⟩ hq
+    by_cases hw4 : vv (q % s.k + 1) = vv (j + 1)
+    · have hqj : q % s.k = j % s.k := by
+        have heq := vvModPred_p35 hk0 (vvModEq_p35 hk0 hper hinj hw4)
+        rw [Nat.mod_eq_of_lt (Nat.mod_lt _ hk0)] at heq
+        exact heq
+      exact hw1 (by rw [← hq, hqj, ← periodic_mod_eq_p23 hper j])
+    · exact hdisj (q % s.k) (by rw [hq]; exact hwCone)
+        (by rw [hq]; exact hw1) (by rw [hq]; exact hw2) hw3 hw4
+  · by_cases hu3 : vv (p % s.k + 1) = vv j
+    · exact hsuccd (p % s.k) u hu3 ⟨αu, βu, hucoe⟩ hp
+    by_cases hu4 : vv (p % s.k + 1) = vv (j + 1)
+    · have hpj : p % s.k = j % s.k := by
+        have heq := vvModPred_p35 hk0 (vvModEq_p35 hk0 hper hinj hu4)
+        rw [Nat.mod_eq_of_lt (Nat.mod_lt _ hk0)] at heq
+        exact heq
+      exact hu1 (by rw [← hp, ← periodic_mod_eq_p23 hper j]; exact congrArg vv hpj)
+    · exact hdisj (p % s.k) (by rw [hp]; exact huCone)
+        (by rw [hp]; exact hu1) (by rw [hp]; exact hu2) hu3 hu4
+/-! ## planemiss7 rungs (lkgrqui-planemiss7-w3, 2026-10-28)
+
+The (A)-winding closure kit, stage 1 (all private `_p35` new names, zero
+sorry, no `open Classical` / `native_decide`):
+
+1. `pmModNeGen_p35` / `pmVvModNe_p35` — modular index-arithmetic helpers.
+2. `pmAzimOffPlaneNe_p35` — off-plane azimuth translator (`≠ 0` and `≠ π`).
+3. `pmConeRingKill_p35` — no ring vertex (other than the dart pair and
+   their cyclic neighbours) lies in the closed dart cone (`fan7`
+   cone-disjointness, standalone).
+4. `pmNegSideOfPi_p35` — azimuth `π` at dart `j` renders `d` in the plane
+   with a strictly negative second coordinate.
+5. `pmB2AntiWedge_p35` — in-plane `e` at azimuth `π` off the `b`-ray sits
+   in the antipodal wedge (`ce < 0 ∧ de < 0`) and `a` sits at azimuth `π`
+   of dart `j+1`.
+
+Insertion point: immediately after `pmFork2Kill_p35`. -/
+
+/-- Generic modular separation: for `0 < c < k` the residue cannot repeat
+after a `c`-step. -/
+private theorem pmModNeGen_p35 {k : ℕ} (hk0 : 0 < k) {x c : ℕ} (hc0 : 0 < c)
+    (hck : c < k) (h : (x + c) % k = x % k) : False := by
+  have hr : x % k < k := Nat.mod_lt x hk0
+  have hc' : c % k = c := Nat.mod_eq_of_lt hck
+  rw [Nat.add_mod, hc'] at h
+  rcases Nat.lt_or_ge (x % k + c) k with hlt | hge
+  · rw [Nat.mod_eq_of_lt hlt] at h
+    omega
+  · have e2 : (x % k + c) % k = (x % k + c - k) % k :=
+      Nat.mod_eq_sub_mod hge
+    rw [e2, Nat.mod_eq_of_lt (by omega : x % k + c - k < k)] at h
+    omega
+
+/-- Vertex-separation transport: distinct residues give distinct vertices. -/
+private theorem pmVvModNe_p35 {vv : ℕ → V3} {k : ℕ} (hk0 : 0 < k)
+    (hper : Periodic vv k)
+    (hinj : ∀ x y : ℕ, x < k → y < k → x ≠ y → vv x ≠ vv y)
+    {x y : ℕ} (hxy : x % k ≠ y % k) : vv x ≠ vv y := by
+  intro heq
+  exact hxy (vvModEq_p35 hk0 hper hinj heq)
+
+/-- The anti-ray double for the `a`-line. -/
+private theorem pmNegCollA_p35 {a b : V3} (ha0 : a ≠ 0)
+    (hnc : ¬ Collinear3 0 a b) : ¬ Collinear3 0 a (-b) := by
+  intro hcol
+  obtain ⟨lam, hlam⟩ := (collinear3_iff_smul (v := (0:V3)) (w := a)
+    (w1 := (-b)) ha0).mp hcol
+  refine hnc ((collinear3_iff_smul (v := (0:V3)) (w := a) (w1 := b) ha0).mpr
+    ⟨-lam, ?_⟩)
+  have hz : (-b - 0 : V3) = -(b - 0) := by
+    simp
+  have hz2 : b - 0 = -(lam • (a - 0)) := by
+    rw [hz] at hlam
+    rw [← hlam]
+    simp
+  rw [hz2, neg_smul]
+
+/-- The `affGt {0, a} {-b}` side conditions bundle. -/
+private theorem pmNegBNe_p35 {a b : V3} (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hnc : ¬ Collinear3 0 a b) :
+    (0:V3) ≠ a ∧ (-b) ≠ (0:V3) ∧ (-b) ≠ a := by
+  refine ⟨Ne.symm ha0, ?_, ?_⟩
+  · intro he
+    rw [neg_eq_zero] at he
+    exact hb0 he
+  · intro he
+    refine hnc ((collinear3_iff_smul (v := (0:V3)) (w := a) (w1 := b) ha0).mpr
+      ⟨-1, ?_⟩)
+    have hb : b = -a := by
+      rw [← he]
+      simp
+    rw [hb]
+    simp [neg_one_smul, sub_zero]
+
+/-- **(A)-rung C1 (pm7): off-plane azimuth translator** — a point strictly
+off the `(a, b)` plane sits at an azimuth that is neither `0` nor `π`. -/
+private theorem pmAzimOffPlaneNe_p35 {a b x : V3} (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hnc : ¬ Collinear3 0 a b)
+    (hx : ∀ s t : ℝ, x - 0 ≠ s • (a - 0) + t • (b - 0)) :
+    azim 0 a b x ≠ 0 ∧ azim 0 a b x ≠ Real.pi := by
+  have hcolx : ¬ Collinear3 0 a x := by
+    intro hcol
+    obtain ⟨lam, hlam⟩ := (collinear3_iff_smul (v := (0:V3)) (w := a)
+      (w1 := x) ha0).mp hcol
+    exact hx lam 0 (by rw [hlam]; simp)
+  refine ⟨fun h0 => ?_, fun hpi => ?_⟩
+  · obtain ⟨c₁, hc₁, d₁, hd₁⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := a) (x := b) (y := x)
+        (Ne.symm ha0) hb0 (fun he => hnc (by rw [he]; exact collinear3_pair_right rfl))).mp
+        ((azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := a) (w := b) hnc hcolx).mp h0)
+    exact hx d₁ c₁ (by rw [hd₁]; exact add_comm _ _)
+  · have hnegb := pmNegCollA_p35 ha0 hnc
+    obtain ⟨ha0', hb0', hba⟩ := pmNegBNe_p35 ha0 hb0 hnc
+    have hπb : azim 0 a b (-b) = Real.pi :=
+      pmAzimPlaneNeg_p35 ha0 hb0 hnc (x := -b) (s := 0) (t := -1)
+        (by simp) (by norm_num)
+    obtain ⟨c₁, hc₁, d₁, hd₁⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := a) (x := -b) (y := x)
+        ha0' hb0' hba).mp
+        ((azim_eq_azim_iff (v0 := (0:V3)) (v1 := a) (w := b) (x := -b) (y := x)
+          hnc hnegb hcolx).mp (by rw [hπb, hpi]))
+    exact hx d₁ (-c₁) (by rw [hd₁]; module)
+
+/-- **(A)-rung C2 (pm7): the standalone dart-cone ring kill** — a ring
+vertex in the closed cone `affGe {0} {vv j, vv (j+1)}` must meet the dart
+pair or their immediate cyclic neighbours, else the `fan7` cone
+disjointness is violated. -/
+private theorem pmConeRingKill_p35 {s : ScsV39} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hk4 : 4 ≤ s.k) (j i : ℕ)
+    (hz : vv i ∈ affGe ({0} : Set V3) {vv j, vv (j + 1)})
+    (h1 : vv i ≠ vv j) (h2 : vv i ≠ vv (j + 1))
+    (h3 : vv (i + 1) ≠ vv j) (h4 : vv (i + 1) ≠ vv (j + 1)) : False := by
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  have hf7 := hfan'.2.2.2.2.2
+  have hvne : ∀ m : ℕ, vv m ≠ (0:V3) := by
+    intro m hm
+    exact hfan'.2.2.2.1 (hm ▸ (Set.mem_range.mpr ⟨m, rfl⟩ : vv m ∈ Set.range vv))
+  have hEj : ({vv j, vv (j + 1)} : Set V3) ∈ E := (dartEdgeMems_p35 hk3 hper hE j).1
+  have hncdi : ¬ Collinear3 0 (vv i) (vv (i + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+  have hz2 : vv i ∈ affGe ({0} : Set V3) {vv i, vv (i + 1)} :=
+    pmSelfCone_p35 (hvne i) (hvne (i + 1)) (fun he =>
+      hncdi (by rw [he]; exact collinear3_pair_right rfl))
+  have hEi : ({vv i, vv (i + 1)} : Set V3) ∈ E := (dartEdgeMems_p35 hk3 hper hE i).1
+  have hempty : ({vv j, vv (j + 1)} ∩ {vv i, vv (i + 1)} : Set V3) = ∅ := by
+    ext z'
+    simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff,
+      Set.notMem_empty, iff_false]
+    intro hcon
+    obtain ⟨hA, hB⟩ := hcon
+    rcases hA with hA' | hA' <;> rcases hB with hB' | hB'
+    · exact h1 (hB'.symm.trans hA')
+    · exact h3 (hB'.symm.trans hA')
+    · exact h2 (hB'.symm.trans hA')
+    · exact h4 (hB'.symm.trans hA')
+  have hz0 := hf7 {vv j, vv (j + 1)}
+    (Set.mem_union_left {s | ∃ v ∈ Set.range vv, s = {v}} hEj) {vv i, vv (i + 1)}
+    (Set.mem_union_left {s | ∃ v ∈ Set.range vv, s = {v}} hEi)
+  rw [hempty] at hz0
+  have hmem : vv i ∈ (affGe ({0} : Set V3) (∅ : Set V3)) := by
+    rw [← hz0]
+    exact Set.mem_inter hz hz2
+  simp only [affGe, Affsign, Set.mem_setOf_eq] at hmem
+  rw [Set.union_empty] at hmem
+  obtain ⟨f, hf, hz, -, -⟩ := hmem
+  have hto : hf.toFinset = {0} := Set.Finite.toFinset_singleton
+  rw [hto] at hz
+  simp at hz
+  exact hvne i hz
+
+/-- **(A)-rung C3 (pm7): the `π`-side rendering of the span vertex** — at
+azimuth `π` the dart-`(j+k-1)` vertex sits in the dart-`j` plane with a
+strictly negative second coordinate. -/
+private theorem pmNegSideOfPi_p35 {a b d : V3} (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hnc : ¬ Collinear3 0 a b) (hπ : azim 0 a b d = Real.pi) :
+    ∃ γ β : ℝ, d - 0 = γ • (a - 0) + β • (b - 0) ∧ β < 0 := by
+  have hnad : ¬ Collinear3 0 a d := by
+    intro hcol
+    rw [azimAxis_p35 hcol] at hπ
+    have := Real.pi_pos
+    linarith
+  have hnegb := pmNegCollA_p35 ha0 hnc
+  obtain ⟨ha0', hb0', hba⟩ := pmNegBNe_p35 ha0 hb0 hnc
+  have hπb : azim 0 a b (-b) = Real.pi :=
+    pmAzimPlaneNeg_p35 ha0 hb0 hnc (x := -b) (s := 0) (t := -1)
+      (by simp) (by norm_num)
+  obtain ⟨c₁, hc₁, d₁, hd₁⟩ :=
+    (affGt_pair_iff (v0 := (0:V3)) (v1 := a) (x := -b) (y := d)
+      ha0' hb0' hba).mp
+      ((azim_eq_azim_iff (v0 := (0:V3)) (v1 := a) (w := b) (x := -b) (y := d)
+        hnc hnegb hnad).mp (by rw [hπb, hπ]))
+  refine ⟨d₁, -c₁, ?_, by linarith⟩
+  rw [hd₁]
+  module
+
+/-- **(A)-rung C4 (pm7): the antipodal wedge** — an in-plane `e` at azimuth
+`π` off the `b`-ray has both dart coordinates negative, and `a` sits at
+azimuth `π` of the `(b, e)` frame. -/
+private theorem pmB2AntiWedge_p35 {a b e : V3} {ce de : ℝ} (ha0 : a ≠ 0)
+    (hb0 : b ≠ 0) (he0 : e ≠ 0) (hnc : ¬ Collinear3 0 a b)
+    (hnce : ¬ Collinear3 0 b e)
+    (hπe : azim 0 a b e = Real.pi)
+    (heM : e - 0 = ce • (a - 0) + de • (b - 0))
+    (hne : azim 0 b e a ≠ 0) :
+    ce < 0 ∧ de < 0 ∧ azim 0 b e a = Real.pi := by
+  have hde : de < 0 := by
+    rcases lt_trichotomy de 0 with h | h0 | h
+    · exact h
+    · exfalso
+      have h0' := pmAzimPlanePos_p35 ha0 hb0 hnc heM (le_of_eq h0.symm)
+      rw [h0'] at hπe
+      have := Real.pi_pos
+      linarith
+    · exfalso
+      have h0' := pmAzimPlanePos_p35 ha0 hb0 hnc heM (le_of_lt h)
+      rw [h0'] at hπe
+      have := Real.pi_pos
+      linarith
+  have hce0 : ce ≠ 0 := by
+    intro h0
+    rw [h0, zero_smul, zero_add] at heM
+    exact hnce ((collinear3_iff_smul (v := (0:V3)) (w := b) (w1 := e)
+      hb0).mpr ⟨de, heM⟩)
+  have hstep : ce • (a - 0) = (e - 0) - de • (b - 0) := by
+    rw [heM, add_sub_cancel_right]
+  have haM : a - 0 = (-(de / ce)) • (b - 0) + (1 / ce) • (e - 0) := by
+    refine (smul_right_injective V3 hce0).eq_iff.mp ?_
+    rw [hstep, smul_add, smul_smul, mul_neg, smul_smul]
+    have hz0 : ce * (1 / ce) = 1 := by
+      rw [one_div, mul_inv_cancel₀ hce0]
+    have hz1 : ce * (de / ce) = de := by
+      rw [mul_comm, div_mul_cancel₀ _ hce0]
+    rw [hz1, hz0, one_smul, neg_smul, sub_eq_add_neg, add_comm]
+  rcases lt_trichotomy ce 0 with hce | hce0' | hce
+  · refine ⟨hce, hde, ?_⟩
+    have hinv : (1:ℝ) / ce < 0 := by
+      rw [one_div]
+      exact inv_lt_zero.mpr hce
+    exact pmAzimPlaneNeg_p35 hb0 he0 hnce haM hinv
+  · exact absurd hce0' hce0
+  · exfalso
+    have hinv : (0:ℝ) < 1 / ce := by
+      rw [one_div]
+      exact inv_pos.mpr hce
+    exact hne (pmAzimPlanePos_p35 hb0 he0 hnce haM (le_of_lt hinv))
+
+/-- auxiliary (pm7): the contradiction engine once the Case-A successor is
+known in-plane — every placement dies except the negative-`a`-coefficient
+winding-order survivor. -/
+private theorem pmEOffPlaneAux_p35 {s : ScsV39} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hk4 : 4 ≤ s.k) (j : ℕ)
+    (hb0 : vv j ≠ (0:V3)) (hc0 : vv (j + 1) ≠ (0:V3))
+    (he0 : vv (j + 1 + 1) ≠ (0:V3))
+    (hbc : vv j ≠ vv (j + 1)) (hncbc : ¬ Collinear3 0 (vv j) (vv (j + 1)))
+    (hv1 : vv (j + 1 + 1) ≠ vv j) (hv2 : vv (j + 1 + 1) ≠ vv (j + 1))
+    (hv3 : vv (j + 2 + 1) ≠ vv j) (hv4 : vv (j + 2 + 1) ≠ vv (j + 1))
+    (hθlt : azim 0 (vv j) (vv (j + 1)) (vv (j + s.k - 1)) < Real.pi)
+    (heM : ∃ c d : ℝ, vv (j + 1 + 1) - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0)) :
+    ∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) + de • (vv (j + 1) - 0) ∧
+      ce < 0 := by
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  have hθne := dartSpanNeCyc_p35 hk3 hper hinj hE j hfan'
+  obtain ⟨ce, de, heM'⟩ := heM
+  rcases azimPlanePlace_p35 hb0 hc0 hncbc ⟨ce, de, heM'⟩ with h0e | hπe
+  · -- azimuth 0: on-axis or off-axis half-plane
+    by_cases hcolae : Collinear3 0 (vv j) (vv (j + 1 + 1))
+    · obtain ⟨lam, hlam⟩ := (collinear3_iff_smul (v := (0:V3)) (w := vv j)
+        (w1 := vv (j + 1 + 1)) hb0).mp hcolae
+      rcases lt_trichotomy lam 0 with hlam0 | hlam00 | hlam0p
+      · exact ⟨lam, 0, by rw [hlam]; simp, hlam0⟩
+      · exfalso
+        simp only [hlam00, zero_smul, add_zero] at hlam
+        exact he0 (by simpa using hlam)
+      · exfalso
+        refine pmConeRingKill_p35 hscs hBB hE hFF hk4 j (j + 2) ?_ hv1 hv2 hv3 hv4
+        exact pmConeMem_p35 hb0 hc0 hbc (le_of_lt hlam0p) (by norm_num)
+          (show vv (j + 1 + 1) - 0 = lam • (vv j - 0) + (0:ℝ) • (vv (j + 1) - 0)
+            from by rw [hlam]; simp)
+    · obtain ⟨c₁, hc₁, d₁, hd₁⟩ :=
+        (affGt_pair_iff (v0 := (0:V3)) (v1 := vv j) (x := vv (j + 1))
+          (y := vv (j + 1 + 1)) (Ne.symm hb0) hc0
+          (fun heq => hbc heq.symm)).mp
+          ((azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := vv j)
+            (w := vv (j + 1)) hncbc hcolae).mp h0e)
+      rcases lt_trichotomy d₁ 0 with hd0 | hd00 | hd
+      · exact ⟨d₁, c₁, by rw [hd₁]; exact add_comm _ _, hd0⟩
+      · exfalso
+        refine pmConeRingKill_p35 hscs hBB hE hFF hk4 j (j + 2) ?_ hv1 hv2 hv3 hv4
+        exact pmConeMem_p35 hb0 hc0 hbc (le_of_eq hd00.symm) (le_of_lt hc₁)
+          (show vv (j + 1 + 1) - 0 = d₁ • (vv j - 0) + c₁ • (vv (j + 1) - 0)
+            from by rw [hd₁]; exact add_comm _ _)
+      · exfalso
+        refine pmConeRingKill_p35 hscs hBB hE hFF hk4 j (j + 2) ?_ hv1 hv2 hv3 hv4
+        exact pmConeMem_p35 hb0 hc0 hbc (le_of_lt hd) (le_of_lt hc₁)
+          (show vv (j + 1 + 1) - 0 = d₁ • (vv j - 0) + c₁ • (vv (j + 1) - 0)
+            from by rw [hd₁]; exact add_comm _ _)
+  · -- azimuth π: above the sector ceiling θ < π
+    exfalso
+    obtain ⟨hsand, -⟩ := wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan j
+    have hle := (hsand (vv (j + 1 + 1)) (Set.mem_range.mpr ⟨j + 2, rfl⟩)).2
+    rw [hπe] at hle
+    have := Real.pi_pos
+    linarith
+
+/-- **(A)-rung D1 (pm7): the Case-A fork** — with the sector span strictly
+below `π`, the successor vertex `e := vv (j+2)` is either strictly off the
+dart-`j` face plane (the Fork-2 input) or carries a negative `a`-coefficient
+(the winding-order survivor). -/
+private theorem pmEOffPlaneOfLtPi_p35 {s : ScsV39} {p q : ℕ} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (j : ℕ)
+    (hθlt : azim 0 (vv j) (vv (j + 1)) (vv (j + s.k - 1)) < Real.pi) :
+    ¬ (∃ c d : ℝ, vv (j + 1 + 1) - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0)) ∨
+      (∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) + de • (vv (j + 1) - 0) ∧
+        ce < 0) := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  have hvne : ∀ m : ℕ, vv m ≠ (0:V3) := by
+    intro m hm
+    exact hfan'.2.2.2.1 (hm ▸ (Set.mem_range.mpr ⟨m, rfl⟩ : vv m ∈ Set.range vv))
+  have hb0 : vv j ≠ (0:V3) := hvne j
+  have hc0 : vv (j + 1) ≠ (0:V3) := hvne (j + 1)
+  have he0 : vv (j + 1 + 1) ≠ (0:V3) := hvne (j + 1 + 1)
+  have hncbc : ¬ Collinear3 0 (vv j) (vv (j + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨j, rfl⟩)
+  have hbc : vv j ≠ vv (j + 1) := by
+    intro he
+    exact hncbc (by rw [he]; exact collinear3_pair_right rfl)
+  have hm22 : (j + 2) % s.k ≠ j % s.k := fun hh =>
+    pmModNeGen_p35 hk0 (x := j) (c := 2) (by omega) (by omega) hh
+  have hm21 : (j + 2) % s.k ≠ (j + 1) % s.k := fun hh =>
+    pmModNeGen_p35 hk0 (x := j + 1) (c := 1) (by omega) (by omega) hh
+  have hm30 : (j + 3) % s.k ≠ j % s.k := fun hh =>
+    pmModNeGen_p35 hk0 (x := j) (c := 3) (by omega) (by omega) hh
+  have hm31 : (j + 3) % s.k ≠ (j + 1) % s.k := fun hh =>
+    pmModNeGen_p35 hk0 (x := j + 1) (c := 2) (by omega) (by omega) hh
+  have hv1 : vv (j + 1 + 1) ≠ vv j := pmVvModNe_p35 hk0 hper hinj hm22
+  have hv2 : vv (j + 1 + 1) ≠ vv (j + 1) := pmVvModNe_p35 hk0 hper hinj hm21
+  have hv3 : vv (j + 2 + 1) ≠ vv j := pmVvModNe_p35 hk0 hper hinj hm30
+  have hv4 : vv (j + 2 + 1) ≠ vv (j + 1) := pmVvModNe_p35 hk0 hper hinj hm31
+  by_cases heM : ∃ c d : ℝ, vv (j + 1 + 1) - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0)
+  · exact Or.inr (pmEOffPlaneAux_p35 hscs hBB hE hFF hk4 j hb0 hc0 he0 hbc hncbc
+      hv1 hv2 hv3 hv4 hθlt heM)
+  · exact Or.inl heM
+
+/-- **(A)-rung D2 (pm7): the `θ = π` root reducer** — at a flat sector the
+span vertex `d` renders on the negative `b`-side; and (i) if `e` is off the
+plane both endpoints carry `α ≥ 0` (the half-plane data), while (ii) if `e`
+is in the plane it either carries a negative `a`-coefficient (the
+winding-order survivor) or sits in the antipodal wedge with the dart-`(j+1)`
+sector flat. -/
+private theorem pmBRootReduce_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (j : ℕ)
+    (hu : ∃ c d : ℝ, u - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0))
+    (hw : ∃ c d : ℝ, w - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0))
+    (hθπ : azim 0 (vv j) (vv (j + 1)) (vv (j + s.k - 1)) = Real.pi) :
+    (∃ γ β : ℝ, vv (j + s.k - 1) - 0 = γ • (vv j - 0) + β • (vv (j + 1) - 0) ∧ β < 0) ∧
+      ((¬ ∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) + de • (vv (j + 1) - 0)) →
+        (∀ cu du : ℝ, u - 0 = cu • (vv j - 0) + du • (vv (j + 1) - 0) → 0 ≤ cu) ∧
+        (∀ cw dw : ℝ, w - 0 = cw • (vv j - 0) + dw • (vv (j + 1) - 0) → 0 ≤ cw)) ∧
+      ((∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) + de • (vv (j + 1) - 0)) →
+        (∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) + de • (vv (j + 1) - 0) ∧
+            ce < 0) ∨
+        ((∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) + de • (vv (j + 1) - 0) ∧
+            ce < 0 ∧ de < 0) ∧
+          azim 0 (vv (j + 1)) (vv (j + 1 + 1)) (vv j) = Real.pi)) := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  have hvne : ∀ m : ℕ, vv m ≠ (0:V3) := by
+    intro m hm
+    exact hfan'.2.2.2.1 (hm ▸ (Set.mem_range.mpr ⟨m, rfl⟩ : vv m ∈ Set.range vv))
+  have hb0 : vv j ≠ (0:V3) := hvne j
+  have hc0 : vv (j + 1) ≠ (0:V3) := hvne (j + 1)
+  have he0 : vv (j + 1 + 1) ≠ (0:V3) := hvne (j + 1 + 1)
+  have hncbc : ¬ Collinear3 0 (vv j) (vv (j + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨j, rfl⟩)
+  have hbc : vv j ≠ vv (j + 1) := by
+    intro he
+    exact hncbc (by rw [he]; exact collinear3_pair_right rfl)
+  have hncbe : ¬ Collinear3 0 (vv (j + 1)) (vv (j + 1 + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨j + 1, rfl⟩)
+  have hm22 : (j + 2) % s.k ≠ j % s.k := fun hh =>
+    pmModNeGen_p35 hk0 (x := j) (c := 2) (by omega) (by omega) hh
+  have hm21 : (j + 2) % s.k ≠ (j + 1) % s.k := fun hh =>
+    pmModNeGen_p35 hk0 (x := j + 1) (c := 1) (by omega) (by omega) hh
+  have hm30 : (j + 3) % s.k ≠ j % s.k := fun hh =>
+    pmModNeGen_p35 hk0 (x := j) (c := 3) (by omega) (by omega) hh
+  have hm31 : (j + 3) % s.k ≠ (j + 1) % s.k := fun hh =>
+    pmModNeGen_p35 hk0 (x := j + 1) (c := 2) (by omega) (by omega) hh
+  have hv1 : vv (j + 1 + 1) ≠ vv j := pmVvModNe_p35 hk0 hper hinj hm22
+  have hv2 : vv (j + 1 + 1) ≠ vv (j + 1) := pmVvModNe_p35 hk0 hper hinj hm21
+  have hv3 : vv (j + 2 + 1) ≠ vv j := pmVvModNe_p35 hk0 hper hinj hm30
+  have hv4 : vv (j + 2 + 1) ≠ vv (j + 1) := pmVvModNe_p35 hk0 hper hinj hm31
+  refine ⟨pmNegSideOfPi_p35 hb0 hc0 hncbc hθπ, ?_, ?_⟩
+  · -- the B1 half-plane arm
+    intro heP
+    have hxe : ∀ s_ t : ℝ, vv (j + 1 + 1) - 0 ≠ s_ • (vv j - 0) +
+        t • (vv (j + 1) - 0) := fun s_ t hst => heP ⟨s_, t, hst⟩
+    obtain ⟨h0ne, hπne⟩ := pmAzimOffPlaneNe_p35 hb0 hc0 hncbc hxe
+    have hcolae : ¬ Collinear3 0 (vv j) (vv (j + 1 + 1)) := by
+      intro hcol
+      obtain ⟨lam, hlam⟩ := (collinear3_iff_smul (v := (0:V3)) (w := vv j)
+        (w1 := vv (j + 1 + 1)) hb0).mp hcol
+      exact heP ⟨lam, 0, by rw [hlam]; simp⟩
+    obtain ⟨hsand, -⟩ := wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan j
+    have hle := (hsand (vv (j + 1 + 1)) (Set.mem_range.mpr ⟨j + 2, rfl⟩)).2
+    have hlt : azim 0 (vv j) (vv (j + 1)) (vv (j + 1 + 1)) < Real.pi :=
+      lt_of_le_of_ne (hle.trans_eq hθπ) hπne
+    have h0lt : 0 < azim 0 (vv j) (vv (j + 1)) (vv (j + 1 + 1)) :=
+      lt_of_le_of_ne (azim_nonneg 0 (vv j) (vv (j + 1)) (vv (j + 1 + 1)))
+        (Ne.symm h0ne)
+    have hbed : (0:ℝ) < (crossProduct ((vv j : V3) : Fin 3 → ℝ)
+        ((vv (j + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (vv (j + 1 + 1) : Fin 3 → ℝ) := by
+      simpa [sub_zero] using cross_dot_fully_surrounded_fan (x := 0)
+        (v1 := vv j) (v := vv (j + 1)) (u1 := vv (j + 1 + 1)) hcolae hncbc h0lt hlt
+    refine ⟨fun cu du hcu => pmAlphaGe_p35
+      (pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (j + 1) u
+        (Set.mem_range.mpr ⟨p % s.k, hp⟩)) hcu hbed,
+      fun cw dw hcw => pmAlphaGe_p35
+      (pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (j + 1) w
+        (Set.mem_range.mpr ⟨q % s.k, hq⟩)) hcw hbed⟩
+  · -- the B2 antipodal-wedge arm
+    intro h
+    obtain ⟨ce, de, heM⟩ := h
+    rcases azimPlanePlace_p35 hb0 hc0 hncbc ⟨ce, de, heM⟩ with h0e | hπe
+    · -- azimuth 0: negative `a`-coefficient or the cone kill
+      by_cases hcolae : Collinear3 0 (vv j) (vv (j + 1 + 1))
+      · obtain ⟨lam, hlam⟩ := (collinear3_iff_smul (v := (0:V3)) (w := vv j)
+          (w1 := vv (j + 1 + 1)) hb0).mp hcolae
+        rcases lt_trichotomy lam 0 with hlam0 | hlam00 | hlam0p
+        · exact Or.inl ⟨lam, 0, by rw [hlam]; simp, hlam0⟩
+        · exfalso
+          simp only [hlam00, zero_smul, add_zero] at hlam
+          exact he0 (by simpa using hlam)
+        · exfalso
+          refine pmConeRingKill_p35 hscs hBB hE hFF hk4 j (j + 2) ?_ hv1 hv2 hv3 hv4
+          exact pmConeMem_p35 hb0 hc0 hbc (le_of_lt hlam0p) (by norm_num)
+            (show vv (j + 1 + 1) - 0 = lam • (vv j - 0) + (0:ℝ) • (vv (j + 1) - 0)
+              from by rw [hlam]; simp)
+      · obtain ⟨c₁, hc₁, d₁, hd₁⟩ :=
+          (affGt_pair_iff (v0 := (0:V3)) (v1 := vv j) (x := vv (j + 1))
+            (y := vv (j + 1 + 1)) (Ne.symm hb0) hc0
+            (fun heq => hbc heq.symm)).mp
+            ((azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := vv j)
+              (w := vv (j + 1)) hncbc hcolae).mp h0e)
+        rcases lt_trichotomy d₁ 0 with hd0 | hd00 | hd
+        · exact Or.inl ⟨d₁, c₁, by rw [hd₁]; exact add_comm _ _, hd0⟩
+        · exfalso
+          refine pmConeRingKill_p35 hscs hBB hE hFF hk4 j (j + 2) ?_ hv1 hv2 hv3 hv4
+          exact pmConeMem_p35 hb0 hc0 hbc (le_of_eq hd00.symm) (le_of_lt hc₁)
+            (show vv (j + 1 + 1) - 0 = d₁ • (vv j - 0) + c₁ • (vv (j + 1) - 0)
+              from by rw [hd₁]; exact add_comm _ _)
+        · exfalso
+          refine pmConeRingKill_p35 hscs hBB hE hFF hk4 j (j + 2) ?_ hv1 hv2 hv3 hv4
+          exact pmConeMem_p35 hb0 hc0 hbc (le_of_lt hd) (le_of_lt hc₁)
+            (show vv (j + 1 + 1) - 0 = d₁ • (vv j - 0) + c₁ • (vv (j + 1) - 0)
+              from by rw [hd₁]; exact add_comm _ _)
+    · -- azimuth π: the antipodal wedge + flat dart-(j+1) sector
+      have hne := dartSpanNeCyc_p35 hk3 hper hinj hE (j + 1) hfan'
+      rw [show (j + 1) + s.k - 1 = j + s.k from by omega,
+        wedgeVvAddK_p35 hper j] at hne
+      obtain ⟨hce, hde, hθ1⟩ := pmB2AntiWedge_p35 hb0 hc0 he0 hncbc hncbe hπe
+        heM hne
+      exact Or.inr ⟨⟨ce, de, heM, ⟨hce, hde⟩⟩, hθ1⟩
+
+/-! ## planemiss8 rungs (lkgrqui-planemiss8-w3, 2026-10-28)
+
+The winding-order residual root kit (all conditional, zero sorry): with the
+R-tilt / R-flat survivor data in hand these rungs globalize the dart
+half-space to the whole ring (every ring vertex on the closed `(a×b)`-side
+of the dart-`j` face plane), flatten the successor sector (`θ_{j+1} = π`),
+and detect the capped-vertex quadrant (an in-plane ring vertex whose capped
+neighbor is strictly above the face plane sits in a forced `(α, β)`-quadrant
+— the pm7 DELIVERY sign algebra `det(x, x⁺, ·)`).  Insertion point: after
+`pmBRootReduce_p35`, before `pmPlaneCrowding_p35`. -/
+
+/-- (pm8) Cross-dot vanishing against the first cross slot. -/
+private theorem pmCrossDotSelfL_p35 (p q : Fin 3 → ℝ) :
+    (crossProduct p q) ⬝ᵥ p = 0 := by
+  rw [dotProduct_comm]
+  exact dot_self_cross p q
+
+/-- (pm8) Cross-dot vanishing against the second cross slot. -/
+private theorem pmCrossDotSelfR_p35 (p q : Fin 3 → ℝ) :
+    (crossProduct p q) ⬝ᵥ q = 0 := by
+  rw [dotProduct_comm]
+  exact dot_cross_self p q
+
+/-- (pm8) Scalar triple product, slot swap (`r` and `q` exchanged). -/
+private theorem pmDotCrossSwap_p35 (p q r : Fin 3 → ℝ) :
+    (crossProduct p q) ⬝ᵥ r = -((crossProduct p r) ⬝ᵥ q) := by
+  have h1 : (crossProduct p q) ⬝ᵥ r = (crossProduct q r) ⬝ᵥ p := pmDetCyc_p35 p q r
+  have h2 : (crossProduct q r) ⬝ᵥ p
+      = (-crossProduct r q) ⬝ᵥ p := by rw [cross_anticomm r q]
+  have h3 : (-crossProduct r q) ⬝ᵥ p
+      = -((crossProduct r q) ⬝ᵥ p) := pmDotNegL_p35 _ _
+  have h4 : (crossProduct r q) ⬝ᵥ p = (crossProduct p r) ⬝ᵥ q :=
+    (pmDetCyc_p35 p r q).symm
+  rw [h1, h2, h3, h4]
+
+/-- (pm8) Cross of the rendered successor against the dart pair: with `e`
+rendered on the dart face as `ce•a + de•b`, `cross(b, e) = -ce • cross(a, b)`. -/
+private theorem pmCrossSuccNeg_p35 {a b e : V3} {ce de : ℝ}
+    (heM : e - 0 = ce • (a - 0) + de • (b - 0)) :
+    (crossProduct (b : Fin 3 → ℝ) (e : Fin 3 → ℝ))
+      = -ce • (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) := by
+  simp only [sub_zero] at heM
+  have hecoe : (e : Fin 3 → ℝ) = ce • (a : Fin 3 → ℝ) + de • (b : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) heM
+  have hbb : crossProduct (b : Fin 3 → ℝ) (b : Fin 3 → ℝ) = 0 := cross_self _
+  have hba : crossProduct (b : Fin 3 → ℝ) (a : Fin 3 → ℝ)
+      = -(crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) :=
+    (cross_anticomm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)).symm
+  rw [hecoe, pmCrossAddR_p35, pmCrossSmulR_p35, pmCrossSmulR_p35, hba, hbb]
+  module
+
+/-- (pm8) Cross of a rendered plane vector against the `a`-ray: with `x`
+rendered as `γ•a + β•b`, `cross(x, a) = -β • cross(a, b)`. -/
+private theorem pmCrossPredNeg_p35 {a b x : V3} {γ β : ℝ}
+    (hxM : x - 0 = γ • (a - 0) + β • (b - 0)) :
+    (crossProduct (x : Fin 3 → ℝ) (a : Fin 3 → ℝ))
+      = -β • (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) := by
+  simp only [sub_zero] at hxM
+  have hxcoe : (x : Fin 3 → ℝ) = γ • (a : Fin 3 → ℝ) + β • (b : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hxM
+  have haa : crossProduct (a : Fin 3 → ℝ) (a : Fin 3 → ℝ) = 0 := cross_self _
+  have hba : crossProduct (b : Fin 3 → ℝ) (a : Fin 3 → ℝ)
+      = -(crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) :=
+    (cross_anticomm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)).symm
+  rw [hxcoe, pmCrossAddL_p35, pmCrossSmulL_p35, pmCrossSmulL_p35, haa, hba]
+  module
+
+/-- **(pm8) R-tilt half-space globalizer**: whenever the successor vertex
+`vv (j+2)` sits in the dart-`j` face plane with a strictly negative
+`a`-coefficient (the winding-order survivor of `pmEOffPlaneOfLtPi_p35`, and
+likewise the `pmBRootReduce_p35` in-plane survivor/antipodal leaves), the
+dart-`(j+1)` half-space globalizes: every ring vertex lies on the closed
+`(a×b)`-side of the dart-`j` face plane. -/
+private theorem pmTiltUpperHalf_p35 {s : ScsV39} {p q : ℕ} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF) (j : ℕ)
+    (hsurv : ∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) + de • (vv (j + 1) - 0) ∧
+      ce < 0)
+    (y : V3) (hy : y ∈ Set.range vv) :
+    (0:ℝ) ≤ (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ) := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  obtain ⟨ce, de, heM, hce⟩ := hsurv
+  have h1 := pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (j + 1) y hy
+  rw [pmCrossSuccNeg_p35 heM, pmDotSmulL_p35] at h1
+  have hpos : (0:ℝ) < -ce := neg_pos.mpr hce
+  by_contra hneg
+  exact absurd (mul_neg_of_pos_of_neg hpos (lt_of_not_ge hneg)) (not_lt.mpr h1)
+
+/-- **(pm8) R-flat(a) half-space globalizer**: whenever the span vertex
+`d := vv (j+k-1)` sits in the dart-`j` face plane on the negative `b`-side
+(the `pmBRootReduce_p35` flat-sector data), the dart-`(j+k-1)` half-space
+globalizes: every ring vertex lies on the closed `(a×b)`-side of the face
+plane. -/
+private theorem pmFlatAUpperHalf_p35 {s : ScsV39} {p q : ℕ} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF) (j : ℕ)
+    (hdsurv : ∃ γ β : ℝ, vv (j + s.k - 1) - 0 = γ • (vv j - 0) + β • (vv (j + 1) - 0) ∧
+      β < 0)
+    (y : V3) (hy : y ∈ Set.range vv) :
+    (0:ℝ) ≤ (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ) := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  obtain ⟨γ, β, hdM, hβ⟩ := hdsurv
+  have h1 := pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (j + s.k - 1) y hy
+  have hvk : vv ((j + s.k - 1) + 1) = vv j := by
+    rw [show (j + s.k - 1) + 1 = j + s.k from by omega]
+    exact wedgeVvAddK_p35 hBB.2.1 j
+  rw [hvk, pmCrossPredNeg_p35 hdM, pmDotSmulL_p35] at h1
+  have hpos : (0:ℝ) < -β := neg_pos.mpr hβ
+  by_contra hneg
+  exact absurd (mul_neg_of_pos_of_neg hpos (lt_of_not_ge hneg)) (not_lt.mpr h1)
+
+/-- (pm8) Quadrant detector against a capped successor: an in-plane vector
+`x = α•a + β•b` whose successor `x'` is strictly on the `(a×b)`-side of the
+face plane and avoids the dart-`x` half-space sign on `a` and `b` is forced
+into the quadrant `α ≤ 0 ∧ 0 ≤ β` (the `det(x, x⁺, ·)` sign algebra). -/
+private theorem pmQuadSucc_p35 {a b x x' : V3} {α β : ℝ}
+    (hxM : x - 0 = α • (a - 0) + β • (b - 0))
+    (hA : (0:ℝ) ≤ (crossProduct (x : Fin 3 → ℝ) (x' : Fin 3 → ℝ)) ⬝ᵥ (a : Fin 3 → ℝ))
+    (hB : (0:ℝ) ≤ (crossProduct (x : Fin 3 → ℝ) (x' : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ))
+    (hD : (0:ℝ) < (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (x' : Fin 3 → ℝ)) :
+    α ≤ 0 ∧ 0 ≤ β := by
+  simp only [sub_zero] at hxM
+  have hxcoe : (x : Fin 3 → ℝ) = α • (a : Fin 3 → ℝ) + β • (b : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hxM
+  have hexp : (crossProduct (x : Fin 3 → ℝ) (x' : Fin 3 → ℝ))
+      = α • (crossProduct (a : Fin 3 → ℝ) (x' : Fin 3 → ℝ))
+        + β • (crossProduct (b : Fin 3 → ℝ) (x' : Fin 3 → ℝ)) := by
+    rw [hxcoe, pmCrossAddL_p35, pmCrossSmulL_p35, pmCrossSmulL_p35]
+  have hcha : (crossProduct (b : Fin 3 → ℝ) (x' : Fin 3 → ℝ)) ⬝ᵥ (a : Fin 3 → ℝ)
+      = (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (x' : Fin 3 → ℝ) := by
+    have h1 : (crossProduct (b : Fin 3 → ℝ) (x' : Fin 3 → ℝ)) ⬝ᵥ (a : Fin 3 → ℝ)
+        = (crossProduct (x' : Fin 3 → ℝ) (a : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ) :=
+      pmDetCyc_p35 _ _ _
+    rw [h1, pmDetCyc_p35]
+  have hchb : (crossProduct (a : Fin 3 → ℝ) (x' : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)
+      = -((crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (x' : Fin 3 → ℝ)) :=
+    pmDotCrossSwap_p35 _ _ _
+  rw [hexp, pmDotAddL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmCrossDotSelfL_p35,
+    mul_zero, zero_add, hcha] at hA
+  rw [hexp, pmDotAddL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmCrossDotSelfL_p35,
+    hchb, mul_zero, add_zero] at hB
+  refine ⟨?_, ?_⟩
+  · by_contra hα
+    exact absurd (mul_neg_of_pos_of_neg (lt_of_not_ge hα) (neg_lt_zero.mpr hD))
+      (not_lt.mpr hB)
+  · by_contra hβ
+    exact absurd (mul_neg_of_neg_of_pos (lt_of_not_ge hβ) hD) (not_lt.mpr hA)
+
+/-- (pm8) Quadrant detector against a capped predecessor: an in-plane vector
+`x = α•a + β•b` whose predecessor `x'` is strictly on the `(a×b)`-side of
+the face plane is forced into the quadrant `0 ≤ α ∧ β ≤ 0`. -/
+private theorem pmQuadPred_p35 {a b x x' : V3} {α β : ℝ}
+    (hxM : x - 0 = α • (a - 0) + β • (b - 0))
+    (hA : (0:ℝ) ≤ (crossProduct (x' : Fin 3 → ℝ) (x : Fin 3 → ℝ)) ⬝ᵥ (a : Fin 3 → ℝ))
+    (hB : (0:ℝ) ≤ (crossProduct (x' : Fin 3 → ℝ) (x : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ))
+    (hD : (0:ℝ) < (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (x' : Fin 3 → ℝ)) :
+    0 ≤ α ∧ β ≤ 0 := by
+  simp only [sub_zero] at hxM
+  have hxcoe : (x : Fin 3 → ℝ) = α • (a : Fin 3 → ℝ) + β • (b : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hxM
+  have hexp : (crossProduct (x' : Fin 3 → ℝ) (x : Fin 3 → ℝ))
+      = α • (crossProduct (x' : Fin 3 → ℝ) (a : Fin 3 → ℝ))
+        + β • (crossProduct (x' : Fin 3 → ℝ) (b : Fin 3 → ℝ)) := by
+    rw [hxcoe, pmCrossAddR_p35, pmCrossSmulR_p35, pmCrossSmulR_p35]
+  have hcha : (crossProduct (x' : Fin 3 → ℝ) (a : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)
+      = (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (x' : Fin 3 → ℝ) :=
+    pmDetCyc_p35 _ _ _
+  have hchb : (crossProduct (x' : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (a : Fin 3 → ℝ)
+      = -((crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (x' : Fin 3 → ℝ)) := by
+    have h1 : (crossProduct (x' : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (a : Fin 3 → ℝ)
+        = -((crossProduct (x' : Fin 3 → ℝ) (a : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)) :=
+      pmDotCrossSwap_p35 _ _ _
+    rw [h1, hcha]
+  rw [hexp, pmDotAddL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmCrossDotSelfR_p35,
+    mul_zero, zero_add, hchb] at hA
+  rw [hexp, pmDotAddL_p35, pmDotSmulL_p35, pmDotSmulL_p35, pmCrossDotSelfR_p35,
+    mul_zero, add_zero, hcha] at hB
+  refine ⟨?_, ?_⟩
+  · by_contra hα
+    exact absurd (mul_neg_of_neg_of_pos (lt_of_not_ge hα) hD) (not_lt.mpr hB)
+  · by_contra hβ
+    exact absurd (mul_neg_of_pos_of_neg (lt_of_not_ge hβ) (neg_lt_zero.mpr hD))
+      (not_lt.mpr hA)
+
+/-- **(pm8) Cap quadrant at the ring, successor form**: with the ring
+globalized to the closed `(a×b)`-side of the dart-`j` face plane, any ring
+vertex `vv m` rendered in the face plane whose successor `vv (m+1)` lies
+strictly off the plane is forced into the quadrant `α ≤ 0 ∧ 0 ≤ β`. -/
+private theorem pmCapQuadSucc_p35 {s : ScsV39} {p q : ℕ} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF) (j m : ℕ)
+    (hup : ∀ y ∈ Set.range vv, (0:ℝ) ≤ (crossProduct (vv j : Fin 3 → ℝ)
+      (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ))
+    (hxM : ∃ α β : ℝ, vv m - 0 = α • (vv j - 0) + β • (vv (j + 1) - 0))
+    (hxp : ¬ ∃ α β : ℝ, vv (m + 1) - 0 = α • (vv j - 0) + β • (vv (j + 1) - 0)) :
+    ∃ α β : ℝ, vv m - 0 = α • (vv j - 0) + β • (vv (j + 1) - 0) ∧ α ≤ 0 ∧ 0 ≤ β := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  have hvne : ∀ i : ℕ, vv i ≠ (0:V3) := by
+    intro i hi
+    exact hfan'.2.2.2.1 (hi ▸ (Set.mem_range.mpr ⟨i, rfl⟩ : vv i ∈ Set.range vv))
+  have hncab : ¬ Collinear3 0 (vv j) (vv (j + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨j, rfl⟩)
+  have hncx : ¬ Collinear3 0 (vv j) (vv (m + 1)) := by
+    intro hcol
+    obtain ⟨t, ht⟩ := (collinear3_iff_smul (v := (0:V3)) (w := vv j)
+      (w1 := vv (m + 1)) (hvne j)).mp hcol
+    exact hxp ⟨t, 0, by rw [ht]; simp⟩
+  have hx'off := pmAzimOffPlaneNe_p35 (a := vv j) (b := vv (j + 1)) (x := vv (m + 1))
+    (hvne j) (hvne (j + 1)) hncab (fun s_ t_ hst => hxp ⟨s_, t_, hst⟩)
+  obtain ⟨hsand, hθle⟩ := wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan j
+  obtain ⟨h0le, hleθ⟩ := hsand (vv (m + 1)) (Set.mem_range.mpr ⟨m + 1, rfl⟩)
+  have h0lt : 0 < azim 0 (vv j) (vv (j + 1)) (vv (m + 1)) :=
+    lt_of_le_of_ne h0le (Ne.symm hx'off.1)
+  have hleπ : azim 0 (vv j) (vv (j + 1)) (vv (m + 1)) ≤ Real.pi := hleθ.trans hθle
+  have hltπ : azim 0 (vv j) (vv (j + 1)) (vv (m + 1)) < Real.pi :=
+    lt_of_le_of_ne hleπ hx'off.2
+  have hD : (0:ℝ) < (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ
+      (vv (m + 1) : Fin 3 → ℝ) := by
+    simpa [sub_zero] using cross_dot_fully_surrounded_fan (x := 0) (v1 := vv j)
+      (v := vv (j + 1)) (u1 := vv (m + 1)) hncx hncab h0lt hltπ
+  have hA := pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan m (vv j)
+    (Set.mem_range.mpr ⟨j, rfl⟩)
+  have hB := pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan m (vv (j + 1))
+    (Set.mem_range.mpr ⟨j + 1, rfl⟩)
+  obtain ⟨α, β, hxM'⟩ := hxM
+  exact ⟨α, β, hxM', pmQuadSucc_p35 hxM' hA hB hD⟩
+
+/-- **(pm8) Cap quadrant at the ring, predecessor form**: with the ring
+globalized to the closed `(a×b)`-side of the dart-`j` face plane, any ring
+vertex `vv m` rendered in the face plane whose cyclic predecessor
+`vv (m+k-1)` lies strictly off the plane is forced into the quadrant
+`0 ≤ α ∧ β ≤ 0`. -/
+private theorem pmCapQuadPred_p35 {s : ScsV39} {p q : ℕ} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF) (j m : ℕ)
+    (hup : ∀ y ∈ Set.range vv, (0:ℝ) ≤ (crossProduct (vv j : Fin 3 → ℝ)
+      (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ (y : Fin 3 → ℝ))
+    (hxM : ∃ α β : ℝ, vv m - 0 = α • (vv j - 0) + β • (vv (j + 1) - 0))
+    (hxp : ¬ ∃ α β : ℝ, vv (m + s.k - 1) - 0 = α • (vv j - 0) + β • (vv (j + 1) - 0)) :
+    ∃ α β : ℝ, vv m - 0 = α • (vv j - 0) + β • (vv (j + 1) - 0) ∧ 0 ≤ α ∧ β ≤ 0 := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  have hvne : ∀ i : ℕ, vv i ≠ (0:V3) := by
+    intro i hi
+    exact hfan'.2.2.2.1 (hi ▸ (Set.mem_range.mpr ⟨i, rfl⟩ : vv i ∈ Set.range vv))
+  have hncab : ¬ Collinear3 0 (vv j) (vv (j + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan'
+      (by rw [← hE]; exact Set.mem_range.mpr ⟨j, rfl⟩)
+  have hncx : ¬ Collinear3 0 (vv j) (vv (m + s.k - 1)) := by
+    intro hcol
+    obtain ⟨t, ht⟩ := (collinear3_iff_smul (v := (0:V3)) (w := vv j)
+      (w1 := vv (m + s.k - 1)) (hvne j)).mp hcol
+    exact hxp ⟨t, 0, by rw [ht]; simp⟩
+  have hx'off := pmAzimOffPlaneNe_p35 (a := vv j) (b := vv (j + 1))
+    (x := vv (m + s.k - 1)) (hvne j) (hvne (j + 1)) hncab
+    (fun s_ t_ hst => hxp ⟨s_, t_, hst⟩)
+  obtain ⟨hsand, hθle⟩ := wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan j
+  obtain ⟨h0le, hleθ⟩ := hsand (vv (m + s.k - 1))
+    (Set.mem_range.mpr ⟨m + s.k - 1, rfl⟩)
+  have h0lt : 0 < azim 0 (vv j) (vv (j + 1)) (vv (m + s.k - 1)) :=
+    lt_of_le_of_ne h0le (Ne.symm hx'off.1)
+  have hleπ : azim 0 (vv j) (vv (j + 1)) (vv (m + s.k - 1)) ≤ Real.pi :=
+    hleθ.trans hθle
+  have hltπ : azim 0 (vv j) (vv (j + 1)) (vv (m + s.k - 1)) < Real.pi :=
+    lt_of_le_of_ne hleπ hx'off.2
+  have hD : (0:ℝ) < (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ
+      (vv (m + s.k - 1) : Fin 3 → ℝ) := by
+    simpa [sub_zero] using cross_dot_fully_surrounded_fan (x := 0) (v1 := vv j)
+      (v := vv (j + 1)) (u1 := vv (m + s.k - 1)) hncx hncab h0lt hltπ
+  have hvk : vv ((m + s.k - 1) + 1) = vv m := by
+    rw [show (m + s.k - 1) + 1 = m + s.k from by omega]
+    exact wedgeVvAddK_p35 hper m
+  have hA := pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (m + s.k - 1) (vv j)
+    (Set.mem_range.mpr ⟨j, rfl⟩)
+  have hB := pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (m + s.k - 1) (vv (j + 1))
+    (Set.mem_range.mpr ⟨j + 1, rfl⟩)
+  rw [hvk] at hA hB
+  obtain ⟨α, β, hxM'⟩ := hxM
+  exact ⟨α, β, hxM', pmQuadPred_p35 hxM' hA hB hD⟩
+
+/-- **(pm8) Successor-sector flattening**: with the successor `e` rendered in
+the dart-`j` face plane at a strictly negative `a`-coefficient, the dart
+`(j+1)` sector span is exactly `π` (`a` sits on the negative-`e` side of the
+`b`-axis: `a = (-de/ce)•b + ce⁻¹•e` with `ce⁻¹ < 0`). -/
+private theorem pmFlatSuccPi_p35 {a b e : V3} {ce de : ℝ} (ha0 : a ≠ 0)
+    (hb0 : b ≠ 0) (hncab : ¬ Collinear3 0 a b)
+    (heM : e - 0 = ce • (a - 0) + de • (b - 0)) (hce : ce < 0) :
+    azim 0 b e a = Real.pi := by
+  have he0 : e ≠ (0:V3) := by
+    intro hzz
+    have hzero : ce • (a - 0) + de • (b - 0) = (0:V3) := by
+      rw [← heM, hzz]
+      simp
+    have hcz := (pmPlaneCoordZero_p35 ha0 hncab hzero).1
+    linarith
+  have hnce : ¬ Collinear3 0 b e := by
+    intro hcol
+    obtain ⟨t, ht⟩ := (collinear3_iff_smul (v := (0:V3)) (w := b) (w1 := e) hb0).mp hcol
+    have hcoord : ce • (a - 0) + de • (b - 0) = (0:ℝ) • (a - 0) + t • (b - 0) := by
+      rw [← heM, ht, zero_smul, zero_add]
+    have hcz := (pmPlaneCoordUnique_p35 ha0 hncab hcoord).1
+    linarith
+  have hcoe : a - 0 = (-de * ce⁻¹) • (b - 0) + ce⁻¹ • (e - 0) := by
+    rw [heM, smul_add, smul_smul, smul_smul, inv_mul_cancel₀ (ne_of_lt hce),
+      one_smul]
+    module
+  exact pmAzimPlaneNeg_p35 (a := b) (b := e) (x := a) hb0 he0 hnce hcoe
+    (inv_lt_zero.mpr hce)
+
+/-! ## planemiss9 rungs (lkgrqui-planemiss9-w3, 2026-10-28)
+
+The normal-axis azimuth engine: with `axN a b := (WithLp.toLp 2
+(crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ)) : V3)` the
+plane-missing endgame reads in-plane polar angles as `azim 0 (axN a b) a x`
+(the azimuth around the dart-face normal axis, measured from the `a`
+half-plane) — the FAN-free chain engine `triAzimAdd_p35` + `azim_compl`
+applies verbatim.  Insertion point: after `pmFlatSuccPi_p35`, before the
+`pmPlaneCrowding_p35` docstring. -/
+
+/-- (pm9) Collinearity is symmetric in the last two arguments. -/
+private theorem pmCollSwap_p35 {a b : V3} (h : Collinear3 0 a b) : Collinear3 0 b a := by
+  have hset : ({0, a, b} : Set V3) = {0, b, a} := by
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  show Collinear ℝ ({0, b, a} : Set V3)
+  rw [← hset]
+  exact h
+
+/-- (pm9) The `V3` dot is the Pi-side dot after the coercion. -/
+private theorem pmCoeDot_p35 (u v : V3) :
+    (u ⬝ᵥ v) = ((u : Fin 3 → ℝ) ⬝ᵥ (v : Fin 3 → ℝ)) := rfl
+
+/-- (pm9) Zero-equality transport through the coercion. -/
+private theorem pmOfLpEqZero_p35 {u : V3} (h : ((u : Fin 3 → ℝ)) = 0) :
+    u = (0:V3) := by
+  have h2 : ‖u‖ ^ 2 = 0 := by
+    rw [pmNormSqDot_p35, h, zero_dotProduct]
+  exact norm_eq_zero.mp (sq_eq_zero_iff.mp h2)
+
+/-- (pm9) Coercion translation for the normal axis (the type-gap piece):
+the coerced cross product reads back as the Pi-side cross product. -/
+private theorem pmNormalAxisCoe_p35 {a b : V3} :
+    ((WithLp.toLp 2 (crossProduct ((a : V3) : Fin 3 → ℝ)
+        ((b : V3) : Fin 3 → ℝ)) : V3) : Fin 3 → ℝ)
+      = crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ) :=
+  WithLp.ofLp_toLp 2 _
+
+/-- (pm9) The normal axis is nonzero whenever the dart pair spans a plane. -/
+private theorem pmNormalAxisNe_p35 {a b : V3} (ha0 : a ≠ (0:V3))
+    (hncab : ¬ Collinear3 0 a b) :
+    (WithLp.toLp 2 (crossProduct ((a : V3) : Fin 3 → ℝ)
+        ((b : V3) : Fin 3 → ℝ)) : V3) ≠ (0:V3) := by
+  intro hz
+  have hb0 : b ≠ (0:V3) := by
+    intro hbz
+    exact hncab (collinear3_pair_left hbz)
+  have hli : LinearIndependent ℝ (![((a : V3) : Fin 3 → ℝ),
+      ((b : V3) : Fin 3 → ℝ)] : Fin 2 → (Fin 3 → ℝ)) := by
+    rw [Fintype.linearIndependent_iff]
+    intro g hg i
+    fin_cases i
+    · by_contra hg0
+      have hsum : (∑ j : Fin 2, g j • (![((a : V3) : Fin 3 → ℝ),
+          ((b : V3) : Fin 3 → ℝ)] : Fin 2 → (Fin 3 → ℝ)) j)
+          = g 0 • ((a : V3) : Fin 3 → ℝ) + g 1 • ((b : V3) : Fin 3 → ℝ) := by
+        simp [Fin.sum_univ_two]
+      rw [hsum] at hg
+      by_cases hg1 : g 1 = 0
+      · rw [hg1, zero_smul, add_zero] at hg
+        exact ha0 (pmOfLpEqZero_p35 ((smul_eq_zero.mp hg).resolve_left hg0))
+      · refine hncab
+          ((collinear3_iff_smul (v := (0:V3)) (w := a) (w1 := b) ha0).mpr
+            ⟨-g 0 / g 1, ?_⟩)
+        have h1 : g 0 • ((a : V3) : Fin 3 → ℝ) + g 1 • ((b : V3) : Fin 3 → ℝ)
+            = 0 := hg
+        have h2 : ((b : V3) : Fin 3 → ℝ)
+            = (-g 0 / g 1) • ((a : V3) : Fin 3 → ℝ) := by
+          have h1' : g 1 • (((b : V3) : Fin 3 → ℝ)
+              - (-g 0 / g 1) • ((a : V3) : Fin 3 → ℝ)) = 0 := by
+            rw [smul_sub, show g 1 • ((b : V3) : Fin 3 → ℝ)
+                = (-g 0) • ((a : V3) : Fin 3 → ℝ) from by
+                rw [neg_smul]; exact eq_neg_of_add_eq_zero_right h1,
+              show g 1 • ((-g 0 / g 1) • ((a : V3) : Fin 3 → ℝ))
+                  = (-g 0) • ((a : V3) : Fin 3 → ℝ) from by
+                rw [smul_smul]; field_simp]
+            module
+          exact sub_eq_zero.mp ((smul_eq_zero.mp h1').resolve_left hg1)
+        have h3 := congrArg (WithLp.toLp 2) h2
+        rw [WithLp.toLp_smul, WithLp.toLp_ofLp, WithLp.toLp_ofLp] at h3
+        rw [sub_zero b, sub_zero a]
+        exact h3
+    · by_contra hg1
+      have hsum : (∑ j : Fin 2, g j • (![((a : V3) : Fin 3 → ℝ),
+          ((b : V3) : Fin 3 → ℝ)] : Fin 2 → (Fin 3 → ℝ)) j)
+          = g 0 • ((a : V3) : Fin 3 → ℝ) + g 1 • ((b : V3) : Fin 3 → ℝ) := by
+        simp [Fin.sum_univ_two]
+      rw [hsum] at hg
+      by_cases hg0 : g 0 = 0
+      · rw [hg0, zero_smul, zero_add] at hg
+        exact hg1 ((smul_eq_zero.mp hg).resolve_right
+          (fun hc => hb0 (pmOfLpEqZero_p35 hc)))
+      · refine hncab (pmCollSwap_p35
+          ((collinear3_iff_smul (v := (0:V3)) (w := b) (w1 := a) hb0).mpr
+            ⟨-g 1 / g 0, ?_⟩))
+        have h1 : g 0 • ((a : V3) : Fin 3 → ℝ) + g 1 • ((b : V3) : Fin 3 → ℝ)
+            = 0 := hg
+        have h2 : ((a : V3) : Fin 3 → ℝ)
+            = (-g 1 / g 0) • ((b : V3) : Fin 3 → ℝ) := by
+          have h1' : g 0 • (((a : V3) : Fin 3 → ℝ)
+              - (-g 1 / g 0) • ((b : V3) : Fin 3 → ℝ)) = 0 := by
+            rw [smul_sub, show g 0 • ((a : V3) : Fin 3 → ℝ)
+                = (-g 1) • ((b : V3) : Fin 3 → ℝ) from by
+                rw [neg_smul]; exact eq_neg_of_add_eq_zero_left h1,
+              show g 0 • ((-g 1 / g 0) • ((b : V3) : Fin 3 → ℝ))
+                  = (-g 1) • ((b : V3) : Fin 3 → ℝ) from by
+                rw [smul_smul]; field_simp]
+            module
+          exact sub_eq_zero.mp ((smul_eq_zero.mp h1').resolve_left hg0)
+        have h3 := congrArg (WithLp.toLp 2) h2
+        rw [WithLp.toLp_smul, WithLp.toLp_ofLp, WithLp.toLp_ofLp] at h3
+        rw [sub_zero a, sub_zero b]
+        exact h3
+  have hz0 : (crossProduct ((a : V3) : Fin 3 → ℝ)
+      ((b : V3) : Fin 3 → ℝ)) = 0 := by
+    have he := pmNormalAxisCoe_p35 (a := a) (b := b)
+    rw [hz] at he
+    exact he.symm.trans rfl
+  exact ((crossProduct_ne_zero_iff_linearIndependent).mpr hli) hz0
+
+/-- (pm9) Orthogonality non-collinearity: a nonzero vector orthogonal to a
+nonzero axis is never collinear with it. -/
+private theorem pmAxisOrthoNC_p35 {ax y : V3} (hax0 : ax ≠ (0:V3)) (hy0 : y ≠ (0:V3))
+    (hdot : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0) : ¬ Collinear3 0 ax y := by
+  intro hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := ax) (w1 := y)
+    hax0).mp hcol
+  have hcoe : ((y : Fin 3 → ℝ)) = c • ((ax : Fin 3 → ℝ)) := by
+    simpa [sub_zero] using congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hc
+  have hc0 : c ≠ 0 := by
+    intro hcz
+    rw [hcz, zero_smul] at hcoe
+    exact hy0 (pmOfLpEqZero_p35 hcoe)
+  have h2 : ((y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ))
+      = c * ((ax : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ)) := by
+    rw [hcoe, pmDotSmulL_p35]
+  rw [hdot] at h2
+  have haxsq : ((ax : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ)) = 0 := by
+    rcases mul_eq_zero.mp h2.symm with hc2 | hax2
+    · exact absurd hc2 hc0
+    · exact hax2
+  exact hax0 (norm_eq_zero.mp
+    (sq_eq_zero_iff.mp (by rw [pmNormSqDot_p35]; exact haxsq)))
+
+/-- (pm9) Azimuth-zero rendering against the normal axis: `azim 0 ax a x = 0`
+puts the target on the open reference ray plus axis slack
+(`x = e•ax + c•a` with `c > 0`). -/
+private theorem pmAzimNormalRender0_p35 {ax a x : V3} (ha0 : a ≠ (0:V3))
+    (hnc : ¬ Collinear3 0 ax a) (hncx : ¬ Collinear3 0 ax x)
+    (h : azim 0 ax a x = 0) :
+    ∃ e c : ℝ, 0 < c ∧ x - 0 = e • (ax - 0) + c • (a - 0) := by
+  obtain ⟨c, hc, e, he⟩ :=
+    (affGt_pair_iff (v0 := (0:V3)) (v1 := ax) (x := a) (y := x)
+      (fun hz => hnc (by rw [hz]; exact collinear3_of_eq rfl))
+      ha0 (fun hz => hnc (by rw [hz]; exact collinear3_pair_right rfl))).mp
+    ((azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := ax) (w := a) (x := x) hnc hncx).mp h)
+  exact ⟨e, c, hc, by rw [he]; exact add_comm _ _⟩
+
+/-- (pm9) **Orthogonal-frame cosine identity**: for two nonzero vectors in
+the plane orthogonal to the axis, the cosine of their azimuth equals the
+scaled dot product. -/
+private theorem pmAzimOrthoCos_p35 {ax a x : V3} (hax0 : ax ≠ (0:V3))
+    (ha0 : a ≠ (0:V3)) (hx0 : x ≠ (0:V3))
+    (hnc : ¬ Collinear3 0 ax a) (hncx : ¬ Collinear3 0 ax x)
+    (hAA : (a : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hXX : (x : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0) :
+    Real.cos (azim 0 ax a x) * (‖a‖ * ‖x‖) = (a : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ) := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul ax hax0
+  obtain ⟨ψ, r1, r2, hr1, hr2, hz1, hz2⟩ :=
+    azim_frame_spec (v := (0:V3)) (w := ax) (w1 := a) (w2 := x) hnc hncx hon
+      (by simp only [dist_eq_norm, sub_zero]; exact halign) hax0
+  set θ : ℝ := azim 0 ax a x with hθdef
+  have hA1 : ((a : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ)) = r1 * Real.cos ψ := by
+    have h := congrArg Complex.re hz1
+    simpa [zOf, Complex.add_re, Complex.mul_re, Complex.mul_im, Complex.I_re,
+      Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, Complex.exp_re,
+      Complex.exp_im, Real.exp_zero] using h
+  have hA2 : ((a : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ)) = r1 * Real.sin ψ := by
+    have h := congrArg Complex.im hz1
+    simpa [zOf, Complex.add_re, Complex.mul_re, Complex.mul_im, Complex.I_re,
+      Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, Complex.exp_re,
+      Complex.exp_im, Real.exp_zero] using h
+  have hX1 : ((x : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ))
+      = r2 * Real.cos (ψ + θ) := by
+    have h := congrArg Complex.re hz2
+    simpa [zOf, Complex.add_re, Complex.mul_re, Complex.mul_im, Complex.I_re,
+      Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, Complex.exp_re,
+      Complex.exp_im, Real.exp_zero] using h
+  have hX2 : ((x : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ))
+      = r2 * Real.sin (ψ + θ) := by
+    have h := congrArg Complex.im hz2
+    simpa [zOf, Complex.add_re, Complex.mul_re, Complex.mul_im, Complex.I_re,
+      Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, Complex.exp_re,
+      Complex.exp_im, Real.exp_zero] using h
+  have hcoe3 : ((ax : Fin 3 → ℝ)) = ‖ax‖ • ((f3 : Fin 3 → ℝ)) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) halign
+  have hf3a : ((a : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) = 0 := by
+    rw [hcoe3] at hAA
+    rw [pmDotSmulR_p35, dotProduct_comm] at hAA
+    exact (mul_eq_zero.mp hAA).resolve_left (norm_ne_zero_iff.mpr hax0)
+  have hf3x : ((x : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) = 0 := by
+    rw [hcoe3] at hXX
+    rw [pmDotSmulR_p35, dotProduct_comm] at hXX
+    exact (mul_eq_zero.mp hXX).resolve_left (norm_ne_zero_iff.mpr hax0)
+  have hna : ‖a‖ = r1 := by
+    have he := on3_expand hon a
+    obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := hon
+    have p11 : ((f1 : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ)) = 1 := h11
+    have p22 : ((f2 : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ)) = 1 := h22
+    have p33 : ((f3 : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) = 1 := h33
+    have p12 : ((f1 : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ)) = 0 := h12
+    have p13 : ((f1 : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) = 0 := h13
+    have p23 : ((f2 : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) = 0 := h23
+    have hns : ((a : Fin 3 → ℝ) ⬝ᵥ (a : Fin 3 → ℝ))
+        = ((a : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ)) ^ 2
+          + ((a : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ)) ^ 2
+          + ((a : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) ^ 2 := by
+      rw [he]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, pmDotAddL_p35, pmDotAddR_p35,
+        pmDotSmulL_p35, pmDotSmulR_p35, smul_eq_mul, dotProduct_comm]
+      simp only [p11, p22, p33, p12, p13, p23, hf3a]
+      ring
+    have hsq : ‖a‖ ^ 2 = r1 ^ 2 := by
+      rw [pmNormSqDot_p35 a, hns, hA1, hA2, hf3a]
+      have hcss := Real.cos_sq_add_sin_sq ψ
+      nlinarith [hcss, hr1]
+    rcases sq_eq_sq_iff_eq_or_eq_neg.mp hsq with hz | hz
+    · exact hz
+    · have hnz : (0:ℝ) < ‖a‖ := norm_pos_iff.mpr ha0
+      linarith
+  have hnx : ‖x‖ = r2 := by
+    have he := on3_expand hon x
+    obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := hon
+    have p11 : ((f1 : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ)) = 1 := h11
+    have p22 : ((f2 : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ)) = 1 := h22
+    have p33 : ((f3 : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) = 1 := h33
+    have p12 : ((f1 : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ)) = 0 := h12
+    have p13 : ((f1 : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) = 0 := h13
+    have p23 : ((f2 : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) = 0 := h23
+    have hns : ((x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ))
+        = ((x : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ)) ^ 2
+          + ((x : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ)) ^ 2
+          + ((x : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ)) ^ 2 := by
+      rw [he]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, pmDotAddL_p35, pmDotAddR_p35,
+        pmDotSmulL_p35, pmDotSmulR_p35, smul_eq_mul, dotProduct_comm]
+      simp only [p11, p22, p33, p12, p13, p23, hf3x]
+      ring
+    have hsq : ‖x‖ ^ 2 = r2 ^ 2 := by
+      rw [pmNormSqDot_p35 x, hns, hX1, hX2, hf3x]
+      have hcss := Real.cos_sq_add_sin_sq (ψ + θ)
+      nlinarith [hcss, hr2]
+    rcases sq_eq_sq_iff_eq_or_eq_neg.mp hsq with hz | hz
+    · exact hz
+    · have hnz : (0:ℝ) < ‖x‖ := norm_pos_iff.mpr hx0
+      linarith
+  have h11 := hon.1
+  have h22 := hon.2.1
+  have h33 := hon.2.2.1
+  have h12 := hon.2.2.2.1
+  have h13 := hon.2.2.2.2.1
+  have h23 := hon.2.2.2.2.2.1
+  have p21 : ((f2 : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ)) = 0 := by
+    rw [dotProduct_comm]
+    exact h12
+  have p31 : ((f3 : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ)) = 0 := by
+    rw [dotProduct_comm]
+    exact h13
+  have p32 : ((f3 : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ)) = 0 := by
+    rw [dotProduct_comm]
+    exact h23
+  have hdot : ((a : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ)) = r1 * r2 * Real.cos θ := by
+    have hea := on3_expand hon a
+    have hex := on3_expand hon x
+    rw [hea, hex]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, pmDotAddL_p35, pmDotAddR_p35,
+      pmDotSmulL_p35, pmDotSmulR_p35, smul_eq_mul]
+    simp only [h11, h22, h33, h12, h13, h23, p21, p31, p32, hf3a, hf3x,
+      hA1, hA2, hX1, hX2]
+    have hcs : Real.cos ψ * Real.cos (ψ + θ) + Real.sin ψ * Real.sin (ψ + θ)
+        = Real.cos θ := by
+      have heq := Real.cos_sub (ψ + θ) ψ
+      rw [show (ψ + θ) - ψ = θ from by ring] at heq
+      linear_combination heq.symm
+    linear_combination (r1 * r2) * hcs
+  rw [hna, hnx, hdot]
+  ring
+
+
+/-- (pm9) **Strict-side azimuth placement** (cross-sign ⟹ polar angle): the
+reference ray `a` and the target `x` in the plane orthogonal to the axis with
+`(a×x)·ax > 0` place `x` strictly inside the reference half-turn:
+`0 < azim 0 ax a x < π`. -/
+private theorem pmAzimOrthoSideGt_p35 {ax a x : V3} (ha0 : a ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hnc : ¬ Collinear3 0 ax a) (hncx : ¬ Collinear3 0 ax x)
+    (hsign : (crossProduct (a : Fin 3 → ℝ) (x : Fin 3 → ℝ)) ⬝ᵥ (ax : Fin 3 → ℝ) > 0) :
+    0 < azim 0 ax a x ∧ azim 0 ax a x < Real.pi := by
+  have hax0 : ax ≠ (0:V3) := fun he =>
+    hnc (by rw [he]; exact collinear3_of_eq rfl)
+  have h0ne : azim 0 ax a x ≠ 0 := by
+    intro hz
+    obtain ⟨e, c, hc, hxx⟩ := pmAzimNormalRender0_p35 ha0 hnc hncx hz
+    have hco : ((x : V3) : Fin 3 → ℝ)
+        = e • ((ax : V3) : Fin 3 → ℝ) + c • ((a : V3) : Fin 3 → ℝ) := by
+      simpa [sub_zero] using congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hxx
+    have hcross : (crossProduct (a : Fin 3 → ℝ) ((x : V3) : Fin 3 → ℝ))
+        ⬝ᵥ (ax : Fin 3 → ℝ) = 0 := by
+      rw [hco, pmCrossAddR_p35, pmCrossSmulR_p35, pmCrossSmulR_p35, cross_self,
+        smul_zero, pmDotAddL_p35, pmDotSmulL_p35, zero_dotProduct, add_zero,
+        pmDetCyc_p35, cross_self, zero_dotProduct, mul_zero]
+    rw [hcross] at hsign
+    exact absurd hsign (by linarith)
+  have hπ : azim 0 ax a x ≤ Real.pi := by
+    by_contra hgt
+    have hcompl := azim_compl hnc hncx
+    rw [if_neg h0ne] at hcompl
+    have hle : azim 0 ax x a ≤ Real.pi := by rw [hcompl]; linarith [azim_nonneg 0 ax a x]
+    have hge := pmCrossGeAll_p35 (y := ax) (z := x) (x := a) hax0 hncx
+      (azim_nonneg 0 ax x a) hle
+    rw [pmDetCyc_p35, show crossProduct (x : Fin 3 → ℝ) (a : Fin 3 → ℝ)
+        = -(crossProduct (a : Fin 3 → ℝ) (x : Fin 3 → ℝ)) from
+      (cross_anticomm (a : Fin 3 → ℝ) (x : Fin 3 → ℝ)).symm, pmDotNegL_p35] at hge
+    linarith
+  have hπne : azim 0 ax a x ≠ Real.pi := by
+    intro hz
+    have hcompl := azim_compl hnc hncx
+    rw [if_neg h0ne, hz] at hcompl
+    have hle2 : azim 0 ax x a ≤ Real.pi := by rw [hcompl]; linarith
+    have hge2 := pmCrossGeAll_p35 (y := ax) (z := x) (x := a) hax0 hncx
+      (azim_nonneg 0 ax x a) hle2
+    rw [pmDetCyc_p35, show crossProduct (x : Fin 3 → ℝ) (a : Fin 3 → ℝ)
+        = -(crossProduct (a : Fin 3 → ℝ) (x : Fin 3 → ℝ)) from
+      (cross_anticomm (a : Fin 3 → ℝ) (x : Fin 3 → ℝ)).symm, pmDotNegL_p35] at hge2
+    linarith
+  exact ⟨lt_of_le_of_ne (azim_nonneg 0 ax a x) (Ne.symm h0ne),
+    lt_of_le_of_ne hπ hπne⟩
+
+/-- (pm9) **Negative-side azimuth placement**: `(a×x)·ax < 0` puts the target
+in the opposite half-turn: `π < azim 0 ax a x < 2·π`. -/
+private theorem pmAzimOrthoSideLt_p35 {ax a x : V3} (ha0 : a ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hnc : ¬ Collinear3 0 ax a) (hncx : ¬ Collinear3 0 ax x)
+    (hsign : (crossProduct (a : Fin 3 → ℝ) (x : Fin 3 → ℝ)) ⬝ᵥ (ax : Fin 3 → ℝ) < 0) :
+    Real.pi < azim 0 ax a x ∧ azim 0 ax a x < 2 * Real.pi := by
+  have hax0 : ax ≠ (0:V3) := fun he =>
+    hnc (by rw [he]; exact collinear3_of_eq rfl)
+  have hgt : ¬ (azim 0 ax a x ≤ Real.pi) := by
+    intro hle
+    have hge := pmCrossGeAll_p35 (y := ax) (z := a) (x := x) hax0 hnc
+      (azim_nonneg 0 ax a x) hle
+    rw [pmDetCyc_p35] at hge
+    linarith
+  exact ⟨not_le.mp hgt, azim_lt_two_pi 0 ax a x⟩
+
+/-- (pm9) **FAN-free chain instance on the normal axis** (the winding engine):
+with the order premise, azimuths add. -/
+private theorem pmAzimNormalChain_p35 {ax a x y : V3} (hax0 : ax ≠ (0:V3))
+    (hnc : ¬ Collinear3 0 ax a) (hncx : ¬ Collinear3 0 ax x)
+    (hncy : ¬ Collinear3 0 ax y)
+    (hle : azim 0 ax a x ≤ azim 0 ax a y) :
+    azim 0 ax a y = azim 0 ax a x + azim 0 ax x y :=
+  triAzimAdd_p35 (x := (0:V3)) (v := ax) hax0 hnc hncx hncy hle
+
+/-- (pm9) **Azimuthal gap lower bound** (cos form): two orthogonal-to-axis
+vectors at annulus norms and chord ≥ 2 meet under an azimuth whose cosine is
+at most `2719/3969`, i.e. the gap is at least `2·arcsin(1/(2·h0)) ≈ 46.74°`. -/
+private theorem pmAzimOrthoGap46_p35 {ax x y : V3} (hax0 : ax ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hy0 : y ≠ (0:V3)) (hncx : ¬ Collinear3 0 ax x)
+    (hncy : ¬ Collinear3 0 ax y)
+    (hXX : (x : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hYY : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hxa : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hd : (2:ℝ) ≤ dist x y) :
+    Real.cos (azim 0 ax x y) ≤ 2719 / 3969 := by
+  have h1 := pmAzimOrthoCos_p35 hax0 hx0 hy0 hncx hncy hXX hYY
+  have h2 := pmCosLe46_p35 hx2 hxa hy2 hya hd
+  have hP : (0:ℝ) < ‖x‖ * ‖y‖ :=
+    mul_pos (norm_pos_iff.mpr hx0) (norm_pos_iff.mpr hy0)
+  rw [← h1] at h2
+  exact le_of_mul_le_mul_right h2 hP
+
+/-- (pm9) **Azimuthal gap upper bound** (cos form): chord ≤ `cstab` forces the
+azimuth's cosine to be at least `−10601/80000`, i.e. the gap is at most
+`2·arcsin(cstab/4) ≈ 97.63°`. -/
+private theorem pmAzimOrthoFarCos_p35 {ax x y : V3} (hax0 : ax ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hy0 : y ≠ (0:V3)) (hncx : ¬ Collinear3 0 ax x)
+    (hncy : ¬ Collinear3 0 ax y)
+    (hXX : (x : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hYY : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hxa : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hd : dist x y ≤ cstab) :
+    -(10601 / 80000) ≤ Real.cos (azim 0 ax x y) := by
+  have h1 := pmAzimOrthoCos_p35 hax0 hx0 hy0 hncx hncy hXX hYY
+  have h2 := pmFarCos_p35 hx2 hxa hy2 hya hd
+  have hP : (0:ℝ) < ‖x‖ * ‖y‖ :=
+    mul_pos (norm_pos_iff.mpr hx0) (norm_pos_iff.mpr hy0)
+  rw [← h1] at h2
+  exact le_of_mul_le_mul_right h2 hP
+
+/-- (pm9) **Azimuthal gap in angle form**: within `[0, π]` the cos bound turns
+into the `arccos` lower bound. -/
+private theorem pmAzimOrthoGapGe_p35 {ax x y : V3} (hax0 : ax ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hy0 : y ≠ (0:V3)) (hncx : ¬ Collinear3 0 ax x)
+    (hncy : ¬ Collinear3 0 ax y)
+    (hXX : (x : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hYY : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hxa : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hd : (2:ℝ) ≤ dist x y)
+    (hπ : azim 0 ax x y ≤ Real.pi) :
+    Real.arccos (2719 / 3969) ≤ azim 0 ax x y := by
+  have hcos := pmAzimOrthoGap46_p35 hax0 hx0 hy0 hncx hncy hXX hYY hx2 hxa hy2 hya hd
+  have h2 : Real.arccos (Real.cos (azim 0 ax x y)) = azim 0 ax x y :=
+    Real.arccos_cos (azim_nonneg 0 ax x y) hπ
+  rw [← h2]
+  exact Real.arccos_le_arccos hcos
+
+/-! ## planemiss10 rungs (lkgrqui-planemiss10-w3, 2026-10-28)
+
+The coplanar-triple squeeze endgame.  Three distinct axis-orthogonal annulus
+points with all pairwise chords in `[2, cstab]` are contradictory: the three
+azimuthal arcs around the axis sum to `2π`, each arc lands in
+`[0, β] ∪ [2π-β, 2π]` with `β := arccos(-10601/80000) < 2π/3` (so at most one
+"far" arc exists), and against the chord-`≥2` radius pinch the far-arc branch
+collides with `dist ≤ cstab`.  This is the closed core of the root's step (i):
+the blocked/same-side branch of the d = 2 squeeze needs no orientation data.
+Insertion point: after `pmAzimOrthoGapGe_p35`, before the
+`pmPlaneCrowding_p35` docstring. -/
+
+/-- (pm10) **Far-arc split**: an axis-orthogonal annulus pair at chord
+`≤ cstab` has its directed azimuth on one of the two near arcs:
+`azim ≤ β` or `2π − azim ≤ β` where `β := arccos(−10601/80000) < 2π/3`. -/
+private theorem pmOrthoTriFarSplit_p35 {ax x y : V3} (hax0 : ax ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hy0 : y ≠ (0:V3)) (hncx : ¬ Collinear3 0 ax x)
+    (hncy : ¬ Collinear3 0 ax y)
+    (hXX : (x : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hYY : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hxa : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hd : dist x y ≤ cstab) :
+    azim 0 ax x y ≤ Real.arccos (-(10601 / 80000)) ∨
+      2 * Real.pi - azim 0 ax x y ≤ Real.arccos (-(10601 / 80000)) := by
+  have hcos := pmAzimOrthoFarCos_p35 hax0 hx0 hy0 hncx hncy hXX hYY hx2 hxa hy2 hya hd
+  have h0 : (0:ℝ) ≤ azim 0 ax x y := azim_nonneg 0 ax x y
+  rcases lt_or_ge Real.pi (azim 0 ax x y) with hgt | hle
+  · refine Or.inr ?_
+    have h2pi : azim 0 ax x y < 2 * Real.pi := azim_lt_two_pi 0 ax x y
+    have hleπ : 2 * Real.pi - azim 0 ax x y ≤ Real.pi := by linarith
+    have hge0 : (0:ℝ) ≤ 2 * Real.pi - azim 0 ax x y := by linarith
+    have hper : Real.cos (2 * Real.pi - azim 0 ax x y) = Real.cos (azim 0 ax x y) := by
+      rw [Real.cos_sub, Real.cos_two_pi, Real.sin_two_pi]
+      ring
+    rw [← hper] at hcos
+    have h1 := Real.arccos_le_arccos hcos
+    rwa [Real.arccos_cos hge0 hleπ] at h1
+  · refine Or.inl ?_
+    have h1 := Real.arccos_le_arccos hcos
+    rwa [Real.arccos_cos h0 hle] at h1
+
+/-- (pm10) An axis-orthogonal annulus pair at chord `≥ 2` has nonzero directed
+azimuth (`cos ≤ 2719/3969 < 1 = cos 0`). -/
+private theorem pmOrthoTriAzimNe0_p35 {ax x y : V3} (hax0 : ax ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hy0 : y ≠ (0:V3)) (hncx : ¬ Collinear3 0 ax x)
+    (hncy : ¬ Collinear3 0 ax y)
+    (hXX : (x : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hYY : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hxa : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hd : (2:ℝ) ≤ dist x y) : azim 0 ax x y ≠ 0 := by
+  intro hz
+  have hcos := pmAzimOrthoGap46_p35 hax0 hx0 hy0 hncx hncy hXX hYY hx2 hxa hy2 hya hd
+  rw [hz] at hcos
+  norm_num at hcos
+
+/-- (pm10) The cosine value of `2π/3`. -/
+private theorem pmOrthoTriCos23_p35 : Real.cos (2 * Real.pi / 3) = -(1 / 2) := by
+  have h23 : 2 * Real.pi / 3 = Real.pi - Real.pi / 3 := by ring
+  rw [h23, Real.cos_pi_sub, Real.cos_pi_div_three]
+
+/-- (pm10) The far-arc constant is at most `2π/3`:
+`arccos(−10601/80000) ≤ arccos(−1/2) = 2π/3`. -/
+private theorem pmOrthoTriBetaLe_p35 :
+    Real.arccos (-(10601 / 80000)) ≤ 2 * Real.pi / 3 := by
+  have h023 : (0:ℝ) ≤ 2 * Real.pi / 3 := by linarith [Real.pi_pos]
+  have hπ23 : 2 * Real.pi / 3 ≤ Real.pi := by linarith [Real.pi_pos]
+  have hcomp : Real.arccos (-(10601 / 80000))
+      ≤ Real.arccos (Real.cos (2 * Real.pi / 3)) :=
+    Real.arccos_le_arccos (show Real.cos (2 * Real.pi / 3) ≤ -(10601 / 80000) by
+      rw [pmOrthoTriCos23_p35]; norm_num)
+  rw [Real.arccos_cos h023 hπ23] at hcomp
+  exact hcomp
+
+/-- (pm10) **The chord-`≥2` radius pinch**: two annulus points at chord `≥ 2`
+whose azimuth cosine is `≥ w` have product of norms at least
+`(4 − (2·h0−2)²) / (2(1−w))` — with `e := 2(1−w)`, `(2331/625)/e ≤ ‖x‖‖y‖`. -/
+private theorem pmOrthoPinch_p35 {x y : V3} {δ w e : ℝ}
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hxa : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hwe : e = 2 * ((1:ℝ) - w)) (hcos : Real.cos δ ≥ w)
+    (hdot : (x : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ)
+      = Real.cos δ * (‖x‖ * ‖y‖))
+    (hd : (2:ℝ) ≤ dist x y) :
+    (2331 / 625) ≤ e * (‖x‖ * ‖y‖) := by
+  have h02 : (2:ℝ) * h0 = 63 / 25 := by norm_num [h0]
+  rw [h02] at hxa hya
+  have hxp : (0:ℝ) ≤ ‖x‖ := by linarith
+  have hyp : (0:ℝ) ≤ ‖y‖ := by linarith
+  have hnp : (0:ℝ) ≤ ‖x‖ * ‖y‖ := by
+    nlinarith [hxp, hyp]
+  have hdn := pmDotNormDist_p35 x y
+  rw [hdot] at hdn
+  have h2 : 2 * Real.cos δ * (‖x‖ * ‖y‖) = ‖x‖ ^ 2 + ‖y‖ ^ 2 - dist x y ^ 2 := by
+    linarith
+  have hsqid : (‖x‖ - ‖y‖)^2 = ‖x‖ ^ 2 + ‖y‖ ^ 2 - 2 * (‖x‖ * ‖y‖) := by ring
+  have h13a : ‖x‖ - ‖y‖ ≤ 13 / 25 := by linarith
+  have h13b : ‖y‖ - ‖x‖ ≤ 13 / 25 := by linarith
+  have hsqle : (‖x‖ - ‖y‖)^2 ≤ (13 / 25)^2 := by
+    nlinarith [h13a, h13b]
+  have hstep1 : (4:ℝ) - (13 / 25)^2
+      ≤ 2 * (‖x‖ * ‖y‖) - 2 * Real.cos δ * (‖x‖ * ‖y‖) := by
+    have h4 : (4:ℝ) ≤ ‖x‖ ^ 2 + ‖y‖ ^ 2 - 2 * Real.cos δ * (‖x‖ * ‖y‖) := by
+      rw [h2]; nlinarith [hd]
+    nlinarith [h4, hsqid, hsqle]
+  have hcw : 2 * w * (‖x‖ * ‖y‖) ≤ 2 * Real.cos δ * (‖x‖ * ‖y‖) := by
+    nlinarith [hcos, hnp]
+  rw [hwe]
+  have hexpl : (2 - 2 * w) * (‖x‖ * ‖y‖)
+      = 2 * (‖x‖ * ‖y‖) - 2 * w * (‖x‖ * ‖y‖) := by ring
+  linarith
+
+/-- (pm10) cosine values and bounds for the arc constants. -/
+private theorem pmOrthoTriCosA_p35 :
+    Real.cos (Real.arccos (2719 / 3969)) = 2719 / 3969 :=
+  Real.cos_arccos (by norm_num : -1 ≤ (2719:ℝ) / 3969) (by norm_num : (2719:ℝ) / 3969 ≤ 1)
+
+private theorem pmOrthoTriCosB_p35 :
+    Real.cos (Real.arccos (-(10601 / 80000))) = -(10601 / 80000) :=
+  Real.cos_arccos (by norm_num : -1 ≤ -((10601:ℝ) / 80000)) (by norm_num : -((10601:ℝ) / 80000) ≤ 1)
+
+private theorem pmOrthoTriSinA_p35 :
+    (7284:ℝ) / 10000 ≤ Real.sin (Real.arccos (2719 / 3969)) := by
+  have h : Real.sin (Real.arccos (2719 / 3969)) = Real.sqrt (1 - (2719 / 3969) ^ 2) :=
+    Real.sin_arccos (2719 / 3969)
+  have h2 : ((7284:ℝ) / 10000) ^ 2 ≤ 1 - (2719 / 3969) ^ 2 := by norm_num
+  have h3 := (Real.sqrt_le_sqrt_iff (show (0:ℝ) ≤ 1 - (2719 / 3969) ^ 2 by norm_num)).mpr h2
+  rw [Real.sqrt_sq (show (0:ℝ) ≤ (7284:ℝ) / 10000 by norm_num)] at h3
+  rw [h]
+  exact h3
+
+private theorem pmOrthoTriSinB_p35 :
+    (9911:ℝ) / 10000 ≤ Real.sin (Real.arccos (-(10601 / 80000))) := by
+  have h : Real.sin (Real.arccos (-((10601:ℝ) / 80000)))
+      = Real.sqrt (1 - (-(10601 / 80000)) ^ 2) := Real.sin_arccos (-((10601:ℝ) / 80000))
+  have h2 : ((9911:ℝ) / 10000) ^ 2 ≤ 1 - (-(10601 / 80000)) ^ 2 := by norm_num
+  have h3 := (Real.sqrt_le_sqrt_iff (show (0:ℝ) ≤ 1 - (-(10601 / 80000)) ^ 2 by norm_num)).mpr h2
+  rw [Real.sqrt_sq (show (0:ℝ) ≤ (9911:ℝ) / 10000 by norm_num)] at h3
+  rw [h]
+  exact h3
+
+/-- (pm10) the half-arc cosine lower bound `cos(β/2) ≥ 3283/5000`. -/
+private theorem pmOrthoTriHalf_p35 :
+    (3283:ℝ) / 5000 ≤ Real.cos (Real.arccos (-(10601 / 80000)) / 2) := by
+  have hcm := Real.cos_half
+    (show -(Real.pi:ℝ) ≤ Real.arccos (-((10601:ℝ) / 80000)) from
+      by linarith [Real.arccos_nonneg (-((10601:ℝ) / 80000)), Real.pi_pos])
+    (Real.arccos_le_pi (-((10601:ℝ) / 80000)))
+  rw [pmOrthoTriCosB_p35] at hcm
+  rw [hcm]
+  have h2 : ((3283:ℝ)/5000)^2 ≤ (1 + -((10601:ℝ) / 80000)) / 2 := by norm_num
+  have h3 := (Real.sqrt_le_sqrt_iff (show (0:ℝ) ≤ (1 + -((10601:ℝ) / 80000)) / 2 by norm_num)).mpr h2
+  rw [Real.sqrt_sq (show (0:ℝ) ≤ (3283:ℝ)/5000 by norm_num)] at h3
+  exact h3
+
+/-- (pm10) the mixed-arc cosine bound `cos(β − α) ≥ 63/100`. -/
+private theorem pmOrthoTriBA_p35 :
+    (63:ℝ) / 100 ≤ Real.cos (Real.arccos (-(10601 / 80000)) - Real.arccos (2719 / 3969)) := by
+  have hcs : Real.cos (Real.arccos (-(10601 / 80000)) - Real.arccos (2719 / 3969))
+      = Real.cos (Real.arccos (-(10601 / 80000))) * Real.cos (Real.arccos (2719 / 3969))
+        + Real.sin (Real.arccos (-(10601 / 80000))) * Real.sin (Real.arccos (2719 / 3969)) :=
+    Real.cos_sub _ _
+  rw [hcs, pmOrthoTriCosB_p35, pmOrthoTriCosA_p35]
+  have h1 := pmOrthoTriSinB_p35
+  have h2 := pmOrthoTriSinA_p35
+  have hsB0 : (0:ℝ) ≤ Real.sin (Real.arccos (-(10601 / 80000))) := le_trans (by norm_num) h1
+  have hsA0 : (0:ℝ) ≤ Real.sin (Real.arccos (2719 / 3969)) := le_trans (by norm_num) h2
+  have hprod : ((9911:ℝ)/10000) * ((7284:ℝ)/10000)
+      ≤ Real.sin (Real.arccos (-(10601 / 80000))) * Real.sin (Real.arccos (2719 / 3969)) :=
+    by nlinarith [h1, h2, hsB0, hsA0]
+  linarith [hprod]
+
+/-- (pm10) the doubled-arc cosine value `cos(2α) = −967039/15752961`. -/
+private theorem pmOrthoTriCos2A_p35 :
+    Real.cos (2 * Real.arccos (2719 / 3969)) = -(967039 / 15752961) := by
+  have hcm := Real.cos_two_mul (Real.arccos (2719 / 3969))
+  rw [pmOrthoTriCosA_p35] at hcm
+  rw [hcm]
+  norm_num
+
+/-- (pm10) cosine is antitone on `[0, π]`. -/
+private theorem pmOrthoTriCosMono_p35 {x y : ℝ} (h1 : (0:ℝ) ≤ x) (h2 : x ≤ y)
+    (h3 : y ≤ Real.pi) : Real.cos y ≤ Real.cos x :=
+  Real.cos_le_cos_of_nonneg_of_le_pi h1 h3 h2
+
+/-- (pm10) azimuthal cosine is direction-symmetric off the axis. -/
+private theorem pmOrthoTriCosSym_p35 {ax x y : V3}
+    (hncx : ¬ Collinear3 0 ax x) (hncy : ¬ Collinear3 0 ax y)
+    (hne : azim 0 ax x y ≠ 0) :
+    Real.cos (azim 0 ax x y) = Real.cos (azim 0 ax y x) := by
+  have hcompl := azim_compl hncx hncy
+  rw [if_neg hne] at hcompl
+  rw [hcompl, Real.cos_sub, Real.cos_two_pi, Real.sin_two_pi]
+  ring
+
+/-- (pm10) **The far-pair dead end**: axis-orthogonal annulus points `u, v, w`
+with the `(v,w)` azimuth squeezed near (`cos ≥ 3283/5000`, i.e. arc `≤ β/2`)
+and the `(u,v)` azimuth far (`cos ≤ −967039/15752961`): the `(u,v)` chord
+bound `≤ cstab` collapses against the chord-`≥2` radius pinch
+(`‖v‖ ≥ 25900/12019 ≈ 2.155`, `‖u‖ ≥ 2` forces `dist(u,v)² ≥ 9.17 > 9.0601`). -/
+private theorem pmOrthoTriDead_p35 {ax u v w : V3} (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hv0 : v ≠ (0:V3)) (hw0 : w ≠ (0:V3))
+    (hncu : ¬ Collinear3 0 ax u) (hncv : ¬ Collinear3 0 ax v)
+    (hncw : ¬ Collinear3 0 ax w)
+    (hUU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hVV : (v : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hWW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hua : ‖u‖ ≤ 2 * h0)
+    (hv2 : (2:ℝ) ≤ ‖v‖) (hva : ‖v‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwa : ‖w‖ ≤ 2 * h0)
+    (hduv : dist u v ≤ cstab) (hduv2 : (2:ℝ) ≤ dist u v)
+    (hdvw2 : (2:ℝ) ≤ dist v w)
+    (hB : Real.cos (azim 0 ax v w) ≥ (3283:ℝ) / 5000)
+    (hK : Real.cos (azim 0 ax u v) ≤ -((967039:ℝ) / 15752961)) : False := by
+  have h02 : (2:ℝ) * h0 = 63 / 25 := by norm_num [h0]
+  have hcs : cstab = 301 / 100 := by norm_num [cstab]
+  have hnp0 : (0:ℝ) ≤ ‖u‖ * ‖v‖ := by nlinarith [hu2]
+  -- pinch on the (v,w) pair: ‖v‖·‖w‖ ≥ 9324/1717
+  have hdotvw : (v : Fin 3 → ℝ) ⬝ᵥ (w : Fin 3 → ℝ)
+      = Real.cos (azim 0 ax v w) * (‖v‖ * ‖w‖) :=
+    (pmAzimOrthoCos_p35 hax0 hv0 hw0 hncv hncw hVV hWW).symm
+  have hpinch := pmOrthoPinch_p35 (x := v) (y := w) (δ := azim 0 ax v w)
+    (w := (3283:ℝ) / 5000) (e := (3434:ℝ) / 5000) hv2 hva hw2 hwa
+    (by norm_num) hB hdotvw hdvw2
+  have hnpub : ‖v‖ * ‖w‖ ≤ ((63:ℝ) / 25) * ‖v‖ := by
+    have hwa' : ‖w‖ ≤ (63:ℝ) / 25 := by linarith
+    nlinarith [hwa', hnp0]
+  have hvge : (25900:ℝ) / 12019 ≤ ‖v‖ := by linarith
+  -- the (u,v) chord identities
+  have hcosuv := pmAzimOrthoCos_p35 hax0 hu0 hv0 hncu hncv hUU hVV
+  have hdn := pmDotNormDist_p35 u v
+  rw [hcosuv.symm] at hdn
+  have h1 : dist u v ^ 2 = ‖u‖ ^ 2 + ‖v‖ ^ 2 - 2 * Real.cos (azim 0 ax u v) * (‖u‖ * ‖v‖) := by
+    linarith
+  have hu2sq : (4:ℝ) ≤ ‖u‖ ^ 2 := by nlinarith [hu2]
+  have hv2sq : ((25900:ℝ)/12019)^2 ≤ ‖v‖ ^ 2 := by nlinarith [hvge]
+  have hnp2 : (2:ℝ) * (25900:ℝ) / 12019 ≤ ‖u‖ * ‖v‖ := by nlinarith [hu2, hvge]
+  have hcn : Real.cos (azim 0 ax u v) * (‖u‖ * ‖v‖)
+      ≤ -((967039:ℝ) / 15752961) * (‖u‖ * ‖v‖) := by nlinarith [hK, hnp0]
+  have hcoslo : -2 * Real.cos (azim 0 ax u v) * (‖u‖ * ‖v‖)
+      ≥ (2 * (967039:ℝ) / 15752961) * ((2:ℝ) * (25900:ℝ) / 12019) := by
+    linarith
+  have hduvle : dist u v ≤ (301:ℝ) / 100 := by rw [hcs] at hduv; exact hduv
+  have hd0 : (0:ℝ) ≤ dist u v := le_trans (by norm_num) hduv2
+  have hkey : dist u v ^ 2 ≤ ((301:ℝ) / 100) ^ 2 := by nlinarith [hduvle, hd0]
+  have hfin : (4:ℝ) + ((25900:ℝ) / 12019) ^ 2
+      + ((2 * (967039:ℝ) / 15752961)) * ((2:ℝ) * (25900:ℝ) / 12019) ≤ dist u v ^ 2 := by
+    linarith
+  linarith
+
+/-- (pm10) **The far-arc squeeze** (chain-order triple, exactly one far arc):
+with the arc of pair `(p,q)` far and the arcs of `(q,r)`, `(r,p)` near, the
+radius pinch on a near pair against the far pair's chord bound contradicts
+`dist p q ≤ cstab`. -/
+private theorem pmOrthoTriFar3_p35 {ax p q r : V3} (hax0 : ax ≠ (0:V3))
+    (hp0 : p ≠ (0:V3)) (hq0 : q ≠ (0:V3)) (hr0 : r ≠ (0:V3))
+    (hncp : ¬ Collinear3 0 ax p) (hncq : ¬ Collinear3 0 ax q)
+    (hncr : ¬ Collinear3 0 ax r)
+    (hPP : (p : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hQQ : (q : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hRR : (r : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hp2 : (2:ℝ) ≤ ‖p‖) (hpa : ‖p‖ ≤ 2 * h0)
+    (hq2 : (2:ℝ) ≤ ‖q‖) (hqa : ‖q‖ ≤ 2 * h0)
+    (hr2 : (2:ℝ) ≤ ‖r‖) (hra : ‖r‖ ≤ 2 * h0)
+    (hpq : dist p q ≤ cstab) (hqr : dist q r ≤ cstab) (hrp : dist r p ≤ cstab)
+    (epq : (2:ℝ) ≤ dist p q) (eqr : (2:ℝ) ≤ dist q r) (erp : (2:ℝ) ≤ dist r p)
+    (hsum : azim 0 ax p q + azim 0 ax q r + azim 0 ax r p = 2 * Real.pi)
+    (h1f : 2 * Real.pi - azim 0 ax p q ≤ Real.arccos (-(10601 / 80000)))
+    (h2n : azim 0 ax q r ≤ Real.arccos (-(10601 / 80000)))
+    (h3n : azim 0 ax r p ≤ Real.arccos (-(10601 / 80000))) : False := by
+  have hβπ : Real.arccos (-(10601 / 80000)) ≤ Real.pi :=
+    le_trans pmOrthoTriBetaLe_p35 (le_of_lt (by linarith [Real.pi_pos]))
+  have hB0 : (0:ℝ) ≤ azim 0 ax q r := azim_nonneg 0 ax q r
+  have hC0 : (0:ℝ) ≤ azim 0 ax r p := azim_nonneg 0 ax r p
+  have hBπ : azim 0 ax q r ≤ Real.pi := le_trans h2n hβπ
+  have hCπ : azim 0 ax r p ≤ Real.pi := le_trans h3n hβπ
+  -- both small arcs are at least α
+  have hBα : Real.arccos (2719 / 3969) ≤ azim 0 ax q r := by
+    have hcos := pmAzimOrthoGap46_p35 hax0 hq0 hr0 hncq hncr hQQ hRR hq2 hqa hr2 hra eqr
+    have hacc := Real.arccos_cos hB0 hBπ
+    have hle := Real.arccos_le_arccos hcos
+    rw [hacc] at hle
+    exact hle
+  have hCα : Real.arccos (2719 / 3969) ≤ azim 0 ax r p := by
+    have hcos := pmAzimOrthoGap46_p35 hax0 hr0 hp0 hncr hncp hRR hPP hr2 hra hp2 hpa erp
+    have hacc := Real.arccos_cos hC0 hCπ
+    have hle := Real.arccos_le_arccos hcos
+    rw [hacc] at hle
+    exact hle
+  -- the small-arc sum is confined, and the far pair's cosine is at most cos(2α)
+  have h2a : (2:ℝ) * Real.arccos (2719 / 3969) ≤ azim 0 ax q r + azim 0 ax r p := by
+    linarith
+  have hBCπ : azim 0 ax q r + azim 0 ax r p ≤ Real.pi := by
+    have hBCle : azim 0 ax q r + azim 0 ax r p ≤ Real.arccos (-(10601 / 80000)) := by
+      linarith
+    linarith
+  have hper : Real.cos (azim 0 ax p q) = Real.cos (azim 0 ax q r + azim 0 ax r p) := by
+    have hp1 := Real.cos_periodic (azim 0 ax p q - 2 * Real.pi)
+    rw [show azim 0 ax p q - 2 * Real.pi + 2 * Real.pi = azim 0 ax p q from by ring] at hp1
+    rw [show azim 0 ax p q - 2 * Real.pi
+        = -(azim 0 ax q r + azim 0 ax r p) from by linarith] at hp1
+    rw [Real.cos_neg] at hp1
+    exact hp1
+  have hK : Real.cos (azim 0 ax p q) ≤ -((967039:ℝ) / 15752961) := by
+    have hmono := pmOrthoTriCosMono_p35
+      (show (0:ℝ) ≤ 2 * Real.arccos (2719 / 3969) from
+        by linarith [Real.arccos_nonneg ((2719:ℝ) / 3969)])
+      h2a hBCπ
+    rw [pmOrthoTriCos2A_p35] at hmono
+    rw [← hper] at hmono
+    linarith
+  -- exactly one of the two small arcs is at most β/2
+  rcases lt_or_ge (azim 0 ax q r) (Real.arccos (-(10601 / 80000)) / 2) with hBh | hBg
+  · exact pmOrthoTriDead_p35 hax0 hp0 hq0 hr0 hncp hncq hncr hPP hQQ hRR
+      hp2 hpa hq2 hqa hr2 hra hpq epq eqr
+      (show Real.cos (azim 0 ax q r) ≥ (3283:ℝ) / 5000 from
+        by
+          have h1 := pmOrthoTriHalf_p35
+          have h2 := pmOrthoTriCosMono_p35 hB0 hBh.le
+            (show Real.arccos (-(10601 / 80000)) / 2 ≤ Real.pi from
+              by linarith [pmOrthoTriBetaLe_p35, Real.pi_pos])
+          linarith)
+      (show Real.cos (azim 0 ax p q) ≤ -((967039:ℝ) / 15752961) from hK)
+  · have hCh : azim 0 ax r p ≤ Real.arccos (-(10601 / 80000)) / 2 := by linarith
+    exact pmOrthoTriDead_p35 (ax := ax) (u := q) (v := p) (w := r) hax0 hq0 hp0 hr0
+      hncq hncp hncr hQQ hPP hRR
+      hq2 hqa hp2 hpa hr2 hra (by rw [dist_comm]; exact hpq) (by rw [dist_comm]; exact epq)
+      (by rw [dist_comm]; exact erp)
+      (show Real.cos (azim 0 ax p r) ≥ (3283:ℝ) / 5000 from
+        by
+          have hsym := pmOrthoTriCosSym_p35 hncr hncp
+            (pmOrthoTriAzimNe0_p35 hax0 hr0 hp0 hncr hncp hRR hPP hr2 hra hp2 hpa
+              erp)
+          have h1 := pmOrthoTriHalf_p35
+          have h2 := pmOrthoTriCosMono_p35 hC0 hCh
+            (show Real.arccos (-(10601 / 80000)) / 2 ≤ Real.pi from
+              by linarith [pmOrthoTriBetaLe_p35, Real.pi_pos])
+          rw [← hsym]
+          linarith)
+      (show Real.cos (azim 0 ax q p) ≤ -((967039:ℝ) / 15752961) from
+        by
+          have hsym := pmOrthoTriCosSym_p35 hncp hncq
+            (pmOrthoTriAzimNe0_p35 hax0 hp0 hq0 hncp hncq hPP hQQ hp2 hpa hq2 hqa epq)
+          rw [← hsym]
+          exact hK)
+
+/-- (pm10) **The chain-order triple kill**: three distinct axis-orthogonal
+annulus points, all pairwise chords in `[2, cstab]`, with the reference-frame
+azimuths of the first two ordered.  The three cycle arcs sum to `2π` and each
+lands in `[0, β] ∪ [2π−β, 2π]` with `β ≤ 2π/3`; either two arcs are far
+(sum > `2π`), all are near (sum ≤ `3β < 2π` with the equality cascade forcing
+`cos ≥ −1/2 > −10601/80000`), or one arc is far and the pinch applies. -/
+private theorem pmOrthoTriCycleKill_p35 {ax p q r : V3} (hax0 : ax ≠ (0:V3))
+    (hp0 : p ≠ (0:V3)) (hq0 : q ≠ (0:V3)) (hr0 : r ≠ (0:V3))
+    (hncp : ¬ Collinear3 0 ax p) (hncq : ¬ Collinear3 0 ax q)
+    (hncr : ¬ Collinear3 0 ax r)
+    (hPP : (p : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hQQ : (q : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hRR : (r : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hp2 : (2:ℝ) ≤ ‖p‖) (hpa : ‖p‖ ≤ 2 * h0)
+    (hq2 : (2:ℝ) ≤ ‖q‖) (hqa : ‖q‖ ≤ 2 * h0)
+    (hr2 : (2:ℝ) ≤ ‖r‖) (hra : ‖r‖ ≤ 2 * h0)
+    (hpq : dist p q ≤ cstab) (hqr : dist q r ≤ cstab) (hrp : dist r p ≤ cstab)
+    (epq : (2:ℝ) ≤ dist p q) (eqr : (2:ℝ) ≤ dist q r) (erp : (2:ℝ) ≤ dist r p)
+    (hord : azim 0 ax p q ≤ azim 0 ax p r) : False := by
+  have hne0pr : azim 0 ax p r ≠ 0 :=
+    pmOrthoTriAzimNe0_p35 hax0 hp0 hr0 hncp hncr hPP hRR hp2 hpa hr2 hra
+      (by rw [dist_comm]; exact erp)
+  have hchain := pmAzimNormalChain_p35 hax0 hncp hncq hncr hord
+  have hcompl := azim_compl hncp hncr
+  rw [if_neg hne0pr] at hcompl
+  have hβπ : Real.arccos (-(10601 / 80000)) ≤ 2 * Real.pi / 3 := pmOrthoTriBetaLe_p35
+  have hsum : azim 0 ax p q + azim 0 ax q r + azim 0 ax r p = 2 * Real.pi := by
+    rw [← hchain, hcompl]
+    ring
+  have hf1 := pmOrthoTriFarSplit_p35 (x := p) (y := q) hax0 hp0 hq0 hncp hncq hPP hQQ
+    hp2 hpa hq2 hqa hpq
+  have hf2 := pmOrthoTriFarSplit_p35 (x := q) (y := r) hax0 hq0 hr0 hncq hncr hQQ hRR
+    hq2 hqa hr2 hra hqr
+  have hf3 := pmOrthoTriFarSplit_p35 (x := r) (y := p) hax0 hr0 hp0 hncr hncp hRR hPP
+    hr2 hra hp2 hpa hrp
+  have hC0 : (0:ℝ) ≤ azim 0 ax r p := azim_nonneg 0 ax r p
+  have hA0 : (0:ℝ) ≤ azim 0 ax p q := azim_nonneg 0 ax p q
+  have hB0c : (0:ℝ) ≤ azim 0 ax q r := azim_nonneg 0 ax q r
+  rcases hf1 with h1n | h1f
+  · rcases hf2 with h2n | h2f
+    · rcases hf3 with h3n | h3f
+      · -- all arcs near: the equality cascade
+        have hβeq : Real.arccos (-(10601 / 80000)) = 2 * Real.pi / 3 := by
+          have hsumle : azim 0 ax p q + azim 0 ax q r + azim 0 ax r p
+              ≤ 3 * Real.arccos (-(10601 / 80000)) := by linarith
+          linarith [hsum, hsumle, pmOrthoTriBetaLe_p35]
+        have ht2 : azim 0 ax p q = Real.arccos (-(10601 / 80000)) := by linarith
+        have hcA : Real.cos (azim 0 ax p q) = Real.cos (2 * Real.pi / 3) := by
+          rw [ht2, hβeq]
+        rw [pmOrthoTriCos23_p35] at hcA
+        have hfar := pmAzimOrthoFarCos_p35 hax0 hp0 hq0 hncp hncq hPP hQQ hp2 hpa hq2 hqa hpq
+        linarith
+      · exact pmOrthoTriFar3_p35 (p := r) (q := p) (r := q) hax0 hr0 hp0 hq0 hncr hncp hncq
+          hRR hPP hQQ hr2 hra hp2 hpa hq2 hqa hrp hpq hqr erp epq eqr
+          (show azim 0 ax r p + azim 0 ax p q + azim 0 ax q r = 2 * Real.pi from
+            by linarith)
+          h3f h1n h2n
+    · rcases hf3 with h3n | h3f
+      · exact pmOrthoTriFar3_p35 (p := q) (q := r) (r := p) hax0 hq0 hr0 hp0 hncq hncr hncp
+          hQQ hRR hPP hq2 hqa hr2 hra hp2 hpa hqr hrp hpq eqr erp epq
+          (show azim 0 ax q r + azim 0 ax r p + azim 0 ax p q = 2 * Real.pi from
+            by linarith)
+          h2f h3n h1n
+      · linarith [Real.pi_pos]
+  · rcases hf2 with h2n | h2f
+    · rcases hf3 with h3n | h3f
+      · exact pmOrthoTriFar3_p35 hax0 hp0 hq0 hr0 hncp hncq hncr hPP hQQ hRR
+          hp2 hpa hq2 hqa hr2 hra hpq hqr hrp epq eqr erp hsum h1f h2n h3n
+      · linarith [Real.pi_pos]
+    · linarith [Real.pi_pos]
+
+/-- (pm10) **THE COPLANAR-TRIPLE SQUEEZE** (the closed step-(i) core): three
+distinct axis-orthogonal annulus points with all pairwise chords in
+`[2, cstab]` cannot exist.  No orientation data is needed: the reference
+azimuths are ordered (or the pair `q,r` is swapped, which permutes the
+hypotheses), the three cycle arcs around the axis sum to `2π`, each arc is
+confined to `[0, β] ∪ [2π−β, 2π]` with `β := arccos(−10601/80000) ≤ 2π/3`,
+so either two arcs are far (sum > `2π`), all are near (sum ≤ `3β ≤ 2π` with
+the equality cascade forcing `cos ≥ −1/2 > −10601/80000`), or one arc is far
+and the chord-`≥2` radius pinch kills the remaining pair.  This discharges
+the blocked/same-side branch of the root's d = 2 squeeze endgame (the
+in-plane triple `u, x₁, w` of the dart plane with pairwise chords in
+`[2, cstab]`); the d ≥ 3 winding account and the off-plane branch remain
+for the next lanes. -/
+private theorem pmOrthoTriCstabKill_p35 {ax p q r : V3} (hax0 : ax ≠ (0:V3))
+    (hp0 : p ≠ (0:V3)) (hq0 : q ≠ (0:V3)) (hr0 : r ≠ (0:V3))
+    (hncp : ¬ Collinear3 0 ax p) (hncq : ¬ Collinear3 0 ax q)
+    (hncr : ¬ Collinear3 0 ax r)
+    (hPP : (p : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hQQ : (q : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hRR : (r : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hp2 : (2:ℝ) ≤ ‖p‖) (hpa : ‖p‖ ≤ 2 * h0)
+    (hq2 : (2:ℝ) ≤ ‖q‖) (hqa : ‖q‖ ≤ 2 * h0)
+    (hr2 : (2:ℝ) ≤ ‖r‖) (hra : ‖r‖ ≤ 2 * h0)
+    (hpq : dist p q ≤ cstab) (hqr : dist q r ≤ cstab) (hrp : dist r p ≤ cstab)
+    (epq : (2:ℝ) ≤ dist p q) (eqr : (2:ℝ) ≤ dist q r) (erp : (2:ℝ) ≤ dist r p) :
+    False := by
+  rcases lt_or_ge (azim 0 ax p q) (azim 0 ax p r) with hle | hge
+  · exact pmOrthoTriCycleKill_p35 hax0 hp0 hq0 hr0 hncp hncq hncr hPP hQQ hRR
+      hp2 hpa hq2 hqa hr2 hra hpq hqr hrp epq eqr erp hle.le
+  · exact pmOrthoTriCycleKill_p35 (p := p) (q := r) (r := q) hax0 hp0 hr0 hq0 hncp hncr hncq
+      hPP hRR hQQ hp2 hpa hr2 hra hq2 hqa (by rw [dist_comm]; exact hrp)
+      (by rw [dist_comm]; exact hqr) (by rw [dist_comm]; exact hpq)
+      (by rw [dist_comm]; exact erp) (by rw [dist_comm]; exact eqr)
+      (by rw [dist_comm]; exact epq) hge
+
+/-! ## planemiss11 rungs (lkgrqui-planemiss11-w3, 2026-10-28)
+
+The d >= 3 winding engine: the (b) direction-engine interface (3-step chain
++ cycle sum) and the (c) counting/radius-coupling arithmetic.  The root's
+d >= 3 branch splits over the two ring arcs between the diagonal endpoints
+`u, w` (both in the dart plane `span {a, b}`): each arc contributes its
+azimuthal displacement, the chain rule turns a run of three consecutive
+in-plane steps into the arc displacement, and the counting conjunct
+(`isScsV39`, `k = 6`) closes the arithmetic feed for the hexagonal squeeze. -/
+
+/-- (pm11) cosine of `pi/3`. -/
+private theorem pmOrthoTriCosPi3_p35 : Real.cos (Real.pi / 3) = 1 / 2 :=
+  Real.cos_pi_div_three
+
+/-- (pm11) `sqrt(2)/2` exceeds `10601/80000` (used to bound the far arc
+constant `beta` against `3*pi/4`). -/
+private theorem pmOrthoSqrt2LtA_p35 : (10601:ℝ) / 80000 < Real.sqrt 2 / 2 := by
+  have h2 : ((10601:ℝ) / 80000) * ((10601:ℝ) / 80000) < 1 / 2 := by norm_num
+  by_contra hge
+  have hge' : (10601:ℝ) / 80000 ≥ Real.sqrt 2 / 2 := le_of_not_gt hge
+  have hmul : ((10601:ℝ) / 80000) * ((10601:ℝ) / 80000)
+      ≥ Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) := by
+    nlinarith [hge', Real.sqrt_nonneg 2,
+      sq_nonneg ((10601:ℝ) / 80000 - Real.sqrt 2 / 2)]
+  have hs22 : Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) = 1 / 2 := by
+    rw [div_mul_div_comm, Real.mul_self_sqrt (show (0:ℝ) ≤ 2 by norm_num)]
+    norm_num
+  rw [hs22] at hmul
+  linarith
+
+/-- (pm11) `sqrt(2)/2` exceeds `2719/3969` (used to bound the step constant
+`alpha` below `pi/4`). -/
+private theorem pmOrthoSqrt2HalfBig_p35 : (2719:ℝ) / 3969 < Real.sqrt 2 / 2 := by
+  have h2 : ((2719:ℝ) / 3969) * ((2719:ℝ) / 3969) < 1 / 2 := by norm_num
+  by_contra hge
+  have hge' : (2719:ℝ) / 3969 ≥ Real.sqrt 2 / 2 := le_of_not_gt hge
+  have hmul : ((2719:ℝ) / 3969) * ((2719:ℝ) / 3969)
+      ≥ Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) := by
+    nlinarith [hge', Real.sqrt_nonneg 2,
+      sq_nonneg ((2719:ℝ) / 3969 - Real.sqrt 2 / 2)]
+  have hs22 : Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) = 1 / 2 := by
+    rw [div_mul_div_comm, Real.mul_self_sqrt (show (0:ℝ) ≤ 2 by norm_num)]
+    norm_num
+  rw [hs22] at hmul
+  linarith
+
+/-- (pm11) **The 3-step chain** (direction-engine interface): with the
+counterclockwise order premises along an in-plane run, the azimuth from the
+run head to the run tail is the sum of the three consecutive step azimuths
+(the FAN-free `triAzimAdd_p35` applied twice). -/
+private theorem pmOrthoArcChain3_p35 {ax p q r s : V3} (hax0 : ax ≠ (0:V3))
+    (hncp : ¬ Collinear3 0 ax p) (hncq : ¬ Collinear3 0 ax q)
+    (hncr : ¬ Collinear3 0 ax r) (hncs : ¬ Collinear3 0 ax s)
+    (h1 : azim 0 ax p q ≤ azim 0 ax p r)
+    (h2 : azim 0 ax p r ≤ azim 0 ax p s) :
+    azim 0 ax p s
+      = azim 0 ax p q + azim 0 ax q r + azim 0 ax r s := by
+  have hstep1 := pmAzimNormalChain_p35 hax0 hncp hncq hncr h1
+  have hstep2 := pmAzimNormalChain_p35 (a := p) (x := r) (y := s) hax0 hncp hncr hncs h2
+  rw [hstep2, hstep1]
+
+/-- (pm11) **The cycle-sum supplier** (Sigma = 2*pi): a monotone 3-step run
+plus the closing arc sums to the full turn. -/
+private theorem pmOrthoCycleSum_p35 {ax p q r s : V3} (hax0 : ax ≠ (0:V3))
+    (hncp : ¬ Collinear3 0 ax p) (hncq : ¬ Collinear3 0 ax q)
+    (hncr : ¬ Collinear3 0 ax r) (hncs : ¬ Collinear3 0 ax s)
+    (h1 : azim 0 ax p q ≤ azim 0 ax p r)
+    (h2 : azim 0 ax p r ≤ azim 0 ax p s)
+    (hne : azim 0 ax p s ≠ 0) :
+    azim 0 ax p q + azim 0 ax q r + azim 0 ax r s + azim 0 ax s p
+      = 2 * Real.pi := by
+  have hchain := pmOrthoArcChain3_p35 hax0 hncp hncq hncr hncs h1 h2
+  have hcompl := azim_compl (z := (0:V3)) (w := ax) (w1 := p) (w2 := s) hncp hncs
+  rw [if_neg hne] at hcompl
+  rw [hcompl, hchain]
+  ring
+
+/-- (pm11) The step lower bound is unconditional: an axis-orthogonal annulus
+pair at chord `>= 2` has directed azimuth at least `alpha` :=
+`arccos(2719/3969)` (for azimuth beyond `pi` this is immediate). -/
+private theorem pmOrthoStepGeA_p35 {ax x y : V3} (hax0 : ax ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hy0 : y ≠ (0:V3)) (hncx : ¬ Collinear3 0 ax x)
+    (hncy : ¬ Collinear3 0 ax y)
+    (hXX : (x : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hYY : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hxa : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hd : (2:ℝ) ≤ dist x y) :
+    Real.arccos (2719 / 3969) ≤ azim 0 ax x y := by
+  rcases lt_or_ge Real.pi (azim 0 ax x y) with hgt | hπ
+  · have hαπ : Real.arccos (2719 / 3969) ≤ Real.pi :=
+      Real.arccos_le_pi (2719 / 3969)
+    linarith
+  · exact pmAzimOrthoGapGe_p35 hax0 hx0 hy0 hncx hncy hXX hYY hx2 hxa hy2 hya hd
+      (by linarith)
+
+/-- (pm11) The step constant exceeds `pi/4`: since `cos(pi/4) = sqrt(2)/2 >
+2719/3969` and cosine is antitone on `[0, pi]`,
+`arccos(2719/3969) > pi/4`. -/
+private theorem pmOrthoStepGeQuart_p35 :
+    Real.pi / 4 < Real.arccos (2719 / 3969) := by
+  by_contra hle
+  have hαle : Real.arccos (2719 / 3969) ≤ Real.pi / 4 := by linarith
+  have hmono := pmOrthoTriCosMono_p35
+    (show (0:ℝ) ≤ Real.arccos (2719 / 3969) from Real.arccos_nonneg _)
+    hαle (show Real.pi / 4 ≤ Real.pi from by linarith [Real.pi_pos])
+  rw [pmOrthoTriCosA_p35, Real.cos_pi_div_four] at hmono
+  exact absurd hmono (not_le.mpr pmOrthoSqrt2HalfBig_p35)
+
+/-- (pm11) The far constant is below `3*pi/4`: `cos(3*pi/4) = -sqrt(2)/2 <
+-10601/80000 = cos(beta)` forces `beta < 3*pi/4`. -/
+private theorem pmOrthoTriBetaLt34_p35 :
+    Real.arccos (-(10601 / 80000)) < 3 * Real.pi / 4 := by
+  by_contra hge
+  have hβge : 3 * Real.pi / 4 ≤ Real.arccos (-(10601 / 80000)) := by linarith
+  have hmono := pmOrthoTriCosMono_p35
+    (show (0:ℝ) ≤ 3 * Real.pi / 4 from by linarith [Real.pi_pos]) hβge
+    (le_trans pmOrthoTriBetaLe_p35 (le_of_lt (by linarith [Real.pi_pos])))
+  rw [pmOrthoTriCosB_p35] at hmono
+  have hval : Real.cos (3 * Real.pi / 4) = -(Real.sqrt 2 / 2) := by
+    have h34 : 3 * Real.pi / 4 = Real.pi - Real.pi / 4 := by ring
+    rw [h34, Real.cos_pi_sub, Real.cos_pi_div_four]
+  rw [hval] at hmono
+  have hge' : (10601:ℝ) / 80000 ≥ Real.sqrt 2 / 2 := by linarith
+  exact absurd hge' (not_le.mpr pmOrthoSqrt2LtA_p35)
+
+/-- (pm11) **The step-arithmetic coupling** (chord-`2` edge): an
+axis-orthogonal annulus pair at chord exactly `2` meets under an azimuth
+whose cosine is at least `1/2`; with the azimuth in `[0, pi]` the step is at
+most `pi/3`.  This is the `k = 6` counting feed (a `2`-`a`-conjunct edge
+with realized chord pinned to its lower bound). -/
+private theorem pmOrthoStepPi3_p35 {ax x y : V3} (hax0 : ax ≠ (0:V3))
+    (hx0 : x ≠ (0:V3)) (hy0 : y ≠ (0:V3)) (hncx : ¬ Collinear3 0 ax x)
+    (hncy : ¬ Collinear3 0 ax y)
+    (hXX : (x : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hYY : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hxa : ‖x‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hd2 : (2:ℝ) ≤ dist x y) (hdle : dist x y ≤ 2)
+    (hπ : azim 0 ax x y ≤ Real.pi) :
+    azim 0 ax x y ≤ Real.pi / 3 := by
+  have hcos := pmAzimOrthoCos_p35 hax0 hx0 hy0 hncx hncy hXX hYY
+  have hdn := pmDotNormDist_p35 x y
+  rw [hdn] at hcos
+  have hd2' : dist x y = 2 := le_antisymm hdle hd2
+  rw [hd2'] at hcos
+  have hrs0 : (0:ℝ) < ‖x‖ * ‖y‖ :=
+    mul_pos (norm_pos_iff.mpr hx0) (norm_pos_iff.mpr hy0)
+  have hrssq : (0:ℝ) ≤ ‖x‖ ^ 2 + ‖y‖ ^ 2 - ‖x‖ * ‖y‖ - 4 := by
+    nlinarith [sq_nonneg (‖x‖ - ‖y‖), hx2, hy2]
+  have hstep : (1:ℝ) / 2 * (‖x‖ * ‖y‖)
+      ≤ Real.cos (azim 0 ax x y) * (‖x‖ * ‖y‖) := by
+    rw [hcos]
+    linarith
+  have hkey : (1:ℝ) / 2 ≤ Real.cos (azim 0 ax x y) :=
+    le_of_mul_le_mul_right hstep hrs0
+  rcases lt_or_ge (azim 0 ax x y) (Real.pi / 3) with hlt | hge
+  · linarith
+  · rcases eq_or_lt_of_le hge with heq | hgt
+    · linarith
+    · exfalso
+      have hmono := pmOrthoTriCosMono_p35
+        (show (0:ℝ) ≤ Real.pi / 3 from by linarith [Real.pi_pos]) hgt.le hπ
+      rw [pmOrthoTriCosPi3_p35] at hmono
+      have heq2 : Real.cos (azim 0 ax x y) = (1:ℝ) / 2 := by linarith
+      have hacos : Real.arccos (Real.cos (azim 0 ax x y)) = azim 0 ax x y :=
+        Real.arccos_cos (azim_nonneg 0 ax x y) hπ
+      have hp3 : Real.arccos (1 / 2) = Real.pi / 3 := by
+        rw [← Real.arccos_cos (show (0:ℝ) ≤ Real.pi / 3 from by linarith [Real.pi_pos])
+          (show Real.pi / 3 ≤ Real.pi from by linarith [Real.pi_pos]),
+          pmOrthoTriCosPi3_p35]
+      rw [← hacos, heq2, hp3] at hgt
+      linarith
+
+/-- (pm11) **The k = 6 counting conjunct** (`isScsV39` feed): with `k = 6`
+the `ncard + k <= 6` conjunct is at full strength, so the big-edge set is
+empty and every edge carries `a = 2` (its lower bound is tight) and
+`b <= 2*h0`. -/
+private theorem pmCountK6_p35 (s : ScsV39) (hscs : isScsV39 s) (hk6 : s.k = 6)
+    (i : ℕ) (hi : i < 6) :
+    s.a i (i + 1) = 2 ∧ s.b i (i + 1) ≤ 2 * h0 := by
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, -, -, -, -, -, hb3, -, -, -, -, hcard⟩ := hscs
+  have hk4 : 4 ≤ s.k := by rw [hk6]; norm_num
+  have hpos0 : (0:ℕ) < s.k :=
+    Nat.lt_of_lt_of_le (show (0:ℕ) < 3 by norm_num)
+      (le_trans (show (3:ℕ) ≤ 4 from by norm_num) hk4)
+  have hcard' := hcard
+  rw [hk6] at hcard'
+  have hnc6 : {j | j < 6 ∧ (2 * h0 < s.b j (j + 1) ∨ 2 < s.a j (j + 1))}.ncard = 0 := by
+    omega
+  have hnc0 : {j | j < s.k ∧ (2 * h0 < s.b j (j + 1) ∨ 2 < s.a j (j + 1))}.ncard = 0 := by
+    rw [hk6]
+    exact hnc6
+  have hik : i < s.k := by rw [hk6]; exact hi
+  have hge : (2:ℝ) ≤ s.a i (i + 1) := by
+    by_cases hlt : i + 1 < s.k
+    · exact hb3 i (i + 1) ⟨hik, hlt, Nat.ne_of_lt (Nat.lt_succ_self i)⟩
+    · have heq : i + 1 = s.k := by omega
+      have h2 := (hpa i 0).2
+      rw [Nat.zero_add] at h2
+      rw [heq, h2]
+      exact hb3 i 0 ⟨hik, hpos0, Nat.ne_of_gt
+        (Nat.lt_of_lt_of_le (show (0:ℕ) < 3 by norm_num)
+          (Nat.le_of_succ_le_succ (show 4 ≤ i + 1 from by rw [heq]; exact hk4)))⟩
+  have hfin : ({j | j < s.k ∧ (2 * h0 < s.b j (j + 1) ∨ 2 < s.a j (j + 1))} : Set ℕ).Finite :=
+    Set.Finite.subset (Set.finite_Iio s.k) (fun x hx => hx.1)
+  have hnotin : ¬ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1)) := by
+    intro hmem2
+    have hpos : (0:ℕ) < {j | j < s.k ∧ (2 * h0 < s.b j (j + 1) ∨ 2 < s.a j (j + 1))}.ncard :=
+      (Set.ncard_pos (hs := hfin)).mpr ⟨i, hik, hmem2⟩
+    rw [hnc0] at hpos
+    norm_num at hpos
+  have hab : ¬ (2:ℝ) < s.a i (i + 1) := fun hc => hnotin (Or.inr hc)
+  have hle : s.a i (i + 1) ≤ 2 := le_of_not_gt hab
+  exact ⟨le_antisymm hle hge, le_of_not_gt (fun hc => hnotin (Or.inl hc))⟩
+
+/-- (pm11) **THE HEXAGONAL TWO-ARC SQUEEZE** (the k = 6, d = 3 core of the
+d >= 3 branch): six axis-orthogonal annulus points around `ax` forming two
+consecutive 3-step arcs `u -> y1 -> y2 -> w` and `w -> z1 -> z2 -> u`, with
+the diagonal `u, w` at chord in `[2, cstab]` and the counterclockwise order
+premises on both arcs.  The chain rule turns each arc into its azimuthal
+displacement, every step is at least `alpha = arccos(2719/3969) > pi/4`, so
+each displacement is at least `3*alpha > 3*pi/4 > beta`; but the far-arc
+split puts at least one of the two directed azimuths (of `w, u`) on the
+near arc, i.e. at most `beta` — contradiction. -/
+private theorem pmOrthoHexArcKill_p35 {ax u y1 y2 w z1 z2 : V3}
+    (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hy10 : y1 ≠ (0:V3)) (hy20 : y2 ≠ (0:V3))
+    (hw0 : w ≠ (0:V3)) (hz10 : z1 ≠ (0:V3)) (hz20 : z2 ≠ (0:V3))
+    (hncu : ¬ Collinear3 0 ax u) (hncy1 : ¬ Collinear3 0 ax y1)
+    (hncy2 : ¬ Collinear3 0 ax y2) (hncw : ¬ Collinear3 0 ax w)
+    (hncz1 : ¬ Collinear3 0 ax z1) (hncz2 : ¬ Collinear3 0 ax z2)
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hY1 : (y1 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hY2 : (y2 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hZ1 : (z1 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hZ2 : (z2 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hua : ‖u‖ ≤ 2 * h0)
+    (hy12 : (2:ℝ) ≤ ‖y1‖) (hy1a : ‖y1‖ ≤ 2 * h0)
+    (hy22 : (2:ℝ) ≤ ‖y2‖) (hy2a : ‖y2‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwa : ‖w‖ ≤ 2 * h0)
+    (hz12 : (2:ℝ) ≤ ‖z1‖) (hz1a : ‖z1‖ ≤ 2 * h0)
+    (hz22 : (2:ℝ) ≤ ‖z2‖) (hz2a : ‖z2‖ ≤ 2 * h0)
+    (e1 : (2:ℝ) ≤ dist u y1) (e2 : (2:ℝ) ≤ dist y1 y2) (e3 : (2:ℝ) ≤ dist y2 w)
+    (f1 : (2:ℝ) ≤ dist w z1) (f2 : (2:ℝ) ≤ dist z1 z2) (f3 : (2:ℝ) ≤ dist z2 u)
+    (hd : dist u w ≤ cstab) (ed : (2:ℝ) ≤ dist u w)
+    (a1 : azim 0 ax u y1 ≤ azim 0 ax u y2)
+    (a2 : azim 0 ax u y2 ≤ azim 0 ax u w)
+    (b1 : azim 0 ax w z1 ≤ azim 0 ax w z2)
+    (b2 : azim 0 ax w z2 ≤ azim 0 ax w u) :
+    False := by
+  -- the far-arc split on the pair (w, u)
+  have hsplit := pmOrthoTriFarSplit_p35 (x := w) (y := u) hax0 hw0 hu0 hncw hncu hW hU
+    hw2 hwa hu2 hua (by rw [dist_comm]; exact hd)
+  rcases hsplit with hnear | hfar
+  · -- near case: the w-arc displacement is at most beta, but its three steps
+    -- are each at least alpha
+    have hstep1 := pmOrthoStepGeA_p35 hax0 hw0 hz10 hncw hncz1 hW hZ1 hw2 hwa hz12 hz1a f1
+    have hstep2 := pmOrthoStepGeA_p35 hax0 hz10 hz20 hncz1 hncz2 hZ1 hZ2 hz12 hz1a hz22 hz2a f2
+    have hstep3 := pmOrthoStepGeA_p35 hax0 hz20 hu0 hncz2 hncu hZ2 hU hz22 hz2a hu2 hua f3
+    have hchain := pmOrthoArcChain3_p35 hax0 hncw hncz1 hncz2 hncu b1 b2
+    rw [hchain] at hnear
+    linarith [pmOrthoStepGeQuart_p35, pmOrthoTriBetaLt34_p35]
+  · -- far case: azim w u >= 2*pi - beta, so azim u w <= beta; the u-arc
+    -- displacement is at most beta against its three alpha steps
+    have hwu0 : azim 0 ax w u ≠ 0 :=
+      pmOrthoTriAzimNe0_p35 hax0 hw0 hu0 hncw hncu hW hU hw2 hwa hu2 hua
+        (by rw [dist_comm]; exact ed)
+    have hcompl := azim_compl (z := (0:V3)) (w := ax) (w1 := w) (w2 := u) hncw hncu
+    rw [if_neg hwu0] at hcompl
+    have huwle : azim 0 ax u w ≤ Real.arccos (-(10601 / 80000)) := by
+      rw [hcompl]
+      linarith
+    have hstep1 := pmOrthoStepGeA_p35 hax0 hu0 hy10 hncu hncy1 hU hY1 hu2 hua hy12 hy1a e1
+    have hstep2 := pmOrthoStepGeA_p35 hax0 hy10 hy20 hncy1 hncy2 hY1 hY2 hy12 hy1a hy22 hy2a e2
+    have hstep3 := pmOrthoStepGeA_p35 hax0 hy20 hw0 hncy2 hncw hY2 hW hy22 hy2a hw2 hwa e3
+    have hchain := pmOrthoArcChain3_p35 hax0 hncu hncy1 hncy2 hncw a1 a2
+    rw [hchain] at huwle
+    linarith [pmOrthoStepGeQuart_p35, pmOrthoTriBetaLt34_p35]
+
+-- pm11 axcheck tail (probe only; dropped from the kit proper)
+
+/-! ## planemiss13 rungs (lkgrqui-planemiss13-w3, 2026-10-28)
+
+The (a) branch of the winding root: the `d = 2` configuration in which the
+common ring neighbour of the diagonal endpoints `u, w` sits OFF the dart
+plane.  The pm9-pm11 winding account is an in-plane-pair story (an
+off-plane vertex with small projection radius admits an azimuthally tiny
+step at chord in `[2, cstab]`), so the off-plane branch needs the
+projection-height coupling account: decompose the off-plane point along
+the dart normal (`y = y' + t * ax`), read every chord to it as a
+Pythagorean split between the in-plane chord of the projection `y'` and
+the squared height `t ^ 2 * ‖ax‖ ^ 2`, and squeeze the height between the
+double annulus chord and the ring diagonal (`t ^ 2 * ‖ax‖ ^ 2 ≤ cstab ^ 2
+- dist u w ^ 2 / 4`, in particular `≤ cstab ^ 2 - 1`).  The kit is FAN-free
+conditional (the assembly lane feeds the ring bookkeeping and the axis):
+the cosine-window pair `pmOrthoOffDotGe/Le_p35` packages the degraded
+azimuth interface for the projection (law-of-cosines bounds shifted by the
+squared height), and the `k = 4` pieces close the abstract residue
+trichotomy: in a 4-periodic ring the dart pair contains the residue-3
+vertex once the residue-1 vertex is off the axis plane
+(`pmOrthoOffFourthOrtho_p35`), so the forced in-plane fourth vertex hands
+the configuration to the pm10 in-plane triple kill
+(`pmOrthoOffK4Kill_p35`, both cases).  All pieces are new lemmas with zero
+`sorry`; the residual root `pmPlaneCrowding_p35` is untouched. -/
+
+/-- (pm13) dot-product self-expansion for a one-dimensional split. -/
+private theorem pmDotSelfAdd_p35 (p q : Fin 3 → ℝ) (t : ℝ) :
+    (p + t • q) ⬝ᵥ (p + t • q)
+      = p ⬝ᵥ p + 2 * t * (p ⬝ᵥ q) + t ^ 2 * (q ⬝ᵥ q) := by
+  rw [pmDotAddL_p35, pmDotAddR_p35, pmDotAddR_p35, pmDotSmulL_p35, pmDotSmulR_p35,
+    pmDotSmulL_p35, pmDotSmulR_p35, dotProduct_comm q p]
+  ring
+
+/-- (pm13) **Pythagoras, norm form**: splitting `y = y' + t * ax` with the
+first summand axis-orthogonal splits the squared norm into the projection
+squared norm plus the squared height `t ^ 2 * ‖ax‖ ^ 2`. -/
+private theorem pmOrthoPythNorm_p35 {ax y y' : V3} {t : ℝ}
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0) :
+    ‖y‖ ^ 2 = ‖y'‖ ^ 2 + t ^ 2 * ‖ax‖ ^ 2 := by
+  have hcoe : ((y' + t • ax : V3) : Fin 3 → ℝ)
+      = (y' : Fin 3 → ℝ) + t • (ax : Fin 3 → ℝ) := rfl
+  rw [pmNormSqDot_p35 y, pmNormSqDot_p35 y', pmNormSqDot_p35 ax, hy, hcoe,
+    pmDotSelfAdd_p35 (y' : Fin 3 → ℝ) (ax : Fin 3 → ℝ) t, hyo]
+  ring
+
+/-- (pm13) **Pythagoras, chord form**: for an axis-orthogonal base point
+`u`, the chord to `y` splits into the chord of the projection `y'` plus
+the squared height.  This is the master identity of the off-plane
+coupling account. -/
+private theorem pmOrthoPythDist_p35 {ax u y y' : V3} {t : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0) :
+    dist u y ^ 2 = dist u y' ^ 2 + t ^ 2 * ‖ax‖ ^ 2 := by
+  have hdy := pmDotNormDist_p35 u y
+  have hdy' := pmDotNormDist_p35 u y'
+  have hcoe : ((y' + t • ax : V3) : Fin 3 → ℝ)
+      = (y' : Fin 3 → ℝ) + t • (ax : Fin 3 → ℝ) := rfl
+  have hdot : ((u : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ))
+      = ((u : Fin 3 → ℝ) ⬝ᵥ (y' : Fin 3 → ℝ)) := by
+    rw [hy, hcoe, pmDotAddR_p35, pmDotSmulR_p35,
+      dotProduct_comm (ax : Fin 3 → ℝ) (u : Fin 3 → ℝ), hU, mul_zero, add_zero]
+  have hny := pmOrthoPythNorm_p35 hy hyo
+  linarith
+
+/-- (pm13) **The general projection witness** (orthogonality): with the
+scalar `c` cancelling the axis component (`y*ax - c * ax*ax = 0`) the
+vector `y - c * ax` is axis-orthogonal. -/
+private theorem pmOrthoProjGenOrtho_p35 {ax y : V3} {c : ℝ}
+    (hc : (y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ)
+        - c * ((ax : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ)) = 0) :
+    (((y - c • ax : V3) : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ)) = 0 := by
+  have hcoe : ((y - c • ax : V3) : Fin 3 → ℝ)
+      = (y : Fin 3 → ℝ) - c • (ax : Fin 3 → ℝ) := rfl
+  rw [hcoe, sub_eq_add_neg, ← neg_smul, pmDotAddL_p35, pmDotSmulL_p35]
+  linear_combination hc
+
+/-- (pm13) **The explicit projection** is axis-orthogonal: for `ax ≠ 0`
+the vector `y - (y*ax / ax*ax) * ax` cancels the axis component. -/
+private theorem pmOrthoProjOrthoC_p35 {ax y : V3} (hax0 : ax ≠ (0:V3)) :
+    (((y - ((y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) /
+        ((ax : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ))) • ax : V3) : Fin 3 → ℝ) ⬝ᵥ
+      (ax : Fin 3 → ℝ)) = 0 := by
+  have haxne : ((ax : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ)) ≠ 0 := by
+    rw [← pmNormSqDot_p35 ax]
+    exact pow_ne_zero 2 (ne_of_gt (norm_pos_iff.mpr hax0))
+  apply pmOrthoProjGenOrtho_p35
+  field_simp
+  ring
+
+/-- (pm13) **The explicit projection decomposition**: `y` is the sum of
+its axis-orthogonal projection and the axis component. -/
+private theorem pmOrthoProjRepr_p35 {ax y : V3} :
+    y = (y - ((y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) /
+        ((ax : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ))) • ax)
+      + ((y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) /
+        ((ax : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ))) • ax := by
+  rw [sub_add_cancel]
+
+/-- (pm13) **THE HEIGHT CEILING** (the projection-height coupling): if the
+chords from an axis-orthogonal pair `u, w` down to `y` are both at most
+`cstab`, the squared height `t ^ 2 * ‖ax‖ ^ 2` is at most
+`cstab ^ 2 - dist u w ^ 2 / 4` — the in-plane triangle inequality through
+the projection with the Cauchy bound `(a + b) ^ 2 ≤ 2 * (a ^ 2 + b ^ 2)`.
+Assembly feeds `2 ≤ dist u w` (the ring-diagonal `a`-conjunct) into the
+corollary `pmOrthoOffHeightSqLeOne_p35`. -/
+private theorem pmOrthoOffHeightSqLe_p35 {ax u w y y' : V3} {t : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (huy : dist u y ≤ cstab) (hwy : dist w y ≤ cstab) :
+    t ^ 2 * ‖ax‖ ^ 2 ≤ cstab ^ 2 - dist u w ^ 2 / 4 := by
+  have hdu : dist u y ^ 2 = dist u y' ^ 2 + t ^ 2 * ‖ax‖ ^ 2 :=
+    pmOrthoPythDist_p35 hU hy hyo
+  have hdw : dist w y ^ 2 = dist w y' ^ 2 + t ^ 2 * ‖ax‖ ^ 2 :=
+    pmOrthoPythDist_p35 hW hy hyo
+  have hsqc : t ^ 2 * ‖ax‖ ^ 2 = (t * ‖ax‖) ^ 2 := by ring
+  have hsnn := sq_nonneg (t * ‖ax‖)
+  have hu : dist u y' ^ 2 ≤ cstab ^ 2 - t ^ 2 * ‖ax‖ ^ 2 := by
+    have h1 : dist u y ^ 2 ≤ cstab ^ 2 :=
+      pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist u y) huy 2
+    linarith
+  have hw : dist w y' ^ 2 ≤ cstab ^ 2 - t ^ 2 * ‖ax‖ ^ 2 := by
+    have h1 : dist w y ^ 2 ≤ cstab ^ 2 :=
+      pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist w y) hwy 2
+    linarith
+  have hdw' : dist w y' = dist y' w := dist_comm w y'
+  rw [hdw'] at hw
+  have htri : dist u w ≤ dist u y' + dist y' w := dist_triangle u y' w
+  have htri2 : dist u w ^ 2 ≤ (dist u y' + dist y' w) ^ 2 :=
+    pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist u w) htri 2
+  have hcauchy : (dist u y' + dist y' w) ^ 2
+      ≤ 2 * (dist u y' ^ 2 + dist y' w ^ 2) := by
+    have h1 := sq_nonneg (dist u y' - dist y' w)
+    nlinarith
+  linarith
+
+/-- (pm13) **Height ceiling, numeric form**: with the ring diagonal at
+least `2` (the `isScsV39` `a`-conjunct at distinct residues), the squared
+height is at most `cstab ^ 2 - 1 ≈ 8.06`, i.e. the height itself is below
+`2.84`: an off-plane ring vertex sits only shallowly above the dart
+plane. -/
+private theorem pmOrthoOffHeightSqLeOne_p35 {ax u w y y' : V3} {t : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (huy : dist u y ≤ cstab) (hwy : dist w y ≤ cstab)
+    (h2 : (2:ℝ) ≤ dist u w) :
+    t ^ 2 * ‖ax‖ ^ 2 ≤ cstab ^ 2 - 1 := by
+  have h := pmOrthoOffHeightSqLe_p35 hU hW hy hyo huy hwy
+  have h4 : (2:ℝ) ^ 2 ≤ dist u w ^ 2 := pow_le_pow_left₀ (by norm_num) h2 2
+  norm_num at h4
+  linarith
+
+/-- (pm13) **Projected chord upper window**: the projection inherits the
+far bound — a chord of at most `cstab` to the lifted point projects to a
+chord of at most `cstab`. -/
+private theorem pmOrthoOffProjChordLe_p35 {ax u y y' : V3} {t : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (huy : dist u y ≤ cstab) : dist u y' ≤ cstab := by
+  have hdu := pmOrthoPythDist_p35 hU hy hyo
+  have hsqc : t ^ 2 * ‖ax‖ ^ 2 = (t * ‖ax‖) ^ 2 := by ring
+  have h1 : dist u y ^ 2 ≤ cstab ^ 2 :=
+    pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist u y) huy 2
+  have hsq : dist u y' ^ 2 ≤ cstab ^ 2 := by
+    linarith [hdu, h1, hsqc, sq_nonneg (t * ‖ax‖)]
+  by_contra hcon
+  have hgt : cstab < dist u y' := not_le.mp hcon
+  have hc0 : (0:ℝ) ≤ cstab := le_of_lt (by norm_num [cstab])
+  have hlt : cstab ^ 2 < dist u y' ^ 2 :=
+    (sq_lt_sq₀ hc0 (by simp)).mpr hgt
+  linarith
+
+/-- (pm13) **Projected chord lower window**: a chord of at least `2` to
+the lifted point leaves the projected chord squared at least `4 - h²` —
+the height deficit is exactly what the winding account must absorb. -/
+private theorem pmOrthoOffProjChordSqGe_p35 {ax u y y' : V3} {t : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hge : (2:ℝ) ≤ dist u y) :
+    (4:ℝ) ≤ dist u y' ^ 2 + t ^ 2 * ‖ax‖ ^ 2 := by
+  have hdu := pmOrthoPythDist_p35 hU hy hyo
+  have h1 : (2:ℝ) ^ 2 ≤ dist u y ^ 2 := pow_le_pow_left₀ (by norm_num) hge 2
+  norm_num at h1
+  linarith
+
+/-- (pm13) **Projected norm window, lower**: a lifted annulus point
+(`‖y‖ ≥ 2`) has projected norm squared at least `4 - h²`. -/
+private theorem pmOrthoOffProjNormSqGe_p35 {ax y y' : V3} {t : ℝ}
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hge : (2:ℝ) ≤ ‖y‖) :
+    (4:ℝ) ≤ ‖y'‖ ^ 2 + t ^ 2 * ‖ax‖ ^ 2 := by
+  have hny := pmOrthoPythNorm_p35 hy hyo
+  have h1 : (2:ℝ) ^ 2 ≤ ‖y‖ ^ 2 := pow_le_pow_left₀ (by norm_num) hge 2
+  norm_num at h1
+  linarith
+
+/-- (pm13) **Projected norm window, upper**: the projection never
+increases the norm (`‖y'‖ ≤ ‖y‖`). -/
+private theorem pmOrthoOffProjNormLe_p35 {ax y y' : V3} {t : ℝ}
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0) :
+    ‖y'‖ ≤ ‖y‖ := by
+  have hny := pmOrthoPythNorm_p35 hy hyo
+  have hsqc : t ^ 2 * ‖ax‖ ^ 2 = (t * ‖ax‖) ^ 2 := by ring
+  have hsqle : ‖y'‖ ^ 2 ≤ ‖y‖ ^ 2 := by
+    linarith [hny, hsqc, sq_nonneg (t * ‖ax‖)]
+  by_contra hcon
+  have hlt : ‖y‖ < ‖y'‖ := not_le.mp hcon
+  have hlt2 : ‖y‖ ^ 2 < ‖y'‖ ^ 2 := by
+    nlinarith [hlt, norm_nonneg y', norm_nonneg y]
+  linarith
+
+/-- (pm13) **Cosine window, lower** (the degraded azimuth interface): the
+projection dot product is at least the law-of-cosines lower bound shifted
+by the squared height — `‖u‖ ^ 2 + ‖y'‖ ^ 2 - cstab ^ 2 + h² ≤ 2 * u*y'`.
+Assembly converts to an azimuth window through `pmAzimOrthoCos_p35` when
+the projection is nonzero and axis-plane-positioned. -/
+private theorem pmOrthoOffDotGe_p35 {ax u y y' : V3} {t : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (huy : dist u y ≤ cstab) :
+    ‖u‖ ^ 2 + ‖y'‖ ^ 2 - cstab ^ 2 + t ^ 2 * ‖ax‖ ^ 2
+      ≤ 2 * ((u : Fin 3 → ℝ) ⬝ᵥ (y' : Fin 3 → ℝ)) := by
+  have hdy' := pmDotNormDist_p35 u y'
+  have hdu := pmOrthoPythDist_p35 hU hy hyo
+  have h1 : dist u y ^ 2 ≤ cstab ^ 2 :=
+    pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist u y) huy 2
+  linarith
+
+/-- (pm13) **Cosine window, upper**: the chord lower bound `2` caps the
+projection dot product — `2 * u*y' ≤ ‖u‖ ^ 2 + ‖y'‖ ^ 2 - 4 + h²`.  The
+pair with `pmOrthoOffDotGe_p35` is the (a)-branch feed for the winding
+account: the height term `h²` widens the window exactly by the amount the
+lifted chord exceeds its in-plane shadow. -/
+private theorem pmOrthoOffDotLe_p35 {ax u y y' : V3} {t : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy : y = y' + t • ax)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hge : (2:ℝ) ≤ dist u y) :
+    2 * ((u : Fin 3 → ℝ) ⬝ᵥ (y' : Fin 3 → ℝ))
+      ≤ ‖u‖ ^ 2 + ‖y'‖ ^ 2 - 4 + t ^ 2 * ‖ax‖ ^ 2 := by
+  have hdy' := pmDotNormDist_p35 u y'
+  have hdu := pmOrthoPythDist_p35 hU hy hyo
+  have h1 : (2:ℝ) ^ 2 ≤ dist u y ^ 2 := pow_le_pow_left₀ (by norm_num) hge 2
+  norm_num at h1
+  linarith
+
+/-- (pm13) **THE `k = 4`, `d = 2` KILL** (abstract form): four annulus
+points `u → y → w → x2` around the axis, every ring chord in
+`[2, cstab]`, the diagonal `u, w` in the axis plane with the diagonal
+chord in `[2, cstab]` — then `False`.  Either `y` is in the axis plane
+too and `u, y, w` is an in-plane triple at pairwise chords in
+`[2, cstab]` (the pm10 kill), or `y` is off the plane and the forced
+fourth vertex `x2` provides the in-plane triple `u, w, x2`.  Assembly
+supplies `x2 ∈` axis plane through the forcing lemma
+`pmOrthoOffFourthOrtho_p35` below; all non-collinearity premises are
+derived in-body from the orthogonality data (`pmAxisOrthoNC_p35`). -/
+private theorem pmOrthoOffK4Kill_p35 {ax u w x2 y : V3} (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hw0 : w ≠ (0:V3)) (hx20 : x2 ≠ (0:V3)) (hy0 : y ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hX2 : (x2 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hua : ‖u‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwa : ‖w‖ ≤ 2 * h0)
+    (hy2 : (2:ℝ) ≤ ‖y‖) (hya : ‖y‖ ≤ 2 * h0)
+    (hx22 : (2:ℝ) ≤ ‖x2‖) (hx2a : ‖x2‖ ≤ 2 * h0)
+    (huy : dist u y ≤ cstab) (hyw : dist y w ≤ cstab)
+    (hwx2 : dist w x2 ≤ cstab) (hx2u : dist x2 u ≤ cstab)
+    (hdiag : dist u w ≤ cstab)
+    (euy : (2:ℝ) ≤ dist u y) (eyw : (2:ℝ) ≤ dist y w)
+    (ewx2 : (2:ℝ) ≤ dist w x2) (ex2u : (2:ℝ) ≤ dist x2 u)
+    (ed : (2:ℝ) ≤ dist u w) :
+    False := by
+  by_cases hY : ((y : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+  · -- y in the axis plane: the triple `u, y, w` dies by the pm10 kill
+    have hncy : ¬ Collinear3 0 ax y := pmAxisOrthoNC_p35 hax0 hy0 hY
+    have hncu : ¬ Collinear3 0 ax u := pmAxisOrthoNC_p35 hax0 hu0 hU
+    have hncw : ¬ Collinear3 0 ax w := pmAxisOrthoNC_p35 hax0 hw0 hW
+    exact pmOrthoTriCstabKill_p35 hax0 hu0 hy0 hw0 hncu hncy hncw hU hY hW
+      hu2 hua hy2 hya hw2 hwa huy hyw (by rw [dist_comm]; exact hdiag)
+      euy eyw (by rw [dist_comm]; exact ed)
+  · -- y off the axis plane: the forced fourth vertex `x2` dies instead
+    have hncu : ¬ Collinear3 0 ax u := pmAxisOrthoNC_p35 hax0 hu0 hU
+    have hncw : ¬ Collinear3 0 ax w := pmAxisOrthoNC_p35 hax0 hw0 hW
+    have hncx2 : ¬ Collinear3 0 ax x2 := pmAxisOrthoNC_p35 hax0 hx20 hX2
+    exact pmOrthoTriCstabKill_p35 hax0 hu0 hw0 hx20 hncu hncw hncx2 hU hW hX2
+      hu2 hua hw2 hwa hx22 hx2a hdiag hwx2 hx2u ed ewx2 ex2u
+
+/-- (pm13) **Periodic shift**: a `k`-periodic ring can be shifted by
+whole periods freely. -/
+private theorem pmOrthoPeriodicShift_p35 {vv : ℕ → V3} {k : ℕ}
+    (hper : Periodic vv k) (m n : ℕ) : vv (m + k * n) = vv m := by
+  induction n with
+  | zero => rw [Nat.mul_zero, Nat.add_zero]
+  | succ n ih =>
+    have hstep : m + k * (n + 1) = (m + k * n) + k := by ring
+    rw [hstep, hper, ih]
+
+/-- (pm13) **The `k = 4` residue trichotomy** (the forcing interface): in
+a 4-periodic ring, every dart pair `(vv j, vv (j+1))` is one of the four
+consecutive residue pairs — so the dart-`j` plane always misses exactly
+the two residues opposite `j`. -/
+private theorem pmOrthoK4Cases_p35 {vv : ℕ → V3} (hper : Periodic vv 4)
+    (j : ℕ) :
+    (vv j = vv 0 ∧ vv (j + 1) = vv 1) ∨
+    (vv j = vv 1 ∧ vv (j + 1) = vv 2) ∨
+    (vv j = vv 2 ∧ vv (j + 1) = vv 3) ∨
+    (vv j = vv 3 ∧ vv (j + 1) = vv 0) := by
+  have hmod : j = j % 4 + 4 * (j / 4) := by
+    have h := Nat.mod_add_div' j 4
+    rw [Nat.mul_comm (j / 4) 4] at h
+    exact h.symm
+  have hvj : vv j = vv (j % 4) := by
+    have h := pmOrthoPeriodicShift_p35 hper (j % 4) (j / 4)
+    conv_lhs => rw [hmod]
+    exact h
+  have hvj1 : vv (j + 1) = vv (j % 4 + 1) := by
+    have h := pmOrthoPeriodicShift_p35 hper (j % 4 + 1) (j / 4)
+    have he : j + 1 = j % 4 + 1 + 4 * (j / 4) := by
+      conv_lhs => rw [hmod]
+      ring
+    rw [he]
+    exact h
+  have h4 : j % 4 < 4 := Nat.mod_lt j (by norm_num)
+  rcases Nat.lt_or_ge (j % 4) 2 with h2 | h2
+  · rcases Nat.lt_or_ge (j % 4) 1 with h1 | h1
+    · have hz : j % 4 = 0 := Nat.lt_one_iff.mp h1
+      exact Or.inl ⟨by rw [hvj, hz], by rw [hvj1, hz]⟩
+    · have hz : j % 4 = 1 := Nat.le_antisymm (Nat.lt_succ_iff.mp h2) h1
+      exact Or.inr (Or.inl ⟨by rw [hvj, hz], by rw [hvj1, hz]⟩)
+  · rcases Nat.lt_or_ge (j % 4) 3 with h3 | h3
+    · have hz : j % 4 = 2 := Nat.le_antisymm (Nat.lt_succ_iff.mp h3) h2
+      exact Or.inr (Or.inr (Or.inl ⟨by rw [hvj, hz], by rw [hvj1, hz]⟩))
+    · have hz : j % 4 = 3 := Nat.le_antisymm (Nat.lt_succ_iff.mp h4) h3
+      refine Or.inr (Or.inr (Or.inr ⟨by rw [hvj, hz], ?_⟩))
+      rw [hvj1, hz]
+      exact hper 0
+
+/-- (pm13) **The off-plane fourth-vertex forcing** (`k = 4`): in a
+4-periodic ring, if both endpoints of the dart `j` lie in the axis plane
+while the residue-1 vertex does not, then the residue-3 vertex is dragged
+into the axis plane — the dart pair must avoid residue 1 (else one of its
+members is `vv 1` against `hy1`), hence it contains residue 3 either way.
+Assembly reindexes `u ↦ vv 0`, the off-plane common neighbour `x₁ ↦ vv 1`,
+`w ↦ vv 2`, the forced fourth vertex `x₂ ↦ vv 3` by periodicity; the
+output feeds `pmOrthoOffK4Kill_p35`. -/
+private theorem pmOrthoOffFourthOrtho_p35 {vv : ℕ → V3} {ax : V3}
+    (hper : Periodic vv 4) (j : ℕ)
+    (hjP : (vv j : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hjp1P : (vv (j + 1) : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1 : ¬ ((vv 1 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)) :
+    (vv 3 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0 := by
+  rcases pmOrthoK4Cases_p35 hper j with ⟨e1, e2⟩ | ⟨e1, e2⟩ | ⟨e1, e2⟩ |
+      ⟨e1, e2⟩
+  · rw [e2] at hjp1P
+    exact absurd hjp1P hy1
+  · rw [e1] at hjP
+    exact absurd hjP hy1
+  · rw [e2] at hjp1P
+    exact hjp1P
+  · rw [e1] at hjP
+    exact hjP
+/-! ## planemiss14 rungs (lkgrqui-planemiss14-w3, 2026-10-28)
+
+The (iii) branch of the winding root: the OFF-PLANE INTERMEDIATE POINT
+account — the two-point sister block of the pm13 (a) branch.  pm13
+couples ONE lifted point to the in-plane diagonal pair (the master
+identity `pmOrthoPythDist_p35`, the height ceiling, the shifted cosine
+windows); this block couples a PAIR of lifted points to each other and
+converts every window into the winding engine's currency (an azimuth
+with an `arccos` window), which is the interface the assembly consumes
+on every `d >= 3` arc that carries an off-plane intermediate vertex:
+the two-point height split `pmOrthoOffTwoPythDist_p35`
+(`dist y1 y2 ^ 2 = dist y1' y2' ^ 2 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2`, the
+single-point master is the `t2 = 0` special case), the shifted window
+pair `pmOrthoOffTwoDotGe/Le_p35` (the shift is the squared height
+DIFFERENCE), the equal-height corollary
+`pmOrthoOffTwoEqHeightChord_p35` (a same-height run projects
+isometrically along itself), the clean far window
+`pmOrthoOffAzimWindowFar_p35` (an axis-orthogonal pair at chord
+`<= cstab` meets under `azim <= arccos((‖p‖² + ‖q‖² - cstab²)/
+(2 ‖p‖ ‖q‖))` — exact norms, no annulus data), the near windows
+`pmOrthoOffStepAzimGe_p35` / `pmOrthoOffTwoStepAzimGe_p35` (the
+chord-`2` bound on the LIFTED chord shifts the lower window by the
+squared height resp. the squared height difference), and the capstone
+`pmOrthoOffMidArcWindows_p35` packaging the full `d = 3`
+intermediate-arc data: the chain displacement through the two
+projections plus all six windows (three steps, near and far).  The
+honest content of the pm9 finding (an off-plane vertex admits
+azimuthally tiny steps) is that the step bound degrades through
+`‖y'‖` and `h²` — the windows stay sharp; the kill itself still needs
+the direction feed, the k ∈ {5, 6} gap account and the wrap
+`Σ = 2π` assembly.  All pieces are new lemmas with zero `sorry`; the
+residual root `pmPlaneCrowding_p35` is untouched. -/
+
+/-- (pm14) division bridge for the window fractions: the projected
+cosine bounds come out half-cross-multiplied, the `arccos` windows need
+them divided by the norm product. -/
+private theorem pmOrthoOffDivBridge_p35 (B D : ℝ) (hD : D ≠ 0) :
+    B / (2 * D) * D = B / 2 := by
+  field_simp
+
+/-- (pm14) `arccos` closing wrapper, near form: a cosine upper bound on
+an azimuth in `[0, π]` lifts to the `arccos` floor window. -/
+private theorem pmOrthoOffAzimGeOfCosLe_p35 {ax p q : V3} {c : ℝ}
+    (hπ : azim 0 ax p q ≤ Real.pi)
+    (h : Real.cos (azim 0 ax p q) ≤ c) :
+    Real.arccos c ≤ azim 0 ax p q := by
+  have h2 : Real.arccos (Real.cos (azim 0 ax p q)) = azim 0 ax p q :=
+    Real.arccos_cos (azim_nonneg 0 ax p q) hπ
+  rw [← h2]
+  exact Real.arccos_le_arccos h
+
+/-- (pm14) `arccos` closing wrapper, far form: a cosine lower bound on
+an azimuth in `[0, π]` lifts to the `arccos` cap window. -/
+private theorem pmOrthoOffAzimLeOfCosGe_p35 {ax p q : V3} {c : ℝ}
+    (hπ : azim 0 ax p q ≤ Real.pi)
+    (h : c ≤ Real.cos (azim 0 ax p q)) :
+    azim 0 ax p q ≤ Real.arccos c := by
+  have h2 : Real.arccos (Real.cos (azim 0 ax p q)) = azim 0 ax p q :=
+    Real.arccos_cos (azim_nonneg 0 ax p q) hπ
+  rw [← h2]
+  exact Real.arccos_le_arccos h
+
+/-- (pm14) **Two-point height split** (the pair master identity): two
+lifted points split their chord into the chord of the projections plus
+the squared height DIFFERENCE.  The single-point master
+`pmOrthoPythDist_p35` is the `t2 = 0` special case read at the base
+point. -/
+private theorem pmOrthoOffTwoPythDist_p35 {ax y1 y2 y1' y2' : V3} {t1 t2 : ℝ}
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0) :
+    dist y1 y2 ^ 2 = dist y1' y2' ^ 2 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2 := by
+  have hdiff : y1 - y2 = (y1' - y2') + (t1 - t2) • ax := by
+    rw [hy1, hy2]
+    module
+  have hcoeD : ((y1' - y2' : V3) : Fin 3 → ℝ)
+      = (y1' : Fin 3 → ℝ) - (y2' : Fin 3 → ℝ) := rfl
+  have hdo : ((y1' - y2' : V3) : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0 := by
+    rw [hcoeD, sub_eq_add_neg, pmDotAddL_p35, pmDotNegL_p35, hy1o, hy2o]
+    ring
+  have hn := pmOrthoPythNorm_p35 (ax := ax) (y := y1 - y2)
+    (y' := (y1' - y2' : V3)) (t := t1 - t2) hdiff hdo
+  have hd1 : dist y1 y2 = ‖y1 - y2‖ := dist_eq_norm y1 y2
+  have hd2 : dist y1' y2' = ‖y1' - y2'‖ := dist_eq_norm y1' y2'
+  rw [hd1, hd2]
+  exact hn
+
+/-- (pm14) **Two-point cosine window, far**: a chord of at most
+`cstab` between two lifted points bounds the projection dot product
+from below — the pm13 single-point window with the height DIFFERENCE
+as the shift. -/
+private theorem pmOrthoOffTwoDotGe_p35 {ax y1 y2 y1' y2' : V3} {t1 t2 : ℝ}
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hd : dist y1 y2 ≤ cstab) :
+    ‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - cstab ^ 2 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2
+      ≤ 2 * ((y1' : Fin 3 → ℝ) ⬝ᵥ (y2' : Fin 3 → ℝ)) := by
+  have hsplit := pmOrthoOffTwoPythDist_p35 hy1 hy1o hy2 hy2o
+  have hwin := pmDotNormDist_p35 y1' y2'
+  have h1 : dist y1 y2 ^ 2 ≤ cstab ^ 2 :=
+    pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist y1 y2) hd 2
+  linarith
+
+/-- (pm14) **Two-point cosine window, near**: a chord of at least `2`
+between two lifted points caps the projection dot product — the
+height-difference deficit is what the winding account absorbs. -/
+private theorem pmOrthoOffTwoDotLe_p35 {ax y1 y2 y1' y2' : V3} {t1 t2 : ℝ}
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hge : (2:ℝ) ≤ dist y1 y2) :
+    2 * ((y1' : Fin 3 → ℝ) ⬝ᵥ (y2' : Fin 3 → ℝ))
+      ≤ ‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2 := by
+  have hsplit := pmOrthoOffTwoPythDist_p35 hy1 hy1o hy2 hy2o
+  have hwin := pmDotNormDist_p35 y1' y2'
+  have h1 : (2:ℝ) ^ 2 ≤ dist y1 y2 ^ 2 :=
+    pow_le_pow_left₀ (by norm_num) hge 2
+  norm_num at h1
+  linarith
+
+/-- (pm14) **Equal-height chord preservation**: two lifted points at
+the SAME height project isometrically — a same-height run of ring
+vertices keeps its internal chords exactly under the projection. -/
+private theorem pmOrthoOffTwoEqHeightChord_p35 {ax y1 y2 y1' y2' : V3} {t : ℝ}
+    (hy1 : y1 = y1' + t • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t • ax)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0) :
+    dist y1 y2 = dist y1' y2' := by
+  have hsplit := pmOrthoOffTwoPythDist_p35 hy1 hy1o hy2 hy2o
+  norm_num at hsplit
+  rcases lt_or_ge (dist y1 y2) (dist y1' y2') with hlt | hge
+  · have hlt2 : dist y1 y2 ^ 2 < dist y1' y2' ^ 2 :=
+      (sq_lt_sq₀ (by simp : (0:ℝ) ≤ dist y1 y2)
+        (by simp : (0:ℝ) ≤ dist y1' y2')).mpr hlt
+    linarith
+  · have hge2 : dist y1' y2' ^ 2 ≤ dist y1 y2 ^ 2 :=
+      pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist y1' y2') hge 2
+    linarith
+
+/-- (pm14) **The clean far window**: ANY axis-orthogonal pair at chord
+`<= cstab` meets under an azimuth capped by the exact-norm `arccos`
+fraction — no annulus data needed (the in-stack far windows pin the
+constants `2719/3969` and `−10601/80000` through the annulus bounds;
+this form keeps the norms free for the projected pairs whose norms are
+not annulus bounds). -/
+private theorem pmOrthoOffAzimWindowFar_p35 {ax p q : V3} (hax0 : ax ≠ (0:V3))
+    (hp0 : p ≠ (0:V3)) (hq0 : q ≠ (0:V3))
+    (hP : (p : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hQ : (q : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hd : dist p q ≤ cstab)
+    (hπ : azim 0 ax p q ≤ Real.pi) :
+    azim 0 ax p q
+      ≤ Real.arccos ((‖p‖ ^ 2 + ‖q‖ ^ 2 - cstab ^ 2) / (2 * (‖p‖ * ‖q‖))) := by
+  have hncp := pmAxisOrthoNC_p35 hax0 hp0 hP
+  have hncq := pmAxisOrthoNC_p35 hax0 hq0 hQ
+  have hcos := pmAzimOrthoCos_p35 hax0 hp0 hq0 hncp hncq hP hQ
+  have hdot := pmDotNormDist_p35 p q
+  have hstep : (‖p‖ ^ 2 + ‖q‖ ^ 2 - cstab ^ 2) / 2
+      ≤ Real.cos (azim 0 ax p q) * (‖p‖ * ‖q‖) := by
+    rw [hcos, hdot]
+    have h1 : dist p q ^ 2 ≤ cstab ^ 2 :=
+      pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist p q) hd 2
+    linarith
+  have hd0 : (‖p‖ * ‖q‖ : ℝ) ≠ 0 := ne_of_gt
+    (mul_pos (norm_pos_iff.mpr hp0) (norm_pos_iff.mpr hq0))
+  have hkey : (‖p‖ ^ 2 + ‖q‖ ^ 2 - cstab ^ 2) / (2 * (‖p‖ * ‖q‖))
+      ≤ Real.cos (azim 0 ax p q) := by
+    have h2 := pmOrthoOffDivBridge_p35 (‖p‖ ^ 2 + ‖q‖ ^ 2 - cstab ^ 2)
+      (‖p‖ * ‖q‖) hd0
+    exact le_of_mul_le_mul_right (by rw [h2]; exact hstep)
+      (mul_pos (norm_pos_iff.mpr hp0) (norm_pos_iff.mpr hq0))
+  exact pmOrthoOffAzimLeOfCosGe_p35 hπ hkey
+
+/-- (pm14) **The lifted-step near window**: the chord-`2` bound on the
+LIFTED chord `dist u y` shifts the lower `arccos` window of the
+projected azimuth by the squared height `t ^ 2 * ‖ax‖ ^ 2`.  This is
+the azimuth-form twin of the pm13 dot window `pmOrthoOffDotLe_p35`. -/
+private theorem pmOrthoOffStepAzimGe_p35 {ax u y y' : V3} {t : ℝ}
+    (hax0 : ax ≠ (0:V3)) (hu0 : u ≠ (0:V3)) (hy0 : y' ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hyo : (y' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy : y = y' + t • ax)
+    (hge : (2:ℝ) ≤ dist u y)
+    (hπ : azim 0 ax u y' ≤ Real.pi) :
+    Real.arccos ((‖u‖ ^ 2 + ‖y'‖ ^ 2 - 4 + t ^ 2 * ‖ax‖ ^ 2)
+        / (2 * (‖u‖ * ‖y'‖))) ≤ azim 0 ax u y' := by
+  have hncu := pmAxisOrthoNC_p35 hax0 hu0 hU
+  have hncy := pmAxisOrthoNC_p35 hax0 hy0 hyo
+  have hcos := pmAzimOrthoCos_p35 hax0 hu0 hy0 hncu hncy hU hyo
+  have hwin := pmOrthoOffDotLe_p35 hU hy hyo hge
+  have hstep : Real.cos (azim 0 ax u y') * (‖u‖ * ‖y'‖)
+      ≤ (‖u‖ ^ 2 + ‖y'‖ ^ 2 - 4 + t ^ 2 * ‖ax‖ ^ 2) / 2 := by
+    rw [hcos]; linarith
+  have hd0 : (‖u‖ * ‖y'‖ : ℝ) ≠ 0 := ne_of_gt
+    (mul_pos (norm_pos_iff.mpr hu0) (norm_pos_iff.mpr hy0))
+  have hkey : Real.cos (azim 0 ax u y')
+      ≤ (‖u‖ ^ 2 + ‖y'‖ ^ 2 - 4 + t ^ 2 * ‖ax‖ ^ 2) / (2 * (‖u‖ * ‖y'‖)) := by
+    have h2 := pmOrthoOffDivBridge_p35
+      (‖u‖ ^ 2 + ‖y'‖ ^ 2 - 4 + t ^ 2 * ‖ax‖ ^ 2) (‖u‖ * ‖y'‖) hd0
+    exact le_of_mul_le_mul_right (by rw [h2]; exact hstep)
+      (mul_pos (norm_pos_iff.mpr hu0) (norm_pos_iff.mpr hy0))
+  exact pmOrthoOffAzimGeOfCosLe_p35 hπ hkey
+
+/-- (pm14) **The lifted-pair near window**: the chord-`2` bound on the
+lifted pair chord shifts the lower `arccos` window of the projected
+azimuth by the squared height DIFFERENCE `(t1 - t2) ^ 2 * ‖ax‖ ^ 2`. -/
+private theorem pmOrthoOffTwoStepAzimGe_p35 {ax y1 y2 y1' y2' : V3} {t1 t2 : ℝ}
+    (hax0 : ax ≠ (0:V3)) (hy10 : y1' ≠ (0:V3)) (hy20 : y2' ≠ (0:V3))
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy2 : y2 = y2' + t2 • ax)
+    (hge : (2:ℝ) ≤ dist y1 y2)
+    (hπ : azim 0 ax y1' y2' ≤ Real.pi) :
+    Real.arccos ((‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2)
+        / (2 * (‖y1'‖ * ‖y2'‖))) ≤ azim 0 ax y1' y2' := by
+  have hncy1 := pmAxisOrthoNC_p35 hax0 hy10 hy1o
+  have hncy2 := pmAxisOrthoNC_p35 hax0 hy20 hy2o
+  have hcos := pmAzimOrthoCos_p35 hax0 hy10 hy20 hncy1 hncy2 hy1o hy2o
+  have hwin := pmOrthoOffTwoDotLe_p35 hy1 hy1o hy2 hy2o hge
+  have hstep : Real.cos (azim 0 ax y1' y2') * (‖y1'‖ * ‖y2'‖)
+      ≤ (‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2) / 2 := by
+    rw [hcos]; linarith
+  have hd0 : (‖y1'‖ * ‖y2'‖ : ℝ) ≠ 0 := ne_of_gt
+    (mul_pos (norm_pos_iff.mpr hy10) (norm_pos_iff.mpr hy20))
+  have hkey : Real.cos (azim 0 ax y1' y2')
+      ≤ (‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2)
+        / (2 * (‖y1'‖ * ‖y2'‖)) := by
+    have h2 := pmOrthoOffDivBridge_p35
+      (‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2)
+      (‖y1'‖ * ‖y2'‖) hd0
+    exact le_of_mul_le_mul_right (by rw [h2]; exact hstep)
+      (mul_pos (norm_pos_iff.mpr hy10) (norm_pos_iff.mpr hy20))
+  exact pmOrthoOffAzimGeOfCosLe_p35 hπ hkey
+
+/-- (pm14) **THE INTERMEDIATE-ARC WINDOW PACKAGE** (the (iii) capstone):
+the full `d = 3` arc `u → y1 → y2 → w` with the diagonal endpoints
+`u, w` in the axis plane, both intermediate points lifted
+(`y1 = y1' + t1 • ax`, `y2 = y2' + t2 • ax`), the three consecutive
+chords in `[2, cstab]`, the direction-feed order premises on the
+projected azimuths — packages the chain displacement
+`azim u w = azim u y1' + azim y1' y2' + azim y2' w` together with ALL
+SIX windows: each projected step is capped by the clean far window
+(the chord bound inherits through the projection) and floored by the
+height-shifted near window (the chord-`2` bound on the LIFTED chord
+shifts by `t ^ 2 * ‖ax‖ ^ 2` resp. the difference shift).  This is the
+single call the winding assembly makes per intermediate arc; the
+remaining kill (radius-dependent window squeeze, `k ∈ {5, 6}` gap,
+wrap `Σ = 2π`) is the next lane's input. -/
+private theorem pmOrthoOffMidArcWindows_p35 {ax u w y1 y2 y1' y2' : V3}
+    {t1 t2 : ℝ}
+    (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hw0 : w ≠ (0:V3))
+    (hy10 : y1' ≠ (0:V3)) (hy20 : y2' ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1 : y1 = y1' + t1 • ax) (hy2 : y2 = y2' + t2 • ax)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab)
+    (e3 : dist y2 w ≤ cstab)
+    (f1 : (2:ℝ) ≤ dist u y1) (f2 : (2:ℝ) ≤ dist y1 y2)
+    (f3 : (2:ℝ) ≤ dist y2 w)
+    (h1 : azim 0 ax u y1' ≤ azim 0 ax u y2')
+    (h2 : azim 0 ax u y2' ≤ azim 0 ax u w)
+    (hp1 : azim 0 ax u y1' ≤ Real.pi) (hp2 : azim 0 ax y1' y2' ≤ Real.pi)
+    (hp3 : azim 0 ax y2' w ≤ Real.pi) :
+    azim 0 ax u w
+      = azim 0 ax u y1' + azim 0 ax y1' y2' + azim 0 ax y2' w
+    ∧ azim 0 ax u y1'
+        ≤ Real.arccos ((‖u‖ ^ 2 + ‖y1'‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖u‖ * ‖y1'‖)))
+    ∧ Real.arccos ((‖u‖ ^ 2 + ‖y1'‖ ^ 2 - 4 + t1 ^ 2 * ‖ax‖ ^ 2)
+          / (2 * (‖u‖ * ‖y1'‖))) ≤ azim 0 ax u y1'
+    ∧ azim 0 ax y1' y2'
+        ≤ Real.arccos ((‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖y1'‖ * ‖y2'‖)))
+    ∧ Real.arccos ((‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + (t1 - t2) ^ 2 * ‖ax‖ ^ 2)
+          / (2 * (‖y1'‖ * ‖y2'‖))) ≤ azim 0 ax y1' y2'
+    ∧ azim 0 ax y2' w
+        ≤ Real.arccos ((‖y2'‖ ^ 2 + ‖w‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖y2'‖ * ‖w‖)))
+    ∧ Real.arccos ((‖w‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + t2 ^ 2 * ‖ax‖ ^ 2)
+          / (2 * (‖y2'‖ * ‖w‖))) ≤ azim 0 ax y2' w := by
+  have hncu := pmAxisOrthoNC_p35 hax0 hu0 hU
+  have hncw := pmAxisOrthoNC_p35 hax0 hw0 hW
+  have hncy1 := pmAxisOrthoNC_p35 hax0 hy10 hy1o
+  have hncy2 := pmAxisOrthoNC_p35 hax0 hy20 hy2o
+  -- the projected chords inherit the far bounds
+  have hd1' : dist u y1' ≤ cstab := pmOrthoOffProjChordLe_p35 hU hy1 hy1o e1
+  have hd3' : dist w y2' ≤ cstab := by
+    refine pmOrthoOffProjChordLe_p35 hW hy2 hy2o ?_
+    rw [dist_comm]
+    exact e3
+  have hspl := pmOrthoOffTwoPythDist_p35 hy1 hy1o hy2 hy2o
+  have hsqn : (0:ℝ) ≤ (t1 - t2) ^ 2 * ‖ax‖ ^ 2 :=
+    mul_nonneg (sq_nonneg (t1 - t2)) (sq_nonneg ‖ax‖)
+  have hd12 : dist y1' y2' ≤ cstab := by
+    have hsq : dist y1 y2 ^ 2 ≤ cstab ^ 2 :=
+      pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist y1 y2) e2 2
+    have hsq2 : dist y1' y2' ^ 2 ≤ cstab ^ 2 := by linarith
+    by_contra hcon
+    have hgt : cstab < dist y1' y2' := not_le.mp hcon
+    have hc0 : (0:ℝ) ≤ cstab := le_of_lt (by norm_num [cstab])
+    have hlt : cstab ^ 2 < dist y1' y2' ^ 2 :=
+      (sq_lt_sq₀ hc0 (by simp : (0:ℝ) ≤ dist y1' y2')).mpr hgt
+    linarith
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact pmOrthoArcChain3_p35 hax0 hncu hncy1 hncy2 hncw h1 h2
+  · exact pmOrthoOffAzimWindowFar_p35 hax0 hu0 hy10 hU hy1o hd1' hp1
+  · exact pmOrthoOffStepAzimGe_p35 hax0 hu0 hy10 hU hy1o hy1 f1 hp1
+  · exact pmOrthoOffAzimWindowFar_p35 hax0 hy10 hy20 hy1o hy2o hd12 hp2
+  · exact pmOrthoOffTwoStepAzimGe_p35 hax0 hy10 hy20 hy1o hy2o hy1 hy2 f2 hp2
+  · -- far window for the (y2', w) step: the chord bound inherits through
+    -- the projection; the dot window is read at the in-plane endpoint and
+    -- commuted to the arc direction
+    have hcosF := pmAzimOrthoCos_p35 hax0 hy20 hw0 hncy2 hncw hy2o hW
+    have hdotF := pmDotNormDist_p35 w y2'
+    have hcomm : ((y2' : Fin 3 → ℝ) ⬝ᵥ (w : Fin 3 → ℝ))
+        = ((w : Fin 3 → ℝ) ⬝ᵥ (y2' : Fin 3 → ℝ)) :=
+      dotProduct_comm (y2' : Fin 3 → ℝ) (w : Fin 3 → ℝ)
+    have hstepF : (‖y2'‖ ^ 2 + ‖w‖ ^ 2 - cstab ^ 2) / 2
+        ≤ Real.cos (azim 0 ax y2' w) * (‖y2'‖ * ‖w‖) := by
+      rw [hcosF, hcomm, hdotF]
+      have h1' : dist w y2' ^ 2 ≤ cstab ^ 2 :=
+        pow_le_pow_left₀ (by simp : (0:ℝ) ≤ dist w y2') hd3' 2
+      linarith
+    have hd0F : (‖y2'‖ * ‖w‖ : ℝ) ≠ 0 := ne_of_gt
+      (mul_pos (norm_pos_iff.mpr hy20) (norm_pos_iff.mpr hw0))
+    have hkeyF : (‖y2'‖ ^ 2 + ‖w‖ ^ 2 - cstab ^ 2) / (2 * (‖y2'‖ * ‖w‖))
+        ≤ Real.cos (azim 0 ax y2' w) := by
+      have hbr := pmOrthoOffDivBridge_p35 (‖y2'‖ ^ 2 + ‖w‖ ^ 2 - cstab ^ 2)
+        (‖y2'‖ * ‖w‖) hd0F
+      exact le_of_mul_le_mul_right (by rw [hbr]; exact hstepF)
+        (mul_pos (norm_pos_iff.mpr hy20) (norm_pos_iff.mpr hw0))
+    exact pmOrthoOffAzimLeOfCosGe_p35 hp3 hkeyF
+  · -- near window for the (y2', w) step: the chord-2 bound on the lifted
+    -- pair (w, y2) shifts by the y2-height
+    have hcos := pmAzimOrthoCos_p35 hax0 hy20 hw0 hncy2 hncw hy2o hW
+    have hwin := pmOrthoOffDotLe_p35 hW hy2 hy2o (by rw [dist_comm]; exact f3)
+    have hstep : Real.cos (azim 0 ax y2' w) * (‖y2'‖ * ‖w‖)
+        ≤ (‖w‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + t2 ^ 2 * ‖ax‖ ^ 2) / 2 := by
+      rw [hcos, dotProduct_comm (y2' : Fin 3 → ℝ) (w : Fin 3 → ℝ)]; linarith
+    have hd0 : (‖y2'‖ * ‖w‖ : ℝ) ≠ 0 := ne_of_gt
+      (mul_pos (norm_pos_iff.mpr hy20) (norm_pos_iff.mpr hw0))
+    have hkey : Real.cos (azim 0 ax y2' w)
+        ≤ (‖w‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + t2 ^ 2 * ‖ax‖ ^ 2)
+          / (2 * (‖y2'‖ * ‖w‖)) := by
+      have hbr := pmOrthoOffDivBridge_p35
+        (‖w‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + t2 ^ 2 * ‖ax‖ ^ 2) (‖y2'‖ * ‖w‖) hd0
+      exact le_of_mul_le_mul_right (by rw [hbr]; exact hstep)
+        (mul_pos (norm_pos_iff.mpr hy20) (norm_pos_iff.mpr hw0))
+    exact pmOrthoOffAzimGeOfCosLe_p35 hp3 hkey
+
+-- pm14 axcheck tail (probe only; dropped from the kit proper)
+/-! ## planemiss15 rungs (lkgrqui-planemiss15-w3, 2026-10-28)
+
+The (iii) branch continues with the two residual sub-blocks of the
+off-plane intermediate-point account.  **(iii-b) the in-plane partner
+specialization**: when the arc tail `y2` sits IN the axis plane
+(`t2 = 0`), the pm13 height ceiling instantiates at the `(u, y2)` (resp.
+`(w, y2)`) pair — the lifted `y1` has both its chords ring-bounded, so its
+squared height drops under `cstab ^ 2 - dist u y2 ^ 2 / 4` (numeric form
+`<= cstab ^ 2 - 1`), the projected radius picks up the coupling floor
+`4 - cstab ^ 2 + dist u y2 ^ 2 / 4`, the step-2 near window degenerates to
+the plain `t1`-shift, and a failed (iii-a) clamp quadrant forces the
+narrowed norm cap `norm y1 ^ 2 < cstab ^ 2 + 25 / 4 - dist u y2 ^ 2 / 4`.
+**(iii-a) the radius-coupled window squeeze, conditional-form core**: the
+pm14 warning stands — ONE arc of four-point window data has free
+instances, so the kill consumes the SECOND arc plus the wrap
+`Sigma = 2 * pi`.  Engine: a projected pair with both norms `>= 2` and one
+`>= 5/2` has its clean far window squeezed under `arccos (11899/100000)`
+(`11899/100000` is the exact minimum of `(p^2 + q^2 - cstab^2)/(2 p q)` on
+that region, attained at `(2, 5/2)`); three such steps sum under
+`3 * phi`, `phi := arccos (11899/100000)`, and the triple-angle identity
+gives `3 * phi < 2 * pi - beta` (`cos (3 phi) = 4 c^3 - 3 c
+<= -35023/100000 < -10601/80000 = cos beta`), so EITHER arc's displacement
+is too short against the far-arc split on the in-plane diagonal pair
+`(w, u)` — both branches die through `azim_compl`.  The honest residual of
+(iii-a): the sub-`5/2` projection quadrant (some lifted projection below
+the clamp — the pm9 tiny-azimuth phenomenon) is NOT killed here; the
+(iii-b) in-plane-partner coupling pieces are its designated feed.  All
+pieces are new lemmas with zero `sorry`; the residual root
+`pmPlaneCrowding_p35` is untouched. -/
+
+/-- (pm15, iii-b) **In-plane-partner ceiling, `u`-form**: with the arc tail
+`y2` in the axis plane (`t2 = 0`), the pm13 height ceiling applies at the
+pair `(u, y2)` — both chords `u-y1` and `y1-y2` are ring-bounded, so the
+lifted `y1`'s squared height drops under `cstab ^ 2 - dist u y2 ^ 2 / 4`. -/
+private theorem pmOrthoOffInPlaneCeilU_p35 {ax u y1 y2 y1' y2' : V3}
+    {t1 t2 : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax) (ht2 : t2 = 0)
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab) :
+    t1 ^ 2 * ‖ax‖ ^ 2 ≤ cstab ^ 2 - dist u y2 ^ 2 / 4 := by
+  have hy2z : y2 = y2' := by rw [hy2, ht2, zero_smul, add_zero]
+  have hY2 : ((y2 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ)) = 0 := by
+    rw [hy2z]; exact hy2o
+  exact pmOrthoOffHeightSqLe_p35 hU hY2 hy1 hy1o e1
+    (by rw [dist_comm]; exact e2)
+
+/-- (pm15, iii-b) **In-plane-partner ceiling, `w`-form**: the same
+instantiation at the pair `(w, y2)` — the skip chord `y1-w` is the second
+ring-bounded chord. -/
+private theorem pmOrthoOffInPlaneCeilW_p35 {ax u w y1 y2 y1' y2' : V3}
+    {t1 t2 : ℝ}
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax) (ht2 : t2 = 0)
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (ew1 : dist y1 w ≤ cstab) (e2 : dist y1 y2 ≤ cstab) :
+    t1 ^ 2 * ‖ax‖ ^ 2 ≤ cstab ^ 2 - dist w y2 ^ 2 / 4 := by
+  have hy2z : y2 = y2' := by rw [hy2, ht2, zero_smul, add_zero]
+  have hY2 : ((y2 : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ)) = 0 := by
+    rw [hy2z]; exact hy2o
+  exact pmOrthoOffHeightSqLe_p35 hW hY2 hy1 hy1o
+    (by rw [dist_comm]; exact ew1) (by rw [dist_comm]; exact e2)
+
+/-- (pm15, iii-b) **In-plane-partner ceiling, numeric form**: with the ring
+chord `dist u y2 >= 2` (the ring-distance-2 `a`-conjunct) the squared
+height is at most `cstab ^ 2 - 1`. -/
+private theorem pmOrthoOffInPlaneCeilNum_p35 {ax u w y1 y2 y1' y2' : V3}
+    {t1 t2 : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax) (ht2 : t2 = 0)
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab)
+    (h2d : (2:ℝ) ≤ dist u y2) :
+    t1 ^ 2 * ‖ax‖ ^ 2 ≤ cstab ^ 2 - 1 := by
+  have h := pmOrthoOffInPlaneCeilU_p35 hU hy2o hy2 ht2 hy1 hy1o e1 e2
+  have h4 : (2:ℝ) ^ 2 ≤ dist u y2 ^ 2 := pow_le_pow_left₀ (by norm_num) h2d 2
+  norm_num at h4
+  linarith
+
+/-- (pm15, iii-b) **Radius-coupling floor**: the ceiling lifts to a floor
+on the projected radius — `norm y1' ^ 2 >= 4 - cstab ^ 2
++ dist u y2 ^ 2 / 4`: the larger the skip chord, the larger the projection
+of the lifted point (the `(norm y1', h1)` quadrant-clamp readout feeding
+(iii-a)). -/
+private theorem pmOrthoOffInPlaneProjFloor_p35 {ax u w y1 y2 y1' y2' : V3}
+    {t1 t2 : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax) (ht2 : t2 = 0)
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab)
+    (h12 : (2:ℝ) ≤ ‖y1‖) :
+    (4:ℝ) - cstab ^ 2 + dist u y2 ^ 2 / 4 ≤ ‖y1'‖ ^ 2 := by
+  have hn := pmOrthoPythNorm_p35 hy1 hy1o
+  have h4 : (2:ℝ) ^ 2 ≤ ‖y1‖ ^ 2 := pow_le_pow_left₀ (by norm_num) h12 2
+  norm_num at h4
+  have hceil := pmOrthoOffInPlaneCeilU_p35 hU hy2o hy2 ht2 hy1 hy1o e1 e2
+  linarith
+
+/-- (pm15, iii-b) **Degenerate step-2 near window**: with `t2 = 0` the
+two-point height-DIFFERENCE shift collapses to the plain `t1`-shift — the
+step-2 near window reads `arccos((norm y1' ^ 2 + norm y2' ^ 2 - 4 +
+t1 ^ 2 * norm ax ^ 2) / (2 * norm y1' * norm y2')) <= azim y1' y2'`. -/
+private theorem pmOrthoOffInPlaneTwoNear_p35 {ax y1 y2 y1' y2' : V3}
+    {t1 t2 : ℝ}
+    (hax0 : ax ≠ (0:V3)) (hy10 : y1' ≠ (0:V3)) (hy20 : y2' ≠ (0:V3))
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1 : y1 = y1' + t1 • ax) (hy2 : y2 = y2' + t2 • ax) (ht2 : t2 = 0)
+    (f2 : (2:ℝ) ≤ dist y1 y2)
+    (hπ : azim 0 ax y1' y2' ≤ Real.pi) :
+    Real.arccos ((‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - 4 + t1 ^ 2 * ‖ax‖ ^ 2)
+        / (2 * (‖y1'‖ * ‖y2'‖))) ≤ azim 0 ax y1' y2' := by
+  have hwin := pmOrthoOffTwoStepAzimGe_p35 hax0 hy10 hy20 hy1o hy2o hy1 hy2 f2 hπ
+  rwa [ht2, sub_zero] at hwin
+
+/-- (pm15, iii-b) **Failed-clamp quadrant readout**: if the projection
+fails the (iii-a) clamp (`norm y1' < 5/2`), the lifted norm is capped —
+`norm y1 ^ 2 < cstab ^ 2 + 25 / 4 - dist u y2 ^ 2 / 4` (numerically under
+`14.32`, i.e. the vertex sits in the narrow annulus `norm y1 < 3.79`):
+the small-projection quadrant is a genuinely thinner configuration. -/
+private theorem pmOrthoOffInPlaneSmallProjNorm_p35 {ax u w y1 y2 y1' y2' : V3}
+    {t1 t2 : ℝ}
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax) (ht2 : t2 = 0)
+    (hy1 : y1 = y1' + t1 • ax)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab)
+    (h12 : (2:ℝ) ≤ ‖y1‖) (hlt : ‖y1'‖ < (5:ℝ) / 2) :
+    ‖y1‖ ^ 2 < cstab ^ 2 + 25 / 4 - dist u y2 ^ 2 / 4 := by
+  have hn := pmOrthoPythNorm_p35 hy1 hy1o
+  have hsq : ‖y1'‖ ^ 2 < ((5:ℝ) / 2) ^ 2 :=
+    (sq_lt_sq₀ (norm_nonneg y1') (by norm_num)).mpr hlt
+  have hconv : ((5:ℝ) / 2) ^ 2 = 25 / 4 := by norm_num
+  rw [hconv] at hsq
+  have hceil := pmOrthoOffInPlaneCeilU_p35 hU hy2o hy2 ht2 hy1 hy1o e1 e2
+  linarith
+
+/-- (pm15, iii-a) **Fraction cap, one-sided form**: for `2 <= p` and
+`5/2 <= q` the clean far-window fraction is at least `11899/100000` — the
+exact minimum of `(p ^ 2 + q ^ 2 - cstab ^ 2) / (2 * p * q)` on that
+region, attained at `(p, q) = (2, 5/2)`.  Proof: the substitution
+`a = p - 2`, `b = q - 5/2` expands `100000 * (p ^ 2 + q ^ 2)
+- 23798 * p * q - 906010` into `100000 * (a - b) ^ 2 + 176202 * a * b +
+340505 * a + 452404 * b >= 0`. -/
+private theorem pmOrthoOffCapFracAux_p35 {p q : ℝ} (h2p : (2:ℝ) ≤ p)
+    (h2q : (5:ℝ) / 2 ≤ q) :
+    (11899:ℝ) / 100000 ≤ (p ^ 2 + q ^ 2 - cstab ^ 2) / (2 * (p * q)) := by
+  have hcs : cstab = 301 / 100 := by norm_num [cstab]
+  rw [hcs]
+  have hsqc : ((301:ℝ) / 100) ^ 2 = 90601 / 10000 := by norm_num
+  rw [hsqc]
+  have h1 : (0:ℝ) ≤ p - 2 := by linarith
+  have h2 : (0:ℝ) ≤ q - 5 / 2 := by linarith
+  have hab : (0:ℝ) ≤ (p - 2) * (q - 5 / 2) := mul_nonneg h1 h2
+  have hsqd : (0:ℝ) ≤ (p - 2) * (p - 2) + (q - 5 / 2) * (q - 5 / 2)
+      - 2 * ((p - 2) * (q - 5 / 2)) := by
+    have hd : ((p - 2) - (q - 5 / 2)) ^ 2
+        = (p - 2) * (p - 2) + (q - 5 / 2) * (q - 5 / 2)
+          - 2 * ((p - 2) * (q - 5 / 2)) := by
+      rw [pow_two]; ring
+    rw [← hd]; exact sq_nonneg _
+  have hkey : (11899:ℝ) / 100000 * (2 * (p * q))
+      ≤ p ^ 2 + q ^ 2 - 90601 / 10000 := by
+    have hexp : (100000:ℝ) * (p ^ 2 + q ^ 2) - 23798 * (p * q) - 906010
+        = 100000 * ((p - 2) * (p - 2) + (q - 5 / 2) * (q - 5 / 2)
+              - 2 * ((p - 2) * (q - 5 / 2)))
+          + 176202 * ((p - 2) * (q - 5 / 2)) + 340505 * (p - 2)
+            + 452404 * (q - 5 / 2) := by
+      ring
+    have hpos : (0:ℝ) ≤ (100000:ℝ) * (p ^ 2 + q ^ 2) - 23798 * (p * q)
+        - 906010 := by rw [hexp]; linarith
+    linarith
+  have hprod : (0:ℝ) < p * q := by
+    have a1 : (0:ℝ) < p := lt_of_lt_of_le (by norm_num) h2p
+    have a2 : (0:ℝ) < q := lt_of_lt_of_le (by norm_num) h2q
+    exact mul_pos a1 a2
+  rw [le_div_iff₀ (show (0:ℝ) < 2 * (p * q) from by linarith)]
+  linarith
+
+/-- (pm15, iii-a) **Fraction cap, symmetric form**: two norms both `>= 2`
+with at least one `>= 5/2` meet the far-window fraction bound
+`11899/100000`. -/
+private theorem pmOrthoOffCapFrac_p35 {p q : ℝ} (h2p : (2:ℝ) ≤ p)
+    (h2q : (2:ℝ) ≤ q) (hmax : (5:ℝ) / 2 ≤ p ∨ (5:ℝ) / 2 ≤ q) :
+    (11899:ℝ) / 100000 ≤ (p ^ 2 + q ^ 2 - cstab ^ 2) / (2 * (p * q)) := by
+  rcases hmax with hm | hm
+  · have h := pmOrthoOffCapFracAux_p35 h2q hm
+    rwa [show (q ^ 2 + p ^ 2 - cstab ^ 2) / (2 * (q * p))
+        = (p ^ 2 + q ^ 2 - cstab ^ 2) / (2 * (p * q)) from by ring] at h
+  · exact pmOrthoOffCapFracAux_p35 h2p hm
+
+/-- (pm15, iii-a) **Step cap**: the clean far window of a clamped
+projected pair collapses to the uniform cap `arccos (11899/100000)`. -/
+private theorem pmOrthoOffStepCap_p35 {ax p q : V3}
+    (h2p : (2:ℝ) ≤ ‖p‖) (h2q : (2:ℝ) ≤ ‖q‖)
+    (hmax : (5:ℝ) / 2 ≤ ‖p‖ ∨ (5:ℝ) / 2 ≤ ‖q‖)
+    (hwin : azim 0 ax p q
+      ≤ Real.arccos ((‖p‖ ^ 2 + ‖q‖ ^ 2 - cstab ^ 2) / (2 * (‖p‖ * ‖q‖)))) :
+    azim 0 ax p q ≤ Real.arccos ((11899:ℝ) / 100000) :=
+  le_trans hwin (Real.arccos_le_arccos (pmOrthoOffCapFrac_p35 h2p h2q hmax))
+
+/-- (pm15, iii-a) Triple-angle identity (private `sin`-free route through
+both `cos 2x` forms). -/
+private theorem pmOrthoCosThreeMul_p35 (x : ℝ) :
+    Real.cos (3 * x) = 4 * Real.cos x ^ 3 - 3 * Real.cos x := by
+  have h1 : Real.cos (3 * x) = Real.cos (2 * x + x) := by congr 1; ring
+  rw [h1, Real.cos_add, Real.cos_two_mul, Real.sin_two_mul]
+  have hA := Real.cos_two_mul x
+  have hB := Real.cos_two_mul' x
+  have hs2 : Real.sin x ^ 2 = 1 - Real.cos x ^ 2 := by linarith
+  linear_combination -2 * Real.cos x * hs2
+
+/-- (pm15, iii-a) **The three-step window engine**: each of the three steps
+capped by `phi := arccos (11899/100000)` sums with the far constant `beta`
+to less than the full turn — `3 * phi < 2 * pi - beta` because
+`cos (3 phi) = 4 c ^ 3 - 3 c <= -35023/100000 < -10601/80000 = cos beta`
+and cosine is decreasing on `[0, pi]`. -/
+private theorem pmOrthoOffArcThreeCap_p35 {S1 S2 S3 : ℝ}
+    (h1 : S1 ≤ Real.arccos ((11899:ℝ) / 100000))
+    (h2 : S2 ≤ Real.arccos ((11899:ℝ) / 100000))
+    (h3 : S3 ≤ Real.arccos ((11899:ℝ) / 100000)) :
+    S1 + S2 + S3 + Real.arccos (-(10601 / 80000)) < 2 * Real.pi := by
+  have hp3 : Real.arccos ((1:ℝ) / 2) = Real.pi / 3 := by
+    rw [← Real.arccos_cos (show (0:ℝ) ≤ Real.pi / 3 from by linarith [Real.pi_pos])
+      (show Real.pi / 3 ≤ Real.pi from by linarith [Real.pi_pos]),
+      pmOrthoTriCosPi3_p35]
+  have h23 : Real.arccos (-(1 / 2:ℝ)) = 2 * Real.pi / 3 := by
+    rw [← Real.arccos_cos (show (0:ℝ) ≤ 2 * Real.pi / 3 from by linarith [Real.pi_pos])
+      (show 2 * Real.pi / 3 ≤ Real.pi from by linarith [Real.pi_pos]),
+      pmOrthoTriCos23_p35]
+  have hφge : Real.pi / 3 ≤ Real.arccos ((11899:ℝ) / 100000) := by
+    have h := Real.arccos_le_arccos (show (11899:ℝ) / 100000 ≤ (1:ℝ) / 2 by norm_num)
+    rwa [hp3] at h
+  have hφle : Real.arccos ((11899:ℝ) / 100000) ≤ 2 * Real.pi / 3 := by
+    have h := Real.arccos_le_arccos (show (-(1 / 2:ℝ)) ≤ (11899:ℝ) / 100000 by norm_num)
+    rwa [h23] at h
+  have hπle : Real.pi ≤ 3 * Real.arccos ((11899:ℝ) / 100000) := by linarith
+  have h2π : 3 * Real.arccos ((11899:ℝ) / 100000) ≤ 2 * Real.pi := by linarith
+  have hcos3 : Real.cos (3 * Real.arccos ((11899:ℝ) / 100000))
+      ≤ -(35023:ℝ) / 100000 := by
+    rw [pmOrthoCosThreeMul_p35,
+      Real.cos_arccos (by norm_num : (-1:ℝ) ≤ 11899 / 100000)
+        (by norm_num : (11899:ℝ) / 100000 ≤ 1)]
+    norm_num
+  have hper : Real.cos (2 * Real.pi - 3 * Real.arccos ((11899:ℝ) / 100000))
+      = Real.cos (3 * Real.arccos ((11899:ℝ) / 100000)) := by
+    rw [Real.cos_sub, Real.cos_two_pi, Real.sin_two_pi]
+    ring
+  have hrev : Real.arccos (-(10601 / 80000))
+      < 2 * Real.pi - 3 * Real.arccos ((11899:ℝ) / 100000) := by
+    by_contra hge
+    have hle : 2 * Real.pi - 3 * Real.arccos ((11899:ℝ) / 100000)
+        ≤ Real.arccos (-(10601 / 80000)) := le_of_not_gt hge
+    have hm := pmOrthoTriCosMono_p35
+      (show (0:ℝ) ≤ 2 * Real.pi - 3 * Real.arccos ((11899:ℝ) / 100000) from by linarith)
+      hle (show Real.arccos (-(10601 / 80000)) ≤ Real.pi from Real.arccos_le_pi _)
+    rw [hper] at hm
+    have hcβ : Real.cos (Real.arccos (-(10601 / 80000))) = -(10601 / 80000) :=
+      Real.cos_arccos (by norm_num) (by norm_num)
+    linarith
+  linarith
+
+/-- (pm15, iii-a) **The single-arc big-kill**: an arc `u -> y1' -> y2' -> w`
+whose three projected steps carry the pm14 clean far windows and whose four
+norms meet the clamp (all `>= 2`, the lifted projections `>= 5/2`) has
+displacement strictly below `2 * pi - beta`. -/
+private theorem pmOrthoOffArcBigKill_p35 {ax u w y1' y2' : V3}
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hw2 : (2:ℝ) ≤ ‖w‖)
+    (cy1 : (5:ℝ) / 2 ≤ ‖y1'‖) (cy2 : (5:ℝ) / 2 ≤ ‖y2'‖)
+    (hchain : azim 0 ax u w
+      = azim 0 ax u y1' + azim 0 ax y1' y2' + azim 0 ax y2' w)
+    (hwin1 : azim 0 ax u y1'
+        ≤ Real.arccos ((‖u‖ ^ 2 + ‖y1'‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖u‖ * ‖y1'‖))))
+    (hwin2 : azim 0 ax y1' y2'
+        ≤ Real.arccos ((‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖y1'‖ * ‖y2'‖))))
+    (hwin3 : azim 0 ax y2' w
+        ≤ Real.arccos ((‖y2'‖ ^ 2 + ‖w‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖y2'‖ * ‖w‖)))) :
+    azim 0 ax u w + Real.arccos (-(10601 / 80000)) < 2 * Real.pi := by
+  have h2y1 : (2:ℝ) ≤ ‖y1'‖ := le_trans (by norm_num) cy1
+  have h2y2 : (2:ℝ) ≤ ‖y2'‖ := le_trans (by norm_num) cy2
+  have hc1 := pmOrthoOffStepCap_p35 hu2 h2y1 (Or.inr cy1) hwin1
+  have hc2 := pmOrthoOffStepCap_p35 h2y1 h2y2 (Or.inl cy1) hwin2
+  have hc3 := pmOrthoOffStepCap_p35 h2y2 hw2 (Or.inl cy2) hwin3
+  rw [hchain]
+  exact pmOrthoOffArcThreeCap_p35 hc1 hc2 hc3
+
+/-- (pm15, iii-a) **THE TWO-ARC SQUEEZE (the conditional-form core)**: the
+full `k = 6`, `d = 3` hexagon `u -> y1 -> y2 -> w -> z1 -> z2 -> u` around
+the axis with BOTH intermediate points of each arc lifted, the in-plane
+diagonal `u, w` an annulus pair at chord in `[2, cstab]`, both arcs
+carrying the direction-feed order premises (the `pmOrthoOffMidArcWindows_p35`
+input shape verbatim, both arcs), the clamp quadrant on all four lifted
+projections — then `False`.  Each arc's displacement is squeezed below
+`2 * pi - beta` (the big-kill), but the far-arc split on the diagonal puts
+one of `azim w u`, `2 * pi - azim w u` at most `beta`, i.e. the OPPOSITE
+arc's displacement at least `2 * pi - beta` — the pm14 one-arc free
+instance dies against the second arc plus the `Sigma = 2 * pi` wrap. -/
+private theorem pmOrthoOffTwoArcSqueeze_p35 {ax u w y1 y2 z1 z2 y1' y2' z1' z2' : V3}
+    {t1 t2 s1 s2 : ℝ}
+    (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hw0 : w ≠ (0:V3))
+    (hy10 : y1' ≠ (0:V3)) (hy20 : y2' ≠ (0:V3)) (hz10 : z1' ≠ (0:V3)) (hz20 : z2' ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz1o : (z1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz2o : (z2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1 : y1 = y1' + t1 • ax) (hy2 : y2 = y2' + t2 • ax)
+    (hz1 : z1 = z1' + s1 • ax) (hz2 : z2 = z2' + s2 • ax)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hua : ‖u‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwa : ‖w‖ ≤ 2 * h0)
+    (cy1 : (5:ℝ) / 2 ≤ ‖y1'‖) (cy2 : (5:ℝ) / 2 ≤ ‖y2'‖)
+    (cz1 : (5:ℝ) / 2 ≤ ‖z1'‖) (cz2 : (5:ℝ) / 2 ≤ ‖z2'‖)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab) (e3 : dist y2 w ≤ cstab)
+    (f1 : dist w z1 ≤ cstab) (f2 : dist z1 z2 ≤ cstab) (f3 : dist z2 u ≤ cstab)
+    (ed : dist u w ≤ cstab) (hdg : (2:ℝ) ≤ dist u w)
+    (r1 : (2:ℝ) ≤ dist u y1) (r2 : (2:ℝ) ≤ dist y1 y2) (r3 : (2:ℝ) ≤ dist y2 w)
+    (r4 : (2:ℝ) ≤ dist w z1) (r5 : (2:ℝ) ≤ dist z1 z2) (r6 : (2:ℝ) ≤ dist z2 u)
+    (h1 : azim 0 ax u y1' ≤ azim 0 ax u y2')
+    (h2 : azim 0 ax u y2' ≤ azim 0 ax u w)
+    (hp1 : azim 0 ax u y1' ≤ Real.pi) (hp2 : azim 0 ax y1' y2' ≤ Real.pi)
+    (hp3 : azim 0 ax y2' w ≤ Real.pi)
+    (g1 : azim 0 ax w z1' ≤ azim 0 ax w z2')
+    (g2 : azim 0 ax w z2' ≤ azim 0 ax w u)
+    (hq1 : azim 0 ax w z1' ≤ Real.pi) (hq2 : azim 0 ax z1' z2' ≤ Real.pi)
+    (hq3 : azim 0 ax z2' u ≤ Real.pi) :
+    False := by
+  have cap1 := pmOrthoOffMidArcWindows_p35 hax0 hu0 hw0 hy10 hy20 hU hW hy1o hy2o
+    hy1 hy2 e1 e2 e3 r1 r2 r3 h1 h2 hp1 hp2 hp3
+  have cap2 := pmOrthoOffMidArcWindows_p35 (u := w) (w := u) (y1 := z1) (y2 := z2)
+    (y1' := z1') (y2' := z2') (t1 := s1) (t2 := s2)
+    hax0 hw0 hu0 hz10 hz20 hW hU hz1o hz2o hz1 hz2 f1 f2 f3 r4 r5 r6 g1 g2 hq1 hq2 hq3
+  have kb1 := pmOrthoOffArcBigKill_p35 hu2 hw2 cy1 cy2
+    cap1.1 cap1.2.1 cap1.2.2.2.1 cap1.2.2.2.2.2.1
+  have kb2 := pmOrthoOffArcBigKill_p35 (u := w) (w := u) (y1' := z1') (y2' := z2')
+    hw2 hu2 cz1 cz2 cap2.1 cap2.2.1 cap2.2.2.2.1 cap2.2.2.2.2.2.1
+  have hncu := pmAxisOrthoNC_p35 hax0 hu0 hU
+  have hncw := pmAxisOrthoNC_p35 hax0 hw0 hW
+  have hwune : azim 0 ax w u ≠ 0 :=
+    pmOrthoTriAzimNe0_p35 hax0 hw0 hu0 hncw hncu hW hU hw2 hwa hu2 hua
+      (by rw [dist_comm]; exact hdg)
+  have hcompl := azim_compl (z := (0:V3)) (w := ax) (w1 := w) (w2 := u) hncw hncu
+  rw [if_neg hwune] at hcompl
+  rcases pmOrthoTriFarSplit_p35 hax0 hw0 hu0 hncw hncu hW hU hw2 hwa hu2 hua
+      (by rw [dist_comm]; exact ed) with hnear | hfar
+  · exfalso
+    rw [hcompl] at kb1
+    linarith
+  · exfalso
+    linarith
+
+-- pm15 axcheck tail (probe only; dropped from the kit proper)
+
+/-! ## planemiss16 rungs (lkgrqui-planemiss16-w3, 2026-10-28)
+
+The **sub-`5/2` projection quadrant** — the honest residual the pm15
+CAPSTONE `pmOrthoOffTwoArcSqueeze_p35` excludes through its four clamp
+hypotheses (the pm9 micro-azimuth freedom: a lifted projection of radius
+`~0.5` admits an azimuthally tiny step at chord in `[2, cstab]`).  The
+attack is a continuous scan of the clamp constant.  The pm15 fraction cap
+`11899/100000` is the exact value of the clean far-window fraction at the
+`(2, 5/2)` corner of the clamp region; the three-step engine only needs
+the fraction above `cos((2 * pi - beta) / 3) ≈ 0.0444`, and the fraction
+at the `(2, 47/20)` corner, `289/5875 ≈ 0.0492`, still clears it — so the
+entire clamp argument runs verbatim with `5/2` weakened to `47/20`:
+**the band `[47/20, 5/2)` of the sub-`5/2` quadrant is closed
+unconditionally** (the reduced CAPSTONE `pmOrthoOffTwoArcSqueezeSub25_p35`).
+For the genuinely free sub-`47/20` quadrant the wave delivers the honest
+sizing the pm9 lesson asks for: with one arc clamped at `47/20` the
+diagonal azimuth is pinned to the near wedge (`pmOrthoOffDiagNearWedge_p35`
+— the far branch dies against the clamped arc alone), and when only ONE
+projection stays sub-`47/20`, the two steps adjacent to it must sum past
+`2 * pi - beta - arccos (289/5875) ≈ 175.2°` (`pmOrthoOffSubQuadResidue_p35`)
+— any surviving configuration bends hard around the small projection.
+That pin is the feed shape the pm12 coupling account consumes.  All
+pieces are new lemmas with zero `sorry`; the residual root
+`pmPlaneCrowding_p35` is untouched. -/
+
+/-- (pm16, sub-`5/2` scan) **Fraction cap on the `47/20` band, one-sided
+form**: for `2 <= p` and `47/20 <= q` the clean far-window fraction is at
+least `289/5875` — the exact minimum of `(p ^ 2 + q ^ 2 - cstab ^ 2) /
+(2 * p * q)` on that region, attained at `(p, q) = (2, 47/20)`.  This
+weakens the pm15 clamp constant: `11899/100000` is the value at `(2, 5/2)`,
+and the value at the `(2, 47/20)` corner still clears the three-step
+engine's threshold `cos((2 * pi - beta) / 3)`.  Proof: the substitution
+`a = p - 2`, `b = q - 47/20` expands the doubled numerator into
+`11750000 * (a - b) ^ 2 + 22344000 * a * b + 44283400 * a + 52913000 * b
+>= 0`, `ring`-locked. -/
+private theorem pmOrthoOffCapFracSub25_p35 {p q : ℝ} (h2p : (2:ℝ) ≤ p)
+    (h2q : (47:ℝ) / 20 ≤ q) :
+    (289:ℝ) / 5875 ≤ (p ^ 2 + q ^ 2 - cstab ^ 2) / (2 * (p * q)) := by
+  have hcs : cstab = 301 / 100 := by norm_num [cstab]
+  rw [hcs]
+  have hsqc : ((301:ℝ) / 100) ^ 2 = 90601 / 10000 := by norm_num
+  rw [hsqc]
+  have h1 : (0:ℝ) ≤ p - 2 := by linarith
+  have h2 : (0:ℝ) ≤ q - 47 / 20 := by linarith
+  have hab : (0:ℝ) ≤ (p - 2) * (q - 47 / 20) := mul_nonneg h1 h2
+  have hsqd : (0:ℝ) ≤ (p - 2) * (p - 2) + (q - 47 / 20) * (q - 47 / 20)
+      - 2 * ((p - 2) * (q - 47 / 20)) := by
+    have hd : ((p - 2) - (q - 47 / 20)) ^ 2
+        = (p - 2) * (p - 2) + (q - 47 / 20) * (q - 47 / 20)
+          - 2 * ((p - 2) * (q - 47 / 20)) := by
+      rw [pow_two]; ring
+    rw [← hd]; exact sq_nonneg _
+  have hkey : (289:ℝ) / 5875 * (2 * (p * q))
+      ≤ p ^ 2 + q ^ 2 - 90601 / 10000 := by
+    have hexp : (11750000:ℝ) * (p ^ 2 + q ^ 2)
+        - (1156000:ℝ) * (p * q) - (106456175:ℝ)
+        = (11750000:ℝ) * ((p - 2) * (p - 2) + (q - 47 / 20) * (q - 47 / 20)
+              - 2 * ((p - 2) * (q - 47 / 20)))
+          + (22344000:ℝ) * ((p - 2) * (q - 47 / 20)) + (44283400:ℝ) * (p - 2)
+            + (52913000:ℝ) * (q - 47 / 20) := by
+      ring
+    have hpos : (0:ℝ) ≤ (11750000:ℝ) * (p ^ 2 + q ^ 2)
+        - (1156000:ℝ) * (p * q) - (106456175:ℝ) := by
+      rw [hexp]; linarith
+    linarith
+  have hprod : (0:ℝ) < p * q := by
+    have a1 : (0:ℝ) < p := lt_of_lt_of_le (by norm_num) h2p
+    have a2 : (0:ℝ) < q := lt_of_lt_of_le (by norm_num) h2q
+    exact mul_pos a1 a2
+  rw [le_div_iff₀ (show (0:ℝ) < 2 * (p * q) from by linarith)]
+  linarith
+
+/-- (pm16, sub-`5/2` scan) **Step cap on the `47/20` band**: a projected
+pair whose norms meet the band disjunction (each `>= 47/20`, with the
+diagonal-end side allowed down to the annulus bound `2 <= norm`) has its
+clean far window squeezed under the uniform cap `arccos (289/5875)`. -/
+private theorem pmOrthoOffStepCapSub25_p35 {ax p q : V3}
+    (hpair : ((2:ℝ) ≤ ‖p‖ ∧ (47:ℝ) / 20 ≤ ‖q‖)
+      ∨ ((47:ℝ) / 20 ≤ ‖p‖ ∧ (2:ℝ) ≤ ‖q‖))
+    (hwin : azim 0 ax p q
+      ≤ Real.arccos ((‖p‖ ^ 2 + ‖q‖ ^ 2 - cstab ^ 2)
+        / (2 * (‖p‖ * ‖q‖)))) :
+    azim 0 ax p q ≤ Real.arccos ((289:ℝ) / 5875) := by
+  refine le_trans hwin (Real.arccos_le_arccos ?_)
+  rcases hpair with ⟨a, b⟩ | ⟨a, b⟩
+  · exact pmOrthoOffCapFracSub25_p35 a b
+  · have h := pmOrthoOffCapFracSub25_p35 (p := ‖q‖) (q := ‖p‖) b a
+    rwa [show (‖q‖ ^ 2 + ‖p‖ ^ 2 - cstab ^ 2) / (2 * (‖q‖ * ‖p‖))
+        = (‖p‖ ^ 2 + ‖q‖ ^ 2 - cstab ^ 2) / (2 * (‖p‖ * ‖q‖)) from by ring] at h
+
+/-- (pm16, sub-`5/2` scan) **The three-step window engine, generic form**:
+with a uniform step cap `arccos c` whose triple angle beats the far
+constant (`cos (3 * arccos c) <= d < -10601/80000 = cos beta`, cap at most
+`2 * pi / 3`), three capped steps plus the far constant sum under the full
+turn.  This factors the trigonometric skeleton of the pm15 engine
+`pmOrthoOffArcThreeCap_p35` (the `11899/100000` instance) so the `47/20`
+band below reuses it with new constants. -/
+private theorem pmOrthoOffArcThreeCapGen_p35 {S1 S2 S3 c d : ℝ}
+    (h1 : S1 ≤ Real.arccos c) (h2 : S2 ≤ Real.arccos c)
+    (h3 : S3 ≤ Real.arccos c)
+    (hhi : Real.arccos c ≤ 2 * Real.pi / 3)
+    (hcos3 : Real.cos (3 * Real.arccos c) ≤ d)
+    (hdlt : d < -(10601 / 80000)) :
+    S1 + S2 + S3 + Real.arccos (-(10601 / 80000)) < 2 * Real.pi := by
+  have h2π : 3 * Real.arccos c ≤ 2 * Real.pi := by linarith
+  have hper : Real.cos (2 * Real.pi - 3 * Real.arccos c)
+      = Real.cos (3 * Real.arccos c) := by
+    rw [Real.cos_sub, Real.cos_two_pi, Real.sin_two_pi]
+    ring
+  have hrev : Real.arccos (-(10601 / 80000))
+      < 2 * Real.pi - 3 * Real.arccos c := by
+    by_contra hge
+    have hle : 2 * Real.pi - 3 * Real.arccos c
+        ≤ Real.arccos (-(10601 / 80000)) := le_of_not_gt hge
+    have hm := pmOrthoTriCosMono_p35
+      (show (0:ℝ) ≤ 2 * Real.pi - 3 * Real.arccos c from by linarith)
+      hle (show Real.arccos (-(10601 / 80000)) ≤ Real.pi from Real.arccos_le_pi _)
+    rw [hper] at hm
+    have hcβ : Real.cos (Real.arccos (-(10601 / 80000))) = -(10601 / 80000) :=
+      Real.cos_arccos (by norm_num) (by norm_num)
+    linarith
+  linarith
+
+/-- (pm16, sub-`5/2` scan) **The `47/20`-band cap constants**: with
+`phi := arccos (289/5875) ≈ 87.18°` the cap sits below `2 * pi / 3` and
+its triple angle satisfies `cos (3 * phi) = 4 c ^ 3 - 3 c
+<= -14709/100000 < -10601/80000 = cos beta` (the pm15 comparison constant
+`-35023/100000` belongs to the sharper `11899/100000` cap; the weaker cap
+gets the weaker constant, still with a comfortable margin). -/
+private theorem pmOrthoOffSub25PhiCaps_p35 :
+    Real.arccos ((289:ℝ) / 5875) ≤ 2 * Real.pi / 3
+    ∧ Real.cos (3 * Real.arccos ((289:ℝ) / 5875)) ≤ -(14709:ℝ) / 100000 := by
+  constructor
+  · have h23 : Real.arccos (-(1 / 2:ℝ)) = 2 * Real.pi / 3 := by
+      rw [← Real.arccos_cos (show (0:ℝ) ≤ 2 * Real.pi / 3 from by linarith [Real.pi_pos])
+        (show 2 * Real.pi / 3 ≤ Real.pi from by linarith [Real.pi_pos]),
+        pmOrthoTriCos23_p35]
+    have h := Real.arccos_le_arccos (show (-(1 / 2:ℝ)) ≤ (289:ℝ) / 5875 by norm_num)
+    rwa [h23] at h
+  · rw [pmOrthoCosThreeMul_p35,
+      Real.cos_arccos (by norm_num : (-1:ℝ) ≤ 289 / 5875)
+        (by norm_num : (289:ℝ) / 5875 ≤ 1)]
+    norm_num
+
+/-- (pm16, sub-`5/2` scan) **The single-arc big-kill on the `47/20` band**:
+an arc `u -> y1' -> y2' -> w` whose three projected steps carry the pm14
+clean far windows and whose four norms meet the band (diagonal endpoints
+`>= 2`, lifted projections `>= 47/20`) has displacement strictly below
+`2 * pi - beta`. -/
+private theorem pmOrthoOffArcBigKillSub25_p35 {ax u w y1' y2' : V3}
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hw2 : (2:ℝ) ≤ ‖w‖)
+    (cy1 : (47:ℝ) / 20 ≤ ‖y1'‖) (cy2 : (47:ℝ) / 20 ≤ ‖y2'‖)
+    (hchain : azim 0 ax u w
+      = azim 0 ax u y1' + azim 0 ax y1' y2' + azim 0 ax y2' w)
+    (hwin1 : azim 0 ax u y1'
+        ≤ Real.arccos ((‖u‖ ^ 2 + ‖y1'‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖u‖ * ‖y1'‖))))
+    (hwin2 : azim 0 ax y1' y2'
+        ≤ Real.arccos ((‖y1'‖ ^ 2 + ‖y2'‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖y1'‖ * ‖y2'‖))))
+    (hwin3 : azim 0 ax y2' w
+        ≤ Real.arccos ((‖y2'‖ ^ 2 + ‖w‖ ^ 2 - cstab ^ 2)
+          / (2 * (‖y2'‖ * ‖w‖)))) :
+    azim 0 ax u w + Real.arccos (-(10601 / 80000)) < 2 * Real.pi := by
+  have h2y1 : (2:ℝ) ≤ ‖y1'‖ := le_trans (by norm_num) cy1
+  have h2y2 : (2:ℝ) ≤ ‖y2'‖ := le_trans (by norm_num) cy2
+  have hc1 := pmOrthoOffStepCapSub25_p35 (Or.inl ⟨hu2, cy1⟩) hwin1
+  have hc2 := pmOrthoOffStepCapSub25_p35 (Or.inl ⟨h2y1, cy2⟩) hwin2
+  have hc3 := pmOrthoOffStepCapSub25_p35 (Or.inr ⟨cy2, hw2⟩) hwin3
+  obtain ⟨hhi, hcos3⟩ := pmOrthoOffSub25PhiCaps_p35
+  have hdlt : -(14709:ℝ) / 100000 < -(10601 / 80000) := by norm_num
+  rw [hchain]
+  exact pmOrthoOffArcThreeCapGen_p35 hc1 hc2 hc3 hhi hcos3 hdlt
+
+/-- (pm16, sub-`5/2` scan) **THE TWO-ARC SQUEEZE, `47/20`-band form (the
+reduced CAPSTONE)**: the pm15 core `pmOrthoOffTwoArcSqueeze_p35` with the
+four clamp hypotheses weakened from `5/2` to `47/20` — every other
+hypothesis verbatim.  The full sub-`5/2` band `[47/20, 5/2)` is thereby
+closed unconditionally; what remains genuinely free is the sub-`47/20`
+quadrant (the pm9 micro-azimuth phenomenon lives there), sized by
+`pmOrthoOffDiagNearWedge_p35` / `pmOrthoOffSubQuadResidue_p35` below. -/
+private theorem pmOrthoOffTwoArcSqueezeSub25_p35
+    {ax u w y1 y2 z1 z2 y1' y2' z1' z2' : V3} {t1 t2 s1 s2 : ℝ}
+    (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hw0 : w ≠ (0:V3))
+    (hy10 : y1' ≠ (0:V3)) (hy20 : y2' ≠ (0:V3)) (hz10 : z1' ≠ (0:V3)) (hz20 : z2' ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz1o : (z1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz2o : (z2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1 : y1 = y1' + t1 • ax) (hy2 : y2 = y2' + t2 • ax)
+    (hz1 : z1 = z1' + s1 • ax) (hz2 : z2 = z2' + s2 • ax)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hua : ‖u‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwa : ‖w‖ ≤ 2 * h0)
+    (cy1 : (47:ℝ) / 20 ≤ ‖y1'‖) (cy2 : (47:ℝ) / 20 ≤ ‖y2'‖)
+    (cz1 : (47:ℝ) / 20 ≤ ‖z1'‖) (cz2 : (47:ℝ) / 20 ≤ ‖z2'‖)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab) (e3 : dist y2 w ≤ cstab)
+    (f1 : dist w z1 ≤ cstab) (f2 : dist z1 z2 ≤ cstab) (f3 : dist z2 u ≤ cstab)
+    (ed : dist u w ≤ cstab) (hdg : (2:ℝ) ≤ dist u w)
+    (r1 : (2:ℝ) ≤ dist u y1) (r2 : (2:ℝ) ≤ dist y1 y2) (r3 : (2:ℝ) ≤ dist y2 w)
+    (r4 : (2:ℝ) ≤ dist w z1) (r5 : (2:ℝ) ≤ dist z1 z2) (r6 : (2:ℝ) ≤ dist z2 u)
+    (h1 : azim 0 ax u y1' ≤ azim 0 ax u y2')
+    (h2 : azim 0 ax u y2' ≤ azim 0 ax u w)
+    (hp1 : azim 0 ax u y1' ≤ Real.pi) (hp2 : azim 0 ax y1' y2' ≤ Real.pi)
+    (hp3 : azim 0 ax y2' w ≤ Real.pi)
+    (g1 : azim 0 ax w z1' ≤ azim 0 ax w z2')
+    (g2 : azim 0 ax w z2' ≤ azim 0 ax w u)
+    (hq1 : azim 0 ax w z1' ≤ Real.pi) (hq2 : azim 0 ax z1' z2' ≤ Real.pi)
+    (hq3 : azim 0 ax z2' u ≤ Real.pi) :
+    False := by
+  have cap1 := pmOrthoOffMidArcWindows_p35 hax0 hu0 hw0 hy10 hy20 hU hW hy1o hy2o
+    hy1 hy2 e1 e2 e3 r1 r2 r3 h1 h2 hp1 hp2 hp3
+  have cap2 := pmOrthoOffMidArcWindows_p35 (u := w) (w := u) (y1 := z1) (y2 := z2)
+    (y1' := z1') (y2' := z2') (t1 := s1) (t2 := s2)
+    hax0 hw0 hu0 hz10 hz20 hW hU hz1o hz2o hz1 hz2 f1 f2 f3 r4 r5 r6 g1 g2 hq1 hq2 hq3
+  have kb1 := pmOrthoOffArcBigKillSub25_p35 hu2 hw2 cy1 cy2
+    cap1.1 cap1.2.1 cap1.2.2.2.1 cap1.2.2.2.2.2.1
+  have kb2 := pmOrthoOffArcBigKillSub25_p35 (u := w) (w := u) (y1' := z1') (y2' := z2')
+    hw2 hu2 cz1 cz2 cap2.1 cap2.2.1 cap2.2.2.2.1 cap2.2.2.2.2.2.1
+  have hncu := pmAxisOrthoNC_p35 hax0 hu0 hU
+  have hncw := pmAxisOrthoNC_p35 hax0 hw0 hW
+  have hwune : azim 0 ax w u ≠ 0 :=
+    pmOrthoTriAzimNe0_p35 hax0 hw0 hu0 hncw hncu hW hU hw2 hwa hu2 hua
+      (by rw [dist_comm]; exact hdg)
+  have hcompl := azim_compl (z := (0:V3)) (w := ax) (w1 := w) (w2 := u) hncw hncu
+  rw [if_neg hwune] at hcompl
+  rcases pmOrthoTriFarSplit_p35 hax0 hw0 hu0 hncw hncu hW hU hw2 hwa hu2 hua
+      (by rw [dist_comm]; exact ed) with hnear | hfar
+  · exfalso
+    rw [hcompl] at kb1
+    linarith
+  · exfalso
+    linarith
+
+/-- (pm16, sub-`5/2` scan) **The diagonal near-wedge pin (arc-2 clamped)**:
+with the SECOND arc's lifted projections clamped at `47/20`, the far-wedge
+branch of the diagonal dies against the clamped arc's three-step kill
+ALONE — so the diagonal azimuth `azim w u` is pinned below `2 * pi - beta`
+unconditionally, with NO hypothesis on the first arc's projections.  This
+is the first half of the honest sizing of the sub-`47/20` quadrant: any
+surviving configuration (in particular any with a sub-`47/20` projection
+on the first arc) has its diagonal in the near wedge `azim w u <= beta`,
+so the first arc must carry the full displacement `>= 2 * pi - beta`. -/
+private theorem pmOrthoOffDiagNearWedge_p35 {ax u w z1 z2 z1' z2' : V3}
+    {s1 s2 : ℝ}
+    (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hw0 : w ≠ (0:V3))
+    (hz10 : z1' ≠ (0:V3)) (hz20 : z2' ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz1o : (z1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz2o : (z2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz1 : z1 = z1' + s1 • ax) (hz2 : z2 = z2' + s2 • ax)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hw2 : (2:ℝ) ≤ ‖w‖)
+    (cz1 : (47:ℝ) / 20 ≤ ‖z1'‖) (cz2 : (47:ℝ) / 20 ≤ ‖z2'‖)
+    (f1 : dist w z1 ≤ cstab) (f2 : dist z1 z2 ≤ cstab) (f3 : dist z2 u ≤ cstab)
+    (r4 : (2:ℝ) ≤ dist w z1) (r5 : (2:ℝ) ≤ dist z1 z2) (r6 : (2:ℝ) ≤ dist z2 u)
+    (g1 : azim 0 ax w z1' ≤ azim 0 ax w z2')
+    (g2 : azim 0 ax w z2' ≤ azim 0 ax w u)
+    (hq1 : azim 0 ax w z1' ≤ Real.pi) (hq2 : azim 0 ax z1' z2' ≤ Real.pi)
+    (hq3 : azim 0 ax z2' u ≤ Real.pi) :
+    azim 0 ax w u + Real.arccos (-(10601 / 80000)) < 2 * Real.pi := by
+  have cap2 := pmOrthoOffMidArcWindows_p35 (u := w) (w := u) (y1 := z1) (y2 := z2)
+    (y1' := z1') (y2' := z2') (t1 := s1) (t2 := s2)
+    hax0 hw0 hu0 hz10 hz20 hW hU hz1o hz2o hz1 hz2 f1 f2 f3 r4 r5 r6 g1 g2 hq1 hq2 hq3
+  exact pmOrthoOffArcBigKillSub25_p35 (u := w) (w := u) (y1' := z1') (y2' := z2')
+    hw2 hu2 cz1 cz2 cap2.1 cap2.2.1 cap2.2.2.2.1
+    cap2.2.2.2.2.2.1
+
+/-- (pm16, sub-`5/2` scan) **THE SUB-QUADRANT RESIDUE (honest sizing)**:
+in the CAPSTONE configuration with only ONE projection left unclamped
+(`y1'` — the sub-`47/20` quadrant proper), the two projected steps
+ADJACENT to the small projection must sum past
+`2 * pi - beta - arccos (289/5875) ≈ 175.2°`: the near-wedge pin
+(`pmOrthoOffDiagNearWedge_p35`) forces the first arc to carry the full
+`2 * pi - beta` displacement, the third step stays under the `47/20`-band
+cap, and the chain splits the rest onto the two steps touching `y1'`.
+Any surviving sub-`47/20` configuration therefore bends hard around its
+small projection — the feed shape the pm12 coupling account consumes. -/
+private theorem pmOrthoOffSubQuadResidue_p35
+    {ax u w y1 y2 z1 z2 y1' y2' z1' z2' : V3} {t1 t2 s1 s2 : ℝ}
+    (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hw0 : w ≠ (0:V3))
+    (hy10 : y1' ≠ (0:V3)) (hy20 : y2' ≠ (0:V3)) (hz10 : z1' ≠ (0:V3)) (hz20 : z2' ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz1o : (z1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz2o : (z2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1 : y1 = y1' + t1 • ax) (hy2 : y2 = y2' + t2 • ax)
+    (hz1 : z1 = z1' + s1 • ax) (hz2 : z2 = z2' + s2 • ax)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hua : ‖u‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwa : ‖w‖ ≤ 2 * h0)
+    (hlt : ‖y1'‖ < (47:ℝ) / 20)
+    (cy2 : (47:ℝ) / 20 ≤ ‖y2'‖)
+    (cz1 : (47:ℝ) / 20 ≤ ‖z1'‖) (cz2 : (47:ℝ) / 20 ≤ ‖z2'‖)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab) (e3 : dist y2 w ≤ cstab)
+    (f1 : dist w z1 ≤ cstab) (f2 : dist z1 z2 ≤ cstab) (f3 : dist z2 u ≤ cstab)
+    (ed : dist u w ≤ cstab) (hdg : (2:ℝ) ≤ dist u w)
+    (r1 : (2:ℝ) ≤ dist u y1) (r2 : (2:ℝ) ≤ dist y1 y2) (r3 : (2:ℝ) ≤ dist y2 w)
+    (r4 : (2:ℝ) ≤ dist w z1) (r5 : (2:ℝ) ≤ dist z1 z2) (r6 : (2:ℝ) ≤ dist z2 u)
+    (h1 : azim 0 ax u y1' ≤ azim 0 ax u y2')
+    (h2 : azim 0 ax u y2' ≤ azim 0 ax u w)
+    (hp1 : azim 0 ax u y1' ≤ Real.pi) (hp2 : azim 0 ax y1' y2' ≤ Real.pi)
+    (hp3 : azim 0 ax y2' w ≤ Real.pi)
+    (g1 : azim 0 ax w z1' ≤ azim 0 ax w z2')
+    (g2 : azim 0 ax w z2' ≤ azim 0 ax w u)
+    (hq1 : azim 0 ax w z1' ≤ Real.pi) (hq2 : azim 0 ax z1' z2' ≤ Real.pi)
+    (hq3 : azim 0 ax z2' u ≤ Real.pi) :
+    (2:ℝ) * Real.pi - Real.arccos (-(10601 / 80000))
+        - Real.arccos ((289:ℝ) / 5875)
+      ≤ azim 0 ax u y1' + azim 0 ax y1' y2' := by
+  have cap1 := pmOrthoOffMidArcWindows_p35 hax0 hu0 hw0 hy10 hy20 hU hW hy1o hy2o
+    hy1 hy2 e1 e2 e3 r1 r2 r3 h1 h2 hp1 hp2 hp3
+  have hR1 := pmOrthoOffDiagNearWedge_p35 hax0 hu0 hw0 hz10 hz20 hU hW hz1o hz2o
+    hz1 hz2 hu2 hw2 cz1 cz2 f1 f2 f3 r4 r5 r6 g1 g2 hq1 hq2 hq3
+  have h2y2 : (2:ℝ) ≤ ‖y2'‖ := le_trans (by norm_num) cy2
+  have hS3 := pmOrthoOffStepCapSub25_p35 (Or.inr ⟨cy2, hw2⟩) cap1.2.2.2.2.2.1
+  have hS3' : azim 0 ax u w
+      ≤ azim 0 ax u y1' + azim 0 ax y1' y2' + Real.arccos ((289:ℝ) / 5875) := by
+    rw [cap1.1]
+    linarith
+  have hncu := pmAxisOrthoNC_p35 hax0 hu0 hU
+  have hncw := pmAxisOrthoNC_p35 hax0 hw0 hW
+  have hwune : azim 0 ax w u ≠ 0 :=
+    pmOrthoTriAzimNe0_p35 hax0 hw0 hu0 hncw hncu hW hU hw2 hwa hu2 hua
+      (by rw [dist_comm]; exact hdg)
+  have hcompl := azim_compl (z := (0:V3)) (w := ax) (w1 := w) (w2 := u) hncw hncu
+  rw [if_neg hwune] at hcompl
+  rcases pmOrthoTriFarSplit_p35 hax0 hw0 hu0 hncw hncu hW hU hw2 hwa hu2 hua
+      (by rw [dist_comm]; exact ed) with hnear | hfar
+  · linarith
+  · exfalso
+    linarith
+
+-- pm16 axcheck tail (probe only; dropped from the kit proper)
+
+/-! ## planemiss17 rungs (lkgrqui-planemiss17-w3, 2026-10-28)
+
+The **(ii) coupling-account consumption interface** for the last free
+sub-quadrant of the LA35 root `pmPlaneCrowding_p35`.  pm16 closed the
+`[47/20, 5/2)` clamp band and pinned the sub-`47/20` residue
+(`pmOrthoOffSubQuadResidue_p35`): any surviving configuration bends its
+first arc hard, carrying `2 * pi - beta - arccos (289/5875) = 175.2°` of
+projected step sum on the two steps that touch the small projection.
+The one datum the CAPSTONE face lacks is an UPPER bound on the
+ring-distance-2 JUMP CHORD `dist u y2` (`isScsV39` only gives `2 <=`).
+This wave interfaces that datum without doing the pm12 (ii) coupling
+account itself:
+
+- `pmOrthoOffJumpCosPin_p35` — the trig constant behind the kill: the pin
+  threshold `th0 := 2 * pi - beta - phi` has `cos th0 <= -9963/10000`
+  (exact rational sine floors `sin beta >= 79294/80000`,
+  `sin phi >= 11735/11750`).
+- `pmOrthoOffJumpThetaPi_p35` / `pmOrthoOffJumpThetaNonneg_p35` — the
+  threshold sits in `[0, pi]` (`beta + phi >= pi` is exact through the
+  `cos beta <= -cos phi` antitone reading).
+- `pmOrthoOffJumpChordWindow_p35` — the bridge: a jump chord
+  `dist u y2 <= 399/100` squeezes the jump azimuth `azim 0 ax u y2'`
+  under `arccos (-79201/80000) ~ 171.9°` (the far window read at the
+  projected pair `(u, y2')` with the height term dropped through the
+  two-point Pythagoras; `2 <=` on both norms is the annulus floor).
+- `pmOrthoOffSubQuadKill_p35` — **THE CONDITIONAL CAPSTONE**: the pm16
+  residue hypothesis face VERBATIM + the jump-chord upper bound
+  `dist u y2 <= 399/100` + the jump-pair `pi` bound `azim u y2' <= pi`
+  (a direction-feed datum of the same species as `hp1..hp3`) gives
+  `False`.  The pin lifts the jump azimuth past `th0` (cosine at most
+  `-0.9963`); the chord window caps it under `arccos (-0.9900125)`;
+  `cos` monotonicity on `[0, pi]` leaves no room.
+- `pmOrthoOffArcThetaCapGen_p35` / `pmOrthoOffArcTriCapGen_p35` — the
+  **dual-constant (end/mid different caps) three-step engine, generic
+  form**: three caps `c1 c2 c3` (end/mid split = `c2 = c3`; the pm16
+  uniform engine `pmOrthoOffArcThreeCapGen_p35` = `c1 = c2 = c3`) whose
+  threshold `2 * e + m`-type sum lies in `[pi, 2 * pi]` with
+  `cos (c1 + c2 + c3) <= d < cos beta`, and three capped steps plus beta
+  stay under the full turn.  This is the engine shape for the
+  `c* ~ 2.2` end/mid split push recorded in the pm16 account.
+- `pmOrthoOffCapFracEnd225_p35` — the **coupling-floor cap adapter**: a
+  projected pair with the annulus floor `2 <= p` and a coupling floor
+  `9/4 <= q` has its clean far window fraction at least `1/3750` (the
+  exact value at `(p, q) = (2, 9/4)`; `p`-monotone while `q ^ 2 <=
+  cstab ^ 2` through the `(p - 2) * (2 * p + cstab ^ 2 - q ^ 2)`
+  factorization, and `>= 1 - cstab ^ 2 / (2 * p * q) >= 1 - 9.0601/12`
+  by AM-GM once `q >= 3`).  With a pm12 (ii) coupling floor
+  `norm y1' >= 9/4` on the small projection this caps BOTH steps
+  touching it (`(u, y1')` and `(y1', y2')`).
+- `pmOrthoOffArcDualCap225_p35` — engine validation at the `9/4` point:
+  caps `{arccos (1/3750), arccos (1/3750), arccos (5083/35250)}` die
+  against beta (exact rational double-and-add angle bookkeeping).  Honest
+  note: the third cap is TIGHTER than the pm16 band cap
+  `arccos (289/5875)` that the `(y2', w)` window currently delivers, so
+  this instance validates the engine and sizes the docking requirement
+  (a `y2'`-side coupling floor `~ 2.56` would supply it) — it is not yet
+  a kill on the live window data.
+
+All pieces are new lemmas with zero `sorry`; the residual root
+`pmPlaneCrowding_p35` is untouched.  The jump-chord bound and the
+jump-pair `pi` bound are EXPLICIT interface hypotheses — see the lane
+DELIVERY for the pm12 post-report docking checklist. -/
+
+/-- (pm17, ii-interface) The kill threshold `2 * pi - beta - phi` has
+cosine at most `-9963/10000`: `cos (2 * pi - (beta + phi)) = cos (beta +
+phi) = cos beta * cos phi - sin beta * sin phi` with the exact rational
+sine floors `sin beta >= 79294/80000` (`79294 ^ 2 + 10601 ^ 2 <=
+80000 ^ 2`) and `sin phi >= 11735/11750` (`11735 ^ 2 + (2 * 289) ^ 2 <=
+(2 * 5875) ^ 2`). -/
+private theorem pmOrthoOffJumpCosPin_p35 :
+    Real.cos ((2:ℝ) * Real.pi - Real.arccos (-(10601 / 80000))
+        - Real.arccos ((289:ℝ) / 5875))
+      ≤ -(9963:ℝ) / 10000 := by
+  have hβc : Real.cos (Real.arccos (-(10601 / 80000))) = -(10601 / 80000) :=
+    Real.cos_arccos (by norm_num) (by norm_num)
+  have hφc : Real.cos (Real.arccos ((289:ℝ) / 5875)) = (289:ℝ) / 5875 :=
+    Real.cos_arccos (by norm_num) (by norm_num)
+  have hβs : Real.sin (Real.arccos (-(10601 / 80000)))
+      = Real.sqrt ((1:ℝ) - (-(10601 / 80000)) ^ 2) := Real.sin_arccos _
+  have hφs : Real.sin (Real.arccos ((289:ℝ) / 5875))
+      = Real.sqrt ((1:ℝ) - ((289:ℝ) / 5875) ^ 2) := Real.sin_arccos _
+  have hper : Real.cos ((2:ℝ) * Real.pi - (Real.arccos (-(10601 / 80000))
+        + Real.arccos ((289:ℝ) / 5875)))
+      = Real.cos (Real.arccos (-(10601 / 80000))
+        + Real.arccos ((289:ℝ) / 5875)) := by
+    rw [Real.cos_sub, Real.cos_two_pi, Real.sin_two_pi]
+    ring
+  have hre : ((2:ℝ) * Real.pi - Real.arccos (-(10601 / 80000))
+      - Real.arccos ((289:ℝ) / 5875))
+      = (2:ℝ) * Real.pi - (Real.arccos (-(10601 / 80000))
+        + Real.arccos ((289:ℝ) / 5875)) := by ring
+  have hadd : Real.cos (Real.arccos (-(10601 / 80000))
+      + Real.arccos ((289:ℝ) / 5875))
+      = Real.cos (Real.arccos (-(10601 / 80000)))
+        * Real.cos (Real.arccos ((289:ℝ) / 5875))
+        - Real.sin (Real.arccos (-(10601 / 80000)))
+          * Real.sin (Real.arccos ((289:ℝ) / 5875)) :=
+    Real.cos_add _ _
+  have hsq1 : ((79294:ℝ) / 80000) ^ 2
+      ≤ (1:ℝ) - (-(10601 / 80000)) ^ 2 := by norm_num
+  have hsb : ((79294:ℝ) / 80000)
+      ≤ Real.sin (Real.arccos (-(10601 / 80000))) := by
+    rw [hβs]
+    exact Real.le_sqrt_of_sq_le hsq1
+  have hsq2 : ((11735:ℝ) / 11750) ^ 2
+      ≤ (1:ℝ) - ((289:ℝ) / 5875) ^ 2 := by norm_num
+  have hsf : ((11735:ℝ) / 11750)
+      ≤ Real.sin (Real.arccos ((289:ℝ) / 5875)) := by
+    rw [hφs]
+    exact Real.le_sqrt_of_sq_le hsq2
+  have hβs0 : (0:ℝ) ≤ Real.sin (Real.arccos (-(10601 / 80000))) :=
+    Real.sin_nonneg_of_nonneg_of_le_pi (Real.arccos_nonneg _) (Real.arccos_le_pi _)
+  have hφs0 : (0:ℝ) ≤ Real.sin (Real.arccos ((289:ℝ) / 5875)) :=
+    Real.sin_nonneg_of_nonneg_of_le_pi (Real.arccos_nonneg _) (Real.arccos_le_pi _)
+  have hprod : ((79294:ℝ) / 80000 * (11735 / 11750))
+      ≤ Real.sin (Real.arccos (-(10601 / 80000)))
+        * Real.sin (Real.arccos ((289:ℝ) / 5875)) :=
+    mul_le_mul hsb hsf (by norm_num) hβs0
+  rw [hre, hper, hadd, hβc, hφc]
+  linarith
+
+/-- (pm17, ii-interface) The kill threshold sits at most `pi`:
+`beta + phi >= pi`, exact since `cos beta = -10601/80000 <= -289/5875 =
+-cos phi` and `cos (pi - phi) = -cos phi` with `arccos` antitone. -/
+private theorem pmOrthoOffJumpThetaPi_p35 :
+    (2:ℝ) * Real.pi - Real.arccos (-(10601 / 80000))
+        - Real.arccos ((289:ℝ) / 5875) ≤ Real.pi := by
+  have hφ0 : (0:ℝ) ≤ Real.arccos ((289:ℝ) / 5875) := Real.arccos_nonneg _
+  have hφπ : Real.arccos ((289:ℝ) / 5875) ≤ Real.pi := Real.arccos_le_pi _
+  have hπφ : Real.pi - Real.arccos ((289:ℝ) / 5875)
+      = Real.arccos (-(289 / 5875)) := by
+    rw [← Real.arccos_cos (show (0:ℝ) ≤ Real.pi - Real.arccos ((289:ℝ) / 5875) by linarith)
+      (show Real.pi - Real.arccos ((289:ℝ) / 5875) ≤ Real.pi by linarith),
+      Real.cos_pi_sub,
+      Real.cos_arccos (by norm_num : (-1:ℝ) ≤ 289 / 5875)
+        (by norm_num : (289:ℝ) / 5875 ≤ 1)]
+  have hle := Real.arccos_le_arccos
+    (show (-(10601 / 80000):ℝ) ≤ -(289 / 5875) by norm_num)
+  rw [← hπφ] at hle
+  linarith
+
+/-- (pm17, ii-interface) The kill threshold is nonnegative (both `beta`
+and `phi` are at most `2 * pi / 3`). -/
+private theorem pmOrthoOffJumpThetaNonneg_p35 :
+    (0:ℝ) ≤ (2:ℝ) * Real.pi - Real.arccos (-(10601 / 80000))
+        - Real.arccos ((289:ℝ) / 5875) := by
+  obtain ⟨hφ23, -⟩ := pmOrthoOffSub25PhiCaps_p35
+  have hβ23 := pmOrthoTriBetaLe_p35
+  have hπpos := Real.pi_pos
+  linarith
+
+/-- (pm17, ii-interface) **The jump-chord window**: a ring-distance-2
+jump `u -> y2` whose lifted chord is capped at `399/100` squeezes the
+projected jump azimuth under `arccos (-79201/80000)` — the far window
+read at the projected pair `(u, y2')` with the height term dropped
+(two-point Pythagoras) and the annulus floors `2 <=` on both norms:
+`cos(azim) * (norm u * norm y2') = u . y2' >= (4 + 4 - (399/100) ^ 2) / 2
+= -79201/20000` against a product of norms `>= 4`. -/
+private theorem pmOrthoOffJumpChordWindow_p35 {ax u y2 y2' : V3} {t2 : ℝ}
+    (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hy20 : y2' ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2 : y2 = y2' + t2 • ax)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hy22 : (2:ℝ) ≤ ‖y2'‖)
+    (hpi : azim 0 ax u y2' ≤ Real.pi)
+    (hj : dist u y2 ≤ (399:ℝ) / 100) :
+    azim 0 ax u y2' ≤ Real.arccos (-(79201:ℝ) / 80000) := by
+  have hncu := pmAxisOrthoNC_p35 hax0 hu0 hU
+  have hncy2 := pmAxisOrthoNC_p35 hax0 hy20 hy2o
+  have hcos := pmAzimOrthoCos_p35 hax0 hu0 hy20 hncu hncy2 hU hy2o
+  have hlift : u = u + (0:ℝ) • ax := by rw [zero_smul, add_zero]
+  have hpyth := pmOrthoOffTwoPythDist_p35 (y1 := u) (y1' := u) (t1 := (0:ℝ))
+    hlift hU hy2 hy2o
+  have hdsq : dist u y2' ^ 2 ≤ ((399:ℝ) / 100) ^ 2 := by
+    have h0 : (0:ℝ) ≤ (0 - t2) ^ 2 * ‖ax‖ ^ 2 :=
+      mul_nonneg (sq_nonneg _) (sq_nonneg _)
+    have h1 : dist u y2 ^ 2 ≤ ((399:ℝ) / 100) ^ 2 :=
+      pow_le_pow_left₀ dist_nonneg hj 2
+    linarith
+  have hn1 : (2:ℝ) ^ 2 ≤ ‖u‖ ^ 2 := pow_le_pow_left₀ (by norm_num) hu2 2
+  have hn2 : (2:ℝ) ^ 2 ≤ ‖y2'‖ ^ 2 := pow_le_pow_left₀ (by norm_num) hy22 2
+  have hdot : (-(79201:ℝ) / 20000
+      ≤ (u : Fin 3 → ℝ) ⬝ᵥ (y2' : Fin 3 → ℝ)) := by
+    have hid := pmDotNormDist_p35 u y2'
+    linarith
+  have hd0 : (0:ℝ) < ‖u‖ * ‖y2'‖ :=
+    mul_pos (norm_pos_iff.mpr hu0) (norm_pos_iff.mpr hy20)
+  have hM4 : (4:ℝ) ≤ ‖u‖ * ‖y2'‖ := by
+    have h := mul_le_mul hu2 hy22 (by norm_num) (norm_nonneg u)
+    linarith
+  have hkey : (-(79201:ℝ) / 80000) * (‖u‖ * ‖y2'‖)
+      ≤ Real.cos (azim 0 ax u y2') * (‖u‖ * ‖y2'‖) := by
+    have hlhs : (-(79201:ℝ) / 80000) * (‖u‖ * ‖y2'‖)
+        ≤ (-(79201:ℝ) / 80000) * 4 :=
+      mul_le_mul_of_nonpos_left hM4 (by norm_num)
+    rw [hcos]
+    linarith
+  refine pmOrthoOffAzimLeOfCosGe_p35 hpi ?_
+  have hrew : Real.cos (azim 0 ax u y2')
+      = Real.cos (azim 0 ax u y2') * (‖u‖ * ‖y2'‖) / (‖u‖ * ‖y2'‖) := by
+    field_simp
+  rw [hrew, le_div_iff₀ hd0]
+  exact hkey
+
+/-- (pm17, ii-interface) **THE SUB-QUADRANT KILL (conditional CAPSTONE)**:
+the pm16 residue configuration — hypothesis face VERBATIM, i.e.
+`pmOrthoOffSubQuadResidue_p35`'s 49 explicit hypotheses one-for-one —
+plus the pm12 (ii) coupling-account interface: the jump chord
+`dist u y2` (ring distance 2) upper-bounded at `399/100`, and the
+jump-pair `pi` bound `azim 0 ax u y2' <= Real.pi` (direction-feed datum,
+same species as `hp1..hp3`).  The 175.2° pin lifts the jump azimuth past
+`th0 = 2 * pi - beta - phi` (cosine at most `-9963/10000`); the jump
+window caps it under `arccos (-79201/80000)` (cosine at least
+`-79201/80000 = -0.9900125`); `cos` monotonicity on `[0, pi]` leaves no
+room. -/
+private theorem pmOrthoOffSubQuadKill_p35
+    {ax u w y1 y2 z1 z2 y1' y2' z1' z2' : V3} {t1 t2 s1 s2 : ℝ}
+    (hax0 : ax ≠ (0:V3))
+    (hu0 : u ≠ (0:V3)) (hw0 : w ≠ (0:V3))
+    (hy10 : y1' ≠ (0:V3)) (hy20 : y2' ≠ (0:V3)) (hz10 : z1' ≠ (0:V3)) (hz20 : z2' ≠ (0:V3))
+    (hU : (u : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hW : (w : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1o : (y1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy2o : (y2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz1o : (z1' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hz2o : (z2' : Fin 3 → ℝ) ⬝ᵥ (ax : Fin 3 → ℝ) = 0)
+    (hy1 : y1 = y1' + t1 • ax) (hy2 : y2 = y2' + t2 • ax)
+    (hz1 : z1 = z1' + s1 • ax) (hz2 : z2 = z2' + s2 • ax)
+    (hu2 : (2:ℝ) ≤ ‖u‖) (hua : ‖u‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwa : ‖w‖ ≤ 2 * h0)
+    (hlt : ‖y1'‖ < (47:ℝ) / 20)
+    (cy2 : (47:ℝ) / 20 ≤ ‖y2'‖)
+    (cz1 : (47:ℝ) / 20 ≤ ‖z1'‖) (cz2 : (47:ℝ) / 20 ≤ ‖z2'‖)
+    (e1 : dist u y1 ≤ cstab) (e2 : dist y1 y2 ≤ cstab) (e3 : dist y2 w ≤ cstab)
+    (f1 : dist w z1 ≤ cstab) (f2 : dist z1 z2 ≤ cstab) (f3 : dist z2 u ≤ cstab)
+    (ed : dist u w ≤ cstab) (hdg : (2:ℝ) ≤ dist u w)
+    (r1 : (2:ℝ) ≤ dist u y1) (r2 : (2:ℝ) ≤ dist y1 y2) (r3 : (2:ℝ) ≤ dist y2 w)
+    (r4 : (2:ℝ) ≤ dist w z1) (r5 : (2:ℝ) ≤ dist z1 z2) (r6 : (2:ℝ) ≤ dist z2 u)
+    (h1 : azim 0 ax u y1' ≤ azim 0 ax u y2')
+    (h2 : azim 0 ax u y2' ≤ azim 0 ax u w)
+    (hp1 : azim 0 ax u y1' ≤ Real.pi) (hp2 : azim 0 ax y1' y2' ≤ Real.pi)
+    (hp3 : azim 0 ax y2' w ≤ Real.pi)
+    (g1 : azim 0 ax w z1' ≤ azim 0 ax w z2')
+    (g2 : azim 0 ax w z2' ≤ azim 0 ax w u)
+    (hq1 : azim 0 ax w z1' ≤ Real.pi) (hq2 : azim 0 ax z1' z2' ≤ Real.pi)
+    (hq3 : azim 0 ax z2' u ≤ Real.pi)
+    (hjr : (2:ℝ) ≤ dist u y2)
+    (hjump : dist u y2 ≤ (399:ℝ) / 100)
+    (hpiu : azim 0 ax u y2' ≤ Real.pi) :
+    False := by
+  have hpin := pmOrthoOffSubQuadResidue_p35 hax0 hu0 hw0 hy10 hy20 hz10 hz20 hU hW
+    hy1o hy2o hz1o hz2o hy1 hy2 hz1 hz2 hu2 hua hw2 hwa hlt cy2 cz1 cz2
+    e1 e2 e3 f1 f2 f3 ed hdg r1 r2 r3 r4 r5 r6 h1 h2 hp1 hp2 hp3 g1 g2
+    hq1 hq2 hq3
+  have hncu := pmAxisOrthoNC_p35 hax0 hu0 hU
+  have hncy1 := pmAxisOrthoNC_p35 hax0 hy10 hy1o
+  have hncy2 := pmAxisOrthoNC_p35 hax0 hy20 hy2o
+  have hchain := pmAzimNormalChain_p35 (a := u) (x := y1') (y := y2')
+    hax0 hncu hncy1 hncy2 h1
+  have h2y2 : (2:ℝ) ≤ ‖y2'‖ := le_trans (by norm_num) cy2
+  have hjw := pmOrthoOffJumpChordWindow_p35 hax0 hu0 hy20 hU hy2o hy2 hu2 h2y2
+    hpiu hjump
+  have hΘn := pmOrthoOffJumpThetaNonneg_p35
+  have hΘπ := pmOrthoOffJumpThetaPi_p35
+  have hΘcos := pmOrthoOffJumpCosPin_p35
+  rw [← hchain] at hpin
+  have hmono := pmOrthoTriCosMono_p35 hΘn hpin hpiu
+  have hcoslo := pmOrthoTriCosMono_p35 (azim_nonneg 0 ax u y2') hjw
+    (Real.arccos_le_pi _)
+  rw [Real.cos_arccos (by norm_num : (-1:ℝ) ≤ -(79201:ℝ) / 80000)
+    (by norm_num : -(79201:ℝ) / 80000 ≤ 1)] at hcoslo
+  have hlt2 : -(9963:ℝ) / 10000 < -(79201:ℝ) / 80000 := by norm_num
+  linarith
+
+/-- (pm17, b) **The theta-cap core** (generic): `cos th <= d < cos beta`
+with `th` in `[pi, 2 * pi]` forces `th + beta < 2 * pi` — the
+`2 * pi`-periodicity move (`cos (2 * pi - th) = cos th`) plus `cos`
+monotonicity on `[0, pi]`. -/
+private theorem pmOrthoOffArcThetaCapGen_p35 {th d : ℝ}
+    (hcos : Real.cos th ≤ d) (hlo : Real.pi ≤ th) (hhi : th ≤ 2 * Real.pi)
+    (hdlt : d < -(10601 / 80000)) :
+    th + Real.arccos (-(10601 / 80000)) < 2 * Real.pi := by
+  have hrev : Real.arccos (-(10601 / 80000)) < 2 * Real.pi - th := by
+    by_contra hge
+    have hle : 2 * Real.pi - th ≤ Real.arccos (-(10601 / 80000)) :=
+      le_of_not_gt hge
+    have hx0 : (0:ℝ) ≤ 2 * Real.pi - th := by linarith
+    have hβ23 := pmOrthoTriBetaLe_p35
+    have hper : Real.cos (2 * Real.pi - th) = Real.cos th := by
+      rw [Real.cos_sub, Real.cos_two_pi, Real.sin_two_pi]
+      ring
+    have hm := pmOrthoTriCosMono_p35 hx0 hle (Real.arccos_le_pi _)
+    rw [hper] at hm
+    have hcb : Real.cos (Real.arccos (-(10601 / 80000))) = -(10601 / 80000) :=
+      Real.cos_arccos (by norm_num) (by norm_num)
+    rw [hcb] at hm
+    linarith
+  linarith
+
+/-- (pm17, b) **The dual-constant (end/mid) three-step engine, generic
+form**: three caps `c1 c2 c3` (end/mid split = `c2 = c3`; the pm16
+uniform engine `pmOrthoOffArcThreeCapGen_p35` is `c1 = c2 = c3`) whose
+threshold `c1 + c2 + c3` lies in `[pi, 2 * pi]` with
+`cos (c1 + c2 + c3) <= d < cos beta`: three capped steps plus beta stay
+under the full turn. -/
+private theorem pmOrthoOffArcTriCapGen_p35 {S1 S2 S3 c1 c2 c3 d : ℝ}
+    (h1 : S1 ≤ c1) (h2 : S2 ≤ c2) (h3 : S3 ≤ c3)
+    (hlo : Real.pi ≤ c1 + c2 + c3) (hhi : c1 + c2 + c3 ≤ 2 * Real.pi)
+    (hcos : Real.cos (c1 + c2 + c3) ≤ d) (hdlt : d < -(10601 / 80000)) :
+    S1 + S2 + S3 + Real.arccos (-(10601 / 80000)) < 2 * Real.pi := by
+  have hcap := pmOrthoOffArcThetaCapGen_p35 hcos hlo hhi hdlt
+  linarith
+
+/-- (pm17, b) **The coupling-floor cap adapter at `9/4`**: a projected
+pair with the annulus floor `2 <= p` and a coupling floor `9/4 <= q` has
+its clean far window fraction at least `1/3750` (the exact value at
+`(2, 9/4)`).  While `q <= cstab` the fraction is `p`-monotone through
+`(p - 2) * (2 * p + cstab ^ 2 - q ^ 2) >= 0` and floors at the `9/4`
+tangent `(q - 9/4) * (q + 16867/7500) >= 0`; for `q >= cstab` AM-GM gives
+`>= 1 - cstab ^ 2 / (2 * p * q) >= 1 - 9.0601 / 12 > 1/3750`. -/
+private theorem pmOrthoOffCapFracEnd225_p35 {p q : ℝ}
+    (h2p : (2:ℝ) ≤ p) (hq : (9:ℝ) / 4 ≤ q) :
+    (1:ℝ) / 3750 ≤ (p ^ 2 + q ^ 2 - cstab ^ 2) / (2 * (p * q)) := by
+  have hcs : cstab = 301 / 100 := by norm_num [cstab]
+  rw [hcs]
+  have hsqc : ((301:ℝ) / 100) ^ 2 = 90601 / 10000 := by norm_num
+  rw [hsqc]
+  have hp0 : (0:ℝ) < p := lt_of_lt_of_le (by norm_num) h2p
+  have hq0 : (0:ℝ) < q := lt_of_lt_of_le (by norm_num) hq
+  have hprod : (0:ℝ) < 2 * (p * q) := by linarith [mul_pos hp0 hq0]
+  rcases lt_or_ge q ((301:ℝ) / 100) with hq3 | hq3
+  · -- q <= cstab: p-monotone, floor at p = 2, then the 9/4 tangent
+    have hCq : q ^ 2 ≤ (90601:ℝ) / 10000 := by
+      have h1 : (0:ℝ) ≤ ((301:ℝ) / 100 - q) * (((301:ℝ) / 100) + q) :=
+        mul_nonneg (by linarith) (by linarith)
+      linear_combination h1
+    have hden : (0:ℝ) ≤ 2 * p + 90601 / 10000 - q ^ 2 := by linarith
+    have hE : (0:ℝ) ≤ (p - 2) * (2 * p + 90601 / 10000 - q ^ 2) :=
+      mul_nonneg (by linarith) hden
+    have hcross : ((2:ℝ) * (p ^ 2 + q ^ 2 - 90601 / 10000)
+        - p * ((2:ℝ) ^ 2 + q ^ 2 - 90601 / 10000))
+        = (p - 2) * (2 * p + 90601 / 10000 - q ^ 2) := by ring
+    have hcross2 : p * ((2:ℝ) ^ 2 + q ^ 2 - 90601 / 10000)
+        ≤ (2:ℝ) * (p ^ 2 + q ^ 2 - 90601 / 10000) := by
+      linear_combination hE - hcross
+    have hA2 : ((1:ℝ) / 3750) * ((2:ℝ) * (2 * q))
+        ≤ (2:ℝ) ^ 2 + q ^ 2 - 90601 / 10000 := by
+      have hpos : (0:ℝ) ≤ (q - 9 / 4) * (q + 16867 / 7500) :=
+        mul_nonneg (by linarith) (by linarith)
+      linear_combination hpos
+    rw [le_div_iff₀ hprod]
+    linear_combination (p / 2) * hA2 + (1 / 2:ℝ) * hcross2
+  · -- q >= cstab: AM-GM gives the fraction >= 1 - 9.0601 / (2 * p * q)
+    have hsum : (2:ℝ) * (p * q) ≤ p ^ 2 + q ^ 2 := by
+      linear_combination (sq_nonneg (p - q))
+    have h6 : (6:ℝ) ≤ p * q := by
+      have h := mul_le_mul h2p hq3 (by norm_num) (le_of_lt hp0)
+      linarith
+    rw [le_div_iff₀ hprod]
+    linarith
+
+/-- (pm17, b) **Engine validation at the `9/4` coupling point**: caps
+`arccos (1/3750)` on two steps and `arccos (5083/35250)` on the third
+die against beta.  `cos (2 * arccos (1/3750) + arccos (5083/35250)) <=
+-1341/10000 < -10601/80000` through the exact rational floors
+`sin (arccos (1/3750)) >= 14062499/14062500` and
+`sin (arccos (5083/35250)) >= 34881/35250`.  Honest note: the third cap
+is tighter than the pm16 band cap the `(y2', w)` window currently
+delivers — this sizes the docking requirement, not a live kill. -/
+private theorem pmOrthoOffArcDualCap225_p35 {S1 S2 S3 : ℝ}
+    (h1 : S1 ≤ Real.arccos ((1:ℝ) / 3750))
+    (h2 : S2 ≤ Real.arccos ((1:ℝ) / 3750))
+    (h3 : S3 ≤ Real.arccos ((5083:ℝ) / 35250)) :
+    S1 + S2 + S3 + Real.arccos (-(10601 / 80000)) < 2 * Real.pi := by
+  have hπpos := Real.pi_pos
+  have hπ3 : (0:ℝ) ≤ Real.pi / 3 := by linarith
+  have hπ3' : Real.pi / 3 ≤ Real.pi := by linarith
+  have he1 : (1:ℝ) / 3750 ≤ Real.cos (Real.pi / 3) := by
+    rw [Real.cos_pi_div_three]
+    norm_num
+  have he2 := Real.arccos_le_arccos he1
+  rw [Real.arccos_cos hπ3 hπ3'] at he2
+  have hm1 : (5083:ℝ) / 35250 ≤ Real.cos (Real.pi / 3) := by
+    rw [Real.cos_pi_div_three]
+    norm_num
+  have hm2 := Real.arccos_le_arccos hm1
+  rw [Real.arccos_cos hπ3 hπ3'] at hm2
+  have he0 : Real.arccos ((1:ℝ) / 3750) ≤ Real.pi / 2 := by
+    have h := Real.arccos_le_arccos (show (0:ℝ) ≤ (1:ℝ) / 3750 by norm_num)
+    rwa [Real.arccos_zero] at h
+  have hm0 : Real.arccos ((5083:ℝ) / 35250) ≤ Real.pi / 2 := by
+    have h := Real.arccos_le_arccos (show (0:ℝ) ≤ (5083:ℝ) / 35250 by norm_num)
+    rwa [Real.arccos_zero] at h
+  have hcose : Real.cos (Real.arccos ((1:ℝ) / 3750)) = (1:ℝ) / 3750 :=
+    Real.cos_arccos (by norm_num) (by norm_num)
+  have hcosm : Real.cos (Real.arccos ((5083:ℝ) / 35250)) = (5083:ℝ) / 35250 :=
+    Real.cos_arccos (by norm_num) (by norm_num)
+  have hse : ((14062499:ℝ) / 14062500)
+      ≤ Real.sin (Real.arccos ((1:ℝ) / 3750)) := by
+    rw [Real.sin_arccos]
+    exact Real.le_sqrt_of_sq_le (by norm_num : ((14062499:ℝ) / 14062500) ^ 2
+      ≤ (1:ℝ) - ((1:ℝ) / 3750) ^ 2)
+  have hsm : ((34881:ℝ) / 35250)
+      ≤ Real.sin (Real.arccos ((5083:ℝ) / 35250)) := by
+    rw [Real.sin_arccos]
+    exact Real.le_sqrt_of_sq_le (by norm_num : ((34881:ℝ) / 35250) ^ 2
+      ≤ (1:ℝ) - ((5083:ℝ) / 35250) ^ 2)
+  have hcos2e : Real.cos ((2:ℝ) * Real.arccos ((1:ℝ) / 3750))
+      = (2:ℝ) * ((1:ℝ) / 3750) ^ 2 - 1 := by
+    rw [Real.cos_two_mul, hcose]
+  have hsin2e : Real.sin ((2:ℝ) * Real.arccos ((1:ℝ) / 3750))
+      = (2:ℝ) * Real.sin (Real.arccos ((1:ℝ) / 3750)) * ((1:ℝ) / 3750) := by
+    rw [Real.sin_two_mul, hcose]
+  have hA2' : ((2:ℝ) * (14062499:ℝ) / 14062500 * ((1:ℝ) / 3750))
+      ≤ (2:ℝ) * Real.sin (Real.arccos ((1:ℝ) / 3750)) * ((1:ℝ) / 3750) :=
+    mul_le_mul_of_nonneg_right (by linarith [hse]) (by norm_num)
+  have hse' : (0:ℝ) ≤ (2:ℝ) * Real.sin (Real.arccos ((1:ℝ) / 3750))
+      * ((1:ℝ) / 3750) :=
+    mul_nonneg (mul_nonneg (by norm_num)
+      (Real.sin_nonneg_of_nonneg_of_le_pi (Real.arccos_nonneg _)
+        (Real.arccos_le_pi _))) (by norm_num)
+  have hshift : ((2:ℝ) * (14062499:ℝ) / 14062500 * ((1:ℝ) / 3750))
+        * ((34881:ℝ) / 35250)
+      ≤ (2:ℝ) * Real.sin (Real.arccos ((1:ℝ) / 3750)) * ((1:ℝ) / 3750)
+        * Real.sin (Real.arccos ((5083:ℝ) / 35250)) :=
+    mul_le_mul hA2' hsm (by norm_num) hse'
+  have hterm : ((2:ℝ) * ((1:ℝ) / 3750) ^ 2 - 1) * ((5083:ℝ) / 35250)
+      - ((2:ℝ) * (14062499:ℝ) / 14062500 * ((1:ℝ) / 3750)) * ((34881:ℝ) / 35250)
+      ≤ -(1341:ℝ) / 10000 := by norm_num
+  have hsum2 : Real.arccos ((1:ℝ) / 3750) + Real.arccos ((1:ℝ) / 3750)
+      = (2:ℝ) * Real.arccos ((1:ℝ) / 3750) := by ring
+  have hlo : Real.pi ≤ Real.arccos ((1:ℝ) / 3750) + Real.arccos ((1:ℝ) / 3750)
+      + Real.arccos ((5083:ℝ) / 35250) := by linarith [he2, hm2]
+  have hhi : Real.arccos ((1:ℝ) / 3750) + Real.arccos ((1:ℝ) / 3750)
+      + Real.arccos ((5083:ℝ) / 35250) ≤ 2 * Real.pi := by
+    linarith [he0, hm0]
+  refine pmOrthoOffArcTriCapGen_p35 h1 h2 h3 hlo hhi ?_
+    (show -(1341:ℝ) / 10000 < -(10601 / 80000) by norm_num)
+  rw [hsum2, Real.cos_add ((2:ℝ) * Real.arccos ((1:ℝ) / 3750))
+    (Real.arccos ((5083:ℝ) / 35250)), hcos2e, hsin2e, hcosm]
+  linarith [hterm, hshift]
+
+-- pm17 axcheck tail (probe only; dropped from the kit proper)
+/-- **THE PLANE-CROWDING RESIDUAL** (lkgrqui-planemiss2-w3): two distinct,
+mutually non-adjacent (scsDiag) ring vertices can not both lie in one dart
+face plane `aff {0, vv j, vv (j+1)}`.  This single named root absorbs all
+four azimuth corners C1–C4 of `sectorTriPlaneMiss_p35`: C1 at dart `j`
+directly; C2 at dart `j + k - 1` (the span-face plane `aff {0, vv i,
+vv (i+k-1)}` is the dart-`(i+k-1)` face plane by `wedgeVvAddK_p35`); C3/C4
+at dart `j` with the flat-span rendering.  HOL route (TECOXBM.hl:311
+`AFF_GT_INTER_AFF_SY` endgame): (i) the whole ring sits in every dart's
+closed half-space (`pmCrossGeDart_p35`, closed in this file); (ii) an
+in-plane vertex propagates plane membership to its ring neighbors by the
+sign algebra `det(x, x⁺, b) = β·det(b, c, x⁺)`, `det(x, x⁺, c) =
+-α·det(b, c, x⁺)` against the two neighbor darts' half-spaces; (iii) with
+the whole ring coplanar, the planar winding + consecutive `b ≤ cstab` +
+pairwise `2 ≤ a` at distinct residues (`isScsV39`) + `ncard + k ≤ 6` +
+`dist u w ≤ cstab` contradict.
+
+pm7 status (lkgrqui-planemiss7-w3): the statement is frozen verbatim; the
+body now branches on the sector span `θ_j`.  Case `θ_j < π` is CLOSED: the
+successor is forced off the dart plane (`pmEOffPlaneOfLtPi_p35`) and the
+Fork-2 kill closes (`pmFork2Kill_p35`).  Case `θ_j = π` is reduced by the
+closed flat-sector reducer (`pmBRootReduce_p35`): the span vertex `d` sits
+in the plane on the negative `b`-side, and every placement of the successor
+`e` either dies (cone kill / antipodal wedge) or leaves the winding-order
+survivor data (negative `a`-coefficient, or the antipodal wedge with the
+dart-`(j+1)` sector flat).  The residual root (single sorry below) is the
+ring winding order + annulus metric squeeze over that survivor data.
+
+pm8 status (lkgrqui-planemiss8-w3): the statement stays frozen verbatim; the
+pm8 kit (between the flat-sector reducer and this theorem) globalizes every
+residual leaf's dart half-space to the whole ring, flattens the successor
+sector, and detects the capped-vertex quadrants, and its two globalizers are
+wired into the case branches below; the residual root is now precisely the
+planar winding order + annulus metric squeeze over that data (see the root
+comment below for the exact next-lane roadmap).
+
+pm9 status (lkgrqui-planemiss9-w3): the statement stays frozen verbatim; the
+pm9 kit (between `pmFlatSuccPi_p35` and this theorem) closes the normal-axis
+azimuth engine — the coerced cross-product axis is nonzero
+(`pmNormalAxisNe_p35`), orthogonal plane vectors are never collinear with it
+(`pmAxisOrthoNC_p35`), azimuth zero renders as open-ray + axis slack
+(`pmAzimNormalRender0_p35`), the cosine identity `cos(azim 0 ax a x)·(‖a‖‖x‖)
+= a⬝x` holds for axis-orthogonal `a, x` (`pmAzimOrthoCos_p35`, frame
+computation), the cross-sign side placement `(a×x)·ax ≷ 0 ⟹ azim 0 ax a x ≶ π`
+(`pmAzimOrthoSideGt/Lt_p35`), the FAN-free additive chain instance
+(`pmAzimNormalChain_p35`), and the metric gap bounds (chord ≥ 2 ⟹ azimuthal
+cos ≤ 2719/3969 `pmAzimOrthoGap46_p35`; chord ≤ cstab ⟹ cos ≥ −10601/80000
+`pmAzimOrthoFarCos_p35`; the `[0, π]` arccos form `pmAzimOrthoGapGe_p35`).
+All standard-three (axcheck-pm9.out). The residual root narrows to: the
+azimuthal step bound is an IN-PLANE-pair statement — an off-plane vertex
+(`n·v > 0`, small projection radius) admits an azimuthally tiny/backtracking
+step at chord ∈ [2, cstab], so the winding kill needs the in-plane
+run/squeeze endgame (see the root comment below). -/
+private theorem pmPlaneCrowding_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hdist : dist u w ≤ cstab)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (j : ℕ)
+    (hu : ∃ c d : ℝ, u - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0))
+    (hw : ∃ c d : ℝ, w - 0 = c • (vv j - 0) + d • (vv (j + 1) - 0)) : False := by
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  obtain ⟨-, hθle⟩ := wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan j
+  -- THE SINGLE RESIDUAL ROOT (this theorem's own sorry, until closed): the
+  -- winding-order root.  Leaves reaching it carry, after the two closed
+  -- reducers: (R-flat) `θ_j = π` with `d = vv (j+k-1)` in the dart-`j`
+  -- plane at negative `b`-coordinate, plus either the half-plane data
+  -- (`α_u, α_w ≥ 0` when `e` is off the plane) or the antipodal-wedge data
+  -- (`e` at negative `a`- and `b`-coordinate with the dart-`(j+1)` sector
+  -- flat); or (R-tilt) the survivor `e` at negative `a`-coefficient.
+  -- pm8 (lkgrqui-planemiss8-w3) globalizes every leaf's dart half-space to
+  -- the whole ring (pmTiltUpperHalf_p35 / pmFlatAUpperHalf_p35, wired below),
+  -- flattens the successor sector (`pmFlatSuccPi_p35`: the survivor forces
+  -- `θ_{j+1} = π`), and detects capped-vertex quadrants (`pmCapQuadSucc_p35`
+  -- / `pmCapQuadPred_p35`: an in-plane vertex with a capped neighbor is
+  -- forced into `α ≤ 0 ∧ 0 ≤ β` resp. `0 ≤ α ∧ β ≤ 0`).  The remaining core
+  -- is the planar winding order: polar angles via the normal-axis azimuth
+  -- (`azim 0 (a×b) a y`, FAN-free chain by `azimAddTriple_p35` +
+  -- `azim_compl`), the step bounds (chord ≤ cstab ⟹ step ≤ 97.63° by
+  -- `pmFarCos_p35`; chord ≥ 2 ⟹ step ≥ 46.74° by `pmCosLe46_p35`), and the
+  -- k ∈ {4,5,6} squeeze/counting (`pmDiag2Squeeze_p35` at the common
+  -- run-neighbour; k = 6 via the counting conjunct, k ∈ {4,5} via
+  -- ncard ≤ 2/1).  pm9 (lkgrqui-planemiss9-w3) closes the normal-axis
+  -- azimuth ENGINE (pm9 kit above, all standard-three): with `axN := (a×b)`,
+  -- `azim 0 axN a x` reads in-plane polar angles; azimuth zero = open
+  -- `a`-ray (pmAzimNormalRender0_p35), `cos(azim)·(‖a‖‖x‖) = a⬝x`
+  -- (pmAzimOrthoCos_p35), cross-sign placement `(a×x)·ax ≷ 0 ⟹ azim ≶ π`
+  -- (pmAzimOrthoSideGt/Lt_p35), additive chain (pmAzimNormalChain_p35), and
+  -- the metric gap bounds for axis-orthogonal pairs: chord ≥ 2 ⟹ azimuthal
+  -- cos ≤ 2719/3969 (≥ 46.74° gap), chord ≤ cstab ⟹ cos ≥ −10601/80000
+  -- (≤ 97.63° gap), plus the `[0, π]` arccos form (pmAzimOrthoGap46/
+  -- FarCos/GapGe_p35).  REMAINING CORE (pm9 sizing finding): the step lower
+  -- bound is an IN-PLANE-pair statement — an off-plane vertex with small
+  -- projection radius admits an azimuthally tiny (even backtracking) step at
+  -- chord ∈ [2, cstab], so the naive 3-step arc ≥ 140.2° account fails for
+  -- off-plane runs; the kill needs (i) the d = 2 squeeze at the common
+  -- in-plane neighbour (pmDiag2Squeeze_p35, blocked case via the quadrant
+  -- route pmCapQuadSucc/Pred_p35 + pmNotSameRay_p35 — same-azimuth in-plane
+  -- pairs are same-ray kills), (ii) the d = 3 counting/angle account after
+  -- planarity of the arc is established (planarity propagation: a blocked
+  -- in-plane triple forces neighbour darts' planes to coincide with P), and
+  -- (iii) the wrap Σ gaps = 2π for in-plane runs.  DISCHARGES: next-lane
+  -- input; the ladder pieces above are all closed (standard three).
+  have hroot : False := by
+    sorry
+  rcases lt_or_eq_of_le hθle with hθlt | hθeq
+  · -- Case A: θ_j < π (Fork-2 closed; the survivor leaf globalizes the
+    -- dart-(j+1) half-space by the pm8 kit)
+    rcases pmEOffPlaneOfLtPi_p35 hscs hdiag hBB hE hFF j hθlt with heP | hop
+    · exact pmFork2Kill_p35 hscs hdiag hp hq hBB hE hFF j hu hw heP hθlt
+    · have hup : ∀ y ∈ Set.range vv, (0:ℝ) ≤
+          (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ
+            (y : Fin 3 → ℝ) :=
+        fun y hy => pmTiltUpperHalf_p35 hscs hdiag hBB hE hFF j hop y hy
+      exact hroot
+  · -- Case B: θ_j = π: every reducer leaf globalizes the dart half-space
+    -- (in-plane successor leaves via the survivor data, off-plane successor
+    -- via the negative-b-side span vertex)
+    obtain ⟨hdneg, hB1, hB2⟩ :=
+      pmBRootReduce_p35 hscs hdiag hp hq hBB hE hFF j hu hw hθeq
+    by_cases heP : ∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) +
+      de • (vv (j + 1) - 0)
+    · have hsurv : ∃ ce de : ℝ, vv (j + 1 + 1) - 0 = ce • (vv j - 0) +
+          de • (vv (j + 1) - 0) ∧ ce < 0 := by
+        rcases hB2 heP with h | h
+        · exact h
+        · obtain ⟨hanti, -⟩ := h
+          obtain ⟨ce, de, hM, hce, -⟩ := hanti
+          exact ⟨ce, de, hM, hce⟩
+      have hup : ∀ y ∈ Set.range vv, (0:ℝ) ≤
+          (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ
+            (y : Fin 3 → ℝ) :=
+        fun y hy => pmTiltUpperHalf_p35 hscs hdiag hBB hE hFF j hsurv y hy
+      exact hroot
+    · have hup : ∀ y ∈ Set.range vv, (0:ℝ) ≤
+          (crossProduct (vv j : Fin 3 → ℝ) (vv (j + 1) : Fin 3 → ℝ)) ⬝ᵥ
+            (y : Fin 3 → ℝ) :=
+        fun y hy => pmFlatAUpperHalf_p35 hscs hdiag hBB hE hFF j hdneg y hy
+      exact hroot
+  -- DISCHARGES (next-lane input): the winding kill is the planar polar-angle
+  -- chain (normal-axis azimuth) + metric squeeze (k ∈ {4,5,6} from
+  -- diagKGe4/scsKLe6), fed by the pm8 globalization/quadrant data.
+/-- **THE SHARPENED NAMED RESIDUAL** (lkgrqui-sectortri-w2): the diagonal
+endpoints never sit together in an azimuth corner of any dart sector.
+With `φ_x(j) := azim 0 (vv j) (vv (j+1)) x` and
+`θ_j := azim 0 (vv j) (vv (j+1)) (vv (j+s.k-1))` (the sector span, which
+`wedgeSectorMem_p35` bounds by π and `dartSpanNeCyc_p35` unbounds from 0)
+the four corners are: C1 `φ_u = φ_w = 0`, C2 `φ_u = φ_w = θ`, and — for
+flat darts θ = π — C3 `(φ_u, φ_w) = (0, π)`, C4 `(φ_u, φ_w) = (π, 0)`.
+This is the azimuth rendering of the dart-plane miss
+`¬(u ∈ aff {0, vv j, vv (j+1)} ∧ w ∈ aff {…})`, i.e. the strictness core
+of HOL `AFF_GT_INTER_AFF_SY` (TECOXBM.hl:311, QKNVMLB.hl 3838-4024):
+the same-azimuth pairs with axial separation and the opposite-azimuth
+pairs at flat darts satisfy every readable metric conjunct (annulus
+norms, a-bounds at distinct residues, consecutive b ≤ cstab, and the
+ConvexLocalFan conjunct itself — a span-π dart only forces the closed
+half-space), so the exclusion must come from the full fan-theory route
+(HOL route: DETERMINE_WEDGE_IN_FAN + PGSQVBL + LOFA_DETERMINE_AZIM_IN_FA
++ AZIM_PI_WEDGE_GE_CROSS_DOT + WEDGE_GE_EQ_AFF_GE + AZIM_CYCLE_EQ_SIGMA_FAN
++ sigma_fan_in_set_of_edge + UNIQUE_AZIM_0_POINT_FAN + FAN_IMP_EE_EQ_SET_OF_EDGE
++ LOFA_CARD_EE_V_1; Lean-world pieces `unique_azim0_point_fan`,
+`unique_azim_point_fan`, `sum2_azim_fan`, `mono_sigma_fan`,
+`permutes_sigma_fan` are in the closure and standard-three, probe
+probes/probe1_fanvis.lean — the remaining chain is the next lane's
+sizing input). -/
+private theorem sectorTriPlaneMiss_p35 {s : ScsV39} {p q : ℕ} {u w : V3}
+    {E : Set (Set V3)} {FF : Set (V3 × V3)} {vv : ℕ → V3}
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (_hdist : dist u w ≤ cstab)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF) :
+    ∀ j : ℕ,
+      ¬(azim 0 (vv j) (vv (j + 1)) u = 0 ∧ azim 0 (vv j) (vv (j + 1)) w = 0) ∧
+      ¬(azim 0 (vv j) (vv (j + 1)) u = azim 0 (vv j) (vv (j + 1)) (vv (j + s.k - 1)) ∧
+        azim 0 (vv j) (vv (j + 1)) w = azim 0 (vv j) (vv (j + 1)) (vv (j + s.k - 1))) ∧
+      ¬(azim 0 (vv j) (vv (j + 1)) u = 0 ∧ azim 0 (vv j) (vv (j + 1)) w = Real.pi) ∧
+      ¬(azim 0 (vv j) (vv (j + 1)) u = Real.pi ∧ azim 0 (vv j) (vv (j + 1)) w = 0) := by
+  intro j
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  refine ⟨fun hc => ?_, fun hc => ?_, fun hc => ?_, fun hc => ?_⟩
+  · -- C1: both endpoints at azimuth 0 sit in the dart face plane
+    obtain ⟨hu0, hw0⟩ := hc
+    obtain ⟨huP, hwP, -⟩ := pmC1AtDart_p35 hscs hdiag hp hq hBB hE hFF j hu0 hw0
+    exact pmPlaneCrowding_p35 hscs hdiag _hdist hp hq hBB hE hFF j huP hwP
+  · -- C2: the span-face plane aff {0, vv j, vv (j+k-1)} is the dart
+    -- (j+k-1) face plane (wedgeVvAddK_p35 rewrites vv (j+k) = vv j)
+    obtain ⟨huθ, hwθ⟩ := hc
+    obtain ⟨c1, d1, hu1⟩ := (pmC2AtDart_p35 hscs hdiag hp hq hBB hE hFF j huθ hwθ).1
+    obtain ⟨c2, d2, hw1⟩ := (pmC2AtDart_p35 hscs hdiag hp hq hBB hE hFF j huθ hwθ).2.1
+    have hj1 : (j + s.k - 1) + 1 = j + s.k := by omega
+    have hvsi : vv (j + s.k - 1 + 1) = vv j := by
+      rw [hj1]; exact wedgeVvAddK_p35 hBB.2.1 j
+    refine pmPlaneCrowding_p35 hscs hdiag _hdist hp hq hBB hE hFF (j + s.k - 1) ?_ ?_
+    · exact ⟨d1, c1, by rw [hu1, hvsi]; exact add_comm _ _⟩
+    · exact ⟨d2, c2, by rw [hw1, hvsi]; exact add_comm _ _⟩
+  · -- C3: u at azimuth 0, w at azimuth π (flat span)
+    obtain ⟨hu0, hwπ⟩ := hc
+    obtain ⟨huP, hwP, -, -⟩ := pmC3AtDart_p35 hscs hdiag hp hq hBB hE hFF j hu0 hwπ
+    exact pmPlaneCrowding_p35 hscs hdiag _hdist hp hq hBB hE hFF j huP hwP
+  · -- C4: u at azimuth π, w at azimuth 0 (flat span)
+    obtain ⟨huπ, hw0⟩ := hc
+    obtain ⟨huP, hwP, -, -⟩ := pmC4AtDart_p35 hscs hdiag hp hq hBB hE hFF j huπ hw0
+    exact pmPlaneCrowding_p35 hscs hdiag _hdist hp hq hBB hE hFF j huP hwP
+  -- DISCHARGES (lkgrqui-planemiss2-w3): source TECOXBM.hl:311
+  -- (AFF_GT_INTER_AFF_SY) strictness core.  All four corners reduce to the
+  -- named residual `pmPlaneCrowding_p35` (single sorryAx root): C1 @ dart
+  -- j, C2 @ dart j+k-1, C3/C4 @ dart j via the π-rendering
+  -- (pmRenderPi_p35).  Consumed by sectorTriCore_p35 unchanged.
+
+/-- **(A)-rung A3 (pm5)**: the double-face cone — every ring vertex sits in
+both adjacent dart-face half-spaces at dart `i` (the convex-cone form of the
+closed sector: faces of dart `i` and of cyclic dart `i+k-1`). -/
+private theorem pmTwoFaceCone_p35 {vv : ℕ → V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hfan : ConvexLocalFan (Set.range vv) E FF) (i : ℕ) (x : V3)
+    (hx : x ∈ Set.range vv) :
+    (0:ℝ) ≤ (crossProduct ((vv i : V3) : Fin 3 → ℝ)
+        ((vv (i + 1) : V3) : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) ∧
+    (0:ℝ) ≤ (crossProduct ((vv (i + k - 1) : V3) : Fin 3 → ℝ)
+        ((vv i : V3) : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) := by
+  refine ⟨pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan i x hx, ?_⟩
+  have h1 := pmCrossGeDart_p35 hk3 hper hinj hE hFF hfan (i + k - 1) x hx
+  have hk1 : (i + k - 1) + 1 = i + k := by omega
+  have hvsi : vv ((i + k - 1) + 1) = vv i := by rw [hk1]; exact wedgeVvAddK_p35 hper i
+  rw [hvsi] at h1
+  exact h1
+
+/-- **(A)-rung A4 (pm5)**: below-π sector collapse — an in-plane point whose
+azimuth is bounded by a below-π sector span sits at azimuth `0`. -/
+private theorem pmPlaneAzim0OfLtPi_p35 {a b x : V3} {s t : ℝ} (ha0 : a ≠ 0)
+    (hb0 : b ≠ 0) (hnc : ¬ Collinear3 0 a b)
+    (hx : x - 0 = s • (a - 0) + t • (b - 0))
+    {θ : ℝ} (hsec : azim 0 a b x ≤ θ) (hθ : θ ≤ Real.pi) (hlt : θ < Real.pi) :
+    azim 0 a b x = 0 := by
+  rcases azimPlanePlace_p35 ha0 hb0 hnc ⟨s, t, hx⟩ with h0 | hpi
+  · exact h0
+  · exfalso
+    linarith
+
+/-- **(A)-rung A5 (pm5)**: the axis-line pair kill — two distinct annulus
+points on one line through `0` with the diagonal chord bounds contradict
+(same ray: the chord–cosine same-ray kill; opposite rays: chord ≥ 4). -/
+private theorem pmAxisPairKill_p35 {a x y : V3} {cx cy : ℝ} (ha0 : a ≠ 0)
+    (hx : x - 0 = cx • (a - 0)) (hy : y - 0 = cy • (a - 0))
+    (hx2 : (2:ℝ) ≤ ‖x‖) (hx' : ‖x‖ ≤ 2 * h0) (hy2 : (2:ℝ) ≤ ‖y‖) (hy' : ‖y‖ ≤ 2 * h0)
+    (hxy : x ≠ y) (h2 : (2:ℝ) ≤ dist x y) (hd : dist x y ≤ cstab) : False := by
+  have hx0 : x ≠ (0:V3) := by
+    intro hzz
+    rw [hzz] at hx2
+    norm_num at hx2
+  have hy0 : y ≠ (0:V3) := by
+    intro hzz
+    rw [hzz] at hy2
+    norm_num at hy2
+  have cx0 : cx ≠ 0 := by
+    intro h
+    rw [h, zero_smul, sub_zero] at hx
+    exact hx0 hx
+  have cy0 : cy ≠ 0 := by
+    intro h
+    rw [h, zero_smul, sub_zero] at hy
+    exact hy0 hy
+  have hxe : (x:V3) = cx • (a - 0) := by simpa using hx
+  have hye : (y:V3) = cy • (a - 0) := by simpa using hy
+  have hdn : dist x y = ‖x - y‖ := by simp [dist_eq_norm]
+  have hc4 : cstab < (4:ℝ) := by norm_num [cstab]
+  rcases lt_trichotomy cx 0 with hcx | hcx0 | hcx
+  · rcases lt_trichotomy cy 0 with hcy | hcy0 | hcy
+    · -- both negative: same ray, positive ratio
+      have hrat : x - 0 = (cx / cy) • (y - 0) := by
+        rw [hx, hy, smul_smul, div_mul_cancel₀ _ cy0]
+      exact pmNotSameRay_p35 (c := cx / cy) hx2 hx' hy2 hy'
+        (le_of_lt (div_pos_of_neg_of_neg hcx hcy)) hrat h2
+    · exact absurd hcy0 cy0
+    · -- mixed signs: chord = ‖x‖ + ‖y‖ ≥ 4
+      exfalso
+      have hsub : x - y = (cx - cy) • (a - 0) := by rw [hxe, hye, sub_smul]
+      have h3 : ‖x - y‖ = |cx - cy| * ‖a‖ := by
+        rw [hsub, norm_smul, Real.norm_eq_abs]
+        simp
+      have h1 : ‖x‖ = |cx| * ‖a‖ := by
+        rw [hxe, norm_smul, Real.norm_eq_abs]
+        simp
+      have h4 : ‖y‖ = |cy| * ‖a‖ := by
+        rw [hye, norm_smul, Real.norm_eq_abs]
+        simp
+      have hX : ‖x‖ = -cx * ‖a‖ := by rw [h1, abs_of_neg hcx]
+      have hY : ‖y‖ = cy * ‖a‖ := by rw [h4, abs_of_pos hcy]
+      have hn : ‖x - y‖ = cy * ‖a‖ - cx * ‖a‖ := by
+        rw [h3, abs_of_neg (show cx - cy < 0 by linarith)]
+        ring
+      linarith
+  · exact absurd hcx0 cx0
+  · rcases lt_trichotomy cy 0 with hcy | hcy0 | hcy
+    · -- mixed signs (mirror): chord = ‖x‖ + ‖y‖ ≥ 4
+      exfalso
+      have hsub : x - y = (cx - cy) • (a - 0) := by rw [hxe, hye, sub_smul]
+      have h3 : ‖x - y‖ = |cx - cy| * ‖a‖ := by
+        rw [hsub, norm_smul, Real.norm_eq_abs]
+        simp
+      have h1 : ‖x‖ = |cx| * ‖a‖ := by
+        rw [hxe, norm_smul, Real.norm_eq_abs]
+        simp
+      have h4 : ‖y‖ = |cy| * ‖a‖ := by
+        rw [hye, norm_smul, Real.norm_eq_abs]
+        simp
+      have hX : ‖x‖ = cx * ‖a‖ := by rw [h1, abs_of_pos hcx]
+      have hY : ‖y‖ = -cy * ‖a‖ := by rw [h4, abs_of_neg hcy]
+      have hn : ‖x - y‖ = cx * ‖a‖ - cy * ‖a‖ := by
+        rw [h3, abs_of_pos (show (0:ℝ) < cx - cy by linarith)]
+        ring
+      linarith
+    · exact absurd hcy0 cy0
+    · -- both positive: same ray, positive ratio
+      have hrat : x - 0 = (cx / cy) • (y - 0) := by
+        rw [hx, hy, smul_smul, div_mul_cancel₀ _ cy0]
+      exact pmNotSameRay_p35 (c := cx / cy) hx2 hx' hy2 hy'
+        (le_of_lt (div_pos hcx hcy)) hrat h2
+
+/-- **(A)-rung A6 (pm5)**: flat-run normal parallelism — two independent
+plane vectors of `span(a, b)` have their cross product a nonzero multiple of
+`cross(a, b)` (the orientation sign is read off the ring at the next lane). -/
+private theorem pmFlatRunNormal_p35 {a b p q : V3} (ha0 : a ≠ 0)
+    (hncab : ¬ Collinear3 0 a b)
+    (hp : ∃ s t : ℝ, p - 0 = s • (a - 0) + t • (b - 0))
+    (hq : ∃ s t : ℝ, q - 0 = s • (a - 0) + t • (b - 0))
+    (hncpq : ¬ Collinear3 0 p q) :
+    ∃ ζ : ℝ, crossProduct (p : Fin 3 → ℝ) (q : Fin 3 → ℝ)
+      = ζ • crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) ∧ ζ ≠ 0 := by
+  obtain ⟨s, t, hp'⟩ := hp
+  obtain ⟨s', t', hq'⟩ := hq
+  simp only [sub_zero] at hp' hq'
+  have hpcoe : (p : Fin 3 → ℝ) = s • (a : Fin 3 → ℝ) + t • (b : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hp'
+  have hqcoe : (q : Fin 3 → ℝ) = s' • (a : Fin 3 → ℝ) + t' • (b : Fin 3 → ℝ) :=
+    congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hq'
+  have haa : crossProduct (a : Fin 3 → ℝ) (a : Fin 3 → ℝ) = 0 := cross_self _
+  have hbb : crossProduct (b : Fin 3 → ℝ) (b : Fin 3 → ℝ) = 0 := cross_self _
+  have hba : crossProduct (b : Fin 3 → ℝ) (a : Fin 3 → ℝ)
+      = -(crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) :=
+    (cross_anticomm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)).symm
+  have hexp : crossProduct (p : Fin 3 → ℝ) (q : Fin 3 → ℝ)
+      = (s * t' - s' * t) • crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) := by
+    rw [hpcoe, hqcoe, pmCrossAddL_p35, pmCrossSmulL_p35, pmCrossSmulL_p35,
+      pmCrossAddR_p35, pmCrossAddR_p35, pmCrossSmulR_p35, pmCrossSmulR_p35,
+      pmCrossSmulR_p35, pmCrossSmulR_p35, haa, hbb, hba]
+    module
+  refine ⟨s * t' - s' * t, hexp, ?_⟩
+  intro hzero
+  have hdet : s * t' = s' * t := by linarith
+  -- the determinant condition makes p and q collinear with 0
+  have hcoord0 : s • (a - 0) + t • (b - 0) = (0:V3) → s = 0 ∧ t = 0 :=
+    fun hco => pmPlaneCoordZero_p35 ha0 hncab hco
+  have hcoordOfPz : (p:V3) = (0:V3) → s = 0 ∧ t = 0 := by
+    intro hzz
+    exact hcoord0 (by simpa using hp'.symm.trans hzz)
+  by_cases hps : s = 0
+  · rcases eq_or_ne t 0 with ht0 | ht
+    · -- p = 0: {0, p, q} is a two-point set
+      have hzz : (p:V3) = (0:V3) := by
+        rw [hp', hps, ht0]
+        simp
+      exact hncpq (by
+        show Collinear ℝ ({(0:V3), p, q} : Set V3)
+        rw [show ({(0:V3), p, q} : Set V3) = ({(0:V3), q} : Set V3) from by
+          ext z; simp [hzz]]
+        exact collinear_pair ℝ (0:V3) q)
+    · -- s = 0, t ≠ 0: s' = 0 and q = (t'/t) • p
+      rw [hps, zero_mul, zero_sub] at hzero
+      have hs'0 : s' = 0 := by
+        have hst : s' * t = 0 := by linarith
+        rcases mul_eq_zero.mp hst with h | h
+        · exact h
+        · exact absurd h ht
+      have hpne : (p:V3) ≠ 0 := by
+        intro hzz
+        obtain ⟨hsz, htz⟩ := hcoordOfPz hzz
+        exact ht htz
+      refine hncpq ((collinear3_iff_smul (v := (0:V3)) (w := p) (w1 := q) hpne).mpr
+        ⟨t' / t, ?_⟩)
+      rw [hp', hq', hps, hs'0]
+      simp only [sub_zero, zero_smul, zero_add, smul_smul,
+        div_mul_cancel₀ _ ht]
+  · rcases eq_or_ne t 0 with ht0 | ht
+    · -- s ≠ 0, t = 0: t' = 0 and q = (s'/s) • p
+      rw [ht0, mul_zero] at hdet
+      have ht'0 : t' = 0 := by
+        have hst : s * t' = 0 := hdet
+        rcases mul_eq_zero.mp hst with h | h
+        · exact absurd h hps
+        · exact h
+      have hpne : (p:V3) ≠ 0 := by
+        intro hzz
+        obtain ⟨hsz, htz⟩ := hcoordOfPz hzz
+        exact hps hsz
+      refine hncpq ((collinear3_iff_smul (v := (0:V3)) (w := p) (w1 := q) hpne).mpr
+        ⟨s' / s, ?_⟩)
+      rw [hp', hq', ht0, ht'0]
+      simp only [sub_zero]
+      rw [smul_add, smul_smul, smul_smul, div_mul_cancel₀ _ hps, mul_zero]
+    · -- s ≠ 0, t ≠ 0: q = (s'/s) • p
+      have htrans : (s' / s) * t = t' := by
+        rw [div_mul_eq_mul_div, div_eq_iff hps]
+        linarith
+      have hpne : (p:V3) ≠ 0 := by
+        intro hzz
+        obtain ⟨hsz, htz⟩ := hcoordOfPz hzz
+        exact hps hsz
+      refine hncpq ((collinear3_iff_smul (v := (0:V3)) (w := p) (w1 := q) hpne).mpr
+        ⟨s' / s, ?_⟩)
+      rw [hp', hq']
+      simp only [sub_zero]
+      rw [smul_add, smul_smul, smul_smul, div_mul_cancel₀ _ hps, htrans]
+/-- The on-axis x θ-boundary corner kill (new kit item). -/
+private theorem axisBoundKill_p35 {b c d u w : V3} (θ' : ℝ)
+    (hb0 : b ≠ 0) (hd0 : d ≠ 0)
+    (hncbc : ¬ Collinear3 0 b c) (hncdb : ¬ Collinear3 0 d b)
+    (hθw : azim 0 b c w = azim 0 b c d)
+    (hncbw : ¬ Collinear3 0 b w)
+    (haxu : Collinear3 0 b u)
+    (hC1 : ¬(azim 0 d b u = 0 ∧ azim 0 d b w = 0))
+    (hC2 : ¬(azim 0 d b u = θ' ∧ azim 0 d b w = θ'))
+    (hC3 : ¬(azim 0 d b u = 0 ∧ azim 0 d b w = Real.pi))
+    (hC4 : ¬(azim 0 d b u = Real.pi ∧ azim 0 d b w = 0))
+    (hbu : azim 0 d b u ≤ θ')
+    (hθ'π : θ' ≤ Real.pi) : False := by
+  have hbwd : ¬ Collinear3 0 b d := coll3swap_p35.not.mp hncdb
+  obtain ⟨lam, hlam⟩ := (collinear3_iff_smul hb0).mp haxu
+  obtain ⟨c1, hc1, c2, hc2⟩ :=
+    (affGt_pair_iff (v0 := (0:V3)) (v1 := b) (x := d) (y := w)
+      (Ne.symm hb0) hd0 (fun he => hncdb (by rw [he]; exact collinear3_pair_right rfl))).mp
+      ((azim_eq_azim_iff hncbc hbwd hncbw).mp hθw.symm)
+  have hu' : azim 0 d b u = 0 ∨ azim 0 d b u = Real.pi :=
+    azimPlanePlace_p35 hd0 hb0 hncdb ⟨0, lam, by rw [hlam]; module⟩
+  have hw' : azim 0 d b w = 0 ∨ azim 0 d b w = Real.pi :=
+    azimPlanePlace_p35 hd0 hb0 hncdb ⟨c1, c2, hc2⟩
+  rcases hu' with hu0' | huπ <;> rcases hw' with hw0' | hwπ
+  · exact hC1 ⟨hu0', hw0'⟩
+  · exact hC3 ⟨hu0', hwπ⟩
+  · exact hC4 ⟨huπ, hw0'⟩
+  · have hθ'eq : θ' = Real.pi := le_antisymm hθ'π (by rw [← huπ]; exact hbu)
+    exact hC2 (by rw [hθ'eq]; exact ⟨huπ, hwπ⟩)
+
+
+/-- **THE NAMED RESIDUAL** (lkgrqui-tecoxbm3-w2): the sector-triangle core,
+k-generic — exactly `TECOXBMv2_p35` without the unused `hV` hypothesis.
+Ladder status: L0/L1 (membership + consecutive non-collinearity), L2 (lune
+rewrite, imported `wedge_eq_affGt`), L5 (cone transfer) and L6 (strict
+sandwich, `azimSandwich_p35` above) are closed; the remaining roots L3/L4
+are documented in the DISCHARGES note. -/
+private theorem sectorTriCore_p35 (s : ScsV39) (p q : ℕ) (u w : V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3)) (vv : ℕ → V3)
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (_hdist : dist u w ≤ cstab)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF) :
+    ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E := by
+  -- kit extraction: k-guards, periodicity, injectivity, the fan structure
+  have hk4 : 4 ≤ s.k := diagKGe4_p35 hscs hdiag
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hk3 : 3 ≤ s.k := hscs.2.1
+  have hk3lt : 3 < s.k := by omega
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hfan : ConvexLocalFan (Set.range vv) E FF := by
+    rcases hBB.2.2.2 with hle | hcl
+    · omega
+    · rw [← hE, ← hFF]
+      exact hcl
+  have hfan' : Kepler.Text.Fan.FAN 0 (Set.range vv) E := fanOfBB_p35 hk4 hBB hE hFF
+  -- window vertices are nonzero (annulus), and the diag pair is a genuine pair
+  have hvne : ∀ j : ℕ, vv j ≠ (0:V3) := by
+    intro j hj
+    have hm : vv j ∈ ballAnnulus := hBB.1 (Set.mem_range.mpr ⟨j, rfl⟩)
+    exact hm.2 (by simp only [hj, ballAnnulus, Metric.mem_ball, dist_self]; norm_num)
+  have hpk : p % s.k < s.k := Nat.mod_lt _ hk0
+  have hqk : q % s.k < s.k := Nat.mod_lt _ hk0
+  have huw : u ≠ w := by
+    intro he
+    have h : vv (p % s.k) = vv (q % s.k) := by rw [hp, hq]; exact he
+    rw [periodic_mod_eq_p23 hper p, periodic_mod_eq_p23 hper q] at h
+    have hm := vvModEq_p35 hk0 hper hinj h
+    exact hdiag.1 hm
+  have hu0 : u ≠ (0:V3) := by rw [← hp]; exact hvne _
+  have hw0 : w ≠ (0:V3) := by rw [← hq]; exact hvne _
+  -- the four corner exclusions at this dart and at the cyclically previous dart
+  have hPM := sectorTriPlaneMiss_p35 hscs hdiag _hdist hp hq hBB hE hFF
+  intro x hx
+  obtain ⟨i, rfl⟩ : ∃ i, (vv i, vv (i + 1)) = x :=
+    Set.mem_range.mp (by rw [hFF]; exact hx)
+  rw [wedgeCyclic_p35 hk3 hper hinj hE i]
+  intro t ht
+  obtain ⟨β, γ, hβ, hγ, htr⟩ := (triMemAffGt_p35 (v0 := (0:V3)) (x := u) (y := w) (z := t)
+    hu0 hw0 huw).mp ht
+  have hbne : vv i ≠ (0:V3) := hvne i
+  -- dart i facts: consecutive non-collinearity, sector span in (0, π]
+  obtain ⟨hncbc, hncdb⟩ := vvNonCollStep_p35 hscs hBB hk3lt i
+  have hspanπ : azim (0:V3) (vv i) (vv (i + 1)) (vv (i + s.k - 1)) ≤ Real.pi :=
+    (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan i).2
+  -- both diag endpoints sit in the closed sector at dart i
+  have huR : u ∈ Set.range vv := Set.mem_range.mpr ⟨p % s.k, hp⟩
+  have hwR : w ∈ Set.range vv := Set.mem_range.mpr ⟨q % s.k, hq⟩
+  obtain ⟨huθ0, huθ⟩ := (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan i).1 u huR
+  obtain ⟨hwθ0, hwθ⟩ := (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan i).1 w hwR
+  -- far-dart bundle (dart i + k - 1, axis vv (i+k-1), start ray vv i), for the
+  -- two boundary kills
+  have hj1 : (i + s.k - 1) + 1 = i + s.k := by omega
+  have hvsi : vv ((i + s.k - 1) + 1) = vv i := by
+    rw [hj1]; exact wedgeVvAddK_p35 hper i
+  obtain ⟨hC1f, hC2f, hC3f, hC4f⟩ := hPM (i + s.k - 1)
+  rw [hvsi] at hC1f hC2f hC3f hC4f
+  have hfarθ : azim (0:V3) (vv (i + s.k - 1)) (vv i) (vv (i + s.k - 1 + s.k - 1))
+      ≤ Real.pi := by
+    have h := (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan (i + s.k - 1)).2
+    rw [hvsi] at h
+    exact h
+  have hfaru : azim (0:V3) (vv (i + s.k - 1)) (vv i) u
+      ≤ azim (0:V3) (vv (i + s.k - 1)) (vv i) (vv (i + s.k - 1 + s.k - 1)) := by
+    obtain ⟨-, h1⟩ := (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan (i + s.k - 1)).1 u huR
+    rw [hvsi] at h1
+    exact h1
+  have hfarw : azim (0:V3) (vv (i + s.k - 1)) (vv i) w
+      ≤ azim (0:V3) (vv (i + s.k - 1)) (vv i) (vv (i + s.k - 1 + s.k - 1)) := by
+    obtain ⟨-, h1⟩ := (wedgeSectorMem_p35 hk3 hper hinj hE hFF hfan (i + s.k - 1)).1 w hwR
+    rw [hvsi] at h1
+    exact h1
+  -- the membership data: t = β•u + γ•w with β, γ > 0
+  -- azimuth trichotomy of the diag pair at dart i
+  rcases lt_trichotomy (azim (0:V3) (vv i) (vv (i + 1)) u)
+      (azim (0:V3) (vv i) (vv (i + 1)) w) with hlt | heq | hgt
+  · -- u strictly before w
+    by_cases hφu0 : azim (0:V3) (vv i) (vv (i + 1)) u = 0
+    · -- φu = 0: on-axis and in-plane sub-branches
+      have hφwpos : 0 < azim (0:V3) (vv i) (vv (i + 1)) w := by linarith
+      have hncbw : ¬ Collinear3 0 (vv i) w := fun hc =>
+        ne_of_gt hφwpos (azimAxis_p35 hc)
+      by_cases hxcol : Collinear3 0 (vv i) u
+      · -- u on the dart axis: same-ray transfer, with the θ-boundary kill
+        obtain ⟨lam, hlam⟩ := (collinear3_iff_smul hbne).mp hxcol
+        have htin : t - 0 = γ • (w - 0) + (β * lam) • (vv i - 0) := by
+          rw [htr, hlam]; module
+        have hncbt : ¬ Collinear3 0 (vv i) t := by
+          intro hc
+          obtain ⟨α, hα⟩ := (collinear3_iff_smul hbne).mp hc
+          apply hncbw
+          have hk1 : γ • (w - 0) + (β * lam) • (vv i - 0) = α • (vv i - 0) := by
+            rw [← htin, hα]
+          have hk2 : γ • (w - 0) = (α - β * lam) • (vv i - 0) := by
+            rw [sub_smul, eq_sub_iff_add_eq]
+            exact hk1
+          refine (collinear3_iff_smul hbne).mpr ⟨(α - β * lam) / γ, ?_⟩
+          have hceq : γ * ((α - β * lam) / γ) = α - β * lam := by field_simp
+          apply smul_right_injective V3 (ne_of_gt hγ)
+          show γ • (w - 0) = γ • (((α - β * lam) / γ) • (vv i - 0))
+          rw [smul_smul, hceq, hk2]
+        have hwvne : w ≠ vv i := fun he =>
+          hncbw (by rw [he]; exact collinear3_pair_right rfl)
+        have htin2 : t ∈ affGt ({(0:V3), vv i} : Set V3) {w} :=
+          (affGt_pair_iff (v0 := (0:V3)) (v1 := vv i) (x := w) (y := t)
+            (Ne.symm hbne) hw0 hwvne).mpr ⟨γ, hγ, β * lam, htin⟩
+        by_cases hwt : azim (0:V3) (vv i) (vv (i + 1)) w
+            = azim (0:V3) (vv i) (vv (i + 1)) (vv (i + s.k - 1))
+        · refine absurd hwt (fun hc => ?_)
+          exact axisBoundKill_p35 (b := vv i) (c := vv (i + 1))
+            (d := vv (i + s.k - 1)) (u := u) (w := w)
+            (azim (0:V3) (vv (i + s.k - 1)) (vv i) (vv (i + s.k - 1 + s.k - 1)))
+            hbne (hvne (i + s.k - 1)) hncbc hncdb hc hncbw hxcol hC1f hC2f hC3f hC4f
+            hfaru hfarθ
+        · have hφt : azim (0:V3) (vv i) (vv (i + 1)) t
+              = azim (0:V3) (vv i) (vv (i + 1)) w :=
+            ((azim_eq_azim_iff hncbc hncbw hncbt).mpr htin2).symm
+          refine ⟨hncbt, ?_, ?_⟩
+          · rw [hφt]; exact hφwpos
+          · rw [hφt]; exact lt_of_le_of_ne hwθ hwt
+      · -- u in the dart plane, off-axis: cone transfer then one sandwich step
+        have hncbu : ¬ Collinear3 0 (vv i) u := hxcol
+        have huw0 : azim 0 (vv i) u w = azim (0:V3) (vv i) (vv (i + 1)) w := by
+          have h := triAzimAdd_p35 (x := (0:V3)) (v := vv i) (u := vv (i + 1))
+            (w1 := u) (w2 := w) hbne hncbc hncbu hncbw
+            (by rw [hφu0]; exact azim_nonneg 0 (vv i) (vv (i + 1)) w)
+          rw [hφu0] at h
+          linarith
+        have hwlt : azim 0 (vv i) u w < Real.pi := by
+          by_contra hge
+          have hπ : azim (0:V3) (vv i) (vv (i + 1)) w = Real.pi := by
+            have := hwθ
+            linarith
+          exact (hPM i).2.2.1 ⟨hφu0, hπ⟩
+        obtain ⟨hncbt, hut0, hutw⟩ := coneMem_p35 (v0 := (0:V3)) (ax := vv i) (u := u)
+          (w := w) (t := t) hncbu hncbw huw (by rw [huw0]; linarith) hwlt β γ hβ hγ htr
+        have hφteq : azim (0:V3) (vv i) (vv (i + 1)) t = azim 0 (vv i) u t := by
+          have h := triAzimAdd_p35 (x := (0:V3)) (v := vv i) (u := vv (i + 1))
+            (w1 := u) (w2 := t) hbne hncbc hncbu hncbt
+            (by rw [hφu0]; exact azim_nonneg 0 (vv i) (vv (i + 1)) t)
+          rw [hφu0] at h
+          linarith
+        refine ⟨hncbt, ?_, ?_⟩
+        · rw [hφteq]; exact hut0
+        · rw [hφteq]; linarith [hutw, huw0]
+    · -- 0 < φu ≤ φw: cone transfer (L5) + strict sandwich (L6)
+      have hφup : 0 < azim (0:V3) (vv i) (vv (i + 1)) u :=
+        lt_of_le_of_ne huθ0 (Ne.symm hφu0)
+      have hncbu : ¬ Collinear3 0 (vv i) u := fun hc => hφu0 (azimAxis_p35 hc)
+      have hφwp : 0 < azim (0:V3) (vv i) (vv (i + 1)) w := by linarith
+      have hncbw : ¬ Collinear3 0 (vv i) w := fun hc =>
+        ne_of_gt hφwp (azimAxis_p35 hc)
+      have huw0 : azim 0 (vv i) u w
+          = azim (0:V3) (vv i) (vv (i + 1)) w - azim (0:V3) (vv i) (vv (i + 1)) u := by
+        have h := triAzimAdd_p35 (x := (0:V3)) (v := vv i) (u := vv (i + 1))
+          (w1 := u) (w2 := w) hbne hncbc hncbu hncbw (le_of_lt hlt)
+        linarith
+      have hgapπ : azim 0 (vv i) u w < Real.pi := by linarith [huw0, hwθ, hφup]
+      obtain ⟨hncbt, hut0, hutw⟩ := coneMem_p35 (v0 := (0:V3)) (ax := vv i) (u := u)
+        (w := w) (t := t) hncbu hncbw huw (by rw [huw0]; linarith) hgapπ β γ hβ hγ htr
+      obtain ⟨hφtp, hφtlt⟩ := azimSandwich_p35 (v0 := (0:V3)) (ax := vv i) (b := vv (i + 1))
+        (p := u) (q := w) (r := t) (Ne.symm hbne) hncbc hncbu hncbw hncbt hφup
+        (le_of_lt hlt) (hwθ.trans hspanπ) hut0 hutw
+      refine ⟨hncbt, hφtp, ?_⟩
+      linarith [hφtlt, hwθ]
+  · -- equal azimuths: the whole cone collapses onto one interior ray
+    have hφ0 : azim (0:V3) (vv i) (vv (i + 1)) u ≠ 0 := fun he0 =>
+      (hPM i).1 ⟨he0, heq.symm.trans he0⟩
+    have hφθ : azim (0:V3) (vv i) (vv (i + 1)) u
+        ≠ azim (0:V3) (vv i) (vv (i + 1)) (vv (i + s.k - 1)) := fun he0 =>
+      (hPM i).2.1 ⟨he0, heq.symm.trans he0⟩
+    have hncbu : ¬ Collinear3 0 (vv i) u := fun hc => absurd (azimAxis_p35 hc) hφ0
+    have hncbw : ¬ Collinear3 0 (vv i) w := fun hc =>
+      absurd (heq.trans (azimAxis_p35 hc)) hφ0
+    have hub : azim 0 (vv i) u w = 0 := by
+      have h := triAzimAdd_p35 (x := (0:V3)) (v := vv i) (u := vv (i + 1))
+        (w1 := u) (w2 := w) hbne hncbc hncbu hncbw (le_of_eq heq)
+      linarith [h, heq]
+    have hubne : u ≠ vv i := fun he2 =>
+      hφ0 (by rw [he2]; exact azimAxis_p35 (collinear3_pair_right rfl))
+    have hwray : w ∈ affGt ({(0:V3), vv i} : Set V3) {u} :=
+      (azim_eq_zero_iff_alt hncbu hncbw).mp hub
+    obtain ⟨c0, hc0, h1c, hc1⟩ := (affGt_pair_iff (v0 := (0:V3)) (v1 := vv i) (x := u)
+      (y := w) (Ne.symm hbne) hu0 hubne).mp hwray
+    have htray : t - 0 = (β + γ * c0) • (u - 0) + (γ * h1c) • (vv i - 0) := by
+      rw [htr, hc1]; module
+    have htin : t ∈ affGt ({(0:V3), vv i} : Set V3) {u} :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := vv i) (x := u) (y := t)
+        (Ne.symm hbne) hu0 hubne).mpr ⟨β + γ * c0,
+        by have hgc : 0 < γ * c0 := mul_pos hγ hc0; linarith, γ * h1c, htray⟩
+    have hncbt : ¬ Collinear3 0 (vv i) t := by
+      intro hc
+      obtain ⟨α, hα⟩ := (collinear3_iff_smul hbne).mp hc
+      apply hncbu
+      have hk1 : (β + γ * c0) • (u - 0) + (γ * h1c) • (vv i - 0) = α • (vv i - 0) := by
+        rw [← htray, hα]
+      have hk2 : (β + γ * c0) • (u - 0) = (α - γ * h1c) • (vv i - 0) := by
+        rw [sub_smul, eq_sub_iff_add_eq]
+        exact hk1
+      refine (collinear3_iff_smul hbne).mpr ⟨(α - γ * h1c) / (β + γ * c0), ?_⟩
+      have hceq : (β + γ * c0) * ((α - γ * h1c) / (β + γ * c0)) = α - γ * h1c := by
+        field_simp
+      have hgc0 : 0 < γ * c0 := mul_pos hγ hc0
+      have hpos : β + γ * c0 ≠ 0 := ne_of_gt (by linarith)
+      apply smul_right_injective V3 hpos
+      show (β + γ * c0) • (u - 0)
+          = (β + γ * c0) • (((α - γ * h1c) / (β + γ * c0)) • (vv i - 0))
+      rw [smul_smul, hceq, hk2]
+    have hφt : azim (0:V3) (vv i) (vv (i + 1)) u = azim (0:V3) (vv i) (vv (i + 1)) t :=
+      (azim_eq_azim_iff hncbc hncbu hncbt).mpr htin
+    refine ⟨hncbt, ?_, ?_⟩
+    · rw [← hφt]; exact lt_of_le_of_ne (azim_nonneg 0 (vv i) (vv (i + 1)) u) (Ne.symm hφ0)
+    · rw [← hφt]; exact lt_of_le_of_ne huθ hφθ
+  · -- w strictly before u: mirror of the first case
+    by_cases hφw0 : azim (0:V3) (vv i) (vv (i + 1)) w = 0
+    · -- φw = 0: on-axis and in-plane sub-branches
+      have hφupos : 0 < azim (0:V3) (vv i) (vv (i + 1)) u := by linarith
+      have hncbu : ¬ Collinear3 0 (vv i) u := fun hc =>
+        ne_of_gt hφupos (azimAxis_p35 hc)
+      by_cases hxwcol : Collinear3 0 (vv i) w
+      · -- w on the dart axis: same-ray transfer, with the θ-boundary kill
+        obtain ⟨lam, hlam⟩ := (collinear3_iff_smul hbne).mp hxwcol
+        have htin : t - 0 = β • (u - 0) + (γ * lam) • (vv i - 0) := by
+          rw [htr, hlam]; module
+        have hncbt : ¬ Collinear3 0 (vv i) t := by
+          intro hc
+          obtain ⟨α, hα⟩ := (collinear3_iff_smul hbne).mp hc
+          apply hncbu
+          have hk1 : β • (u - 0) + (γ * lam) • (vv i - 0) = α • (vv i - 0) := by
+            rw [← htin, hα]
+          have hk2 : β • (u - 0) = (α - γ * lam) • (vv i - 0) := by
+            rw [sub_smul, eq_sub_iff_add_eq]
+            exact hk1
+          refine (collinear3_iff_smul hbne).mpr ⟨(α - γ * lam) / β, ?_⟩
+          have hceq : β * ((α - γ * lam) / β) = α - γ * lam := by field_simp
+          apply smul_right_injective V3 (ne_of_gt hβ)
+          show β • (u - 0) = β • (((α - γ * lam) / β) • (vv i - 0))
+          rw [smul_smul, hceq, hk2]
+        have huune : u ≠ vv i := fun he =>
+          hncbu (by rw [he]; exact collinear3_pair_right rfl)
+        have htin2 : t ∈ affGt ({(0:V3), vv i} : Set V3) {u} :=
+          (affGt_pair_iff (v0 := (0:V3)) (v1 := vv i) (x := u) (y := t)
+            (Ne.symm hbne) hu0 huune).mpr ⟨β, hβ, γ * lam, htin⟩
+        by_cases hut : azim (0:V3) (vv i) (vv (i + 1)) u
+            = azim (0:V3) (vv i) (vv (i + 1)) (vv (i + s.k - 1))
+        · refine absurd hut (fun hc => ?_)
+          exact axisBoundKill_p35 (b := vv i) (c := vv (i + 1))
+            (d := vv (i + s.k - 1)) (u := w) (w := u)
+            (azim (0:V3) (vv (i + s.k - 1)) (vv i) (vv (i + s.k - 1 + s.k - 1)))
+            hbne (hvne (i + s.k - 1)) hncbc hncdb hc hncbu hxwcol
+            (fun hc => hC1f ⟨hc.2, hc.1⟩) (fun hc => hC2f ⟨hc.2, hc.1⟩)
+            (fun hc => hC4f ⟨hc.2, hc.1⟩) (fun hc => hC3f ⟨hc.2, hc.1⟩) hfarw hfarθ
+        · have hφt : azim (0:V3) (vv i) (vv (i + 1)) t
+              = azim (0:V3) (vv i) (vv (i + 1)) u :=
+            ((azim_eq_azim_iff hncbc hncbu hncbt).mpr htin2).symm
+          refine ⟨hncbt, ?_, ?_⟩
+          · rw [hφt]; exact hφupos
+          · rw [hφt]; exact lt_of_le_of_ne huθ hut
+      · -- w in the dart plane, off-axis: cone transfer then one sandwich step
+        have hncbw : ¬ Collinear3 0 (vv i) w := hxwcol
+        have hwu0 : azim 0 (vv i) w u
+            = azim (0:V3) (vv i) (vv (i + 1)) u - azim (0:V3) (vv i) (vv (i + 1)) w := by
+          have h := triAzimAdd_p35 (x := (0:V3)) (v := vv i) (u := vv (i + 1))
+            (w1 := w) (w2 := u) hbne hncbc hncbw hncbu (le_of_lt hgt)
+          linarith
+        have hwult : azim 0 (vv i) w u < Real.pi := by
+          by_contra hge
+          have hπ : azim (0:V3) (vv i) (vv (i + 1)) u = Real.pi := by
+            have := huθ
+            linarith
+          have hz : azim (0:V3) (vv i) (vv (i + 1)) w = 0 := hφw0
+          exact (hPM i).2.2.2 ⟨hπ, hz⟩
+        have htw : t - 0 = γ • (w - 0) + β • (u - 0) := by rw [htr]; module
+        obtain ⟨hncbt, hwt0, hwtu⟩ := coneMem_p35 (v0 := (0:V3)) (ax := vv i) (u := w)
+          (w := u) (t := t) hncbw hncbu (Ne.symm huw)
+          (by rw [hwu0]; linarith) hwult γ β hγ hβ htw
+        have hφteq : azim (0:V3) (vv i) (vv (i + 1)) t = azim 0 (vv i) w t := by
+          have h := triAzimAdd_p35 (x := (0:V3)) (v := vv i) (u := vv (i + 1))
+            (w1 := w) (w2 := t) hbne hncbc hncbw hncbt
+            (by rw [hφw0]; exact azim_nonneg 0 (vv i) (vv (i + 1)) t)
+          rw [hφw0] at h
+          linarith
+        refine ⟨hncbt, ?_, ?_⟩
+        · rw [hφteq]; exact hwt0
+        · rw [hφteq]; linarith [hwtu, hwu0]
+    · -- 0 < φw ≤ φu: cone transfer (L5) + strict sandwich (L6), w/u swapped
+      have hφwp : 0 < azim (0:V3) (vv i) (vv (i + 1)) w :=
+        lt_of_le_of_ne hwθ0 (Ne.symm hφw0)
+      have hncbu : ¬ Collinear3 0 (vv i) u := fun hc =>
+        ne_of_gt (lt_of_le_of_lt hwθ0 hgt) (azimAxis_p35 hc)
+      have hncbw : ¬ Collinear3 0 (vv i) w := fun hc => hφw0 (azimAxis_p35 hc)
+      have hwu0 : azim 0 (vv i) w u
+          = azim (0:V3) (vv i) (vv (i + 1)) u - azim (0:V3) (vv i) (vv (i + 1)) w := by
+        have h := triAzimAdd_p35 (x := (0:V3)) (v := vv i) (u := vv (i + 1))
+          (w1 := w) (w2 := u) hbne hncbc hncbw hncbu (le_of_lt hgt)
+        linarith
+      have hwult : azim 0 (vv i) w u < Real.pi := by
+        by_contra hge
+        have hπ : azim (0:V3) (vv i) (vv (i + 1)) u = Real.pi := by
+          have := huθ
+          linarith
+        have hz : azim (0:V3) (vv i) (vv (i + 1)) w = 0 := by linarith
+        exact (hPM i).2.2.2 ⟨hπ, hz⟩
+      have htw : t - 0 = γ • (w - 0) + β • (u - 0) := by rw [htr]; module
+      obtain ⟨hncbt, hwt0, hwtu⟩ := coneMem_p35 (v0 := (0:V3)) (ax := vv i) (u := w)
+        (w := u) (t := t) hncbw hncbu (Ne.symm huw)
+        (by rw [hwu0]; linarith) hwult γ β hγ hβ htw
+      obtain ⟨hφtp, hφtlt⟩ := azimSandwich_p35 (v0 := (0:V3)) (ax := vv i) (b := vv (i + 1))
+        (p := w) (q := u) (r := t) (Ne.symm hbne) hncbc hncbw hncbu hncbt hφwp
+        (le_of_lt hgt) (huθ.trans hspanπ) hwt0 hwtu
+      refine ⟨hncbt, hφtp, ?_⟩
+      linarith [hφtlt, huθ]
+  -- DISCHARGES (lkgrqui-tecoxbm3-w2): source QKNVMLB.hl 3838-4024 via
+  -- TECOXBM.hl:1456 (TECOXBM1).  Reduction obtained this lane: per dart
+  -- `i`, `wedgeCyclic_p35` renders the target as
+  -- `wedge 0 (vv i) (vv (i+1)) (vv (i+k-1))`; L1 gives the consecutive
+  -- non-collinearity of the sector rays; the membership data is the
+  -- open triangle `t = β•u + γ•w` (`triMemAffGt_p35`, 0 < β, 0 < γ);
+  -- L2+L5 close the generic dart when 0 < azim(b,c) < π; L6
+  -- (`azimSandwich_p35`) transfers the cone placement `azim(u,t) ∈
+  -- (0, azim(u,w))` (itself from L2+L5 at the diag rays, needing
+  -- `azim 0 (vv i) u w < π`) to the sector rays.
+  -- REMAINING ROOT (lkgrqui-sectortri-w2 update): the flat-dart half of
+  -- L3 is CLOSED below — `dartSpanNeCyc_p35` (Fan.unique_azim0_point_fan
+  -- via the fan conjunct that `BBsV39` itself carries, `fanOfBB_p35`;
+  -- NO LA11 Section C dependency) gives
+  -- `azim 0 (vv i) (vv (i+1)) (vv (i+k-1)) ≠ 0`, and `wedgeSectorMem_p35`
+  -- (above) gives the span ≤ π.  What remains is exactly the named
+  -- residual `sectorTriPlaneMiss_p35` (below): the four azimuth-corner
+  -- exclusions of the diag pair (u, w) at every dart — the azimuth
+  -- rendering of the dart-plane miss `¬(u ∈ aff {0, vv j, vv (j+1)} ∧
+  -- w ∈ aff {…})` = the strictness core of HOL AFF_GT_INTER_AFF_SY
+  -- (TECOXBM.hl:311) — plus its azimuth assembly into this statement
+  -- (est. ≈200–300 ln): trichotomy on `azim 0 (vv i) (vv (i+1)) u` vs
+  -- `… w`; the θ-corner (C2) is consumed at dart `i+k-1`; the
+  -- same-azimuth branch goes through `affGt_pair_iff` +
+  -- `azim_eq_zero_iff_alt` + `triAzimAdd_p35` in both orders
+  -- (`azim_compl` idempotence at 0).  `_hdist` is load-bearing: with
+  -- step02 it feeds NONPARALLEL_BALL_ANNULUS, killing antipodal diag
+  -- pairs (`¬ Collinear3 0 u w`).
+
+/-- step02 (HOL 3775-3838; the per-case `SUBGOAL &2 <= norm (u - w)`, same
+shape at k = 4/5/6): the diagonal distance is at least 2 — the `is_scs`
+a-lower-bound at the diagonal indices transported by `BBs` (`a i j ≤
+dist (vv i) (vv j)`; the NOT_EQ_DIAG_p35 core). -/
+theorem TECOXBMv2_step02_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (vv : ℕ → V3)
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w) (hBB : BBsV39 s vv) :
+    (2 : ℝ) ≤ dist u w := by
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hp' : p % s.k < s.k := Nat.mod_lt _ hk0
+  have hq' : q % s.k < s.k := Nat.mod_lt _ hk0
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hd2, -, -, -, -, -⟩ := hscs
+  have h2 : (2 : ℝ) ≤ s.a (p % s.k) (q % s.k) :=
+    hd2 (p % s.k) (q % s.k) ⟨hp', hq', fun e => hdiag.1 e⟩
+  have h3 : s.a (p % s.k) (q % s.k) ≤ dist u w := by
+    have hb := (hBB.2.2.1 (p % s.k) (q % s.k)).1
+    rwa [hp, hq] at hb
+  exact h2.trans h3
+
+/-- step03 (HOL 3774-3812 / 3874-3880 / 3954-3960; the per-case
+`{u,w} SUBSET V_SY v` window assembly, `v = vector[vv 1;..;vv k;vv 0]`): the
+diagonal endpoints lie in the k-window fan vertex set
+`V_SY_p4 (cycRow_p23 vv k)` — the LocalAuto23 `IS_SCS_IN_V_SY_{4,5,6}_p23`
+route replaces the HOL `IN_IMAGE_VV` + `V_E_FF_IS_SCS_CASES` combination. -/
+theorem TECOXBMv2_step03_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (vv : ℕ → V3)
+    (hscs : isScsV39 s) (_hdiag : scsDiag s.k p q)
+    (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hk : s.k = 4 ∨ s.k = 5 ∨ s.k = 6) :
+    {u, w} ⊆ V_SY_p4 (cycRow_p23 vv s.k) := by
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have mem : ∀ j : ℕ, j < s.k → vv j ∈ V_SY_p4 (cycRow_p23 vv s.k) := by
+    intro j hj
+    rcases hk with hk | hk | hk
+    · rw [hk] at hj ⊢; exact IS_SCS_IN_V_SY_4_p23 vv j hj
+    · rw [hk] at hj ⊢; exact IS_SCS_IN_V_SY_5_p23 vv j hj
+    · rw [hk] at hj ⊢; exact IS_SCS_IN_V_SY_6_p23 vv j hj
+  intro x hx
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+  rcases hx with rfl | rfl
+  · rw [← hp]; exact mem _ (Nat.mod_lt _ hk0)
+  · rw [← hq]; exact mem _ (Nat.mod_lt _ hk0)
+
+/-- step04 (HOL 3838-3900: the `:2+2` window; `Tecoxbm.TECOXBM` consumption
+TECOXBM.hl:1726): every k = 4 fan dart wedge contains the diagonal cone.
+FROZEN RESIDUAL, assumption-form: `hIN`/`hVEF` are exactly the conclusions
+of LocalAuto23 `IN_IS_SCS_CASE_4_p23` / `V_E_FF_IS_SCS_CASES_4_p23` (both
+`sorry` there), and the wedge step itself is HOL `Tecoxbm.TECOXBM`
+(TECOXBM.hl:1726 = TECOXBM1 hl:1456 + TECOXBM2 hl:1682), whose only Lean
+ports are `TECOXBM1_p11`/`TECOXBM2_p11` (LocalAuto11:1515/1529) — both
+`sorry`, and LocalAuto11 is unreachable from LocalAuto35 (it imports
+LocalAuto2; LocalAuto1 + LocalAuto2 clash on `atn2PA18` via
+PackingAuto18/PackingAuto20).  Closing this and step05 mechanically closes
+TECOXBMv2_p35 (template in its DISCHARGES note). -/
+theorem TECOXBMv2_step04_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (vv : ℕ → V3)
+    (hscs : isScsV39 s) (hk : s.k = 4) (hdiag : scsDiag s.k p q)
+    (hdist : dist u w ≤ cstab) (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hIN : flattenRow_p23 vv 4 ∈
+      {l : FinVec 4 3 | (∀ i : Fin 4, cycRow_p23 vv 4 i ∈ ballAnnulus) ∧
+        CONDITION1_SY_p4
+          (fun i j => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+          (fun i j => s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+          (cycRow_p23 vv 4) ∧
+        CONDITION2_SY_p4 (cycRow_p23 vv 4)})
+    (hVEF : V_SY_p4 (cycRow_p23 vv 4) = Set.range vv ∧
+      E_SY_p4 (cycRow_p23 vv 4) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+      F_SY_p4 (cycRow_p23 vv 4) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) :
+    ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E := by
+  exact sectorTriCore_p35 s p q u w E FF vv hscs hdiag hdist hp hq hBB hE hFF
+  -- DISCHARGES (lkgrqui-tecoxbm3-w2): body closed by the k-generic named
+  -- residual `sectorTriCore_p35` (kit above); hIN/hVEF stay hypothesis-form
+  -- (LA23 feeders, S7 后收敛).
+
+/-- step05 (HOL 3874-3960 / 3954-4024: the `:2+3` resp. `:3+3` windows;
+`Tecoxbm.TECOXBM` consumption): the k = 5 / k = 6 twin of step04.
+FROZEN RESIDUAL, assumption-form — same blockers as step04, with the
+LocalAuto23 feeders taken per branch (`IN_IS_SCS_CASE_{5,6}_p23`,
+`V_E_FF_IS_SCS_CASES_{5,6}_p23`, all `sorry`). -/
+theorem TECOXBMv2_step05_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (vv : ℕ → V3)
+    (hscs : isScsV39 s) (hk : s.k = 5 ∨ s.k = 6) (hdiag : scsDiag s.k p q)
+    (hdist : dist u w ≤ cstab) (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+    (hBB : BBsV39 s vv)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hIN : (s.k = 5 → flattenRow_p23 vv 5 ∈
+          {l : FinVec 5 3 | (∀ i : Fin 5, cycRow_p23 vv 5 i ∈ ballAnnulus) ∧
+            CONDITION1_SY_p4
+              (fun i j => s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+              (fun i j => s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+              (cycRow_p23 vv 5) ∧
+            CONDITION2_SY_p4 (cycRow_p23 vv 5)}) ∧
+      (s.k = 6 → flattenRow_p23 vv 6 ∈
+          {l : FinVec 6 3 | (∀ i : Fin 6, cycRow_p23 vv 6 i ∈ ballAnnulus) ∧
+            CONDITION1_SY_p4
+              (fun i j => s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+              (fun i j => s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+              (cycRow_p23 vv 6) ∧
+            CONDITION2_SY_p4 (cycRow_p23 vv 6)}))
+    (hVEF : (s.k = 5 → V_SY_p4 (cycRow_p23 vv 5) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 5) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+          F_SY_p4 (cycRow_p23 vv 5) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) ∧
+      (s.k = 6 → V_SY_p4 (cycRow_p23 vv 6) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 6) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+          F_SY_p4 (cycRow_p23 vv 6) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ)) :
+    ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E := by
+  exact sectorTriCore_p35 s p q u w E FF vv hscs hdiag hdist hp hq hBB hE hFF
+  -- DISCHARGES (lkgrqui-tecoxbm3-w2): same reduction as step04 — body
+  -- closed by `sectorTriCore_p35`; hIN/hVEF stay hypothesis-form.
+
+/-- step06 (HOL 4024 assembly: the three-case fold-back): the total
+TECOXBMv2 conclusion from step01 and the per-case wedge statements.
+Closed — so once step04/step05 close, `TECOXBMv2_p35` is the feeder
+derivation + this lemma (template in its DISCHARGES note). -/
+theorem TECOXBMv2_step06_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (vv : ℕ → V3) (hscs : isScsV39 s)
+    (hdiag : scsDiag s.k p q)
+    (h4 : s.k = 4 → ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E)
+    (h56 : s.k = 5 ∨ s.k = 6 →
+      ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E) :
+    ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E := by
+  rcases TECOXBMv2_step01_p35 s p q hscs hdiag with h | h | h
+  · exact h4 h
+  · exact h56 (Or.inl h)
+  · exact h56 (Or.inr h)
+
+/-! ### TECOXBMv2 wedge kit (lkgrqui-tecoxbm2-w2; TECOXBM.hl 1682/1456)
+
+The `Tecoxbm.TECOXBM` consumption of step04/05 splits into the
+non-collinearity half (TECOXBM2, TECOXBM.hl:1682) and the wedge-coverage
+half (TECOXBM1, TECOXBM.hl:1456).  This kit closes the first half genuinely
+(the HOL proof of TECOXBM2 is `MATCH_MP_TAC NONPARALLEL_BALL_ANNULUS`, and
+the LocalAuto4 twin is proved) and concretizes the second half to the cyclic
+two-point neighbour rendering, reducing step04/05 to the sector-triangle
+core stated in their DISCHARGES notes. -/
+
+/-- TECOXBM.hl:1682 `TECOXBM2`, conclusion core (annulus packaging): two
+diagonal endpoints in the ball annulus at distance in `[2, cstab]` are
+non-collinear with the origin.  The B_SY1/vecmats packaging transport is:
+rows of a `B_SY1` table lie in `ballAnnulus` (first `B_SY1_p4` conjunct;
+for the step04/05 consumption, `hBB.1`), `2 ≤ norm (u-w)` is step02 and
+`norm (u-w) ≤ cstab` the `hdist` hypothesis. -/
+theorem TECOXBM2_p35 (u w : V3) (hu : u ∈ ballAnnulus) (hw : w ∈ ballAnnulus)
+    (h2 : (2:ℝ) ≤ ‖u - w‖) (hc : ‖u - w‖ ≤ cstab) : ¬ Collinear3 0 u w :=
+  NONPARALLEL_BALL_ANNULUS hu hw h2 hc
+
+
 /-- HOL `TECOXBMv2` (QKNVMLB.hl:3730): the diag wedge contains every fan
 face wedge. -/
 theorem TECOXBMv2_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (V : Set V3)
@@ -1136,9 +8437,27 @@ theorem TECOXBMv2_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (V : Set V3)
     (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
     (hBB : BBsV39 s vv) :
     ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E := by
-  sorry
-  -- DISCHARGES: source 3730-4024; giant aff_gt/wedge_in_fan_gt argument
-  -- over the cyclic fan ordering (TECOXBM machinery of Local_lemmas).
+  exact sectorTriCore_p35 s p q u w E FF vv hscs hdiag _hdist hp hq hBB hE hFF
+  -- DISCHARGES (lkgrqui-tecoxbm-w2 2026-10-28; updated lkgrqui-tecoxbm2-w2;
+  -- closed modulo the named residual by lkgrqui-tecoxbm3-w2): the body is
+  -- the k-generic `sectorTriCore_p35` DIRECTLY (same conclusion, hV
+  -- unused) — the step04/05/step06 route is recorded above but NOT taken:
+  -- it would need the LA23 feeders (IN_IS_SCS_CASE_4_p23 etc., all sorry)
+  -- for step04/05's hIN/hVEF, which the k-generic residual bypasses.
+  -- Root set = {sectorTriCore_p35} exactly (probe-verified).
+  -- source 3730-4024.  Steps 01/02/03/06 closed above (standard three); the
+  -- residual debt is exactly `TECOXBMv2_step04_p35` + `TECOXBMv2_step05_p35`
+  -- (per-case wedge coverage).  tecoxbm2 status: the TECOXBM2
+  -- (non-collinearity) half of the giant is closed in-file
+  -- (`TECOXBM2_p35`); the wedge half is reduced to the sector-triangle core
+  -- documented at step04's DISCHARGES (HOL route = AFF_GT_INTER_AFF_SY +
+  -- Planarity kit, no LA35-world Lean twin).  Closing template once those
+  -- two close:
+  --   refine TECOXBMv2_step06_p35 s p q u w E FF hscs hdiag ?_ ?_
+  --   · intro _; exact TECOXBMv2_step04_p35 s p q u w E FF vv hscs rfl
+  --       hdiag hdist hp hq hBB hE hFF (feeder fills)
+  --   · intro h56; exact TECOXBMv2_step05_p35 s p q u w E FF vv hscs h56
+  --       hdiag hdist hp hq hBB hE hFF (feeder fills)
 
 /-! ## Graph re-labelling (source order: 4024-4838) -/
 
