@@ -11699,53 +11699,12 @@ theorem NUMSEG_3_p35 : {i : ℕ | i < 4} = {0, 1, 2, 3} := by
 /-! ## Slice tau bank, k' = 3 azimuth identity and the master arrows
       (source order: 8445-10699) -/
 
-/-- HOL `SUM_AZIM_EQ_ANGLE_EQ4` (QKNVMLB.hl:8445). -/
-theorem SUM_AZIM_EQ_ANGLE_EQ4_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
-    (mkj : Prop) (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3))
-    (FF : Set (V3 × V3)) (vv vv' vv'' : ℕ → V3) (HS : Hypermap (V3 × V3))
-    (hk' : k' = 3)
-    (hs' : scsHalfSliceV39 s p q d' mkj = s')
-    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
-    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
-    (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
-    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
-    (hsl : isScsSliceV39 s s' s'' p q) (hk's' : s'.k = k') (hk : s.k = k)
-    (hp : vv (p % k) = u) (hq : vv (q % k) = w)
-    (hV : Set.range vv = V)
-    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
-    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
-    (hnorm : norm (u - w) ≤ cstab)
-    (hfan : ConvexLocalFan
-      (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
-      (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
-      (HS.face (u, rhoNode1 FF u))) :
-    tau3 (vv (0 % k' + p % k)) (vv (1 % k' + p % k)) (vv (2 % k' + p % k)) =
-      setSum {i | i < k'}
-          (fun i => rhoFun (norm (vv (i + p % k))) *
-            interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u)) -
-        (Real.pi + sol0) := by
-  sorry
-  -- DISCHARGES: source 8445-9059; k' = 3: tau3 decomposition via
-  -- SUM_NUMSEG2_p35/NUMSEG_2_p35 + V/E/F_PRIME_EQ_*_p35 +
-  -- SCS_HALF_SLICE_IS_A_SCS_p35 + the local-fan azimuth sum identity
-  -- (SUM_AZIM over the diag-closed slice face).
-  -- lkgrqui-eq4-w3 2026-10-28: this frozen statement is NOT provable as
-  -- stated. The only hypothesis constraining `HS` is `hfan`, and
-  -- `HS := hypermapOfFan 0 V E` (the FULL-fan hypermap, Fan.lean:1169)
-  -- satisfies it: then `vPrime_p3 V (HS.face (u, rhoNode1 FF u)) = V` and
-  -- `ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)) = E` (the diag
-  -- `{u, w}` is realized by no full-fan dart), so `hfan` reduces to the
-  -- full-fan `ConvexLocalFan V E FF` from `hMM`, while
-  -- `HS.face (u, rhoNode1 FF u)` is the full dart cycle on which the RHS
-  -- interior angles differ from the slice-face split (e.g. the i = 0 term
-  -- is `azim 0 u u1 (full-fan pred of u)`, strictly larger than the slice
-  -- term `azim 0 u u1 w` by the diag split). HOL is safe because it pins the
-  -- hypermap to the canonical `hypermap (HYP (vec 0, V, E UNION {{u, w}}))`;
-  -- the Lean freezing abstracted `HS` and dropped exactly that carrier
-  -- (`IsHypE_p35 V (E ∪ {{u, w}}) HS`) that its own DISCHARGES recipe
-  -- (V/E/F_PRIME_EQ_*_p35) consumes. Closing needs a statement ruling: add
-  -- that one hypothesis, then `exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 ...`
-  -- (below, fully proved, standard three).
+-- SUM_AZIM_EQ_ANGLE_EQ4_p35 (SF-86, lkgrqui-eq4-w3 2026-10-28): the frozen
+-- statement dropped the `IsHypE_p35 V (E ∪ {{u, w}}) HS` carrier its HOL
+-- original (QKNVMLB.hl:8445) pins via the canonical hypermap, so as stated
+-- it has countermodels (HS := hypermapOfFan 0 V E). Ruled: + hHS. The
+-- declaration now lives at EOF below (after its proved twin), closed by
+-- `exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 ..`.
 
 /-- HOL `CARD_FF_EQ_CARD_SLICE_FF` (QKNVMLB.hl:9059).
 FIDELITY (SF-83): HOL freezes `HS = hypermap (HYP (vec 0,V,E UNION {{v, w}}))`
@@ -13793,10 +13752,63 @@ theorem SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : �
   -- the faithful rendering of the HOL canonical hypermap
   -- `hypermap (HYP (vec 0, V, E UNION {{u, w}}))`.
 
+
+/-- HOL `SUM_AZIM_EQ_ANGLE_EQ4` (QKNVMLB.hl:8445). -/
+theorem SUM_AZIM_EQ_ANGLE_EQ4_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop) (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (vv vv' vv'' : ℕ → V3) (HS : Hypermap (V3 × V3))
+    (hk' : k' = 3)
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+    (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hsl : isScsSliceV39 s s' s'' p q) (hk's' : s'.k = k') (hk : s.k = k)
+    (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+    (hV : Set.range vv = V)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hnorm : norm (u - w) ≤ cstab)
+    (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+    (hfan : ConvexLocalFan
+      (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+      (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+      (HS.face (u, rhoNode1 FF u))) :
+    tau3 (vv (0 % k' + p % k)) (vv (1 % k' + p % k)) (vv (2 % k' + p % k)) =
+      setSum {i | i < k'}
+          (fun i => rhoFun (norm (vv (i + p % k))) *
+            interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u)) -
+        (Real.pi + sol0) := by
+  exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 s s' s'' p q d' d'' mkj k k' u w V E FF
+    vv vv' vv'' HS hk' hs' hs'' hvv' hvv'' hMM hscs hdiag hsl hk's' hk hp hq hV hE
+    hFF hnorm hHS hfan
+  -- DISCHARGES: source 8445-9059; k' = 3: tau3 decomposition via
+  -- SUM_NUMSEG2_p35/NUMSEG_2_p35 + V/E/F_PRIME_EQ_*_p35 +
+  -- SCS_HALF_SLICE_IS_A_SCS_p35 + the local-fan azimuth sum identity
+  -- (SUM_AZIM over the diag-closed slice face).
+  -- lkgrqui-eq4-w3 2026-10-28: this frozen statement is NOT provable as
+  -- stated. The only hypothesis constraining `HS` is `hfan`, and
+  -- `HS := hypermapOfFan 0 V E` (the FULL-fan hypermap, Fan.lean:1169)
+  -- satisfies it: then `vPrime_p3 V (HS.face (u, rhoNode1 FF u)) = V` and
+  -- `ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)) = E` (the diag
+  -- `{u, w}` is realized by no full-fan dart), so `hfan` reduces to the
+  -- full-fan `ConvexLocalFan V E FF` from `hMM`, while
+  -- `HS.face (u, rhoNode1 FF u)` is the full dart cycle on which the RHS
+  -- interior angles differ from the slice-face split (e.g. the i = 0 term
+  -- is `azim 0 u u1 (full-fan pred of u)`, strictly larger than the slice
+  -- term `azim 0 u u1 w` by the diag split). HOL is safe because it pins the
+  -- hypermap to the canonical `hypermap (HYP (vec 0, V, E UNION {{u, w}}))`;
+  -- the Lean freezing abstracted `HS` and dropped exactly that carrier
+  -- (`IsHypE_p35 V (E ∪ {{u, w}}) HS`) that its own DISCHARGES recipe
+  -- (V/E/F_PRIME_EQ_*_p35) consumes. Closing needs a statement ruling: add
+  -- that one hypothesis, then `exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 ...`
+  -- (below, fully proved, standard three).
+
 end Kepler.Text
 
 -- lkgrqui-eq4-w3 axiom audit (mandate premise ① + ladder; full names,
 -- outside the namespace).  Expected standard three for every entry.
+#print axioms Kepler.Text.SUM_AZIM_EQ_ANGLE_EQ4_p35
 #print axioms Kepler.Text.SUM_AZIM_EQ_ANGLE_EQ4_HS_p35
 #print axioms Kepler.Text.eq4Core_p35
 #print axioms Kepler.Text.face3Rho_p35
