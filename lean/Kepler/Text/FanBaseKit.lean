@@ -2469,4 +2469,574 @@ private theorem fdorbitFFb (hper : Periodic vv k) (hk1 : 1 ≤ k)
 
 end FanOrbitLayer
 
+
+/-! ## D（fanbase-f3b-w1）：LOCAL_FAN_DUAL_SYM_0 与 CONVEX_LOCAL_FAN_SYM_0 收口
+
+前车道交付的装配 DAG（DELIVERY ③）落地：① FAN 提取（BBsV39 末合取 → hfan）；
+② Hypermap 证人（darts Finset + 三张 Perm + comp_eq_one）；③ dih2k_p3 五合取；
+④ master `localFan_p3` 装配 + `LOCAL_FAN_DUAL_SYM_0_fb`；⑤ `CONVEX_LOCAL_FAN_SYM_0_fb`
+（azim/wedge 内容经 `AZIM_NEG_fb` 对换传输 + `sum4_azim_fan`，绕开 LA3 三处
+FAN 门 sorry）。全部新件 private `…Fb` 新名。 -/
+
+section FanMasterLayer
+
+variable {w : ℕ → V3} {k : ℕ} {V' : Set V3} {E' : Set (Set V3)}
+
+/-- 模 k 单射 ⇒ 三条不退化（无自环 / 无跨 k-1 环 / 无 +2 环）。 -/
+private theorem fanNeFb (hk3 : 3 ≤ k) (hper : Periodic w k)
+    (hinj : ∀ i j, w i = w j → i % k = j % k) :
+    (∀ j, w j ≠ w (j + 1)) ∧ (∀ j, w (j + 1) ≠ w (j + k - 1)) ∧ (∀ j, w (j + 2) ≠ w j) := by
+  have hk0 : 0 < k := by omega
+  have hk2 : 2 ≤ k := by omega
+  refine ⟨?_, ?_, ?_⟩
+  · intro j hj
+    exact modNeSuccFb hk2 (hinj j (j + 1) hj)
+  · intro j hcon
+    have hm : (j + 1) % k = (j + k - 1) % k := hinj (j + 1) (j + k - 1) hcon
+    rw [show (j + k - 1 : ℕ) = (j + 1) + (k - 2) from by omega] at hm
+    exact modNeAddltFb hk0 (by omega) (by omega) hm
+  · intro j hcon
+    have hm : (j + 2) % k = (j + k) % k := hinj (j + 2) (j + k) (hcon.trans (hper j).symm)
+    rw [show (j + k : ℕ) = (j + 2) + (k - 2) from by omega] at hm
+    exact modNeAddltFb hk0 (by omega) (by omega) hm
+
+/-- 周期族像 = 有限下标像（Finset 像的 coe）。 -/
+private theorem coeiImageFb {F : ℕ → V3 × V3} (hk0 : 0 < k) (hperF : Periodic F k) :
+    Set.image F Set.univ
+      = ((Finset.univ.image (fun i : Fin k => F (i : ℕ))) : Set (V3 × V3)) := by
+  ext x
+  simp only [Set.mem_image, Set.mem_univ, true_and, Finset.mem_coe, Finset.mem_image]
+  constructor
+  · rintro ⟨i, rfl⟩
+    exact ⟨⟨i % k, Nat.mod_lt _ hk0⟩, Finset.mem_univ _, by
+      show F (i % k) = F i
+      rw [periodicModFb hperF i]⟩
+  · rintro ⟨i, -, rfl⟩
+    exact ⟨i, rfl⟩
+
+/-- `f^[n] = id` 逐点（n > 0）⇒ 双射。 -/
+private theorem bijOfIterIdFb {α : Type*} {f : α → α} {n : ℕ} (hn : 0 < n)
+    (h : ∀ x, f^[n] x = x) :
+    Function.Bijective f := by
+  cases n with
+  | zero => omega
+  | succ m =>
+    constructor
+    · intro a b hab
+      have ha : f^[m] (f a) = a := by
+        rw [← Function.iterate_succ_apply f m a]
+        exact h a
+      have hb : f^[m] (f b) = b := by
+        rw [← Function.iterate_succ_apply f m b]
+        exact h b
+      exact ha.symm.trans ((congrArg (f^[m]) hab).trans hb)
+    · intro y
+      refine ⟨f^[m] y, ?_⟩
+      rw [← Function.iterate_succ_apply' f m y]
+      exact h y
+
+/-- Hypermap 证人组装：dart 集 + 三个 plain 函数（对合×2 + 双射 ff）+
+off-dart 恒等 + 三元复合 ⇒ Hypermap，且各分量逐字等于 plain 函数、face 轨道
+= plain iterate 轨道。 -/
+private theorem hypermapOfDartsFb (D : Finset (V3 × V3))
+    (eeF nnF ffF : V3 × V3 → V3 × V3)
+    (hee : ∀ x, eeF (eeF x) = x) (hnn : ∀ x, nnF (nnF x) = x)
+    (hbij : Function.Bijective ffF)
+    (hoffE : ∀ x ∉ D, eeF x = x) (hoffN : ∀ x ∉ D, nnF x = x) (hoffF : ∀ x ∉ D, ffF x = x)
+    (hcomp : ∀ x, eeF (nnF (ffF x)) = x) :
+    ∃ H : Hypermap (V3 × V3), H.darts = D ∧
+      (H.edgeMap : V3 × V3 → V3 × V3) = eeF ∧
+      (H.nodeMap : V3 × V3 → V3 × V3) = nnF ∧
+      (H.faceMap : V3 × V3 → V3 × V3) = ffF ∧
+      ∀ d : V3 × V3, H.face d = {y | ∃ n : ℕ, ffF^[n] d = y} := by
+  refine ⟨Hypermap.mk D (Equiv.mk eeF eeF hee hee) (Equiv.mk nnF nnF hnn hnn)
+      (Equiv.ofBijective ffF hbij) ?_ ?_ ?_ ?_, rfl, rfl, rfl, rfl, ?_⟩
+  · intro x hx
+    show eeF x = x
+    exact hoffE x hx
+  · intro x hx
+    show nnF x = x
+    exact hoffN x hx
+  · intro x hx
+    show ffF x = x
+    exact hoffF x hx
+  · exact Equiv.ext fun x => by
+      simp only [Equiv.Perm.mul_apply, Equiv.Perm.one_apply]
+      exact hcomp x
+  · intro d
+    rw [Hypermap.face]
+    simp only [orbitMap, Equiv.Perm.coe_pow]
+    rfl
+
+/-- plain 世界全套组合件：darts Finset（coe / 基数 / 覆盖）+ 对合×2 +
+ff 的 k 阶 + 三元复合 + off-dart 恒等。 -/
+private theorem plainKitFb (hk3 : 3 ≤ k) (hper : Periodic w k)
+    (hV : Set.image w Set.univ = V')
+    (hE : Set.image (fun i : ℕ => ({w i, w (i + 1)} : Set V3)) Set.univ = E')
+    (hEE : ∀ i, ee (w i) E' = ({w (i + 1), w (i + k - 1)} : Set V3))
+    (hinj : ∀ i j, w i = w j → i % k = j % k) :
+    ∃ D : Finset (V3 × V3),
+      (↑D : Set (V3 × V3)) = dartsOfHyp_p3 E' V' ∧ D.card = 2 * k ∧
+      (∀ d ∈ D, (↑D : Set (V3 × V3))
+          = {y | ∃ n : ℕ, (ffOfHyp_p3 0 V' E')^[n] d = y}
+            ∪ (nnOfHyp_p3 0 V' E') '' {y | ∃ n : ℕ, (ffOfHyp_p3 0 V' E')^[n] d = y}) ∧
+      (∀ x : V3 × V3, eeOfHyp_p3 0 V' E' (eeOfHyp_p3 0 V' E' x) = x) ∧
+      (∀ x : V3 × V3, nnOfHyp_p3 0 V' E' (nnOfHyp_p3 0 V' E' x) = x) ∧
+      (∀ x : V3 × V3, (ffOfHyp_p3 0 V' E')^[k] x = x) ∧
+      (∀ i : ℕ, 0 < i → i < k → ¬((ffOfHyp_p3 0 V' E')^[i] = id)) ∧
+      (∀ x : V3 × V3,
+        eeOfHyp_p3 0 V' E' (nnOfHyp_p3 0 V' E' (ffOfHyp_p3 0 V' E' x)) = x) ∧
+      hasOrders_p3 (eeOfHyp_p3 0 V' E') 2 ∧
+      hasOrders_p3 (nnOfHyp_p3 0 V' E') 2 ∧
+      (∀ x ∉ D, eeOfHyp_p3 0 V' E' x = x) ∧
+      (∀ x ∉ D, nnOfHyp_p3 0 V' E' x = x) ∧
+      (∀ x ∉ D, ffOfHyp_p3 0 V' E' x = x) ∧
+      (w (0 + 1), w 0) ∈ D := by
+  have hk0 : 0 < k := by omega
+  have hk1 : 1 ≤ k := by omega
+  obtain ⟨hne, hne2, hshift2⟩ := fanNeFb hk3 hper hinj
+  have hperF : Periodic (fun i : ℕ => (w i, w (i + 1))) k := by
+    intro t
+    show (w (t + k), w (t + k + 1)) = (w t, w (t + 1))
+    rw [hper t, show (t:Nat) + k + 1 = t + 1 + k from by omega, hper (t + 1)]
+  have hperB : Periodic (fun i : ℕ => (w (i + 1), w i)) k := by
+    intro t
+    show (w (t + k + 1), w (t + k)) = (w (t + 1), w t)
+    rw [show (t:Nat) + k + 1 = t + 1 + k from by omega, hper (t + 1), hper t]
+  have hswapMem : ∀ x : V3 × V3, x ∈ dartsOfHyp_p3 E' V' →
+      ((x.2, x.1) : V3 × V3) ∈ dartsOfHyp_p3 E' V' := by
+    intro x hx
+    have hself : selfPairs_p3 E' V' = ∅ := fdselfPairsEmptyFb hV hE
+    simp only [dartsOfHyp_p3, Set.mem_union] at hx
+    rcases hx with h | hs
+    · refine Set.mem_union_left _ ?_
+      show ({x.2, x.1} : Set V3) ∈ E'
+      rw [pairSetCommFb]
+      exact h
+    · exfalso
+      rw [hself] at hs
+      exact Set.notMem_empty _ hs
+  have heeAll : ∀ x : V3 × V3, eeOfHyp_p3 0 V' E' (eeOfHyp_p3 0 V' E' x) = x := by
+    intro x
+    by_cases hd : x ∈ dartsOfHyp_p3 E' V'
+    · rw [eeMemEqFb hd, eeMemEqFb (hswapMem x hd)]
+    · rw [eeNotMemEqFb hd, eeNotMemEqFb hd]
+  have hnnAll : ∀ x : V3 × V3, nnOfHyp_p3 0 V' E' (nnOfHyp_p3 0 V' E' x) = x := by
+    intro x
+    by_cases hd : x ∈ dartsOfHyp_p3 E' V'
+    · rcases fddartCasesFb hV hne hE hd with ⟨m, rfl⟩ | ⟨m, rfl⟩
+      · have h1 : nnOfHyp_p3 0 V' E' (w m, w (m + 1))
+            = (w (m + (k - 1) + 1), w (m + (k - 1))) := by
+          rw [fdnnValFFb hper hE hEE hne2 hk1 m]
+          rw [show (w m : V3) = w (m + (k - 1) + 1) from by
+            rw [show (m:Nat) + (k - 1) + 1 = m + k from by omega]; exact (hper m).symm]
+        have h2 : nnOfHyp_p3 0 V' E' (w (m + (k - 1) + 1), w (m + (k - 1)))
+            = (w m, w (m + 1)) := by
+          rw [fdnnValBFb hper hk1 hE hEE hshift2 (m + (k - 1)),
+            show ((m:Nat) + (k - 1) + 1) = m + k from by omega, hper m,
+            show ((m:Nat) + (k - 1) + 2) = m + 1 + k from by omega, hper (m + 1)]
+        rw [h1, h2]
+      · have h1 : nnOfHyp_p3 0 V' E' (w (m + 1), w m) = (w (m + 1), w (m + 2)) :=
+          fdnnValBFb hper hk1 hE hEE hshift2 m
+        have h2 : nnOfHyp_p3 0 V' E' (w (m + 1), w (m + 2)) = (w (m + 1), w m) := by
+          rw [fdnnValFFb hper hE hEE hne2 hk1 (m + 1),
+            show ((m:Nat) + 1 + (k - 1)) = m + k from by omega, hper m]
+        rw [h1, h2]
+    · rw [nnNotMemEqFb hd, nnNotMemEqFb hd]
+  have hcoeD : (((Finset.univ.image (fun i : Fin k => (w (i + 1), w i))
+      ∪ Finset.univ.image (fun i : Fin k => (w i, w (i + 1))) : Finset (V3 × V3)) :
+      Set (V3 × V3))) = dartsOfHyp_p3 E' V' := by
+    rw [Finset.coe_union, ← coeiImageFb (F := fun i : ℕ => (w (i + 1), w i)) hk0 hperB,
+      ← coeiImageFb (F := fun i : ℕ => (w i, w (i + 1))) hk0 hperF,
+      fddartsEqFb hV hne hE, Set.union_comm]
+  have hcardD : (Finset.univ.image (fun i : Fin k => (w (i + 1), w i))
+      ∪ Finset.univ.image (fun i : Fin k => (w i, w (i + 1)))).card = 2 * k := by
+    have hdisjF : Disjoint
+        (Set.image (fun i : ℕ => (w i, w (i + 1))) Set.univ)
+        (Set.image (fun i : ℕ => (w (i + 1), w i)) Set.univ) := by
+      rw [Set.disjoint_iff_inter_eq_empty]
+      exact fddisjFb hk3 hper hinj
+    have hfinF : (Set.image (fun i : ℕ => (w i, w (i + 1))) Set.univ).Finite := by
+      rw [coeiImageFb (F := fun i : ℕ => (w i, w (i + 1))) hk0 hperF]
+      exact Finset.finite_toSet _
+    have hfinB : (Set.image (fun i : ℕ => (w (i + 1), w i)) Set.univ).Finite := by
+      rw [coeiImageFb (F := fun i : ℕ => (w (i + 1), w i)) hk0 hperB]
+      exact Finset.finite_toSet _
+    have h1 : (((Finset.univ.image (fun i : Fin k => (w (i + 1), w i))
+        ∪ Finset.univ.image (fun i : Fin k => (w i, w (i + 1))) : Finset (V3 × V3)) :
+        Set (V3 × V3))).ncard = 2 * k := by
+      rw [hcoeD, fddartsEqFb hV hne hE, ncard_union_eq hdisjF hfinF hfinB,
+        fdfwdCardFb hk0 hper hinj, fdbwdNcardFb hk0 hper hinj]
+      ring
+    rw [← h1, Set.ncard_coe_finset]
+  refine ⟨Finset.univ.image (fun i : Fin k => (w (i + 1), w i))
+      ∪ Finset.univ.image (fun i : Fin k => (w i, w (i + 1))), hcoeD, hcardD, ?_, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · intro d hdmem
+    simp only [Finset.mem_union, Finset.mem_image] at hdmem
+    rcases hdmem with (⟨i, -, rfl⟩ | ⟨i, -, rfl⟩)
+    · rw [fdorbitBFb hper hk0 hk1 hE hEE hne2 (i : ℕ),
+        fdnnImageBFb hper hk0 hk1 hE hEE hshift2, hcoeD, fddartsEqFb hV hne hE,
+        Set.union_comm]
+    · rw [fdorbitFFb hper hk1 hE hEE hshift2 (i : ℕ), fdnnImageFFb hper hk0 hk1 hE hEE hne2,
+        hcoeD, fddartsEqFb hV hne hE]
+  · exact heeAll
+  exact hnnAll
+  · intro x
+    by_cases hd : x ∈ dartsOfHyp_p3 E' V'
+    · rcases fddartCasesFb hV hne hE hd with ⟨m, rfl⟩ | ⟨m, rfl⟩
+      · rw [fdffIterFFb hper hk1 hE hEE hshift2 m k, hper m,
+          show (m:Nat) + k + 1 = m + 1 + k from by omega, hper (m + 1)]
+      · rw [fdffIterBFb hper hk1 hE hEE hne2 m k]
+        have hmul : ((m:Nat) + k * (k - 1)) % k = m % k := by
+          rw [Nat.add_mul_mod_self_left]
+        rw [vvModEqFb hper (modSuccFb hmul), vvModEqFb hper hmul]
+    · exact Function.iterate_fixed (ffNotMemEqFb hd) k
+  · intro i hi0 hik hid
+    have h1 := congrFun hid (w 0, w 1)
+    rw [fdffIterFFb hper hk1 hE hEE hshift2 0 i] at h1
+    have h2 : i % k = 0 % k := hinj i 0 (by simpa using congrArg Prod.fst h1)
+    rw [Nat.mod_eq_of_lt hik, Nat.zero_mod] at h2
+    omega
+  · intro x
+    by_cases hd : x ∈ dartsOfHyp_p3 E' V'
+    · rcases fddartCasesFb hV hne hE hd with ⟨m, rfl⟩ | ⟨m, rfl⟩
+      · have h1 : ffOfHyp_p3 0 V' E' (w m, w (m + 1)) = (w (m + 1), w (m + 2)) :=
+          fdffValFFb hper hk1 hE hEE hshift2 m
+        have h2 : nnOfHyp_p3 0 V' E' (w (m + 1), w (m + 2)) = (w (m + 1), w m) := by
+          rw [fdnnValFFb hper hE hEE hne2 hk1 (m + 1),
+            show ((m:Nat) + 1 + (k - 1)) = m + k from by omega, hper m]
+        have h3 : eeOfHyp_p3 0 V' E' (w (m + 1), w m) = (w m, w (m + 1)) :=
+          eeMemEqFb (ordMemDartsFb (vv := w)
+            (by rw [pairSetCommFb]; exact edgeMemFb hE m))
+        rw [h1, h2, h3]
+      · have h1 : ffOfHyp_p3 0 V' E' (w (m + 1), w m)
+            = (w (m + (k - 1) + 1), w (m + (k - 1))) :=
+          fdffValBFb hper hk1 hE hEE hne2 m
+        have h2 : nnOfHyp_p3 0 V' E' (w (m + (k - 1) + 1), w (m + (k - 1)))
+            = (w m, w (m + 1)) := by
+          rw [fdnnValBFb hper hk1 hE hEE hshift2 (m + (k - 1)),
+            show ((m:Nat) + (k - 1) + 1) = m + k from by omega, hper m,
+            show ((m:Nat) + (k - 1) + 2) = m + 1 + k from by omega, hper (m + 1)]
+        have h3 : eeOfHyp_p3 0 V' E' (w m, w (m + 1)) = (w (m + 1), w m) :=
+          eeMemEqFb (ordMemDartsFb (vv := w) (edgeMemFb hE m))
+        rw [h1, h2, h3]
+    · rw [ffNotMemEqFb hd, nnNotMemEqFb hd, eeNotMemEqFb hd]
+  · have heeOrd : hasOrders_p3 (eeOfHyp_p3 0 V' E') 2 := by
+      constructor
+      · intro i hi0 _hik hid
+        have hi1 : i = 1 := by omega
+        subst hi1
+        have h1 : eeOfHyp_p3 0 V' E' (w 0, w 1) = (w 0, w 1) := congrFun hid (w 0, w 1)
+        rw [eeMemEqFb (ordMemDartsFb (vv := w) (edgeMemFb hE 0))] at h1
+        exact hne 0 (congrArg Prod.fst h1.symm)
+      · funext x
+        show eeOfHyp_p3 0 V' E' (eeOfHyp_p3 0 V' E' x) = x
+        exact heeAll x
+    exact heeOrd
+  · have hnnOrd : hasOrders_p3 (nnOfHyp_p3 0 V' E') 2 := by
+      constructor
+      · intro i hi0 _hik hid
+        have hi1 : i = 1 := by omega
+        subst hi1
+        have h1 : nnOfHyp_p3 0 V' E' (w 0, w 1) = (w 0, w 1) := congrFun hid (w 0, w 1)
+        rw [fdnnValFFb hper hE hEE hne2 hk1 0] at h1
+        have h2 : w 1 = w (k - 1) := by
+          have hc2 := congrArg Prod.snd h1.symm
+          rw [Nat.zero_add] at hc2
+          exact hc2
+        have h3 : w (0 + 1) = w (0 + k - 1) := by
+          rw [show ((0:Nat) + 1) = 1 from by simp, show ((0:Nat) + k) = k from by simp]
+          exact h2
+        exact hne2 0 h3
+      · funext x
+        show nnOfHyp_p3 0 V' E' (nnOfHyp_p3 0 V' E' x) = x
+        exact hnnAll x
+    exact hnnOrd
+  · intro x hx
+    rw [eeNotMemEqFb (fun hc => hx (by rw [← hcoeD] at hc; exact hc))]
+  · intro x hx
+    rw [nnNotMemEqFb (fun hc => hx (by rw [← hcoeD] at hc; exact hc))]
+  · intro x hx
+    rw [ffNotMemEqFb (fun hc => hx (by rw [← hcoeD] at hc; exact hc))]
+  refine Finset.mem_union_left
+    (t := Finset.univ.image (fun i : Fin k => (w i, w (i + 1)))) ?_
+  exact Finset.mem_image.mpr ⟨⟨0, hk0⟩, Finset.mem_univ _, rfl⟩
+
+/-- master：七槽像形 + 周期 + 模 k 单射 + FAN ⇒ `localFan_p3`（backward 像为
+face 轨道）。LA3 `HYP_LEMMA`/`ELMS_OF_HYPERMAP_HYP`（sorry 门）的自建绕法。 -/
+private theorem localFanMasterFb (hk3 : 3 ≤ k) (hper : Periodic w k)
+    (hV : Set.image w Set.univ = V')
+    (hE : Set.image (fun i : ℕ => ({w i, w (i + 1)} : Set V3)) Set.univ = E')
+    (hEE : ∀ i, ee (w i) E' = ({w (i + 1), w (i + k - 1)} : Set V3))
+    (hinj : ∀ i j, w i = w j → i % k = j % k)
+    (hfan : Fan.FAN 0 V' E') :
+    localFan_p3 V' E' (Set.image (fun i : ℕ => (w (i + 1), w i)) Set.univ) := by
+  have hk0 : 0 < k := by omega
+  have hk1 : 1 ≤ k := by omega
+  obtain ⟨hne, hne2, hshift2⟩ := fanNeFb hk3 hper hinj
+  obtain ⟨D, hcoeD, hcardD, hcov, heeInv, hnnInv, hffIterId, hffNotId, hcomp,
+    heeOrd, hnnOrd, hoffE, hoffN, hoffF, hmemD0⟩ := plainKitFb hk3 hper hV hE hEE hinj
+  obtain ⟨H, hHd, hHe, hHn, hHf, hHF⟩ :=
+    hypermapOfDartsFb D (eeOfHyp_p3 0 V' E') (nnOfHyp_p3 0 V' E') (ffOfHyp_p3 0 V' E')
+      heeInv hnnInv (bijOfIterIdFb hk0 hffIterId) hoffE hoffN hoffF hcomp
+  refine ⟨H, ?_, hHe, hHn, hHf, hfan, ?_, ?_⟩
+  · rw [hHd]
+    exact hcoeD
+  · refine ⟨(w (0 + 1), w 0), ?_, ?_⟩
+    · rw [hHd]
+      exact hmemD0
+    · rw [hHF (w (0 + 1), w 0), fdorbitBFb hper hk0 hk1 hE hEE hne2 0]
+  · rw [fdbwdNcardFb hk0 hper hinj]
+    refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · rw [hHd, hcardD]
+    · intro d hdmem
+      rw [hHd] at hdmem ⊢
+      rw [hHF d, hHn]
+      exact hcov d hdmem
+    · rw [hHf]
+      exact ⟨hffNotId, funext hffIterId⟩
+    · rw [hHe]
+      exact heeOrd
+    · rw [hHn]
+      exact hnnOrd
+
+/-- `sigmaFan 0 univ E' (w i) (w (i+1)) = w (i+k-1)`（ε 唯一性；原族 wedge
+内容提取用）。 -/
+private theorem sigmaFanUnivFb (hk3 : 3 ≤ k) (hper : Periodic w k)
+    (hE : Set.image (fun i : ℕ => ({w i, w (i + 1)} : Set V3)) Set.univ = E')
+    (hEE : ∀ i, ee (w i) E' = ({w (i + 1), w (i + k - 1)} : Set V3))
+    (hne2 : ∀ j, w (j + 1) ≠ w (j + k - 1))
+    (hinj : ∀ i j, w i = w j → i % k = j % k)
+    (i : ℕ) :
+    Fan.sigmaFan 0 Set.univ E' (w i) (w (i + 1)) = w (i + k - 1) := by
+  have hsoe : Fan.setOfEdge (w i) Set.univ E' = ({w (i + 1), w (i + k - 1)} : Set V3) := by
+    ext z
+    simp only [Fan.setOfEdge, Set.mem_setOf_eq, Set.mem_univ, true_and]
+    constructor
+    · intro h
+      have hm : ({w i, z} : Set V3) ∈ E' := h.1
+      rw [← hE, Set.mem_image] at hm
+      obtain ⟨j, -, hj⟩ := hm
+      rw [pairSetEqFb] at hj
+      rcases hj with (⟨h1, h2⟩ | ⟨h1, h2⟩)
+      · left
+        show z = w (i + 1)
+        rw [← h2]
+        exact vvModEqFb hper (modSuccFb (hinj j i h1))
+      · right
+        show z = w (i + k - 1)
+        rw [← h1, show ((i:Nat) + k - 1) = i + (k - 1) from by omega]
+        exact vvModEqFb hper (modPredFb (by omega) (hinj (j + 1) i h2))
+    · intro h
+      rcases Set.mem_insert_iff.mp h with hz | hz
+      · rw [hz]
+        refine ⟨?_, trivial⟩
+        rw [← hE]
+        exact ⟨i, Set.mem_univ _, rfl⟩
+      · rw [Set.mem_singleton_iff.mp hz]
+        refine ⟨?_, trivial⟩
+        rw [← hE, Set.mem_image]
+        refine ⟨i + k - 1, Set.mem_univ _, ?_⟩
+        rw [pairSetCommFb, show ((i:Nat) + k - 1 + 1) = i + k from by omega, hper i]
+  have hne1 : Fan.setOfEdge (w i) Set.univ E' ≠ ({w (i + 1)} : Set V3) := by
+    intro hc
+    rw [hsoe] at hc
+    have hm : w (i + k - 1) ∈ ({w (i + 1)} : Set V3) := by
+      rw [← hc]
+      exact Set.mem_insert_iff.mpr (Or.inr rfl)
+    exact hne2 i (Set.mem_singleton_iff.mp hm).symm
+  rw [Fan.sigmaFan, if_neg hne1]
+  refine epsFixedFb ?_ ?_
+  · refine ⟨?_, (hne2 i).symm, ?_⟩
+    · rw [hsoe]
+      exact Set.mem_insert_iff.mpr (Or.inr rfl)
+    · intro u hu1 hu2
+      rw [hsoe] at hu1
+      rcases Set.mem_insert_iff.mp hu1 with hu | hu
+      · exact absurd hu hu2
+      · rw [hu]
+  · intro y hy
+    rw [hsoe] at hy
+    rcases Set.mem_insert_iff.mp hy.1 with hy1 | hy1
+    · exact absurd hy1 hy.2.1
+    · exact hy1
+
+end FanMasterLayer
+
+/-- HOL `LOCAL_FAN_DUAL_SYM_0`（YXIONXL2.hl:1558-1882）；LA13 孪生
+`localFanP13`（LA13-f0b 草案 :2343，True 占位，不可沿袭）。目标谓词 = LA3
+canonical `localFan_p3`；三槽 = HOL 重指标形，经 `oppImageV/E/FEq2NegFb`
+改写为平取负像形后套 master。 -/
+theorem LOCAL_FAN_DUAL_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    localFan_p3
+      (Set.image (fun i : ℕ => -(vv (k - (i % k + 1)))) Set.univ)
+      (Set.image (fun i : ℕ =>
+        ({-(vv (k - (i % k + 1))), -(vv (k - ((i + 1) % k + 1)))} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ =>
+        (-(vv (k - (i % k + 1))), -(vv (k - ((i + 1) % k + 1))))) Set.univ) := by
+  have hconv : ConvexLocalFan (Set.image vv Set.univ)
+      (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ) := by
+    rcases hbb.2.2.2 with h3 | hcf
+    · exact absurd (by rw [hk] at h3; exact h3) hk3
+    · simpa only [Set.image_univ] using hcf
+  obtain ⟨hlf0, -⟩ := hconv
+  obtain ⟨hfan0, -, -⟩ := hlf0
+  have hctx := fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  have hper0 : Periodic vv k := hctx.2.2.1
+  have hperN : Periodic (fun i : ℕ => -(vv i)) k := fun t => by simpa using hper0 t
+  have hinjN : ∀ i j, -(vv i) = -(vv j) → i % k = j % k := by
+    intro i j hc
+    exact vvInjModFb hk (by omega) hctx.1 hctx.2.1 hper0 (by simpa using congrArg Neg.neg hc)
+  rw [oppImageVEqNegFb vv hper0 (by omega), oppImageEEqNegFb vv hper0 (by omega),
+    oppImageFEq2NegFb vv hper0 (by omega)]
+  refine localFanMasterFb (by omega) hperN rfl rfl hctx.2.2.2.2.1 hinjN ?_
+  exact fanNegCoreFb vv hfan0
+
+/-- HOL `CONVEX_LOCAL_FAN_SYM_0`（YXIONXL2.hl:2029-2182）；LA13 孪生 :2357。
+azim ≤ π 与 V ⊆ wedge 经 `AZIM_NEG_fb` 对换传输到原族 forward dart 的
+ConvexLocalFan 内容 (A)/(B)（sigmaFan 值由 `sigmaFanUnivFb` 收口）；wedge
+上界由 (B) 上界 + `sum4_azim_fan` 收口；共线简并分支由 `azim` 定义的 0
+分支收口。 -/
+theorem CONVEX_LOCAL_FAN_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : Set V3)
+    (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hk : s.k = k) (hV : Set.image vv Set.univ = V)
+    (hE : Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ = E)
+    (hFF : Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ = FF)
+    (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    convexLocalFan_p3
+      (Set.image (fun i : ℕ => -(vv (k - (i % k + 1)))) Set.univ)
+      (Set.image (fun i : ℕ =>
+        ({-(vv (k - (i % k + 1))), -(vv (k - ((i + 1) % k + 1)))} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ =>
+        (-(vv (k - (i % k + 1))), -(vv (k - ((i + 1) % k + 1))))) Set.univ) := by
+  have hconv : ConvexLocalFan (Set.image vv Set.univ)
+      (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ) := by
+    rcases hbb.2.2.2 with h3 | hcf
+    · exact absurd (by rw [hk] at h3; exact h3) hk3
+    · simpa only [Set.image_univ] using hcf
+  obtain ⟨hlf0, hpts⟩ := hconv
+  obtain ⟨hfan0, -, -⟩ := hlf0
+  have hctx := fanbaseCtxFb s vv k V E FF hk hV hE hFF hiscs hk3 hbb
+  have hper0 : Periodic vv k := hctx.2.2.1
+  have hperN : Periodic (fun i : ℕ => -(vv i)) k := fun t => by simpa using hper0 t
+  have hne0 : ∀ j, vv j ≠ 0 := by
+    intro j hc
+    exact hfan0.2.2.2.1 ⟨j, Set.mem_univ _, hc⟩
+  have hsig : ∀ i : ℕ, Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1)) = vv (i + k - 1) :=
+    fun i => sigmaFanUnivFb (by omega) hper0 hE hctx.2.2.2.1 hctx.2.2.2.2.2.2.1
+      (fun i j hc => vvInjModFb hk (by omega) hctx.1 hctx.2.1 hper0 hc) i
+  -- 原族 ConvexLocalFan 的方位内容：(A_i) azim ≤ π；(B_i) wedge 覆盖
+  have hAB : ∀ i : ℕ,
+      azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) ≤ Real.pi ∧
+      ∀ z : V3, z ∈ V → 0 ≤ azim 0 (vv i) (vv (i + 1)) z ∧
+        azim 0 (vv i) (vv (i + 1)) z ≤ azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
+    intro i
+    have hdart : (vv i, vv (i + 1)) ∈ Set.image (fun j : ℕ => (vv j, vv (j + 1))) Set.univ :=
+      ⟨i, Set.mem_univ _, rfl⟩
+    obtain ⟨hA, hB⟩ := hpts (vv i, vv (i + 1)) hdart
+    rw [hE] at hA
+    rw [hE, hV] at hB
+    have hcard : 1 < (ee (vv i) E).ncard := by
+      rw [hctx.2.2.2.1 i, Set.ncard_pair (hctx.2.2.2.2.2.2.1 i)]
+      norm_num
+    constructor
+    · have hA' : azim 0 (vv i) (vv (i + 1))
+          (Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1))) ≤ Real.pi := by
+        have h1 : azimInFan (vv i, vv (i + 1)) E
+            = azim 0 (vv i) (vv (i + 1))
+              (Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1))) := by
+          simp only [azimInFan, if_pos hcard]
+        rw [h1] at hA
+        exact hA
+      rwa [hsig i] at hA'
+    · have hB' : V ⊆ wedgeGe 0 (vv i) (vv (i + 1))
+          (Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1))) := by
+        have h1 : wedgeInFanGe (vv i, vv (i + 1)) E
+            = wedgeGe 0 (vv i) (vv (i + 1))
+              (Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1))) := by
+          simp only [wedgeInFanGe, if_pos hcard]
+        rw [h1] at hB
+        exact hB
+      intro z hz
+      have hBm : z ∈ wedgeGe 0 (vv i) (vv (i + 1))
+          (Fan.sigmaFan 0 univ E (vv i) (vv (i + 1))) := hB' hz
+      simp only [wedgeGe, Set.mem_setOf_eq] at hBm
+      rw [hsig i] at hBm
+      exact hBm
+  rw [convexLocalFan_p3]
+  refine ⟨LOCAL_FAN_DUAL_SYM_0_fb s vv k V E FF hk hV hE hFF hiscs hk3 hbb, ?_⟩
+  rw [oppImageVEqNegFb vv hper0 (by omega), oppImageEEqNegFb vv hper0 (by omega),
+    oppImageFEq2NegFb vv hper0 (by omega)]
+  rintro x ⟨j, -, rfl⟩
+  -- fan6 给出的两条不共线（边 {vv j, vv (j+1)} / {vv (j+1), vv (j+2)}）
+  have hcol1 : ¬Collinear ℝ ({0, vv (j + 1), vv j} : Set V3) := by
+    have h := hfan0.2.2.2.2.1 ({vv j, vv (j + 1)} : Set V3) ⟨j, Set.mem_univ _, rfl⟩
+    show ¬Collinear ℝ (insert 0 (insert (vv (j + 1)) ({vv j} : Set V3)))
+    rw [pairSetCommFb]
+    exact h
+  have hcol2 : ¬Collinear ℝ ({0, vv (j + 1), vv (j + 2)} : Set V3) :=
+    hfan0.2.2.2.2.1 ({vv (j + 1), vv (j + 2)} : Set V3) ⟨j + 1, Set.mem_univ _, rfl⟩
+  have hne2j : -(vv (j + 2)) ≠ -(vv j) := by
+    intro hc
+    have hc2 : vv (j + 2) = vv j := by simpa using congrArg Neg.neg hc
+    exact hctx.2.2.2.2.2.2.2 j (hc2.trans (hper0 j).symm)
+  have hneigh : ee (-(vv (j + 1)))
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+      = ({-(vv (j + 2)), -(vv j)} : Set V3) := by
+    have h := hctx.2.2.2.2.1 (j + 1)
+    rw [show ((j:Nat) + 1 + k - 1) = j + k from by omega,
+      show (-(vv (j + k)) : V3) = -(vv j) from by
+        simpa using congrArg Neg.neg (hper0 j)] at h
+    exact h
+  have hcardN : 1 < (EE_p3 (-(vv (j + 1)))
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)).ncard := by
+    show 1 < (ee (-(vv (j + 1)))
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)).ncard
+    rw [hneigh, Set.ncard_pair hne2j]
+    norm_num
+  have hcyc : azimCycle_p3 (EE_p3 (-(vv (j + 1)))
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))
+        0 (-(vv (j + 1))) (-(vv j))
+      = -(vv (j + 2)) := by
+    show azimCycle_p3 (ee (-(vv (j + 1)))
+      (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ))
+      0 (-(vv (j + 1))) (-(vv j)) = -(vv (j + 2))
+    rw [hneigh, azimCycleTwoSwapFb hne2j]
+  constructor
+  · -- azimInFan_p3 x E'' ≤ π：对换传输 = (A_{j+1})
+    have hA := (hAB (j + 1)).1
+    rw [show ((j:Nat) + 1 + k - 1) = j + k from by omega,
+      show (vv (j + k) : V3) = vv j from hper0 j] at hA
+    simp only [azimInFan_p3]
+    rw [if_pos hcardN, hcyc, AZIM_NEG_fb hcol1 hcol2]
+    exact hA
+  · -- V'' ⊆ wedgeInFanGe_p3 x E''：下界 azim_nonneg；上界对换传输 + sum4
+    simp only [wedgeInFanGe_p3]
+    rw [if_pos hcardN, hcyc]
+    rintro z ⟨i, -, rfl⟩
+    simp only [wedgeGe_p3, Set.mem_setOf_eq]
+    refine ⟨azim_nonneg 0 (-(vv (j + 1))) (-(vv j)) (-(vv i)), ?_⟩
+    by_cases hcol : Collinear ℝ ({0, vv (j + 1), vv i} : Set V3)
+    · have hdeg : azim 0 (-(vv (j + 1))) (-(vv j)) (-(vv i)) = 0 := by
+        have hc : Collinear3 0 (-(vv (j + 1))) (-(vv i)) := collinear3_zero_negFb.mp hcol
+        unfold azim
+        exact if_pos (Or.inr hc)
+      rw [hdeg, AZIM_NEG_fb hcol1 hcol2]
+      exact azim_nonneg 0 (vv (j + 1)) (vv (j + 2)) (vv j)
+    · rw [AZIM_NEG_fb hcol1 hcol, AZIM_NEG_fb hcol1 hcol2]
+      have hB := (hAB (j + 1)).2 (vv i) (by rw [← hV]; exact ⟨i, Set.mem_univ _, rfl⟩)
+      rw [show ((j:Nat) + 1 + k - 1) = j + k from by omega,
+        show (vv (j + k) : V3) = vv j from hper0 j] at hB
+      have hsum := sum4_azim_fan (x := 0) (v := vv (j + 1)) (u := vv (j + 2))
+        (w1 := vv i) (w2 := vv j) (hne0 (j + 1)) hcol2 hcol hcol1 hB.2
+      rw [hsum]
+      linarith [azim_nonneg 0 (vv (j + 1)) (vv (j + 2)) (vv i)]
 end Kepler.Text
