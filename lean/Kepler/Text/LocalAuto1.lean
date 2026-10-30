@@ -2282,6 +2282,764 @@ theorem JLXFDMJ_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s 
     ∀ j, j ∉ scsM s → dist (v j) (v (j + 1)) = 2 := by
   sorry
 
+/-! ### `WKEIDFT_concl` discharge kit (lanes `wkeidft2-w3`/`wkeidft3-w3`; private `_p1` names)
+
+HOL route (WKEIDFT.hl:809-817) consumes `WKEIDFT_EQU_V2` (:769) and then
+`YXIONXL3`.  In this file `YXIONXL3_concl` is a `sorry` (a true copy lives in
+LA12, but `LocalAuto1` does not import it and the import block is frozen), so
+consuming it would move the debt instead of closing it.  Bypass: unfold
+`scsArrowV39` on the singleton sets and close the second disjunct by
+transporting the `MMsV39` member along the `scsPropEquV39` shift — the
+unadorned/stab special case of LA12's `TRANS_BBPRIME2_SUBSET`, rebuilt here
+privately (`unadorned_MMs_concl` kills the str/lo/hi/am/bm clauses).  The set
+identity `scsStabDiagV39 s p' q' = scsPropEquV39 (scsStabDiagV39 s p q) i`
+(HOL `WKEIDFT_EQU_V2`) is re-proved from `scs_inj`; the shift direction is the
+HOL one, `SUR_MOD_FUN` at `[p'; p; k]` giving `(i + p') % k = p % k`. -/
+
+/-- Adding a common offset preserves residue equality. -/
+private theorem la1p1_mdeq_add {k c a b : ℕ} (h : a % k = b % k) :
+    (c + a) % k = (c + b) % k := by
+  calc (c + a) % k = (c % k + a % k) % k := Nat.add_mod c a k
+    _ = (c % k + b % k) % k := by rw [h]
+    _ = (c + b) % k := (Nat.add_mod c b k).symm
+
+/-- Adding a common offset is cancellable for residue equality. -/
+private theorem la1p1_mdeq_cancel {k c a b : ℕ} (h : (c + a) % k = (c + b) % k) :
+    a % k = b % k :=
+  Nat.ModEq.add_left_cancel' c h
+
+/-- `((i + m) + k - i % k) % k = m % k`: the backward shift of a forward
+shift is the identity. -/
+private theorem la1p1_back_self {k i : ℕ} (hk : 0 < k) (m : ℕ) :
+    ((i + m) + k - i % k) % k = m % k := by
+  have hdm : i / k * k + i % k = i := by rw [Nat.mul_comm]; exact Nat.div_add_mod i k
+  have h1 : i % k ≤ i := by omega
+  have e1 : (i + m) + k - i % k = m + (i / k + 1) * k := by
+    have h2 : (i / k + 1) * k = i / k * k + k := by rw [Nat.add_mul, Nat.one_mul]
+    omega
+  rw [e1]
+  exact la1periodic_mul (f := fun x : ℕ => x % k)
+    (fun x => Nat.add_mod_right x k) (i / k + 1) m
+
+/-- `(m % k + k - i % k) % k = (m + k - i % k) % k`. -/
+private theorem la1p1_back_mod {k i : ℕ} (hk : 0 < k) (m : ℕ) :
+    (m % k + k - i % k) % k = (m + k - i % k) % k := by
+  have hc : i % k ≤ k := le_of_lt (Nat.mod_lt i hk)
+  have he1 : m % k + k - i % k = m % k + (k - i % k) := by omega
+  have hA : (m % k + (k - i % k)) % k = (m + (k - i % k)) % k :=
+    Nat.ModEq.add_right _ (Nat.mod_mod m k)
+  have he2 : (m + (k - i % k)) % k = (m + k - i % k) % k := by
+    congr 1
+    omega
+  rw [he1, hA, he2]
+
+/-- `((m + i) % k + k - i % k) % k = m % k`: the backward shift applied at the
+residue of `m + i` recovers `m`. -/
+private theorem la1p1_back_idx0 {k i : ℕ} (hk : 0 < k) (m : ℕ) :
+    ((m + i) % k + k - i % k) % k = m % k := by
+  have hc : i % k ≤ k := le_of_lt (Nat.mod_lt i hk)
+  have hdm : i / k * k + i % k = i := by rw [Nat.mul_comm]; exact Nat.div_add_mod i k
+  have hm : (i / k + 1) * k = i / k * k + k := by rw [Nat.add_mul, Nat.one_mul]
+  have h1 : (m + i) % k + k - i % k = (m + i) % k + (k - i % k) := by omega
+  have h2 : ((m + i) % k + (k - i % k)) % k = ((m + i) + (k - i % k)) % k :=
+    Nat.ModEq.add_right _ (Nat.mod_mod (m + i) k)
+  have h3 : (m + i) + (k - i % k) = m + (i / k + 1) * k := by omega
+  rw [h1, h2, h3, la1periodic_mul (f := fun x : ℕ => x % k)
+    (fun x => Nat.add_mod_right x k) (i / k + 1) m]
+
+/-- `((m + i) % k + 1 + k - i % k) % k = (m + 1) % k`: same for the residue
+successor. -/
+private theorem la1p1_back_idx1 {k i : ℕ} (hk : 0 < k) (m : ℕ) :
+    ((m + i) % k + 1 + k - i % k) % k = (m + 1) % k := by
+  have hc : i % k ≤ k := le_of_lt (Nat.mod_lt i hk)
+  have hdm : i / k * k + i % k = i := by rw [Nat.mul_comm]; exact Nat.div_add_mod i k
+  have hm : (i / k + 1) * k = i / k * k + k := by rw [Nat.add_mul, Nat.one_mul]
+  have h1 : (m + i) % k + 1 + k - i % k = (m + i) % k + (1 + (k - i % k)) := by omega
+  have h2 : ((m + i) % k + (1 + (k - i % k))) % k
+      = ((m + i) + (1 + (k - i % k))) % k :=
+    Nat.mod_add_mod (m + i) k (1 + (k - i % k))
+  have h3 : (m + i) + (1 + (k - i % k)) = (m + 1) + (i / k + 1) * k := by omega
+  rw [h1, h2, h3, la1periodic_mul (f := fun x : ℕ => x % k)
+    (fun x => Nat.add_mod_right x k) (i / k + 1) (m + 1)]
+
+/-- `psort` equality from matching residues (direct case). -/
+private theorem la1p1_psort_eq {k a b c d : ℕ} (h1 : a % k = c % k)
+    (h2 : b % k = d % k) : psort k (a, b) = psort k (c, d) := by
+  simp only [psort, h1, h2]
+
+/-- `psort` equality in residue form (iff completion of `la1psort_cases`). -/
+private theorem la1p1_psort_iff {k : ℕ} (a b c d : ℕ) :
+    psort k (a, b) = psort k (c, d) ↔
+      (a % k = c % k ∧ b % k = d % k) ∨ (a % k = d % k ∧ b % k = c % k) := by
+  constructor
+  · exact la1psort_cases
+  · rintro (⟨h1, h2⟩ | ⟨h1, h2⟩)
+    · exact la1p1_psort_eq h1 h2
+    · exact (la1psort_symm k a b).trans (la1p1_psort_eq h2 h1)
+
+/-- The `scs`-shift transport of `psort` classes (HOL `DIAG_PSORT`), in the
+direction used by `WKEIDFT`: shifting `(u, v)` by `i` trades the base pair
+`(p, q)` for `(p', q')` where `(i + p') % k = p % k` and `p' + q = p + q'`. -/
+private theorem la1p1_psort_shift {k i p q p' q' u v : ℕ} (hk : 0 < k)
+    (hmod : (i + p') % k = p % k) (hsum : p' + q = p + q') :
+    psort k (p', q') = psort k (u, v) ↔ psort k (p, q) = psort k (i + u, i + v) := by
+  have hqp : Nat.ModEq k (i + q') q := by
+    have h1 : Nat.ModEq k (q' + p) (q + p') := by
+      show (q' + p) % k = (q + p') % k
+      rw [Nat.add_comm q' p, Nat.add_comm q p', hsum]
+    have h2 : Nat.ModEq k (i + (q' + p)) (q + (i + p')) := by
+      refine (Nat.ModEq.add_left i h1).trans ?_
+      rw [← Nat.add_assoc i q p', Nat.add_comm i q, ← Nat.add_assoc q i p']
+    refine Nat.ModEq.add_right_cancel' p ?_
+    rw [Nat.add_assoc]
+    exact h2.trans (Nat.ModEq.add_left q hmod)
+  constructor
+  · intro h
+    obtain hc | hc := la1psort_cases h
+    · refine (la1p1_psort_iff p q (i + u) (i + v)).2 ?_
+      refine Or.inl ⟨?_, ?_⟩
+      · show p % k = (i + u) % k
+        rw [← Nat.ModEq.add_left i hc.1, hmod]
+      · show q % k = (i + v) % k
+        rw [← Nat.ModEq.add_left i hc.2, hqp]
+    · refine (la1p1_psort_iff p q (i + u) (i + v)).2 ?_
+      refine Or.inr ⟨?_, ?_⟩
+      · show p % k = (i + v) % k
+        rw [← Nat.ModEq.add_left i hc.1, hmod]
+      · show q % k = (i + u) % k
+        rw [← Nat.ModEq.add_left i hc.2, hqp]
+  · intro h
+    obtain hc | hc := la1psort_cases h
+    · refine (la1p1_psort_iff p' q' u v).2 ?_
+      refine Or.inl ⟨?_, ?_⟩
+      · show p' % k = u % k
+        exact (Nat.ModEq.add_left_cancel' i (show Nat.ModEq k (i + u) (i + p') from by
+          show (i + u) % k = (i + p') % k
+          rw [← hc.1, ← hmod])).symm
+      · show q' % k = v % k
+        exact (Nat.ModEq.add_left_cancel' i (show Nat.ModEq k (i + v) (i + q') from by
+          show (i + v) % k = (i + q') % k
+          rw [← hc.2, ← hqp])).symm
+    · refine (la1p1_psort_iff p' q' u v).2 ?_
+      refine Or.inr ⟨?_, ?_⟩
+      · show p' % k = v % k
+        exact (Nat.ModEq.add_left_cancel' i (show Nat.ModEq k (i + v) (i + p') from by
+          show (i + v) % k = (i + p') % k
+          rw [← hc.1, hmod])).symm
+      · show q' % k = u % k
+        exact (Nat.ModEq.add_left_cancel' i (show Nat.ModEq k (i + u) (i + q') from by
+          show (i + u) % k = (i + q') % k
+          rw [← hc.2, hqp])).symm
+
+/-- Diagonal-ness is preserved by a common offset. -/
+private theorem la1p1_diag_shift {k i u v : ℕ} :
+    scsDiag k (i + u) (i + v) ↔ scsDiag k u v := by
+  constructor
+  · intro h
+    refine ⟨fun he => h.1 ?_, fun he => h.2.1 ?_, fun he => h.2.2 ?_⟩
+    · exact la1p1_mdeq_add (c := i) he
+    · have hh := la1p1_mdeq_add (c := i) (k := k) (a := u + 1) (b := v) he
+      rwa [← Nat.add_assoc] at hh
+    · have hh := la1p1_mdeq_add (c := i) (k := k) (a := u) (b := v + 1) he
+      rwa [← Nat.add_assoc] at hh
+  · intro h
+    refine ⟨fun he => h.1 ?_, fun he => h.2.1 ?_, fun he => h.2.2 ?_⟩
+    · exact la1p1_mdeq_cancel (c := i) he
+    · exact la1p1_mdeq_cancel (c := i) (k := k) (a := u + 1) (b := v) he
+    · exact la1p1_mdeq_cancel (c := i) (k := k) (a := u) (b := v + 1) he
+
+/-- Successor-slot value: `f r t = c` whenever `t` is the residue successor
+of `r`. -/
+private theorem la1p1_adj_val {f : ℕ → ℕ → ℝ} {c : ℝ} {k : ℕ} (hk : 0 < k)
+    (hper : Periodic2 f k) (hc : ∀ m, f m (m + 1) = c) {r t : ℕ}
+    (ht : t % k = (r % k + 1) % k) : f r t = c := by
+  have hm : r % k < k := Nat.mod_lt _ hk
+  have h1 : f r t = f (r % k) (t % k) := la1periodic2_mod hper r t
+  rw [h1, ht]
+  rcases Nat.lt_or_ge (r % k + 1) k with h2 | h2
+  · rw [Nat.mod_eq_of_lt h2]
+    exact hc (r % k)
+  · have h3 : r % k + 1 = k := by omega
+    have h5 : f (r % k) k = c := by
+      have h0 := hc (r % k)
+      rwa [h3] at h0
+    have h6 : f (r % k) k = f (r % k) 0 := by
+      rw [la1periodic2_mod hper (r % k) k]
+      simp
+    rw [h3, Nat.mod_self, ← h6]
+    exact h5
+
+/-- One-step diagonal transport: `f x (x+1) = f (x%k) (x%k+1)`. -/
+private theorem la1p1_per2_step {f : ℕ → ℕ → ℝ} {k : ℕ} (hper : Periodic2 f k)
+    (x : ℕ) : f x (x + 1) = f (x % k) (x % k + 1) := by
+  have hx : x % k + x / k * k = x := by rw [Nat.mul_comm]; exact Nat.mod_add_div x k
+  have hy : x % k + 1 + x / k * k = x + 1 := by omega
+  have hA : f x (x + 1) = f (x % k + x / k * k) (x + 1) := by rw [hx]
+  have hB : f (x % k + x / k * k) (x + 1) = f (x % k) (x + 1) :=
+    la1periodic_mul (f := fun m => f m (x + 1)) (fun m => (hper m (x + 1)).1)
+      (x / k) (x % k)
+  have hC : f (x % k) (x + 1) = f (x % k) (x % k + 1 + x / k * k) := by rw [hy]
+  have hD : f (x % k) (x % k + 1 + x / k * k) = f (x % k) (x % k + 1) :=
+    la1periodic_mul (f := fun m => f (x % k) m) (fun m => (hper (x % k) m).2)
+      (x / k) (x % k + 1)
+  rw [hA, hB, hC, hD]
+
+/-- Polymorphic range shift (periodic re-indexing does not change the range). -/
+private theorem la1p1_range_shift {α : Type} {x : ℕ → α} {k i : ℕ} (hk : 0 < k)
+    (hxper : Periodic x k) :
+    Set.range (fun m => x (i + m)) = Set.range x := by
+  ext y
+  constructor
+  · rintro ⟨m, rfl⟩
+    exact ⟨i + m, rfl⟩
+  · rintro ⟨m, rfl⟩
+    refine ⟨(m + k - i % k) % k, ?_⟩
+    show x (i + ((m + k - i % k) % k)) = x m
+    have h1 : x (i + ((m + k - i % k) % k)) = x ((i + ((m + k - i % k) % k)) % k) :=
+      la1periodic_mod hxper _
+    rw [h1, la1shift_rho hk m, la1periodic_mod hxper m]
+
+/-- Residue-level regime invariance: a slot function pinned by the pair
+regime (equal / successor / predecessor / `scsDiag` residues) takes the same
+value at `(x, y)` and at the `i`-shifted residues. -/
+private theorem la1p1_regime_res {f : ℕ → ℕ → ℝ} {c0 c1 cd : ℝ} {k i x y : ℕ}
+    (hk : 0 < k) (hper : Periodic2 f k) (hsym : ∀ u v, f u v = f v u)
+    (hm0 : ∀ m, f m m = c0) (hm1 : ∀ m, f m (m + 1) = c1)
+    (hd : ∀ u v, scsDiag k u v → f u v = cd) :
+    f x y = f ((i + x) % k) ((i + y) % k) := by
+  by_cases h1 : x % k = y % k
+  · have hshift : (i + x) % k = (i + y) % k := la1p1_mdeq_add (c := i) h1
+    rw [la1periodic2_mod hper x y, h1, hm0, hshift, hm0]
+  · by_cases h2 : y % k = (x % k + 1) % k
+    · have hy2 : (i + y) % k = ((i + x) % k + 1) % k := by
+        have e1 : y % k = (x + 1) % k := by rw [h2, Nat.mod_add_mod]
+        have e2 : (i + y) % k = (i + (x + 1)) % k := la1p1_mdeq_add (c := i) e1
+        rw [e2, ← Nat.add_assoc, Nat.mod_add_mod]
+      have hv1 : f x y = c1 := la1p1_adj_val hk hper hm1 h2
+      have hv2 : f ((i + x) % k) ((i + y) % k) = c1 :=
+        la1p1_adj_val hk hper hm1 (t := (i + y) % k) (r := (i + x) % k)
+          (by rw [Nat.mod_mod, Nat.mod_mod]; exact hy2)
+      rw [hv1, hv2]
+    · by_cases h3 : x % k = (y % k + 1) % k
+      · have hx3 : (i + x) % k = ((i + y) % k + 1) % k := by
+          have e1 : x % k = (y + 1) % k := by rw [h3, Nat.mod_add_mod]
+          have e2 : (i + x) % k = (i + (y + 1)) % k := la1p1_mdeq_add (c := i) e1
+          rw [e2, ← Nat.add_assoc, Nat.mod_add_mod]
+        have hA1 : f y x = c1 := la1p1_adj_val hk hper hm1 h3
+        have hA2 : f ((i + y) % k) ((i + x) % k) = c1 :=
+          la1p1_adj_val hk hper hm1 (t := (i + x) % k) (r := (i + y) % k)
+            (by rw [Nat.mod_mod, Nat.mod_mod]; exact hx3)
+        calc f x y = f y x := hsym x y
+          _ = c1 := hA1
+          _ = f ((i + y) % k) ((i + x) % k) := hA2.symm
+          _ = f ((i + x) % k) ((i + y) % k) := (hsym ((i + x) % k) ((i + y) % k)).symm
+      · have hdg : scsDiag k x y :=
+          ⟨h1, fun he => h2 (by rw [Nat.mod_add_mod]; exact he.symm),
+            fun he => h3 (by rw [Nat.mod_add_mod]; exact he)⟩
+        have hdg' : scsDiag k (i + x) (i + y) := la1p1_diag_shift.mpr hdg
+        have hdgRes : scsDiag k ((i + x) % k) ((i + y) % k) := by
+          obtain ⟨d1, d2, d3⟩ := hdg'
+          refine ⟨?_, ?_, ?_⟩
+          · simp only [Nat.mod_mod]
+            exact d1
+          · intro he
+            rw [Nat.mod_mod, Nat.mod_add_mod] at he
+            exact d2 he
+          · intro he
+            rw [Nat.mod_mod, Nat.mod_add_mod] at he
+            exact d3 he
+        exact (hd x y hdg).trans (hd ((i + x) % k) ((i + y) % k) hdgRes).symm
+
+/-- Regime invariance at arbitrary indices (HOL `CHANGE_A_SCS_MOD` /
+`CHANGE_B_SCS_MOD`). -/
+private theorem la1p1_regime_gen {s : ScsV39} {i : ℕ} (f : ℕ → ℕ → ℝ)
+    (c0 c1 cd : ℝ) (hk : 0 < s.k) (hper : Periodic2 f s.k)
+    (hsym : ∀ u v, f u v = f v u) (hm0 : ∀ m, f m m = c0)
+    (hm1 : ∀ m, f m (m + 1) = c1)
+    (hd : ∀ u v, scsDiag s.k u v → f u v = cd) (u v : ℕ) :
+    f u v = f (i + u) (i + v) := by
+  refine (la1p1_regime_res (k := s.k) (i := i) (x := u) (y := v) hk hper hsym hm0 hm1 hd).trans ?_
+  rw [la1periodic2_mod hper (i + u) (i + v)]
+
+/-- `scsPropEquV39` keeps unadorned systems unadorned. -/
+private theorem la1p1_unad_propEqu {s : ScsV39} (i : ℕ) (hu : unadornedV39 s) :
+    unadornedV39 (scsPropEquV39 s i) := by
+  obtain ⟨hlo, hhi, hstr, ham, hbm⟩ := hu
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · funext j
+    show s.lo (i + j) = False
+    rw [hlo]
+  · funext j
+    show s.hi (i + j) = False
+    rw [hhi]
+  · funext j
+    show s.str (i + j) = False
+    rw [hstr]
+  · funext j j'
+    show s.a (i + j) (i + j') = s.am (i + j) (i + j')
+    rw [ham]
+  · funext j j'
+    show s.b (i + j) (i + j') = s.bm (i + j) (i + j')
+    rw [hbm]
+
+/-- The stab-`b` slot commutes with the `scs` shift (HOL `WKEIDFT_B_V2`
+conclusion, in the component form consumed by `scs_inj`). -/
+private theorem la1p1_bstab_shift {s : ScsV39} {b b' b1 : ℝ} {i p q p' q' : ℕ}
+    (hk : 0 < s.k) (hmod : (i + p') % s.k = p % s.k) (hsum : p' + q = p + q')
+    (h11 : Periodic2 s.b s.k) (hsymb : ∀ u v, s.b u v = s.b v u)
+    (hbc : ∀ m, s.b m (m + 1) = b) (hdc : ∀ m, s.b m m = b1)
+    (hbd : ∀ u v, scsDiag s.k u v → s.b u v = b') (u v : ℕ) :
+    (scsStabDiagV39 s p' q').b u v = (scsStabDiagV39 s p q).b (i + u) (i + v) := by
+  have hts1 : scsStabDiagV39 s p' q' = mkUnadornedV39 s.k s.d s.a
+      (fun x y => if psort s.k (p', q') = psort s.k (x, y) then cstab else s.b x y) := rfl
+  have hts2 : scsStabDiagV39 s p q = mkUnadornedV39 s.k s.d s.a
+      (fun x y => if psort s.k (p, q) = psort s.k (x, y) then cstab else s.b x y) := rfl
+  rw [hts1, hts2]
+  show (if psort s.k (p', q') = psort s.k (u, v) then cstab else s.b u v)
+      = (if psort s.k (p, q) = psort s.k (i + u, i + v) then cstab
+        else s.b (i + u) (i + v))
+  by_cases hcls : psort s.k (p', q') = psort s.k (u, v)
+  · have hps : psort s.k (p, q) = psort s.k (i + u, i + v) :=
+      (la1p1_psort_shift hk hmod hsum (u := u) (v := v)).mp hcls
+    rw [if_pos hcls, if_pos hps]
+  · have h2nd : ¬(psort s.k (p, q) = psort s.k (i + u, i + v)) := fun he =>
+      hcls ((la1p1_psort_shift hk hmod hsum (u := u) (v := v)).mpr he)
+    rw [if_neg hcls, if_neg h2nd]
+    exact la1p1_regime_gen s.b b1 b b' hk h11 hsymb hdc hbc hbd u v
+
+/-- HOL `WKEIDFT_EQU_V2` (WKEIDFT.hl:753): the two stabilizations are
+`scsPropEquV39`-shifts of each other. -/
+private theorem la1p1_equ (s : ScsV39) (a b a' b' b1 : ℝ) (p q p' q' : ℕ)
+    (his : isScsV39 s) (hac : ∀ m, s.a m (m + 1) = a) (hbc : ∀ m, s.b m (m + 1) = b)
+    (hsum : p' + q = p + q') (hk3 : 3 < s.k)
+    (had : ∀ u v, scsDiag s.k u v → s.a u v = a')
+    (hbd : ∀ u v, scsDiag s.k u v → s.b u v = b')
+    (hdc : ∀ m, s.b m m = b1) :
+    ∃ i, scsStabDiagV39 s p' q' = scsPropEquV39 (scsStabDiagV39 s p q) i := by
+  obtain ⟨h1, h2, h3, -, -, -, -, h8, -, -, h11, -, h13, -, h15, -, -, -, -, -, -⟩ := his
+  have hk : 0 < s.k := by omega
+  have hsym : ∀ u v, s.a u v = s.a v u ∧ s.b u v = s.b v u := fun u v =>
+    ⟨(h13 u v).1, (h13 u v).2.2.2.1⟩
+  refine ⟨(p + s.k - p' % s.k) % s.k, ?_⟩
+  have hmod : ((p + s.k - p' % s.k) % s.k + p') % s.k = p % s.k := by
+    have h := la1shift_rho (i := p') (m := p) hk
+    rw [Nat.add_comm p' ((p + s.k - p' % s.k) % s.k)] at h
+    exact h
+  have hts1 : scsStabDiagV39 s p' q' = mkUnadornedV39 s.k s.d s.a
+      (fun x y => if psort s.k (p', q') = psort s.k (x, y) then cstab else s.b x y) := rfl
+  have hts2 : scsStabDiagV39 s p q = mkUnadornedV39 s.k s.d s.a
+      (fun x y => if psort s.k (p, q) = psort s.k (x, y) then cstab else s.b x y) := rfl
+  have hb1 : scsBasicV39 (scsStabDiagV39 s p' q') := by
+    rw [hts1]
+    exact ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  have hb2 : scsBasicV39
+      (scsPropEquV39 (scsStabDiagV39 s p q) ((p + s.k - p' % s.k) % s.k)) := by
+    refine ⟨la1p1_unad_propEqu _ ?_, fun a b => ?_⟩
+    · rw [hts2]
+      exact ⟨rfl, rfl, rfl, rfl, rfl⟩
+    · show (scsStabDiagV39 s p q).J
+        (((p + s.k - p' % s.k) % s.k) + a)
+        (((p + s.k - p' % s.k) % s.k) + b) = False
+      rw [hts2]
+      rfl
+  refine scs_inj _ _ hb1 hb2 rfl rfl ?_ ?_
+  · funext u v
+    exact la1p1_regime_gen s.a 0 a a' hk h8 (fun u v => (hsym u v).1) h15 hac had u v
+  · funext u v
+    exact la1p1_bstab_shift hk hmod hsum h11 (fun u v => (hsym u v).2) hbc hdc hbd u v
+
+/-- `BBsV39` transports along the forward `scsPropEquV39` shift. -/
+private theorem la1p1_BBs_fwd {s : ScsV39} {i : ℕ} {v : ℕ → V3}
+    (hk : 0 < s.k) (hv : BBsV39 s v) :
+    BBsV39 (scsPropEquV39 s i) (fun m => v (i + m)) := by
+  obtain ⟨hr, hper, hbnd, hfan⟩ := hv
+  have hperi : Periodic (fun m => v (i + m)) s.k := by
+    intro m
+    show v (i + (m + s.k)) = v (i + m)
+    rw [← Nat.add_assoc]
+    exact hper (i + m)
+  refine ⟨?_, hperi, ?_, ?_⟩
+  · rw [la1p1_range_shift hk hper]
+    exact hr
+  · intro a b
+    exact hbnd (i + a) (i + b)
+  · rcases hfan with h3 | hcf
+    · exact Or.inl h3
+    · refine Or.inr ?_
+      have heper : Periodic (fun m => ({v m, v (m + 1)} : Set V3)) s.k := by
+        intro m
+        show ({v (m + s.k), v (m + s.k + 1)} : Set V3) = ({v m, v (m + 1)} : Set V3)
+        rw [hper m, show m + s.k + 1 = m + 1 + s.k from by omega, hper (m + 1)]
+      have hpper : Periodic (fun m => (v m, v (m + 1))) s.k := by
+        intro m
+        show (v (m + s.k), v (m + s.k + 1)) = (v m, v (m + 1))
+        rw [hper m, show m + s.k + 1 = m + 1 + s.k from by omega, hper (m + 1)]
+      have r2 : Set.range (fun m => ({v (i + m), v (i + (m + 1))} : Set V3))
+          = Set.range (fun m => ({v m, v (m + 1)} : Set V3)) :=
+        la1p1_range_shift hk heper
+      have r3 : Set.range (fun m => (v (i + m), v (i + (m + 1))))
+          = Set.range (fun m => (v m, v (m + 1))) := la1p1_range_shift hk hpper
+      beta_reduce
+      rw [la1p1_range_shift hk hper, r2, r3]
+      exact hcf
+
+/-- `BBsV39` transports back along the `scsPropEquV39` shift. -/
+private theorem la1p1_BBs_back {s : ScsV39} {i : ℕ} {w : ℕ → V3}
+    (hk : 0 < s.k) (hper2a : Periodic2 s.a s.k) (hper2b : Periodic2 s.b s.k)
+    (hw : BBsV39 (scsPropEquV39 s i) w) :
+    BBsV39 s (fun m => w ((m + s.k - i % s.k) % s.k)) := by
+  obtain ⟨hr, hper, hbnd, hfan⟩ := hw
+  have hper : Periodic w s.k := hper
+  have hbnd : ∀ a b, s.a (i + a) (i + b) ≤ dist (w a) (w b) ∧
+      dist (w a) (w b) ≤ s.b (i + a) (i + b) := hbnd
+  have hdm : i % s.k ≤ s.k := le_of_lt (Nat.mod_lt i hk)
+  have hbnd' : ∀ r r', s.a r r' ≤
+        dist (w ((r + s.k - i % s.k) % s.k)) (w ((r' + s.k - i % s.k) % s.k)) ∧
+      dist (w ((r + s.k - i % s.k) % s.k)) (w ((r' + s.k - i % s.k) % s.k)) ≤
+        s.b r r' := by
+    intro r r'
+    have hρ1 : (i + (r + s.k - i % s.k) % s.k) % s.k = r % s.k := la1shift_rho hk r
+    have hρ2 : (i + (r' + s.k - i % s.k) % s.k) % s.k = r' % s.k := la1shift_rho hk r'
+    have ea : s.a r r' = (scsPropEquV39 s i).a ((r + s.k - i % s.k) % s.k)
+        ((r' + s.k - i % s.k) % s.k) := by
+      have e1 : s.a r r' = s.a (r % s.k) (r' % s.k) := la1periodic2_mod hper2a r r'
+      have e2 : s.a (r % s.k) (r' % s.k)
+          = s.a ((i + (r + s.k - i % s.k) % s.k) % s.k)
+            ((i + (r' + s.k - i % s.k) % s.k) % s.k) := by rw [hρ1, hρ2]
+      have e3 : s.a ((i + (r + s.k - i % s.k) % s.k) % s.k)
+          ((i + (r' + s.k - i % s.k) % s.k) % s.k)
+          = (scsPropEquV39 s i).a ((r + s.k - i % s.k) % s.k)
+            ((r' + s.k - i % s.k) % s.k) := by
+        show s.a ((i + (r + s.k - i % s.k) % s.k) % s.k)
+          ((i + (r' + s.k - i % s.k) % s.k) % s.k)
+          = s.a (i + (r + s.k - i % s.k) % s.k) (i + (r' + s.k - i % s.k) % s.k)
+        rw [la1periodic2_mod hper2a (i + (r + s.k - i % s.k) % s.k)
+          (i + (r' + s.k - i % s.k) % s.k)]
+      exact (e1.trans e2).trans e3
+    have eb : s.b r r' = (scsPropEquV39 s i).b ((r + s.k - i % s.k) % s.k)
+        ((r' + s.k - i % s.k) % s.k) := by
+      have e1 : s.b r r' = s.b (r % s.k) (r' % s.k) := la1periodic2_mod hper2b r r'
+      have e2 : s.b (r % s.k) (r' % s.k)
+          = s.b ((i + (r + s.k - i % s.k) % s.k) % s.k)
+            ((i + (r' + s.k - i % s.k) % s.k) % s.k) := by rw [hρ1, hρ2]
+      have e3 : s.b ((i + (r + s.k - i % s.k) % s.k) % s.k)
+          ((i + (r' + s.k - i % s.k) % s.k) % s.k)
+          = (scsPropEquV39 s i).b ((r + s.k - i % s.k) % s.k)
+            ((r' + s.k - i % s.k) % s.k) := by
+        show s.b ((i + (r + s.k - i % s.k) % s.k) % s.k)
+          ((i + (r' + s.k - i % s.k) % s.k) % s.k)
+          = s.b (i + (r + s.k - i % s.k) % s.k) (i + (r' + s.k - i % s.k) % s.k)
+        rw [la1periodic2_mod hper2b (i + (r + s.k - i % s.k) % s.k)
+          (i + (r' + s.k - i % s.k) % s.k)]
+      exact (e1.trans e2).trans e3
+    have h2 := hbnd ((r + s.k - i % s.k) % s.k) ((r' + s.k - i % s.k) % s.k)
+    refine ⟨?_, ?_⟩
+    · rw [ea]
+      exact h2.1
+    · rw [eb]
+      exact h2.2
+  have hper' : Periodic (fun m => w ((m + s.k - i % s.k) % s.k)) s.k := by
+    intro m
+    have h2 : (m + s.k) + s.k - i % s.k = (m + s.k - i % s.k) + s.k := by omega
+    show w (((m + s.k) + s.k - i % s.k) % s.k) = w ((m + s.k - i % s.k) % s.k)
+    rw [h2, Nat.add_mod_right]
+  have hrange : Set.range (fun m => w ((m + s.k - i % s.k) % s.k)) = Set.range w := by
+    ext y
+    constructor
+    · rintro ⟨m, rfl⟩
+      exact ⟨(m + s.k - i % s.k) % s.k, rfl⟩
+    · rintro ⟨n, rfl⟩
+      refine ⟨(n + i) % s.k, ?_⟩
+      show w (((n + i) % s.k + s.k - i % s.k) % s.k) = w n
+      have hidxm : ((n + i) % s.k + s.k - i % s.k) % s.k = n % s.k := by
+        have hc : i % s.k ≤ s.k := le_of_lt (Nat.mod_lt i hk)
+        have h1 : (n + i) % s.k + s.k - i % s.k
+            = (n + i) % s.k + (s.k - i % s.k) := by omega
+        have h2 : ((n + i) % s.k + (s.k - i % s.k)) % s.k
+            = ((n + i) + (s.k - i % s.k)) % s.k :=
+          Nat.ModEq.add_right _ (Nat.mod_mod (n + i) s.k)
+        have h3 : (n + i) + (s.k - i % s.k) = n + (i / s.k + 1) * s.k := by
+          have hdm : i / s.k * s.k + i % s.k = i := by
+            rw [Nat.mul_comm]; exact Nat.div_add_mod i s.k
+          have hm : (i / s.k + 1) * s.k = i / s.k * s.k + s.k := by
+            rw [Nat.add_mul, Nat.one_mul]
+          omega
+        rw [h1, h2, h3, la1periodic_mul (f := fun x : ℕ => x % s.k)
+          (fun x => Nat.add_mod_right x s.k) (i / s.k + 1) n]
+      rw [hidxm, la1periodic_mod hper n]
+  have hsucc : ∀ m, w ((m + s.k - i % s.k) % s.k + 1)
+      = w (((m + 1) + s.k - i % s.k) % s.k) := by
+    intro m
+    have hc : i % s.k ≤ s.k := le_of_lt (Nat.mod_lt i hk)
+    rw [la1periodic_mod hper ((m + s.k - i % s.k) % s.k + 1)]
+    have r1 : ((m + s.k - i % s.k) % s.k + 1) % s.k
+        = ((m + s.k - i % s.k) + 1) % s.k :=
+      Nat.mod_add_mod (m + s.k - i % s.k) s.k 1
+    rw [r1]
+    have r2 : ((m + s.k - i % s.k) + 1) % s.k
+        = (m + 1 + (s.k - i % s.k)) % s.k := by
+      congr 1
+      omega
+    rw [r2]
+    have r3 : (m + 1 + (s.k - i % s.k)) % s.k
+        = ((m + 1) + s.k - i % s.k) % s.k := by
+      congr 1
+      omega
+    rw [r3]
+  have hrng2 : (Set.range (fun m => ({w ((m + s.k - i % s.k) % s.k),
+        w (((m + 1) + s.k - i % s.k) % s.k)} : Set V3)) : Set (Set V3))
+      = Set.range (fun m => ({w m, w (m + 1)} : Set V3)) := by
+    ext t
+    constructor
+    · rintro ⟨m, rfl⟩
+      refine ⟨(m + s.k - i % s.k) % s.k, ?_⟩
+      beta_reduce
+      rw [hsucc m]
+    · rintro ⟨n, rfl⟩
+      refine ⟨(n + i) % s.k, ?_⟩
+      show ({w (((n + i) % s.k + s.k - i % s.k) % s.k),
+          w (((n + i) % s.k + 1 + s.k - i % s.k) % s.k)} : Set V3)
+        = ({w n, w (n + 1)} : Set V3)
+      have hidxm : ((n + i) % s.k + s.k - i % s.k) % s.k = n % s.k :=
+        la1p1_back_idx0 hk n
+      have hA : w (((n + i) % s.k + s.k - i % s.k) % s.k) = w n := by
+        rw [hidxm, la1periodic_mod hper n]
+      have hB : w (((n + i) % s.k + 1 + s.k - i % s.k) % s.k) = w (n + 1) := by
+        rw [la1p1_back_idx1 hk, ← la1periodic_mod hper (n + 1)]
+      rw [hA, hB]
+  have hrng3 : Set.range (fun m => (w ((m + s.k - i % s.k) % s.k),
+        w (((m + 1) + s.k - i % s.k) % s.k)))
+      = Set.range (fun m => (w m, w (m + 1))) := by
+    ext t
+    constructor
+    · rintro ⟨m, rfl⟩
+      refine ⟨(m + s.k - i % s.k) % s.k, ?_⟩
+      beta_reduce
+      rw [hsucc m]
+    · rintro ⟨n, rfl⟩
+      have hidxm : ((n + i) % s.k + s.k - i % s.k) % s.k = n % s.k :=
+        la1p1_back_idx0 hk n
+      have hA : w (((n + i) % s.k + s.k - i % s.k) % s.k) = w n := by
+        rw [hidxm, la1periodic_mod hper n]
+      have hB : w (((n + i) % s.k + 1 + s.k - i % s.k) % s.k) = w (n + 1) := by
+        rw [la1p1_back_idx1 hk, ← la1periodic_mod hper (n + 1)]
+      refine ⟨(n + i) % s.k, ?_⟩
+      show (w (((n + i) % s.k + s.k - i % s.k) % s.k),
+          w (((n + i) % s.k + 1 + s.k - i % s.k) % s.k)) = (w n, w (n + 1))
+      rw [hA, hB]
+  refine ⟨?_, hper', ?_, ?_⟩
+  · rw [hrange]
+    exact hr
+  · intro r r'
+    exact hbnd' r r'
+  · rcases hfan with h3 | hcf
+    · exact Or.inl h3
+    · refine Or.inr ?_
+      beta_reduce at *
+      rw [hrange, hrng2, hrng3]
+      exact hcf
+
+/-- `taustarV39` transports along the forward `scsPropEquV39` shift (for
+`J`-empty systems, i.e. the stabilizations; only the `tauFun` branch occurs
+since `3 < s.k`). -/
+private theorem la1p1_taustar_fwd {s : ScsV39} {i : ℕ} {v : ℕ → V3}
+    (hk : 0 < s.k) (hk3 : 3 < s.k) (hper : Periodic v s.k)
+    (hJ : s.J = fun _ _ => False) :
+    taustarV39 (scsPropEquV39 s i) (fun m => v (i + m)) = taustarV39 s v := by
+  have heper : Periodic (fun m => ({v m, v (m + 1)} : Set V3)) s.k := by
+    intro m
+    show ({v (m + s.k), v (m + s.k + 1)} : Set V3) = ({v m, v (m + 1)} : Set V3)
+    rw [hper m, show m + s.k + 1 = m + 1 + s.k from by omega, hper (m + 1)]
+  have hpper : Periodic (fun m => (v m, v (m + 1))) s.k := by
+    intro m
+    show (v (m + s.k), v (m + s.k + 1)) = (v m, v (m + 1))
+    rw [hper m, show m + s.k + 1 = m + 1 + s.k from by omega, hper (m + 1)]
+  have hJt : (scsPropEquV39 s i).J = fun _ _ => False := by
+    funext a b
+    show s.J (i + a) (i + b) = False
+    rw [hJ]
+  have hk' : (scsPropEquV39 s i).k = s.k := rfl
+  simp only [taustarV39, hk']
+  rw [if_neg (by omega : ¬s.k ≤ 3), if_neg (by omega : ¬s.k ≤ 3)]
+  have e1 : dsvV39 (scsPropEquV39 s i) (fun m => v (i + m)) = s.d :=
+    dsv_J_empty _ _ hJt
+  have e2 : dsvV39 s v = s.d := dsv_J_empty s v hJ
+  rw [e1, e2]
+  have hrange1 : tauFun (Set.range (fun m => v (i + m)))
+      (Set.range (fun m => ({v (i + m), v (i + (m + 1))} : Set V3)))
+      (Set.range (fun m => (v (i + m), v (i + (m + 1)))))
+      = tauFun (Set.range v) (Set.range (fun m => ({v m, v (m + 1)} : Set V3)))
+        (Set.range (fun m => (v m, v (m + 1)))) := by
+    rw [la1p1_range_shift hk hper,
+      show Set.range (fun m => ({v (i + m), v (i + (m + 1))} : Set V3))
+          = Set.range (fun m => ({v m, v (m + 1)} : Set V3)) from
+        la1p1_range_shift hk heper,
+      show Set.range (fun m => (v (i + m), v (i + (m + 1))))
+          = Set.range (fun m => (v m, v (m + 1))) from
+        la1p1_range_shift hk hpper]
+  rw [hrange1]
+
+/-- `BBprime2V39` transports along the forward `scsPropEquV39` shift (the
+unadorned/stab special case of LA12's `TRANS_BBPRIME2_SUBSET`). -/
+private theorem la1p1_BBprime2_fwd {s : ScsV39} {i : ℕ} {v : ℕ → V3}
+    (hk : 0 < s.k) (hk3 : 3 < s.k) (hper2a : Periodic2 s.a s.k)
+    (hper2b : Periodic2 s.b s.k) (hJ : s.J = fun _ _ => False)
+    (hv : v ∈ BBprime2V39 s) :
+    (fun m => v (i + m)) ∈ BBprime2V39 (scsPropEquV39 s i) := by
+  obtain ⟨⟨hBB, hmin, hneg⟩, hidx⟩ := hv
+  have hper : Periodic v s.k := hBB.2.1
+  have hBBf : BBsV39 (scsPropEquV39 s i) (fun m => v (i + m)) := la1p1_BBs_fwd hk hBB
+  have htau : ∀ u : ℕ → V3, Periodic u s.k →
+      taustarV39 (scsPropEquV39 s i) (fun m => u (i + m)) = taustarV39 s u :=
+    fun u hu => la1p1_taustar_fwd hk hk3 hu hJ
+  have hback : ∀ z : ℕ → V3, BBsV39 (scsPropEquV39 s i) z →
+      BBsV39 s (fun m => z ((m + s.k - i % s.k) % s.k)) :=
+    fun z hz => la1p1_BBs_back hk hper2a hper2b hz
+  have hzback : ∀ z : ℕ → V3, BBsV39 (scsPropEquV39 s i) z →
+      taustarV39 (scsPropEquV39 s i) z =
+        taustarV39 s (fun m => z ((m + s.k - i % s.k) % s.k)) := by
+    intro z hz
+    have hperz : Periodic z s.k := hz.2.1
+    have hperz0 : Periodic (fun m => z ((m + s.k - i % s.k) % s.k)) s.k :=
+      (hback z hz).2.1
+    rw [← htau _ hperz0]
+    congr 1
+    funext m
+    show z m = z (((i + m) + s.k - i % s.k) % s.k)
+    rw [la1p1_back_self (i := i) hk m]
+    rw [← la1periodic_mod hperz m]
+  have hminf : ∀ z : ℕ → V3, BBsV39 (scsPropEquV39 s i) z →
+      taustarV39 (scsPropEquV39 s i) (fun m => v (i + m)) ≤
+        taustarV39 (scsPropEquV39 s i) z := by
+    intro z hz
+    rw [htau v hper, hzback z hz]
+    exact hmin _ (hback z hz)
+  have hnegf : taustarV39 (scsPropEquV39 s i) (fun m => v (i + m)) < 0 := by
+    rw [htau v hper]
+    exact hneg
+  have hvBf : (fun m => v (i + m)) ∈ BBprimeV39 (scsPropEquV39 s i) :=
+    ⟨hBBf, hminf, hnegf⟩
+  have hidxT : ∀ u : ℕ → V3, Periodic u s.k →
+      BBindexV39 (scsPropEquV39 s i) (fun m => u (i + m)) = BBindexV39 s u := by
+    intro u hu
+    show {j : ℕ | j < s.k ∧ (scsPropEquV39 s i).a j (j + 1)
+          = dist ((fun m => u (i + m)) j) ((fun m => u (i + m)) (j + 1))}.ncard
+        = {m : ℕ | m < s.k ∧ s.a m (m + 1) = dist (u m) (u (m + 1))}.ncard
+    refine la1shift_ncard (i := i) hk ?_
+    intro j hj
+    have e1 : (scsPropEquV39 s i).a j (j + 1)
+        = s.a ((i + j) % s.k) (((i + j) % s.k) + 1) := by
+      show s.a (i + j) (i + (j + 1)) = _
+      rw [← Nat.add_assoc, la1p1_per2_step hper2a (i + j)]
+    have e2 : dist ((fun m => u (i + m)) j) ((fun m => u (i + m)) (j + 1))
+        = dist (u ((i + j) % s.k)) (u (((i + j) % s.k) + 1)) := by
+      show dist (u (i + j)) (u (i + (j + 1))) = _
+      rw [← Nat.add_assoc, la1periodic_mod hu (i + j), la1periodic_mod hu (i + j + 1),
+        show (i + j + 1) % s.k = ((i + j) % s.k + 1) % s.k from
+          (Nat.mod_add_mod (i + j) s.k 1).symm,
+        ← la1periodic_mod hu (((i + j) % s.k) + 1)]
+    constructor
+    · intro he
+      rw [e1, e2] at he
+      exact he
+    · intro he
+      rw [← e1, ← e2] at he
+      exact he
+  refine ⟨hvBf, ?_⟩
+  obtain ⟨z, hz, hzval⟩ := la1bbindexMin_attained (scsPropEquV39 s i) _ hvBf
+  have hzper : Periodic z s.k := hz.1.2.1
+  have hzB : BBsV39 s (fun m => z ((m + s.k - i % s.k) % s.k)) := hback z hz.1
+  have hz0eq : (fun m => (fun m => z ((m + s.k - i % s.k) % s.k)) (i + m)) = z := by
+    funext m
+    show z (((i + m) + s.k - i % s.k) % s.k) = z m
+    rw [la1p1_back_self (i := i) hk m, ← la1periodic_mod hzper m]
+  have hzid : BBindexV39 s (fun m => z ((m + s.k - i % s.k) % s.k))
+      = BBindexV39 (scsPropEquV39 s i) z := by
+    have hzper0 : Periodic (fun m => z ((m + s.k - i % s.k) % s.k)) s.k := hzB.2.1
+    rw [← hidxT _ hzper0, hz0eq]
+  have hzmin : ∀ u : ℕ → V3, BBsV39 s u →
+      taustarV39 s (fun m => z ((m + s.k - i % s.k) % s.k)) ≤ taustarV39 s u := by
+    intro u hu
+    have hu1 : BBsV39 (scsPropEquV39 s i) (fun m => u (i + m)) := la1p1_BBs_fwd hk hu
+    rw [← hzback z hz.1, ← htau u hu.2.1]
+    exact hz.2.1 _ hu1
+  have hzBp : (fun m => z ((m + s.k - i % s.k) % s.k)) ∈ BBprimeV39 s :=
+    ⟨hzB, hzmin, by rw [← hzback z hz.1]; exact hz.2.2⟩
+  have hle1 := la1bbindexMin_le (scsPropEquV39 s i) hvBf
+  have hzle : BBindexMinV39 s ≤ BBindexMinV39 (scsPropEquV39 s i) := by
+    have h1 : BBindexMinV39 s ≤ BBindexV39 s (fun m => z ((m + s.k - i % s.k) % s.k)) :=
+      la1bbindexMin_le s hzBp
+    rwa [hzid, hzval] at h1
+  refine le_antisymm ?_ hle1
+  rw [hidxT v hper, hidx]
+  exact hzle
+
+/-- Stabilization of a diagonal pair is scs and basic (content of the public
+`YRTAFYH_concl` registered later in this file; replicated privately because
+Lean cannot back-reference it from `WKEIDFT_concl`'s position). -/
+private theorem la1p1_isScs_stab {s : ScsV39} {i j : ℕ} (his : isScsV39 s)
+    (hbasic : scsBasicV39 s) (hk3 : 3 < s.k) (hdg : scsDiag s.k i j)
+    (hac : s.a i j ≤ cstab) :
+    isScsV39 (scsStabDiagV39 s i j) ∧ scsBasicV39 (scsStabDiagV39 s i j) := by
+  obtain ⟨h1, h2, h3, -, -, -, -, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17, h18, -, -,
+    h21⟩ := his
+  set b' : ℕ → ℕ → ℝ :=
+    fun x y => if psort s.k (i, j) = psort s.k (x, y) then cstab else s.b x y with hb'def
+  have hts : scsStabDiagV39 s i j = mkUnadornedV39 s.k s.d s.a b' := by
+    simp only [scsStabDiagV39, hb'def]
+  have hb'periodic : Periodic2 b' s.k := by
+    intro x y
+    constructor
+    · show b' (x + s.k) y = b' x y
+      simp only [hb'def, la1psort_add_left, (h11 x y).1]
+    · have hps : psort s.k (x, y + s.k) = psort s.k (x, y) := by
+        rw [la1psort_symm, la1psort_add_left, la1psort_symm]
+      show b' x (y + s.k) = b' x y
+      simp only [hb'def, hps, (h11 x y).2]
+  have hb'symm : ∀ x y, b' x y = b' y x := by
+    intro x y
+    by_cases hpxy : psort s.k (i, j) = psort s.k (x, y)
+    · have hpyx : psort s.k (i, j) = psort s.k (y, x) := by rw [hpxy, la1psort_symm]
+      simp only [hb'def, if_pos hpxy, if_pos hpyx]
+    · have hyx : psort s.k (i, j) ≠ psort s.k (y, x) := by
+        intro h
+        exact hpxy (by rw [h, la1psort_symm])
+      simp only [hb'def, if_neg hpxy, if_neg hyx]
+      exact (h13 x y).2.2.2.1
+  have hb'ge : ∀ x y, s.a x y ≤ b' x y := by
+    intro x y
+    by_cases hpxy : psort s.k (i, j) = psort s.k (x, y)
+    · have hxy : s.a x y = s.a i j := by
+        obtain hc | hc := la1psort_cases hpxy
+        · rw [la1periodic2_mod h8 x y, hc.1.symm, hc.2.symm, ← la1periodic2_mod h8 i j]
+        · rw [la1periodic2_mod h8 x y, hc.2.symm, hc.1.symm, ← la1periodic2_mod h8 j i,
+            (h13 i j).1]
+      have hbxy : b' x y = cstab := by simp only [hb'def, if_pos hpxy]
+      rw [hbxy, hxy]
+      exact hac
+    · have hbxy : b' x y = s.b x y := by simp only [hb'def, if_neg hpxy]
+      rw [hbxy]
+      exact (h14 x y).1.trans ((h14 x y).2.1.trans (h14 x y).2.2)
+  have hb'adj : ∀ x, psort s.k (i, j) ≠ psort s.k (x, x + 1) :=
+    fun x heq => la1psort_diag s.k hdg heq
+  have hb'nb : ∀ x, b' x (x + 1) = s.b x (x + 1) := fun x => if_neg (hb'adj x)
+  rw [hts]
+  refine ⟨⟨h1, h2, h3, fun _ => rfl, fun _ => rfl, fun _ => rfl, fun _ => rfl, h8, h8,
+    hb'periodic, hb'periodic, fun _ _ => ⟨rfl, rfl⟩,
+    fun x y => ⟨(h13 x y).1, (h13 x y).1, hb'symm x y, hb'symm x y, rfl⟩,
+    fun x y => ⟨le_refl _, hb'ge x y, le_refl _⟩,
+    h15, h16, fun x h3' => absurd h3'.symm hk3.ne,
+    fun x _ => by show b' x (x + 1) ≤ cstab; rw [hb'nb x]; exact h18 x hk3,
+    fun x y hj => hj.elim, fun x y hj => hj.elim, ?_⟩,
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩⟩
+  show {x : ℕ | x < s.k ∧ (2 * h0 < b' x (x + 1) ∨ 2 < s.a x (x + 1))}.ncard + s.k ≤ 6
+  have seteq : {x : ℕ | x < s.k ∧ (2 * h0 < b' x (x + 1) ∨ 2 < s.a x (x + 1))} =
+      {x : ℕ | x < s.k ∧ (2 * h0 < s.b x (x + 1) ∨ 2 < s.a x (x + 1))} := by
+    ext x
+    simp only [Set.mem_setOf_eq, hb'nb x]
+  rw [seteq]
+  exact h21
+
 /-- HOL `WKEIDFT_concl` (WKEIDFT.hl:793, PROVED at :813). FIDELITY fix
 (SF-85): the frozen appendix.hl:1368 summary form dropped the four guards
 `scs_diag k p q`, `scs_diag k p' q'`, `3 < k` and `(!i. scs_b_v39 s i i =
@@ -2297,7 +3055,57 @@ theorem WKEIDFT_concl : ∀ (s : ScsV39) (a b a' b' b1 : ℝ) (p q p' q' : ℕ),
     (∀ i j, scsDiag s.k i j → s.b i j = b') →
     (∀ i, s.b i i = b1) →
     scsArrowV39 {scsStabDiagV39 s p q} {scsStabDiagV39 s p' q'} := by
-  sorry
+  intro s a b a' b' b1 p q p' q' his hbasic hac hbc hsum hdg hdg' hk3 hle had hbd hdiag
+  have hk : 0 < s.k := by omega
+  have hstab' := la1p1_isScs_stab his hbasic hk3 hdg' (hle p' q' hdg')
+  have hstab := la1p1_isScs_stab his hbasic hk3 hdg (hle p q hdg)
+  have h8 : Periodic2 s.a s.k := by
+    obtain ⟨-, -, -, -, -, -, -, h8, -, -, -, -, -, -, -, -, -, -, -, -, -⟩ := id his
+    exact h8
+  have h11 : Periodic2 s.b s.k := by
+    obtain ⟨-, -, -, -, -, -, -, -, -, -, h11, -, -, -, -, -, -, -, -, -, -⟩ := id his
+    exact h11
+  have h11s : Periodic2 (scsStabDiagV39 s p q).b (scsStabDiagV39 s p q).k := by
+    obtain ⟨-, -, -, -, -, -, -, -, -, -, h11s, -, -, -, -, -, -, -, -, -, -⟩ := hstab.1
+    exact h11s
+  have hstJ : (scsStabDiagV39 s p q).J = fun _ _ => False := by
+    funext a b
+    rfl
+  have hun1 : unadornedV39 (scsStabDiagV39 s p q) := by
+    have hts : scsStabDiagV39 s p q = mkUnadornedV39 s.k s.d s.a
+      (fun x y => if psort s.k (p, q) = psort s.k (x, y) then cstab else s.b x y) := rfl
+    rw [hts]
+    exact ⟨rfl, rfl, rfl, rfl, rfl⟩
+  refine ⟨fun t ht => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at ht
+    rw [ht]
+    exact hstab'.1
+  · by_cases hMM : MMsV39 (scsStabDiagV39 s p q) = ∅
+    · refine Or.inl fun t ht => ?_
+      rw [Set.mem_singleton_iff] at ht
+      rw [ht]
+      exact hMM
+    · refine Or.inr ?_
+      obtain ⟨v, hv⟩ :=
+        (Set.nonempty_iff_ne_empty (s := MMsV39 (scsStabDiagV39 s p q))).mpr hMM
+      obtain ⟨i₀, hi₀⟩ :=
+        la1p1_equ s a b a' b' b1 p q p' q' his hac hbc hsum hk3 had hbd hdiag
+      have hvMM : v ∈ BBprime2V39 (scsStabDiagV39 s p q) := by
+        rw [← unadorned_MMs_concl _ hun1]
+        exact hv
+      have hun2 : unadornedV39 (scsPropEquV39 (scsStabDiagV39 s p q) i₀) :=
+        la1p1_unad_propEqu i₀ hun1
+      have hv' : (fun m => v (i₀ + m)) ∈
+          BBprime2V39 (scsPropEquV39 (scsStabDiagV39 s p q) i₀) :=
+        la1p1_BBprime2_fwd (s := scsStabDiagV39 s p q) (i := i₀) (v := v) hk hk3 h8 h11s
+          hstJ hvMM
+      rw [← unadorned_MMs_concl _ hun2] at hv'
+      refine ⟨scsPropEquV39 (scsStabDiagV39 s p q) i₀, ?_, ?_⟩
+      · rw [← hi₀]
+        exact Set.mem_singleton _
+      · exact (Set.nonempty_iff_ne_empty
+          (s := MMsV39 (scsPropEquV39 (scsStabDiagV39 s p q) i₀))).mp
+          (Set.nonempty_def.mpr ⟨_, hv'⟩)
 
 /-- HOL `PEDSLGV1_concl` (appendix.hl:1379). Discharged 2026-10-08
 (LocalAuto1 lane): the `cstab` diagonal override only shrinks the `b`-bound

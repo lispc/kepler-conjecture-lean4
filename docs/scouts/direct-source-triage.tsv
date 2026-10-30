@@ -132,7 +132,6 @@ RYPDIXT_concl	lean/Kepler/Text/LocalAuto1.lean	2573	B	同上箭头族	appendix.h
 NWDGKXH_concl	lean/Kepler/Text/LocalAuto1.lean	2650	B	同上箭头族（4M6'→4T3,4T5）	appendix.hl:1498；同上	W1-银行装配
 YOBIMPP_concl	lean/Kepler/Text/LocalAuto1.lean	2660	B	同上箭头族（4M7 扇出；或需 MMs 非空见证，参照 EFLYGAU 前提形）	appendix.hl:1504；同上	W1-银行装配
 MIQMCSN_concl	lean/Kepler/Text/LocalAuto1.lean	2671	B	同上箭头族（4M8 扇出）	appendix.hl:1510；同上	W1-银行装配
-WKEIDFT_concl	lean/Kepler/Text/LocalAuto1.lean	2253	B	stab-diag 箭头搬运（近 C）：同族 PEDSLGV1_concl 已于 2026-10-08 闭（BBs/taustar 点等搬运套路现成）；LA24 头注记其为轻变体	appendix.hl:1368 / WKEIDFT.hl:570,793；阻塞件=taustar 搬迁论证	W1-银行装配
 AQICLXA	lean/Kepler/Text/LocalAuto20.lean	984	B	箭头装配：AQICLXA_SLICE（funlist 表匹配已具名在文件内）+ FZIOTEF_TRANS/UNION 代数；阻塞件=LA1 YXIONXL3_concl + PROP_EQU_IS_SCS（LocalAuto12:424，待闭小件）	hexagons.hl:1449	W1-银行装配
 FZIOTEF	lean/Kepler/Text/LocalAuto20.lean	1006	B	箭头装配：FUNOUYH_SLICE+FZIOTEF_TRANS+propEqu 幂等；阻塞件同上（YXIONXL3_concl/PROP_EQU_IS_SCS）	hexagons.hl:1592	W1-银行装配
 SCS_6I1_BERAK_BY_CSTAB	lean/Kepler/Text/LocalAuto20.lean	1218	B	箭头组合装配（STAB_MOD/SET_STAB_6I1 均已真）；阻塞件=SCS_6I1_IMP_SCS_6T1 ← mnt11 lane 四 concl + PEDSLGV2（mnt11 波落地后即装配）	hexagons.hl:1831；阻塞件=main_nonlinear_terminal_v11 波	W1-银行装配
