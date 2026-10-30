@@ -4416,4 +4416,340 @@ theorem BBPRIME_EQ_OPP_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
   · rw [TAUSTAR_EQ_SYM_0_fb s vv k hk hiscs hk3 hbp.1]
     exact hbp.2.2
 
+/-! ### S.6 W3（fanbase-s3-w1）：BBindex 计数对称 + `BBPRIME2_SYM_0_fb` +
+`MM_SCS_OPP_fb`（HOL YXIONXL2.hl :3182 / :3343 / :3355 / :3370）。 -/
+
+attribute [local instance] Classical.propDecidable
+
+/-- flip（`σ i = k - (i % k + 1)`）在 `[0,k)` 上的对合性：`σ (σ i) = i`。 -/
+private theorem flipInvIioFb {k i : ℕ} (hik : i < k) :
+    k - ((k - (i % k + 1)) % k + 1) = i := by
+  rw [Nat.mod_eq_of_lt hik, Nat.mod_eq_of_lt (show k - (i + 1) < k by omega)]
+  omega
+
+/-- flip 在 `[0,k)` 上单射。 -/
+private theorem flipInjIioFb {k i j : ℕ} (hik : i < k) (hjk : j < k)
+    (h : k - (i % k + 1) = k - (j % k + 1)) : i = j := by
+  rw [Nat.mod_eq_of_lt hik, Nat.mod_eq_of_lt hjk] at h
+  omega
+
+/-- flip 的后继重指标：`σ (i+1) = (σ i + k - 1) % k`（边端 `σ i ↦ σ i - 1`）。 -/
+private theorem flipSuccModFb {k i : ℕ} (hk1 : 0 < k) :
+    k - ((i + 1) % k + 1) = (k - (i % k + 1) + k - 1) % k := by
+  have hm : i % k < k := Nat.mod_lt i hk1
+  have h1 : (i + 1) % k = (i % k + 1) % k :=
+    Nat.ModEq.symm (Nat.ModEq.add_right 1 (Nat.mod_modEq i k))
+  rcases Nat.lt_or_ge (i % k) (k - 1) with h | h
+  · rw [h1, Nat.mod_eq_of_lt (show i % k + 1 < k by omega)]
+    rw [show k - (i % k + 1) + k - 1 = k - (i % k + 1 + 1) + k from by omega,
+      Nat.add_mod_right]
+    rw [Nat.mod_eq_of_lt (show k - (i % k + 1 + 1) < k by omega)]
+  · have hmk : i % k = k - 1 := by omega
+    rw [hmk] at h1 ⊢
+    rw [show k - 1 + 1 = k from by omega, Nat.mod_self] at h1
+    rw [h1, Nat.zero_add,
+      show k - (k - 1 + 1) + k - 1 = k - 1 from by omega,
+      Nat.mod_eq_of_lt (show k - 1 < k by omega)]
+
+/-- flip 的前驱重指标：`σ (i+k-1) = (σ i + 1) % k`。 -/
+private theorem flipPredModFb {k i : ℕ} (hk1 : 0 < k) :
+    k - ((i + k - 1) % k + 1) = (k - (i % k + 1) + 1) % k := by
+  have hm : i % k < k := Nat.mod_lt i hk1
+  have h1 : (i + k - 1) % k = (i % k + k - 1) % k := by
+    have hh : (i % k + (k - 1)) % k = (i + (k - 1)) % k :=
+      Nat.ModEq.add_right (k - 1) (Nat.mod_modEq i k)
+    rw [show i + k - 1 = i + (k - 1) from by omega,
+      show i % k + k - 1 = i % k + (k - 1) from by omega]
+    exact hh.symm
+  rw [h1]
+  rcases Nat.eq_zero_or_pos (i % k) with hzero | hzero
+  · rw [hzero, Nat.zero_add, Nat.mod_eq_of_lt (show k - 1 < k by omega),
+      show k - (k - 1 + 1) = 0 from by omega]
+    rw [show k - (0 + 1) + 1 = k from by omega, Nat.mod_self]
+  · rw [show i % k + k - 1 = i % k - 1 + k from by omega, Nat.add_mod_right,
+      Nat.mod_eq_of_lt (by omega),
+      show k - (i % k - 1 + 1) = k - i % k from by omega,
+      show k - (i % k + 1) + 1 = k - i % k from by omega,
+      Nat.mod_eq_of_lt (show k - i % k < k by omega)]
+
+/-- rot 退一位 `j ↦ (j + k - 1) % k` 在 `[0,k)` 上单射。 -/
+private theorem rotInjIioFb {k i j : ℕ} (hik : i < k) (hjk : j < k)
+    (h : (i + k - 1) % k = (j + k - 1) % k) : i = j := by
+  have h4 : (i + k) % k = (j + k) % k := by
+    have hi1 : (i + k) % k = ((i + k - 1) % k + 1) % k := by
+      have hh : (i + k - 1 + 1) % k = ((i + k - 1) % k + 1) % k :=
+        (Nat.ModEq.add_right 1 (Nat.mod_modEq (i + k - 1) k)).symm
+      have e1 : i + k = i + k - 1 + 1 := by omega
+      rw [e1]
+      exact hh
+    have hj1 : (j + k) % k = ((j + k - 1) % k + 1) % k := by
+      have hh : (j + k - 1 + 1) % k = ((j + k - 1) % k + 1) % k :=
+        (Nat.ModEq.add_right 1 (Nat.mod_modEq (j + k - 1) k)).symm
+      have e2 : j + k = j + k - 1 + 1 := by omega
+      rw [e2]
+      exact hh
+    rw [hi1, hj1, h]
+  rw [Nat.add_mod_right, Nat.add_mod_right] at h4
+  rw [Nat.mod_eq_of_lt hik, Nat.mod_eq_of_lt hjk] at h4
+  exact h4
+
+/-- HOL `BBINDEX_EQ_SYM_0`（YXIONXL2.hl:3182）：BBindex 紧边计数在 flip 重指标
+下不变（σ 后继/对合 + rot 单射 + a/dist 对称；HOL 的 CARD_IMAGE_INJ_EQ 同型），
+支撑 `BBPRIME2_SYM_0_fb` 的 min 槽。 -/
+theorem BBINDEX_EQ_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbp : BBprimeV39 s vv) :
+    BBindexV39 (scsOppV39 s) (fun i => -(peropp vv k i)) = BBindexV39 s vv := by
+  have hk1 : 0 < k := by have := hiscs.2.1; omega
+  have hK : (scsOppV39 s).k = k := by show s.k = k; exact hk
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, -, -, hsym5, -, -, -, -, -, -, -, -⟩ := hiscs
+  have hasymA : ∀ i j, s.a i j = s.a j i := fun i j => (hsym5 i j).1
+  have hpa' : Periodic2 s.a k := by
+    rw [← hk]
+    exact hpa
+  have hper : Periodic vv k := by
+    have h := hbp.1.2.1
+    rw [hk] at h
+    exact h
+  show {i | i < (scsOppV39 s).k ∧ (scsOppV39 s).a i (i + 1)
+      = dist (-(peropp vv k i)) (-(peropp vv k (i + 1)))}.ncard
+    = {i | i < s.k ∧ s.a i (i + 1) = dist (vv i) (vv (i + 1))}.ncard
+  rw [hK, hk]
+  -- B（flip 形紧边集）= flip '' A'（j → j-1 形紧边集），ncard 经单射传输；
+  -- A' = rot '' A（rot 退一位 + 对称传输），两步计数相等。
+  have hBset : {i | i < k ∧ (scsOppV39 s).a i (i + 1)
+        = dist (-(peropp vv k i)) (-(peropp vv k (i + 1)))}
+      = {i | i < k ∧ s.a (k - (i % k + 1)) ((k - (i % k + 1) + k - 1) % k)
+          = dist (vv (k - (i % k + 1))) (vv ((k - (i % k + 1) + k - 1) % k))} := by
+    ext i
+    simp only [Set.mem_setOf_eq, peropp]
+    have hAop : (scsOppV39 s).a i (i + 1)
+        = s.a (k - (i % k + 1)) (k - ((i + 1) % k + 1)) := by
+      have h0 : (scsOppV39 s).a i (i + 1) = peropp2 s.a s.k i (i + 1) := rfl
+      rw [h0, hk]
+      rfl
+    rw [hAop, flipSuccModFb hk1, distNegNegFb]
+  have hA'fin : {j | j < k ∧ s.a j ((j + k - 1) % k)
+        = dist (vv j) (vv ((j + k - 1) % k))}.Finite :=
+    Set.Finite.subset (Set.finite_Iio k) (fun i hi => hi.1)
+  have hInj : Set.InjOn (fun j => k - (j % k + 1)) {j | j < k ∧ s.a j ((j + k - 1) % k)
+        = dist (vv j) (vv ((j + k - 1) % k))} := fun a ha b hb hab =>
+    flipInjIioFb ha.1 hb.1 hab
+  have hBimg : {i | i < k ∧ s.a (k - (i % k + 1)) ((k - (i % k + 1) + k - 1) % k)
+        = dist (vv (k - (i % k + 1))) (vv ((k - (i % k + 1) + k - 1) % k))}
+      = (fun j => k - (j % k + 1)) '' {j | j < k ∧ s.a j ((j + k - 1) % k)
+          = dist (vv j) (vv ((j + k - 1) % k))} := by
+    ext i
+    constructor
+    · rintro ⟨hik, hcond⟩
+      refine ⟨k - (i % k + 1), ⟨by omega, hcond⟩, ?_⟩
+      show k - ((k - (i % k + 1)) % k + 1) = i
+      exact flipInvIioFb hik
+    · rintro ⟨j, hj, hje⟩
+      have hje' : k - (j % k + 1) = i := hje
+      subst hje'
+      refine ⟨by omega, ?_⟩
+      rw [flipInvIioFb hj.1]
+      exact hj.2
+  have hInjR : Set.InjOn (fun j => (j + k - 1) % k) {j | j < k ∧ s.a j ((j + k - 1) % k)
+        = dist (vv j) (vv ((j + k - 1) % k))} := fun a ha b hb hab =>
+    rotInjIioFb ha.1 hb.1 hab
+  have hA'iff : ∀ j : ℕ, j < k →
+      (j ∈ {j2 | j2 < k ∧ s.a j2 ((j2 + k - 1) % k)
+            = dist (vv j2) (vv ((j2 + k - 1) % k))} ↔
+        (j + k - 1) % k ∈ {i2 | i2 < k ∧ s.a i2 (i2 + 1)
+            = dist (vv i2) (vv (i2 + 1))}) := by
+    intro j hjk
+    rcases Nat.eq_zero_or_pos j with hzero | hzero
+    · subst hzero
+      constructor
+      · rintro ⟨-, hcond⟩
+        refine ⟨Nat.mod_lt _ hk1, ?_⟩
+        rw [Nat.zero_add, Nat.mod_eq_of_lt (show k - 1 < k by omega)] at hcond
+        rw [Nat.zero_add, Nat.mod_eq_of_lt (show k - 1 < k by omega),
+          show k - 1 + 1 = k from by omega]
+        have hv0 : (vv k : V3) = vv 0 := by simpa using hper 0
+        have hpa2 := (hpa' (k - 1) 0).2
+        rw [Nat.zero_add] at hpa2
+        rw [hpa2, hasymA (k - 1) 0, hv0, dist_comm]
+        exact hcond
+      · rintro ⟨-, hcondA⟩
+        refine ⟨hjk, ?_⟩
+        rw [Nat.zero_add, Nat.mod_eq_of_lt (show k - 1 < k by omega)]
+        have hv0 : (vv k : V3) = vv 0 := by simpa using hper 0
+        have hpa2 := (hpa' (k - 1) 0).2
+        rw [Nat.zero_add] at hpa2
+        rw [Nat.zero_add, Nat.mod_eq_of_lt (show k - 1 < k by omega),
+          show k - 1 + 1 = k from by omega, hpa2, hasymA (k - 1) 0, hv0, dist_comm] at hcondA
+        exact hcondA
+    · have hrj : (j + k - 1) % k = j - 1 := by
+        rw [show j + k - 1 = j - 1 + k from by omega, Nat.add_mod_right,
+          Nat.mod_eq_of_lt (by omega)]
+      constructor
+      · rintro ⟨-, hcond⟩
+        refine ⟨Nat.mod_lt _ hk1, ?_⟩
+        rw [hrj] at hcond ⊢
+        rw [show j - 1 + 1 = j from by omega]
+        rw [hasymA j (j - 1), dist_comm] at hcond
+        exact hcond
+      · rintro ⟨-, hcondA⟩
+        refine ⟨hjk, ?_⟩
+        rw [hrj]
+        rw [hrj, show j - 1 + 1 = j from by omega, hasymA (j - 1) j, dist_comm] at hcondA
+        exact hcondA
+  have hA'img : {i | i < k ∧ s.a i (i + 1) = dist (vv i) (vv (i + 1))}
+      = (fun j => (j + k - 1) % k) '' {j | j < k ∧ s.a j ((j + k - 1) % k)
+          = dist (vv j) (vv ((j + k - 1) % k))} := by
+    ext i
+    constructor
+    · rintro ⟨hik, hcond⟩
+      have hj : (i + 1) % k < k := Nat.mod_lt _ hk1
+      have hr : ((i + 1) % k + k - 1) % k = i := by
+        have e1 : ((i + 1) % k + (k - 1)) % k = (i + 1 + (k - 1)) % k :=
+          Nat.ModEq.add_right (k - 1) (Nat.mod_modEq (i + 1) k)
+        rw [show (i + 1) % k + k - 1 = (i + 1) % k + (k - 1) from by omega, e1,
+          show i + 1 + (k - 1) = i + k from by omega, Nat.add_mod_right,
+          Nat.mod_eq_of_lt hik]
+      refine ⟨(i + 1) % k, (hA'iff ((i + 1) % k) hj).mpr ?_, hr⟩
+      rw [hr]
+      exact ⟨hik, hcond⟩
+    · rintro ⟨j, hj, hje⟩
+      have hje' : (j + k - 1) % k = i := hje
+      subst hje'
+      exact (hA'iff j hj.1).mp hj
+  rw [hBset, hBimg, (Set.ncard_image_iff hA'fin).mpr hInj, hA'img,
+    (Set.ncard_image_iff hA'fin).mpr hInjR]
+
+/-- HOL `BBINDEX_MIN_SYM_0`（YXIONXL2.hl:3343）：BBindex_min 在 `scs_opp_v39`
+下不变（像集相等 + `BBINDEX_EQ_SYM_0_fb` + `BBPRIME_EQ_OPP_SYM_0_fb` 于对合侧）。 -/
+theorem BBINDEX_MIN_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbp : BBprimeV39 s vv) :
+    BBindexMinV39 (scsOppV39 s) = BBindexMinV39 s := by
+  have hK : (scsOppV39 s).k = k := by show s.k = k; exact hk
+  have hiscsO : isScsV39 (scsOppV39 s) := isScsOppFb s hiscs
+  have himg : BBindexV39 (scsOppV39 s) '' BBprimeV39 (scsOppV39 s)
+      = BBindexV39 s '' BBprimeV39 s := by
+    ext n
+    constructor
+    · rintro ⟨w, hw, rfl⟩
+      have hw' : BBprimeV39 s (fun i => -(peropp w k i)) := by
+        have h := BBPRIME_EQ_OPP_SYM_0_fb (scsOppV39 s) w k hK hiscsO hk3 hw
+        rwa [SCS_OPP_REFL_fb s hiscs] at h
+      refine ⟨fun i => -(peropp w k i), hw', ?_⟩
+      have h := BBINDEX_EQ_SYM_0_fb (scsOppV39 s) w k hK hiscsO hk3 hw
+      rwa [SCS_OPP_REFL_fb s hiscs] at h
+    · rintro ⟨v, hv, rfl⟩
+      exact ⟨fun i => -(peropp v k i), BBPRIME_EQ_OPP_SYM_0_fb s v k hk hiscs hk3 hv,
+        BBINDEX_EQ_SYM_0_fb s v k hk hiscs hk3 hv⟩
+  show minNum (BBindexV39 (scsOppV39 s) '' BBprimeV39 (scsOppV39 s))
+    = minNum (BBindexV39 s '' BBprimeV39 s)
+  rw [himg]
+
+/-- HOL `BBPRIME2_SYM_0`（YXIONXL2.hl:3355）：BBprime2 对 `scs_opp_v39` +
+负 peropp 实现的对称（BBprime 槽 = BBPRIME_EQ_OPP_SYM_0_fb；min 槽 =
+BBINDEX_MIN_SYM_0_fb + BBINDEX_EQ_SYM_0_fb）。 -/
+theorem BBPRIME2_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbp2 : BBprime2V39 s vv) :
+    BBprime2V39 (scsOppV39 s) (fun i => -(peropp vv k i)) := by
+  simp only [BBprime2V39, Set.mem_setOf_eq]
+  refine ⟨BBPRIME_EQ_OPP_SYM_0_fb s vv k hk hiscs hk3 hbp2.1, ?_⟩
+  rw [BBINDEX_MIN_SYM_0_fb s vv k hk hiscs hk3 hbp2.1,
+    BBINDEX_EQ_SYM_0_fb s vv k hk hiscs hk3 hbp2.1]
+  exact hbp2.2
+
+/-- HOL `MM_SCS_OPP`（YXIONXL2.hl:3370）：MMs 对 `scs_opp_v39` + 负 peropp
+实现的对称（BBprime2 槽 = BBPRIME2_SYM_0_fb；str 槽 = 原族 fan 非共线 +
+AZIM_NEG_fb + flip 后继/前驱重指标 + 周期传输；lo/hi/am/bm 四槽纯传输）。 -/
+theorem MM_SCS_OPP_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hmm : MMsV39 s vv) :
+    MMsV39 (scsOppV39 s) (fun i => -(peropp vv k i)) := by
+  have hK : (scsOppV39 s).k = k := by show s.k = k; exact hk
+  have hk1 : 0 < k := by have := hiscs.2.1; omega
+  obtain ⟨hbp2, hstr0, hlo0, hhi0, ham0, hbm0⟩ := hmm
+  have hbb : BBsV39 s vv := hbp2.1.1
+  have hper : Periodic vv k := by
+    have h := hbb.2.1
+    rw [hk] at h
+    exact h
+  -- 原族 convex local fan（str 槽非共线的来源）
+  have hconv0 : ConvexLocalFan (Set.image vv Set.univ)
+      (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ) := by
+    rcases hbb.2.2.2 with h3 | hcf
+    · rw [hk] at h3
+      exact absurd h3 hk3
+    · simpa only [Set.image_univ] using hcf
+  obtain ⟨hlf0, -⟩ := hconv0
+  obtain ⟨hfan0, -, -⟩ := hlf0
+  have hEcol : ∀ m : ℕ, ¬ Collinear ℝ (insert 0 ({vv m, vv (m + 1)} : Set V3)) :=
+    fun m => hfan0.2.2.2.2.1 _ ⟨m, Set.mem_univ _, rfl⟩
+  simp only [MMsV39, Set.mem_setOf_eq]
+  refine ⟨BBPRIME2_SYM_0_fb s vv k hk hiscs hk3 hbp2, ?_, ?_, ?_, ?_, ?_⟩
+  · -- str 槽：flip 后继/前驱重指标 + AZIM_NEG_fb + 周期传输
+    intro i hi
+    rw [hK]
+    simp only [peropp]
+    rw [show i + (k - 1) = i + k - 1 from by omega, flipSuccModFb hk1,
+      flipPredModFb hk1]
+    have hj : k - (i % k + 1) < k := by omega
+    have hstrj : s.str (k - (i % k + 1)) := by
+      rw [← hk]
+      exact hi
+    have hstr1 := hstr0 (k - (i % k + 1)) hstrj
+    rw [hk, show k - (i % k + 1) + (k - 1) = k - (i % k + 1) + k - 1 from by omega] at hstr1
+    rw [← periodicModFb hper (k - (i % k + 1) + 1),
+      ← periodicModFb hper (k - (i % k + 1) + k - 1)] at hstr1
+    have hcol2 : ¬ Collinear ℝ ({0, vv (k - (i % k + 1)),
+        vv ((k - (i % k + 1) + 1) % k)} : Set V3) := by
+      rcases Nat.lt_or_ge (k - (i % k + 1)) (k - 1) with hlt | hge
+      · rw [Nat.mod_eq_of_lt (show k - (i % k + 1) + 1 < k by omega)]
+        exact hEcol (k - (i % k + 1))
+      · have hlast : k - (i % k + 1) = k - 1 := by omega
+        rw [hlast, show k - 1 + 1 = k from by omega, Nat.mod_self]
+        have hv0 : (vv k : V3) = vv 0 := by simpa using hper 0
+        have hE := hEcol (k - 1)
+        rw [show (vv (k - 1 + 1) : V3) = vv 0 from by
+          rw [show k - 1 + 1 = k from by omega]; exact hv0] at hE
+        exact hE
+    have hcol1 : ¬ Collinear ℝ ({0, vv (k - (i % k + 1)),
+        vv ((k - (i % k + 1) + k - 1) % k)} : Set V3) := by
+      rcases Nat.eq_zero_or_pos (k - (i % k + 1)) with hz | hz
+      · rw [hz, Nat.zero_add, Nat.mod_eq_of_lt (show k - 1 < k by omega)]
+        have hv0 : (vv k : V3) = vv 0 := by simpa using hper 0
+        have hE := hEcol (k - 1)
+        rw [show (vv (k - 1 + 1) : V3) = vv 0 from by
+          rw [show k - 1 + 1 = k from by omega]; exact hv0] at hE
+        rw [pairSetCommFb]
+        exact hE
+      · rw [show (k - (i % k + 1) + k - 1) % k = k - (i % k + 1) - 1 from by
+          rw [show k - (i % k + 1) + k - 1 = k - (i % k + 1) - 1 + k from by omega,
+            Nat.add_mod_right, Nat.mod_eq_of_lt (by omega)]]
+        rw [pairSetCommFb]
+        have hE' := hEcol (k - (i % k + 1) - 1)
+        rw [show k - (i % k + 1) - 1 + 1 = k - (i % k + 1) from by omega] at hE'
+        exact hE'
+    rw [AZIM_NEG_fb hcol1 hcol2]
+    exact hstr1
+  · -- lo 槽
+    intro i hi
+    show norm (-(peropp vv k i)) = 2
+    rw [norm_neg]
+    exact hlo0 (k - (i % k + 1)) (by rw [← hk]; exact hi)
+  · -- hi 槽
+    intro i hi
+    show norm (-(peropp vv k i)) = 2 * h0
+    rw [norm_neg]
+    exact hhi0 (k - (i % k + 1)) (by rw [← hk]; exact hi)
+  · -- am 槽
+    intro i j
+    show s.am (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1))
+      ≤ dist (-(peropp vv k i)) (-(peropp vv k j))
+    rw [hk, distNegNegFb]
+    exact ham0 (k - (i % k + 1)) (k - (j % k + 1))
+  · -- bm 槽
+    intro i j
+    show dist (-(peropp vv k i)) (-(peropp vv k j))
+      ≤ s.bm (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1))
+    rw [hk, distNegNegFb]
+    exact hbm0 (k - (i % k + 1)) (k - (j % k + 1))
+
 end Kepler.Text
