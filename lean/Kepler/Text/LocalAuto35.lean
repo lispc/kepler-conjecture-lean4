@@ -1326,7 +1326,639 @@ theorem TRIO_E_OF_FACE_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj :
     refine ⟨i, ?_⟩
     rw [he, ← hd.1, ← hd.2]
 
-/-- HOL `F_PRIME_EQ_F_vv` (QKNVMLB.hl:4622, proof ~215 ln). -/
+/-! ## Bridge-wave kit: the diag-slice face-cycle azimuth kit
+(lkgrqui-fprime-bridge-w2).  The `TECOXBMv2` cone inclusion extracts the
+strict azimuth placement of the diagonal endpoints in the cyclic fan; on
+it the augmented `azimCycle` value at the diag nodes is computed. -/
+
+/-- Open-segment membership in the open cone `affGt {0} {a, b}` (the
+`AFF_GT_1_2` midpoint fact, `t`-parametrized; `Affsign.of_triple` with
+`t1 = 1 - t`, `t2 = t`). -/
+private theorem segMemAffGt_p35 (a b : V3) (ha0 : a ≠ 0) (hb0 : b ≠ 0) (hab : a ≠ b)
+    (t : ℝ) (ht : 0 < t) (ht1 : t < 1) :
+    (1 - t) • a + t • b ∈ affGt ({0} : Set V3) {a, b} :=
+  Affsign.of_triple (1 - t) t (by linarith) ht
+    (by rw [smul_zero, zero_add]) (Ne.symm ha0) (Ne.symm hb0) hab
+
+/-- The two-element `azimCycle`: on a neighbour set `{a, p}` (with `a ≠ p`)
+the cycle successor of `p` is `a`. -/
+private theorem azimCycle2_p35 {a p : V3} {W : Set V3} (v w : V3) (hap : a ≠ p)
+    (hW : W = {a, p}) : azimCycle_p3 W v w p = a := by
+  have hsub : ¬(W ⊆ {p}) := by
+    intro hc
+    exact hap (hc (by rw [hW]; simp))
+  rw [azimCycle_p3, if_neg hsub]
+  refine epsFixed_p35 ?_ ?_
+  · rw [hW]
+    refine ⟨hap, by simp, ?_⟩
+    intro q hq hqp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+    rcases hq with h | h
+    · subst h
+      exact Or.inr ⟨rfl, le_refl _⟩
+    · exact absurd h hqp
+  · intro y hy
+    rw [hW] at hy
+    obtain ⟨hy1, hy2, -⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy2
+    rcases hy2 with h | h
+    · exact h
+    · exact absurd h hy1
+
+/-! ## Slicing-fan kit (lkgrqui-slicingfan-w2): the diagonal sigma-table.
+
+Closes the residual root of `F_PRIME_EQ_F_vv_p35`: the sigma-preimage
+uniqueness at the two augmented diagonal nodes.  HOL anchor:
+`PROVE_SLICING_FAN` (local_lemmas1.hl:1378-1846, the fan7-with-diagonal
+content at :1392/:1427/:1459/:1607).  The vv-world replacement: the
+`TECOXBMv2` cone inclusion gives the strict sector placement of the diagonal
+endpoints (`wedgeDiagAzim_p35`); the azimuth-addition difference
+`azim 0 u w (pred u) = theta_u - alpha` is `azimAddTriple_p35`, a FAN-free
+clone of `Kepler.Text.Fan.sum2_azim_fan` (whose proof only consumes the
+fan6 non-collinearity, never FAN membership). -/
+
+/-- Shifted-index injectivity: equal `vv`-values at equal shifts force equal
+residue windows. -/
+private theorem sfVVInjShift_p35 {vv : ℕ → V3} {k : ℕ} (hk0 : 0 < k)
+    (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) {a b c : ℕ}
+    (hac : a < k) (hbc : b < k) (h : vv (a + c) = vv (b + c)) : a = b := by
+  have hm : (a + c) % k = (b + c) % k := vvModEq_p35 hk0 hper hinj h
+  have hm2 : a % k = b % k := modAddCancel_p35 hm
+  rwa [Nat.mod_eq_of_lt hac, Nat.mod_eq_of_lt hbc] at hm2
+
+/-- The vertex and its cyclic predecessor differ once `3 ≤ k`. -/
+private theorem sfNePred_p35 {vv : ℕ → V3} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (i : ℕ) :
+    vv i ≠ vv (i + k - 1) := by
+  intro hh
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have heq : (i + k) - 1 = i + (k - 1) := by omega
+  have hm : i % k = ((i + k) - 1) % k := vvModEq_p35 hk0 hper hinj hh
+  rw [heq] at hm
+  have hm2 : (0 + i) % k = ((k - 1) + i) % k := by
+    rw [Nat.zero_add, Nat.add_comm (k - 1) i]
+    exact hm
+  have h := modAddCancel_p35 hm2
+  rw [Nat.zero_mod, Nat.mod_eq_of_lt (by omega)] at h
+  omega
+
+/-- The cyclic predecessor and successor differ once `4 ≤ k`. -/
+private theorem sfPredNeSucc_p35 {vv : ℕ → V3} {k : ℕ} (hk4 : 4 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (i : ℕ) :
+    vv (i + k - 1) ≠ vv (i + 1) := by
+  intro hh
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk4
+  have heq : (i + k) - 1 = i + (k - 1) := by omega
+  have hm : ((i + k) - 1) % k = (i + 1) % k := vvModEq_p35 hk0 hper hinj hh
+  rw [heq] at hm
+  have hm2 : ((k - 1) + i) % k = (1 + i) % k := by
+    rw [Nat.add_comm (k - 1) i, Nat.add_comm 1 i]
+    exact hm
+  have h := modAddCancel_p35 hm2
+  rw [Nat.mod_eq_of_lt (by omega), Nat.mod_eq_of_lt (by omega)] at h
+  omega
+
+/-- Edge membership in the cyclic edge set: exactly the two neighbours
+(kit-local copy of `vvMemEdge_p35`, which sits behind the insertion point). -/
+private theorem sfMemEdge_p35 {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ} (hk3 : 3 ≤ k)
+    (hper : Periodic vv k) (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) (y : V3) :
+    y ∈ EE_p3 (vv i) E ↔ y = vv (i + k - 1) ∨ y = vv (i + 1) := by
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have heq : (i + k) - 1 = i + (k - 1) := by omega
+  have hnosing : ∀ j : ℕ, vv j ≠ vv (j + 1) := by
+    intro j hh
+    have h := sfVVInjShift_p35 (a := 0) (b := 1) (c := j) hk0 hper hinj
+      (by omega) (by omega) (by rw [Nat.zero_add, Nat.add_comm 1 j]; exact hh)
+    omega
+  show {vv i, y} ∈ E ↔ _
+  constructor
+  · intro hy
+    rw [← hE] at hy
+    obtain ⟨j, hj⟩ := hy
+    have m1 : vv j ∈ ({vv i, y} : Set V3) := by rw [← hj]; simp
+    have m2 : vv (j + 1) ∈ ({vv i, y} : Set V3) := by rw [← hj]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at m1 m2
+    rcases m1 with h1 | h1
+    · -- vv j = vv i
+      have hmod : j % k = i % k := vvModEq_p35 hk0 hper hinj h1
+      rcases m2 with h2 | h2
+      · -- singleton edge
+        exact absurd (h1.trans h2.symm) (hnosing j)
+      · refine Or.inr ?_
+        rw [← h2]
+        exact vvStep_p35 hper hmod
+    · -- vv j = y
+      rcases m2 with h2 | h2
+      · -- vv (j+1) = vv i, vv j = y: y is the cyclic predecessor
+        refine Or.inl ?_
+        have hmod' : (j + 1) % k = i % k := vvModEq_p35 hk0 hper hinj h2
+        have hstep : (j + 1) % k = (i + (k - 1) + 1) % k := by
+          rw [show i + (k - 1) + 1 = i + k from by omega, Nat.add_mod_right]
+          exact hmod'
+        have hpred : j % k = (i + (k - 1)) % k := vvModPred_p35 hk0 hstep
+        rw [heq, ← h1, ← periodic_mod_eq_p23 hper (i + (k - 1)), ← hpred,
+          ← periodic_mod_eq_p23 hper j]
+      · -- vv (j+1) = y = vv j: singleton edge
+        exact absurd (h1.trans h2.symm) (hnosing j)
+  · rintro (rfl | rfl)
+    · show {vv i, vv ((i + k) - 1)} ∈ E
+      rw [heq, ← hE]
+      refine Set.mem_range.mpr ⟨i + (k - 1), ?_⟩
+      show {vv (i + (k - 1)), vv (i + (k - 1) + 1)} = {vv i, vv (i + (k - 1))}
+      rw [show i + (k - 1) + 1 = i + k from by omega, ← periodic_mod_eq_p23 hper (i + k),
+        Nat.add_mod_right, periodic_mod_eq_p23 hper i]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    · show {vv i, vv (i + 1)} ∈ E
+      rw [← hE]
+      exact Set.mem_range.mpr ⟨i, rfl⟩
+
+/-- FAN-free azimuth addition (`Kepler.Text.Fan.sum2_azim_fan` clone with the
+`FAN x V E` hypothesis replaced by the three fan6-type non-collinearity
+facts, which is all its proof consumes). -/
+private theorem azimAddTriple_p35 {x v u w1 w2 : V3} (hxv : v ≠ x)
+    (hu : ¬ Collinear3 x v u) (h1 : ¬ Collinear3 x v w1) (h2 : ¬ Collinear3 x v w2)
+    (hle : azim x v u w1 ≤ azim x v u w2) :
+    azim x v u w2 = azim x v u w1 + azim x v w1 w2 := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - x)
+    (sub_ne_zero.mpr hxv)
+  have hax : (v - x : V3) = dist v x • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, ru, r1, hru, hr1, hzu, hzw1⟩ := azim_frame_spec hu h1 hon hax hxv
+  obtain ⟨ψ2, ru2, r2, hru2, hr2, hzu2, hzw2⟩ := azim_frame_spec hu h2 hon hax hxv
+  obtain ⟨ψ', r1', r2', hr1', hr2', hzw1', hzw2'⟩ :=
+    azim_frame_spec h1 h2 hon hax hxv
+  have hψu : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ2 : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hru hru2 (hzu.symm.trans hzu2)
+  have hE2 : Complex.exp ((((ψ + azim x v u w1 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp (((ψ' : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hr1 hr1' (hzw1.symm.trans hzw1')
+  have hE1' : Complex.exp ((((ψ2 + azim x v u w2 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp ((((ψ' + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) :=
+    exp_pos_mul_eq hr2 hr2' (hzw2.symm.trans hzw2')
+  rw [exp_add_I, exp_add_I] at hE1'
+  rw [exp_add_I] at hE2
+  rw [hψu.symm] at hE1'
+  rw [← hE2] at hE1'
+  have hE3 : Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+    have hkey : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+      rw [hE1', mul_assoc, ← exp_add_I]
+    exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hE3
+  have hc2 : ((azim x v u w2 : ℝ) : ℂ) * Complex.I
+      = ((((azim x v u w1 + azim x v w1 w2 : ℝ)
+          + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
+    rw [hn]
+    push_cast
+    ring
+  have hc3 : azim x v u w2
+      = azim x v u w1 + azim x v w1 w2 + (n:ℝ) * (2 * Real.pi) := by
+    exact_mod_cast mul_right_cancel₀ Complex.I_ne_zero hc2
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hr1'0 : (0:ℝ) ≤ azim x v u w1 := azim_nonneg x v u w1
+  have hr2'0 : (0:ℝ) ≤ azim x v w1 w2 := azim_nonneg x v w1 w2
+  have hr3'0 : (0:ℝ) ≤ azim x v u w2 := azim_nonneg x v u w2
+  have hr3'1 : azim x v u w2 < 2 * Real.pi := azim_lt_two_pi x v u w2
+  have hφ1 : azim x v w1 w2 < 2 * Real.pi := azim_lt_two_pi x v w1 w2
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hnpos
+  · exfalso
+    have hle2 : ((n:ℤ) : ℝ) ≤ -1 := by
+      have := (by omega : (n : ℤ) ≤ -1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hle2 h2pi.le
+    linarith
+  · rw [hzero] at hc3
+    simp only [Int.cast_zero, zero_mul, add_zero] at hc3
+    exact hc3
+  · exfalso
+    have hge : ((n:ℤ) : ℝ) ≥ 1 := by
+      have := (by omega : (n : ℤ) ≥ 1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≥ (1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hge h2pi.le
+    linarith
+
+/-- **The wedge extraction at a cyclic vertex** (the `wedgeDiagAzim` draft of
+lkgrqui-fprime-bridge-w2 landed): the `TECOXBMv2` cone inclusion places the
+other diagonal endpoint strictly inside the open fan sector at `vv i` and
+makes it non-collinear with `0` and `vv i` (the vv-world replacement of the
+strictness core of HOL `FACE_MAP_SLICING_HYP_TRANS_POINT`). -/
+private theorem wedgeDiagAzim_p35 {vv : ℕ → V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {k : ℕ} (i j : ℕ) (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ a b, a < k → b < k → a ≠ b → vv a ≠ vv b)
+    (hE : Set.range (fun a => {vv a, vv (a + 1)}) = E)
+    (hFF : Set.range (fun a => (vv a, vv (a + 1))) = FF)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {vv i, vv j} ⊆ wedgeInFanGt_p3 x E)
+    (hu0 : vv i ≠ 0) (hj0 : vv j ≠ 0) (hij : vv i ≠ vv j)
+    (hnc : ¬ Collinear3 0 (vv i) (vv (i + 1)))
+    (hstepne : vv (i + k - 1) ≠ vv (i + 1)) :
+    ¬ Collinear3 0 (vv i) (vv j) ∧
+      0 < azim 0 (vv i) (vv (i + 1)) (vv j) ∧
+      azim 0 (vv i) (vv (i + 1)) (vv j) < azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
+  have hee : EE_p3 (vv i) E = {vv (i + k - 1), vv (i + 1)} := by
+    ext y
+    simpa using sfMemEdge_p35 hk3 hper hinj hE i y
+  have hncard : 1 < (EE_p3 (vv i) E).ncard := by
+    rw [hee, Set.ncard_insert_of_notMem
+      (show vv (i + k - 1) ∉ ({vv (i + 1)} : Set V3) from by simp [hstepne])]
+    simp
+  have hwedge : wedgeInFanGt_p3 (vv i, vv (i + 1)) E =
+      Kepler.Geom.wedge 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
+    simp only [wedgeInFanGt_p3]
+    rw [if_pos hncard]
+    show Kepler.Geom.wedge 0 (vv i) (vv (i + 1))
+        (azimCycle_p3 (EE_p3 (vv i) E) 0 (vv i) (vv (i + 1)))
+      = Kepler.Geom.wedge 0 (vv i) (vv (i + 1)) (vv (i + k - 1))
+    rw [azimCycle2_p35 (v := 0) (w := vv i) hstepne hee]
+  -- the open-segment midpoint of the diagonal lands in the sector
+  have hmidpt : (1 - (2:ℝ)⁻¹) • vv i + (2:ℝ)⁻¹ • vv j
+      ∈ affGt ({0} : Set V3) {vv i, vv j} :=
+    segMemAffGt_p35 _ _ hu0 hj0 hij (2:ℝ)⁻¹ (by norm_num) (by norm_num)
+  have hdart : (vv i, vv (i + 1)) ∈ FF := by
+    rw [← hFF]; exact Set.mem_range.mpr ⟨i, rfl⟩
+  have hmem := hsub _ hdart hmidpt
+  rw [hwedge] at hmem
+  simp only [Kepler.Geom.wedge, Set.mem_setOf_eq] at hmem
+  obtain ⟨hncmid, hpos, hlt⟩ := hmem
+  have hncw : ¬ Collinear3 0 (vv i) (vv j) := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := vv i) (w1 := vv j) hu0).mp hcol
+    apply hncmid
+    refine (collinear3_iff_smul (v := 0) (w := vv i)
+      (w1 := (1 - (2:ℝ)⁻¹) • vv i + (2:ℝ)⁻¹ • vv j) hu0).mpr ⟨(1 + c) / 2, ?_⟩
+    have e1 : (1 - (2:ℝ)⁻¹) • vv i + (2:ℝ)⁻¹ • vv j - 0
+        = (1 - (2:ℝ)⁻¹) • (vv i - 0) + (2:ℝ)⁻¹ • (vv j - 0) := by module
+    rw [e1, hc]
+    module
+  have hrayEq : azim 0 (vv i) (vv (i + 1)) (vv j)
+      = azim 0 (vv i) (vv (i + 1)) ((1 - (2:ℝ)⁻¹) • vv i + (2:ℝ)⁻¹ • vv j) :=
+    (azim_eq_azim_iff (v0 := 0) (v1 := vv i) (w := vv (i + 1)) (x := vv j)
+      (y := (1 - (2:ℝ)⁻¹) • vv i + (2:ℝ)⁻¹ • vv j) hnc hncw hncmid).mpr
+      ((affGt_pair_iff (v0 := 0) (v1 := vv i) (x := vv j)
+          (y := (1 - (2:ℝ)⁻¹) • vv i + (2:ℝ)⁻¹ • vv j)
+          (Ne.symm hu0) hj0 (fun hh => hij hh.symm)).mpr
+        ⟨(2:ℝ)⁻¹, by norm_num, 1 - (2:ℝ)⁻¹, by module⟩)
+  exact ⟨hncw, by rw [hrayEq]; exact hpos, by rw [hrayEq]; exact hlt⟩
+
+/-- **The diagonal-node sigma table and sigma-preimage uniqueness** — the
+residual root of `F_PRIME_EQ_F_vv_p35`, i.e. the fan7-with-diagonal content
+of HOL `PROVE_SLICING_FAN` (local_lemmas1.hl:1378-1846).  At an augmented
+node `u` whose neighbour set is `{pr, s, a}` (`s`/`pr` the cyclic
+successor/predecessor, `a` the diagonal endpoint strictly placed inside the
+open sector: `0 < azim 0 u s a < azim 0 u s pr`), the azimuth-addition
+difference `azim 0 u a pr = theta_u - alpha` (`azimAddTriple_p35` +
+`azim_compl`) fixes the augmented `azimCycle` on `{pr, s, a}` to the
+3-cycle `s ↦ a ↦ pr ↦ s`, and the `ivsAzimCycle_p3` preimages are read off
+the table (uniqueness = table + pairwise distinctness, no geometry). -/
+private theorem sigmaTableDiag_p35 (u s pr a : V3)
+    (hnc1 : ¬ Collinear3 0 u s) (hncp : ¬ Collinear3 0 u pr) (hspr : pr ≠ s)
+    (has : a ≠ s) (hap : a ≠ pr)
+    (hnca : ¬ Collinear3 0 u a)
+    (hpos : 0 < azim 0 u s a)
+    (hlt : azim 0 u s a < azim 0 u s pr) :
+    azimCycle_p3 {pr, s, a} 0 u s = a ∧
+    azimCycle_p3 {pr, s, a} 0 u a = pr ∧
+    azimCycle_p3 {pr, s, a} 0 u pr = s ∧
+    ivsAzimCycle_p3 {pr, s, a} 0 u a = s ∧
+    ivsAzimCycle_p3 {pr, s, a} 0 u s = pr ∧
+    ivsAzimCycle_p3 {pr, s, a} 0 u pr = a := by
+  have hu0 : u ≠ 0 := fun he => hnc1 (collinear3_of_eq he)
+  have hαne : azim 0 u s a ≠ 0 := by
+    intro h
+    rw [h] at hpos
+    exact absurd hpos (by norm_num)
+  have hθpos : 0 < azim 0 u s pr := lt_of_le_of_lt hpos.le hlt
+  have hθne : azim 0 u s pr ≠ 0 := by
+    intro h
+    rw [h] at hθpos
+    exact absurd hθpos (by norm_num)
+  -- the azimuth-addition difference at the diagonal node: THE single point
+  have hadd : azim 0 u s pr = azim 0 u s a + azim 0 u a pr :=
+    azimAddTriple_p35 hu0 hnc1 hnca hncp hlt.le
+  have hApr : azim 0 u a pr = azim 0 u s pr - azim 0 u s a := by linarith
+  have hAs : azim 0 u a s = 2 * Real.pi - azim 0 u s a := by
+    rw [azim_compl hnc1 hnca, if_neg hαne]
+  have hPs : azim 0 u pr s = 2 * Real.pi - azim 0 u s pr := by
+    rw [azim_compl hnc1 hncp, if_neg hθne]
+  have hPa : azim 0 u pr a = 2 * Real.pi - azim 0 u a pr := by
+    rw [azim_compl hnca hncp, if_neg (by rw [hApr]; linarith)]
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hθ2pi : azim 0 u s pr < 2 * Real.pi := azim_lt_two_pi 0 u s pr
+  -- the neighbour set has three pairwise distinct points
+  have hmemP : (pr : V3) ∈ ({pr, s, a} : Set V3) := by simp
+  have hmemS : (s : V3) ∈ ({pr, s, a} : Set V3) := by simp
+  have hsubS : ¬({pr, s, a} : Set V3) ⊆ {s} := fun hc => hspr (hc hmemP)
+  have hsubA : ¬({pr, s, a} : Set V3) ⊆ {a} := fun hc => hap (hc hmemP).symm
+  have hsubP : ¬({pr, s, a} : Set V3) ⊆ {pr} := fun hc => hspr.symm (hc hmemS)
+  have hWne : ({pr, s, a} : Set V3) ≠ ∅ := by
+    intro he
+    have : (pr : V3) ∈ (∅ : Set V3) := by rw [← he]; simp
+    exact absurd this (by simp)
+  -- the sigma table (three entries of the augmented cycle)
+  have hsigS : azimCycle_p3 {pr, s, a} 0 u s = a := by
+    rw [azimCycle_p3, if_neg hsubS]
+    refine epsFixed_p35 ⟨has, by simp, ?_⟩ ?_
+    · intro q hq hqp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      rcases hq with rfl | rfl | rfl
+      · exact Or.inl hlt
+      · exact absurd rfl hqp
+      · exact Or.inr ⟨rfl, le_refl _⟩
+    · intro y hy
+      obtain ⟨yne, ymem, ymin⟩ := hy
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+      rcases ymem with rfl | rfl | rfl
+      · rcases ymin a (by simp) has with h | ⟨h, -⟩
+        · linarith
+        · linarith
+      · exact absurd rfl yne
+      · rfl
+  have hsigA : azimCycle_p3 {pr, s, a} 0 u a = pr := by
+    rw [azimCycle_p3, if_neg hsubA]
+    refine epsFixed_p35 ⟨hap.symm, by simp, ?_⟩ ?_
+    · intro q hq hqp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      rcases hq with rfl | rfl | rfl
+      · exact Or.inr ⟨rfl, le_refl _⟩
+      · refine Or.inl ?_
+        rw [hAs, hApr]
+        linarith
+      · exact absurd rfl hqp
+    · intro y hy
+      obtain ⟨yne, ymem, ymin⟩ := hy
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+      rcases ymem with rfl | rfl | rfl
+      · rfl
+      · rcases ymin pr (by simp) (fun h => hap h.symm) with h | ⟨h, -⟩
+        · rw [hAs, hApr] at h
+          linarith
+        · rw [hAs, hApr] at h
+          linarith
+      · exact absurd rfl yne
+  have hsigP : azimCycle_p3 {pr, s, a} 0 u pr = s := by
+    rw [azimCycle_p3, if_neg hsubP]
+    refine epsFixed_p35 ⟨hspr.symm, by simp, ?_⟩ ?_
+    · intro q hq hqp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      rcases hq with rfl | rfl | rfl
+      · exact absurd rfl hqp
+      · exact Or.inr ⟨rfl, le_refl _⟩
+      · refine Or.inl ?_
+        rw [hPs, hPa, hApr]
+        linarith
+    · intro y hy
+      obtain ⟨yne, ymem, ymin⟩ := hy
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+      rcases ymem with rfl | rfl | rfl
+      · exact absurd rfl yne
+      · rfl
+      · rcases ymin s (by simp) (fun h => hspr h.symm) with h | ⟨h, -⟩
+        · rw [hPs, hPa, hApr] at h
+          linarith
+        · rw [hPs, hPa, hApr] at h
+          linarith
+  refine ⟨hsigS, hsigA, hsigP, ?_, ?_, ?_⟩
+  · -- ivs_u(a) = s : the sigma-preimage of a is s
+    rw [ivsAzimCycle_p3, if_neg hWne]
+    refine epsFixed_p35 ⟨by simp, hsigS⟩ ?_
+    intro y hy
+    obtain ⟨ymem, hsig⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+    rcases ymem with rfl | rfl | rfl
+    · rw [hsigP] at hsig
+      exact absurd hsig.symm has
+    · rfl
+    · rw [hsigA] at hsig
+      exact absurd hsig.symm hap
+  · -- ivs_u(s) = pr : the sigma-preimage of s is pr
+    rw [ivsAzimCycle_p3, if_neg hWne]
+    refine epsFixed_p35 ⟨by simp, hsigP⟩ ?_
+    intro y hy
+    obtain ⟨ymem, hsig⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+    rcases ymem with rfl | rfl | rfl
+    · rfl
+    · rw [hsigS] at hsig
+      exact absurd hsig has
+    · rw [hsigA] at hsig
+      exact absurd hsig hspr
+  · -- ivs_u(pr) = a : the sigma-preimage of pr is a
+    rw [ivsAzimCycle_p3, if_neg hWne]
+    refine epsFixed_p35 ⟨by simp, hsigA⟩ ?_
+    intro y hy
+    obtain ⟨ymem, hsig⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+    rcases ymem with rfl | rfl | rfl
+    · rw [hsigP] at hsig
+      exact absurd hsig hspr.symm
+    · rw [hsigS] at hsig
+      exact absurd hsig hap
+    · rfl
+
+private theorem hkerMod_p35 (k x : ℕ) : (x - x % k) % k = 0 := by
+  have h1 := Nat.div_add_mod x k
+  have h : x - x % k = k * (x / k) := by
+    calc x - x % k = (k * (x / k) + x % k) - x % k := by rw [h1]
+      _ = k * (x / k) := Nat.add_sub_cancel_right _ _
+  rw [h, Nat.mul_mod_right]
+
+private theorem hadd0Mod_p35 (k : ℕ) (hk : 0 < k) :
+    ∀ a c : ℕ, c % k = 0 → (a + c) % k = a % k := by
+  intro a c hc
+  have hcm : c = k * (c / k) := by
+    have h := Nat.div_add_mod c k
+    rw [hc, Nat.add_zero] at h
+    exact h.symm
+  rw [hcm, Nat.mul_comm k (c / k), Nat.add_mul_mod_self_right]
+
+private theorem sfModPredCore_p35 {k x : ℕ} (hx : 0 < x) (hk : 0 < k) :
+    (x - 1) % k = (x % k + k - 1) % k := by
+  have hler : x % k ≤ x := Nat.mod_le x k
+  rcases Nat.lt_or_ge (x % k) 1 with hr | hr
+  · have hxk : x % k = 0 := by omega
+    have hdm : x = k * (x / k) := by
+      have h := Nat.div_add_mod x k
+      rw [hxk] at h
+      omega
+    have hdd : 1 ≤ x / k := by
+      rcases Nat.eq_zero_or_pos (x / k) with h0 | h1
+      · rw [h0, Nat.mul_zero] at hdm
+        omega
+      · exact h1
+    have hkx : k ≤ k * (x / k) := Nat.le_mul_of_pos_right k hdd
+    have hmul : k * (x / k) - 1 = k * (x / k - 1) + (k - 1) := by
+      have h1 : k * (x / k - 1) = k * (x / k) - k := by
+        rw [Nat.mul_sub, Nat.mul_one]
+      set A := k * (x / k) with hA
+      have h2 : k * (x / k - 1) = A - k := h1
+      have hkxA : k ≤ A := hkx
+      rw [h2]
+      omega
+    have e1 : x - 1 = k * (x / k - 1) + (k - 1) := by
+      conv_lhs => rw [hdm]
+      exact hmul
+    rw [e1, Nat.mul_add_mod, hxk, Nat.zero_add]
+  · have hsub : x - 1 = (x % k - 1) + (x - x % k) := by omega
+    rw [hsub, hadd0Mod_p35 k hk _ _ (hkerMod_p35 k x)]
+    have e2 : x % k + k - 1 = (x % k - 1) + k := by omega
+    rw [e2, Nat.add_mod_right]
+
+private theorem sfModPredBack_p35 {k x : ℕ} (hk : 0 < k) :
+    (x % k + k - 1) % k = (x + k - 1) % k := by
+  rcases Nat.eq_zero_or_pos x with h0 | hpos
+  · rw [h0, Nat.zero_mod, Nat.zero_add]
+  · have hler : x % k ≤ x := Nat.mod_le x k
+    rcases Nat.lt_or_ge (x % k) 1 with hr | hr
+    · have hxk : x % k = 0 := by omega
+      have hdm : x = k * (x / k) := by
+        have h := Nat.div_add_mod x k
+        rw [hxk] at h
+        omega
+      have e2 : x + k - 1 = k * (x / k) + (k - 1) := by
+        conv_lhs => rw [hdm]
+        omega
+      rw [hxk, Nat.zero_add, e2, Nat.mul_add_mod]
+    · have hsub : x - 1 = (x % k - 1) + (x - x % k) := by omega
+      have hrw : (x - 1) % k = (x % k - 1) % k := by
+        rw [hsub, hadd0Mod_p35 k hk _ _ (hkerMod_p35 k x)]
+      have e2 : x + k - 1 = (x - 1) + k := by omega
+      have e3 : x % k + k - 1 = (x % k - 1) + k := by omega
+      rw [e3, Nat.add_mod_right, e2, Nat.add_mod_right, hrw]
+
+private theorem sfModPred_p35 {k x y : ℕ} (hx : 0 < x) (hk : 0 < k) (h : x % k = y % k) :
+    (x - 1) % k = (y + k - 1) % k := by
+  rw [sfModPredCore_p35 hx hk, h]
+  exact sfModPredBack_p35 hk
+
+/-- common-summand cancellation of residue equality. -/
+private theorem sfModMod_p35 {k a b c : ℕ} (h : a % k = b % k) :
+    (a + c) % k = (b + c) % k :=
+  Nat.ModEq.add_right c h
+
+private theorem sfVVMod_p35 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k) {a b : ℕ}
+    (h : a % k = b % k) : vv a = vv b := by
+  rw [← periodic_mod_eq_p23 hper a, ← periodic_mod_eq_p23 hper b, h]
+
+private theorem sfPermPow_p35 {α : Type*} [DecidableEq α] (f : Equiv.Perm α) (n : ℕ) (x : α) :
+    (f ^ n) x = (f : α → α)^[n] x := by
+  have key : ∀ n x, (f ^ n) x = (f : α → α)^[n] x := by
+    intro n
+    induction n with
+    | zero => intro x; simp
+    | succ m ih =>
+      intro x
+      rw [pow_succ, Equiv.Perm.mul_apply, Function.iterate_succ_apply, ih]
+  exact key n x
+
+private theorem sfDartMem_p35 {a b : V3} {E : Set (Set V3)} {V : Set V3} (hE : {a, b} ∈ E) :
+    (a, b) ∈ dartsOfHyp_p3 E V := by
+  refine Set.mem_union_left _ ?_
+  show {(a, b).1, (a, b).2} ∈ E
+  simpa using hE
+
+private theorem ivsTwo_p35 {b a c : V3} (hac : a ≠ c) :
+    ivsAzimCycle_p3 ({a, c} : Set V3) 0 b a = c ∧
+      ivsAzimCycle_p3 ({a, c} : Set V3) 0 b c = a := by
+  have hWne : ({a, c} : Set V3) ≠ ∅ := by
+    intro he
+    have : (a : V3) ∈ (∅ : Set V3) := by rw [← he]; simp
+    exact absurd this (by simp)
+  have hσc : azimCycle_p3 ({a, c} : Set V3) 0 b c = a :=
+    azimCycle2_p35 (v := 0) (w := b) hac rfl
+  have hσa : azimCycle_p3 ({a, c} : Set V3) 0 b a = c := by
+    have h := azimCycle2_p35 (v := 0) (w := b) (a := c) (p := a) (W := ({c, a} : Set V3))
+      hac.symm rfl
+    have hset : ({c, a} : Set V3) = {a, c} := by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rwa [hset] at h
+  constructor
+  · rw [ivsAzimCycle_p3, if_neg hWne]
+    refine epsFixed_p35 ⟨by simp, hσc⟩ ?_
+    intro y hy
+    obtain ⟨ymem, hsig⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+    rcases ymem with rfl | rfl
+    · rw [hσa] at hsig
+      exact absurd hsig.symm hac
+    · rfl
+  · rw [ivsAzimCycle_p3, if_neg hWne]
+    refine epsFixed_p35 ⟨by simp, hσa⟩ ?_
+    intro y hy
+    obtain ⟨ymem, hsig⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+    rcases ymem with rfl | rfl
+    · rfl
+    · rw [hσc] at hsig
+      exact absurd hsig hac
+
+
+/-- interior augmented neighbourhood: away from the diagonal endpoints the
+neighbour set is unchanged. -/
+private theorem sfEEinterior_p35 {vv : ℕ → V3} {E : Set (Set V3)} {u w : V3} {k : ℕ}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (s : ℕ) (hsu : vv s ≠ u) (hsw : vv s ≠ w) :
+    EE_p3 (vv s) (E ∪ {{u, w}}) = {vv (s + k - 1), vv (s + 1)} := by
+  ext x
+  have hkey := sfMemEdge_p35 hk3 hper hinj hE s x
+  simp only [EE_p3, Set.mem_setOf_eq, Set.mem_union, Set.mem_singleton_iff,
+    Set.mem_insert_iff]
+  constructor
+  · rintro (h | h)
+    · exact hkey.mp h
+    · exfalso
+      -- {vv s, x} = {u, w} forces vv s ∈ {u, w}
+      have hm : vv s ∈ ({u, w} : Set V3) := by rw [← h]; simp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm
+      rcases hm with hm | hm
+      · exact hsu hm
+      · exact hsw hm
+  · rintro (h | h)
+    · exact Or.inl (hkey.mpr (Or.inl h))
+    · exact Or.inl (hkey.mpr (Or.inr h))
+
+
+/-- collinearity is symmetric in the last two arguments. -/
+private theorem sfCollComm_p35 {a b : V3} (h : ¬ Collinear3 0 a b) : ¬ Collinear3 0 b a := by
+  intro hc
+  apply h
+  show Collinear ℝ ({0, a, b} : Set V3)
+  have hset : ({0, a, b} : Set V3) = {0, b, a} := by
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [hset]
+  exact hc
+-- HOL `F_PRIME_EQ_F_vv` (QKNVMLB.hl:4622-4838).  Residual-root status
+-- (lkgrqui-slicingfan-w2): the PRECURSOR KIT IS CLOSED AND LANDED above —
+-- `azimAddTriple_p35` (FAN-free azimuth addition = the azim-addition
+-- difference `azim 0 u w (pred u) = theta_u - alpha`),
+-- `wedgeDiagAzim_p35` (strict sector placement from the TECOXBMv2 cone
+-- inclusion), `sigmaTableDiag_p35` (THE single point: the diagonal-node
+-- sigma 3-cycle table + sigma-preimage uniqueness = the fan7-with-diagonal
+-- content of HOL PROVE_SLICING_FAN, local_lemmas1.hl:1378-1846), plus
+-- `ivsTwo_p35`/`sfEEinterior_p35`/`sfVVMod_p35`/`sfPermPow_p35`/
+-- `sfDartMem_p35`/`sfModPred_p35`.  REMAINING (WIP, drafts/kit_body.lean
+-- in lane snapshots): the F_PRIME body cascade — the three-class
+-- ff-transition table (interior 2-cycle ivs / turning dart (pred w, w) ↦
+-- (w, u) / trans dart (w, u) ↦ (u, succ u) via hivsU/hivsW above), the
+-- orbit induction `hiter`, and the orbitMap assembly — all tactic-level
+-- (no new mathematics; ~14 residual elaboration errors, error log
+-- probes/compile_c12.log in lane snapshots).
+-- DISCHARGES: source 4622-4838; V/E below close automatically (TRIO_*).
 theorem F_PRIME_EQ_F_vv_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
     (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
@@ -1342,13 +1974,325 @@ theorem F_PRIME_EQ_F_vv_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj 
     (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS) :
     Set.range (fun i => (vv (i % k' + p % k), vv ((i + 1) % k' + p % k))) =
       HS.face (u, rhoNode1 FF u) := by
-  sorry
+  -- 0. the cyclic world
+  obtain ⟨-, -, -, hFaceM⟩ := hHS
+  have hk0 : 0 < k := by rw [← hk]; have := hscs.2.1; omega
+  have hper : Periodic vv k := by rw [← hk]; exact hBB.2.1
+  have hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j := by
+    intro i j hi hj hne he
+    have i' : i < s.k := by rw [hk]; exact hi
+    have j' : j < s.k := by rw [hk]; exact hj
+    exact vvInjAux_p35 s vv hscs hBB i j i' j' hne he
+  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hk3 : 3 ≤ k' := by rw [← hk']; exact hge.1
+  have hklt : k' < k := by
+    have h2 := hge.2.2
+    rw [hk', hk] at h2
+    exact h2
+  have hk4 : 4 ≤ k := by omega
+  have hk3c : 3 ≤ k := by omega
+  have hk'0 : 0 < k' := by omega
+  have hPk : p % k < k := Nat.mod_lt _ hk0
+  have hQk : q % k < k := Nat.mod_lt _ hk0
+  have h1k : (1:ℕ) % k' = 1 := Nat.mod_eq_of_lt (by omega)
+  have h1k2 : (2:ℕ) % k' = 2 := Nat.mod_eq_of_lt (by omega)
+  have h3sk : 3 < s.k := by rw [hk]; omega
+  -- 1. non-collinearity of the four window pairs at the diagonal endpoints
+  have hncU1 : ¬ Collinear3 0 u (vv (p % k + 1)) := by
+    have h1 := IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 s vv (p % k) h3sk hscs hBB
+    rw [hk] at h1
+    have e0 : vv (p % k % k) = vv (p % k) := periodic_mod_eq_p23 hper (p % k)
+    have e1 : vv ((p % k + 1) % k) = vv (p % k + 1) := periodic_mod_eq_p23 hper (p % k + 1)
+    rw [e0, hp, e1] at h1
+    exact h1
+  have hncUp : ¬ Collinear3 0 u (vv (p % k + k - 1)) := by
+    have h2 := IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 s vv (p % k + k - 1) h3sk hscs hBB
+    rw [hk] at h2
+    have e2 : vv ((p % k + k - 1 + 1) % k) = vv (p % k) := by
+      rw [show p % k + k - 1 + 1 = p % k + k from by omega, Nat.add_mod_right,
+        periodic_mod_eq_p23 hper (p % k)]
+    rw [periodic_mod_eq_p23 hper (p % k + k - 1), e2, hp] at h2
+    exact sfCollComm_p35 h2
+  have hncW1 : ¬ Collinear3 0 w (vv (q % k + 1)) := by
+    have h1 := IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 s vv (q % k) h3sk hscs hBB
+    rw [hk] at h1
+    have e0 : vv (q % k % k) = vv (q % k) := periodic_mod_eq_p23 hper (q % k)
+    have e1 : vv ((q % k + 1) % k) = vv (q % k + 1) := periodic_mod_eq_p23 hper (q % k + 1)
+    rw [e0, hq, e1] at h1
+    exact h1
+  have hncWp : ¬ Collinear3 0 w (vv (q % k + k - 1)) := by
+    have h2 := IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 s vv (q % k + k - 1) h3sk hscs hBB
+    rw [hk] at h2
+    have e2 : vv ((q % k + k - 1 + 1) % k) = vv (q % k) := by
+      rw [show q % k + k - 1 + 1 = q % k + k from by omega, Nat.add_mod_right,
+        periodic_mod_eq_p23 hper (q % k)]
+    rw [periodic_mod_eq_p23 hper (q % k + k - 1), e2, hq] at h2
+    exact sfCollComm_p35 h2
+  -- 2. the strict sector placement of the diagonal endpoints (TECOXBMv2 wedge)
+  have htecdist : dist u w ≤ cstab := by rw [dist_eq_norm]; exact hnorm
+  have hUW : u ≠ w := NOT_EQ_DIAG_p35 s p q u w vv hscs hdiag htecdist
+    (by rw [hk]; exact hp) (by rw [hk]; exact hq) hBB
+  have hdiagE : {u, w} ∉ E :=
+    DIAG_NOT_IN_EDGES_p35 s p q u w E vv hscs hdiag htecdist
+      (by rw [hk]; exact hp) (by rw [hk]; exact hq) hE.symm hBB
+  have htecc := TECOXBMv2_p35 s p q u w V E FF vv hscs hdiag htecdist
+    (by rw [hk]; exact hp) (by rw [hk]; exact hq) hV hE hFF hBB
+  rw [← hp, ← hq] at htecc
+  have hu0 : u ≠ 0 := fun he => hncU1 (collinear3_of_eq he)
+  have hw0 : w ≠ 0 := fun he => hncW1 (collinear3_of_eq he)
+  have hUW' : vv (p % k) ≠ vv (q % k) := fun he => hUW (by rw [← hp, ← hq]; exact he)
+  have hstepU : vv (p % k + k - 1) ≠ vv (p % k + 1) := sfPredNeSucc_p35 hk4 hper hinj (p % k)
+  have hstepW : vv (q % k + k - 1) ≠ vv (q % k + 1) := sfPredNeSucc_p35 hk4 hper hinj (q % k)
+  obtain ⟨hncUW, hposU, hltU⟩ := wedgeDiagAzim_p35 (k := k) (p % k) (q % k) hk3c hper hinj
+    hE hFF htecc (by rw [hp]; exact hu0) (by rw [hq]; exact hw0)
+    (fun he => hUW (by rw [← hp, ← hq]; exact he)) (by rw [hp]; exact hncU1) hstepU
+  rw [hp, hq] at hncUW hposU hltU
+  have hteccW : ∀ x ∈ FF, affGt ({0} : Set V3) {vv (q % k), vv (p % k)} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx a ha
+    exact htecc x hx (by simpa [Set.pair_comm] using ha)
+  obtain ⟨hncWU, hposW, hltW⟩ := wedgeDiagAzim_p35 (k := k) (q % k) (p % k) hk3c hper hinj
+    hE hFF hteccW (by rw [hq]; exact hw0) (by rw [hp]; exact hu0)
+    (fun he => hUW (by rw [← hp, ← hq]; exact he.symm)) (by rw [hq]; exact hncW1) hstepW
+  rw [hq, hp] at hncWU hposW hltW
+  -- 3. the sigma tables at the two diagonal nodes (THE single point)
+  have hwne1 : w ≠ vv (p % k + 1) := by
+    intro h
+    have hm := (sfMemEdge_p35 (k := k) hk3c hper hinj hE (p % k) w).mpr (Or.inr h)
+    rw [hp] at hm
+    exact hdiagE hm
+  have hwneP : w ≠ vv (p % k + k - 1) := by
+    intro h
+    have hm := (sfMemEdge_p35 (k := k) hk3c hper hinj hE (p % k) w).mpr (Or.inl h)
+    rw [hp] at hm
+    exact hdiagE hm
+  have huw1 : u ≠ vv (q % k + 1) := by
+    intro h
+    have hm := (sfMemEdge_p35 (k := k) hk3c hper hinj hE (q % k) u).mpr (Or.inr h)
+    rw [hq] at hm
+    exact hdiagE (by simpa [Set.pair_comm, EE_p3] using hm)
+  have huwP : u ≠ vv (q % k + k - 1) := by
+    intro h
+    have hm := (sfMemEdge_p35 (k := k) hk3c hper hinj hE (q % k) u).mpr (Or.inl h)
+    rw [hq] at hm
+    exact hdiagE (by simpa [Set.pair_comm, EE_p3] using hm)
+  obtain ⟨-, -, -, hivsU, -, -⟩ :=
+    sigmaTableDiag_p35 (u := u) (s := vv (p % k + 1)) (pr := vv (p % k + k - 1)) (a := w)
+      hncU1 hncUp (sfPredNeSucc_p35 hk4 hper hinj (p % k)) hwne1 hwneP hncUW hposU hltU
+  have hBmod : (k' - 1 + p % k) % k = q % k := by
+    have hW := W_EW_K_SCS_ADD_P_p35 s s' p q d' mkj k k' u w vv hs' hk' hk hp hq hscs hdiag hBB
+    have hv : vv (k' - 1 + p % k) = vv (q % k) := by rw [hW, hq]
+    have h := vvModEq_p35 hk0 hper hinj hv
+    rwa [Nat.mod_eq_of_lt hQk] at h
+  have hcongr : (k' - 2 + p % k) % k = (q % k + k - 1) % k := by
+    have h : (k' - 1 + p % k - 1) % k = (q + k - 1) % k :=
+      sfModPred_p35 (k := k) (x := k' - 1 + p % k) (y := q) (by omega) hk0 hBmod
+    rw [show k' - 1 + p % k - 1 = k' - 2 + p % k from by omega] at h
+    rw [h]
+    have e1 : q % k + k - 1 = q % k + (k - 1) := by omega
+    have e2 : q + k - 1 = q + (k - 1) := by omega
+    rw [e2, e1, Nat.mod_add_mod]
+  have hvcongr : vv (k' - 2 + p % k) = vv (q % k + k - 1) := sfVVMod_p35 hper hcongr
+  have hncWp' : ¬ Collinear3 0 w (vv (k' - 2 + p % k)) := by
+    rw [hvcongr]
+    exact hncWp
+  have hstepW' : vv (k' - 2 + p % k) ≠ vv (q % k + 1) := fun he =>
+    hstepW (hvcongr.symm.trans he)
+  have huwP' : u ≠ vv (k' - 2 + p % k) := fun he => huwP (he.trans hvcongr)
+  have hltW' : azim 0 w (vv (q % k + 1)) u < azim 0 w (vv (q % k + 1)) (vv (k' - 2 + p % k)) := by
+    rw [hvcongr]
+    exact hltW
+  obtain ⟨-, -, -, -, -, hivsW⟩ :=
+    sigmaTableDiag_p35 (u := w) (s := vv (q % k + 1)) (pr := vv (k' - 2 + p % k)) (a := u)
+      hncW1 hncWp' hstepW' huw1 huwP' hncWU hposW hltW'
+  -- 4. the augmented neighbourhoods
+  have hEEu : EE_p3 u (E ∪ {{u, w}}) = {vv (p % k + k - 1), vv (p % k + 1), w} := by
+    ext x
+    have hkey := sfMemEdge_p35 hk3c hper hinj hE (p % k) x
+    rw [hp] at hkey
+    simp only [EE_p3, Set.mem_setOf_eq, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff]
+    constructor
+    · rintro (h | h)
+      · rcases hkey.mp h with hx | hx
+        · exact Or.inl hx
+        · exact Or.inr (Or.inl hx)
+      · have hm1 : w ∈ ({u, x} : Set V3) := by rw [h]; simp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm1
+        rcases hm1 with hm | hm
+        · exact absurd hm.symm hUW
+        · exact Or.inr (Or.inr hm.symm)
+    · rintro (hx | hx | hx)
+      · exact Or.inl (hkey.mpr (Or.inl hx))
+      · exact Or.inl (hkey.mpr (Or.inr hx))
+      · exact Or.inr (by rw [hx, Set.pair_comm])
+  have hEEw : EE_p3 w (E ∪ {{u, w}}) = {vv (k' - 2 + p % k), vv (q % k + 1), u} := by
+    ext x
+    have hkey := sfMemEdge_p35 hk3c hper hinj hE (q % k) x
+    rw [hq] at hkey
+    simp only [EE_p3, Set.mem_setOf_eq, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff]
+    constructor
+    · rintro (h | h)
+      · rcases hkey.mp h with hx | hx
+        · exact Or.inl (hx.trans hvcongr.symm)
+        · exact Or.inr (Or.inl hx)
+      · have hm1 : u ∈ ({w, x} : Set V3) := by rw [h]; simp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm1
+        rcases hm1 with hm | hm
+        · exact absurd hm hUW
+        · exact Or.inr (Or.inr hm.symm)
+    · rintro (hx | hx | hx)
+      · exact Or.inl (hkey.mpr (Or.inl (hx.trans hvcongr)))
+      · exact Or.inl (hkey.mpr (Or.inr hx))
+      · exact Or.inr (by rw [hx, Set.pair_comm])
+  -- 5. the face-map transition along the k'-window
+  set R : ℕ → V3 × V3 := fun i => (vv (i % k' + p % k), vv ((i + 1) % k' + p % k)) with hRdef
+  have hR0 : R 0 = (u, vv (p % k + 1)) := by
+    simp only [hRdef, Nat.zero_mod, Nat.zero_add, h1k, hp,
+      show (1:ℕ) + p % k = p % k + 1 from Nat.add_comm 1 (p % k)]
+  have hWew : vv (k' - 1 + p % k) = w := W_EW_K_SCS_ADD_P_p35 s s' p q d' mkj k k' u w vv
+    hs' hk' hk hp hq hscs hdiag hBB
+  have hstep : ∀ r : ℕ, ffOfHyp_p3 0 V (E ∪ {{u, w}}) (R r) = R (r + 1) := by
+    intro r
+    generalize ht : r % k' = t
+    have htl : t < k' := by rw [← ht]; exact Nat.mod_lt _ (by omega)
+    simp only [hRdef]
+    have hrw1 : vv (r % k' + p % k) = vv (t + p % k) := by rw [ht]
+    rw [hrw1]
+    rcases Nat.lt_or_ge t (k' - 1) with h1 | h1
+    · have ht1 : (r + 1) % k' = t + 1 := by
+        rw [Nat.add_mod, h1k, ht]
+        exact Nat.mod_eq_of_lt (by omega)
+      rcases Nat.lt_or_ge t (k' - 2) with h2 | h2
+      · -- interior dart: the 2-cycle ivs
+        have hrw2 : vv ((r + 1) % k' + p % k) = vv (t + 1 + p % k) := by rw [ht1]
+        rw [hrw2]
+        have hmem : (vv (t + p % k), vv (t + 1 + p % k))
+            ∈ dartsOfHyp_p3 (E ∪ {{u, w}}) V := by
+          refine Set.mem_union_left _ ?_
+          show {vv (t + p % k), vv (t + 1 + p % k)} ∈ E ∪ {{u, w}}
+          refine Or.inl ?_
+          rw [← hE]
+          exact Set.mem_range.mpr ⟨t + p % k, by rw [Nat.add_right_comm]⟩
+        rw [ffOfHyp_p3, if_pos hmem]
+        dsimp only
+        have hshiftNe : ∀ a b : ℕ, a < k → b < k → a ≠ b → vv (a + p % k) ≠ vv (b + p % k) :=
+          fun a b ha hb hne => fun he => hne (sfVVInjShift_p35 hk0 hper hinj ha hb he)
+        have hbU : vv (t + 1 + p % k) ≠ u := fun he =>
+          hshiftNe 0 (t + 1) (by omega) (by omega) (by omega)
+            (by rw [Nat.zero_add, hp]; exact he.symm)
+        have hbW : vv (t + 1 + p % k) ≠ w := fun he =>
+          hshiftNe (t + 1) (k' - 1) (by omega) (by omega) (by omega) (he.trans hWew.symm)
+        have hEEb : EE_p3 (vv (t + 1 + p % k)) (E ∪ {{u, w}})
+            = {vv (t + p % k), vv (t + 2 + p % k)} := by
+          rw [sfEEinterior_p35 hk3c hper hinj hE (t + 1 + p % k) hbU hbW]
+          ext x
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          constructor
+          · rintro (hx | hx)
+            · left
+              rw [hx, show t + 1 + p % k + k - 1 = t + p % k + k from by omega,
+                ← periodic_mod_eq_p23 hper (t + p % k),
+                ← periodic_mod_eq_p23 hper (t + p % k + k), Nat.add_mod_right]
+            · right
+              rw [hx, show t + 1 + p % k + 1 = t + 2 + p % k from by omega]
+          · rintro (hx | hx)
+            · left
+              rw [hx, show t + 1 + p % k + k - 1 = t + p % k + k from by omega,
+                ← periodic_mod_eq_p23 hper (t + p % k),
+                ← periodic_mod_eq_p23 hper (t + p % k + k), Nat.add_mod_right]
+            · right
+              rw [hx, show t + 1 + p % k + 1 = t + 2 + p % k from by omega]
+        have hac : vv (t + p % k) ≠ vv (t + 2 + p % k) :=
+          hshiftNe t (t + 2) (by omega) (by omega) (by omega)
+        rw [hEEb, (ivsTwo_p35 hac).1]
+        have ht2 : (r + 1 + 1) % k' = t + 2 := by
+          rw [show r + 1 + 1 = r + 2 from by omega, Nat.add_mod, h1k2, ht]
+          exact Nat.mod_eq_of_lt (by omega)
+        simp only [hRdef, ht1, ht2]
+      · -- the turning dart (pred w, w) ↦ (w, u)
+        have ht2 : t = k' - 2 := by omega
+        have hrw2 : vv ((r + 1) % k' + p % k) = w := by
+          rw [show (r + 1) % k' = k' - 1 from by
+            rw [Nat.add_mod, h1k, ht, ht2, show k' - 2 + 1 = k' - 1 from by omega]
+            exact Nat.mod_eq_of_lt (by omega), hWew]
+        rw [hrw2, ht2]
+        have hmem : (vv (k' - 2 + p % k), w) ∈ dartsOfHyp_p3 (E ∪ {{u, w}}) V := by
+          refine Set.mem_union_left _ ?_
+          show {vv (k' - 2 + p % k), w} ∈ E ∪ {{u, w}}
+          refine Or.inl ?_
+          rw [hvcongr, ← hq]
+          show {vv (q % k + k - 1), vv (q % k)} ∈ E
+          have hz := (sfMemEdge_p35 hk3c hper hinj hE (q % k)
+            (vv (q % k + k - 1))).mpr (Or.inl rfl)
+          simpa [Set.pair_comm, EE_p3] using hz
+        rw [ffOfHyp_p3, if_pos hmem]
+        dsimp only
+        rw [hEEw, hivsW]
+        have htA : (r + 1) % k' = k' - 1 := by
+          rw [Nat.add_mod, h1k, ht, ht2, show k' - 2 + 1 = k' - 1 from by omega]
+          exact Nat.mod_eq_of_lt (by omega)
+        have htB : (r + 1 + 1) % k' = 0 := by
+          rw [show r + 1 + 1 = r + 2 from by omega, Nat.add_mod, h1k2, ht, ht2,
+            show k' - 2 + 2 = k' from by omega, Nat.mod_self]
+        simp only [hRdef, htA, htB, Nat.zero_add, hWew, hp]
+    · -- the trans dart (w, u) ↦ (u, succ u)
+      have ht1 : t = k' - 1 := by omega
+      have hrw2 : vv ((r + 1) % k' + p % k) = u := by
+        rw [show (r + 1) % k' = 0 from by
+          rw [Nat.add_mod, h1k, ht, ht1, show k' - 1 + 1 = k' from by omega, Nat.mod_self],
+          Nat.zero_add]
+        exact hp
+      rw [hrw2, ht1, hWew]
+      have hmem : (w, u) ∈ dartsOfHyp_p3 (E ∪ {{u, w}}) V := by
+        refine Set.mem_union_left _ ?_
+        show {(w, u).1, (w, u).2} ∈ E ∪ {{u, w}}
+        refine Or.inr ?_
+        rw [Set.mem_singleton_iff]
+        exact Set.pair_comm ((w, u).1) ((w, u).2)
+      rw [ffOfHyp_p3, if_pos hmem]
+      dsimp only
+      rw [hEEu, hivsU]
+      have htA : (r + 1) % k' = 0 := by
+        rw [Nat.add_mod, h1k, ht, ht1, show k' - 1 + 1 = k' from by omega, Nat.mod_self]
+      have htB : (r + 1 + 1) % k' = 1 := by
+        rw [show r + 1 + 1 = r + 2 from by omega, Nat.add_mod, h1k2, ht, ht1,
+          show k' - 1 + 2 = k' + 1 from by omega, Nat.add_comm, Nat.add_mod_right, h1k]
+      simp only [hRdef, htA, htB, Nat.zero_add, hp,
+        show (1:ℕ) + p % k = p % k + 1 from Nat.add_comm 1 (p % k)]
+  -- 6. the orbit of the base dart is the k'-window
+  have hRcong : ∀ a b : ℕ, a % k' = b % k' → R a = R b := by
+    intro a b h
+    have e1 : (a + 1) % k' = (b + 1) % k' := by
+      rw [Nat.add_mod, h1k, h, Nat.add_mod b 1 k', h1k]
+    simp only [hRdef, h, e1]
+  have hiter : ∀ n : ℕ, (ffOfHyp_p3 0 V (E ∪ {{u, w}}))^[n] (R 0) = R (n % k') := by
+    intro n
+    induction n with
+    | zero => rw [Function.iterate_zero_apply, Nat.zero_mod]
+    | succ m ih =>
+      have hm : (m + 1) % k' = (m % k' + 1) % k' := by rw [Nat.add_mod, h1k]
+      rw [Function.iterate_succ_apply', ih, hstep, hm]
+      exact (hRcong ((m % k' + 1) % k') (m % k' + 1) (Nat.mod_mod _ _)).symm
+  -- 7. assembly
+  have hrho : rhoNode1 FF u = vv (p % k + 1) := by
+    have h := VV_SUC_EQ_RHO_NODE_p35 s k (p % k) p q u V E FF vv hk hp hV hE hFF hscs hdiag hBB 1
+    rw [Function.iterate_one, show (1:ℕ) + p % k = p % k + 1 from Nat.add_comm 1 (p % k)] at h
+    exact h
+  rw [Hypermap.face, hrho]
+  ext y
+  constructor
+  · rintro ⟨i, rfl⟩
+    refine ⟨i % k', ?_⟩
+    rw [sfPermPow_p35, hFaceM, ← hR0, hiter, Nat.mod_eq_of_lt (Nat.mod_lt i hk'0)]
+    exact (hRcong i (i % k') (Nat.mod_eq_of_lt (Nat.mod_lt i hk'0)).symm).symm
+  · rintro ⟨n, hn⟩
+    rw [sfPermPow_p35, hFaceM, ← hR0, hiter] at hn
+    exact ⟨n % k', hn⟩
   -- DISCHARGES: source 4622-4838 -- REMAINING ROOT of the trio (V/E below
-  -- now close from it).  The HOL proof routes through Nkezbfc_local.
-  -- COMPATIBLE_BW_TWO_LEMMAS + Local_lemmas1.PROVE_THE_SLICE_ASSUMPTION,
-  -- whose Lean copies live only in the LocalAuto2-importing world
-  -- (LocalAuto5/6/9), unreachable from this file's import face (the
-  -- LocalAuto1+LocalAuto2 clash).  Dedicated bridge-wave item.
+  -- now close from it): the F_PRIME body cascade = WIP drafts/kit_body.lean
+  -- (see the note above the statement for the precise remaining state).
+
 
 /-- HOL `V_PRIME_EQ_V_vv` (QKNVMLB.hl:4290, proof ~120 ln). -/
 theorem V_PRIME_EQ_V_vv_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
