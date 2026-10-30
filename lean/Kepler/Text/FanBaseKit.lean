@@ -3039,4 +3039,725 @@ theorem CONVEX_LOCAL_FAN_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ) (V : 
         (w1 := vv i) (w2 := vv j) (hne0 (j + 1)) hcol2 hcol hcol1 hB.2
       rw [hsum]
       linarith [azim_nonneg 0 (vv (j + 1)) (vv (j + 2)) (vv i)]
+/-! ## S 链首波三件（fanbase-s1-w1）：`SCS_OPP_REFL_fb` + `DSV_EQ_SYM_0_fb` +
+`PEROPP_IN_BB_SYM_0_fb`
+
+ScsV39 世界的 scs_opp 对偶链首波。HOL 锚（YXIONXL2.hl）：`SCS_OPP_REFL` :3095、
+`DSV_EQ_SYM_0` :2236、`PEROPP_IN_BB_SYM_0` :2183；LA13 P13 孪生 =
+LA13_f0b 草案 :2396 / :2378 / :2372（`ScsV39P13→ScsV39`、`peroppP13→peropp`
+（LA1 canonical def）、`dsvV39P13→dsvV39` 逐槽改型）。
+
+- `SCS_OPP_REFL_fb`：链首新小件，全库缺失。路线 = HOL 同型：peropp/peropp2
+  对合（DUAL_PEROPP/DUAL_PEROPP2 孪生，吃 `oppSucModFb` + 周期传输），k ≠ 0
+  由 isScsV39 的 3 ≤ k 收口。
+- `DSV_EQ_SYM_0_fb`：HOL SUM_EQ_GENERAL 重指标和的 Lean 形 = Finset 和经对合
+  重指标 `dsvReidxFb`（`i ↦ ((k-1-i)+k-1) % k`，[0,k) 对合）的
+  `Finset.sum_nbij`；J 条件双向传输只吃 isScsV39 的 J 对称 + Periodic2；
+  距离端吃 `distNegNegFb` + dist 对换 + Periodic vv k；isEar 两侧皆假
+  （k ≥ 4，NO_IS_EAR/NO_IS_EAR_SCS_OPP 同型）。
+- `PEROPP_IN_BB_SYM_0_fb`：BBsV39 四合取逐条——前三条纯记录（ballAnnulus
+  取负对称、Periodic、peropp2 槽 dist 界）；第四条 = LA1 `ConvexLocalFan`
+  （BBsV39 的 fan 槽是 LA1 canonical 形，非 LA3 `_p3` 形）于取负族：
+  LocalFan 部分经 `localFanLA1ofP3Fb`（AzimBridge `LocalFan.of_localFan_p3`
+  的 kit 内私有重铸；hno 前提由负族无孤立点收口）消费本 kit 的
+  `LOCAL_FAN_DUAL_SYM_0_fb`；azim 部分重走 F3 的 (A)/(B) 对换传输
+  （`AZIM_NEG_fb` + `sum4_azim_fan`），wedge/azimInFan 槽在 LA1 `Fan.sigmaFan`
+  渲染下由 `sigmaFanUnivFb` + `sigmaFanTwoFb` 收口。三槽经
+  `oppImageV/E/FEq2NegFb` 改写为平取负像形。
+
+新增 helper 全部 private `…Fb` 新名；既有件签名逐字不动。 -/
+
+section SOppChain
+
+-- 本节 helper 需要 dart1OfFan/dartsOfHyp_p3 隶属的古典可判定（fan 层 def 的
+-- if 形）；仅 local 作用域，不改文件既有 setup。
+attribute [local instance] Classical.propDecidable
+
+/-! ### S.1 peropp 对合算术（HOL DUAL_PEROPP / DUAL_PEROPP2，LA13 :1447/:1470 孪生） -/
+
+/-- 2 元周期的整倍数传输（LA13 `periodicAdd2P13` 孪生）。 -/
+private theorem periodicAdd2Fb {α : Sort*} {a : ℕ → ℕ → α} {k : ℕ}
+    (hper : Periodic2 a k) : ∀ q i j, a (i + q * k) j = a i j ∧ a i (j + q * k) = a i j := by
+  intro q
+  induction q with
+  | zero => intro i j; simp
+  | succ n ih =>
+      intro i j
+      have hsplit : i + Nat.succ n * k = i + n * k + k := by
+        rw [Nat.succ_mul, Nat.add_assoc, Nat.add_comm (n * k) k]
+      have hsplitJ : j + Nat.succ n * k = j + n * k + k := by
+        rw [Nat.succ_mul, Nat.add_assoc, Nat.add_comm (n * k) k]
+      rw [hsplit, hsplitJ]
+      exact ⟨(hper (i + n * k) j).1.trans (ih i j).1,
+        (hper i (j + n * k)).2.trans (ih i j).2⟩
+
+/-- 2 元周期的取模传输。 -/
+private theorem periodicMod2Fb {α : Sort*} {a : ℕ → ℕ → α} {k : ℕ}
+    (hper : Periodic2 a k) (i j : ℕ) : a i (j % k) = a i j := by
+  have h := (periodicAdd2Fb hper (j / k) i (j % k)).2
+  rw [Nat.mul_comm, Nat.mod_add_div] at h
+  exact h.symm
+
+/-- HOL `DUAL_PEROPP`（YXIONXL2.hl:3084）。 -/
+private theorem peroppDualFb {α : Sort*} {a : ℕ → α} {k : ℕ} (hk : k ≠ 0)
+    (hper : Periodic a k) : peropp (peropp a k) k = a := by
+  funext i
+  show a (k - ((k - (i % k + 1)) % k + 1)) = a i
+  rw [oppSucModFb hk]
+  exact periodicModFb hper i
+
+/-- HOL `DUAL_PEROPP2`（YXIONXL2.hl:3089）。 -/
+private theorem peropp2DualFb {α : Sort*} {a : ℕ → ℕ → α} {k : ℕ} (hk : k ≠ 0)
+    (hper : Periodic2 a k) : peropp2 (peropp2 a k) k = a := by
+  funext i j
+  show a (k - ((k - (i % k + 1)) % k + 1)) (k - ((k - (j % k + 1)) % k + 1)) = a i j
+  rw [oppSucModFb hk, oppSucModFb hk]
+  have hA : a (i % k) (j % k) = a i (j % k) := by
+    have h := (periodicAdd2Fb hper (i / k) (i % k) (j % k)).1.symm
+    rw [Nat.mul_comm, Nat.mod_add_div i k] at h
+    exact h
+  rw [hA, periodicMod2Fb hper i j]
+
+/-- `ballAnnulus` 取负对称（HOL `BALL_ANNULUS_SYM_0` 点态形）。 -/
+private theorem ballAnnulusNegFb (x : V3) (h : x ∈ ballAnnulus) : -x ∈ ballAnnulus := by
+  have hd : dist (-x) (0:V3) = dist x (0:V3) := by simp [dist_eq_norm]
+  obtain ⟨hm, hn⟩ := h
+  refine ⟨Metric.mem_closedBall.mpr ?_, ?_⟩
+  · rw [hd]
+    exact Metric.mem_closedBall.mp hm
+  · intro hc
+    have hc' : dist (-x) (0:V3) < 2 := hc
+    rw [hd] at hc'
+    exact hn (show x ∈ Metric.ball (0:V3) 2 from hc')
+
+/-- HOL `SCS_OPP_REFL`（YXIONXL2.hl:3095；LA13 孪生 `SCS_OPP_REFL_p13`
+= LA13_f0b:2396）。`scs_opp_v39` 对合：逐字段 DUAL_PEROPP/2。 -/
+theorem SCS_OPP_REFL_fb (s : ScsV39) (hiscs : isScsV39 s) :
+    scsOppV39 (scsOppV39 s) = s := by
+  cases s with
+  | mk k d a am bm b J lo hi str =>
+    obtain ⟨-, hk3, -, hlo, hhi, hstr, -, hpa, hpam, hpbm, hpb, hpJ, -, -, -, -, -, -, -, -, -⟩ :=
+      hiscs
+    have hk3' : 3 ≤ k := hk3
+    have hk0 : k ≠ 0 := by omega
+    show ScsV39.mk k d (peropp2 (peropp2 a k) k) (peropp2 (peropp2 am k) k)
+      (peropp2 (peropp2 bm k) k) (peropp2 (peropp2 b k) k) (peropp2 (peropp2 J k) k)
+      (peropp (peropp lo k) k) (peropp (peropp hi k) k) (peropp (peropp str k) k)
+      = ScsV39.mk k d a am bm b J lo hi str
+    rw [ScsV39.mk.injEq k d (peropp2 (peropp2 a k) k) (peropp2 (peropp2 am k) k)
+      (peropp2 (peropp2 bm k) k) (peropp2 (peropp2 b k) k) (peropp2 (peropp2 J k) k)
+      (peropp (peropp lo k) k) (peropp (peropp hi k) k) (peropp (peropp str k) k)
+      k d a am bm b J lo hi str]
+    exact ⟨rfl, rfl, peropp2DualFb hk0 hpa, peropp2DualFb hk0 hpam, peropp2DualFb hk0 hpbm,
+      peropp2DualFb hk0 hpb, peropp2DualFb hk0 hpJ, peroppDualFb hk0 hlo,
+      peroppDualFb hk0 hhi, peroppDualFb hk0 hstr⟩
+
+/-! ### S.2 DSV 记录件（HOL DSV_EQ_SYM_0 :2236） -/
+
+/-- DSV 重指标对合：`i ↦ ((k-1-i)+(k-1)) % k`，[0,k) 上的对合
+（i ≤ k-2 时 = k-2-i；i = k-1 时 = k-1）。职能同 HOL SUM_EQ_GENERAL 的
+重指标 `(\j. k - SUC(SUC(j MOD k) MOD k))`。 -/
+private def dsvReidxFb (k i : ℕ) : ℕ := ((k - 1 - i) + (k - 1)) % k
+
+private theorem dsvReidxSqFb {k i : ℕ} (hik : i < k) (hik2 : i ≤ k - 2) (hk2 : 2 ≤ k) :
+    dsvReidxFb k i = k - 2 - i := by
+  unfold dsvReidxFb
+  have hsplit : (k - 1 - i) + (k - 1) = (k - 2 - i) + k * 1 := by omega
+  rw [hsplit, Nat.add_mul_mod_self_left]
+  exact Nat.mod_eq_of_lt (by omega)
+
+private theorem dsvReidxLastFb {k : ℕ} (hk1 : 1 ≤ k) : dsvReidxFb k (k - 1) = k - 1 := by
+  unfold dsvReidxFb
+  rw [Nat.sub_self, Nat.zero_add, Nat.mod_eq_of_lt (by omega)]
+
+private theorem dsvReidxLtFb {k i : ℕ} (hik : i < k) (hk2 : 2 ≤ k) : dsvReidxFb k i < k := by
+  by_cases hlast : i = k - 1
+  · subst hlast
+    rw [dsvReidxLastFb (k := k) (by omega)]
+    omega
+  · rw [dsvReidxSqFb hik (by omega) hk2]
+    omega
+
+private theorem dsvReidxInvFb {k i : ℕ} (hik : i < k) (hk2 : 2 ≤ k) :
+    dsvReidxFb k (dsvReidxFb k i) = i := by
+  by_cases hlast : i = k - 1
+  · subst hlast
+    have hL := dsvReidxLastFb (k := k) (by omega)
+    rw [hL, hL]
+  · rw [dsvReidxSqFb hik (by omega) hk2, dsvReidxSqFb (by omega) (by omega) hk2]
+    omega
+
+private theorem dsvReidxInjFb {k a b : ℕ} (hab : dsvReidxFb k a = dsvReidxFb k b)
+    (ha : a < k) (hb : b < k) (hk2 : 2 ≤ k) : a = b := by
+  have h := dsvReidxInvFb ha hk2
+  rw [← h, hab, dsvReidxInvFb hb hk2]
+
+/-- J 条件的重指标传输：对 i < k，
+`s.J (k-(i%k+1)) (k-((i+1)%k+1)) ↔ s.J (σ i) (σ i + 1)`。只吃 J 对称 +
+Periodic2（isScsV39 两合取），零几何。 -/
+private theorem dsvKeyFb (s : ScsV39) (hpJ : Periodic2 s.J s.k)
+    (hJsym : ∀ i j, s.J i j = s.J j i) {k : ℕ} (hk : s.k = k) {i : ℕ}
+    (hik : i < k) (hk2 : 2 ≤ k) :
+    s.J (k - (i % k + 1)) (k - ((i + 1) % k + 1)) ↔
+      s.J (dsvReidxFb k i) (dsvReidxFb k i + 1) := by
+  rw [Nat.mod_eq_of_lt hik]
+  by_cases hlast : i = k - 1
+  · subst hlast
+    have hL := dsvReidxLastFb (k := k) (by omega)
+    have hpJk : Periodic2 s.J k := by
+      have h := hpJ
+      rw [hk] at h
+      exact h
+    have hm := periodicMod2Fb hpJk (k - 1) k
+    rw [Nat.mod_self] at hm
+    have hE1 : k - ((k - 1) + 1) = 0 := by omega
+    have hE2 : k - ((k - 1 + 1) % k + 1) = k - 1 := by
+      rw [show k - 1 + 1 = k from by omega, Nat.mod_self]
+    rw [hE1, hE2, hL, show k - 1 + 1 = k from by omega]
+    rw [← hm]
+    refine ⟨fun h => ?_, fun h => ?_⟩
+    · rw [hJsym] at h; exact h
+    · rw [hJsym] at h; exact h
+  · have hb : k - ((i + 1) % k + 1) = k - 2 - i := by
+      rw [Nat.mod_eq_of_lt (by omega : i + 1 < k)]
+      omega
+    rw [show k - (i + 1) = k - 1 - i from by omega, hb,
+      dsvReidxSqFb hik (by omega) hk2,
+      show (k - 2 - i) + 1 = k - 1 - i from by omega]
+    refine ⟨fun h => ?_, fun h => ?_⟩
+    · rw [hJsym] at h; exact h
+    · rw [hJsym] at h; exact h
+
+/-- `setSum` 的有限集展开。 -/
+private theorem setSumFiniteFb {α : Type*} (s : Set α) (f : α → ℝ) (h : Set.Finite s) :
+    setSum s f = ∑ w ∈ h.toFinset, f w := by
+  rw [setSum, dif_pos h]
+
+/-- HOL `DSV_EQ_SYM_0`（YXIONXL2.hl:2236；LA13 孪生 `DSV_EQ_SYM_0_p13`
+= LA13_f0b:2378）。`dsv_v39 (scs_opp_v39 s) (\i. --peropp vv k i)
+= dsv_v39 s vv`。 -/
+theorem DSV_EQ_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    dsvV39 (scsOppV39 s) (fun i => -(peropp vv k i)) = dsvV39 s vv := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, hpJ, hsym5, -, -, -, -, -, -, -, -⟩ := hiscs
+  have hJsym : ∀ i j, s.J i j = s.J j i := fun i j => (hsym5 i j).2.2.2.2
+  have hper : Periodic vv k := by
+    have h := hbb.2.1
+    rw [hk] at h
+    exact h
+  have hk2 : 2 ≤ k := by omega
+  have hK : (scsOppV39 s).k = k := by show s.k = k; exact hk
+  have hdop : (scsOppV39 s).d = s.d := rfl
+  have hJop : ∀ i j : ℕ, (scsOppV39 s).J i j
+      = s.J (k - (i % k + 1)) (k - (j % k + 1)) := by
+    intro i j
+    show peropp2 s.J s.k i j = _
+    rw [hk]
+    rfl
+  have hS1set : {i | i < k ∧ (scsOppV39 s).J i (i + 1)}
+      = {i | i < k ∧ s.J (k - (i % k + 1)) (k - ((i + 1) % k + 1))} := by
+    ext i
+    exact ⟨fun h => ⟨h.1, hJop i (i + 1) ▸ h.2⟩,
+      fun h => ⟨h.1, (hJop i (i + 1)).symm ▸ h.2⟩⟩
+  -- isEar 两侧皆假（k ≥ 4；NO_IS_EAR / NO_IS_EAR_SCS_OPP 同型）
+  have hnearL : ¬isEarV39 (scsOppV39 s) := by
+    intro hc
+    have hk3e := hc.2.2.1
+    rw [hK] at hk3e
+    omega
+  have hnearR : ¬isEarV39 s := by
+    intro hc
+    have hk3e := hc.2.2.1
+    rw [hk] at hk3e
+    omega
+  unfold dsvV39
+  rw [if_neg hnearL, if_neg hnearR, hdop, hK, hk, hS1set]
+  simp only [peropp, distNegNegFb]
+  have hfin1 : {i | i < k ∧ s.J (k - (i % k + 1)) (k - ((i + 1) % k + 1))}.Finite :=
+    Set.Finite.subset (Set.finite_Iio k) (fun i hi => hi.1)
+  have hfin2 : {i | i < k ∧ s.J i (i + 1)}.Finite :=
+    Set.Finite.subset (Set.finite_Iio k) (fun i hi => hi.1)
+  rw [setSumFiniteFb _ _ hfin1, setSumFiniteFb _ _ hfin2]
+  refine congrArg (fun r : ℝ => s.d + (0.1:ℝ) * (-1:ℝ) * r) ?_
+  refine Finset.sum_nbij (fun (i : ℕ) => dsvReidxFb k i) ?_ ?_ ?_ ?_
+  · -- 落点 ∈ 右侧集
+    intro a ha
+    have ha2 : a < k ∧ s.J (k - (a % k + 1)) (k - ((a + 1) % k + 1)) :=
+      hfin1.mem_toFinset.mp ha
+    have hlt := dsvReidxLtFb ha2.1 hk2
+    refine hfin2.mem_toFinset.mpr ⟨hlt, ?_⟩
+    exact dsvKeyFb s hpJ hJsym hk ha2.1 hk2 |>.mp ha2.2
+  · -- 单射
+    intro a ha b hb hab
+    exact dsvReidxInjFb hab (hfin1.mem_toFinset.mp ha).1
+      (hfin1.mem_toFinset.mp hb).1 hk2
+  · -- 满射（逆 = 自身）
+    intro m hm
+    have hm2 : m < k ∧ s.J m (m + 1) := hfin2.mem_toFinset.mp hm
+    have hlt := dsvReidxLtFb hm2.1 hk2
+    have hkey := dsvKeyFb s hpJ hJsym hk hlt hk2
+    rw [dsvReidxInvFb hm2.1 hk2] at hkey
+    refine ⟨dsvReidxFb k m, hfin1.mem_toFinset.mpr ⟨hlt, hkey.mpr hm2.2⟩, ?_⟩
+    show dsvReidxFb k (dsvReidxFb k m) = m
+    rw [dsvReidxInvFb hm2.1 hk2]
+  · -- 逐点：σ 对合下距离端闭合
+    intro a ha
+    have ha2 : a < k := (hfin1.mem_toFinset.mp ha).1
+    show cstab - dist (vv (k - (a % k + 1))) (vv (k - ((a + 1) % k + 1)))
+      = cstab - dist (vv (dsvReidxFb k a)) (vv (dsvReidxFb k a + 1))
+    rw [Nat.mod_eq_of_lt ha2]
+    by_cases hlast : a = k - 1
+    · subst hlast
+      have hL := dsvReidxLastFb (k := k) (by omega)
+      have hE2 : k - ((k - 1 + 1) % k + 1) = k - 1 := by
+        rw [show k - 1 + 1 = k from by omega, Nat.mod_self]
+      have hE4 : k - 1 + 1 = k := by omega
+      have hE5 : (vv k : V3) = vv 0 := by simpa using hper 0
+      rw [show k - ((k - 1) + 1) = 0 from by omega, hE2, hL, hE4, hE5, dist_comm]
+    · have hb2 : k - ((a + 1) % k + 1) = k - 2 - a := by
+        rw [Nat.mod_eq_of_lt (by omega : a + 1 < k)]
+        omega
+      rw [show k - (a + 1) = k - 1 - a from by omega, hb2,
+        dsvReidxSqFb ha2 (by omega) hk2,
+        show (k - 2 - a) + 1 = k - 1 - a from by omega, dist_comm]
+
+/-! ### S.3 LA1 桥（`localFan_p3 → LocalFan`）+ `Fan.sigmaFan` 二元闭式 -/
+
+/-- `Fan.sigmaFan` 在二元邻域集上的闭式：`ee v E = {p, q}`（`p ≠ q`）时
+`Fan.sigmaFan 0 univ E v q = p`（epsilon 唯一性，同 `azimCycleTwoFb` 手法）。 -/
+private theorem sigmaFanTwoFb {p q v u : V3} {E : Set (Set V3)}
+    (hee : ee v E = ({p, q} : Set V3)) (hne : p ≠ q) (huq : u = q) :
+    Fan.sigmaFan 0 Set.univ E v u = p := by
+  have hso : Fan.setOfEdge v Set.univ E = ({p, q} : Set V3) := by
+    have h0 : Fan.setOfEdge v Set.univ E = ee v E := by
+      ext w
+      simp only [Fan.setOfEdge, ee, Set.mem_setOf_eq, Set.mem_univ, true_and, and_true]
+    rw [h0, hee]
+  have hneU : ¬(Fan.setOfEdge v Set.univ E = {u}) := by
+    rw [hso, huq]
+    intro hc
+    have hc' := Set.eq_singleton_iff_unique_mem.mp hc
+    exact hne (hc'.2 p (Set.mem_insert_iff.mpr (Or.inl rfl)))
+  unfold Fan.sigmaFan
+  rw [if_neg hneU, hso, huq]
+  refine epsFixedFb ⟨Set.mem_insert_iff.mpr (Or.inl rfl), hne, ?_⟩ ?_
+  · intro w1 hw1 hw1ne
+    rcases Set.mem_insert_iff.mp hw1 with h | h
+    · exact h ▸ le_refl _
+    · exact absurd h hw1ne
+  · intro y hy
+    rcases Set.mem_insert_iff.mp hy.1 with h | h
+    · exact h
+    · exact absurd h hy.2.1
+
+/-- 逐点函数相等下 iterate 逐点相等。 -/
+private theorem iterateCongrFb {α : Type*} {f g : α → α} (h : ∀ y, f y = g y) :
+    ∀ (n : ℕ) (y : α), f^[n] y = g^[n] y := by
+  intro n
+  induction n with
+  | zero => intro y; rfl
+  | succ m ih =>
+      intro y
+      rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih y, h]
+
+/-- **LA1 桥**：LA3 `localFan_p3` + 孤立自对 dart 缺失
+（`dartsOfHyp_p3 E V = Fan.dart1OfFan V E`）⇒ LA1 `LocalFan`。AzimBridge
+`LocalFan.of_localFan_p3`（:740）的 kit 内私有重铸；hno 前提消去
+self-pair 分支后组件桥为纯 funext 链。 -/
+private theorem localFanLA1ofP3Fb {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hp3 : localFan_p3 V E FF) (hno : dartsOfHyp_p3 E V = Fan.dart1OfFan V E) :
+    LocalFan V E FF := by
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := hp3
+  have c1 := hdih.1
+  have c2 := hdih.2.1
+  have c3 := hdih.2.2.1
+  have c4 := hdih.2.2.2.1
+  have c5 := hdih.2.2.2.2
+  -- Fan.hypermapOfFan 组件在 dart1OfFan 内外的 if 形（AzimBridge apply_* 私有件重铸）
+  have hme : ∀ d : V3 × V3, (@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = if d ∈ Fan.dart1OfFan V E then Fan.eFanPair V E d
+      else d := by
+    intro d
+    show (@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = _
+    unfold Fan.hypermapOfFan Kepler.Text.Fan.extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(Fan.finite_dart1_fan hfan).coe_toFinset]
+  have hmn : ∀ d : V3 × V3, (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = if d ∈ Fan.dart1OfFan V E then Fan.nFanPair 0 V E d
+      else d := by
+    intro d
+    show (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = _
+    unfold Fan.hypermapOfFan Kepler.Text.Fan.extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(Fan.finite_dart1_fan hfan).coe_toFinset]
+  have hmf : ∀ d : V3 × V3, (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = if d ∈ Fan.dart1OfFan V E then Fan.fFanPair 0 V E d
+      else d := by
+    intro d
+    show (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = _
+    unfold Fan.hypermapOfFan Kepler.Text.Fan.extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(Fan.finite_dart1_fan hfan).coe_toFinset]
+  -- ofHyp 组元的 if 形（定义性）
+  have hifE : ∀ d : V3 × V3, eeOfHyp_p3 0 V E d =
+      if d ∈ dartsOfHyp_p3 E V then (d.2, d.1) else d := fun _ => rfl
+  have hifN : ∀ d : V3 × V3, nnOfHyp_p3 0 V E d =
+      if d ∈ dartsOfHyp_p3 E V then (d.1, azimCycle_p3 (EE_p3 d.1 E) 0 d.1 d.2) else d :=
+    fun _ => rfl
+  have hifF : ∀ d : V3 × V3, ffOfHyp_p3 0 V E d =
+      if d ∈ dartsOfHyp_p3 E V then (d.2, ivsAzimCycle_p3 (EE_p3 d.2 E) 0 d.2 d.1) else d :=
+    fun _ => rfl
+  -- 三张点式桥（hno 消去 self-pair 分支）
+  have hptE : ∀ d : V3 × V3, ⇑H.edgeMap d =
+      ⇑(@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) d := by
+    intro d
+    by_cases hd : d ∈ Fan.dart1OfFan V E
+    · have hDD : d ∈ dartsOfHyp_p3 E V := by rw [hno]; exact hd
+      rw [hedge]
+      simp only [hifE d, hme d, if_pos hd, if_pos hDD]
+      rfl
+    · have hNN : ¬(d ∈ dartsOfHyp_p3 E V) := by rw [hno]; exact hd
+      rw [hedge]
+      simp only [hifE d, hme d, if_neg hd, if_neg hNN]
+  have hptN : ∀ d : V3 × V3, ⇑H.nodeMap d =
+      ⇑(@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) d := by
+    intro d
+    by_cases hd : d ∈ Fan.dart1OfFan V E
+    · have hDD : d ∈ dartsOfHyp_p3 E V := by rw [hno]; exact hd
+      rw [hnode]
+      rw [hifN d, hmn d]
+      simp only [if_pos hd, if_pos hDD,
+        AZIM_CYCLE_EQ_SIGMA_FAN hfan
+          ((Fan.properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan).mp hd)]
+      rfl
+    · have hNN : ¬(d ∈ dartsOfHyp_p3 E V) := by rw [hno]; exact hd
+      rw [hnode]
+      rw [hifN d, hmn d, if_neg hd, if_neg hNN]
+  have hptF : ∀ d : V3 × V3, ⇑H.faceMap d =
+      ⇑(@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) d := by
+    intro d
+    by_cases hd : d ∈ Fan.dart1OfFan V E
+    · have hDD : d ∈ dartsOfHyp_p3 E V := by rw [hno]; exact hd
+      have hpE : ({d.2, d.1} : Set V3) ∈ E :=
+        Set.pair_comm _ _ ▸ (hd : ({d.1, d.2} : Set V3) ∈ E)
+      rw [hface]
+      rw [hifF d, hmf d]
+      simp only [if_pos hd, if_pos hDD,
+        IVS_AZIM_EQ_INVERSE_SIGMA_FAN hfan hpE,
+        Fan.inverse_sigma_fan_eq_inverse1 hfan hpE]
+      rfl
+    · have hNN : ¬(d ∈ dartsOfHyp_p3 E V) := by rw [hno]; exact hd
+      rw [hface]
+      rw [hifF d, hmf d, if_neg hd, if_neg hNN]
+  -- dart Finset 一致
+  have hcoeD : ((@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan) : Set (V3 × V3))) = Fan.dart1OfFan V E := by
+    -- toFinset 的 [DecidableEq] 实例钉为 instProd 形（与 Fan.lean 定义时烘焙一致；
+    -- 仅此 have 块内生效，避免 dartDecEq3 抢占 synth）。
+    haveI : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
+    exact (Fan.finite_dart1_fan hfan).coe_toFinset
+  have hDart' : (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) = H.darts :=
+    Finset.coe_injective (hcoeD.trans (hno.symm.trans hdarts.symm))
+  -- iterate / 轨道传输
+  have hitF := iterateCongrFb hptF
+  have hNF : ⇑H.nodeMap =
+      ⇑(@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) :=
+    funext hptN
+  have horb : ∀ y : V3 × V3, orbitMap (H.faceMap : Equiv.Perm (V3 × V3)) y =
+      orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) y := by
+    intro y
+    ext z
+    simp only [orbitMap, Set.mem_setOf_eq, Equiv.Perm.coe_pow]
+    constructor
+    · rintro ⟨n, hn⟩
+      exact ⟨n, (hitF n y).symm ▸ hn⟩
+    · rintro ⟨n, hn⟩
+      exact ⟨n, hitF n y ▸ hn⟩
+  refine ⟨hfan, x, ?_, ?_, ?_⟩
+  · rw [hDart']
+    exact hx
+  · rw [hFF]
+    ext z
+    simp only [Hypermap.face, orbitMap, Set.mem_setOf_eq, Equiv.Perm.coe_pow]
+    constructor
+    · rintro ⟨n, hn⟩
+      exact ⟨n, (hitF n x).symm ▸ hn⟩
+    · rintro ⟨n, hn⟩
+      exact ⟨n, hitF n x ▸ hn⟩
+  · refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · rw [hDart']
+      exact c1
+    · intro dmem hdmem
+      have hd2 : dmem ∈ (↑H.darts : Set (V3 × V3)) := by
+        have h3 : dmem ∈ (↑(@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+          (Fan.hypermapOfFan 0 V E hfan)) : Set (V3 × V3)) := Finset.mem_coe.mpr hdmem
+        rwa [hDart'] at h3
+      rw [hDart', c2 dmem hd2,
+        show H.face dmem = orbitMap (H.faceMap : Equiv.Perm (V3 × V3)) dmem from rfl,
+        ← horb dmem, ← hNF]
+    · refine ⟨?_, ?_⟩
+      · intro i hi0 hik h1
+        have hEq : (H.faceMap : V3 × V3 → V3 × V3)^[i] = id := by
+          funext y
+          rw [hitF i y, ← Equiv.Perm.coe_pow, h1]
+          rfl
+        exact c3.1 i hi0 hik hEq
+      · refine Equiv.Perm.ext fun y => ?_
+        rw [Equiv.Perm.coe_pow, ← hitF (FF.ncard) y, c3.2]
+        rfl
+    · refine ⟨?_, ?_⟩
+      · intro i hi0 hik h1
+        have hEq : (H.edgeMap : V3 × V3 → V3 × V3)^[i] = id := by
+          funext y
+          rw [iterateCongrFb hptE i y, ← Equiv.Perm.coe_pow, h1]
+          rfl
+        exact c4.1 i hi0 hik hEq
+      · refine Equiv.Perm.ext fun y => ?_
+        rw [Equiv.Perm.coe_pow, ← iterateCongrFb hptE (2 : ℕ) y, c4.2]
+        rfl
+    · refine ⟨?_, ?_⟩
+      · intro i hi0 hik h1
+        have hEq : (H.nodeMap : V3 × V3 → V3 × V3)^[i] = id := by
+          funext y
+          rw [iterateCongrFb hptN i y, ← Equiv.Perm.coe_pow, h1]
+          rfl
+        exact c5.1 i hi0 hik hEq
+      · refine Equiv.Perm.ext fun y => ?_
+        rw [Equiv.Perm.coe_pow, ← iterateCongrFb hptN (2 : ℕ) y, c5.2]
+        rfl
+
+/-! ### S.4 PEROPP_IN_BB_SYM_0（HOL :2183） -/
+
+/-- HOL `PEROPP_IN_BB_SYM_0`（YXIONXL2.hl:2183；LA13 孪生
+`PEROPP_IN_BB_SYM_0_p13` = LA13_f0b:2372）。
+`BBs_v39 (scs_opp_v39 s) (\i. -- peropp vv k i)`；fan 槽消费本 kit 的
+`CONVEX_LOCAL_FAN_SYM_0_fb` 层（经 `LOCAL_FAN_DUAL_SYM_0_fb` + LA1 桥 +
+azim 对换传输）。 -/
+theorem PEROPP_IN_BB_SYM_0_fb (s : ScsV39) (vv : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hiscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hbb : BBsV39 s vv) :
+    BBsV39 (scsOppV39 s) (fun i => -(peropp vv k i)) := by
+  have hK : (scsOppV39 s).k = k := by show s.k = k; exact hk
+  have hAop : ∀ i j : ℕ, (scsOppV39 s).a i j
+      = s.a (k - (i % k + 1)) (k - (j % k + 1)) := by
+    intro i j
+    show peropp2 s.a s.k i j = _
+    rw [hk]
+    rfl
+  have hBop : ∀ i j : ℕ, (scsOppV39 s).b i j
+      = s.b (k - (i % k + 1)) (k - (j % k + 1)) := by
+    intro i j
+    show peropp2 s.b s.k i j = _
+    rw [hk]
+    rfl
+  have hw : ∀ i : ℕ, (-(peropp vv k i) : V3) = -(vv (k - (i % k + 1))) := fun _ => rfl
+  -- 上下文
+  have hctx := fanbaseCtxFb s vv k (Set.image vv Set.univ)
+    (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+    (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ)
+    hk rfl rfl rfl hiscs hk3 hbb
+  have hper0 : Periodic vv k := hctx.2.2.1
+  -- 原族 ConvexLocalFan（azim (A)/(B) 内容提取用）
+  have hconv0 : ConvexLocalFan (Set.image vv Set.univ)
+      (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ) := by
+    rcases hbb.2.2.2 with h3 | hcf
+    · rw [hk] at h3
+      exact absurd h3 hk3
+    · simpa only [Set.image_univ] using hcf
+  obtain ⟨hlf0, hpts⟩ := hconv0
+  obtain ⟨hfan0, -, -⟩ := hlf0
+  have hne0 : ∀ j, vv j ≠ 0 := by
+    intro j hc
+    exact hfan0.2.2.2.1 ⟨j, Set.mem_univ _, hc⟩
+  -- 原族方位内容 (A)/(B)（F3 CONVEX 同块）
+  have hsig : ∀ i : ℕ,
+      Fan.sigmaFan 0 Set.univ (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+        (vv i) (vv (i + 1)) = vv (i + k - 1) :=
+    fun i => sigmaFanUnivFb (by omega) hper0 rfl (hctx.2.2.2.1)
+      (hctx.2.2.2.2.2.2.1)
+      (fun i j hc => vvInjModFb hk (by omega) hctx.1 hctx.2.1 hper0 hc) i
+  have hAB : ∀ i : ℕ,
+      azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) ≤ Real.pi ∧
+      ∀ z : V3, z ∈ Set.image vv Set.univ → 0 ≤ azim 0 (vv i) (vv (i + 1)) z ∧
+        azim 0 (vv i) (vv (i + 1)) z ≤ azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
+    intro i
+    have hdart : (vv i, vv (i + 1)) ∈
+        Set.image (fun j : ℕ => (vv j, vv (j + 1))) Set.univ :=
+      ⟨i, Set.mem_univ _, rfl⟩
+    obtain ⟨hA, hB⟩ := hpts (vv i, vv (i + 1)) hdart
+    have hcard : 1 < (ee (vv i)
+        (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)).ncard := by
+      rw [hctx.2.2.2.1 i, Set.ncard_pair (hctx.2.2.2.2.2.2.1 i)]
+      norm_num
+    constructor
+    · have hA' : azim 0 (vv i) (vv (i + 1))
+          (Fan.sigmaFan 0 Set.univ
+            (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+            (vv i) (vv (i + 1))) ≤ Real.pi := by
+        have h1 : azimInFan (vv i, vv (i + 1))
+            (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+            = azim 0 (vv i) (vv (i + 1))
+              (Fan.sigmaFan 0 Set.univ
+                (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+                (vv i) (vv (i + 1))) := by
+          simp only [azimInFan, if_pos hcard]
+        rw [h1] at hA
+        exact hA
+      rwa [hsig i] at hA'
+    · intro z hz
+      have hB' : z ∈ wedgeGe 0 (vv i) (vv (i + 1))
+          (Fan.sigmaFan 0 Set.univ
+            (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+            (vv i) (vv (i + 1))) := by
+        have h1 : wedgeInFanGe (vv i, vv (i + 1))
+            (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+            = wedgeGe 0 (vv i) (vv (i + 1))
+              (Fan.sigmaFan 0 Set.univ
+                (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+                (vv i) (vv (i + 1))) := by
+          simp only [wedgeInFanGe, if_pos hcard]
+        rw [h1] at hB
+        exact hB hz
+      simp only [wedgeGe, Set.mem_setOf_eq] at hB'
+      rw [hsig i] at hB'
+      exact hB'
+  -- LA3 形 localFan（本 kit F3 件）→ 平取负像形
+  have hlf3 := LOCAL_FAN_DUAL_SYM_0_fb s vv k (Set.image vv Set.univ)
+    (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+    (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ)
+    hk rfl rfl rfl hiscs hk3 hbb
+  rw [oppImageVEqNegFb vv hper0 (by omega), oppImageEEqNegFb vv hper0 (by omega),
+    oppImageFEq2NegFb vv hper0 (by omega)] at hlf3
+  -- 负族无孤立点 ⇒ hno
+  have hspEmpty : selfPairs_p3
+      (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ => -(vv i)) Set.univ) = (∅ : Set (V3 × V3)) := by
+    ext p
+    constructor
+    · rintro ⟨hp12, hpV, hpEE⟩
+      obtain ⟨i, -, hi⟩ := hpV
+      rw [← hi] at hpEE
+      have hmem : (-(vv (i + 1)) : V3) ∈ EE_p3 (-(vv i))
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ) := by
+        show -(vv (i + 1)) ∈ ee (-(vv i))
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        rw [hctx.2.2.2.2.1 i]
+        exact Set.mem_insert_iff.mpr (Or.inl rfl)
+      exact absurd hmem (by rw [hpEE]; simp)
+    · exact fun h => h.elim
+  have hno : dartsOfHyp_p3
+      (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+      = Fan.dart1OfFan (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ) := by
+    have hunfold : dartsOfHyp_p3
+        (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+        (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+        = ordPairs_p3 (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          ∪ selfPairs_p3
+            (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+            (Set.image (fun i : ℕ => -(vv i)) Set.univ) := rfl
+    rw [hunfold, hspEmpty, Set.union_empty]
+    rfl
+  have hlf1 : LocalFan (Set.image (fun i : ℕ => -(vv i)) Set.univ)
+      (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+      (Set.image (fun i : ℕ => (-(vv (i + 1)), -(vv i))) Set.univ) :=
+    localFanLA1ofP3Fb hlf3 hno
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · -- 1. ballAnnulus
+    simp only [← Set.image_univ, peropp]
+    rw [oppImageVEqNegFb vv hper0 (by omega)]
+    rintro x ⟨i, -, rfl⟩
+    exact ballAnnulusNegFb _ (hbb.1 ⟨i, rfl⟩)
+  · -- 2. Periodic
+    intro i
+    show -(peropp vv k (i + (scsOppV39 s).k)) = -(peropp vv k i)
+    rw [hK]
+    simp only [peropp, Nat.add_mod_right]
+  · -- 3. dist 界（peropp2 槽）
+    intro i j
+    rw [hAop i j, hBop i j]
+    show s.a (k - (i % k + 1)) (k - (j % k + 1))
+      ≤ dist (-(vv (k - (i % k + 1)))) (-(vv (k - (j % k + 1)))) ∧
+      dist (-(vv (k - (i % k + 1)))) (-(vv (k - (j % k + 1)))) ≤
+        s.b (k - (i % k + 1)) (k - (j % k + 1))
+    rw [distNegNegFb]
+    exact hbb.2.2.1 (k - (i % k + 1)) (k - (j % k + 1))
+  · -- 4. fan 槽（LA1 ConvexLocalFan 于负族）
+    rw [hK]
+    right
+    simp only [← Set.image_univ, peropp]
+    rw [oppImageVEqNegFb vv hper0 (by omega), oppImageEEqNegFb vv hper0 (by omega),
+      oppImageFEq2NegFb vv hper0 (by omega)]
+    refine ⟨hlf1, ?_⟩
+    rintro x ⟨j, -, rfl⟩
+    have hcol1 : ¬Collinear ℝ ({0, vv (j + 1), vv j} : Set V3) := by
+      have h := hfan0.2.2.2.2.1 ({vv j, vv (j + 1)} : Set V3) ⟨j, Set.mem_univ _, rfl⟩
+      show ¬Collinear ℝ (insert 0 (insert (vv (j + 1)) ({vv j} : Set V3)))
+      rw [pairSetCommFb]
+      exact h
+    have hcol2 : ¬Collinear ℝ ({0, vv (j + 1), vv (j + 2)} : Set V3) :=
+      hfan0.2.2.2.2.1 ({vv (j + 1), vv (j + 2)} : Set V3) ⟨j + 1, Set.mem_univ _, rfl⟩
+    have hne2j : -(vv (j + 2)) ≠ -(vv j) := by
+      intro hc
+      have hc2 : vv (j + 2) = vv j := by simpa using congrArg Neg.neg hc
+      exact hctx.2.2.2.2.2.2.2 j (hc2.trans (hper0 j).symm)
+    have hneigh : ee (-(vv (j + 1)))
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+      = ({-(vv (j + 2)), -(vv j)} : Set V3) := by
+      have h := hctx.2.2.2.2.1 (j + 1)
+      rw [show ((j:Nat) + 1 + k - 1) = j + k from by omega,
+        show (-(vv (j + k)) : V3) = -(vv j) from by
+          simpa using congrArg Neg.neg (hper0 j)] at h
+      exact h
+    have hcardN : 1 < (ee (-(vv (j + 1)))
+          (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)).ncard := by
+      rw [hneigh, Set.ncard_pair hne2j]
+      norm_num
+    constructor
+    · -- azimInFan ≤ π：(A) 对换传输
+      have hA := (hAB (j + 1)).1
+      rw [show ((j:Nat) + 1 + k - 1) = j + k from by omega,
+        show (vv (j + k) : V3) = vv j from hper0 j] at hA
+      simp only [azimInFan]
+      rw [if_pos hcardN, sigmaFanTwoFb hneigh hne2j rfl, AZIM_NEG_fb hcol1 hcol2]
+      exact hA
+    · -- V'' ⊆ wedgeInFanGe：下界 azim_nonneg；上界对换传输 + sum4
+      simp only [wedgeInFanGe]
+      rw [if_pos hcardN, sigmaFanTwoFb hneigh hne2j rfl]
+      rintro z ⟨i, -, rfl⟩
+      simp only [wedgeGe, Set.mem_setOf_eq]
+      refine ⟨azim_nonneg 0 (-(vv (j + 1))) (-(vv j)) (-(vv i)), ?_⟩
+      by_cases hcol : Collinear ℝ ({0, vv (j + 1), vv i} : Set V3)
+      · have hdeg : azim 0 (-(vv (j + 1))) (-(vv j)) (-(vv i)) = 0 := by
+          have hc : Collinear3 0 (-(vv (j + 1))) (-(vv i)) := collinear3_zero_negFb.mp hcol
+          unfold azim
+          exact if_pos (Or.inr hc)
+        rw [hdeg, AZIM_NEG_fb hcol1 hcol2]
+        exact azim_nonneg 0 (vv (j + 1)) (vv (j + 2)) (vv j)
+      · rw [AZIM_NEG_fb hcol1 hcol, AZIM_NEG_fb hcol1 hcol2]
+        have hB := (hAB (j + 1)).2 (vv i) (by
+          refine ⟨i, Set.mem_univ _, rfl⟩)
+        rw [show ((j:Nat) + 1 + k - 1) = j + k from by omega,
+          show (vv (j + k) : V3) = vv j from hper0 j] at hB
+        have hsum := sum4_azim_fan (x := 0) (v := vv (j + 1)) (u := vv (j + 2))
+          (w1 := vv i) (w2 := vv j) (hne0 (j + 1)) hcol2 hcol hcol1 hB.2
+        rw [hsum]
+        linarith [azim_nonneg 0 (vv (j + 1)) (vv (j + 2)) (vv i)]
+
+end SOppChain
+
+
 end Kepler.Text
