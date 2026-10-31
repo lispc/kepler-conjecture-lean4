@@ -207,6 +207,7 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | rw 旁目标/自动 rfl（TameLp 桥实测） | `rw [带显式假设参的引理]` 不喂参时若假设参嵌在 LHS 模式的函数应用内，unification 留下**以形参名命名**的旁目标（`case hgood ⊢` 形，极易误读为变量 case）——自定义等式引理进 rw 一律显式喂参（`rw … at h` 同引理却正常，形状敏感）；rw 链使目标变成定义等式会**自动 rfl 收尾**——其后手写 rfl 报 "No goals"（先确认）；`Set.Mem`(coe Finset)↔`Finset.Mem` 双向 exact 直递可用（勿多引 mem_coe） |
 | IVT/滤波替代路径（CF-4d 沉淀，可复用） | 本版不存在：`Filter.le_def`（membership 流向 g→f）、`lt_or_le`/`lt_or_ge_of_le`/`Set.Nonempty.intro`/`Set.not_mem_empty`/`tendsto_def`/`ContinuousOn.isClosed_preimage`——替代：`lt_trichotomy`/`eq_or_lt_of_le`/匿名构造/`Set.mem_empty_iff_false`/`Filter.tendsto_iff_eventually`/`ContinuousOn.preimage_isClosed_of_isClosed`；IVT 首穿件现成可抄：`cf4_ivt_first_hit/dec`（ContraFanDeep，sInf S + `IsClosed.isLeast_csInf` + 左邻域夹逼） |
 | 2026-10-31 EJRCFJD 合流栈批（monotrig2 尾波 / hplane2 实测） | `lt_or_le` → `lt_or_ge`；裸 `lt_of_succ_lt` → `Nat.lt_of_succ_lt`；`Collinear.mono` 不存在 → `Collinear.subset`（方向倒置）；`smul_dotProduct` 本版形为 `x • (v ⬝ᵥ w)`（期望 `(c • v) ⬝ᵥ w` 时改走 `smul_eq_mul` + `add_dotProduct`）；`dot_cross_self e v0` 本版形 `w ⬝ᵥ (v ⨯₃ w)`，须先 `dotProduct_comm`；`Finset.mem_singleton_iff` 本版无（`simp only [Finset.mem_singleton]` 显式链）；`module` tactic 失败时 `rw [sub_smul, …]; abel`。**注意：`le_or_lt`/`lt_or_le` 早已在本表，车道仍写旧名——因为交付前根本没编译（见 §1 交付律）** |
+| 深水合龙波实测（2026-11-01：W2/CR/FIN） | `Set.mem_insert_self` 本版无——`by simp` 直展；`le_or_lt` 不在本版（表列正名 `le_or_gt` 见上），不合形时 W2/CR 实测替代 = `Classical.em` + `not_lt.mp` 手拼；`Set.ncard_empty` 本版 `exact` 不能从期望类型补出 α——一律 `rw [Set.ncard_empty]` 形（FIN 实测）；`edgeOfVertex_p35` 隐式 V 不可由目标合成——显式 `(V := V)`（CR 实测） |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -668,6 +669,73 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
   18 已应用 `54fe4ee2`）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
+
+### 2026-11-01 · 深水合龙与落仓手术波（queue 续 132–149）
+
+- **写法纪律七条（NC2 实证：whnf 烧穿 = 写法问题，非预算问题）**：NC 车道主件装配在
+  「大上下文头部一串应用 + contra 应用」合体时 whnf 5M 确定性烧穿（拆小 / pack ∃ /
+  `Elab.async false` 均未根治，按预算条款删除）；NC2 按下列七条重排写法后**一次装成**
+  `ncNotCircular_p35`（全程无一处超 400k 心跳、未用 `Elab.async false`、零预算抬升）：
+  ① 一切 `have` 不带类型注解（`have h := term`，类型随项而得，不让 unifier 对大证明项反推）；
+  ② 头部打包件的 ∃ 结论**逐分量完全显式**（楔端点 `ivsRhoNode1 FF v` 逐字入型，obtain 后
+  contra 槽用命名隐参直给，杜绝 unifier 猜）；③ obtain 后逐分量
+  `have hX : <逐字形> := hX'` 钉形（小项对显式型的廉价 check，非 ascription 推导）；
+  ④ contra 应用逐槽 `refine … ?_ … ?_`，各槽独立 `exact` 物化；⑤ Set-literal 逐字对齐
+  （`insert a {b}` 槽与 `{rhoNode1 FF v, ivsRhoNode1 FF v}` 同形直给，不让 unifier 做
+  集合展开）；⑥ 隐式参数全部显式给（`(V := V) (E := E) (FF := FF) …`），跨件应用零搜索；
+  ⑦ 拆件（pack / sliceFalse / main，单件 ≤40 行），各挂
+  `set_option maxHeartbeats 400000 in` 探测器定位烧点。与 §2-9「重还是坏」一分钟鉴别
+  配套使用：烧穿先试零风险写法变换，再谈预算。
+- **HK2 两 WHNF 陷阱（后续波必读）**：① `kchDartNonColl_p35` 带 ρu-注解
+  （`have h : ¬ Collinear3 0 u (rhoNode1 FF u) := kchDartNonColl_p35 hlf hdart`）把
+  `d.2 =?= ρu` 交给 unifier 判 defeq ⟹ epsilon 无界展开、400k 确定性超时（KCHMAMG
+  同款坑）；正形 = 无注解 `have h0 := kchDartNonColl_p35 hlf hdart` + 定形
+  `have h : … := h0`（iota 级 defeq）。② `set` 命名 `rhoNode1` 系与①叠加加剧超时——
+  rhoNode1 一律全拼写、零 set/let。附：`azimSpec_exists` 的结果是 def 包裹 And 链，
+  rcases 穿透不稳，正形 = `.2.2` 投影 + 逐层 obtain 全显式命名。
+- **F2 的 lambda 包装**：`Collinear3 ↔ Collinear ℝ` 强制转换在 FACE_MAP exact 处
+  isDefEq 5M 烧穿——把需要强制转换的实参包成 lambda
+  `fun hc => kchDartNonColl_p35 hfanL kitw.1 hc`，让 elaborator 从已知类型走向目标
+  （廉价强制方向），勿让它反推。
+- **W 两坑 + W2 新避坑七条（接力 W3/W4 时全数复验有效）**。W 坑：
+  (i) 本版 `Function.iterate_succ_apply'` 方向 = `f^[n.succ] x = f (f^[n] x)`；
+  对未应用形式直接取 `.symm` 得无效域（错误 12533），一律
+  `Eq.symm (Function.iterate_succ_apply' f i a)` 先应用成 Eq 再反；
+  (ii) 自由 `i` 的 `i + 1` 不 whnf 归约（Nat.add 首参递归），与 `Nat.succ`/λ-形比较
+  一律 omega 桥（`show … = Nat.succ … from by omega`）。W2 七条：
+  (1) 括号内多行 `by` 块续行缩进必须 ≥ `by` 后首 tactic 列——凡嵌入 term 的证明一律
+  提为前置 `have`；(2) 命名参数 `(x := e : T)` 不合法，须 `(x := (e : T))`；
+  (3) `Set.Subset` 展开含 strict-implicit：`hsub x hx y hy` 多传一参，正确
+  `hsub x hx hy`；(4) `mem_union_left` 首个显式参是**右**集；(5) `/` 与 `•` 优先级：
+  `a / b • c` 解析为 `a / (b • c)`，要 `(a / b) • c` 须加括号；(6) rw 的 `?x - 0`
+  模式只代换**首个实例**（需两次 `sub_zero`）；(7) `push_neg` 本版弃用报警，改
+  `Nat.le_of_not_gt` 直拼。
+- **B→B2a 实证补记（前沿陈述查退化前提）**：上波「前沿陈述交接要查退化前提」的机器
+  实证落定——B2a 证伪 B 交付的前沿 F1 `azimCyclePred_p35`（仅 `W.Finite` + `z ∈ W` +
+  `∃ y ∈ W, y ≠ z`）：反例 `W = {-e, e, 2e}`、轴 `u ⊥ e`、`z = -e`——同射线正倍点对
+  `(e, 2e)` 互看方位恒 0，`azimCycle_p3` 的 ε-argmin 对三点全钉死 ≠ `-e`；修正形
+  `b2AzimCyclePredInj_p35` 加 `hinj : Set.InjOn (azim 0 u z) W`（下游随之新增 `hinjE`
+  前提，由 CR `crAzimInjNbr_p35` 从 fan7 闭出）。凡方位/循环类「纯引理」交接，退化构型
+  （同射线/共线/重点）自检 + 机器反例验证必须前置。
+- **HK3：侦察要 grep 港件全集**：HK2 把前沿 B 的窗口归纳估成 250–350 行新水（KCHMAMG
+  四件套同级）；HK3 实测「步骤 6」= 一次 `kchAzimSequence_p35`（KCHMAMG 面 = HOL
+  `SEQUENCE_OF_RHO_NODE_IS_SUC` 港件，LA35Pre:12007 现成，连同 `kchPosDirect`/
+  `kchAzimSuccesor`/`kchAzimFirst`/`kchAzimSmallest` 家族）调用 + 15 行严格递增链归纳，
+  全块 223 行纯装配、一次定向即闭。根因 = HK2 侦察面只覆盖目标链自身，漏了前段已合入的
+  港件族——定尺（估行数）前按「HOL 原文名」对栈面做一次全树 grep（§2-3 查重前置的侦察版）。
+- **落仓手术：span 机械六坑（编排者 17.1k 行闭包插入 + 22 件消费链迁位、迭代 6 轮实录；
+  仓内结构手术操作规程首例）**：① docstring 开头的声明单元须并入后续声明（span 按
+  「注释块 + 声明」切单元，漏并 = 孤儿 docstring 簇）；② 深度计数必须先剥字符串字面量
+  （仓/前段各有一处字符串含 `/-`）；③ span 尾挂载 docstring 前移后，下一 span 的名字要
+  扫 span 内**第一个声明头**（按首行取名会丢件）；④ 迁移件勿再向前吞 span（首尾相接
+  恒真条件）；⑤ 插入标记注释的闭合符必须是 `-/`（`—/` em-dash 不闭合）；⑥ 禁
+  blind replace ` —/`——会把仓内注释文本变闭合符，一次引爆 101 错。
+- **前沿→接力「预算超支如实记账」模式**：NL 2×≈190 / W 2×≈210 调用均超 110 上限，
+  HK2 2×≈156 / CR / N / J 亦超，全部**如实记 + 超因定位单列**（烧穿二分轮次、接口名差
+  探-修轮次分开报），编排者照收不追责；超支轮次的花费要变现为可复用规则（本节前两条
+  纪律即 W/HK2 烧穿二分的直接产物——W 的 10 轮二分定位出 `kchDartNonColl_p35` 隐式
+  `d` metavar 后置展开 `Prod.fst ↦ 6.8M`，显式 `d` 即解）。对照 §1：无证据的预算抬升
+  是掩盖，如实超支不是。
 
 ### 2026-10-31 · EJRCFJD 合流栈：unifier 烧穿 + 未编译交付（queue 续 124–126）
 
