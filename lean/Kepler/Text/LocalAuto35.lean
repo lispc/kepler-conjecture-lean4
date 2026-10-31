@@ -9857,6 +9857,24 @@ theorem q1_norm_diag_p35 (s : ScsV39) (p q : ℕ) (vv : ℕ → V3)
   rw [← dist_eq_norm]
   exact h1.trans hc
 
+/-- `hEE2` supply for the `vv`-world consumer of `EJRCFJD_p35` (EV28): on the
+cyclic fan `V = range vv`, `E = range {vv i, vv (i+1)}` with `3 ≤ k`, every
+vertex has exactly the two neighbours `vv (i+k-1)`, `vv (i+1)`
+(`wedgeCyclicEE_p35` + `wedgeCyclicNC_p35`; injectivity from `vvInjAux_p35`). -/
+private theorem vvEE2OfBB_p35 (s : ScsV39) (vv : ℕ → V3) (hscs : isScsV39 s)
+    (hBB : BBsV39 s vv) (hk3 : 3 ≤ s.k) :
+    ∀ u ∈ Set.range vv,
+      (EE_p3 u (Set.range fun i => {vv i, vv (i + 1)})).ncard = 2 := by
+  intro u hu
+  obtain ⟨i, rfl⟩ := hu
+  have hinj := vvInjAux_p35 s vv hscs hBB
+  have hper : Periodic vv s.k := hBB.2.1
+  rw [wedgeCyclicEE_p35 hk3 hper hinj rfl i,
+    Set.ncard_insert_of_notMem
+      (show vv (i + s.k - 1) ∉ ({vv (i + 1)} : Set V3) from by
+        simp [wedgeCyclicNC_p35 hk3 hper hinj i])]
+  simp
+
 /-- HOL `EJRCFJD` (Local_lemmas1.hl:5967): the diag-slicing
 convex-local-fan lemma, rendered in the `IsHypE_p35` carrier form (the HOL
 `HS = hypermap (HYP (vec 0,V,E UNION {{v,w}}))` equation becomes the
@@ -9868,10 +9886,20 @@ plan: lkgrqui-qknv2-w2 DELIVERY §3.3).  `EJRCFJD_p8` (LocalAuto8) is the
 NKEZBFC.hl:1685 `slicev/slicee/slicef` rendering of the same HOL family;
 this `_p35` form is the Local_lemmas1.hl:5967 one consumed by
 `QKNVMLB1_LE4F/EQ4F` (the `!x. x IN FF ==> aff_gt {vec 0} {v, w} SUBSET
-wedge_in_fan_gt x E` hypothesis is `TECOXBMv2_p35`'s conclusion). -/
+wedge_in_fan_gt x E` hypothesis is `TECOXBMv2_p35`'s conclusion).
+**EV28 (2026-10-31, user-approved EVOLUTION)**: premise `hEE2` added.  HOL's
+`local_fan` admits no isolated vertex (`darts_of_hyp = ord_pairs ∪
+self_pairs`, localization.hl:42–45, killed by `dih2k`), so `∀ v ∈ V, CARD (EE
+v E) = 2` is a *theorem* there (`LOFA_IMP_EE_TWO_ELMS`).  Our `LocalFan`
+(`hypermapOfFan`, no self_pairs) cannot see isolated vertices, and under such
+a junk `v` the face `HS.face (v, rhoNode1 FF v)` is an unconstrained
+`Classical.epsilon` — the five-premise form is neither provable nor
+refutable.  `hEE2` restores exactly the HOL premise strength (queue 续 133/135,
+lane `ejrcfjd-dw-J-junk-w1` DELIVERY). -/
 theorem EJRCFJD_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3)
     (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
-    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E) :
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
     ∃ HS : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HS ∧
       ConvexLocalFan (vPrime_p3 V (HS.face (v, rhoNode1 FF v)))
         (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
@@ -9928,6 +9956,7 @@ theorem QKNVMLB1_LE4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop
       EJRCFJD_p35 (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
         (Set.range fun i => (vv i, vv (i + 1))) (vv (p % s.k)) (vv (q % s.k))
         hfan0 (IN_IMAGE_VV_p35 vv (p % s.k)) (IN_IMAGE_VV_p35 vv (q % s.k)) huw hwedge
+        (vvEE2OfBB_p35 s vv hscs hBB (by have := h4.1; omega))
     -- the V/E/F_PRIME re-labelling trio identifies the re-indexed sets with
     -- the slice face's vertex/edge/dart sets.
     have hVp := V_PRIME_EQ_V_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
