@@ -683,6 +683,20 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
   重写，unifier 零暴露）；`show` 的 iterate 形改 `rw [… ← Function.iterate_succ_apply' …]`。
 - **写法三律**（§2 第 8 条）：ascription 逐字照抄结论形；iterate 朝向走重写不走 show；
   隐式参数不可由目标决定时显式给。**抬 heartbeats 是红旗**（§1）。
+
+### 2026-10-31 · 深水五车道波：注解 have 二例 + junk-顶点结构性发现（queue 续 131–133）
+
+- **注解 have 烧穿第二例（A 车道，独立复现 §2-8 规则）**：装配上下文中
+  `have hncpv : ¬Collinear3 0 v (ivsRhoNode1 FF v) := …` 带注解形态在特定
+  上下文**确定性**触发 5M 心跳 unifier spin（同表达式在 fresh 上下文正常）；
+  改无注解 `have hncpv := …`（类型由项推断）后 2:46 超时消失为 5 s。教训：
+  烧穿优先试「去注解」这种零风险变换，再查 defeq 暴露面。
+- **junk-顶点结构性发现（C+E 实证 + 编排者定性，J 车道在裁）**：Lean `FAN`
+  （忠实 HOL fan_defs.hl:36–52）无合取支排除孤立顶点；`rhoNode1` =
+  `Classical.epsilon` 空谓词任意值、Hypermap 公理只约束 dart 集内部 ⟹
+  「v ∈ V 但 v ∉ ⋃₀E」时凡结论涉及 `HS.face (v, rhoNode1 FF v)` 的根级陈述
+  **junk-歧义**。凡渲染 HOL 以 `v IN V` + `rho_node1 FF v` 为面的定理，端口
+  时必须先核「v 是真 dart」的来源（HOL 里是定理不是公理）——新根端口检查项。
 - **交付律**（§1）：最终文本整体编译日志随交付；未编译 = 未验证，不得在其上叠车道。
 - **编排者侧**（handoff §5-8～13）：lean CLI 日志 4 KB 块缓冲（日志不动 ≠ 进程不动）；
   `-M` 内存保险丝 + 400k heartbeats 定位 + `sample` 定性；拆段接力探针协议
