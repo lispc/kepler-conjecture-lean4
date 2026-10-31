@@ -687,8 +687,8 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
 - **编排者侧**（handoff §5-8～13）：lean CLI 日志 4 KB 块缓冲（日志不动 ≠ 进程不动）；
   `-M` 内存保险丝 + 400k heartbeats 定位 + `sample` 定性；拆段接力探针协议
   （`$S/la35stack-runbook-w1/LA35-STACK-RUNBOOK.md §0d`）把大栈验证从 40 分钟降到 1–2 分钟；
-  `#print axioms _private.<file>.0.…` 在 lean CLI 解析失败，私有件 axioms 用去 `private`
-  的草稿副本打印。
+  `#print axioms _private.<file>.0.…` 显式 mangled 形在 lean CLI 解析失败；同文件内私有件直接
+  `#print axioms Kepler.Text.X` 即可（输出显示 mangled 名），跨文件才需去 `private` 草稿副本。
 - **kit 律**（§2 第 10 条）：hunk 不夹带无关删改。
 
 ### 2026-09-29 · Wave 6（Merge_ineq 波2a-3 / UPFZBZM W1 / JGXZ 全链 / 双 shim / 双侦察降档）
