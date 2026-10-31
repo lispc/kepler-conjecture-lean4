@@ -533,8 +533,12 @@ else
   [ "$other_new" -le "$nsorry_dels" ] \
     || fail "new sorry lines added ($other_new > $nsorry_dels)"
 fi
-printf '%s\n' "$adds" | filter_not_in "$wcmt" | grep -qE '\b(admit|native_decide)\b' \
+printf '%s\n' "$adds" | grep -vE '^\+[[:space:]]*--' | filter_not_in "$wcmt" | grep -qE '\b(admit|native_decide)\b' \
   && fail "banned token in added lines"  # EV26a: code-only (prose hits the token too)
+  # EVOLUTION 27 (2026-10-31): also drop added `--` line comments — wcmt only
+  # collects BLOCK comments (/- … -/), so a `-- clean: zero sorry/admit/…`
+  # bookkeeping comment in a big landing kit tripped this check (cardff-land-w1).
+  # Line comments cannot contain code tokens by definition of code-only.
 
 # 4. build green (timeout => fail, safe direction; errors in log => fail)
 if ! timeout 3600 lake build "$MODULE" > /tmp/auto_gate_build.log 2>&1; then
