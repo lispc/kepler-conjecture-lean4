@@ -24,6 +24,15 @@
 - **绝不 `git commit`，绝不自己跑 `scripts/auto_gate.sh`**（编排者统一验收：
   `LANE_FILES` 多 lane 轮换 + stash，闸过即 commit+push）；
 - 验收构建必须自然退出（中途掐死时 error 未 flush 是假绿）。
+- **交付必须附最终形态的编译探针日志**（EXIT 码 + 全文件 error 计数 + sorry 计数 +
+  新件 `#print axioms` 行）。「终验被墙钟回收」「中途探针过了」「段探针过了」都不是验收；
+  **最终文本没有整体编译过 = 未验证**，编排者按未验证处理、不得在其上叠加后续车道。
+  （2026-10-31 EJRCFJD 合流栈事故：kchmam6 / monotrig2 两车道约 8 车道小时的交付
+  从未在最终形态编译过——unifier 烧穿与 4 个本版不存在的 Mathlib 名（其中两个早在
+  本表 §5.3 里）两天后才暴露。）
+- **`set_option maxHeartbeats` 超过 400000 必须在报告附 profile 证据**（哪条战术、为何
+  合法地重、`sample`/`diagnostics` 读数）。没有证据的抬预算视为掩盖 unifier 烧穿
+  （kchmam6 给 `KCHMAMG_thm_p35` 抬到 30,000,000，实际修好后 < 400,000），编排者打回。
 
 ## 2. 效率纪律（每条都来自真实战报的教训，见 §6）
 
@@ -44,6 +53,26 @@
 7. **收笔终查**：**最后一枚填完、最后一行改完之后**，必须再跑一次 §3 自查并确认为 0。
    "中途验过 = 终态没验"是真实翻车源（wave1 PA25：末段编辑后未终查，闸门拦下 5 个
    编译错误整单打回）。
+8. **别让 unifier 替你证定理**（unifier 烧穿 = `isDefEq` 被问了一个不是定义等价而是
+   要证的命题，于是确定性地无界展开 `setOf`/`insert`/`Prod.fst`，吃光内存永不返回；
+   2026-10-31 `KCHMAMG_thm_p35` 实录：2h+/43 GB 不终止，unfold 计数 45 万次）：
+   - `have h : T := lemma …` / `show T` / `(e : T)` 的 **T 逐字照抄引理的结论形**。要换
+     形式，先 `have h := lemma …` 不加注，再 `rw`/`simp only` 改写——那是命题重写，不是
+     defeq。两者只差一个「要证的事实」（如 `x0.2 = ρ x0.1`）时必烧。
+   - iterate/fold 类记住定义朝向：`f^[n+1] x` 定义展开为 `f^[n] (f x)`；要 `f (f^[n] x)`
+     走 `Function.iterate_succ_apply'` 重写，**不用 `show`**。
+   - 隐式参数不能由目标唯一决定时显式给（`(d := …)`、`(P := P)`），尤其 dart/pair 投影
+     （diagWire 烧穿同因）；`refine 大引理 … ?_` 让 unifier 对半成品目标猜隐式参数——
+     少用，改 `obtain`/`have` 显式接线。
+9. **「重」还是「坏」一分钟鉴别**：把该件改 `set_option maxHeartbeats 400000 in` 再编——
+   报 `(deterministic) timeout at whnf/isDefEq` 且进程内存随时间无界增长 = 烧穿；
+   `sample <pid> 3 -file x.txt` 热栈满屏 `isExprDefEq*/isDefEqArgs/tryHeuristic/
+   unfoldBothDefEq` = unifier（回第 8 条修），满屏 `Simp`/`Omega`/`Linarith` = 战术本身重
+   （拆小/换战术）；`set_option diagnostics true` 看 unfold 计数，`setOf`/`insert`/
+   `Prod.fst` 数十万次 = ascription/投影病。体内定位用 head 切断二分（每轮 1 分钟）。
+10. **kit 最小化**：diff 只含本轮目标区域的 hunk，不夹带顺手清理（删 `#print`、删注释、
+    改无关缩进）。2026-10-31 尾波 kit 因末 hunk 夹带一行 `#print` 删除，整块对原文被拒，
+    编排者手工重拼。
 
 ## 3. 自查命令（收工必做）
 
@@ -177,6 +206,7 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | CF-4c 杂项 13 条 | `absurd (h : ¬P) (hP : P)` 对 `hcol : P` 类型错——用 `(h hcol).elim`；`Real.sin_sq_add_cos_sq` 出 `^2` 形（喂 `s*s+c*c` 先 `rw [← pow_two, ← pow_two]`）；`pow_mul` 本 toolchain 展开成错误重载 pattern——`(k*‖v‖)²` 类收尾直接 `ring`；**`rcases h with rfl` 在 set-literal 成员上会消错变量**（改 `rcases h with h'|h'` + `rw`）；`inner_sub_left/right` 选向且须显式 args 钉实例（裸 lemma 会先展开 `inner (g-pw) (g-pw)`）；`inner_eq_norm_mul_iff_real` 取 `.1`；嵌套匿名构造器槽位数（∃f,∃a b,6-∧ 共 9 槽）少一个 `?_` 远处报错；`field_simp` 留残差接 `all_goals { ring }`；**`X / hG • v` 解析为 `X / (hG • v)`**——`((…) / hG) • v`；`linarith [hfn t ht]` 可能不取 ∀ 假设——先 `have h0 := hfn t ht` 物化；**affineSpan 刻画 kit（新沉淀可复用）**：`mem_affineSpan_iff_exists` + `vectorSpan_eq_span_vsub_set_left k hp`（p 取集合内一点），affineSpan{0,v1,v2}=span{v1,v2} 双向仅 ~30 行 |
 | rw 旁目标/自动 rfl（TameLp 桥实测） | `rw [带显式假设参的引理]` 不喂参时若假设参嵌在 LHS 模式的函数应用内，unification 留下**以形参名命名**的旁目标（`case hgood ⊢` 形，极易误读为变量 case）——自定义等式引理进 rw 一律显式喂参（`rw … at h` 同引理却正常，形状敏感）；rw 链使目标变成定义等式会**自动 rfl 收尾**——其后手写 rfl 报 "No goals"（先确认）；`Set.Mem`(coe Finset)↔`Finset.Mem` 双向 exact 直递可用（勿多引 mem_coe） |
 | IVT/滤波替代路径（CF-4d 沉淀，可复用） | 本版不存在：`Filter.le_def`（membership 流向 g→f）、`lt_or_le`/`lt_or_ge_of_le`/`Set.Nonempty.intro`/`Set.not_mem_empty`/`tendsto_def`/`ContinuousOn.isClosed_preimage`——替代：`lt_trichotomy`/`eq_or_lt_of_le`/匿名构造/`Set.mem_empty_iff_false`/`Filter.tendsto_iff_eventually`/`ContinuousOn.preimage_isClosed_of_isClosed`；IVT 首穿件现成可抄：`cf4_ivt_first_hit/dec`（ContraFanDeep，sInf S + `IsClosed.isLeast_csInf` + 左邻域夹逼） |
+| 2026-10-31 EJRCFJD 合流栈批（monotrig2 尾波 / hplane2 实测） | `lt_or_le` → `lt_or_ge`；裸 `lt_of_succ_lt` → `Nat.lt_of_succ_lt`；`Collinear.mono` 不存在 → `Collinear.subset`（方向倒置）；`smul_dotProduct` 本版形为 `x • (v ⬝ᵥ w)`（期望 `(c • v) ⬝ᵥ w` 时改走 `smul_eq_mul` + `add_dotProduct`）；`dot_cross_self e v0` 本版形 `w ⬝ᵥ (v ⨯₃ w)`，须先 `dotProduct_comm`；`Finset.mem_singleton_iff` 本版无（`simp only [Finset.mem_singleton]` 显式链）；`module` tactic 失败时 `rw [sub_smul, …]; abel`。**注意：`le_or_lt`/`lt_or_le` 早已在本表，车道仍写旧名——因为交付前根本没编译（见 §1 交付律）** |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -638,6 +668,28 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
   18 已应用 `54fe4ee2`）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
+
+### 2026-10-31 · EJRCFJD 合流栈：unifier 烧穿 + 未编译交付（queue 续 124–126）
+
+- **事实链**：kchmam6（4h+ 超限）交付的 `KCHMAMG_thm_p35` 含一处 ascription
+  `have hnc0 : ¬Collinear ℝ {0, x0.1, ρ x0.1} := kchDartNonColl_p35 …`——引理结论是
+  `{0, d.1, d.2}`，注记把 `d.2` 钉成 `ρ x0.1`，unifier 被迫把几何事实 `x0.2 = ρ x0.1`
+  当 defeq 判 → 无界展开；车道把 heartbeats 抬到 30,000,000 掩盖。monotrig2 在其上合流
+  并交付尾波 5 件（含 `le_or_lt`/`lt_or_le`/`lt_of_succ_lt` 三个本版不存在的名，前两个
+  早在 §5.3 表里）——**从未编译**，诚实披露了「终验被墙钟回收」但编排者未把它当硬债；
+  hplane2 再叠一层后 OOM，三层叠加后地基才被发现从没编过。单体 17.7k 行
+  「2h+/43 GB 跑不完」全系该单件；修好后同一 18k 文件 **50 秒**编完。
+- **修法**：`have h := kchDartNonColl_p35 hkeep hx0FF; rwa [← kchRhoDet_p35 …] at h`（纯句法
+  重写，unifier 零暴露）；`show` 的 iterate 形改 `rw [… ← Function.iterate_succ_apply' …]`。
+- **写法三律**（§2 第 8 条）：ascription 逐字照抄结论形；iterate 朝向走重写不走 show；
+  隐式参数不可由目标决定时显式给。**抬 heartbeats 是红旗**（§1）。
+- **交付律**（§1）：最终文本整体编译日志随交付；未编译 = 未验证，不得在其上叠车道。
+- **编排者侧**（handoff §5-8～13）：lean CLI 日志 4 KB 块缓冲（日志不动 ≠ 进程不动）；
+  `-M` 内存保险丝 + 400k heartbeats 定位 + `sample` 定性；拆段接力探针协议
+  （`$S/la35stack-runbook-w1/LA35-STACK-RUNBOOK.md §0d`）把大栈验证从 40 分钟降到 1–2 分钟；
+  `#print axioms _private.<file>.0.…` 在 lean CLI 解析失败，私有件 axioms 用去 `private`
+  的草稿副本打印。
+- **kit 律**（§2 第 10 条）：hunk 不夹带无关删改。
 
 ### 2026-09-29 · Wave 6（Merge_ineq 波2a-3 / UPFZBZM W1 / JGXZ 全链 / 双 shim / 双侦察降档）
 
