@@ -46,6 +46,11 @@ import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto20
 import Kepler.Text.LocalAuto23
+-- sweep-b24-w2: the SET_EQ diagonal-class transfer kit consumes the
+-- LocalAuto12 propEqu transfer and the FanBaseKit opposite bridge
+-- (both import-acyclic w.r.t. LocalAuto24).
+import Kepler.Text.LocalAuto12
+import Kepler.Text.FanBaseKit
 -- casebank-close-w1 kit: the PROVED LA36 fan bridge
 -- (`convexLocalFan_p4_of_ConvexLocalFan_p36`) + the LA36 prereq cores
 -- (`inNotEmpty_core_p36` / `inB1_core_p36`); acyclic (LA36 imports LA23, no LA24).
@@ -331,7 +336,7 @@ theorem DIAG_EQ_ADD5 (i j : ℕ) :
   have hz2 : j % 5 < 5 := Nat.mod_lt j (by omega)
   interval_cases i % 5 <;> interval_cases j % 5 <;> simp [scsDiag] <;> omega
 
-/-! ### B1. The bounded-pentagon implications (`BB`/`MM`), pentagons.hl:125-559 -/
+/-! ### B1. The bounded-pentagon implications (`BB`/`MM`), pentagons.hl:125-559 — the four `MM_5x_IMP_MM_5M2` arrows are relocated below the Section B7 kit in sweep-b24-w2 (statements byte-identical). -/
 
 /-- HOL `BB_5I1_IS_BB_5M2` (OTMTOTJ.hl:125). -/
 theorem BB_5I1_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I1 v)
@@ -340,30 +345,12 @@ theorem BB_5I1_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I1 v)
   sorry
   -- DISCHARGES: pentagons.hl `SCS_TAC` case work on `scs_5I1`/`scs_5M2`.
 
-/-- HOL `MM_5I1_IMP_MM_5M2` (OTMTOTJ.hl:223). -/
-theorem MM_5I1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I1)
-    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
-    MMsV39 scs5M2 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
-  -- `scs5I1` instance: `MMS_IMP_BBS` + `BB_5I1_IS_BB_5M2`; witness is the
-  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
-
 /-- HOL `BB_5I2_IS_BB_5M2` (OTMTOTJ.hl:239). -/
 theorem BB_5I2_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I2 v)
     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
     BBsV39 scs5M2 v := by
   sorry
   -- DISCHARGES: pentagons.hl `SCS_TAC` case work on `scs_5I2`/`scs_5M2`.
-
-/-- HOL `MM_5I2_IMP_MM_5M2` (OTMTOTJ.hl:337). -/
-theorem MM_5I2_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I2)
-    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
-    MMsV39 scs5M2 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
-  -- `scs5I2` instance: `MMS_IMP_BBS` + `BB_5I2_IS_BB_5M2`; witness is the
-  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
 
 /-- HOL `BB_5I3_IS_BB_5M2` (OTMTOTJ.hl:354). -/
 theorem BB_5I3_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I3 v)
@@ -372,30 +359,12 @@ theorem BB_5I3_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I3 v)
   sorry
   -- DISCHARGES: pentagons.hl `SCS_TAC` case work on `scs_5I3`/`scs_5M2`.
 
-/-- HOL `MM_5I3_IMP_MM_5M2` (OTMTOTJ.hl:462). -/
-theorem MM_5I3_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I3)
-    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
-    MMsV39 scs5M2 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
-  -- `scs5I3` instance: `MMS_IMP_BBS` + `BB_5I3_IS_BB_5M2`; witness is the
-  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
-
 /-- HOL `BB_5M1_IS_BB_5M2` (OTMTOTJ.hl:478). -/
 theorem BB_5M1_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5M1 v)
     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
     BBsV39 scs5M2 v := by
   sorry
   -- DISCHARGES: pentagons.hl `SCS_TAC` case work on `scs_5M1`/`scs_5M2`.
-
-/-- HOL `MM_5M1_IMP_MM_5M2` (OTMTOTJ.hl:535). -/
-theorem MM_5M1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5M1)
-    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
-    MMsV39 scs5M2 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
-  -- `scs5M1` instance: `MMS_IMP_BBS` + `BB_5M1_IS_BB_5M2`; witness is the
-  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
 
 /-! ### B2. Diag-stabilisation of the pentagons keeps `MMs` (OTMTOTJ.hl:553-696) -/
 
@@ -772,132 +741,6 @@ private theorem la24a5M1_le_cstab_p24 (i j : ℕ) : scs5M1.a i j ≤ cstab := by
   interval_cases i % 5 <;> interval_cases j % 5 <;>
     simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
 
-/-! ### B3. The `BERAK` arrows (OTMTOTJ.hl:699-954) -/
-
-/-- HOL `SCS_5I1_BERAK_BY_CSTAB` (OTMTOTJ.hl:699). -/
-theorem SCS_5I1_BERAK_BY_CSTAB :
-    scsArrowV39 {scs5I1} ({scs5M2} ∪ {x | ∃ i j, scsDiag 5 i j ∧
-      x = scsStabDiagV39 scs5I1 i j}) := by
-  refine ⟨fun s hs => ?_, ?_⟩
-  · rcases (Set.mem_union _ _ _).mp hs with hs | ⟨i, j, hd, rfl⟩
-    · rw [Set.mem_singleton_iff] at hs
-      subst s
-      exact SCS_5M2_IS_SCS
-    · have hk3 : (3 : ℕ) < scs5I1.k := by show (3 : ℕ) < 5; norm_num
-      exact (YRTAFYH_concl scs5I1 i j SCS_5I1_IS_SCS SCS_5I1_BASIC hk3 hd
-        (la24a5I1_le_cstab_p24 i j)).1
-  · by_cases hE : ∀ s ∈ ({scs5I1} : Set ScsV39), MMsV39 s = ∅
-    · exact Or.inl hE
-    · push_neg at hE
-      obtain ⟨s, hs, hne⟩ := hE
-      rw [Set.mem_singleton_iff] at hs
-      subst s
-      obtain ⟨v, hv⟩ := hne
-      by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
-      · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
-        exact MM_5I1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
-      · push_neg at hdiag
-        obtain ⟨i, j, hdij, hle⟩ := hdiag
-        refine Or.inr ⟨scsStabDiagV39 scs5I1 i j, ?_, ?_⟩
-        · simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq]
-          exact Or.inr ⟨i, j, hdij, rfl⟩
-        · intro hcon
-          rw [Set.eq_empty_iff_forall_notMem] at hcon
-          exact hcon v (SCS_5I1_STAB_DIAG v i j hv hdij hle)
-
-/-- HOL `SCS_5I2_BERAK_BY_CSTAB` (OTMTOTJ.hl:761). -/
-theorem SCS_5I2_BERAK_BY_CSTAB :
-    scsArrowV39 {scs5I2} ({scs5M2} ∪ {x | ∃ i j, scsDiag 5 i j ∧
-      x = scsStabDiagV39 scs5I2 i j}) := by
-  refine ⟨fun s hs => ?_, ?_⟩
-  · rcases (Set.mem_union _ _ _).mp hs with hs | ⟨i, j, hd, rfl⟩
-    · rw [Set.mem_singleton_iff] at hs
-      subst s
-      exact SCS_5M2_IS_SCS
-    · have hk3 : (3 : ℕ) < scs5I2.k := by show (3 : ℕ) < 5; norm_num
-      exact (YRTAFYH_concl scs5I2 i j SCS_5I2_IS_SCS SCS_5I2_BASIC hk3 hd
-        (la24a5I2_le_cstab_p24 i j)).1
-  · by_cases hE : ∀ s ∈ ({scs5I2} : Set ScsV39), MMsV39 s = ∅
-    · exact Or.inl hE
-    · push_neg at hE
-      obtain ⟨s, hs, hne⟩ := hE
-      rw [Set.mem_singleton_iff] at hs
-      subst s
-      obtain ⟨v, hv⟩ := hne
-      by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
-      · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
-        exact MM_5I2_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
-      · push_neg at hdiag
-        obtain ⟨i, j, hdij, hle⟩ := hdiag
-        refine Or.inr ⟨scsStabDiagV39 scs5I2 i j, ?_, ?_⟩
-        · simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq]
-          exact Or.inr ⟨i, j, hdij, rfl⟩
-        · intro hcon
-          rw [Set.eq_empty_iff_forall_notMem] at hcon
-          exact hcon v (SCS_5I2_STAB_DIAG v i j hv hdij hle)
-
-/-- HOL `SCS_5I3_BERAK_BY_CSTAB` (OTMTOTJ.hl:826). -/
-theorem SCS_5I3_BERAK_BY_CSTAB :
-    scsArrowV39 {scs5I3} ({scs5M2} ∪ {x | ∃ i j, scsDiag 5 i j ∧
-      x = scsStabDiagV39 scs5I3 i j}) := by
-  refine ⟨fun s hs => ?_, ?_⟩
-  · rcases (Set.mem_union _ _ _).mp hs with hs | ⟨i, j, hd, rfl⟩
-    · rw [Set.mem_singleton_iff] at hs
-      subst s
-      exact SCS_5M2_IS_SCS
-    · have hk3 : (3 : ℕ) < scs5I3.k := by show (3 : ℕ) < 5; norm_num
-      exact (YRTAFYH_concl scs5I3 i j SCS_5I3_IS_SCS SCS_5I3_BASIC hk3 hd
-        (la24a5I3_le_cstab_p24 i j)).1
-  · by_cases hE : ∀ s ∈ ({scs5I3} : Set ScsV39), MMsV39 s = ∅
-    · exact Or.inl hE
-    · push_neg at hE
-      obtain ⟨s, hs, hne⟩ := hE
-      rw [Set.mem_singleton_iff] at hs
-      subst s
-      obtain ⟨v, hv⟩ := hne
-      by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
-      · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
-        exact MM_5I3_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
-      · push_neg at hdiag
-        obtain ⟨i, j, hdij, hle⟩ := hdiag
-        refine Or.inr ⟨scsStabDiagV39 scs5I3 i j, ?_, ?_⟩
-        · simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq]
-          exact Or.inr ⟨i, j, hdij, rfl⟩
-        · intro hcon
-          rw [Set.eq_empty_iff_forall_notMem] at hcon
-          exact hcon v (SCS_5I3_STAB_DIAG v i j hv hdij hle)
-
-/-- HOL `SCS_5M1_BERAK_BY_CSTAB` (OTMTOTJ.hl:890). -/
-theorem SCS_5M1_BERAK_BY_CSTAB :
-    scsArrowV39 {scs5M1} ({scs5M2} ∪ {x | ∃ i j, scsDiag 5 i j ∧
-      x = scsStabDiagV39 scs5M1 i j}) := by
-  refine ⟨fun s hs => ?_, ?_⟩
-  · rcases (Set.mem_union _ _ _).mp hs with hs | ⟨i, j, hd, rfl⟩
-    · rw [Set.mem_singleton_iff] at hs
-      subst s
-      exact SCS_5M2_IS_SCS
-    · have hk3 : (3 : ℕ) < scs5M1.k := by show (3 : ℕ) < 5; norm_num
-      exact (YRTAFYH_concl scs5M1 i j SCS_5M1_IS_SCS SCS_5M1_BASIC hk3 hd
-        (la24a5M1_le_cstab_p24 i j)).1
-  · by_cases hE : ∀ s ∈ ({scs5M1} : Set ScsV39), MMsV39 s = ∅
-    · exact Or.inl hE
-    · push_neg at hE
-      obtain ⟨s, hs, hne⟩ := hE
-      rw [Set.mem_singleton_iff] at hs
-      subst s
-      obtain ⟨v, hv⟩ := hne
-      by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
-      · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
-        exact MM_5M1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
-      · push_neg at hdiag
-        obtain ⟨i, j, hdij, hle⟩ := hdiag
-        refine Or.inr ⟨scsStabDiagV39 scs5M1 i j, ?_, ?_⟩
-        · simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq]
-          exact Or.inr ⟨i, j, hdij, rfl⟩
-        · intro hcon
-          rw [Set.eq_empty_iff_forall_notMem] at hcon
-          exact hcon v (SCS_5M1_STAB_DIAG v i j hv hdij hle)
-
 /-! ### B4. Diag-set identities over k = 5 (OTMTOTJ.hl:971-1153) -/
 
 /-- `_p24` substrate: `scs_stab_diag_v39` index reduction, first coordinate
@@ -1045,11 +888,609 @@ theorem SET_STAB_5M1 :
     exact ⟨i, j, (DIAG_MOD 5 i j (by omega)).mp hd,
       STAB_MOD scs5M1 i j SCS_5M1_IS_SCS⟩
 
+/-! ### B4.9 (sweep-b24-w2): the private diagonal-class transfer kit
+
+The three `SET_EQ_DIAG_STAB_*` arrows are discharged class-by-class: the
+five diagonal stabilisations of a `k = 5` system are cyclic re-indexings
+(`scs_prop_equ_v39`; LocalAuto12 `TRANS_MMS_SUBSET`/`YXIONXL3`) of the
+`(0,2)` one — except the `5M1` `(1,3)`/`(1,4)` classes, which are reached
+through the opposite re-indexing (`scs_opp_v39`; the OppKit sweep below +
+FanBaseKit `MM_SCS_OPP_fb`), exactly the HOL `YXIONXL2`/`YXIONXL3` +
+`PROP_OPP_DIAG_5M1_*` route of OTMTOTJ.hl:1395. -/
+
+/-- `Periodic2` iteration (LA1-style clone for this file). -/
+private theorem swb_periodic2_mul_p24 {α : Sort u} {f : ℕ → ℕ → α} {k : ℕ}
+    (h : Periodic2 f k) : ∀ n x y, f (x + n * k) y = f x y ∧ f x (y + n * k) = f x y := by
+  intro n
+  induction n with
+  | zero => intro x y; simp
+  | succ m ih =>
+      intro x y
+      obtain ⟨ih1, ih2⟩ := ih x y
+      constructor
+      · have he : x + (m + 1) * k = (x + m * k) + k := by rw [Nat.succ_mul, Nat.add_assoc]
+        rw [he, (h (x + m * k) y).1]
+        exact ih1
+      · have he : y + (m + 1) * k = (y + m * k) + k := by rw [Nat.succ_mul, Nat.add_assoc]
+        rw [he, (h x (y + m * k)).2]
+        exact ih2
+
+/-- `scs_prop_equ_v39` composition. -/
+private theorem swb_pe_comp_p24 (s : ScsV39) (a b : ℕ) :
+    scsPropEquV39 (scsPropEquV39 s b) a = scsPropEquV39 s (a + b) := by
+  obtain ⟨k, d, a₁, am, bm, b₁, J, lo, hi, str⟩ := s
+  simp only [scsPropEquV39]
+  congr 1 <;> (first
+    | rfl
+    | (funext x; simp only [Nat.add_assoc, Nat.add_left_comm])
+    | (funext x y; simp only [Nat.add_assoc, Nat.add_left_comm]))
+
+set_option maxHeartbeats 1000000 in
+private theorem swb_pe_mul_p24 (s : ScsV39) (n : ℕ) (hs : isScsV39 s) :
+    scsPropEquV39 s (n * s.k) = s := by
+  obtain ⟨k, d, a₁, am, bm, b₁, J, lo, hi, str⟩ := s
+  obtain ⟨hd, h3, h6, hplo, hphi, hpstr, -, hpa, hpam, hpbm, hpb, hpJ, -, -, -, -, -, -,
+    -, -, -⟩ := hs
+  simp only [scsPropEquV39]
+  congr 1 <;> (first
+    | rfl
+    | (funext x; rw [Nat.add_comm (n * k) x]; exact la24periodic_mul hplo n x)
+    | (funext x; rw [Nat.add_comm (n * k) x]; exact la24periodic_mul hphi n x)
+    | (funext x; rw [Nat.add_comm (n * k) x]; exact la24periodic_mul hpstr n x)
+    | (funext x y; rw [Nat.add_comm (n * k) x, Nat.add_comm (n * k) y];
+        exact (swb_periodic2_mul_p24 hpa n x (y + n * k)).1.trans
+          (swb_periodic2_mul_p24 hpa n x y).2)
+    | (funext x y; rw [Nat.add_comm (n * k) x, Nat.add_comm (n * k) y];
+        exact (swb_periodic2_mul_p24 hpam n x (y + n * k)).1.trans
+          (swb_periodic2_mul_p24 hpam n x y).2)
+    | (funext x y; rw [Nat.add_comm (n * k) x, Nat.add_comm (n * k) y];
+        exact (swb_periodic2_mul_p24 hpbm n x (y + n * k)).1.trans
+          (swb_periodic2_mul_p24 hpbm n x y).2)
+    | (funext x y; rw [Nat.add_comm (n * k) x, Nat.add_comm (n * k) y];
+        exact (swb_periodic2_mul_p24 hpb n x (y + n * k)).1.trans
+          (swb_periodic2_mul_p24 hpb n x y).2)
+    | (funext x y; rw [Nat.add_comm (n * k) x, Nat.add_comm (n * k) y];
+        exact (swb_periodic2_mul_p24 hpJ n x (y + n * k)).1.trans
+          (swb_periodic2_mul_p24 hpJ n x y).2))
+
+-- The `5M1` `(1,3)` diagonal class is opposite-fixed: the stabilised
+-- `(0,3)` system is the `3`-reindexed opposite of the stabilised `(1,3)` one
+-- (HOL `PROP_OPP_DIAG_5M1_03`, OTMTOTJ.hl:1285; private re-proof after the
+-- LA32 `PROP_OPP_DIAG_4M8_13_p32` recipe).
+set_option maxHeartbeats 1000000 in
+private theorem swb_prop_opp_5M1_13_p24 :
+    scsStabDiagV39 scs5M1 0 3 =
+      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs5M1 1 3)) 3 := by
+  rw [STAB_SYM scs5M1 0 3, STAB_SYM scs5M1 1 3]
+  simp only [scsStabDiagV39, scs5M1, mkUnadornedV39, scsPropEquV39, scsOppV39, peropp2]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, rfl, rfl, rfl, rfl⟩
+  all_goals
+    funext j j'
+    have h1 : j % 5 < 5 := Nat.mod_lt j (by omega)
+    have h2 : j' % 5 < 5 := Nat.mod_lt j' (by omega)
+    try rw [← funlist_mod_p20
+      [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0), ((1, 3), 2 * h0),
+        ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 j j' (by omega)]
+    try rw [← PSORT_MOD 5 j j' (by omega)]
+    try rw [← funlist_mod_p20
+      [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6), ((1, 4), 6),
+        ((2, 4), 6)] (2 * h0) 5 j j' (by omega)]
+    rw [Nat.add_mod 3 j 5, Nat.add_mod 3 j' 5]
+    interval_cases j % 5 <;> interval_cases j' % 5 <;>
+      (first
+        | rfl
+        | simp [funlistV39, psort, assocdV39]
+        | norm_num
+        | norm_num [h0, cstab]
+        | omega)
+
+-- The `(1,4)` twin: the stabilised `(0,2)` system is the `3`-reindexed
+-- opposite of the stabilised `(1,4)` one (HOL `PROP_OPP_DIAG_5M1_02`,
+-- OTMTOTJ.hl:1323; private re-proof after the LA32 recipe).
+set_option maxHeartbeats 1000000 in
+private theorem swb_prop_opp_5M1_02_p24 :
+    scsStabDiagV39 scs5M1 0 2 =
+      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs5M1 1 4)) 3 := by
+  rw [STAB_SYM scs5M1 0 2, STAB_SYM scs5M1 1 4]
+  simp only [scsStabDiagV39, scs5M1, mkUnadornedV39, scsPropEquV39, scsOppV39, peropp2]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, rfl, rfl, rfl, rfl⟩
+  all_goals
+    funext j j'
+    have h1 : j % 5 < 5 := Nat.mod_lt j (by omega)
+    have h2 : j' % 5 < 5 := Nat.mod_lt j' (by omega)
+    try rw [← funlist_mod_p20
+      [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0), ((1, 3), 2 * h0),
+        ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 j j' (by omega)]
+    try rw [← PSORT_MOD 5 j j' (by omega)]
+    try rw [← funlist_mod_p20
+      [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6), ((1, 4), 6),
+        ((2, 4), 6)] (2 * h0) 5 j j' (by omega)]
+    rw [Nat.add_mod 3 j 5, Nat.add_mod 3 j' 5]
+    interval_cases j % 5 <;> interval_cases j' % 5 <;>
+      (first
+        | rfl
+        | simp [funlistV39, psort, assocdV39]
+        | norm_num
+        | norm_num [h0, cstab]
+        | omega)
+
+/-- `psort` equality from unordered residue congruence (backward direction
+of `la1psort_cases`). -/
+private theorem swb_psort_mod_eq_p24 (k a b c d : ℕ) (hk : k ≠ 0)
+    (h : (a % k = c % k ∧ b % k = d % k) ∨ (a % k = d % k ∧ b % k = c % k)) :
+    psort k (a, b) = psort k (c, d) := by
+  rw [← PSORT_MOD k a b hk, ← PSORT_MOD k c d hk]
+  rcases h with ⟨e1, e2⟩ | ⟨e1, e2⟩
+  · rw [e1, e2]
+  · rw [psort_swap_p20 k (a % k) (b % k), e1, e2]
+
+/-- A stabilisation depends only on the residue class of its pair. -/
+private theorem swb_stab_class_p24 (s : ScsV39) (hk : s.k = 5) (hb : scsBasicV39 s)
+    (i j i' j' : ℕ) (hcls : psort 5 (i, j) = psort 5 (i', j')) :
+    scsStabDiagV39 s i j = scsStabDiagV39 s i' j' := by
+  have he : psort s.k (i, j) = psort 5 (i, j) := by rw [hk]
+  have he' : psort s.k (i', j') = psort 5 (i', j') := by rw [hk]
+  have w1 : scsBasicV39 (scsStabDiagV39 s i j) :=
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  have w2 : scsBasicV39 (scsStabDiagV39 s i' j') :=
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  refine scs_inj _ _ w1 w2 rfl rfl rfl ?_
+  funext x y
+  show (if psort s.k (i, j) = psort s.k (x, y) then cstab else s.b x y) =
+      (if psort s.k (i', j') = psort s.k (x, y) then cstab else s.b x y)
+  rw [he, he', hcls]
+
+/-- `csAdj` is residue-determined: the value at `(i % k, j % k)` equals the
+value at `(i, j)`. -/
+private theorem swb_csAdj_mod_p24 {k : ℕ} (a1 a2 : ℝ) (i j : ℕ) :
+    csAdj k a1 a2 (i % k) (j % k) = csAdj k a1 a2 i j := by
+  unfold csAdj
+  simp only [Nat.mod_mod]
+  rw [Nat.mod_add_mod i k 1, Nat.mod_add_mod j k 1]
+
+/-- `csAdj 5 a1 a2` is invariant under a common index shift (its value
+depends only on the residue-difference class of the pair). -/
+private theorem swb_rot_csAdj_p24 (a1 a2 : ℝ) (t x y : ℕ) :
+    csAdj 5 a1 a2 (x + t) (y + t) = csAdj 5 a1 a2 x y := by
+  have bx : x % 5 < 5 := Nat.mod_lt x (by omega)
+  have byb : y % 5 < 5 := Nat.mod_lt y (by omega)
+  have bt : t % 5 < 5 := Nat.mod_lt t (by omega)
+  have e1 : (x + t) % 5 = (x % 5 + t % 5) % 5 := by omega
+  have e2 : (y + t) % 5 = (y % 5 + t % 5) % 5 := by omega
+  have e3 : (x + t + 1) % 5 = (x % 5 + t % 5 + 1) % 5 := by omega
+  have e4 : (y + t + 1) % 5 = (y % 5 + t % 5 + 1) % 5 := by omega
+  have g1 : (x + 1) % 5 = (x % 5 + 1) % 5 := by omega
+  have g2 : (y + 1) % 5 = (y % 5 + 1) % 5 := by omega
+  unfold csAdj
+  by_cases hD : x % 5 = y % 5
+  · rw [if_pos (show (x + t) % 5 = (y + t) % 5 from by omega), if_pos hD]
+  · rw [if_neg hD, if_neg (show (x + t) % 5 ≠ (y + t) % 5 from by omega)]
+    by_cases hA : y % 5 = (x + 1) % 5 ∨ (y + 1) % 5 = x % 5
+    · rcases hA with hA | hA
+      · rw [if_pos (show (y + t) % 5 = (x + t + 1) % 5 ∨
+          (y + t + 1) % 5 = (x + t) % 5 from Or.inl (by omega)),
+          if_pos (Or.inl hA)]
+      · rw [if_pos (show (y + t) % 5 = (x + t + 1) % 5 ∨
+          (y + t + 1) % 5 = (x + t) % 5 from Or.inr (by omega)),
+          if_pos (Or.inr hA)]
+    · rw [if_neg hA,
+        if_neg (show ¬((y + t) % 5 = (x + t + 1) % 5 ∨
+          (y + t + 1) % 5 = (x + t) % 5) from by omega)]
+
+/-- Cyclic-reindexing form of a diagonal stabilisation: the `(0, 2)` class
+stabilisation, re-indexed by `t` (with the tables `hrot`-shift-invariant),
+is the stabilisation of the shifted class. -/
+private theorem swb_stab_pe_p24 (s : ScsV39) (hk : s.k = 5) (hb : scsBasicV39 s)
+    (u v u' v' t : ℕ)
+    (hrot : ∀ x y : ℕ, s.a (x + t) (y + t) = s.a x y ∧ s.b (x + t) (y + t) = s.b x y)
+    (hcls : psort 5 (u' + t, v' + t) = psort 5 (u, v)) :
+    scsPropEquV39 (scsStabDiagV39 s u v) t = scsStabDiagV39 s u' v' := by
+  have hun1 : scsBasicV39 (scsPropEquV39 (scsStabDiagV39 s u v) t) :=
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  have hun2 : scsBasicV39 (scsStabDiagV39 s u' v') :=
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  refine scs_inj _ _ hun1 hun2 rfl rfl ?_ ?_
+  · funext x y
+    show s.a (t + x) (t + y) = s.a x y
+    rw [Nat.add_comm t x, Nat.add_comm t y]
+    exact (hrot x y).1
+  · funext x y
+    have he : psort s.k (u, v) = psort 5 (u, v) := by rw [hk]
+    have he2 : psort s.k (u', v') = psort 5 (u', v') := by rw [hk]
+    show (if psort s.k (u, v) = psort s.k (t + x, t + y) then cstab
+        else s.b (t + x) (t + y)) =
+      (if psort s.k (u', v') = psort s.k (x, y) then cstab else s.b x y)
+    rw [he, he2]
+    have he3 : psort s.k (t + x, t + y) = psort 5 (t + x, t + y) := by rw [hk]
+    have he4 : psort s.k (x, y) = psort 5 (x, y) := by rw [hk]
+    rw [he3, he4]
+    have G : ∀ a b : ℕ, psort 5 (t + a, t + b) = psort 5 (u, v) ↔
+        psort 5 (a, b) = psort 5 (u', v') := by
+      intro a b
+      constructor <;> intro hh
+      · rcases psort_eq_cases_p20 hh with ⟨e1, e2⟩ | ⟨e1, e2⟩
+        · exact swb_psort_mod_eq_p24 5 a b u' v' (by norm_num)
+            (by rcases psort_eq_cases_p20 hcls with ⟨f1, f2⟩ | ⟨f1, f2⟩
+                · exact Or.inl ⟨by omega, by omega⟩
+                · exact Or.inr ⟨by omega, by omega⟩)
+        · exact swb_psort_mod_eq_p24 5 a b u' v' (by norm_num)
+            (by rcases psort_eq_cases_p20 hcls with ⟨f1, f2⟩ | ⟨f1, f2⟩
+                · exact Or.inr ⟨by omega, by omega⟩
+                · exact Or.inl ⟨by omega, by omega⟩)
+      · rcases psort_eq_cases_p20 hh with ⟨e1, e2⟩ | ⟨e1, e2⟩
+        · exact swb_psort_mod_eq_p24 5 (t + a) (t + b) u v (by norm_num)
+            (by rcases psort_eq_cases_p20 hcls with ⟨f1, f2⟩ | ⟨f1, f2⟩
+                · exact Or.inl ⟨by omega, by omega⟩
+                · exact Or.inr ⟨by omega, by omega⟩)
+        · exact swb_psort_mod_eq_p24 5 (t + a) (t + b) u v (by norm_num)
+            (by rcases psort_eq_cases_p20 hcls with ⟨f1, f2⟩ | ⟨f1, f2⟩
+                · exact Or.inr ⟨by omega, by omega⟩
+                · exact Or.inl ⟨by omega, by omega⟩)
+    by_cases hc1 : psort 5 (u, v) = psort 5 (t + x, t + y)
+    · rw [if_pos hc1, if_pos (((G x y).mp hc1.symm).symm)]
+    · rw [if_neg hc1,
+        if_neg (fun h => hc1 (((G x y).mpr h.symm).symm)), Nat.add_comm t x,
+        Nat.add_comm t y]
+      exact (hrot x y).2
+
+/-- Diagonal classes of a `k = 5` pair sit at distance two. -/
+private theorem swb_diag5_pair_p24 {i j : ℕ} (hd : scsDiag 5 i j) :
+    i % 5 = (j % 5 + 2) % 5 ∨ j % 5 = (i % 5 + 2) % 5 := by
+  obtain ⟨hd1, hd2, hd3⟩ := hd
+  have b1 : i % 5 < 5 := Nat.mod_lt i (by omega)
+  have b2 : j % 5 < 5 := Nat.mod_lt j (by omega)
+  have h1 : (i + 1) % 5 = (i % 5 + 1) % 5 := (Nat.mod_add_mod i 5 1).symm
+  have h2 : (j + 1) % 5 = (j % 5 + 1) % 5 := (Nat.mod_add_mod j 5 1).symm
+  rw [h1] at hd2
+  rw [h2] at hd3
+  interval_cases i % 5 <;> interval_cases j % 5 <;> omega
+
+/-- The `dist-2` diagonal stabilisations are cyclic re-indexings of the
+`(0,2)` one (tables `hrot`-shift-invariant). -/
+private theorem swb_stab5_pe_p24 (s : ScsV39) (hk : s.k = 5) (hb : scsBasicV39 s)
+    (i j : ℕ)
+    (hrot : ∀ x y : ℕ, s.a (x + (5 - j % 5)) (y + (5 - j % 5)) = s.a x y ∧
+      s.b (x + (5 - j % 5)) (y + (5 - j % 5)) = s.b x y)
+    (hsum : i % 5 = (j % 5 + 2) % 5) :
+    scsStabDiagV39 s i j = scsPropEquV39 (scsStabDiagV39 s 0 2) (5 - j % 5) := by
+  have hzj : j % 5 < 5 := Nat.mod_lt j (by omega)
+  have hcls1 : psort 5 (i, j) = psort 5 (j % 5, (j % 5 + 2) % 5) := by
+    rw [← PSORT_MOD 5 i j (by norm_num), psort_swap_p20 5 (i % 5) (j % 5), hsum]
+  have hstep1 : scsStabDiagV39 s i j = scsStabDiagV39 s (j % 5) ((j % 5 + 2) % 5) :=
+    swb_stab_class_p24 s hk hb i j (j % 5) ((j % 5 + 2) % 5) hcls1
+  rw [hstep1]
+  refine (swb_stab_pe_p24 s hk hb 0 2 (j % 5) ((j % 5 + 2) % 5) (5 - j % 5) hrot ?_).symm
+  rw [← PSORT_MOD 5 (j % 5 + (5 - j % 5)) ((j % 5 + 2) % 5 + (5 - j % 5)) (by norm_num),
+    (by omega : (j % 5 + (5 - j % 5)) % 5 = 0),
+    (by omega : ((j % 5 + 2) % 5 + (5 - j % 5)) % 5 = 2)]
+
+/-- `MMs`-nonemptiness descends through a cyclic re-indexing. -/
+private theorem swb_mms_pe_inv_p24 (s : ScsV39) (t : ℕ) (hs : isScsV39 s)
+    (h : (MMsV39 (scsPropEquV39 s t)).Nonempty) : (MMsV39 s).Nonempty := by
+  have hk0 : s.k ≠ 0 := by have := hs.2.1; omega
+  have hpe : scsPropEquV39 (scsPropEquV39 s t) (s.k - t % s.k) = s := by
+    have h1 : scsPropEquV39 (scsPropEquV39 s t) (s.k - t % s.k) =
+        scsPropEquV39 s (s.k - t % s.k + t) :=
+      swb_pe_comp_p24 s (s.k - t % s.k) t
+    rw [h1]
+    have ht : s.k - t % s.k + t = (t / s.k + 1) * s.k := by
+      have hlt : t % s.k < s.k := Nat.mod_lt t (by omega)
+      have hdm := Nat.div_add_mod t s.k
+      have h2 : (t / s.k + 1) * s.k = s.k * (t / s.k) + s.k := by
+        rw [Nat.add_mul, Nat.one_mul, Nat.mul_comm (t / s.k) s.k]
+      rw [h2]
+      omega
+    rw [ht, swb_pe_mul_p24 s (t / s.k + 1) hs]
+  obtain ⟨v, hv⟩ := h
+  have h2 := TRANS_MMS_SUBSET (PROP_EQU_IS_SCS rfl hs t) hv (s.k - t % s.k)
+  rw [hpe] at h2
+  exact ⟨_, h2⟩
+
+/-- Residue `φ x = k - (x % k + 1)` is below `k` for `1 ≤ k`. -/
+private theorem swbopp_phi_lt {k : ℕ} (hk : 1 ≤ k) (x : ℕ) :
+    k - (x % k + 1) < k := by
+  have h : x % k < k := Nat.mod_lt x (by omega)
+  omega
+
+/-- Equal residues below `k` give equal indices. -/
+private theorem swbopp_mod_eq {k p q : ℕ} (h : p % k = q % k) (hp : p < k)
+    (hq : q < k) : p = q := by
+  have h1 : p % k = p := Nat.mod_eq_of_lt hp
+  have h2 : q % k = q := Nat.mod_eq_of_lt hq
+  omega
+
+/-- HOL `OPP_SUC_MOD` (YXIONXL2.hl:381): `φ` is an involution on residues. -/
+private theorem swbopp_phi_inv {k : ℕ} (hk : k ≠ 0) (x : ℕ) :
+    k - ((k - (x % k + 1)) % k + 1) = x % k := by
+  have hlt : x % k < k := Nat.mod_lt x (by omega)
+  have h1 : (k - (x % k + 1)) % k = k - (x % k + 1) :=
+    Nat.mod_eq_of_lt (by have := hlt; omega)
+  rw [h1]
+  omega
+
+/-- The `φ`-pair `(φ i, φ (i + 1))` is a reversed adjacent pair modulo `k`:
+`φ i = (φ (i + 1) + 1) % k`. -/
+private theorem swbopp_pair_adj {k : ℕ} (hk : 1 ≤ k) (i : ℕ) :
+    k - (i % k + 1) = (k - ((i + 1) % k + 1) + 1) % k := by
+  have hi : i % k < k := Nat.mod_lt i (by omega)
+  by_cases hlt : i % k + 1 < k
+  · have hw1 : (i + 1) % k = i % k + 1 := by
+      rw [← Nat.mod_add_mod i k 1]
+      exact Nat.mod_eq_of_lt hlt
+    rw [hw1]
+    have hR : k - (i % k + 1 + 1) + 1 < k := by have := hi; omega
+    rw [Nat.mod_eq_of_lt hR]
+    omega
+  · have heq : i % k + 1 = k := by omega
+    have hw1 : (i + 1) % k = 0 := by
+      rw [← Nat.mod_add_mod i k 1, heq, Nat.mod_self]
+    rw [hw1, heq, Nat.sub_self]
+    have hR : k - (0 + 1 : ℕ) + 1 = k := by omega
+    rw [hR, Nat.mod_self]
+
+/-- Orientation swap: if the `φ`-pair satisfies `φ y % k = (φ x + 1) % k`
+then `x % k = (y + 1) % k` (transports the `s.J`-adjacency through the
+opposite re-indexing, orientations swapped). -/
+private theorem swbopp_adj_swap {k : ℕ} (hk : 1 ≤ k) {x y : ℕ}
+    (h : (k - (y % k + 1)) % k = (k - (x % k + 1) + 1) % k) :
+    x % k = (y + 1) % k := by
+  have hx : x % k < k := Nat.mod_lt x (by omega)
+  have hy : y % k < k := Nat.mod_lt y (by omega)
+  have hmod : (k - (y % k + 1)) % k = k - (y % k + 1) :=
+    Nat.mod_eq_of_lt (by have := hy; omega)
+  rw [hmod] at h
+  have hrhs : (k - (x % k + 1) + 1) % k = (k - x % k) % k := by
+    have hsh : k - (x % k + 1) + 1 = k - x % k := by have := hx; omega
+    rw [hsh]
+  rw [hrhs] at h
+  rw [(Nat.mod_add_mod y k 1).symm]
+  by_cases hx0 : x % k = 0
+  · have h2 : (k - x % k) % k = 0 := by rw [hx0, Nat.sub_zero, Nat.mod_self]
+    rw [h2] at h
+    have hyk : y % k + 1 = k := by have := h; have := hy; omega
+    rw [hx0, hyk, Nat.mod_self]
+  · have h2 : (k - x % k) % k = k - x % k :=
+      Nat.mod_eq_of_lt (by have := hx; omega)
+    rw [h2] at h
+    have hxy : y % k + 1 = x % k := by
+      have h3 := h; have := hy; have := hx; omega
+    rw [hxy]
+    exact (Nat.mod_modEq x k).symm
+
+/-- Adjacent-pair value transport: `x % k = (y + 1) % k` makes the value
+`b x y` an adjacent value `b m (m + 1)` with `m = y % k` (the HOL shape
+used throughout `OPP_IS_SCS`; residue reduction via the LocalAuto12 public
+`periodic2Mod1/2` kit). -/
+private theorem swbopp_b_adj {k : ℕ} {b : ℕ → ℕ → ℝ}
+    (hk : 1 ≤ k) (hper : Periodic2 b k) (hsymg : ∀ i j, b i j = b j i)
+    {x y : ℕ} (h : x % k = (y + 1) % k) :
+    b x y = b (y % k) (y % k + 1) := by
+  have hk0 : k ≠ 0 := by omega
+  have hylt : y % k < k := Nat.mod_lt y (by omega)
+  have hyk : (y + 1) % k = (y % k + 1) % k := (Nat.mod_add_mod y k 1).symm
+  rw [hyk] at h
+  have hred : b (x % k) (y % k) = b x y :=
+    (periodic2Mod1 hk0 hper x (y % k)).trans (periodic2Mod2 hk0 hper x y)
+  rw [← hred]
+  by_cases hlt : y % k + 1 < k
+  · have hxk : x % k = y % k + 1 := by rw [h, Nat.mod_eq_of_lt hlt]
+    rw [hxk, hsymg (y % k + 1) (y % k)]
+  · have heq : y % k + 1 = k := by omega
+    have hxk : x % k = 0 := by rw [h, heq, Nat.mod_self]
+    rw [hxk, hsymg 0 (y % k)]
+    exact (hper (y % k) 0).2.symm.trans
+      (congrArg (b (y % k)) (show (0 : ℕ) + k = y % k + 1 from by rw [Nat.zero_add, heq]))
+
+/-- Pointwise key: the `(i, i + 1)`-value of the opposite re-indexing is
+the reversed adjacent value at the successor representative
+`m = k - 1 - ((i + 1) % k)`. -/
+private theorem swbopp_key {k : ℕ} {g : ℕ → ℕ → ℝ}
+    (hk : 1 ≤ k) (hper : Periodic2 g k) (hsymg : ∀ i j, g i j = g j i) (i : ℕ) :
+    g (k - (i % k + 1)) (k - ((i + 1) % k + 1))
+      = g (k - 1 - ((i + 1) % k)) (k - 1 - ((i + 1) % k) + 1) := by
+  have htr := swbopp_b_adj (b := g) hk hper hsymg
+    (x := k - (i % k + 1)) (y := k - ((i + 1) % k + 1))
+    (by rw [Nat.mod_eq_of_lt (swbopp_phi_lt hk i)]; exact swbopp_pair_adj hk i)
+  rw [htr, Nat.mod_eq_of_lt (swbopp_phi_lt hk (i + 1))]
+  rw [show k - ((i + 1) % k + 1) = k - 1 - ((i + 1) % k) from by
+    have hw : (i + 1) % k < k := Nat.mod_lt (i + 1) (by omega)
+    omega]
+
+
+/-- HOL `OPP_IS_SCS` (Ocbicby.hl:2536 / YXIONXL2.hl:2536).  See the
+docstring above for the discharge note. -/
+private theorem swb_opp_isscs_p24 (s : ScsV39) (hs : isScsV39 s) : isScsV39 (scsOppV39 s) := by
+  obtain ⟨hd, h3, hk6, hplo, hphi, hpstr, -, hpa, hpam, hpbm, hpb, hpJ, hsym,
+    hch, hdiag0, hdiag, hb3, hbc, hJstruct, hJab, hcard⟩ := hs
+  have hk0 : s.k ≠ 0 := by omega
+  have hk1 : 1 ≤ s.k := by omega
+  have hsymb : ∀ x y, s.b x y = s.b y x := fun x y => (hsym x y).2.2.2.1
+  have hsymbA : ∀ x y, s.a x y = s.a y x := fun x y => (hsym x y).1
+  refine ⟨hd, h3, hk6, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact peropp_periodic s.lo s.k
+  · exact peropp_periodic s.hi s.k
+  · exact peropp_periodic s.str s.k
+  · exact peropp_periodic s.str s.k
+  · intro p q
+    show s.a (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.a (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.am (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.am (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.am (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.am (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.bm (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.bm (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.bm (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.bm (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.b (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.b (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.J (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.J (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    exact ⟨(hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.2.2⟩
+  · intro p q
+    exact hch (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+  · intro p
+    exact hdiag0 (s.k - (p % s.k + 1))
+  · intro p q hpq
+    have hne : s.k - (p % s.k + 1) ≠ s.k - (q % s.k + 1) := by
+      intro hcon
+      have e1 : s.k - ((s.k - (p % s.k + 1)) % s.k + 1) = p % s.k := swbopp_phi_inv hk0 p
+      have e2 : s.k - ((s.k - (q % s.k + 1)) % s.k + 1) = q % s.k := swbopp_phi_inv hk0 q
+      rw [Nat.mod_eq_of_lt (swbopp_phi_lt hk1 p)] at e1
+      rw [Nat.mod_eq_of_lt (swbopp_phi_lt hk1 q)] at e2
+      exact hpq.2.2 (swbopp_mod_eq (k := s.k) (by rw [← e1, ← e2, hcon]) hpq.1 hpq.2.1)
+    show 2 ≤ s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    exact hdiag _ _ ⟨swbopp_phi_lt hk1 p, swbopp_phi_lt hk1 q, hne⟩
+  · intro p hp3
+    show s.b (s.k - (p % s.k + 1)) (s.k - ((p + 1) % s.k + 1)) < 4
+    rw [swbopp_key hk1 hpb hsymb p]
+    exact hb3 _ hp3
+  · intro p hp6
+    show s.b (s.k - (p % s.k + 1)) (s.k - ((p + 1) % s.k + 1)) ≤ cstab
+    rw [swbopp_key hk1 hpb hsymb p]
+    exact hbc _ hp6
+  · intro p q hpq
+    show q % s.k = (p + 1) % s.k ∨ p % s.k = (q + 1) % s.k
+    have hJs : s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) := hpq
+    rcases hJstruct _ _ hJs with h | h
+    · exact Or.inr (swbopp_adj_swap hk1 h)
+    · exact Or.inl (swbopp_adj_swap hk1 h)
+  · intro p q hpq
+    show s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) = Real.sqrt 8 ∧
+      s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) = cstab
+    exact hJab _ _ hpq
+  · -- the ncard bound: the bad set of the opposite reindexes to the bad
+    -- set of `s` along the successor representative `i ↦ k - 1 - ((i+1)%k)`
+    show {i | i < s.k ∧ (2 * h0 < s.b (s.k - (i % s.k + 1))
+        (s.k - ((i + 1) % s.k + 1)) ∨
+        2 < s.a (s.k - (i % s.k + 1)) (s.k - ((i + 1) % s.k + 1)))}.ncard + s.k ≤ 6
+    have hcardT : {i | i < s.k ∧ (2 * h0 < s.b (s.k - (i % s.k + 1))
+          (s.k - ((i + 1) % s.k + 1)) ∨
+        2 < s.a (s.k - (i % s.k + 1)) (s.k - ((i + 1) % s.k + 1)))}.ncard
+        = {j | j < s.k ∧ (2 * h0 < s.b j (j + 1) ∨ 2 < s.a j (j + 1))}.ncard := by
+      refine Set.ncard_congr
+        (f := fun i (_ : i ∈ (_ : Set ℕ)) => s.k - 1 - ((i + 1) % s.k)) ?_ ?_ ?_
+      · rintro i ⟨hi, hbad | hbad⟩
+        · have hlt : (i + 1) % s.k < s.k := Nat.mod_lt (i + 1) (by omega)
+          refine ⟨by omega, ?_⟩
+          rw [swbopp_key hk1 hpb hsymb i] at hbad
+          exact Or.inl hbad
+        · have hlt : (i + 1) % s.k < s.k := Nat.mod_lt (i + 1) (by omega)
+          refine ⟨by omega, ?_⟩
+          rw [swbopp_key hk1 hpa hsymbA i] at hbad
+          exact Or.inr hbad
+      · rintro i j hi hb hcon
+        obtain ⟨hi, -⟩ := hi
+        obtain ⟨hj, -⟩ := hb
+        have hcon' : s.k - 1 - ((i + 1) % s.k) = s.k - 1 - ((j + 1) % s.k) := hcon
+        by_cases hik : i + 1 < s.k
+        · by_cases hjk : j + 1 < s.k
+          · have e1 : (i + 1) % s.k = i + 1 := Nat.mod_eq_of_lt hik
+            have e2 : (j + 1) % s.k = j + 1 := Nat.mod_eq_of_lt hjk
+            rw [e1, e2] at hcon'
+            omega
+          · have e1 : (i + 1) % s.k = i + 1 := Nat.mod_eq_of_lt hik
+            have hjk1 : j + 1 = s.k := by omega
+            have e2 : (j + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            rw [e1, e2] at hcon'
+            omega
+        · by_cases hjk : j + 1 < s.k
+          · have hjk1 : i + 1 = s.k := by omega
+            have e1 : (i + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            have e2 : (j + 1) % s.k = j + 1 := Nat.mod_eq_of_lt hjk
+            rw [e1, e2] at hcon'
+            omega
+          · have hik1 : i + 1 = s.k := by omega
+            have hjk1 : j + 1 = s.k := by omega
+            have e1 : (i + 1) % s.k = 0 := by rw [hik1, Nat.mod_self]
+            have e2 : (j + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            rw [e1, e2] at hcon'
+            omega
+      · rintro j ⟨hj, hbad⟩
+        set i := (2 * s.k - 2 - j) % s.k with hiv
+        have hi : i < s.k := by rw [hiv]; exact Nat.mod_lt _ (by omega)
+        have hi1 : (i + 1) % s.k = (2 * s.k - 1 - j) % s.k := by
+          rw [hiv, Nat.mod_add_mod (2 * s.k - 2 - j) s.k 1,
+            show 2 * s.k - 2 - j + 1 = 2 * s.k - 1 - j from by omega]
+        have hfi : s.k - 1 - ((i + 1) % s.k) = j := by
+          rw [hi1]
+          by_cases hjk1 : j = s.k - 1
+          · rw [hjk1, show 2 * s.k - 1 - (s.k - 1) = s.k from by omega, Nat.mod_self]
+            omega
+          · have hmod : (2 * s.k - 1 - j) % s.k = s.k - 1 - j := by
+              have hj2 : j ≤ s.k - 2 := by omega
+              rw [show 2 * s.k - 1 - j = s.k + (s.k - 1 - j) from by omega,
+                Nat.add_mod, Nat.mod_self, Nat.zero_add, Nat.mod_modEq _ _,
+                Nat.mod_eq_of_lt (by omega)]
+            rw [hmod]
+            omega
+        refine ⟨i, ⟨hi, ?_⟩, hfi⟩
+        rw [swbopp_key hk1 hpb hsymb i, swbopp_key hk1 hpa hsymbA i, hfi]
+        exact hbad
+    rw [hcardT]
+    exact hcard
+  -- DISCHARGES: NEEDS Ocbicby.hl `OPP_IS_SCS` over `ScsV39`
+  -- (2026-10-28, la33-ab-w1: fan-free sweep, no `sorry` upstream).
+
 /-- HOL `SET_EQ_DIAG_STAB_5I1` (OTMTOTJ.hl:1141). -/
 theorem SET_EQ_DIAG_STAB_5I1 :
     scsArrowV39 {x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I1 i j}
       {scsStabDiagV39 scs5I1 0 2} := by
-  sorry
+  have hI : scsDiag 5 0 2 := by unfold scsDiag; norm_num
+  have his02 : isScsV39 (scsStabDiagV39 scs5I1 0 2) :=
+    la24isScs_stab scs5I1 0 2 hI SCS_5I1_IS_SCS (fun u v _ => la24a5I1_le_cstab_p24 u v)
+  have hrot : ∀ p x y : ℕ, scs5I1.a (x + (5 - p % 5)) (y + (5 - p % 5)) = scs5I1.a x y ∧
+      scs5I1.b (x + (5 - p % 5)) (y + (5 - p % 5)) = scs5I1.b x y := fun p x y =>
+    ⟨swb_rot_csAdj_p24 2 (2 * h0) (5 - p % 5) x y,
+      swb_rot_csAdj_p24 (2 * h0) 6 (5 - p % 5) x y⟩
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hs
+    subst hs
+    exact his02
+  · by_cases hne : (MMsV39 (scsStabDiagV39 scs5I1 0 2)).Nonempty
+    · exact Or.inr ⟨scsStabDiagV39 scs5I1 0 2, Set.mem_singleton _,
+        Set.nonempty_iff_ne_empty.mp hne⟩
+    · have h02e : MMsV39 (scsStabDiagV39 scs5I1 0 2) = ∅ :=
+        Set.not_nonempty_iff_eq_empty.mp hne
+      refine Or.inl fun u hu => ?_
+      obtain ⟨i, j, hd, rfl⟩ := hu
+      rcases swb_diag5_pair_p24 hd with hsum | hsum
+      · rw [swb_stab5_pe_p24 scs5I1 rfl SCS_5I1_BASIC i j (hrot j) hsum]
+        exact Set.not_nonempty_iff_eq_empty.mp fun hne =>
+          Set.not_nonempty_iff_eq_empty.mpr h02e
+            (swb_mms_pe_inv_p24 _ (5 - j % 5) his02 hne)
+      · rw [STAB_SYM scs5I1 i j, swb_stab5_pe_p24 scs5I1 rfl SCS_5I1_BASIC j i
+          (hrot i) hsum]
+        exact Set.not_nonempty_iff_eq_empty.mp fun hne =>
+          Set.not_nonempty_iff_eq_empty.mpr h02e
+            (swb_mms_pe_inv_p24 _ (5 - i % 5) his02 hne)
   -- DISCHARGES: SET_STAB_5I1 + DIAG_EQ_ADD5 + EXPAND_STAB_DIAG_5I1 +
   -- SET_EQ_DIAG_STAB_5I1_02 + FZIOTEF-chaining.
 
@@ -1057,7 +1498,34 @@ theorem SET_EQ_DIAG_STAB_5I1 :
 theorem SET_EQ_DIAG_STAB_5I2 :
     scsArrowV39 {x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I2 i j}
       {scsStabDiagV39 scs5I2 0 2} := by
-  sorry
+  have hI : scsDiag 5 0 2 := by unfold scsDiag; norm_num
+  have his02 : isScsV39 (scsStabDiagV39 scs5I2 0 2) :=
+    la24isScs_stab scs5I2 0 2 hI SCS_5I2_IS_SCS (fun u v _ => la24a5I2_le_cstab_p24 u v)
+  have hrot : ∀ p x y : ℕ, scs5I2.a (x + (5 - p % 5)) (y + (5 - p % 5)) = scs5I2.a x y ∧
+      scs5I2.b (x + (5 - p % 5)) (y + (5 - p % 5)) = scs5I2.b x y := fun p x y =>
+    ⟨swb_rot_csAdj_p24 2 (Real.sqrt 8) (5 - p % 5) x y,
+      swb_rot_csAdj_p24 (2 * h0) 6 (5 - p % 5) x y⟩
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hs
+    subst hs
+    exact his02
+  · by_cases hne : (MMsV39 (scsStabDiagV39 scs5I2 0 2)).Nonempty
+    · exact Or.inr ⟨scsStabDiagV39 scs5I2 0 2, Set.mem_singleton _,
+        Set.nonempty_iff_ne_empty.mp hne⟩
+    · have h02e : MMsV39 (scsStabDiagV39 scs5I2 0 2) = ∅ :=
+        Set.not_nonempty_iff_eq_empty.mp hne
+      refine Or.inl fun u hu => ?_
+      obtain ⟨i, j, hd, rfl⟩ := hu
+      rcases swb_diag5_pair_p24 hd with hsum | hsum
+      · rw [swb_stab5_pe_p24 scs5I2 rfl SCS_5I2_BASIC i j (hrot j) hsum]
+        exact Set.not_nonempty_iff_eq_empty.mp fun hne =>
+          Set.not_nonempty_iff_eq_empty.mpr h02e
+            (swb_mms_pe_inv_p24 _ (5 - j % 5) his02 hne)
+      · rw [STAB_SYM scs5I2 i j, swb_stab5_pe_p24 scs5I2 rfl SCS_5I2_BASIC j i
+          (hrot i) hsum]
+        exact Set.not_nonempty_iff_eq_empty.mp fun hne =>
+          Set.not_nonempty_iff_eq_empty.mpr h02e
+            (swb_mms_pe_inv_p24 _ (5 - i % 5) his02 hne)
   -- DISCHARGES: SET_STAB_5I2 + DIAG_EQ_ADD5 + EXPAND_STAB_DIAG_5I2 +
   -- SET_EQ_DIAG_STAB_5I2_02 + FZIOTEF-chaining.
 
@@ -1167,53 +1635,91 @@ theorem SET_EQ_DIAG_STAB_5M1 :
     scsArrowV39 {x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5M1 i j}
       ({scsStabDiagV39 scs5M1 0 2, scsStabDiagV39 scs5M1 0 3,
         scsStabDiagV39 scs5M1 2 4} : Set ScsV39) := by
-  sorry
+  have hI02 : scsDiag 5 0 2 := by unfold scsDiag; norm_num
+  have hI03 : scsDiag 5 0 3 := by unfold scsDiag; norm_num
+  have hI24 : scsDiag 5 2 4 := by unfold scsDiag; norm_num
+  have hI13 : scsDiag 5 1 3 := by unfold scsDiag; norm_num
+  have hI14 : scsDiag 5 1 4 := by unfold scsDiag; norm_num
+  have hb5 : scsBasicV39 scs5M1 := SCS_5M1_BASIC
+  have hclass : ∀ a b c d : ℕ, psort 5 (a, b) = psort 5 (c, d) →
+      MMsV39 (scsStabDiagV39 scs5M1 a b) =
+        MMsV39 (scsStabDiagV39 scs5M1 c d) := by
+    intro a b c d hcls
+    rw [swb_stab_class_p24 scs5M1 rfl hb5 a b c d hcls]
+  -- the two opposite-class contradictions
+  have h13 : ¬(MMsV39 (scsStabDiagV39 scs5M1 0 3)).Nonempty →
+      MMsV39 (scsStabDiagV39 scs5M1 1 3) = ∅ := fun h03 =>
+    Set.not_nonempty_iff_eq_empty.mp fun hne => h03 (by
+      have hIS : isScsV39 (scsStabDiagV39 scs5M1 1 3) := (STAB_5M1_SCS 1 3 hI13).1
+      obtain ⟨v, hv⟩ := hne
+      have hmem : MMsV39 (scsOppV39 (scsStabDiagV39 scs5M1 1 3))
+          (fun i => -(peropp v 5 i)) :=
+        MM_SCS_OPP_fb _ v 5 rfl hIS (by norm_num) hv
+      have h2 := TRANS_MMS_SUBSET (swb_opp_isscs_p24 _ hIS) hmem 3
+      rw [← swb_prop_opp_5M1_13_p24] at h2
+      exact ⟨_, h2⟩)
+  have h14 : ¬(MMsV39 (scsStabDiagV39 scs5M1 0 2)).Nonempty →
+      MMsV39 (scsStabDiagV39 scs5M1 1 4) = ∅ := fun h02 =>
+    Set.not_nonempty_iff_eq_empty.mp fun hne => h02 (by
+      have hIS : isScsV39 (scsStabDiagV39 scs5M1 1 4) := (STAB_5M1_SCS 1 4 hI14).1
+      obtain ⟨v, hv⟩ := hne
+      have hmem : MMsV39 (scsOppV39 (scsStabDiagV39 scs5M1 1 4))
+          (fun i => -(peropp v 5 i)) :=
+        MM_SCS_OPP_fb _ v 5 rfl hIS (by norm_num) hv
+      have h2 := TRANS_MMS_SUBSET (swb_opp_isscs_p24 _ hIS) hmem 3
+      rw [← swb_prop_opp_5M1_02_p24] at h2
+      exact ⟨_, h2⟩)
+  refine ⟨fun s hs => ?_, ?_⟩
+  · simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hs
+    rcases hs with rfl | hs
+    · exact (STAB_5M1_SCS 0 2 hI02).1
+    rcases hs with rfl | rfl
+    · exact (STAB_5M1_SCS 0 3 hI03).1
+    · exact (STAB_5M1_SCS 2 4 hI24).1
+  · by_cases h02 : (MMsV39 (scsStabDiagV39 scs5M1 0 2)).Nonempty
+    · exact Or.inr ⟨_, Set.mem_insert _ _, Set.nonempty_iff_ne_empty.mp h02⟩
+    by_cases h03 : (MMsV39 (scsStabDiagV39 scs5M1 0 3)).Nonempty
+    · exact Or.inr ⟨_, Set.mem_insert_of_mem _ (Set.mem_insert _ _),
+        Set.nonempty_iff_ne_empty.mp h03⟩
+    by_cases h24 : (MMsV39 (scsStabDiagV39 scs5M1 2 4)).Nonempty
+    · exact Or.inr ⟨_, Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _
+        (Set.mem_singleton _)), Set.nonempty_iff_ne_empty.mp h24⟩
+    have h02e : MMsV39 (scsStabDiagV39 scs5M1 0 2) = ∅ :=
+      Set.not_nonempty_iff_eq_empty.mp h02
+    have h03e : MMsV39 (scsStabDiagV39 scs5M1 0 3) = ∅ :=
+      Set.not_nonempty_iff_eq_empty.mp h03
+    have h24e : MMsV39 (scsStabDiagV39 scs5M1 2 4) = ∅ :=
+      Set.not_nonempty_iff_eq_empty.mp h24
+    refine Or.inl fun u hu => ?_
+    obtain ⟨i, j, hd, rfl⟩ := hu
+    have hzj : j % 5 < 5 := Nat.mod_lt j (by omega)
+    rcases swb_diag5_pair_p24 hd with hsum | hsum
+    · have hps : psort 5 (i, j) = psort 5 (j % 5, (j % 5 + 2) % 5) := by
+        rw [← PSORT_MOD 5 i j (by norm_num), psort_swap_p20 5 (i % 5) (j % 5), hsum]
+      interval_cases j % 5
+      · exact (hclass i j 0 2 (by rw [hps] <;> simp [psort])).trans h02e
+      · rw [hclass i j 1 3 (by rw [hps] <;> simp [psort])]
+        exact h13 h03
+      · exact (hclass i j 2 4 (by rw [hps] <;> simp [psort])).trans h24e
+      · exact (hclass i j 0 3 (by rw [hps] <;> simp [psort])).trans h03e
+      · rw [hclass i j 1 4 (by rw [hps] <;> simp [psort])]
+        exact h14 h02
+    · have hsym : scsStabDiagV39 scs5M1 i j = scsStabDiagV39 scs5M1 j i :=
+        STAB_SYM scs5M1 i j
+      have hzi : i % 5 < 5 := Nat.mod_lt i (by omega)
+      have hps : psort 5 (j, i) = psort 5 (i % 5, (i % 5 + 2) % 5) := by
+        rw [← PSORT_MOD 5 j i (by norm_num), psort_swap_p20 5 (j % 5) (i % 5), hsum]
+      interval_cases i % 5
+      · exact ((congrArg MMsV39 hsym).trans (hclass j i 0 2 (by rw [hps] <;> simp [psort]))).trans h02e
+      · rw [hsym, hclass j i 1 3 (by rw [hps] <;> simp [psort])]
+        exact h13 h03
+      · exact ((congrArg MMsV39 hsym).trans (hclass j i 2 4 (by rw [hps] <;> simp [psort]))).trans h24e
+      · exact ((congrArg MMsV39 hsym).trans (hclass j i 0 3 (by rw [hps] <;> simp [psort]))).trans h03e
+      · rw [hsym, hclass j i 1 4 (by rw [hps] <;> simp [psort])]
+        exact h14 h02
   -- DISCHARGES: SET_STAB_5M1 + DIAG_EQ_ADD5 + EXPAND_STAB_DIAG_5I3 +
   -- EXPAND_STAB_DIAG_5M1 + EQ_DIAG_STAB_* (the three singleton arrows,
   -- FZIOTEF-chained).
-
-/-! ### B6. The four master arrows (OTMTOTJ.hl:1156/1169/1500/1520)
-
-Skeleton restatements (2026-09-21): faithful verbatim statements of the HOL
-masters `OTMTOTJ1-4`, previously carried only by the LocalAuto1
-`OTMTOTJ1-4_concl` registry copies (:1419-1439).  The HOL proofs compose
-the Section B3/B5 arrows through the `FZIOTEF` transitivity/union kit. -/
-
-/-- HOL `OTMTOTJ1` (OTMTOTJ.hl:1156). -/
-theorem OTMTOTJ1 :
-    scsArrowV39 {scs5I1} {scsStabDiagV39 scs5I1 0 2, scs5M2} := by
-  have hberak : scsArrowV39 {scs5I1}
-      ({x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I1 i j} ∪ {scs5M2}) := by
-    rw [Set.union_comm]
-    exact SCS_5I1_BERAK_BY_CSTAB
-  rw [Set.insert_eq]
-  exact FZIOTEF_TRANS {scs5I1}
-    ({x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I1 i j} ∪ {scs5M2})
-    ({scsStabDiagV39 scs5I1 0 2} ∪ {scs5M2}) hberak
-    (FZIOTEF_UNION {x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I1 i j}
-      {scsStabDiagV39 scs5I1 0 2} {scs5M2} {scs5M2} SET_EQ_DIAG_STAB_5I1
-      (FZIOTEF_REFL {scs5M2} (fun s hs => by
-        rw [Set.mem_singleton_iff] at hs
-        subst s
-        exact SCS_5M2_IS_SCS)))
-
-/-- HOL `OTMTOTJ2` (OTMTOTJ.hl:1169). -/
-theorem OTMTOTJ2 :
-    scsArrowV39 {scs5I2} {scsStabDiagV39 scs5I2 0 2, scs5M2} := by
-  have hberak : scsArrowV39 {scs5I2}
-      ({x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I2 i j} ∪ {scs5M2}) := by
-    rw [Set.union_comm]
-    exact SCS_5I2_BERAK_BY_CSTAB
-  rw [Set.insert_eq]
-  exact FZIOTEF_TRANS {scs5I2}
-    ({x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I2 i j} ∪ {scs5M2})
-    ({scsStabDiagV39 scs5I2 0 2} ∪ {scs5M2}) hberak
-    (FZIOTEF_UNION {x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I2 i j}
-      {scsStabDiagV39 scs5I2 0 2} {scs5M2} {scs5M2} SET_EQ_DIAG_STAB_5I2
-      (FZIOTEF_REFL {scs5M2} (fun s hs => by
-        rw [Set.mem_singleton_iff] at hs
-        subst s
-        exact SCS_5M2_IS_SCS)))
 
 /-! ## Section C: UXCKFPE.hl — the k ≤ 6 taustar capstone (2 defs + 20
 theorems)
@@ -2266,13 +2772,419 @@ theorem STAB_5I3_ARROW_STAB_5M1_DIAG :
   -- + FZIOTEF_UNION.
 
 
+/-! ## Section B6.5 (sweep-b24-w2): the `5x → 5M2` transfers and the moved
+`MM`/`BERAK`/`OTMTOTJ1`/`OTMTOTJ2` blocks
+
+The four HOL `MM_5x_IMP_MM_5M2` arrows (OTMTOTJ.hl:223/337/462/535) are
+MOVED here (statements byte-identical to their Section B1 forms; 2026-11-02
+SF-90 restated the conclusions to the HOL-faithful `MMs_v39 scs_5M2 ≠ {}`)
+because their discharges consume the Section B7 `XWNHLMD_MM` private kit;
+the Section B3 `BERAK` arrows and the Section B6 masters `OTMTOTJ1`/`OTMTOTJ2`
+follow them for the same linear-dependency reason (B3 consumes the `MM`
+arrows, `OTMTOTJ1`/`OTMTOTJ2` consume the `5I1`/`5I2` `BERAK`s). -/
+
+/-! ### B2.9 (sweep-b24): the private `5x → 5M2` transfer kit
+
+The HOL `MM_5x_IMP_MM_5M2` (OTMTOTJ.hl:223/337/462/535) concludes
+`~(MMs_v39 scs_5M2 = {})`; this kit discharges exactly that content through
+the Section B7 `XWNHLMD_MM` route (`la24xwnhlmd_mm_p24`): the `5M2` `b`-table
+dominates the source `b`-table (only the `(0,1)` class differs,
+`2*h0 ≤ cstab`), and the `cstab` diagonal hypothesis repairs the `5M2`
+`a`-side; `dTame 5 = 0.4819 ≤ 0.616` transfers the negative taustar. -/
+
+/-- The `5M2` `a`-table is the `csAdj 5 2 cstab` shape (25-cell sweep
+over the mod-reduced residues). -/
+private theorem swb_a5M2_csAdj_p24 (i j : ℕ) :
+    scs5M2.a i j = csAdj 5 2 cstab i j := by
+  have ha : scs5M2.a i j = funlistV39 [((0, 1), 2), ((0, 2), cstab), ((0, 3), cstab),
+      ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5 i j := rfl
+  rw [ha, ← funlist_mod_p20 _ _ 5 i j (by omega), ← swb_csAdj_mod_p24]
+  have hi5 : i % 5 < 5 := Nat.mod_lt i (by omega)
+  have hj5 : j % 5 < 5 := Nat.mod_lt j (by omega)
+  interval_cases i % 5 <;> interval_cases j % 5 <;>
+    simp [funlistV39, psort, assocdV39, csAdj]
+
+/-- The `5M2` `b`-table dominates `csAdj 5 (2*h0) 6` (the `5I1`/`5I2`
+`b`-table): 25-cell sweep over the mod-reduced residues. -/
+private theorem swb_b_csAdj_le_5M2_p24 (i j : ℕ) :
+    csAdj 5 (2 * h0) 6 i j ≤ scs5M2.b i j := by
+  have hb : scs5M2.b i j = funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6),
+      ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 i j := rfl
+  rw [hb, ← funlist_mod_p20 _ _ 5 i j (by omega), ← swb_csAdj_mod_p24]
+  have hi5 : i % 5 < 5 := Nat.mod_lt i (by omega)
+  have hj5 : j % 5 < 5 := Nat.mod_lt j (by omega)
+  interval_cases i % 5 <;> interval_cases j % 5 <;>
+    simp [funlistV39, psort, assocdV39, csAdj] <;> norm_num [h0, cstab]
+
+/-- The `5I3` `b`-table is dominated by the `5M2` `b`-table (only the
+`(0,1)` class differs, `sqrt 8 ≤ cstab`; `la24cellsB_5I3_p24` sweep). -/
+private theorem swb_b_5I3_le_5M2_p24 (i j : ℕ) : scs5I3.b i j ≤ scs5M2.b i j := by
+  have h1 : scs5I3.b i j = funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6),
+      ((0, 3), 6), ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 i j := rfl
+  have h2 : scs5M2.b i j = funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6),
+      ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 i j := rfl
+  rw [h1, h2, ← funlist_mod_p20 _ _ 5 i j (by omega),
+    ← funlist_mod_p20 _ _ 5 i j (by omega)]
+  exact la24cellsB_5I3_p24 (i % 5) (j % 5) (Nat.mod_lt i (by omega))
+    (Nat.mod_lt j (by omega))
+
+/-- The `cstab` diagonal hypothesis transported to a diagonal `a`-slot
+(residue reduction + periodicity). -/
+private theorem swb_hc_diag_p24 (v : ℕ → V3) (hp : Periodic v 5)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j))
+    (i j : ℕ) (h1 : ¬(i % 5 = j % 5))
+    (h2 : ¬(j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5)) :
+    cstab ≤ dist (v i) (v j) := by
+  exact hc i j ⟨h1, fun hh => h2 (Or.inl hh.symm),
+    fun hh => h2 (Or.inr hh.symm)⟩
+
+/-- Edge-slot `2`-bound out of a `csAdj 5 2 a1`-shaped source `a`-table. -/
+private theorem swb_hed_csAdj_p24 {a1 : ℝ} (v : ℕ → V3)
+    (hs : ∀ i j : ℕ, csAdj 5 2 a1 i j ≤ dist (v i) (v j))
+    (i j : ℕ) (h1 : ¬(i % 5 = j % 5))
+    (h2 : j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5) :
+    2 ≤ dist (v i) (v j) := by
+  have h := hs i j
+  unfold csAdj at h
+  rw [if_neg h1, if_pos h2] at h
+  exact h
+
+/-- Edge-slot `2`-bound out of the `5I3` funlist `a`-table. -/
+private theorem swb_hed_5I3_p24 (v : ℕ → V3)
+    (hs : ∀ i j : ℕ, scs5I3.a i j ≤ dist (v i) (v j))
+    (i j : ℕ) (h1 : ¬(i % 5 = j % 5))
+    (h2 : j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5) :
+    2 ≤ dist (v i) (v j) := by
+  have h := hs i j
+  have ha : scs5I3.a i j = funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0),
+      ((0, 3), 2 * h0), ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5
+      (i % 5) (j % 5) :=
+    (funlist_mod_p20 _ _ 5 i j (by omega)).symm
+  rw [ha] at h
+  rw [(Nat.mod_add_mod i 5 1).symm, (Nat.mod_add_mod j 5 1).symm] at h2
+  have hi5 : i % 5 < 5 := Nat.mod_lt i (by omega)
+  have hj5 : j % 5 < 5 := Nat.mod_lt j (by omega)
+  interval_cases i % 5 <;> interval_cases j % 5 <;>
+    first
+      | exact absurd rfl h1
+      | (exfalso; simp at h2; exact (h2 : False).elim)
+      | (simp only [funlistV39, psort, assocdV39] at h;
+          first | exact h | exact le_trans two_lt_two_h0'.le h)
+
+/-- Edge-slot `2`-bound out of the `5M1` funlist `a`-table. -/
+private theorem swb_hed_5M1_p24 (v : ℕ → V3)
+    (hs : ∀ i j : ℕ, scs5M1.a i j ≤ dist (v i) (v j))
+    (i j : ℕ) (h1 : ¬(i % 5 = j % 5))
+    (h2 : j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5) :
+    2 ≤ dist (v i) (v j) := by
+  have h := hs i j
+  have ha : scs5M1.a i j = funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0),
+      ((0, 3), 2 * h0), ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5
+      (i % 5) (j % 5) :=
+    (funlist_mod_p20 _ _ 5 i j (by omega)).symm
+  rw [ha] at h
+  rw [(Nat.mod_add_mod i 5 1).symm, (Nat.mod_add_mod j 5 1).symm] at h2
+  have hi5 : i % 5 < 5 := Nat.mod_lt i (by omega)
+  have hj5 : j % 5 < 5 := Nat.mod_lt j (by omega)
+  interval_cases i % 5 <;> interval_cases j % 5 <;>
+    first
+      | exact absurd rfl h1
+      | (exfalso; simp at h2; exact (h2 : False).elim)
+      | (simp only [funlistV39, psort, assocdV39] at h;
+          first | exact h | exact le_trans two_lt_two_h0'.le h)
+
+/-- `BBsV39`-level transfer `5I1 → 5M2` (`BB_5I1_IS_BB_5M2` content,
+OTMTOTJ.hl:207). -/
+private theorem swb_bb_5I1_5M2_p24 (v : ℕ → V3) (h : BBsV39 scs5I1 v)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    BBsV39 scs5M2 v := by
+  obtain ⟨hr, hp, hbd, hfan⟩ := h
+  refine ⟨hr, hp, fun i j => ?_, hfan⟩
+  constructor
+  · rw [swb_a5M2_csAdj_p24]
+    unfold csAdj
+    by_cases h1 : i % 5 = j % 5
+    · rw [if_pos h1]; exact dist_nonneg
+    rw [if_neg h1]
+    by_cases h2 : j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5
+    · rw [if_pos h2]
+      exact swb_hed_csAdj_p24 v (fun i j => (hbd i j).1) i j h1 h2
+    · rw [if_neg h2]
+      exact swb_hc_diag_p24 v hp hc i j h1 h2
+  · exact le_trans (hbd i j).2 (swb_b_csAdj_le_5M2_p24 i j)
+
+/-- `BBsV39`-level transfer `5I2 → 5M2` (same `b`-table as `5I1`). -/
+private theorem swb_bb_5I2_5M2_p24 (v : ℕ → V3) (h : BBsV39 scs5I2 v)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    BBsV39 scs5M2 v := by
+  obtain ⟨hr, hp, hbd, hfan⟩ := h
+  refine ⟨hr, hp, fun i j => ?_, hfan⟩
+  constructor
+  · rw [swb_a5M2_csAdj_p24]
+    unfold csAdj
+    by_cases h1 : i % 5 = j % 5
+    · rw [if_pos h1]; exact dist_nonneg
+    rw [if_neg h1]
+    by_cases h2 : j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5
+    · rw [if_pos h2]
+      exact swb_hed_csAdj_p24 v (fun i j => (hbd i j).1) i j h1 h2
+    · rw [if_neg h2]
+      exact swb_hc_diag_p24 v hp hc i j h1 h2
+  · exact le_trans (hbd i j).2 (swb_b_csAdj_le_5M2_p24 i j)
+
+/-- `BBsV39`-level transfer `5I3 → 5M2`. -/
+private theorem swb_bb_5I3_5M2_p24 (v : ℕ → V3) (h : BBsV39 scs5I3 v)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    BBsV39 scs5M2 v := by
+  obtain ⟨hr, hp, hbd, hfan⟩ := h
+  refine ⟨hr, hp, fun i j => ?_, hfan⟩
+  constructor
+  · rw [swb_a5M2_csAdj_p24]
+    unfold csAdj
+    by_cases h1 : i % 5 = j % 5
+    · rw [if_pos h1]; exact dist_nonneg
+    rw [if_neg h1]
+    by_cases h2 : j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5
+    · rw [if_pos h2]
+      exact swb_hed_5I3_p24 v (fun i j => (hbd i j).1) i j h1 h2
+    · rw [if_neg h2]
+      exact swb_hc_diag_p24 v hp hc i j h1 h2
+  · exact le_trans (hbd i j).2 (swb_b_5I3_le_5M2_p24 i j)
+
+/-- `BBsV39`-level transfer `5M1 → 5M2` (identical `b`-tables). -/
+private theorem swb_bb_5M1_5M2_p24 (v : ℕ → V3) (h : BBsV39 scs5M1 v)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    BBsV39 scs5M2 v := by
+  obtain ⟨hr, hp, hbd, hfan⟩ := h
+  refine ⟨hr, hp, fun i j => ?_, hfan⟩
+  constructor
+  · rw [swb_a5M2_csAdj_p24]
+    unfold csAdj
+    by_cases h1 : i % 5 = j % 5
+    · rw [if_pos h1]; exact dist_nonneg
+    rw [if_neg h1]
+    by_cases h2 : j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5
+    · rw [if_pos h2]
+      exact swb_hed_5M1_p24 v (fun i j => (hbd i j).1) i j h1 h2
+    · rw [if_neg h2]
+      exact swb_hc_diag_p24 v hp hc i j h1 h2
+  · exact le_trans (hbd i j).2 (le_of_eq rfl)
+
+
+/-- HOL `MM_5I1_IMP_MM_5M2` (OTMTOTJ.hl:223). -/
+theorem MM_5I1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I1)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    MMsV39 scs5M2 ≠ ∅ :=
+  la24xwnhlmd_mm_p24 scs5I1 scs5M2 v SCS_5M2_IS_SCS SCS_5I1_BASIC SCS_5M2_BASIC
+    rfl rfl h (swb_bb_5I1_5M2_p24 v h.1.1.1 hc)
+    (by show dTame 5 ≤ 0.616; norm_num [dTame])
+  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
+  -- `scs5I1` instance, via the private `swb_bb_5I1_5M2_p24` `b`-domination
+  -- + `hc` `a`-repair); witness is the `BBindex`-minimized `w` of
+  -- `la24sgtrnaf5_p24`, not `v`. Axiom root: `XWITCCN_CASE_5_IS_SCS_p24`.
+/-- HOL `MM_5I2_IMP_MM_5M2` (OTMTOTJ.hl:337). -/
+theorem MM_5I2_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I2)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    MMsV39 scs5M2 ≠ ∅ :=
+  la24xwnhlmd_mm_p24 scs5I2 scs5M2 v SCS_5M2_IS_SCS SCS_5I2_BASIC SCS_5M2_BASIC
+    rfl rfl h (swb_bb_5I2_5M2_p24 v h.1.1.1 hc)
+    (by simp only [scs5I2, scs5M2, mkUnadornedV39]; norm_num)
+  -- DISCHARGES: as `MM_5I1_IMP_MM_5M2`, at the `scs5I2` instance.
+/-- HOL `MM_5I3_IMP_MM_5M2` (OTMTOTJ.hl:462). -/
+theorem MM_5I3_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I3)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    MMsV39 scs5M2 ≠ ∅ :=
+  la24xwnhlmd_mm_p24 scs5I3 scs5M2 v SCS_5M2_IS_SCS SCS_5I3_BASIC SCS_5M2_BASIC
+    rfl rfl h (swb_bb_5I3_5M2_p24 v h.1.1.1 hc)
+    (by simp only [scs5I3, scs5M2, mkUnadornedV39]; norm_num)
+  -- DISCHARGES: as `MM_5I1_IMP_MM_5M2`, at the `scs5I3` instance (the
+  -- `b`-domination via `la24cellsB_5I3_p24`).
+/-- HOL `MM_5M1_IMP_MM_5M2` (OTMTOTJ.hl:535). -/
+theorem MM_5M1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5M1)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    MMsV39 scs5M2 ≠ ∅ :=
+  la24xwnhlmd_mm_p24 scs5M1 scs5M2 v SCS_5M2_IS_SCS SCS_5M1_BASIC SCS_5M2_BASIC
+    rfl rfl h (swb_bb_5M1_5M2_p24 v h.1.1.1 hc)
+    (by simp only [scs5M1, scs5M2, mkUnadornedV39]; norm_num)
+  -- DISCHARGES: as `MM_5I1_IMP_MM_5M2`, at the `scs5M1` instance.
+
+/-! ### B3. The `BERAK` arrows (OTMTOTJ.hl:699-954) -/
+
+/-- HOL `SCS_5I1_BERAK_BY_CSTAB` (OTMTOTJ.hl:699). -/
+theorem SCS_5I1_BERAK_BY_CSTAB :
+    scsArrowV39 {scs5I1} ({scs5M2} ∪ {x | ∃ i j, scsDiag 5 i j ∧
+      x = scsStabDiagV39 scs5I1 i j}) := by
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rcases (Set.mem_union _ _ _).mp hs with hs | ⟨i, j, hd, rfl⟩
+    · rw [Set.mem_singleton_iff] at hs
+      subst s
+      exact SCS_5M2_IS_SCS
+    · have hk3 : (3 : ℕ) < scs5I1.k := by show (3 : ℕ) < 5; norm_num
+      exact (YRTAFYH_concl scs5I1 i j SCS_5I1_IS_SCS SCS_5I1_BASIC hk3 hd
+        (la24a5I1_le_cstab_p24 i j)).1
+  · by_cases hE : ∀ s ∈ ({scs5I1} : Set ScsV39), MMsV39 s = ∅
+    · exact Or.inl hE
+    · push_neg at hE
+      obtain ⟨s, hs, hne⟩ := hE
+      rw [Set.mem_singleton_iff] at hs
+      subst s
+      obtain ⟨v, hv⟩ := hne
+      by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
+      · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
+        exact MM_5I1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+      · push_neg at hdiag
+        obtain ⟨i, j, hdij, hle⟩ := hdiag
+        refine Or.inr ⟨scsStabDiagV39 scs5I1 i j, ?_, ?_⟩
+        · simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq]
+          exact Or.inr ⟨i, j, hdij, rfl⟩
+        · intro hcon
+          rw [Set.eq_empty_iff_forall_notMem] at hcon
+          exact hcon v (SCS_5I1_STAB_DIAG v i j hv hdij hle)
+
+/-- HOL `SCS_5I2_BERAK_BY_CSTAB` (OTMTOTJ.hl:761). -/
+theorem SCS_5I2_BERAK_BY_CSTAB :
+    scsArrowV39 {scs5I2} ({scs5M2} ∪ {x | ∃ i j, scsDiag 5 i j ∧
+      x = scsStabDiagV39 scs5I2 i j}) := by
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rcases (Set.mem_union _ _ _).mp hs with hs | ⟨i, j, hd, rfl⟩
+    · rw [Set.mem_singleton_iff] at hs
+      subst s
+      exact SCS_5M2_IS_SCS
+    · have hk3 : (3 : ℕ) < scs5I2.k := by show (3 : ℕ) < 5; norm_num
+      exact (YRTAFYH_concl scs5I2 i j SCS_5I2_IS_SCS SCS_5I2_BASIC hk3 hd
+        (la24a5I2_le_cstab_p24 i j)).1
+  · by_cases hE : ∀ s ∈ ({scs5I2} : Set ScsV39), MMsV39 s = ∅
+    · exact Or.inl hE
+    · push_neg at hE
+      obtain ⟨s, hs, hne⟩ := hE
+      rw [Set.mem_singleton_iff] at hs
+      subst s
+      obtain ⟨v, hv⟩ := hne
+      by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
+      · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
+        exact MM_5I2_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+      · push_neg at hdiag
+        obtain ⟨i, j, hdij, hle⟩ := hdiag
+        refine Or.inr ⟨scsStabDiagV39 scs5I2 i j, ?_, ?_⟩
+        · simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq]
+          exact Or.inr ⟨i, j, hdij, rfl⟩
+        · intro hcon
+          rw [Set.eq_empty_iff_forall_notMem] at hcon
+          exact hcon v (SCS_5I2_STAB_DIAG v i j hv hdij hle)
+
+/-- HOL `SCS_5I3_BERAK_BY_CSTAB` (OTMTOTJ.hl:826). -/
+theorem SCS_5I3_BERAK_BY_CSTAB :
+    scsArrowV39 {scs5I3} ({scs5M2} ∪ {x | ∃ i j, scsDiag 5 i j ∧
+      x = scsStabDiagV39 scs5I3 i j}) := by
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rcases (Set.mem_union _ _ _).mp hs with hs | ⟨i, j, hd, rfl⟩
+    · rw [Set.mem_singleton_iff] at hs
+      subst s
+      exact SCS_5M2_IS_SCS
+    · have hk3 : (3 : ℕ) < scs5I3.k := by show (3 : ℕ) < 5; norm_num
+      exact (YRTAFYH_concl scs5I3 i j SCS_5I3_IS_SCS SCS_5I3_BASIC hk3 hd
+        (la24a5I3_le_cstab_p24 i j)).1
+  · by_cases hE : ∀ s ∈ ({scs5I3} : Set ScsV39), MMsV39 s = ∅
+    · exact Or.inl hE
+    · push_neg at hE
+      obtain ⟨s, hs, hne⟩ := hE
+      rw [Set.mem_singleton_iff] at hs
+      subst s
+      obtain ⟨v, hv⟩ := hne
+      by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
+      · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
+        exact MM_5I3_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+      · push_neg at hdiag
+        obtain ⟨i, j, hdij, hle⟩ := hdiag
+        refine Or.inr ⟨scsStabDiagV39 scs5I3 i j, ?_, ?_⟩
+        · simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq]
+          exact Or.inr ⟨i, j, hdij, rfl⟩
+        · intro hcon
+          rw [Set.eq_empty_iff_forall_notMem] at hcon
+          exact hcon v (SCS_5I3_STAB_DIAG v i j hv hdij hle)
+
+/-- HOL `SCS_5M1_BERAK_BY_CSTAB` (OTMTOTJ.hl:890). -/
+theorem SCS_5M1_BERAK_BY_CSTAB :
+    scsArrowV39 {scs5M1} ({scs5M2} ∪ {x | ∃ i j, scsDiag 5 i j ∧
+      x = scsStabDiagV39 scs5M1 i j}) := by
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rcases (Set.mem_union _ _ _).mp hs with hs | ⟨i, j, hd, rfl⟩
+    · rw [Set.mem_singleton_iff] at hs
+      subst s
+      exact SCS_5M2_IS_SCS
+    · have hk3 : (3 : ℕ) < scs5M1.k := by show (3 : ℕ) < 5; norm_num
+      exact (YRTAFYH_concl scs5M1 i j SCS_5M1_IS_SCS SCS_5M1_BASIC hk3 hd
+        (la24a5M1_le_cstab_p24 i j)).1
+  · by_cases hE : ∀ s ∈ ({scs5M1} : Set ScsV39), MMsV39 s = ∅
+    · exact Or.inl hE
+    · push_neg at hE
+      obtain ⟨s, hs, hne⟩ := hE
+      rw [Set.mem_singleton_iff] at hs
+      subst s
+      obtain ⟨v, hv⟩ := hne
+      by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
+      · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
+        exact MM_5M1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+      · push_neg at hdiag
+        obtain ⟨i, j, hdij, hle⟩ := hdiag
+        refine Or.inr ⟨scsStabDiagV39 scs5M1 i j, ?_, ?_⟩
+        · simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq]
+          exact Or.inr ⟨i, j, hdij, rfl⟩
+        · intro hcon
+          rw [Set.eq_empty_iff_forall_notMem] at hcon
+          exact hcon v (SCS_5M1_STAB_DIAG v i j hv hdij hle)
+
+
+/-! ### B6. The four master arrows (OTMTOTJ.hl:1156/1169/1500/1520)
+
+Skeleton restatements (2026-09-21): faithful verbatim statements of the HOL
+masters `OTMTOTJ1-4`, previously carried only by the LocalAuto1
+`OTMTOTJ1-4_concl` registry copies (:1419-1439).  The HOL proofs compose
+the Section B3/B5 arrows through the `FZIOTEF` transitivity/union kit. -/
+
+/-- HOL `OTMTOTJ1` (OTMTOTJ.hl:1156). -/
+theorem OTMTOTJ1 :
+    scsArrowV39 {scs5I1} {scsStabDiagV39 scs5I1 0 2, scs5M2} := by
+  have hberak : scsArrowV39 {scs5I1}
+      ({x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I1 i j} ∪ {scs5M2}) := by
+    rw [Set.union_comm]
+    exact SCS_5I1_BERAK_BY_CSTAB
+  rw [Set.insert_eq]
+  exact FZIOTEF_TRANS {scs5I1}
+    ({x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I1 i j} ∪ {scs5M2})
+    ({scsStabDiagV39 scs5I1 0 2} ∪ {scs5M2}) hberak
+    (FZIOTEF_UNION {x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I1 i j}
+      {scsStabDiagV39 scs5I1 0 2} {scs5M2} {scs5M2} SET_EQ_DIAG_STAB_5I1
+      (FZIOTEF_REFL {scs5M2} (fun s hs => by
+        rw [Set.mem_singleton_iff] at hs
+        subst s
+        exact SCS_5M2_IS_SCS)))
+
+/-- HOL `OTMTOTJ2` (OTMTOTJ.hl:1169). -/
+theorem OTMTOTJ2 :
+    scsArrowV39 {scs5I2} {scsStabDiagV39 scs5I2 0 2, scs5M2} := by
+  have hberak : scsArrowV39 {scs5I2}
+      ({x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I2 i j} ∪ {scs5M2}) := by
+    rw [Set.union_comm]
+    exact SCS_5I2_BERAK_BY_CSTAB
+  rw [Set.insert_eq]
+  exact FZIOTEF_TRANS {scs5I2}
+    ({x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I2 i j} ∪ {scs5M2})
+    ({scsStabDiagV39 scs5I2 0 2} ∪ {scs5M2}) hberak
+    (FZIOTEF_UNION {x | ∃ i j, scsDiag 5 i j ∧ x = scsStabDiagV39 scs5I2 i j}
+      {scsStabDiagV39 scs5I2 0 2} {scs5M2} {scs5M2} SET_EQ_DIAG_STAB_5I2
+      (FZIOTEF_REFL {scs5M2} (fun s hs => by
+        rw [Set.mem_singleton_iff] at hs
+        subst s
+        exact SCS_5M2_IS_SCS)))
+
+
 /-! ## Section B8 (la24-b3masters-w3): the master arrows `OTMTOTJ3`/`OTMTOTJ4`
 
 The Section B6 skeleton items `OTMTOTJ3` and `OTMTOTJ4` are MOVED here
 verbatim (statements byte-identical to their Section B6 forms): their
 discharges consume `STAB_5I3_ARROW_STAB_5M1_DIAG` (Section B7, which
-follows the case bank). `OTMTOTJ1`/`OTMTOTJ2` remain in their Section B6
-positions (no case-bank dependency). -/
+`OTMTOTJ1`/`OTMTOTJ2` sit in the sweep-b24-w2 transfer section above (moved with the `BERAK` arrows they consume; statements byte-identical). -/
 
 
 /-- The `scs_5M2` reflexivity twin (singleton `isScs` membership), shared by
@@ -2365,3 +3277,13 @@ theorem OTMTOTJ4 :
   rw [← la24diag4_rotate_p24]
   exact la24otj4_chain_p24
 
+
+
+-- sweep-b24-w2: axiom tails of the seven discharged arrows.
+#print axioms Kepler.Text.MM_5I1_IMP_MM_5M2
+#print axioms Kepler.Text.MM_5I2_IMP_MM_5M2
+#print axioms Kepler.Text.MM_5I3_IMP_MM_5M2
+#print axioms Kepler.Text.MM_5M1_IMP_MM_5M2
+#print axioms Kepler.Text.SET_EQ_DIAG_STAB_5I1
+#print axioms Kepler.Text.SET_EQ_DIAG_STAB_5I2
+#print axioms Kepler.Text.SET_EQ_DIAG_STAB_5M1
