@@ -157,6 +157,24 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   zero importers of this file tree-wide + module-closure computation
   (blueprint §1.2).
 
+  ASSEMBLY WAVE 2026-10-28 (lane la35-access-wd1; LA35-series real-proof
+    supply onto the assembly point): the five CNICGSF slots of
+    `JEJTVGB_p16_discharged` are refilled from real-proof donors.  The LA18
+    twins' debt (`SCS_*_SLICE_*_p18` bare sorries on the LKGRQUI lane + the
+    registry arrow `YXIONXL3_concl`) is replaced by `LKGRQUI_p27` instances
+    proved in this file (the `wd_*` private bridge section before the
+    consumption-upshift block; the ten half-slice record identities are
+    PSORT/FUNLIST table bashes, HOL CNICGSF.hl route) + the clean
+    `YXIONXL3_discharged`.  This is the LA35->spine consumption edge: the e2e
+    cone now reaches the LA35 engine, so W-A's (pm12) closure of the
+    `pmPlaneCrowding_p35` root scores at the assembly exit.  Honest debt
+    note: `LKGRQUI_p27` also carries the `SGTRNAF_p27` leg
+    (`XWNHLMD_MM_p26` -> `UXCKFPE*_p27` -> the LA24 `XWITCCN_CASE_*_IS_SCS_p24`
+    bank), so the five refilled slots' sorried-ancestor sets are
+    {pmPlaneCrowding_p35, XWITCCN_CASE_3/4/5/6_IS_SCS_p24} (measured, see the
+    lane's Evidence.md reach probe), replacing the previous 2 dead-end roots
+    per slot.
+
   Classic discharges (twin · shape status; all 16 sorry-free or wave-tainted
   as noted by `#print axioms` at the foot of this file):
     YXIONXL1_discharged  := LocalAuto12.YXIONXL1       (verbatim twin)
@@ -820,35 +838,996 @@ theorem FUNOUYH_discharged :
     scsArrowV39 {scsStabDiagV39 scs6I1 0 3} {scs4M2} :=
   FZIOTEF
 
-/-- WIRE `LocalAuto1.CNICGSF4_concl` <- `CNICGSF4_p18` (verbatim twin; PROVED
-in LA18). -/
+/-
+  W-D lane (la35-access-wd1, 2026-10-28): LA35-series real-proof supply for
+  the five CNICGSF slots of `JEJTVGB_p16_discharged`.  The LA18 twins
+  `CNICGSF{1,2,3,5}_p18`/`CNICGSF4_p18` compose their `(p,q)`-slice arrows
+  `SCS_*_SLICE_*_p18` (bare LA18 sorries, no upstream closure path) with the
+  LA1 registry arrow `YXIONXL3_concl`.  Both roots are replaced here: the
+  slice arrows are re-proved as `LKGRQUI_p27` instances (LA27's real-proof
+  assembly over the LA35 engine `SCS_HALF_SLICE_IS_A_SCS_p35` /
+  `SCS_SLICE_SYM_p35` / `QKNVMLB1_p35` / `QKNVMLB3_p35`; pm root
+  `pmPlaneCrowding_p35` + the `SGTRNAF_p27` leg), and the rotations consume
+  this file's clean `YXIONXL3_discharged`.  All pieces private; the half-slice
+  record identities are PSORT/FUNLIST table bashes (HOL CNICGSF.hl route);
+  `wd_isScs_stab`/`wd_csAdj_far` are copies of LA24's private
+  `la24isScs_stab`/`la24csAdj_far` (deps public) and `wd_STAB_5I1_SCS` fills
+  the one diag-stabilisation SCS lemma LA24 does not carry.
+-/
+
+private theorem wd_csAdj_far {a1 a2 : ℝ} {i j x y : ℕ} (hd : scsDiag 5 i j)
+    (hxy : (i % 5 = x % 5 ∧ j % 5 = y % 5) ∨ (i % 5 = y % 5 ∧ j % 5 = x % 5)) :
+    csAdj 5 a1 a2 x y = a2 := by
+  obtain ⟨hd1, hd2, hd3⟩ := hd
+  rcases hxy with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · simp only [csAdj, ← h1, ← h2]
+    split
+    · exfalso; omega
+    split
+    · exfalso; omega
+    · rfl
+  · simp only [csAdj, ← h1, ← h2]
+    split
+    · exfalso; omega
+    split
+    · exfalso; omega
+    · rfl
+
+private theorem wd_isScs_stab (s : ScsV39) (i j : ℕ) (hd : scsDiag s.k i j)
+    (hs : isScsV39 s)
+    (hdom : ∀ u v, psort s.k (i, j) = psort s.k (u, v) → s.a u v ≤ cstab) :
+    isScsV39 (scsStabDiagV39 s i j) := by
+  have hk0 : s.k ≠ 0 := by have := hs.2.1; omega
+  have hk2 : 1 < s.k := by have := hs.2.1; omega
+  obtain ⟨hdd, hk1, hk6, -, -, -, -, hpa, -, -, hpb, -, hsym, hch, hdiag0, h2a, hb3,
+    hbc, -, -, hcard⟩ := hs
+  have hpb1 : ∀ u v, s.b (u + s.k) v = s.b u v := fun u v => (hpb u v).1
+  have hpb2 : ∀ u v, s.b u (v + s.k) = s.b u v := fun u v => (hpb u v).2
+  set b' : ℕ → ℕ → ℝ := fun x y =>
+    if psort s.k (i, j) = psort s.k (x, y) then cstab else s.b x y with hb'def
+  rw [show scsStabDiagV39 s i j = mkUnadornedV39 s.k s.d s.a b' from by
+    simp only [scsStabDiagV39, mkUnadornedV39, hb'def]]
+  simp only [isScsV39, mkUnadornedV39]
+  have psort_add1 : ∀ u v : ℕ, psort s.k (u + s.k, v) = psort s.k (u, v) := by
+    intro u v
+    rw [(PSORT_MOD s.k (u + s.k) v hk0).symm, Nat.add_mod_right, PSORT_MOD s.k u v hk0]
+  have psort_add2 : ∀ u v : ℕ, psort s.k (u, v + s.k) = psort s.k (u, v) := by
+    intro u v
+    rw [(PSORT_MOD s.k u (v + s.k) hk0).symm, Nat.add_mod_right, PSORT_MOD s.k u v hk0]
+  have hb'edge : ∀ u, b' u (u + 1) = s.b u (u + 1) := by
+    intro u
+    simp only [hb'def]
+    rw [if_neg (diag_not_edge_psort_p20 u hk2 hd)]
+  have hsymB' : ∀ u v, b' u v = b' v u := by
+    intro u v
+    simp only [hb'def]
+    by_cases hcls : psort s.k (i, j) = psort s.k (u, v)
+    · rw [if_pos hcls, psort_swap_p20 s.k v u, if_pos hcls]
+    · rw [if_neg hcls, psort_swap_p20 s.k v u, if_neg hcls]
+      exact (hsym u v).2.2.2.1
+  have hpb' : Periodic2 b' s.k := by
+    intro u v
+    refine ⟨?_, ?_⟩
+    · show b' (u + s.k) v = b' u v
+      simp only [hb'def]
+      rw [psort_add1, hpb1 u v]
+    · show b' u (v + s.k) = b' u v
+      simp only [hb'def]
+      rw [psort_add2, hpb2 u v]
+  have hdomcase : ∀ u v, s.a u v ≤ b' u v := by
+    intro u v
+    by_cases hcls : psort s.k (i, j) = psort s.k (u, v)
+    · simp only [hb'def, if_pos hcls]
+      exact hdom u v hcls
+    · simp only [hb'def, if_neg hcls]
+      exact (hch u v).1.trans ((hch u v).2.1.trans (hch u v).2.2)
+  refine ⟨hdd, hk1, hk6, periodic_empty s.k, periodic_empty s.k, periodic_empty s.k,
+    periodic_empty s.k, hpa, hpa, hpb', hpb', fun _ _ => ⟨rfl, rfl⟩,
+    fun u v => ⟨(hsym u v).1, (hsym u v).1, hsymB' u v, hsymB' u v, trivial⟩,
+    fun u v => ⟨le_refl _, hdomcase u v, le_refl _⟩, hdiag0, h2a,
+    fun u h3 => by rw [hb'edge u]; exact hb3 u h3,
+    fun u h3 => by rw [hb'edge u]; exact hbc u h3,
+    fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+  simp only [hb'edge]
+  exact hcard
+
+/-- `STAB_5I1_SCS` (missing from LA24): diag-stabilisations of `scs5I1` are
+SCS; the stab overrides the diag b-slot to `cstab` and the a-table far value
+`2 * h0` is `≤ cstab` on the stabilised class. -/
+private theorem wd_STAB_5I1_SCS (i j : ℕ) (hd : scsDiag scs5I1.k i j) :
+    isScsV39 (scsStabDiagV39 scs5I1 i j) ∧ scsBasicV39 (scsStabDiagV39 scs5I1 i j) := by
+  refine ⟨wd_isScs_stab scs5I1 i j hd SCS_5I1_IS_SCS ?_,
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩⟩
+  intro u v hcls
+  rw [show scs5I1.k = 5 from rfl] at hcls
+  show csAdj 5 2 (2 * h0) u v ≤ cstab
+  rw [wd_csAdj_far hd (psort_eq_cases_p20 hcls)]
+  norm_num [h0, cstab]
+
+/-! ## wd copies of the LA18 rotation kit (LA18-privates are not visible) -/
+
+private theorem wd_funlistV39_add_period (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ)
+    (k j j' : ℕ) :
+    funlistV39 data d k (k + j) (k + j') = funlistV39 data d k j j' := by
+  unfold funlistV39 psort
+  have h1 : (k + j) % k = j % k := by
+    rw [Nat.add_comm k j]
+    simpa using (Nat.add_mul_mod_self_left j 1 k)
+  have h2 : (k + j') % k = j' % k := by
+    rw [Nat.add_comm k j']
+    simpa using (Nat.add_mul_mod_self_left j' 1 k)
+  rw [h1, h2]
+
+private theorem wd_funlistV39_add_mul_period (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ)
+    (k c j j' : ℕ) :
+    funlistV39 data d k (k * c + j) (k * c + j') = funlistV39 data d k j j' := by
+  induction c with
+  | zero => simp
+  | succ c ih =>
+    rw [show k * (c + 1) + j = k + (k * c + j) from by ring,
+        show k * (c + 1) + j' = k + (k * c + j') from by ring,
+        wd_funlistV39_add_period, ih]
+
+private theorem wd_propEqu_propEqu_mkUnadorned (k : ℕ) (d : ℝ)
+    (data1 : List ((ℕ × ℕ) × ℝ)) (d1 : ℝ) (data2 : List ((ℕ × ℕ) × ℝ)) (d2 : ℝ)
+    (i m c : ℕ) (h : i + m = k * c) :
+    scsPropEquV39 (scsPropEquV39
+        (mkUnadornedV39 k d (funlistV39 data1 d1 k) (funlistV39 data2 d2 k)) i) m
+      = mkUnadornedV39 k d (funlistV39 data1 d1 k) (funlistV39 data2 d2 k) := by
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, rfl, rfl, rfl, rfl⟩
+  all_goals
+    ext j j'
+    simp only [scsPropEquV39, mkUnadornedV39]
+    rw [show i + (m + j) = k * c + j from by omega,
+        show i + (m + j') = k * c + j' from by omega]
+    exact wd_funlistV39_add_mul_period _ _ k c j j'
+
+private theorem wd_scsArrowV39_pair_union {a b c d : ScsV39}
+    (h1 : scsArrowV39 {a} {b}) (h2 : scsArrowV39 {c} {d}) :
+    scsArrowV39 {a, c} {b, d} := by
+  refine ⟨?_, ?_⟩
+  · intro s hs
+    rcases hs with h | h
+    · rw [h]; exact h1.1 b (by simp)
+    · rw [h]; exact h2.1 d (by simp)
+  · rcases h1.2 with h1e | ⟨s, hs, hne⟩
+    · rcases h2.2 with h2e | ⟨t, ht, hne'⟩
+      · left
+        intro u hu
+        rcases hu with h | h
+        · rw [h]; exact h1e a (by simp)
+        · rw [h]; exact h2e c (by simp)
+      · exact Or.inr ⟨t, Or.inr (Set.mem_singleton_iff.mp ht), hne'⟩
+    · exact Or.inr ⟨s, Or.inl (Set.mem_singleton_iff.mp hs), hne⟩
+
+private theorem wd_scsArrowV39_lift {a b b' : ScsV39} (h : scsArrowV39 {a} {b'})
+    (heq : b' = b) : scsArrowV39 {a} {b} := by rw [← heq]; exact h
+
+private theorem wd_pair_eq02 {a b : ℕ} :
+    ({a, b} : Set ℕ) = {0, 2} ↔ (a = 0 ∧ b = 2) ∨ (a = 2 ∧ b = 0) := by
+  constructor
+  · intro h
+    have h0 : (0 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    have h2 : (2 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h0 h2
+    rcases h0 with ha | ha <;> rcases h2 with hb | hb <;> omega
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) <;> ext t <;> simp <;> omega
+
+private theorem wd_pair_eq03 {a b : ℕ} :
+    ({a, b} : Set ℕ) = {0, 3} ↔ (a = 0 ∧ b = 3) ∨ (a = 3 ∧ b = 0) := by
+  constructor
+  · intro h
+    have h0 : (0 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    have h3 : (3 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h0 h3
+    rcases h0 with ha | ha <;> rcases h3 with hb | hb <;> omega
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) <;> ext t <;> simp <;> omega
+
+private theorem wd_sing_ne02 (a : ℕ) : ¬(({a} : Set ℕ) = {0, 2}) := by
+  intro h
+  have h0 : (0 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+  have h2 : (2 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+  simp only [Set.mem_singleton_iff] at h0 h2
+  omega
+
+private theorem wd_sing_ne03 (a : ℕ) : ¬(({a} : Set ℕ) = {0, 3}) := by
+  intro h
+  have h0 : (0 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+  have h3 : (3 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+  simp only [Set.mem_singleton_iff] at h0 h3
+  omega
+
+/-! ## The ten half-table record bashes -/
+
+private theorem wd_half_5I1_02_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs5I1 0 2) 0 2 0.103 False =
+      scsPropEquV39 scs3M1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3M1, scs5I1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5I1_02_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs5I1 0 2) 2 0 0.3789 False =
+      scsPropEquV39 scs4M2 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M2, scs5I1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5I2_02_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs5I2 0 2) 0 2 0.11 False =
+      scsPropEquV39 scs3T1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T1, scs5I2]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5I2_02_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs5I2 0 2) 2 0 0.513 False =
+      scsPropEquV39 scs4M3' 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M3', scs5I2]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5M1_02_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M1 0 2) 0 2 0.2759 False =
+      scsPropEquV39 scs3T4 2 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T4, scs5M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+    have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+    have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+    have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+    have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5M1_02_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M1 0 2) 2 0 0.3789 False =
+      scsPropEquV39 scs4M2 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M2, scs5M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5M1_03_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M1 0 3) 0 3 0.513 False =
+      scsPropEquV39 scs4M4' 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M4', scs5M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5M1_03_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M1 0 3) 3 0 0.103 False =
+      scsPropEquV39 scs3M1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3M1, scs5M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5M1_24_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M1 2 4) 2 4 0.103 False =
+      scsPropEquV39 scs3M1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3M1, scs5M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq02, wd_sing_ne02, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem wd_half_5M1_24_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M1 2 4) 4 2 0.513 False =
+      scsPropEquV39 scs4M5' 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M5', scs5M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [csAdj, funlistV39, psort, assocdV39, wd_pair_eq03, wd_sing_ne03, Set.mem_insert_iff,
+        Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+/-! ## The five slice bridges (LKGRQUI_p27 instances) -/
+
+private theorem SCS_5I1_SLICE_02_wd :
+    scsArrowV39 {scsStabDiagV39 scs5I1 0 2}
+      {scsPropEquV39 scs3M1 1, scsPropEquV39 scs4M2 1} := by
+  have mkjF : (scsPropEquV39 scs3M1 1).J 0
+      ((scsPropEquV39 scs3M1 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs5I1 0 2)
+      (scsPropEquV39 scs3M1 1) (scsPropEquV39 scs4M2 1) 0 2 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨wd_half_5I1_02_lo.symm, wd_half_5I1_02_hi.symm⟩
+    · show (0.103 : ℝ) < 0.9
+      norm_num
+    · show (0.3789 : ℝ) < 0.9
+      norm_num
+    · show dTame 5 ≤ 0.103 + 0.3789
+      norm_num [dTame]
+    · show cstab < 4
+      norm_num [cstab]
+    · right
+      show cstab ≤ cstab
+      exact le_refl cstab
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs5I1 0 2) (scsPropEquV39 scs3M1 1)
+    (scsPropEquV39 scs4M2 1) 0 2 0 0 True
+    (wd_STAB_5I1_SCS 0 2 ⟨by decide, by decide, by decide⟩).1 ⟨by decide, by decide, by decide⟩ hsl
+
+private theorem SCS_5I2_SLICE_02_wd :
+    scsArrowV39 {scsStabDiagV39 scs5I2 0 2}
+      {scsPropEquV39 scs3T1 1, scsPropEquV39 scs4M3' 1} := by
+  have mkjF : (scsPropEquV39 scs3T1 1).J 0
+      ((scsPropEquV39 scs3T1 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs5I2 0 2)
+      (scsPropEquV39 scs3T1 1) (scsPropEquV39 scs4M3' 1) 0 2 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨wd_half_5I2_02_lo.symm, wd_half_5I2_02_hi.symm⟩
+    · show (0.11 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) < 0.9
+      norm_num
+    · show (0.616 : ℝ) ≤ 0.11 + 0.513
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · right
+      show cstab ≤ cstab
+      exact le_refl cstab
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs5I2 0 2) (scsPropEquV39 scs3T1 1)
+    (scsPropEquV39 scs4M3' 1) 0 2 0 0 True
+    (STAB_5I2_SCS 0 2 ⟨by decide, by decide, by decide⟩).1 ⟨by decide, by decide, by decide⟩ hsl
+
+private theorem SCS_5M1_SLICE_02_wd :
+    scsArrowV39 {scsStabDiagV39 scs5M1 0 2}
+      {scsPropEquV39 scs3T4 2, scsPropEquV39 scs4M2 1} := by
+  have mkjF : (scsPropEquV39 scs3T4 2).J 0
+      ((scsPropEquV39 scs3T4 2).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs5M1 0 2)
+      (scsPropEquV39 scs3T4 2) (scsPropEquV39 scs4M2 1) 0 2 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨wd_half_5M1_02_lo.symm, wd_half_5M1_02_hi.symm⟩
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.3789 : ℝ) < 0.9
+      norm_num
+    · show (0.616 : ℝ) ≤ 0.2759 + 0.3789
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · right
+      show cstab ≤ cstab
+      exact le_refl cstab
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs5M1 0 2) (scsPropEquV39 scs3T4 2)
+    (scsPropEquV39 scs4M2 1) 0 2 0 0 True
+    (STAB_5M1_SCS 0 2 ⟨by decide, by decide, by decide⟩).1 ⟨by decide, by decide, by decide⟩ hsl
+
+private theorem SCS_5M1_SLICE_03_wd :
+    scsArrowV39 {scsStabDiagV39 scs5M1 0 3}
+      {scsPropEquV39 scs4M4' 1, scsPropEquV39 scs3M1 1} := by
+  have mkjF : (scsPropEquV39 scs4M4' 1).J 0
+      ((scsPropEquV39 scs4M4' 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs5M1 0 3)
+      (scsPropEquV39 scs4M4' 1) (scsPropEquV39 scs3M1 1) 0 3 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨wd_half_5M1_03_lo.symm, wd_half_5M1_03_hi.symm⟩
+    · show (0.513 : ℝ) < 0.9
+      norm_num
+    · show (0.103 : ℝ) < 0.9
+      norm_num
+    · show (0.616 : ℝ) ≤ 0.513 + 0.103
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · right
+      show cstab ≤ cstab
+      exact le_refl cstab
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs5M1 0 3) (scsPropEquV39 scs4M4' 1)
+    (scsPropEquV39 scs3M1 1) 0 3 0 0 True
+    (STAB_5M1_SCS 0 3 ⟨by decide, by decide, by decide⟩).1 ⟨by decide, by decide, by decide⟩ hsl
+
+private theorem SCS_5M1_SLICE_24_wd :
+    scsArrowV39 {scsStabDiagV39 scs5M1 2 4}
+      {scsPropEquV39 scs3M1 1, scsPropEquV39 scs4M5' 1} := by
+  have mkjF : (scsPropEquV39 scs3M1 1).J 0
+      ((scsPropEquV39 scs3M1 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs5M1 2 4)
+      (scsPropEquV39 scs3M1 1) (scsPropEquV39 scs4M5' 1) 2 4 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨wd_half_5M1_24_lo.symm, wd_half_5M1_24_hi.symm⟩
+    · show (0.103 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) < 0.9
+      norm_num
+    · show (0.616 : ℝ) ≤ 0.103 + 0.513
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · right
+      show cstab ≤ cstab
+      exact le_refl cstab
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs5M1 2 4) (scsPropEquV39 scs3M1 1)
+    (scsPropEquV39 scs4M5' 1) 2 4 0 0 True
+    (STAB_5M1_SCS 2 4 ⟨by decide, by decide, by decide⟩).1 ⟨by decide, by decide, by decide⟩ hsl
+
+/-- WIRE (real proof, W-D 2026-10-28) `LocalAuto1.CNICGSF4_concl`: body
+re-derived from the `LKGRQUI_p27` instance `SCS_5M1_SLICE_03_wd` (LA35 engine;
+slice-arrow debt) + the clean `YXIONXL3_discharged` rotations, replacing the
+LA18 twin `CNICGSF4_p18` whose debt was the bare LA18 sorry
+`SCS_5M1_SLICE_03_p18` + the registry arrow `YXIONXL3_concl`.  Statement
+verbatim. -/
 theorem CNICGSF4_discharged :
-    scsArrowV39 {scsStabDiagV39 scs5M1 0 3} {scs4M4', scs3M1} :=
-  CNICGSF4_p18
+    scsArrowV39 {scsStabDiagV39 scs5M1 0 3} {scs4M4', scs3M1} := by
+  have his1 : isScsV39 (scsPropEquV39 scs4M4' 1) := SCS_5M1_SLICE_03_wd.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs3M1 1) := SCS_5M1_SLICE_03_wd.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs4M4' 1) 3 = scs4M4' :=
+    wd_propEqu_propEqu_mkUnadorned 4 0.513
+      [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+      [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1
+      (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs3M1 1) 2 = scs3M1 :=
+    wd_propEqu_propEqu_mkUnadorned 3 0.103
+      [((0, 1), 2 * h0)] 2 [((0, 1), cstab)] (2 * h0) 1 2 1 (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5M1_SLICE_03_wd
+    (wd_scsArrowV39_pair_union
+      (wd_scsArrowV39_lift (YXIONXL3_discharged _ 3 his1) heq1)
+      (wd_scsArrowV39_lift (YXIONXL3_discharged _ 2 his2) heq2))
 
-/-- WIRE `LocalAuto1.CNICGSF1_concl` <- PROVED `CNICGSF1_p18` via the
-target-set permutation shim (`{scs3M1, scs4M2} = {scs4M2, scs3M1}`). -/
+/-- WIRE (real proof, W-D 2026-10-28) `LocalAuto1.CNICGSF1_concl`: body
+re-derived from the `LKGRQUI_p27` instance `SCS_5I1_SLICE_02_wd` + clean
+`YXIONXL3_discharged` rotations + the target-set permutation shim
+(`{scs3M1, scs4M2} = {scs4M2, scs3M1}`), replacing the LA18 twin's debt
+(`SCS_5I1_SLICE_02_p18` bare sorry + `YXIONXL3_concl`).  Statement verbatim. -/
 theorem CNICGSF1_discharged :
-    scsArrowV39 {scsStabDiagV39 scs5I1 0 2} {scs4M2, scs3M1} :=
-  arrowSetRight CNICGSF1_p18 (by ext t; simp; tauto)
+    scsArrowV39 {scsStabDiagV39 scs5I1 0 2} {scs4M2, scs3M1} := by
+  have his1 : isScsV39 (scsPropEquV39 scs3M1 1) := SCS_5I1_SLICE_02_wd.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs4M2 1) := SCS_5I1_SLICE_02_wd.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs3M1 1) 2 = scs3M1 :=
+    wd_propEqu_propEqu_mkUnadorned 3 0.103
+      [((0, 1), 2 * h0)] 2 [((0, 1), cstab)] (2 * h0) 1 2 1 (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs4M2 1) 3 = scs4M2 :=
+    wd_propEqu_propEqu_mkUnadorned 4 0.3789
+      [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+      [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1 (by norm_num)
+  exact arrowSetRight
+    (FZIOTEF_TRANS _ _ _ SCS_5I1_SLICE_02_wd
+      (wd_scsArrowV39_pair_union
+        (wd_scsArrowV39_lift (YXIONXL3_discharged _ 2 his1) heq1)
+        (wd_scsArrowV39_lift (YXIONXL3_discharged _ 3 his2) heq2)))
+    (by ext t; simp; tauto)
 
-/-- WIRE `LocalAuto1.CNICGSF2_concl` <- PROVED `CNICGSF2_p18` via the
-target-set permutation shim (`{scs3T1, scs4M3'} = {scs4M3', scs3T1}`). -/
+/-- WIRE (real proof, W-D 2026-10-28) `LocalAuto1.CNICGSF2_concl`: body
+re-derived from the `LKGRQUI_p27` instance `SCS_5I2_SLICE_02_wd` + clean
+`YXIONXL3_discharged` rotations + the target-set permutation shim
+(`{scs3T1, scs4M3'} = {scs4M3', scs3T1}`), replacing the LA18 twin's debt
+(`SCS_5I2_SLICE_02_p18` bare sorry + `YXIONXL3_concl`).  Statement verbatim. -/
 theorem CNICGSF2_discharged :
-    scsArrowV39 {scsStabDiagV39 scs5I2 0 2} {scs4M3', scs3T1} :=
-  arrowSetRight CNICGSF2_p18 (by ext t; simp; tauto)
+    scsArrowV39 {scsStabDiagV39 scs5I2 0 2} {scs4M3', scs3T1} := by
+  have his1 : isScsV39 (scsPropEquV39 scs3T1 1) := SCS_5I2_SLICE_02_wd.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs4M3' 1) := SCS_5I2_SLICE_02_wd.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs3T1 1) 2 = scs3T1 := by
+    rw [scs_3T1]
+    exact wd_propEqu_propEqu_mkUnadorned 3 0.11
+      [((0, 1), Real.sqrt 8)] 2 [((0, 1), cstab)] (2 * h0) 1 2 1 (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs4M3' 1) 3 = scs4M3' :=
+    wd_propEqu_propEqu_mkUnadorned 4 0.513
+      [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2
+      [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1 (by norm_num)
+  exact arrowSetRight
+    (FZIOTEF_TRANS _ _ _ SCS_5I2_SLICE_02_wd
+      (wd_scsArrowV39_pair_union
+        (wd_scsArrowV39_lift (YXIONXL3_discharged _ 2 his1) heq1)
+        (wd_scsArrowV39_lift (YXIONXL3_discharged _ 3 his2) heq2)))
+    (by ext t; simp; tauto)
 
-/-- WIRE `LocalAuto1.CNICGSF3_concl` <- PROVED `CNICGSF3_p18` via the
-target-set permutation shim (`{scs3T4, scs4M2} = {scs4M2, scs3T4}`). -/
+/-- WIRE (real proof, W-D 2026-10-28) `LocalAuto1.CNICGSF3_concl`: body
+re-derived from the `LKGRQUI_p27` instance `SCS_5M1_SLICE_02_wd` + clean
+`YXIONXL3_discharged` rotations + the target-set permutation shim
+(`{scs3T4, scs4M2} = {scs4M2, scs3T4}`), replacing the LA18 twin's debt
+(`SCS_5M1_SLICE_02_p18` bare sorry + `YXIONXL3_concl`).  Statement verbatim. -/
 theorem CNICGSF3_discharged :
-    scsArrowV39 {scsStabDiagV39 scs5M1 0 2} {scs4M2, scs3T4} :=
-  arrowSetRight CNICGSF3_p18 (by ext t; simp; tauto)
+    scsArrowV39 {scsStabDiagV39 scs5M1 0 2} {scs4M2, scs3T4} := by
+  have his1 : isScsV39 (scsPropEquV39 scs3T4 2) := SCS_5M1_SLICE_02_wd.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs4M2 1) := SCS_5M1_SLICE_02_wd.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs3T4 2) 1 = scs3T4 :=
+    wd_propEqu_propEqu_mkUnadorned 3 0.2759
+      [((0, 1), 2)] (2 * h0) [((0, 1), 2 * h0)] cstab 2 1 1 (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs4M2 1) 3 = scs4M2 :=
+    wd_propEqu_propEqu_mkUnadorned 4 0.3789
+      [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+      [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1 (by norm_num)
+  exact arrowSetRight
+    (FZIOTEF_TRANS _ _ _ SCS_5M1_SLICE_02_wd
+      (wd_scsArrowV39_pair_union
+        (wd_scsArrowV39_lift (YXIONXL3_discharged _ 1 his1) heq1)
+        (wd_scsArrowV39_lift (YXIONXL3_discharged _ 3 his2) heq2)))
+    (by ext t; simp; tauto)
 
-/-- WIRE `LocalAuto1.CNICGSF5_concl` <- PROVED `CNICGSF5_p18` via the
-target-set permutation shim (`{scs3M1, scs4M5'} = {scs4M5', scs3M1}`). -/
+/-- WIRE (real proof, W-D 2026-10-28) `LocalAuto1.CNICGSF5_concl`: body
+re-derived from the `LKGRQUI_p27` instance `SCS_5M1_SLICE_24_wd` + clean
+`YXIONXL3_discharged` rotations + the target-set permutation shim
+(`{scs3M1, scs4M5'} = {scs4M5', scs3M1}`), replacing the LA18 twin's debt
+(`SCS_5M1_SLICE_24_p18` bare sorry + `YXIONXL3_concl`).  Statement verbatim. -/
 theorem CNICGSF5_discharged :
-    scsArrowV39 {scsStabDiagV39 scs5M1 2 4} {scs4M5', scs3M1} :=
-  arrowSetRight CNICGSF5_p18 (by ext t; simp; tauto)
+    scsArrowV39 {scsStabDiagV39 scs5M1 2 4} {scs4M5', scs3M1} := by
+  have his1 : isScsV39 (scsPropEquV39 scs3M1 1) := SCS_5M1_SLICE_24_wd.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs4M5' 1) := SCS_5M1_SLICE_24_wd.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs3M1 1) 2 = scs3M1 :=
+    wd_propEqu_propEqu_mkUnadorned 3 0.103
+      [((0, 1), 2 * h0)] 2 [((0, 1), cstab)] (2 * h0) 1 2 1 (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs4M5' 1) 3 = scs4M5' :=
+    wd_propEqu_propEqu_mkUnadorned 4 0.513
+      [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1
+      (by norm_num)
+  exact arrowSetRight
+    (FZIOTEF_TRANS _ _ _ SCS_5M1_SLICE_24_wd
+      (wd_scsArrowV39_pair_union
+        (wd_scsArrowV39_lift (YXIONXL3_discharged _ 2 his1) heq1)
+        (wd_scsArrowV39_lift (YXIONXL3_discharged _ 3 his2) heq2)))
+    (by ext t; simp; tauto)
 
 /-- WIRE `LocalAuto1.JKQEWGV1_concl` <- `JKQEWGV1_p23` (shims: hypothesis
 reorder `hs hBB hta hk` -> `hs hk hBB hta`; `(f '' univ)` -> `Set.range f`).
