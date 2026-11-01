@@ -136,6 +136,27 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
         `dihV`.  Verdict: class (iii) corpus-missing for all five; the
         HOLDs stand with no faithful statement available to build.
 
+  ASSEMBLY WAVE 2026-10 (consumption upshift; lane la1concl-reroute-w1,
+  blueprint la1reroute-w1 / structural finding sf78draft-w1 §9-8): the 21
+  WIRE exits feeding `JEJTVGB_p16` (OTMTOTJ1-4, CNICGSF1-5, HIJQAHA,
+  FYSSVEV, ARDBZYE, AUEAHEH, VQFYMZY, BNAWVNH, RAWZDIB, MFKLVDK, RYPDIXT,
+  NWDGKXH, YOBIMPP, MIQMCSN) are now consumed INSIDE this file by
+  `JEJTVGB_p16_discharged` + `nonlinear_imp_lp_main_estimate_p16_discharged`
+  (see the block before `end Kepler.Text`), and `Kepler.Assembly` switches
+  its two consumption points to the latter name.  This moves the assembly
+  point one layer up: the LA1 `*_concl` registry arrows leave the e2e cone
+  (their downstream `LocalAuto16.JEJTVGB_p16` chain loses its last
+  consumer), while the debt graph is preserved verbatim -- same twins,
+  debt flows along the proof term (the ASSEMBLY WAVE 2026-09-21 contract,
+  one layer up).
+  Zero new debt: the two new theorems add no proof debt of their own; the
+  reachable-debt rows move from LocalAuto1 to the twins' owners
+  (LA18/24/29/32/33/17 + `mnt11_anchor`), net +6 rows at the next
+  e2e rescan (static subcone accounting 151 -> 157, blueprint §3.2).
+  Acyclicity of the new edge `Kepler.Assembly -> Kepler.Text.LocalConcl`:
+  zero importers of this file tree-wide + module-closure computation
+  (blueprint §1.2).
+
   Classic discharges (twin · shape status; all 16 sorry-free or wave-tainted
   as noted by `#print axioms` at the foot of this file):
     YXIONXL1_discharged  := LocalAuto12.YXIONXL1       (verbatim twin)
@@ -1705,5 +1726,66 @@ inputs (e.g. `YXIONXL1` via an LA12 wave input, `PQCSXWG2` via
 #print axioms QKNVMLB1_discharged
 #print axioms QKNVMLB2_discharged
 #print axioms QKNVMLB3_discharged
+
+
+/-! ### Consumption upshift (lane la1concl-reroute-w1, 2026-10):
+the `JEJTVGB_p16` assembly assembled from THIS file's WIRE exits, so the
+e2e cone consumes the assembly layer instead of the LocalAuto1 registry
+sorries.  Statement = `LocalAuto16.JEJTVGB_p16` verbatim; body =
+`LocalAuto16.JEJTVGB_case_breakdown_p16` with the 21 registry slots
+refilled from this file's `*_discharged` exits (`_concl` -> `_discharged`,
+positions verbatim modulo the arrow-set-equality shims, which are the same
+`p16h_arrow_congr` wraps as in LocalAuto16).  The a01 slot keeps
+`(OEHDBEN h)` and the a23 slot keeps `BKOSSGE_p16` (both LA16/LA20
+originals, debt-identical to today's chain).  Zero new proof debt: no new
+proof obligation is discharged here, the axiom faces of all 21 exits are
+untouched. -/
+
+/-- HOL `JEJTVGB` assembly, consumption-upshift version (lane
+la1concl-reroute-w1): same statement as `LocalAuto16.JEJTVGB_p16`, with
+the LocalAuto1 registry arrows replaced by this file's `*_discharged`
+exits (debt flows along the proof term, per the ASSEMBLY WAVE contract).
+After `Kepler.Assembly` re-points its two consumption sites at
+`nonlinear_imp_lp_main_estimate_p16_discharged`, the old
+`LocalAuto16.JEJTVGB_p16` chain leaves the e2e cone. -/
+theorem JEJTVGB_p16_discharged (h : main_nonlinear_terminal_v11) :
+    JEJTVGB_assume_v39 := by
+  exact JEJTVGB_case_breakdown_p16 h (OEHDBEN h) OTMTOTJ1_discharged
+    OTMTOTJ2_discharged OTMTOTJ3_discharged OTMTOTJ4_discharged
+    (p16h_arrow_congr HIJQAHA_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF1_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF2_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF3_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    CNICGSF4_discharged
+    (p16h_arrow_congr CNICGSF5_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    FYSSVEV_discharged ARDBZYE_discharged AUEAHEH_discharged
+    (p16h_arrow_congr VQFYMZY_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr BNAWVNH_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr RAWZDIB_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr MFKLVDK_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr RYPDIXT_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    NWDGKXH_discharged
+    (p16h_arrow_congr YOBIMPP_discharged rfl
+      (by ext s; simp [Set.mem_insert_iff]; tauto))
+    MIQMCSN_discharged BKOSSGE_p16
+/-- Assembly-side switch wrapper, mirrors `LocalAuto16.
+nonlinear_imp_lp_main_estimate_p16`; `Kepler.Assembly`'s two consumption
+sites (`linearProgrammingResults`, `textCapstone`) re-point to this name. -/
+theorem nonlinear_imp_lp_main_estimate_p16_discharged :
+    main_nonlinear_terminal_v11 → lp_main_estimate := fun h =>
+  lp_main_estimate_JEJTVGB_p16.2 (JEJTVGB_p16_discharged h)
+
+#print axioms JEJTVGB_p16_discharged
+#print axioms nonlinear_imp_lp_main_estimate_p16_discharged
 
 end Kepler.Text

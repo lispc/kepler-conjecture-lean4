@@ -31,6 +31,14 @@ import Kepler.Text.PackingAuto25
 import Kepler.Text.Hypermap
 import Kepler.Text.ContraFan
 import Kepler.Text.LocalAuto16
+-- la1concl-reroute（2026-10，lane la1concl-reroute-w1；施工图
+-- la1reroute-w1）：LocalConcl 装配层进 e2e 锥——(c1) 上移装配点。本文件两个
+-- 消费点（linearProgrammingResults / textCapstone）改引
+-- `nonlinear_imp_lp_main_estimate_p16_discharged`，LA1 注册表 21 件
+-- `*_concl` 箭头经 LocalConcl `_discharged` 出口在锥内消费（债务面不变，
+-- 债随证明项流动）。无环：全树零 LocalConcl importer + 模块闭包
+-- 计算（la1reroute-w1 §1.2）。
+import Kepler.Text.LocalConcl
 import Kepler.Text.TameLp
 import Kepler.Assembly.GoodListDefs
 import Kepler.Assembly.GoodListAll
@@ -1394,7 +1402,7 @@ theorem nliOx3q1hIds : AllCertified ox3q1hIds := sorry
 /-- 中层骨架 3：HOL `main_nonlinear_terminal_v11`（terminal.hl:24-44；
 LocalAuto1.lean:975 `sorry` 型 opaque def）接口分量本体。
 可见盒形锚 = `LocalAnchors.MainNonlinearTerminalV11`（`2 ≤ y1..y3 ≤ 2*h0 ∧
-cstab ≤ y4 ≤ 3.915 ∧ y5 = y6 = 2`）；消费链 `JEJTVGB_p16` →
+cstab ≤ y4 ≤ 3.915 ∧ y5 = y6 = 2`）；消费链 `JEJTVGB_p16_discharged`（装配层出口）→
 `lp_main_estimate`（LocalAuto16.lean:180-195）已就位。
 资产状态：**真缺口（语句级）** + deferred-compute（证书级）——155 定义
 闭包 B=112/124 为展开式资产。
@@ -6517,16 +6525,16 @@ theorem nonlinearInequalities : TheNonlinearInequalities :=
 theorem linearProgrammingResults (hnl : TheNonlinearInequalities) :
     LinearProgrammingResults :=
   linearProgrammingResultsOf hnl (lpArchiveCertificates hnl.2.2.2.1
-    (nonlinear_imp_lp_main_estimate_p16 hnl.2.2.1))
+    (nonlinear_imp_lp_main_estimate_p16_discharged hnl.2.2.1))
 
 /-- **接口 3 → 真证明（2026-09-21 方向 A）**：HOL `kepler_conjecture_with_assumptions`
 （the_main_statement.hl:170-251，80 行 tactic 脚本）的镜像。消费 §2c 骨架占位
-+ PA25 `PACKING_CHAPTER_MAIN_CONCLUSION` + LA16 `nonlinear_imp_lp_main_estimate_p16`
++ PA25 `PACKING_CHAPTER_MAIN_CONCLUSION` + LA16 `nonlinear_imp_lp_main_estimate_p16_discharged`（装配层出口）
 + Phase 2 `tame_classification` + §4 `goodListArchive`。 -/
 theorem textCapstone : TextCapstone := by
   intro a ⟨hTC, ⟨hAllGood, hLPR⟩, hNL⟩
   obtain ⟨hpnn, hox3, hmnt, hlpineq, hpacka, hkcblrqc⟩ := hNL
-  have hmain : lp_main_estimate := nonlinear_imp_lp_main_estimate_p16 hmnt
+  have hmain : lp_main_estimate := nonlinear_imp_lp_main_estimate_p16_discharged hmnt
   refine kcImpTheKc ?_
   by_contra hneg
   -- packing 章主结论：¬kc ∧ pnn ∧ ox3q1h → ∃W. packing ∧ ⊆annulus ∧ ¬localAnnulus
@@ -6610,7 +6618,7 @@ pkrmAzim/Quarter/Qu/Qx/Qy 五切片 + 29 枚 bank 叶 + LEAF_RANK 既有叶
 LP 分支拓扑（T2 侦察）：接口 2 的唯一上游 sorry 根 =
 `lpArchiveCertificates`（:984†，†=T2 波前行号）；`linearProgrammingResultsOf`
 本体为真推导，`linearProgrammingResults` 消费
-`nonlinear_imp_lp_main_estimate_p16`（真链）。展开形 = P6-C goodListArchive
+`nonlinear_imp_lp_main_estimate_p16_discharged`（真链经装配层出口）。展开形 = P6-C goodListArchive
 先例（数据层 + 分片叶 + 内核组合器）× T1 SF36 先例（ID 清单 + 注册表
 量化命题），全库确定性重导：
 
