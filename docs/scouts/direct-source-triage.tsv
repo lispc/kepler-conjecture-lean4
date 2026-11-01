@@ -4,7 +4,6 @@ nliCell3QZECFICwt0corner	lean/Kepler/Assembly.lean	374	E	cell3 bank 叶，deferr
 nliCell3QZECFICwt0sqrt8	lean/Kepler/Assembly.lean	380	E	cell3 bank 叶，deferred-compute（析取第二支 eta_y^2>2）	ineq.hl:1406；G4 证书+粘合	W4-farm
 nliCell3QZECFICwt1	lean/Kepler/Assembly.lean	386	E	cell3 bank 叶，deferred-compute（h0cut 参数化双支）	ineq.hl:1425；G4 证书+粘合	W4-farm
 nliCell3QZECFICwt2A	lean/Kepler/Assembly.lean	392	E	cell3 bank 叶，deferred-compute（h0cut y4/y5 双支）	ineq.hl:1443；G4 证书+粘合	W4-farm
-nliCell3CIHTIUM	lean/Kepler/Assembly.lean	398	E	cell3 bank 叶，deferred-compute	ineq.hl:1462；G4 证书+粘合	W4-farm
 nliTskGXSA	lean/Kepler/Assembly.lean	585	E	nliTsk bank 叶，deferred-compute（x-空间盒，析取第二支 deltaX<0）	ineq.hl:359；G4 证书+粘合	W4-farm
 nliTskIYOUOBFsharpv2	lean/Kepler/Assembly.lean	591	E	nliTsk bank 叶，deferred-compute	ineq.hl:242；G4 证书+粘合	W4-farm
 nliTskIYOUOBFsym	lean/Kepler/Assembly.lean	597	E	nliTsk bank 叶，deferred-compute（析取三排序支）	ineq.hl:223；G4 证书+粘合	W4-farm
@@ -14,7 +13,6 @@ nliTskTADIAMB	lean/Kepler/Assembly.lean	614	E	nliTsk bank 叶，deferred-compute
 nliTskWKGUESBsym	lean/Kepler/Assembly.lean	620	E	nliTsk bank 叶，deferred-compute（析取四排序支）	ineq.hl:281；G4 证书+粘合	W4-farm
 nliTskXLLIPLS	lean/Kepler/Assembly.lean	626	E	nliTsk bank 叶，deferred-compute	ineq.hl:304；G4 证书+粘合	W4-farm
 nliRest1965189142a	lean/Kepler/Assembly.lean	878	E	rest 叶，deferred-compute（asnFnhk 实分析内容，证书不在库）	ineq.hl:1598；G4 证书+粘合	W4-farm
-nliRestJSPEVYT	lean/Kepler/Assembly.lean	898	E	rest 叶，deferred-compute	ineq.hl:1495；G4 证书+粘合	W4-farm
 nliRestQITNPEA4003532128a	lean/Kepler/Assembly.lean	904	E	rest 叶，deferred-compute	ineq.hl:1290；G4 证书+粘合	W4-farm
 nliRestIXPOTPA	lean/Kepler/Assembly.lean	911	E	rest 叶，deferred-compute（PA25 IXPOTPA_MERGED 已消费投影）	ineq.hl:1265；G4 证书+粘合	W4-farm
 nliRestTXQTPVC	lean/Kepler/Assembly.lean	918	E	rest 叶，deferred-compute（PA25 TXQTPVC_MERGED 已消费）	ineq.hl:1241；G4 证书+粘合	W4-farm
@@ -112,16 +110,9 @@ main_nonlinear_terminal_v11	lean/Kepler/Text/LocalAuto1.lean	980	E	opaque def `:
 AQICLXA	lean/Kepler/Text/LocalAuto20.lean	984	B	箭头装配：AQICLXA_SLICE（funlist 表匹配已具名在文件内）+ FZIOTEF_TRANS/UNION 代数；阻塞件=LA1 YXIONXL3_concl + PROP_EQU_IS_SCS（LocalAuto12:424，待闭小件）	hexagons.hl:1449	W1-银行装配
 FZIOTEF	lean/Kepler/Text/LocalAuto20.lean	1006	B	箭头装配：FUNOUYH_SLICE+FZIOTEF_TRANS+propEqu 幂等；阻塞件同上（YXIONXL3_concl/PROP_EQU_IS_SCS）	hexagons.hl:1592	W1-银行装配
 SCS_6I1_BERAK_BY_CSTAB	lean/Kepler/Text/LocalAuto20.lean	1218	B	箭头组合装配（STAB_MOD/SET_STAB_6I1 均已真）；阻塞件=SCS_6I1_IMP_SCS_6T1 ← mnt11 lane 四 concl + PEDSLGV2（mnt11 波落地后即装配）	hexagons.hl:1831；阻塞件=main_nonlinear_terminal_v11 波	W1-银行装配
-is_scs_3T1_p22	lean/Kepler/Text/LocalAuto22.lean	1814	A	机械：显式 funlist 表逐格求值+基数计数（decide 级，k=3 有限模类）；先例 SCS_6I1_IS_SCS 真证；kit is_scs_funlist_basic_p22 为捷径非必需	is_scs_3T1（hexagons/appendix is_scs 注册表）	W1-银行装配
-is_scs_3T5_p22	lean/Kepler/Text/LocalAuto22.lean	1882	A	同上机械求值（k=3）	is_scs_3T5；同上	W1-银行装配
-is_scs_3M1_p22	lean/Kepler/Text/LocalAuto22.lean	1947	A	同上机械求值（k=3）	is_scs_3M1；同上	W1-银行装配
 OCBICBY_p22	lean/Kepler/Text/LocalAuto22.lean	2221	C	14 支 T-系统 BBs→taustar≥0 箭头（pos_imp_scs_arrow_empty_p23 模板已真，缺逐系统正性=证书级内容，mnt11/empty lane 同族）	empty_* lane；阻塞件=mnt11 波+逐 T-系统正性	W5-C尾
 LFLACKU_p23	lean/Kepler/Text/LocalAuto23.lean	310	C	{3I1}→∅ 空枝：需 taustar_taum_dfun/FUNLIST_EXPLICIT 桥（未移植）+TAUM_STD_POS_p23（阻 mnt11 终端条目 5541487347/OMKYNLT）	JOTSWIX.hl:191；阻塞件=mnt11 波	W5-C尾
-s_init_list_alt_p23	lean/Kepler/Text/LocalAuto23.lean	318	C	清单等式：前六项 rfl，5I3/4I3 两项需 a_pro↔funlist_v39 periodic-2 mod 归约（HOL JOTSWIX.hl:241-257 已给证明脚本，小件移植）	JOTSWIX.hl:216-257	W5-C尾
 XWITCCN_CASE_3_IS_SCS_p24	lean/Kepler/Text/LocalAuto24.lean	1387	C	k=3 tri_sy capstone 支：DISCHARGES 链 6 件（NOT_EMPTY_CASE_3+IN_B_SY1_COLLINEAR+HDPLYGY_CASE_30+IN_NOT_EMPTY_B1_SY_3+TAUSTAR_EQ_TAU_STAR_3+tri stable kit）	UXCKFPE.hl:2495（tri_sy 章 :1488-2597）	W5-C尾
-XWITCCN_CASE_4_IS_SCS_p24	lean/Kepler/Text/LocalAuto24.lean	1128	C	k=4 支：DISCHARGES 链 5 件（stable system+NOT_EMPTY_CASE_4+HDPLYGY/B_SY1 极小化+IN_NOT_EMPTY_B1_SY_4+taustar 负性转移）	UXCKFPE.hl:432	W5-C尾
-XWITCCN_CASE_5_IS_SCS_p24	lean/Kepler/Text/LocalAuto24.lean	1163	C	k=5 支：同 CASE_4 结构（UXCKFPE.hl:547-995 见证层）	UXCKFPE.hl:889	W5-C尾
-XWITCCN_CASE_6_IS_SCS_p24	lean/Kepler/Text/LocalAuto24.lean	1196	C	k=6 支：同 CASE_4 结构（UXCKFPE.hl:1003-1483 见证层）	UXCKFPE.hl:1374	W5-C尾
 EAPGLE_p27	lean/Kepler/Text/LocalAuto27.lean	868	B	装配：MMs 全空前提→JEJTVGB_assume_v39 = 注册表箭头机械组合（FZIOTEF_TRANS/UNION 代数）；阻塞件=LA1 registry 波 + LA22 is_scs 注册表族（多枚场外桩将被拉入锥）	AYQJTMD.hl:222；AYQJTMD 本体已真	W1-银行装配
 UPFZBZM_concl	lean/Kepler/Text/PackingAuto2.lean	5565	B	装配：PA19.UPFZBZM 真件已在 PackingConcl 桥接线；F1 改线波（已批）以 PA2 _p2 kit 重推 RDWKARC 臂 ~80-140 行	pack_concl.hl:233-237；阻塞件=F1 波落地	W1-银行装配
 TameLp.fully_surrounded_perimeter_bound	lean/Kepler/Text/TameLp.lean	840	C	MQMSMAB 前提件：三桥（LA7 周长 lane WSEWPCH/FAN_PERIMETER/BGMIFTE——w6a 已闭 8/9 + Local_lemmas 章 f_surr_localization_convex_local/lemma_face_representation/sum_face_rho_node1 未移植）齐后按 HOL 五步机械装配	lp_main_estimate-compiled.hl:1530-1543；阻塞件=W6b/W6c+Local_lemmas 三件	W5-C尾
@@ -131,10 +122,6 @@ HIJQAHA_p29	lean/Kepler/Text/LocalAuto29.lean	2562	B	la29 标题结论 5M2 多�
 MIQMCSN_p32	lean/Kepler/Text/LocalAuto32.lean	1376	B	4M8→{4M6',3T7,3T4} 箭头（doc: HOL MIQMCSN）；真根，替换 MIQMCSN_concl；新地图 parent=Kepler.Text.MIQMCSN_discharged	MIQMCSN.hl:3436；阻塞件=SCS_4M8_02_ARROW_3T7_p32（其自身 NEEDS: PROP_OPP_4M8_13_p32 + YXIONXL2 + YXIONXL3/OPP_IS_SCS）	la32
 NWDGKXH_p32	lean/Kepler/Text/LocalAuto32.lean	868	B	4M6'→{4T3,4T5} 箭头（doc: HOL NWDGKXH，需 scs_arrow_v39 展开）；真根，替换 NWDGKXH_concl；新地图 parent=Kepler.Text.NWDGKXH_discharged	MIQMCSN.hl:2110；阻塞件=NEEDS: scs_arrow_v39 unfolding + EXTREMAL_SCS_4M6_p32 (dist on   -- diagonals) + STAB_MOD/YRTAFYH kit on the stab branch.  /-- HOL `NWDGKXH` (MIQMC	la32
 YOBIMPP_p32	lean/Kepler/Text/LocalAuto32.lean	1079	B	4M7→{4M6',3T3,3M1,3T4} 扇出箭头（doc: HOL YOBIMPP）；真根，替换 YOBIMPP_concl；新地图 parent=Kepler.Text.YOBIMPP_discharged	MIQMCSN.hl:2453；阻塞件=NEEDS: FZIOTEF_TRANS via SCS_4M7_ARROW_STAB_4M7_4M6_p32 +   -- STAB_SCS_4M7_ARROW_3T3_3M1_3T4_p32 + SCS_OPP_REFL /   -- YXIONXL2 on scs_prop_equ_v3	la32
-OTMTOTJ1	lean/Kepler/Text/LocalAuto24.lean	1047	B	2026-09-21 骨架忠实重述 HOL 主件 OTMTOTJ1（原由 LA1 OTMTOTJ1_concl 注册表行承载）；真根 1:1 换 _concl；新地图 parent=Kepler.Text.OTMTOTJ1_discharged	OTMTOTJ.hl:1156；阻塞件=FZIOTEF_TRANS over SCS_5I1_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5I1 + FZIOTEF_UNION/REFL + SCS_5M2_IS_SCS	la24-casebank
-OTMTOTJ2	lean/Kepler/Text/LocalAuto24.lean	1055	B	同上骨架重述 OTMTOTJ2；真根 1:1 换 OTMTOTJ2_concl；新地图 parent=Kepler.Text.OTMTOTJ2_discharged	OTMTOTJ.hl:1169；阻塞件=as OTMTOTJ1，over SCS_5I2_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5I2	la24-casebank
-OTMTOTJ3	lean/Kepler/Text/LocalAuto24.lean	1062	B	同上骨架重述 OTMTOTJ3；真根 1:1 换 OTMTOTJ3_concl；新地图 parent=Kepler.Text.OTMTOTJ3_discharged	OTMTOTJ.hl:1500；阻塞件=as OTMTOTJ1，over SCS_5I3_BERAK_BY_CSTAB + STAB_5I3_ARROW_STAB_5M1_DIAG + SET_EQ_DIAG_STAB_5M1	la24-casebank
-OTMTOTJ4	lean/Kepler/Text/LocalAuto24.lean	1071	B	同上骨架重述 OTMTOTJ4；真根 1:1 换 OTMTOTJ4_concl；新地图 parent=Kepler.Text.OTMTOTJ4_discharged	OTMTOTJ.hl:1520；阻塞件=as OTMTOTJ1，over SCS_5M1_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5M1	la24-casebank
 SCS_4I1_SLICE_02_p33	lean/Kepler/Text/LocalAuto33.lean	1869	B	stab 4I1(0,2) 半片→pe scs_3M1 1 表恒等（doc: HOL SCS_4I1_SLICE_02，LKGRQUI half-slice）；新 la33 片根；新地图 parent=Kepler.Text.AUEAHEH_p33	AUEAHEH.hl:107；阻塞件=half-slice/prop-equ 表恒等（scs_half_slice fold k'=3 vs pe scs_3M1 1，3×3 mod-case + J/D collar）	la33战役
 SCS_4M2_SLICE_13_p33	lean/Kepler/Text/LocalAuto33.lean	2384	B	stab 4M2(1,3)→{pe 3M1 1, 3T4}（doc: HOL SCS_4M2_SLICE_13，LKGRQUI slice identity）；新 la33 片根；新地图 parent=Kepler.Text.BNAWVNH_p33	AUEAHEH.hl:1081；阻塞件=NEEDS: the half-slice table identity of `stab 4M2 1 3` at `(1, 3)` against `pe scs_3M1 1` / `scs_3T4`. -/ theorem SCS_4M2_SLICE_13_p33 :     scsArr	la33战役
 SCS_4M3_SLICE_13_p33	lean/Kepler/Text/LocalAuto33.lean	2565	B	stab 4M3'(1,3)→{pe 3T1 1, pe 3T6' 2}（doc: LKGRQUI slice identity）；新 la33 片根；新地图 parent=Kepler.Text.RAWZDIB_p33	AUEAHEH.hl:1752；阻塞件=NEEDS: the half-slice table identity against `pe scs_3T1 1` / `pe scs_3T6' 2`. -/ theorem SCS_4M3_SLICE_13_p33 :     scsArrowV39 {scsStabDiagV39 sc	la33战役
@@ -150,3 +137,13 @@ YRTAFYH_p17	lean/Kepler/Text/LocalAuto17.lean	1034	C	对角 a i j≤cstab 稳定
 YXIONXL3_concl	lean/Kepler/Text/LocalAuto1.lean	1690	B	LA1 注册表 prop-equ 箭头 ∀ s i, isScsV39 s → scsArrowV39 {s}{pe s i}（doc: HOL YXIONXL3_concl，Proof pending）；闭合后解锁 AQICLXA/FZIOTEF（旧 135/136 行）；新地图 parent=Kepler.Text.CNICGSF5_p18	appendix.hl:1141；阻塞件=?（无具名件；可参照已闭 YXIONXL2_p33 三步模板）	LA1注册表/LA33
 _private.Kepler.Text.LocalConcl.0.Kepler.Text.mnt11_anchor	lean/Kepler/Text/LocalConcl.lean	553	E	常量级污染（handoff §9-9）：terminal-bank 消费者私有骨架锚；锚 Prop 体=main_nonlinear_terminal_v11 注册表 Prop（体 sorry 于 LocalAuto1.lean:815），无独立数学内容，债归 terminal_v11 农场；新地图 parent=	无（注册表锚 Prop，常量级污染）；阻塞件=terminal_v11 农场（mnt11 波）	terminal_v11农场项
 ztg4_ALT	lean/Kepler/Text/PackingAuto25.lean	9995	C	PA25 PartB4 SF-76 换位既定硬债：statement=ztg4_concl(:2267-2276) 显式盒式展开，γ 项 PA20 gamma4fgcy，19 张证书全在库（PA21:3740-3905 具名投影），体=本草案唯一硬 sorry；替换旧 real_model_ztg4 bank 叶行；新地图 parent=Kepler.Text.real_model_ztg4	merge_ineq.hl:2632-2646；阻塞件=ztg4_concl(:2267-2276) 显式展开 + PA21:3740-3905 19 张证书具名投影装配	SF-76硬债
+MM_5I1_IMP_MM_5M2	lean/Kepler/Text/LocalAuto24.lean	344	B	5I1→5M2 MM 孪生传递（masters Section B7 后显形真根；OTMTOTJ 链残债）	OTMTOTJ.hl;	la24-sweep
+MM_5I2_IMP_MM_5M2	lean/Kepler/Text/LocalAuto24.lean	358	B	5I2→5M2 MM 孪生传递（同上）	OTMTOTJ.hl;	la24-sweep
+MM_5I3_IMP_MM_5M2	lean/Kepler/Text/LocalAuto24.lean	372	B	5I3→5M2 MM 孪生传递（同上；OTMTOTJ3 归因实测残根）	OTMTOTJ.hl:1238;	la24-sweep
+MM_5M1_IMP_MM_5M2	lean/Kepler/Text/LocalAuto24.lean	386	B	5M1→5M2 MM 孪生传递（同上）	OTMTOTJ.hl;	la24-sweep
+SET_EQ_DIAG_STAB_5I1	lean/Kepler/Text/LocalAuto24.lean	1045	B	5I1 对角稳定集等式（OTMTOTJ 链残根）	SCS_5I1_BERAK_BY_CSTAB 系;	la24-sweep
+SET_EQ_DIAG_STAB_5I2	lean/Kepler/Text/LocalAuto24.lean	1053	B	5I2 对角稳定集等式（同上）	SCS_5I1_BERAK_BY_CSTAB 系;	la24-sweep
+SET_EQ_DIAG_STAB_5M1	lean/Kepler/Text/LocalAuto24.lean	1162	B	5M1 对角稳定集等式（同上）	SCS_5M1_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5M1;	la24-sweep
+bodyClosed_p23	lean/Kepler/Text/LocalAuto23.lean	1187	B	体集闭性实分析引理（CASE_4/5/6 归因实测共同残根）	JKQEWGV.hl;	la23-analysis
+continuousOn_tauFun_p23	lean/Kepler/Text/LocalAuto23.lean	1173	B	tauFun 连续性实分析引理（同上）	JKQEWGV.hl;	la23-analysis
+

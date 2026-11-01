@@ -1,12 +1,11 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 2073065
-SORRIED 151
+TOTAL_REACHABLE_KEPLER_DECLS 2073572
+SORRIED 147
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
 Kepler.Assembly	Kepler.Assembly.jcajydu	parent=Kepler.Assembly.textCapstone
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
-Kepler.Assembly	Kepler.Assembly.nliCell3CIHTIUM	parent=Kepler.Assembly.nliCell3Bank
 Kepler.Assembly	Kepler.Assembly.nliCell3QZECFICwt0	parent=Kepler.Assembly.nliCell3Bank
 Kepler.Assembly	Kepler.Assembly.nliCell3QZECFICwt0corner	parent=Kepler.Assembly.nliCell3Bank
 Kepler.Assembly	Kepler.Assembly.nliCell3QZECFICwt0sqrt8	parent=Kepler.Assembly.nliCell3Bank
@@ -34,7 +33,6 @@ Kepler.Assembly	Kepler.Assembly.nliRestGLFVCVK4y4crit	parent=Kepler.Assembly.nli
 Kepler.Assembly	Kepler.Assembly.nliRestGLFVCVK4y4subcrit	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestGLFVCVK4y4supercrit	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestIXPOTPA	parent=Kepler.Assembly.nliPackNonlinearRest
-Kepler.Assembly	Kepler.Assembly.nliRestJSPEVYT	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestMKFKQWU	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestMKFKQWUhalfwt	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestPEMKWU	parent=Kepler.Assembly.nliPackNonlinearRest
@@ -90,12 +88,12 @@ Kepler.Text.LocalAuto20	Kepler.Text.FZIOTEF	parent=Kepler.Text.OEHDBEN
 Kepler.Text.LocalAuto29	Kepler.Text.HIJQAHA_p29	parent=Kepler.Text.HIJQAHA_discharged
 Kepler.Text.LocalAuto23	Kepler.Text.LFLACKU_p23	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
 Kepler.Text.LocalAuto32	Kepler.Text.MIQMCSN_p32	parent=Kepler.Text.MIQMCSN_discharged
+Kepler.Text.LocalAuto24	Kepler.Text.MM_5I1_IMP_MM_5M2	parent=Kepler.Text.SCS_5I1_BERAK_BY_CSTAB
+Kepler.Text.LocalAuto24	Kepler.Text.MM_5I2_IMP_MM_5M2	parent=Kepler.Text.SCS_5I2_BERAK_BY_CSTAB
+Kepler.Text.LocalAuto24	Kepler.Text.MM_5I3_IMP_MM_5M2	parent=Kepler.Text.SCS_5I3_BERAK_BY_CSTAB
+Kepler.Text.LocalAuto24	Kepler.Text.MM_5M1_IMP_MM_5M2	parent=Kepler.Text.SCS_5M1_BERAK_BY_CSTAB
 Kepler.Text.LocalAuto32	Kepler.Text.NWDGKXH_p32	parent=Kepler.Text.NWDGKXH_discharged
 Kepler.Text.LocalAuto22	Kepler.Text.OCBICBY_p22	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
-Kepler.Text.LocalAuto24	Kepler.Text.OTMTOTJ1	parent=Kepler.Text.OTMTOTJ1_discharged
-Kepler.Text.LocalAuto24	Kepler.Text.OTMTOTJ2	parent=Kepler.Text.OTMTOTJ2_discharged
-Kepler.Text.LocalAuto24	Kepler.Text.OTMTOTJ3	parent=Kepler.Text.OTMTOTJ3_discharged
-Kepler.Text.LocalAuto24	Kepler.Text.OTMTOTJ4	parent=Kepler.Text.OTMTOTJ4_discharged
 Kepler.Text.LocalAuto33	Kepler.Text.SCS_4I1_SLICE_02_p33	parent=Kepler.Text.AUEAHEH_p33
 Kepler.Text.LocalAuto33	Kepler.Text.SCS_4M2_SLICE_13_p33	parent=Kepler.Text.BNAWVNH_p33
 Kepler.Text.LocalAuto33	Kepler.Text.SCS_4M3_SLICE_13_p33	parent=Kepler.Text.RAWZDIB_p33
@@ -108,19 +106,18 @@ Kepler.Text.LocalAuto18	Kepler.Text.SCS_5M1_SLICE_02_p18	parent=Kepler.Text.CNIC
 Kepler.Text.LocalAuto18	Kepler.Text.SCS_5M1_SLICE_03_p18	parent=Kepler.Text.CNICGSF4_p18
 Kepler.Text.LocalAuto18	Kepler.Text.SCS_5M1_SLICE_24_p18	parent=Kepler.Text.CNICGSF5_p18
 Kepler.Text.LocalAuto20	Kepler.Text.SCS_6I1_BERAK_BY_CSTAB	parent=Kepler.Text.OEHDBEN_PRIME
+Kepler.Text.LocalAuto24	Kepler.Text.SET_EQ_DIAG_STAB_5I1	parent=Kepler.Text.OTMTOTJ1
+Kepler.Text.LocalAuto24	Kepler.Text.SET_EQ_DIAG_STAB_5I2	parent=Kepler.Text.OTMTOTJ2
+Kepler.Text.LocalAuto24	Kepler.Text.SET_EQ_DIAG_STAB_5M1	parent=_private.Kepler.Text.LocalAuto24.0.Kepler.Text.la24diag3_5M1_arrow_p24
 Kepler.Text.TameLp	Kepler.Text.TameLp.fully_surrounded_perimeter_bound	parent=Kepler.Text.TameLp.MQMSMAB
 Kepler.Text.PackingAuto2	Kepler.Text.UPFZBZM_concl	parent=Kepler.Text.RDWKARC_concl
 Kepler.Text.LocalAuto24	Kepler.Text.XWITCCN_CASE_3_IS_SCS_p24	parent=Kepler.Text.UXCKFPE_p24
-Kepler.Text.LocalAuto24	Kepler.Text.XWITCCN_CASE_4_IS_SCS_p24	parent=Kepler.Text.UXCKFPE_p24
-Kepler.Text.LocalAuto24	Kepler.Text.XWITCCN_CASE_5_IS_SCS_p24	parent=Kepler.Text.UXCKFPE_p24
-Kepler.Text.LocalAuto24	Kepler.Text.XWITCCN_CASE_6_IS_SCS_p24	parent=Kepler.Text.UXCKFPE_p24
 Kepler.Text.LocalAuto32	Kepler.Text.YOBIMPP_p32	parent=Kepler.Text.YOBIMPP_discharged
 Kepler.Text.LocalAuto17	Kepler.Text.YRTAFYH_p17	parent=Kepler.Text.STAB_SCS_p33
 Kepler.Text.LocalAuto1	Kepler.Text.YXIONXL3_concl	parent=Kepler.Text.CNICGSF5_p18
+Kepler.Text.LocalAuto23	Kepler.Text.bodyClosed_p23	parent=Kepler.Text.XWITCCN_CASE_6_IS_SCS_p24
 Kepler.Text.PackingAuto25	Kepler.Text.cc_prep_model_data	parent=Kepler.Text.LEAF_RANK_PROPS
-Kepler.Text.LocalAuto22	Kepler.Text.is_scs_3M1_p22	parent=Kepler.Text.BKOSSGE_p16
-Kepler.Text.LocalAuto22	Kepler.Text.is_scs_3T1_p22	parent=Kepler.Text.BKOSSGE_p16
-Kepler.Text.LocalAuto22	Kepler.Text.is_scs_3T5_p22	parent=Kepler.Text.BKOSSGE_p16
+Kepler.Text.LocalAuto23	Kepler.Text.continuousOn_tauFun_p23	parent=Kepler.Text.XWITCCN_CASE_6_IS_SCS_p24
 Kepler.Text.LocalAuto1	Kepler.Text.main_nonlinear_terminal_v11	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.ox3q1hP25	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankAzimPointwise	parent=Kepler.Text.LEAF_RANK_PROPS
@@ -151,7 +148,6 @@ Kepler.Text.PackingAuto25	Kepler.Text.real_model_quqy_sym	parent=Kepler.Text.pkr
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_sum_azim	parent=Kepler.Text.pkrmAzim
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_tew	parent=Kepler.Text.pkrmQy
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_txq	parent=Kepler.Text.pkrmQy
-Kepler.Text.LocalAuto23	Kepler.Text.s_init_list_alt_p23	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
 Kepler.Text.PackingAuto25	Kepler.Text.ztg4_ALT	parent=Kepler.Text.real_model_ztg4
 Kepler.Text.LocalConcl	_private.Kepler.Text.LocalConcl.0.Kepler.Text.mnt11_anchor	parent=Kepler.Text.MIQMCSN_discharged
 --- AXIOMS ---
