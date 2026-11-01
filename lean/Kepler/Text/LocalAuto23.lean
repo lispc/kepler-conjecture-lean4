@@ -1200,11 +1200,17 @@ clauses incl. fan7 and the hypermap face structure), the family converges to
 the δ=0 config where the edge `{r,s}` is antiparallel through 0, so `fan6`
 fails and CONDITION2 fails — the locus is not closed. HOL CLOSED_SY needs
 its stableSystem context (adjacent-edge upper bound `≤ cstab`: antiparallel
-annulus rows force edge length ≥ 4 > 3.01). Repair direction: add
-stability-shaped hypotheses here and discharge them at the CASE_4/5/6
-consumers from `isScsV39` (their `aRk/bRk` are shifted `s.a/s.b` bounds).
+annulus rows force edge length ≥ 4 > 3.01). REPAIRED (SF-89, 2026-10-28):
+stability-shaped hypotheses added — `hm : 2 < m` (HOL `2 < k`) and
+`hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4` (HOL stable_system's
+`b(i, f i) ≤ cstab` clause, dih2k.hl:65; carrier twin `CLOSED_SY_p18`
+LA18:236 takes the full `stableSystem_p18`); discharged at the CASE_4/5/6
+consumers from `isScsV39` via `stabAdj_of_isScsV39` (LA24: the `3 < s.k →
+s.b i (i + 1) ≤ cstab` conjunct shifted onto the `aRk/bRk` tables). The
+flex family above is out of scope: `bR ≡ 5` fails `hstab` (5 > 3.01).
 (Sorry 2/2 of this kit.) -/
-theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) :
+theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
+    (hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4) :
     IsClosed {v : Fin m → V3 | (∀ i, v i ∈ ballAnnulus) ∧
       CONDITION1_SY_p4 aR bR v ∧ CONDITION2_SY_p4 v} := by
   sorry
