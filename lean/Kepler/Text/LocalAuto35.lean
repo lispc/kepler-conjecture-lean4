@@ -9845,18 +9845,6 @@ theorem q1_head_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop) (vv : ℕ �
           simp only [scsHalfSliceV39] at h
           omega)⟩
 
-/-- HOL SUBGOAL of the LE4F segment: `norm (u - w) <= cstab`, from the
-`bm p q <= cstab` hypothesis through the MMs bound and `periodic2`
-(QKNVMLB.hl LE4F second script block). -/
-theorem q1_norm_diag_p35 (s : ScsV39) (p q : ℕ) (vv : ℕ → V3)
-    (hP2bm : Periodic2 s.bm s.k) (hMM : vv ∈ MMsV39 s) (hc : s.bm p q ≤ cstab) :
-    norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab := by
-  have h1 : dist (vv (p % s.k)) (vv (q % s.k)) ≤ s.bm (p % s.k) (q % s.k) :=
-    hMM.2.2.2.2.2 _ _
-  rw [per2_mod_p35 hP2bm p q] at hc
-  rw [← dist_eq_norm]
-  exact h1.trans hc
-
 /-- `hEE2` supply for the `vv`-world consumer of `EJRCFJD_p35` (EV28): on the
 cyclic fan `V = range vv`, `E = range {vv i, vv (i+1)}` with `3 ≤ k`, every
 vertex has exactly the two neighbours `vv (i+k-1)`, `vv (i+1)`
@@ -9874,111 +9862,6 @@ private theorem vvEE2OfBB_p35 (s : ScsV39) (vv : ℕ → V3) (hscs : isScsV39 s)
       (show vv (i + s.k - 1) ∉ ({vv (i + 1)} : Set V3) from by
         simp [wedgeCyclicNC_p35 hk3 hper hinj i])]
   simp
-
-/-- HOL `EJRCFJD` (Local_lemmas1.hl:5967): the diag-slicing
-convex-local-fan lemma, rendered in the `IsHypE_p35` carrier form (the HOL
-`HS = hypermap (HYP (vec 0,V,E UNION {{v,w}}))` equation becomes the
-existential `HS`; cf. the encoding notes at the `V/E/F_PRIME` trio).
-NEEDS: `THE_SLICING_INTO_2_LEMMA` + `PROVE_THE_SLICE_ASSUMPTION`
-(Local_lemmas1 -- LocalAuto2-importing world, unreachable from LA35
-imports) -- bridge wave, same home as `F_PRIME_EQ_F_vv_p35` (estimate and
-plan: lkgrqui-qknv2-w2 DELIVERY §3.3).  `EJRCFJD_p8` (LocalAuto8) is the
-NKEZBFC.hl:1685 `slicev/slicee/slicef` rendering of the same HOL family;
-this `_p35` form is the Local_lemmas1.hl:5967 one consumed by
-`QKNVMLB1_LE4F/EQ4F` (the `!x. x IN FF ==> aff_gt {vec 0} {v, w} SUBSET
-wedge_in_fan_gt x E` hypothesis is `TECOXBMv2_p35`'s conclusion).
-**EV28 (2026-10-31, user-approved EVOLUTION)**: premise `hEE2` added.  HOL's
-`local_fan` admits no isolated vertex (`darts_of_hyp = ord_pairs ∪
-self_pairs`, localization.hl:42–45, killed by `dih2k`), so `∀ v ∈ V, CARD (EE
-v E) = 2` is a *theorem* there (`LOFA_IMP_EE_TWO_ELMS`).  Our `LocalFan`
-(`hypermapOfFan`, no self_pairs) cannot see isolated vertices, and under such
-a junk `v` the face `HS.face (v, rhoNode1 FF v)` is an unconstrained
-`Classical.epsilon` — the five-premise form is neither provable nor
-refutable.  `hEE2` restores exactly the HOL premise strength (queue 续 133/135,
-lane `ejrcfjd-dw-J-junk-w1` DELIVERY). -/
-theorem EJRCFJD_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3)
-    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
-    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
-    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
-    ∃ HS : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HS ∧
-      ConvexLocalFan (vPrime_p3 V (HS.face (v, rhoNode1 FF v)))
-        (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
-        (HS.face (v, rhoNode1 FF v)) ∧
-      ConvexLocalFan (vPrime_p3 V (HS.face (w, rhoNode1 FF w)))
-        (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
-        (HS.face (w, rhoNode1 FF w)) := by
-  sorry
-  -- DISCHARGES: local_lemmas1.hl:5967 (bridge wave; THE_SLICING_INTO_2_LEMMA
-  -- + PROVE_THE_SLICE_ASSUMPTION unreachable from the LA35 import face).
-
-/-- HOL `QKNVMLB1_LE4F` (QKNVMLB.hl:4838, proof ~225 ln). -/
-theorem QKNVMLB1_LE4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
-    (vv vv' : ℕ → V3)
-    (hs' : s' = scsHalfSliceV39 s p q d' mkj)
-    (hs'' : s'' = scsHalfSliceV39 s q p d'' mkj)
-    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
-    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hd' : d' < 0.9)
-    (h4 : 4 < s.k ∧ s.bm p q ≤ cstab) (hMM : vv ∈ MMsV39 s) :
-    BBsV39 s' vv' := by
-  subst hs'
-  subst hvv'
-  have hk0 : 0 < s.k := by have := hscs.2.1; omega
-  have hBB : BBsV39 s vv := hMM.1.1.1
-  -- HOL script blocks 2-4: range / periodicity / a-b window through the
-  -- half-slice re-indexing (QKNVMLB.hl:4873-5060, engine-w1 sub-lemmas).
-  obtain ⟨h1, h2, h3⟩ := q1_head_p35 s p q d' mkj vv hBB hscs hdiag hMM
-  refine ⟨h1, h2, h3, ?_⟩
-  -- component 4 (HOL: cases on `3 <= k' ==> k' <= 3 \/ ~(k' <= 3)`).
-  have hP2bm : Periodic2 s.bm s.k := hscs.2.2.2.2.2.2.2.2.2.1
-  rcases Nat.lt_or_ge (scsHalfSliceV39 s p q d' mkj).k 4 with hk'3 | hk'4
-  · -- k' <= 3: the fan disjunct is trivial.
-    exact Or.inl (by omega)
-  · -- 4 <= k': the half slice is a genuine diag slice of the s-fan
-    -- (HOL final script block, QKNVMLB.hl:5040-5064).
-    refine Or.inr ?_
-    have hfan0 : ConvexLocalFan (Set.range vv)
-        (Set.range fun i => {vv i, vv (i + 1)})
-        (Set.range fun i => (vv i, vv (i + 1))) := by
-      rcases hBB.2.2.2 with hle | hfan
-      · omega
-      · exact hfan
-    -- HOL SUBGOAL norm (u - w) <= cstab from the bm p q <= cstab hypothesis.
-    have hnorm : norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab :=
-      q1_norm_diag_p35 s p q vv hP2bm hMM h4.2
-    have huw : vv (p % s.k) ≠ vv (q % s.k) :=
-      NOT_EQ_DIAG_p35 s p q _ _ vv hscs hdiag hnorm rfl rfl hBB
-    -- TECOXBMv2: the diag wedge contains every fan face wedge.
-    have hwedge := TECOXBMv2_p35 s p q (vv (p % s.k)) (vv (q % s.k))
-      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
-      (Set.range fun i => (vv i, vv (i + 1))) vv hscs hdiag hnorm rfl rfl rfl rfl rfl hBB
-    -- EJRCFJD: the diag slice of the s-fan is again a convex local fan.
-    obtain ⟨HS, hHS, hfanU, -⟩ :=
-      EJRCFJD_p35 (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
-        (Set.range fun i => (vv i, vv (i + 1))) (vv (p % s.k)) (vv (q % s.k))
-        hfan0 (IN_IMAGE_VV_p35 vv (p % s.k)) (IN_IMAGE_VV_p35 vv (q % s.k)) huw hwedge
-        (vvEE2OfBB_p35 s vv hscs hBB (by have := h4.1; omega))
-    -- the V/E/F_PRIME re-labelling trio identifies the re-indexed sets with
-    -- the slice face's vertex/edge/dart sets.
-    have hVp := V_PRIME_EQ_V_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
-      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
-      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
-      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
-      hnorm hscs hdiag hBB hHS
-    have hEp := E_PRIME_EQ_E_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
-      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
-      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
-      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
-      hnorm hscs hdiag hBB hHS
-    have hFp := F_PRIME_EQ_F_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
-      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
-      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
-      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
-      hnorm hscs hdiag hBB hHS
-    rw [hVp, hEp, hFp]
-    exact hfanU
-
-  -- DISCHARGES: source 4838-5064; MMs → BBs transport along the slice
-  -- (a/b-window re-indexing through scsHalfSliceV39).
 
 /-- HOL `QKNVMLB1_EQ4F` (QKNVMLB.hl:5064, proof ~160 ln). -/
 theorem QKNVMLB1_EQ4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
@@ -10004,38 +9887,6 @@ theorem QKNVMLB1_EQ4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop
   exact Or.inl (by omega)
 
   -- DISCHARGES: source 5064-5223; k = 4 twin of QKNVMLB1_LE4F.
-
-/-- HOL `QKNVMLB1` (QKNVMLB.hl:5223).  RULING 2026-09-21 IV: this twin's
-index convention `vv (i % s'.k + p % s.k)` is the FAITHFUL encoding -- it
-is verbatim the proved original's `vv'` (QKNVMLB.hl:5225).  The LA1
-registry concl carries the appendix.hl:1055 statement-let form
-`vv ((i+p) % s'.k)`, which is unproved upstream and is NOT bridged here;
-the registry correction belongs to the registry-refactor round (ruling
-recorded at LocalConcl `QKNVMLB1_discharged`). -/
-theorem QKNVMLB1_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop) (vv : ℕ → V3)
-    (hMM : vv ∈ MMsV39 s) (hbm : s.bm p q < 4)
-    (h4 : s.k = 4 ∨ s.bm p q ≤ cstab) (hscs : isScsV39 s) (hd' : d' < 0.9)
-    (hdiag : scsDiag s.k p q) (s' : ScsV39)
-    (hs' : s' = scsHalfSliceV39 s p q d' mkj) (vv' : ℕ → V3)
-    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k)) :
-    BBsV39 s' vv' := by
-  -- engine-w1 E2 assembly (verified real-form body): k = 4 -> EQ4F;
-  -- else bm <= cstab with 4 < k -> LE4F (the k = 4 + bm <= cstab corner
-  -- also goes to EQ4F via cstab < 4).
-  have h3k : 3 < s.k := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
-  have hc4 : cstab ≤ 4 := by norm_num [cstab]
-  rcases h4 with hk4 | hcstab
-  · exact QKNVMLB1_EQ4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
-      hs' rfl hvv' hscs hdiag hd' ⟨hk4.symm, le_of_lt hbm⟩ hMM
-  · rcases Nat.eq_or_lt_of_le (by omega : 4 ≤ s.k) with he4 | hk4
-    · exact QKNVMLB1_EQ4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
-        hs' rfl hvv' hscs hdiag hd' ⟨he4, by linarith⟩ hMM
-    · exact QKNVMLB1_LE4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
-        hs' rfl hvv' hscs hdiag hd' ⟨hk4, hcstab⟩ hMM
-
-  -- DISCHARGES: composes QKNVMLB1_EQ4F_p35 (k = 4) / QKNVMLB1_LE4F_p35
-  -- (4 < k, via SCS_K_PRIME_CASE_3_p35) on the bm < 4 / bm ≤ cstab split;
-  -- blocked by QKNVMLB1_LE4F/EQ4F.
 
 /-- HOL `DIAG_IS_NOT_EAR` (QKNVMLB.hl:5265). -/
 theorem DIAG_IS_NOT_EAR_p35 (s : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
@@ -10248,36 +10099,6 @@ theorem INTER_SLICE_SCS_EMPTY1_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ
   · have hy2 : y = j + q % s.k - s.k := by
       rw [hyj, Nat.mod_eq_sub_mod (by omega), Nat.mod_eq_of_lt (by omega)]
     omega
-
-/-- HOL `INTER_SLICE_SCS_EMPTY` (QKNVMLB.hl:5495). -/
-theorem INTER_SLICE_SCS_EMPTY_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
-    (mkj : Prop)
-    (hs' : scsHalfSliceV39 s p q d' mkj = s')
-    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
-    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) :
-    {y | ∃ i < s'.k - 1, y = (i + p % s.k) % s.k} ∩
-      {y | ∃ i < s''.k - 1, y = (i + q % s.k) % s.k} = ∅ := by
-  rcases lt_trichotomy (p % s.k) (q % s.k) with h | h | h
-  · exact INTER_SLICE_SCS_EMPTY1_p35 s s' s'' p q d' d'' mkj hs' hs'' hscs hdiag h
-  · exact absurd h hdiag.1
-  · rw [Set.inter_comm]
-    exact INTER_SLICE_SCS_EMPTY1_p35 s s'' s' q p d'' d' mkj hs'' hs' hscs
-      ⟨fun e => hdiag.1 e.symm, fun e => hdiag.2.2 e.symm, fun e => hdiag.2.1 e.symm⟩ h
-
-/-! ## QKNVMLB2 step kit (source 5522-7735; the mkj = false branch)
-
-Steps for the dsv superadditivity along the slice: 01 not-ear + negative-sign
-dsv form; 02 the corner split of the J-sum; 03 nonnegativity of the J-sum
-term; 04 the half-slice corner J-edge is the mkj flag; 05 re-indexing of the
-half-slice interior J-sum to the s-frame (SUM_EQ_GENERAL); 06 the mkj =
-false branch of QKNVMLB2 assembled from 01-05) and 07 the mkj = true branch
-(HOL 6135-7735: ear / non-ear half dsv forms with the live diagonal corner
-terms, the both-ears subcase via the DIST_DIAG argument under the live flag);
-`QKNVMLB2_p35` below assembles both branches through the flag-mkj bridge
-`q2flagEq`, all inside the standard three. -/
-
-
-open scoped BigOperators
 
 private theorem q2setSumCongr {α : Type*} {A : Set α} {f g : α → ℝ}
     (h : ∀ a ∈ A, f a = g a) : setSum A f = setSum A g := by
@@ -10565,140 +10386,6 @@ J-sum of `s` dominates the two translated interior windows (SCS_J_PRIME_
 SUBSET_SCS_J + INTER_SLICE_SCS_EMPTY + SUM_DIFF/SUM_POS_LE in HOL), each
 each half's dsv is at least `d - 0.1 * S`, and `s.d <= d' + d''` finishes
 the arithmetic.  Consumes only CLEAN kit + the lane's step01-05. -/
-
-theorem QKNVMLB2_step06_mkjFalse_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
-    (mkj : Prop) (vv vv' vv'' : ℕ → V3)
-    (hs' : scsHalfSliceV39 s p q d' mkj = s')
-    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
-    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
-    (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
-    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
-    (hsl : isScsSliceV39 s s' s'' p q) (hd : s.d ≤ d' + d'')
-    (hmkj : ¬mkj) :
-    dsvV39 s vv ≤ dsvV39 s' vv' + dsvV39 s'' vv'' := by
-  have hk0 : 0 < s.k := by have := hscs.2.1; omega
-  have h3k : 3 < s.k := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
-  have hge' := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
-  have hdiag2 : scsDiag s.k q p :=
-    ⟨fun e => hdiag.1 e.symm, fun e => hdiag.2.2 e.symm, fun e => hdiag.2.1 e.symm⟩
-  have hge'' := SCS_K_PRIME_LE_GE_p35 s q p d'' mkj hscs hdiag2 s'' hs''.symm
-  have hk'l : s'.k < s.k := hge'.2.2
-  have hk''l : s''.k < s.k := hge''.2.2
-  -- the two translated interior windows
-  set T1 : Set ℕ :=
-    {j | ∃ i, i < s'.k - 1 ∧ s'.J i (i + 1) ∧ j = (i + p % s.k) % s.k} with hT1def
-  set T2 : Set ℕ :=
-    {j | ∃ i, i < s''.k - 1 ∧ s''.J i (i + 1) ∧ j = (i + q % s.k) % s.k} with hT2def
-  -- (a) both windows sit inside the J-index set of s
-  have hT1J : T1 ⊆ {j | j < s.k ∧ s.J j (j + 1)} := by
-    rintro j ⟨i, hi, hJi, hj⟩
-    rw [hj]
-    refine ⟨Nat.mod_lt _ hk0, ?_⟩
-    exact SCS_J_PRIME_SUBSET_SCS_J_p35 s s' p q d' mkj hs' hscs hdiag i hi hJi
-  have hT2J : T2 ⊆ {j | j < s.k ∧ s.J j (j + 1)} := by
-    rintro j ⟨i, hi, hJi, hj⟩
-    rw [hj]
-    refine ⟨Nat.mod_lt _ hk0, ?_⟩
-    exact SCS_J_PRIME_SUBSET_SCS_J_p35 s s'' q p d'' mkj hs'' hscs hdiag2 i hi hJi
-  -- (c) the windows are disjoint (INTER_SLICE_SCS_EMPTY)
-  have hdisj : T1 ∩ T2 = ∅ := by
-    rw [Set.eq_empty_iff_forall_notMem]
-    intro j hj
-    rw [Set.mem_inter_iff] at hj
-    obtain ⟨⟨i1, hi1, hJ1, hj1⟩, ⟨i2, hi2, hJ2, hj2⟩⟩ := hj
-    have hW := INTER_SLICE_SCS_EMPTY_p35 s s' s'' p q d' d'' mkj hs' hs'' hscs hdiag
-    have hmem : j ∈ ({y | ∃ i, i < s'.k - 1 ∧ y = (i + p % s.k) % s.k} ∩
-        {y | ∃ i, i < s''.k - 1 ∧ y = (i + q % s.k) % s.k} : Set ℕ) :=
-      ⟨⟨i1, hi1, hj1⟩, ⟨i2, hi2, hj2⟩⟩
-    rw [hW] at hmem
-    exact hmem
-  -- finiteness
-  have hJsfin : ({j | j < s.k ∧ s.J j (j + 1)} : Set ℕ).Finite :=
-    (Set.finite_lt_nat s.k).subset fun j hj => hj.1
-  have hA0fin : ({i | i < s'.k - 1} : Set ℕ).Finite := Set.finite_lt_nat _
-  have hA0fin2 : ({i | i < s''.k - 1} : Set ℕ).Finite := Set.finite_lt_nat _
-  have hT1fin : T1.Finite := by
-    refine (hA0fin.image (fun i => (i + p % s.k) % s.k)).subset ?_
-    rintro j ⟨i, hi, hJi, hj⟩
-    exact ⟨i, hi, hj.symm⟩
-  have hT2fin : T2.Finite := by
-    refine (hA0fin2.image (fun i => (i + q % s.k) % s.k)).subset ?_
-    rintro j ⟨i, hi, hJi, hj⟩
-    exact ⟨i, hi, hj.symm⟩
-  -- (e) the window sums are bounded by the J-sum of s and nonnegative
-  have hnonneg : setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1)))
-      + setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1)))
-      ≤ setSum {j | j < s.k ∧ s.J j (j + 1)}
-          (fun j => cstab - dist (vv j) (vv (j + 1))) :=
-    q2setSumGeUnion2 hJsfin hT1fin hT2fin (Set.union_subset hT1J hT2J) hdisj
-      (fun j _ => QKNVMLB2_step03_p35 s p q vv hMM hscs hdiag j)
-  have hS1pos : 0 ≤ setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
-    refine q2setSumNonneg hT1fin ?_
-    rintro j _
-    exact QKNVMLB2_step03_p35 s p q vv hMM hscs hdiag j
-  have hS2pos : 0 ≤ setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
-    refine q2setSumNonneg hT2fin ?_
-    rintro j _
-    exact QKNVMLB2_step03_p35 s p q vv hMM hscs hdiag j
-  -- the s-side dsv form (step01)
-  have hstep1 := QKNVMLB2_step01_dsv_p35 s p q vv hscs hdiag
-  -- the half-slice dsv forms: corner split (step02) + corner flag (step04)
-  have hk'0 : 0 < s'.k := by omega
-  have hk''0 : 0 < s''.k := by omega
-  have hsplit' : setSum {i | i < s'.k ∧ s'.J i (i + 1)}
-      (fun i => cstab - dist (vv (i % s'.k + p % s.k))
-          (vv ((i + 1) % s'.k + p % s.k)))
-      = setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
-    rw [QKNVMLB2_step02_cornerSplit_p35 s'
-      (fun i => cstab - dist (vv (i % s'.k + p % s.k))
-          (vv ((i + 1) % s'.k + p % s.k))) hk'0,
-      (QKNVMLB2_step04_corner_p35 s s' p q d' mkj hs' hscs hdiag).1,
-      if_neg hmkj, add_zero]
-    exact QKNVMLB2_step05_reindex_p35 s s' p q d' mkj vv hs' hscs hdiag hMM
-  have hsplit'' : setSum {i | i < s''.k ∧ s''.J i (i + 1)}
-      (fun i => cstab - dist (vv (i % s''.k + q % s.k))
-          (vv ((i + 1) % s''.k + q % s.k)))
-      = setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
-    rw [QKNVMLB2_step02_cornerSplit_p35 s''
-      (fun i => cstab - dist (vv (i % s''.k + q % s.k))
-          (vv ((i + 1) % s''.k + q % s.k))) hk''0,
-      (QKNVMLB2_step04_corner_p35 s s'' q p d'' mkj hs'' hscs hdiag2).1,
-      if_neg hmkj, add_zero]
-    exact QKNVMLB2_step05_reindex_p35 s s'' q p d'' mkj vv hs'' hscs hdiag2 hMM
-  have hdsv' : dsvV39 s' vv'
-      = s'.d + 0.1 * (if isEarV39 s' then (1:ℝ) else -1) *
-        setSum {i | i < s'.k ∧ s'.J i (i + 1)}
-          (fun i => cstab - dist (vv (i % s'.k + p % s.k))
-              (vv ((i + 1) % s'.k + p % s.k))) := by
-    unfold dsvV39
-    rw [hvv']
-  have hdsv'' : dsvV39 s'' vv''
-      = s''.d + 0.1 * (if isEarV39 s'' then (1:ℝ) else -1) *
-        setSum {i | i < s''.k ∧ s''.J i (i + 1)}
-          (fun i => cstab - dist (vv (i % s''.k + q % s.k))
-              (vv ((i + 1) % s''.k + q % s.k))) := by
-    unfold dsvV39
-    rw [hvv'']
-  rw [hsplit'] at hdsv'
-  rw [hsplit''] at hdsv''
-  -- the ear-sign corner terms dominate the negative-sign forms
-  have hb1 : -(0.1 * setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1))))
-      ≤ 0.1 * (if isEarV39 s' then (1:ℝ) else -1) *
-        setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
-    by_cases he : isEarV39 s'
-    · rw [if_pos he]; linarith
-    · rw [if_neg he]; linarith
-  have hb2 : -(0.1 * setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1))))
-      ≤ 0.1 * (if isEarV39 s'' then (1:ℝ) else -1) *
-        setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
-    by_cases he : isEarV39 s''
-    · rw [if_pos he]; linarith
-    · rw [if_neg he]; linarith
-  have hd'eq : s'.d = d' := by rw [← hs']; simp [scsHalfSliceV39]
-  have hd''eq : s''.d = d'' := by rw [← hs'']; simp [scsHalfSliceV39]
-  linarith
-
-/-! ## q2g support: corner arithmetic, ear / non-ear half dsv forms, DIST_DIAG -/
 
 /-- new plumbing: single-window domination (subset + nonnegativity). -/
 private theorem q2setSumSub {A B : Set ℕ} {f : ℕ → ℝ} (hA : A.Finite) (hB : B.Finite)
@@ -11084,69 +10771,6 @@ theorem QKNVMLB2_step07_mkjTrue_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : �
       linarith
 
 /-! ## q2h: the flag↔mkj bridge -/
-
-/-- The flag-mkj bridge: `is_scs_slice`'s first conjunct pins both half
-slices to the flag `s'.J 0 (s'.k-1)`, so comparing with `hs'` at the
-override pair gives `mkj = flag`. -/
-private theorem q2flagEq (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
-    (hs' : scsHalfSliceV39 s p q d' mkj = s') (hscs : isScsV39 s)
-    (hdiag : scsDiag s.k p q) (hsl : isScsSliceV39 s s' s'' p q) :
-    mkj = (s'.J 0 (s'.k - 1)) := by
-  have hk0 : 0 < s.k := by have := hscs.2.1; omega
-  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
-  have hK : s'.k = (q + 1 + (s.k - p % s.k)) % s.k := by
-    rw [← hs']; simp only [scsHalfSliceV39]
-  have hK0 : 0 < (q + 1 + (s.k - p % s.k)) % s.k := by omega
-  have hm2 : ((q + 1 + (s.k - p % s.k)) % s.k - 1)
-        % ((q + 1 + (s.k - p % s.k)) % s.k)
-      = (q + 1 + (s.k - p % s.k)) % s.k - 1 :=
-    Nat.mod_eq_of_lt (by omega)
-  have hcond : ({(0:ℕ) % ((q + 1 + (s.k - p % s.k)) % s.k),
-      ((q + 1 + (s.k - p % s.k)) % s.k - 1) % ((q + 1 + (s.k - p % s.k)) % s.k)} : Set ℕ)
-      = {0, (q + 1 + (s.k - p % s.k)) % s.k - 1} := by
-    rw [Nat.zero_mod, hm2]
-  -- s'.d = d' and s' = scsHalfSliceV39 s p q d' (s'.J 0 (s'.k-1))
-  have hd'eq : s'.d = d' := by rw [← hs']; simp [scsHalfSliceV39]
-  have hpair := hsl.1
-  simp only [scsSliceV39, Prod.mk.injEq] at hpair
-  obtain ⟨he1, -⟩ := hpair
-  rw [hd'eq] at he1
-  -- apply the J-projection at (0, k'-1) to the two equal half slices
-  have heq : scsHalfSliceV39 s p q d' mkj = scsHalfSliceV39 s p q d' (s'.J 0 (s'.k - 1)) :=
-    Eq.trans hs' he1
-  have hJ := congrArg (fun t : ScsV39 => t.J 0 (t.k - 1)) heq
-  simp only [scsHalfSliceV39] at hJ
-  rw [if_pos hcond, if_pos hcond] at hJ
-  exact hJ
-
-/-- HOL `QKNVMLB2` (QKNVMLB.hl:5522, proof ~2215 ln — the giant).
-RULING 2026-09-21 IV: this twin's `vv (i % s'.k + p % s.k)` /
-`vv (i % s''.k + q % s.k)` convention is faithful (QKNVMLB.hl:5525/:5527);
-the LA1 registry's `vv ((i+p) % s'.k)` form is the unproved
-appendix.hl:1064 statement-let — see `QKNVMLB1_p35`. -/
-theorem QKNVMLB2_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
-    (vv vv' vv'' : ℕ → V3)
-    (hs' : scsHalfSliceV39 s p q d' mkj = s')
-    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
-    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
-    (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
-    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
-    (hsl : isScsSliceV39 s s' s'' p q) (hd : s.d ≤ d' + d'') :
-    dsvV39 s vv ≤ dsvV39 s' vv' + dsvV39 s'' vv'' := by
-  have hmeq : mkj = (s'.J 0 (s'.k - 1)) :=
-    q2flagEq s s' s'' p q d' d'' mkj hs' hscs hdiag hsl
-  subst hmeq
-  rcases Classical.em (s'.J 0 (s'.k - 1)) with hflag | hflag
-  · exact QKNVMLB2_step07_mkjTrue_p35 s s' s'' p q d' d'' (s'.J 0 (s'.k - 1)) vv vv'
-      vv'' hs' hs'' hvv' hvv'' hMM hscs hdiag hsl hd hflag
-  · exact QKNVMLB2_step06_mkjFalse_p35 s s' s'' p q d' d'' (s'.J 0 (s'.k - 1)) vv vv'
-      vv'' hs' hs'' hvv' hvv'' hMM hscs hdiag hsl hd hflag
-  -- DISCHARGES: source 5522-7735 complete.  The mkj = false branch is
-  -- `QKNVMLB2_step06_mkjFalse_p35`, the mkj = true branch is
-  -- `QKNVMLB2_step07_mkjTrue_p35` (ear / non-ear half dsv forms with the live
-  -- diagonal corner terms cancelling by dist symmetry; the both-ears subcase
-  -- via `q2distDiagLe` — the DIST_DIAG argument under the live flag), both
-  -- assembled through the flag-mkj bridge `q2flagEq`.
 
 /-- HOL `DIST_DIAG_LE_CSTAB` (QKNVMLB.hl:7736). -/
 theorem DIST_DIAG_LE_CSTAB_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
@@ -11718,35 +11342,6 @@ theorem SUM_NUMSEG3_p35 (t : ℕ → ℝ) :
   rw [Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ,
     Finset.sum_range_succ]
   simp
-
-/-- HOL `NUMSEG_3` (QKNVMLB.hl:8439). -/
-theorem NUMSEG_3_p35 : {i : ℕ | i < 4} = {0, 1, 2, 3} := by
-  ext i
-  simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
-  omega
-
-/-! ## Slice tau bank, k' = 3 azimuth identity and the master arrows
-      (source order: 8445-10699) -/
-
--- SUM_AZIM_EQ_ANGLE_EQ4_p35 (SF-86, lkgrqui-eq4-w3 2026-10-28): the frozen
--- statement dropped the `IsHypE_p35 V (E ∪ {{u, w}}) HS` carrier its HOL
--- original (QKNVMLB.hl:8445) pins via the canonical hypermap, so as stated
--- it has countermodels (HS := hypermapOfFan 0 V E). Ruled: + hHS. The
--- declaration now lives at EOF below (after its proved twin), closed by
--- `exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 ..`.
-
--- ============================================================================
--- cardff-land-w1 landing block (inserted 2026-10-31).  Source: cardff line
--- tip LA35_stack35 (delta region verbatim) + the minimal transitive closure
--- of its stack31 dependencies (declaration order = original stack order;
--- items already present in HEAD are not duplicated).  Feeds the two CARD_FF
--- roots immediately below, whose sorries are replaced by the cardff master
--- assemblies (cardFF_EQ_main_p35 / cardFF_LE3_main_p35).  This block is
--- clean: zero sorry/admit/native_decide, no new `open`, no heartbeat bump.
--- ============================================================================
-
--- (a) stack31 dependency closure (front-section + EJRCFJD-region pieces
---     absent from HEAD)
 
 /-- `Kepler.Geom.wedge` membership unpacked (flyspeck.ml:3714): off the
 axis plane, with the azimuth sandwiched strictly inside the dart angle. -/
@@ -12740,6 +12335,7 @@ private theorem kchPeriodAddMul_p35 {α : Type*} {f : α → α} {x : α} {q : �
   | succ k ih =>
     rw [Nat.succ_mul, ← Nat.add_assoc, Function.iterate_add_apply, hq]
     exact ih
+namespace LandingKchTwin
 
 /-- 返回周期取模：`f^[q] x = x` 时第 `n` 步只依 `n % q`（纯）。 -/
 private theorem kchPeriodMod_p35 {α : Type*} {f : α → α} {x : α} {q : ℕ}
@@ -12748,6 +12344,8 @@ private theorem kchPeriodMod_p35 {α : Type*} {f : α → α} {x : α} {q : ℕ}
     rw [← Nat.mul_comm q (n / q), Nat.mod_add_div n q]
   conv_lhs => rw [← hsplit]
   exact kchPeriodAddMul_p35 hq _ _
+end LandingKchTwin
+open Kepler.Text.LandingKchTwin
 
 /-- 函数迭代的单射性（底映射单射）。 -/
 private theorem funIterInj_p35 {α : Type*} {f : α → α} (hf : Function.Injective f)
@@ -13098,6 +12696,7 @@ private theorem kchOrbitKit_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 ×
   have hceq : Set.ncard V = c := by
     rw [← hstage, ← hfstOrb, Set.InjOn.ncard_image (kchFstInj_p35 hfan hEE2), hFF, hcdef]
   refine ⟨hcover v hv, hcover, hInjV, c, hc0, hretv, hceq, hwin⟩
+namespace LandingKchTwin
 
 /-- ρ² ≠ id（2-圈归谬：轨道两点化后 `ivs z` 落不进两点集）。 -/
 private theorem kchNoTwoV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
@@ -13146,6 +12745,8 @@ private theorem kchNoTwoV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V
   rcases hivs with h | h
   · exact hzivs h
   · exact hne h.symm
+end LandingKchTwin
+open Kepler.Text.LandingKchTwin
 
 /-- 首命中窗口：`v` 沿 ρ 前进首次到达 `w` 的步数 `m`（`0 < m < c`、窗口内
 不提前命中、窗口单射）。 -/
@@ -14660,6 +14261,17449 @@ theorem CARD_SLICE_FF_LE_3_p35 (V : Set V3) (E : Set (Set V3))
   -- DISCHARGES: source 9122-9193; each slice face is a proper fan face
   -- (≥ 3 darts), same external kit as CARD_FF_EQ_CARD_SLICE_FF_p35.
 
+private theorem azimSumCore_le4 {x v u w1 w2 : V3} (hxv : v ≠ x)
+    (hncu : ¬ Collinear3 x v u) (hnc1 : ¬ Collinear3 x v w1)
+    (hnc2 : ¬ Collinear3 x v w2) :
+    ∃ n : ℤ, azim x v u w2 =
+      azim x v u w1 + azim x v w1 w2 + (n : ℝ) * (2 * Real.pi) := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - x)
+    (sub_ne_zero.mpr (fun he => hxv he))
+  have hax : (v - x : V3) = dist v x • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, ru, r1, hru, hr1, hzu, hzw1⟩ := azim_frame_spec hncu hnc1 hon hax hxv
+  obtain ⟨ψ2, ru2, r2, hru2, hr2, hzu2, hzw2⟩ := azim_frame_spec hncu hnc2 hon hax hxv
+  obtain ⟨ψ', r1', r2', hr1', hr2', hzw1', hzw2'⟩ :=
+    azim_frame_spec hnc1 hnc2 hon hax hxv
+  have hψu : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ2 : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hru hru2 (hzu.symm.trans hzu2)
+  have hE2 : Complex.exp ((((ψ + azim x v u w1 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp (((ψ' : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hr1 hr1' (hzw1.symm.trans hzw1')
+  have hE1' : Complex.exp ((((ψ2 + azim x v u w2 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp ((((ψ' + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) :=
+    exp_pos_mul_eq hr2 hr2' (hzw2.symm.trans hzw2')
+  rw [exp_add_I, exp_add_I] at hE1'
+  rw [exp_add_I] at hE2
+  rw [hψu.symm] at hE1'
+  rw [← hE2] at hE1'
+  have hE3 : Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+    have hkey : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+      rw [hE1', mul_assoc, ← exp_add_I]
+    exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hE3
+  refine ⟨n, ?_⟩
+  have hc2 : ((azim x v u w2 : ℝ) : ℂ) * Complex.I
+      = ((((azim x v u w1 + azim x v w1 w2 : ℝ)
+          + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
+    rw [hn]
+    push_cast
+    ring
+  exact_mod_cast mul_right_cancel₀ Complex.I_ne_zero hc2
+
+/-! ### EJRCFJD landing closure (lane ejrcfjd-landing-w1, 2026-10-28):
+96 prefix units missing from the repo in these forms (verbatim, original
+`private`; incl. the kchPeriodMod_p35/kchNoTwoV_p35 explicit-form twins), then
+the suffix M2+FIN final state (header stripped, 28 repo-duplicated units skipped).
+HEAD's own private same-name twins live in namespace LandingKchTwin (opened above). -/
+
+/-- LA35-world `CVX_LO_IMP_LO` (local_lemmas.hl:2531). The LocalAuto5:4710
+twin lives on the p2 carrier and outside the import face; here the
+projection is definitional. -/
+theorem CVX_LO_IMP_LO_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : ConvexLocalFan V E FF) : LocalFan V E FF := h.1
+
+/-- One-step unfolding of `eeOfHyp_p3` on a dart. -/
+private theorem eeOfHyp_apply_mem_p35 (x : V3) (V : Set V3) (E : Set (Set V3))
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E V) : eeOfHyp_p3 x V E d = (d.2, d.1) := by
+  rw [eeOfHyp_p3, if_pos hd]
+
+/-- One-step unfolding of `eeOfHyp_p3` off the dart set. -/
+private theorem eeOfHyp_apply_notmem_p35 (x : V3) (V : Set V3) (E : Set (Set V3))
+    {d : V3 × V3} (hd : d ∉ dartsOfHyp_p3 E V) : eeOfHyp_p3 x V E d = d := by
+  rw [eeOfHyp_p3, if_neg hd]
+
+/-- `eeOfHyp_p3` is a global involution (LA3 `EE_OF_HYP_PERMUTES_DARTS`
+world, strengthened to every point; no fan hypothesis needed). -/
+theorem eeOfHyp_involution_p35 (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
+    eeOfHyp_p3 x V E (eeOfHyp_p3 x V E d) = d := by
+  by_cases hd : d ∈ dartsOfHyp_p3 E V
+  · rw [eeOfHyp_apply_mem_p35 x V E hd,
+      eeOfHyp_apply_mem_p35 x V E (V_IN_DARTS_IMP_SWICH_SO_DO hd)]
+  · rw [eeOfHyp_apply_notmem_p35 x V E hd, eeOfHyp_apply_notmem_p35 x V E hd]
+
+/-- The edge map of `HYP_p3 0 V E` as an `Equiv.Perm` (no hypotheses): the
+edgeMap component of an `IsHypE_p35` hypermap construction for the
+augmented carrier. -/
+noncomputable def eePermOfHyp_p35 (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    Equiv.Perm (V3 × V3) :=
+  Equiv.ofBijective (eeOfHyp_p3 x V E)
+    (by
+      refine ⟨?_, ?_⟩
+      · intro a b h
+        have h2 := congrArg (eeOfHyp_p3 x V E) h
+        rwa [eeOfHyp_involution_p35, eeOfHyp_involution_p35] at h2
+      · intro y
+        exact ⟨eeOfHyp_p3 x V E y, eeOfHyp_involution_p35 x V E y⟩)
+
+@[simp] theorem eePermOfHyp_p35_apply (x : V3) (V : Set V3) (E : Set (Set V3))
+    (d : V3 × V3) : eePermOfHyp_p35 x V E d = eeOfHyp_p3 x V E d := rfl
+
+/-- True fan darts survive edge-set augmentation: `dart1OfFan V E ⊆
+dartsOfHyp_p3 E' V` for `E ⊆ E'` (the inclusion step of the EJRCFJD HS
+assembly — the fan's darts are exactly the ord pairs). NOTE: full
+`dartsOfHyp_p3 E V ⊆ dartsOfHyp_p3 E' V` is FALSE in general (an isolated
+vertex's self-pair drops out when augmentation gives it a neighbour), so
+the HS assembly must source the augmented dart set from the fan's true
+darts plus the two diagonal darts. -/
+theorem dart1OfFan_subset_dartsOfHyp_p35 {E E' : Set (Set V3)} {V : Set V3}
+    (hsub : E ⊆ E') : Fan.dart1OfFan V E ⊆ dartsOfHyp_p3 E' V := by
+  intro d hd
+  have hdE : ({d.1, d.2} : Set V3) ∈ E := by
+    show ({d.1, d.2} : Set V3) ∈ E
+    exact hd
+  have hmem : d ∈ ordPairs_p3 E' := by
+    show ({d.1, d.2} : Set V3) ∈ E'
+    exact hsub hdE
+  exact Set.mem_union_left _ hmem
+
+/-! ## Non-collinearity kit, wave W1 (ejrcfjd-w01-w3): first closed bricks
+toward HOL `PROVE_THE_SLICE_ASSUMPTION` (local_lemmas1.hl:5647). The
+case-splitting entry point is closed here together with the four
+degenerate-convention helpers its two z=v / z=w halves consume; the halves
+themselves need the `KCHMAMG`/`HKIRPEP` orbit machinery
+(local_lemmas.hl:3197/:6027), not yet on the LA35 face (see the lane
+DELIVERY for the route map). -/
+
+/-- HOL `CVLF_COLLINEAR_CIRCULAR_LUNAR` (local_lemmas1.hl:944): a
+collinear edge pair in a convex local fan is circular or lunar. -/
+private theorem CVLF_CIRCULAR_LUNAR_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w : V3}
+    (_hfan : ConvexLocalFan V E FF) (hvw : {v, w} ⊆ V)
+    (hcol : Collinear ℝ ({0, v, w} : Set V3)) (hwv : v ≠ w) :
+    Circular V E ∨ Lunar v w V E := by
+  rcases Classical.em (Circular V E) with h | h
+  · exact Or.inl h
+  · exact Or.inr ⟨h, hvw, hwv, hcol⟩
+
+/-- Degenerate azimuth convention baked into the `Kepler.Geom.azim` def
+(flyspeck.ml:2148; HOL `AZIM_DEGENERATE` half): the angle vanishes whenever
+either ray endpoint is collinear with the axis. -/
+private theorem azimDeg_p35 {v w w1 w2 : V3}
+    (h : Collinear3 v w w1 ∨ Collinear3 v w w2) : azim v w w1 w2 = 0 := by
+  unfold azim
+  exact if_pos h
+
+/-- HOL `LOCAL_FAN_RHO_NODE_PROS` first component: the principal dart of
+the face orbit lies in the orbit. -/
+private theorem lfRhoNodeDart_mem_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3} (hfan : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hv : v ∈ V) :
+    (v, rhoNode1 FF v) ∈ FF := (lfVertKit_p35 hfan hEE2 hv).1
+
+/-- HOL `LOCAL_FAN_IVS_IN_V`: the inverse successor lands in `V`. -/
+private theorem lfIvs_mem_V_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3} (hfan : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hv : v ∈ V) :
+    ivsRhoNode1 FF v ∈ V := (lfVertKit_p35 hfan hEE2 hv).2.2.2.1
+
+/-- HOL `LOCAL_FAN_RHO_NODE_IVS`: the successor of the inverse successor
+is the vertex itself. -/
+private theorem lfRhoNodeIvs_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3} (hfan : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hv : v ∈ V) :
+    rhoNode1 FF (ivsRhoNode1 FF v) = v := (lfVertKit_p35 hfan hEE2 hv).2.2.1
+
+/-- HOL `WEDGE_IN_FAN_LOFA_DETER2` (local_lemmas1.hl:5609): the fan wedge
+at the principal dart is the open geometric wedge over the dart and its
+inverse successor (the orbit half W1 left open; the geometric half is
+`wedgeInFanGt_two_p35`). -/
+theorem WEDGE_IN_FAN_LOFA_DETER2_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3} (hfan : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hv : v ∈ V) :
+    wedgeInFanGt_p3 (v, rhoNode1 FF v) E
+      = Kepler.Geom.wedge (0 : V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) := by
+  obtain ⟨-, -, -, -, hP5, hP6⟩ := lfVertKit_p35 hfan hEE2 hv
+  exact wedgeInFanGt_two_p35 hP5 hP6 rfl
+/-! ## HS-assembly bricks, wave W2 (scout §4 W2 items 1-2) -/
+
+/-- Set-level identity-extension `Equiv.Perm` (the `Fan.extendPerm` twin
+over a `Set`): a bijection of `S` extends by the identity outside `S`.
+The first brick of the HS assembly (scout §4 W2 item 1). -/
+noncomputable def permOfBijOn_p35 {α : Type*} [DecidableEq α] {S : Set α}
+    (f : α → α) (hf : Set.BijOn f S S) : Equiv.Perm α :=
+  Equiv.ofBijective (fun a => if a ∈ S then f a else a)
+    ⟨by
+      intro a b h
+      have h' : (if a ∈ S then f a else a) = (if b ∈ S then f b else b) := h
+      by_cases ha : a ∈ S <;> by_cases hb : b ∈ S
+      · rw [if_pos ha, if_pos hb] at h'
+        exact hf.2.1 ha hb h'
+      · rw [if_pos ha, if_neg hb] at h'
+        exact absurd (h' ▸ hf.1 ha) hb
+      · rw [if_neg ha, if_pos hb] at h'
+        exact absurd (h'.symm ▸ hf.1 hb) ha
+      · rw [if_neg ha, if_neg hb] at h'
+        exact h',
+     by
+      intro y
+      by_cases hy : y ∈ S
+      · obtain ⟨x, hx, hfxy⟩ := hf.2.2 hy
+        refine ⟨x, ?_⟩
+        show (if x ∈ S then f x else x) = y
+        rw [if_pos hx]
+        exact hfxy
+      · exact ⟨y, if_neg hy⟩⟩
+
+/-- On-set application of `permOfBijOn_p35`. -/
+private theorem permOfBijOn_apply_mem_p35 {α : Type*} [DecidableEq α] {S : Set α}
+    {f : α → α} {hf : Set.BijOn f S S} {a : α} (ha : a ∈ S) :
+    permOfBijOn_p35 f hf a = f a := by
+  show (fun a => if a ∈ S then f a else a) a = f a
+  exact if_pos ha
+
+/-- Off-set application of `permOfBijOn_p35` (the identity). -/
+private theorem permOfBijOn_apply_notmem_p35 {α : Type*} [DecidableEq α] {S : Set α}
+    {f : α → α} {hf : Set.BijOn f S S} {a : α} (ha : a ∉ S) :
+    permOfBijOn_p35 f hf a = a := by
+  show (fun a => if a ∈ S then f a else a) a = a
+  exact if_neg ha
+
+/-- `permOfBijOn_p35` permutes a finite dart set (the `PermutesOn` face
+the `Hypermap` fields need). -/
+theorem permOfBijOn_permutesOn_p35 {α : Type*} [DecidableEq α] {s : Finset α}
+    {f : α → α} {hbf : Set.BijOn f (↑s : Set α) (↑s : Set α)} :
+    PermutesOn (permOfBijOn_p35 f hbf) s := by
+  intro a ha
+  rw [permOfBijOn_apply_notmem_p35 (Finset.mem_coe.not.mp ha)]
+
+/-- Finiteness of the augmented-carrier dart set (scout §4 W2 item 2):
+`dartsOfHyp_p3 E V ⊆ V ×ˢ V` as soon as `⋃₀ E ⊆ V`. -/
+theorem dartsOfHyp_finite_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V) (hV : V.Finite) : (dartsOfHyp_p3 E V).Finite := by
+  have hsub : dartsOfHyp_p3 E V ⊆ V ×ˢ V := by
+    rintro ⟨d1, d2⟩ hd
+    simp only [dartsOfHyp_p3, Set.mem_union, ordPairs_p3, selfPairs_p3,
+      Set.mem_setOf_eq, Set.mem_prod, Set.mem_singleton_iff] at hd
+    rcases hd with h | h
+    · exact ⟨hVE (Set.mem_sUnion_of_mem
+          (Set.mem_insert_iff.mpr (Or.inl rfl)) h),
+        hVE (Set.mem_sUnion_of_mem
+          (Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)) h)⟩
+    · exact ⟨h.2.1, by rw [← h.1]; exact h.2.1⟩
+  exact (hV.prod hV).subset hsub
+
+/-- Membership conversion between the finite dart set and its `Finset`
+witness (orientation-proof bridge for the `PermutesOn` fields). -/
+private theorem finDartsMem_p35 {V : Set V3} {E : Set (Set V3)}
+    (hfin : (dartsOfHyp_p3 E V).Finite) {x : V3 × V3} :
+    x ∈ hfin.toFinset ↔ x ∈ dartsOfHyp_p3 E V :=
+  hfin.mem_toFinset
+
+/-- The node step on a dart: `azim_cycle` at a two-element neighbour set is
+the swap. -/
+private theorem azimCycleDart_p35 {V : Set V3} {E : Set (Set V3)}
+    {v w c : V3} (hd : (v, w) ∈ dartsOfHyp_p3 E V) (hEE : (EE_p3 v E) = {w, c})
+    (hcw : c ≠ w) : azimCycle_p3 (EE_p3 v E) 0 v w = c :=
+  azimCycle2_p35 (v := (0:V3)) (w := v) (a := c) (p := w) hcw
+    (by rw [hEE]; exact pairSwap_p35 w c)
+
+/-- The node map on a dart: the two-element cycle swap. -/
+private theorem nnDart_p35 {V : Set V3} {E : Set (Set V3)}
+    {v w c : V3} (hd : (v, w) ∈ dartsOfHyp_p3 E V) (hEE : (EE_p3 v E) = {w, c})
+    (hcw : c ≠ w) : nnOfHyp_p3 0 V E (v, w) = (v, c) := by
+  rw [nnOfHyp_p3, if_pos hd, azimCycleDart_p35 hd hEE hcw]
+
+/-- The node map carries darts to darts. -/
+private theorem nnMaps_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v w : V3} (hd : (v, w) ∈ dartsOfHyp_p3 E V) :
+    nnOfHyp_p3 0 V E (v, w) ∈ dartsOfHyp_p3 E V := by
+  obtain ⟨c, hEE, hcw, hcd, -⟩ := dartOther_p35 hVE hEE2 hd
+  rw [nnDart_p35 hd hEE hcw]
+  exact hcd
+
+/-- The node map is an involution on the dart set (the two-element swap is
+its own inverse). -/
+private theorem nnInvol_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v w : V3} (hd : (v, w) ∈ dartsOfHyp_p3 E V) :
+    nnOfHyp_p3 0 V E (nnOfHyp_p3 0 V E (v, w)) = (v, w) := by
+  obtain ⟨c, hEE, hcw, hcd, -⟩ := dartOther_p35 hVE hEE2 hd
+  rw [nnDart_p35 hd hEE hcw]
+  obtain ⟨c', hEE', hc'c, hcd', -⟩ := dartOther_p35 hVE hEE2 hcd
+  have hc'w : c' = w := by
+    have hm : c' ∈ EE_p3 v E := by
+      rw [hEE']; exact Set.mem_insert_iff.mpr (Or.inr rfl)
+    rw [hEE] at hm
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm
+    rcases hm with h | h
+    · exact h
+    · exact absurd h hc'c
+  rw [nnDart_p35 hcd hEE' hc'c, hc'w]
+
+/-- Injectivity of the node map on the dart set (from the involution). -/
+private theorem nnInjOn_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    Set.InjOn (nnOfHyp_p3 0 V E) (dartsOfHyp_p3 E V) := by
+  intro a ha b hb hab
+  have h2 := congrArg (nnOfHyp_p3 0 V E) hab
+  rwa [nnInvol_p35 hVE hEE2 ha, nnInvol_p35 hVE hEE2 hb] at h2
+
+/-- The face map carries darts to darts. -/
+private theorem ffMaps_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v w : V3} (hd : (v, w) ∈ dartsOfHyp_p3 E V) :
+    ffOfHyp_p3 0 V E (v, w) ∈ dartsOfHyp_p3 E V := by
+  obtain ⟨c, hEE, hcv, hcd, -⟩ :=
+    dartOther_p35 hVE hEE2 (V_IN_DARTS_IMP_SWICH_SO_DO hd)
+  rw [ffDart_p35 hd hEE hcv]
+  exact hcd
+
+/-- Injectivity of the face map on the dart set: equal images share the
+head, and the inverse-cycle partner pins the tail. -/
+private theorem ffInjOn_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    Set.InjOn (ffOfHyp_p3 0 V E) (dartsOfHyp_p3 E V) := by
+  intro a ha b hb hab
+  obtain ⟨v1, w1⟩ := a
+  obtain ⟨v2, w2⟩ := b
+  obtain ⟨c1, hEE1, hc1, hcd1, -⟩ :=
+    dartOther_p35 hVE hEE2 (V_IN_DARTS_IMP_SWICH_SO_DO ha)
+  obtain ⟨c2, hEE2', hc2, hcd2, -⟩ :=
+    dartOther_p35 hVE hEE2 (V_IN_DARTS_IMP_SWICH_SO_DO hb)
+  rw [ffDart_p35 ha hEE1 hc1, ffDart_p35 hb hEE2' hc2] at hab
+  rw [Prod.mk.injEq] at hab
+  obtain ⟨hw12, hc12⟩ := hab
+  rw [hw12] at hEE1
+  rw [hc12] at hEE1
+  have hv1m : v1 ∈ EE_p3 w2 E := by
+    rw [hEE1]; exact Set.mem_insert_iff.mpr (Or.inl rfl)
+  rw [hEE2'] at hv1m
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hv1m
+  rcases hv1m with h | h
+  · rw [Prod.mk.injEq]
+    exact ⟨h, hw12⟩
+  · have hne : v1 ≠ c2 := fun hh => hc1 (hc12.trans hh.symm)
+    exact absurd h hne
+
+/-- Surjectivity of the face map on the dart set: the explicit preimage is
+the partner dart at the tail. -/
+private theorem ffSurjOn_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) {b : V3 × V3}
+    (hb : b ∈ dartsOfHyp_p3 E V) :
+    ∃ a : V3 × V3, a ∈ dartsOfHyp_p3 E V ∧ ffOfHyp_p3 0 V E a = b := by
+  obtain ⟨v, w⟩ := b
+  obtain ⟨c, hEE, hcw, hcd, -⟩ := dartOther_p35 hVE hEE2 hb
+  have hEEv : (EE_p3 v E) = {c, w} := by rw [hEE]; exact pairSwap_p35 w c
+  have hcvd : (c, v) ∈ dartsOfHyp_p3 E V := V_IN_DARTS_IMP_SWICH_SO_DO hcd
+  refine ⟨(c, v), hcvd, ?_⟩
+  exact ffDart_p35 hcvd hEEv (Ne.symm hcw)
+
+/-- **EJRCFJD chain W2c**: the HYP carrier exists (HOL
+`hypermap (HYP (vec 0, V, E))`, WRGCVDR.hl:140, rendered existentially):
+under two-regularity on `V` the four `Hypermap` proof fields are paid
+explicitly — the three `PermutesOn` fields are the off-dart identity
+branches of the `*_of_hyp_p3` definitions, and `comp_eq_one` is the per-dart
+`edge ∘ node ∘ face = id` three-step computation (HOL `hypermap_lemma`).
+Downstream (W4 assembly) the premises discharge on the slicing fan:
+`hfin` via `dartsOfHyp_finite_p35`, `hVE`/`hEE2` as fan facts. -/
+theorem HS_EXISTS_p35 (V : Set V3) (E : Set (Set V3))
+    (hfin : (dartsOfHyp_p3 E V).Finite) (hVE : ⋃₀ E ⊆ V)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∃ HS : Hypermap (V3 × V3), IsHypE_p35 V E HS := by
+  have hBijNN : Set.BijOn (nnOfHyp_p3 0 V E) (dartsOfHyp_p3 E V)
+      (dartsOfHyp_p3 E V) :=
+    ⟨fun d hd => nnMaps_p35 hVE hEE2 hd, nnInjOn_p35 hVE hEE2,
+      fun b hb => ⟨nnOfHyp_p3 0 V E b, nnMaps_p35 hVE hEE2 hb,
+        nnInvol_p35 hVE hEE2 hb⟩⟩
+  have hBijFF : Set.BijOn (ffOfHyp_p3 0 V E) (dartsOfHyp_p3 E V)
+      (dartsOfHyp_p3 E V) :=
+    ⟨fun d hd => ffMaps_p35 hVE hEE2 hd, ffInjOn_p35 hVE hEE2,
+      fun b hb => ffSurjOn_p35 hVE hEE2 hb⟩
+  refine ⟨⟨hfin.toFinset, eePermOfHyp_p35 0 V E, permOfBijOn_p35 _ hBijNN,
+    permOfBijOn_p35 _ hBijFF, ?_, ?_, ?_, ?_⟩, ?_⟩
+  · intro x hx
+    show eeOfHyp_p3 0 V E x = x
+    refine eeOfHyp_apply_notmem_p35 0 V E (fun hc => hx ((finDartsMem_p35 hfin).mpr hc))
+  · intro x hx
+    exact permOfBijOn_apply_notmem_p35
+      (fun hc => hx ((finDartsMem_p35 hfin).mpr hc))
+  · intro x hx
+    exact permOfBijOn_apply_notmem_p35
+      (fun hc => hx ((finDartsMem_p35 hfin).mpr hc))
+  · refine Equiv.ext fun d => ?_
+    simp only [Equiv.Perm.mul_apply, Equiv.Perm.one_apply]
+    by_cases hd : d ∈ dartsOfHyp_p3 E V
+    · obtain ⟨c, hEEs, hcd1, -, -⟩ := dartOther_p35 hVE hEE2
+        (V_IN_DARTS_IMP_SWICH_SO_DO hd)
+      rw [permOfBijOn_apply_mem_p35 hd, ffDart_p35 hd hEEs hcd1]
+      have hce : c ∈ EE_p3 d.2 E := by
+        rw [hEEs]; exact Set.mem_insert_iff.mpr (Or.inr rfl)
+      have hmd : (d.2, c) ∈ dartsOfHyp_p3 E V :=
+        Set.mem_union_left _ (by show ({d.2, c} : Set V3) ∈ E; exact hce)
+      obtain ⟨c2, hEEc, hc2c, -, -⟩ := dartOther_p35 hVE hEE2 hmd
+      have hc2d1 : c2 = d.1 := by
+        have hm : c2 ∈ EE_p3 d.2 E := by
+          rw [hEEc]; exact Set.mem_insert_iff.mpr (Or.inr rfl)
+        rw [hEEs] at hm
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm
+        rcases hm with h | h
+        · exact h
+        · exact absurd h hc2c
+      rw [permOfBijOn_apply_mem_p35 hmd, nnDart_p35 hmd hEEc hc2c, hc2d1]
+      show eeOfHyp_p3 0 V E (d.2, d.1) = d
+      exact eeOfHyp_apply_mem_p35 0 V E (V_IN_DARTS_IMP_SWICH_SO_DO hd)
+    · rw [permOfBijOn_apply_notmem_p35 hd]
+      rw [permOfBijOn_apply_notmem_p35 hd]
+      show eeOfHyp_p3 0 V E d = d
+      exact eeOfHyp_apply_notmem_p35 0 V E hd
+  · rw [IsHypE_p35]
+    refine ⟨hfin.coe_toFinset, rfl, ?_, ?_⟩
+    · funext d
+      by_cases hd : d ∈ dartsOfHyp_p3 E V
+      · rw [permOfBijOn_apply_mem_p35 hd, nnOfHyp_p3, if_pos hd]
+      · rw [permOfBijOn_apply_notmem_p35 hd, nnOfHyp_p3, if_neg hd]
+    · funext d
+      by_cases hd : d ∈ dartsOfHyp_p3 E V
+      · rw [permOfBijOn_apply_mem_p35 hd, ffOfHyp_p3, if_pos hd]
+      · rw [permOfBijOn_apply_notmem_p35 hd, ffOfHyp_p3, if_neg hd]
+
+
+
+
+/-! ## KCHMAMG 移植备料（EJRCFJD 链 W1 残支前置波，ejrcfjd-kchmam-w1，2026-10-28）
+
+HOL `local_lemmas.hl:3197` `KCHMAMG`：circular 支的可行路陈述——
+`convex_local_fan (V,E,FF) /\ circular V E` 给出
+(i) `∀ v ∈ V, interior_angle1 (vec 0) FF v = pi`（全部内角平角）；
+(ii) 存在平面 `A ∋ 0 ⊇ V` 与其法向 `e`，`cyclic_set V (vec 0) e`，且
+`∀ v ∈ V: azim_cycle V 0 e v = rho_node1 FF v`、
+`azim 0 e v (rho_node1 FF v) = dihV = arcV < pi`。
+
+本波落：陈述定型（Prop 级 def，本体未闭——零 sorry 铁律）+ 依赖工具箱
+（HOL :3197 闭包内 cyclic_set/dihV/arcV 面的算术+几何小件，private `_p35`，
+逐件 axioms 标准三）。`dihV`/`arcV`/`azim_dihv_same`/`azim_dihv_compl`/
+`azim_master` 已在 import 面（Kepler.Geom），`cyclicSet_p3`/`azimCycle_p3`
+（LocalAuto3）、`interiorAngle1`/`rhoNode1`/`ConvexLocalFan`/`Circular`
+（LocalAuto1）在本 namespace。
+
+名字对照（HOL → Lean）：`convex_local_fan` ↦ `ConvexLocalFan`（LocalAuto1
+localization 版，与栈内 `CVLF_CIRCULAR_LUNAR_p35` 同族）；`circular` ↦
+`Circular`；`interior_angle1` ↦ `interiorAngle1`；`plane A` ↦ 内联
+`∃ u v w, ¬ Collinear ℝ {u,v,w} ∧ A = affineSpan ℝ {u,v,w}`
+（flyspeck_multivariate.ml:305 逐字；Mathlib `Collinear` 即仿射共线）；
+`cyclic_set` ↦ `cyclicSet_p3`（polyhedron.hl:126）；`azim_cycle` ↦
+`azimCycle_p3`；`rho_node1` ↦ `rhoNode1`；`dihV`/`arcV` ↦ Kepler.Geom 同名。
+-/
+
+/-- HOL `KCHMAMG`（local_lemmas.hl:3197）陈述定型（Prop 级；本体闭待
+KCHMAMG 波：KOMWBWC 四件套 LOCAL_FAN_IMP_CYCLIC_SET /
+RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT / AZIM_LAST_POINT_IN_RHO_SET2 /
+FIRST_AZIM_CYCLE_EQ_RHO_NODE + 轨道面，见交付 DELIVERY.md 残差定尺）。 -/
+def KCHMAMG_p35 : Prop :=
+  ∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)},
+    ConvexLocalFan V E FF → Circular V E →
+      (∀ v ∈ V, interiorAngle1 0 FF v = Real.pi) ∧
+      ∃ A : Set V3,
+        (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+            A = affineSpan ℝ ({u, v, w} : Set V3)) ∧
+        (0 : V3) ∈ A ∧ V ⊆ A ∧
+        ∃ e : V3,
+          (∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) ∧
+          cyclicSet_p3 V 0 e ∧
+          ∀ v ∈ V,
+            azimCycle_p3 V 0 e v = rhoNode1 FF v ∧
+              azim 0 e v (rhoNode1 FF v) = dihV 0 e v (rhoNode1 FF v) ∧
+              azim 0 e v (rhoNode1 FF v) = arcV 0 v (rhoNode1 FF v) ∧
+              azim 0 e v (rhoNode1 FF v) < Real.pi
+
+/-! ### V3 → Pi 的 coe 桥（Assembly.lean:4260 同款，rfl） -/
+
+/-- coe 保零。 -/
+private theorem kchCoeZero_p35 : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+
+/-- coe 保减。 -/
+private theorem kchCoeSub_p35 (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+/-- coe 保加。 -/
+private theorem kchCoeAdd_p35 (a b : V3) :
+    ((a + b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) + (b : Fin 3 → ℝ) := rfl
+
+/-- coe 保数乘。 -/
+private theorem kchCoeSmul_p35 (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • ((a : V3) : Fin 3 → ℝ) := rfl
+
+/-! ### Pi 侧 crossProduct 线性 + ON 标架循环恒等式（Assembly.lean:4273 同款） -/
+
+private theorem kchCrossAdd_p35 (p q r : Fin 3 → ℝ) :
+    crossProduct (p + q) r = crossProduct p r + crossProduct q r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.add_apply]
+
+private theorem kchCrossSmul_p35 (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct (t • p) r = t • crossProduct p r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply]
+
+private theorem kchCrossAdd'_p35 (p q r : Fin 3 → ℝ) :
+    crossProduct p (q + r) = crossProduct p q + crossProduct p r := by
+  rw [← cross_anticomm (q + r) p, ← cross_anticomm q p, ← cross_anticomm r p,
+    kchCrossAdd_p35, neg_add]
+
+private theorem kchCrossSmul'_p35 (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct p (t • r) = t • crossProduct p r := by
+  rw [← cross_anticomm (t • r) p, kchCrossSmul_p35, ← cross_anticomm p r, smul_neg,
+    neg_neg]
+
+/-- 右手 ON 标架：`f3 × f1 = f2`（Assembly.lean:4296 同款）。 -/
+private theorem kchCrossE3E1_p35 {f1 f2 f3 : V3} (h : Orthonormal3 f1 f2 f3) :
+    crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ) = (f2 : Fin 3 → ℝ) := by
+  have hXf1 : (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) ⬝ᵥ (f1 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_cross_self _ _
+  have hXf2 : (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) ⬝ᵥ (f2 : Fin 3 → ℝ) = 1 := by
+    rw [dotProduct_comm, triple_product_permutation, on3_cross h]
+    exact h.2.2.1
+  have hXf3 : (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) ⬝ᵥ (f3 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_self_cross _ _
+  have hexp := on3_expand h (WithLp.toLp 2 (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) : V3)
+  rw [hXf1, hXf2, hXf3] at hexp
+  simp only [zero_smul, one_smul, zero_add, add_zero] at hexp
+  have hcoe : ((WithLp.toLp 2 (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) : V3) :
+      Fin 3 → ℝ) = (f2 : Fin 3 → ℝ) := by rw [hexp]
+  rw [coe_toLp] at hcoe
+  exact hcoe
+
+/-- 右手 ON 标架：`f3 × f2 = -f1`（Assembly.lean:4315 同款）。 -/
+private theorem kchCrossE3E2_p35 {f1 f2 f3 : V3} (h : Orthonormal3 f1 f2 f3) :
+    crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ) = -(f1 : Fin 3 → ℝ) := by
+  have hXf1 : (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) ⬝ᵥ (f1 : Fin 3 → ℝ) = -1 := by
+    rw [dotProduct_comm, triple_product_permutation,
+      ← cross_anticomm (f1 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ), dotProduct_comm, neg_dotProduct,
+      on3_cross h]
+    rw [h.2.2.1]
+  have hXf2 : (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) ⬝ᵥ (f2 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_cross_self _ _
+  have hXf3 : (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) ⬝ᵥ (f3 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_self_cross _ _
+  have hexp := on3_expand h (WithLp.toLp 2 (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) : V3)
+  rw [hXf1, hXf2, hXf3] at hexp
+  simp only [zero_smul, neg_smul, one_smul, add_zero] at hexp
+  have hcoe : ((WithLp.toLp 2 (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) : V3) :
+      Fin 3 → ℝ) = -(f1 : Fin 3 → ℝ) := by
+    rw [hexp]; rfl
+  rw [coe_toLp] at hcoe
+  exact hcoe
+
+/-! ### JBDNJJB 符号面（Trigonometry2.JBDNJJB 的符号内容；
+Assembly.lean:4340 `crossDotEqSmulSin`/`:4434 sinAzimCrossSign` 同款移植） -/
+
+/-- 点积对左关联三项和的展开（assoc-robust 局部桥）。 -/
+private theorem kchDotAddSmul_p35 (a : Fin 3 → ℝ) (t1 t2 t3 : ℝ) (p q r : Fin 3 → ℝ) :
+    a ⬝ᵥ (t1 • p + t2 • q + t3 • r)
+      = t1 * (a ⬝ᵥ p) + t2 * (a ⬝ᵥ q) + t3 * (a ⬝ᵥ r) := by
+  rw [dotProduct_add, dotProduct_add, dotProduct_smul, dotProduct_smul, dotProduct_smul]
+  simp only [smul_eq_mul]
+
+/-- crossProduct 对右参数左关联三项和的展开（assoc-robust 局部桥）。 -/
+private theorem kchCrossAdd2'_p35 (p s t u : Fin 3 → ℝ) :
+    crossProduct p (s + t + u)
+      = crossProduct p s + crossProduct p t + crossProduct p u := by
+  rw [kchCrossAdd'_p35 p (s + t) u, kchCrossAdd'_p35 p s t]
+
+/-- `cross·w = c·sin(azim)`，`c ≥ 0`（HOL JBDNJJB3 主恒等式的符号内容）。 -/
+private theorem kchCrossDotSmulSin_p35 (u v w : V3) (hu : u ≠ 0) (hnc : ¬ Collinear3 0 u v) :
+    ∃ c : ℝ, 0 ≤ c ∧
+      (crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)
+        = c * Real.sin (azim 0 u v w) := by
+  obtain ⟨g1, g2, g3, hf, halign⟩ := exists_on3_eq_smul u hu
+  have huc : (u : Fin 3 → ℝ) = ‖u‖ • (g3 : Fin 3 → ℝ) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) halign
+    simpa using h
+  have hax : (u - 0 : V3) = dist u 0 • g3 := by
+    rw [dist_eq_norm]
+    simpa using halign
+  obtain ⟨-, -, hmain⟩ := azim_master 0 u v w
+  obtain ⟨k1, k2, hframe⟩ := hmain
+  obtain ⟨ψ, r1, r2, hv, hw, hr1, hr2⟩ := hframe g1 g2 g3 hf hax hu
+  have hr1pos : 0 < r1 := hr1 hnc
+  have o11 : ((g1 : Fin 3 → ℝ)) ⬝ᵥ ((g1 : Fin 3 → ℝ)) = 1 := hf.1
+  have o22 : ((g2 : Fin 3 → ℝ)) ⬝ᵥ ((g2 : Fin 3 → ℝ)) = 1 := hf.2.1
+  have o12 : ((g1 : Fin 3 → ℝ)) ⬝ᵥ ((g2 : Fin 3 → ℝ)) = 0 := hf.2.2.2.1
+  have o13 : ((g1 : Fin 3 → ℝ)) ⬝ᵥ ((g3 : Fin 3 → ℝ)) = 0 := hf.2.2.2.2.1
+  have o23 : ((g2 : Fin 3 → ℝ)) ⬝ᵥ ((g3 : Fin 3 → ℝ)) = 0 := hf.2.2.2.2.2.1
+  have o21 : ((g2 : Fin 3 → ℝ)) ⬝ᵥ ((g1 : Fin 3 → ℝ)) = 0 := by
+    rw [dotProduct_comm]; exact o12
+  have o1u : ((g1 : Fin 3 → ℝ)) ⬝ᵥ (u : Fin 3 → ℝ) = 0 := by
+    rw [huc, dotProduct_smul, o13, smul_zero]
+  have o2u : ((g2 : Fin 3 → ℝ)) ⬝ᵥ (u : Fin 3 → ℝ) = 0 := by
+    rw [huc, dotProduct_smul, o23, smul_zero]
+  have hv' : (v : Fin 3 → ℝ) = (r1 * Real.cos ψ) • (g1 : Fin 3 → ℝ)
+      + (r1 * Real.sin ψ) • (g2 : Fin 3 → ℝ) + k1 • (u : Fin 3 → ℝ) := by
+    have hcc := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hv
+    rw [kchCoeAdd_p35, kchCoeSmul_p35, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35,
+      kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+      sub_zero] at hcc
+    exact hcc
+  have hw' : (w : Fin 3 → ℝ) = (r2 * Real.cos (ψ + azim 0 u v w)) • (g1 : Fin 3 → ℝ)
+      + (r2 * Real.sin (ψ + azim 0 u v w)) • (g2 : Fin 3 → ℝ)
+      + k2 • (u : Fin 3 → ℝ) := by
+    have hcc := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hw
+    rw [kchCoeAdd_p35, kchCoeSmul_p35, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35,
+      kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+      sub_zero] at hcc
+    exact hcc
+  have hd1 : (g1 : Fin 3 → ℝ) ⬝ᵥ (w : Fin 3 → ℝ) = r2 * Real.cos (ψ + azim 0 u v w) := by
+    rw [hw', kchDotAddSmul_p35, o11, o12, o1u]
+    ring
+  have hd2 : (g2 : Fin 3 → ℝ) ⬝ᵥ (w : Fin 3 → ℝ) = r2 * Real.sin (ψ + azim 0 u v w) := by
+    rw [hw', kchDotAddSmul_p35, o21, o22, o2u]
+    ring
+  have hcross : crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)
+      = (‖u‖ * (r1 * Real.cos ψ)) • (g2 : Fin 3 → ℝ)
+        + (-(‖u‖ * (r1 * Real.sin ψ))) • (g1 : Fin 3 → ℝ) := by
+    rw [hv', huc, kchCrossSmul_p35, kchCrossAdd2'_p35, kchCrossSmul'_p35, kchCrossSmul'_p35,
+      kchCrossSmul'_p35, kchCrossSmul'_p35, kchCrossE3E1_p35 hf, kchCrossE3E2_p35 hf,
+      cross_self, smul_zero, smul_zero, add_zero, smul_add, smul_smul, smul_smul, smul_neg,
+      neg_smul]
+  rcases Classical.em (Collinear3 0 u w) with hcolw | hcolw
+  · -- 退化支：w 在轴上，sin azim = 0 且 cross·w = 0（Assembly 同款）
+    obtain ⟨kk, hkw⟩ := (collinear3_iff_smul (v := 0) (w := u) (w1 := w) hu).mp hcolw
+    have haxw : (w : Fin 3 → ℝ) = kk • (u : Fin 3 → ℝ) := by
+      have hcc := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hkw
+      rw [kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSmul_p35, kchCoeSub_p35,
+        kchCoeZero_p35, sub_zero] at hcc
+      exact hcc
+    refine ⟨0, le_refl 0, ?_⟩
+    have hazim0 : azim 0 u v w = 0 := by
+      show (if Collinear3 0 u v ∨ Collinear3 0 u w then (0 : ℝ)
+        else Classical.epsilon (AzimSpec 0 u v w)) = 0
+      rw [if_pos (Or.inr hcolw)]
+    rw [hazim0, Real.sin_zero, haxw, dotProduct_smul,
+      dotProduct_comm, dot_self_cross (u : Fin 3 → ℝ) (v : Fin 3 → ℝ), smul_zero]
+    ring
+  · refine ⟨‖u‖ * r1 * r2,
+      mul_nonneg (mul_nonneg (norm_nonneg u) hr1pos.le) (hr2 hcolw).le, ?_⟩
+    rw [hcross, add_dotProduct, smul_dotProduct, smul_dotProduct, hd2, hd1]
+    simp only [smul_eq_mul]
+    have hsub : Real.sin ((ψ + azim 0 u v w) - ψ)
+        = Real.sin (ψ + azim 0 u v w) * Real.cos ψ
+          - Real.cos (ψ + azim 0 u v w) * Real.sin ψ := Real.sin_sub _ _
+    rw [show (ψ + azim 0 u v w) - ψ = azim 0 u v w from by ring] at hsub
+    rw [hsub]
+    ring
+
+/-- 正弦符号桥（JBDNJJB 消费形态）：`π ≤ azim 0 u v w` 时 `u × v · w ≤ 0`。 -/
+private theorem kchSinAzimCrossSign_p35 (u v w : V3) (hu : u ≠ 0) (hnc : ¬ Collinear3 0 u v)
+    (hge : Real.pi ≤ azim 0 u v w) :
+    (crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ) ≤ 0 := by
+  obtain ⟨c, hc0, hcid⟩ := kchCrossDotSmulSin_p35 u v w hu hnc
+  have hθ2 := azim_lt_two_pi 0 u v w
+  have h1 : 0 ≤ azim 0 u v w - Real.pi := by linarith
+  have h2 : azim 0 u v w - Real.pi ≤ Real.pi := by linarith
+  have h3 := Real.sin_nonneg_of_nonneg_of_le_pi h1 h2
+  have h4 : Real.sin (azim 0 u v w) = -Real.sin (azim 0 u v w - Real.pi) := by
+    rw [show azim 0 u v w = (azim 0 u v w - Real.pi) + Real.pi from by ring]
+    rw [Real.sin_add]
+    simp
+  have hs : Real.sin (azim 0 u v w) ≤ 0 := by rw [h4]; linarith
+  rw [hcid]
+  exact mul_nonpos_of_nonneg_of_nonpos hc0 hs
+
+/-! ### cyclic_set / dot-cross 面（HOL :3197 闭包小件） -/
+
+/-- 轴向纯量倍点落在 `{0, a}` 的仿射包里（HOL `AFFINE_HULL_2` 过 0 特款；
+Mathlib `affineSpan_insert_zero` 桥）。 -/
+private theorem kchSmulMemAffSpanZero_p35 (a : V3) (c : ℝ) :
+    c • a ∈ affineSpan ℝ ({0, a} : Set V3) := by
+  show c • a ∈ (affineSpan ℝ (insert 0 ({a} : Set V3)) : Set V3)
+  rw [affineSpan_insert_zero]
+  exact Submodule.smul_mem _ _ (Submodule.subset_span (Set.mem_singleton a))
+
+/-- `toLp ∘ ofLp = id`（V3 coe 往返桥；Assembly `coe_toLp` 的逆）。 -/
+private theorem kchToLpOfLp_p35 (x : V3) :
+    WithLp.toLp 2 ((x : V3) : Fin 3 → ℝ) = x := rfl
+
+/-- **CYCLIC_SET_IMP_NOT_COLLINEAR 面**（Wrgcvdr_cizmrrh，KCHMAMG :3394 消费）：
+cyclic 集的点与轴不共线（以 `Collinear3` 渲染，供 `azim_dihv_same` 直接消费）。 -/
+private theorem kchNotCollinear3_of_cyclicSet_p35 {W : Set V3} {e x : V3}
+    (hcy : cyclicSet_p3 W 0 e) (hx : x ∈ W) : ¬ Collinear3 0 e x := by
+  intro hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := e) (w1 := x)
+    (Ne.symm hcy.1)).mp hcol
+  have hxm : x ∈ affineSpan ℝ ({0, e} : Set V3) := by
+    have h1 : x - 0 = c • (e - 0) := hc
+    simp only [sub_zero] at h1
+    rw [h1]
+    exact kchSmulMemAffSpanZero_p35 e c
+  have hmem : x ∈ W ∩ (affineSpan ℝ ({0, e} : Set V3) : Set V3) := Set.mem_inter hx hxm
+  have hmem2 : x ∈ (∅ : Set V3) := hcy.2.2.2 ▸ hmem
+  exact absurd hmem2 (by simp)
+
+/-- **DOT_POS_LT 面**：cyclic 轴自点积为正（KCHMAMG :3429 `SIMP_TAC[DOT_POS_LT;
+cyclic_set]` 消费）。 -/
+private theorem kchCyclicDotSelfPos_p35 {W : Set V3} {e : V3} (hcy : cyclicSet_p3 W 0 e) :
+    0 < ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) := by
+  have hne : ((e : V3) : Fin 3 → ℝ) ≠ 0 := by
+    intro h
+    refine hcy.1 ?_
+    rw [← kchToLpOfLp_p35 e, h, ← kchCoeZero_p35, kchToLpOfLp_p35]
+  exact dot_self_pos_iff _ |>.mpr hne
+
+/-- **`v' dot e = 0` 面**（KCHMAMG :3412/:3433 消费）：`{a,b}` 平面内的点与
+`a × b` 点积为零（`V ⊆ affine hull {v, w, 0}` 直接给出前提）。 -/
+private theorem kchCrossDotZero_of_mem_p35 {a b x : V3}
+    (hx : x ∈ affineSpan ℝ (insert 0 ({a, b} : Set V3))) :
+    (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) = 0 := by
+  have hx2 : x ∈ (affineSpan ℝ (insert 0 ({a, b} : Set V3)) : Set V3) := hx
+  rw [affineSpan_insert_zero] at hx2
+  obtain ⟨m, n, hmn⟩ := Submodule.mem_span_pair.mp hx2
+  have hcoe : ((x : V3) : Fin 3 → ℝ)
+      = m • ((a : V3) : Fin 3 → ℝ) + n • ((b : V3) : Fin 3 → ℝ) := by
+    rw [← hmn, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35]
+  rw [hcoe, dotProduct_add, dotProduct_smul, dotProduct_smul,
+    dotProduct_comm, dot_self_cross a b, dotProduct_comm, dot_cross_self a b]
+  simp
+/-! ## KCHMAMG 本体闭合 W2 波（ejrcfjd-kchmam2-w1）：轨道面件 + KOMWBWC 叶件库
+
+来源：LocalAuto5 的 cyclic/SUCCESEOR/POS_DIRECT 波已证语料（localFan_p2 /
+rhoNode1_p2 / plane_p2 世界；LA2↔LA1 经 PackingAuto18/20 冲突不可 import），
+适配到本文件 `LocalFan`（LocalAuto1 hypermapOfFan 结构版）+ W2 轨道 kit
+（`lfUniqueFirst_p35`/`lfVertKit_p35`）。名字对照：`localFan_p2` ↦ `LocalFan`
+（外加 `hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2` 两正则前提，W2 kit 消费序）；
+`rhoNode1_p2` ↦ `rhoNode1`；`plane_p2` ↦ `kchPlane_p35`（内联三非共线点张成）；
+`{ITER n (rho_node1 FF) v | n ≤ l} = U` ↦
+`(fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U`；HOL `ITER n f v` ↦
+`f^[n] v`。
+
+本波落地：轨道面件（kchRhoDet/kchDartInV/kchDartInE/kchDartNonColl/kchIterInV/
+kchRho2Ne）+ 叶件库（kchCollinear3Cross 三非共线点定平面/叉积消零桥、
+kchMixedProdRangeAzim 方位角区间面、kchMemAffGePair affGe witness 形等）+
+`kchKOMWBWC_p35`（HOL KOMWBWC 陈述定型 Prop 级）。
+
+残差（kchmam3 装配波，草稿全文 /tmp/kc2w3/kit_draft_full.lean）：
+KOMWBWC 两条 azim-cycle 合取的本体面 RHO_NODE_IS_SUCCESEOR_AZIM /
+SEQUENCE_OF_RHO_NODE_IS_SUC / V_AZIM_SMALLEST_ELMS / FIRST_AZIM_CYCLE_EQ_RHO_NODE /
+AZIM_LAST_POINT_IN_RHO_SET（LA5:2370-2715 语料 ≈300 行 + affGe/affGt 形 API：
+WEDGE_GE_EQ_AFF_GE (LA5:2024 ≈200 行)/AZIM_EQ_0_GE_ALT2 (LA5:1951)/
+mem_affGe_pair/affGt2_2/affGt_pair_iff/azim_eq_azim_iff_alt/wedge_eq_affGt）；
+cyclic-set 面（LOCAL_FAN_IMP_CYCLIC_SET）与 pos-direct 面
+（RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT）草稿已移植至最后残点（各 1-2 个
+elaboration 细节，见草稿尾注）；`l < CARD FF ⟹ 前 l 迭代两两不同`
+（LA5 `la5_orbit_cycle` 面）；OZQVSFF（ll:2056）。
+下游 `azimCycle_p3` ε-辨识路线：SUCCESEOR 的严格最小 ⇒ `epsFixed_p35` 唯一化
+（免 LocalAuto2 IDENTIFY_AZIM_CYCLE_p2 的 projection 局面）。 -/
+
+/-- 内联 `plane`（sphere.hl:345 / flyspeck_multivariate.ml:305；`KCHMAMG_p35`
+平面合取同款）。 -/
+private def kchPlane_p35 (A : Set V3) : Prop :=
+  ∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+    A = affineSpan ℝ ({u, v, w} : Set V3)
+
+/-- `WithLp.toLp` 消零（LA5 `la5_toLp_eq_zero`）。 -/
+private theorem kchToLpEqZero_p35 {f : Fin 3 → ℝ} :
+    (WithLp.toLp 2 f : V3) = 0 ↔ f = 0 := by
+  constructor
+  · intro h
+    simpa [WithLp.ofLp_toLp, WithLp.ofLp_zero] using
+      congrArg (fun w : V3 => (w : Fin 3 → ℝ)) h
+  · intro h
+    subst h
+    rfl
+
+/-- 三点集旋转不变（LA5 `la5_collinear3_rotate`）。 -/
+private theorem kchCollRotate_p35 {a b c : V3} :
+    Collinear ℝ ({a, b, c} : Set V3) ↔ Collinear ℝ ({b, c, a} : Set V3) := by
+  constructor <;> intro h
+  · exact Collinear.subset (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto) h
+  · exact Collinear.subset (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto) h
+
+/-- 二三换位不变（LA5 `la5_collinear3_swap23`）。 -/
+private theorem kchCollSwap23_p35 {a b c : V3} :
+    Collinear ℝ ({a, b, c} : Set V3) ↔ Collinear ℝ ({a, c, b} : Set V3) := by
+  constructor <;> intro h
+  · exact Collinear.subset (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto) h
+  · exact Collinear.subset (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto) h
+
+/-- Lagrange 恒等式 `a × (a × b) = (a·b) a − (a·a) b`（Fin 3 逐分量）。 -/
+private theorem kchCrossCrossSelf_p35 (a b : Fin 3 → ℝ) :
+    crossProduct a (crossProduct a b)
+      = (a ⬝ᵥ b) • a - (a ⬝ᵥ a) • b := by
+  funext i
+  fin_cases i <;> simp [cross_apply, dotProduct, Fin.sum_univ_three] <;> ring
+
+private theorem kchRange3_p35 {p q r : V3} :
+    Set.range (![p, q, r] : Fin 3 → V3) = ({p, q, r} : Set V3) := by
+  ext z
+  simp only [Set.mem_range, Set.mem_insert_iff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨y, rfl⟩
+    fin_cases y <;> simp
+  · rintro (h | h | h)
+    · exact ⟨0, by simp [h]⟩
+    · exact ⟨1, by simp [h]⟩
+    · exact ⟨2, by simp [h]⟩
+
+/-- `affineSpan ℝ {0, a, b}` 成员的二元系数分解（LA5 `la5_pos_affSpan_origin`）。 -/
+private theorem kchPosAffSpanOrigin_p35 {a b z : V3}
+    (hz : z ∈ (affineSpan ℝ ({(0:V3), a, b} : Set V3) : Set V3)) :
+    ∃ s t : ℝ, z = s • a + t • b := by
+  have hle : affineSpan ℝ ({(0:V3), a, b} : Set V3) ≤
+      (Submodule.span ℝ ({a, b} : Set V3)).toAffineSubspace := by
+    refine affineSpan_le.mpr ?_
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | hx
+    · exact Submodule.zero_mem _
+    · rcases hx with rfl | rfl
+      · exact Submodule.subset_span (by simp)
+      · exact (Submodule.mem_span_pair).mpr ⟨0, 1, by simp⟩
+  obtain ⟨s, t, hs⟩ := Submodule.mem_span_pair.mp (hle hz)
+  exact ⟨s, t, hs.symm⟩
+
+/-- 混积循环恒等式 `(a×b)·c = a·(b×c)`（LA5 `la5_dot_cross_cyclic`）。 -/
+private theorem kchDotCrossCyclic_p35 (a b c : Fin 3 → ℝ) :
+    (crossProduct a b) ⬝ᵥ c = a ⬝ᵥ (crossProduct b c) := by
+  rw [dotProduct_comm, triple_product_permutation c a b]
+
+/-- `π < x < 2π` 处 sin 负（HOL `PI_TO_TWO_PI_NEG_SIN`；LA5:1575）。 -/
+private theorem kchPiTwoPiNegSin_p35 : ∀ x : ℝ, Real.pi < x → x < 2 * Real.pi →
+    Real.sin x < 0 := by
+  intro x h1 h2
+  have h3 : Real.sin (x - Real.pi) > 0 :=
+    Real.sin_pos_of_pos_of_lt_pi (by linarith) (by linarith)
+  rw [show Real.sin x = -Real.sin (x - Real.pi) from by
+    rw [Real.sin_sub]; simp [Real.cos_pi, Real.sin_pi]]
+  linarith
+
+/-- 混积正 ⇒ 方位角 ∈ (0, π)（HOL `MIXED_PROD_POS_IMP_RANGE_AZIM`；LA5:1568，
+JBDNJJB 面改走本文件 `kchCrossDotSmulSin_p35`）。 -/
+private theorem kchMixedProdRangeAzim_p35 {u v w : V3} (hu : u ≠ 0)
+    (h1 : ¬ Collinear3 0 u v) (h2 : ¬ Collinear3 0 u w)
+    (h3 : 0 < (crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)) :
+    0 < azim 0 u v w ∧ azim 0 u v w < Real.pi := by
+  obtain ⟨t, ht0, ht⟩ := kchCrossDotSmulSin_p35 u v w hu h1
+  have htpos : 0 < t := by
+    rcases lt_or_eq_of_le ht0 with h | h
+    · exact h
+    · exfalso
+      rw [← h, zero_mul] at ht
+      linarith
+  have hsin : 0 < Real.sin (azim 0 u v w) := by
+    have h1' : Real.sin (azim 0 u v w)
+        = ((crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)) / t := by
+      rw [ht]
+      field_simp
+    rw [h1']
+    exact div_pos h3 htpos
+  have hge : 0 ≤ azim 0 u v w := azim_nonneg 0 u v w
+  have hlt2 : azim 0 u v w < 2 * Real.pi := azim_lt_two_pi 0 u v w
+  have hne0 : azim 0 u v w ≠ 0 := by
+    intro h0
+    rw [h0, Real.sin_zero] at hsin
+    norm_num at hsin
+  have hnepi : azim 0 u v w ≠ Real.pi := by
+    intro h0
+    rw [h0, Real.sin_pi] at hsin
+    norm_num at hsin
+  by_cases hle : Real.pi ≤ azim 0 u v w
+  · have hlt : Real.pi < azim 0 u v w := lt_of_le_of_ne hle (Ne.symm hnepi)
+    have hneg := kchPiTwoPiNegSin_p35 (azim 0 u v w) hlt hlt2
+    linarith
+  · exact ⟨lt_of_le_of_ne hge (Ne.symm hne0), lt_of_not_ge hle⟩
+
+/-! ### affGe 成员构件（HOL affGe11/22 面 witness 形） -/
+
+/-! ### 轨道面件（W2 kit 消费） -/
+
+/-- HOL `KOMWBWC`（local_lemmas.hl:1703）陈述定型：局部扇 + 单 ρ-轨道截段
+`U = {ρ^[n] v | n ≤ l}` 落在过 0 平面内、轴 `e = v × ρv` ⇒ `U` 成 cyclic 集、
+沿环相邻叉积取正、`azim_cycle` 槽位 = ρ-后继。azim 两合取与末点合取的本体
+（SUCCESEOR/SEQUENCE/V_AZIM/FIRST/LAST，LA5:2370-2715 语料 + affGe/affGt 形
+API WEDGE_GE_EQ_AFF_GE 等）待 kchmam3 装配波；cyclic-set 面（LOCAL_FAN_IMP_
+CYCLIC_SET）与 pos-direct 面（RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT）草稿
+已移植至最后残点，全文见 /tmp/kc2w3/kit_draft_full.lean。 -/
+def kchKOMWBWC_p35 : Prop :=
+  ∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)},
+    LocalFan V E FF → (∀ u ∈ V, (EE_p3 u E).ncard = 2) →
+      ∀ v : V3, v ∈ V → ∀ l : ℕ, ∀ U : Set V3,
+        ((fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l) = U →
+        ∀ P : Set V3, kchPlane_p35 P → (0:V3) ∈ P → U ⊆ P →
+        ∀ e : V3,
+          (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+            ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e →
+          cyclicSet_p3 U 0 e ∧
+            (∀ i : ℕ, i < l →
+              0 < ((WithLp.toLp 2 (crossProduct
+                  (((rhoNode1 FF)^[i] v : V3) : Fin 3 → ℝ)
+                  (((rhoNode1 FF)^[i + 1] v : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ
+                ((e : V3) : Fin 3 → ℝ)) ∧
+              ∀ x : V3, ∀ n : ℕ, x = (rhoNode1 FF)^[n] v → n < l →
+                azimCycle_p3 U 0 e x = rhoNode1 FF x) ∧
+            ∀ ls : V3, (rhoNode1 FF)^[l] v = ls →
+              (∀ i : ℕ, i < l → ls ≠ (rhoNode1 FF)^[i] v) →
+                azimCycle_p3 U 0 e ls = v
+
+/-! ### KCHMAMG 残件收尾（ejrcfjd-kchmam3-w1）：共线↔叉积消零桥、非共线三元组、affGe witness 三件 -/
+
+/-- coe→toLp roundtrip。 -/
+private theorem kchCoeRt_p35 (w : V3) :
+    (WithLp.toLp 2 (w : Fin 3 → ℝ) : V3) = w :=
+  WithLp.toLp_ofLp 2 w
+
+/-- coe 注入。 -/
+private theorem kchCoeInj_p35 {x y : V3} (h : (x : Fin 3 → ℝ) = (y : Fin 3 → ℝ)) : x = y := by
+  have h2 := congrArg (fun f : Fin 3 → ℝ => (WithLp.toLp 2 f : V3)) h
+  rw [kchCoeRt_p35, kchCoeRt_p35] at h2
+  exact h2
+
+private theorem kchCrossR0_p35 (a : Fin 3 → ℝ) : crossProduct a 0 = 0 := by
+  funext i; fin_cases i <;> simp [cross_apply]
+
+private theorem kchCrossL0_p35 (a : Fin 3 → ℝ) : crossProduct 0 a = 0 := by
+  funext i; fin_cases i <;> simp [cross_apply]
+
+private theorem kchCrossSelf0_p35 (a : Fin 3 → ℝ) : crossProduct a a = 0 := by
+  funext i; fin_cases i <;> simp [cross_apply] <;> ring
+
+private theorem kchCrossSmulR_p35 (c : ℝ) (a : Fin 3 → ℝ) : crossProduct a (c • a) = 0 := by
+  funext i; fin_cases i <;> simp [cross_apply, Pi.smul_apply, smul_eq_mul] <;> ring
+
+private theorem kchDotSelfPos_p35 {a : Fin 3 → ℝ} (ha : a ≠ 0) : 0 < a ⬝ᵥ a := by
+  have hunfold : a ⬝ᵥ a = ∑ k ∈ Finset.univ, a k * a k := by
+    simp [dotProduct]
+  rw [hunfold]
+  have h1 : ∀ k ∈ Finset.univ, 0 ≤ a k * a k := fun k _ => mul_self_nonneg _
+  obtain ⟨i, hi⟩ := Function.ne_iff.mp ha
+  exact Finset.sum_pos' h1 ⟨i, Finset.mem_univ _, mul_self_pos.mpr hi⟩
+
+/-- PIECE 1: kchCollinear3Cross（原点形）。 -/
+private theorem kchCollinear3Cross_p35 {a b : V3} :
+    Collinear ℝ ({(0:V3), a, b} : Set V3)
+      ↔ (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) : V3) = 0 := by
+  constructor
+  · intro hcol
+    by_cases ha0 : a = 0
+    · rw [ha0]
+      exact kchToLpEqZero_p35.mpr (kchCrossL0_p35 _)
+    · obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := a) (w1 := b) ha0).mp hcol
+      have hcoe : ((b - (0:V3) : V3) : Fin 3 → ℝ)
+          = ((c • (a - (0:V3)) : V3) : Fin 3 → ℝ) :=
+        congrArg (fun x : V3 => (x : Fin 3 → ℝ)) hc
+      rw [kchCoeSub_p35, kchCoeZero_p35, kchCoeSmul_p35, kchCoeSub_p35, kchCoeZero_p35] at hcoe
+      simp only [sub_zero] at hcoe
+      exact kchToLpEqZero_p35.mpr (by rw [hcoe]; exact kchCrossSmulR_p35 c (a : Fin 3 → ℝ))
+  · intro h0
+    have hc0 : crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) = 0 := kchToLpEqZero_p35.mp h0
+    by_cases ha0 : a = 0
+    · rw [ha0]
+      rw [show ({(0:V3), (0:V3), b} : Set V3) = ({0, b} : Set V3) from by
+        ext z <;> simp <;> tauto]
+      exact collinear_pair ℝ (0:V3) b
+    · have ha0' : (a : Fin 3 → ℝ) ≠ 0 := by
+        intro hc
+        exact ha0 (kchCoeInj_p35 (hc.trans kchCoeZero_p35.symm))
+      have hD0 : (a : Fin 3 → ℝ) ⬝ᵥ (a : Fin 3 → ℝ) ≠ 0 :=
+        ne_of_gt (kchDotSelfPos_p35 ha0')
+      have hL := kchCrossCrossSelf_p35 (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+      rw [hc0, kchCrossR0_p35] at hL
+      have hL2 : ((a : Fin 3 → ℝ) ⬝ᵥ (b : Fin 3 → ℝ)) • (a : Fin 3 → ℝ)
+          = ((a : Fin 3 → ℝ) ⬝ᵥ (a : Fin 3 → ℝ)) • (b : Fin 3 → ℝ) :=
+        sub_eq_zero.mp hL.symm
+      have hscal : ((a : Fin 3 → ℝ) ⬝ᵥ (a : Fin 3 → ℝ))⁻¹
+            * ((a : Fin 3 → ℝ) ⬝ᵥ (b : Fin 3 → ℝ))
+          = (a : Fin 3 → ℝ) ⬝ᵥ (b : Fin 3 → ℝ)
+            / (a : Fin 3 → ℝ) ⬝ᵥ (a : Fin 3 → ℝ) := by
+        field_simp
+      set u : ℝ := (a : Fin 3 → ℝ) ⬝ᵥ (b : Fin 3 → ℝ)
+        / (a : Fin 3 → ℝ) ⬝ᵥ (a : Fin 3 → ℝ) with hu_def
+      have hbF : (b : Fin 3 → ℝ) = u • (a : Fin 3 → ℝ) := by
+        rw [← hscal, ← smul_smul, hL2, smul_smul, inv_mul_cancel₀ hD0, one_smul]
+      have hbV3 : b - (0:V3) = u • (a - (0:V3)) := by
+        have h5 : ((b - (0:V3) : V3) : Fin 3 → ℝ)
+            = ((u • (a - (0:V3)) : V3) : Fin 3 → ℝ) := by
+          rw [kchCoeSub_p35, kchCoeZero_p35, kchCoeSmul_p35, kchCoeSub_p35, kchCoeZero_p35]
+          simp only [sub_zero]
+          exact hbF
+        have h6 := congrArg (fun f : Fin 3 → ℝ => (WithLp.toLp 2 f : V3)) h5
+        simpa using h6
+      exact (collinear3_iff_smul (v := (0:V3)) (w := a) (w1 := b) ha0).mpr ⟨u, hbV3⟩
+
+/-- PIECE 3: kchNoncolTriple。 -/
+private theorem kchNoncolTriple_p35 {v w : V3} :
+    0 < (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) ⬝ᵥ
+        (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) →
+    v ≠ w ∧ ¬ Collinear ℝ ({(0:V3), v, w} : Set V3) := by
+  intro hpos
+  refine ⟨fun h => ?_, fun hcol => ?_⟩
+  · rw [h] at hpos
+    have hf := kchCrossSelf0_p35 (w : Fin 3 → ℝ)
+    rw [hf] at hpos
+    have hd : ((0 : Fin 3 → ℝ)) ⬝ᵥ (0 : Fin 3 → ℝ) = 0 := by simp [dotProduct]
+    rw [hd] at hpos
+    exact lt_irrefl 0 hpos
+  · by_cases hv0 : v = 0
+    · rw [hv0] at hpos
+      have hf : crossProduct ((0:V3) : Fin 3 → ℝ) (w : Fin 3 → ℝ) = 0 := kchCrossL0_p35 _
+      rw [hf] at hpos
+      have hd : ((0 : Fin 3 → ℝ)) ⬝ᵥ (0 : Fin 3 → ℝ) = 0 := by simp [dotProduct]
+      rw [hd] at hpos
+      exact lt_irrefl 0 hpos
+    · obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := v) (w1 := w) hv0).mp hcol
+      have hcoe : ((w - (0:V3) : V3) : Fin 3 → ℝ)
+          = ((c • (v - (0:V3)) : V3) : Fin 3 → ℝ) :=
+        congrArg (fun x : V3 => (x : Fin 3 → ℝ)) hc
+      rw [kchCoeSub_p35, kchCoeZero_p35, kchCoeSmul_p35, kchCoeSub_p35, kchCoeZero_p35] at hcoe
+      simp only [sub_zero] at hcoe
+      have hf : crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ) = 0 := by
+        rw [hcoe]; exact kchCrossSmulR_p35 c (v : Fin 3 → ℝ)
+      rw [hf] at hpos
+      have hd : ((0 : Fin 3 → ℝ)) ⬝ᵥ (0 : Fin 3 → ℝ) = 0 := by simp [dotProduct]
+      rw [hd] at hpos
+      exact lt_irrefl 0 hpos
+
+/-- PIECE 4: kchMemAffGePair。 -/
+private theorem kchMemAffGePair_p35 {x u v z : V3} (hxu : x ≠ u) (hxv : x ≠ v)
+    (huv : u ≠ v) {s t : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t)
+    (hz : z = (1 - s - t) • x + s • u + t • v) :
+    z ∈ affGe ({x} : Set V3) ({u, v} : Set V3) := by
+  have hfin : (({x} ∪ {u, v} : Set V3)).Finite := by simp
+  have hT : hfin.toFinset = ({x, u, v} : Finset V3) := by
+    ext z
+    simp
+    tauto
+  have hmem1 : (x:V3) ∉ ({u, v} : Finset V3) := by
+    intro h
+    rcases Finset.mem_insert.mp h with h' | h'
+    · exact hxu h'
+    · exact hxv (Finset.mem_singleton.mp h')
+  have hmem2 : (u:V3) ∉ ({v} : Finset V3) := fun h =>
+    huv (Finset.mem_singleton.mp h)
+  have hneuv : ¬ (v = u) := fun h => huv h.symm
+  have hw1 : (if x = x then (1 - s - t : ℝ) else if x = u then s else t) = 1 - s - t := by
+    rw [if_pos rfl]
+  have hw2 : (if u = x then (1 - s - t : ℝ) else if u = u then s else t) = s := by
+    rw [if_neg (Ne.symm hxu), if_pos rfl]
+  have hw3 : (if v = x then (1 - s - t : ℝ) else if v = u then s else t) = t := by
+    rw [if_neg (Ne.symm hxv), if_neg hneuv]
+  have hw1' : (fun w : V3 => if w = x then (1 - s - t : ℝ) else if w = u then s else t) x
+      = 1 - s - t := hw1
+  have hw2' : (fun w : V3 => if w = x then (1 - s - t : ℝ) else if w = u then s else t) u
+      = s := hw2
+  have hw3' : (fun w : V3 => if w = x then (1 - s - t : ℝ) else if w = u then s else t) v
+      = t := hw3
+  refine ⟨fun w : V3 => if w = x then (1 - s - t : ℝ) else if w = u then s else t,
+    hfin, ?_, ?_, ?_⟩
+  · rw [hT, Finset.sum_insert hmem1, Finset.sum_insert hmem2, Finset.sum_singleton,
+      hw1', hw2', hw3', ← add_assoc]
+    exact hz
+  · intro w hw
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+    rcases hw with h1 | h1
+    · rw [h1]
+      rw [hw2']
+      exact hs
+    · rw [h1]
+      rw [hw3']
+      exact ht
+  · rw [hT, Finset.sum_insert hmem1, Finset.sum_insert hmem2, Finset.sum_singleton,
+      hw1, hw2, hw3]
+    ring
+/-! ## KCHMAMG azim 槽装配（ejrcfjd-kchmam4-w1）
+
+来源：LocalAuto5 的 azim-cycle 语料（localFan_p2 / rhoNode1_p2 / plane_p2 /
+wedgeGe_p2 世界；LA5:2370-2712 五件 + LA5:123-160/783-860/1124-1430/1650-2230
+依赖链）适配到本文件 `LocalFan`（LocalAuto1 hypermapOfFan 结构版）+ W2/W3 kit。
+名字对照：`localFan_p2` ↦ `LocalFan`（外加 `hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2`
+两正则前提）；`rhoNode1_p2` ↦ `rhoNode1`；`plane_p2` ↦ `kchPlane_p35`；
+`wedgeGe_p2` ↦ `wedgeGe`（PackingAuto2 同形 def）；`azimCycle_p2` ↦
+`azimCycle_p3`；`{(rhoNode1_p2 FF)^[n] v | n ≤ l} = U` ↦
+`(fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U`。LA5 依赖件逐名映射：
+`FAN_IMP_V_DIFF` ↦ `kchFanVNeApex_p35`（fan2 = apex ∉ V 直取）；
+`LOCAL_FAN_CHARACTER_OF_RHO_NODE` ↦ `kchCharLite_p35`（lfVertKit + fan6 两合取，
+免 ORD2 半-单位元链）；`LOCAL_FAN_IMP_NOT_SEMI_IDE` ↦ 显式前件 `hno2`
+（ρ²z ≠ z；HOL 经 dih2k 面数计数消解，p35 侧轨道-面共轭链留 kchmam5）；
+`LOCAL_FAN_RHO_NODE_PROS` ↦ `lfVertKit_p35`；`LOCAL_FAN_IN_FF_IN_ORD_PAIRS` ↦
+`kchDartInE_p35`；`COLLINEAR_CROSS_0` ↦ `kchCollinear3Cross_p35`；
+`la5_noncol_triple_of_dot_cross_pos` ↦ `kchNoncolTriple5_p35`（五合取版）；
+`JBDNJJB` ↦ `kchCrossDotSmulSin_p35`；`SUBSET_NOT_COLLINEAR_AFFINE_HULL_EQ` /
+`THREE_NOT_COLL_DETER_PLANE`（kchmam3 弃件 kchPlaneDet 的新路线：finrank 骨架
+逐字移植）/ `AFF_GE22` / `AZIM_EQ_0_GE_ALT2` / `WEDGE_GE_EQ_AFF_GE` /
+`FAN_IN_AFF_GE_IMP_EQ` / `X_IN_AFF_GE11` / `collinear_triple_iff` /
+`sum4_azim_fan`（TopologyFan 原名在 import 链内）↦ 本段对应件；
+`la5_pos_affSpan_origin` ↦ 栈内 `kchPosAffSpanOrigin_p35`；
+`la5_affSpan_origin_mem_span` ↦ 经 `kchPosAffSpanOrigin_p35` 替代；
+`LOCAL_FAN_IMP_CYCLIC_SET` 消费面（U 内点与轴非共线）↦ `kchNoncolU_p35`
+（plane-det + 混积消元，免 cyclic-set 本体）；`IDENTIFY_AZIM_CYCLE_p2` ↦
+`kchAzimCycleEps_p35` + `epsFixed_p35` 严格最小唯一化（W2 头注既定路线）；
+`la5_orbit_cycle` 面 ↦ `kchOrbitCycle_p35`（纯迭代周期计数）。
+
+本轮落栈 23 件，全部 private `_p35`、零 sorry。 -/
+
+/-- fan2 直取：扇顶点不在 V 内（LA5 `FAN_IMP_V_DIFF` 面）。 -/
+private theorem kchFanVNeApex_p35 {V : Set V3} {E : Set (Set V3)}
+    (hfan : Kepler.Text.Fan.FAN 0 V E) : ∀ z : V3, z ∈ V → z ≠ (0:V3) := by
+  intro z hz he
+  exact hfan.2.2.2.1 (he ▸ hz)
+
+/-- 三点共线 ↔ 第三点落两点仿射包 ∨ 前两点重合（LA5 `collinear_triple_iff`
+逐字移植）。 -/
+private theorem kchCollTripleIff_p35 {x v u : V3} :
+    Collinear ℝ ({x, v, u} : Set V3) ↔ u ∈ affineSpan ℝ ({x, v} : Set V3) ∨ x = v := by
+  constructor
+  · intro hcol
+    obtain ⟨p₀, r, hr⟩ := (collinear_iff_exists_forall_eq_smul_vadd _).mp hcol
+    obtain ⟨a, ha⟩ := hr x (by simp)
+    obtain ⟨b, hb⟩ := hr v (by simp)
+    obtain ⟨c, hc⟩ := hr u (by simp)
+    simp only [vadd_eq_add] at ha hb hc
+    rcases eq_or_ne x v with hx | hx
+    · exact Or.inr hx
+    · have hba : b - a ≠ 0 := by
+        intro h0
+        apply hx
+        have h2 : x - v = 0 := by
+          rw [ha, hb, sub_eq_zero.mp h0]
+          abel
+        exact sub_eq_zero.mp h2
+      refine Or.inl (mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨(c - a) / (b - a), ?_⟩)
+      have hsub : v - x = (b - a) • r := by rw [hb, ha]; module
+      rw [AffineMap.lineMap_apply]
+      simp only [vsub_eq_sub, vadd_eq_add]
+      rw [hsub, smul_smul, div_mul_cancel₀ _ hba, ha, hc]
+      module
+  · intro h
+    rcases h with hmem | hx
+    · refine ((collinear_insert_of_mem_affineSpan_pair (p₁ := u) (p₂ := x)
+        (p₃ := v) hmem).subset ?_)
+      intro z hz; simp at hz ⊢; tauto
+    · rw [hx]
+      simpa using collinear_pair ℝ v u
+
+/-- 单点仿射楔成员（LA5 `X_IN_AFF_GE11`；kchMemAffGePair witness 风格直构）。 -/
+private theorem kchXInAffGe1_p35 (x c : V3) (hcx : c ≠ x) :
+    x ∈ affGe ({c} : Set V3) ({x} : Set V3) := by
+  have hfin : (({c} ∪ {x} : Set V3)).Finite := by simp
+  have hT : hfin.toFinset = ({c, x} : Finset V3) := by
+    ext z
+    simp
+    tauto
+  have hmem1 : (c:V3) ∉ ({x} : Finset V3) := fun h => hcx (Finset.mem_singleton.mp h)
+  refine ⟨fun w : V3 => if w = x then (1:ℝ) else 0, hfin, ?_, ?_, ?_⟩
+  · rw [hT, Finset.sum_insert hmem1, Finset.sum_singleton]
+    simp [hcx]
+  · intro w _hw
+    by_cases hwx : w = x
+    · simp [hwx]
+    · show 0 ≤ (if w = x then (1:ℝ) else 0)
+      rw [if_neg hwx]
+  · rw [hT, Finset.sum_insert hmem1, Finset.sum_singleton]
+    simp [hcx]
+
+/-- 混积正 ⇒ 三非共线 + azim ∈ (0,π) 五合取（LA5
+`la5_noncol_triple_of_dot_cross_pos`；COLLINEAR_CROSS_0 面 ↦
+kchCollinear3Cross，MIXED_PROD_POS_IMP_RANGE_AZIM 面 ↦ kchMixedProdRangeAzim）。 -/
+private theorem kchNoncolTriple5_p35 {a b c : V3}
+    (hpos : 0 < (crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((c : V3) : Fin 3 → ℝ)) :
+    ¬ Collinear ℝ ({(0:V3), a, b} : Set V3) ∧
+      ¬ Collinear ℝ ({(0:V3), a, c} : Set V3) ∧
+      ¬ Collinear ℝ ({(0:V3), b, c} : Set V3) ∧
+      0 < azim 0 c a b ∧ azim 0 c a b < Real.pi := by
+  have hab : (crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ)) ≠ 0 := by
+    intro hz
+    rw [hz] at hpos
+    simp at hpos
+  have hncAB : ¬ Collinear ℝ ({(0:V3), a, b} : Set V3) := by
+    intro hcon
+    exact hab (kchToLpEqZero_p35.mp ((kchCollinear3Cross_p35 (a := a) (b := b)).mp hcon))
+  have hdotAC : (crossProduct ((a : V3) : Fin 3 → ℝ) ((c : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((b : V3) : Fin 3 → ℝ)
+      = -((crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((c : V3) : Fin 3 → ℝ)) := by
+    have hcbswap : crossProduct ((c : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ)
+        = -(crossProduct ((b : V3) : Fin 3 → ℝ) ((c : V3) : Fin 3 → ℝ)) :=
+      (cross_anticomm b c).symm
+    rw [kchDotCrossCyclic_p35, hcbswap, dotProduct_neg, ← kchDotCrossCyclic_p35 a b c]
+  have hac : (crossProduct ((a : V3) : Fin 3 → ℝ) ((c : V3) : Fin 3 → ℝ)) ≠ 0 := by
+    intro hz
+    have h1 : (crossProduct ((a : V3) : Fin 3 → ℝ) ((c : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((b : V3) : Fin 3 → ℝ) = 0 := by rw [hz]; simp
+    rw [hdotAC] at h1
+    linarith
+  have hncAC : ¬ Collinear ℝ ({(0:V3), a, c} : Set V3) := by
+    intro hcon
+    exact hac (kchToLpEqZero_p35.mp ((kchCollinear3Cross_p35 (a := a) (b := c)).mp hcon))
+  have hbc : (crossProduct ((b : V3) : Fin 3 → ℝ) ((c : V3) : Fin 3 → ℝ)) ≠ 0 := by
+    intro hz
+    have h1 : (crossProduct ((b : V3) : Fin 3 → ℝ) ((c : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((a : V3) : Fin 3 → ℝ) = 0 := by rw [hz]; simp
+    rw [kchDotCrossCyclic_p35, triple_product_permutation b c a, dotProduct_comm] at h1
+    linarith
+  have hncBC : ¬ Collinear ℝ ({(0:V3), b, c} : Set V3) := by
+    intro hcon
+    exact hbc (kchToLpEqZero_p35.mp ((kchCollinear3Cross_p35 (a := b) (b := c)).mp hcon))
+  have hncCA : ¬ Collinear ℝ ({(0:V3), c, a} : Set V3) := by
+    intro hc
+    exact hncAC (Collinear.subset (s₁ := ({(0:V3), a, c} : Set V3))
+      (s₂ := ({(0:V3), c, a} : Set V3))
+      (fun z hz => by
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+        tauto) hc)
+  have hncCB : ¬ Collinear ℝ ({(0:V3), c, b} : Set V3) := by
+    intro hc
+    exact hncBC (Collinear.subset (s₁ := ({(0:V3), b, c} : Set V3))
+      (s₂ := ({(0:V3), c, b} : Set V3))
+      (fun z hz => by
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+        tauto) hc)
+  have h4 : 0 < (crossProduct ((c : V3) : Fin 3 → ℝ) ((a : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((b : V3) : Fin 3 → ℝ) := by
+    rw [kchDotCrossCyclic_p35, dotProduct_comm]
+    exact hpos
+  have hcne : c ≠ 0 := by
+    intro hcon
+    rw [hcon] at h4
+    rw [kchCoeZero_p35, kchCrossL0_p35, zero_dotProduct] at h4
+    norm_num at h4
+  exact ⟨hncAB, hncAC, hncBC,
+    (kchMixedProdRangeAzim_p35 (u := c) (v := a) (w := b) hcne hncCA hncCB h4).1,
+    (kchMixedProdRangeAzim_p35 (u := c) (v := a) (w := b) hcne hncCA hncCB h4).2⟩
+
+/-- 迭代周期倍点（LA5 `la5_period_mul`）。 -/
+private theorem kchPeriodMul_p35 {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (k : ℕ) : f^[k * q] x = x := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [Nat.succ_mul, Function.iterate_add_apply, hqx, ih]
+
+/-- 迭代下标模周期归约（LA5 `la5_period_mod`）。 -/
+private theorem kchPeriodMod_p35 {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (n : ℕ) : f^[n] x = f^[n % q] x := by
+  have hsplit : n / q * q + n % q = n := Nat.div_add_mod' n q
+  have hqx' : f^[q] (f^[n % q] x) = f^[n % q] x := by
+    rw [← Function.iterate_add_apply, Nat.add_comm, Function.iterate_add_apply, hqx]
+  calc f^[n] x = f^[n / q * q + n % q] x := by rw [hsplit]
+    _ = f^[n / q * q] (f^[n % q] x) := Function.iterate_add_apply f (n / q * q) (n % q) x
+    _ = f^[n % q] x := kchPeriodMul_p35 f hqx' (n / q)
+
+/-- 轨道条件下重合迭代给出周期差（LA5 `la5_orbit_key`）。 -/
+private theorem kchOrbitKey_p35 {α : Type*} {f : α → α} {V : Set α}
+    (horb : ∀ x ∈ V, orbitF_p3 f x = V) {x : α} (hx : x ∈ V) {i j : ℕ}
+    (hij2 : i ≤ j) (hij : f^[i] x = f^[j] x) : f^[j - i] x = x := by
+  have hEq : j - i + i = j := by omega
+  have hy : f^[j] x = f^[j - i] (f^[i] x) := by
+    have h := Function.iterate_add_apply f (j - i) i x
+    rwa [hEq] at h
+  have hmem : ∀ n : ℕ, f^[n] x ∈ V := by
+    intro n
+    rw [← horb x hx]
+    exact ⟨n, rfl⟩
+  have hyV : f^[i] x ∈ V := hmem i
+  have hxO : x ∈ orbitF_p3 f (f^[i] x) := by rw [horb (f^[i] x) hyV]; exact hx
+  obtain ⟨t, hxt⟩ := hxO
+  have hfix : f^[j - i] (f^[i] x) = f^[i] x := hy.symm.trans hij.symm
+  calc f^[j - i] x = f^[j - i] (f^[t] (f^[i] x)) := by rw [hxt]
+    _ = f^[(j - i) + t] (f^[i] x) := (Function.iterate_add_apply f (j - i) t (f^[i] x)).symm
+    _ = f^[t + (j - i)] (f^[i] x) := by rw [Nat.add_comm]
+    _ = f^[t] (f^[j - i] (f^[i] x)) := Function.iterate_add_apply f t (j - i) (f^[i] x)
+    _ = f^[t] (f^[i] x) := by rw [hfix]
+    _ = x := hxt
+
+/-- 轨道成有限圈：最小周期 p、前 p 项两两相异且穷尽 V、`V.ncard = p`
+（LA5 `la5_orbit_cycle`；纯迭代周期计数，无几何依赖）。 -/
+private theorem kchOrbitCycle_p35 {α : Type*} {f : α → α} {V : Set α}
+    (horb : ∀ x ∈ V, orbitF_p3 f x = V) {x : α} (hx : x ∈ V) :
+    ∃ p : ℕ, 0 < p ∧ f^[p] x = x ∧
+      (∀ i j : ℕ, i < j → j < p → f^[i] x ≠ f^[j] x) ∧
+      ({f^[n] x | n < p} : Set α) = V ∧ V.ncard = p := by
+  have hmem : ∀ n : ℕ, f^[n] x ∈ V := by
+    intro n
+    rw [← horb x hx]
+    exact ⟨n, rfl⟩
+  have hper : ∃ p : ℕ, 0 < p ∧ f^[p] x = x := by
+    have hfx : f x ∈ V := hmem 1
+    have hxO : x ∈ orbitF_p3 f (f x) := by rw [horb (f x) hfx]; exact hx
+    obtain ⟨n, hn⟩ := hxO
+    exact ⟨n + 1, Nat.succ_pos n, by rw [Function.iterate_succ_apply f n x]; exact hn⟩
+  have hex : ∃ n, 0 < n ∧ f^[n] x = x := hper
+  have hp0 : 0 < Nat.find hex := (Nat.find_spec hex).1
+  have hpx : f^[Nat.find hex] x = x := (Nat.find_spec hex).2
+  have hmin : ∀ m : ℕ, 0 < m → m < Nat.find hex → f^[m] x ≠ x :=
+    fun m hm0 hmlt hcon => Nat.find_min hex hmlt ⟨hm0, hcon⟩
+  have hkey : ∀ i j : ℕ, i ≤ j → f^[i] x = f^[j] x → f^[j - i] x = x :=
+    fun i j hle hij' => kchOrbitKey_p35 horb hx hle hij'
+  have hdis : ∀ i j : ℕ, i < j → j < Nat.find hex → f^[i] x ≠ f^[j] x := by
+    intro i j hij hjp hcon
+    exact hmin (j - i) (by omega) (by omega) (hkey i j (Nat.le_of_lt hij) hcon)
+  have hset : ({f^[n] x | n < Nat.find hex} : Set α) = V := by
+    ext y
+    constructor
+    · rintro ⟨n, -, rfl⟩
+      exact hmem n
+    · intro hy
+      have hYO : y ∈ orbitF_p3 f x := by rw [horb x hx]; exact hy
+      obtain ⟨m, hm⟩ := hYO
+      refine ⟨m % Nat.find hex, Nat.mod_lt _ hp0, ?_⟩
+      rw [← kchPeriodMod_p35 f hpx m]
+      exact hm
+  have hcard : V.ncard = Nat.find hex := by
+    have himage : ({f^[n] x | n < Nat.find hex} : Set α) =
+        (fun n : ℕ => f^[n] x) '' Set.Iio (Nat.find hex) := rfl
+    rw [← hset, himage]
+    have hInj : Set.InjOn (fun n : ℕ => f^[n] x) (Set.Iio (Nat.find hex)) := by
+      intro i hi j hj hcon
+      rcases Nat.lt_trichotomy i j with h | h | h
+      · exact absurd hcon (hdis i j h (Set.mem_Iio.mp hj))
+      · exact h
+      · exact absurd hcon.symm (hdis j i h (Set.mem_Iio.mp hi))
+    rw [Set.InjOn.ncard_image hInj]
+    exact Set.ncard_Iio_nat _
+  exact ⟨Nat.find hex, hp0, hpx, hdis, hset, hcard⟩
+
+/-- 三非共线点集含于仿射包 ⇒ 仿射包相等（LA5 `SUBSET_NOT_COLLINEAR_AFFINE_HULL_EQ`
+逐字移植；`la5_range3` ↦ `kchRange3_p35`）。 -/
+private theorem kchSubNotColHullEq_p35 {a b c x y z : V3}
+    (hsub : ({a, b, c} : Set V3) ⊆ affineSpan ℝ ({x, y, z} : Set V3))
+    (hcol : ¬ Collinear ℝ ({a, b, c} : Set V3)) :
+    affineSpan ℝ ({x, y, z} : Set V3) = affineSpan ℝ ({a, b, c} : Set V3) := by
+  have hAI : AffineIndependent ℝ ![a, b, c] := affineIndependent_iff_not_collinear_set.mpr hcol
+  have hA2 : Module.finrank ℝ (vectorSpan ℝ (Set.range ![a, b, c] : Set V3)) = 2 :=
+    hAI.finrank_vectorSpan (by norm_num)
+  have hK2 : Module.finrank ℝ (vectorSpan ℝ (Set.range ![x, y, z] : Set V3)) ≤ 2 :=
+    finrank_vectorSpan_range_le ℝ ![x, y, z] (by norm_num)
+  have hAK : affineSpan ℝ ({a, b, c} : Set V3) ≤ affineSpan ℝ ({x, y, z} : Set V3) :=
+    affineSpan_le.mpr hsub
+  have hdirA : (affineSpan ℝ ({a, b, c} : Set V3)).direction
+      = vectorSpan ℝ (Set.range ![a, b, c] : Set V3) := by
+    rw [direction_affineSpan, ← kchRange3_p35]
+  have hdirK : (affineSpan ℝ ({x, y, z} : Set V3)).direction
+      = vectorSpan ℝ (Set.range ![x, y, z] : Set V3) := by
+    rw [direction_affineSpan, ← kchRange3_p35]
+  haveI hfdA : FiniteDimensional ℝ (affineSpan ℝ ({a, b, c} : Set V3)).direction :=
+    finiteDimensional_direction_affineSpan_of_finite ℝ (Set.toFinite _)
+  haveI hfdK : FiniteDimensional ℝ (affineSpan ℝ ({x, y, z} : Set V3)).direction :=
+    finiteDimensional_direction_affineSpan_of_finite ℝ (Set.toFinite _)
+  have hfdA2 : Module.finrank ℝ (affineSpan ℝ ({a, b, c} : Set V3)).direction = 2 := by
+    rw [hdirA]
+    exact hA2
+  have hfdK2 : Module.finrank ℝ (affineSpan ℝ ({x, y, z} : Set V3)).direction ≤ 2 := by
+    rw [hdirK]
+    exact hK2
+  have hdirEq : (affineSpan ℝ ({a, b, c} : Set V3)).direction
+      = (affineSpan ℝ ({x, y, z} : Set V3)).direction :=
+    Submodule.eq_of_le_of_finrank_eq (AffineSubspace.direction_le hAK)
+      (le_antisymm (Submodule.finrank_mono (AffineSubspace.direction_le hAK))
+        (hfdK2.trans hfdA2.ge))
+  refine (AffineSubspace.eq_of_direction_eq_of_nonempty_of_le hdirEq ?_ hAK).symm
+  rw [affineSpan_nonempty]
+  exact ⟨a, by simp⟩
+
+/-- 三非共线点定平面（LA5 `THREE_NOT_COLL_DETER_PLANE`；kchmam3 弃件
+kchPlaneDet 的新路线）。 -/
+private theorem kchPlaneDet_p35 {P : Set V3} {a b c : V3} (hP : kchPlane_p35 P)
+    (hsub : ({a, b, c} : Set V3) ⊆ P)
+    (hcol : ¬ Collinear ℝ ({a, b, c} : Set V3)) :
+    affineSpan ℝ ({a, b, c} : Set V3) = P := by
+  obtain ⟨u, v, w, hnc, hPdef⟩ := hP
+  have hsub2 : ({a, b, c} : Set V3) ⊆ affineSpan ℝ ({u, v, w} : Set V3) := by
+    rw [← hPdef]
+    exact hsub
+  have h := kchSubNotColHullEq_p35 (a := a) (b := b) (c := c) (x := u) (y := v)
+    (z := w) hsub2 hcol
+  rw [hPdef, h]
+
+/-- 双双对的 affGe 楔成员四系数刻画（LA5 `AFF_GE22` 逐字移植）。 -/
+private theorem kchAffGe22_p35 (a b x y : V3) (hdis : Disjoint ({a, b} : Set V3) ({x, y} : Set V3)) :
+    affGe ({a, b} : Set V3) ({x, y} : Set V3) =
+      {z : V3 | ∃ aa bb xx yy : ℝ, 0 ≤ xx ∧ 0 ≤ yy ∧
+        aa + bb + xx + yy = 1 ∧ z = aa • a + bb • b + xx • x + yy • y} := by
+  have hd' := Set.disjoint_left.mp hdis
+  have hax : a ≠ x := fun he => hd' (Set.mem_insert _ _) (by rw [he]; simp)
+  have hay : a ≠ y := fun he => hd' (Set.mem_insert _ _) (by rw [he]; simp)
+  have hbx : b ≠ x := fun he =>
+    hd' (Set.mem_insert_of_mem _ (Set.mem_singleton b)) (by rw [he]; simp)
+  have hby : b ≠ y := fun he =>
+    hd' (Set.mem_insert_of_mem _ (Set.mem_singleton b)) (by rw [he]; simp)
+  ext z
+  simp only [affGe, Set.mem_setOf_eq, Affsign]
+  constructor
+  · rintro ⟨f, hfin, hval, hpos, hsum⟩
+    by_cases hab : a = b
+    · by_cases hxy : x = y
+      · -- a = b, x = y: 求和集 {a, x}
+        have hset : (({a, b} : Set V3) ∪ ({x, y} : Set V3)) = ({a, x} : Set V3) := by
+          ext w
+          rw [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+            Set.mem_insert_iff, Set.mem_singleton_iff]
+          simp [hab, hxy]
+        have hT : hfin.toFinset = ({a, x} : Finset V3) := by
+          ext w
+          rw [hfin.mem_toFinset, hset]
+          simp
+        rw [hT] at hval hsum
+        rw [Finset.sum_insert (by simp [hax]), Finset.sum_singleton] at hval hsum
+        refine ⟨f a, 0, f x, 0, hpos x (by simp), by norm_num, by linarith, ?_⟩
+        rw [← hab, ← hxy, hval]
+        simp
+      · -- a = b: 求和集 {a, x, y}
+        have hset : (({a, b} : Set V3) ∪ ({x, y} : Set V3)) = ({a, x, y} : Set V3) := by
+          ext w
+          rw [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+            Set.mem_insert_iff, Set.mem_singleton_iff]
+          simp [hab, hxy]
+        have hT : hfin.toFinset = ({a, x, y} : Finset V3) := by
+          ext w
+          rw [hfin.mem_toFinset, hset]
+          simp
+        rw [hT] at hval hsum
+        rw [Finset.sum_insert (by simp [hax, hay]),
+          Finset.sum_insert (by simp [hxy]), Finset.sum_singleton] at hval hsum
+        refine ⟨f a, 0, f x, f y, hpos x (by simp), hpos y (by simp), by linarith, ?_⟩
+        rw [← hab, hval]
+        module
+    · by_cases hxy : x = y
+      · -- x = y: 求和集 {a, b, x}
+        have hset : (({a, b} : Set V3) ∪ ({x, y} : Set V3)) = ({a, b, x} : Set V3) := by
+          ext w
+          rw [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+            Set.mem_insert_iff, Set.mem_singleton_iff]
+          simp [hab, hxy]
+          tauto
+        have hT : hfin.toFinset = ({a, b, x} : Finset V3) := by
+          ext w
+          rw [hfin.mem_toFinset, hset]
+          simp
+        rw [hT] at hval hsum
+        rw [Finset.sum_insert (by simp [hax, hab]),
+          Finset.sum_insert (by simp [hbx]), Finset.sum_singleton] at hval hsum
+        refine ⟨f a, f b, f x, 0, hpos x (by simp), by norm_num, by linarith, ?_⟩
+        rw [← hxy, hval]
+        module
+      · -- 四点互异
+        have hT : hfin.toFinset = ({a, b, x, y} : Finset V3) := by
+          ext w
+          rw [hfin.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+          simp
+          tauto
+        rw [hT] at hval hsum
+        rw [Finset.sum_insert (by simp [hax, hay, hab]),
+          Finset.sum_insert (by simp [hbx, hby]),
+          Finset.sum_insert (by simp [hxy]), Finset.sum_singleton] at hval hsum
+        exact ⟨f a, f b, f x, f y, hpos x (by simp), hpos y (by simp), by linarith,
+          by rw [hval]; abel⟩
+  · rintro ⟨aa, bb, xx, yy, hxx, hyy, hone, hzy⟩
+    have hfin : (({a, b} : Set V3) ∪ ({x, y} : Set V3)).Finite :=
+      ((Set.finite_singleton b).insert a).union ((Set.finite_singleton y).insert x)
+    by_cases hab : a = b
+    · by_cases hxy : x = y
+      · -- a = b, x = y: f 在 {a, x} 上
+        have hzy' : z = (aa + bb) • a + (xx + yy) • x := by
+          rw [hzy, hab, ← hxy]; module
+        have hset : (({a, b} : Set V3) ∪ ({x, y} : Set V3)) = ({a, x} : Set V3) := by
+          ext w
+          rw [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+            Set.mem_insert_iff, Set.mem_singleton_iff]
+          simp [hab, hxy]
+        have hTeq : hfin.toFinset = ({a, x} : Finset V3) := by
+          ext w
+          rw [hfin.mem_toFinset, hset]
+          simp
+        refine ⟨fun w => if w = x then xx + yy else aa + bb, hfin, ?_, ?_, ?_⟩
+        · rw [hTeq, Finset.sum_insert (by simp [hax]), Finset.sum_singleton]
+          show z = (if a = x then xx + yy else aa + bb) • a +
+            (if x = x then xx + yy else aa + bb) • x
+          rw [if_neg hax, if_pos (rfl : x = x)]
+          exact hzy'
+        · intro w hw
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+          rcases hw with hw | hw
+          · rw [hw]; show 0 ≤ (if x = x then (xx + yy : ℝ) else aa + bb)
+            rw [if_pos (rfl : x = x)]; linarith
+          · rw [hw]; show 0 ≤ (if y = x then (xx + yy : ℝ) else aa + bb)
+            rw [if_pos hxy.symm]; linarith
+        · rw [hTeq, Finset.sum_insert (by simp [hax]), Finset.sum_singleton]
+          show (if a = x then xx + yy else aa + bb) +
+            (if x = x then xx + yy else aa + bb) = 1
+          rw [if_neg hax, if_pos (rfl : x = x)]
+          linarith
+      · -- a = b: f 在 {a, x, y} 上
+        have hzy' : z = (aa + bb) • a + (xx • x + yy • y) := by
+          rw [hzy, hab]; module
+        have hset : (({a, b} : Set V3) ∪ ({x, y} : Set V3)) = ({a, x, y} : Set V3) := by
+          ext w
+          rw [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+            Set.mem_insert_iff, Set.mem_singleton_iff]
+          simp [hab, hxy]
+        have hTeq : hfin.toFinset = ({a, x, y} : Finset V3) := by
+          ext w
+          rw [hfin.mem_toFinset, hset]
+          simp
+        refine ⟨fun w => if w = x then xx else if w = y then yy else aa + bb,
+          hfin, ?_, ?_, ?_⟩
+        · rw [hTeq, Finset.sum_insert (by simp [hax, hay]),
+            Finset.sum_insert (by simp [hxy]), Finset.sum_singleton]
+          show z = (if a = x then xx else if a = y then yy else aa + bb) • a +
+            ((if x = x then xx else if x = y then yy else aa + bb) • x +
+              (if y = x then xx else if y = y then yy else aa + bb) • y)
+          rw [if_neg hax, if_neg hay, if_pos (rfl : x = x), if_neg (Ne.symm hxy),
+            if_pos (rfl : y = y)]
+          exact hzy'
+        · intro w hw
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+          rcases hw with hw | hw
+          · rw [hw]
+            show 0 ≤ (if x = x then (xx : ℝ) else if x = y then yy else aa + bb)
+            rw [if_pos (rfl : x = x)]
+            exact hxx
+          · rw [hw]
+            show 0 ≤ (if y = x then (xx : ℝ) else if y = y then yy else aa + bb)
+            rw [if_neg (Ne.symm hxy), if_pos (rfl : y = y)]
+            exact hyy
+        · rw [hTeq, Finset.sum_insert (by simp [hax, hay]),
+            Finset.sum_insert (by simp [hxy]), Finset.sum_singleton]
+          show (if a = x then xx else if a = y then yy else aa + bb) +
+            ((if x = x then xx else if x = y then yy else aa + bb) +
+              (if y = x then xx else if y = y then yy else aa + bb)) = 1
+          rw [if_neg hax, if_neg hay, if_pos (rfl : x = x), if_neg (Ne.symm hxy),
+            if_pos (rfl : y = y)]
+          linarith
+    · by_cases hxy : x = y
+      · -- x = y: f 在 {a, b, x} 上
+        have hzy' : z = aa • a + (bb • b + (xx + yy) • x) := by
+          rw [hzy, ← hxy]; module
+        have hset : (({a, b} : Set V3) ∪ ({x, y} : Set V3)) = ({a, b, x} : Set V3) := by
+          ext w
+          rw [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+            Set.mem_insert_iff, Set.mem_singleton_iff]
+          simp [hab, hxy]
+          tauto
+        have hTeq : hfin.toFinset = ({a, b, x} : Finset V3) := by
+          ext w
+          rw [hfin.mem_toFinset, hset]
+          simp
+        refine ⟨fun w => if w = x then xx + yy else if w = b then bb else aa,
+          hfin, ?_, ?_, ?_⟩
+        · rw [hTeq, Finset.sum_insert (by simp [hax, hab]),
+            Finset.sum_insert (by simp [hbx]), Finset.sum_singleton]
+          show z = (if a = x then xx + yy else if a = b then bb else aa) • a +
+            ((if b = x then xx + yy else if b = b then bb else aa) • b +
+              (if x = x then xx + yy else if x = b then bb else aa) • x)
+          rw [if_neg hax, if_neg hab, if_neg hbx, if_pos (rfl : b = b),
+            if_pos (rfl : x = x)]
+          exact hzy'
+        · intro w hw
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+          rcases hw with hw | hw
+          · rw [hw]
+            show 0 ≤ (if x = x then (xx + yy : ℝ) else if x = b then bb else aa)
+            rw [if_pos (rfl : x = x)]
+            linarith
+          · rw [hw]
+            show 0 ≤ (if y = x then (xx + yy : ℝ) else if y = b then bb else aa)
+            rw [if_pos hxy.symm]
+            linarith
+        · rw [hTeq, Finset.sum_insert (by simp [hax, hab]),
+            Finset.sum_insert (by simp [hbx]), Finset.sum_singleton]
+          show (if a = x then xx + yy else if a = b then bb else aa) +
+            ((if b = x then xx + yy else if b = b then bb else aa) +
+              (if x = x then xx + yy else if x = b then bb else aa)) = 1
+          rw [if_neg hax, if_neg hab, if_neg hbx, if_pos (rfl : b = b),
+            if_pos (rfl : x = x)]
+          linarith
+      · -- 四点互异: f 在 {a, b, x, y} 上
+        have hzy' : z = aa • a + (bb • b + (xx • x + yy • y)) := by
+          rw [hzy]; abel
+        have hTeq : hfin.toFinset = ({a, b, x, y} : Finset V3) := by
+          ext w
+          rw [hfin.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+          simp
+          tauto
+        refine ⟨fun w => if w = x then xx else if w = y then yy else
+          if w = b then bb else aa, hfin, ?_, ?_, ?_⟩
+        · rw [hTeq, Finset.sum_insert (by simp [hax, hay, hab]),
+            Finset.sum_insert (by simp [hbx, hby]),
+            Finset.sum_insert (by simp [hxy]), Finset.sum_singleton]
+          show z = (if a = x then xx else if a = y then yy else if a = b then bb else aa) • a +
+            ((if b = x then xx else if b = y then yy else if b = b then bb else aa) • b +
+              ((if x = x then xx else if x = y then yy else if x = b then bb else aa) • x +
+                (if y = x then xx else if y = y then yy else if y = b then bb else aa) • y))
+          rw [if_neg hax, if_neg hay, if_neg hab, if_neg hbx, if_neg hby,
+            if_pos (rfl : b = b), if_pos (rfl : x = x), if_neg (Ne.symm hxy),
+            if_pos (rfl : y = y)]
+          exact hzy'
+        · intro w hw
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+          rcases hw with hw | hw
+          · rw [hw]
+            show 0 ≤ (if x = x then (xx : ℝ) else if x = y then yy else
+              if x = b then bb else aa)
+            rw [if_pos (rfl : x = x)]
+            exact hxx
+          · rw [hw]
+            show 0 ≤ (if y = x then (xx : ℝ) else if y = y then yy else
+              if y = b then bb else aa)
+            rw [if_neg (Ne.symm hxy), if_pos (rfl : y = y)]
+            exact hyy
+        · rw [hTeq, Finset.sum_insert (by simp [hax, hay, hab]),
+            Finset.sum_insert (by simp [hbx, hby]),
+            Finset.sum_insert (by simp [hxy]), Finset.sum_singleton]
+          show (if a = x then xx else if a = y then yy else if a = b then bb else aa) +
+            ((if b = x then xx else if b = y then yy else if b = b then bb else aa) +
+              ((if x = x then xx else if x = y then yy else if x = b then bb else aa) +
+                (if y = x then xx else if y = y then yy else if y = b then bb else aa))) = 1
+          rw [if_neg hax, if_neg hay, if_neg hab, if_neg hbx, if_neg hby,
+            if_pos (rfl : b = b), if_pos (rfl : x = x), if_neg (Ne.symm hxy),
+            if_pos (rfl : y = y)]
+          linarith
+
+/-- 线上方位角退化为 0 的两侧等价（LA5 `AZIM_EQ_0_GE_ALT2` 逐字移植；
+`collinear_triple_iff` ↦ `kchCollTripleIff_p35`）。 -/
+private theorem kchAzimEq0GeAlt2_p35 (v0 v1 w x : V3)
+    (hw : ¬ Collinear ℝ ({v0, v1, w} : Set V3)) :
+    azim v0 v1 w x = 0 ↔ x ∈ affGe ({v0, v1} : Set V3) ({w} : Set V3) := by
+  have hw' : ¬ Collinear3 v0 v1 w := hw
+  have hv0v1 : v0 ≠ v1 := fun he => hw' (collinear3_of_eq he.symm)
+  have hw0 : w ≠ v0 := fun he => hw' (collinear3_pair_left he)
+  have hw1' : w ≠ v1 := fun he => hw' (collinear3_pair_right he)
+  have hdisj : Disjoint ({v0, v1} : Set V3) ({w} : Set V3) := by
+    refine Set.disjoint_left.mpr ?_
+    intro u hu1 hu2
+    rcases Set.mem_insert_iff.mp hu1 with h | h
+    · exact hw0 ((Set.mem_singleton_iff.mp hu2).symm.trans h)
+    · exact hw1' ((Set.mem_singleton_iff.mp hu2).symm.trans
+        (Set.mem_singleton_iff.mp h))
+  by_cases hxc : Collinear ℝ ({v0, v1, x} : Set V3)
+  · -- x 在 v0v1 线上：两侧恒真
+    have hax0 : azim v0 v1 w x = 0 := by
+      unfold azim
+      exact if_pos (Or.inr hxc)
+    have hline : x ∈ affineSpan ℝ ({v0, v1} : Set V3) := by
+      rcases (kchCollTripleIff_p35 (x := v0) (v := v1) (u := x)).mp hxc with h | h
+      · exact h
+      · exact absurd h hv0v1
+    refine ⟨fun _ => ?_, fun _ => hax0⟩
+    obtain ⟨t, ht⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hline
+    rw [mem_affGe_pair hdisj hv0v1]
+    refine ⟨1 - t, t, 0, by norm_num, by norm_num, ?_⟩
+    rw [AffineMap.lineMap_apply] at ht
+    simp only [vsub_eq_sub, vadd_eq_add] at ht
+    rw [← ht]
+    module
+  · -- 非退化 x：经 affGt 版本（azim_eq_zero_iff_alt）与 affGt ⊆ affGe
+    rw [azim_eq_zero_iff_alt hw' hxc]
+    constructor
+    · rintro ⟨f, hfin, hval, hpos, hsum⟩
+      exact ⟨f, hfin, hval, fun u hu => le_of_lt (hpos u hu), hsum⟩
+    · rintro ⟨f, hfin, hval, hpos, hsum⟩
+      -- 展开求和（支撑集 {v0, v1, w}）；hval0/hsum0 保留原形式供 Affsign 目标使用
+      have hval0 := hval
+      have hsum0 := hsum
+      have hT : hfin.toFinset = ({v0, v1, w} : Finset V3) := by
+        ext z
+        rw [hfin.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+          Set.mem_singleton_iff]
+        simp [Set.mem_singleton_iff]
+        tauto
+      rw [hT] at hval hsum
+      rw [Finset.sum_insert (by simp [hv0v1, Ne.symm hw0]),
+        Finset.sum_insert (by simp [Ne.symm hw1']), Finset.sum_singleton] at hval hsum
+      by_cases hfw : f w = 0
+      · -- f w = 0：x 落在 v0v1 线上，与 hxc 矛盾（空支）
+        exfalso
+        have hx2 : x = f v0 • v0 + f v1 • v1 := by rw [hfw] at hval; simpa using hval
+        have hfv0 : f v0 = 1 - f v1 := by linarith
+        rw [hfv0] at hx2
+        have hxmem : x ∈ affineSpan ℝ ({v0, v1} : Set V3) :=
+          mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨f v1, by
+            rw [AffineMap.lineMap_apply]
+            simp only [vsub_eq_sub, vadd_eq_add]
+            rw [hx2]
+            module⟩
+        exact hxc ((kchCollTripleIff_p35 (x := v0) (v := v1) (u := x)).mpr
+          (Or.inl hxmem))
+      · refine ⟨f, hfin, hval0, fun u hu => ?_, hsum0⟩
+        rw [Set.mem_singleton_iff] at hu
+        rw [hu]
+        exact lt_of_le_of_ne (hpos w (by simp)) (Ne.symm hfw)
+
+/-- 闭楔 = 仿射楔（LA5 `WEDGE_GE_EQ_AFF_GE` 逐字移植；`wedgeGe_p2` ↦
+`wedgeGe`，`collinear_triple_iff` ↦ `kchCollTripleIff_p35`）。 -/
+private theorem kchWedgeGeEqAffGe_p35 {v0 v1 w1 w2 : V3} (hlt : azim v0 v1 w1 w2 < Real.pi)
+    (hw1 : ¬ Collinear ℝ ({v0, v1, w1} : Set V3))
+    (hw2 : ¬ Collinear ℝ ({v0, v1, w2} : Set V3)) :
+    wedgeGe v0 v1 w1 w2 = affGe ({v0, v1} : Set V3) ({w1, w2} : Set V3) := by
+  have hw1' : ¬ Collinear3 v0 v1 w1 := hw1
+  have hw2' : ¬ Collinear3 v0 v1 w2 := hw2
+  have hv0v1 : v0 ≠ v1 := fun he => hw1' (collinear3_of_eq he.symm)
+  have hw1v0 : w1 ≠ v0 := fun he => hw1' (collinear3_pair_left he)
+  have hw1v1 : w1 ≠ v1 := fun he => hw1' (collinear3_pair_right he)
+  have hw2v0 : w2 ≠ v0 := fun he => hw2' (collinear3_pair_left he)
+  have hw2v1 : w2 ≠ v1 := fun he => hw2' (collinear3_pair_right he)
+  have hdisj12 : Disjoint ({v0, v1} : Set V3) ({w1, w2} : Set V3) := by
+    refine Set.disjoint_left.mpr ?_
+    intro u hu1 hu2
+    rcases Set.mem_insert_iff.mp hu2 with h2 | h2
+    · rcases Set.mem_insert_iff.mp hu1 with h1 | h1
+      · exact hw1v0 (h2.symm.trans h1)
+      · exact hw1v1 (h2.symm.trans (Set.mem_singleton_iff.mp h1))
+    · rcases Set.mem_insert_iff.mp hu1 with h1 | h1
+      · exact hw2v0 ((Set.mem_singleton_iff.mp h2).symm.trans h1)
+      · exact hw2v1 ((Set.mem_singleton_iff.mp h2).symm.trans
+          (Set.mem_singleton_iff.mp h1))
+  have hdisj1 : Disjoint ({v0, v1} : Set V3) ({w1} : Set V3) := by
+    refine Set.disjoint_left.mpr ?_
+    intro u hu1 hu2
+    rcases Set.mem_insert_iff.mp hu1 with h1 | h1
+    · exact hw1v0 ((Set.mem_singleton_iff.mp hu2).symm.trans h1)
+    · exact hw1v1 ((Set.mem_singleton_iff.mp hu2).symm.trans
+        (Set.mem_singleton_iff.mp h1))
+  have hdisj2 : Disjoint ({v0, v1} : Set V3) ({w2} : Set V3) := by
+    refine Set.disjoint_left.mpr ?_
+    intro u hu1 hu2
+    rcases Set.mem_insert_iff.mp hu1 with h1 | h1
+    · exact hw2v0 ((Set.mem_singleton_iff.mp hu2).symm.trans h1)
+    · exact hw2v1 ((Set.mem_singleton_iff.mp hu2).symm.trans
+        (Set.mem_singleton_iff.mp h1))
+  -- 单调包：affGe {v0,v1} {w1} / {w2} / affGt {v0,v1} {w1,w2} 均含于 affGe {v0,v1} {w1,w2}
+  have hMono1 : ∀ z : V3, z ∈ affGe ({v0, v1} : Set V3) ({w1} : Set V3) →
+      z ∈ affGe ({v0, v1} : Set V3) ({w1, w2} : Set V3) := by
+    intro z hz
+    obtain ⟨t1, t2, t3, ht3, hsumt, hzq⟩ := (mem_affGe_pair hdisj1 hv0v1).mp hz
+    rw [kchAffGe22_p35 v0 v1 w1 w2 hdisj12]
+    exact ⟨t1, t2, t3, 0, ht3, by norm_num, by linarith, by rw [hzq]; simp⟩
+  have hMono2 : ∀ z : V3, z ∈ affGe ({v0, v1} : Set V3) ({w2} : Set V3) →
+      z ∈ affGe ({v0, v1} : Set V3) ({w1, w2} : Set V3) := by
+    intro z hz
+    obtain ⟨t1, t2, t3, ht3, hsumt, hzq⟩ := (mem_affGe_pair hdisj2 hv0v1).mp hz
+    rw [kchAffGe22_p35 v0 v1 w1 w2 hdisj12]
+    exact ⟨t1, t2, 0, t3, by norm_num, ht3, by linarith, by rw [hzq]; simp⟩
+  have hMono3 : ∀ z : V3, z ∈ affGt ({v0, v1} : Set V3) ({w1, w2} : Set V3) →
+      z ∈ affGe ({v0, v1} : Set V3) ({w1, w2} : Set V3) := by
+    intro z hz
+    rw [affGt2_2 hdisj12] at hz
+    obtain ⟨t1, t2, t3, t4, ht3, ht4, hsumt, hzq⟩ := hz
+    rw [kchAffGe22_p35 v0 v1 w1 w2 hdisj12]
+    exact ⟨t1, t2, t3, t4, le_of_lt ht3, le_of_lt ht4, hsumt, hzq⟩
+  have hMono4 : ∀ z : V3, z ∈ affGt ({v0, v1} : Set V3) ({w2} : Set V3) →
+      z ∈ affGe ({v0, v1} : Set V3) ({w1, w2} : Set V3) := by
+    intro z hz
+    obtain ⟨c, hc, h, hzq⟩ := (affGt_pair_iff hv0v1 hw2v0 hw2v1).mp hz
+    have hzq' : z = (1 - c - h) • v0 + h • v1 + c • w2 := by
+      have h2 : z = v0 + (c • (w2 - v0) + h • (v1 - v0)) := by
+        rw [← hzq]; module
+      rw [h2]; module
+    have hz2 : z ∈ affGe ({v0, v1} : Set V3) ({w2} : Set V3) := by
+      rw [mem_affGe_pair hdisj2 hv0v1]
+      exact ⟨1 - c - h, h, c, le_of_lt hc, by ring, hzq'⟩
+    exact hMono2 z hz2
+  by_cases hw20 : azim v0 v1 w1 w2 = 0
+  · -- 退化：wedgeGe = {azim w1 z = 0} = affGe {v0,v1} {w1}
+    ext z
+    constructor
+    · rintro ⟨hle1, hle2⟩
+      rw [hw20] at hle2
+      have hz0 : azim v0 v1 w1 z = 0 := le_antisymm hle2 hle1
+      exact hMono1 z ((kchAzimEq0GeAlt2_p35 v0 v1 w1 z hw1).mp hz0)
+    · rintro hz
+      rw [kchAffGe22_p35 v0 v1 w1 w2 hdisj12] at hz
+      obtain ⟨aa, bb, xx, yy, hxx, hyy, hone, hzy⟩ := hz
+      have hw2m : w2 ∈ affGe ({v0, v1} : Set V3) ({w1} : Set V3) :=
+        (kchAzimEq0GeAlt2_p35 v0 v1 w1 w2 hw1).mp hw20
+      obtain ⟨t1, t2, t3, ht3, hsumt, hw2q⟩ := (mem_affGe_pair hdisj1 hv0v1).mp hw2m
+      have hyyt : yy * t1 + yy * t2 + yy * t3 = yy := by
+        rw [← mul_add, ← mul_add, hsumt, mul_one]
+      have hyy3 : 0 ≤ yy * t3 := mul_nonneg hyy ht3
+      have hz1m : z ∈ affGe ({v0, v1} : Set V3) ({w1} : Set V3) := by
+        rw [mem_affGe_pair hdisj1 hv0v1]
+        refine ⟨aa + yy * t1, bb + yy * t2, xx + yy * t3, by linarith, ?_, ?_⟩
+        · linarith
+        · rw [hzy, hw2q]
+          simp only [smul_add, smul_smul, add_smul]
+          abel
+      have hz0 : azim v0 v1 w1 z = 0 := (kchAzimEq0GeAlt2_p35 v0 v1 w1 z hw1).mpr hz1m
+      refine ⟨azim_nonneg v0 v1 w1 z, ?_⟩
+      rw [hw20, hz0]
+  · -- 主情形：0 < azim v0 v1 w1 w2 < π
+    have h0w2 : 0 < azim v0 v1 w1 w2 :=
+      lt_of_le_of_ne (azim_nonneg v0 v1 w1 w2) (Ne.symm hw20)
+    ext z
+    constructor
+    · rintro ⟨hle1, hle2⟩
+      by_cases hz0 : azim v0 v1 w1 z = 0
+      · exact hMono1 z ((kchAzimEq0GeAlt2_p35 v0 v1 w1 z hw1).mp hz0)
+      · have hzlt : 0 < azim v0 v1 w1 z := lt_of_le_of_ne hle1 (Ne.symm hz0)
+        have hncz : ¬ Collinear ℝ ({v0, v1, z} : Set V3) := by
+          intro hcol
+          exact hz0 (by
+            unfold azim
+            exact if_pos (Or.inr hcol))
+        by_cases heq : azim v0 v1 w1 z = azim v0 v1 w1 w2
+        · -- w2 侧边界
+          have hzGt : z ∈ affGt ({v0, v1} : Set V3) ({w2} : Set V3) :=
+            (azim_eq_azim_iff_alt hw1' hncz hw2').mp heq
+          exact hMono4 z hzGt
+        · -- 严格内侧：wedge = affGt {v0,v1} {w1,w2}
+          have hzW : z ∈ Kepler.Geom.wedge v0 v1 w1 w2 := by
+            simp only [Kepler.Geom.wedge, Set.mem_setOf_eq]
+            exact ⟨hncz, hzlt, lt_of_le_of_ne hle2 heq⟩
+          have hwEq := wedge_eq_affGt hw1' hw2' h0w2 hlt
+          rw [hwEq] at hzW
+          exact hMono3 z hzW
+    · rintro hz
+      rw [kchAffGe22_p35 v0 v1 w1 w2 hdisj12] at hz
+      obtain ⟨aa, bb, xx, yy, hxx, hyy, hone, hzy⟩ := hz
+      by_cases hyy0 : yy = 0
+      · -- w1 侧：azim w1 z = 0
+        have hz1m : z ∈ affGe ({v0, v1} : Set V3) ({w1} : Set V3) := by
+          rw [mem_affGe_pair hdisj1 hv0v1]
+          refine ⟨aa, bb, xx, hxx, by linarith, ?_⟩
+          rw [hyy0] at hzy
+          simpa using hzy
+        have haz0 : azim v0 v1 w1 z = 0 := (kchAzimEq0GeAlt2_p35 v0 v1 w1 z hw1).mpr hz1m
+        refine ⟨azim_nonneg v0 v1 w1 z, ?_⟩
+        rw [haz0]
+        exact azim_nonneg v0 v1 w1 w2
+      · -- yy > 0
+        have hyypos : 0 < yy := lt_of_le_of_ne hyy (Ne.symm hyy0)
+        by_cases hxx0 : xx = 0
+        · -- w2 侧：azim w1 z = azim w1 w2
+          have hzy2 : z - v0 = yy • (w2 - v0) + bb • (v1 - v0) := by
+            have h1 : z = aa • v0 + bb • v1 + yy • w2 := by
+              rw [hxx0] at hzy; simpa using hzy
+            have haa : aa = 1 - bb - yy := by
+              have hxx1 : xx = 0 := hxx0
+              linarith
+            rw [haa] at h1
+            rw [h1]
+            module
+          have hzGt : z ∈ affGt ({v0, v1} : Set V3) ({w2} : Set V3) :=
+            affGt_pair_iff hv0v1 hw2v0 hw2v1 |>.mpr ⟨yy, hyypos, bb, hzy2⟩
+          -- 射线成员推出非共线
+          have hncz : ¬ Collinear ℝ ({v0, v1, z} : Set V3) := by
+            intro hcol
+            obtain ⟨c, hc, h, hzq⟩ := (affGt_pair_iff hv0v1 hw2v0 hw2v1).mp hzGt
+            rcases (kchCollTripleIff_p35 (x := v0) (v := v1) (u := z)).mp hcol with
+              hmem | h01
+            · obtain ⟨t, ht⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hmem
+              have ht2 : z - v0 = t • (v1 - v0) := by
+                rw [← ht, AffineMap.lineMap_apply]
+                simp only [vsub_eq_sub, vadd_eq_add]
+                module
+              have h3 : c • (w2 - v0) + h • (v1 - v0) = t • (v1 - v0) := by
+                rw [← hzq]; exact ht2
+              have hstep : c • (w2 - v0) = (t - h) • (v1 - v0) := by
+                have h4 : (t - h) • (v1 - v0) = t • (v1 - v0) - h • (v1 - v0) := by
+                  rw [sub_smul]
+                rw [h4, ← h3]
+                abel
+              have h5 : c • (w2 - v0) = c • (((t - h) / c) • (v1 - v0)) := by
+                rw [smul_smul, mul_comm c ((t - h) / c),
+                  div_mul_cancel₀ (t - h) (ne_of_gt hc)]
+                exact hstep
+              have h6 : w2 - v0 = ((t - h) / c) • (v1 - v0) :=
+                smul_right_injective _ (ne_of_gt hc) h5
+              have hwm : w2 ∈ affineSpan ℝ ({v0, v1} : Set V3) :=
+                mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨(t - h) / c, by
+                  rw [AffineMap.lineMap_apply]
+                  simp only [vsub_eq_sub, vadd_eq_add]
+                  rw [← h6]
+                  module⟩
+              exact hw2 ((kchCollTripleIff_p35 (x := v0) (v := v1) (u := w2)).mpr
+                (Or.inl hwm))
+            · exact absurd h01 hv0v1
+          have heq := (azim_eq_azim_iff_alt hw1' hncz hw2').mpr hzGt
+          exact ⟨azim_nonneg v0 v1 w1 z, le_of_eq heq⟩
+        · -- 严格内侧
+          have hzGt : z ∈ affGt ({v0, v1} : Set V3) ({w1, w2} : Set V3) := by
+            rw [affGt2_2 hdisj12]
+            simp only [Set.mem_setOf_eq]
+            exact ⟨aa, bb, xx, yy, lt_of_le_of_ne hxx (Ne.symm hxx0),
+              hyypos, hone, hzy⟩
+          have hwEq := wedge_eq_affGt hw1' hw2' h0w2 hlt
+          rw [← hwEq] at hzGt
+          simp only [Kepler.Geom.wedge, Set.mem_setOf_eq] at hzGt
+          obtain ⟨-, h1, h2⟩ := hzGt
+          exact ⟨le_of_lt h1, le_of_lt h2⟩
+
+/-- 边点楔收缩（LA5 `FAN_IN_AFF_GE_IMP_EQ` 逐字移植）。 -/
+private theorem kchFanInAffGeImpEq_p35 {x a b v : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : Kepler.Text.Fan.FAN x V E) (hv : v ∈ V)
+    (he : ({a, b} : Set V3) ∈ E) (hmem : v ∈ affGe ({x} : Set V3) ({a, b} : Set V3)) :
+    v = a ∨ v = b := by
+  by_cases hcase : v = a ∨ v = b
+  · exact hcase
+  · exfalso
+    have hvx : v ≠ x := fun he2 => hfan.2.2.2.1 (he2 ▸ hv)
+    have h7 := hfan.2.2.2.2.2 ({a, b} : Set V3) (Set.mem_union_left _ he) ({v} : Set V3)
+      (Set.mem_union_right _ ⟨v, hv, rfl⟩)
+    have habv : (({a, b} : Set V3) ∩ {v} : Set V3) = ∅ := by
+      refine Set.eq_empty_iff_forall_notMem.mpr ?_
+      intro z hz
+      have h1 : z ∈ ({a, b} : Set V3) := hz.1
+      have h2 : z = v := hz.2
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h1
+      rcases h1 with h | h
+      · exact hcase (Or.inl (h2.symm.trans h))
+      · exact hcase (Or.inr (h2.symm.trans h))
+    have hv2 : v ∈ affGe ({x} : Set V3) ({v} : Set V3) := kchXInAffGe1_p35 v x (Ne.symm hvx)
+    have hint : v ∈ affGe ({x} : Set V3) ({a, b} : Set V3) ∩
+        affGe ({x} : Set V3) ({v} : Set V3) := ⟨hmem, hv2⟩
+    rw [h7, habv] at hint
+    -- v ∈ affGe {x} ∅ → v = x
+    have hcollapse : ∀ z : V3, z ∈ affGe ({x} : Set V3) (∅ : Set V3) → z = x := by
+      intro z hz
+      simp only [affGe, Set.mem_setOf_eq, Affsign] at hz
+      obtain ⟨f, hfin, hval, -, hsum⟩ := hz
+      have hTs : hfin.toFinset = ({x} : Finset V3) := by
+        ext w
+        simpa using hfin.mem_toFinset w
+      rw [hTs] at hval hsum
+      rw [Finset.sum_singleton] at hsum
+      simpa [hsum] using hval
+    exact hvx (hcollapse v hint)
+
+/-- ρ-轨道沿平面的沿环正定向（LA5 `RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT`
+逐字移植；半-单位元面 `LOCAL_FAN_IMP_NOT_SEMI_IDE` 以显式前件 `hno2` 承载，
+HOL 侧经 dih2k 面数计数消解——p35 侧轨道-面共轭链留 kchmam5）。 -/
+private theorem kchPosDirect_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hno2 : ∀ z : V3, z ∈ V → rhoNode1 FF (rhoNode1 FF z) ≠ z)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {U : Set V3}
+    (hU : (fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U)
+    {P : Set V3} (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
+    (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e) :
+    ∀ i : ℕ, i < l →
+      0 < ((WithLp.toLp 2 (crossProduct
+          (((rhoNode1 FF)^[i] v : V3) : Fin 3 → ℝ)
+          (((rhoNode1 FF)^[i + 1] v : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (e : V3)) := by
+  have hmemV : ∀ n : ℕ, (rhoNode1 FF)^[n] v ∈ V := kchIterInV_p35 hfanL hEE2 hv
+  have hkeep := hfanL
+  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
+  have hVne0 : ∀ z : V3, z ∈ V → z ≠ (0:V3) := fun z hz he2 => hF.2.2.2.1 (he2 ▸ hz)
+  have hUmem : ∀ n : ℕ, n ≤ l → (rhoNode1 FF)^[n] v ∈ U := by
+    intro n hn
+    rw [← hU]
+    exact ⟨n, hn, rfl⟩
+  -- 基例准备：e ≠ 0 与 e ⬝ e > 0
+  have hne0 : e ≠ 0 := by
+    intro hz
+    refine (kchCharLite_p35 hkeep hEE2 hv).2 ?_
+    exact kchCollinear3Cross_p35.mpr (by rw [he, hz])
+  have hdotpos : 0 < ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) := by
+    refine kchDotSelfPos_p35 ?_
+    intro hc
+    exact hne0 (kchCoeInj_p35 (hc.trans kchCoeZero_p35.symm))
+  intro i
+  induction i with
+  | zero =>
+    intro _
+    show 0 < ((WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (e : V3))
+    rw [he]
+    exact hdotpos
+  | succ k ih =>
+    intro hil
+    -- px, py, pz 命名与基本事实
+    set px : V3 := (rhoNode1 FF)^[k] v with hpxdef
+    set py : V3 := (rhoNode1 FF)^[k + 1] v with hpydef
+    set pz : V3 := (rhoNode1 FF)^[k + 2] v with hpzdef
+    have hpyeq : rhoNode1 FF px = py :=
+      (Function.iterate_succ_apply' (rhoNode1 FF) k v).symm
+    have hpyeq2 : rhoNode1 FF py = pz :=
+      (Function.iterate_succ_apply' (rhoNode1 FF) (k + 1) v).symm
+    have hpxV : px ∈ V := hmemV k
+    have hpyV : py ∈ V := hmemV (k + 1)
+    have hpzV : pz ∈ V := hmemV (k + 2)
+    have hpx0 : px ≠ 0 := hVne0 px hpxV
+    have hpy0 : py ≠ 0 := hVne0 py hpyV
+    have hpz0 : pz ≠ 0 := hVne0 pz hpzV
+    have hpxne0 : (0:V3) ≠ px := fun hcon => hpx0 hcon.symm
+    have hpyne0 : (0:V3) ≠ py := fun hcon => hpy0 hcon.symm
+    have hpxpy : (px, py) ∈ FF := by
+      rw [← hpyeq]
+      exact (lfVertKit_p35 hkeep hEE2 hpxV).1
+    have hpypz : (py, pz) ∈ FF := by
+      rw [← hpyeq2]
+      exact (lfVertKit_p35 hkeep hEE2 hpyV).1
+    have hpxE : ({px, py} : Set V3) ∈ E :=
+      kchDartInE_p35 hkeep hpxpy
+    have hpyE : ({py, pz} : Set V3) ∈ E :=
+      kchDartInE_p35 hkeep hpypz
+    have hnc : ¬ Collinear ℝ ({(0:V3), px, py} : Set V3) := by
+      rw [← hpyeq]
+      exact (kchCharLite_p35 hkeep hEE2 hpxV).2
+    have hnc2 : ¬ Collinear ℝ ({(0:V3), py, pz} : Set V3) := by
+      rw [← hpyeq2]
+      exact (kchCharLite_p35 hkeep hEE2 hpyV).2
+    have hpxne : px ≠ py := by
+      intro hcon
+      refine hnc ?_
+      rw [hcon]
+      simpa using collinear_pair ℝ (0:V3) py
+    have hpxne2 : px ≠ pz := by
+      intro hcon
+      refine hno2 px hpxV ?_
+      rw [hpyeq, hpyeq2]
+      exact hcon.symm
+    have hpzne : py ≠ pz := by
+      intro hcon
+      refine hnc2 ?_
+      rw [hcon]
+      simpa using collinear_pair ℝ (0:V3) pz
+    have hk2 : k + 2 ≤ l := by omega
+    -- U/P 成员
+    have hsub0 : ({(0:V3), px, py} : Set V3) ⊆ P := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | hz
+      · exact h0
+      · rcases hz with rfl | rfl
+        · exact hsub (hUmem k (by omega))
+        · exact hsub (hUmem (k + 1) (by omega))
+    have hspan : affineSpan ℝ ({(0:V3), px, py} : Set V3) = P :=
+      kchPlaneDet_p35 hP hsub0 hnc
+    have hpzP : pz ∈ P := hsub (hUmem (k + 2) (by omega))
+    obtain ⟨s, w, hpzcombo⟩ := kchPosAffSpanOrigin_p35 (by rw [hspan]; exact hpzP)
+    -- IH（像素层换算）
+    have ihk : 0 < (crossProduct ((px : V3) : Fin 3 → ℝ) ((py : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((e : V3) : Fin 3 → ℝ) := ih (by omega)
+    -- 反对称：py × px = -(px × py)
+    have hskew : (crossProduct ((py : V3) : Fin 3 → ℝ) ((px : V3) : Fin 3 → ℝ))
+        = -((crossProduct ((px : V3) : Fin 3 → ℝ) ((py : V3) : Fin 3 → ℝ))) :=
+      (cross_anticomm ((px : V3) : Fin 3 → ℝ) ((py : V3) : Fin 3 → ℝ)).symm
+    -- 目标换算
+    rw [show (WithLp.toLp 2 (crossProduct ((py : V3) : Fin 3 → ℝ)
+      ((pz : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (e : V3)
+      = (crossProduct ((py : V3) : Fin 3 → ℝ) ((pz : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((e : V3) : Fin 3 → ℝ) from rfl]
+    have hkey : (crossProduct ((py : V3) : Fin 3 → ℝ) ((pz : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((e : V3) : Fin 3 → ℝ)
+        = -((s:ℝ) * ((crossProduct ((px : V3) : Fin 3 → ℝ) ((py : V3) : Fin 3 → ℝ))
+          ⬝ᵥ ((e : V3) : Fin 3 → ℝ))) := by
+      rw [hpzcombo, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35, kchCrossAdd'_p35,
+        kchCrossSmul'_p35, kchCrossSmul'_p35, add_dotProduct, smul_dotProduct,
+        smul_dotProduct, kchCrossSelf0_p35, zero_dotProduct, dotProduct_comm,
+        hskew, dotProduct_neg, dotProduct_comm]
+      ring
+    rw [hkey]
+    have hcontrad : (0:ℝ) ≤ s → False := by
+      intro hsw
+      by_cases hw : 0 ≤ w
+      · -- w ≥ 0：pz ∈ aff_ge {0} {px,py}，fan7 收缩出 pz = 0
+        have hdisj01 : Disjoint ({(0:V3)} : Set V3) ({px, py} : Set V3) := by
+          refine Set.disjoint_left.mpr ?_
+          intro u hu1 hu2
+          rcases Set.mem_insert_iff.mp hu2 with h | h
+          · exact hpxne0 ((Set.mem_singleton_iff.mp hu1).symm.trans h)
+          · exact hpyne0 ((Set.mem_singleton_iff.mp hu1).symm.trans
+              (Set.mem_singleton_iff.mp h))
+        have hpzw : pz ∈ affGe ({(0:V3)} : Set V3) ({px, py} : Set V3) := by
+          rw [mem_affGe_singleton_pair hdisj01 hpxne]
+          refine ⟨1 - s - w, s, w, hsw, hw, by linarith, ?_⟩
+          rw [hpzcombo]
+          simp
+        have hpzself : pz ∈ affGe ({(0:V3)} : Set V3) ({pz} : Set V3) := by
+          rw [mem_affGe_singleton (x := (0:V3)) (v := pz) (fun hcon => hpz0 hcon.symm)]
+          exact ⟨0, 1, by norm_num, by norm_num, by simp⟩
+        have h7 := hF.2.2.2.2.2 ({px, py} : Set V3) (Set.mem_union_left _ hpxE)
+          ({pz} : Set V3) (Set.mem_union_right _ ⟨pz, hpzV, rfl⟩)
+        have hempty : (({px, py} : Set V3) ∩ {pz} : Set V3) = ∅ := by
+          refine Set.eq_empty_iff_forall_notMem.mpr ?_
+          intro z hz
+          obtain ⟨h1, h2⟩ := hz
+          rcases Set.mem_insert_iff.mp h1 with h1 | h1
+          · exact hpxne2 (h1.symm.trans h2)
+          · exact hpzne (h1.symm.trans h2)
+        have hint : pz ∈ affGe ({(0:V3)} : Set V3) ({px, py} : Set V3) ∩
+            affGe ({(0:V3)} : Set V3) ({pz} : Set V3) := ⟨hpzw, hpzself⟩
+        rw [h7, hempty] at hint
+        have hcollapse : ∀ z2 : V3, z2 ∈ affGe ({(0:V3)} : Set V3) (∅ : Set V3) →
+            z2 = 0 := by
+          intro z2 hz2
+          simp only [affGe, Set.mem_setOf_eq, Affsign] at hz2
+          obtain ⟨f, hfin, hval, -, hsum⟩ := hz2
+          have hTs : hfin.toFinset = ({(0:V3)} : Finset V3) := by
+            ext w2
+            simpa using hfin.mem_toFinset w2
+          rw [hTs] at hval hsum
+          rw [Finset.sum_singleton] at hsum
+          simpa [hsum] using hval
+        exact hpz0 (hcollapse pz hint)
+      · -- w < 0：s • px ∈ aff_ge {0} {py,pz} ∩ aff_ge {0} {px}，fan7 收缩出 s = 0
+        have hwneg : w < 0 := by linarith
+        have hdisj2 : Disjoint ({(0:V3)} : Set V3) ({py, pz} : Set V3) := by
+          refine Set.disjoint_left.mpr ?_
+          intro u hu1 hu2
+          rcases Set.mem_insert_iff.mp hu2 with h | h
+          · exact hpyne0 ((Set.mem_singleton_iff.mp hu1).symm.trans h)
+          · exact hpz0 (h.symm.trans (Set.mem_singleton_iff.mp hu1))
+        have hspx1 : s • px ∈ affGe ({(0:V3)} : Set V3) ({py, pz} : Set V3) := by
+          rw [mem_affGe_singleton_pair hdisj2 hpzne]
+          refine ⟨w, -w, 1, by linarith, by norm_num, by linarith, ?_⟩
+          rw [hpzcombo]
+          simp
+        have hspx2 : s • px ∈ affGe ({(0:V3)} : Set V3) ({px} : Set V3) := by
+          rw [mem_affGe_singleton hpxne0]
+          refine ⟨1 - s, s, hsw, by linarith, ?_⟩
+          simp
+        have h7 := hF.2.2.2.2.2 ({py, pz} : Set V3) (Set.mem_union_left _ hpyE)
+          ({px} : Set V3) (Set.mem_union_right _ ⟨px, hpxV, rfl⟩)
+        have hempty : (({py, pz} : Set V3) ∩ {px} : Set V3) = ∅ := by
+          refine Set.eq_empty_iff_forall_notMem.mpr ?_
+          intro z hz
+          obtain ⟨h1, h2⟩ := hz
+          rcases Set.mem_insert_iff.mp h1 with h1 | h1
+          · exact hpxne (h2.symm.trans h1)
+          · exact hpxne2 (h2.symm.trans (Set.mem_singleton_iff.mp h1))
+        have hint : s • px ∈ affGe ({(0:V3)} : Set V3) ({py, pz} : Set V3) ∩
+            affGe ({(0:V3)} : Set V3) ({px} : Set V3) := ⟨hspx1, hspx2⟩
+        rw [h7, hempty] at hint
+        have hcollapse : ∀ z2 : V3, z2 ∈ affGe ({(0:V3)} : Set V3) (∅ : Set V3) →
+            z2 = 0 := by
+          intro z2 hz2
+          simp only [affGe, Set.mem_setOf_eq, Affsign] at hz2
+          obtain ⟨f, hfin, hval, -, hsum⟩ := hz2
+          have hTs : hfin.toFinset = ({(0:V3)} : Finset V3) := by
+            ext w2
+            simpa using hfin.mem_toFinset w2
+          rw [hTs] at hval hsum
+          rw [Finset.sum_singleton] at hsum
+          simpa [hsum] using hval
+        have hspx0 : s • px = 0 := hcollapse (s • px) hint
+        rcases smul_eq_zero.mp hspx0 with h0z | h0z
+        · -- s = 0：pz = w • py 与 hnc2 矛盾
+          refine hnc2 ?_
+          rw [kchCollTripleIff_p35 (x := (0:V3)) (v := py) (u := pz)]
+          refine Or.inl ?_
+          have hpz2 : pz = w • py := by
+            rw [h0z] at hpzcombo
+            simpa using hpzcombo
+          rw [hpz2]
+          rw [mem_affineSpan_pair_iff_exists_lineMap_eq]
+          refine ⟨w, ?_⟩
+          rw [AffineMap.lineMap_apply]
+          simp only [vsub_eq_sub, vadd_eq_add]
+          simp
+        · exact hpx0 h0z
+    rcases lt_trichotomy (0:ℝ) s with hs | hs | hs
+    · exact absurd (le_of_lt hs) hcontrad
+    · exact absurd (le_of_eq hs) hcontrad
+    · -- s < 0：目标直取
+      rw [show -((s:ℝ) * ((crossProduct ((px : V3) : Fin 3 → ℝ)
+          ((py : V3) : Fin 3 → ℝ)) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)))
+        = (-s) * ((crossProduct ((px : V3) : Fin 3 → ℝ) ((py : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) from by ring]
+      exact mul_pos (by linarith) ihk
+
+/-- U 内点与轴 e 非共线（LA5 `LOCAL_FAN_IMP_CYCLIC_SET` +
+`CYCLIC_SET_IMP_NOT_COLLINEAR` 的消费面替代：plane-det 定平面 + 混积消元，
+免 cyclic-set 本体）。 -/
+private theorem kchNoncolU_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {U : Set V3}
+    (hU : (fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U)
+    {P : Set V3} (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
+    (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e)
+    (hdotpos : 0 < (crossProduct ((v : V3) : Fin 3 → ℝ)
+        ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) ⬝ᵥ ((e : V3) : Fin 3 → ℝ))
+    {z : V3} (hzU : z ∈ U) : ¬ Collinear3 0 e z := by
+  have hmemV : ∀ n : ℕ, (rhoNode1 FF)^[n] v ∈ V := kchIterInV_p35 hfanL hEE2 hv
+  have hkeep := hfanL
+  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
+  have hVne0 : ∀ z2 : V3, z2 ∈ V → z2 ≠ (0:V3) := fun z2 hz2 he2 => hF.2.2.2.1 (he2 ▸ hz2)
+  have hUmem : ∀ n : ℕ, n ≤ l → (rhoNode1 FF)^[n] v ∈ U := by
+    intro n hn
+    rw [← hU]
+    exact ⟨n, hn, rfl⟩
+  have hne0 : e ≠ 0 := by
+    intro hz
+    refine (kchCharLite_p35 hkeep hEE2 hv).2 ?_
+    exact kchCollinear3Cross_p35.mpr (by rw [he, hz])
+  have hzV : z ∈ V := by
+    rw [← hU] at hzU
+    obtain ⟨k, -, hzk⟩ := hzU
+    rw [← hzk]
+    exact hmemV k
+  by_cases hl0 : l = 0
+  · -- l = 0：U = {v}，z = v，混积自消零直驳
+    have hzv : z = v := by
+      rw [← hU, hl0] at hzU
+      obtain ⟨k, hkle, hzk⟩ := hzU
+      have hk0 : k = 0 := by
+        have hkle2 := Set.mem_Iic.mp hkle
+        omega
+      rw [hk0] at hzk
+      simpa using hzk.symm
+    have hzdot0 : (crossProduct ((v : V3) : Fin 3 → ℝ)
+        ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) ⬝ᵥ ((z : V3) : Fin 3 → ℝ) = 0 := by
+      rw [hzv, dotProduct_comm, ← cross_anticomm (rhoNode1 FF v) v, dotProduct_neg,
+        dot_cross_self]
+      norm_num
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := e) (w1 := z) hne0).mp hcol
+    have hcoez : ((z : V3) : Fin 3 → ℝ) = c • ((e : V3) : Fin 3 → ℝ) := by
+      have h1 : ((z - (0:V3) : V3) : Fin 3 → ℝ) = ((c • (e - (0:V3)) : V3) : Fin 3 → ℝ) :=
+        congrArg (fun x2 : V3 => (x2 : Fin 3 → ℝ)) hc
+      rw [kchCoeSub_p35, kchCoeZero_p35, kchCoeSmul_p35, kchCoeSub_p35, kchCoeZero_p35] at h1
+      simpa using h1
+    rw [hcoez, dotProduct_smul, smul_eq_mul] at hzdot0
+    rcases mul_eq_zero.mp hzdot0 with hc0 | hX0
+    · rw [hc0, zero_smul] at hcoez
+      exact hVne0 z hzV (kchCoeInj_p35 (hcoez.trans kchCoeZero_p35.symm))
+    · rw [hX0] at hdotpos
+      norm_num at hdotpos
+  · -- l ≥ 1：{0, v, ρv} ⊆ P，plane-det 定平面后混积消元
+    have hvP : v ∈ P := hsub (hUmem 0 (by omega))
+    have hrhoP : rhoNode1 FF v ∈ P := hsub (hUmem 1 (by omega))
+    have hncVR : ¬ Collinear ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) := by
+      intro hcon
+      have hcz := kchToLpEqZero_p35.mp
+        ((kchCollinear3Cross_p35 (a := v) (b := rhoNode1 FF v)).mp hcon)
+      rw [hcz, zero_dotProduct] at hdotpos
+      norm_num at hdotpos
+    have hsub0 : ({(0:V3), v, rhoNode1 FF v} : Set V3) ⊆ P := by
+      intro z2 hz2
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz2
+      rcases hz2 with rfl | hz2
+      · exact h0
+      · rcases hz2 with rfl | rfl
+        · exact hvP
+        · exact hrhoP
+    have hspan : affineSpan ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) = P :=
+      kchPlaneDet_p35 hP hsub0 hncVR
+    have hzP : z ∈ P := hsub hzU
+    have hzdot : (crossProduct ((v : V3) : Fin 3 → ℝ)
+        ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) ⬝ᵥ ((z : V3) : Fin 3 → ℝ) = 0 :=
+      kchCrossDotZero_of_mem_p35 (a := v) (b := rhoNode1 FF v) (by
+        rw [← hspan] at hzP
+        exact hzP)
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := e) (w1 := z) hne0).mp hcol
+    have hcoez : ((z : V3) : Fin 3 → ℝ) = c • ((e : V3) : Fin 3 → ℝ) := by
+      have h1 : ((z - (0:V3) : V3) : Fin 3 → ℝ) = ((c • (e - (0:V3)) : V3) : Fin 3 → ℝ) :=
+        congrArg (fun x2 : V3 => (x2 : Fin 3 → ℝ)) hc
+      rw [kchCoeSub_p35, kchCoeZero_p35, kchCoeSmul_p35, kchCoeSub_p35, kchCoeZero_p35] at h1
+      simpa using h1
+    rw [hcoez, dotProduct_smul, smul_eq_mul] at hzdot
+    rcases mul_eq_zero.mp hzdot with hc0 | hX0
+    · rw [hc0, zero_smul] at hcoez
+      exact hVne0 z hzV (kchCoeInj_p35 (hcoez.trans kchCoeZero_p35.symm))
+    · rw [hX0] at hdotpos
+      norm_num at hdotpos
+
+/-- `azimCycle_p3` 的 ε-分支展开（W2 头注既定路线：IDENTIFY_AZIM_CYCLE_p2 的
+projection 局面以免除，唯一化走 `epsFixed_p35` 严格最小）。 -/
+private theorem kchAzimCycleEps_p35 (W : Set V3) (v w p : V3) (hsub : ¬ (W ⊆ {p})) :
+    azimCycle_p3 W v w p =
+      Classical.epsilon fun u : V3 => u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
+        azim v w p u < azim v w p q ∨
+          azim v w p u = azim v w p q ∧
+            ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖ := by
+  rw [azimCycle_p3, if_neg hsub]
+
+/-! ### azim 槽五件（LA5:2370-2712；KOMWBWC azim 两合取的本体面） -/
+
+/-- PIECE A（SUCCESEOR）：HOL `RHO_NODE_IS_SUCCESEOR_AZIM`（local_lemmas.hl:1034；
+LA5:2370）。 -/
+private theorem kchAzimSuccesor_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hno2 : ∀ z : V3, z ∈ V → rhoNode1 FF (rhoNode1 FF z) ≠ z)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {U : Set V3}
+    (hU : (fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U)
+    {P : Set V3} (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
+    (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e) :
+    ∀ x : V3, ∀ n : ℕ, x = (rhoNode1 FF)^[n] v → n < l →
+      ∀ y : V3, y ∈ U → y ≠ x → y ≠ rhoNode1 FF x →
+        azim 0 e x (rhoNode1 FF x) < azim 0 e x y := by
+  have hkeep := hfanL
+  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
+  have hfan := hF
+  have hmemV : ∀ m : ℕ, (rhoNode1 FF)^[m] v ∈ V := kchIterInV_p35 hkeep hEE2 hv
+  have hVne0 : ∀ z : V3, z ∈ V → z ≠ (0:V3) := kchFanVNeApex_p35 hfan
+  have hUmem : ∀ m : ℕ, m ≤ l → (rhoNode1 FF)^[m] v ∈ U := by
+    intro m hm; rw [← hU]; exact ⟨m, hm, rfl⟩
+  intro x n hxn hnl y hyU hyx hyrho
+  have hpos := kchPosDirect_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he n hnl
+  subst hxn
+  set x : V3 := (rhoNode1 FF)^[n] v with hXdef
+  set sx : V3 := (rhoNode1 FF)^[n + 1] v with hSXdef
+  have hsx : sx = rhoNode1 FF x := Function.iterate_succ_apply' (rhoNode1 FF) n v
+  -- 混积正 ⇒ 三件非共线 + azim 0 e x sx ∈ (0, π)
+  have hposF : 0 < (crossProduct ((x : V3) : Fin 3 → ℝ)
+      ((sx : V3) : Fin 3 → ℝ)) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) := hpos
+  obtain ⟨hncXS, hncXE, hncSE, hazim0, hazimπ⟩ :=
+    kchNoncolTriple5_p35 (a := x) (b := sx) (c := e) hposF
+  have hxV : x ∈ V := hmemV n
+  have hx0 : (0:V3) ≠ x := fun hcon => hVne0 x hxV hcon.symm
+  have hsx0 : (0:V3) ≠ sx := fun hcon => hVne0 sx (hmemV (n + 1)) hcon.symm
+  have hxsx : x ≠ sx := by
+    intro hcon
+    exact hncXS (by rw [hcon]; simpa using collinear_pair ℝ (0:V3) sx)
+  -- 扇坍缩分支
+  by_cases hyCone : y ∈ affGe ({(0:V3)} : Set V3) ({x, sx} : Set V3)
+  · exfalso
+    have hyV : y ∈ V := by
+      rw [← hU] at hyU
+      obtain ⟨k, hkle, hyk⟩ := hyU
+      rw [← hyk]
+      exact hmemV k
+    have hdart : (x, sx) ∈ FF := by
+      rw [hsx]
+      exact (lfVertKit_p35 hkeep hEE2 hxV).1
+    have hE : ({x, sx} : Set V3) ∈ E := kchDartInE_p35 hkeep hdart
+    rcases kchFanInAffGeImpEq_p35 hfan hyV hE hyCone with h1 | h1
+    · exact hyx h1
+    · exact hyrho (h1.trans hsx)
+  · -- 主情形：y 落在平面 P = aff {0, x, sx} 内但不在扇楔内
+    have hxU : x ∈ U := hUmem n (by omega)
+    have hsxU : sx ∈ U := hUmem (n + 1) (by omega)
+    have hPsub : ({(0:V3), x, sx} : Set V3) ⊆ P := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl
+      · exact h0
+      · exact hsub hxU
+      · exact hsub hsxU
+    have hPdet : affineSpan ℝ ({(0:V3), x, sx} : Set V3) = P :=
+      kchPlaneDet_p35 hP hPsub hncXS
+    have hyP : y ∈ (affineSpan ℝ ({(0:V3), x, sx} : Set V3) : Set V3) := by
+      rw [hPdet]
+      exact hsub hyU
+    obtain ⟨a, b, hyab⟩ := kchPosAffSpanOrigin_p35 hyP
+    have hdis : Disjoint ({(0:V3), e} : Set V3) ({x, sx} : Set V3) := by
+      refine Set.disjoint_left.mpr ?_
+      intro z hz1 hz2
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz1 hz2
+      rcases hz1 with h1e | h1e <;> rcases hz2 with h2 | h2
+      · exact hx0 (h1e.symm.trans h2)
+      · exact hsx0 (h1e.symm.trans h2)
+      · exact hncXE (by
+          have hex : (e:V3) = x := h1e.symm.trans h2
+          rw [hex]
+          simpa using collinear_pair ℝ (0:V3) x)
+      · exact hncSE (by
+          have hex : (e:V3) = sx := h1e.symm.trans h2
+          rw [hex]
+          simpa using collinear_pair ℝ (0:V3) sx)
+    -- 点积消元：y ∈ affGe {0,e} {x,sx} 迫使 e-系数为零
+    have hnotGt : ¬ (y ∈ affGe ({(0:V3), e} : Set V3) ({x, sx} : Set V3)) := by
+      intro hmemGt
+      rw [kchAffGe22_p35 (0:V3) e x sx hdis, Set.mem_setOf_eq] at hmemGt
+      obtain ⟨t1, t2, t3, t4, ht3, ht4, hsum, hyeq⟩ := hmemGt
+      have hd : ((x : V3) : Fin 3 → ℝ) ⬝ᵥ (crossProduct ((x : V3) : Fin 3 → ℝ)
+          ((sx : V3) : Fin 3 → ℝ)) = 0 := by
+        rw [← cross_anticomm sx x, dotProduct_neg, dot_cross_self sx x]
+        norm_num
+      have hsd : (((sx : V3) : Fin 3 → ℝ)) ⬝ᵥ (crossProduct ((x : V3) : Fin 3 → ℝ)
+          ((sx : V3) : Fin 3 → ℝ)) = 0 := dot_cross_self x _
+      have hed : ((e : V3) : Fin 3 → ℝ) ⬝ᵥ (crossProduct ((x : V3) : Fin 3 → ℝ)
+          ((sx : V3) : Fin 3 → ℝ))
+          = (crossProduct ((x : V3) : Fin 3 → ℝ) ((sx : V3) : Fin 3 → ℝ))
+            ⬝ᵥ ((e : V3) : Fin 3 → ℝ) :=
+        dotProduct_comm _ _
+      have hco : ((a • x + b • sx : V3) : Fin 3 → ℝ)
+          = a • ((x : V3) : Fin 3 → ℝ) + b • ((sx : V3) : Fin 3 → ℝ) := rfl
+      have h1 : ((a • x + b • sx : V3) : Fin 3 → ℝ) ⬝ᵥ (crossProduct ((x : V3) : Fin 3 → ℝ)
+          ((sx : V3) : Fin 3 → ℝ)) = 0 := by
+        rw [hco, add_dotProduct, smul_dotProduct, smul_dotProduct, hd, hsd]
+        simp
+      rw [← hyab] at h1
+      have h2 : ((y : V3) : Fin 3 → ℝ) ⬝ᵥ (crossProduct ((x : V3) : Fin 3 → ℝ)
+          ((sx : V3) : Fin 3 → ℝ))
+          = t2 * ((crossProduct ((x : V3) : Fin 3 → ℝ) ((sx : V3) : Fin 3 → ℝ))
+            ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) := by
+        have hyeq' : ((t2 • e + t3 • x + t4 • sx : V3) : Fin 3 → ℝ)
+            = t2 • ((e : V3) : Fin 3 → ℝ) + t3 • ((x : V3) : Fin 3 → ℝ)
+              + t4 • ((sx : V3) : Fin 3 → ℝ) := rfl
+        rw [hyeq, smul_zero, zero_add, hyeq', add_dotProduct, add_dotProduct, smul_dotProduct,
+          smul_dotProduct, smul_dotProduct, hed, hd, hsd]
+        ring
+      rw [h2] at h1
+      have ht2z : t2 = 0 := by
+        rcases mul_eq_zero.mp h1 with h | h
+        · exact h
+        · rw [h] at hposF
+          exact absurd hposF (by norm_num)
+      rw [ht2z] at hyeq
+      simp only [smul_zero, zero_add] at hyeq
+      exact hyCone (kchMemAffGePair_p35 (x := (0:V3)) (u := x) (v := sx) hx0 hsx0 hxsx
+        ht3 ht4 (by rw [hyeq]; simp))
+    -- y ∉ wedgeGe 0 e x sx ⇒ azim 严格大
+    have hwedgeGeEq : wedgeGe 0 e x sx = affGe ({(0:V3), e} : Set V3) ({x, sx} : Set V3) :=
+      kchWedgeGeEqAffGe_p35 hazimπ
+        (fun hc => hncXE ((kchCollSwap23_p35 (a := (0:V3)) (b := e) (c := x)).mp hc))
+        (fun hc => hncSE ((kchCollSwap23_p35 (a := (0:V3)) (b := e) (c := sx)).mp hc))
+    have hnotWedge : y ∉ wedgeGe 0 e x sx := by
+      rw [hwedgeGeEq]
+      exact hnotGt
+    rw [wedgeGe, Set.mem_setOf_eq] at hnotWedge
+    rw [← hsx]
+    have hage : 0 ≤ azim 0 e x y := azim_nonneg 0 e x y
+    rcases not_and_or.mp hnotWedge with h1 | h2
+    · exact absurd hage h1
+    · exact lt_of_not_ge h2
+
+/-- PIECE B（FIRST）：HOL `FIRST_AZIM_CYCLE_EQ_RHO_NODE`（local_lemmas.hl:1204；
+LA5:2509；IDENTIFY 面走 `epsFixed_p35` 严格最小唯一化）。 -/
+private theorem kchAzimFirst_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hno2 : ∀ z : V3, z ∈ V → rhoNode1 FF (rhoNode1 FF z) ≠ z)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {U : Set V3}
+    (hU : (fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U)
+    {P : Set V3} (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
+    (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e) :
+    ∀ x : V3, ∀ n : ℕ, x = (rhoNode1 FF)^[n] v → n < l →
+      azimCycle_p3 U 0 e x = rhoNode1 FF x := by
+  have hkeep := hfanL
+  intro x n hxn hnl
+  have hmemV : ∀ m : ℕ, (rhoNode1 FF)^[m] v ∈ V := kchIterInV_p35 hkeep hEE2 hv
+  have hUmem : ∀ m : ℕ, m ≤ l → (rhoNode1 FF)^[m] v ∈ U := by
+    intro m hm; rw [← hU]; exact ⟨m, hm, rfl⟩
+  rw [hxn]
+  set x : V3 := (rhoNode1 FF)^[n] v with hXdef
+  have hxV : x ∈ V := hmemV n
+  have hne : rhoNode1 FF x ≠ x := (kchCharLite_p35 hkeep hEE2 hxV).1
+  have hrhoU : rhoNode1 FF x ∈ U := by
+    rw [← hU]
+    exact ⟨n + 1, Set.mem_Iic.mpr (by omega), Function.iterate_succ_apply' (rhoNode1 FF) n v⟩
+  have hsubU : ¬ (U ⊆ {x}) := by
+    intro hcon
+    exact hne (Set.mem_singleton_iff.mp (hcon hrhoU))
+  refine kchAzimCycleEps_p35 U 0 e x hsubU |>.trans ?_
+  haveI hne3 : Nonempty V3 := ⟨0⟩
+  refine epsFixed_p35 (pr := fun u : V3 => u ≠ x ∧ u ∈ U ∧ ∀ q ∈ U, q ≠ x →
+      azim 0 e x u < azim 0 e x q ∨
+        azim 0 e x u = azim 0 e x q ∧
+          ‖projection (u - 0) (e - 0)‖ ≤ ‖projection (q - 0) (e - 0)‖)
+    (a := rhoNode1 FF x) ?_ ?_
+  · refine ⟨hne, hrhoU, ?_⟩
+    intro q hq hqx
+    by_cases hrq : q = rhoNode1 FF x
+    · rw [hrq]
+      exact Or.inr ⟨rfl, le_refl _⟩
+    · exact Or.inl (kchAzimSuccesor_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he x n rfl hnl
+        q hq hqx hrq)
+  · intro y hy
+    by_cases hyq : y = rhoNode1 FF x
+    · exact hyq
+    · exfalso
+      have hsuc := kchAzimSuccesor_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he x n rfl hnl y
+        hy.2.1 hy.1 hyq
+      rcases hy.2.2 (rhoNode1 FF x) hrhoU hne with h1 | h2
+      · exact lt_asymm hsuc h1
+      · rw [h2.1] at hsuc
+        exact lt_irrefl _ hsuc
+
+/-- PIECE C（SEQUENCE）：HOL `SEQUENCE_OF_RHO_NODE_IS_SUC`（local_lemmas.hl:1270；
+LA5:2552）。 -/
+private theorem kchAzimSequence_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hno2 : ∀ z : V3, z ∈ V → rhoNode1 FF (rhoNode1 FF z) ≠ z)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {U : Set V3}
+    (hU : (fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U)
+    {P : Set V3} (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
+    (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e) :
+    ∀ x : V3, ∀ n : ℕ, x = (rhoNode1 FF)^[n] v → n < l →
+      ∀ y : V3, y ∈ U → y ≠ x → y ≠ rhoNode1 FF x →
+        azim 0 e y x < azim 0 e y (rhoNode1 FF x) := by
+  have hkeep := hfanL
+  intro x n hxn hnl y hyU hyx hyrho
+  have hne0 : e ≠ 0 := by
+    intro hz
+    refine (kchCharLite_p35 hkeep hEE2 hv).2 ?_
+    exact kchCollinear3Cross_p35.mpr (by rw [he, hz])
+  have hdp : 0 < (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) :=
+    kchPosDirect_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he 0 (by omega)
+  have hnc : ∀ z : V3, z ∈ U → ¬ Collinear3 0 e z :=
+    fun z hz => kchNoncolU_p35 hkeep hEE2 hv hU hP h0 hsub he hdp hz
+  have hxU : x ∈ U := by
+    rw [← hU, hxn]
+    exact ⟨n, Set.mem_Iic.mpr (by omega), rfl⟩
+  have hsxU : rhoNode1 FF x ∈ U := by
+    rw [← hU]
+    refine ⟨n + 1, Set.mem_Iic.mpr (by omega), ?_⟩
+    rw [hxn]
+    exact Function.iterate_succ_apply' (rhoNode1 FF) n v
+  have hncx : ¬ Collinear3 0 e x := hnc x hxU
+  have hncsx : ¬ Collinear3 0 e (rhoNode1 FF x) := hnc _ hsxU
+  have hncy : ¬ Collinear3 0 e y := hnc y hyU
+  have hsuc := kchAzimSuccesor_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he x n hxn hnl y
+    hyU hyx hyrho
+  have hsum := sum4_azim_fan (x := (0:V3)) (v := e) (u := x)
+    (w1 := rhoNode1 FF x) (w2 := y) hne0 hncx hncsx hncy hsuc.le
+  -- azim 0 e x (ρx) > 0
+  have hposx : 0 < azim 0 e x (rhoNode1 FF x) := by
+    have hne : azim 0 e x (rhoNode1 FF x) ≠ 0 := by
+      intro hcon
+      have hposF : 0 < (crossProduct ((e : V3) : Fin 3 → ℝ) ((x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+          ((rhoNode1 FF x : V3) : Fin 3 → ℝ) := by
+        have h0 := kchPosDirect_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he n hnl
+        rw [Function.iterate_succ_apply', ← hxn] at h0
+        rw [kchDotCrossCyclic_p35 e x (rhoNode1 FF x), dotProduct_comm]
+        exact h0
+      obtain ⟨t, ht, hsin⟩ := kchCrossDotSmulSin_p35 (u := e) (v := x)
+        (w := rhoNode1 FF x) hne0 hncx
+      rw [hcon, Real.sin_zero] at hsin
+      have hX0 : (crossProduct ((e : V3) : Fin 3 → ℝ) ((x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+          ((rhoNode1 FF x : V3) : Fin 3 → ℝ) = 0 := by
+        rw [hsin, mul_zero]
+      rw [hX0] at hposF
+      exact absurd hposF (by norm_num)
+    exact lt_of_le_of_ne (azim_nonneg 0 e x (rhoNode1 FF x)) (fun hcon => hne hcon.symm)
+  by_cases hmid : azim 0 e (rhoNode1 FF x) y = 0
+  · exfalso
+    rw [hmid, add_zero] at hsum
+    rw [hsum] at hsuc
+    exact lt_irrefl _ hsuc
+  · have hxy0 : azim 0 e x y ≠ 0 :=
+      fun hcon => lt_irrefl _ (lt_of_le_of_lt (azim_nonneg 0 e x (rhoNode1 FF x))
+        (by rwa [hcon] at hsuc))
+    have hayx : azim 0 e y x = 2 * Real.pi - azim 0 e x y := by
+      rw [azim_compl hncx hncy, if_neg hxy0]
+    have haysx : azim 0 e y (rhoNode1 FF x) =
+        2 * Real.pi - azim 0 e (rhoNode1 FF x) y := by
+      rw [azim_compl hncsx hncy, if_neg hmid]
+    rw [hayx, haysx, hsum]
+    linarith
+
+/-- PIECE D（V_AZIM）：HOL `V_AZIM_SMALLEST_ELMS`（local_lemmas.hl:1469；
+LA5:2624）。 -/
+private theorem kchAzimSmallest_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hno2 : ∀ z : V3, z ∈ V → rhoNode1 FF (rhoNode1 FF z) ≠ z)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {U : Set V3}
+    (hU : (fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U)
+    {P : Set V3} (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
+    (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e) {ls : V3}
+    (hls : (rhoNode1 FF)^[l] v = ls)
+    (hlsne : ∀ i : ℕ, i < l → ls ≠ (rhoNode1 FF)^[i] v) :
+    ∀ y : V3, y ∈ U → y ≠ v → y ≠ ls → azim 0 e ls v < azim 0 e ls y := by
+  have hkeep := hfanL
+  intro y hyU hyv hyls
+  have hUmem : ∀ m : ℕ, m ≤ l → (rhoNode1 FF)^[m] v ∈ U := by
+    intro m hm; rw [← hU]; exact ⟨m, hm, rfl⟩
+  have hlsU : ls ∈ U := by rw [← hls]; exact hUmem l (Nat.le_refl l)
+  have hchain : ∀ i : ℕ, 0 < i → i < l →
+      azim 0 e ls v < azim 0 e ls ((rhoNode1 FF)^[i] v) := by
+    intro i
+    induction i with
+    | zero => intro h0; exact absurd h0 (by norm_num)
+    | succ i ih =>
+      intro hi0 hill
+      by_cases hii : i = 0
+      · rw [hii]
+        have h1l : 1 < l := by omega
+        exact kchAzimSequence_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he v 0 rfl (by omega)
+          ls hlsU (hlsne 0 (by omega))
+          (fun hcon => hlsne 1 h1l (by rw [Function.iterate_succ_apply']; exact hcon))
+      · have hilt : i < l := by omega
+        have hprev := ih (by omega) hilt
+        have hstep := kchAzimSequence_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he
+          ((rhoNode1 FF)^[i] v) i rfl hilt ls hlsU (hlsne i hilt)
+          (fun hcon => hlsne (i + 1) (by omega) (by rw [Function.iterate_succ_apply']; exact hcon))
+        rw [Function.iterate_succ_apply']
+        exact lt_trans hprev hstep
+  rw [← hU] at hyU
+  obtain ⟨k, hkle, hyk⟩ := hyU
+  have hkle2 := Set.mem_Iic.mp hkle
+  rcases Nat.eq_zero_or_pos k with hk | hk
+  · rw [hk] at hyk
+    exact (hyv hyk.symm).elim
+  · by_cases hkl : k = l
+    · rw [hkl] at hyk
+      exact (hyls (hyk.symm.trans hls)).elim
+    · rw [← hyk]
+      exact hchain k hk (by omega)
+
+/-- PIECE E（LAST）：HOL `AZIM_LAST_POINT_IN_RHO_SET`（local_lemmas.hl:1566；
+LA5:2668；IDENTIFY 面走 `epsFixed_p35` 严格最小唯一化）。 -/
+private theorem kchAzimLast_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hno2 : ∀ z : V3, z ∈ V → rhoNode1 FF (rhoNode1 FF z) ≠ z)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {U : Set V3}
+    (hU : (fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U)
+    {P : Set V3} (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
+    (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e) {ls : V3}
+    (hls : (rhoNode1 FF)^[l] v = ls)
+    (hlsne : ∀ i : ℕ, i < l → ls ≠ (rhoNode1 FF)^[i] v) :
+    azimCycle_p3 U 0 e ls = v := by
+  have hkeep := hfanL
+  by_cases hl0 : l = 0
+  · have hUv : U = {v} := by
+      rw [← hU, hl0]
+      ext z
+      constructor
+      · rintro ⟨m, hm, hz⟩
+        have hm0 : m = 0 := by
+          have hm2 := Set.mem_Iic.mp hm
+          omega
+        rw [hm0] at hz
+        simpa using hz.symm
+      · intro hz
+        refine ⟨0, Set.mem_Iic.mpr (by omega), ?_⟩
+        simpa using (Set.mem_singleton_iff.mp hz).symm
+    have hvls : ls = v := by simp only [← hls, hl0, Function.iterate_zero_apply]
+    rw [hvls]
+    have hsub2 : U ⊆ {v} := by rw [hUv]
+    rw [azimCycle_p3, if_pos hsub2]
+  · have hUmem : ∀ m : ℕ, m ≤ l → (rhoNode1 FF)^[m] v ∈ U := by
+      intro m hm; rw [← hU]; exact ⟨m, hm, rfl⟩
+    have hvU : v ∈ U := hUmem 0 (by omega)
+    have hvls : v ≠ ls := fun hcon => hlsne 0 (by omega) hcon.symm
+    have hsubU : ¬ (U ⊆ {ls}) := by
+      intro hcon
+      exact hvls (Set.mem_singleton_iff.mp (hcon hvU))
+    refine kchAzimCycleEps_p35 U 0 e ls hsubU |>.trans ?_
+    haveI hne3 : Nonempty V3 := ⟨0⟩
+    refine epsFixed_p35 (pr := fun u : V3 => u ≠ ls ∧ u ∈ U ∧ ∀ q ∈ U, q ≠ ls →
+        azim 0 e ls u < azim 0 e ls q ∨
+          azim 0 e ls u = azim 0 e ls q ∧
+            ‖projection (u - 0) (e - 0)‖ ≤ ‖projection (q - 0) (e - 0)‖)
+      (a := v) ?_ ?_
+    · refine ⟨hvls, hvU, ?_⟩
+      intro q hq hqls
+      by_cases hvq : q = v
+      · rw [hvq]
+        exact Or.inr ⟨rfl, le_refl _⟩
+      · exact Or.inl (kchAzimSmallest_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he hls hlsne
+          q hq hvq hqls)
+    · intro y hy
+      by_cases hyv : y = v
+      · exact hyv
+      · exfalso
+        have hsuc := kchAzimSmallest_p35 hkeep hEE2 hno2 hv hU hP h0 hsub he hls hlsne y
+          hy.2.1 hyv hy.1
+        rcases hy.2.2 v hvU hvls with h1 | h2
+        · exact lt_asymm hsuc h1
+        · rw [h2.1] at hsuc
+          exact lt_irrefl _ hsuc
+
+/-! ### kchmam5 波（ejrcfjd-kchmam5-w1）：hno2（semi-ide）消解两件 + cyclic-set 本体 +
+KOMWBWC 三合取收口
+
+本波落栈 5 件 + W4 六件 hno2 V-限制化（语句形 `∀ z ∈ V, …`；唯一使用点
+kchPosDirect 内 `hno2 px` 补 `hpxV`），全部零 sorry：
+
+1. `kchPermPowIterate_p35`：`Equiv.Perm` 幂 = 函数迭代（hypermap 轨道层 iterate 桥）。
+2. `kchOrbitMapV_p35`（HOL `LOCAL_FAN_ORBIT_MAP_V`，local_lemmas.hl:469；LA5:1272）：
+   LocalFan + 双邻居 ⇒ `∀ v ∈ V, orbitF_p3 (rhoNode1 FF) v = V`。路线（HOL
+   WRGCVDR 面的 p35 重建，免 BIJ_BETWEEN_FF_AND_V）：faceMap 幂 dart 的首坐标按
+   ρ 推进（`kchRhoDet_p35`）+ FF = faceMap-轨道（LocalFan def 展开）+
+   `(v, ρv) ∈ FF`（lfVertKit）⇒ V = witness 首坐标的 ρ-轨道；faceMap 在有限
+   dart 集内置换出正周期（`PermutesOn.pow_ncard_orbitMap_apply_self`）+
+   周期平移不变 ⇒ 轨道与基点无关。
+3. `kchNoTwoV_p35`（HOL `LOCAL_FAN_NOT_TWO_V_IN_E` + `LOCAL_FAN_IMP_NOT_SEMI_IDE`
+   的 p35 面，local_lemmas.hl:441/:671；LA5:1272-1286）：V 限制形 semi-ide
+   `∀ z ∈ V, ρ(ρz) ≠ z`（HOL NOT_SEMI_IDE 本即 V 限制形）。路线：ρ²z = z ⇒
+   轨道 {z, ρz}（kchPeriodMod 2-归约）= V ⇒ V 二元 ρ-圈 ⇒
+   FF = {(z,ρz),(ρz,z)}、dart1OfFan = FF（自环 dart 由 EE 两邻居剔除）⇒
+   CARD dart = 2 而 dih2k 首合取 CARD dart = 2 * CARD FF = 4，矛盾。
+   即 W4 azim 五件 + kchPosDirect 的 `hno2` 前件消解。
+4. `kchPlaneOrth_p35` + `kchLfCyclicSet_p35`（HOL `LOCAL_FAN_IMP_CYCLIC_SET`
+   本体，local_lemmas.hl:534；ORTHONORMAL_CYCLIC 路线 local_lemmas.hl:106）：
+   `cyclicSet_p3 U 0 e` 四合取（0 ≠ e、U 有限、轴向系数消零、U ∩ 轴线 = ∅）；
+   平面正交核 = 混积循环恒等式（kchDotCrossCyclic_p35）+ 平面确定性
+   （kchPlaneDet_p35 已在栈）。l = 0 退化支：U = {v} 单点直驳。
+5. `kchKOMWBWC_face_p35`：KOMWBWC 三合取全收口（kchLfCyclicSet + kchPosDirect +
+   kchAzimFirst + kchAzimLast，hno2 槽 = kchNoTwoV_p35），形
+   `LocalFan → (∀ u ∈ V, EE = 2) → kchKOMWBWC_p35`。
+
+残点交接（kchmam6 总装）：OZQVSFF（ll:2056）独立小波未动；KCHMAMG 总装未动。 -/
+
+/-- `Equiv.Perm` 的幂即函数迭代（hypermap 轨道层的 iterate 桥）。 -/
+private theorem kchPermPowIterate_p35 {α : Type*} (f : Equiv.Perm α) (x : α) (n : ℕ) :
+    (f ^ n) x = f^[n] x := by
+  induction n with
+  | zero => simp
+  | succ k ih =>
+    rw [pow_succ', Equiv.Perm.mul_apply, ih, Function.iterate_succ_apply']
+
+/-- 件1（HOL `LOCAL_FAN_ORBIT_MAP_V`）：ρ-轨道全等于 V。 -/
+private theorem kchOrbitMapV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∀ v : V3, v ∈ V → orbitF_p3 (rhoNode1 FF) v = V := by
+  have hkeep := hfanL
+  obtain ⟨hF, x0, hx0, hFF, -⟩ := hfanL
+  letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
+  set H := Fan.hypermapOfFan 0 V E hF with hHdef
+  have hcoe : (H.darts : Set (V3 × V3)) = Fan.dart1OfFan V E := hypermapOfFan_darts_p35 hF
+  have hFFsub : FF ⊆ Fan.dart1OfFan V E := by
+    rw [hFF, ← hcoe]
+    exact orbitMap_subset_of_permutesOn H.faceMap_permutes hx0
+  have hface1 : ∀ d ∈ Fan.dart1OfFan V E, (H.faceMap d).1 = d.2 := by
+    intro d hd
+    rw [hypermapOfFan_face_apply_p35 hF d, if_pos hd]
+  -- FF 内 dart 首坐标按 ρ 推进
+  have hmemFF : ∀ n : ℕ, H.faceMap^[n] x0 ∈ FF := by
+    intro n
+    rw [hFF]
+    exact ⟨n, kchPermPowIterate_p35 H.faceMap x0 n⟩
+  have hshift : ∀ n : ℕ, (H.faceMap^[n] x0).1 = (rhoNode1 FF)^[n] x0.1 := by
+    intro n
+    induction n with
+    | zero => rfl
+    | succ k ih =>
+      have hd : H.faceMap^[k] x0 ∈ FF := hmemFF k
+      have hstep : H.faceMap^[k + 1] x0 = H.faceMap (H.faceMap^[k] x0) :=
+        Function.iterate_succ_apply' H.faceMap k x0
+      have h2 : (H.faceMap (H.faceMap^[k] x0)).1 = (H.faceMap^[k] x0).2 :=
+        hface1 _ (hFFsub hd)
+      have h3 : (H.faceMap^[k] x0).2 = rhoNode1 FF (H.faceMap^[k] x0).1 :=
+        (kchRhoDet_p35 hkeep hEE2 (by simpa using hd)).symm
+      rw [hstep, h2, h3, ih, Function.iterate_succ_apply']
+  -- V = FF 的首坐标像
+  have hVimg : V = (fun d : V3 × V3 => d.1) '' FF := by
+    ext z
+    constructor
+    · intro hz
+      exact ⟨(z, rhoNode1 FF z), (lfVertKit_p35 hkeep hEE2 hz).1, rfl⟩
+    · rintro ⟨d, hd, rfl⟩
+      exact (kchDartInV_p35 hkeep hd).1
+  -- witness 首（x0.1）的 ρ-轨道即 V
+  have hstage : orbitF_p3 (rhoNode1 FF) x0.1 = V := by
+    ext y
+    constructor
+    · rintro ⟨n, hn⟩
+      rw [hVimg]
+      exact ⟨H.faceMap^[n] x0, hmemFF n, (hshift n).trans hn⟩
+    · intro hy
+      have hd : (y, rhoNode1 FF y) ∈ FF := (lfVertKit_p35 hkeep hEE2 hy).1
+      rw [hFF] at hd
+      obtain ⟨n, hn⟩ := hd
+      refine ⟨n, ?_⟩
+      rw [← hshift n, ← kchPermPowIterate_p35 H.faceMap x0 n, hn]
+  -- faceMap 周期（有限 dart 集）
+  have hOrbFin : (orbitMap H.faceMap x0).Finite := by
+    refine Set.Finite.subset H.darts.finite_toSet ?_
+    exact orbitMap_subset_of_permutesOn H.faceMap_permutes hx0
+  set c := (orbitMap H.faceMap x0).ncard with hcdef
+  have hc0 : 0 < c := (Set.ncard_pos hOrbFin).mpr ⟨x0, ⟨0, by simp⟩⟩
+  have hpow : H.faceMap^[c] x0 = x0 :=
+    (kchPermPowIterate_p35 H.faceMap x0 c).symm.trans
+      (H.faceMap_permutes.pow_ncard_orbitMap_apply_self x0)
+  have hrhoper : (rhoNode1 FF)^[c] x0.1 = x0.1 := by
+    have h1 := congrArg (fun d : V3 × V3 => d.1) hpow
+    rwa [hshift c] at h1
+  -- 轨道平移不变（周期 c）
+  have hshiftorb : ∀ m : ℕ, orbitF_p3 (rhoNode1 FF) ((rhoNode1 FF)^[m] x0.1)
+      = orbitF_p3 (rhoNode1 FF) x0.1 := by
+    intro m
+    ext y
+    constructor
+    · rintro ⟨k, hk⟩
+      exact ⟨k + m, by rw [Function.iterate_add_apply]; exact hk⟩
+    · rintro ⟨n, hn⟩
+      have hmod : m % c < c := Nat.mod_lt m hc0
+      have hdm : m / c * c + m % c = m := Nat.div_add_mod' m c
+      have hsplit : (m / c + 1) * c = m / c * c + c := by ring
+      have hcK : m ≤ (m / c + 1) * c := by omega
+      refine ⟨n + (m / c + 1) * c - m, ?_⟩
+      have hK2 : n + (m / c + 1) * c - m + m = n + (m / c + 1) * c := by omega
+      rw [← Function.iterate_add_apply, hK2, Function.iterate_add_apply,
+        kchPeriodMul_p35 (rhoNode1 FF) hrhoper (m / c + 1)]
+      exact hn
+  intro v hv
+  rw [← hstage] at hv
+  obtain ⟨m, hm⟩ := hv
+  rw [← hm, hshiftorb m, hstage]
+
+/-- 件2（HOL `LOCAL_FAN_NOT_TWO_V_IN_E` + `LOCAL_FAN_IMP_NOT_SEMI_IDE` 的 p35 面）：
+V 限制形 semi-ide —— W4 azim 五件与 kchPosDirect 的 `hno2` 前件即此。 -/
+private theorem kchNoTwoV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∀ z : V3, z ∈ V → rhoNode1 FF (rhoNode1 FF z) ≠ z := by
+  have hkeep := hfanL
+  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
+  letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
+  obtain ⟨hcard, -, -, -, -⟩ := hdih
+  have hVE : (⋃₀ E) ⊆ V := hF.1
+  intro z hzV hcon
+  have hane : rhoNode1 FF z ≠ z := (kchCharLite_p35 hkeep hEE2 hzV).1
+  have haV : rhoNode1 FF z ∈ V := kchIterInV_p35 hkeep hEE2 hzV 1
+  -- ρ²z = z ⇒ 迭代 2-周期归约
+  have hfix2 : (rhoNode1 FF)^[2] z = z := hcon
+  have hmem2 : ∀ k : ℕ, (rhoNode1 FF)^[k] z ∈ ({z, rhoNode1 FF z} : Set V3) := by
+    intro k
+    rcases Nat.mod_two_eq_zero_or_one k with h | h
+    · rw [kchPeriodMod_p35 (rhoNode1 FF) hfix2 k, h]
+      exact Set.mem_insert _ _
+    · rw [kchPeriodMod_p35 (rhoNode1 FF) hfix2 k, h]
+      exact Set.mem_insert_of_mem _ rfl
+  -- V = {z, ρz}
+  have hV2 : V = ({z, rhoNode1 FF z} : Set V3) := by
+    have horb := kchOrbitMapV_p35 hkeep hEE2 z hzV
+    ext y
+    constructor
+    · intro hy
+      rw [← horb] at hy
+      obtain ⟨k, hk⟩ := hy
+      rw [← hk]
+      exact hmem2 k
+    · intro hy
+      rw [← horb]
+      rcases Set.mem_insert_iff.mp hy with h | h
+      · exact ⟨0, h.symm⟩
+      · exact ⟨1, h.symm⟩
+  -- FF = 两个 dart
+  have hfwd : (z, rhoNode1 FF z) ∈ FF := (lfVertKit_p35 hkeep hEE2 hzV).1
+  have hbwd : (rhoNode1 FF z, z) ∈ FF := by
+    have h1 := (lfVertKit_p35 hkeep hEE2 haV).1
+    rwa [hcon] at h1
+  have hne2 : (z, rhoNode1 FF z) ≠ (rhoNode1 FF z, z) := by
+    intro hh
+    exact hane (congrArg Prod.fst hh).symm
+  have hneIns : (z, rhoNode1 FF z) ∉ ({(rhoNode1 FF z, z)} : Set (V3 × V3)) := by
+    intro hh
+    exact hne2 (Set.mem_singleton_iff.mp hh)
+  have hFFeq : FF = ({(z, rhoNode1 FF z), (rhoNode1 FF z, z)} : Set (V3 × V3)) := by
+    ext d
+    constructor
+    · intro hd
+      obtain ⟨d1, d2⟩ := d
+      have h1 := kchDartInV_p35 hkeep hd
+      have h2 := kchDartNonColl_p35 hkeep hd
+      have h3 : d1 ≠ d2 := by
+        intro hcc
+        refine h2 ?_
+        rw [hcc]
+        simpa using collinear_pair ℝ (0:V3) d2
+      have h4 : d1 ∈ ({z, rhoNode1 FF z} : Set V3) := by rw [← hV2]; exact h1.1
+      have h5 : d2 ∈ ({z, rhoNode1 FF z} : Set V3) := by rw [← hV2]; exact h1.2
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h4 h5
+      rcases h4 with h4 | h4 <;> rcases h5 with h5 | h5
+      · exact absurd (h4.trans h5.symm) h3
+      · rw [h4, h5]
+        exact Set.mem_insert _ _
+      · rw [h4, h5]
+        exact Set.mem_insert_of_mem _ (Set.mem_singleton _)
+      · exact absurd (h5.trans h4.symm).symm h3
+    · rintro (h | h)
+      · rw [h]
+        exact hfwd
+      · rw [Set.mem_singleton_iff.mp h]
+        exact hbwd
+  -- 自环 dart 剔除（EE 两邻居）
+  have hzNE : (z:V3) ∉ EE_p3 z E := by
+    rw [(lfVertKit_p35 hkeep hEE2 hzV).2.2.2.2.1]
+    intro hmem
+    rcases Set.mem_insert_iff.mp hmem with h | h
+    · exact hane h.symm
+    · have hiv : rhoNode1 FF (ivsRhoNode1 FF z) = z := (lfVertKit_p35 hkeep hEE2 hzV).2.2.1
+      rw [← h] at hiv
+      exact hane hiv
+  have hEEa : EE_p3 (rhoNode1 FF z) E = {z, ivsRhoNode1 FF (rhoNode1 FF z)} := by
+    have h := (lfVertKit_p35 hkeep hEE2 haV).2.2.2.2.1
+    rwa [hcon] at h
+  have haNE : rhoNode1 FF z ∉ EE_p3 (rhoNode1 FF z) E := by
+    rw [hEEa]
+    intro hmem
+    rcases Set.mem_insert_iff.mp hmem with h | h
+    · exact hane h
+    · have hiv : rhoNode1 FF (ivsRhoNode1 FF (rhoNode1 FF z)) = rhoNode1 FF z :=
+        (lfVertKit_p35 hkeep hEE2 haV).2.2.1
+      rw [← h] at hiv
+      exact hane (hiv.symm.trans hcon)
+  have hcoe : ((Fan.hypermapOfFan 0 V E hF).darts : Set (V3 × V3)) = Fan.dart1OfFan V E :=
+    hypermapOfFan_darts_p35 hF
+  have hFFsub : FF ⊆ Fan.dart1OfFan V E := by
+    rw [hFF, ← hcoe]
+    exact orbitMap_subset_of_permutesOn (Fan.hypermapOfFan 0 V E hF).faceMap_permutes hx0
+  -- dart1OfFan = FF
+  have hdart1 : Fan.dart1OfFan V E = FF := by
+    refine Set.Subset.antisymm ?_ hFFsub
+    intro d hd
+    obtain ⟨d1, d2⟩ := d
+    rw [Fan.dart1OfFan, Set.mem_setOf_eq] at hd
+    have h1 : d1 ∈ V := hVE (Set.mem_sUnion_of_mem (Set.mem_insert _ _) hd)
+    have h2 : d2 ∈ V := hVE (Set.mem_sUnion_of_mem
+      (Set.mem_insert_of_mem _ (Set.mem_singleton _)) hd)
+    have hdne : d1 ≠ d2 := by
+      intro hcc
+      rw [hcc] at hd
+      have hd2 : ({d2, d2} : Set V3) ∈ E := by simpa using hd
+      have hm : d2 ∈ EE_p3 d2 E := by
+        show ({d2, d2} : Set V3) ∈ E
+        exact hd2
+      rw [(lfVertKit_p35 hkeep hEE2 h2).2.2.2.2.1] at hm
+      rcases Set.mem_insert_iff.mp hm with h | h
+      · exact (kchCharLite_p35 hkeep hEE2 h2).1 h.symm
+      · have hiv : rhoNode1 FF (ivsRhoNode1 FF d2) = d2 :=
+          (lfVertKit_p35 hkeep hEE2 h2).2.2.1
+        rw [← h] at hiv
+        exact (kchCharLite_p35 hkeep hEE2 h2).1 hiv
+    have h4 : d1 ∈ ({z, rhoNode1 FF z} : Set V3) := by rw [← hV2]; exact h1
+    have h5 : d2 ∈ ({z, rhoNode1 FF z} : Set V3) := by rw [← hV2]; exact h2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h4 h5
+    rw [hFFeq]
+    rcases h4 with h4 | h4 <;> rcases h5 with h5 | h5
+    · exact absurd (h4.trans h5.symm) hdne
+    · rw [h4, h5]
+      exact Set.mem_insert _ _
+    · rw [h4, h5]
+      exact Set.mem_insert_of_mem _ (Set.mem_singleton _)
+    · exact absurd (h5.trans h4.symm).symm hdne
+  -- 计数矛盾：CARD dart = 2 * CARD FF（dih2k 首合取）
+  have hFFcard : FF.ncard = 2 := by
+    rw [hFFeq, Set.ncard_insert_of_notMem hneIns, Set.ncard_singleton]
+  have h1 : ((Fan.hypermapOfFan 0 V E hF).darts : Set (V3 × V3)).ncard = 2 := by
+    have h2s : ((Fan.hypermapOfFan 0 V E hF).darts : Set (V3 × V3))
+        = ({(z, rhoNode1 FF z), (rhoNode1 FF z, z)} : Set (V3 × V3)) := by
+      rw [hypermapOfFan_darts_p35 hF, hdart1]
+      exact hFFeq
+    rw [h2s, Set.ncard_insert_of_notMem hneIns, Set.ncard_singleton]
+  rw [Set.ncard_coe_finset (Fan.hypermapOfFan 0 V E hF).darts] at h1
+  rw [h1] at hcard
+  rw [hFFcard] at hcard
+  norm_num at hcard
+
+/-- 平面正交核：span{v,w} 内向量与轴 v×w 垂直（cyclic-set 的两合取共用）。 -/
+private theorem kchPlaneOrth_p35 (s t : ℝ) (cv cw : Fin 3 → ℝ) :
+    (s • cv + t • cw) ⬝ᵥ (crossProduct cv cw) = 0 := by
+  rw [add_dotProduct, smul_dotProduct, smul_dotProduct]
+  have hv : cv ⬝ᵥ (crossProduct cv cw) = 0 := by
+    rw [← cross_anticomm cw cv, dotProduct_neg, dotProduct_comm,
+      kchDotCrossCyclic_p35 cw cv cv, kchCrossSelf0_p35 cv, dotProduct_zero]
+    norm_num
+  have hw : cw ⬝ᵥ (crossProduct cv cw) = 0 := by
+    have hcc : cw ⬝ᵥ (crossProduct cv cw)
+        = (crossProduct cv cw) ⬝ᵥ cw := dotProduct_comm _ _
+    rw [hcc, kchDotCrossCyclic_p35 cv cw cw, kchCrossSelf0_p35 cw, dotProduct_zero]
+  rw [hv, hw]
+  ring
+
+/-- 件3（HOL `LOCAL_FAN_IMP_CYCLIC_SET` 本体；ORTHONORMAL_CYCLIC 路线）：
+cyclicSet_p3 U 0 e 四合取。 -/
+private theorem kchLfCyclicSet_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {U : Set V3}
+    (hU : (fun n : ℕ => (rhoNode1 FF)^[n] v) '' Set.Iic l = U)
+    {P : Set V3} (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
+    (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v : V3) : Fin 3 → ℝ)) : V3) = e) :
+    cyclicSet_p3 U 0 e := by
+  have hkeep := hfanL
+  have hmemV : ∀ n : ℕ, (rhoNode1 FF)^[n] v ∈ V := kchIterInV_p35 hfanL hEE2 hv
+  have hUmem : ∀ n : ℕ, n ≤ l → (rhoNode1 FF)^[n] v ∈ U := by
+    intro n hn; rw [← hU]; exact ⟨n, hn, rfl⟩
+  have hVne0 : ∀ w : V3, w ∈ V → w ≠ (0:V3) := fun w hw he2 => hfanL.1.2.2.2.1 (he2 ▸ hw)
+  have hne0 : e ≠ 0 := by
+    intro hzc
+    refine (kchCharLite_p35 hkeep hEE2 hv).2 ?_
+    exact kchCollinear3Cross_p35.mpr (by rw [he, hzc])
+  have hcene : ((e : V3) : Fin 3 → ℝ) ≠ 0 := by
+    intro hcc
+    exact hne0 (kchCoeInj_p35 (hcc.trans kchCoeZero_p35.symm))
+  have hcedot : 0 < ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) :=
+    kchDotSelfPos_p35 hcene
+  have hecoe : ((e : V3) : Fin 3 → ℝ)
+      = crossProduct ((v : V3) : Fin 3 → ℝ) ((rhoNode1 FF v : V3) : Fin 3 → ℝ) := by
+    rw [← he]
+  have hv0 : ((v : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+    rw [hecoe]; simpa using kchPlaneOrth_p35 (1:ℝ) 0 _ _
+  have hw0 : ((rhoNode1 FF v : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+    rw [hecoe]; simpa using kchPlaneOrth_p35 (0:ℝ) (1:ℝ) _ _
+  have hUfin : U.Finite := by
+    rw [← hU]
+    refine Set.Finite.subset (Finset.finite_toSet
+      ((Finset.range (l + 1)).image fun n : ℕ => (rhoNode1 FF)^[n] v)) ?_
+    rintro y ⟨n, hn, rfl⟩
+    have hnle : n ≤ l := Set.mem_Iic.mp hn
+    exact Finset.mem_image.mpr ⟨n, Finset.mem_range.mpr (by omega), rfl⟩
+  refine ⟨hne0.symm, hUfin, ?_, ?_⟩
+  · -- 轴向系数消零
+    intro p hp q hq h hpq
+    by_cases hl0 : l = 0
+    · -- l = 0：U = {v}，p = q = v
+      have hz1 : p = v := by
+        rw [← hU, hl0] at hp
+        obtain ⟨k, hkle, hzk⟩ := hp
+        have hk0 : k = 0 := by have := Set.mem_Iic.mp hkle; omega
+        rw [hk0] at hzk
+        simpa using hzk.symm
+      have hz2 : q = v := by
+        rw [← hU, hl0] at hq
+        obtain ⟨k, hkle, hzk⟩ := hq
+        have hk0 : k = 0 := by have := Set.mem_Iic.mp hkle; omega
+        rw [hk0] at hzk
+        simpa using hzk.symm
+      exact hz1.trans hz2.symm
+    · -- l ≥ 1：平面确定性 + 正交消零
+      have hvP : v ∈ P := hsub (hUmem 0 (by omega))
+      have hrhoP : rhoNode1 FF v ∈ P := hsub (hUmem 1 (by omega))
+      have hncVR : ¬ Collinear ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) :=
+        (kchCharLite_p35 hkeep hEE2 hv).2
+      have hsub0 : ({(0:V3), v, rhoNode1 FF v} : Set V3) ⊆ P := by
+        intro w hw
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+        rcases hw with rfl | hw
+        · exact h0
+        · rcases hw with rfl | rfl
+          · exact hvP
+          · exact hrhoP
+      have hspan : affineSpan ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) = P :=
+        kchPlaneDet_p35 hP hsub0 hncVR
+      have hdec : ∀ u ∈ U, ∃ s t : ℝ, u = s • v + t • rhoNode1 FF v := by
+        intro u hu
+        have huP : u ∈ P := hsub hu
+        rw [← hspan] at huP
+        exact kchPosAffSpanOrigin_p35 huP
+      obtain ⟨s1, t1, h1⟩ := hdec p hp
+      obtain ⟨s2, t2, h2⟩ := hdec q hq
+      have hpq1 : ((p : V3) : Fin 3 → ℝ)
+          = s1 • ((v : V3) : Fin 3 → ℝ) + t1 • ((rhoNode1 FF v : V3) : Fin 3 → ℝ) := by
+        rw [h1]; rfl
+      have hpq2 : ((q : V3) : Fin 3 → ℝ)
+          = s2 • ((v : V3) : Fin 3 → ℝ) + t2 • ((rhoNode1 FF v : V3) : Fin 3 → ℝ) := by
+        rw [h2]; rfl
+      have hsub' : ((p - q : V3) : Fin 3 → ℝ)
+          = (s1 - s2) • ((v : V3) : Fin 3 → ℝ)
+            + (t1 - t2) • ((rhoNode1 FF v : V3) : Fin 3 → ℝ) := by
+        rw [kchCoeSub_p35, hpq1, hpq2]
+        module
+      have hpm : ((p - q : V3) : Fin 3 → ℝ)
+          = h • (((0:V3) - e : V3) : Fin 3 → ℝ) :=
+        congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hpq
+      have hde : (((0:V3) - e : V3) : Fin 3 → ℝ)
+          = (0 : Fin 3 → ℝ) - ((e : V3) : Fin 3 → ℝ) := by
+        rw [kchCoeSub_p35, kchCoeZero_p35]
+      have hce0 : ((p - q : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+        rw [hsub', add_dotProduct, smul_dotProduct, smul_dotProduct, hv0, hw0]
+        ring
+      have hzero' : ((p - q : V3) : Fin 3 → ℝ) ⬝ᵥ (((0:V3) - e : V3) : Fin 3 → ℝ) = 0 := by
+        rw [hde, dotProduct_sub, dotProduct_zero, hce0, sub_zero]
+      have h2 : ((p - q : V3) : Fin 3 → ℝ) ⬝ᵥ (((0:V3) - e : V3) : Fin 3 → ℝ)
+          = h * ((((0:V3) - e : V3) : Fin 3 → ℝ) ⬝ᵥ
+            (((0:V3) - e : V3) : Fin 3 → ℝ)) := by
+        rw [hpm, smul_dotProduct, smul_eq_mul]
+      have hmul : h * ((((0:V3) - e : V3) : Fin 3 → ℝ) ⬝ᵥ
+          (((0:V3) - e : V3) : Fin 3 → ℝ)) = 0 := by
+        rw [← h2, hzero']
+      have hdepos : 0 < (((0:V3) - e : V3) : Fin 3 → ℝ)
+            ⬝ᵥ (((0:V3) - e : V3) : Fin 3 → ℝ) := by
+        rw [hde, zero_sub, dotProduct_neg, dotProduct_comm, dotProduct_neg, neg_neg]
+        exact hcedot
+      have hh0 : h = 0 := by
+        rcases mul_eq_zero.mp hmul with h0 | h0
+        · exact h0
+        · exact absurd h0 hdepos.ne'
+      rw [hh0, zero_smul] at hpq
+      exact sub_eq_zero.mp hpq
+  · -- U ∩ 轴线 = ∅
+    refine Set.eq_empty_iff_forall_notMem.mpr ?_
+    rintro z ⟨hzU, hzL⟩
+    have hzL2 : z ∈ affineSpan ℝ ({(0:V3), e, (0:V3)} : Set V3) := by
+      have hsub3 : ({(0:V3), e} : Set V3) ⊆ ({(0:V3), e, (0:V3)} : Set V3) := by
+        intro w hw
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw ⊢
+        tauto
+      exact affineSpan_mono ℝ hsub3 hzL
+    have hzV2 : z ∈ V := by
+      rw [← hU] at hzU
+      obtain ⟨k, -, hzk⟩ := hzU
+      rw [← hzk]
+      exact hmemV k
+    have hzP : z ∈ P := hsub hzU
+    by_cases hl0 : l = 0
+    · -- l = 0：z = v，v ∈ 轴线 ⇒ 正交矛盾
+      have hzv : z = v := by
+        rw [← hU, hl0] at hzU
+        obtain ⟨k, hkle, hzk⟩ := hzU
+        have hk0 : k = 0 := by have := Set.mem_Iic.mp hkle; omega
+        rw [hk0] at hzk
+        simpa using hzk.symm
+      obtain ⟨s, t, hs⟩ := kchPosAffSpanOrigin_p35 (a := e) (b := (0:V3)) hzL2
+      have hzse : z = s • e := by rw [hs]; simp
+      have hA : ((z : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+        rw [hzv]; exact hv0
+      have hB : ((z : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)
+          = s * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) := by
+        rw [hzse, kchCoeSmul_p35, smul_dotProduct, smul_eq_mul]
+      have hs0 : s = 0 := by
+        have hprod := hA.symm.trans hB
+        rcases mul_eq_zero.mp hprod.symm with h | h
+        · exact h
+        · exact absurd h hcedot.ne'
+      rw [hs0, zero_smul] at hzse
+      exact absurd (by rw [hzse] : z = (0:V3)) (hVne0 z hzV2)
+    · -- l ≥ 1：z ∈ P = affSpan{0,v,ρv} 且 z ∈ 轴线 ⇒ z = 0
+      have hvP : v ∈ P := hsub (hUmem 0 (by omega))
+      have hrhoP : rhoNode1 FF v ∈ P := hsub (hUmem 1 (by omega))
+      have hncVR : ¬ Collinear ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) :=
+        (kchCharLite_p35 hkeep hEE2 hv).2
+      have hsub0 : ({(0:V3), v, rhoNode1 FF v} : Set V3) ⊆ P := by
+        intro w hw
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+        rcases hw with rfl | hw
+        · exact h0
+        · rcases hw with rfl | rfl
+          · exact hvP
+          · exact hrhoP
+      have hspan : affineSpan ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) = P :=
+        kchPlaneDet_p35 hP hsub0 hncVR
+      obtain ⟨s1, t1, h1⟩ := by
+        have hzP2 : z ∈ (affineSpan ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) : Set V3) := by
+          rw [hspan]; exact hzP
+        exact kchPosAffSpanOrigin_p35 (a := v) (b := rhoNode1 FF v) hzP2
+      obtain ⟨s, t, hs⟩ := kchPosAffSpanOrigin_p35 (a := e) (b := (0:V3)) hzL2
+      have hzse : z = s • e := by rw [hs]; simp
+      have hA : ((z : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+        have hzcoe : ((z : V3) : Fin 3 → ℝ)
+            = s1 • ((v : V3) : Fin 3 → ℝ) + t1 • ((rhoNode1 FF v : V3) : Fin 3 → ℝ) := by
+          rw [h1]; rfl
+        rw [hzcoe, add_dotProduct, smul_dotProduct, smul_dotProduct, hv0, hw0]
+        ring
+      have hB : ((z : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)
+          = s * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) := by
+        rw [hzse, kchCoeSmul_p35, smul_dotProduct, smul_eq_mul]
+      have hs0 : s = 0 := by
+        have hprod := hA.symm.trans hB
+        rcases mul_eq_zero.mp hprod.symm with h | h
+        · exact h
+        · exact absurd h hcedot.ne'
+      rw [hs0, zero_smul] at hzse
+      exact absurd (by rw [hzse] : z = (0:V3)) (hVne0 z hzV2)
+
+/-- 件4：KOMWBWC 三合取全收口（cyclic-set + pos-direct + azim FIRST/LAST；
+hno2 槽 = kchNoTwoV_p35）。 -/
+private theorem kchKOMWBWC_face_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    kchKOMWBWC_p35 := by
+  intro V E FF hfanL hEE2 v hv l U hU P hP h0 hsub e he
+  refine ⟨kchLfCyclicSet_p35 hfanL hEE2 hv hU hP h0 hsub he, ?_, ?_⟩
+  · intro i hi
+    refine ⟨kchPosDirect_p35 hfanL hEE2 (kchNoTwoV_p35 hfanL hEE2) hv hU hP h0 hsub he i hi,
+      ?_⟩
+    intro x n hxn hnl
+    exact kchAzimFirst_p35 hfanL hEE2 (kchNoTwoV_p35 hfanL hEE2) hv hU hP h0 hsub he x n
+      hxn hnl
+  · intro ls hls hlsne
+    exact kchAzimLast_p35 hfanL hEE2 (kchNoTwoV_p35 hfanL hEE2) hv hU hP h0 hsub he hls
+      hlsne
+
+/-! ### suffix M2+FIN final state (LA35Sfx31u lines 11..; 28 duplicates skipped) -/
+
+/-! ## KCHMAMG 总装波（ejrcfjd-kchmam6-w1）：hlsne 桥 + arcV/dihV 桥 + KCHMAMG_thm_p35
+
+HOL `KCHMAMG`（local_lemmas.hl:3197）总装。W5 交接路线落地形：
+
+1. `kchCardFFeqV_p35`：`FF.ncard = V.ncard`（`v ↦ (v, ρv)` 的 V→FF 像集实现：
+   满射 = lfVertKit_p35.1，FF 内 dart 次坐标 = ρ 首坐标（kchRhoDet_p35），
+   `Set.InjOn.ncard_image` 收卡——W5 交接注记的「fst 双向」）。
+2. `kchHlsneOfCard_p35`（W5 交接注记的 `l < CARD FF ⟹ hlsne` 桥）：
+   轨道周期 p = V.ncard = FF.ncard（kchOrbitCycle_p35 + 件1），
+   `i < l < p ⟹ ls = ρ^[l] v ≠ ρ^[i] v`（kchOrbitCycle 两两相异输出）。
+3. `kchArcVScale_p35` / `kchDihvEqArcV_p35`：LA5 `WHEN_A_B_POS_ARCV_STABLE`
+   （trig2.hl:2665，LA5:5711）与 `la5_dihv_eq_arcv`（LA5:5724）的 `_p3`
+   API 转写：正数缩放消去 + `dihV 0 e x y = arcV 0 x y`（x, y ⊥ e 且 e·e > 0）。
+4. `kchCrossTriple_p35`：HOL `CROSS_TRIPLE`（KCHMAMG :3437 消费形）
+   `(e × x) ⬝ y = (x × y) ⬝ e`。
+5. `KCHMAMG_thm_p35`（public 总装定理）：`LocalFan + hEE2 + 半圈输入面
+   （V 落在过 0 平面 P + 内角平角面）⟹ KCHMAMG 结论体`（即 `KCHMAMG_p35`
+   去掉 `ConvexLocalFan → Circular →` 前件的结论形）。装配路：
+   kchOrbitMapV_p35 → kchOrbitCycle_p35 取周期 p，U = V（Iic p 像；
+   ρ^[p] v = v 使 `n ≤ p` 像 = `n < p` 像），kchKOMWBWC_face_p35 在
+   `l = p` 处整圈收口——pos 面覆盖含回边 `(ρ^[p-1]v, v)` 的全部 p 条环边、
+   azimCycle 面由前件直覆盖全体点，**免末点合取**（故免 hlsne；桥件2独立
+   落栈备用）。azim < π 由 kchSinAzimCrossSign_p35 反证（JBDNJJB 面）；
+   azim = dihV 由 `azim_dihv_same`（Kepler.Geom，非共线面 =
+   kchNotCollinear3_of_cyclicSet_p35）；azim = arcV 由件3（⊥e 面 =
+   kchCrossDotZero_of_mem_p35 + V ⊆ P + 平面重合 kchPlaneDet_p35）。
+   未闭两槽（OZQVSFF 链，LA5 `_p2` 版即 la5_interior_angle_pi，≈150+ 行
+   独立波）以半圈输入面显式承入：`hplane`（A = P 槽 + V ⊆ A 槽 +
+   ⊥e 面输入）与 `hint`（interiorAngle1 = π 槽）。
+-/
+
+/-- 轴向 cross 置换（HOL `CROSS_TRIPLE` 的消费形态）：
+`(e × x) ⬝ y = (x × y) ⬝ e`。 -/
+private theorem kchCrossTriple_p35 (e x y : Fin 3 → ℝ) :
+    (crossProduct e x) ⬝ᵥ y = (crossProduct x y) ⬝ᵥ e := by
+  rw [dotProduct_comm, triple_product_permutation y e x, dotProduct_comm]
+
+/-- `FF.ncard = V.ncard`（W5 交接注记的 fst 双向：`v ↦ (v, ρv)` 的 V→FF
+像集实现——满射 = lfVertKit_p35.1，FF 内 dart 次坐标 = ρ 首坐标
+（kchRhoDet_p35），`Set.InjOn.ncard_image` 收卡）。 -/
+private theorem kchCardFFeqV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    FF.ncard = V.ncard := by
+  have hFFimg : FF = (fun v : V3 => (v, rhoNode1 FF v)) '' V := by
+    ext d
+    constructor
+    · intro hd
+      refine ⟨d.1, (kchDartInV_p35 hfanL hd).1, ?_⟩
+      show (d.1, rhoNode1 FF d.1) = d
+      rw [kchRhoDet_p35 hfanL hEE2 hd]
+    · rintro ⟨v, hv, rfl⟩
+      exact (lfVertKit_p35 hfanL hEE2 hv).1
+  have hInj : Set.InjOn (fun v : V3 => (v, rhoNode1 FF v)) V := by
+    intro a _ b _ hcon
+    exact congrArg Prod.fst hcon
+  rw [hFFimg, Set.InjOn.ncard_image hInj]
+
+/-- **hlsne 桥**（W5 交接注记：`l < CARD FF ⟹ hlsne`）：轨道周期
+p = V.ncard = FF.ncard（kchOrbitCycle_p35 + kchCardFFeqV_p35），两两相异
+输出给 `i < l < p ⟹ ρ^[l] v ≠ ρ^[i] v`。 -/
+private theorem kchHlsneOfCard_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v : V3} (hv : v ∈ V) {l : ℕ} {ls : V3} (hlt : l < FF.ncard)
+    (hls : (rhoNode1 FF)^[l] v = ls) :
+    ∀ i : ℕ, i < l → ls ≠ (rhoNode1 FF)^[i] v := by
+  obtain ⟨p, -, -, hpdis, -, hpcard⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (kchOrbitMapV_p35 hfanL hEE2) hv
+  rw [kchCardFFeqV_p35 hfanL hEE2, hpcard] at hlt
+  intro i hi
+  rw [← hls]
+  exact Ne.symm (hpdis i l hi hlt)
+
+/-- LA5 `WHEN_A_B_POS_ARCV_STABLE`（trig2.hl:2665；LA5:5711）转写：
+正数缩放任一自变元不改变 `arcV 0 _ _`。 -/
+private theorem kchArcVScale_p35 {a b : ℝ} {x y : V3} (ha : 0 < a) (hb : 0 < b) :
+    arcV 0 x y = arcV 0 (a • x) (b • y) := by
+  have hcoe : ∀ z : V3, (((z - (0:V3) : V3)) : Fin 3 → ℝ) = ((z : V3) : Fin 3 → ℝ) := by
+    intro z; rw [kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+  have hsm : ∀ (s : ℝ) (z : V3),
+      (((s • z - (0:V3) : V3)) : Fin 3 → ℝ) = s • ((z : V3) : Fin 3 → ℝ) := by
+    intro s z; rw [hcoe, kchCoeSmul_p35]
+  have harg : (((x - (0:V3) : V3)) ⬝ᵥ ((y - (0:V3) : V3)))
+        / (dist x (0:V3) * dist y (0:V3))
+      = (((a • x - (0:V3) : V3)) ⬝ᵥ ((b • y - (0:V3) : V3)))
+        / (dist (a • x) (0:V3) * dist (b • y) (0:V3)) := by
+    have hd1 : dist (a • x) (0:V3) = a * dist x (0:V3) := by
+      rw [dist_zero_right, dist_zero_right, norm_smul, Real.norm_eq_abs, abs_of_pos ha]
+    have hd2 : dist (b • y) (0:V3) = b * dist y (0:V3) := by
+      rw [dist_zero_right, dist_zero_right, norm_smul, Real.norm_eq_abs, abs_of_pos hb]
+    rw [hd1, hd2]
+    have hnum : (((a • x - (0:V3) : V3)) ⬝ᵥ ((b • y - (0:V3) : V3)))
+        = a * b * (((x - (0:V3) : V3)) ⬝ᵥ ((y - (0:V3) : V3))) := by
+      show (((a • x - (0:V3) : V3)) : Fin 3 → ℝ) ⬝ᵥ
+          (((b • y - (0:V3) : V3)) : Fin 3 → ℝ)
+          = a * b * ((((x - (0:V3) : V3)) : Fin 3 → ℝ) ⬝ᵥ
+            (((y - (0:V3) : V3)) : Fin 3 → ℝ))
+      rw [hsm a x, hsm b y, hcoe x, hcoe y, smul_dotProduct, dotProduct_smul,
+        smul_eq_mul, smul_eq_mul]
+      ring
+    rw [hnum]
+    by_cases hden : dist x (0:V3) * dist y (0:V3) = 0
+    · rcases mul_eq_zero.mp hden with h | h
+      · have hx0 : x = 0 := dist_eq_zero.mp h
+        have hz : (((x - (0:V3) : V3)) ⬝ᵥ ((y - (0:V3) : V3))) = 0 := by
+          show (((x - (0:V3) : V3)) : Fin 3 → ℝ) ⬝ᵥ
+            (((y - (0:V3) : V3)) : Fin 3 → ℝ) = 0
+          rw [hx0, kchCoeSub_p35, kchCoeSub_p35, kchCoeZero_p35, sub_zero, sub_zero,
+            dotProduct_comm, dotProduct_zero]
+        rw [hz]
+        norm_num
+      · have hy0 : y = 0 := dist_eq_zero.mp h
+        have hz : (((x - (0:V3) : V3)) ⬝ᵥ ((y - (0:V3) : V3))) = 0 := by
+          show (((x - (0:V3) : V3)) : Fin 3 → ℝ) ⬝ᵥ
+            (((y - (0:V3) : V3)) : Fin 3 → ℝ) = 0
+          rw [hy0, kchCoeSub_p35, kchCoeSub_p35, kchCoeZero_p35, sub_zero, sub_zero,
+            dotProduct_zero]
+        rw [hz]
+        norm_num
+    · field_simp
+  rw [arcV, arcV]
+  exact congrArg Real.arccos harg
+
+/-- `dihV 0 Ex x y = arcV 0 x y`：底矢 Ex 与两点正交且自点积为正
+（LA5 `la5_dihv_eq_arcv`，LocalAuto5.lean:5724，`_p3` API 转写）。 -/
+private theorem kchDihvEqArcV_p35 {Ex x y : V3}
+    (hxe : ((x : V3) : Fin 3 → ℝ) ⬝ᵥ ((Ex : V3) : Fin 3 → ℝ) = 0)
+    (hye : ((y : V3) : Fin 3 → ℝ) ⬝ᵥ ((Ex : V3) : Fin 3 → ℝ) = 0)
+    (hE : 0 < ((Ex : V3) : Fin 3 → ℝ) ⬝ᵥ ((Ex : V3) : Fin 3 → ℝ)) :
+    dihV 0 Ex x y = arcV 0 x y := by
+  have hxeV : ((x : V3) ⬝ᵥ (Ex : V3)) = 0 := by
+    show ((x : V3) : Fin 3 → ℝ) ⬝ᵥ ((Ex : V3) : Fin 3 → ℝ) = 0
+    exact hxe
+  have hyeV : ((y : V3) ⬝ᵥ (Ex : V3)) = 0 := by
+    show ((y : V3) : Fin 3 → ℝ) ⬝ᵥ ((Ex : V3) : Fin 3 → ℝ) = 0
+    exact hye
+  simp only [dihV, hxeV, hyeV, zero_smul, sub_zero]
+  exact (kchArcVScale_p35 hE hE).symm
+
+set_option Elab.async false in
+set_option maxHeartbeats 10000000 in
+/- **KCHMAMG azim 四合取助手**（总装的 per-vertex 槽封装）：给定 KOMWBWC
+在基点 `x0.1` 处的整圈收口输出（cyclic 集 + `∀ i < p` pos/azimCycle 面）与
+周期 `p`、平面重合面、轴定义，出每个环点的
+`azimCycle = ρ`、`azim = dihV`、`azim = arcV`、`azim < π` 四合取。 -/
+
+private theorem kchAzimQuad_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {x0 : V3 × V3} {p : ℕ} {P : Set V3} {e : V3}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv0 : x0.1 ∈ V) (hcy : cyclicSet_p3 V 0 e) (hpos : ∀ i : ℕ, i < p →
+      0 < ((WithLp.toLp 2 (crossProduct
+          (((rhoNode1 FF)^[i] x0.1 : V3) : Fin 3 → ℝ)
+          (((rhoNode1 FF)^[i + 1] x0.1 : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ
+        ((e : V3) : Fin 3 → ℝ)) ∧
+      ∀ x : V3, ∀ n : ℕ, x = (rhoNode1 FF)^[n] x0.1 → n < p →
+        azimCycle_p3 V 0 e x = rhoNode1 FF x)
+    (hpset : {x | ∃ m < p, (rhoNode1 FF)^[m] x0.1 = x} = V)
+    (hperp : ∀ z ∈ V, ((z : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0) :
+    ∀ v' ∈ V,
+      azimCycle_p3 V 0 e v' = rhoNode1 FF v' ∧
+        azim 0 e v' (rhoNode1 FF v') = dihV 0 e v' (rhoNode1 FF v') ∧
+        azim 0 e v' (rhoNode1 FF v') = arcV 0 v' (rhoNode1 FF v') ∧
+        azim 0 e v' (rhoNode1 FF v') < Real.pi := by
+  intro v' hv'
+  obtain ⟨n, hn, hv'n⟩ : ∃ n : ℕ, n < p ∧ v' = (rhoNode1 FF)^[n] x0.1 := by
+    have hz : v' ∈ ({(rhoNode1 FF)^[m] x0.1 | m < p} : Set V3) := by rwa [hpset]
+    obtain ⟨m, hm, rfl⟩ := hz
+    exact ⟨m, hm, rfl⟩
+  have hkey := hpos n hn
+  have hrhoV : rhoNode1 FF v' ∈ V := by
+    rw [hv'n, ← Function.iterate_succ_apply' (rhoNode1 FF) n x0.1]
+    exact kchIterInV_p35 hfanL hEE2 hv0 (n + 1)
+  have hncE : ¬ Collinear3 0 e v' := kchNotCollinear3_of_cyclicSet_p35 hcy hv'
+  have hncR : ¬ Collinear3 0 e (rhoNode1 FF v') :=
+    kchNotCollinear3_of_cyclicSet_p35 hcy hrhoV
+  have hltπ : azim 0 e v' (rhoNode1 FF v') < Real.pi := by
+    by_contra hcon
+    push_neg at hcon
+    have hle := kchSinAzimCrossSign_p35 e v' (rhoNode1 FF v') (Ne.symm hcy.1)
+      hncE hcon
+    have hposE : 0 < (crossProduct ((e : V3) : Fin 3 → ℝ)
+        ((v' : V3) : Fin 3 → ℝ)) ⬝ᵥ ((rhoNode1 FF v' : V3) : Fin 3 → ℝ) := by
+      rw [kchCrossTriple_p35, hv'n,
+        ← Function.iterate_succ_apply' (rhoNode1 FF) n x0.1]
+      exact hkey.1
+    linarith
+  have hperp1 : ((v' : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 :=
+    hperp v' hv'
+  have hperp2 : ((rhoNode1 FF v' : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)
+      = 0 := hperp _ hrhoV
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [hv'n]
+    exact hkey.2 _ n rfl hn
+  · exact azim_dihv_same hncE hncR hltπ
+  · rw [azim_dihv_same hncE hncR hltπ]
+    exact kchDihvEqArcV_p35 hperp1 hperp2 (kchCyclicDotSelfPos_p35 hcy)
+  · exact hltπ
+
+set_option Elab.async false in
+/- **KCHMAMG 总装**（kchmam6 波；HOL `KCHMAMG` local_lemmas.hl:3197 的
+可行路装配形）：`LocalFan + 两邻居 + 半圈输入面 ⟹ KCHMAMG 结论体`——
+结论即 `KCHMAMG_p35` 去掉 `ConvexLocalFan → Circular →` 前件后的本体。
+半圈输入面两件（OZQVSFF 链的显式承入，见块头注 5）：
+`hplane`（V 落在过 0 平面；HOL 由 `LOFA_V_SUBSET_AFF_HULL` 自 convex_local_fan
++circular 提取）与 `hint`（内角平角面；HOL 由 `la5_interior_angle_pi`
++OZQVSFF 链提取）。 -/
+
+theorem KCHMAMG_thm_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hplane : ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧ V ⊆ P)
+    (hint : ∀ v ∈ V, interiorAngle1 0 FF v = Real.pi) :
+    (∀ v ∈ V, interiorAngle1 0 FF v = Real.pi) ∧
+    ∃ A : Set V3,
+      (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+          A = affineSpan ℝ ({u, v, w} : Set V3)) ∧
+      (0 : V3) ∈ A ∧ V ⊆ A ∧
+      ∃ e : V3,
+        (∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) ∧
+        cyclicSet_p3 V 0 e ∧
+        ∀ v ∈ V,
+          azimCycle_p3 V 0 e v = rhoNode1 FF v ∧
+            azim 0 e v (rhoNode1 FF v) = dihV 0 e v (rhoNode1 FF v) ∧
+            azim 0 e v (rhoNode1 FF v) = arcV 0 v (rhoNode1 FF v) ∧
+            azim 0 e v (rhoNode1 FF v) < Real.pi := by
+  have hkeep := hfanL
+  refine ⟨hint, ?_⟩
+  obtain ⟨P, hP0, h0P, hsubV⟩ := hplane
+  obtain ⟨uA, vA, wA, hncA, hPdef⟩ := hP0
+  have hP : kchPlane_p35 P := ⟨uA, vA, wA, hncA, hPdef⟩
+  obtain ⟨hF, x0, -, hFFdef, -⟩ := hfanL
+  have hx0FF : x0 ∈ FF := by
+    rw [hFFdef]
+    exact ⟨0, by rw [pow_zero]; exact Equiv.Perm.one_apply _⟩
+  have hv0 : x0.1 ∈ V := (kchDartInV_p35 hkeep hx0FF).1
+  -- 轨道周期 p
+  obtain ⟨p, -, hpper, hpdis, hpset, hpcard⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (kchOrbitMapV_p35 hkeep hEE2) hv0
+  have hIic : (Set.Iic p : Set ℕ) = Set.Iio (p + 1) := by
+    ext m
+    simp only [Set.mem_Iic, Set.mem_Iio]
+    omega
+  have hU : ((fun n : ℕ => (rhoNode1 FF)^[n] x0.1) '' Set.Iic p) = V := by
+    rw [hIic]
+    ext z
+    constructor
+    · rintro ⟨k, hk, rfl⟩
+      rcases Nat.lt_succ_iff_lt_or_eq.mp (Set.mem_Iio.mp hk) with h | h
+      · rw [← hpset]
+        exact ⟨k, h, rfl⟩
+      · show (rhoNode1 FF)^[k] x0.1 ∈ V
+        rw [h, hpper]
+        exact hv0
+    · intro hz
+      have hz2 : z ∈ ({(rhoNode1 FF)^[m] x0.1 | m < p} : Set V3) := by rwa [hpset]
+      obtain ⟨m, hm, rfl⟩ := hz2
+      exact ⟨m, Set.mem_Iio.mpr (by omega), rfl⟩
+  -- 平面重合：P = affineSpan {x0.1, ρ x0.1, 0}
+  -- （hnc0 不可直接 `kchDartNonColl_p35 hkeep hdart0`：该件结论形是
+  -- `{0, d.1, d.2}`，把 `x0.2 =?= ρ x0.1` 送给 unifier 做 defeq 会无界展开
+  -- （whnf 确定性超时，见 DELIVERY）；先 have 再用 kchRhoDet_p35 逐字改写。）
+  have hnc0 : ¬ Collinear ℝ ({(0:V3), x0.1, rhoNode1 FF x0.1} : Set V3) := by
+    have h := kchDartNonColl_p35 hkeep hx0FF
+    rwa [← kchRhoDet_p35 hkeep hEE2 hx0FF] at h
+  have hset3 : (({x0.1, rhoNode1 FF x0.1, (0:V3)} : Set V3))
+      = ({(0:V3), x0.1, rhoNode1 FF x0.1} : Set V3) := by
+    ext z; simp; tauto
+  have hcol3 : ¬ Collinear ℝ ({x0.1, rhoNode1 FF x0.1, (0:V3)} : Set V3) := by
+    rwa [hset3]
+  have hsub3 : ({x0.1, rhoNode1 FF x0.1, (0:V3)} : Set V3) ⊆ P := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact hsubV hv0
+    · exact hsubV (kchIterInV_p35 hkeep hEE2 hv0 1)
+    · exact h0P
+  have hsetI : (insert 0 ({x0.1, rhoNode1 FF x0.1} : Set V3))
+      = ({x0.1, rhoNode1 FF x0.1, (0:V3)} : Set V3) := by
+    ext z; simp; tauto
+  have hPsp : affineSpan ℝ (insert 0 ({x0.1, rhoNode1 FF x0.1} : Set V3)) = P := by
+    rw [hsetI, kchPlaneDet_p35 hP hsub3 hcol3]
+  -- 轴 e 的选取
+  obtain ⟨e, hedef⟩ : ∃ e : V3,
+      (WithLp.toLp 2 (crossProduct ((x0.1 : V3) : Fin 3 → ℝ)
+        ((rhoNode1 FF x0.1 : V3) : Fin 3 → ℝ)) : V3) = e := ⟨_, rfl⟩
+  -- KOMWBWC 整圈收口（l = p，U = V）
+  obtain ⟨hcy, hpos, -⟩ := kchKOMWBWC_face_p35 hkeep hEE2 hkeep hEE2 x0.1 hv0 p V
+    hU P hP h0P hsubV e hedef
+  refine ⟨P, ⟨uA, vA, wA, hncA, hPdef⟩, h0P, hsubV, e, ?_, hcy, ?_⟩
+  · intro x hx
+    rw [← hedef]
+    exact kchCrossDotZero_of_mem_p35 (a := x0.1) (b := rhoNode1 FF x0.1)
+      (by
+        rw [← hPsp] at hx
+        exact hx)
+  · have hperp : ∀ z ∈ V, ((z : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 :=
+      fun z hz => by
+      rw [← hedef, dotProduct_comm]
+      exact kchCrossDotZero_of_mem_p35 (a := x0.1) (b := rhoNode1 FF x0.1)
+        (by
+          have hzp : z ∈ P := hsubV hz
+          rw [← hPsp] at hzp
+          exact hzp)
+    exact kchAzimQuad_p35 (P := P) hkeep hEE2 hv0 hcy hpos hpset hperp
+/-! ## EJRCFJD chain W3a — the slicing-fan orbit kit (scout §4 W3a)
+
+The wave delivers the face-orbit chapter of the diagonal slicing in the
+**half-fan two-regular rendering** (the w2c handoff form: on a two-regular
+edge set every `ff` step is the partner swap, so the orbit kit, the
+face-cardinality bound, and the two diagonal-crossing determinations land
+without the three-element `azim_cycle` geometry):
+
+- `DETERMINE_FV_p35` — the face of the HYP carrier at a dart `d` is exactly
+  the set of `ff`-iterates of `d` (the orbit characterization; HOL
+  `DETERMINE_FV`, local_lemmas1.hl:2672, determines the same set through the
+  `ITER (rho_node1 FF)` parametrization — the bridge to that form needs the
+  three-element cycle kit and is carried by the downstream slicing wave).
+- `LOFA_HYP_UNION_CARD_GT2_p35` — `2 < CARD fv` (HOL local_lemmas1.hl:1868):
+  the face at any dart of the two-regular carrier holds the three pairwise
+  distinct consecutive darts `d`, `ff d`, `ff (ff d)`.
+- `FACE_MAP_SLICING_HYP_TRANS_POINT_p35` / `FACE_MAP_AT_TURNING_DART_p35`
+  (HOL local_lemmas1.hl:2443 / :2233) — the two diagonal-crossing face steps;
+  the sector placement of the diagonal endpoint (including its
+  non-collinearity with `0` and the node) is taken as the geometric
+  hypothesis (HOL derives it from the `aff_gt ⊆ wedge_in_fan_gt` slicing
+  premise — that derivation is the half-circle wave's share), the crossing
+  itself is `sigmaTableDiag_p35` + the `ff_of_hyp` unfolding — no geometry.
+- `PROVE_SLICING_FAN_p35` — the augmented edge set is still a FAN
+  (HOL local_lemmas1.hl:1378), with the genuinely geometric new-edge cone
+  cases of `fan7` isolated as the hypothesis `hfan7new` (exactly the
+  `aff_gt ⊆ wedge` content the HOL proof extracts from the slicing premise);
+  `FAN7_AUGMENT_p35` reduces `fan7` of the augmentation to those cases and
+  shows the old-edge content is `Kepler.Text.Fan.fan7 0 V E` verbatim.
+
+IMPORTANT (faithfulness ledger): the HOL `E' = E UNION {{v,w}}` has three
+neighbours at the two diagonal endpoints, so the two-regular orbit kit does
+NOT directly instantiate on the full augmented carrier there; the honest
+full-fan form needs the three-element `azim_cycle`/`ivs_azim_cycle`
+determination on `{pred, succ, diag}` at the two diagonal nodes — the
+sector-placement hypotheses of the two `FACE_MAP_*` items below are exactly
+the shape of that input. -/
+
+/-- The in-orbit step (HOL `Wrgcvdr_cizmrrh.IN_ORBIT_MAP_IMP_F_Y` over the
+carrier): `ff` of a face element is a face element. -/
+private theorem fvStep_p35 {V : Set V3} {E : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E HS) {d y : V3 × V3}
+    (hy : y ∈ HS.face d) : ffOfHyp_p3 0 V E y ∈ HS.face d := by
+  obtain ⟨k, hk⟩ := hy
+  refine ⟨k + 1, ?_⟩
+  have hstep : (HS.faceMap ^ (k + 1)) d = ⇑HS.faceMap ((HS.faceMap ^ k) d) := by
+    rw [pow_succ' HS.faceMap k, Equiv.Perm.mul_apply]
+  rw [hstep, hHS.2.2.2, hk]
+
+/-- The face of a dart lies inside the dart set. -/
+private theorem fvSubsetDarts_p35 {V : Set V3} {E : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E HS) {d : V3 × V3}
+    (hd : d ∈ dartsOfHyp_p3 E V) : HS.face d ⊆ dartsOfHyp_p3 E V := by
+  have hdm : d ∈ (↑HS.darts : Set (V3 × V3)) := hHS.1 ▸ hd
+  intro y hy
+  have hy' := orbitMap_subset_of_permutesOn HS.faceMap_permutes hdm hy
+  rwa [hHS.1] at hy'
+
+/-- The face of a dart is finite. -/
+private theorem fvFinite_p35 {V : Set V3} {E : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (d : V3 × V3) : (HS.face d).Finite :=
+  orbitMap_finite HS.faceMap_permutes d
+
+/-- **EJRCFJD chain W3a** — `2 < CARD fv` (HOL `LOFA_HYP_UNION_CARD_GT2`,
+local_lemmas1.hl:1868, two-regular rendering): the face of the two-regular
+carrier at a dart holds the three consecutive darts
+`(v,w)`, `(w,c1)`, `(c1,c2)` (`c1` the partner of `v` at `w`, `c2` the
+partner of `w` at `c1`), pairwise distinct by the no-fixed-node and
+no-degenerate-edge facts, so the cardinality is at least three.
+The HOL original states it for the augmented carrier at `(v, rho_node1 FF v)`
+under the slicing premises; the first three face steps there only consume
+two-regularity at the nodes away from the diagonal, which is what this
+rendering takes as the premise set. -/
+theorem LOFA_HYP_UNION_CARD_GT2_p35 {V : Set V3} {E : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E HS)
+    (hVE : ⋃₀ E ⊆ V) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hgraph : Kepler.Text.Fan.Graph E) {v w : V3} (hvw : v ≠ w)
+    (hd : (v, w) ∈ dartsOfHyp_p3 E V) :
+    2 < (HS.face (v, w)).ncard := by
+  have hsw : (w, v) ∈ dartsOfHyp_p3 E V := V_IN_DARTS_IMP_SWICH_SO_DO hd
+  obtain ⟨c1, hEEw, hc1v, hd1, -⟩ := dartOther_p35 hVE hEE2 hsw
+  have hc1w : c1 ≠ w := by
+    intro hcw
+    have hwm : w ∈ EE_p3 w E := by
+      rw [hEEw, hcw]
+      exact Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)
+    exact graph_ne_diag_p35 hgraph hwm rfl
+  have hff1 : ffOfHyp_p3 0 V E (v, w) = (w, c1) := ffDart_p35 hd hEEw hc1v
+  have hsw1 : (c1, w) ∈ dartsOfHyp_p3 E V := V_IN_DARTS_IMP_SWICH_SO_DO hd1
+  obtain ⟨c2, hEEc, hc2c1, hd2, -⟩ := dartOther_p35 hVE hEE2 hsw1
+  have hff2 : ffOfHyp_p3 0 V E (w, c1) = (c1, c2) := ffDart_p35 hd1 hEEc hc2c1
+  have hmem0 : (v, w) ∈ HS.face (v, w) := ⟨0, rfl⟩
+  have hmem1 := fvStep_p35 HS hHS hmem0
+  rw [hff1] at hmem1
+  have hmem2 := fvStep_p35 HS hHS hmem1
+  rw [hff2] at hmem2
+  have hsub : ({(v, w), (w, c1), (c1, c2)} : Set (V3 × V3)) ⊆ HS.face (v, w) := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with hh | hh | hh
+    · exact hh ▸ hmem0
+    · exact hh ▸ hmem1
+    · exact hh ▸ hmem2
+  have h3 : ({(v, w), (w, c1), (c1, c2)} : Set (V3 × V3)).ncard = 3 := by
+    have hd2n : (c1, c2) ∉ ({(v, w), (w, c1)} : Set (V3 × V3)) := by
+      intro hc
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+      rcases hc with hh | hh
+      · rw [Prod.mk.injEq] at hh
+        exact hc1v hh.1
+      · rw [Prod.mk.injEq] at hh
+        exact hc1w hh.1
+    have hd1n : (w, c1) ∉ ({(v, w)} : Set (V3 × V3)) := by
+      intro hc
+      simp only [Set.mem_singleton_iff] at hc
+      rw [Prod.mk.injEq] at hc
+      exact hvw hc.1.symm
+    have hA : (v, w) ∉ ({(w, c1), (c1, c2)} : Set (V3 × V3)) := by
+      intro hc
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+      rcases hc with hh | hh
+      · rw [Prod.mk.injEq] at hh
+        exact hvw hh.1
+      · rw [Prod.mk.injEq] at hh
+        exact hc1v hh.1.symm
+    have hB : (w, c1) ∉ ({(c1, c2)} : Set (V3 × V3)) := by
+      intro hc
+      simp only [Set.mem_singleton_iff] at hc
+      rw [Prod.mk.injEq] at hc
+      exact hc1w hc.1.symm
+    rw [Set.ncard_insert_of_notMem (a := (v, w))
+        (s := ({(w, c1), (c1, c2)} : Set (V3 × V3))) hA,
+      Set.ncard_insert_of_notMem (a := (w, c1))
+        (s := ({(c1, c2)} : Set (V3 × V3))) hB,
+      Set.ncard_singleton]
+  have hfin := fvFinite_p35 (V := V) (E := E) HS (v, w)
+  have hle : (3 : ℕ) ≤ (HS.face (v, w)).ncard := by
+    rw [← h3]
+    exact Set.ncard_le_ncard hsub hfin
+  exact lt_of_lt_of_le (by norm_num : (2 : ℕ) < 3) hle
+
+/-! ### The two diagonal-crossing face steps (HOL ff face kit)
+
+HOL `FACE_MAP_SLICING_HYP_TRANS_POINT` (local_lemmas1.hl:2443) and
+`FACE_MAP_AT_TURNING_DART` (local_lemmas1.hl:2233).  The sector placement of
+the diagonal endpoint (strictly inside the `rho → ivs` open sector, itself
+non-collinear with `0` and the node) is the geometric input — in HOL it is
+extracted from the `aff_gt ⊆ wedge_in_fan_gt` slicing premise by the
+half-circle analysis; the crossing determination itself is
+`sigmaTableDiag_p35` + the `ff_of_hyp` unfolding. -/
+
+/-- `fan7` of an edge-set augmentation reduces to `fan7` of the old set plus
+the new-edge cone cases: every old-vs-old pair is the old distributivity
+verbatim, and the hypothesis covers exactly the pairs with a new member.
+This isolates the genuinely geometric content of HOL
+`PROVE_SLICING_FAN` (the `aff_gt ⊆ wedge` half-circle analysis) as one
+explicit premise. -/
+theorem FAN7_AUGMENT_p35 {V : Set V3} {E E' : Set (Set V3)}
+    (h7 : Kepler.Text.Fan.fan7 0 V E)
+    (hnew : ∀ e1 ∈ E' ∪ {s : Set V3 | ∃ v ∈ V, s = ({v} : Set V3)},
+      ∀ e2 ∈ E' ∪ {s : Set V3 | ∃ v ∈ V, s = ({v} : Set V3)},
+        e1 ∉ E ∨ e2 ∉ E →
+        affGe ({0} : Set V3) e1 ∩ affGe ({0} : Set V3) e2
+          = affGe ({0} : Set V3) (e1 ∩ e2)) :
+    Kepler.Text.Fan.fan7 0 V E' := by
+  intro e1 he1 e2 he2
+  have h1mem : e1 ∈ E' ∪ {s : Set V3 | ∃ v ∈ V, s = ({v} : Set V3)} := he1
+  have h2mem : e2 ∈ E' ∪ {s : Set V3 | ∃ v ∈ V, s = ({v} : Set V3)} := he2
+  by_cases h1 : e1 ∈ E
+  · rcases he2 with h2E | h2S
+    · by_cases h2 : e2 ∈ E
+      · exact h7 e1 (Set.mem_union_left _ h1) e2 (Set.mem_union_left _ h2)
+      · exact hnew e1 h1mem e2 h2mem (Or.inr h2)
+    · exact h7 e1 (Set.mem_union_left _ h1) e2 (Set.mem_union_right _ h2S)
+  · rcases he1 with h1E | h1S
+    · exact hnew e1 h1mem e2 h2mem (Or.inl h1)
+    · rcases he2 with h2E | h2S
+      · by_cases h2 : e2 ∈ E
+        · exact h7 e1 (Set.mem_union_right _ h1S) e2 (Set.mem_union_left _ h2)
+        · exact hnew e1 h1mem e2 h2mem (Or.inr h2)
+      · exact h7 e1 (Set.mem_union_right _ h1S) e2 (Set.mem_union_right _ h2S)
+
+/-- **EJRCFJD chain W3a** — the augmented edge set is still a FAN
+(HOL `PROVE_SLICING_FAN`, local_lemmas1.hl:1378, skeleton form): the five
+set-level fan components transfer from `FAN 0 V E` verbatim (`fan6` needs
+the non-collinearity of the diagonal on the new edge), and `fan7` reduces
+through `FAN7_AUGMENT_p35` to the new-edge cone cases `hfan7new` — precisely
+the content the HOL proof extracts from the slicing premise
+`aff_gt {vec 0} {v,w} ⊆ wedge_in_fan_gt x E` (the half-circle geometry,
+downstream wave). -/
+theorem PROVE_SLICING_FAN_p35 {V : Set V3} {E : Set (Set V3)} {v w : V3}
+    (hfan : Kepler.Text.Fan.FAN 0 V E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hcol : ¬ Collinear ℝ (insert (0 : V3) {v, w}))
+    (hfan7new : ∀ e2 ∈ (E ∪ {{v, w}}) ∪ {s : Set V3 | ∃ u ∈ V, s = ({u} : Set V3)},
+      affGe ({0} : Set V3) ({v, w} : Set V3) ∩ affGe ({0} : Set V3) e2
+        = affGe ({0} : Set V3) (({v, w} : Set V3) ∩ e2)) :
+    Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}) := by
+  obtain ⟨hVE, hG, hf1, hf2, hf6, h7⟩ := hfan
+  refine ⟨?_, ?_, hf1, hf2, ?_, ?_⟩
+  · intro z hz
+    obtain ⟨e, he, hze⟩ := hz
+    rcases he with hEe | hDe
+    · exact hVE (Set.mem_sUnion_of_mem hze hEe)
+    · rw [show e = ({v, w} : Set V3) from hDe,
+        Set.mem_insert_iff, Set.mem_singleton_iff] at hze
+      rcases hze with hh | hh
+      · exact hh ▸ hv
+      · exact hh ▸ hw
+  · intro e he
+    rcases he with hEe | hDe
+    · exact hG e hEe
+    · rw [show e = ({v, w} : Set V3) from hDe]
+      have h2 : ({v, w} : Set V3).ncard = 2 := by
+        rw [Set.ncard_insert_of_notMem (a := v) (s := ({w} : Set V3))
+          hwv (Set.finite_singleton w), Set.ncard_singleton]
+      refine ⟨Set.Finite.insert v (Set.finite_singleton w), ?_⟩
+      rw [← Set.ncard_eq_toFinset_card ({v, w} : Set V3)
+        (Set.Finite.insert v (Set.finite_singleton w))]
+      exact h2
+  · intro e he
+    rcases he with hEe | hDe
+    · exact hf6 e hEe
+    · have he1 : e = ({v, w} : Set V3) := hDe
+      rw [he1]
+      exact hcol
+  · refine FAN7_AUGMENT_p35 h7 ?_
+    intro e1 he1 e2 he2 hd
+    by_cases h1 : e1 = ({v, w} : Set V3)
+    · rw [h1]
+      exact hfan7new e2 he2
+    · by_cases h2 : e2 = ({v, w} : Set V3)
+      · rw [h2]
+        have H := hfan7new e1 he1
+        rw [Set.inter_comm (affGe ({0} : Set V3) ({v, w} : Set V3))
+          (affGe ({0} : Set V3) e1), Set.inter_comm ({v, w} : Set V3) e1] at H
+        exact H
+      · have h1' : e1 ∈ E ∪ {s : Set V3 | ∃ v ∈ V, s = ({v} : Set V3)} := by
+          rcases he1 with hE1 | hS1
+          · rcases hE1 with hh | hh
+            · exact Set.mem_union_left _ hh
+            · exact absurd hh h1
+          · exact Set.mem_union_right _ hS1
+        have h2' : e2 ∈ E ∪ {s : Set V3 | ∃ v ∈ V, s = ({v} : Set V3)} := by
+          rcases he2 with hE2 | hS2
+          · rcases hE2 with hh | hh
+            · exact Set.mem_union_left _ hh
+            · exact absurd hh h2
+          · exact Set.mem_union_right _ hS2
+        exact h7 e1 h1' e2 h2'
+
+/-! ## EJRCFJD chain W3b — the slicing fan II wave (scout §4 W3b)
+
+HOL `HAFL_CIRCLE_FORM_LOCAL_FAN` (local_lemmas1.hl:3077) concludes
+`local_fan (v_prime V fv, e_prime (E ∪ {{v,w}}) fv, fv)` for the slice face
+`fv = face (hypermap (HYP (vec 0, V, E ∪ {{v,w}}))) (v, rho_node1 FF v)`.
+Its proof scaffolds three chapters:
+
+1. the sliced vertex/edge sets still carry a FAN
+   (`Wrgcvdr_cizmrrh.IMP_FAN_V_PRIME_E_PRIME`, WRGCVDR.hl:2780 — pure
+   face-orbit bookkeeping, no geometry);
+2. the half-circle orbit parametrization of the slice face
+   (`fv = {(w,v)} ∪ {(ITER n (rho_node1 FF) v, ITER (n+1) (rho_node1 FF) v) |
+   ∀ m < n+1, ITER m (rho_node1 FF) v ≠ w}` — the genuinely geometric deep
+   water, whose localized inputs are the two diagonal-crossing steps
+   `FACE_MAP_*_p35` landed in W3a);
+3. the `dih2k` transfer to the sliced carrier
+   (`Lvducxu.LOCALIZE_PRESERVE_FACE` + the order bookkeeping).
+
+This wave lands chapter 1 closed (`FAN_V_PRIME_E_PRIME_p35`, over the W3a
+orbit kit: the second-end supply `(b,c) ∈ fv` for a face dart `(a,b)` is the
+`ff`-orbit step `fvStep_p35`, no two-regularity needed), the carrier
+destructor kit, the slice-face cardinality step, and the conditional
+assemblies `HAFL_RED_p35` / `HAFL2_RED_p35`, which reduce HOL HAFL / HAFL2
+to exactly the two W3b2 residuals: the orbit parametrization (chapter 2)
+feeding the face-localization premise `hface`, and the `dih2k` transfer
+(chapter 3) feeding `hdih`. -/
+
+/-- Carrier darts with distinct ends are monotone in the edge set (the
+`self_pairs` branch is killed by `a ≠ b`, and `ord_pairs` is monotone). -/
+theorem dartsOfHyp_ne_mono_p35 {E E' : Set (Set V3)} {V : Set V3} {a b : V3}
+    (hsub : E ⊆ E') (hd : (a, b) ∈ dartsOfHyp_p3 E V) (hab : a ≠ b) :
+    (a, b) ∈ dartsOfHyp_p3 E' V := by
+  rcases hd with hord | hself
+  · simp only [ordPairs_p3, Set.mem_setOf_eq] at hord ⊢
+    exact Set.mem_union_left _ (hsub hord)
+  · simp only [selfPairs_p3, Set.mem_setOf_eq] at hself
+    exact absurd hself.1 hab
+
+/-- HOL `IMP_FAN_V_PRIME_E_PRIME` (WRGCVDR.hl:2780) — chapter 1 of
+`HAFL_CIRCLE_FORM_LOCAL_FAN`: the slice vertex/edge sets
+`v_prime V fv`, `e_prime E' fv` for a carrier face `fv` still carry a FAN.
+Every component transfers from `FAN 0 V E'` by restriction; the only
+nontrivial supply is the `v_prime` closure at the second end of a face dart,
+which is the `ff`-orbit step (`fvStep_p35`) — no two-regularity, no
+geometry.  In particular `fan7` of the slice is `fan7 0 V E'` verbatim on
+the smaller index sets. -/
+theorem FAN_V_PRIME_E_PRIME_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    (hfan : Kepler.Text.Fan.FAN 0 V E')
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V) :
+    Kepler.Text.Fan.FAN 0 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)) := by
+  obtain ⟨hVE, hG, hf1, hf2, hf6, h7⟩ := hfan
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  -- the second-end supply: a face dart `(a,b)` yields `(b,c)` in the face
+  have hstep : ∀ p ∈ HS.face d, ∃ c : V3, (p.2, c) ∈ HS.face d := by
+    intro p hp
+    have hp2 := fvStep_p35 HS hHS hp
+    rw [ffOfHyp_p3, if_pos (hsub hp)] at hp2
+    exact ⟨_, hp2⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- ⋃₀ (e_prime) ⊆ v_prime
+    intro z hz
+    obtain ⟨e, he, hze⟩ := hz
+    obtain ⟨a, b, rfl, hEe, hfvab⟩ := he
+    have hend := dartsOfHyp_ends_V_p35 hVE (hsub hfvab)
+    rcases Set.mem_insert_iff.mp hze with rfl | rfl
+    · exact ⟨hend.1, ⟨b, hfvab⟩⟩
+    · obtain ⟨c, hbc⟩ := hstep _ hfvab
+      exact ⟨hend.2, ⟨c, hbc⟩⟩
+  · -- Graph (e_prime) : every slice edge is an E' edge
+    intro e he
+    obtain ⟨a, b, rfl, hEe, -⟩ := he
+    exact hG _ hEe
+  · -- fan1 : finite and nonempty
+    refine ⟨hf1.1.subset (fun x hx => hx.1), ?_⟩
+    have hdm : d ∈ HS.face d := ⟨0, rfl⟩
+    have hu : d.1 ∈ V := (dartsOfHyp_ends_V_p35 hVE (hsub hdm)).1
+    intro hcon
+    exact absurd (show d.1 ∈ vPrime_p3 V (HS.face d) from ⟨hu, ⟨d.2, hdm⟩⟩)
+      (by rw [hcon]; simp)
+  · -- fan2 : 0 off the slice vertex set
+    exact fun h0 => hf2 h0.1
+  · -- fan6 : no collinear edge on the slice
+    intro e he
+    obtain ⟨a, b, rfl, hEe, -⟩ := he
+    exact hf6 _ hEe
+  · -- fan7 : the slice index sets sit inside E'-with-singletons
+    intro e1 he1 e2 he2
+    have hc1 : e1 ∈ E' ∪ {s : Set V3 | ∃ u ∈ V, s = ({u} : Set V3)} := by
+      rcases he1 with hE | hS
+      · obtain ⟨a, b, rfl, hEe, -⟩ := hE
+        exact Set.mem_union_left _ hEe
+      · simp only [Set.mem_setOf_eq] at hS
+        obtain ⟨u, hu, rfl⟩ := hS
+        exact Set.mem_union_right _ ⟨u, hu.1, rfl⟩
+    have hc2 : e2 ∈ E' ∪ {s : Set V3 | ∃ u ∈ V, s = ({u} : Set V3)} := by
+      rcases he2 with hE | hS
+      · obtain ⟨a, b, rfl, hEe, -⟩ := hE
+        exact Set.mem_union_left _ hEe
+      · simp only [Set.mem_setOf_eq] at hS
+        obtain ⟨u, hu, rfl⟩ := hS
+        exact Set.mem_union_right _ ⟨u, hu.1, rfl⟩
+    exact h7 e1 hc1 e2 hc2
+
+/-- HOL `HAFL_CIRCLE_FORM_LOCAL_FAN` first cardinality step (`1 < CARD fv`):
+a carrier face at a dart with distinct ends holds the dart and its `ff`
+successor, pairwise distinct by the first components. -/
+theorem FV_NCARD_GE2_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V) (hdd : d.1 ≠ d.2) :
+    2 ≤ (HS.face d).ncard := by
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  have hd0 : d ∈ HS.face d := ⟨0, rfl⟩
+  have hstep := fvStep_p35 HS hHS hd0
+  rw [ffOfHyp_p3, if_pos hd] at hstep
+  have hB : (d.2, ivsAzimCycle_p3 (EE_p3 d.2 E') 0 d.2 d.1)
+      ∉ ({d} : Set (V3 × V3)) := by
+    intro hc
+    simp only [Set.mem_singleton_iff] at hc
+    exact hdd (congrArg Prod.fst hc).symm
+  have htwo : ({(d.2, ivsAzimCycle_p3 (EE_p3 d.2 E') 0 d.2 d.1), d} :
+      Set (V3 × V3)).ncard = 2 := by
+    rw [Set.ncard_insert_of_notMem
+      (a := (d.2, ivsAzimCycle_p3 (EE_p3 d.2 E') 0 d.2 d.1))
+      (s := ({d} : Set (V3 × V3))) hB, Set.ncard_singleton]
+  have hsub2 : ({(d.2, ivsAzimCycle_p3 (EE_p3 d.2 E') 0 d.2 d.1), d} :
+      Set (V3 × V3)) ⊆ HS.face d := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with hh | hh
+    · exact hh ▸ hstep
+    · exact hh ▸ hd0
+  have hfin := fvFinite_p35 (V := V) (E := E') HS d
+  have hle := Set.ncard_le_ncard hsub2 hfin
+  rw [htwo] at hle
+  exact hle
+
+/-- **EJRCFJD chain W3b** — conditional assembly for HOL
+`HAFL_CIRCLE_FORM_LOCAL_FAN` (local_lemmas1.hl:3077) at the `_p3` carrier
+level: given the FAN of the slice (chapter 1, supplied by
+`FAN_V_PRIME_E_PRIME_p35`), a sliced-carrier hypermap realizing the slice
+vertex/edge sets, the face localization of the slice face into that carrier
+(residual W3b2-a: HOL `LOCALIZE_PRESERVE_FACE`, whose input is the
+half-circle orbit parametrization — chapter 2, the deep water), and the
+`dih2k` transfer (residual W3b2-b: HOL's order bookkeeping — chapter 3),
+the slice face is a local fan. -/
+theorem HAFL_RED_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    (hfan : Kepler.Text.Fan.FAN 0 V E')
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (HS' : Hypermap (V3 × V3))
+    (hHS' : IsHypE_p35 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)) HS')
+    (hd' : d ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face d)) (vPrime_p3 V (HS.face d)))
+    (hface : HS.face d = HS'.face d)
+    (hdih : dih2k_p3 HS' (HS.face d).ncard) :
+    localFan_p3 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)) (HS.face d) := by
+  refine ⟨HS', hHS'.1, hHS'.2.1, hHS'.2.2.1, hHS'.2.2.2,
+    FAN_V_PRIME_E_PRIME_p35 HS hHS hfan hd, ⟨d, ?_, hface⟩, hdih⟩
+  have hdc : d ∈ (↑HS'.darts : Set (V3 × V3)) := by rw [hHS'.1]; exact hd'
+  exact Finset.mem_coe.mp hdc
+
+/-- HOL `HAFL_CIRCLE_FORM_LOCAL_FAN2` (local_lemmas1.hl:3742, reduction
+form): the two half faces `fv`/`fw` of the slicing both carry the sliced
+FAN — HOL's `INSERT_COMM` symmetry step instantiated at the two face
+darts.  The full double `local_fan` conclusion is two `HAFL_RED_p35`
+assemblies (one per half, each with its own carrier/dih2k residual). -/
+theorem HAFL2_RED_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    (hfan : Kepler.Text.Fan.FAN 0 V E')
+    {dv dw : V3 × V3} (hdv : dv ∈ dartsOfHyp_p3 E' V)
+    (hdw : dw ∈ dartsOfHyp_p3 E' V) :
+    Kepler.Text.Fan.FAN 0 (vPrime_p3 V (HS.face dv)) (ePrime_p3 E' (HS.face dv)) ∧
+      Kepler.Text.Fan.FAN 0 (vPrime_p3 V (HS.face dw)) (ePrime_p3 E' (HS.face dw)) :=
+  ⟨FAN_V_PRIME_E_PRIME_p35 HS hHS hfan hdv,
+    FAN_V_PRIME_E_PRIME_p35 HS hHS hfan hdw⟩
+
+/-- Chapter-3 brick (HOL `HAFL_CIRCLE_FORM_LOCAL_FAN`'s dih2k transfer):
+the edge map of the carrier is exactly of order 2 whenever a non-degenerate
+dart exists — the involution is `eeOfHyp_involution_p35`, and the
+non-triviality comes from the swapped dart.  Through `IsHypE_p35`'s
+`edgeMap` component this is the `has_orders edge_map 2` conjunct of the
+sliced-carrier `dih2k` (the face/node orders remain part of the W3b2
+residual). -/
+theorem HAFL_EDGE_ORD2_p35 {V : Set V3} {E : Set (Set V3)} {a b : V3}
+    (hd : (a, b) ∈ dartsOfHyp_p3 E V) (hab : a ≠ b) :
+    hasOrders_p3 (eeOfHyp_p3 0 V E : V3 × V3 → V3 × V3) 2 := by
+  refine ⟨?_, ?_⟩
+  · intro i hi0 hilt
+    have hi1 : i = 1 := by omega
+    subst hi1
+    intro hfid
+    have hpt := congrFun hfid (a, b)
+    simp only [Function.iterate_one, id_eq, eeOfHyp_apply_mem_p35 0 V E hd] at hpt
+    have hpair := (Prod.mk.injEq _ _ _ _).mp hpt
+    exact hab hpair.2
+  · funext x
+    exact eeOfHyp_involution_p35 0 V E x
+
+/-- The slice vertex set sits in the carrier vertex set. -/
+theorem vPrime_subset_p35 {V : Set V3} {fv : Set (V3 × V3)} :
+    vPrime_p3 V fv ⊆ V := fun _ hx => hx.1
+
+/-- The slice edge set sits in the carrier edge set. -/
+theorem ePrime_subset_p35 {E : Set (Set V3)} {fv : Set (V3 × V3)} :
+    ePrime_p3 E fv ⊆ E := fun _ he => by
+  obtain ⟨v, w, rfl, hEe, -⟩ := he
+  exact hEe
+/-! ## EJRCFJD chain W3b2 — the HAFL residuals (azim-cycle expansion kit +
+face-cycle parametrization + face localization) -/
+
+/-! ### The azim-cycle expansion kit (1-元 / 2-元 / 3-元)
+
+The w2–w3 registered blocker "3 邻点形态的循环置换件": the cyclic-order
+determinations on the neighbour sets of the augmented (slicing) carrier.
+The 3-element table at the two diagonal nodes is the private
+`sigmaTableDiag_p35` root (public re-export below); the 2-element case at
+every interior node is a single-candidate epsilon pick — pure set algebra,
+no geometry; the 1-element case is the degenerate `W ⊆ {p}` branch. -/
+
+/-- **1-元 expansion**: on a singleton neighbour set the cycle fixes the
+point itself (the `W ⊆ {p}` degenerate branch of HOL `azim_cycle`,
+sphere.hl:414). -/
+theorem azimCycle_singleton_p35 (v w p : V3) :
+    azimCycle_p3 ({p} : Set V3) v w p = p := by
+  rw [azimCycle_p3]
+  split
+  · rfl
+  · rename_i hn
+    exact absurd (Set.Subset.refl ({p} : Set V3)) hn
+
+/-- **2-元 expansion kit (EE form)** — on a two-element neighbour set
+`EE_p3 u E = {p, q}` with `p ≠ q`, both `azimCycle_p3` and `ivsAzimCycle_p3`
+are the transposition `p ↔ q`.  Every entry is a single-candidate epsilon
+determination: pure set algebra, no geometry.  This is the interior-node
+case of the W3b2 face-cycle parametrization. -/
+theorem azimCycle_pairEE_p35 {E : Set (Set V3)} {u p q : V3}
+    (hEE : EE_p3 u E = {p, q}) (h : p ≠ q) :
+    azimCycle_p3 (EE_p3 u E) 0 u p = q ∧
+    azimCycle_p3 (EE_p3 u E) 0 u q = p ∧
+    ivsAzimCycle_p3 (EE_p3 u E) 0 u p = q ∧
+    ivsAzimCycle_p3 (EE_p3 u E) 0 u q = p := by
+  have hmemP : (p : V3) ∈ ({p, q} : Set V3) := Set.mem_insert_iff.mpr (Or.inl rfl)
+  have hmemQ : (q : V3) ∈ ({p, q} : Set V3) := Set.mem_insert_iff.mpr (Or.inr rfl)
+  have hWne : (EE_p3 u E) ≠ ∅ := by
+    rw [hEE]
+    intro hc
+    exact absurd (hc ▸ hmemQ) (by simp)
+  have hsubP : ¬ ({p, q} : Set V3) ⊆ {p} :=
+    fun hc => h (Set.mem_singleton_iff.mp (hc hmemQ)).symm
+  have hsubQ : ¬ ({p, q} : Set V3) ⊆ {q} :=
+    fun hc => h.symm (Set.mem_singleton_iff.mp (hc hmemP)).symm
+  -- the two azimCycle entries (each a single-candidate pick)
+  have hzp : azimCycle_p3 ({p, q} : Set V3) 0 u p = q := by
+    rw [azimCycle_p3, if_neg hsubP]
+    refine epsFixed_p35 ⟨h.symm, hmemQ, ?_⟩ ?_
+    · intro r hr hrp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hr
+      rcases hr with rfl | rfl
+      · exact absurd rfl hrp
+      · exact Or.inr ⟨rfl, le_refl _⟩
+    · intro y hy
+      obtain ⟨yne, ymem, -⟩ := hy
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+      rcases ymem with rfl | rfl
+      · exact absurd rfl yne
+      · rfl
+  have hzq : azimCycle_p3 ({p, q} : Set V3) 0 u q = p := by
+    rw [azimCycle_p3, if_neg hsubQ]
+    refine epsFixed_p35 ⟨h, hmemP, ?_⟩ ?_
+    · intro r hr hrq
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hr
+      rcases hr with rfl | rfl
+      · exact Or.inr ⟨rfl, le_refl _⟩
+      · exact absurd rfl hrq
+    · intro y hy
+      obtain ⟨yne, ymem, -⟩ := hy
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+      rcases ymem with rfl | rfl
+      · rfl
+      · exact absurd rfl yne
+  rw [hEE]
+  refine ⟨hzp, hzq, ?_, ?_⟩
+  · -- the ivs preimage of p is q
+    rw [ivsAzimCycle_p3, if_neg (show ({p, q} : Set V3) ≠ ∅ from fun hc => absurd (hc ▸ hmemQ) (by simp))]
+    refine epsFixed_p35 ⟨hmemQ, hzq⟩ ?_
+    intro y hy
+    obtain ⟨ymem, ycycle⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+    rcases ymem with rfl | rfl
+    · rw [hzp] at ycycle
+      exact absurd ycycle h.symm
+    · rfl
+  · -- the ivs preimage of q is p
+    rw [ivsAzimCycle_p3, if_neg (show ({p, q} : Set V3) ≠ ∅ from fun hc => absurd (hc ▸ hmemQ) (by simp))]
+    refine epsFixed_p35 ⟨hmemP, hzp⟩ ?_
+    intro y hy
+    obtain ⟨ymem, ycycle⟩ := hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ymem
+    rcases ymem with rfl | rfl
+    · rfl
+    · rw [hzq] at ycycle
+      exact absurd ycycle h
+
+/-- Both carriers step a face dart to the same face successor (the two
+successor witnesses of the interface coincide: the reversed-dart exclusion
+kills the `p.1` alternative through `sliceEE_char_p35`). -/
+private theorem param_carrierFF_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) {p : V3 × V3} (hp : p ∈ fv) :
+    ∃ c : V3, ffOfHyp_p3 0 V E' p = (p.2, c) ∧ (p.2, c) ∈ fv ∧
+      ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) p = (p.2, c) := by
+  obtain ⟨c₂, hff₂, hbc₂⟩ := hparam.2.2.2 p hp
+  obtain ⟨c, hcne, hbc, hEE⟩ := hparam.2.2.1 p hp
+  have hEEs := sliceEE_char_p35 hsub hparam.1 p.2
+  have hc₂c : c₂ = c := by
+    have hc₂mem : c₂ ∈ EE_p3 p.2 (ePrime_p3 E' fv) := by
+      rw [hEEs]
+      simp only [Set.mem_setOf_eq]
+      exact Or.inl hbc₂
+    rw [hEE, Set.mem_insert_iff, Set.mem_singleton_iff] at hc₂mem
+    rcases hc₂mem with hh | hh
+    · have hrev : (p.2, p.1) ∈ fv := hh ▸ hbc₂
+      exact absurd hrev (hparam.2.1 p hp)
+    · exact hh
+  refine ⟨c, by rw [hff₂, hc₂c], by rw [← hc₂c]; exact hbc₂, ?_⟩
+  rw [ffOfHyp_p3, if_pos (param_dart_slice_p35 hparam hp)]
+  rw [(azimCycle_pairEE_p35 hEE hcne).2.2.1]
+
+/-- **EJRCFJD chain W3b2** — HOL `LOCALIZE_PRESERVE_FACE` (LVDUCXU.hl:460,
+carrier form): under the face-cycle parametrization the slice face of the
+carrier at `d` is already the face of the localized carrier.  The proof is
+the orbit transfer: the two `ff` maps agree on the face pointwise
+(`param_carrierFF_p35`), so the two orbits from `d` coincide term by term —
+pure bookkeeping on top of the parametrization interface. -/
+theorem LOCALIZE_PRESERVE_FACE_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' (HS.face d))
+    (HS' : Hypermap (V3 × V3))
+    (hHS' : IsHypE_p35 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)) HS')
+    (hd' : d ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face d)) (vPrime_p3 V (HS.face d))) :
+    HS.face d = HS'.face d := by
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  -- the term-by-term orbit agreement
+  have hstep : ∀ k : ℕ,
+      (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)))^[k] d
+        = (ffOfHyp_p3 0 V E')^[k] d ∧ (ffOfHyp_p3 0 V E')^[k] d ∈ HS.face d := by
+    intro k
+    induction k with
+    | zero => exact ⟨rfl, ⟨0, by simp⟩⟩
+    | succ k ih =>
+        obtain ⟨heq, hmem⟩ := ih
+        obtain ⟨c, hc1, hc2, hc3⟩ := param_carrierFF_p35 hsub hparam hmem
+        refine ⟨?_, ?_⟩
+        · rw [Function.iterate_succ_apply', Function.iterate_succ_apply', heq, hc3, hc1]
+        · rw [Function.iterate_succ_apply']
+          exact fvStep_p35 HS hHS hmem
+  ext y
+  constructor
+  · intro hy
+    obtain ⟨k, hk⟩ := hy
+    rw [faceIter_ff_p35 HS hHS k d] at hk
+    have hk' := hstep k
+    rw [← hk'.1] at hk
+    exact ⟨k, by rw [faceIter_ff_p35 HS' hHS' k d]; exact hk⟩
+  · intro hy
+    obtain ⟨k, hk⟩ := hy
+    rw [faceIter_ff_p35 HS' hHS' k d] at hk
+    have hk' := hstep k
+    rw [hk'.1] at hk
+    exact ⟨k, by rw [faceIter_ff_p35 HS hHS k d]; exact hk⟩
+/-! ### Residual W3b2-b: the `dih2k` transfer to the slice carrier
+
+Everything closes purely on top of `faceCycleParam_p35` + the azim-cycle
+expansion kit: the two-element neighbour form at every slice node
+(`{in-pred, succ}`, with the backward step realized as `ee ∘ nn`) turns the
+slice carrier into a `dih2k` hypermap of order `fv.ncard` — HOL chapter 3
+(`LOCALIZE_PRESERVE_FACE` tail + order bookkeeping, LVDUCXU.hl:460). -/
+
+/-- The out-dart of a face node is unique (slice level). -/
+private theorem param_outUniq_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) {u a c y : V3}
+    (hEE : EE_p3 u (ePrime_p3 E' fv) = {a, c}) (hin : (a, u) ∈ fv)
+    (h1 : (u, y) ∈ fv) (h2 : (u, c) ∈ fv) : y = c := by
+  have hy : y ∈ EE_p3 u (ePrime_p3 E' fv) := by
+    rw [sliceEE_char_p35 hsub hparam.1 u]
+    exact Or.inl h1
+  rw [hEE, Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+  rcases hy with hh | hh
+  · exact absurd ((hh : y = a) ▸ h1) (hparam.2.1 (a, u) hin)
+  · exact hh
+
+/-- **The slice darts are exactly the face darts and their reverses.** -/
+theorem SLICE_DARTS_EQ_p35 {V : Set V3} {E' : Set (Set V3)} {fv : Set (V3 × V3)}
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv) :
+    dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)
+      = fv ∪ (fun q : V3 × V3 => (q.2, q.1)) '' fv := by
+  ext x
+  constructor
+  · intro hx
+    rcases hx with hord | hself
+    · simp only [ordPairs_p3, Set.mem_setOf_eq] at hord
+      by_cases hxd : x.1 = x.2
+      · exfalso
+        obtain ⟨a, b, hab, hEab, hfvab⟩ := hord
+        have habne : a ≠ b := hparam.1 (a, b) hfvab
+        rw [hxd] at hab
+        have ham : (a : V3) ∈ ({x.2, x.2} : Set V3) := by
+          rw [hab]; exact Set.mem_insert_iff.mpr (Or.inl rfl)
+        have hbm : (b : V3) ∈ ({x.2, x.2} : Set V3) := by
+          rw [hab]; exact Set.mem_insert_iff.mpr (Or.inr rfl)
+        have hax : a = x.2 := by simpa using ham
+        have hbx : b = x.2 := by simpa using hbm
+        exact habne (hax.trans hbx.symm)
+      · have hord2 : (x.2 : V3) ∈ EE_p3 x.1 (ePrime_p3 E' fv) := hord
+        rw [sliceEE_char_p35 hsub hparam.1 x.1] at hord2
+        simp only [Set.mem_setOf_eq] at hord2
+        rcases hord2 with h | h
+        · exact Set.mem_union_left _ h
+        · refine Set.mem_union_right _ ⟨(x.2, x.1), h, ?_⟩
+          simp
+    · simp only [selfPairs_p3, Set.mem_setOf_eq] at hself
+      obtain ⟨-, hu, hEE⟩ := hself
+      simp only [vPrime_p3, Set.mem_setOf_eq] at hu
+      obtain ⟨w, hw⟩ := hu.2
+      exfalso
+      have hwmem : w ∈ EE_p3 x.1 (ePrime_p3 E' fv) := by
+        rw [sliceEE_char_p35 hsub hparam.1 x.1]
+        exact Or.inl hw
+      rw [hEE] at hwmem
+      exact absurd hwmem (by simp)
+  · intro hx
+    rcases hx with h | ⟨q, hq, rfl⟩
+    · exact param_dart_slice_p35 hparam h
+    · exact param_revDart_slice_p35 hsub hparam hq
+
+/-- **The slice carrier holds exactly `2 * fv.ncard` darts.** -/
+theorem SLICE_DARTS_CARD_p35 {V : Set V3} {E' : Set (Set V3)} {fv : Set (V3 × V3)}
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hfin : fv.Finite) :
+    (dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)).ncard = 2 * fv.ncard := by
+  have hswap : (Set.image (fun q : V3 × V3 => (q.2, q.1)) fv).ncard = fv.ncard := by
+    have hinj : Set.InjOn (fun q : V3 × V3 => (q.2, q.1)) fv := by
+      intro p _ q _ hh
+      have hh2 : (p.2, p.1) = (q.2, q.1) := hh
+      simp only [Prod.mk.injEq] at hh2
+      exact Prod.ext hh2.2 hh2.1
+    exact hinj.ncard_image
+  have hdisj : Disjoint (fv : Set (V3 × V3))
+      (Set.image (fun q : V3 × V3 => (q.2, q.1)) fv) := by
+    rw [Set.disjoint_right]
+    intro x hx hxmem
+    obtain ⟨q, hq, hqx⟩ := hx
+    rw [show x = (q.2, q.1) from hqx.symm] at hxmem
+    exact hparam.2.1 q hq hxmem
+  have hfinS : ((fun q : V3 × V3 => (q.2, q.1)) '' fv).Finite :=
+    Set.Finite.image (fun q : V3 × V3 => (q.2, q.1)) hfin
+  rw [SLICE_DARTS_EQ_p35 hsub hparam,
+    Set.ncard_union_eq hdisj hfin hfinS, hswap]
+  ring
+
+/-! ### The abstract orbit-period lemma -/
+
+/-- **Orbit period** (pure): a self-map whose orbit of `x` covers the finite
+set `S` (with `f` injective on `S`) has period exactly `S.ncard` at `x`. -/
+private theorem period_of_cycle_p35 {α : Type*} [DecidableEq α] {f : α → α}
+    {S : Set α} {x : α} (hInj : Set.InjOn f S) (hmem : ∀ j : ℕ, f^[j] x ∈ S)
+    (hcover : ∀ y ∈ S, ∃ j : ℕ, f^[j] x = y) (hfin : S.Finite) :
+    f^[S.ncard] x = x ∧ ∀ i : ℕ, 0 < i → i < S.ncard → f^[i] x ≠ x := by
+  -- f^[j] is injective on S
+  have hinjit : ∀ j : ℕ, Set.InjOn f^[j] S := by
+    intro j
+    induction j with
+    | zero => intro a _ b _ hh; simpa using hh
+    | succ n ih =>
+        intro a ha b hb hh
+        rw [Function.iterate_succ_apply, Function.iterate_succ_apply] at hh
+        have hfa : f a ∈ S := by
+          obtain ⟨j, hj⟩ := hcover a ha
+          have hjmem : f^[j + 1] x ∈ S := hmem (j + 1)
+          rw [Function.iterate_succ_apply'] at hjmem
+          rw [← hj]
+          exact hjmem
+        have hfb : f b ∈ S := by
+          obtain ⟨j, hj⟩ := hcover b hb
+          have hjmem : f^[j + 1] x ∈ S := hmem (j + 1)
+          rw [Function.iterate_succ_apply'] at hjmem
+          rw [← hj]
+          exact hjmem
+        exact hInj ha hb (ih hfa hfb hh)
+  -- pigeonhole: some positive iterate ≤ S.ncard returns
+  have hpig : ∃ m : ℕ, 0 < m ∧ m ≤ S.ncard ∧ f^[m] x = x := by
+    by_contra hcon
+    push_neg at hcon
+    have hinjr : Set.InjOn (fun j : ℕ => f^[j] x) (Set.Iio (S.ncard + 1)) := by
+      intro j hj i hi hh
+      simp only [Set.mem_Iio] at hj hi
+      have hh2 : f^[j] x = f^[i] x := hh
+      rcases Nat.lt_trichotomy j i with hji | heq | hij
+      · have hsum : j + (i - j) = i := by omega
+        have hshift : f^[j] (f^[i - j] x) = f^[j] x := by
+          rw [← Function.iterate_add_apply f j (i - j) x, hsum, hh2.symm]
+        have hcl : f^[i - j] x = x := by
+          simpa using hinjit j (hmem (i - j)) (hmem 0) hshift
+        exact absurd hcl (hcon (i - j) (by omega) (by omega))
+      · rw [heq]
+      · have hsum : i + (j - i) = j := by omega
+        have hshift : f^[i] (f^[j - i] x) = f^[i] x := by
+          rw [← Function.iterate_add_apply f i (j - i) x, hsum, hh2]
+        have hcl : f^[j - i] x = x := by
+          simpa using hinjit i (hmem (j - i)) (hmem 0) hshift
+        exact absurd hcl (hcon (j - i) (by omega) (by omega))
+    have hcardI : ((fun j : ℕ => f^[j] x) '' Set.Iio (S.ncard + 1)).ncard
+        = (Set.Iio (S.ncard + 1)).ncard := hinjr.ncard_image
+    have hsubI : ((fun j : ℕ => f^[j] x) '' Set.Iio (S.ncard + 1)) ⊆ S := by
+      intro z hz
+      obtain ⟨j, hj, rfl⟩ := hz
+      exact hmem j
+    have hle : ((fun j : ℕ => f^[j] x) '' Set.Iio (S.ncard + 1)).ncard
+        ≤ S.ncard := Set.ncard_le_ncard hsubI hfin
+    have hIio : (Set.Iio (S.ncard + 1)).ncard = S.ncard + 1 := by simp
+    rw [hIio] at hcardI
+    omega
+  -- the minimal positive period
+  obtain ⟨m, hm0, hmle, hmx⟩ := hpig
+  have hfind : ∃ m : ℕ, 0 < m ∧ f^[m] x = x := ⟨m, hm0, hmx⟩
+  set m0 := Nat.find hfind with hm0def
+  have hspec : 0 < m0 ∧ f^[m0] x = x := Nat.find_spec hfind
+  have hmin : ∀ i : ℕ, 0 < i → i < m0 → f^[i] x ≠ x := by
+    intro i h0 hi hfix
+    exact absurd ⟨h0, hfix⟩ (Nat.find_min hfind (by omega))
+  -- powers of the period vanish
+  have hpowm : ∀ q : ℕ, f^[m0 * q] x = x := by
+    intro q
+    induction q with
+    | zero => simp
+    | succ n ih =>
+        rw [Nat.mul_succ, Function.iterate_add_apply f (m0 * n) m0, hspec.2, ih]
+  have hmod : ∀ j : ℕ, f^[j] x = f^[j % m0] x := by
+    intro j
+    have hsplit : j = j % m0 + m0 * (j / m0) := (Nat.mod_add_div j m0).symm
+    have h2 : f^[j] x = f^[j % m0 + m0 * (j / m0)] x := by
+      nth_rewrite 1 [hsplit]
+      rfl
+    rw [h2, Function.iterate_add_apply f (j % m0) (m0 * (j / m0)), hpowm]
+  -- S and the first-m0 window coincide
+  have hcoverm : ∀ y ∈ S, ∃ j : ℕ, j < m0 ∧ f^[j] x = y := by
+    intro y hy
+    obtain ⟨j, hj⟩ := hcover y hy
+    refine ⟨j % m0, Nat.mod_lt _ hspec.1, ?_⟩
+    rw [← hmod j]
+    exact hj
+  have hinjm : Set.InjOn (fun j : ℕ => f^[j] x) (Set.Iio m0) := by
+    intro j hj i hi hh
+    simp only [Set.mem_Iio] at hj hi
+    have hh2 : f^[j] x = f^[i] x := hh
+    rcases Nat.lt_trichotomy j i with hji | heq | hij
+    · have hsum : j + (i - j) = i := by omega
+      have hshift : f^[j] (f^[i - j] x) = f^[j] x := by
+        rw [← Function.iterate_add_apply f j (i - j) x, hsum, hh2.symm]
+      have hcl : f^[i - j] x = x := by
+        simpa using hinjit j (hmem (i - j)) (hmem 0) hshift
+      exact absurd hcl (hmin (i - j) (by omega) (by omega))
+    · rw [heq]
+    · have hsum : i + (j - i) = j := by omega
+      have hshift : f^[i] (f^[j - i] x) = f^[i] x := by
+        rw [← Function.iterate_add_apply f i (j - i) x, hsum, hh2]
+      have hcl : f^[j - i] x = x := by
+        simpa using hinjit i (hmem (j - i)) (hmem 0) hshift
+      exact absurd hcl (hmin (j - i) (by omega) (by omega))
+  have hwindow : ((fun j : ℕ => f^[j] x) '' Set.Iio m0) = S := by
+    apply Set.Subset.antisymm
+    · intro z hz
+      obtain ⟨j, hj, rfl⟩ := hz
+      exact hmem j
+    · intro y hy
+      obtain ⟨j, hj, hjy⟩ := hcoverm y hy
+      exact ⟨j, hj, hjy⟩
+  have hcardm : ((fun j : ℕ => f^[j] x) '' Set.Iio m0).ncard
+      = (Set.Iio m0).ncard := hinjm.ncard_image
+  have hm0eq : m0 = S.ncard := by
+    rw [hwindow] at hcardm
+    have h2 := hcardm
+    simp only [Set.ncard_Iio_nat] at h2
+    omega
+  refine ⟨?_, fun i h0 hi => hmin i h0 ?_⟩
+  · rw [← hm0eq]; exact hspec.2
+  · rw [← hm0eq] at hi; exact hi
+
+/-! ### The slice `ff`/`nn` forms and the order-2 maps (chapter 3) -/
+
+/-- The slice `ff` step at a reverse dart: the backward face step (the
+in-pred form read off the node's two-element neighbour set). -/
+private theorem param_ff_rev_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite) {p : V3 × V3}
+    (hp : p ∈ fv) : ∃ a' : V3, (a', p.1) ∈ fv ∧
+    ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (p.2, p.1) = (p.1, a') ∧
+    (p.1, a') ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) := by
+  obtain ⟨a', c, hne, hin, hout, hEE, -, -⟩ :=
+    param_nodeEE_p35 hsub hparam hfin ⟨p, hp, rfl⟩
+  have hp2c : p.2 = c := param_outUniq_p35 hsub hparam hEE hin hp hout
+  have hivs := (azimCycle_pairEE_p35 hEE hne).2.2.2
+  rw [hEE] at hivs
+  refine ⟨a', hin, ?_, ?_⟩
+  · rw [ffOfHyp_p3, if_pos (param_revDart_slice_p35 hsub hparam hp), hp2c]
+    dsimp only
+    rw [hEE, hivs]
+  · exact param_revDart_slice_p35 hsub hparam hin
+
+/-- The slice `EE` two-element form at the first coordinate of any slice
+carrier dart. -/
+private theorem param_nnForm_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite) {d : V3 × V3}
+    (hd : d ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)) :
+    ∃ a c : V3, a ≠ c ∧ (a, d.1) ∈ fv ∧ (d.1, c) ∈ fv ∧
+      EE_p3 d.1 (ePrime_p3 E' fv) = {a, c} := by
+  rw [SLICE_DARTS_EQ_p35 hsub hparam] at hd
+  rcases hd with h | ⟨q, hq, rfl⟩
+  · obtain ⟨a, c, h1, h2, h3, h4, -, -⟩ :=
+      param_nodeEE_p35 hsub hparam hfin ⟨d, h, rfl⟩
+    exact ⟨a, c, h1, h2, h3, h4⟩
+  · obtain ⟨w, hwne, hwq, -⟩ := hparam.2.2.1 q hq
+    obtain ⟨a, c, h1, h2, h3, h4, -, -⟩ :=
+      param_nodeEE_p35 hsub hparam hfin ⟨(q.2, w), hwq, rfl⟩
+    exact ⟨a, c, h1, h2, h3, h4⟩
+
+/-- **Slice edge map has order 2** — the transposition. -/
+theorem SLICE_EE_ORD2_p35 {V : Set V3} {E' : Set (Set V3)} {fv : Set (V3 × V3)}
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hne : fv.Nonempty) :
+    hasOrders_p3 (eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) :
+      V3 × V3 → V3 × V3) 2 := by
+  refine ⟨?_, ?_⟩
+  · intro i hi0 hilt
+    have hi1 : i = 1 := by omega
+    subst hi1
+    intro hid
+    obtain ⟨p, hp⟩ := hne
+    have hpD : p ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) :=
+      param_dart_slice_p35 hparam hp
+    have hne1 : eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) p ≠ p := by
+      rw [eeOfHyp_p3, if_pos hpD]
+      intro hcon
+      exact hparam.1 p hp (congrArg Prod.fst hcon).symm
+    exact hne1 (congrFun hid p)
+  · funext d
+    show (eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))
+        (eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) d) = d
+    by_cases hd : d ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)
+    · rw [eeOfHyp_apply_mem_p35 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) hd]
+      have hdrev : (d.2, d.1) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv)
+          (vPrime_p3 V fv) := by
+        rw [SLICE_DARTS_EQ_p35 hsub hparam] at hd ⊢
+        rcases hd with h | ⟨q, hq, rfl⟩
+        · exact Set.mem_union_right _ ⟨d, h, rfl⟩
+        · exact Set.mem_union_left _ hq
+      rw [eeOfHyp_apply_mem_p35 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) hdrev]
+    · have h1 := eeOfHyp_apply_notmem_p35 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) hd
+      exact (congrArg (eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)) h1).trans h1
+
+/-- **Slice node map has order 2** — the other transposition at each node. -/
+theorem SLICE_NN_ORD2_p35 {V : Set V3} {E' : Set (Set V3)} {fv : Set (V3 × V3)}
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hfin : fv.Finite) (hne : fv.Nonempty) :
+    hasOrders_p3 (nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) :
+      V3 × V3 → V3 × V3) 2 := by
+  have hdarts : ∀ d ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv),
+      ∃ a c : V3, a ≠ c ∧ (a, d.1) ∈ fv ∧ (d.1, c) ∈ fv ∧
+        EE_p3 d.1 (ePrime_p3 E' fv) = {a, c} :=
+    fun d hd => param_nnForm_p35 hsub hparam hfin hd
+  refine ⟨?_, ?_⟩
+  · intro i hi0 hilt
+    have hi1 : i = 1 := by omega
+    subst hi1
+    intro hid
+    obtain ⟨p, hp⟩ := hne
+    have hpD : p ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) :=
+      param_dart_slice_p35 hparam hp
+    obtain ⟨a, c, hac, hin, hout, hEE⟩ := hdarts p hpD
+    have hp2mem : (p.2 : V3) ∈ ({a, c} : Set V3) := by
+      have hmem : (p.2 : V3) ∈ EE_p3 p.1 (ePrime_p3 E' fv) := by
+        rw [sliceEE_char_p35 hsub hparam.1 p.1]
+        exact Or.inl hp
+      rw [hEE] at hmem
+      exact hmem
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hp2mem
+    have hac1 := (azimCycle_pairEE_p35 hEE hac).1
+    have hac2 := (azimCycle_pairEE_p35 hEE hac).2.1
+    rw [hEE] at hac1 hac2
+    have hne1 : nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) p ≠ p := by
+      rw [nnOfHyp_p3, if_pos hpD]
+      intro hcon
+      have hsnd : azimCycle_p3 (EE_p3 p.1 (ePrime_p3 E' fv)) 0 p.1 p.2
+          = p.2 := congrArg Prod.snd hcon
+      rw [hEE] at hsnd
+      rcases hp2mem with hh | hh
+      · rw [hh, hac1] at hsnd
+        exact hac hsnd.symm
+      · rw [hh, hac2] at hsnd
+        exact hac hsnd
+    exact hne1 (congrFun hid p)
+  · funext d
+    show (nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))
+        (nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) d) = d
+    by_cases hd : d ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)
+    · obtain ⟨a, c, hac, hin, hout, hEE⟩ := hdarts d hd
+      have hd2mem : (d.2 : V3) ∈ ({a, c} : Set V3) := by
+        have hmem : (d.2 : V3) ∈ EE_p3 d.1 (ePrime_p3 E' fv) := by
+          rw [sliceEE_char_p35 hsub hparam.1 d.1]
+          rw [SLICE_DARTS_EQ_p35 hsub hparam] at hd
+          rcases hd with h | ⟨q, hq, rfl⟩
+          · exact Or.inl h
+          · exact Or.inr hq
+        rw [hEE] at hmem
+        exact hmem
+      rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hd2mem
+      have hadart : (d.1, a) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv)
+          (vPrime_p3 V fv) := by
+        refine Set.mem_union_left _ ?_
+        show (a : V3) ∈ EE_p3 d.1 (ePrime_p3 E' fv)
+        rw [hEE]; simp
+      have hcdart' : (d.1, c) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv)
+          (vPrime_p3 V fv) := by
+        refine Set.mem_union_left _ ?_
+        show (c : V3) ∈ EE_p3 d.1 (ePrime_p3 E' fv)
+        rw [hEE]; simp
+      have hac1 := (azimCycle_pairEE_p35 hEE hac).1
+      have hac2 := (azimCycle_pairEE_p35 hEE hac).2.1
+      rw [hEE] at hac1 hac2
+      have hstep1 : nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) d
+          = (d.1, azimCycle_p3 (EE_p3 d.1 (ePrime_p3 E' fv)) 0 d.1 d.2) := by
+        rw [nnOfHyp_p3, if_pos hd]
+      rw [hstep1, hEE]
+      rcases hd2mem with hh | hh
+      · rw [hh, hac1, nnOfHyp_p3, if_pos hcdart']
+        dsimp only
+        rw [hEE, hac2, ← hh]
+      · rw [hh, hac2, nnOfHyp_p3, if_pos hadart]
+        dsimp only
+        rw [hEE, hac1, ← hh]
+    · have hed : nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) d = d := by
+        rw [nnOfHyp_p3, if_neg hd]
+      rw [hed, hed]
+
+/-! ### The backward step and the face-map order (chapter 3, deep block) -/
+
+/-- Second-coordinate injectivity of the face darts (out-dart uniqueness). -/
+private theorem param_injOn_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) {p q : V3 × V3} (hp : p ∈ fv)
+    (hq : q ∈ fv) (hnd : p.2 = q.2) : p.1 = q.1 := by
+  obtain ⟨c, hcne, hbc, hEEq⟩ := hparam.2.2.1 p hp
+  have hr1 : q.1 ∈ EE_p3 q.2 (ePrime_p3 E' fv) := by
+    rw [sliceEE_char_p35 hsub hparam.1 q.2]
+    exact Or.inr hq
+  rw [hnd] at hEEq
+  rw [hEEq, Set.mem_insert_iff, Set.mem_singleton_iff] at hr1
+  rcases hr1 with hh | hh
+  · exact hh.symm
+  · have hrc : q = (c, p.2) := Prod.ext hh hnd.symm
+    rw [hrc] at hq
+    exact absurd hq (hparam.2.1 (p.2, c) hbc)
+
+/-- The slice forward step of a face dart, with its value. -/
+private theorem param_ff_fwd_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) {p : V3 × V3} (hp : p ∈ fv) :
+    ∃ c : V3, ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) p = (p.2, c) ∧
+      (p.2, c) ∈ fv := by
+  obtain ⟨c, hc1, hc2, hc3⟩ := param_carrierFF_p35 hsub hparam hp
+  exact ⟨c, hc3, hc2⟩
+
+/-- The slice node map of a face dart: the backward dart. -/
+private theorem param_nnFwd_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite) {p : V3 × V3}
+    (hp : p ∈ fv) : ∃ a : V3, (a, p.1) ∈ fv ∧
+    nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) p = (p.1, a) ∧
+    (p.1, a) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) := by
+  obtain ⟨a, c, hne, hin, hout, hEE, -, -⟩ :=
+    param_nodeEE_p35 hsub hparam hfin ⟨p, hp, rfl⟩
+  have hp2c : p.2 = c := param_outUniq_p35 hsub hparam hEE hin hp hout
+  have hac1 := (azimCycle_pairEE_p35 hEE hne).2.1
+  rw [hEE] at hac1
+  refine ⟨a, hin, ?_, ?_⟩
+  · rw [nnOfHyp_p3, if_pos (param_dart_slice_p35 hparam hp), hp2c, hEE, hac1]
+  · exact param_revDart_slice_p35 hsub hparam hin
+
+/-- The conjugation step: the slice `ff` at the reverse dart of `q` is the
+reverse of the backward dart of `q.1`. -/
+private theorem param_fswap_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite) {q : V3 × V3}
+    (hq : q ∈ fv) : ∃ a : V3, (a, q.1) ∈ fv ∧
+    ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (q.2, q.1) = (q.1, a) := by
+  obtain ⟨a, c, hne, hin, hout, hEE, -, -⟩ :=
+    param_nodeEE_p35 hsub hparam hfin ⟨q, hq, rfl⟩
+  have hq2c : q.2 = c := param_outUniq_p35 hsub hparam hEE hin hq hout
+  have hac4 := (azimCycle_pairEE_p35 hEE hne).2.2.2
+  rw [hEE] at hac4
+  refine ⟨a, hin, ?_⟩
+  rw [ffOfHyp_p3, if_pos (param_revDart_slice_p35 hsub hparam hq), hq2c, hEE,
+    hac4]
+/- **W4 残差记账（W3b2 交付定尺）**：`SLICE_FF_ORD_p35`（切片 face map 的
+`hasOrders_p3 f (fv.ncard)`：正向/反向两个 k-循环 + `ee∘nn` 后退步共轭）、
+`dih2k` 合取 2（`↑H.darts = H.face x ∪ nodeMap '' H.face x`）、切片载体
+`HS'` 的 `HS_EXISTS` 式构造与 `HAFL_CIRCLE_FORM_LOCAL_FAN_p35` 条件合装
+（`HAFL_RED_p35` + `LOCALIZE_PRESERVE_FACE_p35` + `DIH2K_SLICE`）。
+全部为已交付件之上的纯簿记：抽象周期引理 `period_of_cycle_p35` 与
+`param_ff_fwd/rev/fswap/nnFwd` 步长件即其全部供给（估算 ≈150-200 行 Lean）。
+半圈轨道参数化（HOL 章 2 本体，`LOOP_SET_DETER_FIRTS_ELMS` 邻域）保持为
+`faceCycleParam_p35` 接口之后的几何深水。 -/
+/-! ## EJRCFJD chain W4a — the slice face-map order, the `dih2k` darts
+covering, the slice-carrier `Hypermap` witness, and the conditional
+`HAFL_CIRCLE_FORM_LOCAL_FAN` assembly
+
+All pure bookkeeping on top of the W3b2 delivered pieces
+(`faceCycleParam_p35`, the `param_*` step lemmas, `period_of_cycle_p35`,
+`SLICE_DARTS_*`, the 2-元 azim-cycle kit).  The geometric deep water — the
+half-circle orbit parametrization discharging `faceCycleParam_p35` (HOL
+chapter 2, `LOOP_SET_DETER_FIRTS_ELMS` neighbourhood) — stays behind the
+interface.  Structure: the slice face `fv` is a single forward `k`-cycle
+(period at the carrier dart `d` via the orbit agreement with the carrier
+`ff`), the reversed darts form the conjugate backward `k`-cycle under the
+total map `t = swap ∘ f ∘ swap` (`sliceBack_p35`), so `f^[k] = id` on all
+slice darts; the node map swaps the two cycles; the whole slice dart set is
+`face x ∪ nodeMap '' face x` for every slice dart `x` — exactly the `dih2k`
+conjuncts at order `fv.ncard`.
+
+NOTE (iterate semantics in this toolchain build): `Function.iterate_succ_apply`
+peels into the argument (`f^[n+1] a = f^[n] (f a)`) and
+`Function.iterate_succ_apply'` applies to the result (`f^[n+1] a =
+f (f^[n] a)`). -/
+
+/-- The backward-cycle conjugate of `f`: `t = swap ∘ f ∘ swap`, a total
+self-map of the darts with `f ∘ swap = swap ∘ t` for every dart. -/
+private def sliceBack_p35 (f : V3 × V3 → V3 × V3) : V3 × V3 → V3 × V3 :=
+  Prod.swap ∘ f ∘ Prod.swap
+
+/-- The conjugation identity for iterates of `sliceBack_p35`. -/
+private theorem sliceBack_iter_p35 {f : V3 × V3 → V3 × V3} (j : ℕ) (z : V3 × V3) :
+    (sliceBack_p35 f)^[j] z = Prod.swap (f^[j] (Prod.swap z)) := by
+  induction j with
+  | zero => simp
+  | succ n ih =>
+      rw [Function.iterate_succ_apply' (f := sliceBack_p35 f), ih,
+        Function.iterate_succ_apply' (f := f)]
+      show Prod.swap (f (Prod.swap (Prod.swap (f^[n] (Prod.swap z)))))
+          = Prod.swap (f (f^[n] (Prod.swap z)))
+      rw [Prod.swap_swap]
+
+/-- The iterate-period mod rule (pure). -/
+private theorem param_fmod_p35 {f : V3 × V3 → V3 × V3} {x : V3 × V3} {k : ℕ}
+    (hk : f^[k] x = x) (j : ℕ) : f^[j] x = f^[j % k] x := by
+  have hsplit : j = j % k + k * (j / k) := (Nat.mod_add_div j k).symm
+  nth_rewrite 1 [hsplit]
+  rw [Function.iterate_add_apply f (j % k) (k * (j / k))]
+  have hpow : ∀ m : ℕ, f^[k * m] x = x := by
+    intro m
+    induction m with
+    | zero => simp
+    | succ n ih =>
+        rw [Nat.mul_succ, Function.iterate_add_apply f (k * n) k, hk, ih]
+  rw [hpow]
+
+/-- A fixed point stays fixed under all iterates (pure). -/
+private theorem param_fOffIter_p35 {f : V3 × V3 → V3 × V3} {z : V3 × V3}
+    (h : f z = z) (j : ℕ) : f^[j] z = z := by
+  induction j with
+  | zero => rfl
+  | succ n ih => rw [Function.iterate_succ_apply', ih, h]
+
+/-! ### The slice-level step facts (no carrier needed) -/
+
+/-- The slice node map of a reversed face dart is the forward step. -/
+private theorem param_nnSwap_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+    {q : V3 × V3} (hq : q ∈ fv) :
+    nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (q.2, q.1)
+      = ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) q := by
+  obtain ⟨c, hfc, hfcmem⟩ := param_ff_fwd_p35 hsub hparam hq
+  obtain ⟨a₂, c₂, hac, hin, hout, hEE, -, -⟩ :=
+    param_nodeEE_p35 hsub hparam hfin ⟨(q.2, c), hfcmem, rfl⟩
+  have ha₂ : a₂ = q.1 :=
+    (param_injOn_p35 hsub hparam hq hin (rfl : q.2 = (a₂, q.2).2)).symm
+  have hc₂c : c₂ = c := congrArg Prod.snd
+    (param_fstInj_p35 hsub hparam hfin hout hfcmem rfl)
+  rw [ha₂] at hEE hac
+  rw [hc₂c] at hEE hac
+  have hEE' : EE_p3 q.2 (ePrime_p3 E' fv) = {q.1, c} := hEE
+  have hzq : azimCycle_p3 {q.1, c} 0 q.2 q.1 = c := by
+    have hz := (azimCycle_pairEE_p35 hEE' hac).1
+    rw [hEE'] at hz
+    exact hz
+  rw [nnOfHyp_p3, if_pos (param_revDart_slice_p35 hsub hparam hq)]
+  show (q.2, azimCycle_p3 (EE_p3 q.2 (ePrime_p3 E' fv)) 0 q.2 q.1)
+      = ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) q
+  rw [hEE', hzq, hfc]
+
+/-- The backward step of a forward step is the identity (on the face). -/
+private theorem param_tFwd_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+    {r : V3 × V3} (hr : r ∈ fv) :
+    sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))
+        (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) r) = r := by
+  obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam hr
+  obtain ⟨a, ha, hfs⟩ := param_fswap_p35 hsub hparam hfin hcmem
+  have hfs' : ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (c, r.2)
+      = (r.2, a) := hfs
+  have haeq : r.1 = a :=
+    param_injOn_p35 hsub hparam hr ha (rfl : r.2 = (a, r.2).2)
+  show Prod.swap
+      (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+        (Prod.swap (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) r))) = r
+  rw [hc]
+  show Prod.swap (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (c, r.2)) = r
+  rw [hfs']
+  exact Prod.ext haeq.symm rfl
+
+/-- The backward map keeps the face. -/
+private theorem param_tMem_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+    {q : V3 × V3} (hq : q ∈ fv) :
+    sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)) q ∈ fv := by
+  obtain ⟨a, ha, hfs⟩ := param_fswap_p35 hsub hparam hfin hq
+  show Prod.swap (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+      (q.2, q.1)) ∈ fv
+  rw [hfs]
+  exact ha
+
+/-- Forward iterates stay in the face. -/
+private theorem param_fpowMem_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) {q : V3 × V3} (hq : q ∈ fv) (j : ℕ) :
+    (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[j] q ∈ fv := by
+  induction j with
+  | zero => simpa using hq
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam ih
+      rw [hc]
+      exact hcmem
+
+/-- Backward iterates stay in the face. -/
+private theorem param_tpowMem_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+    {q : V3 × V3} (hq : q ∈ fv) (j : ℕ) :
+    (sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)))^[j] q
+      ∈ fv := by
+  induction j with
+  | zero => simpa using hq
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      exact param_tMem_p35 hsub hparam hfin ih
+
+/-! ### The orbit agreement with the carrier (fv = HS.face d) -/
+
+/-- The slice-carrier `ff` orbit of `d` agrees term-by-term with the
+carrier `ff` orbit, which stays in the face. -/
+private theorem param_orbitAgree_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) (j : ℕ) :
+    (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[j] d
+      = (ffOfHyp_p3 0 V E')^[j] d
+    ∧ (ffOfHyp_p3 0 V E')^[j] d ∈ fv := by
+  subst hfv
+  have hstep : ∀ k : ℕ,
+      (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)))^[k] d
+        = (ffOfHyp_p3 0 V E')^[k] d
+      ∧ (ffOfHyp_p3 0 V E')^[k] d ∈ HS.face d := by
+    intro k
+    induction k with
+    | zero => exact ⟨rfl, ⟨0, rfl⟩⟩
+    | succ k ih =>
+        obtain ⟨heq, hmem⟩ := ih
+        obtain ⟨c, hc1, hc2, hc3⟩ := param_carrierFF_p35 hsub hparam hmem
+        refine ⟨?_, ?_⟩
+        · rw [Function.iterate_succ_apply', Function.iterate_succ_apply', heq,
+            hc3, hc1]
+        · rw [Function.iterate_succ_apply']
+          exact fvStep_p35 HS hHS hmem
+  exact hstep j
+
+/-- The slice `ff` orbit of `d` covers the face. -/
+private theorem param_orbitCover_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) (y : V3 × V3) (hy : y ∈ fv) :
+    ∃ j : ℕ, (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[j] d = y := by
+  subst hfv
+  rw [DETERMINE_FV_p35 HS hHS d] at hy
+  obtain ⟨k, hk⟩ := hy
+  refine ⟨k, ?_⟩
+  rw [(param_orbitAgree_p35 hsub hparam HS hHS rfl k).1]
+  exact hk
+
+/-- The slice `ff` map is injective on the face. -/
+private theorem param_orbitInj_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) :
+    Set.InjOn (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)) fv := by
+  intro p hp q hq hpq
+  obtain ⟨c₁, h₁, -⟩ := param_ff_fwd_p35 hsub hparam hp
+  obtain ⟨c₂, h₂, -⟩ := param_ff_fwd_p35 hsub hparam hq
+  rw [h₁, h₂] at hpq
+  exact Prod.ext (param_injOn_p35 hsub hparam hp hq (congrArg Prod.fst hpq))
+    (congrArg Prod.fst hpq)
+
+/-- The period of the face cycle at the carrier dart. -/
+private theorem param_periodD_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) :
+    (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[fv.ncard] d = d
+    ∧ ∀ i : ℕ, 0 < i → i < fv.ncard →
+        (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[i] d ≠ d := by
+  subst hfv
+  have hmem : ∀ j : ℕ,
+      (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)))^[j] d ∈ HS.face d := by
+    intro j
+    obtain ⟨h1, h2⟩ := param_orbitAgree_p35 hsub hparam HS hHS rfl j
+    rw [h1]
+    exact h2
+  refine period_of_cycle_p35 (param_orbitInj_p35 hsub hparam) hmem
+    (fun y hy => param_orbitCover_p35 hsub hparam HS hHS rfl y hy)
+    (fvFinite_p35 (V := V) (E := E') HS d)
+
+/-! ### The face-cycle period bookkeeping -/
+
+/-- `f^[k] q = q` for every face dart `q` (period propagates around). -/
+private theorem param_fpowFix_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) {q : V3 × V3} (hq : q ∈ fv) :
+    (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[fv.ncard] q = q := by
+  subst hfv
+  obtain ⟨hper, -⟩ := param_periodD_p35 hsub hparam HS hHS rfl
+  have hk1 : 0 < (HS.face d).ncard := by
+    by_contra h0
+    have h0' : (HS.face d).ncard = 0 := by omega
+    rw [Set.ncard_eq_zero (fvFinite_p35 (V := V) (E := E') HS d)] at h0'
+    have hd0 : d ∈ HS.face d := ⟨0, rfl⟩
+    rw [h0'] at hd0
+    exact absurd hd0 (Set.notMem_empty d)
+  obtain ⟨j, hj⟩ := param_orbitCover_p35 hsub hparam HS hHS rfl q hq
+  have hj' := param_fmod_p35 hper j
+  rw [← hj, hj']
+  have hA : (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)))
+      ^[(HS.face d).ncard + j % (HS.face d).ncard] d
+      = (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)))
+          ^[(HS.face d).ncard] ((ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+            (ePrime_p3 E' (HS.face d)))^[j % (HS.face d).ncard] d) :=
+    Function.iterate_add_apply _ _ _ _
+  rw [Nat.add_comm (HS.face d).ncard (j % (HS.face d).ncard)] at hA
+  have hB : (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)))
+      ^[j % (HS.face d).ncard + (HS.face d).ncard] d
+      = (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)))
+          ^[j % (HS.face d).ncard]
+          ((ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+            (ePrime_p3 E' (HS.face d)))^[(HS.face d).ncard] d) :=
+    Function.iterate_add_apply _ _ _ _
+  rw [hB] at hA
+  rw [hper] at hA
+  rw [← hA]
+
+/-- Cancel form: `t^[m] (f^[m] q) = q` on the face. -/
+private theorem param_tCancel_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite) (m : ℕ)
+    {q : V3 × V3} (hq : q ∈ fv) :
+    (sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)))^[m]
+        ((ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[m] q) = q := by
+  induction m with
+  | zero => simp
+  | succ n ih =>
+      rw [Function.iterate_succ_apply (f := sliceBack_p35 _),
+        Function.iterate_succ_apply' (f := ffOfHyp_p3 0 (vPrime_p3 V fv)
+          (ePrime_p3 E' fv)),
+        param_tFwd_p35 hsub hparam hfin
+          (param_fpowMem_p35 hsub hparam hq n), ih]
+
+/-- `t^[m] q = f^[k-m] q` on the face (the backward cycle runs the
+forward cycle in reverse). -/
+private theorem param_tpowEq_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) {m : ℕ} (hm : m ≤ fv.ncard) {q : V3 × V3}
+    (hq : q ∈ fv) :
+    (sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)))^[m] q
+      = (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[fv.ncard - m] q := by
+  subst hfv
+  have hfix := param_fpowFix_p35 hsub hparam HS hHS rfl hq
+  have hmem : (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)))^[(HS.face d).ncard - m] q
+      ∈ HS.face d :=
+    param_fpowMem_p35 hsub hparam hq _
+  have hqeq : q = (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)))^[m]
+      ((ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)))^[(HS.face d).ncard - m] q) := by
+    rw [← Function.iterate_add_apply _ m ((HS.face d).ncard - m) q,
+      show m + ((HS.face d).ncard - m) = (HS.face d).ncard from by omega, hfix]
+  nth_rewrite 1 [hqeq]
+  exact param_tCancel_p35 hsub hparam hfin m hmem
+
+/-- `t^[k] q = q`: the backward cycle has the same period. -/
+private theorem param_tpowFix_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) {q : V3 × V3} (hq : q ∈ fv) :
+    (sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)))
+        ^[fv.ncard] q = q := by
+  subst hfv
+  have hfin' : (HS.face d).Finite := fvFinite_p35 (V := V) (E := E') HS d
+  rw [param_tpowEq_p35 hsub hparam hfin' HS hHS rfl (Nat.le_refl _) hq,
+    show (HS.face d).ncard - (HS.face d).ncard = 0 from by omega]
+  simp
+
+/-- `f ∘ t = id` on the face. -/
+private theorem param_ftMem_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) {q : V3 × V3} (hq : q ∈ fv) :
+    ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+        (sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)) q)
+      = q := by
+  subst hfv
+  have hk1 : 1 ≤ (HS.face d).ncard := by
+    have hd0 : d ∈ HS.face d := ⟨0, rfl⟩
+    by_contra h0
+    have h0' : (HS.face d).ncard = 0 := by omega
+    rw [Set.ncard_eq_zero (fvFinite_p35 (V := V) (E := E') HS d)] at h0'
+    rw [h0'] at hd0
+    exact absurd hd0 (Set.notMem_empty d)
+  have hfin' : (HS.face d).Finite := fvFinite_p35 (V := V) (E := E') HS d
+  show (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)))^[1]
+      ((sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d))))^[1] q) = q
+  rw [param_tpowEq_p35 hsub hparam hfin' HS hHS rfl hk1 hq,
+    ← Function.iterate_add_apply (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+      (ePrime_p3 E' (HS.face d))) 1 ((HS.face d).ncard - 1) q,
+    show 1 + ((HS.face d).ncard - 1) = (HS.face d).ncard from by omega]
+  exact param_fpowFix_p35 hsub hparam HS hHS rfl hq
+
+/-- The forward map on a reversed face dart steps around the conjugate
+cycle: `f^[j] (swap q) = swap (t^[j] q)`. -/
+private theorem param_fSwapIter_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (j : ℕ) {q : V3 × V3}
+    (hq : q ∈ fv) :
+    (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[j] (q.2, q.1)
+      = Prod.swap
+          ((sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv)
+            (ePrime_p3 E' fv)))^[j] q) := by
+  induction j with
+  | zero => simp [Prod.swap]
+  | succ n ih =>
+      rw [Function.iterate_succ_apply' (f := ffOfHyp_p3 0 (vPrime_p3 V fv)
+          (ePrime_p3 E' fv)),
+        Function.iterate_succ_apply' (f := sliceBack_p35 _), ih]
+      show ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+          (Prod.swap ((sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv)
+            (ePrime_p3 E' fv)))^[n] q))
+        = Prod.swap (sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv)
+            (ePrime_p3 E' fv)) ((sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv)
+              (ePrime_p3 E' fv)))^[n] q))
+      simp only [sliceBack_p35, Function.comp_apply, Prod.swap_swap]
+
+/-- `f^[k] (swap q) = swap q`: the conjugate cycle has the same period. -/
+private theorem param_fSwapFix_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) {q : V3 × V3} (hq : q ∈ fv) :
+    (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[fv.ncard] (q.2, q.1)
+      = (q.2, q.1) := by
+  subst hfv
+  rw [param_fSwapIter_p35 hsub hparam _ hq,
+    param_tpowFix_p35 hsub hparam HS hHS rfl hq]
+  simp [Prod.swap]
+
+/-! ### The face-map order and the orbit sets -/
+
+/-- **EJRCFJD chain W4a** — the slice face map has order `fv.ncard`
+(the `has_orders face_map k` conjunct of the sliced-carrier `dih2k`; HOL
+chapter 3 order bookkeeping conditional on the chapter-2 interface
+`faceCycleParam_p35`). -/
+theorem SLICE_FF_ORD_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' (HS.face d)) :
+    hasOrders_p3 (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)) : V3 × V3 → V3 × V3) (HS.face d).ncard := by
+  have hsub := fvSubsetDarts_p35 HS hHS hd
+  refine ⟨?_, ?_⟩
+  · intro i hi0 hilt hid
+    exact (param_periodD_p35 hsub hparam HS hHS rfl).2 i hi0 hilt
+      (congrFun hid d)
+  · funext z
+    by_cases hz : z ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face d))
+        (vPrime_p3 V (HS.face d))
+    · rw [SLICE_DARTS_EQ_p35 hsub hparam] at hz
+      rcases hz with h | ⟨q, hq, rfl⟩
+      · exact param_fpowFix_p35 hsub hparam HS hHS rfl h
+      · exact param_fSwapFix_p35 hsub hparam HS hHS rfl hq
+    · exact param_fOffIter_p35
+        (show ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+              (ePrime_p3 E' (HS.face d)) z = z from by
+          rw [ffOfHyp_p3, if_neg hz]) (HS.face d).ncard
+
+/-- The face orbit set of a face dart is the whole face. -/
+private theorem param_faceFv_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) {x : V3 × V3} (hx : x ∈ fv) :
+    {z : V3 × V3 | ∃ n : ℕ,
+        (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[n] x = z}
+      = fv := by
+  subst hfv
+  obtain ⟨hper, -⟩ := param_periodD_p35 hsub hparam HS hHS rfl
+  have hk1 : 0 < (HS.face d).ncard := by
+    by_contra h0
+    have h0' : (HS.face d).ncard = 0 := by omega
+    rw [Set.ncard_eq_zero (fvFinite_p35 (V := V) (E := E') HS d)] at h0'
+    have hd0 : d ∈ HS.face d := ⟨0, rfl⟩
+    rw [h0'] at hd0
+    exact absurd hd0 (Set.notMem_empty d)
+  have hmodf := param_fmod_p35 (f := ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+    (ePrime_p3 E' (HS.face d))) (x := d) hper
+  ext z
+  constructor
+  · rintro ⟨n, rfl⟩
+    exact param_fpowMem_p35 hsub hparam hx n
+  · intro hz
+    obtain ⟨i, hi⟩ := param_orbitCover_p35 hsub hparam HS hHS rfl z hz
+    obtain ⟨i₀, hi₀⟩ := param_orbitCover_p35 hsub hparam HS hHS rfl x hx
+    have hilt : i % (HS.face d).ncard < (HS.face d).ncard := Nat.mod_lt _ hk1
+    have hi₀lt : i₀ % (HS.face d).ncard < (HS.face d).ncard :=
+      Nat.mod_lt _ hk1
+    have hi' := hmodf i
+    have hi₀' := hmodf i₀
+    have hx' : x = (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)))^[i₀ % (HS.face d).ncard] d :=
+      hi₀.symm.trans hi₀'
+    have hz' : z = (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)))^[i % (HS.face d).ncard] d :=
+      hi.symm.trans hi'
+    rcases Nat.lt_or_ge (i₀ % (HS.face d).ncard) (i % (HS.face d).ncard)
+      with hcmp | hcmp
+    · refine ⟨i % (HS.face d).ncard - i₀ % (HS.face d).ncard, ?_⟩
+      rw [hx', ← Function.iterate_add_apply,
+        show i % (HS.face d).ncard - i₀ % (HS.face d).ncard
+          + i₀ % (HS.face d).ncard = i % (HS.face d).ncard from by omega, hz']
+    · refine ⟨i % (HS.face d).ncard + (HS.face d).ncard
+          - i₀ % (HS.face d).ncard, ?_⟩
+      rw [hx', Nat.add_sub_assoc (show i₀ % (HS.face d).ncard
+          ≤ (HS.face d).ncard from by omega), ← Function.iterate_add_apply,
+        show i % (HS.face d).ncard + ((HS.face d).ncard
+            - i₀ % (HS.face d).ncard) + i₀ % (HS.face d).ncard
+          = i % (HS.face d).ncard + (HS.face d).ncard from by omega,
+        Function.iterate_add_apply, hper, hz']
+
+/-- The face orbit set of a reversed face dart is the reversed image. -/
+private theorem param_faceSwap_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) {q : V3 × V3} (hq : q ∈ fv) :
+    {z : V3 × V3 | ∃ n : ℕ,
+        (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))^[n] (q.2, q.1) = z}
+      = (fun q : V3 × V3 => (q.2, q.1)) '' fv := by
+  subst hfv
+  obtain ⟨hper, -⟩ := param_periodD_p35 hsub hparam HS hHS rfl
+  have hk1 : 0 < (HS.face d).ncard := by
+    by_contra h0
+    have h0' : (HS.face d).ncard = 0 := by omega
+    rw [Set.ncard_eq_zero (fvFinite_p35 (V := V) (E := E') HS d)] at h0'
+    have hd0 : d ∈ HS.face d := ⟨0, rfl⟩
+    rw [h0'] at hd0
+    exact absurd hd0 (Set.notMem_empty d)
+  have hmodf := param_fmod_p35 (f := ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+    (ePrime_p3 E' (HS.face d))) (x := d) hper
+  ext z
+  constructor
+  · rintro ⟨n, rfl⟩
+    rw [param_fSwapIter_p35 hsub hparam n hq]
+    exact ⟨(sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+      (ePrime_p3 E' (HS.face d))))^[n] q,
+      param_tpowMem_p35 hsub hparam hfin hq n, rfl⟩
+  · rintro ⟨r, hr, rfl⟩
+    show ∃ n : ℕ,
+        (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+          (ePrime_p3 E' (HS.face d)))^[n] (q.2, q.1) = (r.2, r.1)
+    obtain ⟨i, hi⟩ := param_orbitCover_p35 hsub hparam HS hHS rfl r hr
+    obtain ⟨i₀, hi₀⟩ := param_orbitCover_p35 hsub hparam HS hHS rfl q hq
+    have hilt : i % (HS.face d).ncard < (HS.face d).ncard := Nat.mod_lt _ hk1
+    have hi₀lt : i₀ % (HS.face d).ncard < (HS.face d).ncard :=
+      Nat.mod_lt _ hk1
+    have hi' := hmodf i
+    have hi₀' := hmodf i₀
+    have hq' : q = (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)))^[i₀ % (HS.face d).ncard] d :=
+      hi₀.symm.trans hi₀'
+    have hr' : r = (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+        (ePrime_p3 E' (HS.face d)))^[i % (HS.face d).ncard] d :=
+      hi.symm.trans hi'
+    rcases Nat.lt_or_ge (i₀ % (HS.face d).ncard) (i % (HS.face d).ncard)
+      with hcmp | hcmp
+    · refine ⟨(HS.face d).ncard
+          - (i % (HS.face d).ncard - i₀ % (HS.face d).ncard), ?_⟩
+      rw [param_fSwapIter_p35 hsub hparam _ hq,
+        param_tpowEq_p35 hsub hparam hfin HS hHS rfl (by omega) hq, hq',
+        ← Function.iterate_add_apply,
+        show (HS.face d).ncard
+            - ((HS.face d).ncard - (i % (HS.face d).ncard
+              - i₀ % (HS.face d).ncard)) + i₀ % (HS.face d).ncard
+          = i % (HS.face d).ncard from by omega]
+      exact congrArg Prod.swap hr'.symm
+    · refine ⟨i₀ % (HS.face d).ncard - i % (HS.face d).ncard, ?_⟩
+      rw [param_fSwapIter_p35 hsub hparam _ hq,
+        param_tpowEq_p35 hsub hparam hfin HS hHS rfl (by omega) hq, hq',
+        ← Function.iterate_add_apply,
+        show (HS.face d).ncard
+            - (i₀ % (HS.face d).ncard - i % (HS.face d).ncard)
+          + i₀ % (HS.face d).ncard
+          = i % (HS.face d).ncard + (HS.face d).ncard from by omega,
+        Function.iterate_add_apply, hper]
+      exact congrArg Prod.swap hr'.symm
+
+/-! ### The node-map image swaps the two cycles -/
+
+/-- The node-map image of the face is the reversed image. -/
+private theorem param_nnImageFv_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite) :
+    nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) '' fv
+      = (fun q : V3 × V3 => (q.2, q.1)) '' fv := by
+  apply Set.Subset.antisymm
+  · rintro z ⟨q, hq, rfl⟩
+    obtain ⟨a, ha, hnn, -⟩ := param_nnFwd_p35 hsub hparam hfin hq
+    rw [hnn]
+    exact ⟨(a, q.1), ha, rfl⟩
+  · rintro z ⟨q, hq, rfl⟩
+    obtain ⟨c, hfc, hfcmem⟩ := param_ff_fwd_p35 hsub hparam hq
+    obtain ⟨a, ha, hnn, -⟩ := param_nnFwd_p35 hsub hparam hfin hfcmem
+    have hnn' : nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (q.2, c)
+        = (q.2, a) := hnn
+    have hq1 : q.1 = a :=
+      param_injOn_p35 hsub hparam hq ha (rfl : q.2 = (a, q.2).2)
+    refine ⟨(q.2, c), hfcmem, ?_⟩
+    show nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (q.2, c)
+      = (q.2, q.1)
+    rw [hnn', hq1]
+
+/-- The node-map image of the reversed image is the face. -/
+private theorem param_nnImageSwap_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hfv : fv = HS.face d) :
+    nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) ''
+        (fun q : V3 × V3 => (q.2, q.1)) '' fv
+      = fv := by
+  ext z
+  constructor
+  · rintro ⟨z', ⟨q, hq, rfl⟩, hnn⟩
+    rw [param_nnSwap_p35 hsub hparam hfin hq] at hnn
+    obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam hq
+    rw [← hnn, hc]
+    exact hcmem
+  · intro hz
+    refine ⟨Prod.swap (sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv)
+      (ePrime_p3 E' fv)) z),
+      ⟨sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)) z,
+        param_tMem_p35 hsub hparam hfin hz, rfl⟩, ?_⟩
+    show nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+        ((sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv)
+          (ePrime_p3 E' fv)) z).2,
+        (sliceBack_p35 (ffOfHyp_p3 0 (vPrime_p3 V fv)
+          (ePrime_p3 E' fv)) z).1) = z
+    rw [param_nnSwap_p35 hsub hparam hfin (param_tMem_p35 hsub hparam hfin hz)]
+    exact param_ftMem_p35 hsub hparam HS hHS hfv hz
+
+/-- **EJRCFJD chain W4a** — the `dih2k` darts-covering conjunct: every
+slice dart's face together with its node-map image covers the whole slice
+dart set (`↑darts = face x ∪ nodeMap '' face x`). -/
+theorem SLICE_DARTS_COVER_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' (HS.face d)) (x : V3 × V3)
+    (hx : x ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face d))
+      (vPrime_p3 V (HS.face d))) :
+    dartsOfHyp_p3 (ePrime_p3 E' (HS.face d)) (vPrime_p3 V (HS.face d))
+      = {z : V3 × V3 | ∃ n : ℕ,
+          (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+            (ePrime_p3 E' (HS.face d)))^[n] x = z}
+        ∪ (nnOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+            (ePrime_p3 E' (HS.face d)) ''
+          {z : V3 × V3 | ∃ n : ℕ,
+            (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+              (ePrime_p3 E' (HS.face d)))^[n] x = z}) := by
+  have hsub := fvSubsetDarts_p35 HS hHS hd
+  have hfin := fvFinite_p35 (V := V) (E := E') HS d
+  rw [SLICE_DARTS_EQ_p35 hsub hparam] at hx
+  rcases hx with hxf | ⟨q, hq, rfl⟩
+  · rw [param_faceFv_p35 hsub hparam HS hHS rfl hxf,
+      param_nnImageFv_p35 hsub hparam hfin, SLICE_DARTS_EQ_p35 hsub hparam]
+  · rw [param_faceSwap_p35 hsub hparam hfin HS hHS rfl hq,
+      param_nnImageSwap_p35 hsub hparam hfin HS hHS rfl,
+      SLICE_DARTS_EQ_p35 hsub hparam, Set.union_comm]
+
+/-! ### The slice-carrier `Hypermap` witness -/
+
+/-- **EJRCFJD chain W4a** — the slice carrier exists (the `HS_EXISTS`
+construction localized to the slice vertex/edge sets): the `Hypermap`
+whose maps are the slice `ee`/`nn`/`ff` pieces.  The three `PermutesOn`
+fields are the off-dart identity branches; `comp_eq_one` is the per-dart
+`edge ∘ node ∘ face = id` three-step computation. -/
+theorem SLICE_HYP_EXISTS_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+    (hne : fv.Nonempty) :
+    ∃ HS' : Hypermap (V3 × V3),
+      IsHypE_p35 (vPrime_p3 V fv) (ePrime_p3 E' fv) HS' := by
+  have hdarts : dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)
+      = fv ∪ (fun q : V3 × V3 => (q.2, q.1)) '' fv :=
+    SLICE_DARTS_EQ_p35 hsub hparam
+  have hfinD : (dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)).Finite := by
+    rw [hdarts]
+    exact hfin.union (Set.Finite.image (fun q : V3 × V3 => (q.2, q.1)) hfin)
+  have hmemD : ∀ z ∈ fv, z ∈ dartsOfHyp_p3 (ePrime_p3 E' fv)
+      (vPrime_p3 V fv) := fun z hz => by rw [hdarts]; exact Set.mem_union_left _ hz
+  have hmemDsw : ∀ z ∈ fv, (z.2, z.1) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv)
+      (vPrime_p3 V fv) := fun z hz => by
+    rw [hdarts]; exact Set.mem_union_right _ ⟨z, hz, rfl⟩
+  have hnn2 := (SLICE_NN_ORD2_p35 hsub hparam hfin hne).2
+  have hnnfix : ∀ z : V3 × V3,
+      nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+        (nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) z) = z := by
+    intro z
+    simpa using congrFun hnn2 z
+  have hmapNN : ∀ z ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv),
+      nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) z
+        ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) := by
+    intro z hz
+    rw [hdarts] at hz
+    rcases hz with h | ⟨q, hq, rfl⟩
+    · obtain ⟨a, ha, hnn, -⟩ := param_nnFwd_p35 hsub hparam hfin h
+      rw [hnn]
+      exact hmemDsw (a, z.1) ha
+    · rw [param_nnSwap_p35 hsub hparam hfin hq]
+      obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam hq
+      rw [hc]
+      exact hmemD _ hcmem
+  have hBijNN : Set.BijOn (nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))
+      (dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv))
+      (dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)) := by
+    refine ⟨hmapNN, ?_, fun b hb => ⟨nnOfHyp_p3 0 (vPrime_p3 V fv)
+      (ePrime_p3 E' fv) b, hmapNN b hb, hnnfix b⟩⟩
+    intro a ha b hb hab
+    have h1 := congrArg (nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)) hab
+    rw [hnnfix a, hnnfix b] at h1
+    exact h1
+  have hmapFF : ∀ z ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv),
+      ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) z
+        ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) := by
+    intro z hz
+    rw [hdarts] at hz
+    rcases hz with h | ⟨q, hq, rfl⟩
+    · obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam h
+      rw [hc]
+      exact hmemD _ hcmem
+    · obtain ⟨a, ha, hfs⟩ := param_fswap_p35 hsub hparam hfin hq
+      rw [hfs]
+      exact hmemDsw (a, q.1) ha
+  have hBijFF : Set.BijOn (ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv))
+      (dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv))
+      (dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)) := by
+    refine ⟨hmapFF, ?_, ?_⟩
+    · intro a ha b hb hab
+      rw [hdarts] at ha hb
+      rcases ha with hfa | ⟨p, hp, rfl⟩ <;> rcases hb with hfb | ⟨q, hq, rfl⟩
+      · obtain ⟨c₁, hc₁, hcm₁⟩ := param_ff_fwd_p35 hsub hparam hfa
+        obtain ⟨c₂, hc₂, hcm₂⟩ := param_ff_fwd_p35 hsub hparam hfb
+        rw [hc₁, hc₂] at hab
+        exact Prod.ext (param_injOn_p35 hsub hparam hfa hfb
+          (congrArg Prod.fst hab)) (congrArg Prod.fst hab)
+      · obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam hfa
+        obtain ⟨a', ha', hfs⟩ := param_fswap_p35 hsub hparam hfin hq
+        have hfs' : ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (q.2, q.1)
+            = (q.1, a') := hfs
+        rw [hc, hfs'] at hab
+        have hfst : a.2 = q.1 := congrArg Prod.fst hab
+        have hqeq : (a.2, c) = q :=
+          param_fstInj_p35 hsub hparam hfin hcmem hq hfst
+        rw [← hfst] at hab ha'
+        have hc_eq : c = a' := congrArg Prod.snd hab
+        rw [← hc_eq] at ha'
+        exact absurd ha' (hparam.2.1 (a.2, c) hcmem)
+      · obtain ⟨a', ha', hfs⟩ := param_fswap_p35 hsub hparam hfin hp
+        obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam hfb
+        have hfs' : ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (p.2, p.1)
+            = (p.1, a') := hfs
+        rw [hfs', hc] at hab
+        have hfst : p.1 = b.2 := congrArg Prod.fst hab
+        have hsnd : a' = c := congrArg Prod.snd hab
+        rw [← hfst, ← hsnd] at hcmem
+        exact absurd ha' (hparam.2.1 (p.1, a') hcmem)
+      · obtain ⟨a', ha', hfs₁⟩ := param_fswap_p35 hsub hparam hfin hp
+        obtain ⟨a'₂, ha'₂, hfs₂⟩ := param_fswap_p35 hsub hparam hfin hq
+        have hfs₁' : ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (p.2, p.1)
+            = (p.1, a') := hfs₁
+        have hfs₂' : ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (q.2, q.1)
+            = (q.1, a'₂) := hfs₂
+        rw [hfs₁', hfs₂'] at hab
+        have hp1q1 : p.1 = q.1 := by
+          have h := congrArg Prod.fst hab
+          simpa using h
+        exact congrArg (fun r : V3 × V3 => (r.2, r.1))
+          (param_fstInj_p35 hsub hparam hfin hp hq hp1q1)
+    · intro b hb
+      rw [hdarts] at hb
+      rcases hb with hb' | ⟨q, hq, rfl⟩
+      · obtain ⟨a, c, hac, hin, hout, hEE, -, -⟩ :=
+          param_nodeEE_p35 hsub hparam hfin ⟨b, hb', rfl⟩
+        have hac4 := (azimCycle_pairEE_p35 hEE hac).2.2.1
+        have hval : ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (a, b.1)
+            = (b.1, c) := by
+          rw [ffOfHyp_p3, if_pos (hmemD _ hin), hac4]
+        have hpre : (b.1, c) = b :=
+          param_fstInj_p35 hsub hparam hfin hout hb' rfl
+        exact ⟨(a, b.1), hmemD _ hin, by rw [hval]; exact hpre⟩
+      · obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam hq
+        obtain ⟨a', ha', hfs⟩ := param_fswap_p35 hsub hparam hfin hcmem
+        have hfs' : ffOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (c, q.2)
+            = (q.2, a') := hfs
+        have ha'q : q.1 = a' := param_injOn_p35 hsub hparam hq ha' rfl
+        exact ⟨(c, q.2), hmemDsw (q.2, c) hcmem, by
+          rw [hfs']
+          show (q.2, a') = (q.2, q.1)
+          rw [ha'q]⟩
+  refine ⟨⟨hfinD.toFinset, eePermOfHyp_p35 0 (vPrime_p3 V fv)
+    (ePrime_p3 E' fv), permOfBijOn_p35 _ hBijNN, permOfBijOn_p35 _ hBijFF,
+    ?_, ?_, ?_, ?_⟩, ?_⟩
+  · intro z hz
+    exact eeOfHyp_apply_notmem_p35 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+      (fun hc => hz ((hfinD.mem_toFinset).mpr hc))
+  · intro z hz
+    exact permOfBijOn_apply_notmem_p35
+      (fun hc => hz ((hfinD.mem_toFinset).mpr hc))
+  · intro z hz
+    exact permOfBijOn_apply_notmem_p35
+      (fun hc => hz ((hfinD.mem_toFinset).mpr hc))
+  · refine Equiv.ext fun z => ?_
+    simp only [Equiv.Perm.mul_apply, Equiv.Perm.one_apply]
+    by_cases hz : z ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)
+    · rw [hdarts] at hz
+      rcases hz with h | ⟨q, hq, rfl⟩
+      · obtain ⟨c, hc, hcmem⟩ := param_ff_fwd_p35 hsub hparam h
+        obtain ⟨a₀, ha₀, hnn₀, -⟩ := param_nnFwd_p35 hsub hparam hfin hcmem
+        have hnn₀' : nnOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (z.2, c)
+            = (z.2, a₀) := hnn₀
+        have ha₀z : z.1 = a₀ := param_injOn_p35 hsub hparam h ha₀
+          (rfl : z.2 = (a₀, z.2).2)
+        have hcmemD : (z.2, c) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv)
+            (vPrime_p3 V fv) := hmemD _ hcmem
+        rw [permOfBijOn_apply_mem_p35 (hmemD _ h), hc,
+          permOfBijOn_apply_mem_p35 hcmemD, hnn₀']
+        show eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (z.2, a₀) = z
+        rw [eeOfHyp_apply_mem_p35 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+          (hmemDsw (a₀, z.2) ha₀)]
+        show (a₀, z.2) = z
+        rw [← ha₀z]
+      · obtain ⟨a, ha, hfs⟩ := param_fswap_p35 hsub hparam hfin hq
+        obtain ⟨a₂, c₂, hac, hin, hout, hEE, -, -⟩ :=
+          param_nodeEE_p35 hsub hparam hfin ⟨q, hq, rfl⟩
+        have ha₂ : a₂ = a := param_injOn_p35 hsub hparam hin ha rfl
+        have hc₂ : c₂ = q.2 := congrArg Prod.snd
+          (param_fstInj_p35 hsub hparam hfin hout hq rfl)
+        rw [ha₂, hc₂] at hEE hac
+        have hnnD : (q.1, a) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv)
+            (vPrime_p3 V fv) := hmemDsw (a, q.1) ha
+        have hzq : azimCycle_p3 {a, q.2} 0 q.1 a = q.2 := by
+          have hz := (azimCycle_pairEE_p35 hEE hac).1
+          rw [hEE] at hz
+          exact hz
+        rw [permOfBijOn_apply_mem_p35 (hmemDsw q hq), hfs,
+          permOfBijOn_apply_mem_p35 hnnD, nnOfHyp_p3, if_pos hnnD]
+        show eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+            (q.1, azimCycle_p3 (EE_p3 q.1 (ePrime_p3 E' fv)) 0 q.1 a)
+          = (q.2, q.1)
+        rw [hEE, hzq]
+        show eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) (q.1, q.2)
+          = (q.2, q.1)
+        rw [eeOfHyp_apply_mem_p35 0 (vPrime_p3 V fv) (ePrime_p3 E' fv)
+          (hmemD q hq)]
+    · rw [permOfBijOn_apply_notmem_p35 hz, permOfBijOn_apply_notmem_p35 hz]
+      show eeOfHyp_p3 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) z = z
+      exact eeOfHyp_apply_notmem_p35 0 (vPrime_p3 V fv) (ePrime_p3 E' fv) hz
+  · rw [IsHypE_p35]
+    refine ⟨hfinD.coe_toFinset, rfl, ?_, ?_⟩
+    · funext z
+      by_cases hz : z ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)
+      · rw [permOfBijOn_apply_mem_p35 hz, nnOfHyp_p3, if_pos hz]
+      · rw [permOfBijOn_apply_notmem_p35 hz, nnOfHyp_p3, if_neg hz]
+    · funext z
+      by_cases hz : z ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv)
+      · rw [permOfBijOn_apply_mem_p35 hz, ffOfHyp_p3, if_pos hz]
+      · rw [permOfBijOn_apply_notmem_p35 hz, ffOfHyp_p3, if_neg hz]
+
+/-! ### The sliced-carrier `dih2k` and the conditional assembly -/
+
+/-- **EJRCFJD chain W4a** — the sliced carrier is a `dih2k` hypermap of
+order `fv.ncard` (HOL chapter 3, `LOCALIZE_PRESERVE_FACE` tail + order
+bookkeeping): card `= 2k`, the darts covering, the face order `k`, and the
+two order-2 maps — all conditional only on `faceCycleParam_p35`. -/
+theorem SLICE_DIH2K_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' (HS.face d))
+    (HS' : Hypermap (V3 × V3))
+    (hHS' : IsHypE_p35 (vPrime_p3 V (HS.face d))
+      (ePrime_p3 E' (HS.face d)) HS') :
+    dih2k_p3 HS' (HS.face d).ncard := by
+  have hsub := fvSubsetDarts_p35 HS hHS hd
+  have hfin := fvFinite_p35 (V := V) (E := E') HS d
+  have hd0 : d ∈ HS.face d := ⟨0, rfl⟩
+  have hne : (HS.face d).Nonempty := ⟨d, hd0⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · rw [← Set.ncard_coe_finset (s := HS'.darts), hHS'.1]
+    exact SLICE_DARTS_CARD_p35 hsub hparam hfin
+  · intro x hx
+    have hmemD : x ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face d))
+        (vPrime_p3 V (HS.face d)) := by
+      rw [← hHS'.1]; exact Finset.mem_coe.mp hx
+    have hface : HS'.face x = {z : V3 × V3 | ∃ n : ℕ,
+        (ffOfHyp_p3 0 (vPrime_p3 V (HS.face d))
+          (ePrime_p3 E' (HS.face d)))^[n] x = z} := by
+      rw [Hypermap.face, orbitMap]
+      ext z
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · rintro ⟨n, hn⟩
+        rw [faceIter_ff_p35 HS' hHS' n x] at hn
+        exact ⟨n, hn⟩
+      · rintro ⟨n, hn⟩
+        rw [← faceIter_ff_p35 HS' hHS' n x] at hn
+        exact ⟨n, hn⟩
+    rw [hHS'.1, hface, hHS'.2.2.1,
+      SLICE_DARTS_COVER_p35 HS hHS hd hparam x hmemD]
+  · rw [hHS'.2.2.2]
+    exact SLICE_FF_ORD_p35 HS hHS hd hparam
+  · rw [hHS'.2.1]
+    exact SLICE_EE_ORD2_p35 hsub hparam hne
+  · rw [hHS'.2.2.1]
+    exact SLICE_NN_ORD2_p35 hsub hparam hfin hne
+
+/-- **EJRCFJD chain W4a** — HOL `HAFL_CIRCLE_FORM_LOCAL_FAN`
+(local_lemmas1.hl:3077), conditional closed: given the carrier at the
+slicing edge set, the FAN of the carrier (chapter 1,
+`FAN_V_PRIME_E_PRIME_p35`), the face-cycle parametrization of the slice
+face (chapter 2 interface, `faceCycleParam_p35` — the geometric deep
+water), a sliced-carrier hypermap, and its membership dart, the slice face
+is a local fan: `LOCALIZE_PRESERVE_FACE_p35` (face localization) +
+`SLICE_DIH2K_p35` (the `dih2k` transfer) feed `HAFL_RED_p35`. -/
+theorem HAFL_CIRCLE_FORM_LOCAL_FAN_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    (hfan : Kepler.Text.Fan.FAN 0 V E')
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' (HS.face d))
+    (HS' : Hypermap (V3 × V3))
+    (hHS' : IsHypE_p35 (vPrime_p3 V (HS.face d))
+      (ePrime_p3 E' (HS.face d)) HS')
+    (hd' : d ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face d))
+      (vPrime_p3 V (HS.face d))) :
+    localFan_p3 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d))
+      (HS.face d) :=
+  HAFL_RED_p35 HS hHS hfan hd HS' hHS' hd'
+    (LOCALIZE_PRESERVE_FACE_p35 HS hHS hd hparam HS' hHS' hd')
+    (SLICE_DIH2K_p35 HS hHS hd hparam HS' hHS')
+
+/-- **EJRCFJD chain W4a** — HOL `HAFL_CIRCLE_FORM_LOCAL_FAN2`
+(local_lemmas1.hl:3742): both half faces of the slicing are local fans at
+their own sliced carriers — two `HAFL_CIRCLE_FORM_LOCAL_FAN_p35`
+assemblies (the symmetric `INSERT_COMM` step of the HOL original). -/
+theorem HAFL2_CIRCLE_FORM_LOCAL_FAN_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    (hfan : Kepler.Text.Fan.FAN 0 V E')
+    {dv dw : V3 × V3} (hdv : dv ∈ dartsOfHyp_p3 E' V)
+    (hdw : dw ∈ dartsOfHyp_p3 E' V)
+    (hparamv : faceCycleParam_p35 V E' (HS.face dv))
+    (hparamw : faceCycleParam_p35 V E' (HS.face dw))
+    (HSv' : Hypermap (V3 × V3))
+    (hHSv' : IsHypE_p35 (vPrime_p3 V (HS.face dv))
+      (ePrime_p3 E' (HS.face dv)) HSv')
+    (hdv' : dv ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face dv))
+      (vPrime_p3 V (HS.face dv)))
+    (HSw' : Hypermap (V3 × V3))
+    (hHSw' : IsHypE_p35 (vPrime_p3 V (HS.face dw))
+      (ePrime_p3 E' (HS.face dw)) HSw')
+    (hdw' : dw ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face dw))
+      (vPrime_p3 V (HS.face dw))) :
+    localFan_p3 (vPrime_p3 V (HS.face dv)) (ePrime_p3 E' (HS.face dv))
+        (HS.face dv)
+      ∧ localFan_p3 (vPrime_p3 V (HS.face dw)) (ePrime_p3 E' (HS.face dw))
+        (HS.face dw) :=
+  ⟨HAFL_CIRCLE_FORM_LOCAL_FAN_p35 HS hHS hfan hdv hparamv HSv' hHSv' hdv',
+    HAFL_CIRCLE_FORM_LOCAL_FAN_p35 HS hHS hfan hdw hparamw HSw' hHSw' hdw'⟩
+
+/-! ## EJRCFJD chain W4b — the `faceCycleParam_p35` discharge (the half-circle
+interface, layered)
+
+HOL chapter 2 (the half-circle orbit parametrization, `LOOP_SET_DETER_FIRTS_ELMS`
+neighbourhood, local_lemmas.hl:3100–3160 / local_lemmas1.hl:2698–3260) is here
+reduced to its exact geometric residue.  The four conjuncts of the W3b2
+interface close **purely** from:
+
+1. `Graph E'` — kills every degenerate dart (the `ord_pairs` branch has an
+   edge of cardinality one; the `self_pairs` branch is a fixed point of `ff`,
+   dead against the step determination);
+2. `hstep` — the carrier face step of every face dart is a genuine
+   `(p.2, c)` pair with `c ≠ p.1` (no back-steps).  This is supplied
+   dart-by-dart: at interior-head darts by the two-element kit
+   (`param_stepTwo_p35`), at the two diagonal darts by the W3a
+   `FACE_MAP_*_p35` items under their sector-placement premises — the
+   wiring adapters `param_stepDiagIn_p35` / `param_stepDiagTurn_p35`;
+3. `hvisit` — the face visits each node at most once (`Prod.fst` is
+   injective on the face).  **This is the honest geometric residue**: the
+   half-circle simple-cycle content of HOL chapter 2 (node-revisit is
+   combinatorially consistent with the carrier hypermap, and is excluded
+   only by the azim/sector analysis of the slicing wave).  From `hvisit`
+   and the injectivity of the permutation `HS.faceMap` the in-dart
+   uniqueness (and the reversed-dart exclusion) follow for free.
+
+The in-dart uniqueness argument: two face darts with the same second
+coordinate step (by `hstep`) to two face darts with the same first
+coordinate, which coincide by `hvisit`; the carrier face map is a
+permutation, hence injective, so the two darts coincide. -/
+
+/-- The two-element step determination: at a dart whose head node carries
+exactly two carrier neighbours, the carrier face step is the partner swap
+(the 2-元 kit: `dartOther_p35` + `ffDart_p35`). -/
+private theorem param_stepTwo_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {p : V3 × V3} (hp : p ∈ dartsOfHyp_p3 E V) :
+    ∃ c : V3, ffOfHyp_p3 0 V E p = (p.2, c) ∧ c ≠ p.1 := by
+  obtain ⟨c, hEE, hcv, -, -⟩ :=
+    dartOther_p35 hVE hEE2 (V_IN_DARTS_IMP_SWICH_SO_DO hp)
+  exact ⟨c, ffDart_p35 hp hEE hcv, hcv⟩
+
+/-- The two-regular packaging: on a two-regular carrier every face dart
+satisfies the step determination. -/
+private theorem param_stepAllTwo_p35 {V : Set V3} {E : Set (Set V3)}
+    (hVE : ⋃₀ E ⊆ V) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E V) :
+    ∀ p ∈ fv, ∃ c : V3, ffOfHyp_p3 0 V E p = (p.2, c) ∧ c ≠ p.1 :=
+  fun p hp => param_stepTwo_p35 hVE hEE2 (hsub hp)
+
+/-- The diagonal-exit wiring: at the dart crossing the new edge the step
+determination is exactly `FACE_MAP_SLICING_HYP_TRANS_POINT_p35` — the
+sector-placed endpoint `v` exits to the fan successor of `w`
+(`sigmaTable3_p35` table at the three-neighbour node `w`). -/
+private theorem param_stepDiagIn_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w : V3} (hvw : v ≠ w)
+    (hd : (v, w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hEE : EE_p3 w (E ∪ {{v, w}}) = {ivsRhoNode1 FF w, rhoNode1 FF w, v})
+    (hnc1 : ¬ Collinear3 0 w (rhoNode1 FF w))
+    (hncp : ¬ Collinear3 0 w (ivsRhoNode1 FF w))
+    (hsp : ivsRhoNode1 FF w ≠ rhoNode1 FF w)
+    (hsv : v ≠ rhoNode1 FF w) (hvp : v ≠ ivsRhoNode1 FF w)
+    (hnca : ¬ Collinear3 0 w v)
+    (hpos : 0 < azim 0 w (rhoNode1 FF w) v)
+    (hlt : azim 0 w (rhoNode1 FF w) v
+      < azim 0 w (rhoNode1 FF w) (ivsRhoNode1 FF w)) :
+    ∃ c : V3, ffOfHyp_p3 0 V (E ∪ {{v, w}}) (v, w) = (w, c) ∧ c ≠ v :=
+  ⟨rhoNode1 FF w, FACE_MAP_SLICING_HYP_TRANS_POINT_p35 hvw hd hEE hnc1 hncp hsp
+    hsv hvp hnca hpos hlt, Ne.symm hsv⟩
+
+/-- The diagonal-entry wiring: at the turning dart entering `v` along the
+fan cycle the step determination is exactly `FACE_MAP_AT_TURNING_DART_p35`
+(`sigmaTable3_p35` table at the three-neighbour node `v`). -/
+private theorem param_stepDiagTurn_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w x : V3} (hvw : v ≠ w)
+    (hd : (x, v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hx : x = ivsRhoNode1 FF v)
+    (hEE : EE_p3 v (E ∪ {{v, w}}) = {ivsRhoNode1 FF v, rhoNode1 FF v, w})
+    (hnc1 : ¬ Collinear3 0 v (rhoNode1 FF v))
+    (hncp : ¬ Collinear3 0 v (ivsRhoNode1 FF v))
+    (hsp : ivsRhoNode1 FF v ≠ rhoNode1 FF v)
+    (hsw : w ≠ rhoNode1 FF v) (hwp : w ≠ ivsRhoNode1 FF v)
+    (hnca : ¬ Collinear3 0 v w)
+    (hpos : 0 < azim 0 v (rhoNode1 FF v) w)
+    (hlt : azim 0 v (rhoNode1 FF v) w
+      < azim 0 v (rhoNode1 FF v) (ivsRhoNode1 FF v)) :
+    ∃ c : V3, ffOfHyp_p3 0 V (E ∪ {{v, w}}) (x, v) = (v, c) ∧ c ≠ x :=
+  ⟨w, FACE_MAP_AT_TURNING_DART_p35 hvw hd hx hEE hnc1 hncp hsp hsw hwp hnca
+    hpos hlt, by rw [hx]; exact hwp⟩
+
+/-- **EJRCFJD chain W4b (main)** — the `faceCycleParam_p35` discharge: all
+four conjuncts close purely from `Graph E'`, the per-dart step
+determination `hstep` (two-element kit at interior darts, the W3a
+`FACE_MAP_*_p35` sector placements at the two diagonal darts), and the
+node-visit injectivity `hvisit` (the half-circle simple-cycle content,
+the geometric residue of HOL chapter 2). -/
+theorem FACE_CYCLE_PARAM_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hgraph : Kepler.Text.Fan.Graph E')
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hstep : ∀ p ∈ HS.face d, ∃ c : V3, ffOfHyp_p3 0 V E' p = (p.2, c) ∧ c ≠ p.1)
+    (hvisit : Set.InjOn Prod.fst (HS.face d)) :
+    faceCycleParam_p35 V E' (HS.face d) := by
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  have hclose : ∀ p ∈ HS.face d, ffOfHyp_p3 0 V E' p ∈ HS.face d :=
+    fun p hp => fvStep_p35 HS hHS hp
+  have hfinj : Function.Injective (ffOfHyp_p3 0 V E') := by
+    rw [← hHS.2.2.2]
+    exact HS.faceMap.injective
+  -- conjunct 1: no degenerate face dart
+  have hnd : ∀ p ∈ HS.face d, p.1 ≠ p.2 := by
+    intro p hp
+    rcases hsub hp with hord | hself
+    · exact graph_ne_diag_p35 hgraph hord
+    · exfalso
+      obtain ⟨c, hc, hcp⟩ := hstep p hp
+      rw [ffOfHyp_p3, if_pos (hsub hp)] at hc
+      have hEEe : EE_p3 p.2 E' = ∅ := by rw [← hself.1]; exact hself.2.2
+      rw [hEEe] at hc
+      rw [ivsAzimCycle_p3, if_pos rfl] at hc
+      exact hcp (congrArg Prod.snd hc.symm)
+  refine ⟨hnd, ?_, ?_, ?_⟩
+  · -- conjunct 2: no reversed face dart
+    intro q hq hrev
+    obtain ⟨c, hc, hcp⟩ := hstep q hq
+    have hfc : (q.2, c) ∈ HS.face d := by rw [← hc]; exact hclose q hq
+    exact hcp (congrArg Prod.snd (hvisit hfc hrev rfl))
+  · -- conjunct 3: the forward step and the two-element slice neighbour set
+    intro p hp
+    obtain ⟨c, hc, hcp⟩ := hstep p hp
+    have hfc : (p.2, c) ∈ HS.face d := by rw [← hc]; exact hclose p hp
+    refine ⟨c, Ne.symm hcp, hfc, ?_⟩
+    rw [sliceEE_char_p35 hsub hnd p.2]
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    constructor
+    · rintro (hz | hz)
+      · exact Or.inr (congrArg Prod.snd (hvisit hfc hz rfl)).symm
+      · -- in-dart uniqueness: both darts step to out-darts at `p.2`
+        obtain ⟨c₂, hc₂, -⟩ := hstep (z, p.2) hz
+        have hfc₂ : (p.2, c₂) ∈ HS.face d := by rw [← hc₂]; exact hclose _ hz
+        have heq := hvisit hfc₂ hfc rfl
+        exact Or.inl (congrArg Prod.fst
+          (hfinj (hc₂.trans (heq.trans hc.symm))))
+    · rintro (hz | hz)
+      · exact Or.inr (by rw [hz]; exact hp)
+      · exact Or.inl (by rw [hz]; exact hfc)
+  · -- conjunct 4: the carrier face step is the pair-valued forward step
+    intro p hp
+    obtain ⟨c, hc, -⟩ := hstep p hp
+    exact ⟨c, hc, by rw [← hc]; exact hclose p hp⟩
+
+/-- **EJRCFJD chain W4b (corollary)** — the W4a conditional assembly with
+the parametrization discharged from the half-circle interface: the slice
+face of the augmented carrier is a local fan.  This closes the HAFL chain
+up to the two named inputs of `FACE_CYCLE_PARAM_p35`. -/
+theorem HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hgraph : Kepler.Text.Fan.Graph E')
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    (hfan : Kepler.Text.Fan.FAN 0 V E')
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hstep : ∀ p ∈ HS.face d, ∃ c : V3, ffOfHyp_p3 0 V E' p = (p.2, c) ∧ c ≠ p.1)
+    (hvisit : Set.InjOn Prod.fst (HS.face d))
+    (HS' : Hypermap (V3 × V3))
+    (hHS' : IsHypE_p35 (vPrime_p3 V (HS.face d))
+      (ePrime_p3 E' (HS.face d)) HS')
+    (hd' : d ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face d))
+      (vPrime_p3 V (HS.face d))) :
+    localFan_p3 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d))
+      (HS.face d) :=
+  HAFL_CIRCLE_FORM_LOCAL_FAN_p35 HS hHS hfan hd
+    (FACE_CYCLE_PARAM_p35 hgraph HS hHS hd hstep hvisit) HS' hHS' hd'
+
+/-! ## EJRCFJD chain W5 — the `hvisit` discharge (half-circle node-visit
+injectivity) and the slicing-context `hstep` supply
+
+The orbit parametrization `F_PRIME_EQ_F_vv_p35` describes the slice face as
+the `k'`-window dart range `i ↦ (vv (i % k' + p % k), vv ((i + 1) % k' + p % k))`.
+Everything else is window arithmetic:
+
+1. `hvisitWindow_p35` — equal `vv`-values at window-shifted indices have equal
+   residues; cancellation of the common summand `p % k` (`modAddCancel_p35`)
+   plus `k' < k` gives `i % k' = j % k'`;
+2. `HVISIT_HALF_CIRCLE_p35` — **the `hvisit` discharge**: `Prod.fst` is
+   injective on the slice face (the half-circle simple-cycle content, the
+   geometric residue of HOL chapter 2, here read off the parametrization —
+   the azim/sector deep water sits inside `F_PRIME_EQ_F_vv_p35`);
+3. `HALF_CIRCLE_STEP_SEQ_p35` — the carrier step along the window (lift of
+   the F_PRIME transition cascade: the strict sector placements via
+   `TECOXBMv2_p35` + `wedgeDiagAzim_p35`, the sigma tables via
+   `sigmaTableDiag_p35`, the augmented neighbourhood tables, and the
+   three-class ff-transition — interior 2-cycle / turning dart / trans dart);
+4. `HALF_CIRCLE_STEP_p35` — the `hstep` supply: every slice-face dart steps
+   (in the augmented carrier) to a `(p.2, c)` pair with `c ≠ p.1` (the
+   distinctness is the `+2`-shift window argument under `3 ≤ k' < k`);
+5. `HAFL_HALF_CIRCLE_SLICED_p35` — the assembly: with both named inputs of
+   `HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35` discharged (and `Graph` proved from
+   the cyclic data by `slicingGraph_p35`), the slice face of the augmented
+   carrier is a local fan.  Remaining inputs: the augmented-carrier fan
+   (`PROVE_SLICING_FAN_p35` scope) and the slice hypermap `HS'` with its
+   base-dart membership (bridge wave, `EJRCFJD_p35` scope). -/
+
+/-- Window-shift residue equality: equal `vv`-values at `i % k' + r` and
+`j % k' + r` force `i % k' = j % k'` (common-summand cancellation, then the
+`k' < k` window). -/
+private theorem hvisitWindow_p35 {vv : ℕ → V3} {k k' : ℕ} (hk0 : 0 < k) (hk'0 : 0 < k')
+    (hlt : k' < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (r : ℕ) {i j : ℕ}
+    (h : vv (i % k' + r) = vv (j % k' + r)) : i % k' = j % k' := by
+  have hmod : (i % k' + r) % k = (j % k' + r) % k := vvModEq_p35 hk0 hper hinj h
+  have hc := modAddCancel_p35 hmod
+  rw [Nat.mod_eq_of_lt (lt_trans (Nat.mod_lt i hk'0) hlt),
+    Nat.mod_eq_of_lt (lt_trans (Nat.mod_lt j hk'0) hlt)] at hc
+  exact hc
+
+/-- **EJRCFJD chain W5 (the `hvisit` discharge)** — the half-circle
+node-visit injectivity: `Prod.fst` is injective on the slice face of the
+augmented carrier, from the orbit parametrization `F_PRIME_EQ_F_vv_p35` and
+the `k' < k` window arithmetic. -/
+theorem HVISIT_HALF_CIRCLE_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hk' : s'.k = k') (hk : s.k = k)
+    (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+    (hV : Set.range vv = V)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hnorm : norm (u - w) ≤ cstab)
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS) :
+    Set.InjOn Prod.fst (HS.face (u, rhoNode1 FF u)) := by
+  have hk0 : 0 < k := by rw [← hk]; have := hscs.2.1; omega
+  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hk'0 : 0 < k' := by rw [← hk']; have := hge.1; omega
+  have hlt : k' < k := by
+    have h2 := hge.2.2
+    rw [hk', hk] at h2
+    exact h2
+  have hper : Periodic vv k := by rw [← hk]; exact hBB.2.1
+  have hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j := by
+    intro i j hi hj hne he
+    have i' : i < s.k := by rw [hk]; exact hi
+    have j' : j < s.k := by rw [hk]; exact hj
+    exact vvInjAux_p35 s vv hscs hBB i j i' j' hne he
+  have hF := F_PRIME_EQ_F_vv_p35 s s' s'' p q d' d'' mkj k k' u w V E FF vv HS hs' hs'' hk' hk
+    hp hq hV hE hFF hnorm hscs hdiag hBB hHS
+  rw [hF.symm]
+  intro d₁ hd₁ d₂ hd₂ hfst
+  obtain ⟨i, rfl⟩ := hd₁
+  obtain ⟨j, rfl⟩ := hd₂
+  have hf1 : vv (i % k' + p % k) = vv (j % k' + p % k) := hfst
+  have h11 := hvisitWindow_p35 hk0 hk'0 hlt hper hinj (p % k) hf1
+  have h11' : (i + 1) % k' = (j + 1) % k' := by
+    have ht : (i % k' + 1) % k' = (j % k' + 1) % k' :=
+      congrArg (fun t => (t + 1) % k') h11
+    have key1 : (i + 1) % k' = (i % k' + 1) % k' := by rw [Nat.mod_add_mod]
+    have key2 : (j + 1) % k' = (j % k' + 1) % k' := by rw [Nat.mod_add_mod]
+    rw [key1, key2]
+    exact ht
+  have h12 : vv ((i + 1) % k' + p % k) = vv ((j + 1) % k' + p % k) :=
+    congrArg (fun t => vv (t + p % k)) h11'
+  show (vv (i % k' + p % k), vv ((i + 1) % k' + p % k))
+      = (vv (j % k' + p % k), vv ((j + 1) % k' + p % k))
+  rw [h11, h12]
+
+/-- The carrier step along the half-circle window: `ff` maps the `i`-th
+window dart of the augmented carrier to the `(i + 1)`-st (lift of the
+F_PRIME transition cascade). -/
+theorem HALF_CIRCLE_STEP_SEQ_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hk' : s'.k = k') (hk : s.k = k)
+    (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+    (hV : Set.range vv = V)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hnorm : norm (u - w) ≤ cstab)
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS) :
+    ∀ i : ℕ, ffOfHyp_p3 0 V (E ∪ {{u, w}})
+        (vv (i % k' + p % k), vv ((i + 1) % k' + p % k))
+      = (vv ((i + 1) % k' + p % k), vv ((i + 1 + 1) % k' + p % k)) := by
+  -- 0. the cyclic world
+  have hk0 : 0 < k := by rw [← hk]; have := hscs.2.1; omega
+  have hper : Periodic vv k := by rw [← hk]; exact hBB.2.1
+  have hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j := by
+    intro i j hi hj hne he
+    have i' : i < s.k := by rw [hk]; exact hi
+    have j' : j < s.k := by rw [hk]; exact hj
+    exact vvInjAux_p35 s vv hscs hBB i j i' j' hne he
+  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hk3 : 3 ≤ k' := by rw [← hk']; exact hge.1
+  have hklt : k' < k := by
+    have h2 := hge.2.2
+    rw [hk', hk] at h2
+    exact h2
+  have hk4 : 4 ≤ k := by omega
+  have hk3c : 3 ≤ k := by omega
+  have hk'0 : 0 < k' := by omega
+  have hPk : p % k < k := Nat.mod_lt _ hk0
+  have hQk : q % k < k := Nat.mod_lt _ hk0
+  have h1k : (1:ℕ) % k' = 1 := Nat.mod_eq_of_lt (by omega)
+  have h1k2 : (2:ℕ) % k' = 2 := Nat.mod_eq_of_lt (by omega)
+  -- 1. non-collinearity of the four window pairs at the diagonal endpoints
+  have h3sk : 3 < s.k := by rw [hk]; omega
+  have hncU1 : ¬ Collinear3 0 u (vv (p % k + 1)) := by
+    have h1 := IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 s vv (p % k) h3sk hscs hBB
+    rw [hk] at h1
+    have e0 : vv (p % k % k) = vv (p % k) := periodic_mod_eq_p23 hper (p % k)
+    have e1 : vv ((p % k + 1) % k) = vv (p % k + 1) := periodic_mod_eq_p23 hper (p % k + 1)
+    rw [e0, hp, e1] at h1
+    exact h1
+  have hncUp : ¬ Collinear3 0 u (vv (p % k + k - 1)) := by
+    have h2 := IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 s vv (p % k + k - 1) h3sk hscs hBB
+    rw [hk] at h2
+    have e2 : vv ((p % k + k - 1 + 1) % k) = vv (p % k) := by
+      rw [show p % k + k - 1 + 1 = p % k + k from by omega, Nat.add_mod_right,
+        periodic_mod_eq_p23 hper (p % k)]
+    rw [periodic_mod_eq_p23 hper (p % k + k - 1), e2, hp] at h2
+    exact sfCollComm_p35 h2
+  have hncW1 : ¬ Collinear3 0 w (vv (q % k + 1)) := by
+    have h1 := IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 s vv (q % k) h3sk hscs hBB
+    rw [hk] at h1
+    have e0 : vv (q % k % k) = vv (q % k) := periodic_mod_eq_p23 hper (q % k)
+    have e1 : vv ((q % k + 1) % k) = vv (q % k + 1) := periodic_mod_eq_p23 hper (q % k + 1)
+    rw [e0, hq, e1] at h1
+    exact h1
+  have hncWp : ¬ Collinear3 0 w (vv (q % k + k - 1)) := by
+    have h2 := IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 s vv (q % k + k - 1) h3sk hscs hBB
+    rw [hk] at h2
+    have e2 : vv ((q % k + k - 1 + 1) % k) = vv (q % k) := by
+      rw [show q % k + k - 1 + 1 = q % k + k from by omega, Nat.add_mod_right,
+        periodic_mod_eq_p23 hper (q % k)]
+    rw [periodic_mod_eq_p23 hper (q % k + k - 1), e2, hq] at h2
+    exact sfCollComm_p35 h2
+  -- 2. the strict sector placement of the diagonal endpoints (TECOXBMv2 wedge)
+  have htecdist : dist u w ≤ cstab := by rw [dist_eq_norm]; exact hnorm
+  have hUW : u ≠ w := NOT_EQ_DIAG_p35 s p q u w vv hscs hdiag htecdist
+    (by rw [hk]; exact hp) (by rw [hk]; exact hq) hBB
+  have hdiagE : {u, w} ∉ E :=
+    DIAG_NOT_IN_EDGES_p35 s p q u w E vv hscs hdiag htecdist
+      (by rw [hk]; exact hp) (by rw [hk]; exact hq) hE.symm hBB
+  have htecc := TECOXBMv2_p35 s p q u w V E FF vv hscs hdiag htecdist
+    (by rw [hk]; exact hp) (by rw [hk]; exact hq) hV hE hFF hBB
+  rw [← hp, ← hq] at htecc
+  have hu0 : u ≠ 0 := fun he => hncU1 (collinear3_of_eq he)
+  have hw0 : w ≠ 0 := fun he => hncW1 (collinear3_of_eq he)
+  have hUW' : vv (p % k) ≠ vv (q % k) := fun he => hUW (by rw [← hp, ← hq]; exact he)
+  have hstepU : vv (p % k + k - 1) ≠ vv (p % k + 1) := sfPredNeSucc_p35 hk4 hper hinj (p % k)
+  have hstepW : vv (q % k + k - 1) ≠ vv (q % k + 1) := sfPredNeSucc_p35 hk4 hper hinj (q % k)
+  obtain ⟨hncUW, hposU, hltU⟩ := wedgeDiagAzim_p35 (k := k) (p % k) (q % k) hk3c hper hinj
+    hE hFF htecc (by rw [hp]; exact hu0) (by rw [hq]; exact hw0)
+    (fun he => hUW (by rw [← hp, ← hq]; exact he)) (by rw [hp]; exact hncU1) hstepU
+  rw [hp, hq] at hncUW hposU hltU
+  have hteccW : ∀ x ∈ FF, affGt ({0} : Set V3) {vv (q % k), vv (p % k)} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx a ha
+    exact htecc x hx (by simpa [Set.pair_comm] using ha)
+  obtain ⟨hncWU, hposW, hltW⟩ := wedgeDiagAzim_p35 (k := k) (q % k) (p % k) hk3c hper hinj
+    hE hFF hteccW (by rw [hq]; exact hw0) (by rw [hp]; exact hu0)
+    (fun he => hUW (by rw [← hp, ← hq]; exact he.symm)) (by rw [hq]; exact hncW1) hstepW
+  rw [hq, hp] at hncWU hposW hltW
+  -- 3. the sigma tables at the two diagonal nodes (THE single point)
+  have hwne1 : w ≠ vv (p % k + 1) := by
+    intro h
+    have hm := (sfMemEdge_p35 (k := k) hk3c hper hinj hE (p % k) w).mpr (Or.inr h)
+    rw [hp] at hm
+    exact hdiagE hm
+  have hwneP : w ≠ vv (p % k + k - 1) := by
+    intro h
+    have hm := (sfMemEdge_p35 (k := k) hk3c hper hinj hE (p % k) w).mpr (Or.inl h)
+    rw [hp] at hm
+    exact hdiagE hm
+  have huw1 : u ≠ vv (q % k + 1) := by
+    intro h
+    have hm := (sfMemEdge_p35 (k := k) hk3c hper hinj hE (q % k) u).mpr (Or.inr h)
+    rw [hq] at hm
+    exact hdiagE (by simpa [Set.pair_comm, EE_p3] using hm)
+  have huwP : u ≠ vv (q % k + k - 1) := by
+    intro h
+    have hm := (sfMemEdge_p35 (k := k) hk3c hper hinj hE (q % k) u).mpr (Or.inl h)
+    rw [hq] at hm
+    exact hdiagE (by simpa [Set.pair_comm, EE_p3] using hm)
+  obtain ⟨-, -, -, hivsU, -, -⟩ :=
+    sigmaTableDiag_p35 (u := u) (s := vv (p % k + 1)) (pr := vv (p % k + k - 1)) (a := w)
+      hncU1 hncUp (sfPredNeSucc_p35 hk4 hper hinj (p % k)) hwne1 hwneP hncUW hposU hltU
+  have hBmod : (k' - 1 + p % k) % k = q % k := by
+    have hW := W_EW_K_SCS_ADD_P_p35 s s' p q d' mkj k k' u w vv hs' hk' hk hp hq hscs hdiag hBB
+    have hv : vv (k' - 1 + p % k) = vv (q % k) := by rw [hW, hq]
+    have h := vvModEq_p35 hk0 hper hinj hv
+    rwa [Nat.mod_eq_of_lt hQk] at h
+  have hcongr : (k' - 2 + p % k) % k = (q % k + k - 1) % k := by
+    have h : (k' - 1 + p % k - 1) % k = (q + k - 1) % k :=
+      sfModPred_p35 (k := k) (x := k' - 1 + p % k) (y := q) (by omega) hk0 hBmod
+    rw [show k' - 1 + p % k - 1 = k' - 2 + p % k from by omega] at h
+    rw [h]
+    have e1 : q % k + k - 1 = q % k + (k - 1) := by omega
+    have e2 : q + k - 1 = q + (k - 1) := by omega
+    rw [e2, e1, Nat.mod_add_mod]
+  have hvcongr : vv (k' - 2 + p % k) = vv (q % k + k - 1) := sfVVMod_p35 hper hcongr
+  have hncWp' : ¬ Collinear3 0 w (vv (k' - 2 + p % k)) := by
+    rw [hvcongr]
+    exact hncWp
+  have hstepW' : vv (k' - 2 + p % k) ≠ vv (q % k + 1) := fun he =>
+    hstepW (hvcongr.symm.trans he)
+  have huwP' : u ≠ vv (k' - 2 + p % k) := fun he => huwP (he.trans hvcongr)
+  have hltW' : azim 0 w (vv (q % k + 1)) u < azim 0 w (vv (q % k + 1)) (vv (k' - 2 + p % k)) := by
+    rw [hvcongr]
+    exact hltW
+  obtain ⟨-, -, -, -, -, hivsW⟩ :=
+    sigmaTableDiag_p35 (u := w) (s := vv (q % k + 1)) (pr := vv (k' - 2 + p % k)) (a := u)
+      hncW1 hncWp' hstepW' huw1 huwP' hncWU hposW hltW'
+  -- 4. the augmented neighbourhoods
+  have hEEu : EE_p3 u (E ∪ {{u, w}}) = {vv (p % k + k - 1), vv (p % k + 1), w} := by
+    ext x
+    have hkey := sfMemEdge_p35 hk3c hper hinj hE (p % k) x
+    rw [hp] at hkey
+    simp only [EE_p3, Set.mem_setOf_eq, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff]
+    constructor
+    · rintro (h | h)
+      · rcases hkey.mp h with hx | hx
+        · exact Or.inl hx
+        · exact Or.inr (Or.inl hx)
+      · have hm1 : w ∈ ({u, x} : Set V3) := by rw [h]; simp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm1
+        rcases hm1 with hm | hm
+        · exact absurd hm.symm hUW
+        · exact Or.inr (Or.inr hm.symm)
+    · rintro (hx | hx | hx)
+      · exact Or.inl (hkey.mpr (Or.inl hx))
+      · exact Or.inl (hkey.mpr (Or.inr hx))
+      · exact Or.inr (by rw [hx, Set.pair_comm])
+  have hEEw : EE_p3 w (E ∪ {{u, w}}) = {vv (k' - 2 + p % k), vv (q % k + 1), u} := by
+    ext x
+    have hkey := sfMemEdge_p35 hk3c hper hinj hE (q % k) x
+    rw [hq] at hkey
+    simp only [EE_p3, Set.mem_setOf_eq, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff]
+    constructor
+    · rintro (h | h)
+      · rcases hkey.mp h with hx | hx
+        · exact Or.inl (hx.trans hvcongr.symm)
+        · exact Or.inr (Or.inl hx)
+      · have hm1 : u ∈ ({w, x} : Set V3) := by rw [h]; simp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm1
+        rcases hm1 with hm | hm
+        · exact absurd hm hUW
+        · exact Or.inr (Or.inr hm.symm)
+    · rintro (hx | hx | hx)
+      · exact Or.inl (hkey.mpr (Or.inl (hx.trans hvcongr)))
+      · exact Or.inl (hkey.mpr (Or.inr hx))
+      · exact Or.inr (by rw [hx, Set.pair_comm])
+  -- 5. the face-map transition along the k'-window
+  set R : ℕ → V3 × V3 := fun i => (vv (i % k' + p % k), vv ((i + 1) % k' + p % k)) with hRdef
+  have hWew : vv (k' - 1 + p % k) = w := W_EW_K_SCS_ADD_P_p35 s s' p q d' mkj k k' u w vv
+    hs' hk' hk hp hq hscs hdiag hBB
+  have hstep : ∀ r : ℕ, ffOfHyp_p3 0 V (E ∪ {{u, w}}) (R r) = R (r + 1) := by
+    intro r
+    generalize ht : r % k' = t
+    have htl : t < k' := by rw [← ht]; exact Nat.mod_lt _ (by omega)
+    simp only [hRdef]
+    have hrw1 : vv (r % k' + p % k) = vv (t + p % k) := by rw [ht]
+    rw [hrw1]
+    rcases Nat.lt_or_ge t (k' - 1) with h1 | h1
+    · have ht1 : (r + 1) % k' = t + 1 := by
+        rw [Nat.add_mod, h1k, ht]
+        exact Nat.mod_eq_of_lt (by omega)
+      rcases Nat.lt_or_ge t (k' - 2) with h2 | h2
+      · -- interior dart: the 2-cycle ivs
+        have hrw2 : vv ((r + 1) % k' + p % k) = vv (t + 1 + p % k) := by rw [ht1]
+        rw [hrw2]
+        have hmem : (vv (t + p % k), vv (t + 1 + p % k))
+            ∈ dartsOfHyp_p3 (E ∪ {{u, w}}) V := by
+          refine Set.mem_union_left _ ?_
+          show {vv (t + p % k), vv (t + 1 + p % k)} ∈ E ∪ {{u, w}}
+          refine Or.inl ?_
+          rw [← hE]
+          exact Set.mem_range.mpr ⟨t + p % k, by rw [Nat.add_right_comm]⟩
+        rw [ffOfHyp_p3, if_pos hmem]
+        dsimp only
+        have hshiftNe : ∀ a b : ℕ, a < k → b < k → a ≠ b → vv (a + p % k) ≠ vv (b + p % k) :=
+          fun a b ha hb hne => fun he => hne (sfVVInjShift_p35 hk0 hper hinj ha hb he)
+        have hbU : vv (t + 1 + p % k) ≠ u := fun he =>
+          hshiftNe 0 (t + 1) (by omega) (by omega) (by omega)
+            (by rw [Nat.zero_add, hp]; exact he.symm)
+        have hbW : vv (t + 1 + p % k) ≠ w := fun he =>
+          hshiftNe (t + 1) (k' - 1) (by omega) (by omega) (by omega) (he.trans hWew.symm)
+        have hEEb : EE_p3 (vv (t + 1 + p % k)) (E ∪ {{u, w}})
+            = {vv (t + p % k), vv (t + 2 + p % k)} := by
+          rw [sfEEinterior_p35 hk3c hper hinj hE (t + 1 + p % k) hbU hbW]
+          ext x
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          constructor
+          · rintro (hx | hx)
+            · left
+              rw [hx, show t + 1 + p % k + k - 1 = t + p % k + k from by omega,
+                ← periodic_mod_eq_p23 hper (t + p % k),
+                ← periodic_mod_eq_p23 hper (t + p % k + k), Nat.add_mod_right]
+            · right
+              rw [hx, show t + 1 + p % k + 1 = t + 2 + p % k from by omega]
+          · rintro (hx | hx)
+            · left
+              rw [hx, show t + 1 + p % k + k - 1 = t + p % k + k from by omega,
+                ← periodic_mod_eq_p23 hper (t + p % k),
+                ← periodic_mod_eq_p23 hper (t + p % k + k), Nat.add_mod_right]
+            · right
+              rw [hx, show t + 1 + p % k + 1 = t + 2 + p % k from by omega]
+        have hac : vv (t + p % k) ≠ vv (t + 2 + p % k) :=
+          hshiftNe t (t + 2) (by omega) (by omega) (by omega)
+        rw [hEEb, (ivsTwo_p35 hac).1]
+        have ht2 : (r + 1 + 1) % k' = t + 2 := by
+          rw [show r + 1 + 1 = r + 2 from by omega, Nat.add_mod, h1k2, ht]
+          exact Nat.mod_eq_of_lt (by omega)
+        simp only [hRdef, ht1, ht2]
+      · -- the turning dart (pred w, w) ↦ (w, u)
+        have ht2 : t = k' - 2 := by omega
+        have hrw2 : vv ((r + 1) % k' + p % k) = w := by
+          rw [show (r + 1) % k' = k' - 1 from by
+            rw [Nat.add_mod, h1k, ht, ht2, show k' - 2 + 1 = k' - 1 from by omega]
+            exact Nat.mod_eq_of_lt (by omega), hWew]
+        rw [hrw2, ht2]
+        have hmem : (vv (k' - 2 + p % k), w) ∈ dartsOfHyp_p3 (E ∪ {{u, w}}) V := by
+          refine Set.mem_union_left _ ?_
+          show {vv (k' - 2 + p % k), w} ∈ E ∪ {{u, w}}
+          refine Or.inl ?_
+          rw [hvcongr, ← hq]
+          show {vv (q % k + k - 1), vv (q % k)} ∈ E
+          have hz := (sfMemEdge_p35 hk3c hper hinj hE (q % k)
+            (vv (q % k + k - 1))).mpr (Or.inl rfl)
+          simpa [Set.pair_comm, EE_p3] using hz
+        rw [ffOfHyp_p3, if_pos hmem]
+        dsimp only
+        rw [hEEw, hivsW]
+        have htA : (r + 1) % k' = k' - 1 := by
+          rw [Nat.add_mod, h1k, ht, ht2, show k' - 2 + 1 = k' - 1 from by omega]
+          exact Nat.mod_eq_of_lt (by omega)
+        have htB : (r + 1 + 1) % k' = 0 := by
+          rw [show r + 1 + 1 = r + 2 from by omega, Nat.add_mod, h1k2, ht, ht2,
+            show k' - 2 + 2 = k' from by omega, Nat.mod_self]
+        simp only [hRdef, htA, htB, Nat.zero_add, hWew, hp]
+    · -- the trans dart (w, u) ↦ (u, succ u)
+      have ht1 : t = k' - 1 := by omega
+      have hrw2 : vv ((r + 1) % k' + p % k) = u := by
+        rw [show (r + 1) % k' = 0 from by
+          rw [Nat.add_mod, h1k, ht, ht1, show k' - 1 + 1 = k' from by omega, Nat.mod_self],
+          Nat.zero_add]
+        exact hp
+      rw [hrw2, ht1, hWew]
+      have hmem : (w, u) ∈ dartsOfHyp_p3 (E ∪ {{u, w}}) V := by
+        refine Set.mem_union_left _ ?_
+        show {(w, u).1, (w, u).2} ∈ E ∪ {{u, w}}
+        refine Or.inr ?_
+        rw [Set.mem_singleton_iff]
+        exact Set.pair_comm ((w, u).1) ((w, u).2)
+      rw [ffOfHyp_p3, if_pos hmem]
+      dsimp only
+      rw [hEEu, hivsU]
+      have htA : (r + 1) % k' = 0 := by
+        rw [Nat.add_mod, h1k, ht, ht1, show k' - 1 + 1 = k' from by omega, Nat.mod_self]
+      have htB : (r + 1 + 1) % k' = 1 := by
+        rw [show r + 1 + 1 = r + 2 from by omega, Nat.add_mod, h1k2, ht, ht1,
+          show k' - 1 + 2 = k' + 1 from by omega, Nat.add_comm, Nat.add_mod_right, h1k]
+      simp only [hRdef, htA, htB, Nat.zero_add, hp,
+        show (1:ℕ) + p % k = p % k + 1 from Nat.add_comm 1 (p % k)]
+  intro i
+  have hs := hstep i
+  simp only [hRdef] at hs
+  exact hs
+
+/-- **EJRCFJD chain W5 (the `hstep` supply)** — every dart of the slice face
+steps (in the augmented carrier) to a `(p.2, c)` pair with `c ≠ p.1`: the
+W4b per-dart step determination, discharged in the slicing context from
+`HALF_CIRCLE_STEP_SEQ_p35` and the `+2`-shift window arithmetic. -/
+theorem HALF_CIRCLE_STEP_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hk' : s'.k = k') (hk : s.k = k)
+    (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+    (hV : Set.range vv = V)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hnorm : norm (u - w) ≤ cstab)
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS) :
+    ∀ p ∈ HS.face (u, rhoNode1 FF u),
+      ∃ c : V3, ffOfHyp_p3 0 V (E ∪ {{u, w}}) p = (p.2, c) ∧ c ≠ p.1 := by
+  have hk0 : 0 < k := by rw [← hk]; have := hscs.2.1; omega
+  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hk'0 : 0 < k' := by rw [← hk']; have := hge.1; omega
+  have hk3 : 3 ≤ k' := by rw [← hk']; exact hge.1
+  have hlt : k' < k := by
+    have h2 := hge.2.2
+    rw [hk', hk] at h2
+    exact h2
+  have hper : Periodic vv k := by rw [← hk]; exact hBB.2.1
+  have hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j := by
+    intro i j hi hj hne he
+    have i' : i < s.k := by rw [hk]; exact hi
+    have j' : j < s.k := by rw [hk]; exact hj
+    exact vvInjAux_p35 s vv hscs hBB i j i' j' hne he
+  intro x hx
+  have hF := F_PRIME_EQ_F_vv_p35 s s' s'' p q d' d'' mkj k k' u w V E FF vv HS hs' hs'' hk' hk
+    hp hq hV hE hFF hnorm hscs hdiag hBB hHS
+  rw [hF.symm] at hx
+  obtain ⟨i, rfl⟩ := hx
+  refine ⟨vv ((i + 1 + 1) % k' + p % k), HALF_CIRCLE_STEP_SEQ_p35 s s' s'' p q d' d'' mkj
+    k k' u w V E FF vv HS hs' hs'' hk' hk hp hq hV hE hFF hnorm hscs hdiag hBB hHS i, ?_⟩
+  intro he
+  have hmod : ((i + 1 + 1) % k' + p % k) % k = (i % k' + p % k) % k :=
+    vvModEq_p35 hk0 hper hinj he
+  have hc := modAddCancel_p35 hmod
+  have hik : i % k' < k' := Nat.mod_lt i hk'0
+  have hi2 : (i + 1 + 1) % k' < k' := Nat.mod_lt _ hk'0
+  rw [Nat.mod_eq_of_lt (lt_trans hi2 hlt), Nat.mod_eq_of_lt (lt_trans hik hlt)] at hc
+  -- hc : (i + 1 + 1) % k' = i % k'
+  have key : (i + 1 + 1) % k' = (i % k' + 2) % k' := by rw [Nat.mod_add_mod]
+  rw [key, Nat.add_mod, Nat.mod_eq_of_lt hik,
+    Nat.mod_eq_of_lt (show (2:ℕ) < k' by omega)] at hc
+  -- hc : (i % k' + 2) % k' = i % k'
+  rcases Nat.lt_or_ge (i % k' + 2) k' with hcase | hcase
+  · rw [Nat.mod_eq_of_lt hcase] at hc
+    omega
+  · have hx : (i % k' + 2) % k' = i % k' + 2 - k' := by
+      rw [show i % k' + 2 = k' + (i % k' + 2 - k') from (Nat.add_sub_cancel' hcase).symm,
+        Nat.add_comm k' (i % k' + 2 - k'), Nat.add_mod_right,
+        Nat.mod_eq_of_lt (by omega)]
+      omega
+    rw [hx] at hc
+    omega
+
+/-- The augmented carrier is a graph: the cyclic edges are two-element sets
+(the successor is never equal, `3 ≤ k`), and the diagonal is a two-element
+set. -/
+private theorem slicingGraph_p35 {vv : ℕ → V3} {k : ℕ} {u w : V3} {E : Set (Set V3)}
+    (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (huw : u ≠ w) :
+    Kepler.Text.Fan.Graph (E ∪ {{u, w}}) := by
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hnext : ∀ i : ℕ, vv i ≠ vv (i + 1) := by
+    intro i hh
+    have hik : i % k < k := Nat.mod_lt i hk0
+    have hm : i % k = (i + 1) % k := vvModEq_p35 hk0 hper hinj hh
+    have key : (i + 1) % k = (i % k + 1) % k := by rw [Nat.mod_add_mod]
+    rw [key] at hm
+    rcases Nat.lt_or_ge (i % k + 1) k with h1 | h1
+    · rw [Nat.mod_eq_of_lt h1] at hm
+      omega
+    · have hx : (i % k + 1) % k = i % k + 1 - k := by
+        rw [show i % k + 1 = k + (i % k + 1 - k) from (Nat.add_sub_cancel' h1).symm,
+          Nat.add_comm k (i % k + 1 - k), Nat.add_mod_right,
+          Nat.mod_eq_of_lt (by omega)]
+        omega
+      rw [hx] at hm
+      omega
+  intro e he
+  rcases he with hEe | hDe
+  · rw [← hE] at hEe
+    obtain ⟨i, rfl⟩ := hEe
+    have h2 : ({vv i, vv (i + 1)} : Set V3).ncard = 2 := by
+      rw [Set.ncard_insert_of_notMem (a := vv i) (s := ({vv (i + 1)} : Set V3))
+        (by simp [hnext i]) (Set.finite_singleton (vv (i + 1))), Set.ncard_singleton]
+    refine ⟨Set.Finite.insert (vv i) (Set.finite_singleton (vv (i + 1))), ?_⟩
+    rw [← Set.ncard_eq_toFinset_card ({vv i, vv (i + 1)} : Set V3)
+      (Set.Finite.insert (vv i) (Set.finite_singleton (vv (i + 1))))]
+    exact h2
+  · rw [show e = ({u, w} : Set V3) from hDe]
+    have h2 : ({u, w} : Set V3).ncard = 2 := by
+      rw [Set.ncard_insert_of_notMem (a := u) (s := ({w} : Set V3))
+        (by simp [huw]) (Set.finite_singleton w), Set.ncard_singleton]
+    refine ⟨Set.Finite.insert u (Set.finite_singleton w), ?_⟩
+    rw [← Set.ncard_eq_toFinset_card ({u, w} : Set V3)
+      (Set.Finite.insert u (Set.finite_singleton w))]
+    exact h2
+
+/-- **EJRCFJD chain W5 (assembly)** — the W4a conditional assembly with both
+named inputs (`hstep`, `hvisit`) discharged from the slicing context: the
+slice face of the augmented carrier is a local fan.  Remaining inputs: the
+augmented-carrier fan (`PROVE_SLICING_FAN_p35` scope) and the slice
+hypermap `HS'` with its base-dart membership (bridge wave, `EJRCFJD_p35`
+scope). -/
+theorem HAFL_HALF_CIRCLE_SLICED_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hk' : s'.k = k') (hk : s.k = k)
+    (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+    (hV : Set.range vv = V)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    (hnorm : norm (u - w) ≤ cstab)
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+    (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+    (hfan : Kepler.Text.Fan.FAN 0 V (E ∪ {{u, w}}))
+    (HS' : Hypermap (V3 × V3))
+    (hHS' : IsHypE_p35 (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+      (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u))) HS')
+    (hd' : (u, rhoNode1 FF u) ∈ dartsOfHyp_p3 (ePrime_p3 (E ∪ {{u, w}})
+      (HS.face (u, rhoNode1 FF u))) (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))) :
+    localFan_p3 (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+      (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+      (HS.face (u, rhoNode1 FF u)) := by
+  have hk0 : 0 < k := by rw [← hk]; have := hscs.2.1; omega
+  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hk'0 : 0 < k' := by rw [← hk']; have := hge.1; omega
+  have hklt : k' < k := by
+    have h2 := hge.2.2
+    rw [hk', hk] at h2
+    exact h2
+  have hk3c : 3 ≤ k := by omega
+  have hper : Periodic vv k := by rw [← hk]; exact hBB.2.1
+  have hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j := by
+    intro i j hi hj hne he
+    have i' : i < s.k := by rw [hk]; exact hi
+    have j' : j < s.k := by rw [hk]; exact hj
+    exact vvInjAux_p35 s vv hscs hBB i j i' j' hne he
+  have htecdist : dist u w ≤ cstab := by rw [dist_eq_norm]; exact hnorm
+  have hUW : u ≠ w := NOT_EQ_DIAG_p35 s p q u w vv hscs hdiag htecdist
+    (by rw [hk]; exact hp) (by rw [hk]; exact hq) hBB
+  have hrho : rhoNode1 FF u = vv (p % k + 1) := by
+    have h := VV_SUC_EQ_RHO_NODE_p35 s k (p % k) p q u V E FF vv hk hp hV hE hFF hscs hdiag hBB 1
+    rw [Function.iterate_one, show (1:ℕ) + p % k = p % k + 1 from Nat.add_comm 1 (p % k)] at h
+    exact h
+  have hd : (u, rhoNode1 FF u) ∈ dartsOfHyp_p3 (E ∪ {{u, w}}) V := by
+    refine Set.mem_union_left _ ?_
+    show {(u, rhoNode1 FF u).1, (u, rhoNode1 FF u).2} ∈ E ∪ {{u, w}}
+    rw [hrho]
+    refine Or.inl ?_
+    rw [← hE, ← hp]
+    exact Set.mem_range.mpr ⟨p % k, rfl⟩
+  have hgraph : Kepler.Text.Fan.Graph (E ∪ {{u, w}}) := slicingGraph_p35 hk3c hper hinj hE hUW
+  exact HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraph HS hHS hfan hd
+    (HALF_CIRCLE_STEP_p35 s s' s'' p q d' d'' mkj k k' u w V E FF vv HS hs' hs'' hk' hk
+      hp hq hV hE hFF hnorm hscs hdiag hBB hHS)
+    (HVISIT_HALF_CIRCLE_p35 s s' s'' p q d' d'' mkj k k' u w V E FF vv HS hs' hs'' hk' hk
+      hp hq hV hE hFF hnorm hscs hdiag hBB hHS) HS' hHS' hd'
+/-! ## GATE-A — the `localFan_p3` → LA1 `LocalFan` bridge
+(lane ejrcfjd-covex2-w1, 2026-10-28)
+
+The HAFL chapter lands the half-circle slice face at the LA3 carrier
+`localFan_p3`; the conditional COVEX piece `COVEX_OF_LOFA_HALF_CIRCLE_p35`
+(below) consumes the LA1 `LocalFan` carrier instead.  AzimBridge carries the
+master bridge `LocalFan.of_localFan_p3` (AzimBridge.lean:740) but is not
+importable from the LA35 face (it drags LocalAuto2, whose LocalAuto1 pairing
+clashes on a duplicate `atn2PA18`); this section recasts it privately (the
+fanbase-s3 kit route), together with the no-isolated-vertex dart
+identification that kills its second hypothesis at the slice faces: slice
+darts with distinct endpoints force every slice vertex to carry an edge, so
+the `self_pairs` branch of `dartsOfHyp_p3` is dead.  Component-level
+transpose: the `hypermapOfFan` components are re-expressed pointwise against
+the abstract `localFan_p3` hypermap `H` through the `ff/nn/eeOfHyp_p3` if-form
+definitions (`AZIM_CYCLE_EQ_SIGMA_FAN`/`IVS_AZIM_EQ_INVERSE_SIGMA_FAN` from
+LocalAuto3 + `Fan.inverse_sigma_fan_eq_inverse1`), the orbits transfer by
+iterate congruence, and `dih2k_p3` transfers to `Dih2k` conjunct by conjunct.
+-/
+
+/-- Iterate congruence: pointwise-equal maps have equal iterates (the
+fanbase-s3 `iterateCongrFb` recast). -/
+private theorem iterateCongr_p35 {α : Type*} {f g : α → α} (h : ∀ y, f y = g y) :
+    ∀ (n : ℕ) (y : α), f^[n] y = g^[n] y := by
+  intro n
+  induction n with
+  | zero => intro y; rfl
+  | succ m ih =>
+      intro y
+      rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih y, h]
+
+/-- **GATE-A bridge** — LA3 `localFan_p3` + absence of isolated self-pair
+darts gives LA1 `LocalFan`.  Private recast of AzimBridge
+`LocalFan.of_localFan_p3` (AzimBridge.lean:740; that file imports LocalAuto2,
+which is excluded from the LA35 face).  Component access via plain `.1`/`.2`
+projections: a flat-pattern `obtain` here whnf-unfolds the `dih2k_p3` def past
+its intended conjunction shape and mis-binds the components. -/
+private theorem localFanLA1ofP3_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hp3 : localFan_p3 V E FF) (hno : dartsOfHyp_p3 E V = Fan.dart1OfFan V E) :
+    LocalFan V E FF := by
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := hp3
+  have c1 := hdih.1
+  have c2 := hdih.2.1
+  have c3 := hdih.2.2.1
+  have c4 := hdih.2.2.2.1
+  have c5 := hdih.2.2.2.2
+  -- Fan.hypermapOfFan components in if-form on/off dart1OfFan
+  have hme : ∀ d : V3 × V3, (@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = if d ∈ Fan.dart1OfFan V E then Fan.eFanPair V E d
+      else d := by
+    intro d
+    show (@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = _
+    unfold Fan.hypermapOfFan Kepler.Text.Fan.extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(Fan.finite_dart1_fan hfan).coe_toFinset]
+  have hmn : ∀ d : V3 × V3, (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = if d ∈ Fan.dart1OfFan V E then Fan.nFanPair 0 V E d
+      else d := by
+    intro d
+    show (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = _
+    unfold Fan.hypermapOfFan Kepler.Text.Fan.extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(Fan.finite_dart1_fan hfan).coe_toFinset]
+  have hmf : ∀ d : V3 × V3, (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = if d ∈ Fan.dart1OfFan V E then Fan.fFanPair 0 V E d
+      else d := by
+    intro d
+    show (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) d = _
+    unfold Fan.hypermapOfFan Kepler.Text.Fan.extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(Fan.finite_dart1_fan hfan).coe_toFinset]
+  -- ofHyp components in if-form (definitional)
+  have hifE : ∀ d : V3 × V3, eeOfHyp_p3 0 V E d =
+      if d ∈ dartsOfHyp_p3 E V then (d.2, d.1) else d := fun _ => rfl
+  have hifN : ∀ d : V3 × V3, nnOfHyp_p3 0 V E d =
+      if d ∈ dartsOfHyp_p3 E V then (d.1, azimCycle_p3 (EE_p3 d.1 E) 0 d.1 d.2) else d :=
+    fun _ => rfl
+  have hifF : ∀ d : V3 × V3, ffOfHyp_p3 0 V E d =
+      if d ∈ dartsOfHyp_p3 E V then (d.2, ivsAzimCycle_p3 (EE_p3 d.2 E) 0 d.2 d.1) else d :=
+    fun _ => rfl
+  -- pointwise bridges (hno kills the self-pair branch)
+  have hptE : ∀ d : V3 × V3, ⇑H.edgeMap d =
+      ⇑(@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) d := by
+    intro d
+    by_cases hd : d ∈ Fan.dart1OfFan V E
+    · have hDD : d ∈ dartsOfHyp_p3 E V := by rw [hno]; exact hd
+      rw [hedge]
+      simp only [hifE d, hme d, if_pos hd, if_pos hDD]
+      rfl
+    · have hNN : ¬(d ∈ dartsOfHyp_p3 E V) := by rw [hno]; exact hd
+      rw [hedge]
+      simp only [hifE d, hme d, if_neg hd, if_neg hNN]
+  have hptN : ∀ d : V3 × V3, ⇑H.nodeMap d =
+      ⇑(@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) d := by
+    intro d
+    by_cases hd : d ∈ Fan.dart1OfFan V E
+    · have hDD : d ∈ dartsOfHyp_p3 E V := by rw [hno]; exact hd
+      rw [hnode]
+      rw [hifN d, hmn d]
+      simp only [if_pos hd, if_pos hDD,
+        AZIM_CYCLE_EQ_SIGMA_FAN hfan
+          ((Fan.properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan).mp hd)]
+      rfl
+    · have hNN : ¬(d ∈ dartsOfHyp_p3 E V) := by rw [hno]; exact hd
+      rw [hnode]
+      rw [hifN d, hmn d, if_neg hd, if_neg hNN]
+  have hptF : ∀ d : V3 × V3, ⇑H.faceMap d =
+      ⇑(@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) d := by
+    intro d
+    by_cases hd : d ∈ Fan.dart1OfFan V E
+    · have hDD : d ∈ dartsOfHyp_p3 E V := by rw [hno]; exact hd
+      have hpE : ({d.2, d.1} : Set V3) ∈ E :=
+        Set.pair_comm _ _ ▸ (hd : ({d.1, d.2} : Set V3) ∈ E)
+      rw [hface]
+      rw [hifF d, hmf d]
+      simp only [if_pos hd, if_pos hDD,
+        IVS_AZIM_EQ_INVERSE_SIGMA_FAN hfan hpE,
+        Fan.inverse_sigma_fan_eq_inverse1 hfan hpE]
+      rfl
+    · have hNN : ¬(d ∈ dartsOfHyp_p3 E V) := by rw [hno]; exact hd
+      rw [hface]
+      rw [hifF d, hmf d, if_neg hd, if_neg hNN]
+  -- dart Finset agreement
+  have hcoeD : ((@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan) : Set (V3 × V3))) = Fan.dart1OfFan V E := by
+    -- pin the [DecidableEq] instance to the instProd form (baked at the
+    -- Fan.lean definition site); scoped to this have block only.
+    haveI : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
+    exact (Fan.finite_dart1_fan hfan).coe_toFinset
+  have hDart' : (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) = H.darts :=
+    Finset.coe_injective (hcoeD.trans (hno.symm.trans hdarts.symm))
+  -- iterate / orbit transport
+  have hitF := iterateCongr_p35 hptF
+  have hNF : ⇑H.nodeMap =
+      ⇑(@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) :=
+    funext hptN
+  have horb : ∀ y : V3 × V3, orbitMap (H.faceMap : Equiv.Perm (V3 × V3)) y =
+      orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) y := by
+    intro y
+    ext z
+    simp only [orbitMap, Set.mem_setOf_eq, Equiv.Perm.coe_pow]
+    constructor
+    · rintro ⟨n, hn⟩
+      exact ⟨n, (hitF n y).symm ▸ hn⟩
+    · rintro ⟨n, hn⟩
+      exact ⟨n, hitF n y ▸ hn⟩
+  refine ⟨hfan, x, ?_, ?_, ?_⟩
+  · rw [hDart']
+    exact hx
+  · rw [hFF]
+    ext z
+    simp only [Hypermap.face, orbitMap, Set.mem_setOf_eq, Equiv.Perm.coe_pow]
+    constructor
+    · rintro ⟨n, hn⟩
+      exact ⟨n, (hitF n x).symm ▸ hn⟩
+    · rintro ⟨n, hn⟩
+      exact ⟨n, hitF n x ▸ hn⟩
+  · refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · rw [hDart']
+      exact c1
+    · intro dmem hdmem
+      have hd2 : dmem ∈ (↑H.darts : Set (V3 × V3)) := by
+        have h3 : dmem ∈ (↑(@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+          (Fan.hypermapOfFan 0 V E hfan)) : Set (V3 × V3)) := Finset.mem_coe.mpr hdmem
+        rwa [hDart'] at h3
+      rw [hDart', c2 dmem hd2,
+        show H.face dmem = orbitMap (H.faceMap : Equiv.Perm (V3 × V3)) dmem from rfl,
+        ← horb dmem, ← hNF]
+    · refine ⟨?_, ?_⟩
+      · intro i hi0 hik h1
+        have hEq : (H.faceMap : V3 × V3 → V3 × V3)^[i] = id := by
+          funext y
+          rw [hitF i y, ← Equiv.Perm.coe_pow, h1]
+          rfl
+        exact c3.1 i hi0 hik hEq
+      · refine Equiv.Perm.ext fun y => ?_
+        rw [Equiv.Perm.coe_pow, ← hitF (FF.ncard) y, c3.2]
+        rfl
+    · refine ⟨?_, ?_⟩
+      · intro i hi0 hik h1
+        have hEq : (H.edgeMap : V3 × V3 → V3 × V3)^[i] = id := by
+          funext y
+          rw [iterateCongr_p35 hptE i y, ← Equiv.Perm.coe_pow, h1]
+          rfl
+        exact c4.1 i hi0 hik hEq
+      · refine Equiv.Perm.ext fun y => ?_
+        rw [Equiv.Perm.coe_pow, ← iterateCongr_p35 hptE (2 : ℕ) y, c4.2]
+        rfl
+    · refine ⟨?_, ?_⟩
+      · intro i hi0 hik h1
+        have hEq : (H.nodeMap : V3 × V3 → V3 × V3)^[i] = id := by
+          funext y
+          rw [iterateCongr_p35 hptN i y, ← Equiv.Perm.coe_pow, h1]
+          rfl
+        exact c5.1 i hi0 hik hEq
+      · refine Equiv.Perm.ext fun y => ?_
+        rw [Equiv.Perm.coe_pow, ← iterateCongr_p35 hptN (2 : ℕ) y, c5.2]
+        rfl
+
+/-- **GATE-A, slice-face corollary** — the HAFL chapter lands the slice face
+as LA3 `localFan_p3`; whenever the slice darts are true darts (distinct
+endpoints — the no-degeneracy conjunct `faceCycleParam_p35 … 1` of the W3b2
+interface, supplied by the slicing kit at the W4 assembly) the no-iso
+identification upgrades it to the LA1 `LocalFan` carrier consumed by
+`COVEX_OF_LOFA_HALF_CIRCLE_p35`. -/
+theorem localFanLA1ofP3Slice_p35 {V : Set V3} {E' : Set (Set V3)} {fv : Set (V3 × V3)}
+    (hp3 : localFan_p3 (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hnd : ∀ p ∈ fv, p.1 ≠ p.2) :
+    LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv := by
+  refine localFanLA1ofP3_p35 hp3 (dartsOfHypEqDart1_p35 ?_)
+  intro v hv
+  obtain ⟨-, w, hw⟩ := hv
+  have hsub := LOCAL_FAN_IMP_FF_SUBSET_DARTS hp3
+  have hmem : (v, w) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) := hsub hw
+  have hne : v ≠ w := hnd (v, w) hw
+  simp only [dartsOfHyp_p3, ordPairs_p3, Set.mem_union, Set.mem_setOf_eq] at hmem
+  rcases hmem with h | h
+  · exact ⟨w, h⟩
+  · exact absurd h.1 hne
+
+/-! ## EJRCFJD chain W3b-c — the `COVEX_OF_LOFA_HALF_CIRCLE` chapter
+(lane ejrcfjd-covex-w1, 2026-10-28)
+
+HOL `COVEX_OF_LOFA_HALF_CIRCLE` (local_lemmas1.hl:3973, 677 ln) upgrades the
+slice face from `local_fan` (the W3b/W4a `HAFL` chapter, closed above) to
+`convex_local_fan`: the `azim_in_fan ≤ π` conjunct plus the closed-sector
+containment `v_prime ⊆ wedge_in_fan_ge` at every slice dart.  The HOL proof
+consists of (i) orbit bookkeeping — `EE w fv = {v, ivs_rho_node1 FF w}`, the
+orbit form of `v_prime V fv`, the slice-face `rho_node1`/`ivs_rho_node1`
+determinations (`DETERM_RHO_NODE`/`IVS_RHO_NODE1_DETE`,
+`AZIM_CYCLE_TWO_POINT_SET`) — and (ii) the geometric core: two applications
+of `MONO_AZIM_AS_BTA_I` (local_lemmas.hl:6448, 480 ln of trigonometry over
+`NEXT_PRO_IMP_ALLS_STRICT`, ll:6275) at the slicing endpoints `w` and `v`,
+which sandwich every carrier orbit point into the closed azimuth sector of
+its slice dart.
+
+On the LA35 face the bookkeeping half is already discharged by the W3b2
+interface: `faceCycleParam_p35` conjunct 3 gives the two-element slice
+neighbour set at every node (`azimCycle_pairEE_p35`/`sigmaFan_two_p35`
+resolve both cycle maps to the transposition), and the orbit form of the
+face is `SLICE_DARTS_EQ_p35`.  What remains is exactly the azimuth
+sandwich — stated as `covexSandwich_p35` (GATE-B: per-dart closed sector
+`azim 0 p.1 p.2 z ≤ azim 0 p.1 p.2 c ≤ π` over the slice vertices; HOL
+discharge = the two `MONO_AZIM_AS_BTA_I` applications) — and the LA1-side
+`LocalFan` carrier (GATE-A: the HAFL chapter lands as `localFan_p3`; the
+bridge to `Kepler.Text.LocalFan`'s `hypermapOfFan` surface is wired by the
+W2 surface kit but not yet assembled).  `NEXT_PRO_IMP_ALLS_STRICT_p35` and
+the `MONO_AZIM_AS_BTA_I_p35` calibrated skeleton are closed here, so GATE-B
+reduces to the single-step trig (HOL ll:6457-6927). -/
+
+/-- HOL `NEXT_PRO_IMP_ALLS_STRICT` (local_lemmas.hl:6275): a step-monotone
+chain on a preorder window is pairwise monotone (transitivity induction;
+the full extent of the proof's logical content). -/
+theorem NEXT_PRO_IMP_ALLS_STRICT_p35 {β : Type*} [Preorder β] {k : ℕ} {f : ℕ → β}
+    (hstep : ∀ i, i + 1 < k → f i ≤ f (i + 1)) {i j : ℕ} (hij : i < j) (hjk : j < k) :
+    f i ≤ f j := by
+  have key : ∀ d i, i + d < k → f i ≤ f (i + d) := by
+    intro d
+    induction d with
+    | zero => exact fun _ _ => le_refl _
+    | succ n ihn =>
+        intro i hik
+        have h1 : f i ≤ f (i + 1) := hstep i (by omega)
+        have h2 : f (i + 1) ≤ f (i + 1 + n) := ihn (i + 1) (by omega)
+        rw [show i + (n + 1) = i + 1 + n from by omega]
+        exact h1.trans h2
+  have hji : i ≤ j := le_of_lt hij
+  have hd : i + (j - i) = j := Nat.add_sub_cancel' hji
+  rw [← hd]
+  exact key (j - i) i (by rw [hd]; exact hjk)
+
+/-- HOL `MONO_AZIM_AS_BTA_I` (local_lemmas.hl:6448) in calibrated form: the
+orbit-window monotonicity `bta i ≤ bta j` (`i < j < CARD V`) from the
+per-step azimuth inequality.  The HOL residue — the single-step trig at the
+convex local fan (`azim 0 v0 (vv 1) (vv i) ≤ azim 0 v0 (vv 1) (vv (i+1))`,
+ll:6457-6927) — is the GATE-B deep water of the COVEX chapter. -/
+theorem MONO_AZIM_AS_BTA_I_p35 (k : ℕ) {v0 : V3} (ρ : ℕ → V3)
+    (hstep : ∀ i, i + 1 < k → azim 0 v0 (ρ 1) (ρ i) ≤ azim 0 v0 (ρ 1) (ρ (i + 1)))
+    {i j : ℕ} (hij : i < j) (hjk : j < k) :
+    azim 0 v0 (ρ 1) (ρ i) ≤ azim 0 v0 (ρ 1) (ρ j) :=
+  NEXT_PRO_IMP_ALLS_STRICT_p35 hstep hij hjk
+
+/-- Two-element neighbour set: `azimInFan` at the dart is the azimuth over
+the transposition partner (the slice-dart concretizer; the `sigmaFan`
+two-point swap `sigmaFan_two_p35` localized to the `azimInFan` unfolding). -/
+private theorem azimInFan_two_p35 {E : Set (Set V3)} {p : V3 × V3} {b c : V3}
+    (hEE : EE_p3 p.1 E = ({b, c} : Set V3)) (hbc : b ≠ c) (hb : p.2 = b) :
+    azimInFan p E = azim 0 p.1 p.2 c := by
+  have hEq : ee p.1 E = ({b, c} : Set V3) := by
+    rw [show (ee p.1 E : Set V3) = EE_p3 p.1 E from rfl]
+    exact hEE
+  have hnc : 1 < (ee p.1 E).ncard := by
+    rw [hEq, show ({b, c} : Set V3) = insert b ({c} : Set V3) from rfl,
+      Set.ncard_insert_of_notMem (show (b : V3) ∉ ({c} : Set V3) from by simp [hbc])]
+    norm_num
+  rw [azimInFan, if_pos hnc, hb]
+  exact congrArg (azim 0 p.1 b)
+    ((sigmaFan_two_p35 (V := Set.univ) (x := 0) (Set.subset_univ _) hEE hbc).1)
+
+/-- Two-element neighbour set: `wedgeInFanGe` at the dart is the closed
+geometric wedge over the dart and the transposition partner (twin of
+`azimInFan_two_p35` at the `wedgeInFanGe` unfolding). -/
+private theorem wedgeInFanGe_two_p35 {E : Set (Set V3)} {p : V3 × V3} {b c : V3}
+    (hEE : EE_p3 p.1 E = ({b, c} : Set V3)) (hbc : b ≠ c) (hb : p.2 = b) :
+    wedgeInFanGe p E = wedgeGe 0 p.1 p.2 c := by
+  have hEq : ee p.1 E = ({b, c} : Set V3) := by
+    rw [show (ee p.1 E : Set V3) = EE_p3 p.1 E from rfl]
+    exact hEE
+  have hnc : 1 < (ee p.1 E).ncard := by
+    rw [hEq, show ({b, c} : Set V3) = insert b ({c} : Set V3) from rfl,
+      Set.ncard_insert_of_notMem (show (b : V3) ∉ ({c} : Set V3) from by simp [hbc])]
+    norm_num
+  rw [wedgeInFanGe, if_pos hnc, hb]
+  exact congrArg (wedgeGe 0 p.1 b)
+    ((sigmaFan_two_p35 (V := Set.univ) (x := 0) (Set.subset_univ _) hEE hbc).1)
+
+/-- **The calibrated GATE-B residue of the COVEX chapter**: at every slice
+face dart `p = (p.1, p.2)` the slice neighbour set of the tail is the
+two-element set `{p.2, c}` (`c` the transposition partner, distinct from the
+dart head), and every slice vertex sits in the closed azimuth sector
+`0 ≤ azim 0 p.1 p.2 z ≤ azim 0 p.1 p.2 c ≤ π`.  HOL discharges this at the
+slicing wave by the two `MONO_AZIM_AS_BTA_I` applications (interior orbit
+darts at `w`/`v`) plus the original fan's convexity at the diagonal darts. -/
+def covexSandwich_p35 (V : Set V3) (E' : Set (Set V3)) (fv : Set (V3 × V3)) :
+    Prop :=
+  ∀ p ∈ fv, ∃ c : V3, c ≠ p.2 ∧
+    EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3) ∧
+    azim 0 p.1 p.2 c ≤ Real.pi ∧
+    ∀ z ∈ vPrime_p3 V fv, 0 ≤ azim 0 p.1 p.2 z ∧ azim 0 p.1 p.2 z ≤ azim 0 p.1 p.2 c
+
+/-- **EJRCFJD chain W3b-c (main)** — HOL `COVEX_OF_LOFA_HALF_CIRCLE`
+(local_lemmas1.hl:3973) in calibrated conditional form: the slice face of a
+half-circle slicing is a **convex** local fan as soon as the slice carries
+the LA1 `LocalFan` structure (GATE-A: the HAFL chapter's `localFan_p3`
+bridge) and the azimuth sandwich (GATE-B: `covexSandwich_p35`, the
+`MONO_AZIM_AS_BTA_I` residue).  Both conjuncts of `ConvexLocalFan` beyond
+the carrier close here from the two-element slice-neighbour resolution:
+`azimInFan_two_p35` collapses the `azim_in_fan ≤ π` conjunct onto the
+sandwich bound, `wedgeInFanGe_two_p35` collapses the `v_prime ⊆
+wedge_in_fan_ge` conjunct onto the sandwich sector. -/
+theorem COVEX_OF_LOFA_HALF_CIRCLE_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)}
+    (hlf : LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hsand : covexSandwich_p35 V E' fv) :
+    ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv := by
+  refine ⟨hlf, ?_⟩
+  intro p hp
+  obtain ⟨c, hcp, hEE, hpi, hs⟩ := hsand p hp
+  have hbc : p.2 ≠ c := fun hh => hcp hh.symm
+  constructor
+  · rw [azimInFan_two_p35 hEE hbc rfl]
+    exact hpi
+  · intro z hz
+    rw [wedgeInFanGe_two_p35 hEE hbc rfl]
+    simp only [wedgeGe, Set.mem_setOf_eq]
+    exact hs z hz
+
+/-- **EJRCFJD chain W3b-c** — HOL `COVEX_OF_LOFA_HALF_CIRCLE2`
+(local_lemmas1.hl:4650, 21 ln): both half faces of the slicing are convex
+local fans — two `COVEX_OF_LOFA_HALF_CIRCLE_p35` assemblies (the symmetric
+`INSERT_COMM` step of the HOL original is carried by the caller's `fw`
+data). -/
+theorem COVEX_OF_LOFA_HALF_CIRCLE2_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv fw : Set (V3 × V3)}
+    (hlfv : LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hsandv : covexSandwich_p35 V E' fv)
+    (hlfw : LocalFan (vPrime_p3 V fw) (ePrime_p3 E' fw) fw)
+    (hsandw : covexSandwich_p35 V E' fw) :
+    ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv ∧
+      ConvexLocalFan (vPrime_p3 V fw) (ePrime_p3 E' fw) fw :=
+  ⟨COVEX_OF_LOFA_HALF_CIRCLE_p35 hlfv hsandv,
+    COVEX_OF_LOFA_HALF_CIRCLE_p35 hlfw hsandw⟩
+
+/-- **GATE-B, EE component** — under the W3b2 face-cycle parametrization the
+two-element slice neighbour set of `covexSandwich_p35` at a face dart is
+free: `param_nnForm_p35` gives the two-element `EE` at the tail (`{a, c}`
+with `(a, p.1) ∈ fv`, `(p.1, c) ∈ fv`), and the dart head `p.2` sits in that
+set by `sliceEE_char_p35` (it is a face out-neighbour of `p.1`), so the
+transposition partner is whichever of `a`/`c` differs from `p.2`. -/
+theorem sandwichEEOfParam_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)}
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hfin : fv.Finite) {p : V3 × V3} (hp : p ∈ fv) :
+    ∃ c : V3, c ≠ p.2 ∧ EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3) := by
+  obtain ⟨a, c, hac, -, -, hEE⟩ :=
+    param_nnForm_p35 hsub hparam hfin (param_dart_slice_p35 hparam hp)
+  have hp2mem : (p.2 : V3) ∈ EE_p3 p.1 (ePrime_p3 E' fv) := by
+    rw [sliceEE_char_p35 hsub hparam.1 p.1]
+    exact Or.inl hp
+  rw [hEE, Set.mem_insert_iff, Set.mem_singleton_iff] at hp2mem
+  rcases hp2mem with hh | hh
+  · refine ⟨c, ?_, by rw [hEE, hh]⟩
+    intro hcon
+    rw [hh] at hcon
+    exact hac hcon.symm
+  · refine ⟨a, ?_, by rw [hEE, hh, pairSwap_p35 a c]⟩
+    intro hcon
+    rw [hh] at hcon
+    exact hac hcon
+
+/-- **GATE-B, calibrated core** — the honest `MONO_AZIM_AS_BTA_I` residue of
+the COVEX chapter, reduced to the pure azimuth inequalities: at every slice
+face dart the partner in the two-element slice neighbour set carries the
+closed sector `azim 0 p.1 p.2 c ≤ π` and every slice vertex lands in it.
+Together with `sandwichEEOfParam_p35` this upgrades the W3b2
+parametrization interface to the full `covexSandwich_p35` — the COVEX
+chapter's remaining geometric input, all of it consumed by the two
+`MONO_AZIM_AS_BTA_I` applications of the HOL original
+(local_lemmas1.hl:4261/:4505). -/
+theorem covexSandwichOfCore_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)}
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hfin : fv.Finite)
+    (hcore : ∀ p ∈ fv, ∃ c : V3, c ≠ p.2 ∧
+      c ∈ EE_p3 p.1 (ePrime_p3 E' fv) ∧
+      azim 0 p.1 p.2 c ≤ Real.pi ∧
+      ∀ z ∈ vPrime_p3 V fv, 0 ≤ azim 0 p.1 p.2 z ∧
+        azim 0 p.1 p.2 z ≤ azim 0 p.1 p.2 c) :
+    covexSandwich_p35 V E' fv := by
+  intro p hp
+  obtain ⟨c, hcp, hcm, hpi, hs⟩ := hcore p hp
+  obtain ⟨c', hcp', hEE⟩ := sandwichEEOfParam_p35 hsub hparam hfin hp
+  rw [hEE] at hcm
+  have hcc : c = c' := by
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hcm
+    rcases hcm with h | h
+    · exact absurd h hcp
+    · exact h
+  refine ⟨c', hcp', hEE, ?_, ?_⟩
+  · rw [← hcc]; exact hpi
+  · intro z hz
+    rw [hcc] at hs
+    exact hs z hz
+
+/-- **COVEX chapter, GATE-A half closed** — the conditional COVEX piece
+reduced to the GATE-B sandwich alone: the HAFL landing shape (`localFan_p3`
+over the slice carriers) upgrades to the LA1 `LocalFan` carrier by the GATE-A
+bridge above (true slice darts kill the isolated self-pair branch), so the
+COVEX chapter now consumes exactly one geometric hypothesis beyond the slice
+data — `covexSandwich_p35`, the `MONO_AZIM_AS_BTA_I` trig residue
+(local_lemmas.hl:6457-6927, not on the LA35 import face). -/
+theorem COVEX_OF_HAFL_p35 {V : Set V3} {E' : Set (Set V3)} {fv : Set (V3 × V3)}
+    (hp3 : localFan_p3 (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hnd : ∀ p ∈ fv, p.1 ≠ p.2)
+    (hsand : covexSandwich_p35 V E' fv) :
+    ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv :=
+  COVEX_OF_LOFA_HALF_CIRCLE_p35 (localFanLA1ofP3Slice_p35 hp3 hnd) hsand
+
+/-- **GATE-B, interior-dart half (closed)** — at a slice dart whose tail keeps
+its two-element neighbour set in the carrier (`EE_p3 p.1 E = {p.2, c}`: the
+diagonal does not touch the tail, so the augmented and slice neighbour sets
+coincide), the closed sector of the ORIGINAL convex local fan collapses onto
+the sandwich at that dart: the `azim ≤ π` bound via the two-point
+`azimInFan` resolution, the sector containment `∀ z ∈ V` via the two-point
+`wedgeInFanGe` resolution, the nonnegativity via `azim_nonneg`.  This
+discharges the HOL original's interior-dart bookkeeping (local_lemmas1.hl
+COVEX chapter: every non-diagonal slice dart takes its sandwich straight from
+the `convex_local_fan (V,E,FF)` first hypothesis); only the two diagonal
+darts (tails at the slicing endpoints) consume the `MONO_AZIM_AS_BTA_I`
+trig — the GATE-B deep water. -/
+theorem sandwichTwoOfConvex_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {p : V3 × V3} {c : V3}
+    (hconv : ConvexLocalFan V E FF) (hp : p ∈ FF)
+    (hEE : EE_p3 p.1 E = ({p.2, c} : Set V3)) (hcb : c ≠ p.2) :
+    azim 0 p.1 p.2 c ≤ Real.pi ∧
+    ∀ z ∈ V, 0 ≤ azim 0 p.1 p.2 z ∧ azim 0 p.1 p.2 z ≤ azim 0 p.1 p.2 c := by
+  have hconj := hconv.2 p hp
+  have hpi : azimInFan p E ≤ Real.pi := hconj.1
+  have hV : V ⊆ wedgeInFanGe p E := hconj.2
+  refine ⟨?_, fun z hz => ⟨azim_nonneg 0 p.1 p.2 z, ?_⟩⟩
+  · rw [azimInFan_two_p35 hEE (Ne.symm hcb) rfl] at hpi
+    exact hpi
+  · have hzW : z ∈ wedgeInFanGe p E := hV hz
+    rw [wedgeInFanGe_two_p35 hEE (Ne.symm hcb) rfl] at hzW
+    simp only [wedgeGe, Set.mem_setOf_eq] at hzW
+    exact hzW.2
+
+/-! ## GATE-B MONO_AZIM 单步三角（lane `ejrcfjd-monotrig-w1`, 2026-10-28）
+
+HOL `MONO_AZIM_AS_BTA_I`（local_lemmas.hl:6448）把窗口单调性归到凸局扇轨道
+相邻点的单步不等式 `azim 0 v0 (ρ 1) (ρ i) ≤ azim 0 v0 (ρ 1) (ρ (i+1))`
+（本体 ll:6457-6927，480 行）。HOL 单步走 Trigonometry2 正交标架组
+（`trig_th`/`NOT_EQ_IMP_EXISTS_BASIC`/`R_POS_SIN_COS_IDENT`/
+`SIN_COS_IDEN_IFF_DIFFER_PERS`/`SIN_COS_PERIODIC_IN_WHOLE`），并以
+KCHMAMG（ll:3197）平面化 + `circular` 路线杀掉方位回卷角点
+`(va, vb) = (π, 0)`。LA35 面上 sin/cos 标架组整体由 import 面
+`JBDNJJB` 方位-正弦桥（Planarity.lean:2702：`sin (azim 0 u v w) =
+t * ((u × v) ⬝ w)`，`t > 0`）替换，单步三角坍缩为：
+(i) `azimAddTriple_p35` 假定窗口内的加法；(ii) 两次 `pmCrossGeAll_p35`
+半空间实例（对角 dart 楔含 v0 的 `≤ π` 半支 + 循环置换反向）；(iii)
+`JBDNJJB` 零传递。活下来的即下方诚实的三角核心——回卷角点被隔离为
+显式析取支：**该析取支的扇论排除（轨道无两点落入 (0, v0) 轴的同一方
+位类：HOL KCHMAMG 领地）本波不开，即 GATE-B 的精确残差**（同族于栈上
+_named_ root `pmPlaneCrowding_p35` 的 C1/C4 角点）。-/
+
+/-- **GATE-B 三角核心（MONO_AZIM 单步，回卷隔离）** — 参考射线 `b`、扇轴
+`(0, u)`：若 `x` 的方位不超过 `y` 的方位则左支；否则 `azimAddTriple_p35`
+在假定窗口内加出步差 `δ = azim 0 u y x ∈ (0, π]`，`JBDNJJB` 给
+`sin δ = t * ((u × y) ⬝ x)`（`t > 0`），对角楔 `x → y` 对 `u` 的 `≤ π`
+半支经 `pmCrossGeAll_p35` 与循环置换反号夹出 `(u × y) ⬝ x = 0`，故
+`sin δ = 0`、`δ = π`，即 `(va, vb) = (π, 0)`。HOL 原路在这一点进入
+KCHMAMG 平面化（ll:6790-6927）导出矛盾；此处如实保留为析取支。 -/
+theorem monoStepCore_p35 {u b x y : V3} (hu0 : u ≠ 0)
+    (hb : ¬ Collinear3 0 u b) (hx : ¬ Collinear3 0 u x)
+    (hy : ¬ Collinear3 0 u y) (hx0 : x ≠ 0) (hncxy : ¬ Collinear3 0 x y)
+    (hvapi : azim 0 u b x ≤ Real.pi)
+    (hdart0 : 0 ≤ azim 0 x y u) (hdartpi : azim 0 x y u ≤ Real.pi)
+    (hvb0 : 0 ≤ azim 0 u b y) :
+    azim 0 u b x ≤ azim 0 u b y ∨
+      (azim 0 u b x = Real.pi ∧ azim 0 u b y = 0) := by
+  rcases lt_or_ge (azim 0 u b y) (azim 0 u b x) with hlt | hle
+  · right
+    have hadd : azim 0 u b x = azim 0 u b y + azim 0 u y x :=
+      azimAddTriple_p35 (x := (0 : V3)) (v := u) (u := b) (w1 := y) (w2 := x)
+        hu0 hb hy hx hlt.le
+    have hδpos : 0 < azim 0 u y x := by linarith
+    have hδpi : azim 0 u y x ≤ Real.pi := by linarith
+    -- JBDNJJB 桥：sin δ = t * ((u × y) ⬝ x)，t > 0
+    obtain ⟨t, ht, hsin⟩ := JBDNJJB (u := u) (v := y) (w := x) hy hx
+    -- 对角楔半空间（pmCrossGeAll 于 dart (x, y) 对 u）
+    have hd := pmCrossGeAll_p35 (y := x) (z := y) (x := u) hx0 hncxy hdart0 hdartpi
+    -- 循环置换 + 反交换：(u × y) ⬝ x = -((x × y) ⬝ u)
+    have hcyc : (crossProduct (u : Fin 3 → ℝ) (y : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ)
+        = -((crossProduct (x : Fin 3 → ℝ) (y : Fin 3 → ℝ)) ⬝ᵥ (u : Fin 3 → ℝ)) := by
+      rw [pmTripleCyc_p35, ← cross_anticomm (x : Fin 3 → ℝ) (y : Fin 3 → ℝ),
+        dotProduct_comm, dotProduct_neg, dotProduct_comm]
+    have hTge : (0:ℝ) ≤ (crossProduct (u : Fin 3 → ℝ) (y : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) := by
+      by_contra hneg
+      push_neg at hneg
+      have hsp : (0:ℝ) ≤ Real.sin (azim 0 u y x) :=
+        Real.sin_nonneg_of_nonneg_of_le_pi hδpos.le hδpi
+      rw [hsin] at hsp
+      have hprod : t * ((crossProduct (u : Fin 3 → ℝ) (y : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ)) < 0 :=
+        mul_neg_of_pos_of_neg ht hneg
+      linarith
+    have hT0 : (crossProduct (u : Fin 3 → ℝ) (y : Fin 3 → ℝ)) ⬝ᵥ (x : Fin 3 → ℝ) = 0 :=
+      le_antisymm (by rw [hcyc]; linarith) hTge
+    have hsin0 : Real.sin (azim 0 u y x) = 0 := by
+      rw [hsin, hT0]; ring
+    have hδeq : azim 0 u y x = Real.pi := by
+      rcases eq_or_lt_of_le hδpi with h | hlt2
+      · exact h
+      · exact absurd (Real.sin_pos_of_pos_of_lt_pi hδpos hlt2)
+          (by rw [hsin0]; simp)
+    have hvaeq : azim 0 u b x = Real.pi := by
+      rw [hadd, hδeq]; linarith
+    have hsub : azim 0 u b y = azim 0 u b x - azim 0 u y x := by linarith
+    rw [hsub, hvaeq, hδeq]
+    simp
+  · exact Or.inl hle
+
+/-- **MONO_AZIM 单步（轨道标定形）** — HOL `MONO_AZIM_AS_BTA_I` 的 `hstep`
+生成器：凸局扇轨道数据（顶点/对角非共线、参考楔 `≤ π` 界、对角楔界）
+前置下，逐相邻对给出「单调 或 回卷角点」析取。`ρ 0 = v0` 时 `i = 0`
+平凡（`azim 0 v0 b v0 = 0`）。 -/
+theorem monoStepOrbit_p35 (k : ℕ) {v0 b : V3} (ρ : ℕ → V3)
+    (hr0 : ρ 0 = v0) (hv0 : v0 ≠ 0) (hb : ¬ Collinear3 0 v0 b)
+    (hvx : ∀ i, 0 < i → i < k → ¬ Collinear3 0 v0 (ρ i))
+    (hvx0 : ∀ i, 0 < i → i < k → ρ i ≠ 0)
+    (hbnds : ∀ i, 0 < i → i < k → 0 ≤ azim 0 v0 b (ρ i) ∧
+      azim 0 v0 b (ρ i) ≤ Real.pi)
+    (hdart : ∀ i, i + 1 < k → ¬ Collinear3 0 (ρ i) (ρ (i + 1)) ∧
+      0 ≤ azim 0 (ρ i) (ρ (i + 1)) v0 ∧
+      azim 0 (ρ i) (ρ (i + 1)) v0 ≤ Real.pi) (i : ℕ) (hik : i + 1 < k) :
+    azim 0 v0 b (ρ i) ≤ azim 0 v0 b (ρ (i + 1)) ∨
+      (azim 0 v0 b (ρ i) = Real.pi ∧ azim 0 v0 b (ρ (i + 1)) = 0) := by
+  rcases Nat.lt_or_ge i 1 with hi0 | hi1
+  · have hi : i = 0 := Nat.lt_one_iff.mp hi0
+    left
+    rw [hi, hr0, azimAxis_p35 (collinear3_pair_right (v0 := (0 : V3))
+      (v1 := v0) (x := v0) rfl)]
+    exact azim_nonneg 0 v0 b _
+  · exact monoStepCore_p35 (u := v0) (b := b) (x := ρ i) (y := ρ (i + 1))
+      hv0 hb (hvx i hi1 (lt_of_le_of_lt (Nat.le_succ i) hik))
+      (hvx (i + 1) (Nat.succ_pos i) hik) (hvx0 i hi1 (lt_of_le_of_lt (Nat.le_succ i) hik))
+      (hdart i hik).1 (hbnds i hi1 (lt_of_le_of_lt (Nat.le_succ i) hik)).2
+      (hdart i hik).2.1 (hdart i hik).2.2 (hbnds (i + 1) (Nat.succ_pos i) hik).1
+
+/-- **MONO_AZIM 窗口单调（无回卷假设下闭）** — 栈上
+`MONO_AZIM_AS_BTA_I_p35` 窗口骨架 + 上件单步（回卷支被 `hnowrap`
+排除后的 `Or.resolve_right`）。GATE-B 对角 dart 夹板的最终扇论输入
+即 `hnowrap`：相邻轨道点方位不落 `(π, 0)` 角点（等价地：无第二轨道点
+与 `ρ 1` 同方位类——HOL KCHMAMG ll:3197 支配的残余）。 -/
+theorem monoWindowNowrap_p35 (k : ℕ) {v0 b : V3} (ρ : ℕ → V3)
+    (hr0 : ρ 0 = v0) (hv0 : v0 ≠ 0) (hb : ¬ Collinear3 0 v0 b)
+    (hvx : ∀ i, 0 < i → i < k → ¬ Collinear3 0 v0 (ρ i))
+    (hvx0 : ∀ i, 0 < i → i < k → ρ i ≠ 0)
+    (hbnds : ∀ i, 0 < i → i < k → 0 ≤ azim 0 v0 b (ρ i) ∧
+      azim 0 v0 b (ρ i) ≤ Real.pi)
+    (hdart : ∀ i, i + 1 < k → ¬ Collinear3 0 (ρ i) (ρ (i + 1)) ∧
+      0 ≤ azim 0 (ρ i) (ρ (i + 1)) v0 ∧
+      azim 0 (ρ i) (ρ (i + 1)) v0 ≤ Real.pi)
+    (hnowrap : ∀ i, i + 1 < k →
+      ¬(azim 0 v0 b (ρ i) = Real.pi ∧ azim 0 v0 b (ρ (i + 1)) = 0))
+    {i j : ℕ} (hij : i < j) (hjk : j < k) :
+    azim 0 v0 b (ρ i) ≤ azim 0 v0 b (ρ j) := by
+  have hstep : ∀ m, m + 1 < k → azim 0 v0 b (ρ m) ≤ azim 0 v0 b (ρ (m + 1)) := by
+    intro m hm
+    rcases monoStepOrbit_p35 k ρ hr0 hv0 hb hvx hvx0 hbnds hdart m hm with h | h
+    · exact h
+    · exact absurd h (hnowrap m hm)
+  -- 窗口归纳（NEXT_PRO_IMP_ALLS_STRICT 骨架的泛射线内联；b 与 ρ 1 的
+  -- 高阶合一在 term-mode 会卡 whnf，故不走 MONO_AZIM_AS_BTA_I_p35 装配）
+  have key : ∀ d m, m + d < k → azim 0 v0 b (ρ m) ≤ azim 0 v0 b (ρ (m + d)) := by
+    intro d
+    induction d with
+    | zero => exact fun _ _ => le_refl _
+    | succ n ihn =>
+        intro m hmk
+        have h1 := hstep m (by omega)
+        have h2 := ihn (m + 1) (by omega)
+        rw [show m + (n + 1) = m + 1 + n from by omega]
+        exact h1.trans h2
+  have hji : i ≤ j := le_of_lt hij
+  have hd : i + (j - i) = j := Nat.add_sub_cancel' hji
+  rw [← hd]
+  exact key (j - i) i (by rw [hd]; exact hjk)
+
+/-- **回卷支锐化（W4 排除输入，C1 角点形态）** — `monoStepCore_p35` 右支的
+`azim 0 u b y = 0` 半支把点 `y` 渲染进参考射线 `b` 自 `(0, u)` 轴线的
+**开**锥：`y = s • u + t • b` 且 `0 < t`（`affGt_pair_iff` 的严格系数）。
+与对偶半支 `azim 0 u b x = π`（HOL `AZIM_EQ_PI_ALT` 形态：`x` 落 `b`
+反向开半平面）合取，回卷角点 = 「两相邻轨道点同落 (0, u, b) 平面且分居
+轴线两侧」——正是 KCHMAMG 平面化（local_lemmas.hl:3197）消费的输入形态。 -/
+theorem monoStepRender0_p35 {u b y : V3} (hu0 : u ≠ 0) (hb0 : b ≠ 0)
+    (hbu : b ≠ u) (hb : ¬ Collinear3 0 u b) (hy : ¬ Collinear3 0 u y)
+    (h : azim 0 u b y = 0) :
+    ∃ s t : ℝ, y - 0 = s • (u - 0) + t • (b - 0) ∧ 0 < t := by
+  by_cases hcol : Collinear3 0 u y
+  · exact absurd hcol hy
+  · obtain ⟨c, hc, s, hs⟩ :=
+      (affGt_pair_iff (v0 := (0 : V3)) (v1 := u) (x := b) (y := y)
+        (Ne.symm hu0) hb0 hbu).mp
+      ((azim_eq_zero_iff_alt (v0 := (0 : V3)) (v1 := u) (w := b) (x := y)
+        hb hcol).mp h)
+    exact ⟨s, c, by rw [hs]; module, hc⟩
+
+/-! ## OZQVSFF (local_lemmas1.hl:2056) — the convex-local-fan plane-exclusion piece
+
+HOL `OZQVSFF` verbatim: `!u w. convex_local_fan (V,E,FF) /\ {u,v,w} SUBSET V /\ plane P /\
+{vec 0,u,v,w} SUBSET P /\ {u,w} INTER aff {vec 0,v} = {} /\
+~(aff {v,vec 0} INTER conv0 {w,u} = {}) ==> interior_angle1 (vec 0) FF v = pi /\
+rho_node1 FF v IN P /\ ivs_rho_node1 FF v IN P`.
+
+Carrier adaptations (same convention as the W2 orbit kit): `plane P` is the
+flyspeck sphere.hl:345 definition rendered over `affineSpan` (the PackingAuto6
+`affine hull` correspondence); `aff` is `affineSpan`; `conv0` is the
+sphere.hl:294 open cone — the PackingAuto18 twin is off the LA35 import face,
+so a defining copy lives here.  Because the LA1 `LocalFan` (hypermapOfFan
+carrier) does not force the HOL 2-regularity of the neighbour sets, the orbit
+facts are sourced from `lfVertKit_p35`, which carries the two-neighbour
+hypothesis `hEE2` explicitly (the deferred `BIJ_BETWEEN_FF_AND_V` wave) —
+the same carrier form as the public `WEDGE_IN_FAN_LOFA_DETER2_p35`. -/
+
+/-- flyspeck `conv0` (sphere.hl:294): `affsign (0 <) ∅ S`, the open cone. -/
+def ozConv0_p35 (S : Set V3) : Set V3 := affGt (∅ : Set V3) S
+
+/-- `conv0` sees only the underlying point set. -/
+private theorem ozConv0_swap_p35 {a b : V3} :
+    ozConv0_p35 ({a, b} : Set V3) = ozConv0_p35 ({b, a} : Set V3) := by
+  have hAB : ({a, b} : Set V3) = {b, a} := by
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [hAB]
+
+/-- Open-cone coefficient extraction (the two-point case of `AFF_GT_0_2`). -/
+private theorem ozConv0_coeff_p35 {w u y : V3}
+    (h : y ∈ ozConv0_p35 ({w, u} : Set V3)) :
+    ∃ t2 t3 : ℝ, 0 < t2 ∧ 0 < t3 ∧ t2 + t3 = 1 ∧ y = t2 • w + t3 • u := by
+  rw [ozConv0_p35, affGt, Set.mem_setOf_eq, Affsign] at h
+  obtain ⟨f, hfin, hvec, hpos, hone⟩ := h
+  by_cases hvw : w = u
+  · subst hvw
+    have h1 : hfin.toFinset = ({w} : Finset V3) := by
+      ext z
+      simp [hfin.mem_toFinset]
+    rw [h1, Finset.sum_singleton] at hvec hone
+    refine ⟨1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+    rw [hvec, hone, one_smul, ← add_smul]
+    norm_num [one_smul]
+  · have h1 : hfin.toFinset = ({w, u} : Finset V3) := by
+      ext z
+      simp [hfin.mem_toFinset, hvw]
+    rw [h1, Finset.sum_insert (show w ∉ ({u} : Finset V3) from by simp [hvw]),
+      Finset.sum_singleton] at hvec hone
+    exact ⟨f w, f u, hpos w (by simp), hpos u (by simp), hone, hvec⟩
+
+/-- Pair-span vector form (out): a point of `line[ℝ, a, b]`. -/
+private theorem ozPairVec_p35 {a b x : V3}
+    (hmem : x ∈ (affineSpan ℝ ({a, b} : Set V3) : Set V3)) :
+    ∃ γ : ℝ, x - a = γ • (b - a) := by
+  rw [SetLike.mem_coe, ← vsub_vadd x a, vadd_left_mem_affineSpan_pair] at hmem
+  obtain ⟨γ, hγ⟩ := hmem
+  exact ⟨γ, hγ.symm⟩
+
+/-- Collinear with `{0, v}` puts the point on the span line. -/
+private theorem ozCollMem_p35 {v u : V3} {γ : ℝ} (h : u - 0 = γ • (v - 0)) :
+    u ∈ (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3) := by
+  rw [SetLike.mem_coe, ← vsub_vadd u (0:V3), vadd_left_mem_affineSpan_pair]
+  exact ⟨γ, by show γ • (v - (0:V3)) = u - (0:V3); exact h.symm⟩
+
+/-- Span-vector form (in) at a triple. -/
+private theorem ozTripleMem_p35 {x y z p : V3} (c1 c2 : ℝ)
+    (h : p - z = c1 • (x - z) + c2 • (y - z)) :
+    p ∈ (affineSpan ℝ ({x, y, z} : Set V3) : Set V3) := by
+  have h5 := AffineSubspace.vadd_mem_iff_mem_direction (k := ℝ) (V := V3) (P := V3)
+    (v := (p -ᵥ z : V3)) (p := z)
+    (subset_affineSpan _ ({x, y, z} : Set V3)
+      (Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _ rfl)))
+  rw [SetLike.mem_coe, ← vsub_vadd p z, h5, direction_affineSpan,
+    vectorSpan_eq_span_vsub_set_right (k := ℝ) (s := ({x, y, z} : Set V3)) (p := z)
+      (by simp)]
+  have hmem : (p -ᵥ z : V3) ∈ Submodule.span ℝ ({x - z, y - z} : Set V3) :=
+    Submodule.mem_span_pair.mpr ⟨c1, c2, h.symm⟩
+  have himg : ({x - z, y - z} : Set V3)
+      ⊆ (fun q : V3 => q -ᵥ z) '' ({x, y, z} : Set V3) := by
+    rintro m (rfl | rfl)
+    · exact ⟨x, Set.mem_insert _ _, rfl⟩
+    · exact ⟨y, Set.mem_insert_of_mem _ (Set.mem_insert _ _), rfl⟩
+  have hle : Submodule.span ℝ ({x - z, y - z} : Set V3)
+      ≤ Submodule.span ℝ ((fun q : V3 => q -ᵥ z) '' ({x, y, z} : Set V3)) :=
+    Submodule.span_mono himg
+  exact SetLike.le_def.mp hle hmem
+
+/-- The `LDURDPN` core: an open-segment crossing of the axis line pins the
+azimuth at `π` (frame/complex computation over `azim_frame_spec`). -/
+private theorem ozAzmPi_p35 {v w u z : V3} (hv0 : v ≠ 0) (hncw : ¬ Collinear3 0 v w)
+    (hncu : ¬ Collinear3 0 v u) (a b γ : ℝ) (ha : 0 < a) (hb : 0 < b)
+    (hz : z = a • w + b • u) (hzline : z - 0 = γ • (v - 0)) :
+    azim 0 v w u = Real.pi := by
+  have hzcomb : z - 0 = a • (w - 0) + b • (u - 0) := by rw [hz]; module
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - 0) (sub_ne_zero.mpr hv0)
+  have hax : (v - 0 : V3) = dist v 0 • f3 := by rw [dist_eq_norm]; exact halign
+  obtain ⟨ψ, r1, r2, hr1, hr2, hzw, hzu⟩ :=
+    azim_frame_spec (v := (0:V3)) (w := v) (w1 := w) (w2 := u) hncw hncu hon hax hv0
+  have hrep1 : zOf f1 f2 (z - 0) = (a:ℂ) * zOf f1 f2 (w - 0) + (b:ℂ) * zOf f1 f2 (u - 0) := by
+    rw [hzcomb, zOf_add, zOf_smul, zOf_smul]
+  have hrep2 : zOf f1 f2 (z - 0) = zOf f1 f2 (γ • (v - 0)) := by rw [hzline]
+  have hrep3 : zOf f1 f2 (γ • (v - 0)) = 0 := by rw [zOf_smul, zOf_axis hax hon, mul_zero]
+  rw [hrep2, hrep3, hzw, hzu] at hrep1
+  rw [exp_add_I] at hrep1
+  have hme : (Complex.exp ((ψ:ℂ) * Complex.I) : ℂ) ≠ 0 := Complex.exp_ne_zero _
+  have hX0 : (a:ℂ) * r1 + (b:ℂ) * r2 *
+      Complex.exp (((azim 0 v w u : ℝ):ℂ) * Complex.I) = 0 := by
+    have hcalc : Complex.exp ((ψ:ℂ) * Complex.I)
+        * ((a:ℂ) * r1 + (b:ℂ) * r2 *
+            Complex.exp (((azim 0 v w u : ℝ):ℂ) * Complex.I)) = 0 := by
+      calc Complex.exp ((ψ:ℂ) * Complex.I)
+          * ((a:ℂ) * r1 + (b:ℂ) * r2 *
+              Complex.exp (((azim 0 v w u : ℝ):ℂ) * Complex.I))
+          = (a:ℂ) * r1 * Complex.exp ((ψ:ℂ) * Complex.I)
+              + (b:ℂ) * r2 * (Complex.exp ((ψ:ℂ) * Complex.I)
+                * Complex.exp (((azim 0 v w u : ℝ):ℂ) * Complex.I)) := by ring
+        _ = 0 := by linear_combination -hrep1
+    rw [← mul_zero] at hcalc
+    exact mul_left_cancel₀ hme hcalc
+  have hkey : ((b * r2 : ℝ):ℂ) * Complex.exp (((azim 0 v w u : ℝ):ℂ) * Complex.I)
+      = ((a * r1 : ℝ):ℂ) * Complex.exp (((Real.pi:ℝ):ℂ) * Complex.I) := by
+    rw [Complex.exp_pi_mul_I, mul_neg_one]
+    refine eq_neg_of_add_eq_zero_right ?_
+    push_cast
+    exact hX0
+  have hθpi : Complex.exp (((azim 0 v w u : ℝ):ℂ) * Complex.I)
+      = Complex.exp (((Real.pi:ℝ):ℂ) * Complex.I) :=
+    exp_pos_mul_eq (mul_pos hb hr2) (mul_pos ha hr1) hkey
+  obtain ⟨k, hk⟩ := Complex.exp_eq_exp_iff_exists_int.mp hθpi
+  have hb1 : (0:ℝ) ≤ azim 0 v w u := azim_nonneg 0 v w u
+  have hb2 : azim 0 v w u < 2 * Real.pi := azim_lt_two_pi 0 v w u
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have hB : (0:ℝ) < 2 * Real.pi := by positivity
+  have hθeq : azim 0 v w u = Real.pi + (k:ℝ) * (2 * Real.pi) := by
+    have h4 := hk
+    push_cast at h4
+    have h5 : ((azim 0 v w u : ℝ):ℂ) * Complex.I
+        = ((Real.pi:ℝ):ℂ) * Complex.I
+          + ((k:ℂ) * (2 * ((Real.pi:ℝ):ℂ) * Complex.I)) := by
+      linear_combination h4
+    have h6 : (((azim 0 v w u : ℝ) - Real.pi : ℝ):ℂ) * Complex.I
+        = ((k:ℂ) * (2 * ((Real.pi:ℝ):ℂ))) * Complex.I := by
+      rw [Complex.ofReal_sub]
+      linear_combination h5
+    have h10 := mul_right_cancel₀ Complex.I_ne_zero h6
+    have h11 := congrArg Complex.re h10
+    simp only [Complex.ofReal_re, Complex.mul_re, Complex.ofReal_im,
+      Complex.I_re, Complex.I_im, mul_zero, sub_zero] at h11
+    norm_num at h11
+    linarith
+  have hk0 : (k:ℤ) = 0 := by
+    have hn1a : (k:ℤ) ≤ 0 := by
+      refine le_of_not_gt ?_
+      intro hc
+      have hge : (1:ℝ) ≤ (k:ℝ) := by exact_mod_cast (by omega : 1 ≤ k)
+      have h1 := mul_le_mul_of_nonneg_right hge hB.le
+      linarith
+    have hn1b : (0:ℤ) ≤ k := by
+      refine le_of_not_gt ?_
+      intro hc
+      have hle : (k:ℝ) ≤ (-1:ℝ) := by exact_mod_cast (by omega : k ≤ -1)
+      have h1 := mul_le_mul_of_nonneg_right hle hB.le
+      linarith
+    omega
+  rw [hk0] at hθeq
+  simpa using hθeq
+
+/-- The OZQVSFF core at a fixed `u`/`w` order: the WLOG branch with
+`azim 0 v ρ w ≤ azim 0 v ρ u` (`ρ = rho_node1 FF v`). -/
+private theorem ozCore_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {P : Set V3}
+    (u v w : V3) (hclf : ConvexLocalFan V E FF)
+    (hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2)
+    (hsub : ({u, v, w} : Set V3) ⊆ V)
+    (hplane : ∃ a b c : V3, ¬ Collinear3 a b c ∧
+      P = (affineSpan ℝ ({a, b, c} : Set V3) : Set V3))
+    (hP : ({(0:V3), u, v, w} : Set V3) ⊆ P)
+    (hdisj : (({u, w} : Set V3) ∩ (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3)) = ∅)
+    (hint : ¬((affineSpan ℝ ({v, (0:V3)} : Set V3) : Set V3) ∩
+      ozConv0_p35 ({w, u} : Set V3) = ∅))
+    (hord : azim 0 v (rhoNode1 FF v) w ≤ azim 0 v (rhoNode1 FF v) u) :
+    interiorAngle1 (0:V3) FF v = Real.pi ∧ rhoNode1 FF v ∈ P ∧ ivsRhoNode1 FF v ∈ P := by
+  obtain ⟨hlf, hcvx⟩ := hclf
+  obtain ⟨hF, -, -, -, -⟩ := id hlf
+  obtain ⟨hVE, -, -, hf2, hf6, -⟩ := hF
+  obtain ⟨a0, b0, c0, -, hPE⟩ := hplane
+  have hv : v ∈ V := hsub (by simp)
+  have hu : u ∈ V := hsub (by simp)
+  have hw : w ∈ V := hsub (by simp)
+  have hv0 : v ≠ 0 := fun he => hf2 (he ▸ hv)
+  have hu0 : u ≠ 0 := fun he => hf2 (he ▸ hu)
+  have hw0 : w ≠ 0 := fun he => hf2 (he ▸ hw)
+  have hvne0 : (0:V3) ≠ v := fun he => hv0 he.symm
+  have huv : u ≠ v := by
+    intro he
+    have hmem : u ∈ ({u, w} : Set V3) ∩ (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3) :=
+      Set.mem_inter (by simp) (SetLike.mem_coe.mpr
+        (by rw [he]; exact right_mem_affineSpan_pair ℝ (0:V3) v))
+    rw [hdisj] at hmem
+    simp at hmem
+  have hwv : w ≠ v := by
+    intro he
+    have hmem : w ∈ ({u, w} : Set V3) ∩ (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3) :=
+      Set.mem_inter (by simp [he]) (SetLike.mem_coe.mpr
+        (by rw [he]; exact right_mem_affineSpan_pair ℝ (0:V3) v))
+    rw [hdisj] at hmem
+    simp at hmem
+  set ρ := rhoNode1 FF v with hρdef
+  set ι := ivsRhoNode1 FF v with hιdef
+  obtain ⟨k1, k2, -, k4, k5, k6⟩ := lfVertKit_p35 hlf hEE2 hv
+  obtain ⟨haif, hwedge⟩ := hcvx (v, ρ) k1
+  have haif2 : azimInFan (v, ρ) E = azim 0 v ρ ι := azimInFan_two_p35 k5 k6 rfl
+  have hbound : azim 0 v ρ ι ≤ Real.pi := by rw [← haif2]; exact haif
+  have hwedge2 : wedgeInFanGe (v, ρ) E = wedgeGe 0 v ρ ι := wedgeInFanGe_two_p35 k5 k6 rfl
+  have hmemu : u ∈ wedgeGe 0 v ρ ι := by rw [← hwedge2]; exact hwedge hu
+  have hmemw : w ∈ wedgeGe 0 v ρ ι := by rw [← hwedge2]; exact hwedge hw
+  simp only [wedgeGe, Set.mem_setOf_eq] at hmemu hmemw
+  have hvE : ({v, ρ} : Set V3) ∈ E := by
+    have hmem : ρ ∈ EE_p3 v E := by rw [k5]; exact Set.mem_insert _ _
+    exact hmem
+  have hncρ : ¬ Collinear3 0 v ρ := by
+    show ¬ Collinear ℝ (insert (0:V3) ({v, ρ} : Set V3))
+    exact hf6 _ hvE
+  have hvιE : ({v, ι} : Set V3) ∈ E := by
+    have hmem : ι ∈ EE_p3 v E := by
+      rw [k5]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      exact Or.inr rfl
+    exact hmem
+  have hncι : ¬ Collinear3 0 v ι := by
+    show ¬ Collinear ℝ (insert (0:V3) ({v, ι} : Set V3))
+    exact hf6 _ hvιE
+  have hncu : ¬ Collinear3 0 v u := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := v) (w1 := u) hv0).mp hcol
+    have hmem : u ∈ ({u, w} : Set V3) ∩ (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3) :=
+      Set.mem_inter (by simp) (SetLike.mem_coe.mpr (ozCollMem_p35 hc))
+    rw [hdisj] at hmem
+    simp at hmem
+  have hncw : ¬ Collinear3 0 v w := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := v) (w1 := w) hv0).mp hcol
+    have hmem : w ∈ ({u, w} : Set V3) ∩ (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3) :=
+      Set.mem_inter (by simp) (SetLike.mem_coe.mpr (ozCollMem_p35 hc))
+    rw [hdisj] at hmem
+    simp at hmem
+  -- the open-segment crossing point
+  have hne : ((affineSpan ℝ ({v, (0:V3)} : Set V3) : Set V3) ∩
+      ozConv0_p35 ({w, u} : Set V3)).Nonempty := by
+    by_contra hcon
+    push_neg at hcon
+    exact hint hcon
+  obtain ⟨z, hz⟩ := hne
+  obtain ⟨hzA, hzC⟩ := hz
+  obtain ⟨t2, t3, ht20, ht30, htsum, htvec⟩ := ozConv0_coeff_p35 hzC
+  have hset : (affineSpan ℝ ({v, (0:V3)} : Set V3) : Set V3)
+      = (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3) := by
+    rw [show ({v, (0:V3)} : Set V3) = ({(0:V3), v} : Set V3) from by
+      ext m; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  obtain ⟨γ', hγ'⟩ := ozPairVec_p35 (a := (0:V3)) (b := v) (x := z)
+    (by rw [← hset]; exact hzA)
+  have hθπ : azim 0 v w u = Real.pi :=
+    ozAzmPi_p35 hv0 hncw hncu t2 t3 γ' ht20 ht30 htvec hγ'
+  -- azimuth bookkeeping around the closed sector [ρ, ι]
+  obtain ⟨n1, hn1⟩ := azimSumCore_le4 (x := (0:V3)) (v := v) (u := w) (w1 := ρ) (w2 := u)
+    hv0 hncw hncρ hncu
+  have hPvw : ({(0:V3), v, w} : Set V3) ⊆ P := by
+    intro m hm
+    refine hP ?_
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+    tauto
+  have hPvu : ({(0:V3), v, u} : Set V3) ⊆ P := by
+    intro m hm
+    refine hP ?_
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+    tauto
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have hB : (0:ℝ) < 2 * Real.pi := by positivity
+  rcases eq_or_lt_of_le hmemw.1 with haw0' | hawpos
+  · -- aw = 0: the sector start ray is hit, everything pins
+    have haw0 : azim 0 v ρ w = 0 := haw0'.symm
+    have hwrho : azim 0 v w ρ = 0 := by
+      rw [azim_compl hncρ hncw, if_pos haw0]
+    have hπeq : azim 0 v w u = azim 0 v ρ u + (n1:ℝ) * (2 * Real.pi) := by
+      rw [hn1, hwrho]
+      simp
+    have hn10 : (n1:ℤ) = 0 := by
+      have hn1a : (n1:ℤ) ≤ 0 := by
+        refine le_of_not_gt ?_
+        intro hc
+        have hge : (1:ℝ) ≤ (n1:ℝ) := by exact_mod_cast (by omega : 1 ≤ n1)
+        have h1 := mul_le_mul_of_nonneg_right hge hB.le
+        have hN : (n1:ℝ) * (2 * Real.pi) = Real.pi - azim 0 v ρ u := by linarith
+        have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+        linarith
+      have hn1b : (0:ℤ) ≤ n1 := by
+        refine le_of_not_gt ?_
+        intro hc
+        have hle : (n1:ℝ) ≤ (-1:ℝ) := by exact_mod_cast (by omega : n1 ≤ -1)
+        have h1 := mul_le_mul_of_nonneg_right hle hB.le
+        have hN : (n1:ℝ) * (2 * Real.pi) = Real.pi - azim 0 v ρ u := by linarith
+        have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+        linarith
+      omega
+    rw [hn10, hθπ] at hπeq
+    simp only [Int.cast_zero, zero_mul, add_zero] at hπeq
+    have haupi : azim 0 v ρ u = Real.pi := hπeq.symm
+    have hari : azim 0 v ρ ι = Real.pi :=
+      le_antisymm hbound (haupi ▸ hmemu.2)
+    refine ⟨?_, ?_, ?_⟩
+    · show azim (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) = Real.pi
+      exact hari
+    · -- ρ ∈ P from azim 0 v w ρ = 0
+      have hmemρ : ρ ∈ affGt ({(0:V3), v} : Set V3) {w} := by
+        rw [← azim_eq_zero_iff_alt hncw hncρ]
+        exact hwrho
+      obtain ⟨c1, hc1, c2, hρvec⟩ :=
+        (affGt_pair_iff (v0 := (0:V3)) (v1 := v) (x := w) (y := ρ) hvne0 hw0 hwv).mp hmemρ
+      have hP' : (({w, v, 0} : Set V3)) ⊆ P := by
+        intro m hm
+        refine hPvw ?_
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+        tauto
+      rw [hPE] at hP' ⊢
+      exact SetLike.le_def.mp (affineSpan_le.mpr hP')
+        (ozTripleMem_p35 (x := w) (y := v) (z := 0) c1 c2 hρvec)
+    · -- ι ∈ P: azim u ι = 0 via the two further splits
+      obtain ⟨n2, hn2⟩ := azimSumCore_le4 (x := (0:V3)) (v := v) (u := w) (w1 := ρ)
+        (w2 := ι) hv0 hncw hncρ hncι
+      have hwieq : azim 0 v w ι = Real.pi + (n2:ℝ) * (2 * Real.pi) := by
+        rw [hn2, hwrho, hari]
+        ring
+      have hlt := azim_lt_two_pi 0 v w ι
+      have hge := azim_nonneg 0 v w ι
+      have hn20 : (n2:ℤ) = 0 := by
+        have hn2a : (n2:ℤ) ≤ 0 := by
+          refine le_of_not_gt ?_
+          intro hc
+          have hge2 : (1:ℝ) ≤ (n2:ℝ) := by exact_mod_cast (by omega : 1 ≤ n2)
+          have h1 := mul_le_mul_of_nonneg_right hge2 hB.le
+          linarith
+        have hn2b : (0:ℤ) ≤ n2 := by
+          refine le_of_not_gt ?_
+          intro hc
+          have hle2 : (n2:ℝ) ≤ (-1:ℝ) := by exact_mod_cast (by omega : n2 ≤ -1)
+          have h2 := mul_le_mul_of_nonneg_right hle2 hB.le
+          have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+          linarith
+        omega
+      rw [hn20] at hwieq
+      have hwine : azim 0 v w ι = Real.pi := by simpa using hwieq
+      obtain ⟨n3, hn3⟩ := azimSumCore_le4 (x := (0:V3)) (v := v) (u := u) (w1 := w)
+        (w2 := ι) hv0 hncu hncw hncι
+      have huw : azim 0 v u w = Real.pi := by
+        rw [azim_compl hncw hncu, if_neg (by rw [hθπ]; exact Real.pi_ne_zero), hθπ]
+        ring
+      have huieq : azim 0 v u ι = azim 0 v u w + azim 0 v w ι + (n3:ℝ) * (2 * Real.pi) := hn3
+      rw [huw, hwine] at huieq
+      have hlt := azim_lt_two_pi 0 v u ι
+      have hge := azim_nonneg 0 v u ι
+      have hn3m : (n3:ℤ) = -1 := by
+        have hn3a : (n3:ℤ) ≤ -1 := by
+          refine le_of_not_gt ?_
+          intro hc
+          have hge3 : (0:ℝ) ≤ (n3:ℝ) := by exact_mod_cast (by omega : 0 ≤ n3)
+          have h1 : (0:ℝ) ≤ (n3:ℝ) * (2 * Real.pi) := mul_nonneg hge3 hB.le
+          linarith
+        have hn3b : (-1:ℤ) ≤ n3 := by
+          refine le_of_not_gt ?_
+          intro hc
+          have hle3 : (n3:ℝ) ≤ (-2:ℝ) := by exact_mod_cast (by omega : n3 ≤ -2)
+          have h2 : (n3:ℝ) * (2 * Real.pi) ≤ (-2:ℝ) * (2 * Real.pi) :=
+            mul_le_mul_of_nonneg_right hle3 hB.le
+          linarith
+        omega
+      rw [hn3m] at huieq
+      simp only [Int.cast_neg, Int.cast_one, neg_mul, one_mul] at huieq
+      have huine : azim 0 v u ι = 0 := by linarith
+      have hmemι : ι ∈ affGt ({(0:V3), v} : Set V3) {u} :=
+        (azim_eq_zero_iff_alt hncu hncι).mp huine
+      obtain ⟨d1, hd1, d2, hιvec⟩ :=
+        (affGt_pair_iff (v0 := (0:V3)) (v1 := v) (x := u) (y := ι) hvne0 hu0 huv).mp hmemι
+      have hP' : (({u, v, 0} : Set V3)) ⊆ P := by
+        intro m hm
+        refine hPvu ?_
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+        tauto
+      rw [hPE] at hP' ⊢
+      exact SetLike.le_def.mp (affineSpan_le.mpr hP')
+        (ozTripleMem_p35 (x := u) (y := v) (z := 0) d1 d2 hιvec)
+  · -- aw > 0 collapses: the sum equation forces aw = 0
+    have hawne : ¬ (azim 0 v ρ w = 0) := fun he => lt_irrefl _ (he ▸ hawpos)
+    have hwrho : azim 0 v w ρ = 2 * Real.pi - azim 0 v ρ w := by
+      rw [azim_compl hncρ hncw, if_neg hawne]
+    have hπeq : azim 0 v w u = 2 * Real.pi - azim 0 v ρ w
+        + azim 0 v ρ u + (n1:ℝ) * (2 * Real.pi) := by
+      rw [hn1, hwrho]
+    have hN' : (n1:ℝ) * (2 * Real.pi) < 0 := by
+      have h2 : azim 0 v w u = 2 * Real.pi - azim 0 v ρ w
+          + azim 0 v ρ u + (n1:ℝ) * (2 * Real.pi) := hπeq
+      rw [hθπ] at h2
+      have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+      linarith
+    have hN : (2 * Real.pi) * (n1:ℝ) < (2 * Real.pi) * 0 := by
+      rw [mul_comm (2 * Real.pi) (n1:ℝ), mul_zero (2 * Real.pi)]
+      exact hN'
+    have hq1 : (n1:ℝ) < 0 := by
+      refine lt_of_mul_lt_mul_left hN hB.le
+    have hn1m : (n1:ℤ) = -1 := by
+      have q3 : (n1:ℤ) ≤ -1 := by
+        refine le_of_not_gt ?_
+        intro hc
+        have hge : (0:ℝ) ≤ (n1:ℝ) := by exact_mod_cast (by omega : 0 ≤ n1)
+        have h1 : (0:ℝ) ≤ (n1:ℝ) * (2 * Real.pi) := mul_nonneg hge hB.le
+        linarith
+      have q4 : (-1:ℤ) ≤ n1 := by
+        refine le_of_not_gt ?_
+        intro hc
+        have hle : (n1:ℝ) ≤ (-2:ℝ) := by exact_mod_cast (by omega : n1 ≤ -2)
+        have h2 := mul_le_mul_of_nonneg_right hle hB.le
+        have hb1 : (0:ℝ) ≤ azim 0 v w u := azim_nonneg 0 v w u
+        have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+        have h3 : azim 0 v w u = 2 * Real.pi - azim 0 v ρ w
+            + azim 0 v ρ u + (n1:ℝ) * (2 * Real.pi) := hπeq
+        linarith
+      omega
+    rw [hn1m] at hπeq
+    simp only [Int.cast_neg, Int.cast_one, neg_mul, one_mul] at hπeq
+    rw [hθπ] at hπeq
+    have h4 : azim 0 v ρ w ≤ 0 := by linarith
+    exact absurd (le_antisymm h4 hmemw.1) hawne
+
+/-- **OZQVSFF** (local_lemmas1.hl:2056): the diag-exclusion piece — a
+convex local fan whose vertex `v` has an open segment between two further
+vertices crossing the line `aff {vec 0, v}` pins the interior angle at `v`
+to `π` and lands the `rho_node1`/`ivs_rho_node1` endpoints in the plane.
+Statement frozen verbatim (see the carrier-adaptation note above). -/
+theorem OZQVSFF_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (P : Set V3)
+    (u v w : V3) (hclf : ConvexLocalFan V E FF)
+    (hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2)
+    (hsub : ({u, v, w} : Set V3) ⊆ V)
+    (hplane : ∃ a b c : V3, ¬ Collinear3 a b c ∧
+      P = (affineSpan ℝ ({a, b, c} : Set V3) : Set V3))
+    (hP : ({(0:V3), u, v, w} : Set V3) ⊆ P)
+    (hdisj : (({u, w} : Set V3) ∩ (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3)) = ∅)
+    (hint : ¬((affineSpan ℝ ({v, (0:V3)} : Set V3) : Set V3) ∩
+      ozConv0_p35 ({w, u} : Set V3) = ∅)) :
+    interiorAngle1 (0:V3) FF v = Real.pi ∧ rhoNode1 FF v ∈ P ∧ ivsRhoNode1 FF v ∈ P := by
+  have hsym1 : ({w, v, u} : Set V3) ⊆ V := by
+    intro m hm
+    refine hsub ?_
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+    tauto
+  have hsym2 : ({(0:V3), w, v, u} : Set V3) ⊆ P := by
+    intro m hm
+    refine hP ?_
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+    tauto
+  have hsym3 : (({w, u} : Set V3) : Set V3) = {u, w} := by
+    ext m
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rcases le_total (azim (0:V3) v (rhoNode1 FF v) w)
+    (azim (0:V3) v (rhoNode1 FF v) u) with h | h
+  · exact ozCore_p35 u v w hclf hEE2 hsub hplane hP hdisj hint h
+  · exact ozCore_p35 w v u hclf hEE2 hsym1 hplane hsym2
+      (by rw [hsym3]; exact hdisj) (by rw [ozConv0_swap_p35]; exact hint) h
+/-! ## EJRCFJD chain W4-prep — OZQVSFF consumption wiring + W4 assembly skeleton
+(lane `ejrcfjd-w4prep-w1`, 2026-10-28)
+
+W4 终装预备：把 W4 从「等三件」压缩为「只等两槽」——`kchmam6` 的
+`KCHMAMG_thm_p35` 与 `monotrig2` 的 `hnowrap`。两个未到位输入以显式假设
+接口化（槽位形态与两波产出形态逐字对齐，见 `EJRCFJD_W4_SKELETON_p35` 槽
+注记），其余全部用栈内现成件真证装配。
+
+OZQVSFF 消费接线（HOL 消费路径：local_lemmas.hl:3045 = `LOFA_V_SUBSET_AFF_HULL`
+与 ll:3437-3467 = KCHMAMG 体内 `MATCH_MP_TAC (GEN_ALL OZQVSFF)`）：
+
+- `w4pEE2OfSlice_p35` — `hEE2` 由切片构造直接供给（OZQVSFF 块头注披露的
+  `lfVertKit` 载体约定在 HAFL 切片扇上的兑现：切片两元形
+  `param_nnForm_p35` + 计数）。
+- `w4pOZTripleSlice_p35` — 在 HAFL 切片扇载体
+  `(vPrime_p3 V fv, ePrime_p3 E' fv, fv)` 处实例化 `OZQVSFF_p35`，产出
+  `interiorAngle1 = π ∧ ρ ∈ P ∧ ι ∈ P` 三输出。
+- `w4pHintOfOZSlice_p35` — 三输出接到 KCHMAMG 槽的 `hint` 子槽（逐点
+  OZQVSFF 回卷见证束的收集形；`ρ/ι ∈ P` 两支是槽内 `LOFA_V_SUBSET_AFF_HULL`
+  轨道面 ll:3045 的逐点原料）。
+
+W4 装配骨架（EJRCFJD 收口链；根定理 `EJRCFJD_p35` :5988 的切片扇级条件形，
+根 sorry 本体不动）：
+
+- `w4pWindowData_p35` — 对角 dart 的 mono 窗口数据束（切片轨道构造的
+  输出面）；其末合取支即 `hnowrap` 槽的逐字形。
+- `w4pSandwichDiag_p35` — 对角 dart 支：`monoWindowNowrap_p35` 窗口单调 +
+  伙伴端点 ⟹ 闭扇三明治（**hnowrap 槽在此真实消费**）。
+- `w4pSandwichInterior_p35` — 非对角 dart 支：`sandwichTwoOfConvex_p35`
+  的原扇消费 + 两元 EE 面的载体一致性（全真证）。
+- `EJRCFJD_W4_SKELETON_p35` — 终装条件形：banked HAFL 链输出（
+  `localFan_p3`，`HAFL_HALF_CIRCLE_SLICED_p35` 产出面）+ GATE-B 三明治
+  合装（`covexSandwichOfCore_p35`）⟹ 切片扇 `ConvexLocalFan`（
+  `COVEX_OF_HAFL_p35` 消费点即 covex 波记账的 W4 装配式）。
+- `w4pNowrapOfRendered_p35` — 量力追加：GATE-B 析取级的
+  `monoStepRender0_p35` C1 角点渲染形排除 ⟹ 原始 `hnowrap` 形（真证）；
+  渲染形排除本身 = KCHMAMG 槽的消费形态（kchmam6/monotrig2 会师点，
+  HOL KCHMAMG 平面化 ll:6790-6927 的骨架级占位，随两波回报闭合）。 -/
+
+/-- 切片构造的两正则供给（OZQVSFF 的 `hEE2` 消费路径）：切片载体上的
+邻居集逐点两元——`param_dart_slice_p35` 载体 dart + `param_nnForm_p35`
+两元形 + 计数（`slicingGraph_p35` 的计数惯用语）。 -/
+private theorem w4pEE2OfSlice_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)}
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hfin : fv.Finite) :
+    ∀ x ∈ vPrime_p3 V fv, (EE_p3 x (ePrime_p3 E' fv)).ncard = 2 := by
+  intro x hx
+  obtain ⟨-, y, hy⟩ := hx
+  have hd : (x, y) ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) :=
+    param_dart_slice_p35 hparam hy
+  obtain ⟨a, c, hac, -, -, hEE⟩ := param_nnForm_p35 hsub hparam hfin hd
+  rw [hEE, Set.ncard_insert_of_notMem (a := a) (s := ({c} : Set V3))
+    (by simp [hac]) (Set.finite_singleton c), Set.ncard_singleton]
+
+/-- **OZQVSFF 消费接线（HAFL 切片扇处）**：`OZQVSFF_p35` 在切片载体
+`(vPrime_p3 V fv, ePrime_p3 E' fv, fv)` 的实例——`hEE2` 由切片构造直接
+供给（`w4pEE2OfSlice_p35`），产出 `interiorAngle1 = π ∧ ρ ∈ P ∧ ι ∈ P`
+三输出（WLOG 菱形支由 `OZQVSFF_p35` 本体承担）。 -/
+theorem w4pOZTripleSlice_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} {P : Set V3} {u v w : V3}
+    (hconv : ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hfin : fv.Finite)
+    (hsub3 : ({u, v, w} : Set V3) ⊆ vPrime_p3 V fv)
+    (hplane : ∃ a b c : V3, ¬ Collinear3 a b c ∧
+      P = (affineSpan ℝ ({a, b, c} : Set V3) : Set V3))
+    (hP : ({(0:V3), u, v, w} : Set V3) ⊆ P)
+    (hdisj : (({u, w} : Set V3) ∩
+        (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3)) = ∅)
+    (hint : ¬((affineSpan ℝ ({v, (0:V3)} : Set V3) : Set V3) ∩
+      ozConv0_p35 ({w, u} : Set V3) = ∅)) :
+    interiorAngle1 (0:V3) fv v = Real.pi ∧ rhoNode1 fv v ∈ P ∧
+      ivsRhoNode1 fv v ∈ P :=
+  OZQVSFF_p35 (vPrime_p3 V fv) (ePrime_p3 E' fv) fv P u v w hconv
+    (w4pEE2OfSlice_p35 hsub hparam hfin) hsub3 hplane hP hdisj hint
+
+/-- KCHMAMG 槽的 `hint` 子槽（切片扇消费形）：逐点 OZQVSFF 回卷见证束
+⟹ 全体内角平角面。见证束的平面部分（`hOZ` 的 `P` 支）同时是槽内
+`hplane` 子槽（`LOFA_V_SUBSET_AFF_HULL` 轨道面）的逐点原料。 -/
+theorem w4pHintOfOZSlice_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)}
+    (hconv : ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hfin : fv.Finite)
+    (hOZ : ∀ x ∈ vPrime_p3 V fv, ∃ u w : V3,
+      ({u, x, w} : Set V3) ⊆ vPrime_p3 V fv ∧
+      (({u, w} : Set V3) ∩
+          (affineSpan ℝ ({(0:V3), x} : Set V3) : Set V3)) = ∅ ∧
+      ¬((affineSpan ℝ ({x, (0:V3)} : Set V3) : Set V3) ∩
+        ozConv0_p35 ({w, u} : Set V3) = ∅) ∧
+      ∃ P : Set V3, ({(0:V3), u, x, w} : Set V3) ⊆ P ∧
+        ∃ a b c : V3, ¬ Collinear3 a b c ∧
+          P = (affineSpan ℝ ({a, b, c} : Set V3) : Set V3)) :
+    ∀ x ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv x = Real.pi := by
+  intro x hx
+  obtain ⟨u, w, h1, h2, h3, P, hP1, a, b, c, hnc, hPdef⟩ := hOZ x hx
+  exact (w4pOZTripleSlice_p35 hconv hsub hparam hfin h1
+    ⟨a, b, c, hnc, hPdef⟩ hP1 h2 h3).1
+
+/-- 对角 dart 的 mono 窗口数据束（切片轨道构造的输出面）：伙伴 `c`、
+窗口长 `k`、顶点轨道 `ρ` 及其几何界；**末合取支即 `hnowrap` 槽**
+（monotrig2 产出形，逐字 `monoWindowNowrap_p35` 的排除形）。 -/
+def w4pWindowData_p35 (V : Set V3) (E' : Set (Set V3)) (fv : Set (V3 × V3))
+    (p : V3 × V3) : Prop :=
+  ∃ c : V3, ∃ k : ℕ, ∃ ρ : ℕ → V3,
+    EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3) ∧ p.2 ≠ c ∧ 2 ≤ k ∧
+    ρ 0 = p.1 ∧ ρ (k - 1) = c ∧
+    (∀ z ∈ vPrime_p3 V fv, ∃ j, j < k ∧ ρ j = z) ∧
+    p.1 ≠ 0 ∧ ¬ Collinear3 0 p.1 p.2 ∧
+    (∀ i, 0 < i → i < k → ¬ Collinear3 0 p.1 (ρ i)) ∧
+    (∀ i, 0 < i → i < k → ρ i ≠ 0) ∧
+    (∀ i, 0 < i → i < k → 0 ≤ azim 0 p.1 p.2 (ρ i) ∧
+      azim 0 p.1 p.2 (ρ i) ≤ Real.pi) ∧
+    (∀ i, i + 1 < k → ¬ Collinear3 0 (ρ i) (ρ (i + 1)) ∧
+      0 ≤ azim 0 (ρ i) (ρ (i + 1)) p.1 ∧
+      azim 0 (ρ i) (ρ (i + 1)) p.1 ≤ Real.pi) ∧
+    (∀ i, i + 1 < k →
+      ¬(azim 0 p.1 p.2 (ρ i) = Real.pi ∧
+        azim 0 p.1 p.2 (ρ (i + 1)) = 0))
+
+/-- **对角 dart 支（GATE-B 的 mono 窗口，`hnowrap` 槽真实消费）**：
+`monoWindowNowrap_p35` 的窗口单调 + 伙伴端点（窗口远端 = 切片两元邻居
+伙伴）⟹ 该 dart 的闭扇三明治——`covexSandwichOfCore_p35` 的逐 dart
+hcore 面。 -/
+theorem w4pSandwichDiag_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} {p : V3 × V3}
+    (hd : w4pWindowData_p35 V E' fv p) :
+    ∃ c : V3, c ≠ p.2 ∧ c ∈ EE_p3 p.1 (ePrime_p3 E' fv) ∧
+      azim 0 p.1 p.2 c ≤ Real.pi ∧
+      ∀ z ∈ vPrime_p3 V fv, 0 ≤ azim 0 p.1 p.2 z ∧
+        azim 0 p.1 p.2 z ≤ azim 0 p.1 p.2 c := by
+  obtain ⟨c, k, ρ, hpc, hcne, hk2, hr0, hlast, hvert, hv0, hb, hvx, hvx0,
+    hbnds, hdart, hnowrap⟩ := hd
+  have hkm1 : k - 1 < k := by omega
+  have hk1 : 0 < k - 1 := by omega
+  have hcB := hbnds (k - 1) hk1 hkm1
+  rw [hlast] at hcB
+  refine ⟨c, Ne.symm hcne, by rw [hpc]; simp, hcB.2, ?_⟩
+  intro z hz
+  obtain ⟨j, hjk, hjz⟩ := hvert z hz
+  refine ⟨azim_nonneg 0 p.1 p.2 z, ?_⟩
+  rcases Nat.lt_or_ge j (k - 1) with hj | hj
+  · have hmono := monoWindowNowrap_p35 k (v0 := p.1) (b := p.2) ρ hr0 hv0 hb
+      hvx hvx0 hbnds hdart hnowrap (i := j) (j := k - 1) hj hkm1
+    rw [← hjz, ← hlast]
+    exact hmono
+  · have hjk1 : j = k - 1 := by omega
+    rw [← hjz, hjk1, hlast]
+
+/-- **非对角 dart 支（GATE-B 的免费簿记面）**：原扇在 dart 尾点的两元
+邻居形（`sandwichTwoOfConvex_p35` 输入面）+ 切片载体一致性 ⟹ 该 dart 的
+三明治。两元面在非对角尾点的载体一致性（`EE_p3 p.1 E =
+EE_p3 p.1 (ePrime_p3 E' fv)`）= 切片构造面（w3b2/w4b 记账），此处以双
+`hEE` 面承入；`hpFF` = 该 dart 是原扇真 dart（对角 dart 由
+`w4pSandwichDiag_p35` 分管）。 -/
+theorem w4pSandwichInterior_p35 {V : Set V3} {E : Set (Set V3)}
+    {E' : Set (Set V3)} {FF fv : Set (V3 × V3)} {p : V3 × V3} {c : V3}
+    (hconv : ConvexLocalFan V E FF) (hpFF : p ∈ FF)
+    (hEEo : EE_p3 p.1 E = ({p.2, c} : Set V3)) (hcne : c ≠ p.2)
+    (hEEs : EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3)) :
+    c ≠ p.2 ∧ c ∈ EE_p3 p.1 (ePrime_p3 E' fv) ∧
+      azim 0 p.1 p.2 c ≤ Real.pi ∧
+      ∀ z ∈ vPrime_p3 V fv, 0 ≤ azim 0 p.1 p.2 z ∧
+        azim 0 p.1 p.2 z ≤ azim 0 p.1 p.2 c := by
+  have hkey := sandwichTwoOfConvex_p35 (V := V) (E := E) (FF := FF) hconv
+    hpFF hEEo hcne
+  have hsubV : vPrime_p3 V fv ⊆ V := by
+    rintro z hz
+    obtain ⟨hzV, -, -⟩ := hz
+    exact hzV
+  exact ⟨hcne, by rw [hEEs]; simp, hkey.1,
+    fun z hz => hkey.2 z (hsubV hz)⟩
+
+/-- **W4 终装装配骨架（条件形）**：EJRCFJD 收口链在切片扇级的合装——
+banked HAFL 链输出 `hlf`（`HAFL_HALF_CIRCLE_SLICED_p35` 产出面）+ GATE-B
+三明治（对角支 = `w4pSandwichDiag_p35` 消费 `hnowrap` 槽；非对角支 =
+`w4pSandwichInterior_p35`）⟹ 切片扇 `ConvexLocalFan`（即根定理
+`EJRCFJD_p35` 结论的第二/三合取支的载体面；根 sorry 本体不动）。
+
+对角 dart `dU`/`dW`（两半扇各自的回卷 dart）与窗口束由切片轨道构造
+供给（`hdU`/`hdW`/`hsplit`）；`hsplit` 的三支 = 两个对角 dart +
+非对角 dart 的双两元 EE 面（切片构造产出）。
+
+**两槽（显式假设，回报后替换即闭合）**：
+1. `hnowrap` — monotrig2 产出：两对角 dart 窗口束的末合取支，逐字
+   `monoWindowNowrap_p35` 排除形
+   `∀ i, i + 1 < k → ¬(azim 0 p.1 p.2 (ρ i) = Real.pi ∧ azim 0 p.1 p.2 (ρ (i + 1)) = 0)`
+   （经 `w4pSandwichDiag_p35` 真实消费）。
+2. `hkch` — kchmam6 产出 `KCHMAMG_thm_p35` 的结论体在切片扇载体的实例
+   （`KCHMAMG_p35` 去 `ConvexLocalFan → Circular →` 前件的结论形，
+   `kchPlane_p35` 体逐字内联）。装配填法（kchmam6 回报后）：
+   `KCHMAMG_thm_p35 (localFanLA1ofP3Slice_p35 hlf hparam.1)
+     (w4pEE2OfSlice_p35 hsub hparam hfin) hplane hint`，其中 `hplane`/
+   `hint` 由 `w4pHintOfOZSlice_p35` 链（OZQVSFF 消费接线）供出。
+   本骨架不消费 `hkch` 的合取支——其消费点 = `hnowrap` 的供出链（渲染形
+   角点排除，见 `w4pNowrapOfRendered_p35` 会师注记）；槽以类型对齐承入，
+   防两波产出形漂移。 -/
+theorem EJRCFJD_W4_SKELETON_p35 {V : Set V3} {E E' : Set (Set V3)}
+    {FF fv : Set (V3 × V3)} {dU dW : V3 × V3}
+    (hlf : localFan_p3 (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+    (hfin : fv.Finite)
+    (hkch : (∀ v ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv v = Real.pi) ∧
+      ∃ A : Set V3,
+        (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+            A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+        (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+        ∃ e : V3,
+          (∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) ∧
+          cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e ∧
+          ∀ v ∈ vPrime_p3 V fv,
+            azimCycle_p3 (vPrime_p3 V fv) (0:V3) e v = rhoNode1 fv v ∧
+              azim 0 e v (rhoNode1 fv v) =
+                dihV (0:V3) e v (rhoNode1 fv v) ∧
+              azim 0 e v (rhoNode1 fv v) =
+                arcV 0 v (rhoNode1 fv v) ∧
+              azim 0 e v (rhoNode1 fv v) < Real.pi)
+    (hconvO : ConvexLocalFan V E FF)
+    (hdU : dU ∈ fv ∧ w4pWindowData_p35 V E' fv dU)
+    (hdW : dW ∈ fv ∧ w4pWindowData_p35 V E' fv dW)
+    (hsplit : ∀ p ∈ fv, p = dU ∨ p = dW ∨
+      ∃ c : V3, c ≠ p.2 ∧ p ∈ FF ∧
+        EE_p3 p.1 E = ({p.2, c} : Set V3) ∧
+        EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3)) :
+    ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv := by
+  refine COVEX_OF_HAFL_p35 hlf hparam.1 ?_
+  refine covexSandwichOfCore_p35 hsub hparam hfin ?_
+  intro p hp
+  rcases hsplit p hp with rfl | rfl | ⟨c, hcne, hpFF, hEEo, hEEs⟩
+  · exact w4pSandwichDiag_p35 hdU.2
+  · exact w4pSandwichDiag_p35 hdW.2
+  · exact ⟨c, w4pSandwichInterior_p35 hconvO hpFF hEEo hcne hEEs⟩
+
+/-- **会师草图（量力追加，真证部分）**：GATE-B 析取级的渲染形角点排除
+⟹ 原始 `hnowrap` 形。`monoStepCore_p35` 右支的 `azim = 0` 半支被
+`monoStepRender0_p35` 渲染进 `b` 开锥（`t > 0`），渲染形排除
+（`t ≤ 0`，即「除 `b` 参考射线自身外无轨道点落入 `b` 开半平面」的系数
+读出）经其反证即死。`hcornerR`（渲染形排除）即 **KCHMAMG 槽的消费
+形态**：kchmam6 回报后，由 `KCHMAMG_thm_p35` 的循环-平面包
+（`cyclicSet` + `azimCycle = ρ` + `azim < π` + 全体落平面的 ⊥e 面）与
+`pmRenderPi_p35` 的 `π`-侧渲染闭合此步（HOL KCHMAMG 平面化
+ll:6790-6927 的骨架级占位；monotrig2 会师点）。 -/
+theorem w4pNowrapOfRendered_p35 (k : ℕ) {v0 b : V3} (ρ : ℕ → V3)
+    (hv0 : v0 ≠ 0) (hb0 : b ≠ 0) (hbu : b ≠ v0) (hb : ¬ Collinear3 0 v0 b)
+    (hnc : ∀ i, i + 1 < k → ¬ Collinear3 0 v0 (ρ (i + 1)))
+    (hcornerR : ∀ i, i + 1 < k → azim 0 v0 b (ρ i) = Real.pi →
+      ∀ s t : ℝ, ρ (i + 1) - 0 = s • (v0 - 0) + t • (b - 0) → t ≤ 0) :
+    ∀ i, i + 1 < k →
+      ¬(azim 0 v0 b (ρ i) = Real.pi ∧ azim 0 v0 b (ρ (i + 1)) = 0) := by
+  intro i hi hcon
+  obtain ⟨s, t, hvec, ht⟩ := monoStepRender0_p35 (u := v0) (b := b)
+    hv0 hb0 hbu hb (hnc i hi) hcon.2
+  exact absurd (hcornerR i hi hcon.1 s t hvec) (not_le.mpr ht)
+
+/-! ## monotrig2 会师件 — GATE-B `hnowrap` 排除（lane `ejrcfjd-monotrig2-w1`，
+2026-10-28；合并基 = stack31p + kchmam2-6 链）
+
+消费 `KCHMAMG_thm_p35`（kchmam6 总装）的结论面排除 monoStep 渲染形回卷角点
+（HOL local_lemmas.hl:6790-6927 平面化的 azim-链重述）。数学结构：
+
+- 角点渲染：`azim 0 p.1 p.2 y = 0` ⟹ y 落 b 开半平面（`monoStepRender0_p35`，
+  b-系数 t > 0）；`azim 0 p.1 p.2 x = π` ⟹ x 落反 b 开半平面
+  （`pmRenderPi_p35` 渲染 + 非共线去零 + 零-方位反证 ⟹ b-系数 t < 0）。
+- 半圆符号链：KCHMAMG 平面 A ⊇ {0, p.1, p.2}，轴 e ⊥ A。渲染点
+  `sin (azim 0 e p.1 z) = T • ((e × p.1) ⬝ z) = T • t • s0`（`JBDNJJB` +
+  cross 线性；`(e × p.1) ⬝ p.1 = 0`），符号 s0 = (e×p.1)⬝p.2 把 b-系数符号
+  翻译成方位角 `azim 0 e p.1 z` 的半圆归属。
+- 扫掠矛盾（s0 > 0 支本波闭合；s0 < 0 支为同一链的 p.2-参照镜像，以
+  `hsgn` 显式承入取向选择，见块尾残差注记）：α_y = azim 0 e p.1 y ∈
+  (0, π)、α_x = azim 0 e p.1 x ∈ (π, 2π)。y = ρ_fan x（步 dart +
+  `kchRhoDet_p35`），KCHMAMG 在 x 处给 `azimCycle_p3 V'' 0 e x = ρ_fan x`
+  （`kchAzimCycleEps_p35` ε-最小化）与 `azim 0 e x y < π`。
+  `azimAddTriple_p35`（α_y < α_x 窗口加法）给 azim 0 e y x = α_x − α_y，
+  `azim_compl` 整圈闭合 azim 0 e x y = 2π − (α_x − α_y)；ε-最小化对参照点
+  q := p.1 给 azim 0 e x y ≤ azim 0 e x p.1 = 2π − α_x；两式相减 α_y ≤ 0，
+  与 α_y > 0 矛盾。
+
+残差记账（诚实）：s0 < 0 支（e 轴反向取向）需要 p.2-参照版的同型扫掠链
+（ε-最小化取 q := p.2、wrap-支经 azim_compl 加法另证、等角点 y ∥ p.2 经
+两点同射线排除），本波未闭合，独立记账。 -/
+
+/-- sin 符号 ⟹ 半圆归属（正弦正支）：0 ≤ α < 2π 且 sin α > 0 ⟹ α < π。 -/
+private theorem monoSinHalf_p35 {α : ℝ} (ha0 : 0 ≤ α) (hlt : α < 2 * Real.pi)
+    (hs : 0 < Real.sin α) : α < Real.pi := by
+  rcases le_or_gt Real.pi α with hge | h
+  · have ha' : 0 ≤ 2 * Real.pi - α ∧ 2 * Real.pi - α ≤ Real.pi :=
+      ⟨by linarith, by linarith⟩
+    have hsn := Real.sin_nonneg_of_nonneg_of_le_pi ha'.1 ha'.2
+    have hsin' : Real.sin (2 * Real.pi - α) = -Real.sin α := by
+      rw [Real.sin_sub, Real.sin_two_pi, Real.cos_two_pi]; ring
+    linarith
+  · exact h
+
+/-- sin 符号 ⟹ 半圆归属（正弦负支）：0 ≤ α 且 sin α < 0 ⟹ π < α。 -/
+private theorem monoSinHalfNeg_p35 {α : ℝ} (ha0 : 0 ≤ α)
+    (hs : Real.sin α < 0) : Real.pi < α := by
+  rcases lt_or_ge α Real.pi with h | h
+  · linarith [Real.sin_nonneg_of_nonneg_of_le_pi ha0 h.le]
+  · rcases eq_or_lt_of_le h with hEq | hLt
+    · rw [← hEq, Real.sin_pi] at hs; linarith
+    · exact hLt
+
+/-- ⊥e 非共线助手：z ≠ 0、z ⬝ e = 0、e ⬝ e ≠ 0 ⟹ ¬ Collinear3 0 e z。 -/
+private theorem monoNotCollE_p35 {e z : V3} (hz0 : z ≠ 0)
+    (hperp : ((z : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0)
+    (hE : ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) ≠ 0) :
+    ¬ Collinear3 0 e z := by
+  have he0 : e ≠ 0 := by
+    intro h
+    rw [h] at hE
+    exact hE (by rw [kchCoeZero_p35]; simp)
+  intro hc
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := e) (w1 := z) he0).mp hc
+  have hd : ((z - 0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+    rw [kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+    exact hperp
+  rw [hc] at hd
+  rw [kchCoeSmul_p35, kchCoeSub_p35, kchCoeZero_p35, sub_zero, smul_dotProduct] at hd
+  have hc0 : c = 0 := by
+    rcases mul_eq_zero.mp hd with h | h
+    · exact h
+    · exact absurd h hE
+  rw [hc0, zero_smul, sub_zero] at hc
+  exact hz0 hc
+
+/-- 半圆符号链（s0 > 0 支）：渲染点 z = s•v0 + t•b 的 b-系数符号翻译成
+轴 e 方位角的半圆归属。 -/
+private theorem monoHalfPos_p35 {e v0 b z : V3}
+    (hev0 : ¬ Collinear3 0 e v0) (hez : ¬ Collinear3 0 e z)
+    (hs0 : 0 < (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)) :
+    (∀ s t : ℝ, z - 0 = s • (v0 - 0) + t • (b - 0) →
+      0 < t → azim 0 e v0 z < Real.pi) ∧
+    (∀ s t : ℝ, z - 0 = s • (v0 - 0) + t • (b - 0) →
+      t < 0 → Real.pi < azim 0 e v0 z) := by
+  constructor
+  · intro s t hvec ht
+    obtain ⟨T, hT, hsin⟩ := JBDNJJB (u := e) (v := v0) (w := z) hev0 hez
+    have hcoe : ((z - 0 : V3) : Fin 3 → ℝ)
+        = s • ((v0 : V3) : Fin 3 → ℝ) + t • ((b : V3) : Fin 3 → ℝ) := by
+      rw [hvec, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35]
+      rw [kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+        sub_zero]
+    have hzc : ((z : V3) : Fin 3 → ℝ)
+        = s • ((v0 : V3) : Fin 3 → ℝ) + t • ((b : V3) : Fin 3 → ℝ) := by
+      rw [← hcoe, kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+    have hdcs : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+        (v0 : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]
+      exact dot_cross_self e v0
+    have hdot : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+        ((z : V3) : Fin 3 → ℝ)
+        = t * ((crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)) := by
+      rw [hzc, dotProduct_add, dotProduct_smul, dotProduct_smul, hdcs]
+      ring
+    have ha0 : 0 ≤ azim 0 e v0 z := azim_nonneg 0 e v0 z
+    have hlt2 : azim 0 e v0 z < 2 * Real.pi := azim_lt_two_pi 0 e v0 z
+    have hspos : 0 < Real.sin (azim 0 e v0 z) := by
+      rw [hsin, hdot]
+      exact mul_pos hT (mul_pos ht hs0)
+    exact monoSinHalf_p35 ha0 hlt2 hspos
+  · intro s t hvec ht
+    obtain ⟨T, hT, hsin⟩ := JBDNJJB (u := e) (v := v0) (w := z) hev0 hez
+    have hcoe : ((z - 0 : V3) : Fin 3 → ℝ)
+        = s • ((v0 : V3) : Fin 3 → ℝ) + t • ((b : V3) : Fin 3 → ℝ) := by
+      rw [hvec, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35]
+      rw [kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+        sub_zero]
+    have hzc : ((z : V3) : Fin 3 → ℝ)
+        = s • ((v0 : V3) : Fin 3 → ℝ) + t • ((b : V3) : Fin 3 → ℝ) := by
+      rw [← hcoe, kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+    have hdcs : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+        (v0 : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]
+      exact dot_cross_self e v0
+    have hdot : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+        ((z : V3) : Fin 3 → ℝ)
+        = t * ((crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)) := by
+      rw [hzc, dotProduct_add, dotProduct_smul, dotProduct_smul, hdcs]
+      ring
+    have ha0 : 0 ≤ azim 0 e v0 z := azim_nonneg 0 e v0 z
+    have hsneg : Real.sin (azim 0 e v0 z) < 0 := by
+      rw [hsin, hdot]
+      have h2 : (t:ℝ) * ((crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+          (b : Fin 3 → ℝ)) < 0 := by nlinarith
+      nlinarith
+    exact monoSinHalfNeg_p35 ha0 hsneg
+
+/-- **HNOWRAP 主件（monotrig2 × kchmam6 会师，public）**：KCHMAMG 结论面
+（`KCHMAMG_thm_p35` 产出面，e 槽已实例化形）+ 窗口束前件（即
+`w4pWindowData_p35` 的逐字展开前件）+ 切片轨道供给 ⟹ `w4pWindowData_p35`
+末合取支（hnowrap 槽逐字形）。`hv0V`/`hrV`/`hstep`/`hb0`/`hfanL`/`hEE2`
+为切片轨道构造的直接供给（`EJRCFJD_W4_SKELETON_p35` 的 `hdU`/`hsplit`
+供给面 + `localFanLA1ofP3Slice_p35`/`w4pEE2OfSlice_p35` 桥）。 -/
+theorem HNOWRAP_OF_KCHMAMG_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} {p : V3 × V3} {k : ℕ} {ρ : ℕ → V3} {e : V3}
+    (hr0 : ρ 0 = p.1) (hv0 : p.1 ≠ 0) (hb0 : p.2 ≠ 0)
+    (hb : ¬ Collinear3 0 p.1 p.2)
+    (hvx : ∀ i, 0 < i → i < k → ¬ Collinear3 0 p.1 (ρ i))
+    (hvx0 : ∀ i, 0 < i → i < k → ρ i ≠ 0)
+    (hfanL : LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hEE2 : ∀ u ∈ vPrime_p3 V fv, (EE_p3 u (ePrime_p3 E' fv)).ncard = 2)
+    (hv0V : p.1 ∈ vPrime_p3 V fv)
+    (hrV : ∀ j, j < k → ρ j ∈ vPrime_p3 V fv)
+    (hstep : ∀ i, i + 1 < k → (ρ i, ρ (i + 1)) ∈ fv)
+    (hplane : ∃ A : Set V3,
+      (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+          A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+        (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+        ∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0)
+    (hcy : cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e)
+    (hq : ∀ v ∈ vPrime_p3 V fv,
+      azimCycle_p3 (vPrime_p3 V fv) (0:V3) e v = rhoNode1 fv v ∧
+        azim 0 e v (rhoNode1 fv v) = dihV (0:V3) e v (rhoNode1 fv v) ∧
+        azim 0 e v (rhoNode1 fv v) = arcV 0 v (rhoNode1 fv v) ∧
+        azim 0 e v (rhoNode1 fv v) < Real.pi)
+    (hsgn : 0 < (crossProduct (e : Fin 3 → ℝ) (p.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (p.2 : Fin 3 → ℝ)) :
+    ∀ i, i + 1 < k →
+      ¬(azim 0 p.1 p.2 (ρ i) = Real.pi ∧ azim 0 p.1 p.2 (ρ (i + 1)) = 0) := by
+  intro i hi hcon
+  have hik : i < k := Nat.lt_of_succ_lt hi
+  -- i > 0（ρ 0 = p.1 在轴上，方位 0 ≠ π）
+  have hi0 : i ≠ 0 := by
+    intro h0
+    rw [h0, hr0] at hcon
+    rw [azimAxis_p35 (collinear3_pair_right (v0 := (0:V3)) (v1 := p.1)
+      (x := p.1) rfl)] at hcon
+    exact Real.pi_ne_zero hcon.1.symm
+  have hpos : 0 < i := Nat.pos_of_ne_zero hi0
+  set x := ρ i with hxd
+  set y := ρ (i + 1) with hyd
+  have hvx1 : ¬ Collinear3 0 p.1 x := hvx i hpos hik
+  have hvx2 : ¬ Collinear3 0 p.1 y := hvx (i + 1) (Nat.succ_pos i) hi
+  have hvx01 : x ≠ 0 := hvx0 i hpos hik
+  have hvx02 : y ≠ 0 := hvx0 (i + 1) (Nat.succ_pos i) hi
+  -- KCHMAMG 面
+  obtain ⟨A, ⟨-, hAdef⟩, h0A, hAVA, heperp⟩ := hplane
+  have hEpos := kchCyclicDotSelfPos_p35 hcy
+  have hEnz : (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) ≠ 0 :=
+    ne_of_gt hEpos
+  have hnc1 : ¬ Collinear3 0 e p.1 := monoNotCollE_p35 hv0 (by
+    rw [dotProduct_comm]; exact heperp p.1 (hAVA hv0V)) hEnz
+  have hncx : ¬ Collinear3 0 e x := monoNotCollE_p35 hvx01 (by
+    rw [dotProduct_comm]; exact heperp x (hAVA (hrV i hik))) hEnz
+  have hncy : ¬ Collinear3 0 e y := monoNotCollE_p35 hvx02 (by
+    rw [dotProduct_comm]; exact heperp y (hAVA (hrV (i + 1) hi))) hEnz
+  have hxv : e ≠ 0 := Ne.symm hcy.1
+  have hp1e : p.1 ≠ e := by
+    intro h
+    refine hEnz ?_
+    have hd0 := heperp p.1 (hAVA hv0V)
+    rw [h] at hd0
+    exact hd0
+  -- p.2 ≠ p.1（非共线去退化）
+  have hbu : p.2 ≠ p.1 := by
+    intro h
+    apply hb
+    rw [h]
+    exact collinear3_pair_right (v0 := (0:V3)) (v1 := p.1) (x := p.1) rfl
+  -- y 侧渲染（b 开锥，t > 0）
+  obtain ⟨s, t, hvecy, hty⟩ := monoStepRender0_p35 (u := p.1) (b := p.2)
+    hv0 hb0 hbu hb hvx2 hcon.2
+  -- x 侧渲染（π 侧）+ b-系数负号
+  obtain ⟨s', t', hvecx⟩ := pmRenderPi_p35 (a := p.1) (b := p.2) (x := x)
+    hv0 hb0 hb hcon.1
+  have htx0 : t' ≠ 0 := by
+    intro h0
+    rw [h0, zero_smul, add_zero] at hvecx
+    apply hvx1
+    exact (collinear3_iff_smul (v := (0:V3)) (w := p.1) (w1 := x) hv0).mpr
+      ⟨s', hvecx⟩
+  have htxneg : t' < 0 := by
+    rcases lt_or_gt_of_ne htx0 with h | h
+    · exact h
+    · exfalso
+      have hmem : x ∈ affGt ({(0:V3), p.1} : Set V3) {p.2} :=
+        (affGt_pair_iff (v0 := (0:V3)) (v1 := p.1) (x := p.2) (y := x)
+          (Ne.symm hv0) hb0 hbu).mpr ⟨t', h, s', by rw [hvecx]; exact add_comm _ _⟩
+      rw [(azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := p.1) (w := p.2) (x := x)
+        hb hvx1).mpr hmem] at hcon
+      exact Real.pi_ne_zero hcon.1.symm
+  -- 半圆符号链
+  have hgateY := monoHalfPos_p35 (v0 := p.1) (b := p.2) hnc1 hncy hsgn
+  have hgateX := monoHalfPos_p35 (v0 := p.1) (b := p.2) hnc1 hncx hsgn
+  have hgte_y := hgateY.1 s t hvecy hty
+  have hgte_x := hgateX.2 s' t' hvecx htxneg
+  -- α_y > 0（零方位把 y 打进 p.1 射线，与 t > 0 矛盾）
+  have haypos : 0 < azim 0 e p.1 y := by
+    rcases lt_or_ge 0 (azim 0 e p.1 y) with h | h
+    · exact h
+    · exfalso
+      have h0y : azim 0 e p.1 y = 0 := le_antisymm h (azim_nonneg 0 e p.1 y)
+      have hdot : ((y : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+        rw [dotProduct_comm]; exact heperp y (hAVA (hrV (i + 1) hi))
+      have yne : y ≠ e := by
+        intro h
+        rw [h] at hdot
+        exact hEnz hdot
+      obtain ⟨cc, hcc, hh, hye⟩ := (affGt_pair_iff (v0 := (0:V3)) (v1 := e)
+        (x := p.1) (y := y) hcy.1 hv0 hp1e).mp
+        ((azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := e) (w := p.1) (x := y)
+          hnc1 hncy).mp h0y)
+      have hp1e0 : ((p.1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+        rw [dotProduct_comm]; exact heperp p.1 (hAVA hv0V)
+      have hexp : ((y - 0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)
+          = cc * (((p.1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ))
+            + hh * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) := by
+        rw [hye, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35, add_dotProduct,
+          smul_dotProduct, smul_eq_mul, smul_dotProduct, smul_eq_mul,
+          kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+          sub_zero]
+      have htot : cc * (((p.1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ))
+          + hh * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) = 0 := by
+        rw [← hexp, kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+        exact hdot
+      have hh0 : hh = 0 := by
+        rw [hp1e0, mul_zero, zero_add] at htot
+        exact (mul_eq_zero.mp htot).resolve_right hEnz
+      rw [hh0, zero_smul, add_zero] at hye
+      apply hb
+      have hz2 : t • ((p.2 : V3) - 0) = (cc - s) • ((p.1 : V3) - 0) := by
+        have h1 : y - 0 = s • ((p.1 : V3) - 0) + t • ((p.2 : V3) - 0) := hvecy
+        rw [hye] at h1
+        rw [sub_smul, h1]
+        abel
+      have hpar : ((p.2 : V3) - 0) = ((cc - s) / t) • ((p.1 : V3) - 0) := by
+        have hinv := congrArg (fun z : V3 => (t⁻¹ : ℝ) • z) hz2
+        rw [smul_smul, inv_mul_cancel₀ (ne_of_gt hty), one_smul] at hinv
+        rw [hinv, smul_smul, mul_comm, div_eq_mul_inv]
+      exact (collinear3_iff_smul (v := (0:V3)) (w := p.1) (w1 := p.2) hv0).mpr
+        ⟨(cc - s) / t, hpar⟩
+  -- y = ρ_fan x（步 dart + kchRhoDet）与 ε-最小化
+  have hrho : rhoNode1 fv x = y := kchRhoDet_p35 hfanL hEE2 (hstep i hi)
+  have hxV : x ∈ vPrime_p3 V fv := hrV i hik
+  have hqx := hq x hxV
+  have hsub : ¬ (vPrime_p3 V fv ⊆ {x}) := by
+    intro hc0
+    exact hvx1 (collinear3_pair_right (v0 := (0:V3)) (v1 := p.1) (x := x)
+      (Set.mem_singleton_iff.mp (hc0 hv0V)).symm)
+  have hVfin : (vPrime_p3 V fv).Finite := hcy.2.1
+  have hne : ({z : V3 | z ∈ vPrime_p3 V fv ∧ z ≠ x} : Set V3).Nonempty :=
+    ⟨p.1, hv0V, fun h => hvx1 (collinear3_pair_right (v0 := (0:V3)) (v1 := p.1)
+      (x := x) h.symm)⟩
+  obtain ⟨a, haW, hamin⟩ := Set.exists_min_image
+    ({z : V3 | z ∈ vPrime_p3 V fv ∧ z ≠ x} : Set V3)
+    (fun z : V3 => azim 0 e x z) (hVfin.subset fun z hz => hz.1) hne
+  have hPex : ∃ u : V3, u ≠ x ∧ u ∈ vPrime_p3 V fv ∧
+      ∀ q ∈ vPrime_p3 V fv, q ≠ x →
+        azim 0 e x u < azim 0 e x q ∨
+          azim 0 e x u = azim 0 e x q ∧
+            ‖projection (u - 0) (e - 0)‖ ≤ ‖projection (q - 0) (e - 0)‖ := by
+    obtain ⟨b, hbT, hbmin⟩ := Set.exists_min_image
+      ({z : V3 | z ∈ vPrime_p3 V fv ∧ z ≠ x ∧ azim 0 e x z = azim 0 e x a} : Set V3)
+      (fun z : V3 => ‖projection (z - 0) (e - 0)‖)
+      (hVfin.subset fun z hz => hz.1)
+      ⟨a, haW.1, haW.2, rfl⟩
+    exact ⟨b, hbT.2.1, hbT.1, fun q hq' hqx' => by
+      rcases lt_or_eq_of_le (hamin q ⟨hq', hqx'⟩) with hlt | heq
+      · exact Or.inl (by rw [hbT.2.2]; exact hlt)
+      · exact Or.inr ⟨hbT.2.2.trans heq, hbmin q ⟨hq', hqx', heq.symm⟩⟩⟩
+  have hpeps := Classical.epsilon_spec hPex
+  rw [kchAzimCycleEps_p35 (vPrime_p3 V fv) (0:V3) e x hsub] at hqx
+  rw [hqx.1] at hpeps
+  obtain ⟨-, -, hmin⟩ := hpeps
+  have hmin1 : azim 0 e x (rhoNode1 fv x) ≤ azim 0 e x p.1 := by
+    rcases hmin p.1 hv0V (fun h => hvx1 (collinear3_pair_right (v0 := (0:V3))
+      (v1 := p.1) (x := x) h.symm)) with h | h
+    · exact le_of_lt h
+    · exact le_of_eq h.1
+  rw [hrho] at hmin1
+  -- 整圈闭合 + 矛盾
+  have hadd := azimAddTriple_p35 (x := (0:V3)) (v := e) (u := p.1) (w1 := y)
+    (w2 := x) hxv hnc1 hncy hncx (le_of_lt (by linarith))
+  have hynx : azim 0 e y x ≠ 0 := by intro h0; linarith
+  have hvnx : azim 0 e p.1 x ≠ 0 := by intro h0; linarith
+  have hd1 : azim 0 e x y = 2 * Real.pi - azim 0 e y x := by
+    rw [azim_compl hncy hncx, if_neg hynx]
+  have hd2 : azim 0 e x p.1 = 2 * Real.pi - azim 0 e p.1 x := by
+    rw [azim_compl hnc1 hncx, if_neg hvnx]
+  have hltπ := hqx.2.2.2
+  rw [hrho] at hltπ
+  linarith
+
+
+/-! ## EJRCFJD chain W4 splice — the `hplane` orbit-plane face (lane
+`ejrcfjd-hplane-w1`, 2026-10-28)
+
+KCHMAMG 槽的 `hplane` 输入（平面含全体轨道点）：HOL `LOFA_V_SUBSET_AFF_HULL`
+(local_lemmas.hl:2990) 的 p35 渲染 — `LOCAL_FAN_ORBIT_MAP_V` 覆盖
+（`kchOrbitMapV_p35`，已在 31n 合流栈）+ ρ-幂归纳；归纳步引擎
+`EXISTS_INTERSECTION_PROPERPLY`（local_lemmas.hl:2897）按消费级重述渲染：
+
+- 路线裁决（对 w4root DELIVERY §5 的三案）：**归纳步渲染案兑付**，但渲染形
+  取「0-顶点线消费级」而非 HOL 逐字形——HOL 的 `aff_gt {x} ∩ aff_lt {x}`
+  一般顶点形在栈内零消费方（OZQVSFF 链/归纳步只消费 0-顶点线 +
+  双端点不过线的强形）；`vplPairAt_p35` 产出比 HOL EIP 更强的弦束
+  （双端点 `a,b ∉ aff {0,z}` + 开锥交点 `t ∈ aff {0,z} ∩ ozConv0 {a,b}`），
+  正是 `OZQVSFF_p35` 的 `hdisj`/`hint` 槽形。JBDNJJB 第三条路与窗口束
+  `hvert` 备选未触发。
+
+- 归纳步的数学核（EXISTS_INTERSECTION_PROPERPLY 的 0-顶点重述）：楔内交叉
+  点 `y = β•v + γ•w = c•u`（`β,γ > 0`、`c < 0`）给 `u = m1•v + m2•w`
+  （`m1,m2 < 0`，`vplCrossCone_p35`）；于是权重 `1,-m1,-m2 > 0` 下
+  三点的 z-线符号满足 `s(u) + (-m1)·s(v) + (-m2)·s(w) = 0` 且
+  `s(v) = β`、`s(w) = -α` 不同时为零（`z ≠ 0`，`α β` 为 `z` 的
+  `(v,w)`-坐标），故三点中必有 `s`-异号对（`vplPairAt_p35`：
+  坐标-符号叶枚举，`vplPairFin_p35` 装配）——异号对的开线段与 z-线相交
+  且两端点均不过 z-线，正是 OZQVSFF 在轨道点 `z` 处消费的双前提。
+  与 HOL EIP 逐字对照：HOL 由 `INTERSECTION_LEMMA +
+  INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0 + sym_line_fan1 +
+  AFF2_DET_BY_TWO_POINTS + SUBSET_AFF2_IMP_COLL` 五件渲染同一几何
+  （其 `a ∉ aff {x,z}` 单端点弱形 + 端点落在 z-线支的交换簿记，在本
+  路线中由符号叶枚举直接绕开）；五件均不在 LA35 import 面，免渲染。
+
+- 产出（public）：`VPLANE_OF_DART_CROSS_p35`（HOL LOFA_V_SUBSET_AFF_HULL
+  逐字前提面：dart `(v,w) ∈ FF` + 楔内交叉 + `u ∈ V` ⟹ 平面含全体 V）
+  与 `VPLANE_OF_CIRCULAR_p35`（`Circular V E` 槽形包装：圆交叉边经
+  `lfVertKit` 的 EE 两元形折成面 dart——HOL `LOFA_IN_E_IMP_IN_FF`
+  （local_lemmas.hl:1887）的 p35 等价物，ι-伙伴路线，
+  免 BIJ_BETWEEN_FF_AND_V）。形态对齐 `KCHMAMG_thm_p35` 的 `hplane` 槽
+  （`kchPlane_p35 P ∧ 0 ∈ P ∧ V ⊆ P`）与 w4prep 骨架 `hkch` 槽内
+  `A = affineSpan {u,v,w} ∧ V ⊆ A` 合取支（`kchPlane_p35` 展开 +
+  `vPrime_p3 V fv ⊆ V` 平凡收窄）。W4 splice 收窄后：KCHMAMG_thm_p35
+  装配 = `VPLANE_OF_CIRCULAR_p35 hconv hEE2 hcirc` + `hint` 面。 -/
+
+/-! ### 0. 共享小件 -/
+
+/-- FF-dart 三非共线的分量非退化（HOL `LOCAL_FAN_IN_FF_NOT_COLLINEAR`
+的分量面：v ≠ 0、w ≠ 0、v ≠ w）。 -/
+private theorem vplDartNe_p35 {v w : V3} (hnc : ¬ Collinear ℝ ({(0:V3), v, w} : Set V3)) :
+    v ≠ 0 ∧ w ≠ 0 ∧ v ≠ w := by
+  refine ⟨fun hv => hnc ?_, fun hw => hnc ?_, fun hvw => hnc ?_⟩
+  · have hsub : ({(0:V3), (0:V3), w} : Set V3) ⊆ ({(0:V3), w} : Set V3) := by
+      intro q hq
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+      tauto
+    rw [hv]
+    exact Collinear.subset hsub (collinear_pair ℝ (0:V3) w)
+  · have hsub : ({(0:V3), v, (0:V3)} : Set V3) ⊆ ({(0:V3), v} : Set V3) := by
+      intro q hq
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+      tauto
+    rw [hw]
+    exact Collinear.subset hsub (collinear_pair ℝ (0:V3) v)
+  · have hsub : ({(0:V3), w, w} : Set V3) ⊆ ({(0:V3), w} : Set V3) := by
+      intro q hq
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+      tauto
+    rw [hvw]
+    exact Collinear.subset hsub (collinear_pair ℝ (0:V3) w)
+
+/-- 过 0 三点的仿射包 = 两向量的纯 span（`affineSpan_insert_zero` 桥）。 -/
+private theorem vplSpan3_p35 (v w : V3) :
+    (affineSpan ℝ ({(0:V3), v, w} : Set V3) : Set V3)
+      = (Submodule.span ℝ ({v, w} : Set V3) : Set V3) := by
+  rw [show ({(0:V3), v, w} : Set V3) = insert (0:V3) ({v, w} : Set V3) from rfl,
+    affineSpan_insert_zero]
+
+/-- 二元集去重（0 或等点三元组的 collinear_pair 桥）。 -/
+private theorem vplSetPairOfTrip_p35 {x y : V3} :
+    ({(0:V3), (0:V3), y} : Set V3) = ({(0:V3), y} : Set V3) := by
+  ext q
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  tauto
+
+/-- 0 点三元组去重 v-位。 -/
+private theorem vplSetPairOfTripV_p35 {x : V3} :
+    ({(0:V3), x, (0:V3)} : Set V3) = ({(0:V3), x} : Set V3) := by
+  ext q
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  tauto
+
+/-- 二元集去重 v-位重复（v = w 支）。 -/
+private theorem vplSetPairOfTripE_p35 {x : V3} :
+    ({(0:V3), x, x} : Set V3) = ({(0:V3), x} : Set V3) := by
+  ext q
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  tauto
+
+/-! ### 1. 交叉前提的系数抽取（HOL wedge 交叉 ⟹ 负锥坐标） -/
+
+/-- `aff_lt {0} {u}` 的射线系数抽取：任一点 = 负系数纯 `u`-倍。
+`u = 0` 时集为空（`f 0 < 0` 与 `∑ = 1` 矛盾），全况统一负系数形。 -/
+private theorem vplAffLtRay_p35 {u y : V3}
+    (hy : y ∈ affLt ({(0:V3)} : Set V3) ({u} : Set V3)) :
+    ∃ c : ℝ, c < 0 ∧ y = c • u := by
+  rw [affLt, Set.mem_setOf_eq, Affsign] at hy
+  obtain ⟨f, hfin, hvec, hpos, hone⟩ := hy
+  have hu0' : u ≠ 0 := by
+    intro hu0
+    have h1 : hfin.toFinset = ({(0:V3)} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        hu0, or_self, Finset.mem_singleton]
+    rw [h1, Finset.sum_singleton] at hvec hone
+    have hm : (0:V3) ∈ ({u} : Set V3) := by rw [hu0]; simp
+    have h2 : f (0:V3) < 0 := hpos (0:V3) hm
+    exact absurd h2 (by linarith [hone])
+  have h1 : hfin.toFinset = ({(0:V3), u} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+      Finset.mem_insert, Finset.mem_singleton]
+  rw [h1, Finset.sum_insert
+    (by
+      intro hc
+      exact absurd (Finset.mem_coe.mpr hc)
+        (by simp [Set.mem_singleton_iff, Ne.symm hu0'])),
+    Finset.sum_singleton] at hvec hone
+  refine ⟨f u, hpos u (by simp), ?_⟩
+  rw [hvec]
+  simp
+
+/-- 楔内交叉点 ⟹ `u` 落在 `{v, w}` 的负锥（HOL
+`EXISTS_INTERSECTION_PROPERPLY` 交叉前提的系数化：`y = β•v + γ•w = c•u`、
+`β,γ > 0`、`c < 0` ⟹ `u = (β/c)•v + (γ/c)•w`，两系数皆负）。 -/
+private theorem vplCrossCone_p35 {v w u y : V3}
+    (hv0 : v ≠ 0) (hw0 : w ≠ 0) (hvw : v ≠ w)
+    (h1 : y ∈ affGt ({(0:V3)} : Set V3) ({v, w} : Set V3))
+    (h2 : y ∈ affLt ({(0:V3)} : Set V3) ({u} : Set V3)) :
+    ∃ m1 m2 : ℝ, m1 < 0 ∧ m2 < 0 ∧ u = m1 • v + m2 • w := by
+  obtain ⟨β, γ, hβ, hγ, hyv⟩ := (triMemAffGt_p35 (v0 := (0:V3)) (x := v) (y := w)
+    hv0 hw0 hvw).mp h1
+  obtain ⟨c, hc, hyu⟩ := vplAffLtRay_p35 h2
+  have hyv' : y = β • v + γ • w := by simpa using hyv
+  refine ⟨β / c, γ / c, ?_, ?_, ?_⟩
+  · have h := div_neg_of_neg_of_pos (a := -β) (b := -c)
+      (neg_lt_zero.mpr hβ) (neg_pos.mpr hc)
+    rwa [neg_div_neg_eq] at h
+  · have h := div_neg_of_neg_of_pos (a := -γ) (b := -c)
+      (neg_lt_zero.mpr hγ) (neg_pos.mpr hc)
+    rwa [neg_div_neg_eq] at h
+  · have hkey : c • u = β • v + γ • w := by rw [← hyu]; exact hyv'
+    refine smul_right_injective V3 (ne_of_lt hc) ?_
+    show c • u = c • ((β / c) • v + (γ / c) • w)
+    rw [smul_add, smul_smul, smul_smul]
+    have hcβ : (c:ℝ) * (β / c) = β := by
+      rw [mul_comm]; exact div_mul_cancel₀ β (ne_of_lt hc)
+    have hcγ : (c:ℝ) * (γ / c) = γ := by
+      rw [mul_comm]; exact div_mul_cancel₀ γ (ne_of_lt hc)
+    rw [hcβ, hcγ]
+    exact hkey
+
+/-! ### 2. 坐标-符号机器（z-线的 (v,w)-坐标符号函数） -/
+
+/-- `{v, w}` 线性无关时的坐标注入性（HOL `SUBSET_AFF2_IMP_COLL` 的反演面）。 -/
+private theorem vplCoordInj_p35 {v w : V3} (hv0 : v ≠ 0)
+    (hncw : ¬ ∃ c : ℝ, w = c • v) {c1 d1 c2 d2 : ℝ}
+    (h : (c1 - d1) • v + (c2 - d2) • w = 0) : c1 = d1 ∧ c2 = d2 := by
+  by_cases hcd : c1 = d1
+  · refine ⟨hcd, ?_⟩
+    rw [hcd, sub_self, zero_smul, zero_add] at h
+    have hw0 : w ≠ 0 := by
+      rintro rfl
+      exact hncw ⟨0, by simp⟩
+    have h2 := smul_eq_zero.mp h
+    cases h2 with
+    | inl h2 => linarith [h2]
+    | inr h2 => exact absurd h2 hw0
+  · have hcd2 : c2 ≠ d2 := by
+      intro hc2
+      rw [hc2, sub_self, zero_smul, add_zero] at h
+      have h2 := smul_eq_zero.mp h
+      cases h2 with
+      | inl h2 => exact hcd (by linarith [h2])
+      | inr h2 => exact absurd h2 hv0
+    have hB0 : (c2 - d2) ≠ 0 := sub_ne_zero.mpr hcd2
+    have h2 : (c2 - d2) • w = -((c1 - d1) • v) :=
+      eq_neg_of_add_eq_zero_left (show ((c2 - d2) • w) + ((c1 - d1) • v) = 0 from by
+        rw [add_comm]; exact h)
+    have hscal2 : (c2 - d2) * -((c1 - d1) / (c2 - d2)) = -(c1 - d1) := by
+      field_simp
+    exfalso
+    apply hncw
+    refine ⟨-((c1 - d1) / (c2 - d2)), ?_⟩
+    apply smul_right_injective V3 hB0
+    show (c2 - d2) • w = (c2 - d2) • (-((c1 - d1) / (c2 - d2)) • v)
+    calc (c2 - d2) • w = -((c1 - d1) • v) := h2
+      _ = (-(c1 - d1)) • v := (neg_smul _ _).symm
+      _ = ((c2 - d2) * -((c1 - d1) / (c2 - d2))) • v := by rw [hscal2]
+      _ = (c2 - d2) • (-((c1 - d1) / (c2 - d2)) • v) := (smul_smul _ _ _).symm
+
+/-- 开锥两元构造（`ozConv0_coeff_p35` 的反向）：正系数和一组合落
+`ozConv0 {a, b}`。 -/
+private theorem vplOzTwoMem_p35 {a b t : V3} (hab : a ≠ b) {l : ℝ}
+    (hl1 : 0 < l) (hl2 : l < 1) (ht : t = l • a + (1 - l) • b) :
+    t ∈ ozConv0_p35 ({a, b} : Set V3) := by
+  have hfin : ((∅ : Set V3) ∪ ({a, b} : Set V3)).Finite :=
+    Set.Finite.union Set.finite_empty (Set.Finite.insert a (Set.finite_singleton b))
+  have hfinset : hfin.toFinset = ({a, b} : Finset V3) := by
+    ext z
+    simp [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_empty_iff_false,
+      Finset.mem_insert, Finset.mem_singleton]
+  set f : V3 → ℝ := fun x => if x = a then l else 1 - l with hf
+  have hfa : f a = l := by
+    show (if a = a then l else (1 - l:ℝ)) = l
+    exact if_pos rfl
+  have hfb : f b = 1 - l := by
+    show (if b = a then l else (1 - l:ℝ)) = 1 - l
+    exact if_neg (Ne.symm hab)
+  rw [ozConv0_p35, affGt, Set.mem_setOf_eq, Affsign]
+  refine ⟨f, hfin, ?_, ?_, ?_⟩
+  · rw [hfinset, Finset.sum_insert
+      (by
+        intro hc
+        exact absurd (Finset.mem_coe.mpr hc)
+          (by simp [Set.mem_singleton_iff, hab])),
+      Finset.sum_singleton]
+    show t = f a • a + f b • b
+    rw [hfa, hfb, ht]
+  · intro z hz
+    by_cases hza : z = a
+    · show (0:ℝ) < f z
+      rw [hza, hfa]
+      exact hl1
+    · have hzb : z = b := by
+        rcases Set.mem_insert_iff.mp hz with h | h
+        · exact absurd h hza
+        · exact h
+      show (0:ℝ) < f z
+      rw [hzb, hfb]
+      linarith
+  · rw [hfinset, Finset.sum_insert
+      (by
+        intro hc
+        exact absurd (Finset.mem_coe.mpr hc)
+          (by simp [Set.mem_singleton_iff, hab])),
+      Finset.sum_singleton]
+    show f a + f b = 1
+    rw [hfa, hfb]
+    linarith
+
+/-- 线性组合差归零（hoff/habne 的向量簿记核）。 -/
+private theorem vplSubSmul2_p35 {v w : V3} (c1 c2 d1 d2 : ℝ)
+    (h : c1 • v + c2 • w = d1 • v + d2 • w) :
+    (c1 - d1) • v + (c2 - d2) • w = 0 := by
+  rw [sub_smul, sub_smul, ← add_sub_add_comm, h, sub_self]
+
+/-- **弦转移装配叶**（EXISTS_INTERSECTION_PROPERPLY 的构造半）：`a`、`b`
+的 `(v,w)`-坐标已知、z-线符号异号 ⟹ 两端点均不过 z-线 + 开线段交 z-线。
+`α β` 为 `z` 的坐标；`ca1 ca2`/`da1 da2` 为 `a`/`b` 的坐标；
+`hsa`/`hsb` 即异号前提。 -/
+private theorem vplPairFin_p35 {v w z a b : V3} {α β ca1 ca2 da1 da2 : ℝ}
+    (hz : z = α • v + β • w) (hz0 : z ≠ 0) (hv0 : v ≠ 0)
+    (hncw : ¬ ∃ c : ℝ, w = c • v)
+    (hza : a = ca1 • v + ca2 • w) (hzb : b = da1 • v + da2 • w)
+    (hsa : 0 < ca1 * β - ca2 * α) (hsb : da1 * β - da2 * α < 0) :
+    a ≠ b ∧
+      (({a, b} : Set V3) ∩ (affineSpan ℝ ({(0:V3), z} : Set V3) : Set V3)) = ∅ ∧
+      ∃ t : V3, t ∈ (affineSpan ℝ ({(0:V3), z} : Set V3) : Set V3) ∧
+        t ∈ ozConv0_p35 ({a, b} : Set V3) := by
+  have hab0' : α ≠ 0 ∨ β ≠ 0 := by
+    by_contra hc
+    push_neg at hc
+    exact hz0 (by rw [hz, hc.1, hc.2]; simp)
+  -- 端点不过线：线上的点 = k•z 的坐标比例化与符号非零矛盾
+  have hoff : ∀ (e1 e2 : ℝ) (p : V3), p = e1 • v + e2 • w →
+      e1 * β - e2 * α ≠ 0 →
+      p ∉ (affineSpan ℝ ({(0:V3), z} : Set V3) : Set V3) := by
+    intro e1 e2 p hp hsp hmem
+    obtain ⟨k, hk⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hmem
+    have hk' : p = (k : ℝ) • z := by
+      rw [← hk, AffineMap.lineMap_apply_module]
+      simp
+    have hmid : p = (k * α) • v + (k * β) • w := by
+      rw [hk', hz, smul_add, smul_smul, smul_smul]
+    have hkey : e1 • v + e2 • w = (k * α) • v + (k * β) • w := by
+      rw [← hp]; exact hmid
+    obtain ⟨i1, i2⟩ :=
+      vplCoordInj_p35 hv0 hncw (vplSubSmul2_p35 _ _ _ _ hkey)
+    rw [i1, i2] at hsp
+    have h6 : ((k * α) * β) - ((k * β) * α) = 0 := by ring
+    rw [h6] at hsp
+    exact absurd hsp (by simp)
+  have ha' := hoff ca1 ca2 a hza ((ne_of_gt hsa))
+  have hb' := hoff da1 da2 b hzb ((ne_of_lt hsb))
+  -- a ≠ b（同点 ⟹ 同坐标 ⟹ 同符号）
+  have habne : a ≠ b := by
+    intro hab
+    rw [← hab] at hzb
+    have hzz : ca1 • v + ca2 • w = da1 • v + da2 • w := hza.symm.trans hzb
+    obtain ⟨i1, i2⟩ := vplCoordInj_p35 hv0 hncw (vplSubSmul2_p35 _ _ _ _ hzz)
+    rw [i1, i2] at hsa
+    linarith [hsa, hsb]
+  -- 交点参数：l := sbv / (sbv - sav) ∈ (0,1)
+  have hdne : da1 * β - da2 * α - (ca1 * β - ca2 * α) ≠ 0 := by linarith
+  set l := (da1 * β - da2 * α) / (da1 * β - da2 * α - (ca1 * β - ca2 * α)) with hl
+  have hlpos : 0 < l := by
+    rw [hl]
+    exact div_pos_of_neg_of_neg (by linarith) (by linarith)
+  have hl1 : l < 1 := by
+    have hden : (0:ℝ) < -(da1 * β - da2 * α - (ca1 * β - ca2 * α)) := by linarith
+    rw [hl, ← neg_div_neg_eq, div_lt_one hden]
+    linarith
+  have hdisj : (({a, b} : Set V3) ∩
+      (affineSpan ℝ ({(0:V3), z} : Set V3) : Set V3)) = ∅ := by
+    refine Set.eq_empty_iff_forall_notMem.mpr ?_
+    intro x hx
+    obtain ⟨hx1, hx2⟩ := (Set.mem_inter_iff x _ _).mp hx
+    rcases hx1 with hx1 | hx1
+    · exact ha' (hx1 ▸ hx2)
+    · exact hb' (hx1 ▸ hx2)
+  -- 交点坐标符号归零
+  set n1 := l * ca1 + (1 - l) * da1 with hn1
+  set n2 := l * ca2 + (1 - l) * da2 with hn2
+  have hn1n2 : n1 * β - n2 * α = 0 := by
+    have h1 : l * (da1 * β - da2 * α - (ca1 * β - ca2 * α))
+        = da1 * β - da2 * α := by
+      rw [hl, div_mul_cancel₀ _ hdne]
+    rw [hn1, hn2]
+    rw [mul_sub, mul_sub, mul_sub] at h1
+    ring_nf at h1 ⊢
+    linarith [h1]
+  have htcoord : l • a + (1 - l) • b = n1 • v + n2 • w := by
+    rw [hza, hzb]
+    module
+  refine ⟨habne, hdisj, l • a + (1 - l) • b, ?_,
+    vplOzTwoMem_p35 habne hlpos hl1 rfl⟩
+  refine hab0'.elim ?_ ?_
+  · intro ha0
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨n1 / α, ?_⟩
+    rw [AffineMap.lineMap_apply_module, htcoord, hz]
+    simp only [smul_zero, zero_add, smul_add, smul_smul]
+    rw [div_mul_cancel₀ _ ha0, show (n1 / α) * β = n2 from by
+      field_simp
+      linarith]
+  · intro hb0
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨n2 / β, ?_⟩
+    rw [AffineMap.lineMap_apply_module, htcoord, hz]
+    simp only [smul_zero, zero_add, smul_add, smul_smul]
+    rw [div_mul_cancel₀ _ hb0, show (n2 / β) * α = n1 from by
+      field_simp
+      linarith]
+
+/-! ### 3. 归纳步引擎（EXISTS_INTERSECTION_PROPERPLY 的 0-顶点消费级渲染） -/
+
+/-- **弦转移引擎**：`{v,w}` 平面 + 负锥点 `u` + 平面内非零点 `z` ⟹
+`u,v,w` 中有异号对：两端点均不过 z-线、开线段交 z-线（OZQVSFF 的
+`hdisj`/`hint` 双前提一步到位）。 -/
+private theorem vplPairAt_p35 {v w u z : V3}
+    (hv0 : v ≠ 0) (hnc : ¬ Collinear ℝ ({(0:V3), v, w} : Set V3))
+    (hmu : ∃ m1 m2 : ℝ, m1 < 0 ∧ m2 < 0 ∧ u = m1 • v + m2 • w)
+    (hzP : z ∈ (affineSpan ℝ ({(0:V3), v, w} : Set V3) : Set V3))
+    (hz0 : z ≠ 0) :
+    ∃ a b t : V3, ({a, b} : Set V3) ⊆ ({u, v, w} : Set V3) ∧ a ≠ b ∧
+      (({a, b} : Set V3) ∩ (affineSpan ℝ ({(0:V3), z} : Set V3) : Set V3)) = ∅ ∧
+      t ∈ (affineSpan ℝ ({(0:V3), z} : Set V3) : Set V3) ∧
+      t ∈ ozConv0_p35 ({a, b} : Set V3) := by
+  obtain ⟨hw0, -, hvw⟩ := vplDartNe_p35 hnc
+  -- z 的 (v,w)-坐标
+  have hzspan : z ∈ (Submodule.span ℝ ({v, w} : Set V3) : Set V3) := by
+    rw [← vplSpan3_p35 v w]
+    exact hzP
+  obtain ⟨α, β, hzcoord⟩ :=
+    Submodule.mem_span_pair.mp hzspan
+  -- 独立性（SUBSET_AFF2_IMP_COLL 反演）
+  have hncw : ¬ ∃ c : ℝ, w = c • v := by
+    rintro ⟨c, hc⟩
+    exact hnc ((collinear3_iff_smul (v := (0:V3)) (w := v) (w1 := w) hv0).mpr
+      ⟨c, by simp [hc]⟩)
+  obtain ⟨m1, m2, hm1, hm2, hmu⟩ := hmu
+  -- 三个 s-值：s(u) = m1*β - m2*α，s(v) = β，s(w) = -α；正权恒等式
+  set sa := m1 * β - m2 * α with hsaD
+  have hsum : sa + (-m1) * β + (-m2) * (-α) = 0 := by ring
+  have hwpos1 : (0:ℝ) < -m1 := by linarith
+  have hwpos2 : (0:ℝ) < -m2 := by linarith
+  have hneg : sa < 0 ∨ β < 0 ∨ -α < 0 := by
+    by_contra hall
+    push_neg at hall
+    obtain ⟨h1, h2, h3⟩ := hall
+    have t2 : (0:ℝ) ≤ (-m1) * β := mul_nonneg hwpos1.le h2
+    have t3 : (0:ℝ) ≤ (-m2) * (-α) := mul_nonneg hwpos2.le h3
+    have ht2 : (-m1) * β = 0 := by linarith [hsum, t2, t3, h1]
+    have ht3 : (-m2) * (-α) = 0 := by linarith [hsum, t2, t3, h1]
+    have hβ0 : β = 0 := by
+      rcases mul_eq_zero.mp ht2 with h | h
+      · linarith [h, hwpos1]
+      · exact h
+    have hα0 : α = 0 := by
+      rcases mul_eq_zero.mp ht3 with h | h
+      · linarith [h, hwpos2]
+      · linarith
+    exact hz0 (by rw [← hzcoord, hα0, hβ0]; simp)
+  have hpos : 0 < sa ∨ 0 < β ∨ 0 < -α := by
+    by_contra hall
+    push_neg at hall
+    obtain ⟨h1, h2, h3⟩ := hall
+    have h2' : (0:ℝ) ≤ -β := by linarith
+    have h3' : (0:ℝ) ≤ α := by linarith
+    have t2' : (0:ℝ) ≤ (-m1) * (-β) := mul_nonneg hwpos1.le h2'
+    have t3' : (0:ℝ) ≤ (-m2) * α := mul_nonneg hwpos2.le h3'
+    rw [mul_neg] at t2'
+    have ht2 : (-m1) * β ≤ 0 := neg_nonneg.mp t2'
+    have ht3 : (-m2) * (-α) ≤ 0 := by
+      have h : (0:ℝ) ≤ -((-m2) * (-α)) := by rw [mul_neg, neg_neg]; exact t3'
+      exact neg_nonneg.mp h
+    have ht2z : (-m1) * β = 0 := by linarith [hsum, ht2, ht3, h1]
+    have ht3z : (-m2) * (-α) = 0 := by linarith [hsum, ht2, ht3, h1]
+    have hβ0 : β = 0 := by
+      rcases mul_eq_zero.mp ht2z with h | h
+      · linarith [h, hwpos1]
+      · exact h
+    have hα0 : α = 0 := by
+      rcases mul_eq_zero.mp ht3z with h | h
+      · linarith [h, hwpos2]
+      · linarith
+    exact hz0 (by rw [← hzcoord, hα0, hβ0]; simp)
+  -- 叶枚举（异号对 3×3）
+  obtain hnU | hnV | hnW := hneg
+  · obtain hpU | hpV | hpW := hpos
+    · exact (lt_irrefl _ (lt_trans hnU hpU)).elim
+    · obtain ⟨hab, hdis, t, ht1, ht2⟩ :=
+        vplPairFin_p35 hzcoord.symm hz0 hv0 hncw
+          (show v = (1:ℝ) • v + (0:ℝ) • w by rw [one_smul, zero_smul, add_zero])
+          hmu (by rw [one_mul, zero_mul, sub_zero]; exact hpV) hnU
+      exact ⟨v, u, t, by intro x hx; simp only [Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hx ⊢; tauto, hab, hdis, ht1, ht2⟩
+    · obtain ⟨hab, hdis, t, ht1, ht2⟩ :=
+        vplPairFin_p35 hzcoord.symm hz0 hv0 hncw
+          (show w = (0:ℝ) • v + (1:ℝ) • w by rw [zero_smul, one_smul, zero_add])
+          hmu (by rw [zero_mul, one_mul, zero_sub]; exact hpW) hnU
+      exact ⟨w, u, t, by intro x hx; simp only [Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hx ⊢; tauto, hab, hdis, ht1, ht2⟩
+  · obtain hpU | hpV | hpW := hpos
+    · obtain ⟨hab, hdis, t, ht1, ht2⟩ :=
+        vplPairFin_p35 hzcoord.symm hz0 hv0 hncw hmu
+          (show v = (1:ℝ) • v + (0:ℝ) • w by rw [one_smul, zero_smul, add_zero])
+          hpU (by rw [one_mul, zero_mul, sub_zero]; exact hnV)
+      exact ⟨u, v, t, by intro x hx; simp only [Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hx ⊢; tauto, hab, hdis, ht1, ht2⟩
+    · exact (lt_irrefl _ (lt_trans hnV hpV)).elim
+    · obtain ⟨hab, hdis, t, ht1, ht2⟩ :=
+        vplPairFin_p35 hzcoord.symm hz0 hv0 hncw
+          (show w = (0:ℝ) • v + (1:ℝ) • w by rw [zero_smul, one_smul, zero_add])
+          (show v = (1:ℝ) • v + (0:ℝ) • w by rw [one_smul, zero_smul, add_zero])
+          (by rw [zero_mul, one_mul, zero_sub]; exact hpW)
+          (by rw [one_mul, zero_mul, sub_zero]; exact hnV)
+      exact ⟨w, v, t, by intro x hx; simp only [Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hx ⊢; tauto, hab, hdis, ht1, ht2⟩
+  · obtain hpU | hpV | hpW := hpos
+    · obtain ⟨hab, hdis, t, ht1, ht2⟩ :=
+        vplPairFin_p35 hzcoord.symm hz0 hv0 hncw hmu
+          (show w = (0:ℝ) • v + (1:ℝ) • w by rw [zero_smul, one_smul, zero_add])
+          hpU (by rw [zero_mul, one_mul, zero_sub]; exact hnW)
+      exact ⟨u, w, t, by intro x hx; simp only [Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hx ⊢; tauto, hab, hdis, ht1, ht2⟩
+    · obtain ⟨hab, hdis, t, ht1, ht2⟩ :=
+        vplPairFin_p35 hzcoord.symm hz0 hv0 hncw
+          (show v = (1:ℝ) • v + (0:ℝ) • w by rw [one_smul, zero_smul, add_zero])
+          (show w = (0:ℝ) • v + (1:ℝ) • w by rw [zero_smul, one_smul, zero_add])
+          (by rw [one_mul, zero_mul, sub_zero]; exact hpV)
+          (by rw [zero_mul, one_mul, zero_sub]; exact hnW)
+      exact ⟨v, w, t, by intro x hx; simp only [Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hx ⊢; tauto, hab, hdis, ht1, ht2⟩
+    · exact (lt_irrefl _ (lt_trans hnW hpW)).elim
+
+/-! ### 4. 主件（public）：HOL `LOFA_V_SUBSET_AFF_HULL` 逐字前提面 -/
+
+/-- **VPLANE（hplane 的 V⊆P 轨道面，dart 交叉形）**：HOL
+`LOFA_V_SUBSET_AFF_HULL`（local_lemmas.hl:2990）的 p35 渲染——`FF` 内
+dart `(v,w)` 的开锥与 `u ∈ V` 的反向线交叉 ⟹ 存在过 0 平面 `P`（由
+`{0,v,w}` 张成）含全体 `V`。结论面 = `KCHMAMG_thm_p35` 的 `hplane` 槽逐字
+（`kchPlane_p35 P ∧ 0 ∈ P ∧ V ⊆ P`）。
+证明 = `kchOrbitMapV_p35` 轨道覆盖 + ρ-幂归纳；归纳步 = `vplPairAt_p35`
+弦转移 + `OZQVSFF_p35` 在轨道点处的消费（`ρ z ∈ P` 即步进）。 -/
+theorem VPLANE_OF_DART_CROSS_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)}
+    (hconv : ConvexLocalFan V E FF) (hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2)
+    {v w u : V3} (hd : (v, w) ∈ FF) (hu : u ∈ V)
+    (hcross : ¬(affGt ({(0:V3)} : Set V3) ({v, w} : Set V3) ∩
+      affLt ({(0:V3)} : Set V3) ({u} : Set V3) = ∅)) :
+    ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧ V ⊆ P := by
+  have hfanL : LocalFan V E FF := hconv.1
+  have hnc := kchDartNonColl_p35 hfanL hd
+  have hvV : v ∈ V := (kchDartInV_p35 hfanL hd).1
+  have hwV : w ∈ V := (kchDartInV_p35 hfanL hd).2
+  obtain ⟨hv0, hw0, hvw⟩ := vplDartNe_p35 hnc
+  obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr hcross
+  obtain ⟨m1, m2, hm1, hm2, hmu⟩ := vplCrossCone_p35 hv0 hw0 hvw hy.1 hy.2
+  refine ⟨affineSpan ℝ ({(0:V3), v, w} : Set V3), ⟨(0:V3), v, w, hnc, rfl⟩, ?_, ?_⟩
+  · rw [vplSpan3_p35]
+    exact Submodule.zero_mem _
+  · intro x hx
+    have horb := kchOrbitMapV_p35 hfanL hEE2 v hvV
+    rw [← horb] at hx
+    obtain ⟨n, hn⟩ := hx
+    rw [← hn]
+    clear hn x
+    -- 平面点辅助（{u, v, w} 的 span/V 双面）
+    have hvP : v ∈ (Submodule.span ℝ ({v, w} : Set V3) : Set V3) :=
+      Submodule.subset_span (Set.mem_insert v ({w} : Set V3))
+    have hwP : w ∈ (Submodule.span ℝ ({v, w} : Set V3) : Set V3) :=
+      Submodule.subset_span (Set.mem_insert_of_mem v (Set.mem_singleton_iff.mpr rfl))
+    have huP : u ∈ (Submodule.span ℝ ({v, w} : Set V3) : Set V3) := by
+      rw [hmu]
+      exact Submodule.add_mem _ (Submodule.smul_mem _ m1 hvP)
+        (Submodule.smul_mem _ m2 hwP)
+    have huvwP : ({u, v, w} : Set V3) ⊆
+        (Submodule.span ℝ ({v, w} : Set V3) : Set V3) := by
+      intro q hq
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      obtain rfl | rfl | rfl := hq
+      · exact huP
+      · exact hvP
+      · exact hwP
+    have huvwV : ({u, v, w} : Set V3) ⊆ V := by
+      intro q hq
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      obtain rfl | rfl | rfl := hq
+      · exact hu
+      · exact hvV
+      · exact hwV
+    induction n with
+    | zero =>
+      rw [vplSpan3_p35]
+      exact Submodule.subset_span (Set.mem_insert v ({w} : Set V3))
+    | succ k ih =>
+      set zw : V3 := (rhoNode1 FF)^[k] v with hzwdef
+      have hzk : zw ∈ V := kchIterInV_p35 hfanL hEE2 hvV k
+      have hdart : (zw, (rhoNode1 FF)^[k + 1] v) ∈ FF := by
+        rw [hzwdef, Function.iterate_succ_apply' (rhoNode1 FF) k v]
+        exact (lfVertKit_p35 hfanL hEE2 hzk).1
+      have hz0 : zw ≠ 0 := by
+        intro hzz
+        refine kchDartNonColl_p35 hfanL hdart ?_
+        have hsub : ({(0:V3), (0:V3), (rhoNode1 FF)^[k + 1] v} : Set V3) ⊆
+            ({(0:V3), (rhoNode1 FF)^[k + 1] v} : Set V3) := by
+          intro q hq
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+          tauto
+        rw [hzz]
+        exact Collinear.subset hsub (collinear_pair ℝ (0:V3) ((rhoNode1 FF)^[k + 1] v))
+      obtain ⟨a, b, t, hsub2, hab, hdisj, ht1, ht2⟩ :=
+        vplPairAt_p35 hv0 hnc ⟨m1, m2, hm1, hm2, hmu⟩ ih hz0
+      have haV3 : a ∈ ({u, v, w} : Set V3) := hsub2 (by simp)
+      have hbV3 : b ∈ ({u, v, w} : Set V3) := hsub2 (by simp)
+      have haP3 : a ∈ (Submodule.span ℝ ({v, w} : Set V3) : Set V3) := huvwP haV3
+      have hbP3 : b ∈ (Submodule.span ℝ ({v, w} : Set V3) : Set V3) := huvwP hbV3
+      -- OZQVSFF 在 z := ρ^[k] v、对 (a, b)
+      have hint' : ¬((affineSpan ℝ ({zw, (0:V3)} : Set V3) : Set V3) ∩
+        ozConv0_p35 ({b, a} : Set V3) = ∅) := by
+        intro hempty
+        refine Set.eq_empty_iff_forall_notMem.mp hempty t ⟨?_, ?_⟩
+        · rw [Set.pair_comm] at ht1
+          exact ht1
+        · rw [ozConv0_swap_p35]
+          exact ht2
+      have hstep := OZQVSFF_p35 (V := V) (E := E) (FF := FF)
+        (P := affineSpan ℝ ({(0:V3), v, w} : Set V3))
+        a zw b hconv hEE2
+        (by
+          intro q hq
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+          rcases hq with rfl | rfl | rfl
+          · exact huvwV haV3
+          · exact hzk
+          · exact huvwV hbV3)
+        ⟨(0:V3), v, w, hnc, rfl⟩
+        (by
+          intro q hq
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+          rw [vplSpan3_p35]
+          rcases hq with rfl | rfl | rfl | rfl
+          · exact Submodule.zero_mem _
+          · exact haP3
+          · exact (by rw [← vplSpan3_p35 v w]; exact ih : zw ∈
+              (Submodule.span ℝ ({v, w} : Set V3) : Set V3))
+          · exact hbP3)
+        hdisj hint'
+      rw [Function.iterate_succ_apply', ← hzwdef]
+      exact hstep.2.1
+
+/-- **VPLANE（Circular 槽形包装）**：HOL `LOFA_IN_E_IMP_IN_FF`
+（local_lemmas.hl:1887）的 p35 ι-伙伴等价物——`Circular V E` 的交叉边
+`{a,b} ∈ E` 经 `lfVertKit` 的 EE 两元形折成面 dart（`b = ρ a` 直接、
+`b = ι a` 时 `(ι a, a) ∈ FF`），再落 `VPLANE_OF_DART_CROSS_p35`。 -/
+theorem VPLANE_OF_CIRCULAR_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)}
+    (hconv : ConvexLocalFan V E FF) (hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2)
+    (hcirc : Circular V E) :
+    ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧ V ⊆ P := by
+  obtain ⟨a, b, u, hE, hu, hcross⟩ := hcirc
+  have hVE : (⋃₀ E) ⊆ V := hconv.1.1.1
+  have haV : a ∈ V := hVE (Set.mem_sUnion_of_mem (Set.mem_insert _ _) hE)
+  have hkit := lfVertKit_p35 hconv.1 hEE2 haV
+  have hbEE : b ∈ EE_p3 a E := hE
+  rw [hkit.2.2.2.2.1] at hbEE
+  rcases Set.mem_insert_iff.mp hbEE with hb | hb
+  · refine VPLANE_OF_DART_CROSS_p35 hconv hEE2 ?_ hu hcross
+    rw [hb]; exact hkit.1
+  · have hswap : (({a, b} : Set V3)) = ({b, a} : Set V3) := by
+      ext q
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hswap] at hcross
+    refine VPLANE_OF_DART_CROSS_p35 hconv hEE2 ?_ hu hcross
+    rw [hb]; exact hkit.2.1
+
+
+/-! ## EJRCFJD chain W4-root — the root body replacement skeleton
+(lane `ejrcfjd-w4root-w1`, 2026-10-28)
+W4 收口替换点 (4)（w4prep 回报清单的第四条）：根定理 `EJRCFJD_p35`（:6004，
+sorry 位 :6014）的**体替换骨架**。本波交付三层，根 sorry 本体不动：
+1. **HS/HS′ 桥面**（真证）——切片扇 `HS`（增广载体
+   `IsHypE_p35 V (E ∪ {{v,w}}) HS`）与切片载体 hypermap `HS′`
+   （`IsHypE_p35 (vPrime V fv) (ePrime E' fv) HS′`，`fv = HS.face d`）的
+   载体桥：
+   - `w4rSliceHypermap_p35` — HS′ **构造**（HAFL_HALF_CIRCLE_SLICED 块头
+     注记名的「bridge wave, EJRCFJD_p35 scope」残差在此闭合）：经
+     `HS_EXISTS_p35` 三输入——局部 dart 有限性（局部载体 dart ⊆ 全局
+     dart：`self_pairs` 支被切片两元邻域计数 `w4pEE2OfSlice_p35` 杀灭）、
+     `⋃₀ (ePrime E' fv) ⊆ vPrime V fv`（ePrime 的边两端都是面端点；远端
+     顶点由 `faceCycleParam` 的 ff-步供出）、逐点两元
+     （`w4pEE2OfSlice_p35`）。
+   - `w4rSliceDartMem_p35` — dart 桥：面 dart 嵌入局部载体
+     （`param_dart_slice_p35` 消费形）。
+   - `w4rFaceRoundTrip_p35` — face 往返：`HS.face d = HS'.face d`
+     （`LOCALIZE_PRESERVE_FACE_p35` + 基 dart 桥）。
+   - `w4rAugPairComm_p35` — 对角边两个 dart 序的集合一致面
+     （`{w,v} = {v,w}`）：根结论第二支 `E ∪ {{w,v}}` 与第一支
+     `E ∪ {{v,w}}` 的拼合桥（EE 一致性面的载体级形态；面级 EE 一致已由
+     `sliceEE_char_p35` 在栈）。
+2. **双例化 + 拼合**（真证装配）——`EJRCFJD_W4_ROOT_p35`：根签名逐字
+   + HS 见证 + HAFL 链接口（W4a/W4b 波产出形态逐字：`hstep`/`hvisit`
+   双面）+ 两槽显式假设化 × 双面（kchmam6 的 `hkch`——`W4RootKchSlot_p35`
+   逐字槽形；monotrig2 的 `hnowrap` 内嵌于 `w4pWindowData_p35` 窗口束
+   `hdUU/hdWU/hdUW/hdWW`；切片供给 `hsplit`——`W4RootSplitSlot_p35` 逐字
+   槽形）⟹ 根结论面逐字（`∃ HS, IsHypE ∧ ConvexLocalFan ∧ ConvexLocalFan`）。
+   证明 = `FACE_CYCLE_PARAM_p35` 双面产 param → 桥面构造 HS′ 双面 →
+   `HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35` 双面产 `localFan_p3`（替换点
+   (3) 的 HAFL 链输出形态）→ `EJRCFJD_W4_SKELETON_p35` 双例化 → 结论面
+   拼合（w 面经 `w4rAugPairComm_p35` 换序桥）。
+3. **根体 splice 分步说明**——本体不做（等两槽真输入到位），步骤入
+   DELIVERY（车道回报）。
+槽位诚实账：`hkchU/hkchW`（kchmam6）、四窗口束末合取支 `hnowrap`
+（monotrig2）、`hsplitU/hsplitW` 的对角支几何（W3a sector-placement 的
+根级供给）、`hgraph/hfanAug`（PROVE_SLICING_FAN 的 hfan7new 面）、
+`HS/hdV/hdW/hfinG`（忠实全扇超图见证 + 基 dart + 有限性）均为显式假设
+——形态与既有栈件/两在飞波产出逐字对齐；骨架本体的每一步推理零 sorry。
+-/
+
+/-- 对角增广边集的两个 dart 序一致（pair comm）：根结论两支的换序桥。 -/
+private theorem w4rAugPairComm_p35 {E : Set (Set V3)} {v w : V3} :
+    (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+  rw [Set.pair_comm w v]
+
+/-- **KCHMAMG 槽形（kchmam6 消费面）**——`EJRCFJD_W4_SKELETON_p35` 的
+`hkch` 槽逐字形，双例化时按面实例化（`E'` 取该面的 dart 序）。 -/
+private def W4RootKchSlot_p35 (V : Set V3) (E' : Set (Set V3))
+    (fv : Set (V3 × V3)) : Prop :=
+  (∀ v ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv v = Real.pi) ∧
+  ∃ A : Set V3,
+    (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+        A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+    (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+    ∃ e : V3,
+      (∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) ∧
+      cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e ∧
+      ∀ v ∈ vPrime_p3 V fv,
+        azimCycle_p3 (vPrime_p3 V fv) (0:V3) e v = rhoNode1 fv v ∧
+          azim 0 e v (rhoNode1 fv v) =
+            dihV (0:V3) e v (rhoNode1 fv v) ∧
+          azim 0 e v (rhoNode1 fv v) =
+            arcV 0 v (rhoNode1 fv v) ∧
+          azim 0 e v (rhoNode1 fv v) < Real.pi
+
+/-- **切片供给槽形（W3a sector-placement 消费面）**——
+`EJRCFJD_W4_SKELETON_p35` 的 `hsplit` 槽逐字形。 -/
+private def W4RootSplitSlot_p35 (V : Set V3) (E : Set (Set V3))
+    (E' : Set (Set V3)) (FF : Set (V3 × V3)) (fv : Set (V3 × V3))
+    (dU dW : V3 × V3) : Prop :=
+  ∀ p ∈ fv, p = dU ∨ p = dW ∨
+    ∃ c : V3, c ≠ p.2 ∧ p ∈ FF ∧
+      EE_p3 p.1 E = ({p.2, c} : Set V3) ∧
+      EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3)
+
+/-- **HS/HS′ 桥面（构造半）**——切片载体 hypermap `HS′` 的构造：
+`IsHypE_p35 V E' HS` + 面 param + 全局 dart 有限性 ⟹ 存在
+`IsHypE_p35 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)) HS′`。
+（`HAFL_HALF_CIRCLE_SLICED_p35`/`HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35`
+接口里悬置的 `HS'`/`hHS'` 输入在此供出。） -/
+private theorem w4rSliceHypermap_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hVE : ⋃₀ E' ⊆ V) (hparam : faceCycleParam_p35 V E' (HS.face d))
+    (hfinG : (dartsOfHyp_p3 E' V).Finite) :
+    ∃ HS' : Hypermap (V3 × V3),
+      IsHypE_p35 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)) HS' := by
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  have hfvfin : (HS.face d).Finite := fvFinite_p35 (V := V) (E := E') HS d
+  have hEE2 := w4pEE2OfSlice_p35 hsub hparam hfvfin
+  refine HS_EXISTS_p35 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)) ?_ ?_ hEE2
+  · -- 局部载体 dart 有限：⊆ 全局 dart 集（self_pairs 支被两元计数杀灭）
+    have hEP : ePrime_p3 E' (HS.face d) ⊆ E' := by
+      intro e he
+      simp only [ePrime_p3, Set.mem_setOf_eq] at he
+      obtain ⟨a, b, rfl, hE, -⟩ := he
+      exact hE
+    have hsubL : dartsOfHyp_p3 (ePrime_p3 E' (HS.face d)) (vPrime_p3 V (HS.face d))
+        ⊆ dartsOfHyp_p3 E' V := by
+      rintro ⟨a, b⟩ hdL
+      rcases hdL with hord | hself
+      · refine Set.mem_union_left _ ?_
+        show ({a, b} : Set V3) ∈ E'
+        simp only [ordPairs_p3, Set.mem_setOf_eq] at hord
+        exact hEP hord
+      · exfalso
+        simp only [selfPairs_p3, Set.mem_setOf_eq] at hself
+        obtain ⟨-, hamem, hEE⟩ := hself
+        have h2 := hEE2 _ hamem
+        rw [hEE] at h2
+        simp at h2
+    exact hfinG.subset hsubL
+  · -- ePrime 的边两端都是面端点（远端由 param 的 ff-步供出）
+    intro z hz
+    obtain ⟨e, he, hze⟩ := hz
+    simp only [ePrime_p3, Set.mem_setOf_eq] at he
+    obtain ⟨a, b, rfl, hEe, hfv⟩ := he
+    have hab : a ∈ V ∧ b ∈ V := by
+      constructor
+      · exact hVE (Set.mem_sUnion_of_mem
+          (Set.mem_insert_iff.mpr (Or.inl rfl)) hEe)
+      · exact hVE (Set.mem_sUnion_of_mem
+          (Set.mem_insert_of_mem a (Set.mem_singleton_iff.mpr rfl)) hEe)
+    rcases Set.mem_insert_iff.mp hze with hza | hzb
+    · rw [hza]
+      exact ⟨hab.1, ⟨b, hfv⟩⟩
+    · rw [hzb]
+      obtain ⟨c, -, hbc⟩ := hparam.2.2.2 (a, b) hfv
+      exact ⟨hab.2, ⟨c, hbc⟩⟩
+
+/-- **HS/HS′ 桥面（dart 半）**——面 dart 嵌入局部载体（基 dart 与任意
+面 dart 的统一消费形）。 -/
+private theorem w4rSliceDartMem_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} (hparam : faceCycleParam_p35 V E' fv) {p : V3 × V3}
+    (hp : p ∈ fv) : p ∈ dartsOfHyp_p3 (ePrime_p3 E' fv) (vPrime_p3 V fv) :=
+  param_dart_slice_p35 hparam hp
+
+/-- **HS/HS′ 桥面（face 半）**——face 往返：任何满足桥构造的 `HS′` 与
+原载体在同一基 dart 的面相等（`LOCALIZE_PRESERVE_FACE_p35` + 基 dart 桥）。 -/
+private theorem w4rFaceRoundTrip_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hVE : ⋃₀ E' ⊆ V) (hparam : faceCycleParam_p35 V E' (HS.face d))
+    (hfinG : (dartsOfHyp_p3 E' V).Finite) :
+    ∀ HS' : Hypermap (V3 × V3),
+      IsHypE_p35 (vPrime_p3 V (HS.face d)) (ePrime_p3 E' (HS.face d)) HS' →
+      HS.face d = HS'.face d := by
+  intro HS' hHS'
+  have hself : d ∈ HS.face d := ⟨0, rfl⟩
+  exact LOCALIZE_PRESERVE_FACE_p35 HS hHS hd hparam HS' hHS'
+    (param_dart_slice_p35 hparam hself)
+
+/-- **EJRCFJD 根体替换骨架（双例化 + 拼合）**——根签名逐字 + HS 见证 +
+HAFL 链接口（W4a/W4b 产出形态逐字）+ 两槽显式假设化 × 双面 ⟹ 根结论面
+逐字。终装波 splice 后根 sorry 退场（结论面与根陈述逐字同形，
+`exact EJRCFJD_W4_ROOT_p35 ...` 一键替换）。 -/
+private theorem EJRCFJD_W4_ROOT_p35 (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfinG : (dartsOfHyp_p3 (E ∪ {{v, w}}) V).Finite)
+    (hgraph : Kepler.Text.Fan.Graph (E ∪ {{v, w}}))
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)))
+    (hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)))
+    (hkchU : W4RootKchSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
+    (hkchW : W4RootKchSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
+    {dU dW dU' dW' : V3 × V3}
+    (hdUU : dU ∈ HS.face (v, rhoNode1 FF v) ∧
+      w4pWindowData_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dU)
+    (hdWU : dW ∈ HS.face (v, rhoNode1 FF v) ∧
+      w4pWindowData_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dW)
+    (hdUW : dU' ∈ HS.face (w, rhoNode1 FF w) ∧
+      w4pWindowData_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dU')
+    (hdWW : dW' ∈ HS.face (w, rhoNode1 FF w) ∧
+      w4pWindowData_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dW')
+    (hsplitU : W4RootSplitSlot_p35 V E (E ∪ {{v, w}}) FF
+      (HS.face (v, rhoNode1 FF v)) dU dW)
+    (hsplitW : W4RootSplitSlot_p35 V E (E ∪ {{w, v}}) FF
+      (HS.face (w, rhoNode1 FF w)) dU' dW') :
+    ∃ HSx : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HSx ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HSx.face (v, rhoNode1 FF v)))
+        (HSx.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HSx.face (w, rhoNode1 FF w)))
+        (HSx.face (w, rhoNode1 FF w)) := by
+  have hVE : ⋃₀ (E ∪ {{v, w}}) ⊆ V := hfanAug.1
+  have hAugW : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+    rw [Set.pair_comm w v]
+  have hHSw : IsHypE_p35 V (E ∪ {{w, v}}) HS := by rw [hAugW]; exact hHS
+  have hgraphW : Kepler.Text.Fan.Graph (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hgraph
+  have hfanAugW : Kepler.Text.Fan.FAN 0 V (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hfanAug
+  have hfinGW : (dartsOfHyp_p3 (E ∪ {{w, v}}) V).Finite := by
+    rw [hAugW]; exact hfinG
+  have hVEW : ⋃₀ (E ∪ {{w, v}}) ⊆ V := by rw [hAugW]; exact hVE
+  have hdWw : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact hdW
+  -- U 半扇：param → 桥面构造 HS′ → HAFL 链输出
+  have hsubU : HS.face (v, rhoNode1 FF v) ⊆ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+    fvSubsetDarts_p35 HS hHS hdV
+  have hparamU : faceCycleParam_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) :=
+    FACE_CYCLE_PARAM_p35 hgraph HS hHS hdV hstepU hvisitU
+  obtain ⟨HS'U, hHS'U⟩ := w4rSliceHypermap_p35 HS hHS hdV hVE hparamU hfinG
+  have hselfU : (v, rhoNode1 FF v) ∈ HS.face (v, rhoNode1 FF v) := ⟨0, rfl⟩
+  have hlfU := HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraph HS hHS hfanAug hdV
+    hstepU hvisitU HS'U hHS'U (param_dart_slice_p35 hparamU hselfU)
+  -- W 半扇：换序桥过同一条链（w 形边集）
+  have hsubW : HS.face (w, rhoNode1 FF w) ⊆ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact fvSubsetDarts_p35 HS hHS hdW
+  have hparamW : faceCycleParam_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) :=
+    FACE_CYCLE_PARAM_p35 hgraphW HS hHSw hdWw hstepW hvisitW
+  obtain ⟨HS'W, hHS'W⟩ := w4rSliceHypermap_p35 HS hHSw hdWw hVEW hparamW hfinGW
+  have hselfW : (w, rhoNode1 FF w) ∈ HS.face (w, rhoNode1 FF w) := ⟨0, rfl⟩
+  have hlfW := HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraphW HS hHSw hfanAugW hdWw
+    hstepW hvisitW HS'W hHS'W (param_dart_slice_p35 hparamW hselfW)
+  -- 拼合：同一 HS 见证下的双例化
+  refine ⟨HS, hHS, ?_, ?_⟩
+  · exact EJRCFJD_W4_SKELETON_p35 hlfU hsubU hparamU
+      (fvFinite_p35 (V := V) (E := E ∪ {{v, w}}) HS (v, rhoNode1 FF v))
+      hkchU hfan hdUU hdWU hsplitU
+  · exact EJRCFJD_W4_SKELETON_p35 hlfW hsubW hparamW
+      (fvFinite_p35 (V := V) (E := E ∪ {{w, v}}) HS (w, rhoNode1 FF w))
+      hkchW hfan hdUW hdWW hsplitW
+
+
+/-! ## monotrig2 会师件 s0-镜像波（lane `ejrcfjd-s0mirror-w1`，2026-10-28；
+合并基 = stack31t）
+
+目标原案：去掉 `HNOWRAP_OF_KCHMAMG_p35` 的取向前提 `hsgn`，交付无 hsgn 同陈述版
+`HNOWRAP_OF_KCHMAMG_ALL_p35`。**数学裁决（诚实口径）：该冻结陈述为假**——s0 < 0
+支不是同一链的可闭镜像，而是真反例面。反例（5 顶点凸扇，全部冻结前件满足、
+结论翻转失败）：e = ẑ 轴，A = xy 平面，p.1 = (1,0,0)、p.2 = (0,−1,0)
+（s0 = (ẑ×x̂)⬝p.2 = −1 < 0），v1 = (cos 60°, sin 60°, 0)、
+v2 = (cos 170°, sin 170°, 0)、v3 = (cos 200°, sin 200°, 0)，fan 环向 =
+e-取向 CCW-最小方位环 p.1 → v1 → v2 → v3 → p.2 → p.1（`hq` 全合取逐点满足，
+p.2 ∈ vPrime 亦真），轨道 ρ 0 = p.1, ρ 1 = v1, ρ 2 = v2, ρ 3 = v3，k = 4。
+在 i = 2 处：azim 0 p.1 p.2 (ρ 2) = π（v2 投影落 +ŷ 半平面）且
+azim 0 p.1 p.2 (ρ 3) = 0（v3 投影落 −ŷ 半平面），nowrap 结论失败。根因：
+`hq` 的 ε-最小环向锁死 e-取向——镜像 e ↦ −e 会把方位翻成
+azim 0 (−e) v w = 2π − azim 0 e v w（非退化），`azimCycle_p3 V0 0 (−e)` 变
+逆环向（取 ε-最大而非 ε-最小），`hq` 的「azimCycle = rhoNode1」与末合取支
+「< π」双双破坏，路线 (a) 的镜像翻译无输入面可套；路线 (b) 的扫掠链在
+s0 < 0 支对 q := p.1 的 ε-下界只给出 α_y ≤ 2π（无矛盾），而 q := p.2 支即便
+补 `p.2 ∈ vPrime` 也无矛盾（反例中 p.2 ∈ vPrime 且全体 ε-下界一致满足）。
+
+故本波按预算条款交付已闭子件 + 诚实剩余，**不定义 ALL 名**（防 sorry 伪闭）：
+
+- `monoSinZero_p35`：[0, 2π) 内 sin-零 ⟹ 方位 0 或 π（闭）。
+- `kchS0NeZero_p35`：s0 = 0 排除件（闭）。**e ≠ 0 可得性核实**：`hcy` 经
+  `kchCyclicDotSelfPos_p35` 给 e ⬝ e > 0 ⟹ e ≠ 0（与 `HNOWRAP_OF_KCHMAMG_p35`
+  体内 `hEpos`/`hEnz` 同源）；真正缺的面是 `e ⬝ p.2 = 0`（p.2 落平面 A）：
+  `hplane` 只给 `vPrime_p3 V fv ⊆ A`，而冻结前件面不含 `p.2 ∈ vPrime`
+  （`hrV` 只覆盖 j < k，无 ρ k = p.2 面）——见 `kchS0NeZeroOfPlane_p35` 的
+  显式补前提。
+- `kchS0NeZeroOfPlane_p35`：s0-排除件对冻结 hplane/hcy 面的消费级重述
+  （显式补 `p.2 ∈ vPrime`；闭）。
+- `monoHalfNeg_p35`：`monoHalfPos_p35` 的镜像门（s0 < 0：t > 0 ⟹ 方位 > π、
+  t < 0 ⟹ 方位 < π；闭）——若后续波把取向选择换面重排（如 KCHMAMG 产出面
+  补逆环向/双轴版 hq、或窗口束改带 azim 0 e p.1 p.2 ∈ (0, π) 取向面），此门
+  与 `kchS0NeZeroOfPlane_p35` 是直接复用块。 -/
+
+/-- sin-零半圆归位：0 ≤ α < 2π 且 sin α = 0 ⟹ α = 0 或 α = π。 -/
+private theorem monoSinZero_p35 {α : ℝ} (ha0 : 0 ≤ α) (hlt : α < 2 * Real.pi)
+    (hs : Real.sin α = 0) : α = 0 ∨ α = Real.pi := by
+  rcases lt_or_ge α Real.pi with h | h
+  · left
+    rcases lt_or_ge 0 α with h0 | h0
+    · exact absurd hs (ne_of_gt (Real.sin_pos_of_pos_of_lt_pi h0 h))
+    · exact le_antisymm h0 ha0
+  · right
+    rcases lt_or_eq_of_le h with hπ | hEq
+    · exfalso
+      have hb' : 0 < 2 * Real.pi - α ∧ 2 * Real.pi - α < Real.pi :=
+        ⟨by linarith, by linarith⟩
+      have hp := Real.sin_pos_of_pos_of_lt_pi hb'.1 hb'.2
+      have hsin' : Real.sin (2 * Real.pi - α) = -Real.sin α := by
+        rw [Real.sin_sub, Real.sin_two_pi, Real.cos_two_pi]; ring
+      rw [hs, neg_zero] at hsin'
+      linarith
+    · exact hEq.symm
+
+/-- **s0 = 0 排除件（public）**：e ⊥ p.1、e ⊥ p.2、e ⬝ e ≠ 0、三点非退化
+⟹ (e × p.1) ⬝ p.2 ≠ 0。链：`JBDNJJB` 把三重积翻成 sin(azim 0 e p.1 p.2)，
+`monoSinZero_p35` 归位到方位 ∈ {0, π}；两支分别经 `azim_eq_zero_iff_alt` +
+`affGt_pair_iff` 与 `pmRenderPi_p35` 渲染成 p.2 = c•p.1 + hh•e（或
+s•e + t•p.1）形，点积消去后 p.2 ∥ p.1，与 `hb` 矛盾。 -/
+theorem kchS0NeZero_p35 {e p1 p2 : V3}
+    (hE : ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) ≠ 0)
+    (hp1e : ((p1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0)
+    (hp2e : ((p2 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0)
+    (hp10 : p1 ≠ 0) (hp20 : p2 ≠ 0) (hb : ¬ Collinear3 0 p1 p2) :
+    (crossProduct (e : Fin 3 → ℝ) (p1 : Fin 3 → ℝ)) ⬝ᵥ (p2 : Fin 3 → ℝ) ≠ 0 := by
+  have hnc1 : ¬ Collinear3 0 e p1 := monoNotCollE_p35 (z := p1) hp10 hp1e hE
+  have hnc2 : ¬ Collinear3 0 e p2 := monoNotCollE_p35 (z := p2) hp20 hp2e hE
+  obtain ⟨T, hT, hsin⟩ := JBDNJJB (u := e) (v := p1) (w := p2) hnc1 hnc2
+  intro h0
+  have hsz : Real.sin (azim 0 e p1 p2) = 0 := by rw [hsin, h0, mul_zero]
+  have ha0 : 0 ≤ azim 0 e p1 p2 := azim_nonneg 0 e p1 p2
+  have hlt2 : azim 0 e p1 p2 < 2 * Real.pi := azim_lt_two_pi 0 e p1 p2
+  rcases monoSinZero_p35 ha0 hlt2 hsz with hz | hz
+  · -- 方位 0 支：p2 = c•p1 + hh•e，点积消去 hh 后 p2 ∥ p1
+    exfalso
+    have hmem : p2 ∈ affGt ({(0:V3), e} : Set V3) {p1} :=
+      (azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := e) (w := p1) (x := p2)
+        hnc1 hnc2).mp hz
+    have h0ne : (0:V3) ≠ e := by
+      intro hEq0
+      rw [← hEq0] at hE
+      exact hE (by rw [kchCoeZero_p35]; simp)
+    have hp1ne : p1 ≠ e := by
+      intro hEq1
+      rw [hEq1] at hp1e
+      exact hE hp1e
+    obtain ⟨c, hc, hh, hp2eq⟩ := (affGt_pair_iff (v0 := (0:V3)) (v1 := e)
+      (x := p1) (y := p2) h0ne hp10 hp1ne).mp hmem
+    have hexp : ((p2 - 0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)
+        = c * (((p1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ))
+          + hh * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) := by
+      rw [hp2eq, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35, add_dotProduct,
+        smul_dotProduct, smul_eq_mul, smul_dotProduct, smul_eq_mul,
+        kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+        sub_zero]
+    have htot : c * (((p1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ))
+        + hh * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) = 0 := by
+      rw [← hexp, kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+      exact hp2e
+    rw [hp1e, mul_zero, zero_add] at htot
+    have hh0 : hh = 0 := (mul_eq_zero.mp htot).resolve_right hE
+    rw [hh0, zero_smul, add_zero] at hp2eq
+    exact hb ((collinear3_iff_smul (v := (0:V3)) (w := p1) (w1 := p2) hp10).mpr
+      ⟨c, hp2eq⟩)
+  · -- 方位 π 支：p2 = s•e + t•p1，点积消去 s 后 p2 ∥ p1
+    exfalso
+    have he0 : e ≠ 0 := by
+      intro hEqE
+      rw [hEqE] at hE
+      exact hE (by rw [kchCoeZero_p35]; simp)
+    obtain ⟨s, t, hp2eq⟩ := pmRenderPi_p35 (a := e) (b := p1) (x := p2)
+      he0 hp10 hnc1 hz
+    have hexp : ((p2 - 0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)
+        = s * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ))
+          + t * (((p1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) := by
+      rw [hp2eq, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35, add_dotProduct,
+        smul_dotProduct, smul_eq_mul, smul_dotProduct, smul_eq_mul,
+        kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+        sub_zero]
+    have htot : s * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ))
+        + t * (((p1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) = 0 := by
+      rw [← hexp, kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+      exact hp2e
+    rw [hp1e, mul_zero, add_zero] at htot
+    have hs0 : s = 0 := (mul_eq_zero.mp htot).resolve_right hE
+    rw [hs0, zero_smul, zero_add] at hp2eq
+    exact hb ((collinear3_iff_smul (v := (0:V3)) (w := p1) (w1 := p2) hp10).mpr
+      ⟨t, hp2eq⟩)
+
+/-- **s0-排除件（hplane 消费级重述，public）**：冻结面 `hplane` 的逐点形式
+（vPrime 全落 e-正交面）+ `hcy`（e ≠ 0 经 `kchCyclicDotSelfPos_p35` 可得）
++ `p.1, p.2 ∈ vPrime` ⟹ s0 ≠ 0。显式补 `p.2 ∈ vPrime`：冻结前件面
+（`HNOWRAP_OF_KCHMAMG_p35` 的 `hrV` 只覆盖 j < k）不含此面，此缺口即本波
+诚实剩余之一。 -/
+theorem kchS0NeZeroOfPlane_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} {p : V3 × V3} {e : V3}
+    (hv0 : p.1 ≠ 0) (hb0 : p.2 ≠ 0) (hb : ¬ Collinear3 0 p.1 p.2)
+    (hv0V : p.1 ∈ vPrime_p3 V fv) (hp2V : p.2 ∈ vPrime_p3 V fv)
+    (hcy : cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e)
+    (heperp : ∀ x ∈ vPrime_p3 V fv,
+      ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) :
+    (crossProduct (e : Fin 3 → ℝ) (p.1 : Fin 3 → ℝ)) ⬝ᵥ (p.2 : Fin 3 → ℝ) ≠ 0 := by
+  have hEpos := kchCyclicDotSelfPos_p35 hcy
+  exact kchS0NeZero_p35 (ne_of_gt hEpos)
+    (by rw [dotProduct_comm]; exact heperp p.1 hv0V)
+    (by rw [dotProduct_comm]; exact heperp p.2 hp2V)
+    hv0 hb0 hb
+
+/-- 半圆符号链（s0 < 0 镜像支，`monoHalfPos_p35` 的镜像门）：渲染点
+z = s•v0 + t•b 的 b-系数符号翻译成轴 e 方位角的**反向**半圆归属：
+t > 0 ⟹ azim 0 e v0 z > π、t < 0 ⟹ azim 0 e v0 z < π。 -/
+private theorem monoHalfNeg_p35 {e v0 b z : V3}
+    (hev0 : ¬ Collinear3 0 e v0) (hez : ¬ Collinear3 0 e z)
+    (hs0 : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ) < 0) :
+    (∀ s t : ℝ, z - 0 = s • (v0 - 0) + t • (b - 0) →
+      0 < t → Real.pi < azim 0 e v0 z) ∧
+    (∀ s t : ℝ, z - 0 = s • (v0 - 0) + t • (b - 0) →
+      t < 0 → azim 0 e v0 z < Real.pi) := by
+  constructor
+  · intro s t hvec ht
+    obtain ⟨T, hT, hsin⟩ := JBDNJJB (u := e) (v := v0) (w := z) hev0 hez
+    have hcoe : ((z - 0 : V3) : Fin 3 → ℝ)
+        = s • ((v0 : V3) : Fin 3 → ℝ) + t • ((b : V3) : Fin 3 → ℝ) := by
+      rw [hvec, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35]
+      rw [kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+        sub_zero]
+    have hzc : ((z : V3) : Fin 3 → ℝ)
+        = s • ((v0 : V3) : Fin 3 → ℝ) + t • ((b : V3) : Fin 3 → ℝ) := by
+      rw [← hcoe, kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+    have hdcs : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+        (v0 : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]
+      exact dot_cross_self e v0
+    have hdot : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+        ((z : V3) : Fin 3 → ℝ)
+        = t * ((crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)) := by
+      rw [hzc, dotProduct_add, dotProduct_smul, dotProduct_smul, hdcs]
+      ring
+    have ha0 : 0 ≤ azim 0 e v0 z := azim_nonneg 0 e v0 z
+    have hsneg : Real.sin (azim 0 e v0 z) < 0 := by
+      rw [hsin, hdot]
+      have h2 : (t:ℝ) * ((crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+          (b : Fin 3 → ℝ)) < 0 := by nlinarith
+      nlinarith
+    exact monoSinHalfNeg_p35 ha0 hsneg
+  · intro s t hvec ht
+    obtain ⟨T, hT, hsin⟩ := JBDNJJB (u := e) (v := v0) (w := z) hev0 hez
+    have hcoe : ((z - 0 : V3) : Fin 3 → ℝ)
+        = s • ((v0 : V3) : Fin 3 → ℝ) + t • ((b : V3) : Fin 3 → ℝ) := by
+      rw [hvec, kchCoeAdd_p35, kchCoeSmul_p35, kchCoeSmul_p35]
+      rw [kchCoeSub_p35, kchCoeZero_p35, sub_zero, kchCoeSub_p35, kchCoeZero_p35,
+        sub_zero]
+    have hzc : ((z : V3) : Fin 3 → ℝ)
+        = s • ((v0 : V3) : Fin 3 → ℝ) + t • ((b : V3) : Fin 3 → ℝ) := by
+      rw [← hcoe, kchCoeSub_p35, kchCoeZero_p35, sub_zero]
+    have hdcs : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+        (v0 : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]
+      exact dot_cross_self e v0
+    have hdot : (crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+        ((z : V3) : Fin 3 → ℝ)
+        = t * ((crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ (b : Fin 3 → ℝ)) := by
+      rw [hzc, dotProduct_add, dotProduct_smul, dotProduct_smul, hdcs]
+      ring
+    have ha0 : 0 ≤ azim 0 e v0 z := azim_nonneg 0 e v0 z
+    have hlt2 : azim 0 e v0 z < 2 * Real.pi := azim_lt_two_pi 0 e v0 z
+    have hspos : 0 < Real.sin (azim 0 e v0 z) := by
+      rw [hsin, hdot]
+      have h2 : (t:ℝ) * ((crossProduct (e : Fin 3 → ℝ) (v0 : Fin 3 → ℝ)) ⬝ᵥ
+          (b : Fin 3 → ℝ)) > 0 := by nlinarith
+      exact mul_pos hT h2
+    exact monoSinHalf_p35 ha0 hlt2 hspos
+
+
+
+/-! ## EJRCFJD chain W4-splice — the `hsgn`-threaded assembly of the W4 root
+skeleton (lane `ejrcfjd-w4splice-w1`, 2026-10-28)
+
+把 `EJRCFJD_W4_ROOT_p35` 的 20 个槽位按 banked 真件收线：本波装配对根骨架做
+三类真实收口，其余槽位诚实承入（逐槽定尺见 DELIVERY）：
+
+1. **机械槽回收**：`hfinG`（dart 有限性）与 `hgraph`（Graph）不再是前提——
+   `Kepler.Text.Fan.FAN` 的 `fan1 = V.Finite ∧ V ≠ ∅` 分量（`hfanAug.2.2.1.1`）
+   经 `dartsOfHyp_finite_p35` 供出 `hfinG`，`hfanAug.2.1` 直出 `hgraph`。
+2. **hsgn 穿线（monotrig2 会师）**：四个窗口槽从「整束 `w4pWindowData_p35`」
+   弱化为「束去末合取支 + 轨道供给 `hrV`/`hstep`」，末合取支 `hnowrap` 在
+   `w4AsmWindowPack_p35` 内由 `HNOWRAP_OF_KCHMAMG_p35` 真实重建——这是该
+   monotrig2 主件的**首个消费者**；`hsgn : 0 < (e × p.1) ⬝ p.2` 以轴 `e` 显式
+   参数化（`eU`/`eW`），每只对角 dart 一支（`hsgnUU/hsgnWU/hsgnUW/hsgnWW`）。
+   并行 s0mirror 车道交付无 hsgn 的 `HNOWRAP_OF_KCHMAMG_ALL_p35` 后，替换 =
+   `w4AsmWindowPack_p35` 内 `HNOWRAP_OF_KCHMAMG_p35 … hsgn` 一行改为
+   `HNOWRAP_OF_KCHMAMG_ALL_p35 …` 并删四处 `hsgn**` 前提，其余零改动。
+3. **kch 槽去 ∃e**：`W4AsmKchSlot_p35` = `W4RootKchSlot_p35` 逐字去 `∃e`
+   （轴以 `eU`/`eW` 显式承入，供 hsgn 定型）；`w4AsmKchPack_p35` 重打包喂
+   根骨架。kch 面的 banked 供出链（`KCHMAMG_thm_p35` + `w4pHintOfOZSlice_p35`
+   /`VPLANE_OF_CIRCULAR_p35`）在切片扇处需要切片 ConvexLocalFan（=骨架结论
+   本身）或 OZ 见证束，鸡生蛋缺口照实承入，不伪闭。
+
+根 `EJRCFJD_p35` 本体不动：装配前提面 = 根 9 参 + 上述残余槽位，根级闭合
+仍等 (a) 增广载体 3 元 HS 见证、(b) hstep/hvisit 抽象级供出（W5 件均为
+scs 世界）、(c) hsub 的 hcol/hfan7new 几何（PROVE_THE_SLICE_ASSUMPTION）、
+(d) 窗口束/hOZ/hsplit 的根级供出——每项定尺入 DELIVERY。 -/
+
+/-- **kch 槽（去 ∃e 形）**：`W4RootKchSlot_p35 V E' fv` 逐字，轴 `e` 显式。 -/
+private def W4AsmKchSlot_p35 (V : Set V3) (E' : Set (Set V3))
+    (fv : Set (V3 × V3)) (e : V3) : Prop :=
+  (∀ z ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv z = Real.pi) ∧
+  ∃ A : Set V3,
+    (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+        A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+    (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+    (∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) ∧
+    cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e ∧
+    ∀ z ∈ vPrime_p3 V fv,
+      azimCycle_p3 (vPrime_p3 V fv) (0:V3) e z = rhoNode1 fv z ∧
+        azim 0 e z (rhoNode1 fv z) = dihV (0:V3) e z (rhoNode1 fv z) ∧
+        azim 0 e z (rhoNode1 fv z) = arcV 0 z (rhoNode1 fv z) ∧
+        azim 0 e z (rhoNode1 fv z) < Real.pi
+
+/-- **窗口槽（束去 hnowrap + 轨道供给）**：`w4pWindowData_p35` 的逐字展开
+去掉末合取支，另加 `hrV`（窗口落切片载体）与 `hstep`（窗口步 dart 落面）
+——`HNOWRAP_OF_KCHMAMG_p35` 的两根切片轨道供给。 -/
+private def W4AsmWindowSlot_p35 (V : Set V3) (E' : Set (Set V3))
+    (fv : Set (V3 × V3)) (p : V3 × V3) : Prop :=
+  ∃ c : V3, ∃ k : ℕ, ∃ ρ : ℕ → V3,
+    EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3) ∧ p.2 ≠ c ∧ 2 ≤ k ∧
+    ρ 0 = p.1 ∧ ρ (k - 1) = c ∧
+    (∀ z ∈ vPrime_p3 V fv, ∃ j, j < k ∧ ρ j = z) ∧
+    p.1 ≠ 0 ∧ ¬ Collinear3 0 p.1 p.2 ∧
+    (∀ i, 0 < i → i < k → ¬ Collinear3 0 p.1 (ρ i)) ∧
+    (∀ i, 0 < i → i < k → ρ i ≠ 0) ∧
+    (∀ i, 0 < i → i < k → 0 ≤ azim 0 p.1 p.2 (ρ i) ∧
+      azim 0 p.1 p.2 (ρ i) ≤ Real.pi) ∧
+    (∀ i, i + 1 < k → ¬ Collinear3 0 (ρ i) (ρ (i + 1)) ∧
+      0 ≤ azim 0 (ρ i) (ρ (i + 1)) p.1 ∧
+      azim 0 (ρ i) (ρ (i + 1)) p.1 ≤ Real.pi) ∧
+    (∀ j, j < k → ρ j ∈ vPrime_p3 V fv) ∧
+    (∀ i, i + 1 < k → (ρ i, ρ (i + 1)) ∈ fv)
+
+/-- kch 槽重打包：`W4AsmKchSlot_p35 V E' fv e → W4RootKchSlot_p35 V E' fv`
+（同一轴 `e` 进 `∃e`）。 -/
+private theorem w4AsmKchPack_p35 {V : Set V3} {E' : Set (Set V3)} {fv : Set (V3 × V3)}
+    {e : V3} (h : W4AsmKchSlot_p35 V E' fv e) : W4RootKchSlot_p35 V E' fv := by
+  obtain ⟨h1, A, hpl, h0A, hsubA, hperp, hcy, hq⟩ := h
+  exact ⟨h1, A, hpl, h0A, hsubA, e, hperp, hcy, hq⟩
+
+/-- **窗口束重建（hsgn 穿线点）**：窗口槽 + 取向前提 `hsgn` + 面级供给
+（LA1 LocalFan 桥 + 两元计数 + kch 面 + 基 dart 载体）⟹ 整束
+`w4pWindowData_p35`。末合取支由 `HNOWRAP_OF_KCHMAMG_p35` 真实供出；
+换 `HNOWRAP_OF_KCHMAMG_ALL_p35` 时删 `hsgn` 参即可（一行替换形）。 -/
+private theorem w4AsmWindowPack_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} {p : V3 × V3} {e : V3}
+    (hw : W4AsmWindowSlot_p35 V E' fv p)
+    (hsgn : 0 < (crossProduct (e : Fin 3 → ℝ) (p.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (p.2 : Fin 3 → ℝ))
+    (hfanL : Kepler.Text.LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+    (hEE2 : ∀ u ∈ vPrime_p3 V fv, (EE_p3 u (ePrime_p3 E' fv)).ncard = 2)
+    (hpv : p.1 ∈ vPrime_p3 V fv)
+    (hplane : ∃ A : Set V3,
+      (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+          A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+        (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+        ∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0)
+    (hcy : cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e)
+    (hq : ∀ z ∈ vPrime_p3 V fv,
+      azimCycle_p3 (vPrime_p3 V fv) (0:V3) e z = rhoNode1 fv z ∧
+        azim 0 e z (rhoNode1 fv z) = dihV (0:V3) e z (rhoNode1 fv z) ∧
+        azim 0 e z (rhoNode1 fv z) = arcV 0 z (rhoNode1 fv z) ∧
+        azim 0 e z (rhoNode1 fv z) < Real.pi) :
+    w4pWindowData_p35 V E' fv p := by
+  obtain ⟨c, k, ρ, hpc, hcne, hk2, hr0, hlast, hvert, hv0, hb, hvx, hvx0, hbnds,
+    hdart, hrV, hstep⟩ := hw
+  have hb0 : p.2 ≠ 0 := by
+    intro hz
+    refine hb ?_
+    rw [hz]
+    show Collinear ℝ ({(0:V3), p.1, (0:V3)} : Set V3)
+    refine Collinear.subset ?_ (collinear_pair ℝ (0:V3) p.1)
+    intro q hq2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq2 ⊢
+    tauto
+  have hnowrap := HNOWRAP_OF_KCHMAMG_p35 (V := V) (E' := E') (fv := fv) (p := p)
+    (k := k) (ρ := ρ) (e := e) hr0 hv0 hb0 hb hvx hvx0 hfanL hEE2 hpv hrV hstep
+    hplane hcy hq hsgn
+  exact ⟨c, k, ρ, hpc, hcne, hk2, hr0, hlast, hvert, hv0, hb, hvx, hvx0, hbnds,
+    hdart, hnowrap⟩
+
+/-- **EJRCFJD W4 装配（hsgn 穿线形）**：根签名逐字 9 参 + 残余槽位
+（HS 见证簇 / 基 dart / 半圆 hstep·hvisit 双面 / kch 去 ∃e 双面 / 窗口束
+去 hnowrap ×4 + hsgn ×4 / hsplit 双面）⟹ 根结论面逐字。相对
+`EJRCFJD_W4_ROOT_p35` 的收口：`hfinG`/`hgraph` 由增广 FAN 分量真证回收，
+四支 `hnowrap` 由 `HNOWRAP_OF_KCHMAMG_p35`（经各自 `hsgn`）真证重建。
+一键替换形（根体 6014）：`exact EJRCFJD_W4_ASSEMBLY_p35 V E FF v w hfan hv
+hw hwv hsub HS hHS hfanAug hdV hdW hstepU hvisitU hstepW hvisitW eU eW hkchU
+hkchW hdUU hdWU hdUW hdWW hsgnUU hsgnWU hsgnUW hsgnWW hsplitU hsplitW`
+（四 dart 隐参由窗口槽面成员定位，合成失败则 `(dU := …)` 钉死）。 -/
+theorem EJRCFJD_W4_ASSEMBLY_p35 (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)))
+    (hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)))
+    (eU eW : V3)
+    (hkchU : W4AsmKchSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) eU)
+    (hkchW : W4AsmKchSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) eW)
+    {dU dW dU' dW' : V3 × V3}
+    (hdUU : dU ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dU)
+    (hdWU : dW ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dW)
+    (hdUW : dU' ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dU')
+    (hdWW : dW' ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dW')
+    (hsgnUU : 0 < (crossProduct (eU : Fin 3 → ℝ) (dU.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dU.2 : Fin 3 → ℝ))
+    (hsgnWU : 0 < (crossProduct (eU : Fin 3 → ℝ) (dW.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dW.2 : Fin 3 → ℝ))
+    (hsgnUW : 0 < (crossProduct (eW : Fin 3 → ℝ) (dU'.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dU'.2 : Fin 3 → ℝ))
+    (hsgnWW : 0 < (crossProduct (eW : Fin 3 → ℝ) (dW'.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dW'.2 : Fin 3 → ℝ))
+    (hsplitU : W4RootSplitSlot_p35 V E (E ∪ {{v, w}}) FF
+      (HS.face (v, rhoNode1 FF v)) dU dW)
+    (hsplitW : W4RootSplitSlot_p35 V E (E ∪ {{w, v}}) FF
+      (HS.face (w, rhoNode1 FF w)) dU' dW') :
+    ∃ HSx : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HSx ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HSx.face (v, rhoNode1 FF v)))
+        (HSx.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HSx.face (w, rhoNode1 FF w)))
+        (HSx.face (w, rhoNode1 FF w)) := by
+  -- 槽位回收：finite + graph 从增广 FAN 分量直出
+  have hVE : ⋃₀ (E ∪ {{v, w}}) ⊆ V := hfanAug.1
+  have hfinG : (dartsOfHyp_p3 (E ∪ {{v, w}}) V).Finite :=
+    dartsOfHyp_finite_p35 hVE hfanAug.2.2.1.1
+  have hgraph : Kepler.Text.Fan.Graph (E ∪ {{v, w}}) := hfanAug.2.1
+  -- 换序桥（w 面）
+  have hAugW : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+    rw [Set.pair_comm w v]
+  have hHSw : IsHypE_p35 V (E ∪ {{w, v}}) HS := by rw [hAugW]; exact hHS
+  have hgraphW : Kepler.Text.Fan.Graph (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hgraph
+  have hfanAugW : Kepler.Text.Fan.FAN 0 V (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hfanAug
+  have hVEW : ⋃₀ (E ∪ {{w, v}}) ⊆ V := by rw [hAugW]; exact hVE
+  have hfinGW : (dartsOfHyp_p3 (E ∪ {{w, v}}) V).Finite :=
+    dartsOfHyp_finite_p35 hVEW hfanAugW.2.2.1.1
+  have hdWw : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact hdW
+  -- U 半扇：param → HS′ 构造 → HAFL 链输出（ROOT 体同款）
+  have hsubU : HS.face (v, rhoNode1 FF v) ⊆ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+    fvSubsetDarts_p35 HS hHS hdV
+  have hparamU : faceCycleParam_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) :=
+    FACE_CYCLE_PARAM_p35 hgraph HS hHS hdV hstepU hvisitU
+  obtain ⟨HS'U, hHS'U⟩ := w4rSliceHypermap_p35 HS hHS hdV hVE hparamU hfinG
+  have hselfU : (v, rhoNode1 FF v) ∈ HS.face (v, rhoNode1 FF v) := ⟨0, rfl⟩
+  have hlfU := HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraph HS hHS hfanAug hdV
+    hstepU hvisitU HS'U hHS'U (param_dart_slice_p35 hparamU hselfU)
+  -- W 半扇：换序桥过同一条链
+  have hsubW : HS.face (w, rhoNode1 FF w) ⊆ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact fvSubsetDarts_p35 HS hHS hdW
+  have hparamW : faceCycleParam_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) :=
+    FACE_CYCLE_PARAM_p35 hgraphW HS hHSw hdWw hstepW hvisitW
+  obtain ⟨HS'W, hHS'W⟩ := w4rSliceHypermap_p35 HS hHSw hdWw hVEW hparamW hfinGW
+  have hselfW : (w, rhoNode1 FF w) ∈ HS.face (w, rhoNode1 FF w) := ⟨0, rfl⟩
+  have hlfW := HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraphW HS hHSw hfanAugW hdWw
+    hstepW hvisitW HS'W hHS'W (param_dart_slice_p35 hparamW hselfW)
+  -- 面级供给：LA1 LocalFan 桥 + 切片两元计数
+  have hfanLU : Kepler.Text.LocalFan (vPrime_p3 V (HS.face (v, rhoNode1 FF v)))
+      (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
+      (HS.face (v, rhoNode1 FF v)) :=
+    localFanLA1ofP3Slice_p35 hlfU hparamU.1
+  have hEE2U : ∀ u ∈ vPrime_p3 V (HS.face (v, rhoNode1 FF v)),
+      (EE_p3 u (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))).ncard
+        = 2 :=
+    w4pEE2OfSlice_p35 hsubU hparamU
+      (fvFinite_p35 (V := V) (E := E ∪ {{v, w}}) HS (v, rhoNode1 FF v))
+  have hfanLW : Kepler.Text.LocalFan (vPrime_p3 V (HS.face (w, rhoNode1 FF w)))
+      (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
+      (HS.face (w, rhoNode1 FF w)) :=
+    localFanLA1ofP3Slice_p35 hlfW hparamW.1
+  have hEE2W : ∀ u ∈ vPrime_p3 V (HS.face (w, rhoNode1 FF w)),
+      (EE_p3 u (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))).ncard
+        = 2 :=
+    w4pEE2OfSlice_p35 hsubW hparamW
+      (fvFinite_p35 (V := V) (E := E ∪ {{w, v}}) HS (w, rhoNode1 FF w))
+  -- kch 槽：先重打包（喂根骨架），再拆包取 hplane/hcy/hq（喂 HNOWRAP）
+  have hkchUp : W4RootKchSlot_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) := w4AsmKchPack_p35 hkchU
+  have hkchWp : W4RootKchSlot_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) := w4AsmKchPack_p35 hkchW
+  obtain ⟨hintU, AU, ⟨u0, v0, w0, hncAU, hAdefU⟩, h0AU, hsubAU, heperpU, hcyU,
+    hqU⟩ := hkchU
+  obtain ⟨hintW, AW, ⟨u0', v0', w0', hncAW, hAdefW⟩, h0AW, hsubAW, heperpW, hcyW,
+    hqW⟩ := hkchW
+  have hplaneU : ∃ A : Set V3,
+      (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+        A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+      (0:V3) ∈ A ∧ vPrime_p3 V (HS.face (v, rhoNode1 FF v)) ⊆ A ∧
+      ∀ x ∈ A, ((eU : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0 :=
+    ⟨AU, ⟨u0, v0, w0, hncAU, hAdefU⟩, h0AU, hsubAU, heperpU⟩
+  have hplaneW : ∃ A : Set V3,
+      (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+        A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+      (0:V3) ∈ A ∧ vPrime_p3 V (HS.face (w, rhoNode1 FF w)) ⊆ A ∧
+      ∀ x ∈ A, ((eW : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0 :=
+    ⟨AW, ⟨u0', v0', w0', hncAW, hAdefW⟩, h0AW, hsubAW, heperpW⟩
+  -- 基 dart 载体（hv0V 供给）
+  have hv0VU : dU.1 ∈ vPrime_p3 V (HS.face (v, rhoNode1 FF v)) :=
+    ⟨(dartsOfHyp_ends_V_p35 hVE (hsubU hdUU.1)).1, dU.2, hdUU.1⟩
+  have hvWVU : dW.1 ∈ vPrime_p3 V (HS.face (v, rhoNode1 FF v)) :=
+    ⟨(dartsOfHyp_ends_V_p35 hVE (hsubU hdWU.1)).1, dW.2, hdWU.1⟩
+  have hv0VW : dU'.1 ∈ vPrime_p3 V (HS.face (w, rhoNode1 FF w)) :=
+    ⟨(dartsOfHyp_ends_V_p35 hVEW (hsubW hdUW.1)).1, dU'.2, hdUW.1⟩
+  have hvWVW : dW'.1 ∈ vPrime_p3 V (HS.face (w, rhoNode1 FF w)) :=
+    ⟨(dartsOfHyp_ends_V_p35 hVEW (hsubW hdWW.1)).1, dW'.2, hdWW.1⟩
+  -- 四个窗口束重建：hnowrap 由 HNOWRAP_OF_KCHMAMG_p35 经 hsgn 真实供出
+  have hdUUb : w4pWindowData_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) dU :=
+    w4AsmWindowPack_p35 hdUU.2 hsgnUU hfanLU hEE2U hv0VU hplaneU hcyU hqU
+  have hdWUb : w4pWindowData_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) dW :=
+    w4AsmWindowPack_p35 hdWU.2 hsgnWU hfanLU hEE2U hvWVU hplaneU hcyU hqU
+  have hdUWb : w4pWindowData_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) dU' :=
+    w4AsmWindowPack_p35 hdUW.2 hsgnUW hfanLW hEE2W hv0VW hplaneW hcyW hqW
+  have hdWWb : w4pWindowData_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) dW' :=
+    w4AsmWindowPack_p35 hdWW.2 hsgnWW hfanLW hEE2W hvWVW hplaneW hcyW hqW
+  -- 根骨架拼合
+  exact EJRCFJD_W4_ROOT_p35 V E FF v w hfan hv hw hwv hsub HS hHS hfinG hgraph
+    hfanAug hdV hdW hstepU hvisitU hstepW hvisitW hkchUp hkchWp
+    ⟨hdUU.1, hdUUb⟩ ⟨hdWU.1, hdWUb⟩ ⟨hdUW.1, hdUWb⟩ ⟨hdWW.1, hdWWb⟩
+    hsplitU hsplitW
+
+-- ===== merged block: lane D (续135 M1 合并, 编排者) =====
+
+
+/-! ## EJRCFJD chain dw-D-kch — the KCHMAMG slots (`hkchU`/`hkchW`) of
+`EJRCFJD_W4_ASSEMBLY_p35` (lane `ejrcfjd-dw-D-kch-w1`, 2026-10-28)
+
+供出装配定理 `EJRCFJD_W4_ASSEMBLY_p35` 的两只 kch 槽。槽体是去 `∃e` 形的
+`W4AsmKchSlot_p35`（轴显式）；本车道以 **∃-形**交付（`∃ eU, W4AsmKchSlot_p35
+… eU`）——轴由 `KCHMAMG_thm_p35` 的平面-循环包选出，槽内自洽；F 车道取向件
+以同一 `e` 陈述 hsgn 即可与装配一键对接（`obtain ⟨eU, hkchU⟩ := …` 后把
+`eU`/`hkchU` 喂装配）。
+
+装配式四参（w4splice DELIVERY §5 缺口 D）：
+`KCHMAMG_thm_p35 (localFanLA1ofP3Slice_p35 hlf hparam.1)
+  (w4pEE2OfSlice_p35 hsub hparam hfin) hplane hint`。前两参在本车道内由接口
+前提（U 面：`HS`/`hHS`/`hfanAug`/`hdV`/`hstepU`/`hvisitU`；W 面经换序桥）
+沿 `FACE_CYCLE_PARAM_p35` → `w4rSliceHypermap_p35` →
+`HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35` 管线真证重建（与装配体 U/W 半扇
+逐字同款）；KCHMAMG 结论体与槽体逐字同形（`hint ∧ ∃A … ∃e …`），把 `e`
+从 `A`-存在式里提出来即槽——纯重打包，零几何。
+
+**诚实残余（每槽两条 premise，根前提不可导）**：
+- `hplane`：`∃ P, kchPlane_p35 P ∧ (0:V3) ∈ P ∧ vPrime_p3 V fv ⊆ P`
+  （切片顶点集落过 0 平面）；
+- `hint`：`∀ z ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv z = Real.pi`。
+
+**hplane 路 (ii) 验证结论（本波正式产物 `dwDhplaneOfCircular_p35` /
+`dwDhplaneOfDartCross_p35`）**：对**原扇** (V, E, FF) 用
+`VPLANE_OF_CIRCULAR_p35` / `VPLANE_OF_DART_CROSS_p35` 得 `P ⊇ V`，切片
+顶点集 `vPrime_p3 V fv ⊆ V` 逐字收窄——确无鸡生蛋；但前提缺口 = 原扇
+`hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2` 与 `Circular V E`（或 dart 交叉
+见证）。两者都不在根前提面：`ConvexLocalFan` 的扇图允许额外弦（二邻居
+计数不在 `FAN`/`ConvexLocalFan` 合取支内，二邻居计数在栈内只在切片载体
+与 KCHMAMG/KOMWBWC 世界成立），`Circular` 的楔内开交叉见证同为根外几何
+——故切片 hplane 以 premise 承入。`hint` 同理：`w4pHintOfOZSlice_p35`
+首参即**切片** `ConvexLocalFan`（= 骨架结论本身，鸡生蛋），OZ 见证束须在
+切片扇世界收集，亦以 premise 承入。零 sorry；两残余的根级供出定尺见
+DELIVERY（后续路线：原扇 KCHMAMG 实例 + 内点 ρ/ι 迁移，或 3 元 azim_cycle
+kit 之后在切片扇世界上 OZQVSFF 链）。 -/
+
+/-- **路 (ii) 条件件（Circular 槽形）**：原扇二邻居计数 + `Circular V E`
+⟹ 过 0 平面 `P ⊇ V`（`VPLANE_OF_CIRCULAR_p35`）；切片顶点集
+`vPrime_p3 V fv ⊆ V` 逐字收窄，即 `KCHMAMG_thm_p35` 的 `hplane` 槽在切片
+载体上的逐字形。原扇前提缺口（`hEE2`/`Circular`）见块头注。 -/
+theorem dwDhplaneOfCircular_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hconv : ConvexLocalFan V E FF)
+    (hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2) (hcirc : Circular V E)
+    (fv : Set (V3 × V3)) :
+    ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧ vPrime_p3 V fv ⊆ P := by
+  obtain ⟨P, hP, h0P, hsubV⟩ := VPLANE_OF_CIRCULAR_p35 hconv hEE2 hcirc
+  refine ⟨P, hP, h0P, ?_⟩
+  intro z hz
+  exact hsubV hz.1
+
+/-- **路 (ii) 条件件（dart 交叉形）**：`VPLANE_OF_DART_CROSS_p35` 的切片
+hplane 收窄版（HOL `LOFA_V_SUBSET_AFF_HULL` 逐字前提面：面 dart + 楔内
+开交叉 + `u ∈ V`）。原扇前提缺口（`hEE2` + 交叉见证）见块头注。 -/
+theorem dwDhplaneOfDartCross_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hconv : ConvexLocalFan V E FF)
+    (hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2) {a b u : V3}
+    (hd : (a, b) ∈ FF) (hu : u ∈ V)
+    (hcross : ¬(affGt ({(0:V3)} : Set V3) ({a, b} : Set V3) ∩
+      affLt ({(0:V3)} : Set V3) ({u} : Set V3) = ∅))
+    (fv : Set (V3 × V3)) :
+    ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧ vPrime_p3 V fv ⊆ P := by
+  obtain ⟨P, hP, h0P, hsubV⟩ := VPLANE_OF_DART_CROSS_p35 hconv hEE2 hd hu hcross
+  refine ⟨P, hP, h0P, ?_⟩
+  intro z hz
+  exact hsubV hz.1
+
+/-- **kch 槽 U 面（∃e 形）**：接口前提下重建切片供给链（与装配体 U 半扇
+逐字同款：`FACE_CYCLE_PARAM_p35` → `w4rSliceHypermap_p35` →
+`HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35` → `localFanLA1ofP3Slice_p35` +
+`w4pEE2OfSlice_p35`），`KCHMAMG_thm_p35` 结论体（`hint ∧ ∃A … ∃e …`）
+逐字对齐槽体 `W4AsmKchSlot_p35`，轴 `e` 提升为槽的存在量。
+残余前提 `hplaneU`/`hintU`（根级供出定尺见块头注/DELIVERY）。 -/
+theorem dwDkchSlotU_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)))
+    (hplaneU : ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧
+      vPrime_p3 V (HS.face (v, rhoNode1 FF v)) ⊆ P)
+    (hintU : ∀ z ∈ vPrime_p3 V (HS.face (v, rhoNode1 FF v)),
+      interiorAngle1 (0:V3) (HS.face (v, rhoNode1 FF v)) z = Real.pi) :
+    ∃ eU : V3, W4AsmKchSlot_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) eU := by
+  -- 切片供给链（装配体 U 半扇逐字）
+  have hVE : ⋃₀ (E ∪ {{v, w}}) ⊆ V := hfanAug.1
+  have hfinG : (dartsOfHyp_p3 (E ∪ {{v, w}}) V).Finite :=
+    dartsOfHyp_finite_p35 hVE hfanAug.2.2.1.1
+  have hgraph : Kepler.Text.Fan.Graph (E ∪ {{v, w}}) := hfanAug.2.1
+  have hsubU : HS.face (v, rhoNode1 FF v) ⊆ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+    fvSubsetDarts_p35 HS hHS hdV
+  have hparamU : faceCycleParam_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) :=
+    FACE_CYCLE_PARAM_p35 hgraph HS hHS hdV hstepU hvisitU
+  obtain ⟨HS'U, hHS'U⟩ := w4rSliceHypermap_p35 HS hHS hdV hVE hparamU hfinG
+  have hselfU : (v, rhoNode1 FF v) ∈ HS.face (v, rhoNode1 FF v) := ⟨0, rfl⟩
+  have hlfU := HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraph HS hHS hfanAug hdV
+    hstepU hvisitU HS'U hHS'U (param_dart_slice_p35 hparamU hselfU)
+  have hfanLU : Kepler.Text.LocalFan (vPrime_p3 V (HS.face (v, rhoNode1 FF v)))
+      (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
+      (HS.face (v, rhoNode1 FF v)) :=
+    localFanLA1ofP3Slice_p35 hlfU hparamU.1
+  have hEE2U : ∀ u ∈ vPrime_p3 V (HS.face (v, rhoNode1 FF v)),
+      (EE_p3 u (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))).ncard
+        = 2 :=
+    w4pEE2OfSlice_p35 hsubU hparamU
+      (fvFinite_p35 (V := V) (E := E ∪ {{v, w}}) HS (v, rhoNode1 FF v))
+  -- KCHMAMG 总装：结论体 = 槽体（hint ∧ ∃A … ∃e …）；轴提出即槽
+  obtain ⟨-, A, ⟨u0, v0, w0, hncA, hAdef⟩, h0A, hsubA, e, hperp, hcy, hq⟩ :=
+    KCHMAMG_thm_p35 hfanLU hEE2U hplaneU hintU
+  exact ⟨e, hintU, A, ⟨u0, v0, w0, hncA, hAdef⟩, h0A, hsubA, hperp, hcy, hq⟩
+
+/-- **kch 槽 W 面（∃e 形）**：U 面的换序对称件——`hHS`/`hfanAug`/`hdW`
+承装配签名的 `E ∪ {{v, w}}` 序（与装配体 W 半扇同款换序桥
+`Set.pair_comm`），`hstepW`/`hvisitW` 承 `E ∪ {{w, v}}` 序；残余前提
+`hplaneW`/`hintW` 同 U 面。 -/
+theorem dwDkchSlotW_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)))
+    (hplaneW : ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧
+      vPrime_p3 V (HS.face (w, rhoNode1 FF w)) ⊆ P)
+    (hintW : ∀ z ∈ vPrime_p3 V (HS.face (w, rhoNode1 FF w)),
+      interiorAngle1 (0:V3) (HS.face (w, rhoNode1 FF w)) z = Real.pi) :
+    ∃ eW : V3, W4AsmKchSlot_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) eW := by
+  -- 换序桥（装配体 W 半扇逐字）
+  have hAugW : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+    rw [Set.pair_comm w v]
+  have hHSw : IsHypE_p35 V (E ∪ {{w, v}}) HS := by rw [hAugW]; exact hHS
+  have hgraphW : Kepler.Text.Fan.Graph (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hfanAug.2.1
+  have hVEW : ⋃₀ (E ∪ {{w, v}}) ⊆ V := by rw [hAugW]; exact hfanAug.1
+  have hfinGW : (dartsOfHyp_p3 (E ∪ {{w, v}}) V).Finite :=
+    dartsOfHyp_finite_p35 hVEW hfanAug.2.2.1.1
+  have hfanAugW : Kepler.Text.Fan.FAN 0 V (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hfanAug
+  have hdWw : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact hdW
+  -- 切片供给链（装配体 W 半扇逐字）
+  have hsubW : HS.face (w, rhoNode1 FF w) ⊆ dartsOfHyp_p3 (E ∪ {{w, v}}) V :=
+    fvSubsetDarts_p35 HS hHSw hdWw
+  have hparamW : faceCycleParam_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) :=
+    FACE_CYCLE_PARAM_p35 hgraphW HS hHSw hdWw hstepW hvisitW
+  obtain ⟨HS'W, hHS'W⟩ := w4rSliceHypermap_p35 HS hHSw hdWw hVEW hparamW hfinGW
+  have hselfW : (w, rhoNode1 FF w) ∈ HS.face (w, rhoNode1 FF w) := ⟨0, rfl⟩
+  have hlfW := HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraphW HS hHSw hfanAugW hdWw
+    hstepW hvisitW HS'W hHS'W (param_dart_slice_p35 hparamW hselfW)
+  have hfanLW : Kepler.Text.LocalFan (vPrime_p3 V (HS.face (w, rhoNode1 FF w)))
+      (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
+      (HS.face (w, rhoNode1 FF w)) :=
+    localFanLA1ofP3Slice_p35 hlfW hparamW.1
+  have hEE2W : ∀ u ∈ vPrime_p3 V (HS.face (w, rhoNode1 FF w)),
+      (EE_p3 u (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))).ncard
+        = 2 :=
+    w4pEE2OfSlice_p35 hsubW hparamW
+      (fvFinite_p35 (V := V) (E := E ∪ {{w, v}}) HS (w, rhoNode1 FF w))
+  -- KCHMAMG 总装：结论体 = 槽体（hint ∧ ∃A … ∃e …）；轴提出即槽
+  obtain ⟨-, A, ⟨u0, v0, w0, hncA, hAdef⟩, h0A, hsubA, e, hperp, hcy, hq⟩ :=
+    KCHMAMG_thm_p35 hfanLW hEE2W hplaneW hintW
+  exact ⟨e, hintW, A, ⟨u0, v0, w0, hncA, hAdef⟩, h0A, hsubA, hperp, hcy, hq⟩
+
+/-- **kch 槽双面合装（装配对接形）**：U/W 两槽一次供出——`obtain
+⟨eU, eW, hkchU, hkchW⟩ := dwDkchPair_p35 …` 后，`eU eW hkchU hkchW` 逐字
+喂 `EJRCFJD_W4_ASSEMBLY_p35`（F 车道 hsgn 以同轴 `eU`/`eW` 定型）。 -/
+theorem dwDkchPair_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)))
+    (hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)))
+    (hplaneU : ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧
+      vPrime_p3 V (HS.face (v, rhoNode1 FF v)) ⊆ P)
+    (hintU : ∀ z ∈ vPrime_p3 V (HS.face (v, rhoNode1 FF v)),
+      interiorAngle1 (0:V3) (HS.face (v, rhoNode1 FF v)) z = Real.pi)
+    (hplaneW : ∃ P : Set V3, kchPlane_p35 P ∧ (0:V3) ∈ P ∧
+      vPrime_p3 V (HS.face (w, rhoNode1 FF w)) ⊆ P)
+    (hintW : ∀ z ∈ vPrime_p3 V (HS.face (w, rhoNode1 FF w)),
+      interiorAngle1 (0:V3) (HS.face (w, rhoNode1 FF w)) z = Real.pi) :
+    ∃ eU eW : V3,
+      W4AsmKchSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) eU ∧
+      W4AsmKchSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) eW := by
+  obtain ⟨eU, hU⟩ := dwDkchSlotU_p35 V E FF v w HS hHS hfanAug hdV hstepU
+    hvisitU hplaneU hintU
+  obtain ⟨eW, hW⟩ := dwDkchSlotW_p35 V E FF v w HS hHS hfanAug hdW hstepW
+    hvisitW hplaneW hintW
+  exact ⟨eU, eW, hU, hW⟩
+
+-- ===== merged block: lane F (续135 M1 合并, 编排者) =====
+
+
+/-! ## 车道 `ejrcfjd-dw-F-split-sgn-w1`（2026-10-28）：hsgn 四支经 KCHMAMG
+产出面导出 + F 槽（`W4RootSplitSlot_p35`）sector-placement 残差归约
+
+1. **hsgn**：装配定理 `EJRCFJD_W4_ASSEMBLY_p35` 的四支取向前提
+   `hsgnUU/hsgnWU/hsgnUW/hsgnWW` 不是独立输入——在 KCHMAMG 产出面（kch 槽，
+   轴 `e` 显式）+ 面 dart 载体 + 面上 `fst` 单射 + 窗口槽处可导出：
+   `hq` 给 `azim 0 e d.1 (rhoNode1 fv d.1) < π`，`fst` 单射把 `rhoNode1 fv d.1`
+   定值为 `d.2`、把 `d.2` 经窗口轨道首步 `ρ 1 ∈ vPrime` 送入切片载体；
+   `kchS0NeZeroOfPlane_p35` 排除 s0 = 0，`kchCrossDotSmulSin_p35` 把三重积
+   渲染成 `c • sin(azim)`（c ≥ 0），sin ≠ 0 + azim ∈ [0, π) ⟹ azim ∈ (0, π)
+   ⟹ sin > 0 ⟹ 三重积 > 0。四支在
+   `EJRCFJD_W4_ASSEMBLY_SGNFREE_p35`（装配签名去 `hsgn`×4，其余逐字）处
+   实例化收口。
+   （与 s0mirror 反例不冲突：反例的翻转 dart 第二坐标在环向「后方」，
+   不是面 dart；面 dart 处 succ 由面成员 + 单射锁定。）
+2. **F**：split 槽 `W4RootSplitSlot_p35 V E E' fv dU dW` 归约为逐 dart 的
+   sector-placement 残差。闭掉的面：切片面上 dart 尾点的两元邻居形
+   `EE_p3 p.1 (ePrime) = {p.2, c}`、`c ≠ p.2`（前驱 dart 存在 = ff 面上单射
+   + 面有限满射；出/入边唯一 = `fst` 单射 + ff 单射）、以及原/增广载体在
+   非对角点处的邻居一致（`{p.1, z} = {v, w}` 需 `p.1 ∈ {v, w}`）。剩余残差
+   （`W4_SPLIT_RED_p35` 的 `hres`）= 每支非对角 dart 是原扇真 dart、首端
+   避开对角端点、切片邻居集与增广载体邻居集一致——即 W3a sector-placement
+   的根级供出，照实承入。装配级消费形 =
+   `EJRCFJD_W4_ASSEMBLY_OF_RESIDUE_p35`（`hsplitU/hsplitW` 换成双残差，
+   其余逐字）。 -/
+
+/-- **hsgn 槽导出件（四支 hsgnUU/hsgnWU/hsgnUW/hsgnWW 的公共参数化形）**：
+kch 槽（KCHMAMG 产出面，轴 e 显式）+ 载体 + 面上 fst 单射 + 面成员 + 窗口槽
+⟹ 取向前提 `0 < (e × d.1) ⬝ d.2`。 -/
+theorem W4_SGN_OF_KCH_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} {e : V3} {d : V3 × V3}
+    (hkch : W4AsmKchSlot_p35 V E' fv e)
+    (hVE : ⋃₀ E' ⊆ V)
+    (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+    (hvisit : Set.InjOn Prod.fst fv)
+    (hd : d ∈ fv)
+    (hwin : W4AsmWindowSlot_p35 V E' fv d) :
+    0 < (crossProduct (e : Fin 3 → ℝ) (d.1 : Fin 3 → ℝ)) ⬝ᵥ (d.2 : Fin 3 → ℝ) := by
+  obtain ⟨-, A, -, -, hsubA, heperpA, hcy, hq⟩ := hkch
+  obtain ⟨c₀, k, ρ, -, -, hk2, hr0, -, -, hv0, hb, -, -, -, -, hrV, hstep⟩ := hwin
+  -- 面上出边唯一：rhoNode1 fv d.1 = d.2（ε-选择落在已有 fv-succ 上 + fst 单射）
+  have heps : (d.1, rhoNode1 fv d.1) ∈ fv :=
+    Classical.epsilon_spec (p := fun z => (d.1, z) ∈ fv) ⟨d.2, hd⟩
+  have hrone : rhoNode1 fv d.1 = d.2 :=
+    congrArg Prod.snd (hvisit heps hd rfl)
+  -- 窗口轨道首步：(d.1, ρ 1) ∈ fv ⟹ d.2 = ρ 1 ∈ vPrime（hrV）
+  have hstep01 : (d.1, ρ 1) ∈ fv := by
+    have h01 := hstep 0 (by omega)
+    rwa [hr0] at h01
+  have hdeq : d.2 = ρ 1 := congrArg Prod.snd (hvisit hd hstep01 rfl)
+  have hp2V : d.2 ∈ vPrime_p3 V fv := by rw [hdeq]; exact hrV 1 (by omega)
+  have hv0V : d.1 ∈ vPrime_p3 V fv :=
+    ⟨(dartsOfHyp_ends_V_p35 hVE (hsub hd)).1, d.2, hd⟩
+  -- kch 面：azim 0 e d.1 d.2 < π
+  have hlt : azim 0 e d.1 (rhoNode1 fv d.1) < Real.pi := (hq d.1 hv0V).2.2.2
+  rw [hrone] at hlt
+  -- p.2 ≠ 0（窗口非共线；w4AsmWindowPack 同款）
+  have hb0 : d.2 ≠ 0 := by
+    intro hz
+    refine hb ?_
+    rw [hz]
+    show Collinear ℝ ({(0:V3), d.1, (0:V3)} : Set V3)
+    refine Collinear.subset ?_ (collinear_pair ℝ (0:V3) d.1)
+    intro q hq2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq2 ⊢
+    tauto
+  have heperp : ∀ x ∈ vPrime_p3 V fv,
+      ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0 :=
+    fun x hx => heperpA x (hsubA hx)
+  -- s0 ≠ 0（e ⊥ d.1、e ⊥ d.2 ∈ vPrime、cyclic ⟹ e ⬝ e ≠ 0）
+  have hne0 := kchS0NeZeroOfPlane_p35 (V := V) (E' := E') (fv := fv) (p := d)
+    (e := e) hv0 hb0 hb hv0V hp2V hcy heperp
+  -- 渲染：s0 = c1 • sin(azim 0 e d.1 d.2)，c1 ≥ 0
+  have hEdot := kchCyclicDotSelfPos_p35 hcy
+  have hEnz : (e : V3) ≠ 0 := by
+    intro hz
+    rw [hz] at hEdot
+    exact absurd (by rw [kchCoeZero_p35]; simp :
+      ((0:V3) : Fin 3 → ℝ) ⬝ᵥ ((0:V3) : Fin 3 → ℝ) = 0) (ne_of_gt hEdot)
+  have hncE : ¬ Collinear3 0 e d.1 := kchNotCollinear3_of_cyclicSet_p35 hcy hv0V
+  obtain ⟨c1, hc1, hcid⟩ := kchCrossDotSmulSin_p35 e d.1 d.2 hEnz hncE
+  have hsin : Real.sin (azim 0 e d.1 d.2) ≠ 0 := by
+    intro hz
+    apply hne0
+    rw [hcid, hz, mul_zero]
+  have ha0 : 0 ≤ azim 0 e d.1 d.2 := azim_nonneg 0 e d.1 d.2
+  have hpos : 0 < azim 0 e d.1 d.2 := by
+    rcases lt_or_eq_of_le ha0 with hh | hh
+    · exact hh
+    · exfalso
+      apply hsin
+      rw [← hh, Real.sin_zero]
+  have hsinpos : 0 < Real.sin (azim 0 e d.1 d.2) :=
+    Real.sin_pos_of_pos_of_lt_pi hpos hlt
+  have hc1pos : 0 < c1 := by
+    rcases lt_or_eq_of_le hc1 with hh | hh
+    · exact hh
+    · exfalso
+      apply hne0
+      rw [hcid, ← hh, zero_mul]
+  rw [hcid]
+  exact mul_pos hc1pos hsinpos
+
+/-- **EJRCFJD W4 装配（hsgn 去前提形）**：装配签名逐字去四支 `hsgn`——
+四支由 `W4_SGN_OF_KCH_p35` 经各自 kch 槽 + 面载体 + `hvisit` + 窗口槽真实
+供出（hsgnUU/hsgnWU 对 `eU`/U 面，hsgnUW/hsgnWW 对 `eW`/W 面），其余槽位
+与结论面逐字同 `EJRCFJD_W4_ASSEMBLY_p35`。 -/
+theorem EJRCFJD_W4_ASSEMBLY_SGNFREE_p35 (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)))
+    (hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)))
+    (eU eW : V3)
+    (hkchU : W4AsmKchSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) eU)
+    (hkchW : W4AsmKchSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) eW)
+    {dU dW dU' dW' : V3 × V3}
+    (hdUU : dU ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dU)
+    (hdWU : dW ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dW)
+    (hdUW : dU' ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dU')
+    (hdWW : dW' ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dW')
+    (hsplitU : W4RootSplitSlot_p35 V E (E ∪ {{v, w}}) FF
+      (HS.face (v, rhoNode1 FF v)) dU dW)
+    (hsplitW : W4RootSplitSlot_p35 V E (E ∪ {{w, v}}) FF
+      (HS.face (w, rhoNode1 FF w)) dU' dW') :
+    ∃ HSx : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HSx ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HSx.face (v, rhoNode1 FF v)))
+        (HSx.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HSx.face (w, rhoNode1 FF w)))
+        (HSx.face (w, rhoNode1 FF w)) := by
+  have hAugW : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+    rw [Set.pair_comm w v]
+  have hVE : ⋃₀ (E ∪ {{v, w}}) ⊆ V := hfanAug.1
+  have hVEW : ⋃₀ (E ∪ {{w, v}}) ⊆ V := by rw [hAugW]; exact hVE
+  have hsubU : HS.face (v, rhoNode1 FF v) ⊆ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+    fvSubsetDarts_p35 HS hHS hdV
+  have hsubW : HS.face (w, rhoNode1 FF w) ⊆ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact fvSubsetDarts_p35 HS hHS hdW
+  -- 四支 hsgn：KCHMAMG 产出面真实导出
+  have hsgnUU : 0 < (crossProduct (eU : Fin 3 → ℝ) (dU.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dU.2 : Fin 3 → ℝ) :=
+    W4_SGN_OF_KCH_p35 hkchU hVE hsubU hvisitU hdUU.1 hdUU.2
+  have hsgnWU : 0 < (crossProduct (eU : Fin 3 → ℝ) (dW.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dW.2 : Fin 3 → ℝ) :=
+    W4_SGN_OF_KCH_p35 hkchU hVE hsubU hvisitU hdWU.1 hdWU.2
+  have hsgnUW : 0 < (crossProduct (eW : Fin 3 → ℝ) (dU'.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dU'.2 : Fin 3 → ℝ) :=
+    W4_SGN_OF_KCH_p35 hkchW hVEW hsubW hvisitW hdUW.1 hdUW.2
+  have hsgnWW : 0 < (crossProduct (eW : Fin 3 → ℝ) (dW'.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dW'.2 : Fin 3 → ℝ) :=
+    W4_SGN_OF_KCH_p35 hkchW hVEW hsubW hvisitW hdWW.1 hdWW.2
+  exact EJRCFJD_W4_ASSEMBLY_p35 V E FF v w hfan hv hw hwv hsub HS hHS hfanAug
+    hdV hdW hstepU hvisitU hstepW hvisitW eU eW hkchU hkchW
+    hdUU hdWU hdUW hdWW hsgnUU hsgnWU hsgnUW hsgnWW hsplitU hsplitW
+
+/-- **切片面 ff-前驱存在**：面 = ff-轨道，ff 在面上单射（载体 faceMap 的
+单射分量）+ 面有限 ⟹ ff 在面上满射。 -/
+private theorem w4fFacePred_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    {p : V3 × V3} (hp : p ∈ HS.face d) :
+    ∃ q : V3 × V3, q ∈ HS.face d ∧ ffOfHyp_p3 0 V E' q = p := by
+  have hmaps : Set.MapsTo (ffOfHyp_p3 0 V E') (HS.face d) (HS.face d) :=
+    fun _ hq => fvStep_p35 HS hHS hq
+  have hinj : Set.InjOn (ffOfHyp_p3 0 V E') (HS.face d) := by
+    intro a _ha b _hb hab
+    rw [← hHS.2.2.2] at hab
+    exact HS.faceMap.injective hab
+  have hncard : (HS.face d).ncard
+      ≤ (ffOfHyp_p3 0 V E' '' (HS.face d)).ncard := by
+    rw [InjOn.ncard_image hinj]
+  have himg : ffOfHyp_p3 0 V E' '' (HS.face d) = HS.face d :=
+    Set.eq_of_subset_of_ncard_le (Set.image_subset_iff.mpr hmaps) hncard
+      (fvFinite_p35 (V := V) (E := E') HS d)
+  have hp' : p ∈ ffOfHyp_p3 0 V E' '' (HS.face d) := by rw [himg]; exact hp
+  obtain ⟨q, hq1, hq2⟩ := hp'
+  exact ⟨q, hq1, hq2⟩
+
+/-- **切片面上 dart 首端的两元邻居形（F 归约的闭掉面）**：对任意面 dart，
+切片邻居集恰为 `{p.2, c}`、`c ≠ p.2`——前驱 dart（w4fFacePred_p35）经
+`faceCycleParam` 的步进/两元合取，出边唯一由 `hvisit`、入边唯一由 ff 单射。 -/
+private theorem w4fEESliceTwo_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS) {d : V3 × V3}
+    (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' (HS.face d))
+    (hvisit : Set.InjOn Prod.fst (HS.face d))
+    {p : V3 × V3} (hp : p ∈ HS.face d) :
+    ∃ c : V3, c ≠ p.2 ∧
+      EE_p3 p.1 (ePrime_p3 E' (HS.face d)) = ({p.2, c} : Set V3) := by
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  have hfinj : Function.Injective (ffOfHyp_p3 0 V E') := by
+    rw [← hHS.2.2.2]
+    exact HS.faceMap.injective
+  -- 前驱 dart q：ff q = p
+  obtain ⟨q, hqf, hff⟩ := w4fFacePred_p35 HS hHS hp
+  obtain ⟨cq, hffq, -⟩ := hparam.2.2.2 q hqf
+  have hpq : (q.2, cq) = p := hffq.symm.trans hff
+  have hq2 : q.2 = p.1 := congrArg Prod.fst hpq
+  have hcq : cq = p.2 := congrArg Prod.snd hpq
+  -- q 的步进合取：出边 (p.1, c) ∈ 面 ⟹ c = p.2（出边唯一）
+  obtain ⟨c, hcne1, hstepc, -⟩ := hparam.2.2.1 q hqf
+  rw [hq2] at hstepc
+  have hcp2 : c = p.2 := congrArg Prod.snd (hvisit hstepc hp rfl)
+  rw [hcp2] at hcne1
+  refine ⟨q.1, hcne1, ?_⟩
+  rw [sliceEE_char_p35 hsub hparam.1 p.1]
+  ext z
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_setOf_eq]
+  constructor
+  · rintro (hz | hz)
+    · exact Or.inl (congrArg Prod.snd (hvisit hz hp rfl))
+    · -- 入边唯一：两支 dart 步进到同一 fst 出边，ff 单射收口
+      obtain ⟨c', hff', hmem'⟩ := hparam.2.2.2 (z, p.1) hz
+      have hc' : c' = p.2 := congrArg Prod.snd (hvisit hmem' hp rfl)
+      have hfcq : ffOfHyp_p3 0 V E' q = (p.1, cq) := by rw [hffq, hq2]
+      have hfcz : ffOfHyp_p3 0 V E' (z, p.1) = (p.1, cq) := by
+        rw [hff', hc', hcq]
+      have heq : (z, p.1) = q := hfinj (hfcz.trans hfcq.symm)
+      exact Or.inr (congrArg Prod.fst heq)
+  · rintro (hz | hz)
+    · exact Or.inl (by rw [hz]; exact hp)
+    · exact Or.inr (by rw [hz]; rw [← hq2]; exact hqf)
+
+/-- **F 槽归约件（split 槽 ⟸ sector-placement 残差）**：闭掉全部面循环
+簿记（切片两元邻居形、原/增广载体在非对角点的邻居一致），剩余残差
+`hres` = 每支非对角 dart 是原扇真 dart、首端避开对角端点、切片邻居集 =
+增广载体邻居集（W3a sector-placement 的根级供出，逐 dart 形）。 -/
+theorem W4_SPLIT_RED_p35 {V : Set V3} {E E' : Set (Set V3)}
+    {FF : Set (V3 × V3)} {dU dW d : V3 × V3} {v w : V3}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hparam : faceCycleParam_p35 V E' (HS.face d))
+    (hvisit : Set.InjOn Prod.fst (HS.face d))
+    (hres : ∀ p ∈ HS.face d, p = dU ∨ p = dW ∨
+      p ∈ FF ∧ p.1 ∉ ({v, w} : Set V3) ∧
+        EE_p3 p.1 (ePrime_p3 E' (HS.face d)) = EE_p3 p.1 (E ∪ {{v, w}})) :
+    W4RootSplitSlot_p35 V E E' FF (HS.face d) dU dW := by
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  -- 原/增广载体在非对角点的邻居一致（{p.1, z} = {v, w} 需 p.1 ∈ {v, w}）
+  have hEEplain : ∀ p ∈ HS.face d, p.1 ∉ ({v, w} : Set V3) →
+      EE_p3 p.1 (E ∪ {{v, w}}) = EE_p3 p.1 E := by
+    intro p hp hnw
+    ext z
+    simp only [EE_p3, Set.mem_setOf_eq]
+    constructor
+    · intro hz
+      rcases hz with hz | hz
+      · exact hz
+      · exfalso
+        have hz' : ({p.1, z} : Set V3) = {v, w} := Set.mem_singleton_iff.mp hz
+        have hm : (p.1 : V3) ∈ ({p.1, z} : Set V3) :=
+          Set.mem_insert_iff.mpr (Or.inl rfl)
+        rw [hz'] at hm
+        exact hnw hm
+    · intro hz
+      exact Set.mem_union_left _ hz
+  intro p hp
+  rcases hres p hp with h1 | h1 | ⟨hFF, hnw, hagr⟩
+  · exact Or.inl h1
+  · exact Or.inr (Or.inl h1)
+  · obtain ⟨c0, hc0ne, hEEs⟩ := w4fEESliceTwo_p35 HS hHS hd hparam hvisit hp
+    have hAgr1 : EE_p3 p.1 (E ∪ {{v, w}}) = ({p.2, c0} : Set V3) := by
+      rw [← hagr]; exact hEEs
+    have hAgr2 : EE_p3 p.1 (E ∪ {{v, w}}) = EE_p3 p.1 E := hEEplain p hp hnw
+    refine Or.inr (Or.inr ⟨c0, hc0ne, hFF, ?_, ?_⟩)
+    · rw [← hAgr2]; exact hAgr1
+    · exact hEEs
+
+/-- **EJRCFJD W4 装配（F 残差形）**：装配签名逐字去掉 `hsplitU/hsplitW` 槽
+（并去 `hsgn`×4——由 `W4_SGN_OF_KCH_p35` 供出），换成双 sector-placement
+残差 `hresU/hresW`，经 `W4_SPLIT_RED_p35` 真实重建 split 槽——F 槽的全部
+剩余内容以此逐 dart 残差照实承入。 -/
+theorem EJRCFJD_W4_ASSEMBLY_OF_RESIDUE_p35 (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)))
+    (hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)))
+    (eU eW : V3)
+    (hkchU : W4AsmKchSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) eU)
+    (hkchW : W4AsmKchSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) eW)
+    {dU dW dU' dW' : V3 × V3}
+    (hdUU : dU ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dU)
+    (hdWU : dW ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dW)
+    (hdUW : dU' ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dU')
+    (hdWW : dW' ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dW')
+    (hresU : ∀ p ∈ HS.face (v, rhoNode1 FF v), p = dU ∨ p = dW ∨
+      p ∈ FF ∧ p.1 ∉ ({v, w} : Set V3) ∧
+        EE_p3 p.1 (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
+          = EE_p3 p.1 (E ∪ {{v, w}}))
+    (hresW : ∀ p ∈ HS.face (w, rhoNode1 FF w), p = dU' ∨ p = dW' ∨
+      p ∈ FF ∧ p.1 ∉ ({w, v} : Set V3) ∧
+        EE_p3 p.1 (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
+          = EE_p3 p.1 (E ∪ {{w, v}})) :
+    ∃ HSx : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HSx ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HSx.face (v, rhoNode1 FF v)))
+        (HSx.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HSx.face (w, rhoNode1 FF w)))
+        (HSx.face (w, rhoNode1 FF w)) := by
+  have hAugW : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+    rw [Set.pair_comm w v]
+  have hHSw : IsHypE_p35 V (E ∪ {{w, v}}) HS := by rw [hAugW]; exact hHS
+  have hVE : ⋃₀ (E ∪ {{v, w}}) ⊆ V := hfanAug.1
+  have hVEW : ⋃₀ (E ∪ {{w, v}}) ⊆ V := by rw [hAugW]; exact hVE
+  have hgraph : Kepler.Text.Fan.Graph (E ∪ {{v, w}}) := hfanAug.2.1
+  have hgraphW : Kepler.Text.Fan.Graph (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hgraph
+  have hdWw : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact hdW
+  have hsubU : HS.face (v, rhoNode1 FF v) ⊆ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+    fvSubsetDarts_p35 HS hHS hdV
+  have hsubW : HS.face (w, rhoNode1 FF w) ⊆ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact fvSubsetDarts_p35 HS hHS hdW
+  -- hsgn ×4（KCHMAMG 产出面导出）
+  have hsgnUU' : 0 < (crossProduct (eU : Fin 3 → ℝ) (dU.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dU.2 : Fin 3 → ℝ) :=
+    W4_SGN_OF_KCH_p35 hkchU hVE hsubU hvisitU hdUU.1 hdUU.2
+  have hsgnWU' : 0 < (crossProduct (eU : Fin 3 → ℝ) (dW.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dW.2 : Fin 3 → ℝ) :=
+    W4_SGN_OF_KCH_p35 hkchU hVE hsubU hvisitU hdWU.1 hdWU.2
+  have hsgnUW' : 0 < (crossProduct (eW : Fin 3 → ℝ) (dU'.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dU'.2 : Fin 3 → ℝ) :=
+    W4_SGN_OF_KCH_p35 hkchW hVEW hsubW hvisitW hdUW.1 hdUW.2
+  have hsgnWW' : 0 < (crossProduct (eW : Fin 3 → ℝ) (dW'.1 : Fin 3 → ℝ)) ⬝ᵥ
+      (dW'.2 : Fin 3 → ℝ) :=
+    W4_SGN_OF_KCH_p35 hkchW hVEW hsubW hvisitW hdWW.1 hdWW.2
+  -- F 槽：残差重建
+  have hparamU : faceCycleParam_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) :=
+    FACE_CYCLE_PARAM_p35 hgraph HS hHS hdV hstepU hvisitU
+  have hparamW : faceCycleParam_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) :=
+    FACE_CYCLE_PARAM_p35 hgraphW HS hHSw hdWw hstepW hvisitW
+  have hsplitU : W4RootSplitSlot_p35 V E (E ∪ {{v, w}}) FF
+      (HS.face (v, rhoNode1 FF v)) dU dW :=
+    W4_SPLIT_RED_p35 (V := V) (E := E) (E' := E ∪ {{v, w}}) (FF := FF)
+      (dU := dU) (dW := dW) (d := (v, rhoNode1 FF v)) (v := v) (w := w)
+      HS hHS hdV hparamU hvisitU hresU
+  have hsplitW : W4RootSplitSlot_p35 V E (E ∪ {{w, v}}) FF
+      (HS.face (w, rhoNode1 FF w)) dU' dW' :=
+    W4_SPLIT_RED_p35 (V := V) (E := E) (E' := E ∪ {{w, v}}) (FF := FF)
+      (dU := dU') (dW := dW') (d := (w, rhoNode1 FF w)) (v := w) (w := v)
+      HS hHSw hdWw hparamW hvisitW hresW
+  exact EJRCFJD_W4_ASSEMBLY_p35 V E FF v w hfan hv hw hwv hsub HS hHS hfanAug
+    hdV hdW hstepU hvisitU hstepW hvisitW eU eW hkchU hkchW
+    hdUU hdWU hdUW hdWW hsgnUU' hsgnWU' hsgnUW' hsgnWW' hsplitU hsplitW
+
+
+-- ===== merged block: lane B (续135 M1 合并, 编排者) =====
+
+/-! ## dw-B-orbit-w1 (EJRCFJD 深水攻坚，车道 B「orbit」)：装配定理
+`EJRCFJD_W4_ASSEMBLY_p35` 的四个轨道槽（hstepU/hvisitU/hstepW/hvisitW）
+的封闭子件 + 诚实前沿。纯追加块，不改既有行（2026-10-31）。
+
+槽位归约（本波核心结论）：
+- **hstep（双面）**：`hstepSlotOfPred_p35` —— 面步不折 backtracking 归结为
+  两个前提：(a) `h2` 增广邻域至少两元（非对角顶点由 `twoNbrOfUnio_p35`
+  封闭供给：ConvexLocalFan 的 `azimInFan ≤ π` 合取 ⟹ FF-dart 尾两邻
+  （`twoNbrOfDart_p35`，cardff-re 移植）+ Dih2k 联合恒等式 ⟹ FF 首坐标
+  覆盖 ⋃₀ E（`fstCoverOfUnio_p35`））；(b) `hpred` 方位环前驱存在性
+  ——**本车道前沿**（栈内只有 2-元/3-元表，无一般 ≥2 元 azimCycle 前驱件，
+  HOL 亦为 chapter-2 体内的隐式步骤）。
+- **hvisit（双面）**：`hvisitSlotOfParam_p35` —— HVISIT_HALF_CIRCLE_p35
+  的窗口算术体（hvisitWindow_p35 消费形）在抽象层重闭合，hvisit 槽归结为
+  「抽象窗口参数化供给」——即 scs 世界 `F_PRIME_EQ_F_vv_p35` 的抽象根对应物
+  （HOL DETERMINE_FV，local_lemmas1.hl:2672；其供给链在抽象根被
+  hEE2（gap E，不在本车道接口）与 hsub 楔几何 sector-placement（gap C/F）
+  两头闸住）。
+- **对角端点角点（诚实账）**：h2 在 v, w 处除「ρv ≠ w / ρw ≠ v」支外还有
+  角点支 `ρv = w ∧ v ∉ ⋃₀ E`（此时 EE_p3 v E' = {w} 单元，hstepU 在基 dart
+  处**假**——ff (v,w) = (w, c), c = w = p.1）；该角点的根级排除属于
+  gap C/E 接口（hsub 楔几何 + PROVE_THE_SLICE_ASSUMPTION），非本车道预算。
+零 sorry：前沿以**显式前提**进入封闭件，下游补供即可全槽闭合。 -/
+
+/-! #### B4: the azimuth-cycle never-self lemma (pure) -/
+
+set_option linter.unusedVariables false in
+theorem azimCycleNeSelf_p35 {W : Set V3} {u p : V3} (hWf : W.Finite)
+    (hpW : p ∈ W) (hy : ∃ y ∈ W, y ≠ p) : azimCycle_p3 W (0:V3) u p ≠ p := by
+  have hsub : ¬(W ⊆ {p}) := by
+    intro hcc
+    obtain ⟨y, hyW, hyne⟩ := hy
+    exact hyne (hcc hyW)
+  rw [azimCycle_p3, if_neg hsub]
+  intro hc
+  have hSf : (W \ {p}).Finite := hWf.subset (fun x hx => hx.1)
+  have hSne : (W \ {p}).Nonempty := by
+    obtain ⟨y, hyW, hyne⟩ := hy
+    exact ⟨y, hyW, hyne⟩
+  obtain ⟨t₁, ht₁S, ht₁min⟩ := Set.exists_min_image (W \ {p})
+    (fun x => azim (0:V3) u p x) hSf hSne
+  have hTf : ((W \ {p}) ∩ {x | azim (0:V3) u p x = azim (0:V3) u p t₁}).Finite :=
+    hSf.subset Set.inter_subset_left
+  have hTne : ((W \ {p}) ∩ {x | azim (0:V3) u p x = azim (0:V3) u p t₁}).Nonempty :=
+    ⟨t₁, ht₁S, rfl⟩
+  obtain ⟨t, htT, htmin⟩ := Set.exists_min_image
+    ((W \ {p}) ∩ {x | azim (0:V3) u p x = azim (0:V3) u p t₁})
+    (fun x => ‖projection (x - (0:V3)) (u - (0:V3))‖) hTf hTne
+  have htS : t ∈ W \ {p} := htT.1
+  have htW : t ∈ W := htS.1
+  have htne : t ≠ p := htS.2
+  have htEq : azim (0:V3) u p t = azim (0:V3) u p t₁ := htT.2
+  have hsat : ∃ z, z ≠ p ∧ z ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim (0:V3) u p z < azim (0:V3) u p q ∨
+        azim (0:V3) u p z = azim (0:V3) u p q ∧
+          ‖projection (z - (0:V3)) (u - (0:V3))‖ ≤
+            ‖projection (q - (0:V3)) (u - (0:V3))‖ := by
+    refine ⟨t, htne, htW, ?_⟩
+    intro q hqW hqp
+    have hqS : q ∈ (W \ {p}) := ⟨hqW, hqp⟩
+    have hle : azim (0:V3) u p t ≤ azim (0:V3) u p q := by
+      rw [htEq]
+      exact ht₁min q hqS
+    rcases lt_or_eq_of_le hle with hlt | heq
+    · exact Or.inl hlt
+    · exact Or.inr ⟨heq, htmin q ⟨hqS, heq.symm.trans htEq⟩⟩
+  exact (Classical.epsilon_spec hsat).1 hc
+
+/-! #### B1: two-neighbour supply at a face-dart tail
+(ported from cardff-re-w1 `re_block.lean`, unchanged statement) -/
+
+theorem fstCoverOfUnio_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hfanL : LocalFan V E FF) {u : V3} (hu : u ∈ ⋃₀ E) :
+    ∃ d ∈ FF, d.1 = u := by
+  obtain ⟨hF, x₀, hx₀d, hFF, hdih⟩ := hfanL
+  obtain ⟨e, heE, hue⟩ := hu
+  obtain ⟨hfin, hcard⟩ := hF.2.1 e heE
+  have hcard2 : e.ncard = 2 := by
+    rw [Set.ncard_eq_toFinset_card e hfin]
+    exact hcard
+  obtain ⟨z, hze, hzu, heq⟩ := exists_other_p35 hfin hcard2 hue
+  have hcoe : (↑(@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan (0:V3) V E hF)) : Set (V3 × V3)) = Fan.dart1OfFan V E :=
+    hypermapOfFan_darts_p35 hF
+  have hdm0 : (u, z) ∈ Fan.dart1OfFan V E := by
+    show ({u, z} : Set V3) ∈ E
+    rw [← heq]
+    exact heE
+  have hun := hdih.2.1 x₀ hx₀d
+  have hdz2 : (u, z) ∈ FF ∪
+      ((↑(@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan (0:V3) V E hF)) : V3 × V3 → V3 × V3) '' FF) := by
+    rw [hFF, hun, hcoe]
+    exact hdm0
+  rcases hdz2 with hmem | ⟨y, hyFF, hyeq⟩
+  · exact ⟨(u, z), hmem, rfl⟩
+  · have hyd1 : y ∈ Fan.dart1OfFan V E := by
+      rw [hFF] at hyFF
+      have hyd := orbitMap_subset_of_permutesOn
+          (@Hypermap.faceMap_permutes (V3 × V3) (fun a b => instDecidableEqProd a b)
+            (Fan.hypermapOfFan (0:V3) V E hF)) hx₀d hyFF
+      rw [hcoe] at hyd
+      exact hyd
+    rw [hypermapOfFan_node_apply_p35 hF y, if_pos hyd1] at hyeq
+    have hy1 : y.1 = u := congrArg Prod.fst hyeq
+    exact ⟨y, hyFF, hy1⟩
+
+/-! #### B3: two-neighbour supply at every original-edge vertex (closed) -/
+
+theorem twoNbrOfUnio_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hfan : ConvexLocalFan V E FF) {u : V3}
+    (hu : u ∈ ⋃₀ E) : 1 < (EE_p3 u E).ncard := by
+  obtain ⟨hL, hconv⟩ := hfan
+  obtain ⟨d, hdFF, hdu⟩ := fstCoverOfUnio_p35 hL hu
+  have h2 := twoNbrOfDart_p35 hconv hdFF
+  rwa [hdu] at h2
+
+/-! #### B8: augmented-neighbour finiteness (closed) -/
+
+theorem eeFiniteOfAugFan_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hVE : ⋃₀ E' ⊆ V) (hVf : V.Finite) (u : V3) : (EE_p3 u E').Finite := by
+  have hsub : (EE_p3 u E') ⊆ V := by
+    intro z hz
+    refine hVE ⟨({u, z} : Set V3), ?_, Set.mem_insert_of_mem u rfl⟩
+    show ({u, z} : Set V3) ∈ E'
+    exact hz
+  exact hVf.subset hsub
+
+/-! #### B5: face darts of the carrier face have nonempty neighbour set
+(closed; fixed-point propagation through the face permutation) -/
+
+theorem faceDartEEne_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hgraph : Kepler.Text.Fan.Graph E')
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hdEE : EE_p3 d.2 E' ≠ ∅) {p : V3 × V3} (hp : p ∈ HS.face d) :
+    EE_p3 p.2 E' ≠ ∅ := by
+  intro hEEp
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  obtain ⟨k, hk⟩ := hp
+  have hpd : p ∈ dartsOfHyp_p3 E' V := hsub ⟨k, hk⟩
+  have hpd2 := hpd
+  rcases hpd with hord | hself
+  · have hm : p.1 ∈ EE_p3 p.2 E' := by
+      show ({p.2, p.1} : Set V3) ∈ E'
+      rw [pairSwap_p35 p.2 p.1]
+      exact hord
+    rw [hEEp] at hm
+    simp at hm
+  · -- p is a self-pair dart (p.1 = p.2 with empty neighbour set): ff fixes p
+    exfalso
+    obtain ⟨hp12, -, hpEE⟩ := hself
+    have hffx : ffOfHyp_p3 0 V E' p = p := by
+      rw [ffOfHyp_p3, if_pos hpd2, ← hp12, hpEE, ivsAzimCycle_p3, if_pos rfl]
+      have hp' : p = (p.1, p.2) := rfl
+      rw [hp', hp12]
+    have hffp : ((HS.faceMap : V3 × V3 → V3 × V3)) p = p := by
+      rw [show (HS.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 0 V E' from hHS.2.2.2]
+      exact hffx
+    have hA : (HS.faceMap ^ (k + 1)) d = HS.faceMap ((HS.faceMap ^ k) d) := by
+      rw [kchPermPowIterate_p35, kchPermPowIterate_p35, Function.iterate_succ_apply']
+    have hB : (HS.faceMap ^ (k + 1)) d
+        = (HS.faceMap ^ k) ((HS.faceMap : V3 × V3 → V3 × V3) d) := by
+      rw [kchPermPowIterate_p35, kchPermPowIterate_p35, Function.iterate_succ_apply]
+    have hcomm : HS.faceMap ((HS.faceMap ^ k) d)
+        = (HS.faceMap ^ k) ((HS.faceMap : V3 × V3 → V3 × V3) d) := by
+      rw [← hA, hB]
+    rw [hk, hffp] at hcomm
+    have hinj := Equiv.injective (HS.faceMap ^ k)
+    have hdd : d = HS.faceMap d := hinj (hk.trans hcomm)
+    -- ff d = d forces d.1 = d.2 (singleton-edge or self-pair dart) — both die
+    have hdd12 : d.2 = d.1 := by
+      have hfd : ffOfHyp_p3 0 V E' d = d := by
+        rw [← hHS.2.2.2]
+        exact hdd.symm
+      rw [ffOfHyp_p3, if_pos hd] at hfd
+      exact congrArg Prod.fst hfd
+    rcases hd with hdord | hdself
+    · have hsingle : ({d.1, d.2} : Set V3) = ({d.1} : Set V3) := by
+        rw [hdd12]
+        simp
+      obtain ⟨hfin, hcard⟩ := hgraph ({d.1, d.2} : Set V3) hdord
+      have hcard2 : ({d.1, d.2} : Set V3).ncard = 2 := by
+        rw [Set.ncard_eq_toFinset_card ({d.1, d.2} : Set V3) hfin]
+        exact hcard
+      rw [hsingle] at hcard2
+      simp at hcard2
+    · exact hdEE (by rw [hdd12]; exact hdself.2.2)
+
+/-! #### B6 (hstep slot, conditional): the no-backtracking face step -/
+
+theorem hstepSlotOfPred_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hgraph : Kepler.Text.Fan.Graph E')
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (hdEE : EE_p3 d.2 E' ≠ ∅)
+    (hfin : ∀ u ∈ ⋃₀ E', (EE_p3 u E').Finite)
+    (h2 : ∀ u ∈ ⋃₀ E', ∀ z ∈ EE_p3 u E', ∃ y ∈ EE_p3 u E', y ≠ z)
+    (hpred : ∀ u ∈ ⋃₀ E', ∀ z ∈ EE_p3 u E',
+      ∃ x ∈ EE_p3 u E', azimCycle_p3 (EE_p3 u E') (0:V3) u x = z) :
+    ∀ p ∈ HS.face d, ∃ c : V3, ffOfHyp_p3 0 V E' p = (p.2, c) ∧ c ≠ p.1 := by
+  intro p hp
+  have hEEne := faceDartEEne_p35 hgraph HS hHS hd hdEE hp
+  have hsub : HS.face d ⊆ dartsOfHyp_p3 E' V := fvSubsetDarts_p35 HS hHS hd
+  have hpdart : p ∈ dartsOfHyp_p3 E' V := hsub hp
+  have hpdart2 := hpdart
+  rcases hpdart with hord | hself
+  · have hu : p.2 ∈ ⋃₀ E' :=
+      ⟨({p.1, p.2} : Set V3), hord, Set.mem_insert_of_mem p.1 rfl⟩
+    have hp1W : p.1 ∈ EE_p3 p.2 E' := by
+      show ({p.2, p.1} : Set V3) ∈ E'
+      rw [pairSwap_p35 p.2 p.1]
+      exact hord
+    have hWf := hfin p.2 hu
+    rw [ffOfHyp_p3, if_pos hpdart2]
+    refine ⟨ivsAzimCycle_p3 (EE_p3 p.2 E') (0:V3) p.2 p.1, rfl, ?_⟩
+    have hne : ¬(EE_p3 p.2 E' = ∅) := hEEne
+    have hc := Classical.epsilon_spec (hpred p.2 hu p.1 hp1W)
+    rw [ivsAzimCycle_p3, if_neg hne]
+    intro hce
+    rw [hce] at hc
+    exact azimCycleNeSelf_p35 hWf hc.1 (h2 p.2 hu p.1 hc.1) hc.2
+  · obtain ⟨hp12, -, hpEE⟩ := hself
+    rw [hp12] at hpEE
+    exact absurd hpEE hEEne
+
+/-! #### B7 (hvisit slot, conditional): node-visit injectivity from the
+window parametrization -/
+
+set_option linter.unusedVariables false in
+theorem hvisitSlotOfParam_p35 {V : Set V3} {E' : Set (Set V3)}
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V)
+    (k k' : ℕ) (hk0 : 0 < k) (hk'0 : 0 < k') (hlt : k' < k)
+    (vv : ℕ → V3) (r : ℕ)
+    (hper : Periodic vv k)
+    (hinj : ∀ i j : ℕ, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hF : (Set.range fun i : ℕ => (vv (i % k' + r), vv ((i + 1) % k' + r)))
+      = HS.face d) :
+    Set.InjOn Prod.fst (HS.face d) := by
+  rw [← hF]
+  intro d₁ hd₁ d₂ hd₂ hfst
+  obtain ⟨i, rfl⟩ := hd₁
+  obtain ⟨j, rfl⟩ := hd₂
+  have hf1 : vv (i % k' + r) = vv (j % k' + r) := hfst
+  have h11 := hvisitWindow_p35 hk0 hk'0 hlt hper hinj r hf1
+  have h11' : (i + 1) % k' = (j + 1) % k' := by
+    have ht : (i % k' + 1) % k' = (j % k' + 1) % k' :=
+      congrArg (fun t => (t + 1) % k') h11
+    have key1 : (i + 1) % k' = (i % k' + 1) % k' := by rw [Nat.mod_add_mod]
+    have key2 : (j + 1) % k' = (j % k' + 1) % k' := by rw [Nat.mod_add_mod]
+    rw [key1, key2]
+    exact ht
+  have h12 : vv ((i + 1) % k' + r) = vv ((j + 1) % k' + r) :=
+    congrArg (fun t => vv (t + r)) h11'
+  show (vv (i % k' + r), vv ((i + 1) % k' + r))
+      = (vv (j % k' + r), vv ((j + 1) % k' + r))
+  rw [h11, h12]
+
+-- ===== merged block: lane A2 (续135 M1 合并, 编排者) =====
+
+/-! ## EJRCFJD chain W4-bridge — the ternary augmented-carrier hypermap
+witness (lane `ejrcfjd-dw-A-hs3-w1`, 2026-10-28)
+
+The `HS`/`hHS` slot of `EJRCFJD_W4_ASSEMBLY_p35` (`IsHypE_p35 V (E ∪ {{v, w}}) HS`)
+discharged from the frozen root `EJRCFJD_p35` signature: the five root
+premises `hfan hv hw hwv hsub` plus the stack-conventional explicit
+two-neighbour hypothesis `hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2` (the
+W2-note surface: `LocalFan` does not force 2-regularity on all of `V`;
+folding it in is the HOL-faithful residual, tracked upstream as W3a — the
+banked binary `HS_EXISTS_p35` carries the same explicit premise).
+
+Route (the gap-A sizing of the w4splice DELIVERY §5):
+1. **Transplants** — the R-e block (`cardff-re-w1/re_block.lean`, whole-block)
+   and the R-b span (LocalAuto35 `diagPlace_p35`/`eeAug*`/`azimSpec_rayShift_p35`
+   /`collinear3_rayShift_p35`/`dartNonColl2_p35`, private upstream, absent from
+   the frozen stack): from the five root premises these supply `hdiag`
+   (diagonal off the edge set), both sector placements
+   `0 < azim 0 u ρu x < azim 0 u ρu ιu` (`x` the opposite endpoint), the
+   non-collinearity `¬ Collinear3 0 u x`, and the three-neighbour
+   identifications `EE_p3 u (E ∪ {{v, w}}) = {ιu, ρu, x}`.
+2. **`hs3NodeTab_p35`** — the per-node cyclic table: at every `u ∈ V` and
+   neighbour `x`, both `azimCycle_p3` and `ivsAzimCycle_p3` stay inside the
+   neighbour set and compose to the identity in both orders (`sigmaTable3_p35`
+   at the two ternary nodes, the unconditional 2-element kit
+   `azimCycle_pairEE_p35` at every interior node via `eeAugNe_p35`).
+3. **`HS_EXISTS3_p35`** — the `Hypermap` assembly: the binary
+   `nnMaps/nnInjOn/nnInvol + comp_eq_one` bookkeeping of `HS_EXISTS_p35`
+   re-paid on the ternary dart set, with the involution data replaced by the
+   two-sided composition identities of `hs3TabP_p35` (σ∘ι = ι∘σ = id at every
+   node is exactly what makes nn and ff `BijOn`s and drives the per-dart
+   `edge ∘ node ∘ face = id`).
+-/
+
+/-! ### Transplanted supply (verbatim upstream pieces; private there, absent
+from the frozen LA35 stack) -/
+
+/-- The diagonal endpoint is neither fan neighbour at the opposite node
+(distinctness supply of the ternary neighbour table, from `hdiag`). -/
+private theorem hs3DiagNe_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv : v ∈ V)
+    (hdiag : ({v, w} : Set V3) ∉ E) :
+    w ≠ rhoNode1 FF v ∧ w ≠ ivsRhoNode1 FF v := by
+  obtain ⟨hdart, hpre, -, -, -, -⟩ := lfVertKit_p35 hfan hEE2 hv
+  refine ⟨fun hc => ?_, fun hc => ?_⟩
+  · have hE := kchDartInE_p35 hfan hdart
+    rw [← hc] at hE
+    exact hdiag hE
+  · have hE := kchDartInE_p35 hfan hpre
+    rw [← hc] at hE
+    rw [Set.pair_comm] at hE
+    exact hdiag hE
+
+/-- The per-node cyclic-table predicate: at every node the `azimCycle_p3`
+step and its `ivsAzimCycle_p3` inverse stay inside the neighbour set and
+compose to the identity in both orders — the ternary generalization of the
+binary involution content (`nnInvol_p35` family). -/
+private def hs3TabP_p35 (V : Set V3) (E' : Set (Set V3)) : Prop :=
+  ∀ u ∈ V, ∀ x ∈ EE_p3 u E',
+    azimCycle_p3 (EE_p3 u E') 0 u x ∈ EE_p3 u E' ∧
+    ivsAzimCycle_p3 (EE_p3 u E') 0 u x ∈ EE_p3 u E' ∧
+    azimCycle_p3 (EE_p3 u E') 0 u
+      (ivsAzimCycle_p3 (EE_p3 u E') 0 u x) = x ∧
+    ivsAzimCycle_p3 (EE_p3 u E') 0 u
+      (azimCycle_p3 (EE_p3 u E') 0 u x) = x
+
+/-- **The ternary per-node cycle table** — `hs3TabP_p35` for the augmented
+carrier: `sigmaTable3_p35` at the two ternary nodes (under the transplanted
+sector placements), the unconditional two-element kit
+`azimCycle_pairEE_p35` at every interior node (via `eeAugNe_p35`). -/
+private theorem hs3NodeTab_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3}
+    (hEEv : EE_p3 v (E ∪ {{v, w}}) = {ivsRhoNode1 FF v, rhoNode1 FF v, w})
+    (hEEw : EE_p3 w (E ∪ {{v, w}}) = {ivsRhoNode1 FF w, rhoNode1 FF w, v})
+    (hv : v ∈ V) (hw : w ∈ V)
+    (hnc1v : ¬ Collinear3 0 v (rhoNode1 FF v))
+    (hncpv : ¬ Collinear3 0 v (ivsRhoNode1 FF v))
+    (hspv : ivsRhoNode1 FF v ≠ rhoNode1 FF v)
+    (hsvv : w ≠ rhoNode1 FF v) (hwpv : w ≠ ivsRhoNode1 FF v)
+    (hncav : ¬ Collinear3 0 v w)
+    (hposv : 0 < azim 0 v (rhoNode1 FF v) w)
+    (hltv : azim 0 v (rhoNode1 FF v) w < azim 0 v (rhoNode1 FF v) (ivsRhoNode1 FF v))
+    (hnc1w : ¬ Collinear3 0 w (rhoNode1 FF w))
+    (hncpw : ¬ Collinear3 0 w (ivsRhoNode1 FF w))
+    (hspw : ivsRhoNode1 FF w ≠ rhoNode1 FF w)
+    (hsvw : v ≠ rhoNode1 FF w) (hwpw : v ≠ ivsRhoNode1 FF w)
+    (hncaw : ¬ Collinear3 0 w v)
+    (hposw : 0 < azim 0 w (rhoNode1 FF w) v)
+    (hltw : azim 0 w (rhoNode1 FF w) v < azim 0 w (rhoNode1 FF w) (ivsRhoNode1 FF w))
+    (hVE : ⋃₀ E ⊆ V) (hVfin : V.Finite)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    hs3TabP_p35 V (E ∪ {{v, w}}) := by
+  intro u hu x hx
+  by_cases huv : u = v
+  · subst huv
+    rw [hEEv] at hx ⊢
+    obtain ⟨hσs, hσa, hσpr, hιa, hιs, hιpr⟩ := sigmaTable3_p35 (u := u)
+      (s := rhoNode1 FF u) (pr := ivsRhoNode1 FF u) (a := w)
+      hnc1v hncpv hspv hsvv hwpv hncav hposv hltv
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl
+    · refine ⟨?_, ?_, ?_, ?_⟩
+      · rw [hσpr]; exact Set.mem_insert_iff.mpr (Or.inr (Or.inl rfl))
+      · rw [hιpr]; exact Set.mem_insert_iff.mpr (Or.inr (Or.inr rfl))
+      · rw [hιpr, hσa]
+      · rw [hσpr, hιs]
+    · refine ⟨?_, ?_, ?_, ?_⟩
+      · rw [hσs]; exact Set.mem_insert_iff.mpr (Or.inr (Or.inr rfl))
+      · rw [hιs]; exact Set.mem_insert_iff.mpr (Or.inl rfl)
+      · rw [hιs, hσpr]
+      · rw [hσs, hιa]
+    · refine ⟨?_, ?_, ?_, ?_⟩
+      · rw [hσa]; exact Set.mem_insert_iff.mpr (Or.inl rfl)
+      · rw [hιa]; exact Set.mem_insert_iff.mpr (Or.inr (Or.inl rfl))
+      · rw [hιa, hσs]
+      · rw [hσa, hιpr]
+  · by_cases huw : u = w
+    · subst huw
+      rw [hEEw] at hx ⊢
+      obtain ⟨hσs, hσa, hσpr, hιa, hιs, hιpr⟩ := sigmaTable3_p35 (u := u)
+        (s := rhoNode1 FF u) (pr := ivsRhoNode1 FF u) (a := v)
+        hnc1w hncpw hspw hsvw hwpw hncaw hposw hltw
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with rfl | rfl | rfl
+      · refine ⟨?_, ?_, ?_, ?_⟩
+        · rw [hσpr]; exact Set.mem_insert_iff.mpr (Or.inr (Or.inl rfl))
+        · rw [hιpr]; exact Set.mem_insert_iff.mpr (Or.inr (Or.inr rfl))
+        · rw [hιpr, hσa]
+        · rw [hσpr, hιs]
+      · refine ⟨?_, ?_, ?_, ?_⟩
+        · rw [hσs]; exact Set.mem_insert_iff.mpr (Or.inr (Or.inr rfl))
+        · rw [hιs]; exact Set.mem_insert_iff.mpr (Or.inl rfl)
+        · rw [hιs, hσpr]
+        · rw [hσs, hιa]
+      · refine ⟨?_, ?_, ?_, ?_⟩
+        · rw [hσa]; exact Set.mem_insert_iff.mpr (Or.inl rfl)
+        · rw [hιa]; exact Set.mem_insert_iff.mpr (Or.inr (Or.inl rfl))
+        · rw [hιa, hσs]
+        · rw [hσa, hιpr]
+    · -- interior node: the augmented neighbour set is the base one, and the
+      -- two-element cycle kit applies unconditionally
+      have hEEn : EE_p3 u (E ∪ {{v, w}}) = EE_p3 u E := eeAugNe_p35 huv huw
+      rw [hEEn] at hx ⊢
+      have hfinEE : (EE_p3 u E).Finite := eeFiniteOfSubVDart_p35 hVE hVfin
+      obtain ⟨c, hcm, hcb, hS⟩ := exists_other_p35 hfinEE (hEE2 u hu) hx
+      obtain ⟨h1, h2, h3, h4⟩ := azimCycle_pairEE_p35 hS (Ne.symm hcb)
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · rw [h1, hS]; exact Set.mem_insert_iff.mpr (Or.inr rfl)
+      · rw [h3, hS]; exact Set.mem_insert_iff.mpr (Or.inr rfl)
+      · rw [h3, h2]
+      · rw [h1, h4]
+
+/-- Dart decomposition on the ternary carrier: every dart is an ordered pair
+(the `self_pairs` branch dies: every vertex carries a neighbour), with both
+ends in `V` and each end in the other's neighbour set. -/
+private theorem hs3DartEE_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hVE : ⋃₀ E' ⊆ V) (hEEne : ∀ u ∈ V, (EE_p3 u E') ≠ ∅)
+    {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V) :
+    ({d.1, d.2} : Set V3) ∈ E' ∧ d.1 ∈ V ∧ d.2 ∈ V ∧
+      d.2 ∈ EE_p3 d.1 E' ∧ d.1 ∈ EE_p3 d.2 E' := by
+  simp only [dartsOfHyp_p3, Set.mem_union, ordPairs_p3, selfPairs_p3,
+    Set.mem_setOf_eq] at hd
+  rcases hd with hord | hself
+  · exact ⟨hord,
+      hVE (Set.mem_sUnion_of_mem (Set.mem_insert_iff.mpr (Or.inl rfl)) hord),
+      hVE (Set.mem_sUnion_of_mem
+        (Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)) hord),
+      hord, by show ({d.2, d.1} : Set V3) ∈ E'; rw [Set.pair_comm d.2 d.1]; exact hord⟩
+  · exact absurd hself.2.2 (hEEne d.1 hself.2.1)
+
+/-- The node map carries darts to darts (ternary carrier). -/
+private theorem hs3NNmaps_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hVE : ⋃₀ E' ⊆ V) (hEEne : ∀ u ∈ V, (EE_p3 u E') ≠ ∅)
+    (hvTab : hs3TabP_p35 V E') {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V) :
+    nnOfHyp_p3 0 V E' d ∈ dartsOfHyp_p3 E' V := by
+  obtain ⟨hord, hd1V, hd2V, hEEab, -⟩ := hs3DartEE_p35 hVE hEEne hd
+  rw [nnOfHyp_p3, if_pos hd]
+  refine Set.mem_union_left _ ?_
+  show ({d.1, azimCycle_p3 (EE_p3 d.1 E') 0 d.1 d.2} : Set V3) ∈ E'
+  exact (hvTab d.1 hd1V d.2 hEEab).1
+
+/-- The node map is injective on the ternary dart set (σ∘ι = id at every
+node). -/
+private theorem hs3NNinj_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hVE : ⋃₀ E' ⊆ V) (hEEne : ∀ u ∈ V, (EE_p3 u E') ≠ ∅)
+    (hvTab : hs3TabP_p35 V E') :
+    Set.InjOn (nnOfHyp_p3 0 V E') (dartsOfHyp_p3 E' V) := by
+  intro a ha b hb hab
+  obtain ⟨-, ha1V, -, hEEa, -⟩ := hs3DartEE_p35 hVE hEEne ha
+  obtain ⟨-, hb1V, -, hEEb, -⟩ := hs3DartEE_p35 hVE hEEne hb
+  rw [nnOfHyp_p3, if_pos ha, nnOfHyp_p3, if_pos hb, Prod.mk.injEq] at hab
+  obtain ⟨h11, h22⟩ := hab
+  rw [h11] at hEEa h22
+  have hiv := congrArg (ivsAzimCycle_p3 (EE_p3 b.1 E') 0 b.1) h22
+  rw [(hvTab b.1 hb1V a.2 hEEa).2.2.2, (hvTab b.1 hb1V b.2 hEEb).2.2.2] at hiv
+  exact Prod.ext h11 hiv
+
+/-- The node map is surjective on the ternary dart set (ι lands in the
+neighbour set and σ∘ι = id). -/
+private theorem hs3NNsurj_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hVE : ⋃₀ E' ⊆ V) (hEEne : ∀ u ∈ V, (EE_p3 u E') ≠ ∅)
+    (hvTab : hs3TabP_p35 V E') {b : V3 × V3} (hb : b ∈ dartsOfHyp_p3 E' V) :
+    ∃ a : V3 × V3, a ∈ dartsOfHyp_p3 E' V ∧ nnOfHyp_p3 0 V E' a = b := by
+  obtain ⟨-, hb1V, -, hEEb, -⟩ := hs3DartEE_p35 hVE hEEne hb
+  obtain ⟨c, e⟩ := b
+  have hι := (hvTab c hb1V e hEEb).2.1
+  have hpre : (c, ivsAzimCycle_p3 (EE_p3 c E') 0 c e) ∈ dartsOfHyp_p3 E' V :=
+    Set.mem_union_left _ (by
+      show ({c, ivsAzimCycle_p3 (EE_p3 c E') 0 c e} : Set V3) ∈ E'
+      exact hι)
+  refine ⟨(c, ivsAzimCycle_p3 (EE_p3 c E') 0 c e), hpre, ?_⟩
+  rw [nnOfHyp_p3, if_pos hpre]
+  show (c, azimCycle_p3 (EE_p3 c E') 0 c
+      (ivsAzimCycle_p3 (EE_p3 c E') 0 c e)) = (c, e)
+  rw [(hvTab c hb1V e hEEb).2.2.1]
+
+/-- The face map carries darts to darts (ternary carrier). -/
+private theorem hs3FFmaps_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hVE : ⋃₀ E' ⊆ V) (hEEne : ∀ u ∈ V, (EE_p3 u E') ≠ ∅)
+    (hvTab : hs3TabP_p35 V E') {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V) :
+    ffOfHyp_p3 0 V E' d ∈ dartsOfHyp_p3 E' V := by
+  obtain ⟨-, -, hd2V, -, hEEba⟩ := hs3DartEE_p35 hVE hEEne hd
+  rw [ffOfHyp_p3, if_pos hd]
+  refine Set.mem_union_left _ ?_
+  show ({d.2, ivsAzimCycle_p3 (EE_p3 d.2 E') 0 d.2 d.1} : Set V3) ∈ E'
+  exact (hvTab d.2 hd2V d.1 hEEba).2.1
+
+/-- The face map is injective on the ternary dart set (ι∘σ = id at every
+node). -/
+private theorem hs3FFinj_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hVE : ⋃₀ E' ⊆ V) (hEEne : ∀ u ∈ V, (EE_p3 u E') ≠ ∅)
+    (hvTab : hs3TabP_p35 V E') :
+    Set.InjOn (ffOfHyp_p3 0 V E') (dartsOfHyp_p3 E' V) := by
+  intro a ha b hb hab
+  obtain ⟨-, ha1V, ha2V, -, hEEa⟩ := hs3DartEE_p35 hVE hEEne ha
+  obtain ⟨-, hb1V, hb2V, -, hEEb⟩ := hs3DartEE_p35 hVE hEEne hb
+  rw [ffOfHyp_p3, if_pos ha, ffOfHyp_p3, if_pos hb, Prod.mk.injEq] at hab
+  obtain ⟨h11, h22⟩ := hab
+  rw [h11] at hEEa h22
+  have hiv := congrArg (azimCycle_p3 (EE_p3 b.2 E') 0 b.2) h22
+  rw [(hvTab b.2 hb2V a.1 hEEa).2.2.1, (hvTab b.2 hb2V b.1 hEEb).2.2.1] at hiv
+  exact Prod.ext hiv h11
+
+/-- The face map is surjective on the ternary dart set (σ lands in the
+neighbour set and ι∘σ = id). -/
+private theorem hs3FFsurj_p35 {V : Set V3} {E' : Set (Set V3)}
+    (hVE : ⋃₀ E' ⊆ V) (hEEne : ∀ u ∈ V, (EE_p3 u E') ≠ ∅)
+    (hvTab : hs3TabP_p35 V E') {b : V3 × V3} (hb : b ∈ dartsOfHyp_p3 E' V) :
+    ∃ a : V3 × V3, a ∈ dartsOfHyp_p3 E' V ∧ ffOfHyp_p3 0 V E' a = b := by
+  obtain ⟨-, hb1V, -, hEEb, -⟩ := hs3DartEE_p35 hVE hEEne hb
+  obtain ⟨c, e⟩ := b
+  have hσ := (hvTab c hb1V e hEEb).1
+  have hpre : (azimCycle_p3 (EE_p3 c E') 0 c e, c) ∈ dartsOfHyp_p3 E' V :=
+    Set.mem_union_left _ (by
+      show ({azimCycle_p3 (EE_p3 c E') 0 c e, c} : Set V3) ∈ E'
+      rw [Set.pair_comm]
+      exact hσ)
+  refine ⟨(azimCycle_p3 (EE_p3 c E') 0 c e, c), hpre, ?_⟩
+  rw [ffOfHyp_p3, if_pos hpre]
+  show (c, ivsAzimCycle_p3 (EE_p3 c E') 0 c
+      (azimCycle_p3 (EE_p3 c E') 0 c e)) = (c, e)
+  rw [(hvTab c hb1V e hEEb).2.2.2]
+
+/-- **EJRCFJD chain W4-bridge** — the augmented-carrier hypermap witness
+exists at three-neighbour diagonal nodes: the ternary rendering of the banked
+binary `HS_EXISTS_p35`, with the involution bookkeeping replaced by the
+per-node cyclic tables (`hs3TabP_p35`: σ∘ι = ι∘σ = id drives the nn/ff
+`BijOn`s and the per-dart `edge ∘ node ∘ face = id`).  Premises: the frozen
+root `EJRCFJD_p35` signature five plus the stack-conventional explicit
+two-neighbour hypothesis `hEE2` (the W3a surface; the binary carrier lemma
+carries the same). -/
+theorem HS_EXISTS3_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∃ HS : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HS := by
+  -- 0. the fan world
+  obtain ⟨hLF, hconv⟩ := hfan
+  have hVE : (⋃₀ E) ⊆ V := hLF.1.1
+  have hVfin : V.Finite := hLF.1.2.2.1.1
+  -- 1. the augmented carrier
+  have hVE' : (⋃₀ (E ∪ {{v, w}})) ⊆ V := by
+    intro z hz
+    obtain ⟨e, he, hze⟩ := hz
+    rcases he with hEe | hDe
+    · exact hVE (Set.mem_sUnion_of_mem hze hEe)
+    · rw [show e = ({v, w} : Set V3) from hDe, Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hze
+      rcases hze with hh | hh
+      · exact hh ▸ hv
+      · exact hh ▸ hw
+  have hfinE' : (dartsOfHyp_p3 (E ∪ {{v, w}}) V).Finite :=
+    dartsOfHyp_finite_p35 hVE' hVfin
+  -- 2. the R-e / R-b transplants: hdiag and the two sector placements
+  have hdiag : ({v, w} : Set V3) ∉ E := diagNotEdge_p35 ⟨hLF, hconv⟩ hv hw hwv hsub
+  have hdiagW : ({w, v} : Set V3) ∉ E := by
+    intro hc
+    refine hdiag ?_
+    rw [Set.pair_comm] at hc
+    exact hc
+  have hsubW : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx z hz
+    rw [Set.pair_comm] at hz
+    exact hsub x hx hz
+  obtain ⟨hncaw, hposw, hltw⟩ := diagPlace_p35 hLF hEE2 hv hw hwv hsub hdiag
+  obtain ⟨hncav, hposv, hltv⟩ :=
+    diagPlace_p35 hLF hEE2 hw hv (Ne.symm hwv) hsubW hdiagW
+  -- 3. the ternary distinctness supply at both nodes
+  obtain ⟨hsvv, hwpv⟩ := hs3DiagNe_p35 hLF hEE2 hv hdiag
+  have hsvw : v ≠ rhoNode1 FF w := by
+    have hE := kchDartInE_p35 hLF ((lfVertKit_p35 hLF hEE2 hw).1)
+    intro hc
+    refine hdiagW ?_
+    rw [← hc] at hE
+    exact hE
+  have hwpw : v ≠ ivsRhoNode1 FF w := by
+    have hE := kchDartInE_p35 hLF ((lfVertKit_p35 hLF hEE2 hw).2.1)
+    intro hc
+    refine hdiagW ?_
+    rw [← hc] at hE
+    rw [Set.pair_comm] at hE
+    exact hE
+  -- 4. the fan non-collinearity of ρ/ι at both nodes (types inferred; the
+  -- annotated `have` form spins the unifier here — see DELIVERY note)
+  have hnc1v := kchDartNonColl_p35 hLF ((lfVertKit_p35 hLF hEE2 hv).1)
+  have hncpv := dartNonColl2_p35 hLF ((lfVertKit_p35 hLF hEE2 hv).2.1)
+  have hnc1w := kchDartNonColl_p35 hLF ((lfVertKit_p35 hLF hEE2 hw).1)
+  have hncpw := dartNonColl2_p35 hLF ((lfVertKit_p35 hLF hEE2 hw).2.1)
+  have hspv : ivsRhoNode1 FF v ≠ rhoNode1 FF v :=
+    Ne.symm ((lfVertKit_p35 hLF hEE2 hv).2.2.2.2.2)
+  have hspw : ivsRhoNode1 FF w ≠ rhoNode1 FF w :=
+    Ne.symm ((lfVertKit_p35 hLF hEE2 hw).2.2.2.2.2)
+  -- 5. the three-neighbour identifications
+  have hEEv : EE_p3 v (E ∪ {{v, w}}) = {ivsRhoNode1 FF v, rhoNode1 FF v, w} := by
+    have h := eeAugThree_p35 (v := w) (w := v) hLF hEE2 hv (Ne.symm hwv) hsvv hwpv
+    rw [show ((E ∪ {{w, v}} : Set (Set V3))) = (E ∪ {{v, w}}) from by
+      rw [Set.pair_comm w v]] at h
+    exact h
+  have hEEw : EE_p3 w (E ∪ {{v, w}}) = {ivsRhoNode1 FF w, rhoNode1 FF w, v} :=
+    eeAugThree_p35 hLF hEE2 hw hwv hsvw hwpw
+  -- 6. every vertex carries a neighbour (kills the self_pairs branch)
+  have hEEne : ∀ u ∈ V, (EE_p3 u (E ∪ {{v, w}})) ≠ ∅ := by
+    intro u hu hc
+    rcases Classical.em (u = v) with huv | huv
+    · have hm : (rhoNode1 FF v) ∈ ({ivsRhoNode1 FF v, rhoNode1 FF v, w} : Set V3) :=
+        Set.mem_insert_iff.mpr (Or.inr (Or.inl rfl))
+      rw [huv, hEEv] at hc
+      rw [hc] at hm
+      exact Set.notMem_empty _ hm
+    · rcases Classical.em (u = w) with huw | huw
+      · have hm : (rhoNode1 FF w) ∈ ({ivsRhoNode1 FF w, rhoNode1 FF w, v} : Set V3) :=
+          Set.mem_insert_iff.mpr (Or.inr (Or.inl rfl))
+        rw [huw, hEEw] at hc
+        rw [hc] at hm
+        exact Set.notMem_empty _ hm
+      · have h2 := hEE2 u hu
+        have hc' : (EE_p3 u E) = ∅ := by rw [← eeAugNe_p35 huv huw]; exact hc
+        rw [hc', Set.ncard_empty] at h2
+        exact absurd h2 (by decide : ¬((0:ℕ) = 2))
+  -- 7. the per-node cyclic table
+  have hvTab : hs3TabP_p35 V (E ∪ {{v, w}}) :=
+    hs3NodeTab_p35 hEEv hEEw hv hw hnc1v hncpv hspv hsvv hwpv hncav hposv hltv
+      hnc1w hncpw hspw hsvw hwpw hncaw hposw hltw hVE hVfin hEE2
+  -- 8. the Hypermap assembly (binary HS_EXISTS_p35 pattern)
+  have hBijNN : Set.BijOn (nnOfHyp_p3 0 V (E ∪ {{v, w}}))
+      (dartsOfHyp_p3 (E ∪ {{v, w}}) V) (dartsOfHyp_p3 (E ∪ {{v, w}}) V) :=
+    ⟨fun d hd => hs3NNmaps_p35 hVE' hEEne hvTab hd,
+      hs3NNinj_p35 hVE' hEEne hvTab,
+      fun b hb => hs3NNsurj_p35 hVE' hEEne hvTab hb⟩
+  have hBijFF : Set.BijOn (ffOfHyp_p3 0 V (E ∪ {{v, w}}))
+      (dartsOfHyp_p3 (E ∪ {{v, w}}) V) (dartsOfHyp_p3 (E ∪ {{v, w}}) V) :=
+    ⟨fun d hd => hs3FFmaps_p35 hVE' hEEne hvTab hd,
+      hs3FFinj_p35 hVE' hEEne hvTab,
+      fun b hb => hs3FFsurj_p35 hVE' hEEne hvTab hb⟩
+  refine ⟨⟨hfinE'.toFinset, eePermOfHyp_p35 0 V (E ∪ {{v, w}}),
+    permOfBijOn_p35 _ hBijNN, permOfBijOn_p35 _ hBijFF, ?_, ?_, ?_, ?_⟩, ?_⟩
+  · intro x hx
+    show eeOfHyp_p3 0 V (E ∪ {{v, w}}) x = x
+    exact eeOfHyp_apply_notmem_p35 0 V (E ∪ {{v, w}})
+      (fun hc => hx ((finDartsMem_p35 hfinE').mpr hc))
+  · intro x hx
+    exact permOfBijOn_apply_notmem_p35
+      (fun hc => hx ((finDartsMem_p35 hfinE').mpr hc))
+  · intro x hx
+    exact permOfBijOn_apply_notmem_p35
+      (fun hc => hx ((finDartsMem_p35 hfinE').mpr hc))
+  · refine Equiv.ext fun d => ?_
+    simp only [Equiv.Perm.mul_apply, Equiv.Perm.one_apply]
+    by_cases hd : d ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V
+    · obtain ⟨hord, hd1V, hd2V, hEEab, hEEba⟩ := hs3DartEE_p35 hVE' hEEne hd
+      have hdart1 : ffOfHyp_p3 0 V (E ∪ {{v, w}}) d
+          = (d.2, ivsAzimCycle_p3 (EE_p3 d.2 (E ∪ {{v, w}})) 0 d.2 d.1) := by
+        rw [ffOfHyp_p3, if_pos hd]
+      have hdart1m : (d.2, ivsAzimCycle_p3 (EE_p3 d.2 (E ∪ {{v, w}})) 0 d.2 d.1)
+          ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V := by
+        rw [← hdart1]; exact hs3FFmaps_p35 hVE' hEEne hvTab hd
+      have hdart2 : nnOfHyp_p3 0 V (E ∪ {{v, w}})
+          (d.2, ivsAzimCycle_p3 (EE_p3 d.2 (E ∪ {{v, w}})) 0 d.2 d.1)
+          = (d.2, d.1) := by
+        rw [nnOfHyp_p3, if_pos hdart1m]
+        exact congrArg (fun z : V3 => (d.2, z))
+          ((hvTab d.2 hd2V d.1 hEEba).2.2.1)
+      rw [permOfBijOn_apply_mem_p35 hd, hdart1,
+        permOfBijOn_apply_mem_p35 hdart1m, hdart2]
+      show eeOfHyp_p3 0 V (E ∪ {{v, w}}) (d.2, d.1) = d
+      exact eeOfHyp_apply_mem_p35 0 V (E ∪ {{v, w}})
+        (V_IN_DARTS_IMP_SWICH_SO_DO hd)
+    · rw [permOfBijOn_apply_notmem_p35 hd]
+      rw [permOfBijOn_apply_notmem_p35 hd]
+      show eeOfHyp_p3 0 V (E ∪ {{v, w}}) d = d
+      exact eeOfHyp_apply_notmem_p35 0 V (E ∪ {{v, w}}) hd
+  · rw [IsHypE_p35]
+    refine ⟨hfinE'.coe_toFinset, rfl, ?_, ?_⟩
+    · funext d
+      by_cases hd : d ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V
+      · rw [permOfBijOn_apply_mem_p35 hd, nnOfHyp_p3, if_pos hd]
+      · rw [permOfBijOn_apply_notmem_p35 hd, nnOfHyp_p3, if_neg hd]
+    · funext d
+      by_cases hd : d ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V
+      · rw [permOfBijOn_apply_mem_p35 hd, ffOfHyp_p3, if_pos hd]
+      · rw [permOfBijOn_apply_notmem_p35 hd, ffOfHyp_p3, if_neg hd]
+
+-- ===== merged block: lane C2 (续135 M1 合并, 编排者) =====
+/-! ## CE-aug wave（车道 `ejrcfjd-dw-CE-aug-w1`，2026-10-28）— C/E 槽口件
+
+供出装配定理 `EJRCFJD_W4_ASSEMBLY_p35` 的三槽（`hfanAug`/`hdV`/`hdW`）。
+三部分：
+
+**PART R — `hdiag` 件移植**（cardff-re-w1 `re_block.lean` 逐字；依赖
+`azimSpec_rayShift_p35` 逐字取自 cardff4-w1 kit_fixed6、`kchFFSubDart1_p35`
+逐字取自 stack34/cardff5）。产出 `diagNotEdge_p35 : ({v, w} : Set V3) ∉ E`
+——根五前提（`ConvexLocalFan` + `hsub`）直接推论。
+
+**PART E — E 槽口的面原生核心**：`rhoNode1 FF v = ε(fun b => (v, b) ∈ FF)`，
+面内以 `v` 为首坐标的 dart 存在 ⟹ 主 dart 落面（`Classical.epsilon_spec`，
+无需唯一性）⟹ `kchDartInE_p35` 供 `{v, ρv} ∈ E` ⟹ 装配成
+`(v, ρv) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V`。面成员前提
+`FacePlacement = ∃ X ∈ FF, X.1 = v`（W3a sector-placement 根级供给）诚实
+承入；`hEE2` 在手时经 `lfVertKit_p35` 全闭（`slotE_ofEE2_p35`）。
+
+**PART C — C 槽口的 junk-exclusion 件**：`hfan7new` 的 V-单点支
+（`e2 = {u}`）在「u 有 FF 尾 dart」前提下全闭：面尾 dart 的切片楔以 u 射线
+为楔轴 ⟹ `u ∉ affGt {0} {v, w}`（`noRayOfFaceTail_p35`，仅消费
+`wedgeMem_p35` 的共线支），锥代数渲染 + `pmSameRayKill_p35` 收掉其余方位。
+e2 ∈ E 支（楔排除 + 平面论证）与 `hcol` 为 C 的精确剩余（见 DELIVERY）。
+-/
+
+/-! ### PART R — hdiag 件移植 -/
+
+/-! ### PART E — E 槽口的面原生核心 -/
+
+/-- **E 核心 1（ε 钉扎）**：面内存在以 `v` 为首坐标的 dart ⟹ 主 dart
+`(v, rhoNode1 FF v)` 落面。`rhoNode1 FF v = ε(fun b => (v, b) ∈ FF)`，
+`Classical.epsilon_spec` 直接供成员（无需唯一性）。 -/
+private theorem rhoDartOfFaceMem_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3}
+    (hmem : ∃ X : V3 × V3, X ∈ FF ∧ X.1 = v) :
+    (v, rhoNode1 FF v) ∈ FF := by
+  obtain ⟨X, hX, hXv⟩ := hmem
+  have hxv : (v, X.2) ∈ FF := by rw [← hXv]; exact hX
+  exact Classical.epsilon_spec (p := fun z : V3 => (v, z) ∈ FF) ⟨X.2, hxv⟩
+
+/-- **E 核心 2（装配形）**：FacePlacement + `LocalFan` ⟹ E 槽口。
+`FacePlacement = ∃ X ∈ FF, X.1 = v` 是 W3a sector-placement 的根级供给
+（诚实承入；`hEE2` 在手时由 `lfVertKit_p35.1` 直接供出）。 -/
+private theorem slotE_ofFaceMem_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w : V3} (hfanL : LocalFan V E FF)
+    (hmem : ∃ X : V3 × V3, X ∈ FF ∧ X.1 = v) :
+    (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V := by
+  have hd : (v, rhoNode1 FF v) ∈ FF := rhoDartOfFaceMem_p35 (V := V) (E := E) hmem
+  refine Set.mem_union_left _ ?_
+  show ({(v, rhoNode1 FF v).1, (v, rhoNode1 FF v).2} : Set V3) ∈ E ∪ {{v, w}}
+  exact Set.mem_union_left _ (kchDartInE_p35 hfanL hd)
+
+/-- **E 槽口（hEE2 全闭形）**：`hEE2` 在手时 `lfVertKit_p35.1` 供面成员，
+E 槽口全闭。 -/
+private theorem slotE_ofEE2_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w : V3} (hfanL : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hv : v ∈ V) :
+    (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+  slotE_ofFaceMem_p35 hfanL ⟨(v, rhoNode1 FF v),
+    (lfVertKit_p35 hfanL hEE2 hv).1, rfl⟩
+
+/-! ### PART C — junk-exclusion 件（V-单点支） -/
+
+/-- 锥点渲染：`x ∈ affGe {0} {v, w}` ⟹ 非负系数组合。 -/
+private theorem affGePairRender_p35 {v w : V3} (hv0 : (0:V3) ≠ v) (hw0 : (0:V3) ≠ w)
+    (hwv : w ≠ v) {x : V3} (hx : x ∈ affGe ({0} : Set V3) ({v, w} : Set V3)) :
+    ∃ s t : ℝ, 0 ≤ s ∧ 0 ≤ t ∧ x = s • v + t • w := by
+  rw [affGe, Set.mem_setOf_eq, Affsign] at hx
+  obtain ⟨f, hfin, hval, hsgn, hsum⟩ := hx
+  have h3 : hfin.toFinset = ({(0:V3), v, w} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  have h0n : (0:V3) ∉ ({v, w} : Finset V3) := by
+    intro h
+    rcases Finset.mem_insert.mp h with h' | h'
+    · exact hv0 h'
+    · exact hw0 (Finset.mem_singleton.mp h')
+  have hvn : (v:V3) ∉ ({w} : Finset V3) := fun h =>
+    hwv (Finset.mem_singleton.mp h).symm
+  have hsumV : ∑ q ∈ hfin.toFinset, f q • q
+      = f (0:V3) • (0:V3) + f v • v + f w • w := by
+    rw [h3, Finset.sum_insert h0n, Finset.sum_insert hvn, Finset.sum_singleton]
+    simp [add_assoc]
+  have hsumS : ∑ q ∈ hfin.toFinset, f q = f (0:V3) + f v + f w := by
+    rw [h3, Finset.sum_insert h0n, Finset.sum_insert hvn, Finset.sum_singleton]
+    ring
+  rw [hsumV] at hval
+  refine ⟨f v, f w, hsgn v (by simp), hsgn w (by simp), ?_⟩
+  rw [hval]
+  simp [add_assoc]
+
+/-- 严格锥成员：正系数组合落在开锥 `affGt {0} {v, w}`。 -/
+private theorem affGtPairOfSums_p35 {v w : V3} (hv0 : (0:V3) ≠ v) (hw0 : (0:V3) ≠ w)
+    (hwv : w ≠ v) {s t : ℝ} (hs : 0 < s) (ht : 0 < t) (x : V3)
+    (hx : x = s • v + t • w) :
+    x ∈ affGt ({0} : Set V3) ({v, w} : Set V3) := by
+  simp only [affGt, Set.mem_setOf_eq, Affsign]
+  have hfin : (({(0:V3)} : Set V3) ∪ ({v, w} : Set V3)).Finite := by simp
+  have h3 : hfin.toFinset = ({(0:V3), v, w} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  have h0n : (0:V3) ∉ ({v, w} : Finset V3) := by
+    intro h
+    rcases Finset.mem_insert.mp h with h' | h'
+    · exact hv0 h'
+    · exact hw0 (Finset.mem_singleton.mp h')
+  have hvn : (v:V3) ∉ ({w} : Finset V3) := fun h =>
+    hwv (Finset.mem_singleton.mp h).symm
+  refine ⟨fun z => if z = v then s else if z = w then t else 1 - s - t, hfin,
+    ?_, ?_, ?_⟩
+  · rw [h3, Finset.sum_insert h0n, Finset.sum_insert hvn, Finset.sum_singleton]
+    show x = (if (0:V3) = v then s else if (0:V3) = w then t else 1 - s - t) • (0:V3)
+        + ((if (v:V3) = v then s else if (v:V3) = w then t else 1 - s - t) • v
+          + (if (w:V3) = v then s else if (w:V3) = w then t else 1 - s - t) • w)
+    rw [if_neg hv0, if_neg hw0, if_pos rfl, if_neg hwv, if_pos rfl, hx]
+    simp
+  · intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with h1 | h1
+    · rw [h1]
+      show 0 < (if (v:V3) = v then s else if (v:V3) = w then t else 1 - s - t)
+      rw [if_pos rfl]
+      exact hs
+    · rw [h1]
+      show 0 < (if (w:V3) = v then s else if (w:V3) = w then t else 1 - s - t)
+      rw [if_neg hwv, if_pos rfl]
+      exact ht
+  · rw [h3, Finset.sum_insert h0n, Finset.sum_insert hvn, Finset.sum_singleton]
+    show (if (0:V3) = v then s else if (0:V3) = w then t else 1 - s - t)
+        + ((if (v:V3) = v then s else if (v:V3) = w then t else 1 - s - t)
+          + (if (w:V3) = v then s else if (w:V3) = w then t else 1 - s - t)) = 1
+    rw [if_neg hv0, if_neg hw0, if_pos rfl, if_neg hwv, if_pos rfl]
+    ring
+
+/-- 单点锥渲染：`x ∈ affGe {0} {u}` ⟹ `x = r • u`，`r ≥ 0`。 -/
+private theorem affGeOneRender_p35 {u : V3} (hu0 : (0:V3) ≠ u)
+    {x : V3} (hx : x ∈ affGe ({0} : Set V3) ({u} : Set V3)) :
+    ∃ r : ℝ, 0 ≤ r ∧ x = r • u := by
+  rw [affGe, Set.mem_setOf_eq, Affsign] at hx
+  obtain ⟨f, hfin, hval, hsgn, hsum⟩ := hx
+  have h3 : hfin.toFinset = ({(0:V3), u} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  have h0n : (0:V3) ∉ ({u} : Finset V3) := fun h => hu0 (Finset.mem_singleton.mp h)
+  have hsumV : ∑ q ∈ hfin.toFinset, f q • q = f (0:V3) • (0:V3) + f u • u := by
+    rw [h3, Finset.sum_insert h0n, Finset.sum_singleton]
+  rw [hsumV] at hval
+  refine ⟨f u, hsgn u (by simp), ?_⟩
+  rw [hval]
+  simp
+
+/-- 零向量在双点锥中：`0 ∈ affGe {0} {v, w}`。 -/
+private theorem zeroMemConePair_p35 {v w : V3} (hv0 : (0:V3) ≠ v) (hw0 : (0:V3) ≠ w)
+    (hwv : w ≠ v) :
+    (0:V3) ∈ affGe ({0} : Set V3) ({v, w} : Set V3) :=
+  kchMemAffGePair_p35 (x := (0:V3)) (u := v) (v := w) (s := 0) (t := 0)
+    hv0 hw0 (Ne.symm hwv) (by norm_num) (by norm_num) (by simp)
+
+/-- 零向量在单点锥中：`0 ∈ affGe {0} {u}`。 -/
+private theorem zeroMemConeOne_p35 {u : V3} (hu0 : (0:V3) ≠ u) :
+    (0:V3) ∈ affGe ({0} : Set V3) ({u} : Set V3) := by
+  simp only [affGe, Set.mem_setOf_eq, Affsign]
+  have hfin : (({(0:V3)} : Set V3) ∪ ({u} : Set V3)).Finite := by simp
+  have h3 : hfin.toFinset = ({(0:V3), u} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  have h0n : (0:V3) ∉ ({u} : Finset V3) := fun h => hu0 (Finset.mem_singleton.mp h)
+  refine ⟨fun z => if z = u then 0 else 1, hfin, ?_, ?_, ?_⟩
+  · rw [h3, Finset.sum_insert h0n, Finset.sum_singleton]
+    show (0:V3) = (if (0:V3) = u then 0 else 1) • (0:V3)
+        + (if (u:V3) = u then 0 else 1) • u
+    rw [if_neg hu0, if_pos rfl]
+    simp
+  · intro z hz
+    simp only [Set.mem_singleton_iff] at hz
+    subst hz
+    simp
+  · rw [h3, Finset.sum_insert h0n, Finset.sum_singleton]
+    show (if (0:V3) = u then 0 else 1) + (if (u:V3) = u then 0 else 1) = 1
+    rw [if_neg hu0, if_pos rfl]
+    norm_num
+
+/-- 空 apex 锥塌缩为原点：`affGe {0} ∅ = {0}`（集合形式）。 -/
+private theorem affGeEmptySet_p35 :
+    affGe ({0} : Set V3) (∅ : Set V3) = ({(0:V3)} : Set V3) := by
+  ext q
+  rw [Set.mem_singleton_iff]
+  constructor
+  · intro hq
+    rw [affGe, Set.mem_setOf_eq, Affsign] at hq
+    obtain ⟨f, hfin, hval, -, hsum⟩ := hq
+    have h3 : hfin.toFinset = ({(0:V3)} : Finset V3) := by
+      ext z
+      simp
+    rw [h3, Finset.sum_singleton] at hval hsum
+    rw [hval, hsum]
+    simp
+  · intro hq
+    rw [hq]
+    simp only [affGe, Set.mem_setOf_eq, Affsign]
+    have hfin : (({(0:V3)} : Set V3) ∪ (∅ : Set V3)).Finite := by simp
+    have h3 : hfin.toFinset = ({(0:V3)} : Finset V3) := by
+      ext z
+      simp
+    refine ⟨fun z => if z = (0:V3) then 1 else 0, hfin, ?_, ?_, ?_⟩
+    · rw [h3, Finset.sum_singleton]
+      show (0:V3) = (if (0:V3) = 0 then 1 else 0) • (0:V3)
+      rw [if_pos rfl]
+      simp
+    · intro z hz
+      exact absurd hz (Set.notMem_empty z)
+    · rw [h3, Finset.sum_singleton]
+      show (if (0:V3) = 0 then 1 else 0) = 1
+      rw [if_pos rfl]
+
+/-- 单点锥落双点锥：`affGe {0} {v} ⊆ affGe {0} {v, w}`。 -/
+private theorem coneOneSubsetConePair_p35 {v w : V3} (hv0 : (0:V3) ≠ v)
+    (hw0 : (0:V3) ≠ w) (hwv : w ≠ v) :
+    affGe ({0} : Set V3) ({v} : Set V3) ⊆ affGe ({0} : Set V3) ({v, w} : Set V3) := by
+  intro x hx
+  obtain ⟨r, hr, hx⟩ := affGeOneRender_p35 hv0 hx
+  exact kchMemAffGePair_p35 (x := (0:V3)) (u := v) (v := w) (s := r) (t := 0)
+    hv0 hw0 (Ne.symm hwv) hr (by norm_num) (by rw [hx]; simp)
+
+/-- **C junk-exclusion 核心**：`u` 是某 FF dart 的尾 ⟹ u 射线不在对角开锥内
+（面尾 dart 的切片楔以 u 为轴，`wedgeMem_p35` 的共线支直接排除）。 -/
+private theorem noRayOfFaceTail_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w u : V3} (hfan : ConvexLocalFan V E FF)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    {b : V3} (hd : (u, b) ∈ FF) :
+    u ∉ affGt ({0} : Set V3) ({v, w} : Set V3) := by
+  obtain ⟨hLF, hconv⟩ := hfan
+  have hc2 := twoNbrOfDart_p35 hconv hd
+  have hu := hsub (u, b) hd
+  rw [wedgeUnpackPair_p35 (a := u) (b := b) hc2] at hu
+  intro huA
+  obtain ⟨hnc, -, -⟩ := wedgeMem_p35 (hu huA)
+  exact hnc (collinear3_pair_right (v0 := (0:V3)) (v1 := u) (x := u) rfl)
+
+/-- E 的边有面尾 dart：`{u, z} ∈ E` ⟹ 存在以 `u` 为尾的 FF dart
+（`Dih2k` 覆盖：真 dart ∈ FF ∪ node '' FF，node 像首坐标 = d.1）。 -/
+private theorem tailOfEdge_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) {u z : V3} (he : ({u, z} : Set V3) ∈ E) :
+    ∃ b : V3, (u, b) ∈ FF := by
+  obtain ⟨hF, x0, hx0d, hFF, hdih⟩ := hfanL
+  have hdih2 := hdih
+  obtain ⟨_, hunion, _, _, _⟩ := hdih
+  have hcoe : ((@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hF)) : Set (V3 × V3)) = Fan.dart1OfFan V E :=
+    hypermapOfFan_darts_p35 hF
+  have hd1 : (u, z) ∈ Fan.dart1OfFan V E := by
+    show ({(u, z).1, (u, z).2} : Set V3) ∈ E
+    exact he
+  have hU := hunion x0 hx0d
+  rw [← hFF] at hU
+  have hmemU : (u, z) ∈ FF ∪
+      (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hF)) '' FF := by
+    rw [hU, hcoe]
+    exact hd1
+  rcases hmemU with hA | hB
+  · exact ⟨z, hA⟩
+  · obtain ⟨d, hdFF, hd'eq⟩ := hB
+    have hd1' : d ∈ Fan.dart1OfFan V E :=
+      kchFFSubDart1_p35 ⟨hF, x0, hx0d, hFF, hdih2⟩ hdFF
+    have hnode := hypermapOfFan_node_apply_p35 hF d
+    rw [if_pos hd1'] at hnode
+    rw [hnode] at hd'eq
+    rw [Prod.mk.injEq] at hd'eq
+    have hdu : d = (u, d.2) := by
+      rw [Prod.mk.injEq]
+      exact ⟨hd'eq.1, rfl⟩
+    exact ⟨d.2, hdu ▸ hdFF⟩
+
+/-- hEE2 的边供给：每顶点有边。 -/
+private theorem edgeOfVertex_p35 {V : Set V3} {E : Set (Set V3)} {u : V3}
+    (h2 : (EE_p3 u E).ncard = 2) : ∃ z : V3, ({u, z} : Set V3) ∈ E := by
+  by_cases hne : (EE_p3 u E) = ∅
+  · rw [hne, Set.ncard_empty] at h2
+    exact absurd h2 (by norm_num)
+  · obtain ⟨z, hz⟩ := Set.nonempty_iff_ne_empty.mpr hne
+    exact ⟨z, hz⟩
+
+/-- **C junk-exclusion（V-单点支全闭）**：`u ∈ V` 有边 ⟹ 增广 fan7 的
+单点支成立：`affGe {0} {v,w} ∩ affGe {0} {u} = affGe {0} ({v,w} ∩ {u})`。
+`u ∉ {v,w}` 支 = 渲染 + 射线归位（`pmSameRayKill_p35`）+ 楔排除；
+`u ∈ {v,w}` 支 = 纯锥代数。此件 + e2 ∈ E 支（楔排除 + 平面论证，剩余）+
+`hcol` 合成 `hfan7new`。 -/
+private theorem fan7AugSingletonKill_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w u : V3} (hfan : ConvexLocalFan V E FF)
+    (hv : v ∈ V) (hw : w ∈ V) (hu : u ∈ V) (hwv : v ≠ w) (huv : u ≠ v) (huw : u ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hedge : ∃ z : V3, ({u, z} : Set V3) ∈ E) :
+    affGe ({0} : Set V3) ({v, w} : Set V3) ∩ affGe ({0} : Set V3) ({u} : Set V3)
+      = affGe ({0} : Set V3) (({v, w} : Set V3) ∩ ({u} : Set V3)) := by
+  have hF : Kepler.Text.Fan.FAN 0 V E := hfan.1.1
+  have h0V : (0:V3) ∉ V := hF.2.2.2.1
+  have hv0 : (0:V3) ≠ v := fun hc => h0V (hc ▸ hv)
+  have hw0 : (0:V3) ≠ w := fun hc => h0V (hc ▸ hw)
+  have hu0 : (0:V3) ≠ u := fun hc => h0V (hc ▸ hu)
+  obtain ⟨zu, hzu⟩ := hedge
+  obtain ⟨b, hdb⟩ := tailOfEdge_p35 hfan.1 hzu
+  have hnoray := noRayOfFaceTail_p35 hfan hsub hdb
+  have huv' : v ≠ u := fun hc => huv hc.symm
+  have huw' : w ≠ u := fun hc => huw hc.symm
+  ext x
+  by_cases huab : u ∈ ({v, w} : Set V3)
+  · -- u ∈ {v, w}：纯锥代数
+    rcases Set.mem_insert_iff.mp huab with hue | hue
+    · -- u = v
+      have hue' : u = v := hue
+      have hint2 : ({v, w} : Set V3) ∩ ({u} : Set V3) = ({u} : Set V3) := by
+        rw [hue']
+        ext q
+        simp
+      rw [hint2]
+      simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨-, hxu⟩
+        exact hxu
+      · intro hxu
+        rw [hue'] at hxu ⊢
+        exact ⟨coneOneSubsetConePair_p35 hv0 hw0 (Ne.symm hwv) hxu, hxu⟩
+    · -- u = w
+      have hue' : u = w := Set.mem_singleton_iff.mp hue
+      have hint2 : ({v, w} : Set V3) ∩ ({u} : Set V3) = ({u} : Set V3) := by
+        rw [hue']
+        ext q
+        simp
+      rw [hint2]
+      simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨-, hxu⟩
+        exact hxu
+      · intro hxu
+        rw [hue'] at hxu ⊢
+        rw [Set.pair_comm v w]
+        exact ⟨coneOneSubsetConePair_p35 hw0 hv0 hwv hxu, hxu⟩
+  · -- u ∉ {v, w}：RHS 塌缩为 {0}，LHS 射线归位排除
+    have hint : ({v, w} : Set V3) ∩ ({u} : Set V3) = (∅ : Set V3) := by
+      ext q
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_inter_iff,
+        Set.notMem_empty]
+      constructor
+      · rintro ⟨hIn, h2⟩
+        rcases hIn with h1 | h1
+        · subst h2
+          apply huab
+          rw [h1]
+          simp
+        · subst h2
+          apply huab
+          rw [h1]
+          simp
+      · exact fun h2 => h2.elim
+    rw [hint, affGeEmptySet_p35]
+    simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨hx, hxu⟩
+      obtain ⟨s, t, hs0, ht0, hx⟩ := affGePairRender_p35 hv0 hw0 (Ne.symm hwv) hx
+      obtain ⟨r, hr0, hxu⟩ := affGeOneRender_p35 hu0 hxu
+      rcases eq_or_lt_of_le hr0 with hr | hr
+      · -- r = 0 ⟹ x = 0
+        rw [hxu, ← hr, zero_smul]
+      · -- r > 0：u 归入对角锥，非负系数 u = (r⁻¹*s)•v + (r⁻¹*t)•w
+        have huinv : u = r⁻¹ • x := by
+          rw [hxu, smul_smul, inv_mul_cancel₀ (ne_of_gt hr), one_smul]
+        have huval : u = (r⁻¹ * s) • v + (r⁻¹ * t) • w := by
+          rw [huinv, hx, smul_add, smul_smul, smul_smul]
+        rcases Classical.em (s = 0) with hs | hs
+        · rcases Classical.em (t = 0) with ht | ht
+          · -- u = 0 ⟹ x = 0
+            rw [hxu, huval, hs, ht, mul_zero, zero_smul, zero_smul, add_zero,
+              smul_zero]
+          · -- u = (r⁻¹ * t) • w：pmSameRayKill
+            rw [hs, mul_zero, zero_smul, zero_add] at huval
+            exact (pmSameRayKill_p35 (v := w) (u := u) hF hw hu huw'
+              (Ne.symm hw0) ⟨r⁻¹ * t,
+                mul_pos (inv_pos.mpr hr) (lt_of_le_of_ne ht0 (Ne.symm ht)), by
+                rw [sub_zero, sub_zero]; exact huval⟩).elim
+        · rcases Classical.em (t = 0) with ht | ht
+          · -- u = (r⁻¹ * s) • v：pmSameRayKill
+            rw [ht, mul_zero, zero_smul, add_zero] at huval
+            exact (pmSameRayKill_p35 (v := v) (u := u) hF hv hu huv'
+              (Ne.symm hv0) ⟨r⁻¹ * s,
+                mul_pos (inv_pos.mpr hr) (lt_of_le_of_ne hs0 (Ne.symm hs)), by
+                rw [sub_zero, sub_zero]; exact huval⟩).elim
+          · -- 两系数皆正：u ∈ 开锥，楔排除
+            exact absurd (affGtPairOfSums_p35 hv0 hw0 (Ne.symm hwv)
+              (mul_pos (inv_pos.mpr hr) (lt_of_le_of_ne hs0 (Ne.symm hs)))
+              (mul_pos (inv_pos.mpr hr) (lt_of_le_of_ne ht0 (Ne.symm ht))) u huval)
+              hnoray
+    · intro hx
+      subst hx
+      exact ⟨zeroMemConePair_p35 hv0 hw0 (Ne.symm hwv), zeroMemConeOne_p35 hu0⟩
+
+-- DISCHARGES（ejrcfjd-dw-CE-aug-w1，2026-10-28）：
+-- PART R：`diagNotEdge_p35`（hdiag 槽）——根五前提直出，cardff-re-w1
+--   re_block.lean 逐字移植（含 azimSpec_rayShift_p35 / kchFFSubDart1_p35）。
+-- PART E：`slotE_ofFaceMem_p35`（E 槽口，FacePlacement 前提下闭）+
+--   `slotE_ofEE2_p35`（hEE2 全闭形）。
+-- PART C：`fan7AugSingletonKill_p35`（hfan7new 的 V-单点支全闭）。
+-- 剩余（见 DELIVERY.md）：hcol、hfan7new 的 e2 ∈ E 支、FacePlacement。
+
+
+-- ===== merged block: lane N (续135 M1 合并, 编排者) =====
+/-! ## NOWRAP 装配波（lane `ejrcfjd-dw-N-nowrap-w1`，2026-10-28）
+
+路线裁定（续 132）的执行：`EJRCFJD_W4_ASSEMBLY_p35` 的 kch 槽对一般切片为假，
+本波把 `hnowrap` 改由原扇凸性 + fan7 直供——单步回卷角点的扇论排除
+（HOL `MONO_AZIM_AS_BTA_I` ll:6687–6850 的机制：对径开半平面 ⟹ 线段穿轴
+⟹ 穿点 ∈ `aff_ge {0} {x,y}` ⟹ fan7 射线-棱锥交零 ⟹ 穿点 = 0 ⟹ 共线矛盾）
++ 去 kch/hsgn 的窗口装配。
+
+诚实定尺（GATE-B 残差）：HOL 在 `AFF_IN_TWO_PARTS` 后半（穿点落 `(0,u)` 轴
+**负**射线支）由 KCHMAMG 平面化（ll:6790–6927）闭合；纯 fan7 前提下该支
+**不被排除**（穿点在负射线 ⟺ `-u ∈ aff_gt {0} {x,y}`，与 FAN 相容——显式
+反例 u = e₁, b = e₂, x = -u-b, y = -2u+b 满足全部局部前提）。故角点杀
+`nwCornerKill_p35` 携带显式对径前提 `hanti`（`-u ∉ aff_gt {0} {x,y}`，逐
+dart 形），`nwNoWrapOfWindow_p35` 按步承接；该前提在消费端须由更深层的原扇
+凸性理论供给，即 KCHMAMG 残差的显式接缝。 -/
+
+/-- `Affsign` 的符号单调（同一见证）：`0 <` 系数面 ⊆ `0 ≤` 系数面。 -/
+private theorem nwAffsignMono_p35 {s t : Set V3} {z : V3}
+    (h : Affsign (fun x : ℝ => 0 < x) s t z) :
+    Affsign (fun x : ℝ => 0 ≤ x) s t z := by
+  obtain ⟨f, hfin, hv, hpos, hone⟩ := h
+  exact ⟨f, hfin, hv, fun w hw => le_of_lt (hpos w hw), hone⟩
+
+/-- `affGe {0} ∅ = {0}` 的消费形：成员即零。 -/
+private theorem nwAffGeEmptyEq_p35 {z : V3}
+    (h : z ∈ affGe ({(0:V3)} : Set V3) (∅ : Set V3)) : z = 0 := by
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at h
+  obtain ⟨f, hfin, hv, -, hone⟩ := h
+  have h1 : hfin.toFinset = ({(0:V3)} : Finset V3) := by
+    ext w
+    simp [hfin.mem_toFinset]
+  rw [h1, Finset.sum_singleton] at hv hone
+  rw [hv, hone]
+  simp
+
+/-- 单点基/单点带号的 `affGe {0} {u}` 成员构造：`c ≥ 0` 时 `c•u` 落
+`u`-闭射线。 -/
+private theorem nwMemAffGeSingle_p35 {u : V3} (c : ℝ) (hc : 0 ≤ c) (h0u : 0 ≠ u) :
+    c • u ∈ affGe ({(0:V3)} : Set V3) ({u} : Set V3) := by
+  have hfin : ({(0:V3)} ∪ {u} : Set V3).Finite :=
+    Set.Finite.insert (0:V3) (Set.finite_singleton u)
+  have h2 : hfin.toFinset = ({(0:V3), u} : Finset V3) := by
+    ext w
+    simp [hfin.mem_toFinset, h0u]
+    tauto
+  refine ⟨fun w => if w = u then c else 1 - c, hfin, ?_, ?_, ?_⟩
+  · rw [h2, Finset.sum_insert (show (0:V3) ∉ ({u} : Finset V3) from by simp [h0u]),
+      Finset.sum_singleton]
+    show c • u = (if (0:V3) = u then c else 1 - c) • (0:V3)
+        + (if (u:V3) = u then c else 1 - c) • u
+    rw [if_neg h0u, if_pos rfl]
+    module
+  · intro w hw
+    simp only [Set.mem_singleton_iff] at hw
+    rcases hw with rfl
+    show 0 ≤ (if (w:V3) = w then c else 1 - c)
+    rw [if_pos rfl]
+    exact hc
+  · rw [h2, Finset.sum_insert (show (0:V3) ∉ ({u} : Finset V3) from by simp [h0u]),
+      Finset.sum_singleton]
+    show (if (0:V3) = u then c else 1 - c) + (if (u:V3) = u then c else 1 - c) = 1
+    rw [if_neg h0u, if_pos rfl]
+    ring
+
+/-- 载体 dart 的边提取（`ord_pairs` 支直读，`self_pairs` 支由 `a ≠ b` 排除）。 -/
+private theorem nwEdgeOfDart_p35 {E : Set (Set V3)} {V : Set V3} {a b : V3}
+    (hd : (a, b) ∈ dartsOfHyp_p3 E V) (hab : a ≠ b) : {a, b} ∈ E := by
+  rcases hd with hord | hself
+  · simp only [dartsOfHyp_p3, Set.mem_union, ordPairs_p3, Set.mem_setOf_eq] at hord
+    exact hord
+  · simp only [dartsOfHyp_p3, Set.mem_union, selfPairs_p3, Set.mem_setOf_eq] at hself
+    exact absurd hself.1 hab
+
+/-- **角点杀（fan7 直供，GATE-B 残差显式定尺）** — HOL `MONO_AZIM_AS_BTA_I`
+ll:6687–6850 的扇论排除。回卷角点（`x` 落 `b` 反向开半平面、`y` 落 `b` 开
+锥，同落 `(0,u,b)` 面）下线段 `xy` 必穿 `(0,u)` 轴线：穿点 `z = α•x + β•y`
+（`α, β > 0`）落 `u`-线。正射线支：`z ∈ aff_ge {0} {u} ∩ aff_ge {0} {x,y}`
+经 fan7（`{u}` 单射边由顶点 `u ∈ V` 自动入 fan7 边域，`{x,y}` 为增广边）交
+出 `aff_ge {0} ∅ = {0}`，穿点 = 0，`¬Collinear3 0 x y` 排之。负射线支：
+`z` 落负射线 ⟺ `-u ∈ aff_gt {0} {x,y}`，由 `hanti` 排除——该支在 flyspeck
+中由 KCHMAMG 平面化闭合，纯 fan7 不备。 -/
+theorem nwCornerKill_p35 {V : Set V3} {E' : Set (Set V3)} {u b x y : V3}
+    (hu0 : u ≠ 0) (hb : ¬ Collinear3 0 u b)
+    (hx : ¬ Collinear3 0 u x) (hy : ¬ Collinear3 0 u y)
+    (hx0 : x ≠ 0) (hy0 : y ≠ 0) (hxy : x ≠ y) (hncxy : ¬ Collinear3 0 x y)
+    (hpi : azim 0 u b x = Real.pi) (hze : azim 0 u b y = 0)
+    (huV : u ∈ V) (hxyE : {x, y} ∈ E')
+    (huxy : u ∉ ({x, y} : Set V3))
+    (hfan7 : Kepler.Text.Fan.fan7 0 V E')
+    (hanti : (-u) ∉ affGt ({(0:V3)} : Set V3) ({x, y} : Set V3)) : False := by
+  have hb0 : b ≠ 0 := by
+    intro hz
+    apply hb
+    rw [hz]
+    exact (collinear3_iff_smul (v := (0:V3)) (w := u) (w1 := (0:V3)) hu0).mpr
+      ⟨0, by rw [zero_smul, sub_self]⟩
+  have hbu : b ≠ u := by
+    intro hz
+    apply hb
+    rw [hz]
+    exact collinear3_pair_right (v0 := (0:V3)) (v1 := u) (x := u) rfl
+  -- y 侧渲染（b 开锥，t > 0）
+  obtain ⟨sy, ty, hry, hty⟩ := monoStepRender0_p35 hu0 hb0 hbu hb hy hze
+  simp only [sub_zero] at hry
+  -- x 侧渲染（π 侧）+ b-系数负号
+  obtain ⟨sx, tx, hrx⟩ := pmRenderPi_p35 (a := u) (b := b) (x := x) hu0 hb0 hb hpi
+  simp only [sub_zero] at hrx
+  have htxne : tx ≠ 0 := by
+    intro h0
+    rw [h0, zero_smul, add_zero] at hrx
+    exact hx ((collinear3_iff_smul (v := (0:V3)) (w := u) (w1 := x) hu0).mpr
+      ⟨sx, by rw [sub_zero, sub_zero]; exact hrx⟩)
+  have htxneg : tx < 0 := by
+    rcases lt_or_gt_of_ne htxne with h | h
+    · exact h
+    · exfalso
+      have hrw : x - 0 = tx • (b - 0) + sx • (u - 0) := by
+        simp only [sub_zero]
+        rw [hrx]
+        module
+      have hmem : x ∈ affGt ({(0:V3), u} : Set V3) ({b} : Set V3) := by
+        rw [affGt_pair_iff (v0 := (0:V3)) (v1 := u) (x := b) (y := x)
+          (Ne.symm hu0) hb0 hbu]
+        exact ⟨tx, h, sx, hrw⟩
+      have hz0 : azim 0 u b x = 0 :=
+        (azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := u) (w := b) (x := x) hb hx).mpr hmem
+      rw [hpi] at hz0
+      exact Real.pi_ne_zero hz0
+  -- 穿点构造：z = α•x + β•y，b-系数相消，z 落 u-线
+  set d : ℝ := ty - tx with hddef
+  have hdpos : 0 < d := by rw [hddef]; linarith
+  set α : ℝ := ty / d with hαdef
+  set β : ℝ := -tx / d with hβdef
+  have hα : 0 < α := div_pos hty hdpos
+  have hβ : 0 < β := div_pos (neg_pos.mpr htxneg) hdpos
+  have hzero : α * tx + β * ty = 0 := by
+    rw [hαdef, hβdef]
+    field_simp
+    ring
+  set c0 : ℝ := α * sx + β * sy with hc0def
+  have hzEq : α • x + β • y = c0 • u := by
+    rw [hrx, hry]
+    have hsplit : α • (sx • u + tx • b) + β • (sy • u + ty • b)
+        = (α * sx + β * sy) • u + (α * tx + β * ty) • b := by
+      simp only [smul_add, smul_smul]
+      module
+    rw [hsplit, hzero, zero_smul, add_zero]
+  -- {x,y} 开锥成员（两支共用）
+  have hmemXYgt : α • x + β • y ∈ affGt ({(0:V3)} : Set V3) ({x, y} : Set V3) := by
+    rw [triMemAffGt_p35 (v0 := (0:V3)) hx0 hy0 hxy]
+    refine ⟨α, β, hα, hβ, ?_⟩
+    rw [sub_zero]
+    module
+  have hmemXY : α • x + β • y ∈ affGe ({(0:V3)} : Set V3) ({x, y} : Set V3) :=
+    nwAffsignMono_p35 hmemXYgt
+  rcases le_or_gt 0 c0 with hc0ge | hc0lt
+  · -- 正射线支：fan7 交零 ⟹ 穿点 = 0 ⟹ 共线矛盾
+    have hzmemU : c0 • u ∈ affGe ({(0:V3)} : Set V3) ({u} : Set V3) :=
+      nwMemAffGeSingle_p35 c0 hc0ge (Ne.symm hu0)
+    rw [← hzEq] at hzmemU
+    have hfanI := hfan7 ({u} : Set V3)
+      (Set.mem_union_right _ (Set.mem_setOf.mpr ⟨u, huV, rfl⟩))
+      ({x, y} : Set V3) (Set.mem_union_left _ hxyE)
+    have hcap : ({u} : Set V3) ∩ ({x, y} : Set V3) = (∅ : Set V3) := by
+      ext w
+      simp [huxy]
+    rw [hcap] at hfanI
+    have hzint : α • x + β • y ∈ affGe ({(0:V3)} : Set V3) ({u} : Set V3) ∩
+        affGe ({(0:V3)} : Set V3) ({x, y} : Set V3) := ⟨hzmemU, hmemXY⟩
+    rw [hfanI] at hzint
+    have hz0 : α • x + β • y = (0:V3) := nwAffGeEmptyEq_p35 hzint
+    have hkey : α • x = -(β • y) := by
+      rw [eq_neg_iff_add_eq_zero]
+      exact hz0
+    have hxs : x - 0 = (-(β/α)) • (y - 0) := by
+      rw [sub_zero, sub_zero]
+      rw [show x = (α:ℝ)⁻¹ • (α • x) from by
+        rw [smul_smul, inv_mul_cancel₀ hα.ne', one_smul]]
+      rw [hkey, smul_neg, smul_smul]
+      module
+    have hcolyx : Collinear3 0 y x :=
+      (collinear3_iff_smul (v := (0:V3)) (w := y) (w1 := x) hy0).mpr ⟨-(β/α), hxs⟩
+    exact hncxy (by
+      show Collinear ℝ ({(0:V3), x, y} : Set V3)
+      rw [show ({(0:V3), x, y} : Set V3) = ({(0:V3), y, x} : Set V3) from by
+        ext w
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto]
+      exact hcolyx)
+  · -- 负射线支：穿点落负射线 ⟺ -u ∈ {x,y} 开锥 ⟹ 对径前提矛盾
+    have hmemB : (-u) ∈ affGt ({(0:V3)} : Set V3) ({x, y} : Set V3) := by
+      rw [triMemAffGt_p35 (v0 := (0:V3)) hx0 hy0 hxy]
+      refine ⟨α / -c0, β / -c0, div_pos hα (neg_pos.mpr hc0lt),
+        div_pos hβ (neg_pos.mpr hc0lt), ?_⟩
+      simp only [sub_zero]
+      have hs : (-1:ℝ) / c0 * c0 = (-1:ℝ) := by field_simp [hc0lt.ne]
+      have h1 : (-1 / c0) • (c0 • u) = (-u : V3) := by
+        rw [smul_smul, hs, neg_one_smul]
+      calc (-u : V3) = (-1 / c0) • (c0 • u) := h1.symm
+        _ = (-1 / c0) • (α • x + β • y) := by rw [hzEq]
+        _ = (α / -c0) • x + (β / -c0) • y := by
+            rw [smul_add, smul_smul, smul_smul]
+            have hEq1 : (-1:ℝ) / c0 * α = α / -c0 := by field_simp [hc0lt.ne]
+            have hEq2 : (-1:ℝ) / c0 * β = β / -c0 := by field_simp [hc0lt.ne]
+            rw [hEq1, hEq2]
+    exact absurd hmemB hanti
+
+/-- 窗口槽逐支平铺体（`W4AsmWindowSlot_p35` 的 `∃ c k ρ` 体逐字；hnw 接口
+与 `nwNoWrapOfWindow_p35` 的共同形）。 -/
+private def nwWindowBody_p35 (V : Set V3) (E' : Set (Set V3))
+    (fv : Set (V3 × V3)) (p : V3 × V3) (c : V3) (k : ℕ) (ρ : ℕ → V3) : Prop :=
+  EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3) ∧ p.2 ≠ c ∧ 2 ≤ k ∧
+  ρ 0 = p.1 ∧ ρ (k - 1) = c ∧
+  (∀ z ∈ vPrime_p3 V fv, ∃ j, j < k ∧ ρ j = z) ∧
+  p.1 ≠ 0 ∧ ¬ Collinear3 0 p.1 p.2 ∧
+  (∀ i, 0 < i → i < k → ¬ Collinear3 0 p.1 (ρ i)) ∧
+  (∀ i, 0 < i → i < k → ρ i ≠ 0) ∧
+  (∀ i, 0 < i → i < k → 0 ≤ azim 0 p.1 p.2 (ρ i) ∧
+    azim 0 p.1 p.2 (ρ i) ≤ Real.pi) ∧
+  (∀ i, i + 1 < k → ¬ Collinear3 0 (ρ i) (ρ (i + 1)) ∧
+    0 ≤ azim 0 (ρ i) (ρ (i + 1)) p.1 ∧
+    azim 0 (ρ i) (ρ (i + 1)) p.1 ≤ Real.pi) ∧
+  (∀ j, j < k → ρ j ∈ vPrime_p3 V fv) ∧
+  (∀ i, i + 1 < k → (ρ i, ρ (i + 1)) ∈ fv)
+
+/-- 槽体平铺桥：`W4AsmWindowSlot_p35` ↔ `∃ c k ρ, nwWindowBody_p35`（同体）。 -/
+private theorem nwSlotIff_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} {p : V3 × V3} :
+    W4AsmWindowSlot_p35 V E' fv p ↔ ∃ c : V3, ∃ k : ℕ, ∃ ρ : ℕ → V3,
+      nwWindowBody_p35 V E' fv p c k ρ := by
+  constructor
+  · rintro ⟨c, k, ρ, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13⟩
+    exact ⟨c, k, ρ, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13⟩
+  · rintro ⟨c, k, ρ, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13⟩
+    exact ⟨c, k, ρ, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13⟩
+
+/-- **窗口无回卷（原扇凸性 + fan7 直供）** — 全支窗口体 + 载体前提
+（`fv ⊆ dartsOfHyp_p3 E' V`、基 dart `p ∈ fv`、增广 `FAN 0 V E'`）+ 逐 dart
+对径前提 ⟹ 冻结 `hnowrap` 形。`monoStepOrbit_p35` 右支的角点由
+`nwCornerKill_p35` 排除；正射线支走 fan7 射线-棱锥交零（`{u}` 单射边自动入
+fan7 边域），负射线支走 `hanti`（KCHMAMG 残差接缝）。 -/
+theorem nwNoWrapOfWindow_p35 {V : Set V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)} {p : V3 × V3} {c : V3} {k : ℕ} {ρ : ℕ → V3}
+    (hfanAug : Kepler.Text.Fan.FAN 0 V E')
+    (hsub' : fv ⊆ dartsOfHyp_p3 E' V)
+    (hp : p ∈ fv)
+    (hb : nwWindowBody_p35 V E' fv p c k ρ)
+    (hanti : ∀ i : ℕ, i + 1 < k →
+      (-p.1) ∉ affGt ({(0:V3)} : Set V3) ({ρ i, ρ (i + 1)} : Set V3)) :
+    ∀ i : ℕ, i + 1 < k →
+      ¬(azim 0 p.1 p.2 (ρ i) = Real.pi ∧ azim 0 p.1 p.2 (ρ (i + 1)) = 0) := by
+  obtain ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds, hdart,
+    hrV, hstep⟩ := hb
+  intro i hik hcorner
+  have hi1 : 0 < i := by
+    rcases Nat.lt_or_ge i 1 with h | h
+    · exfalso
+      have hi : i = 0 := Nat.lt_one_iff.mp h
+      have hax : azim 0 p.1 p.2 p.1 = 0 :=
+        azimAxis_p35 (collinear3_pair_right (v0 := (0:V3)) (v1 := p.1)
+          (x := p.1) rfl)
+      rw [hi, hr0] at hcorner
+      rw [hax] at hcorner
+      exact (Ne.symm Real.pi_ne_zero) hcorner.1
+    · exact h
+  rcases hcorner with ⟨hpi, hze⟩
+  have hncxi : ¬ Collinear3 0 (ρ i) (ρ (i + 1)) := (hdart i hik).1
+  have hxyne : ρ i ≠ ρ (i + 1) := fun he =>
+    hncxi (collinear3_pair_right (v0 := (0:V3)) (v1 := ρ i) (x := ρ (i + 1)) he.symm)
+  have huxy : p.1 ∉ ({ρ i, ρ (i + 1)} : Set V3) := by
+    intro hmem
+    rcases Set.mem_insert_iff.mp hmem with he | he
+    · exact (hvx i hi1 (lt_of_le_of_lt (Nat.le_succ i) hik))
+        (by rw [← he]; exact
+          collinear3_pair_right (v0 := (0:V3)) (v1 := p.1) (x := p.1) rfl)
+    · exact (hvx (i + 1) (Nat.succ_pos i) hik)
+        (by rw [← he]; exact
+          collinear3_pair_right (v0 := (0:V3)) (v1 := p.1) (x := p.1) rfl)
+  exact nwCornerKill_p35 (u := p.1) (b := p.2) (x := ρ i) (y := ρ (i + 1))
+    hv0 hbp2 (hvx i hi1 (lt_of_le_of_lt (Nat.le_succ i) hik))
+    (hvx (i + 1) (Nat.succ_pos i) hik)
+    (hvx0 i hi1 (lt_of_le_of_lt (Nat.le_succ i) hik))
+    (hvx0 (i + 1) (Nat.succ_pos i) hik)
+    hxyne hncxi hpi hze
+    (dartsOfHyp_ends_V_p35 hfanAug.1 (hsub' hp)).1
+    (nwEdgeOfDart_p35 (hsub' (hstep i hik)) hxyne)
+    huxy
+    hfanAug.2.2.2.2.2
+    (hanti i hik)
+
+/-- **EJRCFJD W4 装配（NOWRAP 形，去 kch/hsgn）** — `EJRCFJD_W4_ASSEMBLY_p35`
+的签名去 `eU eW hkchU hkchW` 与四个 `hsgn`，四窗口前提保持
+`W4AsmWindowSlot_p35` 形并新增 `hnwUU/hnwWU/hnwUW/hnwWW`（形：
+`∀ c k ρ, nwWindowBody_p35 … → hnowrap 冻结形`；`nwWindowBody_p35` 为槽的
+`∃ c k ρ` 体逐字平铺，`nwSlotIff_p35` 桥回）。体内四窗口束由 hnw 直供
+`hnowrap` 合取支（⟨c, k, ρ, 槽体, hnw c k ρ 槽体⟩）；根体逐字内联——
+`EJRCFJD_W4_SKELETON_p35` 的 `hkch` 槽为死前件（其证体从不消费），故
+NOWRAP 形不经 `EJRCFJD_W4_ROOT_p35` 而把骨架证体逐字内联，kch 槽零出现。结论与
+`EJRCFJD_W4_ASSEMBLY_p35` 逐字同形。一键替换形（原装配 6244 体）：
+`exact EJRCFJD_W4_ASSEMBLY_NOWRAP_p35 V E FF v w hfan hv hw hwv hsub HS hHS
+hfanAug hdV hdW hstepU hvisitU hstepW hvisitW hdUU hdWU hdUW hdWW hnwUU hnwWU
+hnwUW hnwWW hsplitU hsplitW`（四 dart 隐参由窗口槽面成员定位，合成失败则
+`(dU := …)` 钉死）。 -/
+theorem EJRCFJD_W4_ASSEMBLY_NOWRAP_p35 (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)))
+    (hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)))
+    {dU dW dU' dW' : V3 × V3}
+    (hdUU : dU ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dU)
+    (hdWU : dW ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dW)
+    (hdUW : dU' ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dU')
+    (hdWW : dW' ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dW')
+    (hnwUU : ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dU c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 dU.1 dU.2 (ρ i) = Real.pi ∧
+          azim 0 dU.1 dU.2 (ρ (i + 1)) = 0))
+    (hnwWU : ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) dW c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 dW.1 dW.2 (ρ i) = Real.pi ∧
+          azim 0 dW.1 dW.2 (ρ (i + 1)) = 0))
+    (hnwUW : ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dU' c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 dU'.1 dU'.2 (ρ i) = Real.pi ∧
+          azim 0 dU'.1 dU'.2 (ρ (i + 1)) = 0))
+    (hnwWW : ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) dW' c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 dW'.1 dW'.2 (ρ i) = Real.pi ∧
+          azim 0 dW'.1 dW'.2 (ρ (i + 1)) = 0))
+    (hsplitU : W4RootSplitSlot_p35 V E (E ∪ {{v, w}}) FF
+      (HS.face (v, rhoNode1 FF v)) dU dW)
+    (hsplitW : W4RootSplitSlot_p35 V E (E ∪ {{w, v}}) FF
+      (HS.face (w, rhoNode1 FF w)) dU' dW') :
+    ∃ HSx : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HSx ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HSx.face (v, rhoNode1 FF v)))
+        (HSx.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HSx.face (w, rhoNode1 FF w)))
+        (HSx.face (w, rhoNode1 FF w)) := by
+  -- 槽位回收：finite + graph 从增广 FAN 分量直出（原装配体逐字）
+  have hVE : ⋃₀ (E ∪ {{v, w}}) ⊆ V := hfanAug.1
+  have hfinG : (dartsOfHyp_p3 (E ∪ {{v, w}}) V).Finite :=
+    dartsOfHyp_finite_p35 hVE hfanAug.2.2.1.1
+  have hgraph : Kepler.Text.Fan.Graph (E ∪ {{v, w}}) := hfanAug.2.1
+  -- 换序桥（w 面）（原装配体逐字）
+  have hAugW : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+    rw [Set.pair_comm w v]
+  have hHSw : IsHypE_p35 V (E ∪ {{w, v}}) HS := by rw [hAugW]; exact hHS
+  have hgraphW : Kepler.Text.Fan.Graph (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hgraph
+  have hfanAugW : Kepler.Text.Fan.FAN 0 V (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hfanAug
+  have hVEW : ⋃₀ (E ∪ {{w, v}}) ⊆ V := by rw [hAugW]; exact hVE
+  have hfinGW : (dartsOfHyp_p3 (E ∪ {{w, v}}) V).Finite :=
+    dartsOfHyp_finite_p35 hVEW hfanAugW.2.2.1.1
+  have hdWw : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact hdW
+  -- U 半扇：param → HS′ 构造 → HAFL 链输出（原装配体逐字）
+  have hsubU : HS.face (v, rhoNode1 FF v) ⊆ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+    fvSubsetDarts_p35 HS hHS hdV
+  have hparamU : faceCycleParam_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) :=
+    FACE_CYCLE_PARAM_p35 hgraph HS hHS hdV hstepU hvisitU
+  obtain ⟨HS'U, hHS'U⟩ := w4rSliceHypermap_p35 HS hHS hdV hVE hparamU hfinG
+  have hselfU : (v, rhoNode1 FF v) ∈ HS.face (v, rhoNode1 FF v) := ⟨0, rfl⟩
+  have hlfU := HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraph HS hHS hfanAug hdV
+    hstepU hvisitU HS'U hHS'U (param_dart_slice_p35 hparamU hselfU)
+  -- W 半扇：换序桥过同一条链（原装配体逐字）
+  have hsubW : HS.face (w, rhoNode1 FF w) ⊆ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact fvSubsetDarts_p35 HS hHS hdW
+  have hparamW : faceCycleParam_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) :=
+    FACE_CYCLE_PARAM_p35 hgraphW HS hHSw hdWw hstepW hvisitW
+  obtain ⟨HS'W, hHS'W⟩ := w4rSliceHypermap_p35 HS hHSw hdWw hVEW hparamW hfinGW
+  have hselfW : (w, rhoNode1 FF w) ∈ HS.face (w, rhoNode1 FF w) := ⟨0, rfl⟩
+  have hlfW := HAFL_CIRCLE_FORM_OF_HALF_CIRCLE_p35 hgraphW HS hHSw hfanAugW hdWw
+    hstepW hvisitW HS'W hHS'W (param_dart_slice_p35 hparamW hselfW)
+  -- 四个窗口束重建：hnowrap 由 hnw 接口直供（去 kch/hsgn）
+  have hdUUb : w4pWindowData_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) dU := by
+    obtain ⟨c, k, ρ, hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx,
+      hvx0, hbnds, hdart, hrV, hstep⟩ := nwSlotIff_p35.mp hdUU.2
+    refine Exists.intro c (Exists.intro k (Exists.intro ρ ?_))
+    refine ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds,
+      hdart, hnwUU c k ρ ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx,
+        hvx0, hbnds, hdart, hrV, hstep⟩⟩
+  have hdWUb : w4pWindowData_p35 V (E ∪ {{v, w}})
+      (HS.face (v, rhoNode1 FF v)) dW := by
+    obtain ⟨c, k, ρ, hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx,
+      hvx0, hbnds, hdart, hrV, hstep⟩ := nwSlotIff_p35.mp hdWU.2
+    refine Exists.intro c (Exists.intro k (Exists.intro ρ ?_))
+    refine ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds,
+      hdart, hnwWU c k ρ ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx,
+        hvx0, hbnds, hdart, hrV, hstep⟩⟩
+  have hdUWb : w4pWindowData_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) dU' := by
+    obtain ⟨c, k, ρ, hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx,
+      hvx0, hbnds, hdart, hrV, hstep⟩ := nwSlotIff_p35.mp hdUW.2
+    refine Exists.intro c (Exists.intro k (Exists.intro ρ ?_))
+    refine ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds,
+      hdart, hnwUW c k ρ ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx,
+        hvx0, hbnds, hdart, hrV, hstep⟩⟩
+  have hdWWb : w4pWindowData_p35 V (E ∪ {{w, v}})
+      (HS.face (w, rhoNode1 FF w)) dW' := by
+    obtain ⟨c, k, ρ, hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx,
+      hvx0, hbnds, hdart, hrV, hstep⟩ := nwSlotIff_p35.mp hdWW.2
+    refine Exists.intro c (Exists.intro k (Exists.intro ρ ?_))
+    refine ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds,
+      hdart, hnwWW c k ρ ⟨hpc, hcne, hk2, hr0, hlast, hvert, hv0, hbp2, hvx,
+        hvx0, hbnds, hdart, hrV, hstep⟩⟩
+  -- 根体拼合（ROOT 体逐字内联；SKELETON 的 kch 槽为死前件，不传）
+  refine ⟨HS, hHS, ?_, ?_⟩
+  · -- SKELETON 体逐字内联（kch 死前件不传）
+    have hfinU : (HS.face (v, rhoNode1 FF v)).Finite :=
+      fvFinite_p35 (V := V) (E := E ∪ {{v, w}}) HS (v, rhoNode1 FF v)
+    refine COVEX_OF_HAFL_p35 hlfU hparamU.1 ?_
+    refine covexSandwichOfCore_p35 hsubU hparamU hfinU ?_
+    intro p hp
+    rcases hsplitU p hp with rfl | rfl | ⟨c, hcne, hpFF, hEEo, hEEs⟩
+    · exact w4pSandwichDiag_p35 hdUUb
+    · exact w4pSandwichDiag_p35 hdWUb
+    · exact ⟨c, w4pSandwichInterior_p35 hfan hpFF hEEo hcne hEEs⟩
+  · have hfinW : (HS.face (w, rhoNode1 FF w)).Finite :=
+      fvFinite_p35 (V := V) (E := E ∪ {{w, v}}) HS (w, rhoNode1 FF w)
+    refine COVEX_OF_HAFL_p35 hlfW hparamW.1 ?_
+    refine covexSandwichOfCore_p35 hsubW hparamW hfinW ?_
+    intro p hp
+    rcases hsplitW p hp with rfl | rfl | ⟨c, hcne, hpFF, hEEo, hEEs⟩
+    · exact w4pSandwichDiag_p35 hdUWb
+    · exact w4pSandwichDiag_p35 hdWWb
+    · exact ⟨c, w4pSandwichInterior_p35 hfan hpFF hEEo hcne hEEs⟩
+
+-- ===== merged block: lane J (续135 M1 合并, 编排者) =====
+/-! ## lane_J（ejrcfjd-dw-J-junk-w1）：junk 顶点问题的 p35 渲染件
+
+HOL 考古（T1）结论：junk 顶点（u ∈ V 而无任何边）在 HOL 侧由 `local_fan`
+的 HYP 自环层排除——`darts_of_hyp E V = ord_pairs E ∪ self_pairs E V`
+（localization.hl:42-45）把孤立点编码为自环 dart，`dih2k` 合取支
+（dart = face ∪ node''face 对每个 dart 成立 + edge_map 阶 2）与真 dart
+行不相容，故 HOL `local_fan` 蕴含「每顶点 ≥1 边」，再经
+`LOCAL_FAN_RHO_NODE_PROS`（local_lemmas.hl:69）+ `LOCAL_FAN_ORBIT_MAP_V`
+（:469）+ `LOFA_IMP_EE_TWO_ELMS`（:1907）升级为 2-正则。Lean 侧
+`LocalFan` 用 `hypermapOfFan`（无自环层），junk 顶点对超映射不可见，
+故根 `EJRCFJD_p35` 的五前提联合可满足 junk v——(a) 型排除件
+`jVertOfHsub`（根五前提 → v,w ∈ ⋃₀E）在 Lean 前提下不成立（不是
+难证而是假），退化支吸收也不可复用（见 DELIVERY）。
+
+本块交付 (b) 的 ⋃₀E 限制半边 kit（全部 hEE2-自由，仅 LocalFan）：
+dart 带（belt）结构 + 边端点顶点非叶（≥2 邻）+ 落 FF 首坐标圈。
+完整 2-正则还需 node-双射内容（t_v ≤ 1，即 HOL BIJ_BETWEEN_FF_AND_V
+的 choose_nd_point 方位角几何），本车道未闭，见 DELIVERY EVOLUTION 草案。
+
+实例纪律：Hypermap 组件一律在单证明内 obtain（lfVertKit 同款
+letI-λ + set 模式），不跨陈述传递，杜绝 dartDecEq3/λ 实例壁。 -/
+
+/-- Graph 二元提取：`s ∈ E` 中任取一点 `u`，边必为 `{u, a}` 形。 -/
+private theorem jEdgePairAt_p35 {E : Set (Set V3)}
+    (hgraph : Kepler.Text.Fan.Graph E) {s : Set V3} {u : V3}
+    (hsE : s ∈ E) (hus : u ∈ s) : ∃ a : V3, a ≠ u ∧ s = {u, a} := by
+  obtain ⟨hfin, h2⟩ := hgraph s hsE
+  have hc : (hfin.toFinset : Set V3) = s := hfin.coe_toFinset
+  have hc2 : (hfin.toFinset : Finset V3).card = 2 := h2
+  rw [Finset.card_eq_two] at hc2
+  obtain ⟨p, q, hpq, heq⟩ := hc2
+  have hseq : s = {p, q} := by rw [← hc, heq]; simp
+  rw [hseq, Set.mem_insert_iff, Set.mem_singleton_iff] at hus
+  rcases hus with hu1 | hu2
+  · refine ⟨q, ?_, ?_⟩
+    · intro hcon
+      rw [← hu1] at hpq
+      exact hpq hcon.symm
+    · rw [hu1, hseq]
+  · exact ⟨p, by rw [hu2]; exact hpq, by rw [hu2, hseq]; exact Set.pair_comm p q⟩
+
+/-- **边端点顶点非叶**（HOL `local_fan` 排除 1-价顶点这一事实在
+⋃₀E 限制下的 Lean 重制）：若 `EE u E = {a}` 单邻，则 dart `(u,a)` 同时
+落在 face 行与 node 行，与两行不交（纯计数）矛盾。 -/
+theorem jTwoLeNbrOnUnio_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfan : LocalFan V E FF) : ∀ u ∈ ⋃₀ E, 2 ≤ (EE_p3 u E).ncard := by
+  intro u hu
+  obtain ⟨s, hsE, hus⟩ := hu
+  obtain ⟨hF, x, hx, hFF, hdih⟩ := hfan
+  obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
+  letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
+  set H := Fan.hypermapOfFan 0 V E hF with hHdef
+  -- 连贯件（lfUniqueFirst_p35 内部同款，hEE2-自由）
+  have hVE : (⋃₀ E) ⊆ V := hF.1
+  have hcoe : (↑H.darts : Set (V3 × V3)) = Fan.dart1OfFan V E := hypermapOfFan_darts_p35 hF
+  have hFFsub : FF ⊆ Fan.dart1OfFan V E := by
+    rw [hFF, ← hcoe]
+    exact orbitMap_subset_of_permutesOn H.faceMap_permutes hx
+  have hdarts_eq : Fan.dart1OfFan V E = FF ∪ H.nodeMap '' FF := by
+    have h1 := horb x hx
+    rw [← hFF] at h1
+    rw [← hcoe, ← h1]
+  have hfinD1 : (Fan.dart1OfFan V E).Finite := by
+    have hsub : Fan.dart1OfFan V E ⊆ V ×ˢ V := by
+      intro d hd
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq] at hd
+      exact ⟨hVE (Set.mem_sUnion_of_mem
+          (Set.mem_insert_iff.mpr (Or.inl rfl)) hd),
+        hVE (Set.mem_sUnion_of_mem
+          (Set.mem_insert_of_mem _ (Set.mem_singleton d.2)) hd)⟩
+    exact (hF.2.2.1.1.prod hF.2.2.1.1).subset hsub
+  have hfinFF : FF.Finite := hfinD1.subset hFFsub
+  have hdisj : Disjoint FF (H.nodeMap '' FF) := by
+    rw [Set.disjoint_iff]
+    have hfinI : (H.nodeMap '' FF).Finite :=
+      hfinD1.subset (by
+        rintro y ⟨z, hz, rfl⟩
+        rw [← hcoe]
+        have hz2 : z ∈ Fan.dart1OfFan V E := hFFsub hz
+        rw [← hypermapOfFan_darts_p35 hF] at hz2
+        exact Finset.mem_coe.mpr (H.nodeMap_permutes.apply_mem (Finset.mem_coe.mp hz2)))
+    have hIinj : Set.InjOn (⇑H.nodeMap) FF :=
+      fun a b _ _ hab => H.nodeMap.injective hab
+    have hfinI' : (H.nodeMap '' FF).ncard = FF.ncard := hIinj.ncard_image
+    have hcard1 : (↑H.darts : Set (V3 × V3)).ncard = H.darts.card :=
+      Set.ncard_coe_finset _
+    rintro a haFII
+    have hne : ¬ Disjoint FF (H.nodeMap '' FF) := by
+      intro hc
+      rw [Set.disjoint_iff] at hc
+      exact hc haFII
+    have hlt := Set.ncard_union_lt hfinFF hfinI hne
+    rw [← hdarts_eq] at hlt
+    rw [hfinI'] at hlt
+    rw [← hcoe, hcard1, hcard] at hlt
+    rw [two_mul] at hlt
+    exact lt_irrefl _ hlt
+  have hfirst : ∀ d ∈ Fan.dart1OfFan V E, (H.nodeMap d).1 = d.1 := by
+    intro d hd
+    rw [hypermapOfFan_node_apply_p35 hF d, if_pos hd]
+  -- 边提取与邻域有限性
+  have hgraph : Kepler.Text.Fan.Graph E := hF.2.1
+  obtain ⟨a, hau, hseq⟩ := jEdgePairAt_p35 hgraph hsE hus
+  have haE : ({u, a} : Set V3) ∈ E := by rw [← hseq]; exact hsE
+  have haV : a ∈ V := hVE (Set.mem_sUnion_of_mem
+    (Set.mem_insert_of_mem u (Set.mem_singleton_iff.mpr rfl)) haE)
+  have hfinEE : (EE_p3 u E).Finite := eeFiniteOfSubVDart_p35 hVE hF.2.2.1.1
+  by_contra hge
+  push_neg at hge
+  -- hge : (EE_p3 u E).ncard ≤ 1；EE 非空（a 是邻居）
+  have haEE : a ∈ EE_p3 u E := haE
+  have hEq : EE_p3 u E = {a} := by
+    refine Set.eq_singleton_iff_unique_mem.mpr ⟨haEE, ?_⟩
+    intro z hz
+    by_contra hza
+    have hsub : ({a, z} : Set V3) ⊆ EE_p3 u E := by
+      intro w hw
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+      rcases hw with hw1 | hw1
+      · rw [hw1]; exact haEE
+      · rw [hw1]; exact hz
+    have h3 : ({a, z} : Set V3).ncard = 2 := by
+      rw [show ({a, z} : Set V3) = insert a {z} from rfl,
+        Set.ncard_insert_of_notMem (by exact fun hcon => hza hcon.symm),
+        Set.ncard_singleton]
+    have h4 : ({a, z} : Set V3).ncard ≤ (EE_p3 u E).ncard :=
+      Set.ncard_le_ncard hsub hfinEE
+    omega
+  -- setOfEdge u V E = {a}，故 σ_u 固定 a，nodeMap 固定 dart (u,a)
+  have hsoe : Fan.setOfEdge u V E = {a} := by
+    ext w
+    simp only [Fan.setOfEdge, Set.mem_setOf_eq, Set.mem_singleton_iff]
+    constructor
+    · intro hw
+      obtain ⟨hw1, hw2⟩ := hw
+      have hwm : w ∈ EE_p3 u E := hw1
+      rw [hEq] at hwm
+      exact Set.mem_singleton_iff.mp hwm
+    · intro hw
+      rw [hw]
+      exact ⟨haE, haV⟩
+  have hsig : Fan.sigmaFan 0 V E u a = a := by
+    unfold Fan.sigmaFan
+    rw [hsoe]
+    exact if_pos rfl
+  -- dart (u,a) 同时落在两行 → 矛盾
+  have hd : (u, a) ∈ Fan.dart1OfFan V E := by
+    simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+    exact haE
+  have hmemH : (u, a) ∈ Fan.dart1OfFan V E := hd
+  rw [hdarts_eq] at hmemH
+  rcases hmemH with hmemF | hmemN
+  · have hna : H.nodeMap (u, a) = (u, a) := by
+      rw [hypermapOfFan_node_apply_p35 hF (u, a), if_pos hd, hsig]
+    exact Set.disjoint_left.mp hdisj hmemF ⟨(u, a), hmemF, hna⟩
+  · obtain ⟨d, hdFF, hde⟩ := hmemN
+    have hd1 : d.1 = u := by
+      have hcc := congrArg Prod.fst hde
+      rw [hfirst d (hFFsub hdFF)] at hcc
+      exact hcc
+    have hdFF' : (u, d.2) ∈ FF := by
+      rw [← hd1]; exact hdFF
+    have hda : d.2 = a := by
+      have hm : d.2 ∈ EE_p3 u E := by
+        show ({u, d.2} : Set V3) ∈ E
+        exact hFFsub hdFF'
+      rw [hEq] at hm
+      exact Set.mem_singleton_iff.mp hm
+    have hdu : (u, d.2) = (u, a) := by rw [hda]
+    have hdFFa : (u, a) ∈ FF := by rw [← hdu]; exact hdFF'
+    have hna : H.nodeMap (u, a) = (u, a) := by
+      rw [hypermapOfFan_node_apply_p35 hF (u, a), if_pos hd, hsig]
+    exact Set.disjoint_left.mp hdisj hdFFa ⟨(u, a), hdFFa, hna⟩
+
+/-- **边端点顶点落 FF 面圈**：`u ∈ ⋃₀E` 时 u 是某 FF dart 的首坐标
+（`v_prime` 内容；HOL `LOCAL_FAN_RHO_NODE_PROS` 第一支的 ⋃₀E 限制形）。 -/
+theorem jUnioMemVPrime_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfan : LocalFan V E FF) : ∀ u ∈ ⋃₀ E, u ∈ vPrime_p3 V FF := by
+  intro u hu
+  obtain ⟨s, hsE, hus⟩ := hu
+  obtain ⟨hF, x, hx, hFF, hdih⟩ := hfan
+  obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
+  letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
+  set H := Fan.hypermapOfFan 0 V E hF with hHdef
+  have hVE : (⋃₀ E) ⊆ V := hF.1
+  have hcoe : (↑H.darts : Set (V3 × V3)) = Fan.dart1OfFan V E := hypermapOfFan_darts_p35 hF
+  have hFFsub : FF ⊆ Fan.dart1OfFan V E := by
+    rw [hFF, ← hcoe]
+    exact orbitMap_subset_of_permutesOn H.faceMap_permutes hx
+  have hdarts_eq : Fan.dart1OfFan V E = FF ∪ H.nodeMap '' FF := by
+    have h1 := horb x hx
+    rw [← hFF] at h1
+    rw [← hcoe, ← h1]
+  have hgraph : Kepler.Text.Fan.Graph E := hF.2.1
+  obtain ⟨a, hau, hseq⟩ := jEdgePairAt_p35 hgraph hsE hus
+  have haE : ({u, a} : Set V3) ∈ E := by rw [← hseq]; exact hsE
+  have hd : (u, a) ∈ Fan.dart1OfFan V E := by
+    simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+    exact haE
+  have hmemH : (u, a) ∈ Fan.dart1OfFan V E := hd
+  rw [hdarts_eq] at hmemH
+  rcases hmemH with hmemF | hmemN
+  · simp only [vPrime_p3, Set.mem_setOf_eq]
+    exact ⟨hVE (Set.mem_sUnion_of_mem
+      (Set.mem_insert_iff.mpr (Or.inl rfl)) haE), a, hmemF⟩
+  · obtain ⟨d, hdFF, hde⟩ := hmemN
+    have hfirst : ∀ d₀ ∈ Fan.dart1OfFan V E, (H.nodeMap d₀).1 = d₀.1 := by
+      intro d₀ hd₀
+      rw [hypermapOfFan_node_apply_p35 hF d₀, if_pos hd₀]
+    have hd1 : d.1 = u := by
+      have hcc := congrArg Prod.fst hde
+      rw [hfirst d (hFFsub hdFF)] at hcc
+      exact hcc
+    simp only [vPrime_p3, Set.mem_setOf_eq]
+    refine ⟨hVE (Set.mem_sUnion_of_mem
+      (Set.mem_insert_iff.mpr (Or.inl rfl)) haE), d.2, ?_⟩
+    rw [← hd1]; exact hdFF
+
+/-- **lane_J 接口件**（(b) 的诚实弱化版）：⋃₀E 上每顶点 ≥2 邻、
+且落 FF 首坐标圈；完整 `ncard = 2`（HOL `LOFA_IMP_EE_TWO_ELMS` 面）
+的残差为 t_u ≤ 1（node-双射内容），见 DELIVERY。 -/
+theorem jUnioVertKit_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfan : LocalFan V E FF) :
+    (∀ u ∈ ⋃₀ E, 2 ≤ (EE_p3 u E).ncard) ∧ (∀ u ∈ ⋃₀ E, u ∈ vPrime_p3 V FF) :=
+  ⟨jTwoLeNbrOnUnio_p35 hfan, jUnioMemVPrime_p35 hfan⟩
+
+/-- **边端点顶点偶数邻**（2-正则的必要约束）：`u ∈ ⋃₀E` 的邻数恒为偶
+——u 上方 dart 列拆成 face 行与 node 行各半。与 `jTwoLeNbrOnUnio_p35`
+合并即得邻数 ∈ {2, 4, 6, …}；排除 ≥4 需 node-双射内容（DELIVERY）。 -/
+theorem jEvenNbrOnUnio_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfan : LocalFan V E FF) :
+    ∀ u ∈ ⋃₀ E, ∃ t : ℕ, (EE_p3 u E).ncard = 2 * t := by
+  intro u hu
+  obtain ⟨s, hsE, hus⟩ := hu
+  obtain ⟨hF, x, hx, hFF, hdih⟩ := hfan
+  obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
+  letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
+  set H := Fan.hypermapOfFan 0 V E hF with hHdef
+  -- 连贯件（lfUniqueFirst_p35 内部同款，hEE2-自由）
+  have hVE : (⋃₀ E) ⊆ V := hF.1
+  have hcoe : (↑H.darts : Set (V3 × V3)) = Fan.dart1OfFan V E := hypermapOfFan_darts_p35 hF
+  have hFFsub : FF ⊆ Fan.dart1OfFan V E := by
+    rw [hFF, ← hcoe]
+    exact orbitMap_subset_of_permutesOn H.faceMap_permutes hx
+  have hdarts_eq : Fan.dart1OfFan V E = FF ∪ H.nodeMap '' FF := by
+    have h1 := horb x hx
+    rw [← hFF] at h1
+    rw [← hcoe, ← h1]
+  have hfinD1 : (Fan.dart1OfFan V E).Finite := by
+    have hsub : Fan.dart1OfFan V E ⊆ V ×ˢ V := by
+      intro d hd
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq] at hd
+      exact ⟨hVE (Set.mem_sUnion_of_mem
+          (Set.mem_insert_iff.mpr (Or.inl rfl)) hd),
+        hVE (Set.mem_sUnion_of_mem
+          (Set.mem_insert_of_mem _ (Set.mem_singleton d.2)) hd)⟩
+    exact (hF.2.2.1.1.prod hF.2.2.1.1).subset hsub
+  have hfinFF : FF.Finite := hfinD1.subset hFFsub
+  have hdisj : Disjoint FF (H.nodeMap '' FF) := by
+    rw [Set.disjoint_iff]
+    have hfinI : (H.nodeMap '' FF).Finite :=
+      hfinD1.subset (by
+        rintro y ⟨z, hz, rfl⟩
+        rw [← hcoe]
+        have hz2 : z ∈ Fan.dart1OfFan V E := hFFsub hz
+        rw [← hypermapOfFan_darts_p35 hF] at hz2
+        exact Finset.mem_coe.mpr (H.nodeMap_permutes.apply_mem (Finset.mem_coe.mp hz2)))
+    have hIinj : Set.InjOn (⇑H.nodeMap) FF :=
+      fun a b _ _ hab => H.nodeMap.injective hab
+    have hfinI' : (H.nodeMap '' FF).ncard = FF.ncard := hIinj.ncard_image
+    have hcard1 : (↑H.darts : Set (V3 × V3)).ncard = H.darts.card :=
+      Set.ncard_coe_finset _
+    rintro a haFII
+    have hne : ¬ Disjoint FF (H.nodeMap '' FF) := by
+      intro hc
+      rw [Set.disjoint_iff] at hc
+      exact hc haFII
+    have hlt := Set.ncard_union_lt hfinFF hfinI hne
+    rw [← hdarts_eq] at hlt
+    rw [hfinI'] at hlt
+    rw [← hcoe, hcard1, hcard] at hlt
+    rw [two_mul] at hlt
+    exact lt_irrefl _ hlt
+  have hfirst : ∀ d ∈ Fan.dart1OfFan V E, (H.nodeMap d).1 = d.1 := by
+    intro d hd
+    rw [hypermapOfFan_node_apply_p35 hF d, if_pos hd]
+  -- u 上方 dart 列：D = {d ∈ dart1OfFan | d.1 = u}，face 行 T = {d ∈ FF | d.1 = u}
+  have hgraph : Kepler.Text.Fan.Graph E := hF.2.1
+  obtain ⟨a, hau, hseq⟩ := jEdgePairAt_p35 hgraph hsE hus
+  have haE : ({u, a} : Set V3) ∈ E := by rw [← hseq]; exact hsE
+  set D : Set (V3 × V3) := {d : V3 × V3 | d ∈ Fan.dart1OfFan V E ∧ d.1 = u} with hDdef
+  set T : Set (V3 × V3) := {d : V3 × V3 | d ∈ FF ∧ d.1 = u} with hTdef
+  have himg : (fun w : V3 => (u, w)) '' EE_p3 u E = D := by
+    ext d
+    simp only [Set.mem_image, Set.mem_setOf_eq, EE_p3, Fan.dart1OfFan, hDdef]
+    constructor
+    · rintro ⟨w, hw, rfl⟩
+      exact ⟨hw, rfl⟩
+    · rintro ⟨hd, hd1⟩
+      rw [hd1] at hd
+      exact ⟨d.2, hd, by rw [hd1.symm]⟩
+  have hinj : Set.InjOn (fun w : V3 => (u, w)) (EE_p3 u E) :=
+    fun x _ y _ hcon => by simpa using congrArg Prod.snd hcon
+  have hncD : D.ncard = (EE_p3 u E).ncard := by
+    rw [← hinj.ncard_image, himg]
+  have hTD : T ∪ H.nodeMap '' T = D := by
+    ext d
+    show (d ∈ T ∨ d ∈ H.nodeMap '' T) ↔ d ∈ Fan.dart1OfFan V E ∧ d.1 = u
+    constructor
+    · rintro (hdT | ⟨e, heT, hde⟩)
+      · obtain ⟨hdT1, hdT2⟩ := hdT
+        exact ⟨hFFsub hdT1, hdT2⟩
+      · obtain ⟨heT1, heT2⟩ := heT
+        refine ⟨?_, ?_⟩
+        · rw [← hde]
+          have he1 : e ∈ Fan.dart1OfFan V E := hFFsub heT1
+          rw [← hypermapOfFan_darts_p35 hF] at he1
+          have he2 := H.nodeMap_permutes.apply_mem (Finset.mem_coe.mp he1)
+          rw [← hypermapOfFan_darts_p35 hF]
+          exact Finset.mem_coe.mpr he2
+        · have hcc := congrArg Prod.fst hde
+          rw [hfirst e (hFFsub heT1)] at hcc
+          rw [← hcc]
+          exact heT2
+    · rintro ⟨hd, hd1⟩
+      have hdm : d ∈ Fan.dart1OfFan V E := hd
+      rw [hdarts_eq] at hdm
+      rcases hdm with hdmF | ⟨e, heFF, hde⟩
+      · exact Or.inl ⟨hdmF, hd1⟩
+      · refine Or.inr ⟨e, (show e ∈ FF ∧ e.1 = u by
+          refine ⟨heFF, ?_⟩
+          have hcc := congrArg Prod.fst hde
+          rw [hfirst e (hFFsub heFF)] at hcc
+          rw [hcc, hd1]), hde⟩
+  have hdisjT : Disjoint T (H.nodeMap '' T) := by
+    rw [Set.disjoint_left]
+    intro a haT hmem
+    obtain ⟨e, heT, hae⟩ := hmem
+    obtain ⟨heT1, -⟩ := heT
+    obtain ⟨haT1, -⟩ := haT
+    exact Set.disjoint_left.mp hdisj haT1 ⟨e, heT1, hae⟩
+  have hfinT : T.Finite := hfinFF.subset (fun d hd => hd.1)
+  have hfinNT : (H.nodeMap '' T).Finite :=
+    hfinD1.subset (by
+      rintro y ⟨z, hz, rfl⟩
+      rw [← hcoe]
+      obtain ⟨hz1, -⟩ := hz
+      have hz2 : z ∈ Fan.dart1OfFan V E := hFFsub hz1
+      rw [← hypermapOfFan_darts_p35 hF] at hz2
+      exact Finset.mem_coe.mpr (H.nodeMap_permutes.apply_mem (Finset.mem_coe.mp hz2)))
+  have hinjT : Set.InjOn (⇑H.nodeMap) T := fun a b _ _ hab => H.nodeMap.injective hab
+  have hncNT : (H.nodeMap '' T).ncard = T.ncard := hinjT.ncard_image
+  refine ⟨T.ncard, ?_⟩
+  rw [← hncD, ← hTD, Set.ncard_union_eq hdisjT hfinT hfinNT, hncNT, two_mul]
+
+-- ===== merged block: lane B2 (续136 M1b 合并, 编排者) =====
+
+/-! ## dw-B2-pred-w1 (EJRCFJD 深水攻坚，车道 B2「F1 方位环前驱存在性」)：纯追加块
+
+B-DELIVERY §3 F1 逐字陈述（`azimCyclePred_p35`，无一般位置前提）在本波被
+**机器证伪**（`b2AzimCyclePredFalse_p35`：取 `u₀ ≠ 0` 的右手 ON 标架 `e = f1,
+ax = f3`，`W = {-e, e, 2e}`、`z = -e`——`e` 与 `2e` 同射线（正实数倍方位 0），
+自 z 看两竞争者方位均 π 且投影范数 1 ≤ 2 打平，三点的 ε-值都钉死 ≠ -e，
+前驱不存在）。交付改为：
+- 修正纯引理 `b2AzimCyclePredInj_p35`：加 `Set.InjOn (azim 0 u z) W`（方位-自-z
+  单射 / 无同射线对）前提后逐字闭出同形结论；
+- 机器反例 `b2AzimCyclePredFalse_p35`（诚实账：F1 槽的精确定尺）；
+- 辅件 `b2AzimSmulZero_p35`（正倍点方位 0）、`b2AzimSmulPi_p35`（负倍点方位 π）。
+消费形：`hstepSlotOfPred_p35` 的 `hpred` 槽（B6，第 6609-6610 行）期望
+`∀ u ∈ ⋃₀ E', ∀ z ∈ EE_p3 u E', ∃ x ∈ EE_p3 u E', azimCycle_p3 (EE_p3 u E') (0:V3) u x = z`；
+装配时以 `b2AzimCyclePredInj_p35` 供给（W := EE_p3 u E'，四前提 hfin/hzW/h2/hinj
+中前三者即 B8 + 槽形 h2，`hinj` 需下游从 fan 几何排出同射线对——sphere 半径
+钉死 + 正倍点引理，gap C/E 接口，见 DELIVERY 注记）。零 sorry。 -/
+
+/-- T2: 负实数倍的方位角为 π（轴锥开段跨轴线钉 π）。 -/
+theorem b2AzimSmulPi_p35 {u y : V3} (c : ℝ) (hc : c < 0)
+    (hcol : ¬ Collinear3 (0:V3) u y) : azim (0:V3) u y (c • y) = Real.pi := by
+  have hcz : c ≠ 0 := ne_of_lt hc
+  have hu0 : u ≠ (0:V3) := fun he => hcol (collinear3_of_eq he)
+  have hcolc : ¬ Collinear3 (0:V3) u (c • y) := by
+    intro hcol2
+    obtain ⟨t, ht⟩ := (collinear3_iff_smul hu0).mp hcol2
+    rw [sub_zero, sub_zero] at ht
+    have hy' : y = (t / c) • u := by
+      have h2 := congrArg (fun v : V3 => (c⁻¹ :ℝ) • v) ht
+      rw [inv_smul_smul₀ hcz, smul_smul] at h2
+      rw [show (c:ℝ)⁻¹ * t = t / c from by field_simp] at h2
+      exact h2
+    refine hcol ((collinear3_iff_smul hu0).mpr ⟨t / c, by rw [sub_zero, sub_zero, hy']⟩)
+  exact ozAzmPi_p35 (v := u) (w := y) (u := c • y) (z := (0:V3)) hu0 hcol hcolc
+    (-c) 1 0 (by linarith) one_pos
+    (by rw [one_smul, ← add_smul, neg_add_cancel, zero_smul])
+    (by rw [sub_zero, sub_zero, zero_smul])
+
+/-- T1: 正实数倍的方位角为零（AZIM_EQ_0 射线关系）。 -/
+theorem b2AzimSmulZero_p35 {u y : V3} (c : ℝ) (hc : 0 < c)
+    (hcol : ¬ Collinear3 (0:V3) u y) : azim (0:V3) u y (c • y) = 0 := by
+  have hcz : c ≠ 0 := ne_of_gt hc
+  have hu0 : u ≠ (0:V3) := fun he => hcol (collinear3_of_eq he)
+  have hy0 : y ≠ (0:V3) := fun h0 => hcol (collinear3_pair_left h0)
+  have hcolc : ¬ Collinear3 (0:V3) u (c • y) := by
+    intro hcol2
+    obtain ⟨t, ht⟩ := (collinear3_iff_smul hu0).mp hcol2
+    rw [sub_zero, sub_zero] at ht
+    have hy' : y = (t / c) • u := by
+      have h2 := congrArg (fun v : V3 => (c⁻¹ :ℝ) • v) ht
+      rw [inv_smul_smul₀ hcz, smul_smul] at h2
+      rw [show (c:ℝ)⁻¹ * t = t / c from by field_simp] at h2
+      exact h2
+    refine hcol ((collinear3_iff_smul hu0).mpr ⟨t / c, by rw [sub_zero, sub_zero, hy']⟩)
+  rw [azim_eq_zero_iff hcol hcolc]
+  rw [affGt_pair_iff (v0 := (0:V3)) (v1 := u) (x := c • y) (y := y)
+    (Ne.symm hu0) (by
+      intro hh
+      rcases smul_eq_zero.mp hh with h | h
+      · exact absurd h hc.ne'
+      · exact hy0 h) (by
+      intro hh
+      refine hcol ((collinear3_iff_smul hu0).mpr ⟨c⁻¹, ?_⟩)
+      rw [sub_zero, sub_zero, ← hh, smul_smul, inv_mul_cancel₀ hcz, one_smul])]
+  refine ⟨c⁻¹, by positivity, ⟨0, ?_⟩⟩
+  rw [sub_zero, sub_zero, sub_zero, zero_smul, add_zero, smul_smul,
+    inv_mul_cancel₀ hcz, one_smul]
+
+/-- b2 MAIN（前沿 F1 修正形）：方位环前驱存在性，加方位-自-z 单射（一般位置）前提。
+无该前提的 B-DELIVERY 原陈述被 `b2AzimCyclePredFalse_p35` 机器证伪。 -/
+theorem b2AzimCyclePredInj_p35 {W : Set V3} {u z : V3} (hWf : W.Finite) (hzW : z ∈ W)
+    (h2 : ∃ y ∈ W, y ≠ z)
+    (hinj : Set.InjOn (fun p => azim (0:V3) u z p) W) :
+    ∃ x ∈ W, azimCycle_p3 W (0:V3) u x = z := by
+  obtain ⟨y₀, hy₀W, hy₀ne⟩ := h2
+  have hzz : azim (0:V3) u z z = 0 := azim_self (0:V3) u z
+  have hu0 : u ≠ (0:V3) := by
+    intro hu00
+    have h0 : azim (0:V3) u z y₀ = 0 := by
+      rw [hu00]
+      unfold azim
+      rw [if_pos (Or.inl (collinear3_of_eq (rfl : (0:V3) = (0:V3))))]
+    exact hy₀ne (hinj hy₀W hzW (h0.trans hzz.symm))
+  have hneq : ∀ p ∈ W, p ≠ z → azim (0:V3) u z p ≠ 0 := fun p hp pne heq =>
+    pne (hinj hp hzW (heq.trans hzz.symm))
+  have hncz : ¬ Collinear3 (0:V3) u z := by
+    intro hcol
+    have h0 : azim (0:V3) u z y₀ = 0 := by
+      unfold azim
+      rw [if_pos (Or.inl hcol)]
+    exact hy₀ne (hinj hy₀W hzW (h0.trans hzz.symm))
+  have hncp : ∀ p ∈ W, p ≠ z → ¬ Collinear3 (0:V3) u p := fun p hp pne hcol =>
+    hneq p hp pne (by unfold azim; rw [if_pos (Or.inr hcol)])
+  have hSf : (W \ {z}).Finite := hWf.subset (fun x hx => hx.1)
+  have hSne : (W \ {z}).Nonempty := ⟨y₀, hy₀W, hy₀ne⟩
+  obtain ⟨x, hxS, hxmax⟩ := Set.exists_max_image (W \ {z})
+    (fun p => azim (0:V3) u z p) hSf hSne
+  have hdom : ∀ q ∈ (W \ {z}), q ≠ x → azim (0:V3) u x z < azim (0:V3) u x q := by
+    intro q hqS hqx
+    have hqW : q ∈ W := hqS.1
+    have hqz : q ≠ z := hqS.2
+    have hle : azim (0:V3) u z q ≤ azim (0:V3) u z x := hxmax q hqS
+    have hne : azim (0:V3) u z q ≠ azim (0:V3) u z x := by
+      intro he
+      exact hqx (hinj hqW hxS.1 he)
+    have hlt : azim (0:V3) u z q < azim (0:V3) u z x := lt_of_le_of_ne hle hne
+    have hθq0 : 0 < azim (0:V3) u z q :=
+      lt_of_le_of_ne (azim_nonneg (0:V3) u z q) (fun he => hneq q hqW hqz he.symm)
+    have hncq : ¬ Collinear3 (0:V3) u q := hncp q hqW hqz
+    have hncx : ¬ Collinear3 (0:V3) u x := hncp x hxS.1 hxS.2
+    have hadd := azimAddTriple_p35 (x := (0:V3)) (v := u) (u := z) (w1 := q) (w2 := x)
+      hu0 hncz hncq hncx hle
+    have hqxne : azim (0:V3) u q x ≠ 0 := by
+      intro he
+      rw [he, add_zero] at hadd
+      exact hlt.ne hadd.symm
+    have hcomp1 : azim (0:V3) u x z = 2 * Real.pi - azim (0:V3) u z x := by
+      rw [azim_compl hncz hncx, if_neg (hneq x hxS.1 hxS.2)]
+    have hcomp2 : azim (0:V3) u x q = 2 * Real.pi - azim (0:V3) u q x := by
+      rw [azim_compl hncq hncx, if_neg hqxne]
+    rw [hcomp1, hcomp2, hadd]
+    linarith
+  refine ⟨x, hxS.1, ?_⟩
+  have hsub : ¬ (W ⊆ {x}) := by
+    intro hcc
+    exact hxS.2 (Set.mem_singleton_iff.mpr
+      (Set.mem_singleton_iff.mp (hcc hzW)).symm)
+  rw [azimCycle_p3, if_neg hsub]
+  have hφz : (fun t : V3 => t ≠ x ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ x →
+      azim (0:V3) u x t < azim (0:V3) u x q ∨
+        azim (0:V3) u x t = azim (0:V3) u x q ∧
+          ‖projection (t - (0:V3)) (u - (0:V3))‖ ≤
+            ‖projection (q - (0:V3)) (u - (0:V3))‖) z := by
+    refine ⟨Ne.symm hxS.2, hzW, ?_⟩
+    intro q hqW hqx
+    rcases eq_or_ne q z with rfl | hqz
+    · exact Or.inr ⟨rfl, le_refl _⟩
+    · exact Or.inl (hdom q ⟨hqW, hqz⟩ hqx)
+  have hex : ∃ t, (fun t : V3 => t ≠ x ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ x →
+      azim (0:V3) u x t < azim (0:V3) u x q ∨
+        azim (0:V3) u x t = azim (0:V3) u x q ∧
+          ‖projection (t - (0:V3)) (u - (0:V3))‖ ≤
+            ‖projection (q - (0:V3)) (u - (0:V3))‖) t := ⟨z, hφz⟩
+  have huniq : ∀ t, (fun t : V3 => t ≠ x ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ x →
+      azim (0:V3) u x t < azim (0:V3) u x q ∨
+        azim (0:V3) u x t = azim (0:V3) u x q ∧
+          ‖projection (t - (0:V3)) (u - (0:V3))‖ ≤
+            ‖projection (q - (0:V3)) (u - (0:V3))‖) t → t = z := by
+    intro t ht
+    rcases eq_or_ne t z with rfl | htz
+    · rfl
+    · exfalso
+      obtain ⟨htx, htW, hball⟩ := ht
+      rcases hball z hzW (Ne.symm hxS.2) with hq | ⟨heq1, -⟩
+      · have h1 := hdom t ⟨htW, htz⟩ htx
+        linarith
+      · have h1 := hdom t ⟨htW, htz⟩ htx
+        rw [heq1] at h1
+        exact lt_irrefl _ h1
+  exact huniq _ (Classical.epsilon_spec hex)
+
+/-- b2 反例：B-DELIVERY §3 F1 逐字陈述为假。取 `u₀ ≠ 0` 的右手 ON 标架
+`e = f1, ax = f3`，`W = {-e, e, 2e}`、`z = -e`：e 与 2e 同射线（方位 0），
+自 z 看两竞争者方位均 π 且范数 1 ≤ 2 打平 ⟹ 三点的 ε-值都钉死 ≠ -e。 -/
+theorem b2AzimCyclePredFalse_p35 :
+    ¬ ∀ (W : Set V3) (u z : V3), W.Finite → z ∈ W → (∃ y ∈ W, y ≠ z) →
+      ∃ x ∈ W, azimCycle_p3 W (0:V3) u x = z := by
+  intro Hex
+  obtain ⟨u₀, hu₀n⟩ : ∃ u : V3, u ≠ 0 :=
+    ⟨EuclideanSpace.single (0:Fin 3) (1:ℝ), by
+      intro h
+      have h1 := congrArg (fun v : V3 => (WithLp.ofLp v : Fin 3 → ℝ) 0) h
+      simp [EuclideanSpace.single] at h1⟩
+  obtain ⟨e, e2, ax, hon, halign⟩ := exists_on3_eq_smul u₀ hu₀n
+  obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := hon
+  have hax0 : ax ≠ (0:V3) := by
+    intro h0
+    rw [h0, smul_zero] at halign
+    exact hu₀n halign
+  have he0 : e ≠ (0:V3) := by
+    intro h0
+    rw [h0] at h11
+    simp [dotProduct] at h11
+  have hncE : ¬ Collinear3 (0:V3) ax e := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hax0).mp hcol
+    rw [sub_zero, sub_zero] at hc
+    have hd : e ⬝ᵥ ax = c * (ax ⬝ᵥ ax) := by
+      rw [hc, WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+    rw [h13, h33] at hd
+    norm_num at hd
+    rw [← hd, zero_smul] at hc
+    exact he0 hc
+  have hncT : ∀ t : ℝ, t ≠ 0 → ¬ Collinear3 (0:V3) ax (t • e) := by
+    intro t ht hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hax0).mp hcol
+    rw [sub_zero, sub_zero] at hc
+    have hd : (t • e) ⬝ᵥ ax = c * (ax ⬝ᵥ ax) := by
+      rw [hc, WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+    rw [WithLp.ofLp_smul, smul_dotProduct, h13, h33, smul_eq_mul] at hd
+    norm_num at hd
+    rw [← hd, zero_smul] at hc
+    rcases smul_eq_zero.mp hc with h | h
+    · exact ht h
+    · exact he0 h
+  have hp1 : e ⬝ᵥ e = (1:ℝ) := h11
+  have hz1 : (((-1:ℝ) • e) ⬝ᵥ e) = (-1:ℝ) := by
+    rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, hp1]
+    norm_num
+  have hp21 : (((2:ℝ) • e) ⬝ᵥ e) = 2 := by
+    rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, hp1]
+    norm_num
+  have hne_zp1 : (-1:ℝ) • e ≠ e := by
+    intro hh
+    rw [hh] at hz1
+    rw [hp1] at hz1
+    linarith
+  have hne_p21 : (2:ℝ) • e ≠ e := by
+    intro hh
+    rw [hh] at hp21
+    rw [hp1] at hp21
+    linarith
+  have hne_zp2 : (-1:ℝ) • e ≠ (2:ℝ) • e := by
+    intro hh
+    have h3 := congrArg (fun v : V3 => v ⬝ᵥ e) hh
+    rw [hz1, hp21] at h3
+    linarith
+  -- 方位值：同射线 0（T1），反射线 π（T2）
+  have ha12 : azim (0:V3) ax e ((2:ℝ) • e) = 0 := b2AzimSmulZero_p35 2 two_pos hncE
+  have ha21 : azim (0:V3) ax ((2:ℝ) • e) e = 0 := by
+    have h := b2AzimSmulZero_p35 (y := (2:ℝ) • e) (1 / 2) (by norm_num)
+      (hncT 2 two_ne_zero)
+    rwa [show ((1:ℝ) / 2) • (2:ℝ) • e = e from by rw [smul_smul]; norm_num] at h
+  have haz1 : azim (0:V3) ax e ((-1:ℝ) • e) = Real.pi :=
+    b2AzimSmulPi_p35 (-1) (by linarith) hncE
+  have haz2 : azim (0:V3) ax ((2:ℝ) • e) ((-1:ℝ) • e) = Real.pi := by
+    have h := b2AzimSmulPi_p35 (y := (2:ℝ) • e) (-1 / 2) (by norm_num)
+      (hncT 2 two_ne_zero)
+    rwa [show ((-1:ℝ) / 2) • (2:ℝ) • e = (-1:ℝ) • e from by rw [smul_smul]; norm_num] at h
+  have haz3 : azim (0:V3) ax ((-1:ℝ) • e) ((2:ℝ) • e) = Real.pi := by
+    have h := b2AzimSmulPi_p35 (y := (-1:ℝ) • e) (-2) (by linarith)
+      (hncT (-1) (by norm_num))
+    rwa [show ((-2:ℝ) • ((-1:ℝ) • e)) = (2:ℝ) • e from by rw [smul_smul]; norm_num] at h
+  have haz4 : azim (0:V3) ax ((-1:ℝ) • e) e = Real.pi := by
+    have h := b2AzimSmulPi_p35 (y := (-1:ℝ) • e) (-1) (by linarith)
+      (hncT (-1) (by norm_num))
+    rwa [show ((-1:ℝ) • ((-1:ℝ) • e)) = e
+      from by rw [smul_smul, show ((-1:ℝ) * (-1:ℝ)) = 1 from by norm_num, one_smul]] at h
+  -- 范数事实
+  have hpe : ‖e‖ = (1:ℝ) := by
+    have h2e : ‖e‖ ^ 2 = (1:ℝ) := by rw [norm_sq_eq_dot]; exact hp1
+    have hnn : 0 ≤ ‖e‖ := norm_nonneg _
+    rcases sq_eq_one_iff.mp h2e with h | h
+    · exact h
+    · linarith
+  have hp1n : ‖projection (e - (0:V3)) (ax - (0:V3))‖ ≤
+      ‖projection ((2:ℝ) • e - (0:V3)) (ax - (0:V3))‖ := by
+    have hproj1 : projection (e - (0:V3)) (ax - (0:V3)) = e := by
+      rw [projection, sub_zero, sub_zero, h13, h33]
+      norm_num [sub_zero, zero_smul]
+    have hproj2 : projection ((2:ℝ) • e - (0:V3)) (ax - (0:V3)) = (2:ℝ) • e := by
+      rw [projection, sub_zero, sub_zero, WithLp.ofLp_smul, smul_dotProduct, h13, h33]
+      norm_num [sub_zero, zero_smul]
+    rw [hproj1, hproj2, norm_smul, Real.norm_eq_abs, abs_of_pos two_pos, hpe]
+    norm_num
+  -- 集合与成员
+  set W : Set V3 := {(-1:ℝ) • e, e, (2:ℝ) • e} with hWdef
+  have hWfin : W.Finite := by
+    rw [hWdef]
+    exact Set.Finite.insert ((-1:ℝ) • e)
+      (Set.Finite.insert e (Set.finite_singleton ((2:ℝ) • e)))
+  have hz₀W : (-1:ℝ) • e ∈ W := by rw [hWdef]; simp
+  have heW : e ∈ W := by rw [hWdef]; simp
+  have hp2W : (2:ℝ) • e ∈ W := by rw [hWdef]; simp
+  have hWmem : ∀ v ∈ W, v = (-1:ℝ) • e ∨ v = e ∨ v = (2:ℝ) • e := by
+    intro v hv
+    rw [hWdef] at hv
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hv
+    tauto
+  have hWsub : ∀ p ∈ W, ¬ (W ⊆ {p}) := by
+    intro p hp hcc
+    have h1 : (-1:ℝ) • e ∈ {p} := hcc hz₀W
+    have h2 : e ∈ {p} := hcc heW
+    rw [Set.mem_singleton_iff] at h1 h2
+    exact hne_zp1 (h1.trans h2.symm)
+  obtain ⟨x, hxW, hxval⟩ := Hex W ax ((-1:ℝ) • e) hWfin hz₀W
+    ⟨e, heW, Ne.symm hne_zp1⟩
+  rcases hWmem x hxW with hx0 | hx1 | hx2
+  · -- x = z₀：ε-谓词首合取 t ≠ x 杀灭 value = z₀；witness = e
+    rw [hx0] at hxval
+    have heq1 : (Classical.epsilon (fun t : V3 => t ≠ (-1:ℝ) • e ∧ t ∈ W ∧
+        ∀ q ∈ W, q ≠ (-1:ℝ) • e →
+        azim (0:V3) ax ((-1:ℝ) • e) t < azim (0:V3) ax ((-1:ℝ) • e) q ∨
+          azim (0:V3) ax ((-1:ℝ) • e) t = azim (0:V3) ax ((-1:ℝ) • e) q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖)) = (-1:ℝ) • e := by
+      have h1 : azimCycle_p3 W (0:V3) ax ((-1:ℝ) • e)
+          = Classical.epsilon (fun t : V3 => t ≠ (-1:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W,
+              q ≠ (-1:ℝ) • e →
+              azim (0:V3) ax ((-1:ℝ) • e) t < azim (0:V3) ax ((-1:ℝ) • e) q ∨
+                azim (0:V3) ax ((-1:ℝ) • e) t = azim (0:V3) ax ((-1:ℝ) • e) q ∧
+                  ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                    ‖projection (q - (0:V3)) (ax - (0:V3))‖) := by
+        show (if W ⊆ {(-1:ℝ) • e} then ((-1:ℝ) • e) else
+          (Classical.epsilon (fun t : V3 => t ≠ (-1:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W,
+            q ≠ (-1:ℝ) • e →
+            azim (0:V3) ax ((-1:ℝ) • e) t < azim (0:V3) ax ((-1:ℝ) • e) q ∨
+              azim (0:V3) ax ((-1:ℝ) • e) t = azim (0:V3) ax ((-1:ℝ) • e) q ∧
+                ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                  ‖projection (q - (0:V3)) (ax - (0:V3))‖)))
+          = (Classical.epsilon (fun t : V3 => t ≠ (-1:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W,
+            q ≠ (-1:ℝ) • e →
+            azim (0:V3) ax ((-1:ℝ) • e) t < azim (0:V3) ax ((-1:ℝ) • e) q ∨
+              azim (0:V3) ax ((-1:ℝ) • e) t = azim (0:V3) ax ((-1:ℝ) • e) q ∧
+                ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                  ‖projection (q - (0:V3)) (ax - (0:V3))‖))
+        exact if_neg (hWsub _ hz₀W)
+      exact h1.symm.trans hxval
+    have hφe : (fun t : V3 => t ≠ (-1:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ (-1:ℝ) • e →
+        azim (0:V3) ax ((-1:ℝ) • e) t < azim (0:V3) ax ((-1:ℝ) • e) q ∨
+          azim (0:V3) ax ((-1:ℝ) • e) t = azim (0:V3) ax ((-1:ℝ) • e) q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖) e := by
+      refine ⟨Ne.symm hne_zp1, heW, ?_⟩
+      intro q hqW hqx
+      rcases hWmem q hqW with hq | hq | hq
+      · exact absurd hq hqx
+      · rw [hq]
+        exact Or.inr ⟨rfl, le_refl _⟩
+      · rw [hq]
+        exact Or.inr ⟨by rw [haz4, haz3], hp1n⟩
+    have hphi := Classical.epsilon_spec (show ∃ t, (fun t : V3 =>
+        t ≠ (-1:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ (-1:ℝ) • e →
+        azim (0:V3) ax ((-1:ℝ) • e) t < azim (0:V3) ax ((-1:ℝ) • e) q ∨
+          azim (0:V3) ax ((-1:ℝ) • e) t = azim (0:V3) ax ((-1:ℝ) • e) q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖) t from ⟨e, hφe⟩)
+    rw [heq1] at hphi
+    exact hphi.1 rfl
+  · -- x = e：witness = 2e；ε-值 z₀ 在 q := 2e 处违反方位支配
+    rw [hx1] at hxval
+    have heq1 : (Classical.epsilon (fun t : V3 => t ≠ e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ e →
+        azim (0:V3) ax e t < azim (0:V3) ax e q ∨
+          azim (0:V3) ax e t = azim (0:V3) ax e q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖)) = (-1:ℝ) • e := by
+      have h1 : azimCycle_p3 W (0:V3) ax e
+          = Classical.epsilon (fun t : V3 => t ≠ e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ e →
+              azim (0:V3) ax e t < azim (0:V3) ax e q ∨
+                azim (0:V3) ax e t = azim (0:V3) ax e q ∧
+                  ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                    ‖projection (q - (0:V3)) (ax - (0:V3))‖) := by
+        show (if W ⊆ {e} then e else
+          (Classical.epsilon (fun t : V3 => t ≠ e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ e →
+            azim (0:V3) ax e t < azim (0:V3) ax e q ∨
+              azim (0:V3) ax e t = azim (0:V3) ax e q ∧
+                ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                  ‖projection (q - (0:V3)) (ax - (0:V3))‖)))
+          = (Classical.epsilon (fun t : V3 => t ≠ e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ e →
+            azim (0:V3) ax e t < azim (0:V3) ax e q ∨
+              azim (0:V3) ax e t = azim (0:V3) ax e q ∧
+                ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                  ‖projection (q - (0:V3)) (ax - (0:V3))‖))
+        exact if_neg (hWsub e heW)
+      exact h1.symm.trans hxval
+    have hwit : (fun t : V3 => t ≠ e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ e →
+        azim (0:V3) ax e t < azim (0:V3) ax e q ∨
+          azim (0:V3) ax e t = azim (0:V3) ax e q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖) ((2:ℝ) • e) := by
+      refine ⟨hne_p21, hp2W, ?_⟩
+      intro q hqW hqx
+      rcases hWmem q hqW with hq | hq | hq
+      · rw [hq]
+        refine Or.inl ?_
+        rw [ha12, haz1]
+        linarith [Real.pi_pos]
+      · exact absurd hq hqx
+      · rw [hq]
+        exact Or.inr ⟨rfl, le_refl _⟩
+    have hphi := Classical.epsilon_spec (show ∃ t, (fun t : V3 =>
+        t ≠ e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ e →
+        azim (0:V3) ax e t < azim (0:V3) ax e q ∨
+          azim (0:V3) ax e t = azim (0:V3) ax e q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖) t from ⟨(2:ℝ) • e, hwit⟩)
+    rw [heq1] at hphi
+    obtain ⟨-, -, hball⟩ := hphi
+    rcases hball ((2:ℝ) • e) hp2W hne_p21 with hlt | ⟨heq2, -⟩
+    · rw [haz1, ha12] at hlt
+      linarith [Real.pi_pos]
+    · rw [haz1, ha12] at heq2
+      exact Real.pi_ne_zero heq2
+  · -- x = 2e：witness = e；ε-值 z₀ 在 q := e 处违反方位支配
+    rw [hx2] at hxval
+    have heq1 : (Classical.epsilon (fun t : V3 => t ≠ (2:ℝ) • e ∧ t ∈ W ∧
+        ∀ q ∈ W, q ≠ (2:ℝ) • e →
+        azim (0:V3) ax ((2:ℝ) • e) t < azim (0:V3) ax ((2:ℝ) • e) q ∨
+          azim (0:V3) ax ((2:ℝ) • e) t = azim (0:V3) ax ((2:ℝ) • e) q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖)) = (-1:ℝ) • e := by
+      have h1 : azimCycle_p3 W (0:V3) ax ((2:ℝ) • e)
+          = Classical.epsilon (fun t : V3 => t ≠ (2:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W,
+              q ≠ (2:ℝ) • e →
+              azim (0:V3) ax ((2:ℝ) • e) t < azim (0:V3) ax ((2:ℝ) • e) q ∨
+                azim (0:V3) ax ((2:ℝ) • e) t = azim (0:V3) ax ((2:ℝ) • e) q ∧
+                  ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                    ‖projection (q - (0:V3)) (ax - (0:V3))‖) := by
+        show (if W ⊆ {(2:ℝ) • e} then ((2:ℝ) • e) else
+          (Classical.epsilon (fun t : V3 => t ≠ (2:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W,
+            q ≠ (2:ℝ) • e →
+            azim (0:V3) ax ((2:ℝ) • e) t < azim (0:V3) ax ((2:ℝ) • e) q ∨
+              azim (0:V3) ax ((2:ℝ) • e) t = azim (0:V3) ax ((2:ℝ) • e) q ∧
+                ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                  ‖projection (q - (0:V3)) (ax - (0:V3))‖)))
+          = (Classical.epsilon (fun t : V3 => t ≠ (2:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W,
+            q ≠ (2:ℝ) • e →
+            azim (0:V3) ax ((2:ℝ) • e) t < azim (0:V3) ax ((2:ℝ) • e) q ∨
+              azim (0:V3) ax ((2:ℝ) • e) t = azim (0:V3) ax ((2:ℝ) • e) q ∧
+                ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+                  ‖projection (q - (0:V3)) (ax - (0:V3))‖))
+        exact if_neg (hWsub _ hp2W)
+      exact h1.symm.trans hxval
+    have hwit : (fun t : V3 => t ≠ (2:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ (2:ℝ) • e →
+        azim (0:V3) ax ((2:ℝ) • e) t < azim (0:V3) ax ((2:ℝ) • e) q ∨
+          azim (0:V3) ax ((2:ℝ) • e) t = azim (0:V3) ax ((2:ℝ) • e) q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖) e := by
+      refine ⟨hne_p21.symm, heW, ?_⟩
+      intro q hqW hqx
+      rcases hWmem q hqW with hq | hq | hq
+      · rw [hq]
+        refine Or.inl ?_
+        rw [ha21, haz2]
+        linarith [Real.pi_pos]
+      · rw [hq]
+        exact Or.inr ⟨rfl, le_refl _⟩
+      · exact absurd hq hqx
+    have hphi := Classical.epsilon_spec (show ∃ t, (fun t : V3 =>
+        t ≠ (2:ℝ) • e ∧ t ∈ W ∧ ∀ q ∈ W, q ≠ (2:ℝ) • e →
+        azim (0:V3) ax ((2:ℝ) • e) t < azim (0:V3) ax ((2:ℝ) • e) q ∨
+          azim (0:V3) ax ((2:ℝ) • e) t = azim (0:V3) ax ((2:ℝ) • e) q ∧
+            ‖projection (t - (0:V3)) (ax - (0:V3))‖ ≤
+              ‖projection (q - (0:V3)) (ax - (0:V3))‖) t from ⟨e, hwit⟩)
+    rw [heq1] at hphi
+    obtain ⟨-, -, hball⟩ := hphi
+    rcases hball e heW hne_p21.symm with hlt | ⟨heq2, -⟩
+    · rw [haz2, ha21] at hlt
+      linarith [Real.pi_pos]
+    · rw [haz2, ha21] at heq2
+      exact Real.pi_ne_zero heq2
+
+
+-- ===== merged block: lane FR (续137 M1c 合并, 编排者) =====
+
+-- ===== merged block: lane FR (ejrcfjd-dw-FR-residue-w1, F 车道 split 槽逐 dart 残差, 2026-10-28) =====
+
+/-! ## dw-FR-residue-w1（EJRCFJD 深水攻坚，车道 FR）：F 车道 split 槽的
+逐 dart 残差供出。纯追加块，不改既有行。
+
+供给件（`W4_SPLIT_RED_p35` 的 `hres` 逐字形，U/W 双面）：
+- `frSplitResidueOfCore_p35` — 抽象内核：`hfan : ConvexLocalFan` + `hEE2`
+  （每顶点恰两邻）+ `hcore`（切片面 = 闭合 dart `(b, a)` ∪ ρ-轨道截段 +
+  N = 首次命中 b 的下标）⟹ 面上每支 dart 是基 dart `(a, ρa)`、闭合 dart
+  `(b, a)`，或「原扇真 dart + 首端避开对角端点 + 切片邻居集 = 增广载体
+  邻居集」。
+- `frSplitResidueU_p35` / `frSplitResidueW_p35` — U/W 面双例化（W 面经
+  (v,w) ↔ (w,v) 换序；`hsub` 楔前提内核不需要——纯组合件）。
+- `frSplitAsmCheck_p35` — 装配形核对：`EJRCFJD_W4_ASSEMBLY_OF_RESIDUE_p35`
+  全签名，`hresU/hresW` 槽由双残差逐字替换，`dU := (v, ρv)`、`dW := (w, v)`
+  （W 面 `dU' := (w, ρw)`、`dW' := (v, w)`）。
+
+数学（非切顶点 u 的两支）：u = ρ^[n] a（1 ≤ n < N）在原面上恰有两邻
+`ρu`、`ιu`（`hEE2` + `lfVertKit_p35`）；两支 dart `(u, ρu)`、
+`(ρ^[n-1] a, u)` 都在切片面内（hcore 窗形：n < N 且 n-1 < N，窗端点由
+n ≥ 1 + 首命中排除；轨道中途折回 a 时该 dart 恰是基 dart，归第一支）⟹
+`ePrime` 含 `{u, ρu}`、`{u, q.1}`；反向：面上触 u 的 dart 仅这两支（⊆ 向
+由 `ePrime ⊆ E ∪ {{a,b}}` 与 u ∉ {a,b} 收口）⟹ 两邻居集相等。折回排除
+（q.1 = ρu ⟹ ρ²u = u ⟹ V = {u, ρu} ⟹ ιu ∈ {u, ρu} 与 `lfVertKit_p35`
+两相异矛盾）用 `kchOrbitMapV_p35`/`kchIterInV_p35`。 -/
+
+set_option linter.unusedVariables false in
+/-- **F 车道 split 残差·抽象内核**：面 `HS.face (a, ρa)` = 闭合 dart
+`(b, a)` ∪ ρ-轨道截段（N = 首次命中 b 的下标）时，每支非对角 dart 供出
+`W4_SPLIT_RED_p35` 的 hres 第三支。 -/
+theorem frSplitResidueOfCore_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {HS : Hypermap (V3 × V3)} {a b : V3} (N : ℕ)
+    (hfan : ConvexLocalFan V E FF) (ha : a ∈ V) (hb : b ∈ V) (hab : a ≠ b)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hcore : HS.face (a, rhoNode1 FF a) = insert (b, a)
+        {d : V3 × V3 | ∃ n < N, d = ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)} ∧
+      (rhoNode1 FF)^[N] a = b ∧ ∀ n < N, (rhoNode1 FF)^[n] a ≠ b) :
+    ∀ p ∈ HS.face (a, rhoNode1 FF a), p = (a, rhoNode1 FF a) ∨ p = (b, a) ∨
+      p ∈ FF ∧ p.1 ∉ ({a, b} : Set V3) ∧
+        EE_p3 p.1 (ePrime_p3 (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a)))
+          = EE_p3 p.1 (E ∪ {{a, b}}) := by
+  obtain ⟨hfv, hNhit, hNmin⟩ := hcore
+  have hfanL : LocalFan V E FF := hfan.1
+  have hiterV : ∀ m : ℕ, (rhoNode1 FF)^[m] a ∈ V := kchIterInV_p35 hfanL hEE2 ha
+  have horbmem : ∀ n < N, ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)
+      ∈ HS.face (a, rhoNode1 FF a) := by
+    intro n hn
+    rw [hfv]
+    refine Set.mem_insert_of_mem _ ?_
+    simp only [Set.mem_setOf_eq]
+    exact ⟨n, hn, rfl⟩
+  -- ρ² 折回致 V 两元，与 lfVertKit_p35 的前驱事实矛盾
+  have hVtwo : ∀ u : V3, u ∈ V → (rhoNode1 FF) ((rhoNode1 FF) u) = u → False := by
+    intro u hu h2
+    have horbU : orbitF_p3 (rhoNode1 FF) u = V := kchOrbitMapV_p35 hfanL hEE2 u hu
+    have hfix : ∀ k : ℕ, (rhoNode1 FF)^[2 * k] u = u := by
+      intro k
+      induction k with
+      | zero => rfl
+      | succ k ih =>
+        have hrw : 2 * (k + 1) = 2 + 2 * k := by ring
+        rw [hrw, Function.iterate_add_apply, ih]
+        exact h2
+    have hVsu : V = {u, rhoNode1 FF u} := by
+      rw [← horbU]
+      ext y
+      simp only [orbitF_p3, Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨m, rfl⟩
+        rcases Nat.even_or_odd m with ⟨k, hk⟩ | ⟨k, hk⟩
+        · left
+          have hk2 : m = 2 * k := by omega
+          rw [hk2]
+          exact hfix k
+        · right
+          have hk2 : m = 2 * k + 1 := by omega
+          rw [hk2, Function.iterate_succ_apply' (rhoNode1 FF) (2 * k) u, hfix k]
+      · rintro (rfl | rfl)
+        · exact ⟨0, rfl⟩
+        · exact ⟨1, rfl⟩
+    have hiv : ivsRhoNode1 FF u ∈ V := (lfVertKit_p35 hfanL hEE2 hu).2.2.2.1
+    rw [hVsu, Set.mem_insert_iff, Set.mem_singleton_iff] at hiv
+    rcases hiv with h | h
+    · exfalso
+      have hrio := (lfVertKit_p35 hfanL hEE2 hu).2.2.1
+      rw [h] at hrio
+      have h1 : (EE_p3 u E).ncard = 1 := by
+        rw [(lfVertKit_p35 hfanL hEE2 hu).2.2.2.2.1, hrio, h]
+        simp
+      have hc := hEE2 u hu
+      rw [h1] at hc
+      omega
+    · exact absurd h.symm (lfVertKit_p35 hfanL hEE2 hu).2.2.2.2.2
+  -- 内核：面上触 u 的两支 dart + hEE2 ⟹ 邻居集相等
+  have hKey : ∀ u : V3, u ∈ V → u ∉ ({a, b} : Set V3) → ∀ p q : V3 × V3,
+      p = (u, rhoNode1 FF u) → p ∈ FF → p ∈ HS.face (a, rhoNode1 FF a) →
+      q.2 = u → q ∈ FF → q ∈ HS.face (a, rhoNode1 FF a) →
+      EE_p3 u (ePrime_p3 (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a)))
+        = EE_p3 u (E ∪ {{a, b}}) := by
+    intro u hu hne p q hpu hpFF hpfv hq2 hqFF hqfv
+    have hkit := lfVertKit_p35 hfanL hEE2 hu
+    have hEEp : EE_p3 u (E ∪ {{a, b}}) = EE_p3 u E := by
+      ext z
+      simp only [EE_p3, Set.mem_setOf_eq, Set.mem_union, Set.mem_singleton_iff]
+      constructor
+      · rintro (hz | hz)
+        · exact hz
+        · exfalso
+          refine hne ?_
+          have hm : (u : V3) ∈ ({u, z} : Set V3) := by simp
+          rw [hz] at hm
+          exact hm
+      · exact fun hz => Or.inl hz
+    rw [hEEp]
+    have hsubL : ∀ z ∈ EE_p3 u (ePrime_p3 (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a))),
+        z ∈ EE_p3 u E := by
+      intro z hz
+      simp only [EE_p3, ePrime_p3, Set.mem_setOf_eq] at hz
+      obtain ⟨x, y, hxy, hE', -⟩ := hz
+      show ({u, z} : Set V3) ∈ E
+      rcases hE' with hE | hE
+      · rw [hxy]
+        exact hE
+      · exfalso
+        refine hne ?_
+        have hm : (u : V3) ∈ ({u, z} : Set V3) := by simp
+        rw [hxy, Set.mem_singleton_iff.mp hE] at hm
+        exact hm
+    ext z
+    constructor
+    · exact hsubL z
+    · intro hz
+      rw [hkit.2.2.2.2.1, Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with hz | hz
+      · -- z = ρu：出边支 (u, ρu) 在面内
+        subst hz
+        have hE1 : ({u, rhoNode1 FF u} : Set V3) ∈ E := by
+          have h0 := kchDartInE_p35 hfanL hpFF
+          simp only [hpu] at h0
+          exact h0
+        have hpfv2 : (u, rhoNode1 FF u) ∈ HS.face (a, rhoNode1 FF a) := by
+          rw [← hpu]
+          exact hpfv
+        exact ⟨u, rhoNode1 FF u, rfl, Set.mem_union_left _ hE1, hpfv2⟩
+      · -- z = ιu：入边支 q + 折回排除
+        subst hz
+        have hq1L : q.1 ∈ EE_p3 u
+            (ePrime_p3 (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a))) := by
+          have h0 : ({q.1, q.2} : Set V3) ∈ E := kchDartInE_p35 hfanL hqFF
+          exact ⟨q.1, q.2, by rw [hq2, Set.pair_comm q.1 u], Set.mem_union_left _ h0, hqfv⟩
+        have hq1E : q.1 ∈ EE_p3 u E := hsubL q.1 hq1L
+        rw [hkit.2.2.2.2.1, Set.mem_insert_iff, Set.mem_singleton_iff] at hq1E
+        rcases hq1E with hq1r | hq1i
+        · exfalso
+          have hr1 := kchRhoDet_p35 hfanL hEE2 hqFF
+          rw [hq1r, hq2] at hr1
+          exact hVtwo u hu hr1
+        · rw [← hq1i]
+          exact hq1L
+  -- 面成员按 hcore 分解
+  intro p hp
+  rw [hfv] at hp
+  rcases Set.mem_insert_iff.mp hp with hpb | hp'
+  · exact Or.inr (Or.inl hpb)
+  · simp only [Set.mem_setOf_eq] at hp'
+    obtain ⟨n, hnN, rfl⟩ := hp'
+    rcases Nat.eq_zero_or_pos n with rfl | hn1
+    · -- n = 0：基 dart 本身
+      exact Or.inl rfl
+    · -- n ≥ 1：非对角 dart
+      rcases eq_or_ne ((rhoNode1 FF)^[n] a) a with hua | hua
+      · -- 轨道中途折回 a：恰是基 dart
+        have h2 : (rhoNode1 FF)^[n + 1] a = rhoNode1 FF a := by
+          rw [Function.iterate_succ_apply', hua]
+        refine Or.inl ?_
+        rw [hua, h2]
+      · have hneB : ((rhoNode1 FF)^[n] a) ∉ ({a, b} : Set V3) := by
+          intro hcon
+          rcases Set.mem_insert_iff.mp hcon with h | h
+          · exact hua h
+          · exact hNmin n hnN h
+        have hpFF' : ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a) ∈ FF := by
+          have h0 := (lfVertKit_p35 hfanL hEE2 (hiterV n)).1
+          rw [← Function.iterate_succ_apply' (rhoNode1 FF) n a] at h0
+          exact h0
+        have hqfv' : ((rhoNode1 FF)^[n - 1] a, (rhoNode1 FF)^[n] a)
+            ∈ HS.face (a, rhoNode1 FF a) := by
+          have h0 := horbmem (n - 1) (by omega)
+          rwa [show ((n - 1 : ℕ) + 1) = n from by omega] at h0
+        have hqFF' : ((rhoNode1 FF)^[n - 1] a, (rhoNode1 FF)^[n] a) ∈ FF := by
+          have h0 := (lfVertKit_p35 hfanL hEE2 (hiterV (n - 1))).1
+          rw [← Function.iterate_succ_apply' (rhoNode1 FF) (n - 1) a,
+            show ((n - 1 : ℕ).succ) = n from by omega] at h0
+          exact h0
+        refine Or.inr (Or.inr ⟨hpFF', hneB, hKey ((rhoNode1 FF)^[n] a) (hiterV n) hneB
+          ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)
+          ((rhoNode1 FF)^[n - 1] a, (rhoNode1 FF)^[n] a) ?_ hpFF' (horbmem n hnN)
+          rfl hqFF' hqfv'⟩)
+        rw [Function.iterate_succ_apply' (rhoNode1 FF) n a]
+
+set_option linter.unusedVariables false in
+/-- **U 面残差**（`W4_SPLIT_RED_p35` hres 的 U 面逐字形；装配实例化
+`dU := (v, rhoNode1 FF v)`、`dW := (w, v)`）。前提仅 `hfan + hEE2 + hcore`
+（U 面窗形：闭合 dart `(w, v)` ∪ ρ-轨道截段，N = 首次命中 w 的下标）。 -/
+theorem frSplitResidueU_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} {N : ℕ} {HS : Hypermap (V3 × V3)}
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hcore : HS.face (v, rhoNode1 FF v) = insert (w, v)
+        {d : V3 × V3 | ∃ n < N, d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} ∧
+      (rhoNode1 FF)^[N] v = w ∧ ∀ n < N, (rhoNode1 FF)^[n] v ≠ w) :
+    ∀ p ∈ HS.face (v, rhoNode1 FF v), p = (v, rhoNode1 FF v) ∨ p = (w, v) ∨
+      p ∈ FF ∧ p.1 ∉ ({v, w} : Set V3) ∧
+        EE_p3 p.1 (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
+          = EE_p3 p.1 (E ∪ {{v, w}}) :=
+  frSplitResidueOfCore_p35 N hfan hv hw hwv hEE2 hcore
+
+set_option linter.unusedVariables false in
+/-- **W 面残差**（hres 的 W 面逐字形；装配实例化 `dU' := (w, rhoNode1 FF w)`、
+`dW' := (v, w)`；对角端点换序 (w, v)，`{w, v} = {v, w}` 同集）。前提仅
+`hfan + hEE2 + hcore`（W 面窗形：闭合 dart `(v, w)` ∪ ρ-轨道截段，
+N = 首次命中 v 的下标）。 -/
+theorem frSplitResidueW_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} {N : ℕ} {HS : Hypermap (V3 × V3)}
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hcore : HS.face (w, rhoNode1 FF w) = insert (v, w)
+        {d : V3 × V3 | ∃ n < N, d = ((rhoNode1 FF)^[n] w, (rhoNode1 FF)^[n + 1] w)} ∧
+      (rhoNode1 FF)^[N] w = v ∧ ∀ n < N, (rhoNode1 FF)^[n] w ≠ v) :
+    ∀ p ∈ HS.face (w, rhoNode1 FF w), p = (w, rhoNode1 FF w) ∨ p = (v, w) ∨
+      p ∈ FF ∧ p.1 ∉ ({w, v} : Set V3) ∧
+        EE_p3 p.1 (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
+          = EE_p3 p.1 (E ∪ {{w, v}}) :=
+  frSplitResidueOfCore_p35 N hfan hw hv (Ne.symm hwv) hEE2 hcore
+
+set_option linter.unusedVariables false in
+/-- **装配形核对（F 车道交付面）**：`EJRCFJD_W4_ASSEMBLY_OF_RESIDUE_p35`
+全签名，`hresU/hresW` 槽由 `frSplitResidueU_p35`/`frSplitResidueW_p35`
+逐字替换（`dU := (v, ρv)`、`dW := (w, v)`、`dU' := (w, ρw)`、
+`dW' := (v, w)`），另加 `hEE2` + 双 `hcore` 显式前提。 -/
+theorem frSplitAsmCheck_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NU NW : ℕ)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)))
+    (hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1)
+    (hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)))
+    (eU eW : V3)
+    (hkchU : W4AsmKchSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) eU)
+    (hkchW : W4AsmKchSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) eW)
+    (hdUU : (v, rhoNode1 FF v) ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v))
+        (v, rhoNode1 FF v))
+    (hdWU : (w, v) ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) (w, v))
+    (hdUW : (w, rhoNode1 FF w) ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w))
+        (w, rhoNode1 FF w))
+    (hdWW : (v, w) ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) (v, w))
+    (hcoreU : HS.face (v, rhoNode1 FF v) = insert (w, v)
+        {d : V3 × V3 | ∃ n < NU, d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} ∧
+      (rhoNode1 FF)^[NU] v = w ∧ ∀ n < NU, (rhoNode1 FF)^[n] v ≠ w)
+    (hcoreW : HS.face (w, rhoNode1 FF w) = insert (v, w)
+        {d : V3 × V3 | ∃ n < NW, d = ((rhoNode1 FF)^[n] w, (rhoNode1 FF)^[n + 1] w)} ∧
+      (rhoNode1 FF)^[NW] w = v ∧ ∀ n < NW, (rhoNode1 FF)^[n] w ≠ v) :
+    ∃ HSx : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HSx ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HSx.face (v, rhoNode1 FF v)))
+        (HSx.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HSx.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HSx.face (w, rhoNode1 FF w)))
+        (HSx.face (w, rhoNode1 FF w)) :=
+  EJRCFJD_W4_ASSEMBLY_OF_RESIDUE_p35 V E FF v w hfan hv hw hwv hsub HS hHS hfanAug
+    hdV hdW hstepU hvisitU hstepW hvisitW eU eW hkchU hkchW hdUU hdWU hdUW hdWW
+    (frSplitResidueU_p35 hfan hv hw hwv hEE2 hcoreU)
+    (frSplitResidueW_p35 hfan hv hw hwv hEE2 hcoreW)
+
+-- ===== merged block: lane NC (续138 M1d 合并, 编排者) =====
+/-! ## 非共线性车道（ejrcfjd-dw-NC-noncol-w1，2026-10-28）
+
+HOL `PROVE_THE_SLICE_ASSUMPTION`（local_lemmas1.hl:5647，证明体 ：5654-5966）
+的非共线性结论在 LA35 面的移植。
+
+路线（HOL 反证路线；Circular 支全闭，Lunar 支按预算定尺为门形输入）：
+- `Circular V E` 经 `VPLANE_OF_CIRCULAR_p35` 给过 0 平面 `P ⊇ V`；
+- `affGt {0} {v,w}` 内取半和点 `y`（`affGt_two_mem_p35`）；`y ∈ aff{0,v,w} ⊆ P`；
+- dart `(v, ρv) ∈ FF`（`lfVertKit_p35`）处 `hsub` + `WEDGE_IN_FAN_LOFA_DETER2_p35`
+  给 `y ∈ wedge 0 v (ρv) (ιv)`，即 `0 < azim 0 v (ρv) y < azim 0 v (ρv) (ιv)`；
+- 全体点共面 P ⟹ `azim 0 v (ρv) y` 与 `azim 0 v (ρv) (ιv)` 均落 `{0, π}`
+  （`ncAzimPlaneDich_p35`：azim_master + ON 标架坐标 + cos=±1；即 HOL
+  AZIM_COND_FOR_COPLANAR / AZIM_EQ_0_ALT 的消费形）⟹ 严格夹逼矛盾。
+- 注记：Circular 支的矛盾**不消费** collinear 前提与内角 π 面（HOL KCHMAMG
+  第一合取支 local_lemmas.hl:3197 因此不进入本件；HOL 在 ：5680 一带经
+  KCHMAMG 提取 π 后仅用作楔端点 `azim 0 v (ρv) (ιv) = π`，此处由共面二分
+  对楔端点直接取得，更强）。collinear 前提只在一般陈述化归 Circular 支时
+  经 `CVLF_CIRCULAR_LUNAR_p35`（= HOL CVLF_COLLINEAR_CIRCULAR_LUNAR :944）
+  消费（HOL :5673 同位）。
+- 残差定尺：Lunar 支需 HKIRPEP 链（local_lemmas.hl:6027 及其依赖
+  HALP_CIRCLE_IS_INTERSECTION / LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI /
+  LUNAR_IMP_INTERIOR_ANGLE_EQQ / AFF_IVS_RHO_NODE_EQQ /
+  CONVEX_LOFA_IMP_INANGLE_LE_PI / INTERIOR_ANGLE1_POS；HOL 消费点
+  PROVE_THE_SLICE_ASSUMPTION 体 ：5747 起），以 `hgate`（共线对必 circular）
+  门形显式承入 `ncSliceNoncollinear_p35`；Circular 支全闭于
+  `ncSliceNoncollinearCirc_p35`（z=v / z=w 两支经 INSERT_COMM 对称全闭）。 -/
+
+/-- `affineSpan ℝ {0, v, a}` 的线性化（后段 private `vplSpan3_p35` 的转写件，
+本车道内 public 复用）。 -/
+theorem ncSpan3_p35 (v a : V3) :
+    (affineSpan ℝ ({(0:V3), v, a} : Set V3) : Set V3)
+      = (Submodule.span ℝ ({v, a} : Set V3) : Set V3) :=
+  vplSpan3_p35 v a
+
+/-- `affineSpan ℝ {0, v, a}` 成员的二元系数提取。 -/
+theorem ncSpanPairOfMem_p35 {v a y : V3}
+    (hy : y ∈ (affineSpan ℝ ({(0:V3), v, a} : Set V3) : Set V3)) :
+    ∃ c1 c2 : ℝ, y = c1 • v + c2 • a := by
+  rw [ncSpan3_p35] at hy
+  obtain ⟨c1, c2, hc⟩ := Submodule.mem_span_pair.mp hy
+  exact ⟨c1, c2, hc.symm⟩
+
+/-- 二元系数组合落回 `affineSpan ℝ {0, v, a}`。 -/
+theorem ncMemSpanPair_p35 {v a y : V3} {c1 c2 : ℝ} (hy : y = c1 • v + c2 • a) :
+    y ∈ (affineSpan ℝ ({(0:V3), v, a} : Set V3) : Set V3) := by
+  rw [ncSpan3_p35]
+  exact Submodule.mem_span_pair.mpr ⟨c1, c2, hy.symm⟩
+
+/-- 三点线性组合的点积线性（V3 = WithLp 面；Pi 侧 dotProduct 线性转写）。 -/
+theorem ncDotTri_p35 (α β γ : ℝ) (p q r s : V3) :
+    ((α • p + β • q + γ • r : V3)) ⬝ᵥ s
+      = α * (p ⬝ᵥ s) + β * (q ⬝ᵥ s) + γ * (r ⬝ᵥ s) := by
+  simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct]
+  ring
+
+/-- `affGt {0} {v, w}` 内的取点（HOL `Planarity.exists_in_aff_gt_disjoint`
+的消费形：`{0}` 与 `{v,w}` 不交时半和点落锥），同时给 `aff{0,v,w}` 成员
+（HOL `AFF_GT_SUB_AFF_UNION` 消费链的代用面）。 -/
+theorem ncExistsAffGt_p35 {v w : V3} (hv0 : v ≠ 0) (hw0 : w ≠ 0) (hwv : v ≠ w) :
+    ∃ y : V3, y ∈ affGt ({(0:V3)} : Set V3) ({v, w} : Set V3) ∧
+      y ∈ (affineSpan ℝ ({(0:V3), v, w} : Set V3) : Set V3) := by
+  refine ⟨((1 / 2 : ℝ) • v + (1 / 2 : ℝ) • w), ?_, ?_⟩
+  · exact affGt_two_mem_p35 (c1 := (1 / 2 : ℝ)) (c2 := (1 / 2 : ℝ))
+      (by norm_num) (by norm_num) (by norm_num)
+      (by simp only [show ((1:ℝ) - 1 / 2 - 1 / 2) = 0 from by norm_num,
+        zero_smul, zero_add]) (Ne.symm hv0) (Ne.symm hw0) hwv
+  · exact ncMemSpanPair_p35 (c1 := 1 / 2) (c2 := 1 / 2) rfl
+
+/-- **azim 平面二分判据**（HOL `AZIM_COND_FOR_COPLANAR` 的消费形）：轴点、
+参考点、目标点同落过 0 平面 `P`、参考点离轴（非 `Collinear3 0 v a`）时，
+方位角只取 `0` 或 `π`。证明 = `azim_master` 的 ON 标架表示 + `y = c1•v + c2•a`
+坐标比对 + `cos θ = ±1`（`Real.cos_eq_one_iff` 整数周期消去）。 -/
+theorem ncAzimPlaneDich_p35 {P : Set V3} {v a y : V3}
+    (hP : kchPlane_p35 P) (h0 : (0:V3) ∈ P) (hv : v ∈ P) (hv0 : v ≠ 0)
+    (ha : a ∈ P) (hnc : ¬ Collinear ℝ ({(0:V3), v, a} : Set V3)) (hy : y ∈ P) :
+    azim (0:V3) v a y = 0 ∨ azim (0:V3) v a y = Real.pi := by
+  by_cases hcoly : Collinear3 (0:V3) v y
+  · exact Or.inl (azimDeg_p35 (Or.inr hcoly))
+  · -- P = aff{0,v,a}，y 的二元坐标
+    have hspan : (affineSpan ℝ ({(0:V3), v, a} : Set V3) : Set V3) = P :=
+      kchPlaneDet_p35 hP (by
+        intro q hq
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+        rcases hq with rfl | rfl | rfl
+        · exact h0
+        · exact hv
+        · exact ha) hnc
+    obtain ⟨c1, c2, hyc⟩ := ncSpanPairOfMem_p35 (by rw [hspan]; exact hy)
+    -- 轴标架 + azim_master 表示
+    obtain ⟨f1, f2, f3, hON, hvsm⟩ := exists_on3_eq_smul v hv0
+    set nv : ℝ := ‖(v:V3)‖ with hnv
+    obtain ⟨hθlo, hθhi, hex⟩ := azim_master (0:V3) v a y
+    set θ : ℝ := azim (0:V3) v a y with hθdef
+    have hvax : ((v - (0:V3) : V3)) = dist v (0:V3) • f3 := by
+      rw [sub_zero, dist_eq_norm, sub_zero]; exact hvsm
+    obtain ⟨h1, h2, hspec⟩ := hex
+    obtain ⟨ψ, r1, r2, harep, hyrep, hr1, hr2⟩ :=
+      hspec f1 f2 f3 hON hvax hv0
+    have hafa : a = ((r1 * Real.cos ψ) • f1 + (r1 * Real.sin ψ) • f2
+        + (h1 * nv) • f3 : V3) := by
+      have h9 := harep
+      simp only [sub_zero] at h9
+      rw [h9]
+      conv_lhs => rw [hvsm]
+      rw [smul_smul]
+    have hyf : ((y - (0:V3) : V3)) = ((c2 * (r1 * Real.cos ψ)) • f1
+        + (c2 * (r1 * Real.sin ψ)) • f2 + ((c1 + c2 * h1) * nv) • f3 : V3) := by
+      have h1' : ((y - (0:V3) : V3)) = c1 • v + c2 • a := by rw [sub_zero, ← hyc]
+      have h2' : c1 • v = ((c1 * nv) • f3 : V3) := by
+        conv_lhs => rw [hvsm]
+        rw [smul_smul]
+      rw [h1', h2', hafa]
+      module
+    -- ON 标架正交坐标
+    have h31 : (f3 ⬝ᵥ f1) = 0 := by rw [dotProduct_comm]; exact hON.2.2.2.2.1
+    have h32 : (f3 ⬝ᵥ f2) = 0 := by rw [dotProduct_comm]; exact hON.2.2.2.2.2.1
+    have h21 : (f2 ⬝ᵥ f1) = 0 := by rw [dotProduct_comm]; exact hON.2.2.2.1
+    have h12d : (f1 ⬝ᵥ f2) = 0 := hON.2.2.2.1
+    have h11d : (f1 ⬝ᵥ f1) = 1 := hON.1
+    have h22d : (f2 ⬝ᵥ f2) = 1 := hON.2.1
+    have hz1 : ((v - (0:V3) : V3)) ⬝ᵥ f1 = 0 := by
+      have e : (((0:ℝ) • f1 + (0:ℝ) • f2 + nv • (f3 - (0:V3)) : V3)) ⬝ᵥ f1
+          = 0 * (f1 ⬝ᵥ f1) + 0 * (f2 ⬝ᵥ f1) + nv * ((f3 - (0:V3)) ⬝ᵥ f1) :=
+        ncDotTri_p35 0 0 nv f1 f2 (f3 - (0:V3)) f1
+      calc ((v - (0:V3) : V3)) ⬝ᵥ f1
+          = (((0:ℝ) • f1 + (0:ℝ) • f2 + nv • (f3 - (0:V3)) : V3)) ⬝ᵥ f1 := by
+            rw [sub_zero, hvsm]; simp
+        _ = 0 * (f1 ⬝ᵥ f1) + 0 * (f2 ⬝ᵥ f1) + nv * ((f3 - (0:V3)) ⬝ᵥ f1) := e
+        _ = 0 := by rw [sub_zero, h31]; ring
+    have hz2 : ((v - (0:V3) : V3)) ⬝ᵥ f2 = 0 := by
+      have e : (((0:ℝ) • f1 + (0:ℝ) • f2 + nv • (f3 - (0:V3)) : V3)) ⬝ᵥ f2
+          = 0 * (f1 ⬝ᵥ f2) + 0 * (f2 ⬝ᵥ f2) + nv * ((f3 - (0:V3)) ⬝ᵥ f2) :=
+        ncDotTri_p35 0 0 nv f1 f2 (f3 - (0:V3)) f2
+      calc ((v - (0:V3) : V3)) ⬝ᵥ f2
+          = (((0:ℝ) • f1 + (0:ℝ) • f2 + nv • (f3 - (0:V3)) : V3)) ⬝ᵥ f2 := by
+            rw [sub_zero, hvsm]; simp
+        _ = 0 * (f1 ⬝ᵥ f2) + 0 * (f2 ⬝ᵥ f2) + nv * ((f3 - (0:V3)) ⬝ᵥ f2) := e
+        _ = 0 := by rw [sub_zero, h32]; ring
+    -- 与 f1、f2 的坐标比对
+    have key1 : r2 * Real.cos (ψ + θ) = c2 * (r1 * Real.cos ψ) := by
+      have e1 : ((y - (0:V3) : V3)) ⬝ᵥ f1 = (r2 * Real.cos (ψ + θ)) * (f1 ⬝ᵥ f1)
+          + (r2 * Real.sin (ψ + θ)) * (f2 ⬝ᵥ f1) + h2 * ((v - (0:V3) : V3) ⬝ᵥ f1) := by
+        rw [hyrep, ncDotTri_p35]
+      have e2 : ((y - (0:V3) : V3)) ⬝ᵥ f1
+          = (c2 * (r1 * Real.cos ψ)) * (f1 ⬝ᵥ f1)
+          + (c2 * (r1 * Real.sin ψ)) * (f2 ⬝ᵥ f1)
+          + ((c1 + c2 * h1) * ‖(v:V3)‖) * (f3 ⬝ᵥ f1) := by
+        rw [hyf, ncDotTri_p35]
+      rw [h11d, h21, hz1] at e1
+      rw [h11d, h21, h31] at e2
+      linarith
+    have key2 : r2 * Real.sin (ψ + θ) = c2 * (r1 * Real.sin ψ) := by
+      have e1 : ((y - (0:V3) : V3)) ⬝ᵥ f2 = (r2 * Real.cos (ψ + θ)) * (f1 ⬝ᵥ f2)
+          + (r2 * Real.sin (ψ + θ)) * (f2 ⬝ᵥ f2) + h2 * ((v - (0:V3) : V3) ⬝ᵥ f2) := by
+        rw [hyrep, ncDotTri_p35]
+      have e2 : ((y - (0:V3) : V3)) ⬝ᵥ f2
+          = (c2 * (r1 * Real.cos ψ)) * (f1 ⬝ᵥ f2)
+          + (c2 * (r1 * Real.sin ψ)) * (f2 ⬝ᵥ f2)
+          + ((c1 + c2 * h1) * ‖(v:V3)‖) * (f3 ⬝ᵥ f2) := by
+        rw [hyf, ncDotTri_p35]
+      rw [h12d, h22d, hz2] at e1
+      rw [h12d, h22d, h32] at e2
+      linarith
+    -- cos θ = c2 * r1 / r2
+    have hcos : r2 * Real.cos θ = c2 * r1 := by
+      have e1 : r2 * (Real.cos ψ * Real.cos θ - Real.sin ψ * Real.sin θ)
+          = c2 * (r1 * Real.cos ψ) := by rw [← Real.cos_add ψ θ]; exact key1
+      have e2 : r2 * (Real.sin ψ * Real.cos θ + Real.cos ψ * Real.sin θ)
+          = c2 * (r1 * Real.sin ψ) := by rw [← Real.sin_add ψ θ]; exact key2
+      have hcss : Real.sin ψ ^ 2 + Real.cos ψ ^ 2 = 1 := Real.sin_sq_add_cos_sq ψ
+      have hA : r2 * Real.cos θ * (Real.sin ψ ^ 2 + Real.cos ψ ^ 2)
+          = c2 * r1 * (Real.sin ψ ^ 2 + Real.cos ψ ^ 2) := by
+        have p1 : r2 * Real.cos θ * Real.cos ψ ^ 2
+            = (r2 * (Real.cos ψ * Real.cos θ - Real.sin ψ * Real.sin θ)) * Real.cos ψ
+              + r2 * (Real.sin ψ * Real.sin θ) * Real.cos ψ := by ring
+        have p2 : r2 * Real.cos θ * Real.sin ψ ^ 2
+            = (r2 * (Real.sin ψ * Real.cos θ + Real.cos ψ * Real.sin θ)) * Real.sin ψ
+              - r2 * (Real.cos ψ * Real.sin θ) * Real.sin ψ := by ring
+        rw [mul_add, p1, p2, e1, e2]; ring
+      rw [hcss] at hA
+      linarith
+    -- r2² = c2² r1²
+    have hsq : r2 ^ 2 = c2 ^ 2 * r1 ^ 2 := by
+      have e : (r2 * Real.cos (ψ + θ)) ^ 2 + (r2 * Real.sin (ψ + θ)) ^ 2
+          = (c2 * (r1 * Real.cos ψ)) ^ 2 + (c2 * (r1 * Real.sin ψ)) ^ 2 := by
+        rw [key1, key2]
+      have p1 : (r2 * Real.cos (ψ + θ)) ^ 2 + (r2 * Real.sin (ψ + θ)) ^ 2
+          = r2 ^ 2 * (Real.sin (ψ + θ) ^ 2 + Real.cos (ψ + θ) ^ 2) := by
+        rw [mul_pow, mul_pow]; ring
+      have p2 : (c2 * (r1 * Real.cos ψ)) ^ 2 + (c2 * (r1 * Real.sin ψ)) ^ 2
+          = c2 ^ 2 * r1 ^ 2 * (Real.sin ψ ^ 2 + Real.cos ψ ^ 2) := by
+        rw [mul_pow, mul_pow, mul_pow]; ring
+      have hcss1 : Real.sin (ψ + θ) ^ 2 + Real.cos (ψ + θ) ^ 2 = 1 :=
+        Real.sin_sq_add_cos_sq (ψ + θ)
+      have hcss2 : Real.sin ψ ^ 2 + Real.cos ψ ^ 2 = 1 := Real.sin_sq_add_cos_sq ψ
+      rw [p1, p2, hcss1, hcss2] at e
+      linarith
+    have hr2c : 0 < r2 := hr2 hcoly
+    have hr2nz : r2 ≠ 0 := ne_of_gt hr2c
+    have hc2 : c2 ≠ 0 := by
+      intro h0c
+      rw [h0c, zero_pow two_ne_zero, zero_mul] at hsq
+      exact hr2nz (sq_eq_zero_iff.mp hsq)
+    have hdich : c2 * r1 = r2 ∨ c2 * r1 = -r2 := by
+      have hfac : (c2 * r1 - r2) * (c2 * r1 + r2) = 0 := by
+        have t1 : (c2 * r1 - r2) * (c2 * r1 + r2) = (c2 * r1) ^ 2 - r2 ^ 2 := by ring
+        have t2 : (c2 * r1) ^ 2 = c2 ^ 2 * r1 ^ 2 := by ring
+        rw [t1, t2, hsq]
+        ring
+      rcases mul_eq_zero.mp hfac with h | h
+      · exact Or.inl (by linarith)
+      · exact Or.inr (by linarith)
+    rcases hdich with h | h
+    · -- cos θ = 1，θ ∈ [0, 2π) ⟹ θ = 0
+      left
+      have hc1' : Real.cos θ = 1 := by
+        have hh := hcos
+        rw [h] at hh
+        have hh2 : r2 * Real.cos θ = r2 * 1 := by rw [hh]; ring
+        exact mul_left_cancel₀ hr2nz hh2
+      exact (Real.cos_eq_one_iff_of_lt_of_lt (by linarith [Real.pi_pos]) hθhi).mp hc1'
+    · -- cos θ = -1 ⟹ cos(θ - π) = 1 ⟹ θ - π = 0 ⟹ θ = π
+      right
+      have hneg1 : Real.cos θ = -1 := by
+        have hh := hcos
+        rw [h] at hh
+        have hh2 : r2 * Real.cos θ = r2 * (-1) := by rw [hh]; ring
+        exact mul_left_cancel₀ hr2nz hh2
+      have hcosp : Real.cos (θ - Real.pi) = 1 := by
+        rw [Real.cos_sub, Real.cos_pi, Real.sin_pi, hneg1]; ring
+      have hpi : θ - Real.pi = 0 :=
+        (Real.cos_eq_one_iff_of_lt_of_lt (by linarith [Real.pi_pos])
+          (by linarith [Real.pi_pos])).mp hcosp
+      linarith
+
+set_option Elab.async false in
+/-- dich 应用收口（两枚方位角均落 `{0, π}`，与楔内严格夹逼 `0 < azim y < azim ιv`
+不相容；从大上下文声明中拆出以规避 elaborate 超时，参パ KCHMAMG_thm_p35
+前的 `Elab.async false` 先例）。 -/
+theorem ncDichContra_p35 {P : Set V3} {v rv ivv y : V3}
+    (hPk : kchPlane_p35 P) (h0P : (0:V3) ∈ P) (hvP : v ∈ P) (hv0 : v ≠ 0)
+    (hρP : rv ∈ P) (hnc : ¬ Collinear ℝ ({(0:V3), v, rv} : Set V3))
+    (hivP : ivv ∈ P) (hyP : y ∈ P)
+    (hpos : 0 < azim (0:V3) v rv y)
+    (hlt : azim (0:V3) v rv y < azim (0:V3) v rv ivv) : False := by
+  have hdichy := ncAzimPlaneDich_p35 hPk h0P hvP hv0 hρP hnc hyP
+  have hdichi := ncAzimPlaneDich_p35 hPk h0P hvP hv0 hρP hnc hivP
+  rcases hdichy with hy0 | hyπ
+  · rw [hy0] at hpos
+    exact absurd hpos (by norm_num)
+  · rw [hyπ] at hlt
+    rcases hdichi with hi0 | hiπ
+    · rw [hi0] at hlt; linarith
+    · rw [hiπ] at hlt; linarith
+
+set_option Elab.async false in
+/-- 负射线落负开半空间（flyspeck affsign 直算）：`u ≠ 0` 时
+`-u ∈ affLt {0} {u}`（系数 `f 0 = 2, f u = -1`，和为 1，`u` 的系数 `< 0`）。 -/
+theorem ncNegMemAffLt_p35 {u : V3} (hu : u ≠ 0) :
+    (-u : V3) ∈ affLt ({(0:V3)} : Set V3) ({u} : Set V3) := by
+  set hfin : ({(0:V3)} ∪ {u} : Set V3).Finite :=
+    (Set.finite_singleton (0:V3)).union (Set.finite_singleton u) with hfindef
+  have hset : hfin.toFinset = ({(0:V3), u} : Finset V3) := by
+    ext q
+    simp
+    tauto
+  have hins : (0:V3) ∉ ({u} : Finset V3) := by
+    intro hc
+    exact hu (Finset.mem_singleton.mp hc).symm
+  refine ⟨fun w => if w = u then -1 else 2, hfin, ?_, ?_, ?_⟩
+  · rw [hset]
+    show (-u : V3) = ∑ x ∈ ({(0:V3), u} : Finset V3), (if x = u then -1 else 2) • x
+    rw [Finset.sum_insert hins, Finset.sum_singleton,
+      if_neg (by intro hc; exact hu hc.symm), if_pos rfl]
+    simp
+  · intro w hw
+    simp only [Set.mem_singleton_iff] at hw
+    rw [hw]
+    norm_num
+  · rw [hset]
+    show (∑ x ∈ ({(0:V3), u} : Finset V3), if x = u then -1 else 2) = 1
+    rw [Finset.sum_insert hins, Finset.sum_singleton,
+      if_neg (by intro hc; exact hu hc.symm), if_pos rfl]
+    norm_num
+
+/-- **N 件 hanti 兑现（原边形）**：`¬Circular V E` 逐点给
+`affGt {0} {v,w} ∩ affLt {0} {u} = ∅`，配 `-u ∈ affLt {0} {u}` 即
+`-u ∉ affGt {0} {v,w}`——对原边 `{ρ i, ρ (i+1)} ∈ E` 直接消去 N 件的
+`hanti` 显式前提。 -/
+theorem ncHantiOfNotCircular_p35 {V : Set V3} {E : Set (Set V3)} {u v w : V3}
+    (hnc : ¬ Circular V E) (hu : u ∈ V) (hu0 : u ≠ 0)
+    (hE : ({v, w} : Set V3) ∈ E) :
+    (-u : V3) ∉ affGt ({(0:V3)} : Set V3) ({v, w} : Set V3) := by
+  intro hmem
+  refine hnc ⟨v, w, u, hE, hu, ?_⟩
+  intro hempty
+  exact Set.eq_empty_iff_forall_notMem.mp hempty (-u)
+    ⟨hmem, ncNegMemAffLt_p35 hu0⟩
+
+-- ===== merged block: lane CR (续138 M1d 合并, 编排者) =====
+
+-- ===== lane CR (ejrcfjd-dw-CR-cres-w1, 2026-10-28)：C 槽残余闭合（hfanAug 全闭）+ E 槽一行装配 =====
+-- C+E §3 残余（R-C1 `hcol`、R-C2 `hfan7new` 的 e2 ∈ E 支）以 hEE2 为显式前提闭全：
+-- hEE2 ⟹ 每顶点有边（edgeOfVertex_p35）⟹ 面尾 dart（tailOfEdge_p35）⟹ 开锥楔排除
+-- （noRayOfFaceTail_p35）；e2 ∈ E 支 = 渲染分支 + 开锥-旧边锥楔排除（azim-0 平面论证）
+-- + 边界射线 fan7-旧收口。主件 `crFanAug_p35`（public）经 PROVE_SLICING_FAN_p35 装配。
+
+/-- 单点锥的 smul 成员：`x = r•u`、`0 ≤ r` ⟹ `x ∈ affGe {0} {u}`。 -/
+private theorem crConeOneOfSmul_p35 {u : V3} (hu0 : (0:V3) ≠ u) {r : ℝ} (hr : 0 ≤ r)
+    {x : V3} (hx : x = r • u) :
+    x ∈ affGe ({0} : Set V3) ({u} : Set V3) := by
+  simp only [affGe, Set.mem_setOf_eq, Affsign]
+  have hfin : (({(0:V3)} : Set V3) ∪ ({u} : Set V3)).Finite := by simp
+  have h3 : hfin.toFinset = ({(0:V3), u} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  have h0n : (0:V3) ∉ ({u} : Finset V3) := fun h => hu0 (Finset.mem_singleton.mp h)
+  refine ⟨fun z => if z = u then r else 1 - r, hfin, ?_, ?_, ?_⟩
+  · rw [h3, Finset.sum_insert h0n, Finset.sum_singleton]
+    show x = (if (0:V3) = u then r else 1 - r) • (0:V3)
+        + (if (u:V3) = u then r else 1 - r) • u
+    rw [if_neg hu0, if_pos rfl, hx]
+    simp
+  · intro z hz
+    simp only [Set.mem_singleton_iff] at hz
+    show 0 ≤ (if z = u then r else 1 - r)
+    rw [hz, if_pos rfl]
+    exact hr
+  · rw [h3, Finset.sum_insert h0n, Finset.sum_singleton]
+    show (if (0:V3) = u then r else 1 - r) + (if (u:V3) = u then r else 1 - r) = 1
+    rw [if_neg hu0, if_pos rfl]
+    ring
+
+/-- 开锥严格渲染：`x ∈ affGt {0} {v, w}` ⟹ 正系数组合（affGePairRender_p35 的严格版）。 -/
+private theorem crGtPairRender_p35 {v w : V3} (hv0 : (0:V3) ≠ v) (hw0 : (0:V3) ≠ w)
+    (hwv : w ≠ v) {x : V3} (hx : x ∈ affGt ({0} : Set V3) ({v, w} : Set V3)) :
+    ∃ s t : ℝ, 0 < s ∧ 0 < t ∧ x = s • v + t • w := by
+  rw [affGt, Set.mem_setOf_eq, Affsign] at hx
+  obtain ⟨f, hfin, hval, hsgn, hsum⟩ := hx
+  have h3 : hfin.toFinset = ({(0:V3), v, w} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  have h0n : (0:V3) ∉ ({v, w} : Finset V3) := by
+    intro h
+    rcases Finset.mem_insert.mp h with h' | h'
+    · exact hv0 h'
+    · exact hw0 (Finset.mem_singleton.mp h')
+  have hvn : (v:V3) ∉ ({w} : Finset V3) := fun h =>
+    hwv (Finset.mem_singleton.mp h).symm
+  have hsumV : ∑ q ∈ hfin.toFinset, f q • q
+      = f (0:V3) • (0:V3) + f v • v + f w • w := by
+    rw [h3, Finset.sum_insert h0n, Finset.sum_insert hvn, Finset.sum_singleton]
+    simp [add_assoc]
+  rw [hsumV] at hval
+  refine ⟨f v, f w, hsgn v (by simp), hsgn w (by simp), ?_⟩
+  rw [hval]
+  simp [add_assoc]
+
+/-- 方位角的射线-轴平移不变（消费形）：`x = c•z + t•y`（`0 < c`）时自 `z` 与自 `x`
+的方位相同。 -/
+private theorem crAzimConeRay_p35 {y b z x : V3} {c t : ℝ}
+    (hy0 : y ≠ (0:V3)) (hc : 0 < c)
+    (hx : x = c • z + t • y)
+    (hnb : ¬ Collinear3 (0:V3) y b) (hnz : ¬ Collinear3 (0:V3) y z)
+    (hnx : ¬ Collinear3 (0:V3) y x) :
+    azim (0:V3) y b x = azim (0:V3) y b z := by
+  obtain ⟨θ, hθ⟩ := azimSpec_exists (v := (0:V3)) (w := y) (w1 := b) (w2 := z) hnb hnz
+  have h1 := azim_eq_of_spec (v := (0:V3)) (w := y) (w1 := b) (w2 := z) hnb hnz hθ
+  have hrs := azimSpec_rayShift_p35 (v := (0:V3)) (w := y) (w1 := b) (w2 := z)
+    (θ := θ) (c := c) (t := t) hy0 hc hθ
+  have heq : (0:V3) + c • (z - (0:V3)) + t • (y - (0:V3)) = c • z + t • y := by
+    simp only [sub_zero, zero_add]
+  have hrs' : AzimSpec (0:V3) y b x θ := by
+    rw [hx, ← heq]
+    exact hrs
+  exact (azim_eq_of_spec hnb hnx hrs').trans h1.symm
+
+/-- 边的两元素提取（`Graph E` 的 HAS_SIZE 2）。 -/
+private theorem crEdgePairElms_p35 {V : Set V3} {E : Set (Set V3)}
+    (hF : Kepler.Text.Fan.FAN 0 V E) {e2 : Set V3} (he2 : e2 ∈ E) :
+    ∃ y y' : V3, y ≠ y' ∧ e2 = ({y, y'} : Set V3) := by
+  obtain ⟨hfin, hcard⟩ := hF.2.1 e2 he2
+  have hnc : e2.ncard = 2 := by
+    rw [Set.ncard_eq_toFinset_card e2 hfin]
+    exact hcard
+  exact Set.ncard_eq_two.mp hnc
+
+/-- 零向量在旧边锥中。 -/
+private theorem crZeroConeEdge_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hfan : ConvexLocalFan V E FF) {e2 : Set V3} (he2 : e2 ∈ E) :
+    (0:V3) ∈ affGe ({0} : Set V3) e2 := by
+  have hLF := hfan.1
+  have hF := hLF.1
+  have h0V : (0:V3) ∉ V := hF.2.2.2.1
+  obtain ⟨y, y', hyy, he2y⟩ := crEdgePairElms_p35 hF he2
+  have hyV : y ∈ V := hF.1 (Set.mem_sUnion_of_mem
+    (by rw [he2y]; simp) he2)
+  have hy'V : y' ∈ V := hF.1 (Set.mem_sUnion_of_mem
+    (by rw [he2y]; simp) he2)
+  rw [he2y]
+  exact zeroMemConePair_p35 (fun hc => h0V (hc ▸ hyV)) (fun hc => h0V (hc ▸ hy'V))
+    (fun hc => hyy hc.symm)
+
+/-- **C 残余核心（开锥-旧边锥楔排除）**：`e2 ∈ E` 的闭锥与对角开锥至多交于原点。
+内点支 = 面尾 dart `(y, db)` 的楔（hsub + hEE2 两邻居展开）+ azim 正缩放不变
+（`crAzimConeRay_p35`）+ azimCycle 取定另一邻居（LA35Pre `wedgeAzimCycle2_p35`）；
+边界支 = 正缩放把 `y`/`y'` 归入对角开锥，被 `noRayOfFaceTail_p35` 排除。 -/
+private theorem crOpenConeMissEdge_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {p q : V3} (hfan : ConvexLocalFan V E FF)
+    (hp : p ∈ V) (hq : q ∈ V) (hpq : p ≠ q)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {p, q} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {e2 : Set V3} (he2 : e2 ∈ E) {x : V3}
+    (hxgt : x ∈ affGt ({0} : Set V3) ({p, q} : Set V3))
+    (hxe : x ∈ affGe ({0} : Set V3) e2) :
+    x = (0:V3) := by
+  have hLF := hfan.1
+  have hF := hLF.1
+  have hVE := hF.1
+  have h0V : (0:V3) ∉ V := hF.2.2.2.1
+  have hp0 : (0:V3) ≠ p := fun hc => h0V (hc ▸ hp)
+  have hq0 : (0:V3) ≠ q := fun hc => h0V (hc ▸ hq)
+  obtain ⟨y, y', hyy, he2y⟩ := crEdgePairElms_p35 hF he2
+  have hyy' : y' ≠ y := fun hc => hyy hc.symm
+  have he2' : ({y, y'} : Set V3) ∈ E := by rw [← he2y]; exact he2
+  have hyEe : y ∈ e2 := by rw [he2y]; simp
+  have hy'Ee : y' ∈ e2 := by rw [he2y]; simp
+  have hyV : y ∈ V := hVE (Set.mem_sUnion_of_mem hyEe he2)
+  have hyV' : y' ∈ V := hVE (Set.mem_sUnion_of_mem hy'Ee he2)
+  have hy0 : y ≠ (0:V3) := fun hc => h0V (hc ▸ hyV)
+  have hy'0 : y' ≠ (0:V3) := fun hc => h0V (hc ▸ hyV')
+  -- 面尾 dart 供给（y 与 y' 双向）与楔排除
+  obtain ⟨db, hdb⟩ := tailOfEdge_p35 hLF he2'
+  obtain ⟨db', hdb'⟩ := tailOfEdge_p35 hLF (by rw [Set.pair_comm y' y]; exact he2')
+  have hny := noRayOfFaceTail_p35 hfan hsub hdb
+  have hny' := noRayOfFaceTail_p35 hfan hsub hdb'
+  -- 开锥与 e2 锥渲染
+  obtain ⟨a, b, ha0, hb0, hxab⟩ := crGtPairRender_p35 hp0 hq0 (Ne.symm hpq) hxgt
+  rw [he2y] at hxe
+  obtain ⟨s, t, hs0, ht0, hxst⟩ :=
+    affGePairRender_p35 (Ne.symm hy0) (Ne.symm hy'0) hyy' hxe
+  rcases le_iff_eq_or_lt.mp hs0 with rfl | hs
+  · -- s = 0：x = t•y'
+    rcases le_iff_eq_or_lt.mp ht0 with rfl | ht
+    · simp at hxst
+      exact hxst
+    · -- 边界射线：y' 正缩放归入对角开锥，楔排除
+      have hx'eq : x = t • y' := by rw [hxst]; simp
+      have hy'inv : y' = t⁻¹ • x := by
+        rw [hx'eq, smul_smul, inv_mul_cancel₀ (ne_of_gt ht), one_smul]
+      exact absurd (affGtPairOfSums_p35 hp0 hq0 (Ne.symm hpq)
+        (mul_pos (inv_pos.mpr ht) ha0) (mul_pos (inv_pos.mpr ht) hb0) y'
+        (by rw [hy'inv, hxab]; module)) hny'
+  · -- s > 0
+    rcases le_iff_eq_or_lt.mp ht0 with rfl | ht
+    · -- 边界射线：y 正缩放归入对角开锥，楔排除
+      have hxeq : x = s • y := by rw [hxst]; simp
+      have hyinv : y = s⁻¹ • x := by
+        rw [hxeq, smul_smul, inv_mul_cancel₀ (ne_of_gt hs), one_smul]
+      exact absurd (affGtPairOfSums_p35 hp0 hq0 (Ne.symm hpq)
+        (mul_pos (inv_pos.mpr hs) ha0) (mul_pos (inv_pos.mpr hs) hb0) y
+        (by rw [hyinv, hxab]; module)) hny
+    · -- 内点支：azim-0 平面论证（面尾 dart (y, db) 的楔）
+      have hc2 : 1 < (EE_p3 y E).ncard := by rw [hEE2 y hyV]; norm_num
+      have hwedge := hsub (y, db) hdb
+      rw [wedgeUnpackPair_p35 (a := y) (b := db) hc2] at hwedge
+      have hdE : ({y, db} : Set V3) ∈ E := kchFFSubDart1_p35 hLF hdb
+      have hdEE : db ∈ EE_p3 y E := hdE
+      have hncdb : ¬ Collinear3 (0:V3) y db :=
+        hF.2.2.2.2.1 ({y, db} : Set V3) hdE
+      have hncyy' : ¬ Collinear3 (0:V3) y y' :=
+        hF.2.2.2.2.1 ({y, y'} : Set V3) he2'
+      -- EE_p3 y E = {db, c2}（hEE2 两邻居；db 是其一）
+      obtain ⟨c2, hdc2, hEEins⟩ :
+          ∃ c2 : V3, db ≠ c2 ∧ (EE_p3 y E) = ({db, c2} : Set V3) := by
+        obtain ⟨p1, q1, hpq1, hEE1⟩ := Set.ncard_eq_two.mp (hEE2 y hyV)
+        have hdbins : db ∈ ({p1, q1} : Set V3) := by rw [← hEE1]; exact hdEE
+        have hdb2 : db = p1 ∨ db = q1 := by
+          rcases Set.mem_insert_iff.mp hdbins with hh | hh
+          · exact Or.inl hh
+          · exact Or.inr (Set.mem_singleton_iff.mp hh)
+        rcases hdb2 with hh | hh
+        · exact ⟨q1, fun hc => hpq1 (hh ▸ hc), by rw [hEE1, hh]⟩
+        · exact ⟨p1, fun hc => hpq1 (hc.symm.trans hh),
+            by rw [hEE1, hh, Set.pair_comm q1 p1]⟩
+      have hdd : azimCycle_p3 (EE_p3 y E) (0:V3) y db = c2 :=
+        wedgeAzimCycle2_p35 (0:V3) y (Ne.symm hdc2)
+          (by rw [hEEins, Set.pair_comm])
+      have hxw : x ∈ Kepler.Geom.wedge (0:V3) y db c2 := by
+        rw [← hdd]
+        exact hwedge hxgt
+      obtain ⟨hncx, hpos, hupper⟩ := wedgeMem_p35 hxw
+      -- 正缩放下 x 与 y' 同方位
+      have hazim : azim (0:V3) y db x = azim (0:V3) y db y' :=
+        crAzimConeRay_p35 (y := y) (b := db) (z := y') (c := t) (t := s) hy0 ht
+          (by rw [hxst]; module) hncdb hncyy' hncx
+      -- y' 是 y 的邻居：{db, c2} 两者皆矛盾
+      have hy'ins : y' ∈ ({db, c2} : Set V3) := by rw [← hEEins]; exact he2'
+      have hy'eq : y' = db ∨ y' = c2 := by
+        rcases Set.mem_insert_iff.mp hy'ins with h1 | h1
+        · exact Or.inl h1
+        · exact Or.inr (Set.mem_singleton_iff.mp h1)
+      rcases hy'eq with h1 | h1
+      · rw [h1] at hazim
+        rw [hazim, azim_self] at hpos
+        exact (lt_irrefl (0:ℝ) hpos).elim
+      · rw [h1] at hazim
+        rw [hazim] at hupper
+        exact (lt_irrefl _ hupper).elim
+
+/-- **R-C2 之子（p ∈ e2、q ∉ e2 支）**：旧边 `e2` 与对角锥的 fan7 分配律，RHS 塌缩
+为 `affGe {0} {p}`。 -/
+private theorem crFan7NewEdgeHit_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {p q : V3} (hfan : ConvexLocalFan V E FF)
+    (hp : p ∈ V) (hq : q ∈ V) (hpq : p ≠ q)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {p, q} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {e2 : Set V3} (he2 : e2 ∈ E) (hpE : p ∈ e2) (hqE : q ∉ e2) :
+    affGe ({0} : Set V3) ({p, q} : Set V3) ∩ affGe ({0} : Set V3) e2
+      = affGe ({0} : Set V3) (({p, q} : Set V3) ∩ e2) := by
+  have hLF := hfan.1
+  have hF := hLF.1
+  have h0V : (0:V3) ∉ V := hF.2.2.2.1
+  have hp0 : (0:V3) ≠ p := fun hc => h0V (hc ▸ hp)
+  have hq0 : (0:V3) ≠ q := fun hc => h0V (hc ▸ hq)
+  have h7 : Kepler.Text.Fan.fan7 0 V E := hF.2.2.2.2.2
+  have hint : ({p, q} : Set V3) ∩ e2 = ({p} : Set V3) := by
+    ext z
+    simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨(h1 | h1), h2⟩
+      · exact h1
+      · exact absurd (h1 ▸ h2) hqE
+    · rintro h1
+      exact ⟨Or.inl h1, h1 ▸ hpE⟩
+  rw [hint]
+  ext x
+  simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨hxA, hxB⟩
+    obtain ⟨s, t, hs0, ht0, hxst⟩ := affGePairRender_p35 hp0 hq0 (Ne.symm hpq) hxA
+    rcases le_iff_eq_or_lt.mp hs0 with rfl | hs
+    · rcases le_iff_eq_or_lt.mp ht0 with rfl | ht
+      · simp at hxst
+        rw [hxst]
+        exact zeroMemConeOne_p35 hp0
+      · -- x = t•q ∈ cone{q}；h7：cone{q} ∩ cone e2 = {0}
+        have h7q : affGe ({0} : Set V3) ({q} : Set V3) ∩ affGe ({0} : Set V3) e2
+            = affGe ({0} : Set V3) (({q} : Set V3) ∩ e2) :=
+          h7 ({q} : Set V3) (Set.mem_union_right _
+            (show ({q} : Set V3) ∈ {s : Set V3 | ∃ u ∈ V, s = ({u} : Set V3)} from
+              ⟨q, hq, rfl⟩)) e2 (Set.mem_union_left _ he2)
+        rw [Set.singleton_inter_of_notMem hqE, affGeEmptySet_p35] at h7q
+        have hxq : x = t • q := by rw [hxst]; simp
+        have hx0 : x ∈ ({(0:V3)} : Set V3) := by
+          rw [← h7q]
+          exact ⟨crConeOneOfSmul_p35 hq0 ht.le hxq, hxB⟩
+        rw [Set.mem_singleton_iff] at hx0
+        rw [hx0]
+        exact zeroMemConeOne_p35 hp0
+    · rcases le_iff_eq_or_lt.mp ht0 with rfl | ht
+      · simp at hxst
+        exact crConeOneOfSmul_p35 hp0 hs.le hxst
+      · -- 开锥点：与旧边闭锥至多交于原点
+        have hxgt : x ∈ affGt ({0} : Set V3) ({p, q} : Set V3) :=
+          affGtPairOfSums_p35 hp0 hq0 (Ne.symm hpq) hs ht x hxst
+        rw [crOpenConeMissEdge_p35 hfan hp hq hpq hsub hEE2 he2 hxgt hxB]
+        exact zeroMemConeOne_p35 hp0
+  · intro hx
+    have h7p : affGe ({0} : Set V3) ({p} : Set V3) ∩ affGe ({0} : Set V3) e2
+        = affGe ({0} : Set V3) (({p} : Set V3) ∩ e2) :=
+      h7 ({p} : Set V3) (Set.mem_union_right _
+        (show ({p} : Set V3) ∈ {s : Set V3 | ∃ u ∈ V, s = ({u} : Set V3)} from
+          ⟨p, hp, rfl⟩)) e2 (Set.mem_union_left _ he2)
+    rw [Set.singleton_inter_of_mem hpE] at h7p
+    have hxAB : x ∈ affGe ({0} : Set V3) ({p} : Set V3) ∩ affGe ({0} : Set V3) e2 := by
+      rw [h7p]
+      exact hx
+    exact ⟨coneOneSubsetConePair_p35 hp0 hq0 (Ne.symm hpq) hx, hxAB.2⟩
+
+/-- **R-C2 之子（不交支）**：旧边 `e2` 与对角锥无公共元素时 RHS 塌缩为 `{0}`。 -/
+private theorem crFan7NewEdgeDisj_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {p q : V3} (hfan : ConvexLocalFan V E FF)
+    (hp : p ∈ V) (hq : q ∈ V) (hpq : p ≠ q)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {p, q} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {e2 : Set V3} (he2 : e2 ∈ E) (hpE : p ∉ e2) (hqE : q ∉ e2) :
+    affGe ({0} : Set V3) ({p, q} : Set V3) ∩ affGe ({0} : Set V3) e2
+      = affGe ({0} : Set V3) (({p, q} : Set V3) ∩ e2) := by
+  have hLF := hfan.1
+  have hF := hLF.1
+  have h0V : (0:V3) ∉ V := hF.2.2.2.1
+  have hp0 : (0:V3) ≠ p := fun hc => h0V (hc ▸ hp)
+  have hq0 : (0:V3) ≠ q := fun hc => h0V (hc ▸ hq)
+  have h7 : Kepler.Text.Fan.fan7 0 V E := hF.2.2.2.2.2
+  have hint : ({p, q} : Set V3) ∩ e2 = (∅ : Set V3) := by
+    ext z
+    simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff,
+      Set.notMem_empty]
+    constructor
+    · rintro ⟨(h1 | h1), h2⟩
+      · exact hpE (h1 ▸ h2)
+      · exact hqE (h1 ▸ h2)
+    · exact fun h => h.elim
+  rw [hint, affGeEmptySet_p35]
+  ext x
+  simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨hxA, hxB⟩
+    obtain ⟨s, t, hs0, ht0, hxst⟩ := affGePairRender_p35 hp0 hq0 (Ne.symm hpq) hxA
+    rcases le_iff_eq_or_lt.mp hs0 with rfl | hs
+    · rcases le_iff_eq_or_lt.mp ht0 with rfl | ht
+      · simp at hxst
+        exact hxst
+      · have h7q : affGe ({0} : Set V3) ({q} : Set V3) ∩ affGe ({0} : Set V3) e2
+            = affGe ({0} : Set V3) (({q} : Set V3) ∩ e2) :=
+          h7 ({q} : Set V3) (Set.mem_union_right _
+            (show ({q} : Set V3) ∈ {s : Set V3 | ∃ u ∈ V, s = ({u} : Set V3)} from
+              ⟨q, hq, rfl⟩)) e2 (Set.mem_union_left _ he2)
+        rw [Set.singleton_inter_of_notMem hqE, affGeEmptySet_p35] at h7q
+        have hxq : x = t • q := by rw [hxst]; simp
+        have hx0 : x ∈ ({(0:V3)} : Set V3) := by
+          rw [← h7q]
+          exact ⟨crConeOneOfSmul_p35 hq0 ht.le hxq, hxB⟩
+        rw [Set.mem_singleton_iff] at hx0
+        exact hx0
+    · rcases le_iff_eq_or_lt.mp ht0 with rfl | ht
+      · have h7p : affGe ({0} : Set V3) ({p} : Set V3) ∩ affGe ({0} : Set V3) e2
+            = affGe ({0} : Set V3) (({p} : Set V3) ∩ e2) :=
+          h7 ({p} : Set V3) (Set.mem_union_right _
+            (show ({p} : Set V3) ∈ {s : Set V3 | ∃ u ∈ V, s = ({u} : Set V3)} from
+              ⟨p, hp, rfl⟩)) e2 (Set.mem_union_left _ he2)
+        rw [Set.singleton_inter_of_notMem hpE, affGeEmptySet_p35] at h7p
+        have hxp : x = s • p := by rw [hxst]; simp
+        have hx0 : x ∈ ({(0:V3)} : Set V3) := by
+          rw [← h7p]
+          exact ⟨crConeOneOfSmul_p35 hp0 hs.le hxp, hxB⟩
+        rw [Set.mem_singleton_iff] at hx0
+        exact hx0
+      · have hxgt : x ∈ affGt ({0} : Set V3) ({p, q} : Set V3) :=
+          affGtPairOfSums_p35 hp0 hq0 (Ne.symm hpq) hs ht x hxst
+        exact crOpenConeMissEdge_p35 hfan hp hq hpq hsub hEE2 he2 hxgt hxB
+  · intro hx
+    subst hx
+    exact ⟨zeroMemConePair_p35 hp0 hq0 (Ne.symm hpq), crZeroConeEdge_p35 hfan he2⟩
+
+/-- **R-C2 全闭（e2 ∈ E 支）**：旧边 `e2` 与对角锥的 fan7 分配律。`e2` 含
+`v`、`w` 皆含（⟹ `e2 = {v,w}`，被 `hdiag` 排除）、含一（Hit）、皆不含（Disj）三分。 -/
+private theorem crFan7NewEdge_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hdiag : ({v, w} : Set V3) ∉ E)
+    {e2 : Set V3} (he2 : e2 ∈ E) :
+    affGe ({0} : Set V3) ({v, w} : Set V3) ∩ affGe ({0} : Set V3) e2
+      = affGe ({0} : Set V3) (({v, w} : Set V3) ∩ e2) := by
+  by_cases hvE : v ∈ e2
+  · by_cases hwE : w ∈ e2
+    · -- e2 ⊇ {v,w} ⟹ e2 = {v,w} ∈ E，与 hdiag 矛盾
+      exfalso
+      obtain ⟨y1, y2, -, he2y1⟩ := crEdgePairElms_p35 hfan.1.1 he2
+      rw [he2y1] at hvE hwE
+      have hv' : v = y1 ∨ v = y2 := by
+        rcases Set.mem_insert_iff.mp hvE with h | h
+        · exact Or.inl h
+        · exact Or.inr (Set.mem_singleton_iff.mp h)
+      have hw' : w = y1 ∨ w = y2 := by
+        rcases Set.mem_insert_iff.mp hwE with h | h
+        · exact Or.inl h
+        · exact Or.inr (Set.mem_singleton_iff.mp h)
+      rcases hv' with h1 | h1
+      · rcases hw' with h2 | h2
+        · exact hwv (h1.trans h2.symm)
+        · exact hdiag (by rw [h1, h2, ← he2y1]; exact he2)
+      · rcases hw' with h2 | h2
+        · exact hdiag (by rw [h1, h2, Set.pair_comm y2 y1, ← he2y1]; exact he2)
+        · exact hwv (h1.trans h2.symm)
+    · -- v ∈ e2、w ∉ e2：Hit（p := v, q := w）直接
+      exact crFan7NewEdgeHit_p35 hfan hv hw hwv hsub hEE2 he2 hvE hwE
+  · by_cases hwE : w ∈ e2
+    · -- w ∈ e2、v ∉ e2：换序套用 Hit（p := w, q := v）
+      have hsub' : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+        intro x hx z hz
+        rw [Set.pair_comm w v] at hz
+        exact hsub x hx hz
+      rw [Set.pair_comm v w]
+      exact crFan7NewEdgeHit_p35 hfan hw hv hwv.symm hsub' hEE2 he2 hwE hvE
+    · exact crFan7NewEdgeDisj_p35 hfan hv hw hwv hsub hEE2 he2 hvE hwE
+
+/-- **R-C1 全闭（hcol）**：根五 + `hEE2` ⟹ 对角与原点不共线。`hEE2` 供 `v` 的
+边 ⟹ 面尾 dart（`tailOfEdge_p35`）⟹ `v ∉ affGt {0} {v,w}`（`noRayOfFaceTail_p35`）；
+共线给 `w = c•v`（`c ≠ 0`），正负系数归位均得 `v ∈ affGt {0} {v,w}`，矛盾。 -/
+private theorem crHcol_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ¬ Collinear ℝ (insert (0 : V3) {v, w}) := by
+  have hF := hfan.1.1
+  have h0V : (0:V3) ∉ V := hF.2.2.2.1
+  have hv0 : (0:V3) ≠ v := fun hc => h0V (hc ▸ hv)
+  have hw0 : (0:V3) ≠ w := fun hc => h0V (hc ▸ hw)
+  intro hcol
+  have hcol3 : Collinear3 (0:V3) v w := hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := v) (w1 := w)
+    (Ne.symm hv0)).mp hcol3
+  simp only [sub_zero] at hc
+  have hc0 : c ≠ 0 := by
+    intro h0
+    rw [h0, zero_smul] at hc
+    exact hw0 hc.symm
+  -- hEE2 ⟹ v 有边 ⟹ 面尾 dart ⟹ 楔排除 v 射线
+  obtain ⟨z, hzv⟩ := edgeOfVertex_p35 (V := V) (hEE2 v hv)
+  obtain ⟨b, hdb⟩ := tailOfEdge_p35 hfan.1 hzv
+  have hnoray := noRayOfFaceTail_p35 hfan hsub hdb
+  rcases lt_or_gt_of_ne hc0 with hc' | hc'
+  · -- c < 0：v = (1 - c)•v + 1•w
+    refine hnoray (affGtPairOfSums_p35 (v := v) (w := w) (s := 1 - c) (t := 1)
+      hv0 hw0 (Ne.symm hwv) (by linarith) (by norm_num) v ?_)
+    rw [hc]
+    module
+  · -- 0 < c：v = (1/2)•v + (1/(2c))•w
+    refine hnoray (affGtPairOfSums_p35 (v := v) (w := w) (s := 1/2)
+      (t := 1/(2*c)) hv0 hw0 (Ne.symm hwv) (by norm_num)
+      (div_pos (by norm_num) (by linarith)) v ?_)
+    rw [hc, smul_smul]
+    have hscal : ((1:ℝ)/(2*c)) * c = 1/2 := by field_simp
+    rw [hscal]
+    module
+
+/-- **R-C2 合成（hfan7new 全形）**：M1 单点支（`fan7AugSingletonKill_p35`，
+`u ∈ {v,w}` 支纯锥代数直出）+ e2 ∈ E 支（`crFan7NewEdge_p35`）+ 对角自交支。 -/
+private theorem crFan7New_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hdiag : ({v, w} : Set V3) ∉ E) :
+    ∀ e2 ∈ (E ∪ {{v, w}}) ∪ {s : Set V3 | ∃ u ∈ V, s = ({u} : Set V3)},
+      affGe ({0} : Set V3) ({v, w} : Set V3) ∩ affGe ({0} : Set V3) e2
+        = affGe ({0} : Set V3) (({v, w} : Set V3) ∩ e2) := by
+  have h0V : (0:V3) ∉ V := hfan.1.1.2.2.2.1
+  have hv0 : (0:V3) ≠ v := fun hc => h0V (hc ▸ hv)
+  have hw0 : (0:V3) ≠ w := fun hc => h0V (hc ▸ hw)
+  intro e2 he2
+  rcases he2 with hE2 | hS2
+  · rcases hE2 with hE | hD
+    · exact crFan7NewEdge_p35 hfan hv hw hwv hsub hEE2 hdiag hE
+    · -- e2 = {v, w}：自交
+      rw [hD, Set.inter_self ({v, w} : Set V3)]
+      exact Set.inter_self _
+  · -- 单点支
+    obtain ⟨u, huV, huD⟩ := hS2
+    rw [huD]
+    by_cases huab : u ∈ ({v, w} : Set V3)
+    · have hueq : u = v ∨ u = w := by
+        rcases Set.mem_insert_iff.mp huab with h | h
+        · exact Or.inl h
+        · exact Or.inr (Set.mem_singleton_iff.mp h)
+      rcases hueq with hue | hue
+      · -- u = v：纯锥代数
+        rw [hue, Set.inter_singleton_of_mem (by simp : v ∈ ({v, w} : Set V3))]
+        ext x
+        simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+        constructor
+        · rintro ⟨-, hxv⟩
+          exact hxv
+        · intro hxv
+          exact ⟨coneOneSubsetConePair_p35 hv0 hw0 (Ne.symm hwv) hxv, hxv⟩
+      · -- u = w：纯锥代数（换序）
+        rw [hue, Set.inter_singleton_of_mem (by simp : w ∈ ({v, w} : Set V3))]
+        ext x
+        simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+        constructor
+        · rintro ⟨-, hxw⟩
+          exact hxw
+        · intro hxw
+          rw [Set.pair_comm v w]
+          exact ⟨coneOneSubsetConePair_p35 hw0 hv0 hwv hxw, hxw⟩
+    · -- u ∉ {v, w}：M1 单点支全闭件
+      exact fan7AugSingletonKill_p35 hfan hv hw huV hwv
+        (fun hc => huab (by rw [hc]; simp)) (fun hc => huab (by rw [hc]; simp))
+        hsub (edgeOfVertex_p35 (V := V) (hEE2 u huV))
+
+/-- **E 槽一行装配（v 面）**：`(v, ρv) ∈ dartsOfHyp_p3 (E ∪ {{v,w}}) V`
+（经 `slotE_ofEE2_p35`）。 -/
+private theorem crDartV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hv : v ∈ V) :
+    (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+  slotE_ofEE2_p35 hfan.1 hEE2 hv
+
+/-- **E 槽一行装配（w 面）**：`(w, ρw) ∈ dartsOfHyp_p3 (E ∪ {{v,w}}) V`
+（同件 `slotE_ofEE2_p35` 换 `v := w`）。 -/
+private theorem crDartW_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hw : w ∈ V) :
+    (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V := by
+    rw [Set.pair_comm v w]
+    exact slotE_ofEE2_p35 (v := w) (w := v) hfan.1 hEE2 hw
+
+/-- **主件（hfanAug 全闭，public）**：根五前提（`ConvexLocalFan`、`v,w ∈ V`、
+`v ≠ w`、`hsub`）+ `hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2` ⟹ 增广边集
+`E ∪ {{v,w}}` 仍为 FAN（经 `PROVE_SLICING_FAN_p35` 装配：hcol 槽 =
+`crHcol_p35`，hfan7new 槽 = `crFan7New_p35`，hdiag = `diagNotEdge_p35`）。 -/
+theorem crFanAug_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {v w : V3}
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}) :=
+  PROVE_SLICING_FAN_p35 hfan.1.1 hv hw hwv
+    (crHcol_p35 hfan hv hw hwv hsub hEE2)
+    (crFan7New_p35 hfan hv hw hwv hsub hEE2 (diagNotEdge_p35 hfan hv hw hwv hsub))
+
+
+-- DISCHARGES（ejrcfjd-dw-CR-cres-w1，2026-10-28）：
+-- R-C1：`crHcol_p35`（根五 + hEE2 ⟹ hcol 期望形，楔排除 + 共线正负系数归位）。
+-- R-C2：`crFan7NewEdge_p35`（e2 ∈ E 支：含双 = hdiag 排除、含一 = Hit、皆不含 =
+--   Disj；开锥核 = `crOpenConeMissEdge_p35` 楔排除 + azim 正缩放 + azimCycle 邻居）
+--   与 M1 单点支合成 `crFan7New_p35` ⟹ hfan7new 全形。
+-- 主件：`crFanAug_p35`（public）= PROVE_SLICING_FAN_p35 装配 ⟹ FAN 0 V (E∪{{v,w}})。
+-- E 槽：`crDartV_p35` / `crDartW_p35`（slotE_ofEE2_p35 一行装配）。
+
+-- ===== lane CR 加项（编排者续批，最低优先级）：crAzimInjNbr_p35（hinjE 邻居方位单射）=====
+-- 消费对接：B2a `b2AzimCyclePredInj_p35` 的 `hinj` 槽，实例化 W := EE_p3 u (E ∪ {{v,w}})。
+-- 路 = fan7 路（路线 i）：方位相等经 HOL AZIM_EQ（`azim_eq_azim_iff`）给
+-- `y2 ∈ affGt {0,u} {y1}`（渲染 y2 = α•y1 + β•u，α > 0）→ β 号定侧 → 邻居点落入
+-- 对侧闭锥 → fan7′（crFanAug_p35 的增广扇）交出 cone{u} → 与 fan6′ 非共线矛盾。
+
+/-- 双 apex 开锥渲染：`x ∈ affGt {0, u} {y}` ⟹ `x = a•y + b•u`（`0 < a`）。 -/
+private theorem crApexRender_p35 {u y : V3} (hu0 : (0:V3) ≠ u) (huy : u ≠ y)
+    (hy0 : (0:V3) ≠ y) {x : V3} (hx : x ∈ affGt ({0, u} : Set V3) ({y} : Set V3)) :
+    ∃ a b : ℝ, 0 < a ∧ x = a • y + b • u := by
+  rw [affGt, Set.mem_setOf_eq, Affsign] at hx
+  obtain ⟨f, hfin, hval, hsgn, hsum⟩ := hx
+  have h3 : hfin.toFinset = ({(0:V3), u, y} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  have h0n : (0:V3) ∉ ({u, y} : Finset V3) := by
+    intro h
+    rcases Finset.mem_insert.mp h with h' | h'
+    · exact hu0 h'
+    · exact hy0 (Finset.mem_singleton.mp h')
+  have hun : (u:V3) ∉ ({y} : Finset V3) := fun h =>
+    huy (Finset.mem_singleton.mp h)
+  have hsumV : ∑ q ∈ hfin.toFinset, f q • q
+      = f (0:V3) • (0:V3) + f u • u + f y • y := by
+    rw [h3, Finset.sum_insert h0n, Finset.sum_insert hun, Finset.sum_singleton]
+    simp [add_assoc]
+  rw [hsumV] at hval
+  refine ⟨f y, f u, hsgn y (by simp), ?_⟩
+  rw [hval]
+  module
+
+/-- **加件（hinjE，邻居方位单射）**：根五 + `hEE2` ⟹ 增广边集的每个顶点处，
+邻居集上自任一邻居看的方位两两不同（`Set.InjOn (azim 0 u z) (EE_p3 u E′)`）。
+机制：方位相等 ⟹（HOL AZIM_EQ `azim_eq_azim_iff`）`y2 ∈ affGt {0,u} {y1}` ⟹
+渲染 `y2 = α•y1 + β•u`（`0 < α`）→ β 号定侧，邻居点落入对侧闭锥 → 增广 fan7′
+（`crFanAug_p35`）在 `{u,y1},{u,y2}` 对上交出 `affGe {0} {u}` → 该点在 u 射线上，
+与 fan6′ 的边非共线矛盾。消费对接：B2a `b2AzimCyclePredInj_p35` 的 `hinj` 槽
+（W := EE_p3 u (E ∪ {{v,w}}) 实例化）。 -/
+private theorem crAzimInjNbr_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∀ u ∈ ⋃₀ (E ∪ {{v, w}}), ∀ z ∈ EE_p3 u (E ∪ {{v, w}}),
+      Set.InjOn (azim (0:V3) u z) (EE_p3 u (E ∪ {{v, w}})) := by
+  -- 增广扇全量供体
+  have hFE' := crFanAug_p35 hfan hv hw hwv hsub hEE2
+  have h7' : Kepler.Text.Fan.fan7 0 V (E ∪ {{v, w}}) := hFE'.2.2.2.2.2
+  intro u hu z hz y1 hy1 y2 hy2 heq
+  by_cases hy12 : y1 = y2
+  · exact hy12
+  · -- 顶点与邻居点的非退化
+    have huV : u ∈ V := hFE'.1 hu
+    have hu0 : (0:V3) ≠ u := fun hc => hFE'.2.2.2.1 (hc ▸ huV)
+    have hy1E : ({u, y1} : Set V3) ∈ (E ∪ {{v, w}} : Set (Set V3)) := hy1
+    have hy2E : ({u, y2} : Set V3) ∈ (E ∪ {{v, w}} : Set (Set V3)) := hy2
+    have hy1V' : y1 ∈ V := hFE'.1 (Set.mem_sUnion_of_mem (by simp) hy1E)
+    have hy2V : y2 ∈ V := hFE'.1 (Set.mem_sUnion_of_mem (by simp) hy2E)
+    have hy10 : (0:V3) ≠ y1 := fun hc => hFE'.2.2.2.1 (hc ▸ hy1V')
+    have hy20 : (0:V3) ≠ y2 := fun hc => hFE'.2.2.2.1 (hc ▸ hy2V)
+    have hncz : ¬ Collinear3 (0:V3) u z :=
+      hFE'.2.2.2.2.1 ({u, z} : Set V3) hz
+    have hncy1 : ¬ Collinear3 (0:V3) u y1 :=
+      hFE'.2.2.2.2.1 ({u, y1} : Set V3) hy1E
+    have hncy2 : ¬ Collinear3 (0:V3) u y2 :=
+      hFE'.2.2.2.2.1 ({u, y2} : Set V3) hy2E
+    have huy1 : u ≠ y1 := by
+      intro h
+      rw [← h] at hncy1
+      exact hncy1 (collinear3_pair_right (v0 := (0:V3)) (v1 := u) (x := u) rfl)
+    have huy2 : u ≠ y2 := by
+      intro h
+      rw [← h] at hncy2
+      exact hncy2 (collinear3_pair_right (v0 := (0:V3)) (v1 := u) (x := u) rfl)
+    -- AZIM_EQ：方位相等 ⟹ y2 ∈ affGt {0,u} {y1} ⟹ 渲染 y2 = a•y1 + b•u（0 < a）
+    have hmem : y2 ∈ affGt ({0, u} : Set V3) ({y1} : Set V3) :=
+      (azim_eq_azim_iff (v0 := (0:V3)) (v1 := u) (w := z) (x := y1) (y := y2)
+        hncz hncy1 hncy2).mp heq
+    obtain ⟨a, b, ha0, hy2ab⟩ := crApexRender_p35 hu0 huy1 hy10 hmem
+    -- fan7′：cone{u,y1} ∩ cone{u,y2} = cone{u}（y1 ≠ y2）
+    have hinter : (({u, y1} : Set V3) ∩ ({u, y2} : Set V3)) = ({u} : Set V3) := by
+      ext q
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨(h | h), h'⟩
+        · exact h
+        · rcases h' with h'' | h''
+          · exact absurd (h''.symm.trans h) huy1
+          · exact absurd (h.symm.trans h'') hy12
+      · intro h
+        exact ⟨Or.inl h, Or.inl h⟩
+    have h7pair : affGe ({0} : Set V3) ({u, y1} : Set V3) ∩ affGe ({0} : Set V3)
+        ({u, y2} : Set V3) = affGe ({0} : Set V3) ({u} : Set V3) := by
+      have h0 := h7' ({u, y1} : Set V3) (Set.mem_union_left _ hy1E)
+        ({u, y2} : Set V3) (Set.mem_union_left _ hy2E)
+      rw [hinter] at h0
+      exact h0
+    rcases Classical.em (b < 0) with hneg | hpos
+    · -- b < 0：y1 = a⁻¹•y2 + (-a⁻¹b)•u ∈ cone{u,y2}，对称矛盾
+      have hb0 : 0 ≤ -(a⁻¹ * b) := by
+        have h2 : b * a⁻¹ < 0 := mul_neg_of_neg_of_pos hneg (inv_pos.mpr ha0)
+        exact neg_nonneg.mpr (le_of_lt (by rw [mul_comm]; exact h2))
+      have hy1cone : y1 ∈ affGe ({0} : Set V3) ({u, y2} : Set V3) := by
+        have h0 := kchMemAffGePair_p35 (x := (0:V3)) (u := y2) (v := u) (z := y1)
+          (s := a⁻¹)
+          (t := -(a⁻¹ * b)) hy20 hu0 huy2.symm (le_of_lt (inv_pos.mpr ha0))
+          hb0 (by
+            rw [hy2ab, smul_add, smul_smul, smul_smul, inv_mul_cancel₀
+              (ne_of_gt ha0), one_smul, add_assoc, neg_smul,
+              add_neg_cancel_right, smul_zero, zero_add])
+        rw [Set.pair_comm y2 u] at h0
+        exact h0
+      have hy1self : y1 ∈ affGe ({0} : Set V3) ({u, y1} : Set V3) :=
+        kchMemAffGePair_p35 (x := (0:V3)) (u := u) (v := y1) (z := y1)
+          (s := 0) (t := 1)
+          hu0 hy10 huy1 (by norm_num) (by norm_num) (by simp)
+      have hy1u : y1 ∈ affGe ({0} : Set V3) ({u} : Set V3) := by
+        rw [← h7pair]
+        exact ⟨hy1self, hy1cone⟩
+      obtain ⟨r, hr0, hy1r⟩ := affGeOneRender_p35 hu0 hy1u
+      exact (hncy1 ((collinear3_iff_smul (v := (0:V3)) (w := u) (w1 := y1)
+        (Ne.symm hu0)).mpr ⟨r, by rw [hy1r]; simp⟩)).elim
+    · -- 0 ≤ b：y2 ∈ cone{u,y1} ∩ cone{u,y2} = cone{u} ⟹ y2 在 u 射线上，矛盾
+      have hβ : (0:ℝ) ≤ b := not_lt.mp hpos
+      have hy2cone : y2 ∈ affGe ({0} : Set V3) ({u, y1} : Set V3) := by
+        have h0 := kchMemAffGePair_p35 (x := (0:V3)) (u := y1) (v := u) (z := y2)
+          (s := a) (t := b) hy10 hu0 huy1.symm (le_of_lt ha0) hβ
+            (by rw [hy2ab]; simp)
+        rw [Set.pair_comm y1 u] at h0
+        exact h0
+      have hy2self : y2 ∈ affGe ({0} : Set V3) ({u, y2} : Set V3) :=
+        kchMemAffGePair_p35 (x := (0:V3)) (u := u) (v := y2) (z := y2)
+          (s := 0) (t := 1)
+          hu0 hy20 huy2 (by norm_num) (by norm_num) (by simp)
+      have hy2u : y2 ∈ affGe ({0} : Set V3) ({u} : Set V3) := by
+        rw [← h7pair]
+        exact ⟨hy2cone, hy2self⟩
+      obtain ⟨r, hr0, hy2r⟩ := affGeOneRender_p35 hu0 hy2u
+      exact (hncy2 ((collinear3_iff_smul (v := (0:V3)) (w := u) (w1 := y2)
+        (Ne.symm hu0)).mpr ⟨r, by rw [hy2r]; simp⟩)).elim
+
+-- DISCHARGES（加件，2026-10-28）：
+-- `crAzimInjNbr_p35`（hinjE）：消费对接 = B2a `b2AzimCyclePredInj_p35` 的 `hinj`
+-- 槽，W := EE_p3 u (E ∪ {{v,w}})；u/z/y1/y2 全部走增广扇 fan6′ 非共线 +
+-- AZIM_EQ（azim_eq_azim_iff）+ 渲染定侧 + fan7′ 交锥。
+
+
+-- ===== merged block: lane F2 (续140 M1e 合并, 编排者) =====
+
+/-! ## EJRCFJD chain F2 — 抽象面结构（HOL `DETERMINE_FV` 移植）+ hvisit 窗口参数化
+（lane `ejrcfjd-dw-F2-face-w1`，2026-10-28）
+
+HOL `DETERMINE_FV`（local_lemmas1.hl:2672）的抽象形：对角增广载体
+`E ∪ {{v, w}}` 上，基 dart `(v, rhoNode1 FF v)` 的面 = ρ-轨道首次命中 `w`
+之前的窗口 dart 加上折返 dart `(w, v)`。供给链（HOL 行号）：
+
+1. `LOOP_SET_DETER_FIRTS_ELMS`（local_lemmas.hl:3161）——首次命中下标 `N` 的
+   良基选取（此处 `Nat.find` 直出，`f2FirstHit_p35`）；
+2. `FACE_MAP_SLICING_HYP_TRANS_POINT`（local_lemmas1.hl:2443）——M1 内
+   `FACE_MAP_SLICING_HYP_TRANS_POINT_p35`（对角 dart `(w, v) ↦ (v, ρ v)` 沿 ρ 出穿）；
+3. `FACE_MAP_AT_TURNING_DART`（local_lemmas1.hl:2233）——M1 内
+   `FACE_MAP_AT_TURNING_DART_p35`（折返 dart `(ivsρ w, w) ↦ (w, v)`）；
+4. 面的轨道刻画 `DETERMINE_FV_p35`（M1 W3a 两正则渲染，面 = ff-迭代集）。
+
+几何输入（sector placement / 三邻居表 / 非共线）全部由 A 车道件
+`diagPlace_p35` + `eeAugThree_p35` + `hs3DiagNe_p35` + `lfVertKit_p35` +
+`kchDartNonColl_p35`/`dartNonColl2_p35` 从 `hEE2` 全闭，故本块唯一显式
+前提加项是 `hEE2`；不需要 `hnc`。ρ-轨道覆盖用 LA35Pre 的
+`kchOrbitMapV_p35`（hEE2 闸住）+ `kchOrbitCycle_p35`。 -/
+
+/-- ρ 在 V 上单（周期点论证：`ρ^[p] v = v`、`0 < p`，窗口下标取模归约 +
+窗口两两相异性）。 -/
+private theorem f2RhoInjOnV_p35 {V : Set V3} {FF : Set (V3 × V3)}
+    {v : V3} (hv : v ∈ V)
+    (horb : ∀ z ∈ V, orbitF_p3 (rhoNode1 FF) z = V)
+    {p : ℕ} (hp0 : 0 < p) (hp : (rhoNode1 FF)^[p] v = v)
+    (hwinj : ∀ i j : ℕ, i < j → j < p → (rhoNode1 FF)^[i] v ≠ (rhoNode1 FF)^[j] v)
+    {x y : V3} (hx : x ∈ V) (hy : y ∈ V)
+    (hxy : rhoNode1 FF x = rhoNode1 FF y) : x = y := by
+  have hxO : x ∈ orbitF_p3 (rhoNode1 FF) v := by rw [horb v hv]; exact hx
+  have hyO : y ∈ orbitF_p3 (rhoNode1 FF) v := by rw [horb v hv]; exact hy
+  obtain ⟨i, hi⟩ := hxO
+  obtain ⟨j, hj⟩ := hyO
+  -- 轨道点归约到 < p 的窗口代表
+  obtain ⟨i', hi'x, hi'p⟩ : ∃ t, x = (rhoNode1 FF)^[t] v ∧ t < p :=
+    ⟨i % p, hi.symm.trans (kchPeriodMod_p35 (rhoNode1 FF) hp i), Nat.mod_lt _ hp0⟩
+  obtain ⟨j', hj'y, hj'p⟩ : ∃ t, y = (rhoNode1 FF)^[t] v ∧ t < p :=
+    ⟨j % p, hj.symm.trans (kchPeriodMod_p35 (rhoNode1 FF) hp j), Nat.mod_lt _ hp0⟩
+  have hxi' : rhoNode1 FF x = (rhoNode1 FF)^[i' + 1] v := by
+    rw [hi'x]
+    exact (Function.iterate_succ_apply' (rhoNode1 FF) i' v).symm
+  have hyj' : rhoNode1 FF y = (rhoNode1 FF)^[j' + 1] v := by
+    rw [hj'y]
+    exact (Function.iterate_succ_apply' (rhoNode1 FF) j' v).symm
+  have hEq : (rhoNode1 FF)^[i' + 1] v = (rhoNode1 FF)^[j' + 1] v := by
+    rw [← hxi', ← hyj', hxy]
+  rcases Nat.lt_trichotomy i' j' with hlt | heq | hgt
+  · rcases Nat.lt_or_ge (j' + 1) p with hj1 | hj1
+    · exact absurd hEq (hwinj (i' + 1) (j' + 1) (by omega) hj1)
+    · have hj'p1 : j' + 1 = p := le_antisymm (by omega) hj1
+      have hEq' : (rhoNode1 FF)^[0] v = (rhoNode1 FF)^[i' + 1] v := by
+        rw [Function.iterate_zero_apply, hEq, hj'p1, hp]
+      exact absurd hEq' (hwinj 0 (i' + 1) (by omega) (by omega))
+  · have hx2 : x = (rhoNode1 FF)^[j'] v := by rw [heq] at hi'x; exact hi'x
+    exact hx2.trans hj'y.symm
+  · rcases Nat.lt_or_ge (i' + 1) p with hi1 | hi1
+    · exact absurd hEq.symm (hwinj (j' + 1) (i' + 1) (by omega) hi1)
+    · have hi'p1 : i' + 1 = p := le_antisymm (by omega) hi1
+      have hEq' : (rhoNode1 FF)^[0] v = (rhoNode1 FF)^[j' + 1] v := by
+        rw [Function.iterate_zero_apply, hEq.symm, hi'p1, hp]
+      exact absurd hEq' (hwinj 0 (j' + 1) (by omega) (by omega))
+
+/-- 首中下标（HOL `LOOP_SET_DETER_FIRTS_ELMS` local_lemmas.hl:3161 的 Nat.find 形）：
+`w` 落在 `v` 的 ρ-轨道上，取首次命中的正下标。 -/
+private theorem f2FirstHit_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v w : V3} (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w) :
+    ∃ N : ℕ, 0 < N ∧ (rhoNode1 FF)^[N] v = w ∧
+      ∀ m : ℕ, m < N → (rhoNode1 FF)^[m] v ≠ w := by
+  have horb := kchOrbitMapV_p35 hfanL hEE2
+  have hwO : w ∈ orbitF_p3 (rhoNode1 FF) v := by rw [horb v hv]; exact hw
+  obtain ⟨j, hj⟩ := hwO
+  have j0 : j ≠ 0 := by
+    intro hc
+    rw [hc, Function.iterate_zero_apply] at hj
+    exact hwv hj
+  have hex : ∃ n, 0 < n ∧ (rhoNode1 FF)^[n] v = w :=
+    ⟨j, Nat.pos_of_ne_zero j0, hj⟩
+  refine ⟨Nat.find hex, (Nat.find_spec hex).1, (Nat.find_spec hex).2, ?_⟩
+  intro m hm hcon
+  rcases Nat.eq_zero_or_pos m with hm0 | hm0
+  · rw [hm0, Function.iterate_zero_apply] at hcon
+    exact hwv hcon
+  · exact Nat.find_min hex hm ⟨hm0, hcon⟩
+
+/-- **F2 迁移件** —— 首中下标 + 双节点几何清单 + 三个面迁移
+（内点步 = HOL local_lemmas1.hl:2443 的二邻居消耗、折返步 = :2233、
+对角穿出步 = :2443；sector placement 由 A 车道 `diagPlace_p35` 从
+`hEE2` 全闭）。`HS`/`hHS` 不进入本件（面刻画只在核心件用）。 -/
+private theorem f2TransKit_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfanL : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hdiag : ({v, w} : Set V3) ∉ E) :
+    ∃ N : ℕ, 1 < N ∧ (rhoNode1 FF)^[N] v = w ∧
+      (∀ m : ℕ, m < N → (rhoNode1 FF)^[m] v ≠ w) ∧
+      (∀ n : ℕ, ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)
+        ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V) ∧
+      (w, v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V ∧
+      (∀ n : ℕ, n + 1 < N →
+        ffOfHyp_p3 0 V (E ∪ {{v, w}}) ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)
+          = ((rhoNode1 FF)^[n + 1] v, (rhoNode1 FF)^[n + 1 + 1] v)) ∧
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) ((rhoNode1 FF)^[N - 1] v, w) = (w, v) ∧
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) (w, v) = (v, rhoNode1 FF v) := by
+  classical
+  -- == 0. 首中下标与 N ≥ 2 ==
+  obtain ⟨N, hN0, hNhit, hNmin⟩ := f2FirstHit_p35 hfanL hEE2 hv hw hwv
+  have kitv := lfVertKit_p35 hfanL hEE2 hv
+  have kitw := lfVertKit_p35 hfanL hEE2 hw
+  have hNne1 : N ≠ 1 := by
+    intro hc
+    rw [hc, Function.iterate_one] at hNhit
+    refine hdiag ?_
+    rw [← hNhit]
+    exact kchDartInE_p35 hfanL kitv.1
+  have hN2 : 1 < N := by omega
+  refine ⟨N, hN2, hNhit, hNmin, ?_⟩
+  -- == 1. ρ-周期世界 ==
+  have horb : ∀ z ∈ V, orbitF_p3 (rhoNode1 FF) z = V := kchOrbitMapV_p35 hfanL hEE2
+  obtain ⟨p, hp0, hpv, hwinj, hset, -⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (V := V) horb hv
+  have hitV : ∀ m : ℕ, (rhoNode1 FF)^[m] v ∈ V := kchIterInV_p35 hfanL hEE2 hv
+  have hinjV := @f2RhoInjOnV_p35 (V := V) (FF := FF) v hv horb p hp0 hpv hwinj
+  -- ρ^[p-1] v = ivsρ v，从而 N ≠ p-1（hdiag），得 N < p
+  have hpredv : (rhoNode1 FF)^[p - 1] v = ivsRhoNode1 FF v := by
+    refine hinjV (hitV (p - 1)) kitv.2.2.2.1 ?_
+    have a1 : rhoNode1 FF ((rhoNode1 FF)^[p - 1] v) = v := by
+      rw [← Function.iterate_succ_apply' (rhoNode1 FF) (p - 1) v,
+        show Nat.succ (p - 1) = p from by omega, hpv]
+    rw [a1, kitv.2.2.1]
+  have hsDv : w ≠ rhoNode1 FF v ∧ w ≠ ivsRhoNode1 FF v := hs3DiagNe_p35 hfanL hEE2 hv hdiag
+  have hNnp : N ≠ p - 1 := by
+    intro hc
+    rw [hc, hpredv] at hNhit
+    exact hsDv.2 hNhit.symm
+  have hwV : w ∈ ({(rhoNode1 FF)^[n] v | n < p} : Set V3) := by rw [hset]; exact hw
+  obtain ⟨j, hjp, hjw⟩ := hwV
+  have hNltp : N < p := by
+    rcases Nat.lt_or_ge j N with h | h
+    · exact absurd hjw (hNmin j (by omega))
+    · omega
+  -- == 2. 窗口 dart 的载体成员 ==
+  have hFFit : ∀ m : ℕ, ((rhoNode1 FF)^[m] v, (rhoNode1 FF)^[m + 1] v) ∈ FF := by
+    intro m
+    have h := (lfVertKit_p35 hfanL hEE2 (hitV m)).1
+    rw [← Function.iterate_succ_apply' (rhoNode1 FF) m v] at h
+    exact h
+  have hwdart : ∀ m : ℕ, ((rhoNode1 FF)^[m] v, (rhoNode1 FF)^[m + 1] v)
+      ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V := by
+    intro m
+    refine Set.mem_union_left _ ?_
+    show ({(rhoNode1 FF)^[m] v, (rhoNode1 FF)^[m + 1] v} : Set V3) ∈ E ∪ {{v, w}}
+    exact Set.mem_union_left _ (kchDartInE_p35 hfanL (hFFit m))
+  have hdwv : (w, v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V := by
+    refine Set.mem_union_left _ ?_
+    show ({w, v} : Set V3) ∈ E ∪ {{v, w}}
+    exact Set.mem_union_right _ (Set.mem_singleton_iff.mpr (Set.pair_comm w v))
+  -- == 3. 双节点几何清单（sector placement / 三邻居 / 非共线）==
+  have hdiagW : ({w, v} : Set V3) ∉ E := fun hc => hdiag (by rw [Set.pair_comm] at hc; exact hc)
+  have hsubW : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx z hz
+    rw [Set.pair_comm] at hz
+    exact hsub x hx hz
+  obtain ⟨hncaw, hposw, hltw⟩ := diagPlace_p35 hfanL hEE2 hv hw hwv hsub hdiag
+  obtain ⟨hncav, hposv, hltv⟩ :=
+    diagPlace_p35 hfanL hEE2 hw hv (Ne.symm hwv) hsubW hdiagW
+  have hsDw : v ≠ rhoNode1 FF w ∧ v ≠ ivsRhoNode1 FF w :=
+    hs3DiagNe_p35 (v := w) (w := v) hfanL hEE2 hw hdiagW
+  have hEEv : EE_p3 v (E ∪ {{w, v}}) = {ivsRhoNode1 FF v, rhoNode1 FF v, w} :=
+    eeAugThree_p35 (v := w) (w := v) hfanL hEE2 hv (Ne.symm hwv) hsDv.1 hsDv.2
+  have hEEw : EE_p3 w (E ∪ {{v, w}}) = {ivsRhoNode1 FF w, rhoNode1 FF w, v} :=
+    eeAugThree_p35 hfanL hEE2 hw hwv hsDw.1 hsDw.2
+  have hE'swap : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := w4rAugPairComm_p35
+  -- == 4. 三个迁移件 ==
+  -- T1（内点步，HOL :2443 的二邻居消耗）：窗口 dart 沿 ρ 前进
+  have T1 : ∀ n : ℕ, n + 1 < N →
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)
+        = ((rhoNode1 FF)^[n + 1] v, (rhoNode1 FF)^[n + 1 + 1] v) := by
+    intro n hn
+    have hy := hitV (n + 1)
+    have hyv : (rhoNode1 FF)^[n + 1] v ≠ v := by
+      intro hcc
+      exact hwinj 0 (n + 1) (by omega) (by omega)
+        (by rw [hcc, Function.iterate_zero_apply])
+    have hyw : (rhoNode1 FF)^[n + 1] v ≠ w := hNmin (n + 1) hn
+    have hxE : (rhoNode1 FF)^[n] v = ivsRhoNode1 FF ((rhoNode1 FF)^[n + 1] v) := by
+      refine hinjV (hitV n)
+        ((lfVertKit_p35 hfanL hEE2 (hitV (n + 1))).2.2.2.1) ?_
+      rw [(lfVertKit_p35 hfanL hEE2 (hitV (n + 1))).2.2.1]
+      exact (Function.iterate_succ_apply' (rhoNode1 FF) n v).symm
+    have hEEy : EE_p3 ((rhoNode1 FF)^[n + 1] v) (E ∪ {{v, w}})
+        = ({ivsRhoNode1 FF ((rhoNode1 FF)^[n + 1] v),
+            rhoNode1 FF ((rhoNode1 FF)^[n + 1] v)} : Set V3) := by
+      rw [eeAugNe_p35 (u := (rhoNode1 FF)^[n + 1] v) hyv hyw,
+        (lfVertKit_p35 hfanL hEE2 hy).2.2.2.2.1]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    have hEEf : EE_p3 ((rhoNode1 FF)^[n + 1] v) (E ∪ {{v, w}})
+        = ({(rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1 + 1] v} : Set V3) := by
+      rw [hEEy, ← hxE]
+      have h2 : rhoNode1 FF ((rhoNode1 FF)^[n + 1] v) =
+        (rhoNode1 FF)^[n + 1 + 1] v :=
+        (Function.iterate_succ_apply' (rhoNode1 FF) (n + 1) v).symm
+      rw [h2]
+    have hcne : (rhoNode1 FF)^[n + 1 + 1] v ≠ (rhoNode1 FF)^[n] v := by
+      intro hcc
+      have e : (rhoNode1 FF)^[n + 1 + 1] v
+          = (rhoNode1 FF)^[2] ((rhoNode1 FF)^[n] v) := by
+        rw [show n + 1 + 1 = 2 + n from by omega, ← Function.iterate_add_apply]
+      rw [e, Function.iterate_succ_apply', Function.iterate_one] at hcc
+      exact kchNoTwoV_p35 hfanL hEE2 ((rhoNode1 FF)^[n] v) (hitV n) hcc
+    rw [ffDart_p35 (V := V) (E := E ∪ {{v, w}}) (v := (rhoNode1 FF)^[n] v)
+      (w := (rhoNode1 FF)^[n + 1] v) (c := (rhoNode1 FF)^[n + 1 + 1] v)
+      (hwdart n) hEEf hcne]
+  -- T2（折返步，HOL :2233）：(ρ^[N-1] v, w) ↦ (w, v)
+  have hN1v : (rhoNode1 FF)^[N - 1] v = ivsRhoNode1 FF w := by
+    refine hinjV (hitV (N - 1)) kitw.2.2.2.1 ?_
+    have a1 : rhoNode1 FF ((rhoNode1 FF)^[N - 1] v) = w := by
+      rw [← Function.iterate_succ_apply' (rhoNode1 FF) (N - 1) v,
+        show Nat.succ (N - 1) = N from by omega, hNhit]
+    rw [a1, kitw.2.2.1]
+  have hdN1 : ((rhoNode1 FF)^[N - 1] v, w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V := by
+    refine Set.mem_union_left _ ?_
+    show ({(rhoNode1 FF)^[N - 1] v, w} : Set V3) ∈ E ∪ {{v, w}}
+    refine Set.mem_union_left _ ?_
+    rw [hN1v]
+    exact kchDartInE_p35 hfanL kitw.2.1
+  have T2 : ffOfHyp_p3 0 V (E ∪ {{v, w}}) ((rhoNode1 FF)^[N - 1] v, w) = (w, v) := by
+    rw [hN1v]
+    rw [← hE'swap]
+    have hd' : (ivsRhoNode1 FF w, w) ∈ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+      rw [hE'swap, ← hN1v]
+      exact hdN1
+    have hEEw' : EE_p3 w (E ∪ {{w, v}}) = {ivsRhoNode1 FF w, rhoNode1 FF w, v} := by
+      rw [hE'swap]; exact hEEw
+    exact FACE_MAP_AT_TURNING_DART_p35 (V := V) (E := E) (FF := FF) (v := w) (w := v)
+      (x := ivsRhoNode1 FF w) (Ne.symm hwv) hd' rfl hEEw'
+      (fun hc => kchDartNonColl_p35 hfanL kitw.1 hc)
+      (dartNonColl2_p35 hfanL kitw.2.1)
+      (Ne.symm kitw.2.2.2.2.2) hsDw.1 hsDw.2
+      hncaw hposw hltw
+  -- T3（对角穿出步，HOL :2443）：(w, v) ↦ (v, ρ v)
+  have T3 : ffOfHyp_p3 0 V (E ∪ {{v, w}}) (w, v) = (v, rhoNode1 FF v) := by
+    rw [← hE'swap]
+    have hd' : (w, v) ∈ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+      rw [hE'swap]
+      exact hdwv
+    exact FACE_MAP_SLICING_HYP_TRANS_POINT_p35 (V := V) (E := E) (FF := FF) (v := w)
+      (w := v) (Ne.symm hwv) hd' hEEv
+      (fun hc => kchDartNonColl_p35 hfanL kitv.1 hc)
+      (dartNonColl2_p35 hfanL kitv.2.1) (Ne.symm kitv.2.2.2.2.2) hsDv.1 hsDv.2
+      hncav hposv hltv
+  exact ⟨hwdart, hdwv, T1, T2, T3⟩
+
+/-- **F2 核心件** —— HOL `DETERMINE_FV`（local_lemmas1.hl:2672）的抽象形：
+对角增广载体上基 dart `(v, rhoNode1 FF v)` 的面 = ρ-轨道窗口 + 折返 dart。
+`N` = ρ-轨道自 `v` 首次命中 `w` 的下标（存在量化，附首中性两件；
+`1 < N` 因 `N = 1` 会给出 `{v, w} ∈ E` 与 `hdiag` 矛盾）。 -/
+theorem f2FaceCore_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfanL : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hdiag : ({v, w} : Set V3) ∉ E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS) :
+    ∃ N : ℕ, 1 < N ∧ (rhoNode1 FF)^[N] v = w ∧
+      (∀ m : ℕ, m < N → (rhoNode1 FF)^[m] v ≠ w) ∧
+      HS.face (v, rhoNode1 FF v)
+        = insert (w, v)
+            {d | ∃ n : ℕ, n < N ∧ d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} := by
+  classical
+  obtain ⟨N, hN2, hNhit, hNmin, hwdart, hdwv, T1, T2, T3⟩ :=
+    f2TransKit_p35 hfanL hEE2 hv hw hwv hsub hdiag
+  refine ⟨N, hN2, hNhit, hNmin, ?_⟩
+  -- == 5. 面的窗口刻画 ==
+  have hmem0 : (v, rhoNode1 FF v)
+      ∈ insert (w, v)
+          {d | ∃ n : ℕ, n < N ∧ d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} :=
+    Set.mem_insert_of_mem _ ⟨0, by omega, rfl⟩
+  have hwalk : ∀ k : ℕ, (ffOfHyp_p3 0 V (E ∪ {{v, w}}))^[k] (v, rhoNode1 FF v)
+      ∈ insert (w, v)
+          {d | ∃ n : ℕ, n < N ∧ d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} := by
+    intro k
+    induction k with
+    | zero => exact hmem0
+    | succ k ih =>
+        rw [Function.iterate_succ_apply'
+          (ffOfHyp_p3 0 V (E ∪ {{v, w}})) k (v, rhoNode1 FF v)]
+        rcases Set.mem_insert_iff.mp ih with h | h
+        · rw [h, T3]; exact hmem0
+        · obtain ⟨n, hn, hdart⟩ := h
+          rw [hdart]
+          rcases Nat.lt_or_ge (n + 1) N with h1 | h1
+          · rw [T1 n h1]
+            exact Set.mem_insert_of_mem _ ⟨n + 1, h1, rfl⟩
+          · have hb : (rhoNode1 FF)^[n + 1] v = w := by
+              rw [show n + 1 = N from by omega]; exact hNhit
+            rw [hb, show n = N - 1 from by omega, T2]
+            exact Set.mem_insert_iff.mpr (Or.inl rfl)
+  have hcascade : ∀ n : ℕ, n < N →
+      (ffOfHyp_p3 0 V (E ∪ {{v, w}}))^[n] (v, rhoNode1 FF v)
+        = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v) := by
+    intro n
+    induction n with
+    | zero => intro _; rfl
+    | succ m ih =>
+        intro hn
+        rw [Function.iterate_succ_apply'
+          (ffOfHyp_p3 0 V (E ∪ {{v, w}})) m (v, rhoNode1 FF v), ih (by omega),
+          T1 m (by omega)]
+  have hfold : (ffOfHyp_p3 0 V (E ∪ {{v, w}}))^[N] (v, rhoNode1 FF v) = (w, v) := by
+    have hsplit : N = N - 1 + 1 := by omega
+    rw [hsplit, Function.iterate_succ_apply'
+      (ffOfHyp_p3 0 V (E ∪ {{v, w}})) (N - 1) (v, rhoNode1 FF v),
+      hcascade (N - 1) (by omega)]
+    rw [show (N - 1) + 1 = N from by omega, hNhit, T2]
+  rw [DETERMINE_FV_p35 HS hHS (v, rhoNode1 FF v)]
+  ext z
+  constructor
+  · rintro ⟨k, hk⟩
+    rw [← hk]
+    exact hwalk k
+  · intro hz
+    rcases Set.mem_insert_iff.mp hz with h | h
+    · exact ⟨N, by rw [h]; exact hfold⟩
+    · obtain ⟨n, hn, hdart⟩ := h
+      exact ⟨n, by rw [hcascade n hn]; exact hdart.symm⟩
+
+set_option linter.unusedVariables false in
+/-- **F2 主件**（B 车道 DELIVERY §3 F2 陈述逐字 + 编排者裁定的显式前提
+`hEE2`）——对角增广超图的基面 `(v, rhoNode1 FF v)` 携带 hvisit 窗口
+参数化：周期 `k = p`（ρ-轨道周期，= card V）、窗长 `k' = N + 1`（N =
+ρ-轨道自 v 首次命中 w 的下标；`k' < k` 因 `w ≠ ivsρ v` 即 `hdiag`）、
+起点 `r = 0`、注入序列 `vv i = ρ^[i % p] v`。`hfanAug`/`hdV` 为 F2 陈述
+逐字前提（本证明未消费，`hdV` 可由 `slotE_ofEE2_p35` 从 `hEE2` 导出）。 -/
+theorem F_PRIME_ABSTRACT_p35 (V E FF v w) (hfan : ConvexLocalFan V E FF)
+    (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hdiag : ({v, w} : Set V3) ∉ E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+    (hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}))
+    (hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∃ (k k' r : ℕ) (vv : ℕ → V3), 0 < k ∧ 0 < k' ∧ k' < k ∧ Periodic vv k ∧
+      (∀ i j : ℕ, i < k → j < k → i ≠ j → vv i ≠ vv j) ∧
+      Set.range (fun i : ℕ => (vv (i % k' + r), vv ((i + 1) % k' + r)))
+        = HS.face (v, rhoNode1 FF v) := by
+  obtain ⟨hLF, -⟩ := hfan
+  obtain ⟨N, hN2, hNhit, hNmin, hface⟩ :=
+    f2FaceCore_p35 hLF hEE2 hv hw hwv hsub hdiag HS hHS
+  have horb : ∀ z ∈ V, orbitF_p3 (rhoNode1 FF) z = V := kchOrbitMapV_p35 hLF hEE2
+  obtain ⟨p, hp0, hpv, hwinj, hset, -⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (V := V) horb hv
+  have kitv := lfVertKit_p35 hLF hEE2 hv
+  -- N < p（首中性 + 轨道覆盖）与 N ≠ p - 1（w ≠ ivsρ v），得窗长 N + 1 < p
+  have hpredv : (rhoNode1 FF)^[p - 1] v = ivsRhoNode1 FF v := by
+    have hitV : ∀ m : ℕ, (rhoNode1 FF)^[m] v ∈ V := kchIterInV_p35 hLF hEE2 hv
+    have hinjV := @f2RhoInjOnV_p35 (V := V) (FF := FF) v hv horb p hp0 hpv hwinj
+    refine hinjV (hitV (p - 1)) kitv.2.2.2.1 ?_
+    have a1 : rhoNode1 FF ((rhoNode1 FF)^[p - 1] v) = v := by
+      rw [← Function.iterate_succ_apply' (rhoNode1 FF) (p - 1) v,
+        show Nat.succ (p - 1) = p from by omega, hpv]
+    rw [a1, kitv.2.2.1]
+  have hsDv : w ≠ rhoNode1 FF v ∧ w ≠ ivsRhoNode1 FF v := hs3DiagNe_p35 hLF hEE2 hv hdiag
+  have hNnp : N ≠ p - 1 := by
+    intro hc
+    rw [hc, hpredv] at hNhit
+    exact hsDv.2 hNhit.symm
+  have hwV : w ∈ ({(rhoNode1 FF)^[n] v | n < p} : Set V3) := by rw [hset]; exact hw
+  obtain ⟨j, hjp, hjw⟩ := hwV
+  have hNltp : N < p := by
+    rcases Nat.lt_or_ge j N with h | h
+    · exact absurd hjw (hNmin j (by omega))
+    · omega
+  have hklt : N + 1 < p := by omega
+  -- 序列与窗口算术
+  have hkey : ∀ i : ℕ, i % (N + 1) ≤ N := fun i =>
+    Nat.le_of_lt_succ (Nat.mod_lt i (by omega))
+  have hsuccmod : ∀ i : ℕ, i % (N + 1) < N →
+      (i + 1) % (N + 1) = i % (N + 1) + 1 := by
+    intro i hiN
+    have hA : i % (N + 1) + 1 < N + 1 := by omega
+    have hB : (1:ℕ) % (N + 1) = 1 := Nat.mod_eq_of_lt (by omega)
+    calc (i + 1) % (N + 1)
+        = (i % (N + 1) + 1 % (N + 1)) % (N + 1) := Nat.add_mod i 1 (N + 1)
+      _ = (i % (N + 1) + 1) % (N + 1) := by rw [hB]
+      _ = i % (N + 1) + 1 := Nat.mod_eq_of_lt hA
+  have hper : Periodic (fun i : ℕ => (rhoNode1 FF)^[i % p] v) p := by
+    intro i
+    show (rhoNode1 FF)^[(i + p) % p] v = (rhoNode1 FF)^[i % p] v
+    rw [Nat.add_mod_right]
+  have hinj : ∀ i j : ℕ, i < p → j < p → i ≠ j →
+      (fun i : ℕ => (rhoNode1 FF)^[i % p] v) i
+        ≠ (fun i : ℕ => (rhoNode1 FF)^[i % p] v) j := by
+    intro i j hi hj hne hcc
+    have hcc' : (rhoNode1 FF)^[i % p] v = (rhoNode1 FF)^[j % p] v := hcc
+    rw [Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] at hcc'
+    rcases Nat.lt_trichotomy i j with h | h | h
+    · exact absurd hcc' (hwinj i j h hj)
+    · exact hne h
+    · exact absurd hcc'.symm (hwinj j i h hi)
+  have e1 : ∀ i : ℕ, (i % (N + 1)) % p = i % (N + 1) := fun i =>
+    Nat.mod_eq_of_lt (by have := hkey i; have := hNltp; omega)
+  have hFr : Set.range (fun i : ℕ =>
+      ((fun i : ℕ => (rhoNode1 FF)^[i % p] v) (i % (N + 1) + 0),
+        (fun i : ℕ => (rhoNode1 FF)^[i % p] v) ((i + 1) % (N + 1) + 0)))
+      = HS.face (v, rhoNode1 FF v) := by
+    ext z
+    constructor
+    · rintro ⟨i, rfl⟩
+      show ((rhoNode1 FF)^[i % (N + 1) % p] v, (rhoNode1 FF)^[(i + 1) % (N + 1) % p] v)
+        ∈ HS.face (v, rhoNode1 FF v)
+      rw [hface]
+      rcases Nat.lt_or_ge (i % (N + 1)) N with h | h
+      · rw [e1 i, hsuccmod i h,
+          Nat.mod_eq_of_lt (show i % (N + 1) + 1 < p
+            from by have := hkey i; have := hNltp; omega)]
+        exact Set.mem_insert_of_mem _ ⟨i % (N + 1), h, rfl⟩
+      · have hN : i % (N + 1) = N := le_antisymm (hkey i) (by omega)
+        have hB : (i + 1) % (N + 1) = 0 := by
+          rw [Nat.add_mod, show (1:ℕ) % (N + 1) = 1 from Nat.mod_eq_of_lt (by omega),
+            hN, Nat.mod_self]
+        rw [hN, hB, Nat.mod_eq_of_lt hNltp, Nat.zero_mod, hNhit]
+        exact Set.mem_insert_iff.mpr (Or.inl rfl)
+    · intro hz
+      rw [hface] at hz
+      rcases Set.mem_insert_iff.mp hz with h | h
+      · refine ⟨N, ?_⟩
+        show ((rhoNode1 FF)^[(N % (N + 1) + 0) % p] v,
+            (rhoNode1 FF)^[((N + 1) % (N + 1) + 0) % p] v) = z
+        have hNm : N % (N + 1) < p := by have := hkey N; omega
+        rw [Nat.add_zero, Nat.add_zero, Nat.mod_eq_of_lt hNm, Nat.mod_self,
+          Nat.zero_mod, Nat.mod_eq_of_lt (show N < N + 1 from by omega), hNhit]
+        exact h.symm
+      · obtain ⟨n, hn, hdart⟩ := h
+        refine ⟨n, ?_⟩
+        show ((rhoNode1 FF)^[(n % (N + 1) + 0) % p] v,
+            (rhoNode1 FF)^[((n + 1) % (N + 1) + 0) % p] v) = z
+        rw [Nat.add_zero, Nat.add_zero, e1 n,
+          hsuccmod n (by rw [Nat.mod_eq_of_lt (show n < N + 1 from by omega)]; exact hn),
+          Nat.mod_eq_of_lt (show n % (N + 1) + 1 < p
+            from by have := hkey n; have := hNltp; omega),
+          Nat.mod_eq_of_lt (show n < N + 1 from by omega)]
+        exact hdart.symm
+  refine ⟨p, N + 1, 0, fun i => (rhoNode1 FF)^[i % p] v, hp0, by omega, hklt,
+    hper, hinj, hFr⟩
+
+-- ===== merged block: lane NC2 (续141 M1f 合并, 编排者) =====
+/-! ## NC2 车道 — `¬ Circular V E` 主件装配（ejrcfjd-dw-NC2-circ-w1，2026-10-28）
+
+NC 车道（ejrcfjd-dw-NC-noncol-w1）DELIVERY §2 三行装配文本的落地。NC 车道在
+「大上下文头部一串应用 + contra 应用」合体时 elaborator 稳定 whnf 5M 心跳烧穿
+（头部各 tactic 单独过、contra 单独过、合体烧）；本块按写法纪律装配：
+- 所有 `have` 不带类型注解（`have h := term`），类型随项而得、不让 unifier 反推；
+- 头部打包件（`nc2CircWedgePack_p35`）的 ∃ 结论每个分量完全显式
+  （无 metavariable、楔端点 `ivsRhoNode1 FF v` 逐字入型）；
+- contra 应用逐槽 `refine … ?_`，三枚 `V ⊆ P` 槽独立 `exact` 物化；
+- Set-literal 形（`{0, v, w}` vs `insert 0 {v,w}`）逐字书写对齐，不让
+  unifier 猜。
+
+数学链（Circular 支，全原料闭于 M1d）：`VPLANE_OF_CIRCULAR_p35`（平面化，
+`Circular V E` → 过 0 平面 `P ⊇ V`）→ dart `(v, ρv)`（`lfVertKit_p35`）处
+`hsub` + `WEDGE_IN_FAN_LOFA_DETER2_p35` 给半和点 `y ∈ wedge 0 v (ρv) (ιv)`
+（惯用法同 M1d `diagPlace_p35`），即 `0 < azim 0 v (ρv) y < azim 0 v (ρv) (ιv)`；
+`y ∈ aff{0,v,w} ⊆ P`（`P` 为 kch 平面 = affineSpan 载体）；全体点共面 `P`
+⟹ `ncAzimPlaneDich_p35` 二分 ⟹ `ncDichContra_p35` 严格夹逼矛盾。
+主件 `ncNotCircular_p35` = EJRCFJD 根五前提 + `hEE2` 直出 `¬ Circular V E`，
+N 车道 `hanti`（经 `ncHantiOfNotCircular_p35`）由此解锁。 -/
+
+set_option maxHeartbeats 400000 in
+/-- **Circular 支头部打包**（NC DELIVERY §2 第 1 行的重建件）：根五前提 +
+`hEE2` + `Circular V E` 打包出收口所需全部原料的 ∃ 形——ρ-伙伴 `rv`、
+半和点 `y`、过 0 平面 `P`、以及 dart 非共线与楔内严格夹逼。结论每个分量
+完全显式；各分量在体内先 `have` 钉形再总装。 -/
+theorem nc2CircWedgePack_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF)
+    (hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2) (hcirc : Circular V E)
+    (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E) :
+    ∃ rv y : V3, ∃ P : Set V3, rv ∈ V ∧ ivsRhoNode1 FF v ∈ V ∧
+      v ≠ (0:V3) ∧ w ≠ (0:V3) ∧ (v, rv) ∈ FF ∧ kchPlane_p35 P ∧
+      (0:V3) ∈ P ∧ V ⊆ P ∧ y ∈ P ∧
+      (0:ℝ) < azim (0:V3) v rv y ∧
+      azim (0:V3) v rv y < azim (0:V3) v rv (ivsRhoNode1 FF v) := by
+  obtain ⟨P, hPk, h0P, hVP⟩ := VPLANE_OF_CIRCULAR_p35 hfan hEE2 hcirc
+  have hfanL := hfan.1
+  have h0V : (0:V3) ∉ V := hfan.1.1.2.2.2.1
+  obtain ⟨hdart, -, -, hivV, hEEv, hne⟩ := lfVertKit_p35 hfanL hEE2 hv
+  have hρV := (kchDartInV_p35 hfanL hdart).2
+  have h0v : (0:V3) ≠ v := fun hc => h0V (hc ▸ hv)
+  have h0w : (0:V3) ≠ w := fun hc => h0V (hc ▸ hw)
+  have hv0 := Ne.symm h0v
+  have hw0 := Ne.symm h0w
+  -- 半和点落 `affGt {0} {v, w}`（diagPlace_p35 同法）
+  have hz1 : ((1:ℝ) - 1 / 2 - 1 / 2) = 0 := by norm_num
+  have hmem : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∈ affGt ({0} : Set V3) {v, w} := by
+    refine affGt_two_mem_p35 (v0 := 0) (v1 := v) (v2 := w) (c1 := 1/2) (c2 := 1/2)
+      (by norm_num) (by norm_num) (by norm_num) ?_ h0v h0w hwv
+    rw [hz1, zero_smul, zero_add]
+  have hsub' : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∈ wedgeInFanGt_p3 (v, rhoNode1 FF v) E :=
+    hsub (v, rhoNode1 FF v) hdart hmem
+  -- 楔展开（`wedgeInFanGt_two_p35`，lfVertKit 两元 EE 形直接给）
+  have hwedge : wedgeInFanGt_p3 (v, rhoNode1 FF v) E
+      = Kepler.Geom.wedge (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) :=
+    wedgeInFanGt_two_p35 (d := (v, rhoNode1 FF v)) hEEv hne rfl
+  have hwmem : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∈
+      Kepler.Geom.wedge (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) := by
+    rw [← hwedge]
+    exact hsub'
+  obtain ⟨-, hposm, hltm⟩ := wedgeMem_p35 hwmem
+  -- 半和点落平面 P：aff{0,v,w} ⊆ P（P = 某 affineSpan 载体，含 0、v、w）
+  have hyaff : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∈
+      (affineSpan ℝ ({(0:V3), v, w} : Set V3) : Set V3) :=
+    ncMemSpanPair_p35 (c1 := 1/2) (c2 := 1/2) rfl
+  have hPsub : ({(0:V3), v, w} : Set V3) ⊆ P := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact h0P
+    · exact hVP hv
+    · exact hVP hw
+  have hyP : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∈ P := by
+    obtain ⟨p1, p2, p3, -, hPeq⟩ := hPk
+    have hPs' : ({(0:V3), v, w} : Set V3) ⊆
+        (affineSpan ℝ ({p1, p2, p3} : Set V3) : Set V3) := by
+      rw [← hPeq]
+      exact hPsub
+    have hle := affineSpan_le.mpr hPs'
+    rw [hPeq]
+    exact hle hyaff
+  exact ⟨rhoNode1 FF v, (((1:ℝ)/2)•v + ((1:ℝ)/2)•w), P, hρV, hivV, hv0, hw0,
+    hdart, hPk, h0P, hVP, hyP, hposm, hltm⟩
+
+set_option maxHeartbeats 400000 in
+/-- **Circular 支不相容核**（NC DELIVERY §2 第 2 行）：打包件 obtain 后逐分量
+钉形，contra 应用逐槽 refine——三枚 `V ⊆ P` 槽独立 `exact`，dart 非共线槽
+（`kchDartNonColl_p35` 输出形 `{0, hdart.1, hdart.2}` ↔ `{0, v, rv}`）由
+投影 defeq 平凡闭合，全部为微小单步统一。 -/
+theorem nc2CircSliceFalse_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF)
+    (hEE2 : ∀ x ∈ V, (EE_p3 x E).ncard = 2) (hcirc : Circular V E)
+    (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E) : False := by
+  obtain ⟨rv, y, P, hρV, hivV, hv0, hw0, hdart, hPk, h0P, hVP, hyP, hpos, hlt⟩ :=
+    nc2CircWedgePack_p35 (V := V) (E := E) (FF := FF) (v := v) (w := w)
+      hfan hEE2 hcirc hv hw hwv hsub
+  have hncv := kchDartNonColl_p35 hfan.1 hdart
+  refine ncDichContra_p35 (P := P) (v := v) (rv := rv)
+    (ivv := ivsRhoNode1 FF v) (y := y) hPk h0P ?_ hv0 ?_ hncv ?_ hyP hpos hlt
+  · exact hVP hv
+  · exact hVP hρV
+  · exact hVP hivV
+
+set_option maxHeartbeats 400000 in
+/-- **主件**：EJRCFJD 根五前提 + `hEE2` ⟹ `¬ Circular V E`
+（NC DELIVERY §3 的一行装配；`nc2CircSliceFalse_p35` 编译后即得）。 -/
+theorem ncNotCircular_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V)
+    (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) : ¬ Circular V E :=
+  fun hcirc => nc2CircSliceFalse_p35 (V := V) (E := E) (FF := FF) (v := v) (w := w)
+    hfan hEE2 hcirc hv hw hwv hsub
+
+set_option maxHeartbeats 400000 in
+/-- **共线对出 Lunar**（Lunar 支前沿归约件）：根五前提 + `hEE2` 下，`V` 内
+任意相异共线对 `(a, b)` 必为 `Lunar a b V E`——`CVLF_CIRCULAR_LUNAR_p35`
+二分 + `ncNotCircular_p35` 消去 Circular 支（`Lunar` 定义首合取支即
+`¬Circular V E`，二分是平凡装置）。剩余工作 = `Lunar` 出矛盾
+（HOL `PROVE_THE_SLICE_ASSUMPTION` Lunar 支 ：5747-5966，HKIRPEP 链
+local_lemmas.hl:6027），见 `ncSliceNoncollinear_p35` 门形。 -/
+theorem nc2LunarOfCollinear_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w a b : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V)
+    (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (ha : a ∈ V) (hb : b ∈ V) (hab : a ≠ b)
+    (hcol : Collinear ℝ ({(0:V3), a, b} : Set V3)) : Lunar a b V E := by
+  have hvwAB : ({a, b} : Set V3) ⊆ V := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl
+    · exact ha
+    · exact hb
+  rcases CVLF_CIRCULAR_LUNAR_p35 hfan hvwAB hcol hab with hc | hl
+  · exact absurd hc (ncNotCircular_p35 hfan hv hw hwv hsub hEE2)
+  · exact hl
+
+set_option maxHeartbeats 400000 in
+/-- **切片非共线（Lunar 门形条件主件）**：根五前提 + `hEE2` + Lunar 杀手门
+（`hnl`：`V` 内相异共线对均非 Lunar——即 Lunar 支证假的消费形）⟹ 全非共线
+`∀ z ∈ {v,w}, ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t`。Circular 支经
+`nc2LunarOfCollinear_p35`（= `ncNotCircular_p35` + CVLF）全闭。两门形
+（此处 ¬Lunar 形 / 「共线对必 circular」形）经 `Lunar` 定义首合取支平凡互转。 -/
+theorem ncSliceNoncollinear_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V)
+    (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnl : ∀ a ∈ V, ∀ b ∈ V, a ≠ b →
+      Collinear ℝ ({(0:V3), a, b} : Set V3) → ¬ Lunar a b V E) :
+    ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 (0:V3) z t := by
+  intro z hz t ht htz hcol
+  have hzV : z ∈ V := by
+    rcases Set.mem_insert_iff.mp hz with h1 | h1
+    · rw [h1]; exact hv
+    · rw [h1]; exact hw
+  exact absurd (nc2LunarOfCollinear_p35 (V := V) (E := E) (FF := FF) (a := z) (b := t)
+      hfan hv hw hwv hsub hEE2 hzV ht (Ne.symm htz) hcol)
+    (hnl z hzV t ht (Ne.symm htz) hcol)
+
+-- ===== merged block: lane NL (续142 M1g 合并, 编排者) =====
+-- ===== lane NL (ejrcfjd-dw-NL-lunar-w1, Lunar 支) =====
+/-! ## Lunar 支：`z ∈ {v, w}` 处共线顶点不可 Lunar（HOL `PROVE_THE_SLICE_ASSUMPTION`
+Lunar 分支 local_lemmas1.hl:5747-5966 的移植）
+
+HOL Lunar 分支消费链（行号链）：
+1. `HKIRPEP`（local_lemmas.hl:6027）@local_lemmas1.hl:5747：`convex_local_fan +
+   lunar (v,w) V E` 出**轨道两半**（`?i. i < CARD V ∧ i ≠ 0 ∧ i ≠ 1 ∧
+   w = ITER i ρ v ∧ {ITER l ρ v | 0 < l < i} = aff_gt {0,v} {ρv} ∩ V`，对称
+   j-半经 `LUNAR_COMM` 换序）+ 内角平角/正性四支；
+2. `CARD_V_TWO_HAFL_CIRCLE`（local_lemmas1.hl:4671）@:5752：`i + j = CARD V`；
+3. `POINT_PRESENTED_IN_RHOND1`（local_lemmas1.hl:3877）@:5759：切片伙伴
+   `w = ITER n ρ v`（n < CARD V 且最小）；
+4. 案分 `n = 0 / n < i / n = i / n > i`（:5763/:5765/:5857/:5906），各支以
+   `hsub`（半和点 `y` 落 dart `(v, ρv)` 处楔）+ 楔内严格夹逼 vs 雉内方位角
+   推矛盾（:5801-5805/:5929-5944/:5961-5966）。
+
+**已闭于本块**（LA35 面，零 sorry）：
+- 第 2、3 步为纯轨道计数，经 `kchOrbitMapV_p35` + `kchOrbitCycle_p35`
+  （LA35Pre 在面）直出：`nlPointPresented_p35`、`nlCardTwoHalfCircle_p35`
+  （不消费 `i < CARD V` 前件——轨道周期计数路线更省）；
+- 第 4 步全部分支矛盾闭于本块：`LOCAL_FAN_CHARACTER_OF_RHO_NODE2`（ll:4719）
+  ↦ `kchCharLite_p35`（LA35Pre 在面，两合取面）、`LOCAL_FAN_RHO_NODE_PROS2`
+  ↦ `lfVertKit_p35`、`WEDGE_IN_FAN_LOFA_DETER2` ↦ `wedgeInFanGt_two_p35`、
+  `Planarity.exists_in_aff_gt_disjoint`+`AFF_GT_SUB_AFF_UNION` 消费 ↦
+  `affGt_two_mem_p35` 半和点、`LOFA_IMP_V_DIFF` ↦ `0 ∉ V` 面事实；
+  HOL 的 aff_gt 单调/换生成元三件（`COLL_IN_AFF_GT_AFF_GT_EQ` ll:5488、
+  `AFF_GT_MONO_TRANS` ll:4343、`COLL_IN_AFF_GT_TOO` ll:5427）在 Lean 侧由
+  `nlMemAffGtPair1_p35` 逐系数显式算术替代（面 `Affsign` 无锚点符号约束，
+  雉成员即显式系数分解，配合 `module` 线性组合）；方位角换生成元
+  （`AZIM_EQ_0_ALT`/`AZIM_EQ_ALT` 消费形）↦ `nlAzimRay_p35`：`y = c•b + d•v`
+  （`0 < c`）时 `azim 0 v a y = azim 0 v a b`——经 `azimSpec_exists` +
+  `azim_eq_of_spec`（Kepler.Geom 在面）把 b 的 AzimSpec 表示线性搬运到 y，
+  免标架坐标比对。
+
+**精确前沿 = `hHK` 界面**（本块唯一未闭输入，即 HKIRPEP 结论的轨道-雉两半；
+内角平角四支 `LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI`(ll:4222)/
+`LUNAR_IMP_INTERIOR_ANGLE_EQQ`(ll:5915)/`AFF_IVS_RHO_NODE_EQQ`(ll:5578)/
+`CONVEX_LOFA_IMP_INANGLE_LE_PI`(ll:5818)/`INTERIOR_ANGLE1_POS`(ll:3989)
+与集合等式反向（`AFF_GT_SAME_WITH_ENDS` 链）**均不被四分支消费**，未入界面）：
+HKIRPEP 依赖 `HALP_CIRCLE_IS_INTERSECTION`（ll:5653）←
+`LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100`（ll:5534）←
+`LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT`（ll:4726，体约 810 行）←
+`LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI` + `HALF_CIRCULAR_IN_PLANE`（ll:4431），
+属独立 HKIRPEP 波（约 1500+ 行 HOL），本车道预算内不渲染。
+`Lunar` 的首合取支 `¬ Circular V E` 由 `ncNotCircular_p35`（M1f 已闭）
+单独给出；本块四分支不消费它（HOL 同构：Lunar 支矛盾纯由轨道-楔几何出）。
+
+z = w 支经根前提换序（HOL :5654-5660 `INSERT_COMM` 对称支）：`hsub`/`hcol`
+的集合字面量经 `Set.insert_comm` 换序后套 z = v 支件。 -/
+
+/-- 三点共线集合换序（HOL `INSERT_COMM` 面的集合翻转小件）。 -/
+private theorem nlCollSwap_p35 {a b c : V3} :
+    Collinear ℝ ({a, b, c} : Set V3) ↔ Collinear ℝ ({a, c, b} : Set V3) :=
+  ⟨fun h => h.subset (by intro x hx; simp at hx ⊢; tauto),
+   fun h => h.subset (by intro x hx; simp at hx ⊢; tauto)⟩
+
+/-- 单生成元二元锚锥成员的系数刻画（HOL `AFF_GT_MONO`/`COLL_IN_AFF_GT_*`
+消费面的替代：面 `Affsign` 只约束目标点严格正，锚点系数自由）。 -/
+private theorem nlMemAffGtPair1_p35 {v0 v1 x z : V3} (hv01 : v0 ≠ v1)
+    (hx0 : x ≠ v0) (hx1 : x ≠ v1) :
+    z ∈ affGt ({v0, v1} : Set V3) ({x} : Set V3) ↔
+      ∃ β δ : ℝ, 0 < β ∧ z - v0 = β • (x - v0) + δ • (v1 - v0) := by
+  have hfin : (({v0, v1} : Set V3) ∪ {x}).Finite :=
+    (Set.Finite.insert v0 (Set.finite_singleton v1)).union (Set.finite_singleton x)
+  have h3 : hfin.toFinset = ({v0, v1, x} : Finset V3) := by
+    ext u
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  have hsum : ∀ f : V3 → ℝ, ∑ u ∈ hfin.toFinset, f u = f v0 + f v1 + f x := by
+    intro f
+    rw [h3, Finset.sum_insert (show v0 ∉ ({v1, x} : Finset V3) from by simp [hv01, Ne.symm hx0]),
+      Finset.sum_insert (show v1 ∉ ({x} : Finset V3) from by simp [Ne.symm hx1]),
+      Finset.sum_singleton]
+    ring
+  have hsumv : ∀ f : V3 → ℝ, ∑ u ∈ hfin.toFinset, f u • u
+      = f v0 • v0 + f v1 • v1 + f x • x := by
+    intro f
+    rw [h3, Finset.sum_insert (show v0 ∉ ({v1, x} : Finset V3) from by simp [hv01, Ne.symm hx0]),
+      Finset.sum_insert (show v1 ∉ ({x} : Finset V3) from by simp [Ne.symm hx1]),
+      Finset.sum_singleton]
+    abel
+  unfold affGt Affsign
+  constructor
+  · rintro ⟨f, hf, hz, hpos, hone⟩
+    rw [hsumv f] at hz
+    rw [hsum f] at hone
+    have hβ := hpos x (by simp)
+    refine ⟨f x, f v1, hβ, ?_⟩
+    have hf0 : f v0 = 1 - f v1 - f x := by linarith
+    rw [hz, hf0]
+    module
+  · rintro ⟨β, δ, hβ, hz⟩
+    refine ⟨fun u => if u = x then β else if u = v1 then δ else 1 - β - δ, hfin, ?_, ?_, ?_⟩
+    · rw [hsumv _,
+        show z = (z - v0) + v0 from (sub_add_cancel z v0).symm, hz]
+      have e0 : ((if v0 = x then β else if v0 = v1 then δ else 1 - β - δ : ℝ)) = 1 - β - δ := by
+        simp [hv01, Ne.symm hx0]
+      have e1 : ((if v1 = x then β else if v1 = v1 then δ else 1 - β - δ : ℝ)) = δ := by
+        simp [Ne.symm hx1]
+      have ex : ((if x = x then β else if x = v1 then δ else 1 - β - δ : ℝ)) = β := by
+        simp
+      rw [e0, e1, ex]
+      module
+    · intro u hu
+      have hu' : u = x := Set.mem_singleton_iff.mp hu
+      subst hu'
+      simpa using hβ
+    · rw [hsum _]
+      simp [hv01, hx0, hx1, Ne.symm hx0, Ne.symm hx1]
+
+/-- 方位角生成元线性搬运（HOL `AZIM_EQ_0_ALT`/`AZIM_EQ_ALT` 的消费形）：
+`y = c•b + d•v` 且 `0 < c` 时，绕轴 `(0, v)` 由生成元 `b` 换成 `y` 方位角不变。
+证明 = `azimSpec_exists` + `azim_eq_of_spec`：把 b 的 AzimSpec 帧表示
+`b - 0 = r2(cos(ψ+θ)e1 + sin(ψ+θ)e2) + h2•(v-0)` 线性搬到
+`y - 0 = c•(b-0) + d•(v-0)`（r2、h2 槽分别换 `c*r2`、`c*h2 + d`），角度槽不变。 -/
+private theorem nlAzimRay_p35 {v a b y : V3} (hv0 : v ≠ (0:V3))
+    (ha : ¬ Collinear3 (0:V3) v a) (hb : ¬ Collinear3 (0:V3) v b)
+    {c d : ℝ} (hc : 0 < c) (hy : y = c • b + d • v) :
+    azim (0:V3) v a y = azim (0:V3) v a b := by
+  have hstep : ((y - (0:V3) : V3)) = c • ((b - (0:V3) : V3)) + d • ((v - (0:V3) : V3)) := by
+    rw [hy]
+    simp only [sub_zero]
+  obtain ⟨θ, hspec⟩ := azimSpec_exists (v := (0:V3)) (w := v) ha hb
+  have hbθ : azim (0:V3) v a b = θ := azim_eq_of_spec ha hb hspec
+  obtain ⟨hb0, hb1, h1, h2, hframes⟩ := hspec
+  have hncy : ¬ Collinear3 (0:V3) v y := by
+    intro hcon
+    obtain ⟨e, he⟩ := (collinear3_iff_smul hv0).mp hcon
+    have hdc : c ≠ 0 := ne_of_gt hc
+    rw [he] at hstep
+    have h5 : c • ((b - (0:V3) : V3)) = (e - d) • ((v - (0:V3) : V3)) := by
+      have h6 : (e - d) • ((v - (0:V3) : V3))
+          = e • ((v - (0:V3) : V3)) - d • ((v - (0:V3) : V3)) := sub_smul e d _
+      rw [h6, hstep]
+      module
+    have h8 : ((b - (0:V3) : V3)) = ((e - d) / c) • ((v - (0:V3) : V3)) := by
+      refine (smul_right_injective (M := V3) hdc ?_).symm
+      show c • (((e - d) / c) • ((v - (0:V3) : V3))) = c • ((b - (0:V3) : V3))
+      rw [smul_smul]
+      have h7 : c * ((e - d) / c) = e - d := by
+        field_simp
+      rw [h7]
+      exact h5.symm
+    refine hb ((collinear3_iff_smul hv0).mpr ⟨((e - d) / c), h8⟩)
+  have hyθ : AzimSpec (0:V3) v a y θ :=
+    ⟨hb0, hb1, h1, c * h2 + d, fun e1 e2 e3 heON haxis hwne =>
+      let ⟨ψ, r1, r2, hrep1, hrep2, hr1, hr2⟩ :=
+        hframes e1 e2 e3 heON haxis hwne
+      ⟨ψ, r1, c * r2, hrep1, by
+        rw [hstep, hrep2]
+        module, hr1, by positivity⟩⟩
+  exact azim_eq_of_spec ha hncy hyθ |>.trans hbθ.symm
+
+/-- 切片顶点的 ρ-表示（HOL `POINT_PRESENTED_IN_RHOND1`，local_lemmas1.hl:3877；
+`kchOrbitMapV_p35` + `kchOrbitCycle_p35` 直出：最小 n 经周期前 p 项两两相异
+即得）。 -/
+theorem nlPointPresented_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v w : V3} (hv : v ∈ V) (hw : w ∈ V) :
+    ∃ n : ℕ, n < V.ncard ∧ (rhoNode1 FF)^[n] v = w ∧
+      ∀ m : ℕ, m < n → (rhoNode1 FF)^[m] v ≠ w := by
+  have horb := kchOrbitMapV_p35 hfanL hEE2
+  obtain ⟨p, hp0, hpx, hdis, hset, hcard⟩ := kchOrbitCycle_p35 horb hv
+  have hw' : w ∈ ({(rhoNode1 FF)^[k] v | k < p} : Set V3) := by
+    rw [hset]
+    exact hw
+  obtain ⟨n, hn, hnw⟩ := hw'
+  refine ⟨n, ?_, hnw, ?_⟩
+  · rw [hcard]
+    exact hn
+  · intro m hm hcon
+    exact hdis m n hm hn (hcon.trans hnw.symm)
+
+/-- 半圈两极轨道步数互补（HOL `CARD_V_TWO_HAFL_CIRCLE`，local_lemmas1.hl:4671；
+HOL 消费点 :5752。前件 `v ≠ w` 与 `i, j < CARD V` 逐字保留（HOL 同形）：轨道
+周期计数路线——`ρ^[i+j] v = v` 与最小周期 p = `V.ncard` 案分比较——小于 p 违
+两两相异、大于 p 经 `kchOrbitKey_p35`（`i + j < 2p` 由 i, j < p 出）亦违两两
+相异、为零经 `v ≠ w` 出，故 `i + j = p`。 -/
+theorem nlCardTwoHalfCircle_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {v w : V3} (hv : v ∈ V) (hwv : v ≠ w)
+    {i j : ℕ} (hi : i < V.ncard) (hj : j < V.ncard)
+    (hit : (rhoNode1 FF)^[i] v = w) (hjt : (rhoNode1 FF)^[j] w = v) :
+    i + j = V.ncard := by
+  have horb := kchOrbitMapV_p35 hfanL hEE2
+  obtain ⟨p, hp0, hpx, hdis, -, hcard⟩ := kchOrbitCycle_p35 horb hv
+  have hilt : i < p := by rw [← hcard]; exact hi
+  have hjlt : j < p := by rw [← hcard]; exact hj
+  have hcycle : (rhoNode1 FF)^[i + j] v = v := by
+    rw [Nat.add_comm, Function.iterate_add_apply, hit]
+    exact hjt
+  rcases Nat.eq_zero_or_pos (i + j) with hk0 | hkpos
+  · have hi0 : i = 0 := by omega
+    rw [hi0, Function.iterate_zero_apply] at hit
+    exact absurd hit hwv
+  rcases Nat.lt_trichotomy (i + j) p with hlt | heq | hgt
+  · have hcon := hdis 0 (i + j) hkpos hlt
+    rw [Function.iterate_zero_apply] at hcon
+    exact absurd hcycle.symm hcon
+  · rw [heq]
+    exact hcard.symm
+  · have hkey := kchOrbitKey_p35 horb hv (Nat.le_of_lt hgt)
+      (by rw [hpx]; exact hcycle.symm)
+    have hcon := hdis 0 ((i + j) - p) (by omega) (by omega)
+    rw [Function.iterate_zero_apply] at hcon
+    exact absurd hkey.symm hcon
+
+set_option maxHeartbeats 400000 in
+/-- **楔内半和点三元组**（NC2 已验证链独立成件：`affGt` 半和点 + dart `(v, ρv)`
+处 `hsub` + `wedgeInFanGt_two_p35` 楔展开 + `wedgeMem_p35` 夹逼；HOL
+Planarity.exists_in_aff_gt_disjoint + AFF_GT_SUB_AFF_UNION + WEDGE_IN_FAN_LOFA_DETER2
+消费链的合并面）。 -/
+private theorem nlHalfsumWedge_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w) (hv0 : v ≠ (0:V3)) (hw0 : w ≠ (0:V3))
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E) :
+    ¬ Collinear3 (0:V3) v (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∧
+      0 < azim (0:V3) v (rhoNode1 FF v) (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∧
+      azim (0:V3) v (rhoNode1 FF v) (((1:ℝ)/2)•v + ((1:ℝ)/2)•w)
+        < azim (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) := by
+  obtain ⟨hdart, -, -, -, hEEv, hneiv⟩ := lfVertKit_p35 hfanL hEE2 hv
+  have hwedge : wedgeInFanGt_p3 (v, rhoNode1 FF v) E
+      = Kepler.Geom.wedge (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) :=
+    wedgeInFanGt_two_p35 (d := (v, rhoNode1 FF v)) hEEv hneiv rfl
+  have hz1 : ((1:ℝ) - 1/2 - 1/2) = 0 := by norm_num
+  have hycone : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∈ affGt ({0} : Set V3) {v, w} := by
+    refine affGt_two_mem_p35 (v0 := 0) (v1 := v) (v2 := w) (c1 := (1:ℝ)/2) (c2 := (1:ℝ)/2)
+      (by norm_num) (by norm_num) (by norm_num) (by rw [hz1, zero_smul, zero_add])
+      (Ne.symm hv0) (Ne.symm hw0) hwv
+  have hy1 : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∈ wedgeInFanGt_p3 (v, rhoNode1 FF v) E :=
+    hsub (v, rhoNode1 FF v) hdart hycone
+  have hywedge : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w)
+      ∈ Kepler.Geom.wedge (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) := by
+    rw [← hwedge]
+    exact hy1
+  exact wedgeMem_p35 hywedge
+
+set_option maxHeartbeats 400000 in
+/-- 两锥支（n < i / n > i）共用收口：`w` 落生成元 `g`（ρv 或 ιv）的开口锥
+（系数 β > 0）⟹ 半和点同锥 ⟹ `nlAzimRay_p35` 生成元换算：
+n < i 支 `azim 0 v (ρv) y = azim 0 v (ρv) (ρv) = 0` vs 楔内 `0 <`；
+n > i 支 `azim 0 v (ρv) y = azim 0 v (ρv) (ιv)` vs 楔内严格小于。 -/
+private theorem nlBranchCone_p35 {v w g : V3} {β δ : ℝ}
+    (hβ : 0 < β) (hv0 : v ≠ (0:V3)) (hg0 : g ≠ (0:V3))
+    (hncρ : ¬ Collinear3 (0:V3) v (rhoNode1 FF v))
+    (hncg : ¬ Collinear3 (0:V3) v g)
+    (hwcoef : w - (0:V3) = β • (g - (0:V3)) + δ • (v - (0:V3)))
+    (hypos : 0 < azim (0:V3) v (rhoNode1 FF v) (((1:ℝ)/2)•v + ((1:ℝ)/2)•w))
+    (hylt : azim (0:V3) v (rhoNode1 FF v) (((1:ℝ)/2)•v + ((1:ℝ)/2)•w)
+        < azim (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v))
+    (hgx : g = rhoNode1 FF v ∨ g = ivsRhoNode1 FF v) : False := by
+  have hw' : w = β • g + δ • v := by
+    simp only [sub_zero] at hwcoef
+    exact hwcoef
+  have hyray : (((1:ℝ)/2)•v + ((1:ℝ)/2)•w)
+      = ((β / 2) • g + ((1:ℝ)/2 + δ / 2) • v) := by
+    rw [hw']; module
+  have hyaz := nlAzimRay_p35 (v := v) (a := rhoNode1 FF v) (b := g)
+    hv0 hncρ hncg (c := β / 2) (by linarith) hyray
+  rcases hgx with h | h
+  · -- g = ρv：方位角 = azim_self = 0，vs 楔内 0 <
+    have hz : azim (0:V3) v (rhoNode1 FF v) (((1:ℝ)/2)•v + ((1:ℝ)/2)•w)
+        = azim (0:V3) v (rhoNode1 FF v) (rhoNode1 FF v) :=
+      hyaz.trans (congrArg (fun x => azim (0:V3) v (rhoNode1 FF v) x) h)
+    rw [azim_self] at hz
+    linarith
+  · -- g = ιv：方位角 = 终点角，vs 楔内严格小于
+    have hz : azim (0:V3) v (rhoNode1 FF v) (((1:ℝ)/2)•v + ((1:ℝ)/2)•w)
+        = azim (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) :=
+      hyaz.trans (congrArg (fun x => azim (0:V3) v (rhoNode1 FF v) x) h)
+    linarith
+
+set_option maxHeartbeats 400000 in
+/-- **Lunar 支头部原料 · ρ 侧**：kchCharLite 于 `v` 出 `ρv ≠ v` 与轴点非共线，
+`0 ∉ V` 出 `ρv ≠ 0`。 -/
+private theorem nlLunarKitA1_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v : V3} (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv : v ∈ V) (h0V : (0:V3) ∉ V) :
+    (rhoNode1 FF v ≠ v) ∧
+    (rhoNode1 FF v ≠ (0:V3)) ∧
+    ¬ Collinear3 (0:V3) v (rhoNode1 FF v) := by
+  obtain ⟨hdart, -, -, -, -, -⟩ := lfVertKit_p35 hfanL hEE2 hv
+  have hρV : rhoNode1 FF v ∈ V := (kchDartInV_p35 hfanL hdart).2
+  have hρ0 : rhoNode1 FF v ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hρV)
+  obtain ⟨hrvne, hncrho⟩ := kchCharLite_p35 hfanL hEE2 hv
+  exact ⟨hrvne, hρ0, hncrho⟩
+
+set_option maxHeartbeats 400000 in
+/-- **Lunar 支头部原料 · ιv 非退化**：`0 ∉ V` 出 `ιv ≠ 0`，`ρ(ιv) = v` +
+kchCharLite 于 `ιv` 出 `ιv ≠ v`。 -/
+private theorem nlLunarKitA2_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v : V3} (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv : v ∈ V) (h0V : (0:V3) ∉ V) :
+    (ivsRhoNode1 FF v ≠ (0:V3)) ∧
+    (ivsRhoNode1 FF v ≠ v) := by
+  obtain ⟨-, -, hrhoiv, hivV, -, -⟩ := lfVertKit_p35 hfanL hEE2 hv
+  have hiv0 : ivsRhoNode1 FF v ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hivV)
+  obtain ⟨hrivne, -⟩ := kchCharLite_p35 hfanL hEE2 hivV
+  have hivv : ivsRhoNode1 FF v ≠ v := fun he => hrivne (hrhoiv.trans he.symm)
+  exact ⟨hiv0, hivv⟩
+
+set_option maxHeartbeats 400000 in
+/-- **Lunar 支头部原料 · ιv 轴点非共线**：dart `(ιv, v)` 的
+`kchDartNonColl_p35` + 三点集合换序（inline subset，不走 nlCollSwap）。 -/
+private theorem nlLunarKitA3_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v : V3} (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv : v ∈ V) :
+    ¬ Collinear3 (0:V3) v (ivsRhoNode1 FF v) := by
+  obtain ⟨-, hivdart, -, -, -, -⟩ := lfVertKit_p35 hfanL hEE2 hv
+  have h := kchDartNonColl_p35 hfanL hivdart
+  refine fun hc => h (hc.subset ?_)
+  intro x hx
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+  tauto
+
+set_option maxHeartbeats 400000 in
+/-- **Lunar 支轨道-楔原料**（NC2 pack 同法）：楔内半和点三元组 + 轨道计数
+（`n` 最小表示 + `i + j = CARD V` + 两锥成员函数），结论逐分量显式。 -/
+private theorem nlLunarKitB_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w t : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hzt : t ≠ v)
+    (hHK : ∃ i j : ℕ,
+      2 ≤ i ∧ i < V.ncard ∧ (rhoNode1 FF)^[i] v = t ∧
+      (∀ l : ℕ, 0 < l → l < i →
+        (rhoNode1 FF)^[l] v ∈ affGt ({(0:V3), v} : Set V3) {rhoNode1 FF v}) ∧
+      2 ≤ j ∧ j < V.ncard ∧ (rhoNode1 FF)^[j] t = v ∧
+      (∀ l : ℕ, 0 < l → l < j →
+        (rhoNode1 FF)^[l] t ∈ affGt ({(0:V3), v} : Set V3) {ivsRhoNode1 FF v})) :
+    ¬ Collinear3 (0:V3) v (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∧
+    0 < azim (0:V3) v (rhoNode1 FF v) (((1:ℝ)/2)•v + ((1:ℝ)/2)•w) ∧
+    azim (0:V3) v (rhoNode1 FF v) (((1:ℝ)/2)•v + ((1:ℝ)/2)•w)
+      < azim (0:V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v) ∧
+    ∃ n i j : ℕ,
+      n < V.ncard ∧ (rhoNode1 FF)^[n] v = w ∧
+      i + j = V.ncard ∧
+      (rhoNode1 FF)^[i] v = t ∧
+      (∀ l : ℕ, 0 < l → l < i →
+        (rhoNode1 FF)^[l] v ∈ affGt ({(0:V3), v} : Set V3) {rhoNode1 FF v}) ∧
+      (rhoNode1 FF)^[j] t = v ∧
+      (∀ l : ℕ, 0 < l → l < j →
+        (rhoNode1 FF)^[l] t ∈ affGt ({(0:V3), v} : Set V3) {ivsRhoNode1 FF v}) := by
+  have hfanL := hfan.1
+  have h0V : (0:V3) ∉ V := hfan.1.1.2.2.2.1
+  have hv0 : v ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hv)
+  have hw0 : w ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hw)
+  obtain ⟨hycol, hypos, hylt⟩ := nlHalfsumWedge_p35 hfanL hEE2 hv hw hwv hv0 hw0 hsub
+  obtain ⟨n, hncard, hnW, -⟩ := nlPointPresented_p35 hfanL hEE2 hv hw
+  obtain ⟨i, j, -, hilt, hit, hicn, -, hjlt, hjt, hjcn⟩ := hHK
+  have hcard := nlCardTwoHalfCircle_p35 hfanL hEE2 hv hzt.symm hilt hjlt hit hjt
+  exact ⟨hycol, hypos, hylt, n, i, j, hncard, hnW, hcard, hit, hicn, hjt, hjcn⟩
+
+set_option maxHeartbeats 400000 in
+/-- **Lunar 支四分支矛盾核（z = v 单侧）**：打包件 obtain 后案分 `n = 0 / n < i /
+n = i / n > i` 与 HOL :5763/:5765/:5857/:5906 同位：
+- n = 0：`w = v` 违 `v ≠ w`；
+- n < i：`w = ρ^[n] v`（`0 < n < i`）落 ρv-锥 ⟹ `nlBranchCone_p35`（g = ρv 支）；
+- n = i：`t = w` ⟹ 共线前提换 `w` ⟹ 半和点在轴线（0,v）上 ⟹ 楔内 `¬Collinear3` 违之；
+- n > i：`w = ρ^[n-i] t`（`0 < n-i < j`，经 `i + j = CARD V`）落 ιv-锥
+  ⟹ `nlBranchCone_p35`（g = ιv 支）。 -/
+private theorem nlLunarKillOne_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w t : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hzt : t ≠ v)
+    (hcol : Collinear ℝ ({(0:V3), v, t} : Set V3))
+    (hHK : ∃ i j : ℕ,
+      2 ≤ i ∧ i < V.ncard ∧ (rhoNode1 FF)^[i] v = t ∧
+      (∀ l : ℕ, 0 < l → l < i →
+        (rhoNode1 FF)^[l] v ∈ affGt ({(0:V3), v} : Set V3) {rhoNode1 FF v}) ∧
+      2 ≤ j ∧ j < V.ncard ∧ (rhoNode1 FF)^[j] t = v ∧
+      (∀ l : ℕ, 0 < l → l < j →
+        (rhoNode1 FF)^[l] t ∈ affGt ({(0:V3), v} : Set V3) {ivsRhoNode1 FF v})) :
+    False := by
+  have h0V : (0:V3) ∉ V := hfan.1.1.2.2.2.1
+  obtain ⟨hrvne, hρ0, hncrho3⟩ := nlLunarKitA1_p35 hfan.1 hEE2 hv h0V
+  obtain ⟨hiv0, hivv⟩ := nlLunarKitA2_p35 hfan.1 hEE2 hv h0V
+  have hnciv3 := nlLunarKitA3_p35 hfan.1 hEE2 hv
+  obtain ⟨hycol, hypos, hylt,
+      ⟨n, i, j, hncard, hnW, hcard, hit, hicn, hjt, hjcn⟩⟩ :=
+    nlLunarKitB_p35 hfan hv hw hwv hsub hEE2 hzt hHK
+  have hv0 : v ≠ (0:V3) := fun he => h0V (he ▸ hv)
+  rcases Nat.lt_trichotomy n i with hni | hni | hni
+  · -- n < i（含 n = 0 支）
+    rcases n with _ | m
+    · have hvw0 : v = w := by rw [← hnW]; simp
+      exact hwv hvw0
+    · have hwmem : w ∈ affGt ({(0:V3), v} : Set V3) {rhoNode1 FF v} := by
+        rw [← hnW]
+        exact hicn (m + 1) (by omega) hni
+      obtain ⟨β, δ, hβ, hwcoef⟩ :=
+        (nlMemAffGtPair1_p35 (v0 := (0:V3)) (v1 := v) (x := rhoNode1 FF v)
+          (Ne.symm hv0) hρ0 hrvne).mp hwmem
+      exact nlBranchCone_p35 hβ hv0 hρ0 hncrho3 hncrho3 hwcoef hypos hylt
+        (Or.inl rfl)
+  · -- n = i：t = w，共线前提落到 w
+    have htiw : (rhoNode1 FF)^[i] v = w := by
+      rw [← hni]
+      exact hnW
+    have htw : t = w := hit.symm.trans htiw
+    have hcw : Collinear ℝ ({(0:V3), v, w} : Set V3) := by
+      rw [← htw]
+      exact hcol
+    obtain ⟨c, hcwv⟩ := (collinear3_iff_smul hv0).mp hcw
+    have hw' : w = c • v := by
+      simp only [sub_zero] at hcwv
+      exact hcwv
+    have hyy : ((((1:ℝ)/2)•v + ((1:ℝ)/2)•w : V3) - (0:V3))
+        = (((1:ℝ) + c) / 2) • (v - (0:V3)) := by
+      rw [hw']
+      simp only [sub_zero]
+      module
+    exact hycol ((collinear3_iff_smul hv0).mpr ⟨((1:ℝ) + c) / 2, hyy⟩)
+  · -- n > i：w = ρ^[n-i] t 落 ιv-锥
+    have hwit : (rhoNode1 FF)^[n - i] t = w := by
+      have h1 : (rhoNode1 FF)^[n - i] t = (rhoNode1 FF)^[n - i] ((rhoNode1 FF)^[i] v) := by
+        rw [hit]
+      rw [h1, ← Function.iterate_add_apply, ← hnW]
+      have hexp : n - i + i = n := by omega
+      rw [hexp]
+    have hwmem : w ∈ affGt ({(0:V3), v} : Set V3) {ivsRhoNode1 FF v} := by
+      rw [← hwit]
+      exact hjcn (n - i) (by omega) (by omega)
+    obtain ⟨β, δ, hβ, hwcoef⟩ :=
+      (nlMemAffGtPair1_p35 (v0 := (0:V3)) (v1 := v) (x := ivsRhoNode1 FF v)
+        (Ne.symm hv0) hiv0 hivv).mp hwmem
+    exact nlBranchCone_p35 hβ hv0 hiv0 hncrho3 hnciv3 hwcoef hypos hylt
+      (Or.inr rfl)
+
+set_option maxHeartbeats 400000 in
+/-- **Lunar 杀手（弱门，HOL 原形）**：根五前提 + `hEE2` + `hHK` 界面（HKIRPEP
+轨道-雉两半，唯一前沿输入，见块头注）⟹ `∀ z ∈ {v,w}, ∀ t ∈ V, t ≠ z →
+Collinear ℝ {0,z,t} → ¬ Lunar z t V E`。z = w 支经根前提换序（HOL :5654-5660
+`INSERT_COMM` 对称支）。 -/
+theorem nlLunarKillAt_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hHK : ∀ a b : V3, a ∈ V → b ∈ V → a ≠ b →
+      Collinear ℝ ({(0:V3), a, b} : Set V3) → Lunar a b V E →
+      ∃ i j : ℕ,
+        2 ≤ i ∧ i < V.ncard ∧ (rhoNode1 FF)^[i] a = b ∧
+        (∀ l : ℕ, 0 < l → l < i →
+          (rhoNode1 FF)^[l] a ∈ affGt ({(0:V3), a} : Set V3) {rhoNode1 FF a}) ∧
+        2 ≤ j ∧ j < V.ncard ∧ (rhoNode1 FF)^[j] b = a ∧
+        (∀ l : ℕ, 0 < l → l < j →
+          (rhoNode1 FF)^[l] b ∈ affGt ({(0:V3), a} : Set V3) {ivsRhoNode1 FF a})) :
+    ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z →
+      Collinear ℝ ({(0:V3), z, t} : Set V3) → ¬ Lunar z t V E := by
+  intro z hz t ht htz hcol hLunar
+  rcases Set.mem_insert_iff.mp hz with hz1 | hz1
+  · have hz2 : v = z := hz1.symm
+    subst hz2
+    exact nlLunarKillOne_p35 (V := V) (E := E) (FF := FF) (v := v) (w := w) (t := t)
+      hfan hv hw hwv hsub hEE2 htz hcol (hHK v t hv ht htz.symm hcol hLunar)
+  · rw [Set.mem_singleton_iff] at hz1
+    have hz2 : w = z := hz1.symm
+    subst hz2
+    have hseteq : ({w, v} : Set V3) = {v, w} := by
+      ext u
+      simp
+      tauto
+    have hsub' : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+      intro x hx s hs
+      rw [hseteq] at hs
+      exact hsub x hx hs
+    exact nlLunarKillOne_p35 (V := V) (E := E) (FF := FF) (v := w) (w := v) (t := t)
+      hfan hw hv hwv.symm hsub' hEE2 htz hcol (hHK w t hw ht htz.symm hcol hLunar)
+
+set_option maxHeartbeats 400000 in
+/-- **切片非共线（Lunar 门形主件，无门）**：根五前提 + `hEE2` + `hHK` 界面 ⟹
+`∀ z ∈ {v,w}, ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t`。照 `ncSliceNoncollinear_p35`
+证明体：`nc2LunarOfCollinear_p35` 出 `Lunar z t` 与本车道弱门 `nlLunarKillAt_p35`
+的实例化对撞（hnl 门在此被弱门 + `hHK` 替代，HOL :5747-5966 全链除 HKIRPEP
+界面外已闭）。 -/
+theorem nlSliceNoncollinear_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hHK : ∀ a b : V3, a ∈ V → b ∈ V → a ≠ b →
+      Collinear ℝ ({(0:V3), a, b} : Set V3) → Lunar a b V E →
+      ∃ i j : ℕ,
+        2 ≤ i ∧ i < V.ncard ∧ (rhoNode1 FF)^[i] a = b ∧
+        (∀ l : ℕ, 0 < l → l < i →
+          (rhoNode1 FF)^[l] a ∈ affGt ({(0:V3), a} : Set V3) {rhoNode1 FF a}) ∧
+        2 ≤ j ∧ j < V.ncard ∧ (rhoNode1 FF)^[j] b = a ∧
+        (∀ l : ℕ, 0 < l → l < j →
+          (rhoNode1 FF)^[l] b ∈ affGt ({(0:V3), a} : Set V3) {ivsRhoNode1 FF a})) :
+    ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 (0:V3) z t := by
+  intro z hz t ht htz hcol
+  have hzV : z ∈ V := by
+    rcases Set.mem_insert_iff.mp hz with h1 | h1
+    · rw [h1]; exact hv
+    · rw [h1]; exact hw
+  exact absurd (nc2LunarOfCollinear_p35 (V := V) (E := E) (FF := FF) (a := z) (b := t)
+      hfan hv hw hwv hsub hEE2 hzV ht (Ne.symm htz) hcol)
+    (nlLunarKillAt_p35 (V := V) (E := E) (FF := FF) (v := v) (w := w)
+      hfan hv hw hwv hsub hEE2 hHK z hz t ht htz hcol)
+
+-- ===== merged block: lane W (续143 M1h 合并, 编排者) =====
+-- ===== lane W (ejrcfjd-dw-W-window-w1, 2026-10-28)：W4 装配窗口槽（W4AsmWindowSlot_p35）供出 =====
+
+/-! ## dw-W-window-w1（EJRCFJD 深水攻坚，车道 W）：W4 装配的四个窗口槽
+供出。纯追加块，不改既有行。
+
+交付顺序 W1 → W2 → W3 → W4：
+- **W1 原扇窗口槽** `w1OrigWindow_p35`（数据体 `w1Body_p35`）：原凸局扇的
+  窗口槽（`fv := FF`、`E' := E` 实例化，类型直接对上装配前提的形状）；
+  c = `ιu`（`lfVertKit_p35` 二邻）、k = 轨道周期 = `V.ncard`
+  （`kchOrbitMapV_p35` + `kchOrbitCycle_p35`）、ρ = 原轨道；方位界直接来自
+  原扇凸性闭楔（`wSectorAt_p35`/`wDartSector_p35` =
+  `sandwichTwoOfConvex_p35` 在 `lfVertKit_p35` 两邻分解上的实例）；覆盖/
+  成员来自轨道件（`kchIterInV_p35`/`kchPeriodMod_p35`）；非共线来自
+  `hncu` + fan6（`kchDartNonColl_p35`）。
+- **W2 原扇单调** `w2OrigMono_p35`：W1 槽体 + `nwNoWrapOfWindow_p35`
+  （hanti ← `ncHantiOfNotCircular_p35 hnotcirc` 对原边；对角边不出现于原扇
+  窗口）⟹ hnowrap ⟹ `monoWindowNowrap_p35` ⟹ `i < j < V.ncard` 的轨道
+  方位单调。
+- **W3 切片窗口槽**（抽象 (a, b) 形）：基 dart `w3SliceBase_p35`（c = b、
+  k = N+1、ρ = 原轨道前缀；`EE_p3 a (ePrime …) = {ρa, b}`；方位界 = W1 的
+  界限制到前缀，N < V.ncard）；对角 dart `w3SliceDiag_p35`（c = `ιb` =
+  ρ^[N-1] a（前像唯一 `wRhoPreimEq_p35`）、walk = b ↦ a ↦ ρa ↦ … ↦ ιb；
+  `EE_p3 b (ePrime …) = {a, ιb}`；方位界 = W2 在 b 处单调 +
+  `azimAddTriple_p35` 做减法 `azim 0 b a z = azim 0 b ρb z − θ_a`，θ_a =
+  `azim 0 b ρb a`；逐 dart 界来自原扇凸性闭扇，`i = 0` 支 = `azimAxis_p35`
+  轴零，`i = 1` 支 = `azim_self`）。
+- **W4 装配前提逐字形**：`w4SlotUU_p35` / `w4SlotWU_p35` / `w4SlotUW_p35` /
+  `w4SlotWW_p35`（含 `d ∈ fv` 支：基 dart 经 hcore 的 n = 0 项、对角 dart
+  经 insert）。
+
+显式前提（DELIVERY 逐条列使用点）：`hEE2`、`hnc`、`hnotcirc`、
+`hcoreU`/`hcoreW`（F2/FR 合龙形逐字）。HOL 对应：COVEX_OF_LOFA_HALF_CIRCLE
+的两次 `MONO_AZIM_AS_BTA_I`（local_lemmas.hl:4261/:4505）对原扇。 -/
+
+/-- 有向双邻折成 `ePrime` 二邻（W 车道共用）：`{x, y1}` 经 dart `(x, y1)`、
+`{x, y2}` 经 dart `(y2, x)` 落 fv，且 E'-邻接过滤成两点集。 -/
+private theorem wEEprimeTwo_p35 {x y1 y2 : V3} {E' : Set (Set V3)}
+    {fv : Set (V3 × V3)}
+    (h1 : ({x, y1} : Set V3) ∈ E') (hd1 : (x, y1) ∈ fv)
+    (h2 : ({x, y2} : Set V3) ∈ E') (hd2 : (y2, x) ∈ fv)
+    (hEE : EE_p3 x E' ⊆ ({y1, y2} : Set V3)) :
+    EE_p3 x (ePrime_p3 E' fv) = ({y1, y2} : Set V3) := by
+  ext z
+  have hL : z ∈ EE_p3 x (ePrime_p3 E' fv) ↔ z ∈ ({y1, y2} : Set V3) := by
+    simp only [EE_p3, Set.mem_setOf_eq]
+    constructor
+    · intro hz
+      simp only [ePrime_p3, Set.mem_setOf_eq] at hz
+      obtain ⟨a0, b0, hab0, hE0, -⟩ := hz
+      have hzE : ({x, z} : Set V3) ∈ E' := by rw [hab0]; exact hE0
+      exact hEE (show z ∈ EE_p3 x E' from hzE)
+    · intro hz
+      rcases Set.mem_insert_iff.mp hz with h | h
+      · exact ⟨x, y1, by rw [h], h1, hd1⟩
+      · exact ⟨y2, x, by rw [h]; exact Set.pair_comm x y2,
+          (by rw [← Set.pair_comm x y2]; exact h2), hd2⟩
+  exact hL
+
+/-- ρ 前像唯一：`ρ x = ρ y = t` 且 x, y ∈ V ⟹ x = y（轨道周期两两相异 +
+kchPeriodMod）。 -/
+private theorem wRhoPreimEq_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {x y t : V3} (hfan : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hxV : x ∈ V) (hyV : y ∈ V)
+    (hx : rhoNode1 FF x = t) (hy : rhoNode1 FF y = t) : x = y := by
+  obtain ⟨p, hp0, hpx, hdis, himg, -⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (V := V)
+      (kchOrbitMapV_p35 hfan hEE2) hxV
+  have hyO : y ∈ ({x_1 | ∃ n < p, (rhoNode1 FF)^[n] x = x_1} : Set V3) := by
+    rw [himg]; exact hyV
+  obtain ⟨j, hj1, hj2⟩ : ∃ j < p, (rhoNode1 FF)^[j] x = y := by
+    simpa using hyO
+  have hyj : rhoNode1 FF ((rhoNode1 FF)^[j] x) = t := by rw [hj2]; exact hy
+  rcases Nat.eq_zero_or_pos j with h0 | h0
+  · rw [h0, Function.iterate_zero] at hj2
+    exact hj2
+  · rcases Nat.lt_or_ge (j + 1) p with hlt | hge
+    · have hne := hdis 1 (j + 1) (by omega) hlt
+      rw [Function.iterate_one] at hne
+      rw [Function.iterate_succ_apply' (rhoNode1 FF) j x] at hne
+      exact absurd (hx.trans hyj.symm) hne
+    · have hjp : j + 1 = p := le_antisymm (by omega) hge
+      have hne := hdis 0 1 (by omega) (by omega)
+      rw [Function.iterate_one] at hne
+      have hjp2 : (rhoNode1 FF)^[j + 1] x = x := by rw [hjp]; exact hpx
+      have heqA : (rhoNode1 FF) ((rhoNode1 FF)^[j] x) = x :=
+        (Function.iterate_succ_apply' (rhoNode1 FF) j x).symm.trans hjp2
+      exact absurd ((hx.trans hyj.symm).trans heqA).symm hne
+
+/-- **W1 供给件（原扇顶点闭楔扇形）**：原凸局扇在顶点 u 处的 dart `(u, ρu)`
+的闭扇含全体 V 且扇角 ≤ π（`lfVertKit_p35` 两邻 + `sandwichTwoOfConvex_p35`
+两点收口）。 -/
+theorem wSectorAt_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfan : ConvexLocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {u : V3} (hu : u ∈ V) (z : V3) (hz : z ∈ V) :
+    0 ≤ azim 0 u (rhoNode1 FF u) z ∧ azim 0 u (rhoNode1 FF u) z ≤ Real.pi := by
+  have hlf : LocalFan V E FF := hfan.1
+  obtain ⟨k1, -, -, -, k5, k6⟩ := lfVertKit_p35 hlf hEE2 hu
+  have hsand := sandwichTwoOfConvex_p35 hfan k1 k5 (Ne.symm k6)
+  exact ⟨(hsand.2 z hz).1, le_trans (hsand.2 z hz).2 hsand.1⟩
+
+/-- **W1 供给件（原扇逐 dart 闭扇）**：FF 的每个 dart 处的闭扇含全体 V
+且扇角 ≤ π。 -/
+theorem wDartSector_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfan : ConvexLocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {d : V3 × V3} (hd : d ∈ FF) (z : V3) (hz : z ∈ V) :
+    0 ≤ azim 0 d.1 d.2 z ∧ azim 0 d.1 d.2 z ≤ Real.pi := by
+  have hlf : LocalFan V E FF := hfan.1
+  have hdV := kchDartInV_p35 hlf hd
+  obtain ⟨k1, -, -, -, k5, k6⟩ := lfVertKit_p35 hlf hEE2 hdV.1
+  have hρ : rhoNode1 FF d.1 = d.2 := kchRhoDet_p35 hlf hEE2 hd
+  rw [← hρ]
+  have hsand := sandwichTwoOfConvex_p35 hfan k1 k5 (Ne.symm k6)
+  exact ⟨(hsand.2 z hz).1, le_trans (hsand.2 z hz).2 hsand.1⟩
+
+/-- 原扇 FF 的 ePrime 二邻（W1 槽体的 EE 支）：每个顶点 u 处
+`EE_p3 u (ePrime_p3 E FF) = {ρu, ιu}`（两支有向 dart 分别经 `(u, ρu)`、
+`(ιu, u)` 落 FF）。 -/
+private theorem wEEprimeFF_p35 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {u : V3} (hfan : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hu : u ∈ V) :
+    EE_p3 u (ePrime_p3 E FF) = ({rhoNode1 FF u, ivsRhoNode1 FF u} : Set V3) := by
+  obtain ⟨k1, k2, -, -, k5, -⟩ := lfVertKit_p35 hfan hEE2 hu
+  have hE1 : ({u, rhoNode1 FF u} : Set V3) ∈ E := kchDartInE_p35 hfan k1
+  have hE2 : ({u, ivsRhoNode1 FF u} : Set V3) ∈ E := by
+    rw [Set.pair_comm]
+    exact kchDartInE_p35 hfan k2
+  exact wEEprimeTwo_p35 hE1 k1 hE2 k2 (by intro z hz; rw [k5] at hz; exact hz)
+
+set_option linter.unusedVariables false in
+/-- **W1 体（原扇窗口槽的 `nwWindowBody_p35` 数据）**：c = `ιu`、
+k = `V.ncard`（轨道周期）、ρ = 原轨道。 -/
+private theorem w1Body_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {u : V3} (hfan : ConvexLocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hu : u ∈ V) (hncu : ∀ t ∈ V, t ≠ u → ¬ Collinear3 0 u t) :
+    nwWindowBody_p35 V E FF (u, rhoNode1 FF u) (ivsRhoNode1 FF u) V.ncard
+      (fun n => (rhoNode1 FF)^[n] u) := by
+  have hlf : LocalFan V E FF := hfan.1
+  obtain ⟨k1, k2, k3, k4, k5, k6⟩ := lfVertKit_p35 hlf hEE2 hu
+  have h0V : (0:V3) ∉ V := hlf.1.2.2.2.1
+  have hu0 : u ≠ 0 := fun hc => h0V (hc ▸ hu)
+  have hiterV : ∀ m : ℕ, (rhoNode1 FF)^[m] u ∈ V := kchIterInV_p35 hlf hEE2 hu
+  have horb : orbitF_p3 (rhoNode1 FF) u = V := kchOrbitMapV_p35 hlf hEE2 u hu
+  obtain ⟨p, hp0, hpx, hdis, himg, hcard⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (kchOrbitMapV_p35 hlf hEE2) hu
+  have hb1 : ¬ Collinear3 0 u (rhoNode1 FF u) :=
+    kchDartNonColl_p35 (V := V) (E := E) (FF := FF) hlf
+      (d := (u, rhoNode1 FF u)) k1
+  -- 周期 ≥ 2
+  have h2p : 2 ≤ p := by
+    rcases Nat.eq_or_lt_of_le (Nat.succ_le_of_lt hp0) with h1 | h2
+    · rw [← h1] at hpx
+      have hru : rhoNode1 FF u = u := by
+        rw [show rhoNode1 FF u = (rhoNode1 FF)^[Nat.succ 0] u from rfl]
+        exact hpx
+      rw [hru] at hb1
+      exact absurd (collinear3_pair_right (v0 := (0:V3)) (v1 := u) (x := u) rfl) hb1
+    · exact h2
+  -- 前像唯一：ρ^[p-1] u = ιu
+  have hpre : (rhoNode1 FF)^[p - 1] u = ivsRhoNode1 FF u := by
+    have h1 : rhoNode1 FF ((rhoNode1 FF)^[p - 1] u) = u := by
+      rw [(Function.iterate_succ_apply' (rhoNode1 FF) (p - 1) u).symm,
+        show Nat.succ (p - 1) = p from by omega, hpx]
+    exact wRhoPreimEq_p35 hlf hEE2 (hiterV (p - 1)) k4 h1 k3
+  have h1' : EE_p3 (u, rhoNode1 FF u).1 (ePrime_p3 E FF)
+      = ({(u, rhoNode1 FF u).2, ivsRhoNode1 FF u} : Set V3) := by
+    simpa using wEEprimeFF_p35 hlf hEE2 hu
+  refine ⟨h1', k6, ?_, rfl, ?_, ?_, hu0, hb1, ?_, ?_, ?_,
+    ?_, ?_, ?_⟩
+  · rw [hcard]; exact h2p
+  · rw [hcard]; exact hpre
+  · -- 覆盖：vPrime V FF = V
+    intro z hz
+    simp only [vPrime_p3, Set.mem_setOf_eq] at hz
+    obtain ⟨hzV, -⟩ := hz
+    have hzo : z ∈ orbitF_p3 (rhoNode1 FF) u := by rw [horb]; exact hzV
+    obtain ⟨m, hm⟩ := hzo
+    refine ⟨m % p, by rw [hcard]; exact Nat.mod_lt _ hp0, ?_⟩
+    show (rhoNode1 FF)^[m % p] u = z
+    rw [← kchPeriodMod_p35 (rhoNode1 FF) hpx m]
+    exact hm
+  · -- 内点非共线
+    intro i h0i hik
+    rw [hcard] at hik
+    exact hncu ((rhoNode1 FF)^[i] u) (hiterV i)
+      (fun hc => hdis 0 i h0i (by omega) hc.symm)
+  · -- 内点非零
+    intro i h0i hik
+    exact fun hc => h0V (hc ▸ hiterV i)
+  · -- 内点方位界
+    intro i h0i hik
+    exact wSectorAt_p35 hfan hEE2 (u := u) hu ((rhoNode1 FF)^[i] u) (hiterV i)
+  · -- 逐 dart 支
+    intro i hik
+    have hxk := lfVertKit_p35 hlf hEE2 (hiterV i)
+    have hdartFF : ((rhoNode1 FF)^[i] u, (rhoNode1 FF)^[i + 1] u) ∈ FF := by
+      have h1 := hxk.1
+      rw [show rhoNode1 FF ((rhoNode1 FF)^[i] u)
+          = (rhoNode1 FF)^[i + 1] u from by
+            rw [Eq.symm (Function.iterate_succ_apply' (rhoNode1 FF) i u),
+              Nat.succ_eq_add_one]] at h1
+      exact h1
+    have hncD := kchDartNonColl_p35 hlf hdartFF
+    exact ⟨hncD, wDartSector_p35 hfan hEE2 hdartFF u hu⟩
+  · -- 成员
+    intro j hj
+    simp only [vPrime_p3, Set.mem_setOf_eq]
+    exact ⟨hiterV j, rhoNode1 FF ((rhoNode1 FF)^[j] u),
+      (lfVertKit_p35 hlf hEE2 (hiterV j)).1⟩
+  · -- 步 dart
+    intro i hik
+    have h1 := (lfVertKit_p35 hlf hEE2 (hiterV i)).1
+    rw [show rhoNode1 FF ((rhoNode1 FF)^[i] u)
+        = (rhoNode1 FF)^[i + 1] u from by
+          rw [Eq.symm (Function.iterate_succ_apply' (rhoNode1 FF) i u),
+            Nat.succ_eq_add_one]] at h1
+    exact h1
+
+/-- **W1 原扇窗口槽**：原凸局扇的窗口槽（`fv := FF`、`E' := E` 实例化，
+类型直接对上装配前提的形状）。 -/
+theorem w1OrigWindow_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {u : V3} (hfan : ConvexLocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hu : u ∈ V) (hncu : ∀ t ∈ V, t ≠ u → ¬ Collinear3 0 u t) :
+    W4AsmWindowSlot_p35 V E FF (u, rhoNode1 FF u) :=
+  nwSlotIff_p35.mpr ⟨ivsRhoNode1 FF u, V.ncard, fun n => (rhoNode1 FF)^[n] u,
+    w1Body_p35 hfan hEE2 hu hncu⟩
+
+set_option linter.unusedVariables false in
+/-- **W2 原扇单调**：W1 槽体 + `nwNoWrapOfWindow_p35`（hanti ←
+`ncHantiOfNotCircular_p35 hnotcirc` 对原边）⟹ hnowrap ⟹
+`monoWindowNowrap_p35` ⟹ `i < j < V.ncard` 的轨道方位单调
+（HOL `MONO_AZIM_AS_BTA_I` 对原扇，local_lemmas.hl:4261/:4505）。 -/
+theorem w2OrigMono_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {u : V3} (hfan : ConvexLocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hu : u ∈ V) (hncu : ∀ t ∈ V, t ≠ u → ¬ Collinear3 0 u t)
+    (hnotcirc : ¬ Circular V E)
+    {i j : ℕ} (hij : i < j) (hjk : j < V.ncard) :
+    azim 0 u (rhoNode1 FF u) ((rhoNode1 FF)^[i] u)
+      ≤ azim 0 u (rhoNode1 FF u) ((rhoNode1 FF)^[j] u) := by
+  have hlf : LocalFan V E FF := hfan.1
+  obtain ⟨k1, -, -, -, -, -⟩ := lfVertKit_p35 hlf hEE2 hu
+  have h0V : (0:V3) ∉ V := hlf.1.2.2.2.1
+  have hu0 : (0:V3) ≠ u := fun hc => h0V (hc ▸ hu)
+  have hiterV : ∀ m : ℕ, (rhoNode1 FF)^[m] u ∈ V := kchIterInV_p35 hlf hEE2 hu
+  have hsub' : FF ⊆ dartsOfHyp_p3 E V := by
+    intro d hd
+    exact Set.mem_union_left _
+      (show d ∈ ordPairs_p3 E by
+        simp only [ordPairs_p3, Set.mem_setOf_eq]
+        exact kchDartInE_p35 hlf hd)
+  have hanti : ∀ i : ℕ, i + 1 < V.ncard →
+      (-(u:V3)) ∉ affGt ({(0:V3)} : Set V3)
+        ({(rhoNode1 FF)^[i] u, (rhoNode1 FF)^[i + 1] u} : Set V3) := by
+    intro i hik
+    have hxk := lfVertKit_p35 hlf hEE2 (hiterV i)
+    have hdE : ({(rhoNode1 FF)^[i] u, (rhoNode1 FF)^[i + 1] u} : Set V3) ∈ E := by
+      have he := kchDartInE_p35 hlf hxk.1
+      rw [(Function.iterate_succ_apply' (rhoNode1 FF) i u).symm] at he
+      exact he
+    exact ncHantiOfNotCircular_p35 hnotcirc hu (Ne.symm hu0) hdE
+  have hnw := nwNoWrapOfWindow_p35 (V := V) (E' := E) (fv := FF)
+    (p := (u, rhoNode1 FF u)) (c := ivsRhoNode1 FF u) (k := V.ncard)
+    (ρ := fun n => (rhoNode1 FF)^[n] u)
+    hlf.1 hsub' k1 (w1Body_p35 hfan hEE2 hu hncu) hanti
+  obtain ⟨-, -, -, hr0, -, -, hv0, hbp2, hvx, hvx0, hbnds, hdart, -, -⟩ :=
+    w1Body_p35 hfan hEE2 hu hncu
+  exact monoWindowNowrap_p35 V.ncard (fun n => (rhoNode1 FF)^[n] u) hr0 hv0
+    hbp2 hvx hvx0 hbnds hdart hnw hij hjk
+
+-- ===== 车道 W 交付边界（ejrcfjd-dw-W-window-w1, 2026-10-28）=====
+-- 已闭（本探针 EXIT=0，公理 = 标准三）：W1 原扇窗口槽（w1Body_p35/w1OrigWindow_p35）
+-- + W2 原扇轨道方位单调（w2OrigMono_p35）+ 供给件
+--（wRhoPreimEq_p35/wSectorAt_p35/wDartSector_p35/wEEprimeFF_p35）。
+-- 前沿（W3 切片窗口槽 w3SliceBase_p35/w3SliceDiag_p35 与 W4 装配前提件
+-- w4SlotUU/WU/UW/WW_p35）见 $S/frontier_w3w4.lean 与 DELIVERY.md §前沿。
+
+-- ===== merged block: lane HK (续144 M1i 合并, 编排者) =====
+-- ===== lane HK (ejrcfjd-dw-HK-hkirpep-w1, HKIRPEP 链移植) =====
+/-! ## HKIRPEP 链：月牙扇「两半圆」结构定理（非共线性最后一块）
+
+HOL 依赖链（local_lemmas.hl 除注明外）：
+`HKIRPEP`(local_lemmas.hl:6027) ← `HALP_CIRCLE_IS_INTERSECTION`(ll:5653) ←
+`LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100`(ll:5534) ←
+`LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT`(ll:4726，体约 810 行) ←
+`LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI`(ll:4222) + `HALF_CIRCULAR_IN_PLANE`(ll:4431)。
+
+本块渲染架构（自底向上，件名 `hk` 前缀 + `_p35`）：
+
+- **前沿 A** `hkOzqvsff_p35`：HOL `OZQVSFF`(ll:2056) 抽象渲染——凸局部扇内
+  离轴顶点处内角平角 + 两邻居落轴平面（平面成员以系数形渲染：离轴时
+  `span {u, v}` 即平面 `{0, u, v, w}` 的线性基）。KCHMAMG 同级深水件，
+  本波定型陈述、本体待 Wave 2；
+- **前沿 B** `hkAzimMono_p35`：HOL `FIRST_AZIM_CYCLE_EQ_RHO_NODE`(ll:1204)
+  + `RHO_NODE1_MONO_WITH_AZIM`(ll:4557) + 终点平角（azim 沿对径轨道段
+  单调 + b 端平角 π），打包为 Lunar 轨道段方位角单调前沿（azim 循环
+  工具箱，KCHMAMG(ll:3197) 四件套同级），本体待 Wave 2；
+- **前沿 C** `hkAzimCone_p35`：平面扇 dial 区间 ↦ 开锥的桥（dial 以 a-向
+  为零点、e-定向计：dial(x) ∈ (0, π) ⟺ x 的 g-系数严格正；线性代数 +
+  AzimSpec 构造），本体待 Wave 2；
+- **件1** `hkInteriorAnglePi_p35`（= LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI 外壳）：
+  轴点情形 fan7 射线分离杀（HOL `FAN_IMP_NOT_IN_AFF_GE` ll:4034 面替代）
+  + 离轴情形套前沿 A；π 与两邻居系数结论全闭（模前沿 A）；
+- **件2** `hkHalfCircularPlane_p35`（= HALF_CIRCULAR_IN_PLANE）：对径轨道段
+  平面化归纳（b 在轴上 ⟹ 平面含整条轴，b 免费落平面），全闭（模件1）；
+- **件3** `hkHalfCircleSubsetCone_p35`（= GT100 形 = SUBSET_AFF_GT + i≠0,1）：
+  最小命中指标 i₀ 的 2 ≤ 界 + 件2 平面化 + 前沿 B 单调 + 前沿 C 桥，
+  模三前沿闭；HALP_CIRCLE_IS_INTERSECTION 的反向包含（aff_gt ∩ V ⊆ 轨道段）
+  经核验不被 NL `hHK` 界面消费，未渲染；
+- **件5** `hkHKIRPEP_p35`（= HKIRPEP 的轨道-锥两半 = NL `hHK` 界面逐字）：
+  件3 双定向 + 锥换生成元/换锚系数搬运（AFF_GT 换生成元三件的逐系数
+  替代，全闭）；
+- **件6** `hkSliceNoncollinearFull_p35`（public 终件）：件5 出 hHK 喂
+  `nlSliceNoncollinear_p35`（M1g 已闭），模三前沿闭。
+
+命名对照：`lunar` ↦ `Lunar`、`rho_node1` ↦ `rhoNode1`、`ivs_rho_node1` ↦
+`ivsRhoNode1`、`aff_gt` ↦ `affGt`、`interior_angle1` ↦ `interiorAngle1`、
+`ITER` ↦ `Function.iterate`、`azim` ↦ Kepler.Geom 同名。
+零 sorry；既有行零改动（纯文末追加）。 -/
+
+-- ===== 前沿件（Prop 级陈述定型；本体闭待 Wave 2） =====
+
+/-- 前沿 A：HOL `OZQVSFF`（local_lemmas.hl:2056）抽象渲染。前提映射：
+`convex_local_fan` ↦ 前两参；`{u,v,w} SUBSET V` ↦ 三顶点 ∈ V；
+`plane P ∧ {0,u,v,w} SUBSET P` ↦ w = c•v（c<0）+ u 离轴（u ≠ 0 ∧
+¬Collinear3 0 v u；离轴时 P = plane{0,u,v}，span{u,v} 系数形承载）；
+`{u,w} INTER aff {0,v} = {}` ↦ u ∉ {v,w} + 离轴前提（0 ∉ V 面）；
+`aff {v,0} INTER conv0 {w,u} ≠ {}` ↦ 0 ∈ conv0{v,w}（w = c•v, c<0 直出）。
+结论：内角平角 + ρu、ιu ∈ span{u,v}。 -/
+def hkOzqvsff_p35 : Prop :=
+  ∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)},
+    ConvexLocalFan V E FF → (∀ z ∈ V, (EE_p3 z E).ncard = 2) →
+    ∀ v w u : V3, v ∈ V → w ∈ V → u ∈ V → u ≠ v → u ≠ w →
+      (∃ c : ℝ, c < 0 ∧ w = c • v) → u ≠ (0:V3) →
+      ¬ Collinear3 (0:V3) v u →
+      interiorAngle1 0 FF u = Real.pi ∧
+        (∃ ω s : ℝ, rhoNode1 FF u = ω • u + s • v) ∧
+        (∃ ω s : ℝ, ivsRhoNode1 FF u = ω • u + s • v)
+
+/-- 前沿 B：Lunar 对径轨道段的方位角单调（HOL `RHO_NODE1_MONO_WITH_AZIM`
+ll:4557 轨道段窗口形 + `FIRST_AZIM_CYCLE_EQ_RHO_NODE` ll:1204 + 终点平角
+`azim 0 e a b = π`；e 为轨道平面法向，HOL `v cross rho_node1 FF v`）。 -/
+def hkAzimMono_p35 : Prop :=
+  ∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)},
+    ConvexLocalFan V E FF → (∀ z ∈ V, (EE_p3 z E).ncard = 2) →
+    ∀ a b : V3, a ∈ V → b ∈ V → a ≠ b → Lunar a b V E →
+      Collinear ℝ ({(0:V3), a, b} : Set V3) →
+      ∀ n : ℕ, n < V.ncard → (rhoNode1 FF)^[n] a = b → 2 ≤ n →
+      ∃ e : V3,
+        (∀ k m : ℕ, k < m → m ≤ n →
+          azim (0:V3) e a ((rhoNode1 FF)^[k] a) < azim (0:V3) e a ((rhoNode1 FF)^[m] a)) ∧
+        azim (0:V3) e a b = Real.pi
+
+/-- 前沿 C：平面扇 dial 区间 ↦ 开锥桥（HOL ll:4726 收口面
+`azim ∈ (0, π) ⟺ aff_gt {0,v} {ρv}` 的独立渲染；e-定向的 dial 以 a-向
+为零点，平面点 x = μ•a + ν•g 的 dial ∈ (0, π) 即 ν > 0）。 -/
+def hkAzimCone_p35 : Prop :=
+  ∀ (e a g x : V3) (μ ν : ℝ),
+    ¬ Collinear3 (0:V3) a g →
+    x = μ • a + ν • g →
+    0 < azim (0:V3) e a x → azim (0:V3) e a x < Real.pi →
+    0 < azim (0:V3) e a g → azim (0:V3) e a g < Real.pi →
+    x ∈ affGt ({(0:V3), a} : Set V3) ({g} : Set V3)
+
+-- ===== 私有小件 =====
+
+/-- 闭射线成员的充分系数条件（`Affsign` 逐系数直构；v = 0 退化案分立，
+v = 0 时 z = 0、取 f ≡ 1）。 -/
+private theorem hkMemAffGeRayIn_p35 {v z : V3} {β : ℝ} (hβ : 0 ≤ β) (hz : z = β • v) :
+    z ∈ affGe ({(0:V3)} : Set V3) ({v} : Set V3) := by
+  have hfin : ({(0:V3)} ∪ {v} : Set V3).Finite :=
+    (Set.finite_singleton (0:V3)).union (Set.finite_singleton v)
+  have h2 : hfin.toFinset = insert (0:V3) ({v} : Finset V3) := by
+    ext q
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    first | tauto | skip
+  by_cases hv0' : v = (0:V3)
+  · subst hv0'
+    have hz0 : z = (0:V3) := by rw [hz, smul_zero]
+    subst hz0
+    refine ⟨fun _ => (1:ℝ), hfin, ?_, ?_, ?_⟩
+    · rw [h2, Finset.insert_eq_of_mem (by simp), Finset.sum_singleton]
+      simp
+    · intro q hq
+      rw [Set.mem_singleton_iff] at hq
+      rw [hq]
+      linarith
+    · rw [h2, Finset.insert_eq_of_mem (by simp), Finset.sum_singleton]
+  · have hne0 : (0:V3) ∉ ({v} : Finset V3) := by
+      intro hq
+      exact hv0' (Finset.mem_singleton.mp hq).symm
+    refine ⟨fun w => if w = v then β else (1:ℝ) - β, hfin, ?_, ?_, ?_⟩
+    · rw [hz, h2, Finset.sum_insert hne0, Finset.sum_singleton]
+      simp [hv0']
+    · intro q hq
+      rw [Set.mem_singleton_iff] at hq
+      rw [hq]
+      simp [hβ]
+    · rw [h2, Finset.sum_insert hne0, Finset.sum_singleton, if_pos (rfl : v = v),
+        if_neg (show ¬((0:V3) = v) from fun hc => hv0' hc.symm)]
+      linarith
+
+/-- 退化锥（空目标集）只含原点。 -/
+private theorem hkAffGeEmptyZero_p35 (z : V3) :
+    z ∈ affGe ({(0:V3)} : Set V3) (∅ : Set V3) → z = (0:V3) := by
+  rintro ⟨f, hfin, hsum, -, -⟩
+  have h2 : hfin.toFinset = ({(0:V3)} : Finset V3) := by
+    ext q
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [h2] at hsum
+  simpa using hsum
+
+/-- fan7 射线分离（HOL `FAN_IMP_NOT_IN_AFF_GE` ll:4034 消费面替代）：
+相异 V-点不同处原点出发的同一闭射线。 -/
+private theorem hkFan7RayKill_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {x y : V3} (hfan : ConvexLocalFan V E FF) (hx : x ∈ V) (hy : y ∈ V) (hxy : x ≠ y)
+    (hy0 : y ≠ (0:V3)) (hray : ∃ β : ℝ, 0 ≤ β ∧ y = β • x) : False := by
+  have hfan7 := hfan.1.1.2.2.2.2.2
+  have hm1 : ({x} : Set V3) ∈ E ∪ {s : Set V3 | ∃ v ∈ V, s = {v}} :=
+    Set.mem_union_right _ ⟨x, hx, rfl⟩
+  have hm2 : ({y} : Set V3) ∈ E ∪ {s : Set V3 | ∃ v ∈ V, s = {v}} :=
+    Set.mem_union_right _ ⟨y, hy, rfl⟩
+  have h7 : affGe ({(0:V3)} : Set V3) ({x} : Set V3) ∩
+      affGe ({(0:V3)} : Set V3) ({y} : Set V3) =
+      affGe ({(0:V3)} : Set V3) (∅ : Set V3) := by
+    have h := hfan7 {x} hm1 {y} hm2
+    have hempty : ({x} ∩ {y} : Set V3) = (∅ : Set V3) := by
+      ext q
+      simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨⟨rfl, -⟩, ⟨rfl, -⟩⟩
+        exact absurd rfl hxy
+      · rintro hq
+        exact absurd hq (Set.notMem_empty q)
+    rw [hempty] at h
+    exact h
+  obtain ⟨βr, hβr, hybr⟩ := hray
+  have hymem : y ∈ affGe ({(0:V3)} : Set V3) ({x} : Set V3) ∩
+      affGe ({(0:V3)} : Set V3) ({y} : Set V3) :=
+    ⟨hkMemAffGeRayIn_p35 (v := x) (z := y) (β := βr) hβr hybr,
+      hkMemAffGeRayIn_p35 (v := y) (z := y) (β := (1:ℝ)) (by norm_num) (by simp)⟩
+  exact hy0 (hkAffGeEmptyZero_p35 y (by rw [← h7]; exact hymem))
+
+/-- ρ 在 V 上单射（轨道周期计数：M1g `nlCardTwoHalfCircle_p35` 同法）。 -/
+private theorem hkRhoInj_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {x y : V3} (hx : x ∈ V) (hy : y ∈ V)
+    (h : rhoNode1 FF x = rhoNode1 FF y) : x = y := by
+  have h0V : (0:V3) ∉ V := hfanL.1.2.2.2.1
+  obtain ⟨p, hp0, hper, hdis, hset, -⟩ := kchOrbitCycle_p35 (kchOrbitMapV_p35 hfanL hEE2) hx
+  have hyO : y ∈ ({(rhoNode1 FF)^[k] x | k < p} : Set V3) := by rw [hset]; exact hy
+  obtain ⟨m, hm, hmx⟩ := hyO
+  rcases Nat.eq_zero_or_pos m with hm0 | hm0
+  · subst hm0
+    simpa using hmx
+  · have hge : rhoNode1 FF x = (rhoNode1 FF)^[m + 1] x := by
+      rw [← hmx] at h
+      rw [Function.iterate_succ_apply']
+      exact h
+    rcases Nat.lt_or_ge (m + 1) p with hmp | hmp
+    · exact absurd hge (hdis 1 (m + 1) (by omega) hmp)
+    · have hm1 : m + 1 = p := by omega
+      have hry : rhoNode1 FF y = (rhoNode1 FF)^[m + 1] x := by
+        rw [← hmx, Function.iterate_succ_apply']
+      rw [hm1, hper] at hry
+      have hkit := nlLunarKitA1_p35 hfanL hEE2 hx h0V
+      exact absurd (h.trans hry) hkit.1
+
+/-- FF 的 dart 由次坐标唯一（HOL `PRE_IVS_RHO_NODE1_DETE`/`IVS_RHO_IDD`
+消费面）：ρ 在 V 上单射 + kchRhoDet 直出。 -/
+private theorem hkIvsDet_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    {a z : V3} (hd : (z, a) ∈ FF) : ivsRhoNode1 FF a = z := by
+  obtain ⟨-, hivdart, hrhoiv, hivV, -, -⟩ := lfVertKit_p35 hfanL hEE2
+    (kchDartInV_p35 hfanL hd).2
+  have hzy : rhoNode1 FF z = rhoNode1 FF (ivsRhoNode1 FF a) :=
+    (kchRhoDet_p35 hfanL hEE2 hd).trans (kchRhoDet_p35 hfanL hEE2 hivdart).symm
+  exact (hkRhoInj_p35 hfanL hEE2 (kchDartInV_p35 hfanL hd).1 hivV hzy).symm
+
+-- ===== 件1（HOL LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI ll:4222 外壳） =====
+
+set_option maxHeartbeats 400000 in
+/-- 件1：凸局部扇 + hEE2 + 对径对 (v,w) + 第三顶点 u ∈ V ∖ {v,w} ⟹
+u 处内角平角且 ρu、ιu 落 span{u, v}（轴平面系数形）。轴点情形 fan7 射线
+分离杀（HOL 外壳 `v IN aff {u,0}` 案分）；离轴情形套前沿 A。 -/
+theorem hkInteriorAnglePi_p35 (hOZ : hkOzqvsff_p35) {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w u : V3} (hfan : ConvexLocalFan V E FF)
+    (hEE2 : ∀ z ∈ V, (EE_p3 z E).ncard = 2)
+    (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hcol : Collinear ℝ ({(0:V3), v, w} : Set V3))
+    (hu : u ∈ V) (huv : u ≠ v) (huw : u ≠ w) :
+    interiorAngle1 0 FF u = Real.pi ∧
+      (∃ ω s : ℝ, rhoNode1 FF u = ω • u + s • v) ∧
+      (∃ ω s : ℝ, ivsRhoNode1 FF u = ω • u + s • v) := by
+  have h0V : (0:V3) ∉ V := hfan.1.1.2.2.2.1
+  have hv0 : v ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hv)
+  obtain ⟨c, hcw⟩ := (collinear3_iff_smul hv0).mp hcol
+  have hcw' : w = c • v := by simp only [sub_zero] at hcw; exact hcw
+  have hc0 : c < 0 := by
+    by_cases h : (0:ℝ) ≤ c
+    · exact (hkFan7RayKill_p35 hfan hv hw hwv (fun he => h0V (by rw [← he]; exact hw))
+        ⟨c, h, hcw'⟩).elim
+    · exact lt_of_not_ge h
+  have hu0 : u ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hu)
+  by_cases hcolU : Collinear3 (0:V3) v u
+  · -- 轴点情形：u 与 v 同线，fan7 射线分离杀（正/负半线两案）
+    obtain ⟨t, htu⟩ := (collinear3_iff_smul hv0).mp hcolU
+    have htu' : u = t • v := by simp only [sub_zero] at htu; exact htu
+    by_cases ht : (0:ℝ) ≤ t
+    · exact (hkFan7RayKill_p35 hfan hv hu (Ne.symm huv) hu0 ⟨t, ht, htu'⟩).elim
+    · have hcne : c ≠ 0 := ne_of_lt hc0
+      have hsc : (1:ℝ) / c * c = 1 := by field_simp
+      have hvw : v = (1 / c) • w := by
+        rw [hcw', ← mul_smul, hsc, one_smul]
+      have hβ2 : (0:ℝ) ≤ t / c := by
+        have hring : t / c = -t / -c := by ring
+        rw [hring]
+        exact div_nonneg (le_of_lt (by linarith : (0:ℝ) < -t))
+          (le_of_lt (by linarith : (0:ℝ) < -c))
+      have hureq : u = (t / c) • w := by
+        rw [htu', hvw, ← mul_smul]
+        exact congrArg (fun q : ℝ => q • w) (by ring)
+      exact (hkFan7RayKill_p35 hfan hw hu (Ne.symm huw) hu0
+        ⟨t / c, hβ2, hureq⟩).elim
+  · exact hOZ hfan hEE2 v w u hv hw hu huv huw ⟨c, hc0, hcw'⟩ hu0 hcolU
+
+-- ===== 件2（HOL HALF_CIRCULAR_IN_PLANE ll:4431） =====
+
+set_option maxHeartbeats 400000 in
+/-- 件2：对径轨道段平面化。b 在轴上 ⟹ 平面 aff{0,v,ρv} 含整条轴，b 免费
+落平面；归纳步 = 件1 步进引擎（ρz ∈ span{z, v}）+ 轨道窗口两两相异。 -/
+theorem hkHalfCircularPlane_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hEE2 : ∀ z ∈ V, (EE_p3 z E).ncard = 2)
+    (hv : v ∈ V) (hw : w ∈ V)
+    (hstep : ∀ z ∈ V, z ≠ v → z ≠ w → ∃ ω s : ℝ, rhoNode1 FF z = ω • z + s • v)
+    (n : ℕ) (hn : n < V.ncard) (hnW : (rhoNode1 FF)^[n] v = w) :
+    ∀ m ≤ n, ∃ μ ν : ℝ, (rhoNode1 FF)^[m] v = μ • v + ν • rhoNode1 FF v := by
+  have hfanL := hfan.1
+  obtain ⟨p, hp0, hper, hdis, hset, hpV⟩ := kchOrbitCycle_p35 (kchOrbitMapV_p35 hfanL hEE2) hv
+  have hnp : n < p := by rw [← hpV]; exact hn
+  have hmemV : ∀ k : ℕ, k < p → (rhoNode1 FF)^[k] v ∈ V := by
+    intro k hk
+    rw [← hset]
+    exact ⟨k, hk, rfl⟩
+  intro m hm
+  induction m with
+  | zero => exact ⟨1, 0, by simp⟩
+  | succ m ih =>
+    rcases Nat.eq_zero_or_pos m with hm0 | hm0
+    · rw [show m + 1 = 1 from by omega, Function.iterate_one]
+      exact ⟨0, 1, by simp⟩
+    · have hmn : m < n := by omega
+      have hmV : (rhoNode1 FF)^[m] v ∈ V := hmemV m (by omega)
+      have hmv : (rhoNode1 FF)^[m] v ≠ v := fun he =>
+        hdis 0 m hm0 (by omega) (by rw [Function.iterate_zero]; exact he.symm)
+      have hmw : (rhoNode1 FF)^[m] v ≠ w := fun he =>
+        hdis m n hmn hnp (he.trans hnW.symm)
+      obtain ⟨ω, s, hz⟩ := hstep _ hmV hmv hmw
+      obtain ⟨μ, ν, hμν⟩ := ih (Nat.le_of_succ_le hm)
+      refine ⟨ω * μ + s, ω * ν, ?_⟩
+      rw [Function.iterate_succ_apply', hz, hμν]
+      module
+
+-- ===== 件3（HOL LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT ll:4726 + GT100 ll:5534） =====
+
+set_option maxHeartbeats 400000 in
+/-- 件3（GT100 形）：Lunar 对径对的最小命中指标 i₀ 满足 `2 ≤ i₀ < V.ncard`
+（i₀ = 1 案 = LOCAL_FAN_CHARACTER_OF_RHO_NODE2 面，kchChar 同族杀），
+且中途迭代全落开锥 affGt {0, a} {ρa}（件2 平面化 + 前沿 B 单调 + 前沿 C 桥）。 -/
+theorem hkHalfCircleSubsetCone_p35 (hOZ : hkOzqvsff_p35) (hMono : hkAzimMono_p35)
+    (hCone : hkAzimCone_p35) {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {a b : V3} (hfan : ConvexLocalFan V E FF) (hEE2 : ∀ z ∈ V, (EE_p3 z E).ncard = 2)
+    (ha : a ∈ V) (hb : b ∈ V) (hab : a ≠ b)
+    (hcol : Collinear ℝ ({(0:V3), a, b} : Set V3)) (hL : Lunar a b V E) :
+    ∃ i : ℕ, 2 ≤ i ∧ i < V.ncard ∧ (rhoNode1 FF)^[i] a = b ∧
+      ∀ l : ℕ, 0 < l → l < i →
+        (rhoNode1 FF)^[l] a ∈ affGt ({(0:V3), a} : Set V3) {rhoNode1 FF a} := by
+  have hfanL := hfan.1
+  have h0V : (0:V3) ∉ V := hfanL.1.2.2.2.1
+  obtain ⟨i₀, hi₀c, hi₀W, hi₀min⟩ := nlPointPresented_p35 hfanL hEE2 ha hb
+  have hkitA1 := nlLunarKitA1_p35 hfanL hEE2 ha h0V
+  have hi₀2 : 2 ≤ i₀ := by
+    rcases Nat.lt_trichotomy i₀ 2 with h | h | h
+    · rcases Nat.eq_zero_or_pos i₀ with h0 | h0
+      · rw [show i₀ = 0 from h0, Function.iterate_zero] at hi₀W
+        exact absurd hi₀W hab
+      · have h1 : i₀ = 1 := by omega
+        rw [h1, Function.iterate_one] at hi₀W
+        rw [← hi₀W] at hcol
+        exact absurd hcol hkitA1.2.2
+    · exact Nat.le_of_eq h.symm
+    · exact Nat.le_of_lt h
+  have hstep : ∀ z ∈ V, z ≠ a → z ≠ b → ∃ ω s : ℝ, rhoNode1 FF z = ω • z + s • a := by
+    intro z hz hza hzb
+    exact (hkInteriorAnglePi_p35 hOZ hfan hEE2 ha hb hab hcol hz hza hzb).2.1
+  have hplane := hkHalfCircularPlane_p35 hfan hEE2 ha hb hstep i₀ hi₀c hi₀W
+  obtain ⟨e, hmono, hpi⟩ := hMono hfan hEE2 a b ha hb hab hL hcol i₀ hi₀c hi₀W hi₀2
+  have hz0 : azim (0:V3) e a ((rhoNode1 FF)^[0] a) = 0 := by
+    rw [Function.iterate_zero_apply]
+    exact azim_self (0:V3) e a
+  refine ⟨i₀, hi₀2, hi₀c, hi₀W, ?_⟩
+  intro l hl hli
+  obtain ⟨μ, ν, hxcoef⟩ := hplane l (Nat.le_of_lt hli)
+  have hxp : 0 < azim (0:V3) e a ((rhoNode1 FF)^[l] a) := by
+    have h3 := hmono 0 l hl (Nat.le_of_lt hli)
+    rwa [hz0] at h3
+  have hxl : azim (0:V3) e a ((rhoNode1 FF)^[l] a) < Real.pi := by
+    have h2 := hmono l i₀ hli (le_refl i₀)
+    rwa [hi₀W, hpi] at h2
+  have hgp : 0 < azim (0:V3) e a (rhoNode1 FF a) := by
+    have h3 := hmono 0 1 (by norm_num) (by omega)
+    rwa [hz0, Function.iterate_one] at h3
+  have hgl : azim (0:V3) e a (rhoNode1 FF a) < Real.pi := by
+    have h2 := hmono 1 i₀ (by omega) (le_refl i₀)
+    rwa [Function.iterate_one, hi₀W, hpi] at h2
+  exact hCone e a (rhoNode1 FF a) ((rhoNode1 FF)^[l] a) μ ν hkitA1.2.2 hxcoef hxp hxl hgp hgl
+
+-- ===== 件5（HOL HKIRPEP ll:6027 轨道-锥两半 = NL hHK 界面逐字） =====
+
+set_option maxHeartbeats 400000 in
+/-- 件5：HKIRPEP 渲染件的 hHK 界面形（与 `nlLunarKillAt_p35`/
+`nlSliceNoncollinear_p35` 的 `hHK` 逐字对齐）。i-半 = 件3 在 (a,b) 定向；
+j-半 = 件3 在 (b,a) 定向 + 锥换生成元/换锚系数搬运：
+ιa = ρ^[j-1] b（件由次坐标唯一）落 {0,b}-锥 ⟹ ρb 由 ιa 系数反解 ⟹
+b = c•a 吸锚换位（全闭，AFF_GT 换生成元三件的逐系数替代）。 -/
+theorem hkHKIRPEP_p35 (hOZ : hkOzqvsff_p35) (hMono : hkAzimMono_p35)
+    (hCone : hkAzimCone_p35) {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hfan : ConvexLocalFan V E FF) (hEE2 : ∀ z ∈ V, (EE_p3 z E).ncard = 2) :
+    ∀ a b : V3, a ∈ V → b ∈ V → a ≠ b →
+      Collinear ℝ ({(0:V3), a, b} : Set V3) → Lunar a b V E →
+      ∃ i j : ℕ,
+        2 ≤ i ∧ i < V.ncard ∧ (rhoNode1 FF)^[i] a = b ∧
+        (∀ l : ℕ, 0 < l → l < i →
+          (rhoNode1 FF)^[l] a ∈ affGt ({(0:V3), a} : Set V3) {rhoNode1 FF a}) ∧
+        2 ≤ j ∧ j < V.ncard ∧ (rhoNode1 FF)^[j] b = a ∧
+        (∀ l : ℕ, 0 < l → l < j →
+          (rhoNode1 FF)^[l] b ∈ affGt ({(0:V3), a} : Set V3) {ivsRhoNode1 FF a}) := by
+  intro a b ha hb hab hcol hL
+  obtain ⟨i, hi2, hic, hiW, hicon⟩ :=
+    hkHalfCircleSubsetCone_p35 hOZ hMono hCone hfan hEE2 ha hb hab hcol hL
+  have hsubBA : ({b, a} : Set V3) ⊆ V := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with h1 | h1
+    · rw [h1]; exact hb
+    · rw [h1]; exact ha
+  have hcolBA : Collinear ℝ ({(0:V3), b, a} : Set V3) :=
+    hcol.subset (by
+      intro x hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+      tauto)
+  have hLBA : Lunar b a V E := ⟨hL.1, hsubBA, Ne.symm hL.2.2.1, hcolBA⟩
+  obtain ⟨j, hj2, hjc, hjW, hjcon⟩ :=
+    hkHalfCircleSubsetCone_p35 hOZ hMono hCone hfan hEE2 hb ha (Ne.symm hab) hcolBA hLBA
+  refine ⟨i, j, hi2, hic, hiW, hicon, hj2, hjc, hjW, ?_⟩
+  intro l hl hlj
+  have hfanL := hfan.1
+  have h0V : (0:V3) ∉ V := hfanL.1.2.2.2.1
+  have ha0 : a ≠ (0:V3) := fun he => h0V (by rw [← he]; exact ha)
+  have hb0 : b ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hb)
+  have hkitB := nlLunarKitA1_p35 hfanL hEE2 hb h0V
+  -- ιa = ρ^[j-1] b（件由次坐标唯一）
+  have hitV : (rhoNode1 FF)^[j - 1] b ∈ V := kchIterInV_p35 hfanL hEE2 hb (j - 1)
+  have hdartJ : ((rhoNode1 FF)^[j - 1] b, (rhoNode1 FF)^[j] b) ∈ FF := by
+    have hkit := (lfVertKit_p35 hfanL hEE2 hitV).1
+    have heq : rhoNode1 FF ((rhoNode1 FF)^[j - 1] b) = (rhoNode1 FF)^[j] b := by
+      have hexp : (rhoNode1 FF)^[j] b = (rhoNode1 FF)^[j - 1 + 1] b := by
+        rw [show (j - 1) + 1 = j from by omega]
+      rw [hexp, Function.iterate_succ_apply']
+    rw [heq] at hkit
+    exact hkit
+  have hivJ : ivsRhoNode1 FF a = (rhoNode1 FF)^[j - 1] b := by
+    have h1 := hkIvsDet_p35 hfanL hEE2 hdartJ
+    rwa [hjW] at h1
+  -- ιa ∈ {0,b}-锥（j-1 中途点）
+  have himem : ivsRhoNode1 FF a ∈ affGt ({(0:V3), b} : Set V3) {rhoNode1 FF b} := by
+    rw [hivJ]
+    exact hjcon (j - 1) (by omega) (by omega)
+  -- 系数搬运（换生成元 + 换锚，全闭）
+  obtain ⟨β, δ, hβ, hxcoef⟩ :=
+    nlMemAffGtPair1_p35 (v0 := (0:V3)) (v1 := b) (x := rhoNode1 FF b)
+      (Ne.symm hb0) hkitB.2.1 hkitB.1 |>.mp (hjcon l hl hlj)
+  obtain ⟨β₀, δ₀, hβ₀, hicoef⟩ :=
+    nlMemAffGtPair1_p35 (v0 := (0:V3)) (v1 := b) (x := rhoNode1 FF b)
+      (Ne.symm hb0) hkitB.2.1 hkitB.1 |>.mp himem
+  have hxc : (rhoNode1 FF)^[l] b = β • rhoNode1 FF b + δ • b := by
+    simpa only [sub_zero] using hxcoef
+  have hic2 : ivsRhoNode1 FF a = β₀ • rhoNode1 FF b + δ₀ • b := by
+    simpa only [sub_zero] using hicoef
+  obtain ⟨c, hbc⟩ : ∃ c : ℝ, b = c • a := by
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul ha0).mp hcol
+    exact ⟨c, by simpa only [sub_zero] using hc⟩
+  obtain ⟨hdartA, -, hrhoiv, hivV, -, -⟩ := lfVertKit_p35 hfanL hEE2 ha
+  have hkitA := nlLunarKitA1_p35 hfanL hEE2 ha h0V
+  have hiva0 : ivsRhoNode1 FF a ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hivV)
+  have hivane : ivsRhoNode1 FF a ≠ a := by
+    intro he
+    rw [he] at hrhoiv
+    exact hkitA.1 hrhoiv
+  rw [nlMemAffGtPair1_p35 (v0 := (0:V3)) (v1 := a) (x := ivsRhoNode1 FF a)
+    (Ne.symm ha0) hiva0 hivane]
+  have hβ₀ne : β₀ ≠ 0 := ne_of_gt hβ₀
+  have hbp : ∀ q : ℝ, (q / β₀) * β₀ = q := fun q => div_mul_cancel₀ q hβ₀ne
+  have hsc2 : (β / β₀) * δ₀ * c + (δ - β * δ₀ / β₀) * c = δ * c := by
+    have hX : (β / β₀) * δ₀ * c = β * δ₀ * c / β₀ := by ring
+    have hY : (δ - β * δ₀ / β₀) * c = δ * c - β * δ₀ * c / β₀ := by ring
+    rw [hX, hY]
+    linarith
+  have hcomb : ((β / β₀) * δ₀ * c) • a + ((δ - β * δ₀ / β₀) * c) • a = (δ * c) • a := by
+    have h2 := congrArg (fun q : ℝ => q • a) hsc2
+    rw [add_smul] at h2
+    exact h2
+  refine ⟨β / β₀, (δ - β * δ₀ / β₀) * c, div_pos hβ hβ₀, ?_⟩
+  simp only [sub_zero]
+  rw [hxc, hic2, hbc, smul_add, ← mul_smul, ← mul_smul, ← mul_smul, hbp β, ← mul_smul,
+    add_assoc, hcomb]
+
+-- ===== 件6（public 终件） =====
+
+set_option maxHeartbeats 400000 in
+/-- 终件（public）：根五前提 + `hEE2` + HKIRPEP 链（前沿 A/B/C 输入）⟹
+切片非共线全形 `∀ z ∈ {v,w}, ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t`。
+= `nlSliceNoncollinear_p35`（M1g 已闭）消费本车道 `hkHKIRPEP_p35` 的 hHK
+渲染件；三前沿关闭即非共线性全链闭。 -/
+theorem hkSliceNoncollinearFull_p35 (hOZ : hkOzqvsff_p35) (hMono : hkAzimMono_p35)
+    (hCone : hkAzimCone_p35) {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 (0:V3) z t :=
+  nlSliceNoncollinear_p35 hfan hv hw hwv hsub hEE2
+    (hkHKIRPEP_p35 hOZ hMono hCone hfan hEE2)
+
+-- ===== merged block: lane W2 (续145 M1j 合并, 编排者) =====
+
+-- ===== 车道 W2 (ejrcfjd-dw-W2-slice-w1, 2026-10-28)：W3 切片窗口槽（基/对角 dart）
+-- ===== + W4 四装配前提件 + F2→hcore 桥 + 对角边 hanti NL 件 + 四 hnw 实例化。
+
+/-- **W3 切片窗口槽·基 dart**（抽象 (a, b) 形）：半面
+`HS.face (a, ρa)` = 闭合 dart `(b, a)` ∪ ρ-轨道截段（N = 首次命中 b 的
+下标，F2/FR 合龙形 `hcore` 逐字）时，基 dart `(a, ρa)` 的窗口槽：
+c = b、k = N+1、ρ = 原轨道前缀；`EE_p3 a (ePrime …) = {ρa, b}`；方位界 =
+W1 的界限制到前缀（N < V.ncard）。 -/
+theorem w3SliceBase_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {HS : Hypermap (V3 × V3)} {a b : V3} {N : ℕ}
+    (hfan : ConvexLocalFan V E FF) (ha : a ∈ V) (hb : b ∈ V) (hab : a ≠ b)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {a, b} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({a, b} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hcore : HS.face (a, rhoNode1 FF a) = insert (b, a)
+        {d : V3 × V3 | ∃ n < N, d = ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)} ∧
+      (rhoNode1 FF)^[N] a = b ∧ ∀ n < N, (rhoNode1 FF)^[n] a ≠ b) :
+    W4AsmWindowSlot_p35 V (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a))
+      (a, rhoNode1 FF a) := by
+  obtain ⟨hfv, hNhit, hNmin⟩ := hcore
+  have hlf : LocalFan V E FF := hfan.1
+  obtain ⟨A1, A2, A3, A4, A5, A6⟩ := lfVertKit_p35 hlf hEE2 ha
+  obtain ⟨B1, -, -, -, -, -⟩ := lfVertKit_p35 hlf hEE2 hb
+  have h0V : (0:V3) ∉ V := hlf.1.2.2.2.1
+  have ha0 : a ≠ 0 := fun hc => h0V (hc ▸ ha)
+  have hncA : ∀ t ∈ V, t ≠ a → ¬ Collinear3 0 a t := hnc a (by simp)
+  have hiterV : ∀ m : ℕ, (rhoNode1 FF)^[m] a ∈ V := kchIterInV_p35 hlf hEE2 ha
+  have hdiag : ({a, b} : Set V3) ∉ E := diagNotEdge_p35 hfan ha hb hab hsub
+  have hb1 : ¬ Collinear3 0 a (rhoNode1 FF a) :=
+    kchDartNonColl_p35 (V := V) (E := E) (FF := FF) hlf
+      (d := (a, rhoNode1 FF a)) A1
+  have hρa : rhoNode1 FF a ≠ a := by
+    intro hc
+    have hnc2 := kchDartNonColl_p35 (V := V) (E := E) (FF := FF) hlf
+      (d := (a, rhoNode1 FF a)) A1
+    rw [hc] at hnc2
+    exact hnc2 (collinear3_pair_right (v0 := (0:V3)) (v1 := a) (x := a) rfl)
+  have hρab : rhoNode1 FF a ≠ b := by
+    intro hc
+    have hE : ({a, rhoNode1 FF a} : Set V3) ∈ E := kchDartInE_p35 hlf A1
+    rw [hc] at hE
+    exact hdiag hE
+  -- N 的界
+  have hN1 : 0 < N := by
+    rcases Nat.eq_zero_or_pos N with hc | hc
+    · rw [hc] at hNhit
+      exact absurd (show (rhoNode1 FF)^[0] a = b from hNhit) hab
+    · exact hc
+  have hN2 : 2 ≤ N := by
+    rcases Nat.eq_or_lt_of_le (Nat.succ_le_of_lt hN1) with h1 | h2
+    · rw [← h1] at hNhit
+      have hE : ({a, rhoNode1 FF a} : Set V3) ∈ E := kchDartInE_p35 hlf A1
+      rw [show rhoNode1 FF a = (rhoNode1 FF)^[Nat.succ 0] a from rfl, hNhit] at hE
+      exact absurd hE hdiag
+    · exact h2
+  obtain ⟨p, hp0, hpx, hdis, himg, hcard⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (kchOrbitMapV_p35 hlf hEE2) ha
+  have hNp : N < p := by
+    by_contra hge
+    have hge := Nat.le_of_not_gt hge
+    have hmod := kchPeriodMod_p35 (rhoNode1 FF) hpx N
+    have hlt : N % p < N := lt_of_lt_of_le (Nat.mod_lt _ hp0) hge
+    have hzmod : (rhoNode1 FF)^[N % p] a = b := by rw [← hmod]; exact hNhit
+    exact hNmin (N % p) hlt hzmod
+  -- 面成员
+  have hBAfv : (b, a) ∈ HS.face (a, rhoNode1 FF a) := by
+    rw [hfv]
+    exact Set.mem_insert_iff.mpr (Or.inl rfl)
+  have horbmem : ∀ n < N, ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)
+      ∈ HS.face (a, rhoNode1 FF a) := by
+    intro n hn
+    rw [hfv]
+    refine Set.mem_insert_of_mem _ ?_
+    simp only [Set.mem_setOf_eq]
+    exact ⟨n, hn, rfl⟩
+  -- EE 支
+  have hEEp : EE_p3 a (ePrime_p3 (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a)))
+      = ({rhoNode1 FF a, b} : Set V3) := by
+    have hE1 : ({a, rhoNode1 FF a} : Set V3) ∈ E := kchDartInE_p35 hlf A1
+    have hE2 : ({b, a} : Set V3) ∈ (E ∪ {{a, b}} : Set (Set V3)) :=
+      Set.mem_union_right E (by rw [Set.pair_comm b a]; simp)
+    ext z
+    have hL : z ∈ EE_p3 a (ePrime_p3 (E ∪ {{a, b}})
+        (HS.face (a, rhoNode1 FF a))) ↔ z ∈ ({rhoNode1 FF a, b} : Set V3) := by
+      simp only [EE_p3, Set.mem_setOf_eq]
+      constructor
+      · intro hz
+        simp only [ePrime_p3, Set.mem_setOf_eq] at hz
+        obtain ⟨x0, y0, hxy0, hE0, hd0⟩ := hz
+        have hzE' : ({a, z} : Set V3) ∈ (E ∪ {{a, b}} : Set (Set V3)) := by
+          rw [hxy0]; exact hE0
+        have hzoE' : ({a, z} : Set V3) ∈ E ∨ ({a, z} : Set V3) ∈ {{a, b}} := hzE'
+        rcases hzoE' with hE1' | hE1'
+        · -- {a, z} ∈ E：z ∈ EE_p3 a E = {ρa, ιa}
+          have hzE : z ∈ EE_p3 a E := hE1'
+          rw [A5] at hzE
+          rcases Set.mem_insert_iff.mp hzE with h' | h'
+          · exact Or.inl h'   -- z = ρa ✓
+          · -- z = ιa：面上 dart 两支分解排除
+            exfalso
+            rw [hfv] at hd0
+            rcases Set.mem_insert_iff.mp hd0 with hdc | hdc
+            · -- 闭合 dart (b, a)：{a, ιa} = {b, a}
+              have hm21 : x0 = b := congrArg Prod.fst hdc
+              have hm22 : y0 = a := congrArg Prod.snd hdc
+              rw [hm21, hm22] at hxy0
+              -- hxy0 : ({a, z} : Set V3) = ({b, a} : Set V3)
+              rw [h'] at hxy0
+              -- hxy0 : ({a, ιa} : Set V3) = ({b, a} : Set V3)
+              have hmem : ivsRhoNode1 FF a ∈ ({b, a} : Set V3) := by
+                rw [← hxy0]; simp
+              rcases Set.mem_insert_iff.mp hmem with hq | hq
+              · -- ιa = b：a = ρ ιa = ρ b ⟹ {b, ρb} = {a, b} ∈ E 矛盾
+                exfalso
+                have hab2 : a = rhoNode1 FF b := by rw [← A3, hq]
+                have hE : ({b, rhoNode1 FF b} : Set V3) ∈ E :=
+                  kchDartInE_p35 hlf B1
+                rw [← hab2] at hE
+                rw [Set.pair_comm b a] at hE
+                exact hdiag hE
+              · -- ιa = a：{a, a} = {b, a} ⟹ b = a 矛盾
+                exfalso
+                rw [hq] at hxy0
+                have hmem2 : b ∈ ({a, a} : Set V3) := by rw [hxy0]; simp
+                rcases Set.mem_insert_iff.mp hmem2 with hq2 | hq2
+                · exact hab hq2.symm
+                · exact hab hq2.symm
+            · -- 轨道 dart：a ∈ {ρ^[m]a, ρ^[m+1]a} 的端点分析
+              obtain ⟨m, hm, hm2⟩ := hdc
+              have hm21 : x0 = (rhoNode1 FF)^[m] a := congrArg Prod.fst hm2
+              have hm22 : y0 = (rhoNode1 FF)^[m + 1] a := congrArg Prod.snd hm2
+              rw [hm21, hm22, h'] at hxy0
+              -- hxy0 : ({a, ιa} : Set V3) = ({ρ^[m]a, ρ^[m+1]a} : Set V3)
+              have hmem : a ∈ ({(rhoNode1 FF)^[m] a, (rhoNode1 FF)^[m + 1] a} : Set V3) := by
+                rw [← hxy0]; simp
+              rcases Set.mem_insert_iff.mp hmem with hq | hq
+              · -- ρ^[m]a = a ⟹ m = 0 ⟹ dart = (a, ρa) ⟹ ιa ∈ {a, ρa} 矛盾
+                have hm0 : m = 0 := by
+                  by_contra hm0
+                  exact hdis 0 m (by omega) (by omega) hq
+                rw [hm0, show (rhoNode1 FF)^[0] a = a from rfl,
+                    Nat.zero_add, Function.iterate_one] at hxy0
+                have hmem3 : ivsRhoNode1 FF a ∈ ({a, rhoNode1 FF a} : Set V3) := by
+                  rw [← hxy0]
+                  simp
+                rcases Set.mem_insert_iff.mp hmem3 with hq2 | hq2
+                · -- ιa = a：{a, a} = {a, ρa} ⟹ ρa = a 矛盾
+                  exfalso
+                  rw [hq2] at hxy0
+                  have hmem6 : rhoNode1 FF a ∈ ({a, rhoNode1 FF a} : Set V3) :=
+                    Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)
+                  rw [← hxy0] at hmem6
+                  rcases Set.mem_insert_iff.mp hmem6 with hq3 | hq3
+                  · exact hρa hq3
+                  · exact hρa hq3
+                · exact A6 hq2.symm
+              · -- ρ^[m+1]a = a，1 ≤ m+1 ≤ N < p，矛盾
+                exact hdis 0 (m + 1) (by omega) (by omega) hq
+        · -- {a, z} = {a, b}：z = b
+          have hzab : ({a, z} : Set V3) = ({a, b} : Set V3) :=
+            Set.mem_singleton_iff.mp hE1'
+          have hzm : z ∈ ({a, b} : Set V3) := by
+            rw [← hzab]
+            simp
+          rcases Set.mem_insert_iff.mp hzm with h' | h'
+          · exfalso
+            rw [h'] at hzab
+            have hmem : b ∈ ({a, a} : Set V3) := by rw [hzab]; simp
+            rcases Set.mem_insert_iff.mp hmem with hq | hq
+            · exact hab hq.symm
+            · exact hab hq.symm
+          · exact Or.inr h'
+      · intro hz
+        rcases Set.mem_insert_iff.mp hz with h | h
+        · -- z = ρa：经 dart (a, ρa) 落面
+          refine ⟨a, rhoNode1 FF a, by rw [h], Set.mem_union_left _ hE1, ?_⟩
+          exact horbmem 0 hN1
+        · -- z = b：经闭合 dart (b, a) 落面
+          refine ⟨b, a, by rw [h]; exact Set.pair_comm a b, hE2, hBAfv⟩
+    exact hL
+  refine ⟨b, N + 1, fun n => (rhoNode1 FF)^[n] a, hEEp, hρab, by omega, rfl,
+    (by rw [show N + 1 - 1 = N from by omega]; exact hNhit), ?_, ha0, hb1, ?_,
+    ?_, ?_, ?_, ?_, ?_⟩
+  · -- 覆盖
+    intro z hz
+    simp only [vPrime_p3, Set.mem_setOf_eq] at hz
+    obtain ⟨hzV, y, hy⟩ := hz
+    rw [hfv] at hy
+    rcases Set.mem_insert_iff.mp hy with hc | hc
+    · refine ⟨N, by omega, ?_⟩
+      show (rhoNode1 FF)^[N] a = z
+      rw [hNhit]
+      exact (congrArg Prod.fst hc).symm
+    · obtain ⟨m, hm, hm2⟩ := hc
+      exact ⟨m, by omega, (congrArg Prod.fst hm2).symm⟩
+  · -- 内点非共线
+    intro i h0i hik
+    exact hncA ((rhoNode1 FF)^[i] a) (hiterV i)
+      (fun hc => hdis 0 i h0i (by omega) hc.symm)
+  · -- 内点非零
+    intro i h0i hik
+    exact fun hc => h0V (hc ▸ hiterV i)
+  · -- 内点方位界
+    intro i h0i hik
+    exact wSectorAt_p35 hfan hEE2 ha ((rhoNode1 FF)^[i] a) (hiterV i)
+  · -- 逐 dart 支
+    intro i hik
+    have hxk := lfVertKit_p35 hlf hEE2 (hiterV i)
+    have hdartFF : ((rhoNode1 FF)^[i] a, (rhoNode1 FF)^[i + 1] a) ∈ FF := by
+      have h1 := hxk.1
+      rw [show rhoNode1 FF ((rhoNode1 FF)^[i] a)
+          = (rhoNode1 FF)^[i + 1] a from by
+            rw [Eq.symm (Function.iterate_succ_apply' (rhoNode1 FF) i a),
+              Nat.succ_eq_add_one]] at h1
+      exact h1
+    have hncD := kchDartNonColl_p35 hlf hdartFF
+    exact ⟨hncD, wDartSector_p35 hfan hEE2 hdartFF a ha⟩
+  · -- 成员
+    intro j hj
+    simp only [vPrime_p3, Set.mem_setOf_eq]
+    refine ⟨hiterV j, ?_⟩
+    rcases Nat.lt_or_ge j N with h | h
+    · rw [hfv]
+      exact ⟨(rhoNode1 FF)^[j + 1] a, Set.mem_insert_of_mem _ ⟨j, h, rfl⟩⟩
+    · have hjN : j = N := le_antisymm (by omega) h
+      rw [hjN, hNhit]
+      rw [hfv]; exact ⟨a, Set.mem_insert_iff.mpr (Or.inl rfl)⟩
+  · -- 步 dart
+    intro i hik
+    rw [hfv]
+    exact Set.mem_insert_of_mem _ ⟨i, by omega, rfl⟩
+
+set_option linter.unusedVariables false in
+/-- **W3 切片窗口槽·对角 dart**（抽象 (a, b) 形）：同 `w3SliceBase_p35` 的
+半面与 hcore 下，对角 dart `(b, a)` 的窗口槽：c = `ιb`（= ρ^[N-1] a，前像
+唯一）、k = N+1、walk = b ↦ a ↦ ρa ↦ … ↦ ιb；`EE_p3 b (ePrime …) =
+{a, ιb}`；方位界 = W2 在 b 处单调 + `azimAddTriple_p35` 做减法（θ_a =
+`azim 0 b ρb a`）；逐 dart 界：i = 0 支 = `azimAxis_p35` 轴零、i = 1 支 =
+`azim_self`、其余 = 原扇逐 dart 闭扇。 -/
+theorem w3SliceDiag_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {HS : Hypermap (V3 × V3)} {a b : V3} {N : ℕ}
+    (hfan : ConvexLocalFan V E FF) (ha : a ∈ V) (hb : b ∈ V) (hab : a ≠ b)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {a, b} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({a, b} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcore : HS.face (a, rhoNode1 FF a) = insert (b, a)
+        {d : V3 × V3 | ∃ n < N, d = ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)} ∧
+      (rhoNode1 FF)^[N] a = b ∧ ∀ n < N, (rhoNode1 FF)^[n] a ≠ b) :
+    W4AsmWindowSlot_p35 V (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a)) (b, a) := by
+  obtain ⟨hfv, hNhit, hNmin⟩ := hcore
+  have hlf : LocalFan V E FF := hfan.1
+  obtain ⟨A1, -, -, -, -, -⟩ := lfVertKit_p35 hlf hEE2 ha
+  obtain ⟨B1, B2, B3, B4, B5, B6⟩ := lfVertKit_p35 hlf hEE2 hb
+  have h0V : (0:V3) ∉ V := hlf.1.2.2.2.1
+  have ha0 : a ≠ 0 := fun hc => h0V (hc ▸ ha)
+  have hb0 : b ≠ 0 := fun hc => h0V (hc ▸ hb)
+  have hncB : ∀ t ∈ V, t ≠ b → ¬ Collinear3 0 b t := hnc b (by simp)
+  have hiterV : ∀ m : ℕ, (rhoNode1 FF)^[m] a ∈ V := kchIterInV_p35 hlf hEE2 ha
+  have hdiag : ({a, b} : Set V3) ∉ E := diagNotEdge_p35 hfan ha hb hab hsub
+  have hba : ¬ Collinear3 0 b a := hncB a ha hab
+  have hbrb : ¬ Collinear3 0 b (rhoNode1 FF b) :=
+    kchDartNonColl_p35 (V := V) (E := E) (FF := FF) hlf
+      (d := (b, rhoNode1 FF b)) B1
+  have hρbb : rhoNode1 FF b ≠ b := by
+    intro hc
+    have hnc2 := kchDartNonColl_p35 (V := V) (E := E) (FF := FF) hlf
+      (d := (b, rhoNode1 FF b)) B1
+    rw [hc] at hnc2
+    exact hnc2 (collinear3_pair_right (v0 := (0:V3)) (v1 := b) (x := b) rfl)
+  have hρba : rhoNode1 FF b ≠ a := by
+    intro hc
+    have hE : ({b, rhoNode1 FF b} : Set V3) ∈ E := kchDartInE_p35 hlf B1
+    rw [hc] at hE
+    rw [Set.pair_comm b a] at hE
+    exact hdiag hE
+  have hιba : ivsRhoNode1 FF b ≠ a := by
+    intro hc
+    have h1 : b = rhoNode1 FF a := by rw [← hc]; exact B3.symm
+    have hE : ({a, rhoNode1 FF a} : Set V3) ∈ E := kchDartInE_p35 hlf A1
+    rw [← h1] at hE
+    exact hdiag hE
+  -- N 的界
+  have hN1 : 0 < N := by
+    rcases Nat.eq_zero_or_pos N with hc | hc
+    · rw [hc] at hNhit
+      exact absurd (show (rhoNode1 FF)^[0] a = b from hNhit) hab
+    · exact hc
+  have hN2 : 2 ≤ N := by
+    rcases Nat.eq_or_lt_of_le (Nat.succ_le_of_lt hN1) with h1 | h2
+    · rw [← h1] at hNhit
+      have hE : ({a, rhoNode1 FF a} : Set V3) ∈ E := kchDartInE_p35 hlf A1
+      rw [show rhoNode1 FF a = (rhoNode1 FF)^[Nat.succ 0] a from rfl, hNhit] at hE
+      exact absurd hE hdiag
+    · exact h2
+  obtain ⟨p, hp0, hpx, hdis, -, hcard⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (kchOrbitMapV_p35 hlf hEE2) ha
+  have hNp : N < p := by
+    by_contra hge
+    have hge := Nat.le_of_not_gt hge
+    have hmod := kchPeriodMod_p35 (rhoNode1 FF) hpx N
+    have hlt : N % p < N := lt_of_lt_of_le (Nat.mod_lt _ hp0) hge
+    have hzmod : (rhoNode1 FF)^[N % p] a = b := by rw [← hmod]; exact hNhit
+    exact hNmin (N % p) hlt hzmod
+  -- ιb = ρ^[N-1] a（前像唯一）
+  have hpre : ivsRhoNode1 FF b = (rhoNode1 FF)^[N - 1] a := by
+    have h1 : rhoNode1 FF ((rhoNode1 FF)^[N - 1] a) = b := by
+      rw [(Function.iterate_succ_apply' (rhoNode1 FF) (N - 1) a).symm,
+        show Nat.succ (N - 1) = N from by omega, hNhit]
+    exact wRhoPreimEq_p35 hlf hEE2 B4 (hiterV (N - 1)) B3 h1
+  -- a 在 b 轨道中的前像下标 m（= pB - N）
+  obtain ⟨pB, hpB0, hpBx, hdisB, himgB, hcardB⟩ :=
+    kchOrbitCycle_p35 (f := rhoNode1 FF) (kchOrbitMapV_p35 hlf hEE2) hb
+  have hmO : a ∈ ({x_1 | ∃ n < pB, (rhoNode1 FF)^[n] b = x_1} : Set V3) := by
+    rw [himgB]; exact ha
+  obtain ⟨m, hm1, hma⟩ : ∃ m, m < pB ∧ (rhoNode1 FF)^[m] b = a := by
+    simpa using hmO
+  have hmN : m + N = pB := by
+    have hma' : (rhoNode1 FF)^[m] b = a := hma
+    have h1 : (rhoNode1 FF)^[N + m] b = b := by
+      rw [Function.iterate_add_apply (rhoNode1 FF) N m b, hma']; exact hNhit
+    have hge : pB ≤ N + m := by
+      rcases Nat.lt_or_ge (N + m) pB with h | h
+      · exact absurd h1 (Ne.symm (hdisB 0 (N + m) (by omega) h))
+      · exact h
+    have hNpB : N < pB := by
+      have hpc : p = pB := hcard.symm.trans hcardB
+      omega
+    have hlt : N + m < 2 * pB := by omega
+    have hkey : (rhoNode1 FF)^[N + m - pB] b = b :=
+      kchOrbitKey_p35 (kchOrbitMapV_p35 hlf hEE2) hb hge (by rw [hpBx, h1])
+    have hzero : N + m - pB = 0 := by
+      by_cases hpos : 0 < N + m - pB
+      · exact absurd hkey.symm (hdisB 0 (N + m - pB) hpos (by omega))
+      · omega
+    omega
+  have hma' : (rhoNode1 FF)^[m] b = a := hma
+  -- 对角方位界（W2 在 b 处单调 + azimAddTriple_p35 减法）
+  have hdiagBnd : ∀ j : ℕ, 1 ≤ j → j < N →
+      0 ≤ azim 0 b a ((rhoNode1 FF)^[j] a) ∧
+      azim 0 b a ((rhoNode1 FF)^[j] a) ≤ Real.pi := by
+    intro j hj1 hjN
+    have hjz : (rhoNode1 FF)^[j] a = (rhoNode1 FF)^[m + j] b := by
+      rw [Nat.add_comm m j, Function.iterate_add_apply (rhoNode1 FF) j m b, ← hma']
+    have hmono := w2OrigMono_p35 hfan hEE2 hb hncB hnotcirc (i := m) (j := m + j)
+      (by omega) (by rw [hcardB]; omega)
+    rw [hma'] at hmono
+    have hle : azim 0 b (rhoNode1 FF b) a
+        ≤ azim 0 b (rhoNode1 FF b) ((rhoNode1 FF)^[j] a) := by
+      rw [hjz]; exact hmono
+    have hbrz : ¬ Collinear3 0 b ((rhoNode1 FF)^[j] a) :=
+      hncB _ (hiterV j) (fun hc => hNmin j hjN hc)
+    have hadd := azimAddTriple_p35 (x := (0:V3)) (v := b) (u := rhoNode1 FF b)
+      (w1 := a) (w2 := (rhoNode1 FF)^[j] a) hb0 hbrb hba hbrz hle
+    have hsec := wSectorAt_p35 hfan hEE2 hb ((rhoNode1 FF)^[j] a) (hiterV j)
+    refine ⟨?_, ?_⟩
+    · linarith
+    · linarith [hadd, hle, hsec.1, hsec.2, azim_nonneg 0 b (rhoNode1 FF b) a]
+  -- 面成员
+  have hBAfv : (b, a) ∈ HS.face (a, rhoNode1 FF a) := by
+    rw [hfv]
+    exact Set.mem_insert_iff.mpr (Or.inl rfl)
+  have horbmem : ∀ n < N, ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)
+      ∈ HS.face (a, rhoNode1 FF a) := by
+    intro n hn
+    rw [hfv]
+    refine Set.mem_insert_of_mem _ ?_
+    simp only [Set.mem_setOf_eq]
+    exact ⟨n, hn, rfl⟩
+  have hIbfv : (ivsRhoNode1 FF b, b) ∈ HS.face (a, rhoNode1 FF a) := by
+    have hmem : ((rhoNode1 FF)^[N - 1] a, (rhoNode1 FF)^[N - 1 + 1] a)
+        ∈ HS.face (a, rhoNode1 FF a) := horbmem (N - 1) (by omega)
+    rw [show (N - 1) + 1 = N from by omega, ← hpre, hNhit] at hmem
+    exact hmem
+  -- 对角 walk
+  set walkD : ℕ → V3 := fun i => if i = 0 then b else (rhoNode1 FF)^[i - 1] a
+    with hwd
+  have hw0 : walkD 0 = b := rfl
+  have hwS : ∀ i : ℕ, walkD (i + 1) = (rhoNode1 FF)^[i] a := by
+    intro i
+    simp only [hwd, if_neg (Nat.succ_ne_zero i), Nat.succ_sub_one]
+  have hwS0 : walkD 1 = (rhoNode1 FF)^[0] a := hwS 0
+  -- EE 支
+  have hEEp : EE_p3 b (ePrime_p3 (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a)))
+      = ({a, ivsRhoNode1 FF b} : Set V3) := by
+    have hE2 : ({b, a} : Set V3) ∈ (E ∪ {{a, b}} : Set (Set V3)) :=
+      Set.mem_union_right E (by rw [Set.pair_comm b a]; simp)
+    ext z
+    have hL : z ∈ EE_p3 b (ePrime_p3 (E ∪ {{a, b}})
+        (HS.face (a, rhoNode1 FF a))) ↔ z ∈ ({a, ivsRhoNode1 FF b} : Set V3) := by
+      simp only [EE_p3, Set.mem_setOf_eq]
+      constructor
+      · intro hz
+        simp only [ePrime_p3, Set.mem_setOf_eq] at hz
+        obtain ⟨x0, y0, hxy0, hE0, hd0⟩ := hz
+        have hzE' : ({b, z} : Set V3) ∈ (E ∪ {{a, b}} : Set (Set V3)) := by
+          rw [hxy0]; exact hE0
+        have hzoE' : ({b, z} : Set V3) ∈ E ∨ ({b, z} : Set V3) ∈ {{a, b}} := hzE'
+        rcases hzoE' with hE1' | hE1'
+        · -- {b, z} ∈ E：z ∈ EE_p3 b E = {ρb, ιb}
+          have hzE : z ∈ EE_p3 b E := hE1'
+          rw [B5] at hzE
+          rcases Set.mem_insert_iff.mp hzE with h' | h'
+          · -- z = ρb：排除
+            exfalso
+            rw [hfv] at hd0
+            rcases Set.mem_insert_iff.mp hd0 with hdc | hdc
+            · -- 闭合 dart (b, a)：{b, ρb} = {b, a} ⟹ ρb ∈ {b, a} 矛盾
+              have hm21 : x0 = b := congrArg Prod.fst hdc
+              have hm22 : y0 = a := congrArg Prod.snd hdc
+              rw [hm21, hm22, h'] at hxy0
+              have hmem : rhoNode1 FF b ∈ ({b, a} : Set V3) := by
+                rw [← hxy0]; simp
+              rcases Set.mem_insert_iff.mp hmem with hq | hq
+              · exact hρbb hq
+              · exact hρba hq
+            · -- 轨道 dart：{b, ρb} = {ρ^[mm]a, ρ^[mm+1]a} 双端点分析
+              obtain ⟨mm, hmm, hm2⟩ := hdc
+              have hm21 : x0 = (rhoNode1 FF)^[mm] a := congrArg Prod.fst hm2
+              have hm22 : y0 = (rhoNode1 FF)^[mm + 1] a := congrArg Prod.snd hm2
+              rw [hm21, hm22, h'] at hxy0
+              have hmemB : b ∈ ({(rhoNode1 FF)^[mm] a, (rhoNode1 FF)^[mm + 1] a} : Set V3) := by
+                rw [← hxy0]; simp
+              rcases Set.mem_insert_iff.mp hmemB with hqB | hqB
+              · exact hNmin mm hmm hqB.symm
+              · -- ρ^[mm+1]a = b：mm+1 = N（否则 hNmin）
+                have hmeq : mm + 1 = N := by
+                  by_contra hne
+                  rcases Nat.lt_or_ge (mm + 1) N with hltN | hgeN
+                  · exact hNmin (mm + 1) hltN hqB.symm
+                  · omega
+                have hmemR : rhoNode1 FF b
+                    ∈ ({(rhoNode1 FF)^[mm] a, (rhoNode1 FF)^[mm + 1] a} : Set V3) := by
+                  rw [← hxy0]; simp
+                rw [show mm = N - 1 from by omega, ← hpre,
+                    show (N - 1) + 1 = N from by omega, hNhit] at hmemR
+                rcases Set.mem_insert_iff.mp hmemR with hqR | hqR
+                · exact B6 hqR
+                · exact hρbb hqR
+          · exact Or.inr h'   -- z = ιb ✓
+        · -- {b, z} = {a, b}：z = a
+          have hzab : ({b, z} : Set V3) = ({a, b} : Set V3) :=
+            Set.mem_singleton_iff.mp hE1'
+          have hzm : z ∈ ({a, b} : Set V3) := by
+            rw [← hzab]
+            simp
+          rcases Set.mem_insert_iff.mp hzm with h' | h'
+          · exact Or.inl h'
+          · exfalso
+            rw [h'] at hzab
+            have hmem : a ∈ ({a, b} : Set V3) := Set.mem_insert_iff.mpr (Or.inl rfl)
+            rw [← hzab] at hmem
+            rcases Set.mem_insert_iff.mp hmem with hq | hq
+            · exact hab hq
+            · exact hab hq
+      · intro hz
+        rcases Set.mem_insert_iff.mp hz with h | h
+        · -- z = a：经闭合 dart (b, a) 落面
+          refine ⟨b, a, by rw [h], hE2, hBAfv⟩
+        · -- z = ιb：经 dart (ιb, b) 落面
+          refine ⟨ivsRhoNode1 FF b, b,
+            by rw [h, Set.pair_comm b (ivsRhoNode1 FF b)],
+            Set.mem_union_left {{a, b}} (kchDartInE_p35 hlf B2), hIbfv⟩
+    exact hL
+  have hNN1 : N + 1 - 1 = N := by omega
+  have hNne0 : ¬(N = 0) := by omega
+  have hwalkN : walkD (N + 1 - 1) = ivsRhoNode1 FF b := by
+    rw [hNN1]
+    simp only [hwd, if_neg hNne0]
+    exact hpre.symm
+  refine ⟨ivsRhoNode1 FF b, N + 1, walkD, hEEp, Ne.symm hιba, by omega, hw0,
+    hwalkN, ?_, hb0, hba, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- 覆盖
+    intro z hz
+    simp only [vPrime_p3, Set.mem_setOf_eq] at hz
+    obtain ⟨hzV, y, hy⟩ := hz
+    rw [hfv] at hy
+    rcases Set.mem_insert_iff.mp hy with hc | hc
+    · refine ⟨0, by omega, ?_⟩
+      rw [hw0]
+      exact (congrArg Prod.fst hc).symm
+    · obtain ⟨mm, hmm, hm2⟩ := hc
+      refine ⟨mm + 1, by omega, ?_⟩
+      rw [hwS]
+      exact (congrArg Prod.fst hm2).symm
+  · -- 内点非共线
+    intro i h0i hik
+    rcases i with _ | i'
+    · omega
+    · rw [hwS]
+      rcases Nat.eq_zero_or_pos i' with h0 | h0
+      · rw [h0, Function.iterate_zero]
+        exact hba
+      · exact hncB _ (hiterV i') (fun hc => hNmin i' (by omega) hc)
+  · -- 内点非零
+    intro i h0i hik
+    rcases i with _ | i'
+    · omega
+    · rw [hwS]
+      rcases Nat.eq_zero_or_pos i' with h0 | h0
+      · rw [h0, Function.iterate_zero]
+        exact ha0
+      · exact fun hc => h0V (hc ▸ hiterV i')
+  · -- 内点方位界
+    intro i h0i hik
+    rcases i with _ | i'
+    · omega
+    · rw [hwS]
+      rcases Nat.eq_zero_or_pos i' with h0 | h0
+      · rw [h0, Function.iterate_zero]
+        show 0 ≤ azim 0 b a a ∧ azim 0 b a a ≤ Real.pi
+        rw [azim_self]
+        exact ⟨le_refl _, le_of_lt Real.pi_pos⟩
+      · exact hdiagBnd i' (by omega) (by omega)
+  · -- 逐 dart 支
+    intro i hik
+    rcases i with _ | s
+    · rw [hw0, hwS0, Function.iterate_zero]
+      show ¬ Collinear3 0 b a ∧ 0 ≤ azim 0 b a b ∧ azim 0 b a b ≤ Real.pi
+      have hz0 : azim 0 b a b = 0 :=
+        azimAxis_p35 (collinear3_pair_right (v0 := (0:V3)) (v1 := b) (x := b) rfl)
+      refine ⟨hba, ?_, ?_⟩
+      · rw [hz0]
+      · rw [hz0]; exact le_of_lt Real.pi_pos
+    · simp only [hwS]
+      have hdartFF : ((rhoNode1 FF)^[s] a, (rhoNode1 FF)^[s + 1] a) ∈ FF := by
+        have h1 := (lfVertKit_p35 hlf hEE2 (hiterV s)).1
+        rw [show rhoNode1 FF ((rhoNode1 FF)^[s] a)
+            = (rhoNode1 FF)^[s + 1] a from by
+              rw [Eq.symm (Function.iterate_succ_apply' (rhoNode1 FF) s a),
+                Nat.succ_eq_add_one]] at h1
+        exact h1
+      have hncD := kchDartNonColl_p35 hlf hdartFF
+      exact ⟨hncD, wDartSector_p35 hfan hEE2 hdartFF b hb⟩
+  · -- 成员
+    intro j hj
+    simp only [vPrime_p3, Set.mem_setOf_eq]
+    rcases j with _ | j'
+    · rw [hw0]
+      exact ⟨hb, a, hBAfv⟩
+    · rw [hwS]
+      refine ⟨hiterV j', (rhoNode1 FF)^[j' + 1] a, horbmem j' ?_⟩
+      omega
+  · -- 步 dart
+    intro i hik
+    rcases i with _ | s
+    · rw [hw0, hwS0, Function.iterate_zero]
+      exact hBAfv
+    · simp only [hwS]
+      rw [hfv]
+      exact Set.mem_insert_of_mem _ ⟨s, by omega, rfl⟩
+
+set_option linter.unusedVariables false in
+/-- **W4 装配前提 hdUU**（U 面基 dart `dU := (v, ρv)`）：`EJRCFJD_W4_ASSEMBLY_NOWRAP_p35`
+的 `hdUU` 槽逐字形。 -/
+theorem w4SlotUU_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NU : ℕ) (HS : Hypermap (V3 × V3))
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hcoreU : HS.face (v, rhoNode1 FF v) = insert (w, v)
+        {d : V3 × V3 | ∃ n < NU, d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} ∧
+      (rhoNode1 FF)^[NU] v = w ∧ ∀ n < NU, (rhoNode1 FF)^[n] v ≠ w) :
+    (v, rhoNode1 FF v) ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v))
+        (v, rhoNode1 FF v) := by
+  obtain ⟨hfvU, hNUhit, hNUmin⟩ := hcoreU
+  have hNU1 : 0 < NU := by
+    rcases Nat.eq_zero_or_pos NU with hc | hc
+    · rw [hc] at hNUhit
+      exact absurd (show (rhoNode1 FF)^[0] v = w from hNUhit) hwv
+    · exact hc
+  refine ⟨?_, w3SliceBase_p35 hfan hv hw hwv hsub hEE2 hnc ⟨hfvU, hNUhit, hNUmin⟩⟩
+  rw [hfvU]
+  refine Set.mem_insert_of_mem _ ?_
+  simp only [Set.mem_setOf_eq]
+  exact ⟨0, hNU1, rfl⟩
+
+set_option linter.unusedVariables false in
+/-- **W4 装配前提 hdWU**（U 面对角 dart `dW := (w, v)`）。 -/
+theorem w4SlotWU_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NU : ℕ) (HS : Hypermap (V3 × V3))
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcoreU : HS.face (v, rhoNode1 FF v) = insert (w, v)
+        {d : V3 × V3 | ∃ n < NU, d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} ∧
+      (rhoNode1 FF)^[NU] v = w ∧ ∀ n < NU, (rhoNode1 FF)^[n] v ≠ w) :
+    (w, v) ∈ HS.face (v, rhoNode1 FF v) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) (w, v) := by
+  obtain ⟨hfvU, hNUhit, hNUmin⟩ := hcoreU
+  refine ⟨?_, w3SliceDiag_p35 hfan hv hw hwv hsub hEE2 hnc hnotcirc
+    ⟨hfvU, hNUhit, hNUmin⟩⟩
+  rw [hfvU]; exact Set.mem_insert_iff.mpr (Or.inl rfl)
+
+set_option linter.unusedVariables false in
+/-- **W4 装配前提 hdUW**（W 面基 dart `dU' := (w, ρw)`）：换序实例化。 -/
+theorem w4SlotUW_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NW : ℕ) (HS : Hypermap (V3 × V3))
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hcoreW : HS.face (w, rhoNode1 FF w) = insert (v, w)
+        {d : V3 × V3 | ∃ n < NW, d = ((rhoNode1 FF)^[n] w, (rhoNode1 FF)^[n + 1] w)} ∧
+      (rhoNode1 FF)^[NW] w = v ∧ ∀ n < NW, (rhoNode1 FF)^[n] w ≠ v) :
+    (w, rhoNode1 FF w) ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w))
+        (w, rhoNode1 FF w) := by
+  have hnc' : ∀ z ∈ ({w, v} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t := by
+    intro z hz t ht hne
+    rcases Set.mem_insert_iff.mp hz with h | h
+    · exact hnc z (Or.inr h) t ht hne
+    · exact hnc z (Or.inl h) t ht hne
+  have hsub' : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx y hy
+    rw [Set.pair_comm w v] at hy
+    exact hsub x hx hy
+  obtain ⟨hfvW, hNWhit, hNWmin⟩ := hcoreW
+  have hNW1 : 0 < NW := by
+    rcases Nat.eq_zero_or_pos NW with hc | hc
+    · rw [hc] at hNWhit
+      exact absurd (show (rhoNode1 FF)^[0] w = v from hNWhit) (Ne.symm hwv)
+    · exact hc
+  refine ⟨?_, w3SliceBase_p35 hfan hw hv (Ne.symm hwv) hsub' hEE2 hnc'
+    ⟨hfvW, hNWhit, hNWmin⟩⟩
+  rw [hfvW]
+  refine Set.mem_insert_of_mem _ ?_
+  simp only [Set.mem_setOf_eq]
+  exact ⟨0, hNW1, rfl⟩
+
+set_option linter.unusedVariables false in
+/-- **W4 装配前提 hdWW**（W 面对角 dart `dW' := (v, w)`）：换序实例化。 -/
+theorem w4SlotWW_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NW : ℕ) (HS : Hypermap (V3 × V3))
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcoreW : HS.face (w, rhoNode1 FF w) = insert (v, w)
+        {d : V3 × V3 | ∃ n < NW, d = ((rhoNode1 FF)^[n] w, (rhoNode1 FF)^[n + 1] w)} ∧
+      (rhoNode1 FF)^[NW] w = v ∧ ∀ n < NW, (rhoNode1 FF)^[n] w ≠ v) :
+    (v, w) ∈ HS.face (w, rhoNode1 FF w) ∧
+      W4AsmWindowSlot_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) (v, w) := by
+  have hnc' : ∀ z ∈ ({w, v} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t := by
+    intro z hz t ht hne
+    rcases Set.mem_insert_iff.mp hz with h | h
+    · exact hnc z (Or.inr h) t ht hne
+    · exact hnc z (Or.inl h) t ht hne
+  have hsub' : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx y hy
+    rw [Set.pair_comm w v] at hy
+    exact hsub x hx hy
+  obtain ⟨hfvW, hNWhit, hNWmin⟩ := hcoreW
+  refine ⟨?_, w3SliceDiag_p35 hfan hw hv (Ne.symm hwv) hsub' hEE2 hnc' hnotcirc
+    ⟨hfvW, hNWhit, hNWmin⟩⟩
+  rw [hfvW]; exact Set.mem_insert_iff.mpr (Or.inl rfl)
+
+/-- **对角边 hanti NL 件**：`-s ∉ affGt {0} {s, t}`——开锥成员的严格正系数
+把 t 渲染成 s 的非零实数倍（`triMemAffGt_p35` 展开 + `collinear3_iff_smul`
+反向），与 `¬ Collinear3 0 s t` 矛盾。供 hnw 实例化的对角闭合边支。 -/
+theorem w2NegNotAffGt_p35 {s t : V3} (hs0 : s ≠ 0) (ht0 : t ≠ 0) (hst : s ≠ t)
+    (hnc : ¬ Collinear3 0 s t) :
+    (-s : V3) ∉ affGt ({(0:V3)} : Set V3) ({s, t} : Set V3) := by
+  intro hmem
+  obtain ⟨β, γ, hβ, hγ, hz⟩ := (triMemAffGt_p35 (v0 := (0:V3)) (x := s) (y := t)
+    hs0 ht0 hst).mp hmem
+  simp only [sub_zero] at hz
+  -- hz : -s = β • s + γ • t
+  have h2 : γ • t = (-1 - β) • s := by
+    have hc3 : γ • t + ((β + 1) • s) = (0:V3) := by
+      rw [add_smul, one_smul]
+      calc γ • t + (β • s + s) = (β • s + γ • t) + s := by abel
+        _ = (-s) + s := by rw [hz]
+        _ = 0 := by abel
+    have hc4 : (-1 - β) • s + (β + 1) • s = (0:V3) := by
+      rw [← add_smul,
+        show ((-1:ℝ) - β + (β + 1) : ℝ) = 0 from by ring, zero_smul]
+    have hstep1 : γ • t = -((β + 1) • s) := eq_neg_iff_add_eq_zero.mpr hc3
+    have hc5 : (β + 1) • s + ((-1 - β) • s) = (0:V3) := by
+      rw [add_comm]; exact hc4
+    have hstep2 : (β + 1) • s = -((-1 - β) • s) := eq_neg_iff_add_eq_zero.mpr hc5
+    rw [hstep1, hstep2, neg_neg]
+  have h3 : ((1:ℝ)/γ) • (γ • t) = ((1:ℝ)/γ) • ((-1 - β) • s) := by rw [h2]
+  rw [smul_smul, one_div, inv_mul_cancel₀ hγ.ne', one_smul, smul_smul] at h3
+  -- h3 : t = ((1/γ) * (-1 - β)) • s
+  have hcol : Collinear3 0 s t :=
+    (collinear3_iff_smul (v := (0:V3)) (w := s) (w1 := t) hs0).mpr
+      ⟨(-1 - β) / γ, by rw [h3, sub_zero, sub_zero, inv_mul_eq_div]⟩
+  exact hnc hcol
+
+/-- **F2→hcore 桥**：`f2FaceCore_p35`（FR 面 ∃N 形）的重排——orchestrator
+一行 `obtain ⟨NU, hcoreU⟩ := w2CoreOfF2_p35 hfan.1 hEE2 hv hw hwv hsub hdiag
+HS hHS` 即得 W3/W4/hnw 件的 hcore 合取形。 -/
+theorem w2CoreOfF2_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfanL : LocalFan V E FF)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hdiag : ({v, w} : Set V3) ∉ E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS) :
+    ∃ NU : ℕ, HS.face (v, rhoNode1 FF v) = insert (w, v)
+        {d : V3 × V3 | ∃ n < NU, d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} ∧
+      (rhoNode1 FF)^[NU] v = w ∧ ∀ n < NU, (rhoNode1 FF)^[n] v ≠ w := by
+  obtain ⟨N, -, hNhit, hNmin, hface⟩ :=
+    f2FaceCore_p35 hfanL hEE2 hv hw hwv hsub hdiag HS hHS
+  exact ⟨N, hface, hNhit, hNmin⟩
+
+/-- **hnw 核·基 dart**（抽象 (a, b) 形）：切片窗口槽体（任意 c k ρ）+
+hcore 面刻画 ⟹ hnowrap 冻结形。hanti：面 dart 两支——轨道 dart 的边 ∈ E
+（`ncHantiOfNotCircular_p35`），对角闭合 dart 的边 {a, b}
+（`w2NegNotAffGt_p35` 非共线排除）。 -/
+theorem w2NwBase_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {HS : Hypermap (V3 × V3)} {a b : V3} {N : ℕ}
+    (hfan : ConvexLocalFan V E FF) (ha : a ∈ V) (hb : b ∈ V) (hab : a ≠ b)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {a, b} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({a, b} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcore : HS.face (a, rhoNode1 FF a) = insert (b, a)
+        {d : V3 × V3 | ∃ n < N, d = ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)} ∧
+      (rhoNode1 FF)^[N] a = b ∧ ∀ n < N, (rhoNode1 FF)^[n] a ≠ b) :
+    ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a))
+        (a, rhoNode1 FF a) c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 a (rhoNode1 FF a) (ρ i) = Real.pi ∧
+          azim 0 a (rhoNode1 FF a) (ρ (i + 1)) = 0) := by
+  obtain ⟨hface, hNhit, -⟩ := hcore
+  have hlf : LocalFan V E FF := hfan.1
+  have h0V : (0:V3) ∉ V := hlf.1.2.2.2.1
+  have ha0 : a ≠ 0 := fun hc => h0V (hc ▸ ha)
+  have hb0 : b ≠ 0 := fun hc => h0V (hc ▸ hb)
+  have hiterV : ∀ m : ℕ, (rhoNode1 FF)^[m] a ∈ V := kchIterInV_p35 hlf hEE2 ha
+  have hncA : ¬ Collinear3 0 a b := hnc a (by simp) b hb (Ne.symm hab)
+  -- 基 dart 落面需 0 < N（N = 0 与 hab 矛盾）
+  have hN0 : 0 < N := by
+    rcases Nat.eq_zero_or_pos N with hc | hc
+    · rw [hc] at hNhit
+      exact absurd (show (rhoNode1 FF)^[0] a = b from hNhit) hab
+    · exact hc
+  have hAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{a, b}} : Set (Set V3)) :=
+    crFanAug_p35 hfan ha hb hab hsub hEE2
+  have hsub' : HS.face (a, rhoNode1 FF a) ⊆ dartsOfHyp_p3 (E ∪ {{a, b}}) V := by
+    intro d hd
+    rw [hface] at hd
+    rcases Set.mem_insert_iff.mp hd with hc | hc
+    · rw [hc]
+      refine Set.mem_union_left _ ?_
+      simp only [ordPairs_p3, Set.mem_setOf_eq]
+      exact Set.mem_union_right E (Set.mem_singleton_iff.mpr (Set.pair_comm b a))
+    · obtain ⟨n, hn, hdrt⟩ := hc
+      rw [hdrt]
+      refine Set.mem_union_left _ ?_
+      simp only [ordPairs_p3, Set.mem_setOf_eq]
+      refine Set.mem_union_left _ ?_
+      have hxk := lfVertKit_p35 hlf hEE2 (hiterV n)
+      have hdartFF : ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a) ∈ FF := by
+        have h1 := hxk.1
+        rw [show rhoNode1 FF ((rhoNode1 FF)^[n] a)
+            = (rhoNode1 FF)^[n + 1] a from by
+              rw [Eq.symm (Function.iterate_succ_apply' (rhoNode1 FF) n a),
+                Nat.succ_eq_add_one]] at h1
+        exact h1
+      exact kchDartInE_p35 hlf hdartFF
+  have hpa : (a, rhoNode1 FF a) ∈ HS.face (a, rhoNode1 FF a) := by
+    rw [hface]
+    refine Set.mem_insert_of_mem _ ?_
+    simp only [Set.mem_setOf_eq]
+    exact ⟨0, hN0, rfl⟩
+  intro c k ρ hbod
+  obtain ⟨hEE, hpc, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds, hdart,
+    hrV, hstep⟩ := hbod
+  refine nwNoWrapOfWindow_p35 (V := V) (E' := (E ∪ {{a, b}} : Set (Set V3)))
+    (fv := HS.face (a, rhoNode1 FF a)) (p := (a, rhoNode1 FF a)) (c := c)
+    (k := k) (ρ := ρ) hAug hsub' hpa
+    ⟨hEE, hpc, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds, hdart, hrV,
+      hstep⟩ ?_
+  intro i hik hmem
+  have hd := hstep i hik
+  rw [hface] at hd
+  rcases Set.mem_insert_iff.mp hd with hc | hc
+  · -- 对角闭合 dart (b, a)：边 {a, b}（NL 件）
+    have hfx : ρ i = b := congrArg Prod.fst hc
+    have hsy : ρ (i + 1) = a := congrArg Prod.snd hc
+    rw [hfx, hsy, Set.pair_comm b a] at hmem
+    exact w2NegNotAffGt_p35 ha0 hb0 hab hncA hmem
+  · -- 轨道 dart：边 ∈ E
+    obtain ⟨n, hn, hdrt⟩ := hc
+    have hfx : ρ i = (rhoNode1 FF)^[n] a := congrArg Prod.fst hdrt
+    have hsy : ρ (i + 1) = (rhoNode1 FF)^[n + 1] a := congrArg Prod.snd hdrt
+    rw [hfx, hsy] at hmem
+    have hxk := lfVertKit_p35 hlf hEE2 (hiterV n)
+    have hdartFF : ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a) ∈ FF := by
+      have h1 := hxk.1
+      rw [show rhoNode1 FF ((rhoNode1 FF)^[n] a)
+          = (rhoNode1 FF)^[n + 1] a from by
+            rw [Eq.symm (Function.iterate_succ_apply' (rhoNode1 FF) n a),
+              Nat.succ_eq_add_one]] at h1
+      exact h1
+    exact ncHantiOfNotCircular_p35 hnotcirc ha ha0 (kchDartInE_p35 hlf hdartFF) hmem
+
+set_option linter.unusedVariables false in
+/-- **hnw 核·对角 dart**（抽象 (a, b) 形）：同 `w2NwBase_p35` 前提下，对角
+dart `(b, a)` 的 hnowrap 冻结形。hanti：对角闭合 dart 的边 {b, a}
+（NL 件，negated 点 = b）与轨道 dart 的边 ∈ E。 -/
+theorem w2NwDiag_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {HS : Hypermap (V3 × V3)} {a b : V3} {N : ℕ}
+    (hfan : ConvexLocalFan V E FF) (ha : a ∈ V) (hb : b ∈ V) (hab : a ≠ b)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {a, b} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({a, b} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcore : HS.face (a, rhoNode1 FF a) = insert (b, a)
+        {d : V3 × V3 | ∃ n < N, d = ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a)} ∧
+      (rhoNode1 FF)^[N] a = b ∧ ∀ n < N, (rhoNode1 FF)^[n] a ≠ b) :
+    ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{a, b}}) (HS.face (a, rhoNode1 FF a)) (b, a) c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 b a (ρ i) = Real.pi ∧ azim 0 b a (ρ (i + 1)) = 0) := by
+  obtain ⟨hface, -, -⟩ := hcore
+  have hlf : LocalFan V E FF := hfan.1
+  have h0V : (0:V3) ∉ V := hlf.1.2.2.2.1
+  have ha0 : a ≠ 0 := fun hc => h0V (hc ▸ ha)
+  have hb0 : b ≠ 0 := fun hc => h0V (hc ▸ hb)
+  have hiterV : ∀ m : ℕ, (rhoNode1 FF)^[m] a ∈ V := kchIterInV_p35 hlf hEE2 ha
+  have hncB : ¬ Collinear3 0 b a := hnc b (by simp) a ha hab
+  have hAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{a, b}} : Set (Set V3)) :=
+    crFanAug_p35 hfan ha hb hab hsub hEE2
+  have hsub' : HS.face (a, rhoNode1 FF a) ⊆ dartsOfHyp_p3 (E ∪ {{a, b}}) V := by
+    intro d hd
+    rw [hface] at hd
+    rcases Set.mem_insert_iff.mp hd with hc | hc
+    · rw [hc]
+      refine Set.mem_union_left _ ?_
+      simp only [ordPairs_p3, Set.mem_setOf_eq]
+      exact Set.mem_union_right E (Set.mem_singleton_iff.mpr (Set.pair_comm b a))
+    · obtain ⟨n, hn, hdrt⟩ := hc
+      rw [hdrt]
+      refine Set.mem_union_left _ ?_
+      simp only [ordPairs_p3, Set.mem_setOf_eq]
+      refine Set.mem_union_left _ ?_
+      have hxk := lfVertKit_p35 hlf hEE2 (hiterV n)
+      have hdartFF : ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a) ∈ FF := by
+        have h1 := hxk.1
+        rw [show rhoNode1 FF ((rhoNode1 FF)^[n] a)
+            = (rhoNode1 FF)^[n + 1] a from by
+              rw [Eq.symm (Function.iterate_succ_apply' (rhoNode1 FF) n a),
+                Nat.succ_eq_add_one]] at h1
+        exact h1
+      exact kchDartInE_p35 hlf hdartFF
+  have hpd : (b, a) ∈ HS.face (a, rhoNode1 FF a) := by
+    rw [hface]
+    exact Set.mem_insert_iff.mpr (Or.inl rfl)
+  intro c k ρ hbod
+  obtain ⟨hEE, hpc, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds, hdart,
+    hrV, hstep⟩ := hbod
+  refine nwNoWrapOfWindow_p35 (V := V) (E' := (E ∪ {{a, b}} : Set (Set V3)))
+    (fv := HS.face (a, rhoNode1 FF a)) (p := (b, a)) (c := c) (k := k) (ρ := ρ)
+    hAug hsub' hpd
+    ⟨hEE, hpc, hk2, hr0, hlast, hvert, hv0, hbp2, hvx, hvx0, hbnds, hdart, hrV,
+      hstep⟩ ?_
+  intro i hik hmem
+  have hd := hstep i hik
+  rw [hface] at hd
+  rcases Set.mem_insert_iff.mp hd with hc | hc
+  · -- 对角闭合 dart (b, a)：边 {b, a}（NL 件，negated = b）
+    have hfx : ρ i = b := congrArg Prod.fst hc
+    have hsy : ρ (i + 1) = a := congrArg Prod.snd hc
+    rw [hfx, hsy] at hmem
+    exact w2NegNotAffGt_p35 hb0 ha0 (Ne.symm hab) hncB hmem
+  · -- 轨道 dart：边 ∈ E
+    obtain ⟨n, hn, hdrt⟩ := hc
+    have hfx : ρ i = (rhoNode1 FF)^[n] a := congrArg Prod.fst hdrt
+    have hsy : ρ (i + 1) = (rhoNode1 FF)^[n + 1] a := congrArg Prod.snd hdrt
+    rw [hfx, hsy] at hmem
+    have hxk := lfVertKit_p35 hlf hEE2 (hiterV n)
+    have hdartFF : ((rhoNode1 FF)^[n] a, (rhoNode1 FF)^[n + 1] a) ∈ FF := by
+      have h1 := hxk.1
+      rw [show rhoNode1 FF ((rhoNode1 FF)^[n] a)
+          = (rhoNode1 FF)^[n + 1] a from by
+            rw [Eq.symm (Function.iterate_succ_apply' (rhoNode1 FF) n a),
+              Nat.succ_eq_add_one]] at h1
+      exact h1
+    exact ncHantiOfNotCircular_p35 hnotcirc hb hb0 (kchDartInE_p35 hlf hdartFF) hmem
+
+/-- **hnw 实例 hdUU**（U 面基 dart `dU := (v, ρv)`）：装配 `hnwUU` 槽逐字形。 -/
+theorem w2NwUU_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NU : ℕ) (HS : Hypermap (V3 × V3))
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcoreU : HS.face (v, rhoNode1 FF v) = insert (w, v)
+        {d : V3 × V3 | ∃ n < NU, d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} ∧
+      (rhoNode1 FF)^[NU] v = w ∧ ∀ n < NU, (rhoNode1 FF)^[n] v ≠ w) :
+    ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v))
+        (v, rhoNode1 FF v) c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 (v, rhoNode1 FF v).1 (v, rhoNode1 FF v).2 (ρ i) = Real.pi ∧
+          azim 0 (v, rhoNode1 FF v).1 (v, rhoNode1 FF v).2 (ρ (i + 1)) = 0) :=
+  w2NwBase_p35 hfan hv hw hwv hsub hEE2 hnc hnotcirc hcoreU
+
+/-- **hnw 实例 hdWU**（U 面对角 dart `dW := (w, v)`）：装配 `hnwWU` 槽逐字形。 -/
+theorem w2NwWU_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NU : ℕ) (HS : Hypermap (V3 × V3))
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcoreU : HS.face (v, rhoNode1 FF v) = insert (w, v)
+        {d : V3 × V3 | ∃ n < NU, d = ((rhoNode1 FF)^[n] v, (rhoNode1 FF)^[n + 1] v)} ∧
+      (rhoNode1 FF)^[NU] v = w ∧ ∀ n < NU, (rhoNode1 FF)^[n] v ≠ w) :
+    ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) (w, v) c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 (w, v).1 (w, v).2 (ρ i) = Real.pi ∧
+          azim 0 (w, v).1 (w, v).2 (ρ (i + 1)) = 0) :=
+  w2NwDiag_p35 hfan hv hw hwv hsub hEE2 hnc hnotcirc hcoreU
+
+/-- **hnw 实例 hdUW**（W 面基 dart `dU' := (w, ρw)`）：换序实例化。 -/
+theorem w2NwUW_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NW : ℕ) (HS : Hypermap (V3 × V3))
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcoreW : HS.face (w, rhoNode1 FF w) = insert (v, w)
+        {d : V3 × V3 | ∃ n < NW, d = ((rhoNode1 FF)^[n] w, (rhoNode1 FF)^[n + 1] w)} ∧
+      (rhoNode1 FF)^[NW] w = v ∧ ∀ n < NW, (rhoNode1 FF)^[n] w ≠ v) :
+    ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w))
+        (w, rhoNode1 FF w) c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 (w, rhoNode1 FF w).1 (w, rhoNode1 FF w).2 (ρ i) = Real.pi ∧
+          azim 0 (w, rhoNode1 FF w).1 (w, rhoNode1 FF w).2 (ρ (i + 1)) = 0) := by
+  have hnc' : ∀ z ∈ ({w, v} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t := by
+    intro z hz t ht hne
+    rcases Set.mem_insert_iff.mp hz with h | h
+    · exact hnc z (Or.inr h) t ht hne
+    · exact hnc z (Or.inl h) t ht hne
+  have hsub' : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx y hy
+    rw [Set.pair_comm w v] at hy
+    exact hsub x hx hy
+  exact w2NwBase_p35 hfan hw hv (Ne.symm hwv) hsub' hEE2 hnc' hnotcirc hcoreW
+
+/-- **hnw 实例 hdWW**（W 面对角 dart `dW' := (v, w)`）：换序实例化。 -/
+theorem w2NwWW_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (NW : ℕ) (HS : Hypermap (V3 × V3))
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+    (hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t)
+    (hnotcirc : ¬ Circular V E)
+    (hcoreW : HS.face (w, rhoNode1 FF w) = insert (v, w)
+        {d : V3 × V3 | ∃ n < NW, d = ((rhoNode1 FF)^[n] w, (rhoNode1 FF)^[n + 1] w)} ∧
+      (rhoNode1 FF)^[NW] w = v ∧ ∀ n < NW, (rhoNode1 FF)^[n] w ≠ v) :
+    ∀ c : V3, ∀ k : ℕ, ∀ ρ : ℕ → V3,
+      nwWindowBody_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) (v, w) c k ρ →
+      ∀ i : ℕ, i + 1 < k →
+        ¬(azim 0 (v, w).1 (v, w).2 (ρ i) = Real.pi ∧
+          azim 0 (v, w).1 (v, w).2 (ρ (i + 1)) = 0) := by
+  have hnc' : ∀ z ∈ ({w, v} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t := by
+    intro z hz t ht hne
+    rcases Set.mem_insert_iff.mp hz with h | h
+    · exact hnc z (Or.inr h) t ht hne
+    · exact hnc z (Or.inl h) t ht hne
+  have hsub' : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx y hy
+    rw [Set.pair_comm w v] at hy
+    exact hsub x hx hy
+  exact w2NwDiag_p35 hfan hw hv (Ne.symm hwv) hsub' hEE2 hnc' hnotcirc hcoreW
+
+-- DISCHARGES（车道 W2，2026-10-28）：
+-- W3 `w3SliceBase_p35` / `w3SliceDiag_p35`（切片窗口槽，抽象 (a,b) 形，W 前沿
+--   草稿 652 行闭出：hzab/Or.inr、hIbfv ←hpre+hNhit、hqB.symm、hmemR 四步 rw、
+--   hρbb/hρba 分支、hzab-b 分支、ιb-落面 pair_comm、hNU1/hNW1 界、kchOrbitKey 桥）；
+-- W4 `w4SlotUU_p35` / `w4SlotWU_p35` / `w4SlotUW_p35` / `w4SlotWW_p35`
+--   （四装配前提逐字形，dart 已钉死）；
+-- 桥 `w2CoreOfF2_p35`（f2FaceCore_p35 ∃N 形 → hcore 合取形）；
+-- NL `w2NegNotAffGt_p35`（对角边 hanti：-s ∉ affGt {0} {s,t}）；
+-- hnw `w2NwBase_p35` / `w2NwDiag_p35`（抽象核）+ `w2NwUU/WU/UW/WW_p35`
+--   （四装配 hnw 槽逐字形：nwNoWrapOfWindow_p35 + 切片窗口体 + 两支 hanti）。
+
+-- ===== merged block: lane HK2 (续146 M1k 合并, 编排者) =====
+
+-- ===== merged block: lane HK2 (ejrcfjd-dw-HK2-front-w1, 三前沿闭) =====
+/-! ## HK Wave 2：HKIRPEP 链三前沿（C 锥桥 / A OZQVSFF / B 方位单调）
+
+命名 `hk2` 前缀 + `_p35`；纯文末追加；零 sorry。 -/
+
+-- ===== 前沿 C（hkAzimCone_p35）=====
+
+/-- 坐标引理：u 在「f₁-f₂-轴 ax」分解下的 f₁/f₂ 坐标 = (α, β)
+（ON 标架点积提取；ax 为轴向量）。 -/
+private theorem hk2DotRep_p35 {f1 f2 ax u : V3} {α β δ : ℝ}
+    (c1 : (f1 : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ) = 1)
+    (c2 : (f2 : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ) = 1)
+    (c12 : (f1 : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ) = 0)
+    (cax1 : (ax : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ) = 0)
+    (cax2 : (ax : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ) = 0)
+    (hu : (u : V3) = α • f1 + β • f2 + δ • ax) :
+    u ⬝ᵥ f1 = α ∧ u ⬝ᵥ f2 = β := by
+  rw [hu]
+  constructor
+  · have c21 : (f2 : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]; exact c12
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct,
+      c1, c21, cax1, smul_eq_mul, mul_one, mul_zero, add_zero]
+  · simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct,
+      c2, c12, cax2, smul_eq_mul, mul_one, mul_zero, add_zero, zero_add]
+
+set_option maxHeartbeats 400000 in
+/-- 前沿 C：平面扇 dial 桥。x = μ•a + ν•g、dial(x), dial(g) ∈ (0, π)
+（e-定向、a-向零点）⟹ ν > 0 ⟹ x ∈ affGt {0,a} {g}。
+证法：取 e-同向 ON 标架，双 AzimSpec 展开（a、g 与 a、x），垂直分量
+恒等式 ν·r₁·r₂·sin γ = r₁′·r₂′·sin θ（两侧皆正）⟹ ν > 0；
+成员 = `affGt_pair_iff` 直构。 -/
+theorem hk2AzimCone_p35 : hkAzimCone_p35 := by
+  intro e a g x μ ν hnc hx hxp hxl hgp hgl
+  -- 非退化
+  have ha0 : a ≠ (0:V3) := fun he => hnc (collinear3_of_eq he)
+  have hg0 : g ≠ (0:V3) := fun he => hnc (collinear3_pair_left he)
+  have hga : g ≠ a := fun he => hnc (collinear3_pair_right he)
+  have hncEA : ¬ Collinear3 (0:V3) e a := by
+    intro hc
+    exact absurd (azimDeg_p35 (Or.inl hc)) (ne_of_gt hxp)
+  have hncEX : ¬ Collinear3 (0:V3) e x := by
+    intro hc
+    exact absurd (azimDeg_p35 (Or.inr hc)) (ne_of_gt hxp)
+  have hncEG : ¬ Collinear3 (0:V3) e g := by
+    intro hc
+    exact absurd (azimDeg_p35 (Or.inr hc)) (ne_of_gt hgp)
+  have he0 : e ≠ (0:V3) := fun he => hncEA (collinear3_of_eq he)
+  -- 轴标架
+  obtain ⟨f1, f2, f3, hON, hve⟩ := exists_on3_eq_smul (e - (0:V3):V3)
+    (sub_ne_zero.mpr he0)
+  have hax : (e - (0:V3):V3) = dist e (0:V3) • f3 := by
+    rw [dist_eq_norm]
+    exact hve
+  have h13 : (f1 : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ) = 0 := hON.2.2.2.2.1
+  have h31 : (f3 : Fin 3 → ℝ) ⬝ᵥ (f1 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]; exact h13
+  have h23 : (f2 : Fin 3 → ℝ) ⬝ᵥ (f3 : Fin 3 → ℝ) = 0 := hON.2.2.2.2.2.1
+  have h32 : (f3 : Fin 3 → ℝ) ⬝ᵥ (f2 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]; exact h23
+  have hD1 : (e - (0:V3):V3) ⬝ᵥ f1 = 0 := by
+    rw [hve, WithLp.ofLp_smul, smul_dotProduct, h31]
+    exact mul_zero _
+  have hD2 : (e - (0:V3):V3) ⬝ᵥ f2 = 0 := by
+    rw [hve, WithLp.ofLp_smul, smul_dotProduct, h32]
+    exact mul_zero _
+  have eD1 : (e:V3) ⬝ᵥ f1 = 0 := by
+    rw [show (e:V3) = (e - (0:V3):V3) from (sub_zero e).symm]
+    exact hD1
+  have eD2 : (e:V3) ⬝ᵥ f2 = 0 := by
+    rw [show (e:V3) = (e - (0:V3):V3) from (sub_zero e).symm]
+    exact hD2
+  -- g-方位的 AzimSpec 展开（ψ、γ 槽）
+  obtain ⟨γ, hγ⟩ := azimSpec_exists (v := (0:V3)) (w := e) (w1 := a) (w2 := g) hncEA hncEG
+  have hγd : azim (0:V3) e a g = γ := azim_eq_of_spec hncEA hncEG hγ
+  obtain ⟨h1g, h2g, hframesG⟩ := hγ.2.2
+  obtain ⟨ψ, r₁, r₂, hrepG⟩ := hframesG f1 f2 f3 hON hax he0
+  have hag := hrepG.1
+  have hgr := hrepG.2.1
+  have hr₁ := hrepG.2.2.1
+  have hr₂ := hrepG.2.2.2
+  simp only [sub_zero] at hag hgr
+  -- x-方位的 AzimSpec 展开（ψ′、θ 槽）
+  obtain ⟨θ, hθ⟩ := azimSpec_exists (v := (0:V3)) (w := e) (w1 := a) (w2 := x) hncEA hncEX
+  have hθd : azim (0:V3) e a x = θ := azim_eq_of_spec hncEA hncEX hθ
+  obtain ⟨h1x, h2x, hframesX⟩ := hθ.2.2
+  obtain ⟨ψ', r₁', r₂', hrepX⟩ := hframesX f1 f2 f3 hON hax he0
+  have hag' := hrepX.1
+  have hxr := hrepX.2.1
+  have hr₁' := hrepX.2.2.1
+  have hr₂' := hrepX.2.2.2
+  simp only [sub_zero] at hag' hxr
+  -- 坐标提取（同一标架）
+  obtain ⟨ha1, ha2⟩ := hk2DotRep_p35 (ax := (e:V3)) hON.1 hON.2.1 hON.2.2.2.1 eD1 eD2 hag
+  obtain ⟨hg1, hg2⟩ := hk2DotRep_p35 (ax := (e:V3)) hON.1 hON.2.1 hON.2.2.2.1 eD1 eD2 hgr
+  obtain ⟨ha1', ha2'⟩ := hk2DotRep_p35 (ax := (e:V3)) hON.1 hON.2.1 hON.2.2.2.1 eD1 eD2 hag'
+  obtain ⟨hx1, hx2⟩ := hk2DotRep_p35 (ax := (e:V3)) hON.1 hON.2.1 hON.2.2.2.1 eD1 eD2 hxr
+  -- x 坐标的线性性
+  have hlin1 : x ⬝ᵥ f1 = μ * (a ⬝ᵥ f1) + ν * (g ⬝ᵥ f1) := by
+    rw [hx]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct,
+      smul_eq_mul]
+  have hlin2 : x ⬝ᵥ f2 = μ * (a ⬝ᵥ f2) + ν * (g ⬝ᵥ f2) := by
+    rw [hx]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct,
+      smul_eq_mul]
+  -- 正弦恒等式（dial 以 a-向为零点）
+  have sγ : Real.sin γ = Real.sin (ψ + γ) * Real.cos ψ - Real.cos (ψ + γ) * Real.sin ψ := by
+    have h := Real.sin_sub (ψ + γ) ψ
+    rwa [show (ψ + γ) - ψ = γ from by ring] at h
+  have sθ : Real.sin θ = Real.sin (ψ' + θ) * Real.cos ψ' - Real.cos (ψ' + θ) * Real.sin ψ' := by
+    have h := Real.sin_sub (ψ' + θ) ψ'
+    rwa [show (ψ' + θ) - ψ' = θ from by ring] at h
+  -- 垂直分量恒等式
+  have key : ν * (r₁ * r₂ * Real.sin γ) = r₁' * r₂' * Real.sin θ := by
+    calc ν * (r₁ * r₂ * Real.sin γ)
+        = ν * ((g ⬝ᵥ f2) * (a ⬝ᵥ f1) - (g ⬝ᵥ f1) * (a ⬝ᵥ f2)) := by
+          rw [sγ, hg2, hg1, ha1, ha2]; ring
+      _ = (x ⬝ᵥ f2) * (a ⬝ᵥ f1) - (x ⬝ᵥ f1) * (a ⬝ᵥ f2) := by
+          rw [hlin1, hlin2]; ring
+      _ = r₁' * r₂' * Real.sin θ := by
+          rw [sθ, hx2, hx1, ha1', ha2']; ring
+  -- ν > 0
+  have hγpos : 0 < γ := by rw [← hγd]; exact hgp
+  have hγlt : γ < Real.pi := by rw [← hγd]; exact hgl
+  have hθpos : 0 < θ := by rw [← hθd]; exact hxp
+  have hθlt : θ < Real.pi := by rw [← hθd]; exact hxl
+  have hS : (0:ℝ) < r₁ * r₂ * Real.sin γ :=
+    mul_pos (mul_pos hr₁ hr₂) (Real.sin_pos_of_pos_of_lt_pi hγpos hγlt)
+  have hT : (0:ℝ) < r₁' * r₂' * Real.sin θ :=
+    mul_pos (mul_pos hr₁' hr₂') (Real.sin_pos_of_pos_of_lt_pi hθpos hθlt)
+  have hνpos : 0 < ν := by
+    by_contra hc
+    have h1 : ν * (r₁ * r₂ * Real.sin γ) ≤ 0 :=
+      mul_nonpos_of_nonpos_of_nonneg (le_of_not_gt hc) hS.le
+    linarith
+  -- 开锥成员
+  refine (affGt_pair_iff (v0 := (0:V3)) (v1 := a) (x := g) (y := x) (Ne.symm ha0)
+    hg0 hga).mpr ⟨ν, hνpos, μ, ?_⟩
+  have hx2' : (x - (0:V3):V3) = ν • (g - (0:V3):V3) + μ • (a - (0:V3):V3) := by
+    simp only [sub_zero]
+    rw [hx]
+    module
+  exact hx2'
+
+
+-- ===== 前沿 A（hkOzqvsff_p35）=====
+
+set_option maxHeartbeats 400000 in
+/-- 前沿 A：HOL `OZQVSFF`（local_lemmas.hl:2056）抽象渲染。
+证法：`b2AzimSmulPi_p35` 出对径轴 π（w = c•v, c<0 特例，免 LDURDPN 全形）；
+`kchDartNonColl_p35`（fan6）出 ρu/ιu 离轴；`azimInFan_two_p35`/
+`wedgeInFanGe_two_p35` 把凸性两合取塌缩到二点邻居集的 azim/wedge；
+`azimAddTriple_p35` 双案夹出 dial(v) = 0（或 dial(w) = 0）与
+azim 0 u (ρu) (ιu) = π；`azim_eq_zero_iff` 出 ρu ∈ affGt {0,u} {v/w}
+（结论 2），`azim_eq_azim_iff` 出 w（或 v）∈ affGt {0,u} {ιu}
+⟹ ιu 落 span{u, v}（结论 3）。 -/
+theorem hk2Ozqvsff_p35 : hkOzqvsff_p35 := by
+  intro V E FF hfan hEE2 v w u hv hw hu huv huw hcw hu0 hnc0vu
+  obtain ⟨c, hc0, hcw⟩ := hcw
+  have hlf : LocalFan V E FF := hfan.1
+  have hconv := hfan.2
+  have h0V : (0:V3) ∉ V := hlf.1.2.2.2.1
+  have hv0 : v ≠ (0:V3) := fun he => h0V (he ▸ hv)
+  have hw0 : w ≠ (0:V3) := fun he => h0V (he ▸ hw)
+  have h0u : (0:V3) ≠ u := Ne.symm hu0
+  obtain ⟨hdart, hivdart, -, hivV, hEEu, hriv⟩ := lfVertKit_p35 hlf hEE2 hu
+  -- fan6：dart 过 0 非共线（注记：不用 set 命名 ρu/ιu——set 的 let-绑定会
+  -- 让 whnf 穿透 rhoNode1 的 epsilon 展开，KCHMAMG 同款确定性超时）
+  -- 注记：kchDartNonColl 不可带 ρu-注解直接用（unifier 对 d.2 =?= ρu 会
+  -- 无界 whnf，KCHMAMG 同款确定性超时）；先无注解 have 再定形。
+  have hncR0 := kchDartNonColl_p35 hlf hdart
+  have hncR : ¬ Collinear3 (0:V3) u (rhoNode1 FF u) := hncR0
+  have hncI0 := kchDartNonColl_p35 hlf hivdart
+  have hsetUI : ({(0:V3), ivsRhoNode1 FF u, u} : Set V3)
+      = ({(0:V3), u, ivsRhoNode1 FF u} : Set V3) := by
+    ext q
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hncI : ¬ Collinear3 (0:V3) u (ivsRhoNode1 FF u) :=
+    fun hc => (hncI0 : ¬ Collinear ℝ ({(0:V3), ivsRhoNode1 FF u, u} : Set V3))
+      (by rw [hsetUI]; exact hc)
+  have hsetVU : ({(0:V3), v, u} : Set V3) = ({(0:V3), u, v} : Set V3) := by
+    ext q
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hncUV : ¬ Collinear3 (0:V3) u v := by
+    intro hc
+    apply hnc0vu
+    show Collinear ℝ ({(0:V3), v, u} : Set V3)
+    rw [hsetVU]
+    exact hc
+  -- w = c•v（c<0）⟹ ¬Coll3 0 u w；对径轴 π
+  have hcne : c ≠ 0 := ne_of_lt hc0
+  have hncUW : ¬ Collinear3 (0:V3) u w := by
+    intro hc
+    obtain ⟨t, ht⟩ := (collinear3_iff_smul hu0).mp hc
+    simp only [sub_zero] at ht
+    have hcv : (t:ℝ) • (u:V3) = (c:ℝ) • v := ht.symm.trans hcw
+    have h5 := congrArg (fun q : V3 => (c⁻¹:ℝ) • q) hcv
+    rw [inv_smul_smul₀ hcne, smul_smul] at h5
+    apply hncUV
+    exact (collinear3_iff_smul hu0).mpr ⟨c⁻¹ * t, by rw [sub_zero, sub_zero, ← h5]⟩
+  have hpi : azim (0:V3) u v w = Real.pi := by
+    rw [hcw]
+    exact b2AzimSmulPi_p35 c hc0 hncUV
+  have hpiWV : azim (0:V3) u w v = Real.pi := by
+    rw [azim_compl hncUV hncUW, hpi, if_neg (by simp)]
+    ring
+  -- 凸性两合取塌缩到二点邻居集
+  have hwedge1 : V ⊆ wedgeGe (0:V3) u (rhoNode1 FF u) (ivsRhoNode1 FF u) := by
+    have h1 := wedgeInFanGe_two_p35 (p := (u, rhoNode1 FF u)) (b := rhoNode1 FF u)
+      (c := ivsRhoNode1 FF u) hEEu hriv rfl
+    have h2 : V ⊆ wedgeInFanGe (u, rhoNode1 FF u) E := (hconv (u, rhoNode1 FF u) hdart).2
+    rwa [h1] at h2
+  have hdialI : azim (0:V3) u (rhoNode1 FF u) (ivsRhoNode1 FF u) ≤ Real.pi := by
+    have h1 := azimInFan_two_p35 (p := (u, rhoNode1 FF u)) (b := rhoNode1 FF u)
+      (c := ivsRhoNode1 FF u) hEEu hriv rfl
+    have h2 : azimInFan (u, rhoNode1 FF u) E ≤ Real.pi := (hconv (u, rhoNode1 FF u) hdart).1
+    rwa [h1] at h2
+  have hdv : 0 ≤ azim (0:V3) u (rhoNode1 FF u) v ∧
+      azim (0:V3) u (rhoNode1 FF u) v ≤
+        azim (0:V3) u (rhoNode1 FF u) (ivsRhoNode1 FF u) := by
+    have h := hwedge1 hv
+    simp only [wedgeGe, Set.mem_setOf_eq] at h
+    exact h
+  have hdw : 0 ≤ azim (0:V3) u (rhoNode1 FF u) w ∧
+      azim (0:V3) u (rhoNode1 FF u) w ≤
+        azim (0:V3) u (rhoNode1 FF u) (ivsRhoNode1 FF u) := by
+    have h := hwedge1 hw
+    simp only [wedgeGe, Set.mem_setOf_eq] at h
+    exact h
+  -- ιu 非退化（结论 3 的 affGt 条件）
+  have hiv0 : ivsRhoNode1 FF u ≠ (0:V3) := fun he => h0V (he ▸ hivV)
+  have hivu : ivsRhoNode1 FF u ≠ u := by
+    intro he
+    apply hncI
+    rw [he]
+    exact collinear3_pair_right (rfl : u = u)
+  -- 结论 3 换算器：target = ct•v 落 {0,u}-ιu 锥 ⟹ ιu 落 span{u, v}
+  have key3 : ∀ ct c' h' : ℝ, ct ≠ 0 → 0 < c' →
+      ct • v = c' • (ivsRhoNode1 FF u) + h' • u →
+      ∃ ω' s' : ℝ, ivsRhoNode1 FF u = ω' • u + s' • v := by
+    intro ct c' h' hct0 hc'0 hmem
+    refine ⟨-(c'⁻¹ * h'), c'⁻¹ * ct, ?_⟩
+    have h8 : c' • (ivsRhoNode1 FF u) = ct • v - h' • u := by
+      rw [eq_sub_iff_add_eq]
+      exact hmem.symm
+    have h9 : ivsRhoNode1 FF u = ((c'⁻¹:ℝ)) • (c' • ivsRhoNode1 FF u) := by
+      rw [inv_smul_smul₀ (ne_of_gt hc'0)]
+    rw [h9, h8, smul_sub]
+    module
+  -- 双案夹逼
+  rcases le_total (azim (0:V3) u (rhoNode1 FF u) v)
+      (azim (0:V3) u (rhoNode1 FF u) w) with hle | hle
+  · -- 案 A：dial(v) ≤ dial(w)：dial(v) = 0、dial(ιu) = dial(w) = π
+    have hadd := azimAddTriple_p35 (x := (0:V3)) (v := u) (u := rhoNode1 FF u)
+      (w1 := v) (w2 := w) hu0 hncR hncUV hncUW hle
+    rw [hpi] at hadd
+    have hvz : azim (0:V3) u (rhoNode1 FF u) v = 0 := by
+      have h1 := hdw.2.trans hdialI
+      linarith
+    have hivpi : azim (0:V3) u (rhoNode1 FF u) (ivsRhoNode1 FF u) = Real.pi := by
+      have h1 := hdw.2.trans hdialI
+      linarith
+    have hdwpi : azim (0:V3) u (rhoNode1 FF u) w = Real.pi := by
+      rw [hadd, hvz]; ring
+    refine ⟨hivpi, ?_, ?_⟩
+    · -- 结论 2：ρu ∈ affGt {0,u} {v} ⟹ ρu = ω•u + s•v
+      obtain ⟨s, hs0, ωr, hm2⟩ :=
+        (affGt_pair_iff (v0 := (0:V3)) (v1 := u) (x := v) (y := rhoNode1 FF u) h0u hv0
+          (Ne.symm huv)).mp ((azim_eq_zero_iff hncR hncUV).mp hvz)
+      have h2 : (rhoNode1 FF u) = s • v + ωr • u := by simpa only [sub_zero] using hm2
+      exact ⟨ωr, s, by rw [h2]; module⟩
+    · -- 结论 3：w ∈ affGt {0,u} {ιu} ⟹ ιu = ω•u + s•v
+      have hweq : azim (0:V3) u (rhoNode1 FF u) (ivsRhoNode1 FF u)
+          = azim (0:V3) u (rhoNode1 FF u) w := by rw [hivpi, hdwpi]
+      obtain ⟨c', hc'0, h', hmW⟩ :=
+        (affGt_pair_iff (v0 := (0:V3)) (v1 := u) (x := ivsRhoNode1 FF u) (y := w)
+          h0u hiv0 hivu).mp ((azim_eq_azim_iff hncR hncI hncUW).mp hweq)
+      have hw' : (w:V3) = c' • (ivsRhoNode1 FF u) + h' • u := by
+        simpa only [sub_zero] using hmW
+      exact key3 c c' h' hcne hc'0 (by rw [← hcw]; exact hw')
+  · -- 案 B：dial(w) ≤ dial(v)：dial(w) = 0、dial(ιu) = dial(v) = π
+    have hadd := azimAddTriple_p35 (x := (0:V3)) (v := u) (u := rhoNode1 FF u)
+      (w1 := w) (w2 := v) hu0 hncR hncUW hncUV hle
+    rw [hpiWV] at hadd
+    have hwz : azim (0:V3) u (rhoNode1 FF u) w = 0 := by
+      have h1 := hdv.2.trans hdialI
+      linarith
+    have hivpi : azim (0:V3) u (rhoNode1 FF u) (ivsRhoNode1 FF u) = Real.pi := by
+      have h1 := hdv.2.trans hdialI
+      linarith
+    have hdvpi : azim (0:V3) u (rhoNode1 FF u) v = Real.pi := by
+      rw [hadd, hwz]; ring
+    refine ⟨hivpi, ?_, ?_⟩
+    · -- 结论 2：ρu ∈ affGt {0,u} {w} ⟹ ρu = ω•u + s•v
+      obtain ⟨s, hs0, ωr, hm2⟩ :=
+        (affGt_pair_iff (v0 := (0:V3)) (v1 := u) (x := w) (y := rhoNode1 FF u) h0u hw0
+          (Ne.symm huw)).mp ((azim_eq_zero_iff hncR hncUW).mp hwz)
+      have h2 : (rhoNode1 FF u) = s • w + ωr • u := by simpa only [sub_zero] using hm2
+      refine ⟨ωr, s * c, ?_⟩
+      rw [h2, hcw, smul_smul]
+      module
+    · -- 结论 3：v ∈ affGt {0,u} {ιu} ⟹ ιu = ω•u + s•v
+      have hweq : azim (0:V3) u (rhoNode1 FF u) (ivsRhoNode1 FF u)
+          = azim (0:V3) u (rhoNode1 FF u) v := by rw [hivpi, hdvpi]
+      obtain ⟨c'', hc''0, h'', hmV⟩ :=
+        (affGt_pair_iff (v0 := (0:V3)) (v1 := u) (x := ivsRhoNode1 FF u) (y := v)
+          h0u hiv0 hivu).mp ((azim_eq_azim_iff hncR hncI hncUV).mp hweq)
+      have hv' : (v:V3) = c'' • (ivsRhoNode1 FF u) + h'' • u := by
+        simpa only [sub_zero] using hmV
+      exact key3 1 c'' h'' one_ne_zero hc''0 (by rw [one_smul]; exact hv')
+
+
+-- ===== merged block: lane HK3 (续147 M2 合并, 编排者) =====
+
+-- ===== 车道 HK3 (ejrcfjd-dw-HK3-mono-w1, 2026-10-28)：前沿 B `hkAzimMono_p35` 全闭 =====
+-- ===== + 无门非共线终件 `hk3SliceNoncollinear_p35`（HKIRPEP 非共线全链闭）。 =====
+
+/- 本块渲染架构（HK2 DELIVERY §3 七步蓝图逐字执行；新件名 `hk3` 前缀 + `_p35`）：
+
+- **步骤 1（现成件）**：`kchOrbitCycle_p35 (kchOrbitMapV_p35 …)` 出轨道周期 p =
+  V.ncard，n < p 即窗口 [0,n] 两两相异；
+- **步骤 2（现成件）**：件1 `hkInteriorAnglePi_p35`（模前沿 A，HK2 已闭）出步进引擎
+  ρz = ω•z + s•a，件2 `hkHalfCircularPlane_p35` 平面化：∀ m ≤ n, ρ^[m]a 落
+  span{a, ρa}；
+- **步骤 3**：e := a × ρa（toLp-coe 形，对齐 `kchAzimSequence_p35` 的 he 槽 = rfl）；
+  e ≠ 0（kchCollinear3Cross）+ e ⬝ a = e ⬝ ρa = 0（kchDotCrossCyclic 换位 +
+  kchCrossSelf0）⟹ ¬Coll3 0 e a / ¬Coll3 0 e ρa（正交辅件 hk3OrthNoncol_p35）；
+- **步骤 4（现成件 + 一线换位）**：dial(a) = 0（azim_self）；b = c•a（c < 0，
+  Collinear 排正支 `hkFan7RayKill_p35`）⟹ dial(b) = π（`b2AzimSmulPi_p35`，
+  前沿 A 同件）；dial(ρa) ∈ (0, π)（`kchMixedProdRangeAzim_p35`：混积换位
+  (e×a)⬝ρa = (a×ρa)⬝e = e⬝e > 0，免 AzimSpec 帧）；
+- **步骤 5+6（步进引擎 + 窗口单调；核心）**：`kchAzimSequence_p35`（KCHMAMG 面 =
+  HOL `SEQUENCE_OF_RHO_NODE_IS_SUC` 港件，LA35Pre 现成）：窗口
+  U = {ρ^[k]a | k ≤ n} ⊆ 平面 P := affineSpan {0, a, ρa}（件2 系数 +
+  affineSpan_insert_zero 渲染）+ hno2（`kchNoTwoV_p35`）在 y := a 处给出方位梯
+  dial(z_k) < dial(z_{k+1})（1 ≤ k ≤ n−1）；基步 0 < dial(z_1) 由步骤 4 混积；
+  严格递增链归纳（hchain）⟹ ∀ k < m ≤ n 严格小于；终点 dial(z_n) = π 自动封顶，
+  无 overshoot 分析（蓝图 §3 步骤 6 同款）；
+- **终件** `hk3SliceNoncollinear_p35`（public 一行装配）：
+  `hkSliceNoncollinearFull_p35 hk2Ozqvsff_p35 hk3AzimMono_p35 hk2AzimCone_p35
+  hfan hv hw hwv hsub hEE2` —— 根五 + hEE2 无门非共线全链闭。
+
+WHNF 陷阱遵循 HK2 DELIVERY §2：rhoNode1 全拼写不用 set；本块不触 AzimSpec 帧
+函数（混积面替代）。零 sorry；既有行零改动（纯文末追加）。 -/
+
+/-- 正交辅件：x ≠ 0、y ≠ 0 且 `y ⬝ x = 0` ⟹ `¬ Collinear3 0 x y`
+（Collinear 排 0-支：y = t•x 与 y ⬝ x = t(x⬝x) = 0 矛盾）。 -/
+private theorem hk3OrthNoncol_p35 (x y : V3) (hx : x ≠ (0:V3)) (hy : y ≠ (0:V3))
+    (h : (y : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) : ¬ Collinear3 (0:V3) x y := by
+  intro hcon
+  obtain ⟨t, ht⟩ := (collinear3_iff_smul hx).mp hcon
+  have ht' : y = t • x := by simpa only [sub_zero] using ht
+  have h1 : (y : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ)
+      = t * (((x : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ)) := by
+    rw [ht']
+    simp only [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+  have hxcoe : ((x : V3) : Fin 3 → ℝ) ≠ 0 := fun hz => hx (kchCoeInj_p35 hz)
+  have he2 : 0 < ((x : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) := kchDotSelfPos_p35 hxcoe
+  have ht0 : t = 0 := by
+    rw [h1] at h
+    exact (mul_eq_zero.mp h).resolve_right (ne_of_gt he2)
+  rw [ht0, zero_smul] at ht'
+  exact hy ht'
+
+set_option maxHeartbeats 400000 in
+/-- 前沿 B：Lunar 对径轨道段的方位角单调（HOL `RHO_NODE1_MONO_WITH_AZIM`
+ll:4557 轨道段窗口形 + 终点平角 `azim 0 e a b = π`；e 为轨道平面法向
+`a × ρa`，toLp-coe 形）。证法 = HK2 DELIVERY §3 蓝图：步骤 1–5 全现成件
+（kchOrbitCycle / 件1 / 件2 / hkFan7RayKill / b2AzimSmulPi /
+kchMixedProdRangeAzim），核心单调由 KCHMAMG 面 `kchAzimSequence_p35`
+（HOL `SEQUENCE_OF_RHO_NODE_IS_SUC` 港件）在 y := a 处一次给出方位梯；
+严格递增链 + 终点 π 封顶。 -/
+theorem hk3AzimMono_p35 : hkAzimMono_p35 := by
+  intro V E FF hfan hEE2 a b ha hb hab hL hcol n hn hnW hn2
+  have hlf : LocalFan V E FF := hfan.1
+  have h0V : (0:V3) ∉ V := hlf.1.2.2.2.1
+  have ha0 : a ≠ (0:V3) := fun he => h0V (by rw [← he]; exact ha)
+  -- 步骤1：轨道窗口 [0,n] 两两相异
+  obtain ⟨p, -, -, hdis, -, hpV⟩ := kchOrbitCycle_p35 (kchOrbitMapV_p35 hlf hEE2) ha
+  have hnp : n < p := by rw [← hpV]; exact hn
+  have hdisW : ∀ i j : ℕ, i < j → j ≤ n → (rhoNode1 FF)^[i] a ≠ (rhoNode1 FF)^[j] a :=
+    fun i j hij hjn => hdis i j hij (lt_of_le_of_lt hjn hnp)
+  -- 步骤4a：b 的负系数形（Collinear 排正支 fan7）
+  obtain ⟨c, hcw⟩ := (collinear3_iff_smul ha0).mp hcol
+  have hcw' : b = c • a := by simp only [sub_zero] at hcw; exact hcw
+  have hb0 : b ≠ (0:V3) := fun he => h0V (by rw [← he]; exact hb)
+  have hc0 : c < 0 := by
+    by_cases h : (0:ℝ) ≤ c
+    · exact (hkFan7RayKill_p35 hfan ha hb hab hb0 ⟨c, h, hcw'⟩).elim
+    · exact lt_of_not_ge h
+  -- 步骤3：e := a × ρa（toLp-coe 形；非退化 + 双正交）
+  have hkit := nlLunarKitA1_p35 hlf hEE2 ha h0V
+  have he0 : (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) : V3) ≠ (0:V3) := by
+    intro hz
+    exact hkit.2.2 (kchCollinear3Cross_p35.mpr hz)
+  have hxc0 : (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) ≠ 0 :=
+    fun hz => he0 (kchToLpEqZero_p35.mpr hz)
+  have hecoe : (((WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) : V3)) : Fin 3 → ℝ)
+      = crossProduct (a : Fin 3 → ℝ) ((rhoNode1 FF a : V3) : Fin 3 → ℝ) := rfl
+  have h0 : (crossProduct (a : Fin 3 → ℝ) ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      (a : Fin 3 → ℝ) = 0 := by
+    rw [kchDotCrossCyclic_p35 (a : Fin 3 → ℝ) ((rhoNode1 FF a : V3) : Fin 3 → ℝ)
+      (a : Fin 3 → ℝ), dotProduct_comm,
+      kchDotCrossCyclic_p35 ((rhoNode1 FF a : V3) : Fin 3 → ℝ) (a : Fin 3 → ℝ)
+        (a : Fin 3 → ℝ), kchCrossSelf0_p35 (a : Fin 3 → ℝ), dotProduct_zero]
+  have hdotA : (a : Fin 3 → ℝ) ⬝ᵥ (((WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) : V3)) : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]; exact h0
+  have hG : (crossProduct (a : Fin 3 → ℝ) ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ) = 0 := by
+    rw [kchDotCrossCyclic_p35 (a : Fin 3 → ℝ) ((rhoNode1 FF a : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ),
+      kchCrossSelf0_p35 ((rhoNode1 FF a : V3) : Fin 3 → ℝ), dotProduct_zero]
+  have hdotG : ((rhoNode1 FF a : V3) : Fin 3 → ℝ) ⬝ᵥ (((WithLp.toLp 2 (crossProduct
+      (a : Fin 3 → ℝ) ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) : V3)) : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]; exact hG
+  have hncEA : ¬ Collinear3 (0:V3) (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) a :=
+    hk3OrthNoncol_p35 _ a he0 ha0 hdotA
+  have hncEG : ¬ Collinear3 (0:V3) (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) (rhoNode1 FF a) :=
+    hk3OrthNoncol_p35 _ (rhoNode1 FF a) he0 hkit.2.1 hdotG
+  -- 步骤4b：dial(ρa) ∈ (0, π)（混积换位 (e×a)⬝ρa = (a×ρa)⬝e = e⬝e > 0）
+  have hmix : 0 < (crossProduct (((WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) : V3)) : Fin 3 → ℝ) (a : Fin 3 → ℝ)) ⬝ᵥ
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ) := by
+    rw [kchDotCrossCyclic_p35 (((WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ)) : V3)) : Fin 3 → ℝ) (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ), dotProduct_comm, hecoe]
+    exact kchDotSelfPos_p35 hxc0
+  have hd1pos := kchMixedProdRangeAzim_p35
+    (u := WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) (v := a) (w := rhoNode1 FF a)
+    he0 hncEA hncEG hmix
+  -- 步骤5+6：窗口 U ⊆ 平面 P := affineSpan {0, a, ρa}（件2 系数渲染）
+  have hstep : ∀ z ∈ V, z ≠ a → z ≠ b → ∃ ω s : ℝ, rhoNode1 FF z = ω • z + s • a :=
+    fun z hz hza hzb =>
+      (hkInteriorAnglePi_p35 hk2Ozqvsff_p35 hfan hEE2 ha hb hab hcol hz hza hzb).2.1
+  have hplane := hkHalfCircularPlane_p35 hfan hEE2 ha hb hstep n hn hnW
+  have hP : kchPlane_p35 (affineSpan ℝ ({(0:V3), a, rhoNode1 FF a} : Set V3)) :=
+    ⟨(0:V3), a, rhoNode1 FF a, hkit.2.2, rfl⟩
+  have h0P : (0:V3) ∈ (affineSpan ℝ ({(0:V3), a, rhoNode1 FF a} : Set V3)) := by
+    show (0:V3) ∈ (affineSpan ℝ (insert (0:V3) ({a, rhoNode1 FF a} : Set V3)) : Set V3)
+    rw [affineSpan_insert_zero]
+    exact Submodule.zero_mem _
+  have hsubU : ((fun k : ℕ => (rhoNode1 FF)^[k] a) '' Set.Iic n) ⊆
+      (affineSpan ℝ ({(0:V3), a, rhoNode1 FF a} : Set V3)) := by
+    intro z hz
+    obtain ⟨k, hk, hzz⟩ := hz
+    obtain ⟨μ, ν, hμν⟩ := hplane k (Set.mem_Iic.mp hk)
+    have hzm : (rhoNode1 FF)^[k] a ∈
+        (affineSpan ℝ ({(0:V3), a, rhoNode1 FF a} : Set V3)) := by
+      rw [hμν]
+      show (μ • a + ν • rhoNode1 FF a) ∈
+        (affineSpan ℝ (insert (0:V3) ({a, rhoNode1 FF a} : Set V3)) : Set V3)
+      rw [affineSpan_insert_zero]
+      exact Submodule.add_mem _
+        (Submodule.smul_mem _ _ (Submodule.subset_span
+          (Set.mem_insert a (Set.singleton (rhoNode1 FF a)))))
+        (Submodule.smul_mem _ _ (Submodule.subset_span
+          (Set.mem_insert_of_mem a (Set.mem_singleton (rhoNode1 FF a)))))
+    rw [← hzz]
+    exact hzm
+  -- 方位梯（SEQUENCE 港件，y := a）
+  have hno2 := kchNoTwoV_p35 hlf hEE2
+  have hseq := kchAzimSequence_p35 hlf hEE2 hno2 ha rfl hP h0P hsubU rfl
+  -- 梯步：dial(z_k) < dial(z_{k+1})（1 ≤ k，k+1 ≤ n）
+  have hdstep : ∀ k : ℕ, 1 ≤ k → k + 1 ≤ n →
+      azim (0:V3) (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+        ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) a ((rhoNode1 FF)^[k] a) <
+      azim (0:V3) (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+        ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) a ((rhoNode1 FF)^[k + 1] a) := by
+    intro k hk1 hk2
+    have hne2 : a ≠ rhoNode1 FF ((rhoNode1 FF)^[k] a) := by
+      have h2 := hdisW 0 (k + 1) (by omega) hk2
+      rw [Function.iterate_succ_apply'] at h2
+      exact h2
+    have hs := hseq ((rhoNode1 FF)^[k] a) k rfl (by omega) a
+      (Set.mem_image_of_mem (fun k : ℕ => (rhoNode1 FF)^[k] a)
+        (Set.mem_Iic.mpr (Nat.zero_le n)))
+      (hdisW 0 k hk1 (by omega)) hne2
+    rw [Function.iterate_succ_apply']
+    exact hs
+  -- 基步：0 = dial(z_0) < dial(z_1)
+  have hd0lt1 : azim (0:V3) (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+      ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) a a <
+      azim (0:V3) (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+        ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) a (rhoNode1 FF a) := by
+    rw [azim_self]
+    exact hd1pos.1
+  -- 严格递增链（终点 π 封顶，无需 overshoot）
+  have hchain : ∀ k m : ℕ, k < m → m ≤ n →
+      azim (0:V3) (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+        ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) a ((rhoNode1 FF)^[k] a) <
+      azim (0:V3) (WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+        ((rhoNode1 FF a : V3) : Fin 3 → ℝ))) a ((rhoNode1 FF)^[m] a) := by
+    intro k m
+    induction m with
+    | zero => intro hkm _; exact absurd hkm (Nat.not_lt_zero k)
+    | succ m ih =>
+      intro hkm hm
+      rcases Nat.eq_zero_or_pos m with hm0 | hm0
+      · have hk0 : k = 0 := by omega
+        have hm1 : m + 1 = 1 := by omega
+        subst hk0
+        rw [hm1, Function.iterate_zero_apply, Function.iterate_one, azim_self]
+        exact hd1pos.1
+      · rcases Nat.lt_or_ge k m with hlt | hge
+        · exact lt_trans (ih hlt (by omega)) (hdstep m (by omega) (by omega))
+        · have hkm2 : k = m := by omega
+          rw [hkm2]
+          exact hdstep m (by omega) (by omega)
+  refine ⟨WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ)
+    ((rhoNode1 FF a : V3) : Fin 3 → ℝ)), ?_, ?_⟩
+  · intro k m hkm hm
+    exact hchain k m hkm hm
+  · rw [hcw']
+    exact b2AzimSmulPi_p35 c hc0 hncEA
+
+-- ===== 终件（public）：根五 + hEE2 无门非共线全链闭 =====
+
+/-- 终件（public）：凸局部扇根五前提 + `hEE2` ⟹ 切片非共线全形
+`∀ z ∈ {v,w}, ∀ t ∈ V, t ≠ z → ¬ Collinear3 0 z t`。
+= `hkSliceNoncollinearFull_p35` 一行装配（前沿 A/B/C 全闭输入：
+`hk2Ozqvsff_p35`（HK2）+ `hk3AzimMono_p35`（本块）+ `hk2AzimCone_p35`（HK2））；
+HKIRPEP 非共线全链闭。 -/
+theorem hk3SliceNoncollinear_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 (0:V3) z t :=
+  hkSliceNoncollinearFull_p35 hk2Ozqvsff_p35 hk3AzimMono_p35 hk2AzimCone_p35
+    hfan hv hw hwv hsub hEE2
+
+-- ===== merged block: lane FIN (终装配, ejrcfjd-dw-FIN-asm-w1, 2026-10-28) =====
+/-! ## EJRCFJD 收官装配 — `EJRCFJD_p35_CLOSED_p35`（lane `ejrcfjd-dw-FIN-asm-w1`）
+
+仓根 `EJRCFJD_p35`（`LocalAuto35.lean:9899`，根五 + `hEE2` 新签名，逐字同形）的
+终件：全部 20 车道 kit（合并基底 M2）之上，以 `EJRCFJD_W4_ASSEMBLY_NOWRAP_p35`
+填根。装配树（槽 ← 件 ← 前提）：
+- `HS/hHS` ← `HS_EXISTS3_p35`（A）← 根五 + `hEE2`；
+- `hfanAug` ← `crFanAug_p35`（CR）；`hdV/hdW` ← `crDartV_p35`/`crDartW_p35`（CR）；
+- `hstepU/hstepW` ← `hstepSlotOfPred_p35`（B6）← `hgraph`（=hfanAug.2.1）+ `hdEE`
+  （B DELIVERY §2 配方：selfpair 支由对角边杀灭）+ `hfin`（`eeFiniteOfAugFan_p35`，
+  B8；`u` 为第三显参）+ `h2`（`twoNbrOfUnio_p35`（B3）×2 提升；hEE2 下对角端点
+  亦有 `(EE u E).ncard = 2 > 0` 故 `u ∈ ⋃₀ E`，B DELIVERY §3 角点支由 `hEE2`
+  直接闭合）+ `hpred`（`b2AzimCyclePredInj_p35`（B2a）× `hinj`
+  （`crAzimInjNbr_p35`，CR））；
+- `hvisitU/hvisitW` ← `hvisitSlotOfParam_p35`（B7）× `F_PRIME_ABSTRACT_p35`
+  （F2 主件；W 面为 `v := w`/`w := v` 换序实例）；
+- `hdUU/hdWU/hdUW/hdWW` ← `w4SlotUU_p35`/`w4SlotWU_p35`/`w4SlotUW_p35`/
+  `w4SlotWW_p35`（W2）；`hnwUU/hnwWU/hnwUW/hnwWW` ← `w2NwUU_p35` 同族（W2；
+  NOWRAP 的 hnwUW 槽体在 `E ∪ {{w, v}}`、hnwWW 槽同，`w2NwUW/WW_p35` 逐字直配，
+  换序桥不消费）；
+  `hnc` ← `hk3SliceNoncollinear_p35`（HK3）；`hnotcirc` ← `ncNotCircular_p35`
+  （NC2；`w4SlotWU/WW` 与 `w2Nw*` 对角 dart 槽需之）；
+- `hcoreU/hcoreW` ← `w2CoreOfF2_p35`（W2 桥）∘ `f2FaceCore_p35`（F2）；
+- `hsplitU/hsplitW` ← `W4_SPLIT_RED_p35`（F）∘ `frSplitResidueU_p35`/
+  `frSplitResidueW_p35`（FR）← `hcore`（`hparam` ← `FACE_CYCLE_PARAM_p35` 链，
+  W 面 `v := w`/`w := v` 隐参钉死）。
+-/
+
+theorem EJRCFJD_p35_CLOSED_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∃ HS : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HS ∧
+      ConvexLocalFan (vPrime_p3 V (HS.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
+        (HS.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HS.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
+        (HS.face (w, rhoNode1 FF w)) := by
+  -- R-e：对角非边（两向）
+  have hdiag : ({v, w} : Set V3) ∉ E := diagNotEdge_p35 hfan hv hw hwv hsub
+  have hdiagW : ({w, v} : Set V3) ∉ E := by
+    intro hc
+    refine hdiag ?_
+    rw [Set.pair_comm] at hc
+    exact hc
+  have hsubW : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p3 x E := by
+    intro x hx y hy
+    rw [Set.pair_comm w v] at hy
+    exact hsub x hx hy
+  -- A：增广载体超图见证
+  obtain ⟨HS, hHS⟩ := HS_EXISTS3_p35 V E FF v w hfan hv hw hwv hsub hEE2
+  -- CR：增广扇与两基 dart
+  have hfanAug : Kepler.Text.Fan.FAN 0 V (E ∪ {{v, w}}) :=
+    crFanAug_p35 hfan hv hw hwv hsub hEE2
+  have hdV : (v, rhoNode1 FF v) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+    crDartV_p35 hfan hEE2 hv
+  have hdW : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{v, w}}) V :=
+    crDartW_p35 hfan hEE2 hw
+  -- 换序桥（W 面）
+  have hAugW : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+    rw [Set.pair_comm w v]
+  have hHSw : IsHypE_p35 V (E ∪ {{w, v}}) HS := by rw [hAugW]; exact hHS
+  have hgraph : Kepler.Text.Fan.Graph (E ∪ {{v, w}}) := hfanAug.2.1
+  have hgraphW : Kepler.Text.Fan.Graph (E ∪ {{w, v}}) := by rw [hAugW]; exact hgraph
+  have hfanAugW : Kepler.Text.Fan.FAN 0 V (E ∪ {{w, v}}) := by
+    rw [hAugW]; exact hfanAug
+  have hVEW : ⋃₀ (E ∪ {{w, v}}) ⊆ V := by rw [hAugW]; exact hfanAug.1
+  have hdWw : (w, rhoNode1 FF w) ∈ dartsOfHyp_p3 (E ∪ {{w, v}}) V := by
+    rw [hAugW]; exact hdW
+  -- B 前提束：hfin（B8）与 hdEE（B DELIVERY §2 配方）
+  have hVf : V.Finite := hfan.1.1.2.2.1.1
+  have hfinE : ∀ u ∈ ⋃₀ (E ∪ {{v, w}}), (EE_p3 u (E ∪ {{v, w}})).Finite :=
+    fun u _ => eeFiniteOfAugFan_p35 hfanAug.1 hVf u
+  have hfinW : ∀ u ∈ ⋃₀ (E ∪ {{w, v}}), (EE_p3 u (E ∪ {{w, v}})).Finite :=
+    fun u _ => eeFiniteOfAugFan_p35 hVEW hVf u
+  have hdEEv : EE_p3 (rhoNode1 FF v) (E ∪ {{v, w}}) ≠ ∅ := by
+    intro he
+    rcases hdV with hord | hself
+    · have hmem : (v : V3) ∈ EE_p3 (rhoNode1 FF v) (E ∪ {{v, w}}) := by
+        show ({rhoNode1 FF v, v} : Set V3) ∈ (E ∪ {{v, w}} : Set (Set V3))
+        rw [pairSwap_p35 (rhoNode1 FF v) v]
+        exact hord
+      rw [he] at hmem
+      simp at hmem
+    · obtain ⟨hp12, -, hpEE⟩ := hself
+      have hpEE' : EE_p3 v (E ∪ {{v, w}}) = ∅ := hpEE
+      have hwE : (w : V3) ∈ EE_p3 v (E ∪ {{v, w}}) := by
+        show ({v, w} : Set V3) ∈ (E ∪ {{v, w}} : Set (Set V3))
+        exact Set.mem_union_right E (Set.mem_singleton _)
+      rw [hpEE'] at hwE
+      simp at hwE
+  have hdEEw : EE_p3 (rhoNode1 FF w) (E ∪ {{w, v}}) ≠ ∅ := by
+    intro he
+    rcases hdWw with hord | hself
+    · have hmem : (w : V3) ∈ EE_p3 (rhoNode1 FF w) (E ∪ {{w, v}}) := by
+        show ({rhoNode1 FF w, w} : Set V3) ∈ (E ∪ {{w, v}} : Set (Set V3))
+        rw [pairSwap_p35 (rhoNode1 FF w) w]
+        exact hord
+      rw [he] at hmem
+      simp at hmem
+    · obtain ⟨hp12, -, hpEE⟩ := hself
+      have hpEE' : EE_p3 w (E ∪ {{w, v}}) = ∅ := hpEE
+      have hvE : (v : V3) ∈ EE_p3 w (E ∪ {{w, v}}) := by
+        show ({w, v} : Set V3) ∈ (E ∪ {{w, v}} : Set (Set V3))
+        exact Set.mem_union_right E (Set.mem_singleton _)
+      rw [hpEE'] at hvE
+      simp at hvE
+  -- B3×2：hEE2 ⟹ 每点两相异原邻居（B DELIVERY §3 角点支由 hEE2 闭合）
+  have htwo : ∀ S : Set V3, 2 ≤ S.ncard → ∃ a ∈ S, ∃ b ∈ S, a ≠ b := by
+    intro S hc
+    have h0 : S.ncard ≠ 0 := by omega
+    have hne : S ≠ ∅ := fun hem => h0 (by rw [hem, Set.ncard_empty])
+    obtain ⟨a, ha⟩ := Set.nonempty_iff_ne_empty.mpr hne
+    refine ⟨a, ha, ?_⟩
+    by_contra h1
+    have hsub1 : S ⊆ {a} := by
+      intro t ht
+      by_contra ht1
+      exact h1 ⟨t, ht, fun hcc => ht1 hcc.symm⟩
+    have hle := Set.ncard_le_ncard hsub1 (Set.finite_singleton a)
+    rw [Set.ncard_singleton] at hle
+    omega
+  have h2E : ∀ u ∈ ⋃₀ (E ∪ {{v, w}}), ∀ z ∈ EE_p3 u (E ∪ {{v, w}}),
+      ∃ y ∈ EE_p3 u (E ∪ {{v, w}}), y ≠ z := by
+    intro u hu z hz
+    have huV : u ∈ V := hfanAug.1 hu
+    obtain ⟨a, haE, b, hbE, hab⟩ :=
+      htwo (EE_p3 u E) (by have := hEE2 u huV; omega)
+    by_cases hza : z = a
+    · refine ⟨b, ?_, ?_⟩
+      · show ({u, b} : Set V3) ∈ (E ∪ {{v, w}} : Set (Set V3))
+        exact Set.mem_union_left _ hbE
+      · intro hcc
+        rw [hza] at hcc
+        exact hab hcc.symm
+    · refine ⟨a, ?_, ?_⟩
+      · show ({u, a} : Set V3) ∈ (E ∪ {{v, w}} : Set (Set V3))
+        exact Set.mem_union_left _ haE
+      · exact fun hcc => hza hcc.symm
+  have h2W : ∀ u ∈ ⋃₀ (E ∪ {{w, v}}), ∀ z ∈ EE_p3 u (E ∪ {{w, v}}),
+      ∃ y ∈ EE_p3 u (E ∪ {{w, v}}), y ≠ z := by
+    rw [hAugW]; exact h2E
+  -- CR×B2a：方位单射（hinj）与前驱存在（hpred）
+  have hinjE : ∀ u ∈ ⋃₀ (E ∪ {{v, w}}), ∀ z ∈ EE_p3 u (E ∪ {{v, w}}),
+      Set.InjOn (azim (0:V3) u z) (EE_p3 u (E ∪ {{v, w}})) :=
+    crAzimInjNbr_p35 hfan hv hw hwv hsub hEE2
+  have hpredE : ∀ u ∈ ⋃₀ (E ∪ {{v, w}}), ∀ z ∈ EE_p3 u (E ∪ {{v, w}}),
+      ∃ x ∈ EE_p3 u (E ∪ {{v, w}}),
+        azimCycle_p3 (EE_p3 u (E ∪ {{v, w}})) (0:V3) u x = z :=
+    fun u hu z hz =>
+      b2AzimCyclePredInj_p35 (hfinE u hu) hz (h2E u hu z hz) (hinjE u hu z hz)
+  have hinjW : ∀ u ∈ ⋃₀ (E ∪ {{w, v}}), ∀ z ∈ EE_p3 u (E ∪ {{w, v}}),
+      Set.InjOn (azim (0:V3) u z) (EE_p3 u (E ∪ {{w, v}})) := by
+    rw [hAugW]; exact crAzimInjNbr_p35 hfan hv hw hwv hsub hEE2
+  have hpredW : ∀ u ∈ ⋃₀ (E ∪ {{w, v}}), ∀ z ∈ EE_p3 u (E ∪ {{w, v}}),
+      ∃ x ∈ EE_p3 u (E ∪ {{w, v}}),
+        azimCycle_p3 (EE_p3 u (E ∪ {{w, v}})) (0:V3) u x = z :=
+    fun u hu z hz =>
+      b2AzimCyclePredInj_p35 (hfinW u hu) hz (h2W u hu z hz) (hinjW u hu z hz)
+  -- B6：hstep 双面
+  have hstepU : ∀ p ∈ HS.face (v, rhoNode1 FF v), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{v, w}}) p = (p.2, c) ∧ c ≠ p.1 :=
+    hstepSlotOfPred_p35 hgraph HS hHS hdV hdEEv hfinE h2E hpredE
+  have hstepW : ∀ p ∈ HS.face (w, rhoNode1 FF w), ∃ c : V3,
+      ffOfHyp_p3 0 V (E ∪ {{w, v}}) p = (p.2, c) ∧ c ≠ p.1 :=
+    hstepSlotOfPred_p35 hgraphW HS hHSw hdWw hdEEw hfinW h2W hpredW
+  -- B7×F2：hvisit 双面
+  obtain ⟨k1, k1', r1, vv1, hk10, hk1'0, hk1lt, hper1, hinj1, hF1⟩ :=
+    F_PRIME_ABSTRACT_p35 V E FF v w hfan hv hw hwv hsub hdiag HS hHS hfanAug hdV hEE2
+  have hvisitU : Set.InjOn Prod.fst (HS.face (v, rhoNode1 FF v)) :=
+    hvisitSlotOfParam_p35 HS hHS hdV k1 k1' hk10 hk1'0 hk1lt vv1 r1 hper1 hinj1 hF1
+  obtain ⟨k2, k2', r2, vv2, hk20, hk2'0, hk2lt, hper2, hinj2, hF2⟩ :=
+    F_PRIME_ABSTRACT_p35 V E FF w v hfan hw hv (Ne.symm hwv) hsubW hdiagW HS hHSw
+      hfanAugW hdWw hEE2
+  have hvisitW : Set.InjOn Prod.fst (HS.face (w, rhoNode1 FF w)) :=
+    hvisitSlotOfParam_p35 HS hHSw hdWw k2 k2' hk20 hk2'0 hk2lt vv2 r2 hper2 hinj2 hF2
+  -- FACE_CYCLE_PARAM 链（W4_SPLIT_RED 的 hparam 槽）
+  have hparamU : faceCycleParam_p35 V (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)) :=
+    FACE_CYCLE_PARAM_p35 hgraph HS hHS hdV hstepU hvisitU
+  have hparamW : faceCycleParam_p35 V (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)) :=
+    FACE_CYCLE_PARAM_p35 hgraphW HS hHSw hdWw hstepW hvisitW
+  -- HK3 / NC2
+  have hnc : ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 (0:V3) z t :=
+    hk3SliceNoncollinear_p35 hfan hv hw hwv hsub hEE2
+  have hnotcirc : ¬ Circular V E := ncNotCircular_p35 hfan hv hw hwv hsub hEE2
+  -- W2 桥：hcore 双面
+  obtain ⟨NU, hcoreU⟩ := w2CoreOfF2_p35 hfan.1 hEE2 hv hw hwv hsub hdiag HS hHS
+  obtain ⟨NW, hcoreW⟩ :=
+    w2CoreOfF2_p35 hfan.1 hEE2 hw hv (Ne.symm hwv) hsubW hdiagW HS hHSw
+  -- W2：四窗口槽 + 四 hnw 槽
+  have hdUU := w4SlotUU_p35 V E FF v w NU HS hfan hv hw hwv hsub hEE2 hnc hcoreU
+  have hdWU :=
+    w4SlotWU_p35 V E FF v w NU HS hfan hv hw hwv hsub hEE2 hnc hnotcirc hcoreU
+  have hdUW := w4SlotUW_p35 V E FF v w NW HS hfan hv hw hwv hsub hEE2 hnc hcoreW
+  have hdWW :=
+    w4SlotWW_p35 V E FF v w NW HS hfan hv hw hwv hsub hEE2 hnc hnotcirc hcoreW
+  have hnwUU :=
+    w2NwUU_p35 V E FF v w NU HS hfan hv hw hwv hsub hEE2 hnc hnotcirc hcoreU
+  have hnwWU :=
+    w2NwWU_p35 V E FF v w NU HS hfan hv hw hwv hsub hEE2 hnc hnotcirc hcoreU
+  have hnwUW :=
+    w2NwUW_p35 V E FF v w NW HS hfan hv hw hwv hsub hEE2 hnc hnotcirc hcoreW
+  have hnwWW :=
+    w2NwWW_p35 V E FF v w NW HS hfan hv hw hwv hsub hEE2 hnc hnotcirc hcoreW
+  -- F+FR：hsplit 双面
+  have hsplitU : W4RootSplitSlot_p35 V E (E ∪ {{v, w}}) FF
+      (HS.face (v, rhoNode1 FF v)) (v, rhoNode1 FF v) (w, v) :=
+    W4_SPLIT_RED_p35 HS hHS hdV hparamU hvisitU
+      (frSplitResidueU_p35 hfan hv hw hwv hEE2 hcoreU)
+  have hsplitW : W4RootSplitSlot_p35 V E (E ∪ {{w, v}}) FF
+      (HS.face (w, rhoNode1 FF w)) (w, rhoNode1 FF w) (v, w) :=
+    W4_SPLIT_RED_p35 (v := w) (w := v) HS hHSw hdWw hparamW hvisitW
+      (frSplitResidueW_p35 hfan hv hw hwv hEE2 hcoreW)
+  -- NOWRAP 填根（四 dart 隐参钉死）
+  exact EJRCFJD_W4_ASSEMBLY_NOWRAP_p35 V E FF v w hfan hv hw hwv hsub HS hHS
+    hfanAug hdV hdW hstepU hvisitU hstepW hvisitW
+    (dU := (v, rhoNode1 FF v)) (dW := (w, v)) (dU' := (w, rhoNode1 FF w))
+    (dW' := (v, w))
+    hdUU hdWU hdUW hdWW hnwUU hnwWU hnwUW hnwWW hsplitU hsplitW
+
+/-- HOL SUBGOAL of the LE4F segment: `norm (u - w) <= cstab`, from the
+`bm p q <= cstab` hypothesis through the MMs bound and `periodic2`
+(QKNVMLB.hl LE4F second script block). -/
+theorem q1_norm_diag_p35 (s : ScsV39) (p q : ℕ) (vv : ℕ → V3)
+    (hP2bm : Periodic2 s.bm s.k) (hMM : vv ∈ MMsV39 s) (hc : s.bm p q ≤ cstab) :
+    norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab := by
+  have h1 : dist (vv (p % s.k)) (vv (q % s.k)) ≤ s.bm (p % s.k) (q % s.k) :=
+    hMM.2.2.2.2.2 _ _
+  rw [per2_mod_p35 hP2bm p q] at hc
+  rw [← dist_eq_norm]
+  exact h1.trans hc
+
+/-- HOL `EJRCFJD` (Local_lemmas1.hl:5967): the diag-slicing
+convex-local-fan lemma, rendered in the `IsHypE_p35` carrier form (the HOL
+`HS = hypermap (HYP (vec 0,V,E UNION {{v,w}}))` equation becomes the
+existential `HS`; cf. the encoding notes at the `V/E/F_PRIME` trio).
+NEEDS: `THE_SLICING_INTO_2_LEMMA` + `PROVE_THE_SLICE_ASSUMPTION`
+(Local_lemmas1 -- LocalAuto2-importing world, unreachable from LA35
+imports) -- bridge wave, same home as `F_PRIME_EQ_F_vv_p35` (estimate and
+plan: lkgrqui-qknv2-w2 DELIVERY §3.3).  `EJRCFJD_p8` (LocalAuto8) is the
+NKEZBFC.hl:1685 `slicev/slicee/slicef` rendering of the same HOL family;
+this `_p35` form is the Local_lemmas1.hl:5967 one consumed by
+`QKNVMLB1_LE4F/EQ4F` (the `!x. x IN FF ==> aff_gt {vec 0} {v, w} SUBSET
+wedge_in_fan_gt x E` hypothesis is `TECOXBMv2_p35`'s conclusion).
+**EV28 (2026-10-31, user-approved EVOLUTION)**: premise `hEE2` added.  HOL's
+`local_fan` admits no isolated vertex (`darts_of_hyp = ord_pairs ∪
+self_pairs`, localization.hl:42–45, killed by `dih2k`), so `∀ v ∈ V, CARD (EE
+v E) = 2` is a *theorem* there (`LOFA_IMP_EE_TWO_ELMS`).  Our `LocalFan`
+(`hypermapOfFan`, no self_pairs) cannot see isolated vertices, and under such
+a junk `v` the face `HS.face (v, rhoNode1 FF v)` is an unconstrained
+`Classical.epsilon` — the five-premise form is neither provable nor
+refutable.  `hEE2` restores exactly the HOL premise strength (queue 续 133/135,
+lane `ejrcfjd-dw-J-junk-w1` DELIVERY). -/
+theorem EJRCFJD_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3)
+    (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    ∃ HS : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HS ∧
+      ConvexLocalFan (vPrime_p3 V (HS.face (v, rhoNode1 FF v)))
+        (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
+        (HS.face (v, rhoNode1 FF v)) ∧
+      ConvexLocalFan (vPrime_p3 V (HS.face (w, rhoNode1 FF w)))
+        (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
+        (HS.face (w, rhoNode1 FF w)) := by
+  exact EJRCFJD_p35_CLOSED_p35 V E FF v w hfan hv hw hwv hsub hEE2
+  -- DISCHARGES: local_lemmas1.hl:5967 (bridge wave; THE_SLICING_INTO_2_LEMMA
+  -- + PROVE_THE_SLICE_ASSUMPTION unreachable from the LA35 import face).
+
+/-- HOL `QKNVMLB1_LE4F` (QKNVMLB.hl:4838, proof ~225 ln). -/
+theorem QKNVMLB1_LE4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+    (vv vv' : ℕ → V3)
+    (hs' : s' = scsHalfSliceV39 s p q d' mkj)
+    (hs'' : s'' = scsHalfSliceV39 s q p d'' mkj)
+    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hd' : d' < 0.9)
+    (h4 : 4 < s.k ∧ s.bm p q ≤ cstab) (hMM : vv ∈ MMsV39 s) :
+    BBsV39 s' vv' := by
+  subst hs'
+  subst hvv'
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hBB : BBsV39 s vv := hMM.1.1.1
+  -- HOL script blocks 2-4: range / periodicity / a-b window through the
+  -- half-slice re-indexing (QKNVMLB.hl:4873-5060, engine-w1 sub-lemmas).
+  obtain ⟨h1, h2, h3⟩ := q1_head_p35 s p q d' mkj vv hBB hscs hdiag hMM
+  refine ⟨h1, h2, h3, ?_⟩
+  -- component 4 (HOL: cases on `3 <= k' ==> k' <= 3 \/ ~(k' <= 3)`).
+  have hP2bm : Periodic2 s.bm s.k := hscs.2.2.2.2.2.2.2.2.2.1
+  rcases Nat.lt_or_ge (scsHalfSliceV39 s p q d' mkj).k 4 with hk'3 | hk'4
+  · -- k' <= 3: the fan disjunct is trivial.
+    exact Or.inl (by omega)
+  · -- 4 <= k': the half slice is a genuine diag slice of the s-fan
+    -- (HOL final script block, QKNVMLB.hl:5040-5064).
+    refine Or.inr ?_
+    have hfan0 : ConvexLocalFan (Set.range vv)
+        (Set.range fun i => {vv i, vv (i + 1)})
+        (Set.range fun i => (vv i, vv (i + 1))) := by
+      rcases hBB.2.2.2 with hle | hfan
+      · omega
+      · exact hfan
+    -- HOL SUBGOAL norm (u - w) <= cstab from the bm p q <= cstab hypothesis.
+    have hnorm : norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab :=
+      q1_norm_diag_p35 s p q vv hP2bm hMM h4.2
+    have huw : vv (p % s.k) ≠ vv (q % s.k) :=
+      NOT_EQ_DIAG_p35 s p q _ _ vv hscs hdiag hnorm rfl rfl hBB
+    -- TECOXBMv2: the diag wedge contains every fan face wedge.
+    have hwedge := TECOXBMv2_p35 s p q (vv (p % s.k)) (vv (q % s.k))
+      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) vv hscs hdiag hnorm rfl rfl rfl rfl rfl hBB
+    -- EJRCFJD: the diag slice of the s-fan is again a convex local fan.
+    obtain ⟨HS, hHS, hfanU, -⟩ :=
+      EJRCFJD_p35 (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+        (Set.range fun i => (vv i, vv (i + 1))) (vv (p % s.k)) (vv (q % s.k))
+        hfan0 (IN_IMAGE_VV_p35 vv (p % s.k)) (IN_IMAGE_VV_p35 vv (q % s.k)) huw hwedge
+        (vvEE2OfBB_p35 s vv hscs hBB (by have := h4.1; omega))
+    -- the V/E/F_PRIME re-labelling trio identifies the re-indexed sets with
+    -- the slice face's vertex/edge/dart sets.
+    have hVp := V_PRIME_EQ_V_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
+      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
+      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
+      hnorm hscs hdiag hBB hHS
+    have hEp := E_PRIME_EQ_E_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
+      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
+      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
+      hnorm hscs hdiag hBB hHS
+    have hFp := F_PRIME_EQ_F_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj
+      s.k (scsHalfSliceV39 s p q d' mkj).k (vv (p % s.k)) (vv (q % s.k))
+      (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) vv HS rfl hs''.symm rfl rfl rfl rfl rfl rfl rfl
+      hnorm hscs hdiag hBB hHS
+    rw [hVp, hEp, hFp]
+    exact hfanU
+
+  -- DISCHARGES: source 4838-5064; MMs → BBs transport along the slice
+  -- (a/b-window re-indexing through scsHalfSliceV39).
+
+/-- HOL `QKNVMLB1` (QKNVMLB.hl:5223).  RULING 2026-09-21 IV: this twin's
+index convention `vv (i % s'.k + p % s.k)` is the FAITHFUL encoding -- it
+is verbatim the proved original's `vv'` (QKNVMLB.hl:5225).  The LA1
+registry concl carries the appendix.hl:1055 statement-let form
+`vv ((i+p) % s'.k)`, which is unproved upstream and is NOT bridged here;
+the registry correction belongs to the registry-refactor round (ruling
+recorded at LocalConcl `QKNVMLB1_discharged`). -/
+theorem QKNVMLB1_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop) (vv : ℕ → V3)
+    (hMM : vv ∈ MMsV39 s) (hbm : s.bm p q < 4)
+    (h4 : s.k = 4 ∨ s.bm p q ≤ cstab) (hscs : isScsV39 s) (hd' : d' < 0.9)
+    (hdiag : scsDiag s.k p q) (s' : ScsV39)
+    (hs' : s' = scsHalfSliceV39 s p q d' mkj) (vv' : ℕ → V3)
+    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k)) :
+    BBsV39 s' vv' := by
+  -- engine-w1 E2 assembly (verified real-form body): k = 4 -> EQ4F;
+  -- else bm <= cstab with 4 < k -> LE4F (the k = 4 + bm <= cstab corner
+  -- also goes to EQ4F via cstab < 4).
+  have h3k : 3 < s.k := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
+  have hc4 : cstab ≤ 4 := by norm_num [cstab]
+  rcases h4 with hk4 | hcstab
+  · exact QKNVMLB1_EQ4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
+      hs' rfl hvv' hscs hdiag hd' ⟨hk4.symm, le_of_lt hbm⟩ hMM
+  · rcases Nat.eq_or_lt_of_le (by omega : 4 ≤ s.k) with he4 | hk4
+    · exact QKNVMLB1_EQ4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
+        hs' rfl hvv' hscs hdiag hd' ⟨he4, by linarith⟩ hMM
+    · exact QKNVMLB1_LE4F_p35 (s'' := scsHalfSliceV39 s q p d' mkj) s s' p q d' mkj vv vv'
+        hs' rfl hvv' hscs hdiag hd' ⟨hk4, hcstab⟩ hMM
+
+  -- DISCHARGES: composes QKNVMLB1_EQ4F_p35 (k = 4) / QKNVMLB1_LE4F_p35
+  -- (4 < k, via SCS_K_PRIME_CASE_3_p35) on the bm < 4 / bm ≤ cstab split;
+  -- blocked by QKNVMLB1_LE4F/EQ4F.
+
+/-- HOL `INTER_SLICE_SCS_EMPTY` (QKNVMLB.hl:5495). -/
+theorem INTER_SLICE_SCS_EMPTY_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop)
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) :
+    {y | ∃ i < s'.k - 1, y = (i + p % s.k) % s.k} ∩
+      {y | ∃ i < s''.k - 1, y = (i + q % s.k) % s.k} = ∅ := by
+  rcases lt_trichotomy (p % s.k) (q % s.k) with h | h | h
+  · exact INTER_SLICE_SCS_EMPTY1_p35 s s' s'' p q d' d'' mkj hs' hs'' hscs hdiag h
+  · exact absurd h hdiag.1
+  · rw [Set.inter_comm]
+    exact INTER_SLICE_SCS_EMPTY1_p35 s s'' s' q p d'' d' mkj hs'' hs' hscs
+      ⟨fun e => hdiag.1 e.symm, fun e => hdiag.2.2 e.symm, fun e => hdiag.2.1 e.symm⟩ h
+
+/-! ## QKNVMLB2 step kit (source 5522-7735; the mkj = false branch)
+
+Steps for the dsv superadditivity along the slice: 01 not-ear + negative-sign
+dsv form; 02 the corner split of the J-sum; 03 nonnegativity of the J-sum
+term; 04 the half-slice corner J-edge is the mkj flag; 05 re-indexing of the
+half-slice interior J-sum to the s-frame (SUM_EQ_GENERAL); 06 the mkj =
+false branch of QKNVMLB2 assembled from 01-05) and 07 the mkj = true branch
+(HOL 6135-7735: ear / non-ear half dsv forms with the live diagonal corner
+terms, the both-ears subcase via the DIST_DIAG argument under the live flag);
+`QKNVMLB2_p35` below assembles both branches through the flag-mkj bridge
+`q2flagEq`, all inside the standard three. -/
+
+
+open scoped BigOperators
+
+theorem QKNVMLB2_step06_mkjFalse_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop) (vv vv' vv'' : ℕ → V3)
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+    (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hsl : isScsSliceV39 s s' s'' p q) (hd : s.d ≤ d' + d'')
+    (hmkj : ¬mkj) :
+    dsvV39 s vv ≤ dsvV39 s' vv' + dsvV39 s'' vv'' := by
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have h3k : 3 < s.k := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
+  have hge' := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hdiag2 : scsDiag s.k q p :=
+    ⟨fun e => hdiag.1 e.symm, fun e => hdiag.2.2 e.symm, fun e => hdiag.2.1 e.symm⟩
+  have hge'' := SCS_K_PRIME_LE_GE_p35 s q p d'' mkj hscs hdiag2 s'' hs''.symm
+  have hk'l : s'.k < s.k := hge'.2.2
+  have hk''l : s''.k < s.k := hge''.2.2
+  -- the two translated interior windows
+  set T1 : Set ℕ :=
+    {j | ∃ i, i < s'.k - 1 ∧ s'.J i (i + 1) ∧ j = (i + p % s.k) % s.k} with hT1def
+  set T2 : Set ℕ :=
+    {j | ∃ i, i < s''.k - 1 ∧ s''.J i (i + 1) ∧ j = (i + q % s.k) % s.k} with hT2def
+  -- (a) both windows sit inside the J-index set of s
+  have hT1J : T1 ⊆ {j | j < s.k ∧ s.J j (j + 1)} := by
+    rintro j ⟨i, hi, hJi, hj⟩
+    rw [hj]
+    refine ⟨Nat.mod_lt _ hk0, ?_⟩
+    exact SCS_J_PRIME_SUBSET_SCS_J_p35 s s' p q d' mkj hs' hscs hdiag i hi hJi
+  have hT2J : T2 ⊆ {j | j < s.k ∧ s.J j (j + 1)} := by
+    rintro j ⟨i, hi, hJi, hj⟩
+    rw [hj]
+    refine ⟨Nat.mod_lt _ hk0, ?_⟩
+    exact SCS_J_PRIME_SUBSET_SCS_J_p35 s s'' q p d'' mkj hs'' hscs hdiag2 i hi hJi
+  -- (c) the windows are disjoint (INTER_SLICE_SCS_EMPTY)
+  have hdisj : T1 ∩ T2 = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    intro j hj
+    rw [Set.mem_inter_iff] at hj
+    obtain ⟨⟨i1, hi1, hJ1, hj1⟩, ⟨i2, hi2, hJ2, hj2⟩⟩ := hj
+    have hW := INTER_SLICE_SCS_EMPTY_p35 s s' s'' p q d' d'' mkj hs' hs'' hscs hdiag
+    have hmem : j ∈ ({y | ∃ i, i < s'.k - 1 ∧ y = (i + p % s.k) % s.k} ∩
+        {y | ∃ i, i < s''.k - 1 ∧ y = (i + q % s.k) % s.k} : Set ℕ) :=
+      ⟨⟨i1, hi1, hj1⟩, ⟨i2, hi2, hj2⟩⟩
+    rw [hW] at hmem
+    exact hmem
+  -- finiteness
+  have hJsfin : ({j | j < s.k ∧ s.J j (j + 1)} : Set ℕ).Finite :=
+    (Set.finite_lt_nat s.k).subset fun j hj => hj.1
+  have hA0fin : ({i | i < s'.k - 1} : Set ℕ).Finite := Set.finite_lt_nat _
+  have hA0fin2 : ({i | i < s''.k - 1} : Set ℕ).Finite := Set.finite_lt_nat _
+  have hT1fin : T1.Finite := by
+    refine (hA0fin.image (fun i => (i + p % s.k) % s.k)).subset ?_
+    rintro j ⟨i, hi, hJi, hj⟩
+    exact ⟨i, hi, hj.symm⟩
+  have hT2fin : T2.Finite := by
+    refine (hA0fin2.image (fun i => (i + q % s.k) % s.k)).subset ?_
+    rintro j ⟨i, hi, hJi, hj⟩
+    exact ⟨i, hi, hj.symm⟩
+  -- (e) the window sums are bounded by the J-sum of s and nonnegative
+  have hnonneg : setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1)))
+      + setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1)))
+      ≤ setSum {j | j < s.k ∧ s.J j (j + 1)}
+          (fun j => cstab - dist (vv j) (vv (j + 1))) :=
+    q2setSumGeUnion2 hJsfin hT1fin hT2fin (Set.union_subset hT1J hT2J) hdisj
+      (fun j _ => QKNVMLB2_step03_p35 s p q vv hMM hscs hdiag j)
+  have hS1pos : 0 ≤ setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
+    refine q2setSumNonneg hT1fin ?_
+    rintro j _
+    exact QKNVMLB2_step03_p35 s p q vv hMM hscs hdiag j
+  have hS2pos : 0 ≤ setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
+    refine q2setSumNonneg hT2fin ?_
+    rintro j _
+    exact QKNVMLB2_step03_p35 s p q vv hMM hscs hdiag j
+  -- the s-side dsv form (step01)
+  have hstep1 := QKNVMLB2_step01_dsv_p35 s p q vv hscs hdiag
+  -- the half-slice dsv forms: corner split (step02) + corner flag (step04)
+  have hk'0 : 0 < s'.k := by omega
+  have hk''0 : 0 < s''.k := by omega
+  have hsplit' : setSum {i | i < s'.k ∧ s'.J i (i + 1)}
+      (fun i => cstab - dist (vv (i % s'.k + p % s.k))
+          (vv ((i + 1) % s'.k + p % s.k)))
+      = setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
+    rw [QKNVMLB2_step02_cornerSplit_p35 s'
+      (fun i => cstab - dist (vv (i % s'.k + p % s.k))
+          (vv ((i + 1) % s'.k + p % s.k))) hk'0,
+      (QKNVMLB2_step04_corner_p35 s s' p q d' mkj hs' hscs hdiag).1,
+      if_neg hmkj, add_zero]
+    exact QKNVMLB2_step05_reindex_p35 s s' p q d' mkj vv hs' hscs hdiag hMM
+  have hsplit'' : setSum {i | i < s''.k ∧ s''.J i (i + 1)}
+      (fun i => cstab - dist (vv (i % s''.k + q % s.k))
+          (vv ((i + 1) % s''.k + q % s.k)))
+      = setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
+    rw [QKNVMLB2_step02_cornerSplit_p35 s''
+      (fun i => cstab - dist (vv (i % s''.k + q % s.k))
+          (vv ((i + 1) % s''.k + q % s.k))) hk''0,
+      (QKNVMLB2_step04_corner_p35 s s'' q p d'' mkj hs'' hscs hdiag2).1,
+      if_neg hmkj, add_zero]
+    exact QKNVMLB2_step05_reindex_p35 s s'' q p d'' mkj vv hs'' hscs hdiag2 hMM
+  have hdsv' : dsvV39 s' vv'
+      = s'.d + 0.1 * (if isEarV39 s' then (1:ℝ) else -1) *
+        setSum {i | i < s'.k ∧ s'.J i (i + 1)}
+          (fun i => cstab - dist (vv (i % s'.k + p % s.k))
+              (vv ((i + 1) % s'.k + p % s.k))) := by
+    unfold dsvV39
+    rw [hvv']
+  have hdsv'' : dsvV39 s'' vv''
+      = s''.d + 0.1 * (if isEarV39 s'' then (1:ℝ) else -1) *
+        setSum {i | i < s''.k ∧ s''.J i (i + 1)}
+          (fun i => cstab - dist (vv (i % s''.k + q % s.k))
+              (vv ((i + 1) % s''.k + q % s.k))) := by
+    unfold dsvV39
+    rw [hvv'']
+  rw [hsplit'] at hdsv'
+  rw [hsplit''] at hdsv''
+  -- the ear-sign corner terms dominate the negative-sign forms
+  have hb1 : -(0.1 * setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1))))
+      ≤ 0.1 * (if isEarV39 s' then (1:ℝ) else -1) *
+        setSum T1 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
+    by_cases he : isEarV39 s'
+    · rw [if_pos he]; linarith
+    · rw [if_neg he]; linarith
+  have hb2 : -(0.1 * setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1))))
+      ≤ 0.1 * (if isEarV39 s'' then (1:ℝ) else -1) *
+        setSum T2 (fun j => cstab - dist (vv j) (vv (j + 1))) := by
+    by_cases he : isEarV39 s''
+    · rw [if_pos he]; linarith
+    · rw [if_neg he]; linarith
+  have hd'eq : s'.d = d' := by rw [← hs']; simp [scsHalfSliceV39]
+  have hd''eq : s''.d = d'' := by rw [← hs'']; simp [scsHalfSliceV39]
+  linarith
+
+/-! ## q2g support: corner arithmetic, ear / non-ear half dsv forms, DIST_DIAG -/
+
+/-- The flag-mkj bridge: `is_scs_slice`'s first conjunct pins both half
+slices to the flag `s'.J 0 (s'.k-1)`, so comparing with `hs'` at the
+override pair gives `mkj = flag`. -/
+private theorem q2flagEq (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (hs' : scsHalfSliceV39 s p q d' mkj = s') (hscs : isScsV39 s)
+    (hdiag : scsDiag s.k p q) (hsl : isScsSliceV39 s s' s'' p q) :
+    mkj = (s'.J 0 (s'.k - 1)) := by
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hK : s'.k = (q + 1 + (s.k - p % s.k)) % s.k := by
+    rw [← hs']; simp only [scsHalfSliceV39]
+  have hK0 : 0 < (q + 1 + (s.k - p % s.k)) % s.k := by omega
+  have hm2 : ((q + 1 + (s.k - p % s.k)) % s.k - 1)
+        % ((q + 1 + (s.k - p % s.k)) % s.k)
+      = (q + 1 + (s.k - p % s.k)) % s.k - 1 :=
+    Nat.mod_eq_of_lt (by omega)
+  have hcond : ({(0:ℕ) % ((q + 1 + (s.k - p % s.k)) % s.k),
+      ((q + 1 + (s.k - p % s.k)) % s.k - 1) % ((q + 1 + (s.k - p % s.k)) % s.k)} : Set ℕ)
+      = {0, (q + 1 + (s.k - p % s.k)) % s.k - 1} := by
+    rw [Nat.zero_mod, hm2]
+  -- s'.d = d' and s' = scsHalfSliceV39 s p q d' (s'.J 0 (s'.k-1))
+  have hd'eq : s'.d = d' := by rw [← hs']; simp [scsHalfSliceV39]
+  have hpair := hsl.1
+  simp only [scsSliceV39, Prod.mk.injEq] at hpair
+  obtain ⟨he1, -⟩ := hpair
+  rw [hd'eq] at he1
+  -- apply the J-projection at (0, k'-1) to the two equal half slices
+  have heq : scsHalfSliceV39 s p q d' mkj = scsHalfSliceV39 s p q d' (s'.J 0 (s'.k - 1)) :=
+    Eq.trans hs' he1
+  have hJ := congrArg (fun t : ScsV39 => t.J 0 (t.k - 1)) heq
+  simp only [scsHalfSliceV39] at hJ
+  rw [if_pos hcond, if_pos hcond] at hJ
+  exact hJ
+
+/-- HOL `QKNVMLB2` (QKNVMLB.hl:5522, proof ~2215 ln — the giant).
+RULING 2026-09-21 IV: this twin's `vv (i % s'.k + p % s.k)` /
+`vv (i % s''.k + q % s.k)` convention is faithful (QKNVMLB.hl:5525/:5527);
+the LA1 registry's `vv ((i+p) % s'.k)` form is the unproved
+appendix.hl:1064 statement-let — see `QKNVMLB1_p35`. -/
+theorem QKNVMLB2_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+    (vv vv' vv'' : ℕ → V3)
+    (hs' : scsHalfSliceV39 s p q d' mkj = s')
+    (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+    (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+    (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+    (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+    (hsl : isScsSliceV39 s s' s'' p q) (hd : s.d ≤ d' + d'') :
+    dsvV39 s vv ≤ dsvV39 s' vv' + dsvV39 s'' vv'' := by
+  have hmeq : mkj = (s'.J 0 (s'.k - 1)) :=
+    q2flagEq s s' s'' p q d' d'' mkj hs' hscs hdiag hsl
+  subst hmeq
+  rcases Classical.em (s'.J 0 (s'.k - 1)) with hflag | hflag
+  · exact QKNVMLB2_step07_mkjTrue_p35 s s' s'' p q d' d'' (s'.J 0 (s'.k - 1)) vv vv'
+      vv'' hs' hs'' hvv' hvv'' hMM hscs hdiag hsl hd hflag
+  · exact QKNVMLB2_step06_mkjFalse_p35 s s' s'' p q d' d'' (s'.J 0 (s'.k - 1)) vv vv'
+      vv'' hs' hs'' hvv' hvv'' hMM hscs hdiag hsl hd hflag
+  -- DISCHARGES: source 5522-7735 complete.  The mkj = false branch is
+  -- `QKNVMLB2_step06_mkjFalse_p35`, the mkj = true branch is
+  -- `QKNVMLB2_step07_mkjTrue_p35` (ear / non-ear half dsv forms with the live
+  -- diagonal corner terms cancelling by dist symmetry; the both-ears subcase
+  -- via `q2distDiagLe` — the DIST_DIAG argument under the live flag), both
+  -- assembled through the flag-mkj bridge `q2flagEq`.
+
+/-- HOL `NUMSEG_3` (QKNVMLB.hl:8439). -/
+theorem NUMSEG_3_p35 : {i : ℕ | i < 4} = {0, 1, 2, 3} := by
+  ext i
+  simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+  omega
+
+/-! ## Slice tau bank, k' = 3 azimuth identity and the master arrows
+      (source order: 8445-10699) -/
+
+-- SUM_AZIM_EQ_ANGLE_EQ4_p35 (SF-86, lkgrqui-eq4-w3 2026-10-28): the frozen
+-- statement dropped the `IsHypE_p35 V (E ∪ {{u, w}}) HS` carrier its HOL
+-- original (QKNVMLB.hl:8445) pins via the canonical hypermap, so as stated
+-- it has countermodels (HS := hypermapOfFan 0 V E). Ruled: + hHS. The
+-- declaration now lives at EOF below (after its proved twin), closed by
+-- `exact SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 ..`.
+
+-- ============================================================================
+-- cardff-land-w1 landing block (inserted 2026-10-31).  Source: cardff line
+-- tip LA35_stack35 (delta region verbatim) + the minimal transitive closure
+-- of its stack31 dependencies (declaration order = original stack order;
+-- items already present in HEAD are not duplicated).  Feeds the two CARD_FF
+-- roots immediately below, whose sorries are replaced by the cardff master
+-- assemblies (cardFF_EQ_main_p35 / cardFF_LE3_main_p35).  This block is
+-- clean: zero sorry/admit/native_decide, no new `open`, no heartbeat bump.
+-- ============================================================================
+
+-- (a) stack31 dependency closure (front-section + EJRCFJD-region pieces
+--     absent from HEAD)
+
 /-- HOL `CARD_FF_EQ_SCS_K_3` (QKNVMLB.hl:9193): for k = 3 the fan has
 exactly 3 darts. -/
 theorem CARD_FF_EQ_SCS_K_3_p35 (s : ScsV39) (k : ℕ) (FF : Set (V3 × V3))
@@ -14720,51 +31764,6 @@ theorem CARD_FF_EQ_SCS_K_3_p35 (s : ScsV39) (k : ℕ) (FF : Set (V3 × V3))
 /-! ## Azimuth three-point addition (verbatim port of TopologyFan.lean
 `azim_sum_core` / `sum4_azim_fan`; only `Kepler.Geom` primitives of
 `AzimLemmas.lean` are used, which are on this file's import face). -/
-
-private theorem azimSumCore_le4 {x v u w1 w2 : V3} (hxv : v ≠ x)
-    (hncu : ¬ Collinear3 x v u) (hnc1 : ¬ Collinear3 x v w1)
-    (hnc2 : ¬ Collinear3 x v w2) :
-    ∃ n : ℤ, azim x v u w2 =
-      azim x v u w1 + azim x v w1 w2 + (n : ℝ) * (2 * Real.pi) := by
-  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - x)
-    (sub_ne_zero.mpr (fun he => hxv he))
-  have hax : (v - x : V3) = dist v x • f3 := by
-    rw [dist_eq_norm]
-    exact halign
-  obtain ⟨ψ, ru, r1, hru, hr1, hzu, hzw1⟩ := azim_frame_spec hncu hnc1 hon hax hxv
-  obtain ⟨ψ2, ru2, r2, hru2, hr2, hzu2, hzw2⟩ := azim_frame_spec hncu hnc2 hon hax hxv
-  obtain ⟨ψ', r1', r2', hr1', hr2', hzw1', hzw2'⟩ :=
-    azim_frame_spec hnc1 hnc2 hon hax hxv
-  have hψu : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
-      = Complex.exp (((ψ2 : ℝ) : ℂ) * Complex.I) :=
-    exp_pos_mul_eq hru hru2 (hzu.symm.trans hzu2)
-  have hE2 : Complex.exp ((((ψ + azim x v u w1 : ℝ) : ℂ)) * Complex.I)
-      = Complex.exp (((ψ' : ℝ) : ℂ) * Complex.I) :=
-    exp_pos_mul_eq hr1 hr1' (hzw1.symm.trans hzw1')
-  have hE1' : Complex.exp ((((ψ2 + azim x v u w2 : ℝ) : ℂ)) * Complex.I)
-      = Complex.exp ((((ψ' + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) :=
-    exp_pos_mul_eq hr2 hr2' (hzw2.symm.trans hzw2')
-  rw [exp_add_I, exp_add_I] at hE1'
-  rw [exp_add_I] at hE2
-  rw [hψu.symm] at hE1'
-  rw [← hE2] at hE1'
-  have hE3 : Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
-      = Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
-    have hkey : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
-        * Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
-      = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
-        * Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
-      rw [hE1', mul_assoc, ← exp_add_I]
-    exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
-  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hE3
-  refine ⟨n, ?_⟩
-  have hc2 : ((azim x v u w2 : ℝ) : ℂ) * Complex.I
-      = ((((azim x v u w1 + azim x v w1 w2 : ℝ)
-          + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
-    rw [hn]
-    push_cast
-    ring
-  exact_mod_cast mul_right_cancel₀ Complex.I_ne_zero hc2
 
 private theorem azimSplit_le4 {x v u w1 w2 : V3} (hxv : v ≠ x)
     (hncu : ¬ Collinear3 x v u) (hnc1 : ¬ Collinear3 x v w1)
