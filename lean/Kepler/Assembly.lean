@@ -391,11 +391,327 @@ theorem nliCell3QZECFICwt1 : bank_QZECFICwt1 := sorry
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
 theorem nliCell3QZECFICwt2A : bank_QZECFICwt2A := sorry
 
+
+/-! ## W2b 服务块（nli-w2b-hminus 车道 2026-10-28）：`hminus` 下界与
+`[2hminus,√8]` 盒上的 eta_y² 逐槽保序机件。 -/
+
+/-- w2b 服务件：√2 双侧有理界（自足版；`Kepler.Interval.sqrt2_bounds` 在
+探针 import 闭包外，此处按同法自证）。 -/
+private theorem w2bsqrt2 :
+    (1.4142:ℝ) ≤ Real.sqrt 2 ∧ Real.sqrt 2 ≤ (1.4143:ℝ) := by
+  refine ⟨?_, ?_⟩
+  · exact (Real.le_sqrt (by norm_num) (by norm_num)).mpr (by norm_num)
+  · have h1 : Real.sqrt 2 ≤ Real.sqrt ((1.4143:ℝ)^2) := Real.sqrt_le_sqrt (by norm_num)
+    have h2 : Real.sqrt ((1.4143:ℝ)^2) = (1.4143:ℝ) := Real.sqrt_sq (by norm_num)
+    linarith
+
+set_option maxHeartbeats 1000000 in
+/-- w2b 服务件：区间定号核心。在 [1.2, 1.225] 上 `marchalQuartic x < lfun x`
+（√2 线性化：对 u=√2 斜率 K(x) ≤ 0，取上界 1.4143 处 Q 值；Q 在 x = 1.225 − d
+的 d-展开证书逐系数定号）。 -/
+private theorem w2bMqLtLfun (x : ℝ) (hlo : (1.2:ℝ) ≤ x) (hhi : x ≤ (1.225:ℝ)) :
+    marchalQuartic x < (1.26 - x) / (0.26:ℝ) := by
+  obtain ⟨hsq2lb, hsq2ub⟩ := w2bsqrt2
+  -- P(x) = (1.3254−x)(17x−9x²−3) 的盒下界族
+  have hp1 : (0.1004:ℝ) ≤ 1.3254 - x := by linarith
+  have hp1n : (0:ℝ) ≤ 1.3254 - x := by linarith
+  have hx2 : x ^ 2 ≤ 1.225 * x := by nlinarith [hlo, hhi]
+  have hp2 : (4.17:ℝ) ≤ 17 * x - 9 * x ^ 2 - 3 := by linarith [hx2, hlo]
+  have hp2n : (0:ℝ) ≤ 17 * x - 9 * x ^ 2 - 3 := by linarith [hp2]
+  -- K(x) = 1.627(1.26−x) − 0.26·P(x) ≤ 0
+  have hPlo : (0.1004 * 4.17:ℝ) ≤ (1.3254 - x) * (17 * x - 9 * x ^ 2 - 3) :=
+    mul_le_mul hp1 hp2 (by norm_num) hp1n
+  have h126x : (1.627:ℝ) * (1.26 - x) ≤ 1.627 * 0.06 :=
+    mul_le_mul_of_nonneg_left (by linarith : (1.26:ℝ) - x ≤ 0.06) (by norm_num)
+  have hP26 : (0.26:ℝ) * (0.1004 * 4.17) ≤ 0.26 * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3)) :=
+    mul_le_mul_of_nonneg_left hPlo (by norm_num)
+  have hKle : (0:ℝ) ≥ 1.627 * (1.26 - x)
+      - 0.26 * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3)) := by linarith
+  -- 目标展开 + 分母常数合并
+  unfold marchalQuartic hplus
+  rw [show ((Real.sqrt 2 - x) * (x - 1.3254)) * (9 * x ^ 2 - 17 * x + 3)
+        = (Real.sqrt 2 - x) * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3)) by ring,
+      show ((Real.sqrt 2 - 1) * 5 * ((1.3254:ℝ) - 1)) = (Real.sqrt 2 - 1) * 1.627
+        by rw [mul_assoc]; norm_num]
+  -- Q 在角点 x = 1.225 − d 的 d-展开证书（系数精确，Python Fraction 复核）
+  have hQexp : (1.26 - x) * 0.6740661
+        - 0.26 * ((1.4143 - x) * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3)))
+      = 0.0022481772255 + 0.32376762589 * (1.225 - x)
+        - 1.4589402152 * (1.225 - x)^2 - 0.635102 * (1.225 - x)^3
+        + 2.34 * (1.225 - x)^4 := by ring
+  have hd0 : (0:ℝ) ≤ 1.225 - x := by linarith
+  have hd1 : 1.225 - x ≤ 0.025 := by linarith
+  have hdsq : (1.225 - x)^2 ≤ 0.000625 := by nlinarith [hd0, hd1]
+  have hdcu : (1.225 - x)^3 ≤ 0.000015625 := by
+    have hstep : (1.225 - x)^2 * (1.225 - x) ≤ 0.000625 * (1.225 - x) := by
+      nlinarith [hdsq, hd0]
+    rw [pow_succ]
+    linarith [hstep, hd1]
+  have t1 : (0:ℝ) ≤ 0.32376762589 * (1.225 - x) := mul_nonneg (by norm_num) hd0
+  have t2 : (0:ℝ) ≤ 2.34 * (1.225 - x)^4 := by
+    have dd : (0:ℝ) ≤ (1.225 - x)^2 := by nlinarith [hd0]
+    exact mul_nonneg (by norm_num) (by nlinarith [dd])
+  have t3 : (0:ℝ) ≤ -1.4589402152 * (1.225 - x)^2 + 0.0009118376345 := by
+    linarith [hdsq]
+  have t4 : (0:ℝ) ≤ -0.635102 * (1.225 - x)^3 + 0.00000992346875 := by
+    linarith [hdcu]
+  have hQ0 : (0:ℝ) < (1.26 - x) * 0.6740661
+        - 0.26 * ((1.4143 - x) * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3))) := by
+    linarith
+  -- u-线性化合拢：H(√2) ≥ H(1.4143) = Q > 0
+  have hsplit : (1.26 - x) * ((Real.sqrt 2 - 1) * 1.627)
+        - 0.26 * ((Real.sqrt 2 - x) * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3)))
+      = (1.26 - x) * 0.6740661
+        - 0.26 * ((1.4143 - x) * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3)))
+        + (Real.sqrt 2 - 1.4143) * (1.627 * (1.26 - x)
+            - 0.26 * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3))) := by ring
+  have hprod : (0:ℝ) ≤ (Real.sqrt 2 - 1.4143) * (1.627 * (1.26 - x)
+      - 0.26 * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3))) := by
+    have ha : (0:ℝ) ≥ Real.sqrt 2 - 1.4143 := by linarith
+    nlinarith [ha, hKle]
+  have hmain : (0:ℝ) < (1.26 - x) * ((Real.sqrt 2 - 1) * 1.627)
+      - 0.26 * ((Real.sqrt 2 - x) * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3))) := by
+    linarith
+  -- 去分母换形收尾
+  have hDpos : (0:ℝ) < (Real.sqrt 2 - 1) * 1.627 :=
+    mul_pos (by linarith) (by norm_num)
+  rw [div_lt_iff₀ hDpos, div_mul_eq_mul_div, lt_div_iff₀ (by norm_num : (0:ℝ) < 0.26)]
+  have hcomm : (Real.sqrt 2 - x) * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3)) * 0.26
+      = 0.26 * ((Real.sqrt 2 - x) * ((1.3254 - x) * (17 * x - 9 * x ^ 2 - 3))) := by ring
+  linarith [hcomm, hmain]
+
+/-- w2b 服务件：`hminus > 49/40`（spec 方程 + 区间定号反证）。 -/
+private theorem w2bHminusGt : (49:ℝ)/40 < hminus := by
+  obtain ⟨h12, h13, hspec⟩ := mi_hminus_prop
+  by_contra hcon
+  push_neg at hcon
+  have h40 : ((49:ℝ)/40 : ℝ) = 1.225 := by norm_num
+  have hbran : lmfun hminus = (1.26 - hminus) / (0.26:ℝ) := by
+    have h0e : h0 = (1.26:ℝ) := rfl
+    unfold lmfun
+    rw [h0e, if_pos (show hminus ≤ 1.26 by linarith),
+        show ((1.26:ℝ) - 1) = (0.26:ℝ) by norm_num]
+  rw [hbran] at hspec
+  have hgap := w2bMqLtLfun hminus h12 (by linarith [hcon, h40])
+  linarith
+
+/-- w2b 服务件：`3/2 < hminus²`（(49/40)² = 2401/1600 = 3/2 + 1/1600）。
+日后可提升为公共引理。 -/
+private theorem w2bHminusSq : (3:ℝ)/2 < hminus ^ 2 := by
+  have h1 : (49:ℝ)/40 * hminus < hminus * hminus :=
+    mul_lt_mul_of_pos_right w2bHminusGt (by linarith [mi_hminus_prop.1])
+  have h2 : ((49:ℝ)/40) * ((49:ℝ)/40) < (49:ℝ)/40 * hminus :=
+    mul_lt_mul_of_pos_left w2bHminusGt (by norm_num)
+  rw [pow_two]
+  linarith [h1, h2]
+
+/-- w2b 服务件：交叉相乘去分母（0 < 分母，差非负）。 -/
+private theorem w2bdivCross {A B U V : ℝ} (hU : 0 < U) (hV : 0 < V)
+    (h : 0 ≤ B * U - A * V) : A / U ≤ B / V := by
+  refine (div_le_iff₀ hU).mpr ?_
+  have h2 : B / V * U = B * U / V := div_mul_eq_mul_div B V U
+  rw [h2]
+  exact le_div_iff₀ hV |>.mpr (by linarith)
+
+/-- w2b 服务件：upsX 槽位交换对称。 -/
+private theorem w2bhsymP (p q r : ℝ) : upsX p q r = upsX q p r := by
+  unfold upsX; ring
+
+/-- w2b 服务件：`fun x => x*b*c/ups(x,b,c)` 第一槽保序（差 = 因子·步长·(a1a2−(b−c)²)）。 -/
+private theorem w2betaStep1 (b c a1 a2 : ℝ) (hbc : 0 ≤ b * c) (hu1 : 0 < upsX a1 b c)
+    (hu2 : 0 < upsX a2 b c) (h1 : a1 ≤ a2) (h2 : (b - c) ^ 2 ≤ a1 * a2) :
+    a1 * b * c / upsX a1 b c ≤ a2 * b * c / upsX a2 b c := by
+  have hkey : a2 * upsX a1 b c - a1 * upsX a2 b c
+      = (a2 - a1) * (a1 * a2 - (b - c) ^ 2) := by
+    unfold upsX; ring
+  have hnonneg : 0 ≤ (a2 - a1) * (a1 * a2 - (b - c) ^ 2) :=
+    mul_nonneg (sub_nonneg.mpr h1) (sub_nonneg.mpr h2)
+  have hprod : 0 ≤ b * c * ((a2 - a1) * (a1 * a2 - (b - c) ^ 2)) :=
+    mul_nonneg hbc hnonneg
+  have e1 : a2 * b * c * upsX a1 b c - a1 * b * c * upsX a2 b c
+      = b * c * (a2 * upsX a1 b c - a1 * upsX a2 b c) := by ring
+  exact w2bdivCross hu1 hu2 (by rw [e1, hkey]; exact hprod)
+
+/-- w2b 服务件：`fun z => a*b*z/ups(a,b,z)` 第三槽保序（同型差分恒等式）。 -/
+private theorem w2betaStep3 (a b c1 c2 : ℝ) (hab : 0 ≤ a * b) (hu1 : 0 < upsX a b c1)
+    (hu2 : 0 < upsX a b c2) (h1 : c1 ≤ c2) (h2 : (a - b) ^ 2 ≤ c1 * c2) :
+    a * b * c1 / upsX a b c1 ≤ a * b * c2 / upsX a b c2 := by
+  have hkey : c2 * upsX a b c1 - c1 * upsX a b c2
+      = (c2 - c1) * (c1 * c2 - (a - b) ^ 2) := by
+    unfold upsX; ring
+  have hnonneg : 0 ≤ (c2 - c1) * (c1 * c2 - (a - b) ^ 2) :=
+    mul_nonneg (sub_nonneg.mpr h1) (sub_nonneg.mpr h2)
+  have hprod : 0 ≤ a * b * ((c2 - c1) * (c1 * c2 - (a - b) ^ 2)) :=
+    mul_nonneg hab hnonneg
+  have e1 : a * b * c2 * upsX a b c1 - a * b * c1 * upsX a b c2
+      = a * b * (c2 * upsX a b c1 - c1 * upsX a b c2) := by ring
+  exact w2bdivCross hu1 hu2 (by rw [e1, hkey]; exact hprod)
+
+/-- w2b 服务件：upsX 在 [6,8]²×[4,8] 槽位域恒正（下界 72 − 16 = 56 > 0）。 -/
+private theorem w2bupsPos : ∀ x y z : ℝ, (6:ℝ) ≤ x → x ≤ 8 →
+    (6:ℝ) ≤ y → y ≤ 8 → (4:ℝ) ≤ z → z ≤ 8 → 0 < upsX x y z := by
+  intro x y z hx hxu hy hyu hz hzu
+  have hform : upsX x y z = x * (2 * (y + z) - x) - (y - z) ^ 2 := by
+    unfold upsX; ring
+  have hyz : (y - z) ^ 2 ≤ 16 := by
+    have t1 : y - z ≤ 4 := by linarith
+    have t2 : z - y ≤ 4 := by linarith
+    nlinarith [t1, t1, t2, t2]
+  have hmin : (12:ℝ) ≤ 2 * (y + z) - x := by linarith
+  have hxn : (0:ℝ) ≤ x := by linarith
+  have hm : (6:ℝ) * 12 ≤ x * (2 * (y + z) - x) :=
+    mul_le_mul hx hmin (by linarith) hxn
+  have h72 : (72:ℝ) ≤ (6:ℝ) * 12 := by norm_num
+  linarith [hform, hyz, hm, h72]
+
+set_option maxHeartbeats 1000000 in
 /-- 1a 6/7：HOL ineq entry `CIHTIUM`（ineq.hl:1462；PA21 `bank_CIHTIUM`，
 盒 [1,1]³×[2hmin,√8]³，结论 `eta_y y4 y5 y6 ^ 2 > 2`）。资产状态：
-deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliCell3CIHTIUM : bank_CIHTIUM := sorry
+**W2b 纯 Lean 闭合**（nli-w2b-hminus 2026-10-28）：`hminus` 是 ε-定义
+（PA2 :473-475），spec 三合一由 PA21 `mi_hminus_prop`（:1892）暴露；本件先由
+spec 方程 `marchalQuartic hminus = lmfun hminus` 反证定号 `49/40 < hminus`
+（[1.2,1.225] 上 marchalQuartic−lfun 恒负：√2 ∈ [1.4142,1.4143] 线性化 +
+角点 1.225 处 d-展开证书，全 ring/linarith/nlinarith 级），得 `3/2 < hminus²`
+（2401/1600 = 3/2 + 1/1600），再平移 CJFZZDW 逐槽保序模式：eta_y² = a·b·c/ups
+在 [4hminus²,√8]³ 三步保序至角点 (2hminus,2hminus,2hminus)，角点值
+4hminus²/3 > 2 字面量算术。探针 `$S/nli-w2b-hminus/probe_cihtium.log`：RC=0，
+`#print axioms Kepler.Assembly.nliCell3CIHTIUM` = 标准三
+（propext/choice/Quot.sound，零 sorryAx/native_decide）。
+陈述逐字未动（只加证明 + 9 枚 private w2b 前缀服务引理，见下方 w2b 块）。 -/
+theorem nliCell3CIHTIUM : bank_CIHTIUM := by
+  intro y1 y2 y3 y4 y5 y6 _ _ _ _ _ _ h4l h4h h5l h5h h6l h6h
+  obtain ⟨h12, h13, _⟩ := mi_hminus_prop
+  have hmn : (0:ℝ) ≤ hminus := by linarith
+  have hH : (3:ℝ)/2 < hminus ^ 2 := w2bHminusSq
+  have hA6 : (6:ℝ) < 4 * hminus ^ 2 := by linarith
+  have hA8 : 4 * hminus ^ 2 ≤ 8 := by
+    have hsq : hminus ^ 2 < (1.3:ℝ) ^ 2 := by nlinarith [h13, hmn]
+    linarith
+  -- x-空间盒事实：a=y4², b=y5², c=y6² ∈ [4hminus², 8]
+  have b4 : 4 * hminus ^ 2 ≤ y4 * y4 := by
+    have s : (2 * hminus) * (2 * hminus) = 4 * hminus ^ 2 := by ring
+    have m : (2 * hminus) * (2 * hminus) ≤ y4 * y4 :=
+      mul_le_mul h4l h4l (by linarith) (by linarith)
+    rw [s] at m; exact m
+  have b4u : y4 * y4 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y4 * y4 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h4h h4h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have b5 : 4 * hminus ^ 2 ≤ y5 * y5 := by
+    have s : (2 * hminus) * (2 * hminus) = 4 * hminus ^ 2 := by ring
+    have m : (2 * hminus) * (2 * hminus) ≤ y5 * y5 :=
+      mul_le_mul h5l h5l (by linarith) (by linarith)
+    rw [s] at m; exact m
+  have b5u : y5 * y5 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y5 * y5 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h5h h5h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have b6 : 4 * hminus ^ 2 ≤ y6 * y6 := by
+    have s : (2 * hminus) * (2 * hminus) = 4 * hminus ^ 2 := by ring
+    have m : (2 * hminus) * (2 * hminus) ≤ y6 * y6 :=
+      mul_le_mul h6l h6l (by linarith) (by linarith)
+    rw [s] at m; exact m
+  have b6u : y6 * y6 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y6 * y6 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h6h h6h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have h4n : (0:ℝ) ≤ y4 * y4 := by linarith
+  have h5n : (0:ℝ) ≤ y5 * y5 := by linarith
+  have h6n : (0:ℝ) ≤ y6 * y6 := by linarith
+  -- 6-下界（喂 w2bupsPos）
+  have g4 : (6:ℝ) ≤ y4 * y4 := hA6.le.trans b4
+  have g5 : (6:ℝ) ≤ y5 * y5 := hA6.le.trans b5
+  have g6 : (6:ℝ) ≤ y6 * y6 := hA6.le.trans b6
+  -- ups 正性（四处实例）
+  have huabc : 0 < upsX (y4*y4) (y5*y5) (y6*y6) :=
+    w2bupsPos _ _ _ g4 b4u g5 b5u (show (4:ℝ) ≤ y6*y6 by linarith) b6u
+  have huabA : 0 < upsX (y4*y4) (y5*y5) (4*hminus^2) :=
+    w2bupsPos _ _ _ g4 b4u g5 b5u (show (4:ℝ) ≤ 4*hminus^2 by linarith) hA8
+  have huAbA : 0 < upsX (4*hminus^2) (y5*y5) (4*hminus^2) :=
+    w2bupsPos _ _ _ hA6.le hA8 g5 b5u (show (4:ℝ) ≤ 4*hminus^2 by linarith) hA8
+  have huAAA : 0 < upsX (4*hminus^2) (4*hminus^2) (4*hminus^2) :=
+    w2bupsPos _ _ _ hA6.le hA8 hA6.le hA8 (show (4:ℝ) ≤ 4*hminus^2 by linarith) hA8
+  have hprod : 0 ≤ (y4*y4) * (y5*y5) := mul_nonneg h4n h5n
+  -- 槽位差平方界
+  have hab2 : ((y4*y4) - (y5*y5))^2 ≤ 4*hminus^2 * (y6*y6) := by
+    have u1 : (y4*y4) - (y5*y5) ≤ 2 := by linarith
+    have u2 : (y5*y5) - (y4*y4) ≤ 2 := by linarith
+    have s4 : ((y4*y4) - (y5*y5))^2 ≤ 4 := by nlinarith [u1, u1, u2, u2]
+    have hAA : (4:ℝ) ≤ 4*hminus^2 * (y6*y6) := by
+      have hml : (4*hminus^2) * (4*hminus^2) ≤ 4*hminus^2 * (y6*y6) :=
+        mul_le_mul_of_nonneg_left b6 (by linarith)
+      have h36 : (36:ℝ) ≤ (4*hminus^2) * (4*hminus^2) := by nlinarith [hA6.le]
+      linarith
+    linarith
+  have hsb2 : ((y5*y5) - 4*hminus^2)^2 ≤ 4*hminus^2 * (y4*y4) := by
+    have u1 : (y5*y5) - 4*hminus^2 ≤ 2 := by linarith
+    have u2 : 4*hminus^2 - (y5*y5) ≤ 2 := by linarith
+    have s4 : ((y5*y5) - 4*hminus^2)^2 ≤ 4 := by nlinarith [u1, u1, u2, u2]
+    have hAA : (4:ℝ) ≤ 4*hminus^2 * (y4*y4) := by
+      have hml : (4*hminus^2) * (4*hminus^2) ≤ 4*hminus^2 * (y4*y4) :=
+        mul_le_mul_of_nonneg_left b4 (by linarith)
+      have h36 : (36:ℝ) ≤ (4*hminus^2) * (4*hminus^2) := by nlinarith [hA6.le]
+      linarith
+    linarith
+  have hss0 : (4*hminus^2 - 4*hminus^2)^2 ≤ 4*hminus^2 * (y5*y5) := by
+    have hz : (4*hminus^2 - 4*hminus^2)^2 = 0 := by ring
+    have hp : (0:ℝ) ≤ 4*hminus^2 * (y5*y5) :=
+      mul_nonneg (by linarith) h5n
+    rw [hz]; linarith
+  -- 单调链：E(a,b,c) ≥ E(a,b,A) ≥ E(A,b,A) ≥ E(A,A,A) = 4hminus²/3 > 2
+  have s3 : (y4*y4) * (y5*y5) * (4*hminus^2) / upsX (y4*y4) (y5*y5) (4*hminus^2)
+      ≤ (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) :=
+    w2betaStep3 _ _ _ _ hprod huabA huabc b6 hab2
+  have s2 : (4*hminus^2) * (y5*y5) * (4*hminus^2) / upsX (4*hminus^2) (y5*y5) (4*hminus^2)
+      ≤ (y4*y4) * (y5*y5) * (4*hminus^2) / upsX (y4*y4) (y5*y5) (4*hminus^2) :=
+    w2betaStep1 _ _ _ _ (mul_nonneg h5n (by linarith)) huAbA huabA b4 hsb2
+  have huBAA : 0 < upsX (y5*y5) (4*hminus^2) (4*hminus^2) :=
+    w2bupsPos _ _ _ g5 b5u hA6.le hA8 (show (4:ℝ) ≤ 4*hminus^2 by linarith) hA8
+  have s1pre : (4*hminus^2) * (4*hminus^2) * (4*hminus^2)
+        / upsX (4*hminus^2) (4*hminus^2) (4*hminus^2)
+      ≤ (y5*y5) * (4*hminus^2) * (4*hminus^2) / upsX (y5*y5) (4*hminus^2) (4*hminus^2) :=
+    w2betaStep1 _ _ _ _ (mul_nonneg (by linarith) (by linarith)) huAAA huBAA b5 hss0
+  have s1 : (4*hminus^2) * (4*hminus^2) * (4*hminus^2)
+        / upsX (4*hminus^2) (4*hminus^2) (4*hminus^2)
+      ≤ (4*hminus^2) * (y5*y5) * (4*hminus^2) / upsX (4*hminus^2) (y5*y5) (4*hminus^2) := by
+    have c1 : (y5*y5) * (4*hminus^2) * (4*hminus^2)
+        / upsX (y5*y5) (4*hminus^2) (4*hminus^2)
+        = (4*hminus^2) * (y5*y5) * (4*hminus^2)
+          / upsX (4*hminus^2) (y5*y5) (4*hminus^2) := by
+      rw [w2bhsymP (y5*y5) (4*hminus^2) (4*hminus^2)]; ring
+    linarith [s1pre, c1]
+  have hcorner : (2:ℝ) < (4*hminus^2)*(4*hminus^2)*(4*hminus^2)
+      / upsX (4*hminus^2) (4*hminus^2) (4*hminus^2) := by
+    have hups : upsX (4*hminus^2) (4*hminus^2) (4*hminus^2)
+        = 3*((4*hminus^2)*(4*hminus^2)) := by unfold upsX; ring
+    have hAne : (0:ℝ) < (4*hminus^2)*(4*hminus^2) := by nlinarith [hA6.le]
+    have hDne : (0:ℝ) < 3*((4*hminus^2)*(4*hminus^2)) :=
+      mul_pos (by norm_num) hAne
+    have hkey : (6:ℝ)*((4*hminus^2)*(4*hminus^2))
+        < (4*hminus^2)*(4*hminus^2)*(4*hminus^2) := by
+      nlinarith [hA6, hAne.le]
+    rw [hups, lt_div_iff₀ hDne]
+    linarith [hkey]
+  have heq : eta_y y4 y5 y6 ^ 2
+      = (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) := by
+    have huns : eta_y y4 y5 y6
+        = Real.sqrt ((y4*y4) * (y5*y5) * (y6*y6)
+          / upsX (y4*y4) (y5*y5) (y6*y6)) := rfl
+    have hpos : 0 ≤ (y4*y4) * (y5*y5) * (y6*y6)
+        / upsX (y4*y4) (y5*y5) (y6*y6) :=
+      div_nonneg (mul_nonneg (mul_nonneg h4n h5n) h6n) huabc.le
+    rw [huns, Real.sq_sqrt hpos]
+  calc eta_y y4 y5 y6 ^ 2
+      = (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) := heq
+    _ ≥ (y4*y4) * (y5*y5) * (4*hminus^2) / upsX (y4*y4) (y5*y5) (4*hminus^2) := s3
+    _ ≥ (4*hminus^2) * (y5*y5) * (4*hminus^2) / upsX (4*hminus^2) (y5*y5) (4*hminus^2) := s2
+    _ ≥ (4*hminus^2) * (4*hminus^2) * (4*hminus^2)
+          / upsX (4*hminus^2) (4*hminus^2) (4*hminus^2) := s1
+    _ > 2 := hcorner
+
 
 /-- w2 服务件：交叉相乘去分母（0 < 分母，差非负）。 -/
 private theorem w2divCross {A B U V : ℝ} (hU : 0 < U) (hV : 0 < V)
@@ -891,11 +1207,142 @@ theorem nliRest1965189142x34 : bank_1965189142x34 := by
   have hc : (0.591 : ℝ) - 0.0331 * 34 = -0.5344 := by norm_num
   linarith
 
+set_option maxHeartbeats 1000000 in
 /-- rest 5/62：HOL ineq entry `JSPEVYT`（ineq.hl:1495，盒
 [1,1]³×[2hmin,√8]²×[2,√8]；PA21 `bank_JSPEVYT` / `proj_bank_JSPEVYT`）。
-资产状态：deferred-compute（证书不在库）。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestJSPEVYT : bank_JSPEVYT := sorry
+资产状态：
+**W2b 纯 Lean 闭合**（nli-w2b-hminus 2026-10-28）：与 CIHTIUM 同族同法
+（w2b 块 `3/2 < hminus²` + CJFZZDW 逐槽保序平移）：eta_y² = a·b·c/ups 在
+[4hminus²,√8]²×[4,√8] 三步保序至角点 (2hminus,2hminus,2)，角点值
+4·(4hminus²)²/(16·4hminus²−16) ≥ 9/5 > 1.34² 字面量算术（9/5 因子式
+(A−6)(5A−6) ≥ 0 定号）。探针 `$S/nli-w2b-hminus/probe_jspevyt.log`：RC=0，
+`#print axioms Kepler.Assembly.nliRestJSPEVYT` = 标准三
+（propext/choice/Quot.sound，零 sorryAx/native_decide）。
+陈述逐字未动（只加证明 + 复用 w2b 块）。 -/
+theorem nliRestJSPEVYT : bank_JSPEVYT := by
+  intro y1 y2 y3 y4 y5 y6 _ _ _ _ _ _ h4l h4h h5l h5h h6l h6h
+  obtain ⟨h12, h13, _⟩ := mi_hminus_prop
+  have hmn : (0:ℝ) ≤ hminus := by linarith
+  have hH : (3:ℝ)/2 < hminus ^ 2 := w2bHminusSq
+  have hA6 : (6:ℝ) < 4 * hminus ^ 2 := by linarith
+  have hA8 : 4 * hminus ^ 2 ≤ 8 := by
+    have hsq : hminus ^ 2 < (1.3:ℝ) ^ 2 := by nlinarith [h13, hmn]
+    linarith
+  -- x-空间盒事实：a=y4², b=y5² ∈ [4hminus², 8]，c=y6² ∈ [4, 8]
+  have b4 : 4 * hminus ^ 2 ≤ y4 * y4 := by
+    have s : (2 * hminus) * (2 * hminus) = 4 * hminus ^ 2 := by ring
+    have m : (2 * hminus) * (2 * hminus) ≤ y4 * y4 :=
+      mul_le_mul h4l h4l (by linarith) (by linarith)
+    rw [s] at m; exact m
+  have b4u : y4 * y4 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y4 * y4 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h4h h4h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have b5 : 4 * hminus ^ 2 ≤ y5 * y5 := by
+    have s : (2 * hminus) * (2 * hminus) = 4 * hminus ^ 2 := by ring
+    have m : (2 * hminus) * (2 * hminus) ≤ y5 * y5 :=
+      mul_le_mul h5l h5l (by linarith) (by linarith)
+    rw [s] at m; exact m
+  have b5u : y5 * y5 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y5 * y5 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h5h h5h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have b6 : (4:ℝ) ≤ y6 * y6 := by
+    have s : (2:ℝ) * 2 = 4 := by norm_num
+    have m : (2:ℝ) * 2 ≤ y6 * y6 := mul_le_mul h6l h6l (by norm_num) (by linarith)
+    rw [s] at m; exact m
+  have b6u : y6 * y6 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y6 * y6 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h6h h6h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have h4n : (0:ℝ) ≤ y4 * y4 := by linarith
+  have h5n : (0:ℝ) ≤ y5 * y5 := by linarith
+  have h6n : (0:ℝ) ≤ y6 * y6 := by linarith
+  have g4 : (6:ℝ) ≤ y4 * y4 := hA6.le.trans b4
+  have g5 : (6:ℝ) ≤ y5 * y5 := hA6.le.trans b5
+  -- ups 正性（四处实例）
+  have huabc : 0 < upsX (y4*y4) (y5*y5) (y6*y6) :=
+    w2bupsPos _ _ _ g4 b4u g5 b5u b6 b6u
+  have huab4 : 0 < upsX (y4*y4) (y5*y5) 4 :=
+    w2bupsPos _ _ _ g4 b4u g5 b5u (by norm_num) (by norm_num)
+  have huAb4 : 0 < upsX (4*hminus^2) (y5*y5) 4 :=
+    w2bupsPos _ _ _ hA6.le hA8 g5 b5u (by norm_num) (by norm_num)
+  have huAA4 : 0 < upsX (4*hminus^2) (4*hminus^2) 4 :=
+    w2bupsPos _ _ _ hA6.le hA8 hA6.le hA8 (by norm_num) (by norm_num)
+  have hprod : 0 ≤ (y4*y4) * (y5*y5) := mul_nonneg h4n h5n
+  -- 槽位差平方界
+  have hab4 : ((y4*y4) - (y5*y5))^2 ≤ 4 * (y6*y6) := by
+    have u1 : (y4*y4) - (y5*y5) ≤ 2 := by linarith
+    have u2 : (y5*y5) - (y4*y4) ≤ 2 := by linarith
+    have s4 : ((y4*y4) - (y5*y5))^2 ≤ 4 := by nlinarith [u1, u1, u2, u2]
+    have h16 : (16:ℝ) ≤ 4 * (y6*y6) := by nlinarith [b6]
+    linarith
+  have hsb4 : ((y5*y5) - 4)^2 ≤ 4*hminus^2 * (y4*y4) := by
+    have u1 : (y5*y5) - 4 ≤ 4 := by linarith
+    have u2 : 4 - (y5*y5) ≤ 4 := by linarith
+    have s4 : ((y5*y5) - 4)^2 ≤ 16 := by nlinarith [u1, u1, u2, u2]
+    have hAA : (16:ℝ) ≤ 4*hminus^2 * (y4*y4) := by
+      have hml : (4*hminus^2) * (4*hminus^2) ≤ 4*hminus^2 * (y4*y4) :=
+        mul_le_mul_of_nonneg_left b4 (by linarith)
+      have h36 : (36:ℝ) ≤ (4*hminus^2) * (4*hminus^2) := by nlinarith [hA6.le]
+      linarith
+    linarith
+  have hss4 : (4*hminus^2 - 4)^2 ≤ 4*hminus^2 * (y5*y5) := by
+    have u1 : 4*hminus^2 - 4 ≤ 4 := by linarith
+    have u2 : 4 - 4*hminus^2 ≤ 4 := by linarith
+    have s4 : (4*hminus^2 - 4)^2 ≤ 16 := by nlinarith [u1, u1, u2, u2]
+    have hAA : (16:ℝ) ≤ 4*hminus^2 * (y5*y5) := by
+      have hml : (4*hminus^2) * (4*hminus^2) ≤ 4*hminus^2 * (y5*y5) :=
+        mul_le_mul_of_nonneg_left b5 (by linarith)
+      have h36 : (36:ℝ) ≤ (4*hminus^2) * (4*hminus^2) := by nlinarith [hA6.le]
+      linarith
+    linarith
+  -- 单调链：E(a,b,c) ≥ E(a,b,4) ≥ E(A,b,4) ≥ E(A,A,4) ≥ 9/5 > 1.34²
+  have s3 : (y4*y4) * (y5*y5) * 4 / upsX (y4*y4) (y5*y5) 4
+      ≤ (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) :=
+    w2betaStep3 _ _ _ _ hprod huab4 huabc b6 hab4
+  have s2 : (4*hminus^2) * (y5*y5) * 4 / upsX (4*hminus^2) (y5*y5) 4
+      ≤ (y4*y4) * (y5*y5) * 4 / upsX (y4*y4) (y5*y5) 4 :=
+    w2betaStep1 _ _ _ _ (mul_nonneg h5n (by norm_num)) huAb4 huab4 b4 hsb4
+  have huB44 : 0 < upsX (y5*y5) (4*hminus^2) 4 :=
+    w2bupsPos _ _ _ g5 b5u hA6.le hA8 (by norm_num) (by norm_num)
+  have s1pre : (4*hminus^2) * (4*hminus^2) * 4 / upsX (4*hminus^2) (4*hminus^2) 4
+      ≤ (y5*y5) * (4*hminus^2) * 4 / upsX (y5*y5) (4*hminus^2) 4 :=
+    w2betaStep1 _ _ _ _ (mul_nonneg (by linarith) (by norm_num)) huAA4 huB44 b5 hss4
+  have s1 : (4*hminus^2) * (4*hminus^2) * 4 / upsX (4*hminus^2) (4*hminus^2) 4
+      ≤ (4*hminus^2) * (y5*y5) * 4 / upsX (4*hminus^2) (y5*y5) 4 := by
+    have c1 : (y5*y5) * (4*hminus^2) * 4 / upsX (y5*y5) (4*hminus^2) 4
+        = (4*hminus^2) * (y5*y5) * 4 / upsX (4*hminus^2) (y5*y5) 4 := by
+      rw [w2bhsymP (y5*y5) (4*hminus^2) 4]; ring
+    linarith [s1pre, c1]
+  have hcorner : (1.34:ℝ)^2 < (4*hminus^2)*(4*hminus^2)*4
+      / upsX (4*hminus^2) (4*hminus^2) 4 := by
+    have hups4 : upsX (4*hminus^2) (4*hminus^2) 4 = 16*(4*hminus^2) - 16 := by
+      unfold upsX; ring
+    have hf : (0:ℝ) ≤ (4*hminus^2 - 6)*(5*(4*hminus^2) - 6) :=
+      mul_nonneg (sub_nonneg.mpr hA6.le) (by linarith [hA6.le])
+    have hpos16 : (0:ℝ) < 16*(4*hminus^2) - 16 := by linarith
+    rw [hups4, lt_div_iff₀ hpos16]
+    nlinarith [hf, hA6.le]
+  have heq : eta_y y4 y5 y6 ^ 2
+      = (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) := by
+    have huns : eta_y y4 y5 y6
+        = Real.sqrt ((y4*y4) * (y5*y5) * (y6*y6)
+          / upsX (y4*y4) (y5*y5) (y6*y6)) := rfl
+    have hpos : 0 ≤ (y4*y4) * (y5*y5) * (y6*y6)
+        / upsX (y4*y4) (y5*y5) (y6*y6) :=
+      div_nonneg (mul_nonneg (mul_nonneg h4n h5n) h6n) huabc.le
+    rw [huns, Real.sq_sqrt hpos]
+  calc eta_y y4 y5 y6 ^ 2
+      = (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) := heq
+    _ ≥ (y4*y4) * (y5*y5) * 4 / upsX (y4*y4) (y5*y5) 4 := s3
+    _ ≥ (4*hminus^2) * (y5*y5) * 4 / upsX (4*hminus^2) (y5*y5) 4 := s2
+    _ ≥ (4*hminus^2) * (4*hminus^2) * 4 / upsX (4*hminus^2) (4*hminus^2) 4 := s1
+    _ > 1.34 ^ 2 := hcorner
+
 
 /-- rest 6/62：HOL ineq entry `QITNPEA 4003532128 a`（ineq.hl:1290，盒
 [2hmin,2hplus]×[2,√8]×[√2,√2]³×[2,√8]；PA21 `bank_QITNPEA4003532128a` /
@@ -6692,3 +7139,6 @@ theorem the_kepler_conjecture_from_interfaces : TheKeplerConjecture :=
 #print axioms Kepler.the_kepler_conjecture
 
 end Kepler.Assembly
+
+#print axioms Kepler.Assembly.nliCell3CIHTIUM
+#print axioms Kepler.Assembly.nliRestJSPEVYT
