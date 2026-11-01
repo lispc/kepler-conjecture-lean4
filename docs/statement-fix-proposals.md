@@ -5536,6 +5536,82 @@ private theorem age2_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
 
 **状态**：草案 2026-10-28（sf91-taufun 车道起草）。**在册未落**；应用序列（编排者）：① 用户批（含 (a) 极小性两案裁定，默认案①）→ ② STATEMENT-FIX 闸 LA23（age2 桥编译在此实证）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/91-taufun-stable-hyp.patch SF_ITEM=91 THM=continuousOn_tauFun_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean continuousOn_tauFun_p23` → ③ LA24 逐文件闸 `…/auto_gate.sh Kepler/Text/LocalAuto24.lean XWITCCN_CASE_4_IS_SCS_p24`（CASE_5/6 同式）→ ④ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md`。§91 编号已核。
 
+# PROPOSAL-91-AMEND — §91 执行件转案②（全 `stableSystem_p23` 载体）
+
+修订对象：`docs/statement-fix-proposals.md` §91（SF-91，立案 ded63ace；本 AMEND 由编排者追加到 §91 条目末）。基线 HEAD = **738dce89**（主仓 tracked 零改动）。裁决输入：fanchain-w7 `DELIVERY.md` §6（W7 车道，S2–S10 九件已真证）第 5 项「记录方向」——**S10 `CONTINUOUS_ON_TAU_FUN_p9` 的消费需要 `s : StableSyP9` 记录，其 `prop : stableSystem_p9 …` 含完整 `constraintSystem_p9`，§91 案①三条款（`hm`/`h2`/`hstab`）不足以构造该记录** → 执行件转案②；案①留档为极小形（见 (e′)）。
+
+## (c′) 案② 执行签名（逐字 = patch 91b 的 LA23 hunk）
+
+```lean
+theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ)
+    (hm : 2 < m)
+    (hstab : ∃ a b : ℕ → ℕ → ℝ, ∃ J : Set (Set ℕ),
+      stableSystem_p23 m 0 (Set.Iic (m - 1)) a b J (fun i => (1 + i) % m) ∧
+      (∀ i j : Fin m, a (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = aR i j) ∧
+      (∀ i j : Fin m, b (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = bR i j)) :
+    ContinuousOn (fun l : FinVec m 3 =>
+      tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 aR bR) := by
+  sorry
+```
+
+**结论面逐字不动**（机检 C6：结论三行 + 域 `B_SY1_p4 aR bR` 与 HEAD :1181-1183 byte-identical；`sorry` 保留——本案只修陈述，闭证明走 W8）。
+
+设计要点（每项有机检编号，全量见 91b Evidence.md）：
+
+1. **存在式全载体 + 移位吻合条款**：前提 = 「存在 ℕ 全函数 `a b` 与 `J : Set (Set ℕ)`，使 `(m, 0, Set.Iic (m-1), a, b, J, 后继)` 成全 `stableSystem_p23`（LA23:146，dih2k.hl:61-67 逐字孪生 = HOL `stable_sy` 类不变量），且其 `((i+1)%m)`-移位表恰为 `aR bR`」。这是 HOL 量词语境（`s : stable_sy` 记录 + 5 合取 guard）在 Fin 结论面下的忠实渲染：**强于案①三条款、仍 ≤ HOL**（HOL 每个记录实例都给出本前提的一个 witness，p23 侧哑槽 `d := 0` 任意可取）。
+2. **`f` 逐字 pin 为 `fun i => (1 + i) % m`**（不进存在式）：`IS_SCS_STABLE_SYSTEM_p23`（LA23:762）正是按此 tuple 陈述（`scsToStableSy_p23` 的 `I := Set.Iic (s.k - 1)`、`f := fun i => (1 + i) % s.k`），pin 后喂入一步闭合（机检 C2a-e）；且 **`torsor` 单独不足以强迫后继**——奇 k 时 `fun i => (i+2) % k` 同样满足 torsor 全五支（单 k-循环）而 ≠ 后继（机检 C4a），若 `f` 进存在式则 W8 的 `StableSysHyp_p9` 第五合取 `s.f_sy = (fun i => (1+i) % m)` 无法闭合——pin 是必要设计，非偷懒。
+3. **吻合条款取 `((i:ℕ)+1) % m` 移位形**：在三消费者处对 witness `a := s.a` 是 **`rfl`**（`aRk s i j = s.a ((i+1)%k) ((j+1)%k)` 即 aR4/5/6 的 def 体，机检 C5b）；对 W8 的 G1′ 也是正形——`B_SY1_p9` 的 1-based 行 `x ∈ Icc 1 m` 经 `i := ⟨x-1⟩` 实例化后与 `B_SY1_p4` 的 `Fin (x-1)` 行读同一 ℕ 条目（含 wrap 行 `x = m ↔ Fin m-1`）。
+4. **`hm : 2 < m` 单列保留**（载体 C1 `3 ≤ m` 已蕴含——冗余是有意的）：与同 kit 的 `bodyClosed_p23`（§89）喂料面齐（三消费点已有 `(by norm_num : 2 < k)` 同式），证明波可解耦取用。若闸上被质疑冗余，删 `hm` 即可（前提可由 `hstab` 的 C1 机械导出），三喂点去掉一个实参。
+5. docstring 加 REPAIRED（SF-91 案②）段（记录 pin 依据、d_sy 不 pin 的诚实边界、W7 §6 指针），其余 docstring 逐字保留（patch 内）。
+
+## (d′) 案② 消费者喂法（LA24 三处，类比 SF-89 `stabAdj_of_isScsV39` 模式）
+
+新 private 喂桥（插在 `stabAdj_of_isScsV39` 后、`aR4` 前，LA24:1797 邻域；逐字 = patch）：
+
+```lean
+private theorem fullStable_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
+    (hk : s.k = k) (hk3 : 3 < s.k) (aR bR : Fin k → Fin k → ℝ)
+    (ha : ∀ i j : Fin k, aR i j = s.a (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k))
+    (hb : ∀ i j : Fin k, bR i j = s.b (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k)) :
+    ∃ a b : ℕ → ℕ → ℝ, ∃ J : Set (Set ℕ),
+      stableSystem_p23 k 0 (Set.Iic (k - 1)) a b J (fun i => (1 + i) % k) ∧
+      (∀ i j : Fin k, a (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k) = aR i j) ∧
+      (∀ i j : Fin k, b (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k) = bR i j) :=
+  ⟨s.a, s.b, scsJSet_p23 s,
+    by have h := IS_SCS_STABLE_SYSTEM_p23 s hs hk3; rwa [hk] at h,
+    fun i j => (ha i j).symm, fun i j => (hb i j).symm⟩
+```
+
+三装配点（k = 4/5/6 同型，现 HEAD 调用行 :2006 / :2165 / :2322）：
+
+```lean
+-    continuousOn_tauFun_p23 _ _
++    continuousOn_tauFun_p23 _ _ (by norm_num : 2 < 4)
++      (fullStable_of_isScsV39 s hs hk hk3 _ _ (fun _ _ => rfl) (fun _ _ => rfl))
+```
+
+（`2 < 5` / `2 < 6` 于 CASE_5/6。）
+
+静态推演（闸为权威，逐项）：
+- **隐参统一**：整项期望类型 = `hfun` 的 ascription，与结论 `ContinuousOn … (B_SY1_p4 aR bR)` 合一得 `m := 4/5/6`、`aR := aRk s`、`bR := bRk s`；bridge 的隐参 `k := 4/5/6` 由 `hk : s.k = 4/5/6` 合一。
+- **`hk` pin + 重写**：bridge 体内 `rwa [hk] at h` 把 `IS_SCS_STABLE_SYSTEM_p23 s hs hk3 : stableSystem_p23 s.k 0 (Set.Iic (s.k-1)) s.a s.b (scsJSet_p23 s) (fun i => (1+i) % s.k)` 的 `s.k` 全部改写为 `k`，与第一合取逐字合一（机检 C2a/C2b；对比 stabAdj 用 `subst hk`——此处 `hk : s.k = k` 以 `k` 为变量同样可 subst，`rwa` 版少一步动机检查，两写法等价，闸上择编译过者）。
+- **量词序**：`ha : ∀ i j, …` 以 `(fun _ _ => rfl)` 整体喂入（函数值传入，elaborator 展开 `aRk` def 后逐点 `rfl`——stabAdj 同机制，SF-89 已实证该统一路径）。
+- **零新债面**：喂桥为 term-mode 证明（无 tactic 链失手风险），`rwa [hk]` 是唯一 tactic；喂料全机械，无选择、无启发、无新公理面。
+
+## (e′) 案①不可消费 S10 的论证 → 执行件转案②；案①留档
+
+W7 车道（fanchain-w7 `DELIVERY.md` §6 第 5 项，逐字引）：
+
+> **记录方向（关键约束，需编排者裁定）**：S10 的消费需要 `s : StableSyP9` 证据；其 `prop : stableSystem_p9 …` 含完整 `constraintSystem_p9`（3≤k≤6/J-边/周期性等）—— **SF-91 极小三条款（h2/hstab）不足以构造记录**。两条通路：**（推荐）保守全稳定前提**（recon FIDELITY §A 已备）：SF-91 采用全 `stableSystem_p23` 前提，消费者经 `IS_SCS_STABLE_SYSTEM_p23`（LA23:762，已证）喂入；W8 桥 = `stableSystem_p23 → stableSystem_p9` 的条款平移（两形条款同构、仅索引容器异，FIDELITY §D）+ 记录构造，Est 60–100 行；三条款极小形：需在裸 Fin 表上重放 S2–S10 全链（≥400 行，不可控，不推荐）。
+
+W8 收口必须构造 `StableSyP9` 记录（`StableSysHyp_p9` 需 `k_sy = m ∧ I_SY = Icc 0 (m-1) ∧ f_sy = 后继 ∧ 2 < m` 五件中的记录面），而 `StableSyP9.prop` 是**全量** `stableSystem_p9`——案①的三条款给不出 torsor/J-边/周期等合取，记录构造在案①前提下空洞。故**执行件转案②**。案①（三条款 patch `91-taufun-stable-hyp.patch`，已归档）**保留为记录：极小形**——若日后 `StableSyP9`/S10 改形（例如 S10 改吃裸 Fin 表三条款）再启；其 age2 喂桥草案亦留档（sf91-taufun 车道 CONSUMERS.md §3）。旁注维持：`hstab` 不进 tauFun 连续链（只进 bodyClosed）；S10 链实际消费 = {k=m, f=后继, 2<m, 对称, mod 周期, 2≤a off-diag}，全由载体供给（W7 §6 第 5 项旁注）。
+
+## 载体 → `StableSyP9` 覆盖（摘要；全表 + 机检见 91b Evidence.md）
+
+`StableSyP9` 七字段 + `stableSystem_p9` 九条款 + `StableSysHyp_p9` 四合取，除三项外全部由载体直供/逐字平移：**`d_sy` 缺**（p23 `d : ℕ` 为哑槽、S10 tauFun 链零消费 → W8 自由选定，诚实列为 W8 非承重自由度；日后 tauStar/dFun 链若需真 d 另立案）；**`I_SY`/`J_SY` 容器桥**（Set→Finset，`Iic (m-1) = ↑(Icc 0 (m-1))`、`J.toFinset` 有限性由 C6 上界）；**S3′/S4′ 常数桥**（`cstab = cstab_p4 = 3.01`）。机检 28 组全 PASS（含容器/card/subset 桥的全枚举语义等价 k=3..6、ear 系统非空洞性见证）。
+
+
 ## 92. LA4 `constraintSystem_p4`（HEAD :886，周期条款 ：890）f-周期条款全域量词 × LA11 `liftAB_p11` 出界补零 lift ⟹ 全部 `hss` 客户陈述空洞真（W1「已证」的 `PROPERTIES_OF_FAN_IN_B_SY_p11` 实为 vacuous；修复 = 周期条款限域 `∀ i ∈ s, ∀ j ∈ s`，LA4 定义层 6 行，消费者适配 = 空）— 分级 **A**（fanchain-w2 vac.lean 机检裁决 · 陈述空洞真 · S1 链阻断 · 定义层修复零签名变更）
 
 ### (a) HOL 引用（constraint_system 正本逐字对照；周期条款量词范围的诚实考证）
