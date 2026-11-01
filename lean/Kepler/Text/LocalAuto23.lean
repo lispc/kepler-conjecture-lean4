@@ -1176,8 +1176,36 @@ periodic point `(q,r,s,q,r,s)` violate fan7 by cone overlap), yet dart
 collisions DO occur fan-legally on the body (`ncard F_SY = 3 < 6` there), so
 the missing lemma is local constancy of the collision pattern under `fan7`,
 then the standard re-index (`CHANGE_SUM_TAU_FUN_p9` twin) plus (ii).
+REPAIRED (SF-91 案②, 2026-10-28): the frozen strong form took arbitrary
+`aR bR`. The carrier premise is now the full `stableSystem_p23` (LA23:146,
+verbatim twin of dih2k.hl:61-67 — the HOL `stable_sy` record's class
+invariant) over existentially witnessed ℕ tables, with `f` pinned to the
+cyclic successor `fun i => (1 + i) % m` — exactly the tuple
+`IS_SCS_STABLE_SYSTEM_p23` (LA23:762) supplies, so the CASE_4/5/6 consumers
+feed it in one step (LA24 `fullStable_of_isScsV39`, SF-89 `stabAdj` mode).
+The shifted-agreement legs tie the witnesses to the Fin tables the
+conclusion ranges over (`rfl` at the consumers: `aRk s i j = s.a
+((i+1)%k) ((j+1)%k)` by definition).  Why the full carrier and not the
+三条款 minimal form: the W8 discharge builds a `StableSyP9` record for
+`CONTINUOUS_ON_TAU_FUN_p9` (LA9) whose `prop` is the whole
+`constraintSystem_p9` bundle — three clauses cannot build the record
+(fanchain-w7 DELIVERY §6 item 5).  Honest edges: the p23 `d` slot is the
+unused HOL dummy and the S10 tauFun chain is `d`-blind, so the future
+record's `d_sy` is NOT pinned here (W8 selects it freely); `J_SY` reaches
+the p9 `Finset` shape through the Set→Finset container bridge; `f` had to
+be pinned explicitly because `torsor` alone does not force the successor
+(any single k-cycle is a torsor witness, e.g. `fun i => (i+2) % m` for odd
+m — 91b machine check C4).  `hm : 2 < m` is kept as an explicit premise
+for §89/bodyClosed parity at the shared feed sites although carrier clause
+1 (`3 ≤ m`) already implies it.  W8 bridge plan: fanchain-w7 DELIVERY §6
+(G1′/G2/G3/G3a).
 (Sorry 1/2 of this kit.) -/
-theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) :
+theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ)
+    (hm : 2 < m)
+    (hstab : ∃ a b : ℕ → ℕ → ℝ, ∃ J : Set (Set ℕ),
+      stableSystem_p23 m 0 (Set.Iic (m - 1)) a b J (fun i => (1 + i) % m) ∧
+      (∀ i j : Fin m, a (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = aR i j) ∧
+      (∀ i j : Fin m, b (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = bR i j)) :
     ContinuousOn (fun l : FinVec m 3 =>
       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 aR bR) := by

@@ -1795,6 +1795,25 @@ private theorem stabAdj_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
     ← periodic2_mod_eq_p24 hperb ((i : ℕ) + 1) ((i : ℕ) + 1 + 1)]
   exact le_trans (hup ((i : ℕ) + 1) hk3) (le_of_eq rfl)
 
+/-- SF-91 案② feed: the full `stableSystem_p23` carrier of the CASE_4/5/6
+shifted tables, witnessed by the scs record itself — `IS_SCS_STABLE_SYSTEM_p23`
+(LA23:762) is stated at exactly this tuple, so after `hk : s.k = k` the first
+leg closes by `rwa`; the agreement legs are `rfl` on the frozen `aRk`/`bRk`
+lambdas (`aR4 s i j = s.a ((i+1) % 4) ((j+1) % 4)` definitionally).  This is
+the premise `continuousOn_tauFun_p23` (SF-91 案②) consumes; the W8 discharge
+translates it into the `StableSyP9` record (fanchain-w7 DELIVERY §6). -/
+private theorem fullStable_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
+    (hk : s.k = k) (hk3 : 3 < s.k) (aR bR : Fin k → Fin k → ℝ)
+    (ha : ∀ i j : Fin k, aR i j = s.a (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k))
+    (hb : ∀ i j : Fin k, bR i j = s.b (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k)) :
+    ∃ a b : ℕ → ℕ → ℝ, ∃ J : Set (Set ℕ),
+      stableSystem_p23 k 0 (Set.Iic (k - 1)) a b J (fun i => (1 + i) % k) ∧
+      (∀ i j : Fin k, a (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k) = aR i j) ∧
+      (∀ i j : Fin k, b (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k) = bR i j) :=
+  ⟨s.a, s.b, scsJSet_p23 s,
+    by have h := IS_SCS_STABLE_SYSTEM_p23 s hs hk3; rwa [hk] at h,
+    fun i j => (ha i j).symm, fun i j => (hb i j).symm⟩
+
 /-- the k=4 shifted tables (the frozen inline lambdas). -/
 private def aR4 (s : ScsV39) : Fin 4 → Fin 4 → ℝ :=
   fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)
@@ -2003,7 +2022,8 @@ theorem XWITCCN_CASE_4_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hfun : ContinuousOn (fun l : FinVec 4 3 =>
       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR4 s) (bR4 s)) :=
-    continuousOn_tauFun_p23 _ _
+    continuousOn_tauFun_p23 _ _ (by norm_num : 2 < 4)
+      (fullStable_of_isScsV39 s hs hk hk3 _ _ (fun _ _ => rfl) (fun _ _ => rfl))
   have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
       (B_SY1_p4 (aR4 s) (bR4 s)) :=
     continuousOn_tauStar_p23 _ _ _ hd hfun
@@ -2162,7 +2182,8 @@ theorem XWITCCN_CASE_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hfun : ContinuousOn (fun l : FinVec 5 3 =>
       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR5 s) (bR5 s)) :=
-    continuousOn_tauFun_p23 _ _
+    continuousOn_tauFun_p23 _ _ (by norm_num : 2 < 5)
+      (fullStable_of_isScsV39 s hs hk hk3 _ _ (fun _ _ => rfl) (fun _ _ => rfl))
   have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
       (B_SY1_p4 (aR5 s) (bR5 s)) :=
     continuousOn_tauStar_p23 _ _ _ hd hfun
@@ -2319,7 +2340,8 @@ theorem XWITCCN_CASE_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hfun : ContinuousOn (fun l : FinVec 6 3 =>
       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR6 s) (bR6 s)) :=
-    continuousOn_tauFun_p23 _ _
+    continuousOn_tauFun_p23 _ _ (by norm_num : 2 < 6)
+      (fullStable_of_isScsV39 s hs hk hk3 _ _ (fun _ _ => rfl) (fun _ _ => rfl))
   have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
       (B_SY1_p4 (aR6 s) (bR6 s)) :=
     continuousOn_tauStar_p23 _ _ _ hd hfun
