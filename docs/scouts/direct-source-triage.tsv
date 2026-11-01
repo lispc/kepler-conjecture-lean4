@@ -140,4 +140,4 @@ SET_EQ_DIAG_STAB_5I2	lean/Kepler/Text/LocalAuto24.lean	1053	B	5I2 对角稳定�
 SET_EQ_DIAG_STAB_5M1	lean/Kepler/Text/LocalAuto24.lean	1162	B	5M1 对角稳定集等式（同上）	SCS_5M1_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5M1;	la24-sweep
 bodyClosed_p23	lean/Kepler/Text/LocalAuto23.lean	1187	B	体集闭性实分析引理（CASE_4/5/6 归因实测共同残根）	JKQEWGV.hl;	la23-analysis
 continuousOn_tauFun_p23	lean/Kepler/Text/LocalAuto23.lean	1173	B	tauFun 连续性实分析引理（同上）	JKQEWGV.hl;	la23-analysis
-_private.LocalAuto35.0.Kepler.Text.pmPlaneCrowding_p35	lean/Kepler/Text/LocalAuto35.lean	7583	B	planemiss12 根（W-D 后经 LKGRQUI_p27 五槽入锥；pm 闭即装配点 CNICGSF1–5 五槽翻标准三）；w4corners 已交弧和钉/镖头顶抬尾 + Branch-1 条件形，缺口 = Branch-2 (150–250 行) + R-w3c-2 (250–400 行) 在册	PLANE-CROWDING（LA35 根 docstring）	la35-pm12（在飞）
+_private.LocalAuto35.0.Kepler.Text.pmPlaneCrowding_p35	lean/Kepler/Text/LocalAuto35.lean	7520	B	planemiss12 根（W-D 后经 LKGRQUI_p27 五槽入锥；pm 闭即装配点 CNICGSF1–5 五槽翻标准三）；w4corners 已交弧和钉/镖头顶抬尾 + Branch-1 条件形，缺口 = Branch-2 (150–250 行) + R-w3c-2 (250–400 行) 在册	PLANE-CROWDING（LA35 根 docstring）	la35-pm12（在飞）
