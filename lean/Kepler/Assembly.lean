@@ -386,9 +386,176 @@ theorem nliCell3CIHTIUM : bank_CIHTIUM := sorry
 
 /-- 1a 7/7：HOL ineq entry `CJFZZDW`（ineq.hl:1479；PA21 `bank_CJFZZDW`，
 盒 [1,1]³×[2hplus,√8]²×[2,√8]，结论同 CIHTIUM）。资产状态：
-deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliCell3CJFZZDW : bank_CJFZZDW := sorry
+**W2 纯 Lean 闭合**（nli-w2-screen 2026-10-28）：eta_y² = a·b·c/ups(a,b,c)
+在盒上是逐槽位保序有理函数（差分恒等式 = 因子·步长·(两数积−其余二数平方差)，
+全 ring/linarith/nlinarith 级），角点值 eta_y(2hplus,2hplus,2)² = 2.0481… > 2
+纯字面量算术。探针 `/tmp/nliw2/logs/probe_cjfzzdw.log`：RC=0，
+`#print axioms Kepler.Assembly.nliCell3CJFZZDW` = 标准三
+（propext/Classical.choice/Quot.sound，零 sorryAx/native_decide）。
+陈述逐字未动（只加证明 + 5 枚 private w2 前缀服务引理）。 -/
+/-- w2 服务件：交叉相乘去分母（0 < 分母，差非负）。 -/
+private theorem w2divCross {A B U V : ℝ} (hU : 0 < U) (hV : 0 < V)
+    (h : 0 ≤ B * U - A * V) : A / U ≤ B / V := by
+  refine (div_le_iff₀ hU).mpr ?_
+  have h2 : B / V * U = B * U / V := div_mul_eq_mul_div B V U
+  rw [h2]
+  exact le_div_iff₀ hV |>.mpr (by linarith)
+
+/-- w2 服务件：`fun x => x*b*c/ups(x,b,c)` 第一槽保序（差 = 因子·步长·(a1a2−(b−c)²)）。 -/
+private theorem w2etaStep1 (b c a1 a2 : ℝ) (hbc : 0 ≤ b * c) (hu1 : 0 < upsX a1 b c)
+    (hu2 : 0 < upsX a2 b c) (h1 : a1 ≤ a2) (h2 : (b - c) ^ 2 ≤ a1 * a2) :
+    a1 * b * c / upsX a1 b c ≤ a2 * b * c / upsX a2 b c := by
+  have hkey : a2 * upsX a1 b c - a1 * upsX a2 b c
+      = (a2 - a1) * (a1 * a2 - (b - c) ^ 2) := by
+    unfold upsX; ring
+  have hnonneg : 0 ≤ (a2 - a1) * (a1 * a2 - (b - c) ^ 2) :=
+    mul_nonneg (sub_nonneg.mpr h1) (sub_nonneg.mpr h2)
+  have hprod : 0 ≤ b * c * ((a2 - a1) * (a1 * a2 - (b - c) ^ 2)) :=
+    mul_nonneg hbc hnonneg
+  have e1 : a2 * b * c * upsX a1 b c - a1 * b * c * upsX a2 b c
+      = b * c * (a2 * upsX a1 b c - a1 * upsX a2 b c) := by ring
+  exact w2divCross hu1 hu2 (by rw [e1, hkey]; exact hprod)
+
+/-- w2 服务件：`fun z => a*b*z/ups(a,b,z)` 第三槽保序（同型差分恒等式）。 -/
+private theorem w2etaStep3 (a b c1 c2 : ℝ) (hab : 0 ≤ a * b) (hu1 : 0 < upsX a b c1)
+    (hu2 : 0 < upsX a b c2) (h1 : c1 ≤ c2) (h2 : (a - b) ^ 2 ≤ c1 * c2) :
+    a * b * c1 / upsX a b c1 ≤ a * b * c2 / upsX a b c2 := by
+  have hkey : c2 * upsX a b c1 - c1 * upsX a b c2
+      = (c2 - c1) * (c1 * c2 - (a - b) ^ 2) := by
+    unfold upsX; ring
+  have hnonneg : 0 ≤ (c2 - c1) * (c1 * c2 - (a - b) ^ 2) :=
+    mul_nonneg (sub_nonneg.mpr h1) (sub_nonneg.mpr h2)
+  have hprod : 0 ≤ a * b * ((c2 - c1) * (c1 * c2 - (a - b) ^ 2)) :=
+    mul_nonneg hab hnonneg
+  have e1 : a * b * c2 * upsX a b c1 - a * b * c1 * upsX a b c2
+      = a * b * (c2 * upsX a b c1 - c1 * upsX a b c2) := by ring
+  exact w2divCross hu1 hu2 (by rw [e1, hkey]; exact hprod)
+
+/-- w2 服务件：upsX 在本盒槽位域上恒正（下界 98 − 16 = 82 > 0，纯区间算术）。 -/
+private theorem w2upsPos : ∀ x y z : ℝ, (7.02674064:ℝ) ≤ x → x ≤ 8 →
+    (7.02674064:ℝ) ≤ y → y ≤ 8 → (4:ℝ) ≤ z → z ≤ 8 → 0 < upsX x y z := by
+  intro x y z hx hxu hy hyu hz hzu
+  have hform : upsX x y z = x * (2 * (y + z) - x) - (y - z) ^ 2 := by
+    unfold upsX; ring
+  have hyz : (y - z) ^ 2 ≤ 16 := by
+    have t1 : y - z ≤ 4 := by linarith
+    have t2 : z - y ≤ 4 := by linarith
+    nlinarith [t1, t1, t2, t2]
+  have hmin : (14.05:ℝ) ≤ 2 * (y + z) - x := by linarith
+  have hxn : (0:ℝ) ≤ x := by linarith
+  have hm : (7.02674064:ℝ) * 14.05 ≤ x * (2 * (y + z) - x) :=
+    mul_le_mul (show (7.02674064:ℝ) ≤ x by exact hx) hmin (by norm_num) hxn
+  have h98 : (98:ℝ) ≤ (7.02674064:ℝ) * 14.05 := by norm_num
+  linarith [hform, hyz, hm, h98]
+
+/-- w2 服务件：upsX 槽位交换对称。 -/
+private theorem w2hsymP (p q r : ℝ) : upsX p q r = upsX q p r := by
+  unfold upsX; ring
+
+set_option maxHeartbeats 1000000 in
+theorem nliCell3CJFZZDW : bank_CJFZZDW := by
+  intro y1 y2 y3 y4 y5 y6 _ _ _ _ _ _ h4l h4h h5l h5h h6l h6h
+  have hhp : hplus = 1.3254 := rfl
+  -- x-空间盒事实：a=y4²∈[7.02674064,8]，b=y5²∈[7.02674064,8]，c=y6²∈[4,8]
+  have b4 : (7.02674064:ℝ) ≤ y4 * y4 := by
+    have t : (2 * hplus:ℝ) ≤ y4 := by linarith [h4l, hhp]
+    have s : (2 * hplus) * (2 * hplus) = (7.02674064:ℝ) := by rw [hhp]; norm_num
+    have m : (2 * hplus) * (2 * hplus) ≤ y4 * y4 :=
+      mul_le_mul t t (by linarith) (by linarith)
+    rw [s] at m; exact m
+  have b4u : y4 * y4 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y4 * y4 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h4h h4h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have b5 : (7.02674064:ℝ) ≤ y5 * y5 := by
+    have t : (2 * hplus:ℝ) ≤ y5 := by linarith [h5l, hhp]
+    have s : (2 * hplus) * (2 * hplus) = (7.02674064:ℝ) := by rw [hhp]; norm_num
+    have m : (2 * hplus) * (2 * hplus) ≤ y5 * y5 :=
+      mul_le_mul t t (by linarith) (by linarith)
+    rw [s] at m; exact m
+  have b5u : y5 * y5 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y5 * y5 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h5h h5h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have b6 : (4:ℝ) ≤ y6 * y6 := by
+    have s : (2:ℝ) * 2 = 4 := by norm_num
+    have m : (2:ℝ) * 2 ≤ y6 * y6 := mul_le_mul h6l h6l (by norm_num) (by linarith)
+    rw [s] at m; exact m
+  have b6u : y6 * y6 ≤ 8 := by
+    have s : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have m : y6 * y6 ≤ Real.sqrt 8 * Real.sqrt 8 :=
+      mul_le_mul h6h h6h (by linarith) (Real.sqrt_nonneg 8)
+    rw [s] at m; exact m
+  have h4n : (0:ℝ) ≤ y4 * y4 := by linarith
+  have h5n : (0:ℝ) ≤ y5 * y5 := by linarith
+  have h6n : (0:ℝ) ≤ y6 * y6 := by linarith
+  -- ups 正性（五处实例）
+  have huabc : 0 < upsX (y4*y4) (y5*y5) (y6*y6) := w2upsPos _ _ _ b4 b4u b5 b5u b6 b6u
+  have huab4 : 0 < upsX (y4*y4) (y5*y5) 4 :=
+    w2upsPos _ _ _ b4 b4u b5 b5u (by norm_num) (by norm_num)
+  have hull4 : 0 < upsX 7.02674064 (y5*y5) 4 :=
+    w2upsPos _ _ _ (by norm_num) (by norm_num) b5 b5u (by norm_num) (by norm_num)
+  have hulll4 : 0 < upsX 7.02674064 7.02674064 4 :=
+    w2upsPos _ _ _ (by norm_num) (by norm_num) (by norm_num) (by norm_num)
+      (by norm_num) (by norm_num)
+  have hubl4 : 0 < upsX (y5*y5) 7.02674064 4 := by
+    rw [w2hsymP (y5*y5) 7.02674064 4]; exact hull4
+  -- 符号事实
+  have hprod : 0 ≤ (y4*y4) * (y5*y5) := mul_nonneg h4n h5n
+  have hprodL : 0 ≤ (7.02674064:ℝ) * 4 := by norm_num
+  -- 平方事实
+  have hsqb4 : ((y5*y5) - 4)^2 ≤ (7.02674064:ℝ) * (y4*y4) := by
+    have t1 : (y5*y5) - 4 ≤ 4 := by linarith
+    have s16 : ((y5*y5) - 4)^2 ≤ 16 := by nlinarith [t1, t1]
+    have hm : (7.02674064:ℝ) * (7.02674064:ℝ) ≤ (7.02674064:ℝ) * (y4*y4) :=
+      mul_le_mul (le_refl _) b4 (by norm_num) (by norm_num)
+    have h16 : (16:ℝ) ≤ (7.02674064:ℝ) * (7.02674064:ℝ) := by norm_num
+    linarith
+  have hsql4 : ((7.02674064:ℝ) - 4)^2 ≤ (7.02674064:ℝ) * (y5*y5) := by
+    have h9 : ((7.02674064:ℝ) - 4)^2 ≤ 10 := by norm_num
+    have hm : (7.02674064:ℝ) * (7.02674064:ℝ) ≤ (7.02674064:ℝ) * (y5*y5) :=
+      mul_le_mul (le_refl _) b5 (by norm_num) (by norm_num)
+    have h10 : (10:ℝ) ≤ (7.02674064:ℝ) * (7.02674064:ℝ) := by norm_num
+    linarith
+  have hsab : ((y4*y4) - (y5*y5))^2 ≤ 4 * (y6*y6) := by
+    have t1 : (y4*y4) - (y5*y5) ≤ 1 := by linarith
+    have t2 : (y5*y5) - (y4*y4) ≤ 1 := by linarith
+    have s1' : ((y4*y4) - (y5*y5))^2 ≤ 1 := by nlinarith [t1, t1, t2, t2]
+    have h16 : (16:ℝ) ≤ 4 * (y6*y6) := by nlinarith [b6]
+    linarith
+  -- 单调链：E(a,b,c) ≥ E(a,b,4) ≥ E(A,b,4) ≥ E(A,A,4) = 2.048… > 2
+  have s3 : (y4*y4) * (y5*y5) * 4 / upsX (y4*y4) (y5*y5) 4
+      ≤ (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) :=
+    w2etaStep3 _ _ _ _ hprod huab4 huabc b6 hsab
+  have s1 : (7.02674064:ℝ) * (y5*y5) * 4 / upsX 7.02674064 (y5*y5) 4
+      ≤ (y4*y4) * (y5*y5) * 4 / upsX (y4*y4) (y5*y5) 4 :=
+    w2etaStep1 _ _ _ _ (mul_nonneg h5n (by norm_num)) hull4 huab4 b4 hsqb4
+  have s2pre : (7.02674064:ℝ) * 7.02674064 * 4 / upsX 7.02674064 7.02674064 4
+      ≤ (y5*y5) * 7.02674064 * 4 / upsX (y5*y5) 7.02674064 4 :=
+    w2etaStep1 _ _ _ _ hprodL hulll4 hubl4 b5 hsql4
+  have hcorner : (7.02674064:ℝ) * 7.02674064 * 4 / upsX 7.02674064 7.02674064 4 > 2 := by
+    unfold upsX; norm_num
+  have heq : eta_y y4 y5 y6 ^ 2
+      = (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) := by
+    have huns : eta_y y4 y5 y6
+        = Real.sqrt ((y4*y4) * (y5*y5) * (y6*y6)
+          / upsX (y4*y4) (y5*y5) (y6*y6)) := rfl
+    have hpos : 0 ≤ (y4*y4) * (y5*y5) * (y6*y6)
+        / upsX (y4*y4) (y5*y5) (y6*y6) :=
+      div_nonneg (mul_nonneg (mul_nonneg h4n h5n) h6n) huabc.le
+    rw [huns, Real.sq_sqrt hpos]
+  calc eta_y y4 y5 y6 ^ 2
+      = (y4*y4) * (y5*y5) * (y6*y6) / upsX (y4*y4) (y5*y5) (y6*y6) := heq
+    _ ≥ (y4*y4) * (y5*y5) * 4 / upsX (y4*y4) (y5*y5) 4 := s3
+    _ ≥ (7.02674064:ℝ) * (y5*y5) * 4 / upsX 7.02674064 (y5*y5) 4 := s1
+    _ ≥ (7.02674064:ℝ) * 7.02674064 * 4 / upsX 7.02674064 7.02674064 4 := by
+        have c1 : (y5*y5) * 7.02674064 * 4 / upsX (y5*y5) 7.02674064 4
+            = (7.02674064:ℝ) * (y5*y5) * 4 / upsX 7.02674064 (y5*y5) 4 := by
+          rw [w2hsymP (y5*y5) 7.02674064 4]; ring
+        linarith [s2pre, c1]
+    _ > 2 := hcorner
 
 /-- 中层骨架 1a 本体：cell3 七条的显式合取装配（照 PA21 `cell3_bank` def
 逐位对齐；每枚组件 = 上方具名骨架件）。
