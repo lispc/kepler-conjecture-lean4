@@ -802,10 +802,70 @@ theorem INJ_ROW_B_SY_p9 (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
       rowV3_p9 l i = rowV3_p9 l j → i = j := by
   exact fw2_row_inj s hm l hl
 
+/-! ### fw7 service lemmas (fanchain-w7): the CHANGE_SUM re-index kit
+
+HOL `CHANGE_SUM_TAU_FUN` (Hdplygy.hl:370) re-indexes the `F_SY` set-sum over
+`1..k_sy s` by `SUM_IMAGE` + `INJ_B_SY`; here the dart set is re-rendered over
+the ℕ index segment `1..m` (`fw7_dart_eq`/`fw7_bijon`) and the `SUM_IMAGE`
+step is inlined in S9 via `Finset.sum_image` (the repo `p9_setSum_reindex`
+sits below in the section-2 area, out of reach for S9).  The `Fin`-indexed
+row injectivity consumed by `CARD_F_SY_EQ` is W6's `fw6_fin_inj`. -/
+
+/-- fw7: the cyclic dart at `1 ≤ i ≤ m` in both renderings — the ℕ-indexed
+`rowV3_p9` form and the `Fin`-generated `F_SY_p4` dart (`finNext ⟨i-1⟩` reads
+`⟨i % m⟩`; junk-free since `1 ≤ i ≤ m`). -/
+private theorem fw7_dart_eq {m : ℕ} (l : FinVec m 3) {i : ℕ}
+    (hi : 1 ≤ i ∧ i ≤ m) :
+    (rowV3_p9 l i, rowV3_p9 l (i % m + 1))
+      = (vecmatsV3_p4 l ⟨i - 1, by omega⟩,
+          vecmatsV3_p4 l (finNext ⟨i - 1, by omega⟩)) := by
+  have him : i % m < m := Nat.mod_lt i (by omega)
+  have hi2 : 1 ≤ i % m + 1 ∧ i % m + 1 ≤ m := by omega
+  have h1 : rowV3_p9 l i = vecmatsV3_p4 l ⟨i - 1, by omega⟩ := by
+    simp only [rowV3_p9, dif_pos hi]
+  have h2 : rowV3_p9 l (i % m + 1)
+      = vecmatsV3_p4 l (finNext ⟨i - 1, by omega⟩) := by
+    simp only [rowV3_p9, dif_pos hi2, Nat.add_sub_cancel]
+    refine congrArg (vecmatsV3_p4 l) (Fin.ext ?_)
+    show i % m = (i - 1 + 1) % m
+    rw [show i - 1 + 1 = i from by omega]
+  rw [h1, h2]
+
+/-- fw7: the dart map `i ↦ (row i, row (i % m + 1))` is a bijection
+`1..m → F_SY` — MapsTo by `fw7_dart_eq`, InjOn by `INJ_B_SY_p9`, and every
+`F_SY` dart is generated at index `j.val + 1`. -/
+private theorem fw7_bijon (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
+    (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) :
+    Set.BijOn (fun i : ℕ => (rowV3_p9 l i, rowV3_p9 l (i % m + 1)))
+      (Set.Icc 1 m) (F_SY_p4 (vecmatsV3_p4 l)) := by
+  refine ⟨?_, ?_, ?_⟩
+  · rintro i hi
+    simp only [Set.mem_Icc] at hi
+    rw [show (fun i : ℕ => (rowV3_p9 l i, rowV3_p9 l (i % m + 1))) i
+          = (vecmatsV3_p4 l ⟨i - 1, by omega⟩,
+              vecmatsV3_p4 l (finNext ⟨i - 1, by omega⟩)) from fw7_dart_eq l hi,
+      F_SY_p4]
+    exact Set.mem_image_of_mem _ (Set.mem_univ (x := (⟨i - 1, by omega⟩ : Fin m)))
+  · intro i hi j hj hij
+    simp only [Set.mem_Icc] at hi hj
+    exact INJ_B_SY_p9 s hm l hl i j hi.1 hi.2 hj.1 hj.2 hij
+  · rintro e he
+    simp only [F_SY_p4, Set.mem_image, Set.mem_univ, true_and] at he
+    obtain ⟨j, -, rfl⟩ := he
+    have hjm : (j : ℕ) < m := j.isLt
+    have hmod : ((j : ℕ) + 1) % m < m := Nat.mod_lt _ (by omega)
+    refine ⟨(j : ℕ) + 1, ⟨by omega, by omega⟩, ?_⟩
+    simp only [rowV3_p9,
+      dif_pos (show 1 ≤ (j : ℕ) + 1 ∧ (j : ℕ) + 1 ≤ m from by omega),
+      dif_pos (show 1 ≤ ((j : ℕ) + 1) % m + 1 ∧ ((j : ℕ) + 1) % m + 1 ≤ m
+        from by omega),
+      Nat.add_sub_cancel, finNext]
+
 /-- HOL `CHANGE_SUM_TAU_FUN` (Hdplygy.hl:370): the `F_SY`-sum of
 `rho_fun * azim_in_fan` re-indexed over `1..k_sy s` by `INJ_B_SY`.
-DISCHARGES: from `INJ_B_SY_p9` (proved) once `PROPERTIES_OF_FAN_IN_B_SY`
-lands. -/
+fanchain-w7: discharged via the `fw7` re-index kit (`fw7_bijon` + the
+inlined `SUM_IMAGE` step `Finset.sum_image` at `INJ_B_SY_p9`; the S1
+`PROPERTIES` route is vacuous per fanchain-w2). -/
 theorem CHANGE_SUM_TAU_FUN_p9 (s : StableSyP9) {m : ℕ}
     (hm : StableSysHyp_p9 s m) (l : FinVec m 3)
     (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) :
@@ -815,7 +875,36 @@ theorem CHANGE_SUM_TAU_FUN_p9 (s : StableSyP9) {m : ℕ}
         rhoFun_p9 ‖rowV3_p9 l i‖ *
           azimInFan_p2 (rowV3_p9 l i, rowV3_p9 l (i % s.k_sy + 1))
             (E_SY_p4 (vecmatsV3_p4 l)) := by
-  sorry
+  rw [hm.1]
+  have hfin : (F_SY_p4 (vecmatsV3_p4 l)).Finite := FINITE_F_SY l
+  rw [setSum, dif_pos hfin]
+  have himg : hfin.toFinset =
+      (Finset.Icc 1 m).image
+        (fun i : ℕ => (rowV3_p9 l i, rowV3_p9 l (i % m + 1))) := by
+    refine Finset.ext fun e => ?_
+    constructor
+    · intro he
+      obtain ⟨j, -, rfl⟩ := Iff.mp
+        (Set.mem_image (f := fun j : Fin m =>
+            (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)))
+          (s := (Set.univ : Set (Fin m))) (y := e)) (hfin.mem_toFinset.mp he)
+      have hjm : (j : ℕ) < m := j.isLt
+      have hj2 : 1 ≤ (j : ℕ) + 1 ∧ (j : ℕ) + 1 ≤ m := by omega
+      exact Iff.mpr Finset.mem_image ⟨(j : ℕ) + 1, Finset.mem_Icc.mpr hj2,
+        fw7_dart_eq l hj2⟩
+    · intro he
+      obtain ⟨i, hi, rfl⟩ := Iff.mp Finset.mem_image he
+      have him2 : 1 ≤ i ∧ i ≤ m := Finset.mem_Icc.mp hi
+      exact hfin.mem_toFinset.mpr
+        (Iff.mpr (Set.mem_image (f := fun j : Fin m =>
+              (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)))
+            (s := (Set.univ : Set (Fin m)))
+            (y := (rowV3_p9 l i, rowV3_p9 l (i % m + 1))))
+          ⟨⟨i - 1, by omega⟩, Set.mem_univ _,
+            (fw7_dart_eq l him2).symm⟩)
+  rw [himg, Finset.sum_image (fun i hi j hj hij => INJ_B_SY_p9 s hm l hl i j
+    (Finset.mem_Icc.mp hi).1 (Finset.mem_Icc.mp hi).2
+    (Finset.mem_Icc.mp hj).1 (Finset.mem_Icc.mp hj).2 hij)]
 
 /-! ### fw34 service lemma (fanchain-w34): the COLLINEAR pair + AZIM_EQ_DIHV
 
@@ -1128,14 +1217,25 @@ theorem CONTINUOUS_ON_RHO_FUN_AND_AZIM_p9 (s : StableSyP9) {m : ℕ}
     exact CONTINUOUS_ON_SAME_DOMAIN_p9 key hcont
 
 /-- HOL `CONTINUOUS_ON_TAU_FUN` (Hdplygy.hl:1771). DISCHARGES: from
-`CONTINUOUS_ON_RHO_FUN_AND_AZIM_p9` + `CHANGE_SUM_TAU_FUN_p9` +
-`CARD_F_SY_EQ`. -/
+`CONTINUOUS_ON_RHO_FUN_AND_AZIM_p9` (proved, W6) + `CHANGE_SUM_TAU_FUN_p9` +
+`CARD_F_SY_EQ`.  fanchain-w7: the HOL assembly — `CONTINUOUS_ON_SUB` +
+`CONTINUOUS_ON_SAME_DOMAIN_p9` on both terms, the `k = CARD F_SY` clause via
+`fw6_fin_inj` (W6) + `CARD_F_SY_EQ` (LA4). -/
 theorem CONTINUOUS_ON_TAU_FUN_p9 (s : StableSyP9) {m : ℕ}
     (hm : StableSysHyp_p9 s m) :
     ContinuousOn (fun l : FinVec m 3 => tauFun_p9 (V_SY_p4 (vecmatsV3_p4 l))
         (E_SY_p4 (vecmatsV3_p4 l)) (F_SY_p4 (vecmatsV3_p4 l)))
       (B_SY1_p9 m s.a_sy s.b_sy) := by
-  sorry
+  unfold tauFun_p9
+  refine ContinuousOn.sub ?_ ?_
+  · exact CONTINUOUS_ON_SAME_DOMAIN_p9
+      (fun l hl => (CHANGE_SUM_TAU_FUN_p9 s hm l hl).symm)
+      (CONTINUOUS_ON_RHO_FUN_AND_AZIM_p9 s hm)
+  · have hcard : ContinuousOn (fun _ : FinVec m 3 =>
+        (Real.pi + sol0) * ((m - 2 : ℕ) : ℝ)) (B_SY1_p9 m s.a_sy s.b_sy) :=
+      continuousOn_const
+    exact CONTINUOUS_ON_SAME_DOMAIN_p9 (fun l hl => by
+      rw [CARD_F_SY_EQ l (fw6_fin_inj s hm l hl)]) hcard
 
 /-- HOL `CONTINUOUS_ON_TAU_STAR` (Hdplygy.hl:1805): `tau_star` is the
 difference of the two continuous terms. -/
