@@ -1168,8 +1168,15 @@ continuous on the body set. Isolated roots, both outside the case bank:
        CONTINUOUS_ON_RHO_FUN_AND_AZIM, HDPLYGY.hl:1534-1770; Lean roots
        SEQUENTIALLY_DIVH_p9 / COLLINEAR_B_SY_p9 / AZIM_EQ_DIHV_IN_B_SY_p9,
        LA9:568-660, all rooted at (i)).
-The CLEAN reduction under (i)+(ii) as hypotheses is
-`continuousOn_tauFun_of_azim_p23` below. (Sorry 1/2 of this kit.) -/
+la23-analysis (2026-10-28) addenda: the promised reduction
+`continuousOn_tauFun_of_azim_p23` does NOT exist in this file. Numeric recon
+(snapshots/la23-analysis): no falsity evidence — `fan7` blocks every
+multiplicity-change approach path tried (vertex splits of the fan-legal
+periodic point `(q,r,s,q,r,s)` violate fan7 by cone overlap), yet dart
+collisions DO occur fan-legally on the body (`ncard F_SY = 3 < 6` there), so
+the missing lemma is local constancy of the collision pattern under `fan7`,
+then the standard re-index (`CHANGE_SUM_TAU_FUN_p9` twin) plus (ii).
+(Sorry 1/2 of this kit.) -/
 theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) :
     ContinuousOn (fun l : FinVec m 3 =>
       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
@@ -1183,7 +1190,20 @@ genuine content is the CONDITION2 (fan) factor — HOL CLOSED_SY
 Lean carrier `CLOSED_SY_p18` (LA18:236, `stableSystem_p18`-indexed form)
 needs reindexing glue. The joint (not isolated-fan) form is kept because the
 isolated fan-factor closedness is unverified (la23prereq-w1 PREREQ-PLAN §1
-leg-3 shape note). (Sorry 2/2 of this kit.) -/
+leg-3 shape note).
+la23-analysis (2026-10-28) WARNING: at THIS generality (arbitrary `aR bR`,
+no stability bounds) the statement is probably FALSE — numeric recon
+(snapshots/la23-analysis) gives the flex family `m=3, aR≡0, bR≡5`,
+rows `(2.2·e(0°), 2.2·e(60°+δ), 2.2·e(240°))`: every small δ>0 satisfies
+CONDITION2 (verified against the exact `FAN`/`localFan_p4`/`convexLocalFan_p4`
+clauses incl. fan7 and the hypermap face structure), the family converges to
+the δ=0 config where the edge `{r,s}` is antiparallel through 0, so `fan6`
+fails and CONDITION2 fails — the locus is not closed. HOL CLOSED_SY needs
+its stableSystem context (adjacent-edge upper bound `≤ cstab`: antiparallel
+annulus rows force edge length ≥ 4 > 3.01). Repair direction: add
+stability-shaped hypotheses here and discharge them at the CASE_4/5/6
+consumers from `isScsV39` (their `aRk/bRk` are shifted `s.a/s.b` bounds).
+(Sorry 2/2 of this kit.) -/
 theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) :
     IsClosed {v : Fin m → V3 | (∀ i, v i ∈ ballAnnulus) ∧
       CONDITION1_SY_p4 aR bR v ∧ CONDITION2_SY_p4 v} := by
