@@ -58,6 +58,11 @@ import Kepler.Interval.Cases.C6096597438b
 open Classical Metric Set
 open Kepler.Geom Kepler.Text Kepler.Text.Fan Kepler.Graphs
 
+-- hotfix 2026-11-01: LocalAuto3 全局实例 dartDecEq3 经 LocalAuto16→LA27→LA35→LA3
+-- 泄入本文件，与定义层烘焙的 instDecidableEqProd 不合一（全文直译 24 处报错）。
+-- 仅本文件本地屏蔽；需 dartDecEq3 型条款时显式携带。
+attribute [-instance] Kepler.Text.dartDecEq3
+
 -- 实例盾（2026-10-12 A7，随 `import Kepler.Text.TameLp` 引入）：TameLp 的闭包
 -- 带入全局实例 `LocalAuto2.dartDecEq2 : DecidableEq (V3 × V3)`，与本文件既有的
 -- `instDecidableEqProd` 解析竞争（§2c.8 A5 代码按后者钉死）。此处把 dartDecEq2
@@ -384,15 +389,6 @@ deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
 theorem nliCell3CIHTIUM : bank_CIHTIUM := sorry
 
-/-- 1a 7/7：HOL ineq entry `CJFZZDW`（ineq.hl:1479；PA21 `bank_CJFZZDW`，
-盒 [1,1]³×[2hplus,√8]²×[2,√8]，结论同 CIHTIUM）。资产状态：
-**W2 纯 Lean 闭合**（nli-w2-screen 2026-10-28）：eta_y² = a·b·c/ups(a,b,c)
-在盒上是逐槽位保序有理函数（差分恒等式 = 因子·步长·(两数积−其余二数平方差)，
-全 ring/linarith/nlinarith 级），角点值 eta_y(2hplus,2hplus,2)² = 2.0481… > 2
-纯字面量算术。探针 `/tmp/nliw2/logs/probe_cjfzzdw.log`：RC=0，
-`#print axioms Kepler.Assembly.nliCell3CJFZZDW` = 标准三
-（propext/Classical.choice/Quot.sound，零 sorryAx/native_decide）。
-陈述逐字未动（只加证明 + 5 枚 private w2 前缀服务引理）。 -/
 /-- w2 服务件：交叉相乘去分母（0 < 分母，差非负）。 -/
 private theorem w2divCross {A B U V : ℝ} (hU : 0 < U) (hV : 0 < V)
     (h : 0 ≤ B * U - A * V) : A / U ≤ B / V := by
@@ -453,6 +449,15 @@ private theorem w2hsymP (p q r : ℝ) : upsX p q r = upsX q p r := by
   unfold upsX; ring
 
 set_option maxHeartbeats 1000000 in
+/-- 1a 7/7：HOL ineq entry `CJFZZDW`（ineq.hl:1479；PA21 `bank_CJFZZDW`，
+盒 [1,1]³×[2hplus,√8]²×[2,√8]，结论同 CIHTIUM）。资产状态：
+**W2 纯 Lean 闭合**（nli-w2-screen 2026-10-28）：eta_y² = a·b·c/ups(a,b,c)
+在盒上是逐槽位保序有理函数（差分恒等式 = 因子·步长·(两数积−其余二数平方差)，
+全 ring/linarith/nlinarith 级），角点值 eta_y(2hplus,2hplus,2)² = 2.0481… > 2
+纯字面量算术。探针 `/tmp/nliw2/logs/probe_cjfzzdw.log`：RC=0，
+`#print axioms Kepler.Assembly.nliCell3CJFZZDW` = 标准三
+（propext/Classical.choice/Quot.sound，零 sorryAx/native_decide）。
+陈述逐字未动（只加证明 + 5 枚 private w2 前缀服务引理）。 -/
 theorem nliCell3CJFZZDW : bank_CJFZZDW := by
   intro y1 y2 y3 y4 y5 y6 _ _ _ _ _ _ h4l h4h h5l h5h h6l h6h
   have hhp : hplus = 1.3254 := rfl
