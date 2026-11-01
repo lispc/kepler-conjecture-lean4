@@ -427,10 +427,13 @@ FIDELITY-FIX 2026-09-17: the HOL record's `d` slot is `scs_d_v39 s`
 (XWITCCN.hl:2772), NOT `0`.  The earlier rendering via `scsToStableSy_p23`
 (which fixes `d := 0`) made every `k ≥ 4` `TAUSTAR_EQ_TAU_STAR_*` false,
 since `taustar_v39` subtracts `dsv_v39 = scs_d_v39 s` while
-`tau_star s1` subtracted `0 ≠ d_tame k`.  The `stable` field keeps the
-LocalAuto23 `IS_SCS_STABLE_SYSTEM_p23` placeholder, as in
-`scsToStableSy_p23`. -/
-noncomputable def scsToStableSyD_p36 (s : ScsV39) : StableSyP23 where
+`tau_star s1` subtracted `0 ≠ d_tame k`.
+
+SF-81 案①: the `stable` field is fed from `IS_SCS_STABLE_SYSTEM_p23` via
+explicit evidence parameters — the def-body `sorry` placeholder is gone and
+the taint is carried by that TRACKED M0 theorem instead. -/
+noncomputable def scsToStableSyD_p36 (s : ScsV39) (hs : isScsV39 s)
+    (hk : 3 < s.k) : StableSyP23 where
   k := s.k
   d := s.d
   I := Set.Iic (s.k - 1)
@@ -438,7 +441,7 @@ noncomputable def scsToStableSyD_p36 (s : ScsV39) : StableSyP23 where
   b := s.b
   J := scsJSet_p23 s
   f := fun i => (1 + i) % s.k
-  stable := sorry
+  stable := IS_SCS_STABLE_SYSTEM_p23 s hs hk
 
 /-- `setSum` over the empty set is `0`. -/
 private theorem setSum_empty_p36 {α : Type*} (f : α → ℝ) : setSum (∅ : Set α) f = 0 := by
@@ -488,7 +491,8 @@ private theorem taustar_eq_tauStar_gen_p36 {k : ℕ} (hk3 : ¬(k ≤ 3)) (s : Sc
     (hVEF : V_SY_p4 (cycRow_p23 vv k) = Set.range vv ∧
       E_SY_p4 (cycRow_p23 vv k) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
       F_SY_p4 (cycRow_p23 vv k) = Set.range (fun i : ℕ => (vv i, vv (i + 1))))
-    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv k = l) :
+    (hsS : isScsV39 s) (h3k : 3 < s.k)
+    (hs1 : s1 = scsToStableSyD_p36 s hsS h3k) (hl : flattenRow_p23 vv k = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
   subst hs1
   subst hl
@@ -496,7 +500,7 @@ private theorem taustar_eq_tauStar_gen_p36 {k : ℕ} (hk3 : ¬(k ≤ 3)) (s : Sc
   have hn3 : ¬(s.k ≤ 3) := by omega
   have hvb : vecmatsV3_p4 (flattenRow_p23 vv k) = cycRow_p23 vv k :=
     vecmatsV3_flattenRow_p36 vv
-  have hJs : (scsToStableSyD_p36 s).J = (∅ : Set (Set ℕ)) := by
+  have hJs : (scsToStableSyD_p36 s hsS h3k).J = (∅ : Set (Set ℕ)) := by
     show scsJSet_p23 s = ∅
     ext e
     simp only [scsJSet_p23, Set.mem_setOf_eq, Set.mem_empty_iff_false]
@@ -506,7 +510,7 @@ private theorem taustar_eq_tauStar_gen_p36 {k : ℕ} (hk3 : ¬(k ≤ 3)) (s : Sc
       exact hJm
     · intro h
       exact absurd h (by simp)
-  have hJ1 : J1_SY_p23 (scsToStableSyD_p36 s) = ∅ := by
+  have hJ1 : J1_SY_p23 (scsToStableSyD_p36 s hsS h3k) = ∅ := by
     rw [Set.eq_empty_iff_forall_notMem]
     intro x hx
     simp only [J1_SY_p23, Set.mem_setOf_eq] at hx
@@ -1684,10 +1688,10 @@ theorem TAUSTAR_EQ_TAU_STAR_4 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 4 3)
     (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 4)
-    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 4 = l) :
+    (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 4 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
   refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
-    (V_E_FF_CASE_4 s vv hs hBB hk) hs1 hl
+    (V_E_FF_CASE_4 s vv hs hBB hk) hsS (by omega) hs1 hl
   rw [hs]
   rfl
 
@@ -1859,10 +1863,10 @@ theorem TAUSTAR_EQ_TAU_STAR_5 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 5 3)
     (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 5)
-    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 5 = l) :
+    (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 5 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
   refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
-    (V_E_FF_CASE_5 s vv hs hBB hk) hs1 hl
+    (V_E_FF_CASE_5 s vv hs hBB hk) hsS (by omega) hs1 hl
   rw [hs]
   rfl
 
@@ -2191,10 +2195,10 @@ theorem TAUSTAR_EQ_TAU_STAR_6 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 6 3)
     (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 6)
-    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 6 = l) :
+    (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 6 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
   refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
-    (V_E_FF_CASE_6 s vv hs hBB hk) hs1 hl
+    (V_E_FF_CASE_6 s vv hs hBB hk) hsS (by omega) hs1 hl
   rw [hs]
   rfl
 
@@ -2314,10 +2318,10 @@ theorem TAUSTAR_EQ_TAU_STAR_5_sqrt8 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ �
     (l : FinVec 5 3)
     (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 5)
-    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 5 = l) :
+    (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 5 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
   refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
-    (V_E_FF_CASE_5_sqrt8 s vv hs hBB hk) hs1 hl
+    (V_E_FF_CASE_5_sqrt8 s vv hs hBB hk) hsS (by omega) hs1 hl
   rw [hs]
   rfl
 
@@ -2402,10 +2406,10 @@ theorem TAUSTAR_EQ_TAU_STAR_5_pro_cs (s : ScsV39) (s1 : StableSyP23) (vv : ℕ �
     (hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
       (aPro 5 (Real.sqrt 8) (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 5)
-    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 5 = l) :
+    (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 5 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
   refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
-    (V_E_FF_CASE_5_pro_cs s vv hs hBB hk) hs1 hl
+    (V_E_FF_CASE_5_pro_cs s vv hs hBB hk) hsS (by omega) hs1 hl
   rw [hs]
   rfl
 
@@ -2490,10 +2494,10 @@ theorem TAUSTAR_EQ_TAU_STAR_4_3 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3
     (l : FinVec 4 3)
     (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 4)
-    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 4 = l) :
+    (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 4 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
   refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
-    (V_E_FF_CASE_4_3 s vv hs hBB hk) hs1 hl
+    (V_E_FF_CASE_4_3 s vv hs hBB hk) hsS (by omega) hs1 hl
   rw [hs]
   rfl
 
@@ -2577,10 +2581,10 @@ theorem TAUSTAR_EQ_TAU_STAR_4_sqrt8 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ �
     (hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
       (aPro 4 (Real.sqrt 8) (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 4)
-    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 4 = l) :
+    (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 4 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
   refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
-    (V_E_FF_CASE_4_sqrt8 s vv hs hBB hk) hs1 hl
+    (V_E_FF_CASE_4_sqrt8 s vv hs hBB hk) hsS (by omega) hs1 hl
   rw [hs]
   rfl
 
