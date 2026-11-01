@@ -1484,8 +1484,21 @@ theorem RHO_IVS_IDD_p11 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     rhoNode1_p2 FF (ivsRhoNode1_p2 FF v) = v := by
   sorry
 
+/-- Service lemma (fw1): rows of the re-flattened vector read back as the
+original vectors — the `VECMATS_MATVEC_ID` bridge (LA4:176, dih2k.hl:187)
+at the `WithLp.ofLp` rendering used by `B_SY1_p4`'s flattening map. -/
+private theorem fw1_row {k : ℕ} (v : Fin k → V3) (p : Fin k) :
+    vecmatsV3_p4 (matvec_p4 (fun q : Fin k => WithLp.ofLp (v q))) p = v p := by
+  show (WithLp.toLp 2
+      (vecmats_p4 (matvec_p4 (fun q : Fin k => WithLp.ofLp (v q))) p) : V3) = v p
+  rw [VECMATS_MATVEC_ID, WithLp.toLp_ofLp]
+
 /-- TECOXBM.hl:207 `PROPERTIES_OF_FAN_IN_B_SY` (giant: row separation
-inside `B_SY1`; DISCHARGES). -/
+inside `B_SY1`; DISCHARGES).  HOL proof shape: `B_SY1` membership gives
+`CONDITION1_SY` (`a(i,j) ≤ norm(row i − row j)`), `stable_system` clause 2
+gives `2 ≤ a(i,j)` for `i ≠ j` (TECOXBM branches only bookkeep the ℕ
+`1..dimindex` vs `0..k-1` index shift — absorbed by `Fin k` here); combine
+by transitivity (final `REAL_ARITH_TAC`). -/
 theorem PROPERTIES_OF_FAN_IN_B_SY_p11 {k : ℕ} {a b : Fin k → Fin k → ℝ}
     {J : Finset (Finset ℕ)} {d : ℕ} (hk : 2 < k) (l : FinVec k 3)
     (i j : Fin k) (hij : i ≠ j)
@@ -1493,7 +1506,28 @@ theorem PROPERTIES_OF_FAN_IN_B_SY_p11 {k : ℕ} {a b : Fin k → Fin k → ℝ}
       (fun n => (n + 1) % k))
     (hl : l ∈ B_SY1_p4 a b) :
     (2:ℝ) ≤ ‖vecmatsV3_p4 l i - vecmatsV3_p4 l j‖ := by
-  sorry
+  -- stable_system clause 2 (TECOXBM "THYGIANG2", the `2 ≤ a(i,j)` input).
+  have h2 : ∀ x ∈ Finset.Ico 0 k, ∀ y ∈ Finset.Ico 0 k, x ≠ y →
+      (2:ℝ) ≤ liftAB_p11 a x y := hss.2.1
+  -- B_SY1 body (dih2k.hl:122): `l` flattens some `v` satisfying CONDITION1.
+  obtain ⟨v, hvbody, hlv⟩ := hl
+  have hcond : ∀ p q : Fin k, a p q ≤ ‖v p - v q‖ ∧ ‖v p - v q‖ ≤ b p q :=
+    hvbody.2.1
+  -- Rows of `l` read back as the `v` vectors (VECMATS_MATVEC_ID).
+  have hrow : ∀ p : Fin k, vecmatsV3_p4 l p = v p := by
+    intro p
+    rw [← hlv]
+    exact fw1_row v p
+  rw [hrow i, hrow j]
+  -- Clause 2 instantiated at the ℕ coe indices (TECOXBM MOD branches).
+  have hge := h2 (i : ℕ) (Finset.mem_Ico.mpr ⟨Nat.zero_le _, i.isLt⟩)
+      (j : ℕ) (Finset.mem_Ico.mpr ⟨Nat.zero_le _, j.isLt⟩)
+      (fun h => hij (Fin.eq_of_val_eq h))
+  have hab : liftAB_p11 a (i : ℕ) (j : ℕ) = a i j := by
+    unfold liftAB_p11
+    rw [dif_pos ⟨i.isLt, j.isLt⟩]
+  rw [hab] at hge
+  exact hge.trans (hcond i j).1
 
 /-- TECOXBM.hl:311 `AFF_GT_INTER_AFF_SY` (giant; DISCHARGES).  HOL
 `aff {vec 0, y, z}` renders as `affineSpan ℝ {0, y, z}`. -/
