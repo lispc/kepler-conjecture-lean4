@@ -1,6 +1,6 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 2075729
-SORRIED 128
+TOTAL_REACHABLE_KEPLER_DECLS 2076021
+SORRIED 127
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
@@ -82,7 +82,6 @@ Kepler.Assembly	Kepler.Assembly.nliTskXLLIPLS	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.tameCorrespondenceIso	parent=Kepler.Assembly.textCapstone
 Kepler.Text.LocalAuto20	Kepler.Text.AQICLXA	parent=Kepler.Text.OEHDBEN
 Kepler.Text.LocalAuto33	Kepler.Text.ARDBZYE_p33	parent=Kepler.Text.ARDBZYE_discharged
-Kepler.Text.LocalAuto27	Kepler.Text.EAPGLE_p27	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
 Kepler.Text.LocalAuto33	Kepler.Text.FYSSVEV_p33	parent=Kepler.Text.FYSSVEV_discharged
 Kepler.Text.LocalAuto20	Kepler.Text.FZIOTEF	parent=Kepler.Text.OEHDBEN
 Kepler.Text.LocalAuto29	Kepler.Text.HIJQAHA_p29	parent=Kepler.Text.HIJQAHA_discharged
@@ -97,7 +96,7 @@ Kepler.Text.LocalAuto24	Kepler.Text.XWITCCN_CASE_3_IS_SCS_p24	parent=Kepler.Text
 Kepler.Text.LocalAuto32	Kepler.Text.YOBIMPP_p32	parent=Kepler.Text.YOBIMPP_discharged
 Kepler.Text.LocalAuto23	Kepler.Text.bodyClosed_p23	parent=Kepler.Text.XWITCCN_CASE_6_IS_SCS_p24
 Kepler.Text.PackingAuto25	Kepler.Text.cc_prep_model_data	parent=Kepler.Text.LEAF_RANK_PROPS
-Kepler.Text.LocalAuto23	Kepler.Text.continuousOn_tauFun_p23	parent=Kepler.Text.XWITCCN_CASE_6_IS_SCS_p24
+Kepler.Text.LocalAuto25	Kepler.Text.exists_vv_p25	parent=Kepler.Text.ZITHLQN_p25
 Kepler.Text.LocalAuto1	Kepler.Text.main_nonlinear_terminal_v11	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.ox3q1hP25	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankAzimPointwise	parent=Kepler.Text.LEAF_RANK_PROPS
