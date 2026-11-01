@@ -5535,3 +5535,104 @@ private theorem age2_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
 - 预算：约 22 次工具调用 / 纯 python 机检（未触 lake/lean/.lake）。
 
 **状态**：草案 2026-10-28（sf91-taufun 车道起草）。**在册未落**；应用序列（编排者）：① 用户批（含 (a) 极小性两案裁定，默认案①）→ ② STATEMENT-FIX 闸 LA23（age2 桥编译在此实证）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/91-taufun-stable-hyp.patch SF_ITEM=91 THM=continuousOn_tauFun_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean continuousOn_tauFun_p23` → ③ LA24 逐文件闸 `…/auto_gate.sh Kepler/Text/LocalAuto24.lean XWITCCN_CASE_4_IS_SCS_p24`（CASE_5/6 同式）→ ④ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md`。§91 编号已核。
+
+## 92. LA4 `constraintSystem_p4`（HEAD :886，周期条款 ：890）f-周期条款全域量词 × LA11 `liftAB_p11` 出界补零 lift ⟹ 全部 `hss` 客户陈述空洞真（W1「已证」的 `PROPERTIES_OF_FAN_IN_B_SY_p11` 实为 vacuous；修复 = 周期条款限域 `∀ i ∈ s, ∀ j ∈ s`，LA4 定义层 6 行，消费者适配 = 空）— 分级 **A**（fanchain-w2 vac.lean 机检裁决 · 陈述空洞真 · S1 链阻断 · 定义层修复零签名变更）
+
+### (a) HOL 引用（constraint_system 正本逐字对照；周期条款量词范围的诚实考证）
+
+corpus 正本 `lean/scripts/local/dih2k.hl:52-59`（`reference/flyspeck/text_formalization/local/dih2k.hl` 同位）：
+
+```
+let constraint_system=new_definition
+`constraint_system k d (s:A->bool) (a:A#A->real) (b:A#A->real) J f<=> 
+3<=k /\ k<=6 /\
+torsor s k f/\ 
+(!i j. a(i,j)= a(j,i) /\ b(i,j)=b(j,i) /\ a(i,j)<= b(i,j))
+/\(!i j.  a(i,j)= a(i,(f POWER k) j) /\ b(i,j)=b(i,(f POWER k) j)) 
+/\ J SUBSET {{i,f i}| i IN s} /\
+CARD J+k<=6`;;
+```
+
+`stable_system`（dih2k.hl:61-66）= `constraint_system ∧`（:64）`!i j. i IN s /\ j IN s /\ ~(i=j) ==> &2<=a(i,j)` ∧（:65）`!i. i IN s ==> a(i,i)=&0 /\ b(i,f i)<=cstab` ∧（:66）J-边 sqrt8/cstab。
+
+**诚实考证（先纠正工单口径）**：HOL 周期条款（dih2k.hl:57）**并非限在索引集 s 内**——它是全域量词 `!i j.`，与 Lean `constraintSystem_p4` 的 `∀ i j,` 逐字对应。缺陷不在「量词范围转录失真」（条款-级逐字 FAITHFUL），而在 **def × lift 组合的可满足性**：HOL 侧 `a : A#A->real` 是**无界自由全函数**，全域周期条款恒可满足（任取 s 上有限表作周期延拓即可；torsor 只约束 `f^k = id` **于 s 上**，s 外 f 自由）；Lean 侧载体（六条 LA11 定理，:1465/:1505/:1537/:1551/:1565/:1577）把 `a` **逐字钉死为 `liftAB_p11 a₀`**（LA11:1455，出界补零，:1454 注「entries outside `k × k` read 0」）——全域条款 × 补零 lift 互斥（见 (b)），前提集对 `2 < k` 不可满足。即：**HOL 有模型、Lean 同款前提无模型**，组合层失真。FIDELITY §C 对 PROPERTIES 的「FAITHFUL」判定据此勘误为「陈述逐字对应但定义层语境致空洞」（priority-queue 续185 已录）。
+
+**条款-级对照表**（HOL dih2k.hl ↔ LA4:886-892，逐字）：
+
+| 条款 | HOL | Lean | 对照 |
+|---|---|---|---|
+| 3≤k≤6 | :54 | :888 | 逐字 |
+| torsor | :48-50,:55 | :879-882（`torsor_p4`），:888 | 逐字（`f^k = id` 已限 s 上） |
+| 对称 | :56 | :889 | 逐字（全域） |
+| **f-周期** | **:57 `!i j.`** | **:890 `∀ i j,`** | 逐字（全域）——**本案缺陷所在** |
+| J⊆ 后继边 | :58 | :891 | 逐字 |
+| CARD J+k≤6 | :59 | :892 | 逐字 |
+| 2≤a off-diag | :64（限 s） | :898（限 s） | 逐字 |
+
+**HOL 证明体对周期条款的消费点**（TECOXBM.hl:207-308，PROPERTIES_OF_FAN_IN_B_SY）：:274-281（wrap 分支一）`:275 REWRITE_TAC[constraint_system]` 取周期条款，经 `POWER_MOD_FUN`（:272）+ `MOD_MULT`（:273、:280）把 `a(i,k)` 折回 `a(i,0)`——消费点全在 1-based 行指标 `i,j ∈ 1..dimindex`，折返**目的**是落到 s = 0..k-1 内以吃条款 :64 的 `2 ≤ a`。Lean 0-based `Fin k` 渲染下指标已在 s 内、wrap 内建，该折返**定义性吸收**（W1 实证：`h2 := hss.2.1` 直取，LA11:1510）——即修复后限域条款覆盖 HOL 证明体的**全部**消费点，零消费力损失。
+
+### (b) 缺陷（空洞真：vac.lean 机检导出链复述）
+
+`hss : stableSystem_p4 k d (Ico 0 k) (liftAB_p11 a₀) (liftAB_p11 b₀) J (fun n => (n+1)%k)` 在 `2 < k` 时不可满足，`False` 从 `hss` 单独可导（无需 B_SY1/fan 前提）。导出链（W2 车道机检裁决 `$S/fanchain-w2/vac.lean`，standalone `lean` 编译 **RC=0**；路径投影对照 LA4:888-892 的右嵌套 And）：
+
+1. `hper : ∀ i j : ℕ, liftAB_p11 a₀ i j = liftAB_p11 a₀ i (f^[k] j)`，其中 `f^[k] j = (j+k)%k`——取 `hss.1.2.2.2.2.1`（= 周期条款 :890 第一合取）；
+2. 取 `i < k, j = t + k`（t ∈ s）：LHS = 0（`liftAB_p11` 出界补零，LA11:1455 的 else 分支 `rfl`）；RHS = `a₀ ⟨(f^[k](t+k))%k⟩ = a₀ ⟨t⟩`（`(t+k+k+k-1+1)%k` 簿记 = vac.lean `hiter`/`hsum` 步）；
+3. 故整个 Fin 表被迫为零，与 stable 条款 2（:898）在 `(0,1)` 处 `2 ≤ a₀ ⟨0⟩ ⟨1⟩` 矛盾——`hss.2.1 0 _ 1 _` + `linarith` 收 `False`（vac.lean:48-51）。
+4. 后果：**六条 LA11 `hss` 客户全部空洞真**（同一 `hss` 形状）；其中 W1 已证的 `PROPERTIES_OF_FAN_IN_B_SY_p11`（:1502）的「标准三」账面虽真，但对战役**零喂料价值**——任何定理都无法非空洞地消费它（W2 因此弃 G1 桥改 ℕ 侧路线，DELIVERY §4(a)）；fanchain W3+W4/W6 已实证绕行（直取 `fan_not_collinear`，不依赖 S1）。
+
+与 §85/§86/§89/§91（丢前提/强于正本）反方向：本案是**前提自身不可满足**——逐字保真审计（FIDELITY 四档判定法）结构性抓不到，因为每个条款单看都逐字 FAITHFUL；缺陷藏在两个 FAITHFUL 件的**组合**里。
+
+### (c) 修复定义（LA4 周期条款限域，逐字 = patch hunk；LA11 零改动）
+
+```lean
+/-- HOL `constraint_system` (dih2k.hl:52); the polymorphic HOL index type is
+instantiated at `ℕ` (the only instantiation used by the dih2k chapter).
+SF-92: the f-periodicity clause is restricted to `s × s` (HOL dih2k.hl:57 is
+universal; over the zero-padding `liftAB_p11` lift the universal form is
+unsatisfiable for `2 < k` — see docs/statement-fix-proposals.md §92). -/
+def constraintSystem_p4 (k d : ℕ) (s : Finset ℕ) (a b : ℕ → ℕ → ℝ)
+    (J : Finset (Finset ℕ)) (f : ℕ → ℕ) : Prop :=
+  3 ≤ k ∧ k ≤ 6 ∧ torsor_p4 s k f ∧
+    (∀ i j, a i j = a j i ∧ b i j = b j i ∧ a i j ≤ b i j) ∧
+    (∀ i ∈ s, ∀ j ∈ s, a i j = a i (f^[k] j) ∧ b i j = b i (f^[k] j)) ∧
+    J ⊆ (s.image fun i => {i, f i} : Finset (Finset ℕ)) ∧
+    J.card + k ≤ 6
+```
+
+改动 = 周期条款一行 `∀ i j,` → `∀ i ∈ s, ∀ j ∈ s,`（与同 def 族 `stableSystem_p4` 条款 2 :898 的量词同式）+ docstring 偏差注记 3 行；净 +3（+5/−2）。**六条 LA11 冻结签名零改动**（签名引 `stableSystem_p4`，def 变更在签名下传播）；`stableSystem_p4` 本体（:895-900）零改动。修后 `hss` 对 lift 表可满足：witness `a₀ = diag 0 / off-diag 2, b₀ ≡ 3, J = ∅, k = 3..6` 全条款机检通过（(f) C4；s×s 上 `f^[k] j = j` 条款恒真， vac.lean 的 `hper i (t+k)` 步因 `t+k ∉ s` 不可得）。全文 patch = `docs/statement-fix-proposals-patches/92-csys-periodicity-domain.patch`（git 双头 a/ b/ 仓相对路径，`git apply --check` PASS，1 文件 1 hunk）。
+
+**备选案（用户批裁定点，默认案①）**：案②「周期 lift」——`liftAB_p11` 出界改 `(i%k)(j%k)` 环回（全域条款对 lift 表恒真，HOL :57 保逐字全域），代价 = 改 LA11:1455 def 体 + :1451-1454 docstring 约定 + W1 证明 `hab` 步（:1526，`dif_pos` → `Nat.mod_eq_of_lt` 两行）+ FIDELITY §C「补零为文档化平移」审计注记重审 + LA9:693-695 注释过时；陈述冻结同样不破（签名引 def）。案③「ℕ 直译」（W2 DELIVERY §4(b)③）改全部六条冻结签名，违反陈述冻结纪律，弃。案①最小且与 W2 机检裁决的修复建议一致；W2 的「哨值」案（§4(b)②）经本案核算**不可行**已从备选剔除（非零哨值 c 须处处等于环回位值 `a₀ ⟨t⟩`，对 `2 ≤ a₀` 且非常值的表无解）。
+
+### (d) 消费者影响与适配
+
+全树 grep 普查（(f) C7 实录；详表 = 同 kit CONSUMERS.md）：`constraintSystem_p4` 代码出现恰 2 处 = LA4:886（def）+ LA4:897（`stableSystem_p4` 内唯一引用）；`stableSystem_p4` 客户 = **LA11 六条签名**（:1465 CROSS_DOT_POS / :1505 PROPERTIES / :1537 AFF_GT_INTER_AFF_SY / :1551 TECOXBM1 / :1565 TECOXBM2 / :1577 TECOXBM_p11）+ LA9:149 注释。六条在全树**零下游代码消费者**（LA23:1165、LA35:8327 仅注释；LA9:693-695/786 注释）。工作单「PROPERTIES 是唯一 hss 客户」按「唯一**已证**客户」口径成立——其余五条为 sorry 巨人（同一 `hss` 形状，同罹空洞，修后一并恢复非空洞地位）。
+
+**消费者适配 = 空**（这是案①的决定性优点）：
+
+| 客户 | 修后状态 | 依据 |
+|---|---|---|
+| `PROPERTIES_OF_FAN_IN_B_SY_p11`（:1502，W1 已证） | **证明体逐字不动仍过** | 证明体（:1503-1531）只用 `hss.2.1`（stable 条款 2，:898 未动）+ `hl` 的 CONDITION1 + `fw1_row`；`hss.1`（constraint 面，含被改条款）**零投影出现**（机检 C6a） |
+| `TECOXBM_p11`（:1575，已证复合件） | **逐字不动仍过** | 体 = `⟨TECOXBM2_p11 … hss …, TECOXBM1_p11 … hss …⟩`，`hss` 原样透传，签名文本不变（机检 C6c） |
+| 四条 sorry 巨人（:1462/:1534/:1549/:1563） | 不动 | 体为 `sorry` |
+| 归档 vac.lean（$S/fanchain-w2/） | 探针**失效（预期行为）** | 提取路径 `(hss.1.2.2.2.2.1 i j).1` 对限域条款不再可裸应用（∀ i ∈ s 带成员前提），证链第 1 步即不 elaborates（机检 C6d）——这就是「反例失效」的静态形态 |
+| LA9:148/:694 注释 | 过时文本，**不触** | 注释级；LA9 为多车道活跃文件（W7 在飞）；:694 描述的是修前裁决史，留档无害，可选后续清理 |
+| 平行变体 `constraintSystem_p9/_p18/_p23`（LA9:159/LA18:154/LA23:137） | **不修，出题面** | 同款全域周期条款，但其客户（LA9 StableSysHyp/LA18 CLOSED_SY/StableSyP23 记录）吃**裸 ℕ/Set 表**（无补零 lift 组合），前提集可满足（任取周期延拓）——同型缺陷只在补零 lift 组合下发作，LA11 是全树唯一 lift 客户 |
+
+**未来消费者纪律（W8 及一切吃 S1 的波次）**：修后 `hss.1` 的周期条款只在 `s × s` 上可用（对 lift 表在该域上恒真——承重的是「不可满足义务被移除」）；若未来证明需要 HOL 全域周期性（ℕ 表上 1-based 折返），走 W2 的 ℕ 侧路线（`fw2_aper`，LA9）或案②周期 lift，不得引用限域条款于 s 外索引。
+
+### (e) 风险
+
+- **编译未跑**（本车道禁 lake/lean/.lake）：改动 5 行、语法与 :898 同式、纯 `Prop` 定义层（无逐出/退化风险），编译风险极低；闸为权威。退路：若闸上意外破坏（census 之外出现隐藏投影点——C7 已证全树仅 ：897 一处代码引用，风险≈0），回退 patch 即可（单 hunk）。
+- **逐字保真的诚实代价**：修后 Lean 周期条款（限域）弱于 HOL :57（全域）（universal ⟹ restricted 不反过），即 `constraintSystem_p4` 不再是 `constraint_system` 的条款级逐字翻译——这是用「条款逐字」换「前提可满足」的裁定，docstring 注记（patch 内）已披露。残余：对非 lift 的裸 ℕ 表，修后 Lean 前提集严格弱于 HOL（与 §89/§91 的「Lean 残余强于 HOL」同类的已裁偏差，方向相反）。
+- **条款惰性化**：修后周期条款对 lift 组合在 s×s 上恒真（`f^[k] j = j`），该条款对载体不再携带信息；其作用是恢复模型类非空。S1 修复后的实际喂料力 = stable 条款 2（:898）+ B_SY1 条件——这正是 HOL PROPERTIES 证明体的真实消费集（(a) 消费点表），无隐性损失。
+- **W1 账面勘误**：`PROPERTIES_OF_FAN_IN_B_SY_p11` 的「标准三」在修前是空洞真下的账面；修后前提可满足（witness 机检 C4），「已证」恢复实质地位；SORRIED 账面不变（本件非 sorry 债）。fanchain W2-W6 的绕行路线（fw2_aper / fan_not_collinear）不受影响、无需回改。
+- 下游其它直接实例化点：全树 grep 已核零（(d)），六条 LA11 签名是全部客户且零文本变更。
+
+### (f) 机检证据引用
+
+- **空洞裁决正本**：`lane_snapshots/fanchain-w2/vac.lean`（W2 车道，standalone `lean` RC=0；`False` 从 `hss` 单独可导；Evidence §0/日志 vac6.log）——本车道按工单禁令未复跑，直接引用留档。
+- **本案机检**：`csyscheck_sf92.log`（`csyscheck_sf92.py`，纯 python stdlib，8 组全 PASS，RC=0）：C1 HOL 逐字（:57 全域/`:64` 限域）；C2 Lean 修前 ：890 全域 + kit/b 修后限域唯一化；C3 修前不可满足（k=3..6 全域条款违例 12/24/40/60 处；vac.lean 链数值复现 `lift a 0 (1+k) = 0 ≠ 2 = lift a 0 1` ⊥ 条款 2）；C4 修后 witness 全条款可满足（k=3..6，torsor/对称/a≤b/s×s 周期/J/2≤a/b(i,f i)≤3.01 逐项）；C5 迭代恒等（`f^[k] j = j` 于 s、`f^[k](t+k) = t`——修后不可达）；C6 静态证明影响（W1 体零 `hss.1` 投影、TECOXBM_p11 透传、vac 探针路径失效）；C7 消费者普查（出现集全等于预期集）；C8 §92 槽位空闲（现最大 §91，:5452）。
+- patch 机检：`patcher_sf92.py` 两次逐字替换各 assert count==1，`git diff --no-index` 生成（HEAD c51f4c76 干净树 kit a/b），头形 `a/lean/Kepler/Text/LocalAuto4.lean` / `b/…`，`git apply --check` **PASS**；1 文件 1 hunk，+5/−2。
+- 预算：约 20 次工具调用 / 纯 python 机检（未触 lake/lean/.lake，主仓 tracked 零改动）。
+
+**状态**：草案 2026-10-28（sf92-csys 车道起草）。**在册未落**；应用序列（编排者）：① 用户批（含 (c) 案①/案②裁定，默认案①）→ ② STATEMENT-FIX 闸 LA4：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/92-csys-periodicity-domain.patch SF_ITEM=92 THM=constraintSystem_p4 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto4.lean constraintSystem_p4` → ③ LA11 逐文件闸（六客户编译面）：`lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto11.lean PROPERTIES_OF_FAN_IN_B_SY_p11`（TECOXBM_p11 同式；预期 sorry 面与账面不变）→ ④ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md`（§92 编号已核）。§92 编号已核（现最大 §91）。
