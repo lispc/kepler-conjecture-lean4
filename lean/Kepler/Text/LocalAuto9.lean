@@ -928,9 +928,160 @@ theorem AZIM_EQ_DIHV_IN_B_SY_p9 (s : StableSyP9) {m : ℕ}
   · exact AZIM_LE_PI_EQ_DIHV h1 h2 hbound
   · linarith [Real.pi_pos]
 
+/-- fw6 (fanchain-w6): `rowV3_p9` 的 vecmats 形（`1..m` 界内；HOL
+`SUC (i MOD k)` 后继的 0 基渲染，与 `fw34_edge_rows` 的行展开同法）。 -/
+private theorem fw6_row_vecmats {m : ℕ} (l : FinVec m 3) (k : ℕ) (hk : 1 ≤ k ∧ k ≤ m) :
+    rowV3_p9 l k = vecmatsV3_p4 l ⟨k - 1, by have := hk.2; omega⟩ := by
+  unfold rowV3_p9
+  rw [dif_pos hk]
+
+/-- fw6: `Fin` 索引行 `p` 的行函数值。 -/
+private theorem fw6_row_fin {m : ℕ} (l : FinVec m 3) (p : Fin m) :
+    rowV3_p9 l (p.val + 1) = vecmatsV3_p4 l p := by
+  unfold rowV3_p9
+  rw [dif_pos (by exact ⟨by omega, by have := p.isLt; omega⟩)]
+  refine congrArg (vecmatsV3_p4 l) (Fin.eq_of_val_eq ?_)
+  show (p.val + 1 - 1 : ℕ) = p.val
+  omega
+
+/-- fw6: 行单射的 `Fin` 重述（`INJ_ROW_B_SY_p9` 的 Fin 形；HOL `SET_TAC`
+注入性簿记的等价物）。 -/
+private theorem fw6_fin_inj (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
+    (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy)
+    (p q : Fin m) (hpq : vecmatsV3_p4 l p = vecmatsV3_p4 l q) : p = q := by
+  have h1 : rowV3_p9 l (p.val + 1) = rowV3_p9 l (q.val + 1) := by
+    rw [fw6_row_fin l p, fw6_row_fin l q]; exact hpq
+  have h2 := INJ_ROW_B_SY_p9 s hm l hl (p.val + 1) (q.val + 1)
+    (by omega) (by have := p.isLt; omega) (by omega) (by have := q.isLt; omega) h1
+  exact Fin.eq_of_val_eq (by omega)
+
+/-- fw6（核心）: `B_SY1` 上第 `i` 行的 `EE` 邻域二元组、`azimCycle` 前驱行恒等、
+前驱 ≠ 后继。前驱的 ℕ 形 `(i + m - 2) % m + 1` 把 HOL 的 `x = 1`（前驱 = row k）
+与 `1 < x`（前驱 = row (x-1)）双分支统一为一条 `Fin` 算术：`azimCycle` 消费
+`AZIM_CYCLE_EQ1`（LA4，已证）；`EE = setOfEdge` 小桥为 LA4 私有件
+`ee_eq_setOfEdge_p4` 六行体的内联复刻（LA4 原件 private 不可见）。 -/
+private theorem fw6_eeCore (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
+    (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) (i : ℕ) (hi : 1 ≤ i ∧ i ≤ m) :
+    EE_p2 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l))
+        = ({rowV3_p9 l ((i + m - 2) % m + 1), rowV3_p9 l (i % m + 1)} : Set V3) ∧
+      azimCycle_p2 (EE_p2 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l))) 0 (rowV3_p9 l i)
+          (rowV3_p9 l (i % m + 1)) = rowV3_p9 l ((i + m - 2) % m + 1) ∧
+      rowV3_p9 l ((i + m - 2) % m + 1) ≠ rowV3_p9 l (i % m + 1) := by
+  obtain ⟨⟨hfan, -, -⟩, -⟩ := hl.2.2
+  have h2m : 2 < m := hm.2.2.2
+  have h1m : 1 < m := by omega
+  have hpv : ((i + m - 2) % m : ℕ) < m := Nat.mod_lt _ (by omega)
+  set p : Fin m := ⟨(i + m - 2) % m, hpv⟩ with hpdef
+  have hinj : ∀ a b : Fin m, vecmatsV3_p4 l a = vecmatsV3_p4 l b → a = b :=
+    fw6_fin_inj s hm l hl
+  have hidv : vecmatsV3_p4 l (finNext p) = rowV3_p9 l i := by
+    rw [fw6_row_vecmats l i hi]
+    refine congrArg (vecmatsV3_p4 l) (Fin.eq_of_val_eq ?_)
+    show ((finNext p).val : ℕ) = i - 1
+    show ((p.val + 1) % m : ℕ) = i - 1
+    show (((i + m - 2) % m + 1) % m : ℕ) = i - 1
+    rw [Nat.mod_add_mod]
+    have h3 : (i + m - 2 : ℕ) + 1 = (i - 1) + m := by omega
+    rw [h3, Nat.add_mod_right, Nat.mod_eq_of_lt (by omega)]
+  have hidw : vecmatsV3_p4 l (finNext (finNext p)) = rowV3_p9 l (i % m + 1) := by
+    rw [fw6_row_vecmats l (i % m + 1)
+      ⟨by omega, by have h : i % m < m := Nat.mod_lt i (by omega); omega⟩]
+    refine congrArg (vecmatsV3_p4 l) (Fin.eq_of_val_eq ?_)
+    show ((finNext (finNext p)).val : ℕ) = i % m
+    show ((p.val + 1) % m + 1) % m = i % m
+    show (((i + m - 2) % m + 1) % m + 1) % m = i % m
+    have e1 : (((i + m - 2) % m + 1) % m + 1) % m = ((i + m - 2) % m + 2) % m := by
+      rw [Nat.mod_add_mod]
+    have e2 : ((i + m - 2) % m + 2) % m = ((i + m - 2 : ℕ) + 2) % m :=
+      Nat.mod_add_mod _ _ _
+    have e3 : ((i + m - 2 : ℕ) + 2) % m = (i + m) % m := by
+      congr 1
+      omega
+    have e4 : (i + m) % m = i % m := Nat.add_mod_right _ _
+    rw [e1, e2, e3, e4]
+  have hidu : vecmatsV3_p4 l p = rowV3_p9 l ((i + m - 2) % m + 1) := by
+    rw [fw6_row_vecmats l ((i + m - 2) % m + 1) ⟨by omega, by omega⟩]
+    refine congrArg (vecmatsV3_p4 l) (Fin.eq_of_val_eq ?_)
+    rfl
+  refine ⟨?_, ?_, ?_⟩
+  · -- EE = setOfEdge = {前驱行, 后继行}
+    have hee : EE_p4 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l))
+        = setOfEdge (rowV3_p9 l i) (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+      ext w
+      constructor
+      · intro hw
+        exact ⟨hw, hfan.1 (Set.mem_sUnion.mpr ⟨{rowV3_p9 l i, w}, hw, by simp⟩)⟩
+      · intro hw
+        exact hw.1
+    rw [show EE_p2 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l))
+        = EE_p4 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l)) from rfl, hee, ← hidv,
+      SET_OF_EDGE_CARD_EQ2 l h1m hinj p rfl rfl rfl, hidu, hidw]
+  · -- azimCycle = 前驱行（HOL 的 AZIM_CYCLE_EQ1 双分支统一）
+    have hc := AZIM_CYCLE_EQ1 (l := l) hfan h1m hinj p rfl rfl rfl
+    rw [hidv, hidw, hidu] at hc
+    exact hc
+  · -- 前驱 ≠ 后继（2 < m 下的模算术：p + 2 ≡ p [MOD m] ⟹ m ∣ 2）
+    intro hne
+    have hcon : p = finNext (finNext p) := hinj _ _
+      (by rw [← hidu, ← hidw] at hne; exact hne)
+    have hv2 : (p.val : ℕ) = (p.val + 1 + 1) % m := by
+      calc (p.val : ℕ) = ((p.val + 1) % m + 1) % m := congrArg Fin.val hcon
+        _ = (p.val + 1 + 1) % m := Nat.mod_add_mod _ _ _
+    have h15 := Nat.mod_add_div (p.val + 1 + 1) m
+    have h16 : (p.val + 1 + 1) % m = p.val := hv2.symm
+    have h17 : m * ((p.val + 1 + 1) / m) = 2 := by omega
+    rcases Nat.eq_zero_or_pos ((p.val + 1 + 1) / m) with h0 | h0
+    · rw [h0, mul_zero] at h17; omega
+    · have h18 : 1 ≤ (p.val + 1 + 1) / m := h0
+      have h19 : m ≤ m * ((p.val + 1 + 1) / m) :=
+        calc m = m * 1 := by rw [mul_one]
+          _ ≤ m * ((p.val + 1 + 1) / m) := Nat.mul_le_mul_left m h18
+      omega
+
+/-- fw6: `B_SY1` 上第 `i` 行 `EE` 邻域基数 = 2（HOL `LOFA_CARD_EE_V_2` 的
+语义面；经 `azimInFan_p2` 的分支条款进入 `azim` 分支）。 -/
+private theorem fw6_card_ee (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
+    (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) (i : ℕ) (hi : 1 ≤ i ∧ i ≤ m) :
+    1 < (EE_p2 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l))).ncard := by
+  obtain ⟨hset, -, hne⟩ := fw6_eeCore s hm l hl i hi
+  rw [hset, Set.ncard_eq_two.mpr
+    ⟨rowV3_p9 l ((i + m - 2) % m + 1), rowV3_p9 l (i % m + 1), hne, rfl⟩]
+  norm_num
+
+/-- fw6: `B_SY1` 上 `azimCycle` 项 = 前驱行。 -/
+private theorem fw6_cycRow (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
+    (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) (i : ℕ) (hi : 1 ≤ i ∧ i ≤ m) :
+    azimCycle_p2 (EE_p2 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l))) 0 (rowV3_p9 l i)
+        (rowV3_p9 l (i % m + 1)) = rowV3_p9 l ((i + m - 2) % m + 1) :=
+  (fw6_eeCore s hm l hl i hi).2.1
+
+/-- fw6: `B_SY1` 上 `azimInFan_p2`（第 `i` 行对）= `dihV 0`（前驱行形态）：
+分支条款 = `fw6_card_ee`；`azim` 定值 = S6 `AZIM_EQ_DIHV_IN_B_SY_p9`；
+cycle = 前驱行 = `fw6_cycRow`。 -/
+private theorem fw6_azim_eq (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
+    (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) (i : ℕ) (hi : 1 ≤ i ∧ i ≤ m) :
+    azimInFan_p2 (rowV3_p9 l i, rowV3_p9 l (i % m + 1)) (E_SY_p4 (vecmatsV3_p4 l)) =
+      dihV 0 (rowV3_p9 l i) (rowV3_p9 l (i % m + 1)) (rowV3_p9 l ((i + m - 2) % m + 1)) := by
+  rw [azimInFan_p2, if_pos (fw6_card_ee s hm l hl i hi),
+    AZIM_EQ_DIHV_IN_B_SY_p9 s hm l i hi (rowV3_p9 l i) (rowV3_p9 l (i % m + 1))
+      (azimCycle_p2 (EE_p2 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l))) 0 (rowV3_p9 l i)
+        (rowV3_p9 l (i % m + 1))) rfl (by rw [hm.1]) rfl hl,
+    fw6_cycRow s hm l hl i hi]
+
 /-- HOL `CONTINUOUS_ON_RHO_FUN_AND_AZIM` (Hdplygy.hl:1534) — giant
 continuity of the azim_in_fan family. DISCHARGES: from the
-azim_in_fan continuity kit (not yet ported). -/
+azim_in_fan continuity kit (not yet ported).  fanchain-w6: discharged by
+assembly — the finite sum splits (`continuousOn_finsetSum`) into the
+`rho_fun` affine term (continuous in `norm (row i)` throughout, the HOL
+`CONTINUOUS_ON_LIFT_NORM_COMPOSE ∘ CONTINUOUS_ON_ROW` route) and the azim
+term, which on `B_SY1` is rewritten to `dihV 0 (row i) (row (i%m+1))
+(row predecessor)` via `fw6_azim_eq` (cardinality branch + S6 + cycle =
+predecessor row), and the row-form `dihV` is continuous on `B_SY1` by
+`fw5_continuousAt_dihV` at the S4/S5 non-collinear triples — the HOL
+`CONTINUOUS_ON_SAME_DOMAIN` + `CONTINUOUS_ON_SEQUENTIALLY` +
+`SEQUENTIALLY_DIVH` sequence route collapses to pointwise `ContinuousAt`
+composition (the HOL `x = 1` / `1 < x` cycle-predecessor case split is
+absorbed by the Fin arithmetic of `fw6_eeCore`). -/
 theorem CONTINUOUS_ON_RHO_FUN_AND_AZIM_p9 (s : StableSyP9) {m : ℕ}
     (hm : StableSysHyp_p9 s m) :
     ContinuousOn (fun l : FinVec m 3 => ∑ i ∈ Finset.Icc 1 s.k_sy,
@@ -938,7 +1089,43 @@ theorem CONTINUOUS_ON_RHO_FUN_AND_AZIM_p9 (s : StableSyP9) {m : ℕ}
           azimInFan_p2 (rowV3_p9 l i, rowV3_p9 l (i % s.k_sy + 1))
             (E_SY_p4 (vecmatsV3_p4 l)))
       (B_SY1_p9 m s.a_sy s.b_sy) := by
-  sorry
+  rw [show s.k_sy = m from hm.1]
+  refine continuousOn_finsetSum (Finset.Icc 1 m) fun i him => ?_
+  have hib : 1 ≤ i ∧ i ≤ m := Finset.mem_Icc.mp him
+  refine ContinuousOn.mul ?_ ?_
+  · -- ρ 项：rho_fun affine ∘ norm ∘ row（HOL: CONTINUOUS_ON_ADD/CMUL/LIFT_NORM_COMPOSE∘ROW）
+    have hc : Continuous (fun l : FinVec m 3 => rhoFun_p9 ‖rowV3_p9 l i‖) := by
+      unfold rhoFun_p9
+      exact continuous_const.add
+        (((continuous_const.mul continuous_const).mul continuous_const).mul
+          ((continuous_rowV3_p9 i).norm.sub continuous_const))
+    exact hc.continuousOn
+  · -- azim 项：B_SY1 上 = dihV 0 (row i, row next, row pred)（HOL:
+    --   CONTINUOUS_ON_SAME_DOMAIN + CONTINUOUS_ON_SEQUENTIALLY + SEQUENTIALLY_DIVH
+    --   的 ContinuousAt 重排；序列路线被逐点 ContinuousAt 组合吸收）
+    have key : ∀ l ∈ B_SY1_p9 m s.a_sy s.b_sy,
+        dihV 0 (rowV3_p9 l i) (rowV3_p9 l (i % m + 1)) (rowV3_p9 l ((i + m - 2) % m + 1)) =
+          azimInFan_p2 (rowV3_p9 l i, rowV3_p9 l (i % m + 1)) (E_SY_p4 (vecmatsV3_p4 l)) :=
+      fun l hl => (fw6_azim_eq s hm l hl i hib).symm
+    have hcont : ContinuousOn (fun l : FinVec m 3 =>
+        dihV 0 (rowV3_p9 l i) (rowV3_p9 l (i % m + 1)) (rowV3_p9 l ((i + m - 2) % m + 1)))
+        (B_SY1_p9 m s.a_sy s.b_sy) := by
+      intro x hx
+      have h4 := COLLINEAR_B_SY_p9 s hm x hx i hib
+      rw [hm.1] at h4
+      have h5 := COLLINEAR_AZIM_CYCLE_B_SY_p9 s hm x hx i hib
+      rw [hm.1] at h5
+      rw [fw6_cycRow s hm x hx i hib] at h5
+      have hd := fw5_continuousAt_dihV (rowV3_p9 x i) (rowV3_p9 x (i % m + 1))
+        (rowV3_p9 x ((i + m - 2) % m + 1)) h4 h5
+      have hrow : Continuous (fun l : FinVec m 3 =>
+          (rowV3_p9 l i, rowV3_p9 l (i % m + 1), rowV3_p9 l ((i + m - 2) % m + 1))) :=
+        (continuous_rowV3_p9 i).prodMk ((continuous_rowV3_p9 (i % m + 1)).prodMk
+          (continuous_rowV3_p9 ((i + m - 2) % m + 1)))
+      exact ((hd.comp (f := fun l : FinVec m 3 =>
+          (rowV3_p9 l i, rowV3_p9 l (i % m + 1), rowV3_p9 l ((i + m - 2) % m + 1)))
+            hrow.continuousAt).continuousWithinAt)
+    exact CONTINUOUS_ON_SAME_DOMAIN_p9 key hcont
 
 /-- HOL `CONTINUOUS_ON_TAU_FUN` (Hdplygy.hl:1771). DISCHARGES: from
 `CONTINUOUS_ON_RHO_FUN_AND_AZIM_p9` + `CHANGE_SUM_TAU_FUN_p9` +
