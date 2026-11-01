@@ -32,7 +32,10 @@ FILE MAP
     `dFun_p23`, `tauStar_p23`, `cycRow_p23` (the HOL row vector
     `vector[vv 1;..;vv k;vv 0]` read 0-based), `scsJSet_p23`
     (`change_type_v2 (scs_J_v39 s) k`), `scsToStableSy_p23` (the
-    `stable_sy (...) = s1` record), `ballAnnulus_ne_0_p23`,
+    `stable_sy (...) = s1` record; SF-81 案①: moved to Section B — it cites
+    `IS_SCS_STABLE_SYSTEM_p23` as its `stable` field evidence, so it postdates
+    that theorem; SF-C3: the `d` slot carries `s.d` (FIDELITY-FIX, see the
+    def docstring)), `ballAnnulus_ne_0_p23`,
     `periodic_mod_eq_p23`, `range_periodic_image_p23`.
   Section A (JOTSWIX): `taum_attains_inf_p23`, `TAUM_EXTREMAL_p23`,
     `TAUM_STD_POS_p23`, `LFLACKU_p23` (sorry; need the
@@ -87,9 +90,10 @@ ENCODING NOTES
     flattening `vecmats_p4 (cycRow_p23 vv k)` plays the role of `a`).
   - HOL `change_type_v3` is the identity on `ℕ → ℕ → ℝ` functions and is
     dropped; HOL `change_type_v2 (scs_J_v39 s) k` is `scsJSet_p23 s`.
-  - HOL `stable_sy`/`stable_system` dummy field `d` (unused in dih2k.hl)
-    is carried as `0` in `scsToStableSy_p23` / the `stableSystem_p23`
-    calls (LocalAuto8 typed it `ℕ`).
+  - HOL `stable_sy`/`stable_system` dummy field `d` (unused in dih2k.hl):
+    `stableSystem_p23` keeps the `0` dummy (LocalAuto8 typed it `ℕ`);
+    `scsToStableSy_p23` carries `s.d` since SF-C3 (FIDELITY-FIX 2026-10-28,
+    the record's `d` slot is `scs_d_v39 s` — see the def docstring).
   - HOL `dist(x,y)` ↦ `dist x y`; `norm x` ↦ `norm x`; `vec 0` ↦ `0`;
     `collinear` ↦ `Collinear ℝ`; `interior_angle1` ↦ `interiorAngle1`;
     `sol_local` ↦ `solLocal`; `circular` ↦ `Circular`; `lunar` ↦ `Lunar`;
@@ -216,20 +220,6 @@ index pairs `{i, j}` with `scs_J_v39 s i j` (indices taken mod `k` via the
 `Periodic2 s.J s.k` conjunct of `isScsV39`). -/
 noncomputable def scsJSet_p23 (s : ScsV39) : Set (Set ℕ) :=
   {e | ∃ i j, i < s.k ∧ j < s.k ∧ s.J i j ∧ e = {i, j}}
-
-/-- The `stable_sy ((k),(d),(0..k-1),(a),(b),(J),(\i. (1+i) MOD k)) = s1`
-record of the JKQEWGV hypotheses, built from `s`. The `stable` field is the
-`IS_SCS_STABLE_SYSTEM_p23` unpacking (NEEDS). The unused dih2k dummy `d`
-is carried as `0` (LocalAuto8 `StableSy.d : ℕ`). -/
-noncomputable def scsToStableSy_p23 (s : ScsV39) : StableSyP23 where
-  k := s.k
-  d := 0
-  I := Set.Iic (s.k - 1)
-  a := s.a
-  b := s.b
-  J := scsJSet_p23 s
-  f := fun i => (1 + i) % s.k
-  stable := sorry -- NEEDS: IS_SCS_STABLE_SYSTEM_p23 (torsor over Iic (k-1))
 
 /-- Every point of the ball annulus is nonzero (`dist ≥ 2` from the origin). -/
 theorem ballAnnulus_ne_0_p23 (x : V3) (hx : x ∈ ballAnnulus) : x ≠ 0 := by
@@ -680,6 +670,38 @@ theorem IS_SCS_TRI_STABLE_SYSTEM_p23 (s : ScsV39) (hs : isScsV39 s)
       (fun i => (1 + i) % s.k) := by
   sorry
 
+/-- The `stable_sy ((k),(d),(0..k-1),(a),(b),(J),(\i. (1+i) MOD k)) = s1`
+record of the JKQEWGV hypotheses, built from `s`.  SF-81 案①: the `stable`
+field is the Lean rendering of the HOL `stable_sy` SUBTYPE predicate
+(HDPLYGY.hl:200-205 — the type only contains tuples satisfying
+`stable_system`, cf. `stable_sy_lemma`), so the builder takes the evidence
+as parameters and feeds it from `IS_SCS_STABLE_SYSTEM_p23` — the def-body
+`sorry` placeholder is gone and the taint is carried by that TRACKED M0
+theorem instead (it self-heals when the torsor unpacking lands).  Position:
+after `IS_SCS_STABLE_SYSTEM_p23` (SF-81 moved the def here from Section 0 —
+it cites that theorem, so it must postdate it).
+
+FIDELITY-FIX (SF-C3, 2026-10-28): the HOL record's `d` slot is
+`scs_d_v39 s` (UXCKFPE.hl:450, `stable_sy ((scs_k_v39 s),(scs_d_v39 s),...)`;
+also XWITCCN.hl:2772), NOT `0`.  The `d := 0` rendering made every `k ≥ 4`
+`TAUSTAR_EQ_TAU_STAR_*` bridge false: `taustar_v39` subtracts
+`dsv_v39 = scs_d_v39 s + 0.1*eps*Σ{J-edges}` while `tau_star s1` subtracted
+`0 + 0.1*eps'*Σ{J1_SY}` (the two d-parts then differ by `scs_d_v39 s`, which
+`isScsV39` does not pin — it only bounds `s.d < 0.9`).  This is the same
+defect LA36 repaired on 2026-09-17 as `scsToStableSyD_p36` (`d := s.d`);
+the fix is now applied here, so the record is field-for-field the LA36 twin
+(except the `stable` slot, which keeps the SF-81 案① evidence parameter). -/
+noncomputable def scsToStableSy_p23 (s : ScsV39) (hs : isScsV39 s)
+    (hk : 3 < s.k) : StableSyP23 where
+  k := s.k
+  d := s.d
+  I := Set.Iic (s.k - 1)
+  a := s.a
+  b := s.b
+  J := scsJSet_p23 s
+  f := fun i => (1 + i) % s.k
+  stable := IS_SCS_STABLE_SYSTEM_p23 s hs hk
+
 /-! ### Row bookkeeping (the HOL `fun (so:term)->` tactics, as lemmas) -/
 
 /-- `IS_SCS_IN_V_SY_4` (JKQEWGV.hl:721): row `j` of the k=4 vector is the
@@ -784,14 +806,14 @@ record at the flattening. NEEDS: `V_E_FF_IS_SCS_CASES_4_p23` +
 `TAUSTAR_EQ_TAU_STAR` bridge (the tau_fun/d_fun identity on rows). -/
 theorem TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 (s : ScsV39) (vv : ℕ → V3)
     (s1 : StableSyP23) (hs : isScsV39 s) (hk : s.k = 4) (hBB : BBsV39 s vv)
-    (hs1 : scsToStableSy_p23 s = s1) :
+    (hs1 : scsToStableSy_p23 s hs (by omega) = s1) :
     taustarV39 s vv = tauStar_p23 s1 (flattenRow_p23 vv 4) := by
   sorry
 
 /-- HOL `IS_EAR_V25_EQ_EAR_SY` (JKQEWGV.hl:935). NEEDS:
 `stable_sy_explicit` + `is_ear_v39`/`ear_sy` unfolding. -/
 theorem IS_EAR_V25_EQ_EAR_SY_p23 (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k)
-    (s1 : StableSyP23) (hs1 : scsToStableSy_p23 s = s1) :
+    (s1 : StableSyP23) (hs1 : scsToStableSy_p23 s hs hk = s1) :
     isEarV39 s ↔ earSy_p23 s1 := by
   sorry
 
@@ -840,7 +862,7 @@ theorem IN_IS_SCS_CASE_5_p23 (s : ScsV39) (vv : ℕ → V3)
 the tau_fun/d_fun identity on rows (twin of the k=4 bridge). -/
 theorem TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_5_p23 (s : ScsV39) (vv : ℕ → V3)
     (s1 : StableSyP23) (hs : isScsV39 s) (hk : s.k = 5) (hBB : BBsV39 s vv)
-    (hs1 : scsToStableSy_p23 s = s1) :
+    (hs1 : scsToStableSy_p23 s hs (by omega) = s1) :
     taustarV39 s vv = tauStar_p23 s1 (flattenRow_p23 vv 5) := by
   sorry
 
@@ -887,7 +909,7 @@ theorem IN_IS_SCS_CASE_6_p23 (s : ScsV39) (vv : ℕ → V3)
 the tau_fun/d_fun identity on rows (twin of the k=4 bridge). -/
 theorem TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_6_p23 (s : ScsV39) (vv : ℕ → V3)
     (s1 : StableSyP23) (hs : isScsV39 s) (hk : s.k = 6) (hBB : BBsV39 s vv)
-    (hs1 : scsToStableSy_p23 s = s1) :
+    (hs1 : scsToStableSy_p23 s hs (by omega) = s1) :
     taustarV39 s vv = tauStar_p23 s1 (flattenRow_p23 vv 6) := by
   sorry
 
