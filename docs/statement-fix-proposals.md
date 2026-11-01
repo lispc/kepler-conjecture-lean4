@@ -5078,6 +5078,8 @@ MM_5Ix_IMP_MM_5M2 : ∀ v ∈ MMsV39 scs5Ix, (∀ i j : ℕ, scsDiag 5 i j → c
 **在册未落**，apply + STATEMENT-FIX 闸待编译窗；**叠加序：kit-la24-B1 过闸提交 → 本案 stack 版**（执行件 `84-la24-mm-nonempty-stack.patch`；HEAD 版 `84-la24-mm-nonempty.patch` 仅当 kit-B1 不落时取用，二者互斥，见 (c) 勘误）。闸命令（lean/ 下，`$FILE` 单文件节，THM 可换四件之任意一）：
 `GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/84-la24-mm-nonempty-stack.patch SF_ITEM=84 LANE_FILES=Kepler/Text/LocalAuto24.lean THM=MM_5I1_IMP_MM_5M2 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto24.lean MM_5I1_IMP_MM_5M2`
 （四件体仍 sorry，rule 5 白名单放行；可对 `MM_5I2_IMP_MM_5M2`/`MM_5I3_IMP_MM_5M2`/`MM_5M1_IMP_MM_5M2` 复闸三次。）账面：M0 直源 −0、文件级 sorry 不变；价值 = 四件陈述由非 HOL 内容（更强断言、疑假）回归正本非空式，为 B3 BERAK 四根与 B5-root 填体（XWNHLMD_MM 链）扫障。车道全文见 `lane_snapshots/sf84-draft-w1/PROPOSAL-84.md`。
+**状态（2026-11-02，编排者）：superseded-by-§90。** masters 落地（3e6dc15f）后 LA24:791/:823/:855/:887 四处 `SCS_5Ix_BERAK_BY_CSTAB` 以 `⟨v, MM_5x…⟩` 消费成员式，本案双 patch（`84-la24-mm-nonempty{,-stack}.patch`）在 HEAD 文本可贴但贴后四 BERAK 断装；执行件地位转 §90（结论槽同 ≠∅ 形 + 四消费槽机械适配 + 机检实证），本案双 patch 退役，判 A 核准精神由 §90 继承。
+
 
 ## 85. LA1 `WKEIDFT_concl`（HEAD :2286，**M0 在册行**，triage :136）冻结陈述丢四组 guard（corpus 正本 `WKEIDFT.hl:793` 有 `scs_diag k p q` / `scs_diag k p' q'` / `3 < k` / `(!i. scs_b_v39 s i i = b1)`，`b1` 为隐式全称）— 分级 **A**（移植误植 · 陈述为假 · SF-83 同型）
 
@@ -5295,3 +5297,152 @@ private theorem stabAdj_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
 - 预算：约 26 次工具调用 / 纯 python 机检（未触 lake/lean/.lake）。
 
 **状态**：草案 2026-10-28（sf89-bodyclosed 车道起草）。**在册未落**；应用序列（编排者）：① 用户批 → ② STATEMENT-FIX 闸（喂桥编译在此实证）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/89-bodyclosed-stable-hyp.patch SF_ITEM=89 THM=bodyClosed_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean bodyClosed_p23` → ③ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md`。§89 编号已核（现最大 §87，§88 已预留他用途）。
+
+## 90. LA24 Section B1 `MM_5{I1,I2,I3,M1}_IMP_MM_5M2` 四件结论槽成员式↛正本非空式（SF-84 同案再立案 · 消费者面更新：B3 BERAK 四消费点 `3e6dc15f` 落地后 84 双 patch 修后必然编译断裂；bbcheck 机检 BB 集分离 witness + 60°-gap 引理）— 分级 **A**（移植误植 · 非 HOL 内容 · 修复面 = 四陈述槽 + 四 BERAK 消费槽）
+
+### (a) HOL 引用（正本逐字对照）
+
+corpus 正本 `lean/scripts/local/OTMTOTJ.hl:220-243`（`reference/flyspeck/text_formalization/local/OTMTOTJ.hl:223` 双拷贝逐字同，编排者复核）；四件同构，:223（5I1）逐字：
+
+```
+let MM_5I1_IMP_MM_5M2=prove(`MMs_v39 scs_5I1 v/\ (!i j. scs_diag 5 i j ==>   cstab <= dist(v i,v j)) ==> ~(MMs_v39 scs_5M2 ={})`,
+STRIP_TAC
+THEN MATCH_MP_TAC (GEN_ALL Ppbtydq.XWNHLMD_MM)
+THEN EXISTS_TAC`v:num->real^3`
+THEN EXISTS_TAC`scs_5I1`
+THEN MRESA_TAC Nuxcoea.MMS_IMP_BBS[`scs_5I1`;`v`]
+THEN ASSUME_TAC SCS_5I1_BASIC
+THEN ASSUME_TAC K_SCS_5I1
+THEN ASSUME_TAC SCS_5M2_BASIC
+THEN ASSUME_TAC K_SCS_5M2
+THEN ASSUME_TAC SCS_5M2_IS_SCS
+THEN ASM_SIMP_TAC[BB_5I1_IS_BB_5M2;IN;SCS_5I1_IS_SCS]
+THEN SCS_TAC
+THEN REAL_ARITH_TAC);;
+```
+
+:337（5I2）/:462（5I3）/:535（5M1）结论槽逐字同为 `~(MMs_v39 scs_5M2 ={})`，仅系统名与
+`BB_5Ix_IS_BB_5M2` 实例替换。传递形正本 `reference/flyspeck/text_formalization/local/Ppbtydq.hl:560-563` 逐字：
+
+```
+let XWNHLMD_MM=prove(`  is_scs_v39 s /\ is_scs_v39 s' /\ scs_basic_v39 s /\ scs_basic_v39 s' /\
+  scs_k_v39 s = scs_k_v39 s' /\
+  v IN MMs_v39 s /\ v IN BBs_v39 s' /\ scs_d_v39 s<= scs_d_v39 s' 
+==> ~(MMs_v39 s' ={})`,
+```
+
+`Nuxcoea.MMS_IMP_BBS`（Nuxcoea.hl:213）= `MMs_v39 s w ==> BBs_v39 s w`。d-单调窗口对四件全适：
+`dTame 5 = 0.4819 ≤ 0.616`（5I1）与 `0.616 = 0.616`（5I2/5I3/5M1）。HOL 消费者四处
+（OTMTOTJ.hl:733/:797/:862/:925，B3 BERAK 带）一律 `MP_TAC … THEN RESA_TAC` **存在式解构**。
+
+仓内忠实先例（≠∅ 形，file:line）：同文件已证件 `MM_5I3_IMP_MM_5M1`（LA24:2192-2200，正本
+OTMTOTJ.hl:1238 同型，恰经 HEAD 内 B7 kit `la24xwnhlmd_mm_p24` :2138-2143 闭体）；LA29 全族
+`MM_5M2_IMP_MM_STAB_5I2_p29`（LA29:575-578）、`MM_5M2_IMP_MM_STAB_5I3_p29`（:621-625）、
+`MM_5M2_IMP_MM_STAB_5M3_p29`（:1976）结论一律 `MMsV39 … ≠ ∅` 且额外带边距假设。
+
+槽表（HOL ↔ Lean HEAD LA24:344/:358/:372/:386）：假设槽 `h : v ∈ MMsV39 scs5Ix` ✓、
+`hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)` ✓；**结论槽
+`v ∈ MMsV39 scs5M2` ✗（唯一漂移，正本为 `MMsV39 scs5M2 ≠ ∅`）**。
+
+### (b) 缺陷（加强不可证的论证 + 两 BB 集不等的机检/数值证据）
+
+`MMsV39`（LA1:691-697）= `BBprime2V39`（:687-688：`taustar` 在 `BBs` 上达 min 且 < 0，
+**且** `BBindexV39 v = BBindexMinV39`）+ str/lo/hi/am/bm 侧条件。Lean 成员式断言「**该特定
+v** 是 5M2 世界的 BBindex 最小点」；正本只断言最小点**存在**，且其 witness 由
+`la24sgtrnaf5_p24` 的 BBindex 极小化另行产生（一般 ≠ v）。成员式 ⇒ 非空式平凡，反向不通；
+族内零先例支持成员式结论（(a)）。
+
+机检（`bbcheck_sf90.py` / `bbcheck_sf90.log`，纯 python，忠实复刻 LA1 csAdj/psort/funlistV39
+与 h0 = 1.26、cstab = 3.01、ballAnnulus = `closedBall 0 (2*h0) \ ball 0 2`）：
+
+- **[C] 表紧槽**（25 psort 格逐点）：`b[(0,1)]`：5I1 = 2*h0 = 2.52 vs 5M2 = cstab = 3.01；
+  `a[五对角类]`：5I1 = 2.52 vs 5M2 = 3.01——与 sweep-b24 F1 的两紧槽判读一致。
+- **[A] BB 集分离 witness**：单肥边凸五边形（radii = [2.0946, 2.2341, 2.0708, 2.2239, 2.1364]，
+  fan gaps = [85.613°, 67.172°, 68.854°, 68.28°, 70.08°]）满足 5M2 全部 BB 界（肥边
+  2.9432 ∈ (2.52, 3.01] 落 (0,1) 槽）而违 5I1 边上界（csAdj 边 b ≡ 2.52，循环重标不变式
+  ⟹ 五个 relabel 全违）；且 relabel s ≠ 0 时肥边落入 2*h0 槽 ⟹ **连 5M2 成员也不保**
+  （暴露效应，成员性对标号脆弱）——两 BB 集确不相等，经 `BB_5Ix_IS_BB_5M2` 只能把
+  `v` 的 BBs 成员单向搬过去，搬不动任何极小性条款。
+- **[B] 诚实细化（超出 F1 原论证）**：60°-gap 引理——BBs 界内边距 ≥ 2 且半径 ≤ 2*h0
+  强制每个 fan gap ≥ 60°（`(r−s)² + 2rs(1−cos g) ≥ 8(1−cos g)` ⟹ 边距 ≥ `4 sin(g/2)`），
+  故对角距 ≥ `4 sin 60° = 3.4641 > cstab`（50 万 5I1-可行构型随机搜索最小对角 3.7289）⟹
+  **5M2 对角 a-紧槽对 5I1-realizer 永不触**。即 v-形失败 precisely 在极小性两条款
+  （taustar-min + BBindexMin），不从 `v ∈ MMs_5I1 + hc` 可达；正本非空式的 fresh-witness
+  路线是唯一通路。疑假判定不依赖（84 同口径：非 HOL 内容已足立案）。
+
+### (c) 修复陈述（四件完整 Lean 签名逐字；5I1 全文，5I2/5I3/5M1 仅系统名与 DISCHARGES 实例替换，逐字见 patch）
+
+```lean
+/-- HOL `MM_5I1_IMP_MM_5M2` (OTMTOTJ.hl:223). -/
+theorem MM_5I1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I1)
+    (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+    MMsV39 scs5M2 ≠ ∅ := by
+  sorry
+  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
+  -- `scs5I1` instance: `MMS_IMP_BBS` + `BB_5I1_IS_BB_5M2`; witness is the
+  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
+```
+
+体闭路线已备：`la24xwnhlmd_mm_p24 scs5Ix scs5M2 v SCS_5M2_IS_SCS SCS_5Ix_BASIC
+SCS_5M2_BASIC rfl rfl h (swb_bb_5Ix_5M2_p24 v h.1.1.1 hc) (by norm_num)`——四实例
+`swb_mm_5{I1,I2,I3,M1}_5M2_p24` 在 sweep-b24 草案（`lane_snapshots/sweep-b24/
+draft_LocalAuto24_not-green.lean:4155-4181`）已写齐（该稿未达绿，不得 apply；B1 界件
+`swb_bb_5x_5M2_p24` 同稿随附）。归档 patch
+`docs/statement-fix-proposals-patches/90-mm5m2-nonempty-form.patch`（git a/ b/ 仓相对双头，
+`git diff --no-index` 生成）：1 文件 8 hunk = 四陈述槽（结论行 + DISCHARGES 注记同步改写，
+体保持 `sorry`）+ 四 BERAK 消费槽；`git apply --check` **PASS @ HEAD 67db7757**。
+
+### (d) 消费者影响与适配
+
+全树 grep（含 masters/pipeline，排除 `.lake`/docs）：四件名 term 级消费者恰 **4 处，全在
+LA24** `SCS_5{I1,I2,I3,M1}_BERAK_BY_CSTAB` 体内（:791/:823/:855/:887；四件定义带 :344-390
+除外）。**该消费带为 `3e6dc15f`（LA24 masters 落地）新增——晚于 §84 的消费者普查
+（其时仅 :713 注释，「零 term 级消费者」），§84 (d) 判据已过时。** 四处同型，机械改法
+（目标即 `MMsV39 scs5M2 ≠ ∅`，去壳一行直喂）：
+
+```lean
+-        exact Set.nonempty_iff_ne_empty.mp
+-          ⟨v, MM_5I1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)⟩
++        exact MM_5I1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+```
+
+（5I2/5I3/5M1 三处逐字同型替换。）**84 双 patch 勘验**：`84-la24-mm-nonempty.patch`
+在 67db7757 文本可贴（apply-check PASS，编排者本车道实测）但只改四陈述槽——贴后
+:791/:823/:855/:887 的 `⟨v, ≠∅⟩` 匿名构造子不再能 elaborate 为 `Nonempty`，四个已证
+BERAK 定理**必然编译断裂**；stack 版同理（kit-B1 未落，且窗序前提已失）。故 90 patch
+（含消费槽）是当前 HEAD 上唯一编译自洽形态，落地即取代 84 双 patch。
+
+### (e) 风险
+
+- **编译未跑**（本车道禁 lake/lean）：消费槽改法是同目标 `exact` 精确替换（结论类型逐字
+  = 闸目标），静态推演无缺口；STATEMENT-FIX 闸编译为权威。四件体保持 `sorry`（rule 5
+  白名单口径同 84）。
+- **与 B1 类 kit 的 hunk 邻接冲突**：kit-la24-B1 / sweep-b24 B1 填体（填 `BB_5Ix_IS_BB_5M2`
+  体）尾部上下文含四件 docstring 行（84 (c) 勘误已录互斥先例）。若该类 kit 先落，本 patch
+  须按新树重新生成（`--no-index` 机改，零判断）；patch 的 ± 行多重集不随基线漂移。
+- DISCHARGES 注记随案改写（84 原留待填体；本案一并改写以免遗留误导性证明路线注记）。
+- **§84 关系**：同根同修向，90 = 84 的消费者面升版；落地提交信息与 (f) 状态段显式记
+  「supersedes SF-84」，§84 状态段加 superseded-by-90 标注，`84-la24-mm-nonempty{,-stack}.patch`
+  头部加退役注（文件保留，供考古）。编号 §90 已核（§89 刚立案，§88 预留他用途）。
+
+### (f) 机检证据引用
+
+- BB 集分离/引理/紧槽：`bbcheck_sf90.log`（`bbcheck_sf90.py`，seed 固定可复跑，RC=0）：
+  [C] 25 格表逐点双紧槽；[A] 单肥边 witness（s=0 5M2-成员 ∧ 5I1-非成员；relabel s ∈ 1..4
+  两者全非）——「循环重标暴露肥边、不可隐藏」数值坐实；[B] 60°-gap 引理 + 500k 随机搜索
+  min 对角 = 3.7289 > 3.01 ⟹ v-形失败面 = 极小性条款。
+- patch 机检：scratch `git diff --no-index --src-prefix=a/ --dst-prefix=b/`（HEAD 67db7757
+  干净树），`git apply --check` **PASS**；1 文件 8 hunk（LA24 ×8：陈述 4 + 消费 4）。
+- 消费者普查：全树 grep 仅 `LocalAuto24.lean`（8 处 = 4 定义 + 4 消费）与 HOL 正本
+  `OTMTOTJ.hl`（4 定义 + :733/:797/:862/:925 四消费）；masters/pipeline/LocalConcl 零。
+- 84 双 patch 勘验：`84-la24-mm-nonempty.patch` apply-check PASS @67db7757（文本可贴、
+  语义断装，见 (d)）。
+- 预算：约 24 次工具调用 / 纯 python 机检（未触 lake/lean/.lake）。
+
+**状态**：草案 2026-10-28（sf90-mm5m2 车道起草；sweep-b24 F1 交付义务）。**在册未落**；
+应用序列（编排者）：① 用户批（并确认 §84 supersede 关系）→ ② STATEMENT-FIX 闸
+（lean/ 下；四件体仍 sorry，rule 5 白名单放行；可换 THM 复闸四次）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/90-mm5m2-nonempty-form.patch SF_ITEM=90 LANE_FILES=Kepler/Text/LocalAuto24.lean THM=MM_5I1_IMP_MM_5M2 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto24.lean MM_5I1_IMP_MM_5M2`
+→ ③ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md` + §84 标 superseded + 84 双
+patch 退役注 → ④ 填体战役（swb_mm_5x_5M2_p24 ×4 + swb_bb_5x_5M2_p24，sweep-b24 草案基座）
+另立窗，不在本案。

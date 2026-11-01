@@ -1,0 +1,100 @@
+diff --git a/lean/Kepler/Text/LocalAuto24.lean b/lean/Kepler/Text/LocalAuto24.lean
+index dcd39022..3eef197c 100644
+--- a/lean/Kepler/Text/LocalAuto24.lean
++++ b/lean/Kepler/Text/LocalAuto24.lean
+@@ -343,9 +343,11 @@ theorem BB_5I1_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I1 v)
+ /-- HOL `MM_5I1_IMP_MM_5M2` (OTMTOTJ.hl:223). -/
+ theorem MM_5I1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I1)
+     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+-    v ∈ MMsV39 scs5M2 := by
++    MMsV39 scs5M2 ≠ ∅ := by
+   sorry
+-  -- DISCHARGES: `BB_5I1_IS_BB_5M2` + `MM` unfold.
++  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
++  -- `scs5I1` instance: `MMS_IMP_BBS` + `BB_5I1_IS_BB_5M2`; witness is the
++  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
+ 
+ /-- HOL `BB_5I2_IS_BB_5M2` (OTMTOTJ.hl:239). -/
+ theorem BB_5I2_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I2 v)
+@@ -357,9 +359,11 @@ theorem BB_5I2_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I2 v)
+ /-- HOL `MM_5I2_IMP_MM_5M2` (OTMTOTJ.hl:337). -/
+ theorem MM_5I2_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I2)
+     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+-    v ∈ MMsV39 scs5M2 := by
++    MMsV39 scs5M2 ≠ ∅ := by
+   sorry
+-  -- DISCHARGES: `BB_5I2_IS_BB_5M2` + `MM` unfold.
++  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
++  -- `scs5I2` instance: `MMS_IMP_BBS` + `BB_5I2_IS_BB_5M2`; witness is the
++  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
+ 
+ /-- HOL `BB_5I3_IS_BB_5M2` (OTMTOTJ.hl:354). -/
+ theorem BB_5I3_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I3 v)
+@@ -371,9 +375,11 @@ theorem BB_5I3_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5I3 v)
+ /-- HOL `MM_5I3_IMP_MM_5M2` (OTMTOTJ.hl:462). -/
+ theorem MM_5I3_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5I3)
+     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+-    v ∈ MMsV39 scs5M2 := by
++    MMsV39 scs5M2 ≠ ∅ := by
+   sorry
+-  -- DISCHARGES: `BB_5I3_IS_BB_5M2` + `MM` unfold.
++  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
++  -- `scs5I3` instance: `MMS_IMP_BBS` + `BB_5I3_IS_BB_5M2`; witness is the
++  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
+ 
+ /-- HOL `BB_5M1_IS_BB_5M2` (OTMTOTJ.hl:478). -/
+ theorem BB_5M1_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5M1 v)
+@@ -385,9 +391,11 @@ theorem BB_5M1_IS_BB_5M2 (v : ℕ → V3) (h : BBsV39 scs5M1 v)
+ /-- HOL `MM_5M1_IMP_MM_5M2` (OTMTOTJ.hl:535). -/
+ theorem MM_5M1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5M1)
+     (hc : ∀ i j : ℕ, scsDiag 5 i j → cstab ≤ dist (v i) (v j)) :
+-    v ∈ MMsV39 scs5M2 := by
++    MMsV39 scs5M2 ≠ ∅ := by
+   sorry
+-  -- DISCHARGES: `BB_5M1_IS_BB_5M2` + `MM` unfold.
++  -- DISCHARGES: `Ppbtydq.XWNHLMD_MM` route (`la24xwnhlmd_mm_p24` at the
++  -- `scs5M1` instance: `MMS_IMP_BBS` + `BB_5M1_IS_BB_5M2`; witness is the
++  -- `BBindex`-minimized `w` of `la24sgtrnaf5_p24`, not `v`).
+ 
+ /-! ### B2. Diag-stabilisation of the pentagons keeps `MMs` (OTMTOTJ.hl:553-696) -/
+ 
+@@ -787,8 +795,7 @@ theorem SCS_5I1_BERAK_BY_CSTAB :
+       obtain ⟨v, hv⟩ := hne
+       by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
+       · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
+-        exact Set.nonempty_iff_ne_empty.mp
+-          ⟨v, MM_5I1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)⟩
++        exact MM_5I1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+       · push_neg at hdiag
+         obtain ⟨i, j, hdij, hle⟩ := hdiag
+         refine Or.inr ⟨scsStabDiagV39 scs5I1 i j, ?_, ?_⟩
+@@ -819,8 +826,7 @@ theorem SCS_5I2_BERAK_BY_CSTAB :
+       obtain ⟨v, hv⟩ := hne
+       by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
+       · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
+-        exact Set.nonempty_iff_ne_empty.mp
+-          ⟨v, MM_5I2_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)⟩
++        exact MM_5I2_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+       · push_neg at hdiag
+         obtain ⟨i, j, hdij, hle⟩ := hdiag
+         refine Or.inr ⟨scsStabDiagV39 scs5I2 i j, ?_, ?_⟩
+@@ -851,8 +857,7 @@ theorem SCS_5I3_BERAK_BY_CSTAB :
+       obtain ⟨v, hv⟩ := hne
+       by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
+       · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
+-        exact Set.nonempty_iff_ne_empty.mp
+-          ⟨v, MM_5I3_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)⟩
++        exact MM_5I3_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+       · push_neg at hdiag
+         obtain ⟨i, j, hdij, hle⟩ := hdiag
+         refine Or.inr ⟨scsStabDiagV39 scs5I3 i j, ?_, ?_⟩
+@@ -883,8 +888,7 @@ theorem SCS_5M1_BERAK_BY_CSTAB :
+       obtain ⟨v, hv⟩ := hne
+       by_cases hdiag : ∀ i j : ℕ, scsDiag 5 i j → cstab < dist (v i) (v j)
+       · refine Or.inr ⟨scs5M2, Set.mem_union_left _ (Set.mem_singleton scs5M2), ?_⟩
+-        exact Set.nonempty_iff_ne_empty.mp
+-          ⟨v, MM_5M1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)⟩
++        exact MM_5M1_IMP_MM_5M2 v hv fun i j hdij => le_of_lt (hdiag i j hdij)
+       · push_neg at hdiag
+         obtain ⟨i, j, hdij, hle⟩ := hdiag
+         refine Or.inr ⟨scsStabDiagV39 scs5M1 i j, ?_, ?_⟩
