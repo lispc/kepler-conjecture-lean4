@@ -565,8 +565,105 @@ theorem JBDNJJB3_p9 (u v w : V3)
         (Real.sqrt (‖w‖ ^ 2 - (‖u‖⁻¹ * dot3_p9 u w) ^ 2) * ‖cross3_p9 u v‖) := by
   sorry
 
-/-- HOL `SEQUENTIALLY_DIVH` (Hdplygy.hl:594): the dihedral angle is
-sequentially continuous away from collinear triples. Giant. -/
+/-! ### `SEQUENTIALLY_DIVH` 填体服务件（`fw5` 前缀；Hdplygy.hl:594–1439 的
+Mathlib 压缩载体）
+
+HOL 正本 846 行为逐项极限演算（LIM_MUL/LIM_NULL_NORM/CONTINUOUS_AT_* 及
+FOR_LEMMA19 逐 n 展开、PROVE_DELTA_OVER_SQRT_2UPS/NORM_CAUCHY_SCHWARZ_DIV
+的 |arg| ≤ 1 簿记）。Lean 侧压缩为两条：
+1. `dihV 0 u v w` 的 arccos 闭式（`fw5_dihV_eq`，定义性展开即得）；
+2. 该闭式在非退化点 `(a, b, c)`（`{0,a,b}`、`{0,a,c}` 非共线）处的
+   `ContinuousAt`（`fw5_continuousAt_dihV`）：dot/`•`/`-`/norm 连续 +
+   分母 Gram 行列式非零（`fw5_proj_ne_zero`，`vap = 0` 强迫 `v = c • u`）
+   + Mathlib `Real.arccos` 全直线连续。
+HOL 的 `|arg| ≤ 1` 界不进入本路线（`Real.ContinuousAt.arccos` 无界前提），
+`_hn`（逐 n 非共线）同样不进入：闭式对退化三元组仍按 arccos 垃圾值连续。 -/
+
+/-- `dihV 0 u v w` 的第一投影向量 `vap = (u·u) • v - (v·u) • u`
+（HOL 定义体在 `w0 = vec 0` 处的形状）。 -/
+private def fw5_proj (u v : V3) : V3 := (u ⬝ᵥ u) • v - (v ⬝ᵥ u) • u
+
+/-- `V3` 点积对双变元连续（`Kepler.Geom.inner_eq_dot` +
+Mathlib `Continuous.inner`）。 -/
+private theorem fw5_cont_dot {X : Type*} [TopologicalSpace X] {p r : X → V3}
+    (hp : Continuous p) (hr : Continuous r) : Continuous (fun x => p x ⬝ᵥ r x) := by
+  have h : Continuous (fun x => inner ℝ (p x) (r x)) := hp.inner hr
+  simpa only [inner_eq_dot] using h
+
+private theorem fw5_cont_smul {X : Type*} [TopologicalSpace X] {k : X → ℝ} {v : X → V3}
+    (hk : Continuous k) (hv : Continuous v) : Continuous (fun x => k x • v x) := hk.smul hv
+
+private theorem fw5_cont_sub {X : Type*} [TopologicalSpace X] {p q : X → V3}
+    (hp : Continuous p) (hq : Continuous q) : Continuous (fun x => p x - q x) := hp.sub hq
+
+/-- `{0, u, v}` 非共线时第一投影 `fw5_proj u v ≠ 0`：`vap = 0` 强迫
+`v = c • u`（HOL 注入性输入；|arg| ≤ 1 的 Cauchy–Schwarz 簿记在
+`Real.arccos` 全域连续路线下不需要）。 -/
+private theorem fw5_proj_ne_zero (u v : V3)
+    (huv : ¬ Collinear ℝ ({0, u, v} : Set V3)) : fw5_proj u v ≠ 0 := by
+  have hu : u ≠ 0 := fun hu0 => huv (collinear3_of_eq hu0)
+  have hnu : (‖u‖ : ℝ) ≠ 0 := fun he => hu (norm_eq_zero.mp he)
+  have hu2 : u ⬝ᵥ u ≠ 0 := fun hc =>
+    hnu (sq_eq_zero_iff.mp (by rw [norm_sq_eq_dot]; exact hc))
+  intro hzero
+  refine huv ((collinear3_iff_smul hu).mpr ⟨(v ⬝ᵥ u) / (u ⬝ᵥ u), ?_⟩)
+  show v - 0 = _ • (u - 0)
+  rw [sub_zero, sub_zero]
+  refine smul_right_injective V3 hu2 ?_
+  show (u ⬝ᵥ u) • v = (u ⬝ᵥ u) • ((v ⬝ᵥ u) / (u ⬝ᵥ u)) • u
+  rw [smul_smul, mul_comm, div_mul_cancel₀ _ hu2]
+  exact sub_eq_zero.mp hzero
+
+/-- 逐点闭式（HOL `FOR_LEMMA19` 逐 n 展开 + `acs` 链压缩为定义性展开）：
+`dihV 0 u v w` = 两投影的规范化 Gram 商之 `arccos`。HOL 的
+`PROVE_DELTA_OVER_SQRT_2UPS`/`NORM_CAUCHY_SCHWARZ_DIV`（|arg| ≤ 1）一步
+不进入：Mathlib `Real.arccos` 在 `ℝ` 上全直线连续。 -/
+private theorem fw5_dihV_eq (u v w : V3) :
+    dihV 0 u v w =
+      Real.arccos ((fw5_proj u v ⬝ᵥ fw5_proj u w) /
+        (‖fw5_proj u v‖ * ‖fw5_proj u w‖)) := by
+  unfold dihV arcV fw5_proj
+  simp [sub_zero, dist_eq_norm]
+
+/-- `dihV 0 (·, ·, ·)` 在每个非退化三元组处 `ContinuousAt`
+（Hdplygy.hl:594–1439 `SEQUENTIALLY_DIVH` 核，Mathlib 压缩：
+dot/norm/`•`/`-` 连续 + 分母非零 + 全直线 `Real.continuous_arccos`）。 -/
+private theorem fw5_continuousAt_dihV (a b c : V3)
+    (hab : ¬ Collinear ℝ ({0, a, b} : Set V3))
+    (hac : ¬ Collinear ℝ ({0, a, c} : Set V3)) :
+    ContinuousAt (fun q : V3 × V3 × V3 => dihV 0 q.1 q.2.1 q.2.2) (a, b, c) := by
+  have hne1 : ‖fw5_proj a b‖ ≠ 0 := fun he => fw5_proj_ne_zero a b hab (norm_eq_zero.mp he)
+  have hne2 : ‖fw5_proj a c‖ ≠ 0 := fun he => fw5_proj_ne_zero a c hac (norm_eq_zero.mp he)
+  have cf : Continuous (fun q : V3 × V3 × V3 => q.1) := continuous_fst
+  have cg : Continuous (fun q : V3 × V3 × V3 => q.2.1) := continuous_snd.fst
+  have ch : Continuous (fun q : V3 × V3 × V3 => q.2.2) := continuous_snd.snd
+  have hpA : Continuous (fun q : V3 × V3 × V3 => fw5_proj q.1 q.2.1) :=
+    fw5_cont_sub (fw5_cont_smul (fw5_cont_dot cf cf) cg)
+      (fw5_cont_smul (fw5_cont_dot cg cf) cf)
+  have hpB : Continuous (fun q : V3 × V3 × V3 => fw5_proj q.1 q.2.2) :=
+    fw5_cont_sub (fw5_cont_smul (fw5_cont_dot cf cf) ch)
+      (fw5_cont_smul (fw5_cont_dot ch cf) cf)
+  have hnum : Continuous (fun q : V3 × V3 × V3 =>
+      fw5_proj q.1 q.2.1 ⬝ᵥ fw5_proj q.1 q.2.2) :=
+    fw5_cont_dot hpA hpB
+  have hden : Continuous (fun q : V3 × V3 × V3 =>
+      ‖fw5_proj q.1 q.2.1‖ * ‖fw5_proj q.1 q.2.2‖) :=
+    (hpA.norm).mul hpB.norm
+  have hquot : ContinuousAt (fun q : V3 × V3 × V3 =>
+      (fw5_proj q.1 q.2.1 ⬝ᵥ fw5_proj q.1 q.2.2) /
+        (‖fw5_proj q.1 q.2.1‖ * ‖fw5_proj q.1 q.2.2‖)) (a, b, c) :=
+    hnum.continuousAt.div hden.continuousAt (mul_ne_zero hne1 hne2)
+  have hfinal : ContinuousAt (fun q : V3 × V3 × V3 =>
+      Real.arccos ((fw5_proj q.1 q.2.1 ⬝ᵥ fw5_proj q.1 q.2.2) /
+        (‖fw5_proj q.1 q.2.1‖ * ‖fw5_proj q.1 q.2.2‖))) (a, b, c) :=
+    hquot.arccos
+  exact hfinal.congr (Filter.Eventually.of_forall
+    (fun q => (fw5_dihV_eq q.1 q.2.1 q.2.2).symm))
+
+/-- HOL `SEQUENTIALLY_DIVH` (Hdplygy.hl:594)：二面角在非共线三元组处序列
+连续。体 = 846 行 HOL `LIM_*` 链的 Mathlib 压缩：`dihV` 的 arccos 闭式
+（`fw5_dihV_eq`）在非退化点连续（`fw5_continuousAt_dihV`），`Tendsto`
+组合收尾。 -/
 theorem SEQUENTIALLY_DIVH_p9 (f g h : ℕ → V3) (a b c : V3)
     (hf : Filter.Tendsto f Filter.atTop (nhds a))
     (hg : Filter.Tendsto g Filter.atTop (nhds b))
@@ -577,7 +674,12 @@ theorem SEQUENTIALLY_DIVH_p9 (f g h : ℕ → V3) (a b c : V3)
       ¬ Collinear ℝ ({0, f n, h n} : Set V3)) :
     Filter.Tendsto (fun n => dihV 0 (f n) (g n) (h n)) Filter.atTop
       (nhds (dihV 0 a b c)) := by
-  sorry
+  have htri : Filter.Tendsto (fun n => (f n, g n, h n)) Filter.atTop
+      (nhds (a, b, c)) := by
+    rw [nhds_prod_eq, nhds_prod_eq]
+    exact hf.prodMk (hg.prodMk hh)
+  have hcomp := (fw5_continuousAt_dihV a b c _hab _hac).tendsto.comp htri
+  exact hcomp.congr' (Filter.Eventually.of_forall fun _ => rfl)
 
 /-- The index hypothesis shape shared by the B_SY1 chain (HOL
 `k_sy s = k /\ dimindex(:M) = k /\ I_SY s = 0..k-1 /\ f_sy s = (\i. (1+i) MOD k)`. -/
