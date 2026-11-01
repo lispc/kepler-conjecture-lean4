@@ -46,6 +46,10 @@ import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto20
 import Kepler.Text.LocalAuto23
+-- casebank-close-w1 kit: the PROVED LA36 fan bridge
+-- (`convexLocalFan_p4_of_ConvexLocalFan_p36`) + the LA36 prereq cores
+-- (`inNotEmpty_core_p36` / `inB1_core_p36`); acyclic (LA36 imports LA23, no LA24).
+import Kepler.Text.LocalAuto36
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -1096,6 +1100,157 @@ The HOL giants (each a 100-300 line tactic block over the row/periodicity
 bookkeeping) are `sorry` with DISCHARGES chains; `FINITE_J1_TS`,
 `tri_sy_explicit` and the case assembly `UXCKFPE` are PROVED. -/
 
+
+private theorem periodic2_left_p24 {f : ℕ → ℕ → ℝ} {n : ℕ} (hp : Periodic2 f n)
+    (q i j : ℕ) : f (n * q + i) j = f i j := by
+  induction q with
+  | zero => simp
+  | succ m ih =>
+      have hrw : n * (m + 1) + i = n * m + i + n := by ring
+      rw [hrw, (hp (n * m + i) j).1, ih]
+
+private theorem periodic2_right_p24 {f : ℕ → ℕ → ℝ} {n : ℕ} (hp : Periodic2 f n)
+    (i j q : ℕ) : f i (n * q + j) = f i j := by
+  induction q with
+  | zero => simp
+  | succ m ih =>
+      have hrw : n * (m + 1) + j = n * m + j + n := by ring
+      rw [hrw, (hp i (n * m + j)).2, ih]
+
+private theorem periodic2_mod_eq_p24 {f : ℕ → ℕ → ℝ} {n : ℕ} (hp : Periodic2 f n)
+    (i j : ℕ) : f i j = f (i % n) (j % n) := by
+  have h1 : f i j = f (n * (i / n) + i % n) j := by
+    conv_lhs => rw [(Nat.div_add_mod i n).symm]
+  rw [h1, periodic2_left_p24 hp]
+  have h2 : f (i % n) j = f (i % n) (n * (j / n) + j % n) := by
+    conv_lhs => rw [(Nat.div_add_mod j n).symm]
+  rw [h2, periodic2_right_p24 hp]
+
+private theorem table_shift_eq_p24 (f : ℕ → ℕ → ℝ) (n : ℕ) (hp : Periodic2 f n)
+    (i j : ℕ) (hi : i < n) (hj : j < n) :
+    f (i + 1) (j + 1) = f ((i + 1) % n) ((j + 1) % n) := by
+  have e1 : f (i + 1) (j + 1) = f (n * ((i + 1) / n) + (i + 1) % n) (j + 1) := by
+    conv_lhs => rw [(Nat.div_add_mod (i + 1) n).symm]
+  rw [e1, periodic2_left_p24 hp]
+  have e2 : f ((i + 1) % n) (j + 1)
+      = f ((i + 1) % n) (n * ((j + 1) / n) + (j + 1) % n) := by
+    conv_lhs => rw [(Nat.div_add_mod (j + 1) n).symm]
+  rw [e2, periodic2_right_p24 hp]
+
+/-- the k=4 shifted tables (the frozen inline lambdas). -/
+private def aR4 (s : ScsV39) : Fin 4 → Fin 4 → ℝ :=
+  fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)
+
+private def bR4 (s : ScsV39) : Fin 4 → Fin 4 → ℝ :=
+  fun i j : Fin 4 => s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)
+
+/-- glue (CLEAN): BBs bounds give the shifted CONDITION1. -/
+private theorem cond1_4_of_BBs (s : ScsV39) (w : ℕ → V3) (hBB : BBsV39 s w) :
+    CONDITION1_SY_p4 (aR4 s) (bR4 s) (cycRow_p23 w 4) := by
+  intro i j
+  have h := hBB.2.2.1 (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)
+  rw [dist_eq_norm] at h
+  exact ⟨h.1, h.2⟩
+
+/-- glue (LA36 fan bridge + V/E/F): the BBs fan conjunct gives CONDITION2. -/
+private theorem cond2_4_of_BBs (s : ScsV39) (w : ℕ → V3) (hs : isScsV39 s)
+    (hk : s.k = 4) (hBB : BBsV39 s w) :
+    CONDITION2_SY_p4 (cycRow_p23 w 4) := by
+  have hVEFF := V_E_FF_IS_SCS_CASES_4_p23 s w hs hk hBB
+  rcases hBB.2.2.2 with h3 | hfan
+  · omega
+  · show convexLocalFan_p4 (V_SY_p4 (cycRow_p23 w 4))
+      (E_SY_p4 (cycRow_p23 w 4)) (F_SY_p4 (cycRow_p23 w 4))
+    rw [hVEFF.1, hVEFF.2.1, hVEFF.2.2, Set.image_univ, Set.image_univ]
+    exact convexLocalFan_p4_of_ConvexLocalFan_p36 hfan
+
+/-- glue (CLEAN): the flattening of any BBs realisation lies in the body. -/
+private theorem flatten_mem_B_SY1_4 (s : ScsV39) (w : ℕ → V3) (hs : isScsV39 s)
+    (hk : s.k = 4) (hBB : BBsV39 s w) :
+    flattenRow_p23 w 4 ∈ (B_SY1_p4 (aR4 s) (bR4 s) : Set (FinVec 4 3)) := by
+  refine ⟨cycRow_p23 w 4, ?_, rfl⟩
+  refine ⟨?_, ?_, ?_⟩
+  · intro i
+    exact hBB.1 ⟨((i : ℕ) + 1) % 4, rfl⟩
+  · exact cond1_4_of_BBs s w hBB
+  · exact cond2_4_of_BBs s w hs hk hBB
+
+/-- the k=5 shifted tables (the frozen inline lambdas). -/
+private def aR5 (s : ScsV39) : Fin 5 → Fin 5 → ℝ :=
+  fun i j : Fin 5 => s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5)
+
+private def bR5 (s : ScsV39) : Fin 5 → Fin 5 → ℝ :=
+  fun i j : Fin 5 => s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5)
+
+/-- glue (CLEAN): BBs bounds give the shifted CONDITION1. -/
+private theorem cond1_5_of_BBs (s : ScsV39) (w : ℕ → V3) (hBB : BBsV39 s w) :
+    CONDITION1_SY_p4 (aR5 s) (bR5 s) (cycRow_p23 w 5) := by
+  intro i j
+  have h := hBB.2.2.1 (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5)
+  rw [dist_eq_norm] at h
+  exact ⟨h.1, h.2⟩
+
+/-- glue (LA36 fan bridge + V/E/F): the BBs fan conjunct gives CONDITION2. -/
+private theorem cond2_5_of_BBs (s : ScsV39) (w : ℕ → V3) (hs : isScsV39 s)
+    (hk : s.k = 5) (hBB : BBsV39 s w) :
+    CONDITION2_SY_p4 (cycRow_p23 w 5) := by
+  have hVEFF := V_E_FF_IS_SCS_CASES_5_p23 s w hs hk hBB
+  rcases hBB.2.2.2 with h3 | hfan
+  · omega
+  · show convexLocalFan_p4 (V_SY_p4 (cycRow_p23 w 5))
+      (E_SY_p4 (cycRow_p23 w 5)) (F_SY_p4 (cycRow_p23 w 5))
+    rw [hVEFF.1, hVEFF.2.1, hVEFF.2.2, Set.image_univ, Set.image_univ]
+    exact convexLocalFan_p4_of_ConvexLocalFan_p36 hfan
+
+/-- glue (CLEAN): the flattening of any BBs realisation lies in the body. -/
+private theorem flatten_mem_B_SY1_5 (s : ScsV39) (w : ℕ → V3) (hs : isScsV39 s)
+    (hk : s.k = 5) (hBB : BBsV39 s w) :
+    flattenRow_p23 w 5 ∈ (B_SY1_p4 (aR5 s) (bR5 s) : Set (FinVec 5 3)) := by
+  refine ⟨cycRow_p23 w 5, ?_, rfl⟩
+  refine ⟨?_, ?_, ?_⟩
+  · intro i
+    exact hBB.1 ⟨((i : ℕ) + 1) % 5, rfl⟩
+  · exact cond1_5_of_BBs s w hBB
+  · exact cond2_5_of_BBs s w hs hk hBB
+
+/-- the k=6 shifted tables (the frozen inline lambdas). -/
+private def aR6 (s : ScsV39) : Fin 6 → Fin 6 → ℝ :=
+  fun i j : Fin 6 => s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6)
+
+private def bR6 (s : ScsV39) : Fin 6 → Fin 6 → ℝ :=
+  fun i j : Fin 6 => s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6)
+
+/-- glue (CLEAN): BBs bounds give the shifted CONDITION1. -/
+private theorem cond1_6_of_BBs (s : ScsV39) (w : ℕ → V3) (hBB : BBsV39 s w) :
+    CONDITION1_SY_p4 (aR6 s) (bR6 s) (cycRow_p23 w 6) := by
+  intro i j
+  have h := hBB.2.2.1 (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6)
+  rw [dist_eq_norm] at h
+  exact ⟨h.1, h.2⟩
+
+/-- glue (LA36 fan bridge + V/E/F): the BBs fan conjunct gives CONDITION2. -/
+private theorem cond2_6_of_BBs (s : ScsV39) (w : ℕ → V3) (hs : isScsV39 s)
+    (hk : s.k = 6) (hBB : BBsV39 s w) :
+    CONDITION2_SY_p4 (cycRow_p23 w 6) := by
+  have hVEFF := V_E_FF_IS_SCS_CASES_6_p23 s w hs hk hBB
+  rcases hBB.2.2.2 with h3 | hfan
+  · omega
+  · show convexLocalFan_p4 (V_SY_p4 (cycRow_p23 w 6))
+      (E_SY_p4 (cycRow_p23 w 6)) (F_SY_p4 (cycRow_p23 w 6))
+    rw [hVEFF.1, hVEFF.2.1, hVEFF.2.2, Set.image_univ, Set.image_univ]
+    exact convexLocalFan_p4_of_ConvexLocalFan_p36 hfan
+
+/-- glue (CLEAN): the flattening of any BBs realisation lies in the body. -/
+private theorem flatten_mem_B_SY1_6 (s : ScsV39) (w : ℕ → V3) (hs : isScsV39 s)
+    (hk : s.k = 6) (hBB : BBsV39 s w) :
+    flattenRow_p23 w 6 ∈ (B_SY1_p4 (aR6 s) (bR6 s) : Set (FinVec 6 3)) := by
+  refine ⟨cycRow_p23 w 6, ?_, rfl⟩
+  refine ⟨?_, ?_, ?_⟩
+  · intro i
+    exact hBB.1 ⟨((i : ℕ) + 1) % 6, rfl⟩
+  · exact cond1_6_of_BBs s w hBB
+  · exact cond2_6_of_BBs s w hs hk hBB
+
 /-! ### C1. The k = 4 witnesses (UXCKFPE.hl:70-543) -/
 
 /-- HOL `NOT_EMPTY_CASE_4_IS_SCS` (UXCKFPE.hl:70). -/
@@ -1104,9 +1259,33 @@ theorem NOT_EMPTY_CASE_4_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
     (B_SY1_p4
       (fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
       (fun i j : Fin 4 => s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))) ≠ ∅ := by
-  sorry
+
+  -- FILL (la23prereq-w1 draft C; LA36 core `inNotEmpty_core_p36` + table glue;
+  -- CLEAN)
+  have hap : Periodic2 s.a s.k := hs.2.2.2.2.2.2.2.1
+  rw [hk] at hap
+  have hbp : Periodic2 s.b s.k := hs.2.2.2.2.2.2.2.2.2.2.1
+  rw [hk] at hbp
+  have htabA : (fun i j : Fin 4 => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+      = (fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)) := by
+    funext i j
+    show s.a ((i : ℕ) + 1) ((j : ℕ) + 1) = _
+    exact table_shift_eq_p24 s.a 4 hap (i : ℕ) (j : ℕ) i.isLt j.isLt
+  have htabB : (fun i j : Fin 4 => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+      = (fun i j : Fin 4 => s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)) := by
+    funext i j
+    show s.b ((i : ℕ) + 1) ((j : ℕ) + 1) = _
+    exact table_shift_eq_p24 s.b 4 hbp (i : ℕ) (j : ℕ) i.isLt j.isLt
+  show (B_SY1_p4
+    (fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+    (fun i j : Fin 4 => s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))) ≠ ∅
+  rw [← htabA, ← htabB]
+  exact Set.nonempty_iff_ne_empty.mp
+    ⟨flattenRow_p23 vv 4, inNotEmpty_core_p36 (k := 4) (by omega) hk hBB⟩
   -- DISCHARGES: IN_IS_SCS_CASE_4_p23 (witness `flattenRow_p23 vv 4`) over
   -- IS_SCS_IN_BALL_ANNULUS_4_p23 + the BBsV39 bound/fan conjuncts.
+  -- (filled from the LA23 fill `V_E_FF_IS_SCS_CASES_4_p23` +
+  -- `IS_SCS_IN_BALL_ANNULUS_4_p23` + the LA36 core `inNotEmpty_core_p36`.)
 
 /-- HOL `IN_NOT_EMPTY_B1_SY_4_IS_SCS` (UXCKFPE.hl:208): the row-decoding
 converse — the k = 4 body conditions realize `vv` in `BBsV39 s`. -/
@@ -1119,20 +1298,118 @@ theorem IN_NOT_EMPTY_B1_SY_4_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
       (cycRow_p23 vv 4))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 4)) :
     BBsV39 s vv := by
-  sorry
+
+  -- FILL (la23prereq-w1 draft C; LA36 core `inB1_core_p36` + table glue; CLEAN)
+  have hap : Periodic2 s.a s.k := hs.2.2.2.2.2.2.2.1
+  rw [hk] at hap
+  have hbp : Periodic2 s.b s.k := hs.2.2.2.2.2.2.2.2.2.2.1
+  rw [hk] at hbp
+  have htabA : (fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+      = (fun i j : Fin 4 => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1)) := by
+    funext i j
+    show s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4) = _
+    exact (table_shift_eq_p24 s.a 4 hap (i : ℕ) (j : ℕ) i.isLt j.isLt).symm
+  have htabB : (fun i j : Fin 4 => s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+      = (fun i j : Fin 4 => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
+    funext i j
+    show s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4) = _
+    exact (table_shift_eq_p24 s.b 4 hbp (i : ℕ) (j : ℕ) i.isLt j.isLt).symm
+  rw [htabA, htabB] at hC1
+  exact inB1_core_p36 (k := 4) (by omega) hk hper
+    (fun i j => ⟨periodic2_mod_eq_p24 hap i j, periodic2_mod_eq_p24 hbp i j⟩)
+    hball hC1 hC2
   -- DISCHARGES: BBsV39 conjunct walk — annulus range + the CONDITION1
   -- bounds lifted to all indices by `Periodic2 s.a/b s.k` periodicity
   -- (PERIODIC_PROPERTY) + V_E_FF_IS_SCS_CASES_4_p23 for the fan conjunct.
+  -- (filled from the LA23 fill + the LA36 core `inB1_core_p36`.)
 
 /-- HOL `XWITCCN_CASE_4_IS_SCS` (UXCKFPE.hl:432). -/
 theorem XWITCCN_CASE_4_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
     (hs : isScsV39 s) (hBB : BBsV39 s vv) (hk : s.k = 4)
     (hta : taustarV39 s vv < 0) :
     (BBprimeV39 s : Set (ℕ → V3)) ≠ ∅ := by
-  sorry
+
+  -- FILL (la24casebank-w1 probe3 assembly + casebank-close-w1
+  -- kit; wiring: HDPLYGY minimizer + the five prereq fills + the TAUSTAR
+  -- bridge; the only taint entering here is the two HDPLYGY-kit NEEDS
+  -- pieces `continuousOn_tauFun_p23` / `bodyClosed_p23` — see CLOSE-PLAN).
+  have hk3 : 3 < s.k := by omega
+  have hcomp : IsCompact (B_SY1_p4 (aR4 s) (bR4 s) : Set (FinVec 4 3)) :=
+    B_SY1_p4_compact_of_fan_p23 (aR4 s) (bR4 s)
+      (bodyClosed_p23 (aR4 s) (bR4 s)) (bodyBounded_p23 4 (aR4 s) (bR4 s))
+  have hd : ContinuousOn (fun l : FinVec 4 3 =>
+      dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR4 s) (bR4 s)) :=
+    (continuous_dFun_p23 _).continuousOn
+  have hfun : ContinuousOn (fun l : FinVec 4 3 =>
+      tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR4 s) (bR4 s)) :=
+    continuousOn_tauFun_p23 _ _
+  have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
+      (B_SY1_p4 (aR4 s) (bR4 s)) :=
+    continuousOn_tauStar_p23 _ _ _ hd hfun
+  have hne := NOT_EMPTY_CASE_4_IS_SCS_p24 s vv hs hk hBB
+  obtain ⟨x, hx_mem, hx_min⟩ :=
+    HDPLYGY_p23 (scsToStableSy_p23 s hs hk3) (aR4 s) (bR4 s) hcomp hcont hne
+  unfold B_SY1_p4 at hx_mem
+  obtain ⟨w, hw, hwx⟩ := hx_mem
+  -- the cyclic un-flattening vv1 of the body point w (HOL ABBREV vv1)
+  set vv1 : ℕ → V3 := fun i => w ⟨(i + 3) % 4, by omega⟩ with hv1
+  have hp4 : Periodic vv1 4 := by
+    intro i
+    simp only [hv1]
+    refine congrArg w (Fin.val_injective ?_)
+    simp only [Fin.val_mk]
+    omega
+  have hcyc : cycRow_p23 vv1 4 = w := by
+    funext j
+    show vv1 (((j : ℕ) + 1) % 4) = w j
+    have hj := j.isLt
+    simp only [hv1]
+    refine congrArg w (Fin.val_injective ?_)
+    simp only [Fin.val_mk]
+    omega
+  have hflat : flattenRow_p23 vv1 4 = x := by
+    funext i
+    show (cycRow_p23 vv1 4 ⟨(i : ℕ) / 3, by have := i.isLt; omega⟩ :
+        Fin 3 → ℝ) ⟨(i : ℕ) % 3, by omega⟩ = x i
+    rw [hcyc]
+    exact congrFun hwx i
+  have hball : ∀ i : Fin 4, cycRow_p23 vv1 4 i ∈ ballAnnulus := by
+    intro i; rw [hcyc]; exact hw.1 i
+  have hC1 : CONDITION1_SY_p4 (aR4 s) (bR4 s) (cycRow_p23 vv1 4) := by
+    rw [hcyc]; exact hw.2.1
+  have hC2 : CONDITION2_SY_p4 (cycRow_p23 vv1 4) := by
+    rw [hcyc]; exact hw.2.2
+  have hBB1 : BBsV39 s vv1 :=
+    IN_NOT_EMPTY_B1_SY_4_IS_SCS_p24 s vv1 hs hk hp4 hball hC1 hC2
+  have hmemVV : flattenRow_p23 vv 4 ∈
+      (B_SY1_p4 (aR4 s) (bR4 s) : Set (FinVec 4 3)) :=
+    flatten_mem_B_SY1_4 s vv hs hk hBB
+  -- negativity transfer (TAUSTAR bridge twice + minimizer)
+  have hneg : taustarV39 s vv1 < 0 := by
+    rw [TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 s vv1 _ hs hk hBB1 rfl, hflat]
+    have hta' : tauStar_p23 (scsToStableSy_p23 s hs hk3) (flattenRow_p23 vv 4) < 0 := by
+      rw [← TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 s vv _ hs hk hBB rfl]
+      exact hta
+    exact (hx_min _ hmemVV).trans_lt hta'
+  -- the three BBprime conjuncts
+  intro hempty
+  have hmem : vv1 ∈ BBprimeV39 s := by
+    refine ⟨hBB1, ?_, hneg⟩
+    intro u hBBu
+    rw [TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 s vv1 _ hs hk hBB1 rfl, hflat,
+      TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 s u _ hs hk hBBu rfl]
+    exact hx_min _ (flatten_mem_B_SY1_4 s u hs hk hBBu)
+  rw [hempty] at hmem
+  exact (Set.mem_empty_iff_false _).mp hmem
   -- DISCHARGES: IS_SCS_STABLE_SYSTEM_p23 + NOT_EMPTY_CASE_4_IS_SCS_p24 +
   -- the HDPLYGY/B_SY1 minimizer on the stable record + IN_NOT_EMPTY_B1_SY_4
   -- + TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 (negativity transfer).
+  -- (FILLED, casebank-close-w1 kit: wiring = HDPLYGY minimizer
+  -- (B_SY1_p4_compact_of_fan_p23 + continuousOn_tauStar_p23) on the
+  -- post SF-81a+SF-C3 stable record + the five prereq fills + the filled
+  -- SF-C3-fixed TAUSTAR bridge. Transitive taint: continuousOn_tauFun_p23 +
+  -- bodyClosed_p23 (HDPLYGY-kit NEEDS, giant roots — see CLOSE-PLAN §M0).)
 
 /-! ### C2. The k = 5 witnesses (UXCKFPE.hl:547-995) -/
 
@@ -1142,8 +1419,32 @@ theorem NOT_EMPTY_CASE_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
     (B_SY1_p4
       (fun i j : Fin 5 => s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
       (fun i j : Fin 5 => s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))) ≠ ∅ := by
-  sorry
+
+  -- FILL (la23prereq-w1 draft C; LA36 core `inNotEmpty_core_p36` + table glue;
+  -- CLEAN)
+  have hap : Periodic2 s.a s.k := hs.2.2.2.2.2.2.2.1
+  rw [hk] at hap
+  have hbp : Periodic2 s.b s.k := hs.2.2.2.2.2.2.2.2.2.2.1
+  rw [hk] at hbp
+  have htabA : (fun i j : Fin 5 => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+      = (fun i j : Fin 5 => s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5)) := by
+    funext i j
+    show s.a ((i : ℕ) + 1) ((j : ℕ) + 1) = _
+    exact table_shift_eq_p24 s.a 5 hap (i : ℕ) (j : ℕ) i.isLt j.isLt
+  have htabB : (fun i j : Fin 5 => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+      = (fun i j : Fin 5 => s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5)) := by
+    funext i j
+    show s.b ((i : ℕ) + 1) ((j : ℕ) + 1) = _
+    exact table_shift_eq_p24 s.b 5 hbp (i : ℕ) (j : ℕ) i.isLt j.isLt
+  show (B_SY1_p4
+    (fun i j : Fin 5 => s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+    (fun i j : Fin 5 => s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))) ≠ ∅
+  rw [← htabA, ← htabB]
+  exact Set.nonempty_iff_ne_empty.mp
+    ⟨flattenRow_p23 vv 5, inNotEmpty_core_p36 (k := 5) (by omega) hk hBB⟩
   -- DISCHARGES: IN_IS_SCS_CASE_5_p23 (witness `flattenRow_p23 vv 5`).
+  -- (filled from the LA23 fill `V_E_FF_IS_SCS_CASES_5_p23` +
+  -- `IS_SCS_IN_BALL_ANNULUS_5_p23` + the LA36 core `inNotEmpty_core_p36`.)
 
 /-- HOL `IN_NOT_EMPTY_B1_SY_5_IS_SCS` (UXCKFPE.hl:704). -/
 theorem IN_NOT_EMPTY_B1_SY_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
@@ -1155,17 +1456,115 @@ theorem IN_NOT_EMPTY_B1_SY_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
       (cycRow_p23 vv 5))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 5)) :
     BBsV39 s vv := by
-  sorry
+
+  -- FILL (la23prereq-w1 draft C; LA36 core `inB1_core_p36` + table glue; CLEAN)
+  have hap : Periodic2 s.a s.k := hs.2.2.2.2.2.2.2.1
+  rw [hk] at hap
+  have hbp : Periodic2 s.b s.k := hs.2.2.2.2.2.2.2.2.2.2.1
+  rw [hk] at hbp
+  have htabA : (fun i j : Fin 5 => s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+      = (fun i j : Fin 5 => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1)) := by
+    funext i j
+    show s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5) = _
+    exact (table_shift_eq_p24 s.a 5 hap (i : ℕ) (j : ℕ) i.isLt j.isLt).symm
+  have htabB : (fun i j : Fin 5 => s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+      = (fun i j : Fin 5 => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
+    funext i j
+    show s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5) = _
+    exact (table_shift_eq_p24 s.b 5 hbp (i : ℕ) (j : ℕ) i.isLt j.isLt).symm
+  rw [htabA, htabB] at hC1
+  exact inB1_core_p36 (k := 5) (by omega) hk hper
+    (fun i j => ⟨periodic2_mod_eq_p24 hap i j, periodic2_mod_eq_p24 hbp i j⟩)
+    hball hC1 hC2
   -- DISCHARGES: as `IN_NOT_EMPTY_B1_SY_4_IS_SCS_p24` at k = 5
   -- (V_E_FF_IS_SCS_CASES_5_p23).
+  -- (filled from the LA23 fill + the LA36 core `inB1_core_p36`.)
 
 /-- HOL `XWITCCN_CASE_5_IS_SCS` (UXCKFPE.hl:889). -/
 theorem XWITCCN_CASE_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
     (hs : isScsV39 s) (hBB : BBsV39 s vv) (hk : s.k = 5)
     (hta : taustarV39 s vv < 0) :
     (BBprimeV39 s : Set (ℕ → V3)) ≠ ∅ := by
-  sorry
+
+  -- FILL (la24casebank-w1 probe5 assembly + casebank-close-w1
+  -- kit; wiring: HDPLYGY minimizer + the five prereq fills + the TAUSTAR
+  -- bridge; the only taint entering here is the two HDPLYGY-kit NEEDS
+  -- pieces `continuousOn_tauFun_p23` / `bodyClosed_p23` — see CLOSE-PLAN).
+  have hk3 : 3 < s.k := by omega
+  have hcomp : IsCompact (B_SY1_p4 (aR5 s) (bR5 s) : Set (FinVec 5 3)) :=
+    B_SY1_p4_compact_of_fan_p23 (aR5 s) (bR5 s)
+      (bodyClosed_p23 (aR5 s) (bR5 s)) (bodyBounded_p23 5 (aR5 s) (bR5 s))
+  have hd : ContinuousOn (fun l : FinVec 5 3 =>
+      dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR5 s) (bR5 s)) :=
+    (continuous_dFun_p23 _).continuousOn
+  have hfun : ContinuousOn (fun l : FinVec 5 3 =>
+      tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR5 s) (bR5 s)) :=
+    continuousOn_tauFun_p23 _ _
+  have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
+      (B_SY1_p4 (aR5 s) (bR5 s)) :=
+    continuousOn_tauStar_p23 _ _ _ hd hfun
+  have hne := NOT_EMPTY_CASE_5_IS_SCS_p24 s vv hs hk hBB
+  obtain ⟨x, hx_mem, hx_min⟩ :=
+    HDPLYGY_p23 (scsToStableSy_p23 s hs hk3) (aR5 s) (bR5 s) hcomp hcont hne
+  unfold B_SY1_p4 at hx_mem
+  obtain ⟨w, hw, hwx⟩ := hx_mem
+  -- the cyclic un-flattening vv1 of the body point w (HOL ABBREV vv1)
+  set vv1 : ℕ → V3 := fun i => w ⟨(i + 4) % 5, by omega⟩ with hv1
+  have hp5 : Periodic vv1 5 := by
+    intro i
+    simp only [hv1]
+    refine congrArg w (Fin.val_injective ?_)
+    simp only [Fin.val_mk]
+    omega
+  have hcyc : cycRow_p23 vv1 5 = w := by
+    funext j
+    show vv1 (((j : ℕ) + 1) % 5) = w j
+    have hj := j.isLt
+    simp only [hv1]
+    refine congrArg w (Fin.val_injective ?_)
+    simp only [Fin.val_mk]
+    omega
+  have hflat : flattenRow_p23 vv1 5 = x := by
+    funext i
+    show (cycRow_p23 vv1 5 ⟨(i : ℕ) / 3, by have := i.isLt; omega⟩ :
+        Fin 3 → ℝ) ⟨(i : ℕ) % 3, by omega⟩ = x i
+    rw [hcyc]
+    exact congrFun hwx i
+  have hball : ∀ i : Fin 5, cycRow_p23 vv1 5 i ∈ ballAnnulus := by
+    intro i; rw [hcyc]; exact hw.1 i
+  have hC1 : CONDITION1_SY_p4 (aR5 s) (bR5 s) (cycRow_p23 vv1 5) := by
+    rw [hcyc]; exact hw.2.1
+  have hC2 : CONDITION2_SY_p4 (cycRow_p23 vv1 5) := by
+    rw [hcyc]; exact hw.2.2
+  have hBB1 : BBsV39 s vv1 :=
+    IN_NOT_EMPTY_B1_SY_5_IS_SCS_p24 s vv1 hs hk hp5 hball hC1 hC2
+  have hmemVV : flattenRow_p23 vv 5 ∈
+      (B_SY1_p4 (aR5 s) (bR5 s) : Set (FinVec 5 3)) :=
+    flatten_mem_B_SY1_5 s vv hs hk hBB
+  -- negativity transfer (TAUSTAR bridge twice + minimizer)
+  have hneg : taustarV39 s vv1 < 0 := by
+    rw [TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_5_p23 s vv1 _ hs hk hBB1 rfl, hflat]
+    have hta' : tauStar_p23 (scsToStableSy_p23 s hs hk3) (flattenRow_p23 vv 5) < 0 := by
+      rw [← TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_5_p23 s vv _ hs hk hBB rfl]
+      exact hta
+    exact (hx_min _ hmemVV).trans_lt hta'
+  -- the three BBprime conjuncts
+  intro hempty
+  have hmem : vv1 ∈ BBprimeV39 s := by
+    refine ⟨hBB1, ?_, hneg⟩
+    intro u hBBu
+    rw [TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_5_p23 s vv1 _ hs hk hBB1 rfl, hflat,
+      TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_5_p23 s u _ hs hk hBBu rfl]
+    exact hx_min _ (flatten_mem_B_SY1_5 s u hs hk hBBu)
+  rw [hempty] at hmem
+  exact (Set.mem_empty_iff_false _).mp hmem
   -- DISCHARGES: as `XWITCCN_CASE_4_IS_SCS_p24` at k = 5.
+  -- (FILLED, casebank-close-w1 kit: wiring = HDPLYGY minimizer
+  -- (B_SY1_p4_compact_of_fan_p23 + continuousOn_tauStar_p23) on the
+  -- post SF-81a+SF-C3 stable record + the five prereq fills + the filled
+  -- SF-C3-fixed TAUSTAR bridge. Transitive taint: continuousOn_tauFun_p23 +
+  -- bodyClosed_p23 (HDPLYGY-kit NEEDS, giant roots — see CLOSE-PLAN §M0).)
 
 /-! ### C3. The k = 6 witnesses (UXCKFPE.hl:1003-1483) -/
 
@@ -1175,8 +1574,32 @@ theorem NOT_EMPTY_CASE_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
     (B_SY1_p4
       (fun i j : Fin 6 => s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
       (fun i j : Fin 6 => s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))) ≠ ∅ := by
-  sorry
+
+  -- FILL (la23prereq-w1 draft C; LA36 core `inNotEmpty_core_p36` + table glue;
+  -- CLEAN)
+  have hap : Periodic2 s.a s.k := hs.2.2.2.2.2.2.2.1
+  rw [hk] at hap
+  have hbp : Periodic2 s.b s.k := hs.2.2.2.2.2.2.2.2.2.2.1
+  rw [hk] at hbp
+  have htabA : (fun i j : Fin 6 => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+      = (fun i j : Fin 6 => s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6)) := by
+    funext i j
+    show s.a ((i : ℕ) + 1) ((j : ℕ) + 1) = _
+    exact table_shift_eq_p24 s.a 6 hap (i : ℕ) (j : ℕ) i.isLt j.isLt
+  have htabB : (fun i j : Fin 6 => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+      = (fun i j : Fin 6 => s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6)) := by
+    funext i j
+    show s.b ((i : ℕ) + 1) ((j : ℕ) + 1) = _
+    exact table_shift_eq_p24 s.b 6 hbp (i : ℕ) (j : ℕ) i.isLt j.isLt
+  show (B_SY1_p4
+    (fun i j : Fin 6 => s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+    (fun i j : Fin 6 => s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))) ≠ ∅
+  rw [← htabA, ← htabB]
+  exact Set.nonempty_iff_ne_empty.mp
+    ⟨flattenRow_p23 vv 6, inNotEmpty_core_p36 (k := 6) (by omega) hk hBB⟩
   -- DISCHARGES: IN_IS_SCS_CASE_6_p23 (witness `flattenRow_p23 vv 6`).
+  -- (filled from the LA23 fill `V_E_FF_IS_SCS_CASES_6_p23` +
+  -- `IS_SCS_IN_BALL_ANNULUS_6_p23` + the LA36 core `inNotEmpty_core_p36`.)
 
 /-- HOL `IN_NOT_EMPTY_B1_SY_6_IS_SCS` (UXCKFPE.hl:1161). -/
 theorem IN_NOT_EMPTY_B1_SY_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
@@ -1188,17 +1611,115 @@ theorem IN_NOT_EMPTY_B1_SY_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
       (cycRow_p23 vv 6))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 6)) :
     BBsV39 s vv := by
-  sorry
+
+  -- FILL (la23prereq-w1 draft C; LA36 core `inB1_core_p36` + table glue; CLEAN)
+  have hap : Periodic2 s.a s.k := hs.2.2.2.2.2.2.2.1
+  rw [hk] at hap
+  have hbp : Periodic2 s.b s.k := hs.2.2.2.2.2.2.2.2.2.2.1
+  rw [hk] at hbp
+  have htabA : (fun i j : Fin 6 => s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+      = (fun i j : Fin 6 => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1)) := by
+    funext i j
+    show s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6) = _
+    exact (table_shift_eq_p24 s.a 6 hap (i : ℕ) (j : ℕ) i.isLt j.isLt).symm
+  have htabB : (fun i j : Fin 6 => s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+      = (fun i j : Fin 6 => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
+    funext i j
+    show s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6) = _
+    exact (table_shift_eq_p24 s.b 6 hbp (i : ℕ) (j : ℕ) i.isLt j.isLt).symm
+  rw [htabA, htabB] at hC1
+  exact inB1_core_p36 (k := 6) (by omega) hk hper
+    (fun i j => ⟨periodic2_mod_eq_p24 hap i j, periodic2_mod_eq_p24 hbp i j⟩)
+    hball hC1 hC2
   -- DISCHARGES: as `IN_NOT_EMPTY_B1_SY_4_IS_SCS_p24` at k = 6
   -- (V_E_FF_IS_SCS_CASES_6_p23).
+  -- (filled from the LA23 fill + the LA36 core `inB1_core_p36`.)
 
 /-- HOL `XWITCCN_CASE_6_IS_SCS` (UXCKFPE.hl:1374). -/
 theorem XWITCCN_CASE_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
     (hs : isScsV39 s) (hBB : BBsV39 s vv) (hk : s.k = 6)
     (hta : taustarV39 s vv < 0) :
     (BBprimeV39 s : Set (ℕ → V3)) ≠ ∅ := by
-  sorry
+
+  -- FILL (la24casebank-w1 probe5 assembly + casebank-close-w1
+  -- kit; wiring: HDPLYGY minimizer + the five prereq fills + the TAUSTAR
+  -- bridge; the only taint entering here is the two HDPLYGY-kit NEEDS
+  -- pieces `continuousOn_tauFun_p23` / `bodyClosed_p23` — see CLOSE-PLAN).
+  have hk3 : 3 < s.k := by omega
+  have hcomp : IsCompact (B_SY1_p4 (aR6 s) (bR6 s) : Set (FinVec 6 3)) :=
+    B_SY1_p4_compact_of_fan_p23 (aR6 s) (bR6 s)
+      (bodyClosed_p23 (aR6 s) (bR6 s)) (bodyBounded_p23 6 (aR6 s) (bR6 s))
+  have hd : ContinuousOn (fun l : FinVec 6 3 =>
+      dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR6 s) (bR6 s)) :=
+    (continuous_dFun_p23 _).continuousOn
+  have hfun : ContinuousOn (fun l : FinVec 6 3 =>
+      tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR6 s) (bR6 s)) :=
+    continuousOn_tauFun_p23 _ _
+  have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
+      (B_SY1_p4 (aR6 s) (bR6 s)) :=
+    continuousOn_tauStar_p23 _ _ _ hd hfun
+  have hne := NOT_EMPTY_CASE_6_IS_SCS_p24 s vv hs hk hBB
+  obtain ⟨x, hx_mem, hx_min⟩ :=
+    HDPLYGY_p23 (scsToStableSy_p23 s hs hk3) (aR6 s) (bR6 s) hcomp hcont hne
+  unfold B_SY1_p4 at hx_mem
+  obtain ⟨w, hw, hwx⟩ := hx_mem
+  -- the cyclic un-flattening vv1 of the body point w (HOL ABBREV vv1)
+  set vv1 : ℕ → V3 := fun i => w ⟨(i + 5) % 6, by omega⟩ with hv1
+  have hp6 : Periodic vv1 6 := by
+    intro i
+    simp only [hv1]
+    refine congrArg w (Fin.val_injective ?_)
+    simp only [Fin.val_mk]
+    omega
+  have hcyc : cycRow_p23 vv1 6 = w := by
+    funext j
+    show vv1 (((j : ℕ) + 1) % 6) = w j
+    have hj := j.isLt
+    simp only [hv1]
+    refine congrArg w (Fin.val_injective ?_)
+    simp only [Fin.val_mk]
+    omega
+  have hflat : flattenRow_p23 vv1 6 = x := by
+    funext i
+    show (cycRow_p23 vv1 6 ⟨(i : ℕ) / 3, by have := i.isLt; omega⟩ :
+        Fin 3 → ℝ) ⟨(i : ℕ) % 3, by omega⟩ = x i
+    rw [hcyc]
+    exact congrFun hwx i
+  have hball : ∀ i : Fin 6, cycRow_p23 vv1 6 i ∈ ballAnnulus := by
+    intro i; rw [hcyc]; exact hw.1 i
+  have hC1 : CONDITION1_SY_p4 (aR6 s) (bR6 s) (cycRow_p23 vv1 6) := by
+    rw [hcyc]; exact hw.2.1
+  have hC2 : CONDITION2_SY_p4 (cycRow_p23 vv1 6) := by
+    rw [hcyc]; exact hw.2.2
+  have hBB1 : BBsV39 s vv1 :=
+    IN_NOT_EMPTY_B1_SY_6_IS_SCS_p24 s vv1 hs hk hp6 hball hC1 hC2
+  have hmemVV : flattenRow_p23 vv 6 ∈
+      (B_SY1_p4 (aR6 s) (bR6 s) : Set (FinVec 6 3)) :=
+    flatten_mem_B_SY1_6 s vv hs hk hBB
+  -- negativity transfer (TAUSTAR bridge twice + minimizer)
+  have hneg : taustarV39 s vv1 < 0 := by
+    rw [TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_6_p23 s vv1 _ hs hk hBB1 rfl, hflat]
+    have hta' : tauStar_p23 (scsToStableSy_p23 s hs hk3) (flattenRow_p23 vv 6) < 0 := by
+      rw [← TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_6_p23 s vv _ hs hk hBB rfl]
+      exact hta
+    exact (hx_min _ hmemVV).trans_lt hta'
+  -- the three BBprime conjuncts
+  intro hempty
+  have hmem : vv1 ∈ BBprimeV39 s := by
+    refine ⟨hBB1, ?_, hneg⟩
+    intro u hBBu
+    rw [TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_6_p23 s vv1 _ hs hk hBB1 rfl, hflat,
+      TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_6_p23 s u _ hs hk hBBu rfl]
+    exact hx_min _ (flatten_mem_B_SY1_6 s u hs hk hBBu)
+  rw [hempty] at hmem
+  exact (Set.mem_empty_iff_false _).mp hmem
   -- DISCHARGES: as `XWITCCN_CASE_4_IS_SCS_p24` at k = 6.
+  -- (FILLED, casebank-close-w1 kit: wiring = HDPLYGY minimizer
+  -- (B_SY1_p4_compact_of_fan_p23 + continuousOn_tauStar_p23) on the
+  -- post SF-81a+SF-C3 stable record + the five prereq fills + the filled
+  -- SF-C3-fixed TAUSTAR bridge. Transitive taint: continuousOn_tauFun_p23 +
+  -- bodyClosed_p23 (HDPLYGY-kit NEEDS, giant roots — see CLOSE-PLAN §M0).)
 
 /-! ### C4. The k = 3 `tri_sy` capstone (UXCKFPE.hl:1488-2597)
 
