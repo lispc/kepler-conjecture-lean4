@@ -1025,15 +1025,133 @@ theorem DIAG_NOT_PSORT_p17 (k i j : ℕ) (hk : k ≠ 0) (hd : scsDiag k i j)
   · have hi : i % k = (j % k + 1) % k := by rw [e1, hstep, e2]
     exact h3 (by rw [Nat.add_mod, hone, hi])
 
+/-! ## SWEEP-A17 private kit for `YRTAFYH_p17` (all `private`, `swa`-prefixed)
+
+Slot-level bookkeeping for the diagonal-stabilised record `scsStabDiagV39 s i j`
+= `mkUnadornedV39 s.k s.d s.a b'` with `b' i' j' = if psort s.k (i, j) =
+psort s.k (i', j') then cstab else s.b i' j'`: the record only re-points the
+`b`/`bm` fields at the diagonal `psort`-class, so every `is_scs_v39` conjunct
+transfers from `s`, with the diagonal class patched to `cstab`. -/
+
+/-- `cstab` is below 4 (decimal crutch; `cstab = 3.01` by rfl). -/
+private theorem swa_cstab_lt_four_p17 : cstab < 4 := by
+  have h : cstab = 3.01 := rfl
+  rw [h]; norm_num
+
+/-- Slot evaluator for the staged `b'` of `scsStabDiagV39`: membership in the
+diagonal `psort`-class of `(i, j)` decides `cstab` vs. the untouched `s.b`. -/
+private theorem swa_bprime_app_p17 (s : ScsV39) (i j i' j' : ℕ) :
+    (scsStabDiagV39 s i j).b i' j' =
+      if psort s.k (i, j) = psort s.k (i', j') then cstab else s.b i' j' :=
+  rfl
+
+/-- `psort` discards `+ k` shifts of either coordinate. -/
+private theorem swa_psort_add_right_p17 (k x y : ℕ) :
+    psort k (x + k, y) = psort k (x, y) ∧ psort k (x, y + k) = psort k (x, y) := by
+  constructor
+  · exact psort_pair_eq_p17 k (x + k) y x y |>.mpr
+      (Or.inl ⟨Nat.add_mod_right x k, rfl⟩)
+  · exact psort_pair_eq_p17 k x (y + k) x y |>.mpr
+      (Or.inl ⟨rfl, Nat.add_mod_right y k⟩)
+
+/-- The staged `b'` is `k`-periodic in both coordinates. -/
+private theorem swa_bprime_periodic_p17 (s : ScsV39) (i j : ℕ)
+    (hpb : Periodic2 s.b s.k) (x y : ℕ) :
+    (scsStabDiagV39 s i j).b (x + s.k) y = (scsStabDiagV39 s i j).b x y ∧
+      (scsStabDiagV39 s i j).b x (y + s.k) = (scsStabDiagV39 s i j).b x y := by
+  obtain ⟨hps1, hps2⟩ := swa_psort_add_right_p17 s.k x y
+  refine ⟨?_, ?_⟩
+  · rw [swa_bprime_app_p17 s i j (x + s.k) y, swa_bprime_app_p17 s i j x y]
+    by_cases hc : psort s.k (i, j) = psort s.k (x, y)
+    · rw [if_pos (hc.trans hps1.symm), if_pos hc]
+    · rw [if_neg (fun hcon => hc (hcon.trans hps1)), if_neg hc, (hpb x y).1]
+  · rw [swa_bprime_app_p17 s i j x (y + s.k), swa_bprime_app_p17 s i j x y]
+    by_cases hc : psort s.k (i, j) = psort s.k (x, y)
+    · rw [if_pos (hc.trans hps2.symm), if_pos hc]
+    · rw [if_neg (fun hcon => hc (hcon.trans hps2)), if_neg hc, (hpb x y).2]
+
+/-- The staged `b'` is symmetric. -/
+private theorem swa_bprime_sym_p17 (s : ScsV39) (i j x y : ℕ)
+    (hsb : ∀ u v : ℕ, s.b u v = s.b v u) :
+    (scsStabDiagV39 s i j).b x y = (scsStabDiagV39 s i j).b y x := by
+  have hswap : psort s.k (x, y) = psort s.k (y, x) :=
+    psort_pair_eq_p17 s.k x y y x |>.mpr (Or.inr ⟨rfl, rfl⟩)
+  rw [swa_bprime_app_p17 s i j x y, swa_bprime_app_p17 s i j y x]
+  by_cases hc : psort s.k (i, j) = psort s.k (x, y)
+  · rw [if_pos hc, if_pos (hc.trans hswap)]
+  · rw [if_neg hc, if_neg (fun hcon => hc (hcon.trans hswap.symm)), hsb]
+
+/-- The `a <= b'` chain slot: on the diagonal class it is exactly the hypothesis
+`s.a i j <= cstab` transported through `A_EQ_PSORT_p17`; off the class it is
+the untouched chain of `s`. -/
+private theorem swa_chain_p17 (s : ScsV39) (i j x y : ℕ) (his : isScsV39 s)
+    (hch : ∀ u v : ℕ, s.a u v ≤ s.am u v ∧ s.am u v ≤ s.bm u v ∧ s.bm u v ≤ s.b u v)
+    (hac : s.a i j ≤ cstab) :
+    s.a x y ≤ (scsStabDiagV39 s i j).b x y := by
+  rw [swa_bprime_app_p17]
+  by_cases hc : psort s.k (i, j) = psort s.k (x, y)
+  · rw [if_pos hc, A_EQ_PSORT_p17 s x y i j his hc.symm]
+    exact hac
+  · rw [if_neg hc]
+    exact (hch x y).1.trans ((hch x y).2.1.trans (hch x y).2.2)
+
+/-- Adjacent slots of the staged `b'` carry either `cstab` or the untouched
+`s.b` value. -/
+private theorem swa_adj_b_p17 (s : ScsV39) (i j x : ℕ) :
+    (scsStabDiagV39 s i j).b x (x + 1) = cstab ∨
+      (scsStabDiagV39 s i j).b x (x + 1) = s.b x (x + 1) := by
+  rw [swa_bprime_app_p17]
+  by_cases hc : psort s.k (i, j) = psort s.k (x, x + 1)
+  · rw [if_pos hc]; exact Or.inl rfl
+  · rw [if_neg hc]; exact Or.inr rfl
+
+/-- The card set of the stabilised record coincides with that of `s`: a
+diagonal `psort`-class never meets an adjacent slot (`DIAG_NOT_PSORT_p17`), so
+every adjacent value is the untouched `s.b`. -/
+private theorem swa_card_p17 (s : ScsV39) (i j : ℕ) (hk0 : s.k ≠ 0)
+    (hdiag : scsDiag s.k i j) :
+    {x | x < (scsStabDiagV39 s i j).k ∧ (2 * h0 < (scsStabDiagV39 s i j).b x (x + 1) ∨
+        2 < (scsStabDiagV39 s i j).a x (x + 1))} =
+      {x | x < s.k ∧ (2 * h0 < s.b x (x + 1) ∨ 2 < s.a x (x + 1))} := by
+  refine Set.ext (fun x => ?_)
+  simp only [Set.mem_setOf_eq]
+  rw [swa_bprime_app_p17, if_neg (DIAG_NOT_PSORT_p17 s.k i j hk0 hdiag x)]
+  exact ⟨fun h => ⟨h.1, h.2⟩, fun h => ⟨h.1, h.2⟩⟩
+
 /-- HOL `YRTAFYH`: stabilising a diagonal with `a i j <= cstab` preserves
 `is_scs_v39` and `scs_basic_v39`.
 DISCHARGES: LocalAuto1.YRTAFYH_concl (appendix.hl:1554).
-NEEDS: the full `scs_v39_explicit` re-verification of the stabilised record
-(the 20-conjunct case tree of YRTAFYH.hl:430-496, incl. `A_EQ_PSORT` /
-`DIAG_NOT_PSORT` splits). -/
+DISCHARGED (sweep-a17-22): the 20-conjunct case tree of YRTAFYH.hl:430-496 is
+assembled below via the private `swa_*` kit (the `A_EQ_PSORT` /
+`DIAG_NOT_PSORT` splits included); standalone audit:
+`#print axioms Kepler.Text.YRTAFYH_p17` = [propext, choice, Quot.sound]. -/
 theorem YRTAFYH_p17 : ∀ (s : ScsV39) (i j : ℕ), isScsV39 s → scsBasicV39 s →
     3 < s.k → scsDiag s.k i j → s.a i j ≤ cstab →
-    isScsV39 (scsStabDiagV39 s i j) ∧ scsBasicV39 (scsStabDiagV39 s i j) := sorry
+    isScsV39 (scsStabDiagV39 s i j) ∧ scsBasicV39 (scsStabDiagV39 s i j) := by
+  intro s i j his hbas hk hdiag hac
+  have hcopy := his
+  obtain ⟨hd, hk1, hk2, -, -, -, -, hpa, -, -, hpb, -, hsym, hch, hdiag0, h2a,
+    hb3, hbc, -, -, hcard⟩ := hcopy
+  have hk0 : s.k ≠ 0 := by omega
+  have hsb : ∀ u v : ℕ, s.b u v = s.b v u := fun u v => (hsym u v).2.2.2.1
+  refine ⟨⟨hd, hk1, hk2, fun _ => rfl, fun _ => rfl, fun _ => rfl, fun _ => rfl,
+    hpa, hpa, fun x y => swa_bprime_periodic_p17 s i j hpb x y,
+    fun x y => swa_bprime_periodic_p17 s i j hpb x y, fun x y => ⟨rfl, rfl⟩,
+    fun x y => ⟨(hsym x y).1, (hsym x y).1, swa_bprime_sym_p17 s i j x y hsb,
+      swa_bprime_sym_p17 s i j x y hsb, rfl⟩,
+    fun x y => ⟨le_refl _, swa_chain_p17 s i j x y his hch hac, le_refl _⟩,
+    hdiag0, h2a, ?_, ?_, fun x y hj => hj.elim, fun x y hj => hj.elim, ?_⟩,
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun x y => rfl⟩⟩
+  · intro x h3
+    rcases swa_adj_b_p17 s i j x with he | he
+    · rw [he]; exact swa_cstab_lt_four_p17
+    · rw [he]; exact hb3 x h3
+  · intro x h3k
+    rcases swa_adj_b_p17 s i j x with he | he
+    · rw [he]
+    · rw [he]; exact hbc x h3k
+  · rw [swa_card_p17 s i j hk0 hdiag]
+    exact hcard
 
 /-- HOL `STAB_IS_SCS` (YRTAFYH.hl:500): the `is_scs_v39` half of `YRTAFYH`,
 derived from it exactly as `SIMP_TAC [YRTAFYH]` does. -/
