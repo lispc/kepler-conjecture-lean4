@@ -45,6 +45,11 @@ Encoding:
 - No `native_decide`; the proved items are mechanical (mod/order arithmetic,
   definitional folding of `scsHalfSliceV39`, choice/`min_num` arguments).
   The giants are `sorry`.
+- Fill-wave 2026-10-28 (lane la27-eapgle-w2): `EAPGLE_p27` discharged
+    (6 sorries remain) via the reified registry-arrow twin `ZITHLQN_p25`
+    (new import LocalAuto25, acyclic: it imports LA1/LA23 only) + the
+    `AYQJTMD_p27` contrapositive; the axiom face inherits `sorryAx` only
+    (see the EAPGLE docstring for the two root families).
 - Fill-wave 2026-09-19: `SCS_M_LE_1_p27` and `HXHYTIJ_p27` discharged
     (10 sorries remain). Fill-wave 2026-09-21: `XWITCCN2_p27` and
     `AYQJTMD_p27` discharged (8 sorries remain) via the new Section F1
@@ -90,8 +95,12 @@ FILE MAP
     `unadorned_MMs_p27` (proved 2026-09-18), `S_INIT_IS_UNADORNED_p27`
     (proved 2026-09-18), `AYQJTMD_p27` (proved 2026-09-21 via
     `SGTRNAF_p27` + `s_init_scs_p27` + `S_INIT_IS_UNADORNED_p27`),
-    `EAPGLE_p27` (sorry; NEEDS the JEJTVGB registry, LocalAuto1:541-547,
-    `ZITHLQN_concl` pending).
+    `EAPGLE_p27` (discharged 2026-10-28, lane la27-eapgle-w2: the HOL
+    `ZITHLQN` route — the reified LA25 twin `ZITHLQN_p25` (LocalAuto25,
+    supersedes the la27-eapgle-w1 draft's `ZITHLQN_concl` re-route, whose
+    LocalAuto1 body is still a blanket `sorry`) + the `AYQJTMD_p27`
+    contrapositive; zero new sorries, sorry-inherited axiom face — see the
+    EAPGLE docstring).
   Section G (FEKTYIY): `FEKTYIY_p27` (sorry).
 
   Section H (LKGRQUI): `SLICE_IS_UNADORNED_p27` (proved),
@@ -108,6 +117,11 @@ import Kepler.Text.LocalAuto1
 -- verified empirically: LA24's chain (LA1/LA17/LA20/LA22/LA23) carries no
 -- `atn2` conflict with this file's substrate.
 import Kepler.Text.LocalAuto24
+-- EAPGLE re-route (2026-10-28, lane la27-eapgle-w2): the reified
+-- registry-arrow twin `ZITHLQN_p25` (LocalAuto25, wave la27-zithlqn-w1)
+-- replaces the still-`sorry` LocalAuto1 arrow `ZITHLQN_concl` on this
+-- file's EAPGLE path. Acyclic: LocalAuto25 imports LA1/LA23/Mathlib only.
+import Kepler.Text.LocalAuto25
 import Kepler.Text.LocalAuto35
 import Mathlib
 
@@ -864,14 +878,34 @@ theorem AYQJTMD_p27 : ∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
   intro s vv hs hBB hta
   exact SGTRNAF_p27 s vv (s_init_scs_p27 s hs) (S_INIT_IS_UNADORNED_p27 s hs) hBB hta
 
-/-- HOL `EAPGLE` (AYQJTMD.hl:222). -/
+/-- HOL `EAPGLE` (AYQJTMD.hl:222).
+DISCHARGED (la27-eapgle-w2 2026-10-28): the HOL route — apply the registry
+arrow, here the REIFIED LA25 twin `ZITHLQN_p25` (LocalAuto25, statement
+identical to the still-`sorry` LocalAuto1 registry arrow `ZITHLQN_concl`,
+whose blanket body is thereby bypassed on this path), and kill its
+`taustar < 0` branch with the contrapositive of `AYQJTMD_p27` (Section F2;
+this is exactly what HOL EAPGLE consumes at AYQJTMD.hl:232-241). Honest
+face: zero new sorries; the axiom face inherits `sorryAx` from two
+corpus-blocked root families — `exists_vv_p25` (LocalAuto25, the `rhoNode1`
+dart-cycle enumerator inside `ZITHLQN_p25`'s Section-A assembly; FF→rhoNode1
+dart-layer bridge is a corpus-level blocker) and the `UXCKFPE_p24` k = 3
+case `XWITCCN_CASE_3_IS_SCS_p24` → LA23 `bodyClosed_p23` /
+`continuousOn_tauFun_p23` (the k = 4/5/6 cases are real bodies), via
+`UXCKFPE2_p27`/`SGTRNAF_p27`/`AYQJTMD_p27`. -/
 theorem EAPGLE_p27 :
     (∀ s ∈ sInitListV39, MMsV39 s = ∅) → JEJTVGB_assume_v39 := by
-  sorry
-    -- DISCHARGES: NEEDS the six JEJTVGB items (the
-    -- `JEJTVGB_concl`/`JEJTVGB_assume_v39` registry, LocalAuto1:544);
-    -- `AYQJTMD` itself is now proved (Section F2) but its contrapositive
-    -- (never-empty `MMs` from `taustar < 0`) is not what EAPGLE consumes.
+  intro h
+  refine ZITHLQN_p25 ?_
+  intro s hs vv hBB
+  -- the taustar dichotomy; the negative branch dies on the contrapositive
+  -- of AYQJTMD_p27 against the hypothesis `MMsV39 s = ∅`
+  have hsplit : taustarV39 s vv < 0 ∨ 0 ≤ taustarV39 s vv := by
+    by_contra hcon
+    rw [not_or] at hcon
+    linarith
+  rcases hsplit with hneg | hpos
+  · exact absurd (h s hs) (AYQJTMD_p27 s vv hs hBB hneg)
+  · exact hpos
 
 /-! ## Section G: FEKTYIY -/
 
