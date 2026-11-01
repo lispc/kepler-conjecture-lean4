@@ -106,6 +106,7 @@ ENCODING NOTES
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto4
+import Kepler.Text.LocalAuto9
 import Kepler.Text.SphereKit
 import Mathlib
 
@@ -1159,6 +1160,197 @@ theorem annulus_c1_closed_p23 (m : ℕ) (aR bR : Fin m → Fin m → ℝ) :
     exact isClosed_iInter fun i => isClosed_iInter fun j => key i j
   exact h1.inter h2
 
+/-! ### fanchain-w8 (W8 收口): discharge of `continuousOn_tauFun_p23` through
+LA9 `CONTINUOUS_ON_TAU_FUN_p9` (W7, standard three axioms). Carrier → record:
+the p23 carrier's `a b` are re-wrapped as `fun i j => a (i % m) (j % m)` so the
+1-based ℕ row `i` of `B_SY1_p9` reads the same entry as Fin row `⟨i-1⟩` of
+`aR`/`bR` (the `%m` wrap absorbs the row-`m` ↔ row-`0` wrap line; sf91b
+Evidence §3 item 3). `J_SY` is the faithful Set→Finset container bridge: the
+carrier's `J` enumerated over the edge family and filtered by membership
+(card ≤ `Nat.card J` via the coe injection). `d_sy := 0` (the unused HOL
+dummy; the S10 tauFun chain is `d`-blind, sf91b Evidence §3). -/
+
+/-- fw8: `Finset.Icc 0 (m-1)` ↔ `Set.Iic (m-1)` membership bridge
+(sf91b machine check C3a/C9). -/
+private theorem fw8_mem_Icc {m x : ℕ} :
+    x ∈ (Finset.Icc 0 (m - 1) : Finset ℕ) ↔ x ∈ Set.Iic (m - 1) := by
+  constructor
+  · exact fun h => (Finset.mem_Icc.mp h).2
+  · exact fun h => Finset.mem_Icc.mpr ⟨Nat.zero_le x, h⟩
+
+/-- fw8: congruence lemma for the wrapped-table period clause. -/
+private theorem fw8_add_mod_congr {m a b c : ℕ} (h : a % m = b % m) :
+    (c + a) % m = (c + b) % m := by
+  calc (c + a) % m = (c % m + a % m) % m := Nat.add_mod c a m
+    _ = (c % m + b % m) % m := by rw [h]
+    _ = (c + b) % m := (Nat.add_mod c b m).symm
+
+/-- fw8: the pinned successor `fun i => (1 + i) % m` iterated `n` times sends
+`x` to `(n + x) % m` modulo `m` (makes the `f^[m]` period clause of the
+wrapped table definitional). -/
+private theorem fw8_iter_mod (m : ℕ) :
+    ∀ (n x : ℕ), ((fun i => (1 + i) % m)^[n] x) % m = (n + x) % m := by
+  intro n
+  induction n with
+  | zero => intro x; simp
+  | succ n ih =>
+    intro x
+    have h1 : ((fun i => (1 + i) % m)^[n + 1] x)
+        = (fun i => (1 + i) % m)^[n] ((1 + x) % m) :=
+      Function.iterate_succ_apply _ n x
+    rw [h1, ih]
+    have h2 : (1 + x) % m = (x + 1) % m := by rw [Nat.add_comm]
+    have h3 : (n + ((x + 1) % m)) % m = (n + (x + 1)) % m :=
+      fw8_add_mod_congr (Nat.mod_mod (x + 1) m)
+    calc (n + (1 + x) % m) % m = (n + ((x + 1) % m)) % m := by rw [h2]
+      _ = (n + (x + 1)) % m := h3
+      _ = (n + 1 + x) % m := by congr 1; omega
+
+/-- fw8: the `B_SY1_p4` image map (matrix flattening of a `Fin m → V3` row
+family; body verbatim-twin of the lambda inside `B_SY1_p4`). -/
+private def fw8_flat {m : ℕ} (w : Fin m → V3) : FinVec m 3 :=
+  fun i : Fin (m * 3) =>
+    (w ⟨(i : ℕ) / 3, by have := i.isLt; omega⟩).ofLp ⟨(i : ℕ) % 3, by omega⟩
+
+/-- fw8: `vecmatsV3_p4` undoes the flattening (`MATVEC_VECMATS_ID` twin on the
+`V3`-typed rows). -/
+private theorem fw8_flat_roundtrip {m : ℕ} (w : Fin m → V3) :
+    vecmatsV3_p4 (fw8_flat w) = w := by
+  funext j
+  show (WithLp.toLp 2 (vecmats_p4 (fw8_flat w) j) : V3) = w j
+  rw [WithLp.ext_iff, WithLp.ofLp_toLp]
+  funext k
+  have hdm := div_mod_row (by norm_num : (0:ℕ) < 3) j k j.isLt k.isLt
+  show (w ⟨(finProdEquiv m 3 ⟨j, k⟩ : ℕ) / 3, _⟩).ofLp
+      ⟨(finProdEquiv m 3 ⟨j, k⟩ : ℕ) % 3, _⟩ = (w j).ofLp k
+  simp only [finProdEquiv_val, hdm.1, hdm.2]
+
+/-- fw8: `vecmatsV3_p4` is injective (through `MATVEC_VECMATS_ID`). -/
+private theorem fw8_vecmats_inj {m : ℕ} : Function.Injective (vecmatsV3_p4 (m := m)) := by
+  intro l₁ l₂ h
+  have h' : vecmats_p4 l₁ = vecmats_p4 l₂ := by
+    funext j
+    have h2 : (WithLp.toLp 2 (vecmats_p4 l₁ j) : V3) = WithLp.toLp 2 (vecmats_p4 l₂ j) :=
+      congrFun h j
+    rw [WithLp.ext_iff 2] at h2
+    rwa [WithLp.ofLp_toLp, WithLp.ofLp_toLp] at h2
+  exact (MATVEC_VECMATS_ID l₁).symm.trans
+    ((congrArg (fun v : FinMat m 3 => matvec_p4 v) h').trans (MATVEC_VECMATS_ID l₂))
+
+/-- fw8: the flattening of `vecmatsV3_p4 l` is `l` again. -/
+private theorem fw8_vecmats_flat {m : ℕ} (l : FinVec m 3) :
+    fw8_flat (vecmatsV3_p4 l) = l := by
+  refine fw8_vecmats_inj ?_
+  rw [fw8_flat_roundtrip (vecmatsV3_p4 l)]
+
+/-- fw8: `rowV3_p9` at a `Fin` index (LA9 `fw6_row_fin` shape; the original is
+private to LocalAuto9). -/
+private theorem fw8_row_fin {m : ℕ} (l : FinVec m 3) (p : Fin m) :
+    rowV3_p9 l (p.val + 1) = vecmatsV3_p4 l p := by
+  unfold rowV3_p9
+  rw [dif_pos (by exact ⟨by omega, by have := p.isLt; omega⟩)]
+  refine congrArg (vecmatsV3_p4 l) (Fin.eq_of_val_eq ?_)
+  show (p.val + 1 - 1 : ℕ) = p.val
+  omega
+
+/-- fw8: `rowV3_p9` at a ℕ index in `1..m`. -/
+private theorem fw8_row_nat {m : ℕ} (l : FinVec m 3) (i : ℕ) (hi : 1 ≤ i) (him : i ≤ m) :
+    rowV3_p9 l i = vecmatsV3_p4 l ⟨i - 1, by omega⟩ := by
+  unfold rowV3_p9
+  rw [dif_pos ⟨hi, him⟩]
+
+/-- fw8 (G2 bridge): `azimInFan` ≡ `azimInFan_p2` on a fan dart — the
+`ee`/`EE_p2` guard is definitional, the positive branch is
+`AZIM_CYCLE_EQ_SIGMA_FAN_ALT` (LA2) after `EE_elim`. -/
+private theorem fw8_azim_eq {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E)
+    {e : V3 × V3} (hw : e.2 ∈ Fan.setOfEdge e.1 V E) :
+    azimInFan e E = azimInFan_p2 e E := by
+  -- LA1's `azimInFan` hardwires `sigmaFan 0 univ E`; transport to the fan's
+  -- own vertex set through the `EE_elim`-equality of the two neighbour sets
+  have hso : Fan.setOfEdge e.1 Set.univ E = Fan.setOfEdge e.1 V E := by
+    rw [← EE_elim hfan e.1]
+    simp [Fan.setOfEdge, EE_p2]
+  have hsf : Fan.sigmaFan 0 Set.univ E e.1 e.2 = Fan.sigmaFan 0 V E e.1 e.2 := by
+    unfold Fan.sigmaFan
+    rw [hso]
+  unfold azimInFan azimInFan_p2
+  by_cases hnc : 1 < (ee e.1 E).ncard
+  · rw [if_pos hnc, if_pos (show 1 < (EE_p2 e.1 E).ncard from hnc), hsf,
+      EE_elim hfan e.1]
+    exact congrArg (azim 0 e.1 e.2) (AZIM_CYCLE_EQ_SIGMA_FAN_ALT hfan hw).symm
+  · rw [if_neg hnc, if_neg (show ¬(1 < (EE_p2 e.1 E).ncard) from hnc)]
+
+/-- fw8: `setSum` respects pointwise equality of summands. -/
+private theorem fw8_setSum_congr {α : Type*} {s : Set α} {f g : α → ℝ}
+    (h : ∀ x ∈ s, f x = g x) : setSum s f = setSum s g := by
+  unfold setSum
+  by_cases hs : Set.Finite s
+  · rw [dif_pos hs, dif_pos hs]
+    exact Finset.sum_congr rfl fun x hx => h x (hs.mem_toFinset.mp hx)
+  · rw [dif_neg hs, dif_neg hs]
+
+/-- fw8 (G3a+G3 bridges): `tauFun ≡ tauFun_p9` on a fan's dart set —
+`rhoFun ≡ rhoFun_p9` is definitional, the azimuth factor is G2. -/
+private theorem fw8_tauFun_eq {V : Set V3} {E : Set (Set V3)} {F : Set (V3 × V3)}
+    (hfan : Fan.FAN 0 V E) (hdart : ∀ e ∈ F, e.2 ∈ Fan.setOfEdge e.1 V E) :
+    tauFun V E F = tauFun_p9 V E F := by
+  have hsum : ∀ e ∈ F, rhoFun ‖e.1‖ * azimInFan e E = rhoFun_p9 ‖e.1‖ * azimInFan_p2 e E := by
+    intro e he
+    calc rhoFun ‖e.1‖ * azimInFan e E = rhoFun ‖e.1‖ * azimInFan_p2 e E := by
+          rw [fw8_azim_eq hfan (hdart e he)]
+      _ = rhoFun_p9 ‖e.1‖ * azimInFan_p2 e E := rfl
+  unfold tauFun tauFun_p9
+  rw [fw8_setSum_congr hsum]
+
+/-- fw8 (G1′ bridge, p4 → p9): `B_SY1_p4 aR bR ⊆ B_SY1_p9 m A B` whenever the
+Fin tables are the `(p+1)`-shifts of the ℕ tables (`A (p+1) (q+1) = aR p q`). -/
+private theorem fw8_memB9_of_memB4 {m : ℕ} {aR bR : Fin m → Fin m → ℝ}
+    {A B : ℕ → ℕ → ℝ}
+    (hsh : ∀ p q : Fin m, aR p q = A (p.val + 1) (q.val + 1) ∧
+      bR p q = B (p.val + 1) (q.val + 1))
+    {l : FinVec m 3} (hl : l ∈ (B_SY1_p4 aR bR : Set (FinVec m 3))) :
+    l ∈ B_SY1_p9 m A B := by
+  obtain ⟨w, hw, hfl⟩ := hl
+  obtain ⟨hb, hc1, hc2⟩ := hw
+  have hrt : vecmatsV3_p4 l = w := by
+    have hfl' : fw8_flat w = l := hfl
+    rw [← hfl']
+    exact fw8_flat_roundtrip w
+  rw [← hrt] at hb hc1
+  have hc2' : convexLocalFan_p4 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (F_SY_p4 (vecmatsV3_p4 l)) := by
+    rw [hrt]; exact hc2
+  refine ⟨hb, ?_, hc2'⟩
+  intro i j hi him hj hjm
+  have pq : A ((⟨i - 1, by have := him; omega⟩ : Fin m).val + 1)
+      ((⟨j - 1, by have := hjm; omega⟩ : Fin m).val + 1) = A i j := by
+    show A (i - 1 + 1) (j - 1 + 1) = A i j
+    rw [show i - 1 + 1 = i by omega, show j - 1 + 1 = j by omega]
+  have pqB : B ((⟨i - 1, by have := him; omega⟩ : Fin m).val + 1)
+      ((⟨j - 1, by have := hjm; omega⟩ : Fin m).val + 1) = B i j := by
+    show B (i - 1 + 1) (j - 1 + 1) = B i j
+    rw [show i - 1 + 1 = i by omega, show j - 1 + 1 = j by omega]
+  have h1 := hc1 (⟨i - 1, by have := him; omega⟩ : Fin m)
+    (⟨j - 1, by have := hjm; omega⟩ : Fin m)
+  rw [(hsh _ _).1, (hsh _ _).2, pq, pqB, hrt] at h1
+  rw [fw8_row_nat l i hi him, fw8_row_nat l j hj hjm, hrt]
+  exact h1
+
+/-- fw8 (G1′ bridge, p9 → p4): the reverse inclusion. -/
+private theorem fw8_memB4_of_memB9 {m : ℕ} {aR bR : Fin m → Fin m → ℝ}
+    {A B : ℕ → ℕ → ℝ}
+    (hsh : ∀ p q : Fin m, aR p q = A (p.val + 1) (q.val + 1) ∧
+      bR p q = B (p.val + 1) (q.val + 1))
+    {l : FinVec m 3} (hl : l ∈ B_SY1_p9 m A B) :
+    l ∈ (B_SY1_p4 aR bR : Set (FinVec m 3)) := by
+  refine ⟨vecmatsV3_p4 l, ⟨hl.1, ?_, hl.2.2⟩, fw8_vecmats_flat l⟩
+  intro p q
+  have h := hl.2.1 (p.val + 1) (q.val + 1) (by omega) (by have := p.isLt; omega)
+    (by omega) (by have := q.isLt; omega)
+  rw [fw8_row_fin l p, fw8_row_fin l q] at h
+  rw [(hsh p q).1, (hsh p q).2]
+  exact h
+
 /-- NEEDS (HOL CONTINUOUS_ON_TAU_FUN analog, general m): `tau_fun` is
 continuous on the body set. Isolated roots, both outside the case bank:
   (i)  darts-injectivity on the body (INJ_B_SY twin; root
@@ -1199,7 +1391,11 @@ m — 91b machine check C4).  `hm : 2 < m` is kept as an explicit premise
 for §89/bodyClosed parity at the shared feed sites although carrier clause
 1 (`3 ≤ m`) already implies it.  W8 bridge plan: fanchain-w7 DELIVERY §6
 (G1′/G2/G3/G3a).
-(Sorry 1/2 of this kit.) -/
+(Discharged fanchain-w8: the full-carrier premise builds a `StableSyP9`
+record (wrapped tables `fun i j => a (i % m) (j % m)`, faithful filtered-image
+`J_SY`, `d_sy := 0` free dummy) and `CONTINUOUS_ON_TAU_FUN_p9` (LA9, W7,
+standard three axioms) transports along the G1' body-set bridge and the
+G3a+G2+G3 tauFun bridge.  Root 1/2 of this kit is closed.) -/
 theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ)
     (hm : 2 < m)
     (hstab : ∃ a b : ℕ → ℕ → ℝ, ∃ J : Set (Set ℕ),
@@ -1209,7 +1405,154 @@ theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ)
     ContinuousOn (fun l : FinVec m 3 =>
       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 aR bR) := by
-  sorry
+  -- W8 discharge (fanchain-w8): build the StableSyP9 record from the full
+  -- stableSystem_p23 carrier and transport along G1′/G3a+G2+G3 into
+  -- CONTINUOUS_ON_TAU_FUN_p9 (LA9, standard three axioms).
+  obtain ⟨a, b, J, hcar, hsa, hsb⟩ := hstab
+  obtain ⟨hsys, hS2, hS3, hS4⟩ := hcar
+  obtain ⟨h3m, hm6, htorsor, hsymm, -, hJsub, hJcard⟩ := hsys
+  -- faithful Set→Finset container bridge for J (sf91b Evidence §3, C3/C6)
+  haveI hdec : DecidablePred (fun p : Finset ℕ => (p : Set ℕ) ∈ J) :=
+    fun _ => Classical.propDecidable _
+  set J_SY : Finset (Finset ℕ) := ((Finset.Icc 0 (m - 1)).image
+      (fun i : ℕ => ({i, (1 + i) % m} : Finset ℕ))).filter
+      (fun p : Finset ℕ => (p : Set ℕ) ∈ J) with hJ_SY
+  have hIfin : ((Set.Iic (m - 1) : Set ℕ)).Finite := Set.finite_Iic (m - 1)
+  have hJfin : J.Finite :=
+    Set.Finite.subset (hIfin.image fun i : ℕ => ({i, (1 + i) % m} : Set ℕ)) (by
+      intro e he
+      obtain ⟨i, hi, rfl⟩ := hJsub he
+      exact ⟨i, hi, rfl⟩)
+  -- G1′ shift pairing: Fin row (p, q) reads ℕ row (p+1, q+1) of the wrapped
+  -- tables (the %m wrap absorbs the row-m ↔ row-0 wrap line)
+  have hsh : ∀ p q : Fin m, aR p q = a ((p.val + 1) % m) ((q.val + 1) % m) ∧
+      bR p q = b ((p.val + 1) % m) ((q.val + 1) % m) :=
+    fun p q => ⟨(hsa p q).symm, (hsb p q).symm⟩
+  -- record clause: torsor over Icc 0 (m-1)
+  have htorsor9 : torsor_p9 (Finset.Icc 0 (m - 1)) m (fun i => (1 + i) % m) := by
+    refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · intro x hx; exact fw8_mem_Icc.mpr (htorsor.1 x (fw8_mem_Icc.mp hx))
+    · intro x₁ hx₁ x₂ hx₂ h12
+      exact htorsor.2.1 x₁ (fw8_mem_Icc.mp hx₁) x₂ (fw8_mem_Icc.mp hx₂) h12
+    · intro n x hn hnm hx
+      exact htorsor.2.2.1 n x hn hnm (fw8_mem_Icc.mp hx)
+    · intro x hx; exact htorsor.2.2.2.1 x (fw8_mem_Icc.mp hx)
+    · rw [Nat.card_Icc]; omega
+  -- record clause: 2 ≤ a off-diagonal (wrapped tables)
+  have hS2' : ∀ i ∈ (Finset.Icc 0 (m - 1) : Finset ℕ),
+      ∀ j ∈ (Finset.Icc 0 (m - 1) : Finset ℕ), i ≠ j →
+        2 ≤ (fun i j => a (i % m) (j % m)) i j := by
+    intro i hi j hj hne
+    have hi' := fw8_mem_Icc.mp hi
+    have hj' := fw8_mem_Icc.mp hj
+    show 2 ≤ a (i % m) (j % m)
+    rw [Nat.mod_eq_of_lt (by have := Set.mem_Iic.mp hi'; omega),
+      Nat.mod_eq_of_lt (by have := Set.mem_Iic.mp hj'; omega)]
+    exact hS2 i hi' j hj' hne
+  -- record clause: diagonal + cstab (cstab = cstab_p4 = 3.01, sf91b C8)
+  have hS3' : ∀ i ∈ (Finset.Icc 0 (m - 1) : Finset ℕ),
+      (fun i j => a (i % m) (j % m)) i i = 0 ∧
+        (fun i j => b (i % m) (j % m)) i ((fun i => (1 + i) % m) i) ≤ cstab_p4 := by
+    intro i hi
+    have hi' := fw8_mem_Icc.mp hi
+    obtain ⟨h3a, h3b⟩ := hS3 i hi'
+    have hii : i % m = i := Nat.mod_eq_of_lt (by have := Set.mem_Iic.mp hi'; omega)
+    have hfi : ((1 + i) % m) % m = (1 + i) % m := Nat.mod_mod _ _
+    refine ⟨?_, ?_⟩
+    · show a (i % m) (i % m) = 0
+      rw [hii]; exact h3a
+    · show b (i % m) (((1 + i) % m) % m) ≤ cstab_p4
+      rw [hii, hfi]; exact h3b
+  -- record clause: J-edges carry √8 / cstab
+  have hS4' : ∀ i j : ℕ, {i, j} ∈ J_SY →
+      (fun i j => a (i % m) (j % m)) i j = Real.sqrt 8 ∧
+        (fun i j => b (i % m) (j % m)) i j = cstab_p4 := by
+    intro i j hij
+    have hmem := (Finset.mem_filter.mp hij).1
+    have hq : ({i, j} : Set ℕ) ∈ J := by
+      have hq' := (Finset.mem_filter.mp hij).2
+      simpa [Finset.coe_insert, Finset.coe_singleton] using hq'
+    obtain ⟨i₀, hi₀, hpi⟩ := Finset.mem_image.mp hmem
+    have hi₀' : i₀ ≤ m - 1 := by
+      have := Finset.mem_Icc.mp hi₀; omega
+    have hfi₀ : (1 + i₀) % m ≤ m - 1 := htorsor.1 i₀ hi₀'
+    have hii : i ∈ ({i₀, (1 + i₀) % m} : Finset ℕ) := by
+      rw [hpi]; exact Finset.mem_insert_self i {j}
+    have hjj : j ∈ ({i₀, (1 + i₀) % m} : Finset ℕ) := by
+      rw [hpi]; exact Finset.mem_insert.mpr (Or.inr (Finset.mem_singleton.mpr rfl))
+    have him : i ≤ m - 1 := by
+      rcases Finset.mem_insert.mp hii with hc | hc
+      · omega
+      · have := Finset.mem_singleton.mp hc; omega
+    have hjm : j ≤ m - 1 := by
+      rcases Finset.mem_insert.mp hjj with hc | hc
+      · omega
+      · have := Finset.mem_singleton.mp hc; omega
+    show a (i % m) (j % m) = Real.sqrt 8 ∧ b (i % m) (j % m) = cstab_p4
+    rw [Nat.mod_eq_of_lt (by omega), Nat.mod_eq_of_lt (by omega)]
+    exact hS4 i j hq
+  -- the record: k=m, d=0 (unused dummy), I=Icc 0 (m-1), f=pinned successor
+  have hprop : stableSystem_p9 m 0 (Finset.Icc 0 (m - 1))
+      (fun i j => a (i % m) (j % m)) (fun i j => b (i % m) (j % m)) J_SY
+      (fun i => (1 + i) % m) := by
+    refine ⟨?_, hS2', hS3', hS4'⟩
+    refine ⟨h3m, hm6, htorsor9, fun i j => hsymm (i % m) (j % m), ?_, ?_, ?_⟩
+    · -- period clause: f^[m] j ≡ j (mod m) makes the wrapped table periodic
+      intro i j
+      have hmod : ((fun i => (1 + i) % m)^[m] j) % m = j % m := by
+        rw [fw8_iter_mod m m j, Nat.add_mod_left]
+      constructor
+      · show a (i % m) (j % m) = a (i % m) (((fun i => (1 + i) % m)^[m] j) % m)
+        rw [hmod]
+      · show b (i % m) (j % m) = b (i % m) (((fun i => (1 + i) % m)^[m] j) % m)
+        rw [hmod]
+    · -- C5: J_SY ⊆ edge image
+      rw [hJ_SY]
+      exact Finset.filter_subset _ _
+    · -- C6: card bridge through the coe injection into J
+      haveI : Finite (J : Set (Set ℕ)) := hJfin.to_subtype
+      have hcard1 : Nat.card ((J_SY : Finset (Finset ℕ)) : Set (Finset ℕ))
+          ≤ Nat.card (J : Set (Set ℕ)) :=
+        Nat.card_le_card_of_injective
+          (fun p : {x : Finset ℕ // x ∈ ((J_SY : Finset (Finset ℕ)) : Set (Finset ℕ))} =>
+            ⟨((p.1 : Finset ℕ) : Set ℕ), (Finset.mem_filter.mp p.2).2⟩)
+          (fun x y hxy => Subtype.ext (Finset.coe_injective (Subtype.ext_iff.mp hxy)))
+      have hcardFin : Nat.card ((J_SY : Finset (Finset ℕ)) : Set (Finset ℕ)) = J_SY.card :=
+        (Nat.card_eq_fintype_card).trans (Fintype.card_coe J_SY)
+      have hc := hcard1
+      have hf := hcardFin
+      rw [← hf]
+      omega
+  -- LA9 S10 with the record; StableSysHyp_p9 is definitional here
+  have h9 : ContinuousOn (fun l : FinVec m 3 => tauFun_p9 (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (F_SY_p4 (vecmatsV3_p4 l)))
+      (B_SY1_p9 m (fun i j => a (i % m) (j % m)) (fun i j => b (i % m) (j % m))) :=
+    CONTINUOUS_ON_TAU_FUN_p9
+      (⟨m, 0, Finset.Icc 0 (m - 1), fun i j => a (i % m) (j % m),
+        fun i j => b (i % m) (j % m), J_SY, fun i => (1 + i) % m, hprop⟩ : StableSyP9)
+      ⟨rfl, rfl, rfl, hm⟩
+  -- G1′: the two body sets agree
+  have hBeq : B_SY1_p9 m (fun i j => a (i % m) (j % m)) (fun i j => b (i % m) (j % m))
+      = (B_SY1_p4 aR bR : Set (FinVec m 3)) :=
+    Set.ext fun l => ⟨fun hl => @fw8_memB4_of_memB9 m aR bR
+      (fun i j => a (i % m) (j % m)) (fun i j => b (i % m) (j % m)) hsh l hl,
+      fun hl => @fw8_memB9_of_memB4 m aR bR
+      (fun i j => a (i % m) (j % m)) (fun i j => b (i % m) (j % m)) hsh l hl⟩
+  -- G3a + G2 + G3: tauFun ≡ tauFun_p9 pointwise on the body
+  have hfw : Set.EqOn (fun l : FinVec m 3 => tauFun (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (F_SY_p4 (vecmatsV3_p4 l)))
+      (fun l : FinVec m 3 => tauFun_p9 (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) (F_SY_p4 (vecmatsV3_p4 l)))
+      (B_SY1_p4 aR bR) := by
+    intro l hl
+    have hl9 := @fw8_memB9_of_memB4 m aR bR
+      (fun i j => a (i % m) (j % m)) (fun i j => b (i % m) (j % m)) hsh l hl
+    refine fw8_tauFun_eq hl9.2.2.1.1 ?_
+    intro e he
+    obtain ⟨i, -, rfl⟩ := he
+    exact ⟨EDGE_IN_E_SY l i, ⟨finNext i, rfl⟩⟩
+  rw [hBeq] at h9
+  exact ContinuousOn.congr h9 hfw
 
 /-- NEEDS (HOL CLOSED_SY analog, general m): the joint body locus is closed.
 The (annulus ∧ CONDITION1) factor is CLEAN (`annulus_c1_closed_p23`); the
