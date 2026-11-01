@@ -109,6 +109,19 @@ DISCHARGES (2026-10-28, la33yx2-w1; 1 more): `YXIONXL2_p33` closed — the
   and the `is_scs` slot by the la33-ab `OPP_IS_SCS_p33`.  The theorem now
   stands after `OPP_IS_SCS_p33` (its body consumes it; no forward refs) —
   see its docstring.
+
+DISCHARGES (2026-10-28, la33-slice-w1; 6 of the remaining 23): the six
+  half-slice arrows `SCS_4I1_SLICE_02_p33`, `SCS_4M2_SLICE_13_p33`,
+  `SCS_4M3_SLICE_13_p33`, `SCS_4M4_SLICE_13_p33`, `SCS_4M4_SLICE_02_p33`,
+  `SCS_4M5_SLICE_13_p33` — each as an `LKGRQUI_p27` instance over the
+  `scs_half_slice_v39` record identities `la33slice_half_*` (the half-fold at
+  `k' = 3` against the `scs_prop_equ_v39`/concrete ear twins, 3×3 mod-case
+  table sweeps + J/D collars; `+import Kepler.Text.LocalAuto27` at the head
+  for `LKGRQUI_p27`).  sorryAx standing via `LKGRQUI_p27`'s in-ledger roots
+  (`XWITCCN_CASE_3_IS_SCS_p24`, `bodyClosed_p23`, `continuousOn_tauFun_p23`,
+  LA35 `pmPlaneCrowding_p35`) — no new row.  `ARDBZYE_p33`/`FYSSVEV_p33`
+  stay: their `main_nonlinear_terminal_v11` case-bank inputs are untouched
+  this wave (transitive pollution `main_nonlinear_terminal_v11`, in ledger).
 -/
 
 import Kepler.Text.FanBaseKit
@@ -119,6 +132,7 @@ import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto20
 import Kepler.Text.LocalAuto22
 import Kepler.Text.LocalAuto26
+import Kepler.Text.LocalAuto27
 import Kepler.Text.LocalAuto29
 import Kepler.Text.SphereKit
 import Mathlib
@@ -1862,12 +1876,568 @@ theorem FYSSVEV_p33 (_hmn : main_nonlinear_terminal_v11) :
 
 /-! ## Section A: AUEAHEH (AUEAHEH.hl, 101 theorems, source order) -/
 
+private theorem la33slice_set02 {a b : ℕ} :
+    ({a, b} : Set ℕ) = ({0, 2} : Set ℕ) ↔ (a = 0 ∧ b = 2) ∨ (a = 2 ∧ b = 0) := by
+  constructor
+  · intro h
+    have h0 : (0 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    have h2 : (2 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h0 h2
+    rcases h0 with h0 | h0 <;> rcases h2 with h2 | h2
+    · exact absurd h2 (by rw [← h0]; decide)
+    · exact Or.inl ⟨h0.symm, h2.symm⟩
+    · exact Or.inr ⟨h2.symm, h0.symm⟩
+    · exact absurd h2 (by rw [← h0]; decide)
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) <;> ext x <;> simp <;> tauto
+
+private theorem la33slice_set02s {a : ℕ} :
+    ({a} : Set ℕ) = ({0, 2} : Set ℕ) ↔ False := by
+  constructor
+  · intro h
+    have h0 : (0 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+    have h2 : (2 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+    simp only [Set.mem_singleton_iff] at h0 h2
+    exact absurd h2 (by rw [← h0]; decide)
+  · rintro h
+    exact h.elim
+
+/-! ### 4I1 stab(0,2) vs `pe scs_3M1 1` (both halves) -/
+
+private theorem la33slice_cA_4I1_02 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4I1 0 2) 0 2 0.103 False).a i j
+      = (scsPropEquV39 scs3M1 1).a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4I1,
+    scs3M1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02,
+        la33slice_set02s]
+
+private theorem la33slice_cB_4I1_02 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4I1 0 2) 0 2 0.103 False).b i j
+      = (scsPropEquV39 scs3M1 1).b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4I1,
+    scs3M1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02,
+        la33slice_set02s]
+
+private theorem la33slice_half_4I1_02_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs4I1 0 2) 0 2 0.103 False
+      = scsPropEquV39 scs3M1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4I1, scs3M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4I1_02 i j
+  · funext i j; exact la33slice_cA_4I1_02 i j
+  · funext i j; exact la33slice_cB_4I1_02 i j
+  · funext i j; exact la33slice_cB_4I1_02 i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la33slice_cA_4I1_02hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4I1 0 2) 2 0 0.103 False).a i j
+      = (scsPropEquV39 scs3M1 1).a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4I1,
+    scs3M1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02,
+        la33slice_set02s]
+
+private theorem la33slice_cB_4I1_02hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4I1 0 2) 2 0 0.103 False).b i j
+      = (scsPropEquV39 scs3M1 1).b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4I1,
+    scs3M1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02,
+        la33slice_set02s]
+
+private theorem la33slice_half_4I1_02_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs4I1 0 2) 2 0 0.103 False
+      = scsPropEquV39 scs3M1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4I1, scs3M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4I1_02hi i j
+  · funext i j; exact la33slice_cA_4I1_02hi i j
+  · funext i j; exact la33slice_cB_4I1_02hi i j
+  · funext i j; exact la33slice_cB_4I1_02hi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+/-! ### 4M2 stab(1,3): lo vs `pe scs_3M1 1`, hi vs `scs_3T4` -/
+
+private theorem la33slice_cA_4M2_13 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M2 1 3) 1 3 0.103 False).a i j
+      = (scsPropEquV39 scs3M1 1).a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M2,
+    scs3M1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02,
+        la33slice_set02s]
+
+private theorem la33slice_cB_4M2_13 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M2 1 3) 1 3 0.103 False).b i j
+      = (scsPropEquV39 scs3M1 1).b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M2,
+    scs3M1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02,
+        la33slice_set02s]
+
+private theorem la33slice_half_4M2_13_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M2 1 3) 1 3 0.103 False
+      = scsPropEquV39 scs3M1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M2, scs3M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M2_13 i j
+  · funext i j; exact la33slice_cA_4M2_13 i j
+  · funext i j; exact la33slice_cB_4M2_13 i j
+  · funext i j; exact la33slice_cB_4M2_13 i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la33slice_cA_4M2_13hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M2 1 3) 3 1 0.2759 False).a i j
+      = scs3T4.a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scs4M2, scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02,
+        la33slice_set02s]
+
+private theorem la33slice_cB_4M2_13hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M2 1 3) 3 1 0.2759 False).b i j
+      = scs3T4.b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scs4M2, scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02,
+        la33slice_set02s]
+
+private theorem la33slice_half_4M2_13_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M2 1 3) 3 1 0.2759 False
+      = scs3T4 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scs4M2, scs3T4]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M2_13hi i j
+  · funext i j; exact la33slice_cA_4M2_13hi i j
+  · funext i j; exact la33slice_cB_4M2_13hi i j
+  · funext i j; exact la33slice_cB_4M2_13hi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+
+
+
+
+private theorem la33slice_cA_4M3_13 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M3' 1 3) 1 3 0.11 False).a i j
+      = (scsPropEquV39 scs3T1 1).a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M3', scs3T1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_cB_4M3_13 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M3' 1 3) 1 3 0.11 False).b i j
+      = (scsPropEquV39 scs3T1 1).b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M3', scs3T1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_half_4M3_13_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M3' 1 3) 1 3 0.11 False
+      = scsPropEquV39 scs3T1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M3', scs3T1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M3_13 i j
+  · funext i j; exact la33slice_cA_4M3_13 i j
+  · funext i j; exact la33slice_cB_4M3_13 i j
+  · funext i j; exact la33slice_cB_4M3_13 i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la33slice_cA_4M3_13hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M3' 1 3) 3 1 0.4348 False).a i j
+      = (scsPropEquV39 scs3T6' 2).a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M3', scs3T6']
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+  have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_cB_4M3_13hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M3' 1 3) 3 1 0.4348 False).b i j
+      = (scsPropEquV39 scs3T6' 2).b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M3', scs3T6']
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+  have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_half_4M3_13_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M3' 1 3) 3 1 0.4348 False
+      = scsPropEquV39 scs3T6' 2 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M3', scs3T6']
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M3_13hi i j
+  · funext i j; exact la33slice_cA_4M3_13hi i j
+  · funext i j; exact la33slice_cB_4M3_13hi i j
+  · funext i j; exact la33slice_cB_4M3_13hi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+
+private theorem la33slice_cA_4M4_13 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M4' 1 3) 1 3 0.2759 False).a i j
+      = (scsPropEquV39 scs3T4 2).a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M4', scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+  have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_cB_4M4_13 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M4' 1 3) 1 3 0.2759 False).b i j
+      = (scsPropEquV39 scs3T4 2).b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M4', scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+  have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_half_4M4_13_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M4' 1 3) 1 3 0.2759 False
+      = scsPropEquV39 scs3T4 2 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M4', scs3T4]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M4_13 i j
+  · funext i j; exact la33slice_cA_4M4_13 i j
+  · funext i j; exact la33slice_cB_4M4_13 i j
+  · funext i j; exact la33slice_cB_4M4_13 i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la33slice_cA_4M4_13hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M4' 1 3) 3 1 0.2759 False).a i j
+      = scs3T4.a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, la33slice_set02,
+    scs4M4', scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_cB_4M4_13hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M4' 1 3) 3 1 0.2759 False).b i j
+      = scs3T4.b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, la33slice_set02,
+    scs4M4', scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_half_4M4_13_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M4' 1 3) 3 1 0.2759 False
+      = scs3T4 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scs4M4', scs3T4]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M4_13hi i j
+  · funext i j; exact la33slice_cA_4M4_13hi i j
+  · funext i j; exact la33slice_cB_4M4_13hi i j
+  · funext i j; exact la33slice_cB_4M4_13hi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+
+private theorem la33slice_cA_4M4_02 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M4' 0 2) 0 2 0.476 False).a i j
+      = scs3T3.a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, la33slice_set02,
+    scs4M4', scs3T3]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_cB_4M4_02 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M4' 0 2) 0 2 0.476 False).b i j
+      = scs3T3.b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, la33slice_set02,
+    scs4M4', scs3T3]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_half_4M4_02_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M4' 0 2) 0 2 0.476 False
+      = scs3T3 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scs4M4', scs3T3]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M4_02 i j
+  · funext i j; exact la33slice_cA_4M4_02 i j
+  · funext i j; exact la33slice_cB_4M4_02 i j
+  · funext i j; exact la33slice_cB_4M4_02 i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la33slice_cA_4M4_02hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M4' 0 2) 2 0 0.103 False).a i j
+      = (scsPropEquV39 scs3M1 1).a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M4', scs3M1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_cB_4M4_02hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M4' 0 2) 2 0 0.103 False).b i j
+      = (scsPropEquV39 scs3M1 1).b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, la33slice_set02, scs4M4', scs3M1]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_half_4M4_02_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M4' 0 2) 2 0 0.103 False
+      = scsPropEquV39 scs3M1 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M4', scs3M1]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M4_02hi i j
+  · funext i j; exact la33slice_cA_4M4_02hi i j
+  · funext i j; exact la33slice_cB_4M4_02hi i j
+  · funext i j; exact la33slice_cB_4M4_02hi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+
+private theorem la33slice_cA_4M5_13 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M5' 1 3) 1 3 0.2759 False).a i j
+      = scs3T4.a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, la33slice_set02,
+    scs4M5', scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_cB_4M5_13 (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M5' 1 3) 1 3 0.2759 False).b i j
+      = scs3T4.b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, la33slice_set02,
+    scs4M5', scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_half_4M5_13_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M5' 1 3) 1 3 0.2759 False
+      = scs3T4 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scs4M5', scs3T4]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M5_13 i j
+  · funext i j; exact la33slice_cA_4M5_13 i j
+  · funext i j; exact la33slice_cB_4M5_13 i j
+  · funext i j; exact la33slice_cB_4M5_13 i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la33slice_cA_4M5_13hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M5' 1 3) 3 1 0.2759 False).a i j
+      = scs3T4.a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, la33slice_set02,
+    scs4M5', scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_cB_4M5_13hi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M5' 1 3) 3 1 0.2759 False).b i j
+      = scs3T4.b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, la33slice_set02,
+    scs4M5', scs3T4]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 _ _ _ i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [csAdj, funlistV39, psort, assocdV39, la33slice_set02, la33slice_set02s]
+
+private theorem la33slice_half_4M5_13_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M5' 1 3) 3 1 0.2759 False
+      = scs3T4 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scs4M5', scs3T4]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la33slice_cA_4M5_13hi i j
+  · funext i j; exact la33slice_cA_4M5_13hi i j
+  · funext i j; exact la33slice_cB_4M5_13hi i j
+  · funext i j; exact la33slice_cB_4M5_13hi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+
+
 /-- HOL `SCS_4I1_SLICE_02` (AUEAHEH.hl:107): the LKGRQUI half-slice of
-`stab 4I1 0 2` at `(0, 2)`.  NEEDS: the half-slice/prop-equ table identity
-(the `scs_half_slice_v39` fold at `k' = 3` against `scs_prop_equ_v39
-scs_3M1 1`, a 3×3 mod-case check plus J/D collars). -/
+`stab 4I1 0 2` at `(0, 2)`.  DISCHARGED 2026-10-28 (la33-slice-w1):
+`LKGRQUI_p27` instance over the `la33slice_half_4I1_02_lo/_hi` record
+identities (both halves of the `(0, 2)` slice fold to `pe scs_3M1 1`;
+3×3 mod-case sweeps + J/D collars; sorryAx standing via `LKGRQUI_p27`'s
+in-ledger roots). -/
 theorem SCS_4I1_SLICE_02_p33 :
-    scsArrowV39 {scsStabDiagV39 scs4I1 0 2} {scsPropEquV39 scs3M1 1} := sorry
+    scsArrowV39 {scsStabDiagV39 scs4I1 0 2} {scsPropEquV39 scs3M1 1} := by
+  have mkjF : (scsPropEquV39 scs3M1 1).J 0
+      ((scsPropEquV39 scs3M1 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs4I1 0 2)
+      (scsPropEquV39 scs3M1 1) (scsPropEquV39 scs3M1 1) 0 2 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la33slice_half_4I1_02_lo.symm, la33slice_half_4I1_02_hi.symm⟩
+    · show (0.103 : ℝ) < 0.9
+      norm_num
+    · show (0.103 : ℝ) < 0.9
+      norm_num
+    · show dTame 4 ≤ 0.103 + 0.103
+      norm_num [dTame]
+    · show cstab < 4
+      norm_num [cstab]
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  have har := LKGRQUI_p27 (scsStabDiagV39 scs4I1 0 2) (scsPropEquV39 scs3M1 1)
+    (scsPropEquV39 scs3M1 1) 0 2 0 0 True
+    (STAB_4I1_SCS_p33 0 2 SCS_DIAG_SCS_4I1_02_p33).1 SCS_DIAG_SCS_4I1_02_p33 hsl
+  rwa [show ({scsPropEquV39 scs3M1 1, scsPropEquV39 scs3M1 1} : Set ScsV39)
+      = {scsPropEquV39 scs3M1 1} from by ext t; simp] at har
   -- DISCHARGES: NEEDS AUEAHEH.hl SCS_4I1_SLICE_02 (slice table identity).
 
 /-- HOL `AUEAHEH` (AUEAHEH.hl:245). Proved modulo `SCS_4I1_SLICE_02_p33`,
@@ -2379,11 +2949,37 @@ theorem STAB_4M2_02_ARROW_4M2_13_p33 :
   · exact YXIONXL2_p33 _ h1 (by decide)
   · exact YXIONXL3_p33 _ 2 (OPP_IS_SCS_p33 _ h1)
 
-/-- HOL `SCS_4M2_SLICE_13` (AUEAHEH.hl:1081).  NEEDS: the half-slice table
-identity of `stab 4M2 1 3` at `(1, 3)` against `pe scs_3M1 1` / `scs_3T4`. -/
+/-- HOL `SCS_4M2_SLICE_13` (AUEAHEH.hl:1081).  The half-slice table identity of
+`stab 4M2 1 3` at `(1, 3)`.  DISCHARGED 2026-10-28 (la33-slice-w1):
+`LKGRQUI_p27` instance over the `la33slice_half_4M2_13_lo/_hi` record
+identities (the `(1, 3)` half folds to `pe scs_3M1 1`, the `(3, 1)` half to
+`scs_3T4`; sorryAx standing via `LKGRQUI_p27`'s in-ledger roots). -/
 theorem SCS_4M2_SLICE_13_p33 :
     scsArrowV39 {scsStabDiagV39 scs4M2 1 3}
-      {scsPropEquV39 scs3M1 1, scs3T4} := sorry
+      {scsPropEquV39 scs3M1 1, scs3T4} := by
+  have mkjF : (scsPropEquV39 scs3M1 1).J 0
+      ((scsPropEquV39 scs3M1 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs4M2 1 3)
+      (scsPropEquV39 scs3M1 1) scs3T4 1 3 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la33slice_half_4M2_13_lo.symm, la33slice_half_4M2_13_hi.symm⟩
+    · show (0.103 : ℝ) < 0.9
+      norm_num
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.3789 : ℝ) ≤ 0.103 + 0.2759
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs4M2 1 3) (scsPropEquV39 scs3M1 1)
+    scs3T4 1 3 0 0 True
+    (STAB_4M2_SCS_p33 1 3 SCS_DIAG_SCS_4M2_13_p33).1 SCS_DIAG_SCS_4M2_13_p33 hsl
   -- DISCHARGES: NEEDS AUEAHEH.hl SCS_4M2_SLICE_13 (LKGRQUI slice identity).
 
 /-- HOL `BNAWVNH` (AUEAHEH.hl:1204). Proved modulo the `4M2` BB strut and
@@ -2560,11 +3156,38 @@ theorem STAB_4M3_02_ARROW_4M3_13_p33 :
   · exact YXIONXL2_p33 _ h1 (by decide)
   · exact YXIONXL3_p33 _ 2 (OPP_IS_SCS_p33 _ h1)
 
-/-- HOL `SCS_4M3_SLICE_13` (AUEAHEH.hl:1752).  NEEDS: the half-slice table
-identity against `pe scs_3T1 1` / `pe scs_3T6' 2`. -/
+/-- HOL `SCS_4M3_SLICE_13` (AUEAHEH.hl:1752).  The half-slice table identity of
+`stab 4M3' 1 3` against `pe scs_3T1 1` / `pe scs_3T6' 2`.  DISCHARGED
+2026-10-28 (la33-slice-w1): `LKGRQUI_p27` instance over the
+`la33slice_half_4M3_13_lo/_hi` record identities (the `(1, 3)` half folds to
+`pe scs_3T1 1`, the `(3, 1)` half to `pe scs_3T6' 2`; sorryAx standing via
+`LKGRQUI_p27`'s in-ledger roots). -/
 theorem SCS_4M3_SLICE_13_p33 :
     scsArrowV39 {scsStabDiagV39 scs4M3' 1 3}
-      {scsPropEquV39 scs3T1 1, scsPropEquV39 scs3T6' 2} := sorry
+      {scsPropEquV39 scs3T1 1, scsPropEquV39 scs3T6' 2} := by
+  have mkjF : (scsPropEquV39 scs3T1 1).J 0
+      ((scsPropEquV39 scs3T1 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs4M3' 1 3)
+      (scsPropEquV39 scs3T1 1) (scsPropEquV39 scs3T6' 2) 1 3 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la33slice_half_4M3_13_lo.symm, la33slice_half_4M3_13_hi.symm⟩
+    · show (0.11 : ℝ) < 0.9
+      norm_num
+    · show (0.4348 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) ≤ 0.11 + 0.4348
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs4M3' 1 3) (scsPropEquV39 scs3T1 1)
+    (scsPropEquV39 scs3T6' 2) 1 3 0 0 True
+    (STAB_4M3_SCS_p33 1 3 SCS_DIAG_SCS_4M3_13_p33).1 SCS_DIAG_SCS_4M3_13_p33 hsl
   -- DISCHARGES: NEEDS AUEAHEH.hl SCS_4M3_SLICE_13 (LKGRQUI slice identity).
 
 /-- HOL `RAWZDIB` (AUEAHEH.hl:1764). Proved modulo the `4M3'` BB strut and
@@ -2694,18 +3317,71 @@ theorem SET_EQ_DIAG_STAB_4M4_p33 :
   SET_EQ_DIAG_STAB_GEN4_p33 scs4M4' is_scs_4M4_p33 SCS_4M4_BASIC_p33 K_SCS_4M4_p33
     (fun i j hd => by rw [a_diag_4M4_p33 i j hd]; exact two_h0_le_cstab_p20)
 
-/-- HOL `SCS_4M4_SLICE_13` (AUEAHEH.hl:1948).  NEEDS: the half-slice table
-identity against `pe scs_3T4 2` / `scs_3T4`. -/
+/-- HOL `SCS_4M4_SLICE_13` (AUEAHEH.hl:1948).  The half-slice table identity of
+`stab 4M4' 1 3` against `pe scs_3T4 2` / `scs_3T4`.  DISCHARGED 2026-10-28
+(la33-slice-w1): `LKGRQUI_p27` instance over the
+`la33slice_half_4M4_13_lo/_hi` record identities (the `(1, 3)` half folds to
+`pe scs_3T4 2`, the `(3, 1)` half to `scs_3T4`; sorryAx standing via
+`LKGRQUI_p27`'s in-ledger roots). -/
 theorem SCS_4M4_SLICE_13_p33 :
     scsArrowV39 {scsStabDiagV39 scs4M4' 1 3}
-      {scsPropEquV39 scs3T4 2, scs3T4} := sorry
+      {scsPropEquV39 scs3T4 2, scs3T4} := by
+  have mkjF : (scsPropEquV39 scs3T4 2).J 0
+      ((scsPropEquV39 scs3T4 2).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs4M4' 1 3)
+      (scsPropEquV39 scs3T4 2) scs3T4 1 3 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la33slice_half_4M4_13_lo.symm, la33slice_half_4M4_13_hi.symm⟩
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) ≤ 0.2759 + 0.2759
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs4M4' 1 3) (scsPropEquV39 scs3T4 2)
+    scs3T4 1 3 0 0 True
+    (STAB_4M4_SCS_p33 1 3 SCS_DIAG_SCS_4M4_13_p33).1 SCS_DIAG_SCS_4M4_13_p33 hsl
   -- DISCHARGES: NEEDS AUEAHEH.hl SCS_4M4_SLICE_13 (LKGRQUI slice identity).
 
-/-- HOL `SCS_4M4_SLICE_02` (AUEAHEH.hl:2075).  NEEDS: the half-slice table
-identity against `scs_3T3` / `pe scs_3M1 1`. -/
+/-- HOL `SCS_4M4_SLICE_02` (AUEAHEH.hl:2075).  The half-slice table identity of
+`stab 4M4' 0 2` against `scs_3T3` / `pe scs_3M1 1`.  DISCHARGED 2026-10-28
+(la33-slice-w1): `LKGRQUI_p27` instance over the
+`la33slice_half_4M4_02_lo/_hi` record identities (the `(0, 2)` half folds to
+`scs_3T3`, the `(2, 0)` half to `pe scs_3M1 1`; sorryAx standing via
+`LKGRQUI_p27`'s in-ledger roots). -/
 theorem SCS_4M4_SLICE_02_p33 :
     scsArrowV39 {scsStabDiagV39 scs4M4' 0 2}
-      {scs3T3, scsPropEquV39 scs3M1 1} := sorry
+      {scs3T3, scsPropEquV39 scs3M1 1} := by
+  have mkjF : scs3T3.J 0 (scs3T3.k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs4M4' 0 2)
+      scs3T3 (scsPropEquV39 scs3M1 1) 0 2 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la33slice_half_4M4_02_lo.symm, la33slice_half_4M4_02_hi.symm⟩
+    · show (0.476 : ℝ) < 0.9
+      norm_num
+    · show (0.103 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) ≤ 0.476 + 0.103
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs4M4' 0 2) scs3T3
+    (scsPropEquV39 scs3M1 1) 0 2 0 0 True
+    (STAB_4M4_SCS_p33 0 2 SCS_DIAG_SCS_4M4_02_p33).1 SCS_DIAG_SCS_4M4_02_p33 hsl
   -- DISCHARGES: NEEDS AUEAHEH.hl SCS_4M4_SLICE_02 (LKGRQUI slice identity).
 
 /-- HOL `MFKLVDK` (AUEAHEH.hl:2211). Proved modulo the `4M4'` BB strut and
@@ -2884,10 +3560,35 @@ theorem STAB_4M5_02_ARROW_4M5_13_p33 :
   · exact YXIONXL2_p33 _ h1 (by decide)
   · exact YXIONXL3_p33 _ 2 (OPP_IS_SCS_p33 _ h1)
 
-/-- HOL `SCS_4M5_SLICE_13` (AUEAHEH.hl:2831).  NEEDS: the half-slice table
-identity of `stab 4M5' 1 3` against `scs_3T4`. -/
+/-- HOL `SCS_4M5_SLICE_13` (AUEAHEH.hl:2831).  The half-slice table identity of
+`stab 4M5' 1 3` against `scs_3T4`.  DISCHARGED 2026-10-28 (la33-slice-w1):
+`LKGRQUI_p27` instance over the `la33slice_half_4M5_13_lo/_hi` record
+identities (both halves of the `(1, 3)` slice fold to `scs_3T4`; sorryAx
+standing via `LKGRQUI_p27`'s in-ledger roots). -/
 theorem SCS_4M5_SLICE_13_p33 :
-    scsArrowV39 {scsStabDiagV39 scs4M5' 1 3} {scs3T4} := sorry
+    scsArrowV39 {scsStabDiagV39 scs4M5' 1 3} {scs3T4} := by
+  have mkjF : scs3T4.J 0 (scs3T4.k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs4M5' 1 3)
+      scs3T4 scs3T4 1 3 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la33slice_half_4M5_13_lo.symm, la33slice_half_4M5_13_hi.symm⟩
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) ≤ 0.2759 + 0.2759
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  have har := LKGRQUI_p27 (scsStabDiagV39 scs4M5' 1 3) scs3T4 scs3T4 1 3 0 0 True
+    (STAB_4M5_SCS_p33 1 3 SCS_DIAG_SCS_4M5_13_p33).1 SCS_DIAG_SCS_4M5_13_p33 hsl
+  rwa [show ({scs3T4, scs3T4} : Set ScsV39) = {scs3T4} from by ext t; simp] at har
   -- DISCHARGES: NEEDS AUEAHEH.hl SCS_4M5_SLICE_13 (LKGRQUI slice identity).
 
 /-- HOL `RYPDIXT` (AUEAHEH.hl:2845). Proved modulo the `4M5'` BB strut and
