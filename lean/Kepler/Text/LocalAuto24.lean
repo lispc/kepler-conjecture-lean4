@@ -1273,6 +1273,22 @@ private theorem table_shift_eq_p24 (f : ℕ → ℕ → ℝ) (n : ℕ) (hp : Per
     conv_lhs => rw [(Nat.div_add_mod (j + 1) n).symm]
   rw [e2, periodic2_right_p24 hp]
 
+/-- SF-89 feed: `isScsV39`'s adjacent-edge upper bound (the
+`3 < s.k → s.b i (i + 1) ≤ cstab` conjunct of LA1 `isScsV39`, HOL is_scs_v39 appendix.hl:354) shifted onto
+the `((i + 1) % k)`-indexing that the CASE_4/5/6 tables `aRk`/`bRk` use —
+this is exactly the repaired `hstab` premise of `bodyClosed_p23` at
+`m = k`, since `bRk s i (finNext i) = s.b ((i + 1) % k)
+(((finNext i : ℕ) + 1) % k)` definitionally. -/
+private theorem stabAdj_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
+    (hk : s.k = k) (hk3 : 3 < s.k) (i : Fin k) :
+    s.b (((i : ℕ) + 1) % k) ((((finNext i : Fin k) : ℕ) + 1) % k) ≤ cstab_p4 := by
+  unfold isScsV39 at hs
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, hperb, -, -, -, -, -, -, hup, -, -, -⟩ := hs
+  subst hk
+  rw [show ((finNext i : Fin s.k) : ℕ) = ((i : ℕ) + 1) % s.k from rfl, Nat.mod_add_mod,
+    ← periodic2_mod_eq_p24 hperb ((i : ℕ) + 1) ((i : ℕ) + 1 + 1)]
+  exact le_trans (hup ((i : ℕ) + 1) hk3) (le_of_eq rfl)
+
 /-- the k=4 shifted tables (the frozen inline lambdas). -/
 private def aR4 (s : ScsV39) : Fin 4 → Fin 4 → ℝ :=
   fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)
@@ -1472,7 +1488,9 @@ theorem XWITCCN_CASE_4_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hk3 : 3 < s.k := by omega
   have hcomp : IsCompact (B_SY1_p4 (aR4 s) (bR4 s) : Set (FinVec 4 3)) :=
     B_SY1_p4_compact_of_fan_p23 (aR4 s) (bR4 s)
-      (bodyClosed_p23 (aR4 s) (bR4 s)) (bodyBounded_p23 4 (aR4 s) (bR4 s))
+      (bodyClosed_p23 (aR4 s) (bR4 s) (by norm_num : 2 < 4)
+        (fun i => stabAdj_of_isScsV39 s hs hk hk3 i))
+      (bodyBounded_p23 4 (aR4 s) (bR4 s))
   have hd : ContinuousOn (fun l : FinVec 4 3 =>
       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR4 s) (bR4 s)) :=
     (continuous_dFun_p23 _).continuousOn
@@ -1629,7 +1647,9 @@ theorem XWITCCN_CASE_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hk3 : 3 < s.k := by omega
   have hcomp : IsCompact (B_SY1_p4 (aR5 s) (bR5 s) : Set (FinVec 5 3)) :=
     B_SY1_p4_compact_of_fan_p23 (aR5 s) (bR5 s)
-      (bodyClosed_p23 (aR5 s) (bR5 s)) (bodyBounded_p23 5 (aR5 s) (bR5 s))
+      (bodyClosed_p23 (aR5 s) (bR5 s) (by norm_num : 2 < 5)
+        (fun i => stabAdj_of_isScsV39 s hs hk hk3 i))
+      (bodyBounded_p23 5 (aR5 s) (bR5 s))
   have hd : ContinuousOn (fun l : FinVec 5 3 =>
       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR5 s) (bR5 s)) :=
     (continuous_dFun_p23 _).continuousOn
@@ -1784,7 +1804,9 @@ theorem XWITCCN_CASE_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hk3 : 3 < s.k := by omega
   have hcomp : IsCompact (B_SY1_p4 (aR6 s) (bR6 s) : Set (FinVec 6 3)) :=
     B_SY1_p4_compact_of_fan_p23 (aR6 s) (bR6 s)
-      (bodyClosed_p23 (aR6 s) (bR6 s)) (bodyBounded_p23 6 (aR6 s) (bR6 s))
+      (bodyClosed_p23 (aR6 s) (bR6 s) (by norm_num : 2 < 6)
+        (fun i => stabAdj_of_isScsV39 s hs hk hk3 i))
+      (bodyBounded_p23 6 (aR6 s) (bR6 s))
   have hd : ContinuousOn (fun l : FinVec 6 3 =>
       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR6 s) (bR6 s)) :=
     (continuous_dFun_p23 _).continuousOn

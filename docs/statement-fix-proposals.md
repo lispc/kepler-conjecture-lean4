@@ -5297,6 +5297,8 @@ private theorem stabAdj_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
 - 预算：约 26 次工具调用 / 纯 python 机检（未触 lake/lean/.lake）。
 
 **状态**：草案 2026-10-28（sf89-bodyclosed 车道起草）。**在册未落**；应用序列（编排者）：① 用户批 → ② STATEMENT-FIX 闸（喂桥编译在此实证）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/89-bodyclosed-stable-hyp.patch SF_ITEM=89 THM=bodyClosed_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean bodyClosed_p23` → ③ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md`。§89 编号已核（现最大 §87，§88 已预留他用途）。
+**应用记录（2026-11-02，编排者）**：用户批后 STATEMENT-FIX 闸 LA23 段一次过；LA24 段首闸 lake build 失败于喂桥 `stabAdj_of_isScsV39`（车道静态推演三处失误：`hup` 量词序为 `∀ i, 3 < s.k → …` 须 `hup (i+1) hk3`；`Nat.mod_add_mod` 应正向；桥对任意 Fin 界 `k` 不成立——周期性是 mod `s.k`，须加前提 `(hk : s.k = k)` 并 `subst`，三消费者补传各自 `hk`）。修正后 LA24 整文件 standalone RC=0；归档 patch 按修正后真实 diff 重生成（陈述槽 `bodyClosed_p23` 两前提逐字不变，仅桥证明体与消费者实参变），原归档副本留 `/tmp/89-archived-orig.patch` 比对。
+
 
 ## 90. LA24 Section B1 `MM_5{I1,I2,I3,M1}_IMP_MM_5M2` 四件结论槽成员式↛正本非空式（SF-84 同案再立案 · 消费者面更新：B3 BERAK 四消费点 `3e6dc15f` 落地后 84 双 patch 修后必然编译断裂；bbcheck 机检 BB 集分离 witness + 60°-gap 引理）— 分级 **A**（移植误植 · 非 HOL 内容 · 修复面 = 四陈述槽 + 四 BERAK 消费槽）
 
