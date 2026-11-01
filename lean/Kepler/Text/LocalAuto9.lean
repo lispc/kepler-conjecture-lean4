@@ -585,22 +585,120 @@ def StableSysHyp_p9 (s : StableSyP9) (m : ℕ) : Prop :=
   s.k_sy = m ∧ s.I_SY = Finset.Icc 0 (m - 1) ∧
     s.f_sy = (fun i => (1 + i) % m) ∧ 2 < m
 
+/-! ### fw2 service lemmas (fanchain-w2): the `INJ_*_B_SY` discharge
+
+HOL routes both INJ theorems through `PROPERTIES_OF_FAN_IN_B_SY` (TECOXBM
+lane); the Lean S1 rendering's `liftAB_p11` hypothesis is unusable — the
+universal period clause of `constraintSystem_p4` (`a i j = a i (f^[k] j)`,
+all of ℕ×ℕ) times the out-of-domain zero padding of `liftAB_p11` forces the
+whole Fin table to vanish, contradicting clause 2 (`2 ≤ a i j`) whenever
+`2 < k` (machine-checked in the fanchain-w2 lane: `False` derived from the
+`hss` shape alone).  The TECOXBM.hl:207-308 MOD-branch bookkeeping is
+therefore done inline: the stable system's own symmetry + period clauses
+make the ℕ table `mod m`-aperiodic (`fw2_aper`), which is exactly the
+`2 ≤ a(i,j)` ingredient of the HOL `PROPERTIES` instance, combined with the
+`B_SY1` condition-1 lower bound and `‖row i − row i‖ = 0`. -/
+
+/-- fw2: `n + 1` iterates of the `f_sy` successor cycle advance the index by
+`n + 1` (HOL `POWER_MOD_FUN` flavor; the `n + 1` count form avoids the false
+`n = 0` identity `f^[0] x = (x + 0) % m`). -/
+private theorem fw2_iter_succ {m : ℕ} : ∀ n t : ℕ,
+    (fun x => (1 + x) % m)^[n + 1] t = (t + n + 1) % m := by
+  intro n
+  induction n with
+  | zero =>
+    intro t
+    rw [Function.iterate_succ, Function.comp_apply, Function.iterate_zero_apply,
+      Nat.add_zero, Nat.add_comm 1 t]
+  | succ n ih =>
+    intro t
+    rw [Function.iterate_succ, Function.comp_apply, ih,
+      Nat.add_assoc ((1 + t) % m) n 1, Nat.mod_add_mod]
+    congr 1
+    omega
+
+/-- fw2: the coefficient table is fully `mod m`-aperiodic — the period
+clause reduces the second index, symmetry moves the first (the TECOXBM
+MOD branches collapsed into one identity). -/
+private theorem fw2_aper {s : StableSyP9} {m : ℕ} (hm : StableSysHyp_p9 s m)
+    (p q : ℕ) : s.a_sy p q = s.a_sy (p % m) (q % m) := by
+  have hc := stable_sy_lemma_p9 s
+  have hf := hm.2.2.1
+  have hkm : s.k_sy = m := hm.1
+  have hlt : 2 < m := hm.2.2.2
+  have hkm1 : s.k_sy = m - 1 + 1 := by omega
+  have h2nd : ∀ r w : ℕ, s.a_sy r w = s.a_sy r (w % m) := by
+    intro r w
+    have h := (hc.1.2.2.2.2.1 r w).1
+    rw [hf, hkm1, fw2_iter_succ, show (w:ℕ) + (m - 1) + 1 = w + m from by omega,
+      Nat.add_mod_right] at h
+    exact h
+  have hsym : ∀ r w : ℕ, s.a_sy r w = s.a_sy w r := fun r w => (hc.1.2.2.2.1 r w).1
+  calc s.a_sy p q = s.a_sy q p := hsym p q
+    _ = s.a_sy q (p % m) := h2nd q p
+    _ = s.a_sy (p % m) q := hsym q (p % m)
+    _ = s.a_sy (p % m) (q % m) := h2nd (p % m) q
+
+/-- fw2: row injectivity on `B_SY1` — clause 2 of the stable system at the
+`mod m`-reduced indices against the condition-1 lower bound (the HOL
+`INJ_ROW_B_SY` proof body: `PROPERTIES` instance, then `‖row i − row i‖ = 0`). -/
+private theorem fw2_row_inj (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
+    (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) :
+    ∀ i j : ℕ, 1 ≤ i → i ≤ m → 1 ≤ j → j ≤ m →
+      rowV3_p9 l i = rowV3_p9 l j → i = j := by
+  intro i j hi him hj hjm hrefl
+  by_cases hne : i = j
+  · exact hne
+  · exfalso
+    have hc := stable_sy_lemma_p9 s
+    have him' : i % m < m := Nat.mod_lt i (by omega)
+    have hjm' : j % m < m := Nat.mod_lt j (by omega)
+    have hu : i % m ∈ Finset.Icc 0 (m - 1) :=
+      Finset.mem_Icc.mpr ⟨Nat.zero_le _, by omega⟩
+    have hv : j % m ∈ Finset.Icc 0 (m - 1) :=
+      Finset.mem_Icc.mpr ⟨Nat.zero_le _, by omega⟩
+    rw [← hm.2.1] at hu hv
+    have huv : i % m ≠ j % m := by
+      rcases Nat.eq_or_lt_of_le hjm with hj_eq | hjlt
+      · rw [hj_eq, Nat.mod_self]
+        rcases Nat.eq_or_lt_of_le him with hi_eq | hilt
+        · exact absurd (hi_eq.trans hj_eq.symm) hne
+        · have h1 : i % m = i := Nat.mod_eq_of_lt hilt
+          omega
+      · have h2 : j % m = j := Nat.mod_eq_of_lt hjlt
+        rcases Nat.eq_or_lt_of_le him with hi_eq | hilt
+        · rw [hi_eq, Nat.mod_self, h2]
+          omega
+        · have h1 : i % m = i := Nat.mod_eq_of_lt hilt
+          omega
+    have hcl2 := hc.2.1 (i % m) hu (j % m) hv huv
+    rw [← fw2_aper hm i j] at hcl2
+    have hfin : (2:ℝ) ≤ ‖rowV3_p9 l i - rowV3_p9 l j‖ :=
+      hcl2.trans (hl.2.1 i j hi him hj hjm).1
+    rw [hrefl, sub_self, norm_zero] at hfin
+    linarith
+
 /-- HOL `INJ_B_SY` (Hdplygy.hl:334) — needs `PROPERTIES_OF_FAN_IN_B_SY`
-(WJSCPRO lane). DISCHARGES: from `PROPERTIES_OF_FAN_IN_B_SY`. -/
+(WJSCPRO lane). DISCHARGES: from `PROPERTIES_OF_FAN_IN_B_SY`.  fanchain-w2:
+discharged via `fw2_row_inj` (the HOL `PROPERTIES` instance reduces to the
+`mod m` aperiodicity sandwich `fw2_aper`; the S1 `liftAB_p11` hypothesis is
+unusable, see fanchain-w2 Evidence). -/
 theorem INJ_B_SY_p9 (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
     (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) :
     ∀ i j : ℕ, 1 ≤ i → i ≤ m → 1 ≤ j → j ≤ m →
       (rowV3_p9 l i, rowV3_p9 l (i % m + 1)) =
         (rowV3_p9 l j, rowV3_p9 l (j % m + 1)) → i = j := by
-  sorry
+  intro i j hi him hj hjm hpair
+  exact fw2_row_inj s hm l hl i j hi him hj hjm (congrArg Prod.fst hpair)
 
 /-- HOL `INJ_ROW_B_SY` (Hdplygy.hl:351). DISCHARGES: from
-`PROPERTIES_OF_FAN_IN_B_SY` (WJSCPRO lane). -/
+`PROPERTIES_OF_FAN_IN_B_SY` (WJSCPRO lane).  fanchain-w2: discharged via
+`fw2_row_inj` (same route as `INJ_B_SY_p9`). -/
 theorem INJ_ROW_B_SY_p9 (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
     (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) :
     ∀ i j : ℕ, 1 ≤ i → i ≤ m → 1 ≤ j → j ≤ m →
       rowV3_p9 l i = rowV3_p9 l j → i = j := by
-  sorry
+  exact fw2_row_inj s hm l hl
 
 /-- HOL `CHANGE_SUM_TAU_FUN` (Hdplygy.hl:370): the `F_SY`-sum of
 `rho_fun * azim_in_fan` re-indexed over `1..k_sy s` by `INJ_B_SY`.
