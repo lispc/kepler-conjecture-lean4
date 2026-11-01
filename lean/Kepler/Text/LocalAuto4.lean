@@ -882,12 +882,15 @@ def torsor_p4 {α : Type*} (s : Finset α) (k : ℕ) (f : α → α) : Prop :=
     (∀ x ∈ s, f^[k] x = x) ∧ s.card = k
 
 /-- HOL `constraint_system` (dih2k.hl:52); the polymorphic HOL index type is
-instantiated at `ℕ` (the only instantiation used by the dih2k chapter). -/
+instantiated at `ℕ` (the only instantiation used by the dih2k chapter).
+SF-92: the f-periodicity clause is restricted to `s × s` (HOL dih2k.hl:57 is
+universal; over the zero-padding `liftAB_p11` lift the universal form is
+unsatisfiable for `2 < k` — see docs/statement-fix-proposals.md §92). -/
 def constraintSystem_p4 (k d : ℕ) (s : Finset ℕ) (a b : ℕ → ℕ → ℝ)
     (J : Finset (Finset ℕ)) (f : ℕ → ℕ) : Prop :=
   3 ≤ k ∧ k ≤ 6 ∧ torsor_p4 s k f ∧
     (∀ i j, a i j = a j i ∧ b i j = b j i ∧ a i j ≤ b i j) ∧
-    (∀ i j, a i j = a i (f^[k] j) ∧ b i j = b i (f^[k] j)) ∧
+    (∀ i ∈ s, ∀ j ∈ s, a i j = a i (f^[k] j) ∧ b i j = b i (f^[k] j)) ∧
     J ⊆ (s.image fun i => {i, f i} : Finset (Finset ℕ)) ∧
     J.card + k ≤ 6
 
