@@ -38,12 +38,48 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   anchors `mnt11_anchor` / `p21_anchor` below -- that injection is the
   corpus's own interface convention, not a shape bridge.
 
-    WIRE (real proof term, debt = twin's axioms + injected anchors): 62
-      = the 16 classic discharges below + 46 assembly wires
-    HOLD (explicit `sorry`, reason recorded): 28
-      = (a) 5 no-twin + (b) 11 circular re-export + 7 (c) non-bridgeable
-        + 5 (d) shape mismatches
+    WIRE (real proof term, debt = twin's axioms + injected anchors): 69
+      (body census = the 16 classic discharges + 53 assembly wires)
+    HOLD (explicit `sorry`, reason recorded): 21 (body census)
+      = (a) 5 no-twin + (b) 11 circular re-export + (c) 5 non-bridgeable
+    RECONCILIATION (SF-87 audit of the count block): the 2026-09-21
+      baseline recorded WIRE 62 / HOLD 28, but four of its 28 ((d)
+      OEHDBEN/TBRMXRZ1/VPWSHTO/XWNHLMD) had been rebased onto twin bodies
+      by the SF-63/69/71/73 statement-fix waves without this block being
+      updated -- the pre-SF-87 body census was already 66/24.  This wave
+      WIRES the QKNVMLB trio: 28 -> 25 on the ledger convention = 24 -> 21
+      on the body census (the only convention-consistent delta is -3).
     TOTAL: 90/90 registry contracts exposed at this exit.
+
+  ASSEMBLY WAVE 2026-11-01 (SF-87, lane la35-access-wb1; the QKNVMLB
+    slicing trio leaves the HOLD ledger): LA1's registry concls were
+    rebased onto the corpus original form (SF-64/65/66 fixed the index
+    convention `vv (i % s'.k + p % s.k)`; SF-87 completes the reshape by
+    restating the QKNVMLB2/3 half-slice realisation pair as the corpus
+    two-equation form `scsHalfSliceV39 s p q d' mkj = s'` /
+    `scsHalfSliceV39 s q p d'' mkj = s''` (QKNVMLB.hl:5523/:5524 and
+    :10665/:10666) instead of the `(s', s'') = scsSliceV39 ...` tuple
+    slot -- the two shapes are inter-derivable via the `scsSliceV39` def +
+    `Prod.mk.injEq`, so the restatement is content-preserving; the W-E
+    mod-boundary probe (`vvAppendix_ne_vvCorpus`, lane la35-access-we1)
+    supplies the machine evidence that the OLD appendix index form
+    `vv ((i+p) % s'.k)` was the right thing to abandon).  This exit now
+    WIRES all three against the proved LA35 twins (import of
+    `Kepler.Text.LocalAuto35` added):
+      QKNVMLB1 <- LocalAuto35.QKNVMLB1_p35 (LA35:31426; sorry-free body),
+      QKNVMLB2 <- LocalAuto35.QKNVMLB2_p35 (LA35:31654; sorry-free body),
+      QKNVMLB3 <- LocalAuto35.QKNVMLB3_p35 (LA35:33360; via
+        QKNVMLB3_LE4/Eq4_p35, both proved through `tausplit_le4`).
+    Debt (measured 2026-11-01, `#print axioms` at this exit + against the
+    LA35 olean): QKNVMLB2/QKNVMLB3 wires are FULLY CLEAN
+    (`[propext, Classical.choice, Quot.sound]` -- the tausplit_le4
+    assembly closed their faces; the recon-era "all three polluted"
+    expectation is superseded).  QKNVMLB1's wire carries `sorryAx`
+    inherited from the twin's LE4 branch: `QKNVMLB1_LE4F_p35` (sorryAx)
+    <- `TECOXBMv2_p35` (sorryAx) <- the sectorTri/pmPlaneCrowding chain
+    (LA35 bare sorry at :7583; `QKNVMLB1_EQ4F_p35` is already clean) --
+    the debt has that single known root and self-clears when W-A (pm12)
+    closes it.
 
   ASSEMBLY WAVE 2026-09-21 II (skeleton propagation into the (a) class):
     four of the eleven (a) entries have PROVED HOL originals that had never
@@ -199,6 +235,10 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
         functions (different moduli), not equable via periodicity.  The LA1
         correction is therefore deferred to the registry-refactor round
         (LA1 frozen this round); full ruling on the entries below.
+        [2026-11-01 SF-87: the deferral is executed -- LA1 registry re-based
+        onto the corpus form (SF-64/65/66 index + SF-87 two-equation) and
+        QKNVMLB1/QKNVMLB2 are WIRED through the proved, sorry-free-bodied
+        LA35 twins; (c) HELD 7 -> 5.  See the 2026-11-01 wave note above.]
       WIRED (38): XWITCCN, XWITCCN2, AYQJTMD, EAPGLE, JKQEWGV1/2/3,
       MHAEYJN (LA37 lane now BUILDS on this checkout — its twin
         `MHAEYJN_p37` is typed by the verbatim Prop-def
@@ -238,6 +278,10 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
       XWNHLMD, QKNVMLB3); CUXVZOZ/CJBDXXN left this class -- their p21
       twins match the registry concls modulo the terminal-bank anchor, so
       they are WIRED through the injected `p21_anchor` (see the wave note).
+      [2026-11-01 SF-87: QKNVMLB3 left this class -- the registry re-based
+      onto the corpus two-equation form and WIRED through the proved
+      `QKNVMLB3_p35` (its `tausplit_le4` assembly closed the former
+      "still-sorried Eq4/LE4 branches" blocker); 4 remain.]
       [2026-09-20: this whole class re-audited against the fresh proofs;
       every blocker below is confirmed non-derivable, with the reason:]
       OEHDBEN -- LocalAuto20.OEHDBEN/OEHDBEN_PRIME are now PROVED but (i)
@@ -420,6 +464,7 @@ import Kepler.Text.LocalAuto31
 import Kepler.Text.LocalAuto32
 import Kepler.Text.LocalAuto33
 import Kepler.Text.LocalAuto34
+import Kepler.Text.LocalAuto35
 import Kepler.Text.LocalAuto36
 import Kepler.Text.LocalAuto37
 import Kepler.Text.LocalAuto38
@@ -1429,53 +1474,71 @@ theorem LFLACKU_discharged : main_nonlinear_terminal_v11 →
     scsArrowV39 {scs3I1} ∅ := by
   sorry
 
-/-- HOLD (c) `QKNVMLB1_concl`: the LA35 twin concludes on the index
-convention `vv (i % s'.k + p % s.k)` where the registry uses
-`vv ((i + p) % s'.k)`; the conventions disagree off the mod boundary
-(e.g. k = 6, p = 2, q = 0, i = 4 gives `vv 6` vs `vv 1`) and `Periodic vv`
-does not reconcile them (cf. the QKNVMLB3 (d) note).
-RULING 2026-09-21 IV (index-convention arbitration): the TWIN is the
-faithful encoding.  `QKNVMLB1_p35` (LA35:628) restates verbatim the PROVED
-HOL original `QKNVMLB1` (QKNVMLB.hl:5223-5230; `vv'` at :5225 reads
-`vv (i MOD (scs_k_v39 s') + p MOD (scs_k_v39 s))`), as do its components
-`QKNVMLB1_LE4F`/`QKNVMLB1_EQ4F` (QKNVMLB.hl:4838/:5064).  The REGISTRY
-form transcribes the appendix.hl:1055-1062 `QKNVMLB1_concl` let verbatim
-(`vv ((i+p) MOD (scs_k_v39 s'))`), but that appendix let is a
-statement-only binding whose proved counterpart states the OTHER
-convention: no `prove` of the appendix form exists anywhere in the corpus,
-and the two forms are different functions (different moduli s'.k vs s.k --
-not equable by periodicity; a rotation of one is not an instance of the
-other).  Disposition (two-sources case): LA35 statements stay AS-IS
-(already faithful); the LA1 registry correction is deferred to the
-registry-refactor round (LA1 frozen this round).  This entry stays HOLD
-because no proved twin of the REGISTRY form exists and none can be bridged
-from the contract form. -/
+/-- WIRE `LocalAuto1.QKNVMLB1_concl` <- `QKNVMLB1_p35` (verbatim twin,
+LA35:31426).  SF-87 re-based this exit onto the corpus original form: the
+registry statement is the twin's conclusion with `s'`/`vv'` inlined at
+`scsHalfSliceV39 s p q d' mkj` / `fun i => vv (i % s'.k + p % s.k)` --
+the `let s' =`/`let vv' =` shape of the PROVED HOL original `QKNVMLB1`
+(QKNVMLB.hl:5223-5230; `vv'` at :5225), per RULING 2026-09-21 IV
+(arbitration: the twin side is the faithful encoding; machine-checked by
+the W-E mod-boundary probe `vvAppendix_ne_vvCorpus`, lane
+la35-access-we1 -- the appendix form `vv ((i+p) % s'.k)` is a different
+function off the mod boundary and has NO proof in the corpus).
+Debt-consolidating wiring, sorryAx standing: the twin's proof body is
+sorry-free (the EQ4F/LE4F case split `QKNVMLB1_EQ4F_p35`/
+`QKNVMLB1_LE4F_p35`; the EQ4F branch is already axiom-clean), but the
+LE4 branch's axiom face inherits the LA35 sectorTri/pmPlaneCrowding root
+(`QKNVMLB1_LE4F_p35` <- `TECOXBMv2_p35` <- LA35 bare sorry at :7583);
+the debt has that single known root and self-clears when W-A (pm12)
+closes it.
+History: HOLD (c) 2026-09-19..2026-10-31 while the registry carried the
+appendix form; SF-64 re-based the registry onto the corpus form, SF-87
+completes the reshape and wires. -/
 theorem QKNVMLB1_discharged : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
     (vv : ℕ → V3),
     MMsV39 s vv → s.bm p q < 4 → (s.k = 4 ∨ s.bm p q ≤ cstab) → isScsV39 s →
     d' < 0.9 → scsDiag s.k p q →
     BBsV39 (scsHalfSliceV39 s p q d' mkj)
-      (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) := by
-  sorry
+      (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k)) :=
+  fun s p q d' mkj vv hMM hbm h4 hscs hd' hdiag =>
+    QKNVMLB1_p35 (s' := scsHalfSliceV39 s p q d' mkj)
+      (vv' := fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k))
+      s p q d' mkj vv hMM hbm h4 hscs hd' hdiag rfl rfl
 
-/-- HOLD (c) `QKNVMLB2_concl`: same index-convention mismatch on both
-half-slice realisations as QKNVMLB1.  RULING 2026-09-21 IV: the twin
-(`QKNVMLB2_p35`, LA35:868) is faithful to the proved original `QKNVMLB2`
-(QKNVMLB.hl:5522-5533; `vv (i MOD s'.k + p MOD s.k)` at :5525 and
-`vv (i MOD s''.k + q MOD s.k)` at :5527); the registry transcribes the
-unproved appendix.hl:1064-1073 statement-let (`vv ((i+p) MOD s'.k)`,
-`vv ((i+q) MOD s''.k)`).  Twin stays as-is; LA1 correction deferred to the
-registry-refactor round; entry stays HOLD. -/
+/-- WIRE `LocalAuto1.QKNVMLB2_concl` <- `QKNVMLB2_p35` (verbatim twin,
+LA35:31654).  SF-87 re-based this exit onto the corpus original form:
+the half-slice realisation pair is carried as the corpus two-equation
+antecedents `scsHalfSliceV39 s p q d' mkj = s'` /
+`scsHalfSliceV39 s q p d'' mkj = s''` (QKNVMLB.hl:5523/:5524; twin
+`hs'`/`hs''` same direction) instead of the `(s', s'') = scsSliceV39 ...`
+tuple slot -- the two shapes are inter-derivable via the `scsSliceV39`
+def + `Prod.mk.injEq`, so the restatement is content-preserving; the
+realisations stay inlined (= the `let vv'`/`let vv''` shape of the proved
+original, `vv (i MOD s'.k + p MOD s.k)` at :5525 and
+`vv (i MOD s''.k + q MOD s.k)` at :5527, RULING 2026-09-21 IV).
+Debt: measured CLEAN at this exit -- the twin's proof body is sorry-free
+(the mkj flag split `QKNVMLB2_step06/07_mkj*_p35`) and its axiom face is
+`[propext, Classical.choice, Quot.sound]` (the tausplit-chain assemblies
+feeding it are closed; the recon-era pmPlaneCrowding-pollution
+expectation no longer applies to this item).
+History: HOLD (c) 2026-09-19..2026-10-31 (SF-65
+had already fixed the index convention; the tuple slot was the remaining
+registry delta). -/
 theorem QKNVMLB2_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (mkj : Prop) (vv : ℕ → V3),
-    (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    scsHalfSliceV39 s p q d' mkj = s' →
+    scsHalfSliceV39 s q p d'' mkj = s'' →
     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     s.d ≤ d' + d'' →
     dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
-      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) := by
-  sorry
+      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k)) :=
+  fun s s' s'' p q d' d'' mkj vv hs' hs'' hMM hscs hdiag hsl hd =>
+    QKNVMLB2_p35 (vv' := fun i => vv (i % s'.k + p % s.k))
+      (vv'' := fun i => vv (i % s''.k + q % s.k))
+      s s' s'' p q d' d'' mkj vv hs' hs'' rfl rfl hMM hscs hdiag hsl hd
 
-/-! ### (d) Twin proved but the shape delta is not bridgeable (5) -/
+/-! ### (d) Twin proved but the shape delta is not bridgeable (4 after
+      SF-87 wired QKNVMLB3; was 5) -/
 
 /-- WIRE `LocalAuto1.OEHDBEN_concl` <- `OEHDBEN` (verbatim twin; SF-73
 rebased this exit onto the corpus original form -- mnt11 antecedent, tail
@@ -1534,33 +1597,39 @@ theorem XWNHLMD_discharged : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s �
     scsArrowV39 {s} {s'} :=
   XWNHLMD_p26
 
-/-- HOLD (d) `QKNVMLB3_concl`: the proved `QKNVMLB3_p35` case-splits onto
-the still-sorried `QKNVMLB3_Eq4/LE4_p35` branches AND its realisation
-arguments use the index convention `vv (i % s'.k + p % s.k)` and the
-`scsHalfSliceV39 s p q d' mkj = s'` equation form where the registry uses
-`vv ((i + p) % s'.k)` and the `(s', s'') = scsSliceV39 ...` tuple form (the
-tuple side does bridge via the `scsSliceV39` def; the index conventions
-disagree off the mod boundary, e.g. s.k=6, p=2, q=0, i=4 gives `vv 6` vs
-`vv 1`, and `Periodic vv s.k` cannot reconcile them).
-RULING 2026-09-21 IV: on the index convention the TWIN side is the
-faithful one -- the proved HOL master `QKNVMLB3` (QKNVMLB.hl:10665-10675)
-realises `vv'`/`vv''` as `vv (i MOD s'.k + p MOD s.k)` (:10667) and
-`vv (i MOD s''.k + q MOD s.k)` (:10669), exactly the `QKNVMLB3_p35`
-hypothesis form; the registry's `vv ((i+p) % s'.k)` transcribes the
-unproved appendix.hl:1075-1084 statement-let (proved counterpart states
-the other convention -- no `prove` of the appendix form exists in the
-corpus).  The tuple-vs-equation form delta is separately bridgeable (via
-the `scsSliceV39` def), so once the registry convention is corrected
-(registry-refactor round; LA1 frozen this round) this (d) block reduces to
-the still-sorried `QKNVMLB3_Eq4/LE4_p35` branches alone. -/
+/-- WIRE `LocalAuto1.QKNVMLB3_concl` <- `QKNVMLB3_p35` (verbatim twin,
+LA35:33360).  SF-87 re-based this exit onto the corpus original form:
+the half-slice realisation pair is carried as the corpus two-equation
+antecedents `scsHalfSliceV39 s p q d' mkj = s'` /
+`scsHalfSliceV39 s q p d'' mkj = s''` (QKNVMLB.hl:10665/:10666; twin
+`hs'`/`hs''` same direction) instead of the `(s', s'') = scsSliceV39 ...`
+tuple slot -- inter-derivable via the `scsSliceV39` def +
+`Prod.mk.injEq` (content-preserving); the realisations stay inlined (=
+the `let vv'`/`let vv''` shape of the proved master `QKNVMLB3`,
+QKNVMLB.hl:10665-10675; `vv (i MOD s'.k + p MOD s.k)` at :10667 and
+`vv (i MOD s''.k + q MOD s.k)` at :10669, RULING 2026-09-21 IV).
+Debt: measured CLEAN at this exit -- the twin case-splits onto
+`QKNVMLB3_Eq4_p35`/`QKNVMLB3_LE4_p35`, both PROVED through the
+`tausplit_le4` assembly (LA35:32955; the old "still-sorried branches"
+blocker is voided by lkgrqui-le4eq4-fin-w2), and its axiom face is
+`[propext, Classical.choice, Quot.sound]` (the tausplit chain is closed;
+the recon-era pmPlaneCrowding-pollution expectation no longer applies to
+this item).
+History: HOLD (d) 2026-09-19..2026-10-31 (SF-66 had already fixed
+the index convention; the tuple slot was the remaining registry
+delta). -/
 theorem QKNVMLB3_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (mkj : Prop) (vv : ℕ → V3),
-    (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    scsHalfSliceV39 s p q d' mkj = s' →
+    scsHalfSliceV39 s q p d'' mkj = s'' →
     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     s.d ≤ d' + d'' →
     taustarV39 s' (fun i => vv (i % s'.k + p % s.k)) +
-      taustarV39 s'' (fun i => vv (i % s''.k + q % s.k)) ≤ taustarV39 s vv := by
-  sorry
+      taustarV39 s'' (fun i => vv (i % s''.k + q % s.k)) ≤ taustarV39 s vv :=
+  fun s s' s'' p q d' d'' mkj vv hs' hs'' hMM hscs hdiag hsl hd =>
+    QKNVMLB3_p35 (vv' := fun i => vv (i % s'.k + p % s.k))
+      (vv'' := fun i => vv (i % s''.k + q % s.k))
+      s s' s'' p q d' d'' mkj vv hs' hs'' rfl rfl hMM hscs hdiag hsl hd
 
 /-! ## Debt ledger (`#print axioms` ground truth)
 
@@ -1633,5 +1702,8 @@ inputs (e.g. `YXIONXL1` via an LA12 wave input, `PQCSXWG2` via
 #print axioms OTMTOTJ4_discharged
 #print axioms ASSWPOW_discharged
 #print axioms DRNDRDV_discharged
+#print axioms QKNVMLB1_discharged
+#print axioms QKNVMLB2_discharged
+#print axioms QKNVMLB3_discharged
 
 end Kepler.Text

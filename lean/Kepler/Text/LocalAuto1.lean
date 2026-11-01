@@ -3649,7 +3649,11 @@ theorem BKOSSGE_concl : scsArrowV39 {scs3M1} {scs3T1, scs3T5} := by
 
 /-- HOL `QKNVMLB1_concl` (SF-64 真化：索引约定改采 corpus 正本
 QKNVMLB.hl:5222-5230 形 `vv (i % s'.k + p % s.k)`——RULING 2026-09-21 IV
-判孪生侧忠实；appendix.hl:1055 摘要形在 corpus 无原证)。 -/
+判孪生侧忠实；appendix.hl:1055 摘要形在 corpus 无原证)。
+SF-87 复核：与孪生 `QKNVMLB1_p35`（LA35）签名逐 token 同形——半片 s' 与
+实现 vv' 在本句内联（= corpus `let s' =`/`let vv' =` 绑定的忠实转录），
+假设集与结论经内联代换后与 QKNVMLB.hl:5223 正本及孪生逐字一致；本句无需
+再改形。 -/
 theorem QKNVMLB1_concl : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
     (vv : ℕ → V3),
     MMsV39 s vv → s.bm p q < 4 → (s.k = 4 ∨ s.bm p q ≤ cstab) → isScsV39 s →
@@ -3659,10 +3663,16 @@ theorem QKNVMLB1_concl : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
   sorry
 
 /-- HOL `QKNVMLB2_concl` (SF-65 真化：双半片实现约定改采 corpus 正本
-QKNVMLB.hl:5525/:5527 形——RULING 2026-09-21 IV 判孪生侧忠实)。 -/
+QKNVMLB.hl:5525/:5527 形——RULING 2026-09-21 IV 判孪生侧忠实)。
+SF-87 真化：半片实现对由 `scsSliceV39` 元组槽改采 corpus 正本双等式形
+`scs_half_slice_v39 s p q d' mkj = s'` / `scs_half_slice_v39 s q p d'' mkj
+= s''`（QKNVMLB.hl:5523/:5524，孪生 `QKNVMLB2_p35` 的 `hs'`/`hs''` 同向同
+形）——元组形与双等式形经 `scsSliceV39` 定义 + `Prod.mk.injEq` 互推，内容
+不变；实现仍内联（= corpus `let vv'`/`let vv''` 绑定）。 -/
 theorem QKNVMLB2_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
     (vv : ℕ → V3),
-    (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    scsHalfSliceV39 s p q d' mkj = s' →
+    scsHalfSliceV39 s q p d'' mkj = s'' →
     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     s.d ≤ d' + d'' →
     dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
@@ -3671,10 +3681,16 @@ theorem QKNVMLB2_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj
 
 /-- HOL `QKNVMLB3_concl` (SF-66 真化：双半片实现约定改采 corpus 正本
 QKNVMLB.hl:10667/:10669 形——RULING 2026-09-21 IV 判孪生侧忠实；
-Eq4/LE4 分支债见 LA35)。 -/
+Eq4/LE4 分支债见 LA35)。
+SF-87 真化：半片实现对由 `scsSliceV39` 元组槽改采 corpus 正本双等式形
+`scs_half_slice_v39 s p q d' mkj = s'` / `scs_half_slice_v39 s q p d'' mkj
+= s''`（QKNVMLB.hl:10665/:10666，孪生 `QKNVMLB3_p35` 的 `hs'`/`hs''` 同向
+同形）——元组形与双等式形经 `scsSliceV39` 定义 + `Prod.mk.injEq` 互推，
+内容不变；实现仍内联（= corpus `let vv'`/`let vv''` 绑定）。 -/
 theorem QKNVMLB3_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
     (vv : ℕ → V3),
-    (s', s'') = scsSliceV39 s p q d' d'' mkj →
+    scsHalfSliceV39 s p q d' mkj = s' →
+    scsHalfSliceV39 s q p d'' mkj = s'' →
     MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
     s.d ≤ d' + d'' →
     taustarV39 s' (fun i => vv (i % s'.k + p % s.k)) +
