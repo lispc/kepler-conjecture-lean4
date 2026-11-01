@@ -311,14 +311,87 @@ theorem LFLACKU_p23 (h : main_nonlinear_terminal_v11) :
     scsArrowV39 {scs3I1} ∅ := by
   sorry
 
+/-- The `{0, 1}` residue-pair test of `a_pro` (JOTSWIX.hl:216-257): the
+two-element set `{a, b}` is `{0, 1}` iff the pair is `{0, 1}` or `{1, 0}`. -/
+private theorem la23pair01 {a b : ℕ} :
+    ({a, b} : Set ℕ) = {0, 1} ↔ (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) := by
+  constructor
+  · intro h
+    have ha : a = 0 ∨ a = 1 := by
+      have hm : a ∈ ({a, b} : Set ℕ) := by simp
+      rw [h] at hm
+      simpa using hm
+    have hb : b = 0 ∨ b = 1 := by
+      have hm : b ∈ ({a, b} : Set ℕ) := by simp
+      rw [h] at hm
+      simpa using hm
+    rcases ha with rfl | rfl <;> rcases hb with rfl | rfl
+    · exact absurd h (by
+        rw [show ({0, 0} : Set ℕ) = {0} from by ext x; simp] at h
+        have hm : (1:ℕ) ∈ ({0, 1} : Set ℕ) := by simp
+        rw [← h] at hm
+        simp at hm)
+    · exact Or.inl ⟨rfl, rfl⟩
+    · exact Or.inr ⟨rfl, rfl⟩
+    · exact absurd h (by
+        rw [show ({1, 1} : Set ℕ) = {1} from by ext x; simp] at h
+        have hm : (0:ℕ) ∈ ({0, 1} : Set ℕ) := by simp
+        rw [← h] at hm
+        simp at hm)
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩)
+    · rfl
+    · ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+
 /-- HOL `s_init_list_alt` (JOTSWIX.hl:216): the init list spelled out.
-NEEDS (for the `5I3`/`4I3` entries): the `a_pro` ↔ `funlist_v39`
-periodic-2 mod reduction (HOL proof JOTSWIX.hl:241-257; the first six
-entries are `rfl`). -/
+The first six entries are `rfl`; the `5I3`/`4I3` entries go through the
+`a_pro` ↔ `funlist_v39` function equalities (JOTSWIX.hl:241-257): `a_pro`'s
+`p`-slot is the cycle edge `(0, 1)`, its `a1`-slot the remaining cycle edges
+(funlist default), and its `a2`-slot the diagonals (the remaining table
+slots), checked over all residue pairs by `interval_cases`. -/
 theorem s_init_list_alt_p23 :
     sInitListV39 =
       [scs6I1, scs5I1, scs4I1, scs3I1, scs5I2, scs4I2, scs5I3, scs4I3] := by
-  sorry
+  have key5 : ∀ p q r : ℝ,
+      ((fun (i j : ℕ) =>
+          if i % 5 = j % 5 then (0:ℝ)
+          else if ({i % 5, j % 5} : Set ℕ) = {0, 1} then p
+          else if j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5 then q else r) =
+        funlistV39 [((0, 1), p), ((0, 2), r), ((0, 3), r), ((1, 3), r), ((1, 4), r),
+          ((2, 4), r)] q 5) := by
+    intro p q r
+    funext i j
+    have hfl : funlistV39 [((0, 1), p), ((0, 2), r), ((0, 3), r), ((1, 3), r),
+        ((1, 4), r), ((2, 4), r)] q 5 i j =
+        funlistV39 [((0, 1), p), ((0, 2), r), ((0, 3), r), ((1, 3), r), ((1, 4), r),
+          ((2, 4), r)] q 5 (i % 5) (j % 5) := by
+      simp [funlistV39, psort, Nat.mod_mod]
+    rw [hfl, ← Nat.mod_add_mod i 5 1, ← Nat.mod_add_mod j 5 1]
+    have hz1 : i % 5 < 5 := Nat.mod_lt i (by omega)
+    have hz2 : j % 5 < 5 := Nat.mod_lt j (by omega)
+    interval_cases i % 5 <;> interval_cases j % 5 <;>
+      simp [funlistV39, psort, assocdV39, la23pair01] <;> norm_num
+  have key4 : ∀ p q r : ℝ,
+      ((fun (i j : ℕ) =>
+          if i % 4 = j % 4 then (0:ℝ)
+          else if ({i % 4, j % 4} : Set ℕ) = {0, 1} then p
+          else if j % 4 = (i + 1) % 4 ∨ (j + 1) % 4 = i % 4 then q else r) =
+        funlistV39 [((0, 1), p), ((0, 2), r), ((1, 3), r)] q 4) := by
+    intro p q r
+    funext i j
+    have hfl : funlistV39 [((0, 1), p), ((0, 2), r), ((1, 3), r)] q 4 i j =
+        funlistV39 [((0, 1), p), ((0, 2), r), ((1, 3), r)] q 4 (i % 4) (j % 4) := by
+      simp [funlistV39, psort, Nat.mod_mod]
+    rw [hfl, ← Nat.mod_add_mod i 4 1, ← Nat.mod_add_mod j 4 1]
+    have hz1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hz2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la23pair01] <;> norm_num
+  simp only [sInitListV39, scs6I1, scs5I1, scs4I1, scs3I1, scs5I2, scs4I2, scs5I3,
+    scs4I3]
+  rw [key5 (2 * h0) 2 (2 * h0), key5 (Real.sqrt 8) (2 * h0) 6,
+    key4 (2 * h0) 2 (Real.sqrt 8), key4 (Real.sqrt 8) (2 * h0) 6]
 
 /-- HOL `JEJTVGB_case_breakdown` (JOTSWIX.hl:260): the arrow-registry
 conjunction ending in `JEJTVGB_assume_v39`. Twin of LocalAuto16's
