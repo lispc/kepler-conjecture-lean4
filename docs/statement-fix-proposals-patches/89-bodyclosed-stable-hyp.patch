@@ -1,0 +1,87 @@
+diff --git a/lean/Kepler/Text/LocalAuto23.lean b/lean/Kepler/Text/LocalAuto23.lean
+index 0898d8b7..d44ec903 100644
+--- a/lean/Kepler/Text/LocalAuto23.lean
++++ b/lean/Kepler/Text/LocalAuto23.lean
+@@ -1200,11 +1200,17 @@ clauses incl. fan7 and the hypermap face structure), the family converges to
+ the δ=0 config where the edge `{r,s}` is antiparallel through 0, so `fan6`
+ fails and CONDITION2 fails — the locus is not closed. HOL CLOSED_SY needs
+ its stableSystem context (adjacent-edge upper bound `≤ cstab`: antiparallel
+-annulus rows force edge length ≥ 4 > 3.01). Repair direction: add
+-stability-shaped hypotheses here and discharge them at the CASE_4/5/6
+-consumers from `isScsV39` (their `aRk/bRk` are shifted `s.a/s.b` bounds).
++annulus rows force edge length ≥ 4 > 3.01). REPAIRED (SF-89, 2026-10-28):
++stability-shaped hypotheses added — `hm : 2 < m` (HOL `2 < k`) and
++`hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4` (HOL stable_system's
++`b(i, f i) ≤ cstab` clause, dih2k.hl:65; carrier twin `CLOSED_SY_p18`
++LA18:236 takes the full `stableSystem_p18`); discharged at the CASE_4/5/6
++consumers from `isScsV39` via `stabAdj_of_isScsV39` (LA24: the `3 < s.k →
++s.b i (i + 1) ≤ cstab` conjunct shifted onto the `aRk/bRk` tables). The
++flex family above is out of scope: `bR ≡ 5` fails `hstab` (5 > 3.01).
+ (Sorry 2/2 of this kit.) -/
+-theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) :
++theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
++    (hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4) :
+     IsClosed {v : Fin m → V3 | (∀ i, v i ∈ ballAnnulus) ∧
+       CONDITION1_SY_p4 aR bR v ∧ CONDITION2_SY_p4 v} := by
+   sorry
+diff --git a/lean/Kepler/Text/LocalAuto24.lean b/lean/Kepler/Text/LocalAuto24.lean
+index dcd39022..09b354ee 100644
+--- a/lean/Kepler/Text/LocalAuto24.lean
++++ b/lean/Kepler/Text/LocalAuto24.lean
+@@ -1269,6 +1269,23 @@ private theorem table_shift_eq_p24 (f : ℕ → ℕ → ℝ) (n : ℕ) (hp : Per
+     conv_lhs => rw [(Nat.div_add_mod (j + 1) n).symm]
+   rw [e2, periodic2_right_p24 hp]
+ 
++/-- SF-89 feed: `isScsV39`'s adjacent-edge upper bound (the
++`3 < s.k → s.b i (i + 1) ≤ cstab` conjunct of LA1 `isScsV39`, HOL is_scs_v39 appendix.hl:354) shifted onto
++the `((i + 1) % k)`-indexing that the CASE_4/5/6 tables `aRk`/`bRk` use —
++this is exactly the repaired `hstab` premise of `bodyClosed_p23` at
++`m = k`, since `bRk s i (finNext i) = s.b ((i + 1) % k)
++(((finNext i : ℕ) + 1) % k)` definitionally. -/
++private theorem stabAdj_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
++    (hk3 : 3 < s.k) (i : Fin k) :
++    s.b (((i : ℕ) + 1) % k) ((((finNext i : Fin k) : ℕ) + 1) % k) ≤ cstab_p4 := by
++  unfold isScsV39 at hs
++  obtain ⟨-, -, -, -, -, -, -, -, -, -, hperb, -, -, -, -, -, -, hup, -, -, -⟩ := hs
++  have hb := hup hk3 ((i : ℕ) + 1)
++  have hmod := periodic2_mod_eq_p24 hperb ((i : ℕ) + 1) ((i : ℕ) + 1 + 1)
++  rw [show ((finNext i : Fin k) : ℕ) = ((i : ℕ) + 1) % k from rfl,
++    ← Nat.mod_add_mod ((i : ℕ) + 1) k 1, ← hmod]
++  exact le_trans hb (le_of_eq rfl)
++
+ /-- the k=4 shifted tables (the frozen inline lambdas). -/
+ private def aR4 (s : ScsV39) : Fin 4 → Fin 4 → ℝ :=
+   fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)
+@@ -1468,7 +1485,9 @@ theorem XWITCCN_CASE_4_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+   have hk3 : 3 < s.k := by omega
+   have hcomp : IsCompact (B_SY1_p4 (aR4 s) (bR4 s) : Set (FinVec 4 3)) :=
+     B_SY1_p4_compact_of_fan_p23 (aR4 s) (bR4 s)
+-      (bodyClosed_p23 (aR4 s) (bR4 s)) (bodyBounded_p23 4 (aR4 s) (bR4 s))
++      (bodyClosed_p23 (aR4 s) (bR4 s) (by norm_num : 2 < 4)
++        (fun i => stabAdj_of_isScsV39 s hs hk3 i))
++      (bodyBounded_p23 4 (aR4 s) (bR4 s))
+   have hd : ContinuousOn (fun l : FinVec 4 3 =>
+       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR4 s) (bR4 s)) :=
+     (continuous_dFun_p23 _).continuousOn
+@@ -1625,7 +1644,9 @@ theorem XWITCCN_CASE_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+   have hk3 : 3 < s.k := by omega
+   have hcomp : IsCompact (B_SY1_p4 (aR5 s) (bR5 s) : Set (FinVec 5 3)) :=
+     B_SY1_p4_compact_of_fan_p23 (aR5 s) (bR5 s)
+-      (bodyClosed_p23 (aR5 s) (bR5 s)) (bodyBounded_p23 5 (aR5 s) (bR5 s))
++      (bodyClosed_p23 (aR5 s) (bR5 s) (by norm_num : 2 < 5)
++        (fun i => stabAdj_of_isScsV39 s hs hk3 i))
++      (bodyBounded_p23 5 (aR5 s) (bR5 s))
+   have hd : ContinuousOn (fun l : FinVec 5 3 =>
+       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR5 s) (bR5 s)) :=
+     (continuous_dFun_p23 _).continuousOn
+@@ -1780,7 +1801,9 @@ theorem XWITCCN_CASE_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+   have hk3 : 3 < s.k := by omega
+   have hcomp : IsCompact (B_SY1_p4 (aR6 s) (bR6 s) : Set (FinVec 6 3)) :=
+     B_SY1_p4_compact_of_fan_p23 (aR6 s) (bR6 s)
+-      (bodyClosed_p23 (aR6 s) (bR6 s)) (bodyBounded_p23 6 (aR6 s) (bR6 s))
++      (bodyClosed_p23 (aR6 s) (bR6 s) (by norm_num : 2 < 6)
++        (fun i => stabAdj_of_isScsV39 s hs hk3 i))
++      (bodyBounded_p23 6 (aR6 s) (bR6 s))
+   have hd : ContinuousOn (fun l : FinVec 6 3 =>
+       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR6 s) (bR6 s)) :=
+     (continuous_dFun_p23 _).continuousOn

@@ -5214,3 +5214,84 @@ LA1 注册表 90 口：28 HOLD → 25；LocalConcl LC:423 消费带；下游 = W
 ### (f) 状态
 
 立案 2026-11-01（用户批）；W-B 波执行中。
+
+## 89. LA23 `bodyClosed_p23`（HEAD :1207，docstring :1186-1206）泛性陈述丢 HOL `CLOSED_SY` 稳定语境（la23-analysis 数值反例族 ⟹ 现陈述大概率为假；修复 = 加 `hm : 2 < m` + 邻接上界 `≤ cstab_p4` 两前提，LA24 CASE_4/5/6 三装配点机械喂出）— 分级 **A**（冻结陈述为假 · SF-85 同型 · 修复面含三消费者）
+
+### (a) HOL 引用（CLOSED_SY 正本逐字对照与被丢的稳定语境）
+
+corpus 正本 `lean/scripts/local/WJSCPRO.hl:63-66`（`reference/flyspeck/text_formalization/local/WJSCPRO.hl` 同位，闭性巨人证明跨 ：63-3174）：
+
+```
+stable_system k d (0..k-1) a b J (\i. ((1+i):num MOD k)) /\ k = dimindex(:M)
+/\ 1< k /\ 2<k
+==>
+closed {matvec(v:real^3^M) | (!i. ... row i v IN ball_annulus) /\
+  CONDITION1_SY a b v /\ CONDITION2_SY v }
+```
+
+`stable_system` 正本 `dih2k.hl:61-67`：`constraint_system … ∧ (∀ i j ∈ s, i≠j → 2 ≤ a(i,j)) ∧ (∀ i ∈ s, a(i,i)=0 ∧ **b(i, f i) ≤ cstab**) ∧ (∀ {i,j} ∈ J, a(i,j)=√8 ∧ b(i,j)=cstab)`；`cstab = #3.01`（dih2k.hl:42；appendix.hl:78）。对闭性承重的正是邻接条款 `b(i, f i) ≤ cstab`：CLOSED_SY 证明体显式取用（WJSCPRO.hl:258 `norm (row i …) − row (SUC (i MOD dimindex(:M))) … ≤ cstab`）——稳定语境保证相邻行永不反平行过原点（环带 ‖v‖ ≥ 2 ⟹ 反平行对距离 ≥ 4 > 3.01），fan6 在极限点的拒绝机制不可达，sequential-lims 参数才得以穿过 CONDITION2。
+
+Lean 侧载体全部带稳定前提：`CLOSED_SY_p18`（LA18:234-241，取全 `stableSystem_p18 k d s a b J f`，:164-170 逐字孪生 dih2k.hl:61-67，含 `b i (f i) ≤ cstab_p4`）；LA9 :568-660 五件全带 `StableSyP9`；LA11 `PROPERTIES_OF_FAN_IN_B_SY_p11`（:1489）带 `stableSystem_p4`。**LA23 泛性陈述（`{m : ℕ} (aR bR : Fin m → Fin m → ℝ)`，零稳定形前提）严格强于上述全部正本/载体——冻结丢前提**，与 §85（WKEIDFT 丢 guard）、§86（EQ4 丢载体）同型。
+
+### (b) 缺陷（泛性陈述为假：挠曲反例族，数值级）
+
+la23-analysis 实证、本车道复跑确认（见 (f)）：取 `m=3`、`aR ≡ 0`、`bR ≡ 5`，行向量 `2.2·e(0°) / 2.2·e(60°+δ) / 2.2·e(240°)`：
+- 每个 δ>0（数值核到 δ=0.001°）：CONDITION2 全过（Graph／fan6／fan7 锥交分配律／FF=单 face 轨道／darts=2·3／azimInFan ≤ π／V ⊆ wedge 逐项）；CONDITION1 距离阵 {0, 2.2, 2.2, 3.81, 3.81, 4.4} ⊆ [0,5] ✓。
+- δ→0 极限：`{r, s}` 反平行过原点（cross ≈ 1.8e-15，‖r−s‖ = 4.4）→ fan6 假 → CONDITION2 假。
+- 体集含整条 δ>0 族而不含其极限 ⟹ **不闭 ⟹ 现陈述大概率为假**（家族部分为数值+精确平面扇论证，未 Lean 形式化；「极限点违 CONDITION2」本身是两行 Lean 论证）。δ<60° 一侧 fan7 真违例（锥重叠越共享射线），fan6/fan7 恰在 60° 夹断该族。
+
+### (c) 修复陈述（加前提后的完整 Lean 签名，逐字）
+
+```lean
+theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
+    (hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4) :
+    IsClosed {v : Fin m → V3 | (∀ i, v i ∈ ballAnnulus) ∧
+      CONDITION1_SY_p4 aR bR v ∧ CONDITION2_SY_p4 v} := by
+  sorry
+```
+
+结论面逐字不动；两前提 = HOL `2 < k` 与 stable_system 邻接条款 `b(i, f i) ≤ cstab` 的最小稳定形（`finNext` = LA4:868 环后继 = HOL `SUC (i MOD dimindex(:M))`；`cstab_p4` = LA4:375 = 3.01，与 LA1 `cstab` :200 同值）。反例族即刻出界（`bR ≡ 5` 违 `hstab`）。docstring 同 patch 内把 la23-analysis 的「Repair direction」段改写为 REPAIRED 记录（其余逐字保留）。全文 patch = `docs/statement-fix-proposals-patches/89-bodyclosed-stable-hyp.patch`（git 双头 a/ b/ 仓相对路径，`git apply --check` PASS）。
+
+### (d) 消费者影响与喂法
+
+全树 grep `bodyClosed_p23`：代码消费者恰 **3 处，全在 LA24** CASE_4/5/6 装配（:1471 / :1628 / :1783；LA23:982、LA33:121 仅注释）。三处同型，机械改法：
+
+```lean
+-      (bodyClosed_p23 (aRk s) (bRk s)) (bodyBounded_p23 k (aRk s) (bRk s))
++      (bodyClosed_p23 (aRk s) (bRk s) (by norm_num : 2 < k)
++        (fun i => stabAdj_of_isScsV39 s hs hk3 i))
++      (bodyBounded_p23 k (aRk s) (bRk s))
+```
+
+（k = 4/5/6；`hs : isScsV39 s` 与 `have hk3 : 3 < s.k` 在三个定理体内均已先于装配点在册。）喂出引理由：`aRk/bRk`（LA24:1273/1276/1311/1314/1349/1352）= `s.a/s.b` 的 `((i+1) % k)` 平移表；`isScsV39`（LA1:360，HOL `is_scs_v39` appendix.hl:354）恰含邻接条款 `∀ i, 3 < s.k → s.b i (i + 1) ≤ cstab` 与 `Periodic2 s.b s.k`。patch 新增 private 喂桥（插在 LA24 periodic 工具组之后、`aR4` 之前）：
+
+```lean
+private theorem stabAdj_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
+    (hk3 : 3 < s.k) (i : Fin k) :
+    s.b (((i : ℕ) + 1) % k) ((((finNext i : Fin k) : ℕ) + 1) % k) ≤ cstab_p4 := by
+  unfold isScsV39 at hs
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, hperb, -, -, -, -, -, -, hup, -, -, -⟩ := hs
+  have hb := hup hk3 ((i : ℕ) + 1)
+  have hmod := periodic2_mod_eq_p24 hperb ((i : ℕ) + 1) ((i : ℕ) + 1 + 1)
+  rw [show ((finNext i : Fin k) : ℕ) = ((i : ℕ) + 1) % k from rfl,
+    ← Nat.mod_add_mod ((i : ℕ) + 1) k 1, ← hmod]
+  exact le_trans hb (le_of_eq rfl)
+```
+
+（喂法链：isScsV39 第 18 合取支 → 指标 `i+1` → `periodic2_mod_eq_p24` 归到 `% k` 代表元 → `cstab = cstab_p4`（`le_of_eq rfl`，两 def 均 = 3.01）→ 平移表邻接位 `bRk s i (finNext i)` 定义等价承接。全程机械：无选择、无启发、无新增公理面。）
+
+### (e) 风险
+
+- **编译未跑**（本车道禁 lake/lean）：喂桥的 21 合取支 rcases 槽序（hperb 第 11、hup 第 18）与 `Nat.mod_add_mod` 重写链需 STATEMENT-FIX 闸上 lean 实证。apply-check 已过；万一喂桥证法失手，退路 = 喂桥体暂置 `sorry`（前提陈述面不变，直接 sorry 债 +1 并标注 SF-89 继承）。
+- 修复后 `bodyClosed_p23` **仍为 sorry**（本提案只修陈述不闭证明；(b) 的反例形式化与闭性证明各自另立战役）。同 kit 的 `continuousOn_tauFun_p23`（sorry 1/2）不受影响。
+- **LA9/LA11 fan-连续链相邻关系**：闭性证明根 = HOL CLOSED_SY 的 sequential-lims 穿 CONDITION2，与 LA9 `CONTINUOUS_ON_RHO_FUN_AND_AZIM_p9` / `CONTINUOUS_ON_TAU_FUN_p9`（LA9:568-660，带 `StableSyP9`）及 LA11 `PROPERTIES_OF_FAN_IN_B_SY_p11`（LA11:1489，带 `stableSystem_p4`）同风扇结构章根（HOL HDPLYGY.hl:1534-1770 / TECOXBM.hl:207 / WJSCPRO.hl:63-3174）。修复把 LA23 拉回与其载体同语境（消除「泛性特强于 roots」失配），闭件战役应与 LA9/LA11 链及 `continuousOn_tauFun_p23` 同批攻坚，勿作零头派发。
+- 下游其它直接实例化点：全树 grep 已核零（(d)），CASE_4/5/6 是唯三。
+
+### (f) 机检证据引用
+
+- 反例族复跑：`lane_snapshots/sf89-bodyclosed/fancheck_rerun.log`（la23-analysis `fancheck_la23ana.py`，RC=0；t ∈ {61, 60.5, 60.1, 60.01, 60.001, 65, 70, 90, 120}° 全 COND2-OK，t ≤ 59.9° fan7 真违例，t=60° fan6 拒（cross ≈ 1.8e-15）——与 la23-analysis Evidence 完全复现）。
+- 稳定前提出界验证：`stabcheck_sf89.log`（`stabcheck_sf89.py`，复用同一数值模型）：族相邻边 {q-r, r-s, s-q} = {2.23, **4.40**, **3.81**} 在全部 δ 下两项 > 3.01（bR≡5 可行 ⟹ 旧 scope；cstab=3.01 不可行 ⟹ 修复 scope 外）；环带上反平行对距离 min = **4.00** > 3.01；|v−w| ≤ 3.01 时行对夹角至多 97.6°（反平行需 180°）；40000 随机 capped 三元组 antiparallel-ness ≤ 0.003 —— **fan6 拒绝机制在修复 scope 内不可达**。
+- patch 机检：由 scratch 副本 `git diff --no-index` 生成（HEAD 1e5477f0 干净树），`git apply --check` **PASS**；2 文件 5 hunk（LA23 ×1、LA24 ×4）。
+- 预算：约 26 次工具调用 / 纯 python 机检（未触 lake/lean/.lake）。
+
+**状态**：草案 2026-10-28（sf89-bodyclosed 车道起草）。**在册未落**；应用序列（编排者）：① 用户批 → ② STATEMENT-FIX 闸（喂桥编译在此实证）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/89-bodyclosed-stable-hyp.patch SF_ITEM=89 THM=bodyClosed_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean bodyClosed_p23` → ③ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md`。§89 编号已核（现最大 §87，§88 已预留他用途）。
