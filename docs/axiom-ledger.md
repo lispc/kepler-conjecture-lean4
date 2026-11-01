@@ -409,7 +409,7 @@ LA33 −11、LA17 −1、mnt11_anchor −1、WKEIDFT 须 phase-2）每闭一根 
 > LFLACKU_p23 = m1asm B 批七 kit 的根（LFLACKU 根 LA23:312 = **M0 直源 C2**，W5-C 尾）。
 > SF-67（k=3 忠实形 3<s.k）已裁 corpus 外新数学不接。
 
-> **2026-11-01 勘误（axaudit-w1，续 150）**：本节行号为 cardff-land 前旧态（现已漂移，如 EJRCFJD sorry :9882→:9910）。实测（LA35 全模块 471 件全审）：QKNVMLB 组现况 5/7 标准三（经六层装配已闭）、2/7 仍 sorryAx（源 = QKNVMLB3_LE4_p35 与 QKNVMLB3_Eq4_p35 自体）；EJRCFJD 链已闭待落仓。全模块口径审计见 lane_snapshots/axaudit-w1/REPORT.md。
+> **2026-11-01 勘误（axaudit-w1，续 150）**：本节行号为 cardff-land 前旧态（现已漂移，如 EJRCFJD sorry :9882→:9910）。实测（LA35 全模块 471 件全审；勘误再正 per qkv-recon-w1）：QKNVMLB 组现况 5/7 标准三——**QKNVMLB3_LE4_p35 / QKNVMLB3_Eq4_p35 已由 31a1d0db（窗 §1-6 le4eq4-clean, sorry 7→5）真体化（独立探针实测标准三，本表初版误记仍 sorryAx）**；2/7 残 sorryAx 的真源 = **QKNVMLB1_p35（:10015）与 QKNVMLB1_LE4F_p35（:9915），经 EJRCFJD 链继承**（EJRCFJD 落仓后自动升级，非自体 sorry）。全模块口径审计见 lane_snapshots/axaudit-w1/REPORT.md。
 | 声明全名 | 文件:行 | 类别 | axiom 面 | 污染根（文件:行） | 判词 | 备注 | 台账来源 |
 |---|---|---|---|---|---|---|---|
 | Kepler.Text.QKNVMLB1_p35 | LocalAuto35.lean:634 | 根件（锥外孪生侧） | sorryAx | 自体sorry占位 LA35:641 (受阻于LE4F/EQ4F); 根=QKNVMLB1_LE4F_p35 sorry LA35:611 + QKNVMLB1_EQ4F_p35 sorry LA35:624 | 不可接(等LE4F/EQ4F灌证) | — | twinprobe-w1/SF-64 |
