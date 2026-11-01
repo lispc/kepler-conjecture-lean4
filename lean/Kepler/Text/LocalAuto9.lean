@@ -817,33 +817,116 @@ theorem CHANGE_SUM_TAU_FUN_p9 (s : StableSyP9) {m : ℕ}
             (E_SY_p4 (vecmatsV3_p4 l)) := by
   sorry
 
+/-! ### fw34 service lemma (fanchain-w34): the COLLINEAR pair + AZIM_EQ_DIHV
+
+HOL routes `COLLINEAR_B_SY`/`COLLINEAR_AZIM_CYCLE_B_SY` (Hdplygy.hl:1441/
+1458) through `EDGE_IN_E_SY` + `remark1_fan` (fan.hl:423) — its collinear
+component is the `fan6` clause, repo `Fan.fan_not_collinear`; the
+azim-cycle variant re-renders the cycle point as `sigmaFan` via
+`AZIM_CYCLE_EQ_SIGMA_FAN` (repo `LocalAuto2.AZIM_CYCLE_EQ_SIGMA_FAN_ALT`
++ `EE_elim`) and `sigma_fan_in_set_of_edge`.  Per fanchain-w2 the S1
+`PROPERTIES_OF_FAN_IN_B_SY` route is vacuous, so — exactly as in the HOL
+proof body — only `B_SY1`'s `convexLocalFan_p4` clause is consumed. -/
+
+/-- fw34 (fanchain-w34): the cyclic edge at `i` in `Fin` rendering — both
+rows unfolded off `rowV3_p9` (junk-free since `1 ≤ i ≤ m`; the HOL
+`SUC (i MOD k)` successor reads `i % m + 1`, 0-based index `i % m`), plus
+the `E_SY` membership (`EDGE_IN_E_SY` at `i - 1`). -/
+private theorem fw34_edge_rows {m : ℕ} (l : FinVec m 3) {i : ℕ}
+    (hi : 1 ≤ i ∧ i ≤ m) (him : i % m < m) :
+    rowV3_p9 l i = vecmatsV3_p4 l ⟨i - 1, by omega⟩ ∧
+      rowV3_p9 l (i % m + 1) = vecmatsV3_p4 l ⟨i % m, him⟩ ∧
+      {vecmatsV3_p4 l ⟨i - 1, by omega⟩, vecmatsV3_p4 l ⟨i % m, him⟩}
+        ∈ E_SY_p4 (vecmatsV3_p4 l) := by
+  have hi1 : i - 1 < m := by omega
+  have hi2 : 1 ≤ i % m + 1 ∧ i % m + 1 ≤ m := by omega
+  refine ⟨?_, ?_, ?_⟩
+  · simp only [rowV3_p9, dif_pos hi]
+  · simp only [rowV3_p9, dif_pos hi2, Nat.add_sub_cancel]
+  · have h := EDGE_IN_E_SY (m := m) l ⟨i - 1, hi1⟩
+    have hfe : finNext ⟨i - 1, hi1⟩ = ⟨i % m, him⟩ := by
+      refine Fin.ext ?_
+      show (i - 1 + 1) % m = i % m
+      rw [show i - 1 + 1 = i from by omega]
+    rw [hfe] at h
+    exact h
+
 /-- HOL `COLLINEAR_B_SY` (Hdplygy.hl:1441). DISCHARGES: needs `remark1_fan`
-(`Local_lemmas`). -/
+(`Local_lemmas`).  fanchain-w34: discharged via the `fan6` component of
+`B_SY1`'s `convexLocalFan_p4` clause (`Fan.fan_not_collinear`) on the
+`EDGE_IN_E_SY` cyclic edge (`fw34_edge_rows`); the S1 route is vacuous
+(fanchain-w2). -/
 theorem COLLINEAR_B_SY_p9 (s : StableSyP9) {m : ℕ} (hm : StableSysHyp_p9 s m)
     (l : FinVec m 3) (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) (i : ℕ)
     (hi : 1 ≤ i ∧ i ≤ m) :
     ¬ Collinear ℝ ({0, rowV3_p9 l i, rowV3_p9 l (i % s.k_sy + 1)} : Set V3) := by
-  sorry
+  rw [hm.1]
+  have him : i % m < m := Nat.mod_lt i (by omega)
+  obtain ⟨hu, hv, he⟩ := fw34_edge_rows l hi him
+  rw [hu, hv]
+  exact fan_not_collinear hl.2.2.1.1 he
 
 /-- HOL `COLLINEAR_AZIM_CYCLE_B_SY` (Hdplygy.hl:1458). DISCHARGES: needs
-`AZIM_CYCLE_EQ_SIGMA_FAN` + `sigma_fan_in_set_of_edge` + `remark1_fan`. -/
+`AZIM_CYCLE_EQ_SIGMA_FAN` + `sigma_fan_in_set_of_edge` + `remark1_fan`.
+fanchain-w34: the cycle point is re-rendered as `sigmaFan`
+(`AZIM_CYCLE_EQ_SIGMA_FAN_ALT` + `EE_elim`), then the same `fan6`
+component as S4 applies to the `{row i, sigmaFan …}` edge. -/
 theorem COLLINEAR_AZIM_CYCLE_B_SY_p9 (s : StableSyP9) {m : ℕ}
     (hm : StableSysHyp_p9 s m) (l : FinVec m 3)
     (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) (i : ℕ) (hi : 1 ≤ i ∧ i ≤ m) :
     ¬ Collinear ℝ ({0, rowV3_p9 l i,
         azimCycle_p2 (EE_p2 (rowV3_p9 l i) (E_SY_p4 (vecmatsV3_p4 l))) 0
           (rowV3_p9 l i) (rowV3_p9 l (i % s.k_sy + 1))} : Set V3) := by
-  sorry
+  rw [hm.1]
+  have him : i % m < m := Nat.mod_lt i (by omega)
+  have hi1 : i - 1 < m := by omega
+  obtain ⟨hu, hv, he⟩ := fw34_edge_rows l hi him
+  rw [hu, hv]
+  have hfan : FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) :=
+    hl.2.2.1.1
+  have hvsoe := (properties_of_setOfEdge_fan 0 (V_SY_p4 (vecmatsV3_p4 l))
+    (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l ⟨i - 1, hi1⟩)
+    (vecmatsV3_p4 l ⟨i % m, him⟩) hfan).mp he
+  rw [EE_elim hfan _, AZIM_CYCLE_EQ_SIGMA_FAN_ALT hfan hvsoe]
+  have hσ := sigma_fan_in_setOfEdge hfan hvsoe
+  have heσ := (properties_of_setOfEdge_fan 0 (V_SY_p4 (vecmatsV3_p4 l))
+    (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l ⟨i - 1, hi1⟩)
+    (sigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l ⟨i - 1, hi1⟩) (vecmatsV3_p4 l ⟨i % m, him⟩))
+    hfan).mpr hσ
+  exact fan_not_collinear hfan heσ
 
 /-- HOL `AZIM_EQ_DIHV_IN_B_SY` (Hdplygy.hl:1484). DISCHARGES: needs
-`LOFA_DETERMINE_AZIM_IN_FA` + `AZIM_LE_PI_EQ_DIHV` (`Local_lemmas`). -/
+`LOFA_DETERMINE_AZIM_IN_FA` + `AZIM_LE_PI_EQ_DIHV` (`Local_lemmas`).
+fanchain-w34: the `azim ≤ π` bound is the `convexLocalFan_p4` clause at
+the dart `(u, v)` (`EDGE_IN_F_SY_p9`); splitting `azimInFan_p4`'s
+cardinality if yields the LOFA determination
+`azim = azim 0 u v (azimCycle …)` in the `azimCycle_p2` rendering
+(definitional `_p2`/`_p4` twins), and `AZIM_LE_PI_EQ_DIHV` closes off the
+S4/S5 non-collinearity. -/
 theorem AZIM_EQ_DIHV_IN_B_SY_p9 (s : StableSyP9) {m : ℕ}
     (hm : StableSysHyp_p9 s m) (l : FinVec m 3) (i : ℕ) (hi : 1 ≤ i ∧ i ≤ m)
     (u v w : V3) (hu : u = rowV3_p9 l i) (hv : v = rowV3_p9 l (i % s.k_sy + 1))
     (hw : w = azimCycle_p2 (EE_p2 u (E_SY_p4 (vecmatsV3_p4 l))) 0 u v)
     (hl : l ∈ B_SY1_p9 m s.a_sy s.b_sy) :
     azim 0 u v w = dihV 0 u v w := by
-  sorry
+  subst hu
+  subst hv
+  subst hw
+  have h1 := COLLINEAR_B_SY_p9 s hm l hl i hi
+  have h2 := COLLINEAR_AZIM_CYCLE_B_SY_p9 s hm l hl i hi
+  obtain ⟨-, hxb⟩ := hl.2.2
+  have hmem : (rowV3_p9 l i, rowV3_p9 l (i % s.k_sy + 1))
+      ∈ F_SY_p4 (vecmatsV3_p4 l) := by
+    rw [hm.1]
+    have h9 := EDGE_IN_F_SY_p9 l i hi (rowV3_p9 l i)
+      (rowV3_p9 l (i % m + 1)) rfl rfl
+    exact h9
+  obtain ⟨hbound, -⟩ := hxb _ hmem
+  unfold azimInFan_p4 at hbound
+  split_ifs at hbound
+  · exact AZIM_LE_PI_EQ_DIHV h1 h2 hbound
+  · linarith [Real.pi_pos]
 
 /-- HOL `CONTINUOUS_ON_RHO_FUN_AND_AZIM` (Hdplygy.hl:1534) — giant
 continuity of the azim_in_fan family. DISCHARGES: from the
