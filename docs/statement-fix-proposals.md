@@ -5172,3 +5172,45 @@ SF 通道常态化授权（2026-10-28）立案。**在册未落**，两闸待编
 闸二（STATEMENT-FIX）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/86-eq4-hhs-closure.diff SF_ITEM=86 THM=SUM_AZIM_EQ_ANGLE_EQ4_p35 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto35.lean SUM_AZIM_EQ_ANGLE_EQ4_p35`
 闸二落库即 **M0 −1 兑现**。车道全文见 `lane_snapshots/lkgrqui-eq4-w3/`
 （PLAN/DELIVERY/kit/drafts/probes）。
+
+## 87. LA1 注册表 `QKNVMLB{1,2,3}_concl` appendix 形与 corpus 正本形指标分歧（appendix 桩疑似伪，注册表解冻改形 ~200 行，28 HOLD→25）
+
+### (a) HOL 裁决
+
+corpus 正本 `lean/scripts/local/QKNVMLB.hl:5223/5522/10665`；appendix 注册表 let
+`:1055/1064/1075`。指标约定冲突：注册表形 `vv ((i+p) % s'.k)` vs corpus/孪生形
+`vv (i % s'.k + p % s.k)`——mod 边界外是不同函数。RULING 2026-09-21 IV
+（LocalConcl:1438-1442/1537-1555）：`Periodic vv` 在异模数下不可弥合两形。
+appendix 形在 corpus **无证明**（corpus 侧从未证明该形）。
+
+### (b) Lean 诊断（分歧机器化）
+
+车道 la35-access-we1 探针 B（EXIT=0，零 sorry，`$S/la35-access-we1/`）：
+主定理 `vvAppendix_ne_vvCorpus`——s.k=6, s'.k=5, p=2 时两映射作为函数不等
+（i=4 处 `vv 1 ≠ vv 0`，周期性下存活）。**关键加强：分歧不是人造边界**——
+`scsHalfSliceV39` 半片模数公式（LA1:851-853）在 s.k=6, p=2, q=0 恰输出
+`(0+1+(6-2))%6 = 5`，即异模数分歧由真实半片构型实现。诚实边界：appendix 形在
+全 scs 假设集下的整体证伪仍开放（不阻塞改形；改形依据 = corpus 正本形有孪生
+真证 `QKNVMLB1/2/3_p35`，LA35:31426/31654/33360，sorry-free 本体，公理面单源
+pmPlaneCrowding 污染待 pm12 闭）。
+
+### (c) 补丁（W-B 波产出后归档 `docs/statement-fix-proposals-patches/87-*`）
+
+LA1 注册表三语句（LA1:3648/3658/3670）改 corpus 正本形（~45 行）+ LocalConcl
+三条 HOLD→WIRE 重绑（~100 行，模板照 2026-09-21 WIRED 38 现成样式），合计
+~200 行净。获批：用户 2026-11-01「都按照你建议批吧」（LA1 解冻轮走 SF 通道）。
+
+### (d) 消费面
+
+LA1 注册表 90 口：28 HOLD → 25；LocalConcl LC:423 消费带；下游 = W-D 挂脊柱
+装配点（(c1) 获批后）为 LA35 计分唯一通路。
+
+### (e) 风险
+
+注册表 refactor 波及面 = 三名全部引用点（普查见 recon WORKORDER P2）；落地顺序
+= 落地 #1/#2 之后（LFα 七源 + (c1) kit 先行，W-B 基座随之重锚）；appendix 形
+整体证伪开放不阻塞。
+
+### (f) 状态
+
+立案 2026-11-01（用户批）；W-B 波执行中。
