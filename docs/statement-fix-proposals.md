@@ -5448,3 +5448,90 @@ BERAK 定理**必然编译断裂**；stack 版同理（kit-B1 未落，且窗序
 → ③ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md` + §84 标 superseded + 84 双
 patch 退役注 → ④ 填体战役（swb_mm_5x_5M2_p24 ×4 + swb_bb_5x_5M2_p24，sweep-b24 草案基座）
 另立窗，不在本案。
+
+## 91. LA23 `continuousOn_tauFun_p23`（HEAD :1180，docstring :1162-1179）叶 sorry 陈述严格强于 HOL 载体 `CONTINUOUS_ON_TAU_FUN`（丢全 `stable_sy` 稳定语境 + 多出 m≤2 未验证区；修复 = 加 `hm : 2 < m` + `h2 : ∀ i j, i ≠ j → 2 ≤ aR i j` + `hstab : ∀ i, bR i (finNext i) ≤ cstab_p4` 三前提，LA24 CASE_4/5/6 三装配点机械喂出）— 分级 **A**（fanchain-recon 保真审计 SF 候选唯一件 · 冻结陈述强于正本 · 修复面含三消费者 · fan 连续链 W0 波先行）
+
+### (a) HOL 引用（CONTINUOUS_ON_TAU_FUN 正本逐字对照与条款取用点）
+
+corpus 正本 `lean/scripts/local/HDPLYGY.hl:1771-1802`（`reference/flyspeck/text_formalization/local/HDPLYGY.hl` 同位，diff 确认 byte-identical）：
+
+```
+let CONTINUOUS_ON_TAU_FUN=prove(`!s:stable_sy .
+k_sy s =k /\ dimindex(:M) =k/\ I_SY s= 0..k-1 /\ f_sy s=(\i. ((1+i):num MOD k)) /\ 2<k
+==> lift o(\l:real^(M,3)finite_product. tau_fun (V_SY (vecmats l)) (E_SY (vecmats l)) (F_SY (vecmats l))) continuous_on (B_SY1 (a_sy s) (b_sy s))`,
+```
+
+`stable_sy` 不是自由记录：它是 `new_type_definition`（HDPLYGY.hl:204）从 `exist_stable_system`（:198-202，7 元组满足 `stable_system`）打包的类型，桥引理 `stable_sy_lemma`（:226-228）给出 `!s:stable_sy. stable_system (k_sy s) (d_sy s) (I_SY s) (a_sy s) (b_sy s) (J_SY s) (f_sy s)`。故 HOL 量词语境 = `stable_system`（dih2k.hl:61-67）**全条款**：constraint_system（3≤k≤6、torsor、对称、f-周期性、J⊆后继边、CARD J+k≤6）∧（:64）`∀ i j∈s, i≠j → 2 ≤ a(i,j)` ∧（:65）`∀ i∈s, a(i,i)=0 ∧ b(i,f i) ≤ cstab` ∧（:66）J-√8 条款；加 5 合取 `k_sy s=k ∧ dimindex(:M)=k ∧ I_SY s=0..k-1 ∧ f_sy s=(1+i) MOD k ∧ 2<k`。结论面 `lift o` 为 HOL 重嵌入约定（`REWRITE_TAC[o_DEF;LIFT_SUB]` 即剥，语义同）。
+
+**证明体条款取用点**（fanchain-recon WORKORDER 1b 关键路径 + 本车道逐行读取，行号两本通用）：
+
+| 条款 | 取用点 |
+|---|---|
+| `2 < k` | tauFun 体内 `ARITH_RULE'2<k==> 1<k'`（HDPLYGY.hl:1794）；INJ/PROPERTIES 体内 TECOXBM.hl:267、:286（`1<=i /\ 2<k ==> …`）与 MOD 簿记 :273/:288-290 |
+| `2 ≤ a(i,j)`（:64） | **唯一消费者 = `PROPERTIES_OF_FAN_IN_B_SY`（TECOXBM.hl:207-308）**：:248-250 `REWRITE_TAC[stable_system]`+STRIP 后，:253-255 把该条款置为目标前件（constraint_system 标 THYGIANG2）；内点 case :262-265 取于 [i;j]（:263）+ CONDITION1 距离下界 `a(i,j) ≤ norm(y−z)`（dih2k.hl:84，B_SY1 成员给出）+ :265 REAL_ARITH 收 `2 ≤ norm(y−z)`；wrap case :267-281 取于 [i;0]（:270）、:286-293 同型取于 [j;0]（:303）。经 `INJ_B_SY`（stable_sy_lemma 于 HDPLYGY.hl:344，PROPERTIES 于 :345）喂 `CHANGE_SUM_TAU_FUN`（INJ 取用于 :399；tauFun 体内 :1789 取 CHANGE_SUM）；经 `INJ_ROW_B_SY`（:361-362）喂 CARD 分支（tauFun 体内 :1796 取 INJ_ROW、:1802 取 CARD_F_SY_EQ） |
+| `b(i, f i) ≤ cstab`（:65） | **零取用——证明体显式丢弃**：TECOXBM.hl:251 REMOVE_ASSUM_TAC（丢 J-√8 条款）后 **:252 REMOVE_ASSUM_TAC（丢 `a(i,i)=0 ∧ b(i,f i)≤cstab` 条款）**；`cstab` 在 HDPLYGY.hl:270-1802 与 TECOXBM.hl:207-308 零文本出现（机检 C4a/b），对照组 WJSCPRO.hl:258（CLOSED_SY 闭性巨人）真取用之（机检 C4d）——即该条款是闭性章的承重件、非连续性章的 |
+
+其余 stable 条款的实际取用（极小性裁定所需，如实列出）：HOL 行索引 1..k vs s=0..k-1 的错位使 wrap case（i=k 或 j=k）需要 **constraint_system 的 f-周期性条款**（`a(i,j)=a(i,(f POWER k) j)`，dih2k.hl:59）+ `POWER_MOD_FUN`（WJSCPRO.hl:42，`f POWER n i = (n+i) MOD k`）+ MOD_MULT 把 `a(i,k)` 折回 `a(i,0)` 再上 `2≤a`（TECOXBM.hl:274-280、:291-299）——这是 **1-based 记账伪影**：Lean `Fin` 0-based 渲染下 `finNext`（LA4:868，`(i+1)%m`）wrap 内建，该条款不需进 Lean 前提。torsor/对称/3≤k≤6 子句 strip 后未承重（收口全为 REAL_ARITH/MOD 算术；J-subset 与 CARD 子句在 :277-278/:294-295 REMOVE）。S8 的 azim 分支（COLLINEAR_B_SY :1441 / COLLINEAR_AZIM_CYCLE_B_SY :1458 / AZIM_EQ_DIHV_IN_B_SY :1484 / SEQUENTIALLY_DIVH :594）只用 B_SY1⇒CONDITION2 的 fan 面，零 stable 条款解构。
+
+**极小性裁定（fanchain-recon「待人工裁定」回复）**：真极小 = `{2<k, 2≤a off-diag}` 两条款；`hstab` 非 tauFun 链所需。两案：
+
+- **案①（本提案，FIDELITY §A 草案三条款）**：保留 `hstab` 与同 kit 的 `bodyClosed_p23`（§89/SF-89）表面统一；三条款均被 HOL 载体蕴含 ⟹ Lean 仍 ≤ HOL 强度，不损保真；喂料零额外成本（`stabAdj_of_isScsV39` 已在库，LA24:1282，SF-89 落地件）；为证明波（W1 移植 S1）留兜底——若 LA11 `PROPERTIES_OF_FAN_IN_B_SY_p11` 载体形态需要更多 stable 面，`hstab` 已在签名内。**推荐**。
+- **案②（保守全载体）**：前提换 `stableSystem_p23` 式（LA23:146 定义，逐字孪生 dih2k.hl:61-67），消费者经 `IS_SCS_STABLE_SYSTEM_p23`（LA23:762，已证）一步喂出，零风险但签名重、与 §89 两条款式不齐、且把条款级取用信息从陈述面抹掉（后续证明波无从受益于极小面）。不推荐，仅作闸上失败时的回退案。
+
+### (b) 缺陷（陈述严格强于正本 + 未验证区）
+
+- **丢前提（冻结）**：Lean `{m : ℕ} (aR bR : Fin m → Fin m → ℝ)` 对任意 `aR bR`（零稳定形前提）断言结论；HOL 全称只盖 `stable_sy` 记录（其类不变式 = 全 `stable_system` + 5 合取）。任意不满足 `2 ≤ aR i j`（off-diag）或 `bR i (finNext i) ≤ cstab` 的表对都在 Lean 量程内而在 HOL 量程外 ⟹ **Lean 严格强于正本**。与 §89（bodyClosed 丢 CLOSED_SY 语境）、§85/§86（丢 guard/载体）同型；本案特殊处：无反例证据（FIDELITY §E：la23-analysis 数值侦察支持强形式大概率为真、但无证明路线——HOL 路线 S1 直接吃 `2≤a`（TECOXBM:263），无稳定语境不可用；替代引理「fan7 ⇒ 碰撞模式局部恒定」无 HOL 载体、未形式化）。
+- **多范围（未验证区）**：`m ≤ 2` 区无任何 HOL 载体（HOL `2<k`）；Lean 的 `B_SY1_p4 aR bR` 在 m≤2 可非空（如 m=1 单行环带内点），命题仍断言 tauFun 连续——纯未验证区，随 `hm : 2 < m` 一并出清。
+- 叶 sorry（LA23:1184），锥内性见 WORKORDER §0：CASE_4/5/6 与 LKGRQUI_p27 引擎债面两根之一（另一根 bodyClosed_p23，§89 已修陈述）。
+
+### (c) 修复陈述（加前提后的完整 Lean 签名，逐字 = patch LA23 hunk）
+
+```lean
+theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ)
+    (hm : 2 < m)
+    (h2 : ∀ i j : Fin m, i ≠ j → 2 ≤ aR i j)
+    (hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4) :
+    ContinuousOn (fun l : FinVec m 3 =>
+      tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 aR bR) := by
+  sorry
+```
+
+**结论面逐字不动**（机检 C6：旧 :1180-1184 全文捕获，结论三行与域 `B_SY1_p4 aR bR` 未动）。三前提对应：(a) 表 `2<k` / :64 / :65 三行；`finNext` = LA4:868 环后继 = HOL `SUC (i MOD dimindex(:M))` 0-based；`cstab_p4` = LA4:375 = 3.01 与 LA1 `cstab` :200 同值（§89 同判）。docstring 同 patch 内加 REPAIRED（SF-91）段（条款取用点 + 消费者喂桥出处 + m≤2 出清注记），其余逐字保留。全文 patch = `docs/statement-fix-proposals-patches/91-taufun-stable-hyp.patch`（git 双头 a/ b/ 仓相对路径，`git apply --check` PASS，2 文件 5 hunk）。
+
+### (d) 消费者影响与喂法
+
+全树 grep `continuousOn_tauFun_p23`：代码消费者恰 **3 处，全在 LA24** CASE_4/5/6 裸调用 `continuousOn_tauFun_p23 _ _`（:1500 / :1659 / :1816）；LA23:982 与 LA33:121 仅注释、LA24:1487/1565/1646/1722/1803/1879 为 CLOSE-PLAN 注释行、LA23:1162-1179 为本体 docstring（patch 内改写）。**LA23 内部零代码消费者**（`continuousOn_tauStar_p23` :1236 与 `HDPLYGY_p23` :1227 均以 `hfun`/`hcont` 为显式假设，不引本体）。三处同型，机械改法（k = 4/5/6）：
+
+```lean
+-    continuousOn_tauFun_p23 _ _
++    continuousOn_tauFun_p23 _ _ (by norm_num : 2 < 4)
++      (fun i j _ => age2_of_isScsV39 s hs hk hk3 i j)
++      (fun i => stabAdj_of_isScsV39 s hs hk hk3 i)
+```
+
+（`hs : isScsV39 s`、`hk : s.k = k`（定理假设命名槽）、`have hk3 : 3 < s.k := by omega` 三者在三定理体内均已先于装配点在册——机检 C5；`by norm_num : 2 < k` 与 §89 喂 `bodyClosed_p23` 的同式。）喂出引理：`hstab` 腿 = `stabAdj_of_isScsV39`（LA24:1282，SF-89 落地件，已编译，`hk : s.k = k` + `subst` + `periodic2_mod_eq_p24` 链）；`h2` 腿 = patch 新增 private 喂桥 `age2_of_isScsV39`（插在 stabAdj 之后、`aR4` 之前，LA24:1291），与 stabAdj 同型：
+
+```lean
+private theorem age2_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
+    (hk : s.k = k) (hk3 : 3 < s.k) (i j : Fin k) (hij : i ≠ j) :
+    2 ≤ s.a (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k)
+```
+
+证明思路（静态推演，闸为权威）：`unfold isScsV39` 后 21 合取支 `obtain`，取第 16 槽 `hage2 : ∀ i j, i < s.k ∧ j < s.k ∧ i ≠ j → 2 ≤ s.a i j`（LA1:377）→ `subst hk`（SF-89 教训：mod 对 `s.k` 取，桥对任意 Fin 界不成立）→ 代表元 `((i:ℕ)+1)%k < k`、`((j:ℕ)+1)%k < k` 由 `Nat.mod_lt`（`0 < k` 由 `hk3`）→ `i ≠ j ⟹ (i+1)%k ≠ (j+1)%k`：两侧各 `Nat.lt_or_ge` 二分（`(i:ℕ)+1 < k` 或 `= k`），`Nat.mod_eq_of_lt` / `Nat.mod_self` 归约后 `omega` 收 `i = j`（Fin.val_injective 桥）——机检 C1/C3 对 k=3..8 全枚举核对该组合核。消费者以函数值传入（elaborator 展开 `aRk` def 后统一，stabAdj 同机制，SF-89 已实证编译）。喂法链全程机械：无选择、无启发、无新增公理面。
+
+### (e) 风险
+
+- **编译未跑**（本车道禁 lake/lean）：age2 桥的 21 合取支 rcases 槽序（`hage2` 第 16 槽）、`Nat.lt_or_ge`/`Nat.mod_eq_of_lt`/`Nat.mod_self`/`Nat.mod_lt`/`Fin.val_injective` 引理名与 `⟨hik, hjk, ?_⟩` 匿名构造需 STATEMENT-FIX 闸上 lean 实证。apply-check 已过；万一桥证法失手，退路 = 桥体暂置 `sorry`（前提陈述面不变，直接 sorry 债 +1 并标注 SF-91 继承）——与 SF-89 桥同规。
+- 修复后 `continuousOn_tauFun_p23` **仍为 sorry**（本提案只修陈述不闭证明；闭证明走 fanchain-recon WORKORDER W1-W8 波，本案 = 其 W0）。
+- **kit 内不对称（诚实注记）**：§89 给 `bodyClosed_p23` 加的是 {hm, hstab} 两条款（CLOSED_SY 证明体 WJSCPRO.hl:258 真取用邻接条款），本案裁定 `hstab` 非 tauFun 链所需（TECOXBM:252 丢弃）——同 kit 两件的前提面依各自 HOL 证明体的真实取用而定，不对称是有据的。若后续裁定进一步极小化本案（去 `hstab`），三消费者去掉第三实参即可；本 patch 按案①（三条款）归档。
+- **LA9/LA11 链关系**：修后终点件回到与 S10 `CONTINUOUS_ON_TAU_FUN_p9`（LA9:663，`StableSysHyp_p9`）同语境；W8 discharge 时由 S8/S9/S10 + G1-G5 胶合喂出（WORKORDER 1c/2），勿作零头派发。
+- 下游其它直接实例化点：全树 grep 已核零（(d)），CASE_4/5/6 是唯三。
+
+### (f) 机检证据引用
+
+- `taucheck_sf91.log`（`taucheck_sf91.py`，纯组合 + 文本核对，8 组全 PASS）：C1 `%k` 代表元平移（i≠j : Fin k ⟹ (i+1)%k ≠ (j+1)%k 且两侧 < k，k=3..8 全枚举——age2 桥 `hij` 翻译核）；C2 `finNext` 复合恒等（stabAdj 腿对齐不变）；C3 `hage2` 三前件在全部代表元处成立（k=4,5,6）；C4a-d HOL 条款取用文本证据（`cstab` 在 tauFun 锥零出现 + TECOXBM:249-251 strip/丢弃序列逐字 + WJSCPRO:258 对照组真取用）；C5 三消费者上下文（hs/hk/hk3 先于裸调用）；C6 旧签名/结论面逐字捕获；C7 `docs/statement-fix-proposals.md` 无 `## 91.` 槽位（现最大 §90，§88 已预留他用途）；C8 `stabAdj_of_isScsV39` 在库形态（hk pin + subst + `hup ((i:ℕ)+1) hk3` 量词序）。
+- patch 机检：由 scratch 副本 `git diff --no-index` 生成（HEAD 65e8e270 干净树，patcher.py 五次逐字替换每次 assert count==1），header sed 归一为 `a/lean/… b/lean/…` 仓相对路径，`git apply --check` **PASS**；2 文件 5 hunk（LA23 ×1、LA24 ×4）。
+- 预算：约 22 次工具调用 / 纯 python 机检（未触 lake/lean/.lake）。
+
+**状态**：草案 2026-10-28（sf91-taufun 车道起草）。**在册未落**；应用序列（编排者）：① 用户批（含 (a) 极小性两案裁定，默认案①）→ ② STATEMENT-FIX 闸 LA23（age2 桥编译在此实证）：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/91-taufun-stable-hyp.patch SF_ITEM=91 THM=continuousOn_tauFun_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean continuousOn_tauFun_p23` → ③ LA24 逐文件闸 `…/auto_gate.sh Kepler/Text/LocalAuto24.lean XWITCCN_CASE_4_IS_SCS_p24`（CASE_5/6 同式）→ ④ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md`。§91 编号已核。

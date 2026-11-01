@@ -1,0 +1,109 @@
+diff --git a/lean/Kepler/Text/LocalAuto23.lean b/lean/Kepler/Text/LocalAuto23.lean
+index d44ec903..f0ca6492 100644
+--- a/lean/Kepler/Text/LocalAuto23.lean
++++ b/lean/Kepler/Text/LocalAuto23.lean
+@@ -1176,8 +1176,24 @@ periodic point `(q,r,s,q,r,s)` violate fan7 by cone overlap), yet dart
+ collisions DO occur fan-legally on the body (`ncard F_SY = 3 < 6` there), so
+ the missing lemma is local constancy of the collision pattern under `fan7`,
+ then the standard re-index (`CHANGE_SUM_TAU_FUN_p9` twin) plus (ii).
++REPAIRED (SF-91, 2026-10-28): the old statement was strictly stronger than
++the HOL carrier `CONTINUOUS_ON_TAU_FUN` (HDPLYGY.hl:1771-1802 quantifies over
++`!s:stable_sy`, the whole stable context) and ranged over an unverified
++`m ≤ 2` zone. Stability-shaped hypotheses added — `hm : 2 < m` (HOL `2 < k`),
++`h2 : ∀ i j : Fin m, i ≠ j → 2 ≤ aR i j` (stable_system's `2 <= a(i,j)`
++off-diagonal clause, dih2k.hl:64 — the clause the HOL tauFun chain actually
++consumes, via `PROPERTIES_OF_FAN_IN_B_SY` TECOXBM.hl:253-263/270) and
++`hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4` (kept for kit uniformity
++with `bodyClosed_p23`/SF-89; the HOL tauFun chain discards this clause at
++TECOXBM.hl:252 — textually unused by the continuity proof). Discharged at
++the CASE_4/5/6 consumers from `isScsV39` via `age2_of_isScsV39` (the
++off-diagonal conjunct, LA1:377, shifted onto the `aRk/bRk` tables) and
++`stabAdj_of_isScsV39` (SF-89 bridge). The `m ≤ 2` zone is excluded by `hm`.
+ (Sorry 1/2 of this kit.) -/
+-theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) :
++theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ)
++    (hm : 2 < m)
++    (h2 : ∀ i j : Fin m, i ≠ j → 2 ≤ aR i j)
++    (hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4) :
+     ContinuousOn (fun l : FinVec m 3 =>
+       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 aR bR) := by
+diff --git a/lean/Kepler/Text/LocalAuto24.lean b/lean/Kepler/Text/LocalAuto24.lean
+index d8a2cb45..eff76541 100644
+--- a/lean/Kepler/Text/LocalAuto24.lean
++++ b/lean/Kepler/Text/LocalAuto24.lean
+@@ -1289,6 +1289,41 @@ private theorem stabAdj_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
+     ← periodic2_mod_eq_p24 hperb ((i : ℕ) + 1) ((i : ℕ) + 1 + 1)]
+   exact le_trans (hup ((i : ℕ) + 1) hk3) (le_of_eq rfl)
+ 
++/-- SF-91 feed: `isScsV39`'s off-diagonal lower bound (the `i < s.k ∧ j < s.k
++∧ i ≠ j → 2 ≤ s.a i j` conjunct of LA1 `isScsV39`, HOL stable_system clause 2,
++dih2k.hl:64) shifted onto the `((i + 1) % k)`-indexing that the CASE_4/5/6
++tables `aRk`/`bRk` use — this is exactly the repaired `h2` premise of
++`continuousOn_tauFun_p23` at `m = k`, since `aRk s i j = s.a ((i + 1) % k)
++((j + 1) % k)` definitionally. Same shape as the SF-89 bridge
++`stabAdj_of_isScsV39` above: the bridge needs the `s.k = k` pin (the
++representative mod is against `s.k`, not the Fin bound). -/
++private theorem age2_of_isScsV39 {k : ℕ} (s : ScsV39) (hs : isScsV39 s)
++    (hk : s.k = k) (hk3 : 3 < s.k) (i j : Fin k) (hij : i ≠ j) :
++    2 ≤ s.a (((i : ℕ) + 1) % k) (((j : ℕ) + 1) % k) := by
++  unfold isScsV39 at hs
++  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hage2, -, -, -, -, -⟩ := hs
++  subst hk
++  have hilt : (i : ℕ) < s.k := i.isLt
++  have hjlt : (j : ℕ) < s.k := j.isLt
++  have hik : ((i : ℕ) + 1) % s.k < s.k := Nat.mod_lt _ (by omega)
++  have hjk : ((j : ℕ) + 1) % s.k < s.k := Nat.mod_lt _ (by omega)
++  refine hage2 _ _ ⟨hik, hjk, ?_⟩
++  intro he
++  refine hij (Fin.val_injective ?_)
++  rcases Nat.lt_or_ge ((i : ℕ) + 1) s.k with hi1 | hi1
++  · rcases Nat.lt_or_ge ((j : ℕ) + 1) s.k with hj1 | hj1
++    · rw [Nat.mod_eq_of_lt hi1, Nat.mod_eq_of_lt hj1] at he
++      omega
++    · have hje : (j : ℕ) + 1 = s.k := by omega
++      rw [Nat.mod_eq_of_lt hi1, hje, Nat.mod_self] at he
++      omega
++  · have hie : (i : ℕ) + 1 = s.k := by omega
++    rcases Nat.lt_or_ge ((j : ℕ) + 1) s.k with hj1 | hj1
++    · rw [hie, Nat.mod_self, Nat.mod_eq_of_lt hj1] at he
++      omega
++    · have hje : (j : ℕ) + 1 = s.k := by omega
++      exact by omega
++
+ /-- the k=4 shifted tables (the frozen inline lambdas). -/
+ private def aR4 (s : ScsV39) : Fin 4 → Fin 4 → ℝ :=
+   fun i j : Fin 4 => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4)
+@@ -1497,7 +1532,9 @@ theorem XWITCCN_CASE_4_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+   have hfun : ContinuousOn (fun l : FinVec 4 3 =>
+       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR4 s) (bR4 s)) :=
+-    continuousOn_tauFun_p23 _ _
++    continuousOn_tauFun_p23 _ _ (by norm_num : 2 < 4)
++      (fun i j _ => age2_of_isScsV39 s hs hk hk3 i j)
++      (fun i => stabAdj_of_isScsV39 s hs hk hk3 i)
+   have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
+       (B_SY1_p4 (aR4 s) (bR4 s)) :=
+     continuousOn_tauStar_p23 _ _ _ hd hfun
+@@ -1656,7 +1693,9 @@ theorem XWITCCN_CASE_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+   have hfun : ContinuousOn (fun l : FinVec 5 3 =>
+       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR5 s) (bR5 s)) :=
+-    continuousOn_tauFun_p23 _ _
++    continuousOn_tauFun_p23 _ _ (by norm_num : 2 < 5)
++      (fun i j _ => age2_of_isScsV39 s hs hk hk3 i j)
++      (fun i => stabAdj_of_isScsV39 s hs hk hk3 i)
+   have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
+       (B_SY1_p4 (aR5 s) (bR5 s)) :=
+     continuousOn_tauStar_p23 _ _ _ hd hfun
+@@ -1813,7 +1852,9 @@ theorem XWITCCN_CASE_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
+   have hfun : ContinuousOn (fun l : FinVec 6 3 =>
+       tauFun (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+         (F_SY_p4 (vecmatsV3_p4 l))) (B_SY1_p4 (aR6 s) (bR6 s)) :=
+-    continuousOn_tauFun_p23 _ _
++    continuousOn_tauFun_p23 _ _ (by norm_num : 2 < 6)
++      (fun i j _ => age2_of_isScsV39 s hs hk hk3 i j)
++      (fun i => stabAdj_of_isScsV39 s hs hk hk3 i)
+   have hcont : ContinuousOn (tauStar_p23 (scsToStableSy_p23 s hs hk3))
+       (B_SY1_p4 (aR6 s) (bR6 s)) :=
+     continuousOn_tauStar_p23 _ _ _ hd hfun
