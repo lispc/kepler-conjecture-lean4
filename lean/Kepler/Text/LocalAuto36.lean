@@ -600,7 +600,10 @@ theorem hyp_p4_of_fan_p36 {x : V3} {V : Set V3} {E : Set (Set V3)} (hfan : Fan.F
 /-- Registry → `_p4`: LA1's `LocalFan` gives LA4's `localFan_p4`. -/
 theorem localFan_p4_of_LocalFan_p36 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) : localFan_p4 V E FF := by
-  obtain ⟨hfan, x, hx, hFF, hD⟩ := h
+  -- α2: the trailing ψ slot is bound by NAME (a `-` pattern here makes rcases
+  -- whnf-unfold `Dih2k` and mis-bind `hD`, cf. the AzimBridge §6 note).
+  obtain ⟨hfan, x, hx, hFF, hD, htwo⟩ := h
+  clear htwo
   have hhp := hyp_p4_of_fan_p36 hfan
   refine ⟨hfan, ⟨x, ?_, ?_⟩, ?_⟩
   · rw [hhp]; exact hx
@@ -608,23 +611,127 @@ theorem localFan_p4_of_LocalFan_p36 {V : Set V3} {E : Set (Set V3)} {FF : Set (V
   · rw [hhp]
     exact (dih2k_p4_iff_Dih2k_p36 (Fan.hypermapOfFan 0 V E hfan) FF.ncard).mpr hD
 
-/-- `_p4` → registry: LA4's `localFan_p4` gives LA1's `LocalFan`. -/
-theorem LocalFan_of_localFan_p4_p36 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
-    (h : localFan_p4 V E FF) : LocalFan V E FF := by
+/-! **α2-W2 resolution (lf-alpha-w2)**: the α2 `LocalFan` conjunct
+`∀ u ∈ V, (ee u E).ncard = 2` is NOT closable from `_p4` data alone — under
+`FAN`, `hyp_p4` is `hypermapOfFan` (`hyp_p4_of_fan_p36`), whose dart layer
+carries no self-pairs, so isolated vertices are invisible to `localFan_p4`
+(lf-alpha-w1 counterexample: triangle + isolated point satisfies every
+`_p4` condition while ψ fails at the isolated point).  Solution (a) of the
+w1 BLOCKER note: add the premise `V ⊆ ⋃₀ E`, which (with `FAN`'s
+`⋃₀ E ⊆ V` conjunct and `Graph E`) gives the no-isolated form
+`∀ v ∈ V, ∃ w, {v, w} ∈ E` and closes ψ through the AzimBridge core lemma. -/
+
+/-- No-isolated in its natural form from `V ⊆ ⋃₀ E`: `hsub` gives an edge
+through each `v ∈ V`, and `Graph E` (a `FAN` conjunct: every edge is a
+2-element set) makes that edge literally `{v, w}`. -/
+theorem noIsolated_of_hsub_p36 {V : Set V3} {E : Set (Set V3)}
+    (hfan : Fan.FAN 0 V E) (hsub : V ⊆ ⋃₀ E) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  intro v hv
+  obtain ⟨e, heE, hev⟩ := Set.mem_sUnion.mp (hsub hv)
+  obtain ⟨hfin, h2⟩ := hfan.2.1 e heE
+  have hw : ∃ w ∈ hfin.toFinset, w ≠ v := by
+    by_contra hcon
+    push_neg at hcon
+    have hle : hfin.toFinset.card ≤ 1 :=
+      (Finset.card_le_card (fun x hx => Finset.mem_singleton.mpr (hcon x hx))).trans
+        (Finset.card_singleton v).le
+    omega
+  obtain ⟨w, hws, hwv⟩ := hw
+  have hwe : w ∈ e := hfin.mem_toFinset.mp hws
+  have hsubVW : ({v, w} : Set V3) ⊆ e := by
+    intro x hx
+    rcases Set.mem_insert_iff.mp hx with rfl | hx
+    · exact hev
+    · rw [Set.mem_singleton_iff.mp hx]; exact hwe
+  have hncVW : ({v, w} : Set V3).ncard = 2 := by
+    rw [Set.ncard_insert_of_notMem (a := v) (s := {w})
+      (fun hm => hwv (Set.mem_singleton_iff.mp hm).symm), Set.ncard_singleton]
+  have hncE : e.ncard = 2 := by
+    rw [← hfin.coe_toFinset, Set.ncard_coe_finset]
+    omega
+  have hEq : ({v, w} : Set V3) = e :=
+    Set.eq_of_subset_of_ncard_le hsubVW (by omega) hfin
+  refine ⟨w, ?_⟩
+  rw [hEq]
+  exact heE
+
+/-- **W2 helper**: LA4's `localFan_p4` assembles the packaged `localFan_p3`
+provided no vertex of `V` is isolated.  The witness hypermap is the HYP
+hypermap of the fan (`exists_hypHyp_of_fan`), whose components are the raw
+of-hyp maps by construction; the dart layer matches through
+`hno_of_no_isolated` (fed by `noIsolated_of_hsub_p36`), and LA1's `Dih2k`
+(at the instProd-baked `hypermapOfFan`, reached from `dih2k_p4` by
+`dih2k_p4_iff_Dih2k_p36`) transports to `dih2k_p3` conjunct by conjunct —
+the mirror of AzimBridge's `LocalFan.of_localFan_p3` transport. -/
+theorem localFan_p3_of_localFan_p4_p36 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p4 V E FF) (hsub : V ⊆ ⋃₀ E) : localFan_p3 V E FF := by
   obtain ⟨hfan, ⟨p, hp, hFF⟩, hD⟩ := h
   have hhp := hyp_p4_of_fan_p36 hfan
+  have hedge := noIsolated_of_hsub_p36 hfan hsub
+  have hno := hno_of_no_isolated hedge
+  obtain ⟨H, hdarts, hedgeF, hnodeF, hfaceF⟩ := exists_hypHyp_of_fan hfan
+  have hDartF : @Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan) = H.darts :=
+    Finset.coe_injective ((dartsLA1 0 V E hfan).trans (hno.symm.trans hdarts.symm))
   have hm : p ∈ (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
       (Fan.hypermapOfFan 0 V E hfan) : Finset (V3 × V3)) := by
     rw [← hhp]; exact hp
+  have hcoF : (H.faceMap : V3 × V3 → V3 × V3) =
+      ⇑(@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) := hfaceF.trans (ffOfHyp_p3_eq_faceMapLA1_fun hfan)
+  have hcoN : (H.nodeMap : V3 × V3 → V3 × V3) =
+      ⇑(@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) := hnodeF.trans (nnOfHyp_p3_eq_nodeMapLA1_fun hfan)
+  have hcoE : (H.edgeMap : V3 × V3 → V3 × V3) =
+      ⇑(@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) := hedgeF.trans (eeOfHyp_p3_eq_edgeMapLA1_fun hfan)
+  rw [hhp] at hFF hD
   have heq : FF = orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
       (Fan.hypermapOfFan 0 V E hfan)) p := by
-    rw [hhp] at hFF
-    rw [hFF, face_p4_eq_orbitMap_p36 (Fan.hypermapOfFan 0 V E hfan) p hm]
+    rw [hFF]
+    exact face_p4_eq_orbitMap_p36 (Fan.hypermapOfFan 0 V E hfan) p hm
   have hd : @Dih2k (V3 × V3) (fun a b => instDecidableEqProd a b)
-      (Fan.hypermapOfFan 0 V E hfan) FF.ncard := by
-    rw [hhp] at hD
-    exact (dih2k_p4_iff_Dih2k_p36 (Fan.hypermapOfFan 0 V E hfan) FF.ncard).mp hD
-  exact ⟨hfan, p, hm, heq, hd⟩
+      (Fan.hypermapOfFan 0 V E hfan) FF.ncard :=
+    (dih2k_p4_iff_Dih2k_p36 (Fan.hypermapOfFan 0 V E hfan) FF.ncard).mp hD
+  -- the `localFan_p3` face-orbit congruence (mirror of
+  -- `LocalFan.of_localFan_p3`'s `hfaceOrb`)
+  have hfaceOrb : ∀ y : V3 × V3, H.face y = orbitF_p3 (ffOfHyp_p3 0 V E) y := by
+    intro y
+    show orbitMap H.faceMap y = orbitF_p3 (ffOfHyp_p3 0 V E) y
+    unfold orbitMap orbitF_p3
+    ext z
+    simp only [Equiv.Perm.coe_pow, hfaceF]
+  have hpD : p ∈ (↑H.darts : Set (V3 × V3)) := by
+    rw [hdarts, hno, ← dartsLA1 0 V E hfan]
+    exact Finset.mem_coe.mp hm
+  refine ⟨H, hdarts, hedgeF, hnodeF, hfaceF, hfan, ⟨p, Finset.mem_coe.mpr hpD, ?_⟩, ?_⟩
+  · rw [heq, orbitMap_LA1faceMap_eq_orbitF hfan p]
+    exact (hfaceOrb p).symm
+  -- `dih2k_p3 H FF.ncard`: conjunct-by-conjunct transport of `hd`
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · rw [← hDartF]; exact hd.1
+  · intro d hdD
+    have hdD' : d ∈ @Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan) := by rw [hDartF]; exact hdD
+    have hb := hd.2.1 d hdD'
+    rw [hDartF] at hb
+    show (↑H.darts : Set (V3 × V3)) = orbitMap H.faceMap d ∪
+      (H.nodeMap : V3 × V3 → V3 × V3) '' orbitMap H.faceMap d
+    rw [orbitMap_congr hcoF d, hcoN]
+    exact hb.symm
+  · rw [hcoF]; exact (hasOrders_iff_hasOrders_p4 _ _).mp hd.2.2.1
+  · rw [hcoE]; exact (hasOrders_iff_hasOrders_p4 _ _).mp hd.2.2.2.1
+  · rw [hcoN]; exact (hasOrders_iff_hasOrders_p4 _ _).mp hd.2.2.2.2
+
+/-- `_p4` → registry: LA4's `localFan_p4` gives LA1's `LocalFan`.  The α2
+2-regularity conjunct rides on the AzimBridge receipt `localFanEquiv_p35`
+via the W2 helper above; the added premise `hsub : V ⊆ ⋃₀ E` is exactly the
+no-isolated input the `_p4` dart layer cannot see (see the α2-W2 resolution
+note above).  Conclusion shape frozen (lf-alpha-w1 α2); only the premise is
+added. -/
+theorem LocalFan_of_localFan_p4_p36 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p4 V E FF) (hsub : V ⊆ ⋃₀ E) : LocalFan V E FF :=
+  localFanEquiv_p35.mpr (localFan_p3_of_localFan_p4_p36 h hsub)
 
 /-- The `azim_in_fan` renderings merge on fan darts: `azimInFan_p4` =
 `azimInFan_p3` (rfl) and the sigmaFan-vs-azimCycle bodies merge through the
@@ -649,7 +756,8 @@ theorem convexLocalFan_p4_of_ConvexLocalFan_p36 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : ConvexLocalFan V E FF) : convexLocalFan_p4 V E FF := by
   obtain ⟨hl, haw⟩ := h
   have hlf : LocalFan V E FF := hl
-  obtain ⟨hfan, x0, hx0, hFF, -⟩ := hl
+  obtain ⟨hfan, x0, hx0, hFF, hD0, htwo⟩ := hl
+  clear hD0 htwo
   refine ⟨localFan_p4_of_LocalFan_p36 hlf, ?_⟩
   intro x hxFF
   have hdart : x ∈ Fan.dart1OfFan V E := by
@@ -665,7 +773,8 @@ theorem convexLocalFan_p4_of_ConvexLocalFan_p36 {V : Set V3} {E : Set (Set V3)}
 `IN_NOT_EMPTY_B1_SY_*` row-decoding twins to lift `CONDITION2_SY_p4` to the
 `BBsV39` fan conjunct). -/
 theorem ConvexLocalFan_of_convexLocalFan_p4_p36 {V : Set V3} {E : Set (Set V3)}
-    {FF : Set (V3 × V3)} (h : convexLocalFan_p4 V E FF) : ConvexLocalFan V E FF := by
+    {FF : Set (V3 × V3)} (h : convexLocalFan_p4 V E FF) (hsub : V ⊆ ⋃₀ E) :
+    ConvexLocalFan V E FF := by
   obtain ⟨hl, haw⟩ := h
   have hlf : localFan_p4 V E FF := hl
   obtain ⟨hfan, ⟨p, hp, hFF⟩, hD⟩ := hl
@@ -677,7 +786,7 @@ theorem ConvexLocalFan_of_convexLocalFan_p4_p36 {V : Set V3} {E : Set (Set V3)}
       (Fan.hypermapOfFan 0 V E hfan)) p := by
     rw [hhp] at hFF
     rw [hFF, face_p4_eq_orbitMap_p36 (Fan.hypermapOfFan 0 V E hfan) p hm]
-  refine ⟨LocalFan_of_localFan_p4_p36 hlf, ?_⟩
+  refine ⟨LocalFan_of_localFan_p4_p36 hlf hsub, ?_⟩
   intro x hxFF
   have hdart : x ∈ Fan.dart1OfFan V E := by
     rw [hFF'] at hxFF
@@ -744,12 +853,21 @@ theorem inB1_core_p36 {k : ℕ} (hk : 4 ≤ k) {s : ScsV39} {vv : ℕ → V3}
       (cycRow_p23 vv k))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv k)) :
     BBsV39 s vv := by
+  -- α2-W2: the vv-world `V ⊆ ⋃₀ E` for the converse fan bridge — a periodic
+  -- row puts every vertex on a cyclic edge (`k ≥ 1` suffices).  Stated in the
+  -- `V_SY_p4`/`E_SY_p4` world to match the rewritten goal below.
+  have hvsub : V_SY_p4 (cycRow_p23 vv k) ⊆ ⋃₀ E_SY_p4 (cycRow_p23 vv k) := by
+    rw [vSy_eq_range_p36 (by omega) hper, eSy_eq_range_p36 (by omega) hper]
+    rintro y ⟨n, rfl⟩
+    exact Set.mem_sUnion_of_mem
+      (Set.mem_insert_iff.mpr (Or.inl (periodic_mod_eq_p23 hper n).symm))
+      (Set.mem_range_self (n % k))
   have hc : ConvexLocalFan (Set.range vv)
       (Set.range fun i : ℕ => {vv i, vv (i + 1)})
       (Set.range fun i : ℕ => (vv i, vv (i + 1))) := by
     rw [← vSy_eq_range_p36 (by omega) hper, ← eSy_eq_range_p36 (by omega) hper,
       ← fSy_eq_range_p36 (by omega) hper]
-    exact ConvexLocalFan_of_convexLocalFan_p4_p36 hC2
+    exact ConvexLocalFan_of_convexLocalFan_p4_p36 hC2 hvsub
   refine ⟨?_, by rw [hksk]; exact hper, ?_, Or.inr hc⟩
   · rintro y ⟨n, rfl⟩
     have hrow : cycRow_p23 vv k ⟨(n % k + k - 1) % k, Nat.mod_lt _ (by omega)⟩

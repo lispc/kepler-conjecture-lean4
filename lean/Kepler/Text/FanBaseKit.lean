@@ -3360,6 +3360,291 @@ private theorem iterateCongrFb {α : Type*} {f g : α → α} (h : ∀ y, f y = 
       intro y
       rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih y, h]
 
+section W1CoreFb
+
+variable {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+
+/-- `nnOfHyp_p3` preserves the first coordinate (both `ite` branches). -/
+theorem w1_nnFstFb (z : V3 × V3) : (nnOfHyp_p3 0 V E z).1 = z.1 := by
+  unfold nnOfHyp_p3
+  split <;> rfl
+
+/-- `nnOfHyp_p3` on a genuine (ord-pair) dart. -/
+theorem w1_nn_applyFb (V : Set V3) {E : Set (Set V3)} {a b : V3}
+    (hab : {a, b} ∈ E) :
+    nnOfHyp_p3 0 V E (a, b) = (a, azimCycle_p3 (EE_p3 a E) 0 a b) := by
+  unfold nnOfHyp_p3
+  rw [if_pos (IN_E_IMP_IMP_IN_DARTS (V := V) hab)]
+
+/-- Step 1 (HOL: the `self_pairs` layer is incompatible with `dih2k`):
+`localFan_p3` has no isolated vertex. -/
+theorem w1NoIsoFb (h : localFan_p3 V E FF) : ∀ u ∈ V, EE_p3 u E ≠ ∅ := by
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := h
+  have hcard := hdih.1
+  have horb := hdih.2.1
+  have hcardPos : 0 < H.darts.card := Finset.card_pos.mpr ⟨x, hx⟩
+  have hFFpos : 0 < FF.ncard := by have := hcard; omega
+  intro u hu hEu
+  have hselfD : (u, u) ∈ dartsOfHyp_p3 E V := by
+    have hs : (u, u) ∈ selfPairs_p3 E V := ⟨rfl, hu, hEu⟩
+    exact Set.mem_union_right _ hs
+  have hself : (u, u) ∈ (↑H.darts : Set (V3 × V3)) := by rw [hdarts]; exact hselfD
+  have hselfF : (u, u) ∈ H.darts := Finset.mem_coe.mpr hself
+  -- faceMap fixes it (the `EE u E = ∅` branch of `ivs_azim_cycle`)
+  have hfixF : (H.faceMap : V3 × V3 → V3 × V3) (u, u) = (u, u) := by
+    rw [hface]
+    unfold ffOfHyp_p3
+    rw [if_pos hselfD]
+    have hivs : ivsAzimCycle_p3 (EE_p3 (u, u).2 E) 0 (u, u).2 (u, u).1 = (u, u).2 := by
+      unfold ivsAzimCycle_p3
+      exact if_pos hEu
+    rw [hivs]
+  have hfaceU : H.face (u, u) = {(u, u)} :=
+    orbitMap_eq_singleton (f := H.faceMap) hfixF
+  -- nodeMap fixes it (the `W ⊆ {p}` branch of `azim_cycle`)
+  have hsubE : EE_p3 (u, u).1 E ⊆ {(u, u).2} := by
+    show (EE_p3 u E : Set V3) ⊆ {u}
+    rw [hEu]
+    exact Set.empty_subset _
+  have hfixN : (H.nodeMap : V3 × V3 → V3 × V3) (u, u) = (u, u) := by
+    rw [hnode]
+    unfold nnOfHyp_p3
+    rw [if_pos hselfD]
+    have hacy : azimCycle_p3 (EE_p3 (u, u).1 E) 0 (u, u).1 (u, u).2 = (u, u).2 :=
+      W_SUBSET_SINGLETON_IMP_IDE hsubE 0 _
+    rw [hacy]
+  -- dih2k's belt conjunct collapses to a singleton dart set
+  have h2 := horb (u, u) hselfF
+  rw [hfaceU, Set.image_singleton, hfixN, Set.union_singleton] at h2
+  have hcard1 : H.darts.card = 1 := by
+    have hnc := Set.ncard_coe_finset H.darts
+    rw [h2] at hnc
+    simpa using hnc.symm
+  omega
+
+/-- The azimuthal three-neighbor contradiction (`|EE| ≤ 2` core): a third
+neighbor `q` beyond `u0` and its successor `s` forces `2·π ≤ azim < 2·π`. -/
+theorem w1_azim3Fb (hfan : Fan.FAN 0 V E) {v u0 s q : V3}
+    (hu0E : {v, u0} ∈ E) (hsE : {v, s} ∈ E) (hqE : {v, q} ∈ E)
+    (hmin1 : azim 0 v u0 s ≤ azim 0 v u0 q)
+    (hmin2 : azim 0 v s u0 ≤ azim 0 v s q)
+    (hsne : s ≠ u0) : False := by
+  have hadd := Fan.sum2_azim_fan hfan hu0E hsE hqE hmin1
+  have hncU : ¬ Collinear3 0 v u0 := Fan.fan_not_collinear hfan hu0E
+  have hncS : ¬ Collinear3 0 v s := Fan.fan_not_collinear hfan hsE
+  have hzero : azim 0 v u0 s ≠ 0 := fun hzz =>
+    hsne (Eq.symm (Fan.unique_azim0_point_fan hfan hu0E hsE hzz))
+  have hcomp : azim 0 v s u0 = 2 * Real.pi - azim 0 v u0 s := by
+    rw [azim_compl hncU hncS, if_neg hzero]
+  have hlt := azim_lt_two_pi (v := 0) (w := v) (w1 := u0) (w2 := q)
+  linarith
+
+/-- Upper bound: `azim_cycle` = `sigmaFan` under `FAN`, and `nn² = id`
+(`hasOrders_p3 nodeMap 2`) forces `|EE| ≤ 2` via `SIGMA_FAN`-minimality +
+`w1_azim3Fb` (the three-neighbor azimuth contradiction). -/
+theorem w1SigmaBndFb (h : localFan_p3 V E FF) :
+    ∀ u ∈ V, (EE_p3 u E).ncard ≤ 2 := by
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := id h
+  have hsub : ⋃₀ E ⊆ V := hfan.1
+  have hVfin : V.Finite := hfan.2.2.1.1
+  have hnn2 : (⇑H.nodeMap)^[2] = id := by
+    have hon := hdih.2.2.2.2
+    exact hon.2
+  have hnnSq : ∀ d : V3 × V3,
+      (⇑H.nodeMap) ((⇑H.nodeMap) d) = d := by
+    intro d
+    have hd := congrFun hnn2 d
+    rw [show (⇑H.nodeMap)^[2]
+        = (⇑H.nodeMap) ∘ (⇑H.nodeMap) from by
+        simp [Function.iterate_succ]] at hd
+    exact hd
+  intro v hv
+  have hEEne : EE_p3 v E ≠ ∅ := w1NoIsoFb h v hv
+  have hEEsoe : EE_p3 v E = Fan.setOfEdge v V E := UNI_E_IMP_EE_EQ_SET_OF_EDGE hsub v
+  have hfinEE : (EE_p3 v E).Finite :=
+    hVfin.subset fun w hw => hsub (EE_SUBSET_UNIONS_E v E hw)
+  obtain ⟨u0, hu0⟩ : (EE_p3 v E).Nonempty := Set.nonempty_iff_ne_empty.mpr hEEne
+  have hu0E : {v, u0} ∈ E := hu0
+  have hu0soe : u0 ∈ Fan.setOfEdge v V E := by rw [← hEEsoe]; exact hu0
+  by_cases hcA : EE_p3 v E ⊆ {u0}
+  · have h1 := Set.ncard_le_ncard hcA (Set.finite_singleton u0)
+    have h2 : ({u0} : Set V3).ncard = 1 := Set.ncard_singleton u0
+    omega
+  · have hneU : Fan.setOfEdge v V E ≠ {u0} := by
+      intro he
+      have hq0 : ∃ q ∈ EE_p3 v E, q ≠ u0 := by
+        by_contra hcon
+        push_neg at hcon
+        exact hcA fun q hq => hcon q hq
+      obtain ⟨q, hqE, hqu⟩ := hq0
+      have hqS : q ∈ Fan.setOfEdge v V E := by rw [← hEEsoe]; exact hqE
+      rw [he] at hqS
+      exact hqu (by simpa using hqS)
+    obtain ⟨hsm, hsne, hsmin⟩ := Fan.SIGMA_FAN hneU hfan hu0soe
+    set s : V3 := Fan.sigmaFan 0 V E v u0 with hsdef
+    have hEs : {v, s} ∈ E := hsm.1
+    have hstep1 : (⇑H.nodeMap) (v, u0) = (v, s) := by
+      rw [hnode]
+      exact (w1_nn_applyFb V hu0E).trans (congrArg (fun t : V3 => (v, t))
+        (AZIM_CYCLE_EQ_SIGMA_FAN hfan hu0soe))
+    have key := hnnSq (v, u0)
+    rw [hstep1] at key
+    have hstep2 : (⇑H.nodeMap) (v, s) = (v, azimCycle_p3 (EE_p3 v E) 0 v s) := by
+      rw [hnode]
+      exact w1_nn_applyFb V hEs
+    rw [hstep2] at key
+    have hz : azimCycle_p3 (EE_p3 v E) 0 v s = u0 := congrArg Prod.snd key
+    have hsf2 : Fan.sigmaFan 0 V E v s = u0 := by
+      rw [← AZIM_CYCLE_EQ_SIGMA_FAN hfan hsm]
+      exact hz
+    have hneS : Fan.setOfEdge v V E ≠ {s} := by
+      intro he
+      have hu0s : u0 ∈ ({s} : Set V3) := by rw [← he]; exact hu0soe
+      exact hsne (show u0 = s from by simpa using hu0s).symm
+    obtain ⟨-, hsne2, hsmin2⟩ := Fan.SIGMA_FAN hneS hfan hsm
+    rw [hsf2] at hsmin2
+    have hsub2 : EE_p3 v E ⊆ {u0, s} := by
+      intro q hq
+      by_cases hqu : q = u0
+      · rw [hqu]
+        exact Set.mem_insert u0 {s}
+      · by_cases hqs : q = s
+        · rw [hqs]
+          exact Set.mem_insert_of_mem u0 rfl
+        · exfalso
+          exact w1_azim3Fb hfan hu0E hEs hq
+            (hsmin q (by rw [← hEEsoe]; exact hq) hqu)
+            (hsmin2 q (by rw [← hEEsoe]; exact hq) hqs) hsne
+    have h2le : (EE_p3 v E).ncard ≤ ({u0, s} : Set V3).ncard :=
+      Set.ncard_le_ncard hsub2 (Set.finite_insert.mpr (Set.finite_singleton s))
+    rw [Set.ncard_insert_of_notMem (a := u0) (s := {s})
+        (fun hmem => hsne (show u0 = s from by simpa using hmem).symm)
+        (Set.finite_singleton s),
+      Set.ncard_singleton] at h2le
+    exact h2le
+
+/-- Lower bound: belt disjointness (counting: `darts.card = 2*FF.ncard`
+against the `dih2k` orbit-union identity) makes `|EE v E| = 2*t_v` with
+`t_v ≥ 1` — every vertex carries a face dart above it. -/
+theorem w1TwoLeFb (h : localFan_p3 V E FF) :
+    ∀ u ∈ V, 2 ≤ (EE_p3 u E).ncard := by
+  have hnoIso := w1NoIsoFb h
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := h
+  have hcard := hdih.1
+  have horb := hdih.2.1
+  have hsub : ⋃₀ E ⊆ V := hfan.1
+  intro v hv
+  have hEEne : EE_p3 v E ≠ ∅ := hnoIso v hv
+  obtain ⟨u0, hu0⟩ : (EE_p3 v E).Nonempty := Set.nonempty_iff_ne_empty.mpr hEEne
+  have hu0E : {v, u0} ∈ E := hu0
+  have hFFsub : FF ⊆ (↑H.darts : Set (V3 × V3)) := by
+    rw [hFF]; exact H.face_subset_darts hx
+  have hfinFF : FF.Finite := Set.Finite.subset H.darts.finite_toSet hFFsub
+  have hbelt : (↑H.darts : Set (V3 × V3)) = FF ∪ ((⇑H.nodeMap) '' FF) := by
+    have := horb x hx
+    rwa [← hFF] at this
+  have hninj : Function.Injective (⇑H.nodeMap) := Equiv.injective _
+  have hcardI : ((⇑H.nodeMap) '' FF).ncard = FF.ncard :=
+    Set.InjOn.ncard_image fun a _ b _ hnc => hninj hnc
+  have hdisj : FF ∩ ((⇑H.nodeMap) '' FF) = (∅ : Set (V3 × V3)) := by
+    have hun := Set.ncard_union_add_ncard_inter FF ((⇑H.nodeMap) '' FF) hfinFF
+      (hfinFF.image (⇑H.nodeMap))
+    have hcardU : (FF ∪ (⇑H.nodeMap) '' FF).ncard = H.darts.card := by
+      rw [← hbelt, Set.ncard_coe_finset]
+    rw [hcardU, hcardI] at hun
+    have h0 : (FF ∩ (⇑H.nodeMap) '' FF).ncard = 0 := by omega
+    rwa [Set.ncard_eq_zero (hfinFF.subset Set.inter_subset_left)] at h0
+  -- ncard (darts above v) = ncard (EE v E), and the split Sv = Tv ⊔ nn''Tv
+  have hcardSv : ({d : V3 × V3 | d ∈ (↑H.darts : Set (V3 × V3)) ∧ d.1 = v}).ncard
+      = (EE_p3 v E).ncard := by
+    have hSvimg : {d : V3 × V3 | d ∈ (↑H.darts : Set (V3 × V3)) ∧ d.1 = v}
+        = (fun w : V3 => (v, w)) '' (EE_p3 v E) := by
+      ext d
+      obtain ⟨dv, dw⟩ := d
+      simp only [Set.mem_setOf_eq, Set.mem_image]
+      constructor
+      · rintro ⟨hd, hd1⟩
+        have hdart : (dv, dw) ∈ dartsOfHyp_p3 E V := by
+          rw [← hdarts]; exact hd
+        rcases Set.mem_union _ _ _ |>.mp hdart with hord | hself
+        · exact ⟨dw, hd1 ▸ (show ({dv, dw} : Set V3) ∈ E from hord), by rw [hd1]⟩
+        · rw [hd1] at hself
+          exact absurd hself.2.2 (hnoIso v hv)
+      · rintro ⟨w, hw, hwE⟩
+        injection hwE with h1 h2
+        have hvd : (dv, dw) ∈ (↑H.darts : Set (V3 × V3)) := by
+          rw [hdarts, ← h1, ← h2]
+          exact Set.mem_union_left _ (show (v, w) ∈ ordPairs_p3 E from hw)
+        exact ⟨hvd, h1.symm⟩
+    rw [hSvimg]
+    exact Set.InjOn.ncard_image fun a _ b _ hnc => by simpa using hnc
+  have hsplit : {d : V3 × V3 | d ∈ (↑H.darts : Set (V3 × V3)) ∧ d.1 = v}
+      = {d : V3 × V3 | d ∈ FF ∧ d.1 = v}
+        ∪ ((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v}) := by
+    ext d
+    simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_image]
+    constructor
+    · rintro ⟨hd, hd1⟩
+      rcases Set.mem_union _ _ _ |>.mp (hbelt ▸ hd) with hF | hI
+      · exact Or.inl ⟨hF, hd1⟩
+      · obtain ⟨z, hzF, hzd⟩ := hI
+        refine Or.inr ⟨z, ⟨hzF, ?_⟩, hzd⟩
+        have hz1 : z.1 = ((⇑H.nodeMap) z).1 := by rw [hnode]; exact (w1_nnFstFb z).symm
+        rw [hz1, hzd]
+        exact hd1
+    · rintro (⟨hF, hd1⟩ | ⟨z, ⟨hzF, hz1⟩, hzd⟩)
+      · exact ⟨by rw [hbelt]; exact Set.mem_union_left _ hF, hd1⟩
+      · refine ⟨?_, ?_⟩
+        · rw [← hzd, hbelt]
+          exact Set.mem_union_right _ ⟨z, hzF, rfl⟩
+        · rw [← hzd, hnode, w1_nnFstFb z]
+          exact hz1
+  have hdisjT : ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}
+      ∩ ((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v})) = (∅ : Set (V3 × V3)) := by
+    refine Set.eq_empty_iff_forall_notMem.mpr fun d hd => ?_
+    obtain ⟨hdT, hdI⟩ := hd
+    obtain ⟨z, hzT, hzd⟩ := hdI
+    have hmemFF : d ∈ (FF ∩ ((⇑H.nodeMap) '' FF) : Set (V3 × V3)) :=
+      ⟨hdT.1, z, hzT.1, hzd⟩
+    rw [hdisj] at hmemFF
+    exact hmemFF
+  have hTvfin : ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}).Finite :=
+    hfinFF.subset fun d hd => hd.1
+  have hTvI : (((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v}).ncard)
+      = ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}).ncard :=
+    Set.InjOn.ncard_image fun a _ b _ hnc => hninj hnc
+  have hunT := Set.ncard_union_add_ncard_inter
+    {d : V3 × V3 | d ∈ FF ∧ d.1 = v}
+    (((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v})) hTvfin
+    (hTvfin.image (⇑H.nodeMap))
+  rw [← hsplit, hcardSv, hdisjT, Set.ncard_empty, hTvI] at hunT
+  -- Tv nonempty: the dart (v, u0) is in Tv or in its nn-image
+  have hTvne : {d : V3 × V3 | d ∈ FF ∧ d.1 = v}.Nonempty := by
+    have hvd : (v, u0) ∈ (↑H.darts : Set (V3 × V3)) := by
+      rw [hdarts]
+      exact Set.mem_union_left _ (show (v, u0) ∈ ordPairs_p3 E from hu0E)
+    have hin : (v, u0) ∈ {d : V3 × V3 | d ∈ FF ∧ d.1 = v}
+        ∪ ((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v}) := by
+      rw [← hsplit]
+      exact ⟨hvd, rfl⟩
+    rcases Set.mem_union _ _ _ |>.mp hin with hT | hI
+    · exact ⟨(v, u0), hT⟩
+    · obtain ⟨z, hzT, _⟩ := hI
+      exact ⟨z, hzT⟩
+  have hTv1 : 1 ≤ ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}).ncard :=
+    (Set.ncard_pos hTvfin).mpr hTvne
+  have hfin : (EE_p3 v E).ncard = 2 * ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}).ncard := by
+    rw [← hcardSv]; omega
+  omega
+
+end W1CoreFb
+
+/-- **Core lemma (lf-alpha-w1)**: HOL `LOFA_IMP_EE_TWO_ELMS` (local_lemmas1
+~:1907) at the `_p3` HYP world — a `localFan_p3` is 2-regular. -/
+theorem localFanLA3TwoNbrFb (h : localFan_p3 V E FF) :
+    ∀ u ∈ V, (EE_p3 u E).ncard = 2 := by
+  intro v hv
+  exact le_antisymm (w1SigmaBndFb h v hv) (w1TwoLeFb h v hv)
 /-- **LA1 桥**：LA3 `localFan_p3` + 孤立自对 dart 缺失
 （`dartsOfHyp_p3 E V = Fan.dart1OfFan V E`）⇒ LA1 `LocalFan`。AzimBridge
 `LocalFan.of_localFan_p3`（:740）的 kit 内私有重铸；hno 前提消去
@@ -3367,6 +3652,7 @@ self-pair 分支后组件桥为纯 funext 链。 -/
 private theorem localFanLA1ofP3Fb {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hp3 : localFan_p3 V E FF) (hno : dartsOfHyp_p3 E V = Fan.dart1OfFan V E) :
     LocalFan V E FF := by
+  have hp3keep : localFan_p3 V E FF := hp3
   obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := hp3
   have c1 := hdih.1
   have c2 := hdih.2.1
@@ -3485,7 +3771,7 @@ private theorem localFanLA1ofP3Fb {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 
       exact ⟨n, (hitF n y).symm ▸ hn⟩
     · rintro ⟨n, hn⟩
       exact ⟨n, hitF n y ▸ hn⟩
-  refine ⟨hfan, x, ?_, ?_, ?_⟩
+  refine ⟨hfan, x, ?_, ?_, ?_, ?_⟩
   · rw [hDart']
     exact hx
   · rw [hFF]
@@ -3537,6 +3823,10 @@ private theorem localFanLA1ofP3Fb {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 
       · refine Equiv.Perm.ext fun y => ?_
         rw [Equiv.Perm.coe_pow, ← iterateCongrFb hptN (2 : ℕ) y, c5.2]
         rfl
+
+  · -- α2 conjunct: 2-正则（核心引理块副本，见上方 localFanLA3TwoNbrFb）
+    intro u hu
+    exact localFanLA3TwoNbrFb hp3keep u hu
 
 /-! ### S.4 PEROPP_IN_BB_SYM_0（HOL :2183） -/
 

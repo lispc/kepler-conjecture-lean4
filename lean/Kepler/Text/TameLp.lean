@@ -10216,6 +10216,341 @@ private theorem yk10_vPrime_subset_wedgeInFanGe (V : Set V3) (hlpfan : LpFan V (
 
 /-! #### 9l.4 Dih2k 实例转移 + ConvexLocalFan 装配 -/
 
+/-! #### 9l.4a 切片世界 2-正则（W4 槽件，Lane lf-alpha-w3 2026-10-28）
+
+`yk10_convexLocalFan` 第 4 槽（lf-alpha-w1 的 LocalFan α2 合取支
+`∀ u ∈ V, (ee u E).ncard = 2` 在切片世界 `(vPrime_p2 V f, ePrime_p2 (ESTD V) f)`
+上的实例）的闭合。lf-alpha-w1 ProbeCore（w1TwoLe/w1SigmaBnd，HOL
+`LOFA_IMP_EE_TWO_ELMS`）在切片词表的逐字镜像：
+下界 = belt 计数（yk9_Dih2k 的 darts.card = 2·f.ncard + belt 恒等
+darts = f ⊔ nn〝f + node 保首坐标——切片世界 nodeMap = nFanPair 定义性，
+无 self-pair 分支）⟹ |ee| = 2·|Tv| ≥ 2（Tv 由 vPrime 的出边 dart 非空）；
+上界 = hasOrders nodeMap 2 的 nn² = id + nodeMap = nFanPair（切片世界无
+AZIM_CYCLE 桥，σ 即 sigmaFan）⟹ sigmaFan v (sigmaFan v u0) = u0，
+SIGMA_FAN 极小性两次 + 三邻方位矛盾（w1_azim3 逐字副本）。
+探测底稿 ProbeYk10.lean（import 旧 oleans，EXIT=0，axioms 标准三）。
+词表翻译记录（_p3 HYP 世界 → _p2 切片世界）：EE_p3 u E ↦ ee u (ePrime_p2 …)
+（LA1:90 同形定义）；nnOfHyp_p3/azimCycle_p3 桥 ↦ nFanPair/sigmaFan 直读
+（AZIM_CYCLE_EQ_SIGMA_FAN 桥消失）；dartsOfHyp_p3 = ordPairs ⊔ selfPairs
+的 self-pair 排除分支 ↦ dart1OfFan 直读（消失）；hypermapOfFan 投影一律
+@instDecidableEqProd 标签（裸投影被 instance synthesis 重标 dartDecEq3
+而失配——本块 yk10sdarts/yk10snn 缩写承载）。 -/
+
+/-- 切片（或任意）扇超映射的 dart 集，instDec 标签（= yk9/yk10 逐字拼写）。 -/
+private noncomputable def yk10sdarts (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E) :
+    Finset (V3 × V3) :=
+  @Hypermap.darts (V3 × V3) (fun a b' => instDecidableEqProd a b')
+    (hypermapOfFan 0 V E hfan)
+
+/-- 切片（或任意）扇超映射的 nodeMap，instDec 标签。 -/
+private noncomputable def yk10snn (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E) :
+    Equiv.Perm (V3 × V3) :=
+  @Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+    (hypermapOfFan 0 V E hfan)
+
+/-- dart 集 coe（COMPONENTS_HYPERMAP_OF_FAN 第一分量的同构重标不变式）。 -/
+private theorem yk10sdarts_coe (hfan : FAN 0 V E) :
+    (↑(yk10sdarts V E hfan) : Set (V3 × V3)) = dart1OfFan V E :=
+  (Set.Finite.coe_toFinset (finite_dart1_fan hfan))
+
+/-- `nodeMap` 在 dart1 上 = `nFanPair`（hypermapOfFan 的 `extendPerm` 构造
+直接读出）。 -/
+private theorem yk10snn_apply (hfan : FAN 0 V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    (yk10snn V E hfan) d = nFanPair 0 V E d := by
+  have hmem : d ∈ (finite_dart1_fan hfan).toFinset :=
+    (Set.Finite.mem_toFinset (finite_dart1_fan hfan)).mpr hd
+  show @Hypermap.nodeMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan) d = nFanPair 0 V E d
+  simp only [hypermapOfFan, extendPerm, Equiv.ofBijective_apply]
+  exact if_pos hmem
+
+/-- 三邻方位矛盾（lf-alpha-w1 `w1_azim3` 逐字副本，世界泛型）。 -/
+private theorem yk10_azim3 {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E)
+    {v u0 s q : V3}
+    (hu0E : {v, u0} ∈ E) (hsE : {v, s} ∈ E) (hqE : {v, q} ∈ E)
+    (hmin1 : azim 0 v u0 s ≤ azim 0 v u0 q)
+    (hmin2 : azim 0 v s u0 ≤ azim 0 v s q)
+    (hsne : s ≠ u0) : False := by
+  have hadd := Fan.sum2_azim_fan hfan hu0E hsE hqE hmin1
+  have hncU : ¬ Collinear3 0 v u0 := Fan.fan_not_collinear hfan hu0E
+  have hncS : ¬ Collinear3 0 v s := Fan.fan_not_collinear hfan hsE
+  have hzero : azim 0 v u0 s ≠ 0 := fun hzz =>
+    hsne (Eq.symm (Fan.unique_azim0_point_fan hfan hu0E hsE hzz))
+  have hcomp : azim 0 v s u0 = 2 * Real.pi - azim 0 v u0 s := by
+    rw [azim_compl hncU hncS, if_neg hzero]
+  have hlt := azim_lt_two_pi (v := 0) (w := v) (w1 := u0) (w2 := q)
+  linarith
+
+/-- 下界（lf-alpha-w1 `w1TwoLe` 切片镜像）：belt 计数给出
+`|ee v E'| = 2·|{d ∈ f | d.1 = v}| ≥ 2`。 -/
+private theorem yk10TwoLe {V : Set V3} {E : Set (Set V3)} {b : V3 × V3} {f : Set (V3 × V3)}
+    (hfan : FAN 0 V E) (hb : b ∈ dart1OfFan V E)
+    (hf : f = orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan)) b)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    (hFF : orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) b = f)
+    (hD : @Dih2k (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan') f.ncard) :
+    ∀ v ∈ vPrime_p2 V f, 2 ≤ (ee v (ePrime_p2 E f)).ncard := by
+  intro v hv
+  -- 面 f 的 dart 结构（大世界）：f ⊆ dart1OfFan V E
+  have hbd : b ∈ yk10sdarts V E hfan :=
+    (Set.Finite.mem_toFinset (finite_dart1_fan hfan)).mpr hb
+  have hfdart1 : ∀ d ∈ f, d ∈ dart1OfFan V E := by
+    intro d hd
+    rw [hf] at hd
+    have hsub : orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 V E hfan)) b ⊆ (↑(yk10sdarts V E hfan) : Set (V3 × V3)) :=
+      @Hypermap.face_subset_darts (V3 × V3) (fun a b' => instDecidableEqProd a b')
+        (hypermapOfFan 0 V E hfan) (x := b) hbd
+    rw [← yk10sdarts_coe hfan]
+    exact hsub hd
+  -- b ∈ 切片 darts
+  have hbF : b ∈ f := by
+    rw [← hFF]
+    exact mem_orbitMap_self _ _
+  have hbE : ({b.1, b.2} : Set V3) ∈ ePrime_p2 E f :=
+    ⟨b.1, b.2, rfl, hb, hbF⟩
+  have hb' : b ∈ yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan' := by
+    refine Finset.mem_coe.mpr ?_
+    show b ∈ (↑(yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan') : Set (V3 × V3))
+    rw [yk10sdarts_coe hfan']
+    exact hbE
+  -- belt：切片 darts = f ⊔ nn〝f
+  have hbelt : (↑(yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan') : Set (V3 × V3))
+      = f ∪ ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' f) := by
+    have h2 := hD.2.1 b hb'
+    rw [hFF] at h2
+    exact h2.symm
+  have hFFsub : f ⊆ (↑(yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan') : Set (V3 × V3)) := by
+    intro d hd
+    rw [hbelt]
+    exact Set.mem_union_left _ hd
+  have hfinF : f.Finite := Set.Finite.subset
+    (yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan').finite_toSet hFFsub
+  have hninj : Function.Injective (yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') :=
+    Equiv.injective _
+  have hcardI : ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' f).ncard = f.ncard :=
+    Set.InjOn.ncard_image fun a _ b' _ hnc => hninj hnc
+  have hcard : (yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan').card = 2 * f.ncard := hD.1
+  have hdisj : f ∩ ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' f)
+      = (∅ : Set (V3 × V3)) := by
+    have hun := Set.ncard_union_add_ncard_inter f
+      ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' f) hfinF
+      (hfinF.image (yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+    have hcardU : (f ∪ ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' f)).ncard
+        = (yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan').card := by
+      rw [← hbelt, Set.ncard_coe_finset]
+    rw [hcardU, hcardI] at hun
+    have h0 : (f ∩ ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' f)).ncard = 0 := by
+      omega
+    rwa [Set.ncard_eq_zero (hfinF.subset Set.inter_subset_left)] at h0
+  -- |Sv| = |ee v E'|（dart1 定义的直读，无 self-pair 分支）
+  have hcardSv : {d : V3 × V3 |
+      d ∈ (↑(yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan') : Set (V3 × V3)) ∧ d.1 = v}.ncard
+      = (ee v (ePrime_p2 E f)).ncard := by
+    have hSvimg : {d : V3 × V3 |
+        d ∈ (↑(yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan') : Set (V3 × V3)) ∧ d.1 = v}
+        = (fun w : V3 => (v, w)) '' (ee v (ePrime_p2 E f)) := by
+      ext d
+      obtain ⟨dv, dw⟩ := d
+      constructor
+      · rintro ⟨hd, hdv⟩
+        have hdv' : dv = v := hdv
+        refine ⟨dw, ?_, ?_⟩
+        · rw [hdv'] at hd
+          rw [yk10sdarts_coe hfan'] at hd
+          exact hd
+        · rw [hdv']
+      · rintro ⟨w, hw, hwe⟩
+        have hinj : v = dv ∧ w = dw := by simpa using hwe
+        refine ⟨?_, ?_⟩
+        · rw [← hinj.1, ← hinj.2, yk10sdarts_coe hfan']
+          exact hw
+        · rw [hinj.1]
+    rw [hSvimg]
+    exact Set.InjOn.ncard_image fun a _ b' _ hnc => by simpa using hnc
+  -- node 保首坐标（切片世界 = nFanPair，定义性）
+  have hnz1 : ∀ z ∈ f, ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') z).1 = z.1 := by
+    intro z hz
+    have hz1 : z ∈ dart1OfFan (vPrime_p2 V f) (ePrime_p2 E f) := by
+      rw [← yk10sdarts_coe hfan']
+      exact hFFsub hz
+    rw [yk10snn_apply hfan' hz1]
+    rfl
+  -- Sv = Tv ⊔ nn〝Tv
+  have hsplit : {d : V3 × V3 |
+      d ∈ (↑(yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan') : Set (V3 × V3)) ∧ d.1 = v}
+      = {d : V3 × V3 | d ∈ f ∧ d.1 = v}
+        ∪ ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' {d : V3 × V3 | d ∈ f ∧ d.1 = v}) := by
+    ext d
+    simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_image]
+    constructor
+    · rintro ⟨hd, hd1⟩
+      rcases Set.mem_union _ _ _ |>.mp (hbelt ▸ hd) with hF | hI
+      · exact Or.inl ⟨hF, hd1⟩
+      · obtain ⟨z, hzF, hzd⟩ := hI
+        refine Or.inr ⟨z, ⟨hzF, ?_⟩, hzd⟩
+        have h1 : ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') z).1 = d.1 := by
+          rw [← hzd]
+        rw [← hd1, ← h1, hnz1 z hzF]
+    · rintro (⟨hF, hd1⟩ | ⟨z, ⟨hzF, hz1⟩, hzd⟩)
+      · refine ⟨?_, hd1⟩
+        rw [hbelt]
+        exact Set.mem_union_left _ hF
+      · refine ⟨?_, ?_⟩
+        · rw [hbelt]
+          exact Set.mem_union_right _ ⟨z, hzF, hzd⟩
+        · rw [← hzd, hnz1 z hzF]
+          exact hz1
+  have hdisjT : ({d : V3 × V3 | d ∈ f ∧ d.1 = v}
+      ∩ ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' {d : V3 × V3 | d ∈ f ∧ d.1 = v}))
+      = (∅ : Set (V3 × V3)) := by
+    refine Set.eq_empty_iff_forall_notMem.mpr fun d hd => ?_
+    obtain ⟨hdT, hdI⟩ := hd
+    obtain ⟨z, hzT, hzd⟩ := hdI
+    have hmemFF : d ∈ (f ∩ ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' f) :
+        Set (V3 × V3)) :=
+      ⟨hdT.1, z, hzT.1, hzd⟩
+    rw [hdisj] at hmemFF
+    exact hmemFF
+  have hTvfin : ({d : V3 × V3 | d ∈ f ∧ d.1 = v}).Finite :=
+    hfinF.subset fun d hd => hd.1
+  have hTvI : ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') ''
+      {d : V3 × V3 | d ∈ f ∧ d.1 = v}).ncard
+      = ({d : V3 × V3 | d ∈ f ∧ d.1 = v}).ncard :=
+    Set.InjOn.ncard_image fun a _ b' _ hnc => hninj hnc
+  have hunT := Set.ncard_union_add_ncard_inter
+    {d : V3 × V3 | d ∈ f ∧ d.1 = v}
+    ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' {d : V3 × V3 | d ∈ f ∧ d.1 = v})
+    hTvfin (hTvfin.image (yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan'))
+  rw [← hsplit, hcardSv, hdisjT, Set.ncard_empty, hTvI] at hunT
+  -- Tv 非空：v ∈ vPrime 自带出边 dart
+  obtain ⟨w0, hw0f⟩ := hv.2
+  have hw0E : ({v, w0} : Set V3) ∈ ePrime_p2 E f :=
+    ⟨v, w0, rfl, hfdart1 (v, w0) hw0f, hw0f⟩
+  have hTvne : {d : V3 × V3 | d ∈ f ∧ d.1 = v}.Nonempty := by
+    have hvd : (v, w0) ∈ {d : V3 × V3 |
+        d ∈ (↑(yk10sdarts (vPrime_p2 V f) (ePrime_p2 E f) hfan') : Set (V3 × V3)) ∧ d.1 = v} := by
+      refine ⟨?_, rfl⟩
+      rw [yk10sdarts_coe hfan']
+      exact hw0E
+    have hin : (v, w0) ∈ {d : V3 × V3 | d ∈ f ∧ d.1 = v}
+        ∪ ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') '' {d : V3 × V3 | d ∈ f ∧ d.1 = v}) := by
+      rw [← hsplit]
+      exact hvd
+    rcases Set.mem_union _ _ _ |>.mp hin with hT | hI
+    · exact ⟨(v, w0), hT⟩
+    · obtain ⟨z, hzT, _⟩ := hI
+      exact ⟨z, hzT⟩
+  have hTv1 : 1 ≤ ({d : V3 × V3 | d ∈ f ∧ d.1 = v}).ncard :=
+    (Set.ncard_pos hTvfin).mpr hTvne
+  omega
+
+/-- 上界（lf-alpha-w1 `w1SigmaBnd` 切片镜像）：nn² = id + nodeMap = nFanPair
+强迫 `sigmaFan v (sigmaFan v u0) = u0`，SIGMA_FAN 极小性两次 + `yk10_azim3`
+排除第三邻。 -/
+private theorem yk10SigmaBnd {V : Set V3} {E : Set (Set V3)} {f : Set (V3 × V3)}
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    (hD : @Dih2k (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan') f.ncard) :
+    ∀ v ∈ vPrime_p2 V f, (ee v (ePrime_p2 E f)).ncard ≤ 2 := by
+  intro v hv
+  have hEEsoe : ee v (ePrime_p2 E f) = Fan.setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) := by
+    ext w
+    show ({v, w} : Set V3) ∈ ePrime_p2 E f ↔
+      w ∈ Fan.setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f)
+    exact properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) v w hfan'
+  have hnnSq : ∀ d : V3 × V3,
+      (yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan')
+        ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') d) = d := by
+    intro d
+    have h := hD.2.2.2.2.2
+    rw [pow_succ, pow_one] at h
+    have h' : (yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan' *
+        yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan' : Equiv.Perm (V3 × V3)) = 1 := h
+    show ((yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan' *
+        yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan' : Equiv.Perm (V3 × V3))) d = d
+    rw [h']
+    rfl
+  by_cases hEu : ee v (ePrime_p2 E f) = ∅
+  · rw [hEu, Set.ncard_empty]
+    exact zero_le
+  · obtain ⟨u0, hu0⟩ := Set.nonempty_iff_ne_empty.mpr hEu
+    have hu0E : ({v, u0} : Set V3) ∈ ePrime_p2 E f := hu0
+    have hu0soe : u0 ∈ Fan.setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) := by
+      rw [← hEEsoe]; exact hu0
+    by_cases hcA : ee v (ePrime_p2 E f) ⊆ {u0}
+    · have h1 := Set.ncard_le_ncard hcA (Set.finite_singleton u0)
+      have h2 : ({u0} : Set V3).ncard = 1 := Set.ncard_singleton u0
+      omega
+    · have hneU : Fan.setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) ≠ {u0} := by
+        intro he
+        refine hcA ?_
+        intro q hq
+        have hqS : q ∈ Fan.setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) := by
+          rw [← hEEsoe]; exact hq
+        rw [he] at hqS
+        simpa using hqS
+      obtain ⟨hsm, hsne, hsmin⟩ := Fan.SIGMA_FAN hneU hfan' hu0soe
+      set s : V3 := Fan.sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) v u0 with hsdef
+      have hsmE : ({v, s} : Set V3) ∈ ePrime_p2 E f := hsm.1
+      have hstep1 : (yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') (v, u0) = (v, s) := by
+        rw [yk10snn_apply hfan' hu0E]
+        rfl
+      have key := hnnSq (v, u0)
+      rw [hstep1] at key
+      have hstep2 : (yk10snn (vPrime_p2 V f) (ePrime_p2 E f) hfan') (v, s)
+          = (v, Fan.sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) v s) := by
+        rw [yk10snn_apply hfan' hsmE]
+        rfl
+      rw [hstep2] at key
+      have hz : Fan.sigmaFan 0 (vPrime_p2 V f) (ePrime_p2 E f) v s = u0 :=
+        congrArg Prod.snd key
+      have hneS : Fan.setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) ≠ {s} := by
+        intro he
+        have hu0s : u0 ∈ ({s} : Set V3) := by rw [← he]; exact hu0soe
+        exact hsne (show u0 = s from by simpa using hu0s).symm
+      have hsmsoe : s ∈ Fan.setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) :=
+        (properties_of_setOfEdge_fan 0 (vPrime_p2 V f) (ePrime_p2 E f) v s hfan').mp hsmE
+      obtain ⟨-, -, hsmin2⟩ := Fan.SIGMA_FAN hneS hfan' hsmsoe
+      rw [hz] at hsmin2
+      have hsub2 : ee v (ePrime_p2 E f) ⊆ {u0, s} := by
+        intro q hq
+        by_cases hqu : q = u0
+        · rw [hqu]
+          exact Set.mem_insert u0 {s}
+        · by_cases hqs : q = s
+          · rw [hqs]
+            exact Set.mem_insert_of_mem u0 rfl
+          · exfalso
+            have hqS : q ∈ Fan.setOfEdge v (vPrime_p2 V f) (ePrime_p2 E f) := by
+              rw [← hEEsoe]; exact hq
+            exact yk10_azim3 hfan' hu0E hsmE hq (hsmin q hqS hqu) (hsmin2 q hqS hqs) hsne
+      have h2le : (ee v (ePrime_p2 E f)).ncard ≤ ({u0, s} : Set V3).ncard :=
+        Set.ncard_le_ncard hsub2 (Set.finite_insert.mpr (Set.finite_singleton s))
+      rw [Set.ncard_insert_of_notMem (a := u0) (s := {s})
+          (fun hmem => hsne (show u0 = s from by simpa using hmem).symm)
+          (Set.finite_singleton s),
+        Set.ncard_singleton] at h2le
+      exact h2le
+
+/-- **lf-alpha-w3 槽引理（W4）**：切片世界 `LocalFan` 的 2-正则合取支。
+`hFF` 由 `(yk7_FF_eq_faceOrbit …)` 逐字给出，`hD` 由 `(yk9_Dih2k …)` 逐字给出。 -/
+private theorem yk10TwoReg {V : Set V3} {E : Set (Set V3)} {b : V3 × V3} {f : Set (V3 × V3)}
+    (hfan : FAN 0 V E) (hb : b ∈ dart1OfFan V E)
+    (hf : f = orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 V E hfan)) b)
+    (hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 E f))
+    (hFF : orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan')) b = f)
+    (hD : @Dih2k (V3 × V3) (fun a b' => instDecidableEqProd a b')
+      (hypermapOfFan 0 (vPrime_p2 V f) (ePrime_p2 E f) hfan') f.ncard) :
+    ∀ u ∈ vPrime_p2 V f, (ee u (ePrime_p2 E f)).ncard = 2 := by
+  intro v hv
+  exact le_antisymm (yk10SigmaBnd hfan' hD v hv) (yk10TwoLe hfan hb hf hfan' hFF hD v hv)
+
 /-- **ConvexLocalFan (vPrime, ePrime, f) 装配**（JEJTVGB_std_concl 前提①）。
 LocalFan 面 = §9k 三件（yk9_Dih2k / yk7_FF_eq_faceOrbit / yk2_FAN_vPrime_ePrime）；
 azim≤π 面 = yk6 桥 + FullySurrounded；wedge 面 = 9l.3 主件。 -/
@@ -10229,15 +10564,19 @@ private theorem yk10_convexLocalFan (V : Set V3) (hlpfan : LpFan V (ESTD V))
   have hV : V.Finite := yk10_packingFinite hlpfan.2.2.2.2 hlpfan.2.2.2.1
   have hfan' : FAN 0 (vPrime_p2 V f) (ePrime_p2 (ESTD V) f) :=
     yk2_FAN_vPrime_ePrime hfan b hb f hf
+  have hD4 := yk9_Dih2k hfan hconf hV b hb f hf hk hfan'
   refine ⟨⟨hfan', b, ?_, ?_, ?_⟩, ?_⟩
   · -- b ∈ 受限 darts
     exact Finset.mem_coe.mpr
       ((yk2_mem_darts_iff hfan' b).mpr (yk9_base_ctx hfan b hb f hf hfan').1)
   · -- f = orbitMap faceMap' b
     exact (yk7_FF_eq_faceOrbit hfan b hb f hf).symm
-  · -- Dih2k（LocalFan 体的 Dih2k 实例即 hypermapOfFan 烤定 instProd 味，
-    -- 与 yk9_Dih2k 结论同实例，直接衔接）
-    exact yk9_Dih2k hfan hconf hV b hb f hf hk hfan'
+  · -- Dih2k + 切片世界 2-正则（W4 槽）：LocalFan α2 合取支在
+    -- (vPrime_p2, ePrime_p2) 上的实例；hFF = yk7_FF_eq_faceOrbit（即第 2 槽
+    -- 件的正向）、hD = yk9_Dih2k（= 旧第 3 槽件，提升为 hD4 复用）。
+    -- 注：尾槽须以 2-元组 ⟨hD4, _⟩ 整体闭合（Dih2k ∧ ψ）——匿名构造的
+    -- 扁平化会把多余项下沉进 Dih2k 的定义性 And 链，故不拆槽。
+    exact ⟨hD4, yk10TwoReg hfan hb hf hfan' (yk7_FF_eq_faceOrbit hfan b hb f hf) hD4⟩
   · intro y hy
     refine ⟨?_, yk10_vPrime_subset_wedgeInFanGe V hlpfan hb hf hy⟩
     have hy1 : y ∈ dart1OfFan V (ESTD V) :=

@@ -58,12 +58,12 @@ Encoding notes:
   (its HOL twin), losing only the redundant `i = j` conjunct.
 
 STATUS (2026-09-20 fill wave): 26 of the 120 skeleton sorries proved:
-`ARG_CNJ`, `CONDS_IN_CONV2`, `FINITE_CARD1_IMP_SINGLETON`, `SET2_INSERT1`,
+`ARG_CNJ`, `CONDS_IN_CONV2_pa18`, `FINITE_CARD1_IMP_SINGLETON_pa18`, `SET2_INSERT1`,
 `SET2_INSERT2` (finite-set kit); `chi_msb_swap_01/12/23`,
 `chi_msb_additive_a/d`, `CHI_MSB_ADDITIVE`, `CHI_MSB_CONVEX` (chi_msb is the
 row determinant `det ![d-a, b-a, c-a]`, private `chiMsb_det`);
 `DIST_LE_HALF_PLANE`, `DIST_EQ_HALF_PLANE` (inner-product algebra,
-`dist_sq_diff`); `affine_invert`, `AFF_GE_MONO_TRANS` (Affsign/finset-sum
+`dist_sq_diff`); `affine_invert`, `AFF_GE_MONO_TRANS_pa18` (Affsign/finset-sum
 regrouping); `CARD4_ALL_DISTINCT`, `LENGTH4_SET2`, `LENGTH4_SET2_SWAP01`;
 `BARV3_TRUNC2`, `STEM_OF_LEAF`, `truncate_set_of_list` (via PA5's
 `TRUNCATE_SIMPLEX_INITIAL_SUBLIST` kit); `LIST_OF_CC_UH`,
@@ -3263,8 +3263,8 @@ theorem NUNRRDS_0 {V : Set V3} {ul : List V3} (hp : Packing V)
   rw [hcon] at hmemC
   exact hmemC
 
-/-- HOL `AFF_GE_MONO_TRANS` (leaf_cell.hl:1314-1390). -/
-theorem AFF_GE_MONO_TRANS {X Y S : Set V3} (h : S ⊆ X) :
+/-- HOL `AFF_GE_MONO_TRANS_pa18` (leaf_cell.hl:1314-1390). -/
+theorem AFF_GE_MONO_TRANS_pa18 {X Y S : Set V3} (h : S ⊆ X) :
     affGe (X \ S) (Y ∪ S) ⊆ affGe X Y := by
   intro v hv
   simp only [affGe, Affsign, Set.mem_setOf_eq] at hv
@@ -4014,8 +4014,8 @@ theorem MCELL2_SUBSET_AFF_GE (V : Set V3) (ul : List V3) :
   · rw [mcell2, if_neg h]
     exact Set.empty_subset _
 
-/-- HOL `CONDS_IN_CONV2` (leaf_cell.hl:1870-?). -/
-theorem CONDS_IN_CONV2 {v w : V3} {t2 t3 : ℝ} (h2 : 0 ≤ t2) (h3 : 0 ≤ t3)
+/-- HOL `CONDS_IN_CONV2_pa18` (leaf_cell.hl:1870-?). -/
+theorem CONDS_IN_CONV2_pa18 {v w : V3} {t2 t3 : ℝ} (h2 : 0 ≤ t2) (h3 : 0 ≤ t3)
     (hne : ¬(t2 = 0 ∧ t3 = 0)) :
     (t2 / (t2 + t3)) • v + (t3 / (t2 + t3)) • w ∈ convexHull ℝ ({v, w} : Set V3) := by
   have hpos : 0 < t2 + t3 := by
@@ -6125,8 +6125,8 @@ theorem MCELL2_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated
     · rw [BumpP4.MCELL2 V ul, BumpP4.MCELL2 V (leftActionList (Equiv.swap 0 1) ul)]
       exact (RVFXZBU (by simp) hs hp hb pa18c_permutes_swap01 pa18c_fix_swap01).symm
 
-/-- HOL `FINITE_CARD1_IMP_SINGLETON` (leaf_cell.hl:3338-3374). -/
-theorem FINITE_CARD1_IMP_SINGLETON {α : Type*} {S : Set α}
+/-- HOL `FINITE_CARD1_IMP_SINGLETON_pa18` (leaf_cell.hl:3338-3374). -/
+theorem FINITE_CARD1_IMP_SINGLETON_pa18 {α : Type*} {S : Set α}
     (h : Nat.card S = 1) : ∃ x, S = {x} := by
   have hfin : S.Finite := by
     by_contra hin

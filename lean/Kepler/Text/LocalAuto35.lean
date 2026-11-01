@@ -56,8 +56,8 @@ Encoding:
   `wedgeInFanGt_p3`, `hypermap (HYP (vec 0,V,E'))` ↦ carrier
   `HS : Hypermap (V3 × V3)` with the `IsHypE_p35` predicate (the LocalAuto2
   `IsHyp_p2` pattern over the LocalAuto3 `_p3` HYP pieces; NOTE: LocalAuto2
-  itself is NOT importable from this lane — the LocalAuto1 + LocalAuto2
-  import pair clashes on a duplicate `atn2PA18` via PackingAuto18/PackingAuto20);
+++ LocalAuto35.patched.lean
+  itself is NOT imported by this lane — the historic reason was the
   HOL `face` ↦ `Hypermap.face`; `convex_local_fan` ↦ `ConvexLocalFan`
   (LocalAuto1); `sol0`/`setSum` ↦ PackingAuto2.
 - HOL `x MOD k` ↦ `x % k`; `SUC i` ↦ `i + 1`; `IMAGE vv (:num)` ↦
@@ -8325,9 +8325,9 @@ of LocalAuto23 `IN_IS_SCS_CASE_4_p23` / `V_E_FF_IS_SCS_CASES_4_p23` (both
 `sorry` there), and the wedge step itself is HOL `Tecoxbm.TECOXBM`
 (TECOXBM.hl:1726 = TECOXBM1 hl:1456 + TECOXBM2 hl:1682), whose only Lean
 ports are `TECOXBM1_p11`/`TECOXBM2_p11` (LocalAuto11:1515/1529) — both
-`sorry`, and LocalAuto11 is unreachable from LocalAuto35 (it imports
-LocalAuto2; LocalAuto1 + LocalAuto2 clash on `atn2PA18` via
-PackingAuto18/PackingAuto20).  Closing this and step05 mechanically closes
+  LocalAuto1 + LocalAuto2 clash on a duplicate `atn2PA18` via
+  PackingAuto18/PackingAuto20, resolved by the atn2-merge wave 3
+  single-sourcing into `SphereKit` (la35-access-recon-w1 ruling,
 TECOXBMv2_p35 (template in its DISCHARGES note). -/
 theorem TECOXBMv2_step04_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (vv : ℕ → V3)
@@ -9844,24 +9844,6 @@ theorem q1_head_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop) (vv : ℕ �
       (by have h := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag _ rfl
           simp only [scsHalfSliceV39] at h
           omega)⟩
-
-/-- `hEE2` supply for the `vv`-world consumer of `EJRCFJD_p35` (EV28): on the
-cyclic fan `V = range vv`, `E = range {vv i, vv (i+1)}` with `3 ≤ k`, every
-vertex has exactly the two neighbours `vv (i+k-1)`, `vv (i+1)`
-(`wedgeCyclicEE_p35` + `wedgeCyclicNC_p35`; injectivity from `vvInjAux_p35`). -/
-private theorem vvEE2OfBB_p35 (s : ScsV39) (vv : ℕ → V3) (hscs : isScsV39 s)
-    (hBB : BBsV39 s vv) (hk3 : 3 ≤ s.k) :
-    ∀ u ∈ Set.range vv,
-      (EE_p3 u (Set.range fun i => {vv i, vv (i + 1)})).ncard = 2 := by
-  intro u hu
-  obtain ⟨i, rfl⟩ := hu
-  have hinj := vvInjAux_p35 s vv hscs hBB
-  have hper : Periodic vv s.k := hBB.2.1
-  rw [wedgeCyclicEE_p35 hk3 hper hinj rfl i,
-    Set.ncard_insert_of_notMem
-      (show vv (i + s.k - 1) ∉ ({vv (i + 1)} : Set V3) from by
-        simp [wedgeCyclicNC_p35 hk3 hper hinj i])]
-  simp
 
 /-- HOL `QKNVMLB1_EQ4F` (QKNVMLB.hl:5064, proof ~160 ln). -/
 theorem QKNVMLB1_EQ4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
@@ -11612,7 +11594,7 @@ private theorem lfUniqueFirst_p35 {V : Set V3} {E : Set (Set V3)}
       (∀ d ∈ FF,
         (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
               (Fan.hypermapOfFan 0 V E hfan.1)).symm d ∈ FF) := by
-  obtain ⟨hF, x, hx, hFF, hdih⟩ := hfan
+  obtain ⟨hF, x, hx, hFF, hdih, -⟩ := hfan
   obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
   set H := Fan.hypermapOfFan 0 V E hF with hHdef
@@ -11763,7 +11745,7 @@ private theorem lfVertKit_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V
       EE_p3 v E = {rhoNode1 FF v, ivsRhoNode1 FF v} ∧
       rhoNode1 FF v ≠ ivsRhoNode1 FF v := by
   have hfan0 := hfan
-  obtain ⟨hF, x, hx, hFF, hdih⟩ := hfan
+  obtain ⟨hF, x, hx, hFF, hdih, -⟩ := hfan
   obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
   set H := Fan.hypermapOfFan 0 V E hF with hHdef
@@ -12361,7 +12343,7 @@ private theorem funIterInj_p35 {α : Type*} {f : α → α} (hf : Function.Injec
 private theorem kchFFSubDart1_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hfan : LocalFan V E FF) : FF ⊆ Kepler.Text.Fan.dart1OfFan V E := by
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
-  obtain ⟨hF, x0, hx0, hFF, -⟩ := hfan
+  obtain ⟨hF, x0, hx0, hFF, -, -⟩ := hfan
   have hcoe : ((Kepler.Text.Fan.hypermapOfFan 0 V E hF).darts : Set (V3 × V3))
       = Kepler.Text.Fan.dart1OfFan V E := hypermapOfFan_darts_p35 hF
   rw [hFF, ← hcoe]
@@ -12372,9 +12354,8 @@ private theorem kchFFSubDart1_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 
 private theorem kchDartInV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hfan : LocalFan V E FF) {d : V3 × V3} (hd : d ∈ FF) : d.1 ∈ V ∧ d.2 ∈ V := by
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfan
-  have hfan : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih⟩
   have h1 := kchFFSubDart1_p35 hfan hd
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfan
   exact ⟨hF.1 (Set.mem_sUnion_of_mem (by simp) h1),
     hF.1 (Set.mem_sUnion_of_mem (by simp) h1)⟩
 
@@ -12440,9 +12421,9 @@ private theorem kchFstInj_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V
 private theorem cardFF_V_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hfan : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
     Set.ncard FF = Set.ncard V := by
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfan
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfan
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
-  have hfan : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih⟩
+  have hfan : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih, hEE2⟩
   have hcoe : ((Kepler.Text.Fan.hypermapOfFan 0 V E hF).darts : Set (V3 × V3))
       = Kepler.Text.Fan.dart1OfFan V E := hypermapOfFan_darts_p35 hF
   have hsub : FF ⊆ ((Kepler.Text.Fan.hypermapOfFan 0 V E hF).darts : Set (V3 × V3)) := by
@@ -12478,9 +12459,9 @@ private theorem kchOrbitKit_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 ×
     Set.InjOn (rhoNode1 FF) V ∧
     ∃ c : ℕ, 0 < c ∧ (rhoNode1 FF)^[c] v = v ∧ Set.ncard V = c ∧
       Set.InjOn (fun k : ℕ => (rhoNode1 FF)^[k] v) (Set.Iio c) := by
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfan
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfan
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
-  have hfan : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih⟩
+  have hfan : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih, hEE2⟩
   have hsubD1 : FF ⊆ Kepler.Text.Fan.dart1OfFan V E := kchFFSubDart1_p35 hfan
   have hfaceInj : Function.Injective
       ⇑(Kepler.Text.Fan.hypermapOfFan 0 V E hF).faceMap := by
@@ -12702,8 +12683,8 @@ namespace LandingKchTwin
 private theorem kchNoTwoV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     {z : V3} (hfan : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
     (hz : z ∈ V) : rhoNode1 FF (rhoNode1 FF z) ≠ z := by
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfan
-  have hfan : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih⟩
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfan
+  have hfan : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih, hEE2⟩
   have horb := (kchOrbitKit_p35 hfan hEE2 hz).2.1 z hz
   intro hcon
   have hfix : (rhoNode1 FF)^[2] z = z := hcon
@@ -12784,8 +12765,8 @@ private theorem cardVGe3_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3
     3 ≤ Set.ncard V := by
   obtain ⟨hfanL⟩ := hfan
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
-  have hfanL : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih⟩
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfanL
+  have hfanL : LocalFan V E FF := ⟨hF, x0, hx0, hFF, hdih, hEE2⟩
   have hG : Kepler.Text.Fan.Graph E := hF.2.1
   have hvne : V.Nonempty := by
     have h1 : x0 ∈ Kepler.Text.Fan.dart1OfFan V E := by
@@ -13765,7 +13746,7 @@ docstring above for the route. -/
 private theorem eeTwoElms_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hfan : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
     ∀ u ∈ V, (EE_p3 u E).ncard = 2 := by
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfan
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfan
   obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
   set H := Fan.hypermapOfFan 0 V E hF with hHdef
@@ -14136,8 +14117,8 @@ private theorem diagNotEdge_p35 {V : Set V3} {E : Set (Set V3)}
     ({v, w} : Set V3) ∉ E := by
   intro hevw
   obtain ⟨hLF, hconv⟩ := hfan
-  obtain ⟨hF, x0, hx0d, hFF, hdih⟩ := hLF
-  have hLFre : LocalFan V E FF := ⟨hF, x0, hx0d, hFF, hdih⟩
+  obtain ⟨hF, x0, hx0d, hFF, hdih, htwo⟩ := hLF
+  have hLFre : LocalFan V E FF := ⟨hF, x0, hx0d, hFF, hdih, htwo⟩
   obtain ⟨-, hunion, -, -, -⟩ := hdih
   have h0V : (0:V3) ∉ V := hF.2.2.2.1
   have hv0 : (0:V3) ≠ v := fun hc => h0V (hc ▸ hv)
@@ -16209,7 +16190,7 @@ private theorem kchPosDirect_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 �
           (((rhoNode1 FF)^[i + 1] v : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (e : V3)) := by
   have hmemV : ∀ n : ℕ, (rhoNode1 FF)^[n] v ∈ V := kchIterInV_p35 hfanL hEE2 hv
   have hkeep := hfanL
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfanL
   have hVne0 : ∀ z : V3, z ∈ V → z ≠ (0:V3) := fun z hz he2 => hF.2.2.2.1 (he2 ▸ hz)
   have hUmem : ∀ n : ℕ, n ≤ l → (rhoNode1 FF)^[n] v ∈ U := by
     intro n hn
@@ -16441,7 +16422,7 @@ private theorem kchNoncolU_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × 
     {z : V3} (hzU : z ∈ U) : ¬ Collinear3 0 e z := by
   have hmemV : ∀ n : ℕ, (rhoNode1 FF)^[n] v ∈ V := kchIterInV_p35 hfanL hEE2 hv
   have hkeep := hfanL
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfanL
   have hVne0 : ∀ z2 : V3, z2 ∈ V → z2 ≠ (0:V3) := fun z2 hz2 he2 => hF.2.2.2.1 (he2 ▸ hz2)
   have hUmem : ∀ n : ℕ, n ≤ l → (rhoNode1 FF)^[n] v ∈ U := by
     intro n hn
@@ -16549,7 +16530,7 @@ private theorem kchAzimSuccesor_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V
       ∀ y : V3, y ∈ U → y ≠ x → y ≠ rhoNode1 FF x →
         azim 0 e x (rhoNode1 FF x) < azim 0 e x y := by
   have hkeep := hfanL
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfanL
   have hfan := hF
   have hmemV : ∀ m : ℕ, (rhoNode1 FF)^[m] v ∈ V := kchIterInV_p35 hkeep hEE2 hv
   have hVne0 : ∀ z : V3, z ∈ V → z ≠ (0:V3) := kchFanVNeApex_p35 hfan
@@ -16961,7 +16942,7 @@ private theorem kchOrbitMapV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 �
     (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
     ∀ v : V3, v ∈ V → orbitF_p3 (rhoNode1 FF) v = V := by
   have hkeep := hfanL
-  obtain ⟨hF, x0, hx0, hFF, -⟩ := hfanL
+  obtain ⟨hF, x0, hx0, hFF, -, -⟩ := hfanL
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
   set H := Fan.hypermapOfFan 0 V E hF with hHdef
   have hcoe : (H.darts : Set (V3 × V3)) = Fan.dart1OfFan V E := hypermapOfFan_darts_p35 hF
@@ -17051,7 +17032,7 @@ private theorem kchNoTwoV_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V
     (hfanL : LocalFan V E FF) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
     ∀ z : V3, z ∈ V → rhoNode1 FF (rhoNode1 FF z) ≠ z := by
   have hkeep := hfanL
-  obtain ⟨hF, x0, hx0, hFF, hdih⟩ := hfanL
+  obtain ⟨hF, x0, hx0, hFF, hdih, -⟩ := hfanL
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
   obtain ⟨hcard, -, -, -, -⟩ := hdih
   have hVE : (⋃₀ E) ⊆ V := hF.1
@@ -20447,8 +20428,8 @@ The HAFL chapter lands the half-circle slice face at the LA3 carrier
 `localFan_p3`; the conditional COVEX piece `COVEX_OF_LOFA_HALF_CIRCLE_p35`
 (below) consumes the LA1 `LocalFan` carrier instead.  AzimBridge carries the
 master bridge `LocalFan.of_localFan_p3` (AzimBridge.lean:740) but is not
-importable from the LA35 face (it drags LocalAuto2, whose LocalAuto1 pairing
-clashes on a duplicate `atn2PA18`); this section recasts it privately (the
+  2026-10-28); the non-import is now lane discipline, not a blocker);
+`sorry`, and LocalAuto11 is not imported by LocalAuto35 (it imports
 fanbase-s3 kit route), together with the no-isolated-vertex dart
 identification that kills its second hypothesis at the slice faces: slice
 darts with distinct endpoints force every slice vertex to carry an edge, so
@@ -20471,6 +20452,291 @@ private theorem iterateCongr_p35 {α : Type*} {f g : α → α} (h : ∀ y, f y 
       intro y
       rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih y, h]
 
+section W1CoreP35
+
+variable {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+
+/-- `nnOfHyp_p3` preserves the first coordinate (both `ite` branches). -/
+theorem w1_nnFst_p35 (z : V3 × V3) : (nnOfHyp_p3 0 V E z).1 = z.1 := by
+  unfold nnOfHyp_p3
+  split <;> rfl
+
+/-- `nnOfHyp_p3` on a genuine (ord-pair) dart. -/
+theorem w1_nn_apply_p35 (V : Set V3) {E : Set (Set V3)} {a b : V3}
+    (hab : {a, b} ∈ E) :
+    nnOfHyp_p3 0 V E (a, b) = (a, azimCycle_p3 (EE_p3 a E) 0 a b) := by
+  unfold nnOfHyp_p3
+  rw [if_pos (IN_E_IMP_IMP_IN_DARTS (V := V) hab)]
+
+/-- Step 1 (HOL: the `self_pairs` layer is incompatible with `dih2k`):
+`localFan_p3` has no isolated vertex. -/
+theorem w1NoIsoAux_p35 (h : localFan_p3 V E FF) : ∀ u ∈ V, EE_p3 u E ≠ ∅ := by
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := h
+  have hcard := hdih.1
+  have horb := hdih.2.1
+  have hcardPos : 0 < H.darts.card := Finset.card_pos.mpr ⟨x, hx⟩
+  have hFFpos : 0 < FF.ncard := by have := hcard; omega
+  intro u hu hEu
+  have hselfD : (u, u) ∈ dartsOfHyp_p3 E V := by
+    have hs : (u, u) ∈ selfPairs_p3 E V := ⟨rfl, hu, hEu⟩
+    exact Set.mem_union_right _ hs
+  have hself : (u, u) ∈ (↑H.darts : Set (V3 × V3)) := by rw [hdarts]; exact hselfD
+  have hselfF : (u, u) ∈ H.darts := Finset.mem_coe.mpr hself
+  -- faceMap fixes it (the `EE u E = ∅` branch of `ivs_azim_cycle`)
+  have hfixF : (H.faceMap : V3 × V3 → V3 × V3) (u, u) = (u, u) := by
+    rw [hface]
+    unfold ffOfHyp_p3
+    rw [if_pos hselfD]
+    have hivs : ivsAzimCycle_p3 (EE_p3 (u, u).2 E) 0 (u, u).2 (u, u).1 = (u, u).2 := by
+      unfold ivsAzimCycle_p3
+      exact if_pos hEu
+    rw [hivs]
+  have hfaceU : H.face (u, u) = {(u, u)} :=
+    orbitMap_eq_singleton (f := H.faceMap) hfixF
+  -- nodeMap fixes it (the `W ⊆ {p}` branch of `azim_cycle`)
+  have hsubE : EE_p3 (u, u).1 E ⊆ {(u, u).2} := by
+    show (EE_p3 u E : Set V3) ⊆ {u}
+    rw [hEu]
+    exact Set.empty_subset _
+  have hfixN : (H.nodeMap : V3 × V3 → V3 × V3) (u, u) = (u, u) := by
+    rw [hnode]
+    unfold nnOfHyp_p3
+    rw [if_pos hselfD]
+    have hacy : azimCycle_p3 (EE_p3 (u, u).1 E) 0 (u, u).1 (u, u).2 = (u, u).2 :=
+      W_SUBSET_SINGLETON_IMP_IDE hsubE 0 _
+    rw [hacy]
+  -- dih2k's belt conjunct collapses to a singleton dart set
+  have h2 := horb (u, u) hselfF
+  rw [hfaceU, Set.image_singleton, hfixN, Set.union_singleton] at h2
+  have hcard1 : H.darts.card = 1 := by
+    have hnc := Set.ncard_coe_finset H.darts
+    rw [h2] at hnc
+    simpa using hnc.symm
+  omega
+
+/-- The azimuthal three-neighbor contradiction (`|EE| ≤ 2` core): a third
+neighbor `q` beyond `u0` and its successor `s` forces `2·π ≤ azim < 2·π`. -/
+theorem w1_azim3_p35 (hfan : Fan.FAN 0 V E) {v u0 s q : V3}
+    (hu0E : {v, u0} ∈ E) (hsE : {v, s} ∈ E) (hqE : {v, q} ∈ E)
+    (hmin1 : azim 0 v u0 s ≤ azim 0 v u0 q)
+    (hmin2 : azim 0 v s u0 ≤ azim 0 v s q)
+    (hsne : s ≠ u0) : False := by
+  have hadd := Fan.sum2_azim_fan hfan hu0E hsE hqE hmin1
+  have hncU : ¬ Collinear3 0 v u0 := Fan.fan_not_collinear hfan hu0E
+  have hncS : ¬ Collinear3 0 v s := Fan.fan_not_collinear hfan hsE
+  have hzero : azim 0 v u0 s ≠ 0 := fun hzz =>
+    hsne (Eq.symm (Fan.unique_azim0_point_fan hfan hu0E hsE hzz))
+  have hcomp : azim 0 v s u0 = 2 * Real.pi - azim 0 v u0 s := by
+    rw [azim_compl hncU hncS, if_neg hzero]
+  have hlt := azim_lt_two_pi (v := 0) (w := v) (w1 := u0) (w2 := q)
+  linarith
+
+/-- Upper bound: `azim_cycle` = `sigmaFan` under `FAN`, and `nn² = id`
+(`hasOrders_p3 nodeMap 2`) forces `|EE| ≤ 2` via `SIGMA_FAN`-minimality +
+`w1_azim3_p35` (the three-neighbor azimuth contradiction). -/
+theorem w1SigmaBndAux_p35 (h : localFan_p3 V E FF) :
+    ∀ u ∈ V, (EE_p3 u E).ncard ≤ 2 := by
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := id h
+  have hsub : ⋃₀ E ⊆ V := hfan.1
+  have hVfin : V.Finite := hfan.2.2.1.1
+  have hnn2 : (⇑H.nodeMap)^[2] = id := by
+    have hon := hdih.2.2.2.2
+    exact hon.2
+  have hnnSq : ∀ d : V3 × V3,
+      (⇑H.nodeMap) ((⇑H.nodeMap) d) = d := by
+    intro d
+    have hd := congrFun hnn2 d
+    rw [show (⇑H.nodeMap)^[2]
+        = (⇑H.nodeMap) ∘ (⇑H.nodeMap) from by
+        simp [Function.iterate_succ]] at hd
+    exact hd
+  intro v hv
+  have hEEne : EE_p3 v E ≠ ∅ := w1NoIsoAux_p35 h v hv
+  have hEEsoe : EE_p3 v E = Fan.setOfEdge v V E := UNI_E_IMP_EE_EQ_SET_OF_EDGE hsub v
+  have hfinEE : (EE_p3 v E).Finite :=
+    hVfin.subset fun w hw => hsub (EE_SUBSET_UNIONS_E v E hw)
+  obtain ⟨u0, hu0⟩ : (EE_p3 v E).Nonempty := Set.nonempty_iff_ne_empty.mpr hEEne
+  have hu0E : {v, u0} ∈ E := hu0
+  have hu0soe : u0 ∈ Fan.setOfEdge v V E := by rw [← hEEsoe]; exact hu0
+  by_cases hcA : EE_p3 v E ⊆ {u0}
+  · have h1 := Set.ncard_le_ncard hcA (Set.finite_singleton u0)
+    have h2 : ({u0} : Set V3).ncard = 1 := Set.ncard_singleton u0
+    omega
+  · have hneU : Fan.setOfEdge v V E ≠ {u0} := by
+      intro he
+      have hq0 : ∃ q ∈ EE_p3 v E, q ≠ u0 := by
+        by_contra hcon
+        push_neg at hcon
+        exact hcA fun q hq => hcon q hq
+      obtain ⟨q, hqE, hqu⟩ := hq0
+      have hqS : q ∈ Fan.setOfEdge v V E := by rw [← hEEsoe]; exact hqE
+      rw [he] at hqS
+      exact hqu (by simpa using hqS)
+    obtain ⟨hsm, hsne, hsmin⟩ := Fan.SIGMA_FAN hneU hfan hu0soe
+    set s : V3 := Fan.sigmaFan 0 V E v u0 with hsdef
+    have hEs : {v, s} ∈ E := hsm.1
+    have hstep1 : (⇑H.nodeMap) (v, u0) = (v, s) := by
+      rw [hnode]
+      exact (w1_nn_apply_p35 V hu0E).trans (congrArg (fun t : V3 => (v, t))
+        (AZIM_CYCLE_EQ_SIGMA_FAN hfan hu0soe))
+    have key := hnnSq (v, u0)
+    rw [hstep1] at key
+    have hstep2 : (⇑H.nodeMap) (v, s) = (v, azimCycle_p3 (EE_p3 v E) 0 v s) := by
+      rw [hnode]
+      exact w1_nn_apply_p35 V hEs
+    rw [hstep2] at key
+    have hz : azimCycle_p3 (EE_p3 v E) 0 v s = u0 := congrArg Prod.snd key
+    have hsf2 : Fan.sigmaFan 0 V E v s = u0 := by
+      rw [← AZIM_CYCLE_EQ_SIGMA_FAN hfan hsm]
+      exact hz
+    have hneS : Fan.setOfEdge v V E ≠ {s} := by
+      intro he
+      have hu0s : u0 ∈ ({s} : Set V3) := by rw [← he]; exact hu0soe
+      exact hsne (show u0 = s from by simpa using hu0s).symm
+    obtain ⟨-, hsne2, hsmin2⟩ := Fan.SIGMA_FAN hneS hfan hsm
+    rw [hsf2] at hsmin2
+    have hsub2 : EE_p3 v E ⊆ {u0, s} := by
+      intro q hq
+      by_cases hqu : q = u0
+      · rw [hqu]
+        exact Set.mem_insert u0 {s}
+      · by_cases hqs : q = s
+        · rw [hqs]
+          exact Set.mem_insert_of_mem u0 rfl
+        · exfalso
+          exact w1_azim3_p35 hfan hu0E hEs hq
+            (hsmin q (by rw [← hEEsoe]; exact hq) hqu)
+            (hsmin2 q (by rw [← hEEsoe]; exact hq) hqs) hsne
+    have h2le : (EE_p3 v E).ncard ≤ ({u0, s} : Set V3).ncard :=
+      Set.ncard_le_ncard hsub2 (Set.finite_insert.mpr (Set.finite_singleton s))
+    rw [Set.ncard_insert_of_notMem (a := u0) (s := {s})
+        (fun hmem => hsne (show u0 = s from by simpa using hmem).symm)
+        (Set.finite_singleton s),
+      Set.ncard_singleton] at h2le
+    exact h2le
+
+/-- Lower bound: belt disjointness (counting: `darts.card = 2*FF.ncard`
+against the `dih2k` orbit-union identity) makes `|EE v E| = 2*t_v` with
+`t_v ≥ 1` — every vertex carries a face dart above it. -/
+theorem w1TwoLeAux_p35 (h : localFan_p3 V E FF) :
+    ∀ u ∈ V, 2 ≤ (EE_p3 u E).ncard := by
+  have hnoIso := w1NoIsoAux_p35 h
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := h
+  have hcard := hdih.1
+  have horb := hdih.2.1
+  have hsub : ⋃₀ E ⊆ V := hfan.1
+  intro v hv
+  have hEEne : EE_p3 v E ≠ ∅ := hnoIso v hv
+  obtain ⟨u0, hu0⟩ : (EE_p3 v E).Nonempty := Set.nonempty_iff_ne_empty.mpr hEEne
+  have hu0E : {v, u0} ∈ E := hu0
+  have hFFsub : FF ⊆ (↑H.darts : Set (V3 × V3)) := by
+    rw [hFF]; exact H.face_subset_darts hx
+  have hfinFF : FF.Finite := Set.Finite.subset H.darts.finite_toSet hFFsub
+  have hbelt : (↑H.darts : Set (V3 × V3)) = FF ∪ ((⇑H.nodeMap) '' FF) := by
+    have := horb x hx
+    rwa [← hFF] at this
+  have hninj : Function.Injective (⇑H.nodeMap) := Equiv.injective _
+  have hcardI : ((⇑H.nodeMap) '' FF).ncard = FF.ncard :=
+    Set.InjOn.ncard_image fun a _ b _ hnc => hninj hnc
+  have hdisj : FF ∩ ((⇑H.nodeMap) '' FF) = (∅ : Set (V3 × V3)) := by
+    have hun := Set.ncard_union_add_ncard_inter FF ((⇑H.nodeMap) '' FF) hfinFF
+      (hfinFF.image (⇑H.nodeMap))
+    have hcardU : (FF ∪ (⇑H.nodeMap) '' FF).ncard = H.darts.card := by
+      rw [← hbelt, Set.ncard_coe_finset]
+    rw [hcardU, hcardI] at hun
+    have h0 : (FF ∩ (⇑H.nodeMap) '' FF).ncard = 0 := by omega
+    rwa [Set.ncard_eq_zero (hfinFF.subset Set.inter_subset_left)] at h0
+  -- ncard (darts above v) = ncard (EE v E), and the split Sv = Tv ⊔ nn''Tv
+  have hcardSv : ({d : V3 × V3 | d ∈ (↑H.darts : Set (V3 × V3)) ∧ d.1 = v}).ncard
+      = (EE_p3 v E).ncard := by
+    have hSvimg : {d : V3 × V3 | d ∈ (↑H.darts : Set (V3 × V3)) ∧ d.1 = v}
+        = (fun w : V3 => (v, w)) '' (EE_p3 v E) := by
+      ext d
+      obtain ⟨dv, dw⟩ := d
+      simp only [Set.mem_setOf_eq, Set.mem_image]
+      constructor
+      · rintro ⟨hd, hd1⟩
+        have hdart : (dv, dw) ∈ dartsOfHyp_p3 E V := by
+          rw [← hdarts]; exact hd
+        rcases Set.mem_union _ _ _ |>.mp hdart with hord | hself
+        · exact ⟨dw, hd1 ▸ (show ({dv, dw} : Set V3) ∈ E from hord), by rw [hd1]⟩
+        · rw [hd1] at hself
+          exact absurd hself.2.2 (hnoIso v hv)
+      · rintro ⟨w, hw, hwE⟩
+        injection hwE with h1 h2
+        have hvd : (dv, dw) ∈ (↑H.darts : Set (V3 × V3)) := by
+          rw [hdarts, ← h1, ← h2]
+          exact Set.mem_union_left _ (show (v, w) ∈ ordPairs_p3 E from hw)
+        exact ⟨hvd, h1.symm⟩
+    rw [hSvimg]
+    exact Set.InjOn.ncard_image fun a _ b _ hnc => by simpa using hnc
+  have hsplit : {d : V3 × V3 | d ∈ (↑H.darts : Set (V3 × V3)) ∧ d.1 = v}
+      = {d : V3 × V3 | d ∈ FF ∧ d.1 = v}
+        ∪ ((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v}) := by
+    ext d
+    simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_image]
+    constructor
+    · rintro ⟨hd, hd1⟩
+      rcases Set.mem_union _ _ _ |>.mp (hbelt ▸ hd) with hF | hI
+      · exact Or.inl ⟨hF, hd1⟩
+      · obtain ⟨z, hzF, hzd⟩ := hI
+        refine Or.inr ⟨z, ⟨hzF, ?_⟩, hzd⟩
+        have hz1 : z.1 = ((⇑H.nodeMap) z).1 := by rw [hnode]; exact (w1_nnFst_p35 z).symm
+        rw [hz1, hzd]
+        exact hd1
+    · rintro (⟨hF, hd1⟩ | ⟨z, ⟨hzF, hz1⟩, hzd⟩)
+      · exact ⟨by rw [hbelt]; exact Set.mem_union_left _ hF, hd1⟩
+      · refine ⟨?_, ?_⟩
+        · rw [← hzd, hbelt]
+          exact Set.mem_union_right _ ⟨z, hzF, rfl⟩
+        · rw [← hzd, hnode, w1_nnFst_p35 z]
+          exact hz1
+  have hdisjT : ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}
+      ∩ ((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v})) = (∅ : Set (V3 × V3)) := by
+    refine Set.eq_empty_iff_forall_notMem.mpr fun d hd => ?_
+    obtain ⟨hdT, hdI⟩ := hd
+    obtain ⟨z, hzT, hzd⟩ := hdI
+    have hmemFF : d ∈ (FF ∩ ((⇑H.nodeMap) '' FF) : Set (V3 × V3)) :=
+      ⟨hdT.1, z, hzT.1, hzd⟩
+    rw [hdisj] at hmemFF
+    exact hmemFF
+  have hTvfin : ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}).Finite :=
+    hfinFF.subset fun d hd => hd.1
+  have hTvI : (((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v}).ncard)
+      = ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}).ncard :=
+    Set.InjOn.ncard_image fun a _ b _ hnc => hninj hnc
+  have hunT := Set.ncard_union_add_ncard_inter
+    {d : V3 × V3 | d ∈ FF ∧ d.1 = v}
+    (((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v})) hTvfin
+    (hTvfin.image (⇑H.nodeMap))
+  rw [← hsplit, hcardSv, hdisjT, Set.ncard_empty, hTvI] at hunT
+  -- Tv nonempty: the dart (v, u0) is in Tv or in its nn-image
+  have hTvne : {d : V3 × V3 | d ∈ FF ∧ d.1 = v}.Nonempty := by
+    have hvd : (v, u0) ∈ (↑H.darts : Set (V3 × V3)) := by
+      rw [hdarts]
+      exact Set.mem_union_left _ (show (v, u0) ∈ ordPairs_p3 E from hu0E)
+    have hin : (v, u0) ∈ {d : V3 × V3 | d ∈ FF ∧ d.1 = v}
+        ∪ ((⇑H.nodeMap) '' {d : V3 × V3 | d ∈ FF ∧ d.1 = v}) := by
+      rw [← hsplit]
+      exact ⟨hvd, rfl⟩
+    rcases Set.mem_union _ _ _ |>.mp hin with hT | hI
+    · exact ⟨(v, u0), hT⟩
+    · obtain ⟨z, hzT, _⟩ := hI
+      exact ⟨z, hzT⟩
+  have hTv1 : 1 ≤ ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}).ncard :=
+    (Set.ncard_pos hTvfin).mpr hTvne
+  have hfin : (EE_p3 v E).ncard = 2 * ({d : V3 × V3 | d ∈ FF ∧ d.1 = v}).ncard := by
+    rw [← hcardSv]; omega
+  omega
+
+end W1CoreP35
+
+/-- **Core lemma (lf-alpha-w1)**: HOL `LOFA_IMP_EE_TWO_ELMS` (local_lemmas1
+~:1907) at the `_p3` HYP world — a `localFan_p3` is 2-regular. -/
+theorem localFanLA3TwoNbr_p35 (h : localFan_p3 V E FF) :
+    ∀ u ∈ V, (EE_p3 u E).ncard = 2 := by
+  intro v hv
+  exact le_antisymm (w1SigmaBndAux_p35 h v hv) (w1TwoLeAux_p35 h v hv)
 /-- **GATE-A bridge** — LA3 `localFan_p3` + absence of isolated self-pair
 darts gives LA1 `LocalFan`.  Private recast of AzimBridge
 `LocalFan.of_localFan_p3` (AzimBridge.lean:740; that file imports LocalAuto2,
@@ -20480,6 +20746,7 @@ its intended conjunction shape and mis-binds the components. -/
 private theorem localFanLA1ofP3_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hp3 : localFan_p3 V E FF) (hno : dartsOfHyp_p3 E V = Fan.dart1OfFan V E) :
     LocalFan V E FF := by
+  have hp3keep : localFan_p3 V E FF := hp3
   obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := hp3
   have c1 := hdih.1
   have c2 := hdih.2.1
@@ -20598,7 +20865,7 @@ private theorem localFanLA1ofP3_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V
       exact ⟨n, (hitF n y).symm ▸ hn⟩
     · rintro ⟨n, hn⟩
       exact ⟨n, hitF n y ▸ hn⟩
-  refine ⟨hfan, x, ?_, ?_, ?_⟩
+  refine ⟨hfan, x, ?_, ?_, ?_, ?_⟩
   · rw [hDart']
     exact hx
   · rw [hFF]
@@ -20650,6 +20917,9 @@ private theorem localFanLA1ofP3_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V
       · refine Equiv.Perm.ext fun y => ?_
         rw [Equiv.Perm.coe_pow, ← iterateCongr_p35 hptN (2 : ℕ) y, c5.2]
         rfl
+  · -- α2 conjunct: 2-正则（核心引理块副本，见上方 localFanLA3TwoNbr_p35）
+    intro u hu
+    exact localFanLA3TwoNbr_p35 hp3keep u hu
 
 /-- **GATE-A, slice-face corollary** — the HAFL chapter lands the slice face
 as LA3 `localFan_p3`; whenever the slice darts are true darts (distinct
@@ -24142,7 +24412,7 @@ theorem azimCycleNeSelf_p35 {W : Set V3} {u p : V3} (hWf : W.Finite)
 theorem fstCoverOfUnio_p35 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (hfanL : LocalFan V E FF) {u : V3} (hu : u ∈ ⋃₀ E) :
     ∃ d ∈ FF, d.1 = u := by
-  obtain ⟨hF, x₀, hx₀d, hFF, hdih⟩ := hfanL
+  obtain ⟨hF, x₀, hx₀d, hFF, hdih, -⟩ := hfanL
   obtain ⟨e, heE, hue⟩ := hu
   obtain ⟨hfin, hcard⟩ := hF.2.1 e heE
   have hcard2 : e.ncard = 2 := by
@@ -25001,7 +25271,7 @@ private theorem noRayOfFaceTail_p35 {V : Set V3} {E : Set (Set V3)}
 private theorem tailOfEdge_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hfanL : LocalFan V E FF) {u z : V3} (he : ({u, z} : Set V3) ∈ E) :
     ∃ b : V3, (u, b) ∈ FF := by
-  obtain ⟨hF, x0, hx0d, hFF, hdih⟩ := hfanL
+  obtain ⟨hF, x0, hx0d, hFF, hdih, htwo⟩ := hfanL
   have hdih2 := hdih
   obtain ⟨_, hunion, _, _, _⟩ := hdih
   have hcoe : ((@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
@@ -25021,7 +25291,7 @@ private theorem tailOfEdge_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × 
   · exact ⟨z, hA⟩
   · obtain ⟨d, hdFF, hd'eq⟩ := hB
     have hd1' : d ∈ Fan.dart1OfFan V E :=
-      kchFFSubDart1_p35 ⟨hF, x0, hx0d, hFF, hdih2⟩ hdFF
+      kchFFSubDart1_p35 ⟨hF, x0, hx0d, hFF, hdih2, htwo⟩ hdFF
     have hnode := hypermapOfFan_node_apply_p35 hF d
     rw [if_pos hd1'] at hnode
     rw [hnode] at hd'eq
@@ -25662,7 +25932,7 @@ theorem jTwoLeNbrOnUnio_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)
     (hfan : LocalFan V E FF) : ∀ u ∈ ⋃₀ E, 2 ≤ (EE_p3 u E).ncard := by
   intro u hu
   obtain ⟨s, hsE, hus⟩ := hu
-  obtain ⟨hF, x, hx, hFF, hdih⟩ := hfan
+  obtain ⟨hF, x, hx, hFF, hdih, -⟩ := hfan
   obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
   set H := Fan.hypermapOfFan 0 V E hF with hHdef
@@ -25794,7 +26064,7 @@ theorem jUnioMemVPrime_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hfan : LocalFan V E FF) : ∀ u ∈ ⋃₀ E, u ∈ vPrime_p3 V FF := by
   intro u hu
   obtain ⟨s, hsE, hus⟩ := hu
-  obtain ⟨hF, x, hx, hFF, hdih⟩ := hfan
+  obtain ⟨hF, x, hx, hFF, hdih, -⟩ := hfan
   obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
   set H := Fan.hypermapOfFan 0 V E hF with hHdef
@@ -25848,7 +26118,7 @@ theorem jEvenNbrOnUnio_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     ∀ u ∈ ⋃₀ E, ∃ t : ℕ, (EE_p3 u E).ncard = 2 * t := by
   intro u hu
   obtain ⟨s, hsE, hus⟩ := hu
-  obtain ⟨hF, x, hx, hFF, hdih⟩ := hfan
+  obtain ⟨hF, x, hx, hFF, hdih, -⟩ := hfan
   obtain ⟨hcard, horb, hof, hoe, hon⟩ := hdih
   letI hDartEq : DecidableEq (V3 × V3) := fun a b => instDecidableEqProd a b
   set H := Fan.hypermapOfFan 0 V E hF with hHdef
@@ -31334,8 +31604,7 @@ refutable.  `hEE2` restores exactly the HOL premise strength (queue 续 133/135,
 lane `ejrcfjd-dw-J-junk-w1` DELIVERY). -/
 theorem EJRCFJD_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3)
     (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
-    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
-    (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) :
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E) :
     ∃ HS : Hypermap (V3 × V3), IsHypE_p35 V (E ∪ {{v, w}}) HS ∧
       ConvexLocalFan (vPrime_p3 V (HS.face (v, rhoNode1 FF v)))
         (ePrime_p3 (E ∪ {{v, w}}) (HS.face (v, rhoNode1 FF v)))
@@ -31343,7 +31612,9 @@ theorem EJRCFJD_p35 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w :
       ConvexLocalFan (vPrime_p3 V (HS.face (w, rhoNode1 FF w)))
         (ePrime_p3 (E ∪ {{w, v}}) (HS.face (w, rhoNode1 FF w)))
         (HS.face (w, rhoNode1 FF w)) := by
-  exact EJRCFJD_p35_CLOSED_p35 V E FF v w hfan hv hw hwv hsub hEE2
+  obtain ⟨hL, -⟩ := id hfan
+  obtain ⟨-, -, -, -, -, hpsi⟩ := id hL
+  exact EJRCFJD_p35_CLOSED_p35 V E FF v w hfan hv hw hwv hsub hpsi
   -- DISCHARGES: local_lemmas1.hl:5967 (bridge wave; THE_SLICING_INTO_2_LEMMA
   -- + PROVE_THE_SLICE_ASSUMPTION unreachable from the LA35 import face).
 
@@ -31392,7 +31663,8 @@ theorem QKNVMLB1_LE4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop
       EJRCFJD_p35 (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
         (Set.range fun i => (vv i, vv (i + 1))) (vv (p % s.k)) (vv (q % s.k))
         hfan0 (IN_IMAGE_VV_p35 vv (p % s.k)) (IN_IMAGE_VV_p35 vv (q % s.k)) huw hwedge
-        (vvEE2OfBB_p35 s vv hscs hBB (by have := h4.1; omega))
+    -- EV30 (lf-alpha alpha2): the root no longer takes hEE2; the 2-regularity
+    -- conjunct is intrinsic to ConvexLocalFan and supplied inside the root.
     -- the V/E/F_PRIME re-labelling trio identifies the re-indexed sets with
     -- the slice face's vertex/edge/dart sets.
     have hVp := V_PRIME_EQ_V_vv_p35 s (scsHalfSliceV39 s p q d' mkj) s'' p q d' d'' mkj

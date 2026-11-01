@@ -153,12 +153,17 @@ fan chapter's dart-layer hypermap `hypermapOfFan 0 V E` (Fan.lean), whose
 darts are `dart1OfFan V E`: on a fan the `HYP` kit's isolated-vertex
 `self_pairs` are absent and its `azim_cycle` maps coincide with the
 `sigmaFan` maps, so the face/`dih2k` content lands verbatim; the residual
-`HYP`-layer bookkeeping is tracked by downstream obligations. -/
+`HYP`-layer bookkeeping is tracked by downstream obligations.  The lf-alpha
+conjunction `∀ u ∈ V, (ee u E).ncard = 2` (no isolated vertices /
+2-regular, HOL `LOFA_IMP_EE_TWO_ELMS`) is appended at the innermost `∧`,
+so `hfan.1`/`hfan.1.1` projections and the two-level `∃` shape are
+preserved (`ConvexLocalFan` below inherits it verbatim). -/
 def LocalFan (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) : Prop :=
   ∃ hfan : FAN 0 V E,
     ∃ x ∈ (hypermapOfFan 0 V E hfan).darts,
       FF = orbitMap (hypermapOfFan 0 V E hfan).faceMap x ∧
-        Dih2k (hypermapOfFan 0 V E hfan) FF.ncard
+        Dih2k (hypermapOfFan 0 V E hfan) FF.ncard ∧
+        ∀ u ∈ V, (ee u E).ncard = 2
 
 /-- HOL `wedge_in_fan_ge (v,w) E` (localization.hl:88). -/
 noncomputable def wedgeInFanGe (e : V3 × V3) (E : Set (Set V3)) : Set V3 :=

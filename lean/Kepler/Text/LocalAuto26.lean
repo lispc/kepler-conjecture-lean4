@@ -52,9 +52,13 @@ FILE MAP
     `NOT_CIRCULAR_SY_p26`, `GBYCPXS_p26`.
 
 ENCODING NOTES
-  - Import discipline: this file sits entirely on the LocalAuto1 side of
-    the fatal `atn2PA18` duplication (LocalAuto2/9/11 and PackingAuto20 are
-    NOT imported; LocalAuto19-27 same-wave lanes are NOT imported). The
+  - Import discipline: this file sits entirely on the LocalAuto1 side
+    (LocalAuto2/9/11 and PackingAuto20 are NOT imported; LocalAuto19-27
+    same-wave lanes are NOT imported).  The historic "fatal `atn2PA18`
+    duplication" is resolved: atn2-merge wave 3 single-sourced `atn2` into
+    `SphereKit`, the clash does not exist and the trees coexist
+    (la35-access-recon-w1 ruling, 2026-10-28); the non-imports are now lane
+    discipline, not a blocker. The
     scs record (`ScsV39`, `isScsV39`, `BBsV39`, `taustarV39`, `MMsV39`,
     `BBprimeV39`/`BBprime2V39`/`BBindexV39`, `dsvV39`, `scsBasicV39`,
     `scsM`, `scsArrowV39`, `scsDiag`, `scsGeneric`,

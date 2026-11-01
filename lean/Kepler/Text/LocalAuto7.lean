@@ -1602,7 +1602,7 @@ theorem ORDER_AZIM_SUM2Pi_0 {x y z : V3} {n : ℕ} {g : ℕ → V3}
 /-- HOL `LOCAL_FAN_NOT_EMPTY_FF` (polar_fan.hl:511). -/
 theorem LOCAL_FAN_NOT_EMPTY_FF {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) : FF ≠ ∅ := by
-  obtain ⟨hfan, x, hx, hFF, -⟩ := h
+  obtain ⟨hfan, x, hx, hFF, -, -⟩ := h
   intro h0
   have hx' : x ∈ FF := by rw [hFF]; exact mem_orbitMap_self _ x
   rw [h0] at hx'
@@ -1611,7 +1611,7 @@ theorem LOCAL_FAN_NOT_EMPTY_FF {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × 
 /-- HOL `LOCAL_FAN_NOT_CARD_FF_GE_2` (polar_fan.hl:521). -/
 theorem LOCAL_FAN_NOT_CARD_FF_GE_2 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (h : LocalFan V E FF) : 2 ≤ FF.ncard := by
-  obtain ⟨hfan, x, hx, hFF, hD⟩ := h
+  obtain ⟨hfan, x, hx, hFF, hD, -⟩ := h
   have hxFF : x ∈ FF := by rw [hFF]; exact mem_orbitMap_self _ x
   have hsub : FF ⊆ dart1OfFan V E := by
     rw [hFF]

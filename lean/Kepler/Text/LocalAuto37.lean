@@ -48,7 +48,10 @@ Encoding (house conventions, cf. LocalAuto31/34):
   `aff {a,b}` ↔ `affineSpan ℝ ({a, b} : Set V3)`; `collinear {a,b,c}` ↔
   `Collinear ℝ ({a, b, c} : Set V3)`; `azim` ↔ `Kepler.Geom.azim`.
 - `x cross y` ↔ `cross3_p37` (verbatim copy of the shared `cross3`; see the
-  def comment for the PackingAuto18/PackingAuto20 `atn2PA18` conflict);
+  def comment — the PackingAuto18/PackingAuto20 `atn2PA18` conflict that
+  forced the copy is resolved (atn2-merge wave 3 single-sourced it into
+  `SphereKit`; la35-access-recon-w1 ruling, 2026-10-28); the copy is kept
+  for diff stability);
   `x dot y` ↔ `⬝ᵥ` after coercion to `Fin 3 → ℝ`; `norm` ↔ `‖·‖`.
 - HOL `f continuous atreal r` ↔ `ContinuousAt f r` for point-`atreal`
   statements (LocalAuto6/14 convention).  EXCEPTION, documented: in
@@ -105,11 +108,14 @@ open Kepler.Geom Set Classical
 /-! ## Local twin defs (`_p37` copies) -/
 
 /-- HOL `u cross v` on `real^3` — verbatim copy of the shared
-`PackingAuto18.cross3` / `TopologyFan.cross3` body.  WHY A COPY: this file
-imports `LocalAuto1`, whose tree loads `PackingAuto18`; the same-wave
-`LocalAuto2`/`LocalAuto9` trees load `PackingAuto20`, and the two declare
-conflicting `Kepler.Text.atn2PA18` copies, so the trees cannot coexist.
-NEEDS: switch to the shared `cross3` once the `atn2PA18` shadowing is merged. -/
+`PackingAuto18.cross3` / `TopologyFan.cross3` body.  WHY A COPY (historic):
+this file imports `LocalAuto1`, whose tree loads `PackingAuto18`; the
+same-wave `LocalAuto2`/`LocalAuto9` trees load `PackingAuto20`, and the two
+used to declare conflicting `Kepler.Text.atn2PA18` copies.  RESOLVED:
+atn2-merge wave 3 single-sourced `atn2` into `SphereKit`, the clash does not
+exist and the trees coexist (la35-access-recon-w1 ruling, 2026-10-28).
+NOTE: switching to the shared `cross3` is now a plain refactor (no shadowing
+left to merge); the local copy is kept for diff stability. -/
 noncomputable def cross3_p37 (a b : V3) : V3 :=
   WithLp.toLp 2 (crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ))
 
