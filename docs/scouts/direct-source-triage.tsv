@@ -124,13 +124,6 @@ NWDGKXH_p32	lean/Kepler/Text/LocalAuto32.lean	868	B	4M6'→{4T3,4T5} 箭头（do
 YOBIMPP_p32	lean/Kepler/Text/LocalAuto32.lean	1079	B	4M7→{4M6',3T3,3M1,3T4} 扇出箭头（doc: HOL YOBIMPP）；真根，替换 YOBIMPP_concl；新地图 parent=Kepler.Text.YOBIMPP_discharged	MIQMCSN.hl:2453；阻塞件=NEEDS: FZIOTEF_TRANS via SCS_4M7_ARROW_STAB_4M7_4M6_p32 +   -- STAB_SCS_4M7_ARROW_3T3_3M1_3T4_p32 + SCS_OPP_REFL /   -- YXIONXL2 on scs_prop_equ_v3	la32
 _private.Kepler.Text.LocalConcl.0.Kepler.Text.mnt11_anchor	lean/Kepler/Text/LocalConcl.lean	553	E	常量级污染（handoff §9-9）：terminal-bank 消费者私有骨架锚；锚 Prop 体=main_nonlinear_terminal_v11 注册表 Prop（体 sorry 于 LocalAuto1.lean:815），无独立数学内容，债归 terminal_v11 农场；新地图 parent=	无（注册表锚 Prop，常量级污染）；阻塞件=terminal_v11 农场（mnt11 波）	terminal_v11农场项
 ztg4_ALT	lean/Kepler/Text/PackingAuto25.lean	9995	C	PA25 PartB4 SF-76 换位既定硬债：statement=ztg4_concl(:2267-2276) 显式盒式展开，γ 项 PA20 gamma4fgcy，19 张证书全在库（PA21:3740-3905 具名投影），体=本草案唯一硬 sorry；替换旧 real_model_ztg4 bank 叶行；新地图 parent=Kepler.Text.real_model_ztg4	merge_ineq.hl:2632-2646；阻塞件=ztg4_concl(:2267-2276) 显式展开 + PA21:3740-3905 19 张证书具名投影装配	SF-76硬债
-MM_5I1_IMP_MM_5M2	lean/Kepler/Text/LocalAuto24.lean	344	B	5I1→5M2 MM 孪生传递（masters Section B7 后显形真根；OTMTOTJ 链残债）	OTMTOTJ.hl;	la24-sweep
-MM_5I2_IMP_MM_5M2	lean/Kepler/Text/LocalAuto24.lean	358	B	5I2→5M2 MM 孪生传递（同上）	OTMTOTJ.hl;	la24-sweep
-MM_5I3_IMP_MM_5M2	lean/Kepler/Text/LocalAuto24.lean	372	B	5I3→5M2 MM 孪生传递（同上；OTMTOTJ3 归因实测残根）	OTMTOTJ.hl:1238;	la24-sweep
-MM_5M1_IMP_MM_5M2	lean/Kepler/Text/LocalAuto24.lean	386	B	5M1→5M2 MM 孪生传递（同上）	OTMTOTJ.hl;	la24-sweep
-SET_EQ_DIAG_STAB_5I1	lean/Kepler/Text/LocalAuto24.lean	1045	B	5I1 对角稳定集等式（OTMTOTJ 链残根）	SCS_5I1_BERAK_BY_CSTAB 系;	la24-sweep
-SET_EQ_DIAG_STAB_5I2	lean/Kepler/Text/LocalAuto24.lean	1053	B	5I2 对角稳定集等式（同上）	SCS_5I1_BERAK_BY_CSTAB 系;	la24-sweep
-SET_EQ_DIAG_STAB_5M1	lean/Kepler/Text/LocalAuto24.lean	1162	B	5M1 对角稳定集等式（同上）	SCS_5M1_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5M1;	la24-sweep
 bodyClosed_p23	lean/Kepler/Text/LocalAuto23.lean	1187	B	体集闭性实分析引理（CASE_4/5/6 归因实测共同残根）	JKQEWGV.hl;	la23-analysis
 continuousOn_tauFun_p23	lean/Kepler/Text/LocalAuto23.lean	1173	B	tauFun 连续性实分析引理（同上）	JKQEWGV.hl;	la23-analysis
 _private.LocalAuto35.0.Kepler.Text.pmPlaneCrowding_p35	lean/Kepler/Text/LocalAuto35.lean	7520	B	planemiss12 根（W-D 后经 LKGRQUI_p27 五槽入锥；pm 闭即装配点 CNICGSF1–5 五槽翻标准三）；w4corners 已交弧和钉/镖头顶抬尾 + Branch-1 条件形，缺口 = Branch-2 (150–250 行) + R-w3c-2 (250–400 行) 在册	PLANE-CROWDING（LA35 根 docstring）	la35-pm12（在飞）
