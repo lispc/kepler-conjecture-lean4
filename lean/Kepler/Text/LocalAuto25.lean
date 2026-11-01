@@ -42,7 +42,16 @@ FILE MAP
     (all proved via the generic `bbsV39_csAdj_cycle_p25` value-table kit),
     `ZITHLQN_CASE_5_pro_cs_p25`, `ZITHLQN_CASE_4_pro_cs_p25` (proved via the
     `bbsV39_aPro_cycle_p25` kit), `exists_vv3_p25` (proved), `ZITHLQN_p25`
-    (proved; re-export of the LocalAuto1 registry arrow `ZITHLQN_concl`).
+    (statement verbatim; body assembled IN PLACE by wave la27-zithlqn-w1
+    from the Section-A kit — `exists_vv_p25` parameterises each fan, the
+    `exists_vv3_p25`/`ZITHLQN_CASE_*` components realise the systems, and
+    the private `zithlqnRot_w1` rotation kit re-anchors the two `a_pro`
+    cases, so `exists_vv_FF_p25` is not consumed any more; the only
+    inherited root is `exists_vv_p25`'s own `sorry`). It is therefore no
+    longer a re-export of the LocalAuto1 registry arrow `ZITHLQN_concl`
+    (which itself stays `sorry`: LA25 imports LA1, so the LA1 twin cannot
+    cite any of this kit — the arrow direction blocks an LA1-side
+    assembly).
   Section B (VASYYAU): `WGDHPPI_p25` (re-export of LocalAuto1
     `WGDHPPI_concl`), `DIST_V_IN_BB_LE_C_p25` (proved),
     `arclength_lt_1553_p25` (proved: atn2 case splits + tan double-angle +
@@ -92,10 +101,12 @@ ENCODING NOTES
     `rhoNode1`-cycle enumerators (`exists_vv_FF_p25`/`exists_vv_p25`, blocked
     by the unported `ITER`/dart-layer orbit kit) and `TUAPYYU1_p25` (blocked
     by the interior-angle→azim kit, whose LocalAuto23 plug-ins are still
-    `sorry`). The 7 circuit-concl twins
-    (ZITHLQN/WGDHPPI/TUAPYYU/YEBWJNG/WKZZEEH/PWEIWBZ/VASYYAU) are kept as
-    LocalAuto1 registry re-exports (LocalConcl category (b): vacuous, not
-    discharges). Proved items are mechanical (mod arithmetic, set
+    `sorry`). Of the 7 circuit-concl twins
+    (ZITHLQN/WGDHPPI/TUAPYYU/YEBWJNG/WKZZEEH/PWEIWBZ/VASYYAU) six are kept
+    as LocalAuto1 registry re-exports (LocalConcl category (b): vacuous, not
+    discharges); ZITHLQN left the class on 2026-10-28 (wave la27-zithlqn-w1
+    assembled its body in place from the Section-A kit, statement verbatim;
+    inherited taint: the single `exists_vv_p25` root). Proved items are mechanical (mod arithmetic, set
     bookkeeping, csAdj value tables, `norm_num` numerics).
 -/
 
@@ -997,10 +1008,410 @@ theorem ZITHLQN_CASE_4_pro_cs_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 
     (by rw [_hvv0, _hvv1]; exact _hv0) (by rw [_hvv0, _hvv1]; exact _hw0)
     _hne
 
-/-- HOL `ZITHLQN` (ZITHLQN.hl:2465): the final registry arrow; the
-LocalAuto1 twin `ZITHLQN_concl` has the identical statement. -/
+/-- **zithlqn membership bridge (wave la27-zithlqn-w1).** The eight
+`sInitListV39` entries as a disjunction of definitional equalities; the
+caller picks a branch by `rfl`. (Avoids `simp` over-normalising the
+membership goal.) -/
+private theorem zithlqn_mem_w1 (s : ScsV39)
+    (h : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6) ∨
+      s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6) ∨
+      s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6) ∨
+      s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6) ∨
+      s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6) ∨
+      s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6) ∨
+      s = mkUnadornedV39 5 0.616 (aPro_p25 5 (2 * h0) 2 (2 * h0))
+        (aPro_p25 5 (Real.sqrt 8) (2 * h0) 6) ∨
+      s = mkUnadornedV39 4 0.477 (aPro_p25 4 (2 * h0) 2 (Real.sqrt 8))
+        (aPro_p25 4 (Real.sqrt 8) (2 * h0) 6)) :
+    s ∈ sInitListV39 := by
+  rcases h with h | h | h | h | h | h | h | h
+  · rw [h]; exact List.Mem.head _
+  · rw [h]; exact List.Mem.tail _ (List.Mem.head _)
+  · rw [h]; exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))
+  · rw [h]
+    exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))
+  · rw [h]
+    exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))
+  · rw [h]
+    exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _
+      (List.Mem.head _)))))
+  · rw [h]
+    exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _
+      (List.Mem.tail _ (List.Mem.head _))))))
+  · rw [h]
+    exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _
+      (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))
+
+/-- **zithlqn rotation kit (wave la27-zithlqn-w1).** Re-indexing a periodic
+enumeration by a fixed offset preserves periodicity, index-injectivity and
+all three range equalities. This lets the unanchored `exists_vv_p25` witness
+serve the two `a_pro` cases (the HOL anchors them via `exists_vv_FF`, which
+would additionally need the `LOFA_IN_E_IMP_IN_FF` dart bridge, unavailable in
+this import world). -/
+private theorem zithlqnRot_shift_w1 (n j : ℕ) (vv : ℕ → V3) (hn : 0 < n)
+    (hper : ∀ i, vv (i % n) = vv i) (m : ℕ) :
+    ∃ k : ℕ, vv (k + j) = vv m ∧ vv (k + 1 + j) = vv (m + 1) := by
+  by_cases hmj : j ≤ m
+  · refine ⟨m - j, ?_, ?_⟩
+    · rw [Nat.sub_add_cancel hmj]
+    · rw [show m - j + 1 + j = m + 1 from by omega]
+  · have hmul : j + 1 ≤ n * (j + 1) := Nat.le_mul_of_pos_left (j + 1) hn
+    have hjle : j ≤ m + n * (j + 1) := by omega
+    refine ⟨m + n * (j + 1) - j, ?_, ?_⟩
+    · rw [Nat.sub_add_cancel hjle, ← hper, Nat.add_mul_mod_self_left, hper]
+    · rw [show m + n * (j + 1) - j + 1 + j = m + 1 + n * (j + 1) from by omega, ← hper,
+        Nat.add_mul_mod_self_left, hper]
+
+private theorem zithlqnRot_w1 (n : ℕ) (vv : ℕ → V3) (j : ℕ) (hn : 0 < n)
+    (hper : ∀ i, vv (i % n) = vv i) (hinj : ∀ a b, vv a = vv b → a % n = b % n) :
+    (∀ m, vv ((m % n) + j) = vv (m + j)) ∧
+    (∀ a b, vv (a + j) = vv (b + j) → a % n = b % n) ∧
+    ((Set.range fun m => vv (m + j) : Set V3) = (Set.range vv : Set V3)) ∧
+    ((Set.range (fun m => ({vv (m + j), vv (m + 1 + j)} : Set V3)) : Set (Set V3)) =
+      (Set.range fun m => ({vv m, vv (m + 1)} : Set V3))) ∧
+    ((Set.range (fun m => ((vv (m + j), vv (m + 1 + j)) : V3 × V3)) : Set (V3 × V3)) =
+      (Set.range fun m => ((vv m, vv (m + 1)) : V3 × V3))) := by
+  constructor
+  · intro m
+    have hkey : ((m % n) + j) ≡ (m + j) [MOD n] := by
+      have e1 : (m % n) + j ≡ (m % n) + j % n [MOD n] :=
+        Nat.ModEq.add_left _ (Nat.mod_modEq j n).symm
+      have e2 : (m % n) + j % n ≡ m + j % n [MOD n] := Nat.ModEq.add_right _ (Nat.mod_modEq m n)
+      have e3 : m + j % n ≡ m + j [MOD n] := Nat.ModEq.add_left _ (Nat.mod_modEq j n)
+      exact e1.trans (e2.trans e3)
+    rw [← hper ((m % n) + j), hkey, ← hper (m + j)]
+  · constructor
+    · intro a b hab
+      have h1 : (a + j) ≡ (b + j) [MOD n] := hinj (a + j) (b + j) hab
+      show a ≡ b [MOD n]
+      exact Nat.ModEq.add_right_cancel' j h1
+    · constructor
+      · ext y
+        constructor
+        · rintro ⟨m, rfl⟩
+          exact ⟨m + j, rfl⟩
+        · rintro ⟨m, rfl⟩
+          obtain ⟨k, e1, -⟩ := zithlqnRot_shift_w1 n j vv hn hper m
+          exact ⟨k, e1⟩
+      · constructor
+        · ext Z
+          constructor
+          · rintro ⟨m, hm⟩
+            refine ⟨m + j, ?_⟩
+            simp only []
+            rw [← hm]
+            simp only []
+            rw [Nat.add_right_comm m j 1]
+          · rintro ⟨m, rfl⟩
+            obtain ⟨k, e1, e2⟩ := zithlqnRot_shift_w1 n j vv hn hper m
+            refine ⟨k, ?_⟩
+            show ({vv (k + j), vv (k + 1 + j)} : Set V3) = ({vv m, vv (m + 1)} : Set V3)
+            rw [e1, e2]
+        · ext Z
+          constructor
+          · rintro ⟨m, hm⟩
+            refine ⟨m + j, ?_⟩
+            simp only []
+            rw [← hm]
+            simp only []
+            rw [Nat.add_right_comm m j 1]
+          · rintro ⟨m, rfl⟩
+            obtain ⟨k, e1, e2⟩ := zithlqnRot_shift_w1 n j vv hn hper m
+            refine ⟨k, ?_⟩
+            show ((vv (k + j), vv (k + 1 + j)) : V3 × V3) = (vv m, vv (m + 1))
+            rw [e1, e2]
+
+/-- **zithlqn std-case worker (wave la27-zithlqn-w1).** One `csAdj` initial
+system, one cardinality branch: parameterise the fan by `exists_vv_p25`,
+realise it through the value-table case lemma, then read
+`taustarV39 = tauFun − s.d` off the wave hypothesis. -/
+private theorem zithlqnStd_w1 (h : ∀ s ∈ sInitListV39, ∀ vv : ℕ → V3, BBsV39 s vv →
+    0 ≤ taustarV39 s vv)
+    (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (k : ℕ) (d : ℝ) (s : ScsV39)
+    (hlf : ConvexLocalFan V E FF) (hp : Kepler.Packing V) (hb : V ⊆ ballAnnulus)
+    (h3 : 3 ≤ V.ncard) (h6 : V.ncard ≤ 6) (hk : V.ncard = k) (hk3 : 3 < k)
+    (hne : ∀ v w : V3, v ≠ w → v ∈ V → w ∈ V → {v, w} ∉ E → 2 * h0 ≤ dist v w)
+    (hd : ∀ v w : V3, {v, w} ∈ E → 2 ≤ dist v w ∧ dist v w ≤ 2 * h0)
+    (hcase : ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (vv : ℕ → V3) (s : ScsV39),
+      ConvexLocalFan V E FF → Kepler.Packing V → V ⊆ ballAnnulus → V.ncard = k →
+      (∀ v w : V3, v ≠ w → v ∈ V → w ∈ V → {v, w} ∉ E → 2 * h0 ≤ dist v w) →
+      (∀ v w : V3, {v, w} ∈ E → 2 ≤ dist v w ∧ dist v w ≤ 2 * h0) →
+      s = mkUnadornedV39 k d (csAdj k 2 (2 * h0)) (csAdj k (2 * h0) 6) →
+      (∀ i, vv (i % V.ncard) = vv i) →
+      (∀ i j, vv i = vv j → i % V.ncard = j % V.ncard) →
+      (Set.range vv : Set V3) = V →
+      (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E →
+      (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF →
+      BBsV39 s vv)
+    (hmem : s ∈ sInitListV39)
+    (hseq : s = mkUnadornedV39 k d (csAdj k 2 (2 * h0)) (csAdj k (2 * h0) 6))
+    (hsd : s.d = d) :
+    d ≤ tauFun V E FF := by
+  have hsk : s.k = k := by rw [hseq]; rfl
+  obtain ⟨vv, hper, hinj, hV, hE, hFF⟩ := exists_vv_p25 V E FF hlf hp hb h3 h6
+  have hBB : BBsV39 s vv :=
+    hcase V E FF vv s hlf hp hb hk hne hd hseq (fun i => (hper i).symm) hinj hV hE hFF
+  have hts : 0 ≤ taustarV39 s vv := h s hmem vv hBB
+  rw [taustarV39, if_neg (by rw [hsk]; omega)] at hts
+  rw [hV, hE, hFF, dsv_scs_init_p25 s hmem vv, hsd] at hts
+  linarith
+
+/-- **zithlqn a_pro pentagon in the corpus-original `2 * h0` band (wave
+la27-zithlqn-w1).** The landed `ZITHLQN_CASE_5_pro_cs_p25` states its
+non-edge slot in the strengthened `sqrt8` band, which `JEJTVGB_pent_pro_concl`
+does not provide (its own band is `2 * h0`; the HOL original
+ZITHLQN.hl:1478 also carries `2 * h0`). This wrapper re-derives the
+realisation straight from the generic `bbsV39_aPro_cycle_p25` kit, whose
+`hlow` slot is already `a2`-parameterised (`a2 = 2 * h0` for the pentagon). -/
+private theorem zithlqnCase5Pro2h0_w1 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (vv : ℕ → V3) (s : ScsV39) (v0 w0 : V3)
+    (hlf : ConvexLocalFan V E FF) (hp : Kepler.Packing V) (hb : V ⊆ ballAnnulus)
+    (hc : ncard V = 5)
+    (hne : ∀ v w : V3, v ≠ w → v ∈ V → w ∈ V → {v, w} ∉ E → 2 * h0 ≤ dist v w)
+    (hd : ∀ v w : V3, {v, w} ∈ E → {v, w} ≠ ({v0, w0} : Set V3) →
+      2 ≤ dist v w ∧ dist v w ≤ 2 * h0)
+    (he : ({v0, w0} : Set V3) ∈ E)
+    (hv0 : 2 * h0 ≤ dist v0 w0) (hw0 : dist v0 w0 ≤ Real.sqrt 8)
+    (hseq : s = mkUnadornedV39 5 0.616 (aPro_p25 5 (2 * h0) 2 (2 * h0))
+      (aPro_p25 5 (Real.sqrt 8) (2 * h0) 6))
+    (hper : ∀ i, vv (i % ncard V) = vv i)
+    (hinj : ∀ i j, vv i = vv j → i % ncard V = j % ncard V)
+    (hV : (Set.range vv : Set V3) = V)
+    (hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
+    (hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF)
+    (hvv0 : vv 0 = v0) (hvv1 : vv 1 = w0) :
+    BBsV39 s vv := by
+  have hper5 : ∀ i, vv (i % 5) = vv i := by
+    intro i
+    have h := hper i
+    rwa [hc] at h
+  have hinj5 : ∀ i j, vv i = vv j → i % 5 = j % 5 := by
+    intro i j hij
+    have h := hinj i j hij
+    rwa [hc] at h
+  exact bbsV39_aPro_cycle_p25 5 0.616 (2 * h0) s vv V E FF hseq (by omega) hper5 hinj5
+    hV hE hFF hlf hb (fun v w hvw hvne => hd v w hvw (by rw [← hvv0, ← hvv1]; exact hvne))
+    (by rw [hvv0, hvv1]; exact hv0) (by rw [hvv0, hvv1]; exact hw0)
+    (fun v w hvw hvin hwv hvne => hne v w hvw hvin hwv hvne)
+
+/-- **zithlqn a_pro worker (wave la27-zithlqn-w1).** The pro-edge band is
+anchored at an (unordered) cycle position: parameterise the fan, locate the
+edge inside the cycle image, split by orientation, and re-index the witness
+by `zithlqnRot_w1` so that the anchor sits at positions 0/1. `c2` is the
+non-edge band demanded by the supplied case lemma (`sqrt 8` for the quad,
+`2 * h0` for the pentagon wrapper). -/
+private theorem zithlqnPro_w1 (h : ∀ s ∈ sInitListV39, ∀ vv : ℕ → V3, BBsV39 s vv →
+    0 ≤ taustarV39 s vv)
+    (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (k : ℕ) (d : ℝ) (c1 c2 : ℝ) (s : ScsV39)
+    (hlf : ConvexLocalFan V E FF) (hp : Kepler.Packing V) (hb : V ⊆ ballAnnulus)
+    (hc : V.ncard = k) (h3 : 3 ≤ V.ncard) (hk3 : 3 < k)
+    (hne : ∀ v w : V3, v ≠ w → v ∈ V → w ∈ V → {v, w} ∉ E → c2 ≤ dist v w)
+    (hcase : ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (vv : ℕ → V3) (s : ScsV39)
+      (v0 w0 : V3), ConvexLocalFan V E FF → Kepler.Packing V → V ⊆ ballAnnulus →
+      V.ncard = k →
+      (∀ v w : V3, v ≠ w → v ∈ V → w ∈ V → {v, w} ∉ E → c2 ≤ dist v w) →
+      (∀ v w : V3, {v, w} ∈ E → {v, w} ≠ ({v0, w0} : Set V3) →
+        2 ≤ dist v w ∧ dist v w ≤ 2 * h0) →
+      ({v0, w0} : Set V3) ∈ E → 2 * h0 ≤ dist v0 w0 → dist v0 w0 ≤ Real.sqrt 8 →
+      s = mkUnadornedV39 k d (aPro_p25 k (2 * h0) 2 c1)
+        (aPro_p25 k (Real.sqrt 8) (2 * h0) 6) →
+      (∀ i, vv (i % V.ncard) = vv i) →
+      (∀ i j, vv i = vv j → i % V.ncard = j % V.ncard) →
+      (Set.range vv : Set V3) = V →
+      (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E →
+      (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF →
+      vv 0 = v0 → vv 1 = w0 → BBsV39 s vv)
+    (hmem : s ∈ sInitListV39)
+    (hseq : s = mkUnadornedV39 k d (aPro_p25 k (2 * h0) 2 c1)
+      (aPro_p25 k (Real.sqrt 8) (2 * h0) 6))
+    (hsd : s.d = d)
+    (vv : ℕ → V3)
+    (hper : ∀ i, vv i = vv (i % V.ncard)) (hinj : ∀ i j, vv i = vv j → i % V.ncard = j % V.ncard)
+    (hV : (Set.range vv : Set V3) = V)
+    (hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
+    (hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF)
+    (p q : V3)
+    (hband : ∀ v w : V3, {v, w} ∈ E → {v, w} ≠ ({p, q} : Set V3) →
+      2 ≤ dist v w ∧ dist v w ≤ 2 * h0)
+    (he : ({p, q} : Set V3) ∈ E)
+    (hv0 : 2 * h0 ≤ dist p q) (hw0 : dist p q ≤ Real.sqrt 8) :
+    d ≤ tauFun V E FF := by
+  have hpos : (0:ℝ) < 2 * h0 := by norm_num [h0]
+  have hper' : ∀ i, vv (i % V.ncard) = vv i := fun i => (hper i).symm
+  obtain ⟨i0, hi0⟩ := Set.mem_range.mp
+    (show ({p, q} : Set V3) ∈
+      Set.range (fun i => ({vv i, vv (i + 1)} : Set V3)) from by rw [hE]; exact he)
+  obtain ⟨rot1, rot2, rotV, rotE, rotP⟩ :=
+    zithlqnRot_w1 V.ncard vv i0 (by omega) hper' hinj
+  have hswap : ({q, p} : Set V3) = ({p, q} : Set V3) := by
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hpne : vv i0 ≠ vv (i0 + 1) := by
+    intro hEq
+    rw [hEq] at hi0
+    have hsub : ∀ z : V3, z ∈ ({p, q} : Set V3) → z = vv (i0 + 1) := by
+      intro z hz
+      rw [← hi0] at hz
+      simpa using hz
+    rw [(hsub p (by simp)).trans (hsub q (by simp)).symm, dist_self] at hv0
+    linarith
+  have hsplit : (vv i0 = p ∧ vv (i0 + 1) = q) ∨ (vv i0 = q ∧ vv (i0 + 1) = p) := by
+    have hmem2 : ∀ z : V3, z ∈ ({vv i0, vv (i0 + 1)} : Set V3) → z ∈ ({p, q} : Set V3) := by
+      intro z hz
+      rw [hi0] at hz
+      exact hz
+    have m1 : vv i0 ∈ ({p, q} : Set V3) := hmem2 _ (by simp)
+    have m2 : vv (i0 + 1) ∈ ({p, q} : Set V3) := hmem2 _ (by simp)
+    rcases Set.mem_insert_iff.mp m1 with r1 | r1 <;>
+      rcases Set.mem_insert_iff.mp m2 with r2 | r2
+    · exact absurd (r1.trans r2.symm) hpne
+    · exact Or.inl ⟨r1, r2⟩
+    · exact Or.inr ⟨r1, r2⟩
+    · exact absurd (r1.trans r2.symm) hpne
+  have core : ∀ a b : V3,
+      (∀ v w : V3, {v, w} ∈ E → {v, w} ≠ ({a, b} : Set V3) →
+        2 ≤ dist v w ∧ dist v w ≤ 2 * h0) →
+      ({a, b} : Set V3) ∈ E → 2 * h0 ≤ dist a b → dist a b ≤ Real.sqrt 8 →
+      vv i0 = a → vv (i0 + 1) = b → d ≤ tauFun V E FF := by
+    intro a b hband he' hva hvb r1 r2
+    have hsk : s.k = k := by rw [hseq]; rfl
+    have hBB : BBsV39 s (fun m => vv (m + i0)) :=
+      hcase V E FF (fun m => vv (m + i0)) s a b hlf hp hb hc hne hband he' hva hvb hseq
+        rot1 rot2 (rotV.trans hV) (rotE.trans hE) (rotP.trans hFF)
+        (by rw [Nat.zero_add i0]; exact r1) (by rw [Nat.add_comm 1 i0]; exact r2)
+    have hts : 0 ≤ taustarV39 s (fun m => vv (m + i0)) := h s hmem _ hBB
+    simp only [taustarV39] at hts
+    rw [if_neg (by rw [hsk]; omega)] at hts
+    rw [rotV, rotE, rotP, hV, hE, hFF,
+      dsv_scs_init_p25 s hmem (fun m => vv (m + i0)), hsd] at hts
+    linarith
+  rcases hsplit with ⟨r1, r2⟩ | ⟨r1, r2⟩
+  · exact core p q hband he hv0 hw0 r1 r2
+  · refine core q p ?_ ?_ ?_ ?_ r1 r2
+    · intro v w hvw hvne
+      refine hband v w hvw ?_
+      intro hEq
+      apply hvne
+      rw [hEq, hswap]
+    · rw [hswap]; exact he
+    · rw [dist_comm]; exact hv0
+    · rw [dist_comm]; exact hw0
+
+/-- HOL `ZITHLQN` (ZITHLQN.hl:2465): the final registry arrow, assembled in
+place (wave la27-zithlqn-w1) from the Section-A realisation kit:
+`exists_vv_p25` parameterises each fan, the eight `ZITHLQN_CASE_*` value
+tables realise the corresponding initial system, `exists_vv3_p25` serves the
+triangle item, and `zithlqnStd_w1`/`zithlqnPro_w1` do the per-case wiring
+(the two `a_pro` cases via the rotation kit instead of HOL's `exists_vv_FF`,
+which is not consumed any more). Statement verbatim; the only inherited root
+is `exists_vv_p25`'s own `sorryAx` (the corpus-blocked `rhoNode1`
+dart-cycle enumerator). -/
 theorem ZITHLQN_p25 (h : ∀ s ∈ sInitListV39, ∀ vv : ℕ → V3, BBsV39 s vv →
-    0 ≤ taustarV39 s vv) : JEJTVGB_assume_v39 := ZITHLQN_concl h
+    0 ≤ taustarV39 s vv) : JEJTVGB_assume_v39 := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- JEJTVGB_std_concl (dTame ncard ≤ tauFun, ncard ∈ {4,5,6})
+    intro V E FF hlf hp hb h4 h6 hne hd
+    rcases (by omega : V.ncard = 4 ∨ V.ncard = 5 ∨ V.ncard = 6) with hk | hk | hk
+    · rw [hk]
+      refine zithlqnStd_w1 h V E FF 4 (dTame 4)
+        (mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
+        hlf hp hb (by omega) (by omega) hk (by omega) hne hd
+        ZITHLQN_CASE_4_p25 (zithlqn_mem_w1 _ (Or.inr (Or.inr (Or.inl rfl)))) rfl rfl
+    · rw [hk]
+      refine zithlqnStd_w1 h V E FF 5 (dTame 5)
+        (mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
+        hlf hp hb (by omega) (by omega) hk (by omega) hne hd
+        ZITHLQN_CASE_5_p25 (zithlqn_mem_w1 _ (Or.inr (Or.inl rfl))) rfl rfl
+    · rw [hk]
+      refine zithlqnStd_w1 h V E FF 6 (dTame 6)
+        (mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
+        hlf hp hb (by omega) (by omega) hk (by omega) hne hd
+        ZITHLQN_CASE_6_p25 (zithlqn_mem_w1 _ (Or.inl rfl)) rfl rfl
+  · -- JEJTVGB_std3_concl (0 ≤ tau3 v1 v2 v3)
+    intro v1 v2 v3 hn1 hn2 hn3 hm1 hm2 hm3 hd12 hd13 hd23 he12 he13 he23
+    set vv : ℕ → V3 := fun i => if i % 3 = 0 then v1 else if i % 3 = 1 then v2 else v3
+    have hvv : ∀ i, vv i = if i % 3 = 0 then v1 else if i % 3 = 1 then v2 else v3 :=
+      fun i => rfl
+    obtain ⟨hper, hball, hc, hd'⟩ :=
+      exists_vv3_p25 v1 v2 v3 vv (Set.range vv : Set V3)
+        (Set.range fun i => ({vv i, vv (i + 1)} : Set V3))
+        (Set.range fun i => ((vv i, vv (i + 1)) : V3 × V3))
+        hn1 hn2 hn3 hm1 hm2 hm3 hd12 hd13 hd23 he12 he13 he23 hvv rfl rfl rfl
+    have hBB : BBsV39 (mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6)) vv :=
+      ZITHLQN_CASE_3_p25 (Set.range vv : Set V3)
+        (Set.range fun i => ({vv i, vv (i + 1)} : Set V3))
+        (Set.range fun i => ((vv i, vv (i + 1)) : V3 × V3)) vv _ hball hc hd' rfl hper rfl rfl rfl
+    have hmem :
+        mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6) ∈ sInitListV39 :=
+      zithlqn_mem_w1 _ (Or.inr (Or.inr (Or.inr (Or.inl rfl))))
+    have hts : 0 ≤ taustarV39 (mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0))
+        (csAdj 3 (2 * h0) 6)) vv := h _ hmem vv hBB
+    rw [taustarV39, if_pos (by decide)] at hts
+    have hdd : (mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6)).d = 0 := rfl
+    rw [dsv_scs_init_p25 _ hmem vv, hdd] at hts
+    have e0 : vv 0 = v1 := by rw [hvv 0]; simp
+    have e1 : vv 1 = v2 := by rw [hvv 1]; simp
+    have e2 : vv 2 = v3 := by rw [hvv 2]; simp
+    rw [e0, e1, e2] at hts
+    linarith
+  · -- JEJTVGB_pent_diag_concl (0.616 ≤ tauFun, sqrt8-diagonal pentagon)
+    intro V E FF hlf hp hb hc hne hd
+    obtain ⟨vv, hper, hinj, hV, hE, hFF⟩ :=
+      exists_vv_p25 V E FF hlf hp hb (by omega) (by omega)
+    have hBB := ZITHLQN_CASE_5_sqrt8_p25 V E FF vv
+      (mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6)) hlf hp hb hc hne hd
+      rfl (fun i => (hper i).symm) hinj hV hE hFF
+    have hmem :
+        mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6) ∈ sInitListV39 :=
+      zithlqn_mem_w1 _ (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl rfl)))))
+    have hts : 0 ≤ taustarV39 (mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8))
+        (csAdj 5 (2 * h0) 6)) vv := h _ hmem vv hBB
+    rw [taustarV39, if_neg (by decide)] at hts
+    rw [hV, hE, hFF, dsv_scs_init_p25 _ hmem vv] at hts
+    have hdd : (mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6)).d = 0.616 :=
+      rfl
+    rw [hdd] at hts
+    linarith
+  · -- JEJTVGB_pent_pro_concl (0.616 ≤ tauFun, a_pro pentagon)
+    intro V E FF hlf hp hb hc hne hex
+    obtain ⟨v0, w0, hband, he, hv0, hw0⟩ := hex
+    obtain ⟨vv, hper, hinj, hV, hE, hFF⟩ :=
+      exists_vv_p25 V E FF hlf hp hb (by omega) (by omega)
+    refine zithlqnPro_w1 h V E FF 5 0.616 (2 * h0) (2 * h0)
+      (mkUnadornedV39 5 0.616 (aPro_p25 5 (2 * h0) 2 (2 * h0))
+        (aPro_p25 5 (Real.sqrt 8) (2 * h0) 6))
+      hlf hp hb hc (by omega) (by omega) hne zithlqnCase5Pro2h0_w1
+      (zithlqn_mem_w1 _ (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl rfl))))))))
+      rfl rfl vv hper hinj hV hE hFF v0 w0 hband he hv0 hw0
+  · -- JEJTVGB_quad_pro_concl (0.477 ≤ tauFun, a_pro quad)
+    intro V E FF hlf hp hb hc hne hex
+    obtain ⟨v0, w0, hband, he, hv0, hw0⟩ := hex
+    obtain ⟨vv, hper, hinj, hV, hE, hFF⟩ :=
+      exists_vv_p25 V E FF hlf hp hb (by omega) (by omega)
+    refine zithlqnPro_w1 h V E FF 4 0.477 (Real.sqrt 8) (Real.sqrt 8)
+      (mkUnadornedV39 4 0.477 (aPro_p25 4 (2 * h0) 2 (Real.sqrt 8))
+        (aPro_p25 4 (Real.sqrt 8) (2 * h0) 6))
+      hlf hp hb hc (by omega) (by omega) hne ZITHLQN_CASE_4_pro_cs_p25
+      (zithlqn_mem_w1 _ (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr rfl))))))))
+      rfl rfl vv hper hinj hV hE hFF v0 w0 hband he hv0 hw0
+  · -- JEJTVGB_quad_diag_concl (0.467 ≤ tauFun, &3-diagonal quad)
+    intro V E FF hlf hp hb hc hne hd
+    obtain ⟨vv, hper, hinj, hV, hE, hFF⟩ :=
+      exists_vv_p25 V E FF hlf hp hb (by omega) (by omega)
+    have hBB := ZITHLQN_CASE_4_3_p25 V E FF vv
+      (mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6)) hlf hp hb hc hne hd
+      rfl (fun i => (hper i).symm) hinj hV hE hFF
+    have hmem :
+        mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6) ∈ sInitListV39 :=
+      zithlqn_mem_w1 _ (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl rfl))))))
+    have hts : 0 ≤ taustarV39 (mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6)) vv :=
+      h _ hmem vv hBB
+    rw [taustarV39, if_neg (by decide)] at hts
+    rw [hV, hE, hFF, dsv_scs_init_p25 _ hmem vv] at hts
+    have hdd : (mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6)).d = 0.467 := rfl
+    rw [hdd] at hts
+    linarith
 
 /-! ## Section B: VASYYAU (Vasyyau.hl) -/
 
