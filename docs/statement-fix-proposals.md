@@ -4667,6 +4667,31 @@ CASE_3 顶层陈述（结论 BBprimeV39 ≠ ∅，不涉体集，零改动）—
 §77；单文件单闸全覆盖）：
 `GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/80-k3-builder.patch SF_ITEM=80 LANE_FILES=Kepler/Text/LocalAuto24.lean THM=IN_B_SY1_COLLINEAR_CASE_3_IS_SCS_p24 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto24.lean IN_B_SY1_COLLINEAR_CASE_3_IS_SCS_p24`
 
+# PROPOSAL-80-AMEND — §80 刷新记（HEAD 892dcf5e 重验：patch 原样可贴、(c) 不变、消费面结论维持、波 4 喂桥新事实）
+
+修订对象：`docs/statement-fix-proposals.md` §80（SF-80，立案 2026-10-28 深夜；本 AMEND 由 sf80-refresh 车道产出，**拟由编排者追加到 §80 条目末**，格式沿 PROPOSAL-91-AMEND 先例）。基线 HEAD = **892dcf5e**（主仓 tracked 零改动；勘定 + 机检 + scratch 应用全在本车道快照 `lane_snapshots/sf80-refresh/`，配 `STATUS.md` / `CONSUMERS.md` / `Evidence.md`）。**结论：归档 patch `80-k3-builder.patch` 对 892dcf5e `git apply --check` PASS（scratch 实应用成功、六 hunk 锚位全对、offset ≈ +1211~+1228），(a)–(f) 修复陈述零变更，无需 80b 重做；本 AMEND 只记账，不改任何陈述槽。**
+
+### (g′) 重验（对 892dcf5e）
+
+1. **可贴性**：`git apply --check` PASS（仓库根 exit 0）；scratch 实应用 +47/−24；五处陈述位（修后 :2434/:2464/:2507/:2546/:2565-2592 四槽）与节头注记全部落位正确；`IN_NOT_EMPTY_B1_SY_3_IS_SCS_p24`（:2431）与 `TAUSTAR_EQ_TAU_STAR_3_IS_SCS_p24`（:2583）、`tri_sy_explicit_p24`（:2501）未被触，与 (c)「不动」清单一字不差。
+2. **k=3 节零漂移**：9cd305ad..HEAD 七次触 LA24 的 commit（SF-85 / casebank / masters / SF-90 / SF-89 / SET_EQ / SF-91b）无一触及 k=3 节——(e) 预言的 hunk 不交兑现，la23prereq 避让条款**了结**（对方已以 casebank/masters 形落库）。
+3. **机检复跑（python，纪律禁 lean）**：五 builder 位成员谓词 l-脱钩（缺陷）与修后 l-自缚（row-indexed）正则锚定六判全真；k=3 纬度实例（‖vv i‖=2∈[2,2.52]、pairwise dist=2、BBs 表 C1 过、邻接 2.52≤3.01）上旧形零矩阵反例复现（可反驳 + hne/hnc 联合矛盾被空真）、修后同策略死亡（‖0‖=0<2 出环）且 flattenRow 证人保非空。配方与全文输出见 Evidence.md；Lean 三探针（probe80_base/fix/refute_fixed）不重跑，承 sfc1c2draft-w1 VALIDATION.md 在案。
+4. **(f) 闸命令原样有效**（THM 件在新 HEAD :2522 在册）。
+
+### (d′) 消费面刷新（结论不变，锚位刷新）
+
+全树 grep 七件名（详见 CONSUMERS.md）：六件链**今日代码调用点 = 0**（仅 `XWITCCN_CASE_3_IS_SCS_p24` :2599-2601 DISCHARGES 注记接线，装配体自体 sorry）；装配件唯一代码消费点 = `UXCKFPE_p24` case split（:2612，修后陈述不动 ⇒ 调用行逐字有效）；`UXCKFPE_p24` 唯一下游代码消费点 = LA27 `UXCKFPE2_p27`（:550，已证件，吃 `≠ ∅` 结论面，零交集）；`XWITCCN_CASE_3` 名字面另见 LA33:121 / LA27:79/:106 / LA26:788 / LocalConcl:3040 注记（LKGRQUI_p27 引擎四根之一、LA33 两件 case-bank 输入的**转递污染路径**，无代码调用）。**修后调用点改写 = 0，与 (d) 原判一致。**
+
+### (e′) 波 4（CASE_3 闭体）新事实——§80 起草后出现，patch 不涉、证填期须知
+
+1. **喂桥 `3 < s.k` 阻塞**：SF-89/SF-91b 落库的两枚喂桥 `stabAdj_of_isScsV39` / `fullStable_of_isScsV39`（LA24:1788/:1805，private）与载体件 `IS_SCS_STABLE_SYSTEM_p23`（LA23:762）均带 `(hk3 : 3 < s.k)`——**在 k=3 不可用**。k=3 的载体位已在册：`IS_SCS_TRI_STABLE_SYSTEM_p23`（LA23:866，`s.k = 3` 形，体 sorry，torsor unpacking）。
+2. **闭性腿反而变轻**：§80 修后的 k=3 体集是 **C2-free 形**（`{l | (∀ i, rowSy_p23 l i ∈ ballAnnulus) ∧ CONDITION1_SY_p4 aR bR (fun i => rowSy_p23 l i)}`，无 `CONDITION2_SY_p4`）——闭性是环带闭条件与距离有界条件的有限交，**初等可闭，不取道 `bodyClosed_p23`/`stabAdj`**，上述 `3 < s.k` 阻塞在紧性腿上自然绕开；承重腿收敛到 (i) tri-stable 填体、(ii) `HDPLYGY_CASE_30` 极小化器移植（la27-corridor-recon WORKORDER 翻案②：极小化器树内不存在，须移植；通用件 `HDPLYGY_p23` LA23:1255 已在树、CASE_4/5/6 装配体为模板），以及 (iii) tauStar 连续腿在 k=3 载体（triStable）上的喂法——(ii)(iii) 为波 4 主未知量（M 级，WORKORDER 已标最重）。
+3. **装配模板**：`XWITCCN_CASE_4_IS_SCS_p24`（:2004 起 ≈50 行：紧性 + 两条 ContinuousOn + `HDPLYGY_p23` + 逆扁平 + 证人装配）为 CASE_3 装配体的直接文体。
+
+### (f′) 状态（刷新后）
+
+**在册未落不变；patch 原样可用经 892dcf5e 重验。** 应用序列：用户批 → 原样 `git apply docs/statement-fix-proposals-patches/80-k3-builder.patch` → (f) 闸命令（原样）→ 波 4 CASE_3 闭体（(e′) 要点为先导侦察项）。本 AMEND 不改 patch、不改任何冻结陈述；获批与闸通过前主仓零动作。
+
 ## 81. `StableSyP23` 的 `stable := sorry` 常量级污染（`scsToStableSy_p23` LA23:232 + 孪生 `scsToStableSyD_p36` LA36:441）— 分级 B（def 编码 · 常量级 taint 根除，两路线）
 
 ### (a) HOL 裁决
