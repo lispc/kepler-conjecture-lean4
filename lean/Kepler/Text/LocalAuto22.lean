@@ -1329,7 +1329,91 @@ theorem stab_diag_basic_p22 (s : ScsV39) (i j : ℕ)
     (h : scsBasicV39 s) (hne : ¬ (i = j)) : scsBasicV39 (scsStabDiagV39 s i j) := by
   sorry
 
-/-- HOL `is_scs_funlist_basic` (NEEDS the funlist periodicity/symmetry kit). -/
+/-- `psort` reads unordered residue pairs: `psort k (j, i) = psort k (i, j)`
+(hexagons.hl `PSORT` symmetry; port of LocalAuto20's `periodic2_funlist_p20`
+support kit, which LA22 cannot import — LA20 imports LA22). -/
+private theorem la22psort_swap (k : ℕ) (i j : ℕ) : psort k (j, i) = psort k (i, j) := by
+  simp only [psort]
+  rcases Nat.lt_trichotomy (i % k) (j % k) with h | h | h
+  · rw [if_neg (Nat.not_le.mpr h), if_pos (Nat.le_of_lt h)]
+  · have h1 : i % k ≤ j % k := Nat.le_of_eq h
+    have h2 : j % k ≤ i % k := Nat.le_of_eq h.symm
+    rw [if_pos h2, if_pos h1, h]
+  · rw [if_pos (Nat.le_of_lt h), if_neg (Nat.not_le.mpr h)]
+
+/-- `Periodic2` backward in both coordinates (residue reduction); funlist-case
+edition of `la22periodic2_mod` below, hoisted ahead of the generator. -/
+private theorem la22p2mod_fun {α : Sort u} {f : ℕ → ℕ → α} {n : ℕ}
+    (hf : Periodic2 f n) (i j : ℕ) : f (i % n) (j % n) = f i j := by
+  have hfirst : ∀ q r j, f (q * n + r) j = f r j := by
+    intro q
+    induction q with
+    | zero => intro r j; simp
+    | succ q ih =>
+      intro r j
+      have h1 : f (q * n + r + n) j = f (q * n + r) j := (hf _ j).1
+      have h2 : (q + 1) * n + r = q * n + r + n := by ring
+      rw [h2, h1, ih r j]
+  have hsecond : ∀ q r i, f i (q * n + r) = f i r := by
+    intro q
+    induction q with
+    | zero => intro r i; simp
+    | succ q ih =>
+      intro r i
+      have h1 : f i (q * n + r + n) = f i (q * n + r) := (hf _ _).2
+      have h2 : (q + 1) * n + r = q * n + r + n := by ring
+      rw [h2, h1, ih r i]
+  conv_rhs => rw [show i = i / n * n + i % n from by
+    rw [Nat.mul_comm]; exact (Nat.div_add_mod i n).symm]
+  rw [hfirst]
+  conv_rhs => rw [show j = j / n * n + j % n from by
+    rw [Nat.mul_comm]; exact (Nat.div_add_mod j n).symm]
+  rw [hsecond]
+
+/-- `funlist_v39` tables are `k`-periodic (hexagons.hl `PSORT_3456_PERIODIC`). -/
+private theorem la22funlist_periodic2 (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ) (k : ℕ) :
+    Periodic2 (funlistV39 data d k) k := by
+  intro i j
+  simp [funlistV39, psort, Nat.add_mod_right]
+
+/-- `funlist_v39` reads unordered residue pairs. -/
+private theorem la22funlist_sym (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ) (k i j : ℕ) :
+    funlistV39 data d k i j = funlistV39 data d k j i := by
+  unfold funlistV39
+  rw [la22psort_swap k j i]
+  by_cases h : i % k = j % k
+  · rw [if_pos h, if_pos h.symm]
+  · rw [if_neg h, if_neg (Ne.symm h)]
+
+/-- `funlist_v39` edge entries read residues: the `(i, i + 1)` entry equals the
+`(i % k, i % k + 1)` entry (JOTSWIX.hl:241-257 mod reduction). -/
+private theorem la22funlist_edge_mod (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ) (k i : ℕ)
+    (hk : 0 < k) :
+    funlistV39 data d k i (i + 1) = funlistV39 data d k (i % k) (i % k + 1) := by
+  have hper : Periodic2 (funlistV39 data d k) k := la22funlist_periodic2 data d k
+  have hz : i % k < k := Nat.mod_lt i hk
+  rcases Nat.lt_or_ge (i % k + 1) k with hlt | hge
+  · have he : (i + 1) % k = i % k + 1 := by
+      rw [← Nat.mod_add_mod i k 1]
+      exact Nat.mod_eq_of_lt hlt
+    rw [← la22p2mod_fun hper i (i + 1), he]
+  · have heq : i % k + 1 = k := by omega
+    have he : (i + 1) % k = 0 := by
+      rw [← Nat.mod_add_mod i k 1, heq]
+      exact Nat.mod_self k
+    have hback : funlistV39 data d k (i % k) (i % k + 1) = funlistV39 data d k (i % k) 0 := by
+      rw [heq]
+      have h1 : funlistV39 data d k (i % k) (0 + k) = funlistV39 data d k (i % k) 0 :=
+        (hper (i % k) 0).2
+      rw [Nat.zero_add] at h1
+      exact h1
+    rw [← la22p2mod_fun hper i (i + 1), he, ← hback]
+
+/-- HOL `is_scs_funlist_basic`: the funlist case-bank generator. An unadorned
+system with `funlist_v39` tables is `is_scs` exactly when the slot hypotheses
+hold (periodicity/symmetry/diag-zero come from the `psort`/`assocd` machine,
+proved via the private kit above; the `a ≤ b` chain slot of HOL is vacuous in
+the Lean `isScsV39` encoding). -/
 theorem is_scs_funlist_basic_p22 (k : ℕ) (d : ℝ) (a0 b0 : List ((ℕ × ℕ) × ℝ))
     (a b : ℕ × ℕ → ℝ) (hd : d < 0.9) (hk1 : 3 ≤ k) (hk2 : k ≤ 6)
     (hchain : ∀ i j, i < j ∧ j < k →
@@ -1340,7 +1424,44 @@ theorem is_scs_funlist_basic_p22 (k : ℕ) (d : ℝ) (a0 b0 : List ((ℕ × ℕ)
     (hcard : {i | i < k ∧ (2 * h0 < funlistV39 b0 d k i (Nat.succ i) ∨
         2 < funlistV39 a0 d k i (Nat.succ i))}.ncard + k ≤ 6) :
     isScsV39 (mkUnadornedV39 k d (funlistV39 a0 d k) (funlistV39 b0 d k)) := by
-  sorry
+  have hpa : Periodic2 (funlistV39 a0 d k) k := la22funlist_periodic2 a0 d k
+  have hpb : Periodic2 (funlistV39 b0 d k) k := la22funlist_periodic2 b0 d k
+  -- the `a ≤ bm` chain slot: `hchain` transported off the `i < j < k` window by
+  -- residue reduction and table symmetry (the two `le_refl` slots are `a = am`,
+  -- `bm = b` for unadorned systems)
+  have hmid : ∀ i j, funlistV39 a0 d k i j ≤ funlistV39 b0 d k i j := by
+    intro i j
+    rw [← la22p2mod_fun hpa i j, ← la22p2mod_fun hpb i j]
+    have hik : i % k < k := Nat.mod_lt i (by omega)
+    have hjk : j % k < k := Nat.mod_lt j (by omega)
+    rcases Nat.lt_trichotomy (i % k) (j % k) with h | h | h
+    · exact hchain (i % k) (j % k) ⟨h, hjk⟩
+    · rw [h]
+      exact le_of_eq (by simp [funlistV39])
+    · rw [la22funlist_sym a0 d k (i % k) (j % k), la22funlist_sym b0 d k (i % k) (j % k)]
+      exact hchain (j % k) (i % k) ⟨h, hik⟩
+  unfold isScsV39
+  dsimp only [mkUnadornedV39]
+  refine ⟨hd, hk1, hk2, periodic_empty k, periodic_empty k, periodic_empty k,
+    periodic_empty k, hpa, hpa, hpb, hpb, fun _ _ => ⟨rfl, rfl⟩,
+    fun i j => ⟨la22funlist_sym a0 d k i j, la22funlist_sym a0 d k i j,
+      la22funlist_sym b0 d k i j, la22funlist_sym b0 d k i j, rfl⟩,
+    fun i j => ⟨le_refl _, hmid i j, le_refl _⟩,
+    fun i => by simp [funlistV39], ?_, ?_, ?_,
+    fun _ _ hJ => False.elim hJ, fun _ _ hJ => False.elim hJ, hcard⟩
+  · intro i j ⟨hik, hjk, hne⟩
+    by_cases hij : i < j
+    · exact ha i j ⟨hij, hjk⟩
+    · have hji : j < i := lt_of_le_of_ne (Nat.le_of_not_lt hij) (fun he => hne he.symm)
+      rw [la22funlist_sym a0 d k i j]
+      exact ha j i ⟨hji, hik⟩
+  · intro i hk3
+    subst hk3
+    rw [la22funlist_edge_mod b0 d 3 i (by omega)]
+    exact hb3 (i % 3) ⟨Nat.mod_lt i (by omega), rfl⟩
+  · intro i hk3
+    rw [la22funlist_edge_mod b0 d k i (by omega)]
+    exact hbk (i % k) ⟨Nat.mod_lt i (by omega), hk3⟩
 
 /-- HOL `azim_in_fan_azim` (NEEDS the sigmaFan/ee localization kit). -/
 theorem azim_in_fan_azim_p22 (vv : ℕ → V3) (E : Set (Set V3)) (k i : ℕ)
@@ -1663,10 +1784,82 @@ theorem is_scs_4T4_p22 : isScsV39 scs4T4 := by
 theorem is_scs_4T5_p22 : isScsV39 scs4T5 := by
   sorry
 
-/-- HOL `is_scs_3T1` (NEEDS the funlist evaluation + card kit of
-`is_scs_funlist_basic_p22`). -/
+/-- Numeric facts for the funlist case bank (decimal crutch via
+`sqrt8_flyspeck_p22`; this Mathlib's `norm_num` cannot order `√8` against
+decimals directly). -/
+private theorem la22two_le_sqrt8 : (2:ℝ) ≤ Real.sqrt 8 :=
+  le_trans (by norm_num) (le_of_lt sqrt8_flyspeck_p22.1)
+private theorem la22two_h0_le_sqrt8 : 2 * h0 ≤ Real.sqrt 8 := by
+  rw [h0_eq_p22]; exact le_trans (by norm_num) (le_of_lt sqrt8_flyspeck_p22.1)
+private theorem la22two_h0_lt_sqrt8 : 2 * h0 < Real.sqrt 8 := by
+  rw [h0_eq_p22]; exact lt_of_le_of_lt (by norm_num) sqrt8_flyspeck_p22.1
+private theorem la22sqrt8_le_cstab : Real.sqrt 8 ≤ cstab := by
+  exact le_trans (le_of_lt sqrt8_flyspeck_p22.2) (by norm_num [cstab_eq_p22])
+private theorem la22sqrt8_lt_four : Real.sqrt 8 < 4 :=
+  lt_trans sqrt8_flyspeck_p22.2 (by norm_num)
+private theorem la22cstab_lt_four : cstab < 4 := by rw [cstab_eq_p22]; norm_num
+private theorem la22two_h0_lt_four : 2 * h0 < 4 := by rw [h0_eq_p22]; norm_num
+private theorem la22two_h0_lt_cstab : 2 * h0 < cstab := by
+  rw [h0_eq_p22, cstab_eq_p22]; norm_num
+private theorem la22two_h0_le_cstab : 2 * h0 ≤ cstab := by
+  rw [h0_eq_p22, cstab_eq_p22]; norm_num
+private theorem la22two_le_two_h0 : (2:ℝ) ≤ 2 * h0 := by rw [h0_eq_p22]; norm_num
+
+/-- HOL `is_scs_3T1`: direct `is_scs` verification of the `scs_3T1` funlist
+tables (`k = 3, d = 0.11`; slot `(0,1)` carries `√8`, card set `{0}`). The
+generator `is_scs_funlist_basic_p22` cannot be literally applied here — its
+conclusion type-fits `mkUnadornedV39 k d (funlist a0 d k)` with table default
+`= d`, while the registry T/M rows carry defaults `2`/`2 * h0`; the private
+funlist kit above is the evaluation + card kit it contributes. -/
 theorem is_scs_3T1_p22 : isScsV39 scs3T1 := by
-  sorry
+  unfold isScsV39 scs3T1
+  dsimp only
+  have pa : Periodic2 (funlistV39 [((0, 1), Real.sqrt 8)] 2 3) 3 :=
+    la22funlist_periodic2 _ _ _
+  have pb : Periodic2 (funlistV39 [((0, 1), cstab)] (2 * h0) 3) 3 :=
+    la22funlist_periodic2 _ _ _
+  refine ⟨by norm_num, by norm_num, by norm_num, periodic_empty 3, periodic_empty 3,
+    periodic_empty 3, periodic_empty 3, pa, pa, pb, pb, fun _ _ => ⟨rfl, rfl⟩, ?_, ?_,
+    fun i => by simp [funlistV39], ?_, ?_, ?_,
+    fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+  · intro i j
+    exact ⟨la22funlist_sym _ _ _ i j, la22funlist_sym _ _ _ i j,
+      la22funlist_sym _ _ _ i j, la22funlist_sym _ _ _ i j, rfl⟩
+  · intro i j
+    refine ⟨le_refl _, ?_, le_refl _⟩
+    have hz1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hz2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    rw [← la22p2mod_fun pa i j, ← la22p2mod_fun pb i j]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la22sqrt8_le_cstab, la22two_le_two_h0] <;>
+      norm_num [h0_eq_p22]
+  · intro i j ⟨hik, hjk, hne⟩
+    interval_cases i <;> interval_cases j <;>
+      simp_all [funlistV39, psort, assocdV39, la22two_le_sqrt8] <;> norm_num
+  · intro i hk3
+    have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+    rw [la22funlist_edge_mod _ _ 3 i (by omega)]
+    interval_cases i % 3 <;>
+      simp [funlistV39, psort, assocdV39, la22cstab_lt_four, la22two_h0_lt_four]
+  · intro i hk3
+    exact absurd hk3 (by norm_num)
+  · have key : ∀ r : ℕ, r < 3 →
+        ((2 * h0 < funlistV39 [((0, 1), cstab)] (2 * h0) 3 r ((r + 1) % 3) ∨
+          2 < funlistV39 [((0, 1), Real.sqrt 8)] 2 3 r ((r + 1) % 3)) ↔ r = 0) := by
+      intro r hr
+      interval_cases r <;>
+        simp [funlistV39, psort, assocdV39, la22two_h0_lt_cstab, la22two_le_sqrt8,
+          lt_irrefl] <;> norm_num [h0_eq_p22, cstab_eq_p22]
+    have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [((0, 1), cstab)] (2 * h0) 3 i (i + 1) ∨
+        2 < funlistV39 [((0, 1), Real.sqrt 8)] 2 3 i (i + 1))} = {0} := by
+      ext i
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      rw [← la22p2mod_fun pb i (i + 1), ← la22p2mod_fun pa i (i + 1),
+        ← Nat.mod_add_mod i 3 1]
+      rw [key (i % 3) (Nat.mod_lt i (by omega))]
+      omega
+    rw [hS]
+    norm_num [Set.ncard_singleton]
 
 /-- HOL `is_scs_3T2` (NEEDS the funlist evaluation + card kit of
 `is_scs_funlist_basic_p22`). -/
@@ -1683,10 +1876,59 @@ theorem is_scs_3T3_p22 : isScsV39 scs3T3 := by
 theorem is_scs_3T4_p22 : isScsV39 scs3T4 := by
   sorry
 
-/-- HOL `is_scs_3T5` (NEEDS the funlist evaluation + card kit of
-`is_scs_funlist_basic_p22`). -/
+/-- HOL `is_scs_3T5`: direct `is_scs` verification of the `scs_3T5` funlist
+tables (`k = 3, d = 0.103`; slot `(0,1)` carries `2 * h0`, card set `{0}`;
+same generator-type caveat as `is_scs_3T1_p22`). -/
 theorem is_scs_3T5_p22 : isScsV39 scs3T5 := by
-  sorry
+  unfold isScsV39 scs3T5 mkUnadornedV39
+  dsimp only
+  have pa : Periodic2 (funlistV39 [((0, 1), 2 * h0)] 2 3) 3 :=
+    la22funlist_periodic2 _ _ _
+  have pb : Periodic2 (funlistV39 [((0, 1), Real.sqrt 8)] (2 * h0) 3) 3 :=
+    la22funlist_periodic2 _ _ _
+  refine ⟨by norm_num, by norm_num, by norm_num, periodic_empty 3, periodic_empty 3,
+    periodic_empty 3, periodic_empty 3, pa, pa, pb, pb, fun _ _ => ⟨rfl, rfl⟩, ?_, ?_,
+    fun i => by simp [funlistV39], ?_, ?_, ?_,
+    fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+  · intro i j
+    exact ⟨la22funlist_sym _ _ _ i j, la22funlist_sym _ _ _ i j,
+      la22funlist_sym _ _ _ i j, la22funlist_sym _ _ _ i j, rfl⟩
+  · intro i j
+    refine ⟨le_refl _, ?_, le_refl _⟩
+    have hz1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hz2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    rw [← la22p2mod_fun pa i j, ← la22p2mod_fun pb i j]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la22two_h0_le_sqrt8, la22two_le_two_h0] <;>
+      norm_num [h0_eq_p22]
+  · intro i j ⟨hik, hjk, hne⟩
+    interval_cases i <;> interval_cases j <;>
+      simp_all [funlistV39, psort, assocdV39, la22two_le_two_h0] <;> norm_num [h0_eq_p22]
+  · intro i hk3
+    have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+    rw [la22funlist_edge_mod _ _ 3 i (by omega)]
+    interval_cases i % 3 <;>
+      simp [funlistV39, psort, assocdV39, la22sqrt8_lt_four, la22two_h0_lt_four]
+  · intro i hk3
+    exact absurd hk3 (by norm_num)
+  · have key : ∀ r : ℕ, r < 3 →
+        ((2 * h0 < funlistV39 [((0, 1), Real.sqrt 8)] (2 * h0) 3 r ((r + 1) % 3) ∨
+          2 < funlistV39 [((0, 1), 2 * h0)] 2 3 r ((r + 1) % 3)) ↔ r = 0) := by
+      intro r hr
+      interval_cases r <;>
+        simp [funlistV39, psort, assocdV39, la22two_h0_lt_sqrt8, la22two_le_two_h0,
+          lt_irrefl] <;> norm_num [h0_eq_p22]
+    have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [((0, 1), Real.sqrt 8)] (2 * h0) 3 i
+            (i + 1) ∨
+        2 < funlistV39 [((0, 1), 2 * h0)] 2 3 i (i + 1))} = {0} := by
+      ext i
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      rw [← la22p2mod_fun pb i (i + 1), ← la22p2mod_fun pa i (i + 1),
+        ← Nat.mod_add_mod i 3 1]
+      rw [key (i % 3) (Nat.mod_lt i (by omega))]
+      omega
+    rw [hS]
+    norm_num [Set.ncard_singleton]
 
 /-- HOL `is_scs_3T6` (NEEDS the funlist evaluation + card kit of
 `is_scs_funlist_basic_p22`). -/
@@ -1698,10 +1940,59 @@ theorem is_scs_3T6_p22 : isScsV39 scs3T6' := by
 theorem is_scs_3T7_p22 : isScsV39 scs3T7 := by
   sorry
 
-/-- HOL `is_scs_3M1` (NEEDS the funlist evaluation + card kit of
-`is_scs_funlist_basic_p22`). -/
+/-- HOL `is_scs_3M1`: direct `is_scs` verification of the `scs_3M1` funlist
+tables (`k = 3, d = 0.103`; slot `(0,1)` carries `2 * h0`, card set `{0}`).
+Port of the planned LocalAuto20:209 `SCS_3M1_IS_SCS` twin via the private
+funlist kit (LA20 imports LA22, so the twin cannot be cited directly). -/
 theorem is_scs_3M1_p22 : isScsV39 scs3M1 := by
-  sorry
+  unfold isScsV39 scs3M1 mkUnadornedV39
+  dsimp only
+  have pa : Periodic2 (funlistV39 [((0, 1), 2 * h0)] 2 3) 3 :=
+    la22funlist_periodic2 _ _ _
+  have pb : Periodic2 (funlistV39 [((0, 1), cstab)] (2 * h0) 3) 3 :=
+    la22funlist_periodic2 _ _ _
+  refine ⟨by norm_num, by norm_num, by norm_num, periodic_empty 3, periodic_empty 3,
+    periodic_empty 3, periodic_empty 3, pa, pa, pb, pb, fun _ _ => ⟨rfl, rfl⟩, ?_, ?_,
+    fun i => by simp [funlistV39], ?_, ?_, ?_,
+    fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+  · intro i j
+    exact ⟨la22funlist_sym _ _ _ i j, la22funlist_sym _ _ _ i j,
+      la22funlist_sym _ _ _ i j, la22funlist_sym _ _ _ i j, rfl⟩
+  · intro i j
+    refine ⟨le_refl _, ?_, le_refl _⟩
+    have hz1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hz2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    rw [← la22p2mod_fun pa i j, ← la22p2mod_fun pb i j]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la22two_h0_le_cstab, la22two_le_two_h0] <;>
+      norm_num [h0_eq_p22]
+  · intro i j ⟨hik, hjk, hne⟩
+    interval_cases i <;> interval_cases j <;>
+      simp_all [funlistV39, psort, assocdV39, la22two_le_two_h0] <;> norm_num [h0_eq_p22]
+  · intro i hk3
+    have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+    rw [la22funlist_edge_mod _ _ 3 i (by omega)]
+    interval_cases i % 3 <;>
+      simp [funlistV39, psort, assocdV39, la22cstab_lt_four, la22two_h0_lt_four]
+  · intro i hk3
+    exact absurd hk3 (by norm_num)
+  · have key : ∀ r : ℕ, r < 3 →
+        ((2 * h0 < funlistV39 [((0, 1), cstab)] (2 * h0) 3 r ((r + 1) % 3) ∨
+          2 < funlistV39 [((0, 1), 2 * h0)] 2 3 r ((r + 1) % 3)) ↔ r = 0) := by
+      intro r hr
+      interval_cases r <;>
+        simp [funlistV39, psort, assocdV39, la22two_h0_lt_cstab, la22two_le_two_h0,
+          lt_irrefl] <;> norm_num [h0_eq_p22, cstab_eq_p22]
+    have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [((0, 1), cstab)] (2 * h0) 3 i (i + 1) ∨
+        2 < funlistV39 [((0, 1), 2 * h0)] 2 3 i (i + 1))} = {0} := by
+      ext i
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      rw [← la22p2mod_fun pb i (i + 1), ← la22p2mod_fun pa i (i + 1),
+        ← Nat.mod_add_mod i 3 1]
+      rw [key (i % 3) (Nat.mod_lt i (by omega))]
+      omega
+    rw [hS]
+    norm_num [Set.ncard_singleton]
 
 /-- HOL `is_scs_5I3` (NEEDS the funlist evaluation + card kit of
 `is_scs_funlist_basic_p22`). -/
