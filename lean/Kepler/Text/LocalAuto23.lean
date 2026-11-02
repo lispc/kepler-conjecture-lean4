@@ -864,12 +864,109 @@ theorem IS_SCS_STABLE_SYSTEM_p23 (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k) :
 
 
 /-- HOL `IS_SCS_TRI_STABLE_SYSTEM` (JKQEWGV.hl:409): the `k = 3` twin.
-NEEDS: same torsor unpacking at k = 3. -/
+FILLED (sf80-case3-w1): the same torsor unpacking at k = 3, mirroring the
+`IS_SCS_STABLE_SYSTEM_p23` body above (`hb3` supplies the `b i (f i) < 4`
+diagonal bound the `stableSystem` variant replaced by `≤ cstab`). -/
 theorem IS_SCS_TRI_STABLE_SYSTEM_p23 (s : ScsV39) (hs : isScsV39 s)
     (hk : s.k = 3) :
     triStable_p23 s.k 0 (Set.Iic (s.k - 1)) s.a s.b (scsJSet_p23 s)
       (fun i => (1 + i) % s.k) := by
-  sorry
+  obtain ⟨-, h3le, h6le, -, -, -, -, haP, -, -, hbP, -, hsymm, hchain, hadiag,
+    hage2, hb3, -, hJadj, hJsqrt, hcard⟩ := hs
+  refine ⟨⟨h3le, h6le, torsor_succ_mod_p23 (by omega), ?_, ?_, ?_, ?_⟩, hk, ?_, ?_, ?_⟩
+  · -- symmetry of a, b and a ≤ b
+    intro i j
+    exact ⟨(hsymm i j).1, (hsymm i j).2.2.2.1,
+      le_trans (hchain i j).1 (le_trans (hchain i j).2.1 (hchain i j).2.2)⟩
+  · -- periodicity under the successor cycle
+    intro i j
+    have hit : (fun n => (1 + n) % s.k)^[s.k] j = j % s.k :=
+      iterate_mod_eq_p23 s.k (by omega) j
+    constructor
+    · rw [hit]; exact periodic2_mod_r_p23 haP i j
+    · rw [hit]; exact periodic2_mod_r_p23 hbP i j
+  · -- every J edge is a successor edge {i, f i}
+    intro e he
+    simp only [scsJSet_p23, Set.mem_setOf_eq] at he
+    obtain ⟨i, j, hi, hj, hJm, rfl⟩ := he
+    simp only [Set.mem_setOf_eq]
+    rcases hJadj i j hJm with hadj | hadj
+    · refine ⟨i, by rw [Set.mem_Iic]; omega, ?_⟩
+      have hjeq : j = (i + 1) % s.k := by
+        rw [Nat.mod_eq_of_lt hj] at hadj; exact hadj
+      show ({i, j} : Set ℕ) = {i, (1 + i) % s.k}
+      rw [hjeq, Nat.add_comm 1 i]
+    · refine ⟨j, by rw [Set.mem_Iic]; omega, ?_⟩
+      have hieq : i = (j + 1) % s.k := by
+        rw [Nat.mod_eq_of_lt hi] at hadj; exact hadj
+      show ({i, j} : Set ℕ) = {j, (1 + j) % s.k}
+      rw [hieq, setPair_comm_p23, Nat.add_comm 1 j]
+  · -- the card bound: scsJSet routes into the bad-index set
+    have hsub : scsJSet_p23 s ⊆
+        (fun i : ℕ => ({i, (1 + i) % s.k} : Set ℕ)) ''
+          {i | i < s.k ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} := by
+      rintro e he
+      simp only [scsJSet_p23, Set.mem_setOf_eq] at he
+      obtain ⟨i, j, hi, hj, hJm, rfl⟩ := he
+      rcases hJadj i j hJm with hadj | hadj
+      · refine ⟨i, ⟨hi, Or.inr ?_⟩, ?_⟩
+        · have hshift : s.a i (i + 1) = s.a i ((i + 1) % s.k) :=
+            periodic2_mod_r_p23 haP i (i + 1)
+          have hjeq : (i + 1) % s.k = j := by
+            rw [Nat.mod_eq_of_lt hj] at hadj; exact hadj.symm
+          rw [hshift, hjeq]
+          exact lt_of_lt_of_eq two_lt_sqrt8_p23 (hJsqrt i j hJm).1.symm
+        · have hjeq : j = (i + 1) % s.k := by
+            rw [Nat.mod_eq_of_lt hj] at hadj; exact hadj
+          show ({i, (1 + i) % s.k} : Set ℕ) = {i, j}
+          rw [hjeq, Nat.add_comm 1 i]
+      · refine ⟨j, ⟨hj, Or.inr ?_⟩, ?_⟩
+        · have hshift : s.a j (j + 1) = s.a j ((j + 1) % s.k) :=
+            periodic2_mod_r_p23 haP j (j + 1)
+          have hieq : (j + 1) % s.k = i := by
+            rw [Nat.mod_eq_of_lt hi] at hadj; exact hadj.symm
+          rw [hshift, hieq, (hsymm j i).1]
+          exact lt_of_lt_of_eq two_lt_sqrt8_p23 (hJsqrt i j hJm).1.symm
+        · have hieq : i = (j + 1) % s.k := by
+            rw [Nat.mod_eq_of_lt hi] at hadj; exact hadj
+          show ({j, (1 + j) % s.k} : Set ℕ) = {i, j}
+          rw [hieq, setPair_comm_p23, Nat.add_comm 1 j]
+    have hfinB : {i | i < s.k ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))}.Finite :=
+      Set.Finite.subset (Set.finite_Ico 0 s.k) (fun x hx => ⟨Nat.zero_le _, hx.1⟩)
+    have h1 : Nat.card (scsJSet_p23 s) = Set.ncard (scsJSet_p23 s) :=
+      Nat.card_coe_set_eq _
+    have h2 : Set.ncard (scsJSet_p23 s) ≤
+        Set.ncard ((fun i : ℕ => ({i, (1 + i) % s.k} : Set ℕ)) ''
+          {i | i < s.k ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))}) :=
+      Set.ncard_le_ncard hsub (Set.Finite.image _ hfinB)
+    have h3 : Set.ncard ((fun i : ℕ => ({i, (1 + i) % s.k} : Set ℕ)) ''
+          {i | i < s.k ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))})
+        ≤ Set.ncard {i | i < s.k ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} :=
+      Set.ncard_image_le hfinB
+    have h6 : s.k ≤ 6 := by omega
+    omega
+  · -- off-diagonal a-bound
+    intro i hi j hj hne
+    exact hage2 i j ⟨by rw [Set.mem_Iic] at hi; omega,
+      by rw [Set.mem_Iic] at hj; omega, hne⟩
+  · -- diagonal + successor b-bound (k = 3: the `hb3` conjunct)
+    intro i hi
+    refine ⟨hadiag i, ?_⟩
+    have hshift : s.b i (i + 1) = s.b i ((i + 1) % s.k) :=
+      periodic2_mod_r_p23 hbP i (i + 1)
+    show s.b i ((1 + i) % s.k) < 4
+    rw [show (1 + i) % s.k = (i + 1) % s.k from by rw [Nat.add_comm], ← hshift]
+    exact hb3 i hk
+  · -- J edges carry the sqrt8 / cstab pair
+    intro i j hmem
+    simp only [scsJSet_p23, Set.mem_setOf_eq] at hmem
+    obtain ⟨i', j', hi', hj', hJ', hpair⟩ := hmem
+    rcases Set.pair_eq_pair_iff.mp hpair with ⟨he1, he2⟩ | ⟨he1, he2⟩
+    · subst he1; subst he2; exact hJsqrt i j hJ'
+    · subst he2; subst he1
+      constructor
+      · rw [(hsymm i j).1]; exact (hJsqrt j i hJ').1
+      · rw [(hsymm i j).2.2.2.1]; exact (hJsqrt j i hJ').2
 
 /-- The `stable_sy ((k),(d),(0..k-1),(a),(b),(J),(\i. (1+i) MOD k)) = s1`
 record of the JKQEWGV hypotheses, built from `s`.  SF-81 案①: the `stable`
