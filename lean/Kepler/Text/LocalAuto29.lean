@@ -159,6 +159,35 @@ FILE MAP
   `SCS_5M3_{02,03,24}_ARROW_*`, `SET_EQ_DIAG_STAB_5M3{,_IMP_SCS_3_4}`;
   needs `LKGRQUI_concl`/`QKNVMLB*_concl`, still sorry in LocalAuto1)
   and the `xrr` monotone-envelope kit.
+
+  Fill-wave 2026-10-28 (lane la29-slice-w2): the slice kit is closed
+  natively. The three `SCS_5M3_SLICE_*_p29` arrows are `LKGRQUI_p27`
+  (LocalAuto27:943, real engine body over the LA35 QKNVMLB donors) in
+  the la18-slice-w1 assembly shape: `STAB_5M3_SCS_p29` supplies
+  `isScsV39` of the stabilised source, the in-file diag lemmas supply
+  `scsDiag`, and the `isScsSliceV39` slot is the six half-table
+  identities `la29w2_half_*` (`ScsV39.mk.injEq` 10-field bashes over
+  the `scsHalfSliceV39` override/residue mechanics vs the
+  `scsPropEquV39`-rotated primes; same recipe as LocalAuto18's
+  `la18slice_half_*`). The three `SCS_5M3_*_ARROW_*_p29` composites
+  chain each slice through the proved `YXIONXL3` (LocalAuto12) +
+  `la29w2_pe_pe` rotation identities + the five proved prime arrows.
+  `SET_EQ_DIAG_STAB_5M3_p29` expands the diag set to the five
+  representatives; the odd keys `(1,3)`/`(1,4)` route through a
+  `scsOppV39` arrow - the LA1 blanket `YXIONXL2_concl` is NOT used;
+  instead the LocalAuto33 twin (`OPP_IS_SCS_p33` + `YXIONXL2_p33`)
+  is ported privately (`la29w2_opp_*`: LA33 imports this file, so the
+  port is copies; the `MMs` slot is the proved FanBaseKit
+  `MM_SCS_OPP_fb`, and `la29w2_oppArrow` is standard-three) and
+  closes at the proved `PROP_OPP_DIAG_5M3_{02,03}_p29` targets.
+  `SET_EQ_DIAG_STAB_5M3_IMP_SCS_3_4_p29` is the `FZIOTEF_TRANS`
+  over `SET_EQ_DIAG_STAB_5M3_p29` and the three composite arrows
+  (HL HIJQAHA.hl:3299 route verbatim). `SCS_5M3_SLICE_03_p29` moved
+  above `SCS_5M3_03_ARROW_3T1_4M7_p29` for declaration order (its
+  old position held no forward references). No import changes
+  (LA27/LA35 already in the cone via LocalAuto26). Remaining 5
+  sorries: `SCS_5M2_IMP_SCS_5T1_p29`, `JCYFMRP_V2_p29`,
+  `JCYFMRP_V3_p29`, `xrr_le_1553_p29`, `xrr_le_1553_BB_p29`.
 -/
 
 import Kepler.Text.LocalAuto1
@@ -2238,19 +2267,473 @@ theorem SCS_4M6_prime_ARROW_MM_4M6_p29 :
       exact Or.inr ⟨scs4M6', Set.mem_singleton _, MM_4M6_prime_IMP_MM_4M6_p29 v hv⟩
   -- DISCHARGED: HL `SCS_TAC` + the two preceding bridges.
 
+/-! ## Set-membership helpers for the half-slice overrides -/
+
+private theorem la29w2_pair_eq02 {a b : ℕ} :
+    ({a, b} : Set ℕ) = {0, 2} ↔ (a = 0 ∧ b = 2) ∨ (a = 2 ∧ b = 0) := by
+  constructor
+  · intro h
+    have h0 : (0 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    have h2 : (2 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h0 h2
+    rcases h0 with ha | ha <;> rcases h2 with hb | hb <;> omega
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) <;> ext t <;> simp <;> omega
+
+private theorem la29w2_pair_eq03 {a b : ℕ} :
+    ({a, b} : Set ℕ) = {0, 3} ↔ (a = 0 ∧ b = 3) ∨ (a = 3 ∧ b = 0) := by
+  constructor
+  · intro h
+    have h0 : (0 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    have h3 : (3 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h0 h3
+    rcases h0 with ha | ha <;> rcases h3 with hb | hb <;> omega
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) <;> ext t <;> simp <;> omega
+
+private theorem la29w2_sing_ne02 (a : ℕ) : ¬(({a} : Set ℕ) = {0, 2}) := by
+  intro h
+  have h0 : (0 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+  have h2 : (2 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+  simp only [Set.mem_singleton_iff] at h0 h2
+  omega
+
+private theorem la29w2_sing_ne03 (a : ℕ) : ¬(({a} : Set ℕ) = {0, 3}) := by
+  intro h
+  have h0 : (0 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+  have h3 : (3 : ℕ) ∈ ({a} : Set ℕ) := by rw [h]; simp
+  simp only [Set.mem_singleton_iff] at h0 h3
+  omega
+
+/-! ## propEqu composition over mkUnadorned records -/
+
+private theorem la29w2_pe_pe (k : ℕ) (hk0 : k ≠ 0) (d : ℝ) (da db : List ((ℕ × ℕ) × ℝ))
+    (va vb : ℝ) (i r : ℕ) (hir : i + r = k) :
+    scsPropEquV39 (scsPropEquV39 (mkUnadornedV39 k d (funlistV39 da va k)
+        (funlistV39 db vb k)) i) r
+      = mkUnadornedV39 k d (funlistV39 da va k) (funlistV39 db vb k) := by
+  have hfl : ∀ (g : List ((ℕ × ℕ) × ℝ)) (w : ℝ) (x y : ℕ),
+      funlistV39 g w k (k + x) (k + y) = funlistV39 g w k x y := by
+    intro g w x y
+    have e1 : (k + x) % k = x % k := by
+      rw [Nat.add_mod, Nat.mod_self, Nat.zero_add, Nat.mod_mod]
+    have e2 : (k + y) % k = y % k := by
+      rw [Nat.add_mod, Nat.mod_self, Nat.zero_add, Nat.mod_mod]
+    rw [← funlist_mod_p20 g w k (k + x) (k + y) hk0, e1, e2,
+      funlist_mod_p20 g w k x y hk0]
+  rw [scsPropEquV39, scsPropEquV39, mkUnadornedV39]
+  rw [ScsV39.mk.injEq]
+  have hshift : ∀ x : ℕ, i + (r + x) = k + x := by
+    intro x
+    rw [← Nat.add_assoc, hir]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext x y
+    show funlistV39 da va k (i + (r + x)) (i + (r + y)) = funlistV39 da va k x y
+    rw [hshift x, hshift y, hfl]
+  · funext x y
+    show funlistV39 da va k (i + (r + x)) (i + (r + y)) = funlistV39 da va k x y
+    rw [hshift x, hshift y, hfl]
+  · funext x y
+    show funlistV39 db vb k (i + (r + x)) (i + (r + y)) = funlistV39 db vb k x y
+    rw [hshift x, hshift y, hfl]
+  · funext x y
+    show funlistV39 db vb k (i + (r + x)) (i + (r + y)) = funlistV39 db vb k x y
+    rw [hshift x, hshift y, hfl]
+  · funext x y
+    rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la29w2_arrow_lift {a b b' : ScsV39} (h : scsArrowV39 {a} {b'})
+    (heq : b' = b) : scsArrowV39 {a} {b} := by rw [← heq]; exact h
+
+private theorem la29w2_pair_union (x y : ScsV39) : ({x, y} : Set ScsV39) = {x} ∪ {y} := by
+  ext t
+  simp only [Set.mem_insert_iff, Set.mem_union, Set.mem_singleton_iff]
+
+private theorem la29w2_pair_union_arrow {a b c d : ScsV39}
+    (h1 : scsArrowV39 {a} {b}) (h2 : scsArrowV39 {c} {d}) :
+    scsArrowV39 {a, c} {b, d} := by
+  rw [la29w2_pair_union b d, la29w2_pair_union a c]
+  exact FZIOTEF_UNION _ _ _ _ h1 h2
+
+private theorem la29w2_arrow_tgt (S T T' : Set ScsV39) (h : scsArrowV39 S T)
+    (heq : T = T') : scsArrowV39 S T' := by rw [← heq]; exact h
+
+
+/-! ## The six half-slice table identities -/
+
+private theorem la29w2_half_02_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M3 0 2) 0 2 0.2759 False =
+      scsPropEquV39 scs3T4Prime_p29 2 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T4Prime_p29, scs5M3]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+    have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+    have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+    have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (2 + i) % 3 = (i % 3 + 2) % 3 := by omega
+    have e2 : (2 + j) % 3 = (j % 3 + 2) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (2 + i) (2 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la29w2_half_02_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M3 0 2) 2 0 0.513 False =
+      scsPropEquV39 scs4M6Prime_p29 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M6Prime_p29, scs5M3]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la29w2_half_03_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M3 0 3) 0 3 0.513 False =
+      scsPropEquV39 scs4M7Prime_p29 1 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M7Prime_p29, scs5M3]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+    have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la29w2_half_03_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M3 0 3) 3 0 0.11 False =
+      scsPropEquV39 scs3T1Prime_p29 1 := by
+  rw [scs3T1Prime_eq_p29]
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs5M3]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la29w2_half_24_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M3 2 4) 2 4 0.11 False =
+      scsPropEquV39 scs3T1Prime_p29 1 := by
+  rw [scs3T1Prime_eq_p29]
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs5M3]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+    have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+    have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+    have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+    rw [← funlist_mod_p20 _ _ _ (1 + i) (1 + j) (by omega), e1, e2]
+    interval_cases i % 3 <;> interval_cases j % 3 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq02, la29w2_sing_ne02,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la29w2_half_24_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs5M3 2 4) 4 2 0.513 False =
+      scsPropEquV39 scs4M8Prime_p29 3 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M8Prime_p29, scs5M3]
+  rw [ScsV39.mk.injEq]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · rfl
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (3 + i) % 4 = (i % 4 + 3) % 4 := by omega
+    have e2 : (3 + j) % 4 = (j % 4 + 3) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (3 + i) (3 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (3 + i) % 4 = (i % 4 + 3) % 4 := by omega
+    have e2 : (3 + j) % 4 = (j % 4 + 3) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (3 + i) (3 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (3 + i) % 4 = (i % 4 + 3) % 4 := by omega
+    have e2 : (3 + j) % 4 = (j % 4 + 3) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (3 + i) (3 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    have hi4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hj4 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have e1 : (3 + i) % 4 = (i % 4 + 3) % 4 := by omega
+    have e2 : (3 + j) % 4 = (j % 4 + 3) % 4 := by omega
+    rw [← funlist_mod_p20 _ _ _ (3 + i) (3 + j) (by omega), e1, e2]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39, la29w2_pair_eq03, la29w2_sing_ne03,
+        Set.mem_insert_iff, Set.mem_singleton_iff]
+  · funext i j
+    split
+    · rfl
+    · rfl
+  · rfl
+  · rfl
+  · rfl
+
 /-- HOL `SCS_5M3_SLICE_02` (HIJQAHA.hl:2475): the 0-2 diag-stab of
 `scs_5M3` arrows to the pair of prop-equa slices. -/
 theorem SCS_5M3_SLICE_02_p29 :
     scsArrowV39 {scsStabDiagV39 scs5M3 0 2}
       {scsPropEquV39 scs3T4Prime_p29 2, scsPropEquV39 scs4M6Prime_p29 1} := by
-  sorry
+  have mkjF : (scsPropEquV39 scs3T4Prime_p29 2).J 0
+      ((scsPropEquV39 scs3T4Prime_p29 2).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs5M3 0 2)
+      (scsPropEquV39 scs3T4Prime_p29 2) (scsPropEquV39 scs4M6Prime_p29 1) 0 2 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la29w2_half_02_lo.symm, la29w2_half_02_hi.symm⟩
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) < 0.9
+      norm_num
+    · show (0.616 : ℝ) ≤ 0.2759 + 0.513
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · right
+      show cstab ≤ cstab
+      exact le_refl cstab
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs5M3 0 2) (scsPropEquV39 scs3T4Prime_p29 2)
+    (scsPropEquV39 scs4M6Prime_p29 1) 0 2 0 0 True
+    (STAB_5M3_SCS_p29 0 2 SCS_DIAG_SCS_5M3_02_p29).1 SCS_DIAG_SCS_5M3_02_p29 hsl
   -- DISCHARGES: HL `is_scs_slice_v39` verification plus the slice
   -- arrow machinery (`SLICE_IS_UNADORNED`, `LKGRQUI` kit).
 
 /-- HOL `SCS_5M3_02_ARROW_3T4_4M6` (HIJQAHA.hl:2594). -/
 theorem SCS_5M3_02_ARROW_3T4_4M6_p29 :
     scsArrowV39 {scsStabDiagV39 scs5M3 0 2} {scs3T4, scs4M6'} := by
-  sorry
+  have hisX : isScsV39 (scsPropEquV39 scs3T4Prime_p29 2) :=
+    SCS_5M3_SLICE_02_p29.1 _ (by simp)
+  have hisY : isScsV39 (scsPropEquV39 scs4M6Prime_p29 1) :=
+    SCS_5M3_SLICE_02_p29.1 _ (by simp)
+  have heqX : scsPropEquV39 (scsPropEquV39 scs3T4Prime_p29 2) 1 = scs3T4Prime_p29 :=
+    la29w2_pe_pe 3 (by norm_num) 0.2759 [((0, 1), 2), ((1, 2), cstab)]
+      [((0, 1), 2 * h0)] (2 * h0) cstab 2 1 (by norm_num)
+  have heqY : scsPropEquV39 (scsPropEquV39 scs4M6Prime_p29 1) 3 = scs4M6Prime_p29 :=
+    la29w2_pe_pe 4 (by norm_num) 0.513
+      [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)]
+      [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] 2 (2 * h0) 1 3 (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5M3_SLICE_02_p29
+    (la29w2_pair_union_arrow
+      (FZIOTEF_TRANS _ _ _ (la29w2_arrow_lift (YXIONXL3 _ 1 hisX) heqX)
+        SCS_3T4_prime_ARROW_MM_3T4_p29)
+      (FZIOTEF_TRANS _ _ _ (la29w2_arrow_lift (YXIONXL3 _ 3 hisY) heqY)
+        SCS_4M6_prime_ARROW_MM_4M6_p29))
   -- DISCHARGES: HL FTRANS over `SCS_5M3_SLICE_02`, the prop-equa arrow
   -- `YXIONXL3`, and the two prime bridges.
 
@@ -2330,10 +2813,57 @@ theorem SCS_4M7_prime_ARROW_MM_4M7_p29 :
       exact Or.inr ⟨scs4M7, Set.mem_singleton _, MM_4M7_prime_IMP_MM_4M7_p29 v hv⟩
   -- DISCHARGED: HL `SCS_TAC` + the two preceding bridges.
 
+/-- HOL `SCS_5M3_SLICE_03` (HIJQAHA.hl:2623). -/
+theorem SCS_5M3_SLICE_03_p29 :
+    scsArrowV39 {scsStabDiagV39 scs5M3 0 3}
+      {scsPropEquV39 scs4M7Prime_p29 1, scsPropEquV39 scs3T1Prime_p29 1} := by
+  have mkjF : (scsPropEquV39 scs4M7Prime_p29 1).J 0
+      ((scsPropEquV39 scs4M7Prime_p29 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs5M3 0 3)
+      (scsPropEquV39 scs4M7Prime_p29 1) (scsPropEquV39 scs3T1Prime_p29 1) 0 3 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la29w2_half_03_lo.symm, la29w2_half_03_hi.symm⟩
+    · show (0.513 : ℝ) < 0.9
+      norm_num
+    · show (0.11 : ℝ) < 0.9
+      norm_num
+    · show (0.616 : ℝ) ≤ 0.513 + 0.11
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · right
+      show cstab ≤ cstab
+      exact le_refl cstab
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs5M3 0 3) (scsPropEquV39 scs4M7Prime_p29 1)
+    (scsPropEquV39 scs3T1Prime_p29 1) 0 3 0 0 True
+    (STAB_5M3_SCS_p29 0 3 SCS_DIAG_SCS_5M3_03_p29).1 SCS_DIAG_SCS_5M3_03_p29 hsl
+  -- DISCHARGES: HL `is_scs_slice_v39` verification plus the slice
+  -- arrow machinery.
+
 /-- HOL `SCS_5M3_03_ARROW_3T1_4M7` (HIJQAHA.hl:2867). -/
 theorem SCS_5M3_03_ARROW_3T1_4M7_p29 :
     scsArrowV39 {scsStabDiagV39 scs5M3 0 3} {scs4M7, scs3T1} := by
-  sorry
+  have hisX : isScsV39 (scsPropEquV39 scs4M7Prime_p29 1) :=
+    SCS_5M3_SLICE_03_p29.1 _ (by simp)
+  have hisY : isScsV39 (scsPropEquV39 scs3T1Prime_p29 1) :=
+    SCS_5M3_SLICE_03_p29.1 _ (by simp)
+  have heqX : scsPropEquV39 (scsPropEquV39 scs4M7Prime_p29 1) 3 = scs4M7Prime_p29 :=
+    la29w2_pe_pe 4 (by norm_num) 0.513
+      [((0, 1), cstab), ((1, 2), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)]
+      [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)]
+      2 (2 * h0) 1 3 (by norm_num)
+  have heqY : scsPropEquV39 (scsPropEquV39 scs3T1Prime_p29 1) 2 = scs3T1Prime_p29 :=
+    la29w2_pe_pe 3 (by norm_num) 0.11 [((0, 1), cstab)] [((0, 1), cstab)] 2 (2 * h0) 1 2 (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5M3_SLICE_03_p29
+    (la29w2_pair_union_arrow
+      (FZIOTEF_TRANS _ _ _ (la29w2_arrow_lift (YXIONXL3 _ 3 hisX) heqX)
+        SCS_4M7_prime_ARROW_MM_4M7_p29)
+      (FZIOTEF_TRANS _ _ _ (la29w2_arrow_lift (YXIONXL3 _ 2 hisY) heqY)
+        SCS_3T1_prime_ARROW_MM_3T1_p29))
   -- DISCHARGES: HL FTRANS over the 0-3 slice pair and the prime
   -- bridges for 3T1 and 4M7.
 
@@ -2379,22 +2909,55 @@ theorem SCS_4M8_prime_ARROW_MM_4M8_p29 :
 theorem SCS_5M3_SLICE_24_p29 :
     scsArrowV39 {scsStabDiagV39 scs5M3 2 4}
       {scsPropEquV39 scs3T1Prime_p29 1, scsPropEquV39 scs4M8Prime_p29 3} := by
-  sorry
-  -- DISCHARGES: HL `is_scs_slice_v39` verification plus the slice
-  -- arrow machinery.
+  have mkjF : (scsPropEquV39 scs3T1Prime_p29 1).J 0
+      ((scsPropEquV39 scs3T1Prime_p29 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs5M3 2 4)
+      (scsPropEquV39 scs3T1Prime_p29 1) (scsPropEquV39 scs4M8Prime_p29 3) 2 4 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la29w2_half_24_lo.symm, la29w2_half_24_hi.symm⟩
+    · show (0.11 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) < 0.9
+      norm_num
+    · show (0.616 : ℝ) ≤ 0.11 + 0.513
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · right
+      show cstab ≤ cstab
+      exact le_refl cstab
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  exact LKGRQUI_p27 (scsStabDiagV39 scs5M3 2 4) (scsPropEquV39 scs3T1Prime_p29 1)
+    (scsPropEquV39 scs4M8Prime_p29 3) 2 4 0 0 True
+    (STAB_5M3_SCS_p29 2 4 SCS_DIAG_SCS_5M3_24_p29).1 SCS_DIAG_SCS_5M3_24_p29 hsl
 
-/-- HOL `SCS_5M3_SLICE_03` (HIJQAHA.hl:2623). -/
-theorem SCS_5M3_SLICE_03_p29 :
-    scsArrowV39 {scsStabDiagV39 scs5M3 0 3}
-      {scsPropEquV39 scs4M7Prime_p29 1, scsPropEquV39 scs3T1Prime_p29 1} := by
-  sorry
+/-! ## The three composite arrows -/
   -- DISCHARGES: HL `is_scs_slice_v39` verification plus the slice
   -- arrow machinery.
 
 /-- HOL `SCS_5M3_24_ARROW_3T1_4M8` (HIJQAHA.hl:3073). -/
 theorem SCS_5M3_24_ARROW_3T1_4M8_p29 :
     scsArrowV39 {scsStabDiagV39 scs5M3 2 4} {scs3T1, scs4M8} := by
-  sorry
+  have hisX : isScsV39 (scsPropEquV39 scs3T1Prime_p29 1) :=
+    SCS_5M3_SLICE_24_p29.1 _ (by simp)
+  have hisY : isScsV39 (scsPropEquV39 scs4M8Prime_p29 3) :=
+    SCS_5M3_SLICE_24_p29.1 _ (by simp)
+  have heqX : scsPropEquV39 (scsPropEquV39 scs3T1Prime_p29 1) 2 = scs3T1Prime_p29 :=
+    la29w2_pe_pe 3 (by norm_num) 0.11 [((0, 1), cstab)] [((0, 1), cstab)] 2 (2 * h0) 1 2 (by norm_num)
+  have heqY : scsPropEquV39 (scsPropEquV39 scs4M8Prime_p29 3) 1 = scs4M8Prime_p29 :=
+    la29w2_pe_pe 4 (by norm_num) 0.513
+      [((0, 1), 2 * h0), ((2, 3), cstab), ((0, 2), cstab), ((1, 3), cstab)]
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)]
+      2 (2 * h0) 3 1 (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5M3_SLICE_24_p29
+    (la29w2_pair_union_arrow
+      (FZIOTEF_TRANS _ _ _ (la29w2_arrow_lift (YXIONXL3 _ 2 hisX) heqX)
+        SCS_3T1_prime_ARROW_MM_3T1_p29)
+      (FZIOTEF_TRANS _ _ _ (la29w2_arrow_lift (YXIONXL3 _ 1 hisY) heqY)
+        SCS_4M8_prime_ARROW_MM_4M8_p29))
   -- DISCHARGES: HL FTRANS over `SCS_5M3_SLICE_24`, the prop-equa
   -- arrow, and the prime bridges for 3T1 and 4M8.
 
@@ -2451,6 +3014,292 @@ theorem PROP_OPP_DIAG_5M3_02_p29 :
     simp [funlistV39, psort, assocdV39] <;>
     omega
   -- DISCHARGED: HL definitional expansion as for the 0-3 twin.
+
+/-! ## la29w2 diag-relation + opp kit (see fill-wave note in the header) -/
+
+private theorem la29w2_diag_rel {i j : ℕ} (hd : scsDiag 5 i j) :
+    i % 5 = (j % 5 + 2) % 5 ∨ j % 5 = (i % 5 + 2) % 5 := by
+  obtain ⟨h1, h2, h3⟩ := hd
+  rcases penta_p29 i with hi | hi | hi | hi | hi <;>
+  rcases penta_p29 j with hj | hj | hj | hj | hj <;>
+  simp only [hi, hj] <;>
+  simp at h1 h2 h3 ⊢ <;>
+  omega
+
+/-! ## Opp kit (port of LocalAuto33 `OppKit` + OPP_IS_SCS_p33; LA33 itself
+imports LA29, so the port is private copies) -/
+
+private theorem la29w2_opp_phi_lt {k : ℕ} (hk : 1 ≤ k) (x : ℕ) :
+    k - (x % k + 1) < k := by
+  have h : x % k < k := Nat.mod_lt x (by omega)
+  omega
+
+private theorem la29w2_opp_mod_eq {k p q : ℕ} (h : p % k = q % k) (hp : p < k)
+    (hq : q < k) : p = q := by
+  have h1 : p % k = p := Nat.mod_eq_of_lt hp
+  have h2 : q % k = q := Nat.mod_eq_of_lt hq
+  omega
+
+private theorem la29w2_opp_phi_inv {k : ℕ} (hk : k ≠ 0) (x : ℕ) :
+    k - ((k - (x % k + 1)) % k + 1) = x % k := by
+  have hlt : x % k < k := Nat.mod_lt x (by omega)
+  have h1 : (k - (x % k + 1)) % k = k - (x % k + 1) :=
+    Nat.mod_eq_of_lt (by have := hlt; omega)
+  rw [h1]
+  omega
+
+private theorem la29w2_opp_pair_adj {k : ℕ} (hk : 1 ≤ k) (i : ℕ) :
+    k - (i % k + 1) = (k - ((i + 1) % k + 1) + 1) % k := by
+  have hi : i % k < k := Nat.mod_lt i (by omega)
+  by_cases hlt : i % k + 1 < k
+  · have hw1 : (i + 1) % k = i % k + 1 := by
+      rw [← Nat.mod_add_mod i k 1]
+      exact Nat.mod_eq_of_lt hlt
+    rw [hw1]
+    have hR : k - (i % k + 1 + 1) + 1 < k := by have := hi; omega
+    rw [Nat.mod_eq_of_lt hR]
+    omega
+  · have heq : i % k + 1 = k := by omega
+    have hw1 : (i + 1) % k = 0 := by
+      rw [← Nat.mod_add_mod i k 1, heq, Nat.mod_self]
+    rw [hw1, heq, Nat.sub_self]
+    have hR : k - (0 + 1 : ℕ) + 1 = k := by omega
+    rw [hR, Nat.mod_self]
+
+private theorem la29w2_opp_adj_swap {k : ℕ} (hk : 1 ≤ k) {x y : ℕ}
+    (h : (k - (y % k + 1)) % k = (k - (x % k + 1) + 1) % k) :
+    x % k = (y + 1) % k := by
+  have hx : x % k < k := Nat.mod_lt x (by omega)
+  have hy : y % k < k := Nat.mod_lt y (by omega)
+  have hmod : (k - (y % k + 1)) % k = k - (y % k + 1) :=
+    Nat.mod_eq_of_lt (by have := hy; omega)
+  rw [hmod] at h
+  have hrhs : (k - (x % k + 1) + 1) % k = (k - x % k) % k := by
+    have hsh : k - (x % k + 1) + 1 = k - x % k := by have := hx; omega
+    rw [hsh]
+  rw [hrhs] at h
+  rw [(Nat.mod_add_mod y k 1).symm]
+  by_cases hx0 : x % k = 0
+  · have h2 : (k - x % k) % k = 0 := by rw [hx0, Nat.sub_zero, Nat.mod_self]
+    rw [h2] at h
+    have hyk : y % k + 1 = k := by have := h; have := hy; omega
+    rw [hx0, hyk, Nat.mod_self]
+  · have h2 : (k - x % k) % k = k - x % k :=
+      Nat.mod_eq_of_lt (by have := hx; omega)
+    rw [h2] at h
+    have hxy : y % k + 1 = x % k := by
+      have h3 := h; have := hy; have := hx; omega
+    rw [hxy]
+    exact (Nat.mod_modEq x k).symm
+
+private theorem la29w2_opp_b_adj {k : ℕ} {b : ℕ → ℕ → ℝ}
+    (hk : 1 ≤ k) (hper : Periodic2 b k) (hsymg : ∀ i j, b i j = b j i)
+    {x y : ℕ} (h : x % k = (y + 1) % k) :
+    b x y = b (y % k) (y % k + 1) := by
+  have hk0 : k ≠ 0 := by omega
+  have hylt : y % k < k := Nat.mod_lt y (by omega)
+  have hyk : (y + 1) % k = (y % k + 1) % k := (Nat.mod_add_mod y k 1).symm
+  rw [hyk] at h
+  have hred : b (x % k) (y % k) = b x y :=
+    (periodic2Mod1 hk0 hper x (y % k)).trans (periodic2Mod2 hk0 hper x y)
+  rw [← hred]
+  by_cases hlt : y % k + 1 < k
+  · have hxk : x % k = y % k + 1 := by rw [h, Nat.mod_eq_of_lt hlt]
+    rw [hxk, hsymg (y % k + 1) (y % k)]
+  · have heq : y % k + 1 = k := by omega
+    have hxk : x % k = 0 := by rw [h, heq, Nat.mod_self]
+    rw [hxk, hsymg 0 (y % k)]
+    exact (hper (y % k) 0).2.symm.trans
+      (congrArg (b (y % k)) (show (0 : ℕ) + k = y % k + 1 from by rw [Nat.zero_add, heq]))
+
+private theorem la29w2_opp_key {k : ℕ} {g : ℕ → ℕ → ℝ}
+    (hk : 1 ≤ k) (hper : Periodic2 g k) (hsymg : ∀ i j, g i j = g j i) (i : ℕ) :
+    g (k - (i % k + 1)) (k - ((i + 1) % k + 1))
+      = g (k - 1 - ((i + 1) % k)) (k - 1 - ((i + 1) % k) + 1) := by
+  have htr := la29w2_opp_b_adj (b := g) hk hper hsymg
+    (x := k - (i % k + 1)) (y := k - ((i + 1) % k + 1))
+    (by rw [Nat.mod_eq_of_lt (la29w2_opp_phi_lt hk i)]; exact la29w2_opp_pair_adj hk i)
+  rw [htr, Nat.mod_eq_of_lt (la29w2_opp_phi_lt hk (i + 1))]
+  rw [show k - ((i + 1) % k + 1) = k - 1 - ((i + 1) % k) from by
+    have hw : (i + 1) % k < k := Nat.mod_lt (i + 1) (by omega)
+    omega]
+
+private theorem la29w2_opp_isScs (s : ScsV39) (hs : isScsV39 s) :
+    isScsV39 (scsOppV39 s) := by
+  obtain ⟨hd, h3, hk6, hplo, hphi, hpstr, -, hpa, hpam, hpbm, hpb, hpJ, hsym,
+    hch, hdiag0, hdiag, hb3, hbc, hJstruct, hJab, hcard⟩ := hs
+  have hk0 : s.k ≠ 0 := by omega
+  have hk1 : 1 ≤ s.k := by omega
+  have hsymb : ∀ x y, s.b x y = s.b y x := fun x y => (hsym x y).2.2.2.1
+  have hsymbA : ∀ x y, s.a x y = s.a y x := fun x y => (hsym x y).1
+  refine ⟨hd, h3, hk6, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact peropp_periodic s.lo s.k
+  · exact peropp_periodic s.hi s.k
+  · exact peropp_periodic s.str s.k
+  · exact peropp_periodic s.str s.k
+  · intro p q
+    show s.a (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.a (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.am (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.am (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.am (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.am (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.bm (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.bm (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.bm (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.bm (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.b (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.b (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.J (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.J (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    exact ⟨(hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.2.1,
+      (hsym (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.2.2⟩
+  · intro p q
+    exact hch (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+  · intro p
+    exact hdiag0 (s.k - (p % s.k + 1))
+  · intro p q hpq
+    have hne : s.k - (p % s.k + 1) ≠ s.k - (q % s.k + 1) := by
+      intro hcon
+      have e1 : s.k - ((s.k - (p % s.k + 1)) % s.k + 1) = p % s.k := la29w2_opp_phi_inv hk0 p
+      have e2 : s.k - ((s.k - (q % s.k + 1)) % s.k + 1) = q % s.k := la29w2_opp_phi_inv hk0 q
+      rw [Nat.mod_eq_of_lt (la29w2_opp_phi_lt hk1 p)] at e1
+      rw [Nat.mod_eq_of_lt (la29w2_opp_phi_lt hk1 q)] at e2
+      exact hpq.2.2 (la29w2_opp_mod_eq (k := s.k) (by rw [← e1, ← e2, hcon]) hpq.1 hpq.2.1)
+    show 2 ≤ s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    exact hdiag _ _ ⟨la29w2_opp_phi_lt hk1 p, la29w2_opp_phi_lt hk1 q, hne⟩
+  · intro p hp3
+    show s.b (s.k - (p % s.k + 1)) (s.k - ((p + 1) % s.k + 1)) < 4
+    rw [la29w2_opp_key hk1 hpb hsymb p]
+    exact hb3 _ hp3
+  · intro p hp6
+    show s.b (s.k - (p % s.k + 1)) (s.k - ((p + 1) % s.k + 1)) ≤ cstab
+    rw [la29w2_opp_key hk1 hpb hsymb p]
+    exact hbc _ hp6
+  · intro p q hpq
+    show q % s.k = (p + 1) % s.k ∨ p % s.k = (q + 1) % s.k
+    have hJs : s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) := hpq
+    rcases hJstruct _ _ hJs with h | h
+    · exact Or.inr (la29w2_opp_adj_swap hk1 h)
+    · exact Or.inl (la29w2_opp_adj_swap hk1 h)
+  · intro p q hpq
+    show s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) = Real.sqrt 8 ∧
+      s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) = cstab
+    exact hJab _ _ hpq
+  · show {i | i < s.k ∧ (2 * h0 < s.b (s.k - (i % s.k + 1))
+        (s.k - ((i + 1) % s.k + 1)) ∨
+        2 < s.a (s.k - (i % s.k + 1)) (s.k - ((i + 1) % s.k + 1)))}.ncard + s.k ≤ 6
+    have hcardT : {i | i < s.k ∧ (2 * h0 < s.b (s.k - (i % s.k + 1))
+          (s.k - ((i + 1) % s.k + 1)) ∨
+        2 < s.a (s.k - (i % s.k + 1)) (s.k - ((i + 1) % s.k + 1)))}.ncard
+        = {j | j < s.k ∧ (2 * h0 < s.b j (j + 1) ∨ 2 < s.a j (j + 1))}.ncard := by
+      refine Set.ncard_congr
+        (f := fun i (_ : i ∈ (_ : Set ℕ)) => s.k - 1 - ((i + 1) % s.k)) ?_ ?_ ?_
+      · rintro i ⟨hi, hbad | hbad⟩
+        · have hlt : (i + 1) % s.k < s.k := Nat.mod_lt (i + 1) (by omega)
+          refine ⟨by omega, ?_⟩
+          rw [la29w2_opp_key hk1 hpb hsymb i] at hbad
+          exact Or.inl hbad
+        · have hlt : (i + 1) % s.k < s.k := Nat.mod_lt (i + 1) (by omega)
+          refine ⟨by omega, ?_⟩
+          rw [la29w2_opp_key hk1 hpa hsymbA i] at hbad
+          exact Or.inr hbad
+      · rintro i j hi hb hcon
+        obtain ⟨hi, -⟩ := hi
+        obtain ⟨hj, -⟩ := hb
+        have hcon' : s.k - 1 - ((i + 1) % s.k) = s.k - 1 - ((j + 1) % s.k) := hcon
+        by_cases hik : i + 1 < s.k
+        · by_cases hjk : j + 1 < s.k
+          · have e1 : (i + 1) % s.k = i + 1 := Nat.mod_eq_of_lt hik
+            have e2 : (j + 1) % s.k = j + 1 := Nat.mod_eq_of_lt hjk
+            rw [e1, e2] at hcon'
+            omega
+          · have e1 : (i + 1) % s.k = i + 1 := Nat.mod_eq_of_lt hik
+            have hjk1 : j + 1 = s.k := by omega
+            have e2 : (j + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            rw [e1, e2] at hcon'
+            omega
+        · by_cases hjk : j + 1 < s.k
+          · have hjk1 : i + 1 = s.k := by omega
+            have e1 : (i + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            have e2 : (j + 1) % s.k = j + 1 := Nat.mod_eq_of_lt hjk
+            rw [e1, e2] at hcon'
+            omega
+          · have hik1 : i + 1 = s.k := by omega
+            have hjk1 : j + 1 = s.k := by omega
+            have e1 : (i + 1) % s.k = 0 := by rw [hik1, Nat.mod_self]
+            have e2 : (j + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            rw [e1, e2] at hcon'
+            omega
+      · rintro j ⟨hj, hbad⟩
+        set i := (2 * s.k - 2 - j) % s.k with hiv
+        have hi : i < s.k := by rw [hiv]; exact Nat.mod_lt _ (by omega)
+        have hi1 : (i + 1) % s.k = (2 * s.k - 1 - j) % s.k := by
+          rw [hiv, Nat.mod_add_mod (2 * s.k - 2 - j) s.k 1,
+            show 2 * s.k - 2 - j + 1 = 2 * s.k - 1 - j from by omega]
+        have hfi : s.k - 1 - ((i + 1) % s.k) = j := by
+          rw [hi1]
+          by_cases hjk1 : j = s.k - 1
+          · rw [hjk1, show 2 * s.k - 1 - (s.k - 1) = s.k from by omega, Nat.mod_self]
+            omega
+          · have hmod : (2 * s.k - 1 - j) % s.k = s.k - 1 - j := by
+              have hj2 : j ≤ s.k - 2 := by omega
+              rw [show 2 * s.k - 1 - j = s.k + (s.k - 1 - j) from by omega,
+                Nat.add_mod, Nat.mod_self, Nat.zero_add, Nat.mod_modEq _ _,
+                Nat.mod_eq_of_lt (by omega)]
+            rw [hmod]
+            omega
+        refine ⟨i, ⟨hi, ?_⟩, hfi⟩
+        rw [la29w2_opp_key hk1 hpb hsymb i, la29w2_opp_key hk1 hpa hsymbA i, hfi]
+        exact hbad
+    rw [hcardT]
+    exact hcard
+
+private theorem la29w2_opp_mm_ne (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k)
+    {v : ℕ → V3} (hmm : MMsV39 s v) : MMsV39 (scsOppV39 s) ≠ ∅ := by
+  have hw' : MMsV39 (scsOppV39 s) (fun i => -(peropp v s.k i)) :=
+    MM_SCS_OPP_fb s v s.k rfl hs (by omega) hmm
+  intro hcon
+  rw [hcon] at hw'
+  exact hw'
+
+private theorem la29w2_oppArrow (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k) :
+    scsArrowV39 {s} {scsOppV39 s} := by
+  refine ⟨fun t ht => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at ht
+    subst ht
+    exact la29w2_opp_isScs s hs
+  · by_cases hex : (MMsV39 s).Nonempty
+    · obtain ⟨v, hv⟩ := hex
+      exact Or.inr ⟨scsOppV39 s, rfl, la29w2_opp_mm_ne s hs hk hv⟩
+    · refine Or.inl fun t ht => ?_
+      rw [Set.mem_singleton_iff] at ht
+      subst ht
+      exact Set.not_nonempty_iff_eq_empty.mp hex
 
 /-! ## Section D3: the `{stab_diag i j | diag 5 i j}` set expansions
 (HIJQAHA.hl:3179-3313) -/
@@ -2537,7 +3386,88 @@ theorem SET_EQ_DIAG_STAB_5M3_p29 :
     scsArrowV39 {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5M3 i j = t}
       {scsStabDiagV39 scs5M3 0 2, scsStabDiagV39 scs5M3 0 3,
         scsStabDiagV39 scs5M3 2 4} := by
-  sorry
+  have hsrc : {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5M3 i j = t} =
+      {scsStabDiagV39 scs5M3 2 0} ∪ {scsStabDiagV39 scs5M3 3 1} ∪
+        {scsStabDiagV39 scs5M3 4 2} ∪ {scsStabDiagV39 scs5M3 5 3} ∪
+        {scsStabDiagV39 scs5M3 6 4} := by
+    ext t
+    simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨i, j, hd, rfl⟩
+      rcases diag2_keys_p29 i j (la29w2_diag_rel hd) with hk | hk | hk | hk | hk
+      · exact Or.inl (Or.inl (Or.inl (Or.inl ((stab_mod_p29 i j).symm.trans
+          ((stab_eq_of_key_p29 (i % 5) (j % 5) 0 2 hk).trans
+            (stab_eq_of_key_p29 0 2 2 0 (by simp [psort])))))))
+      · exact Or.inl (Or.inl (Or.inl (Or.inr ((stab_mod_p29 i j).symm.trans
+          ((stab_eq_of_key_p29 (i % 5) (j % 5) 1 3 hk).trans
+            (stab_eq_of_key_p29 1 3 3 1 (by simp [psort])))))))
+      · exact Or.inl (Or.inl (Or.inr ((stab_mod_p29 i j).symm.trans
+          ((stab_eq_of_key_p29 (i % 5) (j % 5) 2 4 hk).trans
+            (stab_eq_of_key_p29 2 4 4 2 (by simp [psort]))))))
+      · exact Or.inl (Or.inr ((stab_mod_p29 i j).symm.trans
+          ((stab_eq_of_key_p29 (i % 5) (j % 5) 0 3 hk).trans
+            (stab_eq_of_key_p29 0 3 5 3 (by simp [psort])))))
+      · exact Or.inr ((stab_mod_p29 i j).symm.trans
+          ((stab_eq_of_key_p29 (i % 5) (j % 5) 1 4 hk).trans
+            (stab_eq_of_key_p29 1 4 6 4 (by simp [psort]))))
+    · rintro (h | h)
+      · rcases h with (h | h)
+        · rcases h with (h | h)
+          · rcases h with (h | h)
+            · exact ⟨2, 0, ⟨by decide, by decide, by decide⟩, h.symm⟩
+            · exact ⟨3, 1, ⟨by decide, by decide, by decide⟩, h.symm⟩
+          · exact ⟨4, 2, ⟨by decide, by decide, by decide⟩, h.symm⟩
+        · exact ⟨5, 3, ⟨by decide, by decide, by decide⟩, h.symm⟩
+      · exact ⟨6, 4, ⟨by decide, by decide, by decide⟩, h.symm⟩
+  rw [hsrc]
+  have htgt : {scsStabDiagV39 scs5M3 0 2, scsStabDiagV39 scs5M3 0 3,
+      scsStabDiagV39 scs5M3 2 4} =
+      ({scsStabDiagV39 scs5M3 0 2} ∪ {scsStabDiagV39 scs5M3 0 3} ∪
+        {scsStabDiagV39 scs5M3 2 4} ∪ {scsStabDiagV39 scs5M3 0 3} ∪
+        {scsStabDiagV39 scs5M3 0 2} : Set ScsV39) := by
+    ext u
+    simp only [Set.mem_insert_iff, Set.mem_union, Set.mem_singleton_iff]
+    tauto
+  rw [htgt]
+  have hd02 : scsDiag scs5M3.k 0 2 := SCS_DIAG_SCS_5M3_02_p29
+  have hd03 : scsDiag scs5M3.k 0 3 := SCS_DIAG_SCS_5M3_03_p29
+  have hd24 : scsDiag scs5M3.k 2 4 := SCS_DIAG_SCS_5M3_24_p29
+  have hd13 : scsDiag scs5M3.k 1 3 := ⟨by decide, by decide, by decide⟩
+  have hd14 : scsDiag scs5M3.k 1 4 := ⟨by decide, by decide, by decide⟩
+  have hscs13 : isScsV39 (scsStabDiagV39 scs5M3 1 3) :=
+    (STAB_5M3_SCS_p29 1 3 hd13).1
+  have hscs14 : isScsV39 (scsStabDiagV39 scs5M3 1 4) :=
+    (STAB_5M3_SCS_p29 1 4 hd14).1
+  refine FZIOTEF_UNION _ _ _ _
+    (FZIOTEF_UNION _ _ _ _ (FZIOTEF_UNION _ _ _ _ (FZIOTEF_UNION _ _ _ _ ?_ ?_) ?_) ?_) ?_
+  · rw [show scsStabDiagV39 scs5M3 2 0 = scsStabDiagV39 scs5M3 0 2 from
+      stab_eq_of_key_p29 2 0 0 2 (by simp [psort])]
+    exact FZIOTEF_REFL _ fun s hs => by
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact (STAB_5M3_SCS_p29 0 2 hd02).1
+  · rw [show scsStabDiagV39 scs5M3 3 1 = scsStabDiagV39 scs5M3 1 3 from
+      stab_eq_of_key_p29 3 1 1 3 (by simp [psort])]
+    exact FZIOTEF_TRANS _ _ _ (la29w2_oppArrow _ hscs13 (by decide))
+      (la29w2_arrow_lift (YXIONXL3 (scsOppV39 (scsStabDiagV39 scs5M3 1 3)) 3
+        (la29w2_opp_isScs _ hscs13)) (PROP_OPP_DIAG_5M3_03_p29.symm))
+  · rw [show scsStabDiagV39 scs5M3 4 2 = scsStabDiagV39 scs5M3 2 4 from
+      stab_eq_of_key_p29 4 2 2 4 (by simp [psort])]
+    exact FZIOTEF_REFL _ fun s hs => by
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact (STAB_5M3_SCS_p29 2 4 hd24).1
+  · rw [show scsStabDiagV39 scs5M3 5 3 = scsStabDiagV39 scs5M3 0 3 from
+      stab_eq_of_key_p29 5 3 0 3 (by simp [psort])]
+    exact FZIOTEF_REFL _ fun s hs => by
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact (STAB_5M3_SCS_p29 0 3 hd03).1
+  · rw [show scsStabDiagV39 scs5M3 6 4 = scsStabDiagV39 scs5M3 1 4 from
+      stab_eq_of_key_p29 6 4 1 4 (by simp [psort])]
+    exact FZIOTEF_TRANS _ _ _ (la29w2_oppArrow _ hscs14 (by decide))
+      (la29w2_arrow_lift (YXIONXL3 (scsOppV39 (scsStabDiagV39 scs5M3 1 4)) 3
+        (la29w2_opp_isScs _ hscs14)) (PROP_OPP_DIAG_5M3_02_p29.symm))
   -- DISCHARGES: HL `SET_EQ` reorientation (`psort` symmetry) plus
   -- FZIOTEF over the three representative diag-stabs.
 
@@ -2545,7 +3475,34 @@ theorem SET_EQ_DIAG_STAB_5M3_p29 :
 theorem SET_EQ_DIAG_STAB_5M3_IMP_SCS_3_4_p29 :
     scsArrowV39 {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5M3 i j = t}
       {scs4M6', scs4M7, scs4M8, scs3T1, scs3T4} := by
-  sorry
+  have h3 : {scsStabDiagV39 scs5M3 0 2, scsStabDiagV39 scs5M3 0 3,
+      scsStabDiagV39 scs5M3 2 4} =
+      ({scsStabDiagV39 scs5M3 0 2} ∪ {scsStabDiagV39 scs5M3 0 3} ∪
+        {scsStabDiagV39 scs5M3 2 4} : Set ScsV39) := by
+    ext u
+    simp only [Set.mem_insert_iff, Set.mem_union, Set.mem_singleton_iff]
+    tauto
+  have h5 : ({scs3T4, scs4M6'} ∪ {scs4M7, scs3T1} ∪ {scs3T1, scs4M8} :
+      Set ScsV39) =
+      {scs4M6', scs4M7, scs4M8, scs3T1, scs3T4} := by
+    ext u
+    simp only [Set.mem_insert_iff, Set.mem_union, Set.mem_singleton_iff]
+    tauto
+  have u12 : scsArrowV39
+      ({scsStabDiagV39 scs5M3 0 2} ∪ {scsStabDiagV39 scs5M3 0 3})
+      ({scs3T4, scs4M6'} ∪ {scs4M7, scs3T1}) :=
+    FZIOTEF_UNION _ _ _ _ SCS_5M3_02_ARROW_3T4_4M6_p29 SCS_5M3_03_ARROW_3T1_4M7_p29
+  have u : scsArrowV39
+      ({scsStabDiagV39 scs5M3 0 2} ∪ {scsStabDiagV39 scs5M3 0 3} ∪
+        {scsStabDiagV39 scs5M3 2 4})
+      ({scs3T4, scs4M6'} ∪ {scs4M7, scs3T1} ∪ {scs3T1, scs4M8}) :=
+    FZIOTEF_UNION _ _ _ _ u12 SCS_5M3_24_ARROW_3T1_4M8_p29
+  have s3 : scsArrowV39 {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5M3 i j = t}
+      ({scsStabDiagV39 scs5M3 0 2} ∪ {scsStabDiagV39 scs5M3 0 3} ∪
+        {scsStabDiagV39 scs5M3 2 4}) :=
+    la29w2_arrow_tgt _ _ _ SET_EQ_DIAG_STAB_5M3_p29 h3
+  exact FZIOTEF_TRANS _ _ _ s3
+    (la29w2_arrow_tgt _ _ {scs4M6', scs4M7, scs4M8, scs3T1, scs3T4} u h5)
   -- DISCHARGES: HL FTRANS over `SET_EQ_DIAG_STAB_5M3`, the three
   -- composite slice arrows, and the prime bridges.
 
