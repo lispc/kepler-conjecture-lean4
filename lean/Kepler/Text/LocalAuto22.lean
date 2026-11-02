@@ -1583,6 +1583,234 @@ theorem scs_lb_2_p22 (s : ScsV39) (vv : ℕ → V3) (i j : ℕ)
   rw [hred] at h2le
   exact h2le.trans hle
 
+/-! ## w5sg2_* private block (lane scsgeneric-w5b2): the `SYNQIWN_p22` kit.
+HOL `SYNQIWN` (OCBICBY.hl:2506) was proved via the terminal inequality
+certificates "1117202051"/"4559601669"/"4559601669b" plus the
+azim -> dihV -> dih_y -> delta4_y chain (all outside this module's closure);
+this port replaces that route by a direct `azim_master` coordinate computation:
+`cos (azim 0 A B C) < 0` from the projection dot product
+`B*C - (B.proj)(C.proj) = deltaX4(six squared lengths) / (4*|A|^2)`, whose
+negativity is the six-way case box arithmetic of `w5sg2_delta4_cases`
+(the same three certificate boxes, discharged by direct real arithmetic).
+-/
+
+/-- `Periodic` backward (LA22 twin of `la22periodic_mod`; local copy so the
+block is self-contained). -/
+private theorem w5sg2_periodic_mod {α : Sort u} {f : ℕ → α} {n : ℕ}
+    (hper : Periodic f n) : ∀ m, f (m % n) = f m := by
+  have hstep : ∀ q r, f (q * n + r) = f r := by
+    intro q
+    induction q with
+    | zero => intro r; simp
+    | succ q ih =>
+      intro r
+      have h1 : f (q * n + r + n) = f (q * n + r) := hper _
+      have h2 : (q + 1) * n + r = q * n + r + n := by ring
+      rw [h2, h1, ih r]
+  intro m
+  conv_rhs => rw [show m = m / n * n + m % n from by
+    rw [Nat.mul_comm]; exact (Nat.div_add_mod m n).symm]
+  rw [hstep]
+
+
+/-- Annulus norm bounds (LA4 twin). -/
+private theorem w5sg2_norm_bounds {v : V3} (hv : v ∈ ballAnnulus) :
+    2 ≤ ‖v‖ ∧ ‖v‖ ≤ 2 * h0 := by
+  obtain ⟨hin, hnot⟩ := hv
+  have h1 : ‖v‖ ≤ 2 * h0 := by
+    simpa [dist_zero_right] using Metric.mem_closedBall.mp hin
+  have h2 : 2 ≤ ‖v‖ := by
+    have h3 : ¬ (dist v (0:V3) < 2) := hnot
+    simpa [dist_zero_right] using h3
+  exact ⟨h2, h1⟩
+
+/-- HOL `SUC_MOD_NOT_EQ` (QKNVMLB.hl:3431). -/
+private theorem w5sg2_suc_mod_not_eq {k : ℕ} (hk : 1 < k) (i : ℕ) :
+    i % k ≠ (i + 1) % k := by
+  have e1 : (i + 1) % k = (i % k + 1) % k := by simp [Nat.add_mod]
+  have hik : i % k < k := Nat.mod_lt _ (by omega)
+  rcases Nat.lt_or_ge (i % k + 1) k with h | h
+  · rw [e1, Nat.mod_eq_of_lt (by omega : i % k + 1 < k)]
+    omega
+  · have hk1 : i % k + 1 = k := by omega
+    rw [e1, hk1, Nat.mod_self]
+    omega
+
+/-- HOL `NONPARALLEL_BALL_ANNULUS` core (dih2k.hl:635 / LA4 aux, `cstab = 3.01`). -/
+private theorem w5sg2_nonparallel_annulus {v w : V3} (hv : v ∈ ballAnnulus)
+    (hw : w ∈ ballAnnulus) (h2 : 2 ≤ ‖v - w‖) (hup : ‖v - w‖ ≤ cstab) :
+    ¬ Collinear3 (0:V3) v w := by
+  obtain ⟨hv2, hvu⟩ := w5sg2_norm_bounds hv
+  obtain ⟨hw2, hwu⟩ := w5sg2_norm_bounds hw
+  have hvne : v ≠ 0 := by
+    intro hzz; rw [hzz] at hv2; norm_num at hv2
+  have h0126 : h0 = 1.26 := rfl
+  have hcs : (cstab:ℝ) = 3.01 := rfl
+  intro hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul hvne).mp hcol
+  have hwv : w = c • v := by simpa using hc
+  have e2 : ‖w‖ = |c| * ‖v‖ := by rw [hwv, norm_smul, Real.norm_eq_abs]
+  by_cases hc0 : 0 ≤ c
+  · have e3 : ‖w‖ = c * ‖v‖ := by rw [e2, abs_of_nonneg hc0]
+    have e1 : ‖v - w‖ = |(1 - c) * ‖v‖| := by
+      rw [hwv]
+      have hs : v - c • v = (1 - c) • v := by module
+      rw [hs, norm_smul, Real.norm_eq_abs, abs_mul,
+        abs_of_nonneg (by linarith : (0:ℝ) ≤ ‖v‖)]
+    have habs : (1 - c) * ‖v‖ = ‖v‖ - c * ‖v‖ := by ring
+    have e4 : ‖v - w‖ = |‖v‖ - ‖w‖| := by
+      rw [e1, habs, e3]
+    have hb : |‖v‖ - ‖w‖| ≤ 2 * h0 - 2 := abs_le.mpr ⟨by linarith, by linarith⟩
+    have h02 : h0 < 2 := by norm_num [h0126]
+    rw [e4] at h2
+    linarith
+  · have e1 : ‖v - w‖ = ‖v‖ + ‖w‖ := by
+      rw [hwv]
+      have hs : v - c • v = (1 - c) • v := by module
+      rw [hs, norm_smul, Real.norm_eq_abs, abs_of_pos (by linarith : (0:ℝ) < 1 - c)]
+      rw [norm_smul, Real.norm_eq_abs, abs_of_neg (by linarith : c < 0)]
+      ring
+    rw [e1, hcs] at hup
+    linarith
+
+/-- HOL `IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3` (QKNVMLB.hl:3447). -/
+private theorem w5sg2_not_collinear (s : ScsV39) (vv : ℕ → V3) (i : ℕ)
+    (hk : 3 < s.k) (hscs : isScsV39 s) (hBB : BBsV39 s vv) :
+    ¬ Collinear ℝ {(0:V3), vv (i % s.k), vv ((i + 1) % s.k)} := by
+  have hk0 : 0 < s.k := by omega
+  have hP : i % s.k < s.k := Nat.mod_lt _ hk0
+  have hQ : (i + 1) % s.k < s.k := Nat.mod_lt _ hk0
+  have hne : i % s.k ≠ (i + 1) % s.k := w5sg2_suc_mod_not_eq (by omega) i
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, hpb, -, -, -, -, hd2, -, hbc, -, -, -⟩ := hscs
+  have hp1 : Periodic (fun z => s.b (i % s.k) z) s.k := fun t => (hpb (i % s.k) t).2
+  have h2' : (i % s.k + 1) % s.k = (i + 1) % s.k := Nat.mod_add_mod i s.k 1
+  have hbb : s.b (i % s.k) ((i + 1) % s.k) ≤ cstab := by
+    have h1 := w5sg2_periodic_mod hp1 (i % s.k + 1)
+    conv_lhs => rw [← h2']
+    rw [h1]
+    exact hbc (i % s.k) hk
+  have hv1 : vv (i % s.k) ∈ ballAnnulus := hBB.1 ⟨i % s.k, rfl⟩
+  have hv2 : vv ((i + 1) % s.k) ∈ ballAnnulus := hBB.1 ⟨(i + 1) % s.k, rfl⟩
+  have h2le : (2:ℝ) ≤ s.a (i % s.k) ((i + 1) % s.k) := hd2 _ _ ⟨hP, hQ, hne⟩
+  have hge2 : (2 : ℝ) ≤ ‖vv (i % s.k) - vv ((i + 1) % s.k)‖ := by
+    have h3 := (hBB.2.2.1 (i % s.k) ((i + 1) % s.k)).1
+    rw [dist_eq_norm] at h3
+    linarith
+  have hup : ‖vv (i % s.k) - vv ((i + 1) % s.k)‖ ≤ cstab := by
+    have h3 := (hBB.2.2.1 (i % s.k) ((i + 1) % s.k)).2
+    rw [dist_eq_norm] at h3
+    linarith
+  exact w5sg2_nonparallel_annulus hv1 hv2 hge2 hup
+
+/-! ## The delta_x4 six-case box arithmetic -/
+
+/-- τ-symmetry: simultaneous swap `(x2,x3)` and `(x5,x6)`. -/
+private theorem w5sg2_delta4_sym2 (a b c d e f : ℝ) :
+    deltaX4 a b c d e f = deltaX4 a c b d f e := by
+  simp only [deltaX4]; ring
+
+/-- σ-symmetry: swap the pairs `(x2,x3) ↔ (x5,x6)`. -/
+private theorem w5sg2_delta4_sym3 (a b c d e f : ℝ) :
+    deltaX4 a b c d e f = deltaX4 a e f d b c := by
+  simp only [deltaX4]; ring
+
+/-- Shape 1: slots `x2 = x5 = 4`. -/
+private theorem w5sg2_delta4_s1 (x1 x3 x4 x6 : ℝ) (h1 : 4 ≤ x1) (h4 : 9.0601 ≤ x4)
+    (hn3 : 0 ≤ x3) (h3 : x3 ≤ 6.3504) (h6 : x6 ≤ 6.3504) :
+    deltaX4 x1 4 x3 x4 4 x6 < 0 := by
+  have hp : x3 * x6 ≤ 6.3504 * 6.3504 := by nlinarith [h3, h6, hn3]
+  have he : deltaX4 x1 4 x3 x4 4 x6
+      = (32 - 8 * x4 + x3 * x6) + (x1 - 4) * (4 - x1 - 2 * x4 + x3 + x6) := by
+    simp only [deltaX4]; ring
+  have hpn : (0:ℝ) ≤ (x1 - 4) * (x1 + 2 * x4 - x3 - x6 - 4) :=
+    mul_nonneg (by linarith) (by linarith)
+  have hprod : (x1 - 4) * (4 - x1 - 2 * x4 + x3 + x6) ≤ 0 := by nlinarith [hpn]
+  rw [he]
+  linarith
+
+/-- Shape 3: slots `x2 = x3 = 4`. -/
+private theorem w5sg2_delta4_s3 (x1 x4 x5 x6 : ℝ) (h1 : 4 ≤ x1) (h4 : 9.0601 ≤ x4)
+    (h5 : x5 ≤ 6.3504) (h6 : x6 ≤ 6.3504) :
+    deltaX4 x1 4 4 x4 x5 x6 < 0 := by
+  have he : deltaX4 x1 4 4 x4 x5 x6
+      = (61.27881984 - 8 * x4)
+        - (x1 - 4) * (x1 + 2 * x4 - 16.7008)
+        - (6.3504 - x5) * (x1 + 4 - x6)
+        - (6.3504 - x6) * (x1 + 4 - 6.3504) := by
+    simp only [deltaX4]; ring
+  have hn1 : (0:ℝ) ≤ (x1 - 4) * (x1 + 2 * x4 - 16.7008) :=
+    mul_nonneg (by linarith) (by linarith)
+  have hn2 : (0:ℝ) ≤ (6.3504 - x5) * (x1 + 4 - x6) :=
+    mul_nonneg (by linarith) (by linarith)
+  have hn3 : (0:ℝ) ≤ (6.3504 - x6) * (x1 + 4 - 6.3504) :=
+    mul_nonneg (by linarith) (by linarith)
+  rw [he]
+  linarith
+
+/-- Shape 5: slots `x2 = x6 = 4`. -/
+private theorem w5sg2_delta4_s5 (x1 x3 x4 x5 : ℝ) (h1 : 4 ≤ x1) (h4 : 9.0601 ≤ x4)
+    (h3 : x3 ≤ 6.3504) (h5 : x5 ≤ 6.3504) :
+    deltaX4 x1 4 x3 x4 x5 4 < 0 := by
+  have he : deltaX4 x1 4 x3 x4 x5 4 = x1 * (-x1 + 8 - 2 * x4 + x3 + x5) := by
+    simp only [deltaX4]; ring
+  have hpn : (0:ℝ) ≤ x1 * (x1 + 2 * x4 - x3 - x5 - 8) :=
+    mul_nonneg (by linarith) (by linarith)
+  have hpr : (0:ℝ) ≤ (x1 - 4) * (-1.4194 - (-x1 + 8 - 2 * x4 + x3 + x5)) :=
+    mul_nonneg (by linarith) (by linarith)
+  rw [he]
+  nlinarith [hpn, hpr]
+
+/-- The six-way case analysis behind `SYNQIWN_p22` (HOL
+`Terminal.get_main_nonlinear "1117202051"/"4559601669"/"4559601669b"`,
+discharged by direct box arithmetic; `delta_x4` is affine of slope `-2*x1`
+in `x4`, so the true diagonal slot only helps). -/
+private theorem w5sg2_delta4_cases (x1 x2 x3 x4 x5 x6 : ℝ)
+    (h1 : 4 ≤ x1) (h4 : 9.0601 ≤ x4)
+    (hn2 : 0 ≤ x2) (hn3 : 0 ≤ x3)
+    (hb2 : x2 ≤ 6.3504) (hb3 : x3 ≤ 6.3504) (hb5 : x5 ≤ 6.3504) (hb6 : x6 ≤ 6.3504)
+    (hdisj : (x2 = 4 ∧ x5 = 4) ∨ (x3 = 4 ∧ x6 = 4) ∨ (x2 = 4 ∧ x3 = 4) ∨
+      (x5 = 4 ∧ x6 = 4) ∨ (x2 = 4 ∧ x6 = 4) ∨ (x3 = 4 ∧ x5 = 4)) :
+    deltaX4 x1 x2 x3 x4 x5 x6 < 0 := by
+  rcases hdisj with h | h | h | h | h | h
+  · obtain ⟨e2, e5⟩ := h
+    subst e2; subst e5
+    exact w5sg2_delta4_s1 x1 x3 x4 x6 h1 h4 hn3 hb3 hb6
+  · obtain ⟨e3, e6⟩ := h
+    subst e3; subst e6
+    rw [w5sg2_delta4_sym2]
+    exact w5sg2_delta4_s1 x1 x2 x4 x5 h1 h4 hn2 hb2 hb5
+  · obtain ⟨e2, e3⟩ := h
+    subst e2; subst e3
+    exact w5sg2_delta4_s3 x1 x4 x5 x6 h1 h4 hb5 hb6
+  · obtain ⟨e5, e6⟩ := h
+    subst e5; subst e6
+    rw [w5sg2_delta4_sym3]
+    exact w5sg2_delta4_s3 x1 x4 x2 x3 h1 h4 hb2 hb3
+  · obtain ⟨e2, e6⟩ := h
+    subst e2; subst e6
+    exact w5sg2_delta4_s5 x1 x3 x4 x5 h1 h4 hb3 hb5
+  · obtain ⟨e3, e5⟩ := h
+    subst e3; subst e5
+    rw [w5sg2_delta4_sym3]
+    exact w5sg2_delta4_s5 x1 x6 x4 x2 h1 h4 hb6 hb2
+
+private theorem w5sg2_ofLp_sub (a b : V3) : (a - b).ofLp = a.ofLp - b.ofLp := rfl
+
+private theorem w5sg2_dot_self (a : V3) :
+    a.ofLp ⬝ᵥ a.ofLp = ‖a‖ * ‖a‖ := by
+  have hd : a.ofLp ⬝ᵥ a.ofLp = ∑ i : Fin 3, a.ofLp i * a.ofLp i := rfl
+  have hnp : 0 ≤ ∑ i : Fin 3, ‖a.ofLp i‖ ^ 2 := by positivity
+  rw [hd, ← pow_two ‖a‖, EuclideanSpace.norm_eq, Real.sq_sqrt hnp]
+  exact Finset.sum_congr rfl fun i _ => by
+    rw [Real.norm_eq_abs, sq_abs]; ring
+
+private theorem w5sg2_cos_law (u v : V3) :
+    u.ofLp ⬝ᵥ v.ofLp = (‖u‖ * ‖u‖ + ‖v‖ * ‖v‖ - ‖u - v‖ * ‖u - v‖) / 2 := by
+  have h1 : (u - v).ofLp ⬝ᵥ (u - v).ofLp = ‖u - v‖ * ‖u - v‖ := w5sg2_dot_self _
+  rw [w5sg2_ofLp_sub, sub_dotProduct, dotProduct_sub, dotProduct_sub] at h1
+  rw [dotProduct_comm v.ofLp u.ofLp] at h1
+  linarith [h1, w5sg2_dot_self u, w5sg2_dot_self v]
+
 /-- HOL `SYNQIWN`. -/
 theorem SYNQIWN_p22 (h : main_nonlinear_terminal_v11) (s : ScsV39) (v : ℕ → V3) (i k : ℕ)
     (h1 : isScsV39 s) (h2 : BBsV39 s v) (hkk : s.k = k) (h3 : 3 < k)
@@ -1596,7 +1824,232 @@ theorem SYNQIWN_p22 (h : main_nonlinear_terminal_v11) (s : ScsV39) (v : ℕ → 
     (he2 : dist (v i) (v (i + k - 1)) ≤ 2 * h0)
     (hc : cstab ≤ dist (v (i + 1)) (v (i + k - 1))) :
     Real.pi / 2 < azim 0 (v i) (v (i + 1)) (v (i + k - 1)) := by
-  sorry
+
+  have _h := h
+  have hk0 : 0 < s.k := by have h32 := h1.2.1; omega
+  have hk' : 3 < s.k := by rw [hkk]; exact h3
+  have hper : Periodic v s.k := h2.2.1
+  have hvper := w5sg2_periodic_mod hper
+  have hnb : ∀ j : ℕ, 2 ≤ ‖v j‖ ∧ ‖v j‖ ≤ 2 * h0 := fun j =>
+    w5sg2_norm_bounds (h2.1 ⟨j, rfl⟩)
+  have hA0 : (v i) ≠ 0 := by
+    have hge := (hnb i).1
+    intro hzz; rw [hzz] at hge; norm_num at hge
+  have hnc1 : ¬ Collinear3 (0:V3) (v i) (v (i + 1)) := by
+    have hc0 := w5sg2_not_collinear s v i hk' h1 h2
+    rw [hvper i, hvper (i + 1)] at hc0
+    exact hc0
+  have hnc2 : ¬ Collinear3 (0:V3) (v i) (v (i + k - 1)) := by
+    have hc0 := w5sg2_not_collinear s v (i + k - 1) hk' h1 h2
+    rw [hvper (i + k - 1), hvper (i + k - 1 + 1)] at hc0
+    rw [show i + k - 1 + 1 = i + k from by omega] at hc0
+    have hvi : v (i + s.k) = v i := hper i
+    rw [hkk] at hvi
+    rw [hvi] at hc0
+    have hset : ({(0:V3), v (i + k - 1), v i} : Set V3) = {0, v i, v (i + k - 1)} := by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset] at hc0
+    exact hc0
+  obtain ⟨hn0, hn2pi, hspec⟩ := azim_master 0 (v i) (v (i + 1)) (v (i + k - 1))
+  obtain ⟨e1, e2, e3, hon, hax⟩ := exists_on3_eq_smul (v i) hA0
+  have haxis : ((v i - 0 : V3)) = dist (v i) 0 • e3 := by
+    rw [sub_zero, dist_zero_right]
+    exact hax
+  obtain ⟨hh1, hh2, H⟩ := hspec
+  obtain ⟨psi, r1, r2, hco1, hco2, hr1, hr2⟩ := H e1 e2 e3 hon haxis hA0
+  have hr1' : 0 < r1 := hr1 hnc1
+  have hr2' : 0 < r2 := hr2 hnc2
+  simp only [sub_zero] at hco1 hco2
+  obtain ⟨he11, he22, he33, he12, he13, he23, -⟩ := hon
+  have hAv : ∀ (t : ℝ) (X : V3), ((t • e3 : V3) ⬝ᵥ X) = t * (X ⬝ᵥ e3) := by
+    intro t X
+    rw [← inner_eq_dot (t • e3) X, ← inner_eq_dot X e3, real_inner_smul_left,
+      real_inner_comm]
+  have hAA : ((v i : V3) ⬝ᵥ (v i : V3)) = ‖v i‖ * ‖v i‖ := by
+    rw [← norm_sq_eq_dot (v i : V3), pow_two]
+  have hA3 : ((v i : V3) ⬝ᵥ e3) = ‖v i‖ := by
+    have h1 := hAv ‖v i‖ e3
+    rw [← hax] at h1
+    rw [h1, he33, mul_one]
+  have hA1 : ((v i : V3) ⬝ᵥ e1) = 0 := by
+    have h1 := hAv ‖v i‖ e1
+    rw [← hax] at h1
+    rw [h1, he13, mul_zero]
+  have hA2e : ((v i : V3) ⬝ᵥ e2) = 0 := by
+    have h1 := hAv ‖v i‖ e2
+    rw [← hax] at h1
+    rw [h1, he23, mul_zero]
+  have hA1c : ((e1 : V3) ⬝ᵥ (v i : V3)) = 0 := by
+    rw [dotProduct_comm]; exact hA1
+  have hA2c : ((e2 : V3) ⬝ᵥ (v i : V3)) = 0 := by
+    rw [dotProduct_comm]; exact hA2e
+  have he12c : ((e2 : V3) ⬝ᵥ (e1 : V3)) = 0 := by
+    rw [dotProduct_comm]; exact he12
+  have hB3 : ((v (i + 1) : V3) ⬝ᵥ e3) = hh1 * ‖v i‖ := by
+    conv_lhs => rw [hco1]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct,
+      smul_eq_mul, he13, he23, hA3, mul_zero, zero_add, add_zero]
+  have hC3 : ((v (i + k - 1) : V3) ⬝ᵥ e3) = hh2 * ‖v i‖ := by
+    conv_lhs => rw [hco2]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct,
+      smul_eq_mul, he13, he23, hA3, mul_zero, zero_add, add_zero]
+  have hAB : ((v i : V3) ⬝ᵥ (v (i + 1))) = hh1 * (‖v i‖ * ‖v i‖) := by
+    have h1 := hAv ‖v i‖ (v (i + 1))
+    rw [← hax] at h1
+    rw [h1, hB3]; ring
+  have hAC : ((v i : V3) ⬝ᵥ (v (i + k - 1))) = hh2 * (‖v i‖ * ‖v i‖) := by
+    have h1 := hAv ‖v i‖ (v (i + k - 1))
+    rw [← hax] at h1
+    rw [h1, hC3]; ring
+  have htrig : Real.cos (azim 0 (v i) (v (i + 1)) (v (i + k - 1)))
+      = Real.cos psi * Real.cos (psi + azim 0 (v i) (v (i + 1)) (v (i + k - 1)))
+        + Real.sin psi * Real.sin (psi + azim 0 (v i) (v (i + 1)) (v (i + k - 1))) := by
+    have hcs := Real.cos_sub psi
+      (psi + azim 0 (v i) (v (i + 1)) (v (i + k - 1)))
+    rw [show psi - (psi + azim 0 (v i) (v (i + 1)) (v (i + k - 1))) =
+      -(azim 0 (v i) (v (i + 1)) (v (i + k - 1)) : ℝ) from by ring, Real.cos_neg] at hcs
+    exact hcs
+  have hBC : ((v (i + 1) : V3) ⬝ᵥ (v (i + k - 1)))
+      = r1 * r2 * Real.cos (azim 0 (v i) (v (i + 1)) (v (i + k - 1)))
+        + hh1 * hh2 * (‖v i‖ * ‖v i‖) := by
+    conv_lhs => rw [hco1, hco2]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      dotProduct_smul, smul_dotProduct, smul_eq_mul, he11, he22, he12, hA1, hA2e, hAA,
+      hA1c, hA2c, he12c, mul_zero, mul_one, zero_add, add_zero]
+    rw [htrig]
+    ring
+  have hP : ((v (i + 1) : V3) ⬝ᵥ (v (i + k - 1)))
+      - ((v (i + 1) : V3) ⬝ᵥ e3) * ((v (i + k - 1) : V3) ⬝ᵥ e3)
+      = r1 * r2 * Real.cos (azim 0 (v i) (v (i + 1)) (v (i + k - 1))) := by
+    rw [hBC, hB3, hC3]; ring
+  -- distance bridges
+  have hdBC : ((v (i + 1) : V3) ⬝ᵥ (v (i + k - 1))) * 2
+      = ‖v (i + 1)‖ * ‖v (i + 1)‖ + ‖v (i + k - 1)‖ * ‖v (i + k - 1)‖
+        - dist (v (i + 1)) (v (i + k - 1)) * dist (v (i + 1)) (v (i + k - 1)) := by
+    have h1 : ((v (i + 1) : V3) - v (i + k - 1)).ofLp
+        ⬝ᵥ ((v (i + 1) : V3) - v (i + k - 1)).ofLp
+        = ‖v (i + 1) - v (i + k - 1)‖ * ‖v (i + 1) - v (i + k - 1)‖ := w5sg2_dot_self _
+    have h3 : ‖v (i + 1) - v (i + k - 1)‖ = dist (v (i + 1)) (v (i + k - 1)) :=
+      (dist_eq_norm _ _).symm
+    rw [← h3, ← h1, w5sg2_ofLp_sub, sub_dotProduct, dotProduct_sub,
+      dotProduct_sub, dotProduct_comm ((v (i + k - 1) : V3).ofLp) ((v (i + 1) : V3).ofLp),
+      ← w5sg2_dot_self (v (i + 1)), ← w5sg2_dot_self (v (i + k - 1))]
+    ring
+  have hdAB : ((v i : V3) ⬝ᵥ (v (i + 1))) * 2
+      = ‖v i‖ * ‖v i‖ + ‖v (i + 1)‖ * ‖v (i + 1)‖
+        - dist (v i) (v (i + 1)) * dist (v i) (v (i + 1)) := by
+    have h1 : ((v i : V3) - v (i + 1)).ofLp ⬝ᵥ ((v i : V3) - v (i + 1)).ofLp
+        = ‖v i - v (i + 1)‖ * ‖v i - v (i + 1)‖ := w5sg2_dot_self _
+    have h3 : ‖v i - v (i + 1)‖ = dist (v i) (v (i + 1)) := (dist_eq_norm _ _).symm
+    rw [← h3, ← h1, w5sg2_ofLp_sub, sub_dotProduct, dotProduct_sub,
+      dotProduct_sub, dotProduct_comm ((v (i + 1) : V3).ofLp) ((v i : V3).ofLp),
+      ← w5sg2_dot_self (v i), ← w5sg2_dot_self (v (i + 1))]
+    ring
+  have hdAC : ((v i : V3) ⬝ᵥ (v (i + k - 1))) * 2
+      = ‖v i‖ * ‖v i‖ + ‖v (i + k - 1)‖ * ‖v (i + k - 1)‖
+        - dist (v i) (v (i + k - 1)) * dist (v i) (v (i + k - 1)) := by
+    have h1 : ((v i : V3) - v (i + k - 1)).ofLp ⬝ᵥ ((v i : V3) - v (i + k - 1)).ofLp
+        = ‖v i - v (i + k - 1)‖ * ‖v i - v (i + k - 1)‖ := w5sg2_dot_self _
+    have h3 : ‖v i - v (i + k - 1)‖ = dist (v i) (v (i + k - 1)) := (dist_eq_norm _ _).symm
+    rw [← h3, ← h1, w5sg2_ofLp_sub, sub_dotProduct, dotProduct_sub,
+      dotProduct_sub, dotProduct_comm ((v (i + k - 1) : V3).ofLp) ((v i : V3).ofLp),
+      ← w5sg2_dot_self (v i), ← w5sg2_dot_self (v (i + k - 1))]
+    ring
+  have hkey : deltaX4 (‖v i‖ ^ 2) (‖v (i + 1)‖ ^ 2) (‖v (i + k - 1)‖ ^ 2)
+      (dist (v (i + 1)) (v (i + k - 1)) ^ 2) (dist (v i) (v (i + k - 1)) ^ 2)
+      (dist (v i) (v (i + 1)) ^ 2)
+      = (4 * ‖v i‖ ^ 2) * (((v (i + 1) : V3) ⬝ᵥ (v (i + k - 1)))
+        - ((v (i + 1) : V3) ⬝ᵥ e3) * ((v (i + k - 1) : V3) ⬝ᵥ e3)) := by
+    have hkey1 : deltaX4 (‖v i‖ ^ 2) (‖v (i + 1)‖ ^ 2) (‖v (i + k - 1)‖ ^ 2)
+      (dist (v (i + 1)) (v (i + k - 1)) ^ 2) (dist (v i) (v (i + k - 1)) ^ 2)
+      (dist (v i) (v (i + 1)) ^ 2)
+      = (2 * ‖v i‖ ^ 2) * (‖v (i + 1)‖ * ‖v (i + 1)‖ + ‖v (i + k - 1)‖ * ‖v (i + k - 1)‖
+          - dist (v (i + 1)) (v (i + k - 1)) * dist (v (i + 1)) (v (i + k - 1)))
+        - (‖v i‖ * ‖v i‖ + ‖v (i + 1)‖ * ‖v (i + 1)‖
+            - dist (v i) (v (i + 1)) * dist (v i) (v (i + 1)))
+          * (‖v i‖ * ‖v i‖ + ‖v (i + k - 1)‖ * ‖v (i + k - 1)‖
+            - dist (v i) (v (i + k - 1)) * dist (v i) (v (i + k - 1))) := by
+      unfold deltaX4; ring
+    rw [hkey1, ← hdBC, ← hdAB, ← hdAC, hAB, hAC, hB3, hC3]
+    field_simp
+    ring
+  -- numeric bounds
+  have h2h0 : (2:ℝ) * h0 = 2.52 := by norm_num [h0]
+  have hcst : (cstab:ℝ) = 3.01 := rfl
+  have hx1 : (4:ℝ) ≤ ‖v i‖ ^ 2 := by nlinarith [(hnb i).1]
+  have hx4 : (9.0601:ℝ) ≤ dist (v (i + 1)) (v (i + k - 1)) ^ 2 := by
+    have hd1 : (3.01:ℝ) ≤ dist (v (i + 1)) (v (i + k - 1)) := by rw [← hcst]; exact hc
+    have hdn : (0:ℝ) ≤ dist (v (i + 1)) (v (i + k - 1)) := dist_nonneg
+    nlinarith [hd1, hdn]
+  have hsqb : ∀ j : ℕ, ‖v j‖ ^ 2 ≤ 6.3504 := by
+    intro j
+    have hb := (hnb j).2
+    rw [h2h0] at hb
+    have hnn : (0:ℝ) ≤ ‖v j‖ := norm_nonneg _
+    nlinarith [hb, hnn]
+  have hd6 : dist (v i) (v (i + 1)) ^ 2 ≤ 6.3504 := by
+    have hb := he1
+    rw [h2h0] at hb
+    have hnn : (0:ℝ) ≤ dist (v i) (v (i + 1)) := dist_nonneg
+    nlinarith [hb, hnn]
+  have hd5 : dist (v i) (v (i + k - 1)) ^ 2 ≤ 6.3504 := by
+    have hb := he2
+    rw [h2h0] at hb
+    have hnn : (0:ℝ) ≤ dist (v i) (v (i + k - 1)) := dist_nonneg
+    nlinarith [hb, hnn]
+  have hdelta_neg : deltaX4 (‖v i‖ ^ 2) (‖v (i + 1)‖ ^ 2)
+      (‖v (i + k - 1)‖ ^ 2) (dist (v (i + 1)) (v (i + k - 1)) ^ 2)
+      (dist (v i) (v (i + k - 1)) ^ 2) (dist (v i) (v (i + 1)) ^ 2) < 0 := by
+    apply w5sg2_delta4_cases (h1 := hx1) (h4 := hx4)
+    · exact sq_nonneg _
+    · exact sq_nonneg _
+    · exact hsqb (i + 1)
+    · exact hsqb (i + k - 1)
+    · exact hd5
+    · exact hd6
+    · rcases hears with h | h | h | h | h | h
+      · exact Or.inl (And.intro (by rw [h.1]; norm_num) (by rw [h.2]; norm_num))
+      · exact Or.inr (Or.inl (And.intro (by rw [h.1]; norm_num) (by rw [h.2]; norm_num)))
+      · exact Or.inr (Or.inr (Or.inl (And.intro (by rw [h.1]; norm_num)
+          (by rw [h.2]; norm_num))))
+      · exact Or.inr (Or.inr (Or.inr (Or.inl (And.intro (by rw [h.2]; norm_num)
+          (by rw [h.1]; norm_num)))))
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (And.intro (by rw [h.1]; norm_num)
+          (by rw [h.2]; norm_num))))))
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (And.intro (by rw [h.1]; norm_num)
+          (by rw [h.2]; norm_num))))))
+  have hA2pos : (0:ℝ) < ‖v i‖ ^ 2 := by nlinarith [(hnb i).1]
+  have hPpos : (0:ℝ) < 4 * ‖v i‖ ^ 2 := by nlinarith [hA2pos]
+  have hPlt : ((v (i + 1) : V3) ⬝ᵥ (v (i + k - 1)))
+      - ((v (i + 1) : V3) ⬝ᵥ e3) * ((v (i + k - 1) : V3) ⬝ᵥ e3) < 0 := by
+    have h0 : (4 * ‖v i‖ ^ 2) * (((v (i + 1) : V3) ⬝ᵥ (v (i + k - 1)))
+        - ((v (i + 1) : V3) ⬝ᵥ e3) * ((v (i + k - 1) : V3) ⬝ᵥ e3)) < 0 := by
+      rw [← hkey]; exact hdelta_neg
+    nlinarith [h0, hPpos]
+  have hcos : Real.cos (azim 0 (v i) (v (i + 1)) (v (i + k - 1))) < 0 := by
+    have h0 : r1 * r2 * Real.cos (azim 0 (v i) (v (i + 1)) (v (i + k - 1))) < 0 := by
+      rw [← hP]; exact hPlt
+    have hrr : (0:ℝ) < r1 * r2 := mul_pos hr1' hr2'
+    nlinarith [h0, hrr]
+  by_cases hcmp : (3:ℝ) * Real.pi / 2 ≤ azim 0 (v i) (v (i + 1)) (v (i + k - 1))
+  · exfalso
+    have hhigh := hcmp
+    have hper' := Real.cos_periodic
+      (azim 0 (v i) (v (i + 1)) (v (i + k - 1)) - 2 * Real.pi)
+    rw [show (azim 0 (v i) (v (i + 1)) (v (i + k - 1)) - 2 * Real.pi) + 2 * Real.pi =
+      azim 0 (v i) (v (i + 1)) (v (i + k - 1)) from by ring] at hper'
+    rw [hper'] at hcos
+    have hcn : (0:ℝ) ≤ Real.cos (azim 0 (v i) (v (i + 1)) (v (i + k - 1)) - 2 * Real.pi) :=
+      Real.cos_nonneg_of_neg_pi_div_two_le_of_le (by linarith) (by linarith)
+    linarith
+  · by_contra hcon
+    have hcon2 : (azim 0 (v i) (v (i + 1)) (v (i + k - 1))) ≤ Real.pi / 2 :=
+      not_lt.mp hcon
+    have hcn : (0:ℝ) ≤ Real.cos (azim 0 (v i) (v (i + 1)) (v (i + k - 1))) :=
+      Real.cos_nonneg_of_neg_pi_div_two_le_of_le (by linarith) (by linarith)
+    linarith
 
 /-- HOL `RRCWNS_WEAK`. -/
 theorem RRCWNS_WEAK_p22 (h : main_nonlinear_terminal_v11) (s : ScsV39) (vv : ℕ → V3)
