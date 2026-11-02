@@ -141,10 +141,31 @@ FILE MAP
     `xrr` monotone-envelope kit), `J_SCS_5M2_0_p29` (proved),
     `SCS_5M2_IMP_SCS_5T1_p29`, `HIJ_STEP_1_p29`, `HIJQAHA_p29`
     (sorry; NEEDS `main_nonlinear_terminal_v11` consumers).
+
+  Fill-wave 2026-10-28 (lane la29-hijqaha-w1): +imports LocalAuto24,
+  LocalAuto26, LocalAuto28 (BFS-checked acyclic w.r.t. this file).
+  Discharged the three `MM_5M2_IMP_MM_STAB_*` transfers
+  (`XWNHLMD_MM_p26` route; the 5I2 transfer moved to just below
+  `STAB_5I2_SCS_p29` for declaration order), the five prime
+  `MM_*_IMP_MM_*` bridges and the five `SCS_*_prime_ARROW_MM_*`
+  arrows (`XWNHLMD_MM_p26` over the proved `BB_*_prime_IMP_scs_*`
+  table bridges), `HIJ_STEP_1_p29` (true four-branch assembly) and
+  `HIJQAHA_p29` (true `FZIOTEF_TRANS` assembly over `HIJ_STEP_1_p29`
+  and the private `p29arrow_B_T`). Remaining 13 sorries, each with
+  its blocker: `SCS_5M2_IMP_SCS_5T1_p29` (needs `scsGeneric` via
+  `RRCWNSJ_p26`, still sorry in LocalAuto26, plus the
+  `JCYFMRP_V2/V3` inputs and the terminal geometric assembly), the
+  `scs_5M3` slice kit (`SCS_5M3_SLICE_{02,03,24}`,
+  `SCS_5M3_{02,03,24}_ARROW_*`, `SET_EQ_DIAG_STAB_5M3{,_IMP_SCS_3_4}`;
+  needs `LKGRQUI_concl`/`QKNVMLB*_concl`, still sorry in LocalAuto1)
+  and the `xrr` monotone-envelope kit.
 -/
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto20
+import Kepler.Text.LocalAuto24
+import Kepler.Text.LocalAuto26
+import Kepler.Text.LocalAuto28
 import Kepler.Text.PackingAuto18
 import Mathlib
 
@@ -571,15 +592,6 @@ theorem SCS_5I1_STAB_DIAG_2h0_p29 : ∀ (v : ℕ → V3) (i j : ℕ),
   exact stabBB_p29 scs5I2 v i j (by rw [hk5]; norm_num) hdist
     (bbs_5I2_of_bbs_5M2_p29 v hbb hed)
 
-/-- HOL `MM_5M2_IMP_MM_STAB_5I2` (HIJQAHA.hl:209). -/
-theorem MM_5M2_IMP_MM_STAB_5I2_p29 : ∀ (v : ℕ → V3) (i j : ℕ),
-    v ∈ MMsV39 scs5M2 → scsDiag 5 i j → dist (v i) (v j) ≤ cstab →
-    (∀ i, dist (v i) (v (i + 1)) ≤ 2 * h0) →
-    MMsV39 (scsStabDiagV39 scs5I2 i j) ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL SCS_TAC + `MMs` nonemptyness from the transferred
-  -- `BBs` witness via `SCS_5I1_STAB_DIAG_2h0` and `taustar` negativity.
-
 /-- HOL `SCS_5I1_STAB_DIAG_2h0_sqrt8` (HIJQAHA.hl:229). DISCHARGED: the
 SCS_TAC table expansion `5M2 → 5I3` (`bbs_5I3_of_bbs_5M2_p29`: the
 `(0,1)`-edge class pinned by the `2*h0 ≤ d ≤ sqrt8` window, other edges
@@ -617,15 +629,48 @@ theorem SCS_5M2_EDGE_LE_2H0_IMP_0_p29 : ∀ (v : ℕ → V3) (i j l : ℕ),
   · exact h
   · exact (SCS_5M2_EDGE_LE_2H0_p29 v i j l hbb hd hp hlt h).elim
 
-/-- HOL `MM_5M2_IMP_MM_STAB_5I3` (HIJQAHA.hl:419). -/
+/-- `Periodic f n` lets one drop `m * n` summands off the index. -/
+private theorem periodic_add_mul_p29 {α : Sort u} {f : ℕ → α} {n : ℕ}
+    (hp : Periodic f n) (m i : ℕ) : f (i + m * n) = f i := by
+  induction m with
+  | zero => rw [Nat.zero_mul, Nat.add_zero]
+  | succ k ih =>
+    rw [Nat.succ_mul, ← Nat.add_assoc, hp (i + k * n), ih]
+
+/-- A periodic family only depends on the index modulo the period. -/
+private theorem periodic_mod_p29 {α : Sort u} {f : ℕ → α} {n : ℕ}
+    (hp : Periodic f n) (i : ℕ) : f i = f (i % n) := by
+  have h2 := periodic_add_mul_p29 hp (i / n) (i % n)
+  rw [Nat.mul_comm (i / n) n] at h2
+  have h4 : i % n + n * (i / n) = i := by
+    have h3 := Nat.div_add_mod i n
+    rw [Nat.add_comm (i % n) (n * (i / n))]
+    exact h3
+  rw [h4] at h2
+  exact h2
+
+/-- HOL `MM_5M2_IMP_MM_STAB_5I3` (HIJQAHA.hl:419). DISCHARGED: the
+XWNHLMD_MM transfer (`LocalAuto26`) over the proved `BBs` stab transfer
+`SCS_5I1_STAB_DIAG_2h0_sqrt8_p29`; the `l`-edge window moves to the `(0,1)`
+edge by `SCS_5M2_EDGE_LE_2H0_IMP_0_p29` + `periodic_mod_p29`. -/
 theorem MM_5M2_IMP_MM_STAB_5I3_p29 : ∀ (v : ℕ → V3) (i j l : ℕ),
     v ∈ MMsV39 scs5M2 → scsDiag 5 i j → dist (v i) (v j) ≤ cstab →
     2 * h0 < dist (v l) (v (l + 1)) →
     dist (v l) (v (l + 1)) ≤ Real.sqrt 8 →
     MMsV39 (scsStabDiagV39 scs5I3 i j) ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL SCS_TAC on the `scs_5I3` tables with the
-  -- `(2*h0, sqrt8]` edge window; nonemptyness via `MMs` transfer.
+  intro v i j l hv hdij hdist hlt hhi
+  refine XWNHLMD_MM_p26 scs5M2 (scsStabDiagV39 scs5I3 i j) v
+    SCS_5M2_IS_SCS ((STAB_5I3_SCS i j hdij).1)
+    SCS_5M2_BASIC ((STAB_5I3_SCS i j hdij).2) rfl hv ?_ (le_refl _)
+  have hbb : BBsV39 scs5M2 v := MMS_IMP_BBS_p28 scs5M2 v hv
+  have hp : Periodic v 5 := hbb.2.1
+  have h05 : l % 5 = 0 := SCS_5M2_EDGE_LE_2H0_IMP_0_p29 v i j l hbb hdij hdist hlt
+  have hshift : dist (v l) (v (l + 1)) = dist (v 0) (v 1) := by
+    rw [periodic_mod_p29 hp l, periodic_mod_p29 hp (l + 1), h05]
+    have h11 : (l + 1) % 5 = 1 := by rw [Nat.add_mod, h05]
+    rw [h11]
+  exact SCS_5I1_STAB_DIAG_2h0_sqrt8_p29 v i j hbb hdij hdist
+    (by rw [← hshift]; exact hlt.le) (by rw [← hshift]; exact hhi)
 
 /-- HOL `SCS_5I1_STAB_DIAG_sqrt8` (HIJQAHA.hl:452). DISCHARGED: the
 stab-diag `BBs` transfer for a same-system stab — LocalAuto20's proved
@@ -1815,6 +1860,22 @@ theorem STAB_5I2_SCS_p29 (i j : ℕ) : scsDiag scs5I2.k i j →
       omega
   · exact ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
 
+/-- HOL `MM_5M2_IMP_MM_STAB_5I2` (HIJQAHA.hl:209). DISCHARGED: the
+XWNHLMD_MM transfer (`LocalAuto26`) over the proved `BBs` stab transfer
+`SCS_5I1_STAB_DIAG_2h0_p29` (the `XWNHLMD_MM_p26`/`SGTRNAF_p27` route;
+`MMS_IMP_BBS_p28` for the `BBs` drop from the `MMs` member). Positioned
+after `STAB_5I2_SCS_p29`, on which its proof now depends. -/
+theorem MM_5M2_IMP_MM_STAB_5I2_p29 : ∀ (v : ℕ → V3) (i j : ℕ),
+    v ∈ MMsV39 scs5M2 → scsDiag 5 i j → dist (v i) (v j) ≤ cstab →
+    (∀ i, dist (v i) (v (i + 1)) ≤ 2 * h0) →
+    MMsV39 (scsStabDiagV39 scs5I2 i j) ≠ ∅ := by
+  intro v i j hv hdij hdist hed
+  exact XWNHLMD_MM_p26 scs5M2 (scsStabDiagV39 scs5I2 i j) v
+    SCS_5M2_IS_SCS ((STAB_5I2_SCS_p29 i j hdij).1)
+    SCS_5M2_BASIC ((STAB_5I2_SCS_p29 i j hdij).2) rfl hv
+    (SCS_5I1_STAB_DIAG_2h0_p29 v i j (MMS_IMP_BBS_p28 scs5M2 v hv) hdij hdist hed)
+    (le_refl _)
+
 /-- The stabbed `scs_5M3` b-table at an edge pair: the diagonal `psort`-key
 never hits an edge key, so the override is invisible (`diag_not_edge_psort_p20`). -/
 private theorem stab5M3_edge_p29 (i j p : ℕ) (hdd : scsDiag 5 i j) :
@@ -1977,9 +2038,22 @@ theorem MM_5M2_IMP_MM_STAB_5M3_p29 : ∀ (v : ℕ → V3) (i j l : ℕ),
     v ∈ MMsV39 scs5M2 → scsDiag 5 i j → dist (v i) (v j) ≤ cstab →
     Real.sqrt 8 ≤ dist (v l) (v (l + 1)) →
     MMsV39 (scsStabDiagV39 scs5M3 i j) ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL SCS_TAC on the `scs_5M3` stabbed tables with the
-  -- `sqrt8 ≤` edge bound; nonemptyness via `MMs` transfer.
+  intro v i j l hv hdij hdist hlo
+  refine XWNHLMD_MM_p26 scs5M2 (scsStabDiagV39 scs5M3 i j) v
+    SCS_5M2_IS_SCS ((STAB_5M3_SCS_p29 i j hdij).1)
+    SCS_5M2_BASIC ((STAB_5M3_SCS_p29 i j hdij).2) rfl hv ?_ (le_refl _)
+  have hbb : BBsV39 scs5M2 v := MMS_IMP_BBS_p28 scs5M2 v hv
+  have hp : Periodic v 5 := hbb.2.1
+  have hlt : 2 * h0 < dist (v l) (v (l + 1)) :=
+    lt_of_lt_of_le LT_sqrt8_2h0 hlo
+  have hshift : dist (v l) (v (l + 1)) = dist (v 0) (v 1) := by
+    rw [periodic_mod_p29 hp l, periodic_mod_p29 hp (l + 1)]
+    have h05 : l % 5 = 0 := SCS_5M2_EDGE_LE_2H0_IMP_0_p29 v i j l hbb hdij hdist hlt
+    rw [h05]
+    have h11 : (l + 1) % 5 = 1 := by rw [Nat.add_mod, h05]
+    rw [h11]
+  exact SCS_5M3_STAB_DIAG_sqrt8_p29 v i j hbb hdij hdist
+    (by rw [← hshift]; exact hlo)
 
 /-! ## Section D2: prime-to-plain bridges and the `scs_5M3` slices
 (HIJQAHA.hl:2365-3101) -/
@@ -2100,15 +2174,31 @@ theorem BB_3T4_prime_IMP_scs_3T4_p29 (v : ℕ → V3) (h : BBsV39 scs3T4Prime_p2
 /-- HOL `MM_3T4_prime_IMP_MM_3T4` (HIJQAHA.hl:2378). -/
 theorem MM_3T4_prime_IMP_MM_3T4_p29 (v : ℕ → V3) :
     v ∈ MMsV39 scs3T4Prime_p29 → MMsV39 scs3T4 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL MESON over `SCS_3T4_IS_SCS`, `K_SCS_3T4{,_prime}`,
-  -- membership, and `BB_3T4_prime_IMP_scs_3T4`.
+  intro hv
+  exact XWNHLMD_MM_p26 scs3T4Prime_p29 scs3T4 v
+    SCS_3T4_prime_IS_SCS_p29 SCS_3T4_IS_SCS_p29
+    SCS_3T4_prime_BASIC_p29 SCS_3T4_BASIC rfl hv
+    (BB_3T4_prime_IMP_scs_3T4_p29 v (MMS_IMP_BBS_p28 scs3T4Prime_p29 v hv))
+    (le_refl _)
+  -- DISCHARGED: HL MESON over `SCS_3T4_IS_SCS`, `K_SCS_3T4{,_prime}`,
+  -- membership, and `BB_3T4_prime_IMP_scs_3T4` — the `XWNHLMD_MM_p26`
+  -- transfer over the proved table-comparison `BBs` bridge.
 
 /-- HOL `SCS_3T4_prime_ARROW_MM_3T4` (HIJQAHA.hl:2390). -/
 theorem SCS_3T4_prime_ARROW_MM_3T4_p29 :
     scsArrowV39 {scs3T4Prime_p29} {scs3T4} := by
-  sorry
-  -- DISCHARGES: HL `SCS_TAC` + the two preceding bridges.
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hs
+    subst hs
+    exact SCS_3T4_IS_SCS_p29
+  · by_cases hE : MMsV39 scs3T4Prime_p29 = ∅
+    · exact Or.inl (fun s hs => by
+        rw [Set.mem_singleton_iff] at hs
+        subst hs
+        exact hE)
+    · obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hE
+      exact Or.inr ⟨scs3T4, Set.mem_singleton _, MM_3T4_prime_IMP_MM_3T4_p29 v hv⟩
+  -- DISCHARGED: HL `SCS_TAC` + the two preceding bridges.
 
 /-- HOL `BB_4M6_prime_IMP_scs_4M6` (HIJQAHA.hl:2415). -/
 theorem BB_4M6_prime_IMP_scs_4M6_p29 (v : ℕ → V3) (h : BBsV39 scs4M6Prime_p29 v) :
@@ -2122,15 +2212,31 @@ theorem BB_4M6_prime_IMP_scs_4M6_p29 (v : ℕ → V3) (h : BBsV39 scs4M6Prime_p2
 /-- HOL `MM_4M6_prime_IMP_MM_4M6` (HIJQAHA.hl:2436). -/
 theorem MM_4M6_prime_IMP_MM_4M6_p29 (v : ℕ → V3) :
     v ∈ MMsV39 scs4M6Prime_p29 → MMsV39 scs4M6' ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL MESON over `SCS_4M6_IS_SCS`, `K_SCS_4M6{,_prime}`,
-  -- membership, and `BB_4M6_prime_IMP_scs_4M6`.
+  intro hv
+  exact XWNHLMD_MM_p26 scs4M6Prime_p29 scs4M6' v
+    SCS_4M6_prime_IS_SCS_p29 SCS_4M6_IS_SCS_p29
+    SCS_4M6_prime_BASIC_p29 SCS_4M6_BASIC rfl hv
+    (BB_4M6_prime_IMP_scs_4M6_p29 v (MMS_IMP_BBS_p28 scs4M6Prime_p29 v hv))
+    (le_refl _)
+  -- DISCHARGED: HL MESON over `SCS_4M6_IS_SCS`, `K_SCS_4M6{,_prime}`,
+  -- membership, and `BB_4M6_prime_IMP_scs_4M6` — the `XWNHLMD_MM_p26`
+  -- transfer over the proved table-comparison `BBs` bridge.
 
 /-- HOL `SCS_4M6_prime_ARROW_MM_4M6` (HIJQAHA.hl:2449). -/
 theorem SCS_4M6_prime_ARROW_MM_4M6_p29 :
     scsArrowV39 {scs4M6Prime_p29} {scs4M6'} := by
-  sorry
-  -- DISCHARGES: HL `SCS_TAC` + the two preceding bridges.
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hs
+    subst hs
+    exact SCS_4M6_IS_SCS_p29
+  · by_cases hE : MMsV39 scs4M6Prime_p29 = ∅
+    · exact Or.inl (fun s hs => by
+        rw [Set.mem_singleton_iff] at hs
+        subst hs
+        exact hE)
+    · obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hE
+      exact Or.inr ⟨scs4M6', Set.mem_singleton _, MM_4M6_prime_IMP_MM_4M6_p29 v hv⟩
+  -- DISCHARGED: HL `SCS_TAC` + the two preceding bridges.
 
 /-- HOL `SCS_5M3_SLICE_02` (HIJQAHA.hl:2475): the 0-2 diag-stab of
 `scs_5M3` arrows to the pair of prop-equa slices. -/
@@ -2160,15 +2266,31 @@ theorem BB_3T1_prime_IMP_scs_3T1_p29 (v : ℕ → V3) (h : BBsV39 scs3T1Prime_p2
 /-- HOL `MM_3T1_prime_IMP_MM_3T1` (HIJQAHA.hl:2771). -/
 theorem MM_3T1_prime_IMP_MM_3T1_p29 (v : ℕ → V3) :
     v ∈ MMsV39 scs3T1Prime_p29 → MMsV39 scs3T1 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL MESON over `SCS_3T1_IS_SCS`, `K_SCS_3T1{,_prime}`,
-  -- membership, and `BB_3T1_prime_IMP_scs_3T1`.
+  intro hv
+  exact XWNHLMD_MM_p26 scs3T1Prime_p29 scs3T1 v
+    SCS_3T1_prime_IS_SCS_p29 SCS_3T1_IS_SCS_p29
+    SCS_3T1_prime_BASIC_p29 SCS_3T1_BASIC rfl hv
+    (BB_3T1_prime_IMP_scs_3T1_p29 v (MMS_IMP_BBS_p28 scs3T1Prime_p29 v hv))
+    (le_refl _)
+  -- DISCHARGED: HL MESON over `SCS_3T1_IS_SCS`, `K_SCS_3T1{,_prime}`,
+  -- membership, and `BB_3T1_prime_IMP_scs_3T1` — the `XWNHLMD_MM_p26`
+  -- transfer over the proved table-comparison `BBs` bridge.
 
 /-- HOL `SCS_3T1_prime_ARROW_MM_3T1` (HIJQAHA.hl:2786). -/
 theorem SCS_3T1_prime_ARROW_MM_3T1_p29 :
     scsArrowV39 {scs3T1Prime_p29} {scs3T1} := by
-  sorry
-  -- DISCHARGES: HL `SCS_TAC` + the two preceding bridges.
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hs
+    subst hs
+    exact SCS_3T1_IS_SCS_p29
+  · by_cases hE : MMsV39 scs3T1Prime_p29 = ∅
+    · exact Or.inl (fun s hs => by
+        rw [Set.mem_singleton_iff] at hs
+        subst hs
+        exact hE)
+    · obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hE
+      exact Or.inr ⟨scs3T1, Set.mem_singleton _, MM_3T1_prime_IMP_MM_3T1_p29 v hv⟩
+  -- DISCHARGED: HL `SCS_TAC` + the two preceding bridges.
 
 /-- HOL `BB_4M7_prime_IMP_scs_4M7` (HIJQAHA.hl:2813). -/
 theorem BB_4M7_prime_IMP_scs_4M7_p29 (v : ℕ → V3) (h : BBsV39 scs4M7Prime_p29 v) :
@@ -2182,15 +2304,31 @@ theorem BB_4M7_prime_IMP_scs_4M7_p29 (v : ℕ → V3) (h : BBsV39 scs4M7Prime_p2
 /-- HOL `MM_4M7_prime_IMP_MM_4M7` (HIJQAHA.hl:2827). -/
 theorem MM_4M7_prime_IMP_MM_4M7_p29 (v : ℕ → V3) :
     v ∈ MMsV39 scs4M7Prime_p29 → MMsV39 scs4M7 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL MESON over `SCS_4M7_IS_SCS`, `K_SCS_4M7{,_prime}`,
-  -- membership, and `BB_4M7_prime_IMP_scs_4M7`.
+  intro hv
+  exact XWNHLMD_MM_p26 scs4M7Prime_p29 scs4M7 v
+    SCS_4M7_prime_IS_SCS_p29 SCS_4M7_IS_SCS_p29
+    SCS_4M7_prime_BASIC_p29 SCS_4M7_BASIC_p29 rfl hv
+    (BB_4M7_prime_IMP_scs_4M7_p29 v (MMS_IMP_BBS_p28 scs4M7Prime_p29 v hv))
+    (le_refl _)
+  -- DISCHARGED: HL MESON over `SCS_4M7_IS_SCS`, `K_SCS_4M7{,_prime}`,
+  -- membership, and `BB_4M7_prime_IMP_scs_4M7` — the `XWNHLMD_MM_p26`
+  -- transfer over the proved table-comparison `BBs` bridge.
 
 /-- HOL `SCS_4M7_prime_ARROW_MM_4M7` (HIJQAHA.hl:2842). -/
 theorem SCS_4M7_prime_ARROW_MM_4M7_p29 :
     scsArrowV39 {scs4M7Prime_p29} {scs4M7} := by
-  sorry
-  -- DISCHARGES: HL `SCS_TAC` + the two preceding bridges.
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hs
+    subst hs
+    exact SCS_4M7_IS_SCS_p29
+  · by_cases hE : MMsV39 scs4M7Prime_p29 = ∅
+    · exact Or.inl (fun s hs => by
+        rw [Set.mem_singleton_iff] at hs
+        subst hs
+        exact hE)
+    · obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hE
+      exact Or.inr ⟨scs4M7, Set.mem_singleton _, MM_4M7_prime_IMP_MM_4M7_p29 v hv⟩
+  -- DISCHARGED: HL `SCS_TAC` + the two preceding bridges.
 
 /-- HOL `SCS_5M3_03_ARROW_3T1_4M7` (HIJQAHA.hl:2867). -/
 theorem SCS_5M3_03_ARROW_3T1_4M7_p29 :
@@ -2211,15 +2349,31 @@ theorem BB_4M8_prime_IMP_scs_4M8_p29 (v : ℕ → V3) (h : BBsV39 scs4M8Prime_p2
 /-- HOL `MM_4M8_prime_IMP_MM_4M8` (HIJQAHA.hl:3032). -/
 theorem MM_4M8_prime_IMP_MM_4M8_p29 (v : ℕ → V3) :
     v ∈ MMsV39 scs4M8Prime_p29 → MMsV39 scs4M8 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL MESON over `SCS_4M8_IS_SCS`, `K_SCS_4M8{,_prime}`,
-  -- membership, and `BB_4M8_prime_IMP_scs_4M8`.
+  intro hv
+  exact XWNHLMD_MM_p26 scs4M8Prime_p29 scs4M8 v
+    SCS_4M8_prime_IS_SCS_p29 SCS_4M8_IS_SCS_p29
+    SCS_4M8_prime_BASIC_p29 SCS_4M8_BASIC_p29 rfl hv
+    (BB_4M8_prime_IMP_scs_4M8_p29 v (MMS_IMP_BBS_p28 scs4M8Prime_p29 v hv))
+    (le_refl _)
+  -- DISCHARGED: HL MESON over `SCS_4M8_IS_SCS`, `K_SCS_4M8{,_prime}`,
+  -- membership, and `BB_4M8_prime_IMP_scs_4M8` — the `XWNHLMD_MM_p26`
+  -- transfer over the proved table-comparison `BBs` bridge.
 
 /-- HOL `SCS_4M8_prime_ARROW_MM_4M8` (HIJQAHA.hl:3047). -/
 theorem SCS_4M8_prime_ARROW_MM_4M8_p29 :
     scsArrowV39 {scs4M8Prime_p29} {scs4M8} := by
-  sorry
-  -- DISCHARGES: HL `SCS_TAC` + the two preceding bridges.
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hs
+    subst hs
+    exact SCS_4M8_IS_SCS_p29
+  · by_cases hE : MMsV39 scs4M8Prime_p29 = ∅
+    · exact Or.inl (fun s hs => by
+        rw [Set.mem_singleton_iff] at hs
+        subst hs
+        exact hE)
+    · obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hE
+      exact Or.inr ⟨scs4M8, Set.mem_singleton _, MM_4M8_prime_IMP_MM_4M8_p29 v hv⟩
+  -- DISCHARGED: HL `SCS_TAC` + the two preceding bridges.
 
 /-- HOL `SCS_5M3_SLICE_24` (HIJQAHA.hl:2896). -/
 theorem SCS_5M3_SLICE_24_p29 :
@@ -2546,26 +2700,216 @@ theorem SCS_5M2_IMP_SCS_5T1_p29 : main_nonlinear_terminal_v11 →
   -- `scs_5M2` realisation with all diag distances `> cstab` realises
   -- `scs_5T1` with negative taustar.
 
-/-- HOL `HIJ_STEP_1` (HIJQAHA.hl:3949). -/
+/-- A witness in the source of an arrow projects to a witness in the target
+(the content half of `scs_arrow_v39`). -/
+private theorem p29arrow_witness {S1 S2 : Set ScsV39} (h : scsArrowV39 S1 S2)
+    (hex : ∃ s ∈ S1, MMsV39 s ≠ ∅) : ∃ t ∈ S2, MMsV39 t ≠ ∅ := by
+  rcases h.2 with hE | hx
+  · obtain ⟨s, hs, hne⟩ := hex
+    exact absurd (hE s hs) hne
+  · exact hx
+
+/-- Membership in `HIJ_STEP_1`'s four-fold fanout union, split. -/
+private theorem p29memUnion3 {a : ScsV39} {A B C D : Set ScsV39}
+    (h : a ∈ ((A ∪ B) ∪ C) ∪ D) : a ∈ A ∨ a ∈ B ∨ a ∈ C ∨ a ∈ D := by
+  rcases (Set.mem_union a ((A ∪ B) ∪ C) D).mp h with h1 | h1
+  · rcases (Set.mem_union a (A ∪ B) C).mp h1 with h2 | h2
+    · rcases (Set.mem_union a A B).mp h2 with h3 | h3
+      · exact Or.inl h3
+      · exact Or.inr (Or.inl h3)
+    · exact Or.inr (Or.inr (Or.inl h2))
+  · exact Or.inr (Or.inr (Or.inr h1))
+
+/-- The `∃`-builder membership of a diag-stab family is symmetric under
+swapping the equation. -/
+private theorem p29memSwap (f : ScsV39) (u : ScsV39) :
+    (∃ i' j' : ℕ, scsDiag 5 i' j' ∧ scsStabDiagV39 f i' j' = u) ↔
+    (∃ i' j' : ℕ, scsDiag 5 i' j' ∧ u = scsStabDiagV39 f i' j') := by
+  constructor <;> rintro ⟨i', j', hd', he'⟩
+  · exact ⟨i', j', hd', he'.symm⟩
+  · exact ⟨i', j', hd', he'.symm⟩
+
+/-- An arrow out of a `{u | P u}`-builder transports along a pointwise
+reorientation of the builder predicate. -/
+private theorem p29arrow_setOf_congr (X : Set ScsV39) (P Q : ScsV39 → Prop)
+    (hPQ : ∀ u, P u ↔ Q u) (h : scsArrowV39 {u | P u} X) :
+    scsArrowV39 {u | Q u} X := by
+  refine ⟨fun s hs => h.1 s hs, ?_⟩
+  rcases h.2 with hE | hx
+  · refine Or.inl (fun s hs => hE s ?_)
+    exact (hPQ s).mpr hs
+  · exact Or.inr hx
+
+/-- HOL FTRANS second edge of `HIJQAHA` (HIJQAHA.hl:4096): the diag-stab
+fanout set `B` of `HIJ_STEP_1` arrows into the ten-element registry `{5T1,
+stab 5I2 0 2, stab 5M1 0 2, stab 5M1 0 3, stab 5M1 2 4, 4M6', 4M7, 4M8,
+3T1, 3T4}` — the `5T1`/`5I2`/`5I3` branches through the proved
+`SET_EQ_DIAG_STAB_5I2`, `STAB_5I3_ARROW_STAB_5M1_DIAG` and
+`SET_EQ_DIAG_STAB_5M1` (LocalAuto24), the `5M3` branch through the
+still-`sorry` `SET_EQ_DIAG_STAB_5M3_IMP_SCS_3_4_p29` (slice kit blocked at
+the `LKGRQUI`/`QKNVMLB` masters in LocalAuto1). -/
+private theorem p29arrow_B_T :
+    scsArrowV39
+      ({scs5T1} ∪
+        {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5I2 i j = t} ∪
+        {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5I3 i j = t} ∪
+        {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5M3 i j = t})
+      {scs5T1, scsStabDiagV39 scs5I2 0 2, scsStabDiagV39 scs5M1 0 2,
+        scsStabDiagV39 scs5M1 0 3, scsStabDiagV39 scs5M1 2 4, scs4M6',
+        scs4M7, scs4M8, scs3T1, scs3T4} := by
+  refine ⟨fun s hs => ?_, ?_⟩
+  · simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hs
+    rcases hs with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    · exact SCS_5T1_IS_SCS_p29
+    · exact (STAB_5I2_SCS_p29 0 2 SCS_DIAG_SCS_5M3_02_p29).1
+    · exact (STAB_5M1_SCS 0 2 SCS_DIAG_SCS_5M3_02_p29).1
+    · exact (STAB_5M1_SCS 0 3 SCS_DIAG_SCS_5M3_03_p29).1
+    · exact (STAB_5M1_SCS 2 4 SCS_DIAG_SCS_5M3_24_p29).1
+    · exact SCS_4M6_IS_SCS_p29
+    · exact SCS_4M7_IS_SCS_p29
+    · exact SCS_4M8_IS_SCS_p29
+    · exact SCS_3T1_IS_SCS_p29
+    · exact SCS_3T4_IS_SCS_p29
+  · by_cases hex : ∃ s ∈ ({scs5T1} ∪
+          {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5I2 i j = t} ∪
+          {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5I3 i j = t} ∪
+          {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5M3 i j = t}),
+        MMsV39 s ≠ ∅
+    · obtain ⟨s, hsB, hne⟩ := hex
+      rcases p29memUnion3 hsB with hsB | ⟨i, j, hdij, hsBeq⟩ | ⟨i, j, hdij, hsBeq⟩ |
+          ⟨i, j, hdij, hsBeq⟩
+      · rw [Set.mem_singleton_iff] at hsB
+        subst hsB
+        exact Or.inr ⟨scs5T1, Or.inl rfl, hne⟩
+      · subst hsBeq
+        obtain ⟨t, ht, hne2⟩ := p29arrow_witness (p29arrow_setOf_congr
+            {scsStabDiagV39 scs5I2 0 2}
+            (fun u => ∃ i' j', scsDiag 5 i' j' ∧ u = scsStabDiagV39 scs5I2 i' j')
+            (fun u => ∃ i' j', scsDiag 5 i' j' ∧ scsStabDiagV39 scs5I2 i' j' = u)
+            (fun u => (p29memSwap scs5I2 u).symm)
+            SET_EQ_DIAG_STAB_5I2)
+          ⟨scsStabDiagV39 scs5I2 i j, ⟨i, j, hdij, rfl⟩, hne⟩
+        rcases Set.mem_singleton_iff.mp ht with ht
+        subst ht
+        exact Or.inr ⟨scsStabDiagV39 scs5I2 0 2, Or.inr (Or.inl rfl), hne2⟩
+      · subst hsBeq
+        have h1 : scsArrowV39 {u | ∃ i' j', scsDiag 5 i' j' ∧
+              scsStabDiagV39 scs5I3 i' j' = u}
+            {x | ∃ i' j', scsDiag 5 i' j' ∧ x = scsStabDiagV39 scs5M1 i' j'} :=
+          p29arrow_setOf_congr
+            {x | ∃ i' j', scsDiag 5 i' j' ∧ x = scsStabDiagV39 scs5M1 i' j'}
+            (fun u => ∃ i' j', scsDiag 5 i' j' ∧ u = scsStabDiagV39 scs5I3 i' j')
+            (fun u => ∃ i' j', scsDiag 5 i' j' ∧ scsStabDiagV39 scs5I3 i' j' = u)
+            (fun u => (p29memSwap scs5I3 u).symm)
+            STAB_5I3_ARROW_STAB_5M1_DIAG
+        obtain ⟨t, ht, hne2⟩ := p29arrow_witness
+          (FZIOTEF_TRANS _ _ _ h1 SET_EQ_DIAG_STAB_5M1)
+          ⟨scsStabDiagV39 scs5I3 i j, ⟨i, j, hdij, rfl⟩, hne⟩
+        rcases Set.mem_insert_iff.mp ht with ht | ht
+        · subst ht
+          exact Or.inr ⟨scsStabDiagV39 scs5M1 0 2,
+            Or.inr (Or.inr (Or.inl rfl)), hne2⟩
+        · rcases Set.mem_insert_iff.mp ht with ht | ht
+          · subst ht
+            exact Or.inr ⟨scsStabDiagV39 scs5M1 0 3,
+              Or.inr (Or.inr (Or.inr (Or.inl rfl))), hne2⟩
+          · have ht' := Set.mem_singleton_iff.mp ht
+            subst ht'
+            exact Or.inr ⟨scsStabDiagV39 scs5M1 2 4,
+              Or.inr (Or.inr (Or.inr (Or.inr (Or.inl rfl)))), hne2⟩
+      · subst hsBeq
+        obtain ⟨t, ht, hne2⟩ := p29arrow_witness
+          SET_EQ_DIAG_STAB_5M3_IMP_SCS_3_4_p29
+          ⟨scsStabDiagV39 scs5M3 i j, ⟨i, j, hdij, rfl⟩, hne⟩
+        rcases Set.mem_insert_iff.mp ht with ht | ht
+        · subst ht
+          exact Or.inr ⟨scs4M6',
+            Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl rfl))))), hne2⟩
+        · rcases Set.mem_insert_iff.mp ht with ht | ht
+          · subst ht
+            exact Or.inr ⟨scs4M7,
+              Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+                (Or.inl rfl)))))), hne2⟩
+          · rcases Set.mem_insert_iff.mp ht with ht | ht
+            · subst ht
+              exact Or.inr ⟨scs4M8,
+                Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+                  (Or.inr (Or.inl rfl))))))), hne2⟩
+            · rcases Set.mem_insert_iff.mp ht with ht | ht
+              · subst ht
+                exact Or.inr ⟨scs3T1,
+                  Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+                    (Or.inr (Or.inr (Or.inl rfl)))))))), hne2⟩
+              · have ht' := Set.mem_singleton_iff.mp ht
+                subst ht'
+                exact Or.inr ⟨scs3T4,
+                  Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+                    (Or.inr (Or.inr (Or.inr
+                      (Set.mem_singleton_iff.mpr rfl))))))))), hne2⟩
+    · refine Or.inl (fun s hs => ?_)
+      by_contra hne
+      exact hex ⟨s, hs, hne⟩
+
+/-- HOL `HIJ_STEP_1` (HIJQAHA.hl:3949). DISCHARGED: the HOL four-way
+edge-case split. The `isScs` half is `SCS_5T1_IS_SCS` plus the three
+`STAB_*_SCS` diag-stab verifications; the witness half case-splits on
+`MMsV39 scs5M2`, the diagonal bound and the `(2*h0, sqrt8]` edge window,
+landing on `SCS_5M2_IMP_SCS_5T1` (all-diag case) and the three discharged
+`MM_5M2_IMP_MM_STAB_*` transfers. -/
 theorem HIJ_STEP_1_p29 : main_nonlinear_terminal_v11 →
     scsArrowV39 {scs5M2}
       ({scs5T1} ∪
         {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5I2 i j = t} ∪
         {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5I3 i j = t} ∪
         {t | ∃ i j, scsDiag 5 i j ∧ scsStabDiagV39 scs5M3 i j = t}) := by
-  sorry
-  -- DISCHARGES: HL FTRANS assembling the edge case split on
-  -- `dist(v 0, v 1)`: `≤ 2*h0` (5I2 stab), `≤ sqrt8` (5I3 stab),
-  -- `> sqrt8` (5M3 stab), and the all-diag-`> cstab` case (5T1).
+  intro hmnt
+  refine ⟨fun s hs => ?_, ?_⟩
+  · rcases p29memUnion3 hs with hs | hs | hs | hs
+    · rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact SCS_5T1_IS_SCS_p29
+    · obtain ⟨i, j, hd, rfl⟩ := hs; exact (STAB_5I2_SCS_p29 i j hd).1
+    · obtain ⟨i, j, hd, rfl⟩ := hs; exact (STAB_5I3_SCS i j hd).1
+    · obtain ⟨i, j, hd, rfl⟩ := hs; exact (STAB_5M3_SCS_p29 i j hd).1
+  · by_cases hE : MMsV39 scs5M2 = ∅
+    · refine Or.inl (fun s hs => ?_)
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact hE
+    · obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hE
+      by_cases hall : ∀ i j, scsDiag 5 i j → cstab < dist (v i) (v j)
+      · refine Or.inr ⟨scs5T1, ?_, SCS_5M2_IMP_SCS_5T1_p29 hmnt v hv hall⟩
+        exact Or.inl (Or.inl (Or.inl rfl))
+      · push_neg at hall
+        obtain ⟨i, j, hdij, hle⟩ := hall
+        by_cases hed : ∀ i, dist (v i) (v (i + 1)) ≤ 2 * h0
+        · refine Or.inr ⟨scsStabDiagV39 scs5I2 i j, ?_,
+              MM_5M2_IMP_MM_STAB_5I2_p29 v i j hv hdij hle hed⟩
+          exact Or.inl (Or.inl (Or.inr ⟨i, j, hdij, rfl⟩))
+        · push_neg at hed
+          obtain ⟨l, hl2⟩ := hed
+          by_cases h8 : dist (v l) (v (l + 1)) ≤ Real.sqrt 8
+          · refine Or.inr ⟨scsStabDiagV39 scs5I3 i j, ?_,
+                MM_5M2_IMP_MM_STAB_5I3_p29 v i j l hv hdij hle hl2 h8⟩
+            exact Or.inl (Or.inr ⟨i, j, hdij, rfl⟩)
+          · refine Or.inr ⟨scsStabDiagV39 scs5M3 i j, ?_,
+                MM_5M2_IMP_MM_STAB_5M3_p29 v i j l hv hdij hle (not_le.mp h8).le⟩
+            exact Or.inr ⟨i, j, hdij, rfl⟩
 
-/-- HOL `HIJQAHA` (HIJQAHA.hl:4096): the file's title conclusion. -/
+/-- HOL `HIJQAHA` (HIJQAHA.hl:4096): the file's title conclusion.
+DISCHARGED as a debt-moving assembly: `FZIOTEF_TRANS` over `HIJ_STEP_1_p29`
+(first edge) and `p29arrow_B_T` (second edge). The proof is a true term;
+the residual `sorryAx` debt concentrates in the `SCS_5M2_IMP_SCS_5T1_p29`
+branch of `HIJ_STEP_1` (blocked by the still-`sorry` `RRCWNSJ_p26` →
+`scsGeneric` route and the `JCYFMRP`/terminal cluster) and in
+`SET_EQ_DIAG_STAB_5M3_IMP_SCS_3_4_p29` (blocked by the still-`sorry`
+`LKGRQUI_concl`/`QKNVMLB` slice masters in LocalAuto1). -/
 theorem HIJQAHA_p29 : main_nonlinear_terminal_v11 →
     scsArrowV39 {scs5M2}
       {scs5T1, scsStabDiagV39 scs5I2 0 2, scsStabDiagV39 scs5M1 0 2,
         scsStabDiagV39 scs5M1 0 3, scsStabDiagV39 scs5M1 2 4, scs4M6',
         scs4M7, scs4M8, scs3T1, scs3T4} := by
-  sorry
-  -- DISCHARGES: HL FTRANS over `HIJ_STEP_1`, `SET_EQ_DIAG_STAB_5M3_IMP_SCS_3_4`,
-  -- and the earlier `scs_5M1` diag-stab registry (OXLZLEZ wave).
+  intro hmnt
+  exact FZIOTEF_TRANS _ _ _ (HIJ_STEP_1_p29 hmnt) p29arrow_B_T
 
 end Kepler.Text
