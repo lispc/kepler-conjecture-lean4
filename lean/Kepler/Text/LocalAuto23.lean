@@ -58,7 +58,7 @@ FILE MAP
     `JKQEWGV2_p23` (proved), `JKQEWGV3_p23` (proved),
     `IS_SCS_POINT_IN_BBS_IS_NOT_0_3_p23` (proved),
     `IS_SCS_POINT_IN_BBS_IS_NOT_0_LE_3_p23` (proved),
-    `IS_SCS_NOT_COLLINEAR_BBs_CASE_3_p23` / `_LE_3_p23` (sorry).
+    `IS_SCS_NOT_COLLINEAR_BBs_CASE_3_p23` / `_LE_3_p23` (proved; `w5cF2_*` kit).
   The HOL `INJ_H_FUN_TAC` / `EXISTS_SCS_J_TAC` / `IN_IMAGE_VV_EQ_3`
   proof-tactics are absorbed into the statements above (their content is
   `periodic_mod_eq_p23` + the `IS_SCS_IN_*_p23` row lemmas);
@@ -4346,23 +4346,133 @@ theorem IS_SCS_POINT_IN_BBS_IS_NOT_0_LE_3_p23 (s : ScsV39) (vv : ℕ → V3) (i 
     (hs : isScsV39 s) (hk : 3 < s.k) (hBB : BBsV39 s vv) : vv i ≠ 0 :=
   ballAnnulus_ne_0_p23 _ (hBB.1 ⟨i, rfl⟩)
 
-/-- HOL `IS_SCS_NOT_COLLINEAR_BBs_CASE_3` (JKQEWGV.hl:2328). NEEDS: the
-`collinear_fan22`/`aff`-hull distance kit (HOL proof JKQEWGV.hl:2334-2758). -/
+/-! ### W5c lane (scsgeneric-w5cF2): helpers for the two
+`IS_SCS_NOT_COLLINEAR_BBs_*_p23` fill-ins
+
+Private `w5cF2_*` pieces inserted before the two targets (2026-10-28): the
+HOL `collinear_fan22`/`aff`-hull distance kit (proof JKQEWGV.hl:2334-2758).
+A triple collinear with the origin `{0, x, y}` (both nonzero) is parameterised
+`y = t • x`; the sign branches of `t` (and of `1 - t`) force `dist = ‖x‖ - ‖y‖`
+(`t ≤ 0` or `t ≥ 1`) or `‖x‖ = ‖y‖ + dist` (`0 ≤ t ≤ 1`), each clashing with the
+ballAnnulus caps `2 ≤ ‖·‖ ≤ 2*h0 (= 2.52 < 4)` and the `s.b < 4` / `cstab < 4`
+upper bounds on the BB distance. -/
+
+/-- A pair collinear with the origin is a scalar multiple (HOL
+`Local_lemmas.collinear_fan22` + `aff` + `AFFINE_HULL_2` step). -/
+private theorem w5cF2_exists_smul {v w : V3}
+    (hcol : Collinear ℝ ({0, v, w} : Set V3)) (hv0 : v ≠ 0) (hw0 : w ≠ 0) :
+    ∃ t : ℝ, w = t • v := by
+  rw [collinear_iff_of_mem (Set.mem_insert 0 {v, w})] at hcol
+  obtain ⟨u, hu⟩ := hcol
+  obtain ⟨a, ha⟩ := hu v (Set.mem_insert_of_mem 0 (Set.mem_insert v {w}))
+  obtain ⟨b, hb⟩ := hu w (Set.mem_insert_of_mem 0 (Set.mem_insert_of_mem v
+    (Set.mem_singleton w)))
+  simp only [vadd_eq_add] at ha hb
+  have ha0 : a ≠ 0 := by
+    intro h
+    exact hv0 (by rw [ha, h, zero_smul, zero_add])
+  have hb0 : b ≠ 0 := by
+    intro h
+    exact hw0 (by rw [hb, h, zero_smul, zero_add])
+  refine ⟨b / a, ?_⟩
+  have hvu : v = a • u := by rw [ha]; simp
+  have hwu : w = b • u := by rw [hb]; simp
+  rw [hwu, hvu, smul_smul]
+  have hkey : b / a * a = b := div_mul_cancel₀ _ ha0
+  rw [hkey]
+
+/-- The distance core of JKQEWGV.hl:2334-2758: two ballAnnulus points whose
+BB distance is squeezed between `2` and a cap `< 4` cannot be collinear with
+the origin. -/
+private theorem w5cF2_not_coll {x y : V3} {a b : ℝ} (hx : x ∈ ballAnnulus)
+    (hy : y ∈ ballAnnulus) (ha2 : (2:ℝ) ≤ a) (hb4 : b < 4)
+    (hda : a ≤ dist x y) (hbd : dist x y ≤ b)
+    (hcol : Collinear ℝ ({0, x, y} : Set V3)) : False := by
+  obtain ⟨h2x, hu2x⟩ := ballAnnulus_norm_bounds hx
+  obtain ⟨h2y, hu2y⟩ := ballAnnulus_norm_bounds hy
+  have hx0 : x ≠ 0 := ballAnnulus_ne_0_p23 x hx
+  have hy0 : y ≠ 0 := ballAnnulus_ne_0_p23 y hy
+  have h24 : (2:ℝ) * h0 < 4 := by show (2:ℝ) * 1.26 < 4; norm_num
+  obtain ⟨t, hxy⟩ := w5cF2_exists_smul hcol hx0 hy0
+  have hE1 : ‖y‖ = |t| * ‖x‖ := by rw [hxy, norm_smul, Real.norm_eq_abs]
+  have hsub : x - t • x = (1 - t) • x := by module
+  have hE2 : dist x y = |1 - t| * ‖x‖ := by
+    rw [hxy, dist_eq_norm, hsub, norm_smul, Real.norm_eq_abs]
+  rcases le_or_gt t 0 with ht | ht
+  · -- t ≤ 0: dist = ‖x‖ + ‖y‖ ≥ 4 > dist ≤ b
+    have h1 : ‖y‖ = -t * ‖x‖ := by rw [hE1, abs_of_nonpos ht]
+    have h2 : dist x y = (1 - t) * ‖x‖ := by
+      rw [hE2, abs_of_nonneg (show (0:ℝ) ≤ 1 - t by linarith)]
+    have hring : (1 - t) * ‖x‖ = ‖x‖ + -t * ‖x‖ := by ring
+    linarith
+  · rcases le_or_gt (1 - t) 0 with ht1 | ht1
+    · -- t ≥ 1: ‖y‖ = ‖x‖ + dist ≥ 4 > 2*h0
+      have h1 : ‖y‖ = t * ‖x‖ := by
+        rw [hE1, abs_of_nonneg (show (0:ℝ) ≤ t by linarith)]
+      have h2 : dist x y = -(1 - t) * ‖x‖ := by
+        rw [hE2, abs_of_nonpos ht1]
+      have hring : t * ‖x‖ = ‖x‖ + -(1 - t) * ‖x‖ := by ring
+      linarith
+    · -- 0 < t < 1: ‖x‖ = ‖y‖ + dist ≥ 4 > 2*h0
+      have h1 : ‖y‖ = t * ‖x‖ := by
+        rw [hE1, abs_of_nonneg (show (0:ℝ) ≤ t by linarith)]
+      have h2 : dist x y = (1 - t) * ‖x‖ := by
+        rw [hE2, abs_of_nonneg (le_of_lt ht1)]
+      have hring : (1 - t) * ‖x‖ + t * ‖x‖ = ‖x‖ := by ring
+      linarith
+
+/-- HOL `IS_SCS_NOT_COLLINEAR_BBs_CASE_3` (JKQEWGV.hl:2328); the
+`collinear_fan22`/`aff`-hull distance kit (HOL proof JKQEWGV.hl:2334-2758)
+is carried by the `w5cF2_*` block above. -/
 theorem IS_SCS_NOT_COLLINEAR_BBs_CASE_3_p23 (s : ScsV39) (vv : ℕ → V3)
     (hs : isScsV39 s) (hk : s.k = 3) (hBB : BBsV39 s vv) :
     ¬ Collinear ℝ ({0, vv 1, vv 2} : Set V3) ∧
       ¬ Collinear ℝ ({0, vv 1, vv 0} : Set V3) ∧
       ¬ Collinear ℝ ({0, vv 2, vv 0} : Set V3) := by
-  sorry
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, hpbb, -, hsym, -, -, hage, hblt4, -, -, -, -⟩ := hs
+  have hmem : ∀ i : ℕ, vv i ∈ ballAnnulus := fun i => hBB.1 ⟨i, rfl⟩
+  have hdist := hBB.2.2.1
+  -- leg (1, 2): `2 ≤ s.a 1 2` direct, `s.b 1 2 < 4` direct
+  have ha12 : (2:ℝ) ≤ s.a 1 2 := hage 1 2 ⟨by omega, by omega, by omega⟩
+  have hb12 : s.b 1 2 < 4 := by simpa using hblt4 1 hk
+  -- leg (1, 0): both bounds through the `s.a`/`s.b` symmetry
+  have ha10 : (2:ℝ) ≤ s.a 1 0 := by
+    rw [← (hsym 0 1).1]
+    exact hage 0 1 ⟨by omega, by omega, by omega⟩
+  have hb10 : s.b 1 0 < 4 := by
+    rw [← (hsym 0 1).2.2.2.1]
+    simpa using hblt4 0 hk
+  -- leg (2, 0): `s.b 2 0 < 4` through `Periodic2 s.b` (`s.b 2 3 = s.b 2 0`)
+  have ha20 : (2:ℝ) ≤ s.a 2 0 := by
+    rw [← (hsym 0 2).1]
+    exact hage 0 2 ⟨by omega, by omega, by omega⟩
+  have hpbb2 : s.b 2 3 = s.b 2 0 := by
+    have h2 := (hpbb 2 0).2
+    rw [hk] at h2
+    exact h2
+  have hb20 : s.b 2 0 < 4 := by
+    rw [← hpbb2]
+    exact hblt4 2 hk
+  refine ⟨fun hc => w5cF2_not_coll (hmem 1) (hmem 2) ha12 hb12 (hdist 1 2).1
+    (hdist 1 2).2 hc, fun hc => w5cF2_not_coll (hmem 1) (hmem 0) ha10 hb10
+    (hdist 1 0).1 (hdist 1 0).2 hc, fun hc => w5cF2_not_coll (hmem 2) (hmem 0)
+    ha20 hb20 (hdist 2 0).1 (hdist 2 0).2 hc⟩
 
-/-- HOL `IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_3` (JKQEWGV.hl:2785). NEEDS:
-the same collinearity kit. -/
+/-- HOL `IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_3` (JKQEWGV.hl:2785); the same
+`w5cF2_*` collinearity kit carries the distance core. -/
 theorem IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_3_p23 (s : ScsV39) (vv : ℕ → V3)
     (i j : ℕ) (hs : isScsV39 s) (hk : 3 < s.k) (hBB : BBsV39 s vv)
     (hmod : i % s.k ≠ j % s.k)
     (hd : dist (vv (i % s.k)) (vv (j % s.k)) ≤ cstab) :
     ¬ Collinear ℝ ({0, vv (i % s.k), vv (j % s.k)} : Set V3) := by
-  sorry
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hage, -, -, -, -, -⟩ := hs
+  have hkpos : 0 < s.k := by omega
+  have hik : i % s.k < s.k := Nat.mod_lt _ hkpos
+  have hjk : j % s.k < s.k := Nat.mod_lt _ hkpos
+  have ha2 : (2:ℝ) ≤ s.a (i % s.k) (j % s.k) := hage _ _ ⟨hik, hjk, hmod⟩
+  have hc4 : (cstab:ℝ) < 4 := by show 3.01 < 4; norm_num
+  exact fun hc => w5cF2_not_coll (hBB.1 ⟨i % s.k, rfl⟩) (hBB.1 ⟨j % s.k, rfl⟩)
+    ha2 hc4 (hBB.2.2.1 _ _).1 hd hc
 
 /-! ### W5b lane (scsgeneric-w5b4): helpers for `JKQEWGV1_p23`
 
