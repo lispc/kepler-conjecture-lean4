@@ -3716,4 +3716,1217 @@ theorem w6ccs_false_of_planar_inter {y z y1 z1 x : V3}
 
 end W6cKit
 
+/-! === W6dKit: bodyclosed-w6d —— fan7/FAN 装配器（w6c 残差清零）+ localFan/azimInFan 两顶石与装配件（w6b 残差清零）。纯插入；零新 import；零 sorry。 === -/
+
+section W6dKit
+
+/-! === fan7 装配层（W6c）=== -/
+
+set_option maxHeartbeats 800000 in
+/-- 顶点×顶点 fan7 面。 -/
+private theorem w6ccs_fan7_vv {p q : V3} (hp0 : p ≠ 0) (hq0 : q ≠ 0)
+    (hp : p ∈ ballAnnulus) (hq : q ∈ ballAnnulus)
+    (h2 : p ≠ q → (2:ℝ) ≤ ‖p - q‖) :
+    affGe ({0} : Set V3) ({p}) ∩ affGe ({0} : Set V3) ({q})
+      = affGe ({0} : Set V3) ((({p} : Set V3) ∩ {q})) := by
+  by_cases hpq : p = q
+  · have hq' : affGe ({0} : Set V3) ({q}) = affGe ({0} : Set V3) ({p}) := by rw [hpq]
+    have hint : ((({p} : Set V3) ∩ {q} : Set V3)) = {p} := by
+      ext u
+      simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨h, -⟩
+        exact h
+      · intro h
+        exact ⟨h, by rw [h, hpq]⟩
+    rw [hq', hint, Set.inter_self]
+  · have hempty : ((({p} : Set V3) ∩ {q} : Set V3)) = ∅ := by
+      ext u
+      simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨h1, h2⟩
+        exact hpq (h1.symm.trans h2)
+      · intro h
+        exact absurd h (by simp)
+    rw [hempty, w5cs_affGe_empty]
+    ext u
+    constructor
+    · rintro ⟨hu1, hu2⟩
+      exact Set.mem_singleton_iff.mpr (VEC0_BALL_ANNULUS (h2 hpq) hp hq hu1 hu2)
+    · intro hu
+      rw [Set.mem_singleton_iff.mp hu]
+      exact ⟨w4cs_zero_mem_ray hp0, w4cs_zero_mem_ray hq0⟩
+
+/-- 边×顶点 fan7 面。 -/
+private theorem w6ccs_fan7_ev {y z v : V3}
+    (hy0 : y ≠ 0) (hz0 : z ≠ 0) (hv0 : v ≠ 0)
+    (hy : y ∈ ballAnnulus) (hz : z ∈ ballAnnulus) (hv : v ∈ ballAnnulus)
+    (hnc : ¬ Collinear3 (0:V3) y z)
+    (hadj : ‖y - z‖ ≤ cstab_p4)
+    (hsep : ∀ u w : V3, u ≠ w → u ∈ ({y, z, v} : Set V3) →
+      w ∈ ({y, z, v} : Set V3) → (2:ℝ) ≤ ‖u - w‖) :
+    affGe ({0} : Set V3) ({y, z}) ∩ affGe ({0} : Set V3) ({v})
+      = affGe ({0} : Set V3) ((({y, z} : Set V3) ∩ {v})) := by
+  by_cases hvy : v = y
+  · rw [hvy]
+    have hint : ((({y, z} : Set V3) ∩ {y} : Set V3)) = {y} := by
+      ext u
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hint]
+    ext u
+    constructor
+    · rintro ⟨-, hu2⟩
+      exact hu2
+    · intro hu
+      have hc1 : u ∈ affGe ({0} : Set V3) ({y, z}) := by
+        rw [aff_ge_eq_aff_gt_union_aff_ge hnc, Set.mem_union, Set.mem_union]
+        exact Or.inl (Or.inr hu)
+      exact ⟨hc1, hu⟩
+  · by_cases hvz : v = z
+    · rw [hvz]
+      have hint : ((({y, z} : Set V3) ∩ {z} : Set V3)) = {z} := by
+        ext u
+        simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hint]
+      ext u
+      constructor
+      · rintro ⟨-, hu2⟩
+        exact hu2
+      · intro hu
+        have hc1 : u ∈ affGe ({0} : Set V3) ({y, z}) := by
+          rw [aff_ge_eq_aff_gt_union_aff_ge hnc, Set.mem_union, Set.mem_union]
+          exact Or.inr hu
+        exact ⟨hc1, hu⟩
+    · have hyv : y ≠ v := fun h => hvy h.symm
+      have hzv : z ≠ v := fun h => hvz h.symm
+      have hyz : y ≠ z := fun he => hnc (collinear3_pair_right he.symm)
+      have h2yz : (2:ℝ) ≤ ‖y - z‖ := hsep y z hyz (by simp) (by simp)
+      have hint : ((({y, z} : Set V3) ∩ {v} : Set V3)) = ∅ := by
+        ext u
+        simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+        constructor
+        · rintro ⟨h1, h2⟩
+          rcases h1 with rfl | rfl
+          · exact absurd h2 hyv
+          · exact absurd h2 hzv
+        · intro h
+          exact absurd h (by simp)
+      rw [hint, w5cs_affGe_empty]
+      ext u
+      constructor
+      · rintro ⟨hu1, hu2⟩
+        rw [aff_ge_eq_aff_gt_union_aff_ge hnc, Set.mem_union, Set.mem_union] at hu1
+        rcases hu1 with (hgt | hry) | hrz
+        · exact Set.mem_singleton_iff.mpr (w6acs_gt_ray_kill_strong (v := v) hnc hy hz hv
+            h2yz hadj
+            (hsep y v hyv (by simp) (by simp))
+            (hsep z v hzv (by simp) (by simp)) hgt hu2)
+        · exact Set.mem_singleton_iff.mpr (VEC0_BALL_ANNULUS
+            (hsep y v hyv (by simp) (by simp)) hy hv hry hu2)
+        · exact Set.mem_singleton_iff.mpr (VEC0_BALL_ANNULUS
+            (hsep z v hzv (by simp) (by simp)) hz hv hrz hu2)
+      · intro hu
+        rw [Set.mem_singleton_iff.mp hu]
+        exact ⟨w4cs_zero_mem_cone hnc hy0 hz0, w4cs_zero_mem_ray hv0⟩
+
+/-- 顶点×边 fan7 面（对称）。 -/
+private theorem w6ccs_fan7_ve {y z v : V3}
+    (hy0 : y ≠ 0) (hz0 : z ≠ 0) (hv0 : v ≠ 0)
+    (hy : y ∈ ballAnnulus) (hz : z ∈ ballAnnulus) (hv : v ∈ ballAnnulus)
+    (hnc : ¬ Collinear3 (0:V3) y z)
+    (hadj : ‖y - z‖ ≤ cstab_p4)
+    (hsep : ∀ u w : V3, u ≠ w → u ∈ ({y, z, v} : Set V3) →
+      w ∈ ({y, z, v} : Set V3) → (2:ℝ) ≤ ‖u - w‖) :
+    affGe ({0} : Set V3) ({v}) ∩ affGe ({0} : Set V3) ({y, z})
+      = affGe ({0} : Set V3) ((({v} : Set V3) ∩ {y, z})) := by
+  have hL := w6ccs_fan7_ev hy0 hz0 hv0 hy hz hv hnc hadj hsep
+  rw [Set.inter_comm (affGe ({0} : Set V3) ({v})) (affGe ({0} : Set V3) ({y, z})),
+    Set.inter_comm ({v} : Set V3) ({y, z} : Set V3)]
+  exact hL
+
+set_option maxHeartbeats 800000 in
+/-- 边×边共享端点 fan7 面（点级、四向统一）。 -/
+private theorem w6ccs_fan7_ee_shared {y z y1 z1 v : V3}
+    (hy0 : y ≠ 0) (hz0 : z ≠ 0) (hy10 : y1 ≠ 0) (hz10 : z1 ≠ 0)
+    (hy : y ∈ ballAnnulus) (hz : z ∈ ballAnnulus) (hy1 : y1 ∈ ballAnnulus)
+    (hz1 : z1 ∈ ballAnnulus)
+    (hnc1 : ¬ Collinear3 (0:V3) y z) (hnc2 : ¬ Collinear3 (0:V3) y1 z1)
+    (hyz : y ≠ z) (hy1z1 : y1 ≠ z1)
+    (hadj1 : ‖y - z‖ ≤ cstab_p4) (hadj2 : ‖y1 - z1‖ ≤ cstab_p4)
+    (hsep : ∀ u w : V3, u ≠ w → u ∈ ({y, z, y1, z1} : Set V3) →
+      w ∈ ({y, z, y1, z1} : Set V3) → (2:ℝ) ≤ ‖u - w‖)
+    (hvs : (({y, z} : Set V3) ∩ ({y1, z1} : Set V3)) = ({v} : Set V3)) :
+    affGe ({0} : Set V3) ({y, z}) ∩ affGe ({0} : Set V3) ({y1, z1})
+      = affGe ({0} : Set V3) ((({y, z} : Set V3) ∩ {y1, z1})) := by
+  have hzy := Ne.symm hyz
+  have hvin : v ∈ ({y, z} : Set V3) ∩ ({y1, z1} : Set V3) := by
+    rw [hvs]; exact Set.mem_singleton_iff.mpr rfl
+  have hyv : v = y ∨ v = z := by
+    have h1 := hvin.1
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h1
+    exact h1
+  have hvw : v = y1 ∨ v = z1 := by
+    have h1 := hvin.2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h1
+    exact h1
+  rcases hyv with hv1 | hv1 <;> rcases hvw with hv2 | hv2
+  · -- v = y ∧ v = y1：(a,b,c) := (z, y, z1)
+    have hyy1 : y = y1 := hv1.symm.trans hv2
+    have hX : (z:V3) ≠ z1 := by
+      intro he
+      have hpv : (z:V3) ∈ ({v} : Set V3) := by
+        rw [← hvs]
+        refine ⟨Set.mem_insert_of_mem _ (Set.mem_singleton z), ?_⟩
+        rw [he]; simp
+      exact hyz (((Set.mem_singleton_iff.mp hpv).trans hv1).symm)
+    have hint : ((({z, y} : Set V3) ∩ {y, z1} : Set V3)) = {y} := by
+      ext u
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+      refine ⟨fun h => ?_, fun h => ⟨Or.inr h, Or.inl h⟩⟩
+      obtain ⟨h1, h2⟩ := h
+      rcases h1 with h1 | h1 <;> rw [h1] at h2
+      · rcases h2 with h2 | h2
+        · exact absurd h2 hzy
+        · exact absurd h2 hX
+      · exact h1
+    rw [show ((({y, z} : Set V3)) = ({z, y} : Set V3)) from by
+      ext u; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto,
+      show ((({y1, z1} : Set V3)) = ({y, z1} : Set V3)) from by
+        rw [← hyy1], hint]
+    have hnc2' : ¬ Collinear3 (0:V3) y z1 := by
+      intro hcc
+      refine hnc2 ?_
+      show Collinear ℝ ({(0:V3), y1, z1} : Set V3)
+      rw [show ({(0:V3), y1, z1} : Set V3) = ({(0:V3), y, z1} : Set V3) from by
+        rw [← hyy1]]
+      exact hcc
+    exact w6acs_fan7_edges_shared w6ccs_false_of_planar_inter hyz.symm
+      (fun he => hy1z1 (hyy1.symm.trans he)) hX hz hy hz1
+      (by
+        intro hcc
+        refine hnc1 ?_
+        show Collinear ℝ ({(0:V3), y, z} : Set V3)
+        rw [show ({(0:V3), y, z} : Set V3) = ({(0:V3), z, y} : Set V3) from by
+          ext u; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+        exact hcc)
+      hnc2' (hsep z y hyz.symm (by simp) (by simp))
+      (by rw [norm_sub_rev]; exact hadj1)
+      (hsep y z1 (fun he => hy1z1 (hyy1.symm.trans he)) (by simp) (by simp))
+      (by rw [hyy1]; exact hadj2)
+      (hsep z z1 hX (by simp) (by simp))
+  · -- v = y ∧ v = z1：(a,b,c) := (z, y, y1)
+    have hzz1 : z1 = y := hv2.symm.trans hv1
+    have hX : (z:V3) ≠ y1 := by
+      intro he
+      have hpv : (z:V3) ∈ ({v} : Set V3) := by
+        rw [← hvs]
+        refine ⟨Set.mem_insert_of_mem _ (Set.mem_singleton z), ?_⟩
+        rw [he]; simp
+      exact hyz (((Set.mem_singleton_iff.mp hpv).trans hv1).symm)
+    have hint : ((({z, y} : Set V3) ∩ {y, y1} : Set V3)) = {y} := by
+      ext u
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+      refine ⟨fun h => ?_, fun h => ⟨Or.inr h, Or.inl h⟩⟩
+      obtain ⟨h1, h2⟩ := h
+      rcases h1 with h1 | h1 <;> rw [h1] at h2
+      · rcases h2 with h2 | h2
+        · exact absurd h2 hzy
+        · exact absurd h2 hX
+      · exact h1
+    rw [show ((({y, z} : Set V3)) = ({z, y} : Set V3)) from by
+      ext u; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto,
+      show ((({y1, z1} : Set V3)) = ({y, y1} : Set V3)) from by
+        rw [hzz1]; ext u; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto, hint]
+    have hnc2' : ¬ Collinear3 (0:V3) y y1 := by
+      intro hcc
+      refine hnc2 ?_
+      show Collinear ℝ ({(0:V3), y1, z1} : Set V3)
+      rw [show ({(0:V3), y1, z1} : Set V3) = ({(0:V3), y, y1} : Set V3) from by
+        rw [hzz1]; ext u; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+      exact hcc
+    exact w6acs_fan7_edges_shared w6ccs_false_of_planar_inter hyz.symm
+      (fun he => hy1z1 (he.symm.trans hzz1.symm)) hX hz hy hy1
+      (by
+        intro hcc
+        refine hnc1 ?_
+        show Collinear ℝ ({(0:V3), y, z} : Set V3)
+        rw [show ({(0:V3), y, z} : Set V3) = ({(0:V3), z, y} : Set V3) from by
+          ext u; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+        exact hcc)
+      hnc2' (hsep z y hyz.symm (by simp) (by simp))
+      (by rw [norm_sub_rev]; exact hadj1)
+      (hsep y y1 (fun he => hy1z1 (he.symm.trans hzz1.symm)) (by simp) (by simp))
+      (by rw [norm_sub_rev, ← hzz1]; exact hadj2)
+      (hsep z y1 hX (by simp) (by simp))
+  · -- v = z ∧ v = y1：(a,b,c) := (y, z, z1)
+    have hyy1 : y1 = z := hv2.symm.trans hv1
+    have hX : (y:V3) ≠ z1 := by
+      intro he
+      have hpv : (y:V3) ∈ ({v} : Set V3) := by
+        rw [← hvs]
+        refine ⟨Set.mem_insert y ({z} : Set V3), ?_⟩
+        rw [he]; simp
+      exact hyz ((Set.mem_singleton_iff.mp hpv).trans hv1)
+    have hint : ((({y, z} : Set V3) ∩ {z, z1} : Set V3)) = {z} := by
+      ext u
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+      refine ⟨fun h => ?_, fun h => ⟨Or.inr h, Or.inl h⟩⟩
+      obtain ⟨h1, h2⟩ := h
+      rcases h1 with h1 | h1 <;> rw [h1] at h2
+      · rcases h2 with h2 | h2
+        · exact absurd h2 hyz
+        · exact absurd h2 hX
+      · exact h1
+    rw [show ((({y1, z1} : Set V3)) = ({z, z1} : Set V3)) from by
+      rw [hyy1], hint]
+    have hnc2' : ¬ Collinear3 (0:V3) z z1 := by
+      intro hcc
+      refine hnc2 ?_
+      show Collinear ℝ ({(0:V3), y1, z1} : Set V3)
+      rw [show ({(0:V3), y1, z1} : Set V3) = ({(0:V3), z, z1} : Set V3) from by
+        rw [hyy1]]
+      exact hcc
+    exact w6acs_fan7_edges_shared w6ccs_false_of_planar_inter hyz
+      (fun he => hy1z1 (hyy1.trans he)) hX hy hz hz1 hnc1 hnc2'
+      (hsep y z hyz (by simp) (by simp)) hadj1
+      (hsep z z1 (fun he => hy1z1 (hyy1.trans he)) (by simp) (by simp))
+      (by rw [← hyy1]; exact hadj2)
+      (hsep y z1 hX (by simp) (by simp))
+  · -- v = z ∧ v = z1：(a,b,c) := (y, z, y1)
+    have hzz1 : z1 = z := hv2.symm.trans hv1
+    have hX : (y:V3) ≠ y1 := by
+      intro he
+      have hpv : (y:V3) ∈ ({v} : Set V3) := by
+        rw [← hvs]
+        refine ⟨Set.mem_insert y ({z} : Set V3), ?_⟩
+        rw [he]; simp
+      exact hyz ((Set.mem_singleton_iff.mp hpv).trans hv1)
+    have hint : ((({y, z} : Set V3) ∩ {z, y1} : Set V3)) = {z} := by
+      ext u
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+      refine ⟨fun h => ?_, fun h => ⟨Or.inr h, Or.inl h⟩⟩
+      obtain ⟨h1, h2⟩ := h
+      rcases h1 with h1 | h1 <;> rw [h1] at h2
+      · rcases h2 with h2 | h2
+        · exact absurd h2 hyz
+        · exact absurd h2 hX
+      · exact h1
+    rw [show ((({y1, z1} : Set V3)) = ({z, y1} : Set V3)) from by
+      rw [hzz1]; ext u; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto, hint]
+    have hnc2' : ¬ Collinear3 (0:V3) z y1 := by
+      intro hcc
+      refine hnc2 ?_
+      show Collinear ℝ ({(0:V3), y1, z1} : Set V3)
+      rw [show ({(0:V3), y1, z1} : Set V3) = ({(0:V3), z, y1} : Set V3) from by
+        rw [hzz1]; ext u; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+      exact hcc
+    exact w6acs_fan7_edges_shared w6ccs_false_of_planar_inter hyz
+      (fun he => hy1z1 (he.symm.trans hzz1.symm)) hX hy hz hy1 hnc1 hnc2'
+      (hsep y z hyz (by simp) (by simp)) hadj1
+      (hsep z y1 (fun he => hy1z1 (he.symm.trans hzz1.symm)) (by simp) (by simp))
+      (by rw [norm_sub_rev, ← hzz1]; exact hadj2)
+      (hsep y y1 hX (by simp) (by simp))
+set_option maxHeartbeats 800000 in
+/-- 边×边不交 fan7 面（极限点侧：topstone → 缺口 2）。 -/
+private theorem w6ccs_fan7_ee_disj {k : ℕ} {d : ℝ} {s : Finset ℕ}
+    {a b : ℕ → ℕ → ℝ} {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (hL : L ∈ BSY1body_cs k a b)
+    {i i' : Fin k} (hii : i ≠ i') (hiz : i ≠ finNext i') (hzi : finNext i ≠ i')
+    (hzz : finNext i ≠ finNext i')
+    (hdisj : (({vecmatsV3_p4 L i, vecmatsV3_p4 L (finNext i)} : Set V3) ∩
+      {vecmatsV3_p4 L i', vecmatsV3_p4 L (finNext i')}) = (∅ : Set V3)) :
+    affGe ({0} : Set V3) ({vecmatsV3_p4 L i, vecmatsV3_p4 L (finNext i)} : Set V3)
+      ∩ affGe ({0} : Set V3) ({vecmatsV3_p4 L i', vecmatsV3_p4 L (finNext i')} : Set V3)
+      = ({0} : Set V3) := by
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk1 : 1 < k := by omega
+  set y := vecmatsV3_p4 L i with hY
+  set z := vecmatsV3_p4 L (finNext i) with hZ
+  set y1 := vecmatsV3_p4 L i' with hY1
+  set z1 := vecmatsV3_p4 L (finNext i') with hZ1
+  have hadj : ∀ j : Fin k, ‖vecmatsV3_p4 L j - vecmatsV3_p4 L (finNext j)‖ ≤ cstab_p4 := by
+    intro j
+    have hj := w3cs_row_adj_cstab hsys hs hf hk1 L hL
+      (p := j.val + 1) (by omega) (by have := j.isLt; omega)
+    have hj2 : rowV3_cs L ((j.val + 1) % k + 1) = rowV3_cs L ((finNext j).val + 1) := rfl
+    rw [show rowV3_cs L (j.val + 1) = vecmatsV3_p4 L j from w6bcs_row_fin L j,
+      hj2, show rowV3_cs L ((finNext j).val + 1) = vecmatsV3_p4 L (finNext j)
+        from w6bcs_row_fin L (finNext j)] at hj
+    exact hj
+  have hnc1 : ¬ Collinear3 (0:V3) y z :=
+    NONPARALLEL_BALL_ANNULUS (hL.1 i) (hL.1 (finNext i))
+      (w3cs_two_le_next_fin hsys hs hf (by omega) L hL i) (hadj i)
+  have hnc2 : ¬ Collinear3 (0:V3) y1 z1 :=
+    NONPARALLEL_BALL_ANNULUS (hL.1 i') (hL.1 (finNext i'))
+      (w3cs_two_le_next_fin hsys hs hf (by omega) L hL i') (hadj i')
+  have hneij : i ≠ finNext i := fun he =>
+    hnc1 (collinear3_pair_right (show vecmatsV3_p4 L (finNext i) = vecmatsV3_p4 L i from by
+      rw [he.symm]))
+  have hneij' : i' ≠ finNext i' := fun he =>
+    hnc2 (collinear3_pair_right (show vecmatsV3_p4 L (finNext i') = vecmatsV3_p4 L i' from by
+      rw [he.symm]))
+  have hsep : ∀ p q : ℕ, 1 ≤ p → p ≤ k → 1 ≤ q → q ≤ k → p ≠ q →
+      (2:ℝ) ≤ ‖rowV3_cs L p - rowV3_cs L q‖ :=
+    fun p q hp hpk hq hqk hpq => w3cs_two_le_row_of_BSY1body hsys hs hf hk1 L hL hp hpk hq hqk hpq
+  have htwo : ∀ p q : Fin k, p ≠ q → (2:ℝ) ≤ ‖vecmatsV3_p4 L p - vecmatsV3_p4 L q‖ := by
+    intro p q hpq
+    rw [← w6bcs_row_fin, ← w6bcs_row_fin]
+    exact hsep (p.val + 1) (q.val + 1) (by omega) (by have := p.isLt; omega)
+      (by omega) (by have := q.isLt; omega) (fun h => hpq (Fin.ext (by omega)))
+  have h2yz : (2:ℝ) ≤ ‖y - z‖ := htwo i (finNext i) hneij
+  have h2y1z1 : (2:ℝ) ≤ ‖y1 - z1‖ := htwo i' (finNext i') hneij'
+  have h2yy1 : (2:ℝ) ≤ ‖y - y1‖ := htwo i i' hii
+  have h2yz1 : (2:ℝ) ≤ ‖y - z1‖ := htwo i (finNext i') hiz
+  have h2zy1 : (2:ℝ) ≤ ‖z - y1‖ := htwo (finNext i) i' hzi
+  have h2zz1 : (2:ℝ) ≤ ‖z - z1‖ := htwo (finNext i) (finNext i') hzz
+  have hsep4 : ∀ v w : V3, v ≠ w → v ∈ ({y, z, y1, z1} : Set V3) →
+      w ∈ ({y, z, y1, z1} : Set V3) → (2:ℝ) ≤ ‖v - w‖ := by
+    intro v w hvw hv hw
+    have hd : ∀ t : V3, t ∈ ({y, z, y1, z1} : Set V3) →
+        t = y ∨ t = z ∨ t = y1 ∨ t = z1 := by
+      intro t ht
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      tauto
+    rcases hd v hv with rfl | rfl | rfl | rfl <;>
+      rcases hd w hw with rfl | rfl | rfl | rfl
+    · exact absurd rfl hvw
+    · exact h2yz
+    · exact h2yy1
+    · exact h2yz1
+    · rw [norm_sub_rev]; exact h2yz
+    · exact absurd rfl hvw
+    · exact h2zy1
+    · exact h2zz1
+    · rw [norm_sub_rev]; exact h2yy1
+    · rw [norm_sub_rev]; exact h2zy1
+    · exact absurd rfl hvw
+    · exact h2y1z1
+    · rw [norm_sub_rev]; exact h2yz1
+    · rw [norm_sub_rev]; exact h2zz1
+    · rw [norm_sub_rev]; exact h2y1z1
+    · exact absurd rfl hvw
+  have hy0 : y ≠ 0 := w4cs_annulus_ne_zero (hL.1 i)
+  have hz0 : z ≠ 0 := w4cs_annulus_ne_zero (hL.1 (finNext i))
+  have hy10 : y1 ≠ 0 := w4cs_annulus_ne_zero (hL.1 i')
+  have hz10 : z1 ≠ 0 := w4cs_annulus_ne_zero (hL.1 (finNext i'))
+  have hdiff4 : ¬ (y1 ∈ ({y, z} : Set V3) ∧ z1 ∈ ({y, z} : Set V3)) := by
+    intro hc
+    obtain ⟨hm1, -⟩ := hc
+    have hmem : y1 ∈ (({y, z} : Set V3) ∩ ({y1, z1} : Set V3)) :=
+      ⟨hm1, by simp⟩
+    rw [hdisj] at hmem
+    exact hmem
+  have hR : affGe ({0} : Set V3)
+      ((({y, z} : Set V3) ∩ ({y1, z1} : Set V3))) = {0} := by
+    rw [hdisj, w5cs_affGe_empty]
+  ext x
+  constructor
+  · rintro ⟨hx1, hx2⟩
+    rw [aff_ge_eq_aff_gt_union_aff_ge hnc1, Set.mem_union, Set.mem_union] at hx1
+    rw [aff_ge_eq_aff_gt_union_aff_ge hnc2, Set.mem_union, Set.mem_union] at hx2
+    have hkill1 : ∀ (w : V3), w ∈ ({y, z} : Set V3) → ∀ (t : V3),
+        t ∈ affGt ({0} : Set V3) ({y1, z1}) → t ∈ affGe ({0} : Set V3) ({w}) → t = 0 := by
+      intro w hw t hgt ht
+      have hwd : w = y ∨ w = z := by
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+        exact hw
+      rcases hwd with hwy | hwz
+      · rw [hwy] at ht
+        exact w6acs_gt_ray_kill_strong (y := y1) (z := z1) (v := y) hnc2
+          (hL.1 i') (hL.1 (finNext i')) (hL.1 i) h2y1z1 (hadj i')
+          (by rw [norm_sub_rev]; exact h2yy1) (by rw [norm_sub_rev]; exact h2yz1) hgt ht
+      · rw [hwz] at ht
+        exact w6acs_gt_ray_kill_strong (y := y1) (z := z1) (v := z) hnc2
+          (hL.1 i') (hL.1 (finNext i')) (hL.1 (finNext i)) h2y1z1 (hadj i')
+          (by rw [norm_sub_rev]; exact h2zy1) (by rw [norm_sub_rev]; exact h2zz1) hgt ht
+    have hkill2 : ∀ (w : V3), w ∈ ({y1, z1} : Set V3) → ∀ (t : V3),
+        t ∈ affGt ({0} : Set V3) ({y, z}) → t ∈ affGe ({0} : Set V3) ({w}) → t = 0 := by
+      intro w hw t hgt ht
+      have hwd : w = y1 ∨ w = z1 := by
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+        exact hw
+      rcases hwd with hwy1 | hwz1
+      · rw [hwy1] at ht
+        exact w6acs_gt_ray_kill_strong (y := y) (z := z) (v := y1) hnc1
+          (hL.1 i) (hL.1 (finNext i)) (hL.1 i') h2yz (hadj i)
+          h2yy1 h2zy1 hgt ht
+      · rw [hwz1] at ht
+        exact w6acs_gt_ray_kill_strong (y := y) (z := z) (v := z1) hnc1
+          (hL.1 i) (hL.1 (finNext i)) (hL.1 (finNext i')) h2yz (hadj i)
+          h2yz1 h2zz1 hgt ht
+    rcases hx1 with (g1 | ry) | rz <;> rcases hx2 with (g2 | ry1) | rz1
+    · exact (w6ccs_false_of_planar_inter hnc1 hnc2
+          (⟨hL.1 i, hL.1 (finNext i), hL.1 i', hL.1 (finNext i')⟩) (hadj i) (hadj i')
+          hdiff4 hsep4
+          (w5bcs_planar_of_mem_affGt_inter hsys hs hf humem huto hL hii hiz hzi hzz x
+            g1 g2).1
+          (w5bcs_planar_of_mem_affGt_inter hsys hs hf humem huto hL hii hiz hzi hzz x
+            g1 g2).2 g1 g2).elim
+    · exact Set.mem_singleton_iff.mpr (hkill2 y1 (by simp) x g1 ry1)
+    · exact Set.mem_singleton_iff.mpr (hkill2 z1 (by simp) x g1 rz1)
+    · exact Set.mem_singleton_iff.mpr (hkill1 y (by simp) x g2 ry)
+    · exact Set.mem_singleton_iff.mpr (VEC0_BALL_ANNULUS h2yy1 (hL.1 i) (hL.1 i') ry ry1)
+    · exact Set.mem_singleton_iff.mpr (VEC0_BALL_ANNULUS h2yz1
+        (hL.1 i) (hL.1 (finNext i')) ry rz1)
+    · exact Set.mem_singleton_iff.mpr (hkill1 z (by simp) x g2 rz)
+    · exact Set.mem_singleton_iff.mpr (VEC0_BALL_ANNULUS h2zy1
+        (hL.1 (finNext i)) (hL.1 i') rz ry1)
+    · exact Set.mem_singleton_iff.mpr (VEC0_BALL_ANNULUS h2zz1
+        (hL.1 (finNext i)) (hL.1 (finNext i')) rz rz1)
+  · intro hx
+    rw [Set.mem_singleton_iff] at hx
+    rw [hx]
+    exact ⟨w4cs_zero_mem_cone hnc1 hy0 hz0, w4cs_zero_mem_cone hnc2 hy10 hz10⟩
+set_option maxHeartbeats 800000 in
+/-- W6c 主装配器：极限点 L 处的 fan7（前提形 = w5cs_false_of_limit_wall 统一形状）。 -/
+theorem w6ccs_fan7_of_limit {k : ℕ} {d : ℝ} {s : Finset ℕ}
+    {a b : ℕ → ℕ → ℝ} {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (hL : L ∈ BSY1body_cs k a b) :
+    Fan.fan7 0 (V_SY_p4 (vecmatsV3_p4 L)) (E_SY_p4 (vecmatsV3_p4 L)) := by
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk1 : 1 < k := by omega
+  have hk2 : 2 < k := by omega
+  have hfinInj : Function.Injective (@finNext k) := by
+    intro p q hpq
+    apply Fin.ext
+    have hval : ((p : ℕ) + 1) % k = ((q : ℕ) + 1) % k := congrArg Fin.val hpq
+    have h1 : Nat.ModEq k (p : ℕ) (q : ℕ) := Nat.ModEq.add_right_cancel' (c := 1) hval
+    change (p : ℕ) % k = (q : ℕ) % k at h1
+    rwa [Nat.mod_eq_of_lt p.isLt, Nat.mod_eq_of_lt q.isLt] at h1
+  have hadj : ∀ j : Fin k, ‖vecmatsV3_p4 L j - vecmatsV3_p4 L (finNext j)‖ ≤ cstab_p4 := by
+    intro j
+    have hj := w3cs_row_adj_cstab hsys hs hf hk1 L hL
+      (p := j.val + 1) (by omega) (by have := j.isLt; omega)
+    have hj2 : rowV3_cs L ((j.val + 1) % k + 1) = rowV3_cs L ((finNext j).val + 1) := rfl
+    rw [show rowV3_cs L (j.val + 1) = vecmatsV3_p4 L j from w6bcs_row_fin L j,
+      hj2, show rowV3_cs L ((finNext j).val + 1) = vecmatsV3_p4 L (finNext j)
+        from w6bcs_row_fin L (finNext j)] at hj
+    exact hj
+  have hnc : ∀ j : Fin k, ¬ Collinear3 (0:V3) (vecmatsV3_p4 L j)
+      (vecmatsV3_p4 L (finNext j)) :=
+    fun j => NONPARALLEL_BALL_ANNULUS (hL.1 j) (hL.1 (finNext j))
+      (w3cs_two_le_next_fin hsys hs hf hk2 L hL j) (hadj j)
+  have hsepN : ∀ p q : ℕ, 1 ≤ p → p ≤ k → 1 ≤ q → q ≤ k → p ≠ q →
+      (2:ℝ) ≤ ‖rowV3_cs L p - rowV3_cs L q‖ :=
+    fun p q hp hpk hq hqk hpq => w3cs_two_le_row_of_BSY1body hsys hs hf hk1 L hL hp hpk hq hqk hpq
+  have htwo : ∀ p q : Fin k, p ≠ q → (2:ℝ) ≤ ‖vecmatsV3_p4 L p - vecmatsV3_p4 L q‖ := by
+    intro p q hpq
+    rw [← w6bcs_row_fin, ← w6bcs_row_fin]
+    exact hsepN (p.val + 1) (q.val + 1) (by omega) (by have := p.isLt; omega)
+      (by omega) (by have := q.isLt; omega) (fun h => hpq (Fin.ext (by omega)))
+  have hpinj : ∀ p q : Fin k, vecmatsV3_p4 L p = vecmatsV3_p4 L q → p = q := by
+    intro p q he
+    by_contra hc
+    have h2 := htwo p q hc
+    rw [he, sub_self, norm_zero] at h2
+    linarith
+  have hne : ∀ j : Fin k, vecmatsV3_p4 L j ≠ vecmatsV3_p4 L (finNext j) :=
+    w3cs_row_ne_next_fin hsys hs hf hk2 L hL
+  have hsep4 : ∀ (p1 p2 p3 p4 : Fin k) (a b : V3), a ≠ b →
+      a ∈ ({vecmatsV3_p4 L p1, vecmatsV3_p4 L p2, vecmatsV3_p4 L p3,
+        vecmatsV3_p4 L p4} : Set V3) →
+      b ∈ ({vecmatsV3_p4 L p1, vecmatsV3_p4 L p2, vecmatsV3_p4 L p3,
+        vecmatsV3_p4 L p4} : Set V3) → (2:ℝ) ≤ ‖a - b‖ := by
+    intro p1 p2 p3 p4 a b hab ha hb
+    have hd : ∀ t : V3, t ∈ ({vecmatsV3_p4 L p1, vecmatsV3_p4 L p2, vecmatsV3_p4 L p3,
+        vecmatsV3_p4 L p4} : Set V3) → t = vecmatsV3_p4 L p1 ∨ t = vecmatsV3_p4 L p2 ∨
+        t = vecmatsV3_p4 L p3 ∨ t = vecmatsV3_p4 L p4 := by
+      intro t ht
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      tauto
+    rcases hd a ha with rfl | rfl | rfl | rfl <;>
+      rcases hd b hb with rfl | rfl | rfl | rfl
+    · exact absurd rfl hab
+    · exact htwo p1 p2 (fun he => hab (by rw [he]))
+    · exact htwo p1 p3 (fun he => hab (by rw [he]))
+    · exact htwo p1 p4 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p1 p2 (fun he => hab (by rw [he]))
+    · exact absurd rfl hab
+    · exact htwo p2 p3 (fun he => hab (by rw [he]))
+    · exact htwo p2 p4 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p1 p3 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p2 p3 (fun he => hab (by rw [he]))
+    · exact absurd rfl hab
+    · exact htwo p3 p4 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p1 p4 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p2 p4 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p3 p4 (fun he => hab (by rw [he]))
+    · exact absurd rfl hab
+  have hsep3 : ∀ (p1 p2 p3 : Fin k) (a b : V3), a ≠ b →
+      a ∈ ({vecmatsV3_p4 L p1, vecmatsV3_p4 L p2, vecmatsV3_p4 L p3} : Set V3) →
+      b ∈ ({vecmatsV3_p4 L p1, vecmatsV3_p4 L p2, vecmatsV3_p4 L p3} : Set V3) →
+      (2:ℝ) ≤ ‖a - b‖ := by
+    intro p1 p2 p3 a b hab ha hb
+    have hd : ∀ t : V3, t ∈ ({vecmatsV3_p4 L p1, vecmatsV3_p4 L p2,
+        vecmatsV3_p4 L p3} : Set V3) → t = vecmatsV3_p4 L p1 ∨ t = vecmatsV3_p4 L p2 ∨
+        t = vecmatsV3_p4 L p3 := by
+      intro t ht
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      tauto
+    rcases hd a ha with rfl | rfl | rfl <;> rcases hd b hb with rfl | rfl | rfl
+    · exact absurd rfl hab
+    · exact htwo p1 p2 (fun he => hab (by rw [he]))
+    · exact htwo p1 p3 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p1 p2 (fun he => hab (by rw [he]))
+    · exact absurd rfl hab
+    · exact htwo p2 p3 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p1 p3 (fun he => hab (by rw [he]))
+    · rw [norm_sub_rev]
+      exact htwo p2 p3 (fun he => hab (by rw [he]))
+    · exact absurd rfl hab
+  have hdec : ∀ e : Set V3, e ∈ E_SY_p4 (vecmatsV3_p4 L) ∪
+      {s : Set V3 | ∃ v ∈ V_SY_p4 (vecmatsV3_p4 L), s = {v}} →
+      (∃ j : Fin k, e = ({vecmatsV3_p4 L j, vecmatsV3_p4 L (finNext j)} : Set V3)) ∨
+      (∃ j : Fin k, e = ({vecmatsV3_p4 L j} : Set V3)) := by
+    intro e he
+    rw [Set.mem_union] at he
+    rcases he with heE | heV
+    · simp only [E_SY_p4, Set.mem_image, Set.mem_univ, true_and] at heE
+      obtain ⟨j, rfl⟩ := heE
+      exact Or.inl ⟨j, rfl⟩
+    · simp only [Set.mem_setOf_eq] at heV
+      obtain ⟨v, hv, rfl⟩ := heV
+      rw [V_SY_p4, Set.mem_range] at hv
+      obtain ⟨j, rfl⟩ := hv
+      exact Or.inr ⟨j, rfl⟩
+  intro e1 he1 e2 he2
+  rcases hdec e1 he1 with ⟨j, rfl⟩ | ⟨j, rfl⟩ <;>
+    rcases hdec e2 he2 with ⟨j', rfl⟩ | ⟨j', rfl⟩
+  · -- 边×边
+    by_cases hjj : j = j'
+    · subst hjj
+      rw [Set.inter_self, Set.inter_self]
+    · by_cases hyeq : vecmatsV3_p4 L j = vecmatsV3_p4 L j'
+      · -- 共享端点 v = L j = L j'
+        have hzz1ne : vecmatsV3_p4 L (finNext j) ≠ vecmatsV3_p4 L (finNext j') :=
+          fun he => hjj (hfinInj (hpinj (finNext j) (finNext j') he))
+        refine w6ccs_fan7_ee_shared (v := vecmatsV3_p4 L j)
+          (w4cs_annulus_ne_zero (hL.1 j)) (w4cs_annulus_ne_zero (hL.1 (finNext j)))
+          (w4cs_annulus_ne_zero (hL.1 j')) (w4cs_annulus_ne_zero (hL.1 (finNext j')))
+          (hL.1 j) (hL.1 (finNext j)) (hL.1 j') (hL.1 (finNext j'))
+          (hnc j) (hnc j')
+          (fun he => hne j he)
+          (fun he => hne j' he)
+          (hadj j) (hadj j')
+          (hsep4 j (finNext j) j' (finNext j'))
+          (by
+            rw [← hyeq]
+            ext t
+            simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+            constructor
+            · rintro ⟨h1, h2⟩
+              rcases h1 with h1 | h1
+              · exact h1
+              · rcases h2 with h2 | h2
+                · exact h2
+                · exact absurd (h1.symm.trans h2) hzz1ne
+            · intro h
+              exact ⟨Or.inl h, Or.inl h⟩)
+      · by_cases hyz1 : vecmatsV3_p4 L j = vecmatsV3_p4 L (finNext j')
+        · -- 共享端点 v = L j = L finNext j'
+          have hzz1ne : vecmatsV3_p4 L (finNext j) ≠ vecmatsV3_p4 L (finNext j') :=
+            fun he => hjj (hfinInj (hpinj (finNext j) (finNext j') he))
+          have hzy1ne : vecmatsV3_p4 L (finNext j) ≠ vecmatsV3_p4 L j' := by
+            intro he
+            have eq2 : w6bcs_prev j = j' := by
+              have h2 := hpinj j (finNext j') hyz1
+              have := congrArg w6bcs_prev h2
+              rw [w6bcs_prev_finNext] at this
+              exact this
+            exact w6bcs_hne hsys hs hf hk3 L hL j
+              ((congrArg (vecmatsV3_p4 L) eq2).trans he.symm)
+          refine w6ccs_fan7_ee_shared (v := vecmatsV3_p4 L j)
+            (w4cs_annulus_ne_zero (hL.1 j)) (w4cs_annulus_ne_zero (hL.1 (finNext j)))
+            (w4cs_annulus_ne_zero (hL.1 j')) (w4cs_annulus_ne_zero (hL.1 (finNext j')))
+            (hL.1 j) (hL.1 (finNext j)) (hL.1 j') (hL.1 (finNext j'))
+            (hnc j) (hnc j')
+            (fun he => hne j he)
+            (fun he => hne j' he)
+            (hadj j) (hadj j')
+            (hsep4 j (finNext j) j' (finNext j'))
+            (by
+              rw [← hyz1]
+              ext t
+              simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+              constructor
+              · rintro ⟨h1, h2⟩
+                rcases h1 with h1 | h1
+                · exact h1
+                · rcases h2 with h2 | h2
+                  · exact absurd (h1.symm.trans h2) hzy1ne
+                  · exact h2
+              · intro h
+                exact ⟨Or.inl h, Or.inr h⟩)
+        · by_cases hzy1 : vecmatsV3_p4 L (finNext j) = vecmatsV3_p4 L j'
+          · -- 共享端点 v = L finNext j = L j'
+            have hyy1ne : vecmatsV3_p4 L j ≠ vecmatsV3_p4 L (finNext j') := by
+              intro he
+              have eq2 : w6bcs_prev j = j' := by
+                have h2 := hpinj j (finNext j') he
+                have := congrArg w6bcs_prev h2
+                rw [w6bcs_prev_finNext] at this
+                exact this
+              exact w6bcs_hne hsys hs hf hk3 L hL j
+                ((congrArg (vecmatsV3_p4 L) eq2).trans hzy1.symm)
+            refine w6ccs_fan7_ee_shared (v := vecmatsV3_p4 L (finNext j))
+              (w4cs_annulus_ne_zero (hL.1 j)) (w4cs_annulus_ne_zero (hL.1 (finNext j)))
+              (w4cs_annulus_ne_zero (hL.1 j')) (w4cs_annulus_ne_zero (hL.1 (finNext j')))
+              (hL.1 j) (hL.1 (finNext j)) (hL.1 j') (hL.1 (finNext j'))
+              (hnc j) (hnc j')
+              (fun he => hne j he)
+              (fun he => hne j' he)
+              (hadj j) (hadj j')
+              (hsep4 j (finNext j) j' (finNext j'))
+              (by
+                rw [← hzy1]
+                ext t
+                simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+                constructor
+                · rintro ⟨h1, h2⟩
+                  rcases h1 with h1 | h1
+                  · rcases h2 with h2 | h2
+                    · exact h2
+                    · exact absurd (h1.symm.trans h2) hyy1ne
+                  · exact h1
+                · intro h
+                  exact ⟨Or.inr h, Or.inl h⟩)
+          · by_cases hzz1 : vecmatsV3_p4 L (finNext j) = vecmatsV3_p4 L (finNext j')
+            · -- 共享端点 v = L finNext j = L finNext j'
+              have hyy1ne : vecmatsV3_p4 L j ≠ vecmatsV3_p4 L j' :=
+                fun he => hjj (hpinj j j' he)
+              refine w6ccs_fan7_ee_shared (v := vecmatsV3_p4 L (finNext j))
+                (w4cs_annulus_ne_zero (hL.1 j)) (w4cs_annulus_ne_zero (hL.1 (finNext j)))
+                (w4cs_annulus_ne_zero (hL.1 j')) (w4cs_annulus_ne_zero (hL.1 (finNext j')))
+                (hL.1 j) (hL.1 (finNext j)) (hL.1 j') (hL.1 (finNext j'))
+                (hnc j) (hnc j')
+                (fun he => hne j he)
+                (fun he => hne j' he)
+                (hadj j) (hadj j')
+                (hsep4 j (finNext j) j' (finNext j'))
+                (by
+                  rw [← hzz1]
+                  ext t
+                  simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+                  constructor
+                  · rintro ⟨h1, h2⟩
+                    rcases h1 with h1 | h1
+                    · rcases h2 with h2 | h2
+                      · exact absurd (h1.symm.trans h2) hyy1ne
+                      · exact h2
+                    · exact h1
+                  · intro h
+                    exact ⟨Or.inr h, Or.inr h⟩)
+            · -- 完全不交
+              have hhii : j ≠ j' := fun he => hyeq (congrArg (vecmatsV3_p4 L) he)
+              have hhiz : j ≠ finNext j' := fun he => hyz1 (congrArg (vecmatsV3_p4 L) he)
+              have hhzi : finNext j ≠ j' := fun he => hzy1 (congrArg (vecmatsV3_p4 L) he)
+              have hhzz : finNext j ≠ finNext j' := fun he => hzz1 (congrArg (vecmatsV3_p4 L) he)
+              have hdisj0 : (({vecmatsV3_p4 L j, vecmatsV3_p4 L (finNext j)} : Set V3) ∩
+                  {vecmatsV3_p4 L j', vecmatsV3_p4 L (finNext j')}) = (∅ : Set V3) := by
+                ext t
+                simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+                constructor
+                · rintro ⟨h1, h2⟩
+                  rcases h1 with h1 | h1 <;> rcases h2 with h2 | h2
+                  · exact absurd (hpinj j j' (h1.symm.trans h2)) hhii
+                  · exact absurd (hpinj j (finNext j') (h1.symm.trans h2)) hhiz
+                  · exact absurd (hpinj (finNext j) j' (h1.symm.trans h2)) hhzi
+                  · exact absurd (hpinj (finNext j) (finNext j') (h1.symm.trans h2)) hhzz
+                · intro h
+                  exact absurd h (by simp)
+              rw [hdisj0, w5cs_affGe_empty]
+              exact w6ccs_fan7_ee_disj hsys hs hf humem huto hL hhii hhiz hhzi hhzz hdisj0
+  · -- 边×顶点
+    exact w6ccs_fan7_ev (w4cs_annulus_ne_zero (hL.1 j)) (w4cs_annulus_ne_zero (hL.1 (finNext j)))
+      (w4cs_annulus_ne_zero (hL.1 j')) (hL.1 j) (hL.1 (finNext j)) (hL.1 j') (hnc j) (hadj j)
+      (hsep3 j (finNext j) j')
+  · -- 顶点×边
+    exact w6ccs_fan7_ve (w4cs_annulus_ne_zero (hL.1 j'))
+      (w4cs_annulus_ne_zero (hL.1 (finNext j'))) (w4cs_annulus_ne_zero (hL.1 j))
+      (hL.1 j') (hL.1 (finNext j')) (hL.1 j) (hnc j') (hadj j')
+      (hsep3 j' (finNext j') j)
+  · -- 顶点×顶点
+    exact w6ccs_fan7_vv (w4cs_annulus_ne_zero (hL.1 j)) (w4cs_annulus_ne_zero (hL.1 j'))
+      (hL.1 j) (hL.1 j') (fun he => htwo j j'
+        (fun hc => he (congrArg (vecmatsV3_p4 L) hc)))
+
+/-- W6c 顶石：极限点 L 处的 FAN（S-I 条款）。 -/
+theorem w6ccs_FAN_of_limit {k : ℕ} {d : ℝ} {s : Finset ℕ}
+    {a b : ℕ → ℕ → ℝ} {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (hL : L ∈ BSY1body_cs k a b) :
+    Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 L)) (E_SY_p4 (vecmatsV3_p4 L)) := by
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk2 : 2 < k := by omega
+  exact w3cs_FAN_of_clauses L (w3cs_sUnion_E_SY_sub_V L)
+    (w3cs_Graph_E_SY L (w3cs_row_ne_next_fin hsys hs hf hk2 L hL))
+    (w3cs_fan1_E_SY L (by omega)) (w3cs_fan2_E_SY L hL)
+    (w3cs_fan6_E_SY hsys hs hf hk2 L hL) (w6ccs_fan7_of_limit hsys hs hf humem huto hL)
+
+/-- Dart count: `|dart1OfFan| = 2 · |F_SY|` (consumes LA4's proven
+`CARD_F_SY_EQ` / `F_SY_INTER_IMAGE_NN_EMPTY`). -/
+theorem w6bcs_card_darts {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hk2 : 2 < k) (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j) :
+    (Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts.card
+      = 2 * Set.ncard (F_SY_p4 (vecmatsV3_p4 l)) := by
+  have hk1 : 1 < k := by omega
+  have hncard : Set.ncard (F_SY_p4 (vecmatsV3_p4 l)) = k := CARD_F_SY_EQ l hinj
+  have hf1c : (Finset.image
+      (fun i : Fin k => (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i))) Finset.univ).card = k := by
+    have hinj1 : Function.Injective
+        (fun i : Fin k => (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i))) := by
+      intro p q hpq
+      exact hinj p q (by have h := congrArg Prod.fst hpq; exact h)
+    rw [Finset.card_image_of_injective _ hinj1, Finset.card_univ, Fintype.card_fin]
+  have hf2c : (Finset.image
+      (fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) Finset.univ).card = k := by
+    have hinj2 : Function.Injective
+        (fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) := by
+      intro p q hpq
+      exact hinj p q (by have h := congrArg Prod.snd hpq; exact h)
+    rw [Finset.card_image_of_injective _ hinj2, Finset.card_univ, Fintype.card_fin]
+  have hdisj : Disjoint
+      (Finset.image (fun i : Fin k => (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i)))
+        Finset.univ)
+      (Finset.image (fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i))
+        Finset.univ) := by
+    rw [Finset.disjoint_iff_ne]
+    intro a ha b hb hcon
+    have ha' : a ∈ F_SY_p4 (vecmatsV3_p4 l) := by
+      obtain ⟨j, -, hj⟩ := Finset.mem_image.mp ha
+      rw [← hj]
+      exact ⟨j, Set.mem_univ _, rfl⟩
+    have hab : a ∈ ((fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) ''
+        Set.univ) := by
+      rw [hcon]
+      obtain ⟨j, -, hj⟩ := Finset.mem_image.mp hb
+      rw [← hj]
+      exact ⟨j, Set.mem_univ _, rfl⟩
+    have hcap : a ∈ F_SY_p4 (vecmatsV3_p4 l) ∩
+        ((fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ) :=
+      Set.mem_inter ha' hab
+    rw [F_SY_INTER_IMAGE_NN_EMPTY l hk2 hinj] at hcap
+    exact hcap
+  have heq : (Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts
+      = Finset.image (fun i : Fin k => (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i)))
+          Finset.univ
+        ∪ Finset.image (fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i))
+          Finset.univ := by
+    refine Finset.ext fun d => ?_
+    show d ∈ ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+          (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts : Set (V3 × V3)) ↔
+      d ∈ Finset.image (fun i : Fin k => (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i)))
+          Finset.univ ∪
+        Finset.image (fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i))
+          Finset.univ
+    constructor
+    · intro hd'
+      have hs1 : d ∈ ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+            (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts : Set (V3 × V3)) :=
+        Finset.mem_coe.mp hd'
+      rw [w6bcs_darts_coe hfan, w6bcs_dart1_eq l hk1 hinj, F_SY_p4] at hs1
+      rcases hs1 with hd1 | hd1
+      · obtain ⟨j, -, rfl⟩ := hd1
+        exact Finset.mem_union_left _ (Finset.mem_image_of_mem _ (Finset.mem_univ j))
+      · obtain ⟨j, -, rfl⟩ := hd1
+        exact Finset.mem_union_right _ (Finset.mem_image_of_mem _ (Finset.mem_univ j))
+    · intro hd'
+      rw [Finset.mem_union] at hd'
+      rcases hd' with hd1 | hd1
+      · obtain ⟨j, _, hj⟩ := Finset.mem_image.mp hd1
+        rw [← hj]
+        exact w6bcs_darts_mem hfan (by
+          show (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j))
+            ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+          exact ⟨j, Set.mem_univ _, rfl⟩)
+      · obtain ⟨j, _, hj⟩ := Finset.mem_image.mp hd1
+        rw [← hj]
+        exact w6bcs_darts_mem hfan (by
+          simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+          rw [Set.pair_comm]
+          exact ⟨j, Set.mem_univ _, rfl⟩)
+  rw [heq, Finset.card_union_of_disjoint hdisj, hf1c, hf2c, hncard, two_mul]
+
+/-- `edgeMap` has order 2. -/
+theorem w6bcs_orders_edge {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hk2 : 2 < k) (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j) :
+    hasOrders_p4
+      ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).edgeMap
+        : V3 × V3 → V3 × V3) 2 := by
+  refine ⟨fun i hi0 hi2 => ?_, funext ?_⟩
+  · have hi1 : i = 1 := by omega
+    subst hi1
+    intro hcon
+    have hmem : (vecmatsV3_p4 l ⟨(0:ℕ), by omega⟩, vecmatsV3_p4 l (finNext ⟨(0:ℕ), by omega⟩))
+        ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      exact ⟨⟨(0:ℕ), by omega⟩, Set.mem_univ _, rfl⟩
+    have h2 := congrFun hcon
+      (vecmatsV3_p4 l ⟨(0:ℕ), by omega⟩, vecmatsV3_p4 l (finNext ⟨(0:ℕ), by omega⟩))
+    rw [Function.iterate_one, w6bcs_edgeMap_apply hfan _ hmem] at h2
+    have h4 : ((0:ℕ) + 1) % k = 0 := by
+      have h4' : vecmatsV3_p4 l (finNext ⟨(0:ℕ), by omega⟩)
+          = vecmatsV3_p4 l ⟨(0:ℕ), by omega⟩ := congrArg Prod.fst h2
+      have h5' := hinj (finNext ⟨(0:ℕ), by omega⟩) ⟨(0:ℕ), by omega⟩ h4'
+      exact congrArg Fin.val h5'
+    have h6 := Nat.mod_lt (0 + 1) (by omega)
+    have h7 : ((0:ℕ) + 1) % k = 1 := by
+      show (1:ℕ) % k = 1
+      exact Nat.mod_eq_of_lt (by omega)
+    omega
+  · intro d
+    show ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).edgeMap :
+        V3 × V3 → V3 × V3)^[2] d = d
+    by_cases hd : d ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+    · have hd2 : (d.2, d.1) ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+        simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+        rw [Set.pair_comm]
+        exact hd
+      rw [Function.iterate_succ_apply, Function.iterate_one, w6bcs_edgeMap_apply hfan d hd,
+        w6bcs_edgeMap_apply hfan (d.2, d.1) hd2]
+    · rw [Function.iterate_succ_apply, Function.iterate_one]
+      have hout := w6bcs_map_apply_out hfan d hd
+      rw [hout.2.1, hout.2.1]
+
+/-- `nodeMap` has order 2. -/
+theorem w6bcs_orders_node {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hk2 : 2 < k)
+    (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i)) :
+    hasOrders_p4
+      ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).nodeMap
+        : V3 × V3 → V3 × V3) 2 := by
+  refine ⟨fun i hi0 hi2 => ?_, funext ?_⟩
+  · have hi1 : i = 1 := by omega
+    subst hi1
+    intro hcon
+    have hmem : (vecmatsV3_p4 l ⟨(0:ℕ), by omega⟩, vecmatsV3_p4 l (finNext ⟨(0:ℕ), by omega⟩))
+        ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      exact ⟨⟨(0:ℕ), by omega⟩, Set.mem_univ _, rfl⟩
+    have h2 := congrFun hcon
+      (vecmatsV3_p4 l ⟨(0:ℕ), by omega⟩, vecmatsV3_p4 l (finNext ⟨(0:ℕ), by omega⟩))
+    rw [Function.iterate_one, w6bcs_nodeMap_apply hfan _ hmem,
+      w6bcs_nFanPair_next l hsoe hne ⟨(0:ℕ), by omega⟩] at h2
+    have h3 : vecmatsV3_p4 l (w6bcs_prev ⟨(0:ℕ), by omega⟩)
+        = vecmatsV3_p4 l (finNext ⟨(0:ℕ), by omega⟩) := congrArg Prod.snd h2
+    exact hne ⟨(0:ℕ), by omega⟩ h3
+  · intro d
+    show ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).nodeMap :
+        V3 × V3 → V3 × V3)^[2] d = d
+    by_cases hd : d ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+    · have hd' : d ∈ F_SY_p4 (vecmatsV3_p4 l) ∪
+        ((fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ) := by
+        rw [← w6bcs_darts_eq l hfan hk2 hinj]
+        exact w6bcs_darts_mem hfan hd
+      rcases (Set.mem_union _ _ _).mp hd' with hd1 | hd1
+      · obtain ⟨j, -, rfl⟩ := hd1
+        have hmem1 : (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)) ∈ Fan.dart1OfFan
+            (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+          simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+          exact ⟨j, Set.mem_univ _, rfl⟩
+        have hmem2 : (vecmatsV3_p4 l (finNext (w6bcs_prev j)), vecmatsV3_p4 l (w6bcs_prev j))
+            ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+          simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+          exact ⟨w6bcs_prev j, Set.mem_univ _, by
+            show ({vecmatsV3_p4 l (w6bcs_prev j), vecmatsV3_p4 l (finNext (w6bcs_prev j))} :
+                Set V3)
+              = ({vecmatsV3_p4 l (finNext (w6bcs_prev j)), vecmatsV3_p4 l (w6bcs_prev j)}
+                : Set V3)
+            rw [Set.pair_comm]⟩
+        rw [Function.iterate_succ_apply, Function.iterate_one,
+          w6bcs_nodeMap_apply hfan _ hmem1, w6bcs_nFanPair_next l hsoe hne j,
+          show ((vecmatsV3_p4 l j, vecmatsV3_p4 l (w6bcs_prev j)) : V3 × V3)
+            = (vecmatsV3_p4 l (finNext (w6bcs_prev j)), vecmatsV3_p4 l (w6bcs_prev j)) from by
+            rw [congrArg (vecmatsV3_p4 l) (w6bcs_finNext_prev j).symm],
+          w6bcs_nodeMap_apply hfan _ hmem2, w6bcs_nFanPair_prev l hsoe hne (w6bcs_prev j),
+          w6bcs_finNext_prev]
+      · obtain ⟨t, -, rfl⟩ := hd1
+        have hmem1 : (vecmatsV3_p4 l (finNext t), vecmatsV3_p4 l t) ∈ Fan.dart1OfFan
+            (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+          simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+          rw [Set.pair_comm]
+          exact ⟨t, Set.mem_univ _, rfl⟩
+        have hmem3 : (vecmatsV3_p4 l (finNext t), vecmatsV3_p4 l (finNext (finNext t)))
+            ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+          simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+          exact ⟨finNext t, Set.mem_univ _, rfl⟩
+        rw [Function.iterate_succ_apply, Function.iterate_one,
+          w6bcs_nodeMap_apply hfan _ hmem1, w6bcs_nFanPair_prev l hsoe hne t,
+          w6bcs_nodeMap_apply hfan _ hmem3,
+          w6bcs_nFanPair_next l hsoe hne (finNext t), w6bcs_prev_finNext]
+    · rw [Function.iterate_succ_apply, Function.iterate_one]
+      have hout := w6bcs_map_apply_out hfan d hd
+      rw [hout.2.2, hout.2.2]
+
+/-- Outside the dart set all three maps fix the point; iterates too. -/
+theorem w6bcs_faceMap_iterate_out {V : Set V3} {E : Set (Set V3)}
+    (hfan : Fan.FAN 0 V E) (n : ℕ) (d : V3 × V3)
+    (hd : d ∉ Fan.dart1OfFan V E) :
+    ((Fan.hypermapOfFan 0 V E hfan).faceMap : V3 × V3 → V3 × V3)^[n] d = d := by
+  induction n with
+  | zero => rfl
+  | succ m ih =>
+    have h1 := (w6bcs_map_apply_out hfan d hd).1
+    rw [Function.iterate_succ_apply', ih, h1]
+
+/-- `faceMap` has order `k`. -/
+theorem w6bcs_orders_face {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hk2 : 2 < k)
+    (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i)) :
+    hasOrders_p4
+      ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).faceMap
+        : V3 × V3 → V3 × V3) k := by
+  have hfk : ∀ i : Fin k, finNext^[k] i = i := by
+    intro i
+    rw [w6bcs_finNext_iterate]
+    refine Fin.ext ?_
+    show ((i.val + k) % k) = i.val
+    rw [Nat.add_mod_right, Nat.mod_eq_of_lt i.isLt]
+  have hpk : ∀ i : Fin k, (w6bcs_prev)^[k] i = i := by
+    intro i
+    rw [w6bcs_prev_iterate, Function.iterate_mul,
+      show finNext^[k] = (id : Fin k → Fin k) from funext hfk]
+    simp
+  refine ⟨fun i hi0 hik => ?_, funext ?_⟩
+  · intro hcon
+    have hmem : (vecmatsV3_p4 l ⟨(0:ℕ), by omega⟩, vecmatsV3_p4 l (finNext ⟨(0:ℕ), by omega⟩))
+        ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      exact ⟨⟨(0:ℕ), by omega⟩, Set.mem_univ _, rfl⟩
+    have h2 := congrFun hcon
+      (vecmatsV3_p4 l ⟨(0:ℕ), by omega⟩, vecmatsV3_p4 l (finNext ⟨(0:ℕ), by omega⟩))
+    rw [w6bcs_faceMap_iterate_fwd l hsoe hne hfan i ⟨(0:ℕ), by omega⟩,
+      w6bcs_finNext_iterate, Nat.zero_add] at h2
+    have h3 : vecmatsV3_p4 l ⟨(i % k), Nat.mod_lt _ (by omega)⟩
+        = vecmatsV3_p4 l ⟨(0:ℕ), by omega⟩ := congrArg Prod.fst h2
+    have h4 : (Fin.mk (i % k) (Nat.mod_lt _ (by omega)) : Fin k)
+        = Fin.mk 0 (by omega) := hinj _ _ h3
+    have h5 : (i % k : ℕ) = 0 := congrArg Fin.val h4
+    rw [Nat.mod_eq_of_lt hik] at h5
+    omega
+  · intro d
+    show ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).faceMap :
+        V3 × V3 → V3 × V3)^[k] d = d
+    by_cases hd : d ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+    · have hd' : d ∈ F_SY_p4 (vecmatsV3_p4 l) ∪
+        ((fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ) := by
+        rw [← w6bcs_darts_eq l hfan hk2 hinj]
+        exact w6bcs_darts_mem hfan hd
+      rcases (Set.mem_union _ _ _).mp hd' with hd1 | hd1
+      · obtain ⟨j, -, rfl⟩ := hd1
+        rw [w6bcs_faceMap_iterate_fwd l hsoe hne hfan k j, hfk]
+      · obtain ⟨t, -, rfl⟩ := hd1
+        rw [w6bcs_faceMap_iterate_rev l hsoe hne hfan k t, hpk]
+    · exact w6bcs_faceMap_iterate_out hfan k d hd
+
+/-- The `dih2k` clause for the `F_SY` hypermap at the limit configuration
+(HOL `DIH2K_FAN_HYP_SY`, dih2k.hl:3217; LA4's twin is a sorry giant,
+reproved here from the Fan.hypermapOfFan kit). -/
+theorem w6bcs_dih2k {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hk2 : 2 < k) (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i)) :
+    dih2k_p4 (hyp_p4 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+      (Set.ncard (F_SY_p4 (vecmatsV3_p4 l))) := by
+  have hc := w6bcs_card_darts l hfan hk2 hinj
+  rw [CARD_F_SY_EQ l hinj] at hc
+  rw [w6bcs_hyp_eq hfan, CARD_F_SY_EQ l hinj]
+  refine ⟨hc, fun p hp => ?_, w6bcs_orders_face l hfan hk2 hinj hsoe hne,
+    w6bcs_orders_edge l hfan hk2 hinj, w6bcs_orders_node l hfan hk2 hinj hsoe hne⟩
+  have hs3 : p ∈ ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts : Set (V3 × V3)) :=
+    Finset.mem_coe.mp hp
+  rw [w6bcs_darts_eq l hfan hk2 hinj] at hs3 ⊢
+  rcases hs3 with hp1 | hp2
+  · obtain ⟨j, -, rfl⟩ := hp1
+    rw [← w6bcs_hyp_eq hfan, w6bcs_face_fwd l hfan hsoe hne j, w6bcs_hyp_eq hfan,
+      w6bcs_nodeMap_image_fwd l hfan hsoe hne]
+  · obtain ⟨j, -, rfl⟩ := hp2
+    rw [← w6bcs_hyp_eq hfan, w6bcs_face_rev l hfan hsoe hne j, w6bcs_hyp_eq hfan,
+      w6bcs_nodeMap_image_rev l hfan hsoe hne, Set.union_comm]
+
+/-- **S-I top stone**: from the explicit `FAN` clause the full `localFan_p4`
+holds with `FF = F_SY` (the ∃-dart and `dih2k` clauses of
+`CONDITION2_SY_cs`'s definitional expansion; HOL WJSCPRO:2292-2400,
+`FACE_HYP_FAN_SY` + `DIH2K_FAN_HYP_SY` stations). -/
+theorem w6bcs_localFan_of_FAN {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (hL : L ∈ BSY1body_cs k a b)
+    (hFAN : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 L)) (E_SY_p4 (vecmatsV3_p4 L))) :
+    localFan_p4 (V_SY_p4 (vecmatsV3_p4 L)) (E_SY_p4 (vecmatsV3_p4 L))
+      (F_SY_p4 (vecmatsV3_p4 L)) := by
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk1 : 1 < k := by omega
+  have hk2 : 2 < k := by omega
+  have hinj := w6bcs_hinj hsys hs hf hk1 L hL
+  have hne := w6bcs_hne hsys hs hf hk3 L hL
+  have hsoe : ∀ i : Fin k, Fan.setOfEdge (vecmatsV3_p4 L i) (V_SY_p4 (vecmatsV3_p4 L))
+      (E_SY_p4 (vecmatsV3_p4 L)) =
+      {vecmatsV3_p4 L (w6bcs_prev i), vecmatsV3_p4 L (finNext i)} :=
+    fun i => w6bcs_setOfEdge_eq L hk1 hinj i
+  refine ⟨hFAN, ⟨(vecmatsV3_p4 L ⟨(0:ℕ), by omega⟩, vecmatsV3_p4 L (finNext ⟨(0:ℕ), by omega⟩)),
+    ?_, ?_⟩, ?_⟩
+  · rw [w6bcs_hyp_eq hFAN]
+    exact w6bcs_darts_mem hFAN (by
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      exact ⟨⟨(0:ℕ), by omega⟩, Set.mem_univ _, rfl⟩)
+  · rw [w6bcs_face_fwd L hFAN hsoe hne ⟨(0:ℕ), by omega⟩]
+  · exact w6bcs_dih2k L hFAN hk2 hinj hsoe hne
+
+/-- **S-K bridge, direction A**: from the convex bound `azim ≤ π` to the
+mixed-product sign (HOL WJSCPRO ~2412-2470 station; `JBDNJJB` = Planarity). -/
+theorem w6bcs_mixed_ge_of_azim_le_pi {u v w : V3}
+    (h1 : ¬ Collinear3 (0:V3) u v) (h2 : ¬ Collinear3 (0:V3) u w)
+    (h : azim 0 u v w ≤ Real.pi) :
+    0 ≤ (crossProduct (WithLp.ofLp u : Fin 3 → ℝ) (WithLp.ofLp v : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp w : Fin 3 → ℝ) := by
+  obtain ⟨t, ht, hsin⟩ := JBDNJJB h1 h2
+  have hs : 0 ≤ Real.sin (azim 0 u v w) := Real.sin_nonneg_of_mem_Icc ⟨azim_nonneg 0 u v w, h⟩
+  rw [hsin] at hs
+  rcases le_or_gt 0 ((crossProduct (WithLp.ofLp u : Fin 3 → ℝ)
+      (WithLp.ofLp v : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp w : Fin 3 → ℝ)) with hm | hm
+  · exact hm
+  · exfalso
+    have hneg : Real.sin (azim 0 u v w) < 0 := by
+      rw [hsin]
+      have h1 := mul_lt_mul_of_pos_left hm ht
+      rwa [mul_zero] at h1
+    linarith
+
+/-- **S-K bridge, direction B**: from the mixed-product sign back to
+`azim ≤ π` (HOL WJSCPRO ~2470-2600 station: `PI_TO_TWO_PI_NEG_SIN`
+route via `azim_lt_two_pi`). -/
+theorem w6bcs_azim_le_pi_of_mixed_ge {u v w : V3}
+    (h1 : ¬ Collinear3 (0:V3) u v) (h2 : ¬ Collinear3 (0:V3) u w)
+    (hm : 0 ≤ (crossProduct (WithLp.ofLp u : Fin 3 → ℝ) (WithLp.ofLp v : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp w : Fin 3 → ℝ)) :
+    azim 0 u v w ≤ Real.pi := by
+  obtain ⟨t, ht, hsin⟩ := JBDNJJB h1 h2
+  have hsn : 0 ≤ Real.sin (azim 0 u v w) := by
+    rw [hsin]
+    exact mul_nonneg (le_of_lt ht) hm
+  rcases lt_or_ge (Real.pi) (azim 0 u v w) with hlt | hle
+  · exfalso
+    have hsub : azim 0 u v w - Real.pi ∈ Set.Ioo (0:ℝ) Real.pi :=
+      ⟨by linarith, by linarith [azim_lt_two_pi 0 u v w]⟩
+    have hpos : 0 < Real.sin (azim 0 u v w - Real.pi) := Real.sin_pos_of_mem_Ioo hsub
+    have hsinpi : Real.sin (azim 0 u v w - Real.pi) = -Real.sin (azim 0 u v w) := by
+      rw [Real.sin_sub]
+      simp
+    linarith
+  · exact hle
+
+/-- **S-K top stone**: the `azimInFan ≤ π` clause of `CONDITION2_SY_cs`
+transfers to the limit point (HOL WJSCPRO:2292-2686, S-K; the per-`n`
+supply is the convex clause of `CONDITION2_SY_cs (u n)`, the geometric
+quantity moves by `w5cs_tendsto_cross_dot` + `ge_of_tendsto`). -/
+theorem w6bcs_azimInFan_le_pi {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (hL : L ∈ BSY1body_cs k a b)
+    (hFAN : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 L)) (E_SY_p4 (vecmatsV3_p4 L))) :
+    ∀ x ∈ F_SY_p4 (vecmatsV3_p4 L), azimInFan_p4 x (E_SY_p4 (vecmatsV3_p4 L)) ≤ Real.pi := by
+  intro x hx
+  obtain ⟨i, -, rfl⟩ := hx
+  show azimInFan_p4 (vecmatsV3_p4 L i, vecmatsV3_p4 L (finNext i))
+      (E_SY_p4 (vecmatsV3_p4 L)) ≤ Real.pi
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk1 : 1 < k := by omega
+  have hk2 : 2 < k := by omega
+  have hinjL := w6bcs_hinj hsys hs hf hk1 L hL
+  have hneL := w6bcs_hne hsys hs hf hk3 L hL
+  rw [w6bcs_azimInFan_gen L hFAN hk1 hinjL i (hneL i)]
+  have hmxL : 0 ≤ (crossProduct (WithLp.ofLp (vecmatsV3_p4 L i) : Fin 3 → ℝ)
+      (WithLp.ofLp (vecmatsV3_p4 L (finNext i)) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 L (w6bcs_prev i)) : Fin 3 → ℝ) := by
+    have hmixn : ∀ n : ℕ, 0 ≤ (crossProduct
+        (WithLp.ofLp (vecmatsV3_p4 (u n) i) : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 (u n) (finNext i)) : Fin 3 → ℝ)) ⬝ᵥ
+        (WithLp.ofLp (vecmatsV3_p4 (u n) (w6bcs_prev i)) : Fin 3 → ℝ) := by
+      intro n
+      have hm : u n ∈ SYset_cs k a b := humem n
+      have hun : u n ∈ BSY1body_cs k a b := hm.1
+      have hc2 : CONDITION2_SY_cs k (u n) := hm.2
+      have hfanN : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 (u n))) (E_SY_p4 (vecmatsV3_p4 (u n))) :=
+        (hc2.1).1
+      have hinjN := w6bcs_hinj hsys hs hf hk1 (u n) hun
+      have hneN := w6bcs_hne hsys hs hf hk3 (u n) hun
+      have hcf := (hc2.2 (vecmatsV3_p4 (u n) i, vecmatsV3_p4 (u n) (finNext i))
+        ⟨i, Set.mem_univ _, rfl⟩).1
+      rw [w6bcs_azimInFan_gen (u n) hfanN hk1 hinjN i (hneN i)] at hcf
+      have he1 : {vecmatsV3_p4 (u n) i, vecmatsV3_p4 (u n) (finNext i)}
+          ∈ E_SY_p4 (vecmatsV3_p4 (u n)) := ⟨i, Set.mem_univ _, rfl⟩
+      have he2 : {vecmatsV3_p4 (u n) i, vecmatsV3_p4 (u n) (w6bcs_prev i)}
+          ∈ E_SY_p4 (vecmatsV3_p4 (u n)) := by
+        refine ⟨w6bcs_prev i, Set.mem_univ _, ?_⟩
+        show ({vecmatsV3_p4 (u n) (w6bcs_prev i), vecmatsV3_p4 (u n) (finNext (w6bcs_prev i))} :
+            Set V3) = ({vecmatsV3_p4 (u n) i, vecmatsV3_p4 (u n) (w6bcs_prev i)} : Set V3)
+        rw [w6bcs_finNext_prev, Set.pair_comm]
+      exact w6bcs_mixed_ge_of_azim_le_pi (Fan.fan_not_collinear hfanN he1)
+        (Fan.fan_not_collinear hfanN he2) hcf
+    have htn := w5cs_tendsto_cross_dot huto i (finNext i) (w6bcs_prev i)
+    exact ge_of_tendsto htn (Filter.Eventually.of_forall hmixn)
+  have he1L : {vecmatsV3_p4 L i, vecmatsV3_p4 L (finNext i)}
+      ∈ E_SY_p4 (vecmatsV3_p4 L) := ⟨i, Set.mem_univ _, rfl⟩
+  have he2L : {vecmatsV3_p4 L i, vecmatsV3_p4 L (w6bcs_prev i)}
+      ∈ E_SY_p4 (vecmatsV3_p4 L) := by
+    rw [Set.pair_comm (vecmatsV3_p4 L i) (vecmatsV3_p4 L (w6bcs_prev i))]
+    exact ⟨w6bcs_prev i, Set.mem_univ _, by
+      show ({vecmatsV3_p4 L (w6bcs_prev i), vecmatsV3_p4 L (finNext (w6bcs_prev i))} :
+          Set V3) = ({vecmatsV3_p4 L (w6bcs_prev i), vecmatsV3_p4 L i} : Set V3)
+      rw [w6bcs_finNext_prev]⟩
+  exact w6bcs_azim_le_pi_of_mixed_ge (Fan.fan_not_collinear hFAN he1L)
+    (Fan.fan_not_collinear hFAN he2L) hmxL
+
+
+end W6dKit
+
 end Kepler.Text
