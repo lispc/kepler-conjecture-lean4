@@ -114,33 +114,6 @@ image). Verbatim twin of `SYset_p18` (LocalAuto18:232). -/
 def SYset_cs (k : ℕ) (a b : ℕ → ℕ → ℝ) : Set (FinVec k 3) :=
   {l | l ∈ BSY1body_cs k a b ∧ CONDITION2_SY_cs k l}
 
-/-- HOL `CLOSED_SY` (WJSCPRO.hl:63). Giant (the HOL proof spans
-WJSCPRO.hl:63-3174, threading sequential limits through the rows,
-`CONDITION1_SY` and the fan-convexity clause `CONDITION2_SY`).
-
-bodyClosed 战役 W3–W7 目标；HOL CLOSED_SY WJSCPRO.hl:63-3174；
-SF-89b/bodyclosed-recon 路线 B 债根（bodyclosed-w2b 起为唯一债根：LA23
-`bodyClosed_p23` 经 G-B2 + G-B1 消费本件，LA18 `CLOSED_SY_p18` 经定义层孪生
-桥重定向到本件）。
-
-Statement verbatim twin of `CLOSED_SY_p18` (LocalAuto18:238).
-SF-89c (2026-11-02, bodyclosed-w3 §2.2): the premise pins `s = 0..k-1` and
-`f = succ mod k` exactly as HOL `stable_system k d (0..k-1) a b J
-(\i. (1+i) MOD k)` — the free-`s f` generalization had no supply for the
-row-pair lower bound (`s ∩ [1,k] = ∅`) and is refuted by the m=6 collapse
-family; G-B2 supplies precisely this pinned shape. -/
-theorem CLOSED_SY_cs {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
-    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
-    (_hsys : stableSystem_cs k d s a b J f) (_hs : s = Finset.Iic (k - 1))
-    (_hf : f = fun j => (1 + j) % k) (_hk1 : 1 < k) (_hk2 : 2 < k) :
-    IsClosed (SYset_cs k a b) := by
-  sorry
-  -- DISCHARGES: the `BSY1body_cs` factor is closed exactly as in
-  -- LocalAuto9's `CLOSED_TRI_SY_p9` (proved there; blocked here only by
-  -- that theorem's `triStable_p9` hypothesis, so the intersection
-  -- argument must be redone locally); the `CONDITION2_SY_cs` factor
-  -- needs the limit argument on `V_SY`/`E_SY`/`F_SY`
-  -- (HOL: CLOSED_SY's SKOLEM/sequential-lims part).
 
 /-! ## Section A′: bodyclosed-w2 G-B1 bridge, redirected to `_cs`
 
@@ -5280,5 +5253,413 @@ theorem w6bcs_azimInFan_le_pi {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ �
 
 
 end W6dKit
+
+/-! === W7bKit: bodyclosed-w7b —— hstrict 静态核（strict 分支孪生链）+
+`w7bcs_hC2_W7` 拼装 + `CLOSED_SY_cs` 出清。纯插入；零新 import；零 sorry。
+
+strict 支路线（不走 W7a §4 已探明的三条失败路）：
+- `w7bcs_azim_compose`：方位角复合 `azim 0 u v z ≡ azim 0 u v p +
+  azim 0 u p z (mod 2π)` —— `azim_frame_spec` ×3 + 复指数相位消去
+  （`azim_compl` 模板）；由此绕开 LA5 `WEDGE_GE_EQ_AFF_GE` 孪生链。
+- `w7bcs_azim_le_of_two_cross`：两条 dart cross-dot（phase 1 在 dart `i` 与
+  dart `prev i`，`finNext (prev i) = i`）+ JBDNJJB sin 桥 ⟹ `azim 0 u v w ≤ β`。
+- β = 0 情形：`azim_eq_zero_iff` + `affGt_pair_iff` 系数 + fan7（affGe
+  分配律）两次应用 ⟹ 同射线 ⟹ 与 annulus 非零矛盾。 === -/
+
+section W7bKit
+
+/-- Pi 侧 skew 桥（`w5bcs_cross_skew_dot` 的公开化孪生）。 -/
+theorem w7bcs_cross_skew_dot {p q : V3} (t : Fin 3 → ℝ) :
+    (crossProduct (WithLp.ofLp q : Fin 3 → ℝ) (WithLp.ofLp p : Fin 3 → ℝ)) ⬝ᵥ t
+      = -((crossProduct (WithLp.ofLp p : Fin 3 → ℝ) (WithLp.ofLp q : Fin 3 → ℝ)) ⬝ᵥ t) := by
+  rw [dotProduct_comm, ← cross_anticomm, dotProduct_neg, dotProduct_comm]
+
+/-- `affGe {x} ∅ = {x}`（Affsign 空锥和式坍缩）。 -/
+theorem w7bcs_affGe_empty {x : V3} : affGe ({x} : Set V3) (∅ : Set V3) = {x} := by
+  ext y
+  simp only [affGe, Affsign, Set.mem_setOf_eq, Set.mem_singleton_iff,
+    Set.mem_empty_iff_false]
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have hT : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp only [hfin.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false, Finset.mem_singleton]
+      tauto
+    rw [hT] at hsum hone
+    rw [Finset.sum_singleton] at hsum hone
+    rw [hone] at hsum
+    simpa using hsum
+  · intro hy
+    rw [hy]
+    refine ⟨fun _ => (1:ℝ), by simp, ?_, ?_, ?_⟩
+    · simp
+    · intro w hw
+      simp at hw
+    · simp
+
+/-- 射线自反：`x ∈ affGe {0} {x}`。 -/
+theorem w7bcs_self_mem_affGe_ray (x : V3) :
+    x ∈ affGe ({(0:V3)} : Set V3) ({x} : Set V3) := by
+  rw [affGe, Set.mem_setOf_eq, Affsign]
+  refine ⟨fun w => if w = x then (1:ℝ) else 0,
+    (Set.finite_singleton (0:V3)).union (Set.finite_singleton x), ?_, ?_, ?_⟩
+  · simp [Set.union_singleton]
+  · intro w hw
+    simp only [Set.mem_singleton_iff] at hw
+    rw [hw]
+    simp
+  · simp
+
+/-- 方位角复合（LA5 `WEDGE_GE_EQ_AFF_GE` 孪生链的替代核心）：同一轴下，
+从 `v` 量到 `z` 的方位角 ≡ 从 `v` 量到 `p` 加从 `p` 量到 `z`（mod 2π）。
+证：`azim_frame_spec` 三次（同一右手正交标架，e3 ∥ u），三个平面极坐标
+相位经 `exp_pos_mul_eq` 消去半径后链式相消（`azim_compl` 模板）。 -/
+theorem w7bcs_azim_compose {u v p z : V3} (h1 : ¬ Collinear3 0 u v)
+    (h2 : ¬ Collinear3 0 u p) (h3 : ¬ Collinear3 0 u z) :
+    ∃ n : ℤ, azim 0 u v z
+      = azim 0 u v p + azim 0 u p z + (n:ℝ) * (2 * Real.pi) := by
+  have hu0 : u ≠ 0 := fun he => h1 (by rw [he]; exact collinear3_of_eq rfl)
+  obtain ⟨e1, e2, e3, hon, hue⟩ := exists_on3_eq_smul u hu0
+  have hax : (u - 0 : V3) = dist u 0 • e3 := by
+    rw [sub_zero, dist_eq_norm, sub_zero]
+    exact hue
+  -- spec A：参考射线 v（θ := azim 0 u v z）
+  obtain ⟨ψ, rv, rz, hrv, hrz, hvz, hvzz⟩ :=
+    azim_frame_spec (v := 0) (w := u) (w1 := v) (w2 := z) h1 h3 hon hax hu0
+  -- spec B：参考射线 v（β := azim 0 u v p）
+  obtain ⟨ψ', rv', rp, hrv', hrp, hvz', hpzp⟩ :=
+    azim_frame_spec (v := 0) (w := u) (w1 := v) (w2 := p) h1 h2 hon hax hu0
+  -- spec C：参考射线 p（φ := azim 0 u p z）
+  obtain ⟨ψ'', rp', rz', hrp', hrz', hpzp', hpzz'⟩ :=
+    azim_frame_spec (v := 0) (w := u) (w1 := p) (w2 := z) h2 h3 hon hax hu0
+  have hveq : Complex.exp (((ψ:ℝ):ℂ) * Complex.I)
+      = Complex.exp (((ψ':ℝ):ℂ) * Complex.I) :=
+    exp_pos_mul_eq hrv hrv' (hvz.symm.trans hvz')
+  have hpeq : Complex.exp ((((ψ' + azim 0 u v p : ℝ)):ℂ) * Complex.I)
+      = Complex.exp (((ψ'':ℝ):ℂ) * Complex.I) :=
+    exp_pos_mul_eq hrp hrp' (hpzp.symm.trans hpzp')
+  have hzeq : Complex.exp ((((ψ + azim 0 u v z : ℝ)):ℂ) * Complex.I)
+      = Complex.exp ((((ψ'' + azim 0 u p z : ℝ)):ℂ) * Complex.I) :=
+    exp_pos_mul_eq hrz hrz' (hvzz.symm.trans hpzz')
+  have s1 : Complex.exp ((((ψ + azim 0 u v z : ℝ)):ℂ) * Complex.I)
+      = Complex.exp (((ψ:ℝ):ℂ) * Complex.I)
+        * Complex.exp (((azim 0 u v z : ℝ):ℂ) * Complex.I) := exp_add_I _ _
+  have s2 : Complex.exp ((((ψ'' + azim 0 u p z : ℝ)):ℂ) * Complex.I)
+      = Complex.exp (((ψ'':ℝ):ℂ) * Complex.I)
+        * Complex.exp (((azim 0 u p z : ℝ):ℂ) * Complex.I) := exp_add_I _ _
+  have s3 : Complex.exp ((((ψ' + azim 0 u v p : ℝ)):ℂ) * Complex.I)
+      = Complex.exp (((ψ':ℝ):ℂ) * Complex.I)
+        * Complex.exp (((azim 0 u v p : ℝ):ℂ) * Complex.I) := exp_add_I _ _
+  have s4 : Complex.exp ((((azim 0 u v p + azim 0 u p z : ℝ)):ℂ) * Complex.I)
+      = Complex.exp (((azim 0 u v p : ℝ):ℂ) * Complex.I)
+        * Complex.exp (((azim 0 u p z : ℝ):ℂ) * Complex.I) := exp_add_I _ _
+  have hcancel : Complex.exp (((azim 0 u v z : ℝ):ℂ) * Complex.I)
+      = Complex.exp ((((azim 0 u v p + azim 0 u p z : ℝ)):ℂ) * Complex.I) := by
+    refine mul_left_cancel₀ (a := Complex.exp (((ψ:ℝ):ℂ) * Complex.I))
+      (Complex.exp_ne_zero _) ?_
+    rw [← s1, hzeq, s2, ← hpeq, s3, s4, ← hveq]
+    ring
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hcancel
+  refine ⟨n, ?_⟩
+  have hc : ((azim 0 u v z : ℝ):ℂ) * Complex.I
+      = (((azim 0 u v p + azim 0 u p z + (n:ℝ) * (2 * Real.pi) : ℝ)):ℂ) * Complex.I := by
+    rw [hn]
+    push_cast
+    ring
+  have hfin : azim 0 u v z = azim 0 u v p + azim 0 u p z + (n:ℝ) * (2 * Real.pi) := by
+    have h2 := congrArg Complex.re (mul_right_cancel₀ Complex.I_ne_zero hc)
+    simpa using h2
+  exact hfin
+
+/-- **strict 支静态核**（HOL WJSCPRO:3031-3172 的线性代数化；HOL 的
+`WEDGE_GE_EQ_AFF_GE` + `inter_aff_ge_3_1` + `aff_ge_3_1_rep_cross_dot` 三件
+在此被「sin 桥 + 方位角复合」替代）：两条 dart cross-dot 非负（phase 1 在
+dart `i` 与 dart `prev i`，后者 `finNext (prev i) = i`）⟹ 行的方位角 ≤ β
+（β ∈ (0, π)；β = 0 由 fan7 排除，见供体）。 -/
+theorem w7bcs_azim_le_of_two_cross {u v p w : V3}
+    (huv : ¬ Collinear3 0 u v) (hup : ¬ Collinear3 0 u p)
+    (hBpos : 0 < azim 0 u v p)
+    (h1 : (0:ℝ) ≤ (crossProduct (WithLp.ofLp u : Fin 3 → ℝ)
+        (WithLp.ofLp v : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp w : Fin 3 → ℝ))
+    (h2 : (0:ℝ) ≤ (crossProduct (WithLp.ofLp p : Fin 3 → ℝ)
+        (WithLp.ofLp u : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp w : Fin 3 → ℝ)) :
+    azim 0 u v w ≤ azim 0 u v p := by
+  by_cases hwcol : Collinear3 0 u w
+  · rw [azim, if_pos (Or.inr hwcol)]
+    exact azim_nonneg 0 u v p
+  · -- 两条 sin 桥
+    obtain ⟨t2, ht2, hsin2⟩ := JBDNJJB huv hwcol
+    obtain ⟨t3, ht3, hsin3⟩ := JBDNJJB hup hwcol
+    -- θ := azim 0 u v w ∈ [0, π]（sin θ ≥ 0 由 h1）
+    have hθle : azim 0 u v w ≤ Real.pi := by
+      by_contra hcon
+      push_neg at hcon
+      have hsneg : Real.sin (azim 0 u v w) < 0 :=
+        w7acs_pi_to_two_pi_neg_sin _ hcon (azim_lt_two_pi 0 u v w)
+      rw [hsin2] at hsneg
+      exact absurd (mul_nonneg ht2.le h1) (not_le.mpr hsneg)
+    -- φ := azim 0 u p w：sin φ ≤ 0（h2 经 skew 桥）
+    have h3n := w7bcs_cross_skew_dot (t := WithLp.ofLp w) (p := u) (q := p)
+    have hφsign : Real.sin (azim 0 u p w) ≤ 0 := by
+      rw [hsin3]
+      have hXle : (crossProduct (WithLp.ofLp u : Fin 3 → ℝ)
+          (WithLp.ofLp p : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp w : Fin 3 → ℝ) ≤ 0 := by
+        linarith
+      exact (mul_le_mul_of_nonneg_left hXle ht3.le).trans (by rw [mul_zero])
+    have hφcase : azim 0 u p w = 0 ∨ Real.pi ≤ azim 0 u p w := by
+      rcases eq_or_lt_of_le (azim_nonneg 0 u p w) with h0 | hpos
+      · exact Or.inl h0.symm
+      · by_cases hπ : Real.pi ≤ azim 0 u p w
+        · exact Or.inr hπ
+        · exfalso
+          push_neg at hπ
+          linarith [Real.sin_pos_of_pos_of_lt_pi hpos hπ, hφsign]
+    -- 复合 + 整数分档
+    obtain ⟨n, hn⟩ := w7bcs_azim_compose huv hup hwcol
+    rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+    · -- n ≤ -1：θ = β + φ + n·2π ≤ β + 2π - 2π = β
+      have hnle : ((n:ℤ):ℝ) ≤ -1 := by exact_mod_cast (by omega : (n:ℤ) ≤ -1)
+      have hnmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+        mul_le_mul_of_nonneg_right hnle (by positivity)
+      rw [neg_one_mul] at hnmul
+      rw [hn]
+      linarith [hnmul, azim_lt_two_pi 0 u p w]
+    · -- n = 0：θ = β + φ；φ = 0 ⟹ θ = β，φ ≥ π ⟹ θ > π 与 hθle 矛盾
+      rcases hφcase with h0 | hπ
+      · have hn0 : ((n:ℤ):ℝ) = 0 := by exact_mod_cast hzero
+        rw [hn0, h0] at hn
+        simp at hn
+        linarith
+      · have hn0 : ((n:ℤ):ℝ) = 0 := by exact_mod_cast hzero
+        rw [hn0] at hn
+        simp at hn
+        linarith [hn, hπ, hBpos, hθle]
+    · -- n ≥ 1：θ ≥ β + φ + 2π > 2π 与 azim 值域矛盾
+      have hnge : ((n:ℤ):ℝ) ≥ 1 := by exact_mod_cast (by omega : (n:ℤ) ≥ 1)
+      have hnmul : (1:ℝ) * (2 * Real.pi) ≤ (n:ℝ) * (2 * Real.pi) :=
+        mul_le_mul_of_nonneg_right hnge (by positivity)
+      rw [one_mul] at hnmul
+      rw [hn]
+      linarith [hnmul, hBpos.le, azim_nonneg 0 u p w, azim_lt_two_pi 0 u v w]
+
+/-- **hstrict 供体**（`w7acs_wedge_of_limit` 的 `hstrict` 前提在 L 处的真证；
+W7b 唯一新增承载件）：FAN + phase 1 + β = 0 的 fan7 排除 ⟹ strict 情形
+wedge 成员。 -/
+theorem w7bcs_hstrict_of_limit {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (hL : L ∈ BSY1body_cs k a b)
+    (hFAN : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 L)) (E_SY_p4 (vecmatsV3_p4 L))) :
+    ∀ (i : Fin k) (w : V3), w ∈ V_SY_p4 (vecmatsV3_p4 L) →
+      azim 0 (vecmatsV3_p4 L i) (vecmatsV3_p4 L (finNext i))
+          (vecmatsV3_p4 L (w6bcs_prev i)) < Real.pi →
+      w ∈ wedgeGe_p4 0 (vecmatsV3_p4 L i) (vecmatsV3_p4 L (finNext i))
+          (vecmatsV3_p4 L (w6bcs_prev i)) := by
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk2 : 2 < k := by omega
+  have hk1 : 1 < k := by omega
+  rw [BSY1body_cs, Set.mem_setOf_eq] at hL
+  have hann : ∀ j : Fin k, vecmatsV3_p4 L j ∈ ballAnnulus := hL.1
+  have hinj := w6bcs_hinj hsys hs hf hk1 L hL
+  have hu0 : ∀ j, vecmatsV3_p4 L j ≠ (0:V3) := fun j => w4cs_annulus_ne_zero (hann j)
+  obtain ⟨-, -, -, -, -, hf7⟩ := hFAN
+  intro i w hw hplt
+  obtain ⟨r, rfl⟩ := Set.mem_range.mp hw
+  -- phase-1 两条（dart i 与 dart prev i；finNext (prev i) = i）
+  have hcVi := w7acs_cross_dot_ge_of_limit hsys hs hf humem huto i r
+  have hcVp := w7acs_cross_dot_ge_of_limit hsys hs hf humem huto (w6bcs_prev i) r
+  rw [w6bcs_finNext_prev] at hcVp
+  -- dart 非共线两条
+  have hncUV := NONPARALLEL_BALL_ANNULUS (hann i) (hann (finNext i))
+    (w6bcs_two_le_fin hsys hs hf hk1 L hL (w7acs_ne_next hk2 i))
+    (w7acs_adj_fin hsys hs hf hk1 L hL i)
+  have hncUP := NONPARALLEL_BALL_ANNULUS (hann i) (hann (w6bcs_prev i))
+    (w6bcs_two_le_fin hsys hs hf hk1 L hL (w7acs_ne_prev hk2 i))
+    (by rw [norm_sub_rev]
+        have h := w7acs_adj_fin hsys hs hf hk1 L hL (w6bcs_prev i)
+        rw [w6bcs_finNext_prev] at h
+        exact h)
+  rcases eq_or_lt_of_le (azim_nonneg 0 (vecmatsV3_p4 L i)
+      (vecmatsV3_p4 L (finNext i)) (vecmatsV3_p4 L (w6bcs_prev i))) with hB0 | hBpos
+  · -- β = 0：fan7 排除
+    exfalso
+    set u := vecmatsV3_p4 L i with hudef
+    set v := vecmatsV3_p4 L (finNext i) with hvdef
+    set p := vecmatsV3_p4 L (w6bcs_prev i) with hpdef
+    have hup0 : p ≠ 0 := hu0 (w6bcs_prev i)
+    have hv0 : v ≠ 0 := hu0 (finNext i)
+    have hvp : p ≠ v := w6bcs_hne hsys hs hf hk3 L hL i
+    have hvu : v ≠ u := by
+      intro hcon
+      exact w7acs_ne_next hk2 i (hinj _ _ hcon).symm
+    -- 两条边（经 setOfEdge；show 规整 setOf 的 And 形，W7a 陷阱 47 同法）
+    have hsoeU := w6bcs_setOfEdge_eq L hk1 hinj i
+    have heUV : ({u, v} : Set V3) ∈ E_SY_p4 (vecmatsV3_p4 L) := by
+      have hm : ({u, v} : Set V3) ∈ E_SY_p4 (vecmatsV3_p4 L)
+          ∧ v ∈ V_SY_p4 (vecmatsV3_p4 L) :=
+        show v ∈ Fan.setOfEdge u (V_SY_p4 (vecmatsV3_p4 L))
+            (E_SY_p4 (vecmatsV3_p4 L)) from by
+          rw [hsoeU]
+          exact Set.mem_insert_iff.mpr (Or.inr rfl)
+      exact hm.1
+    have heUP : ({u, p} : Set V3) ∈ E_SY_p4 (vecmatsV3_p4 L) := by
+      have hm : ({u, p} : Set V3) ∈ E_SY_p4 (vecmatsV3_p4 L)
+          ∧ p ∈ V_SY_p4 (vecmatsV3_p4 L) :=
+        show p ∈ Fan.setOfEdge u (V_SY_p4 (vecmatsV3_p4 L))
+            (E_SY_p4 (vecmatsV3_p4 L)) from by
+          rw [hsoeU]
+          exact Set.mem_insert_iff.mpr (Or.inl rfl)
+      exact hm.1
+    -- β = 0 ⟹ v ∈ affGt {0, u} {p}
+    have hpnu : p ≠ u := by
+      intro hcon
+      exact w7acs_ne_prev hk2 i (hinj _ _ hcon).symm
+    have hvgt : v ∈ affGt ({(0:V3), u} : Set V3) ({p} : Set V3) :=
+      (azim_eq_zero_iff (v0 := (0:V3)) (v1 := u) (w := v) (x := p)
+        hncUV hncUP).mp hB0.symm
+    obtain ⟨c, hc, hco, hvq⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := u) (x := p) (y := v)
+        (Ne.symm (hu0 i)) hup0 hpnu).mp hvgt
+    simp at hvq
+    -- fan7 两次：cone(u,v) ∩ ray(p) = {0} 与 cone(u,p) ∩ ray(v) = {0}
+    have hmemUV : ({u, v} : Set V3) ∈ E_SY_p4 (vecmatsV3_p4 L)
+        ∪ {s : Set V3 | ∃ z ∈ V_SY_p4 (vecmatsV3_p4 L), s = {z}} := Or.inl heUV
+    have hmemUP : ({u, p} : Set V3) ∈ E_SY_p4 (vecmatsV3_p4 L)
+        ∪ {s : Set V3 | ∃ z ∈ V_SY_p4 (vecmatsV3_p4 L), s = {z}} := Or.inl heUP
+    have hmemP : ({p} : Set V3) ∈ E_SY_p4 (vecmatsV3_p4 L)
+        ∪ {s : Set V3 | ∃ z ∈ V_SY_p4 (vecmatsV3_p4 L), s = {z}} :=
+      Or.inr ⟨p, Set.mem_range.mpr ⟨w6bcs_prev i, rfl⟩, rfl⟩
+    have hmemV : ({v} : Set V3) ∈ E_SY_p4 (vecmatsV3_p4 L)
+        ∪ {s : Set V3 | ∃ z ∈ V_SY_p4 (vecmatsV3_p4 L), s = {z}} :=
+      Or.inr ⟨v, Set.mem_range.mpr ⟨finNext i, rfl⟩, rfl⟩
+    have hix1 : (({u, v} : Set V3) ∩ {p} : Set V3) = (∅ : Set V3) := by
+      ext z
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false]
+      refine ⟨fun hc2 => ?_, fun hc2 => hc2.elim⟩
+      obtain ⟨hz, hzp⟩ := hc2
+      rcases hz with hz | hz
+      · rw [hz] at hzp
+        exact w7acs_ne_prev hk2 i (hinj _ _ hzp)
+      · rw [hz] at hzp
+        exact hvp hzp.symm
+    have hix2 : (({u, p} : Set V3) ∩ {v} : Set V3) = (∅ : Set V3) := by
+      ext z
+      simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false]
+      refine ⟨fun hc2 => ?_, fun hc2 => hc2.elim⟩
+      obtain ⟨hz, hzp⟩ := hc2
+      rcases hz with hz | hz
+      · rw [hz] at hzp
+        exact hvu hzp.symm
+      · rw [hz] at hzp
+        exact hvp hzp
+    have hfan1 := hf7 _ hmemUV _ hmemP
+    rw [hix1, w7bcs_affGe_empty] at hfan1
+    have hfan2 := hf7 _ hmemUP _ hmemV
+    rw [hix2, w7bcs_affGe_empty] at hfan2
+    have hpr : p ∈ affGe ({(0:V3)} : Set V3) ({p} : Set V3) :=
+      w7bcs_self_mem_affGe_ray _
+    have hvray : v ∈ affGe ({(0:V3)} : Set V3) ({v} : Set V3) :=
+      w7bcs_self_mem_affGe_ray _
+    by_cases hle : hco ≤ 0
+    · -- hco ≤ 0：p ∈ cone(u,v)（aff_ge_1_2 系数）→ p ∈ {0} 与 annulus 矛盾
+      have hdisj : Disjoint ({(0:V3)} : Set V3) ({u, v} : Set V3) :=
+        Set.disjoint_singleton_left.mpr
+          (by rintro (hc | hc)
+              · exact hu0 i hc.symm
+              · exact hu0 (finNext i) hc.symm)
+      have hpmem : p ∈ affGe ({(0:V3)} : Set V3) ({u, v} : Set V3) := by
+        rw [aff_ge_1_2 hdisj]
+        refine ⟨1 - (-hco/c) - 1/c, -hco/c, 1/c, div_nonneg (neg_nonneg.mpr hle) hc.le,
+          (by positivity : (0:ℝ) ≤ 1 / c), by ring, ?_⟩
+        rw [hvq, smul_add, smul_smul, smul_smul, smul_zero, zero_add]
+        have e1 : ((1/c) * c : ℝ) = 1 := by field_simp
+        rw [e1, one_smul]
+        module
+      have hpin : p ∈ (affGe ({(0:V3)} : Set V3) ({u, v} : Set V3))
+          ∩ affGe ({(0:V3)} : Set V3) ({p} : Set V3) := Set.mem_inter hpmem hpr
+      rw [hfan1] at hpin
+      exact hup0 (Set.mem_singleton_iff.mp hpin)
+    · -- hco > 0：v ∈ cone(u,p) → v ∈ {0} 与 annulus 矛盾
+      push_neg at hle
+      have hgt : 0 < hco := hle
+      have hdisj2 : Disjoint ({(0:V3)} : Set V3) ({u, p} : Set V3) :=
+        Set.disjoint_singleton_left.mpr
+          (by rintro (hc | hc)
+              · exact hu0 i hc.symm
+              · exact hu0 (w6bcs_prev i) hc.symm)
+      have hvmem : v ∈ affGe ({(0:V3)} : Set V3) ({u, p} : Set V3) := by
+        rw [aff_ge_1_2 hdisj2]
+        refine ⟨1 - hco - c, hco, c, hgt.le, hc.le, by ring, ?_⟩
+        rw [hvq, smul_zero]
+        module
+      have hvin : v ∈ (affGe ({(0:V3)} : Set V3) ({u, p} : Set V3))
+          ∩ affGe ({(0:V3)} : Set V3) ({v} : Set V3) := Set.mem_inter hvmem hvray
+      rw [hfan2] at hvin
+      exact hv0 (Set.mem_singleton_iff.mp hvin)
+  · -- β ∈ (0, π)：strict 核
+    rw [wedgeGe_p4, Set.mem_setOf_eq]
+    exact ⟨azim_nonneg 0 (vecmatsV3_p4 L i) (vecmatsV3_p4 L (finNext i))
+        (vecmatsV3_p4 L r),
+      w7bcs_azim_le_of_two_cross hncUV hncUP hBpos hcVi hcVp⟩
+
+/-- **W7b 主件**（W3 DELIVERY §2.1 冻结结论形逐字；前提按骨架对齐钉
+`hs hf`，W7a §5 拼装式逐字喂入）：极限点 L 处的 `CONDITION2_SY_cs`。 -/
+theorem w7bcs_hC2_W7 {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ} (hsys : stableSystem_cs k d s a b J f)
+    (hs : s = Finset.Iic (k - 1)) (hf : f = fun j => (1 + j) % k)
+    (_hk1 : 1 < k) (_hk2 : 2 < k) :
+    ∀ (u : ℕ → FinVec k 3) (L : FinVec k 3), (∀ n, u n ∈ SYset_cs k a b) →
+      Filter.Tendsto u Filter.atTop (nhds L) → L ∈ BSY1body_cs k a b →
+      CONDITION2_SY_cs k L := by
+  intro u L humem huto hL
+  have hFAN := w6ccs_FAN_of_limit hsys hs hf humem huto hL
+  have hazim := w6bcs_azimInFan_le_pi hsys hs hf humem huto hL hFAN
+  have hlf := w6bcs_localFan_of_FAN hsys hs hf humem huto hL hFAN
+  exact w7acs_CONDITION2_of_parts L hlf hazim
+    (w7acs_wedge_of_limit hsys hs hf humem huto hL hFAN hazim
+      (w7bcs_hstrict_of_limit hsys hs hf humem huto hL hFAN))
+
+end W7bKit
+
+
+/-! The debt root moves to the file tail (W7b): Lean has no forward
+references, and its proof now consumes the W7bKit assembly below;
+statement and premise names are verbatim-unchanged, only the body
+`sorry` line is replaced. -/
+
+/-- HOL `CLOSED_SY` (WJSCPRO.hl:63). Giant (the HOL proof spans
+WJSCPRO.hl:63-3174, threading sequential limits through the rows,
+`CONDITION1_SY` and the fan-convexity clause `CONDITION2_SY`).
+
+bodyClosed 战役 W3–W7 目标；HOL CLOSED_SY WJSCPRO.hl:63-3174；
+SF-89b/bodyclosed-recon 路线 B 债根（bodyclosed-w2b 起为唯一债根：LA23
+`bodyClosed_p23` 经 G-B2 + G-B1 消费本件，LA18 `CLOSED_SY_p18` 经定义层孪生
+桥重定向到本件）。
+
+Statement verbatim twin of `CLOSED_SY_p18` (LocalAuto18:238).
+SF-89c (2026-11-02, bodyclosed-w3 §2.2): the premise pins `s = 0..k-1` and
+`f = succ mod k` exactly as HOL `stable_system k d (0..k-1) a b J
+(\i. (1+i) MOD k)` — the free-`s f` generalization had no supply for the
+row-pair lower bound (`s ∩ [1,k] = ∅`) and is refuted by the m=6 collapse
+family; G-B2 supplies precisely this pinned shape. -/
+theorem CLOSED_SY_cs {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (_hsys : stableSystem_cs k d s a b J f) (_hs : s = Finset.Iic (k - 1))
+    (_hf : f = fun j => (1 + j) % k) (_hk1 : 1 < k) (_hk2 : 2 < k) :
+    IsClosed (SYset_cs k a b) := by
+  exact closedSy_cs_of_limitTransfer (w7bcs_hC2_W7 _hsys _hs _hf _hk1 _hk2)
+  -- DISCHARGES: the `BSY1body_cs` factor is closed exactly as in
+  -- LocalAuto9's `CLOSED_TRI_SY_p9` (proved there; blocked here only by
+  -- that theorem's `triStable_p9` hypothesis, so the intersection
+  -- argument must be redone locally); the `CONDITION2_SY_cs` factor
+  -- needs the limit argument on `V_SY`/`E_SY`/`F_SY`
+  -- (HOL: CLOSED_SY's SKOLEM/sequential-lims part).
 
 end Kepler.Text
