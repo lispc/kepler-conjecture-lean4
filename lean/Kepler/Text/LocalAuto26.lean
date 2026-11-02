@@ -97,6 +97,7 @@ ENCODING NOTES
     1-based-row bridge.
 -/
 
+import Kepler.Text.CircularSolKit
 import Kepler.Text.LocalAuto23
 import Kepler.Text.LocalAuto27
 import Mathlib
@@ -1275,12 +1276,12 @@ theorem TAU_STAR_POS_p26 (s : StableSyP23) (l : FinVec s.k 3)
   unfold tauStar_p23
   linarith
 
-/-- HOL `CIRCULAR_SOL_EQ_2PI` (GBYCPXS.hl:592). Proof pending (needs
-`LOCAL_FAN_RHO_NODE_PROS` / `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM` / `KCHMAMG`:
-on a circular fan every dart azimuth equals `pi`). -/
+/-- HOL `CIRCULAR_SOL_EQ_2PI` (GBYCPXS.hl:592): on a circular fan every
+dart azimuth equals `pi`, so the solid angle is `2 * pi` (KCHMAMG engine,
+discharged by `circularSolEq2Pi_cs`, CircularSolKit). -/
 theorem CIRCULAR_SOL_EQ_2PI_p26 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (hclf : ConvexLocalFan V E FF) (hc : Circular V E) : solLocal E FF = 2 * Real.pi := by
-  sorry
+  exact circularSolEq2Pi_cs hclf hc
 
 /-- HOL `NOT_CIRCULAR_SY` (GBYCPXS.hl:621): `tau_star s l <= 0` forces the
 fan of `l` to be non-circular, since circularity would give
