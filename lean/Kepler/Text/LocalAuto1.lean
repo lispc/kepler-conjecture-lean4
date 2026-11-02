@@ -1889,12 +1889,185 @@ theorem AURSIPD_concl : ∀ (s : ScsV39) (v : ℕ → V3), 3 < s.k → isScsV39 
     3 + {i | i < s.k ∧ scsIsStr s v i}.ncard ≤ s.k := by
   sorry
 
+/-! ## W5c-F1 helper kit: analytic `arcV` / `atn2` / `arcLength` lemmas
+(proves `PPBTYDQ_concl` + `OIQKKEP_concl`; all pieces are within LA1's
+existing import closure — no new imports). -/
+
+/-- `arcV 0 x y = arccos (x ⬝ᵥ y / (‖x‖ * ‖y‖))` (angle at the origin;
+same idiom as SolidAngle's private `arcV_zero_neg` proof). -/
+private theorem w5cF1_arcV_zero (x y : V3) :
+    arcV 0 x y = Real.arccos (x ⬝ᵥ y / (‖x‖ * ‖y‖)) := by
+  simp only [arcV, dist_zero_right]
+  congr 1
+  simp
+
+/-- `atn2 x y = arctan (y / x)` whenever `x > 0` (branch-resolved). -/
+private theorem w5cF1_atn2_eq_arctan {x y : ℝ} (hx : 0 < x) :
+    atn2 x y = Real.arctan (y / x) := by
+  rw [atn2]
+  split_ifs with hb1 hb2 hb3
+  · rfl
+  · -- `¬(|y| < x)`, `0 < y`: `π/2 - arctan (x/y) = arctan (y/x)`
+    have hz : 0 < y / x := div_pos hb2 hx
+    have hinv := Real.arctan_inv_of_pos hz
+    rw [inv_div] at hinv
+    linarith
+  · -- `¬(0 < y)`, `y < 0`: `-(π/2) - arctan (x/y) = arctan (y/x)`
+    have hy0 : y < 0 := hb3
+    have hz : y / x < 0 := div_neg_of_neg_of_pos hy0 hx
+    have hinv := Real.arctan_inv_of_neg hz
+    rw [inv_div] at hinv
+    linarith
+  · -- `y = 0`: `|y| < x` holds, contradicting `hb1` — unreachable branch
+    have hy0 : y = 0 := le_antisymm (by linarith) (by linarith)
+    rw [hy0] at hb1
+    simp at hb1
+    exact absurd hx (not_lt.mpr hb1)
+
+/-- `cos (π/2 + w) = -sin w`. -/
+private theorem w5cF1_cos_pi_half_add (w : ℝ) :
+    Real.cos (Real.pi / 2 + w) = -Real.sin w := by
+  rw [Real.cos_add, Real.cos_pi_div_two, Real.sin_pi_div_two]
+  ring
+
+/-- `arctan z ∈ (-π/2, π/2)`. -/
+private theorem w5cF1_arctan_mem (z : ℝ) :
+    Real.arctan z < Real.pi / 2 ∧ -Real.pi / 2 < Real.arctan z := by
+  constructor
+  · exact Real.arctan_lt_pi_div_two z
+  · have h := Real.arctan_lt_pi_div_two (-z)
+    rw [Real.arctan_neg] at h
+    linarith
+
+/-- `arclength 2 2 c = acs ((8 - c^2)/8)` on the flyspeck range `2 ≤ c < 4`
+(the angle of the isoceles triangle with legs `2, 2` and base `c`). -/
+private theorem w5cF1_arclength222_eq_acos {c : ℝ} (hc2 : 2 ≤ c) (hc4 : c < 4) :
+    arcLength 2 2 c = Real.arccos ((8 - c * c) / 8) := by
+  have hc0 : (0:ℝ) ≤ c := by linarith
+  have hpos : (0:ℝ) < 16 - c * c := by nlinarith
+  have hup : upsX (2 * 2) (2 * 2) (c * c) = c ^ 2 * (16 - c * c) := by
+    simp only [upsX]
+    ring
+  have hx : Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)) = c * Real.sqrt (16 - c * c) := by
+    rw [hup, Real.sqrt_mul (sq_nonneg c), Real.sqrt_sq hc0]
+  have hxpos : (0:ℝ) < c * Real.sqrt (16 - c * c) :=
+    mul_pos (by linarith) (Real.sqrt_pos.mpr hpos)
+  have hxne : c * Real.sqrt (16 - c * c) ≠ 0 := ne_of_gt hxpos
+  have hX2Y2 : (c * Real.sqrt (16 - c * c)) ^ 2 + (c * c - 8) ^ 2 = 64 := by
+    have hsq : (c * Real.sqrt (16 - c * c)) ^ 2 = c ^ 2 * (16 - c * c) := by
+      rw [mul_pow, Real.sq_sqrt (by nlinarith : (0:ℝ) ≤ 16 - c * c)]
+    rw [hsq]
+    ring
+  have hdL : arcLength 2 2 c
+      = Real.pi / 2 + atn2 (Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)))
+          (c * c - 2 * 2 - 2 * 2) := rfl
+  have hsimp : (c * c - 2 * 2 - 2 * 2 : ℝ) = c * c - 8 := by ring
+  rw [hdL, hsimp, hx, w5cF1_atn2_eq_arctan hxpos]
+  refine (Real.arccos_eq_of_eq_cos ?_ ?_ ?_).symm
+  · obtain ⟨_, hlo⟩ :=
+      w5cF1_arctan_mem ((c * c - 8) / (c * Real.sqrt (16 - c * c)))
+    linarith [Real.pi_pos]
+  · obtain ⟨hhi, _⟩ :=
+      w5cF1_arctan_mem ((c * c - 8) / (c * Real.sqrt (16 - c * c)))
+    linarith [Real.pi_pos]
+  · rw [w5cF1_cos_pi_half_add, Real.sin_arctan]
+    have hsq0 : Real.sqrt (16 - c * c) ≠ 0 :=
+      fun he => absurd (Real.sqrt_pos.mpr hpos) (by rw [he]; simp)
+    have hsq0b : Real.sqrt (16 - c ^ 2) ≠ 0 := by rw [pow_two]; exact hsq0
+    have hsq2 : (c * Real.sqrt (16 - c * c)) ^ 2 ≠ 0 :=
+      fun he => hxne (pow_eq_zero_iff (by norm_num : (2:ℕ) ≠ 0) |>.mp he)
+    have hsq1 : (1:ℝ) + ((c * c - 8) / (c * Real.sqrt (16 - c * c))) ^ 2
+        = 64 / (c * Real.sqrt (16 - c * c)) ^ 2 := by
+      rw [div_pow, ← div_self hsq2, ← add_div, hX2Y2]
+    rw [hsq1, Real.sqrt_div (by norm_num : (0:ℝ) ≤ 64),
+      show (Real.sqrt 64 : ℝ) = 8 from by norm_num,
+      Real.sqrt_sq (by nlinarith : (0:ℝ) ≤ c * Real.sqrt (16 - c * c))]
+    rw [show ((c * c - 8) / (c * Real.sqrt (16 - c * c))
+          / (8 / (c * Real.sqrt (16 - c * c))) : ℝ) = (c * c - 8) / 8
+      from by field_simp [hsq0b],
+      show (8:ℝ) - c * c = -(c * c - 8) from by ring, neg_div]
+
+/-- For `x, y ≠ 0` and `t < 0`, the origin angles `arcV 0 x y` and
+`arcV 0 y (t • x)` add up to `π` (`y` lies on the ray opposite to `x`). -/
+private theorem w5cF1_arcV_neg_smul_sum {x y : V3} {t : ℝ}
+    (hx : x ≠ 0) (hy : y ≠ 0) (ht : t < 0) :
+    arcV 0 x y + arcV 0 y (t • x) = Real.pi := by
+  have hxn : (0:ℝ) < ‖x‖ := norm_pos_iff.mpr hx
+  have hyn : (0:ℝ) < ‖y‖ := norm_pos_iff.mpr hy
+  have htn : ‖t • x‖ = (-t) * ‖x‖ := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_neg ht]
+  have e1 := w5cF1_arcV_zero x y
+  have e2 : arcV 0 y (t • x) = Real.arccos (-(x ⬝ᵥ y / (‖x‖ * ‖y‖))) := by
+    simp only [arcV, dist_zero_right, WithLp.ofLp_zero, sub_zero, WithLp.ofLp_smul,
+      dotProduct_smul, dotProduct_comm, smul_eq_mul, htn]
+    congr 1
+    rw [show (‖y‖ * (-t * ‖x‖) : ℝ) = (-t) * (‖x‖ * ‖y‖) from by ring,
+      ← div_mul_div_comm, div_neg, div_self ht.ne, neg_mul, one_mul]
+  rw [e1, e2, Real.arccos_neg]
+  ring
+
 /-- HOL `PPBTYDQ_concl` (appendix.hl:1285). Proof pending. -/
 theorem PPBTYDQ_concl : ∀ (u v p : V3), ¬Collinear ℝ ({0, v, p} : Set V3) →
     ¬Collinear ℝ ({0, u, p} : Set V3) →
     arcV 0 u p + arcV 0 p v < Real.pi →
     ¬(0 ∈ convexHull ℝ ({u, v} : Set V3)) := by
-  sorry
+  intro u v p hv hu hlt hconv
+  have h2set : ∀ (a b : V3), ({a, a, b} : Set V3) = {a, b} := by
+    intro a b
+    ext z
+    simp
+  have hu0 : u ≠ 0 := by
+    intro he
+    refine hu ?_
+    rw [he, h2set]
+    exact collinear_pair ℝ 0 p
+  have hv0 : v ≠ 0 := by
+    intro he
+    refine hv ?_
+    rw [he, h2set]
+    exact collinear_pair ℝ 0 p
+  have hp0 : p ≠ 0 := by
+    intro he
+    refine hu ?_
+    rw [he]
+    have hz : ({0, u, (0:V3)} : Set V3) = {0, u} := by ext z; simp; tauto
+    rw [hz]
+    exact collinear_pair ℝ 0 u
+  have hcomb : ∃ a b : ℝ, 0 ≤ a ∧ 0 ≤ b ∧ 0 < a + b ∧ a • u + b • v = (0:V3) := by
+    rw [convexHull_pair] at hconv
+    rw [mem_segment_iff_div] at hconv
+    obtain ⟨a, b, ha, hb, hsum, hvec⟩ := hconv
+    refine ⟨a / (a + b), b / (a + b), div_nonneg ha (le_of_lt hsum),
+      div_nonneg hb (le_of_lt hsum),
+      (by rw [← add_div, div_self (ne_of_gt hsum)]; norm_num), ?_⟩
+    exact hvec
+  obtain ⟨a, b, ha, hb, hsum, hvec⟩ := hcomb
+  rcases lt_or_ge 0 b with hbp | hb0
+  · rcases lt_or_ge 0 a with hap | ha0
+    · -- main case: both coefficients positive ⇒ v = (-(a / b)) • u, negative scalar
+      exact hlt.ne (by
+        have hbn : b ≠ 0 := ne_of_gt hbp
+        have htpos : (0:ℝ) < a / b := div_pos hap hbp
+        have hsm : b • v = b • ((-(a / b)) • u) := by
+          rw [smul_smul, show (b * -(a / b) : ℝ) = -a from by field_simp, neg_smul,
+            eq_neg_of_add_eq_zero_right hvec]
+        have hvt : v = (-(a / b)) • u := smul_right_injective V3 hbn hsm
+        rw [hvt]
+        rw [w5cF1_arcV_neg_smul_sum hu0 hp0 (by linarith)])
+    · -- a = 0 ⇒ v = 0, contradicting ¬Collinear {0, v, p}
+      have hae : a = 0 := by linarith
+      rw [hae, zero_smul, zero_add] at hvec
+      rw [smul_eq_zero] at hvec
+      rcases hvec with he | he
+      · exact absurd he hbp.ne'
+      · exact hv (by rw [he, h2set]; exact collinear_pair ℝ 0 p)
+  · -- b = 0 ⇒ u = 0, contradicting ¬Collinear {0, u, p}
+    have hbe : b = 0 := by linarith
+    rw [hbe, zero_smul, add_zero] at hvec
+    rw [smul_eq_zero] at hvec
+    rcases hvec with he | he
+    · exact absurd he (fun hc => by linarith)
+    · exact hu (by rw [he, h2set]; exact collinear_pair ℝ 0 p)
 
 /-- HOL `MXQTIED_concl` (appendix.hl:1288). Proof pending. -/
 theorem MXQTIED_concl : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s → isScsV39 s' →
@@ -2020,7 +2193,66 @@ theorem XWNHLMD_concl : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s → isS
 /-- HOL `OIQKKEP_concl` (appendix.hl:1309). Proof pending. -/
 theorem OIQKKEP_concl : ∀ (u v : V3) (c : ℝ), u ∈ ballAnnulus → v ∈ ballAnnulus →
     c < 4 → 2 ≤ dist u v → dist u v ≤ c → arcV 0 u v ≤ arcLength 2 2 c := by
-  sorry
+  intro u v c hu hv hc4 hd2 hdc
+  have hu' : dist u 0 ≤ 2 * h0 ∧ ¬(dist u 0 < 2) := by
+    simpa [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball, dist_self] using hu
+  have hv' : dist v 0 ≤ 2 * h0 ∧ ¬(dist v 0 < 2) := by
+    simpa [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball, dist_self] using hv
+  have hux : (2:ℝ) ≤ ‖u‖ := by
+    rw [← dist_zero_right]
+    exact le_of_not_gt hu'.2
+  have hvx : (2:ℝ) ≤ ‖v‖ := by
+    rw [← dist_zero_right]
+    exact le_of_not_gt hv'.2
+  have hup : (0:ℝ) < ‖u‖ * ‖v‖ :=
+    mul_pos (lt_of_lt_of_le (by norm_num) hux) (lt_of_lt_of_le (by norm_num) hvx)
+  have e1 : arcV 0 u v = Real.arccos (u ⬝ᵥ v / (‖u‖ * ‖v‖)) := w5cF1_arcV_zero u v
+  have hnormsub : dist u v ^ 2 = ‖u‖ ^ 2 + ‖v‖ ^ 2 - 2 * (u ⬝ᵥ v) := by
+    have h1 : (u : V3) ⬝ᵥ u = ‖u‖ ^ 2 := by
+      rw [← Kepler.Geom.inner_eq_dot]
+      exact real_inner_self_eq_norm_sq u
+    have h2 : (v : V3) ⬝ᵥ v = ‖v‖ ^ 2 := by
+      rw [← Kepler.Geom.inner_eq_dot]
+      exact real_inner_self_eq_norm_sq v
+    have h3 : (u - v : V3) ⬝ᵥ (u - v : V3) = ‖u - v‖ ^ 2 := by
+      rw [← Kepler.Geom.inner_eq_dot]
+      exact real_inner_self_eq_norm_sq (u - v)
+    have h4 : (u - v : V3) ⬝ᵥ (u - v : V3) = u ⬝ᵥ u - 2 * (u ⬝ᵥ v) + v ⬝ᵥ v := by
+      rw [← Kepler.Geom.inner_eq_dot (u - v : V3) (u - v : V3)]
+      simp only [inner_sub_left, inner_sub_right, real_inner_comm, Kepler.Geom.inner_eq_dot]
+      ring
+    rw [dist_eq_norm, ← h3, h4, h1, h2]
+    ring
+  have hdc2 : dist u v ^ 2 ≤ c ^ 2 := by
+    have hge : (0:ℝ) ≤ dist u v := by
+      rw [dist_eq_norm]
+      exact norm_nonneg _
+    nlinarith
+  have hxy4 : (4:ℝ) ≤ ‖u‖ * ‖v‖ := by nlinarith
+  have hstep : (8:ℝ) * (u ⬝ᵥ v) ≥ 8 * (‖u‖ * ‖v‖) - c ^ 2 * (‖u‖ * ‖v‖) := by
+    have hA4 : (8:ℝ) * (u ⬝ᵥ v) = 4 * (‖u‖ ^ 2 + ‖v‖ ^ 2) - 4 * dist u v ^ 2 := by
+      linear_combination 4 * hnormsub
+    have hmid : (4:ℝ) * (‖u‖ ^ 2 + ‖v‖ ^ 2) - 4 * c ^ 2
+        ≥ 8 * (‖u‖ * ‖v‖) - c ^ 2 * (‖u‖ * ‖v‖) := by
+      have heq : (4:ℝ) * (‖u‖ ^ 2 + ‖v‖ ^ 2) - 4 * c ^ 2
+          - (8 * (‖u‖ * ‖v‖) - c ^ 2 * (‖u‖ * ‖v‖))
+          = 4 * (‖u‖ - ‖v‖) ^ 2 + c ^ 2 * (‖u‖ * ‖v‖ - 4) := by ring
+      have hpos2 : (0:ℝ) ≤ 4 * (‖u‖ - ‖v‖) ^ 2 + c ^ 2 * (‖u‖ * ‖v‖ - 4) :=
+        add_nonneg (by nlinarith [sq_nonneg (‖u‖ - ‖v‖)])
+          (mul_nonneg (sq_nonneg c) (by linarith))
+      linarith
+    linarith
+  have hq2 : ((8 - c * c : ℝ) / 8) ≤ u ⬝ᵥ v / (‖u‖ * ‖v‖) := by
+    rw [le_div_iff₀ hup]
+    have hdv : ((8 - c * c) / 8) * (‖u‖ * ‖v‖) ≤ u ⬝ᵥ v := by
+      rw [div_mul_eq_mul_div, div_le_iff₀ (by norm_num : (0:ℝ) < 8)]
+      linarith
+    exact hdv
+  have e2 : arcLength 2 2 c = Real.arccos ((8 - c * c) / 8) :=
+    w5cF1_arclength222_eq_acos (by linarith) hc4
+  calc arcV 0 u v = Real.arccos (u ⬝ᵥ v / (‖u‖ * ‖v‖)) := e1
+    _ ≤ Real.arccos ((8 - c * c) / 8) := Real.arccos_le_arccos hq2
+    _ = arcLength 2 2 c := e2.symm
 
 /-- HOL `AXJRPNC_concl` (appendix.hl:1313). Proof pending. -/
 theorem AXJRPNC_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i j : ℕ), isScsV39 s →
