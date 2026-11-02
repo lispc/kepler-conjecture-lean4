@@ -3716,6 +3716,358 @@ theorem w6ccs_false_of_planar_inter {y z y1 z1 x : V3}
 
 end W6cKit
 
+/-! === W7a: S-L — the wedge clause of `CONDITION2_SY_cs` at the limit
+point (bodyclosed-w7a; HOL WJSCPRO.hl:2687-3174) ===
+
+Route.  At each `u n` the wedge clause of `CONDITION2_SY_cs` gives
+`row r ∈ wedgeGe_p4 0 (row p) (row (finNext p)) (row (prev p))` (the dart
+wedge is identified with the predecessor wedge by `w7acs_wedgeInFanGe_eq_prev`,
+a FAN-only twin of `w6bcs_azimInFan_gen`); the azim clause bounds the wedge
+endpoint by `π`.  `cross_dot_fully_surrounded_ge_fan` (Planarity) converts the
+membership to the dart cross-dot ≥ 0 (collinear rows give zero), and
+`w5cs_tendsto_cross_dot` + `ge_of_tendsto` transfer it to the limit
+(`w7acs_cross_dot_ge_of_limit` — phase 1, fully closed).  At the limit the
+wedge membership closes in the two azim branches of the endpoint:
+`azim = π` via the half-space form `w7acs_azim_pi_wedge_ge_cross_dot` (twin
+of LA5 `AZIM_PI_WEDGE_GE_CROSS_DOT`, ported to the `_p4` family — pulling
+LocalAuto5 into the import block would shift the DecidableEq instance
+synthesis of the existing W6bKit/W6cKit declarations and break them); `azim < π` is the explicit residual premise `hstrict` of
+`w7acs_wedge_of_limit` (the HOL :3119-3135 static core consumes
+`Conforming.aff_3_rep_cross_dot` / Nkezbfc `inter_aff_ge_3_1` /
+`aff_ge_3_1_rep_cross_dot`, none of which is in this import closure; the
+`WEDGE_GE_EQ_AFF_GE` twin chain exceeds a lane budget). -/
+
+section W7aKit
+
+/-- Index: `i ≠ finNext i` for `2 ≤ k`. -/
+theorem w7acs_ne_next {k : ℕ} (hk2 : 2 < k) (i : Fin k) : i ≠ finNext i := by
+  have hk2 : 2 ≤ k := by omega
+  intro h
+  have hv : i.val = (finNext i).val := congrArg Fin.val h
+  have := i.isLt
+  simp only [finNext] at hv
+  by_cases hlt : i.val + 1 < k
+  · rw [Nat.mod_eq_of_lt hlt] at hv
+    omega
+  · have hk : i.val + 1 = k := le_antisymm (by omega) (by omega)
+    rw [hk, Nat.mod_self] at hv
+    omega
+
+/-- Index: `i ≠ w6bcs_prev i` for `2 ≤ k`. -/
+theorem w7acs_ne_prev {k : ℕ} (hk2 : 2 < k) (i : Fin k) : i ≠ w6bcs_prev i := by
+  have hk2 : 2 ≤ k := by omega
+  intro h
+  have hv : i.val = (w6bcs_prev i).val := congrArg Fin.val h
+  have := i.isLt
+  by_cases h0 : i.val = 0
+  · have hp : (w6bcs_prev i).val = k - 1 := by
+      simp only [w6bcs_prev, h0, Nat.zero_add]
+      exact Nat.mod_eq_of_lt (Nat.sub_lt (by omega) (by omega))
+    rw [h0] at hv
+    rw [hp] at hv
+    omega
+  · have hp : (w6bcs_prev i).val = i.val - 1 := by
+      simp only [w6bcs_prev]
+      have hsplit : i.val - 1 + k = i.val + k - 1 := by omega
+      rw [← hsplit, Nat.add_mod_right]
+      exact Nat.mod_eq_of_lt (by omega)
+    rw [hp] at hv
+    omega
+
+/-- Fin-form cstab adjacency (clone of the inline `hadj` of the W6c
+stations, via the public `w6bcs_row_fin`). -/
+theorem w7acs_adj_fin {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k) (hk1 : 1 < k)
+    (l : FinVec k 3) (hL : l ∈ BSY1body_cs k a b) (j : Fin k) :
+    ‖vecmatsV3_p4 l j - vecmatsV3_p4 l (finNext j)‖ ≤ cstab_p4 := by
+  have hj := w3cs_row_adj_cstab hsys hs hf hk1 l hL
+    (p := j.val + 1) (by omega) (by have := j.isLt; omega)
+  have hj2 : rowV3_cs l ((j.val + 1) % k + 1) = rowV3_cs l ((finNext j).val + 1) := rfl
+  rw [show rowV3_cs l (j.val + 1) = vecmatsV3_p4 l j from w6bcs_row_fin l j,
+    hj2, show rowV3_cs l ((finNext j).val + 1) = vecmatsV3_p4 l (finNext j)
+      from w6bcs_row_fin l (finNext j)] at hj
+  exact hj
+
+/-- Clone of `w6bcs_azimInFan_gen` for `wedgeInFanGe_p4`: under the FAN
+clauses the wedge of the cyclic dart `(l j, l (finNext j))` is the closed
+wedge at the origin between the dart target and the predecessor row. -/
+theorem w7acs_wedgeInFanGe_eq_prev {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hk1 : 1 < k)
+    (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j)
+    (j : Fin k)
+    (hne : vecmatsV3_p4 l (w6bcs_prev j) ≠ vecmatsV3_p4 l (finNext j)) :
+    wedgeInFanGe_p4 (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j))
+        (E_SY_p4 (vecmatsV3_p4 l))
+      = wedgeGe_p4 0 (vecmatsV3_p4 l j) (vecmatsV3_p4 l (finNext j))
+          (vecmatsV3_p4 l (w6bcs_prev j)) := by
+  have hsoe := w6bcs_setOfEdge_eq l hk1 hinj j
+  have hncard : (1:ℕ) < (EE_p4 (vecmatsV3_p4 l j) (E_SY_p4 (vecmatsV3_p4 l))).ncard := by
+    rw [w6bcs_ee_eq_setOfEdge hfan, hsoe]
+    have hnc := Set.ncard_pair (a := vecmatsV3_p4 l (w6bcs_prev j))
+      (b := vecmatsV3_p4 l (finNext j)) hne
+    omega
+  rw [wedgeInFanGe_p4, if_pos hncard]
+  have h := AZIM_CYCLE_EQ1 (l := l) hfan hk1 hinj (w6bcs_prev j)
+    (u := vecmatsV3_p4 l (w6bcs_prev j)) (v := vecmatsV3_p4 l j)
+    (w := vecmatsV3_p4 l (finNext j)) rfl (by rw [w6bcs_finNext_prev])
+    (by rw [w6bcs_finNext_prev])
+  rw [h]
+
+set_option maxHeartbeats 800000 in
+/-- PHASE 1 (S-L core transfer; HOL WJSCPRO:2687-2830 + :2999
+`LIM_DROP_LBOUND`): the dart cross-dot is nonnegative at the limit for every
+triple (dart `(p, finNext p)`, arbitrary row `r`).  At each `u n` the wedge
+clause of `CONDITION2_SY_cs` gives `row r ∈ wedgeGe 0 (row p) (row
+(finNext p)) (row (prev p))`, whence
+`azim 0 … row r ≤ azimInFan ≤ π` (azim clause + `w6bcs_azimInFan_gen`);
+`cross_dot_fully_surrounded_ge_fan` converts to the cross-dot (collinear
+rows give zero via `dot_self_cross`); the limit is taken with
+`w5cs_tendsto_cross_dot` + `ge_of_tendsto`. -/
+theorem w7acs_cross_dot_ge_of_limit {k : ℕ} {d : ℝ} {s : Finset ℕ}
+    {a b : ℕ → ℕ → ℝ} {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (p r : Fin k) :
+    (0:ℝ) ≤ (crossProduct (WithLp.ofLp (vecmatsV3_p4 L p) : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 L (finNext p)) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 L r) : Fin 3 → ℝ) := by
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk2 : 2 < k := by omega
+  have hk1 : 1 < k := by omega
+  have hpt : ∀ n : ℕ, (0:ℝ) ≤ (crossProduct
+      (WithLp.ofLp (vecmatsV3_p4 (u n) p) : Fin 3 → ℝ)
+      (WithLp.ofLp (vecmatsV3_p4 (u n) (finNext p)) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 (u n) r) : Fin 3 → ℝ) := by
+    intro n
+    obtain ⟨hann, hcond2⟩ := humem n
+    rw [BSY1body_cs, Set.mem_setOf_eq] at hann
+    have hannv : ∀ j : Fin k, vecmatsV3_p4 (u n) j ∈ ballAnnulus := hann.1
+    simp only [CONDITION2_SY_cs, convexLocalFan_p4] at hcond2
+    obtain ⟨hlf, hcl⟩ := hcond2
+    have hfan := hlf.1
+    have hinj := w6bcs_hinj hsys hs hf hk1 (u n) hann
+    have hne := w6bcs_hne hsys hs hf hk3 (u n) hann p
+    have hdart : (vecmatsV3_p4 (u n) p, vecmatsV3_p4 (u n) (finNext p))
+        ∈ F_SY_p4 (vecmatsV3_p4 (u n)) := ⟨p, Set.mem_univ p, rfl⟩
+    obtain ⟨hazimN, hwedgeN⟩ := hcl _ hdart
+    have hz := w6bcs_azimInFan_gen (l := u n) hfan hk1 hinj p hne
+    have hwmem := hwedgeN (Set.mem_range_self r)
+    rw [w7acs_wedgeInFanGe_eq_prev (l := u n) hfan hk1 hinj p hne] at hwmem
+    simp only [wedgeGe_p4, Set.mem_setOf_eq] at hwmem
+    obtain ⟨h0a, hle⟩ := hwmem
+    rw [← hz] at hle
+    have hpi : azim 0 (vecmatsV3_p4 (u n) p) (vecmatsV3_p4 (u n) (finNext p))
+        (vecmatsV3_p4 (u n) r) ≤ Real.pi := hle.trans hazimN
+    have hnc2 : ¬ Collinear3 (0:V3) (vecmatsV3_p4 (u n) p)
+        (vecmatsV3_p4 (u n) (finNext p)) :=
+      NONPARALLEL_BALL_ANNULUS (hannv p) (hannv (finNext p))
+        (w6bcs_two_le_fin hsys hs hf hk1 (u n) hann (w7acs_ne_next hk2 p))
+        (w7acs_adj_fin hsys hs hf hk1 (u n) hann p)
+    by_cases hcol : Collinear3 (0:V3) (vecmatsV3_p4 (u n) p) (vecmatsV3_p4 (u n) r)
+    · have hmpv : vecmatsV3_p4 (u n) p ≠ 0 := w4cs_annulus_ne_zero (hannv p)
+      obtain ⟨c, hc⟩ := (collinear3_iff_smul hmpv).mp hcol
+      rw [sub_zero, sub_zero] at hc
+      rw [hc, WithLp.ofLp_smul, dotProduct_smul, dotProduct_comm, dot_self_cross]
+      simp
+    · have hkey := cross_dot_fully_surrounded_ge_fan hcol hnc2
+        (azim_nonneg _ _ _ _) hpi
+      rw [sub_zero, sub_zero, sub_zero] at hkey
+      exact hkey
+  have ht := w5cs_tendsto_cross_dot huto p (finNext p) r
+  exact ge_of_tendsto ht (Filter.Eventually.of_forall hpt)
+
+/-! ### pi-branch twins (LA5 `AZIM_PI_WEDGE_GE_SIN` /
+`AZIM_PI_WEDGE_GE_CROSS_DOT` ported to the `_p4` family; zero imports). -/
+
+/-- Twin of LA5 lane-support `PI_TO_TWO_PI_NEG_SIN`. -/
+theorem w7acs_pi_to_two_pi_neg_sin : ∀ x : ℝ, Real.pi < x → x < 2 * Real.pi →
+    Real.sin x < 0 := by
+  intro x h1 h2
+  have h3 : Real.sin (x - Real.pi) > 0 :=
+    Real.sin_pos_of_pos_of_lt_pi (by linarith) (by linarith)
+  rw [show Real.sin x = -Real.sin (x - Real.pi) from by
+    rw [Real.sin_sub]; simp [Real.cos_pi, Real.sin_pi]]
+  linarith
+
+/-- Twin of LA5 lane-support `collinear3_zero_sub`. -/
+theorem w7acs_collinear3_zero_sub {x a b : V3} :
+    Collinear3 x a b ↔ Collinear3 0 (a - x) (b - x) := by
+  by_cases ha : a = x
+  · subst ha
+    rw [sub_self]
+    constructor <;> · intro hcon; exact collinear3_of_eq rfl
+  · rw [collinear3_iff_smul ha, collinear3_iff_smul (sub_ne_zero.mpr ha)]
+    simp only [sub_zero]
+
+/-- Twin of LA5 `AZIM_PI_WEDGE_GE_SIN` in the `_p4` family: the wedge of an
+azimuth-`π` endpoint is the sine half-space. -/
+theorem w7acs_azim_pi_wedge_ge_sin {u v w ww : V3} (h : azim u v w ww = Real.pi) :
+    wedgeGe_p4 u v w ww = {x : V3 | 0 ≤ Real.sin (azim u v w x)} := by
+  have hrange : ∀ z : V3, azim u v w z < 2 * Real.pi := fun z => azim_lt_two_pi u v w z
+  ext z
+  simp only [wedgeGe_p4, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨h1, h2⟩
+    rw [h] at h2
+    exact Real.sin_nonneg_of_nonneg_of_le_pi h1 h2
+  · intro hsin
+    refine ⟨azim_nonneg u v w z, ?_⟩
+    rw [h]
+    by_contra hcon
+    exact absurd hsin (not_le.mpr
+      (w7acs_pi_to_two_pi_neg_sin (azim u v w z) (not_le.mp hcon) (hrange z)))
+
+/-- Twin of LA5 `AZIM_PI_WEDGE_GE_CROSS_DOT` in the `_p4` family
+(`wedgeGe_p2` → `wedgeGe_p4`; the proof is verbatim-adapted, with
+`JBDNJJB` / `azim_sub_self` consumed from Planarity, so that LocalAuto5
+need not be imported — importing LA5 shifts the DecidableEq instance
+synthesis of the existing W6bKit/W6cKit declarations and breaks them). -/
+theorem w7acs_azim_pi_wedge_ge_cross_dot {u v w ww : V3} (h : azim u v w ww = Real.pi) :
+    wedgeGe_p4 u v w ww = {x : V3 |
+      0 ≤ ((WithLp.toLp 2 (crossProduct ((v - u : V3) : Fin 3 → ℝ)
+        ((w - u : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (x - u))} := by
+  have hnc : ¬ Collinear3 u v w := by
+    intro hcon
+    rw [azim, if_pos (Or.inl hcon)] at h
+    exact Real.pi_ne_zero h.symm
+  have huv : u ≠ v := fun hcon => hnc (by rw [hcon]; exact collinear3_of_eq rfl)
+  set N : V3 := WithLp.toLp 2 (crossProduct ((v - u : V3) : Fin 3 → ℝ)
+    ((w - u : V3) : Fin 3 → ℝ)) with hNdef
+  have hNcoe : ((N : V3) : Fin 3 → ℝ) = crossProduct ((v - u : V3) : Fin 3 → ℝ)
+      ((w - u : V3) : Fin 3 → ℝ) := by rw [hNdef]
+  have hzero : ∀ y : V3, Collinear3 u v y → (N : V3) ⬝ᵥ (y - u) = 0 := by
+    intro y hcol
+    obtain ⟨s, hs⟩ := (collinear3_iff_smul (Ne.symm huv)).mp hcol
+    have key : ((y - u : V3) : Fin 3 → ℝ) = s • ((v - u : V3) : Fin 3 → ℝ) :=
+      congrArg (fun z : V3 => ((z : V3) : Fin 3 → ℝ)) hs
+    have hp : (crossProduct ((v - u : V3) : Fin 3 → ℝ) ((w - u : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((v - u : V3) : Fin 3 → ℝ) = 0 :=
+      (dotProduct_comm ((crossProduct ((v - u : V3) : Fin 3 → ℝ)
+        ((w - u : V3) : Fin 3 → ℝ))) ((v - u : V3) : Fin 3 → ℝ)).trans
+        (dot_self_cross ((v - u : V3) : Fin 3 → ℝ) ((w - u : V3) : Fin 3 → ℝ))
+    calc (N : V3) ⬝ᵥ (y - u)
+        = dotProduct ((N : V3) : Fin 3 → ℝ) ((y - u : V3) : Fin 3 → ℝ) := rfl
+      _ = s * dotProduct ((N : V3) : Fin 3 → ℝ) ((v - u : V3) : Fin 3 → ℝ) := by
+          rw [key, dotProduct_smul, smul_eq_mul]
+      _ = s * dotProduct (crossProduct ((v - u : V3) : Fin 3 → ℝ)
+            ((w - u : V3) : Fin 3 → ℝ)) ((v - u : V3) : Fin 3 → ℝ) := by rw [hNcoe]
+      _ = 0 := by rw [hp, mul_zero]
+  rw [w7acs_azim_pi_wedge_ge_sin h]
+  ext x
+  simp only [Set.mem_setOf_eq]
+  by_cases hcol : Collinear3 u v x
+  · have haz : azim u v w x = 0 := by
+      rw [azim]
+      exact if_pos (Or.inr hcol)
+    rw [haz, Real.sin_zero, hzero x hcol]
+  · have hncw : ¬ Collinear3 0 (v - u) (w - u) :=
+      fun hc => hnc (w7acs_collinear3_zero_sub.mpr hc)
+    have hncx : ¬ Collinear3 0 (v - u) (x - u) :=
+      fun hc => hcol (w7acs_collinear3_zero_sub.mpr hc)
+    obtain ⟨t, ht, hsin⟩ := JBDNJJB (u := (v - u : V3)) (v := (w - u : V3))
+      (w := (x - u : V3)) hncw hncx
+    rw [azim_sub_self, hsin]
+    show (0:ℝ) ≤ t * ((N : V3) ⬝ᵥ (x - u)) ↔ 0 ≤ (N : V3) ⬝ᵥ (x - u)
+    constructor
+    · intro hs
+      by_contra hcon
+      push_neg at hcon
+      exact absurd hs (not_le.mpr (mul_neg_of_pos_of_neg ht hcon))
+    · intro hm
+      exact mul_nonneg ht.le hm
+
+/-- S-L pi-branch (HOL :3012-3029): when the wedge endpoint has azimuth `π`,
+the dart wedge is the cross-dot half-space, so the transferred dart
+cross-dots give the membership of every row. -/
+theorem w7acs_wedge_pi_of_cross_dot {k : ℕ} (l : FinVec k 3) (i : Fin k)
+    (hpi : azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i))
+        (vecmatsV3_p4 l (w6bcs_prev i)) = Real.pi)
+    (hcd : ∀ r : Fin k, (0:ℝ) ≤ (crossProduct
+        (WithLp.ofLp (vecmatsV3_p4 l i) : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 l (finNext i)) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 l r) : Fin 3 → ℝ)) :
+    V_SY_p4 (vecmatsV3_p4 l) ⊆ wedgeGe_p4 0 (vecmatsV3_p4 l i)
+      (vecmatsV3_p4 l (finNext i)) (vecmatsV3_p4 l (w6bcs_prev i)) := by
+  rw [w7acs_azim_pi_wedge_ge_cross_dot hpi]
+  intro w hw
+  obtain ⟨r, rfl⟩ := Set.mem_range.mp hw
+  simp only [Set.mem_setOf_eq, sub_zero, WithLp.ofLp_zero]
+  exact hcd r
+
+set_option maxHeartbeats 800000 in
+/-- **S-L wave theorem** (HOL WJSCPRO:2687-3174, the `(v)` wedge clause of
+`CONDITION2_SY_cs` at the limit point).  Premise shape = the unified
+limit-point block of `w5cs_false_of_limit_wall`, plus the FAN clause at the
+limit (W6d will feed `w6ccs_FAN_of_limit`), the azim clause
+(W6d will feed `w6bcs_azimInFan_le_pi`), and the strict-branch residual
+`hstrict` (see the section header). -/
+theorem w7acs_wedge_of_limit {k : ℕ} {d : ℝ} {s : Finset ℕ}
+    {a b : ℕ → ℕ → ℝ} {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (hL : L ∈ BSY1body_cs k a b)
+    (hFAN : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 L)) (E_SY_p4 (vecmatsV3_p4 L)))
+    (hazim : ∀ x ∈ F_SY_p4 (vecmatsV3_p4 L),
+      azimInFan_p4 x (E_SY_p4 (vecmatsV3_p4 L)) ≤ Real.pi)
+    (hstrict : ∀ i : Fin k, ∀ w ∈ V_SY_p4 (vecmatsV3_p4 L),
+      azim 0 (vecmatsV3_p4 L i) (vecmatsV3_p4 L (finNext i))
+          (vecmatsV3_p4 L (w6bcs_prev i)) < Real.pi →
+      w ∈ wedgeGe_p4 0 (vecmatsV3_p4 L i) (vecmatsV3_p4 L (finNext i))
+          (vecmatsV3_p4 L (w6bcs_prev i))) :
+    ∀ x ∈ F_SY_p4 (vecmatsV3_p4 L),
+      V_SY_p4 (vecmatsV3_p4 L) ⊆ wedgeInFanGe_p4 x (E_SY_p4 (vecmatsV3_p4 L)) := by
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk2 : 2 < k := by omega
+  have hk1 : 1 < k := by omega
+  have hinj := w6bcs_hinj hsys hs hf hk1 L hL
+  intro x hx
+  obtain ⟨i, -, rfl⟩ := hx
+  show V_SY_p4 (vecmatsV3_p4 L)
+      ⊆ wedgeInFanGe_p4 (vecmatsV3_p4 L i, vecmatsV3_p4 L (finNext i))
+        (E_SY_p4 (vecmatsV3_p4 L))
+  have hne := w6bcs_hne hsys hs hf hk3 L hL i
+  rw [w7acs_wedgeInFanGe_eq_prev (l := L) hFAN hk1 hinj i hne]
+  have hdart : (vecmatsV3_p4 L i, vecmatsV3_p4 L (finNext i))
+      ∈ F_SY_p4 (vecmatsV3_p4 L) := ⟨i, Set.mem_univ i, rfl⟩
+  have hazx := hazim _ hdart
+  have hzx := w6bcs_azimInFan_gen (l := L) hFAN hk1 hinj i hne
+  have hpiP : azim 0 (vecmatsV3_p4 L i) (vecmatsV3_p4 L (finNext i))
+      (vecmatsV3_p4 L (w6bcs_prev i)) ≤ Real.pi := by rw [← hzx]; exact hazx
+  have hcdL : ∀ r : Fin k, (0:ℝ) ≤ (crossProduct
+      (WithLp.ofLp (vecmatsV3_p4 L i) : Fin 3 → ℝ)
+      (WithLp.ofLp (vecmatsV3_p4 L (finNext i)) : Fin 3 → ℝ)) ⬝ᵥ
+    (WithLp.ofLp (vecmatsV3_p4 L r) : Fin 3 → ℝ) :=
+    fun r => w7acs_cross_dot_ge_of_limit hsys hs hf humem huto i r
+  rcases eq_or_lt_of_le hpiP with hPpi | hPlt
+  · exact w7acs_wedge_pi_of_cross_dot (l := L) i hPpi hcdL
+  · intro w hw
+    exact hstrict i w hw hPlt
+
+/-- W7b assembler: `CONDITION2_SY_cs k L` from its three clauses at the
+limit (the localFan clause, the azim clause, and the wedge clause delivered
+by `w7acs_wedge_of_limit`). -/
+theorem w7acs_CONDITION2_of_parts {k : ℕ} (L : FinVec k 3)
+    (hlf : localFan_p4 (V_SY_p4 (vecmatsV3_p4 L)) (E_SY_p4 (vecmatsV3_p4 L))
+      (F_SY_p4 (vecmatsV3_p4 L)))
+    (hazim : ∀ x ∈ F_SY_p4 (vecmatsV3_p4 L),
+      azimInFan_p4 x (E_SY_p4 (vecmatsV3_p4 L)) ≤ Real.pi)
+    (hwedge : ∀ x ∈ F_SY_p4 (vecmatsV3_p4 L),
+      V_SY_p4 (vecmatsV3_p4 L) ⊆ wedgeInFanGe_p4 x (E_SY_p4 (vecmatsV3_p4 L))) :
+    CONDITION2_SY_cs k L := by
+  rw [CONDITION2_SY_cs, convexLocalFan_p4]
+  exact ⟨hlf, fun x hx => ⟨hazim x hx, hwedge x hx⟩⟩
+
+end W7aKit
+
 /-! === W6dKit: bodyclosed-w6d —— fan7/FAN 装配器（w6c 残差清零）+ localFan/azimInFan 两顶石与装配件（w6b 残差清零）。纯插入；零新 import；零 sorry。 === -/
 
 section W6dKit
