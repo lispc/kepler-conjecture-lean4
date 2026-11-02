@@ -1831,4 +1831,517 @@ documented in Evidence.md §3. -/
 
 end W4Kit
 
+section W6aKit
+
+/-! ### W6a P1: static geometric core (annulus ray estimates, gt×ray kills,
+cone-ray fan7 face, shared-endpoint edge-edge face). -/
+
+/-- Sharp ray-distance estimate (HOL `BALL_ANNULUS_3PONITS_NORM_MIN`,
+dih2k.hl:852): a positive point of the ray through `w` stays at distance at
+least `√(4 − h0²)` from the distinct, 2-separated annulus point `v`. -/
+theorem w6acs_norm_min_ray {v w : V3} (hvw : v ≠ w) (h2 : 2 ≤ ‖v - w‖)
+    (hvm : v ∈ ballAnnulus) (hwm : w ∈ ballAnnulus) {t : ℝ} (ht : 0 < t) :
+    Real.sqrt (4 - h0 ^ 2) ≤ ‖v - t • w‖ := by
+  obtain ⟨hv2, hvu⟩ := ballAnnulus_norm_bounds hvm
+  obtain ⟨hw2, hwu⟩ := ballAnnulus_norm_bounds hwm
+  have h126 : h0 = 1.26 := rfl
+  have h4pos : (0:ℝ) ≤ 4 - h0 ^ 2 := by norm_num [h126]
+  have hp : (0:ℝ) ≤ h0 ^ 2 := by norm_num [h126]
+  have h4h0 : (0:ℝ) ≤ 7 - 4 * h0 ^ 2 := by norm_num [h126]
+  have hA2ge : (4:ℝ) ≤ ‖v‖ ^ 2 := by nlinarith [hv2]
+  have hB2ge : (4:ℝ) ≤ ‖w‖ ^ 2 := by nlinarith [hw2]
+  have hexp : ‖v - t • w‖ ^ 2
+      = ‖v‖ ^ 2 + t ^ 2 * ‖w‖ ^ 2 - 2 * (t * (v ⬝ᵥ w)) := by
+    have h1 := w4cs_norm_sq_eq_inner v (t • w)
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos ht, mul_pow] at h1
+    rw [← inner_eq_dot, real_inner_smul_right, inner_eq_dot] at h1
+    linarith [h1]
+  have hCbound : v ⬝ᵥ w ≤ (‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2 := by
+    have h := w4cs_norm_sq_eq_inner v w
+    have hsq : (4:ℝ) ≤ ‖v - w‖ ^ 2 := by nlinarith
+    linarith
+  by_cases hcle : v ⬝ᵥ w ≤ 0
+  · -- obtuse: direct
+    have htc : t * (v ⬝ᵥ w) ≤ 0 := by nlinarith [hcle, ht.le]
+    have htB : (0:ℝ) ≤ t ^ 2 * ‖w‖ ^ 2 := by positivity
+    have hlow : 4 - h0 ^ 2 ≤ ‖v - t • w‖ ^ 2 := by
+      rw [hexp]; linarith [hA2ge, htB, htc, h4pos, hp]
+    exact Real.sqrt_le_iff.mpr ⟨norm_nonneg _, hlow⟩
+  · push Not at hcle
+    -- acute: AM–GM + the sharp box algebra
+    have hC0 : (0:ℝ) < v ⬝ᵥ w := hcle
+    have hSpos : (0:ℝ) ≤ (‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2 := by linarith [hA2ge, hB2ge]
+    have hCS : (v ⬝ᵥ w) ^ 2 ≤ ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 := by
+      have hCS1 : (0:ℝ) ≤ v ⬝ᵥ w * ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) :=
+        mul_nonneg (le_of_lt hC0) hSpos
+      nlinarith [hCS1, le_of_lt hC0, hCbound]
+    have hB0 : (0:ℝ) < ‖w‖ := by positivity
+    have hB2 : (0:ℝ) < ‖w‖ ^ 2 := by positivity
+    -- AM–GM: 0 ≤ (tB² − C)² gives −C²/B² ≤ t²B² − 2tC
+    have hAM : -((v ⬝ᵥ w) ^ 2 / ‖w‖ ^ 2) ≤ t ^ 2 * ‖w‖ ^ 2 - 2 * (t * (v ⬝ᵥ w)) := by
+      have hexp2 : (t * ‖w‖ ^ 2 - v ⬝ᵥ w) ^ 2
+          = t ^ 2 * ‖w‖ ^ 2 * ‖w‖ ^ 2 - 2 * (t * (v ⬝ᵥ w) * ‖w‖ ^ 2)
+            + (v ⬝ᵥ w) ^ 2 := by
+        ring
+      have hnum : 0 ≤ t ^ 2 * ‖w‖ ^ 2 * ‖w‖ ^ 2 - 2 * (t * (v ⬝ᵥ w) * ‖w‖ ^ 2)
+          + (v ⬝ᵥ w) ^ 2 := by
+        rw [← hexp2]
+        exact sq_nonneg _
+      have hdiv : (t ^ 2 * ‖w‖ ^ 2 * ‖w‖ ^ 2 - 2 * (t * (v ⬝ᵥ w) * ‖w‖ ^ 2)
+          + (v ⬝ᵥ w) ^ 2) / ‖w‖ ^ 2
+          = t ^ 2 * ‖w‖ ^ 2 - 2 * (t * (v ⬝ᵥ w)) + (v ⬝ᵥ w) ^ 2 / ‖w‖ ^ 2 := by
+        field_simp
+      have hpos : 0 ≤ t ^ 2 * ‖w‖ ^ 2 - 2 * (t * (v ⬝ᵥ w))
+          + (v ⬝ᵥ w) ^ 2 / ‖w‖ ^ 2 := by
+        have h1 := div_nonneg hnum (le_of_lt hB2)
+        rw [hdiv] at h1
+        exact h1
+      linarith
+    -- the sharp box algebra
+    have hA2le : ‖v‖ ^ 2 ≤ 4 * h0 ^ 2 := by nlinarith [hvu, hv2, h126]
+    have hB2le : ‖w‖ ^ 2 ≤ 4 * h0 ^ 2 := by nlinarith [hwu, hw2, h126]
+    have hbox : ‖w‖ ^ 2 * (4 - h0 ^ 2)
+        ≤ ‖v‖ ^ 2 * ‖w‖ ^ 2 - ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 := by
+      have e1 : (0:ℝ) ≤ ‖v‖ ^ 2 - 4 := by linarith
+      have e2 : (0:ℝ) ≤ 2 * ‖w‖ ^ 2 + 4 - ‖v‖ ^ 2 := by linarith [hB2ge, hA2le, h4h0]
+      have e3 : (0:ℝ) ≤ ‖w‖ ^ 2 * (4 * h0 ^ 2 - ‖w‖ ^ 2) := by positivity
+      have e4 : (0:ℝ) ≤ (‖v‖ ^ 2 - 4) * (2 * ‖w‖ ^ 2 + 4 - ‖v‖ ^ 2)
+          + ‖w‖ ^ 2 * (4 * h0 ^ 2 - ‖w‖ ^ 2) :=
+        add_nonneg (mul_nonneg e1 e2) e3
+      have e5 : (‖v‖ ^ 2 - 4) * (2 * ‖w‖ ^ 2 + 4 - ‖v‖ ^ 2)
+          + ‖w‖ ^ 2 * (4 * h0 ^ 2 - ‖w‖ ^ 2)
+          = 4 * (‖v‖ ^ 2 * ‖w‖ ^ 2 - ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2
+            - ‖w‖ ^ 2 * (4 - h0 ^ 2)) := by
+        ring
+      linarith
+    have hmid : 4 - h0 ^ 2
+        ≤ ‖v‖ ^ 2 - ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 / ‖w‖ ^ 2 := by
+      have hh : ‖w‖ ^ 2 * (‖v‖ ^ 2 - ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 / ‖w‖ ^ 2)
+          = ‖v‖ ^ 2 * ‖w‖ ^ 2 - ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 := by
+        field_simp
+      have hle : ‖w‖ ^ 2 * (4 - h0 ^ 2)
+          ≤ ‖w‖ ^ 2 * (‖v‖ ^ 2 - ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 / ‖w‖ ^ 2) := by
+        rw [hh]; exact hbox
+      exact le_of_mul_le_mul_left hle hB2
+    have hcd : (v ⬝ᵥ w) ^ 2 / ‖w‖ ^ 2
+        ≤ ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 / ‖w‖ ^ 2 := by
+      have hh1 : ‖w‖ ^ 2 * ((v ⬝ᵥ w) ^ 2 / ‖w‖ ^ 2) = (v ⬝ᵥ w) ^ 2 := by
+        field_simp
+      have hh2 : ‖w‖ ^ 2 * (((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 / ‖w‖ ^ 2)
+          = ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 := by
+        field_simp
+      have hm : ‖w‖ ^ 2 * ((v ⬝ᵥ w) ^ 2 / ‖w‖ ^ 2)
+          ≤ ‖w‖ ^ 2 * (((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 / ‖w‖ ^ 2) := by
+        rw [hh1, hh2]; exact hCS
+      exact le_of_mul_le_mul_left hm hB2
+    have hlow : 4 - h0 ^ 2 ≤ ‖v - t • w‖ ^ 2 := by
+      have hQ1 : ‖v - t • w‖ ^ 2 ≥ ‖v‖ ^ 2 - (v ⬝ᵥ w) ^ 2 / ‖w‖ ^ 2 := by
+        rw [hexp]; linarith [hAM]
+      have hQ2 : ‖v - t • w‖ ^ 2
+          ≥ ‖v‖ ^ 2 - ((‖v‖ ^ 2 + ‖w‖ ^ 2 - 4) / 2) ^ 2 / ‖w‖ ^ 2 := by
+        rw [hexp]; linarith [hcd]
+      linarith [hQ1, hQ2, hmid]
+    exact Real.sqrt_le_iff.mpr ⟨norm_nonneg _, hlow⟩
+
+/-- Scaling form of a point of the open `{0}`-cone. -/
+theorem w6acs_affGt_zero_scale {u v w : V3} (hu : u ≠ 0) (hv : v ≠ 0) (huv : u ≠ v)
+    (hw : w ∈ affGt {(0:V3)} {u, v}) :
+    ∃ a t : ℝ, 0 < a ∧ 0 < t ∧ t < 1 ∧ a • w = (1 - t) • u + t • v := by
+  have hdis : Disjoint ({(0:V3)} : Set V3) {u, v} := by
+    rw [Set.disjoint_singleton_left]
+    intro hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl
+    · exact hu rfl
+    · exact hv rfl
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hw
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hwq⟩ := hw
+  have hs : 0 < t2 + t3 := add_pos ht2 ht3
+  refine ⟨(t2 + t3)⁻¹, t3 / (t2 + t3), inv_pos.2 hs, div_pos ht3 hs, ?_, ?_⟩
+  · rw [div_lt_one hs]
+    linarith
+  · have hkey1 : ((t2 + t3)⁻¹ * t2) = 1 - t3 / (t2 + t3) := by
+      field_simp
+      linarith
+    have hkey2 : ((t2 + t3)⁻¹ * t3) = t3 / (t2 + t3) := by
+      field_simp
+    rw [hwq, smul_add, smul_add, smul_smul, smul_smul, smul_smul, smul_zero,
+      zero_add, hkey1, hkey2]
+
+/-- The open `{0}`-cone is closed under positive scaling. -/
+theorem w6acs_affGt_smul {y z x : V3} (hy : y ≠ 0) (hz : z ≠ 0) {c : ℝ} (hc : 0 < c)
+    (hx : x ∈ affGt ({0} : Set V3) ({y, z})) : c • x ∈ affGt ({0} : Set V3) ({y, z}) := by
+  have hdis : Disjoint ({(0:V3)} : Set V3) {y, z} := by
+    rw [Set.disjoint_singleton_left]
+    intro hx2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx2
+    rcases hx2 with rfl | rfl
+    · exact hy rfl
+    · exact hz rfl
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hx ⊢
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hxq⟩ := hx
+  refine ⟨c * t1 + (1 - c), c * t2, c * t3, by nlinarith [(le_of_lt hc), ht2],
+    by nlinarith [(le_of_lt hc), ht3], by nlinarith [hsum], ?_⟩
+  rw [hxq]
+  module
+
+/-- Annulus point versus the open cone of a short chord (HOL
+`BALL_ANNULUS_4PONITS_AFF_GT`, dih2k.hl:1149; the LA4 copy is a sorry giant). -/
+theorem w6acs_ballAnnulus_4ponits_aff_gt {v w z : V3}
+    (hnc1 : ¬ Collinear3 (0:V3) v z) (hnc2 : ¬ Collinear3 (0:V3) w z)
+    (h2 : 2 ≤ ‖v - w‖) (hup : ‖v - w‖ ≤ cstab_p4) (h3 : 2 ≤ ‖z - v‖)
+    (h4 : 2 ≤ ‖z - w‖) (hvm : v ∈ ballAnnulus) (hwm : w ∈ ballAnnulus)
+    (hzm : z ∈ ballAnnulus) : z ∉ affGt {(0:V3)} {v, w} := by
+  intro hz
+  have hvw : v ≠ w := fun he => (by rw [he] at h2; norm_num at h2 : False)
+  have hvz : v ≠ z := fun he => (by rw [he] at h3; norm_num at h3 : False)
+  have hwz : w ≠ z := fun he => (by rw [he] at h4; norm_num at h4 : False)
+  obtain ⟨a, t, ha0, ht0, ht1, hac⟩ := w6acs_affGt_zero_scale
+    (w4cs_annulus_ne_zero hvm) (w4cs_annulus_ne_zero hwm) hvw hz
+  have hmin1 := w6acs_norm_min_ray hvz (by rw [norm_sub_rev]; exact h3) hvm hzm ha0
+  have hmin2 := w6acs_norm_min_ray hwz (by rw [norm_sub_rev]; exact h4) hwm hzm ha0
+  have hred1 : v - a • z = t • (v - w) := by rw [hac]; module
+  have hred2 : w - a • z = (1 - t) • (w - v) := by rw [hac]; module
+  rw [hred1, norm_smul, Real.norm_eq_abs, abs_of_pos ht0] at hmin1
+  rw [hred2, norm_smul, Real.norm_eq_abs, abs_of_pos (by linarith : (0:ℝ) < 1 - t),
+    norm_sub_rev] at hmin2
+  have habsurd : 2 * Real.sqrt (4 - h0 ^ 2) ≤ cstab_p4 := by linarith
+  have h126 : h0 = 1.26 := rfl
+  have h0p : (0:ℝ) ≤ 4 - h0 ^ 2 := by norm_num [h126]
+  have hs2 : Real.sqrt (4 * (4 - h0 ^ 2)) = 2 * Real.sqrt (4 - h0 ^ 2) := by
+    rw [Real.sqrt_mul (by norm_num : (0:ℝ) ≤ 4) (4 - h0 ^ 2)]
+    norm_num
+  rw [← hs2, Real.sqrt_le_iff] at habsurd
+  rcases habsurd with ⟨_, h5⟩
+  norm_num [h126, show cstab_p4 = 3.01 from rfl] at h5
+
+/-- Same-ray annulus points are closer than the 2-separation. -/
+theorem w6acs_same_ray_dist_lt2 {y v : V3} (hyv : 2 ≤ ‖y - v‖) (hy : y ∈ ballAnnulus)
+    (hv : v ∈ ballAnnulus) {c : ℝ} (hc : 0 < c) (hcv : v = c • y) : False := by
+  obtain ⟨hy2, hyu⟩ := ballAnnulus_norm_bounds hy
+  obtain ⟨hv2, hvu⟩ := ballAnnulus_norm_bounds hv
+  have h126 : h0 = 1.26 := rfl
+  have hve : v - y = (c - 1) • y := by rw [hcv]; module
+  have h1 : ‖v - y‖ = |c - 1| * ‖y‖ := by rw [hve, norm_smul, Real.norm_eq_abs]
+  have h3 : ‖v‖ = c * ‖y‖ := by rw [hcv, norm_smul, Real.norm_eq_abs, abs_of_pos hc]
+  have hbound : |c - 1| * ‖y‖ ≤ 2 * h0 - 2 := by
+    by_cases hc1 : (1:ℝ) ≤ c
+    · rw [abs_of_nonneg (by linarith : (0:ℝ) ≤ c - 1)]
+      linarith
+    · rw [abs_of_neg (by linarith : (c:ℝ) - 1 < 0)]
+      linarith
+  have hh : (2:ℝ) ≤ ‖v - y‖ := by rw [norm_sub_rev]; exact hyv
+  rw [h1] at hh
+  have h02 : (2:ℝ) * h0 - 2 < 2 := by norm_num [h126]
+  linarith
+
+/-- Independence of two non-collinear vectors (scalar-coefficient uniqueness). -/
+theorem w6acs_smul_indep {y z : V3} (hy : y ≠ 0) (hz : z ≠ 0)
+    (hnc : ¬ Collinear3 (0:V3) y z) {a b : ℝ} (h : a • y + b • z = 0) :
+    a = 0 ∧ b = 0 := by
+  rcases eq_or_ne b 0 with hb0 | hbne
+  · refine ⟨?_, hb0⟩
+    have h1 : a • y = 0 := by
+      rw [← h, hb0, zero_smul, add_zero]
+    exact (smul_eq_zero.mp h1).resolve_right hy
+  · exfalso
+    have ha0 : a ≠ 0 := by
+      intro ha0
+      rw [ha0, zero_smul, zero_add, smul_eq_zero] at h
+      exact hz (h.resolve_left hbne)
+    have h3 : (1 / b) • (a • y + b • z) = (0:V3) := by
+      rw [h]; simp
+    rw [smul_add, smul_smul, smul_smul] at h3
+    have h4 : ((1 / b) * a) = a / b := by ring
+    have h5 : ((1 / b) * b) = 1 := by field_simp
+    rw [h4, h5] at h3
+    exact hnc (w5bcs_collinear_of_eq_zero (by norm_num) h3.symm)
+
+/-- A vertex 2-separated from a capped edge is never inside the edge's open
+cone (the collinear cases collapse by independence; only the generic case
+needs the 4-points estimate). -/
+theorem w6acs_indep_gt_kill {y z v : V3} (hnc : ¬ Collinear3 (0:V3) y z)
+    (hy : y ∈ ballAnnulus) (hz : z ∈ ballAnnulus) (hv : v ∈ ballAnnulus)
+    (h2 : 2 ≤ ‖y - z‖) (hup : ‖y - z‖ ≤ cstab_p4)
+    (h3 : 2 ≤ ‖y - v‖) (h4 : 2 ≤ ‖z - v‖)
+    (hvin : v ∈ affGt ({0} : Set V3) ({y, z})) : False := by
+  have hy0 : y ≠ 0 := w4cs_annulus_ne_zero hy
+  have hz0 : z ≠ 0 := w4cs_annulus_ne_zero hz
+  rcases Classical.em (Collinear3 (0:V3) y v) with hc1 | hc1
+  · obtain ⟨κ, hκ⟩ := w4cs_collinear0_smul hy0 hc1
+    obtain ⟨c1, c2, hc1p, hc2p, hvq⟩ := w5bcs_coeff_of_mem_affGt hy0 hz0 hvin
+    have hkeq : κ • y = c1 • y + c2 • z := by rw [← hκ, hvq]
+    have heq : (κ - c1) • y + (-c2) • z = 0 := by
+      rw [show (((κ - c1) • y + (-c2) • z : V3)) = κ • y - (c1 • y + c2 • z) from
+        by module]
+      rw [hkeq]
+      module
+    obtain ⟨e1, e2⟩ := w6acs_smul_indep hy0 hz0 hnc heq
+    rw [neg_eq_zero.mp e2] at hc2p
+    exact lt_irrefl (0:ℝ) hc2p
+  rcases Classical.em (Collinear3 (0:V3) z v) with hc2 | hc2
+  · obtain ⟨κ, hκ⟩ := w4cs_collinear0_smul hz0 hc2
+    obtain ⟨c1, c2, hc1p, hc2p, hvq⟩ := w5bcs_coeff_of_mem_affGt hy0 hz0 hvin
+    have hkeq : κ • z = c1 • y + c2 • z := by rw [← hκ, hvq]
+    have heq : c1 • y + (c2 - κ) • z = 0 := by
+      rw [show ((c1 • y + (c2 - κ) • z : V3)) = c1 • y + c2 • z - κ • z from
+        by module]
+      rw [hkeq]
+      module
+    obtain ⟨e1, e2⟩ := w6acs_smul_indep hy0 hz0 hnc heq
+    rw [e1] at hc1p
+    exact lt_irrefl (0:ℝ) hc1p
+  · exact w6acs_ballAnnulus_4ponits_aff_gt hc1 hc2 h2 hup
+      (by rw [norm_sub_rev]; exact h3) (by rw [norm_sub_rev]; exact h4) hy hz hv hvin
+
+/-- A point of the open cone of a capped edge that lies on a ray of any other
+annulus point 2-separated from the edge's endpoints is the origin. -/
+theorem w6acs_gt_ray_kill_strong {y z v x : V3}
+    (hnc : ¬ Collinear3 (0:V3) y z) (hy : y ∈ ballAnnulus) (hz : z ∈ ballAnnulus)
+    (hv : v ∈ ballAnnulus) (h2 : 2 ≤ ‖y - z‖) (hup : ‖y - z‖ ≤ cstab_p4)
+    (h3 : 2 ≤ ‖y - v‖) (h4 : 2 ≤ ‖z - v‖)
+    (hx1 : x ∈ affGt ({0} : Set V3) ({y, z}))
+    (hx2 : x ∈ affGe ({0} : Set V3) ({v})) : x = 0 := by
+  by_cases hx0 : x = 0
+  · exact hx0
+  · exfalso
+    have hv0 : v ≠ 0 := w4cs_annulus_ne_zero hv
+    obtain ⟨t, ht0, hxt⟩ := w4cs_ray_coeff hv0 hx2
+    have htp : 0 < t := by
+      by_cases hte : t = 0
+      · exact absurd (by rw [hte, zero_smul] at hxt; exact hxt) hx0
+      · exact lt_of_le_of_ne ht0 (Ne.symm hte)
+    have hvin : v ∈ affGt ({0} : Set V3) ({y, z}) := by
+      have hsc := w6acs_affGt_smul (w4cs_annulus_ne_zero hy) (w4cs_annulus_ne_zero hz)
+        (inv_pos.mpr htp) hx1
+      rw [hxt, smul_smul, inv_mul_cancel₀ (ne_of_gt htp), one_smul] at hsc
+      simpa using hsc
+    exact w6acs_indep_gt_kill hnc hy hz hv h2 hup h3 h4 hvin
+
+/-- A point of the open cone of a non-degenerate edge that lies on the ray
+through one of the edge's own endpoints is the origin. -/
+theorem w6acs_gt_ray_self_kill {y z x : V3} (hnc : ¬ Collinear3 (0:V3) y z)
+    (hy0 : y ≠ 0) (hz0 : z ≠ 0)
+    (hx1 : x ∈ affGt ({0} : Set V3) ({y, z}))
+    (hx2 : x ∈ affGe ({0} : Set V3) ({y})) : x = 0 := by
+  obtain ⟨t, ht0, hxt⟩ := w4cs_ray_coeff hy0 hx2
+  rcases eq_or_ne x 0 with h0 | hne
+  · exact h0
+  · exfalso
+    have htp : 0 < t := by
+      by_cases hte : t = 0
+      · exact absurd (by rw [hte, zero_smul] at hxt; exact hxt) hne
+      · exact lt_of_le_of_ne ht0 (Ne.symm hte)
+    obtain ⟨c1, c2, hc1, hc2, hvq⟩ := w5bcs_coeff_of_mem_affGt hy0 hz0 hx1
+    rw [hvq] at hxt
+    have heq : (c1 - t) • y + c2 • z = 0 := by
+      rw [show (((c1 - t) • y + c2 • z : V3)) = c1 • y + c2 • z - t • y from
+        by module]
+      rw [hxt]
+      exact sub_self (t • y)
+    obtain ⟨e1, e2⟩ := w6acs_smul_indep hy0 hz0 hnc heq
+    rw [e2] at hc2
+    exact lt_irrefl (0:ℝ) hc2
+
+/-- fan7 edge×edge face with a shared endpoint: the two cones meet exactly in
+the ray through the shared vertex.  `hplanar` is the pointwise planar-kill
+(the W6a gap-2 statement) supplied as an explicit hypothesis parameter. -/
+theorem w6acs_fan7_edges_shared {a b c : V3}
+    (hplanar : ∀ {y z y1 z1 x : V3},
+      ¬ Collinear3 (0:V3) y z → ¬ Collinear3 (0:V3) y1 z1 →
+      y ∈ ballAnnulus ∧ z ∈ ballAnnulus ∧ y1 ∈ ballAnnulus ∧ z1 ∈ ballAnnulus →
+      ‖y - z‖ ≤ cstab_p4 → ‖y1 - z1‖ ≤ cstab_p4 →
+      ¬ (y1 ∈ ({y, z} : Set V3) ∧ z1 ∈ ({y, z} : Set V3)) →
+      (∀ v w : V3, v ≠ w → v ∈ ({y, z, y1, z1} : Set V3) →
+        w ∈ ({y, z, y1, z1} : Set V3) → (2:ℝ) ≤ ‖v - w‖) →
+      (crossProduct (WithLp.ofLp y : Fin 3 → ℝ) (WithLp.ofLp z : Fin 3 → ℝ)) ⬝ᵥ
+        (WithLp.ofLp y1 : Fin 3 → ℝ) = 0 →
+      (crossProduct (WithLp.ofLp y : Fin 3 → ℝ) (WithLp.ofLp z : Fin 3 → ℝ)) ⬝ᵥ
+        (WithLp.ofLp z1 : Fin 3 → ℝ) = 0 →
+      x ∈ affGt ({0} : Set V3) ({y, z}) →
+      x ∈ affGt ({0} : Set V3) ({y1, z1}) → False)
+    (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
+    (ha : a ∈ ballAnnulus) (hb : b ∈ ballAnnulus) (hcm : c ∈ ballAnnulus)
+    (hnc1 : ¬ Collinear3 (0:V3) a b) (hnc2 : ¬ Collinear3 (0:V3) b c)
+    (h2ab : 2 ≤ ‖a - b‖) (hupab : ‖a - b‖ ≤ cstab_p4)
+    (h2bc : 2 ≤ ‖b - c‖) (hupbc : ‖b - c‖ ≤ cstab_p4)
+    (h2ac : 2 ≤ ‖a - c‖) :
+    affGe ({0} : Set V3) ({a, b}) ∩ affGe ({0} : Set V3) ({b, c})
+      = affGe ({0} : Set V3) ({b}) := by
+  have ha0 : a ≠ 0 := w4cs_annulus_ne_zero ha
+  have hb0 : b ≠ 0 := w4cs_annulus_ne_zero hb
+  have hc0 : c ≠ 0 := w4cs_annulus_ne_zero hcm
+  have hdecb : affGe ({0} : Set V3) ({a, b})
+      = affGt ({0} : Set V3) ({a, b}) ∪ affGe ({0} : Set V3) ({a})
+        ∪ affGe ({0} : Set V3) ({b}) :=
+    aff_ge_eq_aff_gt_union_aff_ge hnc1
+  have hdecc : affGe ({0} : Set V3) ({b, c})
+      = affGt ({0} : Set V3) ({b, c}) ∪ affGe ({0} : Set V3) ({b})
+        ∪ affGe ({0} : Set V3) ({c}) :=
+    aff_ge_eq_aff_gt_union_aff_ge hnc2
+  -- the 3-point 2-separation for the gap-2 call
+  have hdec4 : ∀ u : V3, u ∈ ({a, b, b, c} : Set V3) → u = a ∨ u = b ∨ u = c := by
+    intro u hu
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu
+    tauto
+  have hsep3 : ∀ v w : V3, v ≠ w → v ∈ ({a, b, b, c} : Set V3) →
+      w ∈ ({a, b, b, c} : Set V3) → (2:ℝ) ≤ ‖v - w‖ := by
+    intro v w hvw hv hw
+    have he1 := hdec4 v hv
+    have he2 := hdec4 w hw
+    rcases he1 with rfl | rfl | rfl
+    · rcases he2 with rfl | rfl | rfl
+      · exact absurd rfl hvw
+      · exact h2ab
+      · exact h2ac
+    · rcases he2 with rfl | rfl | rfl
+      · rw [norm_sub_rev]; exact h2ab
+      · exact absurd rfl hvw
+      · exact h2bc
+    · rcases he2 with rfl | rfl | rfl
+      · rw [norm_sub_rev]; exact h2ac
+      · rw [norm_sub_rev]; exact h2bc
+      · exact absurd rfl hvw
+  ext x
+  constructor
+  · rintro ⟨hx1, hx2⟩
+    rw [hdecb, Set.mem_union, Set.mem_union] at hx1
+    rw [hdecc, Set.mem_union, Set.mem_union] at hx2
+    refine Or.elim hx1 (fun ha1 => ?_) (fun hc1 => ?_)
+    · refine Or.elim ha1 (fun g1 => ?_) (fun r1a => ?_)
+      · refine Or.elim hx2 (fun ha2 => ?_) (fun hc2 => ?_)
+        · refine Or.elim ha2 (fun g2 => ?_) (fun r2b => ?_)
+          · exfalso
+            -- gt∩gt: planes distinct kill, or the coplanar gap-2 kill
+            by_cases hpl : (crossProduct (WithLp.ofLp a : Fin 3 → ℝ)
+                (WithLp.ofLp b : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp c : Fin 3 → ℝ) = 0
+            · exact hplanar hnc1 hnc2 ⟨ha, hb, hb, hcm⟩ hupab hupbc
+                (by
+                  intro hcon
+                  rcases hcon with ⟨_, h2⟩
+                  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h2
+                  rcases h2 with h2 | h2
+                  · exact hac h2.symm
+                  · exact hbc h2.symm) hsep3
+                (by rw [dotProduct_comm]; exact dot_cross_self a b) hpl g1 g2
+            · obtain ⟨α, β, hα, hβ, hxq⟩ := w5bcs_coeff_of_mem_affGt ha0 hb0 g1
+              obtain ⟨γ, δ, hγ, hδ, hxq2⟩ := w5bcs_coeff_of_mem_affGt hb0 hc0 g2
+              have h0x : (crossProduct (WithLp.ofLp a : Fin 3 → ℝ)
+                  (WithLp.ofLp b : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp x : Fin 3 → ℝ) = 0 := by
+                rw [hxq]
+                simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+                rw [dotProduct_add, dotProduct_smul, dotProduct_smul,
+                  show ((crossProduct (WithLp.ofLp a : Fin 3 → ℝ)
+                      (WithLp.ofLp b : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp a : Fin 3 → ℝ)) = 0 from
+                    (by rw [dotProduct_comm]; exact dot_self_cross a b),
+                  show ((crossProduct (WithLp.ofLp a : Fin 3 → ℝ)
+                      (WithLp.ofLp b : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp b : Fin 3 → ℝ)) = 0 from
+                    (by rw [dotProduct_comm]; exact dot_cross_self a b)]
+                ring
+              have hδx : (crossProduct (WithLp.ofLp a : Fin 3 → ℝ)
+                  (WithLp.ofLp b : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp x : Fin 3 → ℝ)
+                  = δ * ((crossProduct (WithLp.ofLp a : Fin 3 → ℝ)
+                    (WithLp.ofLp b : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp c : Fin 3 → ℝ)) := by
+                rw [hxq2]
+                simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+                rw [dotProduct_add, dotProduct_smul, dotProduct_smul,
+                  show ((crossProduct (WithLp.ofLp a : Fin 3 → ℝ)
+                      (WithLp.ofLp b : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp b : Fin 3 → ℝ)) = 0 from
+                    (by rw [dotProduct_comm]; exact dot_cross_self a b)]
+                ring
+              rw [h0x] at hδx
+              exact hpl (by
+                rcases mul_eq_zero.mp hδx.symm with h1 | h1
+                · exact absurd h1 (ne_of_gt hδ)
+                · exact h1)
+          · -- gt(a,b) ∩ ray(b): independence kill
+            obtain ⟨t, ht0, hxt⟩ := w4cs_ray_coeff hb0 r2b
+            rcases eq_or_ne x 0 with h0 | hne
+            · rw [h0]; exact w4cs_zero_mem_ray hb0
+            · exfalso
+              have htp : 0 < t := by
+                by_cases hte : t = 0
+                · exact absurd (by rw [hte, zero_smul] at hxt; exact hxt) hne
+                · exact lt_of_le_of_ne ht0 (Ne.symm hte)
+              obtain ⟨α, β, hα, hβ, hxq⟩ := w5bcs_coeff_of_mem_affGt ha0 hb0 g1
+              rw [hxq] at hxt
+              have heq : α • a + (β - t) • b = 0 := by
+                rw [show ((α • a + (β - t) • b : V3)) = α • a + β • b - t • b from
+                  by module]
+                rw [hxt]
+                exact sub_self (t • b)
+              obtain ⟨e1, e2⟩ := w6acs_smul_indep ha0 hb0 hnc1 heq
+              rw [e1] at hα
+              exact lt_irrefl (0:ℝ) hα
+        · -- gt(a,b) ∩ ray(c): vertex-in-open-cone kill
+          obtain ⟨t, ht0, hxt⟩ := w4cs_ray_coeff hc0 hc2
+          rcases eq_or_ne x 0 with h0 | hne
+          · rw [h0]; exact w4cs_zero_mem_ray hb0
+          · exfalso
+            have htp : 0 < t := by
+              by_cases hte : t = 0
+              · exact absurd (by rw [hte, zero_smul] at hxt; exact hxt) hne
+              · exact lt_of_le_of_ne ht0 (Ne.symm hte)
+            have hcin : c ∈ affGt ({0} : Set V3) ({a, b}) := by
+              have hsc := w6acs_affGt_smul ha0 hb0 (inv_pos.mpr htp) g1
+              rw [hxt, smul_smul, inv_mul_cancel₀ (ne_of_gt htp), one_smul] at hsc
+              simpa using hsc
+            exact w6acs_indep_gt_kill hnc1 ha hb hcm h2ab hupab h2ac h2bc hcin
+      · refine Or.elim hx2 (fun ha2 => ?_) (fun hc2 => ?_)
+        · refine Or.elim ha2 (fun g2 => ?_) (fun r2b => ?_)
+          · -- ray(a) ∩ gt(b,c): vertex-in-open-cone kill
+            obtain ⟨t, ht0, hxt⟩ := w4cs_ray_coeff ha0 r1a
+            rcases eq_or_ne x 0 with h0 | hne
+            · rw [h0]; exact w4cs_zero_mem_ray hb0
+            · exfalso
+              have htp : 0 < t := by
+                by_cases hte : t = 0
+                · exact absurd (by rw [hte, zero_smul] at hxt; exact hxt) hne
+                · exact lt_of_le_of_ne ht0 (Ne.symm hte)
+              have hain : a ∈ affGt ({0} : Set V3) ({b, c}) := by
+                have hsc := w6acs_affGt_smul hb0 hc0 (inv_pos.mpr htp) g2
+                rw [hxt, smul_smul, inv_mul_cancel₀ (ne_of_gt htp), one_smul] at hsc
+                simpa using hsc
+              exact w6acs_indep_gt_kill hnc2 hb hcm ha h2bc hupbc
+                (by rw [norm_sub_rev]; exact h2ab)
+                (by rw [norm_sub_rev]; exact h2ac) hain
+          · have hx0 := VEC0_BALL_ANNULUS h2ab ha hb r1a r2b
+            rw [hx0]
+            exact hx0 ▸ w4cs_zero_mem_ray hb0
+        · have hx0 := VEC0_BALL_ANNULUS h2ac ha hcm r1a hc2
+          rw [hx0]
+          exact w4cs_zero_mem_ray hb0
+    · refine Or.elim hx2 (fun ha2 => ?_) (fun hc2 => ?_)
+      · refine Or.elim ha2 (fun g2 => ?_) (fun r2b => ?_)
+        · -- ray(b) ∩ gt(b,c): independence kill
+          obtain ⟨t, ht0, hxt⟩ := w4cs_ray_coeff hb0 hc1
+          rcases eq_or_ne x 0 with h0 | hne
+          · exact h0 ▸ hc1
+          · exfalso
+            have htp : 0 < t := by
+              by_cases hte : t = 0
+              · exact absurd (by rw [hte, zero_smul] at hxt; exact hxt) hne
+              · exact lt_of_le_of_ne ht0 (Ne.symm hte)
+            obtain ⟨γ, δ, hγ, hδ, hxq2⟩ := w5bcs_coeff_of_mem_affGt hb0 hc0 g2
+            rw [hxq2] at hxt
+            have heq : (t - γ) • b + (-δ) • c = 0 := by
+              rw [show (((t - γ) • b + (-δ) • c : V3)) = t • b - (γ • b + δ • c) from
+                by module]
+              rw [← hxt]
+              module
+            obtain ⟨e1, e2⟩ := w6acs_smul_indep hb0 hc0 hnc2 heq
+            rw [neg_eq_zero.mp e2] at hδ
+            exact lt_irrefl (0:ℝ) hδ
+        · exact hc1
+      · have hx0 := VEC0_BALL_ANNULUS h2bc hb hcm hc1 hc2
+        rw [hx0]
+        exact w4cs_zero_mem_ray hb0
+  · intro hx
+    rw [hdecb, hdecc, Set.mem_inter_iff, Set.mem_union, Set.mem_union, Set.mem_union,
+      Set.mem_union]
+    exact ⟨Or.inr hx, Or.inl (Or.inr hx)⟩
+
+
+end W6aKit
+
 end Kepler.Text
