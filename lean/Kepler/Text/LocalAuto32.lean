@@ -104,7 +104,10 @@ FILE MAP
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto20
+import Kepler.Text.LocalAuto23
+import Kepler.Text.LocalAuto29
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -430,14 +433,78 @@ theorem SCS_3M1_prime_ARROW_MM_3M1_p32 :
 
 /-! ### 4M7 stab-diag BB/MM steps (MIQMCSN.hl:1077-1130) -/
 
+/-- `_p32` substrate (private `la1psort_cases` twin, copied since LA1 keeps
+it private): a `psort`-class of two pairs at any `k` is the residue pair
+read in one of the two orientations. -/
+private theorem la32psort_cases {k i j x y : ℕ}
+    (heq : psort k (i, j) = psort k (x, y)) :
+    (i % k = x % k ∧ j % k = y % k) ∨ (i % k = y % k ∧ j % k = x % k) := by
+  simp only [psort] at heq
+  split at heq <;> split at heq <;>
+    simp only [Prod.mk.injEq] at heq
+  · exact Or.inl heq
+  · exact Or.inr heq
+  · exact Or.inr ⟨heq.2, heq.1⟩
+  · exact Or.inl ⟨heq.2, heq.1⟩
+
+/-- `_p32` substrate: a `scs_diag 4` pair is the "opposite edge" of its
+first index (`EXPAND_DIAG_4V` shape). -/
+private theorem la32diag4_plus2 {r r' : ℕ} (h : scsDiag 4 r r') :
+    r' % 4 = (r + 2) % 4 := by
+  obtain ⟨h1, h2, h3⟩ := h
+  have hr : r % 4 < 4 := Nat.mod_lt r (by omega)
+  have hr' : r' % 4 < 4 := Nat.mod_lt r' (by omega)
+  have hr1 : (r + 1) % 4 = (r % 4 + 1) % 4 := by rw [Nat.add_mod]
+  have hr1' : (r' + 1) % 4 = (r' % 4 + 1) % 4 := by rw [Nat.add_mod]
+  have hr2 : (r + 2) % 4 = (r % 4 + 2) % 4 := by rw [Nat.add_mod]
+  rw [hr1] at h2
+  rw [hr1'] at h3
+  rw [hr2]
+  interval_cases r % 4 <;> interval_cases r' % 4 <;> simp_all
+
+/-- `_p32` substrate: `BBs_v39` transfers verbatim through
+`scs_stab_diag_v39` at `k = 4` — the pointwise content of the HOL
+`BB_4M6/4M7/4M8_IMP_BB_STAN_*` twins (`B_EQ_PSORT` slot swap carried by the
+periodicity of the realisation; the `ConvexLocalFan`/annulus/periodic
+components are unchanged). -/
+private theorem la32stabBB4 (s : ScsV39) (v : ℕ → V3) (i j : ℕ) (hk : s.k = 4)
+    (h1 : BBsV39 s v) (h3 : dist (v i) (v j) ≤ cstab) :
+    BBsV39 (scsStabDiagV39 s i j) v := by
+  obtain ⟨hann, hper, hbnd, hfan⟩ := h1
+  show BBsV39 (mkUnadornedV39 s.k s.d s.a
+      (fun i' j' => if psort s.k (i, j) = psort s.k (i', j') then cstab
+        else s.b i' j')) v
+  have hper4 : Periodic v 4 := by
+    have h := hper
+    rw [hk] at h
+    exact h
+  refine ⟨hann, hper, ?_, hfan⟩
+  · intro x y
+    obtain ⟨hal, hub⟩ := hbnd x y
+    show s.a x y ≤ dist (v x) (v y) ∧
+      dist (v x) (v y) ≤
+        (if psort s.k (i, j) = psort s.k (x, y) then cstab else s.b x y)
+    refine ⟨hal, ?_⟩
+    by_cases hps : psort s.k (i, j) = psort s.k (x, y)
+    · rw [if_pos hps]
+      rcases la32psort_cases hps with ⟨hx, hy⟩ | ⟨hx, hy⟩
+      · rw [hk] at hx hy
+        rw [← periodic_mod_eq_p23 hper4 x, ← periodic_mod_eq_p23 hper4 y, ← hx, ← hy,
+          periodic_mod_eq_p23 hper4 i, periodic_mod_eq_p23 hper4 j]
+        exact h3
+      · rw [hk] at hx hy
+        rw [← periodic_mod_eq_p23 hper4 x, ← periodic_mod_eq_p23 hper4 y, ← hx, ← hy,
+          periodic_mod_eq_p23 hper4 j, periodic_mod_eq_p23 hper4 i, dist_comm]
+        exact h3
+    · rw [if_neg hps]
+      exact hub
+
 /-- HOL `BB_4M7_IMP_BB_STAN_4M7` (MIQMCSN.hl:1077). -/
 theorem BB_4M7_IMP_BB_STAN_4M7_p32 (v : ℕ → V3) (i j : ℕ)
     (h1 : BBsV39 scs4M7 v) (h2 : scsDiag 4 i j)
     (h3 : dist (v i) (v j) ≤ cstab) :
-    BBsV39 (scsStabDiagV39 scs4M7 i j) v := by
-  sorry
-  -- NEEDS: BBs_v39 + scs_stab_diag_v39 pointwise unfolding
-  -- (B_EQ_PSORT on the (i,j) slot) + BB_4M7 hypothesis.
+    BBsV39 (scsStabDiagV39 scs4M7 i j) v :=
+  la32stabBB4 scs4M7 v i j rfl h1 h3
 
 /-- HOL `MM_4M7_IMP_STAB_4M7` (MIQMCSN.hl:1101). -/
 theorem MM_4M7_IMP_STAB_4M7_p32 (v : ℕ → V3) (i j : ℕ)
@@ -522,12 +589,61 @@ theorem EXPAND_STAB_DIAG_4M7_p32 :
     · omega
     · exact hmod (i + 2) i
 
-/-- HOL `SET_EQ_DIAG_STAB_4M7` (MIQMCSN.hl:1131). -/
+/-- HOL `SET_EQ_DIAG_STAB_4M7` (MIQMCSN.hl:1131). DISCHARGED: field 1 is
+`YRTAFYH_p17` on the two records (`is_scs_4M7_p22` + `h0_LT_B_SCS_4M7_p32`
+for the `a i j ≤ cstab` gate); field 2 routes any stabilised member through
+`stabDiag_mod_p32`/`la32diag4_plus2` to the residue records
+`(0,2)`/`(1,3)` (the `(2,0)`/`(3,1)` orientations re-orient by `STAB_SYM`). -/
 theorem SET_EQ_DIAG_STAB_4M7_p32 :
     scsArrowV39 {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M7 i j}
       {scsStabDiagV39 scs4M7 0 2, scsStabDiagV39 scs4M7 1 3} := by
-  sorry
-  -- NEEDS: EXPAND_STAB_DIAG_4M7_p32 + EXPAND_DIAG_4V + FZIOTEF_UNION.
+  have h02 : scsDiag 4 0 2 := by unfold scsDiag; decide
+  have h13 : scsDiag 4 1 3 := by unfold scsDiag; decide
+  have hbas : scsBasicV39 scs4M7 := ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  have hk7 : (3:ℕ) < scs4M7.k := by rw [K_SCS_4M7_p32]; omega
+  have hac02 : scs4M7.a 0 2 ≤ cstab := by
+    simp [scs4M7, mkUnadornedV39, funlistV39, psort, assocdV39]
+  have hac13 : scs4M7.a 1 3 ≤ cstab := by
+    simp [scs4M7, mkUnadornedV39, funlistV39, psort, assocdV39]
+  have his02 := (YRTAFYH_p17 scs4M7 0 2 SCS_4M7_IS_SCS_p29 hbas hk7 h02 hac02).1
+  have his13 := (YRTAFYH_p17 scs4M7 1 3 SCS_4M7_IS_SCS_p29 hbas hk7 h13 hac13).1
+  refine ⟨fun t ht => ?_, ?_⟩
+  · rw [Set.mem_insert_iff] at ht
+    rcases ht with ht | ht
+    · rw [ht]; exact his02
+    · rw [Set.mem_singleton_iff] at ht
+      rw [ht]; exact his13
+  · by_cases hhex :
+      ∀ s' ∈ ({s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M7 i j} :
+        Set ScsV39), MMsV39 s' = ∅
+    · exact Or.inl hhex
+    · push_neg at hhex
+      obtain ⟨t, ⟨i, j, hd, rfl⟩, htne⟩ := hhex
+      have h4n : scs4M7.k ≠ 0 := by rw [K_SCS_4M7_p32]; omega
+      have hmod : scsStabDiagV39 scs4M7 i j =
+          scsStabDiagV39 scs4M7 (i % 4) (j % 4) := by
+        have h := stabDiag_mod_p32 scs4M7 h4n i j
+        rwa [K_SCS_4M7_p32] at h
+      rw [hmod] at htne
+      have hd4 : scsDiag 4 (i % 4) (j % 4) := (DIAG_MOD 4 i j (by omega)).mpr hd
+      have hdm : j % 4 = (i % 4 + 2) % 4 := by
+        have h' := la32diag4_plus2 (r := i % 4) (r' := j % 4) hd4
+        simpa using h'
+      rw [hdm] at htne
+      have hzi : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4
+      · refine Or.inr ⟨scsStabDiagV39 scs4M7 0 2, Set.mem_insert _ _, ?_⟩
+        exact Set.nonempty_iff_ne_empty.mp htne
+      · refine Or.inr ⟨scsStabDiagV39 scs4M7 1 3, by simp, ?_⟩
+        exact Set.nonempty_iff_ne_empty.mp htne
+      · refine Or.inr ⟨scsStabDiagV39 scs4M7 0 2, Set.mem_insert _ _, ?_⟩
+        have h2 : (MMsV39 (scsStabDiagV39 scs4M7 2 0)).Nonempty := htne
+        rw [STAB_SYM scs4M7 2 0] at h2
+        exact Set.nonempty_iff_ne_empty.mp h2
+      · refine Or.inr ⟨scsStabDiagV39 scs4M7 1 3, by simp, ?_⟩
+        have h3 : (MMsV39 (scsStabDiagV39 scs4M7 3 1)).Nonempty := htne
+        rw [STAB_SYM scs4M7 3 1] at h3
+        exact Set.nonempty_iff_ne_empty.mp h3
 
 /-- HOL `SCS_4M7_SLICE_13` (MIQMCSN.hl:1182). -/
 theorem SCS_4M7_SLICE_13_p32 :
@@ -574,10 +690,8 @@ theorem STAB_SCS_4M7_ARROW_3T3_3M1_3T4_p32 :
 theorem BB_4M8_IMP_BB_STAN_4M8_p32 (v : ℕ → V3) (i j : ℕ)
     (h1 : BBsV39 scs4M8 v) (h2 : scsDiag 4 i j)
     (h3 : dist (v i) (v j) ≤ cstab) :
-    BBsV39 (scsStabDiagV39 scs4M8 i j) v := by
-  sorry
-  -- NEEDS: BBs_v39 + scs_stab_diag_v39 pointwise unfolding
-  -- (B_EQ_PSORT on the (i,j) slot) + BB_4M8 hypothesis.
+    BBsV39 (scsStabDiagV39 scs4M8 i j) v :=
+  la32stabBB4 scs4M8 v i j rfl h1 h3
 
 /-- HOL `MM_4M8_IMP_STAB_4M8` (MIQMCSN.hl:1521). -/
 theorem MM_4M8_IMP_STAB_4M8_p32 (v : ℕ → V3) (i j : ℕ)
@@ -641,12 +755,60 @@ theorem EXPAND_STAB_DIAG_4M8_p32 :
     · omega
     · exact hmod (i + 2) i
 
-/-- HOL `SET_EQ_DIAG_STAB_4M8` (MIQMCSN.hl:1550). -/
+/-- HOL `SET_EQ_DIAG_STAB_4M8` (MIQMCSN.hl:1550). DISCHARGED as
+`SET_EQ_DIAG_STAB_4M7_p32` on `scs_4M8`. -/
 theorem SET_EQ_DIAG_STAB_4M8_p32 :
     scsArrowV39 {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M8 i j}
       {scsStabDiagV39 scs4M8 0 2, scsStabDiagV39 scs4M8 1 3} := by
-  sorry
-  -- NEEDS: EXPAND_STAB_DIAG_4M8_p32 + EXPAND_DIAG_4V + FZIOTEF_UNION.
+  have h02 : scsDiag 4 0 2 := by unfold scsDiag; decide
+  have h13 : scsDiag 4 1 3 := by unfold scsDiag; decide
+  have hbas : scsBasicV39 scs4M8 := ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  have hk4 : scs4M8.k = 4 := rfl
+  have hk8 : (3:ℕ) < scs4M8.k := by rw [hk4]; omega
+  have hac02 : scs4M8.a 0 2 ≤ cstab := by
+    simp [scs4M8, mkUnadornedV39, funlistV39, psort, assocdV39]
+  have hac13 : scs4M8.a 1 3 ≤ cstab := by
+    simp [scs4M8, mkUnadornedV39, funlistV39, psort, assocdV39]
+  have his02 := (YRTAFYH_p17 scs4M8 0 2 SCS_4M8_IS_SCS_p29 hbas hk8 h02 hac02).1
+  have his13 := (YRTAFYH_p17 scs4M8 1 3 SCS_4M8_IS_SCS_p29 hbas hk8 h13 hac13).1
+  refine ⟨fun t ht => ?_, ?_⟩
+  · rw [Set.mem_insert_iff] at ht
+    rcases ht with ht | ht
+    · rw [ht]; exact his02
+    · rw [Set.mem_singleton_iff] at ht
+      rw [ht]; exact his13
+  · by_cases hhex :
+      ∀ s' ∈ ({s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M8 i j} :
+        Set ScsV39), MMsV39 s' = ∅
+    · exact Or.inl hhex
+    · push_neg at hhex
+      obtain ⟨t, ⟨i, j, hd, rfl⟩, htne⟩ := hhex
+      have h4n : scs4M8.k ≠ 0 := by rw [hk4]; omega
+      have hmod : scsStabDiagV39 scs4M8 i j =
+          scsStabDiagV39 scs4M8 (i % 4) (j % 4) := by
+        have h := stabDiag_mod_p32 scs4M8 h4n i j
+        rw [hk4] at h
+        exact h
+      rw [hmod] at htne
+      have hd4 : scsDiag 4 (i % 4) (j % 4) := (DIAG_MOD 4 i j (by omega)).mpr hd
+      have hdm : j % 4 = (i % 4 + 2) % 4 := by
+        have h' := la32diag4_plus2 (r := i % 4) (r' := j % 4) hd4
+        simpa using h'
+      rw [hdm] at htne
+      have hzi : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4
+      · refine Or.inr ⟨scsStabDiagV39 scs4M8 0 2, Set.mem_insert _ _, ?_⟩
+        exact Set.nonempty_iff_ne_empty.mp htne
+      · refine Or.inr ⟨scsStabDiagV39 scs4M8 1 3, by simp, ?_⟩
+        exact Set.nonempty_iff_ne_empty.mp htne
+      · refine Or.inr ⟨scsStabDiagV39 scs4M8 0 2, Set.mem_insert _ _, ?_⟩
+        have h2 : (MMsV39 (scsStabDiagV39 scs4M8 2 0)).Nonempty := htne
+        rw [STAB_SYM scs4M8 2 0] at h2
+        exact Set.nonempty_iff_ne_empty.mp h2
+      · refine Or.inr ⟨scsStabDiagV39 scs4M8 1 3, by simp, ?_⟩
+        have h3 : (MMsV39 (scsStabDiagV39 scs4M8 3 1)).Nonempty := htne
+        rw [STAB_SYM scs4M8 3 1] at h3
+        exact Set.nonempty_iff_ne_empty.mp h3
 
 /-- HOL `PROP_OPP_DIAG_4M8_13` (MIQMCSN.hl:1603). Discharged: both records
 re-oriented by `STAB_SYM` to the literal-index classes `(3,1)`/`(2,0)`, then
@@ -1351,12 +1513,50 @@ theorem SCS_4M8_13_ARROW_3T7_OPP_p32 :
   -- NEEDS: FZIOTEF_TRANS via {scs_4M8_13} + SCS_4M8_02_ARROW_4M8_13_p32
   -- + SCS_4M8_13_ARROW_3T7_p32 + YXIONXL2 (opp arrow on scs_3T7).
 
-/-- HOL `PROP_OPP_4M8_13` (MIQMCSN.hl:3377). -/
+/-- HOL `PROP_OPP_4M8_13` (MIQMCSN.hl:3377). DISCHANGED: componentwise
+`ScsV39.mk.injEq`; the four table components are 16-cell residue sweeps —
+the `propEqu 2` shift composed with the reflection `j ↦ 3 - (j % 4)` of
+`peropp2` preserves the common all-`cstab` 4M8 `a`-table and swaps the
+`b`-classes `(0,2) ↔ (1,3)` (`3.62 ↔ 6`). Minefield: normalise the target
+lookup via `funlist_mod_p20` and the shifted indices via `Nat.add_mod`
+BEFORE `interval_cases` (mirrors `PROP_OPP_DIAG_4M8_13_p32`). -/
 theorem PROP_OPP_4M8_13_p32 :
     scs4M8_13 = scsPropEquV39 (scsOppV39 scs4M8_02) 2 := by
-  sorry
-  -- NEEDS: scs_inj on the two records + psort/peropp2 mod-4 case work
-  -- (PSORT_MOD, MOD_ADD_MOD, FUNLIST_EXPLICIT).
+  simp only [scs4M8_13, scs4M8_02, mkUnadornedV39, scsPropEquV39, scsOppV39, peropp2]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, rfl, rfl, rfl, rfl⟩
+  · funext j j'
+    have h1 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have h2 : j' % 4 < 4 := Nat.mod_lt j' (by omega)
+    rw [← funlist_mod_p20
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4
+      j j' (by omega), Nat.add_mod 2 j 4, Nat.add_mod 2 j' 4]
+    interval_cases j % 4 <;> interval_cases j' % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num
+  · funext j j'
+    have h1 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have h2 : j' % 4 < 4 := Nat.mod_lt j' (by omega)
+    rw [← funlist_mod_p20
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4
+      j j' (by omega), Nat.add_mod 2 j 4, Nat.add_mod 2 j' 4]
+    interval_cases j % 4 <;> interval_cases j' % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num
+  · funext j j'
+    have h1 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have h2 : j' % 4 < 4 := Nat.mod_lt j' (by omega)
+    rw [← funlist_mod_p20
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 3.62)] 2 4
+      j j' (by omega), Nat.add_mod 2 j 4, Nat.add_mod 2 j' 4]
+    interval_cases j % 4 <;> interval_cases j' % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num
+  · funext j j'
+    have h1 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have h2 : j' % 4 < 4 := Nat.mod_lt j' (by omega)
+    rw [← funlist_mod_p20
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 3.62)] 2 4
+      j j' (by omega), Nat.add_mod 2 j 4, Nat.add_mod 2 j' 4]
+    interval_cases j % 4 <;> interval_cases j' % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num
 
 /-- HOL `SCS_4M8_02_ARROW_4M8_13` (MIQMCSN.hl:3410). -/
 theorem SCS_4M8_02_ARROW_4M8_13_p32 :
