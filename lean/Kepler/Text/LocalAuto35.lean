@@ -20731,12 +20731,10 @@ theorem w1TwoLeAux_p35 (h : localFan_p3 V E FF) :
 
 end W1CoreP35
 
-/-- **Core lemma (lf-alpha-w1)**: HOL `LOFA_IMP_EE_TWO_ELMS` (local_lemmas1
-~:1907) at the `_p3` HYP world — a `localFan_p3` is 2-regular. -/
-theorem localFanLA3TwoNbr_p35 (h : localFan_p3 V E FF) :
-    ∀ u ∈ V, (EE_p3 u E).ncard = 2 := by
-  intro v hv
-  exact le_antisymm (w1SigmaBndAux_p35 h v hv) (w1TwoLeAux_p35 h v hv)
+-- `localFanLA3TwoNbr_p35` (HOL `LOFA_IMP_EE_TWO_ELMS`, `_p3` 2-regularity) is
+-- now taken verbatim from AzimBridge.lean:909 — that module entered this
+-- file's import closure via LocalAuto23 → CircularSolKit (2026-11-03), so the
+-- former local copy (identical statement) would clash and was removed.
 /-- **GATE-A bridge** — LA3 `localFan_p3` + absence of isolated self-pair
 darts gives LA1 `LocalFan`.  Private recast of AzimBridge
 `LocalFan.of_localFan_p3` (AzimBridge.lean:740; that file imports LocalAuto2,
@@ -20917,7 +20915,7 @@ private theorem localFanLA1ofP3_p35 {V : Set V3} {E : Set (Set V3)} {FF : Set (V
       · refine Equiv.Perm.ext fun y => ?_
         rw [Equiv.Perm.coe_pow, ← iterateCongr_p35 hptN (2 : ℕ) y, c5.2]
         rfl
-  · -- α2 conjunct: 2-正则（核心引理块副本，见上方 localFanLA3TwoNbr_p35）
+  · -- α2 conjunct: 2-正则（`localFanLA3TwoNbr_p35`，AzimBridge.lean:909）
     intro u hu
     exact localFanLA3TwoNbr_p35 hp3keep u hu
 

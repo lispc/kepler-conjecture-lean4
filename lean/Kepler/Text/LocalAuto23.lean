@@ -52,10 +52,10 @@ FILE MAP
     bookkeeping tactic-lemmas `IS_SCS_IN_V_SY_*_p23`,
     `IS_SCS_IN_BALL_ANNULUS_*_p23`, `IS_SCS_IN_E_SY_*_p23` (proved; the
     HOL `fun (so:term)->` tactics), `V_E_FF_IS_SCS_CASES_3_p23` (proved)
-    and `_4/_5/_6` (sorry), `IN_IS_SCS_CASE_*_p23`,
+    and `_4/_5/_6` (proved), `IN_IS_SCS_CASE_*_p23`,
     `TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_*_p23`, `IS_EAR_V25_EQ_EAR_SY_p23`,
     `JKQEWGV1_CASE_*_p23`, `JKQEWGV1_p23`, `JKQEWGV2_CASE_*_p23`,
-    `JKQEWGV2_p23`, `JKQEWGV3_p23` (sorry),
+    `JKQEWGV2_p23` (proved), `JKQEWGV3_p23` (sorry),
     `IS_SCS_POINT_IN_BBS_IS_NOT_0_3_p23` (proved),
     `IS_SCS_POINT_IN_BBS_IS_NOT_0_LE_3_p23` (proved),
     `IS_SCS_NOT_COLLINEAR_BBs_CASE_3_p23` / `_LE_3_p23` (sorry).
@@ -104,6 +104,7 @@ ENCODING NOTES
     ball-annulus nontriviality, Mathlib compactness).
 -/
 
+import Kepler.Text.CircularSolKit
 import Kepler.Text.ClosedSyKit
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto4
@@ -3423,6 +3424,508 @@ private theorem w2sg_tau_ge (vv : ℕ → V3) (hper : Periodic vv 4)
       show ((3 + 3) % 4 : ℕ) = 2 from by norm_num] at h1 h2 h3 hge0 hge1 hge2 hge3 haz0 haz1 haz2 haz3 ⊢
     linarith [h1, h2, h3, hge0, hge1, hge2, hge3, haz0, haz1, haz2, haz3, Real.pi_pos]
 
+/-! ### W3 车道私件（scsgeneric-w3b, 2026-10-28）：CASE_5/6 引擎路线终算套件。
+
+`circularAzimInFanPi_cs`（CircularSolKit，HOL `CIRCULAR_SOL_EQ_2PI` 的 per-dart
+面）给每 dart `azimInFan = π`，绕开 k=4 wheel 路线在 k=5/6 的 slot-枚举缺口
+（scsgeneric-w2c DELIVERY §4.2：k=5/6 时弦 {vv (i+3), vv i} 非边、fan6 断链）。
+本套件仅需：F 的 5/6 元插入形 + ncard/setSum 计数（w2sg_F_* 的 `%4 → %k` 机械
+泛化，k=5 补集基数 2 / k=6 基数 3）+ tauFun 下界 `2π − 4·sol0`（k=5/6 统一形，
+因 `2π − (k−2)(π+sol0) ≥ 2π − 4sol0` 对 k ∈ {5,6} 成立）+ dsv 上界的 k-泛化形
+（w2sg_dsv_le 的 `3 < s.k` 形）。全部 private、零 sorry、零 native_decide。 -/
+
+private theorem w3sg_dsv_le (s : ScsV39) (vv : ℕ → V3) (hs : isScsV39 s) (hk : 3 < s.k)
+    (hBB : BBsV39 s vv) : dsvV39 s vv ≤ s.d := by
+  obtain ⟨hd09, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hbc, -, -, -⟩ := hs
+  have hne : ¬ isEarV39 s := by
+    intro hc
+    obtain ⟨-, -, hkear, -, -, -⟩ := hc
+    omega
+  have hsum : (0:ℝ) ≤ setSum {i : ℕ | i < s.k ∧ s.J i (i + 1)}
+      (fun i => cstab - dist (vv i) (vv (i + 1))) := by
+    rw [setSum]
+    split
+    · rename_i hfin
+      refine Finset.sum_nonneg ?_
+      intro i hi
+      have hmem := hfin.mem_toFinset.mp hi
+      obtain ⟨hik, hj⟩ := hmem
+      have hdle := (hBB.2.2.1 i (i + 1)).2
+      have hcb := hbc i hk
+      exact sub_nonneg.mpr (le_trans hdle hcb)
+    · exact le_refl 0
+  unfold dsvV39
+  rw [if_neg hne]
+  linarith
+
+private theorem w3sg_F_insert5 (vv : ℕ → V3) (hper : Periodic vv 5) :
+    (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ
+      = insert (vv 0, vv (0 + 1)) (insert (vv 1, vv (1 + 1))
+          (insert (vv 2, vv (2 + 1))
+            (insert (vv 3, vv (3 + 1))
+              (insert (vv 4, vv (4 + 1)) (∅ : Set (V3 × V3)))))) := by
+  ext d
+  constructor
+  · rintro ⟨i, -, hd⟩
+    have h1 : vv i = vv (i % 5) := (periodic_mod_eq_p23 hper i).symm
+    have h2 : vv (i + 1) = vv ((i % 5 + 1) % 5) := by
+      rw [← periodic_mod_eq_p23 hper (i + 1)]
+      congr 1
+      omega
+    rw [← hd]
+    simp only
+    rw [h1, h2]
+    rcases (by omega : i % 5 = 0 ∨ i % 5 = 1 ∨ i % 5 = 2 ∨ i % 5 = 3 ∨ i % 5 = 4) with h | h | h | h | h
+    · rw [h]; simp
+    · rw [h]; simp
+    · rw [h]; simp
+    · rw [h]; simp
+    · rw [h, show ((4 + 1) % 5 : ℕ) = 0 from by norm_num, ← hper 0]
+      simp
+  · intro hd
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_empty_iff_false,
+      or_false] at hd
+    rcases hd with hd | hd
+    · exact ⟨0, Set.mem_univ _, hd.symm⟩
+    · rcases hd with hd | hd
+      · exact ⟨1, Set.mem_univ _, hd.symm⟩
+      · rcases hd with hd | hd
+        · exact ⟨2, Set.mem_univ _, hd.symm⟩
+        · rcases hd with hd | hd
+          · exact ⟨3, Set.mem_univ _, hd.symm⟩
+          · exact ⟨4, Set.mem_univ _, hd.symm⟩
+
+private theorem w3sg_F_ncard5 (vv : ℕ → V3) (hper : Periodic vv 5)
+    (hinj : ∀ i j : ℕ, i < 5 → j < 5 → i ≠ j → vv i ≠ vv j) :
+    Set.ncard ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) = 5 := by
+  rw [w3sg_F_insert5 vv hper]
+  have hne : ∀ m n : ℕ, m < 5 → n < 5 → m ≠ n →
+      (vv m, vv (m + 1)) ≠ (vv n, vv (n + 1)) := by
+    intro m n hm hn hmn hc
+    simp only [Prod.mk.injEq] at hc
+    exact hinj m n hm hn hmn hc.1
+  have hd0 : (vv 0, vv (0 + 1)) ∉ insert ((vv 1, vv (1 + 1)) : V3 × V3)
+      (insert (vv 2, vv (2 + 1)) (insert (vv 3, vv (3 + 1))
+        (insert (vv 4, vv (4 + 1)) (∅ : Set (V3 × V3))))) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 0 1 (by omega) (by omega) (by omega) hc
+    · rcases hc with hc | hc
+      · exact hne 0 2 (by omega) (by omega) (by omega) hc
+      · rcases hc with hc | hc
+        · exact hne 0 3 (by omega) (by omega) (by omega) hc
+        · rcases hc with hc | hc
+          · exact hne 0 4 (by omega) (by omega) (by omega) hc
+          · exact absurd hc (Set.notMem_empty _)
+  have hd1 : (vv 1, vv (1 + 1)) ∉ insert ((vv 2, vv (2 + 1)) : V3 × V3)
+      (insert (vv 3, vv (3 + 1)) (insert (vv 4, vv (4 + 1)) (∅ : Set (V3 × V3)))) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 1 2 (by omega) (by omega) (by omega) hc
+    · rcases hc with hc | hc
+      · exact hne 1 3 (by omega) (by omega) (by omega) hc
+      · rcases hc with hc | hc
+        · exact hne 1 4 (by omega) (by omega) (by omega) hc
+        · exact absurd hc (Set.notMem_empty _)
+  have hd2 : (vv 2, vv (2 + 1)) ∉ insert ((vv 3, vv (3 + 1)) : V3 × V3)
+      (insert (vv 4, vv (4 + 1)) (∅ : Set (V3 × V3))) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 2 3 (by omega) (by omega) (by omega) hc
+    · rcases hc with hc | hc
+      · exact hne 2 4 (by omega) (by omega) (by omega) hc
+      · exact absurd hc (Set.notMem_empty _)
+  have hd3 : (vv 3, vv (3 + 1)) ∉ insert ((vv 4, vv (4 + 1)) : V3 × V3)
+      (∅ : Set (V3 × V3)) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 3 4 (by omega) (by omega) (by omega) hc
+    · exact absurd hc (Set.notMem_empty _)
+  have hd4 : (vv 4, vv (4 + 1)) ∉ (∅ : Set (V3 × V3)) := Set.notMem_empty _
+  rw [Set.ncard_insert_of_notMem hd0, Set.ncard_insert_of_notMem hd1,
+    Set.ncard_insert_of_notMem hd2, Set.ncard_insert_of_notMem hd3,
+    Set.ncard_insert_of_notMem hd4, Set.ncard_empty]
+
+private theorem w3sg_setSum_F5 (vv : ℕ → V3) (hper : Periodic vv 5)
+    (hinj : ∀ i j : ℕ, i < 5 → j < 5 → i ≠ j → vv i ≠ vv j)
+    (g : V3 × V3 → ℝ) :
+    setSum ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) g
+      = g (vv 0, vv ((0 + 1) % 5)) + g (vv 1, vv ((1 + 1) % 5))
+          + g (vv 2, vv ((2 + 1) % 5)) + g (vv 3, vv ((3 + 1) % 5))
+          + g (vv 4, vv ((4 + 1) % 5)) := by
+  have hnd : ∀ m n : ℕ, m < 5 → n < 5 → m ≠ n →
+      (vv m, vv (m + 1)) ≠ (vv n, vv (n + 1)) := by
+    intro m n hm hn hmn hc
+    simp only [Prod.mk.injEq] at hc
+    exact hinj m n hm hn hmn hc.1
+  rw [w3sg_F_insert5 vv hper]
+  simp only [setSum]
+  split
+  · rename_i hfin
+    have htf : hfin.toFinset
+        = insert (vv 0, vv (0 + 1)) (insert (vv 1, vv (1 + 1))
+            (insert (vv 2, vv (2 + 1))
+              (insert (vv 3, vv (3 + 1))
+                (insert (vv 4, vv (4 + 1)) (∅ : Finset (V3 × V3)))))) := by
+      ext t; simp
+    rw [htf]
+    have hd4 : (vv 4, vv (4 + 1)) ∉ (∅ : Finset (V3 × V3)) := Finset.notMem_empty _
+    have hd3 : (vv 3, vv (3 + 1)) ∉ (insert (vv 4, vv (4 + 1)) (∅ : Finset (V3 × V3))) := by
+      intro hc
+      refine hnd 3 4 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc) (Finset.notMem_empty _)
+    have hd2 : (vv 2, vv (2 + 1)) ∉ (insert (vv 3, vv (3 + 1)) (insert (vv 4, vv (4 + 1)) (∅ : Finset (V3 × V3)))) := by
+      intro hc
+      refine hnd 2 3 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc) ?_
+      intro hc2
+      refine hnd 2 4 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc2) (Finset.notMem_empty _)
+    have hd1 : (vv 1, vv (1 + 1)) ∉ (insert (vv 2, vv (2 + 1)) (insert (vv 3, vv (3 + 1)) (insert (vv 4, vv (4 + 1)) (∅ : Finset (V3 × V3))))) := by
+      intro hc
+      refine hnd 1 2 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc) ?_
+      intro hc2
+      refine hnd 1 3 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc2) ?_
+      intro hc3
+      refine hnd 1 4 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc3) (Finset.notMem_empty _)
+    have hd0 : (vv 0, vv (0 + 1)) ∉ (insert (vv 1, vv (1 + 1)) (insert (vv 2, vv (2 + 1)) (insert (vv 3, vv (3 + 1)) (insert (vv 4, vv (4 + 1)) (∅ : Finset (V3 × V3)))))) := by
+      intro hc
+      refine hnd 0 1 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc) ?_
+      intro hc2
+      refine hnd 0 2 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc2) ?_
+      intro hc3
+      refine hnd 0 3 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc3) ?_
+      intro hc4
+      refine hnd 0 4 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc4) (Finset.notMem_empty _)
+    rw [Finset.sum_insert hd0, Finset.sum_insert hd1, Finset.sum_insert hd2,
+      Finset.sum_insert hd3, Finset.sum_insert hd4]
+    have hb4 : ((vv 4, vv (4 + 1)) : V3 × V3) = (vv 4, vv ((4 + 1) % 5)) := by
+      rw [show ((4 + 1) % 5 : ℕ) = 0 from by norm_num, ← hper 0]
+    rw [hb4]
+    ring
+  · rename_i hnofin
+    exact absurd
+      (Set.Finite.insert _ (Set.Finite.insert _ (Set.Finite.insert _
+        (Set.Finite.insert _ (Set.Finite.insert _ (Set.finite_empty (α := V3 × V3)))))))
+      hnofin
+
+private theorem w3sg_tau_ge5 (vv : ℕ → V3) (hper : Periodic vv 5)
+    (hinj : ∀ i j : ℕ, i < 5 → j < 5 → i ≠ j → vv i ≠ vv j)
+    (hdart : ∀ d ∈ (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ,
+      azimInFan d ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ) = Real.pi)
+    (hρ : ∀ m : ℕ, (1:ℝ) ≤ rhoFun (norm (vv m))) :
+    ((2 * Real.pi - 4 * sol0) : ℝ) ≤ tauFun (Set.range vv)
+      ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) := by
+  have hsum := w3sg_setSum_F5 vv hper hinj
+    (fun e => rhoFun (norm e.1) * azimInFan e
+      ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ))
+  have hcard := w3sg_F_ncard5 vv hper hinj
+  unfold tauFun
+  simp only [hsum, hcard]
+  have hcoef : (((5 - 2 : ℕ) : ℝ)) = 3 := by norm_num
+  rw [hcoef]
+  have hd0 : (vv 0, vv ((0 + 1) % 5)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨0, Set.mem_univ _, rfl⟩
+  have hd1 : (vv 1, vv ((1 + 1) % 5)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨1, Set.mem_univ _, rfl⟩
+  have hd2 : (vv 2, vv ((2 + 1) % 5)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨2, Set.mem_univ _, rfl⟩
+  have hd3 : (vv 3, vv ((3 + 1) % 5)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨3, Set.mem_univ _, rfl⟩
+  have hd4 : (vv 4, vv ((4 + 1) % 5)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := by
+    refine ⟨4, Set.mem_univ _, ?_⟩
+    show (vv 4, vv (4 + 1)) = (vv 4, vv ((4 + 1) % 5))
+    rw [show ((4 + 1) % 5 : ℕ) = 0 from by norm_num, ← hper 0]
+  have hz0 : rhoFun (norm (vv 0)) * azimInFan (vv 0, vv ((0 + 1) % 5))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 0)) * Real.pi := by rw [hdart _ hd0]
+  have hz1 : rhoFun (norm (vv 1)) * azimInFan (vv 1, vv ((1 + 1) % 5))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 1)) * Real.pi := by rw [hdart _ hd1]
+  have hz2 : rhoFun (norm (vv 2)) * azimInFan (vv 2, vv ((2 + 1) % 5))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 2)) * Real.pi := by rw [hdart _ hd2]
+  have hz3 : rhoFun (norm (vv 3)) * azimInFan (vv 3, vv ((3 + 1) % 5))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 3)) * Real.pi := by rw [hdart _ hd3]
+  have hz4 : rhoFun (norm (vv 4)) * azimInFan (vv 4, vv ((4 + 1) % 5))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 4)) * Real.pi := by rw [hdart _ hd4]
+  rw [hz0, hz1, hz2, hz3, hz4]
+  have hge : ∀ m : ℕ, (1:ℝ) * Real.pi ≤ rhoFun (norm (vv m)) * Real.pi := fun m =>
+    mul_le_mul_of_nonneg_right (hρ m) (le_of_lt Real.pi_pos)
+  linarith [hge 0, hge 1, hge 2, hge 3, hge 4, w2sg_sol0_nonneg]
+
+private theorem w3sg_F_insert6 (vv : ℕ → V3) (hper : Periodic vv 6) :
+    (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ
+      = insert (vv 0, vv (0 + 1)) (insert (vv 1, vv (1 + 1))
+          (insert (vv 2, vv (2 + 1))
+            (insert (vv 3, vv (3 + 1))
+              (insert (vv 4, vv (4 + 1))
+                (insert (vv 5, vv (5 + 1)) (∅ : Set (V3 × V3))))))) := by
+  ext d
+  constructor
+  · rintro ⟨i, -, hd⟩
+    have h1 : vv i = vv (i % 6) := (periodic_mod_eq_p23 hper i).symm
+    have h2 : vv (i + 1) = vv ((i % 6 + 1) % 6) := by
+      rw [← periodic_mod_eq_p23 hper (i + 1)]
+      congr 1
+      omega
+    rw [← hd]
+    simp only
+    rw [h1, h2]
+    rcases (by omega : i % 6 = 0 ∨ i % 6 = 1 ∨ i % 6 = 2 ∨ i % 6 = 3 ∨ i % 6 = 4 ∨ i % 6 = 5) with h | h | h | h | h | h
+    · rw [h]; simp
+    · rw [h]; simp
+    · rw [h]; simp
+    · rw [h]; simp
+    · rw [h]; simp
+    · rw [h, show ((5 + 1) % 6 : ℕ) = 0 from by norm_num, ← hper 0]
+      simp
+  · intro hd
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_empty_iff_false,
+      or_false] at hd
+    rcases hd with hd | hd
+    · exact ⟨0, Set.mem_univ _, hd.symm⟩
+    · rcases hd with hd | hd
+      · exact ⟨1, Set.mem_univ _, hd.symm⟩
+      · rcases hd with hd | hd
+        · exact ⟨2, Set.mem_univ _, hd.symm⟩
+        · rcases hd with hd | hd
+          · exact ⟨3, Set.mem_univ _, hd.symm⟩
+          · rcases hd with hd | hd
+            · exact ⟨4, Set.mem_univ _, hd.symm⟩
+            · exact ⟨5, Set.mem_univ _, hd.symm⟩
+
+private theorem w3sg_F_ncard6 (vv : ℕ → V3) (hper : Periodic vv 6)
+    (hinj : ∀ i j : ℕ, i < 6 → j < 6 → i ≠ j → vv i ≠ vv j) :
+    Set.ncard ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) = 6 := by
+  rw [w3sg_F_insert6 vv hper]
+  have hne : ∀ m n : ℕ, m < 6 → n < 6 → m ≠ n →
+      (vv m, vv (m + 1)) ≠ (vv n, vv (n + 1)) := by
+    intro m n hm hn hmn hc
+    simp only [Prod.mk.injEq] at hc
+    exact hinj m n hm hn hmn hc.1
+  have hd0 : (vv 0, vv (0 + 1)) ∉ insert ((vv 1, vv (1 + 1)) : V3 × V3)
+      (insert (vv 2, vv (2 + 1)) (insert (vv 3, vv (3 + 1))
+        (insert (vv 4, vv (4 + 1)) (insert (vv 5, vv (5 + 1))
+          (∅ : Set (V3 × V3)))))) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 0 1 (by omega) (by omega) (by omega) hc
+    · rcases hc with hc | hc
+      · exact hne 0 2 (by omega) (by omega) (by omega) hc
+      · rcases hc with hc | hc
+        · exact hne 0 3 (by omega) (by omega) (by omega) hc
+        · rcases hc with hc | hc
+          · exact hne 0 4 (by omega) (by omega) (by omega) hc
+          · rcases hc with hc | hc
+            · exact hne 0 5 (by omega) (by omega) (by omega) hc
+            · exact absurd hc (Set.notMem_empty _)
+  have hd1 : (vv 1, vv (1 + 1)) ∉ insert ((vv 2, vv (2 + 1)) : V3 × V3)
+      (insert (vv 3, vv (3 + 1)) (insert (vv 4, vv (4 + 1))
+        (insert (vv 5, vv (5 + 1)) (∅ : Set (V3 × V3))))) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 1 2 (by omega) (by omega) (by omega) hc
+    · rcases hc with hc | hc
+      · exact hne 1 3 (by omega) (by omega) (by omega) hc
+      · rcases hc with hc | hc
+        · exact hne 1 4 (by omega) (by omega) (by omega) hc
+        · rcases hc with hc | hc
+          · exact hne 1 5 (by omega) (by omega) (by omega) hc
+          · exact absurd hc (Set.notMem_empty _)
+  have hd2 : (vv 2, vv (2 + 1)) ∉ insert ((vv 3, vv (3 + 1)) : V3 × V3)
+      (insert (vv 4, vv (4 + 1)) (insert (vv 5, vv (5 + 1))
+        (∅ : Set (V3 × V3)))) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 2 3 (by omega) (by omega) (by omega) hc
+    · rcases hc with hc | hc
+      · exact hne 2 4 (by omega) (by omega) (by omega) hc
+      · rcases hc with hc | hc
+        · exact hne 2 5 (by omega) (by omega) (by omega) hc
+        · exact absurd hc (Set.notMem_empty _)
+  have hd3 : (vv 3, vv (3 + 1)) ∉ insert ((vv 4, vv (4 + 1)) : V3 × V3)
+      (insert (vv 5, vv (5 + 1)) (∅ : Set (V3 × V3))) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 3 4 (by omega) (by omega) (by omega) hc
+    · rcases hc with hc | hc
+      · exact hne 3 5 (by omega) (by omega) (by omega) hc
+      · exact absurd hc (Set.notMem_empty _)
+  have hd4 : (vv 4, vv (4 + 1)) ∉ insert ((vv 5, vv (5 + 1)) : V3 × V3)
+      (∅ : Set (V3 × V3)) := by
+    intro hc
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hc
+    rcases hc with hc | hc
+    · exact hne 4 5 (by omega) (by omega) (by omega) hc
+    · exact absurd hc (Set.notMem_empty _)
+  have hd5 : (vv 5, vv (5 + 1)) ∉ (∅ : Set (V3 × V3)) := Set.notMem_empty _
+  rw [Set.ncard_insert_of_notMem hd0, Set.ncard_insert_of_notMem hd1,
+    Set.ncard_insert_of_notMem hd2, Set.ncard_insert_of_notMem hd3,
+    Set.ncard_insert_of_notMem hd4, Set.ncard_insert_of_notMem hd5,
+    Set.ncard_empty]
+
+private theorem w3sg_setSum_F6 (vv : ℕ → V3) (hper : Periodic vv 6)
+    (hinj : ∀ i j : ℕ, i < 6 → j < 6 → i ≠ j → vv i ≠ vv j)
+    (g : V3 × V3 → ℝ) :
+    setSum ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) g
+      = g (vv 0, vv ((0 + 1) % 6)) + g (vv 1, vv ((1 + 1) % 6))
+          + g (vv 2, vv ((2 + 1) % 6)) + g (vv 3, vv ((3 + 1) % 6))
+          + g (vv 4, vv ((4 + 1) % 6)) + g (vv 5, vv ((5 + 1) % 6)) := by
+  have hnd : ∀ m n : ℕ, m < 6 → n < 6 → m ≠ n →
+      (vv m, vv (m + 1)) ≠ (vv n, vv (n + 1)) := by
+    intro m n hm hn hmn hc
+    simp only [Prod.mk.injEq] at hc
+    exact hinj m n hm hn hmn hc.1
+  rw [w3sg_F_insert6 vv hper]
+  simp only [setSum]
+  split
+  · rename_i hfin
+    have htf : hfin.toFinset
+        = insert (vv 0, vv (0 + 1)) (insert (vv 1, vv (1 + 1))
+            (insert (vv 2, vv (2 + 1))
+              (insert (vv 3, vv (3 + 1))
+                (insert (vv 4, vv (4 + 1))
+                  (insert (vv 5, vv (5 + 1)) (∅ : Finset (V3 × V3))))))) := by
+      ext t; simp
+    rw [htf]
+    have hd5 : (vv 5, vv (5 + 1)) ∉ (∅ : Finset (V3 × V3)) := Finset.notMem_empty _
+    have hd4 : (vv 4, vv (4 + 1)) ∉ (insert (vv 5, vv (5 + 1)) (∅ : Finset (V3 × V3))) := by
+      intro hc
+      refine hnd 4 5 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc) (Finset.notMem_empty _)
+    have hd3 : (vv 3, vv (3 + 1)) ∉ (insert (vv 4, vv (4 + 1)) (insert (vv 5, vv (5 + 1)) (∅ : Finset (V3 × V3)))) := by
+      intro hc
+      refine hnd 3 4 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc) ?_
+      intro hc2
+      refine hnd 3 5 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc2) (Finset.notMem_empty _)
+    have hd2 : (vv 2, vv (2 + 1)) ∉ (insert (vv 3, vv (3 + 1)) (insert (vv 4, vv (4 + 1)) (insert (vv 5, vv (5 + 1)) (∅ : Finset (V3 × V3))))) := by
+      intro hc
+      refine hnd 2 3 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc) ?_
+      intro hc2
+      refine hnd 2 4 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc2) ?_
+      intro hc3
+      refine hnd 2 5 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc3) (Finset.notMem_empty _)
+    have hd1 : (vv 1, vv (1 + 1)) ∉ (insert (vv 2, vv (2 + 1)) (insert (vv 3, vv (3 + 1)) (insert (vv 4, vv (4 + 1)) (insert (vv 5, vv (5 + 1)) (∅ : Finset (V3 × V3)))))) := by
+      intro hc
+      refine hnd 1 2 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc) ?_
+      intro hc2
+      refine hnd 1 3 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc2) ?_
+      intro hc3
+      refine hnd 1 4 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc3) ?_
+      intro hc4
+      refine hnd 1 5 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc4) (Finset.notMem_empty _)
+    have hd0 : (vv 0, vv (0 + 1)) ∉ (insert (vv 1, vv (1 + 1)) (insert (vv 2, vv (2 + 1)) (insert (vv 3, vv (3 + 1)) (insert (vv 4, vv (4 + 1)) (insert (vv 5, vv (5 + 1)) (∅ : Finset (V3 × V3))))))) := by
+      intro hc
+      refine hnd 0 1 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc) ?_
+      intro hc2
+      refine hnd 0 2 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc2) ?_
+      intro hc3
+      refine hnd 0 3 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc3) ?_
+      intro hc4
+      refine hnd 0 4 (by omega) (by omega) (by omega) ?_
+      refine Or.resolve_right (Finset.mem_insert.mp hc4) ?_
+      intro hc5
+      refine hnd 0 5 (by omega) (by omega) (by omega) ?_
+      exact Or.resolve_right (Finset.mem_insert.mp hc5) (Finset.notMem_empty _)
+    rw [Finset.sum_insert hd0, Finset.sum_insert hd1, Finset.sum_insert hd2,
+      Finset.sum_insert hd3, Finset.sum_insert hd4, Finset.sum_insert hd5]
+    have hb5 : ((vv 5, vv (5 + 1)) : V3 × V3) = (vv 5, vv ((5 + 1) % 6)) := by
+      rw [show ((5 + 1) % 6 : ℕ) = 0 from by norm_num, ← hper 0]
+    rw [hb5]
+    ring
+  · rename_i hnofin
+    exact absurd
+      (Set.Finite.insert _ (Set.Finite.insert _ (Set.Finite.insert _
+        (Set.Finite.insert _ (Set.Finite.insert _ (Set.Finite.insert _
+          (Set.finite_empty (α := V3 × V3))))))))
+      hnofin
+
+private theorem w3sg_tau_ge6 (vv : ℕ → V3) (hper : Periodic vv 6)
+    (hinj : ∀ i j : ℕ, i < 6 → j < 6 → i ≠ j → vv i ≠ vv j)
+    (hdart : ∀ d ∈ (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ,
+      azimInFan d ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ) = Real.pi)
+    (hρ : ∀ m : ℕ, (1:ℝ) ≤ rhoFun (norm (vv m))) :
+    ((2 * Real.pi - 4 * sol0) : ℝ) ≤ tauFun (Set.range vv)
+      ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) := by
+  have hsum := w3sg_setSum_F6 vv hper hinj
+    (fun e => rhoFun (norm e.1) * azimInFan e
+      ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ))
+  have hcard := w3sg_F_ncard6 vv hper hinj
+  unfold tauFun
+  simp only [hsum, hcard]
+  have hcoef : (((6 - 2 : ℕ) : ℝ)) = 4 := by norm_num
+  rw [hcoef]
+  have hd0 : (vv 0, vv ((0 + 1) % 6)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨0, Set.mem_univ _, rfl⟩
+  have hd1 : (vv 1, vv ((1 + 1) % 6)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨1, Set.mem_univ _, rfl⟩
+  have hd2 : (vv 2, vv ((2 + 1) % 6)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨2, Set.mem_univ _, rfl⟩
+  have hd3 : (vv 3, vv ((3 + 1) % 6)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨3, Set.mem_univ _, rfl⟩
+  have hd4 : (vv 4, vv ((4 + 1) % 6)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := ⟨4, Set.mem_univ _, rfl⟩
+  have hd5 : (vv 5, vv ((5 + 1) % 6)) ∈
+      (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ := by
+    refine ⟨5, Set.mem_univ _, ?_⟩
+    show (vv 5, vv (5 + 1)) = (vv 5, vv ((5 + 1) % 6))
+    rw [show ((5 + 1) % 6 : ℕ) = 0 from by norm_num, ← hper 0]
+  have hz0 : rhoFun (norm (vv 0)) * azimInFan (vv 0, vv ((0 + 1) % 6))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 0)) * Real.pi := by rw [hdart _ hd0]
+  have hz1 : rhoFun (norm (vv 1)) * azimInFan (vv 1, vv ((1 + 1) % 6))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 1)) * Real.pi := by rw [hdart _ hd1]
+  have hz2 : rhoFun (norm (vv 2)) * azimInFan (vv 2, vv ((2 + 1) % 6))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 2)) * Real.pi := by rw [hdart _ hd2]
+  have hz3 : rhoFun (norm (vv 3)) * azimInFan (vv 3, vv ((3 + 1) % 6))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 3)) * Real.pi := by rw [hdart _ hd3]
+  have hz4 : rhoFun (norm (vv 4)) * azimInFan (vv 4, vv ((4 + 1) % 6))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 4)) * Real.pi := by rw [hdart _ hd4]
+  have hz5 : rhoFun (norm (vv 5)) * azimInFan (vv 5, vv ((5 + 1) % 6))
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      = rhoFun (norm (vv 5)) * Real.pi := by rw [hdart _ hd5]
+  rw [hz0, hz1, hz2, hz3, hz4, hz5]
+  have hge : ∀ m : ℕ, (1:ℝ) * Real.pi ≤ rhoFun (norm (vv m)) * Real.pi := fun m =>
+    mul_le_mul_of_nonneg_right (hρ m) (le_of_lt Real.pi_pos)
+  linarith [hge 0, hge 1, hge 2, hge 3, hge 4, hge 5, w2sg_sol0_nonneg]
+
 /-- HOL `JKQEWGV2_CASE_4` (JKQEWGV.hl:2974): the realisation graph is not
 circular. NEEDS: the `JKQEWGV1_CASE_4` kit. -/
 theorem JKQEWGV2_CASE_4_p23 (s : ScsV39) (vv : ℕ → V3)
@@ -3621,13 +4124,54 @@ theorem JKQEWGV1_CASE_5_p23 (s : ScsV39) (vv : ℕ → V3)
         ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) < Real.pi := by
   sorry
 
-/-- HOL `JKQEWGV2_CASE_5` (JKQEWGV.hl:3027). NEEDS: the case-5 kit. -/
+/-- HOL `JKQEWGV2_CASE_5` (JKQEWGV.hl:3027): discharged by the CircularSolKit
+  engine (`circularAzimInFanPi_cs`, per-dart `azimInFan = π`) + the `w3sg_*` k=5
+  final-computation kit (`2π − 4sol0 ≥ 4 > 0.9` vs `taustar < 0`). -/
 theorem JKQEWGV2_CASE_5_p23 (s : ScsV39) (vv : ℕ → V3)
     (hs : isScsV39 s) (hk : s.k = 5) (hBB : BBsV39 s vv)
     (hta : taustarV39 s vv < 0) :
     ¬ Circular (Set.range vv)
       ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ) := by
-  sorry
+  intro hc
+  have hper : Periodic vv 5 := hk ▸ hBB.2.1
+  have hinj : ∀ i j : ℕ, i < 5 → j < 5 → i ≠ j → vv i ≠ vv j :=
+    fun i j hi5 hj5 hij =>
+      w2sg_vv_inj s vv hs hBB (by rw [hk]; exact hi5) (by rw [hk]; exact hj5) hij
+  have hCLF : ConvexLocalFan (Set.range vv)
+      ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) := by
+    rcases hBB.2.2.2 with hle | hcl
+    · rw [hk] at hle; omega
+    · have hconv1 : (Set.range fun i : ℕ => ({vv i, vv (i + 1)} : Set V3))
+          = ((fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) '' Set.univ) := by
+        ext t; simp [Set.mem_range, Set.mem_image]
+      have hconv2 : (Set.range fun i : ℕ => ((vv i, vv (i + 1)) : V3 × V3))
+          = ((fun i : ℕ => ((vv i, vv (i + 1)) : V3 × V3)) '' Set.univ) := by
+        ext t; simp [Set.mem_range, Set.mem_image]
+      rw [hconv1, hconv2] at hcl
+      exact hcl
+  have hρfun : ∀ m : ℕ, (1:ℝ) ≤ rhoFun (norm (vv m)) := fun m =>
+    w2sg_rhoFun_ge_one (w2sg_norm_ge_two s vv hBB m)
+  have htau := w3sg_tau_ge5 vv hper hinj (circularAzimInFanPi_cs hCLF hc) hρfun
+  have hdsv := w3sg_dsv_le s vv hs (by omega) hBB
+  have hta' : tauFun (Set.range vv)
+      ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) - dsvV39 s vv < 0 := by
+    have hta'' : taustarV39 s vv = tauFun (Set.range vv)
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+        ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) - dsvV39 s vv := by
+      unfold taustarV39
+      rw [if_neg (show ¬(s.k ≤ 3) from by omega)]
+      have hc1 : (Set.range fun i : ℕ => ({vv i, vv (i + 1)} : Set V3))
+          = ((fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) '' Set.univ) := by
+        ext t; simp [Set.mem_range, Set.mem_image]
+      have hc2 : (Set.range fun i : ℕ => ((vv i, vv (i + 1)) : V3 × V3))
+          = ((fun i : ℕ => ((vv i, vv (i + 1)) : V3 × V3)) '' Set.univ) := by
+        ext t; simp [Set.mem_range, Set.mem_image]
+      rw [hc1, hc2]
+    rw [← hta'']
+    exact hta
+  linarith [htau, w2sg_sol0_le_pi_half, hdsv, hs.1, hta']
 
 /-- HOL `V_E_FF_IS_SCS_CASES_6` (JKQEWGV.hl:1697). NEEDS: same image
 bookkeeping as the k=4 twin. -/
@@ -3671,13 +4215,54 @@ theorem JKQEWGV1_CASE_6_p23 (s : ScsV39) (vv : ℕ → V3)
         ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) < Real.pi := by
   sorry
 
-/-- HOL `JKQEWGV2_CASE_6` (JKQEWGV.hl:3082). NEEDS: the case-6 kit. -/
+/-- HOL `JKQEWGV2_CASE_6` (JKQEWGV.hl:3082): discharged by the CircularSolKit
+  engine (`circularAzimInFanPi_cs`, per-dart `azimInFan = π`) + the `w3sg_*` k=6
+  final-computation kit (`2π − 4sol0 ≥ 4 > 0.9` vs `taustar < 0`). -/
 theorem JKQEWGV2_CASE_6_p23 (s : ScsV39) (vv : ℕ → V3)
     (hs : isScsV39 s) (hk : s.k = 6) (hBB : BBsV39 s vv)
     (hta : taustarV39 s vv < 0) :
     ¬ Circular (Set.range vv)
       ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ) := by
-  sorry
+  intro hc
+  have hper : Periodic vv 6 := hk ▸ hBB.2.1
+  have hinj : ∀ i j : ℕ, i < 6 → j < 6 → i ≠ j → vv i ≠ vv j :=
+    fun i j hi6 hj6 hij =>
+      w2sg_vv_inj s vv hs hBB (by rw [hk]; exact hi6) (by rw [hk]; exact hj6) hij
+  have hCLF : ConvexLocalFan (Set.range vv)
+      ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) := by
+    rcases hBB.2.2.2 with hle | hcl
+    · rw [hk] at hle; omega
+    · have hconv1 : (Set.range fun i : ℕ => ({vv i, vv (i + 1)} : Set V3))
+          = ((fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) '' Set.univ) := by
+        ext t; simp [Set.mem_range, Set.mem_image]
+      have hconv2 : (Set.range fun i : ℕ => ((vv i, vv (i + 1)) : V3 × V3))
+          = ((fun i : ℕ => ((vv i, vv (i + 1)) : V3 × V3)) '' Set.univ) := by
+        ext t; simp [Set.mem_range, Set.mem_image]
+      rw [hconv1, hconv2] at hcl
+      exact hcl
+  have hρfun : ∀ m : ℕ, (1:ℝ) ≤ rhoFun (norm (vv m)) := fun m =>
+    w2sg_rhoFun_ge_one (w2sg_norm_ge_two s vv hBB m)
+  have htau := w3sg_tau_ge6 vv hper hinj (circularAzimInFanPi_cs hCLF hc) hρfun
+  have hdsv := w3sg_dsv_le s vv hs (by omega) hBB
+  have hta' : tauFun (Set.range vv)
+      ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+      ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) - dsvV39 s vv < 0 := by
+    have hta'' : taustarV39 s vv = tauFun (Set.range vv)
+        ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
+        ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) - dsvV39 s vv := by
+      unfold taustarV39
+      rw [if_neg (show ¬(s.k ≤ 3) from by omega)]
+      have hc1 : (Set.range fun i : ℕ => ({vv i, vv (i + 1)} : Set V3))
+          = ((fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) '' Set.univ) := by
+        ext t; simp [Set.mem_range, Set.mem_image]
+      have hc2 : (Set.range fun i : ℕ => ((vv i, vv (i + 1)) : V3 × V3))
+          = ((fun i : ℕ => ((vv i, vv (i + 1)) : V3 × V3)) '' Set.univ) := by
+        ext t; simp [Set.mem_range, Set.mem_image]
+      rw [hc1, hc2]
+    rw [← hta'']
+    exact hta
+  linarith [htau, w2sg_sol0_le_pi_half, hdsv, hs.1, hta']
 
 /-! ### The k = 3 kit -/
 
@@ -3792,12 +4377,17 @@ theorem JKQEWGV1_p23 (s : ScsV39) (vv : ℕ → V3) (hs : isScsV39 s)
   sorry
 
 /-- HOL `JKQEWGV2` (JKQEWGV.hl:3136): the realisation graph is not
-circular. NEEDS: the case split with `JKQEWGV2_CASE_*_p23`. -/
+circular. The case split `s.k ∈ {4,5,6}` (from `hs.2.1`/`hs.2.2.1` + `hk`) dispatches
+  to the three real `JKQEWGV2_CASE_*_p23 theorems. -/
 theorem JKQEWGV2_p23 (s : ScsV39) (vv : ℕ → V3) (hs : isScsV39 s)
     (hk : 3 < s.k) (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) :
     ¬ Circular (Set.range vv)
       ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ) := by
-  sorry
+  have hle6 : s.k ≤ 6 := hs.2.2.1
+  rcases (by omega : s.k = 4 ∨ s.k = 5 ∨ s.k = 6) with h4 | h5 | h6
+  · exact JKQEWGV2_CASE_4_p23 s vv hs h4 hBB hta
+  · exact JKQEWGV2_CASE_5_p23 s vv hs h5 hBB hta
+  · exact JKQEWGV2_CASE_6_p23 s vv hs h6 hBB hta
 
 /-- HOL `JKQEWGV3` (JKQEWGV.hl:3173): under a lunar hypothesis the
 interior angle at `v` is under pi/2. NEEDS: `JKQEWGV2_p23` + `HKIRPEP`
