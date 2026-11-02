@@ -122,6 +122,19 @@ DISCHARGES (2026-10-28, la33-slice-w1; 6 of the remaining 23): the six
   LA35 `pmPlaneCrowding_p35`) — no new row.  `ARDBZYE_p33`/`FYSSVEV_p33`
   stay: their `main_nonlinear_terminal_v11` case-bank inputs are untouched
   this wave (transitive pollution `main_nonlinear_terminal_v11`, in ledger).
+
+DISCHARGES (2026-10-28, la33-w2; 3 of the remaining 16): the master `4I2`
+  arrow `ARDBZYE_p33`, the mid relay `SCS_4I1_ARROW_SCS_4I2_STAB_4I1_p33`
+  and the master `4I1` arrow `FYSSVEV_p33` — each a definition-level/`FZIOTEF`
+  assembly, zero new sorried declarations and zero new sorry (glue helpers
+  `FZIOTEF_TRANS`/`FZIOTEF_BOTH_p33`/`SING_PAD_p33` only).  The terminal
+  branches stay on the frozen leaves `SCS_4I2_IMP_SCS_4T1_p33`,
+  `MM_4I2_IMP_4T2_4T1_p33`, `SCS_4I1_IMP_SCS_4I2_p33` (farm family:
+  `RRCWNSJ`/`JCYFMRP_V3`/`JLXFDMJ` giants + `ear_acute`; HOL :1357/:2339/:2575
+  — gap list in the lane DELIVERY).  sorryAx standing: via the `_hmn`
+  hypothesis (口径 B) and the three leaves.  Master-cone direct-source net
+  estimate (lane probe, M0/M1): +1 (rows out: `ARDBZYE_p33`/`FYSSVEV_p33`;
+  attributed rows in: the three leaves) — 编排者裁决.
 -/
 
 import Kepler.Text.FanBaseKit
@@ -1640,11 +1653,34 @@ theorem MM_4I2_IMP_4T2_4T1_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ →
     MMsV39 scs4T1 ≠ ∅ ∨ MMsV39 scs4T2 ≠ ∅ := sorry
   -- DISCHARGES: NEEDS ARDBZYE.hl MM_4I2_IMP_4T2_4T1.
 
-/-- HOL `ARDBZYE` (ARDBZYE.hl:2514), the master `4I2` arrow.  NEEDS:
-`SCS_4I2_IMP_SCS_4T1_p33` + `MM_4I2_IMP_4T2_4T1_p33` assembly. -/
+/-- HOL `ARDBZYE` (ARDBZYE.hl:2514), the master `4I2` arrow.  DISCHARGED
+2026-10-28 (la33-w2): the definition-level assembly over the two frozen
+NEEDS leaves (`SCS_4I2_IMP_SCS_4T1_p33` in the all-diags-open branch,
+`MM_4I2_IMP_4T2_4T1_p33` in the diag-closed branch); the `isScs` half is
+the `SCS_4T1/4T2_IS_SCS_p33` bank.  sorryAx standing via `_hmn` (口径 B)
+and the leaves. -/
 theorem ARDBZYE_p33 (_hmn : main_nonlinear_terminal_v11) :
-    scsArrowV39 {scs4I2} {scs4T1, scs4T2} := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl ARDBZYE.
+    scsArrowV39 {scs4I2} {scs4T1, scs4T2} := by
+  refine ⟨fun t ht => ?_, ?_⟩
+  · rcases Set.mem_insert_iff.mp ht with h | h
+    · subst h; exact SCS_4T1_IS_SCS_p33
+    · rw [Set.mem_singleton_iff] at h; subst h; exact SCS_4T2_IS_SCS_p33
+  · by_cases hex : (MMsV39 scs4I2).Nonempty
+    · obtain ⟨v, hv⟩ := hex
+      by_cases hopen : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)
+      · exact Or.inr ⟨scs4T1, Set.mem_insert_iff.mpr (Or.inl rfl),
+          SCS_4I2_IMP_SCS_4T1_p33 _hmn v hv hopen⟩
+      · push_neg at hopen
+        obtain ⟨i, j, hd, hc⟩ := hopen
+        rcases MM_4I2_IMP_4T2_4T1_p33 _hmn v i j hv hd hc with h1 | h1
+        · exact Or.inr ⟨scs4T1, Set.mem_insert_iff.mpr (Or.inl rfl), h1⟩
+        · exact Or.inr ⟨scs4T2, Set.mem_insert_iff.mpr (Or.inr rfl), h1⟩
+    · refine Or.inl (fun s hs => ?_)
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact Set.not_nonempty_iff_eq_empty.mp hex
+  -- DISCHARGES: NEEDS ARDBZYE.hl ARDBZYE (2026-10-28, la33-w2: assembly over
+  -- the two frozen leaves; farm gap list in the lane DELIVERY).
 
 /-- HOL `SCS_4I1_IMP_SCS_4I2` (ARDBZYE.hl:2575).  NEEDS: the terminal case
 bank (the 4I1 b-table dominates 4I2's away from the diagonals). -/
@@ -1674,12 +1710,38 @@ theorem MM_4I1_IMP_STAB_4I1_p33 {v : ℕ → V3} (i j : ℕ) (hv : v ∈ MMsV39 
   MM_STAN_p33 scs4I1 SCS_4I1_IS_SCS_p33 SCS_4I1_BASIC_p33 i j
     (show scsDiag scs4I1.k i j from hd) (STAB_4I1_SCS_p33 i j hd) hv hc
 
-/-- HOL `SCS_4I1_ARROW_SCS_4I2_STAB_4I1` (ARDBZYE.hl:2707).  NEEDS:
-`SCS_4I1_IMP_SCS_4I2_p33` in the all-diags-open branch. -/
+/-- HOL `SCS_4I1_ARROW_SCS_4I2_STAB_4I1` (ARDBZYE.hl:2707).  DISCHARGED
+2026-10-28 (la33-w2): the definition-level assembly — the `isScs` half via
+`SCS_4I2_IS_SCS_p33`/`STAB_4I1_SCS_p33`, the empty branch, the all-diags-open
+branch over the frozen leaf `SCS_4I1_IMP_SCS_4I2_p33`, and the diag-closed
+branch via the discharged `MM_4I1_IMP_STAB_4I1_p33`.  sorryAx standing via
+`_hmn` (口径 B) and the leaf. -/
 theorem SCS_4I1_ARROW_SCS_4I2_STAB_4I1_p33 (_hmn : main_nonlinear_terminal_v11) :
     scsArrowV39 {scs4I1}
-      ({scs4I2} ∪ {x | ∃ i j, scsDiag 4 i j ∧ x = scsStabDiagV39 scs4I1 i j}) := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl SCS_4I1_ARROW_SCS_4I2_STAB_4I1.
+      ({scs4I2} ∪ {x | ∃ i j, scsDiag 4 i j ∧ x = scsStabDiagV39 scs4I1 i j}) := by
+  refine ⟨fun t ht => ?_, ?_⟩
+  · rcases Set.mem_union _ _ _ |>.mp ht with h | h
+    · rw [Set.mem_singleton_iff] at h; subst h; exact SCS_4I2_IS_SCS_p33
+    · rw [Set.mem_setOf_eq] at h
+      obtain ⟨i, j, hd, rfl⟩ := h
+      exact (STAB_4I1_SCS_p33 i j (show scsDiag scs4I1.k i j from hd)).1
+  · by_cases hex : (MMsV39 scs4I1).Nonempty
+    · obtain ⟨v, hv⟩ := hex
+      by_cases hopen : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)
+      · exact Or.inr ⟨scs4I2, Set.mem_union_left _ (Set.mem_singleton_iff.mpr rfl),
+          SCS_4I1_IMP_SCS_4I2_p33 _hmn v hv hopen⟩
+      · push_neg at hopen
+        obtain ⟨i, j, hd, hc⟩ := hopen
+        have hne := MM_4I1_IMP_STAB_4I1_p33 i j hv hd hc
+        refine Or.inr ⟨scsStabDiagV39 scs4I1 i j, ?_, hne⟩
+        refine Set.mem_union_right _ ⟨i, j, hd, ?_⟩
+        rfl
+    · refine Or.inl (fun s hs => ?_)
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact Set.not_nonempty_iff_eq_empty.mp hex
+  -- DISCHARGES: NEEDS ARDBZYE.hl SCS_4I1_ARROW_SCS_4I2_STAB_4I1 (2026-10-28,
+  -- la33-w2: assembly over the frozen all-open leaf; farm gap list in lane DELIVERY).
 
 /-- HOL `SET_STAB_4I1` (ARDBZYE.hl:2768). -/
 theorem SET_STAB_4I1_p33 :
@@ -1868,11 +1930,29 @@ theorem SET_EQ_DIAG_STAB_4I1_p33 :
       subst ht
       exact his02)
 
-/-- HOL `FYSSVEV` (ARDBZYE.hl:2881).  NEEDS:
-`SCS_4I1_ARROW_SCS_4I2_STAB_4I1_p33` + `SET_EQ_DIAG_STAB_4I1_p33`. -/
+/-- HOL `FYSSVEV` (ARDBZYE.hl:2881).  DISCHARGED 2026-10-28 (la33-w2): the
+HOL `FZIOTEF_TRANS` route through `{scs4I2} ∪ {stab-diag class}` — first leg
+`SCS_4I1_ARROW_SCS_4I2_STAB_4I1_p33`, second leg `FZIOTEF_BOTH` of the
+`scs4I2` singleton pad and `SET_EQ_DIAG_STAB_4I1_p33`.  sorryAx standing via
+`_hmn` (口径 B) and the arrow's leaf. -/
 theorem FYSSVEV_p33 (_hmn : main_nonlinear_terminal_v11) :
-    scsArrowV39 {scs4I1} {scs4I2, scsStabDiagV39 scs4I1 0 2} := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl FYSSVEV.
+    scsArrowV39 {scs4I1} {scs4I2, scsStabDiagV39 scs4I1 0 2} := by
+  have hisT : ∀ t ∈ ({scs4I2, scsStabDiagV39 scs4I1 0 2} : Set ScsV39), isScsV39 t := by
+    intro t ht
+    rcases Set.mem_insert_iff.mp ht with h | h
+    · subst h; exact SCS_4I2_IS_SCS_p33
+    · rw [Set.mem_singleton_iff] at h; subst h
+      exact (STAB_4I1_SCS_p33 0 2 SCS_DIAG_SCS_4I1_02_p33).1
+  refine FZIOTEF_TRANS _ _ _ (SCS_4I1_ARROW_SCS_4I2_STAB_4I1_p33 _hmn) ?_
+  exact FZIOTEF_BOTH_p33 {scs4I2}
+    {x | ∃ i j, scsDiag 4 i j ∧ x = scsStabDiagV39 scs4I1 i j}
+    {scs4I2, scsStabDiagV39 scs4I1 0 2}
+    (SING_PAD_p33 scs4I2 _ (Set.mem_insert_iff.mpr (Or.inl rfl)) hisT)
+    (FZIOTEF_TRANS _ _ _ SET_EQ_DIAG_STAB_4I1_p33
+      (SING_PAD_p33 (scsStabDiagV39 scs4I1 0 2) _
+        (Set.mem_insert_iff.mpr (Or.inr (Set.mem_singleton_iff.mpr rfl))) hisT))
+    hisT
+  -- DISCHARGES: NEEDS ARDBZYE.hl FYSSVEV (2026-10-28, la33-w2).
 
 /-! ## Section A: AUEAHEH (AUEAHEH.hl, 101 theorems, source order) -/
 
