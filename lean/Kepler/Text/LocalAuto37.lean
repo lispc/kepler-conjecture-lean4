@@ -219,7 +219,12 @@ theorem DISJTINCT_PROPERTY_p37 {V : Set V3} {f : V3 → ℝ → V3} {u : V3} {a 
 theorem EDGE_FORM_IN_LOCAL_FAN_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {x : Set V3} (h : LocalFan V E FF) (hx : x ∈ E) :
     ∃ u v : V3, u ≠ v ∧ {u, v} = x := by
-  sorry
+  obtain ⟨hfan, d, hd, -, -, -⟩ := h
+  obtain ⟨hfin, hcard⟩ := hfan.2.1 x hx
+  obtain ⟨a, b, hab, hset⟩ := Finset.card_eq_two.mp hcard
+  refine ⟨a, b, hab, ?_⟩
+  rw [← Set.Finite.coe_toFinset hfin, hset]
+  simp
 
 /-- HOL `EDGE_IN_LOCAL_FAN_DET_RHO_NODE` (lunar_deform.hl:185).  NEEDS:
 `Local_lemmas.LOFA_IN_E_IMP_IN_FF` + `Local_lemmas.DETER_RHO_NODE` twins
