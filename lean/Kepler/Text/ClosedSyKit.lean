@@ -695,4 +695,341 @@ theorem w3cs_FAN_of_clauses {k : ℕ} (L : FinVec k 3)
 
 end W3Kit
 
+/-! ## Section W5 (bodyclosed-w5): S-H edge×edge — the cross-dot sign wall
+(WJSCPRO.hl:874-2291 + :1191-1262 limit side; the `{y',z'} ∈ E_SY (v N1)`
+sequential transfers at :1133/:1450 are definitional in the Fin-rendering;
+the ℕ wrap stations :2215/:2250 are absorbed by `finNext`).
+
+Architecture (self-contained reconstruction; HOL branch bookkeeping replaced):
+- `w5cs_false_of_sign_wall` (pointwise engine): fan7 at a point + two
+  disjoint edges + the four strict cross-dot inequalities ⟹ False
+  (`condition_cross_dot_4point` twice; the two triple-products coincide by
+  `cross_anticomm`; the common point lies in both open fans, hence in
+  `affGe {0} (e1 ∩ e2) = {0}` — against `origin_is_not_aff_gt_fan`).
+- `w5cs_tendsto_cross_dot` + `w5cs_tendsto_pos_eventual` +
+  `w5cs_eventual_ne`: the sequential layer (LA4 `CROSS_DOT_SEQUENTIALLY`
+  rendered at Fin rows; HOL `ABS_LT_EPSI` stations become Mathlib
+  `Metric.tendsto_atTop`).
+- `w5cs_false_of_limit_wall` (5a capstone, unified W6/W7 premise shape
+  「u, L, ∀ n, u n ∈ SYset_cs, Tendsto u atTop (𝓝 L), L ∈ BSY1body_cs」 +
+  G-B2-pinned hsys/hs/hf): the sign wall at the limit point transfers to a
+  large index, where fan7 (from CONDITION2 at `u n`) and edge-disjointness
+  (eventual 2-separation) close the wall to False. -/
+
+section W5Kit
+
+/-- W5 service: a sequence converging to a positive limit is eventually
+positive (HOL `ABS_LT_EPSI` station, Mathlib rendering). -/
+theorem w5cs_tendsto_pos_eventual {g : ℕ → ℝ} {c : ℝ}
+    (hg : Filter.Tendsto g Filter.atTop (nhds c)) (hc : 0 < c) :
+    ∃ N : ℕ, ∀ n ≥ N, 0 < g n := by
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp hg (c / 2) (by linarith)
+  refine ⟨N, fun n hn => ?_⟩
+  have h := hN n hn
+  rw [Real.dist_eq] at h
+  have h2 := abs_lt.mp h
+  linarith
+
+/-- W5 service: two row sequences with distinct limits are eventually
+distinct as points. -/
+theorem w5cs_eventual_ne {f g : ℕ → V3} {x y : V3}
+    (hf : Filter.Tendsto f Filter.atTop (nhds x))
+    (hg : Filter.Tendsto g Filter.atTop (nhds y))
+    (hxy : x ≠ y) : ∃ N : ℕ, ∀ n ≥ N, f n ≠ g n := by
+  have hsub : Filter.Tendsto (fun n => f n - g n) Filter.atTop (nhds (x - y)) := hf.sub hg
+  have hnorm : Filter.Tendsto (fun n => ‖f n - g n‖) Filter.atTop (nhds ‖x - y‖) := hsub.norm
+  have hpos : 0 < ‖x - y‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hxy)
+  obtain ⟨N, hN⟩ := w5cs_tendsto_pos_eventual hnorm hpos
+  refine ⟨N, fun n hn hfg => ?_⟩
+  have hz := hN n hn
+  rw [hfg] at hz
+  simp at hz
+
+/-- W5 service: `affGe {x} ∅ = {x}` (public twin of the private
+`affGe_empty_singleton` in Planarity; HOL `AFF_GE_EQ_AFFINE_HULL` +
+`AFFINE_HULL_SING`). -/
+theorem w5cs_affGe_empty (x : V3) : affGe {x} ∅ = {x} := by
+  have hx : x ∈ affGe {x} ∅ := by
+    simp only [affGe, Set.mem_setOf_eq]
+    refine ⟨fun v => if v = x then (1:ℝ) else 0, ?_, ?_, ?_, ?_⟩
+    · exact (Set.finite_singleton x).union Set.finite_empty
+    · have hfin : ({x} ∪ ∅ : Set V3).Finite := by
+        exact (Set.finite_singleton x).union Set.finite_empty
+      have htf : hfin.toFinset = {x} := by ext u; simp
+      rw [htf]
+      simp
+    · intro v hv
+      exact absurd hv (Set.notMem_empty v)
+    · have hfin : ({x} ∪ ∅ : Set V3).Finite := by
+        exact (Set.finite_singleton x).union Set.finite_empty
+      have htf : hfin.toFinset = {x} := by ext u; simp
+      rw [htf]
+      simp
+  ext w
+  by_cases hw : w = x
+  · subst hw
+    constructor
+    · intro _
+      exact Set.mem_singleton_iff.mpr rfl
+    · intro _
+      exact hx
+  · constructor
+    · intro hc
+      simp only [affGe, Set.mem_setOf_eq] at hc
+      obtain ⟨f, hfin, h1, h2, h3⟩ := hc
+      have htf : hfin.toFinset = {x} := by ext u; simp
+      rw [htf] at h1 h3
+      simp only [Finset.sum_singleton] at h1 h3
+      rw [h3] at h1
+      simpa using h1
+    · intro hc
+      exact absurd (Set.mem_singleton_iff.mp hc) hw
+
+set_option maxHeartbeats 2000000 in
+/-- W5 service: `condition_cross_dot_4point` at the origin, with the
+`have`-lets discharged into an explicit statement (the `(w - 0 : V3)` forms
+must stay explicit `WithLp.ofLp` coercions; the bare coercion
+elaboration diverges). -/
+theorem w5cs_cond4 (y z v u : V3) (hnc : ¬ Collinear3 (0:V3) v u)
+    (h1 : 0 < (crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ)
+        (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp (u - 0 : V3) : Fin 3 → ℝ))
+    (h2 : 0 < -((crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ)
+        (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp (v - 0 : V3) : Fin 3 → ℝ))) :
+    (WithLp.toLp 2 (crossProduct
+        (crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ))
+        (crossProduct (WithLp.ofLp (v - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (u - 0 : V3) : Fin 3 → ℝ))) + 0 : V3)
+      ∈ affGt ({0} : Set V3) ({v, u} : Set V3) :=
+  condition_cross_dot_4point (0:V3) y z v u hnc h1 h2
+
+set_option maxHeartbeats 2000000 in
+/-- W5 core engine (HOL WJSCPRO:1385-1490, de-branchified): at a point
+where fan7 holds, two disjoint edges with all four strict cross-dot
+inequalities (each edge straddles the other's plane) cannot exist.  The
+conjunction `wall1 ∧ wall2` says edge `{y1, z1}` straddles plane `{0, y, z}`
+with `y1` on the `(y × z)`-positive side; `wall3 ∧ wall4` says edge
+`{y, z}` straddles plane `{0, y1, z1}` with `z` on the `(y1 × z1)`-positive
+side; the orientation is coherent because both open fans share the
+intersection line of the two planes. -/
+theorem w5cs_false_of_sign_wall {y z y1 z1 : V3}
+    (hf7 : affGe ({0} : Set V3) ({y, z} : Set V3) ∩ affGe ({0} : Set V3) ({y1, z1} : Set V3)
+        = affGe ({0} : Set V3) (({y, z} : Set V3) ∩ {y1, z1}))
+    (hdisj : ({y, z} : Set V3) ∩ {y1, z1} = ∅)
+    (hnc1 : ¬ Collinear3 (0:V3) y z) (hnc2 : ¬ Collinear3 (0:V3) y1 z1)
+    (wall1 : 0 < (crossProduct (WithLp.ofLp y1 : Fin 3 → ℝ) (WithLp.ofLp z1 : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp z : Fin 3 → ℝ))
+    (wall2 : 0 < -((crossProduct (WithLp.ofLp y1 : Fin 3 → ℝ) (WithLp.ofLp z1 : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp y : Fin 3 → ℝ)))
+    (wall3 : 0 < (crossProduct (WithLp.ofLp z : Fin 3 → ℝ) (WithLp.ofLp y : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp z1 : Fin 3 → ℝ))
+    (wall4 : 0 < -((crossProduct (WithLp.ofLp z : Fin 3 → ℝ) (WithLp.ofLp y : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp y1 : Fin 3 → ℝ))) : False := by
+  have hy0 : y ≠ 0 := fun he => hnc1 (collinear3_of_eq he)
+  have hz0 : z ≠ 0 := fun he => hnc1 (collinear3_pair_left he)
+  have hy10 : y1 ≠ 0 := fun he => hnc2 (collinear3_of_eq he)
+  have hz10 : z1 ≠ 0 := fun he => hnc2 (collinear3_pair_left he)
+  have hdis1 : Disjoint ({0} : Set V3) ({y, z} : Set V3) := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨fun h => hy0 h.symm, fun h => hz0 h.symm⟩
+  have hdis2 : Disjoint ({0} : Set V3) ({y1, z1} : Set V3) := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨fun h => hy10 h.symm, fun h => hz10 h.symm⟩
+  have e1 : 0 < (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ)
+      (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ) := by
+    simpa using wall1
+  have e2 : 0 < -((crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ)
+      (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ)) := by
+    simpa using wall2
+  have e3 : 0 < (crossProduct (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ)
+      (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ) := by
+    simpa using wall3
+  have e4 : 0 < -((crossProduct (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ)
+      (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ)) ⬝ᵥ (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ)) := by
+    simpa using wall4
+  have c1 : (WithLp.toLp 2 (crossProduct
+      (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ))
+      (crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ))) + 0 : V3)
+      ∈ affGt ({0} : Set V3) ({y, z} : Set V3) :=
+    w5cs_cond4 y1 z1 y z hnc1 e1 e2
+  have c2 : (WithLp.toLp 2 (crossProduct
+      (crossProduct (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ))
+      (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ))) + 0 : V3)
+      ∈ affGt ({0} : Set V3) ({y1, z1} : Set V3) :=
+    w5cs_cond4 z y y1 z1 hnc2 e3 e4
+  have hkey : crossProduct
+      (crossProduct (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ))
+      (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ))
+      = crossProduct
+      (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ))
+      (crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ)) := by
+    have hzy : (crossProduct (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ))
+        = -(crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ)) :=
+      (cross_anticomm _ _).symm
+    rw [hzy, map_neg, LinearMap.neg_apply, cross_anticomm]
+  have h2' : (WithLp.toLp 2 (crossProduct
+      (crossProduct (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ))
+      (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ))) + 0 : V3)
+      = (WithLp.toLp 2 (crossProduct
+      (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ))
+      (crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ))) + 0 : V3) := by
+    rw [hkey]
+  rw [h2'] at c2
+  have hmem : (WithLp.toLp 2 (crossProduct
+      (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ))
+      (crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ))) + 0 : V3)
+      ∈ affGe ({0} : Set V3) ({y, z} : Set V3) ∩ affGe ({0} : Set V3) ({y1, z1} : Set V3) :=
+    ⟨aff_gt_subset_aff_ge (x := (0:V3)) (v := y) (u := z) hdis1 c1,
+      aff_gt_subset_aff_ge (x := (0:V3)) (v := y1) (u := z1) hdis2 c2⟩
+  have h3 : affGe ({0} : Set V3) ({y, z} : Set V3) ∩ affGe ({0} : Set V3) ({y1, z1} : Set V3)
+      = ({0} : Set V3) := by
+    rw [hf7, hdisj]
+    exact w5cs_affGe_empty 0
+  have hmem0 : (WithLp.toLp 2 (crossProduct
+      (crossProduct (WithLp.ofLp (y1 - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z1 - 0 : V3) : Fin 3 → ℝ))
+      (crossProduct (WithLp.ofLp (y - 0 : V3) : Fin 3 → ℝ) (WithLp.ofLp (z - 0 : V3) : Fin 3 → ℝ))) + 0 : V3) = 0 := by
+    have hm := hmem
+    rw [h3] at hm
+    exact Set.mem_singleton_iff.mp hm
+  rw [hmem0] at c1
+  have hnot : (0:V3) ∉ affGt ({0} : Set V3) ({y, z} : Set V3) := by
+    refine origin_is_not_aff_gt_fan (x := (0:V3)) (v := y) (u := z) ?_ hdis1
+    rw [← collinear3_iff_mem_affineSpan (v0 := (0:V3)) (v1 := y) (Ne.symm hy0)]
+    exact hnc1
+  exact hnot c1
+
+/-- W5 service: the cross-dot of three rows converges along a convergent
+sequence of flattenings (LA4 `CROSS_DOT_SEQUENTIALLY`, HOL
+`CROSS_DOT_SEQUENTIALLY` dih2k.hl:1467). -/
+theorem w5cs_tendsto_cross_dot {k : ℕ} {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (hu : Filter.Tendsto u Filter.atTop (nhds L)) (p q r : Fin k) :
+    Filter.Tendsto (fun n => (crossProduct (WithLp.ofLp (vecmatsV3_p4 (u n) p) : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 (u n) q) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 (u n) r) : Fin 3 → ℝ)) Filter.atTop
+      (nhds ((crossProduct (WithLp.ofLp (vecmatsV3_p4 L p) : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 L q) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 L r) : Fin 3 → ℝ))) :=
+  CROSS_DOT_SEQUENTIALLY (((w3cs_continuous_vecmatsV3 p).tendsto L).comp hu)
+    (((w3cs_continuous_vecmatsV3 q).tendsto L).comp hu)
+    (((w3cs_continuous_vecmatsV3 r).tendsto L).comp hu)
+
+/-- W5 5a capstone (HOL WJSCPRO:660-1490): under the unified limit-point
+premises and the G-B2-pinned stability shape, two pairwise-distinct edges
+of the limit fan whose segments strictly straddle each other's planes
+(the four-fold cross-dot sign wall) are impossible — the wall transfers to
+a large index where fan7 (carried by `CONDITION2_SY_cs` at `u n`) and the
+eventual 2-separation of the edges close it.  This is the sole
+sequence-dependent content of fan7's edge×edge layer. -/
+theorem w5cs_false_of_limit_wall {k : ℕ} {d : ℝ} {s : Finset ℕ}
+    {a b : ℕ → ℕ → ℝ} {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k)
+    {u : ℕ → FinVec k 3} {L : FinVec k 3}
+    (humem : ∀ n, u n ∈ SYset_cs k a b)
+    (huto : Filter.Tendsto u Filter.atTop (nhds L))
+    (hL : L ∈ BSY1body_cs k a b)
+    {i i' : Fin k} (hii : i ≠ i') (hiz : i ≠ finNext i')
+    (hzi : finNext i ≠ i') (hzz : finNext i ≠ finNext i')
+    (wall1 : 0 < (crossProduct (WithLp.ofLp (vecmatsV3_p4 L i') : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 L (finNext i')) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 L (finNext i)) : Fin 3 → ℝ))
+    (wall2 : 0 < -((crossProduct (WithLp.ofLp (vecmatsV3_p4 L i') : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 L (finNext i')) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 L i) : Fin 3 → ℝ)))
+    (wall3 : 0 < (crossProduct (WithLp.ofLp (vecmatsV3_p4 L (finNext i)) : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 L i) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 L (finNext i')) : Fin 3 → ℝ))
+    (wall4 : 0 < -((crossProduct (WithLp.ofLp (vecmatsV3_p4 L (finNext i)) : Fin 3 → ℝ)
+        (WithLp.ofLp (vecmatsV3_p4 L i) : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp (vecmatsV3_p4 L i') : Fin 3 → ℝ))) : False := by
+  have hk3 : 3 ≤ k := hsys.1.1
+  have hk1 : 1 < k := by omega
+  have hk2 : 2 < k := by omega
+  have hsep : ∀ p q : ℕ, 1 ≤ p → p ≤ k → 1 ≤ q → q ≤ k → p ≠ q →
+      (2:ℝ) ≤ ‖rowV3_cs L p - rowV3_cs L q‖ :=
+    fun p q hp hpk hq hqk hpq => w3cs_two_le_row_of_BSY1body hsys hs hf hk1 L hL hp hpk hq hqk hpq
+  have htwo : ∀ p q : Fin k, p ≠ q → (2:ℝ) ≤ ‖vecmatsV3_p4 L p - vecmatsV3_p4 L q‖ := by
+    intro p q hpq
+    rw [← bcw2b_row_fin_cs, ← bcw2b_row_fin_cs]
+    exact hsep (p.val + 1) (q.val + 1) (by omega) (by have := p.isLt; omega)
+      (by omega) (by have := q.isLt; omega) (fun h => hpq (Fin.ext (by omega)))
+  have htend : ∀ j : Fin k, Filter.Tendsto (fun n => vecmatsV3_p4 (u n) j) Filter.atTop
+      (nhds (vecmatsV3_p4 L j)) := fun j =>
+    ((w3cs_continuous_vecmatsV3 j).tendsto L).comp huto
+  have dne : ∀ p q : Fin k, p ≠ q → vecmatsV3_p4 L p ≠ vecmatsV3_p4 L q := by
+    intro p q hpq he
+    have h2 := htwo p q hpq
+    rw [he, sub_self, norm_zero] at h2
+    linarith
+  obtain ⟨n1, hn1⟩ := w5cs_eventual_ne (htend i) (htend i') (dne i i' hii)
+  obtain ⟨n2, hn2⟩ := w5cs_eventual_ne (htend i) (htend (finNext i')) (dne i (finNext i') hiz)
+  obtain ⟨n3, hn3⟩ := w5cs_eventual_ne (htend (finNext i)) (htend i') (dne (finNext i) i' hzi)
+  obtain ⟨n4, hn4⟩ := w5cs_eventual_ne (htend (finNext i)) (htend (finNext i'))
+    (dne (finNext i) (finNext i') hzz)
+  obtain ⟨m1, hm1⟩ := w5cs_tendsto_pos_eventual
+    (w5cs_tendsto_cross_dot huto i' (finNext i') (finNext i)) wall1
+  obtain ⟨m2, hm2⟩ := w5cs_tendsto_pos_eventual
+    (Filter.Tendsto.neg (w5cs_tendsto_cross_dot huto i' (finNext i') i)) (by linarith)
+  obtain ⟨m3, hm3⟩ := w5cs_tendsto_pos_eventual
+    (w5cs_tendsto_cross_dot huto (finNext i) i (finNext i')) wall3
+  obtain ⟨m4, hm4⟩ := w5cs_tendsto_pos_eventual
+    (Filter.Tendsto.neg (w5cs_tendsto_cross_dot huto (finNext i) i i')) (by linarith)
+  obtain ⟨N, hN⟩ : ∃ N : ℕ, n1 ≤ N ∧ n2 ≤ N ∧ n3 ≤ N ∧ n4 ≤ N ∧
+      m1 ≤ N ∧ m2 ≤ N ∧ m3 ≤ N ∧ m4 ≤ N :=
+    ⟨n1 + n2 + n3 + n4 + m1 + m2 + m3 + m4, by omega⟩
+  have w1 := hm1 N (by omega)
+  have w2 := hm2 N (by omega)
+  have w3 := hm3 N (by omega)
+  have w4 := hm4 N (by omega)
+  have d1 := hn1 N (by omega)
+  have d2 := hn2 N (by omega)
+  have d3 := hn3 N (by omega)
+  have d4 := hn4 N (by omega)
+  -- fan7 at u N
+  have hE1m : {vecmatsV3_p4 (u N) i, vecmatsV3_p4 (u N) (finNext i)}
+      ∈ E_SY_p4 (vecmatsV3_p4 (u N)) := ⟨i, Set.mem_univ i, rfl⟩
+  have hE2m : {vecmatsV3_p4 (u N) i', vecmatsV3_p4 (u N) (finNext i')}
+      ∈ E_SY_p4 (vecmatsV3_p4 (u N)) := ⟨i', Set.mem_univ i', rfl⟩
+  have hmemN : u N ∈ BSY1body_cs k a b := (humem N).1
+  have hf7N : affGe ({0} : Set V3)
+      ({vecmatsV3_p4 (u N) i, vecmatsV3_p4 (u N) (finNext i)} : Set V3)
+      ∩ affGe ({0} : Set V3) ({vecmatsV3_p4 (u N) i', vecmatsV3_p4 (u N) (finNext i')} : Set V3)
+      = affGe ({0} : Set V3)
+        (({vecmatsV3_p4 (u N) i, vecmatsV3_p4 (u N) (finNext i)} : Set V3)
+        ∩ {vecmatsV3_p4 (u N) i', vecmatsV3_p4 (u N) (finNext i')}) :=
+    (humem N).2.1.1.2.2.2.2.2 _ (Or.inl hE1m) _ (Or.inl hE2m)
+  have hdisjN : ({vecmatsV3_p4 (u N) i, vecmatsV3_p4 (u N) (finNext i)} : Set V3)
+      ∩ {vecmatsV3_p4 (u N) i', vecmatsV3_p4 (u N) (finNext i')} = ∅ := by
+    refine Set.eq_empty_iff_forall_notMem.mpr fun x hx => ?_
+    rw [Set.mem_inter_iff] at hx
+    obtain ⟨hx1, hx2⟩ := hx
+    rcases Set.mem_insert_iff.mp hx1 with hx1 | hx1 <;>
+      rcases Set.mem_insert_iff.mp hx2 with hx2 | hx2
+    · exact d1 (hx1.symm.trans hx2)
+    · exact d2 (hx1.symm.trans hx2)
+    · exact d3 (hx1.symm.trans hx2)
+    · exact d4 (hx1.symm.trans hx2)
+  have hup : ∀ j : Fin k,
+      ‖vecmatsV3_p4 (u N) j - vecmatsV3_p4 (u N) (finNext j)‖ ≤ cstab_p4 := by
+    intro j
+    have hj := w3cs_row_adj_cstab hsys hs hf hk1 (u N) hmemN
+      (p := j.val + 1) (by omega) (by have := j.isLt; omega)
+    have hj2 : rowV3_cs (u N) ((j.val + 1) % k + 1) = rowV3_cs (u N) ((finNext j).val + 1) :=
+      rfl
+    rw [show rowV3_cs (u N) (j.val + 1) = vecmatsV3_p4 (u N) j from bcw2b_row_fin_cs (u N) j,
+      hj2, show rowV3_cs (u N) ((finNext j).val + 1) = vecmatsV3_p4 (u N) (finNext j)
+        from bcw2b_row_fin_cs (u N) (finNext j)] at hj
+    exact hj
+  have hnc1N : ¬ Collinear3 (0:V3) (vecmatsV3_p4 (u N) i)
+      (vecmatsV3_p4 (u N) (finNext i)) :=
+    NONPARALLEL_BALL_ANNULUS (hmemN.1 i) (hmemN.1 (finNext i))
+      (w3cs_two_le_next_fin hsys hs hf hk2 (u N) hmemN i) (hup i)
+  have hnc2N : ¬ Collinear3 (0:V3) (vecmatsV3_p4 (u N) i')
+      (vecmatsV3_p4 (u N) (finNext i')) :=
+    NONPARALLEL_BALL_ANNULUS (hmemN.1 i') (hmemN.1 (finNext i'))
+      (w3cs_two_le_next_fin hsys hs hf hk2 (u N) hmemN i') (hup i')
+  exact w5cs_false_of_sign_wall hf7N hdisjN hnc1N hnc2N w1 w2 w3 w4
+
+end W5Kit
+
 end Kepler.Text
