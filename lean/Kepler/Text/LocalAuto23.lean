@@ -54,7 +54,7 @@ FILE MAP
     HOL `fun (so:term)->` tactics), `V_E_FF_IS_SCS_CASES_3_p23` (proved)
     and `_4/_5/_6` (proved), `IN_IS_SCS_CASE_*_p23`,
     `TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_*_p23`, `IS_EAR_V25_EQ_EAR_SY_p23`,
-    `JKQEWGV1_CASE_*_p23`, `JKQEWGV1_p23`, `JKQEWGV2_CASE_*_p23`,
+    `JKQEWGV1_CASE_*_p23`, `JKQEWGV1_p23` (proved), `JKQEWGV2_CASE_*_p23`,
     `JKQEWGV2_p23` (proved), `JKQEWGV3_p23` (proved),
     `IS_SCS_POINT_IN_BBS_IS_NOT_0_3_p23` (proved),
     `IS_SCS_POINT_IN_BBS_IS_NOT_0_LE_3_p23` (proved),
@@ -4364,6 +4364,252 @@ theorem IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_3_p23 (s : ScsV39) (vv : ℕ → V3)
     ¬ Collinear ℝ ({0, vv (i % s.k), vv (j % s.k)} : Set V3) := by
   sorry
 
+/-! ### W5b lane (scsgeneric-w5b4): helpers for `JKQEWGV1_p23`
+
+Private `w5sg4_*` pieces inserted before `JKQEWGV1_p23` (2026-10-28): the
+curvature core and the numeric leg, copied verbatim from the w5b1 `w5sg3_*`
+block below (bodies renamed: the originals are declared after `JKQEWGV1_p23`
+in this file and are not in scope there), plus the k-periodicity finiteness
+of the dart range discharging `hfinFF`. -/
+
+private theorem w5sg4_sin_pi_twelve : Real.sin (Real.pi / 12) = (Real.sqrt 6 - Real.sqrt 2 : ℝ) / 4 := by
+  have h6 : Real.sqrt 6 = Real.sqrt 2 * Real.sqrt 3 := by
+    rw [← Real.sqrt_mul (show (0:ℝ) ≤ 2 by norm_num) 3, show (2:ℝ) * 3 = 6 from by norm_num]
+  have h : Real.pi / 12 = Real.pi / 3 - Real.pi / 4 := by linarith [Real.pi_pos]
+  rw [h, Real.sin_sub, Real.sin_pi_div_three, Real.cos_pi_div_three,
+    Real.sin_pi_div_four, Real.cos_pi_div_four, h6]
+  ring
+
+/-- cos(π/12) = (√6 + √2)/4. -/
+private theorem w5sg4_cos_pi_twelve : Real.cos (Real.pi / 12) = (Real.sqrt 6 + Real.sqrt 2 : ℝ) / 4 := by
+  have h6 : Real.sqrt 6 = Real.sqrt 2 * Real.sqrt 3 := by
+    rw [← Real.sqrt_mul (show (0:ℝ) ≤ 2 by norm_num) 3, show (2:ℝ) * 3 = 6 from by norm_num]
+  have h : Real.pi / 12 = Real.pi / 3 - Real.pi / 4 := by linarith [Real.pi_pos]
+  rw [h, Real.cos_sub, Real.cos_pi_div_three, Real.sin_pi_div_three,
+    Real.cos_pi_div_four, Real.sin_pi_div_four, h6]
+  ring
+
+/-- `43√6 − 37√2 < 160/3`. -/
+private theorem w5sg4_sqrt_key : 43 * Real.sqrt 6 - 37 * Real.sqrt 2 < 160 / 3 := by
+  have s6 : (Real.sqrt 6)^2 = 6 := Real.sq_sqrt (by positivity)
+  have s2 : (Real.sqrt 2)^2 = 2 := Real.sq_sqrt (by positivity)
+  have m62 : Real.sqrt 6 * Real.sqrt 2 = 2 * Real.sqrt 3 := by
+    rw [← Real.sqrt_mul (show (0:ℝ) ≤ 6 by norm_num) 2,
+      show (6:ℝ) * 2 = 4 * 3 from by norm_num,
+      Real.sqrt_mul (show (0:ℝ) ≤ 4 by norm_num) 3,
+      show (Real.sqrt 4 : ℝ) = 2 from by
+        rw [show (4:ℝ) = 2 ^ 2 from by norm_num, Real.sqrt_sq (show (0:ℝ) ≤ 2 by norm_num)]]
+  have hexp : (43 * Real.sqrt 6 - 37 * Real.sqrt 2 : ℝ)^2
+      = 13832 - 6364 * Real.sqrt 3 := by
+    have he : (43 * Real.sqrt 6 - 37 * Real.sqrt 2 : ℝ)^2
+        = 43^2 * (Real.sqrt 6)^2 + 37^2 * (Real.sqrt 2)^2
+          - 2 * (43 * Real.sqrt 6) * (37 * Real.sqrt 2) := by ring
+    rw [he, s6, s2]
+    linear_combination (-(2 * 43 * 37)) * m62
+  have h3 : (98888 / 57276 : ℝ) < Real.sqrt 3 := by
+    have hsq : ((98888 / 57276 : ℝ))^2 < 3 := by norm_num
+    have hpos : 0 ≤ (98888 / 57276 : ℝ) := by norm_num
+    have h := Real.sqrt_lt_sqrt (sq_nonneg _) hsq
+    rwa [Real.sqrt_sq hpos] at h
+  have hpos : 0 < 43 * Real.sqrt 6 - 37 * Real.sqrt 2 := by
+    have hs37 : Real.sqrt (37 ^ 2) = 37 := Real.sqrt_sq (show (0:ℝ) ≤ 37 by norm_num)
+    have hs43 : Real.sqrt (43 ^ 2) = 43 := Real.sqrt_sq (show (0:ℝ) ≤ 43 by norm_num)
+    have h1 : Real.sqrt ((37:ℝ)^2 * 2) < Real.sqrt ((43:ℝ)^2 * 6) :=
+      Real.sqrt_lt_sqrt (by positivity) (by norm_num)
+    rw [Real.sqrt_mul (show (0:ℝ) ≤ (37:ℝ)^2 by norm_num) 2, hs37,
+      Real.sqrt_mul (show (0:ℝ) ≤ (43:ℝ)^2 by norm_num) 6, hs43] at h1
+    linarith
+  have hsq : (43 * Real.sqrt 6 - 37 * Real.sqrt 2 : ℝ)^2 < (160/3 : ℝ)^2 := by
+    rw [hexp]; linarith
+  nlinarith [hpos]
+
+/-- The arcsin lower bound: `π/12 + 3/40 < arcsin(1/3)`. -/
+private theorem w5sg4_arcsin_third_gt : Real.pi / 12 + 3 / 40 < Real.arcsin (1 / 3 : ℝ) := by
+  have htsin := w5sg4_sin_pi_twelve
+  have htc := w5sg4_cos_pi_twelve
+  have hkey := w5sg4_sqrt_key
+  have hmain : (Real.sqrt 6 - Real.sqrt 2 : ℝ) / 4
+      + (Real.sqrt 6 + Real.sqrt 2 : ℝ) / 4 * (3 / 40) < 1 / 3 := by linarith
+  have hp0 : 0 ≤ Real.pi / 12 + 3 / 40 := by linarith [Real.pi_pos]
+  have hp1 : Real.pi / 12 + 3 / 40 ≤ Real.pi / 2 := by linarith [Real.pi_gt_three]
+  have hsinpos : 0 ≤ Real.sin (Real.pi / 12 + 3 / 40) :=
+    Real.sin_nonneg_of_mem_Icc ⟨by linarith, by linarith⟩
+  have hbound : Real.sin (Real.pi / 12 + 3 / 40) < 1 / 3 := by
+    have hadd : Real.sin (Real.pi / 12 + 3 / 40)
+        = Real.sin (Real.pi / 12) * Real.cos (3 / 40)
+          + Real.cos (Real.pi / 12) * Real.sin (3 / 40) := Real.sin_add _ _
+    have hc1 : Real.cos (3 / 40 : ℝ) ≤ 1 := Real.cos_le_one _
+    have hs1 : Real.sin (3 / 40 : ℝ) ≤ 3 / 40 := le_of_lt (Real.sin_lt (by norm_num))
+    have hsqpos : 0 ≤ (Real.sqrt 6 - Real.sqrt 2 : ℝ) / 4 := by
+      have h2 : (Real.sqrt (2:ℝ)) < Real.sqrt 6 :=
+        Real.sqrt_lt_sqrt (by norm_num) (by norm_num)
+      linarith [Real.sqrt_nonneg 2]
+    have hsqpos2 : 0 ≤ (Real.sqrt 6 + Real.sqrt 2 : ℝ) / 4 := by positivity
+    have hp1' : (Real.sqrt 6 - Real.sqrt 2 : ℝ) / 4 * Real.cos (3 / 40)
+        ≤ (Real.sqrt 6 - Real.sqrt 2 : ℝ) / 4 := by
+      have h := mul_le_mul_of_nonneg_left hc1 hsqpos
+      rwa [mul_one] at h
+    have hp2' : (Real.sqrt 6 + Real.sqrt 2 : ℝ) / 4 * Real.sin (3 / 40)
+        ≤ (Real.sqrt 6 + Real.sqrt 2 : ℝ) / 4 * (3 / 40) :=
+      mul_le_mul_of_nonneg_left hs1 hsqpos2
+    rw [hadd, htsin, htc]
+    linarith
+  have hneg : -(Real.pi / 2) ≤ Real.pi / 12 + 3 / 40 := by linarith [Real.pi_pos]
+  have hlt := Real.arcsin_lt_arcsin (by linarith : (-1:ℝ) ≤ Real.sin (Real.pi / 12 + 3 / 40))
+    hbound (by norm_num : (1 / 3 : ℝ) ≤ 1)
+  rw [Real.arcsin_sin hneg hp1] at hlt
+  linarith
+
+/-- `9/10 + 4·sol0 < π`. -/
+private theorem w5sg4_nine_add_4sol0_lt_pi : 9 / 10 + 4 * sol0 < Real.pi := by
+  have harc := w5sg4_arcsin_third_gt
+  have hsol : sol0 = 3 * (Real.pi / 2 - Real.arcsin (1/3 : ℝ)) - Real.pi := by
+    unfold sol0
+    rw [Real.arccos_eq_pi_div_two_sub_arcsin]
+  rw [hsol]
+  linarith
+
+private theorem w5sg4_vv_shift {α : Type*} {vv : ℕ → α} {k : ℕ} (hper : ∀ i, vv (i + k) = vv i) :
+    ∀ m r : ℕ, vv (m * k + r) = vv r := by
+  intro m
+  induction m with
+  | zero => intro r; simp
+  | succ n ih =>
+    intro r
+    have he : (n + 1) * k + r = (n * k + r) + k := by ring
+    rw [he, hper, ih r]
+
+private theorem w5sg4_dart_mod {s : ScsV39} {vv : ℕ → V3} (hper : Periodic vv s.k) (i : ℕ) :
+    (vv (i % s.k), vv (i % s.k + 1)) = (vv i, vv (i + 1)) := by
+  have h1 := w5sg4_vv_shift (by intro j; exact hper j) (i / s.k) (i % s.k)
+  have h2 := w5sg4_vv_shift (by intro j; exact hper j) (i / s.k) (i % s.k + 1)
+  have hda : s.k * (i / s.k) + i % s.k = i := Nat.div_add_mod i s.k
+  have heq : (i / s.k) * s.k + i % s.k = i := by rw [Nat.mul_comm]; omega
+  have heq2 : (i / s.k) * s.k + (i % s.k + 1) = i + 1 := by rw [Nat.mul_comm]; omega
+  have hv1 : vv i = vv (i % s.k) := (h1.symm.trans (by rw [heq])).symm
+  have hv2 : vv (i + 1) = vv (i % s.k + 1) := (h2.symm.trans (by rw [heq2])).symm
+  rw [hv1, hv2]
+
+private theorem w5sg4_vv_inj {s : ScsV39} {vv : ℕ → V3} (hs : isScsV39 s) (hBB : BBsV39 s vv)
+    {i j : ℕ} (hi : i < s.k) (hj : j < s.k) (hne : i ≠ j) : vv i ≠ vv j := by
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hdiag, -, -, -, -, -⟩ := hs
+  have hdist : s.a i j ≤ dist (vv i) (vv j) := (hBB.2.2.1 i j).1
+  have h2 : (2:ℝ) ≤ s.a i j := hdiag i j ⟨hi, hj, hne⟩
+  intro heq
+  rw [heq, dist_self] at hdist
+  linarith
+
+private theorem w5sg4_dart_inj {s : ScsV39} {vv : ℕ → V3} (hs : isScsV39 s) (hBB : BBsV39 s vv)
+    {i j : ℕ} (hi : i < s.k) (hj : j < s.k)
+    (heq : (vv i, vv (i + 1)) = (vv j, vv (j + 1))) : i = j := by
+  simp only [Prod.mk.injEq] at heq
+  rcases Nat.lt_trichotomy i j with h | h | h
+  · exact absurd heq.1 (w5sg4_vv_inj hs hBB hi hj (by omega))
+  · exact h
+  · exact absurd heq.1.symm (w5sg4_vv_inj hs hBB hj hi (by omega))
+
+private theorem w5sg4_F_ncard {s : ScsV39} {vv : ℕ → V3} (hs : isScsV39 s) (hBB : BBsV39 s vv) :
+    Set.ncard (Set.range fun i : ℕ => (vv i, vv (i + 1))) = s.k := by
+  have hk3 : 3 ≤ s.k := hs.2.1
+  refine Set.ncard_eq_of_bijective (fun i (_ : i < s.k) => (vv i, vv (i + 1)))
+    (fun d hd => ?_) (fun i hi => ⟨i, rfl⟩) (fun i j hi hj heq => w5sg4_dart_inj hs hBB hi hj heq)
+  · obtain ⟨i, rfl⟩ := hd
+    exact ⟨i % s.k, Nat.mod_lt i (by omega), w5sg4_dart_mod hBB.2.1 i⟩
+
+private theorem w5sg4_setSum_F {s : ScsV39} {vv : ℕ → V3} (hs : isScsV39 s) (hBB : BBsV39 s vv)
+    (hfinFF : (Set.range fun i : ℕ => (vv i, vv (i + 1))).Finite)
+    (E : Set (Set V3)) (g : V3 × V3 → ℝ) :
+    setSum (Set.range fun i : ℕ => (vv i, vv (i + 1))) g
+      = ∑ i ∈ Finset.range s.k, g (vv i, vv (i + 1)) := by
+  have hk3 : 3 ≤ s.k := hs.2.1
+  rw [setSum, dif_pos hfinFF]
+  have himg : hfinFF.toFinset = Finset.image (fun i : ℕ => (vv i, vv (i + 1)))
+      (Finset.range s.k) := by
+    ext d
+    rw [Set.Finite.mem_toFinset]
+    simp only [Finset.mem_image, Set.mem_range, Finset.mem_range]
+    refine ⟨fun hd => ?_, fun ⟨i, hi, hd'⟩ => ⟨i, hd'⟩⟩
+    obtain ⟨i, rfl⟩ := hd
+    have hm : i % s.k < s.k := Nat.mod_lt i (by omega)
+    exact ⟨i % s.k, hm, w5sg4_dart_mod hBB.2.1 i⟩
+  rw [himg, Finset.sum_image]
+  intro i hi j hj heq
+  simp only [Finset.mem_coe, Finset.mem_range] at hi hj
+  simp only [] at heq
+  exact w5sg4_dart_inj hs hBB hi hj heq
+
+private theorem w5sg4_sum_pi {f : ℕ → ℝ} {k : ℕ} :
+    (∑ i ∈ Finset.range k, (f i - Real.pi))
+      = (∑ i ∈ Finset.range k, f i) - Real.pi * k := by
+  rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_comm]
+
+private theorem w5sg4_azimInFan_nonneg (d : V3 × V3) (E : Set (Set V3)) :
+    0 ≤ azimInFan d E := by
+  unfold azimInFan
+  split_ifs
+  · exact azim_nonneg 0 d.1 d.2 _
+  · positivity
+
+/-- The curvature core: negative taustar gives `solLocal < 9/10 + 4·sol0`
+(direct route, no `JKQEWGV1`). -/
+private theorem w5sg4_solLocal_lt {s : ScsV39} {vv : ℕ → V3} (hs : isScsV39 s)
+    (hBB : BBsV39 s vv) (hk : 3 < s.k)
+    (hta : tauFun (Set.range vv) (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+        (Set.range fun i : ℕ => (vv i, vv (i + 1))) - dsvV39 s vv < 0)
+    (hfinFF : (Set.range fun i : ℕ => (vv i, vv (i + 1))).Finite) :
+    solLocal (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+        (Set.range fun i : ℕ => (vv i, vv (i + 1))) < 9 / 10 + 4 * sol0 := by
+  have hsd := hs.1
+  have hk6 := hs.2.2.1
+  have hdsv := w3sg_dsv_le s vv hs hk hBB
+  have hcard0 := w5sg4_F_ncard hs hBB
+  have hsol : solLocal (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (Set.range fun i : ℕ => (vv i, vv (i + 1))) = 2 * Real.pi + setSum (Set.range fun i : ℕ => (vv i, vv (i + 1))) (fun d => azimInFan d (Set.range fun i : ℕ => {vv i, vv (i + 1)}) - Real.pi) := rfl
+  have htaufun : tauFun (Set.range vv) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (Set.range fun i : ℕ => (vv i, vv (i + 1)))
+      = setSum (Set.range fun i : ℕ => (vv i, vv (i + 1))) (fun d => rhoFun (norm d.1) * azimInFan d (Set.range fun i : ℕ => {vv i, vv (i + 1)}))
+        - (Real.pi + sol0) * (((Set.range fun i : ℕ => (vv i, vv (i + 1))).ncard - 2 : ℕ) : ℝ) := rfl
+  have hsum1 := w5sg4_setSum_F hs hBB hfinFF (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (fun d => rhoFun (norm d.1) * azimInFan d (Set.range fun i : ℕ => {vv i, vv (i + 1)}))
+  have hsum2 := w5sg4_setSum_F hs hBB hfinFF (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (fun d => azimInFan d (Set.range fun i : ℕ => {vv i, vv (i + 1)}))
+  have h1 := w5sg4_setSum_F hs hBB hfinFF (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (fun d => azimInFan d (Set.range fun i : ℕ => {vv i, vv (i + 1)}) - Real.pi)
+  have hρ : ∀ i : ℕ, azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+      ≤ rhoFun (norm (vv i, vv (i + 1)).1) * azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) := by
+    intro i
+    have h2 : (2:ℝ) ≤ norm (vv i, vv (i + 1)).1 := w2sg_norm_ge_two s vv hBB i
+    have hρ1 := w2sg_rhoFun_ge_one h2
+    have haz : 0 ≤ azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) := w5sg4_azimInFan_nonneg _ (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+    calc azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+        = azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) * 1 := (mul_one _).symm
+      _ ≤ azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) * rhoFun (norm (vv i, vv (i + 1)).1) :=
+          mul_le_mul_of_nonneg_left hρ1 haz
+      _ = rhoFun (norm (vv i, vv (i + 1)).1) * azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) := mul_comm _ _
+  have hSum : ∑ i ∈ Finset.range s.k, azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+      ≤ ∑ i ∈ Finset.range s.k, rhoFun (norm (vv i, vv (i + 1)).1) * azimInFan (vv i, vv (i + 1)) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) :=
+    by refine Finset.sum_le_sum fun i _ => ?_; exact hρ i
+  rcases (by omega : s.k = 4 ∨ s.k = 5 ∨ s.k = 6) with hkc | hkc | hkc
+  · rw [hkc] at hsum1 hsum2 h1 hSum hcard0
+    rw [w5sg4_sum_pi] at h1
+    norm_num at h1
+    have hcast : (((Set.range fun i : ℕ => (vv i, vv (i + 1))).ncard - 2 : ℕ) : ℝ) = 2 := by rw [hcard0]; norm_num
+    have htauge : solLocal (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (Set.range fun i : ℕ => (vv i, vv (i + 1))) - 2 * sol0 ≤ tauFun (Set.range vv) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (Set.range fun i : ℕ => (vv i, vv (i + 1))) := by
+      rw [htaufun, hcast]
+      linarith [hsum1, hSum, hsum2, h1, hsol]
+    linarith [htauge, hta, hdsv, hsd, w5sg4_nine_add_4sol0_lt_pi, w2sg_sol0_nonneg]
+  · rw [hkc] at hsum1 hsum2 h1 hSum hcard0
+    rw [w5sg4_sum_pi] at h1
+    norm_num at h1
+    have hcast : (((Set.range fun i : ℕ => (vv i, vv (i + 1))).ncard - 2 : ℕ) : ℝ) = 3 := by rw [hcard0]; norm_num
+    have htauge : solLocal (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (Set.range fun i : ℕ => (vv i, vv (i + 1))) - 3 * sol0 ≤ tauFun (Set.range vv) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (Set.range fun i : ℕ => (vv i, vv (i + 1))) := by
+      rw [htaufun, hcast]
+      linarith [hsum1, hSum, hsum2, h1, hsol]
+    linarith [htauge, hta, hdsv, hsd, w5sg4_nine_add_4sol0_lt_pi, w2sg_sol0_nonneg]
+  · rw [hkc] at hsum1 hsum2 h1 hSum hcard0
+    rw [w5sg4_sum_pi] at h1
+    norm_num at h1
+    have hcast : (((Set.range fun i : ℕ => (vv i, vv (i + 1))).ncard - 2 : ℕ) : ℝ) = 4 := by rw [hcard0]; norm_num
+    have htauge : solLocal (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (Set.range fun i : ℕ => (vv i, vv (i + 1))) - 4 * sol0 ≤ tauFun (Set.range vv) (Set.range fun i : ℕ => {vv i, vv (i + 1)}) (Set.range fun i : ℕ => (vv i, vv (i + 1))) := by
+      rw [htaufun, hcast]
+      linarith [hsum1, hSum, hsum2, h1, hsol]
+    linarith [htauge, hta, hdsv, hsd, w5sg4_nine_add_4sol0_lt_pi]
+
 /-! ### The main JKQEWGV conclusions -/
 
 /-- HOL `JKQEWGV1` (JKQEWGV.hl:2940): a negative-taustar BBs realisation
@@ -4374,7 +4620,28 @@ theorem JKQEWGV1_p23 (s : ScsV39) (vv : ℕ → V3) (hs : isScsV39 s)
     (hk : 3 < s.k) (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) :
     solLocal ((fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ)
         ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) < Real.pi := by
-  sorry
+  rw [Set.image_univ, Set.image_univ]
+  obtain ⟨hann, hper, hdist, h4⟩ := hBB
+  rcases h4 with hkle3 | hclf
+  · omega
+  have hk' : ¬(s.k ≤ 3) := by omega
+  have hta' : tauFun (Set.range vv) (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+      (Set.range fun i : ℕ => (vv i, vv (i + 1))) - dsvV39 s vv < 0 := by
+    have h := hta
+    rw [taustarV39, if_neg hk'] at h
+    exact h
+  have hper2 : Periodic (fun i : ℕ => (vv i, vv (i + 1))) s.k := by
+    intro i
+    have h2 : vv (i + s.k + 1) = vv (i + 1) := by
+      rw [Nat.add_right_comm i s.k 1]
+      exact hper (i + 1)
+    show (vv (i + s.k), vv (i + s.k + 1)) = (vv i, vv (i + 1))
+    rw [hper i, h2]
+  have hfinFF : (Set.range fun i : ℕ => (vv i, vv (i + 1))).Finite := by
+    rw [range_periodic_image_p23 (fun i : ℕ => (vv i, vv (i + 1))) s.k (by omega) hper2]
+    exact (Set.finite_Iio s.k).image (fun i : ℕ => (vv i, vv (i + 1)))
+  exact lt_trans (w5sg4_solLocal_lt hs ⟨hann, hper, hdist, Or.inr hclf⟩ hk hta' hfinFF)
+    w5sg4_nine_add_4sol0_lt_pi
 
 /-- HOL `JKQEWGV2` (JKQEWGV.hl:3136): the realisation graph is not
 circular. The case split `s.k ∈ {4,5,6}` (from `hs.2.1`/`hs.2.2.1` + `hk`) dispatches
