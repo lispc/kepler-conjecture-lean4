@@ -3275,4 +3275,445 @@ theorem w6bcs_darts_eq {k : ℕ} (l : FinVec k 3)
 
 end W6bKit
 
+/-! ## Section W6cKit (bodyclosed-w6c): 缺口 2 点态平面退化反驳
+(w6ccs_false_of_planar_inter, W5b §4 钉形 + hdiff 修正, W6a §3 陈述逐字).
+坐标抽取 (正交补维数路线) + D-恒等式符号树五支收口 + 4ponits/same-ray 杀.
+零新 import; 零 sorry; 六件 (四 private + 两公开面其中缺口 2 公开).
+-/
+
+section W6cKit
+
+/-- 坐标抽取：`w` 与 `(y×z)` 正交（即落在平面 `span{y,z}` 内）时给出
+`(y,z)`-坐标分解。正交补维数路线：`finrank_orthogonal_span_singleton` +
+`Submodule.eq_of_le_of_finrank_eq`。 -/
+private theorem w6ccs_coords_of_planar_dot {y z w : V3}
+    (hnc : ¬ Collinear3 (0:V3) y z) (hy0 : y ≠ 0)
+    (hpl : (crossProduct (WithLp.ofLp y : Fin 3 → ℝ) (WithLp.ofLp z : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp w : Fin 3 → ℝ) = 0) :
+    ∃ p q : ℝ, w = p • y + q • z := by
+  set n : V3 := WithLp.toLp 2 (crossProduct (WithLp.ofLp y : Fin 3 → ℝ)
+    (WithLp.ofLp z : Fin 3 → ℝ)) with hndef
+  have hLI : LinearIndependent ℝ ![y, z] := by
+    rw [LinearIndependent.pair_iff' hy0]
+    intro a hae
+    refine hnc (w5bcs_collinear_of_eq_zero (α := -a) one_pos ?_)
+    rw [← hae]
+    module
+  have hn0 : n ≠ 0 := by
+    intro h0
+    have hc : crossProduct (WithLp.ofLp y : Fin 3 → ℝ) (WithLp.ofLp z : Fin 3 → ℝ) = 0 := by
+      have hco : (WithLp.ofLp n : Fin 3 → ℝ) = crossProduct (WithLp.ofLp y : Fin 3 → ℝ)
+        (WithLp.ofLp z : Fin 3 → ℝ) := rfl
+      rw [← hco, h0]
+      simp
+    have hy0pi : WithLp.ofLp y ≠ 0 := by
+      intro he
+      refine hy0 ?_
+      rw [show y = WithLp.toLp 2 (WithLp.ofLp y) from rfl, he]
+      simp
+    have hnl : ¬ LinearIndependent ℝ ![WithLp.ofLp y, WithLp.ofLp z] :=
+      fun hli => (crossProduct_ne_zero_iff_linearIndependent.mpr hli) hc
+    rw [LinearIndependent.pair_iff' hy0pi] at hnl
+    push Not at hnl
+    obtain ⟨a, hae⟩ := hnl
+    refine hnc (w5bcs_collinear_of_eq_zero (α := -a) one_pos ?_)
+    have hae3 : a • y = z :=
+      congrArg (WithLp.toLp 2) hae
+    rw [← hae3]
+    module
+  have hny : inner ℝ n y = 0 := by
+    rw [inner_eq_dot, dot_toLp, dotProduct_comm]
+    exact dot_self_cross (WithLp.ofLp y) (WithLp.ofLp z)
+  have hnz : inner ℝ n z = 0 := by
+    rw [inner_eq_dot, dot_toLp, dotProduct_comm]
+    exact dot_cross_self (WithLp.ofLp y) (WithLp.ofLp z)
+  have hnw : inner ℝ n w = 0 := by
+    rw [inner_eq_dot, dot_toLp]
+    exact hpl
+  haveI : Fact (Module.finrank ℝ V3 = 2 + 1) := ⟨by simp⟩
+  have hK2 : Module.finrank ℝ (Submodule.span ℝ ({y, z} : Set V3)) = 2 := by
+    rw [show (Submodule.span ℝ ({y, z} : Set V3)) = Submodule.span ℝ
+      (Set.range ![y, z]) from by
+        congr 1
+        ext u
+        constructor
+        · rintro (rfl | rfl)
+          · exact ⟨0, rfl⟩
+          · exact ⟨1, rfl⟩
+        · rintro ⟨i, hi⟩
+          fin_cases i <;> simp at hi <;> rw [hi] <;> simp, finrank_span_eq_card hLI]
+    rw [Fintype.card_fin]
+  have hQle : Submodule.span ℝ ({y, z} : Set V3) ≤ (ℝ ∙ n)ᗮ := by
+    rw [Submodule.span_le]
+    rintro u hu
+    rcases Set.mem_insert_iff.mp hu with rfl | rfl
+    · exact Submodule.mem_orthogonal_singleton_iff_inner_right.mpr hny
+    · exact Submodule.mem_orthogonal_singleton_iff_inner_right.mpr hnz
+  have hfQ : Module.finrank ℝ ((ℝ ∙ n)ᗮ) = 2 :=
+    Submodule.finrank_orthogonal_span_singleton (n := 2) hn0
+  have hKQ : Submodule.span ℝ ({y, z} : Set V3) = (ℝ ∙ n)ᗮ :=
+    Submodule.eq_of_le_of_finrank_eq hQle (hK2.trans hfQ.symm)
+  have hwQ : w ∈ (ℝ ∙ n)ᗮ := Submodule.mem_orthogonal_singleton_iff_inner_right.mpr hnw
+  rw [← hKQ] at hwQ
+  obtain ⟨p, q, hpq⟩ := Submodule.mem_span_pair.mp hwQ
+  exact ⟨p, q, hpq.symm⟩
+
+/-- 纯实数符号树：α,β,γ,δ > 0、α = γp + δr、β = γq + δs、D = ps − rq > 0
+五支收口。 -/
+private theorem w6ccs_planar_sign_aux {p q r s α β γ δ : ℝ}
+    (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ) (hδ : 0 < δ)
+    (he1 : α = γ * p + δ * r) (he2 : β = γ * q + δ * s)
+    (hD : 0 < p * s - r * q) :
+    (0 < s ∧ q < 0) ∨ (r < 0 ∧ 0 < p) ∨ (0 < p ∧ 0 < q) ∨ (0 < r ∧ 0 < s) ∨
+      (q = 0 ∧ r = 0) := by
+  by_cases hp : 0 < p
+  · -- p > 0
+    by_cases hqp : 0 < q
+    · -- q > 0 → 支3
+      exact Or.inr (Or.inr (Or.inl (show 0 < p ∧ 0 < q from ⟨hp, hqp⟩)))
+    · have hqle : q ≤ 0 := le_of_not_gt hqp
+      rcases eq_or_ne q 0 with hq0 | hqneg
+      · -- q = 0：β = δs > 0 ⟹ s > 0；r<0 → 支2、r>0 → 支4、r=0 → 支5
+        rw [hq0, mul_zero, zero_add] at he2
+        have hds : (0:ℝ) < δ * s := by rw [← he2]; exact hβ
+        have hs : 0 < s :=
+          lt_of_mul_lt_mul_left (by rw [mul_zero]; exact hds : δ * (0:ℝ) < δ * s) hδ.le
+        by_cases hr1 : r < 0
+        · exact Or.inr (Or.inl (show r < 0 ∧ 0 < p from ⟨hr1, hp⟩))
+        · have hrge : (0:ℝ) ≤ r := le_of_not_gt hr1
+          rcases eq_or_ne r 0 with hr0 | hrne
+          · exact Or.inr (Or.inr (Or.inr (Or.inr (show q = 0 ∧ r = 0 from ⟨hq0, hr0⟩))))
+          · have hrpos : 0 < r := lt_of_le_of_ne hrge (fun he => hrne he.symm)
+            exact Or.inr (Or.inr (Or.inr (Or.inl (And.intro hrpos hs))))
+      · -- q < 0 → 支1（β > 0 ⟹ s > 0）
+        have hq1 : q < 0 := lt_of_le_of_ne hqle hqneg
+        have hγq : γ * q < 0 := by nlinarith [hγ, hq1]
+        have hdt : (0:ℝ) < δ * s := by rw [he2] at hβ; linarith
+        have hs : 0 < s :=
+          lt_of_mul_lt_mul_left (by rw [mul_zero]; exact hdt : δ * (0:ℝ) < δ * s) hδ.le
+        exact Or.inl (And.intro hs hq1)
+  · -- p ≤ 0
+    rcases eq_or_ne p 0 with hp0 | hpne
+    · -- p = 0：he1 ⟹ r > 0；D = −rq > 0 ⟹ q < 0；β > 0 ⟹ s > 0 → 支4
+      rw [hp0, mul_zero, zero_add] at he1
+      have hdr : (0:ℝ) < δ * r := by rw [← he1]; exact hα
+      have hr : (0:ℝ) < r :=
+        lt_of_mul_lt_mul_left (by rw [mul_zero]; exact hdr : δ * (0:ℝ) < δ * r) hδ.le
+      have hrq : r * q < 0 := by
+        rw [hp0, zero_mul, zero_sub] at hD
+        linarith
+      have hqneg : q < 0 := by
+        by_cases h1 : q < 0
+        · exact h1
+        · have h2 : (0:ℝ) ≤ q := le_of_not_gt h1
+          have h3 : (0:ℝ) ≤ r * q := by nlinarith [hr.le, h2]
+          linarith
+      have hγq : γ * q < 0 := by nlinarith [hγ, hqneg]
+      have hdt : (0:ℝ) < δ * s := by rw [he2] at hβ; linarith
+      have hs : 0 < s :=
+        lt_of_mul_lt_mul_left (by rw [mul_zero]; exact hdt : δ * (0:ℝ) < δ * s) hδ.le
+      exact Or.inr (Or.inr (Or.inr (Or.inl (And.intro hr hs))))
+    · -- p < 0
+      have hpneg : p < 0 := lt_of_le_of_ne (le_of_not_gt hp) hpne
+      have hpr : (0:ℝ) < r := by
+        by_cases hr0 : 0 < r
+        · exact hr0
+        · have hrle : r ≤ 0 := le_of_not_gt hr0
+          have h1 : γ * p < 0 := by nlinarith [hγ, hpneg]
+          have h2 : δ * r ≤ 0 := by nlinarith [hrle, hδ.le]
+          rw [he1] at hα
+          linarith
+      by_cases hs1 : 0 < s
+      · exact Or.inr (Or.inr (Or.inr (Or.inl (And.intro hpr hs1))))
+      · have hsle : s ≤ 0 := le_of_not_gt hs1
+        rcases eq_or_ne s 0 with hs0 | hsne
+        · -- s = 0：β = γq > 0 ⟹ q > 0 ⟹ D = −rq < 0 矛盾
+          have hqp : (0:ℝ) < q := by
+            rw [hs0, mul_zero, add_zero] at he2
+            by_contra hc
+            have hqle : q ≤ 0 := le_of_not_gt hc
+            have hγq : γ * q ≤ 0 := by nlinarith [hγ.le, hqle]
+            rw [he2] at hβ
+            linarith
+          have hrq : (0:ℝ) < r * q := by nlinarith [hpr, hqp]
+          rw [hs0, mul_zero, zero_sub] at hD
+          linarith
+        · -- s < 0：β > 0 ⟹ q > 0；乘积矛盾 rq > ps
+          have hsn : s < 0 := lt_of_le_of_ne hsle hsne
+          have hqp : (0:ℝ) < q := by
+            by_contra hc
+            have hqle : q ≤ 0 := le_of_not_gt hc
+            have h1 : γ * q ≤ 0 := by nlinarith [hγ.le, hqle]
+            have h2 : δ * s < 0 := by nlinarith [hδ, hsn]
+            rw [he2] at hβ
+            linarith
+          have e1 : -(γ * p) < δ * r := by
+            have := he1
+            linarith
+          have e2 : -(δ * s) < γ * q := by
+            have := he2
+            linarith
+          have b1 : (0:ℝ) < -(γ * p) := by nlinarith [hγ, hpneg]
+          have b2 : (0:ℝ) < -(δ * s) := by nlinarith [hδ, hsn]
+          have gq : (0:ℝ) < γ * q := mul_pos hγ (by linarith)
+          have s2 : (δ * r) * (γ * q) > (-(γ * p)) * (γ * q) :=
+            mul_lt_mul_of_pos_right e1 gq
+          have s1 : (-(γ * p)) * (γ * q) > (-(γ * p)) * (-(δ * s)) :=
+            mul_lt_mul_of_pos_left e2 b1
+          have hprod : (δ * r) * (γ * q) > (-(γ * p)) * (-(δ * s)) := gt_trans s2 s1
+          have hc1 : (δ * r) * (γ * q) = (γ * δ) * (r * q) := by ring
+          have hc2 : (-(γ * p)) * (-(δ * s)) = (γ * δ) * (p * s) := by ring
+          have hgd : (0:ℝ) < γ * δ := mul_pos hγ hδ
+          have hrq : r * q > p * s := by
+            rw [hc1, hc2] at hprod
+            exact lt_of_mul_lt_mul_left hprod hgd.le
+          linarith
+
+/-- 系数非零 ⟹ 点不与第一基点重合。 -/
+private theorem w6ccs_ne_of_coeff {y z w : V3} (hy : y ≠ 0) (hz : z ≠ 0)
+    (hnc : ¬ Collinear3 (0:V3) y z) {t s : ℝ} (hw : w = t • y + s • z) (hs : s ≠ 0) : w ≠ y := by
+  intro he
+  rw [he] at hw
+  have h6 : ((1 - t) • y + (-s) • z : V3) = y - (t • y + s • z) := by module
+  have h7 : (1 - t) • y + (-s) • z = 0 := by rw [h6, ← hw, sub_self]
+  obtain ⟨e1, e2⟩ := w6acs_smul_indep hy hz hnc h7
+  exact hs (neg_eq_zero.mp e2)
+
+/-- 第一系数非零 ⟹ 点不与第二基点重合。 -/
+private theorem w6ccs_ne_of_coeff' {y z w : V3} (hy : y ≠ 0) (hz : z ≠ 0)
+    (hnc : ¬ Collinear3 (0:V3) y z) {t s : ℝ} (hw : w = t • y + s • z) (ht : t ≠ 0) : w ≠ z := by
+  intro he
+  rw [he] at hw
+  have h6 : (t • y + (s - 1) • z : V3) = (t • y + s • z) - z := by module
+  have h7 : t • y + (s - 1) • z = 0 := by rw [h6, ← hw, sub_self]
+  obtain ⟨e1, e2⟩ := w6acs_smul_indep hy hz hnc h7
+  exact ht e1
+
+/-- D > 0 情形的五支杀（消费 `w6ccs_planar_sign_aux`）。 -/
+private theorem w6ccs_planar_kill_pos {y z y1 z1 x : V3}
+    {p q r s α β γ δ : ℝ}
+    (hy1c : y1 = p • y + q • z) (hz1c : z1 = r • y + s • z)
+    (hx1e : x = α • y + β • z) (hx2e : x = γ • y1 + δ • z1)
+    (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ) (hδ : 0 < δ)
+    (hyz : y ≠ z) (hy0 : y ≠ 0) (hz0 : z ≠ 0)
+    (hy1z1 : y1 ≠ z1) (hy10 : y1 ≠ 0) (hz10 : z1 ≠ 0)
+    (hy : y ∈ ballAnnulus) (hz : z ∈ ballAnnulus) (hy1 : y1 ∈ ballAnnulus)
+    (hz1 : z1 ∈ ballAnnulus)
+    (hnc1 : ¬ Collinear3 (0:V3) y z) (hnc2 : ¬ Collinear3 (0:V3) y1 z1)
+    (hadj1 : ‖y - z‖ ≤ cstab_p4) (hadj2 : ‖y1 - z1‖ ≤ cstab_p4)
+    (hdiff : ¬ (y1 ∈ ({y, z} : Set V3) ∧ z1 ∈ ({y, z} : Set V3)))
+    (hsep : ∀ v w : V3, v ≠ w → v ∈ ({y, z, y1, z1} : Set V3) →
+      w ∈ ({y, z, y1, z1} : Set V3) → (2:ℝ) ≤ ‖v - w‖)
+    (hD : 0 < p * s - r * q) : False := by
+  have hDne : p * s - r * q ≠ 0 := ne_of_gt hD
+  -- 两组系数的协调（坐标唯一性）
+  have hcollect : (γ * p + δ * r) • y + (γ * q + δ * s) • z = γ • y1 + δ • z1 := by
+    rw [hy1c, hz1c]; module
+  have hxeq : α • y + β • z = γ • y1 + δ • z1 := by rw [← hx1e, ← hx2e]
+  have hdep : (γ * p + δ * r - α) • y + (γ * q + δ * s - β) • z = 0 := by
+    have h5 : (γ * p + δ * r) • y + (γ * q + δ * s) • z = α • y + β • z := by
+      rw [hcollect, ← hxeq]
+    have h6 : (γ * p + δ * r - α) • y + (γ * q + δ * s - β) • z
+        = (γ * p + δ * r) • y + (γ * q + δ * s) • z - (α • y + β • z) := by module
+    rw [h6, h5, sub_self]
+  obtain ⟨e1, e2⟩ := w6acs_smul_indep hy0 hz0 hnc1 hdep
+  have heq1 : α = γ * p + δ * r := by linarith
+  have heq2 : β = γ * q + δ * s := by linarith
+  rcases w6ccs_planar_sign_aux hα hβ hγ hδ heq1 heq2 hD with hsA | hsB | hsC | hsC' | hsE
+  · -- 支A: 0 < s ∧ q < 0 → y ∈ gt(y1,z1)
+    obtain ⟨hsp, hqn⟩ := hsA
+    have hne1 : y1 ≠ y := w6ccs_ne_of_coeff hy0 hz0 hnc1 hy1c (ne_of_lt hqn)
+    have hne2 : z1 ≠ y := w6ccs_ne_of_coeff hy0 hz0 hnc1 hz1c (ne_of_gt hsp)
+    have hyE : y = (s / (p * s - r * q)) • y1 + (-q / (p * s - r * q)) • z1 := by
+      rw [hy1c, hz1c]
+      rw [show ((s / (p * s - r * q)) • (p • y + q • z) +
+          (-q / (p * s - r * q)) • (r • y + s • z) : V3)
+          = ((s * p + -q * r) / (p * s - r * q)) • y +
+            ((s * q + -q * s) / (p * s - r * q)) • z from by module]
+      rw [show ((s * q + -q * s : ℝ)) = 0 from by ring, zero_div, zero_smul, add_zero,
+        show ((s * p + -q * r : ℝ)) = p * s - r * q from by ring, div_self hDne, one_smul]
+    have hygt : y ∈ affGt ({0} : Set V3) ({y1, z1}) :=
+      w4cs_mem_affGt_two hy1z1 hy10 hz10 hyE (div_pos hsp hD)
+        (div_pos (by linarith : (0:ℝ) < -q) hD)
+    exact w6acs_indep_gt_kill (v := y) hnc2 hy1 hz1 hy
+      (hsep y1 z1 hy1z1 (by simp) (by simp)) hadj2
+      (hsep y1 y hne1 (by simp) (by simp))
+      (hsep z1 y hne2 (by simp) (by simp)) hygt
+  · -- 支B: r < 0 ∧ 0 < p → z ∈ gt(y1,z1)
+    obtain ⟨hrn, hpp⟩ := hsB
+    have hne1 : y1 ≠ z := w6ccs_ne_of_coeff' hy0 hz0 hnc1 hy1c (ne_of_gt hpp)
+    have hne2 : z1 ≠ z := w6ccs_ne_of_coeff' hy0 hz0 hnc1 hz1c (ne_of_lt hrn)
+    have hzE : z = (-r / (p * s - r * q)) • y1 + (p / (p * s - r * q)) • z1 := by
+      rw [hy1c, hz1c]
+      rw [show ((-r / (p * s - r * q)) • (p • y + q • z) +
+          (p / (p * s - r * q)) • (r • y + s • z) : V3)
+          = ((-r * p + p * r) / (p * s - r * q)) • y +
+            ((-r * q + p * s) / (p * s - r * q)) • z from by module]
+      rw [show ((-r * p + p * r : ℝ)) = 0 from by ring, zero_div, zero_smul, zero_add,
+        show ((-r * q + p * s : ℝ)) = p * s - r * q from by ring, div_self hDne, one_smul]
+    have hzgt : z ∈ affGt ({0} : Set V3) ({y1, z1}) :=
+      w4cs_mem_affGt_two hy1z1 hy10 hz10 hzE (div_pos (by linarith : (0:ℝ) < -r) hD)
+        (div_pos hpp hD)
+    exact w6acs_indep_gt_kill (v := z) hnc2 hy1 hz1 hz
+      (hsep y1 z1 hy1z1 (by simp) (by simp)) hadj2
+      (hsep y1 z hne1 (by simp) (by simp))
+      (hsep z1 z hne2 (by simp) (by simp)) hzgt
+  · -- 支C: 0 < p ∧ 0 < q → y1 ∈ gt(y,z)
+    obtain ⟨hpp, hqp⟩ := hsC
+    have hne1 : y1 ≠ y := w6ccs_ne_of_coeff hy0 hz0 hnc1 hy1c (ne_of_gt hqp)
+    have hne2 : y1 ≠ z := w6ccs_ne_of_coeff' hy0 hz0 hnc1 hy1c (ne_of_gt hpp)
+    have hygt : y1 ∈ affGt ({0} : Set V3) ({y, z}) :=
+      w4cs_mem_affGt_two hyz hy0 hz0 hy1c hpp hqp
+    exact w6acs_indep_gt_kill (v := y1) hnc1 hy hz hy1
+      (hsep y z hyz (by simp) (by simp)) hadj1
+      (hsep y y1 (fun he => hne1 he.symm) (by simp) (by simp))
+      (hsep z y1 (fun he => hne2 he.symm) (by simp) (by simp)) hygt
+  · -- 支C': 0 < r ∧ 0 < s → z1 ∈ gt(y,z)
+    obtain ⟨hrp, hsp⟩ := hsC'
+    have hne1 : z1 ≠ y := w6ccs_ne_of_coeff hy0 hz0 hnc1 hz1c (ne_of_gt hsp)
+    have hne2 : z1 ≠ z := w6ccs_ne_of_coeff' hy0 hz0 hnc1 hz1c (ne_of_gt hrp)
+    have hzgt : z1 ∈ affGt ({0} : Set V3) ({y, z}) :=
+      w4cs_mem_affGt_two hyz hy0 hz0 hz1c hrp hsp
+    exact w6acs_indep_gt_kill (v := z1) hnc1 hy hz hz1
+      (hsep y z hyz (by simp) (by simp)) hadj1
+      (hsep y z1 hne1.symm (by simp) (by simp))
+      (hsep z z1 hne2.symm (by simp) (by simp)) hzgt
+  · -- 支E: q = 0 ∧ r = 0 → y1 = p•y, z1 = s•z 同射线杀
+    obtain ⟨hq0, hr0⟩ := hsE
+    rw [hq0, zero_smul, add_zero] at hy1c
+    rw [hr0, zero_smul, zero_add] at hz1c
+    rw [hr0] at heq1
+    rw [hq0] at heq2
+    simp only [mul_zero, zero_add, add_zero] at heq1 heq2
+    have hp0 : 0 < p := by
+      by_contra hc
+      have hcle : p ≤ 0 := le_of_not_gt hc
+      have : γ * p ≤ 0 := by nlinarith [hγ.le, hcle]
+      rw [heq1] at hα
+      linarith
+    have hs0 : 0 < s := by
+      by_contra hc
+      have hsle : s ≤ 0 := le_of_not_gt hc
+      have : δ * s ≤ 0 := by nlinarith [hδ.le, hsle]
+      rw [heq2] at hβ
+      linarith
+    rcases eq_or_ne y y1 with hye | hyne
+    · -- y = y1：hdiff ⟹ z1 ≠ z ⟹ 同射线 (z, z1)
+      have hz1z : z1 ≠ z := by
+        intro he2
+        refine hdiff ⟨?_, ?_⟩
+        · rw [hye]; simp
+        · rw [he2]; simp
+      exact w6acs_same_ray_dist_lt2 (hsep z z1 hz1z.symm (by simp) (by simp)) hz hz1 hs0 hz1c
+    · -- y ≠ y1：同射线 (y, y1)
+      exact w6acs_same_ray_dist_lt2 (hsep y y1 hyne (by simp) (by simp)) hy hy1 hp0 hy1c
+
+/-- 缺口 2：点态平面退化反驳（W5b §4 钉形 + hdiff 修正，W6a §3 陈述逐字）。 -/
+theorem w6ccs_false_of_planar_inter {y z y1 z1 x : V3}
+    (hnc1 : ¬ Collinear3 (0:V3) y z) (hnc2 : ¬ Collinear3 (0:V3) y1 z1)
+    (hann : y ∈ ballAnnulus ∧ z ∈ ballAnnulus ∧ y1 ∈ ballAnnulus ∧ z1 ∈ ballAnnulus)
+    (hadj1 : ‖y - z‖ ≤ cstab_p4) (hadj2 : ‖y1 - z1‖ ≤ cstab_p4)
+    (hdiff : ¬ (y1 ∈ ({y, z} : Set V3) ∧ z1 ∈ ({y, z} : Set V3)))
+    (hsep : ∀ v w : V3, v ≠ w → v ∈ ({y, z, y1, z1} : Set V3) →
+      w ∈ ({y, z, y1, z1} : Set V3) → (2:ℝ) ≤ ‖v - w‖)
+    (hpl1 : (crossProduct (WithLp.ofLp y : Fin 3 → ℝ) (WithLp.ofLp z : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp y1 : Fin 3 → ℝ) = 0)
+    (hpl2 : (crossProduct (WithLp.ofLp y : Fin 3 → ℝ) (WithLp.ofLp z : Fin 3 → ℝ)) ⬝ᵥ
+      (WithLp.ofLp z1 : Fin 3 → ℝ) = 0)
+    (hx1 : x ∈ affGt ({0} : Set V3) ({y, z} : Set V3))
+    (hx2 : x ∈ affGt ({0} : Set V3) ({y1, z1} : Set V3)) : False := by
+  obtain ⟨hy, hz, hy1, hz1⟩ := hann
+  have hy0 : y ≠ 0 := w4cs_annulus_ne_zero hy
+  have hz0 : z ≠ 0 := w4cs_annulus_ne_zero hz
+  have hy10 : y1 ≠ 0 := w4cs_annulus_ne_zero hy1
+  have hz10 : z1 ≠ 0 := w4cs_annulus_ne_zero hz1
+  have hyz : y ≠ z := fun he => hnc1 (collinear3_pair_right he.symm)
+  have hy1z1 : y1 ≠ z1 := fun he => hnc2 (collinear3_pair_right he.symm)
+  obtain ⟨α, β, hα, hβ, hx1e⟩ := w5bcs_coeff_of_mem_affGt hy0 hz0 hx1
+  obtain ⟨γ, δ, hγ, hδ, hx2e⟩ := w5bcs_coeff_of_mem_affGt hy10 hz10 hx2
+  obtain ⟨p, q, hy1c⟩ := w6ccs_coords_of_planar_dot hnc1 hy0 hpl1
+  obtain ⟨r, s, hz1c⟩ := w6ccs_coords_of_planar_dot hnc1 hy0 hpl2
+  -- D = ps − rq ≠ 0（hnc2 反驳）
+  have hDne : p * s - r * q ≠ 0 := by
+    intro h0
+    have hdep2 : s • y1 + (-q) • z1 = (p * s - r * q) • y := by
+      rw [hy1c, hz1c]; module
+    rw [h0, zero_smul] at hdep2
+    by_cases h1 : 0 < -q
+    · exact hnc2 (w5bcs_collinear_of_eq_zero h1 hdep2.symm)
+    · have hnq : -q ≤ 0 := le_of_not_gt h1
+      by_cases hq0 : q = 0
+      · rw [hq0, neg_zero, zero_smul, add_zero] at hdep2
+        rcases eq_or_ne s 0 with hs0 | hsne
+        · -- s = 0: y1 = p•y, z1 = r•y, p,r ≠ 0 → 共线
+          rw [hs0, zero_smul, add_zero] at hz1c
+          rw [hq0, zero_smul, add_zero] at hy1c
+          rcases eq_or_ne p 0 with hp00 | hpne0
+          · rw [hp00, zero_smul] at hy1c; exact hy10 hy1c
+          · rcases eq_or_ne r 0 with hr00 | hrne0
+            · rw [hr00, zero_smul] at hz1c; exact hz10 hz1c
+            · rcases lt_or_gt_of_ne hpne0 with hp0n | hp0p
+              · -- p < 0: 0 = r • y1 + (-p) • z1
+                refine hnc2 (w5bcs_collinear_of_eq_zero (α := r) (neg_pos.mpr hp0n) ?_)
+                have h6 : (r • y1 + (-p) • z1 : V3) = (r • (p • y) + (-p) • (r • y)) := by
+                  rw [hy1c, hz1c]
+                rw [h6]; module
+              · -- p > 0: 0 = (-r) • y1 + p • z1
+                refine hnc2 (w5bcs_collinear_of_eq_zero (α := -r) hp0p ?_)
+                have h6 : ((-r) • y1 + p • z1 : V3) =
+                    ((-r) • (p • y) + p • (r • y)) := by
+                  rw [hy1c, hz1c]
+                rw [h6]; module
+        · -- s ≠ 0: s • y1 = 0 → y1 = 0
+          rw [smul_eq_zero] at hdep2
+          exact hy10 (hdep2.resolve_left hsne)
+      · -- q ≠ 0 且 −q ≤ 0 → q > 0：翻转系数 0 = (−s)•y1 + q•z1
+        have hqge : (0:ℝ) ≤ q := by linarith
+        have hqp : 0 < q := lt_of_le_of_ne hqge (fun he => hq0 he.symm)
+        have hneg : (0:V3) = (-s) • y1 + q • z1 := by
+          rw [show ((-s) • y1 + q • z1 : V3) = -(s • y1 + (-q) • z1) from by module, hdep2,
+            neg_zero]
+        exact hnc2 (w5bcs_collinear_of_eq_zero hqp hneg)
+  rcases lt_or_gt_of_ne hDne with hDneg | hDpos
+  · -- D < 0：换基 (z,y) 后调用 kill_pos
+    have hy1c2 : y1 = q • z + p • y := by rw [hy1c]; module
+    have hz1c2 : z1 = s • z + r • y := by rw [hz1c]; module
+    have hx1e2 : x = β • z + α • y := by rw [hx1e]; module
+    have hzy : ({z, y} : Set V3) = ({y, z} : Set V3) := by
+      ext u
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    have hzy4 : ({z, y, y1, z1} : Set V3) = ({y, z, y1, z1} : Set V3) := by
+      ext u
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    have hnc1' : ¬ Collinear3 (0:V3) z y := by
+      intro hcc
+      refine hnc1 ?_
+      show Collinear ℝ ({(0:V3), y, z} : Set V3)
+      rw [show ({(0:V3), y, z} : Set V3) = ({(0:V3), z, y} : Set V3) from by
+        ext u
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto]
+      exact hcc
+    have hadj1' : ‖z - y‖ ≤ cstab_p4 := by rw [norm_sub_rev]; exact hadj1
+    exact w6ccs_planar_kill_pos hy1c2 hz1c2 hx1e2 hx2e hβ hα hγ hδ
+      (Ne.symm hyz) hz0 hy0 hy1z1 hy10 hz10 hz hy hy1 hz1 hnc1' hnc2 hadj1' hadj2
+      (by rw [hzy]; exact hdiff)
+      (by
+        intro v w hvw hv hw
+        rw [hzy4] at hv hw
+        exact hsep v w hvw hv hw)
+      (by rw [show q * r - s * p = -(p * s - r * q) from by ring]; linarith)
+  · -- D > 0：直接调用 kill_pos
+    exact w6ccs_planar_kill_pos hy1c hz1c hx1e hx2e hα hβ hγ hδ
+      hyz hy0 hz0 hy1z1 hy10 hz10 hy hz hy1 hz1 hnc1 hnc2 hadj1 hadj2 hdiff hsep hDpos
+
+
+
+/-! === fan7 装配层（W6c）=== -/
+
+
+end W6cKit
+
 end Kepler.Text
