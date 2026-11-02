@@ -5799,5 +5799,5 @@ theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
 ### (f) 状态
 
 **立案 + 应用 2026-11-02 清晨**（用户「都批」；同时授予编排者 SF 常态化自主裁决权，见 DECISIONS.md 2026-11-02）。归档 patch `docs/statement-fix-proposals-patches/93-bodyclosed-full-carrier.patch`（LA23 陈述 + docstring；LA24 三喂点），由应用态真实 `git diff` 生成。闸 ×2（lean/ 下）：
-`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/93-bodyclosed-full-carrier.patch SF_ITEM=93 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto24.lean THM=bodyClosed_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean bodyClosed_p23`，随后同 patch 对 `Kepler/Text/LocalAuto24.lean XWITCCN_CASE_4_IS_SCS_p24` 再闸。落库结果见 queue §8 续 195/196。
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/93-bodyclosed-full-carrier.patch SF_ITEM=93 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto24.lean THM=bodyClosed_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean bodyClosed_p23`，随后同 patch 对 `Kepler/Text/LocalAuto24.lean XWITCCN_CASE_4_IS_SCS_p24` 再闸。落库结果：**闸 ×2 PASS**（LA23 七根 6 min 0 错 08:10；LA24 12s 08:12），patch 由应用态 `git diff HEAD` 生成且 `git apply --check -R` 逐字一致；公理面 `bodyClosed_p23` / `XWITCCN_CASE_4_IS_SCS_p24` = [propext, sorryAx, Classical.choice, Quot.sound]（债根仍为 bodyClosed 本体）。**已落**（queue §8 续 195）。
 

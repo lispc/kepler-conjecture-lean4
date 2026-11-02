@@ -1579,9 +1579,25 @@ LA18:236 takes the full `stableSystem_p18`); discharged at the CASE_4/5/6
 consumers from `isScsV39` via `stabAdj_of_isScsV39` (LA24: the `3 < s.k →
 s.b i (i + 1) ≤ cstab` conjunct shifted onto the `aRk/bRk` tables). The
 flex family above is out of scope: `bR ≡ 5` fails `hstab` (5 > 3.01).
-(Sorry 2/2 of this kit.) -/
+(Sorry 2/2 of this kit.)
+REPAIRED AGAIN (SF-89b, 2026-11-02, bodyclosed-recon): the SF-89 minimal
+two-clause premise is still insufficient — HOL CLOSED_SY's proof consumes
+three stable_system clauses (`2 ≤ a(i,j)` dih2k.hl:64 at the limit-point
+sandwich / row-distinctness / six wrap sites, `b(i,f i) ≤ cstab` :65,
+periodicity constraint_system :57), and the m=6 collapse family (angles
+(0,δ,85,170,255,340)°, R=2.2, aR≡0, bR ring-adjacent 3.0 ≤ cstab) stays in
+the body for every δ>0 while its δ=0 limit (row 0 = row 1 ⇒ `E_SY` singleton
+edge ⇒ Graph false) leaves CONDITION2 — the minimal-form locus is not
+closed. `hstab` is therefore upgraded to the full `stableSystem_p23` carrier,
+verbatim the shape of `continuousOn_tauFun_p23` (SF-91 案②); the CASE_4/5/6
+consumers feed it with the already-proved `fullStable_of_isScsV39` (LA24),
+exactly as the tauFun feed. Discharge route (B): bridge to LA18
+`CLOSED_SY_p18`. -/
 theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
-    (hstab : ∀ i : Fin m, bR i (finNext i) ≤ cstab_p4) :
+    (hstab : ∃ a b : ℕ → ℕ → ℝ, ∃ J : Set (Set ℕ),
+      stableSystem_p23 m 0 (Set.Iic (m - 1)) a b J (fun i => (1 + i) % m) ∧
+      (∀ i j : Fin m, a (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = aR i j) ∧
+      (∀ i j : Fin m, b (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = bR i j)) :
     IsClosed {v : Fin m → V3 | (∀ i, v i ∈ ballAnnulus) ∧
       CONDITION1_SY_p4 aR bR v ∧ CONDITION2_SY_p4 v} := by
   sorry

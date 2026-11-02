@@ -2014,7 +2014,7 @@ theorem XWITCCN_CASE_4_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hcomp : IsCompact (B_SY1_p4 (aR4 s) (bR4 s) : Set (FinVec 4 3)) :=
     B_SY1_p4_compact_of_fan_p23 (aR4 s) (bR4 s)
       (bodyClosed_p23 (aR4 s) (bR4 s) (by norm_num : 2 < 4)
-        (fun i => stabAdj_of_isScsV39 s hs hk hk3 i))
+        (fullStable_of_isScsV39 s hs hk hk3 _ _ (fun _ _ => rfl) (fun _ _ => rfl)))
       (bodyBounded_p23 4 (aR4 s) (bR4 s))
   have hd : ContinuousOn (fun l : FinVec 4 3 =>
       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR4 s) (bR4 s)) :=
@@ -2174,7 +2174,7 @@ theorem XWITCCN_CASE_5_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hcomp : IsCompact (B_SY1_p4 (aR5 s) (bR5 s) : Set (FinVec 5 3)) :=
     B_SY1_p4_compact_of_fan_p23 (aR5 s) (bR5 s)
       (bodyClosed_p23 (aR5 s) (bR5 s) (by norm_num : 2 < 5)
-        (fun i => stabAdj_of_isScsV39 s hs hk hk3 i))
+        (fullStable_of_isScsV39 s hs hk hk3 _ _ (fun _ _ => rfl) (fun _ _ => rfl)))
       (bodyBounded_p23 5 (aR5 s) (bR5 s))
   have hd : ContinuousOn (fun l : FinVec 5 3 =>
       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR5 s) (bR5 s)) :=
@@ -2332,7 +2332,7 @@ theorem XWITCCN_CASE_6_IS_SCS_p24 (s : ScsV39) (vv : ℕ → V3)
   have hcomp : IsCompact (B_SY1_p4 (aR6 s) (bR6 s) : Set (FinVec 6 3)) :=
     B_SY1_p4_compact_of_fan_p23 (aR6 s) (bR6 s)
       (bodyClosed_p23 (aR6 s) (bR6 s) (by norm_num : 2 < 6)
-        (fun i => stabAdj_of_isScsV39 s hs hk hk3 i))
+        (fullStable_of_isScsV39 s hs hk hk3 _ _ (fun _ _ => rfl) (fun _ _ => rfl)))
       (bodyBounded_p23 6 (aR6 s) (bR6 s))
   have hd : ContinuousOn (fun l : FinVec 6 3 =>
       dFun_p23 (scsToStableSy_p23 s hs hk3) l) (B_SY1_p4 (aR6 s) (bR6 s)) :=
