@@ -45,6 +45,7 @@ Encoding:
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto12
 import Kepler.Text.LocalAuto22
 import Mathlib
 
@@ -960,6 +961,10 @@ theorem AQICLXA_SLICE :
   -- `(propEqu scs_3M1 1, propEqu scs_5M1 1) = scs_slice_v39 (stab 6I1 0 2)
   -- 0 2 0.103 0.616 False` (funlist table match, 9 + 25 residue cells),
   -- `dTame 6 = 0.712 ≤ 0.719`, `bm 0 2 = cstab < 4`, `mkj = False`.
+  -- la20-bank-w1 2026-10-28 勘定: the engine instance exists engine-sunk at
+  -- LocalConcl (`l20es_SLICE_6I1_02`, an `LKGRQUI_p27` instance over the
+  -- p35 engine, import-cyclic from here since LA24 imports LA20).  This
+  -- comp2 is the sole blocker of the `AQICLXA` row.
 
 /-- HOL `FZIOTEF_UNION` (hexagons.hl:1433). -/
 theorem FZIOTEF_UNION (S1 S2 S3 S4 : Set ScsV39)
@@ -991,6 +996,13 @@ theorem AQICLXA :
   -- definitional `scs_prop_equ_v39 (scs_prop_equ_v39 s i) j =
   -- scs_prop_equ_v39 s (i + j)` and mod-k collapse (needs PROP_EQU_IS_SCS,
   -- LocalAuto12:424, proof pending, only for the isScs half).
+  -- la20-bank-w1 2026-10-28 勘定: PROP_EQU_IS_SCS is PROVED (LocalAuto12:579,
+  -- not :424) and `LocalAuto12.YXIONXL3` is the clean real twin (standard
+  -- three); this file now imports LocalAuto12 and assembles the arrow modulo
+  -- the slice as `w1AQICLXA_modulo` below (zero sorry).  Sole remaining
+  -- blocker: the slice comp2 realization content (UXCKFPE2/SGTRNAF class;
+  -- uxckfpe.hl unported, LA12 sgtrnaf_p12 anchor still sorry).  LocalConcl
+  -- carries the verbatim engine-sunk body `AQICLXA_discharged`.
 
 /-- HOL `FUNOUYH_SLICE` (hexagons.hl:1474). -/
 theorem FUNOUYH_SLICE :
@@ -1001,6 +1013,9 @@ theorem FUNOUYH_SLICE :
   -- the local `is_scs_slice_v39` side conditions for the `(0, 3)` half-slices
   -- against `propEqu scs_4M2 1` (funlist table match, 16 + 16 residue cells,
   -- `d' = d'' = 0.3789`, `bm 0 3 = cstab < 4`, `mkj = False`).
+  -- la20-bank-w1 2026-10-28 勘定: engine instance engine-sunk at LocalConcl
+  -- (`l20es_SLICE_6I1_03`); this comp2 is the sole blocker of the `FZIOTEF`
+  -- row (same UXCKFPE2/SGTRNAF-class realization content).
 
 /-- HOL `FZIOTEF` (hexagons.hl:1592). -/
 theorem FZIOTEF :
@@ -1010,6 +1025,10 @@ theorem FZIOTEF :
   -- `{propEqu scs_4M2 1} → {scs_4M2}` (`LocalAuto1.YXIONXL3_concl` at shift 3,
   -- proof pending, composed with `propEqu (propEqu scs_4M2 1) 3 = scs_4M2`,
   -- needs PROP_EQU_IS_SCS for the isScs half).
+  -- la20-bank-w1 2026-10-28 勘定: as `AQICLXA` — assembled modulo the slice
+  -- as `w1FZIOTEF_modulo` below (zero sorry, via LocalAuto12.YXIONXL3 +
+  -- `w1rot4`); sole blocker = FUNOUYH_SLICE comp2.  LocalConcl carries the
+  -- verbatim engine-sunk body `FUNOUYH_discharged`.
 
 /-- HOL `h0_LT_B_SCS_6M1` (hexagons.hl:1610). -/
 theorem h0_LT_B_SCS_6M1 :
@@ -1514,3 +1533,125 @@ theorem OEHDBEN (hmn : main_nonlinear_terminal_v11) :
     FZIOTEF_UNION _ _ _ _ hrefl (FZIOTEF_UNION _ _ _ _ AQICLXA FZIOTEF)
   rw [hset] at hunion
   exact FZIOTEF_TRANS _ _ _ (OEHDBEN_PRIME hmn) hunion
+
+/-! ## la20-bank-w1 probe: assembly modulo the slice arrows (zero sorry).
+
+Ports of the LocalConcl `l20es_*` private helpers plus the clean LA12 twins
+(`PROP_EQU_IS_SCS`, `YXIONXL3`); every item below is proved outright, so the
+ONLY remaining input for `AQICLXA`/`FZIOTEF` is the slice arrow statement
+itself (`AQICLXA_SLICE` / `FUNOUYH_SLICE`), i.e. the comp2 realization
+content (UXCKFPE2/SGTRNAF class). -/
+
+private theorem w1funlistV39_add_period (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ)
+    (k j j' : ℕ) :
+    funlistV39 data d k (k + j) (k + j') = funlistV39 data d k j j' := by
+  unfold funlistV39 psort
+  have h1 : (k + j) % k = j % k := by
+    rw [Nat.add_comm k j]
+    simpa using (Nat.add_mul_mod_self_left j 1 k)
+  have h2 : (k + j') % k = j' % k := by
+    rw [Nat.add_comm k j']
+    simpa using (Nat.add_mul_mod_self_left j' 1 k)
+  rw [h1, h2]
+
+private theorem w1funlistV39_add_mul_period (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ)
+    (k c j j' : ℕ) :
+    funlistV39 data d k (k * c + j) (k * c + j') = funlistV39 data d k j j' := by
+  induction c with
+  | zero => simp
+  | succ c ih =>
+    rw [show k * (c + 1) + j = k + (k * c + j) from by ring,
+        show k * (c + 1) + j' = k + (k * c + j') from by ring,
+        w1funlistV39_add_period, ih]
+
+private theorem w1propEqu_propEqu_mkUnadorned (k : ℕ) (d : ℝ)
+    (data1 : List ((ℕ × ℕ) × ℝ)) (d1 : ℝ) (data2 : List ((ℕ × ℕ) × ℝ)) (d2 : ℝ)
+    (i m c : ℕ) (h : i + m = k * c) :
+    scsPropEquV39 (scsPropEquV39
+        (mkUnadornedV39 k d (funlistV39 data1 d1 k) (funlistV39 data2 d2 k)) i) m
+      = mkUnadornedV39 k d (funlistV39 data1 d1 k) (funlistV39 data2 d2 k) := by
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, rfl, rfl, rfl, rfl⟩
+  all_goals
+    ext j j'
+    simp only [scsPropEquV39, mkUnadornedV39]
+    rw [show i + (m + j) = k * c + j from by omega,
+        show i + (m + j') = k * c + j' from by omega]
+    exact w1funlistV39_add_mul_period _ _ k c j j'
+
+private theorem w1scsArrowV39_pair_union {a b c d : ScsV39}
+    (h1 : scsArrowV39 {a} {b}) (h2 : scsArrowV39 {c} {d}) :
+    scsArrowV39 {a, c} {b, d} := by
+  refine ⟨?_, ?_⟩
+  · intro s hs
+    rcases hs with h | h
+    · rw [h]; exact h1.1 b (by simp)
+    · rw [h]; exact h2.1 d (by simp)
+  · rcases h1.2 with h1e | ⟨s, hs, hne⟩
+    · rcases h2.2 with h2e | ⟨t, ht, hne'⟩
+      · left
+        intro u hu
+        rcases hu with h | h
+        · rw [h]; exact h1e a (by simp)
+        · rw [h]; exact h2e c (by simp)
+      · exact Or.inr ⟨t, Or.inr (Set.mem_singleton_iff.mp ht), hne'⟩
+    · exact Or.inr ⟨s, Or.inl (Set.mem_singleton_iff.mp hs), hne⟩
+
+private theorem w1scsArrowV39_lift {a b b' : ScsV39} (h : scsArrowV39 {a} {b'})
+    (heq : b' = b) : scsArrowV39 {a} {b} := by rw [← heq]; exact h
+
+private theorem w1rot3 : scsPropEquV39 (scsPropEquV39 scs3M1 1) 2 = scs3M1 :=
+  w1propEqu_propEqu_mkUnadorned 3 0.103 [((0, 1), 2 * h0)] 2 [((0, 1), cstab)]
+    (2 * h0) 1 2 1 (by norm_num)
+
+private theorem w1rot5 : scsPropEquV39 (scsPropEquV39 scs5M1 1) 4 = scs5M1 :=
+  w1propEqu_propEqu_mkUnadorned 5 0.616
+    [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0), ((1, 3), 2 * h0),
+      ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2
+    [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6), ((1, 4), 6),
+      ((2, 4), 6)] (2 * h0) 1 4 1 (by norm_num)
+
+private theorem w1rot4 : scsPropEquV39 (scsPropEquV39 scs4M2 1) 3 = scs4M2 :=
+  w1propEqu_propEqu_mkUnadorned 4 0.3789
+    [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+    [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1 (by norm_num)
+
+private theorem w1is3 : isScsV39 (scsPropEquV39 scs3M1 1) :=
+  PROP_EQU_IS_SCS rfl SCS_3M1_IS_SCS 1
+
+private theorem w1is5 : isScsV39 (scsPropEquV39 scs5M1 1) :=
+  PROP_EQU_IS_SCS rfl SCS_5M1_IS_SCS 1
+
+private theorem w1is4 : isScsV39 (scsPropEquV39 scs4M2 1) :=
+  PROP_EQU_IS_SCS rfl SCS_4M2_IS_SCS 1
+
+private theorem w1half3 : scsArrowV39 {scsPropEquV39 scs3M1 1} {scs3M1} :=
+  w1scsArrowV39_lift (YXIONXL3 (scsPropEquV39 scs3M1 1) 2 w1is3) w1rot3
+
+private theorem w1half5 : scsArrowV39 {scsPropEquV39 scs5M1 1} {scs5M1} :=
+  w1scsArrowV39_lift (YXIONXL3 (scsPropEquV39 scs5M1 1) 4 w1is5) w1rot5
+
+private theorem w1half4 : scsArrowV39 {scsPropEquV39 scs4M2 1} {scs4M2} :=
+  w1scsArrowV39_lift (YXIONXL3 (scsPropEquV39 scs4M2 1) 3 w1is4) w1rot4
+
+/-- Assembly of LA20 `AQICLXA` from its slice arrow alone: once
+`AQICLXA_SLICE` is discharged (by whichever route), `AQICLXA` is
+`w1AQICLXA_modulo AQICLXA_SLICE`. -/
+private theorem w1AQICLXA_modulo (hsl : scsArrowV39 {scsStabDiagV39 scs6I1 0 2}
+    ({scsPropEquV39 scs3M1 1, scsPropEquV39 scs5M1 1} : Set ScsV39)) :
+    scsArrowV39 {scsStabDiagV39 scs6I1 0 2} {scs3M1, scs5M1} :=
+  FZIOTEF_TRANS _ _ _ hsl (w1scsArrowV39_pair_union w1half3 w1half5)
+
+/-- Assembly of LA20 `FZIOTEF` from its slice arrow alone: once
+`FUNOUYH_SLICE` is discharged, `FZIOTEF` is
+`w1FZIOTEF_modulo FUNOUYH_SLICE`. -/
+private theorem w1FZIOTEF_modulo (hsl : scsArrowV39 {scsStabDiagV39 scs6I1 0 3}
+    ({scsPropEquV39 scs4M2 1, scsPropEquV39 scs4M2 1} : Set ScsV39)) :
+    scsArrowV39 {scsStabDiagV39 scs6I1 0 3} {scs4M2} := by
+  have hset : ({scs4M2, scs4M2} : Set ScsV39) = {scs4M2} := by
+    ext s
+    simp
+  have hleg : scsArrowV39 {scsPropEquV39 scs4M2 1, scsPropEquV39 scs4M2 1}
+      ({scs4M2, scs4M2} : Set ScsV39) := w1scsArrowV39_pair_union w1half4 w1half4
+  rw [hset] at hleg
+  exact FZIOTEF_TRANS _ _ _ hsl hleg

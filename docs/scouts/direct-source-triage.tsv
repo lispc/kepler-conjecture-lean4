@@ -107,8 +107,8 @@ real_model_pemb	lean/Kepler/Text/PackingAuto25.lean	10480	E	bank 叶：deferred-
 real_model_txq	lean/Kepler/Text/PackingAuto25.lean	10928	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
 real_model_tew	lean/Kepler/Text/PackingAuto25.lean	10940	E	bank 叶：deferred-compute；pkrmQy	Oxl_real.hl；G4 证书粘合	W3-poolc
 main_nonlinear_terminal_v11	lean/Kepler/Text/LocalAuto1.lean	980	E	opaque def `: Prop := sorry`（109 条 Main_estimate 合取整章债）；与 Assembly nliMainNonlinearTerminalV11 同根，terminal.hl 展开即双闭	terminal.hl:24-44；外部锚定性 def	W4-farm
-AQICLXA	lean/Kepler/Text/LocalAuto20.lean	984	B	箭头装配：AQICLXA_SLICE（funlist 表匹配已具名在文件内）+ FZIOTEF_TRANS/UNION 代数；阻塞件=LA1 YXIONXL3_concl + PROP_EQU_IS_SCS（LocalAuto12:424，待闭小件）	hexagons.hl:1449	W1-银行装配
-FZIOTEF	lean/Kepler/Text/LocalAuto20.lean	1006	B	箭头装配：FUNOUYH_SLICE+FZIOTEF_TRANS+propEqu 幂等；阻塞件同上（YXIONXL3_concl/PROP_EQU_IS_SCS）	hexagons.hl:1592	W1-银行装配
+AQICLXA	lean/Kepler/Text/LocalAuto20.lean	984	B	装配已停靠（la20-bank-w1 `w1AQICLXA_modulo` 私有件，闸过纯新增 +141）：只差 comp2 slice 陈述本身 `AQICLXA_SLICE`（LA20:954，MMsV39 空/非空 + taustar 全局极小变分内容）；farm（mnt11/terminal_v11 族）落地 slice 后一行闭合 `AQICLXA := w1AQICLXA_modulo AQICLXA_SLICE`	hexagons.hl:1449；阻塞 = comp2 slice；勘定 2026-11-02：PROP_EQU_IS_SCS 已真（LA12:579）、YXIONXL3 干净真孪生（LA12:1220）、引擎路 LA20↔Concl import 成环不可行	W1-银行装配
+FZIOTEF	lean/Kepler/Text/LocalAuto20.lean	1006	B	同 AQICLXA：装配停靠 `w1FZIOTEF_modulo`（经 LocalAuto12.YXIONXL3 + propEqu 幂等）；只差 comp2 slice `FUNOUYH_SLICE`（LA20:996）	hexagons.hl:1592；阻塞 = comp2 slice（farm 族）	W1-银行装配
 SCS_6I1_BERAK_BY_CSTAB	lean/Kepler/Text/LocalAuto20.lean	1218	B	箭头组合装配（STAB_MOD/SET_STAB_6I1 均已真）；阻塞件=SCS_6I1_IMP_SCS_6T1 ← mnt11 lane 四 concl + PEDSLGV2（mnt11 波落地后即装配）	hexagons.hl:1831；阻塞件=main_nonlinear_terminal_v11 波	W1-银行装配
 OCBICBY_p22	lean/Kepler/Text/LocalAuto22.lean	2221	C	14 支 T-系统 BBs→taustar≥0 箭头（pos_imp_scs_arrow_empty_p23 模板已真，缺逐系统正性=证书级内容，mnt11/empty lane 同族）	empty_* lane；阻塞件=mnt11 波+逐 T-系统正性	W5-C尾
 LFLACKU_p23	lean/Kepler/Text/LocalAuto23.lean	310	C	{3I1}→∅ 空枝：需 taustar_taum_dfun/FUNLIST_EXPLICIT 桥（未移植）+TAUM_STD_POS_p23（阻 mnt11 终端条目 5541487347/OMKYNLT）	JOTSWIX.hl:191；阻塞件=mnt11 波	W5-C尾
