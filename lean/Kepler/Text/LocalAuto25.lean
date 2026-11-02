@@ -112,6 +112,7 @@ ENCODING NOTES
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto23
+import Kepler.Text.AzimBridge
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -288,7 +289,373 @@ theorem SMALL_BALL_ANNULUS_6_3_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3
     _ ≤ 2 * h0 + 2 * h0 := by linarith
     _ ≤ 6 := by norm_num [h0]
 
+/-! ### The rhoNode1 dart-cycle kit (wave la25-rhonode1-w1)
+
+The HOL `exists_vv`/`exists_vv_FF` witness `vv := fun i => ITER i (rho_node1 FF) v`
+is rebuilt here on the p2 bridge: `LocalFan` lands in the `localFan_p2` world
+via AzimBridge `localFan_p2.of_LocalFan_noIso` (the no-isolated-vertices premise
+is the LA1 `LocalFan` 2-regular conjunct `∀ u ∈ V, (ee u E).ncard = 2` via
+`w1hedge`), where the public `WRGCVDR_BIJ` / `WRGCVDR_ORBIT` (LocalAuto2) supply
+the dart bijection and the orbit condition. `rhoNode1_p2` is the same
+`Classical.epsilon` construction as LA1's `rhoNode1` (defeq, see
+`rhoNode1_p2_eq`), so the p2 facts transfer verbatim; the orbit-cycle engine
+(`w1cycMul`/`w1cycMod`/`w1orbitKey`/`w1orbitCycle`) is the generic LA7 `w6a_*`
+kit rebuilt (private there). Import note: AzimBridge is already in the
+transitive environment of every LA25 consumer (LA24 → LA36 → AzimBridge), and
+LA7/la36 witness the LA1+LA23+AzimBridge co-existence. -/
+
+/-- `rhoNode1_p2` (LA2:210) is LA1's `rhoNode1` (LocalAuto1:100) verbatim. -/
+private theorem rhoNode1_p2_eq (FF : Set (V3 × V3)) : rhoNode1_p2 FF = rhoNode1 FF := rfl
+
+/-- Every vertex of `V` lies on an edge (from the 2-regular conjunct). -/
+private theorem w1hedge {V : Set V3} {E : Set (Set V3)}
+    (h2reg : ∀ u ∈ V, (ee u E).ncard = 2) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := h2reg v hv
+  have hne : (ee v E) ≠ ∅ := by
+    intro hE
+    rw [hE, Set.ncard_empty] at h2
+    omega
+  obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  exact ⟨w, hw⟩
+
+/-- The first component of a dart is a vertex (p2 dart bijection, maps-to half). -/
+private theorem w1fstMem {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : LocalFan V E FF) (h3 : 3 ≤ ncard V) {v w : V3} (hvw : (v, w) ∈ FF) :
+    v ∈ V := by
+  have hcopy := hlf
+  obtain ⟨-, -, -, -, -, h2reg⟩ := hcopy
+  obtain ⟨hmap, -, -⟩ := WRGCVDR_BIJ (localFan_p2.of_LocalFan_noIso hlf (w1hedge h2reg))
+  exact hmap hvw
+
+/-- `Classical.epsilon` collapse under a uniqueness hypothesis (LA7 `w6a_epsilon_fixed`). -/
+private theorem w1epsFixed {α : Type*} [Nonempty α] {p : α → Prop} {a : α} (hpa : p a)
+    (huniq : ∀ y, p y → y = a) : Classical.epsilon p = a := by
+  by_contra hne
+  exact hne (huniq _ (Classical.epsilon_spec ⟨a, hpa⟩))
+
+/-- LA7 `w6a_deter` (HOL `DETER_RHO_NODE`): the dart out of `v` is determined. -/
+private theorem w1deter_p2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v w : V3} (hw : (v, w) ∈ FF) : rhoNode1_p2 FF v = w := by
+  obtain ⟨-, hinj, -⟩ := WRGCVDR_BIJ h
+  exact w1epsFixed hw fun y hy => (congrArg Prod.snd (hinj hw hy rfl)).symm
+
+/-- LA5 `LOCAL_FAN_RHO_NODE_PROS` (15-line `WRGCVDR_BIJ` derivation). -/
+private theorem w1rhoPro_p2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) :
+    (∀ x ∈ V, (x, rhoNode1_p2 FF x) ∈ FF) ∧ ∀ d ∈ FF, d = (d.1, rhoNode1_p2 FF d.1) := by
+  obtain ⟨hmap, hinj, hsurj⟩ := WRGCVDR_BIJ h
+  have hleft : ∀ x ∈ V, (x, rhoNode1_p2 FF x) ∈ FF := by
+    intro x hx
+    obtain ⟨d, hd, hfd⟩ := hsurj hx
+    have hdeq : (x, d.2) = d := Prod.ext hfd.symm rfl
+    have hmemFF : (x, d.2) ∈ FF := by
+      rw [hdeq]
+      exact hd
+    exact Classical.epsilon_spec (p := fun w => (x, w) ∈ FF) ⟨d.2, hmemFF⟩
+  refine ⟨hleft, fun d hd => ?_⟩
+  exact (hinj (hleft d.1 (hmap hd)) hd rfl).symm
+
+/-- q-periodic points stay fixed under multiples of the period (LA7 copy). -/
+private theorem w1cycMul {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (k : ℕ) : f^[k * q] x = x := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [Nat.succ_mul, Function.iterate_add_apply, hqx, ih]
+
+/-- Index reduction modulo a period (LA7 copy). -/
+private theorem w1cycMod {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (n : ℕ) : f^[n] x = f^[n % q] x := by
+  have hsplit : n / q * q + n % q = n := Nat.div_add_mod' n q
+  have hqx' : f^[q] (f^[n % q] x) = f^[n % q] x := by
+    rw [← Function.iterate_add_apply, Nat.add_comm, Function.iterate_add_apply, hqx]
+  calc f^[n] x = f^[n / q * q + n % q] x := by rw [hsplit]
+    _ = f^[n / q * q] (f^[n % q] x) := Function.iterate_add_apply f (n / q * q) (n % q) x
+    _ = f^[n % q] x := w1cycMul f hqx' (n / q)
+
+/-- Under the orbit condition, coinciding iterates force periodicity at the
+index difference (LA7 copy). -/
+private theorem w1orbitKey {α : Type*} {f : α → α} {V : Set α}
+    (horb : ∀ x ∈ V, orbitF_p2 f x = V) {x : α} (hx : x ∈ V) {i j : ℕ}
+    (hij2 : i ≤ j) (hij : f^[i] x = f^[j] x) : f^[j - i] x = x := by
+  have hEq : j - i + i = j := by omega
+  have hy : f^[j] x = f^[j - i] (f^[i] x) := by
+    have h := Function.iterate_add_apply f (j - i) i x
+    rwa [hEq] at h
+  have hmem : ∀ n : ℕ, f^[n] x ∈ V := by
+    intro n
+    rw [← horb x hx]
+    exact ⟨n, rfl⟩
+  have hyV : f^[i] x ∈ V := hmem i
+  have hxO : x ∈ orbitF_p2 f (f^[i] x) := by rw [horb (f^[i] x) hyV]; exact hx
+  obtain ⟨t, hxt⟩ := hxO
+  have hfix : f^[j - i] (f^[i] x) = f^[i] x := hy.symm.trans hij.symm
+  calc f^[j - i] x = f^[j - i] (f^[t] (f^[i] x)) := by rw [hxt]
+    _ = f^[(j - i) + t] (f^[i] x) := (Function.iterate_add_apply f (j - i) t (f^[i] x)).symm
+    _ = f^[t + (j - i)] (f^[i] x) := by rw [Nat.add_comm]
+    _ = f^[t] (f^[j - i] (f^[i] x)) := Function.iterate_add_apply f t (j - i) (f^[i] x)
+    _ = f^[t] (f^[i] x) := by rw [hfix]
+    _ = x := hxt
+
+/-- The orbit condition makes `V` a finite cycle; `p` is a common period with
+`0 < p`, the first `p` iterates are pairwise distinct and exhaust `V`, and
+`V.ncard = p` (LA7 `w6a_orbit_cycle` copy). -/
+private theorem w1orbitCycle {α : Type*} {f : α → α} {V : Set α}
+    (horb : ∀ x ∈ V, orbitF_p2 f x = V) {x : α} (hx : x ∈ V) :
+    ∃ p : ℕ, 0 < p ∧ f^[p] x = x ∧
+      (∀ i j : ℕ, i < j → j < p → f^[i] x ≠ f^[j] x) ∧
+      ({f^[n] x | n < p} : Set α) = V ∧ V.ncard = p := by
+  have hmem : ∀ n : ℕ, f^[n] x ∈ V := by
+    intro n
+    rw [← horb x hx]
+    exact ⟨n, rfl⟩
+  have hper : ∃ p : ℕ, 0 < p ∧ f^[p] x = x := by
+    have hfx : f x ∈ V := hmem 1
+    have hxO : x ∈ orbitF_p2 f (f x) := by rw [horb (f x) hfx]; exact hx
+    obtain ⟨n, hn⟩ := hxO
+    exact ⟨n + 1, Nat.succ_pos n, by rw [Function.iterate_succ_apply f n x]; exact hn⟩
+  have hp0 : 0 < Nat.find hper := (Nat.find_spec hper).1
+  have hpx : f^[Nat.find hper] x = x := (Nat.find_spec hper).2
+  have hmin : ∀ m : ℕ, 0 < m → m < Nat.find hper → f^[m] x ≠ x :=
+    fun m hm0 hmlt hcon => Nat.find_min hper hmlt ⟨hm0, hcon⟩
+  have hkey : ∀ i j : ℕ, i ≤ j → f^[i] x = f^[j] x → f^[j - i] x = x :=
+    fun i j hle hij' => w1orbitKey horb hx hle hij'
+  have hdis : ∀ i j : ℕ, i < j → j < Nat.find hper → f^[i] x ≠ f^[j] x := by
+    intro i j hij hjp hcon
+    exact hmin (j - i) (by omega) (by omega) (hkey i j (Nat.le_of_lt hij) hcon)
+  have hset : ({f^[n] x | n < Nat.find hper} : Set α) = V := by
+    ext y
+    constructor
+    · rintro ⟨n, -, rfl⟩
+      exact hmem n
+    · intro hy
+      have hYO : y ∈ orbitF_p2 f x := by rw [horb x hx]; exact hy
+      obtain ⟨m, hm⟩ := hYO
+      refine ⟨m % Nat.find hper, Nat.mod_lt _ hp0, ?_⟩
+      rw [← w1cycMod f hpx m]
+      exact hm
+  have hcard : V.ncard = Nat.find hper := by
+    have himage : ({f^[n] x | n < Nat.find hper} : Set α) =
+        (fun n : ℕ => f^[n] x) '' Set.Iio (Nat.find hper) := rfl
+    rw [← hset, himage]
+    have hInj : Set.InjOn (fun n : ℕ => f^[n] x) (Set.Iio (Nat.find hper)) := by
+      intro i hi j hj hcon
+      rcases Nat.lt_trichotomy i j with h | h | h
+      · exact absurd hcon (hdis i j h (Set.mem_Iio.mp hj))
+      · exact h
+      · exact absurd hcon.symm (hdis j i h (Set.mem_Iio.mp hi))
+    rw [Set.InjOn.ncard_image hInj]
+    exact Set.ncard_Iio_nat _
+  exact ⟨Nat.find hper, hp0, hpx, hdis, hset, hcard⟩
+
+/-- An orbit that returns within two steps lives in a 2-point set. -/
+private theorem w1orbit2 {α : Type*} {f : α → α} {u : α} (h2u : f (f u) = u) (n : ℕ) :
+    f^[n] u ∈ ({u, f u} : Set α) := by
+  induction n with
+  | zero => exact Set.mem_insert _ _
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      rcases Set.mem_insert_iff.mp ih with heq | heq
+      · rw [heq]
+        exact Set.mem_insert_of_mem _ (Set.mem_singleton _)
+      · rw [heq, h2u]
+        exact Set.mem_insert _ _
+
+/-- Under the orbit condition the rho-node has no fixed point above cardinal 3. -/
+private theorem w1noFix {V : Set V3} {FF : Set (V3 × V3)}
+    (horb : ∀ v ∈ V, orbitF_p2 (rhoNode1 FF) v = V) {u : V3} (hu : u ∈ V)
+    (h3 : 3 ≤ ncard V) : (rhoNode1 FF) u ≠ u := by
+  intro hfix
+  have hsingle : orbitF_p2 (rhoNode1 FF) u = {u} := by
+    ext y
+    simp only [orbitF_p2, Set.mem_setOf_eq, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨n, rfl⟩
+      induction n with
+      | zero => rfl
+      | succ n ih => rw [Function.iterate_succ_apply', ih, hfix]
+    · intro h
+      exact ⟨0, by rw [h]; rfl⟩
+  have hV1 : V = {u} := by rw [← horb u hu, hsingle]
+  rw [hV1] at h3
+  simp only [Set.ncard_singleton] at h3
+  omega
+
+/-- LA5 `LOCAL_FAN_IN_FF_IN_ORD_PAIRS` role: darts of the face are ordered
+pairs of edges; the self-pair branch dies on `w1noFix` + `3 ≤ ncard V`. -/
+private theorem w1ffEdge_p2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) (h3 : 3 ≤ ncard V) {d : V3 × V3} (hd : d ∈ FF) :
+    {d.1, d.2} ∈ E := by
+  have hc := h
+  have horb1 : ∀ v ∈ V, orbitF_p2 (rhoNode1 FF) v = V := fun v hv =>
+    WRGCVDR_ORBIT hc v hv
+  obtain ⟨H, hdarts, -, -, -, -, ⟨z, hz, hFF⟩, -⟩ := h
+  have hinf : d ∈ H.face z := by rw [← hFF]; exact hd
+  have hdD : d ∈ (↑H.darts : Set (V3 × V3)) := H.face_subset_darts hz hinf
+  rw [hdarts] at hdD
+  rcases Set.mem_or_mem_of_mem_union hdD with ho | hs
+  · show {d.1, d.2} ∈ E
+    exact ho
+  · exfalso
+    have hs' : d.1 = d.2 ∧ d.1 ∈ V ∧ EE_p2 d.1 E = ∅ := hs
+    obtain ⟨hdu, hdV, -⟩ := hs'
+    have hd' : (d.1, d.2) ∈ FF := hd
+    have hfx : rhoNode1 FF d.1 = d.1 := (w1deter_p2 hc hd').trans hdu.symm
+    exact w1noFix horb1 hdV h3 hfx
+
 /-! ### Cyclic enumeration of a local fan -/
+
+/-- Shared body of `exists_vv_FF_p25` / `exists_vv_p25` (ZITHLQN.hl:70/:288):
+the HOL witness `vv := fun i => ITER i (rho_node1 FF) v`, assembled from the
+dart-cycle kit above. `vv (i+1) = rhoNode1 FF (vv i)` is carried for the
+`exists_vv_FF_p25` anchor. -/
+private theorem exists_vv_aux_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hlf : ConvexLocalFan V E FF) (h3 : 3 ≤ ncard V) (x : V3) (hx : x ∈ V) :
+    ∃ vv : ℕ → V3, vv 0 = x ∧
+      (∀ i, vv (i + 1) = rhoNode1 FF (vv i)) ∧
+      (∀ i, vv i = vv (i % ncard V)) ∧
+      (∀ i j, vv i = vv j → i % ncard V = j % ncard V) ∧
+      (Set.range vv : Set V3) = V ∧
+      (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E ∧
+      (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF := by
+  obtain ⟨hfan, -, -, -, -, h2reg⟩ := hlf.1
+  have hp2 := localFan_p2.of_LocalFan_noIso hlf.1 (w1hedge h2reg)
+  have horb : ∀ v ∈ V, orbitF_p2 (rhoNode1 FF) v = V := fun v hv =>
+    WRGCVDR_ORBIT hp2 v hv
+  obtain ⟨hmap, -, -⟩ := WRGCVDR_BIJ hp2
+  have hpro : ∀ y ∈ V, (y, (rhoNode1 FF) y) ∈ FF := fun y hy =>
+    (w1rhoPro_p2 hp2).1 y hy
+  have hfV : ∀ i : ℕ, (rhoNode1 FF)^[i] x ∈ V := by
+    intro i
+    have h1 : (rhoNode1 FF)^[i] x ∈ orbitF_p2 (rhoNode1 FF) x := ⟨i, rfl⟩
+    rwa [horb x hx] at h1
+  obtain ⟨p, hp0, hpx, hdis, hset, hcard⟩ := w1orbitCycle horb hx
+  have hV : (Set.range fun i => (rhoNode1 FF)^[i] x : Set V3) = V := by
+    ext y
+    constructor
+    · rintro ⟨i, rfl⟩
+      have hy' : ((rhoNode1 FF)^[i] x : V3) ∈
+          ({(rhoNode1 FF)^[n] x | n < p} : Set V3) :=
+        ⟨i % p, Nat.mod_lt i hp0, (w1cycMod _ hpx i).symm⟩
+      rwa [hset] at hy'
+    · intro hy
+      have hy' : y ∈ ({(rhoNode1 FF)^[n] x | n < p} : Set V3) := by rwa [hset]
+      obtain ⟨n, -, hn'⟩ := hy'
+      exact ⟨n, hn'⟩
+  have hE : (Set.range fun i =>
+      ({(rhoNode1 FF)^[i] x, (rhoNode1 FF)^[i + 1] x} : Set V3)) = E := by
+    ext Z
+    constructor
+    · rintro ⟨i, rfl⟩
+      show ({(rhoNode1 FF)^[i] x, (rhoNode1 FF)^[i + 1] x} : Set V3) ∈ E
+      have hdart : (((rhoNode1 FF)^[i] x, (rhoNode1 FF)^[i + 1] x) : V3 × V3) ∈ FF := by
+        rw [Function.iterate_succ_apply']
+        exact hpro _ (hfV i)
+      exact w1ffEdge_p2 hp2 h3 hdart
+    · intro hZ
+      obtain ⟨hfin, hc⟩ := hfan.2.1 Z hZ
+      have h2 : Z.ncard = 2 := by
+        rw [Set.ncard_eq_toFinset_card Z hfin]
+        exact hc
+      obtain ⟨u, w, huw, rfl⟩ := Set.ncard_eq_two.mp h2
+      have huV : u ∈ V := by
+        refine FAN_EDGE_EL_V (u := w) hfan ?_
+        rw [Set.pair_comm]
+        exact hZ
+      have hwV : w ∈ V := FAN_EDGE_EL_V (u := u) hfan hZ
+      have hwE : w ∈ ee u E := hZ
+      obtain ⟨k, hk⟩ := Set.mem_range.mp (by rw [hV]; exact huV)
+      have hfuu : (rhoNode1 FF) u ∈ ee u E := by
+        show ({u, rhoNode1 FF u} : Set V3) ∈ E
+        exact w1ffEdge_p2 hp2 h3 (hpro u huV)
+      have hpre : ∃ a ∈ V, (rhoNode1 FF) a = u := by
+        rcases Nat.eq_zero_or_pos k with rfl | hk0
+        · refine ⟨(rhoNode1 FF)^[p - 1] x, hfV (p - 1), ?_⟩
+          have hp1 : p - 1 + 1 = p := by omega
+          calc (rhoNode1 FF) ((rhoNode1 FF)^[p - 1] x)
+              = (rhoNode1 FF)^[p - 1 + 1] x := (Function.iterate_succ_apply' _ _ _).symm
+            _ = (rhoNode1 FF)^[p] x := by rw [hp1]
+            _ = x := hpx
+            _ = u := hk
+        · obtain ⟨m, rfl⟩ : ∃ m, k = m + 1 := ⟨k - 1, by omega⟩
+          refine ⟨(rhoNode1 FF)^[m] x, hfV m, ?_⟩
+          calc (rhoNode1 FF) ((rhoNode1 FF)^[m] x)
+              = (rhoNode1 FF)^[m + 1] x := (Function.iterate_succ_apply' _ _ _).symm
+            _ = u := hk
+      obtain ⟨a, haV, haf⟩ := hpre
+      have hae : a ∈ ee u E := by
+        have hE1 : ({a, (rhoNode1 FF) a} : Set V3) ∈ E := w1ffEdge_p2 hp2 h3 (hpro a haV)
+        rw [haf, Set.pair_comm] at hE1
+        exact hE1
+      have hne2 : a ≠ (rhoNode1 FF) u := by
+        intro hcon
+        have h2u : (rhoNode1 FF) ((rhoNode1 FF) u) = u :=
+          (congrArg (rhoNode1 FF) hcon).symm.trans haf
+        have hVsub : V ⊆ ({u, (rhoNode1 FF) u} : Set V3) := by
+          intro y hy
+          have hyo : y ∈ orbitF_p2 (rhoNode1 FF) u := by rw [horb u huV]; exact hy
+          obtain ⟨n, hn⟩ := hyo
+          rw [← hn]
+          exact w1orbit2 h2u n
+        have hune : u ≠ (rhoNode1 FF) u := fun h => w1noFix horb huV h3 h.symm
+        have h1le : ncard V ≤ 2 := by
+          refine le_trans (Set.ncard_le_ncard hVsub
+            (Set.Finite.insert u (Set.finite_singleton ((rhoNode1 FF) u)))) ?_
+          rw [Set.ncard_pair hune]
+        omega
+      have hfu_a : (rhoNode1 FF) u ≠ a := fun h => hne2 h.symm
+      have hsub2 : ({(rhoNode1 FF) u, a} : Set V3) ⊆ ee u E := by
+        intro y hy
+        rcases Set.mem_insert_iff.mp hy with heq | heq
+        · rw [heq]; exact hfuu
+        · rw [heq]; exact hae
+      have heq2 : ee u E = ({(rhoNode1 FF) u, a} : Set V3) := by
+        have heeFin : (ee u E).Finite :=
+          hfan.2.2.1.1.subset fun z hz => FAN_EDGE_EL_V hfan hz
+        refine (Set.eq_of_subset_of_ncard_le hsub2 ?_ heeFin).symm
+        rw [h2reg u huV, Set.ncard_pair (a := (rhoNode1 FF) u) (b := a) hfu_a]
+      rw [heq2] at hwE
+      rcases Set.mem_insert_iff.mp hwE with hwf | hwa
+      · exact ⟨k, by
+          show ({(rhoNode1 FF)^[k] x, (rhoNode1 FF)^[k + 1] x} : Set V3) = {u, w}
+          rw [Function.iterate_succ_apply', hk, hwf]⟩
+      · have hfw : (rhoNode1 FF) w = u := by rw [hwa]; exact haf
+        obtain ⟨m, hm⟩ := Set.mem_range.mp (by rw [hV]; exact hwV)
+        refine ⟨m, ?_⟩
+        show ({(rhoNode1 FF)^[m] x, (rhoNode1 FF)^[m + 1] x} : Set V3) = {u, w}
+        rw [Function.iterate_succ_apply', hm, hfw]
+        exact Set.pair_comm w u
+  have hFF : (Set.range fun i =>
+      (((rhoNode1 FF)^[i] x, (rhoNode1 FF)^[i + 1] x) : V3 × V3)) = FF := by
+    ext d
+    constructor
+    · rintro ⟨i, rfl⟩
+      show (((rhoNode1 FF)^[i] x, (rhoNode1 FF)^[i + 1] x) : V3 × V3) ∈ FF
+      rw [Function.iterate_succ_apply']
+      exact hpro _ (hfV i)
+    · intro hd
+      have hde : d = (d.1, (rhoNode1 FF) d.1) := (w1rhoPro_p2 hp2).2 d hd
+      have hd1V : d.1 ∈ V := hmap hd
+      obtain ⟨k, hk⟩ := Set.mem_range.mp (by rw [hV]; exact hd1V)
+      refine Set.mem_range.mpr ⟨k, ?_⟩
+      show (((rhoNode1 FF)^[k] x, (rhoNode1 FF)^[k + 1] x) : V3 × V3) = d
+      rw [hde, ← hk, Function.iterate_succ_apply']
+  refine ⟨fun i => (rhoNode1 FF)^[i] x, rfl, fun i => Function.iterate_succ_apply' _ i x,
+    ?_, ?_, hV, hE, hFF⟩
+  · intro i
+    show (rhoNode1 FF)^[i] x = (rhoNode1 FF)^[i % ncard V] x
+    rw [w1cycMod (rhoNode1 FF) hpx i, hcard]
+  · intro i j hij
+    have hci : (rhoNode1 FF)^[i] x = (rhoNode1 FF)^[i % p] x := w1cycMod _ hpx i
+    have hcj : (rhoNode1 FF)^[j] x = (rhoNode1 FF)^[j % p] x := w1cycMod _ hpx j
+    have hcon : (rhoNode1 FF)^[i % p] x = (rhoNode1 FF)^[j % p] x := by
+      rw [← hci, ← hcj]; exact hij
+    rcases Nat.lt_trichotomy (i % p) (j % p) with h | h | h
+    · exact absurd hcon (hdis _ _ h (Nat.mod_lt j hp0))
+    · rw [hcard]; exact h
+    · exact absurd hcon.symm (hdis _ _ h (Nat.mod_lt i hp0))
+
 
 /-- HOL `exists_vv_FF` (ZITHLQN.hl:70): the `rho_node1`-cycle enumeration.
 The HOL proof witnesses `vv := fun i => ITER i (rho_node1 FF) v` from the dart
@@ -311,7 +678,13 @@ theorem exists_vv_FF_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
       (Set.range vv : Set V3) = V ∧
       (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E ∧
       (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF := by
-  sorry
+  obtain ⟨-, -, -, -, -, h2reg⟩ := _hlf.1
+  obtain ⟨vv, h0, hsucc, hper, hinj, hV, hE, hFF⟩ :=
+    exists_vv_aux_p25 V E FF _hlf _h3 v (w1fstMem _hlf.1 _h3 _hvw)
+  refine ⟨vv, h0, ?_, hper, hinj, hV, hE, hFF⟩
+  have h1 : vv 1 = rhoNode1 FF (vv 0) := hsucc 0
+  rw [h1, h0]
+  exact w1deter_p2 (localFan_p2.of_LocalFan_noIso _hlf.1 (w1hedge h2reg)) _hvw
 
 /-- HOL `exists_vv` (ZITHLQN.hl:288). NEEDS: same `rhoNode1`-iterate cycle
 kit as `exists_vv_FF_p25`; HOL seeds the base point via `exists_point_in_V`
@@ -324,7 +697,10 @@ theorem exists_vv_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
       (Set.range vv : Set V3) = V ∧
       (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E ∧
       (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF := by
-  sorry
+  obtain ⟨v, hv⟩ := exists_point_in_V_p25 V E FF _hlf _hp _hb _h3 _h6
+  obtain ⟨vv, -, -, hper, hinj, hV, hE, hFF⟩ :=
+    exists_vv_aux_p25 V E FF _hlf _h3 v hv
+  exact ⟨vv, hper, hinj, hV, hE, hFF⟩
 
 /-- HOL `exists_vv3` (ZITHLQN.hl:2325): the explicit triangle witness. -/
 theorem exists_vv3_p25 (v1 v2 v3 : V3) (vv : ℕ → V3) (V : Set V3) (E : Set (Set V3))
