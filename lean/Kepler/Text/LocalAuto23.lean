@@ -2425,6 +2425,516 @@ theorem JKQEWGV1_CASE_4_p23 (s : ScsV39) (vv : ℕ → V3)
         ((fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) < Real.pi := by
   sorry
 
+/-! ### W2 车道私件（scsgeneric-w2b, 2026-10-28）：CASE_4 主装配的
+ Witness→平面化→逐 dart π 消歧套件 + 法向泛函件（目标 JKQEWGV2_CASE_4_p23 保持
+ sorry，备料式交付；套件全部零 sorry，#print axioms 标准三）。关键引理
+ `w2sg_wheel_core`：k=4 轮盘 + circular witness ⇒ 三个 dart 的 azimInFan 顶为 π
+ （第 4 个 ≥ 0），从而 Σ ≥ 3π，tauFun ≥ 2；主装配残余缺口见交付说明。 -/
+
+/-- NOTE (W2b 残件): `w2sg_ee_eq` / `w2sg_ee_ncard` / `w2sg_sigmaFan_eq` /
+`w2sg_azimInFan_eq` 的修正式在本波探针中已基本闭合（ee_eq 的 hwk 反例块、
+ee_ncard 的 card_empty、sigmaFan 的 subst 分支均已验证到最后一层），但
+HOL `AZIM_EQ_0`-侧的 `Set.mem_insert`-elaboration 卡点仍未清零，为保 Work.lean RC=0
+整文件绿，本波 kit 暂不含此四件；它们是主装配（tauFun 下界）的唯一前置缺口，
+精确修法与最终形态见交付说明与探针日志。 -/
+
+private theorem w2sg_mem_span_of_azim_pi {a b d : V3} (ha0 : a ≠ 0)
+    (h1 : ¬ Collinear3 0 a b) (h2 : ¬ Collinear3 0 a d)
+    (hpi : azim 0 a b d = Real.pi) :
+    d ∈ Submodule.span ℝ ({a, b} : Set V3) := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul a ha0
+  have hax : (a - 0 : V3) = dist a 0 • f3 := by
+    rw [dist_zero_right, sub_zero]; exact halign
+  obtain ⟨ψ, r₁, r₂, hr₁, hr₂, hB, hD⟩ := azim_frame_spec h1 h2 hon hax ha0
+  rw [hpi] at hD
+  have hr₁c : ((r₁ : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hr₁.ne'
+  have hB' : ((r₂ / r₁ : ℝ) : ℂ) * zOf f1 f2 (b - 0)
+      = (↑r₂ : ℂ) * Complex.exp ((ψ : ℂ) * Complex.I) := by
+    rw [hB]
+    have hstep : ((r₂ / r₁ : ℝ) : ℂ) * (↑r₁ : ℂ) = (↑r₂ : ℂ) := by
+      rw [Complex.ofReal_div, div_mul_eq_mul_div, mul_comm (↑r₂ : ℂ) (↑r₁ : ℂ),
+        mul_div_cancel_left₀ (↑r₂ : ℂ) hr₁c]
+    rw [← mul_assoc, hstep]
+  have hD' : zOf f1 f2 (d - 0) = ((-(r₂ / r₁) : ℝ) : ℂ) * zOf f1 f2 (b - 0) := by
+    rw [show ((ψ + Real.pi : ℝ) : ℂ) * Complex.I
+        = (ψ : ℂ) * Complex.I + ((Real.pi : ℝ) : ℂ) * Complex.I from by push_cast; ring,
+      Complex.exp_add, Complex.exp_pi_mul_I] at hD
+    rw [← mul_assoc, mul_neg, mul_one] at hD
+    rw [Complex.ofReal_neg, neg_mul, hB']
+    exact hD
+  obtain ⟨h, hd⟩ := rep_smul_of_zOf hon hax ha0 b d (-(r₂ / r₁)) hD'
+  simp only [sub_zero] at hd
+  refine Submodule.mem_span_pair.mpr ⟨h, -(r₂ / r₁), ?_⟩
+  rw [hd, add_comm]
+
+private theorem w2sg_inner_eq (v w : V3) (hvv : (0:ℝ) < inner ℝ v v) :
+    inner ℝ w (w - (inner ℝ w v / inner ℝ v v) • v)
+      = inner ℝ (w - (inner ℝ w v / inner ℝ v v) • v)
+          (w - (inner ℝ w v / inner ℝ v v) • v) := by
+  have hvne : inner ℝ v v ≠ 0 := ne_of_gt hvv
+  set K : ℝ := inner ℝ w v / inner ℝ v v with hKdef
+  have hkey : K * inner ℝ v v = inner ℝ w v := by
+    rw [hKdef]; field_simp [hvne]
+  have h1 : inner ℝ w (w - K • v) = inner ℝ w w - K * inner ℝ w v := by
+    simp only [inner_sub_right, real_inner_smul_right]
+  have h2 : inner ℝ (w - K • v) (w - K • v)
+      = inner ℝ w w - 2 * (K * inner ℝ w v) + K * K * inner ℝ v v := by
+    simp only [inner_sub_left, inner_sub_right, real_inner_smul_right, real_inner_comm]
+    ring
+  rw [h1, h2, ← hkey]
+  ring
+
+private theorem w2sg_normal_exists (hv0 : v ≠ 0) (hnc : ¬ Collinear3 0 v w) :
+    ∃ n : V3, (inner ℝ n v = 0) ∧ (0 < inner ℝ n n) ∧ (inner ℝ w n = inner ℝ n n) := by
+  have hvv : (0:ℝ) < inner ℝ v v := by
+    rw [real_inner_self_eq_norm_sq]
+    exact sq_pos_iff.mpr (ne_of_gt (norm_pos_iff.mpr hv0))
+  have hvne : inner ℝ v v ≠ 0 := ne_of_gt hvv
+  refine ⟨w - (inner ℝ w v / inner ℝ v v) • v, ?_, ?_, ?_⟩
+  · rw [inner_sub_left, real_inner_smul_left]
+    have hkm : inner ℝ w v / inner ℝ v v * inner ℝ v v = inner ℝ w v := by
+      field_simp [hvne]
+    rw [hkm, sub_self]
+  · have hn0 : (w - (inner ℝ w v / inner ℝ v v) • v) ≠ 0 := by
+      intro hzero
+      have hc : w = (inner ℝ w v / inner ℝ v v) • v := sub_eq_zero.mp hzero
+      refine hnc ?_
+      exact (collinear3_iff_smul hv0).mpr ⟨_, by rw [hc, sub_zero, sub_zero]⟩
+    rw [real_inner_self_eq_norm_sq]
+    exact sq_pos_iff.mpr (ne_of_gt (norm_pos_iff.mpr hn0))
+  · exact w2sg_inner_eq v w hvv
+
+private theorem w2sg_arcsin_third_ge : (1/3 : ℝ) ≤ Real.arcsin (1/3) := by
+  have h1 : Real.sin (1/3) ≤ (1/3 : ℝ) := le_of_lt (Real.sin_lt (by norm_num))
+  have h2 : Real.arcsin (Real.sin (1/3)) ≤ Real.arcsin (1/3) := Real.arcsin_le_arcsin h1
+  rw [Real.arcsin_sin (by linarith [Real.pi_gt_three]) (by linarith [Real.pi_gt_three])] at h2
+  exact h2
+
+private theorem w2sg_sol0_nonneg : 0 ≤ sol0 := by
+  have hb : Real.arcsin (1/3 : ℝ) ≤ Real.pi / 6 := by
+    have h2 : Real.arcsin (1/3 : ℝ) ≤ Real.arcsin (1/2 : ℝ) :=
+      Real.arcsin_le_arcsin (by norm_num)
+    have h3 : Real.arcsin (1/2 : ℝ) = Real.pi / 6 := by
+      rw [show (1/2 : ℝ) = Real.sin (Real.pi / 6) from Real.sin_pi_div_six.symm,
+        Real.arcsin_sin (by linarith [Real.pi_gt_three]) (by linarith [Real.pi_gt_three])]
+    rw [h3] at h2
+    exact h2
+  rw [show sol0 = 3 * (Real.pi / 2 - Real.arcsin (1/3 : ℝ)) - Real.pi from by
+    unfold sol0; rw [Real.arccos_eq_pi_div_two_sub_arcsin]]
+  linarith
+
+private theorem w2sg_sol0_le_pi_half : sol0 ≤ Real.pi / 2 - 1 := by
+  have hb := w2sg_arcsin_third_ge
+  rw [show sol0 = 3 * (Real.pi / 2 - Real.arcsin (1/3 : ℝ)) - Real.pi from by
+    unfold sol0; rw [Real.arccos_eq_pi_div_two_sub_arcsin]]
+  linarith
+
+/-! ### Wheel kit (wave 2): coordinate / dichotomy tools -/
+
+private theorem w2sg_hncol_ne {a b : V3} (h : ¬ Collinear3 0 a b) : a ≠ 0 ∧ b ≠ 0 := by
+  constructor
+  · intro ha
+    refine h ?_
+    rw [ha]
+    show Collinear ℝ ({0, (0:V3), b} : Set V3)
+    rw [show ({0, (0:V3), b} : Set V3) = ({0, b} : Set V3) from by
+      ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact collinear_pair ℝ 0 b
+  · intro hb
+    refine h ?_
+    rw [hb]
+    show Collinear ℝ ({0, a, (0:V3)} : Set V3)
+    rw [show ({0, a, (0:V3)} : Set V3) = ({0, a} : Set V3) from by
+      ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact collinear_pair ℝ 0 a
+
+private theorem w2sg_coll3_symm {a b : V3} : Collinear3 0 a b ↔ Collinear3 0 b a := by
+  unfold Collinear3
+  rw [show ({0, a, b} : Set V3) = ({0, b, a} : Set V3) from by
+    ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+
+private theorem w2sg_coord_uniq {a b : V3} (_ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hncol : ¬ Collinear3 0 a b) {ξ₁ η₁ ξ₂ η₂ : ℝ}
+    (h₁ : ξ₁ • a + η₁ • b = ξ₂ • a + η₂ • b) : ξ₁ = ξ₂ ∧ η₁ = η₂ := by
+  have hsub : (ξ₁ - ξ₂) • a + (η₁ - η₂) • b = 0 := by
+    have e1 : (ξ₁ - ξ₂) • a = ξ₁ • a - ξ₂ • a := by rw [sub_smul]
+    have e2 : (η₁ - η₂) • b = η₁ • b - η₂ • b := by rw [sub_smul]
+    rw [e1, e2, sub_add_sub_comm, h₁, sub_self]
+  have hξ : ξ₁ = ξ₂ := by
+    by_contra hne
+    have hd : (ξ₁ - ξ₂ : ℝ) ≠ 0 := sub_ne_zero.mpr hne
+    have hsplit : (ξ₁ - ξ₂) • a = (η₂ - η₁) • b := by
+      have hXneg : (ξ₁ - ξ₂) • a = -((η₁ - η₂) • b) := eq_neg_of_add_eq_zero_left hsub
+      rw [hXneg, ← neg_smul, show (η₂ - η₁ : ℝ) = -(η₁ - η₂) from by ring]
+    have ha : a = ((ξ₁ - ξ₂ : ℝ)⁻¹ * (η₂ - η₁)) • b := by
+      have h1 := congrArg ((ξ₁ - ξ₂ : ℝ)⁻¹ • ·) hsplit
+      rw [inv_smul_smul₀ hd, smul_smul] at h1
+      exact h1
+    refine hncol ((w2sg_coll3_symm).mp
+      ((collinear3_iff_smul (v := (0:V3)) (w := b) (w1 := a) hb0).mpr
+        ⟨((ξ₁ - ξ₂ : ℝ)⁻¹ * (η₂ - η₁)), by rw [ha, sub_zero, sub_zero]⟩))
+  constructor
+  · exact hξ
+  · have heq : ξ₁ - ξ₂ = 0 := sub_eq_zero.mpr hξ
+    rw [heq] at hsub
+    simp only [zero_smul, zero_add] at hsub
+    rcases smul_eq_zero.mp hsub with hc | hc
+    · linarith
+    · exact absurd hc hb0
+
+
+private theorem w2sg_azim_plane_dich {β x y : V3} (hβ0 : β ≠ 0)
+    (h1 : ¬ Collinear3 0 β x) (h2 : ¬ Collinear3 0 β y)
+    (γ δ : ℝ) (hrel : y = γ • x + δ • β) :
+    (0 < γ ∧ azim 0 β x y = 0) ∨ (γ < 0 ∧ azim 0 β x y = Real.pi) := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul β hβ0
+  have hax : (β - 0 : V3) = dist β 0 • f3 := by
+    rw [dist_zero_right, sub_zero]; exact halign
+  obtain ⟨ψ, r₁, r₂, hr₁, hr₂, hB, hD⟩ := azim_frame_spec h1 h2 hon hax hβ0
+  have hzβ : zOf f1 f2 β = 0 := by
+    rw [show (β : V3) = β - 0 from by simp]
+    exact zOf_axis hax hon
+  have hx0 : zOf f1 f2 (x - 0) = zOf f1 f2 x := by rw [sub_zero]
+  have hzy : zOf f1 f2 (y - 0) = ((γ : ℝ) : ℂ) * zOf f1 f2 (x - 0) := by
+    rw [hrel, show ((γ • x + δ • β : V3) - 0) = γ • x + δ • β from by simp,
+      zOf_add f1 f2 (γ • x) (δ • β), zOf_smul f1 f2, zOf_smul f1 f2, hzβ, mul_zero,
+      add_zero, hx0]
+  exact w2sg_azim_val_of_zOf_smul r₁ r₂ ψ γ hr₁ hr₂ hB hD hzy
+
+private theorem w2sg_coll3_of_smul_sum {a b u : V3} (hncol : ¬ Collinear3 0 a b)
+    {f₁ f₂ t : ℝ} (hf₁ : 0 < f₁) (hf₂ : 0 < f₂) (_ht : 0 < t)
+    (hsum : f₁ • a + f₂ • b + t • u = 0) :
+    ¬ Collinear3 0 a u ∧ ¬ Collinear3 0 b u ∧ a ≠ 0 ∧ b ≠ 0 ∧ u ≠ 0 := by
+  obtain ⟨ha0, hb0⟩ := w2sg_hncol_ne hncol
+  refine ⟨?_, ?_, ha0, hb0, ?_⟩
+  · intro hc
+    obtain ⟨(c : ℝ), hcu⟩ := (collinear3_iff_smul (v := (0:V3)) (w := a) ha0).mp hc
+    rw [show (u : V3) = u - 0 from by simp, hcu, smul_smul, sub_zero] at hsum
+    have hfac : (t * c + f₁) • a + f₂ • b = 0 := by
+      rw [add_smul, add_assoc, add_comm ((t * c : ℝ) • a) (f₁ • a + f₂ • b)]
+      exact hsum
+    have hneg : f₂ • b = (-(t * c + f₁)) • a := by
+      have h0 := eq_neg_of_add_eq_zero_right hfac
+      rw [← neg_smul] at h0
+      exact h0
+    have hb' : b = ((f₂ : ℝ)⁻¹ * -(t * c + f₁)) • a := by
+      have h2 := congrArg ((f₂ : ℝ)⁻¹ • ·) hneg
+      rw [inv_smul_smul₀ (ne_of_gt hf₂), smul_smul] at h2
+      exact h2
+    exact hncol ((collinear3_iff_smul (v := (0:V3)) (w := a) ha0).mpr
+      ⟨_, by rw [hb', sub_zero, sub_zero]⟩)
+  · intro hc
+    obtain ⟨(c : ℝ), hcu⟩ := (collinear3_iff_smul (v := (0:V3)) (w := b) hb0).mp hc
+    rw [show (u : V3) = u - 0 from by simp, hcu, smul_smul, sub_zero] at hsum
+    have hfac : f₁ • a + (f₂ + t * c) • b = 0 := by
+      rw [add_smul, ← add_assoc]
+      exact hsum
+    have hneg : f₁ • a = (-(f₂ + t * c)) • b := by
+      have h0 := eq_neg_of_add_eq_zero_left hfac
+      rw [← neg_smul] at h0
+      exact h0
+    have ha' : a = ((f₁ : ℝ)⁻¹ * -(f₂ + t * c)) • b := by
+      have h2 := congrArg ((f₁ : ℝ)⁻¹ • ·) hneg
+      rw [inv_smul_smul₀ (ne_of_gt hf₁), smul_smul] at h2
+      exact h2
+    exact hncol ((w2sg_coll3_symm).mp
+      ((collinear3_iff_smul (v := (0:V3)) (w := b) hb0).mpr
+        ⟨_, by rw [ha', sub_zero, sub_zero]⟩))
+  · intro hu0
+    rw [hu0, smul_zero, add_zero] at hsum
+    have hneg : f₁ • a = (-f₂) • b := by
+      have h0 := eq_neg_of_add_eq_zero_left hsum
+      rw [← neg_smul] at h0
+      exact h0
+    have ha' : a = ((f₁ : ℝ)⁻¹ * -f₂) • b := by
+      have h2 := congrArg ((f₁ : ℝ)⁻¹ • ·) hneg
+      rw [inv_smul_smul₀ (ne_of_gt hf₁), smul_smul] at h2
+      exact h2
+    exact hncol ((w2sg_coll3_symm).mp
+      ((collinear3_iff_smul (v := (0:V3)) (w := b) hb0).mpr
+        ⟨_, by rw [ha', sub_zero, sub_zero]⟩))
+
+
+
+private theorem w2sg_span_pair_eq {a b c d : V3}
+    (h1 : ¬ Collinear3 0 a b) (h2 : ¬ Collinear3 0 c d)
+    (hc : c ∈ Submodule.span ℝ ({a, b} : Set V3))
+    (hd : d ∈ Submodule.span ℝ ({a, b} : Set V3)) :
+    Submodule.span ℝ ({c, d} : Set V3) = Submodule.span ℝ ({a, b} : Set V3) := by
+  refine Submodule.eq_of_le_of_finrank_eq (Submodule.span_le.mpr ?_) ?_
+  · intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl
+    · exact hc
+    · exact hd
+  · rw [w2sg_finrank_span_pair h2, w2sg_finrank_span_pair h1]
+
+private theorem w2sg_neg_of_pos_mul_neg {r s : ℝ} (hrs : 0 < r * s) (hs : s < 0) : r < 0 := by
+  rcases Classical.em (r < 0) with h | h
+  · exact h
+  · exfalso
+    have h2 : (0:ℝ) ≤ r := not_lt.mp h
+    nlinarith [hrs, h2, hs]
+
+private theorem w2sg_neg_of_pos_mul_neg' {r s : ℝ} (hrs : 0 < r * s) (hr : r < 0) : s < 0 := by
+  rcases Classical.em (s < 0) with h | h
+  · exact h
+  · exfalso
+    have h2 : (0:ℝ) ≤ s := not_lt.mp h
+    nlinarith [hrs, h2, hr]
+
+set_option maxHeartbeats 1600000 in
+private theorem w2sg_wheel_core {a b w₂ w₃ u : V3} {f₁ f₂ t : ℝ}
+    (hf₁ : 0 < f₁) (hf₂ : 0 < f₂) (ht : 0 < t)
+    (hsum : f₁ • a + f₂ • b + t • u = 0)
+    (hu : u = w₂ ∨ u = w₃)
+    (hncAB : ¬ Collinear3 0 a b) (hncBW₂ : ¬ Collinear3 0 b w₂)
+    (hncW₂W₃ : ¬ Collinear3 0 w₂ w₃) (hncW₃A : ¬ Collinear3 0 w₃ a)
+    (hwAB : azim 0 a b u ≤ azim 0 a b w₃)
+    (hwBW₂ : azim 0 b w₂ u ≤ azim 0 b w₂ a)
+    (hwW₃A : azim 0 w₃ a b ≤ azim 0 w₃ a w₂)
+    (hpileAB : azim 0 a b w₃ ≤ Real.pi)
+    (hpileBW₂ : azim 0 b w₂ a ≤ Real.pi)
+    (hpileW₃A : azim 0 w₃ a w₂ ≤ Real.pi) :
+    azim 0 a b w₃ = Real.pi ∧ azim 0 b w₂ a = Real.pi ∧ azim 0 w₃ a w₂ = Real.pi := by
+  obtain ⟨hAu, hBu, ha0, hb0, hu0⟩ := w2sg_coll3_of_smul_sum hncAB hf₁ hf₂ ht hsum
+  obtain ⟨hw₃0, -⟩ := w2sg_hncol_ne hncW₃A
+  have hncAW₃ : ¬ Collinear3 0 a w₃ := fun hc => hncW₃A ((w2sg_coll3_symm).mpr hc)
+  have hncBA : ¬ Collinear3 0 b a := fun hc => hncAB ((w2sg_coll3_symm).mpr hc)
+  have hsum' : f₂ • b + f₁ • a + t • u = 0 := by
+    rw [add_comm (f₂ • b) (f₁ • a)]
+    exact hsum
+  obtain ⟨htri1, -⟩ := w2sg_tri_angle_pi f₂ f₁ t hf₂ hf₁ ht hsum' hncAB hAu
+  have huP : u ∈ Submodule.span ℝ ({a, b} : Set V3) :=
+    w2sg_mem_span_of_azim_pi ha0 hncAB hAu htri1
+  obtain ⟨ξu, ηu, hcu⟩ := Submodule.mem_span_pair.mp huP
+  have hcu' : u = ξu • a + ηu • b := hcu.symm
+  have hcoord : f₁ + t * ξu = 0 ∧ f₂ + t * ηu = 0 := by
+    have h2 : f₁ • a + f₂ • b + t • u = 0 := hsum
+    rw [hcu'] at h2
+    have hsplit : f₁ • a + f₂ • b + t • (ξu • a + ηu • b)
+        = (f₁ + t * ξu) • a + (f₂ + t * ηu) • b := by
+      module
+    have h3 : f₁ • a + f₂ • b + t • (ξu • a + ηu • b)
+        = (0:ℝ) • a + (0:ℝ) • b := by rw [h2, zero_smul, zero_smul, add_zero]
+    rw [hsplit] at h3
+    exact w2sg_coord_uniq ha0 hb0 hncAB h3
+  obtain ⟨hc1, hc2⟩ := hcoord
+  have hξu : ξu = -f₁ / t := by
+    rw [eq_div_iff (ne_of_gt ht)]
+    linear_combination hc1
+  have hηu : ηu = -f₂ / t := by
+    rw [eq_div_iff (ne_of_gt ht)]
+    linear_combination hc2
+  have hξun : ξu < 0 := by
+    rw [hξu]
+    exact div_neg_of_neg_of_pos (by linarith [hf₁]) ht
+  have hηun : ηu < 0 := by
+    rw [hηu]
+    exact div_neg_of_neg_of_pos (by linarith [hf₂]) ht
+  have haP : a ∈ Submodule.span ℝ ({a, b} : Set V3) :=
+    Submodule.mem_span_pair.mpr ⟨1, 0, by rw [one_smul, zero_smul, add_zero]⟩
+  have hbP : b ∈ Submodule.span ℝ ({a, b} : Set V3) :=
+    Submodule.mem_span_pair.mpr ⟨0, 1, by rw [zero_smul, one_smul, zero_add]⟩
+  rcases hu with huw₂ | huw₃
+  · -- case A: u = w₂
+    rw [← huw₂] at hwW₃A hpileW₃A hncW₂W₃
+    have hg0 : azim 0 a b w₃ = Real.pi :=
+      le_antisymm hpileAB (by rw [← htri1]; exact hwAB)
+    have hw₃P : w₃ ∈ Submodule.span ℝ ({a, b} : Set V3) :=
+      w2sg_mem_span_of_azim_pi ha0 hncAB hncAW₃ hg0
+    obtain ⟨ξ₃, η₃, hw₃c⟩ := Submodule.mem_span_pair.mp hw₃P
+    have hw₃c' : w₃ = ξ₃ • a + η₃ • b := hw₃c.symm
+    -- hg₁ : dichotomy on azim 0 b u a
+    have hspBU : Submodule.span ℝ ({b, u} : Set V3)
+        = Submodule.span ℝ ({a, b} : Set V3) :=
+      w2sg_span_pair_eq hncAB hBu hbP huP
+    obtain ⟨γ₁, δ₁, h⟩ := Submodule.mem_span_pair.mp (by rw [hspBU]; exact haP)
+    have hrel₁ : a = δ₁ • u + γ₁ • b := by rw [h.symm, add_comm (γ₁ • b) (δ₁ • u)]
+    have htr₁ : δ₁ • u + γ₁ • b = (δ₁ * ξu) • a + (δ₁ * ηu + γ₁) • b := by
+      rw [hcu']; module
+    have hkey₁ := w2sg_coord_uniq ha0 hb0 hncAB (ξ₁ := δ₁ * ξu)
+      (η₁ := δ₁ * ηu + γ₁) (ξ₂ := 1) (η₂ := 0) (by
+        rw [← htr₁, ← hrel₁, one_smul, zero_smul, add_zero])
+    obtain ⟨hδ₁ξ, -⟩ := hkey₁
+    have hpδ₁ : (0:ℝ) < δ₁ * ξu := by rw [hδ₁ξ]; norm_num
+    have hδ₁ : δ₁ < 0 := w2sg_neg_of_pos_mul_neg hpδ₁ hξun
+    rcases w2sg_azim_plane_dich hb0 hBu hncBA δ₁ γ₁ hrel₁ with ⟨hδ₁pos, hz1⟩ | hg₁'
+    · exfalso
+      linarith [hδ₁pos, hδ₁]
+    · have hg₁ : azim 0 b w₂ a = Real.pi := by rw [← huw₂]; exact hg₁'.2
+      -- hg₃ : dichotomy on azim 0 w₃ a u
+      have hncW₃U : ¬ Collinear3 0 w₃ u :=
+        fun hc => hncW₂W₃ ((w2sg_coll3_symm).mpr hc)
+      have hspW₃A : Submodule.span ℝ ({w₃, a} : Set V3)
+          = Submodule.span ℝ ({a, b} : Set V3) :=
+        w2sg_span_pair_eq hncAB hncW₃A hw₃P haP
+      obtain ⟨γ₃, δ₃, h⟩ := Submodule.mem_span_pair.mp (by rw [hspW₃A]; exact huP)
+      have hrel₃ : u = δ₃ • a + γ₃ • w₃ := by rw [h.symm, add_comm (γ₃ • w₃) (δ₃ • a)]
+      rcases w2sg_azim_plane_dich hw₃0 hncW₃A hncW₃U δ₃ γ₃ hrel₃ with
+        ⟨hδ₃pos, hz3⟩ | ⟨hγ₃neg, hg₃'⟩
+      · exfalso
+        -- bad branch: wedge at dart (w₃, a) collapses at z = b
+        have hcol : azim 0 w₃ a b = 0 := by
+          have h1 : azim 0 w₃ a b ≤ azim 0 w₃ a u := hwW₃A
+          rw [hz3] at h1
+          exact le_antisymm h1 (azim_nonneg 0 w₃ a b)
+        rcases Classical.em (Collinear3 0 w₃ b) with hcolWB | hncW₃B
+        · -- degenerate: b = c • w₃ forces δ₃ = ξu < 0
+          exfalso
+          obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := w₃) hw₃0).mp hcolWB
+          have hbeq' : b = c • w₃ := by simpa using hc
+          have husub : u = ξu • a + ηu • (c • w₃) := by rw [hcu', hbeq']
+          have hkeyD := w2sg_coord_uniq (ha0) (hw₃0) (hncAW₃) (ξ₁ := δ₃) (η₁ := γ₃)
+            (ξ₂ := ξu) (η₂ := ηu * c) (by
+              rw [← hrel₃, husub, mul_smul])
+          obtain ⟨hDD, -⟩ := hkeyD
+          linarith [hDD, hδ₃pos, hξun]
+        · -- generic: dichotomy on azim 0 w₃ a b
+          obtain ⟨γ₄, δ₄, h⟩ := Submodule.mem_span_pair.mp (by rw [hspW₃A]; exact hbP)
+          have hrel₄ : b = δ₄ • a + γ₄ • w₃ := by
+            rw [h.symm, add_comm (γ₄ • w₃) (δ₄ • a)]
+          rcases w2sg_azim_plane_dich hw₃0 hncW₃A hncW₃B δ₄ γ₄ hrel₄ with
+            ⟨hδ₄pos, hz4⟩ | ⟨hγ₄neg, hπ₄⟩
+          · exfalso
+            have htr₃ : δ₃ • a + γ₃ • w₃ = (δ₃ + γ₃ * ξ₃) • a + (γ₃ * η₃) • b := by
+              rw [hw₃c']; module
+            have hkey₃ := w2sg_coord_uniq ha0 hb0 hncAB (ξ₁ := δ₃ + γ₃ * ξ₃)
+              (η₁ := γ₃ * η₃) (ξ₂ := ξu) (η₂ := ηu) (by
+                rw [← htr₃, ← hrel₃, ← hcu'])
+            obtain ⟨he3, he4⟩ := hkey₃
+            have htr₄ : δ₄ • a + γ₄ • w₃ = (δ₄ + γ₄ * ξ₃) • a + (γ₄ * η₃) • b := by
+              rw [hw₃c']; module
+            have hkey₄ := w2sg_coord_uniq ha0 hb0 hncAB (ξ₁ := δ₄ + γ₄ * ξ₃)
+              (η₁ := γ₄ * η₃) (ξ₂ := 0) (η₂ := 1) (by
+                rw [← htr₄, ← hrel₄, zero_smul, one_smul, zero_add])
+            obtain ⟨he5, he6⟩ := hkey₄
+            have hη₃ne : η₃ ≠ 0 := by
+              intro h0
+              rw [h0, mul_zero] at he6
+              linarith
+            have ht1 : t * ξu = -f₁ := by linear_combination hc1
+            have ht2 : t * ηu = -f₂ := by linear_combination hc2
+            have hrel3 : f₁ * η₃ - f₂ * ξ₃ + t * (ξu * η₃ - ηu * ξ₃) = 0 := by
+              linear_combination ht1 * η₃ - ht2 * ξ₃
+            have hsum3 : -(f₁ * η₃ - f₂ * ξ₃ + t * (ξu * η₃ - ηu * ξ₃)) = 0 := by
+              rw [hrel3]; ring
+            rw [show ξu * η₃ - ηu * ξ₃ = δ₃ * η₃ from by
+                linear_combination ξ₃ * he4 - η₃ * he3,
+              show ξ₃ = δ₄ * (0 - η₃) from by
+                linear_combination η₃ * he5 - ξ₃ * he6] at hsum3
+            rw [show -(f₁ * η₃ - f₂ * (δ₄ * (0 - η₃)) + t * (δ₃ * η₃))
+                = -((f₁ + f₂ * δ₄ + t * δ₃) * η₃) from by ring] at hsum3
+            rw [neg_eq_zero, mul_eq_zero] at hsum3
+            rcases hsum3 with hc | hc
+            · have hp1 : (0:ℝ) < f₂ * δ₄ := mul_pos hf₂ hδ₄pos
+              have hp2 : (0:ℝ) < t * δ₃ := mul_pos ht hδ₃pos
+              linarith [hf₁, hp1, hp2, hc]
+            · exact hη₃ne hc
+          · exfalso
+            have h1 : azim 0 w₃ a b ≤ azim 0 w₃ a u := hwW₃A
+            rw [hπ₄, hz3] at h1
+            linarith [h1, Real.pi_pos]
+      · have hg₃ : azim 0 w₃ a w₂ = Real.pi := by rw [← huw₂]; exact hg₃'
+        exact ⟨hg0, hg₁, hg₃⟩
+  · -- case B: u = w₃
+    have hw₃c : w₃ = ξu • a + ηu • b := by rw [← huw₃]; exact hcu.symm
+    have hg0 : azim 0 a b w₃ = Real.pi := by rw [← huw₃]; exact htri1
+    have hw₃P : w₃ ∈ Submodule.span ℝ ({a, b} : Set V3) :=
+      w2sg_mem_span_of_azim_pi ha0 hncAB hncAW₃ hg0
+    -- hg₃ : wedge at dart (w₃, a) with z = b forces π
+    have hspW₃A : Submodule.span ℝ ({w₃, a} : Set V3)
+        = Submodule.span ℝ ({a, b} : Set V3) :=
+      w2sg_span_pair_eq hncAB hncW₃A hw₃P haP
+    rcases Classical.em (Collinear3 0 w₃ b) with hcolWB | hncW₃B
+    · exfalso
+      -- degenerate: b = c • w₃ forces ξu = 0
+      obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := w₃) hw₃0).mp hcolWB
+      have hbeq' : b = c • w₃ := by simpa using hc
+      have hkeyD := w2sg_coord_uniq (ha0) (hw₃0) (hncAW₃) (ξ₁ := 0) (η₁ := 1)
+        (ξ₂ := ξu) (η₂ := ηu * c) (by
+          rw [zero_smul, zero_add, one_smul, mul_smul, ← hbeq', hw₃c])
+      obtain ⟨hDD, -⟩ := hkeyD
+      rw [hDD] at hξun
+      linarith
+    · -- generic: dichotomy on azim 0 w₃ a b
+      obtain ⟨γ₄, δ₄, h⟩ := Submodule.mem_span_pair.mp (by rw [hspW₃A]; exact hbP)
+      have hrel₄ : b = δ₄ • a + γ₄ • w₃ := by
+        rw [h.symm, add_comm (γ₄ • w₃) (δ₄ • a)]
+      have htr₄ : δ₄ • a + γ₄ • w₃ = (δ₄ + γ₄ * ξu) • a + (γ₄ * ηu) • b := by
+        rw [hw₃c]; module
+      have hkey₄ := w2sg_coord_uniq ha0 hb0 hncAB (ξ₁ := δ₄ + γ₄ * ξu)
+        (η₁ := γ₄ * ηu) (ξ₂ := 0) (η₂ := 1) (by
+          rw [← htr₄, ← hrel₄, zero_smul, one_smul, zero_add])
+      obtain ⟨he5, he6⟩ := hkey₄
+      have hpγ₄ : (0:ℝ) < γ₄ * ηu := by rw [he6]; norm_num
+      have hγ₄ : γ₄ < 0 := w2sg_neg_of_pos_mul_neg hpγ₄ hηun
+      have hpgξ : (0:ℝ) < γ₄ * ξu := by nlinarith [hγ₄, hξun]
+      have hδ₄n : δ₄ < 0 := by
+        rcases Classical.em (δ₄ < 0) with h | h
+        · exact h
+        · exfalso
+          have h2 : (0:ℝ) ≤ δ₄ := not_lt.mp h
+          nlinarith [he5, hpgξ, h2]
+      rcases w2sg_azim_plane_dich hw₃0 hncW₃A hncW₃B δ₄ γ₄ hrel₄ with
+        ⟨hδ₄pos, hz0⟩ | ⟨hγ₄neg, hzAB⟩
+      · exact absurd hδ₄pos (not_lt.mpr hδ₄n.le)
+      · -- hzAB : azim 0 w₃ a b = Real.pi
+        have hg₃ : azim 0 w₃ a w₂ = Real.pi := by
+          have h1 : Real.pi ≤ azim 0 w₃ a w₂ := by
+            have h2 : azim 0 w₃ a b ≤ azim 0 w₃ a w₂ := hwW₃A
+            rw [hzAB] at h2
+            exact h2
+          exact le_antisymm hpileW₃A h1
+        -- planarize w₂ via T3 on hg₃
+        have hncW₃W₂ : ¬ Collinear3 0 w₃ w₂ :=
+          fun hc => hncW₂W₃ ((w2sg_coll3_symm).mpr hc)
+        have hw₂P : w₂ ∈ Submodule.span ℝ ({a, b} : Set V3) := by
+          have h1 := w2sg_mem_span_of_azim_pi hw₃0 hncW₃A hncW₃W₂ hg₃
+          rw [hspW₃A] at h1
+          exact h1
+        -- hg₁ : dichotomy on azim 0 b w₂ a
+        have hspBW₂ : Submodule.span ℝ ({b, w₂} : Set V3)
+            = Submodule.span ℝ ({a, b} : Set V3) :=
+          w2sg_span_pair_eq hncAB hncBW₂ hbP hw₂P
+        obtain ⟨ξ₂, η₂, hw₂c⟩ := Submodule.mem_span_pair.mp hw₂P
+        have hw₂c' : w₂ = ξ₂ • a + η₂ • b := hw₂c.symm
+        obtain ⟨γ₁, δ₁, h⟩ := Submodule.mem_span_pair.mp (by rw [hspBW₂]; exact haP)
+        have hrel₁ : a = δ₁ • w₂ + γ₁ • b := by
+          rw [h.symm, add_comm (γ₁ • b) (δ₁ • w₂)]
+        have htr₁ : δ₁ • w₂ + γ₁ • b = (δ₁ * ξ₂) • a + (δ₁ * η₂ + γ₁) • b := by
+          rw [hw₂c']; module
+        have hkey₁ := w2sg_coord_uniq ha0 hb0 hncAB (ξ₁ := δ₁ * ξ₂)
+          (η₁ := δ₁ * η₂ + γ₁) (ξ₂ := 1) (η₂ := 0) (by
+            rw [← htr₁, ← hrel₁, one_smul, zero_smul, add_zero])
+        obtain ⟨hδ₁ξ, -⟩ := hkey₁
+        rcases w2sg_azim_plane_dich hb0 hncBW₂ hncBA δ₁ γ₁ hrel₁ with
+          ⟨hδ₁pos, hz1⟩ | ⟨hγ₁neg, hg₁'⟩
+        · exfalso
+          -- bad branch: wedge at dart (b, w₂) collapses at z = u
+          have hcol : azim 0 b w₂ u = 0 := by
+            have h2 : azim 0 b w₂ u ≤ azim 0 b w₂ a := hwBW₂
+            rw [hz1] at h2
+            exact le_antisymm h2 (azim_nonneg 0 b w₂ u)
+          have hξ₂p : (0:ℝ) < ξ₂ := by nlinarith [hδ₁pos, hδ₁ξ]
+          obtain ⟨γ₂, δ₂, h⟩ := Submodule.mem_span_pair.mp (by rw [hspBW₂]; exact huP)
+          have hrel₂ : u = δ₂ • w₂ + γ₂ • b := by
+            rw [h.symm, add_comm (γ₂ • b) (δ₂ • w₂)]
+          have htr₂ : δ₂ • w₂ + γ₂ • b = (δ₂ * ξ₂) • a + (δ₂ * η₂ + γ₂) • b := by
+            rw [hw₂c']; module
+          have hkey₂ := w2sg_coord_uniq ha0 hb0 hncAB (ξ₁ := δ₂ * ξ₂)
+            (η₁ := δ₂ * η₂ + γ₂) (ξ₂ := ξu) (η₂ := ηu) (by
+              rw [← htr₂, ← hrel₂, ← hcu'])
+          obtain ⟨hδ₂ξ, -⟩ := hkey₂
+          rcases w2sg_azim_plane_dich hb0 hncBW₂ hBu δ₂ γ₂ hrel₂ with
+            ⟨hδ₂pos, hz2⟩ | ⟨hγ₂neg, hπ₂⟩
+          · exfalso
+            have hp : (0:ℝ) < ξu := by rw [← hδ₂ξ]; exact mul_pos hδ₂pos hξ₂p
+            linarith [hp, hξun]
+          · linarith [hπ₂, hcol, Real.pi_pos]
+        · have hg₁ : azim 0 b w₂ a = Real.pi := hg₁'
+          exact ⟨hg0, hg₁, hg₃⟩
+
 /-- HOL `JKQEWGV2_CASE_4` (JKQEWGV.hl:2974): the realisation graph is not
 circular. NEEDS: the `JKQEWGV1_CASE_4` kit. -/
 theorem JKQEWGV2_CASE_4_p23 (s : ScsV39) (vv : ℕ → V3)
