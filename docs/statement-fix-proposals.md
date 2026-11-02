@@ -4692,6 +4692,10 @@ CASE_3 顶层陈述（结论 BBprimeV39 ≠ ∅，不涉体集，零改动）—
 
 **在册未落不变；patch 原样可用经 892dcf5e 重验。** 应用序列：用户批 → 原样 `git apply docs/statement-fix-proposals-patches/80-k3-builder.patch` → (f) 闸命令（原样）→ 波 4 CASE_3 闭体（(e′) 要点为先导侦察项）。本 AMEND 不改 patch、不改任何冻结陈述；获批与闸通过前主仓零动作。
 
+### (f″) 已落（2026-11-02 清晨）
+
+**用户「都批」** → `git apply docs/statement-fix-proposals-patches/80-k3-builder.patch`（LA24 +47/−24，HEAD ae864a90 原样可贴）→ (f) STATEMENT-FIX 闸 **PASS**（`IN_B_SY1_COLLINEAR_CASE_3_IS_SCS_p24`，默认七根 4 min 0 错）→ 落库（queue §8 续 195）。波 4 CASE_3 闭体车道随后发车（先导侦察三项见 (e′)）。
+
 ## 81. `StableSyP23` 的 `stable := sorry` 常量级污染（`scsToStableSy_p23` LA23:232 + 孪生 `scsToStableSyD_p36` LA36:441）— 分级 B（def 编码 · 常量级 taint 根除，两路线）
 
 ### (a) HOL 裁决
@@ -5737,3 +5741,63 @@ def constraintSystem_p4 (k d : ℕ) (s : Finset ℕ) (a b : ℕ → ℕ → ℝ)
 - 预算：约 20 次工具调用 / 纯 python 机检（未触 lake/lean/.lake，主仓 tracked 零改动）。
 
 **状态**：草案 2026-10-28（sf92-csys 车道起草）。**在册未落**；应用序列（编排者）：① 用户批（含 (c) 案①/案②裁定，默认案①）→ ② STATEMENT-FIX 闸 LA4：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/92-csys-periodicity-domain.patch SF_ITEM=92 THM=constraintSystem_p4 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto4.lean constraintSystem_p4` → ③ LA11 逐文件闸（六客户编译面）：`lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto11.lean PROPERTIES_OF_FAN_IN_B_SY_p11`（TECOXBM_p11 同式；预期 sorry 面与账面不变）→ ④ patch 落库 + 本条目并入 `docs/statement-fix-proposals.md`（§92 编号已核）。§92 编号已核（现最大 §91）。
+
+## 93. LA23 `bodyClosed_p23`（HEAD :1240）叶 sorry 陈述严格强于 HOL `CLOSED_SY`（WJSCPRO.hl:63-66）：SF-89 极小两条款前提下陈述**大概率为假**（bodyclosed-recon 机检 C3 m=6 坍缩族）；修复 = 前提升级为全 `stableSystem_p23` 载体（镜像 SF-91② LA23 `continuousOn_tauFun_p23` 逐字形），LA24 三喂点一行替换 ×3（喂桥 `fullStable_of_isScsV39` 已证，零新桥）— 分级 **A**（陈述大概率为假 · 真值修复 · 零新桥 · 用户 2026-11-02 批）
+
+### (a) HOL 裁决（WJSCPRO.hl:63-66 逐字 + 证明体稳定条款消费点表）
+
+正本 `lean/scripts/local/WJSCPRO.hl:63-66`（`reference/flyspeck/text_formalization/local/WJSCPRO.hl` 同位）：
+
+```hol
+let CLOSED_SY = prove_by_refinement(
+`!k d a b J. stable_system k d (0..k-1) a b J (\i. (1+i) MOD k) /\ k = dimindex(:M) /\ 1 < k /\ 2 < k
+ ==> closed {matvec (v:real^3^M) | (!i. 1 <= i /\ i <= dimindex(:M) ==> row i v IN ball_annulus) /\
+             CONDITION1_SY a b v /\ CONDITION2_SY v}`,
+```
+
+HOL 前提 = **全 `stable_system` 语境**（dih2k.hl:61-67：`constraint_system` ∧ `2 ≤ a(i,j)` distinct ∧ `a(i,i)=0` ∧ `b(i,f i) ≤ cstab` ∧ J-sqrt8）。证明体（:63-3174）实际消费的稳定条款三条（bodyclosed-recon Evidence §3 消费点表）：
+- ① `2 ≤ a(i,j)`（dih2k.hl:64）：WJSCPRO :186-255 极限点 sandwich 下界、:331-348 行互异、:2215/:2250/:2452/:2490/:2813/:2851 六处 wrap 换根；
+- ② `b(i,f i) ≤ cstab`（:65）：:256-315（含 i=k wrap）；
+- ③ 周期性 `a i j = a i (f^[k] j)`（constraint_system :57）：全部 wrap 换根消费点。
+- J-sqrt8 条款零消费；symmetry / a≤b / a(i,i)=0 / 3≤k≤6 / torsor 的隐性（ASM_SIMP）消费未逐条排除——不阻塞（全载体形照供全条款）。
+
+Lean 现形（SF-89 修后，LA23:1240-1244）只供给条款 ②（`hstab : ∀ i, bR i (finNext i) ≤ cstab_p4`）+ `hm : 2 < m` ⟹ **Lean 严格强于 HOL（丢条款 ①③）**，HOL 证明路线在极小形下不可回放。
+
+### (b) 机检（bodyclosed-recon `bccheck.py` / `bccheck.log`，8/8 PASS，SF-92 附录配方第 1 级）
+
+- **C1**：SF-89 极小前提 witness SAT（m=3/6）——前提集非空洞，缺陷类型 = 「前提不足致陈述为假」（与 §85/§86/§89 初版同谱系）。
+- **C2**：m=3 正交角扇 R=2 过 CONDITION2——hstab 域内体非空，**勿以「m=3 空体」立论**；反例承载在 m=6。
+- **C3（headline）**：m=6 坍缩族——角 (0°, δ, 85°, 170°, 255°, 340°)、R=2.2、`aR ≡ 0`、`bR` 环邻 = 3.0（≤ 3.01 满足 hstab）/ 其余 4.39；δ ∈ {30,15,5,1,0.1,0.01}° 全部 annulus + CONDITION1 + CONDITION2 全过（la23-analysis 验证链 check3 原样复用）；δ = 0 极限 `v 0 = v 1` ⟹ `E_SY` 单点边 ⟹ Graph 假 ⟹ CONDITION2 假，而 annulus + CONDITION1 仍真 ⟹ 极限点不在体 ⟹ **体不闭、极小形陈述大概率为假**。机理：条款①下界（行距 ≥ 2）与条款②上界（≤ 3.01）夹出 `NONPARALLEL_BALL_ANNULUS`（LA4:450）适用窗，极小形只有上边，坍缩方向敞开。诚实边界：家族部分数值级（未 Lean 形式化），气密核（极限点单点边 → Graph 假）两行 Lean 论证；口径「大概率为假」与 la23-analysis / §89 初版同级。
+- **C4**：全载体 witness（周期延拓表 `a = 0/2.5 按 i%k==j%k`、`b ≡ 3`、`J = ∅`）在 k=4/5/6 逐条款全过 ⟹ **修后非空洞**（首次 witness 因周期条款失败即配方有效性旁证：stableSystem 全称量词跑遍 ℕ，表必须周期延拓——SF-92 §1 同一课）。
+
+### (c) 修复陈述（逐字；结论面不动；镜像 SF-91② LA23 `continuousOn_tauFun_p23` 载体形）
+
+```lean
+theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
+    (hstab : ∃ a b : ℕ → ℕ → ℝ, ∃ J : Set (Set ℕ),
+      stableSystem_p23 m 0 (Set.Iic (m - 1)) a b J (fun i => (1 + i) % m) ∧
+      (∀ i j : Fin m, a (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = aR i j) ∧
+      (∀ i j : Fin m, b (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = bR i j)) :
+    IsClosed {v : Fin m → V3 | (∀ i, v i ∈ ballAnnulus) ∧
+      CONDITION1_SY_p4 aR bR v ∧ CONDITION2_SY_p4 v} := by
+  sorry
+```
+
+`hm` 保留（载体条款 `3 ≤ m` 已蕴它；与 SF-91② 同一「装配点 parity」理由）。docstring 同步改写为载体形说明（纯注释）。
+
+### (d) 消费面（bodyclosed-recon CONSUMERS 普查，HEAD 29017b2a）
+
+- 全树代码消费点恰三处：LA24 `XWITCCN_CASE_4/5/6_IS_SCS_p24` 装配体 :2017 / :2177 / :2335，均为 `(fun i => stabAdj_of_isScsV39 s hs hk hk3 i)` 喂 `hstab`；修后一行替换 ×3 为 `(fullStable_of_isScsV39 s hs hk hk3 _ _ (fun _ _ => rfl) (fun _ _ => rfl))`——与同装配体内 `continuousOn_tauFun_p23` 的喂法逐字相同（SF-91② 已证喂桥 LA24:1805-1822）。
+- `stabAdj_of_isScsV39`（LA24:1788，private，SF-89 遗留）修后为死代码，本案保留不删（零风险；可随后续 LA24 波清理）。
+- 路线 (B) 后续（非本案）：桥 G-B2（stableSystem_p23 → p18 容器平移）+ G-B1（SYset_p18 ↔ 行渲染集）→ 巨人在 LA18 `CLOSED_SY_p18` 落地；债根换位 LA23 → LA18，计数不变；W7 出清后 CASE_4/5/6 债面归零。
+
+### (e) 极小性与备胎
+
+- 「恰好三条款」中间形不提案（省两条款 ≤ 30 行 Lean 的收益不值得多一个非标载体形；全载体形与 SF-91② 对齐，装配点共用同一喂桥）。
+- SF-89c 备胎（LA18 `CLOSED_SY_p18` 前提钉后继 `f = (1+i) % k`）挂账：W3 首日探一般 s/f 回放，遇阻即切（bodyclosed-recon WORKORDER §4.2）。
+
+### (f) 状态
+
+**立案 + 应用 2026-11-02 清晨**（用户「都批」；同时授予编排者 SF 常态化自主裁决权，见 DECISIONS.md 2026-11-02）。归档 patch `docs/statement-fix-proposals-patches/93-bodyclosed-full-carrier.patch`（LA23 陈述 + docstring；LA24 三喂点），由应用态真实 `git diff` 生成。闸 ×2（lean/ 下）：
+`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/93-bodyclosed-full-carrier.patch SF_ITEM=93 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto24.lean THM=bodyClosed_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean bodyClosed_p23`，随后同 patch 对 `Kepler/Text/LocalAuto24.lean XWITCCN_CASE_4_IS_SCS_p24` 再闸。落库结果见 queue §8 续 195/196。
+
