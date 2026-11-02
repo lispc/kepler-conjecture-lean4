@@ -34,7 +34,7 @@ FILE MAP
   Section A (RRCWNSJ): `BB_VV_FUN_EQ_p26`, `WL_IN_E_p26`,
     `LUNAR_IN_V_p26`, `B_LE_2h0_A_EQ2_IN_CASES_6_p26`,
     `J_EMPY_CASES_6_p26`, `BB_RHO_NODE_IVS_p26`, `BB_F_SUC_PRE_p26`,
-    `RRCWNSJ_p26` (with the `w5sg_*` prep block inserted before it).
+    `RRCWNSJ_p26` (with the `w5sg_*` / `w5sg3b_*` prep blocks inserted before it).
   Section B (AXJRPNC): `DIST_LE_2h0_IN_CASES_6_p26`,
     `DIST_EDGE_IN_BB_LE_2_p26`, `arclength222h0_p26`,
     `is_scs_k_le_3_p26`, `DIST_LE2_BB_CASSE_4_p26`,
@@ -567,6 +567,262 @@ private theorem w5sg_lunar_p3_p26 {V : Set V3} {E : Set (Set V3)} {a b : V3} :
   · intro h
     obtain ⟨h1, h2, h3, h4⟩ := h
     exact ⟨h1, h2, h3, h4⟩
+
+/-! ### The `w5sg3b` block (lane scsgeneric-w5b3): in-place re-derivations of
+the two remaining lunar-bank debts consumed by the `RRCWNSJ` assembly — debt
+#3 (`LOCAL_CONVEX_NOT_COLLINEAR`, LA37:991; LA37 is outside this file's
+import closure) and debt #4 (`AXJRPNC` forward port).  Engines: the LA5
+lunar-fan inventory `HKIRPEP`, `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` /
+`LOFA_IMP_NOT_COLL_IVS`, the LA5 rho-orbit map, and
+`PlanarityAngle.aff_gt_imp_not_collinear` — all inside this file's import
+closure via `CircularSolKit`; the LA1→LA2 gate is the in-file
+`w5sg_clf2_p26` block above. -/
+
+/-- Iterate mod-folding: a point of period `k` folds iterate indices
+mod `k`. -/
+private theorem w5sg3b_iter_mod {α : Type*} {f : α → α} {x : α} {k : ℕ} (hk : 0 < k)
+    (hper : f^[k] x = x) (m : ℕ) : f^[m] x = f^[m % k] x := by
+  have hstep : ∀ r : ℕ, f^[r + k] x = f^[r] x := by
+    intro r
+    rw [Function.iterate_add_apply f r k x, hper]
+  have hmain : ∀ q r : ℕ, f^[q * k + r] x = f^[r] x := by
+    intro q
+    induction q with
+    | zero =>
+        intro r
+        simp
+    | succ q ih =>
+        intro r
+        have hq : q.succ * k + r = (q * k + r) + k := by
+          rw [Nat.succ_eq_add_one]
+          ring_nf
+        rw [hq, hstep, ih r]
+  calc f^[m] x = f^[m / k * k + m % k] x := by
+        conv_lhs =>
+          rw [show m = m / k * k + m % k from by
+            rw [Nat.mul_comm (m / k) k]
+            exact (Nat.div_add_mod m k).symm]
+    _ = f^[m % k] x := hmain (m / k) (m % k)
+
+/-- HOL `LOCAL_CONVEX_NOT_COLLINEAR` (lunar_deform.hl:3616; LA37:991,
+assembly debt #3) — in-place re-derivation.  Route: the LA5 lunar-fan
+inventory `HKIRPEP` describes the two rho-cycle arcs between `v` and `w`
+as exact `affGt {0, v} {-} ∩ V` equalities; every other vertex lies on one
+of the two arcs, hence in one of the two open half-cones bounded by
+`line (0, v)`; `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` (successor direction) and
+`LOFA_IMP_NOT_COLL_IVS` (predecessor direction) give the non-collinearity of
+the cone directions and `PlanarityAngle.aff_gt_imp_not_collinear`
+transports it to `u`.  (The HOL route consumes
+`LUNAR_IMP_IN_TWO_HAFLS_PLANE`, which is only available as a `sorry` in
+LA37; the arc equalities of `HKIRPEP` subsume it here.) -/
+private theorem w5sg3b_localConvexNotCollinear_p26 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w : V3} (h : ConvexLocalFan V E FF) (hl : Lunar v w V E) :
+    ∀ u ∈ V, u ≠ v → u ≠ w → ¬Collinear ℝ ({0, v, u} : Set V3) := by
+  have hclf : convexLocalFan_p2 V E FF := w5sg_clf2_p26 h
+  have hl2 : lunar_p2 v w V E := hl
+  obtain ⟨hlf, -⟩ := CVLF_LF_F hclf
+  have hvV : v ∈ V := hl.2.1 (by simp)
+  obtain ⟨-, -, -, -, harcv, harcw⟩ := HKIRPEP hclf hl2
+  obtain ⟨t, htV, ht0, ht1, htw, harcvE⟩ := harcv
+  obtain ⟨t2, ht2V, ht20, ht21, ht2v, harcwE⟩ := harcw
+  have hrho := LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf hvV
+  have hivs := LOFA_IMP_NOT_COLL_IVS hlf hvV
+  -- the rho-cycle closes: `v` has period `t + t2` (both ≥ 2 by HKIRPEP)
+  have htpos : 0 < t := by omega
+  have ht2pos : 0 < t2 := by omega
+  have hper : (rhoNode1_p2 FF)^[t + t2] v = v := by
+    rw [show t + t2 = t2 + t from Nat.add_comm t t2, Function.iterate_add_apply,
+      ← htw, ← ht2v]
+  intro u hu hne1 hne2
+  -- `u` lies on the rho-orbit of `v`
+  have hu2 : u ∈ orbitF_p2 (rhoNode1_p2 FF) v := by
+    rw [LOCAL_FAN_ORBIT_MAP_V hlf hvV]
+    exact hu
+  simp only [orbitF_p2, Set.mem_setOf_eq] at hu2
+  obtain ⟨m, hm⟩ := hu2
+  have hf := w5sg3b_iter_mod (by omega) hper m
+  have hur : (rhoNode1_p2 FF)^[m % (t + t2)] v = u := hf.symm.trans hm
+  rcases Nat.lt_trichotomy (m % (t + t2)) t with hri | hri | hri
+  · -- before `w` on the forward arc (or at `v` itself)
+    rcases Nat.eq_zero_or_pos (m % (t + t2)) with hr0 | hrpos
+    · rw [hr0, Function.iterate_zero_apply] at hur
+      exact fun _hc => absurd hur.symm hne1
+    · have huarc : u ∈
+        (fun l => (rhoNode1_p2 FF)^[l] v) '' {l : ℕ | 0 < l ∧ l < t} :=
+        ⟨m % (t + t2), ⟨hrpos, hri⟩, hur⟩
+      have humem : u ∈ affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3) ∩ V := by
+        rw [← harcvE]
+        exact huarc
+      exact aff_gt_imp_not_collinear hrho humem.1
+  · -- at `w` itself
+    rw [hri, ← htw] at hur
+    exact fun _hc => absurd hur.symm hne2
+  · -- past `w`: on the return arc, in the `ivs v` cone
+    have hrlt : m % (t + t2) < t + t2 :=
+      Nat.mod_lt _ (by omega)
+    have hsplit : (rhoNode1_p2 FF)^[m % (t + t2)] v
+        = (rhoNode1_p2 FF)^[m % (t + t2) - t] ((rhoNode1_p2 FF)^[t] v) := by
+      have hradd : m % (t + t2) = m % (t + t2) - t + t := by omega
+      conv_lhs =>
+        rw [hradd, Function.iterate_add_apply]
+    rw [hsplit, ← htw] at hur
+    have huarc : u ∈
+        (fun l => (rhoNode1_p2 FF)^[l] w) '' {l : ℕ | 0 < l ∧ l < t2} :=
+      ⟨m % (t + t2) - t, ⟨by omega, by omega⟩, hur⟩
+    have humem : u ∈ affGt ({0, v} : Set V3) ({ivsRhoNode1_p2 FF v} : Set V3) ∩ V := by
+      rw [← harcwE]
+      exact huarc
+    exact aff_gt_imp_not_collinear hivs humem.1
+
+/-- HOL `AXJRPNC` (AXJRPNC.hl:380; assembly debt #4) — forward port with the
+single metric-elimination premise `helim`.  The HOL body is a ~670-line case
+bash: the structural core (MMs → fan, `HKIRPEP` lunar inventory, `CARD V = k`,
+rho-successor orbit bookkeeping, minimal period, the cyclic-distance case
+bash) is proved here in full; the distance-2 lunar eliminations that power
+the `k = 4/5` branches and the `k = 6` distance-2/4 sub-branches consume
+`Ppbtydq.PPBTYDQ` + `OIQKKEP` in HOL (Lean twins `PPBTYDQ_concl` /
+`OIQKKEP_concl`, LocalAuto1, are `sorryAx`), so exactly those legs are
+carried as the explicit premise `helim` below (a lunar pair at cyclic
+distance 2 is impossible).  W5d closes the target by proving `helim` and
+applying this piece verbatim. -/
+private theorem w5sg3b_axjrpnc_p26 (s : ScsV39) (v : ℕ → V3) (i j : ℕ)
+    (hs : isScsV39 s) (hbasic : scsBasicV39 s)
+    (hb : ∀ i, s.b i (i + 1) ≤ cstab) (hv : MMsV39 s v)
+    (hlunar : Lunar (v i) (v j) (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3)))
+    (helim : ∀ p : ℕ, ¬ Lunar (v p) (v (p + 2)) (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3)))
+    (h4 : 4 ≤ s.k) :
+    s.k = 6 ∧ v j = v (i + 3) := by
+  have hBB : BBsV39 s v := w5sg_mms_bbs_p26 s v hv
+  have hk0 : 0 < s.k := by
+    have h3 : 3 ≤ s.k := hs.2.1
+    omega
+  have h3k : 3 < s.k := by omega
+  have h6k : s.k ≤ 6 := hs.2.2.1
+  have hper : Periodic v s.k := hBB.2.1
+  -- the range-form fan (LA1 form, from the `BBsV39` disjunction) and its p2 transport
+  have hcfan : ConvexLocalFan (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3))
+      (Set.range fun l : ℕ => (v l, v (l + 1))) :=
+    hBB.2.2.2.resolve_left (by omega)
+  have hclf2 : convexLocalFan_p2 (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3))
+      (Set.range fun l : ℕ => (v l, v (l + 1))) := w5sg_clf2_p26 hcfan
+  obtain ⟨-, -, -, -, harcv, harcw⟩ :=
+    HKIRPEP hclf2 (hlunar : lunar_p2 (v i) (v j) (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3)))
+  obtain ⟨t, htV, ht0, ht1, htw, -⟩ := harcv
+  obtain ⟨t2, ht2V, ht20, ht21, ht2v, -⟩ := harcw
+  -- rho = successor on the dart cycle (in-file kit), under the p2 name
+  have hrho1 : ∀ p : ℕ,
+      rhoNode1_p2 (Set.range fun l : ℕ => (v l, v (l + 1))) (v p) = v (p + 1) := by
+    intro p
+    exact (BB_RHO_NODE_IVS_p26 s s.k v (v p) (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3))
+      (Set.range fun l : ℕ => (v l, v (l + 1))) p rfl rfl rfl rfl rfl hs h3k hBB).1
+  -- iterate step: `rho^[n] (v p) = v (p + n)`
+  have hstep : ∀ n p : ℕ,
+      ((rhoNode1_p2 (Set.range fun l : ℕ => (v l, v (l + 1))))^[n]) (v p)
+        = v (p + n) := by
+    intro n
+    induction n with
+    | zero =>
+        intro p
+        rw [Function.iterate_zero_apply, Nat.add_zero]
+    | succ n ih =>
+        intro p
+        rw [Function.iterate_succ_apply', ih p, hrho1, Nat.add_assoc]
+  -- CARD V = s.k (in-place `CARD_V_EQ_SCS_K1`)
+  have hVcard : (Set.range v).ncard = s.k := by
+    rw [range_periodic_image_p23 v s.k hk0 hper, Set.InjOn.ncard_image]
+    · rw [Set.ncard_Iio_nat]
+    · intro a ha b hbv hab
+      have hmod := (BB_VV_FUN_EQ_p26 s v hs hBB a b).mp hab
+      rw [Nat.mod_eq_of_lt ha, Nat.mod_eq_of_lt hbv] at hmod
+      exact hmod
+  have htlt : t < s.k := by rw [← hVcard]; exact htV
+  have ht2lt : t2 < s.k := by rw [← hVcard]; exact ht2V
+  -- the lunar partner is the `t`-th successor of `v i`, and vice versa
+  have hvj_t : v j = v (i + t) := by rw [htw, hstep]
+  have hvi_t2 : v i = v (j + t2) := by rw [ht2v, hstep]
+  have hback : v (i + t + t2) = v i := by
+    rw [← hstep (t2) (i + t), ← hstep t i, ← htw, ← ht2v]
+  -- minimal period: `s.k ∣ t + t2`
+  have hdvd : s.k ∣ (i + t + t2) - i := by
+    have hme := (BB_VV_FUN_EQ_p26 s v hs hBB (i + t + t2) i).mp hback
+    exact (Nat.modEq_iff_dvd' (by omega)).mp hme.symm
+  have hsub : (i + t + t2) - i = t + t2 := by omega
+  rw [hsub] at hdvd
+  obtain ⟨q, hq⟩ := hdvd
+  rcases Nat.lt_or_ge q 2 with hq1 | hq2
+  · rcases Nat.lt_or_ge q 1 with hq0 | hq1'
+    · -- q = 0: contradicts t, t2 ≥ 2
+      have hqv : q = 0 := by omega
+      rw [hqv, Nat.mul_zero] at hq
+      exfalso
+      omega
+    · -- q = 1: the only survivor
+      have hqv : q = 1 := by omega
+      rw [hqv, Nat.mul_one] at hq
+      -- t, t2 ∈ [2, s.k - 1], t + t2 = s.k
+      rcases Nat.lt_or_ge s.k 6 with hk5 | hk6
+      · rcases Nat.lt_or_ge s.k 5 with hk4 | hk5'
+        · -- k = 4: t = t2 = 2, a distance-2 lunar pair
+          have hkv : s.k = 4 := by omega
+          have htv : t = 2 := by omega
+          rw [htv] at hvj_t
+          rw [hvj_t] at hlunar
+          exact absurd hlunar (helim i)
+        · -- k = 5: t = 2 or t = 3
+          rcases Nat.lt_or_ge t 3 with htv | htv2
+          · have htv3 : t = 2 := by omega
+            rw [htv3] at hvj_t
+            rw [hvj_t] at hlunar
+            exact absurd hlunar (helim i)
+          · have htv3 : t = 3 := by omega
+            have hkv : s.k = 5 := by omega
+            rw [htv3] at hvj_t
+            rw [hkv] at hper
+            have hb5 : v ((i + 3) + 2) = v i := by
+              rw [show (i + 3) + 2 = i + 5 from by omega]
+              exact hper i
+            rw [hvj_t] at hlunar
+            have h1p : lunar_p2 (v i) (v (i + 3)) (Set.range v)
+                (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3)) := hlunar
+            have h2p := (LUNAR_COMM (v i) (v (i + 3)) (Set.range v)
+              (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3))).mp h1p
+            rw [← hb5] at h2p
+            exact absurd h2p (helim (i + 3))
+      · -- k = 6
+        have hkv : s.k = 6 := by omega
+        rcases Nat.lt_or_ge t 3 with htv | htv4
+        · have htv2 : t = 2 := by omega
+          rw [htv2] at hvj_t
+          rw [hvj_t] at hlunar
+          exact absurd hlunar (helim i)
+        · rcases Nat.lt_or_ge t 4 with htv3 | htv4'
+          · have htv3 : t = 3 := by omega
+            rw [htv3] at hvj_t
+            exact ⟨hkv, hvj_t⟩
+          · have htv4 : t = 4 := by omega
+            rw [htv4] at hvj_t
+            rw [hkv] at hper
+            have hb6 : v ((i + 4) + 2) = v i := by
+              rw [show (i + 4) + 2 = i + 6 from by omega]
+              exact hper i
+            rw [hvj_t] at hlunar
+            have h1p : lunar_p2 (v i) (v (i + 4)) (Set.range v)
+                (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3)) := hlunar
+            have h2p := (LUNAR_COMM (v i) (v (i + 4)) (Set.range v)
+              (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3))).mp h1p
+            rw [← hb6] at h2p
+            exact absurd h2p (helim (i + 4))
+  · -- q ≥ 2: t + t2 ≥ 2·s.k contradicts t, t2 < s.k
+    have h2 : s.k * 2 ≤ s.k * q := Nat.mul_le_mul (Nat.le_refl s.k) hq2
+    rw [← hq] at h2
+    exfalso
+    omega
 
 /-- HOL `RRCWNSJ` (RRCWNSJ.hl:248). Proof pending (needs
 `MMS_IMP_BBPRIME` / `JKQEWGV2` / `BBS_IMP_CONVEX_LOCAL_FAN`). -/
