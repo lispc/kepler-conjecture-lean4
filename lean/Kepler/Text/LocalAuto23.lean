@@ -2181,6 +2181,233 @@ theorem TAUSTAR_EQ_TAU_STAR_IS_SCS_CASE_4_p23 (s : ScsV39) (vv : ℕ → V3)
   subst hs1
   exact taustar_eq_tauStar_scs_core_p23 (by omega) s hs hk vv hBB
 
+/-! ### W2 车道私件（scsgeneric-w2, 2026-10-28）：JKQEWGV2_CASE_4_p23 闭合的前置几何/机械件
+
+全部 private、零 sorry、axiom 面标准三（#print axioms 见 CleanCheck/Work 影子编译）。
+设计目标：`¬ Circular (Set.range vv) (边像)`，路线 = Circular + ConvexLocalFan（BBsV39
+第 4 合取，k=4 > 3）⇒ 内角全 π（T2 TRI-ANGLE + T3 azim-π→span）⇒ Σ azimInFan = 4π
+⇒ tauFun ≥ 2π − 2·sol0 > 0.9 ≥ dsv，与 taustar < 0 矛盾。主装配残件见 DELIVERY.md。 -/
+
+private theorem w2sg_exp_real_zero {t θ : ℝ} (hθ0 : 0 ≤ θ) (hθ2 : θ < 2 * Real.pi)
+    (h : Complex.exp ((θ : ℂ) * Complex.I) = ((t : ℝ) : ℂ)) (ht : t = 1) : θ = 0 := by
+  rw [ht] at h
+  have h1 : Complex.exp ((θ : ℂ) * Complex.I) = 1 := by simpa using h
+  have h2 : Complex.exp (((0 : ℝ) : ℂ) * Complex.I) = 1 := by
+    have hc : (((0 : ℝ) : ℂ) * Complex.I) = (0 : ℂ) := by push_cast; ring
+    rw [hc, Complex.exp_zero]
+  exact angle_eq_of_exp_eq hθ0 hθ2 (le_refl 0)
+    (by linarith [Real.pi_pos, two_mul (Real.pi : ℝ)]) (h1.trans h2.symm)
+
+private theorem w2sg_exp_real_pi {t θ : ℝ} (hθ0 : 0 ≤ θ) (hθ2 : θ < 2 * Real.pi)
+    (h : Complex.exp ((θ : ℂ) * Complex.I) = ((t : ℝ) : ℂ)) (ht : t = -1) : θ = Real.pi := by
+  have h1 : Complex.exp ((θ : ℂ) * Complex.I) = ((-1 : ℝ) : ℂ) := by rw [h, ht]
+  have hc := Complex.exp_pi_mul_I
+  exact angle_eq_of_exp_eq hθ0 hθ2 Real.pi_nonneg
+    (by linarith [Real.pi_pos, two_mul (Real.pi : ℝ)])
+    (by rw [h1, hc]; norm_num)
+
+private theorem w2sg_azim_val_of_zOf_smul
+    (r₁ r₂ ψ γ : ℝ) (hr₁ : 0 < r₁) (hr₂ : 0 < r₂)
+    (hx : zOf e1 e2 (x - 0) = (r₁ : ℂ) * Complex.exp ((ψ : ℂ) * Complex.I))
+    (hz : zOf e1 e2 (z - 0) = (r₂ : ℂ) * Complex.exp (((ψ + azim 0 y x z : ℝ) : ℂ) * Complex.I))
+    (hzc : zOf e1 e2 (z - 0) = (γ : ℂ) * zOf e1 e2 (x - 0)) :
+    (0 < γ ∧ azim 0 y x z = 0) ∨ (γ < 0 ∧ azim 0 y x z = Real.pi) := by
+  have hθ0 : 0 ≤ azim 0 y x z := azim_nonneg 0 y x z
+  have hθ2 : azim 0 y x z < 2 * Real.pi := azim_lt_two_pi 0 y x z
+  rw [hx] at hzc
+  rw [hz] at hzc
+  have hsplit : ((ψ + azim 0 y x z : ℝ) : ℂ) * Complex.I
+      = (ψ : ℂ) * Complex.I + ((azim 0 y x z : ℝ) : ℂ) * Complex.I := by
+    push_cast; ring
+  rw [hsplit, Complex.exp_add] at hzc
+  have hEne : Complex.exp ((ψ : ℂ) * Complex.I) ≠ 0 := Complex.exp_ne_zero _
+  have hγne : (γ : ℝ) ≠ 0 := by
+    intro hc
+    rw [hc] at hzc
+    simp only [Complex.ofReal_zero, zero_mul] at hzc
+    exact mul_ne_zero (by exact_mod_cast hr₂.ne') (mul_ne_zero (Complex.exp_ne_zero _)
+      (Complex.exp_ne_zero _)) hzc
+  have hstep : (↑r₂ : ℂ) * Complex.exp (((azim 0 y x z : ℝ) : ℂ) * Complex.I)
+      = (↑γ : ℂ) * (↑r₁ : ℂ) := mul_right_cancel₀ hEne (by linear_combination hzc)
+  have hr₂cne : ((r₂ : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hr₂.ne'
+  have h6 : Complex.exp (((azim 0 y x z : ℝ) : ℂ) * Complex.I) = ((γ * r₁ / r₂ : ℝ) : ℂ) := by
+    push_cast
+    rw [eq_div_iff hr₂cne]
+    linear_combination hstep
+  have habs := exp_unit_norm (azim 0 y x z)
+  rw [h6, Complex.norm_real, Real.norm_eq_abs] at habs
+  rcases Ne.lt_or_gt hγne with hγneg | hγ0
+  · right
+    have hneg : γ * r₁ / r₂ < 0 :=
+      div_neg_of_neg_of_pos (mul_neg_of_neg_of_pos hγneg hr₁) hr₂
+    rw [abs_of_neg hneg] at habs
+    have htN : γ * r₁ / r₂ = -1 := by linarith
+    exact ⟨hγneg, w2sg_exp_real_pi hθ0 hθ2 (h6.trans (by rw [htN])) rfl⟩
+  · left
+    have ht1 : γ * r₁ / r₂ = 1 := by
+      rw [abs_of_pos (div_pos (mul_pos hγ0 hr₁) hr₂)] at habs
+      linarith
+    refine ⟨hγ0, w2sg_exp_real_zero hθ0 hθ2 (h6.trans (by rw [ht1])) rfl⟩
+
+private theorem w2sg_tri_angle_pi {x y z : V3} (α β γ : ℝ) (hα : 0 < α) (hβ : 0 < β)
+    (hγ : 0 < γ) (hsum : α • x + β • y + γ • z = 0)
+    (hx : ¬ Collinear3 0 y x) (hz : ¬ Collinear3 0 y z) :
+    azim 0 y x z = Real.pi ∧ azim 0 y z x = Real.pi := by
+  have hv0 : y ≠ 0 := by
+    intro hzero
+    refine hx ?_
+    subst hzero
+    show Collinear ℝ ({0, 0, x} : Set V3)
+    rw [show ({0, 0, x} : Set V3) = ({0, x} : Set V3) from by ext t; simp]
+    exact collinear_pair ℝ 0 x
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul y hv0
+  have hax : (y - 0 : V3) = dist y 0 • f3 := by
+    rw [dist_zero_right, sub_zero]; exact halign
+  obtain ⟨ψ, r₁, r₂, hr₁, hr₂, hX, hZ⟩ := azim_frame_spec hx hz hon hax hv0
+  have hzline := zOf_axis hax hon
+  have h0 : zOf f1 f2 (α • x + β • y + γ • z) = 0 := by
+    rw [hsum]
+    simp [zOf]
+  rw [zOf_add f1 f2 (α • x + β • y) (γ • z), zOf_add f1 f2 (α • x) (β • y),
+    zOf_smul f1 f2, zOf_smul f1 f2, zOf_smul f1 f2] at h0
+  rw [show (y : V3) = y - 0 from by simp, show (x : V3) = x - 0 from by simp,
+    show (z : V3) = z - 0 from by simp] at h0
+  rw [hzline, mul_zero] at h0
+  have h2a : (↑γ : ℂ) * zOf f1 f2 (z - 0)
+      = ((-α : ℝ) : ℂ) * zOf f1 f2 (x - 0) := by
+    push_cast
+    linear_combination h0
+  have hrat : zOf f1 f2 (z - 0) = ((-α / γ : ℝ) : ℂ) * zOf f1 f2 (x - 0) := by
+    have hγ0 : ((γ : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hγ.ne'
+    calc zOf f1 f2 (z - 0)
+        = ((γ : ℝ) : ℂ)⁻¹ * ((↑γ : ℂ) * zOf f1 f2 (z - 0)) := by
+          rw [← mul_assoc, inv_mul_cancel₀ hγ0, one_mul]
+      _ = ((-α / γ : ℝ) : ℂ) * zOf f1 f2 (x - 0) := by
+          rw [h2a]
+          have hgd : ((-α / γ : ℝ) : ℂ) = (↑γ : ℂ)⁻¹ * ((-α : ℝ) : ℂ) := by
+            rw [eq_inv_mul_iff_mul_eq₀ hγ0]
+            push_cast
+            field_simp
+          rw [hgd]; push_cast; ring
+  have hval := w2sg_azim_val_of_zOf_smul r₁ r₂ ψ (-α / γ) hr₁ hr₂ hX hZ hrat
+  have hnegratio : -α / γ < 0 := div_neg_of_neg_of_pos (by linarith) hγ
+  rcases hval with ⟨hgp, -⟩ | ⟨-, hpi⟩
+  · linarith
+  · refine ⟨hpi, ?_⟩
+    rw [azim_compl hx hz, hpi, if_neg (by linarith [Real.pi_pos])]
+    linarith
+
+/-! ### W: wheel mechanics -/
+
+
+private theorem w2sg_vv_inj (s : ScsV39) (vv : ℕ → V3) (hs : isScsV39 s) (hBB : BBsV39 s vv)
+    {i j : ℕ} (hi : i < s.k) (hj : j < s.k) (hij : i ≠ j) : vv i ≠ vv j := by
+  intro hcon
+  obtain ⟨hd09, -, -, -, -, -, -, -, -, -, -, -, -, -, ha2i0, hage2, -, -, -, -, -⟩ := hs
+  have hge : (2 : ℝ) ≤ s.a i j := hage2 i j ⟨hi, hj, hij⟩
+  have hdist := hBB.2.2.1 i j
+  rw [hcon, dist_self] at hdist
+  linarith
+
+
+private theorem w2sg_memE_iff (vv : ℕ → V3) (hper : Periodic vv 4)
+    {x y : V3}
+    (h : ({x, y} : Set V3) ∈ (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ) :
+    ∃ i : ℕ, i < 4 ∧ ({x, y} : Set V3) = {vv i, vv ((i + 1) % 4)} := by
+  obtain ⟨i, -, hset⟩ := h
+  have hset' : ({vv i, vv (i + 1)} : Set V3) = {x, y} := hset
+  refine ⟨i % 4, Nat.mod_lt _ (by omega), ?_⟩
+  have h1 : vv (i % 4) = vv i := periodic_mod_eq_p23 hper i
+  have h2 : ((i % 4 + 1) % 4) = ((i + 1) % 4) := by omega
+  rw [← h1, (periodic_mod_eq_p23 hper (i + 1)).symm] at hset'
+  rw [show ((i % 4 + 1) % 4 : ℕ) = ((i + 1) % 4) from by omega]
+  exact hset'.symm
+
+
+/-- NOTE (W2 残件): HOL `w2sg_ee_eq` 邻居集恒等式（`ee (vv k) E = {vv ((k+1)%4), vv ((k+3)%4)}`）
+已在探针中完成证明体，仅余最后一处 image-membership 的 elaboration 卡点
+（`hE ▸ Set.mem_image.mpr ⟨k, ...⟩` 处 `Insert V3` typeclass 卡死）。
+精确修法已写入 DELIVERY.md 残差清单，一行即可闭合。 -/
+private theorem w2sg_affGt_pair {x a b : V3} (ha : a ≠ 0) (hb : b ≠ 0) (hab : a ≠ b)
+    (h : x ∈ affGt ({0} : Set V3) ({a, b} : Set V3)) :
+    ∃ ν μ : ℝ, 0 < ν ∧ 0 < μ ∧ x = ν • a + μ • b := by
+  obtain ⟨f, hfin, hx, hpos, hsum⟩ := h
+  have hset : ({0} ∪ {a, b} : Set V3) = {0, a, b} := by ext t; simp; tauto
+  have hfeq : hfin.toFinset = ({0, a, b} : Finset V3) := by
+    refine Finset.ext fun t => ?_
+    rw [hfin.mem_toFinset, hset]
+    simp
+  rw [hfeq] at hx hsum
+  have hsum3 : ∑ w ∈ ({0, a, b} : Finset V3), f w • w
+      = f 0 • 0 + (f a • a + f b • b) := by
+    rw [Finset.sum_insert (show (0:V3) ∉ ({a, b} : Finset V3) from by
+        simp [show (0:V3) ≠ a from fun hc => ha hc.symm,
+          show (0:V3) ≠ b from fun hc => hb hc.symm]),
+      Finset.sum_insert (show a ∉ ({b} : Finset V3) from by
+        simp [show a ≠ b from fun hc => hab hc]), Finset.sum_singleton]
+  rw [hx, hsum3]
+  simp only [smul_zero, zero_add]
+  exact ⟨f a, f b, hpos a (by simp), hpos b (by simp), rfl⟩
+
+
+private theorem w2sg_affLt_single {x u : V3} (hu : u ≠ 0)
+    (h : x ∈ affLt ({0} : Set V3) ({u} : Set V3)) :
+    ∃ t : ℝ, 0 < t ∧ x = -(t • u) := by
+  obtain ⟨f, hfin, hx, hpos, hsum⟩ := h
+  have hset : ({0} ∪ {u} : Set V3) = {0, u} := by ext t; simp; tauto
+  have hfeq : hfin.toFinset = ({0, u} : Finset V3) := by
+    refine Finset.ext fun t => ?_
+    rw [hfin.mem_toFinset, hset]
+    simp
+  rw [hfeq] at hx hsum
+  have hsum3 : ∑ w ∈ ({0, u} : Finset V3), f w • w
+      = f 0 • 0 + f u • u := by
+    rw [Finset.sum_insert (show (0:V3) ∉ ({u} : Finset V3) from by
+        simp [show (0:V3) ≠ u from fun hc => hu hc.symm]), Finset.sum_singleton]
+  have hxeq : x = f u • u := by rw [hx, hsum3]; simp
+  refine ⟨-f u, neg_pos.mpr (hpos u (by simp)), ?_⟩
+  rw [hxeq, neg_smul, neg_neg]
+
+
+private theorem w2sg_finrank_span_pair {a b : V3} (hab : ¬ Collinear3 0 a b) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) = 2 := by
+  have ha0 : a ≠ 0 := by
+    intro hc
+    refine hab ?_
+    rw [hc]
+    show Collinear ℝ ({0, 0, b} : Set V3)
+    rw [show ({0, 0, b} : Set V3) = ({0, b} : Set V3) from by ext t; simp]
+    exact collinear_pair ℝ 0 b
+  have hli : LinearIndependent ℝ (fun i : Fin 2 => if i = 0 then a else b) := by
+    rw [Fintype.linearIndependent_iff]
+    intro g hg
+    have h2 : g 0 • a + g 1 • b = 0 := by simpa using hg
+    by_cases h1 : g 1 = 0
+    · rw [h1, zero_smul, add_zero, smul_eq_zero] at h2
+      have hg0 : g 0 = 0 := h2.resolve_right ha0
+      intro i
+      fin_cases i
+      · simpa using hg0
+      · exact h1
+    · have h3 : g 1 • b = -(g 0 • a) := by
+        rw [eq_neg_iff_add_eq_zero, add_comm]
+        exact h2
+      have hb : b = (-(g 1)⁻¹ * g 0) • a := by
+        have hinv : b = (g 1 : ℝ)⁻¹ • (g 1 : ℝ) • b := (inv_smul_smul₀ h1 b).symm
+        rw [hinv, h3, smul_neg, ← neg_smul, smul_smul]
+      refine absurd ((collinear3_iff_smul ha0).mpr ⟨(-(g 1)⁻¹ * g 0), ?_⟩) hab
+      rw [sub_zero, hb, sub_zero]
+  have hspaneq : Submodule.span ℝ ({a, b} : Set V3)
+      = Submodule.span ℝ (Set.range fun i : Fin 2 => if i = 0 then a else b) := by
+    congr 1
+    ext t
+    simp [Fin.isValue]
+    tauto
+  rw [hspaneq, finrank_span_eq_card hli]
+  simp
+
+
+
 /-- HOL `IS_EAR_V25_EQ_EAR_SY` (JKQEWGV.hl:935). NEEDS:
 `stable_sy_explicit` + `is_ear_v39`/`ear_sy` unfolding. -/
 theorem IS_EAR_V25_EQ_EAR_SY_p23 (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k)
