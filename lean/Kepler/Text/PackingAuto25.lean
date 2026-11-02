@@ -9764,13 +9764,34 @@ theorem beta_bumpA_y_sym26 (y1 y2 y3 y4 y5 y6 : ℝ) :
   ring
 
 /-- `gamma4fgcy_sym23`（PA25 只有 sym26；PA21 `p21i_gamma4fgcy_sym23` 私件
-不可见）。 -/  -- SORRY 占位：期望战术 = 按 PA25 `gamma4fgcy_sym26`（:9650
--- 真证）模板对 (2 3)(5 6) 置换重排：volY 经 hD2 一发、solY 12 项经
--- dihY_sym23P25/dihY_sym26P25 逐项 rw、vol4f 的 dihY 边 4 项经 hdy23、
--- 末 ring。模板同构机械活，但 solY 置换链索引须编译窗实测。
+不可见）。ztg4-w1 车道收口：按 PA25 `gamma4fgcy_sym26`（:10122，真证）模板
+对 (2 3)(5 6) 置换重排——volY 经 `deltaX_sym23P25` 一发；solY 四项 12 个
+dihY 子项经 `dihY_sym23P25` 逐项回写（配对表见证内注）；vol4f 六 dihY 边项
+中 y2/y3 对调、y5/y6 对调后恰两项同型免写，余四项回写；末 `ring`。 -/
 theorem gamma4fgcy_sym23P25 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) :
     gamma4fgcyP25 y1 y2 y3 y4 y5 y6 f = gamma4fgcyP25 y1 y3 y2 y4 y6 y5 f := by
-  sorry
+  have hvol : volY y1 y2 y3 y4 y5 y6 = volY y1 y3 y2 y4 y6 y5 := by
+    unfold volY volXf
+    rw [deltaX_sym23P25]
+  -- solY 块：σt 侧 12 项逐一回写到 t 侧（R1a↔L1a ←向、R1b→L1c、R1c←L1b、
+  -- R2a→L2a、R2b←L2c、R2c←L2b、R3a→L4a、R3b→L4c、R3c→L4b、
+  -- R4a→L3a、R4b→L3c、R4c→L3b；全部 sym23 单发）
+  have hsol : solY y1 y3 y2 y4 y6 y5 + solY y1 y6 y5 y4 y3 y2 +
+      solY y4 y6 y2 y1 y3 y5 + solY y4 y3 y5 y1 y6 y2 =
+    solY y1 y2 y3 y4 y5 y6 + solY y1 y5 y6 y4 y2 y3 +
+      solY y4 y5 y3 y1 y2 y6 + solY y4 y2 y6 y1 y5 y3 := by
+    unfold solY
+    rw [← dihY_sym23P25 y1 y2 y3 y4 y5 y6, dihY_sym23P25 y3 y2 y1 y6 y5 y4,
+      ← dihY_sym23P25 y2 y3 y1 y5 y6 y4, dihY_sym23P25 y1 y6 y5 y4 y3 y2,
+      ← dihY_sym23P25 y6 y1 y5 y3 y4 y2, ← dihY_sym23P25 y5 y6 y1 y2 y3 y4,
+      dihY_sym23P25 y4 y6 y2 y1 y3 y5, dihY_sym23P25 y6 y2 y4 y3 y5 y1,
+      dihY_sym23P25 y2 y4 y6 y5 y1 y3, dihY_sym23P25 y4 y3 y5 y1 y6 y2,
+      dihY_sym23P25 y3 y5 y4 y6 y2 y1, dihY_sym23P25 y5 y4 y3 y2 y1 y6]
+    ring
+  unfold gamma4fgcyP25 vol4fP25
+  rw [hvol, hsol, ← dihY_sym23P25 y1 y2 y3 y4 y5 y6, dihY_sym23P25 y3 y2 y1 y6 y5 y4,
+    ← dihY_sym23P25 y2 y3 y1 y5 y6 y4, ← dihY_sym26P25 y4 y3 y5 y1 y6 y2]
+  ring
 
 /-! ## Part B1：beta 桥三件（real，无 sorry） -/
 
@@ -9985,7 +10006,838 @@ theorem ztg4_shard_finish_m0 (y1 y2 y3 y4 y5 y6 : ℝ)
     rw [heq] at hrad
     linarith
 
-/-! ## Part B4：ztg4_ALT（statement 真；体 = 本草案唯一硬 sorry） -/
+/-! ## Part B3.5：ztg4-w1 车道新件（`ztg4_ALT` 装配用；全部真证零 sorry）
+
+四件套路线（HOL merge_ineq.hl:2310-2631 逐段对照后的 Lean 化收敛形）：
+1. `ztg4w1_wlog4`/`ztg4w1_step1`：Klein 四元群 min-归序 WLOG（HOL
+   REAL_WLOG_SIMPLEX_LEMMA2_LE 两支的显式八叶版）；
+2. `ztg4w1_y2bound`：`bank_MKFKQWU` 对偶否证 y2 < 2hminus（HOL :2385-2427）;
+3. `ztg4w1_quarter_norm2hh` + `ztg4w1_gamma_pos`：GLFVCVK4 的 γ>0 支燃料
+   （HOL :2414-2418 subgoal）；
+4. `ztg4w1_finish` + `ztg4w1_main`：ZTGIJCF4 ×16 叶统一收口——每叶
+   `gamma_wt`（t ≤ w' 恒成立：超临界 y_k 使 wtcount 只减不增）+
+   `ztg4w1_bumpA_nonneg`（乘积形 bumpA 任一零因子即非负）+
+   `ineq_approxA_ztg4P25`。路线注记：因 w' ≥ t 对**全部** 16 叶成立（含
+   y4 超临界），HOL 的 step 3（y3,y5,y6 ≤ 2hplus 定界）在此收敛形下不再
+   需要；`bank_MKFKQWUhalfwt`/`bank_GLFVCVK4y4*`/`bank_GLFVCVK4a*` 五张
+   证书不被消费（19 供 18 用，HOL ztg4_hyp 的保守超配）。 -/
+
+/-- HOL `quarter_norm2hh`（merge_ineq.hl:2159-2206）的 Lean 化：norm2hh 六项
+平方和 < (hplus−hminus)² ⟹ y1 临界、y2..y6 全 < 2hminus。纯实数链：y_k ≥
+2hminus 时 (y_k−2)² ≥ (2hminus−2)² ≥ (hplus−hminus)²（燃料 1.2 ≤ hminus <
+1.3 ≤ hplus = 1.3254）；y1 出临界带时首项 (y1−hminus−hplus)² ≥
+(hplus−hminus)²（A²−B² = (y1−2hplus)(y1−2hminus) 因式分解）。 -/
+theorem ztg4w1_quarter_norm2hh (y1 y2 y3 y4 y5 y6 : ℝ)
+    (h : norm2hh y1 y2 y3 y4 y5 y6 < (hplus - hminus) ^ 2) :
+    criticalEdgeY y1 ∧ y2 < 2 * hminus ∧ y3 < 2 * hminus ∧ y4 < 2 * hminus ∧
+      y5 < 2 * hminus ∧ y6 < 2 * hminus := by
+  have hm : (1.2 : ℝ) ≤ hminus := mi_hminus_prop.1
+  have hhp : hplus = 1.3254 := rfl
+  have hmp : hminus ≤ hplus := by
+    have h13 : hminus < 1.3 := mi_hminus_prop.2.1
+    linarith
+  -- 非负平方差钥匙：0 ≤ u ≤ v ⟹ u² ≤ v²（v²−u² = (v−u)(v+u) ≥ 0）
+  have hdif : ∀ u v : ℝ, 0 ≤ u → u ≤ v → u ^ 2 ≤ v ^ 2 := by
+    intro u v hu hv
+    have p1 : (0 : ℝ) ≤ v - u := by linarith
+    have p2 : (0 : ℝ) ≤ v + u := by linarith
+    have e : v ^ 2 - u ^ 2 = (v - u) * (v + u) := by ring
+    linarith [mul_nonneg p1 p2]
+  have hsq1 : (0 : ℝ) ≤ hplus - hminus := by linarith
+  have hsq2 : hplus - hminus ≤ 2 * hminus - 2 := by linarith
+  have hsq3 : (hplus - hminus) ^ 2 ≤ (2 * hminus - 2) ^ 2 := hdif _ _ hsq1 hsq2
+  unfold norm2hh at h
+  have s1 := sq_nonneg (y1 - hminus - hplus)
+  have s2 := sq_nonneg (y2 - 2)
+  have s3 := sq_nonneg (y3 - 2)
+  have s4 := sq_nonneg (y4 - 2)
+  have s5 := sq_nonneg (y5 - 2)
+  have s6 := sq_nonneg (y6 - 2)
+  have hsub : ∀ y : ℝ, (y - 2) ^ 2 < (hplus - hminus) ^ 2 → y < 2 * hminus := by
+    intro y hy
+    by_contra hge
+    have hy2 : (2 * hminus - 2) ^ 2 ≤ (y - 2) ^ 2 :=
+      hdif _ _ (by linarith) (by linarith)
+    linarith
+  refine ⟨⟨?_, ?_⟩, hsub y2 ?_, hsub y3 ?_, hsub y4 ?_, hsub y5 ?_, hsub y6 ?_⟩
+  · -- y1 ≥ 2hminus
+    by_contra hnc
+    have hlt : y1 < 2 * hminus := not_le.mp hnc
+    have key : (hplus - hminus) ^ 2 < (y1 - hminus - hplus) ^ 2 := by
+      have un : (0 : ℝ) < -(y1 - 2 * hminus) := by linarith
+      have vn : (0 : ℝ) < -(y1 - 2 * hplus) := by linarith
+      have uv : (y1 - 2 * hminus) * (y1 - 2 * hplus) =
+          (-(y1 - 2 * hminus)) * (-(y1 - 2 * hplus)) := by ring
+      have e : (y1 - hminus - hplus) ^ 2 - (hplus - hminus) ^ 2 =
+          (y1 - 2 * hminus) * (y1 - 2 * hplus) := by ring
+      linarith [mul_pos un vn, uv]
+    linarith
+  · -- y1 ≤ 2hplus
+    by_contra hnc
+    have hgt : 2 * hplus < y1 := not_le.mp hnc
+    have key : (hplus - hminus) ^ 2 ≤ (y1 - hminus - hplus) ^ 2 := by
+      have e : (y1 - hminus - hplus) ^ 2 - (hplus - hminus) ^ 2 =
+          (y1 - 2 * hplus) * (y1 - 2 * hminus) := by ring
+      have p : (0 : ℝ) ≤ (y1 - 2 * hplus) * (y1 - 2 * hminus) :=
+        mul_nonneg (by linarith) (by linarith)
+      linarith
+    linarith
+  all_goals
+    linarith
+
+/-- 通用 bump 非负桥（`beta_bumpA_lb0P25` 的乘积形强化）：bumpA = 六个 0/1
+临界因子乘积 × bump 差，任一因子为零即 `bumpA = 0`。析取按「y_k ≥ 2hminus
+使第 k 因子（y_k < 2hminus 指示）为零、非临界使临界因子为零」组织——覆盖
+ZTGIJCF4 ×16 各叶（i_k = 1 叶有 y_k ≥ 2hminus；y4 非临界叶有 ¬critical）。 -/
+theorem ztg4w1_bumpA_nonneg (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hd : ¬ criticalEdgeY y1 ∨ criticalEdgeY y2 ∨ 2 * hminus ≤ y3 ∨
+      2 * hminus ≤ y5 ∨ 2 * hminus ≤ y6 ∨ ¬ criticalEdgeY y4) :
+    (0 : ℝ) ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 := by
+  rcases hd with d | d | d | d | d | d
+  · have hb : beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = 0 := by
+      simp only [beta_bumpA_yP25, if_neg d]; ring
+    linarith
+  · have hb : beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = 0 := by
+      simp only [beta_bumpA_yP25,
+        if_neg (fun h2 => absurd h2 (not_lt.mpr d.1))]; ring
+    linarith
+  · have hb : beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = 0 := by
+      simp only [beta_bumpA_yP25,
+        if_neg (fun h3 => absurd h3 (not_lt.mpr d))]; ring
+    linarith
+  · have hb : beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = 0 := by
+      simp only [beta_bumpA_yP25,
+        if_neg (fun h5 => absurd h5 (not_lt.mpr d))]; ring
+    linarith
+  · have hb : beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = 0 := by
+      simp only [beta_bumpA_yP25,
+        if_neg (fun h6 => absurd h6 (not_lt.mpr d))]; ring
+    linarith
+  · have hb : beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 = 0 := by
+      simp only [beta_bumpA_yP25, if_neg d]; ring
+    linarith
+
+/-- step 4 的 γ>0 燃料（HOL :2414-2418 subgoal）：y3..y6 有任一 ≥ 2hminus 时
+`gamma4fgcy > 0`。GLFVCVK4 三支：rad2 支经 rfl 桥否证；norm2hh 支经
+`ztg4w1_quarter_norm2hh` 与析取反驳；γ>0 支直供。 -/
+theorem ztg4w1_gamma_pos (hG4 : bank_GLFVCVK4) (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hb1 : 2 * hminus ≤ y1) (hb1' : y1 ≤ 2 * hplus)
+    (hb2 : 2 ≤ y2) (hb2' : y2 ≤ Real.sqrt 8) (hb3 : 2 ≤ y3) (hb3' : y3 ≤ Real.sqrt 8)
+    (hb4 : 2 ≤ y4) (hb4' : y4 ≤ Real.sqrt 8) (hb5 : 2 ≤ y5) (hb5' : y5 ≤ Real.sqrt 8)
+    (hb6 : 2 ≤ y6) (hb6' : y6 ≤ Real.sqrt 8)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2)
+    (hany : 2 * hminus ≤ y3 ∨ 2 * hminus ≤ y4 ∨ 2 * hminus ≤ y5 ∨ 2 * hminus ≤ y6) :
+    0 < gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun := by
+  have hin := hG4 y1 y2 y3 y4 y5 y6 hb1 hb1' hb2 hb2' hb3 hb3' hb4 hb4' hb5 hb5'
+    hb6 hb6'
+  rcases hin with hg | hn | hr
+  · exact hg
+  · obtain ⟨-, h2, h3, h4, h5, h6⟩ := ztg4w1_quarter_norm2hh y1 y2 y3 y4 y5 y6 hn
+    rcases hany with h | h | h | h
+    · exact absurd h (not_le.mpr h3)
+    · exact absurd h (not_le.mpr h4)
+    · exact absurd h (not_le.mpr h5)
+    · exact absurd h (not_le.mpr h6)
+  · have heq : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+    rw [heq] at hrad
+    linarith
+
+/-- step 4 统一收口（HOL 各叶 `ineq_approxA_ztg4` 消费位）：shard 左支
+g/w + m·lb > 脊 + γ/w ≤ γ/t + m·lb ≤ bumpA + rad2 否证 ⟹ 结论体。
+`t = ↑(wtcount6Y …)` 保持不可知形——超临界 y_k 使 t 严格小于 w' 亦可
+（γ ≥ 0 下 γ/w ≤ γ/t 只用 t ≤ w'）。 -/
+theorem ztg4w1_finish (y1 y2 y3 y4 y5 y6 : ℝ) (g : ℝ) (w : ℕ) (m : ℝ)
+    (hgw : g / (w : ℝ) ≤ g / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ))
+    (hbm : m * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6)
+    (hcase : g / (w : ℝ) + m * betaBumpLb >
+        aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2) :
+    g / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) + beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 := by
+  rcases ineq_approxA_ztg4P25 g w (wtcount6Y y1 y2 y3 y4 y5 y6) m
+      (aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6) (beta_bumpA_yP25 y1 y2 y3 y4 y5 y6)
+      (yOfX rad2X y1 y2 y3 y4 y5 y6) hgw hbm hcase with hc | hr2
+  · exact hc
+  · have heq : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+    rw [heq] at hrad
+    linarith
+
+/-- HOL `REAL_WLOG_SIMPLEX_LEMMA2_LE`（merge_ineq.hl:1821-1843）的 Lean 化：
+Klein 四元群 {e, (23)(56), (26)(35), (25)(36)} 下的 min-归序 WLOG。P 在
+σ23/σ26 下不变 + min 叶（y2 ≤ y3 ∧ y2 ≤ y5 ∧ y2 ≤ y6）成立 ⟹ 全域成立。
+八叶穷举（min ∈ {y2,y3,y5,y6}，按 le_total 阶梯定位），对偶支经 σ23/σ26/
+σ23σ26 回写。 -/
+theorem ztg4w1_wlog4 (P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → Prop)
+    (h23 : ∀ a b c d e g : ℝ, P a b c d e g → P a c b d g e)
+    (h26 : ∀ a b c d e g : ℝ, P a b c d e g → P a g e d c b)
+    (hmin : ∀ a b c d e g : ℝ, b ≤ c → b ≤ e → b ≤ g → P a b c d e g)
+    (y1 y2 y3 y4 y5 y6 : ℝ) : P y1 y2 y3 y4 y5 y6 := by
+  have h53 : ∀ a b c d e g : ℝ, P a b c d e g → P a e g d b c := fun a b c d e g h =>
+    h26 a c b d g e (h23 a b c d e g h)
+  rcases le_total y2 y3 with h32 | h23l
+  · rcases le_total y2 y5 with h25 | h52
+    · rcases le_total y2 y6 with h26l | h62
+      · -- min = y2
+        exact hmin y1 y2 y3 y4 y5 y6 h32 h25 h26l
+      · -- min = y6：y6 ≤ y2 ≤ y3, y6 ≤ y2 ≤ y5
+        exact h26 y1 y6 y5 y4 y3 y2
+          (hmin y1 y6 y5 y4 y3 y2 (le_trans h62 h25) (le_trans h62 h32) h62)
+    · rcases le_total y5 y6 with h56 | h65
+      · -- min = y5：y5 ≤ y2 ≤ y3, y5 ≤ y6
+        exact h53 y1 y5 y6 y4 y2 y3
+          (hmin y1 y5 y6 y4 y2 y3 h56 h52 (le_trans h52 h32))
+      · -- min = y6：y6 ≤ y5 ≤ y2 ≤ y3
+        exact h26 y1 y6 y5 y4 y3 y2
+          (hmin y1 y6 y5 y4 y3 y2 h65
+            (le_trans (le_trans h65 h52) h32) (le_trans h65 h52))
+  · rcases le_total y5 y6 with h56 | h65
+    · rcases le_total y3 y5 with h35 | h53r
+      · -- min = y3：y3 ≤ y2, y3 ≤ y5 ≤ y6
+        exact h23 y1 y3 y2 y4 y6 y5
+          (hmin y1 y3 y2 y4 y6 y5 h23l (le_trans h35 h56) h35)
+      · -- min = y5：y5 ≤ y3 ≤ y2, y5 ≤ y6
+        exact h53 y1 y5 y6 y4 y2 y3
+          (hmin y1 y5 y6 y4 y2 y3 h56 (le_trans h53r h23l) h53r)
+    · rcases le_total y3 y6 with h36 | h63
+      · -- min = y3：y3 ≤ y2, y3 ≤ y6 < y5
+        exact h23 y1 y3 y2 y4 y6 y5
+          (hmin y1 y3 y2 y4 y6 y5 h23l h36 (le_trans h36 h65))
+      · -- min = y6：y6 ≤ y3 ≤ y2, y6 ≤ y5
+        exact h26 y1 y6 y5 y4 y3 y2
+          (hmin y1 y6 y5 y4 y3 y2 h65 h63 (le_trans h63 h23l))
+
+/-- WLOG 谓词：ztg4 结论体（`gamma4fgcyP25` 形，与 PA20 `gamma4fgcy` 同体
+defeq）的盒式包装。六槽全显式，σ23/σ26 不变量逐字可回写。 -/
+def ztg4w1_P (y1 y2 y3 y4 y5 y6 : ℝ) : Prop :=
+  2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    rad2YP25 y1 y2 y3 y4 y5 y6 < 2 →
+    gamma4fgcyP25 y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+        beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6
+
+/-- `gamma4fgcyP25` 在 (2 6)(3 5) 置换下的不变量（= PA25:10122
+`gamma4fgcy_sym26` 的前置副本——原件声明在 `ztg4_ALT` 之后，Lean 不可
+前向引用；后续车道可改重指向消重）。 -/
+theorem ztg4w1_gamma_sym26P25 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) :
+    gamma4fgcyP25 y1 y2 y3 y4 y5 y6 f = gamma4fgcyP25 y1 y6 y5 y4 y3 y2 f := by
+  have hD1 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x6 x5 x4 x3 x2 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX; ring
+  have hD2 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX; ring
+  have hD3 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x6 x5 x4 x3 x2 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX4; ring
+  have hD4 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x3 x2 x4 x6 x5 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX4; ring
+  have hdy26 : ∀ a b c d e g : ℝ, dihY a b c d e g = dihY a g e d c b := by
+    intro a b c d e g
+    show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (g * g) =
+      dihXf (a * a) (g * g) (e * e) (d * d) (c * c) (b * b)
+    unfold dihXf
+    rw [hD1 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g),
+      hD3 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g)]
+  have hdy23 : ∀ a b c d e g : ℝ, dihY a b c d e g = dihY a c b d g e := by
+    intro a b c d e g
+    show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (g * g) =
+      dihXf (a * a) (c * c) (b * b) (d * d) (g * g) (e * e)
+    unfold dihXf
+    rw [hD2 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g),
+      hD4 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g)]
+  have hvol : volY y1 y2 y3 y4 y5 y6 = volY y1 y6 y5 y4 y3 y2 := by
+    unfold volY volXf
+    rw [hD1 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)]
+  have hsol : solY y1 y6 y5 y4 y3 y2 + solY y1 y3 y2 y4 y6 y5 +
+      solY y4 y3 y5 y1 y6 y2 + solY y4 y6 y2 y1 y3 y5 =
+    solY y1 y2 y3 y4 y5 y6 + solY y1 y5 y6 y4 y2 y3 +
+      solY y4 y5 y3 y1 y2 y6 + solY y4 y2 y6 y1 y5 y3 := by
+    unfold solY
+    rw [hdy26 y1 y6 y5 y4 y3 y2, hdy23 y6 y5 y1 y3 y2 y4, hdy23 y5 y1 y6 y2 y4 y3,
+      hdy26 y1 y3 y2 y4 y6 y5, hdy23 y3 y2 y1 y6 y5 y4, hdy23 y2 y1 y3 y5 y4 y6,
+      hdy23 y4 y3 y5 y1 y6 y2, hdy23 y3 y5 y4 y6 y2 y1, hdy23 y5 y4 y3 y2 y1 y6,
+      hdy23 y4 y6 y2 y1 y3 y5, hdy23 y6 y2 y4 y3 y5 y1, hdy23 y2 y4 y6 y5 y1 y3]
+    ring
+  unfold gamma4fgcyP25 vol4fP25
+  rw [hvol, hsol,
+    hdy26 y1 y6 y5 y4 y3 y2,          -- edge y1 term
+    hdy23 y6 y5 y1 y3 y2 y4,          -- edge y6 term
+    hdy23 y4 y5 y3 y1 y2 y6,          -- edge y4 term
+    hdy23 y2 y1 y3 y5 y4 y6]          -- edge y2 term
+  ring
+
+/-- step 1：WLOG 归约引理——「min-归序盒（y2 ≤ y3 ∧ y2 ≤ y5 ∧ y2 ≤ y6）上
+成立 ⟹ 全盒成立」（HOL :2316-2351 REAL_WLOG_SIMPLEX_LEMMA2_LE 两支）。
+对偶支：rad2/wtcount/beta/gamma/dihY 五件 sym23/sym26 逐字回写；γ 的
+sym26 支取 `ztg4w1_gamma_sym26P25` 前置副本。 -/
+theorem ztg4w1_step1
+    (hmain : ∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+      2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+      2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+      2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+      2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+      y2 ≤ y3 → y2 ≤ y5 → y2 ≤ y6 →
+      rad2YP25 y1 y2 y3 y4 y5 y6 < 2 →
+      gamma4fgcyP25 y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+          beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+        aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6)
+    (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hb1 : 2 * hminus ≤ y1) (hb1' : y1 ≤ 2 * hplus)
+    (hb2 : 2 ≤ y2) (hb2' : y2 ≤ Real.sqrt 8) (hb3 : 2 ≤ y3) (hb3' : y3 ≤ Real.sqrt 8)
+    (hb4 : 2 ≤ y4) (hb4' : y4 ≤ Real.sqrt 8) (hb5 : 2 ≤ y5) (hb5' : y5 ≤ Real.sqrt 8)
+    (hb6 : 2 ≤ y6) (hb6' : y6 ≤ Real.sqrt 8)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2) :
+    gamma4fgcyP25 y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+        beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 := by
+  have hP23 : ∀ a b c d e g : ℝ, ztg4w1_P a b c d e g → ztg4w1_P a c b d g e := by
+    intro a b c d e g h
+    unfold ztg4w1_P at h ⊢
+    intro ha ha' hc hc' hb hb' hd hd' hg hg' he he' hr
+    rw [← gamma4fgcy_sym23P25 a b c d e g lmfun, ← wtcount6_y_sym23 a b c d e g,
+      ← beta_bumpA_y_sym23 a b c d e g, ← dihY_sym23P25 a b c d e g]
+    refine h ha ha' hb hb' hc hc' hd hd' he he' hg hg' ?_
+    rw [rad2YP25_sym23P25 a c b d g e] at hr
+    exact hr
+  have hP26 : ∀ a b c d e g : ℝ, ztg4w1_P a b c d e g → ztg4w1_P a g e d c b := by
+    intro a b c d e g h
+    unfold ztg4w1_P at h ⊢
+    intro ha ha' hg hg' he he' hd hd' hc hc' hb hb' hr
+    rw [← ztg4w1_gamma_sym26P25 a b c d e g lmfun, ← wtcount6_y_sym26 a b c d e g,
+      ← beta_bumpA_y_sym26 a b c d e g, ← dihY_sym26P25 a b c d e g]
+    refine h ha ha' hb hb' hc hc' hd hd' he he' hg hg' ?_
+    rw [rad2YP25_sym26P25 a g e d c b] at hr
+    exact hr
+  have hPmin : ∀ a b c d e g : ℝ, b ≤ c → b ≤ e → b ≤ g → ztg4w1_P a b c d e g := by
+    intro a b c d e g h1 h2 h3
+    unfold ztg4w1_P
+    intro ha ha' hb hb' hc hc' hd hd' he he' hg hg' hr
+    exact hmain a b c d e g ha ha' hb hb' hc hc' hd hd' he he' hg hg' h1 h2 h3 hr
+  exact ztg4w1_wlog4 ztg4w1_P hP23 hP26 hPmin y1 y2 y3 y4 y5 y6
+    hb1 hb1' hb2 hb2' hb3 hb3' hb4 hb4' hb5 hb5' hb6 hb6' hrad
+
+/-- step 2：y2 定界（HOL :2385-2392 + :2402-2427）。min-归序 + 盒前提 +
+rad2 < 2 下 `bank_MKFKQWU` 实例化（y2 ≥ 2hminus 时其盒前提全可喂）单支
+结论 yOfX rad2X > 2 与 hrad 矛盾 ⟹ y2 < 2hminus。 -/
+theorem ztg4w1_y2bound (hM : bank_MKFKQWU) (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hb1 : 2 * hminus ≤ y1) (hb1' : y1 ≤ 2 * hplus)
+    (hb2 : 2 ≤ y2) (hb2' : y2 ≤ Real.sqrt 8) (hb3 : 2 ≤ y3) (hb3' : y3 ≤ Real.sqrt 8)
+    (hb4 : 2 ≤ y4) (hb4' : y4 ≤ Real.sqrt 8) (hb5 : 2 ≤ y5) (hb5' : y5 ≤ Real.sqrt 8)
+    (hb6 : 2 ≤ y6) (hb6' : y6 ≤ Real.sqrt 8)
+    (hmin3 : y2 ≤ y3) (hmin5 : y2 ≤ y5) (hmin6 : y2 ≤ y6)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2) : y2 < 2 * hminus := by
+  by_contra h2ge
+  have h2lo : 2 * hminus ≤ y2 := not_lt.mp h2ge
+  have h3lo : 2 * hminus ≤ y3 := le_trans h2lo hmin3
+  have h5lo : 2 * hminus ≤ y5 := le_trans h2lo hmin5
+  have h6lo : 2 * hminus ≤ y6 := le_trans h2lo hmin6
+  have hin := hM y1 y2 y3 y4 y5 y6 hb1 hb1' h2lo hb2' h3lo hb3' hb4 hb4' h5lo hb5'
+    h6lo hb6'
+  have heq : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+  rw [heq] at hrad
+  linarith
+
+/-- step 4 前置共用件：临界指示 ≤ 1（叶内 wtcount 上界账的原子）。 -/
+theorem ztg4w1_ind_le (y : ℝ) : (if criticalEdgeY y then (1 : ℕ) else 0) ≤ 1 := by
+  by_cases hc : criticalEdgeY y <;> simp [hc]
+
+/-- step 3+4（HOL :2414 起逐支；本装配无独立 step 3——见块头路线注记）：
+min-归序 + y2 < 2hminus 下，y3/y4/y5/y6 各按 2hminus 二分的 16 叶逐一
+实例化同键 ZTGIJCF4 shard，经 `ztg4w1_finish` 统一收口。每叶账目：
+w' = 1 + Σ bankGenMid i_k（norm_num 字面量归约）、m = [w' = 2 ∧ i4 = 1]、
+γ ≥ 0 由 `ztg4w1_gamma_pos`（叶有某 y_k ≥ 2hminus）、bump 桥由
+`ztg4w1_bumpA_nonneg`（i_k = 1 叶）或 `betaBumpLb_le_beta_bumpA_yP25`
+（(0,1,0,0) 唯一 m = 1 叶）。结论体为 `gamma4fgcyP25` 形（defeq 桥在
+`ztg4_ALT` 装配处）。 -/
+theorem ztg4w1_main (hM : bank_MKFKQWU) (hG4 : bank_GLFVCVK4)
+    (hZ1111 : bank_ZTGIJCF4_1_1_1_1) (hZ1110 : bank_ZTGIJCF4_1_1_1_0)
+    (hZ1101 : bank_ZTGIJCF4_1_1_0_1) (hZ1100 : bank_ZTGIJCF4_1_1_0_0)
+    (hZ1011 : bank_ZTGIJCF4_1_0_1_1) (hZ1010 : bank_ZTGIJCF4_1_0_1_0)
+    (hZ1001 : bank_ZTGIJCF4_1_0_0_1) (hZ1000 : bank_ZTGIJCF4_1_0_0_0)
+    (hZ0111 : bank_ZTGIJCF4_0_1_1_1) (hZ0110 : bank_ZTGIJCF4_0_1_1_0)
+    (hZ0101 : bank_ZTGIJCF4_0_1_0_1) (hZ0100 : bank_ZTGIJCF4_0_1_0_0)
+    (hZ0011 : bank_ZTGIJCF4_0_0_1_1) (hZ0010 : bank_ZTGIJCF4_0_0_1_0)
+    (hZ0001 : bank_ZTGIJCF4_0_0_0_1) (hZ0000 : bank_ZTGIJCF4_0_0_0_0)
+    (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hb1 : 2 * hminus ≤ y1) (hb1' : y1 ≤ 2 * hplus)
+    (hb2 : 2 ≤ y2) (hb2' : y2 ≤ Real.sqrt 8) (hb3 : 2 ≤ y3) (hb3' : y3 ≤ Real.sqrt 8)
+    (hb4 : 2 ≤ y4) (hb4' : y4 ≤ Real.sqrt 8) (hb5 : 2 ≤ y5) (hb5' : y5 ≤ Real.sqrt 8)
+    (hb6 : 2 ≤ y6) (hb6' : y6 ≤ Real.sqrt 8)
+    (hmin3 : y2 ≤ y3) (hmin5 : y2 ≤ y5) (hmin6 : y2 ≤ y6)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2) :
+    gamma4fgcyP25 y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+        beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 := by
+  have h2 : y2 < 2 * hminus := ztg4w1_y2bound hM y1 y2 y3 y4 y5 y6 hb1 hb1' hb2 hb2'
+    hb3 hb3' hb4 hb4' hb5 hb5' hb6 hb6' hmin3 hmin5 hmin6 hrad
+  have hc1 : criticalEdgeY y1 := ⟨hb1, hb1'⟩
+  have hn2 : ¬ criticalEdgeY y2 := fun d => absurd h2 (not_lt.mpr d.1)
+  have htp : (0 : ℕ) < wtcount6Y y1 y2 y3 y4 y5 y6 := by
+    unfold wtcount6Y wtcount3Y
+    rw [if_pos hc1]
+    omega
+  have hgamma : 2 * hminus ≤ y3 ∨ 2 * hminus ≤ y4 ∨ 2 * hminus ≤ y5 ∨
+      2 * hminus ≤ y6 → 0 < gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun :=
+    ztg4w1_gamma_pos hG4 y1 y2 y3 y4 y5 y6 hb1 hb1' hb2 hb2' hb3 hb3' hb4 hb4'
+      hb5 hb5' hb6 hb6' hrad
+  -- 叶 Runner（15 个非全超临界叶共用）：γ ≥ 0 燃料 + gamma_wt 桥 + finish。
+  -- 结论体取 `gamma4fgcyP25` 形；`ztg4w1_finish` 的 PA20 形结论经 defeq 直吞。
+  have run : ∀ (w : ℕ) (m : ℝ)
+      (hge : 2 * hminus ≤ y3 ∨ 2 * hminus ≤ y4 ∨ 2 * hminus ≤ y5 ∨ 2 * hminus ≤ y6)
+      (hbm : m * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6)
+      (hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ w)
+      (hin : gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / (w : ℝ) + m * betaBumpLb >
+          aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 ∨
+        yOfX rad2X y1 y2 y3 y4 y5 y6 > 2),
+      gamma4fgcyP25 y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+          beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+        aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 :=
+    fun w m hge hbm hwtle hin =>
+      ztg4w1_finish y1 y2 y3 y4 y5 y6 (gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun) w m
+        (gamma_wtP25 (gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun) w
+          (wtcount6Y y1 y2 y3 y4 y5 y6) (le_of_lt (hgamma hge)) hwtle htp)
+        hbm hin hrad
+  by_cases h3 : y3 < 2 * hminus <;> by_cases h4 : y4 < 2 * hminus <;>
+    by_cases h5 : y5 < 2 * hminus <;> by_cases h6 : y6 < 2 * hminus
+  · -- 叶 (0,0,0,0)：w' = 1、m = 0（ztg4_shard_finish_m0 同型；t = w' = 1，γ 不需 ≥ 0）
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    have hin := hZ0000 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      hb3 (le_of_lt h3)
+      hb4 (le_of_lt h4)
+      hb5 (le_of_lt h5)
+      hb6 (le_of_lt h6)
+    have mv : (if 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 = 2 ∧
+        (0 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 : ℝ) =
+        ((1 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have ht1 : wtcount6Y y1 y2 y3 y4 y5 y6 = 1 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hn4, if_neg hn5, if_neg hn6]
+    refine ztg4w1_finish y1 y2 y3 y4 y5 y6 (gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun) 1 0
+      (by rw [ht1]) ?_ hin hrad
+    linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hn4)))))]
+  · -- 叶 (0,0,0,1)：w' = 2、m = 0
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hin := hZ0001 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      hb3 (le_of_lt h3)
+      hb4 (le_of_lt h4)
+      hb5 (le_of_lt h5)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h6)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb6')
+    have mv : (if 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 + bankGenMid 1 = 2 ∧
+        (0 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 + bankGenMid 1 : ℝ) =
+        ((2 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 2 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hn4, if_neg hn5]
+      have b6 := ztg4w1_ind_le y6
+      generalize ha6 : (if criticalEdgeY y6 then (1 : ℕ) else 0) = a6
+      rw [ha6] at b6
+      omega
+    exact run 2 0 (Or.inr (Or.inr (Or.inr (not_lt.mp h6))))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (not_lt.mp h6))))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (0,0,1,0)：w' = 2、m = 0
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    have hin := hZ0010 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      hb3 (le_of_lt h3)
+      hb4 (le_of_lt h4)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h5)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb5')
+      hb6 (le_of_lt h6)
+    have mv : (if 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 = 2 ∧
+        (0 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 : ℝ) =
+        ((2 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 2 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hn4, if_neg hn6]
+      have b5 := ztg4w1_ind_le y5
+      generalize ha5 : (if criticalEdgeY y5 then (1 : ℕ) else 0) = a5
+      rw [ha5] at b5
+      omega
+    exact run 2 0 (Or.inr (Or.inr (Or.inl (not_lt.mp h5))))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inr (Or.inl (not_lt.mp h5)))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (0,0,1,1)：w' = 3、m = 0
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hin := hZ0011 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      hb3 (le_of_lt h3)
+      hb4 (le_of_lt h4)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h5)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb5')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h6)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb6')
+    have mv : (if 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 1 + bankGenMid 1 = 2 ∧
+        (0 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 1 + bankGenMid 1 : ℝ) =
+        ((3 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 3 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hn4]
+      have b5 := ztg4w1_ind_le y5
+      have b6 := ztg4w1_ind_le y6
+      generalize ha5 : (if criticalEdgeY y5 then (1 : ℕ) else 0) = a5
+      generalize ha6 : (if criticalEdgeY y6 then (1 : ℕ) else 0) = a6
+      rw [ha5] at b5
+      rw [ha6] at b6
+      omega
+    exact run 3 0 (Or.inr (Or.inr (Or.inl (not_lt.mp h5))))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inr (Or.inl (not_lt.mp h5)))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (0,1,0,0)：w' = 2、m = 1（唯一 m = 1 叶；ztg4_shard_finish_m1 同型）
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    have hin := hZ0100 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      hb3 (le_of_lt h3)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h4)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb4')
+      hb5 (le_of_lt h5)
+      hb6 (le_of_lt h6)
+    have mv : (if 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 = 2 ∧
+        (1 : ℕ) = 1 then (1 : ℝ) else 0) = 1 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 : ℝ) =
+        ((2 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 2 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hn5, if_neg hn6]
+      have b4 := ztg4w1_ind_le y4
+      generalize ha4 : (if criticalEdgeY y4 then (1 : ℕ) else 0) = a4
+      rw [ha4] at b4
+      omega
+    exact run 2 1 (Or.inr (Or.inl (not_lt.mp h4)))
+      (by linarith [betaBumpLb_le_beta_bumpA_yP25 y1 y2 y3 y4 y5 y6] : (1:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (0,1,0,1)：w' = 3、m = 0
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hin := hZ0101 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      hb3 (le_of_lt h3)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h4)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb4')
+      hb5 (le_of_lt h5)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h6)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb6')
+    have mv : (if 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 + bankGenMid 1 = 2 ∧
+        (1 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 + bankGenMid 1 : ℝ) =
+        ((3 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 3 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hn5]
+      have b4 := ztg4w1_ind_le y4
+      have b6 := ztg4w1_ind_le y6
+      generalize ha4 : (if criticalEdgeY y4 then (1 : ℕ) else 0) = a4
+      generalize ha6 : (if criticalEdgeY y6 then (1 : ℕ) else 0) = a6
+      rw [ha4] at b4
+      rw [ha6] at b6
+      omega
+    exact run 3 0 (Or.inr (Or.inr (Or.inr (not_lt.mp h6))))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (not_lt.mp h6))))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (0,1,1,0)：w' = 3、m = 0
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    have hin := hZ0110 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      hb3 (le_of_lt h3)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h4)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb4')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h5)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb5')
+      hb6 (le_of_lt h6)
+    have mv : (if 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 1 + bankGenMid 0 = 2 ∧
+        (1 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 1 + bankGenMid 0 : ℝ) =
+        ((3 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 3 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hn6]
+      have b4 := ztg4w1_ind_le y4
+      have b5 := ztg4w1_ind_le y5
+      generalize ha4 : (if criticalEdgeY y4 then (1 : ℕ) else 0) = a4
+      generalize ha5 : (if criticalEdgeY y5 then (1 : ℕ) else 0) = a5
+      rw [ha4] at b4
+      rw [ha5] at b5
+      omega
+    exact run 3 0 (Or.inr (Or.inr (Or.inl (not_lt.mp h5))))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inr (Or.inl (not_lt.mp h5)))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (0,1,1,1)：w' = 4、m = 0
+    have hn3 : ¬ criticalEdgeY y3 := fun d => absurd h3 (not_lt.mpr d.1)
+    have hin := hZ0111 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      hb3 (le_of_lt h3)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h4)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb4')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h5)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb5')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h6)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb6')
+    have mv : (if 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 = 2 ∧
+        (1 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 : ℝ) =
+        ((4 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 4 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3]
+      have b4 := ztg4w1_ind_le y4
+      have b5 := ztg4w1_ind_le y5
+      have b6 := ztg4w1_ind_le y6
+      generalize ha4 : (if criticalEdgeY y4 then (1 : ℕ) else 0) = a4
+      generalize ha5 : (if criticalEdgeY y5 then (1 : ℕ) else 0) = a5
+      generalize ha6 : (if criticalEdgeY y6 then (1 : ℕ) else 0) = a6
+      rw [ha4] at b4
+      rw [ha5] at b5
+      rw [ha6] at b6
+      omega
+    exact run 4 0 (Or.inr (Or.inr (Or.inl (not_lt.mp h5))))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inr (Or.inl (not_lt.mp h5)))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (1,0,0,0)：w' = 2、m = 0
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    have hin := hZ1000 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h3)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb3')
+      hb4 (le_of_lt h4)
+      hb5 (le_of_lt h5)
+      hb6 (le_of_lt h6)
+    have mv : (if 1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 = 2 ∧
+        (0 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 : ℝ) =
+        ((2 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 2 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn4, if_neg hn5, if_neg hn6]
+      have b3 := ztg4w1_ind_le y3
+      generalize ha3 : (if criticalEdgeY y3 then (1 : ℕ) else 0) = a3
+      rw [ha3] at b3
+      omega
+    exact run 2 0 (Or.inl (not_lt.mp h3))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inl (not_lt.mp h3))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (1,0,0,1)：w' = 3、m = 0
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hin := hZ1001 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h3)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb3')
+      hb4 (le_of_lt h4)
+      hb5 (le_of_lt h5)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h6)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb6')
+    have mv : (if 1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 1 = 2 ∧
+        (0 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 1 : ℝ) =
+        ((3 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 3 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn4, if_neg hn5]
+      have b3 := ztg4w1_ind_le y3
+      have b6 := ztg4w1_ind_le y6
+      generalize ha3 : (if criticalEdgeY y3 then (1 : ℕ) else 0) = a3
+      generalize ha6 : (if criticalEdgeY y6 then (1 : ℕ) else 0) = a6
+      rw [ha3] at b3
+      rw [ha6] at b6
+      omega
+    exact run 3 0 (Or.inl (not_lt.mp h3))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inl (not_lt.mp h3))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (1,0,1,0)：w' = 3、m = 0
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    have hin := hZ1010 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h3)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb3')
+      hb4 (le_of_lt h4)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h5)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb5')
+      hb6 (le_of_lt h6)
+    have mv : (if 1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 = 2 ∧
+        (0 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 : ℝ) =
+        ((3 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 3 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn4, if_neg hn6]
+      have b3 := ztg4w1_ind_le y3
+      have b5 := ztg4w1_ind_le y5
+      generalize ha3 : (if criticalEdgeY y3 then (1 : ℕ) else 0) = a3
+      generalize ha5 : (if criticalEdgeY y5 then (1 : ℕ) else 0) = a5
+      rw [ha3] at b3
+      rw [ha5] at b5
+      omega
+    exact run 3 0 (Or.inl (not_lt.mp h3))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inl (not_lt.mp h3))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (1,0,1,1)：w' = 4、m = 0
+    have hn4 : ¬ criticalEdgeY y4 := fun d => absurd h4 (not_lt.mpr d.1)
+    have hin := hZ1011 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h3)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb3')
+      hb4 (le_of_lt h4)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h5)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb5')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h6)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb6')
+    have mv : (if 1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 1 = 2 ∧
+        (0 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 1 : ℝ) =
+        ((4 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 4 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn4]
+      have b3 := ztg4w1_ind_le y3
+      have b5 := ztg4w1_ind_le y5
+      have b6 := ztg4w1_ind_le y6
+      generalize ha3 : (if criticalEdgeY y3 then (1 : ℕ) else 0) = a3
+      generalize ha5 : (if criticalEdgeY y5 then (1 : ℕ) else 0) = a5
+      generalize ha6 : (if criticalEdgeY y6 then (1 : ℕ) else 0) = a6
+      rw [ha3] at b3
+      rw [ha5] at b5
+      rw [ha6] at b6
+      omega
+    exact run 4 0 (Or.inl (not_lt.mp h3))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inl (not_lt.mp h3))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (1,1,0,0)：w' = 3、m = 0
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    have hin := hZ1100 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h3)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb3')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h4)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb4')
+      hb5 (le_of_lt h5)
+      hb6 (le_of_lt h6)
+    have mv : (if 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 = 2 ∧
+        (1 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 : ℝ) =
+        ((3 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 3 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn5, if_neg hn6]
+      have b3 := ztg4w1_ind_le y3
+      have b4 := ztg4w1_ind_le y4
+      generalize ha3 : (if criticalEdgeY y3 then (1 : ℕ) else 0) = a3
+      generalize ha4 : (if criticalEdgeY y4 then (1 : ℕ) else 0) = a4
+      rw [ha3] at b3
+      rw [ha4] at b4
+      omega
+    exact run 3 0 (Or.inl (not_lt.mp h3))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inl (not_lt.mp h3))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (1,1,0,1)：w' = 4、m = 0
+    have hn5 : ¬ criticalEdgeY y5 := fun d => absurd h5 (not_lt.mpr d.1)
+    have hin := hZ1101 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h3)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb3')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h4)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb4')
+      hb5 (le_of_lt h5)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h6)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb6')
+    have mv : (if 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 1 = 2 ∧
+        (1 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 0 + bankGenMid 1 : ℝ) =
+        ((4 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 4 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn5]
+      have b3 := ztg4w1_ind_le y3
+      have b4 := ztg4w1_ind_le y4
+      have b6 := ztg4w1_ind_le y6
+      generalize ha3 : (if criticalEdgeY y3 then (1 : ℕ) else 0) = a3
+      generalize ha4 : (if criticalEdgeY y4 then (1 : ℕ) else 0) = a4
+      generalize ha6 : (if criticalEdgeY y6 then (1 : ℕ) else 0) = a6
+      rw [ha3] at b3
+      rw [ha4] at b4
+      rw [ha6] at b6
+      omega
+    exact run 4 0 (Or.inl (not_lt.mp h3))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inl (not_lt.mp h3))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (1,1,1,0)：w' = 4、m = 0
+    have hn6 : ¬ criticalEdgeY y6 := fun d => absurd h6 (not_lt.mpr d.1)
+    have hin := hZ1110 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h3)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb3')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h4)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb4')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h5)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb5')
+      hb6 (le_of_lt h6)
+    have mv : (if 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 0 = 2 ∧
+        (1 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 0 : ℝ) =
+        ((4 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 4 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn6]
+      have b3 := ztg4w1_ind_le y3
+      have b4 := ztg4w1_ind_le y4
+      have b5 := ztg4w1_ind_le y5
+      generalize ha3 : (if criticalEdgeY y3 then (1 : ℕ) else 0) = a3
+      generalize ha4 : (if criticalEdgeY y4 then (1 : ℕ) else 0) = a4
+      generalize ha5 : (if criticalEdgeY y5 then (1 : ℕ) else 0) = a5
+      rw [ha3] at b3
+      rw [ha4] at b4
+      rw [ha5] at b5
+      omega
+    exact run 4 0 (Or.inl (not_lt.mp h3))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inl (not_lt.mp h3))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+  · -- 叶 (1,1,1,1)：w' = 5、m = 0
+    have hin := hZ1111 y1 y2 y3 y4 y5 y6 hc1.1 hc1.2 hb2 (le_of_lt h2)
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h3)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb3')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h4)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb4')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h5)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb5')
+      (by norm_num [bank_ZTGIJCF4lo]; exact not_lt.mp h6)
+      (by norm_num [bank_ZTGIJCF4hi]; exact hb6')
+    have mv : (if 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 = 2 ∧
+        (1 : ℕ) = 1 then (1 : ℝ) else 0) = 0 := by norm_num [bankGenMid]
+    have wv : (1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 : ℝ) =
+        ((5 : ℕ) : ℝ) := by norm_num [bankGenMid]
+    rw [mv, wv] at hin
+    have hwtle : wtcount6Y y1 y2 y3 y4 y5 y6 ≤ 5 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2]
+      have b3 := ztg4w1_ind_le y3
+      have b4 := ztg4w1_ind_le y4
+      have b5 := ztg4w1_ind_le y5
+      have b6 := ztg4w1_ind_le y6
+      generalize ha3 : (if criticalEdgeY y3 then (1 : ℕ) else 0) = a3
+      generalize ha4 : (if criticalEdgeY y4 then (1 : ℕ) else 0) = a4
+      generalize ha5 : (if criticalEdgeY y5 then (1 : ℕ) else 0) = a5
+      generalize ha6 : (if criticalEdgeY y6 then (1 : ℕ) else 0) = a6
+      rw [ha3] at b3
+      rw [ha4] at b4
+      rw [ha5] at b5
+      rw [ha6] at b6
+      omega
+    exact run 5 0 (Or.inl (not_lt.mp h3))
+      (by linarith [ztg4w1_bumpA_nonneg y1 y2 y3 y4 y5 y6 (Or.inr (Or.inr (Or.inl (not_lt.mp h3))))] : (0:ℝ) * betaBumpLb ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6) hwtle hin
+
+/-! ## Part B4：ztg4_ALT（statement 真；体 = ztg4-w1 车道四步实装，零 sorry） -/
 
 /-- HOL `ztg4_ALT`（merge_ineq.hl:2632-2646）Lean 化：statement =
 `ztg4_concl`（:2267-2276）的显式盒式展开（消 `ineq` 列表机；γ 项用 PA20
@@ -10003,34 +10855,34 @@ theorem ztg4_ALT (hnl : pack_nonlinear_non_ox3q1h) (y1 y2 y3 y4 y5 y6 : ℝ)
     gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
         beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
       aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 := by
-  -- 期望战术（HOL merge_ineq.hl:2310-2631 逐段对照；编译窗按此分四步走）：
-  -- step 1（WLOG 骨架，HOL :2316-2351 REAL_WLOG_SIMPLEX_LEMMA2_LE 两支）：
-  --   不失一般性设 (y2,y3) 按 sym23=(1,3,2,4,6,5)、(y5,y6) 按
-  --   sym26=(1,6,5,4,3,2) 归序——所需 sym 件已由 Part A 供给：
-  --   rad2YP25_sym23P25/sym26P25、beta_bumpA_y_sym23（SF-75）/
-  --   beta_bumpA_y_sym26、wtcount6_y_sym23/sym26（PA25 :9582/:9588 真证）、
-  --   dihY_sym23P25/sym26P25、gamma4fgcy_sym23P25（Part A 唯一 sorried 件）/
-  --   gamma4fgcy_sym26（PA25 :9650 真证）。Lean 化可用数学归纳式 wlog 或
-  --   直接 by_cases y3 ≤ y6 等 + 对偶调用（HOL 引擎体即两支 meson）。
-  -- step 2（y2 定界，HOL :2385-2392 + :2402-2427）：y2 ≥ 2hminus 时
-  --   proj_bank_MKFKQWU 实例化（盒前提 y3,y5,y6 ≥ 2hminus 由 step 3 的对偶
-  --   rad2 否证回填），其单支结论 yOfX rad2X > 2 与 hrad 矛盾 ⟹ y2 < 2hminus。
-  --   y2 ≤ 2hminus 且 y2 < 2 的平凡边界由盒前提吃。
-  -- step 3（超临界排除，HOL :2414-2440 三连对偶）：由 sym 置换处的 16-shard
-  --   实例（ISPECL [y1;y3;y2;y4;y6;y5] 等三组）的 rad2 支分别否证
-  --   y3 > 2hplus / y5 > 2hplus / y6 > 2hplus ⟹ y3,y5,y6 ≤ 2hplus。
-  -- step 4（GLFVCVK4 quarter 支，HOL :2380-2384 + :2441 起逐支）：
-  --   proj_bank_GLFVCVK4 三支——rad2 支否证；norm2hh 支经 quarter_norm2hh
-  --   （Lean 化 = norm2hh unfold +平方放缩链，PA25 可仿 IneqClosureDefs
-  --   quarter_lemma 系）得六重临界 ⟹ beta 项 = bump 差、wtcount = 2；
-  --   gamma > 0 支 + ZTGIJCF4 ×16 的 2hmin 二分（by_cases 四连 = 16 支），
-  --   每支按 ztg4_shard_finish_m1/m0 两代表同型收口（w' 字面量归约
-  --   norm_num [bankGenMid]；m = 1 支用 betaBumpLb_le_beta_bumpA_yP25，
-  --   m = 0 支用 beta_bumpA_lb0P25——析取支由 y4 < 2hminus / y4 临界 /
-  --   step 3 的 y_k ≤ 2hplus 组合给出）；GLFVCVK4y4crit/supercrit/subcrit
-  --   三张 y4 专用 shard 在 y4 三段二分处消费（eta_y 支否证链沿用 HOL
-  --   beta_bumpA_lb0 消费位）。收口统一走 ineq_approxA_ztg4P25。
-  sorry
+  -- ztg4-w1 车道实装（PF25 四步期望战术的收敛形；路线注记见 Part B3.5 块头）：
+  -- step 1 WLOG 归序（ztg4w1_step1：Klein 四元群 min-归序八叶 + Part A sym 件回写）
+  -- step 2 y2 定界（ztg4w1_y2bound：bank_MKFKQWU 对偶否证）
+  -- step 4 十六叶统一收口（ztg4w1_main：ZTGIJCF4 ×16 按 2hminus 二分逐叶实例化，
+  --   ztg4w1_finish = gamma_wt + bumpA 桥 + ineq_approxA_ztg4P25；step 3 超临界
+  --   定界在 t ≤ w' 统一账下不单独需要）。消费 18/19 张证书（halfwt 保守超配
+  --   未用）；#print axioms = 标准三（hnl 系假设非公理，bank 投影吃之）。
+  have hM := proj_bank_MKFKQWU hnl
+  have hG4 := proj_bank_GLFVCVK4 hnl
+  have hZ1111 := proj_bank_ZTGIJCF4_1_1_1_1 hnl
+  have hZ1110 := proj_bank_ZTGIJCF4_1_1_1_0 hnl
+  have hZ1101 := proj_bank_ZTGIJCF4_1_1_0_1 hnl
+  have hZ1100 := proj_bank_ZTGIJCF4_1_1_0_0 hnl
+  have hZ1011 := proj_bank_ZTGIJCF4_1_0_1_1 hnl
+  have hZ1010 := proj_bank_ZTGIJCF4_1_0_1_0 hnl
+  have hZ1001 := proj_bank_ZTGIJCF4_1_0_0_1 hnl
+  have hZ1000 := proj_bank_ZTGIJCF4_1_0_0_0 hnl
+  have hZ0111 := proj_bank_ZTGIJCF4_0_1_1_1 hnl
+  have hZ0110 := proj_bank_ZTGIJCF4_0_1_1_0 hnl
+  have hZ0101 := proj_bank_ZTGIJCF4_0_1_0_1 hnl
+  have hZ0100 := proj_bank_ZTGIJCF4_0_1_0_0 hnl
+  have hZ0011 := proj_bank_ZTGIJCF4_0_0_1_1 hnl
+  have hZ0010 := proj_bank_ZTGIJCF4_0_0_1_0 hnl
+  have hZ0001 := proj_bank_ZTGIJCF4_0_0_0_1 hnl
+  have hZ0000 := proj_bank_ZTGIJCF4_0_0_0_0 hnl
+  exact ztg4w1_step1 (ztg4w1_main hM hG4 hZ1111 hZ1110 hZ1101 hZ1100 hZ1011 hZ1010
+      hZ1001 hZ1000 hZ0111 hZ0110 hZ0101 hZ0100 hZ0011 hZ0010 hZ0001 hZ0000)
+    y1 y2 y3 y4 y5 y6 hb1 hb1' hb2 hb2' hb3 hb3' hb4 hb4' hb5 hb5' hb6 hb6' hrad
 
 /-- HOL `real_model_ztg4`（OXLZLEZ3.hl:6666-6707）：GG_MCELL_GENERAL +
 c_4_azim_mcell_dih_y + ztg4_ALT + MCELL4_DOMAIN 四件串联。语句与 PA25:9507
