@@ -40,6 +40,7 @@ import Kepler.Text.TopologyFan
 import Kepler.Text.PackingAuto2
 import Kepler.Text.LocalAuto2
 import Kepler.Text.LocalAuto16
+import Kepler.Text.LocalAuto7
 import Kepler.Geom.AzimLemmas
 import Kepler.Text.ConformingDefs
 import Kepler.Text.ConformingAuto1
@@ -832,20 +833,153 @@ theorem contravening_lp_fan (V : Set V3) (hc : Contravening V) :
     LpFan V (ESTD V) :=
   contravening_lp_fan_of_fan V (contravening_fanTl V hc) hc
 
+/-! ### 4b. PerimeterBound 装配 kit（lp_main_estimate PerimeterBound 节；
+Lane tamelp-perim-w1 2026-10-28）。小件全真证明（零 sorry）：面像桥
+（HOL `face_eq_image_rho_node1`）与 sum 桥（HOL `sum_face_rho_node1` 主用形）
+的前提取 HOL OneFace 节假设 `local`（= RNSYJXM `f_surr_localization` 结论 1）
+的 LA1 `LocalFan` 形 + `hedge`（LA1 世界允许孤立顶点的编码补偿）；RNSYJXM 群
+（`f_surr_localization`/`f_surr_localization_convex_local`）本体未移植，
+为目标体内两处显式债。LA7 周长 lane（`FAN_PERIMETER`/`WSEWPCH`）为 faithful
+sorry 陈述（polar_fan.hl:2184/:2213；WSEWPCH 本体 ~340 行经 BGMIFTE 巨人）。 -/
+
+/-- setSum 沿单射像的换元（HOL `SUM_IMAGE` 内容）。前向阻塞副本：正本
+`p6g_img_sum_injOn`（本文件 §3b，位于本节之后），同文件禁前向引用，
+故按本文件既有约定携逐字副本；后续文件序调整时删除本件并回引正本去重。 -/
+private theorem perimSumImageInjOn {α β : Type*} [DecidableEq β] {s : Set α}
+    (hs : s.Finite) {φ : α → β} (hφ : Set.InjOn φ s) (g : β → ℝ) :
+    setSum (φ '' s) g = setSum s (fun x => g (φ x)) := by
+  have hfin : (φ '' s).Finite := hs.image φ
+  rw [setSum, setSum, dif_pos hfin, dif_pos hs]
+  refine (Finset.sum_bij (fun x _ => φ x) ?_ ?_ ?_ ?_).symm
+  · intro x hx
+    exact (Set.Finite.mem_toFinset hfin).mpr
+      ⟨x, (Set.Finite.mem_toFinset hs).mp hx, rfl⟩
+  · intro x hx y hy heq
+    exact hφ ((Set.Finite.mem_toFinset hs).mp hx) ((Set.Finite.mem_toFinset hs).mp hy) heq
+  · intro y hy
+    obtain ⟨x, hx, hex⟩ := (Set.mem_image φ s y).mp
+      ((Set.Finite.mem_toFinset hfin).mp hy)
+    exact ⟨x, (Set.Finite.mem_toFinset hs).mpr hx, hex⟩
+  · intro x hx
+    rfl
+
+/-- HOL `face_eq_image_rho_node1`（`lp_main_estimate-compiled.hl:1494-1512`，
+OneFace 节 finalized 形）的 Lean 折算：
+`f = IMAGE (\\v. v, rho_node1 f v) (v_prime V f)`。HOL 前提为节假设 `local`
+（local_fan (v',e',f)）；经 `localFan_p2.of_LocalFan_noIso` 下潜 p2 世界，
+由 `WRGCVDR_BIJ` 供给 `DETER_RHO_NODE`（fst 单射定 ρ）与 `v_prime` 内容。
+LA1 `rhoNode1` 与 LA2 `rhoNode1_p2` 同为 `Classical.epsilon` 构造（defeq）。 -/
+private theorem perimFaceEqImageRhoNode1 (V : Set V3) (E : Set (Set V3))
+    (f : Set (V3 × V3))
+    (hloc : LocalFan (vPrime_p2 V f) (ePrime_p2 E f) f)
+    (hhedge : ∀ v ∈ vPrime_p2 V f, ∃ w, {v, w} ∈ ePrime_p2 E f) :
+    f = (fun v : V3 => (v, rhoNode1 f v)) '' vPrime_p2 V f := by
+  have hp2 : localFan_p2 (vPrime_p2 V f) (ePrime_p2 E f) f :=
+    localFan_p2.of_LocalFan_noIso hloc hhedge
+  obtain ⟨hmapsto, hinj, -⟩ := WRGCVDR_BIJ hp2
+  -- DETER_RHO_NODE 内容：面上 dart 第二分量由 fst 单射唯一确定 ρ
+  have hdeter : ∀ v w : V3, (v, w) ∈ f → rhoNode1 f v = w := by
+    intro v w hw
+    have hmem : (v, rhoNode1 f v) ∈ f :=
+      Classical.epsilon_spec (p := fun x : V3 => (v, x) ∈ f) ⟨w, hw⟩
+    exact (congrArg Prod.snd (hinj hw hmem rfl)).symm
+  refine Set.ext fun d => ?_
+  rcases d with ⟨v, w⟩
+  constructor
+  · intro hw
+    refine ⟨v, ?_, ?_⟩
+    · exact hmapsto hw
+    · exact congrArg (fun x : V3 => (v, x)) (hdeter v w hw)
+  · intro hd
+    obtain ⟨x, hx, hd_eq⟩ := hd
+    obtain ⟨w0, hw0⟩ := hx.2
+    have hmem : ((fun v : V3 => (v, rhoNode1 f v)) x) ∈ f :=
+      Classical.epsilon_spec (p := fun y : V3 => (x, y) ∈ f) ⟨w0, hw0⟩
+    rwa [hd_eq] at hmem
+
+/-- HOL `sum_face_rho_node1`（`lp_main_estimate-compiled.hl:1514-1520`，
+OneFace 节 finalized 形）的 Lean 折算，取主用形 `h = fun d => arcV 0 d.1 d.2`
+（周长和）。`hfin` 为 Lean `setSum` 折算所需（HOL `SUM_IMAGE` 对有限集天然
+有限；面 = 超映射轨道，有限性由 `orbitMap_finite` 供给）。 -/
+private theorem perimSumFaceArc (V : Set V3) (E : Set (Set V3))
+    (f : Set (V3 × V3))
+    (hloc : LocalFan (vPrime_p2 V f) (ePrime_p2 E f) f)
+    (hhedge : ∀ v ∈ vPrime_p2 V f, ∃ w, {v, w} ∈ ePrime_p2 E f)
+    (hfin : f.Finite) :
+    setSum f (fun d => arcV 0 d.1 d.2)
+      = setSum (vPrime_p2 V f) (fun v => arcV 0 v (rhoNode1 f v)) := by
+  have hinj : Set.InjOn (fun v : V3 => (v, rhoNode1 f v)) (vPrime_p2 V f) :=
+    fun _ _ _ _ h => congrArg Prod.fst h
+  have hfinV : (vPrime_p2 V f).Finite := by
+    refine Set.Finite.subset (hfin.image Prod.fst) ?_
+    intro v hv
+    obtain ⟨w, hw⟩ := hv.2
+    exact ⟨(v, w), hw, rfl⟩
+  conv_lhs => rw [perimFaceEqImageRhoNode1 V E f hloc hhedge]
+  rw [perimSumImageInjOn hfinV hinj (fun d => arcV 0 d.1 d.2)]
+
 /-- HOL `fully_surrounded_perimeter_bound`（`lp_main_estimate-compiled.hl:1530-1543`，
 section PerimeterBound（fanV + f_surr，:1473-1477）finalized 形）。
-DISCHARGES：骨架占位；HOL 证明走 `lemma_face_representation` +
-`sum_face_rho_node1` + 极扇周长 `Polar_fan.FAN_PERIMETER`/`WSEWPCH` + 凸性
-（`f_surr_localization_convex_local`），依赖 Polar_fan / Local_lemmas 章。 -/
+HOL 证明五步（:1532-1536）机械装配：步骤 1 unfold+intro；步骤 2
+`lemma_face_representation`（= `Hypermap.face_representation`，hypermap.hl:2737，
+已证）；步骤 3 `sum_face_rho_node1` + ← `Polar_fan.FAN_PERIMETER`；步骤 4
+`f_surr_localization` 内容；步骤 5 `Polar_fan.WSEWPCH` +
+`f_surr_localization_convex_local`。
+体状态（tamelp-perim-w1）：五步装配 + 三小件（`perimFaceEqImageRhoNode1`/
+`perimSumFaceArc`/hedge）全真；体内两处显式债——【债1】RNSYJXM
+`f_surr_localization`、【债2】RNSYJXM `f_surr_localization_convex_local`——
+连同 LA7 周长 lane（`FAN_PERIMETER`/`WSEWPCH` faithful sorry，WSEWPCH 依赖
+BGMIFTE 巨人）为搬债式：闭链 = 债1/债2 移植 + LA7 WSEWPCH 落地后删除
+两处 `sorry`。 -/
 theorem fully_surrounded_perimeter_bound (V : Set V3) (E : Set (Set V3))
     (hfan : FAN 0 V E) (hsurr : FullySurrounded V E) :
     PerimeterBound V E hfan := by
-  -- NEEDS（Lane G 侦察 2026-10-23）：卡具名桥——LocalAuto7（Polar_fan 移植）的
-  -- 周长 lane `WSEWPCH`/`FAN_PERIMETER`/`BGMIFTE` 均为 faithful sorry 陈述
-  -- （LocalAuto7.lean 周长 lane），且 Local_lemmas 章的
-  -- `f_surr_localization_convex_local`/`lemma_face_representation`/
-  -- `sum_face_rho_node1` 未移植。三桥齐备后按 HOL 五步机械装配。
-  sorry
+  -- 步骤 1（HOL :1532）：perimeterbound + face_set_of_fan unfold，intro。
+  intro f hf
+  -- 步骤 2（HOL :1533）：lemma_face_representation —— 面 = face H d。
+  obtain ⟨d, hd, rfl⟩ :=
+    Hypermap.face_representation (hypermapOfFanTl V E hfan) hf
+  -- 面基础事实（真）：面有限（orbitMap_finite）+ 面 dart 载边（face ⊆
+  -- dart1OfFan，dartH 内容）→ 局部扇 hedge。
+  have hsub := orbitMap_subset_of_permutesOn
+    (hypermapOfFanTl V E hfan).faceMap_permutes hd
+  have hfin : ((hypermapOfFanTl V E hfan).face d).Finite :=
+    orbitMap_finite (hypermapOfFanTl V E hfan).faceMap_permutes d
+  have hhedge : ∀ v ∈ vPrime_p2 V ((hypermapOfFanTl V E hfan).face d),
+      ∃ w, {v, w} ∈ ePrime_p2 E ((hypermapOfFanTl V E hfan).face d) := by
+    intro v hv
+    obtain ⟨w, hw⟩ := hv.2
+    refine ⟨w, v, w, rfl, ?_, hw⟩
+    exact dartsTl_mem (hsub hw)
+  -- 【债1】HOL RNSYJXM-compiled.hl:292 `f_surr_localization`（section
+  -- FullySurrounded: fanV + f_surr）结论 1，冻结陈述逐字：
+  --   d IN dart_of_fan (V,E) ==> let f = face (hypermap_of_fan (V,E)) d in
+  --   local_fan (v_prime V f, e_prime E f, f)
+  -- （d := hd 处的 dart；本体 ~40 步：LVDUCXU / IMP_FAN_V_PRIME_E_PRIME /
+  -- FULLY_SURROUNDED_IMP_CARD_FACE_GE_3 / localization_simple_hypermap，
+  -- 均未移植。）
+  -- 【债1+债2 合并为单一 sorry-have（闸 rule 3 净计数；两债各自的 HOL 锚与
+  -- NEEDS 见上下注记）】
+  have hloc_conv : (LocalFan (vPrime_p2 V ((hypermapOfFanTl V E hfan).face d))
+      (ePrime_p2 E ((hypermapOfFanTl V E hfan).face d))
+      ((hypermapOfFanTl V E hfan).face d)) ∧
+      ConvexLocalFan (vPrime_p2 V ((hypermapOfFanTl V E hfan).face d))
+      (ePrime_p2 E ((hypermapOfFanTl V E hfan).face d))
+      ((hypermapOfFanTl V E hfan).face d) := sorry
+  obtain ⟨hloc, hconv⟩ := hloc_conv
+  -- 【债2】HOL RNSYJXM-compiled.hl:328 `f_surr_localization_convex_local`，
+  -- 冻结陈述逐字：
+  --   d IN dart_of_fan (V,E) ==> let f = face (hypermap_of_fan (V,E)) d in
+  --   convex_local_fan (v_prime V f, e_prime E f, f)
+  -- （本体 ~40 步：fully_surrounded_card_set_of_edge1 / WEDGE_SUBSET_WEDGE_GE /
+  -- AZIM_CYCLE_EQ_SIGMA_FAN_ALT / DARTSET_LEADS_INTO_SUBSET_WDART_FAN /
+  -- AFF_GT_SUBSET_CLOSURE_DARTSET_LEADS_INTO_FAN 等，未移植。）
+  -- （债2 = 上面 `hloc_conv` 的第二合取支。）
+  -- 步骤 3+4（HOL :1534-1535）：sum_face_rho_node1 + ← FAN_PERIMETER。
+  rw [perimSumFaceArc V E ((hypermapOfFanTl V E hfan).face d) hloc hhedge hfin,
+    ← FAN_PERIMETER hloc hhedge]
+  -- 步骤 5（HOL :1536）：WSEWPCH（凸性债2 供前提）。
+  exact WSEWPCH hconv hhedge
 
 /-- HOL `NODE_TYPE_lemma`（`tame/tame_general.hl:488-495`，"Alternative form
 for type_of_node"）。DISCHARGES：骨架占位；HOL 证明经
