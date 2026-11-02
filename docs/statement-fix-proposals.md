@@ -5801,3 +5801,39 @@ theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
 **立案 + 应用 2026-11-02 清晨**（用户「都批」；同时授予编排者 SF 常态化自主裁决权，见 DECISIONS.md 2026-11-02）。归档 patch `docs/statement-fix-proposals-patches/93-bodyclosed-full-carrier.patch`（LA23 陈述 + docstring；LA24 三喂点），由应用态真实 `git diff` 生成。闸 ×2（lean/ 下）：
 `GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/93-bodyclosed-full-carrier.patch SF_ITEM=93 LANE_FILES=Kepler/Text/LocalAuto23.lean,Kepler/Text/LocalAuto24.lean THM=bodyClosed_p23 lock_build nice -n 19 bash scripts/auto_gate.sh Kepler/Text/LocalAuto23.lean bodyClosed_p23`，随后同 patch 对 `Kepler/Text/LocalAuto24.lean XWITCCN_CASE_4_IS_SCS_p24` 再闸。落库结果：**闸 ×2 PASS**（LA23 七根 6 min 0 错 08:10；LA24 12s 08:12），patch 由应用态 `git diff HEAD` 生成且 `git apply --check -R` 逐字一致；公理面 `bodyClosed_p23` / `XWITCCN_CASE_4_IS_SCS_p24` = [propext, sorryAx, Classical.choice, Quot.sound]（债根仍为 bodyClosed 本体）。**已落**（queue §8 续 195）。
 
+## 94. `CLOSED_SY_cs`（ClosedSyKit:126）/ LA18 `CLOSED_SY_p18`（:239）/ `WJSCPRO_p18`（:266）前提对 `s f` 自由全称 ⟹ 严格强于 HOL（WJSCPRO.hl:63 / :3194 钉 `s = 0..k-1`、`f = (\i.(1+i) MOD k)`），自由形在 `s ∩ [1,k] = ∅` 实例下无行对下界供给、被 m=6 坍缩族反驳（大概率为假）；修复 = 加钉形前提 `(hs : s = Finset.Iic (k - 1)) (hf : f = fun j => (1 + j) % k)`（SF-89c，bodyclosed-w3 §2.2 方案 A）— 分级 **A**（HOL 逐字钉形 · 推广失真 · 编排者依 2026-11-02 常态化授权批）
+
+### (a) HOL 裁决
+
+`lean/scripts/local/WJSCPRO.hl:63-66`（CLOSED_SY）与 `:3194`（WJSCPRO）的前提均为 `stable_system k d (0..k-1) a b J (\i. (1+i) MOD k) /\ k = dimindex(:M) /\ 1 < k /\ 2 < k`——**`s` 钉死为 `0..k-1`、`f` 钉死为后继 mod k**。Lean 载体（LA18:164 `stableSystem_p18 k d s a b J f` 及其 `_cs` 孪生）把 `s f` 开成自由全称（bodyclosed-recon FIDELITY §B 已标「前提推广风险」），`CLOSED_SY_p18`/`CLOSED_SY_cs`/`WJSCPRO_p18` 据此对任意 `s f` 断言结论 ⟹ **Lean 严格强于 HOL**。
+
+### (b) 机检与证明链实证（bodyclosed-w3 DELIVERY §2.2 + bodyclosed-recon bccheck）
+
+- **证明链无供给**：HOL S-B 的 `2 ≤ ‖row p − row q‖` sandwich（:186-255）与 S-C wrap（:290）的消费链 = 条款①（在 `s` 上）→ 条款③周期性 → `POWER_MOD_FUN`（后继特用）→ 1-based 行对；它要求 `0 ∈ s`、`{1,…,k−1} ⊆ s` 且 `f` 为后继。当 `s ∩ [1,k] = ∅`（torsor 条款允许 `s` 为任意 k-元轨道）时行对 `(p,q) ∈ [1,k]²` 的 `a p q` 无下界供给。
+- **反例族**：bodyclosed-recon C3 m=6 坍缩族（角 (0,δ,85,170,255,340)°、R=2.2、`a ≡ 0` 于 [1,k]²、`b` 环邻 3.0）在自由 `s` 下落入 `SYset_cs` 而 δ→0 极限不在（E_SY 单点边 ⟹ Graph 假）⟹ 体不闭 ⟹ 自由形陈述大概率为假（数值级家族 + 两行 Lean 气密核，口径同 §93）。
+- **钉形可满足**：C4 周期延拓 witness（`s = 0..k-1`、`f = succ`，k=4/5/6）全条款 PASS ⟹ 修后非空洞；W3 已按钉形交付 19 件 `w3cs_*`（全消费 `hs hf`），消费链每步已证。
+
+### (c) 修复陈述（逐字；结论面不动；三件同形加两前提）
+
+```lean
+theorem CLOSED_SY_cs {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (_hsys : stableSystem_cs k d s a b J f) (_hs : s = Finset.Iic (k - 1))
+    (_hf : f = fun j => (1 + j) % k) (_hk1 : 1 < k) (_hk2 : 2 < k) :
+    IsClosed (SYset_cs k a b) := by
+  sorry
+```
+`CLOSED_SY_p18`（LA18:239）同形加 `(_hs) (_hf)`，体 `exact CLOSED_SY_cs (d := d) _hsys _hs _hf _hk1 _hk2`；`WJSCPRO_p18`（:266）同形加 `(hs) (hf)` 并透传。等式前提形（而非直接代入）与 W3 件/G-B2 供给形一致，HOL 语义相同。
+
+### (d) 消费面
+
+全树代码消费点：LA23 `bodyClosed_p23` 装配体一处（`CLOSED_SY_cs hsys_cs (by ext x; simp) rfl (by omega) hm`——G-B2 供 `s = Finset.Icc 0 (m-1)`，`Finset.Icc 0 (m-1) = Finset.Iic (m-1)` 由 `ext; simp` 桥；`f` 形 α-等价 `rfl`）；LA18 内 `WJSCPRO_p18 → CLOSED_SY_p18` 透传；LA18/LA23 之外零消费（grep 复核）。W7 的 `hC2` 装配件按 W3 §2.1 契约加 `hs hf`。
+
+### (e) 极小性
+
+不改 `stableSystem_*` def（def 层编码改动会波及 LA18 全载体消费者）；两等式前提是最小钉形。SF-89c 备胎条款（recon WORKORDER §4.2）至此了结。
+
+### (f) 状态
+
+**立案 + 应用 2026-11-02 上午**（编排者依 2026-11-02 常态化授权批，分级 A：HOL 逐字锚 + 机检 C3/C4 + W3 证明链实证 + 消费者普查齐备）。归档 patch `docs/statement-fix-proposals-patches/94-closed-sy-pinned-s-f.patch`（ClosedSyKit + LA18 + LA23 三段，应用态真实 `git diff` 生成）。闸 ×3（lean/ 下，`GATE_MODE=STATEMENT-FIX SF_PATCH=… SF_ITEM=94 LANE_FILES=Kepler/Text/ClosedSyKit.lean,Kepler/Text/LocalAuto18.lean,Kepler/Text/LocalAuto23.lean`）：ClosedSyKit THM=CLOSED_SY_cs；LA18 THM=CLOSED_SY_p18；LA23 THM=bodyClosed_p23。结果见 queue §8 续 205。
+

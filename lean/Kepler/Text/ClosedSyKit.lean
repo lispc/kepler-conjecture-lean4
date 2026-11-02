@@ -122,10 +122,16 @@ SF-89b/bodyclosed-recon 路线 B 债根（bodyclosed-w2b 起为唯一债根：LA
 `bodyClosed_p23` 经 G-B2 + G-B1 消费本件，LA18 `CLOSED_SY_p18` 经定义层孪生
 桥重定向到本件）。
 
-Statement verbatim twin of `CLOSED_SY_p18` (LocalAuto18:238). -/
+Statement verbatim twin of `CLOSED_SY_p18` (LocalAuto18:238).
+SF-89c (2026-11-02, bodyclosed-w3 §2.2): the premise pins `s = 0..k-1` and
+`f = succ mod k` exactly as HOL `stable_system k d (0..k-1) a b J
+(\i. (1+i) MOD k)` — the free-`s f` generalization had no supply for the
+row-pair lower bound (`s ∩ [1,k] = ∅`) and is refuted by the m=6 collapse
+family; G-B2 supplies precisely this pinned shape. -/
 theorem CLOSED_SY_cs {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
     {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
-    (_hsys : stableSystem_cs k d s a b J f) (_hk1 : 1 < k) (_hk2 : 2 < k) :
+    (_hsys : stableSystem_cs k d s a b J f) (_hs : s = Finset.Iic (k - 1))
+    (_hf : f = fun j => (1 + j) % k) (_hk1 : 1 < k) (_hk2 : 2 < k) :
     IsClosed (SYset_cs k a b) := by
   sorry
   -- DISCHARGES: the `BSY1body_cs` factor is closed exactly as in

@@ -1836,7 +1836,8 @@ theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
   obtain ⟨a, b, J, hcar, hsa, hsb⟩ := hstab
   obtain ⟨Jf, hsys_cs⟩ := bcw2b_stableSystem_cs_of_p23 hcar
   exact bcw2b_bodyClosed_of_SYset_cs aR bR _ _
-    (fun p q => hsa p q) (fun p q => hsb p q) (CLOSED_SY_cs hsys_cs (by omega) hm)
+    (fun p q => hsa p q) (fun p q => hsb p q)
+    (CLOSED_SY_cs hsys_cs (by ext x; simp) rfl (by omega) hm)
 
 /-- the EVT core of HDPLYGY / MINIMUM_IN_B_SY (Mathlib only, CLEAN). -/
 theorem hdplygy_min_core_p23 {β : Type*} [NormedAddCommGroup β] [NormedSpace ℝ β]

@@ -1,0 +1,72 @@
+diff --git a/lean/Kepler/Text/ClosedSyKit.lean b/lean/Kepler/Text/ClosedSyKit.lean
+index 08e6c655..6694451a 100644
+--- a/lean/Kepler/Text/ClosedSyKit.lean
++++ b/lean/Kepler/Text/ClosedSyKit.lean
+@@ -122,10 +122,16 @@ SF-89b/bodyclosed-recon 路线 B 债根（bodyclosed-w2b 起为唯一债根：LA
+ `bodyClosed_p23` 经 G-B2 + G-B1 消费本件，LA18 `CLOSED_SY_p18` 经定义层孪生
+ 桥重定向到本件）。
+ 
+-Statement verbatim twin of `CLOSED_SY_p18` (LocalAuto18:238). -/
++Statement verbatim twin of `CLOSED_SY_p18` (LocalAuto18:238).
++SF-89c (2026-11-02, bodyclosed-w3 §2.2): the premise pins `s = 0..k-1` and
++`f = succ mod k` exactly as HOL `stable_system k d (0..k-1) a b J
++(\i. (1+i) MOD k)` — the free-`s f` generalization had no supply for the
++row-pair lower bound (`s ∩ [1,k] = ∅`) and is refuted by the m=6 collapse
++family; G-B2 supplies precisely this pinned shape. -/
+ theorem CLOSED_SY_cs {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+     {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+-    (_hsys : stableSystem_cs k d s a b J f) (_hk1 : 1 < k) (_hk2 : 2 < k) :
++    (_hsys : stableSystem_cs k d s a b J f) (_hs : s = Finset.Iic (k - 1))
++    (_hf : f = fun j => (1 + j) % k) (_hk1 : 1 < k) (_hk2 : 2 < k) :
+     IsClosed (SYset_cs k a b) := by
+   sorry
+   -- DISCHARGES: the `BSY1body_cs` factor is closed exactly as in
+diff --git a/lean/Kepler/Text/LocalAuto18.lean b/lean/Kepler/Text/LocalAuto18.lean
+index 2c35751a..5a335320 100644
+--- a/lean/Kepler/Text/LocalAuto18.lean
++++ b/lean/Kepler/Text/LocalAuto18.lean
+@@ -238,13 +238,14 @@ WJSCPRO.hl:63-3174, threading sequential limits through the rows,
+ `CONDITION1_SY` and the fan-convexity clause `CONDITION2_SY`). -/
+ theorem CLOSED_SY_p18 {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+     {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+-    (_hsys : stableSystem_p18 k d s a b J f) (_hk1 : 1 < k) (_hk2 : 2 < k) :
++    (_hsys : stableSystem_p18 k d s a b J f) (_hs : s = Finset.Iic (k - 1))
++    (_hf : f = fun j => (1 + j) % k) (_hk1 : 1 < k) (_hk2 : 2 < k) :
+     IsClosed (SYset_p18 k a b) := by
+   -- bodyclosed-w2b: the statement is a verbatim twin of `CLOSED_SY_cs`
+   -- (Kepler.Text.ClosedSyKit); the verbatim twin defs make this redirect
+   -- definitional, with zero new proof debt: the giant obligation is now
+   -- rooted at `CLOSED_SY_cs` alone.
+-  exact CLOSED_SY_cs (d := d) _hsys _hk1 _hk2
++  exact CLOSED_SY_cs (d := d) _hsys _hs _hf _hk1 _hk2
+   -- DISCHARGES (history of the former local gap): the
+   -- `BSY1body_p18` factor is closed exactly as in LocalAuto9's
+   -- `CLOSED_TRI_SY_p9` (proved there; blocked here only by that theorem's
+@@ -265,10 +266,11 @@ theorem BOUNDED_SY_p18 {k : ℕ} {a b : ℕ → ℕ → ℝ} :
+ /-- HOL `WJSCPRO` (WJSCPRO.hl:3194): compactness = closed + bounded. -/
+ theorem WJSCPRO_p18 {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+     {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+-    (hsys : stableSystem_p18 k d s a b J f) (hk1 : 1 < k) (hk2 : 2 < k) :
++    (hsys : stableSystem_p18 k d s a b J f) (hs : s = Finset.Iic (k - 1))
++    (hf : f = fun j => (1 + j) % k) (hk1 : 1 < k) (hk2 : 2 < k) :
+     IsCompact (SYset_p18 k a b) :=
+   Metric.isCompact_iff_isClosed_bounded.mpr
+-    ⟨CLOSED_SY_p18 hsys hk1 hk2, BOUNDED_SY_p18⟩
++    ⟨CLOSED_SY_p18 hsys hs hf hk1 hk2, BOUNDED_SY_p18⟩
+ 
+ /-! ## Section B: IUNBUIG (Iunbuig.hl) -/
+ 
+diff --git a/lean/Kepler/Text/LocalAuto23.lean b/lean/Kepler/Text/LocalAuto23.lean
+index 03fe3abc..be9f6d71 100644
+--- a/lean/Kepler/Text/LocalAuto23.lean
++++ b/lean/Kepler/Text/LocalAuto23.lean
+@@ -1836,7 +1836,8 @@ theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
+   obtain ⟨a, b, J, hcar, hsa, hsb⟩ := hstab
+   obtain ⟨Jf, hsys_cs⟩ := bcw2b_stableSystem_cs_of_p23 hcar
+   exact bcw2b_bodyClosed_of_SYset_cs aR bR _ _
+-    (fun p q => hsa p q) (fun p q => hsb p q) (CLOSED_SY_cs hsys_cs (by omega) hm)
++    (fun p q => hsa p q) (fun p q => hsb p q)
++    (CLOSED_SY_cs hsys_cs (by ext x; simp) rfl (by omega) hm)
+ 
+ /-- the EVT core of HDPLYGY / MINIMUM_IN_B_SY (Mathlib only, CLEAN). -/
+ theorem hdplygy_min_core_p23 {β : Type*} [NormedAddCommGroup β] [NormedSpace ℝ β]

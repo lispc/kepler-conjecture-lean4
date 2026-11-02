@@ -238,13 +238,14 @@ WJSCPRO.hl:63-3174, threading sequential limits through the rows,
 `CONDITION1_SY` and the fan-convexity clause `CONDITION2_SY`). -/
 theorem CLOSED_SY_p18 {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
     {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
-    (_hsys : stableSystem_p18 k d s a b J f) (_hk1 : 1 < k) (_hk2 : 2 < k) :
+    (_hsys : stableSystem_p18 k d s a b J f) (_hs : s = Finset.Iic (k - 1))
+    (_hf : f = fun j => (1 + j) % k) (_hk1 : 1 < k) (_hk2 : 2 < k) :
     IsClosed (SYset_p18 k a b) := by
   -- bodyclosed-w2b: the statement is a verbatim twin of `CLOSED_SY_cs`
   -- (Kepler.Text.ClosedSyKit); the verbatim twin defs make this redirect
   -- definitional, with zero new proof debt: the giant obligation is now
   -- rooted at `CLOSED_SY_cs` alone.
-  exact CLOSED_SY_cs (d := d) _hsys _hk1 _hk2
+  exact CLOSED_SY_cs (d := d) _hsys _hs _hf _hk1 _hk2
   -- DISCHARGES (history of the former local gap): the
   -- `BSY1body_p18` factor is closed exactly as in LocalAuto9's
   -- `CLOSED_TRI_SY_p9` (proved there; blocked here only by that theorem's
@@ -265,10 +266,11 @@ theorem BOUNDED_SY_p18 {k : ℕ} {a b : ℕ → ℕ → ℝ} :
 /-- HOL `WJSCPRO` (WJSCPRO.hl:3194): compactness = closed + bounded. -/
 theorem WJSCPRO_p18 {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
     {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
-    (hsys : stableSystem_p18 k d s a b J f) (hk1 : 1 < k) (hk2 : 2 < k) :
+    (hsys : stableSystem_p18 k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k) (hk1 : 1 < k) (hk2 : 2 < k) :
     IsCompact (SYset_p18 k a b) :=
   Metric.isCompact_iff_isClosed_bounded.mpr
-    ⟨CLOSED_SY_p18 hsys hk1 hk2, BOUNDED_SY_p18⟩
+    ⟨CLOSED_SY_p18 hsys hs hf hk1 hk2, BOUNDED_SY_p18⟩
 
 /-! ## Section B: IUNBUIG (Iunbuig.hl) -/
 
