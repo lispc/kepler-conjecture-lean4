@@ -274,12 +274,49 @@ theorem NONPLANAR_OPEN_p14 (v1 v2 v3 v4 : ℝ → V3) (t : ℝ)
       ¬ Coplanar ({v1 t', v2 t', v3 t', v4 t'} : Set V3) := by
   sorry
 
+/-! ## w5cA helpers (W5c-A lane; inserted before consumption points) -/
+
+/-- w5cA: collinear-with-origin vectors have vanishing cross product. -/
+private theorem w5cA_collinear_cross3_eq {v w : V3}
+    (h : Collinear ℝ ({0, v, w} : Set V3)) : cross3 v w = 0 := by
+  by_cases hv : v = 0
+  · have hpi : crossProduct ((v : V3) : Fin 3 → ℝ) ((w : V3) : Fin 3 → ℝ) = 0 := by
+      rw [hv, coe_zero_p14, map_zero, LinearMap.zero_apply]
+    have hd : cross3 v w ⬝ᵥ (cross3 v w) = 0 := by
+      rw [dot3_eq_p14, coe_cross3_p14, hpi, dotProduct_zero]
+    exact dot3_self_zero_p14 hd
+  obtain ⟨t, ht⟩ := smul_of_collinear0_p14 hv h
+  have hpi : crossProduct ((v : V3) : Fin 3 → ℝ) ((w : V3) : Fin 3 → ℝ) = 0 := by
+    rw [ht, coe_smul_p14, map_smul, cross_self, smul_zero]
+  have hd : cross3 v w ⬝ᵥ (cross3 v w) = 0 := by
+    rw [dot3_eq_p14, coe_cross3_p14, hpi, dotProduct_zero]
+  exact dot3_self_zero_p14 hd
+
 /-- HOL `COLL_IFF_COLL_CROSS2` (hl:59).  NEEDS: cross-product collinearity
 algebra. -/
 theorem COLL_IFF_COLL_CROSS2_p14 (v w : V3) :
     Collinear ℝ ({0, v, w} : Set V3) ↔
       Collinear ℝ ({0, w, cross3 v w} : Set V3) := by
-  sorry
+  constructor
+  · intro h
+    rw [w5cA_collinear_cross3_eq h]
+    simpa using collinear2_p14 w 0
+  · intro h
+    by_cases hnc : Collinear ℝ ({0, v, w} : Set V3)
+    · exact hnc
+    · exfalso
+      have hc : cross3 v w ≠ 0 := cross3_ne_p14 hnc
+      have hset : Collinear ℝ ({0, cross3 v w, w} : Set V3) := by
+        rw [show ({0, cross3 v w, w} : Set V3) = ({0, w, cross3 v w} : Set V3) from
+          by ext z; simp; tauto]
+        exact h
+      obtain ⟨t, ht⟩ := smul_of_collinear0_p14 hc hset
+      have hd : cross3 v w ⬝ᵥ w = 0 := cross3_dotR_p14 v w
+      nth_rewrite 2 [ht] at hd
+      rw [coe_smul_p14, dot3_smul_right_p14] at hd
+      rcases mul_eq_zero.mp hd with h0 | hcz
+      · exact hnc (by rw [ht, h0]; simpa using collinear2_p14 v 0)
+      · exact absurd hcz (ne_of_gt (dot3_self_pos_p14 hc))
 
 /-- HOL `azim_cross_0` (hl:76). -/
 theorem azim_cross_0_p14 (v w : V3) (h : ¬ Collinear ℝ ({0, v, w} : Set V3)) :
@@ -596,12 +633,155 @@ theorem KCZXLLE_SYM_p14 (u : ℕ → V3) (r i j k : ℕ) (hk : k ≤ r) (hj : j 
     azim 0 (u i) (u j) (u k) = 0 := by
   sorry
 
+/-- w5cA: a 2-vector family spans something of finrank 2 when linearly
+independent. -/
+private theorem w5cA_finrank_span_range_two {a b : V3}
+    (hind : LinearIndependent ℝ ![a, b]) :
+    Module.finrank ℝ (Submodule.span ℝ (Set.range ![a, b])) = 2 := by
+  rw [finrank_span_eq_card hind]
+  norm_num
+
 /-- HOL `coplanar_in_affine_hull` (hl:960; HOL real^A rendered at V3).
 NEEDS: affine-dimension theory. -/
 theorem coplanar_in_affine_hull_p14 (u v w x : V3)
     (h1 : ¬ Collinear ℝ ({u, v, w} : Set V3)) (h2 : Coplanar ({x, u, v, w} : Set V3)) :
     x ∈ affineSpan ℝ ({u, v, w} : Set V3) := by
-  sorry
+  obtain ⟨p, q, r, hsub⟩ := h2
+  set A : AffineSubspace ℝ V3 := affineSpan ℝ ({p, q, r} : Set V3) with hAdef
+  set B : AffineSubspace ℝ V3 := affineSpan ℝ ({u, v, w} : Set V3) with hBdef
+  have huA : u ∈ A := hsub (by simp)
+  have hBA : B ≤ A := affineSpan_le.mpr (fun z hz => hsub (by rcases hz with rfl | rfl | rfl <;> simp))
+  have hind : LinearIndependent ℝ ![v - u, w - u] := by
+    rw [Fintype.linearIndependent_iff]
+    intro g hg
+    simp only [Fin.sum_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons] at hg
+    simp only [Fin.forall_fin_two, Fin.forall_fin_one]
+    refine ⟨?_, ?_⟩
+    · by_contra h0
+      apply h1
+      have hkey := eq_neg_of_add_eq_zero_left hg
+      have hkey2 : v - u = ((g 0)⁻¹ * -(g 1)) • (w - u) := by
+        apply smul_right_injective V3 h0
+        show (g 0) • (v - u) = (g 0) • (((g 0)⁻¹ * -(g 1)) • (w - u))
+        rw [smul_smul, ← mul_assoc, mul_inv_cancel₀ h0, one_mul]
+        exact hkey.trans (neg_smul (g 1) (w - u)).symm
+      refine collinear_iff_exists_forall_eq_smul_vadd _ |>.2 ⟨u, w - u, ?_⟩
+      rintro z (hz1 | hz1 | hz1)
+      · exact ⟨0, by rw [hz1]; simp⟩
+      · refine ⟨(g 0)⁻¹ * -(g 1), ?_⟩
+        have hzz : v = (v - u) + u := by abel
+        rw [hz1, hzz, hkey2, vadd_eq_add]
+      · exact ⟨1, by rw [hz1]; simp⟩
+    · by_contra h1'
+      apply h1
+      have hkey := eq_neg_of_add_eq_zero_right hg
+      have hkey2 : w - u = ((g 1)⁻¹ * -(g 0)) • (v - u) := by
+        apply smul_right_injective V3 h1'
+        show (g 1) • (w - u) = (g 1) • (((g 1)⁻¹ * -(g 0)) • (v - u))
+        rw [smul_smul, ← mul_assoc, mul_inv_cancel₀ h1', one_mul]
+        exact hkey.trans (neg_smul (g 0) (v - u)).symm
+      refine collinear_iff_exists_forall_eq_smul_vadd _ |>.2 ⟨u, v - u, ?_⟩
+      rintro z (hz1 | hz1 | hz1)
+      · exact ⟨0, by rw [hz1]; simp⟩
+      · exact ⟨1, by rw [hz1]; simp⟩
+      · refine ⟨(g 1)⁻¹ * -(g 0), ?_⟩
+        have hzz : w = (w - u) + u := by abel
+        rw [hz1, hzz, hkey2, vadd_eq_add]
+  have hfr2 : Module.finrank ℝ (Submodule.span ℝ (Set.range ![v - u, w - u])) = 2 :=
+    w5cA_finrank_span_range_two hind
+  have hspanB : Submodule.span ℝ (Set.range ![v - u, w - u]) ≤ B.direction := by
+    rw [Submodule.span_le]
+    rintro d ⟨i, hi, rfl⟩
+    fin_cases i <;>
+      simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons] <;>
+      exact AffineSubspace.vsub_mem_direction
+        (mem_affineSpan ℝ (by simp)) (mem_affineSpan ℝ (by simp))
+  have hdBA : B.direction ≤ A.direction := by
+    rw [hBdef, direction_affineSpan, vectorSpan_def, Submodule.span_le]
+    rintro d ⟨z, hz, y, hy, rfl⟩
+    exact AffineSubspace.vsub_mem_direction (hsub (by rcases hz with rfl | rfl | rfl <;> simp))
+      (hsub (by rcases hy with rfl | rfl | rfl <;> simp))
+  have hdA : A.direction ≤ Submodule.span ℝ ({q - p, r - p} : Set V3) := by
+    rw [hAdef, direction_affineSpan, vectorSpan_def, Submodule.span_le]
+    rintro d ⟨a, ha, b, hb, rfl⟩
+    rcases ha with hp | hq | hr
+    · rcases hb with hp' | hq' | hr'
+      · rw [hp, hp']
+        simp only [vsub_eq_sub, sub_self]
+        exact Submodule.zero_mem _
+      · rw [hp, hq']
+        simp only [vsub_eq_sub]
+        rw [show (p : V3) - q = (-1 : ℝ) • (q - p) from by module]
+        exact Submodule.smul_mem _ (-1) (Submodule.subset_span (by simp))
+      · rw [hp, hr']
+        simp only [vsub_eq_sub]
+        rw [show (p : V3) - r = (-1 : ℝ) • (r - p) from by module]
+        exact Submodule.smul_mem _ (-1) (Submodule.subset_span (by simp))
+    · rcases hb with hp' | hq' | hr'
+      · rw [hq, hp']
+        simp only [vsub_eq_sub]
+        exact Submodule.subset_span (by simp)
+      · rw [hq, hq']
+        simp only [vsub_eq_sub, sub_self]
+        exact Submodule.zero_mem _
+      · rw [hq, hr']
+        simp only [vsub_eq_sub]
+        have hqeq : (q : V3) - r = (q - p) - (r - p) := by abel
+        rw [hqeq]
+        exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+          (Submodule.subset_span (by simp))
+    · rcases hb with hp' | hq' | hr'
+      · rw [hr, hp']
+        simp only [vsub_eq_sub]
+        exact Submodule.subset_span (by simp)
+      · rw [hr, hq']
+        simp only [vsub_eq_sub]
+        have hrq : (r : V3) - q = (r - p) - (q - p) := by abel
+        rw [hrq]
+        exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+          (Submodule.subset_span (by simp))
+      · rw [hr, hr']
+        simp only [vsub_eq_sub, sub_self]
+        exact Submodule.zero_mem _
+  have hfrA : Module.finrank ℝ A.direction
+      ≤ Module.finrank ℝ (Submodule.span ℝ ({q - p, r - p} : Set V3)) :=
+    Submodule.finrank_mono hdA
+  have hfrA2 : Module.finrank ℝ (Submodule.span ℝ ({q - p, r - p} : Set V3)) ≤ 2 := by
+    have h := finrank_span_finset_le_card (R := ℝ) ({q - p, r - p} : Finset V3)
+    unfold Set.finrank at h
+    rw [show (({q - p, r - p} : Finset V3) : Set V3) = ({q - p, r - p} : Set V3) from
+      by ext z; simp] at h
+    have hcard : (({q - p, r - p} : Finset V3)).card ≤ 2 := by
+      have h2c := Finset.card_insert_le (q - p) ({r - p} : Finset V3)
+      rw [Finset.card_singleton] at h2c
+      simpa using h2c
+    exact le_trans h hcard
+  have hfrB : Module.finrank ℝ (Submodule.span ℝ (Set.range ![v - u, w - u]))
+      ≤ Module.finrank ℝ B.direction := Submodule.finrank_mono hspanB
+  have h2 : Module.finrank ℝ B.direction ≤ Module.finrank ℝ A.direction :=
+    Submodule.finrank_mono hdBA
+  have h3 : Module.finrank ℝ A.direction ≤ 2 := le_trans hfrA hfrA2
+  have hfdB : Module.finrank ℝ B.direction = 2 :=
+    le_antisymm (h2.trans h3) (hfr2.symm.le.trans hfrB)
+  have hfdA : Module.finrank ℝ A.direction = 2 :=
+    le_antisymm h3 (hfdB.symm.le.trans h2)
+  have hdir : B.direction = A.direction :=
+    Submodule.eq_of_le_of_finrank_eq hdBA (by rw [hfdB]; exact hfdA.symm)
+  have hABeq : A = B := by
+    ext z
+    constructor
+    · intro hz
+      have hd : z -ᵥ u ∈ B.direction := by
+        rw [hdir]
+        exact AffineSubspace.vsub_mem_direction hz huA
+      have hzv : z = (z -ᵥ u) +ᵥ u := by rw [vsub_vadd]
+      rw [hzv]
+      exact AffineSubspace.vadd_mem_of_mem_direction hd
+        (mem_affineSpan ℝ (by simp))
+    · intro hz
+      exact hBA hz
+  rw [← hABeq]
+  exact hsub (by simp)
 
 /-- HOL `azim_0_as_closed` (hl:972).  NEEDS: azim-zero coplanarity theory. -/
 theorem azim_0_as_closed_p14 (v2 v3 v4 : V3)
@@ -925,11 +1105,61 @@ theorem XIV_ECAU_p14 (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3) (a b : �
       f (w (r + 1)) t ∈ wedgeGe 0 (f (w 1) t) (f (w 2) t) (f (w 0) t) := by
   sorry
 
+/-- w5cA: the affine span of `{0, t • e}` equals that of `{0, e}` for `t ≠ 0`. -/
+private theorem w5cA_affineSpan_pair_smul (e : V3) (t : ℝ) (ht : t ≠ 0) :
+    affineSpan ℝ ({0, t • e} : Set V3) = affineSpan ℝ ({0, e} : Set V3) := by
+  ext z
+  constructor
+  · intro hz
+    rw [mem_affineSpan_pair_iff_exists_lineMap_eq] at hz ⊢
+    obtain ⟨s, hs⟩ := hz
+    refine ⟨s * t, ?_⟩
+    rw [AffineMap.lineMap_apply_module'] at hs ⊢
+    simp only [sub_zero, add_zero] at hs ⊢
+    rw [← hs, smul_smul]
+  · intro hz
+    rw [mem_affineSpan_pair_iff_exists_lineMap_eq] at hz ⊢
+    obtain ⟨s, hs⟩ := hz
+    refine ⟨s / t, ?_⟩
+    rw [AffineMap.lineMap_apply_module'] at hs ⊢
+    simp only [sub_zero, add_zero] at hs ⊢
+    rw [← hs, smul_smul, div_mul_cancel₀ s ht]
+
 /-- HOL `cyclic_set_scale` (hl:2651).  NEEDS: affine-span scaling invariance
 (this file's Section 0 has the collinearity kit). -/
 theorem cyclic_set_scale_p14 (U : Set V3) (e : V3) (t : ℝ) (ht : t ≠ 0) :
     cyclicSet U 0 (t • e) ↔ cyclicSet U 0 e := by
-  sorry
+  have hspan : affineSpan ℝ ({0, t • e} : Set V3) = affineSpan ℝ ({0, e} : Set V3) :=
+    w5cA_affineSpan_pair_smul e t ht
+  have hne : (0 : V3) ≠ t • e ↔ (0 : V3) ≠ e := by
+    constructor
+    · intro h hze
+      exact h (by rw [← hze, smul_zero])
+    · intro h hze
+      rcases smul_eq_zero.mp hze.symm with h3 | h3
+      · exact absurd h3 ht
+      · exact h h3.symm
+  constructor
+  · rintro ⟨h0, hfin, hdiff, hspanE⟩
+    refine ⟨hne.mp h0, hfin, ?_, ?_⟩
+    · intro p hp q hq h heq
+      have hcoef : (h * t⁻¹) • (0 - t • e) = h • (0 - e) := by
+        rw [zero_sub, zero_sub, smul_neg, smul_neg, smul_smul, mul_assoc,
+          inv_mul_cancel₀ ht, mul_one]
+      refine hdiff p hp q hq (h * t⁻¹) ?_
+      rw [heq, hcoef]
+    · rw [hspan] at hspanE
+      exact hspanE
+  · rintro ⟨h0, hfin, hdiff, hspanE⟩
+    refine ⟨hne.mpr h0, hfin, ?_, ?_⟩
+    · intro p hp q hq h heq
+      have hcoef : (h * t) • (0 - e) = h • (0 - t • e) := by
+        rw [zero_sub, zero_sub, smul_neg, smul_neg, smul_smul]
+      refine hdiff p hp q hq (h * t) ?_
+      rw [heq, hcoef]
+    · rw [← hspan] at hspanE
+      exact hspanE
+
 
 /-- HOL `projection_scale` (hl:2681; argument order: HOL `projection e u`
 ↔ repo `projection u e`). -/
@@ -952,10 +1182,112 @@ theorem projection_scale_p14 (e u : V3) (t : ℝ) (ht : t ≠ 0) :
     rw [h1, h2, smul_smul]
     field_simp
 
+/-- w5cA: azim is invariant under positively scaling the axis point. -/
+private theorem w5cA_azim_axis_scale (e x u : V3) (t : ℝ) (ht : 0 < t) :
+    azim 0 (t • e) x u = azim 0 e x u := by
+  have hcoliff : ∀ z : V3, Collinear3 0 (t • e) z ↔ Collinear3 0 e z := by
+    intro z
+    by_cases he : e = 0
+    · subst he
+      rw [smul_zero]
+    · have hne : t • e ≠ 0 := by
+        intro hze
+        exact ht.ne' ((smul_eq_zero.mp hze).resolve_right he)
+      rw [collinear3_iff_smul (hw := hne) (v := 0) (w := t • e) (w1 := z),
+        collinear3_iff_smul (hw := he) (v := 0) (w := e) (w1 := z)]
+      constructor
+      · rintro ⟨c, hc⟩
+        refine ⟨c * t, ?_⟩
+        simpa only [sub_zero, smul_smul] using hc
+      · rintro ⟨c, hc⟩
+        refine ⟨c / t, ?_⟩
+        simpa only [sub_zero, smul_smul, div_mul_cancel₀ c (ne_of_gt ht)] using hc
+  by_cases hc1 : Collinear3 0 e x
+  · have hc1' : Collinear3 0 (t • e) x := (hcoliff x).mpr hc1
+    rw [azim, azim, if_pos (Or.inl hc1'), if_pos (Or.inl hc1)]
+  · by_cases hc2 : Collinear3 0 e u
+    · rw [azim, azim, if_pos (Or.inr ((hcoliff u).mpr hc2)), if_pos (Or.inr hc2)]
+    · obtain ⟨hge0, hlt2pi, h1c, h2c, hframe⟩ := azim_master 0 (t • e) x u
+      have hdist : dist (t • e) 0 = t * dist e 0 := by
+        rw [dist_eq_norm, dist_eq_norm, sub_zero, sub_zero, norm_smul,
+          Real.norm_eq_abs, abs_of_pos ht]
+      have hspec : AzimSpec 0 e x u (azim 0 (t • e) x u) :=
+        ⟨hge0, hlt2pi, h1c * t, h2c * t, ?_⟩
+      exact (azim_eq_of_spec hc1 hc2 hspec).symm
+      intro E1 E2 E3 hon haxis he0
+      rw [sub_zero] at haxis
+      obtain ⟨ψ, r1, r2, hrepx, hrepu, hpos1, hpos2⟩ :=
+        hframe E1 E2 E3 hon
+          (show (t • e - 0) = dist (t • e) 0 • E3 from by
+            rw [sub_zero, hdist]
+            conv_lhs => rw [haxis]
+            rw [smul_smul])
+          (by
+            intro hze
+            exact ht.ne' ((smul_eq_zero.mp hze).resolve_right
+              (fun he0 => hc1 (by rw [he0]; simpa [Collinear3] using collinear2_p14 0 x))))
+      refine ⟨ψ, r1, r2, ?_, ?_, ?_, ?_⟩
+      · simpa only [sub_zero, smul_smul] using hrepx
+      · simpa only [sub_zero, smul_smul] using hrepu
+      · exact hpos1 (fun hh => hc1 ((hcoliff x).mp hh))
+      · exact hpos2 (fun hh => hc2 ((hcoliff u).mp hh))
+
+/-- w5cA: on a finite set not contained in `{p}` there exists an
+azim-minimal element with the projection-norm tiebreak. -/
+private theorem w5cA_exis_smallest {W : Set V3} {v w p : V3}
+    (h1 : ¬(W ⊆ {p})) (hfin : W.Finite) :
+    ∃ u : V3, u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim v w p u < azim v w p q ∨
+        azim v w p u = azim v w p q ∧
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖ := by
+  have hne : {u : V3 | u ∈ W ∧ u ≠ p}.Nonempty := by
+    by_contra hc
+    apply h1
+    intro x hx
+    by_contra hxp
+    exact hc ⟨x, hx, hxp⟩
+  have hf : {u : V3 | u ∈ W ∧ u ≠ p}.Finite := hfin.subset fun x hx => hx.1
+  obtain ⟨q, hqin, hqmin⟩ := Set.exists_min_image
+    {u : V3 | u ∈ W ∧ u ≠ p}
+    (fun x => toLex (azim v w p x, ‖projection (x - v) (w - v)‖)) hf hne
+  refine ⟨q, hqin.2, hqin.1, fun r hr hpr => ?_⟩
+  have h := hqmin r ⟨hr, hpr⟩
+  rw [Prod.Lex.toLex_le_toLex] at h
+  exact h
+
+/-- w5cA: characterization of `azimCycle_p14` (the `_p14` copy of the proved
+`AZIM_CYCLE_PROPERTIES`). -/
+private theorem w5cA_azimCycle_properties {W : Set V3} {p : V3} (hsub : ¬(W ⊆ {p}))
+    (hfin : W.Finite) (v w : V3) :
+    azimCycle_p14 W v w p ≠ p ∧ azimCycle_p14 W v w p ∈ W ∧
+      ∀ q ∈ W, q ≠ p →
+        azim v w p (azimCycle_p14 W v w p) < azim v w p q ∨
+          azim v w p (azimCycle_p14 W v w p) = azim v w p q ∧
+            ‖projection (azimCycle_p14 W v w p - v) (w - v)‖ ≤
+              ‖projection (q - v) (w - v)‖ := by
+  obtain ⟨u, hu1, hu2, hu3⟩ := w5cA_exis_smallest hsub hfin
+  rw [azimCycle_p14, if_neg hsub]
+  exact Classical.epsilon_spec
+    (p := fun u : V3 => u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim v w p u < azim v w p q ∨
+        azim v w p u = azim v w p q ∧
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖)
+    ⟨u, hu1, hu2, hu3⟩
+
 /-- HOL `azim_cycle_scale` (hl:2699).  NEEDS: azim scaling theory. -/
 theorem azim_cycle_scale_p14 (U : Set V3) (e : V3) (t : ℝ) (ht : 0 < t) :
     azimCycle_p14 U 0 (t • e) = azimCycle_p14 U 0 e := by
-  sorry
+  funext p
+  by_cases hsub : U ⊆ {p}
+  · rw [azimCycle_p14, if_pos hsub, azimCycle_p14, if_pos hsub]
+  · rw [azimCycle_p14, if_neg hsub, azimCycle_p14, if_neg hsub]
+    refine congrArg Classical.epsilon ?_
+    funext q
+    have hax : ∀ z : V3, azim 0 (t • e) p z = azim 0 e p z :=
+      fun z => w5cA_azim_axis_scale e p z t ht
+    have hproj : ∀ z : V3, projection z (t • e) = projection z e :=
+      fun z => projection_scale_p14 e z t (ne_of_gt ht)
+    simp only [sub_zero, hax, hproj]
 
 /-- HOL `IDENTIFY_AZIM_CYCLE_SIMPLE` (hl:2720). -/
 theorem IDENTIFY_AZIM_CYCLE_SIMPLE_p14 (W : Set V3) (v w p u : V3)
@@ -993,7 +1325,58 @@ theorem azim_cycle_distinct_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite)
     (h2 : v ∈ U) (h3 : w ∈ U) (h4 : v ≠ w)
     (h5 : ∀ x ∈ U, e ⬝ᵥ (cross3 x (azimCycle_p14 U 0 e x)) ≠ 0) :
     0 < azim 0 e v w := by
-  sorry
+  have he0 : e ≠ 0 := by
+    intro he
+    exact h5 v h2 (by rw [he, dot3_eq_p14, coe_zero_p14, dotProduct_comm,
+      dotProduct_zero])
+  have hnc : ∀ x ∈ U, ¬ Collinear ℝ ({0, e, x} : Set V3) := by
+    intro x hx hcol
+    by_cases hx0 : x = 0
+    · refine h5 x hx ?_
+      have h3z : cross3 x (azimCycle_p14 U 0 e x) = 0 :=
+        w5cA_collinear_cross3_eq (v := x) (w := azimCycle_p14 U 0 e x)
+          (by simpa [hx0] using collinear2_p14 0 (azimCycle_p14 U 0 e 0))
+      rw [h3z]
+      simp
+    · obtain ⟨c, hc⟩ := (collinear3_iff_smul (hw := he0) (v := 0) (w := e)
+        (w1 := x)).mp (by simpa [Collinear3] using hcol)
+      have hc' : x = c • e := by simpa only [sub_zero] using hc
+      apply h5 x hx
+      rw [hc', dot3_eq_p14, coe_cross3_p14, coe_smul_p14, map_smul,
+        LinearMap.smul_apply]
+      simp [dot_self_cross]
+  have hcy := w5cA_azimCycle_properties (p := v)
+    (hsub := by intro hsub; exact h4 ((Set.mem_singleton_iff.mp (hsub h3)).symm)) h1 0 e
+  obtain ⟨hcy1, hcy2, hcy3⟩ := hcy
+  have hncv : ¬ Collinear ℝ ({0, e, v} : Set V3) := hnc v h2
+  have hncu : ¬ Collinear ℝ ({0, e, azimCycle_p14 U 0 e v} : Set V3) := hnc _ hcy2
+  have hcyc0 : azimCycle_p14 U 0 e v ≠ 0 := by
+    intro hzero
+    exact hncu (by rw [hzero]; simpa using collinear2_p14 e 0)
+  have hcycE : azimCycle_p14 U 0 e v ≠ e := by
+    intro heq
+    exact hncu (by rw [heq]; simpa using collinear2_p14 0 e)
+  have hpos : 0 < azim 0 e v (azimCycle_p14 U 0 e v) := by
+    rw [azim_pos_iff_nz_p14]
+    intro hz
+    apply h5 v h2
+    obtain ⟨a, ha, k, hvk⟩ := (affGt_pair_iff (v0 := 0) (v1 := e)
+      (x := azimCycle_p14 U 0 e v) (y := v) (Ne.symm he0)
+      (by intro hzero; exact hncu (by rw [hzero]; simpa using collinear2_p14 e 0))
+      (by intro heq; exact hncu (by rw [heq]; simpa using collinear2_p14 0 e))).mp
+      ((azim_eq_zero_iff hncv hncu).mp hz)
+    have hvk' : v = a • (azimCycle_p14 U 0 e v) + k • e := by
+      simpa only [sub_zero] using hvk
+    nth_rewrite 1 [hvk']
+    rw [dot3_eq_p14, coe_cross3_p14, coe_add_p14, coe_smul_p14, coe_smul_p14,
+      map_add, LinearMap.add_apply, map_smul, LinearMap.smul_apply, map_smul,
+      LinearMap.smul_apply, cross_self, smul_zero, zero_add, dotProduct_comm,
+      smul_dotProduct, dotProduct_comm, dot_self_cross, smul_zero]
+  rcases hcy3 w h3 (Ne.symm h4) with hlt | heqq
+  · exact lt_trans hpos hlt
+  · obtain ⟨heqq, -⟩ := heqq
+    rw [← heqq]
+    exact hpos
 
 /-- HOL `azim_cycle_neg` (hl:2828).  NEEDS: azimuth-cycle negation theory. -/
 theorem azim_cycle_neg_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite) (h2 : v ∈ U)
