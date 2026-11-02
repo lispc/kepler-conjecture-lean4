@@ -899,10 +899,418 @@ theorem ARROW_SPLIT_p33 (s y : ScsV39) (S : Set ScsV39) (hisy : isScsV39 y)
 
 /-! ## Section R: ARDBZYE (ARDBZYE.hl, 81 theorems, source order) -/
 
+private theorem w3sg_ofLp_sub (a b : V3) : (a - b).ofLp = a.ofLp - b.ofLp := rfl
+
+private theorem w3sg_ofLp_smul (t : ℝ) (a : V3) : (t • a).ofLp = t • a.ofLp := rfl
+
+private theorem w3sg_dot_self (a : V3) :
+    a.ofLp ⬝ᵥ a.ofLp = ‖a‖ * ‖a‖ := by
+  have hd : a.ofLp ⬝ᵥ a.ofLp = ∑ i : Fin 3, a.ofLp i * a.ofLp i := rfl
+  have hnp : 0 ≤ ∑ i : Fin 3, ‖a.ofLp i‖ ^ 2 := by positivity
+  rw [hd, ← pow_two ‖a‖, EuclideanSpace.norm_eq, Real.sq_sqrt hnp]
+  exact Finset.sum_congr rfl fun i _ => by
+    rw [Real.norm_eq_abs, sq_abs]; ring
+
+private theorem w3sg_arcV_val (a b : V3) :
+    arcV 0 a b = Real.arccos (a.ofLp ⬝ᵥ b.ofLp / (‖a‖ * ‖b‖)) := by
+  have e1 : arcV 0 a b
+      = Real.arccos ((a - 0).ofLp ⬝ᵥ (b - 0).ofLp / (dist a 0 * dist b 0)) := rfl
+  rw [e1]
+  simp only [sub_zero, dist_eq_norm, sub_zero]
+
+private theorem w3sg_arcV_sym (a b : V3) : arcV 0 a b = arcV 0 b a := by
+  rw [w3sg_arcV_val a b, w3sg_arcV_val b a]
+  refine congrArg Real.arccos ?_
+  rw [dotProduct_comm, mul_comm]
+
+private theorem w3sg_arcV_smul_neg (w p : V3) (t : ℝ) (ht : t < 0) :
+    arcV 0 (t • w) p = Real.pi - arcV 0 w p := by
+  rw [w3sg_arcV_val, w3sg_arcV_val, w3sg_ofLp_smul]
+  have h1 : t • w.ofLp ⬝ᵥ p.ofLp / (‖t • w‖ * ‖p‖)
+      = -(w.ofLp ⬝ᵥ p.ofLp / (‖w‖ * ‖p‖)) := by
+    rw [smul_dotProduct, smul_eq_mul, norm_smul, Real.norm_eq_abs, abs_of_neg ht]
+    have htne : t ≠ 0 := ne_of_lt ht
+    field_simp
+  rw [h1, Real.arccos_neg]
+
+private theorem w3sg_arc_sum_eq_pi {w u p : V3} (t : ℝ) (ht : t < 0) (hu : u = t • w) :
+    arcV 0 u p + arcV 0 p w = Real.pi := by
+  rw [hu, w3sg_arcV_smul_neg w p t ht, w3sg_arcV_sym p w]
+  ring
+
+private theorem w3sg_cos_law (u v : V3) :
+    u.ofLp ⬝ᵥ v.ofLp = (‖u‖ * ‖u‖ + ‖v‖ * ‖v‖ - ‖u - v‖ * ‖u - v‖) / 2 := by
+  have h1 : (u - v).ofLp ⬝ᵥ (u - v).ofLp = ‖u - v‖ * ‖u - v‖ := w3sg_dot_self _
+  rw [w3sg_ofLp_sub, sub_dotProduct, dotProduct_sub, dotProduct_sub] at h1
+  rw [dotProduct_comm v.ofLp u.ofLp] at h1
+  linarith [h1, w3sg_dot_self u, w3sg_dot_self v]
+
+private theorem w3sg_arc_len_bound {u v : V3} (c : ℝ) (hu : 2 ≤ ‖u‖) (hv : 2 ≤ ‖v‖)
+    (hdc : dist u v ≤ c) (hc2 : 2 ≤ c) (hcl : c < 10 / 3) :
+    arcV 0 u v ≤ arcLength 2 2 c := by
+  have hrp : (0:ℝ) < ‖u‖ * ‖v‖ := by nlinarith
+  have hrr : (4:ℝ) ≤ ‖u‖ * ‖v‖ := by nlinarith
+  have hd0 : (0:ℝ) ≤ dist u v := dist_nonneg
+  have hcd0 : dist u v * dist u v ≤ c * c := by nlinarith [hd0, hc2]
+  have hkey2 : (8 - c * c) * (‖u‖ * ‖v‖)
+      ≤ (‖u‖ * ‖u‖ + ‖v‖ * ‖v‖ - dist u v * dist u v) * 4 := by
+    have ht1 : (0:ℝ) ≤ (‖u‖ - ‖v‖) * (‖u‖ - ‖v‖) := mul_self_nonneg (‖u‖ - ‖v‖)
+    have hcc2 : (0:ℝ) ≤ 2 * (c * c) := by nlinarith
+    have ht2 : (2:ℝ) * (c * c) * 4 ≤ 2 * (c * c) * (‖u‖ * ‖v‖) := by nlinarith [hrr, hcc2]
+    have ht3 : (0:ℝ) ≤ (c * c - dist u v * dist u v) * 8 := by nlinarith [hcd0]
+    have hex : (‖u‖ * ‖u‖ + ‖v‖ * ‖v‖ - dist u v * dist u v) * 8
+        = (‖u‖ - ‖v‖) * (‖u‖ - ‖v‖) * 8 + (8 - c * c) * (2 * (‖u‖ * ‖v‖))
+          + 2 * (c * c) * (‖u‖ * ‖v‖ - 4) + (c * c - dist u v * dist u v) * 8 := by
+      ring
+    linarith
+  have hX : arcV 0 u v ≤ Real.arccos ((8 - c * c) / 8) := by
+    rw [w3sg_arcV_val, w3sg_cos_law]
+    refine Real.arccos_le_arccos ?_
+    rw [show ‖u - v‖ = dist u v from (dist_eq_norm u v).symm,
+      div_le_div_iff₀ (by norm_num : (0:ℝ) < 8) hrp,
+      show ((‖u‖ * ‖u‖ + ‖v‖ * ‖v‖ - dist u v * dist u v) / 2) * 8
+          = (‖u‖ * ‖u‖ + ‖v‖ * ‖v‖ - dist u v * dist u v) * 4 by ring]
+    linarith
+  have hc9 : c < 10 / 3 := hcl
+  have h3 : (10:ℝ) / 3 - c > 0 := by linarith
+  have h5 : (c + (10:ℝ) / 3) * ((10:ℝ) / 3 - c) > 0 := mul_pos (by linarith) h3
+  have h6 : (c + (10:ℝ) / 3) * ((10:ℝ) / 3 - c)
+      = ((10:ℝ) / 3) * ((10:ℝ) / 3) - c * c := by ring
+  have hcc : c * c < ((10:ℝ) / 3) * ((10:ℝ) / 3) := by linarith
+  have hlo4 : (c * c - 8:ℝ) ≤ 4 := by linarith
+  have hcc4 : (4:ℝ) ≤ c * c := by nlinarith
+  have hhi4 : -(4:ℝ) ≤ (c * c - 8:ℝ) := by linarith
+  have hsq16 : (c * c - 8:ℝ) ^ 2 ≤ 16 := by
+    have h1' : (0:ℝ) ≤ 4 - (c * c - 8) := by linarith
+    have h2' : (0:ℝ) ≤ 4 + (c * c - 8) := by linarith
+    have h3' : (0:ℝ) ≤ (4 - (c * c - 8)) * (4 + (c * c - 8)) := mul_nonneg h1' h2'
+    have h4' : (4 - (c * c - 8)) * (4 + (c * c - 8)) = 16 - (c * c - 8) ^ 2 := by ring
+    linarith
+  have hups : upsX (2 * 2) (2 * 2) (c * c) = 64 - (c * c - 8) ^ 2 := by
+    simp only [upsX]; ring
+  have hupsp : 0 < upsX (2 * 2) (2 * 2) (c * c) := by rw [hups]; linarith
+  have hSne : upsX (2 * 2) (2 * 2) (c * c) ≠ 0 := ne_of_gt hupsp
+  have hab : |(c * c - 8:ℝ)| < Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)) := by
+    refine Real.lt_sqrt_of_sq_lt ?_
+    rw [hups, sq_abs]
+    linarith
+  have hSL : arcLength 2 2 c
+      = Real.pi / 2 + Real.arctan ((c * c - 8) / Real.sqrt (upsX (2 * 2) (2 * 2) (c * c))) := by
+    unfold arcLength atn2
+    have h2x : (c * c - 2 * 2 - 2 * 2 : ℝ) = c * c - 8 := by ring
+    rw [h2x, if_pos hab]
+  have hang0 : 0 ≤ Real.pi / 2
+      + Real.arctan ((c * c - 8) / Real.sqrt (upsX (2 * 2) (2 * 2) (c * c))) := by
+    have h1 := Real.arctan_lt_pi_div_two
+      (-((c * c - 8) / Real.sqrt (upsX (2 * 2) (2 * 2) (c * c))))
+    rw [Real.arctan_neg] at h1
+    linarith
+  have hangpi : Real.pi / 2
+      + Real.arctan ((c * c - 8) / Real.sqrt (upsX (2 * 2) (2 * 2) (c * c))) ≤ Real.pi := by
+    have h1 := Real.arctan_lt_pi_div_two
+      ((c * c - 8) / Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)))
+    linarith
+  have hS2 : Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)) ^ 2
+      = upsX (2 * 2) (2 * 2) (c * c) := Real.sq_sqrt (le_of_lt hupsp)
+  have hS : 0 < Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)) :=
+    Real.sqrt_pos.mpr hupsp
+  have hcosang : Real.cos (Real.pi / 2
+      + Real.arctan ((c * c - 8) / Real.sqrt (upsX (2 * 2) (2 * 2) (c * c))))
+      = (8 - c * c) / 8 := by
+    set S : ℝ := Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)) with hSdef
+    have hSne' : S ≠ 0 := ne_of_gt hS
+    rw [Real.cos_add, Real.cos_pi_div_two, Real.sin_pi_div_two, zero_mul, zero_sub, one_mul,
+      Real.sin_arctan]
+    have hmul : ((1:ℝ) + ((c * c - 8) / S) ^ 2) * S ^ 2 = 64 := by
+      rw [add_mul, one_mul, div_pow, hS2, div_mul_cancel₀ ((c * c - 8) ^ 2) hSne, hups]
+      ring
+    have hform : (1:ℝ) + ((c * c - 8) / S) ^ 2 = 64 / S ^ 2 :=
+      eq_div_of_mul_eq (show S ^ 2 ≠ 0 by rw [hS2]; exact hSne) hmul
+    have hsqrt : Real.sqrt ((1:ℝ) + ((c * c - 8) / S) ^ 2) = 8 / S := by
+      rw [hform, Real.sqrt_div (by norm_num : (0:ℝ) ≤ (64:ℝ)),
+        show Real.sqrt (64:ℝ) = 8 from by norm_num,
+        Real.sqrt_sq (show (0:ℝ) ≤ S by linarith)]
+    rw [hsqrt]
+    field_simp
+    ring
+  rw [hSL, ← Real.arccos_cos hang0 hangpi, hcosang]
+  exact hX
+
+/-! ### affine extraction helpers -/
+
+private theorem w3sg_affGe_pair {a b z : V3} (ha0 : a ≠ 0) (hab : a ≠ b) (hb0 : b ≠ 0)
+    (h : z ∈ affGe ({0} : Set V3) ({a, b} : Set V3)) :
+    ∃ α β : ℝ, 0 ≤ α ∧ 0 ≤ β ∧ z = α • a + β • b := by
+  simp only [affGe, Set.mem_setOf_eq] at h
+  obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+  rw [Kepler.Geom.sum_insert_pair_v hfin ha0.symm hb0.symm hab] at hsumv
+  refine ⟨f a, f b, hpos a (by simp), hpos b (by simp), ?_⟩
+  rw [hsumv, smul_zero, zero_add]
+
+private theorem w3sg_affLt_single {u z : V3} (hu0 : u ≠ 0)
+    (h : z ∈ affLt ({0} : Set V3) ({u} : Set V3)) :
+    ∃ γ : ℝ, γ < 0 ∧ z = γ • u := by
+  simp only [affLt, Set.mem_setOf_eq] at h
+  obtain ⟨g, gfin, gsumv, gneg, gone⟩ := h
+  rw [Kepler.Geom.sum_insert_single_v gfin hu0.symm] at gsumv
+  exact ⟨g u, gneg u (by simp), by rw [gsumv, smul_zero, zero_add]⟩
+
+private theorem w3sg_v_period4 {v : ℕ → V3} (hper : Periodic v 4) {a b : ℕ}
+    (h : a % 4 = b % 4) : v a = v b := by
+  have key : ∀ m x : ℕ, v (x + 4 * m) = v x := by
+    intro m
+    induction m with
+    | zero => simp
+    | succ k ih =>
+        intro x
+        rw [show x + 4 * (k + 1) = x + 4 * k + 4 from by ring, hper, ih x]
+  rcases Nat.lt_or_ge a b with hlt | hge
+  · obtain ⟨m, hm⟩ : ∃ m, b = a + 4 * m := ⟨(b - a) / 4, by omega⟩
+    rw [hm]
+    exact (key m a).symm
+  · obtain ⟨m, hm⟩ : ∃ m, a = b + 4 * m := ⟨(a - b) / 4, by omega⟩
+    rw [hm, key]
+
+private theorem w3sg_smul_of_eq {x u : V3} {p q : ℝ} (hp : 0 < p) (hq : q < 0)
+    (h : p • x = q • u) : ∃ t : ℝ, t < 0 ∧ u = t • x := by
+  have hq0 : q ≠ 0 := ne_of_lt hq
+  refine ⟨p / q, ?_, ?_⟩
+  · rw [div_eq_mul_inv]
+    exact mul_neg_of_pos_of_neg hp (inv_lt_zero.mpr hq)
+  · have h2 := congrArg (fun w => q⁻¹ • w) h
+    rw [smul_smul, smul_smul, inv_mul_cancel₀ hq0, one_smul, ← div_eq_inv_mul] at h2
+    exact h2.symm
+
+private theorem w3sg_edge_dist_contra {x u : V3} {t : ℝ} (ht : t < 0) (hu : u = t • x)
+    (hxn : 2 ≤ ‖x‖) (hun : 2 ≤ ‖u‖) (hle : dist u x ≤ cstab) (hcst4 : cstab < 4) : False := by
+  have hx : t • x - x = (t - 1) • x := by module
+  have hd : dist u x = -(t - 1) * ‖x‖ := by
+    rw [hu, dist_eq_norm, hx, norm_smul, Real.norm_eq_abs,
+      abs_of_neg (by linarith : t - 1 < 0)]
+  have huN : ‖u‖ = -t * ‖x‖ := by
+    rw [hu, norm_smul, Real.norm_eq_abs, abs_of_neg ht]
+  have h4 : (4:ℝ) ≤ dist u x := by linarith
+  linarith
+
+
+private theorem w3sg_path_kill {s : ScsV39} {v : ℕ → V3}
+    (hBB : BBsV39 s v) (hb : ∀ i, s.b i (i + 1) ≤ cstab) (hper : Periodic v 4)
+    {j m : ℕ} (hpar : ∃ t : ℝ, t < 0 ∧ v (j + 2) = t • v j)
+    (hsm : ‖v (j + m) - v (j + m + 1)‖ ≤ 2 * h0)
+    (hm0 : m = 0 ∨ m = 1 ∨ m = 2 ∨ m = 3) : False := by
+  have hn : ∀ k, 2 ≤ ‖v k‖ := fun k => NORM_LE_2_IN_BBS_p28 s v k hBB
+  have hc : ∀ k, ‖v k - v (k + 1)‖ ≤ cstab := fun k => NORM_V_IN_BB_LE_CSTAB_p26 s v hb hBB k
+  have h02 : (2:ℝ) ≤ 2 * h0 := by norm_num [h0]
+  have h03 : 2 * h0 < (10:ℝ) / 3 := by norm_num [h0]
+  have hcs3 : cstab < (10:ℝ) / 3 := by norm_num [cstab]
+  obtain ⟨t, ht, htpar⟩ := hpar
+  rcases hm0 with rfl | rfl | rfl | rfl
+  · rw [Nat.add_zero] at hsm
+    have hpi : arcV 0 (v (j + 2)) (v (j + 1)) + arcV 0 (v (j + 1)) (v j) = Real.pi :=
+      w3sg_arc_sum_eq_pi t ht htpar
+    have hb1 : arcV 0 (v (j + 1)) (v j) ≤ arcLength 2 2 (2 * h0) :=
+      w3sg_arc_len_bound _ (hn (j + 1)) (hn j)
+        (by rw [dist_eq_norm, norm_sub_rev]; exact hsm) h02 h03
+    have hb2 : arcV 0 (v (j + 2)) (v (j + 1)) ≤ arcLength 2 2 cstab :=
+      w3sg_arc_len_bound _ (hn (j + 2)) (hn (j + 1))
+        (by rw [dist_eq_norm, norm_sub_rev]; exact hc (j + 1)) (by norm_num [cstab]) hcs3
+    linarith [hpi, hb1, hb2, arclength_2h0_cstab_p26]
+  · rw [show (j:ℕ) + 1 + 1 = j + 2 from rfl] at hsm
+    have hpi : arcV 0 (v (j + 2)) (v (j + 1)) + arcV 0 (v (j + 1)) (v j) = Real.pi :=
+      w3sg_arc_sum_eq_pi t ht htpar
+    have hb1 : arcV 0 (v (j + 1)) (v j) ≤ arcLength 2 2 cstab :=
+      w3sg_arc_len_bound _ (hn (j + 1)) (hn j)
+        (by rw [dist_eq_norm, norm_sub_rev]; exact hc j) (by norm_num [cstab]) hcs3
+    have hb2 : arcV 0 (v (j + 2)) (v (j + 1)) ≤ arcLength 2 2 (2 * h0) :=
+      w3sg_arc_len_bound _ (hn (j + 2)) (hn (j + 1))
+        (by rw [dist_eq_norm, norm_sub_rev]; exact hsm) h02 h03
+    linarith [hpi, hb1, hb2, arclength_2h0_cstab_p26]
+  · have hpi : arcV 0 (v (j + 2)) (v (j + 3)) + arcV 0 (v (j + 3)) (v j) = Real.pi :=
+      w3sg_arc_sum_eq_pi t ht htpar
+    rw [show (j:ℕ) + 2 + 1 = j + 3 from rfl] at hsm
+    have hb1 : arcV 0 (v (j + 2)) (v (j + 3)) ≤ arcLength 2 2 (2 * h0) :=
+      w3sg_arc_len_bound _ (hn (j + 2)) (hn (j + 3))
+        (by rw [dist_eq_norm]; exact hsm) h02 h03
+    have hb2 : arcV 0 (v (j + 3)) (v j) ≤ arcLength 2 2 cstab :=
+      w3sg_arc_len_bound _ (hn (j + 3)) (hn j)
+        (by rw [dist_eq_norm, ← hper j]; exact hc (j + 3)) (by norm_num [cstab]) hcs3
+    linarith [hpi, hb1, hb2, arclength_2h0_cstab_p26]
+  · have hpi : arcV 0 (v (j + 2)) (v (j + 3)) + arcV 0 (v (j + 3)) (v j) = Real.pi :=
+      w3sg_arc_sum_eq_pi t ht htpar
+    rw [show (j:ℕ) + 3 + 1 = j + 4 from rfl] at hsm
+    have hb1 : arcV 0 (v (j + 3)) (v j) ≤ arcLength 2 2 (2 * h0) :=
+      w3sg_arc_len_bound _ (hn (j + 3)) (hn j)
+        (by rw [dist_eq_norm, ← hper j]; exact hsm) h02 h03
+    have hb2 : arcV 0 (v (j + 2)) (v (j + 3)) ≤ arcLength 2 2 cstab :=
+      w3sg_arc_len_bound _ (hn (j + 2)) (hn (j + 3))
+        (by rw [dist_eq_norm]; exact hc (j + 2)) (by norm_num [cstab]) hcs3
+    linarith [hpi, hb1, hb2, arclength_2h0_cstab_p26]
+
+private theorem w3sg_antiparallel_kill {s : ScsV39} {v : ℕ → V3} {x u : V3}
+    (hBB : BBsV39 s v) (hs : isScsV39 s) (hb : ∀ i, s.b i (i + 1) ≤ cstab) (hk : s.k = 4)
+    (hper : Periodic v 4)
+    (hpar : ∃ t : ℝ, t < 0 ∧ u = t • x)
+    (hxe : ∃ j : ℕ, x = v j ∧ u = v (j + 2)) : False := by
+  obtain ⟨j, hxj, huj⟩ := hxe
+  obtain ⟨t, ht, hut⟩ := hpar
+  rw [hxj, huj] at hut
+  obtain ⟨e, hesm⟩ := DIST_LE2_BB_CASSE_4_p26 s v hk hBB hs
+  obtain ⟨m, hmeq, hm4⟩ : ∃ m, e % 4 = (j + m) % 4 ∧ m < 4 :=
+    ⟨(e % 4 + 4 - j % 4) % 4, by omega, by omega⟩
+  have heT : v e = v (j + m) := w3sg_v_period4 hper hmeq
+  have he1T : v (e + 1) = v (j + m + 1) := w3sg_v_period4 hper (by omega)
+  have hsm : ‖v (j + m) - v (j + m + 1)‖ ≤ 2 * h0 := by
+    rw [← heT, ← he1T]; exact hesm
+  rcases (by omega : m = 0 ∨ m = 1 ∨ m = 2 ∨ m = 3) with rfl | rfl | rfl | rfl
+  · exact w3sg_path_kill hBB hb hper ⟨t, ht, hut⟩ hsm (Or.inl rfl)
+  · exact w3sg_path_kill hBB hb hper ⟨t, ht, hut⟩ hsm (Or.inr (Or.inl rfl))
+  · exact w3sg_path_kill hBB hb hper ⟨t, ht, hut⟩ hsm (Or.inr (Or.inr (Or.inl rfl)))
+  · exact w3sg_path_kill hBB hb hper ⟨t, ht, hut⟩ hsm (Or.inr (Or.inr (Or.inr rfl)))
+
+private theorem w3sg_antiparallel_branch (x u : V3) {s : ScsV39} {v : ℕ → V3}
+    (hBB : BBsV39 s v) (hs : isScsV39 s) (hb : ∀ i, s.b i (i + 1) ≤ cstab) (hk : s.k = 4)
+    (hper : Periodic v 4) (h2n : ∀ k, 2 ≤ ‖v k‖) (hcst4 : cstab < 4)
+    (hpar : ∃ t : ℝ, t < 0 ∧ u = t • x) (j m : ℕ) (hm4 : m < 4)
+    (hxj : x = v j) (huEq : u = v (j + m)) : False := by
+  rw [hxj, huEq] at hpar
+  obtain ⟨t, ht, hut⟩ := hpar
+  have hc : ∀ k, ‖v k - v (k + 1)‖ ≤ cstab := fun k => NORM_V_IN_BB_LE_CSTAB_p26 s v hb hBB k
+  rcases (by omega : m = 0 ∨ m = 1 ∨ m = 2 ∨ m = 3) with rfl | rfl | rfl | rfl
+  · rw [Nat.add_zero] at hut
+    exact w3sg_edge_dist_contra ht hut (h2n j) (h2n j)
+      (by rw [dist_self]; norm_num [cstab]) hcst4
+  · exact w3sg_edge_dist_contra ht hut (h2n j) (h2n (j + 1))
+      (by rw [dist_eq_norm, norm_sub_rev]; exact hc j) hcst4
+  · exact w3sg_antiparallel_kill hBB hs hb hk hper ⟨t, ht, hut⟩ ⟨j, rfl, rfl⟩
+  · refine w3sg_edge_dist_contra ht hut (h2n j) (h2n (j + 3)) ?_ hcst4
+    rw [dist_eq_norm, ← hper j]
+    exact hc (j + 3)
+
+private theorem w3sg_edge_case {s : ScsV39} {v : ℕ → V3} {a b u z : V3}
+    (hBB : BBsV39 s v) (hs : isScsV39 s) (hb : ∀ i, s.b i (i + 1) ≤ cstab) (hk : s.k = 4)
+    (hper : Periodic v 4)
+    (hnc : ¬ Circular (Set.range v) (Set.range fun i : ℕ => {v i, v (i + 1)}))
+    (huV : u ∈ Set.range v)
+    (hge : z ∈ affGe ({0} : Set V3) ({a, b} : Set V3))
+    (hlt : z ∈ affLt ({0} : Set V3) ({u} : Set V3))
+    {i₀ : ℕ} (hi04 : i₀ < 4) (hA : a = v i₀) (hB : b = v (i₀ + 1)) : False := by
+  subst hA; subst hB
+  have h2d : ∀ k, 2 ≤ ‖v k - v (k + 1)‖ := fun k => DIST_EDGE_IN_BB_LE_2_p26 s v hBB hs k
+  have hcd : ∀ k, ‖v k - v (k + 1)‖ ≤ cstab := fun k => NORM_V_IN_BB_LE_CSTAB_p26 s v hb hBB k
+  have h2n : ∀ k, 2 ≤ ‖v k‖ := fun k => NORM_LE_2_IN_BBS_p28 s v k hBB
+  have hcst4 : cstab < (4:ℝ) := by norm_num [cstab]
+  have hne0a : v i₀ ≠ 0 := by
+    intro hc; have hb2n := h2n i₀; rw [hc] at hb2n; norm_num at hb2n
+  have hne0b : v (i₀ + 1) ≠ 0 := by
+    intro hc; have hb2n := h2n (i₀ + 1); rw [hc] at hb2n; norm_num at hb2n
+  have habne : v i₀ ≠ v (i₀ + 1) := by
+    intro hc; have hb2d := h2d i₀; rw [hc, sub_self, norm_zero] at hb2d; linarith
+  have huV' : u ∈ Set.range v := huV
+  obtain ⟨l, hl⟩ := huV
+  have hu0 : u ≠ 0 := by
+    intro hc; have hb2n := h2n l; rw [hl, hc] at hb2n; norm_num at hb2n
+  obtain ⟨γ, hγneg, hγz⟩ := w3sg_affLt_single hu0 hlt
+  obtain ⟨α, β, hα, hβ, hzab⟩ := w3sg_affGe_pair hne0a habne hne0b hge
+  obtain ⟨d, hd4, hdEq⟩ : ∃ d, d < 4 ∧ l % 4 = (i₀ + d) % 4 :=
+    ⟨(l % 4 + 4 - i₀ % 4) % 4, by omega, by omega⟩
+  have huEq : u = v (i₀ + d) := by
+    rw [← hl]
+    exact w3sg_v_period4 hper hdEq
+  by_cases hαp : (0:ℝ) < α
+  · by_cases hβp : (0:ℝ) < β
+    · exfalso
+      have hy : z = (1 - α - β) • (0:V3) + α • v i₀ + β • v (i₀ + 1) := by
+        rw [hzab, smul_zero, zero_add]
+      have hzgt : Affsign (fun x : ℝ => 0 < x) ({0} : Set V3) ({v i₀, v (i₀ + 1)} : Set V3) z :=
+        Kepler.Geom.Affsign.of_triple α β hαp hβp hy hne0a.symm hne0b.symm habne
+      have hgt : z ∈ affGt ({0} : Set V3) ({v i₀, v (i₀ + 1)} : Set V3) := by
+        simp only [affGt, Set.mem_setOf_eq]; exact hzgt
+      refine hnc ⟨v i₀, v (i₀ + 1), u, ⟨i₀, rfl⟩, huV', ?_⟩
+      exact Set.nonempty_iff_ne_empty.mp ⟨z, Set.mem_inter hgt hlt⟩
+    · have hβ0 : β = 0 := le_antisymm (by linarith) hβ
+      rw [hβ0, zero_smul, add_zero] at hzab
+      exact w3sg_antiparallel_branch (v i₀) u hBB hs hb hk hper h2n hcst4
+        (w3sg_smul_of_eq hαp hγneg (hzab.symm.trans hγz)) i₀ d hd4 rfl huEq
+  · have hα0 : α = 0 := le_antisymm (by linarith) hα
+    by_cases hβp : (0:ℝ) < β
+    · rw [hα0, zero_smul, zero_add] at hzab
+      rcases (by omega : d = 0 ∨ d = 1 ∨ d = 2 ∨ d = 3) with rfl | rfl | rfl | rfl
+      · exact w3sg_antiparallel_branch (v (i₀ + 1)) u hBB hs hb hk hper h2n hcst4
+          (w3sg_smul_of_eq hβp hγneg (hzab.symm.trans hγz)) (i₀ + 1) 3 (by omega) rfl
+          (by rw [huEq, Nat.add_zero, show (i₀:ℕ) + 1 + 3 = i₀ + 4 from rfl, ← hper i₀])
+      · exact w3sg_antiparallel_branch (v (i₀ + 1)) u hBB hs hb hk hper h2n hcst4
+          (w3sg_smul_of_eq hβp hγneg (hzab.symm.trans hγz)) (i₀ + 1) 0 (by omega) rfl
+          (by rw [huEq, Nat.add_zero])
+      · exact w3sg_antiparallel_branch (v (i₀ + 1)) u hBB hs hb hk hper h2n hcst4
+          (w3sg_smul_of_eq hβp hγneg (hzab.symm.trans hγz)) (i₀ + 1) 1 (by omega) rfl
+          (by rw [huEq, show (i₀:ℕ) + 2 = i₀ + 1 + 1 from rfl])
+      · exact w3sg_antiparallel_branch (v (i₀ + 1)) u hBB hs hb hk hper h2n hcst4
+          (w3sg_smul_of_eq hβp hγneg (hzab.symm.trans hγz)) (i₀ + 1) 2 (by omega) rfl
+          (by rw [huEq, show (i₀:ℕ) + 3 = i₀ + 1 + 2 from rfl])
+    · have hβ0 : β = 0 := le_antisymm (by linarith) hβ
+      rw [hα0, hβ0, zero_smul, zero_smul, zero_add] at hzab
+      rw [hzab] at hγz
+      rcases smul_eq_zero.mp hγz.symm with hc | hc
+      · exact absurd hc (ne_of_lt hγneg)
+      · exact hu0 hc
+
 /-- HOL `GSXRFWM1` (ARDBZYE.hl:98).  NEEDS: the k = 4 genericity of an
 `MMs` realisation (the `RRCWNSJ`-style case bank over the b-table). -/
 theorem GSXRFWM1_p33 (s : ScsV39) (v : ℕ → V3) (hs : isScsV39 s) (hk : s.k = 4)
-    (hv : v ∈ MMsV39 s) (hb : ∀ i, s.b i (i + 1) ≤ cstab) : scsGeneric v := sorry
+    (hv : v ∈ MMsV39 s) (hb : ∀ i, s.b i (i + 1) ≤ cstab) : scsGeneric v := by
+  have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hv
+  have hta : taustarV39 s v < 0 := (MMS_IMP_BBPRIME_p28 s v hv).2.2
+  have hper : Periodic v 4 := by
+    have hbper := hBB.2.1
+    rw [hk] at hbper
+    exact hbper
+  have h2n : ∀ l, 2 ≤ ‖v l‖ := fun l => NORM_LE_2_IN_BBS_p28 s v l hBB
+  have h2d : ∀ k, 2 ≤ ‖v k - v (k + 1)‖ := fun k => DIST_EDGE_IN_BB_LE_2_p26 s v hBB hs k
+  have hnc : ¬ Circular (Set.range v) (Set.range fun i : ℕ => {v i, v (i + 1)}) := by
+    rw [← Set.image_univ (f := fun i : ℕ => {v i, v (i + 1)})]
+    exact JKQEWGV2_p23 s v hs (by rw [hk]; omega) hBB hta
+  simp only [scsGeneric, Generic]
+  intro a b u he huV
+  rw [Set.eq_empty_iff_forall_notMem]
+  intro z hz
+  have hge : z ∈ affGe ({0} : Set V3) ({a, b} : Set V3) := hz.1
+  have hlt : z ∈ affLt ({0} : Set V3) ({u} : Set V3) := hz.2
+  obtain ⟨i, hi⟩ := he
+  have hii : {v i, v (i + 1)} = {a, b} := hi
+  have ha' : a = v i ∨ a = v (i + 1) := by
+    have hmem : a ∈ ({v i, v (i + 1)} : Set V3) := by
+      rw [hii]; exact Set.mem_insert a {b}
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    exact hmem
+  have hb' : b = v i ∨ b = v (i + 1) := by
+    have hmem : b ∈ ({v i, v (i + 1)} : Set V3) := by rw [hii]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    exact hmem
+  rcases ha' with rfl | rfl <;> rcases hb' with rfl | rfl
+  · exfalso
+    have hii1 : {v i, v (i + 1)} = {v i, v i} := hi
+    have hv' : v (i + 1) = v i := by
+      have hm : v (i + 1) ∈ ({v i, v (i + 1)} : Set V3) :=
+        Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)
+      rw [hii1] at hm
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm
+      rcases hm with hm | hm <;> exact hm
+    have hb2d := h2d i; rw [hv', sub_self, norm_zero] at hb2d; linarith
+  · exact w3sg_edge_case hBB hs hb hk hper hnc huV hge hlt
+      (by omega : (i % 4:ℕ) < 4)
+      (w3sg_v_period4 hper (by omega)) (w3sg_v_period4 hper (by omega))
+  · exact w3sg_edge_case hBB hs hb hk hper hnc huV
+      (by rw [Set.pair_comm]; exact hge) hlt
+      (by omega : (i % 4:ℕ) < 4)
+      (w3sg_v_period4 hper (by omega)) (w3sg_v_period4 hper (by omega))
+  · exfalso
+    have hii4 : {v (i + 1), v (i + 1)} = {v i, v (i + 1)} := hi.symm
+    have hv' : v i = v (i + 1) := by
+      have hm : v i ∈ ({v i, v (i + 1)} : Set V3) := Set.mem_insert _ _
+      rw [← hii4] at hm
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm
+      rcases hm with hm | hm <;> exact hm
+    have hb2d := h2d i; rw [← hv', sub_self, norm_zero] at hb2d; linarith
   -- DISCHARGES: NEEDS ARDBZYE.hl GSXRFWM1 (b-edge ≤ cstab ⇒ generic).
 
 /-- HOL `SCS_B_LE_CSTAB` (ARDBZYE.hl:356): the `is_scs_v39` b-edge bound. -/
