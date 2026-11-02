@@ -671,6 +671,236 @@ private theorem w4sg_bbs_fan_p18 {s : ScsV39} {k : ℕ} {v : ℕ → V3}
 --     (fan6 edge kit + hcol give all non-collinearity instances; no
 --     injectivity lemma is needed - degenerate sub-cases die via the
 --     azim definition's collinear branches).
+/-! ## W4 wave 2 (lane scsgeneric-w4b): staging kit toward
+`coplanar_aff_gt_simple_p18` -/
+
+/-- A point with barycentric coordinates summing to one lies in the
+affine span of the three reference points (`spanPoints` constructor). -/
+private theorem w4sg_mem_affineSpan3_p18 {y a b c : V3} {r s t : ℝ}
+    (hsum : r + s + t = 1) (hy : y = r • a + s • b + t • c) :
+    y ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := by
+  have hst : s = 1 - r - t := by linarith
+  show y ∈ spanPoints ℝ ({a, b, c} : Set V3)
+  refine ⟨a, Set.mem_insert a ({b, c} : Set V3),
+    s • (b -ᵥ a) + t • (c -ᵥ a), ?_, ?_⟩
+  · have hvsb : ((b : V3) -ᵥ a) ∈ vectorSpan ℝ ({a, b, c} : Set V3) :=
+      vsub_mem_vectorSpan ℝ (Set.mem_insert_of_mem (a : V3)
+          (Set.mem_insert b ({c} : Set V3)))
+        (Set.mem_insert (a : V3) (insert (b : V3) ({c} : Set V3)))
+    have hvsc : ((c : V3) -ᵥ a) ∈ vectorSpan ℝ ({a, b, c} : Set V3) :=
+      vsub_mem_vectorSpan ℝ (Set.mem_insert_of_mem (a : V3) (Set.mem_insert_of_mem
+          (b : V3) (Set.mem_singleton c)))
+        (Set.mem_insert (a : V3) (insert (b : V3) ({c} : Set V3)))
+    exact Submodule.add_mem _ (Submodule.smul_mem _ _ hvsb)
+      (Submodule.smul_mem _ _ hvsc)
+  · rw [hy, hst, vadd_eq_add]
+    simp only [vsub_eq_sub]
+    module
+
+/-- An `affGt` point lies in the affine span of its three reference
+points; no distinctness hypotheses are needed. -/
+private theorem w4sg_affGt_pair_mem3_p18 {y p q : V3}
+    (hmem : y ∈ affGt ({0, p} : Set V3) ({q} : Set V3)) :
+    y ∈ (affineSpan ℝ ({0, p, q} : Set V3) : Set V3) := by
+  obtain ⟨f, hfin, hsum, -, -⟩ := hmem
+  have hsp : ((p : V3) -ᵥ (0 : V3)) ∈ vectorSpan ℝ ({0, p, q} : Set V3) :=
+    vsub_mem_vectorSpan ℝ (Set.mem_insert_of_mem (0 : V3)
+        (Set.mem_insert p ({q} : Set V3)))
+      (Set.mem_insert (0 : V3) (insert p ({q} : Set V3)))
+  have hp : (p : V3) ∈ vectorSpan ℝ ({0, p, q} : Set V3) := by
+    rwa [vsub_eq_sub, sub_zero] at hsp
+  have hsq : ((q : V3) -ᵥ (0 : V3)) ∈ vectorSpan ℝ ({0, p, q} : Set V3) :=
+    vsub_mem_vectorSpan ℝ (Set.mem_insert_of_mem (0 : V3) (Set.mem_insert_of_mem p
+        (Set.mem_singleton q)))
+      (Set.mem_insert (0 : V3) (insert p ({q} : Set V3)))
+  have hq : (q : V3) ∈ vectorSpan ℝ ({0, p, q} : Set V3) := by
+    rwa [vsub_eq_sub, sub_zero] at hsq
+  refine ⟨(0 : V3), Set.mem_insert (0 : V3) ({p, q} : Set V3), y -ᵥ (0 : V3), ?_,
+    (vsub_vadd y (0 : V3)).symm⟩
+  rw [hsum, vsub_eq_sub, sub_zero]
+  refine Submodule.sum_mem _ ?_
+  intro w hw
+  simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+    Set.mem_singleton_iff] at hw
+  rcases hw with hw2 | hq'
+  · rcases hw2 with rfl | rfl
+    · rw [smul_zero]
+      exact Submodule.zero_mem _
+    · exact Submodule.smul_mem _ _ hp
+  · rw [hq']
+    exact Submodule.smul_mem _ _ hq
+
+/-- Azimuth `π` places the reference point in the affine span of the axis
+pair and the target point (frame polar form + `rep_smul_of_zOf`). -/
+private theorem w4sg_azim_pi_mem_p18 {v0 v1 w1 w2 : V3} (hw : v1 ≠ v0)
+    (hnc1 : ¬ Collinear3 v0 v1 w1) (hnc2 : ¬ Collinear3 v0 v1 w2)
+    (hπ : azim v0 v1 w1 w2 = Real.pi) :
+    w1 ∈ (affineSpan ℝ ({v0, v1, w2} : Set V3) : Set V3) := by
+  have hv01 : v0 ≠ v1 := Ne.symm hw
+  obtain ⟨e1, e2, e3, hon, hal⟩ := exists_on3_eq_smul (v1 - v0) (sub_ne_zero.mpr hw)
+  have hax : (v1 - v0 : V3) = dist v1 v0 • e3 := by rw [dist_eq_norm]; exact hal
+  obtain ⟨ψ, r1, r2, hr1, hr2, hz1, hz2⟩ := azim_frame_spec hnc1 hnc2 hon hax hw
+  have hexp : Complex.exp (((Real.pi:ℝ):ℂ) * Complex.I) = -1 := Complex.exp_pi_mul_I
+  have hz2' : zOf e1 e2 (w2 - v0)
+      = ((-r2 : ℝ):ℂ) * Complex.exp (((ψ : ℝ):ℂ) * Complex.I) := by
+    have hsplit : ((ψ + Real.pi : ℝ):ℂ) * Complex.I
+        = ((ψ:ℝ):ℂ) * Complex.I + ((Real.pi:ℝ):ℂ) * Complex.I := by
+      rw [Complex.ofReal_add]; ring
+    rw [hπ] at hz2
+    rw [hz2, hsplit, Complex.exp_add, hexp]
+    push_cast
+    ring
+  have hlin : zOf e1 e2 (w1 - v0)
+      = ((-(r1 / r2) : ℝ):ℂ) * zOf e1 e2 (w2 - v0) := by
+    have hr2c : (r2 : ℂ) ≠ 0 := by exact_mod_cast hr2.ne'
+    have hx1 : zOf e1 e2 (w1 - v0) * (r2 : ℂ)
+        = (-(r1 : ℂ)) * zOf e1 e2 (w2 - v0) := by
+      rw [hz1, hz2']
+      push_cast
+      ring
+    push_cast
+    rw [eq_div_of_mul_eq hr2c hx1, neg_mul ((r1 : ℂ) / (r2 : ℂ))
+      (zOf e1 e2 (w2 - v0)), div_mul_eq_mul_div]
+    ring
+  obtain ⟨h, hmem⟩ := rep_smul_of_zOf hon hax hw w2 w1 (-(r1 / r2)) hlin
+  show w1 ∈ spanPoints ℝ ({v0, v1, w2} : Set V3)
+  rw [show w1 = (w1 -ᵥ v0) +ᵥ v0 from (vsub_vadd w1 v0).symm]
+  have hvec : (w1 -ᵥ v0 : V3) ∈ vectorSpan ℝ ({v0, v1, w2} : Set V3) := by
+    show w1 - v0 ∈ vectorSpan ℝ ({v0, v1, w2} : Set V3)
+    have hkey : w1 - v0 = h • (v1 - v0) + (-(r1 / r2)) • (w2 - v0) := by
+      rw [hmem]
+      module
+    have hvv1 : (v1 -ᵥ v0 : V3) ∈ vectorSpan ℝ ({v0, v1, w2} : Set V3) :=
+      vsub_mem_vectorSpan ℝ (Set.mem_insert_of_mem (v0 : V3)
+          (Set.mem_insert (v1 : V3) ({w2} : Set V3)))
+        (Set.mem_insert (v0 : V3) (insert (v1 : V3) ({w2} : Set V3)))
+    have hvv2 : (w2 -ᵥ v0 : V3) ∈ vectorSpan ℝ ({v0, v1, w2} : Set V3) :=
+      vsub_mem_vectorSpan ℝ (Set.mem_insert_of_mem (v0 : V3) (Set.mem_insert_of_mem
+          (v1 : V3) (Set.mem_singleton w2)))
+        (Set.mem_insert (v0 : V3) (insert (v1 : V3) ({w2} : Set V3)))
+    rw [hkey]
+    exact Submodule.add_mem _ (Submodule.smul_mem _ _ hvv1)
+      (Submodule.smul_mem _ _ hvv2)
+  exact ⟨v0, by simp, w1 -ᵥ v0, hvec, rfl⟩
+
+/-- Window shift along a periodic family: every index is `k`-adjacent to a
+representative `i + j` with `j < k`. -/
+private theorem w4sg_periodic_shift_p18 {f : ℕ → V3} {k : ℕ} (hk : k ≠ 0)
+    (hper : Periodic f k) (i x : ℕ) : ∃ j < k, f x = f (i + j) := by
+  have hkpos : 0 < k := Nat.pos_of_ne_zero hk
+  have hmod : ∀ n : ℕ, f (n % k) = f n := by
+    intro n
+    have key : ∀ m n : ℕ, f (n % k + k * m) = f (n % k) := by
+      intro m
+      induction m with
+      | zero => intro n; rw [Nat.mul_zero, Nat.add_zero]
+      | succ m ih =>
+        intro n
+        have he : n % k + k * (m + 1) = n % k + k * m + k := by ring
+        rw [he, hper, ih n]
+    have h1 := key (n / k) n
+    rw [Nat.mod_add_div n k] at h1
+    exact h1.symm
+  refine ⟨(x + k - i % k) % k, Nat.mod_lt _ hkpos, ?_⟩
+  have hA : (i % k + (x + k - i % k)) % k = x % k := by
+    have hle2 : i % k ≤ x + k :=
+      le_trans (Nat.le_of_lt (Nat.mod_lt _ hkpos)) (by omega : k ≤ x + k)
+    rw [Nat.add_sub_cancel' hle2, Nat.add_mod_right]
+  have hkey : (i + ((x + k - i % k) % k)) % k = x % k :=
+    Eq.trans (Eq.trans (Nat.ModEq.add_right _ (Nat.ModEq.symm (Nat.mod_modEq i k)))
+      (Nat.ModEq.add_left (i % k) (Nat.mod_modEq (x + k - i % k) k))) hA
+  rw [← hmod (i + ((x + k - i % k) % k)), ← hmod x, hkey]
+
+/-- Lane support: `WithLp.toLp` zero test (Pi level). -/
+private theorem w4sg_toLp_eq_zero {f : Fin 3 → ℝ} :
+    (WithLp.toLp 2 f : V3) = 0 ↔ f = 0 := by
+  constructor
+  · intro h
+    simpa [WithLp.ofLp_toLp, WithLp.ofLp_zero] using
+      congrArg (fun w : V3 => (w : Fin 3 → ℝ)) h
+  · intro h
+    subst h
+    rfl
+
+/-- Lane support: `Set.range ![p, q, r]` is the three-point set. -/
+private theorem w4sg_range3 {p q r : V3} :
+    (Set.range ![p, q, r] : Set V3) = ({p, q, r} : Set V3) := by
+  ext w
+  constructor
+  · rintro ⟨i, rfl⟩
+    fin_cases i <;> simp
+  · intro hw
+    rcases Set.mem_insert_iff.mp hw with rfl | h
+    · exact ⟨0, rfl⟩
+    rcases Set.mem_insert_iff.mp h with rfl | rfl
+    · exact ⟨1, rfl⟩
+    · exact ⟨2, rfl⟩
+
+/-- Coplanarity with a non-collinear triple through the origin puts the
+fourth point in the linear span of the two non-collinear ones
+(`la5_coplanar_diff_span` shape re-derived inline). -/
+private theorem w4sg_coplanar_mem_span_p18 {p q r : V3}
+    (hnc : ¬ Collinear3 0 p q) (hcop : Coplanar ({0, p, q, r} : Set V3)) :
+    ∃ μ ν : ℝ, r = μ • p + ν • q := by
+  have hLI : LinearIndependent ℝ ![((p - 0 : V3) : Fin 3 → ℝ), ((q - 0 : V3) : Fin 3 → ℝ)] := by
+    have hne : ¬((crossProduct ((p - 0 : V3) : Fin 3 → ℝ)
+        ((q - 0 : V3) : Fin 3 → ℝ)) = 0) := fun h =>
+      hnc ((COLLINEAR_CROSS_0 (x := 0) (y := p) (z := q)).mpr
+        (w4sg_toLp_eq_zero.mpr h))
+    exact crossProduct_ne_zero_iff_linearIndependent.mp hne
+  obtain ⟨u, v', w', hsub⟩ := hcop
+  have h0K : 0 ∈ (affineSpan ℝ ({u, v', w'} : Set V3) : Set V3) := hsub (by simp)
+  have hpK : p ∈ (affineSpan ℝ ({u, v', w'} : Set V3) : Set V3) := hsub (by simp)
+  have hqK : q ∈ (affineSpan ℝ ({u, v', w'} : Set V3) : Set V3) := hsub (by simp)
+  have hrK : r ∈ (affineSpan ℝ ({u, v', w'} : Set V3) : Set V3) := hsub (by simp)
+  have hp : (p - 0 : V3) ∈ (affineSpan ℝ ({u, v', w'} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction hpK h0K
+  have hq : (q - 0 : V3) ∈ (affineSpan ℝ ({u, v', w'} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction hqK h0K
+  have hr : (r - 0 : V3) ∈ (affineSpan ℝ ({u, v', w'} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction hrK h0K
+  have hLIV3 : LinearIndependent ℝ ![(p - 0 : V3), (q - 0 : V3)] := by
+    rw [Fintype.linearIndependent_iff]
+    intro g hg i
+    have hPi : (∑ j, g j • ((![((p - 0 : V3) : Fin 3 → ℝ), ((q - 0 : V3) : Fin 3 → ℝ)] :
+        Fin 2 → (Fin 3 → ℝ)) j)) = 0 := by
+      simpa using congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hg
+    exact Fintype.linearIndependent_iff.mp hLI g hPi i
+  have hset : (Set.range ![p - 0, q - 0] : Set V3) = ({p - 0, q - 0} : Set V3) := by
+    ext s
+    constructor
+    · rintro ⟨i, rfl⟩
+      fin_cases i <;> simp
+    · intro hs
+      rcases Set.mem_insert_iff.mp hs with rfl | hs
+      · exact ⟨0, rfl⟩
+      · exact ⟨1, by simpa using (Set.mem_singleton_iff.mp hs).symm⟩
+  have hf2 : Module.finrank ℝ (Submodule.span ℝ (Set.range ![p - 0, q - 0] : Set V3)) = 2 := by
+    have := finrank_span_eq_card (R := ℝ) (M := V3) hLIV3
+    simpa using this
+  have hvs : vectorSpan ℝ ({u, v', w'} : Set V3)
+      = vectorSpan ℝ (Set.range ![u, v', w'] : Set V3) := by
+    rw [w4sg_range3]
+  have hfrK : Module.finrank ℝ (affineSpan ℝ ({u, v', w'} : Set V3)).direction ≤ 2 := by
+    rw [direction_affineSpan, hvs]
+    exact finrank_vectorSpan_range_le ℝ ![u, v', w'] (by norm_num)
+  haveI hfdK : FiniteDimensional ℝ (affineSpan ℝ ({u, v', w'} : Set V3)).direction :=
+    finiteDimensional_direction_affineSpan_of_finite ℝ (Set.toFinite _)
+  have hle : Submodule.span ℝ (Set.range ![p - 0, q - 0] : Set V3)
+      ≤ (affineSpan ℝ ({u, v', w'} : Set V3)).direction := by
+    rw [Submodule.span_le, hset]
+    rintro s (rfl | rfl)
+    · exact hp
+    · exact hq
+  have hEq : Submodule.span ℝ ({p - 0, q - 0} : Set V3)
+      = (affineSpan ℝ ({u, v', w'} : Set V3)).direction := by
+    rw [← hset]
+    exact Submodule.eq_of_le_of_finrank_eq hle
+      (le_antisymm (Submodule.finrank_mono hle) (hfrK.trans hf2.ge))
+  obtain ⟨μ, ν, hμν⟩ := Submodule.mem_span_pair.mp (hEq ▸ hr)
+  simp only [sub_zero] at hμν
+  exact ⟨μ, ν, hμν.symm⟩
+
 /-- HOL `coplanar_aff_gt_simple` (IUNBUIG.hl:663). Giant. -/
 theorem coplanar_aff_gt_simple_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i : ℕ)
     (his : isScsV39 s) (hk : s.k = k) (hk₃ : 3 < k) (hMM : v ∈ MMsV39 s)
@@ -678,7 +908,155 @@ theorem coplanar_aff_gt_simple_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i : 
     (hcol : ∀ j : ℕ, v j ≠ v i → ¬ Collinear3 0 (v i) (v j))
     (hcp : Coplanar ({0, v i, v (i + 1), v (i + 2)} : Set V3)) :
     v (i + 1) ∈ affGt {0} {v i, v (i + 2)} := by
-  sorry
+  -- MMs → BBs → periodic + fan (LA27 + wave-1 kit)
+  obtain ⟨hBB, -⟩ := mm_BBs_taustar_p27 s v hMM
+  obtain ⟨hper, hfan⟩ := w4sg_bbs_fan_p18 hk hk₃ hBB
+  have hfan2 := hfan.2.2.2.1
+  have hv0 : ∀ j : ℕ, v j ≠ 0 := by
+    intro j he
+    exact hfan2 (Set.mem_range.mpr ⟨j, he⟩)
+  have heI : ({v i, v (i + 1)} : Set V3) ∈
+      Set.range (fun j : ℕ => ({v j, v (j + 1)} : Set V3)) := Set.mem_range.mpr ⟨i, rfl⟩
+  have heI1 : ({v (i + 1), v (i + 2)} : Set V3) ∈
+      Set.range (fun j : ℕ => ({v j, v (j + 1)} : Set V3)) :=
+    Set.mem_range.mpr ⟨i + 1, rfl⟩
+  have hi0 : v i ≠ 0 := hv0 i
+  have hnc01 : ¬ Collinear3 0 (v i) (v (i + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan heI
+  have hnc12 : ¬ Collinear3 0 (v (i + 1)) (v (i + 2)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan heI1
+  have hi1 : v i ≠ v (i + 1) := by
+    intro he
+    exact hnc01 (by rw [he]; exact collinear3_pair_right rfl)
+  -- the sorried giant (in-file, already in the e2e cone)
+  obtain ⟨-, E2, E3, E4, E5⟩ := EGHNAVX_COLL_SCS_p18 s k v i his hk hk₃ hBB hbas hcol
+  -- azimuth dichotomy from the coplanarity hypothesis
+  obtain ⟨μ, ν, hμν⟩ := w4sg_coplanar_mem_span_p18 hnc01 hcp
+  have hx1 : v (i + 2) - 0 = μ • (v i - 0) + ν • (v (i + 1) - 0) := by
+    rw [sub_zero, sub_zero, sub_zero, hμν]
+  rcases w4sg_azim_plane_p18 hi0 (hv0 (i + 1)) hnc01 ⟨μ, ν, hx1⟩ with haz0 | hazπ
+  · -- Case azim = 0
+    obtain ⟨-, h4⟩ := E4 2 2 haz0 (by norm_num) (by norm_num) (by omega)
+    obtain ⟨c1, hc1, h1c, hexp1⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := v i) (x := v (i+1)) (y := v (i+2))
+        (Ne.symm hi0) (hv0 (i+1)) (Ne.symm hi1)).mp h4
+    simp only [sub_zero] at hexp1
+    -- hexp1 : v (i+2) = c1 • v (i+1) + h1c • v i  with 0 < c1
+    have hvi_eq : v (i + 2) = v i → False := by
+      intro hexpd
+      apply hnc01
+      have hvi : v i = c1 • v (i + 1) + h1c • v i := by
+        rw [← hexp1]; exact hexpd.symm
+      have h2 : (1 - h1c) • v i + h1c • v i = c1 • v (i + 1) + h1c • v i := by
+        rw [← hvi]; module
+      have hrel := add_right_cancel h2
+      have hc1' : c1 ≠ 0 := hc1.ne'
+      refine (collinear3_iff_smul hi0).mpr ⟨(1 - h1c) / c1, ?_⟩
+      rw [sub_zero, sub_zero, show ((1 - h1c : ℝ) / c1) • (v i : V3)
+          = (1 / c1) • ((1 - h1c) • v i) from by
+            rw [smul_smul, mul_comm, show (1 - h1c : ℝ) * (1 / c1)
+                = (1 - h1c) / c1 from by ring]]
+      rw [hrel, one_div, inv_smul_smul₀ hc1']
+    have hi2 : v (i + 2) ≠ v i := fun h => hvi_eq h
+    have hncI2 : ¬ Collinear3 0 (v i) (v (i + 2)) := hcol (i + 2) hi2
+    obtain ⟨c2, hc2, h2c, hexp2⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := v i) (x := v (i+2)) (y := v (i+1))
+        (Ne.symm hi0) (hv0 (i+2)) hi2).mp ((azim_eq_zero_iff hnc01 hncI2).mp haz0)
+    simp only [sub_zero] at hexp2
+    -- hexp2 : v (i+1) = c2 • v (i+2) + h2c • v i  with 0 < c2
+    have hcomp2 : v (i + 1) = (c2 * c1) • v (i + 1) + (c2 * h1c + h2c) • v i := by
+      have hcomp : v (i + 1) = c2 • (c1 • v (i + 1) + h1c • v i) + h2c • v i := by
+        conv_rhs => rw [← hexp1]
+        exact hexp2
+      nth_rewrite 1 [hcomp]
+      module
+    have hkeyA : (1 - c2 * c1) • v (i + 1) - (c2 * h1c + h2c) • v i = 0 := by
+      rw [sub_smul, one_smul]
+      nth_rewrite 1 [hcomp2]
+      module
+    by_cases hzero : 1 - c2 * c1 = 0
+    · have hDv : (c2 * h1c + h2c) • v i = 0 := by
+        rw [hzero] at hkeyA
+        simpa using hkeyA
+      have hs0 : c2 * h1c + h2c = 0 := by
+        rcases smul_eq_zero.mp hDv with hn | hvz
+        · linarith
+        · exact absurd hvz hi0
+      by_cases h1n : h1c < 0
+      · -- h1c < 0 forces h2c > 0: the goal witness
+        have h2cp : 0 < h2c := by
+          have he : h2c = -(c2 * h1c) := by linarith
+          rw [he]
+          simpa [neg_mul] using mul_pos hc2 (neg_pos.mpr h1n)
+        show Affsign (fun x : ℝ => 0 < x) ({0} : Set V3) ({v i, v (i + 2)} : Set V3)
+          (v (i + 1))
+        exact Affsign.of_triple h2c c2 h2cp hc2
+          (by rw [smul_zero, zero_add, hexp2]; module) (Ne.symm hi0)
+          (Ne.symm (hv0 (i + 2))) (Ne.symm hi2)
+      · -- h1c ≥ 0: v (i+2) ∈ affGe {0} {v i, v (i+1)} and the fan kills both disjuncts
+        exfalso
+        have h1ge : 0 ≤ h1c := le_of_not_gt h1n
+        have hmem_ge : v (i + 2) ∈ affGe ({0} : Set V3) ({v i, v (i + 1)} : Set V3) := by
+          show Affsign (fun x : ℝ => 0 ≤ x) ({0} : Set V3) ({v i, v (i + 1)} : Set V3)
+            (v (i + 2))
+          exact Affsign.of_triple h1c c1 h1ge hc1.le
+            (by rw [smul_zero, zero_add, hexp1]; module) (Ne.symm hi0)
+            (Ne.symm (hv0 (i + 1))) hi1
+        exact (FAN_IN_AFF_GE_IMP_EQ hfan (Set.mem_range.mpr ⟨i + 2, rfl⟩) heI
+          hmem_ge).elim hvi_eq
+          (fun hexpd2 => hnc12 (by rw [hexpd2]; exact collinear3_pair_right rfl))
+    · -- 1 - c2 * c1 ≠ 0: v (i+1) is a real multiple of v i, collinear contradiction
+      exfalso
+      have hden : 1 - c2 * c1 ≠ 0 := hzero
+      refine absurd ((collinear3_iff_smul hi0).mpr
+        ⟨(c2 * h1c + h2c) / (1 - c2 * c1), ?_⟩) hnc01
+      rw [sub_zero, sub_zero, show ((c2 * h1c + h2c : ℝ) / (1 - c2 * c1)) • (v i : V3)
+          = (1 / (1 - c2 * c1)) • ((c2 * h1c + h2c) • v i) from by
+            rw [smul_smul, mul_comm (1 / (1 - c2 * c1)) (c2 * h1c + h2c),
+              show (c2 * h1c + h2c : ℝ) * (1 / (1 - c2 * c1))
+                = (c2 * h1c + h2c) / (1 - c2 * c1) from by ring]]
+      rw [← sub_eq_zero.mp hkeyA, one_div, inv_smul_smul₀ hden]
+  · -- Case azim = π
+    have hk0 : k ≠ 0 := by omega
+    have hk2 : 2 < k - 1 := by omega
+    have hge : Real.pi ≤ azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) := by
+      rw [← hazπ]; exact E3 2 (k - 1) hk2 (by omega)
+    have hreq : azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi :=
+      le_antisymm E2 hge
+    have h0 : azim 0 (v i) (v (i + 1)) (v i) = 0 := by
+      rw [azim, if_pos (Or.inr (collinear3_pair_right rfl))]
+    have hncIK : ¬ Collinear3 0 (v i) (v (i + (k - 1))) := by
+      by_contra hnc'
+      have hne : v (i + (k - 1)) ≠ v i := by
+        intro he
+        rw [he] at hreq
+        rw [h0] at hreq
+        exact Real.pi_ne_zero hreq.symm
+      exact hcol (i + (k - 1)) hne hnc'
+    refine absurd (?_ : Coplanar ({0} ∪ Set.range v : Set V3))
+      (FEKTYIY_p27 s v his hMM (by rw [hk]; omega))
+    refine ⟨(0:V3), v i, v (i + (k - 1)), ?_⟩
+    intro z hz
+    rcases hz with h0z | hj
+    · rw [h0z]
+      have hz0 : (0:V3) = (1:ℝ) • (0:V3) + (0:ℝ) • v i + (0:ℝ) • v (i + (k - 1)) := by
+        simp
+      exact w4sg_mem_affineSpan3_p18 (hy := hz0) (by norm_num)
+    · obtain ⟨j, hjv⟩ := Set.mem_range.mp hj
+      rw [← hjv]
+      obtain ⟨d, hdlt, hdv⟩ := w4sg_periodic_shift_p18 hk0 hper i j
+      rw [hdv]
+      rcases Nat.eq_zero_or_pos d with hd0 | hd1p
+      · rw [hd0, Nat.add_zero]
+        have hvi : v i = (0:ℝ) • (0:V3) + (1:ℝ) • v i + (0:ℝ) • v (i + (k - 1)) := by
+          simp
+        exact w4sg_mem_affineSpan3_p18 (hy := hvi) (by norm_num)
+      · by_cases hd1 : d = 1
+        · rw [hd1]
+          exact w4sg_azim_pi_mem_p18 hi0 hnc01 hncIK hreq
+        · have hd2 : 2 ≤ d := by omega
+          have h5 := (E5 2 d (hazπ.trans hreq.symm) (by norm_num) hk2 hd2 hdlt).2
+          exact w4sg_affGt_pair_mem3_p18 h5
   -- DISCHARGES: EGHNAVX_COLL_SCS_p18 + FAN_IN_AFF_GE_IMP_EQ +
   -- fan_in_e_imp_neq + the affine-hull argument of HOL IUNBUIG.hl:672-906.
 
