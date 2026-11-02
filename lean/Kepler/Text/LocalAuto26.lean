@@ -312,8 +312,15 @@ theorem J_EMPY_CASES_6_p26 (s : ScsV39) (i : ℕ) (hk : s.k = 6)
       exact hle
     norm_num [cstab, h0] at hbad
 
-/-- HOL `BB_RHO_NODE_IVS` (RRCWNSJ.hl:195). Proof pending (needs
-`VV_SUC_EQ_RHO_NODE_PRIME` / `BBS_IMP_CONVEX_LOCAL_FAN` / `CVLF_LF_F`). -/
+/-- HOL `BB_RHO_NODE_IVS` (RRCWNSJ.hl:195).
+DISCHARGED 2026-10-28 (scsgeneric-recon): the fan-free route — both
+`rho_node1`/`ivs_rho_node1` are epsilon picks over the dart set, and `FF`
+is the periodic image of the successor darts, so the predecessor/successor
+of `u = vv p1` along the cycle is unique by mod-k injectivity
+(`BB_VV_FUN_EQ_p26` + `periodic_mod_eq_p23`, both already standard-three in
+this file's import closure); no `ConvexLocalFan`/`CVLF_LF_F` input is
+consumed.  The HOL route (`VV_SUC_EQ_RHO_NODE_PRIME` iterate + `CARD V = k`
+iterate tail) is replaced by the direct dart-characterisation. -/
 theorem BB_RHO_NODE_IVS_p26 (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (u : V3)
     (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (p1 : ℕ)
     (hk' : s.k = k) (hu : vv p1 = u) (hV : Set.range vv = V)
@@ -321,7 +328,73 @@ theorem BB_RHO_NODE_IVS_p26 (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (u : V3)
     (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
     (hs : isScsV39 s) (h3k : 3 < k) (hv : BBsV39 s vv) :
     rhoNode1 FF u = vv (p1 + 1) ∧ ivsRhoNode1 FF u = vv (p1 + k - 1) := by
-  sorry
+  subst hk'
+  -- dart membership: FF is exactly the successor-dart image.
+  have hmem : ∀ x y : V3, (x, y) ∈ FF ↔ ∃ i, (vv i, vv (i + 1)) = (x, y) := by
+    intro x y
+    rw [← hFF, Set.mem_range]
+  have hmod : ∀ n, vv (n % s.k) = vv n := fun n => periodic_mod_eq_p23 hv.2.1 n
+  -- mod-k injectivity (Section A, already discharged).
+  have hinj : ∀ i j, vv i = vv j → i % s.k = j % s.k :=
+    fun i j hij => (BB_VV_FUN_EQ_p26 s vv hs hv i j).mp hij
+  -- the successor along the cycle: witness + uniqueness.
+  have hwsucc : (fun w => (u, w) ∈ FF) (vv (p1 + 1)) := by
+    show (u, vv (p1 + 1)) ∈ FF
+    rw [hmem]
+    exact ⟨p1, by rw [hu]⟩
+  have huniqsucc : ∀ w, (u, w) ∈ FF → w = vv (p1 + 1) := by
+    intro w hw
+    obtain ⟨i, hfi⟩ := (hmem u w).mp hw
+    have h1 : vv i = u := congrArg Prod.fst hfi
+    have h2 : vv (i + 1) = w := congrArg Prod.snd hfi
+    have hpi : vv p1 = vv i := by rw [hu, h1]
+    have heq : i % s.k = p1 % s.k := (hinj p1 i hpi).symm
+    have hshift : (i + 1) % s.k = (p1 + 1) % s.k := by
+      have e1 : (i + 1) % s.k = (i % s.k + 1) % s.k := (Nat.mod_add_mod i s.k 1).symm
+      have e2 : (p1 + 1) % s.k = (p1 % s.k + 1) % s.k := (Nat.mod_add_mod p1 s.k 1).symm
+      rw [e1, heq, e2]
+    calc w = vv (i + 1) := h2.symm
+      _ = vv ((i + 1) % s.k) := (hmod _).symm
+      _ = vv ((p1 + 1) % s.k) := by rw [hshift]
+      _ = vv (p1 + 1) := hmod _
+  -- the predecessor along the cycle: witness + uniqueness.
+  have hkwrap : (p1 + s.k) % s.k = p1 % s.k := by
+    rw [Nat.add_mod, Nat.mod_self, Nat.add_zero, Nat.mod_mod]
+  have hkpred : vv (p1 + s.k - 1 + 1) = u := by
+    have hsk : p1 + s.k - 1 + 1 = p1 + s.k := by omega
+    rw [hsk]
+    rw [← hu, ← hmod (p1 + s.k), hkwrap, hmod p1]
+  have hwpred : (fun a => (a, u) ∈ FF) (vv (p1 + s.k - 1)) := by
+    show (vv (p1 + s.k - 1), u) ∈ FF
+    rw [hmem]
+    refine ⟨p1 + s.k - 1, ?_⟩
+    rw [hkpred]
+  have huniqpred : ∀ a, (a, u) ∈ FF → a = vv (p1 + s.k - 1) := by
+    intro a ha
+    obtain ⟨i, hfi⟩ := (hmem a u).mp ha
+    have h1 : vv i = a := congrArg Prod.fst hfi
+    have h2 : vv (i + 1) = u := congrArg Prod.snd hfi
+    have hp1eq : vv p1 = vv (i + 1) := by rw [hu, ← h2]
+    have heq : (i + 1) % s.k = p1 % s.k := (hinj p1 (i + 1) hp1eq).symm
+    -- i + 1 ≡ p1 (mod k), k ≥ 1 ⇒ i ≡ p1 + k - 1 (mod k).
+    have hshift : i % s.k = (p1 + s.k - 1) % s.k := by
+      have hB : (p1 + s.k) % s.k = p1 % s.k := hkwrap
+      have hD : Nat.ModEq s.k i (p1 + s.k - 1) := by
+        have hE : (i + 1) % s.k = ((p1 + s.k - 1) + 1) % s.k := by
+          rw [heq, show (p1 + s.k - 1) + 1 = p1 + s.k from by omega, hB]
+        exact Nat.ModEq.add_right_cancel' 1 hE
+      exact hD
+    calc a = vv i := h1.symm
+      _ = vv (i % s.k) := (hmod _).symm
+      _ = vv ((p1 + s.k - 1) % s.k) := by rw [hshift]
+      _ = vv (p1 + s.k - 1) := hmod _
+  refine ⟨?_, ?_⟩
+  · show Classical.epsilon (fun w => (u, w) ∈ FF) = vv (p1 + 1)
+    exact huniqsucc _ (Classical.epsilon_spec (p := fun w => (u, w) ∈ FF)
+      ⟨vv (p1 + 1), hwsucc⟩)
+  · show Classical.epsilon (fun a => (a, u) ∈ FF) = vv (p1 + s.k - 1)
+    exact huniqpred _ (Classical.epsilon_spec (p := fun a => (a, u) ∈ FF)
+      ⟨vv (p1 + s.k - 1), hwpred⟩)
 
 /-- HOL `BB_F_SUC_PRE` (RRCWNSJ.hl:223). -/
 theorem BB_F_SUC_PRE_p26 (s : ScsV39) (f : ℕ → V3) (hs : isScsV39 s)
