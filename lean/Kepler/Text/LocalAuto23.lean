@@ -104,6 +104,7 @@ ENCODING NOTES
     ball-annulus nontriviality, Mathlib compactness).
 -/
 
+import Kepler.Text.ClosedSyKit
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto4
 import Kepler.Text.LocalAuto9
@@ -1554,6 +1555,137 @@ theorem continuousOn_tauFun_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ)
   rw [hBeq] at h9
   exact ContinuousOn.congr h9 hfw
 
+/-! ### bodyclosed-w2b: private G-B2 carrier translation
+
+Code copied verbatim from bodyclosed-w2's `bcw2_stableSystem_p18_of_p23`
+(LA18 block) with the `p18` names redirected to the `ClosedSyKit` twins
+(`torsor_cs` / `stableSystem_cs` / `POWER_MOD_FUN_cs`).  The
+`stableSystem_p23` carrier over `Set.Iic (m-1)` with the successor cycle
+(SF-89b shape) translates to the `stableSystem_cs` carrier over
+`Finset.Icc 0 (m-1)` with the `% m`-wrapped tables; the edge set is
+re-rendered as a `Finset (Finset ℕ)` injected into `J` (cardinality is all
+the carrier clause consumes).  Private: LA23-internal glue for
+`bodyClosed_p23`; fully proved, zero proof debt. -/
+
+private theorem bcw2b_stableSystem_cs_of_p23 {m : ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Set (Set ℕ)}
+    (hsys : stableSystem_p23 m 0 (Set.Iic (m - 1)) a b J (fun i => (1 + i) % m)) :
+    ∃ Jf : Finset (Finset ℕ),
+      stableSystem_cs m 0 (Finset.Icc 0 (m - 1))
+        (fun i j => a (i % m) (j % m)) (fun i j => b (i % m) (j % m)) Jf
+        (fun i => (1 + i) % m) := by
+  obtain ⟨hcar, hS2, hS3, hS4⟩ := hsys
+  obtain ⟨h3m, hm6, ht, hsymm, hper, hJsub, hJcard⟩ := hcar
+  have hm0 : 0 < m := by omega
+  have hmemS : ∀ x : ℕ, x ≤ m - 1 → x ∈ (Finset.Icc 0 (m - 1) : Finset ℕ) :=
+    fun x hx => Finset.mem_Icc.mpr ⟨by omega, hx⟩
+  have hIic : ∀ x : ℕ, x ∈ (Finset.Icc 0 (m - 1) : Finset ℕ) → x ∈ Set.Iic (m - 1) :=
+    fun x hx => Set.mem_Iic.mpr (Finset.mem_Icc.mp hx).2
+  -- torsor: clause translation (outputs re-bridged Iic → Icc); card computed
+  have ht18 : torsor_cs (Finset.Icc 0 (m - 1)) m (fun i => (1 + i) % m) := by
+    refine ⟨fun x hx => hmemS _ (ht.1 x (hIic x hx)),
+      fun x₁ hx₁ x₂ hx₂ h12 => ht.2.1 x₁ (hIic x₁ hx₁) x₂ (hIic x₂ hx₂) h12,
+      fun i x hi hik hx => ht.2.2.1 i x hi hik (hIic x hx),
+      fun x hx => ht.2.2.2.1 x (hIic x hx), ?_⟩
+    rw [Nat.card_Icc]
+    omega
+  -- J container: finiteness of J (subset of a finite edge image)
+  have hIicfin : (Set.Iic (m - 1) : Set ℕ).Finite := Set.finite_Iic _
+  have hJfin : J.Finite := Set.Finite.subset
+    (hIicfin.image (fun i : ℕ => ({i, (1 + i) % m} : Set ℕ))) (by
+      intro S hS
+      obtain ⟨i, hi, rfl⟩ := hJsub hS
+      exact ⟨i, hi, rfl⟩)
+  -- the Finset-graded preimage of J under the coercion
+  have hJcfin : {e : Finset ℕ | (e : Set ℕ) ∈ J}.Finite := Set.Finite.subset
+    (hIicfin.image (fun i : ℕ => ({i, (1 + i) % m} : Finset ℕ))) (by
+      intro e he
+      obtain ⟨i, hi, hxe⟩ := hJsub he
+      refine Set.mem_image _ _ _ |>.mpr ⟨i, hi, ?_⟩
+      refine Finset.coe_injective ?_
+      simp only [Finset.coe_insert, Finset.coe_singleton]
+      exact hxe.symm)
+  -- edges of J have both endpoints < m
+  have hlt_of_memJ : ∀ i j : ℕ, ({i, j} : Set ℕ) ∈ J → i < m ∧ j < m := by
+    intro i j hij
+    obtain ⟨p, hp, hpx⟩ := hJsub hij
+    have hii : i ∈ ({p, (1 + p) % m} : Set ℕ) := by rw [← hpx]; simp
+    have hjj : j ∈ ({p, (1 + p) % m} : Set ℕ) := by rw [← hpx]; simp
+    have hp' : p ≤ m - 1 := Set.mem_Iic.mp hp
+    refine ⟨?_, ?_⟩
+    · rcases hii with rfl | rfl
+      · omega
+      · exact Nat.mod_lt (1 + p) hm0
+    · rcases hjj with rfl | rfl
+      · omega
+      · exact Nat.mod_lt (1 + p) hm0
+  -- wrapped-table clauses of the carrier
+  have hsymm18 : ∀ i j : ℕ, a (i % m) (j % m) = a (j % m) (i % m) ∧
+      b (i % m) (j % m) = b (j % m) (i % m) ∧ a (i % m) (j % m) ≤ b (i % m) (j % m) :=
+    fun i j => ⟨(hsymm (i % m) (j % m)).1, (hsymm (i % m) (j % m)).2.1,
+      (hsymm (i % m) (j % m)).2.2⟩
+  have hper18 : ∀ i j : ℕ, a (i % m) (j % m) =
+      a (i % m) ((fun j => (1 + j) % m)^[m] j % m) ∧
+      b (i % m) (j % m) = b (i % m) ((fun j => (1 + j) % m)^[m] j % m) := by
+    have hpm : ∀ x : ℕ, ((fun j => (1 + j) % m)^[m] x) % m = x % m := by
+      intro x
+      rw [POWER_MOD_FUN_cs m x m (by omega) (by omega), Nat.add_mod_left, Nat.mod_mod]
+    exact fun i j => ⟨by rw [hpm j], by rw [hpm j]⟩
+  have hS218 : ∀ i ∈ (Finset.Icc 0 (m - 1) : Finset ℕ),
+      ∀ j ∈ (Finset.Icc 0 (m - 1) : Finset ℕ), i ≠ j → 2 ≤ a (i % m) (j % m) := by
+    intro i hi j hj hne
+    rw [Nat.mod_eq_of_lt (by have := Finset.mem_Icc.mp hi; omega),
+      Nat.mod_eq_of_lt (by have := Finset.mem_Icc.mp hj; omega)]
+    exact hS2 i (hIic i hi) j (hIic j hj) hne
+  have hS318 : ∀ i ∈ (Finset.Icc 0 (m - 1) : Finset ℕ),
+      a (i % m) (i % m) = 0 ∧
+        b (i % m) ((fun i => (1 + i) % m) i % m) ≤ cstab_p4 := by
+    intro i hi
+    have him : i < m := by have := Finset.mem_Icc.mp hi; omega
+    obtain ⟨h3a, h3b⟩ := hS3 i (hIic i hi)
+    refine ⟨?_, ?_⟩
+    · rw [Nat.mod_eq_of_lt him]; exact h3a
+    · rw [Nat.mod_eq_of_lt him, Nat.mod_mod]
+      exact h3b
+  have hS418 : ∀ i j : ℕ, ({i, j} : Finset ℕ) ∈ hJcfin.toFinset →
+      a (i % m) (j % m) = Real.sqrt 8 ∧ b (i % m) (j % m) = cstab_p4 := by
+    intro i j hij
+    have hmemJ : ({i, j} : Set ℕ) ∈ J := by
+      have h := (Set.Finite.mem_toFinset hJcfin).mp hij
+      simpa only [Set.mem_setOf_eq, Finset.coe_insert, Finset.coe_singleton] using h
+    obtain ⟨h8, hb8⟩ := hS4 i j hmemJ
+    obtain ⟨him, hjm⟩ := hlt_of_memJ i j hmemJ
+    exact ⟨by rw [Nat.mod_eq_of_lt him, Nat.mod_eq_of_lt hjm]; exact h8,
+      by rw [Nat.mod_eq_of_lt him, Nat.mod_eq_of_lt hjm]; exact hb8⟩
+  have hJsub18 : hJcfin.toFinset ⊆
+      (Finset.Icc 0 (m - 1)).image (fun i : ℕ => ({i, (1 + i) % m} : Finset ℕ)) := by
+    intro e he
+    have hE : (e : Set ℕ) ∈ J := (Set.Finite.mem_toFinset hJcfin).mp he
+    obtain ⟨i, hi, hxe⟩ := hJsub hE
+    refine Finset.mem_image.mpr ⟨i, hmemS i (Set.mem_Iic.mp hi), ?_⟩
+    refine Finset.coe_injective ?_
+    simp only [Finset.coe_insert, Finset.coe_singleton]
+    exact hxe.symm
+  have hJcard18 : hJcfin.toFinset.card + m ≤ 6 := by
+    have h1 : (hJcfin.toFinset.image (fun e : Finset ℕ => (e : Set ℕ))) ⊆
+        hJfin.toFinset := by
+      intro S hS
+      obtain ⟨e, he, rfl⟩ := Finset.mem_image.mp hS
+      have hJ' : (e : Set ℕ) ∈ J := by
+        have h := (Set.Finite.mem_toFinset hJcfin).mp he
+        simpa only [Set.mem_setOf_eq] using h
+      exact (Set.Finite.mem_toFinset (s := J) (a := (e : Set ℕ)) hJfin).mpr hJ'
+    have hinjOn : Set.InjOn (fun e : Finset ℕ => (e : Set ℕ))
+        (hJcfin.toFinset : Finset (Finset ℕ)) :=
+      fun p _ q _ hpq => Finset.coe_injective hpq
+    have h2 := Finset.card_le_card h1
+    rw [Finset.card_image_of_injOn hinjOn] at h2
+    have h4 : Nat.card ↑J = hJfin.toFinset.card :=
+      (Nat.card_coe_set_eq J).trans (Set.ncard_eq_toFinset_card J hJfin)
+    omega
+  refine ⟨hJcfin.toFinset, ⟨⟨h3m, hm6, ht18, hsymm18, hper18, hJsub18, hJcard18⟩,
+    hS218, hS318, hS418⟩⟩
+
 /-- NEEDS (HOL CLOSED_SY analog, general m): the joint body locus is closed.
 The (annulus ∧ CONDITION1) factor is CLEAN (`annulus_c1_closed_p23`); the
 genuine content is the CONDITION2 (fan) factor — HOL CLOSED_SY
@@ -1592,7 +1724,11 @@ closed. `hstab` is therefore upgraded to the full `stableSystem_p23` carrier,
 verbatim the shape of `continuousOn_tauFun_p23` (SF-91 案②); the CASE_4/5/6
 consumers feed it with the already-proved `fullStable_of_isScsV39` (LA24),
 exactly as the tauFun feed. Discharge route (B): bridge to LA18
-`CLOSED_SY_p18`. -/
+`CLOSED_SY_p18`. EXECUTED (bodyclosed-w2b, 2026-10-28): via the
+`Kepler.Text.ClosedSyKit` twin `CLOSED_SY_cs` — LA23 cannot import LA18
+(LA18→LA27→LA24→LA23 cycle), so the carrier kit moved upstream of LA23;
+G-B2 (`bcw2b_stableSystem_cs_of_p23`, above) + G-B1
+(`bcw2b_bodyClosed_of_SYset_cs`, ClosedSyKit) assemble below. -/
 theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
     (hstab : ∃ a b : ℕ → ℕ → ℝ, ∃ J : Set (Set ℕ),
       stableSystem_p23 m 0 (Set.Iic (m - 1)) a b J (fun i => (1 + i) % m) ∧
@@ -1600,7 +1736,10 @@ theorem bodyClosed_p23 {m : ℕ} (aR bR : Fin m → Fin m → ℝ) (hm : 2 < m)
       (∀ i j : Fin m, b (((i : ℕ) + 1) % m) (((j : ℕ) + 1) % m) = bR i j)) :
     IsClosed {v : Fin m → V3 | (∀ i, v i ∈ ballAnnulus) ∧
       CONDITION1_SY_p4 aR bR v ∧ CONDITION2_SY_p4 v} := by
-  sorry
+  obtain ⟨a, b, J, hcar, hsa, hsb⟩ := hstab
+  obtain ⟨Jf, hsys_cs⟩ := bcw2b_stableSystem_cs_of_p23 hcar
+  exact bcw2b_bodyClosed_of_SYset_cs aR bR _ _
+    (fun p q => hsa p q) (fun p q => hsb p q) (CLOSED_SY_cs hsys_cs (by omega) hm)
 
 /-- the EVT core of HDPLYGY / MINIMUM_IN_B_SY (Mathlib only, CLEAN). -/
 theorem hdplygy_min_core_p23 {β : Type*} [NormedAddCommGroup β] [NormedSpace ℝ β]

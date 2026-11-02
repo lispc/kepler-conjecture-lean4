@@ -97,6 +97,7 @@ ENCODING NOTES
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.SphereKit
+import Kepler.Text.ClosedSyKit
 import Kepler.Text.LocalAuto4
 import Kepler.Text.LocalAuto27
 import Mathlib
@@ -239,13 +240,18 @@ theorem CLOSED_SY_p18 {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ �
     {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
     (_hsys : stableSystem_p18 k d s a b J f) (_hk1 : 1 < k) (_hk2 : 2 < k) :
     IsClosed (SYset_p18 k a b) := by
-  sorry
-  -- DISCHARGES: the `BSY1body_p18` factor is closed exactly as in
-  -- LocalAuto9's `CLOSED_TRI_SY_p9` (proved there; blocked here only by
-  -- that theorem's `triStable_p9` hypothesis, so the intersection
-  -- argument must be redone locally); the `CONDITION2_SY_p18` factor
-  -- needs the limit argument on `V_SY`/`E_SY`/`F_SY`
-  -- (HOL: CLOSED_SY's SKOLEM/sequential-lims part).
+  -- bodyclosed-w2b: the statement is a verbatim twin of `CLOSED_SY_cs`
+  -- (Kepler.Text.ClosedSyKit); the verbatim twin defs make this redirect
+  -- definitional, with zero new proof debt: the giant obligation is now
+  -- rooted at `CLOSED_SY_cs` alone.
+  exact CLOSED_SY_cs (d := d) _hsys _hk1 _hk2
+  -- DISCHARGES (history of the former local gap): the
+  -- `BSY1body_p18` factor is closed exactly as in LocalAuto9's
+  -- `CLOSED_TRI_SY_p9` (proved there; blocked here only by that theorem's
+  -- `triStable_p9` hypothesis, so the intersection argument must be redone
+  -- locally); the `CONDITION2_SY_p18` factor needs the limit argument on
+  -- `V_SY`/`E_SY`/`F_SY` (HOL: CLOSED_SY's SKOLEM/sequential-lims part).
+  -- The obligation now lives at `CLOSED_SY_cs` (W3–W7 bodyclosed waves).
 
 /-- HOL `BOUNDED_SY` (WJSCPRO.hl:3179): the space sits inside the compact
 rows-in-`ball_annulus` product. -/
