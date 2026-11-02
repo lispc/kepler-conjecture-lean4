@@ -34,7 +34,7 @@ FILE MAP
   Section A (RRCWNSJ): `BB_VV_FUN_EQ_p26`, `WL_IN_E_p26`,
     `LUNAR_IN_V_p26`, `B_LE_2h0_A_EQ2_IN_CASES_6_p26`,
     `J_EMPY_CASES_6_p26`, `BB_RHO_NODE_IVS_p26`, `BB_F_SUC_PRE_p26`,
-    `RRCWNSJ_p26`.
+    `RRCWNSJ_p26` (with the `w5sg_*` prep block inserted before it).
   Section B (AXJRPNC): `DIST_LE_2h0_IN_CASES_6_p26`,
     `DIST_EDGE_IN_BB_LE_2_p26`, `arclength222h0_p26`,
     `is_scs_k_le_3_p26`, `DIST_LE2_BB_CASSE_4_p26`,
@@ -408,6 +408,165 @@ theorem BB_F_SUC_PRE_p26 (s : ScsV39) (f : ℕ → V3) (hs : isScsV39 s)
     omega
   intro i
   rw [heq, hv.2.1]
+
+/-! ## w5sg prep block for `RRCWNSJ_p26` (lane scsgeneric-w5a): in-place
+re-derivations of the LA28/LA34 legs (outside this file's import closure)
+and assembly bridges for the RRCWNSJ.hl:248-861 materialization. -/
+
+/-- HOL `MMS_IMP_BBS` (NUXCOEA.hl:213; LA28:190) — in-place re-derivation
+(LA28 is outside LA26's import closure). -/
+private theorem w5sg_mms_bbs_p26 (s : ScsV39) (w : ℕ → V3) (h : w ∈ MMsV39 s) :
+    BBsV39 s w := by
+  simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h
+  exact h.1.1.1
+
+/-- HOL `MMS_IMP_BBPRIME` (NUXCOEA.hl:217; LA28:196) — in-place re-derivation. -/
+private theorem w5sg_mms_bbprime_p26 (s : ScsV39) (w : ℕ → V3) (h : w ∈ MMsV39 s) :
+    w ∈ BBprimeV39 s := by
+  simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h
+  exact h.1.1
+
+/-- The `taustar < 0` leg consumed by `JKQEWGV2_p23`'s `hta` hypothesis
+(HOL `MRESAL_TAC MMS_IMP_BBPRIME` at RRCWNSJ.hl:258 supplies it via
+`BBprime_v39`). -/
+private theorem w5sg_mms_taustar_neg_p26 (s : ScsV39) (w : ℕ → V3)
+    (h : w ∈ MMsV39 s) : taustarV39 s w < 0 := by
+  simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h
+  exact h.1.1.2.2
+
+/-- HOL `BBS_IMP_CONVEX_LOCAL_FAN` (IMJXPHR.hl:97; LA34:494) — in-place
+re-derivation (LA34 is outside LA26's import closure); body verbatim. -/
+private theorem w5sg_bbs_convexlocalfan_p26 (s : ScsV39) (k : ℕ) (w : ℕ → V3)
+    (hk : 3 < k) (hkk : s.k = k) (hBB : BBsV39 s w) :
+    ConvexLocalFan (Set.range w)
+      (Set.range fun i => ({w i, w (i + 1)} : Set V3))
+      (Set.range fun i => (w i, w (i + 1))) := by
+  rcases hBB.2.2.2 with h3 | hcf
+  · exact absurd h3 (by omega)
+  · exact hcf
+
+/-- HOL `WL_IN_V` (Odxlstc; LA28:172 twin) — in-place re-derivation. -/
+private theorem w5sg_wl_in_v_p26 (w : ℕ → V3) (l : ℕ) : w l ∈ Set.range w := ⟨l, rfl⟩
+
+/-- Diagonal-premise extraction (RRCWNSJ.hl:404-414 / 682-692 shape):
+on a diagonal pair the frozen premises give `a i j < dist (v i) (v j)`
+(`a ≤ cstab < dist`). -/
+private theorem w5sg_diag_lt_dist_p26 (s : ScsV39) (v : ℕ → V3)
+    (hdiag : ∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j))
+    {i j : ℕ} (hd : scsDiag s.k i j) : s.a i j < dist (v i) (v j) :=
+  lt_of_le_of_lt (hdiag i j hd).1 (hdiag i j hd).2
+
+/-- `scsDiag` is invariant under reducing both indices mod `k` (role of HOL
+`Ocbicby.MOD_EQ_MOD_SHIFT` in the RRCWNSJ case bash). -/
+private theorem w5sg_diag_mod_p26 {k i j : ℕ} :
+    scsDiag k i j ↔ scsDiag k (i % k) (j % k) := by
+  have hred : ∀ a : ℕ, a % k % k = a % k := fun a => Nat.mod_mod a k
+  have hshift1 : ∀ a : ℕ, (a % k + 1) % k = (a + 1) % k := fun a =>
+    Nat.ModEq.add (Nat.mod_modEq a k) (Nat.ModEq.refl 1)
+  constructor
+  · intro h
+    obtain ⟨h1, h2, h3⟩ := h
+    refine ⟨fun hc => h1 (by rw [hred i, hred j] at hc; exact hc), ?_, ?_⟩
+    · intro hc
+      rw [hshift1 i, hred j] at hc
+      exact h2 hc
+    · intro hc
+      rw [hred i, hshift1 j] at hc
+      exact h3 hc
+  · intro h
+    obtain ⟨h1, h2, h3⟩ := h
+    refine ⟨fun hc => h1 (by rw [hred i, hred j]; exact hc),
+      fun hc => h2 (by rw [hshift1 i, hred j]; exact hc),
+      fun hc => h3 (by rw [hred i, hshift1 j]; exact hc)⟩
+
+/-- The RRCWNSJ.hl:829-833 diagonal instance: for `4 ≤ k` the pair
+`(x+1, x+k-1)` (one step after `x` against the `k-1`-th predecessor) is a
+diagonal. -/
+private theorem w5sg_diag_ends_p26 {k x : ℕ} (hk : 4 ≤ k) :
+    scsDiag k (x + 1) (x + k - 1) := by
+  refine ⟨?_, ?_, ?_⟩
+  · intro hc
+    have hdvd := (Nat.modEq_iff_dvd' (show (x + 1) ≤ x + k - 1 by omega)).mp hc
+    have hle : k ≤ (x + k - 1) - (x + 1) := Nat.le_of_dvd (by omega) hdvd
+    omega
+  · intro hc
+    have hdvd := (Nat.modEq_iff_dvd' (show x + 1 + 1 ≤ x + k - 1 by omega)).mp hc
+    have hle : k ≤ (x + k - 1) - (x + 2) := Nat.le_of_dvd (by omega) hdvd
+    omega
+  · intro hc
+    have hdvd := (Nat.modEq_iff_dvd' (show (x + 1) ≤ x + k - 1 + 1 by omega)).mp hc
+    have hle : k ≤ (x + k - 1 + 1) - (x + 1) := Nat.le_of_dvd (by omega) hdvd
+    omega
+
+/-! ### The `ConvexLocalFan` → `convexLocalFan_p2` gate
+
+LA5's lunar kit (`HKIRPEP` / `LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT` /
+`AFF_IVS_RHO_NODE_EQQ` / `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` / `CVLF_LF_F` /
+`ITER_CARD_MINUS1_EQ_IVS_RN1`) is stated over the LA2 `convexLocalFan_p2`
+encoding, while `BBsV39` (and hence the RRCWNSJ assembly) carries the LA1
+`ConvexLocalFan`.  The transport exists as the private `kcs_clf2` inside
+CircularSolKit; this is its public-consumer re-derivation (bodies carried
+verbatim from CircularSolKit.lean, whose private helpers are re-made here).
+-/
+
+/-- 2-regularity ⇒ every vertex lies on some edge (CircularSolKit `kcs_hedge`). -/
+private theorem w5sg_hedge_p26 {V : Set V3} {E : Set (Set V3)}
+    (h2reg : ∀ u ∈ V, (ee u E).ncard = 2) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := h2reg v hv
+  have hne : (ee v E) ≠ ∅ := by
+    intro hE
+    rw [hE, Set.ncard_empty] at h2
+    omega
+  obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  exact ⟨w, hw⟩
+
+/-- `localFan_p2 ⇒ FF ⊆ dart1OfFan` (CircularSolKit `kcs_ffSubDart`). -/
+private theorem w5sg_ffSubDart_p26 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : localFan_p2 V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
+    FF ⊆ Fan.dart1OfFan V E := by
+  obtain ⟨H, hd, -, -, -, -, hface, -⟩ := hlf
+  obtain ⟨z, hzd, hFF⟩ := hface
+  intro d hdF
+  have hsub := H.face_subset_darts hzd (hFF ▸ hdF)
+  rw [hd] at hsub
+  exact (hno_p2_of_no_isolated hedge) ▸ hsub
+
+/-- LA1 `ConvexLocalFan` → LA2 `convexLocalFan_p2` (CircularSolKit `kcs_clf2`,
+carried verbatim; that copy is `private` and not importable). -/
+private theorem w5sg_clf2_p26 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : ConvexLocalFan V E FF) : convexLocalFan_p2 V E FF := by
+  obtain ⟨hlf, hcvx⟩ := h
+  have hcopy := hlf
+  obtain ⟨hfan, -, -, -, -, h2reg⟩ := hcopy
+  have hlf2 := localFan_p2.of_LocalFan_noIso hlf (w5sg_hedge_p26 h2reg)
+  have hsub := w5sg_ffSubDart_p26 hlf2 (w5sg_hedge_p26 h2reg)
+  refine ⟨hlf2, ?_⟩
+  intro d hd
+  refine ⟨?_, ?_⟩
+  · have hb : azimInFan d E = azimInFan_p3 d E :=
+      azimInFan_eq_azimInFan_p3 hfan (hsub hd)
+    show azimInFan_p2 d E ≤ Real.pi
+    rw [show azimInFan_p2 d E = azimInFan_p3 d E from rfl, ← hb]
+    exact (hcvx d hd).1
+  · show V ⊆ wedgeInFanGe_p2 d E
+    rw [show wedgeInFanGe_p2 d E = wedgeInFanGe_p3 d E from rfl,
+      ← wedgeInFanGe_eq_wedgeInFanGe_p3 hfan (hsub hd)]
+    exact (hcvx d hd).2
+
+/-! ### Def-family bridges for `CIZMRRH` (LA3, `p3` family) -/
+
+/-- `lunar_p3` (LA3, pair-curried) is the LA1 `Lunar` (RRCWNSJ assembly form);
+bodies coincide modulo the `Collinear3` notation (`Geom/Azim.lean:43`). -/
+private theorem w5sg_lunar_p3_p26 {V : Set V3} {E : Set (Set V3)} {a b : V3} :
+    lunar_p3 (a, b) V E ↔ Lunar a b V E := by
+  constructor
+  · intro h
+    obtain ⟨h1, h2, h3, h4⟩ := h
+    exact ⟨h1, h2, h3, h4⟩
+  · intro h
+    obtain ⟨h1, h2, h3, h4⟩ := h
+    exact ⟨h1, h2, h3, h4⟩
 
 /-- HOL `RRCWNSJ` (RRCWNSJ.hl:248). Proof pending (needs
 `MMS_IMP_BBPRIME` / `JKQEWGV2` / `BBS_IMP_CONVEX_LOCAL_FAN`). -/
