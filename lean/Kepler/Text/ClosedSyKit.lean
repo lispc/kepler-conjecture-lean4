@@ -2344,4 +2344,935 @@ theorem w6acs_fan7_edges_shared {a b c : V3}
 
 end W6aKit
 
+
+/-! ## Section W6bKit (bodyclosed-w6b): S-I (the ∃-dart + dih2k clauses) and
+S-K (azimInFan ≤ π) for the CONDITION2_SY_cs transfer at the limit point
+(HOL WJSCPRO.hl:2292-2686).  Zero new imports; zero sorry. -/
+
+section W6bKit
+
+theorem w6bcs_row_fin {m : ℕ} (l : FinVec m 3) (p : Fin m) :
+    rowV3_cs l (p.val + 1) = vecmatsV3_p4 l p := by
+  unfold rowV3_cs
+  rw [dif_pos (by exact ⟨by omega, by have := p.isLt; omega⟩)]
+  refine congrArg (vecmatsV3_p4 l) (Fin.eq_of_val_eq ?_)
+  show (p.val + 1 - 1 : ℕ) = p.val
+  omega
+
+def w6bcs_prev {k : ℕ} (i : Fin k) : Fin k := ⟨(i.val + k - 1) % k,
+  Nat.mod_lt _ (lt_of_le_of_lt (Nat.zero_le _) i.isLt)⟩
+
+theorem w6bcs_finNext_prev {k : ℕ} (i : Fin k) : finNext (w6bcs_prev i) = i := by
+  refine Fin.ext ?_
+  by_cases h0 : i.val = 0
+  · have hp : (w6bcs_prev i).val = k - 1 := by
+      simp only [w6bcs_prev, h0, Nat.zero_add]
+      exact Nat.mod_eq_of_lt (Nat.sub_lt (by omega) (by omega))
+    show (((w6bcs_prev i).val + 1) % k) = i.val
+    rw [hp, show ((k - 1 : ℕ) + 1) = k by omega, Nat.mod_self k]
+    exact h0.symm
+  · have hp : (w6bcs_prev i).val = i.val - 1 := by
+      simp only [w6bcs_prev]
+      have hsplit : i.val - 1 + k = i.val + k - 1 := by omega
+      rw [← hsplit, Nat.add_mod_right]
+      exact Nat.mod_eq_of_lt (by omega)
+    show (((w6bcs_prev i).val + 1) % k) = i.val
+    rw [hp, show ((i.val - 1 : ℕ) + 1) = i.val by omega, Nat.mod_eq_of_lt i.isLt]
+
+theorem w6bcs_prev_finNext {k : ℕ} (i : Fin k) : w6bcs_prev (finNext i) = i := by
+  refine Fin.ext ?_
+  by_cases h0 : i.val + 1 < k
+  · have hn : (finNext i).val = i.val + 1 := by
+      simp only [finNext]; exact Nat.mod_eq_of_lt h0
+    have hp : (w6bcs_prev (finNext i)).val = ((finNext i).val + k - 1) % k := rfl
+    show (w6bcs_prev (finNext i)).val = i.val
+    rw [hp, hn, show ((i.val + 1 : ℕ) + k - 1) = i.val + k by omega,
+      Nat.add_mod_right, Nat.mod_eq_of_lt i.isLt]
+  · have hk : i.val + 1 = k := le_antisymm (by have := i.isLt; omega) (by have := i.isLt; omega)
+    have hn : (finNext i).val = 0 := by
+      simp only [finNext, hk]
+      exact Nat.mod_self k
+    have hp : (w6bcs_prev (finNext i)).val = k - 1 := by
+      simp only [w6bcs_prev, hn, Nat.zero_add]
+      exact Nat.mod_eq_of_lt (Nat.sub_lt (by omega) (by omega))
+    show (w6bcs_prev (finNext i)).val = i.val
+    rw [hp]
+    have := i.isLt
+    omega
+
+theorem w6bcs_two_le_fin {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k) (hk1 : 1 < k)
+    (L : FinVec k 3) (hL : L ∈ BSY1body_cs k a b)
+    {i j : Fin k} (hij : i ≠ j) :
+    (2:ℝ) ≤ ‖vecmatsV3_p4 L i - vecmatsV3_p4 L j‖ := by
+  rw [← w6bcs_row_fin, ← w6bcs_row_fin]
+  exact w3cs_two_le_row_of_BSY1body hsys hs hf hk1 L hL
+    (by omega) (by have := i.isLt; omega) (by omega) (by have := j.isLt; omega)
+    (fun h => hij (Fin.ext (by omega)))
+
+theorem w6bcs_hinj {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k) (hk1 : 1 < k)
+    (L : FinVec k 3) (hL : L ∈ BSY1body_cs k a b) :
+    ∀ i j : Fin k, vecmatsV3_p4 L i = vecmatsV3_p4 L j → i = j := by
+  intro i j heq
+  by_cases hij : i = j
+  · exact hij
+  · exfalso
+    have h2 := w6bcs_two_le_fin hsys hs hf hk1 L hL hij
+    rw [heq, sub_self, norm_zero] at h2
+    linarith
+
+theorem w6bcs_hne {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+    {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+    (hsys : stableSystem_cs k d s a b J f) (hs : s = Finset.Iic (k - 1))
+    (hf : f = fun j => (1 + j) % k) (hk3 : 3 ≤ k)
+    (L : FinVec k 3) (hL : L ∈ BSY1body_cs k a b) (i : Fin k) :
+    vecmatsV3_p4 L (w6bcs_prev i) ≠ vecmatsV3_p4 L (finNext i) := by
+  have hk1 : 1 < k := by omega
+  have hidx : (w6bcs_prev i).val ≠ (finNext i).val := by
+    by_cases h0 : i.val = 0
+    · have h1 : (w6bcs_prev i).val = k - 1 := by
+        simp only [w6bcs_prev, h0, Nat.zero_add]
+        exact Nat.mod_eq_of_lt (Nat.sub_lt (by omega) (by omega))
+      have h2 : (finNext i).val = 1 := by
+        simp only [finNext, h0, Nat.zero_add]
+        exact Nat.mod_eq_of_lt (by have := i.isLt; omega)
+      rw [h1, h2]; omega
+    · have h1 : (w6bcs_prev i).val = i.val - 1 := by
+        simp only [w6bcs_prev]
+        have hsplit : i.val - 1 + k = i.val + k - 1 := by omega
+        rw [← hsplit, Nat.add_mod_right]
+        exact Nat.mod_eq_of_lt (by omega)
+      rcases Nat.lt_or_ge (i.val + 1) k with hlt | hge
+      · have h2 : (finNext i).val = i.val + 1 := by
+          simp only [finNext]; exact Nat.mod_eq_of_lt hlt
+        rw [h1, h2]; omega
+      · have hik : i.val + 1 = k := le_antisymm (by have := i.isLt; omega) hge
+        have h2 : (finNext i).val = 0 := by
+          simp only [finNext, hik]
+          exact Nat.mod_self k
+        rw [h1, h2]; omega
+  intro heq
+  have h2 := w6bcs_two_le_fin hsys hs hf hk1 L hL (i := w6bcs_prev i) (j := finNext i)
+    (Fin.ne_of_val_ne hidx)
+  rw [heq, sub_self, norm_zero] at h2
+  linarith
+
+theorem w6bcs_ee_eq_setOfEdge {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E)
+    (v : V3) : EE_p4 v E = Fan.setOfEdge v V E := by
+  ext w
+  constructor
+  · intro hw
+    exact ⟨hw, hfan.1 (Set.mem_sUnion.mpr ⟨{v, w}, hw, by simp⟩)⟩
+  · intro hw
+    exact hw.1
+
+theorem w6bcs_setOfEdge_eq {k : ℕ} (l : FinVec k 3) (hk1 : 1 < k)
+    (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j) (i : Fin k) :
+    Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)} := by
+  exact SET_OF_EDGE_CARD_EQ2 (l := l) hk1 hinj (w6bcs_prev i)
+    (u := vecmatsV3_p4 l (w6bcs_prev i)) (v := vecmatsV3_p4 l i)
+    (w := vecmatsV3_p4 l (finNext i)) rfl (by rw [w6bcs_finNext_prev])
+    (by rw [w6bcs_finNext_prev])
+
+theorem w6bcs_sigma_next {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.sigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i))
+      = vecmatsV3_p4 l (w6bcs_prev i) := by
+  have hnot : ¬ (Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (finNext i)}) := by
+    intro hsingle
+    have hmem : vecmatsV3_p4 l (w6bcs_prev i) ∈ ({vecmatsV3_p4 l (finNext i)} : Set V3) := by
+      rw [hsingle.symm.trans (hsoe i)]
+      exact Set.mem_insert _ _
+    rw [Set.mem_singleton_iff] at hmem
+    exact hne i hmem
+  rw [Fan.sigmaFan, if_neg hnot]
+  have hwit : (fun w : V3 => w ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) ∧ w ≠ vecmatsV3_p4 l (finNext i) ∧
+          ∀ w1 ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+            (E_SY_p4 (vecmatsV3_p4 l)), w1 ≠ vecmatsV3_p4 l (finNext i) →
+            azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)) w ≤
+              azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)) w1)
+      (vecmatsV3_p4 l (w6bcs_prev i)) := by
+    show vecmatsV3_p4 l (w6bcs_prev i) ∈ Fan.setOfEdge (vecmatsV3_p4 l i)
+        (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) ∧
+      vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i) ∧
+      ∀ w1 ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)), w1 ≠ vecmatsV3_p4 l (finNext i) →
+        azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i))
+          (vecmatsV3_p4 l (w6bcs_prev i)) ≤
+        azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)) w1
+    refine ⟨?_, hne i, ?_⟩
+    · rw [hsoe i]; exact Set.mem_insert _ _
+    · intro w1 hw1 hw1ne
+      rw [hsoe i] at hw1
+      rcases Set.mem_insert_iff.mp hw1 with h | h
+      · subst h; exact le_refl _
+      · rw [Set.mem_singleton_iff] at h
+        exact absurd h hw1ne
+  obtain ⟨hm1, hm2, -⟩ := Classical.epsilon_spec
+    (p := fun w : V3 => w ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) ∧ w ≠ vecmatsV3_p4 l (finNext i) ∧
+          ∀ w1 ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+            (E_SY_p4 (vecmatsV3_p4 l)), w1 ≠ vecmatsV3_p4 l (finNext i) →
+            azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)) w ≤
+              azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)) w1)
+    ⟨vecmatsV3_p4 l (w6bcs_prev i), hwit⟩
+  have hm3 : (Classical.epsilon (fun w : V3 => w ∈ Fan.setOfEdge (vecmatsV3_p4 l i)
+        (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) ∧
+          w ≠ vecmatsV3_p4 l (finNext i) ∧
+          ∀ w1 ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+            (E_SY_p4 (vecmatsV3_p4 l)), w1 ≠ vecmatsV3_p4 l (finNext i) →
+            azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)) w ≤
+              azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)) w1))
+      ∈ ({vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)} : Set V3) := by
+    rw [← hsoe i]; exact hm1
+  rcases Set.mem_insert_iff.mp hm3 with h | h
+  · exact h
+  · rw [Set.mem_singleton_iff] at h
+    exact absurd h hm2
+
+theorem w6bcs_sigma_prev {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.sigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i))
+      = vecmatsV3_p4 l (finNext i) := by
+  have hnot : ¬ (Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i)}) := by
+    intro hsingle
+    have hmem : vecmatsV3_p4 l (finNext i) ∈ ({vecmatsV3_p4 l (w6bcs_prev i)} : Set V3) := by
+      rw [hsingle.symm.trans (hsoe i)]
+      exact Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)
+    rw [Set.mem_singleton_iff] at hmem
+    exact hne i hmem.symm
+  rw [Fan.sigmaFan, if_neg hnot]
+  have hwit : (fun w : V3 => w ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) ∧ w ≠ vecmatsV3_p4 l (w6bcs_prev i) ∧
+          ∀ w1 ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+            (E_SY_p4 (vecmatsV3_p4 l)), w1 ≠ vecmatsV3_p4 l (w6bcs_prev i) →
+            azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) w ≤
+              azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) w1)
+      (vecmatsV3_p4 l (finNext i)) := by
+    show vecmatsV3_p4 l (finNext i) ∈ Fan.setOfEdge (vecmatsV3_p4 l i)
+        (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) ∧
+      vecmatsV3_p4 l (finNext i) ≠ vecmatsV3_p4 l (w6bcs_prev i) ∧
+      ∀ w1 ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)), w1 ≠ vecmatsV3_p4 l (w6bcs_prev i) →
+        azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i))
+          (vecmatsV3_p4 l (finNext i)) ≤
+        azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) w1
+    refine ⟨?_, fun hc => hne i hc.symm, ?_⟩
+    · rw [hsoe i]; exact Set.mem_insert_of_mem _ rfl
+    · intro w1 hw1 hw1ne
+      rw [hsoe i] at hw1
+      rcases Set.mem_insert_iff.mp hw1 with h | h
+      · exact absurd h hw1ne
+      · rw [Set.mem_singleton_iff] at h
+        subst h
+        exact le_refl _
+  obtain ⟨hm1, hm2, -⟩ := Classical.epsilon_spec
+    (p := fun w : V3 => w ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) ∧ w ≠ vecmatsV3_p4 l (w6bcs_prev i) ∧
+          ∀ w1 ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+            (E_SY_p4 (vecmatsV3_p4 l)), w1 ≠ vecmatsV3_p4 l (w6bcs_prev i) →
+            azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) w ≤
+              azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) w1)
+    ⟨vecmatsV3_p4 l (finNext i), hwit⟩
+  have hm3 : (Classical.epsilon (fun w : V3 => w ∈ Fan.setOfEdge (vecmatsV3_p4 l i)
+        (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) ∧
+          w ≠ vecmatsV3_p4 l (w6bcs_prev i) ∧
+          ∀ w1 ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+            (E_SY_p4 (vecmatsV3_p4 l)), w1 ≠ vecmatsV3_p4 l (w6bcs_prev i) →
+            azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) w ≤
+              azim 0 (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) w1))
+      ∈ ({vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)} : Set V3) := by
+    rw [← hsoe i]; exact hm1
+  rcases Set.mem_insert_iff.mp hm3 with h | h
+  · exact absurd h hm2
+  · exact Set.mem_singleton_iff.mp h
+
+theorem w6bcs_azimInFan_gen {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hk1 : 1 < k)
+    (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j)
+    (j : Fin k)
+    (hne : vecmatsV3_p4 l (w6bcs_prev j) ≠ vecmatsV3_p4 l (finNext j)) :
+    azimInFan_p4 (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j))
+        (E_SY_p4 (vecmatsV3_p4 l))
+      = azim 0 (vecmatsV3_p4 l j) (vecmatsV3_p4 l (finNext j))
+          (vecmatsV3_p4 l (w6bcs_prev j)) := by
+  have hsoe := w6bcs_setOfEdge_eq l hk1 hinj j
+  have hncard : (1:ℕ) < (EE_p4 (vecmatsV3_p4 l j) (E_SY_p4 (vecmatsV3_p4 l))).ncard := by
+    rw [w6bcs_ee_eq_setOfEdge hfan, hsoe]
+    have hnc := Set.ncard_pair (a := vecmatsV3_p4 l (w6bcs_prev j))
+      (b := vecmatsV3_p4 l (finNext j)) hne
+    omega
+  rw [azimInFan_p4, if_pos hncard]
+  show azim 0 (vecmatsV3_p4 l j) (vecmatsV3_p4 l (finNext j))
+      (azimCycle_p4 (EE_p4 (vecmatsV3_p4 l j) (E_SY_p4 (vecmatsV3_p4 l))) 0
+        (vecmatsV3_p4 l j) (vecmatsV3_p4 l (finNext j)))
+    = azim 0 (vecmatsV3_p4 l j) (vecmatsV3_p4 l (finNext j))
+        (vecmatsV3_p4 l (w6bcs_prev j))
+  have h := AZIM_CYCLE_EQ1 (l := l) hfan hk1 hinj (w6bcs_prev j)
+    (u := vecmatsV3_p4 l (w6bcs_prev j)) (v := vecmatsV3_p4 l j)
+    (w := vecmatsV3_p4 l (finNext j)) rfl (by rw [w6bcs_finNext_prev])
+    (by rw [w6bcs_finNext_prev])
+  rw [h]
+
+
+
+/-! ## w6b chunk B: extensionSigma, inverseSigma, f/n-fan-pair steps, iterates -/
+
+/-- `extensionSigmaFan` at vertex `l i` swaps the two neighbors
+(`l (finNext i) ↦ l (prev i)`). -/
+theorem w6bcs_extSigma_next {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)) = vecmatsV3_p4 l (w6bcs_prev i) := by
+  rw [Fan.extensionSigmaFan, if_neg (by
+    intro hnc
+    exact hnc (by
+      rw [hsoe i]
+      exact Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)))]
+  exact w6bcs_sigma_next l hsoe hne i
+
+/-- `extensionSigmaFan` at vertex `l i` swaps the two neighbors
+(`l (prev i) ↦ l (finNext i)`). -/
+theorem w6bcs_extSigma_prev {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) = vecmatsV3_p4 l (finNext i) := by
+  rw [Fan.extensionSigmaFan, if_neg (by
+    intro hnc
+    exact hnc (by
+      rw [hsoe i]
+      exact Set.mem_insert _ _))]
+  exact w6bcs_sigma_prev l hsoe hne i
+
+theorem w6bcs_extSigma_notmem {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (i : Fin k) {w : V3} (hw : w ∉ Fan.setOfEdge (vecmatsV3_p4 l i)
+      (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))) :
+    Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l i) w = w := by
+  rw [Fan.extensionSigmaFan, if_pos hw]
+
+/-- `extensionSigmaFan` at an `E_SY` vertex is injective. -/
+theorem w6bcs_extSigma_injective {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Function.Injective (Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l i)) := by
+  intro x y hxy
+  by_cases hx : x ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+  · rw [hsoe i] at hx
+    rcases Set.mem_insert_iff.mp hx with hx1 | hx1
+    · by_cases hy : y ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      · rw [hsoe i] at hy
+        rcases Set.mem_insert_iff.mp hy with hy1 | hy1
+        · exact hx1.trans hy1.symm
+        · rw [Set.mem_singleton_iff] at hy1
+          rw [hx1, hy1, w6bcs_extSigma_prev l hsoe hne i, w6bcs_extSigma_next l hsoe hne i] at hxy
+          exact absurd hxy.symm (hne i)
+      · rw [hx1, w6bcs_extSigma_prev l hsoe hne i, w6bcs_extSigma_notmem l hsoe i hy] at hxy
+        rw [← hxy] at hy
+        exact absurd (by
+          rw [hsoe i]
+          exact Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)) hy
+    · rw [Set.mem_singleton_iff] at hx1
+      by_cases hy : y ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      · rw [hsoe i] at hy
+        rcases Set.mem_insert_iff.mp hy with hy1 | hy1
+        · rw [hx1, hy1, w6bcs_extSigma_next l hsoe hne i, w6bcs_extSigma_prev l hsoe hne i] at hxy
+          exact absurd hxy (hne i)
+        · exact hx1.trans hy1.symm
+      · rw [hx1, w6bcs_extSigma_next l hsoe hne i, w6bcs_extSigma_notmem l hsoe i hy] at hxy
+        rw [← hxy] at hy
+        exact absurd (by
+          rw [hsoe i]
+          exact Set.mem_insert _ _) hy
+  · by_cases hy : y ∈ Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+    · rw [hsoe i] at hy
+      rcases Set.mem_insert_iff.mp hy with hy1 | hy1
+      · rw [hy1, w6bcs_extSigma_prev l hsoe hne i, w6bcs_extSigma_notmem l hsoe i hx] at hxy
+        rw [hxy] at hx
+        exact absurd (by
+          rw [hsoe i]
+          exact Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)) hx
+      · rw [Set.mem_singleton_iff] at hy1
+        rw [hy1, w6bcs_extSigma_next l hsoe hne i, w6bcs_extSigma_notmem l hsoe i hx] at hxy
+        rw [hxy] at hx
+        exact absurd (by
+          rw [hsoe i]
+          exact Set.mem_insert _ _) hx
+    · rw [w6bcs_extSigma_notmem l hsoe i hx, w6bcs_extSigma_notmem l hsoe i hy] at hxy
+      exact hxy
+
+/-- inverse of the neighbor swap at vertex `l (finNext i)`, applied to
+`l i`: gives `l (finNext (finNext i))` (HOL `FF_OF_HYP_EQ` station). -/
+theorem w6bcs_invSigma_next {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.inverseSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l (finNext i)) (vecmatsV3_p4 l i)
+      = vecmatsV3_p4 l (finNext (finNext i)) := by
+  have hg : ∀ a b : V3, Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l (finNext i)) a =
+      Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l (finNext i)) b → a = b :=
+    w6bcs_extSigma_injective l hsoe hne (finNext i)
+  have hcomp : Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l (finNext i)) (vecmatsV3_p4 l (finNext (finNext i)))
+      = vecmatsV3_p4 l i := by
+    rw [w6bcs_extSigma_next l hsoe hne (finNext i), w6bcs_prev_finNext]
+  have hgt : Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l (finNext i))
+      (Function.invFun (Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+          (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l (finNext i))) (vecmatsV3_p4 l i))
+      = vecmatsV3_p4 l i :=
+    Function.invFun_eq ⟨vecmatsV3_p4 l (finNext (finNext i)), hcomp⟩
+  show Function.invFun (Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l (finNext i))) (vecmatsV3_p4 l i)
+    = vecmatsV3_p4 l (finNext (finNext i))
+  exact (hg _ _ (hgt.trans hcomp.symm))
+
+/-- inverse of the neighbor swap at vertex `l i`, applied to
+`l (finNext i)`: gives `l (prev i)`. -/
+theorem w6bcs_invSigma_prev {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.inverseSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i))
+      = vecmatsV3_p4 l (w6bcs_prev i) := by
+  have hg : ∀ a b : V3, Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l i) a =
+      Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l i) b → a = b :=
+    w6bcs_extSigma_injective l hsoe hne i
+  have hcomp : Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l i) (vecmatsV3_p4 l (w6bcs_prev i)) = vecmatsV3_p4 l (finNext i) :=
+    w6bcs_extSigma_prev l hsoe hne i
+  have hgt : Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      (vecmatsV3_p4 l i)
+      (Function.invFun (Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+          (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l i)) (vecmatsV3_p4 l (finNext i)))
+      = vecmatsV3_p4 l (finNext i) :=
+    Function.invFun_eq ⟨vecmatsV3_p4 l (w6bcs_prev i), hcomp⟩
+  show Function.invFun (Fan.extensionSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l i)) (vecmatsV3_p4 l (finNext i))
+    = vecmatsV3_p4 l (w6bcs_prev i)
+  exact (hg _ _ (hgt.trans hcomp.symm))
+
+/-- face step on a forward dart: `(u i, u i+1) ↦ (u i+1, u i+2)` -/
+theorem w6bcs_fFanPair_next {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.fFanPair 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i))
+      = (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l (finNext (finNext i))) := by
+  show (vecmatsV3_p4 l (finNext i),
+      Fan.inverseSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l (finNext i)) (vecmatsV3_p4 l i))
+    = (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l (finNext (finNext i)))
+  rw [w6bcs_invSigma_next l hsoe hne i]
+
+/-- face step on a reverse dart: `(u i+1, u i) ↦ (u i, u i-1)` -/
+theorem w6bcs_fFanPair_prev {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.fFanPair 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)
+      = (vecmatsV3_p4 l i, vecmatsV3_p4 l (w6bcs_prev i)) := by
+  show (vecmatsV3_p4 l i,
+      Fan.inverseSigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)))
+    = (vecmatsV3_p4 l i, vecmatsV3_p4 l (w6bcs_prev i))
+  rw [w6bcs_invSigma_prev l hsoe hne i]
+
+/-- node step on a forward dart: `(u i, u i+1) ↦ (u i, u i-1)` -/
+theorem w6bcs_nFanPair_next {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.nFanPair 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i))
+      = (vecmatsV3_p4 l i, vecmatsV3_p4 l (w6bcs_prev i)) := by
+  show (vecmatsV3_p4 l i, Fan.sigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l i) (vecmatsV3_p4 l (finNext i)))
+    = (vecmatsV3_p4 l i, vecmatsV3_p4 l (w6bcs_prev i))
+  rw [w6bcs_sigma_next l hsoe hne i]
+
+/-- node step on a reverse dart: `(u i+1, u i) ↦ (u i+1, u i+2)` -/
+theorem w6bcs_nFanPair_prev {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    Fan.nFanPair 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+        (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)
+      = (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l (finNext (finNext i))) := by
+  show (vecmatsV3_p4 l (finNext i), Fan.sigmaFan 0 (V_SY_p4 (vecmatsV3_p4 l))
+      (E_SY_p4 (vecmatsV3_p4 l)) (vecmatsV3_p4 l (finNext i)) (vecmatsV3_p4 l i))
+    = (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l (finNext (finNext i)))
+  have h := w6bcs_sigma_prev l hsoe hne (finNext i)
+  rw [w6bcs_prev_finNext] at h
+  rw [h]
+
+/-- `finNext` iterate in explicit mod form. -/
+theorem w6bcs_finNext_iterate {k : ℕ} (n : ℕ) (i : Fin k) :
+    finNext^[n] i = ⟨(i.val + n) % k,
+      Nat.mod_lt _ (lt_of_le_of_lt (Nat.zero_le _) i.isLt)⟩ := by
+  induction n with
+  | zero =>
+    refine Fin.ext ?_
+    show (finNext^[0] i).val = (i.val + 0) % k
+    rw [Function.iterate_zero_apply, Nat.add_zero, Nat.mod_eq_of_lt i.isLt]
+  | succ m ih =>
+    rw [Function.iterate_succ_apply', ih]
+    refine Fin.ext ?_
+    show (((i.val + m) % k + 1) % k) = ((i.val + (m + 1)) % k)
+    rw [Nat.mod_add_mod, Nat.add_assoc]
+
+
+
+
+/-! ### w6b S-I: dart set, face orbits, cardinalities, orders, dih2k -/
+
+theorem w6bcs_darts_coe {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E) :
+    ((Fan.hypermapOfFan 0 V E hfan).darts : Set (V3 × V3)) = Fan.dart1OfFan V E := by
+  have hD := Fan.finite_dart1_fan hfan
+  simpa [Fan.hypermapOfFan] using hD.coe_toFinset
+
+theorem w6bcs_faceMap_apply {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E)
+    (d : V3 × V3) (hd : d ∈ Fan.dart1OfFan V E) :
+    (Fan.hypermapOfFan 0 V E hfan).faceMap d = Fan.fFanPair 0 V E d := by
+  have hmem : d ∈ (((Fan.finite_dart1_fan hfan).toFinset : Finset (V3 × V3)) : Set (V3 × V3)) := by
+    rw [Set.Finite.coe_toFinset]; exact hd
+  simp only [Fan.hypermapOfFan, Fan.extendPerm, Equiv.ofBijective_apply, Fan.res, hmem,
+    if_true]
+
+theorem w6bcs_edgeMap_apply {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E)
+    (d : V3 × V3) (hd : d ∈ Fan.dart1OfFan V E) :
+    (Fan.hypermapOfFan 0 V E hfan).edgeMap d = (d.2, d.1) := by
+  have hmem : d ∈ (((Fan.finite_dart1_fan hfan).toFinset : Finset (V3 × V3)) : Set (V3 × V3)) := by
+    rw [Set.Finite.coe_toFinset]; exact hd
+  simp only [Fan.hypermapOfFan, Fan.extendPerm, Equiv.ofBijective_apply, Fan.res, hmem,
+    if_true]
+  rfl
+
+theorem w6bcs_nodeMap_apply {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E)
+    (d : V3 × V3) (hd : d ∈ Fan.dart1OfFan V E) :
+    (Fan.hypermapOfFan 0 V E hfan).nodeMap d = Fan.nFanPair 0 V E d := by
+  have hmem : d ∈ (((Fan.finite_dart1_fan hfan).toFinset : Finset (V3 × V3)) : Set (V3 × V3)) := by
+    rw [Set.Finite.coe_toFinset]; exact hd
+  simp only [Fan.hypermapOfFan, Fan.extendPerm, Equiv.ofBijective_apply, Fan.res, hmem,
+    if_true]
+
+theorem w6bcs_map_apply_out {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E)
+    (d : V3 × V3) (hd : d ∉ Fan.dart1OfFan V E) :
+    (Fan.hypermapOfFan 0 V E hfan).faceMap d = d ∧
+      (Fan.hypermapOfFan 0 V E hfan).edgeMap d = d ∧
+      (Fan.hypermapOfFan 0 V E hfan).nodeMap d = d := by
+  have hnc : d ∉ (((Fan.finite_dart1_fan hfan).toFinset : Finset (V3 × V3)) : Set (V3 × V3)) := by
+    rw [Set.Finite.coe_toFinset]; exact hd
+  refine ⟨?_, ?_, ?_⟩ <;>
+    simp only [Fan.hypermapOfFan, Fan.extendPerm, Equiv.ofBijective_apply, Fan.res, hnc,
+      if_false]
+
+theorem w6bcs_faceMap_iterate_fwd {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (n : ℕ) (i : Fin k) :
+    (Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).faceMap^[n]
+        (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i))
+      = (vecmatsV3_p4 l (finNext^[n] i), vecmatsV3_p4 l (finNext (finNext^[n] i))) := by
+  induction n with
+  | zero => rfl
+  | succ m ih =>
+    rw [Function.iterate_succ_apply', ih]
+    have hidx : vecmatsV3_p4 l (finNext^[m] i) = vecmatsV3_p4 l (finNext^[m] i) := rfl
+    rw [hidx]
+    rw [w6bcs_faceMap_apply hfan
+      (d := (vecmatsV3_p4 l (finNext^[m] i), vecmatsV3_p4 l (finNext (finNext^[m] i))))
+      (by simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+          exact ⟨finNext^[m] i, Set.mem_univ _, rfl⟩)]
+    rw [w6bcs_fFanPair_next l hsoe hne (finNext^[m] i), Function.iterate_succ_apply']
+
+theorem w6bcs_prev_iterate {k : ℕ} (n : ℕ) (i : Fin k) :
+    (w6bcs_prev)^[n] i = finNext^[n * (k - 1)] i := by
+  have hprev : ∀ x : Fin k, finNext^[k - 1] x = w6bcs_prev x := by
+    intro x
+    rw [w6bcs_finNext_iterate]
+    refine Fin.ext ?_
+    show ((x.val + (k - 1)) % k) = ((x.val + k - 1) % k)
+    exact congrArg (fun t : ℕ => t % k)
+      (Nat.add_sub_assoc (by have hx := x.isLt; omega) x.val).symm
+  rw [show (w6bcs_prev : Fin k → Fin k) = finNext^[k - 1] from
+      funext fun x => (hprev x).symm,
+    ← Function.iterate_mul, Nat.mul_comm]
+
+/-- Cyclic reachability of the predecessor shift. -/
+theorem w6bcs_prev_reach {k : ℕ} (i j : Fin k) :
+    ∃ n : ℕ, (w6bcs_prev)^[n] j = i := by
+  refine ⟨(j.val + k - i.val) % k, ?_⟩
+  rw [w6bcs_prev_iterate, w6bcs_finNext_iterate]
+  refine Fin.ext ?_
+  show ((j.val + ((j.val + k - i.val) % k) * (k - 1)) % k) = i.val
+  set n := (j.val + k - i.val) % k with hn
+  have h1 : ((j.val + k - i.val) % k) ≡ (j.val + k - i.val) [MOD k] :=
+    Nat.mod_modEq _ _
+  have h2 : i.val + n ≡ i.val + (j.val + k - i.val) [MOD k] := Nat.ModEq.add_left _ h1
+  have h3 : i.val + (j.val + k - i.val) = j.val + k := by omega
+  have h4 : i.val + n ≡ j.val [MOD k] := by
+    have hX : (i.val + (j.val + k - i.val)) ≡ j.val [MOD k] := by
+      rw [h3]
+      show ((j.val + k) % k) = (j.val % k)
+      exact Nat.add_mod_right j.val k
+    exact h2.trans hX
+  have h6 : n * (k - 1) + n ≡ 0 [MOD k] := by
+    show (n * (k - 1) + n) % k = (0 : ℕ) % k
+    have hik := i.isLt
+    have hjk := j.isLt
+    have hnk : (n * (k - 1) + n : ℕ) = n * k := by
+      have h1 := Nat.mul_add n (k - 1) 1
+      rw [Nat.mul_one] at h1
+      conv_rhs => rw [show ((k : ℕ)) = (k - 1) + 1 from by omega]
+      exact h1.symm
+    rw [hnk, Nat.mul_comm, Nat.mul_mod_right, Nat.zero_mod]
+  have h7 : j.val + (n * (k - 1) + n) ≡ j.val [MOD k] := by
+    have h7' := Nat.ModEq.add_left j.val h6
+    rw [Nat.add_zero] at h7'
+    exact h7'
+  have h8 : i.val + n ≡ j.val + (n * (k - 1) + n) [MOD k] := h4.trans h7.symm
+  have h9 : j.val + (n * (k - 1)) ≡ i.val [MOD k] := by
+    have h8' : j.val + (n * (k - 1) + n) ≡ i.val + n [MOD k] := h8.symm
+    rw [← Nat.add_assoc] at h8'
+    exact Nat.ModEq.add_right_cancel' n h8'
+  rw [← Nat.mod_eq_of_lt i.isLt]
+  exact h9
+
+theorem w6bcs_faceMap_iterate_rev {k : ℕ} (l : FinVec k 3)
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (n : ℕ) (i : Fin k) :
+    (Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).faceMap^[n]
+        (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)
+      = (vecmatsV3_p4 l (finNext ((w6bcs_prev)^[n] i)), vecmatsV3_p4 l ((w6bcs_prev)^[n] i)) := by
+  induction n with
+  | zero => rfl
+  | succ m ih =>
+    rw [Function.iterate_succ_apply', ih]
+    rw [w6bcs_faceMap_apply hfan
+      (d := (vecmatsV3_p4 l (finNext ((w6bcs_prev)^[m] i)),
+          vecmatsV3_p4 l ((w6bcs_prev)^[m] i)))
+      (by simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+          have hpc : {vecmatsV3_p4 l (finNext ((w6bcs_prev)^[m] i)),
+              vecmatsV3_p4 l ((w6bcs_prev)^[m] i)}
+            = {vecmatsV3_p4 l ((w6bcs_prev)^[m] i),
+                vecmatsV3_p4 l (finNext ((w6bcs_prev)^[m] i))} := Set.pair_comm _ _
+          rw [hpc]
+          exact ⟨(w6bcs_prev)^[m] i, Set.mem_univ _, rfl⟩)]
+    rw [w6bcs_fFanPair_prev l hsoe hne ((w6bcs_prev)^[m] i), Function.iterate_succ_apply',
+      w6bcs_finNext_prev]
+
+#print axioms Kepler.Text.w6bcs_faceMap_iterate_rev
+
+
+/-- Forward cyclic reachability. -/
+theorem w6bcs_finNext_reach {k : ℕ} (i j : Fin k) :
+    ∃ n : ℕ, finNext^[n] i = j := by
+  refine ⟨(j.val + k - i.val) % k, ?_⟩
+  rw [w6bcs_finNext_iterate]
+  refine Fin.ext ?_
+  show ((i.val + ((j.val + k - i.val) % k)) % k) = j.val
+  have h1 : ((j.val + k - i.val) % k) ≡ (j.val + k - i.val) [MOD k] := Nat.mod_modEq _ _
+  have h2 : i.val + ((j.val + k - i.val) % k) ≡ i.val + (j.val + k - i.val) [MOD k] :=
+    Nat.ModEq.add_left _ h1
+  have h3 : i.val + (j.val + k - i.val) = j.val + k := by omega
+  have h4 : i.val + ((j.val + k - i.val) % k) ≡ j.val [MOD k] := by
+    have hX : (i.val + (j.val + k - i.val)) ≡ j.val [MOD k] := by
+      rw [h3]
+      show ((j.val + k) % k) = (j.val % k)
+      exact Nat.add_mod_right j.val k
+    exact h2.trans hX
+  conv_rhs => rw [← Nat.mod_eq_of_lt j.isLt]
+  exact h4
+
+/-- Under `FAN` the `_p4` hypermap is the importable `hypermapOfFan`. -/
+theorem w6bcs_hyp_eq {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E) :
+    hyp_p4 0 V E = Fan.hypermapOfFan 0 V E hfan := by
+  unfold hyp_p4
+  split
+  · have hp : Fan.FAN 0 V E := ‹Fan.FAN 0 V E›
+    exact congrArg _ (Subsingleton.elim hp hfan)
+  · have hn : ¬Fan.FAN 0 V E := ‹¬Fan.FAN 0 V E›
+    exact absurd hfan hn
+
+/-- The face of the `F_SY` hypermap at any forward dart is all of `F_SY`
+(HOL `F_SY_EQ_FACE` station; LA4's twin is a sorry giant, reproved here). -/
+theorem w6bcs_face_fwd {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (i : Fin k) :
+    face_p4 (hyp_p4 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+        (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i))
+      = F_SY_p4 (vecmatsV3_p4 l) := by
+  rw [w6bcs_hyp_eq hfan]
+  ext y
+  constructor
+  · rintro ⟨hmem, ⟨n, hn⟩⟩
+    rw [w6bcs_faceMap_iterate_fwd l hsoe hne hfan n i] at hn
+    subst hn
+    exact ⟨finNext^[n] i, Set.mem_univ _, rfl⟩
+  · rintro ⟨j, -, rfl⟩
+    obtain ⟨n, hn⟩ := w6bcs_finNext_reach i j
+    have hd : (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j))
+        ∈ ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts :
+            Set (V3 × V3)) := by
+      rw [w6bcs_darts_coe hfan]
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      exact ⟨j, Set.mem_univ _, rfl⟩
+    have hit := w6bcs_faceMap_iterate_fwd l hsoe hne hfan n i
+    rw [hn] at hit
+    exact ⟨hd, n, hit⟩
+
+/-- The face at any reverse dart is the reverse-dart set (HOL
+`F_SY_EQ_FACE1` station). -/
+theorem w6bcs_face_rev {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i))
+    (j : Fin k) :
+    face_p4 (hyp_p4 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+        (vecmatsV3_p4 l (finNext j), vecmatsV3_p4 l j)
+      = (fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ := by
+  rw [w6bcs_hyp_eq hfan]
+  ext y
+  constructor
+  · rintro ⟨hmem, ⟨n, hn⟩⟩
+    rw [w6bcs_faceMap_iterate_rev l hsoe hne hfan n j] at hn
+    subst hn
+    exact ⟨(w6bcs_prev)^[n] j, Set.mem_univ _, rfl⟩
+  · rintro ⟨i, -, rfl⟩
+    obtain ⟨n, hn⟩ := w6bcs_prev_reach i j
+    have hd : (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)
+        ∈ ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts :
+            Set (V3 × V3)) := by
+      rw [w6bcs_darts_coe hfan]
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      rw [Set.pair_comm]
+      exact ⟨i, Set.mem_univ _, rfl⟩
+    have hit := w6bcs_faceMap_iterate_rev l hsoe hne hfan n j
+    rw [hn] at hit
+    exact ⟨hd, n, hit⟩
+
+/-- `nodeMap` sends the forward darts onto the reverse darts. -/
+theorem w6bcs_nodeMap_image_fwd {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i)) :
+    (Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).nodeMap ''
+        F_SY_p4 (vecmatsV3_p4 l)
+      = (fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ := by
+  ext y
+  constructor
+  · rintro ⟨d, hd, hnd⟩
+    obtain ⟨i, -, rfl⟩ := hd
+    have hd1 : (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i)) ∈ Fan.dart1OfFan
+        (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      exact ⟨i, Set.mem_univ _, rfl⟩
+    rw [w6bcs_nodeMap_apply hfan _ hd1, w6bcs_nFanPair_next l hsoe hne i] at hnd
+    refine ⟨w6bcs_prev i, Set.mem_univ _, ?_⟩
+    show (vecmatsV3_p4 l (finNext (w6bcs_prev i)), vecmatsV3_p4 l (w6bcs_prev i)) = y
+    rw [w6bcs_finNext_prev]
+    exact hnd
+  · rintro ⟨i, -, rfl⟩
+    refine ⟨(vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l (finNext (finNext i))),
+      ⟨finNext i, Set.mem_univ _, rfl⟩, ?_⟩
+    have hd1 : (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l (finNext (finNext i))) ∈ Fan.dart1OfFan
+        (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      exact ⟨finNext i, Set.mem_univ _, rfl⟩
+    dsimp only
+    rw [w6bcs_nodeMap_apply hfan _ hd1, w6bcs_nFanPair_next l hsoe hne (finNext i),
+      w6bcs_prev_finNext]
+
+/-- `nodeMap` sends the reverse darts onto the forward darts. -/
+theorem w6bcs_nodeMap_image_rev {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hsoe : ∀ i : Fin k,
+      Fan.setOfEdge (vecmatsV3_p4 l i) (V_SY_p4 (vecmatsV3_p4 l))
+        (E_SY_p4 (vecmatsV3_p4 l)) = {vecmatsV3_p4 l (w6bcs_prev i), vecmatsV3_p4 l (finNext i)})
+    (hne : ∀ i : Fin k, vecmatsV3_p4 l (w6bcs_prev i) ≠ vecmatsV3_p4 l (finNext i)) :
+    (Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).nodeMap ''
+        ((fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ)
+      = F_SY_p4 (vecmatsV3_p4 l) := by
+  ext y
+  constructor
+  · rintro ⟨d, hd, hnd⟩
+    obtain ⟨i, -, rfl⟩ := hd
+    have hd1 : (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i) ∈ Fan.dart1OfFan
+        (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      rw [Set.pair_comm]
+      exact ⟨i, Set.mem_univ _, rfl⟩
+    rw [w6bcs_nodeMap_apply hfan _ hd1, w6bcs_nFanPair_prev l hsoe hne i] at hnd
+    exact ⟨finNext i, Set.mem_univ _, hnd⟩
+  · rintro ⟨j, -, rfl⟩
+    refine ⟨(vecmatsV3_p4 l (finNext (w6bcs_prev j)), vecmatsV3_p4 l (w6bcs_prev j)),
+      ⟨w6bcs_prev j, Set.mem_univ _, rfl⟩, ?_⟩
+    have hd1 : (vecmatsV3_p4 l (finNext (w6bcs_prev j)), vecmatsV3_p4 l (w6bcs_prev j))
+        ∈ Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) := by
+      simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      show ({vecmatsV3_p4 l (finNext (w6bcs_prev j)), vecmatsV3_p4 l (w6bcs_prev j)} : Set V3)
+          ∈ E_SY_p4 (vecmatsV3_p4 l)
+      rw [Set.pair_comm]
+      exact ⟨w6bcs_prev j, Set.mem_univ _, rfl⟩
+    dsimp only
+    rw [w6bcs_nodeMap_apply hfan _ hd1, w6bcs_nFanPair_prev l hsoe hne (w6bcs_prev j),
+      w6bcs_finNext_prev]
+
+/-- `dart1OfFan` splits into the forward and reverse `F_SY` darts. -/
+theorem w6bcs_dart1_eq {k : ℕ} (l : FinVec k 3) (hk1 : 1 < k)
+    (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j) :
+    Fan.dart1OfFan (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))
+      = F_SY_p4 (vecmatsV3_p4 l)
+        ∪ ((fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ) := by
+  ext d
+  have hfinnextne : ∀ j : Fin k, finNext j ≠ j := by
+    intro j hjj
+    have hval : ((j.val + 1) % k) = j.val := congrArg Fin.val hjj
+    rcases Nat.lt_or_ge (j.val + 1) k with hlt | hge
+    · rw [Nat.mod_eq_of_lt hlt] at hval
+      omega
+    · have hke : j.val + 1 = k := le_antisymm (by have := j.isLt; omega) hge
+      rw [hke, Nat.mod_self] at hval
+      have hij := j.isLt
+      omega
+  constructor
+  · intro hd
+    simp only [Fan.dart1OfFan, Set.mem_setOf_eq] at hd
+    obtain ⟨j, -, hj⟩ := hd
+    have hj' : ({vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)} : Set V3) = {d.1, d.2} := hj
+    have hd1 : d.1 ∈ ({d.1, d.2} : Set V3) := Set.mem_insert _ _
+    have hd2 : d.2 ∈ ({d.1, d.2} : Set V3) := Set.mem_insert_of_mem _ rfl
+    rw [← hj'] at hd1 hd2
+    rcases Set.mem_insert_iff.mp hd1 with h1 | h1
+    · rcases Set.mem_insert_iff.mp hd2 with h2 | h2
+      · rw [h1, h2] at hj'
+        have hsin : ({vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)} : Set V3)
+            ≠ {vecmatsV3_p4 l j, vecmatsV3_p4 l j} := by
+          intro hcon
+          have hm : vecmatsV3_p4 l (finNext j) ∈ ({vecmatsV3_p4 l j, vecmatsV3_p4 l j} : Set V3) := by
+            rw [← hcon]
+            exact Set.mem_insert_of_mem _ rfl
+          rcases Set.mem_insert_iff.mp hm with hme | hme
+          · exact hfinnextne j (hinj _ _ hme)
+          · rw [Set.mem_singleton_iff] at hme
+            exact hfinnextne j (hinj _ _ hme)
+        exact absurd hj' hsin
+      · exact Or.inl ⟨j, Set.mem_univ _, by
+          show (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)) = (d.1, d.2)
+          rw [h1, h2]⟩
+    · rcases Set.mem_insert_iff.mp hd2 with h2 | h2
+      · exact Or.inr ⟨j, Set.mem_univ _, by
+          show (vecmatsV3_p4 l (finNext j), vecmatsV3_p4 l j) = (d.1, d.2)
+          rw [h1, h2]⟩
+      · rw [h1, h2] at hj'
+        have hsin : ({vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)} : Set V3)
+            ≠ {vecmatsV3_p4 l (finNext j), vecmatsV3_p4 l (finNext j)} := by
+          intro hcon
+          have hm : vecmatsV3_p4 l j ∈ ({vecmatsV3_p4 l (finNext j), vecmatsV3_p4 l (finNext j)} : Set V3) := by
+            rw [← hcon]
+            exact Set.mem_insert _ _
+          rcases Set.mem_insert_iff.mp hm with hme | hme
+          · exact hfinnextne j (hinj _ _ hme.symm)
+          · exact hfinnextne j (hinj _ _ hme.symm)
+        exact absurd hj' hsin
+  · rintro (⟨j, -, rfl⟩ | ⟨j, -, rfl⟩)
+    · simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      exact ⟨j, Set.mem_univ _, rfl⟩
+    · simp only [Fan.dart1OfFan, Set.mem_setOf_eq]
+      rw [Set.pair_comm]
+      exact ⟨j, Set.mem_univ _, rfl⟩
+
+
+/-- Set-level dart membership through the `hypermapOfFan` coe. -/
+theorem w6bcs_darts_mem {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E)
+    {x : V3 × V3} (hx : x ∈ Fan.dart1OfFan V E) :
+    x ∈ ((Fan.hypermapOfFan 0 V E hfan).darts : Set (V3 × V3)) := by
+  exact w6bcs_darts_coe hfan ▸ hx
+
+/-- `↑darts = F_SY ⊔ reverse-F_SY`. -/
+theorem w6bcs_darts_eq {k : ℕ} (l : FinVec k 3)
+    (hfan : Fan.FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
+    (hk2 : 2 < k) (hinj : ∀ i j : Fin k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j) :
+    ((Fan.hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts :
+        Set (V3 × V3))
+      = F_SY_p4 (vecmatsV3_p4 l)
+        ∪ ((fun i : Fin k => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ) := by
+  rw [w6bcs_darts_coe hfan]
+  exact w6bcs_dart1_eq l (by omega) hinj
+
+
+
+end W6bKit
+
 end Kepler.Text
