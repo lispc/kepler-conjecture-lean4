@@ -33,6 +33,20 @@
 - **`set_option maxHeartbeats` 超过 400000 必须在报告附 profile 证据**（哪条战术、为何
   合法地重、`sample`/`diagnostics` 读数）。没有证据的抬预算视为掩盖 unifier 烧穿
   （kchmam6 给 `KCHMAMG_thm_p35` 抬到 30,000,000，实际修好后 < 400,000），编排者打回。
+- **禁 `open Classical`（含 `open Classical in` 局部形式）**：需可判定性用 `classical` tactic
+  （W6c kit 两处 `open Classical in` 被编排者剥离后才落库；LA1/LA26/LA37 头部的遗留
+  `open … Classical` 不得效仿——其副作用是 `#print axioms` 把 `Classical.choice` 打印为 `choice`）。
+- **kit 只含整文件 RC=0 的内容**：修不完的件连同仅它们消费的助件移 `Kit-draft-<lane>.lean`
+  （禁 sorry 占位），kit 中目标体恢复原 `sorry`。含编译错误的 kit 整单打回（w6b 首 kit 13 错）。
+- **零新 import 为默认**：确需新 import 须附 BFS 无环证明 + 全文件漂移核（import 前后 warning
+  谱面逐条一致 + ≥10 件既有件 `#print axioms` 零漂移）+ grep 新进闭包模块公开名与下游重名
+  （同文件加 import 不是行为保持变换，见 §6 2026-11-02/03）。
+- **搬债审计以 `docs/e2e-reachability-map.tsv` 地图行为准**（`grep <name>`，0 行 = 不在锥），
+  不得以 import 闭包替代；体内新引用的每个 sorried 件都要查。
+- **截断探针须落在声明边界**（`head -n` 切在 docstring/证明中间制造假错）。
+- **交付平铺在 `$S/<lane>/` 根下**，不要再建同名子目录。
+- **报告里的计数附命令原文与读数**（`grep -c ': error:'`、`grep -c 'declaration uses \`sorry\`'`
+  带反引号）；编排者按日志复核，不按自报。
 
 ## 2. 效率纪律（每条都来自真实战报的教训，见 §6）
 
@@ -669,6 +683,36 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
   18 已应用 `54fe4ee2`）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
+
+### 2026-11-02/03 · bodyClosed/pm12 双程序收官 + scsgeneric 四形变塔开工（queue 续 150–244）
+
+- **同文件 `import` 追加不是行为保持变换**（W7a 实证）：`import LocalAuto5` 经 BFS 确认无环，但整文件
+  重编后 15 件既有声明的 `DecidableEq` 实例漂移、一件吸入 sorryAx；LA23 `+import CircularSolKit` 把
+  AzimBridge 带进 LA35 闭包，与 LA35 内同名 `localFanLA3TwoNbr_p35` 撞车（`has already been declared`）。
+  BFS 无环只是必要条件——新 import 一律配**全文件漂移核**（warning 谱面逐条一致 + ≥10 件既有件
+  `#print axioms` 零漂移）+ 新进闭包模块公开名 grep 重名。
+- **失败/中断的子代理可直接续**：API quota 杀掉三车道、EPIPE 杀掉一车道，全部用 SendMessage 到原
+  agentId 恢复，上下文完整、无需重发工单。重发新车道 = 白扔已花预算。
+- **栈落库多重集差法**（pm12 stack9 落 LA35，+7130/−6）：cp 栈 → 仓文件之前先算
+  `Counter(repo_lines) − Counter(stack_lines)`——`diff` 对大块插入会错配，报 237 行删除实为 6 行
+  （根 `sorry` + 5 行去重注记）；多重集差 + 冻结签名逐字比对才是无损证明。
+- **裁定 E 实操**：纯 sorry 根的归因探针恒为 {self, mnt11}，债锥须按 HOL 路线重建；闭
+  `coplanar_aff_gt_simple_p18` / `GSXRFWM1_p33` / JKQEWGV 全族 / `RRCWNSJ_p26` 都**不改 e2e**
+  （非直源），e2e 只在消费行装配时动。搬债预估必须查地图行（`docs/e2e-reachability-map.tsv`），
+  sg-w4b 报「净 −1」实为 0 即此坑。
+- **kit 纪律首次受检（W5c-B）**：LA37 六件目标体草稿四轮迭代未达 RC=0，车道正确地只交 1 件进 kit、
+  其余 15 助件 + 6 体入 `Kit-draft-w5cB.lean`（零 sorry 占位）；编排者据 draft 发 B2 续作。对照 w6b
+  首 kit 13 错整单打回——「kit 只含整文件 RC=0 内容」是硬线。
+- **助件块必须放在首个消费者之前**：LA23 w5sg3 块后置，w5b4 被迫逐字复制 14 件为 `w5sg4_*`，
+  留下去重卫生债。
+- **闸时长按根侧消费者分层**：LA14（无根消费者）30 s / LA37（← LocalConcl 根）4 min / LA35 ~18 min
+  + 七根 / LA1、LA23（深层）20 min。同锚二次 kit `git apply` 无 fuzz 会被拒——用 `patch -p1`；
+  杀闸进程链安全（mkdir 锁随 `lock_build` 返回释放）；macOS 无 `setsid`，用 `(nohup bash -c '…' &)`。
+- **车道自报计数不可信，以日志复核**：件数（sg-w2 报 11 实 9）、错误数（w5cB 报 30 实 49）、
+  嵌套交付目录（w6a/w6b/w3/feedfree-w2 四例 `$S/<lane>/<lane>/`）。
+- **U+FFFD 乱码**：编排者中文输出偶发 U+FFFD 进文档（三次修复）；`grep -c $'\xEF\xBF\xBD'` 计行
+  不计字（queue :250 一行两字），比对基线用 python 字符计数。
+- **W5c-F/A 的交付口径**：低于验收期望（A 报 5/≥9）时如实入账、余件进下波工单，不凑数。
 
 ### 2026-11-01 · 深水合龙与落仓手术波（queue 续 132–149）
 
