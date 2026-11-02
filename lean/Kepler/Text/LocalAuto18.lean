@@ -552,6 +552,125 @@ theorem coplanar_cross_reduction_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i 
   -- AFFINE_HULL_3_GENERATED / periodic-image machinery (HOL proof
   -- IUNBUIG.hl:486-660).
 
+/-- In-plane azimuth dichotomy (HOL `AZIM_COND_FOR_COPLANAR` consumption
+shape): a point of the linear plane through `0`, `a`, `b` sits at azimuth
+`0` or `π`. Adapted from the `lkgrqui-sectortri-asm-w3` kit item. -/
+private theorem w4sg_azim_plane_p18 {a b x : V3} (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hnc : ¬ Collinear3 0 a b) (hx : ∃ s t : ℝ, x - 0 = s • (a - 0) + t • (b - 0)) :
+    azim 0 a b x = 0 ∨ azim 0 a b x = Real.pi := by
+  obtain ⟨s, t, hx'⟩ := hx
+  by_cases hcolx : Collinear3 0 a x
+  · exact Or.inl (by rw [azim, if_pos (Or.inr hcolx)])
+  rcases lt_trichotomy t 0 with ht0 | ht00 | ht1
+  · -- negative side: azimuth π (frame computation)
+    have hge : (0:ℝ) ≤ azim 0 a b x := azim_nonneg 0 a b x
+    have hlt : azim 0 a b x < 2 * Real.pi := azim_lt_two_pi 0 a b x
+    obtain ⟨e1, e2, e3, hon, hal⟩ := exists_on3_eq_smul (a - 0) (sub_ne_zero.mpr ha0)
+    have hax : (a - 0 : V3) = dist a 0 • e3 := by rw [dist_eq_norm]; exact hal
+    obtain ⟨ψ, r1, r2, hr1, hr2, hzb, hzx⟩ := azim_frame_spec hnc hcolx hon hax
+      (by simpa using ha0)
+    have hza : zOf e1 e2 (a - 0) = 0 := zOf_axis hax hon
+    have hlin : zOf e1 e2 (x - 0) = (t:ℂ) * zOf e1 e2 (b - 0) := by
+      rw [hx', zOf_add, zOf_smul, zOf_smul, hza, mul_zero, zero_add]
+    have hexp : Complex.exp (((Real.pi:ℝ):ℂ) * Complex.I) = -1 := Complex.exp_pi_mul_I
+    have hkey : (r2:ℂ) * Complex.exp (((ψ + azim 0 a b x : ℝ):ℂ) * Complex.I)
+        = (((-t) * r1 : ℝ):ℂ) * Complex.exp (((ψ + Real.pi : ℝ):ℂ) * Complex.I) := by
+      have hex : Complex.exp (((ψ + Real.pi : ℝ):ℂ) * Complex.I)
+          = Complex.exp (((ψ:ℝ):ℂ) * Complex.I) * (-1) := by
+        have hsplit : ((ψ + Real.pi : ℝ):ℂ) * Complex.I
+            = ((ψ:ℝ):ℂ) * Complex.I + ((Real.pi:ℝ):ℂ) * Complex.I := by
+          rw [Complex.ofReal_add]
+          ring
+        rw [hsplit, Complex.exp_add, hexp]
+      rw [← hzx, hlin, hzb, hex]
+      push_cast
+      ring
+    have hexeq : Complex.exp (((ψ + azim 0 a b x : ℝ):ℂ) * Complex.I)
+        = Complex.exp (((ψ + Real.pi : ℝ):ℂ) * Complex.I) :=
+      exp_pos_mul_eq hr2 (mul_pos (by linarith : (0:ℝ) < -t) hr1) hkey
+    obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hexeq
+    have hθ : azim 0 a b x = Real.pi + (n:ℝ) * (2 * Real.pi) := by
+      have h4 := hn
+      push_cast at h4
+      rw [add_mul, add_mul] at h4
+      have h5 : ((azim 0 a b x : ℝ):ℂ) * Complex.I
+          = ((Real.pi:ℝ):ℂ) * Complex.I
+            + ((n:ℂ) * (2 * ((Real.pi:ℝ):ℂ) * Complex.I)) := by
+        linear_combination h4
+      have h6 : (((azim 0 a b x : ℝ) - Real.pi : ℝ):ℂ) * Complex.I
+          = ((n:ℂ) * (2 * ((Real.pi:ℝ):ℂ))) * Complex.I := by
+        rw [Complex.ofReal_sub]
+        linear_combination h5
+      have h10 := mul_right_cancel₀ Complex.I_ne_zero h6
+      have h11 := congrArg Complex.re h10
+      simp only [Complex.ofReal_re, Complex.mul_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im, mul_zero, sub_zero] at h11
+      norm_num at h11
+      linarith
+    have hπ0 : (0:ℝ) < Real.pi := Real.pi_pos
+    have h2π : (0:ℝ) < 2 * Real.pi := by linarith
+    rcases Int.lt_trichotomy n 0 with hn0 | hn00 | hn1
+    · exfalso
+      have hnle : ((n:ℤ):ℝ) ≤ ((-1:ℤ):ℝ) := Int.cast_le.mpr (by omega)
+      simp only [Int.cast_neg, Int.cast_one] at hnle
+      have hmul : (2:ℝ) * Real.pi * ((n:ℤ):ℝ) ≤ (2:ℝ) * Real.pi * (-1) :=
+        mul_le_mul_of_nonneg_left hnle h2π.le
+      rw [hθ] at hge
+      nlinarith [hmul, hπ0]
+    · refine Or.inr ?_
+      rw [hθ, hn00]
+      push_cast
+      ring
+    · exfalso
+      have hnge : ((1:ℤ):ℝ) ≤ ((n:ℤ):ℝ) := Int.cast_le.mpr (by omega)
+      simp only [Int.cast_one] at hnge
+      have hmul : (2:ℝ) * Real.pi * 1 ≤ (2:ℝ) * Real.pi * ((n:ℤ):ℝ) :=
+        mul_le_mul_of_nonneg_left hnge h2π.le
+      rw [hθ] at hlt
+      nlinarith [hmul, hπ0]
+  · -- t = 0: x on the axis
+    exfalso
+    simp only [ht00, zero_smul, add_zero] at hx'
+    exact hcolx ((collinear3_iff_smul ha0).mpr ⟨s, hx'⟩)
+  · -- positive side: azimuth 0
+    refine Or.inl ((azim_eq_zero_iff_alt hnc hcolx).mpr ?_)
+    refine (affGt_pair_iff (v0 := (0:V3)) (v1 := a) (x := b) (y := x)
+      (Ne.symm ha0) hb0 (fun he => hnc (by rw [he]; exact collinear3_pair_right rfl))).mpr
+      ⟨t, ht1, s, by rw [hx']; module⟩
+
+/-- `BBsV39` under `3 < k` yields the periodicity and the fan at the
+origin (structural projections of `ConvexLocalFan`/`LocalFan`). -/
+private theorem w4sg_bbs_fan_p18 {s : ScsV39} {k : ℕ} {v : ℕ → V3}
+    (hk : s.k = k) (hk₃ : 3 < k) (hBB : BBsV39 s v) :
+    Periodic v k ∧
+      Kepler.Text.Fan.FAN 0 (Set.range v) (Set.range fun j => {v j, v (j + 1)}) := by
+  obtain ⟨-, hper, -, hclf⟩ := hBB
+  rcases hclf with hle | hclf
+  · omega
+  · obtain ⟨hLF, -⟩ := hclf
+    obtain ⟨hfan, -⟩ := hLF
+    exact ⟨by rw [← hk]; exact hper, hfan⟩
+
+-- W4 (lane scsgeneric-w4) wave 1: real staging kit toward this theorem.
+-- The three w4sg_* lemmas above are real (axioms = standard three):
+--   * w4sg_azim_plane_p18  - in-plane azimuth dichotomy (the
+--     AZIM_COND_FOR_COPLANAR consumption shape; LA6's sorried giant is
+--     out of the import closure, this is the plane-through-0 case);
+--   * w4sg_azim_pi_mem_p18 - azim = pi places w1 in affineSpan {v0, v1, w2};
+--   * w4sg_bbs_fan_p18     - BBsV39 + 3 < k gives Periodic + FAN 0
+--     (range v) (range edges) via ConvexLocalFan/LocalFan projections.
+-- Wave-2 gap (HOL IUNBUIG.hl:672-906, still open):
+--   * EGHNAVX_COLL_SCS_p18 (in-file sorried giant) supplies conclusions
+--     2/3/4/5; FEKTYIY_p27 (LA27, sorried, in-closure) supplies the
+--     case-2 non-coplanarity contradiction; both are already in the e2e
+--     cone, so assembling with them is net -1 with zero new sorries;
+--   * still to port: w4sg_periodic_shift (periodicity window shift),
+--     w4sg_coplanar_mem_span (the la5_coplanar_diff_span-style span
+--     argument, LA5/PackingAuto4 shapes in-closure), the barycentric
+--     goal-builder via Affsign.of_triple, and the two-case assembly
+--     (fan6 edge kit + hcol give all non-collinearity instances; no
+--     injectivity lemma is needed - degenerate sub-cases die via the
+--     azim definition's collinear branches).
 /-- HOL `coplanar_aff_gt_simple` (IUNBUIG.hl:663). Giant. -/
 theorem coplanar_aff_gt_simple_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i : ℕ)
     (his : isScsV39 s) (hk : s.k = k) (hk₃ : 3 < k) (hMM : v ∈ MMsV39 s)
