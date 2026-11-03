@@ -111,3 +111,4 @@ import Kepler.Graphs.Sanity
 import Kepler.Graphs
 -- Phase 5: 文字证明移植 —— hypermap 核心定义层
 import Kepler.Text.Hypermap
+import Kepler.Text.HypermapConcl

@@ -181,7 +181,15 @@ def mainRun : CoreM Unit := do
   let e2e : Name := `Kepler.Assembly.the_kepler_conjecture_from_interfaces
   let manual : Array Name := #[
     `Kepler.Text.OXLZLEZ,
-    `Kepler.Text.PACKING_CHAPTER_MAIN_CONCLUSION]
+    `Kepler.Text.PACKING_CHAPTER_MAIN_CONCLUSION,
+    -- hypermap 章结论根（lane hypermap-root-w1，工单 hypermap-mat-scout §3 候选 1
+    -- + §5；HOL more_tame_concl.hl:276/:286/:423/:425/:428 五别名，见
+    -- Kepler/Text/HypermapConcl.lean）
+    `Kepler.Text.QRDYXYJ,
+    `Kepler.Text.AQIUNPP1,
+    `Kepler.Text.ZBHENEI_hypermap,
+    `Kepler.Text.XWCNBMA_hypermap,
+    `Kepler.Text.STKBEPH_hypermap]
   let e1 := scan1 env
   let pck := sortNames e1.pck
   let loc := sortNames e1.loc
