@@ -100,6 +100,20 @@
   PA16 `QZYZMJC` 1 / PA2 `GRUTOTI1_concl` 1 / LocalConcl 1 / 其余 LA 单条若干。
   在飞批 2 直接瞄准其中 QZYZMJC 与 GRUTOTI1_concl。
 
+### 基线 D：批 2 首笔落库 `ed6b5a1e`（PA25 B0 replay）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH | **2,078,646**（较基线 C +141） |
+| K_SORRIED | **112**（−11 = PA25 B0 的 11 直源） |
+| K_AXIOM | 624 |
+| K_UNIVERSE | 2,094,306 |
+| COVERAGE | 99.25%（2,078,646 / 2,094,306） |
+
+- PA25 `real_model_*` 直源 30 → 19；poolc-w4/w5/w6 的 11 条重放件 + 5 条 kit 件全标准三
+  （验证车道 `pa25-b0-replay` 判决 GO，编排者过闸）。批 2 另两条（PA16 `QZYZMJC` /
+  PA2 `GRUTOTI1_concl`）在飞，落库后预计 112 → 110。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的

@@ -1,13 +1,13 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2078505
-K_SORRIED 123
+K_REACH 2078646
+K_SORRIED 112
 K_AXIOM 624
 K_MODULES 4171
-K_UNIVERSE 2094279
-COVERAGE 2078505 / 2094279
-TOTAL_VALUE_DECLS 2077803
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2077803
-SORRIED 123
+K_UNIVERSE 2094306
+COVERAGE 2078646 / 2094306
+TOTAL_VALUE_DECLS 2077944
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2077944
+SORRIED 112
 AXIOMS 624
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
@@ -106,22 +106,11 @@ Kepler.Text.PackingAuto25	Kepler.Text.cc_prep_model_data	parent=Kepler.Text.LEAF
 Kepler.Text.PackingAuto25	Kepler.Text.ox3q1hP25	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankAzimPointwise	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankCriticalEdge	parent=Kepler.Text.LEAF_RANK_PROPS
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_3a	parent=Kepler.Text.pkrmQy
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_3b	parent=Kepler.Text.pkrmQy
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_azim1	parent=Kepler.Text.pkrmQu
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_azim2	parent=Kepler.Text.pkrmQx
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_cell23	parent=Kepler.Text.pkrmQy
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_fhbv2_sym	parent=Kepler.Text.pkrmQu
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_g_qxd	parent=Kepler.Text.pkrmQx
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_gamma10	parent=Kepler.Text.pkrmQx
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_gamma11	parent=Kepler.Text.pkrmQx
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_gamma8	parent=Kepler.Text.pkrmQx
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_gamma8b	parent=Kepler.Text.pkrmQx
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_gamma_qu	parent=Kepler.Text.pkrmQu
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_gamma_qx	parent=Kepler.Text.pkrmQx
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_gaz4	parent=Kepler.Text.pkrmQu
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_gaz6	parent=Kepler.Text.pkrmQu
-Kepler.Text.PackingAuto25	Kepler.Text.real_model_gaz9	parent=Kepler.Text.pkrmQx
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_gckb	parent=Kepler.Text.pkrmAzim
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_gr	parent=Kepler.Text.pkrmQy
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_ox3q1h_merge	parent=Kepler.Text.pkrmQuarter
