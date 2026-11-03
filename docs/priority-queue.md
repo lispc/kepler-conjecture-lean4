@@ -22,13 +22,14 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-03 深夜，池 **3/3**：certtm-root-w1 / hypermap-root-w1 / la35-root-w1——物化三侦察已收工，落地波接棒在飞；批 1 四车道与 orphan-scout 量尺已全部收工）
+## 1. 在飞（2026-11-03 深夜，池 **3/3**：hypermap-root-w1 / la35-root-w1 / island-wire-w1（§2-16 接线波，certtm-root-w1 落库后补位发车）；物化三侦察与 certtm 落地波已收工）
 
 > 批 1（用户指令「pa15, pa19, terminal11 t0, pa25 各一条」）四车道全部收工：PA19 落库 `a34cb699`（续 255）、PA25 归档 `ceef5a91`（续 256）、PA15 落库 `f8b3e46f` + T0 落库 `a522078c`（续 257）。批 2 选题原则 = 用户拍板的「最快增大 e2e tree」（2026-11-03 晚）；`orphan-scout` 量尺车道产出榜单后，批 3 起按「预期新节点 ÷ agent 时」选槽。
 
 | 车道 | 任务 | 文件 | 状态 |
 |---|---|---|---|
 | `certtm-root-w1` | CertTM 落地波：R1/R2 根候选登记复验 + CertG 消费边勘定（禁造边，无锚即 NO-GO） | Interval.CertTM 侧（docs-only） | **完成（2026-11-03 · 续 265：W1 完成（R1+R2 精确 union +110，修正 +121）；W2 诚实 NO-GO——锥内消费边锚不成立，根候选归档 `docs/lane-archives/certtm-root/` 待 TM3/Mono\* 重锚）** |
+| `island-wire-w1` | §2-16 孤儿岛接入：Text.LP + 8 个零 import 消费者单文件（锚 = orphan-scout §1 锚表；逐文件 GO/NO-GO，禁造边；TameSpine 排除） | 按锚定文件面（可能含两脚本根清单/Kepler.lean，与 hypermap kit 有重叠声明） | **在飞（续 265 后补位发车）** |
 | `hypermap-root-w1` | HypermapConcl 五章别名 verbatim 正本根（+1,143）+ Kepler.lean import + 两脚本根清单 | HypermapConcl（新）+ Kepler.lean + 2 脚本 | **在飞（本笔发车）** |
 | `la35-root-w1` | `la35_wire_capstone_w1` 88 出口合取（生成器机械抽签名）+ w2 保型转发 + Assembly 一行 re-point（+453） | LocalConcl + Assembly | **在飞（本笔发车）** |
 | `pa16-qzyzmjc` | 闭 `QZYZMJC`（锥内真源，父边 KIZHLTL2） | PackingAuto16 | **完成（2026-11-03 · 续 262，`2dea72f0`）** |
