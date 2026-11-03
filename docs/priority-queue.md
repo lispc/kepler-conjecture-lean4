@@ -114,6 +114,8 @@
 11. `完成（2026-10-28 · 644ad2a7…ef5dc842 十二提交，12/12 闸 PASS）` **SF-63..74 LA1 注册表误植十二连修**；遗留接线微波：63/69/71/73 修后各一行转 PROVED（LocalConcl 支），随下一编译窗（fixscout-w1 勘察 2026-10-28，编排者依 SF 常态化授权裁决 **12/12 判 A** 直接执行）：定性翻案——「形状差」非 Lean 侧误植，而是 HOL 语料内部 appendix 摘要 let ↔ corpus 原证的转写漂移，归正一律以 corpus 证明文件为准（VPWSHTO/QKNVMLB×3/YXIONXL2/LKGRQUI/TBRMXRZ1/SYNQIWN/XWNHLMD/CQAOQLR/OEHDBEN/LFLACKU）；63/69/71/73 修后可 1 行接线转 PROVED，消费面全为出口级零代码消费者。**执行序列：SF-59..62 链毕后接 63..74 串行链**（工作树单态约束；链毕先 apply --check 复验行锚）；SF-69（TBRMXRZ1）误判风险最高，闸上以 LA22 已证孪生逐字复核。patches 12/12 过 apply --check。
 12. `已批·闸排队` **SF-75**（PA25 betabump 填体+sym23 证填，双 hunk 一闸 THM=`beta_bumpA_y_sym23`）与 **SF-76**（GG_MCELL_GENERAL 证填 + ztg4 装配，e3f35a8c 立案，patch 待 75 落定后构建）——串行执行，ztg4 闭合 = **锥 −1**；SF-76 草案 122 行全真证 + 233 真证:2 sorry，编译窗估 6-9h（lane_snapshots/sf76draft-w1/）。
 
+13. `已裁（2026-11-03）` **hNL/mnt 机器方案 + 下一批车道**（用户「本机暂不允许重型计算 … mnt/rest 暂时不跑；先不要启动任何 sub agents，讨论确认后再启动」）：证书农场全面暂停（含 T0）；池 0/3 持位，下一批由编排者提案、用户逐批确认后发；两程序槽归属问题随之失效（三槽默认 LA 侧）。详见 DECISIONS.md 2026-11-03。
+
 ## 7. 文档/代码卫生（2026-10-25 盘点）
 
 - ~~e2e-debt-map.md 自称"现行度量文件"~~ → 已加存档标记（本日）。
