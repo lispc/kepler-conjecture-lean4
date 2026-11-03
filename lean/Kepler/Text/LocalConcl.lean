@@ -3542,6 +3542,576 @@ standard-three axiom face (scout logs/la35_group_r1.out,
 la35_axprobe.out); the exact kit yield is re-measured at the
 orchestrator e2e gate. -/
 
+/-! ### LA22 materialization capstone (lane lv7-w1, 2026-11-04,
+after the leftover-mat-scout workorder §2-16 LV7): the 88 public
+top-level LocalAuto22 clean exits that no e2e root reaches are
+re-exposed as ONE conjunction -- 87 exits implemented, 1
+dropped (equation-compiler lemmas with no source signature, def-kind
+statement definitions, or statements naming module-private constants)
+-- all per the no-forcing rule (see the theorem docstring).
+Measured on HEAD 1e139a28 (baseline I): the 88-seed closure = +137
+fresh nodes, sorried-0, standard-three axiom face (scout logs/probe2.out
+GROUP_VS_CONE, axprobe.out SYNQIWN_p22 = standard three); the exact kit
+yield is re-measured at the orchestrator e2e gate (lv-wire-w2 wiring). -/
+
+/-- LA22 materialization capstone (scout lane leftover-mat-scout §2-16 LV7,
+implementation lane lv7-w1, 2026-11-04).  The public top-level
+LocalAuto22 exits unreachable from every e2e root and sorried-0 in
+their whole closure (probe1: 163 top-level exits = 88 clean + 75
+sorried; the 75 sorried exits are excluded per the workorder -- not one
+enters; probe2: 88-seed closure GROUP_FRESH_VS_CONE 137, GROUP_SORRIED
+0, i.e. sorried-0, K_SORRIED 134 and K_AXIOM 624 unchanged).
+Implemented here: 87 of the 88.  Of these, 53 carry their verbatim source signature and 34 are equation-lemma exits carried by their verbatim printer signature.  Dropped per the
+no-forcing rule ("抽不出/不一致 → 剔除并如实报"), mechanically detected
+by the generator, recorded one by one:
+--   assocdV39.eq_def: universe-polymorphic statement (free universe in Sort/Type position); a universe parameter would change the capstone shape
+
+Anchors (no fabricated edges): every conjunct is asserted verbatim --
+for plain seeds the conjunct text is the declaration's source signature
+in LocalAuto22.lean (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); for equation-lemma exits (`X.eq_1`/`X.eq_def` generated
+by the equation compiler, present in no source file as a declaration)
+the conjunct text is the `#check @name` printer dump
+(logs/sigprobe_88.out), which re-elaborates to the very same type;
+semantic identity is re-verified by the elaboration of the `<...>`
+assembly below (each component must unify definitionally with its
+conjunct).  Conjunct order: the seed-list order (probe1 LA22 sorried-0
+list = seeds_clean.txt LA22 subset), drops removed.  Body = the
+assembly of the exit constants -- zero new proof obligations, zero new
+imports. -/
+theorem la22_capstone_w1 :
+    -- 1. CARD_3_SUBSET_p22 (LA22:1147; HOL `CARD_3_SUBSET`)
+    (∀ (f : ℕ → Prop)
+    ,
+          {i | i < 3 ∧ f i}.ncard ≤ 3
+    ) ∧
+    -- 2. DOT_LSUB_p22 (LA22:138; HOL `DOT_LSUB`)
+    (∀ (x y z : V3)
+    ,
+          (x - y) ⬝ᵥ z = x ⬝ᵥ z - y ⬝ᵥ z
+    ) ∧
+    -- 3. DOT_RSUB_p22 (LA22:143; HOL `DOT_RSUB`)
+    (∀ (x y z : V3)
+    ,
+          x ⬝ᵥ (y - z) = x ⬝ᵥ y - x ⬝ᵥ z
+    ) ∧
+    -- 4. I_LT_J_LT_5_EXPLICIT_p22 (LA22:1162; HOL `I_LT_J_LT_5_EXPLICIT`)
+    (∀ (i j : ℕ)
+    ,
+          (i < j ∧ j < 5) ↔
+          ((i = 0 ∧ j = 1) ∨ (i = 0 ∧ j = 2) ∨ (i = 0 ∧ j = 3) ∨ (i = 1 ∧ j = 2) ∨
+            (i = 1 ∧ j = 3) ∨ (i = 2 ∧ j = 3) ∨ (i = 0 ∧ j = 4) ∨ (i = 1 ∧ j = 4) ∨
+            (i = 2 ∧ j = 4) ∨ (i = 3 ∧ j = 4))
+    ) ∧
+    -- 5. MOD_5_EXPLICIT_p22 (LA22:1170; HOL `MOD_5_EXPLICIT`)
+    (0 % 5 = 0 ∧ 1 % 5 = 1 ∧ 2 % 5 = 2 ∧ 3 % 5 = 3 ∧ 4 % 5 = 4 ∧
+          5 % 5 = 0 ∧ 6 % 5 = 1 ∧ 7 % 5 = 2
+    ) ∧
+    -- 6. MOD_EQ_MOD_SHIFT_p22 (LA22:1108; HOL `MOD_EQ_MOD_SHIFT`)
+    (∀ {n x1 x2 y : ℕ} (hn : n ≠ 0)
+    ,
+          ((y + x1) % n = (y + x2) % n) ↔ (x1 % n = x2 % n)
+    ) ∧
+    -- 7. REAL_OPEN_REAL_INTERVAL_p22 (LA22:361; HOL `REAL_OPEN_REAL_INTERVAL`)
+    (∀ (a b : ℝ)
+    ,
+          IsOpen (Set.Ioo a b)
+    ) ∧
+    -- 8. SYNQIWN_p22 (LA22:1815; HOL `SYNQIWN`)
+    (∀ (h : main_nonlinear_terminal_v11) (s : ScsV39) (v : ℕ → V3) (i k : ℕ)
+          (h1 : isScsV39 s) (h2 : BBsV39 s v) (hkk : s.k = k) (h3 : 3 < k)
+          (hears : (norm (v (i + 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2) ∨
+            (norm (v (i + k - 1)) = 2 ∧ dist (v i) (v (i + 1)) = 2) ∨
+            (norm (v (i + 1)) = 2 ∧ norm (v (i + k - 1)) = 2) ∨
+            (dist (v i) (v (i + 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2) ∨
+            (norm (v (i + 1)) = 2 ∧ dist (v i) (v (i + 1)) = 2) ∨
+            (norm (v (i + k - 1)) = 2 ∧ dist (v i) (v (i + k - 1)) = 2))
+          (he1 : dist (v i) (v (i + 1)) ≤ 2 * h0)
+          (he2 : dist (v i) (v (i + k - 1)) ≤ 2 * h0)
+          (hc : cstab ≤ dist (v (i + 1)) (v (i + k - 1))),
+          Real.pi / 2 < azim 0 (v i) (v (i + 1)) (v (i + k - 1))
+    ) ∧
+    -- 9. basic_examples_p22 (LA22:2591; no HOL anchor line in file docstring)
+    (scsBasicV39 scs6I1 ∧
+          scsBasicV39 scs5I1 ∧
+          scsBasicV39 scs5I2 ∧
+          scsBasicV39 scs5I3 ∧
+          scsBasicV39 scs4I1 ∧
+          scsBasicV39 scs4I2 ∧
+          scsBasicV39 scs4I3 ∧
+          scsBasicV39 scs3I1 ∧
+          scsBasicV39 scs6T1 ∧
+          scsBasicV39 scs5T1 ∧
+          scsBasicV39 scs4T1 ∧
+          scsBasicV39 scs4T2 ∧
+          scsBasicV39 scs4T3 ∧
+          scsBasicV39 scs4T4 ∧
+          scsBasicV39 scs4T5 ∧
+          scsBasicV39 scs3T1 ∧
+          scsBasicV39 scs3T2 ∧
+          scsBasicV39 scs3T3 ∧
+          scsBasicV39 scs3T4 ∧
+          scsBasicV39 scs3T5 ∧
+          scsBasicV39 scs3T6' ∧
+          scsBasicV39 scs3T7 ∧
+          scsBasicV39 scs6M1 ∧
+          scsBasicV39 scs5M1 ∧
+          scsBasicV39 scs5M2 ∧
+          scsBasicV39 scs4M1 ∧
+          scsBasicV39 scs4M2 ∧
+          scsBasicV39 scs4M3' ∧
+          scsBasicV39 scs4M4' ∧
+          scsBasicV39 scs4M5' ∧
+          scsBasicV39 scs4M6' ∧
+          scsBasicV39 scs4M7 ∧
+          scsBasicV39 scs4M8 ∧
+          scsBasicV39 scs3M1
+    ) ∧
+    -- 10. const1_pos_p22 (LA22:1195; HOL `const1_pos`)
+    (0 < const1_p22
+    ) ∧
+    -- 11. csAdj_ge2_p22 (LA22:881; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} {a1 a2 : ℝ} (h1 : 2 ≤ a1) (h2 : 2 ≤ a2) {i j : ℕ}
+          (h : ¬ (i % k = j % k)),
+          2 ≤ csAdj k a1 a2 i j
+    ) ∧
+    -- 12. cs_adj_SUC_p22 (LA22:899; HOL `cs_adj_SUC`)
+    (∀ {k : ℕ} {a1 a2 : ℝ} (hk : 1 < k) (i : ℕ)
+    ,
+          csAdj k a1 a2 i (i + 1) = a1
+    ) ∧
+    -- 13. dTame.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (∀ (n : ℕ),
+          dTame n = if n = 3 then 0 else if n = 4 then 0.206 else if n = 5 then 0.4819 else if n = 6 then 0.712 else tgt
+    ) ∧
+    -- 14. delta_diff4_p22 (LA22:252; HOL `delta_diff4`)
+    (∀ (x1 x2 x3 x4 x5 x6 z4 : ℝ)
+    ,
+          deltaX x1 x2 x3 x4 x5 x6 =
+          deltaX x1 x2 x3 z4 x5 x6 + deltaX4 x1 x2 x3 x4 x5 x6 * (x4 - z4)
+            + x1 * (x4 - z4) ^ 2
+    ) ∧
+    -- 15. delta_x4_dim_reduction_p22 (LA22:323; HOL `delta_x4_dim_reduction`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ) (hy1 : y1 ≠ 0)
+          (hy2 : y2 ≠ 0) (hy3 : y3 ≠ 0),
+          deltaX4 4 4 4 (8 * (1 - (y2 * y2 + y3 * y3 - y4 * y4) / (2 * y2 * y3)))
+            (8 * (1 - (y1 * y1 + y3 * y3 - y5 * y5) / (2 * y1 * y3)))
+            (8 * (1 - (y1 * y1 + y2 * y2 - y6 * y6) / (2 * y1 * y2))) =
+          16 * yOfX (deltaX4) y1 y2 y3 y4 y5 y6 / (y1 * y1 * y2 * y3)
+    ) ∧
+    -- 16. delta_x_xrr_p22 (LA22:312; HOL `delta_x_xrr`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ) (hy1 : y1 ≠ 0) (hy2 : y2 ≠ 0)
+          (hy3 : y3 ≠ 0),
+          deltaX 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6) =
+          64 * deltaY y1 y2 y3 y4 y5 y6 / (y1 * y2 * y3) ^ 2
+    ) ∧
+    -- 17. delta_y_dim_reduction_p22 (LA22:300; HOL `delta_y_dim_reduction`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ) (hy1 : y1 ≠ 0)
+          (hy2 : y2 ≠ 0) (hy3 : y3 ≠ 0),
+          deltaX 4 4 4 (8 * (1 - (y2 * y2 + y3 * y3 - y4 * y4) / (2 * y2 * y3)))
+            (8 * (1 - (y1 * y1 + y3 * y3 - y5 * y5) / (2 * y1 * y3)))
+            (8 * (1 - (y1 * y1 + y2 * y2 - y6 * y6) / (2 * y1 * y2))) =
+          64 * deltaY y1 y2 y3 y4 y5 y6 / (y1 * y2 * y3) ^ 2
+    ) ∧
+    -- 18. delta_y_pos_xrr_p22 (LA22:739; HOL `delta_y_pos_xrr`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
+          (hy3 : 0 < y3),
+          (0 < deltaY y1 y2 y3 y4 y5 y6 ↔
+          0 < deltaX 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6))
+    ) ∧
+    -- 19. derived_form_b_p22 (LA22:148; HOL `derived_form_b`)
+    (∀ (b : Prop) (f : ℝ → ℝ) (f' x : ℝ) (s : Set ℝ)
+    ,
+          (derivedForm b f f' x s ↔ (b → derivedForm True f f' x s))
+    ) ∧
+    -- 20. derived_form_delta_x4_wrt_x4_p22 (LA22:334; HOL `derived_form_delta_x4_wrt_x4`)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ)
+    ,
+          derivedForm True (fun q => deltaX4 x1 x2 x3 q x5 x6) (-2 * x1) x4 Set.univ
+    ) ∧
+    -- 21. derived_form_delta_x4_wrt_x5_p22 (LA22:345; HOL `derived_form_delta_x4_wrt_x5`)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ)
+    ,
+          derivedForm True (fun q => deltaX4 x1 x2 x3 x4 q x6) (x1 + x2 - x6) x5 Set.univ
+    ) ∧
+    -- 22. derived_form_delta_x_wrt_x4_p22 (LA22:207; HOL `derived_form_delta_x_wrt_x4`)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ)
+    ,
+          derivedForm True (fun q => deltaX x1 x2 x3 q x5 x6)
+          (deltaX4 x1 x2 x3 x4 x5 x6) x4 Set.univ
+    ) ∧
+    -- 23. derived_form_delta_x_wrt_x5_p22 (LA22:225; HOL `derived_form_delta_x_wrt_x5`)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ)
+    ,
+          derivedForm True (fun q => deltaX x1 x2 x3 x4 q x6)
+          (deltaX5 x1 x2 x3 x4 x5 x6) x5 Set.univ
+    ) ∧
+    -- 24. derived_form_dnum1_p22 (LA22:408; HOL `derived_form_dnum1`)
+    (∀ (x4 x5 x6 e1 e2 e3 : ℝ)
+    ,
+          derivedForm True (fun q => num1 e1 e2 e3 q x5 x6)
+          (4 * dnum1 e1 e2 e3 x4 x5 x6) x4 Set.univ
+    ) ∧
+    -- 25. derived_form_num1_p22 (LA22:393; HOL `derived_form_num1`)
+    (∀ (x4 x5 x6 e1 e2 e3 : ℝ)
+    ,
+          derivedForm True (fun q => num1 e1 e2 e3 q x5 x6)
+          (4 * ((16 - 2 * x4) * e1 + (x5 - 8) * e2 + (x6 - 8) * e3)) x4 Set.univ
+    ) ∧
+    -- 26. derived_form_xrr_D2_p22 (LA22:278; HOL `derived_form_xrr_D2`)
+    (∀ (y1 y2 y6 : ℝ)
+    ,
+          derivedForm (0 < y1 ∧ 0 < y2) (fun q => 8 * q / (y1 * y2)) (8 / (y1 * y2)) y6
+          Set.univ
+    ) ∧
+    -- 27. derived_form_xrr_D3_p22 (LA22:291; HOL `derived_form_xrr_D3`)
+    (∀ (y1 y2 y6 : ℝ)
+    ,
+          derivedForm (0 < y1 ∧ 0 < y2) (fun _q => 8 / (y1 * y2)) 0 y6 Set.univ
+    ) ∧
+    -- 28. funlistV39.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (∀ (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ) (k i j : ℕ),
+          funlistV39 data d k i j =
+            if i % k = j % k then 0 else assocdV39 (psort k (i, j)) (List.map (fun p => (psort k p.1, p.2)) data) d
+    ) ∧
+    -- 29. is_scs_5T1_p22 (LA22:1066; HOL `is_scs_5T1`)
+    (isScsV39 scs5T1
+    ) ∧
+    -- 30. is_scs_6M1_p22 (LA22:1095; HOL `is_scs_6M1`)
+    (isScsV39 scs6M1
+    ) ∧
+    -- 31. is_scs_funlist_basic_p22 (LA22:1417; HOL `is_scs_funlist_basic`)
+    (∀ (k : ℕ) (d : ℝ) (a0 b0 : List ((ℕ × ℕ) × ℝ))
+          (a b : ℕ × ℕ → ℝ) (hd : d < 0.9) (hk1 : 3 ≤ k) (hk2 : k ≤ 6)
+          (hchain : ∀ i j, i < j ∧ j < k →
+            funlistV39 a0 d k i j ≤ funlistV39 b0 d k i j)
+          (ha : ∀ i j, i < j ∧ j < k → 2 ≤ funlistV39 a0 d k i j)
+          (hb3 : ∀ i, i < 3 ∧ k = 3 → funlistV39 b0 d k i (Nat.succ i) < 4)
+          (hbk : ∀ i, i < k ∧ 3 < k → funlistV39 b0 d k i (Nat.succ i) ≤ cstab)
+          (hcard : {i | i < k ∧ (2 * h0 < funlistV39 b0 d k i (Nat.succ i) ∨
+              2 < funlistV39 a0 d k i (Nat.succ i))}.ncard + k ≤ 6),
+          isScsV39 (mkUnadornedV39 k d (funlistV39 a0 d k) (funlistV39 b0 d k))
+    ) ∧
+    -- 32. pos_imp_scs_arrow_empty_p22 (LA22:2652; HOL `pos_imp_scs_arrow_empty`)
+    (∀ (s : ScsV39)
+          (h : ∀ vv, BBsV39 s vv → 0 ≤ taustarV39 s vv),
+          scsArrowV39 {s} ∅
+    ) ∧
+    -- 33. psort_4_p22 (LA22:1176; HOL `psort_4`)
+    (∀ (i : ℕ)
+    ,
+          psort 4 (i, 4) = psort 4 (i, 0) ∧ psort 4 (4, i) = psort 4 (0, i)
+    ) ∧
+    -- 34. psort_5_p22 (LA22:1181; HOL `psort_5`)
+    (psort 5 (0, 1) = (0, 1) ∧ psort 5 (0, 2) = (0, 2) ∧ psort 5 (0, 3) = (0, 3) ∧
+          psort 5 (0, 4) = (0, 4) ∧ psort 5 (1, 1) = (1, 1) ∧ psort 5 (1, 2) = (1, 2) ∧
+          psort 5 (1, 3) = (1, 3) ∧ psort 5 (1, 4) = (1, 4) ∧ psort 5 (2, 1) = (1, 2) ∧
+          psort 5 (2, 2) = (2, 2) ∧ psort 5 (2, 3) = (2, 3) ∧ psort 5 (2, 4) = (2, 4) ∧
+          psort 5 (3, 1) = (1, 3) ∧ psort 5 (3, 2) = (2, 3) ∧ psort 5 (3, 3) = (3, 3) ∧
+          psort 5 (3, 4) = (3, 4) ∧ psort 5 (4, 1) = (1, 4) ∧ psort 5 (4, 2) = (2, 4) ∧
+          psort 5 (4, 3) = (3, 4) ∧ psort 5 (4, 4) = (4, 4) ∧ psort 5 (4, 5) = (0, 4) ∧
+          psort 5 (5, 4) = (0, 4)
+    ) ∧
+    -- 35. real_open_contains_real_interval_p22 (LA22:771; HOL `real_open_contains_real_interval`)
+    (∀ (x : ℝ) (s : Set ℝ) (hx : x ∈ s)
+          (hopen : IsOpen s),
+          ∃ a b, x ∈ Set.Ioo a b ∧ Set.Ioo a b ⊆ s
+    ) ∧
+    -- 36. real_open_univ_p22 (LA22:358; HOL `real_open_univ`)
+    (IsOpen (Set.univ : Set ℝ)
+    ) ∧
+    -- 37. rho_bounds_p22 (LA22:1214; HOL `rho_bounds`)
+    (∀ (y : ℝ) (hy1 : 2 ≤ y) (hy2 : y ≤ 2 * h0)
+    ,
+          1 ≤ rho y ∧ rho y ≤ 1 + sol0 / Real.pi
+    ) ∧
+    -- 38. scs3I1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3I1 = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6)
+    ) ∧
+    -- 39. scs3M1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3M1 =
+          mkUnadornedV39 3 0.103 (funlistV39 [((0, 1), 2 * h0)] 2 3) (funlistV39 [((0, 1), cstab)] (2 * h0) 3)
+    ) ∧
+    -- 40. scs3T1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3T1 =
+          { k := 3, d := 0.11, a := funlistV39 [((0, 1), √8)] 2 3, am := funlistV39 [((0, 1), √8)] 2 3,
+            bm := funlistV39 [((0, 1), cstab)] (2 * h0) 3, b := funlistV39 [((0, 1), cstab)] (2 * h0) 3,
+            J := fun x x_1 => False, lo := fun x => False, hi := fun x => False, str := fun x => False }
+    ) ∧
+    -- 41. scs3T2.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3T2 = mkUnadornedV39 3 0 (funlistV39 [] 2 3) (funlistV39 [] 2 3)
+    ) ∧
+    -- 42. scs3T3.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3T3 = mkUnadornedV39 3 0.476 (funlistV39 [] (2 * h0) 3) (funlistV39 [] cstab 3)
+    ) ∧
+    -- 43. scs3T4.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3T4 =
+          mkUnadornedV39 3 0.2759 (funlistV39 [((0, 1), 2)] (2 * h0) 3) (funlistV39 [((0, 1), 2 * h0)] cstab 3)
+    ) ∧
+    -- 44. scs3T5.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3T5 = mkUnadornedV39 3 0.103 (funlistV39 [((0, 1), 2 * h0)] 2 3) (funlistV39 [((0, 1), √8)] (2 * h0) 3)
+    ) ∧
+    -- 45. scs3T6'.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3T6' =
+          mkUnadornedV39 3 0.4348 (funlistV39 [((0, 1), √8), ((1, 2), √8)] 2 3)
+            (funlistV39 [((0, 1), cstab), ((1, 2), cstab)] (2 * h0) 3)
+    ) ∧
+    -- 46. scs3T7.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs3T7 =
+          mkUnadornedV39 3 0.2565 (funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 2), 2)] 2 3)
+            (funlistV39 [((0, 1), 3.62), ((0, 2), cstab), ((1, 2), 2)] 2 3)
+    ) ∧
+    -- 47. scs4I1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4I1 = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6)
+    ) ∧
+    -- 48. scs4I2.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4I2 = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6)
+    ) ∧
+    -- 49. scs4I3.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4I3 =
+          mkUnadornedV39 4 0.477 (funlistV39 [((0, 1), 2 * h0), ((0, 2), √8), ((1, 3), √8)] 2 4)
+            (funlistV39 [((0, 1), √8), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 50. scs4M1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4M1 =
+          mkUnadornedV39 4 0.3401 (funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 51. scs4M2.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4M2 =
+          mkUnadornedV39 4 0.3789 (funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 52. scs4M3'.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4M3' =
+          mkUnadornedV39 4 0.513 (funlistV39 [((0, 1), √8), ((0, 2), √8), ((1, 3), √8)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 53. scs4M4'.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4M4' =
+          mkUnadornedV39 4 0.513 (funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 54. scs4M5'.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4M5' =
+          mkUnadornedV39 4 0.513 (funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 55. scs4M6'.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4M6' =
+          mkUnadornedV39 4 0.513 (funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 56. scs4M7.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4M7 =
+          mkUnadornedV39 4 0.513 (funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 57. scs4M8.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4M8 =
+          mkUnadornedV39 4 0.513 (funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)] (2 * h0) 4)
+    ) ∧
+    -- 58. scs4T1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4T1 = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 2 6)
+    ) ∧
+    -- 59. scs4T2.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4T2 = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 3)
+    ) ∧
+    -- 60. scs4T3.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4T3 =
+          mkUnadornedV39 4 0.513 (funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] 2 4)
+    ) ∧
+    -- 61. scs4T4.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4T4 =
+          mkUnadornedV39 4 0.477 (funlistV39 [((0, 1), 2 * h0), ((0, 2), √8), ((1, 3), √8)] 2 4)
+            (funlistV39 [((0, 1), √8), ((0, 2), 6), ((1, 3), cstab)] (2 * h0) 4)
+    ) ∧
+    -- 62. scs4T5.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs4T5 =
+          mkUnadornedV39 4 0.513 (funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+            (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), cstab)] (2 * h0) 4)
+    ) ∧
+    -- 63. scs5I1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs5I1 = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6)
+    ) ∧
+    -- 64. scs5I2.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs5I2 = mkUnadornedV39 5 0.616 (csAdj 5 2 √8) (csAdj 5 (2 * h0) 6)
+    ) ∧
+    -- 65. scs5I3.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs5I3 =
+          mkUnadornedV39 5 0.616
+            (funlistV39
+              [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0), ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5)
+            (funlistV39 [((0, 1), √8), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5)
+    ) ∧
+    -- 66. scs5M1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs5M1 =
+          mkUnadornedV39 5 0.616
+            (funlistV39
+              [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0), ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5)
+            (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5)
+    ) ∧
+    -- 67. scs5M2.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs5M2 =
+          mkUnadornedV39 5 0.616
+            (funlistV39 [((0, 1), 2), ((0, 2), cstab), ((0, 3), cstab), ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5)
+            (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5)
+    ) ∧
+    -- 68. scs5T1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs5T1 = mkUnadornedV39 5 0.616 (csAdj 5 2 cstab) (csAdj 5 2 6)
+    ) ∧
+    -- 69. scs6T1.eq_1 (equation-lemma exit, printer signature (sigprobe_88.out))
+    (scs6T1 = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 cstab) (csAdj 6 2 6)
+    ) ∧
+    -- 70. scs_basic_unadorned_p22 (LA22:907; HOL `scs_basic_unadorned`)
+    (∀ {k : ℕ} {d : ℝ} {a b : ℕ → ℕ → ℝ}
+    ,
+          scsBasicV39 (mkUnadornedV39 k d a b)
+    ) ∧
+    -- 71. scs_diag_2_p22 (LA22:1121; HOL `scs_diag_2`)
+    (∀ {k i : ℕ} (hk : 3 < k)
+    ,
+          scsDiag k (i + 1) (i + (k - 1))
+    ) ∧
+    -- 72. scs_diag_cs_adj_p22 (LA22:889; HOL `scs_diag_cs_adj`)
+    (∀ {k : ℕ} {a b : ℝ} {i j : ℕ} (h : scsDiag k i j)
+    ,
+          csAdj k a b i j = b
+    ) ∧
+    -- 73. scs_lb_2_p22 (LA22:1572; HOL `scs_lb_2`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (i j : ℕ)
+          (h1 : isScsV39 s) (h2 : BBsV39 s vv) (hne : i % s.k ≠ j % s.k),
+          2 ≤ dist (vv i) (vv j)
+    ) ∧
+    -- 74. scs_mk_unadorned_unadorned_p22 (LA22:903; HOL `scs_mk_unadorned_unadorned`)
+    (∀ {k : ℕ} {d : ℝ} {a b : ℕ → ℕ → ℝ}
+    ,
+          unadornedV39 (mkUnadornedV39 k d a b)
+    ) ∧
+    -- 75. scs_vv_MOD_p22 (LA22:1308; HOL `scs_vv_MOD`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (i : ℕ)
+          (h1 : isScsV39 s) (h2 : BBsV39 s vv),
+          vv (i % s.k) = vv i
+    ) ∧
+    -- 76. unadorned_examples_p22 (LA22:2548; HOL `unadorned_examples`)
+    (unadornedV39 scs6I1 ∧
+          unadornedV39 scs5I1 ∧
+          unadornedV39 scs5I2 ∧
+          unadornedV39 scs5I3 ∧
+          unadornedV39 scs4I1 ∧
+          unadornedV39 scs4I2 ∧
+          unadornedV39 scs4I3 ∧
+          unadornedV39 scs3I1 ∧
+          unadornedV39 scs6T1 ∧
+          unadornedV39 scs5T1 ∧
+          unadornedV39 scs4T1 ∧
+          unadornedV39 scs4T2 ∧
+          unadornedV39 scs4T3 ∧
+          unadornedV39 scs4T4 ∧
+          unadornedV39 scs4T5 ∧
+          unadornedV39 scs3T1 ∧
+          unadornedV39 scs3T2 ∧
+          unadornedV39 scs3T3 ∧
+          unadornedV39 scs3T4 ∧
+          unadornedV39 scs3T5 ∧
+          unadornedV39 scs3T6' ∧
+          unadornedV39 scs3T7 ∧
+          unadornedV39 scs6M1 ∧
+          unadornedV39 scs5M1 ∧
+          unadornedV39 scs5M2 ∧
+          unadornedV39 scs4M1 ∧
+          unadornedV39 scs4M2 ∧
+          unadornedV39 scs4M3' ∧
+          unadornedV39 scs4M4' ∧
+          unadornedV39 scs4M5' ∧
+          unadornedV39 scs4M6' ∧
+          unadornedV39 scs4M7 ∧
+          unadornedV39 scs4M8 ∧
+          unadornedV39 scs3M1
+    ) ∧
+    -- 77. ups_x_delta_x_p22 (LA22:245; HOL `ups_x_delta_x`)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ)
+    ,
+          deltaX4 x1 x2 x3 x4 x5 x6 ^ 2 + 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 =
+          upsX x1 x3 x5 * upsX x1 x2 x6
+    ) ∧
+    -- 78. ups_x_triangle_ineq_p22 (LA22:571; HOL `ups_x_triangle_ineq`)
+    (∀ (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
+          (hy6 : 0 < y6),
+          (0 < upsX (y1 * y1) (y2 * y2) (y6 * y6) ↔
+          (y1 < y2 + y6 ∧ y2 < y1 + y6 ∧ y6 < y1 + y2))
+    ) ∧
+    -- 79. xrr_bounds_2_p22 (LA22:610; HOL `xrr_bounds_2`)
+    (∀ (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6)
+    ,
+          (0 < upsX (y1 * y1) (y2 * y2) (y6 * y6) ↔
+          0 < xrr y1 y2 y6 ∧ xrr y1 y2 y6 < 16)
+    ) ∧
+    -- 80. xrr_bounds_p22 (LA22:603; HOL `xrr_bounds`)
+    (∀ (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6)
+          (hu : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)),
+          0 < xrr y1 y2 y6 ∧ xrr y1 y2 y6 < 16
+    ) ∧
+    -- 81. xrr_factor_8_p22 (LA22:544; HOL `xrr_factor_8`)
+    (∀ (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
+    ,
+          16 - xrr y1 y2 y6 = 4 * ((y6 + y2 + y1) * (y2 + y1 - y6)) / (y1 * y2)
+    ) ∧
+    -- 82. xrr_factor_p22 (LA22:537; HOL `xrr_factor`)
+    (∀ (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
+    ,
+          xrr y1 y2 y6 = 4 * ((y6 + y2 - y1) * (y6 - y2 + y1)) / (y1 * y2)
+    ) ∧
+    -- 83. xrr_increasing_p22 (LA22:1252; HOL `xrr_increasing`)
+    (∀ (y1 y2 y6 y6' : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
+          (hy6 : 0 ≤ y6) (hlt : y6 < y6'),
+          xrr y1 y2 y6 < xrr y1 y2 y6'
+    ) ∧
+    -- 84. xrr_le_16_p22 (LA22:644; HOL `xrr_le_16`)
+    (∀ (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6)
+          (hu : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)),
+          xrr y1 y2 y6 ≤ 16
+    ) ∧
+    -- 85. xrr_lt_16_p22 (LA22:560; HOL `xrr_lt_16`)
+    (∀ (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6)
+          (t3 : y6 < y1 + y2),
+          xrr y1 y2 y6 < 16
+    ) ∧
+    -- 86. xrr_pos_p22 (LA22:551; HOL `xrr_pos`)
+    (∀ (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
+          (t1 : y1 < y2 + y6) (t2 : y2 < y1 + y6),
+          0 < xrr y1 y2 y6
+    ) ∧
+    -- 87. xrr_sym_p22 (LA22:296; HOL `xrr_sym`)
+    (∀ (y1 y2 y6 : ℝ)
+    ,
+          xrr y1 y2 y6 = xrr y2 y1 y6
+    ) :=
+    ⟨CARD_3_SUBSET_p22, DOT_LSUB_p22, DOT_RSUB_p22, I_LT_J_LT_5_EXPLICIT_p22, MOD_5_EXPLICIT_p22,
+      MOD_EQ_MOD_SHIFT_p22, REAL_OPEN_REAL_INTERVAL_p22, SYNQIWN_p22, basic_examples_p22,
+      const1_pos_p22, csAdj_ge2_p22, cs_adj_SUC_p22, dTame.eq_1, delta_diff4_p22,
+      delta_x4_dim_reduction_p22, delta_x_xrr_p22, delta_y_dim_reduction_p22,
+      delta_y_pos_xrr_p22, derived_form_b_p22, derived_form_delta_x4_wrt_x4_p22,
+      derived_form_delta_x4_wrt_x5_p22, derived_form_delta_x_wrt_x4_p22,
+      derived_form_delta_x_wrt_x5_p22, derived_form_dnum1_p22, derived_form_num1_p22,
+      derived_form_xrr_D2_p22, derived_form_xrr_D3_p22, funlistV39.eq_1, is_scs_5T1_p22,
+      is_scs_6M1_p22, @is_scs_funlist_basic_p22, pos_imp_scs_arrow_empty_p22, psort_4_p22,
+      psort_5_p22, @real_open_contains_real_interval_p22, real_open_univ_p22, rho_bounds_p22,
+      scs3I1.eq_1, scs3M1.eq_1, scs3T1.eq_1, scs3T2.eq_1, scs3T3.eq_1, scs3T4.eq_1, scs3T5.eq_1,
+      scs3T6'.eq_1, scs3T7.eq_1, scs4I1.eq_1, scs4I2.eq_1, scs4I3.eq_1, scs4M1.eq_1, scs4M2.eq_1,
+      scs4M3'.eq_1, scs4M4'.eq_1, scs4M5'.eq_1, scs4M6'.eq_1, scs4M7.eq_1, scs4M8.eq_1,
+      scs4T1.eq_1, scs4T2.eq_1, scs4T3.eq_1, scs4T4.eq_1, scs4T5.eq_1, scs5I1.eq_1, scs5I2.eq_1,
+      scs5I3.eq_1, scs5M1.eq_1, scs5M2.eq_1, scs5T1.eq_1, scs6T1.eq_1, scs_basic_unadorned_p22,
+      scs_diag_2_p22, scs_diag_cs_adj_p22, scs_lb_2_p22, scs_mk_unadorned_unadorned_p22,
+      scs_vv_MOD_p22, unadorned_examples_p22, ups_x_delta_x_p22, ups_x_triangle_ineq_p22,
+      xrr_bounds_2_p22, xrr_bounds_p22, xrr_factor_8_p22, xrr_factor_p22, xrr_increasing_p22,
+      xrr_le_16_p22, xrr_lt_16_p22, xrr_pos_p22, xrr_sym_p22⟩
+
+#print axioms la22_capstone_w1
+
 /-- LA35 materialization capstone (design lane la35-mat-scout R1,
 implementation lane la35-root-w1, 2026-11-03).  The 88 public top-level
 LocalAuto35 exits unreachable from every e2e root (orphan-scout 741
