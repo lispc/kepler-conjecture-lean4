@@ -713,6 +713,7 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
 - **U+FFFD 乱码**：编排者中文输出偶发 U+FFFD 进文档（三次修复）；`grep -c $'\xEF\xBF\xBD'` 计行
   不计字（queue :250 一行两字），比对基线用 python 字符计数。
 - **W5c-F/A 的交付口径**：低于验收期望（A 报 5/≥9）时如实入账、余件进下波工单，不凑数。
+- **docstring-only 改动过不了标准闸**（2026-11-03 LA26 实测）：NOTES-LANE 豁免只认 `--` 注释行，docstring（`/-- … -/`）行的删除会触发「no sorry consumed (theorem untouched?)」；此类勘误并入一个消费 sorry 的 diff 一起落，或以 `LANE_FILES` 连带（主 `$FILE` 须是消费了 sorry 的文件）。另：LA 文件本体 lake 真建 5–6 s、standalone 4.7 s（LA37 实测），车道报「4 min 大编译」是草稿迭代循环。
 
 ### 2026-11-01 · 深水合龙与落仓手术波（queue 续 132–149）
 

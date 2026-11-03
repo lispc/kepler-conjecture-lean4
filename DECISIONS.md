@@ -16,6 +16,8 @@ rest 55 更重 1.5–5×）：
 3. 编排者自身的非重型工作不受限：文档/账本、SF 立案与 STATEMENT-FIX 闸（LA 文件秒级编译）、stale 注记清理等可照常，
    但不发 sub-agent。
 
+**补记（2026-11-03 中午）**：编排者提案下一批三槽（`scsgeneric-w5cC2` LA31 收尾 / `scsgeneric-w5cB3` LA37 SUB_LUNAR 分段 / `f1-upfzbzm-rewire` PA25-PA2 M0 −1），用户「不反对」= **已批**；用户换 session，新 session 开工即发（规格见 handoff #35 (d)）。SF-97 与轻量注记清理亦经「不反对」执行完毕。
+
 **影响**：M0 在冻结期的现实下降来源只剩 F1 UPFZBZM 重接线（−1，纯 Lean，已批未做）；scsgeneric 四塔 → RRCWNSJ → 5T1/LA33
 装配可继续推进但 e2e 计数不动（债收敛到 farm 根 CUXVZOZ / P_BBQUESTION / ear_acute，均在暂停的农场内）。
 
