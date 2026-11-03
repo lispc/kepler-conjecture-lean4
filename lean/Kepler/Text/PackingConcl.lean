@@ -95,7 +95,13 @@ IMPORT SET
                     with the Auto2 encodings; no module can import both.
     PackingAuto22 — hosts only the shape-mismatched GOTCJAH twin; kept
                     out to hold the closure clash-free.
-    PackingAuto23 — hosts no twin.
+    PackingAuto23 — joined 2026-11-03 (lane island-wire-w1): its proved
+                    `GRUTOTI` capstone (GT-5/GT-6, GRUTOTI.hl:60-8001) is the
+                    shape-verbatim implementation of Auto2's
+                    `GRUTOTI1_concl` interface; its import closure
+                    {PA2, ConicCapVolume, PA6, PA12, PA15, PA17} is already
+                    inside this file's transitive set, so the addition is
+                    clash-free (standalone `-o` re-verified).
 -/
 
 import Kepler.Text.PackingAuto2
@@ -114,6 +120,7 @@ import Kepler.Text.PackingAuto16
 import Kepler.Text.PackingAuto17
 import Kepler.Text.PackingAuto19
 import Kepler.Text.PackingAuto21
+import Kepler.Text.PackingAuto23
 import Kepler.Text.PackingAuto24
 import Kepler.Text.PackingAuto25
 
@@ -805,14 +812,18 @@ it stays in PA24 because the EV20 duplicate-provision conditions do not
 hold (PA23's provider is named `GRUTOTI`, and the twin's set-builder
 carries an explicit `: Set V3` binder ascription). Residual taint in
 the axiom footprint is PA23's own upstream chain (AJRIPQN et al.), no
-longer the Auto2 interface. -/
+longer the Auto2 interface.
+2026-11-03 (lane island-wire-w1): the documented direct rename is now
+executed at term level — the proof term is `GRUTOTI` itself (PA23 joined
+the import set above; its closure is clash-free), so `GRUTOTI1_concl_p24_pub`
+is truly consumer-free as its own docstring states. -/
 theorem GRUTOTI1_concl_discharged :
     ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3), saturated V →
       Packing V → u0 ∈ V → u1 ∈ V → u0 ≠ u1 → hl [u0, u1] < Real.sqrt 2 →
       e = {u0, u1} →
       setSum {X | mcellSet V X ∧ e ∈ edgeX V X} (fun t => dihX V t (u0, u1)) =
         2 * Real.pi :=
-  GRUTOTI1_concl_p24_pub
+  GRUTOTI
 
 /-- `PackingAuto2.REUHADY_concl` (Auto2:935), discharged by
 `PackingAuto24.REUHADY_p24` (REUHADY.hl) — statement-identical
@@ -964,8 +975,10 @@ theorem GRHIDFA_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
 #print axioms OXLZLEZ_concl_discharged
 #print axioms REUHADY_concl_discharged
 #print axioms REUHADY_concl_version2_discharged
--- GRUTOTI1 wave: twin un-privatized via PA24's `GRUTOTI1_concl_p24_pub`
--- (expect `sorryAx` — the Auto2 interface itself is sorried).
+-- GRUTOTI1 wave: twin un-privatized via PA24's `GRUTOTI1_concl_p24_pub`;
+-- 2026-11-03 island-wire-w1: term re-pointed to PA23's proved `GRUTOTI`
+-- (residual `sorryAx`, if any, is PA23's own upstream chain — AJRIPQN et al.
+-- — no longer the Auto2 interface).
 #print axioms GRUTOTI1_concl_discharged
 #print axioms URRPHBZ3_concl_discharged
 -- CC4P4-exposure wave: the nine newly verbatim-wired Auto3-family rows
