@@ -168,6 +168,61 @@
 - GATE_ROOTS 分层实例：本 kit 动了 `Kepler.lean` → 宇宙根 olean 过期，
   `lake build Kepler` 3.3 s 重建（全缓存，非重型）；成规则待办。
 
+### 基线 G：island-wire-w1 `d607cf48`（PA23 入两宇宙，锥不动）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH（e2e 锥） | **2,079,707（较基线 F ±0）** |
+| K_SORRIED / K_AXIOM | **135 / 624（±0）** |
+| K_MODULES | 4,179（±0） |
+| K_UNIVERSE | 2,094,648（+315 = PA23 自身声明入宇宙） |
+| union `GRUTOTI1_concl_discharged` 根闭包 | 58 → **2,149**（+2,092；direct-sorry 1→0） |
+| ORPHANS_TOTAL（union） | 13,580 → **13,559（−21）** |
+
+- 落库 = REWIRE：`GRUTOTI1_concl_discharged` 体 `GRUTOTI1_concl_p24_pub` → `PA23.GRUTOTI`
+  （三方在库锚；2026-10-12 起只差项层执行的「直接改名」）。8 文件诚实 NO-GO
+  （Text.LP 项层化被显式排期 = Assembly:6915 NEEDS；PA19 的 scout 锚过时被勘误——
+  09-29 已经 `PackingJGXZYGW` discharge）。axiom 面 `[propext, sorryAx, choice,
+  Quot.sound]` 新旧 footprint 逐位同（taint 来源 PA2 接口 → PA23 上游链）；
+  UNION K_SORRIED_TOTAL 171 不变。
+- 诚实注记：根闭包 +2,092 但孤儿账只 −21——闭包新增大半本就经其他根可达；
+  PA23 入宇宙 376 件（61 件余孤儿）。事故记录：车道 farm 符号链接回填时 `cp`
+  两次短暂写穿共享 `PackingConcl.olean`，落库闸 rule 4 lake 重编自愈，读数无漂移。
+
+### 基线 H：la35 71 出口入锥 + pa15 五源闭（`a8e35ccf` + `38aa0981`）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH（e2e 锥） | **2,079,940（+233，归 la35）** |
+| K_SORRIED | **135（±0——pa15 所闭 5 件不在锥直源之列，诚实修正车道预期）** |
+| K_AXIOM | **624（护栏不动）** |
+| K_MODULES | 4,179（±0） |
+| K_UNIVERSE | 2,094,451（★ 较 G **−197 异常**，仪器待查，见下） |
+| ORPHANS_TOTAL（union） | 13,559 → **13,129（−430）** |
+| LA35 模块孤儿 | 741 → **353** |
+| 孤儿榜新 #1 | `Interval.CertTM` 618（根候选待重锚，续 265） |
+
+- **la35-root-w1**：`la35_wire_capstone_w1` 71 出口逐字合取（生成器机械抽签名，每支带
+  LA35 行号 + HOL 锚注释）+ `localconcl_wire_capstone_w2` 保型转发 + Assembly
+  `textCapstone` 一行 re-point（`.1` 投影语义不变）。**cone 实增 +233**（侦察上界
+  +453 对应 88 支；差 = 17 支诚实机械剔除：12 支引 LA35 `private def`、2 支
+  def-Prop、3 支宇宙多态）。w1 恰标准三；w2 结构性带既有 cone sorryAx（引 S1
+  capstone 所致，零新增债，Assembly warning 82/82 逐位）。
+- **pa15-residual-w1**：PA15 own-sorry 5→0（`CARD_BOUNDARY_INT_BALL_BOUND_1` 新短证
+  ~95 行、`_1` 版 25 行推论、`MCELL_ID_MXI` self-copy、`CARD_EDGEX_LE_16` /
+  `BOUND_GAMMA_X_lmfun` self-copy PA18 真证 kit——p18 private 件以 PA15 自有已证件
+  替代，未改 PA18 一字），删除面恰 5 行裸 sorry，5 件全标准三。**cone SORRIED ±0**：
+  这 5 件本就不在 135 直源之列（与车道「下游不引 PA15 源」的消费者链分析互证）——
+  真债已闭但记模块/union 账。
+- **★ 仪器待查**：K_UNIVERSE 2,094,648（G）→ 2,094,451（H）呈 −197，与单调预期
+  矛盾（期间应只增不减；E/F 期该数曾跨运行稳定 2,094,333）。cone 主指标
+  （K_REACH/SORRIED/AXIOM）干净且双仪器一致（union 仪器 e2e 根行逐位同）。疑点
+  指向 PA23 入宇宙窗口的 olean 版次——列入仪器随访。
+- 落库过程注记：Assembly.olean 独立重建回灌主 `.lake`（18:24 版本未含 re-point，
+  不重建则地图看不到 la35 增量——实测证实，c1 等价手核先例）；pa15 闸级联
+  LocalConcl 重编通过；rule 1 一次撞「apply→gate 与并行 commit 的时序竞态」，
+  commit 后重跑 PASS。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
