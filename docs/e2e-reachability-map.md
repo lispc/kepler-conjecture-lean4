@@ -139,6 +139,35 @@
   修复 = 6 路并行独立 `lean -o` 重编（0 error）+ Assembly.olean 独立重建（c1 等价手核路线）。
   **纪律新增：Assembly 级模块闸永久禁用。**
 
+### 基线 F：hypermap 章结论根物化 `5bf11a82`（cone 不动，union 账本移动）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH（e2e 锥） | **2,079,707（较基线 E ±0，仪器重跑逐位）** |
+| K_SORRIED | **135（±0）** |
+| K_AXIOM | **624（护栏不动）** |
+| K_MODULES | 4,179（±0——HypermapConcl 不在 Assembly 闭包） |
+| K_UNIVERSE | 2,094,333 |
+| union 根 ROOTS | **157 → 162**（+5 章根） |
+| ORPHANS_TOTAL（union 账本） | **13,580**（Hypermap 模块 1,299 → 156，出榜） |
+
+- 落库内容（`hypermap-root-w1`，闸 GATE-PASS）：新文件 `Kepler/Text/HypermapConcl.lean`
+  68 行——HOL `more_tame_concl.hl` 五章别名 verbatim 正名（陈述逐字取 Hypermap.lean
+  原签名，体 = 原常数应用，零 sorry 纯 Mathlib）+ `Kepler.lean` +1 import + 两脚本
+  手工根清单 +5。五根 `#print axioms` 全标准三零 sorryAx。
+- **★ 记账勘误（仪器事实，续 266 详载）**：官方 K_REACH 仪器
+  `e2e_reach_map.lean` 只 import `Kepler.Assembly`、单根 e2e，量的是**锥**；侦察的
+  "+1,143" 是 **union 口径**（章根账本）增量。编排者此前（续 264 与落库 commit
+  message）把它记成 cone 预期——勘误：**本波 cone +0（设计内：无消费边不造边，真
+  消费点 = §2-16 TameSpine 接入 discharge），union 账本 ORPHANS −1,143**（Hypermap
+  模块 1,299→156 之差逐位吻合）。union 侧读数：五根逐根 SORRIED/AXIOM 全 0；WIRE
+  逐根 AQIUNPP1 1,046 / QRDYXYJ 886 / STKBEPH 203；UNION K_SORRIED_TOTAL 171
+  （锥 135 + shim 36，与 la35 侦察参考线一致）。孤儿榜新 #1 = LA35 741（下一发
+  `la35-root-w1` 在飞），#2 CertTM 618（根候选归档待重锚，续 265）。
+- TSV（锥口径）内容与基线 E 相同，未重生。
+- GATE_ROOTS 分层实例：本 kit 动了 `Kepler.lean` → 宇宙根 olean 过期，
+  `lake build Kepler` 3.3 s 重建（全缓存，非重型）；成规则待办。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
