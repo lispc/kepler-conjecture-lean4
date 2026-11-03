@@ -39,6 +39,7 @@ import Kepler.Text.LocalAuto16
 -- 债随证明项流动）。无环：全树零 LocalConcl importer + 模块闭包
 -- 计算（la1reroute-w1 §1.2）。
 import Kepler.Text.LocalConcl
+import Kepler.Text.PackingConcl
 import Kepler.Text.TameLp
 import Kepler.Assembly.GoodListDefs
 import Kepler.Assembly.GoodListAll
@@ -6985,7 +6986,7 @@ theorem textCapstone : TextCapstone := by
   refine kcImpTheKc ?_
   by_contra hneg
   -- packing 章主结论：¬kc ∧ pnn ∧ ox3q1h → ∃W. packing ∧ ⊆annulus ∧ ¬localAnnulus
-  obtain ⟨W, hWp, hWsub, hWlai⟩ := PACKING_CHAPTER_MAIN_CONCLUSION hneg hpnn hox3
+  obtain ⟨W, hWp, hWsub, hWlai⟩ := PACKING_CHAPTER_MAIN_CONCLUSION_discharged hneg hpnn hox3
   have hW12 : 12 < scriptL W := by
     by_contra hle
     exact hWlai ((localAnnulusInequalityScriptL W).mpr (not_lt.1 hle))

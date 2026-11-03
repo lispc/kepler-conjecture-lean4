@@ -524,6 +524,180 @@ theorem UPFZBZM_concl_discharged :
       ∃ G : V3 → ℝ, negligibleFun0 G V ∧ fccCompatible G V :=
   fun V hs hp hcc hT hlm => UPFZBZM V hs hp hcc hT hlm
 
+/-! ## F1 transplant: `RDWKARC_concl` assembly over `PackingAuto19.UPFZBZM`
+
+Lane `packingconcl-c1-stage1` (2026-11-03).  This is the port of
+`f1-upfzbzm-rewire`'s `rdwkarcConcl_p25` into the e2e consumer endpoint:
+`Kepler.Assembly.textCapstone` consumes the packing-chapter capstone through
+this file, so the F1 re-wire lands here rather than in PA25 (PA25 / PA19 /
+PA2 stay untouched).  The three private kit lemmas below are the only pieces
+of the `_p2` kit of `PackingAuto2` that are not publicly available
+(`hlPairAdd`, `setSumCongr`, `setSumImage`); the translation/radius and
+`JGXZYGW_KY` kits are consumed from `PackingAuto19` (public, proved).
+`rdwkarcConcl_pc` re-derives the `RDWKARC_concl` assembly verbatim with
+`UPFZBZM` (PackingAuto19, real proof) in place of the interface constant
+`UPFZBZM_concl` (PackingAuto2). -/
+
+/-- `hl` re-indexing bridge: `hl [0, a] = hl [u, a + u]` for `a ≠ 0`
+(RDWKARC.hl closing segment; via `RADV_TRANS_EQ` and the `setOfList` pair
+form, same route as PA2's private `hlPairAdd_p2`). -/
+private theorem hlPairAdd_pc {a u : V3} (ha : a ≠ 0) : hl [0, a] = hl [u, a + u] := by
+  have hsl : ∀ x y : V3, setOfList [x, y] = {x, y} := by
+    intro x y
+    ext b
+    simp [setOfList]
+  have hkey := RADV_TRANS_EQ (0 : V3) a u (Ne.symm ha)
+  rw [zero_add] at hkey
+  show radV (setOfList [0, a]) = radV (setOfList [u, a + u])
+  rw [hsl, hsl]
+  exact hkey
+
+/-- `setSum` respects pointwise congruence of the summand (same route as PA2's
+private `setSumCongr_p2`). -/
+private theorem setSumCongr_pc {α : Type*} {s : Set α} {f g : α → ℝ}
+    (h : ∀ a ∈ s, f a = g a) : setSum s f = setSum s g := by
+  by_cases hs : Set.Finite s
+  · unfold setSum
+    rw [dif_pos hs, dif_pos hs]
+    exact Finset.sum_congr rfl fun a ha => h a (hs.mem_toFinset.mp ha)
+  · unfold setSum
+    rw [dif_neg hs, dif_neg hs]
+
+/-- `setSum` re-indexes along an injective image (Lean form of HOL
+`SUM_EQ_GENERAL_INVERSES`; junk convention wagers finiteness on both sides,
+same route as PA2's private `setSumImage_p2`). -/
+private theorem setSumImage_pc (g : V3 → V3) (A : Set V3) (f : V3 → ℝ)
+    (hinj : Set.InjOn g A) (hA : A.Finite) :
+    setSum (g '' A) f = setSum A (fun a => f (g a)) := by
+  classical
+  have himg : (g '' A).Finite := hA.image g
+  unfold setSum
+  rw [dif_pos himg, dif_pos hA, Set.Finite.toFinset_image g hA himg,
+    Finset.sum_image (fun a ha b hb h => hinj (hA.mem_toFinset.mp ha)
+      (hA.mem_toFinset.mp hb) h)]
+
+/-- HOL `RDWKARC` (RDWKARC.hl:180-314), `_pc` re-wiring of the
+`RDWKARC_concl` assembly: unpack `¬kepler_conjecture` to a failing witness
+`V`; if `lmfunInequality V` held, `UPFZBZM` (PackingAuto19) + `JGXZYGW_KY`
+would give the density bound — contradiction; hence some `u ∈ V` has edge
+lmfun-sum `> 12`; the witness `{v | v + u ∈ V} ∩ ballAnnulus` is a packing
+(`PACKING_TRANS`) inside the annulus, and its annulus sum re-indexes along
+`v ↦ v + u` to the `V`-edge sum (`setSumImage_pc` / `setSumCongr_pc`,
+packing separation for the `v = u` junk case, `hl` translation invariance via
+`RADV_TRANS_EQ`).
+
+Replaces the `PackingAuto2.RDWKARC_concl` consumer edge of
+`PACKING_CHAPTER_MAIN_CONCLUSION` (F1 UPFZBZM re-wire, 2026-11-03). -/
+theorem rdwkarcConcl_pc : ¬keplerConjecture →
+    (∀ V : Set V3, Packing V → saturated V → cellClusterInequality V) →
+    TSKAJXY_statement →
+    ∃ V : Set V3, Packing V ∧ V ⊆ ballAnnulus ∧ ¬localAnnulusInequality V := by
+  intro hkc hcc hT
+  -- RDWKARC.hl:189-193 — unpack `¬kepler_conjecture` to a failing witness.
+  obtain ⟨V, hP, hs, hden⟩ : ∃ V : Set V3, Packing V ∧ saturated V ∧
+      ¬(∃ c : ℝ, ∀ r : ℝ, 1 ≤ r →
+        volume.real (((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 r : Set V3)) /
+          volume.real (Metric.ball (0 : V3) r) ≤ Real.pi / Real.sqrt 18 + c / r) := by
+    by_contra hex
+    refine hkc fun V hV => ?_
+    by_contra hc
+    exact hex ⟨V, hV.1, hV.2, hc⟩
+  -- RDWKARC.hl:196-215 — `lmfunInequality V` would give the density bound
+  -- via UPFZBZM + JGXZYGW_KY; contradiction.
+  have hnlm : ¬lmfunInequality V := by
+    intro hlm
+    obtain ⟨G, hG0, hGf⟩ := UPFZBZM V hs hP (hcc V hP hs) hT hlm
+    exact hden (JGXZYGW_KY V hP hs ⟨G, hGf, hG0⟩)
+  -- RDWKARC.hl:217-222 — extract `u ∈ V` with edge lmfun-sum > 12.
+  obtain ⟨u, hu, hsum⟩ : ∃ u : V3, u ∈ V ∧
+      12 < setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+        (fun v => lmfun (hl [u, v])) := by
+    by_contra hall
+    push Not at hall
+    exact hnlm hall
+  have hPT : Packing {v : V3 | v + u ∈ V} := PACKING_TRANS V hP u
+  -- Membership of the witness in terms of distances (annulus ↔ edge set).
+  have hAann : ∀ v : V3, v ∈ {w : V3 | w + u ∈ V} ∩ ballAnnulus →
+      v + u ∈ V ∧ dist 0 v ≤ 2 * h0 ∧ 2 ≤ dist 0 v := by
+    intro v hv
+    rw [Set.mem_inter_iff] at hv
+    obtain ⟨hm, hann⟩ := hv
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball] at hann
+    refine ⟨hm, ?_, ?_⟩
+    · rw [dist_comm]; exact hann.1
+    · rw [dist_comm]; exact le_of_not_gt hann.2
+  have hballmem : ∀ v : V3, dist 0 v ≤ 2 * h0 → 2 ≤ dist 0 v → v ∈ ballAnnulus := by
+    intro v hle h2
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball]
+    refine ⟨?_, ?_⟩
+    · rw [dist_comm]; exact hle
+    · intro hb
+      rw [dist_comm] at hb
+      exact absurd hb (not_lt.2 h2)
+  have hAfin : ({v : V3 | v + u ∈ V} ∩ ballAnnulus).Finite := by
+    refine Set.Finite.subset (hPT.finite_inter_ball (2 * h0 + 1)) ?_
+    intro v hv
+    obtain ⟨hm, hle, -⟩ := hAann v hv
+    refine Set.mem_inter hm (Metric.mem_ball.2 ?_)
+    rw [dist_comm]
+    linarith
+  refine ⟨{v : V3 | v + u ∈ V} ∩ ballAnnulus, ?_, Set.inter_subset_right, ?_⟩
+  · -- packing of the witness: PACKING_TRANS then subset.
+    intro a ha b hb hlt
+    rw [Set.mem_inter_iff] at ha hb
+    exact hPT a ha.1 b hb.1 hlt
+  · -- RDWKARC.hl:226-314 — the annulus sum re-indexes to the V-edge sum.
+    intro hLAI
+    have hinj : Set.InjOn (fun a : V3 => a + u)
+        ({v : V3 | v + u ∈ V} ∩ ballAnnulus) := fun _ _ _ _ h => add_right_cancel h
+    have hTeq : {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0} =
+        (fun a : V3 => a + u) '' ({v : V3 | v + u ∈ V} ∩ ballAnnulus) := by
+      ext w
+      constructor
+      · rintro ⟨hwV, hwu, hdu⟩
+        have hdu2 : dist 0 (w - u) = dist u w := by
+          rw [dist_eq_norm, dist_eq_norm]; abel
+        have h2wu : 2 ≤ dist u w := Packing.dist_ge_two hP hu hwV (Ne.symm hwu)
+        have hVin : w - u + u = w := by abel
+        have hinV : (w - u) + u ∈ V := by rw [hVin]; exact hwV
+        have hle : dist 0 (w - u) ≤ 2 * h0 := by rw [hdu2]; exact hdu
+        have h2 : 2 ≤ dist 0 (w - u) := by rw [hdu2]; exact h2wu
+        refine ⟨w - u, Set.mem_inter hinV (hballmem _ hle h2), hVin⟩
+      · rintro ⟨a, ha, rfl⟩
+        show a + u ∈ {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+        obtain ⟨haV, hle, ha2⟩ := hAann a ha
+        have ha0 : a ≠ 0 := by
+          intro h0
+          rw [h0] at ha2
+          rw [dist_self] at ha2
+          linarith
+        refine ⟨haV, ?_, ?_⟩
+        · intro h
+          have h' : a + u = (0 : V3) + u := by rw [zero_add]; exact h
+          exact ha0 (add_right_cancel h')
+        · have hd : dist u (a + u) = dist 0 a := by
+            rw [dist_eq_norm, dist_eq_norm]; abel
+          rw [hd]; exact hle
+    have key : setSum ({v : V3 | v + u ∈ V} ∩ ballAnnulus)
+        (fun w => lmfun (hl [0, w])) =
+        setSum {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+          (fun v => lmfun (hl [u, v])) := by
+      rw [hTeq, setSumImage_pc (fun a : V3 => a + u) _ _ hinj hAfin]
+      refine setSumCongr_pc fun a ha => ?_
+      obtain ⟨-, -, ha2⟩ := hAann a ha
+      have ha0 : a ≠ 0 := by
+        intro h0
+        rw [h0] at ha2
+        rw [dist_self] at ha2
+        linarith
+      show lmfun (hl [0, a]) = lmfun (hl [u, a + u])
+      rw [hlPairAdd_pc ha0]
+    unfold localAnnulusInequality at hLAI
+    rw [key] at hLAI
+    linarith
+
+/- Note (lane packingconcl-c1-stage1): the body below is now `rdwkarcConcl_pc`
+(PA19 `UPFZBZM` re-derivation); the statement is frozen verbatim. -/
 /-- `PackingAuto2.RDWKARC_concl` (Auto2:860), discharged by
 `PackingAuto19.RDWKARC` (RDWKARC.hl).  Shape-verbatim. -/
 theorem RDWKARC_concl_discharged :
@@ -531,7 +705,23 @@ theorem RDWKARC_concl_discharged :
     (∀ V : Set V3, Packing V → saturated V → cellClusterInequality V) →
     TSKAJXY_statement →
     ∃ V : Set V3, Packing V ∧ V ⊆ ballAnnulus ∧ ¬localAnnulusInequality V :=
-  RDWKARC
+  rdwkarcConcl_pc
+
+/-- `PackingAuto25.PACKING_CHAPTER_MAIN_CONCLUSION` (PA25:12302), the e2e
+packing-chapter capstone.  Statement verbatim to the PA25 anchor; the body
+routes through `rdwkarcConcl_pc` (PA19 `UPFZBZM` real proof) and supplies
+the two `RDWKARC_concl` antecedents from the caller's `hnl` / `hox`:
+`hcc` is the `OXLZLEZ` kernel and the pointwise `TSKAJXY_statement` is
+PA21's `TSKAJXY` at the bank `hnl`. -/
+theorem PACKING_CHAPTER_MAIN_CONCLUSION_discharged (hkc : ¬ keplerConjecture)
+    (hnl : pack_nonlinear_non_ox3q1h) (hox : ox3q1hP25) :
+    ∃ V : Set V3, Packing V ∧ V ⊆ ballAnnulus ∧ ¬ localAnnulusInequality V := by
+  refine rdwkarcConcl_pc hkc ?_ ?_
+  · intro V hp hs
+    exact OXLZLEZ V hnl hox hp hs
+  · intro V X hs hp hm hcrit
+    exact TSKAJXY V X hnl hs hp hm hcrit
+
 
 /-- `PackingAuto2.GOTCJAH_concl` (Auto2:867).  TWIN MISMATCH:
 `PackingAuto22.GOTCJAH` (counting_spheres.hl:4366) is a different
