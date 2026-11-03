@@ -973,11 +973,1197 @@ noncomputable def mkPlanar2 (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ) : V3 :=
   v0 + ((x1 + x3 - x5) / (2 * x1)) • (v1 - v0) +
     ((s / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) • vcross
 
+/-! ## Localized `IneqClosureDefs` vocabulary (T0, 2026-11-03)
+
+The 109 `Main_estimate` statements below need a handful of defs that live in
+`Kepler.Text.IneqClosureDefs`.  That module cannot be imported here: the Text
+root union (`LocalBridge` + `PackingAuto22`) already contains
+`Kepler.Text.sqrt3` from `PackingAuto22`, and `IneqClosureDefs` carries a
+second `sqrt3` twin, so importing both fails with
+`environment already contains 'Kepler.Text.sqrt3'`.  The needed bodies are
+therefore copied verbatim (HOL anchors kept) under the `_t11` suffix; this
+file stays at **zero new imports**.  Transitive ICD references (`matan`,
+`node2Y`) are localized as well. -/
+
+/-- HOL `matan` (sphere.hl:728-731). -/
+noncomputable def matan_t11 (x : ℝ) : ℝ :=
+  if x = 0 then 1
+  else if x > 0 then Real.arctan (Real.sqrt x) / Real.sqrt x
+  else Real.log ((1 + Real.sqrt (-x)) / (1 - Real.sqrt (-x))) /
+    (2 * Real.sqrt (-x))
+
+/-- HOL `rotate2` (sphere.hl:654-655). -/
+def rotate2_t11 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ)
+    (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := f x2 x3 x1 x5 x6 x4
+
+/-- HOL `rotate3` (sphere.hl:657-658). -/
+def rotate3_t11 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ)
+    (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := f x3 x1 x2 x6 x4 x5
+
+/-- HOL `dih_x_div_sqrtdelta_posbranch` (nonlin_def.hl:138-142). -/
+noncomputable def dihXDivSqrtdeltaPosbranch_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  let dX4 := deltaX4 x1 x2 x3 x4 x5 x6
+  let d := deltaX x1 x2 x3 x4 x5 x6
+  (Real.sqrt (4 * x1) / dX4) * matan_t11 (4 * x1 * d / dX4 ^ 2)
+
+/-- HOL `delta4_squared_x` (sphere.hl:835-836). -/
+noncomputable def delta4SquaredX_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  deltaX4 x1 x2 x3 x4 x5 x6 ^ 2
+
+/-- HOL `tame_table_d` (sphere.hl:803-805). -/
+def tameTableD_t11 (r s : ℕ) : ℝ :=
+  if r + 2 * s > 3 then
+    0.103 * (2 - (s : ℝ)) + 0.2759 * ((r : ℝ) + 2 * (s : ℝ) - 4)
+  else 0
+
+/-- HOL `node2_y` (sphere.hl:222). -/
+def node2Y_t11 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  f y2 y3 y1 y5 y6 y4
+
+/-- HOL `rho` (sphere.hl:201). -/
+noncomputable def rhoICD_t11 (y : ℝ) : ℝ := 1 + const1 - const1 * ly y
+
+/-- HOL `rhazim` (sphere.hl:211). -/
+noncomputable def rhazim_t11 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  rhoICD_t11 y1 * dihY y1 y2 y3 y4 y5 y6
+
+/-- HOL `rhazim2` (sphere.hl:226): `node2_y rhazim`. -/
+noncomputable def rhazim2_t11 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := node2Y_t11 rhazim_t11
+
+/-- HOL `cayleyR` (leg/cayleyR_def.hl:32). -/
+noncomputable def cayleyR_t11 (x12 x13 x14 x15 x23 x24 x25 x34 x35 x45 : ℝ) : ℝ :=
+
+  ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((-(((x14
+  * x14) * x23) * x23)) + ((((2 * x14) * x15) * x23) * x23)) - (((x15 * x15) * x23) * x23))
+  + ((((2 * x13) * x14) * x23) * x24)) - ((((2 * x13) * x15) * x23) * x24)) - ((((2 * x14) *
+  x15) * x23) * x24)) + ((((2 * x15) * x15) * x23) * x24)) - (((x13 * x13) * x24) * x24)) +
+  ((((2 * x13) * x15) * x24) * x24)) - (((x15 * x15) * x24) * x24)) - ((((2 * x13) * x14) *
+  x23) * x25)) + ((((2 * x14) * x14) * x23) * x25)) + ((((2 * x13) * x15) * x23) * x25)) -
+  ((((2 * x14) * x15) * x23) * x25)) + ((((2 * x13) * x13) * x24) * x25)) - ((((2 * x13) *
+  x14) * x24) * x25)) - ((((2 * x13) * x15) * x24) * x25)) + ((((2 * x14) * x15) * x24) *
+  x25)) - (((x13 * x13) * x25) * x25)) + ((((2 * x13) * x14) * x25) * x25)) - (((x14 * x14)
+  * x25) * x25)) + ((((2 * x12) * x14) * x23) * x34)) - ((((2 * x12) * x15) * x23) * x34)) -
+  ((((2 * x14) * x15) * x23) * x34)) + ((((2 * x15) * x15) * x23) * x34)) + ((((2 * x12) *
+  x13) * x24) * x34)) - ((((2 * x12) * x15) * x24) * x34)) - ((((2 * x13) * x15) * x24) *
+  x34)) + ((((2 * x15) * x15) * x24) * x34)) + ((((4 * x15) * x23) * x24) * x34)) - ((((2 *
+  x12) * x13) * x25) * x34)) - ((((2 * x12) * x14) * x25) * x34)) + ((((4 * x13) * x14) *
+  x25) * x34)) + ((((4 * x12) * x15) * x25) * x34)) - ((((2 * x13) * x15) * x25) * x34)) -
+  ((((2 * x14) * x15) * x25) * x34)) - ((((2 * x14) * x23) * x25) * x34)) - ((((2 * x15) *
+  x23) * x25) * x34)) - ((((2 * x13) * x24) * x25) * x34)) - ((((2 * x15) * x24) * x25) *
+  x34)) + ((((2 * x13) * x25) * x25) * x34)) + ((((2 * x14) * x25) * x25) * x34)) - (((x12 *
+  x12) * x34) * x34)) + ((((2 * x12) * x15) * x34) * x34)) - (((x15 * x15) * x34) * x34)) +
+  ((((2 * x12) * x25) * x34) * x34)) + ((((2 * x15) * x25) * x34) * x34)) - (((x25 * x25) *
+  x34) * x34)) - ((((2 * x12) * x14) * x23) * x35)) + ((((2 * x14) * x14) * x23) * x35)) +
+  ((((2 * x12) * x15) * x23) * x35)) - ((((2 * x14) * x15) * x23) * x35)) - ((((2 * x12) *
+  x13) * x24) * x35)) + ((((4 * x12) * x14) * x24) * x35)) - ((((2 * x13) * x14) * x24) *
+  x35)) - ((((2 * x12) * x15) * x24) * x35)) + ((((4 * x13) * x15) * x24) * x35)) - ((((2 *
+  x14) * x15) * x24) * x35)) - ((((2 * x14) * x23) * x24) * x35)) - ((((2 * x15) * x23) *
+  x24) * x35)) + ((((2 * x13) * x24) * x24) * x35)) + ((((2 * x15) * x24) * x24) * x35)) +
+  ((((2 * x12) * x13) * x25) * x35)) - ((((2 * x12) * x14) * x25) * x35)) - ((((2 * x13) *
+  x14) * x25) * x35)) + ((((2 * x14) * x14) * x25) * x35)) + ((((4 * x14) * x23) * x25) *
+  x35)) - ((((2 * x13) * x24) * x25) * x35)) - ((((2 * x14) * x24) * x25) * x35)) + ((((2 *
+  x12) * x12) * x34) * x35)) - ((((2 * x12) * x14) * x34) * x35)) - ((((2 * x12) * x15) *
+  x34) * x35)) + ((((2 * x14) * x15) * x34) * x35)) - ((((2 * x12) * x24) * x34) * x35)) -
+  ((((2 * x15) * x24) * x34) * x35)) - ((((2 * x12) * x25) * x34) * x35)) - ((((2 * x14) *
+  x25) * x34) * x35)) + ((((2 * x24) * x25) * x34) * x35)) - (((x12 * x12) * x35) * x35)) +
+  ((((2 * x12) * x14) * x35) * x35)) - (((x14 * x14) * x35) * x35)) + ((((2 * x12) * x24) *
+  x35) * x35)) + ((((2 * x14) * x24) * x35) * x35)) - (((x24 * x24) * x35) * x35)) + ((((4 *
+  x12) * x13) * x23) * x45)) - ((((2 * x12) * x14) * x23) * x45)) - ((((2 * x13) * x14) *
+  x23) * x45)) - ((((2 * x12) * x15) * x23) * x45)) - ((((2 * x13) * x15) * x23) * x45)) +
+  ((((4 * x14) * x15) * x23) * x45)) + ((((2 * x14) * x23) * x23) * x45)) + ((((2 * x15) *
+  x23) * x23) * x45)) - ((((2 * x12) * x13) * x24) * x45)) + ((((2 * x13) * x13) * x24) *
+  x45)) + ((((2 * x12) * x15) * x24) * x45)) - ((((2 * x13) * x15) * x24) * x45)) - ((((2 *
+  x13) * x23) * x24) * x45)) - ((((2 * x15) * x23) * x24) * x45)) - ((((2 * x12) * x13) *
+  x25) * x45)) + ((((2 * x13) * x13) * x25) * x45)) + ((((2 * x12) * x14) * x25) * x45)) -
+  ((((2 * x13) * x14) * x25) * x45)) - ((((2 * x13) * x23) * x25) * x45)) - ((((2 * x14) *
+  x23) * x25) * x45)) + ((((4 * x13) * x24) * x25) * x45)) + ((((2 * x12) * x12) * x34) *
+  x45)) - ((((2 * x12) * x13) * x34) * x45)) - ((((2 * x12) * x15) * x34) * x45)) + ((((2 *
+  x13) * x15) * x34) * x45)) - ((((2 * x12) * x23) * x34) * x45)) - ((((2 * x15) * x23) *
+  x34) * x45)) - ((((2 * x12) * x25) * x34) * x45)) - ((((2 * x13) * x25) * x34) * x45)) +
+  ((((2 * x23) * x25) * x34) * x45)) + ((((2 * x12) * x12) * x35) * x45)) - ((((2 * x12) *
+  x13) * x35) * x45)) - ((((2 * x12) * x14) * x35) * x45)) + ((((2 * x13) * x14) * x35) *
+  x45)) - ((((2 * x12) * x23) * x35) * x45)) - ((((2 * x14) * x23) * x35) * x45)) - ((((2 *
+  x12) * x24) * x35) * x45)) - ((((2 * x13) * x24) * x35) * x45)) + ((((2 * x23) * x24) *
+  x35) * x45)) + ((((4 * x12) * x34) * x35) * x45)) - (((x12 * x12) * x45) * x45)) + ((((2 *
+  x12) * x13) * x45) * x45)) - (((x13 * x13) * x45) * x45)) + ((((2 * x12) * x23) * x45) *
+  x45)) + ((((2 * x13) * x23) * x45) * x45)) - (((x23 * x23) * x45) * x45))
+
+/-! ## Terminal 11 statement kit (T0, 2026-11-03)
+
+Statement-level port of the HOL `Main_estimate` vocabulary needed by the 109
+`main_nonlinear_terminal_v11` conjuncts and not yet canonical in this file's
+import closure.  Every def carries its HOL anchor and a verbatim body
+(camelCase renames only); the `_t11` suffix keeps the kit disjoint from the
+`_p11`/`_p19`/`_p38` twins (dedup debt recorded in the lane DELIVERY).
+
+The 109 conjuncts themselves are the named `mainEstimate_<idv>` defs below:
+each is a closed `Prop` (no proof claimed), so the terminal Prop stops being
+an opaque placeholder and becomes 109 countable statement debts. -/
+
+/-- HOL `mu_y` (nonlin_def.hl:401). -/
+noncomputable def muY_t11 (y1 y2 y3 : ℝ) : ℝ :=
+  0.012 + 0.07 * (2.52 - y1) + 0.01 * (2.52 * 2 - y2 - y3)
+
+/-- HOL `mu6_x` (nonlin_def.hl:403): `mu_y ∘ (sqrt x1, sqrt x2, sqrt x3)`. -/
+noncomputable def mu6X_t11 (x1 x2 x3 _x4 _x5 _x6 : ℝ) : ℝ :=
+  muY_t11 (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3)
+
+/-- HOL `flat_term` (sphere.hl:527). -/
+noncomputable def flatTerm_t11 (y : ℝ) : ℝ :=
+  sol0 * (y - 2 * h0) / (2 * h0 - 2)
+
+/-- HOL `flat_term_x` (sphere.hl:825). -/
+noncomputable def flatTermX_t11 (x : ℝ) : ℝ := flatTerm_t11 (Real.sqrt x)
+
+/-- HOL `taud` (nonlin_def.hl:406). -/
+noncomputable def taud_t11 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  flatTerm_t11 y1 + Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) * muY_t11 y1 y2 y3
+
+/-- HOL `taud_x` (nonlin_def.hl:413). -/
+noncomputable def taudX_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  flatTermX_t11 x1 +
+    Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) *
+      muY_t11 (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3)
+
+/-- HOL `delta_x1` (nonlin_def.hl:418). -/
+def deltaX1_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  -x1 * x4 + x2 * x5 - x3 * x5 - x2 * x6 + x3 * x6 +
+    x4 * (-x1 + x2 + x3 - x4 + x5 + x6)
+
+/-- HOL `delta_126_x` (sphere.hl:844). -/
+def delta126x_t11 (s3 s4 s5 : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 x2 _x3 _x4 _x5 x6 => deltaX x1 x2 s3 s4 s5 x6
+
+/-- HOL `delta_234_x` (sphere.hl:848). -/
+def delta234x_t11 (s1 s5 s6 : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun _x1 x2 x3 x4 _x5 _x6 => deltaX s1 x2 x3 x4 s5 s6
+
+/-- HOL `delta_135_x` (sphere.hl:852). -/
+def delta135x_t11 (s2 s4 s6 : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 _x2 x3 _x4 x5 _x6 => deltaX x1 s2 x3 s4 x5 s6
+
+/-- HOL `mud_126_x_v1` (nonlin_def.hl:496). -/
+noncomputable def mud126xV1_t11 (a b c : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 x2 x3 x4 x5 x6 =>
+    muY_t11 a (Real.sqrt x1) (Real.sqrt x2) *
+      Real.sqrt (delta126x_t11 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6)
+
+/-- HOL `mud_135_x_v1` (nonlin_def.hl:491). -/
+noncomputable def mud135xV1_t11 (a b c : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 x2 x3 x4 x5 x6 =>
+    muY_t11 a (Real.sqrt x1) (Real.sqrt x3) *
+      Real.sqrt (delta135x_t11 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6)
+
+/-- HOL `mud_234_x_v1` (nonlin_def.hl:501). -/
+noncomputable def mud234xV1_t11 (a b c : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 x2 x3 x4 x5 x6 =>
+    muY_t11 a (Real.sqrt x2) (Real.sqrt x3) *
+      Real.sqrt (delta234x_t11 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6)
+
+/-- HOL `mudLs_126_x` (nonlin_def.hl:511). -/
+noncomputable def mudLs126x_t11 (d1s d2s a b c : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 x2 x3 x4 x5 x6 =>
+    mu6X_t11 (a * a) x1 x2 0 0 0 *
+      ((1 / (d1s + d2s)) *
+          (delta126x_t11 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6 - d1s * d1s) + d1s)
+
+/-- HOL `mudLs_135_x` (nonlin_def.hl:516). -/
+noncomputable def mudLs135x_t11 (d1s d2s a b c : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 x2 x3 x4 x5 x6 =>
+    mu6X_t11 (a * a) x1 x3 0 0 0 *
+      ((1 / (d1s + d2s)) *
+          (delta135x_t11 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6 - d1s * d1s) + d1s)
+
+/-- HOL `mudLs_234_x` (nonlin_def.hl:506). -/
+noncomputable def mudLs234x_t11 (d1s d2s a b c : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 x2 x3 x4 x5 x6 =>
+    mu6X_t11 (a * a) x2 x3 0 0 0 *
+      ((1 / (d1s + d2s)) *
+          (delta234x_t11 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6 - d1s * d1s) + d1s)
+
+/-- HOL `abc_of_quadratic` (sphere.hl:59). -/
+noncomputable def abcOfQuadratic_t11 (f : ℝ → ℝ) : ℝ × ℝ × ℝ :=
+  let c := f 0
+  let p := f 1
+  let n := f (-1)
+  ((p + n) / 2 - c, (p - n) / 2, c)
+
+/-- HOL `edge2_flatD_x1` (nonlin_def.hl:473). -/
+noncomputable def edge2FlatDX1_t11 (d x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  let abc := abcOfQuadratic_t11 fun x1 => d - deltaX x1 x2 x3 x4 x5 x6
+  quadraticRootPlus abc.1 abc.2.1 abc.2.2
+
+/-- HOL `flat_term2_126_x` (nonlin_def.hl:486). -/
+noncomputable def flatTerm2_126x_t11 (d a b : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 x2 _x3 _x4 _x5 x6 => flatTermX_t11 (edge2FlatDX1_t11 d x1 x2 x6 a b)
+
+/-- HOL `flat_term2_135_x` (nonlin_def.hl:489). -/
+noncomputable def flatTerm2_135x_t11 (d a b : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 _x2 x3 _x4 x5 _x6 => flatTermX_t11 (edge2FlatDX1_t11 d x1 x3 x5 a b)
+
+/-- HOL `flat_term2_234_x` (nonlin_def.hl:492). -/
+noncomputable def flatTerm2_234x_t11 (d a b : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun _x1 x2 x3 x4 _x5 _x6 => flatTermX_t11 (edge2FlatDX1_t11 d x2 x3 x4 a b)
+
+/-- HOL `eulerA_x` (sphere.hl:831). -/
+noncomputable def eulerAX_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  Real.sqrt x1 * Real.sqrt x2 * Real.sqrt x3 +
+    Real.sqrt x1 * (x2 + x3 - x4) / 2 +
+    Real.sqrt x2 * (x1 + x3 - x5) / 2 +
+    Real.sqrt x3 * (x1 + x2 - x6) / 2
+
+/-- HOL `taud_D1_num_x` (nonlin_def.hl:457). -/
+noncomputable def taudD1numX_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  let d := deltaX x1 x2 x3 x4 x5 x6
+  let delta' := deltaX1_t11 x1 x2 x3 x4 x5 x6 * 2 * Real.sqrt x1
+  let mu := mu6X_t11 x1 x2 x3 x4 x5 x6
+  (-0.07) * d + (1 / 2) * mu * delta' + (sol0 / 0.52) * Real.sqrt d
+
+/-- HOL `taud_D2_num_x` (nonlin_def.hl:465). -/
+noncomputable def taudD2numX_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  let d := deltaX x1 x2 x3 x4 x5 x6
+  let delta' := deltaX1_t11 x1 x2 x3 x4 x5 x6 * 2 * Real.sqrt x1
+  let delta'' := (-8) * x1 * x4 + deltaX1_t11 x1 x2 x3 x4 x5 x6 * 2
+  let mu := mu6X_t11 x1 x2 x3 x4 x5 x6
+  (-0.07) * d * delta' - (1 / 4) * mu * (delta' * delta') +
+    (1 / 2) * mu * d * delta''
+
+/-- HOL `rhazim_x_div_sqrtdelta_posbranch` (nonlin_def.hl:169). -/
+noncomputable def rhazimXDivSqrtdeltaPosbranch_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  rhoICD_t11 (Real.sqrt x1) * dihXDivSqrtdeltaPosbranch_t11 x1 x2 x3 x4 x5 x6
+
+/-- HOL `tau_residual_x` (nonlin_def.hl:181). -/
+noncomputable def tauResidualX_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  rhazimXDivSqrtdeltaPosbranch_t11 x1 x2 x3 x4 x5 x6 +
+    rotate2_t11 rhazimXDivSqrtdeltaPosbranch_t11 x1 x2 x3 x4 x5 x6 +
+    rotate3_t11 rhazimXDivSqrtdeltaPosbranch_t11 x1 x2 x3 x4 x5 x6
+
+/-- HOL `taum_x` (sphere.hl:827): `rhazim_x + rhazim2_x + rhazim3_x - (1+const1)*pi`. -/
+noncomputable def taumX_t11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  rhazim_t11 (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x4)
+      (Real.sqrt x5) (Real.sqrt x6) +
+    rhazim2_t11 (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x4)
+      (Real.sqrt x5) (Real.sqrt x6) +
+    rotate3_t11 rhazim_t11 (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x4)
+      (Real.sqrt x5) (Real.sqrt x6) -
+    (1 + const1) * Real.pi
+
+/-- HOL `delta4_squared_y` (sphere.hl:838). -/
+noncomputable def delta4SquaredY_t11 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) ^ 2
+
+/-- HOL `x1_delta_y` (sphere.hl:842). -/
+noncomputable def x1DeltaY_t11 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  y1 * y1 * deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+
+/-- HOL `cayleytr` (leg/collect_geom.hl:164). -/
+noncomputable def cayleytr_t11 (x12 x13 x14 x15 x23 x24 x25 x34 x35 x45 : ℝ) : ℝ :=
+  2 * x23 * x25 * x34 + 2 * x23 * x24 * x35 + -1 * x23 ^ 2 * x45 + -2 * x15 * x23 * x34 + -2 * x15 * x23 * x24 + 2 * x15 * x23 ^ 2 + -2 * x14 * x23 * x35 + -2 * x14 * x23 * x25 + 2 * x14 * x23 ^ 2 + 4 * x14 * x15 * x23 + -2 * x13 * x25 * x34 + -2 * x13 * x24 * x35 + 4 * x13 * x24 * x25 + 2 * x13 * x23 * x45 + -2 * x13 * x23 * x25 + -2 * x13 * x23 * x24 + 2 * x13 * x15 * x34 + -2 * x13 * x15 * x24 + -2 * x13 * x15 * x23 + 2 * x13 * x14 * x35 + -2 * x13 * x14 * x25 + -2 * x13 * x14 * x23 + -1 * x13 ^ 2 * x45 + 2 * x13 ^ 2 * x25 + 2 * x13 ^ 2 * x24 + 4 * x12 * x34 * x35 + -2 * x12 * x25 * x34 + -2 * x12 * x24 * x35 + 2 * x12 * x23 * x45 + -2 * x12 * x23 * x35 + -2 * x12 * x23 * x34 + -2 * x12 * x15 * x34 + 2 * x12 * x15 * x24 + -2 * x12 * x15 * x23 + -2 * x12 * x14 * x35 + 2 * x12 * x14 * x25 + -2 * x12 * x14 * x23 + 2 * x12 * x13 * x45 + -2 * x12 * x13 * x35 + -2 * x12 * x13 * x34 + -2 * x12 * x13 * x25 + -2 * x12 * x13 * x24 + 4 * x12 * x13 * x23 + -1 * x12 ^ 2 * x45 + 2 * x12 ^ 2 * x35 + 2 * x12 ^ 2 * x34
+
+/-- The r755 d-slot selector, 234 copy (HOL `mk_ineq_hex`, main_estimate_ineq.hl:904). -/
+noncomputable def r755D234_t11 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  match i with
+  | 0 => yOfX (flatTerm2_234x_t11 0 4 4) y1 y2 y3 y4 y5 y6
+  | 1 => 0
+  | 2 => yOfX (mud234xV1_t11 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+  | 3 => yOfX (mudLs234x_t11 4 10 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+  | _ => 0 - sol0
+
+/-- The r755 d-slot selector, 126 copy. -/
+noncomputable def r755D126_t11 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  match i with
+  | 0 => yOfX (flatTerm2_126x_t11 0 4 4) y1 y2 y3 y4 y5 y6
+  | 1 => 0
+  | 2 => yOfX (mud126xV1_t11 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+  | 3 => yOfX (mudLs126x_t11 4 10 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+  | _ => 0 - sol0
+
+/-- The r755 d-slot selector, 135 copy. -/
+noncomputable def r755D135_t11 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  match i with
+  | 0 => yOfX (flatTerm2_135x_t11 0 4 4) y1 y2 y3 y4 y5 y6
+  | 1 => 0
+  | 2 => yOfX (mud135xV1_t11 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+  | 3 => yOfX (mudLs135x_t11 4 10 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+  | _ => 0 - sol0
+
+/-- The r755 c-slot (range guard) selector, 234 copy. -/
+noncomputable def r755C234_t11 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) : Prop :=
+  match i with
+  | 0 => yOfX (delta234x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 0 ∨
+      yOfX (delta234x_t11 (2.52 ^ 2) 4 4) y1 y2 y3 y4 y5 y6 > 0
+  | 1 => False
+  | 2 => yOfX (delta234x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 100
+  | 3 => yOfX (delta234x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 16 ∨
+      yOfX (delta234x_t11 4 4 4) y1 y2 y3 y4 y5 y6 > 100
+  | _ => yOfX (delta234x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 0 ∨
+      yOfX (delta234x_t11 4 4 4) y1 y2 y3 y4 y5 y6 > 16
+
+/-- The r755 c-slot selector, 126 copy. -/
+noncomputable def r755C126_t11 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) : Prop :=
+  match i with
+  | 0 => yOfX (delta126x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 0 ∨
+      yOfX (delta126x_t11 (2.52 ^ 2) 4 4) y1 y2 y3 y4 y5 y6 > 0
+  | 1 => False
+  | 2 => yOfX (delta126x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 100
+  | 3 => yOfX (delta126x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 16 ∨
+      yOfX (delta126x_t11 4 4 4) y1 y2 y3 y4 y5 y6 > 100
+  | _ => yOfX (delta126x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 0 ∨
+      yOfX (delta126x_t11 4 4 4) y1 y2 y3 y4 y5 y6 > 16
+
+/-- The r755 c-slot selector, 135 copy. -/
+noncomputable def r755C135_t11 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) : Prop :=
+  match i with
+  | 0 => yOfX (delta135x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 0 ∨
+      yOfX (delta135x_t11 (2.52 ^ 2) 4 4) y1 y2 y3 y4 y5 y6 > 0
+  | 1 => False
+  | 2 => yOfX (delta135x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 100
+  | 3 => yOfX (delta135x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 16 ∨
+      yOfX (delta135x_t11 4 4 4) y1 y2 y3 y4 y5 y6 > 100
+  | _ => yOfX (delta135x_t11 4 4 4) y1 y2 y3 y4 y5 y6 < 0 ∨
+      yOfX (delta135x_t11 4 4 4) y1 y2 y3 y4 y5 y6 > 16
+
+/-- The `template_hex` body of HOL `mk_ineq_hex` (main_estimate_ineq.hl:904),
+with `s45`/`s56` resolved by the index equalities. -/
+noncomputable def r755Body_t11 (i234 i126 i135 : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) : Prop :=
+  taum y1 y2 y3 y4 y5 y6 + r755D234_t11 i234 y1 y2 y3 y4 y5 y6 +
+      r755D126_t11 i126 y1 y2 y3 y4 y5 y6 +
+      r755D135_t11 i135 y1 y2 y3 y4 y5 y6 > 0.712 ∨
+    yOfX eulerAX_t11 y1 y2 y3 y4 y5 y6 < 0 ∨
+    r755C234_t11 i234 y1 y2 y3 y4 y5 y6 ∨
+    r755C126_t11 i126 y1 y2 y3 y4 y5 y6 ∨
+    r755C135_t11 i135 y1 y2 y3 y4 y5 y6 ∨
+    (if i234 = i126 then y6 < y4 else False) ∨
+    (if i126 = i135 then y5 < y6 else False)
+
+/-- One entry of the r755 family: HOL `mk_ineq_hex i234 i126 i135` over the
+`template_hex` box `[2,2.52]^3 × [3.01,3.915]^3`. -/
+noncomputable def r755Ineq_t11 (i234 i126 i135 : ℕ) : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    2 ≤ y1 → y1 ≤ 2.52 → 2 ≤ y2 → y2 ≤ 2.52 → 2 ≤ y3 → y3 ≤ 2.52 →
+    3.01 ≤ y4 → y4 ≤ 3.915 → 3.01 ≤ y5 → y5 ≤ 3.915 →
+    3.01 ≤ y6 → y6 ≤ 3.915 → r755Body_t11 i234 i126 i135 y1 y2 y3 y4 y5 y6
+
+
+/-! ## The 109 `Main_estimate` conjuncts (registry order) -/
+
+/-- HOL `Main_estimate` `2125338128` (main_estimate_ineq.hl:1948). -/
+noncomputable def mainEstimate_2125338128 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    deltaY y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- HOL `Main_estimate` `2445657182` (main_estimate_ineq.hl:1931). -/
+noncomputable def mainEstimate_2445657182 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 > (0.11 : ℝ) + (0.12 : ℝ) * (y1 - (2 : ℝ))
+
+/-- HOL `Main_estimate` `9096461391` (main_estimate_ineq.hl:1913). -/
+noncomputable def mainEstimate_9096461391 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (2.52 : ℝ) ≤ y5 → y5 ≤ (3.01 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 + (0.12 : ℝ) * (y1 - (2 : ℝ)) > (0.403 : ℝ)
+
+/-- HOL `Main_estimate` `8495326405` (main_estimate_ineq.hl:1894). -/
+noncomputable def mainEstimate_8495326405 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y3 → y3 ≤ (6 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (2 : ℝ) * h0 ≤ y5 → y5 ≤ (2 : ℝ) * h0 → (3.01 : ℝ) ≤ y6 → y6 ≤ (6 : ℝ) →
+    deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `OMKYNLT 3336871894` (main_estimate_ineq.hl:1877). -/
+noncomputable def mainEstimate_OMKYNLT_3336871894 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2.0 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2.0 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2.0 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 ≥ (0.0 : ℝ)
+
+/-- HOL `Main_estimate` `5541487347` (main_estimate_ineq.hl:1860). -/
+noncomputable def mainEstimate_5541487347 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (2.52 : ℝ) ≤ y6 → y6 ≤ (Real.sqrt 8) →
+    taum y1 y2 y3 y4 y5 y6 > (0.103 : ℝ)
+
+/-- HOL `Main_estimate` `6833979866` (main_estimate_ineq.hl:1842). -/
+noncomputable def mainEstimate_6833979866 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (2.52 : ℝ) ≤ y5 → y5 ≤ (3.01 : ℝ) → (2.52 : ℝ) ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 > (0.2759 : ℝ)
+
+/-- HOL `Main_estimate` `4010906068` (main_estimate_ineq.hl:1824). -/
+noncomputable def mainEstimate_4010906068 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2.52 : ℝ) ≤ y4 → y4 ≤ (3.01 : ℝ) → (2.52 : ℝ) ≤ y5 → y5 ≤ (3.01 : ℝ) → (2.52 : ℝ) ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 > (0.476 : ℝ)
+
+/-- HOL `Main_estimate` `7881254908` (main_estimate_ineq.hl:1802). -/
+noncomputable def mainEstimate_7881254908 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2.0 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2.52 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (Real.sqrt 8) ≤ y5 → y5 ≤ (3.01 : ℝ) → (Real.sqrt 8) ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 > (0.696 : ℝ) - (2 : ℝ) * (0.11 : ℝ)
+
+/-- HOL `Main_estimate` `5026777310a` (main_estimate_ineq.hl:1783). -/
+noncomputable def mainEstimate_5026777310a : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2.0 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (Real.sqrt 8) ≤ y4 → y4 ≤ (3.01 : ℝ) → (Real.sqrt 8) ≤ y5 → y5 ≤ (3.01 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    ( taum y1 y2 y3 y4 y5 y6 > tameTableD_t11 4 1 - (2 : ℝ) * (0.11 : ℝ)) ∨ (deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ))
+
+/-- HOL `Main_estimate` `5405130650` (main_estimate_ineq.hl:1760). -/
+noncomputable def mainEstimate_5405130650 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2.0 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (Real.sqrt 8) ≤ y4 → y4 ≤ (3.01 : ℝ) → (2.52 : ℝ) ≤ y5 → y5 ≤ (Real.sqrt 8) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    ( taum y1 y2 y3 y4 y5 y6 + (0.1 : ℝ) * ((3.01 : ℝ) - y4) > (0.477 : ℝ) - (0.11 : ℝ)) ∨ (deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ))
+
+/-- HOL `Main_estimate` `3603097872` (main_estimate_ineq.hl:1738). -/
+noncomputable def mainEstimate_3603097872 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2.0 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (Real.sqrt 8) ≤ y4 → y4 ≤ (3.01 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    ( taum y1 y2 y3 y4 y5 y6 - (0.1 : ℝ) * ((3.01 : ℝ) - y4) > (0.11 : ℝ)) ∨ (deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ))
+
+/-- HOL `Main_estimate` `2468307358` (main_estimate_ineq.hl:1530). -/
+noncomputable def mainEstimate_2468307358 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.62 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.01 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    ( taum y1 y2 y3 y4 y5 y6 > (0.2565 : ℝ) )
+
+/-- HOL `Main_estimate` `2171548893` (main_estimate_ineq.hl:1512). -/
+noncomputable def mainEstimate_2171548893 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y2 → y2 ≤ (3.01 : ℝ) → (3.62 : ℝ) ≤ y3 → y3 ≤ (6 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.01 : ℝ) → (3.62 : ℝ) ≤ y6 → y6 ≤ (6 : ℝ) →
+    deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `4680581274 delta top issue` (main_estimate_ineq.hl:1490). -/
+noncomputable def mainEstimate_4680581274_delta_top_issue : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (3.166 : ℝ) ≤ y1 → y1 ≤ (4 : ℝ) → (3.01 : ℝ) ≤ y2 → y2 ≤ (3.01 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) → (3.166 : ℝ) ≤ y4 → y4 ≤ (4 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `4680581274 delta issue-cayleyR` (main_estimate_ineq.hl:1455). -/
+noncomputable def mainEstimate_4680581274_delta_issue_cayleyR : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 : ℝ,
+    (4.0 : ℝ) ≤ x1 → x1 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x2 → x2 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x3 → x3 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (3.01 : ℝ) * (3.01 : ℝ) ≤ x4 → x4 ≤ (3.166 : ℝ) * (3.166 : ℝ) → (4.0 : ℝ) ≤ x5 → x5 ≤ (4.0 : ℝ) → (4.0 : ℝ) ≤ x6 → x6 ≤ (4.0 : ℝ) → (4.0 : ℝ) ≤ x7 → x7 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x8 → x8 ≤ (4.0 : ℝ) → (3.01 : ℝ) * (3.01 : ℝ) ≤ x9 → x9 ≤ (3.01 : ℝ) * (3.01 : ℝ) → (3.01 : ℝ) * (3.01 : ℝ) ≤ x10 → x10 ≤ (3.01 : ℝ) * (3.01 : ℝ) →
+    (0 : ℝ) < cayleyR_t11 x3 x2 x1 x7 x4 x5 x8 x6 x9 x10 ∨ (10 : ℝ) + deltaX x1 x2 x3 x4 x5 x6 * (-1 : ℝ) < (0 : ℝ) ∨ deltaX4 x1 x2 x3 x4 x5 x6 * (-1 : ℝ) < (0 : ℝ)
+
+/-- HOL `Main_estimate` `4680581274 delta issue-cayleytr` (main_estimate_ineq.hl:1422). -/
+noncomputable def mainEstimate_4680581274_delta_issue_cayleytr : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 : ℝ,
+    (4.0 : ℝ) ≤ x1 → x1 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x2 → x2 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x3 → x3 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (3.01 : ℝ) * (3.01 : ℝ) ≤ x4 → x4 ≤ (3.166 : ℝ) * (3.166 : ℝ) → (4.0 : ℝ) ≤ x5 → x5 ≤ (4.0 : ℝ) → (4.0 : ℝ) ≤ x6 → x6 ≤ (4.0 : ℝ) → (4.0 : ℝ) ≤ x7 → x7 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x8 → x8 ≤ (4.0 : ℝ) → (3.01 : ℝ) * (3.01 : ℝ) ≤ x9 → x9 ≤ (3.01 : ℝ) * (3.01 : ℝ) → (3.01 : ℝ) * (3.01 : ℝ) ≤ x10 → x10 ≤ (3.01 : ℝ) * (3.01 : ℝ) →
+    (0 : ℝ) < (2 : ℝ) * upsX x2 x3 x4 * x10 + cayleytr_t11 x3 x2 x1 x7 x4 x5 x8 x6 x9 ((0 : ℝ)) ∨ (10 : ℝ) + deltaX x1 x2 x3 x4 x5 x6 * (-1 : ℝ) < (0 : ℝ) ∨ deltaX4 x1 x2 x3 x4 x5 x6 * (-1 : ℝ) < (0 : ℝ)
+
+/-- HOL `Main_estimate` `4680581274 delta issue-cayleytr0` (main_estimate_ineq.hl:1389). -/
+noncomputable def mainEstimate_4680581274_delta_issue_cayleytr0 : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 x7 x8 x9 : ℝ,
+    (4.0 : ℝ) ≤ x1 → x1 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x2 → x2 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x3 → x3 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (3.01 : ℝ) * (3.01 : ℝ) ≤ x4 → x4 ≤ (3.166 : ℝ) * (3.166 : ℝ) → (4.0 : ℝ) ≤ x5 → x5 ≤ (4.0 : ℝ) → (4.0 : ℝ) ≤ x6 → x6 ≤ (4.0 : ℝ) → (4.0 : ℝ) ≤ x7 → x7 ≤ (2.0 : ℝ) * (1.26 : ℝ) * (2.0 : ℝ) * (1.26 : ℝ) → (4.0 : ℝ) ≤ x8 → x8 ≤ (4.0 : ℝ) → (3.01 : ℝ) * (3.01 : ℝ) ≤ x9 → x9 ≤ (3.01 : ℝ) * (3.01 : ℝ) →
+    cayleytr_t11 x3 x2 x1 x7 x4 x5 x8 x6 x9 ((0 : ℝ)) < (0 : ℝ) ∨ (10 : ℝ) + deltaX x1 x2 x3 x4 x5 x6 * (-1 : ℝ) < (0 : ℝ) ∨ deltaX4 x1 x2 x3 x4 x5 x6 * (-1 : ℝ) < (0 : ℝ)
+
+/-- HOL `Main_estimate` `4680581274 2x` (main_estimate_ineq.hl:1319). -/
+noncomputable def mainEstimate_4680581274_2x : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+    (4.0 : ℝ) ≤ x1 → x1 ≤ ((2 : ℝ) * h0) ^ 2 → (4.0 : ℝ) ≤ x2 → x2 ≤ ((2 : ℝ) * h0) ^ 2 → (4.0 : ℝ) ≤ x3 → x3 ≤ ((2 : ℝ) * h0) ^ 2 → (3.01 : ℝ) ^ 2 ≤ x4 → x4 ≤ (3.166 : ℝ) ^ 2 → (3.01 : ℝ) ^ 2 ≤ x5 → x5 ≤ (3.01 : ℝ) ^ 2 → (4 : ℝ) ≤ x6 → x6 ≤ (4 : ℝ) →
+    ( taumX_t11 x1 x2 x3 x4 x5 x6 > (0.541 : ℝ))
+
+/-- HOL `Main_estimate` `4680581274 1x` (main_estimate_ineq.hl:1303). -/
+noncomputable def mainEstimate_4680581274_1x : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+    (4.0 : ℝ) ≤ x1 → x1 ≤ ((2 : ℝ) * h0) ^ 2 → (4.0 : ℝ) ≤ x2 → x2 ≤ ((2 : ℝ) * h0) ^ 2 → (4.0 : ℝ) ≤ x3 → x3 ≤ ((2 : ℝ) * h0) ^ 2 → (3.01 : ℝ) ^ 2 ≤ x4 → x4 ≤ (3.166 : ℝ) ^ 2 → (4 : ℝ) ≤ x5 → x5 ≤ (4 : ℝ) → (4 : ℝ) ≤ x6 → x6 ≤ (4 : ℝ) →
+    ( taudX_t11 x1 x2 x3 x4 x5 x6 > (-0.028 : ℝ)) ∨ deltaX x1 x2 x3 x4 x5 x6 < (10 : ℝ)
+
+/-- HOL `Main_estimate` `5550839403 delta` (main_estimate_ineq.hl:1219). -/
+noncomputable def mainEstimate_5550839403_delta : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.01 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.55 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) * h0 →
+    (deltaY y1 y2 y3 y4 y5 y6 > (0 : ℝ))
+
+/-- HOL `Main_estimate` `5550839403` (main_estimate_ineq.hl:1202). -/
+noncomputable def mainEstimate_5550839403 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.01 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.55 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) * h0 →
+    (dihY y1 y2 y3 y4 y5 y6 < (2.0 : ℝ))
+
+/-- HOL `Main_estimate` `8405387449` (main_estimate_ineq.hl:1180). -/
+noncomputable def mainEstimate_8405387449 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.55 : ℝ) → (2 : ℝ) * h0 ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    let tan2lower := (3.86 : ℝ); (((4 : ℝ) * x1DeltaY_t11 y1 y2 y3 y4 y5 y6 < tan2lower * delta4SquaredY_t11 y1 y2 y3 y4 y5 y6) ∨ deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ))
+
+/-- HOL `Main_estimate` `9368433105` (main_estimate_ineq.hl:1164). -/
+noncomputable def mainEstimate_9368433105 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.55 : ℝ) → (2 : ℝ) * h0 ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    (delta4Y y1 y2 y3 y4 y5 y6 > (0 : ℝ))
+
+/-- HOL `Main_estimate` `5557288534 delta` (main_estimate_ineq.hl:1147). -/
+noncomputable def mainEstimate_5557288534_delta : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.01 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.3 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    (deltaY y1 y2 y3 y4 y5 y6 > (0 : ℝ))
+
+/-- HOL `Main_estimate` `5557288534` (main_estimate_ineq.hl:1131). -/
+noncomputable def mainEstimate_5557288534 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.01 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.3 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    (dihY y1 y2 y3 y4 y5 y6 < (1.7 : ℝ))
+
+/-- HOL `Main_estimate` `1348932091 delta` (main_estimate_ineq.hl:1115). -/
+noncomputable def mainEstimate_1348932091_delta : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2.52 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.3 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    (deltaY y1 y2 y3 y4 y5 y6 > (0 : ℝ))
+
+/-- HOL `Main_estimate` `1348932091` (main_estimate_ineq.hl:1099). -/
+noncomputable def mainEstimate_1348932091 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2.52 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.3 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    (dihY y1 y2 y3 y4 y5 y6 < (1.4 : ℝ))
+
+/-- HOL `Main_estimate` `2073661826` (main_estimate_ineq.hl:1083). -/
+noncomputable def mainEstimate_2073661826 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.55 : ℝ) ≤ y4 → y4 ≤ (4 : ℝ) * h0 → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (2.52 : ℝ) ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    (delta4Y y1 y2 y3 y4 y5 y6 < (0 : ℝ))
+
+/-- HOL `Main_estimate` `6184614449` (main_estimate_ineq.hl:1067). -/
+noncomputable def mainEstimate_6184614449 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) * h0 → (3.3 : ℝ) ≤ y4 → y4 ≤ (4 : ℝ) * h0 → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) * h0 →
+    (delta4Y y1 y2 y3 y4 y5 y6 < (0 : ℝ))
+
+/-- HOL `Main_estimate` `5202826650 a` (main_estimate_ineq.hl:1031). -/
+noncomputable def mainEstimate_5202826650_a : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2.52 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    (yOfX tauResidualX_t11 y1 y2 y3 y4 y5 y6 > (0 : ℝ)) ∨ (deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ))
+
+/-- HOL `Main_estimate` `4821120729` (main_estimate_ineq.hl:1015). -/
+noncomputable def mainEstimate_4821120729 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) * h0 → (2.0 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) * h0 → (2.0 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) * h0 → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    yOfX eulerAX_t11 y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- HOL `Main_estimate` `8631418063` (main_estimate_ineq.hl:1000). -/
+noncomputable def mainEstimate_8631418063 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    yOfX deltaX4 y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- HOL `Main_estimate` `8346775862` (main_estimate_ineq.hl:984). -/
+noncomputable def mainEstimate_8346775862 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) * h0 → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    deltaY y1 y2 y3 y4 y5 y6 > (200 : ℝ) ∨ yOfX deltaX4 y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `6762190381` (main_estimate_ineq.hl:968). -/
+noncomputable def mainEstimate_6762190381 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) * h0 → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    deltaY y1 y2 y3 y4 y5 y6 < (200 : ℝ) ∨ taum y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- HOL `Main_estimate` `7550003505 4 4 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_4_4_4 : Prop := r755Ineq_t11 4 4 4
+
+/-- HOL `Main_estimate` `7550003505 3 4 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_3_4_4 : Prop := r755Ineq_t11 3 4 4
+
+/-- HOL `Main_estimate` `7550003505 3 3 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_3_3_4 : Prop := r755Ineq_t11 3 3 4
+
+/-- HOL `Main_estimate` `7550003505 3 3 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_3_3_3 : Prop := r755Ineq_t11 3 3 3
+
+/-- HOL `Main_estimate` `7550003505 2 4 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_2_4_4 : Prop := r755Ineq_t11 2 4 4
+
+/-- HOL `Main_estimate` `7550003505 2 3 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_2_3_4 : Prop := r755Ineq_t11 2 3 4
+
+/-- HOL `Main_estimate` `7550003505 2 3 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_2_3_3 : Prop := r755Ineq_t11 2 3 3
+
+/-- HOL `Main_estimate` `7550003505 2 2 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_2_2_4 : Prop := r755Ineq_t11 2 2 4
+
+/-- HOL `Main_estimate` `7550003505 2 2 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_2_2_3 : Prop := r755Ineq_t11 2 2 3
+
+/-- HOL `Main_estimate` `7550003505 2 2 2` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_2_2_2 : Prop := r755Ineq_t11 2 2 2
+
+/-- HOL `Main_estimate` `7550003505 1 4 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_4_4 : Prop := r755Ineq_t11 1 4 4
+
+/-- HOL `Main_estimate` `7550003505 1 3 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_3_4 : Prop := r755Ineq_t11 1 3 4
+
+/-- HOL `Main_estimate` `7550003505 1 3 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_3_3 : Prop := r755Ineq_t11 1 3 3
+
+/-- HOL `Main_estimate` `7550003505 1 2 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_2_4 : Prop := r755Ineq_t11 1 2 4
+
+/-- HOL `Main_estimate` `7550003505 1 2 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_2_3 : Prop := r755Ineq_t11 1 2 3
+
+/-- HOL `Main_estimate` `7550003505 1 2 2` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_2_2 : Prop := r755Ineq_t11 1 2 2
+
+/-- HOL `Main_estimate` `7550003505 1 1 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_1_4 : Prop := r755Ineq_t11 1 1 4
+
+/-- HOL `Main_estimate` `7550003505 1 1 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_1_3 : Prop := r755Ineq_t11 1 1 3
+
+/-- HOL `Main_estimate` `7550003505 1 1 2` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_1_2 : Prop := r755Ineq_t11 1 1 2
+
+/-- HOL `Main_estimate` `7550003505 1 1 1` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_1_1_1 : Prop := r755Ineq_t11 1 1 1
+
+/-- HOL `Main_estimate` `7550003505 0 4 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_4_4 : Prop := r755Ineq_t11 0 4 4
+
+/-- HOL `Main_estimate` `7550003505 0 3 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_3_4 : Prop := r755Ineq_t11 0 3 4
+
+/-- HOL `Main_estimate` `7550003505 0 3 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_3_3 : Prop := r755Ineq_t11 0 3 3
+
+/-- HOL `Main_estimate` `7550003505 0 2 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_2_4 : Prop := r755Ineq_t11 0 2 4
+
+/-- HOL `Main_estimate` `7550003505 0 2 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_2_3 : Prop := r755Ineq_t11 0 2 3
+
+/-- HOL `Main_estimate` `7550003505 0 2 2` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_2_2 : Prop := r755Ineq_t11 0 2 2
+
+/-- HOL `Main_estimate` `7550003505 0 1 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_1_4 : Prop := r755Ineq_t11 0 1 4
+
+/-- HOL `Main_estimate` `7550003505 0 1 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_1_3 : Prop := r755Ineq_t11 0 1 3
+
+/-- HOL `Main_estimate` `7550003505 0 1 2` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_1_2 : Prop := r755Ineq_t11 0 1 2
+
+/-- HOL `Main_estimate` `7550003505 0 1 1` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_1_1 : Prop := r755Ineq_t11 0 1 1
+
+/-- HOL `Main_estimate` `7550003505 0 0 4` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_0_4 : Prop := r755Ineq_t11 0 0 4
+
+/-- HOL `Main_estimate` `7550003505 0 0 3` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_0_3 : Prop := r755Ineq_t11 0 0 3
+
+/-- HOL `Main_estimate` `7550003505 0 0 2` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_0_2 : Prop := r755Ineq_t11 0 0 2
+
+/-- HOL `Main_estimate` `7550003505 0 0 1` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_0_1 : Prop := r755Ineq_t11 0 0 1
+
+/-- HOL `Main_estimate` `7550003505 0 0 0` (main_estimate_ineq.hl:949), hex-ear template. -/
+noncomputable def mainEstimate_7550003505_0_0_0 : Prop := r755Ineq_t11 0 0 0
+
+/-- HOL `Main_estimate` `5744538693` (main_estimate_ineq.hl:862). -/
+noncomputable def mainEstimate_5744538693 : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+    (4 : ℝ) ≤ x1 → x1 ≤ (8 : ℝ) → (4 : ℝ) ≤ x2 → x2 ≤ (7 : ℝ) → (4 : ℝ) ≤ x3 → x3 ≤ (7 : ℝ) → (8 : ℝ) ≤ x4 → x4 ≤ (28 : ℝ) → (4 : ℝ) ≤ x5 → x5 ≤ (7 : ℝ) → (4 : ℝ) ≤ x6 → x6 ≤ (7 : ℝ) →
+    (0 : ℝ) < delta4SquaredX_t11 x1 x2 x3 x4 x5 x6 ∨ (0 : ℝ) < deltaX x1 x2 x3 x4 x5 x6
+
+/-- HOL `Main_estimate` `7823243247` (main_estimate_ineq.hl:840). -/
+noncomputable def mainEstimate_7823243247 : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+    (4 : ℝ) ≤ x1 → x1 ≤ (6.3504 : ℝ) → (4 : ℝ) ≤ x2 → x2 ≤ (6.3504 : ℝ) → (4 : ℝ) ≤ x3 → x3 ≤ (6.3504 : ℝ) → (9.0 : ℝ) ≤ x4 → x4 ≤ (15.328 : ℝ) → (9.0 : ℝ) ≤ x5 → x5 ≤ (15.328 : ℝ) → (9.0 : ℝ) ≤ x6 → x6 ≤ (15.328 : ℝ) →
+    (0 : ℝ) < deltaX x1 x2 x3 x4 x5 x6 ∨ eulerAX_t11 x1 x2 x3 x4 x5 x6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `9692636487` (main_estimate_ineq.hl:817). -/
+noncomputable def mainEstimate_9692636487 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    (yOfX taudD2numX_t11 y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ)) ∨ deltaY y1 y2 y3 y4 y5 y6 > (15 : ℝ)
+
+/-- HOL `Main_estimate` `6877738680` (main_estimate_ineq.hl:794). -/
+noncomputable def mainEstimate_6877738680 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    yOfX taudD1numX_t11 y1 y2 y3 y4 y5 y6 > (0 : ℝ) ∨ yOfX taudD1numX_t11 y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ (yOfX taudD2numX_t11 y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ yOfX taudX_t11 y1 y2 y3 y4 y5 y6 > (0 : ℝ) ∨ deltaY y1 y2 y3 y4 y5 y6 < (15 : ℝ))
+
+/-- HOL `Main_estimate` `7439076204` (main_estimate_ineq.hl:754). -/
+noncomputable def mainEstimate_7439076204 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.915 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.915 : ℝ) →
+    yOfX deltaX4 y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ yOfX eulerAX_t11 y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- HOL `Main_estimate` `6459846571` (main_estimate_ineq.hl:734). -/
+noncomputable def mainEstimate_6459846571 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (4.52 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    (y4 < (3.915 : ℝ)) ∨ deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `1008824382` (main_estimate_ineq.hl:701). -/
+noncomputable def mainEstimate_1008824382 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 + (0.705 : ℝ) * yOfX (flatTerm2_135x_t11 ((20 : ℝ)) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 + ((0.012 : ℝ) + (0.01 : ℝ) * ((2.52 : ℝ) * (2 : ℝ) - y1 - y3 )) * (4.47 : ℝ) + yOfX (flatTerm2_126x_t11 ((0 : ℝ)) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > (0.616 : ℝ) ∨ yOfX (delta135x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > (20 : ℝ) ∨ yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- HOL `Main_estimate` `8875146520` (main_estimate_ineq.hl:672). -/
+noncomputable def mainEstimate_8875146520 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 + yOfX (flatTerm2_135x_t11 ((20 : ℝ)) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 + ((0.012 : ℝ) + (0.01 : ℝ) * ((2.52 : ℝ) * (2 : ℝ) - y1 - y3 )) * (4.47 : ℝ) + yOfX (mud126xV1_t11 ((2 : ℝ) * h0) ((2 : ℝ)) ((2 : ℝ))) y1 y2 y3 y4 y5 y6 > (0.616 : ℝ) ∨ yOfX (delta135x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > (20 : ℝ) ∨ yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 < (20 : ℝ)
+
+/-- HOL `Main_estimate` `1586903463` (main_estimate_ineq.hl:643). -/
+noncomputable def mainEstimate_1586903463 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 + yOfX (flatTerm2_135x_t11 ((20 : ℝ)) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 + ((0.012 : ℝ) + (0.01 : ℝ) * ((2.52 : ℝ) * (2 : ℝ) - y1 - y3 )) * (4.47 : ℝ) + (0 : ℝ) > (0.616 : ℝ) ∨ yOfX (delta135x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > (20 : ℝ) ∨ yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > (20 : ℝ)
+
+/-- HOL `Main_estimate` `1948775510` (main_estimate_ineq.hl:617). -/
+noncomputable def mainEstimate_1948775510 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 + yOfX (flatTerm2_126x_t11 ((0 : ℝ)) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 + yOfX (mud135xV1_t11 ((2 : ℝ) * h0) ((2 : ℝ)) ((2 : ℝ))) y1 y2 y3 y4 y5 y6 > (0.616 : ℝ) ∨ yOfX (delta135x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 < (20 : ℝ) ∨ yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- HOL `Main_estimate` `5708641738` (main_estimate_ineq.hl:588). -/
+noncomputable def mainEstimate_5708641738 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    let d := (20 : ℝ); ((taum y1 y2 y3 y4 y5 y6 + (0.053 : ℝ) > (0.616 : ℝ)) ∨ yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > d )
+
+/-- HOL `Main_estimate` `2565248885` (main_estimate_ineq.hl:562). -/
+noncomputable def mainEstimate_2565248885 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    let d := (0 : ℝ); ((taum y1 y2 y3 y4 y5 y6 + yOfX (flatTerm2_126x_t11 d ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 + yOfX (mud135xV1_t11 ((2 : ℝ)) ((2 : ℝ)) ((2 : ℝ))) y1 y2 y3 y4 y5 y6 - sol0 > (0.616 : ℝ)) ∨ yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > d )
+
+/-- HOL `Main_estimate` `5429238960` (main_estimate_ineq.hl:538). -/
+noncomputable def mainEstimate_5429238960 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > (20 : ℝ) ∨ (taum y1 y2 y3 y4 y5 y6 + yOfX (mud135xV1_t11 ((2 : ℝ)) ((2 : ℝ)) ((2 : ℝ))) y1 y2 y3 y4 y5 y6 - sol0 > (0.616 : ℝ))
+
+/-- HOL `Main_estimate` `2320951108` (main_estimate_ineq.hl:512). -/
+noncomputable def mainEstimate_2320951108 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    (taum y1 y2 y3 y4 y5 y6 + yOfX (mud135xV1_t11 ((2 : ℝ)) ((2 : ℝ)) ((2 : ℝ))) y1 y2 y3 y4 y5 y6 - sol0 + (0.053 : ℝ) > (0.616 : ℝ))
+
+/-- HOL `Main_estimate` `7997589055` (main_estimate_ineq.hl:486). -/
+noncomputable def mainEstimate_7997589055 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    (taum y1 y2 y3 y4 y5 y6 + yOfX (mud126xV1_t11 ((2 : ℝ)) ((2 : ℝ)) ((2 : ℝ))) y1 y2 y3 y4 y5 y6 - sol0 + yOfX (mud135xV1_t11 ((2 : ℝ)) ((2 : ℝ)) ((2 : ℝ))) y1 y2 y3 y4 y5 y6 - sol0 > (0.616 : ℝ))
+
+/-- HOL `Main_estimate` `5546286427` (main_estimate_ineq.hl:460). -/
+noncomputable def mainEstimate_5546286427 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    let d := (0 : ℝ); ((taum y1 y2 y3 y4 y5 y6 + yOfX (flatTerm2_126x_t11 d ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 + (0.12 : ℝ) > (0.616 : ℝ)) ∨ yOfX (delta126x_t11 ((4 : ℝ) * h0 * h0) ((4 : ℝ)) ((4 : ℝ))) y1 y2 y3 y4 y5 y6 > d )
+
+/-- HOL `Main_estimate` `7903347843` (main_estimate_ineq.hl:435). -/
+noncomputable def mainEstimate_7903347843 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    (taum y1 y2 y3 y4 y5 y6 + yOfX (mud126xV1_t11 ((2 : ℝ)) ((2 : ℝ)) ((2 : ℝ))) y1 y2 y3 y4 y5 y6 - sol0 + (0.12 : ℝ) > (0.616 : ℝ))
+
+/-- HOL `Main_estimate` `3665919985` (main_estimate_ineq.hl:418). -/
+noncomputable def mainEstimate_3665919985 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    taum y1 y2 y3 y4 y5 y6 > (0.541 : ℝ)
+
+/-- HOL `Main_estimate` `6601228004` (main_estimate_ineq.hl:396). -/
+noncomputable def mainEstimate_6601228004 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.237 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    yOfX taudD2numX_t11 y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ deltaY y1 y2 y3 y4 y5 y6 > (20 : ℝ) ∨ deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `3078028960` (main_estimate_ineq.hl:375). -/
+noncomputable def mainEstimate_3078028960 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    yOfX deltaX1_t11 y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ deltaY y1 y2 y3 y4 y5 y6 > (20 : ℝ)
+
+/-- HOL `Main_estimate` `1347067436` (main_estimate_ineq.hl:351). -/
+noncomputable def mainEstimate_1347067436 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.237 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    yOfX taudD1numX_t11 y1 y2 y3 y4 y5 y6 > (0 : ℝ) ∨ yOfX taudD1numX_t11 y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ yOfX taudD2numX_t11 y1 y2 y3 y4 y5 y6 < (0 : ℝ) ∨ yOfX taudX_t11 y1 y2 y3 y4 y5 y6 > (0.12 : ℝ) ∨ deltaY y1 y2 y3 y4 y5 y6 < (20 : ℝ)
+
+/-- HOL `Main_estimate` `2314572187` (main_estimate_ineq.hl:329). -/
+noncomputable def mainEstimate_2314572187 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2.0 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    (taum y1 y2 y3 y4 y5 y6 > yOfX taudX_t11 y1 y2 y3 y4 y5 y6) ∨ (deltaY y1 y2 y3 y4 y5 y6 < (80 : ℝ))
+
+/-- HOL `Main_estimate` `7796879304` (main_estimate_ineq.hl:307). -/
+noncomputable def mainEstimate_7796879304 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2.0 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    (deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ)) ∨ (deltaY y1 y2 y3 y4 y5 y6 > (80 : ℝ)) ∨ (yOfX tauResidualX_t11 y1 y2 y3 y4 y5 y6 > (0.012 : ℝ) + (0.07 : ℝ) * ((2.52 : ℝ) - y1) + (0.01 : ℝ) * ((2.52 : ℝ) * (2 : ℝ) - y2 - y3 ))
+
+/-- HOL `Main_estimate` `6789182745` (main_estimate_ineq.hl:287). -/
+noncomputable def mainEstimate_6789182745 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (3.01 : ℝ) ≤ y6 → y6 ≤ (3.237 : ℝ) →
+    (dihY y1 y2 y3 y4 y5 y6 < (1.109 : ℝ))
+
+/-- HOL `Main_estimate` `4887115291` (main_estimate_ineq.hl:268). -/
+noncomputable def mainEstimate_4887115291 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.01 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    (1.75 : ℝ) < dihY y1 y2 y3 y4 y5 y6
+
+/-- HOL `Main_estimate` `7175074394` (main_estimate_ineq.hl:236). -/
+noncomputable def mainEstimate_7175074394 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (3.237 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    let tan2lower := (0.110186 : ℝ); (deltaY y1 y2 y3 y4 y5 y6 > (20 : ℝ)) ∨ ((4 : ℝ) * x1DeltaY_t11 y1 y2 y3 y4 y5 y6 < tan2lower * delta4SquaredY_t11 y1 y2 y3 y4 y5 y6)
+
+/-- HOL `Main_estimate` `2485876245b` (main_estimate_ineq.hl:213). -/
+noncomputable def mainEstimate_2485876245b : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) * (2.52 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (3.01 : ℝ) →
+    (delta4Y y1 y2 y3 y4 y5 y6 > (0 : ℝ)) ∨ (deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ))
+
+/-- HOL `Main_estimate` `2485876245a` (main_estimate_ineq.hl:193). -/
+noncomputable def mainEstimate_2485876245a : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y4 → y4 ≤ (2.52 : ℝ) → (3.0 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) * (2.52 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    delta4Y y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- HOL `Main_estimate` `4559601669b` (main_estimate_ineq.hl:172). -/
+noncomputable def mainEstimate_4559601669b : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.01 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    delta4Y y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `4559601669` (main_estimate_ineq.hl:154). -/
+noncomputable def mainEstimate_4559601669 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.915 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    delta4Y y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `1117202051` (main_estimate_ineq.hl:136). -/
+noncomputable def mainEstimate_1117202051 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.0 : ℝ) → (3.01 : ℝ) ≤ y4 → y4 ≤ (3.01 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) →
+    delta4Y y1 y2 y3 y4 y5 y6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `6843920790` (main_estimate_ineq.hl:99). -/
+noncomputable def mainEstimate_6843920790 : Prop :=
+  ∀ e1 e2 e3 a2 b2 c2 : ℝ,
+    (1 : ℝ) ≤ e1 → e1 ≤ (1 : ℝ) + sol0/ Real.pi → (1 : ℝ) ≤ e2 → e2 ≤ (1 : ℝ) + sol0/ Real.pi → (1 : ℝ) ≤ e3 → e3 ≤ (1 : ℝ) + sol0/ Real.pi → ((2 : ℝ) / h0) ^ 2 ≤ a2 → a2 ≤ (3.01 : ℝ) ^ 2 → (2.38 : ℝ) ^ 2 ≤ b2 → b2 ≤ (15.53 : ℝ) → (2.38 : ℝ) ^ 2 ≤ c2 → c2 ≤ (15.53 : ℝ) →
+    (num1 e1 e2 e3 a2 b2 c2 > (0 : ℝ))
+
+/-- HOL `Main_estimate` `4828966562` (main_estimate_ineq.hl:79). -/
+noncomputable def mainEstimate_4828966562 : Prop :=
+  ∀ e1 e2 e3 a2 b2 c2 : ℝ,
+    (1 : ℝ) ≤ e1 → e1 ≤ (1 : ℝ) + sol0/ Real.pi → (1 : ℝ) ≤ e2 → e2 ≤ (1 : ℝ) + sol0/ Real.pi → (1 : ℝ) ≤ e3 → e3 ≤ (1 : ℝ) + sol0/ Real.pi → ((2 : ℝ) / h0) ^ 2 ≤ a2 → a2 ≤ ((2 : ℝ) * h0) ^ 2 → ((2 : ℝ)/ h0) ^ 2 ≤ b2 → b2 ≤ (3.01 : ℝ) ^ 2 → (2.38 : ℝ) ^ 2 ≤ c2 → c2 ≤ (16.0 : ℝ) →
+    (num1 e1 e2 e3 a2 b2 c2 ) > (0 : ℝ)
+
+/-- HOL `Main_estimate` `1834976363` (main_estimate_ineq.hl:60). -/
+noncomputable def mainEstimate_1834976363 : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+    (1 : ℝ) ≤ x1 → x1 ≤ (1 : ℝ) + sol0/ Real.pi → (1 : ℝ) ≤ x2 → x2 ≤ (1 : ℝ) + sol0/ Real.pi → (1 : ℝ) ≤ x3 → x3 ≤ (1 : ℝ) + sol0/ Real.pi → ((2 : ℝ) / h0) ^ 2 ≤ x4 → x4 ≤ (15.53 : ℝ) → ((2 : ℝ) / h0) ^ 2 ≤ x5 → x5 ≤ (4 : ℝ) ^ 2 → ((2 : ℝ) / h0) ^ 2 ≤ x6 → x6 ≤ (4 : ℝ) ^ 2 →
+    num1 x1 x2 x3 x4 x5 x6 > (0 : ℝ) ∨ num1 x1 x2 x3 x4 x5 x6 < (0 : ℝ) ∨ dnum1 x1 x2 x3 x4 x5 x6 < (0 : ℝ)
+
+/-- HOL `Main_estimate` `9563139965 f` (main_estimate_ineq.hl:2676). -/
+noncomputable def mainEstimate_9563139965_f : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) * h0 → (3 : ℝ) ≤ y4 → y4 ≤ (3 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) * h0 →
+    (taum y1 y2 y3 y4 y5 y6 > (0.115 : ℝ))
+
+/-- HOL `Main_estimate` `9563139965 e` (main_estimate_ineq.hl:2657). -/
+noncomputable def mainEstimate_9563139965_e : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) * h0 → (3 : ℝ) ≤ y4 → y4 ≤ (3 : ℝ) → (2.467 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ) * h0 →
+    (taum y1 y2 y3 y4 y5 y6 > (0.467 : ℝ) - (0.115 : ℝ))
+
+/-- HOL `Main_estimate` `9563139965 d` (main_estimate_ineq.hl:2637). -/
+noncomputable def mainEstimate_9563139965_d : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ) * h0 → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ) * h0 → (3 : ℝ) ≤ y4 → y4 ≤ (3 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.472 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.472 : ℝ) →
+    (taum y1 y2 y3 y4 y5 y6 + (0.5 : ℝ) * ( (8.472 : ℝ) / (2 : ℝ) - y5 - y6) > (0.467 : ℝ) / (2 : ℝ))
+
+/-- HOL `Main_estimate` `5691615370` (main_estimate_ineq.hl:2523). -/
+noncomputable def mainEstimate_5691615370 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (3.0 : ℝ) ≤ y1 → y1 ≤ (3.0 : ℝ) → (2 : ℝ) ≤ y2 → y2 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y3 → y3 ≤ (2.52 : ℝ) → (3.0 : ℝ) ≤ y4 → y4 ≤ (3.0 : ℝ) → (2 : ℝ) ≤ y5 → y5 ≤ (2.52 : ℝ) → (2 : ℝ) ≤ y6 → y6 ≤ (2.52 : ℝ) →
+    (deltaY y1 y2 y3 y4 y5 y6 < (0 : ℝ)) ∨ (y2 + y3 + y5 + y6 > (8.472 : ℝ)) ∨ (y2 < y3) ∨ (y2 < y5) ∨ (y2 < y6 ) ∨ (y3 < y6)
+
+/-- HOL `Main_estimate` `4717061266` (main_estimate_ineq.hl:1698). -/
+noncomputable def mainEstimate_4717061266 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    (2 : ℝ) ≤ y1 → y1 ≤ (2 : ℝ)*h0 → (2 : ℝ) ≤ y2 → y2 ≤ (2 : ℝ)*h0 → (2 : ℝ) ≤ y3 → y3 ≤ (2 : ℝ)*h0 → (2 : ℝ) ≤ y4 → y4 ≤ (2 : ℝ)*h0 → (2 : ℝ) ≤ y5 → y5 ≤ (2 : ℝ)*h0 → (2 : ℝ) ≤ y6 → y6 ≤ (2 : ℝ)*h0 →
+    deltaY y1 y2 y3 y4 y5 y6 > (0 : ℝ)
+
+/-- The 109 `Main_estimate` ids in registry order (HOL `Ineq.ineqs` filtered
+by the `Main_estimate` tag, terminal.hl:26-34); entry for entry identical to
+`Kepler.Assembly.mainNonlinearTerminalV11Ids` (IdLists.lean:369). -/
+def mainNonlinearTerminalV11Ids_t11 : List String :=
+  ["2125338128",
+  "2445657182",
+  "9096461391",
+  "8495326405",
+  "OMKYNLT 3336871894",
+  "5541487347",
+  "6833979866",
+  "4010906068",
+  "7881254908",
+  "5026777310a",
+  "5405130650",
+  "3603097872",
+  "2468307358",
+  "2171548893",
+  "4680581274 delta top issue",
+  "4680581274 delta issue-cayleyR",
+  "4680581274 delta issue-cayleytr",
+  "4680581274 delta issue-cayleytr0",
+  "4680581274 2x",
+  "4680581274 1x",
+  "5550839403 delta",
+  "5550839403",
+  "8405387449",
+  "9368433105",
+  "5557288534 delta",
+  "5557288534",
+  "1348932091 delta",
+  "1348932091",
+  "2073661826",
+  "6184614449",
+  "5202826650 a",
+  "4821120729",
+  "8631418063",
+  "8346775862",
+  "6762190381",
+  "7550003505 4 4 4",
+  "7550003505 3 4 4",
+  "7550003505 3 3 4",
+  "7550003505 3 3 3",
+  "7550003505 2 4 4",
+  "7550003505 2 3 4",
+  "7550003505 2 3 3",
+  "7550003505 2 2 4",
+  "7550003505 2 2 3",
+  "7550003505 2 2 2",
+  "7550003505 1 4 4",
+  "7550003505 1 3 4",
+  "7550003505 1 3 3",
+  "7550003505 1 2 4",
+  "7550003505 1 2 3",
+  "7550003505 1 2 2",
+  "7550003505 1 1 4",
+  "7550003505 1 1 3",
+  "7550003505 1 1 2",
+  "7550003505 1 1 1",
+  "7550003505 0 4 4",
+  "7550003505 0 3 4",
+  "7550003505 0 3 3",
+  "7550003505 0 2 4",
+  "7550003505 0 2 3",
+  "7550003505 0 2 2",
+  "7550003505 0 1 4",
+  "7550003505 0 1 3",
+  "7550003505 0 1 2",
+  "7550003505 0 1 1",
+  "7550003505 0 0 4",
+  "7550003505 0 0 3",
+  "7550003505 0 0 2",
+  "7550003505 0 0 1",
+  "7550003505 0 0 0",
+  "5744538693",
+  "7823243247",
+  "9692636487",
+  "6877738680",
+  "7439076204",
+  "6459846571",
+  "1008824382",
+  "8875146520",
+  "1586903463",
+  "1948775510",
+  "5708641738",
+  "2565248885",
+  "5429238960",
+  "2320951108",
+  "7997589055",
+  "5546286427",
+  "7903347843",
+  "3665919985",
+  "6601228004",
+  "3078028960",
+  "1347067436",
+  "2314572187",
+  "7796879304",
+  "6789182745",
+  "4887115291",
+  "7175074394",
+  "2485876245b",
+  "2485876245a",
+  "4559601669b",
+  "4559601669",
+  "1117202051",
+  "6843920790",
+  "4828966562",
+  "1834976363",
+  "9563139965 f",
+  "9563139965 e",
+  "9563139965 d",
+  "5691615370",
+  "4717061266"]
+
+set_option maxRecDepth 2048 in
+/-- Registry length pinned at generation time (`rfl`). -/
+theorem mainNonlinearTerminalV11Ids_t11_length :
+    mainNonlinearTerminalV11Ids_t11.length = 109 := rfl
+
+/-- HOL `get_main_nonlinear` (terminal.hl:26-44): the `Main_estimate`
+statement selected by its `idv`.  Unknown ids fall back to `True` (the HOL
+lookup is partial; the domain invariant is `id ∈ mainNonlinearTerminalV11Ids_t11`). -/
+noncomputable def get_main_nonlinear (id : String) : Prop :=
+  match id with
+  | "2125338128" => mainEstimate_2125338128
+  | "2445657182" => mainEstimate_2445657182
+  | "9096461391" => mainEstimate_9096461391
+  | "8495326405" => mainEstimate_8495326405
+  | "OMKYNLT 3336871894" => mainEstimate_OMKYNLT_3336871894
+  | "5541487347" => mainEstimate_5541487347
+  | "6833979866" => mainEstimate_6833979866
+  | "4010906068" => mainEstimate_4010906068
+  | "7881254908" => mainEstimate_7881254908
+  | "5026777310a" => mainEstimate_5026777310a
+  | "5405130650" => mainEstimate_5405130650
+  | "3603097872" => mainEstimate_3603097872
+  | "2468307358" => mainEstimate_2468307358
+  | "2171548893" => mainEstimate_2171548893
+  | "4680581274 delta top issue" => mainEstimate_4680581274_delta_top_issue
+  | "4680581274 delta issue-cayleyR" => mainEstimate_4680581274_delta_issue_cayleyR
+  | "4680581274 delta issue-cayleytr" => mainEstimate_4680581274_delta_issue_cayleytr
+  | "4680581274 delta issue-cayleytr0" => mainEstimate_4680581274_delta_issue_cayleytr0
+  | "4680581274 2x" => mainEstimate_4680581274_2x
+  | "4680581274 1x" => mainEstimate_4680581274_1x
+  | "5550839403 delta" => mainEstimate_5550839403_delta
+  | "5550839403" => mainEstimate_5550839403
+  | "8405387449" => mainEstimate_8405387449
+  | "9368433105" => mainEstimate_9368433105
+  | "5557288534 delta" => mainEstimate_5557288534_delta
+  | "5557288534" => mainEstimate_5557288534
+  | "1348932091 delta" => mainEstimate_1348932091_delta
+  | "1348932091" => mainEstimate_1348932091
+  | "2073661826" => mainEstimate_2073661826
+  | "6184614449" => mainEstimate_6184614449
+  | "5202826650 a" => mainEstimate_5202826650_a
+  | "4821120729" => mainEstimate_4821120729
+  | "8631418063" => mainEstimate_8631418063
+  | "8346775862" => mainEstimate_8346775862
+  | "6762190381" => mainEstimate_6762190381
+  | "7550003505 4 4 4" => mainEstimate_7550003505_4_4_4
+  | "7550003505 3 4 4" => mainEstimate_7550003505_3_4_4
+  | "7550003505 3 3 4" => mainEstimate_7550003505_3_3_4
+  | "7550003505 3 3 3" => mainEstimate_7550003505_3_3_3
+  | "7550003505 2 4 4" => mainEstimate_7550003505_2_4_4
+  | "7550003505 2 3 4" => mainEstimate_7550003505_2_3_4
+  | "7550003505 2 3 3" => mainEstimate_7550003505_2_3_3
+  | "7550003505 2 2 4" => mainEstimate_7550003505_2_2_4
+  | "7550003505 2 2 3" => mainEstimate_7550003505_2_2_3
+  | "7550003505 2 2 2" => mainEstimate_7550003505_2_2_2
+  | "7550003505 1 4 4" => mainEstimate_7550003505_1_4_4
+  | "7550003505 1 3 4" => mainEstimate_7550003505_1_3_4
+  | "7550003505 1 3 3" => mainEstimate_7550003505_1_3_3
+  | "7550003505 1 2 4" => mainEstimate_7550003505_1_2_4
+  | "7550003505 1 2 3" => mainEstimate_7550003505_1_2_3
+  | "7550003505 1 2 2" => mainEstimate_7550003505_1_2_2
+  | "7550003505 1 1 4" => mainEstimate_7550003505_1_1_4
+  | "7550003505 1 1 3" => mainEstimate_7550003505_1_1_3
+  | "7550003505 1 1 2" => mainEstimate_7550003505_1_1_2
+  | "7550003505 1 1 1" => mainEstimate_7550003505_1_1_1
+  | "7550003505 0 4 4" => mainEstimate_7550003505_0_4_4
+  | "7550003505 0 3 4" => mainEstimate_7550003505_0_3_4
+  | "7550003505 0 3 3" => mainEstimate_7550003505_0_3_3
+  | "7550003505 0 2 4" => mainEstimate_7550003505_0_2_4
+  | "7550003505 0 2 3" => mainEstimate_7550003505_0_2_3
+  | "7550003505 0 2 2" => mainEstimate_7550003505_0_2_2
+  | "7550003505 0 1 4" => mainEstimate_7550003505_0_1_4
+  | "7550003505 0 1 3" => mainEstimate_7550003505_0_1_3
+  | "7550003505 0 1 2" => mainEstimate_7550003505_0_1_2
+  | "7550003505 0 1 1" => mainEstimate_7550003505_0_1_1
+  | "7550003505 0 0 4" => mainEstimate_7550003505_0_0_4
+  | "7550003505 0 0 3" => mainEstimate_7550003505_0_0_3
+  | "7550003505 0 0 2" => mainEstimate_7550003505_0_0_2
+  | "7550003505 0 0 1" => mainEstimate_7550003505_0_0_1
+  | "7550003505 0 0 0" => mainEstimate_7550003505_0_0_0
+  | "5744538693" => mainEstimate_5744538693
+  | "7823243247" => mainEstimate_7823243247
+  | "9692636487" => mainEstimate_9692636487
+  | "6877738680" => mainEstimate_6877738680
+  | "7439076204" => mainEstimate_7439076204
+  | "6459846571" => mainEstimate_6459846571
+  | "1008824382" => mainEstimate_1008824382
+  | "8875146520" => mainEstimate_8875146520
+  | "1586903463" => mainEstimate_1586903463
+  | "1948775510" => mainEstimate_1948775510
+  | "5708641738" => mainEstimate_5708641738
+  | "2565248885" => mainEstimate_2565248885
+  | "5429238960" => mainEstimate_5429238960
+  | "2320951108" => mainEstimate_2320951108
+  | "7997589055" => mainEstimate_7997589055
+  | "5546286427" => mainEstimate_5546286427
+  | "7903347843" => mainEstimate_7903347843
+  | "3665919985" => mainEstimate_3665919985
+  | "6601228004" => mainEstimate_6601228004
+  | "3078028960" => mainEstimate_3078028960
+  | "1347067436" => mainEstimate_1347067436
+  | "2314572187" => mainEstimate_2314572187
+  | "7796879304" => mainEstimate_7796879304
+  | "6789182745" => mainEstimate_6789182745
+  | "4887115291" => mainEstimate_4887115291
+  | "7175074394" => mainEstimate_7175074394
+  | "2485876245b" => mainEstimate_2485876245b
+  | "2485876245a" => mainEstimate_2485876245a
+  | "4559601669b" => mainEstimate_4559601669b
+  | "4559601669" => mainEstimate_4559601669
+  | "1117202051" => mainEstimate_1117202051
+  | "6843920790" => mainEstimate_6843920790
+  | "4828966562" => mainEstimate_4828966562
+  | "1834976363" => mainEstimate_1834976363
+  | "9563139965 f" => mainEstimate_9563139965_f
+  | "9563139965 e" => mainEstimate_9563139965_e
+  | "9563139965 d" => mainEstimate_9563139965_d
+  | "5691615370" => mainEstimate_5691615370
+  | "4717061266" => mainEstimate_4717061266
+  | _ => True
+
 /-- HOL `main_nonlinear_terminal_v11` (terminal.hl:24-44): the closed
-conjunction of `Main_estimate` inequalities built from the nonlinear
-chapter's Ineq database (see `LocalAnchors.MainNonlinearTerminalV11` for the
-visible box shape). Registry: `sorry`-typed Prop until that lane lands. -/
-def main_nonlinear_terminal_v11 : Prop := sorry
+conjunction of the 109 `Main_estimate` entries in registry order, built from
+the per-id accessor exactly as HOL `end_itlist (curry mk_conj)` builds it.
+T0 status: the placeholder body is gone, but this proposition is NOT proved — the 109
+named `mainEstimate_*` defs are the countable statement debts. -/
+def main_nonlinear_terminal_v11 : Prop :=
+  ∀ id ∈ mainNonlinearTerminalV11Ids_t11, get_main_nonlinear id
+
+/-- Accessor, HOL `get_main_nonlinear "<idv>"` consumption pattern. -/
+theorem get_main_nonlinear_of_mem {id : String} (h : main_nonlinear_terminal_v11)
+    (hid : id ∈ mainNonlinearTerminalV11Ids_t11) : get_main_nonlinear id :=
+  h id hid
+
+/-- T0 sample accessor (4717061266): the first `A`-batch entry, consumed by
+the same pattern HOL uses (`get_main_nonlinear "<idv>"`).  The certificate
+glue (`C4717061266_pos` -> this statement) is the T1 work order; it needs the
+553-shard case build, so it is NOT imported here. -/
+theorem main_nonlinear_terminal_v11_4717061266 (h : main_nonlinear_terminal_v11) :
+    mainEstimate_4717061266 :=
+  h "4717061266" (by simp [mainNonlinearTerminalV11Ids_t11])
+
+/-- The accessor equation for the sample id (`rfl`). -/
+theorem get_main_nonlinear_4717061266 :
+    get_main_nonlinear "4717061266" = mainEstimate_4717061266 := rfl
+
+/-- T0 sample: the EAR_DELTA_X4 consumption pattern (terminal.hl:2279) uses
+two ids; the same accessor extracts both. -/
+theorem main_nonlinear_terminal_v11_EAR_DELTA_X4_inputs
+    (h : main_nonlinear_terminal_v11) :
+    mainEstimate_8346775862 ∧ mainEstimate_8631418063 :=
+  ⟨h "8346775862" (by simp [mainNonlinearTerminalV11Ids_t11]),
+    h "8631418063" (by simp [mainNonlinearTerminalV11Ids_t11])⟩
+
 
 /-! ## Conclusions, part 1 (appendix.hl:25-59, 679-714, 1089-1108) -/
 
