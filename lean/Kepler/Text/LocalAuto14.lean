@@ -262,17 +262,539 @@ private theorem smul_of_collinear0_p14 {c v : V3} (hc : c ≠ 0)
   rw [hvd, hvc, smul_smul]
   field_simp
 
+/-! ## w5cA2 kit A (W5c-A wave 2): continuity of cross/dot along curves and
+the coplanarity/triple-product characterization.  Inserted before the first
+consumption point `NONPLANAR_OPEN_p14`; self-contained w.r.t. the wave-1
+`w5cA_` block (which sits later in the file). -/
+
+/-- w5cA2: collinear-with-origin vectors have vanishing cross product
+(re-derivation; this kit precedes the wave-1 helper block). -/
+private theorem w5cA2_collinear0_cross {v w : V3}
+    (h : Collinear ℝ ({0, v, w} : Set V3)) : cross3 v w = 0 := by
+  by_cases hv : v = 0
+  · have hpi : crossProduct ((v : V3) : Fin 3 → ℝ) ((w : V3) : Fin 3 → ℝ) = 0 := by
+      rw [hv, coe_zero_p14, map_zero, LinearMap.zero_apply]
+    have hd : cross3 v w ⬝ᵥ (cross3 v w) = 0 := by
+      rw [dot3_eq_p14, coe_cross3_p14, hpi, dotProduct_zero]
+    exact dot3_self_zero_p14 hd
+  obtain ⟨s, hs⟩ := smul_of_collinear0_p14 hv h
+  have hpi : crossProduct ((v : V3) : Fin 3 → ℝ) ((w : V3) : Fin 3 → ℝ) = 0 := by
+    rw [hs, coe_smul_p14, map_smul, cross_self, smul_zero]
+  have hd : cross3 v w ⬝ᵥ (cross3 v w) = 0 := by
+    rw [dot3_eq_p14, coe_cross3_p14, hpi, dotProduct_zero]
+  exact dot3_self_zero_p14 hd
+
+/-- w5cA2: origin-collinearity is exactly the vanishing of the cross product. -/
+private theorem w5cA2_collinear0_iff_cross {v w : V3} :
+    Collinear ℝ ({0, v, w} : Set V3) ↔ cross3 v w = 0 :=
+  ⟨w5cA2_collinear0_cross, fun hc => by
+    by_contra hnc
+    exact absurd hc (cross3_ne_p14 hnc)⟩
+
+/-- w5cA2: norm bound for the cross product. -/
+private theorem w5cA2_cross_norm_le (u v : V3) : ‖cross3 u v‖ ≤ ‖u‖ * ‖v‖ := by
+  have key : cross3 u v ⬝ᵥ cross3 u v = ‖u‖ ^ 2 * ‖v‖ ^ 2 - (u ⬝ᵥ v) ^ 2 := by
+    rw [dot3_eq_p14, coe_cross3_p14 u v, cross_dot_cross, ← dot3_eq_p14 u u,
+      ← dot3_eq_p14 v v, ← dot3_eq_p14 u v, ← dot3_eq_p14 v u, norm_sq_eq_dot,
+      norm_sq_eq_dot, dot3_comm_p14 v u, sq]
+
+  have h1 : ‖cross3 u v‖ ^ 2 ≤ (‖u‖ * ‖v‖) ^ 2 := by
+    have hs : ‖cross3 u v‖ ^ 2 = cross3 u v ⬝ᵥ cross3 u v := norm_sq_eq_dot _
+    have hpow : (‖u‖ * ‖v‖) ^ 2 = ‖u‖ ^ 2 * ‖v‖ ^ 2 := by
+      rw [pow_two, pow_two, pow_two]; ring
+    rw [hs, key]
+    linarith [sq_nonneg (u ⬝ᵥ v), hpow]
+  have h2 := sq_le_sq.mp h1
+  rw [abs_of_nonneg (norm_nonneg _),
+    abs_of_nonneg (mul_nonneg (norm_nonneg _) (norm_nonneg _))] at h2
+  exact h2
+
+private theorem w5cA2_coe_sub_p14 (x y : V3) :
+    ((x - y : V3) : Fin 3 → ℝ) = ((x : V3) : Fin 3 → ℝ) - ((y : V3) : Fin 3 → ℝ) := rfl
+
+private theorem w5cA2_coe_neg_p14 (x : V3) :
+    ((-x : V3) : Fin 3 → ℝ) = -((x : V3) : Fin 3 → ℝ) := rfl
+
+/-- w5cA2: difference form of cross bilinearity. -/
+private theorem w5cA2_cross3_sub (a a' b b' : V3) :
+    cross3 a b - cross3 a' b' = cross3 (a - a') b + cross3 a' (b - b') := by
+  have h : ((cross3 a b - cross3 a' b' : V3) : Fin 3 → ℝ)
+      = ((cross3 (a - a') b + cross3 a' (b - b') : V3) : Fin 3 → ℝ) := by
+    rw [w5cA2_coe_sub_p14, coe_add_p14, coe_cross3_p14 a b, coe_cross3_p14 a' b',
+      coe_cross3_p14 (a - a') b, coe_cross3_p14 a' (b - b')]
+    simp only [w5cA2_coe_sub_p14, map_sub, LinearMap.sub_apply]
+    ring
+  exact congrArg (fun w : Fin 3 → ℝ => WithLp.toLp 2 w) h
+
+/-- w5cA2: antisymmetry of `cross3`. -/
+private theorem w5cA2_cross3_neg (x y : V3) : cross3 x y = -cross3 y x := by
+  have h : ((cross3 x y : V3) : Fin 3 → ℝ) = ((-cross3 y x : V3) : Fin 3 → ℝ) := by
+    rw [coe_cross3_p14 x y, w5cA2_coe_neg_p14, coe_cross3_p14 y x, cross_anticomm]
+  exact congrArg (fun w : Fin 3 → ℝ => WithLp.toLp 2 w) h
+
+/-- w5cA2: continuity of the cross product along curves. -/
+private theorem w5cA2_continuousAt_cross3 {f g : ℝ → V3} {t : ℝ}
+    (hf : ContinuousAt f t) (hg : ContinuousAt g t) :
+    ContinuousAt (fun x => cross3 (f x) (g x)) t := by
+  have hb : ∀ x : ℝ, dist (cross3 (f x) (g x)) (cross3 (f t) (g t))
+      ≤ ‖f x - f t‖ * ‖g x‖ + ‖f t‖ * ‖g x - g t‖ := by
+    intro x
+    rw [dist_eq_norm, w5cA2_cross3_sub (f x) (f t) (g x) (g t)]
+    refine le_trans (norm_add_le _ _) ?_
+    exact add_le_add (w5cA2_cross_norm_le _ _) (w5cA2_cross_norm_le _ _)
+  have ha : Filter.Tendsto (fun x => ‖f x - f t‖) (nhds t) (nhds 0) := by
+    have h : Filter.Tendsto (fun x => ‖f x - f t‖) (nhds t)
+        (nhds (‖f t - f t‖)) :=
+      (hf.sub continuousAt_const).norm.tendsto
+    rw [sub_self, norm_zero] at h
+    exact h
+  have hb2 : Filter.Tendsto (fun x => ‖f t‖ * ‖g x - g t‖) (nhds t) (nhds 0) := by
+    have h : Filter.Tendsto (fun x => ‖g x - g t‖) (nhds t)
+        (nhds (‖g t - g t‖)) :=
+      (hg.sub continuousAt_const).norm.tendsto
+    rw [sub_self, norm_zero] at h
+    have h2 := h.const_mul ‖f t‖
+    rwa [mul_zero] at h2
+  have h1 : Filter.Tendsto (fun x => ‖f x - f t‖ * ‖g x‖) (nhds t) (nhds 0) := by
+    have h : Filter.Tendsto (fun x => ‖f x - f t‖ * ‖g x‖) (nhds t)
+        (nhds (0 * ‖g t‖)) :=
+      ha.mul hg.norm.tendsto
+    rwa [zero_mul] at h
+  have hsum : Filter.Tendsto
+      (fun x => ‖f x - f t‖ * ‖g x‖ + ‖f t‖ * ‖g x - g t‖) (nhds t) (nhds 0) := by
+    have h := Filter.Tendsto.add h1 hb2
+    rwa [zero_add] at h
+  have h2 : Filter.Tendsto (fun x => dist (cross3 (f x) (g x)) (cross3 (f t) (g t)))
+      (nhds t) (nhds 0) :=
+    squeeze_zero (fun x => dist_nonneg) hb hsum
+  show Filter.Tendsto (fun x => cross3 (f x) (g x)) (nhds t)
+    (nhds (cross3 (f t) (g t)))
+  exact tendsto_iff_dist_tendsto_zero.mpr h2
+
+/-- w5cA2: continuity of the dot product along curves. -/
+private theorem w5cA2_continuousAt_dot {f g : ℝ → V3} {t : ℝ}
+    (hf : ContinuousAt f t) (hg : ContinuousAt g t) :
+    ContinuousAt (fun x => f x ⬝ᵥ g x) t := by
+  have hEq : (fun x => f x ⬝ᵥ g x) = fun x => inner ℝ (f x) (g x) :=
+    funext fun x => (inner_eq_dot _ _).symm
+  rw [hEq]
+  exact hf.inner hg
+
+/-- w5cA2: a scalar function continuous at a point of nonzero value stays
+nonzero in a ball around the point. -/
+private theorem w5cA2_eventually_ne {G : ℝ → ℝ} {t : ℝ} (hG : ContinuousAt G t)
+    (h0 : G t ≠ 0) : ∃ e : ℝ, 0 < e ∧ ∀ t', |t - t'| < e → G t' ≠ 0 := by
+  have hd : (0:ℝ) < dist (G t) 0 := by
+    rw [dist_eq_norm, sub_zero]
+    exact norm_pos_iff.mpr h0
+  have hmem : Metric.ball (G t) (dist (G t) 0 / 2) ∈ nhds (G t) :=
+    Metric.ball_mem_nhds (G t) (by linarith)
+  have hsub : Metric.ball (G t) (dist (G t) 0 / 2) ⊆ {y : ℝ | y ≠ 0} := by
+    intro y hy hy0
+    rw [Metric.mem_ball] at hy
+    rw [hy0, dist_comm] at hy
+    linarith
+  obtain ⟨e, he, hball⟩ := Metric.eventually_nhds_iff_ball.mp (hG.eventually hmem)
+  refine ⟨e, he, fun t' ht => hsub (hball t' ?_)⟩
+  rw [Metric.mem_ball, Real.dist_eq, abs_sub_comm]
+  exact ht
+
+/-- w5cA2: a scalar function continuous at a point of positive value stays
+positive in a ball around the point. -/
+private theorem w5cA2_eventually_pos {G : ℝ → ℝ} {t : ℝ} (hG : ContinuousAt G t)
+    (h0 : 0 < G t) : ∃ e : ℝ, 0 < e ∧ ∀ t', |t - t'| < e → 0 < G t' := by
+  have hmem : {y : ℝ | 0 < y} ∈ nhds (G t) := isOpen_Ioi.mem_nhds h0
+  obtain ⟨e, he, hball⟩ := Metric.eventually_nhds_iff_ball.mp (hG.eventually hmem)
+  refine ⟨e, he, fun t' ht => hball t' ?_⟩
+  rw [Metric.mem_ball, Real.dist_eq, abs_sub_comm]
+  exact ht
+
+/-- w5cA2: a vector in the span of two others has zero triple product. -/
+private theorem w5cA2_span2_triple {v w x : V3}
+    (h : x ∈ Submodule.span ℝ ({v, w} : Set V3)) : x ⬝ᵥ cross3 v w = 0 := by
+  obtain ⟨α, β, hx⟩ := Submodule.mem_span_pair.mp h
+  have h1 : v ⬝ᵥ cross3 v w = 0 := by rw [dot3_comm_p14]; exact cross3_dotL_p14 v w
+  have h2 : w ⬝ᵥ cross3 v w = 0 := by rw [dot3_comm_p14]; exact cross3_dotR_p14 v w
+  rw [← hx, dot3_add_left_p14, dot3_smul_left_p14, dot3_smul_left_p14, h1, h2]
+  ring
+
+/-- w5cA2: negation in the second slot of the dot product. -/
+private theorem w5cA2_dot_neg_right (x w : V3) : x ⬝ᵥ (-w) = -(x ⬝ᵥ w) := by
+  exact dotProduct_neg _ _
+
+/-- w5cA2: cyclic permutation of the triple product. -/
+private theorem w5cA2_triple_perm (x y z : V3) :
+    x ⬝ᵥ cross3 y z = y ⬝ᵥ cross3 z x := by
+  rw [dot3_eq_p14, dot3_eq_p14, coe_cross3_p14 y z, coe_cross3_p14 z x]
+  exact triple_product_permutation _ _ _
+
+/-- w5cA2: swapping the cross factors negates the triple product. -/
+private theorem w5cA2_triple_anti (x y z : V3) :
+    x ⬝ᵥ cross3 y z = -(y ⬝ᵥ cross3 x z) := by
+  have h2 : x ⬝ᵥ cross3 y z + y ⬝ᵥ cross3 x z = 0 := by
+    rw [dot3_eq_p14, dot3_eq_p14, coe_cross3_p14 y z, coe_cross3_p14 x z,
+      triple_product_permutation ((y : V3) : Fin 3 → ℝ) ((x : V3) : Fin 3 → ℝ)
+        ((z : V3) : Fin 3 → ℝ), ← dotProduct_add, cross_anticomm',
+      dotProduct_zero]
+  exact eq_neg_iff_add_eq_zero.mpr h2
+
+/-- w5cA2: case analysis over `Fin 3` by the literal value. -/
+private theorem w5cA2_fin3_eq_cases {f g : Fin 3 → ℝ} (h0 : f 0 = g 0) (h1 : f 1 = g 1)
+    (h2 : f 2 = g 2) (i : Fin 3) : f i = g i := by
+  have hv := i.isLt
+  have hval : (i : ℕ) = 0 ∨ (i : ℕ) = 1 ∨ (i : ℕ) = 2 := by omega
+  rcases hval with h | h | h
+  · have hi0 : i = (0 : Fin 3) := Fin.ext (b := 0) (by simpa using h)
+    rw [hi0]; exact h0
+  · have hi1 : i = (1 : Fin 3) := Fin.ext (b := 1) (by simpa using h)
+    rw [hi1]; exact h1
+  · have hi2 : i = (2 : Fin 3) := Fin.ext (b := 2) (by simpa using h)
+    rw [hi2]; exact h2
+
+/-- w5cA2: a dependent triple of vectors has one member in the span of the
+other two. -/
+private theorem w5cA2_dependent3 {u v w : V3} (hdep : ¬ LinearIndependent ℝ ![u, v, w]) :
+    u ∈ Submodule.span ℝ ({v, w} : Set V3) ∨ v ∈ Submodule.span ℝ ({u, w} : Set V3) ∨
+      w ∈ Submodule.span ℝ ({u, v} : Set V3) := by
+  obtain ⟨f, g, hsum, hne⟩ :=
+    (Fintype.not_linearIndependent_iffₛ (v := ![u, v, w])).mp hdep
+  have hkey : ∑ i, (f i - g i) • (![u, v, w] i) = 0 := by
+    have hterm : ∀ i : Fin 3, (f i - g i) • (![u, v, w] i)
+        = f i • (![u, v, w] i) - g i • (![u, v, w] i) := fun i => sub_smul _ _ _
+    rw [Finset.sum_congr rfl (fun i _ => hterm i), Finset.sum_sub_distrib, hsum,
+      sub_self]
+  simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.head_cons, show (![u, v, w] : Fin 3 → V3) 2 = w from rfl] at hkey
+  by_cases hz1 : f 0 = g 0
+  · by_cases hz2 : f 1 = g 1
+    · have hz3 : f 2 - g 2 ≠ 0 := by
+        intro h3
+        obtain ⟨i, hi⟩ := hne
+        have hi' := w5cA2_fin3_eq_cases (f := f) (g := g) hz1 hz2
+          (sub_eq_zero.mp h3) i
+        rw [hi'] at hi
+        exact hi rfl
+      rw [hz1, hz2, sub_self, sub_self, zero_smul, zero_smul, zero_add, zero_add]
+        at hkey
+      have hwz : w = 0 := by
+        rcases smul_eq_zero.mp hkey with h | h
+        · exact absurd h hz3
+        · exact h
+      exact Or.inr (Or.inr (by rw [hwz]; exact Submodule.zero_mem _))
+    · have h2ne : f 1 - g 1 ≠ 0 := sub_ne_zero.mpr hz2
+      have hkv : (f 1 - g 1) • v = -((f 2 - g 2) • w) := by
+        rw [hz1, sub_self, zero_smul, zero_add] at hkey
+        exact eq_neg_iff_add_eq_zero.mpr hkey
+      have hvw2 : v = ((f 1 - g 1)⁻¹ * -(f 2 - g 2)) • w := by
+        have h := congrArg (fun z : V3 => (f 1 - g 1)⁻¹ • z) hkv
+        rw [smul_smul, inv_mul_cancel₀ h2ne, one_smul, smul_neg] at h
+        rw [h]
+        module
+      refine Or.inr (Or.inl (Submodule.mem_span_pair.mpr
+        ⟨0, (f 1 - g 1)⁻¹ * -(f 2 - g 2), by rw [zero_smul, zero_add, hvw2]⟩))
+  · have h1ne : f 0 - g 0 ≠ 0 := sub_ne_zero.mpr hz1
+    have hu : u = -((f 0 - g 0)⁻¹ • ((f 1 - g 1) • v + (f 2 - g 2) • w)) := by
+      have h : (f 0 - g 0) • u + ((f 1 - g 1) • v + (f 2 - g 2) • w) = 0 :=
+        (add_assoc ((f 0 - g 0) • u) ((f 1 - g 1) • v)
+          ((f 2 - g 2) • w)).symm.trans hkey
+      have h2 := congrArg (fun z : V3 => (f 0 - g 0)⁻¹ • z)
+        (eq_neg_iff_add_eq_zero.mpr h)
+      rw [smul_smul, inv_mul_cancel₀ h1ne, one_smul, smul_neg] at h2
+      exact h2
+    refine Or.inl (Submodule.mem_span_pair.mpr
+      ⟨-(f 0 - g 0)⁻¹ * (f 1 - g 1), -(f 0 - g 0)⁻¹ * (f 2 - g 2), ?_⟩)
+    rw [hu]
+    module
+
+/-- w5cA2: a linearly independent triple has nonzero triple product. -/
+private theorem w5cA2_li3_triple_ne {u v w : V3} (hli : LinearIndependent ℝ ![u, v, w]) :
+    u ⬝ᵥ cross3 v w ≠ 0 := by
+  have hco : crossProduct ((v : V3) : Fin 3 → ℝ) ((w : V3) : Fin 3 → ℝ) ≠ 0 := by
+    rw [crossProduct_ne_zero_iff_linearIndependent]
+    rw [Fintype.linearIndependent_iff]
+    intro g hg
+    simp only [Fin.sum_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one] at hg
+    have hv3 : ((g 0 • v + g 1 • w : V3) : Fin 3 → ℝ) = ((0 : V3) : Fin 3 → ℝ) := by
+      rw [coe_add_p14, coe_smul_p14, coe_smul_p14, coe_zero_p14]
+      exact hg
+    have hv3' : g 0 • v + g 1 • w = (0 : V3) :=
+      congrArg (fun q : Fin 3 → ℝ => WithLp.toLp 2 q) hv3
+    have h1 := Fintype.linearIndependent_iff.mp hli ![0, g 0, g 1] (by
+      show (∑ i : Fin 3, (![0, g 0, g 1] i) • (![u, v, w] i)) = 0
+      simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.head_cons, show (![0, g 0, g 1] : Fin 3 → ℝ) 2 = g 1 from rfl,
+        show (![u, v, w] : Fin 3 → V3) 2 = w from rfl, zero_smul, zero_add]
+      simp [hv3'])
+    have hg0 : g 0 = 0 := h1 1
+    have hg1 : g 1 = 0 := h1 2
+    intro i
+    fin_cases i <;> simp [hg0, hg1]
+  have hcw : cross3 v w ≠ 0 := by
+    intro h0
+    have h := coe_cross3_p14 v w
+    rw [h0, coe_zero_p14] at h
+    exact hco h.symm
+  -- {u, v, w} is a basis of V3; write the cross product in it and dot with itself
+  have hfin3 : Module.finrank ℝ V3 = 3 := by
+    have h := (finrank_euclideanSpace_fin (𝕜 := ℝ) : Module.finrank ℝ (EuclideanSpace ℝ (Fin 3)) = 3)
+    exact h
+  have hcard : Fintype.card (Fin 3) = Module.finrank ℝ V3 := by simp [hfin3]
+  have hbcoe : ∀ i : Fin 3,
+      (basisOfLinearIndependentOfCardEqFinrank hli hcard) i = (![u, v, w] i) :=
+    fun i => by rw [coe_basisOfLinearIndependentOfCardEqFinrank]
+  have hcsum : (basisOfLinearIndependentOfCardEqFinrank hli hcard).repr
+        (cross3 v w) 0 • (basisOfLinearIndependentOfCardEqFinrank hli hcard) 0
+      + (basisOfLinearIndependentOfCardEqFinrank hli hcard).repr (cross3 v w) 1 •
+        (basisOfLinearIndependentOfCardEqFinrank hli hcard) 1
+      + (basisOfLinearIndependentOfCardEqFinrank hli hcard).repr (cross3 v w) 2 •
+        (basisOfLinearIndependentOfCardEqFinrank hli hcard) 2 = cross3 v w := by
+    have h := (basisOfLinearIndependentOfCardEqFinrank hli hcard).sum_repr
+      (cross3 v w)
+    simpa [hbcoe, Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, show (![u, v, w] : Fin 3 → V3) 2 = w from rfl] using h
+  intro hz
+  have hv0 : v ⬝ᵥ cross3 v w = 0 := by rw [dot3_comm_p14]; exact cross3_dotL_p14 v w
+  have hv0' : w ⬝ᵥ cross3 v w = 0 := by rw [dot3_comm_p14]; exact cross3_dotR_p14 v w
+  rw [← hcsum] at hz hv0 hv0'
+  simp only [hbcoe, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    show (![u, v, w] : Fin 3 → V3) 2 = w from rfl] at hz hv0 hv0'
+  have hc0 : cross3 v w ⬝ᵥ cross3 v w = 0 := by
+    rw [← hcsum, dot3_add_left_p14, dot3_add_left_p14, dot3_smul_left_p14,
+      dot3_smul_left_p14, dot3_smul_left_p14]
+    simp only [hbcoe, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+      show (![u, v, w] : Fin 3 → V3) 2 = w from rfl]
+    rw [hz, hv0, hv0']
+    ring
+  exact hcw (dot3_self_zero_p14 hc0)
+
+/-- w5cA2: membership in the affine span of three points, explicit form. -/
+private theorem w5cA2_mem_affineSpan_of_span2 {a b c x : V3}
+    (h : x - a ∈ Submodule.span ℝ ({b - a, c - a} : Set V3)) :
+    x ∈ affineSpan ℝ ({a, b, c} : Set V3) := by
+  have hsub : ({b - a, c - a} : Set V3) ⊆ ({a, b, c} : Set V3) -ᵥ ({a, b, c} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hzb | hzc
+    · exact ⟨b, by simp, a, by simp, hzb ▸ rfl⟩
+    · exact ⟨c, by simp, a, by simp, hzc ▸ rfl⟩
+  have hd : x -ᵥ a ∈ (affineSpan ℝ ({a, b, c} : Set V3)).direction := by
+    rw [direction_affineSpan, vectorSpan_def]
+    exact Submodule.span_mono hsub h
+  have hx : x = (x -ᵥ a) +ᵥ a := (vsub_vadd x a).symm
+  rw [hx]
+  exact AffineSubspace.vadd_mem_of_mem_direction hd (mem_affineSpan ℝ (by simp))
+
+/-- w5cA2: master coplanarity characterization: four points are coplanar iff
+the triple product of the difference vectors vanishes. -/
+private theorem w5cA2_coplanar_triple {a b c d : V3} :
+    Coplanar ({a, b, c, d} : Set V3) ↔ (b - a) ⬝ᵥ cross3 (c - a) (d - a) = 0 := by
+  constructor
+  · rintro ⟨p, q, r, hsub⟩
+    have hdirle : (affineSpan ℝ ({p, q, r} : Set V3)).direction ≤
+        Submodule.span ℝ ({q - p, r - p} : Set V3) := by
+      rw [direction_affineSpan, vectorSpan_def, Submodule.span_le]
+      rintro d ⟨z, hz, y, hy, rfl⟩
+      simp only [vsub_eq_sub] at hy ⊢
+      rcases hz with hp | hq | hr
+      · rcases hy with hp' | hq' | hr'
+        · rw [hp, hp']
+          simp only [sub_self]
+          exact Submodule.zero_mem _
+        · rw [hp, hq']
+          rw [show (p : V3) - q = (-1 : ℝ) • (q - p) from by module]
+          exact Submodule.smul_mem _ (-1) (Submodule.subset_span (by simp))
+        · rw [hp, hr']
+          rw [show (p : V3) - r = (-1 : ℝ) • (r - p) from by module]
+          exact Submodule.smul_mem _ (-1) (Submodule.subset_span (by simp))
+      · rcases hy with hp' | hq' | hr'
+        · rw [hq, hp']
+          exact Submodule.subset_span (by simp)
+        · rw [hq, hq']
+          simp only [sub_self]
+          exact Submodule.zero_mem _
+        · rw [hq, hr']
+          have hqeq : (q : V3) - r = (q - p) - (r - p) := by abel
+          rw [hqeq]
+          exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+            (Submodule.subset_span (by simp))
+      · rcases hy with hp' | hq' | hr'
+        · rw [hr, hp']
+          exact Submodule.subset_span (by simp)
+        · rw [hr, hq']
+          have hrq : (r : V3) - q = (r - p) - (q - p) := by abel
+          rw [hrq]
+          exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+            (Submodule.subset_span (by simp))
+        · rw [hr, hr']
+          simp only [sub_self]
+          exact Submodule.zero_mem _
+    have hfr : Module.finrank ℝ (Submodule.span ℝ ({q - p, r - p} : Set V3)) ≤ 2 := by
+      have h := finrank_span_finset_le_card (R := ℝ) ({q - p, r - p} : Finset V3)
+      unfold Set.finrank at h
+      rw [show (({q - p, r - p} : Finset V3) : Set V3) = ({q - p, r - p} : Set V3) from
+        by ext z; simp] at h
+      have h2c : (({q - p, r - p} : Finset V3)).card ≤ 2 := by
+        have h2c := Finset.card_insert_le (q - p) ({r - p} : Finset V3)
+        rw [Finset.card_singleton] at h2c
+        simpa using h2c
+      exact le_trans h h2c
+    have hndep : ¬ LinearIndependent ℝ ![b - a, c - a, d - a] := by
+      intro hli
+      have h3 : Module.finrank ℝ (Submodule.span ℝ (Set.range ![b - a, c - a, d - a])) = 3 := by
+        rw [finrank_span_eq_card hli]; norm_num
+      have hmem : ∀ z ∈ ({b - a, c - a, d - a} : Set V3),
+          z ∈ Submodule.span ℝ ({q - p, r - p} : Set V3) := by
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with h | h | h
+        · rw [h]
+          exact hdirle (AffineSubspace.vsub_mem_direction (hsub (by simp))
+            (hsub (by simp)))
+        · rw [h]
+          exact hdirle (AffineSubspace.vsub_mem_direction (hsub (by simp))
+            (hsub (by simp)))
+        · rw [h]
+          exact hdirle (AffineSubspace.vsub_mem_direction (hsub (by simp))
+            (hsub (by simp)))
+      have hle : Submodule.span ℝ (Set.range ![b - a, c - a, d - a]) ≤
+          Submodule.span ℝ ({q - p, r - p} : Set V3) := by
+        rw [Submodule.span_le]
+        rintro y ⟨i, hi, rfl⟩
+        fin_cases i <;>
+          simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons] <;>
+          exact hmem _ (by simp)
+      exact absurd (le_trans (Submodule.finrank_mono hle) hfr) (by rw [h3]; norm_num)
+    rcases w5cA2_dependent3 hndep with h | h | h
+    · exact w5cA2_span2_triple h
+    · rw [w5cA2_triple_anti (b - a) (c - a) (d - a), w5cA2_span2_triple h, neg_zero]
+    · rw [w5cA2_triple_perm (b - a) (c - a) (d - a),
+        w5cA2_triple_perm (c - a) (d - a) (b - a), w5cA2_span2_triple h]
+  · intro hz
+    by_cases hind : LinearIndependent ℝ ![c - a, d - a]
+    · have hmem : b - a ∈ Submodule.span ℝ ({c - a, d - a} : Set V3) := by
+        by_contra hout
+        have hli : LinearIndependent ℝ ![b - a, c - a, d - a] := by
+          rw [Fintype.linearIndependent_iff]
+          intro g hg
+          simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+            Matrix.head_cons, show (![b - a, c - a, d - a] : Fin 3 → V3) 2 = d - a
+              from rfl] at hg
+          by_cases h0 : g 0 = 0
+          · have h12 : g 1 • (c - a) + g 2 • (d - a) = 0 := by
+              rw [h0, zero_smul, zero_add] at hg; exact hg
+            have h12' := Fintype.linearIndependent_iff.mp hind ![g 1, g 2] (by
+              simpa [Fin.sum_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one]
+                using h12)
+            have hg1 : g 1 = 0 := h12' 0
+            have hg2 : g 2 = 0 := h12' 1
+            intro i
+            fin_cases i <;> simp [h0, hg1, hg2]
+          · exfalso
+            have hu : b - a = ((-g 1 / g 0) • (c - a) + (-g 2 / g 0) • (d - a)) := by
+              have hinj := smul_right_injective V3 h0
+              refine hinj ?_
+              show g 0 • (b - a)
+                = g 0 • ((-g 1 / g 0) • (c - a) + (-g 2 / g 0) • (d - a))
+              rw [smul_add, smul_smul, smul_smul]
+              rw [show g 0 * (-g 1 / g 0) = -g 1 from by field_simp,
+                show g 0 * (-g 2 / g 0) = -g 2 from by field_simp]
+              have hxe := eq_neg_iff_add_eq_zero.mpr
+                ((add_assoc (g 0 • (b - a)) (g 1 • (c - a))
+                    (g 2 • (d - a))).symm.trans hg)
+              rw [hxe, neg_add, neg_smul, neg_smul]
+              -- 目标两侧已一致
+            exact hout (Submodule.mem_span_pair.mpr ⟨-g 1 / g 0, -g 2 / g 0,
+              hu.symm⟩)
+        exact absurd hz (w5cA2_li3_triple_ne hli)
+      refine ⟨a, c, d, ?_⟩
+      intro z hzz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hzz
+      rcases hzz with rfl | rfl | rfl | rfl
+      · exact mem_affineSpan ℝ (by simp)
+      · exact w5cA2_mem_affineSpan_of_span2 hmem
+      · exact mem_affineSpan ℝ (by simp)
+      · exact mem_affineSpan ℝ (by simp)
+    · by_cases hca : c - a = 0
+      · refine ⟨a, b, d, ?_⟩
+        intro z hzz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hzz
+        rcases hzz with rfl | rfl | rfl | rfl
+        · exact mem_affineSpan ℝ (by simp)
+        · exact mem_affineSpan ℝ (by simp)
+        · rw [show z = a from sub_eq_zero.mp hca]; exact mem_affineSpan ℝ (by simp)
+        · exact mem_affineSpan ℝ (by simp)
+      · obtain ⟨f, g, hsum, hne⟩ :=
+          (Fintype.not_linearIndependent_iffₛ (v := ![c - a, d - a])).mp hind
+        have hkey : ∑ i, (f i - g i) • (![c - a, d - a] i) = 0 := by
+          have hterm : ∀ i : Fin 2, (f i - g i) • (![c - a, d - a] i)
+              = f i • (![c - a, d - a] i) - g i • (![c - a, d - a] i) :=
+            fun i => sub_smul _ _ _
+          rw [Finset.sum_congr rfl (fun i _ => hterm i), Finset.sum_sub_distrib,
+            hsum, sub_self]
+        simp only [Fin.sum_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one]
+          at hkey
+        by_cases hk0 : f 0 - g 0 = 0
+        · by_cases hk1 : f 1 - g 1 = 0
+          · exfalso
+            rcases hne with ⟨i, hi⟩
+            fin_cases i
+            · rw [show f (⟨0, _⟩ : Fin 2) = g (⟨0, _⟩ : Fin 2) from
+                sub_eq_zero.mp hk0] at hi
+              exact hi rfl
+            · rw [show f (⟨1, _⟩ : Fin 2) = g (⟨1, _⟩ : Fin 2) from
+                sub_eq_zero.mp hk1] at hi
+              exact hi rfl
+          · rw [hk0, zero_smul, zero_add, smul_eq_zero] at hkey
+            have hd0 : d - a = 0 := hkey.resolve_left hk1
+            refine ⟨a, b, c, ?_⟩
+            intro z hzz
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hzz
+            rcases hzz with rfl | rfl | rfl | rfl
+            · exact mem_affineSpan ℝ (by simp)
+            · exact mem_affineSpan ℝ (by simp)
+            · exact mem_affineSpan ℝ (by simp)
+            · exact w5cA2_mem_affineSpan_of_span2
+                (by rw [hd0]; exact Submodule.zero_mem _)
+        · by_cases hk1 : f 1 - g 1 = 0
+          · rw [hk1, zero_smul, add_zero, smul_eq_zero] at hkey
+            exact (hca (hkey.resolve_left hk0)).elim
+          · have hdv : d - a = (-(f 0 - g 0) / (f 1 - g 1)) • (c - a) := by
+              have hinj := smul_right_injective V3 hk1
+              refine hinj ?_
+              show (f 1 - g 1) • (d - a)
+                = (f 1 - g 1) • ((-(f 0 - g 0) / (f 1 - g 1)) • (c - a))
+              rw [smul_smul, show (f 1 - g 1) * (-(f 0 - g 0) / (f 1 - g 1))
+                = -(f 0 - g 0) from by field_simp, neg_smul]
+              exact eq_neg_of_add_eq_zero_right hkey
+            refine ⟨a, b, c, ?_⟩
+            intro z hzz
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hzz
+            rcases hzz with rfl | rfl | rfl | rfl
+            · exact mem_affineSpan ℝ (by simp)
+            · exact mem_affineSpan ℝ (by simp)
+            · exact mem_affineSpan ℝ (by simp)
+            · exact w5cA2_mem_affineSpan_of_span2
+                (Submodule.mem_span_pair.mpr ⟨0, -(f 0 - g 0) / (f 1 - g 1),
+                  by rw [hdv]; simp⟩)
+
 /-! ## Section 1: the theorems of ZLZTHIC.hl, in source order -/
 
 /-- HOL `NONPLANAR_OPEN` (hl:33): coplanarity is an open condition along
-continuous curves.  NEEDS: continuity of the coplanarity predicate. -/
+continuous curves. -/
 theorem NONPLANAR_OPEN_p14 (v1 v2 v3 v4 : ℝ → V3) (t : ℝ)
     (h : ¬ Coplanar ({v1 t, v2 t, v3 t, v4 t} : Set V3))
     (hc1 : ContinuousAt v1 t) (hc2 : ContinuousAt v2 t) (hc3 : ContinuousAt v3 t)
     (hc4 : ContinuousAt v4 t) :
     ∃ e : ℝ, 0 < e ∧ ∀ t', |t - t'| < e →
       ¬ Coplanar ({v1 t', v2 t', v3 t', v4 t'} : Set V3) := by
-  sorry
+  have hG : ContinuousAt
+      (fun x => (v2 x - v1 x) ⬝ᵥ cross3 (v3 x - v1 x) (v4 x - v1 x)) t :=
+    w5cA2_continuousAt_dot (hc2.sub hc1)
+      (w5cA2_continuousAt_cross3 (hc3.sub hc1) (hc4.sub hc1))
+  have hne : (fun x => (v2 x - v1 x) ⬝ᵥ cross3 (v3 x - v1 x) (v4 x - v1 x)) t ≠ 0 :=
+    fun hz => h (w5cA2_coplanar_triple.mpr hz)
+  obtain ⟨e, he, hne'⟩ := w5cA2_eventually_ne hG hne
+  exact ⟨e, he, fun t' ht hc => hne' t' ht (w5cA2_coplanar_triple.mp hc)⟩
 
 /-! ## w5cA helpers (W5c-A lane; inserted before consumption points) -/
 
@@ -813,7 +1335,15 @@ theorem azim_pos_open_p14 (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
       ¬ (azim 0 (v2 t') (v3 t') (v4 t') = 0) := by
   sorry
 
-/-- HOL `azim_real_continuous_on` (hl:1141).  NEEDS: azim continuity. -/
+/-- HOL `azim_real_continuous_on` (hl:1141).  W5c-A2 FINDING (2026-10-28):
+the frozen Lean statement is FALSE for boundary points `t = a` or `t = b`
+(contrary to the HOL original, whose `real_interval (t-e, t+e)` is the OPEN
+interval).  Countermodel: `t = a`, the curves constant-nice on `[a, b]` and
+redefined at one point `q0 < a` inside `[a-e, a+e]` (h1-h3 only constrain
+`Icc a b`), making the azim function jump at `q0`.  Wave 3 must re-freeze
+with `h4 : t ∈ Set.Ioo a b` (registry sign-off) before this can close;
+the azim-continuity kit (cos/sin representation + arccos assembly) is
+designed and ready in the wave-3 handoff note. -/
 theorem azim_real_continuous_on_p14 (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
     (h1 : ∀ x, x ∈ Set.Icc a b → ContinuousAt v2 x)
     (h2 : ∀ x, x ∈ Set.Icc a b → ContinuousAt v3 x)
@@ -1378,7 +1908,14 @@ theorem azim_cycle_distinct_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite)
     rw [← heqq]
     exact hpos
 
-/-- HOL `azim_cycle_neg` (hl:2828).  NEEDS: azimuth-cycle negation theory. -/
+/-- HOL `azim_cycle_neg` (hl:2828).  NEEDS: azimuth-cycle negation theory
+(wave-3: helpers `w5cA2_azim_axis_neg` (`azim 0 (-e) x u = azim 0 e u x`,
+frame flip E1 := -E1, E2, E3 := -E3 of the AzimSpec transport) and
+`w5cA2_sum2_azim` (the `Fan.sum2_azim_fan` skeleton with FAN replaced by
+three `¬ Collinear3`); route = minimality `A ≤ azim 0 e v q`,
+`C := azim 0 e w' w ≤ A`, one `sum2` application per trichotomy branch of
+`A = azim 0 e v w'`, `azim_compl` for `C` from `D := azim 0 e w w'`, and
+`azim_cycle_distinct_p14` at `(w, w')` for the `D = 0` branch). -/
 theorem azim_cycle_neg_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite) (h2 : v ∈ U)
     (h3 : azimCycle_p14 U 0 e v = w)
     (h4 : ∀ x ∈ U, e ⬝ᵥ (cross3 x (azimCycle_p14 U 0 e x)) ≠ 0) :
@@ -1386,7 +1923,16 @@ theorem azim_cycle_neg_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite) (h2 : v ∈
   sorry
 
 /-- HOL `azim_cycle_neg` re-proved (hl:2897; the source re-binds the name
-with stronger hypotheses).  NEEDS: azimuth-cycle negation theory. -/
+with stronger hypotheses).  W5c-A2 FINDING (2026-10-28): the statement is
+FALSE as frozen (the HOL block at hl:2897 is the commented-out abandoned
+attempt, and the abandonment is justified).  Countermodel: `U := {v, w, 2•w}`
+with `e •ᵕ (v ×₃ w) ≠ 0`, `cyc(e; v) = w` (the azim-tie against `2•w` is
+broken by the projection tiebreak), and `cyc(-e; w) = 2•w` because
+`azim 0 e (2•w) w = 0 < A = azim 0 e v w`; the -e-cycle successor of `w` is
+`2•w ≠ v`.  All hypotheses (including `cyclicSet U 0 e`: no element on the
+axis line, no axis-parallel differences) hold.  Wave 3 options: (a) add the
+nondegeneracy `∀ x ∈ U, e •ᵕ (x ×₃ cyc(x)) ≠ 0` (reducing to
+`azim_cycle_neg_p14`), or (b) formalize the refutation. -/
 theorem azim_cycle_neg2_p14 (U : Set V3) (e v w : V3) (h1 : ¬ (U ⊆ {w}))
     (h2 : U.Finite) (h3 : cyclicSet U 0 e) (h4 : v ∈ U)
     (h5 : e ⬝ᵥ (cross3 v w) ≠ 0) (h6 : azimCycle_p14 U 0 e v = w) :
