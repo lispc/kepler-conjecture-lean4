@@ -1051,6 +1051,44 @@ theorem RADV_TRANS_EQ (u v x : V3) (h : ¬(u = v)) :
   rw [radV_pair u v (fun huv => h huv),
     radV_pair (u + x) (v + x) (by simp [h]), hd]
 
+/-- `hl` re-indexing bridge: `hl [0, a] = hl [u, a + u]` for `a ≠ 0`
+(RDWKARC.hl closing segment; via `RADV_TRANS_EQ` and the `setOfList` pair
+form, same route as PA2's private `hlPairAdd_p2`). -/
+private theorem hlPairAdd_p19 {a u : V3} (ha : a ≠ 0) : hl [0, a] = hl [u, a + u] := by
+  have hsl : ∀ x y : V3, setOfList [x, y] = {x, y} := by
+    intro x y
+    ext b
+    simp [setOfList]
+  have hkey := RADV_TRANS_EQ (0 : V3) a u (Ne.symm ha)
+  rw [zero_add] at hkey
+  show radV (setOfList [0, a]) = radV (setOfList [u, a + u])
+  rw [hsl, hsl]
+  exact hkey
+
+/-- `setSum` respects pointwise congruence of the summand (same route as PA2's
+private `setSumCongr_p2`). -/
+private theorem setSumCongr_p19 {α : Type*} {s : Set α} {f g : α → ℝ}
+    (h : ∀ a ∈ s, f a = g a) : setSum s f = setSum s g := by
+  by_cases hs : Set.Finite s
+  · unfold setSum
+    rw [dif_pos hs, dif_pos hs]
+    exact Finset.sum_congr rfl fun a ha => h a (hs.mem_toFinset.mp ha)
+  · unfold setSum
+    rw [dif_neg hs, dif_neg hs]
+
+/-- `setSum` re-indexes along an injective image (Lean form of HOL
+`SUM_EQ_GENERAL_INVERSES`; junk convention wagers finiteness on both sides,
+same route as PA2's private `setSumImage_p2`). -/
+private theorem setSumImage_p19 (g : V3 → V3) (A : Set V3) (f : V3 → ℝ)
+    (hinj : Set.InjOn g A) (hA : A.Finite) :
+    setSum (g '' A) f = setSum A (fun a => f (g a)) := by
+  classical
+  have himg : (g '' A).Finite := hA.image g
+  unfold setSum
+  rw [dif_pos himg, dif_pos hA, Set.Finite.toFinset_image g hA himg,
+    Finset.sum_image (fun a ha b hb h => hinj (hA.mem_toFinset.mp ha)
+      (hA.mem_toFinset.mp hb) h)]
+
 /-- GIANT — HOL `RDWKARC` (RDWKARC.hl:180-314): if the Kepler density bound
 fails then some packing inside the ball annulus violates the local annulus
 inequality. HL proof architecture: unfold `kepler_conjecture` and move the
@@ -1068,6 +1106,108 @@ theorem RDWKARC : ¬keplerConjecture →
     (∀ V : Set V3, Packing V → saturated V → cellClusterInequality V) →
     TSKAJXY_statement →
     ∃ V : Set V3, Packing V ∧ V ⊆ ballAnnulus ∧ ¬localAnnulusInequality V := by
-  sorry
+  intro hkc hcc hT
+  -- RDWKARC.hl:189-193 — unpack `¬kepler_conjecture` to a failing witness.
+  obtain ⟨V, hP, hs, hden⟩ : ∃ V : Set V3, Packing V ∧ saturated V ∧
+      ¬(∃ c : ℝ, ∀ r : ℝ, 1 ≤ r →
+        volume.real (((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 r : Set V3)) /
+          volume.real (Metric.ball (0 : V3) r) ≤ Real.pi / Real.sqrt 18 + c / r) := by
+    by_contra hex
+    refine hkc fun V hV => ?_
+    by_contra hc
+    exact hex ⟨V, hV.1, hV.2, hc⟩
+  -- RDWKARC.hl:196-215 — `lmfunInequality V` would give the density bound
+  -- via UPFZBZM + JGXZYGW_KY; contradiction.
+  have hnlm : ¬lmfunInequality V := by
+    intro hlm
+    obtain ⟨G, hG0, hGf⟩ := UPFZBZM V hs hP (hcc V hP hs) hT hlm
+    exact hden (JGXZYGW_KY V hP hs ⟨G, hGf, hG0⟩)
+  -- RDWKARC.hl:217-222 — extract `u ∈ V` with edge lmfun-sum > 12.
+  obtain ⟨u, hu, hsum⟩ : ∃ u : V3, u ∈ V ∧
+      12 < setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+        (fun v => lmfun (hl [u, v])) := by
+    by_contra hall
+    push Not at hall
+    exact hnlm hall
+  have hPT : Packing {v : V3 | v + u ∈ V} := PACKING_TRANS V hP u
+  -- Membership of the witness in terms of distances (annulus ↔ edge set).
+  have hAann : ∀ v : V3, v ∈ {w : V3 | w + u ∈ V} ∩ ballAnnulus →
+      v + u ∈ V ∧ dist 0 v ≤ 2 * h0 ∧ 2 ≤ dist 0 v := by
+    intro v hv
+    rw [Set.mem_inter_iff] at hv
+    obtain ⟨hm, hann⟩ := hv
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball] at hann
+    refine ⟨hm, ?_, ?_⟩
+    · rw [dist_comm]; exact hann.1
+    · rw [dist_comm]; exact le_of_not_gt hann.2
+  have hballmem : ∀ v : V3, dist 0 v ≤ 2 * h0 → 2 ≤ dist 0 v → v ∈ ballAnnulus := by
+    intro v hle h2
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball]
+    refine ⟨?_, ?_⟩
+    · rw [dist_comm]; exact hle
+    · intro hb
+      rw [dist_comm] at hb
+      exact absurd hb (not_lt.2 h2)
+  have hAfin : ({v : V3 | v + u ∈ V} ∩ ballAnnulus).Finite := by
+    refine Set.Finite.subset (hPT.finite_inter_ball (2 * h0 + 1)) ?_
+    intro v hv
+    obtain ⟨hm, hle, -⟩ := hAann v hv
+    refine Set.mem_inter hm (Metric.mem_ball.2 ?_)
+    rw [dist_comm]
+    linarith
+  refine ⟨{v : V3 | v + u ∈ V} ∩ ballAnnulus, ?_, Set.inter_subset_right, ?_⟩
+  · -- packing of the witness: PACKING_TRANS then subset.
+    intro a ha b hb hlt
+    rw [Set.mem_inter_iff] at ha hb
+    exact hPT a ha.1 b hb.1 hlt
+  · -- RDWKARC.hl:226-314 — the annulus sum re-indexes to the V-edge sum.
+    intro hLAI
+    have hinj : Set.InjOn (fun a : V3 => a + u)
+        ({v : V3 | v + u ∈ V} ∩ ballAnnulus) := fun _ _ _ _ h => add_right_cancel h
+    have hTeq : {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0} =
+        (fun a : V3 => a + u) '' ({v : V3 | v + u ∈ V} ∩ ballAnnulus) := by
+      ext w
+      constructor
+      · rintro ⟨hwV, hwu, hdu⟩
+        have hdu2 : dist 0 (w - u) = dist u w := by
+          rw [dist_eq_norm, dist_eq_norm]; abel
+        have h2wu : 2 ≤ dist u w := Packing.dist_ge_two hP hu hwV (Ne.symm hwu)
+        have hVin : w - u + u = w := by abel
+        have hinV : (w - u) + u ∈ V := by rw [hVin]; exact hwV
+        have hle : dist 0 (w - u) ≤ 2 * h0 := by rw [hdu2]; exact hdu
+        have h2 : 2 ≤ dist 0 (w - u) := by rw [hdu2]; exact h2wu
+        refine ⟨w - u, Set.mem_inter hinV (hballmem _ hle h2), hVin⟩
+      · rintro ⟨a, ha, rfl⟩
+        show a + u ∈ {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+        obtain ⟨haV, hle, ha2⟩ := hAann a ha
+        have ha0 : a ≠ 0 := by
+          intro h0
+          rw [h0] at ha2
+          rw [dist_self] at ha2
+          linarith
+        refine ⟨haV, ?_, ?_⟩
+        · intro h
+          have h' : a + u = (0 : V3) + u := by rw [zero_add]; exact h
+          exact ha0 (add_right_cancel h')
+        · have hd : dist u (a + u) = dist 0 a := by
+            rw [dist_eq_norm, dist_eq_norm]; abel
+          rw [hd]; exact hle
+    have key : setSum ({v : V3 | v + u ∈ V} ∩ ballAnnulus)
+        (fun w => lmfun (hl [0, w])) =
+        setSum {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+          (fun v => lmfun (hl [u, v])) := by
+      rw [hTeq, setSumImage_p19 (fun a : V3 => a + u) _ _ hinj hAfin]
+      refine setSumCongr_p19 fun a ha => ?_
+      obtain ⟨-, -, ha2⟩ := hAann a ha
+      have ha0 : a ≠ 0 := by
+        intro h0
+        rw [h0] at ha2
+        rw [dist_self] at ha2
+        linarith
+      show lmfun (hl [0, a]) = lmfun (hl [u, a + u])
+      rw [hlPairAdd_p19 ha0]
+    unfold localAnnulusInequality at hLAI
+    rw [key] at hLAI
+    linarith
 
 end Kepler.Text
