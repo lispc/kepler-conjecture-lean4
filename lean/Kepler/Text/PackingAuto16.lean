@@ -210,44 +210,655 @@ private theorem lemmaRRFix2 {C : Set V3} {x : V3} {r s : ℝ}
     rw [heq, Set.inter_eq_left.mpr hrad.1]
     field_simp
 
-/-- GIANT — HOL `MCELL_SET_NOT_EMPTY` (QZYZMJC.hl:137-496): a packing point
-lies in a non-null Marchal cell (the `mcell 0` sliver around `v` is null, so
-some `mcell i V ul`, `1 <= i <= 4`, is not).
+/-! ### p16q helpers for the QZYZMJC fill-in (2026-11-03 lane; all placed
+before their first consumer, `p16q_` prefix, zero new imports) -/
 
-Sorried: the HL proof is a 360-line refinement chain — vol-monotonicity over
-the cell covering (NEEDS SLTSTLO1, NEEDS MEASURABLE_MCELL/Auto10), the null
-decomposition of `rogers V vl` (NEEDS mcell0 = rogers DIFF ball), the
-identification `voronoi_closed V v ∩ ball(v, sqrt 2)` with the union over
-`barV V 3` lists truncating to `[v]` (NEEDS GLTVHUM/PackingAuto6), finiteness
-by NEEDS KIUMVTC (PackingAuto5) + FINITE_SET_LIST_LEMMA (AJRIPQN.hl, not on
-the Lean side), the `1 < sqrt 2` + `VOLUME_BALL` positivity contradiction,
-and NEEDS LEPJBDJ (PackingAuto11) for `V ∩ mcell i V ul =
-set_of_list (truncate_simplex (i - 1) ul)`. -/
+/-- HOL `FINITE_SET_LIST_LEMMA` at length `4`: `4`-term lists drawn from a
+finite point set form a finite set. -/
+private theorem p16q_finite_lists4 {s : Set V3} (hfin : s.Finite) :
+    {ul : List V3 | ∃ u0 : V3, u0 ∈ s ∧ ∃ u1 : V3, u1 ∈ s ∧ ∃ u2 : V3, u2 ∈ s ∧
+      ∃ u3 : V3, u3 ∈ s ∧ ul = [u0, u1, u2, u3]}.Finite := by
+  classical
+  have hprod : ((s ×ˢ s) ×ˢ (s ×ˢ s)).Finite := (hfin.prod hfin).prod (hfin.prod hfin)
+  have himg : ((fun q : (V3 × V3) × (V3 × V3) => [q.1.1, q.1.2, q.2.1, q.2.2]) ''
+      ((s ×ˢ s) ×ˢ (s ×ˢ s))).Finite :=
+    hprod.image (fun q : (V3 × V3) × (V3 × V3) => [q.1.1, q.1.2, q.2.1, q.2.2])
+  refine Set.Finite.subset himg ?_
+  rintro ul ⟨u0, h0, u1, h1, u2, h2, u3, h3, rfl⟩
+  exact ⟨((u0, u1), (u2, u3)), ⟨⟨h0, h1⟩, ⟨h2, h3⟩⟩, rfl⟩
+
+/-- A `barV V 3` list rooted at `v` (via `truncateSimplex 0`) has head `v`
+(`HD_TRUNCATE_SIMPLEX`, PackingAuto5). -/
+private theorem p16q_hd_of_trunc0 {ul : List V3} {v : V3} (hlen : 1 ≤ ul.length)
+    (htr : truncateSimplex 0 ul = [v]) : hdV ul = v := by
+  have h1 := HD_TRUNCATE_SIMPLEX ul 0 hlen
+  rw [htr] at h1
+  have h2 : hdV [v] = v := by simp [hdV]
+  rw [h2] at h1
+  exact h1.symm
+
+/-- The `barV V 3` lists rooted at `v` are finite: their points lie in
+`V ∩ ball v 4` (`BARV_SUBSET` + `BARV_3_IMP_FINITE_lemma2`), so the list
+family injects into the finite `4`-list family over that set. -/
+private theorem p16q_rooted_lists_finite (V : Set V3) (v : V3) (hs : saturated V)
+    (hp : Packing V) :
+    {ul : List V3 | barV V 3 ul ∧ truncateSimplex 0 ul = [v]}.Finite := by
+  refine Set.Finite.subset (p16q_finite_lists4 (KIUMVTC v 4 V hp)) ?_
+  rintro ul ⟨hb, htr⟩
+  have hlen4 : ul.length = 4 := hb.1
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+  have hvsl : v ∈ setOfList ul := by
+    refine (SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET ul 0 (by omega)) ?_
+    rw [htr]
+    simp [setOfList]
+  have hV := BARV_SUBSET V 3 ul hb
+  have hB := barV3ImpFinite2 hp hs hb hvsl
+  subst hul
+  refine ⟨u0, ⟨hV (by simp [setOfList]), hB (by simp [setOfList])⟩,
+    u1, ⟨hV (by simp [setOfList]), hB (by simp [setOfList])⟩,
+    u2, ⟨hV (by simp [setOfList]), hB (by simp [setOfList])⟩,
+    u3, ⟨hV (by simp [setOfList]), hB (by simp [setOfList])⟩, rfl⟩
+
+/-- `volume.real` of a ball (localized copy of the later `p16_volume_ball_real`,
+which sits below the consumers of this block). -/
+private theorem p16q_volume_ball_real {c : V3} {q : ℝ} (hq : 0 ≤ q) :
+    volume.real (Metric.ball c q) = 4 * Real.pi / 3 * q ^ 3 := by
+  rw [Measure.real_def, EuclideanSpace.volume_ball_fin_three, ENNReal.toReal_mul,
+    ENNReal.toReal_pow, ENNReal.toReal_ofReal hq,
+    ENNReal.toReal_ofReal (by positivity : (0:ℝ) ≤ Real.pi * 4 / 3)]
+  ring
+
+/-- A ball of positive radius has nonzero volume. -/
+private theorem p16q_ball_volume_ne_zero {c : V3} {q : ℝ} (hq : 0 < q) :
+    volume (Metric.ball c q) ≠ 0 := by
+  intro h0
+  have h1 : volume.real (Metric.ball c q) = 0 := by
+    rw [Measure.real_def, h0, ENNReal.toReal_zero]
+  rw [p16q_volume_ball_real (le_of_lt hq)] at h1
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have hq3 : q ^ 3 ≠ 0 := pow_ne_zero 3 (ne_of_gt hq)
+  have hc : (4:ℝ) * Real.pi / 3 ≠ 0 :=
+    div_ne_zero (by nlinarith) (by norm_num)
+  rcases mul_eq_zero.mp h1 with h5 | h5
+  · exact hc h5
+  · exact hq3 h5
+
+/-- A Rogers simplex has finite volume: it is the compact convex hull of a
+finite point family (the `MEASURABLE_ROGERS` construction in PackingAuto12),
+hence bounded, and `volume` is finite on bounded measurable sets. -/
+private theorem p16q_rogers_vol_lt_top (V : Set V3) (ul : List V3)
+    (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul) :
+    volume (rogers V ul) < ⊤ := by
+  have hcomp : IsCompact (rogers V ul) := by
+    rw [rogers]
+    exact Set.Finite.isCompact_convexHull ℝ
+      (Set.Finite.image (fun j : ℕ => omegaListN V ul j) (Set.finite_lt_nat ul.length))
+  exact hcomp.measure_lt_top
+
+/-- DISCHARGED — HOL `MCELL_SET_NOT_EMPTY` (QZYZMJC.hl:137-496): a packing
+point lies in a non-null Marchal cell.
+
+Port of the HL refinement chain, by contradiction on the two-leaf case split:
+either every candidate sliver `mcell i V ul` (`1 ≤ i ≤ 4`, root list
+`truncateSimplex 0 ul = [v]`) is null — then each `rogers V ul ∩ ball v √2` is
+null (volume monotonicity over the cell covering `SLTSTLO1` plus the
+`mcell 0 = rogers DIFF ball` decomposition and `volume`-additivity on the
+disjoint measurable split, with `hdV ul = v` from `HD_TRUNCATE_SIMPLEX`), so
+`voronoi_closed V v ∩ ball v √2` is a finite union of nulls (GLTVHUM +
+finiteness of the rooted-list family via KIUMVTC), so `ball v 1` is null
+(packing: every other center is `≥ 2` away) — contradicting
+`volume(ball v 1) = 4π/3 > 0`; or some sliver is non-null and it is the
+witness cell: `mcell_set` membership is `mcellSet2`, and
+`v ∈ V ∩ mcell i V ul` follows from LEPJBDJ (the non-null cell is nonempty)
+plus `set_of_list (truncate_simplex 0 ul) = {v} ⊆ set_of_list
+(truncate_simplex (i - 1) ul)` (TRUNCATE_SIMPLEX_SUBSET). -/
 private theorem mcellSetNotEmpty (V : Set V3) (v : V3) (hs : saturated V)
     (hp : Packing V) (hv : v ∈ V) :
     {X | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X} ≠ ∅ := by
-  sorry
+  classical
+  by_cases hall : ∀ (i : ℕ) (ul : List V3), 1 ≤ i → i ≤ 4 → barV V 3 ul →
+      truncateSimplex 0 ul = [v] → nullSet (mcell i V ul)
+  · -- Case 1: all candidate slivers null ⟹ ball v 1 null ⟹ contradiction
+    exfalso
+    have hsqrt2 : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+    -- (a) each rooted Rogers simplex cut by ball v √2 is null
+    have hnullR : ∀ ul, barV V 3 ul → truncateSimplex 0 ul = [v] →
+        nullSet (rogers V ul ∩ Metric.ball v (Real.sqrt 2)) := by
+      intro ul hb htr
+      have hlen : ul.length = 4 := hb.1
+      -- covering: rogers ⊆ ⋃_{i ∈ range 5} mcell i V ul (SLTSTLO1)
+      have hcov : rogers V ul ⊆ ⋃ i ∈ (Finset.range 5 : Finset ℕ), mcell i V ul := by
+        intro x hx
+        obtain ⟨i, hi, hxm⟩ := SLTSTLO1 V ul x hs hp hb hx
+        exact Set.mem_biUnion (Finset.mem_range.mpr (by omega)) hxm
+      -- the 1..4 subunion is null (hall)
+      have hBnull : volume (⋃ i ∈ (((Finset.range 5).filter (fun i : ℕ => 1 ≤ i) : Finset ℕ) :
+          Set ℕ), mcell i V ul) = 0 := by
+        rw [MeasureTheory.measure_biUnion_null_iff (Set.Finite.countable
+          ((Finset.range 5).filter (fun i : ℕ => 1 ≤ i)).finite_toSet)]
+        intro i hi
+        have hf := Finset.mem_filter.mp (Finset.mem_coe.mp hi)
+        exact hall i ul hf.2 (by have := Finset.mem_range.mp hf.1; omega) hb htr
+      -- vol of the 5-cell union collapses to vol of the mcell 0 sliver
+      have hAeq : volume (⋃ i ∈ (Finset.range 5 : Finset ℕ), mcell i V ul)
+          = volume (mcell 0 V ul) := by
+        refine le_antisymm ?_
+          (measure_mono (fun x hx => Set.mem_biUnion
+            (Finset.mem_coe.mpr (Finset.mem_range.mpr (by norm_num : (0:ℕ) < 5))) hx))
+        have hsub : (⋃ i ∈ (Finset.range 5 : Finset ℕ), mcell i V ul)
+            ⊆ mcell 0 V ul ∪ (⋃ i ∈ (((Finset.range 5).filter (fun i : ℕ => 1 ≤ i) :
+              Finset ℕ) : Set ℕ), mcell i V ul) := by
+          intro x hx
+          rw [Set.mem_iUnion₂] at hx
+          obtain ⟨i, hi, hxm⟩ := hx
+          rcases Nat.eq_zero_or_pos i with hi0 | hi1
+          · subst hi0
+            exact Or.inl hxm
+          · exact Or.inr (Set.mem_iUnion₂.mpr
+              ⟨i, Finset.mem_coe.mpr (Finset.mem_filter.mpr ⟨hi, hi1⟩), hxm⟩)
+        calc volume (⋃ i ∈ (Finset.range 5 : Finset ℕ), mcell i V ul)
+            ≤ volume (mcell 0 V ul) + volume (⋃ i ∈
+                (((Finset.range 5).filter (fun i : ℕ => 1 ≤ i) : Finset ℕ) : Set ℕ),
+                mcell i V ul) := (measure_mono hsub).trans (measure_union_le _ _)
+          _ = volume (mcell 0 V ul) := by rw [hBnull, add_zero]
+      -- the mcell 0 sliver is rogers minus the √2-ball around v
+      have hhd : hdV ul = v := p16q_hd_of_trunc0 (by omega) htr
+      have hm0 : mcell 0 V ul = rogers V ul \ Metric.ball v (Real.sqrt 2) := by
+        have h0 : mcell 0 V ul = mcell0 V ul := by simp [mcell]
+        rw [h0, mcell0, hhd]
+      -- volumes: vol(rogers) ≤ vol(rogers \ ball v √2) ...
+      have hvolle : volume (rogers V ul)
+          ≤ volume (rogers V ul \ Metric.ball v (Real.sqrt 2)) := by
+        calc volume (rogers V ul)
+            ≤ volume (⋃ i ∈ (Finset.range 5 : Finset ℕ), mcell i V ul) :=
+              measure_mono hcov
+          _ = volume (mcell 0 V ul) := hAeq
+          _ = volume (rogers V ul \ Metric.ball v (Real.sqrt 2)) := by rw [hm0]
+      -- ... and vol(rogers) = vol(rogers ∩ ball) + vol(rogers \ ball) (additivity)
+      have hmeasR : MeasurableSet (rogers V ul) := MEASURABLE_ROGERS V ul hs hp hb
+      have hmeasB : MeasurableSet (Metric.ball v (Real.sqrt 2)) :=
+        Metric.isOpen_ball.measurableSet
+      have hsunion : rogers V ul ∩ Metric.ball v (Real.sqrt 2)
+            ∪ (rogers V ul \ Metric.ball v (Real.sqrt 2)) = rogers V ul := by
+        ext x; simp
+      have hdisj : rogers V ul ∩ Metric.ball v (Real.sqrt 2)
+            ∩ (rogers V ul \ Metric.ball v (Real.sqrt 2)) = ∅ := by
+        ext x
+        constructor
+        · rintro ⟨⟨-, hb2⟩, -, hn2⟩
+          exact hn2 hb2
+        · exact fun h => absurd h (Set.notMem_empty x)
+      have hun := measure_union_add_inter (μ := volume)
+        (rogers V ul ∩ Metric.ball v (Real.sqrt 2)) (hmeasR.diff hmeasB)
+      rw [hsunion, hdisj, measure_empty, add_zero] at hun
+      -- real arithmetic forces vol(rogers ∩ ball) = 0
+      have hXfin : volume (rogers V ul ∩ Metric.ball v (Real.sqrt 2)) ≠ ⊤ :=
+        ne_of_lt (lt_of_le_of_lt (measure_mono Set.inter_subset_left)
+          (p16q_rogers_vol_lt_top V ul hs hp hb))
+      have hYfin : volume (rogers V ul \ Metric.ball v (Real.sqrt 2)) ≠ ⊤ :=
+        ne_of_lt (lt_of_le_of_lt (measure_mono Set.sdiff_subset)
+          (p16q_rogers_vol_lt_top V ul hs hp hb))
+      have hre := congrArg ENNReal.toReal hun
+      rw [ENNReal.toReal_add hXfin hYfin] at hre
+      have hRfin : volume (rogers V ul) ≠ ⊤ :=
+        ne_of_lt (p16q_rogers_vol_lt_top V ul hs hp hb)
+      have hle := (ENNReal.toReal_le_toReal hRfin hYfin).mpr hvolle
+      have hnpos : 0 ≤ (volume (rogers V ul ∩ Metric.ball v (Real.sqrt 2))).toReal :=
+        ENNReal.toReal_nonneg
+      have hX0 : (volume (rogers V ul ∩ Metric.ball v (Real.sqrt 2))).toReal = 0 := by
+        linarith
+      have hXeq0 : volume (rogers V ul ∩ Metric.ball v (Real.sqrt 2)) = 0 := by
+        rcases eq_zero_or_pos (volume (rogers V ul ∩ Metric.ball v (Real.sqrt 2)))
+          with h6 | h6
+        · exact h6
+        · exact absurd hX0 (by
+            have hpos := ENNReal.toReal_pos (ne_of_gt h6) hXfin
+            linarith)
+      exact hXeq0
+    -- (b) voronoiClosed V v ∩ ball v √2 is a finite union of such nulls
+    have hnullVC : nullSet (voronoiClosed V v ∩ Metric.ball v (Real.sqrt 2)) := by
+      have hcore := p16q_rooted_lists_finite V v hs hp
+      have heq : voronoiClosed V v ∩ Metric.ball v (Real.sqrt 2)
+          = ⋃ ul ∈ {ul : List V3 | barV V 3 ul ∧ truncateSimplex 0 ul = [v]},
+              rogers V ul ∩ Metric.ball v (Real.sqrt 2) := by
+        ext x
+        rw [Set.mem_iUnion₂]
+        constructor
+        · rintro ⟨hxv, hxb⟩
+          obtain ⟨ul, hb, hxr, htr⟩ := (GLTVHUM V v x ⟨hp, hs⟩ hv).mp hxv
+          exact ⟨ul, ⟨hb, htr⟩, hxr, hxb⟩
+        · rintro ⟨ul, ⟨hb, htr⟩, hxr, hxb⟩
+          exact ⟨(GLTVHUM V v x ⟨hp, hs⟩ hv).mpr ⟨ul, hb, hxr, htr⟩, hxb⟩
+      show volume (voronoiClosed V v ∩ Metric.ball v (Real.sqrt 2)) = 0
+      rw [heq, MeasureTheory.measure_biUnion_null_iff hcore.countable]
+      rintro ul ⟨hb, htr⟩
+      exact hnullR ul hb htr
+    -- (c) ball v 1 ⊆ voronoiClosed V v ∩ ball v √2, hence null
+    have hsubB1 : Metric.ball v 1 ⊆ voronoiClosed V v ∩ Metric.ball v (Real.sqrt 2) := by
+      intro x hx
+      have hbx : dist x v < 1 := by simpa using hx
+      have hvc : x ∈ voronoiClosed V v := by
+        intro w hw
+        by_cases hwv : w = v
+        · subst hwv
+          exact le_refl _
+        · have h2 : 2 ≤ dist w v := hp.dist_ge_two hw hv hwv
+          have htri : dist v w ≤ dist v x + dist x w := dist_triangle v x w
+          have hdvx : dist v x = dist x v := dist_comm v x
+          have hdwv : dist v w = dist w v := dist_comm v w
+          linarith
+      refine ⟨hvc, ?_⟩
+      have h12 : (1:ℝ) < Real.sqrt 2 :=
+        (Real.lt_sqrt (by norm_num : (0:ℝ) ≤ (1:ℝ))).mpr
+          (by norm_num : (1:ℝ) ^ 2 < 2)
+      simpa using lt_trans hbx h12
+    -- (d) ball v 1 is null but has volume 4π/3 > 0
+    have hnullB1 : volume (Metric.ball v 1) = 0 :=
+      measure_mono_null hsubB1 hnullVC
+    have hrealB1 : volume.real (Metric.ball v 1) = 0 := by
+      rw [Measure.real_def, hnullB1, ENNReal.toReal_zero]
+    rw [p16q_volume_ball_real (by norm_num : (0:ℝ) ≤ 1)] at hrealB1
+    have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+    linarith
+  · -- Case 2: some candidate sliver is non-null — it is the witness
+    obtain ⟨i, ul, hi1, hi4, hb, htr, hnull⟩ :
+        ∃ i ul, 1 ≤ i ∧ i ≤ 4 ∧ barV V 3 ul ∧ truncateSimplex 0 ul = [v] ∧
+          ¬nullSet (mcell i V ul) :=
+      Classical.byContradiction fun hc =>
+        hall fun i ul hi1 hi4 hb htr =>
+          Classical.byContradiction fun hnn =>
+            (hc ⟨i, ul, hi1, hi4, hb, htr, hnn⟩).elim
+    have hlen4 : ul.length = 4 := hb.1
+    have hcellset : mcellSet V (mcell i V ul) := by
+      rw [mcellSet2 V]
+      exact ⟨i, ul, rfl, hb, hi4⟩
+    have hv1 : v ∈ V ∩ mcell i V ul := by
+      have hne0 : mcell i V ul ≠ ∅ := fun hc => hnull (by rw [hc]; exact measure_empty)
+      have hL := LEPJBDJ V ul i hs hp hb hi1 hi4 hne0
+      rw [hL]
+      have h0mem : v ∈ setOfList (truncateSimplex 0 ul) := by rw [htr]; simp [setOfList]
+      exact TRUNCATE_SIMPLEX_SUBSET ul (i - 1) 0 (by omega) (by omega) h0mem
+
+    exact Set.nonempty_iff_ne_empty.mp ⟨mcell i V ul, hcellset, hnull, hv1⟩
 
 /-! ## QZYZMJC (QZYZMJC.hl:36-39, 503-1108) -/
 
-/-- GIANT — HOL `QZYZMJC` (QZYZMJC.hl:503-1108, concl `QZYZMJC1_concl`
+
+/-- Radiality shrinks to smaller radii: a radial set at radius `s` is radial at
+any smaller radius, intersected with the smaller ball. -/
+private theorem p16q_radial_shrink {x : V3} {C : Set V3} {s r : ℝ}
+    (hs : radialNorm s x C) (hrle : r ≤ s) : radialNorm r x (C ∩ Metric.ball x r) := by
+  refine ⟨fun u hu => hu.2, ?_⟩
+  intro u hu t ht0 htr
+  refine ⟨hs.2 u hu.1 t ht0 (lt_of_lt_of_le htr hrle), ?_⟩
+  rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
+    abs_of_pos ht0]
+  exact htr
+
+/-- setSum congruence (localized copy of the later `p16_setSumCongr`). -/
+private theorem p16q_setSumCongr {α : Type*} {s : Set α} {f g : α → ℝ}
+    (h : ∀ a ∈ s, f a = g a) : setSum s f = setSum s g := by
+  classical
+  by_cases hs0 : s.Finite
+  · unfold setSum
+    rw [dif_pos hs0, dif_pos hs0]
+    exact Finset.sum_congr rfl fun a ha => h a ((Set.Finite.mem_toFinset hs0).mp ha)
+  · unfold setSum
+    rw [dif_neg hs0, dif_neg hs0]
+
+/-- setSum superset transfer (localized copy of the later
+`p16_setSum_superset_eq`, which sits below the consumer). -/
+private theorem p16q_setSum_superset_eq {α : Type*} {s t : Set α} (hs : s.Finite)
+    (ht : t.Finite) (hsub : s ⊆ t) (f : α → ℝ)
+    (hz : ∀ a ∈ t, a ∉ s → f a = 0) : setSum s f = setSum t f := by
+  have hsd : ht.toFinset \ hs.toFinset ⊆ ht.toFinset := fun a ha =>
+    (Finset.mem_sdiff.mp ha).1
+  have hsplit : ∑ x ∈ ht.toFinset \ hs.toFinset, f x + ∑ x ∈ hs.toFinset, f x
+      = ∑ x ∈ ht.toFinset, f x := Finset.sum_sdiff
+      (fun a ha => (Set.Finite.mem_toFinset ht).mpr
+        (hsub ((Set.Finite.mem_toFinset hs).mp ha)))
+  have hzero : ∑ x ∈ ht.toFinset \ hs.toFinset, f x = 0 := by
+    refine Finset.sum_eq_zero fun x hx => ?_
+    have h1 : x ∈ t := (Set.Finite.mem_toFinset ht).mp (Finset.mem_sdiff.mp hx).1
+    have h2 : x ∉ s := by
+      intro hcon
+      exact absurd ((Set.Finite.mem_toFinset hs).mpr hcon) (Finset.mem_sdiff.mp hx).2
+    exact hz x h1 h2
+  unfold setSum
+  rw [dif_pos hs, dif_pos ht]
+  linarith [hsplit, hzero]
+
+/-- setSum scalar (localized copy of the later `p16_setSum_lmull`). -/
+private theorem p16q_setSum_lmull {α : Type*} {s : Set α} (hs : s.Finite) (c : ℝ)
+    (f : α → ℝ) : setSum s (fun x => c * f x) = c * setSum s f := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos hs, Finset.mul_sum]
+
+/-- a.e.-disjoint finite union in ENNReal (localized copy of the later
+`p16_ae_biUnion`). -/
+private theorem p16q_ae_biUnion {ι : Type} [DecidableEq ι] (s : Finset ι) (f : ι → Set V3)
+    (hm : ∀ i ∈ s, MeasurableSet (f i))
+    (hpair : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → volume (f i ∩ f j) = 0) :
+    volume (⋃ i ∈ s, f i) = ∑ i ∈ s, volume (f i) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | insert i s hi ih =>
+    have himem : i ∈ insert i s := Finset.mem_insert_self _ _
+    have hms : MeasurableSet (⋃ j ∈ s, f j) :=
+      MeasurableSet.biUnion (Set.Finite.countable s.finite_toSet)
+        (fun j hj => hm j (Finset.mem_insert_of_mem hj))
+    have hnull : volume ((f i) ∩ ⋃ j ∈ s, f j) = 0 := by
+      have heq : ((f i) ∩ ⋃ j ∈ s, f j) = ⋃ j ∈ (s : Set ι), (f i ∩ f j) := by
+        ext x
+        simp [Set.mem_inter_iff]
+      rw [heq, MeasureTheory.measure_biUnion_null_iff
+        (Set.Finite.countable s.finite_toSet)]
+      intro j hj
+      exact hpair i himem j (Finset.mem_insert_of_mem hj)
+        (fun hcon => hi (by rw [hcon]; exact hj))
+    have hadd := MeasureTheory.measure_union_add_inter (μ := volume) (f i) hms
+    rw [hnull, add_zero] at hadd
+    rw [Finset.set_biUnion_insert]
+    rw [Finset.sum_insert hi]
+    calc volume ((f i) ∪ ⋃ x ∈ (s : Set ι), f x)
+        = volume ((f i) ∪ ⋃ j ∈ s, f j) := rfl
+      _ = volume (f i) + volume (⋃ j ∈ s, f j) := hadd
+      _ = volume (f i) + ∑ j ∈ s, volume (f j) := by
+            rw [ih (fun j hj => hm j (Finset.mem_insert_of_mem hj))
+              (fun j hj k hk hjk => hpair j (Finset.mem_insert_of_mem hj) k
+                (Finset.mem_insert_of_mem hk) hjk)]
+
+/-- The `volume.real` form of the a.e.-disjoint finite union identity
+(localized copy of the later `p16_vol_biUnion_finset_real`). -/
+private theorem p16q_vol_biUnion_finset_real {ι : Type} [DecidableEq ι] (s : Finset ι)
+    (f : ι → Set V3) (hm : ∀ i ∈ s, MeasurableSet (f i))
+    (hpair : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → volume (f i ∩ f j) = 0)
+    (htop : ∀ i ∈ s, volume (f i) ≠ ⊤) :
+    volume.real (⋃ i ∈ s, f i) = ∑ i ∈ s, volume.real (f i) := by
+  have hae := p16q_ae_biUnion s f hm hpair
+  have hsumne : ∑ i ∈ s, volume (f i) ≠ ⊤ := ENNReal.sum_ne_top.mpr htop
+  have hutop : volume (⋃ i ∈ s, f i) ≠ ⊤ := by rw [hae]; exact hsumne
+  show (volume (⋃ i ∈ s, f i)).toReal = ∑ i ∈ s, (volume (f i)).toReal
+  rw [hae]
+  exact ENNReal.toReal_sum (f := fun i => volume (f i)) (fun i hi => htop i hi)
+
+/-- A ball has finite volume (localized copy of the later
+`p16_volume_ball_lt_top`, hypothesis-free so it adds no linter noise). -/
+private theorem p16q_ball_lt_top {c : V3} {q : ℝ} :
+    volume (Metric.ball c q) < ⊤ := by
+  rw [EuclideanSpace.volume_ball_fin_three]
+  exact ENNReal.mul_lt_top (ENNReal.pow_lt_top ENNReal.ofReal_lt_top)
+    ENNReal.ofReal_lt_top
+
+/-- DISCHARGED — HOL `QZYZMJC` (QZYZMJC.hl:503-1108, concl `QZYZMJC1_concl`
 HL:36-39): the solid angles of the non-null Marchal cells around a packing
-point sum to `4π`. The set `{X | mcell_set V X /\ v IN VX V X}` is first
-rewritten to `{X | mcell_set V X /\ ~NULLSET X /\ v IN V INTER X}` (VX of a
-null cell is empty; HDTFNFZ/PackingAuto10 identifies `VX` with `V ∩ X`
-otherwise), proved FINITE (the pair `(i, ul)` ranges over a finite product —
-`mcellSet2`, `barV3ImpFinite2`, LEPJBDJ, KIUMVTC), then each summand `sol v t`
-is unfolded via `sol_spec` at a uniform small radius `r` (SKOLEM + inf of the
-finitely many radiality witnesses URRPHBZ2/PackingAuto13, `lemmaRRFix2`),
-`sum S vol` collapses to `vol (normball v r)` by pairwise-disjointness of the
-cells (NEEDS AJRIPQN uniqueness; null cells contribute 0) and
-`normball v r ⊆ voronoi_closed V v ⊆ UNIONS cells` (GLTVHUM/PackingAuto6 +
-SLTSTLO1/PackingAuto13), giving `(3 / r^3) * vol (ball v r) = 4π`.
+point sum to `4π`. Port of the HL refinement chain: the summation domain
+`{X | mcell_set V X /\ v IN VX V X}` is rewritten to the non-null cells `S`
+(`VX` of a null cell is empty by definition; `HDTFNFZ` identifies `VX V X`
+with `V ∩ X` otherwise); `S` sits inside the finite set `F` of all mcell-set
+cells containing `v` (pairs `(i, ul)`, `i ≤ 4`, over the finite `4`-lists
+from `V ∩ ball v 4` — `KIUMVTC` + `BARV_3_EXPLICIT` + `BARV_SUBSET` +
+`BARV_3_IMP_FINITE_lemma2` + `LEPJBDJ`/`LEPJBDJ_0` +
+`SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET`); `URRPHBZ2` + choice select a positive
+radiality radius `f t` per cell, and the uniform small radius `r' ≤ f t`
+(`min` of the finite image, nonemptiness by `MCELL_SET_NOT_EMPTY`) feeds
+`sol_spec` through the radial-shrink lemma, so every summand is
+`3 / r'^3 * vol(t ∩ ball v r')`; null cells contribute zero
+(`p16q_setSum_superset_eq`), the sum collapses to
+`(3/r'^3) * vol((⋃ F) ∩ ball v r')` (a.e.-disjointness of distinct cells by
+`AJRIPQN` uniqueness + `MEASURABLE_MCELL`), and the covering
+`ball v r' ⊆ voronoiClosed V v ⊆ ⋃ F` (`GLTVHUM` + `SLTSTLO1` + `LEPJBDJ`,
+the `mcell 0` branch killed by `hdV ul = v` and `r' < 1 < √2`) makes the
+union-meet-ball equal the ball, giving `(3/r'^3) * (4π/3 * r'^3) = 4π`.
+
+Consumed sorried-in-tree giants (existing cone members, no new sources):
+`URRPHBZ2`, `SLTSTLO1` (PackingAuto13), `LEPJBDJ`/`LEPJBDJ_0` internals
+(PackingAuto11), `AJRIPQN` internals (PackingAuto17), `VORONOI_LIST_3_
+SINGLETON_EXPLICIT` shim (PackingAuto12, via `mcellSetNotEmpty`'s port) —
+same flow the discharged `KIZHLTL1`/`KIZHLTL2`/`KIZHLTL4` already consume.
 
 DISCHARGES: PackingAuto2.QZYZMJC_concl (PackingAuto2.lean:803). -/
 theorem QZYZMJC : ∀ (V : Set V3) (v : V3), saturated V → Packing V → v ∈ V →
     setSum {X | mcellSet V X ∧ v ∈ VX V X} (fun t => sol v t) = 4 * Real.pi := by
-  sorry
+  classical
+  intro V v hs hp hv
+  -- Step A: rewrite the summation domain to the non-null cells around v
+  have hAS : {X | mcellSet V X ∧ v ∈ VX V X}
+      = {X | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X} := by
+    ext X
+    simp only [Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨hm, hvx⟩
+      by_cases hnull : nullSet X
+      · exfalso
+        rw [VX, if_pos hnull] at hvx
+        exact absurd hvx (Set.notMem_empty v)
+      · have hm' := hm
+        rw [mcellSet2 V] at hm'
+        obtain ⟨i, ul, rflX, hb, -⟩ := hm'
+        rw [HDTFNFZ (V := V) (v := v) hs hp hb rflX hnull] at hvx
+        exact ⟨hm, hnull, hvx⟩
+    · rintro ⟨hm, hnn, hmem⟩
+      have hm' := hm
+      rw [mcellSet2 V] at hm'
+      obtain ⟨i, ul, rflX, hb, -⟩ := hm'
+      rw [HDTFNFZ (V := V) (v := v) hs hp hb rflX hnn]
+      exact ⟨hm, hmem⟩
+  rw [hAS]
+  -- Step B: the ambient finite family F of cells containing v
+  have hFfin : {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X}.Finite := by
+    have hs4 : (V ∩ Metric.ball v 4).Finite := KIUMVTC v 4 V hp
+    have hlistfin := p16q_finite_lists4 hs4
+    have hI4 : ({i : ℕ | i ≤ 4} : Set ℕ).Finite := Set.finite_Iic 4
+    have hpairs : ({p : ℕ × List V3 |
+        p.1 ≤ 4 ∧ barV V 3 p.2 ∧ v ∈ V ∩ mcell p.1 V p.2} : Set (ℕ × List V3)).Finite := by
+      refine Set.Finite.subset (hI4.prod hlistfin) ?_
+      rintro ⟨i, ul⟩ hp
+      simp only [Set.mem_setOf_eq] at hp
+      obtain ⟨hi4, hb, hvcell⟩ := hp
+      have hlen4 : ul.length = 4 := hb.1
+      obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+      have hvsl : v ∈ setOfList ul := by
+        rcases Nat.eq_zero_or_pos i with hi0 | hi1
+        · subst hi0
+          rw [LEPJBDJ_0 V ul hs hp hb] at hvcell
+          exact absurd hvcell (Set.notMem_empty v)
+        · rw [LEPJBDJ V ul i hs hp hb hi1 (by omega)
+            (Set.nonempty_iff_ne_empty.mp (Set.nonempty_of_mem hvcell.2))] at hvcell
+          exact (SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET ul (i - 1) (by omega)) hvcell
+      have hV := BARV_SUBSET V 3 ul hb
+      have hB := barV3ImpFinite2 hp hs hb hvsl
+      subst hul
+      exact ⟨hi4, u0, ⟨hV (by simp [setOfList]), hB (by simp [setOfList])⟩,
+        u1, ⟨hV (by simp [setOfList]), hB (by simp [setOfList])⟩,
+        u2, ⟨hV (by simp [setOfList]), hB (by simp [setOfList])⟩,
+        u3, ⟨hV (by simp [setOfList]), hB (by simp [setOfList])⟩, rfl⟩
+    refine Set.Finite.subset
+      (Set.Finite.image (fun p : ℕ × List V3 => mcell p.1 V p.2) hpairs) ?_
+    rintro X ⟨hm, hvX⟩
+    have hm' := hm
+    rw [mcellSet2 V] at hm'
+    obtain ⟨i, ul, rfl, hb, hi4⟩ := hm'
+    exact ⟨(i, ul), ⟨hi4, hb, hvX⟩, rfl⟩
+  have hSfin : {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X}.Finite :=
+    hFfin.subset (fun X hX => ⟨hX.1, hX.2.2⟩)
+  -- Step C: SKOLEM choice of a radiality radius per cell (URRPHBZ2)
+  have hsk : ∀ X : Set V3, ∃ c : ℝ, X ∈ {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧
+      v ∈ V ∩ X} → 0 < c ∧ radialNorm c v (X ∩ Metric.ball v c) := by
+    intro X
+    by_cases hX : X ∈ {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X}
+    · have hXm := hX.1
+      rw [mcellSet2 V] at hXm
+      obtain ⟨i, ul, rfl, hb, -⟩ := hXm
+      obtain ⟨c, hc0, hcr⟩ := URRPHBZ2 V ul i v hs hp hb hv
+      exact ⟨c, fun _ => ⟨hc0, hcr⟩⟩
+    · exact ⟨1, fun hn => absurd hn hX⟩
+  choose f hf using hsk
+  -- Step E: uniform small radius r' (nonemptiness: mcellSetNotEmpty)
+  have hneS : {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X} ≠ ∅ :=
+    mcellSetNotEmpty V v hs hp hv
+  obtain ⟨r₀, hr₀pos, hr₀min⟩ : ∃ r₀ : ℝ, 0 < r₀ ∧ ∀ X ∈
+      {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X}, r₀ ≤ f X := by
+    have hne : ((hFfin.toFinset.filter fun X : Set V3 =>
+        X ∈ {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X} : Finset (Set V3))).Nonempty := by
+      obtain ⟨X, hXS⟩ := Set.nonempty_iff_ne_empty.mpr hneS
+      exact ⟨X, Finset.mem_filter.mpr
+        ⟨(Set.Finite.mem_toFinset hFfin).mpr ⟨hXS.1, hXS.2.2⟩, hXS⟩⟩
+    have himg : (((hFfin.toFinset.filter fun X : Set V3 =>
+        X ∈ {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X}).image f : Finset ℝ)).Nonempty := by
+      obtain ⟨X, hXm⟩ := hne
+      exact ⟨f X, Finset.mem_image_of_mem f hXm⟩
+    refine ⟨Finset.min' _ himg, ?_, ?_⟩
+    · obtain ⟨X, hXp, hfX⟩ := Finset.mem_image.mp (Finset.min'_mem _ himg)
+      rw [← hfX]
+      exact (hf X (Finset.mem_filter.mp hXp).2).1
+    · intro Y hYS
+      exact Finset.min'_le _ _
+        (Finset.mem_image_of_mem f
+          (Finset.mem_filter.mpr
+            ⟨(Set.Finite.mem_toFinset hFfin).mpr ⟨hYS.1, hYS.2.2⟩, hYS⟩))
+  set r' := min r₀ (1 / 2) with hr'def
+  have hr'pos : 0 < r' := lt_min hr₀pos (by norm_num)
+  have hr'lt1 : r' < 1 := lt_of_le_of_lt (min_le_right _ _) (by norm_num)
+  have hr'ne : r' ≠ 0 := ne_of_gt hr'pos
+  have hr'min : ∀ X ∈ {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X},
+      r' ≤ f X := fun X hX => le_trans (min_le_left _ _) (hr₀min X hX)
+  -- Step D: sol v t is the scaled truncated volume of t
+  have hsol : ∀ t ∈ {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X},
+      sol v t = 3 / r' ^ 3 * volume.real (t ∩ Metric.ball v r') := by
+    intro t ht
+    obtain ⟨hc0, hcr⟩ := hf t ht
+    have hshr := p16q_radial_shrink hcr (hr'min t ht)
+    have heq : (t ∩ Metric.ball v (f t)) ∩ Metric.ball v r' = t ∩ Metric.ball v r' := by
+      ext x
+      constructor
+      · rintro ⟨⟨hxt, -⟩, hx2⟩
+        exact ⟨hxt, hx2⟩
+      · rintro ⟨hxt, hx2⟩
+        exact ⟨⟨hxt, by simpa using lt_of_lt_of_le (by simpa using hx2) (hr'min t ht)⟩,
+          hx2⟩
+    rw [heq] at hshr
+    have hm' := ht.1
+    rw [mcellSet2 V] at hm'
+    obtain ⟨i, ul, rfl, hb, -⟩ := hm'
+    have hmT : MeasurableSet (mcell i V ul ∩ Metric.ball v r') :=
+      (MEASURABLE_MCELL V ul i hs hp hb).inter Metric.isOpen_ball.measurableSet
+    rw [sol_spec hr'pos hmT hshr]
+    ring
+  -- Step D': transfer the sum from the non-null family S to the finite F,
+  -- null cells contributing zero
+  have hsum1 : setSum {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X}
+        (fun t => sol v t)
+      = setSum {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X}
+          (fun t => 3 / r' ^ 3 * volume.real (t ∩ Metric.ball v r')) := by
+    rw [p16q_setSumCongr (s := {X : Set V3 | mcellSet V X ∧ ¬nullSet X ∧ v ∈ V ∩ X})
+      (f := fun t => sol v t)
+      (g := fun t => 3 / r' ^ 3 * volume.real (t ∩ Metric.ball v r')) hsol]
+    refine p16q_setSum_superset_eq hSfin hFfin (fun X hX => ⟨hX.1, hX.2.2⟩)
+      (fun t => 3 / r' ^ 3 * volume.real (t ∩ Metric.ball v r')) ?_
+    intro a haF hnaS
+    obtain ⟨hma, hva⟩ := haF
+    have hnull : nullSet a := by
+      by_contra hnn
+      exact absurd ⟨hma, hnn, hva⟩ hnaS
+    have h0r : volume.real (a ∩ Metric.ball v r') = 0 := by
+      rw [Measure.real_def, measure_mono_null Set.inter_subset_left hnull,
+        ENNReal.toReal_zero]
+    rw [h0r, mul_zero]
+  -- Step G: scalar out; collapse the a.e.-disjoint finite union
+  have hmeasF : ∀ t ∈ {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X}, MeasurableSet t := by
+    intro t ht
+    obtain ⟨hm, -⟩ := ht
+    rw [mcellSet2 V] at hm
+    obtain ⟨i, ul, rfl, hb, -⟩ := hm
+    exact MEASURABLE_MCELL V ul i hs hp hb
+  have htopF : ∀ t ∈ {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X},
+      volume (t ∩ Metric.ball v r') ≠ ⊤ := fun t _ =>
+    ne_of_lt (lt_of_le_of_lt (measure_mono Set.inter_subset_right) p16q_ball_lt_top)
+  have hpairF : ∀ a ∈ {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X},
+      ∀ b ∈ {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X}, a ≠ b →
+        volume ((a ∩ Metric.ball v r') ∩ (b ∩ Metric.ball v r')) = 0 := by
+    intro a haF b hbF hne
+    have hab : volume (a ∩ b) = 0 := by
+      by_contra hpos
+      obtain ⟨ha1, -⟩ := haF
+      obtain ⟨hb1, -⟩ := hbF
+      rw [mcellSet2 V] at ha1 hb1
+      obtain ⟨i, ul, rfl, hba, hia⟩ := ha1
+      obtain ⟨j, wl, rfl, hbw, hjb⟩ := hb1
+      exact hne (AJRIPQN V ul wl i j hs hp hba hbw
+        (by simp; omega) (by simp; omega) hpos).2
+    exact measure_mono_null
+      (Set.inter_subset_inter Set.inter_subset_left Set.inter_subset_left) hab
+  have hsumdef : setSum {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X}
+        (fun t => volume.real (t ∩ Metric.ball v r'))
+      = ∑ t ∈ hFfin.toFinset, volume.real (t ∩ Metric.ball v r') := by
+    unfold setSum
+    rw [dif_pos hFfin]
+  -- Step I/J/K: the union of the cells meets the small ball in the whole ball
+  have hcover : Metric.ball v r' ⊆
+      ⋃₀ {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X} := by
+    intro x hx
+    have hbx : dist x v < r' := by simpa using hx
+    have hvc : x ∈ voronoiClosed V v := by
+      intro w hw
+      by_cases hwv : w = v
+      · subst hwv
+        exact le_refl _
+      · have h2 : 2 ≤ dist w v := hp.dist_ge_two hw hv hwv
+        have htri : dist v w ≤ dist v x + dist x w := dist_triangle v x w
+        have hdvx : dist v x = dist x v := dist_comm v x
+        have hdwv : dist v w = dist w v := dist_comm v w
+        linarith
+    obtain ⟨ul, hb, hxr, htr⟩ := (GLTVHUM V v x ⟨hp, hs⟩ hv).mp hvc
+    have hlen : ul.length = 4 := hb.1
+    obtain ⟨i, hi4, hxm⟩ := SLTSTLO1 V ul x hs hp hb hxr
+    rcases Nat.eq_zero_or_pos i with hi0 | hi1
+    · subst hi0
+      exfalso
+      have hm0 : x ∈ rogers V ul \ Metric.ball (hdV ul) (Real.sqrt 2) := by
+        simpa [mcell, mcell0] using hxm
+      have hhd : hdV ul = v := p16q_hd_of_trunc0 (by omega) htr
+      rw [hhd] at hm0
+      obtain ⟨-, hxnb⟩ := hm0
+      have hx2 : x ∈ Metric.ball v (Real.sqrt 2) := by
+        simpa using lt_trans (lt_trans hbx hr'lt1)
+          ((Real.lt_sqrt (by norm_num : (0:ℝ) ≤ (1:ℝ))).mpr
+            (by norm_num : (1:ℝ) ^ 2 < 2))
+      exact hxnb hx2
+    · have hne0 : mcell i V ul ≠ ∅ := fun hc =>
+        absurd hxm (by rw [hc]; exact Set.notMem_empty x)
+      have hL := LEPJBDJ V ul i hs hp hb hi1 hi4 hne0
+      have hmemv : v ∈ V ∩ mcell i V ul := by
+        rw [hL]
+        have h0mem : v ∈ setOfList (truncateSimplex 0 ul) := by
+          rw [htr]
+          simp [setOfList]
+        exact TRUNCATE_SIMPLEX_SUBSET ul (i - 1) 0 (by omega) (by omega) h0mem
+      refine Set.mem_sUnion.mpr ⟨mcell i V ul, ⟨⟨i, ul, rfl, hb⟩, hmemv⟩, hxm⟩
+  have hunion : ⋃ t ∈ hFfin.toFinset, t ∩ Metric.ball v r'
+      = ⋃₀ {X : Set V3 | mcellSet V X ∧ v ∈ V ∩ X} ∩ Metric.ball v r' := by
+    ext x
+    rw [Set.mem_iUnion₂]
+    constructor
+    · rintro ⟨T, hTF, hTx⟩
+      exact ⟨⟨T, (Set.Finite.mem_toFinset hFfin).mp hTF, hTx.1⟩, hTx.2⟩
+    · rintro ⟨⟨T, hTF, hTx⟩, hxb⟩
+      exact ⟨T, (Set.Finite.mem_toFinset hFfin).mpr hTF, ⟨hTx, hxb⟩⟩
+  -- Step L: final arithmetic
+  rw [hsum1, p16q_setSum_lmull hFfin, hsumdef,
+    ← p16q_vol_biUnion_finset_real (hFfin.toFinset)
+      (fun t => t ∩ Metric.ball v r')
+      (fun t ht => (hmeasF t ((Set.Finite.mem_toFinset hFfin).mp ht)).inter
+        Metric.isOpen_ball.measurableSet)
+      (fun a ha b hb hne =>
+        hpairF a ((Set.Finite.mem_toFinset hFfin).mp ha) b
+          ((Set.Finite.mem_toFinset hFfin).mp hb) hne)
+      (fun t ht => htopF t ((Set.Finite.mem_toFinset hFfin).mp ht)),
+    hunion, Set.inter_eq_right.mpr hcover,
+    p16q_volume_ball_real (le_of_lt hr'pos)]
+  field_simp [hr'ne]
 
 /-! ## KIZHLTL (KIZHLTL.hl) -/
 
