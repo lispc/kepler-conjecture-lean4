@@ -3525,7 +3525,1757 @@ theorem localconcl_wire_capstone_w1 :
       QKNVMLB1_discharged, QKNVMLB2_discharged, QKNVMLB3_discharged, YRTAFYH_discharged,
       ZNLLLDL_discharged⟩
 
+/-! ### LA35 materialization capstone (lane la35-root-w1, 2026-11-03,
+after the la35-mat-scout workorder R1): the 88 public top-level
+LocalAuto35 exits that no e2e root reaches (orphan-scout 741 account =
+88 top-level + 653 aux; 268 private + 29 derived items are structurally
+unreachable by pure wiring) are re-exposed as ONE conjunction -- 71
+exits implemented, 17 dropped because their statements name
+LA35-module-private constants, are `def`-kind statement
+definitions (not proven exits), or are universe-polymorphic (which
+would break the mandated Assembly consumption shape) -- all per the
+workorder's no-forcing rule (see the theorem docstring) -- and a type-preserving w2 forward re-points the
+Assembly `textCapstone` consumer with `.1` projection semantics
+unchanged (S1 precedent `ebe0d0b7`).  Measured on HEAD 0c445f94: full
+88-seed closure = +453 fresh nodes (444 LA35 + 9 LA23), sorried-0,
+standard-three axiom face (scout logs/la35_group_r1.out,
+la35_axprobe.out); the exact kit yield is re-measured at the
+orchestrator e2e gate. -/
+
+/-- LA35 materialization capstone (design lane la35-mat-scout R1,
+implementation lane la35-root-w1, 2026-11-03).  The 88 public top-level
+LocalAuto35 exits unreachable from every e2e root (orphan-scout 741
+account: 88 top-level + 653 aux; the 88-seed closure probe:
+GROUP_FRESH_VS_CONE 453 = 444 LA35 + 9 LA23, GROUP_SORRIED 0, i.e. the
+new closure is sorried-0, K_SORRIED 135 and K_AXIOM 624 unchanged).
+Implemented here: 71 of the 88.  Dropped per the workorder's
+no-forcing rule ("抽不出/不一致 → 剔除并如实报"), mechanically detected
+by the generator:
+--   EJRCFJD_W4_ASSEMBLY_OF_RESIDUE_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmKchSlot_p35, Kepler.Text.W4AsmWindowSlot_p35 (unstatable from LocalConcl)
+--   EJRCFJD_W4_ASSEMBLY_SGNFREE_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmKchSlot_p35, Kepler.Text.W4AsmWindowSlot_p35, Kepler.Text.W4RootSplitSlot_p35 (unstatable from LocalConcl)
+--   EJRCFJD_W4_ASSEMBLY_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmKchSlot_p35, Kepler.Text.W4AsmWindowSlot_p35, Kepler.Text.W4RootSplitSlot_p35 (unstatable from LocalConcl)
+--   KCHMAMG_thm_p35: statement names LA35-private constant(s) Kepler.Text.kchPlane_p35 (unstatable from LocalConcl)
+--   W4_SGN_OF_KCH_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmKchSlot_p35, Kepler.Text.W4AsmWindowSlot_p35 (unstatable from LocalConcl)
+--   dwDhplaneOfCircular_p35: statement names LA35-private constant(s) Kepler.Text.kchPlane_p35 (unstatable from LocalConcl)
+--   dwDhplaneOfDartCross_p35: statement names LA35-private constant(s) Kepler.Text.kchPlane_p35 (unstatable from LocalConcl)
+--   dwDkchPair_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmKchSlot_p35, Kepler.Text.kchPlane_p35 (unstatable from LocalConcl)
+--   dwDkchSlotU_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmKchSlot_p35, Kepler.Text.kchPlane_p35 (unstatable from LocalConcl)
+--   dwDkchSlotW_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmKchSlot_p35, Kepler.Text.kchPlane_p35 (unstatable from LocalConcl)
+--   frSplitAsmCheck_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmKchSlot_p35, Kepler.Text.W4AsmWindowSlot_p35 (unstatable from LocalConcl)
+--   w1OrigWindow_p35: statement names LA35-private constant(s) Kepler.Text.W4AsmWindowSlot_p35 (unstatable from LocalConcl)
+--   KCHMAMG_p35: declared `def` (LA35:21824) = statement definition, not a proven exit
+--   kchKOMWBWC_p35: declared `def` (LA35:22261) = statement definition, not a proven exit
+--   FFBD_PER1_p35: universe-polymorphic statement (free universe in Sort/Type position); a universe parameter would break the mandated `have hcap := <name>` consumption shape
+--   NEXT_PRO_IMP_ALLS_STRICT_p35: universe-polymorphic statement (free universe in Sort/Type position); a universe parameter would break the mandated `have hcap := <name>` consumption shape
+--   permOfBijOn_permutesOn_p35: universe-polymorphic statement (free universe in Sort/Type position); a universe parameter would break the mandated `have hcap := <name>` consumption shape
+
+Anchors (no fabricated edges): every conjunct is asserted in the
+verbatim wording of its LA35 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim
+and mechanically split at the binder/conclusion separator by the
+generator gen_items.py); the Lean `#check @name` printer dump
+(scout pipeline, logs/sigprobe_88.out) is retained as a cross
+reference; semantic identity is re-verified by the elaboration of the
+`<...>` assembly below (each component must unify definitionally with
+its conjunct); the per-conjunct comments carry each exit's LA35
+declaration line, file-local docstring HOL anchor and section.
+Conjunct order: the seed-list order (la35_orphan_seeds_88.txt), drops
+removed.  Body = the assembly of the exit constants -- zero new proof
+obligations, zero new imports. -/
+theorem la35_wire_capstone_w1 :
+    -- 1. CARD_FF_EQ_CARD_SLICE_FF_p35 (LA35:21341; HOL `CARD_FF_EQ_CARD_SLICE_FF`)
+    (∀ (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (v w : V3) (HS : Hypermap (V3 × V3))
+          (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+          (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+          (fv : Set (V3 × V3)) (hfv : fv = HS.face (v, rhoNode1 FF v))
+          (fw : Set (V3 × V3)) (hfw : fw = HS.face (w, rhoNode1 FF w)),
+          Set.ncard FF = Set.ncard fv + Set.ncard fw - 2
+    ) ∧
+    -- 2. CARD_FF_EQ_SCS_K_3_p35 (LA35:39103; HOL `CARD_FF_EQ_SCS_K_3`)
+    (∀ (s : ScsV39) (k : ℕ) (FF : Set (V3 × V3))
+          (vv : ℕ → V3) (hk : s.k = k)
+          (hFF : FF = Set.range fun i => (vv i, vv (i + 1)))
+          (hscs : isScsV39 s) (hk3 : k = 3) (hBB : BBsV39 s vv),
+          Set.ncard FF = 3
+    ) ∧
+    -- 3. CARD_SLICE_FF_LE_3_p35 (LA35:21359; HOL `CARD_SLICE_FF_LE_3`)
+    (∀ (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (v w : V3) (HS : Hypermap (V3 × V3))
+          (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+          (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+          (fv : Set (V3 × V3)) (hfv : fv = HS.face (v, rhoNode1 FF v))
+          (fw : Set (V3 × V3)) (hfw : fw = HS.face (w, rhoNode1 FF w)),
+          3 ≤ Set.ncard fv ∧ 3 ≤ Set.ncard fw
+    ) ∧
+    -- 4. CARD_V_EQ_SCS_K_p35 (LA35:15660; HOL `CARD_V_EQ_SCS_K`)
+    (∀ (s : ScsV39) (k p q : ℕ) (V : Set V3) (vv : ℕ → V3)
+          (hk : s.k = k) (hV : Set.range vv = V) (hscs : isScsV39 s)
+          (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv),
+          Set.ncard V = k
+    ) ∧
+    -- 5. COVEX_OF_LOFA_HALF_CIRCLE2_p35 (LA35:28209; HOL `COVEX_OF_LOFA_HALF_CIRCLE2`)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          {fv fw : Set (V3 × V3)}
+          (hlfv : LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+          (hsandv : covexSandwich_p35 V E' fv)
+          (hlfw : LocalFan (vPrime_p3 V fw) (ePrime_p3 E' fw) fw)
+          (hsandw : covexSandwich_p35 V E' fw),
+          ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv ∧
+          ConvexLocalFan (vPrime_p3 V fw) (ePrime_p3 E' fw) fw
+    ) ∧
+    -- 6. CVX_LO_IMP_LO_p35 (LA35:21427; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (h : ConvexLocalFan V E FF),
+          LocalFan V E FF
+    ) ∧
+    -- 7. DIAGE_VAL_P_Q_p35 (LA35:40723; HOL `DIAGE_VAL_P_Q`)
+    (∀ (p q : ℕ) (h1 : p % 4 ≠ q % 4)
+          (h2 : (p + 1) % 4 ≠ q % 4) (h3 : p % 4 ≠ (q + 1) % 4),
+          q % 4 = (p % 4 + 2) % 4
+    ) ∧
+    -- 8. DIAG_NOT_IN_SCS_J_p35 (LA35:17061; HOL `DIAG_NOT_IN_SCS_J`)
+    (∀ (s : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
+          (hdiag : scsDiag s.k p q),
+          ¬ s.J p q
+    ) ∧
+    -- 9. DIST_DIAG_LE_CSTAB_p35 (LA35:17886; HOL `DIST_DIAG_LE_CSTAB`)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+          (mkj : Prop) (vv : ℕ → V3)
+          (hj : ¬(s.k = 4 ∧ ¬s'.J 0 (s'.k - 1)))
+          (hs' : scsHalfSliceV39 s p q d' mkj = s')
+          (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+          (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+          (hsl : isScsSliceV39 s s' s'' p q),
+          norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab
+    ) ∧
+    -- 10. EJRCFJD_W4_SKELETON_p35 (LA35:29149; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E E' : Set (Set V3)}
+          {FF fv : Set (V3 × V3)} {dU dW : V3 × V3}
+          (hlf : localFan_p3 (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+          (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+          (hfin : fv.Finite)
+          (hkch : (∀ v ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv v = Real.pi) ∧
+            ∃ A : Set V3,
+              (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+                  A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+              (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+              ∃ e : V3,
+                (∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) ∧
+                cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e ∧
+                ∀ v ∈ vPrime_p3 V fv,
+                  azimCycle_p3 (vPrime_p3 V fv) (0:V3) e v = rhoNode1 fv v ∧
+                    azim 0 e v (rhoNode1 fv v) =
+                      dihV (0:V3) e v (rhoNode1 fv v) ∧
+                    azim 0 e v (rhoNode1 fv v) =
+                      arcV 0 v (rhoNode1 fv v) ∧
+                    azim 0 e v (rhoNode1 fv v) < Real.pi)
+          (hconvO : ConvexLocalFan V E FF)
+          (hdU : dU ∈ fv ∧ w4pWindowData_p35 V E' fv dU)
+          (hdW : dW ∈ fv ∧ w4pWindowData_p35 V E' fv dW)
+          (hsplit : ∀ p ∈ fv, p = dU ∨ p = dW ∨
+            ∃ c : V3, c ≠ p.2 ∧ p ∈ FF ∧
+              EE_p3 p.1 E = ({p.2, c} : Set V3) ∧
+              EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3)),
+          ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv
+    ) ∧
+    -- 11. FFBD_MODEQ_EQ_p35 (LA35:305; no HOL anchor line in file docstring)
+    (∀ {k a b : ℕ} (h : a % k = b % k) (ha : a < k) (hb : b < k)
+    ,
+          a = b
+    ) ∧
+    -- 12. FV_NCARD_GE2_p35 (LA35:25191; HOL `HAFL_CIRCLE_FORM_LOCAL_FAN`)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+          {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V) (hdd : d.1 ≠ d.2),
+          2 ≤ (HS.face d).ncard
+    ) ∧
+    -- 13. HAFL2_CIRCLE_FORM_LOCAL_FAN_p35 (LA35:26786; HOL `HAFL_CIRCLE_FORM_LOCAL_FAN2`)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+          (hfan : Kepler.Text.Fan.FAN 0 V E')
+          {dv dw : V3 × V3} (hdv : dv ∈ dartsOfHyp_p3 E' V)
+          (hdw : dw ∈ dartsOfHyp_p3 E' V)
+          (hparamv : faceCycleParam_p35 V E' (HS.face dv))
+          (hparamw : faceCycleParam_p35 V E' (HS.face dw))
+          (HSv' : Hypermap (V3 × V3))
+          (hHSv' : IsHypE_p35 (vPrime_p3 V (HS.face dv))
+            (ePrime_p3 E' (HS.face dv)) HSv')
+          (hdv' : dv ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face dv))
+            (vPrime_p3 V (HS.face dv)))
+          (HSw' : Hypermap (V3 × V3))
+          (hHSw' : IsHypE_p35 (vPrime_p3 V (HS.face dw))
+            (ePrime_p3 E' (HS.face dw)) HSw')
+          (hdw' : dw ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face dw))
+            (vPrime_p3 V (HS.face dw))),
+          localFan_p3 (vPrime_p3 V (HS.face dv)) (ePrime_p3 E' (HS.face dv))
+            (HS.face dv)
+          ∧ localFan_p3 (vPrime_p3 V (HS.face dw)) (ePrime_p3 E' (HS.face dw))
+            (HS.face dw)
+    ) ∧
+    -- 14. HAFL2_RED_p35 (LA35:25250; HOL `HAFL_CIRCLE_FORM_LOCAL_FAN2`)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+          (hfan : Kepler.Text.Fan.FAN 0 V E')
+          {dv dw : V3 × V3} (hdv : dv ∈ dartsOfHyp_p3 E' V)
+          (hdw : dw ∈ dartsOfHyp_p3 E' V),
+          Kepler.Text.Fan.FAN 0 (vPrime_p3 V (HS.face dv)) (ePrime_p3 E' (HS.face dv)) ∧
+          Kepler.Text.Fan.FAN 0 (vPrime_p3 V (HS.face dw)) (ePrime_p3 E' (HS.face dw))
+    ) ∧
+    -- 15. HAFL_EDGE_ORD2_p35 (LA35:25267; HOL `HAFL_CIRCLE_FORM_LOCAL_FAN`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {a b : V3}
+          (hd : (a, b) ∈ dartsOfHyp_p3 E V) (hab : a ≠ b),
+          hasOrders_p3 (eeOfHyp_p3 0 V E : V3 × V3 → V3 × V3) 2
+    ) ∧
+    -- 16. HAFL_HALF_CIRCLE_SLICED_p35 (LA35:27496; no HOL anchor line in file docstring)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+          (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+          (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+          (hs' : scsHalfSliceV39 s p q d' mkj = s')
+          (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+          (hk' : s'.k = k') (hk : s.k = k)
+          (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+          (hV : Set.range vv = V)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hnorm : norm (u - w) ≤ cstab)
+          (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+          (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+          (hfan : Kepler.Text.Fan.FAN 0 V (E ∪ {{u, w}}))
+          (HS' : Hypermap (V3 × V3))
+          (hHS' : IsHypE_p35 (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+            (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u))) HS')
+          (hd' : (u, rhoNode1 FF u) ∈ dartsOfHyp_p3 (ePrime_p3 (E ∪ {{u, w}})
+            (HS.face (u, rhoNode1 FF u))) (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))),
+          localFan_p3 (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+          (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+          (HS.face (u, rhoNode1 FF u))
+    ) ∧
+    -- 17. HALF_CIRCLE_STEP_SEQ_p35 (LA35:27079; no HOL anchor line in file docstring)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+          (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+          (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+          (hs' : scsHalfSliceV39 s p q d' mkj = s')
+          (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+          (hk' : s'.k = k') (hk : s.k = k)
+          (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+          (hV : Set.range vv = V)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hnorm : norm (u - w) ≤ cstab)
+          (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+          (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS),
+          ∀ i : ℕ, ffOfHyp_p3 0 V (E ∪ {{u, w}})
+            (vv (i % k' + p % k), vv ((i + 1) % k' + p % k))
+          = (vv ((i + 1) % k' + p % k), vv ((i + 1 + 1) % k' + p % k))
+    ) ∧
+    -- 18. HALF_CIRCLE_STEP_p35 (LA35:27386; no HOL anchor line in file docstring)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+          (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+          (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+          (hs' : scsHalfSliceV39 s p q d' mkj = s')
+          (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+          (hk' : s'.k = k') (hk : s.k = k)
+          (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+          (hV : Set.range vv = V)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hnorm : norm (u - w) ≤ cstab)
+          (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+          (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS),
+          ∀ p ∈ HS.face (u, rhoNode1 FF u),
+          ∃ c : V3, ffOfHyp_p3 0 V (E ∪ {{u, w}}) p = (p.2, c) ∧ c ≠ p.1
+    ) ∧
+    -- 19. HNOWRAP_OF_KCHMAMG_p35 (LA35:29345; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          {fv : Set (V3 × V3)} {p : V3 × V3} {k : ℕ} {ρ : ℕ → V3} {e : V3}
+          (hr0 : ρ 0 = p.1) (hv0 : p.1 ≠ 0) (hb0 : p.2 ≠ 0)
+          (hb : ¬ Collinear3 0 p.1 p.2)
+          (hvx : ∀ i, 0 < i → i < k → ¬ Collinear3 0 p.1 (ρ i))
+          (hvx0 : ∀ i, 0 < i → i < k → ρ i ≠ 0)
+          (hfanL : LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+          (hEE2 : ∀ u ∈ vPrime_p3 V fv, (EE_p3 u (ePrime_p3 E' fv)).ncard = 2)
+          (hv0V : p.1 ∈ vPrime_p3 V fv)
+          (hrV : ∀ j, j < k → ρ j ∈ vPrime_p3 V fv)
+          (hstep : ∀ i, i + 1 < k → (ρ i, ρ (i + 1)) ∈ fv)
+          (hplane : ∃ A : Set V3,
+            (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+                A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+              (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+              ∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0)
+          (hcy : cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e)
+          (hq : ∀ v ∈ vPrime_p3 V fv,
+            azimCycle_p3 (vPrime_p3 V fv) (0:V3) e v = rhoNode1 fv v ∧
+              azim 0 e v (rhoNode1 fv v) = dihV (0:V3) e v (rhoNode1 fv v) ∧
+              azim 0 e v (rhoNode1 fv v) = arcV 0 v (rhoNode1 fv v) ∧
+              azim 0 e v (rhoNode1 fv v) < Real.pi)
+          (hsgn : 0 < (crossProduct (e : Fin 3 → ℝ) (p.1 : Fin 3 → ℝ)) ⬝ᵥ
+            (p.2 : Fin 3 → ℝ)),
+          ∀ i, i + 1 < k →
+          ¬(azim 0 p.1 p.2 (ρ i) = Real.pi ∧ azim 0 p.1 p.2 (ρ (i + 1)) = 0)
+    ) ∧
+    -- 20. HVISIT_HALF_CIRCLE_p35 (LA35:27028; no HOL anchor line in file docstring)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+          (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+          (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+          (hs' : scsHalfSliceV39 s p q d' mkj = s')
+          (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+          (hk' : s'.k = k') (hk : s.k = k)
+          (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+          (hV : Set.range vv = V)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hnorm : norm (u - w) ≤ cstab)
+          (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+          (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS),
+          Set.InjOn Prod.fst (HS.face (u, rhoNode1 FF u))
+    ) ∧
+    -- 21. LOFA_HYP_UNION_CARD_GT2_p35 (LA35:24907; HOL `LOFA_HYP_UNION_CARD_GT2`)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E HS)
+          (hVE : ⋃₀ E ⊆ V) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+          (hgraph : Kepler.Text.Fan.Graph E) {v w : V3} (hvw : v ≠ w)
+          (hd : (v, w) ∈ dartsOfHyp_p3 E V),
+          2 < (HS.face (v, w)).ncard
+    ) ∧
+    -- 22. MOD_EQ_IMP_MOD_EQ_0_p35 (LA35:112; HOL `MOD_EQ_IMP_MOD_EQ_0`)
+    (∀ {k p q : ℕ} (hk : k ≠ 0) (hmod : p % k = q % k)
+          (hle : q ≤ p),
+          (p - q) % k = 0
+    ) ∧
+    -- 23. MONO_AZIM_AS_BTA_I_p35 (LA35:28123; HOL `MONO_AZIM_AS_BTA_I`)
+    (∀ (k : ℕ) {v0 : V3} (ρ : ℕ → V3)
+          (hstep : ∀ i, i + 1 < k → azim 0 v0 (ρ 1) (ρ i) ≤ azim 0 v0 (ρ 1) (ρ (i + 1)))
+          {i j : ℕ} (hij : i < j) (hjk : j < k),
+          azim 0 v0 (ρ 1) (ρ i) ≤ azim 0 v0 (ρ 1) (ρ j)
+    ) ∧
+    -- 24. NUMSEG_2_p35 (LA35:18444; HOL `NUMSEG_2`)
+    ({i : ℕ | i < 3} = {0, 1, 2}
+    ) ∧
+    -- 25. NUMSEG_3_p35 (LA35:39073; HOL `NUMSEG_3`)
+    ({i : ℕ | i < 4} = {0, 1, 2, 3}
+    ) ∧
+    -- 26. SCS_K_LE_6_p35 (LA35:970; HOL `SCS_K_LE_6`)
+    (∀ (s : ScsV39) (h : isScsV39 s)
+    ,
+          s.k ≤ 6
+    ) ∧
+    -- 27. SCS_K_PRIME_CASE_5_p35 (LA35:147; HOL `SCS_K_PRIME_CASE_5`)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+          (hs' : s' = scsHalfSliceV39 s p q d' mkj)
+          (hs'' : s'' = scsHalfSliceV39 s q p d' mkj) (hscs : isScsV39 s)
+          (hk : s.k = 5) (hdiag : scsDiag s.k p q),
+          (s'.k = 3 ∧ s''.k = 4) ∨ (s'.k = 4 ∧ s''.k = 3)
+    ) ∧
+    -- 28. SCS_K_PRIME_CASE_6_p35 (LA35:166; HOL `SCS_K_PRIME_CASE_6`)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+          (hs' : s' = scsHalfSliceV39 s p q d' mkj)
+          (hs'' : s'' = scsHalfSliceV39 s q p d' mkj) (hscs : isScsV39 s)
+          (hk : s.k = 6) (hdiag : scsDiag s.k p q),
+          (s'.k = 3 ∧ s''.k = 5) ∨ (s'.k = 5 ∧ s''.k = 3) ∨ (s'.k = 4 ∧ s''.k = 4)
+    ) ∧
+    -- 29. SLICE_HYP_EXISTS_p35 (LA35:26519; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+          (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+          (hne : fv.Nonempty),
+          ∃ HS' : Hypermap (V3 × V3),
+          IsHypE_p35 (vPrime_p3 V fv) (ePrime_p3 E' fv) HS'
+    ) ∧
+    -- 30. SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 (LA35:41035; HOL `SUM_AZIM_EQ_ANGLE_EQ4`)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+          (mkj : Prop) (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (vv vv' vv'' : ℕ → V3) (HS : Hypermap (V3 × V3))
+          (hk' : k' = 3)
+          (hs' : scsHalfSliceV39 s p q d' mkj = s')
+          (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+          (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+          (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+          (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+          (hsl : isScsSliceV39 s s' s'' p q) (hk's' : s'.k = k') (hk : s.k = k)
+          (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+          (hV : Set.range vv = V)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hnorm : norm (u - w) ≤ cstab)
+          (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+          (hfan : ConvexLocalFan
+            (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+            (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+            (HS.face (u, rhoNode1 FF u))),
+          tau3 (vv (0 % k' + p % k)) (vv (1 % k' + p % k)) (vv (2 % k' + p % k)) =
+          setSum {i | i < k'}
+              (fun i => rhoFun (norm (vv (i + p % k))) *
+                interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u)) -
+            (Real.pi + sol0)
+    ) ∧
+    -- 31. SUM_AZIM_EQ_ANGLE_EQ4_p35 (LA35:41073; HOL `SUM_AZIM_EQ_ANGLE_EQ4`)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+          (mkj : Prop) (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (vv vv' vv'' : ℕ → V3) (HS : Hypermap (V3 × V3))
+          (hk' : k' = 3)
+          (hs' : scsHalfSliceV39 s p q d' mkj = s')
+          (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+          (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+          (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+          (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+          (hsl : isScsSliceV39 s s' s'' p q) (hk's' : s'.k = k') (hk : s.k = k)
+          (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+          (hV : Set.range vv = V)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hnorm : norm (u - w) ≤ cstab)
+          (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+          (hfan : ConvexLocalFan
+            (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+            (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+            (HS.face (u, rhoNode1 FF u))),
+          tau3 (vv (0 % k' + p % k)) (vv (1 % k' + p % k)) (vv (2 % k' + p % k)) =
+          setSum {i | i < k'}
+              (fun i => rhoFun (norm (vv (i + p % k))) *
+                interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u)) -
+            (Real.pi + sol0)
+    ) ∧
+    -- 32. SUM_AZIM_EQ_ANGLE_LE4_p35 (LA35:18316; HOL `SUM_AZIM_EQ_ANGLE_LE4`)
+    (∀ (s : ScsV39) (p q : ℕ) (u : V3) (V : Set V3)
+          (E : Set (Set V3)) (FF : Set (V3 × V3)) (vv : ℕ → V3)
+          (hk3 : ¬(s.k ≤ 3)) (hBB : BBsV39 s vv) (hscs : isScsV39 s)
+          (hp : vv (p % s.k) = u)
+          (hV : Set.range vv = V)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF),
+          setSum {i | i < s.k}
+            (fun i => rhoFun (norm (vv (i + p % s.k))) *
+              interiorAngle1 0 FF ((rhoNode1 FF)^[i] u)) =
+          setSum FF (fun e => rhoFun (norm e.1) * azimInFan e E)
+    ) ∧
+    -- 33. SUM_NUMSEG3_p35 (LA35:18450; HOL `SUM_NUMSEG3`)
+    (∀ (t : ℕ → ℝ)
+    ,
+          ∑ i ∈ Finset.range 4, t i = t 0 + t 1 + t 2 + t 3
+    ) ∧
+    -- 34. TECOXBM2_p35 (LA35:15552; no HOL anchor line in file docstring)
+    (∀ (u w : V3) (hu : u ∈ ballAnnulus) (hw : w ∈ ballAnnulus)
+          (h2 : (2:ℝ) ≤ ‖u - w‖) (hc : ‖u - w‖ ≤ cstab),
+          ¬ Collinear3 0 u w
+    ) ∧
+    -- 35. TECOXBMv2_step01_p35 (LA35:1138; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
+          (hdiag : scsDiag s.k p q),
+          s.k = 4 ∨ s.k = 5 ∨ s.k = 6
+    ) ∧
+    -- 36. TECOXBMv2_step02_p35 (LA35:15411; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (vv : ℕ → V3)
+          (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+          (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w) (hBB : BBsV39 s vv),
+          (2 : ℝ) ≤ dist u w
+    ) ∧
+    -- 37. TECOXBMv2_step03_p35 (LA35:15431; HOL `IN_IMAGE_VV`)
+    (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (vv : ℕ → V3)
+          (hscs : isScsV39 s) (_hdiag : scsDiag s.k p q)
+          (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+          (hk : s.k = 4 ∨ s.k = 5 ∨ s.k = 6),
+          {u, w} ⊆ V_SY_p4 (cycRow_p23 vv s.k)
+    ) ∧
+    -- 38. TECOXBMv2_step04_p35 (LA35:15460; HOL `Tecoxbm.TECOXBM`)
+    (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (vv : ℕ → V3)
+          (hscs : isScsV39 s) (hk : s.k = 4) (hdiag : scsDiag s.k p q)
+          (hdist : dist u w ≤ cstab) (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+          (hBB : BBsV39 s vv)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hIN : flattenRow_p23 vv 4 ∈
+            {l : FinVec 4 3 | (∀ i : Fin 4, cycRow_p23 vv 4 i ∈ ballAnnulus) ∧
+              CONDITION1_SY_p4
+                (fun i j => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+                (fun i j => s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+                (cycRow_p23 vv 4) ∧
+              CONDITION2_SY_p4 (cycRow_p23 vv 4)})
+          (hVEF : V_SY_p4 (cycRow_p23 vv 4) = Set.range vv ∧
+            E_SY_p4 (cycRow_p23 vv 4) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+            F_SY_p4 (cycRow_p23 vv 4) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ),
+          ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E
+    ) ∧
+    -- 39. TECOXBMv2_step05_p35 (LA35:15488; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (vv : ℕ → V3)
+          (hscs : isScsV39 s) (hk : s.k = 5 ∨ s.k = 6) (hdiag : scsDiag s.k p q)
+          (hdist : dist u w ≤ cstab) (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+          (hBB : BBsV39 s vv)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hIN : (s.k = 5 → flattenRow_p23 vv 5 ∈
+                {l : FinVec 5 3 | (∀ i : Fin 5, cycRow_p23 vv 5 i ∈ ballAnnulus) ∧
+                  CONDITION1_SY_p4
+                    (fun i j => s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+                    (fun i j => s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+                    (cycRow_p23 vv 5) ∧
+                  CONDITION2_SY_p4 (cycRow_p23 vv 5)}) ∧
+            (s.k = 6 → flattenRow_p23 vv 6 ∈
+                {l : FinVec 6 3 | (∀ i : Fin 6, cycRow_p23 vv 6 i ∈ ballAnnulus) ∧
+                  CONDITION1_SY_p4
+                    (fun i j => s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+                    (fun i j => s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+                    (cycRow_p23 vv 6) ∧
+                  CONDITION2_SY_p4 (cycRow_p23 vv 6)}))
+          (hVEF : (s.k = 5 → V_SY_p4 (cycRow_p23 vv 5) = Set.range vv ∧
+                E_SY_p4 (cycRow_p23 vv 5) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+                F_SY_p4 (cycRow_p23 vv 5) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) ∧
+            (s.k = 6 → V_SY_p4 (cycRow_p23 vv 6) = Set.range vv ∧
+                E_SY_p4 (cycRow_p23 vv 6) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+                F_SY_p4 (cycRow_p23 vv 6) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ)),
+          ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E
+    ) ∧
+    -- 40. TECOXBMv2_step06_p35 (LA35:15524; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (vv : ℕ → V3) (hscs : isScsV39 s)
+          (hdiag : scsDiag s.k p q)
+          (h4 : s.k = 4 → ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E)
+          (h56 : s.k = 5 ∨ s.k = 6 →
+            ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E),
+          ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E
+    ) ∧
+    -- 41. VV_INJ_p35 (LA35:15647; HOL `VV_INJ`)
+    (∀ (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (hk : s.k = k)
+          (hscs : isScsV39 s) (hBB : BBsV39 s vv),
+          ∀ i j, i < k ∧ j < k ∧ i ≠ j → vv i ≠ vv j
+    ) ∧
+    -- 42. VV_SUC_EQ_RHO_NODE_PRIME_p35 (LA35:18295; HOL `VV_SUC_EQ_RHO_NODE_PRIME`)
+    (∀ (s : ScsV39) (k p1 p q : ℕ) (u : V3)
+          (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (vv : ℕ → V3)
+          (hk : s.k = k) (hp1 : vv p1 = u)
+          (hV : Set.range vv = V)
+          (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hBB : BBsV39 s vv),
+          ∀ m, (rhoNode1 FF)^[m] u = vv (m + p1)
+    ) ∧
+    -- 43. V_SLICE_EQ_NUMSEG_p35 (LA35:18362; HOL `V_SLICE_EQ_NUMSEG`)
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ)
+          (mkj : Prop) (k k' : ℕ) (u : V3) (FF : Set (V3 × V3)) (vv : ℕ → V3)
+          (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+          (hk : s.k = k) (hk' : s'.k = k') (hp : vv (p % k) = u)
+          (hs' : scsHalfSliceV39 s p q d' mkj = s')
+          (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+          (hsl : isScsSliceV39 s s' s'' p q),
+          {i | i < k ∧ (rhoNode1 FF)^[i] u ∈ Set.range (fun j => vv (j % k' + p % k))} =
+          {i | i < k'}
+    ) ∧
+    -- 44. WEDGE_IN_FAN_LOFA_DETER2_p35 (LA35:21535; HOL `WEDGE_IN_FAN_LOFA_DETER2`)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v : V3} (hfan : LocalFan V E FF)
+          (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hv : v ∈ V),
+          wedgeInFanGt_p3 (v, rhoNode1 FF v) E
+          = Kepler.Geom.wedge (0 : V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v)
+    ) ∧
+    -- 45. azimCycle_singleton_p35 (LA35:25306; HOL `azim_cycle`)
+    (∀ (v w p : V3)
+    ,
+          azimCycle_p3 ({p} : Set V3) v w p = p
+    ) ∧
+    -- 46. b2AzimCyclePredFalse_p35 (LA35:33529; no HOL anchor line in file docstring)
+    (¬ ∀ (W : Set V3) (u z : V3), W.Finite → z ∈ W → (∃ y ∈ W, y ≠ z) →
+          ∃ x ∈ W, azimCycle_p3 W (0:V3) u x = z
+    ) ∧
+    -- 47. b2AzimSmulZero_p35 (LA35:33404; no HOL anchor line in file docstring)
+    (∀ {u y : V3} (c : ℝ) (hc : 0 < c)
+          (hcol : ¬ Collinear3 (0:V3) u y),
+          azim (0:V3) u y (c • y) = 0
+    ) ∧
+    -- 48. dart1OfFan_subset_dartsOfHyp_p35 (LA35:21473; no HOL anchor line in file docstring)
+    (∀ {E E' : Set (Set V3)} {V : Set V3}
+          (hsub : E ⊆ E'),
+          Fan.dart1OfFan V E ⊆ dartsOfHyp_p3 E' V
+    ) ∧
+    -- 49. dartsOfHyp_ne_mono_p35 (LA35:25113; no HOL anchor line in file docstring)
+    (∀ {E E' : Set (Set V3)} {V : Set V3} {a b : V3}
+          (hsub : E ⊆ E') (hd : (a, b) ∈ dartsOfHyp_p3 E V) (hab : a ≠ b),
+          (a, b) ∈ dartsOfHyp_p3 E' V
+    ) ∧
+    -- 50. ePrime_subset_p35 (LA35:25287; no HOL anchor line in file docstring)
+    (∀ {E : Set (Set V3)} {fv : Set (V3 × V3)}
+    ,
+          ePrime_p3 E fv ⊆ E
+    ) ∧
+    -- 51. eePermOfHyp_p35_apply (LA35:21463; no HOL anchor line in file docstring)
+    (∀ (x : V3) (V : Set V3) (E : Set (Set V3))
+          (d : V3 × V3),
+          eePermOfHyp_p35 x V E d = eeOfHyp_p3 x V E d
+    ) ∧
+    -- 52. fstCoverOfUnio_p35 (LA35:31534; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (hfanL : LocalFan V E FF) {u : V3} (hu : u ∈ ⋃₀ E),
+          ∃ d ∈ FF, d.1 = u
+    ) ∧
+    -- 53. jEvenNbrOnUnio_p35 (LA35:33238; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (hfan : LocalFan V E FF),
+          ∀ u ∈ ⋃₀ E, ∃ t : ℕ, (EE_p3 u E).ncard = 2 * t
+    ) ∧
+    -- 54. jTwoLeNbrOnUnio_p35 (LA35:33053; HOL `local_fan`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (hfan : LocalFan V E FF),
+          ∀ u ∈ ⋃₀ E, 2 ≤ (EE_p3 u E).ncard
+    ) ∧
+    -- 55. jUnioMemVPrime_p35 (LA35:33185; HOL `LOCAL_FAN_RHO_NODE_PROS`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (hfan : LocalFan V E FF),
+          ∀ u ∈ ⋃₀ E, u ∈ vPrime_p3 V FF
+    ) ∧
+    -- 56. jUnioVertKit_p35 (LA35:33230; HOL `LOFA_IMP_EE_TWO_ELMS`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (hfan : LocalFan V E FF),
+          (∀ u ∈ ⋃₀ E, 2 ≤ (EE_p3 u E).ncard) ∧ (∀ u ∈ ⋃₀ E, u ∈ vPrime_p3 V FF)
+    ) ∧
+    -- 57. kchS0NeZeroOfPlane_p35 (LA35:30525; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          {fv : Set (V3 × V3)} {p : V3 × V3} {e : V3}
+          (hv0 : p.1 ≠ 0) (hb0 : p.2 ≠ 0) (hb : ¬ Collinear3 0 p.1 p.2)
+          (hv0V : p.1 ∈ vPrime_p3 V fv) (hp2V : p.2 ∈ vPrime_p3 V fv)
+          (hcy : cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e)
+          (heperp : ∀ x ∈ vPrime_p3 V fv,
+            ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0),
+          (crossProduct (e : Fin 3 → ℝ) (p.1 : Fin 3 → ℝ)) ⬝ᵥ (p.2 : Fin 3 → ℝ) ≠ 0
+    ) ∧
+    -- 58. kchS0NeZero_p35 (LA35:30450; no HOL anchor line in file docstring)
+    (∀ {e p1 p2 : V3}
+          (hE : ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) ≠ 0)
+          (hp1e : ((p1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0)
+          (hp2e : ((p2 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0)
+          (hp10 : p1 ≠ 0) (hp20 : p2 ≠ 0) (hb : ¬ Collinear3 0 p1 p2),
+          (crossProduct (e : Fin 3 → ℝ) (p1 : Fin 3 → ℝ)) ⬝ᵥ (p2 : Fin 3 → ℝ) ≠ 0
+    ) ∧
+    -- 59. ncExistsAffGt_p35 (LA35:34165; HOL `Planarity.exists_in_aff_gt_disjoint`, HOL `AFF_GT_SUB_AFF_UNION`)
+    (∀ {v w : V3} (hv0 : v ≠ 0) (hw0 : w ≠ 0) (hwv : v ≠ w)
+    ,
+          ∃ y : V3, y ∈ affGt ({(0:V3)} : Set V3) ({v, w} : Set V3) ∧
+          y ∈ (affineSpan ℝ ({(0:V3), v, w} : Set V3) : Set V3)
+    ) ∧
+    -- 60. ncSliceNoncollinear_p35 (LA35:35677; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V)
+          (hwv : v ≠ w)
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+          (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+          (hnl : ∀ a ∈ V, ∀ b ∈ V, a ≠ b →
+            Collinear ℝ ({(0:V3), a, b} : Set V3) → ¬ Lunar a b V E),
+          ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 (0:V3) z t
+    ) ∧
+    -- 61. twoNbrOfUnio_p35 (LA35:31572; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (hfan : ConvexLocalFan V E FF) {u : V3}
+          (hu : u ∈ ⋃₀ E),
+          1 < (EE_p3 u E).ncard
+    ) ∧
+    -- 62. vPrime_subset_p35 (LA35:25283; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {fv : Set (V3 × V3)}
+    ,
+          vPrime_p3 V fv ⊆ V
+    ) ∧
+    -- 63. w1NoIsoAux_p35 (LA35:27601; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p3 V E FF)
+    ,
+          ∀ u ∈ V, EE_p3 u E ≠ ∅
+    ) ∧
+    -- 64. w1SigmaBndAux_p35 (LA35:27665; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p3 V E FF)
+    ,
+          ∀ u ∈ V, (EE_p3 u E).ncard ≤ 2
+    ) ∧
+    -- 65. w1TwoLeAux_p35 (LA35:27749; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p3 V E FF)
+    ,
+          ∀ u ∈ V, 2 ≤ (EE_p3 u E).ncard
+    ) ∧
+    -- 66. w1_azim3_p35 (LA35:27647; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E) {v u0 s q : V3}
+          (hu0E : {v, u0} ∈ E) (hsE : {v, s} ∈ E) (hqE : {v, q} ∈ E)
+          (hmin1 : azim 0 v u0 s ≤ azim 0 v u0 q)
+          (hmin2 : azim 0 v s u0 ≤ azim 0 v s q)
+          (hsne : s ≠ u0),
+          False
+    ) ∧
+    -- 67. w1_nnFst_p35 (LA35:27588; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} (z : V3 × V3)
+    ,
+          (nnOfHyp_p3 0 V E z).1 = z.1
+    ) ∧
+    -- 68. w1_nn_apply_p35 (LA35:27593; no HOL anchor line in file docstring)
+    (∀ {E : Set (Set V3)} (V : Set V3) {E : Set (Set V3)} {a b : V3}
+          (hab : {a, b} ∈ E),
+          nnOfHyp_p3 0 V E (a, b) = (a, azimCycle_p3 (EE_p3 a E) 0 a b)
+    ) ∧
+    -- 69. w4pHintOfOZSlice_p35 (LA35:29031; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          {fv : Set (V3 × V3)}
+          (hconv : ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+          (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+          (hfin : fv.Finite)
+          (hOZ : ∀ x ∈ vPrime_p3 V fv, ∃ u w : V3,
+            ({u, x, w} : Set V3) ⊆ vPrime_p3 V fv ∧
+            (({u, w} : Set V3) ∩
+                (affineSpan ℝ ({(0:V3), x} : Set V3) : Set V3)) = ∅ ∧
+            ¬((affineSpan ℝ ({x, (0:V3)} : Set V3) : Set V3) ∩
+              ozConv0_p35 ({w, u} : Set V3) = ∅) ∧
+            ∃ P : Set V3, ({(0:V3), u, x, w} : Set V3) ⊆ P ∧
+              ∃ a b c : V3, ¬ Collinear3 a b c ∧
+                P = (affineSpan ℝ ({a, b, c} : Set V3) : Set V3)),
+          ∀ x ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv x = Real.pi
+    ) ∧
+    -- 70. w4pNowrapOfRendered_p35 (LA35:29194; no HOL anchor line in file docstring)
+    (∀ (k : ℕ) {v0 b : V3} (ρ : ℕ → V3)
+          (hv0 : v0 ≠ 0) (hb0 : b ≠ 0) (hbu : b ≠ v0) (hb : ¬ Collinear3 0 v0 b)
+          (hnc : ∀ i, i + 1 < k → ¬ Collinear3 0 v0 (ρ (i + 1)))
+          (hcornerR : ∀ i, i + 1 < k → azim 0 v0 b (ρ i) = Real.pi →
+            ∀ s t : ℝ, ρ (i + 1) - 0 = s • (v0 - 0) + t • (b - 0) → t ≤ 0),
+          ∀ i, i + 1 < k →
+          ¬(azim 0 v0 b (ρ i) = Real.pi ∧ azim 0 v0 b (ρ (i + 1)) = 0)
+    ) ∧
+    -- 71. w4pOZTripleSlice_p35 (LA35:29010; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E' : Set (Set V3)}
+          {fv : Set (V3 × V3)} {P : Set V3} {u v w : V3}
+          (hconv : ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+          (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+          (hfin : fv.Finite)
+          (hsub3 : ({u, v, w} : Set V3) ⊆ vPrime_p3 V fv)
+          (hplane : ∃ a b c : V3, ¬ Collinear3 a b c ∧
+            P = (affineSpan ℝ ({a, b, c} : Set V3) : Set V3))
+          (hP : ({(0:V3), u, v, w} : Set V3) ⊆ P)
+          (hdisj : (({u, w} : Set V3) ∩
+              (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3)) = ∅)
+          (hint : ¬((affineSpan ℝ ({v, (0:V3)} : Set V3) : Set V3) ∩
+            ozConv0_p35 ({w, u} : Set V3) = ∅)),
+          interiorAngle1 (0:V3) fv v = Real.pi ∧ rhoNode1 fv v ∈ P ∧
+          ivsRhoNode1 fv v ∈ P
+    ) :=
+    ⟨CARD_FF_EQ_CARD_SLICE_FF_p35, CARD_FF_EQ_SCS_K_3_p35, CARD_SLICE_FF_LE_3_p35,
+      CARD_V_EQ_SCS_K_p35, @COVEX_OF_LOFA_HALF_CIRCLE2_p35, CVX_LO_IMP_LO_p35, DIAGE_VAL_P_Q_p35,
+      DIAG_NOT_IN_SCS_J_p35, DIST_DIAG_LE_CSTAB_p35, @EJRCFJD_W4_SKELETON_p35, FFBD_MODEQ_EQ_p35,
+      @FV_NCARD_GE2_p35, @HAFL2_CIRCLE_FORM_LOCAL_FAN_p35, @HAFL2_RED_p35, HAFL_EDGE_ORD2_p35,
+      HAFL_HALF_CIRCLE_SLICED_p35, HALF_CIRCLE_STEP_SEQ_p35, HALF_CIRCLE_STEP_p35,
+      @HNOWRAP_OF_KCHMAMG_p35, HVISIT_HALF_CIRCLE_p35, LOFA_HYP_UNION_CARD_GT2_p35,
+      MOD_EQ_IMP_MOD_EQ_0_p35, MONO_AZIM_AS_BTA_I_p35, NUMSEG_2_p35, NUMSEG_3_p35,
+      SCS_K_LE_6_p35, SCS_K_PRIME_CASE_5_p35, SCS_K_PRIME_CASE_6_p35, @SLICE_HYP_EXISTS_p35,
+      @SUM_AZIM_EQ_ANGLE_EQ4_HS_p35, @SUM_AZIM_EQ_ANGLE_EQ4_p35, SUM_AZIM_EQ_ANGLE_LE4_p35,
+      SUM_NUMSEG3_p35, TECOXBM2_p35, TECOXBMv2_step01_p35, TECOXBMv2_step02_p35,
+      @TECOXBMv2_step03_p35, @TECOXBMv2_step04_p35, @TECOXBMv2_step05_p35, @TECOXBMv2_step06_p35,
+      VV_INJ_p35, VV_SUC_EQ_RHO_NODE_PRIME_p35, @V_SLICE_EQ_NUMSEG_p35,
+      WEDGE_IN_FAN_LOFA_DETER2_p35, azimCycle_singleton_p35, b2AzimCyclePredFalse_p35,
+      b2AzimSmulZero_p35, @dart1OfFan_subset_dartsOfHyp_p35, @dartsOfHyp_ne_mono_p35,
+      @ePrime_subset_p35, eePermOfHyp_p35_apply, fstCoverOfUnio_p35, jEvenNbrOnUnio_p35,
+      jTwoLeNbrOnUnio_p35, jUnioMemVPrime_p35, jUnioVertKit_p35, @kchS0NeZeroOfPlane_p35,
+      kchS0NeZero_p35, ncExistsAffGt_p35, ncSliceNoncollinear_p35, twoNbrOfUnio_p35,
+      @vPrime_subset_p35, w1NoIsoAux_p35, w1SigmaBndAux_p35, w1TwoLeAux_p35, w1_azim3_p35,
+      w1_nnFst_p35, w1_nn_apply_p35, @w4pHintOfOZSlice_p35, w4pNowrapOfRendered_p35,
+      @w4pOZTripleSlice_p35⟩
+
+/-- LA35 wire forwarding, wave w2 (lane la35-root-w1, 2026-11-03;
+S1 rewire precedent `ebe0d0b7` same shape).  Type-preserving re-point
+target for `Kepler.Assembly.textCapstone`: the statement is exactly
+
+  (S1 conjunct 1: the p16 switch, verbatim) ∧
+  (la35_wire_capstone_w1's full 88-exit conjunction, verbatim) ∧
+  (S1 conjuncts 2..47, verbatim, in their S1 order)
+
+so the Assembly consumer's `.1` projection keeps its exact statement
+(`hcap.1 hmnt` elaborates to the same `lp_main_estimate` derivation).
+Body = repackaging of `la35_wire_capstone_w1` and the S1 capstone by
+projections -- zero new proof obligations. -/
+theorem localconcl_wire_capstone_w2 :
+    (main_nonlinear_terminal_v11 → lp_main_estimate) ∧
+    (
+  -- 1. CARD_FF_EQ_CARD_SLICE_FF_p35 (LA35:21341; HOL `CARD_FF_EQ_CARD_SLICE_FF`)
+  (∀ (V : Set V3) (E : Set (Set V3))
+        (FF : Set (V3 × V3)) (v w : V3) (HS : Hypermap (V3 × V3))
+        (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+        (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+        (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+        (fv : Set (V3 × V3)) (hfv : fv = HS.face (v, rhoNode1 FF v))
+        (fw : Set (V3 × V3)) (hfw : fw = HS.face (w, rhoNode1 FF w)),
+        Set.ncard FF = Set.ncard fv + Set.ncard fw - 2
+  ) ∧
+  -- 2. CARD_FF_EQ_SCS_K_3_p35 (LA35:39103; HOL `CARD_FF_EQ_SCS_K_3`)
+  (∀ (s : ScsV39) (k : ℕ) (FF : Set (V3 × V3))
+        (vv : ℕ → V3) (hk : s.k = k)
+        (hFF : FF = Set.range fun i => (vv i, vv (i + 1)))
+        (hscs : isScsV39 s) (hk3 : k = 3) (hBB : BBsV39 s vv),
+        Set.ncard FF = 3
+  ) ∧
+  -- 3. CARD_SLICE_FF_LE_3_p35 (LA35:21359; HOL `CARD_SLICE_FF_LE_3`)
+  (∀ (V : Set V3) (E : Set (Set V3))
+        (FF : Set (V3 × V3)) (v w : V3) (HS : Hypermap (V3 × V3))
+        (hfan : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hv : v ∈ V) (hw : w ∈ V) (hwv : v ≠ w)
+        (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+        (hHS : IsHypE_p35 V (E ∪ {{v, w}}) HS)
+        (fv : Set (V3 × V3)) (hfv : fv = HS.face (v, rhoNode1 FF v))
+        (fw : Set (V3 × V3)) (hfw : fw = HS.face (w, rhoNode1 FF w)),
+        3 ≤ Set.ncard fv ∧ 3 ≤ Set.ncard fw
+  ) ∧
+  -- 4. CARD_V_EQ_SCS_K_p35 (LA35:15660; HOL `CARD_V_EQ_SCS_K`)
+  (∀ (s : ScsV39) (k p q : ℕ) (V : Set V3) (vv : ℕ → V3)
+        (hk : s.k = k) (hV : Set.range vv = V) (hscs : isScsV39 s)
+        (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv),
+        Set.ncard V = k
+  ) ∧
+  -- 5. COVEX_OF_LOFA_HALF_CIRCLE2_p35 (LA35:28209; HOL `COVEX_OF_LOFA_HALF_CIRCLE2`)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        {fv fw : Set (V3 × V3)}
+        (hlfv : LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+        (hsandv : covexSandwich_p35 V E' fv)
+        (hlfw : LocalFan (vPrime_p3 V fw) (ePrime_p3 E' fw) fw)
+        (hsandw : covexSandwich_p35 V E' fw),
+        ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv ∧
+        ConvexLocalFan (vPrime_p3 V fw) (ePrime_p3 E' fw) fw
+  ) ∧
+  -- 6. CVX_LO_IMP_LO_p35 (LA35:21427; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+        (h : ConvexLocalFan V E FF),
+        LocalFan V E FF
+  ) ∧
+  -- 7. DIAGE_VAL_P_Q_p35 (LA35:40723; HOL `DIAGE_VAL_P_Q`)
+  (∀ (p q : ℕ) (h1 : p % 4 ≠ q % 4)
+        (h2 : (p + 1) % 4 ≠ q % 4) (h3 : p % 4 ≠ (q + 1) % 4),
+        q % 4 = (p % 4 + 2) % 4
+  ) ∧
+  -- 8. DIAG_NOT_IN_SCS_J_p35 (LA35:17061; HOL `DIAG_NOT_IN_SCS_J`)
+  (∀ (s : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
+        (hdiag : scsDiag s.k p q),
+        ¬ s.J p q
+  ) ∧
+  -- 9. DIST_DIAG_LE_CSTAB_p35 (LA35:17886; HOL `DIST_DIAG_LE_CSTAB`)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+        (mkj : Prop) (vv : ℕ → V3)
+        (hj : ¬(s.k = 4 ∧ ¬s'.J 0 (s'.k - 1)))
+        (hs' : scsHalfSliceV39 s p q d' mkj = s')
+        (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+        (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+        (hsl : isScsSliceV39 s s' s'' p q),
+        norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab
+  ) ∧
+  -- 10. EJRCFJD_W4_SKELETON_p35 (LA35:29149; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E E' : Set (Set V3)}
+        {FF fv : Set (V3 × V3)} {dU dW : V3 × V3}
+        (hlf : localFan_p3 (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+        (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+        (hfin : fv.Finite)
+        (hkch : (∀ v ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv v = Real.pi) ∧
+          ∃ A : Set V3,
+            (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+                A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+            (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+            ∃ e : V3,
+              (∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0) ∧
+              cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e ∧
+              ∀ v ∈ vPrime_p3 V fv,
+                azimCycle_p3 (vPrime_p3 V fv) (0:V3) e v = rhoNode1 fv v ∧
+                  azim 0 e v (rhoNode1 fv v) =
+                    dihV (0:V3) e v (rhoNode1 fv v) ∧
+                  azim 0 e v (rhoNode1 fv v) =
+                    arcV 0 v (rhoNode1 fv v) ∧
+                  azim 0 e v (rhoNode1 fv v) < Real.pi)
+        (hconvO : ConvexLocalFan V E FF)
+        (hdU : dU ∈ fv ∧ w4pWindowData_p35 V E' fv dU)
+        (hdW : dW ∈ fv ∧ w4pWindowData_p35 V E' fv dW)
+        (hsplit : ∀ p ∈ fv, p = dU ∨ p = dW ∨
+          ∃ c : V3, c ≠ p.2 ∧ p ∈ FF ∧
+            EE_p3 p.1 E = ({p.2, c} : Set V3) ∧
+            EE_p3 p.1 (ePrime_p3 E' fv) = ({p.2, c} : Set V3)),
+        ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv
+  ) ∧
+  -- 11. FFBD_MODEQ_EQ_p35 (LA35:305; no HOL anchor line in file docstring)
+  (∀ {k a b : ℕ} (h : a % k = b % k) (ha : a < k) (hb : b < k)
+  ,
+        a = b
+  ) ∧
+  -- 12. FV_NCARD_GE2_p35 (LA35:25191; HOL `HAFL_CIRCLE_FORM_LOCAL_FAN`)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+        {d : V3 × V3} (hd : d ∈ dartsOfHyp_p3 E' V) (hdd : d.1 ≠ d.2),
+        2 ≤ (HS.face d).ncard
+  ) ∧
+  -- 13. HAFL2_CIRCLE_FORM_LOCAL_FAN_p35 (LA35:26786; HOL `HAFL_CIRCLE_FORM_LOCAL_FAN2`)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+        (hfan : Kepler.Text.Fan.FAN 0 V E')
+        {dv dw : V3 × V3} (hdv : dv ∈ dartsOfHyp_p3 E' V)
+        (hdw : dw ∈ dartsOfHyp_p3 E' V)
+        (hparamv : faceCycleParam_p35 V E' (HS.face dv))
+        (hparamw : faceCycleParam_p35 V E' (HS.face dw))
+        (HSv' : Hypermap (V3 × V3))
+        (hHSv' : IsHypE_p35 (vPrime_p3 V (HS.face dv))
+          (ePrime_p3 E' (HS.face dv)) HSv')
+        (hdv' : dv ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face dv))
+          (vPrime_p3 V (HS.face dv)))
+        (HSw' : Hypermap (V3 × V3))
+        (hHSw' : IsHypE_p35 (vPrime_p3 V (HS.face dw))
+          (ePrime_p3 E' (HS.face dw)) HSw')
+        (hdw' : dw ∈ dartsOfHyp_p3 (ePrime_p3 E' (HS.face dw))
+          (vPrime_p3 V (HS.face dw))),
+        localFan_p3 (vPrime_p3 V (HS.face dv)) (ePrime_p3 E' (HS.face dv))
+          (HS.face dv)
+        ∧ localFan_p3 (vPrime_p3 V (HS.face dw)) (ePrime_p3 E' (HS.face dw))
+          (HS.face dw)
+  ) ∧
+  -- 14. HAFL2_RED_p35 (LA35:25250; HOL `HAFL_CIRCLE_FORM_LOCAL_FAN2`)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E' HS)
+        (hfan : Kepler.Text.Fan.FAN 0 V E')
+        {dv dw : V3 × V3} (hdv : dv ∈ dartsOfHyp_p3 E' V)
+        (hdw : dw ∈ dartsOfHyp_p3 E' V),
+        Kepler.Text.Fan.FAN 0 (vPrime_p3 V (HS.face dv)) (ePrime_p3 E' (HS.face dv)) ∧
+        Kepler.Text.Fan.FAN 0 (vPrime_p3 V (HS.face dw)) (ePrime_p3 E' (HS.face dw))
+  ) ∧
+  -- 15. HAFL_EDGE_ORD2_p35 (LA35:25267; HOL `HAFL_CIRCLE_FORM_LOCAL_FAN`)
+  (∀ {V : Set V3} {E : Set (Set V3)} {a b : V3}
+        (hd : (a, b) ∈ dartsOfHyp_p3 E V) (hab : a ≠ b),
+        hasOrders_p3 (eeOfHyp_p3 0 V E : V3 × V3 → V3 × V3) 2
+  ) ∧
+  -- 16. HAFL_HALF_CIRCLE_SLICED_p35 (LA35:27496; no HOL anchor line in file docstring)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+        (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+        (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+        (hs' : scsHalfSliceV39 s p q d' mkj = s')
+        (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+        (hk' : s'.k = k') (hk : s.k = k)
+        (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+        (hV : Set.range vv = V)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hnorm : norm (u - w) ≤ cstab)
+        (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+        (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+        (hfan : Kepler.Text.Fan.FAN 0 V (E ∪ {{u, w}}))
+        (HS' : Hypermap (V3 × V3))
+        (hHS' : IsHypE_p35 (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+          (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u))) HS')
+        (hd' : (u, rhoNode1 FF u) ∈ dartsOfHyp_p3 (ePrime_p3 (E ∪ {{u, w}})
+          (HS.face (u, rhoNode1 FF u))) (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))),
+        localFan_p3 (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+        (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+        (HS.face (u, rhoNode1 FF u))
+  ) ∧
+  -- 17. HALF_CIRCLE_STEP_SEQ_p35 (LA35:27079; no HOL anchor line in file docstring)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+        (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+        (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+        (hs' : scsHalfSliceV39 s p q d' mkj = s')
+        (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+        (hk' : s'.k = k') (hk : s.k = k)
+        (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+        (hV : Set.range vv = V)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hnorm : norm (u - w) ≤ cstab)
+        (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+        (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS),
+        ∀ i : ℕ, ffOfHyp_p3 0 V (E ∪ {{u, w}})
+          (vv (i % k' + p % k), vv ((i + 1) % k' + p % k))
+        = (vv ((i + 1) % k' + p % k), vv ((i + 1 + 1) % k' + p % k))
+  ) ∧
+  -- 18. HALF_CIRCLE_STEP_p35 (LA35:27386; no HOL anchor line in file docstring)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+        (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+        (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+        (hs' : scsHalfSliceV39 s p q d' mkj = s')
+        (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+        (hk' : s'.k = k') (hk : s.k = k)
+        (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+        (hV : Set.range vv = V)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hnorm : norm (u - w) ≤ cstab)
+        (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+        (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS),
+        ∀ p ∈ HS.face (u, rhoNode1 FF u),
+        ∃ c : V3, ffOfHyp_p3 0 V (E ∪ {{u, w}}) p = (p.2, c) ∧ c ≠ p.1
+  ) ∧
+  -- 19. HNOWRAP_OF_KCHMAMG_p35 (LA35:29345; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        {fv : Set (V3 × V3)} {p : V3 × V3} {k : ℕ} {ρ : ℕ → V3} {e : V3}
+        (hr0 : ρ 0 = p.1) (hv0 : p.1 ≠ 0) (hb0 : p.2 ≠ 0)
+        (hb : ¬ Collinear3 0 p.1 p.2)
+        (hvx : ∀ i, 0 < i → i < k → ¬ Collinear3 0 p.1 (ρ i))
+        (hvx0 : ∀ i, 0 < i → i < k → ρ i ≠ 0)
+        (hfanL : LocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+        (hEE2 : ∀ u ∈ vPrime_p3 V fv, (EE_p3 u (ePrime_p3 E' fv)).ncard = 2)
+        (hv0V : p.1 ∈ vPrime_p3 V fv)
+        (hrV : ∀ j, j < k → ρ j ∈ vPrime_p3 V fv)
+        (hstep : ∀ i, i + 1 < k → (ρ i, ρ (i + 1)) ∈ fv)
+        (hplane : ∃ A : Set V3,
+          (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+              A = (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ∧
+            (0:V3) ∈ A ∧ vPrime_p3 V fv ⊆ A ∧
+            ∀ x ∈ A, ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0)
+        (hcy : cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e)
+        (hq : ∀ v ∈ vPrime_p3 V fv,
+          azimCycle_p3 (vPrime_p3 V fv) (0:V3) e v = rhoNode1 fv v ∧
+            azim 0 e v (rhoNode1 fv v) = dihV (0:V3) e v (rhoNode1 fv v) ∧
+            azim 0 e v (rhoNode1 fv v) = arcV 0 v (rhoNode1 fv v) ∧
+            azim 0 e v (rhoNode1 fv v) < Real.pi)
+        (hsgn : 0 < (crossProduct (e : Fin 3 → ℝ) (p.1 : Fin 3 → ℝ)) ⬝ᵥ
+          (p.2 : Fin 3 → ℝ)),
+        ∀ i, i + 1 < k →
+        ¬(azim 0 p.1 p.2 (ρ i) = Real.pi ∧ azim 0 p.1 p.2 (ρ (i + 1)) = 0)
+  ) ∧
+  -- 20. HVISIT_HALF_CIRCLE_p35 (LA35:27028; no HOL anchor line in file docstring)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
+        (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+        (vv : ℕ → V3) (HS : Hypermap (V3 × V3))
+        (hs' : scsHalfSliceV39 s p q d' mkj = s')
+        (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+        (hk' : s'.k = k') (hk : s.k = k)
+        (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+        (hV : Set.range vv = V)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hnorm : norm (u - w) ≤ cstab)
+        (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv)
+        (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS),
+        Set.InjOn Prod.fst (HS.face (u, rhoNode1 FF u))
+  ) ∧
+  -- 21. LOFA_HYP_UNION_CARD_GT2_p35 (LA35:24907; HOL `LOFA_HYP_UNION_CARD_GT2`)
+  (∀ {V : Set V3} {E : Set (Set V3)}
+        (HS : Hypermap (V3 × V3)) (hHS : IsHypE_p35 V E HS)
+        (hVE : ⋃₀ E ⊆ V) (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+        (hgraph : Kepler.Text.Fan.Graph E) {v w : V3} (hvw : v ≠ w)
+        (hd : (v, w) ∈ dartsOfHyp_p3 E V),
+        2 < (HS.face (v, w)).ncard
+  ) ∧
+  -- 22. MOD_EQ_IMP_MOD_EQ_0_p35 (LA35:112; HOL `MOD_EQ_IMP_MOD_EQ_0`)
+  (∀ {k p q : ℕ} (hk : k ≠ 0) (hmod : p % k = q % k)
+        (hle : q ≤ p),
+        (p - q) % k = 0
+  ) ∧
+  -- 23. MONO_AZIM_AS_BTA_I_p35 (LA35:28123; HOL `MONO_AZIM_AS_BTA_I`)
+  (∀ (k : ℕ) {v0 : V3} (ρ : ℕ → V3)
+        (hstep : ∀ i, i + 1 < k → azim 0 v0 (ρ 1) (ρ i) ≤ azim 0 v0 (ρ 1) (ρ (i + 1)))
+        {i j : ℕ} (hij : i < j) (hjk : j < k),
+        azim 0 v0 (ρ 1) (ρ i) ≤ azim 0 v0 (ρ 1) (ρ j)
+  ) ∧
+  -- 24. NUMSEG_2_p35 (LA35:18444; HOL `NUMSEG_2`)
+  ({i : ℕ | i < 3} = {0, 1, 2}
+  ) ∧
+  -- 25. NUMSEG_3_p35 (LA35:39073; HOL `NUMSEG_3`)
+  ({i : ℕ | i < 4} = {0, 1, 2, 3}
+  ) ∧
+  -- 26. SCS_K_LE_6_p35 (LA35:970; HOL `SCS_K_LE_6`)
+  (∀ (s : ScsV39) (h : isScsV39 s)
+  ,
+        s.k ≤ 6
+  ) ∧
+  -- 27. SCS_K_PRIME_CASE_5_p35 (LA35:147; HOL `SCS_K_PRIME_CASE_5`)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+        (hs' : s' = scsHalfSliceV39 s p q d' mkj)
+        (hs'' : s'' = scsHalfSliceV39 s q p d' mkj) (hscs : isScsV39 s)
+        (hk : s.k = 5) (hdiag : scsDiag s.k p q),
+        (s'.k = 3 ∧ s''.k = 4) ∨ (s'.k = 4 ∧ s''.k = 3)
+  ) ∧
+  -- 28. SCS_K_PRIME_CASE_6_p35 (LA35:166; HOL `SCS_K_PRIME_CASE_6`)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+        (hs' : s' = scsHalfSliceV39 s p q d' mkj)
+        (hs'' : s'' = scsHalfSliceV39 s q p d' mkj) (hscs : isScsV39 s)
+        (hk : s.k = 6) (hdiag : scsDiag s.k p q),
+        (s'.k = 3 ∧ s''.k = 5) ∨ (s'.k = 5 ∧ s''.k = 3) ∨ (s'.k = 4 ∧ s''.k = 4)
+  ) ∧
+  -- 29. SLICE_HYP_EXISTS_p35 (LA35:26519; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        {fv : Set (V3 × V3)} (hsub : fv ⊆ dartsOfHyp_p3 E' V)
+        (hparam : faceCycleParam_p35 V E' fv) (hfin : fv.Finite)
+        (hne : fv.Nonempty),
+        ∃ HS' : Hypermap (V3 × V3),
+        IsHypE_p35 (vPrime_p3 V fv) (ePrime_p3 E' fv) HS'
+  ) ∧
+  -- 30. SUM_AZIM_EQ_ANGLE_EQ4_HS_p35 (LA35:41035; HOL `SUM_AZIM_EQ_ANGLE_EQ4`)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+        (mkj : Prop) (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3))
+        (FF : Set (V3 × V3)) (vv vv' vv'' : ℕ → V3) (HS : Hypermap (V3 × V3))
+        (hk' : k' = 3)
+        (hs' : scsHalfSliceV39 s p q d' mkj = s')
+        (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+        (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+        (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+        (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+        (hsl : isScsSliceV39 s s' s'' p q) (hk's' : s'.k = k') (hk : s.k = k)
+        (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+        (hV : Set.range vv = V)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hnorm : norm (u - w) ≤ cstab)
+        (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+        (hfan : ConvexLocalFan
+          (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+          (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+          (HS.face (u, rhoNode1 FF u))),
+        tau3 (vv (0 % k' + p % k)) (vv (1 % k' + p % k)) (vv (2 % k' + p % k)) =
+        setSum {i | i < k'}
+            (fun i => rhoFun (norm (vv (i + p % k))) *
+              interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u)) -
+          (Real.pi + sol0)
+  ) ∧
+  -- 31. SUM_AZIM_EQ_ANGLE_EQ4_p35 (LA35:41073; HOL `SUM_AZIM_EQ_ANGLE_EQ4`)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+        (mkj : Prop) (k k' : ℕ) (u w : V3) (V : Set V3) (E : Set (Set V3))
+        (FF : Set (V3 × V3)) (vv vv' vv'' : ℕ → V3) (HS : Hypermap (V3 × V3))
+        (hk' : k' = 3)
+        (hs' : scsHalfSliceV39 s p q d' mkj = s')
+        (hs'' : scsHalfSliceV39 s q p d'' mkj = s'')
+        (hvv' : vv' = fun i => vv (i % s'.k + p % s.k))
+        (hvv'' : vv'' = fun i => vv (i % s''.k + q % s.k))
+        (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+        (hsl : isScsSliceV39 s s' s'' p q) (hk's' : s'.k = k') (hk : s.k = k)
+        (hp : vv (p % k) = u) (hq : vv (q % k) = w)
+        (hV : Set.range vv = V)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hnorm : norm (u - w) ≤ cstab)
+        (hHS : IsHypE_p35 V (E ∪ {{u, w}}) HS)
+        (hfan : ConvexLocalFan
+          (vPrime_p3 V (HS.face (u, rhoNode1 FF u)))
+          (ePrime_p3 (E ∪ {{u, w}}) (HS.face (u, rhoNode1 FF u)))
+          (HS.face (u, rhoNode1 FF u))),
+        tau3 (vv (0 % k' + p % k)) (vv (1 % k' + p % k)) (vv (2 % k' + p % k)) =
+        setSum {i | i < k'}
+            (fun i => rhoFun (norm (vv (i + p % k))) *
+              interiorAngle1 0 (HS.face (u, rhoNode1 FF u)) ((rhoNode1 FF)^[i] u)) -
+          (Real.pi + sol0)
+  ) ∧
+  -- 32. SUM_AZIM_EQ_ANGLE_LE4_p35 (LA35:18316; HOL `SUM_AZIM_EQ_ANGLE_LE4`)
+  (∀ (s : ScsV39) (p q : ℕ) (u : V3) (V : Set V3)
+        (E : Set (Set V3)) (FF : Set (V3 × V3)) (vv : ℕ → V3)
+        (hk3 : ¬(s.k ≤ 3)) (hBB : BBsV39 s vv) (hscs : isScsV39 s)
+        (hp : vv (p % s.k) = u)
+        (hV : Set.range vv = V)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF),
+        setSum {i | i < s.k}
+          (fun i => rhoFun (norm (vv (i + p % s.k))) *
+            interiorAngle1 0 FF ((rhoNode1 FF)^[i] u)) =
+        setSum FF (fun e => rhoFun (norm e.1) * azimInFan e E)
+  ) ∧
+  -- 33. SUM_NUMSEG3_p35 (LA35:18450; HOL `SUM_NUMSEG3`)
+  (∀ (t : ℕ → ℝ)
+  ,
+        ∑ i ∈ Finset.range 4, t i = t 0 + t 1 + t 2 + t 3
+  ) ∧
+  -- 34. TECOXBM2_p35 (LA35:15552; no HOL anchor line in file docstring)
+  (∀ (u w : V3) (hu : u ∈ ballAnnulus) (hw : w ∈ ballAnnulus)
+        (h2 : (2:ℝ) ≤ ‖u - w‖) (hc : ‖u - w‖ ≤ cstab),
+        ¬ Collinear3 0 u w
+  ) ∧
+  -- 35. TECOXBMv2_step01_p35 (LA35:1138; no HOL anchor line in file docstring)
+  (∀ (s : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
+        (hdiag : scsDiag s.k p q),
+        s.k = 4 ∨ s.k = 5 ∨ s.k = 6
+  ) ∧
+  -- 36. TECOXBMv2_step02_p35 (LA35:15411; no HOL anchor line in file docstring)
+  (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (vv : ℕ → V3)
+        (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+        (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w) (hBB : BBsV39 s vv),
+        (2 : ℝ) ≤ dist u w
+  ) ∧
+  -- 37. TECOXBMv2_step03_p35 (LA35:15431; HOL `IN_IMAGE_VV`)
+  (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (vv : ℕ → V3)
+        (hscs : isScsV39 s) (_hdiag : scsDiag s.k p q)
+        (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+        (hk : s.k = 4 ∨ s.k = 5 ∨ s.k = 6),
+        {u, w} ⊆ V_SY_p4 (cycRow_p23 vv s.k)
+  ) ∧
+  -- 38. TECOXBMv2_step04_p35 (LA35:15460; HOL `Tecoxbm.TECOXBM`)
+  (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+        (FF : Set (V3 × V3)) (vv : ℕ → V3)
+        (hscs : isScsV39 s) (hk : s.k = 4) (hdiag : scsDiag s.k p q)
+        (hdist : dist u w ≤ cstab) (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+        (hBB : BBsV39 s vv)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hIN : flattenRow_p23 vv 4 ∈
+          {l : FinVec 4 3 | (∀ i : Fin 4, cycRow_p23 vv 4 i ∈ ballAnnulus) ∧
+            CONDITION1_SY_p4
+              (fun i j => s.a (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+              (fun i j => s.b (((i : ℕ) + 1) % 4) (((j : ℕ) + 1) % 4))
+              (cycRow_p23 vv 4) ∧
+            CONDITION2_SY_p4 (cycRow_p23 vv 4)})
+        (hVEF : V_SY_p4 (cycRow_p23 vv 4) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 4) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+          F_SY_p4 (cycRow_p23 vv 4) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ),
+        ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E
+  ) ∧
+  -- 39. TECOXBMv2_step05_p35 (LA35:15488; no HOL anchor line in file docstring)
+  (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+        (FF : Set (V3 × V3)) (vv : ℕ → V3)
+        (hscs : isScsV39 s) (hk : s.k = 5 ∨ s.k = 6) (hdiag : scsDiag s.k p q)
+        (hdist : dist u w ≤ cstab) (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
+        (hBB : BBsV39 s vv)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hIN : (s.k = 5 → flattenRow_p23 vv 5 ∈
+              {l : FinVec 5 3 | (∀ i : Fin 5, cycRow_p23 vv 5 i ∈ ballAnnulus) ∧
+                CONDITION1_SY_p4
+                  (fun i j => s.a (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+                  (fun i j => s.b (((i : ℕ) + 1) % 5) (((j : ℕ) + 1) % 5))
+                  (cycRow_p23 vv 5) ∧
+                CONDITION2_SY_p4 (cycRow_p23 vv 5)}) ∧
+          (s.k = 6 → flattenRow_p23 vv 6 ∈
+              {l : FinVec 6 3 | (∀ i : Fin 6, cycRow_p23 vv 6 i ∈ ballAnnulus) ∧
+                CONDITION1_SY_p4
+                  (fun i j => s.a (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+                  (fun i j => s.b (((i : ℕ) + 1) % 6) (((j : ℕ) + 1) % 6))
+                  (cycRow_p23 vv 6) ∧
+                CONDITION2_SY_p4 (cycRow_p23 vv 6)}))
+        (hVEF : (s.k = 5 → V_SY_p4 (cycRow_p23 vv 5) = Set.range vv ∧
+              E_SY_p4 (cycRow_p23 vv 5) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+              F_SY_p4 (cycRow_p23 vv 5) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ) ∧
+          (s.k = 6 → V_SY_p4 (cycRow_p23 vv 6) = Set.range vv ∧
+              E_SY_p4 (cycRow_p23 vv 6) = (fun i : ℕ => {vv i, vv (i + 1)}) '' Set.univ ∧
+              F_SY_p4 (cycRow_p23 vv 6) = (fun i : ℕ => (vv i, vv (i + 1))) '' Set.univ)),
+        ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E
+  ) ∧
+  -- 40. TECOXBMv2_step06_p35 (LA35:15524; no HOL anchor line in file docstring)
+  (∀ (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
+        (FF : Set (V3 × V3)) (vv : ℕ → V3) (hscs : isScsV39 s)
+        (hdiag : scsDiag s.k p q)
+        (h4 : s.k = 4 → ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E)
+        (h56 : s.k = 5 ∨ s.k = 6 →
+          ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E),
+        ∀ x ∈ FF, affGt ({0} : Set V3) {u, w} ⊆ wedgeInFanGt_p3 x E
+  ) ∧
+  -- 41. VV_INJ_p35 (LA35:15647; HOL `VV_INJ`)
+  (∀ (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (hk : s.k = k)
+        (hscs : isScsV39 s) (hBB : BBsV39 s vv),
+        ∀ i j, i < k ∧ j < k ∧ i ≠ j → vv i ≠ vv j
+  ) ∧
+  -- 42. VV_SUC_EQ_RHO_NODE_PRIME_p35 (LA35:18295; HOL `VV_SUC_EQ_RHO_NODE_PRIME`)
+  (∀ (s : ScsV39) (k p1 p q : ℕ) (u : V3)
+        (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (vv : ℕ → V3)
+        (hk : s.k = k) (hp1 : vv p1 = u)
+        (hV : Set.range vv = V)
+        (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hscs : isScsV39 s) (hk3 : ¬(k ≤ 3)) (hBB : BBsV39 s vv),
+        ∀ m, (rhoNode1 FF)^[m] u = vv (m + p1)
+  ) ∧
+  -- 43. V_SLICE_EQ_NUMSEG_p35 (LA35:18362; HOL `V_SLICE_EQ_NUMSEG`)
+  (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ)
+        (mkj : Prop) (k k' : ℕ) (u : V3) (FF : Set (V3 × V3)) (vv : ℕ → V3)
+        (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+        (hk : s.k = k) (hk' : s'.k = k') (hp : vv (p % k) = u)
+        (hs' : scsHalfSliceV39 s p q d' mkj = s')
+        (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
+        (hsl : isScsSliceV39 s s' s'' p q),
+        {i | i < k ∧ (rhoNode1 FF)^[i] u ∈ Set.range (fun j => vv (j % k' + p % k))} =
+        {i | i < k'}
+  ) ∧
+  -- 44. WEDGE_IN_FAN_LOFA_DETER2_p35 (LA35:21535; HOL `WEDGE_IN_FAN_LOFA_DETER2`)
+  (∀ {V : Set V3} {E : Set (Set V3)}
+        {FF : Set (V3 × V3)} {v : V3} (hfan : LocalFan V E FF)
+        (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2) (hv : v ∈ V),
+        wedgeInFanGt_p3 (v, rhoNode1 FF v) E
+        = Kepler.Geom.wedge (0 : V3) v (rhoNode1 FF v) (ivsRhoNode1 FF v)
+  ) ∧
+  -- 45. azimCycle_singleton_p35 (LA35:25306; HOL `azim_cycle`)
+  (∀ (v w p : V3)
+  ,
+        azimCycle_p3 ({p} : Set V3) v w p = p
+  ) ∧
+  -- 46. b2AzimCyclePredFalse_p35 (LA35:33529; no HOL anchor line in file docstring)
+  (¬ ∀ (W : Set V3) (u z : V3), W.Finite → z ∈ W → (∃ y ∈ W, y ≠ z) →
+        ∃ x ∈ W, azimCycle_p3 W (0:V3) u x = z
+  ) ∧
+  -- 47. b2AzimSmulZero_p35 (LA35:33404; no HOL anchor line in file docstring)
+  (∀ {u y : V3} (c : ℝ) (hc : 0 < c)
+        (hcol : ¬ Collinear3 (0:V3) u y),
+        azim (0:V3) u y (c • y) = 0
+  ) ∧
+  -- 48. dart1OfFan_subset_dartsOfHyp_p35 (LA35:21473; no HOL anchor line in file docstring)
+  (∀ {E E' : Set (Set V3)} {V : Set V3}
+        (hsub : E ⊆ E'),
+        Fan.dart1OfFan V E ⊆ dartsOfHyp_p3 E' V
+  ) ∧
+  -- 49. dartsOfHyp_ne_mono_p35 (LA35:25113; no HOL anchor line in file docstring)
+  (∀ {E E' : Set (Set V3)} {V : Set V3} {a b : V3}
+        (hsub : E ⊆ E') (hd : (a, b) ∈ dartsOfHyp_p3 E V) (hab : a ≠ b),
+        (a, b) ∈ dartsOfHyp_p3 E' V
+  ) ∧
+  -- 50. ePrime_subset_p35 (LA35:25287; no HOL anchor line in file docstring)
+  (∀ {E : Set (Set V3)} {fv : Set (V3 × V3)}
+  ,
+        ePrime_p3 E fv ⊆ E
+  ) ∧
+  -- 51. eePermOfHyp_p35_apply (LA35:21463; no HOL anchor line in file docstring)
+  (∀ (x : V3) (V : Set V3) (E : Set (Set V3))
+        (d : V3 × V3),
+        eePermOfHyp_p35 x V E d = eeOfHyp_p3 x V E d
+  ) ∧
+  -- 52. fstCoverOfUnio_p35 (LA35:31534; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)}
+        {FF : Set (V3 × V3)} (hfanL : LocalFan V E FF) {u : V3} (hu : u ∈ ⋃₀ E),
+        ∃ d ∈ FF, d.1 = u
+  ) ∧
+  -- 53. jEvenNbrOnUnio_p35 (LA35:33238; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+        (hfan : LocalFan V E FF),
+        ∀ u ∈ ⋃₀ E, ∃ t : ℕ, (EE_p3 u E).ncard = 2 * t
+  ) ∧
+  -- 54. jTwoLeNbrOnUnio_p35 (LA35:33053; HOL `local_fan`)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+        (hfan : LocalFan V E FF),
+        ∀ u ∈ ⋃₀ E, 2 ≤ (EE_p3 u E).ncard
+  ) ∧
+  -- 55. jUnioMemVPrime_p35 (LA35:33185; HOL `LOCAL_FAN_RHO_NODE_PROS`)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+        (hfan : LocalFan V E FF),
+        ∀ u ∈ ⋃₀ E, u ∈ vPrime_p3 V FF
+  ) ∧
+  -- 56. jUnioVertKit_p35 (LA35:33230; HOL `LOFA_IMP_EE_TWO_ELMS`)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+        (hfan : LocalFan V E FF),
+        (∀ u ∈ ⋃₀ E, 2 ≤ (EE_p3 u E).ncard) ∧ (∀ u ∈ ⋃₀ E, u ∈ vPrime_p3 V FF)
+  ) ∧
+  -- 57. kchS0NeZeroOfPlane_p35 (LA35:30525; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        {fv : Set (V3 × V3)} {p : V3 × V3} {e : V3}
+        (hv0 : p.1 ≠ 0) (hb0 : p.2 ≠ 0) (hb : ¬ Collinear3 0 p.1 p.2)
+        (hv0V : p.1 ∈ vPrime_p3 V fv) (hp2V : p.2 ∈ vPrime_p3 V fv)
+        (hcy : cyclicSet_p3 (vPrime_p3 V fv) (0:V3) e)
+        (heperp : ∀ x ∈ vPrime_p3 V fv,
+          ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ) = 0),
+        (crossProduct (e : Fin 3 → ℝ) (p.1 : Fin 3 → ℝ)) ⬝ᵥ (p.2 : Fin 3 → ℝ) ≠ 0
+  ) ∧
+  -- 58. kchS0NeZero_p35 (LA35:30450; no HOL anchor line in file docstring)
+  (∀ {e p1 p2 : V3}
+        (hE : ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) ≠ 0)
+        (hp1e : ((p1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0)
+        (hp2e : ((p2 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0)
+        (hp10 : p1 ≠ 0) (hp20 : p2 ≠ 0) (hb : ¬ Collinear3 0 p1 p2),
+        (crossProduct (e : Fin 3 → ℝ) (p1 : Fin 3 → ℝ)) ⬝ᵥ (p2 : Fin 3 → ℝ) ≠ 0
+  ) ∧
+  -- 59. ncExistsAffGt_p35 (LA35:34165; HOL `Planarity.exists_in_aff_gt_disjoint`, HOL `AFF_GT_SUB_AFF_UNION`)
+  (∀ {v w : V3} (hv0 : v ≠ 0) (hw0 : w ≠ 0) (hwv : v ≠ w)
+  ,
+        ∃ y : V3, y ∈ affGt ({(0:V3)} : Set V3) ({v, w} : Set V3) ∧
+        y ∈ (affineSpan ℝ ({(0:V3), v, w} : Set V3) : Set V3)
+  ) ∧
+  -- 60. ncSliceNoncollinear_p35 (LA35:35677; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+        {v w : V3} (hfan : ConvexLocalFan V E FF) (hv : v ∈ V) (hw : w ∈ V)
+        (hwv : v ≠ w)
+        (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p3 x E)
+        (hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2)
+        (hnl : ∀ a ∈ V, ∀ b ∈ V, a ≠ b →
+          Collinear ℝ ({(0:V3), a, b} : Set V3) → ¬ Lunar a b V E),
+        ∀ z ∈ ({v, w} : Set V3), ∀ t ∈ V, t ≠ z → ¬ Collinear3 (0:V3) z t
+  ) ∧
+  -- 61. twoNbrOfUnio_p35 (LA35:31572; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)}
+        {FF : Set (V3 × V3)} (hfan : ConvexLocalFan V E FF) {u : V3}
+        (hu : u ∈ ⋃₀ E),
+        1 < (EE_p3 u E).ncard
+  ) ∧
+  -- 62. vPrime_subset_p35 (LA35:25283; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {fv : Set (V3 × V3)}
+  ,
+        vPrime_p3 V fv ⊆ V
+  ) ∧
+  -- 63. w1NoIsoAux_p35 (LA35:27601; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p3 V E FF)
+  ,
+        ∀ u ∈ V, EE_p3 u E ≠ ∅
+  ) ∧
+  -- 64. w1SigmaBndAux_p35 (LA35:27665; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p3 V E FF)
+  ,
+        ∀ u ∈ V, (EE_p3 u E).ncard ≤ 2
+  ) ∧
+  -- 65. w1TwoLeAux_p35 (LA35:27749; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p3 V E FF)
+  ,
+        ∀ u ∈ V, 2 ≤ (EE_p3 u E).ncard
+  ) ∧
+  -- 66. w1_azim3_p35 (LA35:27647; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN 0 V E) {v u0 s q : V3}
+        (hu0E : {v, u0} ∈ E) (hsE : {v, s} ∈ E) (hqE : {v, q} ∈ E)
+        (hmin1 : azim 0 v u0 s ≤ azim 0 v u0 q)
+        (hmin2 : azim 0 v s u0 ≤ azim 0 v s q)
+        (hsne : s ≠ u0),
+        False
+  ) ∧
+  -- 67. w1_nnFst_p35 (LA35:27588; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E : Set (Set V3)} (z : V3 × V3)
+  ,
+        (nnOfHyp_p3 0 V E z).1 = z.1
+  ) ∧
+  -- 68. w1_nn_apply_p35 (LA35:27593; no HOL anchor line in file docstring)
+  (∀ {E : Set (Set V3)} (V : Set V3) {E : Set (Set V3)} {a b : V3}
+        (hab : {a, b} ∈ E),
+        nnOfHyp_p3 0 V E (a, b) = (a, azimCycle_p3 (EE_p3 a E) 0 a b)
+  ) ∧
+  -- 69. w4pHintOfOZSlice_p35 (LA35:29031; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        {fv : Set (V3 × V3)}
+        (hconv : ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+        (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+        (hfin : fv.Finite)
+        (hOZ : ∀ x ∈ vPrime_p3 V fv, ∃ u w : V3,
+          ({u, x, w} : Set V3) ⊆ vPrime_p3 V fv ∧
+          (({u, w} : Set V3) ∩
+              (affineSpan ℝ ({(0:V3), x} : Set V3) : Set V3)) = ∅ ∧
+          ¬((affineSpan ℝ ({x, (0:V3)} : Set V3) : Set V3) ∩
+            ozConv0_p35 ({w, u} : Set V3) = ∅) ∧
+          ∃ P : Set V3, ({(0:V3), u, x, w} : Set V3) ⊆ P ∧
+            ∃ a b c : V3, ¬ Collinear3 a b c ∧
+              P = (affineSpan ℝ ({a, b, c} : Set V3) : Set V3)),
+        ∀ x ∈ vPrime_p3 V fv, interiorAngle1 (0:V3) fv x = Real.pi
+  ) ∧
+  -- 70. w4pNowrapOfRendered_p35 (LA35:29194; no HOL anchor line in file docstring)
+  (∀ (k : ℕ) {v0 b : V3} (ρ : ℕ → V3)
+        (hv0 : v0 ≠ 0) (hb0 : b ≠ 0) (hbu : b ≠ v0) (hb : ¬ Collinear3 0 v0 b)
+        (hnc : ∀ i, i + 1 < k → ¬ Collinear3 0 v0 (ρ (i + 1)))
+        (hcornerR : ∀ i, i + 1 < k → azim 0 v0 b (ρ i) = Real.pi →
+          ∀ s t : ℝ, ρ (i + 1) - 0 = s • (v0 - 0) + t • (b - 0) → t ≤ 0),
+        ∀ i, i + 1 < k →
+        ¬(azim 0 v0 b (ρ i) = Real.pi ∧ azim 0 v0 b (ρ (i + 1)) = 0)
+  ) ∧
+  -- 71. w4pOZTripleSlice_p35 (LA35:29010; no HOL anchor line in file docstring)
+  (∀ {V : Set V3} {E' : Set (Set V3)}
+        {fv : Set (V3 × V3)} {P : Set V3} {u v w : V3}
+        (hconv : ConvexLocalFan (vPrime_p3 V fv) (ePrime_p3 E' fv) fv)
+        (hsub : fv ⊆ dartsOfHyp_p3 E' V) (hparam : faceCycleParam_p35 V E' fv)
+        (hfin : fv.Finite)
+        (hsub3 : ({u, v, w} : Set V3) ⊆ vPrime_p3 V fv)
+        (hplane : ∃ a b c : V3, ¬ Collinear3 a b c ∧
+          P = (affineSpan ℝ ({a, b, c} : Set V3) : Set V3))
+        (hP : ({(0:V3), u, v, w} : Set V3) ⊆ P)
+        (hdisj : (({u, w} : Set V3) ∩
+            (affineSpan ℝ ({(0:V3), v} : Set V3) : Set V3)) = ∅)
+        (hint : ¬((affineSpan ℝ ({v, (0:V3)} : Set V3) : Set V3) ∩
+          ozConv0_p35 ({w, u} : Set V3) = ∅)),
+        interiorAngle1 (0:V3) fv v = Real.pi ∧ rhoNode1 fv v ∈ P ∧
+        ivsRhoNode1 fv v ∈ P
+  )
+    ) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s → s.k = 4 → v ∈ MMsV39 s →
+      scsGeneric v) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), isScsV39 s →
+    BBsV39 s vv → taustarV39 s vv < 0 → 3 < s.k →
+    ¬Circular (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3) (v w : V3),
+    isScsV39 s → BBsV39 s vv → taustarV39 s vv < 0 →
+    Lunar v w (Set.range vv)
+      (Set.range fun i => {vv i, vv (i + 1)}) → 3 < s.k →
+    interiorAngle1 0 (Set.range fun i => (vv i, vv (i + 1))) v <
+      Real.pi / 2) ∧
+    (scsArrowV39 {scsStabDiagV39 scs6I1 0 2} {scs5M1, scs3M1}) ∧
+    (∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x5 x6 s : ℝ),
+      0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
+      ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+      x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+      0 < upsX x1 x3 x5 → s = 1 ∨ s = -1 →
+      v3 = mkPlanar2 v0 v1 v2 x1 x2 x3 x5 x6 s →
+      Coplanar ({v0, v1, v2, v3} : Set V3) ∧
+      x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧
+      ∃ t : ℝ, 0 < t ∧ t • cross3 (v3 - v0) (v1 - v0) = s • cross3 (v1 - v0) (v2 - v0)) ∧
+    (scsArrowV39 {scsStabDiagV39 scs6I1 0 3} {scs4M2}) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), isScsV39 s →
+    BBsV39 s vv → taustarV39 s vv < 0 → 3 < s.k →
+    solLocal (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) < Real.pi) ∧
+    (∀ vv : ℕ → V3,
+    ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) ⊆ ballAnnulus →
+    Kepler.Packing ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) →
+    vv 0 ≠ vv 1 → vv 0 ≠ vv 1 → vv 0 ≠ vv 2 → vv 0 ≠ vv 3 →
+    vv 0 ≠ vv 4 → vv 1 ≠ vv 2 → vv 1 ≠ vv 3 → vv 1 ≠ vv 4 →
+    vv 2 ≠ vv 3 → vv 2 ≠ vv 4 → vv 3 ≠ vv 4 →
+    norm (vv 0 - vv 1) = 2 → norm (vv 1 - vv 2) = 2 → norm (vv 2 - vv 3) = 2 →
+    norm (vv 3 - vv 4) = 2 → norm (vv 4 - vv 0) = 2 →
+    ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
+      norm (vv i - vv ((i + 2) % 5)) ≤ 1 + Real.sqrt 5 ∧
+      norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5) ∧
+    (∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ),
+      0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
+      ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+      x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+      0 < upsX x1 x3 x5 →
+      ContinuousAt (fun q => mkPlanar2 v0 v1 q x1 x2 x3 x5 x6 s) v2) ∧
+    (∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ),
+    0 < x1 → 0 < x2 → 0 < x3 → 0 < x4 → 0 < x5 → 0 < x6 →
+    ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+    x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+    0 < deltaX x1 x2 x3 x4 x5 x6 →
+    v3 = mkSimplex1 v0 v1 v2 x1 x2 x3 x4 x5 x6 →
+    ContinuousAt (fun q => mkSimplex1 v0 v1 v2 x1 x2 x3 x4 q x6) x5) ∧
+    (∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ),
+      0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
+      ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+      x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+      0 < upsX x1 x3 x5 →
+      ContinuousAt (fun q => mkPlanar2 v0 v1 v2 x1 x2 q x5 x6 s) x3) ∧
+    (∀ (s t : ScsV39), isScsV39 s → transferV39 s t → scsArrowV39 {s} {t}) ∧
+    (main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (FF : Set (V3 × V3)) (k p1 : ℕ) (v : ℕ → V3),
+      FF = Set.range (fun i => (v i, v (i + 1))) →
+      isScsV39 s → k = s.k → 3 < k → v ∈ MMsV39 s → scsBasicV39 s →
+      scsGeneric v →
+      3 ≤ dist (v (p1 + 1)) (v (p1 + k - 1)) →
+      (∀ i j, scsDiag k i j ∧ psort k (i, j) ≠ psort k (p1 + 1, p1 + k - 1) →
+        s.a i j < dist (v i) (v j)) →
+      (∀ i j, scsDiag k i j → 4 * h0 < s.b i j) →
+      interiorAngle1 0 FF (v p1) < Real.pi →
+      (Real.pi / 2 < interiorAngle1 0 FF (v p1) ∨
+        interiorAngle1 0 FF (v (p1 + k - 1)) < Real.pi) →
+      s.a p1 (p1 + k - 1) = 2 → s.b p1 (p1 + k - 1) ≤ 2 * h0 →
+      2 ≤ dist (v (p1 + 1)) (v p1) →
+      dist (v (p1 + 1)) (v p1) ≤ cstab →
+      dist (v p1) (v (p1 + k - 1)) = 2) ∧
+    (main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (FF : Set (V3 × V3)) (k p1 : ℕ) (v : ℕ → V3),
+      FF = Set.range (fun i => (v i, v (i + 1))) →
+      isScsV39 s → k = s.k → 3 < k → v ∈ MMsV39 s → scsBasicV39 s →
+      scsGeneric v →
+      3 ≤ dist (v (p1 + k - 1)) (v (p1 + 1)) →
+      (∀ i j, scsDiag k i j ∧ psort k (i, j) ≠ psort k (p1 + k - 1, p1 + 1) →
+        s.a i j < dist (v i) (v j)) →
+      (∀ i j, scsDiag k i j → 4 * h0 < s.b i j) →
+      interiorAngle1 0 FF (v p1) < Real.pi →
+      (Real.pi / 2 < interiorAngle1 0 FF (v p1) ∨
+        interiorAngle1 0 FF (v (p1 + 1)) < Real.pi) →
+      s.a p1 (p1 + 1) = 2 → s.b p1 (p1 + 1) ≤ 2 * h0 →
+      2 ≤ dist (v (p1 + k - 1)) (v p1) →
+      dist (v (p1 + k - 1)) (v p1) ≤ cstab →
+      dist (v p1) (v (p1 + 1)) = 2) ∧
+    (∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ),
+    0 < x1 → 0 < x2 → 0 < x3 → 0 < x4 → 0 < x5 → 0 < x6 →
+    ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+    x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+    0 < deltaX x1 x2 x3 x4 x5 x6 →
+    v3 = mkSimplex1 v0 v1 v2 x1 x2 x3 x4 x5 x6 →
+    x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧ x4 = dist v3 v2 ^ 2 ∧
+      0 < ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ
+        (crossProduct ((v2 - v0 : V3) : Fin 3 → ℝ) ((v3 - v0 : V3) : Fin 3 → ℝ))) ∧
+    (∀ (f g : ℝ → ℝ) (f' g' h' x y : ℝ),
+    derivedForm True f f' x (Set.univ : Set ℝ) →
+    derivedForm True g g' y (Set.univ : Set ℝ) →
+    derivedForm True (g ∘ f) h' x (Set.univ : Set ℝ) →
+    0 < f' → f x = y → reEqvl h' g') ∧
+    (∀ (s : ScsV39) (i j : ℕ) (c : ℝ),
+    isScsV39 s → s.a i j ≤ c → c ≤ s.b i j → 3 < s.k →
+    ¬(i % s.k = j % s.k) → ¬s.J i j →
+    (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k → ¬(c = s.am i j)) →
+    (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k →
+      2 < s.a i j ∨ 2 * h0 < s.b i j) →
+    scsArrowV39 {s} (setOfList (subdivV39 s i j c))) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), 3 < s.k → isScsV39 s →
+    scsGeneric v → v ∈ MMsV39 s →
+    3 + {i | i < s.k ∧ scsIsStr s v i}.ncard ≤ s.k) ∧
+    (∀ y1 y2 y6 : ℝ,
+    derivedForm (0 < y1 ∧ 0 < y2) (fun q => xrr y1 y2 q) (8 * y6 / (y1 * y2)) y6
+      (Set.univ : Set ℝ)) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
+    v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+    (∀ i j, scsDiag s.k i j → 4 * h0 < s.b i j) → (scsM s).ncard ≤ 1 →
+    3 < s.k →
+    (∀ i, s.a i (i + 1) = 2) →
+    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
+    ∃ i, dist (v i) (v (i + 1)) = 2) ∧
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+      (f : V3 → ℝ → V3) (v w u : V3),
+      ConvexLocalFan V E FF →
+      Lunar v w V E →
+      Deformation f V a b →
+      interiorAngle1 0 FF v < Real.pi →
+      u ∈ V → u ≠ v → u ≠ w →
+      (∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u') →
+      (∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, v, w, u} : Set V3)) →
+      ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+        ConvexLocalFan ((fun v => f v t) '' V)
+          ((fun e => (fun v => f v t) '' e) '' E)
+          ((fun d => (f d.1 t, f d.2 t)) '' FF) ∧
+        Lunar v w ((fun v => f v t) '' V)
+          ((fun e => (fun v => f v t) '' e) '' E)) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
+    scsBasicV39 s → 3 < s.k → v ∈ MMsV39 s →
+    (∀ i j, scsDiag s.k i j → 4 * h0 < s.b i j) →
+    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
+    (∀ i, s.b i (i + 1) ≤ cstab) → scsGeneric v) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
+    3 < s.k → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) = 2 * h0 →
+    dist (v i) (v (i + 1)) = 2 →
+    (∀ i j, scsDiag s.k i j → (s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) ∧
+      4 * h0 < s.b i j) →
+    2 < s.b i (i + 1) → s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) →
+    dist (v (i + 1)) (v (i + 2)) = 2) ∧
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+      (f : V3 → ℝ → V3),
+      ConvexLocalFan V E FF →
+      Generic V E →
+      Deformation f V a b →
+      (∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+        interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi) →
+      ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+        ConvexLocalFan ((fun v => f v t) '' V)
+          ((fun e => (fun v => f v t) '' e) '' E)
+          ((fun d => (f d.1 t, f d.2 t)) '' FF) ∧
+        Generic ((fun v => f v t) '' V)
+          ((fun e => (fun v => f v t) '' e) '' E)) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
+    v ∈ MMsV39 s → s.k = 4 → scsBasicV39 s →
+    s.b i (i + 1) ≤ 2 * h0 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
+    xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53) ∧
+    (∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s →
+    isScsV39 s' → scsBasicV39 s → scsBasicV39 s' → scsM s = scsM s' →
+    s.k = s'.k → v ∈ MMsV39 s → BBsV39 s' v → s.d = s'.d →
+    (∀ i, s'.a i (i + 1) = s.a i (i + 1)) →
+    (∀ i j, s.a i j ≤ s'.a i j ∧ s'.b i j ≤ s.b i j) → v ∈ MMsV39 s') ∧
+    (∀ (s : ScsV39) (v : ℕ → V3) (i j : ℕ), isScsV39 s →
+    scsBasicV39 s → v ∈ MMsV39 s → (∀ i, s.b i (i + 1) ≤ cstab) →
+    Lunar (v i) (v j) (Set.range v) (Set.range fun i => {v i, v (i + 1)}) →
+    s.k = 6 ∧ v j = v (i + 3)) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
+    v ∈ MMsV39 s → 3 < s.k →
+    ¬Coplanar (({0} ∪ Set.range v : Set V3))) ∧
+    (∀ (s : ScsV39) (vv ww : ℕ → V3), isScsV39 s →
+    vv ∈ BBprime2V39 s → BBsV39 s ww →
+    taustarV39 s vv < taustarV39 s ww ∨ BBindexV39 s vv ≤ BBindexV39 s ww) ∧
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ),
+    isScsV39 s → w ∈ MMsV39 s →
+    azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi →
+    k = s.k → 3 < k →
+    ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3) →
+    w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3) →
+    (∀ i, scsDiag k l i → 4 * h0 < s.b l i) → norm (w l) ≠ 2 →
+    (∀ i, scsDiag k l i → s.a l i < dist (w l) (w i)) →
+    (∀ i, ¬s.J l i) →
+    (∀ (V : Set V3) (E : Set (Set V3)) (v : V3), V = Set.range w →
+      E = Set.range (fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E) →
+    s.a l (l + 1) = dist (w l) (w (l + 1)) ∧
+      s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1)))) ∧
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ),
+    isScsV39 s → w ∈ MMsV39 s →
+    azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi →
+    ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3) →
+    w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3) →
+    k = s.k → 3 < k →
+    (j % k = (l + 1) % k ∨ (j + 1) % k = l % k) →
+    s.a j l = dist (w j) (w l) → s.a j l < s.b j l →
+    (∀ i, scsDiag k l i → 4 * h0 < s.b l i) →
+    (∀ i, scsDiag k l i → s.a l i < dist (w l) (w i)) →
+    (∀ i, ¬s.J l i) →
+    (∀ (V : Set V3) (E : Set (Set V3)) (v : V3), V = Set.range w →
+      E = Set.range (fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E) →
+    s.a l (l + 1) = dist (w l) (w (l + 1)) ∧
+      s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1)))) ∧
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ),
+    isScsV39 s → w ∈ MMsV39 s → k = s.k → 3 < k →
+    (∀ i, scsDiag k l i → 4 * h0 < s.b l i) → norm (w l) ≠ 2 →
+    (∀ i, ¬(i % k = l % k) → s.a l i < dist (w l) (w i)) →
+    (∀ i, ¬s.J l i) →
+    (∀ (V : Set V3) (E : Set (Set V3)) (v : V3), V = Set.range w →
+      E = Set.range (fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E) →
+    False) ∧
+    (∀ (u v p : V3), ¬Collinear ℝ ({0, v, p} : Set V3) →
+    ¬Collinear ℝ ({0, u, p} : Set V3) →
+    arcV 0 u p + arcV 0 p v < Real.pi →
+    ¬(0 ∈ convexHull ℝ ({u, v} : Set V3))) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
+    BBsV39 s vv → taustarV39 s vv < 0 → BBprime2V39 s ≠ ∅) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
+    BBsV39 s vv → taustarV39 s vv < 0 → BBprimeV39 s ≠ ∅) ∧
+    (∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s →
+    isScsV39 s' → scsBasicV39 s → scsBasicV39 s' → s.k = s'.k →
+    s.d ≤ s'.d →
+    v ∈ MMsV39 s → BBsV39 s' v →
+    scsArrowV39 {s} {s'}) ∧
+    (∀ s : ScsV39, unadornedV39 s → MMsV39 s = BBprime2V39 s) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
+    BBsV39 s vv → taustarV39 s vv < 0 → MMsV39 s ≠ ∅) ∧
+    (scsArrowV39 {scs3M1} {scs3T1, scs3T5}) ∧
+    ((∀ s ∈ sInitListV39, MMsV39 s = ∅) → JEJTVGB_assume_v39) ∧
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop),
+    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    scsArrowV39 {s} {s', s''}) ∧
+    (main_nonlinear_terminal_v11 →
+    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1}) ∧
+    (∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+    (vv : ℕ → V3),
+    MMsV39 s vv → s.bm p q < 4 → (s.k = 4 ∨ s.bm p q ≤ cstab) → isScsV39 s →
+    d' < 0.9 → scsDiag s.k p q →
+    BBsV39 (scsHalfSliceV39 s p q d' mkj)
+      (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k))) ∧
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop) (vv : ℕ → V3),
+    scsHalfSliceV39 s p q d' mkj = s' →
+    scsHalfSliceV39 s q p d'' mkj = s'' →
+    MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    s.d ≤ d' + d'' →
+    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k))) ∧
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop) (vv : ℕ → V3),
+    scsHalfSliceV39 s p q d' mkj = s' →
+    scsHalfSliceV39 s q p d'' mkj = s'' →
+    MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    s.d ≤ d' + d'' →
+    taustarV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      taustarV39 s'' (fun i => vv (i % s''.k + q % s.k)) ≤ taustarV39 s vv) ∧
+    (∀ (s : ScsV39) (i j : ℕ), isScsV39 s →
+    scsBasicV39 s → 3 < s.k → scsDiag s.k i j → s.a i j ≤ cstab →
+    isScsV39 (scsStabDiagV39 s i j) ∧ scsBasicV39 (scsStabDiagV39 s i j)) ∧
+    (scsArrowV39 {scsStabDiagV39 scs4I3 0 2} {scs4T4}) :=
+    ⟨localconcl_wire_capstone_w1.1, la35_wire_capstone_w1,
+      localconcl_wire_capstone_w1.2.1, localconcl_wire_capstone_w1.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.1, localconcl_wire_capstone_w1.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2⟩
+
 #print axioms localconcl_wire_capstone_w1
+#print axioms la35_wire_capstone_w1
+#print axioms localconcl_wire_capstone_w2
+
 
 
 end Kepler.Text
