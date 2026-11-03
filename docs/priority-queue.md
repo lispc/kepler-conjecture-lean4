@@ -22,7 +22,7 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-03 晚，池 **4/3**：批 2 三车道 + `orphan-scout` 量尺；批 1 四车道已全部收工）
+## 1. 在飞（2026-11-03 深夜，池 **3/3**：pa16-qzyzmjc / pa2-grutoti1-concl / localconcl-wiring-w1；批 1 四车道与 orphan-scout 量尺已全部收工）
 
 > 批 1（用户指令「pa15, pa19, terminal11 t0, pa25 各一条」）四车道全部收工：PA19 落库 `a34cb699`（续 255）、PA25 归档 `ceef5a91`（续 256）、PA15 落库 `f8b3e46f` + T0 落库 `a522078c`（续 257）。批 2 选题原则 = 用户拍板的「最快增大 e2e tree」（2026-11-03 晚）；`orphan-scout` 量尺车道产出榜单后，批 3 起按「预期新节点 ÷ agent 时」选槽。
 
@@ -50,6 +50,8 @@
 
 ## 2. 排队（按序补位）
 
+> **提级（用户 2026-11-03 晚：「同意」物化程序 A/B/C + 「hypermap 和 la35 优先级提到 pending queue 最前面」）**：补位首发序 = **§2-13 `hypermap-mat-scout` → §2-14 `la35-mat-scout`** → CertTM 物化侦察（§2-15）→ 孤儿岛接入（§2-16）→ 其余按原序。当前池 3/3（pa16-qzyzmjc / pa2-grutoti1-concl / localconcl-wiring-w1），任一完成即按此序补位。
+
 0. `已批·提级首发` **nli-prep-w1 切界层数学预处理波**（在飞，§1）（用户 2026-10-26 提级）：QITNPEAv2 主攻——rad2X 纯多项式支样板链先行（一行级粘合）→ 切界叶 prep 剖分（沿 disj 曲面加人工分割面）/ 单调性通道（HOL doc 自注 rad2 单调）双路试闭；任务书已立 `lane_snapshots/nli-prep-w1/TASK.md`；RQWUDDU 留下一波复用通道。预期样板链 + 部分切界叶 = 锥 −2 的一半。
 
 1. `在飞` **NKEZBFC_PREP GIANT 第二波（主石 stepB）**（见 §1 nkezbfc-giant-w2；第一波已落库 `3034e8f7`，LA9 NKEZBFC 节 19→9，`p9_main_induction` 骨架就位）；之后 `EJRCFJD_ALT2`（LA2:1589，正本 EJRCFJD LA6:1135）+ `NKEZBFC`（LA2:1606）一行装配——注意 LA2 import LA5/LA9 均成环，装配层需走 LA9 侧或桥文件。
@@ -72,6 +74,11 @@
    > **w0prep-w1 修正（2026-10-28，预测 CLEAN 7 / TAINTED 55，`docs/scouts/w0-wire-inventory.tsv`）**：**bola1「W0 审计后直源立减 5+」不成立**——CNICGSF1-5_p18 虽已证，但消费方仍为 sorried 的 LA18 SCS_5\*_SLICE_\*_p18 巨件，且共吃 LA1 本体 `YXIONXL3_concl`（:1683 仍 sorry）这一未点名第二污染源；「+」的 LA33 六箭头亦全 TAINTED。**W0 先验立减 = 0，直源保持 23；立减 5 改挂波 1 闸**（LKGRQUI slice + YXIONXL3_concl 灌证后 23→18）。附赠翻案：ARDBZYE_p33/FYSSVEV_p33 现为直接 sorry（LocalConcl「PROVED」docstring 过时）；XWITCCN2/AYQJTMD 孪生「已证」但闭包经 UXCKFPE_p24 落 LA24 k=3..6 四 case 全 sorry（「已证 ≠ sorry-free」形态）。探针 `w0probe.lean`+`run_w0.sh` 备跑（快照），窗口期分钟级；CLEAN 7 条有被实测翻案残差，以 w0-diff 为准。
    > **la2027-scout（LA20-27 簇，2026-10-28，`docs/scouts/la2027-scout.md`）**：14=14 全真债（R3/S4/M4/X3，D=0）；过时注记 +2（PEDSLGV2/MXQTIED 已证，mnt11「四 concl」实三）；**修正 bola1**：AQICLXA/FZIOTEF 被 QKNVMLB 切片 kit 挡（真数学，降级波 2*，解锁前置 = SF-64..66 已落）；**新首发波四件**（LA22 is_scs_3T1/3T5/3M1_p22 + LA23 s_init_list_alt_p23，≤550 行零 mnt11，**e2e −4** 带 BKOSSGE_p16 半闭红利）→ §2-12。
 12. `就绪·待编译窗` **LA20-27 波 1 四件**（la2027-scout 首发建议 2026-10-28）：LA22 is_scs_3T1/3T5/3M1_p22（生成器已证 + 3M1 有 LA20:209 孪生可移植）+ LA23 s_init_list_alt_p23（≤550 行、零 mnt11）——**e2e −4**，红利 BKOSSGE_p16 半闭；裕量加插 EAPGLE/ZITHLQN 总装（LA25 八 CASE 全证只差总装）。波 2 = XWITCCN×4（CASE_4 立模板）+ EAPGLE（−9）；波 3 = BERAK/OCBICBY/LFLACKU 三 X 件随 mnt11 银行。施工图 `docs/scouts/la2027-scout.md`。
+
+13. `提级首发` **hypermap-mat-scout**（+1,299，orphan-scout 榜 S3 转批）：`Text.Hypermap` 是最大整文件孤儿岛（1,299 = 1,157 thm + 138 def，GE500 口径）。纯侦察波：勘 1,299 个孤儿的内部证明图（哪些 capstone、依赖是否自洽）、设计新根 capstone 形状（仿 c1 `PACKING_CHAPTER_MAIN_CONCLUSION_discharged` 模式或 Hypermap 章出口聚合）、产出接线边逐条锚表 + 分波工单；零证明、零仓库改动（报告入 docs/scouts/）。侦察 GO 后物化波另发。
+14. `提级次席` **la35-mat-scout**（+741）：`LocalAuto35` 741 孤儿同上模式侦察；与 13 共享方法论，可由同车道接续或并行第二槽。
+15. `已批·排队` **CertTM 物化侦察**（+618）：`Interval.CertTM` 618 孤儿；注意 CertTM 语义演进有 SF-42 尾波债前科（A2-W2a 的 CertG demo decide=false），侦察须先核 TM demo 健全性再设计根。
+16. `已批·排队` **孤儿岛接入**（~+300）：`Text.LP` 205 + `Text.TameSpine` 75 + 8 个零 import 消费者单文件（PackingAuto1/22/23、LocalBridge、LA6/7/10、LocalAnchors）——多为加 import + 消费点接线（锚 = 文件头/Assembly 行号，orphan-scout DELIVERY §1 已附）；与 13–15 的物化分开走，避免一次改 import 面过大。
 
 ## 3. 两周战术排序（2026-10-25 战略备忘录定稿）
 
@@ -106,6 +113,7 @@
 
 ## 6. 等用户裁决（编排者不单方面动）
 
+0. `已裁（2026-11-03 晚）` **树增长物化程序 A/B/C**（用户「同意」+ 提级 hypermap/la35 到队首）：A = Hypermap 物化（§2-13，侦察先行）；B = LA35 物化（§2-14）+ CertTM（§2-15，先核 SF-42 TM demo 健全性）；C = 孤儿岛接入 Text.LP/TameSpine/8 单文件（§2-16）。**D = 机械证书层解冻（Interval.Cases 13,293 + LP ~952）仍待用户解冻令**，编排者不单方面动。
 1. `已裁` **PA2 桩族去留**（用户 2026-10-26「现在先不删」）：删除暂缓，死代码/沉睡件记账留 M1 终审一并处理。
 2. `已裁·时点编排者定` **PA24 / PackingConcl 整合**（用户 2026-10-26「可以整合，时机你定」）：编排者定时点 = **WSEWPCH 链收官（W6a/W6b/W6c 全落库）时正式整合**，整合前一批次发 M0 口径预公告（预计锥直源 +84 跳涨，PA24 52 + PackingConcl 32）。
 3. `已裁·暂缓` **终局 native_decide 政策**（用户 2026-10-26「不急着决定，以后再讨论」）：维持现状；编排者已呈报关键事实——A2 的 `decide +kernel` 实测证明全 vanilla 化性能可行，北极星公理三条要求终局转换，待用户重启讨论时按 (a) 全 vanilla / (c) 可达链 vanilla 两案重呈。

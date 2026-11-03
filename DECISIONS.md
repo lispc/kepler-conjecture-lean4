@@ -3,6 +3,15 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-03 — 树增长物化程序 A/B/C 获批；Hypermap / LA35 提到队首（用户「同意」+「hypermap 和 la35 优先级提到 pending queue 最前面」）
+
+**拍板**（用户，2026-11-03 深夜，在 orphan-scout 量尺结论呈报后）：
+
+1. **获批**：A = Hypermap 物化（1,299 孤儿，侦察先行）；B = LA35（741）+ CertTM（618，先核 SF-42 TM demo 健全性）物化；C = 孤儿岛接入（Text.LP 205 + Text.TameSpine 75 + 8 个零 import 消费者单文件，~+300）。
+2. **提级**：补位首发序 = hypermap-mat-scout → la35-mat-scout → CertTM 侦察 → 孤儿岛接入（queue §2 头注 + §2-13..16）。
+3. **未批**：D = 机械证书层解冻（Interval.Cases 13,293 + LP 证书 ~952 在 universe 外）——仍待用户解冻令，编排者不单方面动。
+4. **量级口径**（orphan-scout，`docs/scouts/orphan-scout.md`）：现有根集合内可测上行 ≤ 1,214（接线）+ 5,644（影子上界）；>13K 增长只能来自新根物化与证书层解冻。接线波（S1 `localconcl-wiring-w1`）预期 SORRIED 可视化上升，K_AXIOM 624 为护栏。
+
 ## 2026-11-03 — lane 选题原则改为「最快增大 e2e tree」；T0 接口物化记录（用户「同意」）
 
 **拍板**（用户，2026-11-03 晚，问「如果安排 lane 的原则是最快增大 e2e tree，该做什么」并对编排者方案「同意」）：
