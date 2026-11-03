@@ -1307,6 +1307,272 @@ private theorem w5cB3_lunar_window
     obtain ⟨v', w', u', hE, hV, hne⟩ := hcirc
     exact hne (hsep t hte1 hte2 htIcc {v', w'} hE u' hV)
 
+/-! ## w5cB4 kit (W5c-B 第四波): `SUB_LUNAR_DEFORM_LEMMA` 段 7 / 7b / 8 的条件形
+
+HOL 源 `lunar_deform.hl:695-788`（段 7a）、`1018-1532`（段 7b）、`1533-1750`
+（段 8）。上游 twins（`HKIRPEP_ALT` / `LUNAR_IMP_IN_TWO_HAFLS_PLANE`）与 LA5
+fan-rho 物质件在本 checkout 仍为 `sorry`（按裁定不可消费、不可改），故本区把
+它们的结论作为**显式前提**，交付一面标准三的条件件；`DELIVERY.md` §2 给出逐件
+缺口与下一波总装接口。 -/
+
+/-- 段 7a（HOL `lunar_deform.hl:695-788`）：设 `V` 的点都可写成
+`rhoNode1 FF` 在 `v` 上的迭代（`LOFA_IMP_LT_CARD_SET_V` 的轨道覆盖形），且
+`w = rho^[i] v`、两半集合等于相应半锥与 `V` 的交，则 `u ∈ V \ {v,w}` 落在
+`v` 侧或 `w` 侧的半锥内。 -/
+private theorem w5cB4_mem_half_of_orbits
+    {V : Set V3} {FF : Set (V3 × V3)} {u v w : V3}
+    (huv : u ≠ v) (huw : u ≠ w)
+    (horb : ∃ n : ℕ, n < Set.ncard V ∧ u = (rhoNode1 FF)^[n] v)
+    {i j : ℕ} (hij : i + j = Set.ncard V)
+    (hwi : w = (rhoNode1 FF)^[i] v)
+    (hsv : {z | ∃ l, 0 < l ∧ l < i ∧ z = (rhoNode1 FF)^[l] v} =
+      affGt ({0, v} : Set V3) {rhoNode1 FF v} ∩ V)
+    (hsw : {z | ∃ l, 0 < l ∧ l < j ∧ z = (rhoNode1 FF)^[l] w} =
+      affGt ({0, v} : Set V3) {ivsRhoNode1 FF v} ∩ V)
+    (hivs : affGt ({0, v} : Set V3) {ivsRhoNode1 FF v} =
+      affGt ({0, w} : Set V3) {rhoNode1 FF w}) :
+    u ∈ affGt ({0, v} : Set V3) {rhoNode1 FF v} ∨
+      u ∈ affGt ({0, w} : Set V3) {rhoNode1 FF w} := by
+  obtain ⟨n, hnV, hun⟩ := horb
+  have hn0 : n ≠ 0 := by
+    intro h0
+    exact huv (by rw [hun, h0, Function.iterate_zero_apply])
+  have hne : n ≠ i := by
+    intro he
+    exact huw (by rw [hun, he]; exact hwi.symm)
+  by_cases hni : n < i
+  · left
+    have hmem : u ∈ {z | ∃ l, 0 < l ∧ l < i ∧ z = (rhoNode1 FF)^[l] v} :=
+      ⟨n, Nat.pos_of_ne_zero hn0, hni, hun⟩
+    rw [hsv] at hmem
+    exact hmem.1
+  · right
+    have hin : i < n := by omega
+    set m : ℕ := n - i with hm
+    have hnm : n = m + i := by omega
+    have hm0 : m ≠ 0 := by omega
+    have hmlt : m < j := by omega
+    have hum : u = (rhoNode1 FF)^[m] w := by
+      rw [hun, hnm, Function.iterate_add_apply, ← hwi]
+    have hmem : u ∈ {z | ∃ l, 0 < l ∧ l < j ∧ z = (rhoNode1 FF)^[l] w} :=
+      ⟨m, Nat.pos_of_ne_zero hm0, hmlt, hum⟩
+    rw [hsw] at hmem
+    rw [hivs] at hmem
+    exact hmem.1
+
+/-- 段 7a 的 twin 消费形：把 `HKIRPEP_ALT_p37` 的整个结论（LA6 twin
+`Local_lemmas1.CARD_V_TWO_HAFL_CIRCLE` 链的输出）作为显式前提，加上 `V` 的
+`v`-轨道覆盖与 `AFF_IVS_RHO_NODE_EQQ` 的半锥等式，交出段 7a 的析取
+（标准三，不消费 sorry）。 -/
+private theorem w5cB4_mem_half_of_hkir
+    {V : Set V3} {FF : Set (V3 × V3)} {u v w : V3}
+    (huv : u ≠ v) (huw : u ≠ w)
+    (horb : ∃ n : ℕ, n < Set.ncard V ∧ u = (rhoNode1 FF)^[n] v)
+    (hivs : affGt ({0, v} : Set V3) {ivsRhoNode1 FF v} =
+      affGt ({0, w} : Set V3) {rhoNode1 FF w})
+    (hkir :
+      (∀ u' ∈ V \ {v, w}, interiorAngle1 0 FF u' = Real.pi) ∧
+      0 < interiorAngle1 0 FF v ∧
+      interiorAngle1 0 FF v ≤ Real.pi ∧
+      interiorAngle1 0 FF v = interiorAngle1 0 FF w ∧
+      ∃ i j : ℕ, i + j = Set.ncard V ∧ i < Set.ncard V ∧ i ≠ 0 ∧ i ≠ 1 ∧
+        w = (rhoNode1 FF)^[i] v ∧
+        {z | ∃ l, 0 < l ∧ l < i ∧ z = (rhoNode1 FF)^[l] v} =
+          affGt ({0, v} : Set V3) {rhoNode1 FF v} ∩ V ∧
+        j < Set.ncard V ∧ j ≠ 0 ∧ j ≠ 1 ∧
+        v = (rhoNode1 FF)^[j] w ∧
+        {z | ∃ l, 0 < l ∧ l < j ∧ z = (rhoNode1 FF)^[l] w} =
+          affGt ({0, v} : Set V3) {ivsRhoNode1 FF v} ∩ V) :
+    u ∈ affGt ({0, v} : Set V3) {rhoNode1 FF v} ∨
+      u ∈ affGt ({0, w} : Set V3) {rhoNode1 FF w} := by
+  obtain ⟨_, _, _, _, i, j, hij, _, _, _, hwi, hsv, _, _, _, _, hsw⟩ := hkir
+  exact w5cB4_mem_half_of_orbits (V := V) (FF := FF) (u := u) (v := v) (w := w)
+    huv huw horb hij hwi hsv hsw hivs
+
+/-- 半锥不含基点 `0`（基点只在支撑集里，`dot` 系数为 `0`）：非共线
+`{0, u, dir}` 下 `affGt {0,u} {dir}` 的点不等于 `0`（段 7b 的 `0 ∉ s`
+边条件）。 -/
+private theorem w5cB4_zero_ne_of_mem {u dir z : V3}
+    (hnc : ¬ Collinear ℝ ({(0 : V3), u, dir} : Set V3))
+    (hz : z ∈ affGt ({(0 : V3), u} : Set V3) {dir}) : z ≠ (0 : V3) := by
+  have h0u : (0 : V3) ≠ u :=
+    fun he => hnc (collinear3_of_eq (v := (0 : V3)) (w := u) (w1 := dir) he.symm)
+  have h0d : (0 : V3) ≠ dir :=
+    fun he => hnc (collinear3_pair_left (v0 := (0 : V3)) (v1 := u) (x := dir) he.symm)
+  have hud : u ≠ dir :=
+    fun he => hnc (collinear3_pair_right (v0 := (0 : V3)) (v1 := u) (x := dir) he.symm)
+  intro hz0
+  obtain ⟨t1, t2, t3, ht3, hsum, hze⟩ :=
+    w5cB_affGt_2_1_mp (x := (0 : V3)) (u := u) (v := dir) h0u h0d hud hz
+  have hlin : t2 • u + t3 • dir = (0 : V3) := by
+    have h' : (0 : V3) = t1 • (0 : V3) + t2 • u + t3 • dir := hz0.symm.trans hze
+    simpa using h'.symm
+  have ht3ne : t3 ≠ 0 := ne_of_gt ht3
+  have hdir : dir = (-(t2 / t3)) • u := by
+    have h1 : t3 • dir = (-t2) • u := by
+      rw [neg_smul, eq_neg_iff_add_eq_zero, add_comm]
+      exact hlin
+    refine w5cB_smul_left_cancel ht3ne ?_
+    have hcoef : t3 * (-(t2 / t3)) = -t2 := by
+      rw [mul_neg, mul_comm t3 (t2 / t3), div_mul_cancel₀ t2 ht3ne]
+    rw [h1, smul_smul, hcoef]
+  exact hnc ((collinear3_iff_smul (v := (0 : V3)) (w := u) (w1 := dir)
+    (Ne.symm h0u)).mpr ⟨-(t2 / t3), by simpa using hdir⟩)
+
+/-- 段 7b 的锥传递（`TOW_POINTS_IN_IMP_AFF_GT_SUBSET` 的直接消费）：两个像点
+落在同一半锥时，边像（二元集）生成的锥也落在该半锥。 -/
+private theorem w5cB4_cone_subset_of_half {x u dir a b : V3}
+    (hnc : ¬ Collinear ℝ ({x, u, dir} : Set V3))
+    (ha : a ∈ affGt ({x, u} : Set V3) {dir})
+    (hb : b ∈ affGt ({x, u} : Set V3) {dir})
+    (hxa : x ≠ a) (hxb : x ≠ b) :
+    affGt ({x} : Set V3) {a, b} ⊆ affGt ({x, u} : Set V3) {dir} := by
+  have hxu : x ≠ u :=
+    fun he => hnc (collinear3_of_eq (v := x) (w := u) (w1 := dir) he.symm)
+  have hxd : x ≠ dir :=
+    fun he => hnc (collinear3_pair_left (v0 := x) (v1 := u) (x := dir) he.symm)
+  have hud : u ≠ dir :=
+    fun he => hnc (collinear3_pair_right (v0 := x) (v1 := u) (x := dir) he.symm)
+  refine TOW_POINTS_IN_IMP_AFF_GT_SUBSET_p37 ?_ ha hb ?_
+  · refine Set.disjoint_left.mpr ?_
+    intro q hq hqd
+    rw [Set.mem_singleton_iff] at hqd
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+    rcases hq with rfl | rfl
+    · exact hxd hqd
+    · exact hud hqd
+  · refine Set.disjoint_left.mpr ?_
+    intro q hq hqd
+    rw [Set.mem_singleton_iff] at hq
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hqd
+    rcases hqd with rfl | rfl
+    · exact hxa hq.symm
+    · exact hxb hq.symm
+
+/-- 段 7b 的边像步：若边 `x = {a,b}` 的两端点像都落在同一半锥
+`affGt {0,u} {dir}`，则该边像 `(f · t) '' x` 生成的锥也落在其中。 -/
+private theorem w5cB4_cone_image_edge {t : ℝ} {f : V3 → ℝ → V3} {x : Set V3}
+    {a b u dir : V3}
+    (hx : x = {a, b})
+    (hnc : ¬ Collinear ℝ ({(0 : V3), u, dir} : Set V3))
+    (ha : f a t ∈ affGt ({(0 : V3), u} : Set V3) {dir})
+    (hb : f b t ∈ affGt ({(0 : V3), u} : Set V3) {dir}) :
+    affGt ({0} : Set V3) ((fun z => f z t) '' x) ⊆
+      affGt ({(0 : V3), u} : Set V3) {dir} := by
+  subst hx
+  have himg : (fun z => f z t) '' ({a, b} : Set V3) = ({f a t, f b t} : Set V3) := by
+    ext z
+    constructor
+    · rintro ⟨y, hy, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+      rcases hy with rfl | rfl <;> simp
+    · intro hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      rcases hz with rfl | rfl
+      · exact ⟨a, Or.inl rfl, rfl⟩
+      · exact ⟨b, Or.inr rfl, rfl⟩
+  rw [himg]
+  exact w5cB4_cone_subset_of_half (x := (0 : V3)) (u := u) (dir := dir) hnc ha hb
+    (Ne.symm (w5cB4_zero_ne_of_mem hnc ha)) (Ne.symm (w5cB4_zero_ne_of_mem hnc hb))
+
+/-- 段 8 的集合步：边锥落在半锥 `H` 内、且 `H` 与对侧仿射负锥不交时，
+边锥与 `affLt {0} {u'}` 不交（HOL 1533-1750 的 `SET_RULE` 收口形）。 -/
+private theorem w5cB4_disjoint_of_cone {s : Set V3} {u' : V3} {H : Set V3}
+    (hsub : affGt ({0} : Set V3) s ⊆ H)
+    (hdisj : H ∩ affLt ({0} : Set V3) {u'} = ∅) :
+    affGt ({0} : Set V3) s ∩ affLt ({0} : Set V3) {u'} = ∅ := by
+  refine Set.eq_empty_iff_forall_notMem.mpr ?_
+  intro z hz
+  have h1 : z ∈ H := hsub hz.1
+  have h2 : z ∈ H ∩ affLt ({0} : Set V3) {u'} := ⟨h1, hz.2⟩
+  rw [hdisj] at h2
+  exact (Set.notMem_empty z) h2
+
+/-- 段 7b 的边扫描：每条边经 `EDGE_IN_LOCAL_FAN_DET_RHO_NODE` 写成
+`{v', rho v'}`，两端点像同属一半时，边像锥落在那半（`hdet` 与 `hhalf`
+分别承接 LA5 的边 rho 形与 fan 侧分解，即 HOL 1018-1532 的物质前提）。 -/
+private theorem w5cB4_cover_of_edges
+    {e : ℝ} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {f : V3 → ℝ → V3} {u v w : V3}
+    (hdet : ∀ x ∈ E, ∃ v' ∈ V, x = {v', rhoNode1 FF v'})
+    (hncv : ¬ Collinear ℝ ({(0 : V3), v, rhoNode1 FF v} : Set V3))
+    (hncw : ¬ Collinear ℝ ({(0 : V3), w, rhoNode1 FF w} : Set V3))
+    (hhalf : ∀ t : ℝ, -e < t → t < e →
+      ∀ x ∈ E, ∀ v' ∈ V, x = {v', rhoNode1 FF v'} →
+        ((f v' t ∈ affGt ({0, v} : Set V3) {rhoNode1 FF v} ∧
+            f (rhoNode1 FF v') t ∈ affGt ({0, v} : Set V3) {rhoNode1 FF v}) ∨
+          (f v' t ∈ affGt ({0, w} : Set V3) {rhoNode1 FF w} ∧
+            f (rhoNode1 FF v') t ∈ affGt ({0, w} : Set V3) {rhoNode1 FF w}))) :
+    ∀ t : ℝ, -e < t → t < e → t ∈ Icc a b →
+      ∀ s : Set V3, s ∈ (fun s => (fun z => f z t) '' s) '' E →
+        affGt ({0} : Set V3) s ⊆ affGt ({0, v} : Set V3) {rhoNode1 FF v} ∨
+        affGt ({0} : Set V3) s ⊆ affGt ({0, w} : Set V3) {rhoNode1 FF w} := by
+  intro t ht1 ht2 _
+  rintro s ⟨x, hxE, rfl⟩
+  obtain ⟨v', hv'V, hx⟩ := hdet x hxE
+  rcases hhalf t ht1 ht2 x hxE v' hv'V hx with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · exact Or.inl (w5cB4_cone_image_edge (f := f) (t := t) hx hncv h1 h2)
+  · exact Or.inr (w5cB4_cone_image_edge (f := f) (t := t) hx hncw h1 h2)
+
+/-- 段 8 的装配接口：窗口内 (i) 每条边像锥落在 `v` 半或 `w` 半、(ii) 每半与
+每个像点的 `affLt {0}` 不交，则 `SUB_LUNAR_DEFORM_LEMMA` 的 `hsep` 成立，
+由分段 6（`w5cB3_lunar_window`）收口。前提 (i)/(ii) 精确承接段 7b/8 的
+HOL 输出（见 `DELIVERY.md` §2）。 -/
+private theorem w5cB4_lunar_of_cover
+    {a b e : ℝ} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {f : V3 → ℝ → V3} {u v w : V3}
+    (hl : Lunar v w V E) (huv : u ≠ v) (huw : u ≠ w)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+    (ha : a < 0) (hb : 0 < b) (he : 0 < e)
+    (hcover : ∀ t : ℝ, -e < t → t < e → t ∈ Icc a b →
+      ∀ s : Set V3, s ∈ (fun s => (fun z => f z t) '' s) '' E →
+        affGt ({0} : Set V3) s ⊆ affGt ({0, v} : Set V3) {rhoNode1 FF v} ∨
+        affGt ({0} : Set V3) s ⊆ affGt ({0, w} : Set V3) {rhoNode1 FF w})
+    (hdv : ∀ t : ℝ, -e < t → t < e → t ∈ Icc a b → ∀ u' : V3,
+      u' ∈ (fun z => f z t) '' V →
+        affGt ({0, v} : Set V3) {rhoNode1 FF v} ∩ affLt ({0} : Set V3) {u'} = ∅)
+    (hdw : ∀ t : ℝ, -e < t → t < e → t ∈ Icc a b → ∀ u' : V3,
+      u' ∈ (fun z => f z t) '' V →
+        affGt ({0, w} : Set V3) {rhoNode1 FF w} ∩ affLt ({0} : Set V3) {u'} = ∅) :
+    ∃ e' : ℝ, 0 < e' ∧ ∀ t : ℝ, -e' < t ∧ t < e' →
+      Lunar v w ((fun z => f z t) '' V) ((fun s => (fun z => f z t) '' s) '' E) := by
+  refine w5cB3_lunar_window (a := a) (b := b) (V := V) (E := E) (f := f)
+    (u := u) (v := v) (w := w) (e := e) hl huv huw hpin ha hb he ?_
+  intro t ht1 ht2 htIcc s hs u' hu'
+  rcases hcover t ht1 ht2 htIcc s hs with hsub | hsub
+  · exact w5cB4_disjoint_of_cone hsub (hdv t ht1 ht2 htIcc u' hu')
+  · exact w5cB4_disjoint_of_cone hsub (hdw t ht1 ht2 htIcc u' hu')
+
+/-- `SUB_LUNAR_DEFORM_LEMMA_p37` 的显式条件形：签名与目标逐字一致，另挂窗口
+半径 `d` 与段 7b/8 的两条 HOL 输出（边像锥落半、半锥与 `affLt` 不交）。
+target 体中 `d` 由分段 4/5 的 `w5cB3_affGt_window_all` 产出（其非共线前提
+`¬Collinear {0,v,u}` 属 own-sorry #16 的 `LOCAL_CONVEX_NOT_COLLINEAR` 链），
+产出后本件即给出目标的结论（标准三）。 -/
+private theorem w5cB4_SUB_LUNAR_DF_cond
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {f : V3 → ℝ → V3} {u v w : V3}
+    (_hV : V.Finite) (_hcf : ConvexLocalFan V E FF) (hl : Lunar v w V E)
+    (_hE : ∀ x ∈ E, x ⊆ V) (_hu0 : f u 0 = u) (_hcu : ContinuousAt (f u) 0)
+    (_hang : interiorAngle1 0 FF v < Real.pi) (ha : a < 0) (hb : 0 < b)
+    (_hu : u ∈ V) (huv : u ≠ v) (huw : u ≠ w)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+    (_haff : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, v, w, u} : Set V3))
+    (d : ℝ) (hd : 0 < d)
+    (hcover : ∀ t : ℝ, -d < t → t < d → t ∈ Icc a b →
+      ∀ s : Set V3, s ∈ (fun s => (fun z => f z t) '' s) '' E →
+        affGt ({0} : Set V3) s ⊆ affGt ({0, v} : Set V3) {rhoNode1 FF v} ∨
+        affGt ({0} : Set V3) s ⊆ affGt ({0, w} : Set V3) {rhoNode1 FF w})
+    (hdv : ∀ t : ℝ, -d < t → t < d → t ∈ Icc a b → ∀ u' : V3,
+      u' ∈ (fun z => f z t) '' V →
+        affGt ({0, v} : Set V3) {rhoNode1 FF v} ∩ affLt ({0} : Set V3) {u'} = ∅)
+    (hdw : ∀ t : ℝ, -d < t → t < d → t ∈ Icc a b → ∀ u' : V3,
+      u' ∈ (fun z => f z t) '' V →
+        affGt ({0, w} : Set V3) {rhoNode1 FF w} ∩ affLt ({0} : Set V3) {u'} = ∅) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      Lunar v w ((fun z => f z t) '' V) ((fun s => (fun z => f z t) '' s) '' E) :=
+  w5cB4_lunar_of_cover (a := a) (b := b) (e := d) (V := V) (E := E) (FF := FF)
+    (f := f) (u := u) (v := v) (w := w) hl huv huw hpin ha hb hd hcover hdv hdw
+
 /-! ## The SUB_LUNAR_DEFORM_LEMMA giant (source 528-1830) -/
 
 /-- HOL `SUB_LUNAR_DEFORM_LEMMA` (lunar_deform.hl:528): the lunar
