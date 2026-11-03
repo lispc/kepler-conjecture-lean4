@@ -13,7 +13,7 @@
 - **禁止任何 `lake` 子命令**；不触 `lean/.lake/`；不写 `/tmp/lfainteg/`、`/tmp/pm12_oleans`、`/tmp/orch_*`、`/tmp/lane_*`、其它车道的 scratch。
 - 编译只用 standalone：`LEAN_PATH=$(cat /tmp/lfainteg/asm_check/leanpath.txt) nice -n 19 script -q <log> lean <file>`（读日志先 `tr -d '\r'`；`grep 'declaration uses \`sorry\`'` 要带反引号）。探针单进程串行；探针报 olean 不存在 → 等 2 min 重试。`#print axioms` 用全名 `Kepler.Text.<name>`；本 Lean 4.32 在 `open Classical` 下把 `Classical.choice` 打印为 `choice`。
 - **禁 `open Classical`（含 `open Classical in` 局部形式）**；需可判定性用 `classical` tactic。目标文件头部若有遗留 `open … Classical`，不得效仿、不得再加。
-- **陈述冻结逐字**：目标定理的签名（含隐式/显���参数、docstring 前的 `set_option … in`）一字不改；单行 `:= sorry` 骨架则前缀逐字重现后接 `:= by`。新件零 sorry/admit/native_decide。`set_option … in` 放 docstring 之前。
+- **陈述冻结逐字**：目标定理的签名（含隐式/显式参数、docstring 前的 `set_option … in`）一字不改；单行 `:= sorry` 骨架则前缀逐字重现后接 `:= by`。新件零 sorry/admit/native_decide。`set_option … in` 放 docstring 之前。
 - **kit 只含整文件 RC=0 的内容**：修不完的件连同仅它们消费的助件移 `$S/Kit-draft-<lane-name>.lean`（禁 sorry 占位、禁进 kit），kit 中目标体恢复原 `sorry`。kit 头形 `diff --git a/lean/Kepler/Text/<File>.lean b/lean/Kepler/Text/<File>.lean` 仓相对双头，`git apply --stat` 只显示仓内路径，对 HEAD `git apply --check` PASS。
 - **零新 import**（确需则附 BFS 无环证明 + 全文件漂移核（import 前后 warning 谱面逐条一致 + ≥10 件既有件 `#print axioms` 零漂移）+ grep 新进闭包模块公开名与下游重名——同文件加 import **不是行为保持变换**）。
 - **搬债审计以 `docs/e2e-reachability-map.tsv` 地图行为准**（`grep <name>`，0 行 = 不在锥），不得以 import 闭包替代；体内新引用的每个 sorried 件都要查。
