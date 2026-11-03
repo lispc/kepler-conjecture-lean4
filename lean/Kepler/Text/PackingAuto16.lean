@@ -102,8 +102,10 @@ HOL sources:
   `KIZHLTL1` proof of this file also discharges the wave-2 scout's pieces 1-4
   without needing `IsOpen (voronoi_open)`. KIZHLTL4 discharged (wave 3,
   2026-09-30): the edge-dihedral capstone, consuming PA15's three ★ stars
-  (`DIHX_SYM` / `FINITE_EDGE_X2` / `SUM_PAIR_2_SET`) + PA2 `GRUTOTI1_concl`
-  directly (see its docstring; `MCELL_SUBSET_BALL_4`/`PACKING_BALL_BOUNDARY`
+  (`DIHX_SYM` / `FINITE_EDGE_X2` / `SUM_PAIR_2_SET`) + PA23 `GRUTOTI`
+  directly (re-pointed from the sorried PA2 `GRUTOTI1_concl` interface,
+  2026-11-04, lane grutoti1-d-w1; see its docstring;
+  `MCELL_SUBSET_BALL_4`/`PACKING_BALL_BOUNDARY`
   turned out unnecessary). Still sorried: `MCELL_SET_NOT_EMPTY`,
   `QZYZMJC`, `KIZHLTL3` (no HL proof exists).
 -/
@@ -114,6 +116,7 @@ import Kepler.Text.PackingAuto10
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto15
 import Kepler.Text.PackingAuto17
+import Kepler.Text.PackingAuto23
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -2016,14 +2019,15 @@ by the gammaX epsilon convention; the guard-form summand is `p16_gammaE`).
 Proof chain (port of the HL steps): cell-edge double sum reindexes over
 `T1` = pairs of `V ∩ ball 0 r` (filter + Fubini), restricts to `T2` (edges
 with `hl ≤ h0`; off-`T2` summands vanish because `lmfun` cuts off at `h0`),
-each `T2` edge contributes `2π · lmfun (radV e)` by `GRUTOTI1_concl` (the
-PackingAuto2 interface shim, discharged by PackingAuto23's `GRUTOTI`), and the
+each `T2` edge contributes `2π · lmfun (radV e)` by PackingAuto23's `GRUTOTI`
+(term re-pointed from the PA2 `GRUTOTI1_concl` interface, 2026-11-04), and the
 final unordered→ordered-pair comparison runs PA15 `SUM_PAIR_2_SET` + a
 product-set reindexing (`p16_setSum_prod`) + `radV {u,v} = hl [u,v]`
 (`HL_2`). Consumed upstream pieces: PA15 `FINITE_MCELL_SET_LEMMA`,
 `FINITE_EDGE_X2` / `DIHX_SYM` / `SUM_PAIR_2_SET` (the three ★ stars — consumed
 directly since PackingAuto15 is imported; the parallel lane's proofs land
-in-place, no `_p16` copies needed), PA10 `HDTFNFZ`, PA2 `GRUTOTI1_concl`.
+in-place, no `_p16` copies needed), PA10 `HDTFNFZ`, PA23 `GRUTOTI` (re-pointed
+from the PA2 `GRUTOTI1_concl` interface, 2026-11-04).
 `0 ≤ mm2` is re-derived locally (`p16_mm2_nonneg`, exact triple-angle
 algebra) because PA19's `ZERO_LE_MM2_LEMMA` lives downstream (PA19 imports
 this file). NOT needed (contrary to the earlier header estimate):
@@ -2225,7 +2229,7 @@ theorem KIZHLTL4 : ∀ V : Set V3, ∃ c : ℝ, ∀ r : ℝ, saturated V → Pac
         p16_setSumCongr
           (fun X _ => mul_comm (dihX V X (m, n)) (lmfun (hl [m, n]))),
         p16_setSum_lmull hXfin (lmfun (hl [m, n])) (fun X => dihX V X (m, n)),
-        GRUTOTI1_concl V m n {m, n} hs hp hm.1 hn.1 hne
+        GRUTOTI V m n {m, n} hs hp hm.1 hn.1 hne
           (by rw [HL_2]; linarith [H0_LT_SQRT2, hdist]) rfl,
         p16_radV_pair m n]
       ring
