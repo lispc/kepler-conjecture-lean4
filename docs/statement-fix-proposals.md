@@ -5903,3 +5903,35 @@ theorem azim_real_continuous_on_p14 (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
 ### (f) 状态
 
 **立案 + 应用 2026-11-03 上午**（同 §95 授权，分级 A：HOL 注释块实锚 + 完整反例 + 消费者 0）。归档 patch `docs/statement-fix-proposals-patches/96-la14-azim-cycle-neg2-delete.patch`；STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto14.lean THM=NONPLANAR_OPEN_p14 SF_ITEM=96`。
+
+## 97. LA27 `SCS_M_EQ_1_p27`（HEAD :527）方向倒置 ⟹ 与 HOL `SCS_M_EQ_1`（JLXFDMJ.hl:159）异形且**为假**（scsgeneric-recon 机检反例）；重铸为 HOL 正本形并直接真证
+
+### (a) HOL 裁决
+
+`lean/scripts/local/JLXFDMJ.hl:159`：`scs_M s = {x} /\ is_scs_v39 s ==> (!i. ~(i MOD scs_k_v39 s = x) ==> scs_b_v39 s i (SUC i) <= &2 * h0 /\ scs_a_v39 s i (SUC i) = &2)`——**单钉 `scs_M s = {x}` 为前提，钉边结论为结论**。Lean 冻结形 `3 ≤ s.k → (∀ i, a < b) → isScsV39 s → i ∈ scsM s → (scsM s).ncard = 1` 把方向倒置成一般 `s` 的基数断言，HOL 无此命题。
+
+### (b) 为假的机理（scsgeneric-recon FIDELITY §2.2，`witness_scsmeq1.py` / `witness_out.txt`）
+
+k = 4，边 (a,b) = (2.5, 2.6) 于残基 0,1、(2.0, 2.1) 于残基 2,3，非边对 (2.5, 2.6)，J = False，unadorned，d = 0：前提全真（`3 ≤ k`、逐边 `a < b`、`isScsV39` 机检零违规含 ncard + 4 ≤ 6、`0 ∈ scsM s`），而 `scsM s = {0, 1}`，ncard = 2 ≠ 1。
+
+### (c) 修复陈述（HOL 逐字；并直接真证）
+
+```lean
+theorem SCS_M_EQ_1_p27 (s : ScsV39) (x : ℕ) :
+    scsM s = {x} → isScsV39 s →
+      ∀ i, ¬ (i % s.k = x) → s.b i (i + 1) ≤ 2 * h0 ∧ s.a i (i + 1) = 2
+```
+
+体 = `SCS_M_LE_1_p27`（已净，`ncard ≤ 1 → ∃ p, ∀ i, ¬(i % k = p % k) → …`）的单例实例：`{x}.ncard = 1 ≤ 1` 取 `p`，由 `x ∈ scsM s`（`x < k` 且 `2h0 < b ∨ 2 < a`）排除 `x ≠ p % k`（否则 `hp x` 给出 `b ≤ 2h0 ∧ a = 2` 矛盾），故 `x = p % k`，结论即 `hp i`。17 行，standalone 探针 `[propext, choice, Quot.sound]`。参数 `(i : ℕ)` 改为 `(x : ℕ)`；DISCHARGES 旧注记（「V{0,1,2} 档案单元」）删除；净 +21/−8，**LA27 own-sorry 6 → 5（陈述修正后真证，不计原假陈述的"闭合"）**。
+
+### (d) 消费面
+
+全树 grep `SCS_M_EQ_1_p27`：仅 LA27 自身（声明 + 文件头 §C 清单注记「JLXFDMJ_p27 (sorry; NEEDS SCS_M_EQ_1_p27)」）；`JLXFDMJ_p27` 体为 `sorry`，不受影响；地图 0 行。recon 注：JLXFDMJ 的钉边结论实际由 `SCS_M_LE_1_p27` 直接供出。
+
+### (e) 极小性
+
+HOL 逐字形；结论不加强、前提不多加。
+
+### (f) 状态
+
+**立案 + 应用 2026-11-03 中午**（编排者依常态化授权批 A 级：HOL 逐字锚 + 机检反例 + 消费者 0；用户 2026-11-03「不反对」）。归档 patch `docs/statement-fix-proposals-patches/97-la27-scs-m-eq-1-hol-form.patch`；STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto27.lean THM=SCS_M_EQ_1_p27 SF_ITEM=97`（rule 5 对修后件本身：标准三）。
