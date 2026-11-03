@@ -114,6 +114,31 @@
   （验证车道 `pa25-b0-replay` 判决 GO，编排者过闸）。批 2 另两条（PA16 `QZYZMJC` /
   PA2 `GRUTOTI1_concl`）在飞，落库后预计 112 → 110。
 
+### 基线 E：S1 接线波 + QZYZMJC 闭合（`ebe0d0b7` + `2dea72f0`）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH | **2,079,707**（较基线 D **+1,061**） |
+| K_SORRIED | **135**（wiring 显形 +24 真实债；QZYZMJC 闭合 −1） |
+| K_AXIOM | **624（护栏不动）** |
+| K_MODULES | 4,179（+8，树广度） |
+| K_UNIVERSE | 2,094,333 |
+| COVERAGE | 99.29%（2,079,707 / 2,094,333） |
+
+- **S1 `localconcl-wiring-w1`**（`ebe0d0b7`）：LocalConcl 新增聚合 capstone
+  `localconcl_wire_capstone_w1`（47 条 twin-body `*_discharged` 根逐字合取，top3
+  GSXRFWM/JKQEWGV2/JKQEWGV3 全接入；21 条裸 sorry HOLD 桩按 LEDGER 留下）+ Assembly
+  `textCapstone` 一行 rewire。**SORRIED 112 → 135 是设计内收益**（树越大越好口径）：24 条
+  锥外 discharged 债显形为锥内直源，逐根新直源表在 lane DELIVERY §4，锚 = 各出口
+  docstring + LocalConcl LEDGER (c)/(d)。
+- **`pa16-qzyzmjc`**（`2dea72f0`）：`QZYZMJC` 真证出列（连带私有巨件 `mcellSetNotEmpty`
+  翻绿标准三）；axiom 面如实带 sorryAx（继承锥内既有链）。`GRUTOTI1_concl` 未闭合
+  （Lane-draft 归档，见 `docs/lane-archives/pa2-grutoti1-concl/`）。
+- **仪器事故与修复**（queue 续 261 详载）：Assembly 级模块闸 `lake build Kepler.Assembly`
+  会触发 Interval.Cases shard 全量重编（几千文件）——闸被掐后遗留 12 个 shard olean 缺失；
+  修复 = 6 路并行独立 `lean -o` 重编（0 error）+ Assembly.olean 独立重建（c1 等价手核路线）。
+  **纪律新增：Assembly 级模块闸永久禁用。**
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
