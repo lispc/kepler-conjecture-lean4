@@ -223,6 +223,34 @@
   LocalConcl 重编通过；rule 1 一次撞「apply→gate 与并行 commit 的时序竞态」，
   commit 后重跑 PASS。
 
+### 基线 I：grutoti1-d-w1 `e561b60e`（GRUTOTI1 路线 (d)，cone +334 / SORRIED −1）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH（e2e 锥） | **2,080,274（较基线 H +334）** |
+| K_SORRIED | **134（−1：`GRUTOTI1_concl` 出锥）** |
+| K_AXIOM | **624（护栏不动）** |
+| K_MODULES | **4,180（+1：PA23 成为树可达模块）** |
+| K_UNIVERSE | 2,094,451（与 H 持平——基线 H 的 −197 异常未复现，仪器随访降级为观察项） |
+| UNION K_SORRIED_TOTAL | 171 → **170** |
+| ORPHANS_TOTAL | 13,129 → **13,130（+1 = `GRUTOTI1_concl` 本尊出锥后入孤儿账）** |
+
+- 落库（REWIRE 双闸：PA16 THM=`KIZHLTL4`、PA24 THM=`GRUTOTI1_concl_p24_pub`）：
+  PA2 `GRUTOTI1_concl`（PA2:5843，SORRIED 135 成员）的两处 term 消费者 re-point →
+  PA23 已证 capstone `GRUTOTI`——PA16:2229（KIZHLTL4 内，+1 import）+ PA24:13332
+  （shim，+1 import，NEEDS→DONE）。**KIZHLTL4 与 p24_pub 公理面 sorryAx → 恰标准三**
+  （其唯一 sorryAx 通路即 GRUTOTI1_concl，taint 源清空）；消费者清零验证；p24_pub
+  零消费者零触碰；PA2 零改动。PA24.olean 单独回灌（闸只编 $FILE 模块，不回灌则
+  地图读旧 shim——la35 课再验）。
+- **诚实修正**：预测 "~2,0xx 入锥" 实际 **+334**——GRUTOTI 子树大半闭包本就在锥内
+  （与基线 G 根闭包 2,149 的 union-fresh 口径差异同源）。+334 仍为今日最大单笔
+  （> la35 +233）。GRUTOTI1 saga 终章：PA2 路线 (a) 的 28K 行复制 kit 未走通的路，
+  消费者改线一行走通（PA24:13316 NEEDS 原文 "the parallel Auto23 lane owns the
+  proof (already proved)" 自证的等待）。
+- 遗留卫生项：PA2 的 `GRUTOTI1_concl` 死债声明（无消费者、SORRIED 账外）可由
+  卫生波删除（rule 2 裸 sorry 删除合法）；低优先。
+- viz 同代重建：17,452 节点（+334 逐位）/ 204 模块 / sorry=134。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
