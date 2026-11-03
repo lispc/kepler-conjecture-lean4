@@ -1,0 +1,38 @@
+diff --git a/lean/Kepler/Text/LocalAuto14.lean b/lean/Kepler/Text/LocalAuto14.lean
+index a2cbf68d..cf4c1e9b 100644
+--- a/lean/Kepler/Text/LocalAuto14.lean
++++ b/lean/Kepler/Text/LocalAuto14.lean
+@@ -1335,20 +1335,20 @@ theorem azim_pos_open_p14 (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
+       ¬ (azim 0 (v2 t') (v3 t') (v4 t') = 0) := by
+   sorry
+ 
+-/-- HOL `azim_real_continuous_on` (hl:1141).  W5c-A2 FINDING (2026-10-28):
+-the frozen Lean statement is FALSE for boundary points `t = a` or `t = b`
+-(contrary to the HOL original, whose `real_interval (t-e, t+e)` is the OPEN
+-interval).  Countermodel: `t = a`, the curves constant-nice on `[a, b]` and
+-redefined at one point `q0 < a` inside `[a-e, a+e]` (h1-h3 only constrain
+-`Icc a b`), making the azim function jump at `q0`.  Wave 3 must re-freeze
+-with `h4 : t ∈ Set.Ioo a b` (registry sign-off) before this can close;
+-the azim-continuity kit (cos/sin representation + arccos assembly) is
+-designed and ready in the wave-3 handoff note. -/
++/-- HOL `azim_real_continuous_on` (hl:1141).  SF-95 (2026-11-03): the four
++`real_interval (a,b)` hypotheses are OPEN intervals in HOL; the first
++rendering used `Set.Icc a b` and was FALSE at `t = a` / `t = b` (the window
++`Icc (t-e) (t+e)` leaves `[a, b]`, where h1-h3 say nothing — W5c-A2
++countermodel: curves constant-nice on `[a, b]`, redefined at one point
++`q0 < a`).  Re-frozen verbatim to HOL with `Set.Ioo a b`; the closed window
++in the conclusion is kept (stronger than HOL's open one, true for small
++`e`).  The azim-continuity kit (cos/sin representation + arccos assembly)
++is designed in the W5c-A2 handoff note. -/
+ theorem azim_real_continuous_on_p14 (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
+-    (h1 : ∀ x, x ∈ Set.Icc a b → ContinuousAt v2 x)
+-    (h2 : ∀ x, x ∈ Set.Icc a b → ContinuousAt v3 x)
+-    (h3 : ∀ x, x ∈ Set.Icc a b → ContinuousAt v4 x)
+-    (h4 : t ∈ Set.Icc a b)
++    (h1 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v2 x)
++    (h2 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v3 x)
++    (h3 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v4 x)
++    (h4 : t ∈ Set.Ioo a b)
+     (h5 : ¬ Collinear ℝ ({0, v2 t, v3 t} : Set V3))
+     (h6 : ¬ Collinear ℝ ({0, v2 t, v4 t} : Set V3))
+     (h7 : ¬ (azim 0 (v2 t) (v3 t) (v4 t) = 0)) :

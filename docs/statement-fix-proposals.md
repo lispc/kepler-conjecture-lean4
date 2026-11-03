@@ -5837,3 +5837,69 @@ theorem CLOSED_SY_cs {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ →
 
 **立案 + 应用 2026-11-02 上午**（编排者依 2026-11-02 常态化授权批，分级 A：HOL 逐字锚 + 机检 C3/C4 + W3 证明链实证 + 消费者普查齐备）。归档 patch `docs/statement-fix-proposals-patches/94-closed-sy-pinned-s-f.patch`（ClosedSyKit + LA18 + LA23 三段，应用态真实 `git diff` 生成）。闸 ×3（lean/ 下，`GATE_MODE=STATEMENT-FIX SF_PATCH=… SF_ITEM=94 LANE_FILES=Kepler/Text/ClosedSyKit.lean,Kepler/Text/LocalAuto18.lean,Kepler/Text/LocalAuto23.lean`）：ClosedSyKit THM=CLOSED_SY_cs；LA18 THM=CLOSED_SY_p18；LA23 THM=bodyClosed_p23。结果见 queue §8 续 205。
 
+
+## 95. LA14 `azim_real_continuous_on_p14`（HEAD :1347）四处 `Set.Icc a b` ⟹ 严格强于 HOL `azim_real_continuous_on`（ZLZTHIC.hl:1141，`real_interval(a,b)` 为**开**区间），端点实例 `t = a` / `t = b` 为假
+
+### (a) HOL 裁决
+
+`lean/scripts/local/ZLZTHIC.hl:1141-1148`：`!v2 v3 v4 t a b. (!x. x IN real_interval (a,b) ==> v2 continuous (atreal x)) /\ (… v3 …) /\ (… v4 …) /\ t IN real_interval(a,b) /\ ~collinear {vec 0, v2 t, v3 t} /\ ~collinear {vec 0, v2 t, v4 t} /\ ~(azim (vec 0) (v2 t) (v3 t) (v4 t) = &0) ==> (?e. &0 < e /\ (\q. azim (vec 0) (v2 q) (v3 q) (v4 q)) real_continuous_on (real_interval (t - e, t + e)))`。HOL Light `real_interval(a,b)`（圆括号）是开区间 `{x | a < x /\ x < b}`；`real_interval[a,b]`（方括号）才是闭。Lean 载体把 h1–h4 四处 `real_interval(a,b)` 全部渲染为 `Set.Icc a b`。
+
+### (b) 为假的机理（scsgeneric-w5cA2 DELIVERY §2.1，编排者复核 HOL 原文）
+
+取 `t = a`：结论要某 `e > 0` 使 `fun q => azim 0 (v2 q) (v3 q) (v4 q)` 在 `Icc (a-e) (a+e)` 上 ContinuousOn；但 h1–h3 只约束 `x ∈ Icc a b`，对 `(a-e, a)` 无任何约束——令三条曲线在 `[a,b]` 上为常值良好点、在 `(a-e, a)` 内某 `q0` 重定义成另一方位，则 azim 在 `q0` 跳跃，对所有 `e > 0` 失败。HOL 中 `t` 在开区间内部，取 `e < min (t-a) (b-t)` 即可把窗口收进 `(a,b)`。
+
+### (c) 修复陈述（逐字；h1–h4 四处 `Set.Icc a b` → `Set.Ioo a b`；结论面不动）
+
+```lean
+theorem azim_real_continuous_on_p14 (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
+    (h1 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v2 x)
+    (h2 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v3 x)
+    (h3 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v4 x)
+    (h4 : t ∈ Set.Ioo a b)
+    (h5 : ¬ Collinear ℝ ({0, v2 t, v3 t} : Set V3))
+    (h6 : ¬ Collinear ℝ ({0, v2 t, v4 t} : Set V3))
+    (h7 : ¬ (azim 0 (v2 t) (v3 t) (v4 t) = 0)) :
+    ∃ e : ℝ, 0 < e ∧
+      ContinuousOn (fun q => azim 0 (v2 q) (v3 q) (v4 q)) (Set.Icc (t - e) (t + e)) := by
+  sorry
+```
+
+结论保留 `Icc (t-e) (t+e)`（比 HOL 的开窗口略强；`t` 为内点、`e` 足够小时闭窗口 ⊂ `(a,b)`，仍真）。docstring 同步改为 SF-95 注记（替换 w5cA2 的 FINDING 段）。净 +13/−13 行，体 `sorry` 不动，own-sorry 不变。
+
+### (d) 消费面
+
+全树 grep `azim_real_continuous_on_p14`：仅 LA14 自身声明，**0 消费者**；`docs/e2e-reachability-map.tsv` 0 行。HOL 侧消费者（ZLZTHIC reduction hl:1418 / 主件 hl:3742 的 ε-窗口）在 W5c-A3 装配时按修后形取用。
+
+### (e) 极小性
+
+四处同改 `Ioo` 是 HOL 逐字。只改 h4 也能去假（h1–h3 保持 Icc 是比 HOL 强的前提，无害），但非逐字——取逐字形。
+
+### (f) 状态
+
+**立案 + 应用 2026-11-03 上午**（编排者依 2026-11-02 常态化授权批，分级 A：HOL 逐字锚 + 反例机理 + 消费者普查 0）。归档 patch `docs/statement-fix-proposals-patches/95-la14-azim-real-continuous-on-ioo.patch`；STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto14.lean THM=NONPLANAR_OPEN_p14 SF_ITEM=95`。
+
+## 96. LA14 `azim_cycle_neg2_p14`（HEAD :1936）移植自 ZLZTHIC.hl:2897 **OCaml 注释块内**的废弃尝试——HOL 从未证明、陈述为假（反例 `U = {v, w, 2•w}`）⟹ 删除声明
+
+### (a) HOL 裁决
+
+`lean/scripts/local/ZLZTHIC.hl:2896-2935`：`(* let azim_cycle_neg = prove_by_refinement( \`!U e v w. ~(U SUBSET {w}) /\ FINITE U /\ cyclic_set U (vec 0) e /\ v IN U /\ ~(e dot (v cross w) = &0) /\ azim_cycle U (vec 0) e v = w ==> azim_cycle U (vec 0) (-- e) w = v\` … (* COME BACK. TO HERE. still problems with degenerate cases. make azim progression condition on all of U *) *)`——整段位于 OCaml 注释 `(* … *)` 内，是作者放弃的重绑定尝试；活的 `azim_cycle_neg` 是 :2828（Lean `azim_cycle_neg_p14`），后文 :3030 `MATCH_MP_TAC azim_cycle_neg` 引用的正是它。LA14 文件头（:47-49）与 :1388 docstring 把注释块误读为「re-proved with stronger hypotheses」。
+
+### (b) 为假的机理（scsgeneric-w5cA2 DELIVERY §2.2）
+
+`U := {v, w, 2•w}`，取 `e` 使 `e ⬝ᵥ (v ×₃ w) ≠ 0`。`azimCycle_p14 U 0 e v = w`（`w` 与 `2•w` 方位平手，由投影范数破平手取 `w`）；而 `azimCycle_p14 U 0 (-e) w`：`azim 0 e (2•w) w = 0 < azim 0 e v w`，后继取 `2•w ≠ v`。`cyclicSet U 0 e`（U 与轴仿射包不交、无轴平行差）、`¬ U ⊆ {w}`、`U.Finite`、`v ∈ U` 全部成立而结论假——正是 HOL 作者注释所指的同射线退化。
+
+### (c) 修复（删除声明；docstring 一并删；文件头注记改一处）
+
+删 LA14 :1923-1941（docstring 13 行 + 签名 4 行 + `sorry` + 空行），文件头 :47-49 的「proved twice … rebind is kept」改为「hl:2897 is an abandoned attempt inside an OCaml comment block … removed by SF-96」。净 +3/−20；own-sorry 34 → 33 **属陈述修正，不计闭合**。不加非退化前提重铸：HOL 无对应活件，zlz_* 消费链只用 :2828 版。
+
+### (d) 消费面
+
+全树 grep `azim_cycle_neg2_p14`：仅 LA14 自身（声明 + 文件头注记），**0 消费者**；地图 0 行。
+
+### (e) 极小性
+
+删除即最小。备选（w5cA2 选项 a）加 `∀ x ∈ U, e ⬝ᵥ (x ×₃ cyc x) ≠ 0` 前提归约到 `azim_cycle_neg_p14`——会留下一条 HOL 不存在的发明定理，违反忠实移植原则，不取。
+
+### (f) 状态
+
+**立案 + 应用 2026-11-03 上午**（同 §95 授权，分级 A：HOL 注释块实锚 + 完整反例 + 消费者 0）。归档 patch `docs/statement-fix-proposals-patches/96-la14-azim-cycle-neg2-delete.patch`；STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto14.lean THM=NONPLANAR_OPEN_p14 SF_ITEM=96`。
