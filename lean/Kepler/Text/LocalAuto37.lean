@@ -953,6 +953,360 @@ theorem AZIM_PI_LEMMA_p37 {u v x y a : V3} {s : Set V3}
     rw [hc2]
     linarith
 
+/-! ## w5cB3 kit (W5c-B 第三波): `SUB_LUNAR_DEFORM_LEMMA` 分段 1–6
+
+HOL 源 `lunar_deform.hl:528-1830` 按消费点切段；本区承载前六段（全部净证）。
+剩余段的划分图与下波工单见 `DELIVERY.md` §5。 -/
+
+/-- 分段 1（HOL `lunar_deform.hl:556-640`，SUB_LUNAR 首个子目标）：
+`t ∈ Icc a b` 时形变钉住 `v, w`（`u ≠ v, u ≠ w` + `hpin`），故
+`{v, w}` 仍在形变像 `(f · t) '' V` 中，且 `v ≠ w` 保持（`Lunar`）。 -/
+private theorem w5cB3_image_preserves_lunar
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {f : V3 → ℝ → V3} {u v w : V3}
+    (hl : Lunar v w V E) (huv : u ≠ v) (huw : u ≠ w)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u') :
+    ∀ t ∈ Icc a b, f v t = v ∧ f w t = w ∧
+      ({v, w} ⊆ (fun z => f z t) '' V) ∧ v ≠ w := by
+  obtain ⟨-, hVsub, hvw, -⟩ := hl
+  have hvV : v ∈ V := hVsub (by simp)
+  have hwV : w ∈ V := hVsub (by simp)
+  intro t ht
+  have hfv : f v t = v := hpin v hvV huv t ht
+  have hfw : f w t = w := hpin w hwV huw t ht
+  refine ⟨hfv, hfw, ?_, hvw⟩
+  intro z hz
+  rcases Set.mem_insert_iff.mp hz with heq | hz
+  · rw [heq]
+    exact ⟨v, hvV, hfv⟩
+  · rw [Set.mem_singleton_iff] at hz
+    rw [hz]
+    exact ⟨w, hwV, hfw⟩
+
+/-- 分段 2（HOL `lunar_deform.hl:648-700`，`Counting_spheres.pad2d3d_dropout_lemma`
+的显式版）：`x ⊆ V` 的形变像等于 `x \ {u}` 再按需换入 `f u t`。 -/
+private theorem w5cB3_image_sdiff
+    {a b : ℝ} {V : Set V3} {f : V3 → ℝ → V3} {u : V3}
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u') :
+    ∀ t ∈ Icc a b, ∀ x ⊆ V,
+      (fun z => f z t) '' x = (x \ {u}) ∪ (if u ∈ x then {f u t} else ∅) := by
+  intro t ht x hx
+  ext y
+  constructor
+  · rintro ⟨z, hz, rfl⟩
+    by_cases hzu : z = u
+    · subst hzu
+      rw [if_pos hz]
+      exact Set.mem_union_right _ (Set.mem_singleton _)
+    · have hfix : f z t = z := hpin z (hx hz) (Ne.symm hzu) t ht
+      change f z t ∈ (x \ {u}) ∪ (if u ∈ x then {f u t} else ∅)
+      rw [hfix]
+      exact Set.mem_union_left _ ⟨hz, hzu⟩
+  · intro hy
+    rw [Set.mem_union] at hy
+    rcases hy with hy | hy
+    · refine ⟨y, hy.1, ?_⟩
+      exact hpin y (hx hy.1) (fun he => hy.2 (by rw [he]; simp)) t ht
+    · by_cases hux : u ∈ x
+      · rw [if_pos hux] at hy
+        rw [Set.mem_singleton_iff] at hy
+        exact ⟨u, hux, hy.symm⟩
+      · rw [if_neg hux] at hy
+        exact absurd hy (Set.notMem_empty y)
+
+/-- 分段 2 特例（HOL `lunar_deform.hl:666-690`）：`V` 的像 = `V \ {u}` 换入 `f u t`。 -/
+private theorem w5cB3_image_V_eq
+    {a b : ℝ} {V : Set V3} {f : V3 → ℝ → V3} {u : V3}
+    (hu : u ∈ V)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u') :
+    ∀ t ∈ Icc a b, (fun z => f z t) '' V = insert (f u t) (V \ {u}) := by
+  intro t ht
+  have h := w5cB3_image_sdiff (a := a) (b := b) (V := V) (f := f) (u := u) hpin
+    t ht (x := V) (Set.Subset.refl V)
+  rw [h, if_pos hu, Set.union_singleton]
+
+/-- 分段 3（HOL `lunar_deform.hl:700-760`）：分离窗口 `hsep`（`DISJTINCT_PROPERTY`
+输出形）下，`V` 内 2 元集的形变像仍是 2 元集（边像保基数）。 -/
+private theorem w5cB3_image_ncard_two
+    {a b : ℝ} {V : Set V3} {f : V3 → ℝ → V3} {u : V3} {e : ℝ}
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+    (hsep : ∀ t u', -e < t ∧ t < e ∧ u' ∈ V ∧ u' ≠ u → f u t ≠ f u' t) :
+    ∀ t ∈ Icc a b, -e < t → t < e → ∀ x ⊆ V, x.Finite → x.ncard = 2 →
+      ((fun z => f z t) '' x).ncard = 2 := by
+  intro t ht hte1 hte2 x hx hxfin hx2
+  have hdrop := w5cB3_image_sdiff (a := a) (b := b) (V := V) (f := f) (u := u) hpin
+    t ht x hx
+  rw [hdrop]
+  by_cases hux : u ∈ x
+  · rw [if_pos hux, Set.union_singleton]
+    have hx1 : (x \ {u}).ncard = 1 := by
+      rw [Set.ncard_sdiff_singleton_of_mem hux, hx2]
+    have hnot : f u t ∉ x \ {u} := by
+      intro hmem
+      have hV' : f u t ∈ V := hx hmem.1
+      have hne : f u t ≠ u := hmem.2
+      have hfix : f (f u t) t = f u t := hpin (f u t) hV' (Ne.symm hne) t ht
+      exact (hsep t (f u t) ⟨hte1, hte2, hV', hne⟩) hfix.symm
+    rw [Set.ncard_insert_of_notMem hnot hxfin.sdiff, hx1]
+  · rw [if_neg hux, Set.union_empty]
+    have hxs : x \ {u} = x := by
+      ext y
+      exact ⟨fun hy => hy.1, fun hy => ⟨hy, fun h => hux (h ▸ hy)⟩⟩
+    rw [hxs, hx2]
+
+/-- 分段 4 助件：`affineSpan {0, v, u}` 的显式线性坐标
+（`affineCombination` 提取 → `Fin 3` 三槽拆分）。 -/
+private theorem w5cB3_affineSpan_triple_repr {x v u : V3}
+    (h : x ∈ (affineSpan ℝ ({0, v, u} : Set V3) : Set V3)) :
+    ∃ c1 c2 : ℝ, x = c1 • v + c2 • u := by
+  classical
+  let p : Fin 3 → V3 := fun j => if j = 0 then 0 else if j = 1 then v else u
+  have hrange : Set.range p = ({0, v, u} : Set V3) := by
+    ext z
+    constructor
+    · rintro ⟨j, rfl⟩
+      fin_cases j
+      · simp [p]
+      · simp [p]
+      · simp [p]
+    · intro hz
+      rcases Set.mem_insert_iff.mp hz with rfl | hz
+      · exact ⟨0, by simp [p]⟩
+      rcases Set.mem_insert_iff.mp hz with rfl | hz
+      · exact ⟨1, by simp [p]⟩
+      · rw [Set.mem_singleton_iff] at hz
+        exact ⟨2, by simp [p, hz]⟩
+  obtain ⟨s, W, hWsum, hxW⟩ :=
+    (mem_affineSpan_iff_eq_affineCombination ℝ V3 (p1 := x) (p := p)).mp (by
+      rw [hrange]; exact h)
+  have hlin : s.affineCombination ℝ p W = ∑ j ∈ s, W j • p j :=
+    s.affineCombination_eq_linear_combination p W hWsum
+  set W' : Fin 3 → ℝ := fun j => if j ∈ s then W j else 0 with hW'
+  have hstep1 : ∑ j ∈ s, W j • p j = ∑ j ∈ s, W' j • p j := by
+    refine Finset.sum_congr rfl ?_
+    intro j hj
+    rw [hW']
+    simp [hj]
+  have hstep2 : ∑ j ∈ s, W' j • p j = ∑ j : Fin 3, W' j • p j := by
+    refine Finset.sum_subset (Finset.subset_univ s) ?_
+    intro j _ hj
+    rw [hW']
+    simp [hj]
+  rw [Fin.sum_univ_three] at hstep2
+  refine ⟨W' 1, W' 2, ?_⟩
+  rw [hxW, hlin, hstep1, hstep2]
+  simp [p]
+
+/-- 分段 4（HOL `lunar_deform.hl:690-1020`）：`uh = u - ((u·v)/(v·v)) v` 连续窗口
+`d`；`|t| < d` 且 `t ∈ Icc a b` 时 `f u t ∈ affGt {0, v} {u}`（HOL 的
+`! t. --d < t /\ t < d /\ t IN real_interval (a,b) ==> f u t IN aff_gt {0,v} {u}`）。 -/
+private theorem w5cB3_affGt_window
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {f : V3 → ℝ → V3} {u v w : V3}
+    (hl : Lunar v w V E)
+    (hnc : ¬ Collinear ℝ ({0, v, u} : Set V3))
+    (hu0 : f u 0 = u) (hcu : ContinuousAt (f u) 0)
+    (haff : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, v, w, u} : Set V3)) :
+    ∃ d : ℝ, 0 < d ∧ ∀ t : ℝ, |t| < d → t ∈ Icc a b →
+      f u t ∈ affGt {0, v} {u} := by
+  have hcol : Collinear ℝ ({0, v, w} : Set V3) := hl.2.2.2
+  have h0v : (0 : V3) ≠ v := by
+    intro he
+    exact hnc (collinear3_of_eq (v := 0) (w := v) (w1 := u) he.symm)
+  have hv0 : v ≠ 0 := Ne.symm h0v
+  have huv : u ≠ v := by
+    intro he
+    apply hnc
+    have hset : ({0, v, u} : Set V3) = ({0, v} : Set V3) := by
+      rw [he]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ (0 : V3) v
+  have hu0' : u ≠ 0 := by
+    intro he
+    apply hnc
+    have hset : ({0, v, u} : Set V3) = ({0, v} : Set V3) := by
+      rw [he]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ (0 : V3) v
+  set c : ℝ := (u ⬝ᵥ v) / (v ⬝ᵥ v) with hc
+  set uh : V3 := u - c • v with huh
+  have hvv : v ⬝ᵥ v ≠ 0 := by
+    intro hzero
+    have h2 : ‖v‖ ^ 2 = (0 : ℝ) := by rw [norm_sq_eq_dot]; exact hzero
+    have h3 : ‖v‖ = 0 := (pow_eq_zero_iff (by norm_num : (2 : ℕ) ≠ 0)).mp h2
+    exact hv0 (norm_eq_zero.mp h3)
+  have hc_mul : c * (v ⬝ᵥ v) = u ⬝ᵥ v := by
+    rw [hc]
+    exact div_mul_cancel₀ _ hvv
+  have horth : uh ⬝ᵥ v = 0 := by
+    simp only [huh, WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct,
+      smul_dotProduct, smul_eq_mul]
+    rw [hc_mul, sub_self]
+  have horth' : v ⬝ᵥ uh = 0 := by rw [dotProduct_comm]; exact horth
+  have huhne : uh ≠ 0 := by
+    intro hzero
+    have hueq : u = c • v := by
+      have h1 : u - c • v = 0 := hzero
+      exact sub_eq_zero.mp h1
+    apply hnc
+    apply (collinear3_iff_smul (v := (0 : V3)) (w := v) (w1 := u) hv0).mpr
+    exact ⟨c, by rw [hueq]; simp⟩
+  have huhmem : uh ∈ affGt {0, v} {u} := by
+    rw [affGt_pair_iff (v0 := (0 : V3)) (v1 := v) (x := u) (y := uh) h0v hu0' huv]
+    refine ⟨1, one_pos, -c, ?_⟩
+    simp only [huh, one_smul, sub_zero]
+    module
+  obtain ⟨d, hd0, hd⟩ := Metric.continuousAt_iff.mp hcu ‖uh‖ (norm_pos_iff.mpr huhne)
+  refine ⟨d, hd0, ?_⟩
+  intro t htI htIcc
+  have hspan : (affineSpan ℝ ({0, v, w, u} : Set V3) : Set V3) =
+      affineSpan ℝ ({0, v, u} : Set V3) := by
+    have hwmem : w ∈ (affineSpan ℝ ({0, v} : Set V3) : Set V3) :=
+      hcol.mem_affineSpan_of_mem_of_ne (p₁ := (0 : V3)) (p₂ := v) (p₃ := w)
+        (by simp) (by simp) (by simp) h0v
+    have hwmem' : w ∈ (affineSpan ℝ ({0, v, u} : Set V3) : Set V3) := by
+      have hsub : ({0, v} : Set V3) ⊆ ({0, v, u} : Set V3) := by
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+        tauto
+      exact affineSpan_mono ℝ hsub hwmem
+    have hset : ({0, v, w, u} : Set V3) = insert w ({0, v, u} : Set V3) := by
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset, affineSpan_insert_eq_affineSpan ℝ hwmem']
+  obtain ⟨c1, c2, hrepr⟩ := w5cB3_affineSpan_triple_repr (v := v) (u := u) (x := f u t) (by
+    rw [← hspan]
+    exact haff t htIcc)
+  have hdist : dist (f u t) (f u 0) < ‖uh‖ := hd (by
+    rw [Real.dist_eq, sub_zero]
+    exact htI)
+  have hdist' : ‖f u t - f u 0‖ < ‖uh‖ := by
+    rw [dist_eq_norm] at hdist
+    exact hdist
+  have hnorm2 : ‖f u t - f u 0‖ ^ 2 < ‖uh‖ ^ 2 := by
+    nlinarith [norm_nonneg (f u t - f u 0), norm_nonneg uh]
+  have hdecomp : f u t - f u 0 = (c1 + c2 * c - c) • v + (c2 - 1) • uh := by
+    rw [hrepr, hu0]
+    have huu : u = uh + c • v := by
+      rw [huh]; abel
+    rw [huu]
+    module
+  have hinner : inner ℝ ((c1 + c2 * c - c) • v) ((c2 - 1) • uh) = 0 := by
+    rw [real_inner_smul_left, real_inner_smul_right, inner_eq_dot, horth']
+    ring
+  have hsq : ‖(c1 + c2 * c - c) • v + (c2 - 1) • uh‖ ^ 2
+      = ‖(c1 + c2 * c - c) • v‖ ^ 2 + ‖(c2 - 1) • uh‖ ^ 2 := by
+    have h := (norm_add_sq_eq_norm_sq_add_norm_sq_iff_real_inner_eq_zero
+      ((c1 + c2 * c - c) • v) ((c2 - 1) • uh)).mpr hinner
+    simpa [pow_two] using h
+  have hsmul1 : ‖(c1 + c2 * c - c) • v‖ ^ 2 = (c1 + c2 * c - c) ^ 2 * ‖v‖ ^ 2 := by
+    rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs]
+  have hsmul2 : ‖(c2 - 1) • uh‖ ^ 2 = (c2 - 1) ^ 2 * ‖uh‖ ^ 2 := by
+    rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs]
+  have hlt : (c1 + c2 * c - c) ^ 2 * ‖v‖ ^ 2 + (c2 - 1) ^ 2 * ‖uh‖ ^ 2 < ‖uh‖ ^ 2 := by
+    rw [← hsmul1, ← hsmul2, ← hsq, ← hdecomp]
+    exact hnorm2
+  have hc2pos : 0 < c2 := by
+    by_contra hcon
+    push_neg at hcon
+    have h1 : (1 : ℝ) ≤ (c2 - 1) ^ 2 := by
+      have hh : 0 ≤ c2 * (c2 - 2) := mul_nonneg_of_nonpos_of_nonpos (by linarith) (by linarith)
+      nlinarith
+    have h2 : 0 ≤ (c1 + c2 * c - c) ^ 2 * ‖v‖ ^ 2 :=
+      mul_nonneg (sq_nonneg _) (sq_nonneg _)
+    have h3 : 0 ≤ ‖uh‖ ^ 2 := sq_nonneg _
+    have h4 : ‖uh‖ ^ 2 ≤ (c2 - 1) ^ 2 * ‖uh‖ ^ 2 := by
+      calc ‖uh‖ ^ 2 = 1 * ‖uh‖ ^ 2 := (one_mul _).symm
+        _ ≤ (c2 - 1) ^ 2 * ‖uh‖ ^ 2 := mul_le_mul_of_nonneg_right h1 h3
+    linarith
+  rw [affGt_pair_iff (v0 := (0 : V3)) (v1 := v) (x := u) (y := f u t) h0v hu0' huv]
+  refine ⟨c2, hc2pos, c1, ?_⟩
+  rw [hrepr]
+  module
+
+/-- 分段 5 助件：`z ∈ affGt {0, v} {z}`（系数 `1 · z`；免互异）。 -/
+private theorem w5cB3_mem_affGt_self (z v : V3) : z ∈ affGt ({0, v} : Set V3) {z} := by
+  classical
+  have hfin : ({0, v} ∪ {z} : Set V3).Finite :=
+    ((Set.finite_singleton v).insert 0).union (Set.finite_singleton z)
+  have hz : z ∈ hfin.toFinset := by
+    rw [Set.Finite.mem_toFinset]
+    exact Set.mem_union_right _ (Set.mem_singleton z)
+  refine ⟨fun w => if w = z then 1 else 0, hfin, ?_, ?_, ?_⟩
+  · rw [Finset.sum_eq_single z]
+    · simp
+    · intro c _ hc
+      simp [hc]
+    · intro hznot
+      exact absurd hz hznot
+  · intro w hw
+    rw [Set.mem_singleton_iff] at hw
+    subst hw
+    simp
+  · rw [Finset.sum_eq_single z]
+    · simp
+    · intro c _ hc
+      simp [hc]
+    · intro hznot
+      exact absurd hz hznot
+
+/-- 分段 5（HOL `lunar_deform.hl:999-1017`）：窗口内 `V` 的每个顶点 `u'` 满足
+`f u' t ∈ affGt {0, v} {u'}`（`u' ≠ u` 用钉住，`u' = u` 用分段 4）。 -/
+private theorem w5cB3_affGt_window_all
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {f : V3 → ℝ → V3} {u v w : V3}
+    (hl : Lunar v w V E)
+    (hnc : ¬ Collinear ℝ ({0, v, u} : Set V3))
+    (hu0 : f u 0 = u) (hcu : ContinuousAt (f u) 0)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+    (haff : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, v, w, u} : Set V3)) :
+    ∃ d : ℝ, 0 < d ∧ ∀ t : ℝ, |t| < d → t ∈ Icc a b → ∀ u' ∈ V,
+      f u' t ∈ affGt ({0, v} : Set V3) {u'} := by
+  obtain ⟨d, hd0, hd⟩ := w5cB3_affGt_window (a := a) (b := b) (V := V) (E := E)
+    (f := f) (u := u) (v := v) (w := w) hl hnc hu0 hcu haff
+  refine ⟨d, hd0, ?_⟩
+  intro t ht htIcc u' hu'
+  by_cases hzu : u' = u
+  · subst hzu
+    exact hd t ht htIcc
+  · have hfix : f u' t = u' := hpin u' hu' (Ne.symm hzu) t htIcc
+    rw [hfix]
+    exact w5cB3_mem_affGt_self u' v
+
+private theorem w5cB3_lunar_window
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {f : V3 → ℝ → V3} {u v w : V3} {e : ℝ}
+    (hl : Lunar v w V E) (huv : u ≠ v) (huw : u ≠ w)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+    (ha : a < 0) (hb : 0 < b) (he : 0 < e)
+    (hsep : ∀ t, -e < t → t < e → t ∈ Icc a b →
+      ∀ s : Set V3, s ∈ (fun s => (fun z => f z t) '' s) '' E →
+        ∀ u' : V3, u' ∈ (fun z => f z t) '' V →
+        affGt ({0} : Set V3) s ∩ affLt ({0} : Set V3) {u'} = ∅) :
+    ∃ e' : ℝ, 0 < e' ∧ ∀ t : ℝ, -e' < t ∧ t < e' →
+      Lunar v w ((fun z => f z t) '' V) ((fun s => (fun z => f z t) '' s) '' E) := by
+  refine ⟨min (min (-a) b) e, ?_, ?_⟩
+  · exact lt_min (lt_min (by linarith) hb) he
+  · intro t ht
+    have hle1 : min (min (-a) b) e ≤ e := min_le_right _ _
+    have hle2 : min (min (-a) b) e ≤ -a := le_trans (min_le_left _ _) (min_le_left _ _)
+    have hle3 : min (min (-a) b) e ≤ b := le_trans (min_le_left _ _) (min_le_right _ _)
+    have hte1 : -e < t := by linarith [ht.1]
+    have hte2 : t < e := by linarith [ht.2]
+    have hta : a ≤ t := by linarith [ht.1]
+    have htb : t ≤ b := by linarith [ht.2]
+    have htIcc : t ∈ Icc a b := ⟨hta, htb⟩
+    obtain ⟨hfv, hfw, hsub, hvw⟩ := w5cB3_image_preserves_lunar (a := a) (b := b)
+      (V := V) (E := E) (f := f) (u := u) (v := v) (w := w) hl huv huw hpin t htIcc
+    refine ⟨?_, hsub, hvw, hl.2.2.2⟩
+    intro hcirc
+    unfold Circular at hcirc
+    obtain ⟨v', w', u', hE, hV, hne⟩ := hcirc
+    exact hne (hsep t hte1 hte2 htIcc {v', w'} hE u' hV)
+
 /-! ## The SUB_LUNAR_DEFORM_LEMMA giant (source 528-1830) -/
 
 /-- HOL `SUB_LUNAR_DEFORM_LEMMA` (lunar_deform.hl:528): the lunar
