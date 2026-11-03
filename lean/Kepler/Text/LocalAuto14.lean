@@ -44,9 +44,9 @@ ENCODING NOTES
     `i ∈ Set.Icc 1 (r+1)`; HOL `pairwise P (m..n)` ↔
     `Set.Pairwise (Set.Icc m n) P`; HOL `(\(i,j,k). g i j k) = dh` is
     rendered pointwise `∀ i j k, g i j k = dh (i, j, k)`.
-  - Source duplicate: `azim_cycle_neg` is proved twice (hl:2828, hl:2897,
-    the second re-binds the name); the rebind is kept as
-    `azim_cycle_neg2_p14`.  hl:2964 has a commented-out hypothesis
+  - Source duplicate: `azim_cycle_neg` appears twice (hl:2828 live; hl:2897
+    is an abandoned attempt inside an OCaml comment block, never proved and
+    false — its port was removed by SF-96).  hl:2964 has a commented-out hypothesis
     (`// &0 < ...`), kept out of `XIV_ECAU_BACK_p14`.
   - DISCHARGES convention: the terminal theorem `ZLZTHIC_p14`
     shape-matches `ZLZTHIC_concl` (LocalAuto1, appendix.hl:45); a later
@@ -1919,23 +1919,6 @@ three `¬ Collinear3`); route = minimality `A ≤ azim 0 e v q`,
 theorem azim_cycle_neg_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite) (h2 : v ∈ U)
     (h3 : azimCycle_p14 U 0 e v = w)
     (h4 : ∀ x ∈ U, e ⬝ᵥ (cross3 x (azimCycle_p14 U 0 e x)) ≠ 0) :
-    azimCycle_p14 U 0 (-e) w = v := by
-  sorry
-
-/-- HOL `azim_cycle_neg` re-proved (hl:2897; the source re-binds the name
-with stronger hypotheses).  W5c-A2 FINDING (2026-10-28): the statement is
-FALSE as frozen (the HOL block at hl:2897 is the commented-out abandoned
-attempt, and the abandonment is justified).  Countermodel: `U := {v, w, 2•w}`
-with `e •ᵕ (v ×₃ w) ≠ 0`, `cyc(e; v) = w` (the azim-tie against `2•w` is
-broken by the projection tiebreak), and `cyc(-e; w) = 2•w` because
-`azim 0 e (2•w) w = 0 < A = azim 0 e v w`; the -e-cycle successor of `w` is
-`2•w ≠ v`.  All hypotheses (including `cyclicSet U 0 e`: no element on the
-axis line, no axis-parallel differences) hold.  Wave 3 options: (a) add the
-nondegeneracy `∀ x ∈ U, e •ᵕ (x ×₃ cyc(x)) ≠ 0` (reducing to
-`azim_cycle_neg_p14`), or (b) formalize the refutation. -/
-theorem azim_cycle_neg2_p14 (U : Set V3) (e v w : V3) (h1 : ¬ (U ⊆ {w}))
-    (h2 : U.Finite) (h3 : cyclicSet U 0 e) (h4 : v ∈ U)
-    (h5 : e ⬝ᵥ (cross3 v w) ≠ 0) (h6 : azimCycle_p14 U 0 e v = w) :
     azimCycle_p14 U 0 (-e) w = v := by
   sorry
 
