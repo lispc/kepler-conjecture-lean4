@@ -145,6 +145,444 @@ theorem CONS_IMP_CONTINUOUS_ATREAL_p37 {a b : ℝ} {f : ℝ → V3} {u : V3}
   intro t ht
   exact (continuous_const.continuousWithinAt).congr (fun y hy => h y hy) (h t ht)
 
+/-! ## w5cB2 kit (W5c-B 第二波): `Affsign` coefficient bookkeeping -/
+
+/-- 实数左消去（ℝ-模上 `s • p = s • q → p = q`）。 -/
+private theorem w5cB_smul_left_cancel {s : ℝ} (hs : s ≠ 0) {p q : V3} (h : s • p = s • q) :
+    p = q := by
+  have h2 : s • (p - q) = (0 : V3) := by rw [smul_sub, h, sub_self]
+  rcases smul_eq_zero.mp h2 with h' | h'
+  · exact absurd h' hs
+  · exact sub_eq_zero.mp h'
+
+private theorem w5cB_evsub (z w : V3) : z -ᵥ w = z - w := rfl
+
+private theorem w5cB_evadd (p v : V3) : p +ᵥ v = p + v := rfl
+
+/-- 三槽存在形：finset 元素都落在 `{u, v, w}` 时，和可拆成三系数形。 -/
+private theorem w5cB_finset3_sum (u v w : V3) {F : Finset V3} {c : V3 → ℝ}
+    (hF : ∀ x ∈ F, x = u ∨ x = v ∨ x = w) :
+    ∃ t1 t2 t3 : ℝ, (∑ x ∈ F, c x • x) = t1 • u + t2 • v + t3 • w ∧
+      ∑ x ∈ F, c x = t1 + t2 + t3 := by
+  classical
+  induction F using Finset.induction with
+  | empty => exact ⟨0, 0, 0, by simp, by simp⟩
+  | insert a F ha ih =>
+      obtain ⟨e1, e2, e3, hv, hs⟩ :=
+        ih (fun x hx => hF x (Finset.mem_insert_of_mem hx))
+      have ha3 := hF a (Finset.mem_insert_self a F)
+      rcases ha3 with he | he | he
+      · have hca : c a • a = c a • u := by rw [he]
+        refine ⟨e1 + c a, e2, e3, ?_, ?_⟩
+        · rw [Finset.sum_insert ha, hv, add_smul, hca]
+          abel
+        · rw [Finset.sum_insert ha]
+          linarith
+      · have hca : c a • a = c a • v := by rw [he]
+        refine ⟨e1, e2 + c a, e3, ?_, ?_⟩
+        · rw [Finset.sum_insert ha, hv, add_smul, hca]
+          abel
+        · rw [Finset.sum_insert ha]
+          linarith
+      · have hca : c a • a = c a • w := by rw [he]
+        refine ⟨e1, e2, e3 + c a, ?_, ?_⟩
+        · rw [Finset.sum_insert ha, hv, add_smul, hca]
+          abel
+        · rw [Finset.sum_insert ha]
+          linarith
+
+/-- 双点 lineMap 组合：`s • a + t • b`（`s + t ≠ 0`）。 -/
+private theorem w5cB_lineMap_pair_smul (a b : V3) {s t : ℝ} (hst : s + t ≠ 0) :
+    s • a + t • b = (s + t) • (AffineMap.lineMap a b (t / (s + t))) := by
+  have hmd : (s + t) * (t / (s + t)) = t := by
+    field_simp
+  rw [AffineMap.lineMap_apply, w5cB_evsub, w5cB_evadd, smul_add, smul_smul, hmd, smul_sub]
+  module
+
+/-- 三点系数组合入三点仿射包（direction-法，同 LuneVolume 惯例；无需互异）。 -/
+private theorem w5cB2_line3_mem {p q r : V3} (a b c : ℝ) (hsum : a + b + c = 1) :
+    (a • p + b • q + c • r) ∈ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := by
+  have hpS : p ∈ affineSpan ℝ ({p, q, r} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hqS : q ∈ affineSpan ℝ ({p, q, r} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hrS : r ∈ affineSpan ℝ ({p, q, r} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hd3 : b • (q - p) ∈ (affineSpan ℝ ({p, q, r} : Set V3)).direction :=
+    Submodule.smul_mem _ b (AffineSubspace.vsub_mem_direction hqS hpS)
+  have hd4 : c • (r - p) ∈ (affineSpan ℝ ({p, q, r} : Set V3)).direction :=
+    Submodule.smul_mem _ c (AffineSubspace.vsub_mem_direction hrS hpS)
+  have hd5 : b • (q - p) + c • (r - p) ∈ (affineSpan ℝ ({p, q, r} : Set V3)).direction :=
+    Submodule.add_mem _ hd3 hd4
+  have hval2 : (a • p + b • q + c • r) -ᵥ p = b • (q - p) + c • (r - p) := by
+    rw [w5cB_evsub, show a = 1 - b - c from by linarith, sub_smul, sub_smul]
+    module
+  rw [← vsub_vadd (a • p + b • q + c • r) p, hval2]
+  exact AffineSubspace.vadd_mem_of_mem_direction hd5 hpS
+
+/-- 三点系数和为 1 的组合落在三点仿射包内。 -/
+private theorem w5cB_affine3_mem_affineSpan (u v w : V3) (t1 t2 t3 : ℝ)
+    (hsum : t1 + t2 + t3 = 1) :
+    (t1 • u + t2 • v + t3 • w) ∈ (affineSpan ℝ ({u, v, w} : Set V3) : Set V3) :=
+  w5cB2_line3_mem t1 t2 t3 hsum
+
+/-- 三点并集（两基点 + 一锥点）的 toFinset 标量和分解。 -/
+private theorem w5cB2_pus3_sum {f : V3 → ℝ} {a b c : V3} (hab : a ≠ b)
+    (hca : c ≠ a) (hcb : c ≠ b) (hfin : ({a, b} ∪ {c} : Set V3).Finite) :
+    ∑ w ∈ hfin.toFinset, f w = f a + f b + f c := by
+  have h3 : hfin.toFinset = ({a, b, c} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [h3, Finset.sum_insert (by simp [hab, Ne.symm hca]),
+    Finset.sum_insert (by simp [Ne.symm hcb]), Finset.sum_singleton]
+  ring
+
+/-- 三点并集（两基点 + 一锥点）的 toFinset 向量和分解。 -/
+private theorem w5cB2_pus3_v {f : V3 → ℝ} {a b c : V3} (hab : a ≠ b)
+    (hca : c ≠ a) (hcb : c ≠ b) (hfin : ({a, b} ∪ {c} : Set V3).Finite) :
+    ∑ w ∈ hfin.toFinset, f w • w = f a • a + f b • b + f c • c := by
+  have h3 : hfin.toFinset = ({a, b, c} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [h3, Finset.sum_insert (by simp [hab, Ne.symm hca]),
+    Finset.sum_insert (by simp [Ne.symm hcb]), Finset.sum_singleton]
+  abel
+
+/-- `affGt {x} {u, v}` 的三系数形（AFF_GT_1_2 提取向）。 -/
+private theorem w5cB_affGt_1_2_mp {x u v z : V3} (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v)
+    (h : z ∈ affGt {x} {u, v}) :
+    ∃ t1 t2 t3 : ℝ, 0 < t2 ∧ 0 < t3 ∧ t1 + t2 + t3 = 1 ∧ z = t1 • x + t2 • u + t3 • v := by
+  obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+  refine ⟨f x, f u, f v, hpos u (Set.mem_insert u ({v} : Set V3)),
+    hpos v (Set.mem_insert_of_mem u (Set.mem_singleton v)), ?_, ?_⟩
+  · rw [sum_insert_pair_s (x := x) (v := u) (u := v) hfin hxu hxv huv] at hone
+    linarith
+  · rw [sum_insert_pair_v (x := x) (v := u) (u := v) hfin hxu hxv huv] at hsumv
+    rw [hsumv]
+
+/-- 三系数形构造回 `affGt {x} {u, v}`（AFF_GT_1_2 构造向）。 -/
+private theorem w5cB_affGt_1_2_mpr {x u v z : V3} (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v)
+    {t1 t2 t3 : ℝ} (ht2 : 0 < t2) (ht3 : 0 < t3) (hsum : t1 + t2 + t3 = 1)
+    (hz : z = t1 • x + t2 • u + t3 • v) :
+    z ∈ affGt {x} {u, v} :=
+  Affsign.of_triple (sgn := fun r : ℝ => 0 < r) (x := x) (v := u) (u := v) t2 t3 ht2 ht3
+    (by rw [hz, show t1 = 1 - t2 - t3 from by linarith]) hxu hxv huv
+
+/-- `affGt {x, u} {v}` 的三系数形（AFF_GT_2_1 提取向）。 -/
+private theorem w5cB_affGt_2_1_mp {x u v z : V3} (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v)
+    (h : z ∈ affGt {x, u} {v}) :
+    ∃ t1 t2 t3 : ℝ, 0 < t3 ∧ t1 + t2 + t3 = 1 ∧ z = t1 • x + t2 • u + t3 • v := by
+  obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+  refine ⟨f x, f u, f v, hpos v (Set.mem_singleton v), ?_, ?_⟩
+  · rw [w5cB2_pus3_sum (a := x) (b := u) (c := v) hxu (Ne.symm hxv) (Ne.symm huv) hfin]
+      at hone
+    linarith
+  · rw [w5cB2_pus3_v (a := x) (b := u) (c := v) hxu (Ne.symm hxv) (Ne.symm huv) hfin]
+      at hsumv
+    rw [hsumv]
+
+/-- `affGt {x, u} {v}` 的三系数形构造（AFF_GT_2_1 构造向）。 -/
+private theorem w5cB_affGt_2_1_mpr {x u v z : V3} (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v)
+    {t1 t2 t3 : ℝ} (ht3 : 0 < t3) (hsum : t1 + t2 + t3 = 1)
+    (hz : z = t1 • x + t2 • u + t3 • v) :
+    z ∈ affGt {x, u} {v} := by
+  have hfin : (({x, u} : Set V3) ∪ {v} : Set V3).Finite :=
+    ((Set.finite_singleton u).insert x).union (Set.finite_singleton v)
+  refine ⟨fun q => if q = v then t3 else if q = u then t2 else t1, hfin, ?_, ?_, ?_⟩
+  · rw [w5cB2_pus3_v (a := x) (b := u) (c := v) hxu (Ne.symm hxv) (Ne.symm huv) hfin]
+    simp only [if_neg hxv, if_neg hxu, if_neg huv, if_true, hz]
+  · intro q hq
+    simp only [Set.mem_singleton_iff] at hq
+    subst hq
+    simp only [if_true]
+    exact ht3
+  · rw [w5cB2_pus3_sum (a := x) (b := u) (c := v) hxu (Ne.symm hxv) (Ne.symm huv) hfin]
+    simp only [if_neg hxv, if_neg hxu, if_neg huv, if_true]
+    linarith
+
+/-- `affGt {x} {v}` 的两系数形提取。 -/
+private theorem w5cB_affGt_single_mp {x v z : V3} (hxv : x ≠ v)
+    (h : z ∈ affGt {x} {v}) :
+    ∃ t1 t2 : ℝ, 0 < t2 ∧ t1 + t2 = 1 ∧ z = t1 • x + t2 • v := by
+  obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+  refine ⟨f x, f v, hpos v (Set.mem_singleton v), ?_, ?_⟩
+  · rw [sum_insert_single_s hfin hxv] at hone
+    linarith
+  · rw [sum_insert_single_v hfin hxv] at hsumv
+    rw [hsumv]
+
+/-- 两系数形构造回 `affGt {x} {v}`。 -/
+private theorem w5cB_affGt_single_mpr {x v z : V3} (hxv : x ≠ v) {t1 t2 : ℝ}
+    (ht2 : 0 < t2) (hsum : t1 + t2 = 1) (hz : z = t1 • x + t2 • v) :
+    z ∈ affGt {x} {v} := by
+  have hfin : (({x} : Set V3) ∪ {v} : Set V3).Finite :=
+    (Set.finite_singleton x).union (Set.finite_singleton v)
+  refine ⟨fun q => if q = v then t2 else 1 - t2, hfin, ?_, ?_, ?_⟩
+  · rw [sum_insert_single_v hfin hxv]
+    simp only [if_neg hxv, if_true, hz, show t1 = 1 - t2 from by linarith]
+  · intro q hq
+    simp only [Set.mem_singleton_iff] at hq
+    subst hq
+    simp only [if_true]
+    exact ht2
+  · rw [sum_insert_single_s hfin hxv]
+    simp only [if_neg hxv, if_true]
+    linarith
+
+/-- `affLt {x} {w}` 的两系数形提取（AFF_LT_1_1 提取向）。 -/
+private theorem w5cB_affLt_1_1_mp {x w z : V3} (hxw : x ≠ w)
+    (h : z ∈ affLt {x} {w}) :
+    ∃ t1 t2 : ℝ, t2 < 0 ∧ t1 + t2 = 1 ∧ z = t1 • x + t2 • w := by
+  obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+  refine ⟨f x, f w, hpos w (Set.mem_singleton w), ?_, ?_⟩
+  · rw [sum_insert_single_s hfin hxw] at hone
+    linarith
+  · rw [sum_insert_single_v hfin hxw] at hsumv
+    rw [hsumv]
+
+/-- `affLt {u, v} {a}` 的三系数形提取（AFF_LT_2_1 提取向）。 -/
+private theorem w5cB_affLt_2_1_mp {u v a z : V3} (huv : u ≠ v) (hva : v ≠ a) (hua : u ≠ a)
+    (h : z ∈ affLt {u, v} {a}) :
+    ∃ t1 t2 t3 : ℝ, t3 < 0 ∧ t1 + t2 + t3 = 1 ∧ z = t1 • u + t2 • v + t3 • a := by
+  obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+  refine ⟨f u, f v, f a, hpos a (Set.mem_singleton a), ?_, ?_⟩
+  · rw [w5cB2_pus3_sum (a := u) (b := v) (c := a) huv (Ne.symm hua) (Ne.symm hva) hfin]
+      at hone
+    linarith
+  · rw [w5cB2_pus3_v (a := u) (b := v) (c := a) huv (Ne.symm hua) (Ne.symm hva) hfin]
+      at hsumv
+    rw [hsumv]
+
+/-- 三系数形构造回 `affLt {u, v} {a}`（AFF_LT_2_1 构造向）。 -/
+private theorem w5cB_affLt_2_1_mpr {u v a z : V3} (huv : u ≠ v) (hva : v ≠ a) (hua : u ≠ a)
+    {t1 t2 t3 : ℝ} (ht3 : t3 < 0) (hsum : t1 + t2 + t3 = 1)
+    (hz : z = t1 • u + t2 • v + t3 • a) :
+    z ∈ affLt {u, v} {a} := by
+  have hfin : (({u, v} : Set V3) ∪ {a} : Set V3).Finite :=
+    ((Set.finite_singleton v).insert u).union (Set.finite_singleton a)
+  refine ⟨fun q => if q = a then t3 else if q = v then t2 else t1, hfin, ?_, ?_, ?_⟩
+  · rw [w5cB2_pus3_v (a := u) (b := v) (c := a) huv (Ne.symm hua) (Ne.symm hva) hfin]
+    simp only [if_neg hua, if_neg huv, if_neg hva, if_true, hz]
+  · intro q hq
+    simp only [Set.mem_singleton_iff] at hq
+    subst hq
+    simp only [if_true]
+    exact ht3
+  · rw [w5cB2_pus3_sum (a := u) (b := v) (c := a) huv (Ne.symm hua) (Ne.symm hva) hfin]
+    simp only [if_neg hua, if_neg huv, if_neg hva, if_true]
+    linarith
+
+/-- 非共线三元组的第二方向系数零化：`r•(b-a) + s•(x-a) = 0 → s = 0`。 -/
+private theorem w5cB_nc_second_coeff_zero {a b x : V3} (hab : a ≠ b) (hax : a ≠ x)
+    (hnc : ¬Collinear ℝ ({a, b, x} : Set V3)) {r s : ℝ}
+    (h0 : r • (b - a) + s • (x - a) = (0 : V3)) : s = 0 := by
+  by_cases hs : s = 0
+  · exact hs
+  · exfalso
+    apply hnc
+    have hlin : s • (x - a) = -(r • (b - a)) := by
+      rw [eq_comm, neg_eq_iff_add_eq_zero]
+      exact h0
+    have hmul : s * (r / s) = r := by
+      field_simp
+    have hxeq : x - a = (-(r / s)) • (b - a) := by
+      refine w5cB_smul_left_cancel hs ?_
+      rw [hlin, smul_smul, mul_neg, neg_smul, hmul]
+    exact collinear3_iff_smul (v := a) (w := b) (w1 := x) (Ne.symm hab) |>.mpr
+      ⟨-(r / s), hxeq⟩
+
+/-- `COLL_IN_AFF_GT_TOO` 的就地重制：aff_gt 内的点与基座不共线。 -/
+private theorem w5cB_coll_in_aff_gt_too {x y z a : V3} (hnc : ¬Collinear ℝ ({x, y, z} : Set V3))
+    (ha : a ∈ affGt {x, y} {z}) : ¬Collinear ℝ ({x, y, a} : Set V3) := by
+  intro hca
+  have hxy : x ≠ y := fun he => hnc (collinear3_of_eq he.symm)
+  have hyx : y ≠ x := Ne.symm hxy
+  have hzx : z ≠ x := fun he => hnc (collinear3_pair_left he)
+  have hzy : z ≠ y := fun he => hnc (collinear3_pair_right he)
+  obtain ⟨c, hc, h, hsub⟩ :=
+    affGt_pair_iff (v0 := x) (v1 := y) (x := z) (y := a) hxy hzx hzy |>.mp ha
+  obtain ⟨c', hsub'⟩ :=
+    collinear3_iff_smul (v := x) (w := y) (w1 := a) hyx |>.mp hca
+  have hkey : c • (z - x) + h • (y - x) = c' • (y - x) := by
+    rw [← hsub, hsub']
+  have hkey2 : c • (z - x) = (c' - h) • (y - x) := by
+    have h1 : c • (z - x) = c' • (y - x) - h • (y - x) := by
+      rw [hkey.symm]
+      module
+    rw [h1]
+    module
+  have hmd : c * ((c' - h) / c) = c' - h := by
+    field_simp
+  have hz' : z - x = ((c' - h) / c) • (y - x) := by
+    refine w5cB_smul_left_cancel (ne_of_gt hc) ?_
+    rw [hkey2, smul_smul, hmd]
+  exact hnc (collinear3_iff_smul (v := x) (w := y) (w1 := z) hyx |>.mpr ⟨(c' - h) / c, hz'⟩)
+
+/-- `aff_gt` 射线上的点与轴基点共线性互相传递。 -/
+private theorem w5cB_collinear3_affGt_transfer {u v x y : V3} (h : x ∈ affGt {u, v} {y}) :
+    Collinear ℝ ({u, v, x} : Set V3) ↔ Collinear ℝ ({u, v, y} : Set V3) := by
+  by_cases huv : u = v
+  · constructor
+    · exact fun _ => collinear3_of_eq huv.symm
+    · exact fun _ => collinear3_of_eq huv.symm
+  · by_cases huy : u = y
+    · obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+      have h3 : hfin.toFinset = ({u, v} : Finset V3) := by
+        ext q
+        rw [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+          Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+        simp only [huy]
+        tauto
+      rw [h3] at hsumv hone
+      rw [Finset.sum_insert (by simp only [Finset.mem_singleton]; exact huv),
+        Finset.sum_singleton] at hsumv hone
+      constructor
+      · exact fun _ => collinear3_pair_left huy.symm
+      · intro _
+        refine collinear3_iff_smul (v := u) (w := v) (w1 := x) (Ne.symm huv) |>.mpr ⟨f v, ?_⟩
+        rw [hsumv, show f u = 1 - f v from by linarith]
+        module
+    · by_cases hvy : v = y
+      · obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+        have h3 : hfin.toFinset = ({u, v} : Finset V3) := by
+          ext q
+          rw [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+          simp only [hvy]
+          tauto
+        rw [h3] at hsumv hone
+        rw [Finset.sum_insert (by simp only [Finset.mem_singleton]; exact huv),
+          Finset.sum_singleton] at hsumv hone
+        constructor
+        · exact fun _ => collinear3_pair_right hvy.symm
+        · intro _
+          refine collinear3_iff_smul (v := u) (w := v) (w1 := x) (Ne.symm huv) |>.mpr
+            ⟨f v, ?_⟩
+          rw [hsumv, show f u = 1 - f v from by linarith]
+          module
+      · -- 一般：三系数形
+        obtain ⟨f, hfin, hsumv, hpos, hone⟩ := h
+        have hfy : f y > 0 := hpos y (Set.mem_singleton y)
+        have h3 : hfin.toFinset = ({u, v, y} : Finset V3) := by
+          ext q
+          rw [Set.Finite.mem_toFinset]
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+            Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [h3] at hsumv hone
+        rw [Finset.sum_insert (by simp only [Finset.mem_insert, Finset.mem_singleton]; tauto),
+          Finset.sum_insert (by simp only [Finset.mem_singleton]; exact hvy),
+          Finset.sum_singleton] at hsumv hone
+        have key : x - u = f y • (y - u) + f v • (v - u) := by
+          rw [hsumv, show f u = 1 - f v - f y from by linarith]
+          module
+        constructor
+        · intro hcy
+          obtain ⟨c, hcyy⟩ :=
+            collinear3_iff_smul (v := u) (w := v) (w1 := x) (Ne.symm huv) |>.mp hcy
+          refine collinear3_iff_smul (v := u) (w := v) (w1 := y) (Ne.symm huv) |>.mpr
+            ⟨(c - f v) / f y, ?_⟩
+          have h2 : f y • (y - u) + f v • (v - u) = c • (v - u) := key.symm.trans hcyy
+          rw [show c = f v + (c - f v) from by ring, add_smul] at h2
+          have hA : f y • (y - u) = (c - f v) • (v - u) :=
+            add_right_cancel (h2.trans (add_comm (f v • (v - u)) ((c - f v) • (v - u))))
+          have hmd : f y * ((c - f v) / f y) = c - f v := by
+            field_simp
+          refine w5cB_smul_left_cancel (ne_of_gt hfy) ?_
+          rw [hA, smul_smul, hmd]
+        · intro hcx
+          obtain ⟨c, hcyy⟩ :=
+            collinear3_iff_smul (v := u) (w := v) (w1 := y) (Ne.symm huv) |>.mp hcx
+          refine collinear3_iff_smul (v := u) (w := v) (w1 := x) (Ne.symm huv) |>.mpr
+            ⟨f v + f y * c, ?_⟩
+          rw [hcyy] at key
+          rw [smul_smul] at key
+          rw [key, add_smul]
+          abel
+
+/-- `azim u v a z = π` 当 `z` 在 `a` 关于轴 `u v` 的对侧（affLt {u,v} {a} 形）。 -/
+private theorem w5cB_azim_eq_pi_of_affLt {u v a z : V3}
+    (hncA : ¬Collinear ℝ ({u, v, a} : Set V3)) (hncZ : ¬Collinear ℝ ({u, v, z} : Set V3))
+    (hmem : z ∈ affLt {u, v} {a}) :
+    azim u v a z = Real.pi := by
+  have huv : u ≠ v := fun he => hncA (collinear3_of_eq he.symm)
+  have hau : a ≠ u := fun he => hncA (collinear3_pair_left he)
+  have hav : a ≠ v := fun he => hncA (collinear3_pair_right he)
+  obtain ⟨t1, t2, t3, ht3, hsum, hz⟩ :=
+    w5cB_affLt_2_1_mp (u := u) (v := v) (a := a) huv (Ne.symm hav) (Ne.symm hau) hmem
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - u) (sub_ne_zero.mpr (Ne.symm huv))
+  have hax : (v - u : V3) = dist v u • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, r1, r2, hr1, hr2, hza, hzz⟩ :=
+    azim_frame_spec (v := u) (w := v) (w1 := a) (w2 := z) hncA hncZ hon hax (Ne.symm huv)
+  have hzu : z - u = t2 • (v - u) + t3 • (a - u) := by
+    rw [hz, show t1 = 1 - t2 - t3 from by linarith]
+    module
+  have hzof : zOf f1 f2 (z - u) = ((t3 * r1 : ℝ) : ℂ) *
+      Complex.exp (((ψ : ℝ) : ℂ) * Complex.I) := by
+    rw [hzu, zOf_add, zOf_smul, zOf_smul, zOf_axis hax hon, mul_zero, zero_add, hza]
+    push_cast
+    ring
+  rw [exp_add_I ψ (azim u v a z)] at hzz
+  rw [hzof] at hzz
+  rw [← mul_assoc] at hzz
+  rw [mul_right_comm ((r2 : ℝ) : ℂ) (Complex.exp (((ψ : ℝ) : ℂ) * Complex.I))
+    (Complex.exp (((azim u v a z : ℝ) : ℂ) * Complex.I))] at hzz
+  have hkey : ((t3 * r1 : ℝ) : ℂ) = ((r2 : ℝ) : ℂ) *
+      Complex.exp (((azim u v a z : ℝ) : ℂ) * Complex.I) :=
+    mul_right_cancel₀ (Complex.exp_ne_zero _) hzz
+  have hsin : Real.sin (azim u v a z) = 0 := by
+    have hi := congrArg Complex.im hkey
+    simp only [Complex.ofReal_im, Complex.mul_im, Complex.ofReal_re, Complex.exp_mul_I,
+      Complex.add_im, Complex.add_re, Complex.I_re, Complex.I_im, Complex.sin_ofReal_re,
+      Complex.sin_ofReal_im, Complex.cos_ofReal_re, Complex.cos_ofReal_im, mul_zero,
+      zero_mul, add_zero, zero_add, mul_one] at hi
+    have h0 : (r2 : ℝ) * Real.sin (azim u v a z) = 0 := hi.symm
+    rcases mul_eq_zero.mp h0 with h | h
+    · exact absurd h hr2.ne'
+    · exact h
+  have hcoslt : Real.cos (azim u v a z) < 0 := by
+    have hr := congrArg Complex.re hkey
+    simp only [Complex.ofReal_re, Complex.mul_re, Complex.ofReal_im, Complex.exp_mul_I,
+      Complex.add_re, Complex.add_im, Complex.I_re, Complex.I_im, Complex.sin_ofReal_re,
+      Complex.sin_ofReal_im, Complex.cos_ofReal_re, Complex.cos_ofReal_im, mul_zero,
+      zero_mul, add_zero, zero_add, mul_one, sub_self, sub_zero] at hr
+    have hreq : (r2 : ℝ) * Real.cos (azim u v a z) = (t3 : ℝ) * r1 := hr.symm
+    by_contra hge
+    push_neg at hge
+    have hge2 : (0 : ℝ) ≤ (r2 : ℝ) * Real.cos (azim u v a z) := mul_nonneg hr2.le hge
+    rw [hreq] at hge2
+    have hneg : (t3 : ℝ) * r1 < 0 := mul_neg_of_neg_of_pos ht3 hr1
+    linarith
+  rcases Real.sin_eq_zero_iff.mp hsin with ⟨n, hn⟩
+  have hpi : Real.pi > 0 := Real.pi_pos
+  have hzero : (0 : ℝ) ≤ azim u v a z := azim_nonneg u v a z
+  have hlt : azim u v a z < 2 * Real.pi := azim_lt_two_pi u v a z
+  have hnge : (0 : ℝ) ≤ (n : ℝ) * Real.pi := by rw [hn]; exact hzero
+  have hnlt : (n : ℝ) * Real.pi < 2 * Real.pi := by rw [hn]; exact hlt
+  have hngR : (0 : ℝ) ≤ (n : ℝ) := by
+    by_contra hneg
+    push_neg at hneg
+    have hmul : (n : ℝ) * Real.pi < 0 := mul_neg_of_neg_of_pos hneg hpi
+    linarith
+  have hn0 : n ≠ 0 := by
+    intro h0
+    have htheta0 : azim u v a z = (0 : ℝ) := by
+      rw [← hn, h0]
+      simp
+    rw [htheta0, Real.cos_zero] at hcoslt
+    linarith
+  have hn1 : n = 1 := by
+    have hr2' : (n : ℝ) < 2 := lt_of_mul_lt_mul_right hnlt hpi.le
+    have hz2 : (n : ℤ) < 2 := by exact_mod_cast hr2'
+    have hz0 : (0 : ℤ) ≤ n := by exact_mod_cast hngR
+    omega
+  rw [← hn, show ((n : ℝ) : ℝ) = 1 from by exact_mod_cast hn1, one_mul]
+
 /-- HOL `AFF_GT_SUBSET_AFFINE_HULL21` (lunar_deform.hl:127): the
 `{u,v} ∪ {w}` instance of `AFF_GT_SUBSET_AFFINE_HULL`.
 NEEDS: `Affsign` → affine-combination → `affineSpan` bridge (Mathlib
@@ -152,7 +590,20 @@ NEEDS: `Affsign` → affine-combination → `affineSpan` bridge (Mathlib
 finite witness of `Affsign`). -/
 theorem AFF_GT_SUBSET_AFFINE_HULL21_p37 (u v w : V3) :
     affGt {u, v} {w} ⊆ (affineSpan ℝ ({u, v, w} : Set V3) : Set V3) := by
-  sorry
+  intro z hz
+  obtain ⟨f, hfin, hsumv, hpos, hone⟩ := hz
+  have hFsub : ∀ x ∈ hfin.toFinset, x = u ∨ x = v ∨ x = w := by
+    intro x hx
+    rw [Set.Finite.mem_toFinset, Set.mem_union] at hx
+    rcases hx with h1 | h1
+    · rcases Set.mem_insert_iff.mp h1 with h2 | h2
+      · exact Or.inl h2
+      · exact Or.inr (Or.inl h2)
+    · exact Or.inr (Or.inr (Set.mem_singleton_iff.mp h1))
+  obtain ⟨t1, t2, t3, hv, hs⟩ := w5cB_finset3_sum u v w hFsub
+  rw [hv] at hsumv
+  rw [hsumv]
+  exact w5cB_affine3_mem_affineSpan u v w t1 t2 t3 (by rw [← hs]; exact hone)
 
 /-- HOL `DISJTINCT_PROPERTY` (lunar_deform.hl:131; source spelling kept):
 a deformation pinning `V \\ {u}` while moving `u` continuously off them
@@ -242,7 +693,63 @@ theorem TOW_POINTS_IN_IMP_AFF_GT_SUBSET_p37 {x u v a b : V3}
     (_ha : a ∈ affGt {x, u} {v}) (_hb : b ∈ affGt {x, u} {v})
     (_h2 : Disjoint ({x} : Set V3) ({a, b} : Set V3)) :
     affGt {x} {a, b} ⊆ affGt {x, u} {v} := by
-  sorry
+  have hxv : x ≠ v := fun he =>
+    Set.disjoint_left.mp _h1 (Set.mem_insert x ({u} : Set V3)) (by rw [he]; simp)
+  have huv : u ≠ v := fun he =>
+    Set.disjoint_left.mp _h1 (Set.mem_insert_of_mem x (Set.mem_singleton u))
+      (by rw [he]; simp)
+  have hxa : x ≠ a := fun he =>
+    Set.disjoint_left.mp _h2 (Set.mem_singleton x) (by rw [he]; simp)
+  have hxb : x ≠ b := fun he =>
+    Set.disjoint_left.mp _h2 (Set.mem_singleton x) (by rw [he]; simp)
+  by_cases hab : a = b
+  · -- a = b：集合塌缩，两系数形复合
+    rw [show ({a, b} : Set V3) = ({b} : Set V3) from by rw [hab]; ext q; simp]
+    intro w hw
+    obtain ⟨p1, p2, hp2, hpsum, hpb⟩ := w5cB_affGt_single_mp hxb hw
+    by_cases hxu : x = u
+    · subst hxu
+      rw [show ({x, x} : Set V3) = ({x} : Set V3) from by ext q; simp] at _hb ⊢
+      obtain ⟨q1, q2, hq2, hqsum, hqb⟩ := w5cB_affGt_single_mp hxv _hb
+      have hs : p1 + p2 * q1 + p2 * q2 = 1 :=
+        by linear_combination hpsum + p2 * hqsum
+      refine w5cB_affGt_single_mpr hxv (t1 := p1 + p2 * q1) (t2 := p2 * q2)
+        (mul_pos hp2 hq2) hs ?_
+      rw [hpb, hqb]
+      module
+    · obtain ⟨q1, q2, q3, hq3, hqsum, hqb⟩ := w5cB_affGt_2_1_mp hxu hxv huv _hb
+      have hs : p1 + p2 * q1 + p2 * q2 + p2 * q3 = 1 :=
+        by linear_combination hpsum + p2 * hqsum
+      refine w5cB_affGt_2_1_mpr hxu hxv huv (t1 := p1 + p2 * q1) (t2 := p2 * q2)
+        (t3 := p2 * q3) (mul_pos hp2 hq3) hs ?_
+      rw [hpb, hqb]
+      module
+  · -- a ≠ b：三系数形复合
+    by_cases hxu : x = u
+    · subst hxu
+      rw [show ({x, x} : Set V3) = ({x} : Set V3) from by ext q; simp] at _ha _hb ⊢
+      intro w hw
+      obtain ⟨r1, r2, r3, hr2, hr3, hrsum, hrw⟩ := w5cB_affGt_1_2_mp hxa hxb hab hw
+      obtain ⟨p1, p2, hp2, hpsum, hpa⟩ := w5cB_affGt_single_mp hxv _ha
+      obtain ⟨q1, q2, hq2, hqsum, hqb⟩ := w5cB_affGt_single_mp hxv _hb
+      have hs : r1 + r2 * p1 + r3 * q1 + (r2 * p2 + r3 * q2) = 1 :=
+        by linear_combination hrsum + r2 * hpsum + r3 * hqsum
+      refine w5cB_affGt_single_mpr hxv (t1 := r1 + r2 * p1 + r3 * q1)
+        (t2 := r2 * p2 + r3 * q2) (add_pos (mul_pos hr2 hp2) (mul_pos hr3 hq2))
+        hs ?_
+      rw [hrw, hpa, hqb]
+      module
+    · intro w hw
+      obtain ⟨r1, r2, r3, hr2, hr3, hrsum, hrw⟩ := w5cB_affGt_1_2_mp hxa hxb hab hw
+      obtain ⟨p1, p2, p3, hp3, hpsum, hpa⟩ := w5cB_affGt_2_1_mp hxu hxv huv _ha
+      obtain ⟨q1, q2, q3, hq3, hqsum, hqb⟩ := w5cB_affGt_2_1_mp hxu hxv huv _hb
+      have hs : r1 + r2 * p1 + r3 * q1 + (r2 * p2 + r3 * q2) + (r2 * p3 + r3 * q3) = 1 :=
+        by linear_combination hrsum + r2 * hpsum + r3 * hqsum
+      refine w5cB_affGt_2_1_mpr hxu hxv huv (t1 := r1 + r2 * p1 + r3 * q1)
+        (t2 := r2 * p2 + r3 * q2) (t3 := r2 * p3 + r3 * q3)
+        (add_pos (mul_pos hr2 hp3) (mul_pos hr3 hq3)) hs ?_
+      rw [hrw, hpa, hqb]
+      module
 
 /-- HOL `REAL_LT_MUL12` (lunar_deform.hl:251). -/
 theorem REAL_LT_MUL12_p37 {a b : ℝ} (hb : 0 < b) (ha : a < 0) : a * b < 0 :=
@@ -254,7 +761,33 @@ decomposition kit. -/
 theorem COLL_IN_AFF_GT_INTER_EMPTY_p37 {a b x u : V3}
     (hnc : ¬Collinear ℝ ({a, b, x} : Set V3)) (hu : u ∈ affGt {a, b} {x}) :
     affGt {a, b} {x} ∩ affLt {a} {u} = ∅ := by
-  sorry
+  have hab : a ≠ b := fun he => hnc (collinear3_of_eq he.symm)
+  have hax : a ≠ x := fun he => hnc (collinear3_pair_left he.symm)
+  have hbx : b ≠ x := fun he => hnc (collinear3_pair_right he.symm)
+  have hncu := w5cB_coll_in_aff_gt_too (x := a) (y := b) (z := x) (a := u) hnc hu
+  have hua : u ≠ a := fun he => hncu (collinear3_pair_left he)
+  refine Set.eq_empty_iff_forall_notMem.mpr ?_
+  intro w hw
+  obtain ⟨hw1, hw2⟩ := hw
+  obtain ⟨t1, t2, t3, ht3, hsum, hw1'⟩ := w5cB_affGt_2_1_mp hab hax hbx hw1
+  obtain ⟨s1, s2, hs2, ssum, hw2'⟩ := w5cB_affLt_1_1_mp (Ne.symm hua) hw2
+  obtain ⟨t1', t2', t3', ht3', hsum', hu'⟩ := w5cB_affGt_2_1_mp hab hax hbx hu
+  rw [hu'] at hw2'
+  have hsub1 : w - a = t2 • (b - a) + t3 • (x - a) := by
+    rw [hw1', show t1 = 1 - t2 - t3 from by linarith]
+    module
+  have hsub2 : w - a = (s2 * t2') • (b - a) + (s2 * t3') • (x - a) := by
+    rw [hw2', show s1 = 1 - s2 from by linarith,
+      show t1' = 1 - t2' - t3' from by linarith]
+    module
+  have hd : (t2 • (b - a) + t3 • (x - a)) -
+      ((s2 * t2') • (b - a) + (s2 * t3') • (x - a)) = (0 : V3) := by
+    rw [← hsub1, ← hsub2, sub_self]
+  have hcoef : (t2 - s2 * t2') • (b - a) + (t3 - s2 * t3') • (x - a) = (0 : V3) := by
+    rw [smul_sub, smul_sub, ← hd]
+    module
+  have hzero := w5cB_nc_second_coeff_zero hab hax hnc hcoef
+  linarith [mul_neg_of_neg_of_pos hs2 ht3', hzero, ht3]
 
 /-- HOL `HKIRPEP_ALT` (lunar_deform.hl:316): the lunar two-half circle
 characterisation, `Local_lemmas.HKIRPEP` re-pruned for the deformation
@@ -381,7 +914,44 @@ theorem AZIM_PI_LEMMA_p37 {u v x y a : V3} {s : Set V3}
     (_h4 : ¬Collinear ℝ ({u, v, x} : Set V3))
     (_h5 : ¬Collinear ℝ ({u, v, y} : Set V3)) :
     azim u v x y = Real.pi := by
-  sorry
+  obtain ⟨z', hz'1, hz'2⟩ := Set.nonempty_iff_ne_empty.mpr _h1
+  have huv : u ≠ v := fun he => _h5 (collinear3_of_eq he.symm)
+  have hz'1' : z' ∈ affGt {u, v} {y} := _h2 hz'1
+  have hncA := w5cB_coll_in_aff_gt_too (x := u) (y := v) (z := x) (a := a) _h4 _h3
+  have hncZ := w5cB_coll_in_aff_gt_too (x := u) (y := v) (z := y) (a := z') _h5 hz'1'
+  have hua : u ≠ a := fun he => hncA (collinear3_pair_left he.symm)
+  have hav : a ≠ v := fun he => hncA (collinear3_pair_right he)
+  have hz'2' : z' ∈ affLt {u, v} {a} := by
+    obtain ⟨s1, s2, hs2, ssum, hzz⟩ := w5cB_affLt_1_1_mp hua hz'2
+    exact w5cB_affLt_2_1_mpr (u := u) (v := v) (a := a) huv (Ne.symm hav) hua
+      (t1 := s1) (t2 := 0) (t3 := s2) hs2 (by linarith)
+      (by rw [hzz, zero_smul, add_zero])
+  have hpi : azim u v a z' = Real.pi := w5cB_azim_eq_pi_of_affLt hncA hncZ hz'2'
+  have hchain2 : azim u v a y = Real.pi := by
+    have heq := (azim_eq_azim_iff_alt (v0 := u) (v1 := v) (w := a) (x := z') (y := y)
+      hncA hncZ _h5).mpr hz'1'
+    rw [← heq]
+    exact hpi
+  have hcompl1 : azim u v y a = Real.pi := by
+    have hc := azim_compl (z := u) (w := v) (w1 := y) (w2 := a) _h5 hncA
+    by_cases hz0 : azim u v y a = 0
+    · rw [hz0, if_pos rfl] at hc
+      linarith
+    · rw [if_neg hz0] at hc
+      have hval : Real.pi = 2 * Real.pi - azim u v y a := by linarith [hchain2, hc]
+      linarith
+  have hchain3 : azim u v y x = Real.pi := by
+    have heq := (azim_eq_azim_iff_alt (v0 := u) (v1 := v) (w := y) (x := a) (y := x)
+      _h5 hncA _h4).mpr _h3
+    rw [← heq]
+    exact hcompl1
+  have hc2 := azim_compl (z := u) (w := v) (w1 := y) (w2 := x) _h5 _h4
+  by_cases hz0 : azim u v y x = 0
+  · rw [hz0, if_pos rfl] at hc2
+    linarith
+  · rw [if_neg hz0] at hc2
+    rw [hc2]
+    linarith
 
 /-! ## The SUB_LUNAR_DEFORM_LEMMA giant (source 528-1830) -/
 
@@ -872,7 +1442,62 @@ theorem CONT_ATREAL_INJ_PRESERVED_p37 {V : Set V3} {ff : V3 → ℝ → V3} {r :
     (_hinj : Set.InjOn (fun v => ff v r) V) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t - r| < e →
       Set.InjOn (fun v => ff v t) V := by
-  sorry
+  classical
+  have hpair : ∀ p : V3 × V3, ∃ d : ℝ, 0 < d ∧
+      ((p.1 ∈ V ∧ p.2 ∈ V ∧ p.1 ≠ p.2) → ∀ t : ℝ, |t - r| < d → ff p.1 t ≠ ff p.2 t) := by
+    intro p
+    by_cases hd : p.1 ∈ V ∧ p.2 ∈ V ∧ p.1 ≠ p.2
+    · have hcon : ContinuousAt (fun t => dist (ff p.1 t) (ff p.2 t)) r :=
+        (_hc p.1 hd.1).dist (_hc p.2 hd.2.1)
+      have hne : ff p.1 r ≠ ff p.2 r := fun heq => hd.2.2 (_hinj hd.1 hd.2.1 heq)
+      have hpos : (0 : ℝ) < dist (ff p.1 r) (ff p.2 r) := dist_pos.mpr hne
+      obtain ⟨d, hd0, hd1⟩ := Metric.continuousAt_iff.mp hcon
+        (dist (ff p.1 r) (ff p.2 r) / 2) (by linarith)
+      refine ⟨d, hd0, fun _ t ht => ?_⟩
+      have h3 : dist (dist (ff p.1 t) (ff p.2 t)) (dist (ff p.1 r) (ff p.2 r)) <
+          dist (ff p.1 r) (ff p.2 r) / 2 :=
+        hd1 (by rw [Real.dist_eq]; exact ht)
+      have hd2 : (0 : ℝ) < dist (ff p.1 t) (ff p.2 t) := by
+        rw [Real.dist_eq] at h3
+        obtain ⟨h3a, -⟩ := abs_lt.mp h3
+        linarith
+      intro heq
+      rw [dist_eq_zero.mpr heq] at hd2
+      exact lt_irrefl (0 : ℝ) hd2
+    · refine ⟨1, by norm_num, ?_⟩
+      intro hh
+      exact absurd hh hd
+  choose d hd using hpair
+  by_cases hV : V.Nonempty
+  · obtain ⟨v0, hv0⟩ := hV
+    have hPf : ((V ×ˢ V) : Set (V3 × V3)).Finite := _hV.prod _hV
+    have hSne : (hPf.toFinset.image (fun p : V3 × V3 => d p)).Nonempty := by
+      refine ⟨d (v0, v0), ?_⟩
+      exact Finset.mem_image.mpr ⟨(v0, v0), by
+        rw [Set.Finite.mem_toFinset]
+        exact ⟨hv0, hv0⟩, rfl⟩
+    have hminpos : 0 < Finset.min'
+        (hPf.toFinset.image (fun p : V3 × V3 => d p)) hSne := by
+      have hmem := Finset.mem_image.mp (Finset.min'_mem _ hSne)
+      obtain ⟨p, hp, he⟩ := hmem
+      obtain ⟨h1, -⟩ := hd p
+      rw [← he]
+      exact h1
+    refine ⟨Finset.min' (hPf.toFinset.image (fun p : V3 × V3 => d p)) hSne,
+      hminpos, ?_⟩
+    intro t ht u hu u' hu' heq
+    by_cases hne : u = u'
+    · exact hne
+    · have hpS : (u, u') ∈ hPf.toFinset := by
+        rw [Set.Finite.mem_toFinset]
+        exact ⟨hu, hu'⟩
+      have hle := Finset.min'_le (hPf.toFinset.image (fun p : V3 × V3 => d p))
+        (d (u, u')) (Finset.mem_image.mpr ⟨(u, u'), hpS, rfl⟩)
+      obtain ⟨-, hinj⟩ := hd (u, u')
+      exact absurd heq (hinj ⟨hu, hu', hne⟩ t (lt_of_lt_of_le ht hle))
+  · refine ⟨1, by norm_num, ?_⟩
+    intro t _ u hu
+    exact absurd ⟨u, hu⟩ hV
 
 /-- HOL `INJ_BIJ_IMAGE` (lunar_deform.hl:3066). -/
 theorem INJ_BIJ_IMAGE_p37 {f : V3 → V3} {S S' A : Set V3}
@@ -913,7 +1538,92 @@ theorem CONTINUOUS_POS_PRES_p37 {x y : V3} {a b r : ℝ} {f : ℝ → V3}
     (_h0 : 0 < a) (_hc : ContinuousAt f r) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → ∀ t1 t2 : ℝ,
       f (r + t) = t1 • x + t2 • y → 0 < t1 := by
-  sorry
+  classical
+  have hx0 : x ≠ 0 := by
+    intro he
+    apply _hnc
+    have hset : ({x, y, (0 : V3)} : Set V3) = ({y, (0 : V3)} : Set V3) := by
+      rw [he]; ext z; simp
+    rw [hset]
+    exact collinear_pair ℝ y (0 : V3)
+  have hy0 : y ≠ 0 := by
+    intro he
+    apply _hnc
+    have hset : ({x, y, (0 : V3)} : Set V3) = ({x, (0 : V3)} : Set V3) := by
+      rw [he]; ext z; simp
+    rw [hset]
+    exact collinear_pair ℝ x (0 : V3)
+  have hyv : y ⬝ᵥ y ≠ 0 := by
+    intro he
+    have h2 : ‖y‖ ^ 2 = (0 : ℝ) := by rw [norm_sq_eq_dot y]; exact he
+    exact hy0 (norm_eq_zero.mp ((pow_eq_zero_iff (by norm_num : (2 : ℕ) ≠ 0)).mp h2))
+  have hD : (x ⬝ᵥ x) * (y ⬝ᵥ y) - (x ⬝ᵥ y) * (x ⬝ᵥ y) ≠ 0 := by
+    intro hD0
+    apply _hnc
+    have hset0 : ({0, y, x} : Set V3) = ({x, y, 0} : Set V3) := by
+      ext q
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [← hset0]
+    have hcy : (x ⬝ᵥ y) / (y ⬝ᵥ y) * (y ⬝ᵥ y) = x ⬝ᵥ y :=
+      div_mul_cancel₀ (x ⬝ᵥ y) hyv
+    have hnorm : ‖x - ((x ⬝ᵥ y) / (y ⬝ᵥ y)) • y‖ ^ 2 =
+        ((x ⬝ᵥ x) * (y ⬝ᵥ y) - (x ⬝ᵥ y) * (x ⬝ᵥ y)) / (y ⬝ᵥ y) := by
+      rw [norm_sq_eq_dot]
+      simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, dotProduct_sub,
+        smul_dotProduct, dotProduct_smul, smul_eq_mul, dotProduct_comm]
+      rw [hcy, sub_self, sub_zero, sub_div, mul_div_assoc (x ⬝ᵥ x) (y ⬝ᵥ y) (y ⬝ᵥ y),
+        div_self hyv, mul_one, div_mul_eq_mul_div]
+    have hzero : ‖x - ((x ⬝ᵥ y) / (y ⬝ᵥ y)) • y‖ ^ 2 = (0 : ℝ) := by
+      rw [hnorm, hD0, zero_div]
+    have hxpy : x = ((x ⬝ᵥ y) / (y ⬝ᵥ y)) • y :=
+      sub_eq_zero.mp (norm_eq_zero.mp ((pow_eq_zero_iff (by norm_num : (2 : ℕ) ≠ 0)).mp hzero))
+    exact (collinear3_iff_smul (v := (0 : V3)) (w := y) (w1 := x) hy0).mpr ⟨_, by
+      rw [sub_zero, sub_zero, hxpy]⟩
+  have hcoe : Continuous fun z : V3 => ((z : V3) : Fin 3 → ℝ) :=
+    PiLp.continuous_ofLp 2 (fun _ : Fin 3 => ℝ)
+  have hdotx : Continuous fun p : V3 => p ⬝ᵥ x := by
+    simp only [dotProduct]
+    exact continuous_finsetSum Finset.univ fun i _ =>
+      ((continuous_apply i).comp hcoe).mul continuous_const
+  have hdoty : Continuous fun p : V3 => p ⬝ᵥ y := by
+    simp only [dotProduct]
+    exact continuous_finsetSum Finset.univ fun i _ =>
+      ((continuous_apply i).comp hcoe).mul continuous_const
+  set g : V3 → ℝ := fun p =>
+    ((p ⬝ᵥ x) * (y ⬝ᵥ y) - (p ⬝ᵥ y) * (x ⬝ᵥ y)) /
+      ((x ⬝ᵥ x) * (y ⬝ᵥ y) - (x ⬝ᵥ y) * (x ⬝ᵥ y)) with hg
+  have hgcont : ContinuousAt g (f r) :=
+    (((hdotx.mul continuous_const).sub (hdoty.mul continuous_const)).div continuous_const
+      (fun _p => hD)).continuousAt
+  have hcoef1 : ∀ t1 t2 : ℝ, (t1 • x + t2 • y) ⬝ᵥ x = t1 * (x ⬝ᵥ x) + t2 * (x ⬝ᵥ y) := by
+    intro t1 t2
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul, dotProduct_comm]
+  have hcoef2 : ∀ t1 t2 : ℝ, (t1 • x + t2 • y) ⬝ᵥ y = t1 * (x ⬝ᵥ y) + t2 * (y ⬝ᵥ y) := by
+    intro t1 t2
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul]
+  have hgfr : g (f r) = a := by
+    simp only [hg, _hab, hcoef1, hcoef2]
+    rw [div_eq_iff hD]
+    ring
+  obtain ⟨e0, he0, he⟩ := Metric.continuousAt_iff.mp hgcont (a / 2) (by linarith)
+  obtain ⟨ef, hef0, hef⟩ := Metric.continuousAt_iff.mp _hc e0 he0
+  refine ⟨ef, hef0, ?_⟩
+  intro t ht t1 t2 hf
+  have hgt : g (f (r + t)) = t1 := by
+    simp only [hg, hf, hcoef1, hcoef2]
+    rw [div_eq_iff hD]
+    ring
+  have hpt : dist (f (r + t)) (f r) < e0 := hef (by
+    rw [Real.dist_eq, show (r + t) - r = (t : ℝ) from by ring]
+    exact ht)
+  have hw : |g (f (r + t)) - g (f r)| < a / 2 := he hpt
+  rw [hgfr] at hw
+  rcases abs_lt.mp hw with ⟨ha1, ha2⟩
+  rw [← hgt]
+  linarith
 
 /-- HOL `IVS_RHO_NODE_V_IN_FF` (lunar_deform.hl:3334).  NEEDS:
 `Local_lemmas.LOCAL_FAN_RHO_NODE_PROS2` + `Local_lemmas1.LOCAL_FAN_IVS_IN_V`
@@ -928,7 +1638,20 @@ along `aff_gt {u,v} {y}` rays.  NEEDS: `AZIM_DEGENERATE` + the
 `aff_gt`-ray `azim` invariance kit. -/
 theorem IN_AFF_GT_IMP_AZIMEQ_p37 {u v w x y : V3}
     (_hx : x ∈ affGt {u, v} {y}) : azim u v w x = azim u v w y := by
-  sorry
+  have htr : Collinear ℝ ({u, v, x} : Set V3) ↔ Collinear ℝ ({u, v, y} : Set V3) :=
+    w5cB_collinear3_affGt_transfer _hx
+  by_cases hcw : Collinear ℝ ({u, v, w} : Set V3)
+  · have hcw3 : Collinear3 u v w := hcw
+    unfold azim
+    rw [if_pos (Or.inl hcw3), if_pos (Or.inl hcw3)]
+  · by_cases hcy : Collinear ℝ ({u, v, y} : Set V3)
+    · have hcx := htr.mpr hcy
+      have hcy3 : Collinear3 u v y := hcy
+      have hcx3 : Collinear3 u v x := hcx
+      unfold azim
+      rw [if_pos (Or.inr hcx3), if_pos (Or.inr hcy3)]
+    · have hcx : ¬Collinear ℝ ({u, v, x} : Set V3) := fun hc => hcy (htr.mp hc)
+      exact (azim_eq_azim_iff_alt hcw hcx hcy).mpr _hx
 
 /-- HOL `IN_AFF_GT_IMP_AZIMEQ2` (lunar_deform.hl:3384). -/
 theorem IN_AFF_GT_IMP_AZIMEQ2_p37 {u v x y : V3} (hx : x ∈ affGt {u, v} {y})
