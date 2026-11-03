@@ -55,6 +55,16 @@ Encoding:
    `fun _ _ _ => True` (LocalAuto1.lean:138), so local-fan-conditioned
    hypotheses carry no structure, and the azim scale invariance
    `AZIM_SPECIAL_SCALE`/`AZIM_SCALE_ALL` is not ported (see NEEDS markers).
+
+   ERRATUM (2026-11-03, scsgeneric-w5cC probe): every "root blocker:
+   `LocalFan` stub (`True`, LocalAuto1.lean:138)" NEEDS marker below is
+   OBSOLETE — `LocalFan` has been the real encoding since the lf-alpha
+   wave (LocalAuto1.lean:161: FAN witness + `hypermapOfFan` dart orbit +
+   `Dih2k` + 2-regularity `(ee u E).ncard = 2`), and the azim scale
+   invariance is ported as `w5cC_azim_scale` (Section 8 head).  The import
+   closure of this file reaches LocalAuto5/9/12/23/35 and AzimBridge, so
+   the LA5 fan-rho kit, `JKQEWGV2_p23` (standard-three) and
+   `SUM_AZIM_EQ_ANGLE_LE4_p35` are directly citable without new imports.
 -/
 
 import Kepler.Text.LocalAuto18
@@ -1379,9 +1389,9 @@ theorem WW_DEFORMATION_CONVEX_LOCAL_FAN_p31 (hz : ZLZTHIC_concl_p31)
     (_hm : MHAEYJN_concl_p31) : LEMMA1_concl_p31 := by
   sorry
   -- NEEDS (still): `JKQEWGV2` (MMs realisation is a convex local fan) —
-  -- proved only as the `sorry` stubs `JKQEWGV2_concl` (LocalAuto1) /
-  -- `JKQEWGV2_p23` (LocalAuto23, itself needing the `sorry`
-  -- `JKQEWGV2_CASE_*_p23`), plus `Deformation.XRECQNS`,
+  -- `JKQEWGV2_p23` (LocalAuto23) is standard-three since 2026-11-02
+  -- (scsgeneric W2'/W5b) and sits in this file's import closure; still
+  -- open: `Deformation.XRECQNS`,
   -- `Wrgcvdr_cizmrrh.CIZMRRH`, the interior-angle transfer via
   -- AZIM_DEFORMATION_GENERIC_p31, CARD_V_EQ_SCS_K1_p31 (now proved above)
   -- and the annulus pin DEFORMATION_IN_BALL_ANNULUS_p31 (proved above).
