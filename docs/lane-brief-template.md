@@ -20,6 +20,12 @@
 - 截断探针须落在声明边界。诚实口径优先：卡住交精确缺口清单（哪个 goal、哪个 API、error 原文），备料式 fallback 可接受。
 - 预算 ≤120 调用 / ≤3h；满 ~55 调用用 SendMessage 给编排者发中途简报（闭合件数、剩余错误数、是否需要裁定）。
 - 报告里的计数附命令原文与读数（`grep -c ': error:'` 等）；编排者按日志复核，不按自报。
+- **验收口径（2026-11-03 起，用户拍板）**：主指标 = **K-REACH / COVERAGE / SHIMS / ORPHANS**；
+  `K-SORRIED` 为信息项（不设单调目标）；`K-AXIOM` 为护栏。own-sorry 只作台账，不作为验收闸。
+- **未落库工件入库归档**：`kit-*.diff` + `DELIVERY.md` + `Evidence.md` 必须放
+  `docs/lane-archives/<lane>/`（Work.lean 不入库，可由 kit + HEAD 重建）；主仓 tracked 改动仅限落库文件。
+- **REWIRE 闸**（陈述冻结的证明项换 donor）：`GATE_MODE=REWIRE RW_ALLOW=<allowlist> RW_DONOR=<donor>
+  LANE_FILES="a,b" bash scripts/auto_gate.sh <file> <THM>`；删除行必须在 allowlist，且不得删声明头/签名。
 
 ## 1. 起点（上波遗产，先读）
 - `$S0=/Users/zhangzhuo/c17_backup/lane_snapshots/<prev-lane>/`：`DELIVERY.md`（§… 消费图 / 残件表 / 下波工单）、`Evidence.md`（API 陷阱档）、`Kit-draft-<prev>.lean`（<件数> 草稿，零 sorry，未 RC=0）、`logs/`、`Work.lean`（<说明：是整文件拼接态还是草稿工作件>）。

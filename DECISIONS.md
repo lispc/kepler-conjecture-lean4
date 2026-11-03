@@ -3,6 +3,27 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-03 — 方向切换：以「树越大越好」为主指标；PackingConcl 进 e2e（用户「都同意。执行吧」）
+
+**拍板**（用户，2026-11-03 下午）：
+
+1. **主指标改为真实可达图**：不再追求 e2e `SORRIED` 单调下降；以 **K-REACH / COVERAGE / ORPHANS / SHIMS**
+   为主，`K-SORRIED` 为信息项（不设单调目标），`K-AXIOM` 为护栏。根集合 = e2e 根 + 各装配出口
+   （PackingConcl / LocalConcl 的 `*_discharged`）+ 各章 capstone；“树”只认 proof-term 可达，不认 import 闭包。
+2. **PackingConcl 进 e2e**：Stage 1 = PackingConcl 新增 `rdwkarcConcl_pc`（F1 重推件移植）+ 修假
+   `RDWKARC_concl_discharged`（原 `:= RDWKARC`，而 PA19 `RDWKARC` 是 sorry）+ 新 capstone
+   `PACKING_CHAPTER_MAIN_CONCLUSION_discharged` + Assembly import/一行 rewire；Stage 2 = used-interface
+   全量接线 + 假 discharge 清理 + 多根覆盖。
+3. **批准 `REWIRE` 闸模式**：`auto_gate.sh` 新增 `GATE_MODE=REWIRE`（`RW_ALLOW` allowlist + `RW_DONOR`
+   + 禁删声明头/签名），用于“陈述冻结的证明项换 donor”。F1 kit 回归测试 PASS；空 allowlist 负测试 PASS。
+4. **未落库工件入库归档**：`docs/lane-archives/<lane>/` 放 `kit.diff` + `DELIVERY.md` + `Evidence.md`
+   （Work.lean 不入库，可由 kit + HEAD 重建）。
+5. **build 覆盖**：零 importer 装配文件（PackingConcl 等）加入周期性 typecheck，防止静默腐烂。
+6. **批 1 三槽**：`packingconcl-c1-stage1` / `map-metrics-v2` / `tower-b4`。
+
+**影响**：Stage 1 预计 e2e `SORRIED` 123 → 129（+6），属真实债显形，不作为失败；验收改看
+K-REACH/COVERAGE/SHIMS/ORPHANS + axiom 护栏。F1 不再单独落库，其 kit 作为 Stage 1 的供体。
+
 ## 2026-11-03 — 本机禁重型计算：hNL/mnt/rest 证书农场全面暂停；冻结期不启动任何 sub-agent（用户「本机还是暂时不允许跑重型计算，所以 mnt / rest 这些都暂时不跑。现在先不要启动任何 sub agents，等我们讨论清楚确认再启动」）
 
 **拍板**（用户，2026-11-03 上午，在编排者给出 hNL/mnt 核时估算之后——mnt 109 全链 ≈1,600–7,700 核时、本机 50 片/h 内存限并发、

@@ -41,6 +41,30 @@ dels=$(git diff HEAD -- "$FILE" | grep -E '^-' | grep -v '^---' || true)
 # (silently empty adds => check void) while GNU grep accepts it.
 adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
 
+# 2-RW. REWIRE mode (approved 2026-11-03, DECISIONS.md): statement-preserving
+# proof-term donor swaps (assembly re-pointing). Replaces rule 2; rules
+# 1/3/4/4b/5 unchanged. RW_ALLOW is a file with the exact deleted lines (one
+# per line, with or without the diff '-' prefix); RW_DONOR names the new donor
+# constant that must appear among the added lines. Deleting a declaration
+# header/signature is rejected — the statement must stay frozen.
+if [ "${GATE_MODE:-}" = "REWIRE" ]; then
+  [ -n "${RW_ALLOW:-}" ] || fail "REWIRE: RW_ALLOW (allowlist file) not set"
+  case "$RW_ALLOW" in /*) ;; *) RW_ALLOW="$REPO_ROOT/$RW_ALLOW" ;; esac
+  [ -f "$RW_ALLOW" ] || fail "REWIRE: allowlist $RW_ALLOW missing"
+  [ -n "${RW_DONOR:-}" ] || fail "REWIRE: RW_DONOR (new donor constant) not set"
+  [ -n "$dels" ] || fail "REWIRE: no deleted lines (not a rewire?)"
+  [ -n "$adds" ] || fail "REWIRE: no added lines"
+  # exact multiset containment: every deleted line must be in the allowlist
+  rw_bad=$(comm -23 \
+    <(printf '%s\n' "$dels" | sed 's/^-//' | grep -v '^$' | sort) \
+    <(sed 's/^-//' "$RW_ALLOW" | grep -v '^$' | sort) || true)
+  [ -z "$rw_bad" ] || fail "REWIRE: deleted line not in allowlist: $(printf '%s' "$rw_bad" | head -3)"
+  if printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*((private|protected|noncomputable|unsafe|partial)[[:space:]]+)*(theorem|lemma|def|abbrev|instance)[[:space:]]'; then
+    fail "REWIRE: deletion includes a declaration header (statement not frozen)"
+  fi
+  printf '%s\n' "$adds" | grep -qF -- "$RW_DONOR" \
+    || fail "REWIRE: RW_DONOR '$RW_DONOR' not found among added lines"
+
 # 2-SF. STATEMENT-FIX mode (approved 2026-09-28, DECISIONS.md): statement
 # modifications are only legal as the verbatim application of a human-approved
 # patch draft archived under docs/statement-fix-proposals-patches/ and cited
@@ -49,7 +73,7 @@ adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
 # (multiset compare — robust to hunk-context drift, strict on content).
 # Replaces rule 2 below; rules 1/3/4/4b/5 unchanged (rule 5 then requires the
 # FIXED theorem to be sorryAx-free).
-if [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
+elif [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
   [ -n "${SF_PATCH:-}" ] || fail "STATEMENT-FIX: SF_PATCH (archived patch path) not set"
   case "$SF_PATCH" in /*) ;; *) SF_PATCH="$REPO_ROOT/$SF_PATCH" ;; esac
   [ -f "$SF_PATCH" ] || fail "STATEMENT-FIX: patch $SF_PATCH missing"
