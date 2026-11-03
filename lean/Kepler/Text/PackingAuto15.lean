@@ -470,7 +470,10 @@ theorem CARD_BOUNDARY_INT_BALL_BOUND (x : V3) (k1 k2 : ℝ) :
       (((Nat.card ↥((intBall x (r + k1)) \ (intBall x (r - k2))) : ℕ) : ℝ)) ≤ C * r ^ 2 := sorry
 
 /-- marchal3.hl:610 `BOUNDARY_VOLUME`.
--- NEEDS: 测度算术，独立中等档（~100-130 行）。路线：VOLUME_BALL 取
+-- PROVED (pa15-nli5, ~90 行): `measureReal_sdiff` + `volume_ball_fin_three`
+-- + `(u³-l³) = (u-l)(u²+ul+l²) ≤ max(k1+k2,0)·3u²` with `u = max(r+k1,0)`,
+-- `l = max(r-k2,0)` and `u ≤ (|k1|+1)r`; the `k1+k2 < 0` branch is empty.
+-- 原路线记录：VOLUME_BALL 取
 -- `EuclideanSpace.volume_ball_fin_three`（ENNReal，ofReal r^3 * ofReal (π*4/3)）
 -- 过 `Measure.real_def` 转 `volume.real`；annulus = sdiff 可测（`measurableSet_ball`）
 -- 且内球 ⊆ 外球（r-k2 ≤ r+k1）时 `measure_sdiff` 给体积差；立方差恒等式
@@ -480,10 +483,101 @@ theorem CARD_BOUNDARY_INT_BALL_BOUND (x : V3) (k1 k2 : ℝ) :
 -- 体积 ≤ D ≤ D·r²（volume ≥ 0）；k1+k2 < 0 时 r+k1 < 0 球空即 0。 -/
 theorem BOUNDARY_VOLUME (p : V3) (k1 k2 : ℝ) :
     ∃ C : ℝ, ∀ r : ℝ, 1 ≤ r →
-      volume.real (Metric.ball p (r + k1) \ Metric.ball p (r - k2)) ≤ C * r ^ 2 := sorry
+      volume.real (Metric.ball p (r + k1) \ Metric.ball p (r - k2)) ≤ C * r ^ 2 := by
+  classical
+  refine ⟨(Real.pi * 4 / 3) * (3 * max (k1 + k2) 0 * (|k1| + 1) ^ 2), ?_⟩
+  intro r hr1
+  by_cases hk : 0 ≤ k1 + k2
+  · have hRle : r - k2 ≤ r + k1 := by linarith
+    have hsub : Metric.ball p (r - k2) ⊆ Metric.ball p (r + k1) :=
+      Metric.ball_subset_ball hRle
+    have hfin : volume (Metric.ball p (r + k1)) ≠ ⊤ := by
+      rw [EuclideanSpace.volume_ball_fin_three]
+      exact ENNReal.mul_ne_top (ENNReal.pow_ne_top ENNReal.ofReal_ne_top)
+        ENNReal.ofReal_ne_top
+    rw [measureReal_sdiff hsub measurableSet_ball hfin]
+    have hbu : volume.real (Metric.ball p (r + k1))
+        = max (r + k1) 0 ^ 3 * (Real.pi * 4 / 3) := by
+      rw [Measure.real_def, EuclideanSpace.volume_ball_fin_three, ENNReal.toReal_mul,
+        ENNReal.toReal_pow, ENNReal.toReal_ofReal', ENNReal.toReal_ofReal (by positivity)]
+    have hbl : volume.real (Metric.ball p (r - k2))
+        = max (r - k2) 0 ^ 3 * (Real.pi * 4 / 3) := by
+      rw [Measure.real_def, EuclideanSpace.volume_ball_fin_three, ENNReal.toReal_mul,
+        ENNReal.toReal_pow, ENNReal.toReal_ofReal', ENNReal.toReal_ofReal (by positivity)]
+    rw [hbu, hbl]
+    have hcube : max (r + k1) 0 ^ 3 - max (r - k2) 0 ^ 3
+        ≤ 3 * max (k1 + k2) 0 * (|k1| + 1) ^ 2 * r ^ 2 := by
+      set u := max (r + k1) 0 with hu
+      set l := max (r - k2) 0 with hl
+      have hu0 : 0 ≤ u := le_max_right _ _
+      have hl0 : 0 ≤ l := le_max_right _ _
+      have hlu : l ≤ u := by
+        rw [hu, hl]; exact max_le_max hRle (le_refl 0)
+      have hub : u ≤ (|k1| + 1) * r := by
+        have h1 : r + k1 ≤ r + |k1| := by
+          have := le_abs_self k1; linarith
+        have h2 : r + |k1| ≤ r + |k1| * r := by
+          have : |k1| * 1 ≤ |k1| * r := by
+            exact mul_le_mul_of_nonneg_left hr1 (abs_nonneg k1)
+          nlinarith
+        have h3 : r + |k1| * r = (|k1| + 1) * r := by ring
+        have h0 : (0:ℝ) ≤ (|k1| + 1) * r := by positivity
+        rw [hu]; exact max_le (by linarith) h0
+      have hkey : ∀ a b : ℝ, max a 0 - max b 0 ≤ max (a - b) 0 := by
+        intro a b
+        have h : max a 0 ≤ max (a - b) 0 + max b 0 := by
+          refine max_le ?_ ?_
+          · have h1 : a - b ≤ max (a - b) 0 := le_max_left _ _
+            have h2 : b ≤ max b 0 := le_max_left _ _
+            linarith
+          · have h1 : (0:ℝ) ≤ max (a - b) 0 := le_max_right _ _
+            have h2 : (0:ℝ) ≤ max b 0 := le_max_right _ _
+            linarith
+        linarith
+      have hud : u - l ≤ max (k1 + k2) 0 := by
+        rw [hu, hl]
+        have h := hkey (r + k1) (r - k2)
+        have h2 : r + k1 - (r - k2) = k1 + k2 := by ring
+        rw [h2] at h
+        exact h
+      have hq : u ^ 2 + u * l + l ^ 2 ≤ 3 * u ^ 2 := by
+        nlinarith [mul_nonneg hl0 (sub_nonneg.mpr hlu), sq_nonneg (u - l), hu0, hl0]
+      have hM0 : 0 ≤ max (k1 + k2) 0 := le_max_right _ _
+      calc u ^ 3 - l ^ 3 = (u - l) * (u ^ 2 + u * l + l ^ 2) := by ring
+        _ ≤ max (k1 + k2) 0 * (3 * u ^ 2) := by
+            apply mul_le_mul hud hq (by positivity) hM0
+        _ ≤ max (k1 + k2) 0 * (3 * (((|k1| + 1) * r) ^ 2)) := by
+            have hu2 : u ^ 2 ≤ ((|k1| + 1) * r) ^ 2 := by
+              have h0 : (0:ℝ) ≤ (|k1| + 1) * r := by positivity
+              exact pow_le_pow_left₀ hu0 hub 2
+            have : 3 * u ^ 2 ≤ 3 * (((|k1| + 1) * r) ^ 2) := by linarith
+            exact mul_le_mul_of_nonneg_left this hM0
+        _ = 3 * max (k1 + k2) 0 * (|k1| + 1) ^ 2 * r ^ 2 := by ring
+    have hcpos : 0 < Real.pi * 4 / 3 := by positivity
+    have hstep : max (r + k1) 0 ^ 3 * (Real.pi * 4 / 3)
+        - max (r - k2) 0 ^ 3 * (Real.pi * 4 / 3)
+        = (max (r + k1) 0 ^ 3 - max (r - k2) 0 ^ 3) * (Real.pi * 4 / 3) := by ring
+    rw [hstep]
+    calc (max (r + k1) 0 ^ 3 - max (r - k2) 0 ^ 3) * (Real.pi * 4 / 3)
+        ≤ (3 * max (k1 + k2) 0 * (|k1| + 1) ^ 2 * r ^ 2) * (Real.pi * 4 / 3) :=
+          mul_le_mul_of_nonneg_right hcube hcpos.le
+      _ = (Real.pi * 4 / 3) * (3 * max (k1 + k2) 0 * (|k1| + 1) ^ 2) * r ^ 2 := by ring
+  · have hk' : k1 + k2 < 0 := not_le.mp hk
+    have hempty : Metric.ball p (r + k1) \ Metric.ball p (r - k2) = ∅ := by
+      rw [sdiff_eq_empty]
+      exact Metric.ball_subset_ball (by linarith)
+    rw [hempty]
+    simp only [measure_empty, Measure.real_def, ENNReal.toReal_zero]
+    have h1 : max (k1 + k2) 0 = 0 := max_eq_right (not_le.mp hk).le
+    have hz : (Real.pi * 4 / 3) * (3 * max (k1 + k2) 0 * (|k1| + 1) ^ 2) * r ^ 2 = 0 := by
+      rw [h1]; ring
+    rw [hz]
 
 /-- marchal3.hl:737 `PACKING_BALL_BOUNDARY`.
--- NEEDS: 消费 BOUNDARY_VOLUME(k1+1, k2+1) 的计数装配（~120-160 行）。路线：
+-- PROVED (pa15-nli5, ~80 行): disjoint unit balls over the annulus points lie
+-- in the thickened shell `ball p (r+k1+1) \ ball p (r-k2-1)`; the shell
+-- volume is bounded by `BOUNDARY_VOLUME p (k1+1) (k2+1)`, so the count is at
+-- most the shell volume divided by `4π/3`. 原路线记录：
 -- ① B := (V ∩ ball p (r+k1)) \ (V ∩ ball p (r-k2)) 有限：⊆ V ∩ ball 0 (r+k1+‖p‖+1)
 --    （dist 三角形），后者 = `hp.finite_inter_ball`（0 心版，Statement 已真证）。
 -- ② 计数链 = Statement.finite_inter_ball 的 `key` 论证原样平移到心 p：
@@ -496,11 +590,176 @@ theorem BOUNDARY_VOLUME (p : V3) (k1 k2 : ℝ) :
 theorem PACKING_BALL_BOUNDARY (V : Set V3) (p : V3) (k1 k2 : ℝ) (hp : Packing V) :
     ∃ C : ℝ, ∀ r : ℝ, 1 ≤ r →
       (((Nat.card ↥((V ∩ Metric.ball p (r + k1)) \ (V ∩ Metric.ball p (r - k2))) : ℕ) : ℝ))
-        ≤ C * r ^ 2 := sorry
+        ≤ C * r ^ 2 := by
+  classical
+  obtain ⟨Cv, hCv⟩ := BOUNDARY_VOLUME p (k1 + 1) (k2 + 1)
+  refine ⟨Cv / (Real.pi * 4 / 3), ?_⟩
+  intro r hr1
+  set A : Set V3 := (V ∩ Metric.ball p (r + k1)) \ (V ∩ Metric.ball p (r - k2)) with hA
+  have hfin : A.Finite := by
+    refine Set.Finite.subset (hp.finite_inter_ball (r + k1 + ‖p‖ + 1)) ?_
+    intro v hv
+    rw [hA] at hv
+    obtain ⟨⟨hvV, hvp⟩, -⟩ := hv
+    refine ⟨hvV, ?_⟩
+    rw [Metric.mem_ball] at hvp ⊢
+    have hpd : dist p 0 = ‖p‖ := by rw [dist_eq_norm, sub_zero]
+    calc dist v 0 ≤ dist v p + dist p 0 := dist_triangle v p 0
+      _ < r + k1 + ‖p‖ + 1 := by rw [hpd]; linarith
+  have hshell : (⋃ v ∈ hfin.toFinset, Metric.ball v 1)
+      ⊆ Metric.ball p (r + (k1 + 1)) \ Metric.ball p (r - (k2 + 1)) := by
+    intro w hw
+    simp only [Set.mem_iUnion, Finset.mem_coe, exists_prop] at hw
+    obtain ⟨v, hvT, hwv⟩ := hw
+    have hvA : v ∈ A := (Set.Finite.mem_toFinset hfin).mp hvT
+    rw [hA] at hvA
+    obtain ⟨⟨hvV, hvp⟩, hvn⟩ := hvA
+    have hvp' : dist v p < r + k1 := Metric.mem_ball.mp hvp
+    have hwv' : dist w v < 1 := Metric.mem_ball.mp hwv
+    have hvn' : v ∉ Metric.ball p (r - k2) := fun h => hvn ⟨hvV, h⟩
+    have hvn2 : r - k2 ≤ dist v p := le_of_not_gt (fun h => hvn' (Metric.mem_ball.mpr h))
+    refine ⟨?_, ?_⟩
+    · rw [Metric.mem_ball]
+      calc dist w p ≤ dist w v + dist v p := dist_triangle w v p
+        _ < 1 + (r + k1) := by linarith
+        _ = r + (k1 + 1) := by ring
+    · rw [Metric.mem_ball]
+      have h1 : dist v p ≤ dist v w + dist w p := dist_triangle v w p
+      rw [dist_comm v w] at h1
+      linarith
+  have hdisj : (hfin.toFinset : Set V3).PairwiseDisjoint (fun v => Metric.ball v 1) := by
+    intro u hu v hv hne
+    have huA : u ∈ A := (Set.Finite.mem_toFinset hfin).mp hu
+    have hvA : v ∈ A := (Set.Finite.mem_toFinset hfin).mp hv
+    have hdist := hp.dist_ge_two (by rw [hA] at huA; exact huA.1.1)
+      (by rw [hA] at hvA; exact hvA.1.1) hne
+    simp only [Function.onFun]
+    rw [disjoint_iff_inter_eq_empty]
+    by_contra hne'
+    obtain ⟨w, hwu, hwv⟩ := Set.nonempty_iff_ne_empty.mpr hne'
+    have : dist u v ≤ dist u w + dist w v := dist_triangle u w v
+    rw [Metric.mem_ball] at hwu hwv
+    linarith [dist_comm u w ▸ hwu]
+  have hfr : ∀ v ∈ hfin.toFinset, volume (Metric.ball v 1) ≠ ⊤ := by
+    intro v _
+    rw [EuclideanSpace.volume_ball_fin_three]
+    exact ENNReal.mul_ne_top (ENNReal.pow_ne_top ENNReal.ofReal_ne_top) ENNReal.ofReal_ne_top
+  have hsum := measureReal_biUnion_finset (μ := volume) (s := hfin.toFinset)
+    (f := fun v => Metric.ball v 1) hdisj (fun v _ => measurableSet_ball) hfr
+  have hfshell : volume (Metric.ball p (r + (k1 + 1)) \ Metric.ball p (r - (k2 + 1))) ≠ ⊤ := by
+    refine ne_top_of_le_ne_top ?_ (measure_mono (Set.sdiff_subset))
+    rw [EuclideanSpace.volume_ball_fin_three]
+    exact ENNReal.mul_ne_top (ENNReal.pow_ne_top ENNReal.ofReal_ne_top) ENNReal.ofReal_ne_top
+  have hle := measureReal_mono hshell hfshell (μ := volume)
+  rw [hsum] at hle
+  have hbv : ∀ v ∈ hfin.toFinset, volume.real (Metric.ball v 1) = Real.pi * 4 / 3 := by
+    intro v _
+    rw [Measure.real_def, EuclideanSpace.volume_ball_fin_three, ENNReal.toReal_mul,
+      ENNReal.toReal_pow, ENNReal.toReal_ofReal (by norm_num : (0:ℝ) ≤ 1),
+      ENNReal.toReal_ofReal (by positivity)]
+    norm_num
+  rw [Finset.sum_congr rfl hbv, Finset.sum_const, nsmul_eq_mul] at hle
+  have hCv' := hCv r hr1
+  have h4 : (0:ℝ) < Real.pi * 4 / 3 := by positivity
+  have hcard : (((hfin.toFinset.card : ℕ) : ℝ)) * (Real.pi * 4 / 3)
+      ≤ Cv * r ^ 2 := le_trans hle hCv'
+  have hnat : Nat.card ↥A = hfin.toFinset.card := by
+    rw [Nat.card_coe_set_eq, Set.ncard_eq_toFinset_card _ hfin]
+  rw [hnat]
+  calc ((hfin.toFinset.card : ℕ) : ℝ)
+      = (((hfin.toFinset.card : ℕ) : ℝ) * (Real.pi * 4 / 3)) / (Real.pi * 4 / 3) := by
+        field_simp
+    _ ≤ (Cv * r ^ 2) / (Real.pi * 4 / 3) := by
+        exact div_le_div_of_nonneg_right hcard h4.le
+    _ = Cv / (Real.pi * 4 / 3) * r ^ 2 := by ring
+
+/-- `HL_2` inside PA15's prefix (`HL_2` itself is declared later in the file):
+`hl [u, v] = dist u v / 2` (private copy of the `HL_2` body). -/
+private theorem p15_hl_pair2 (u v : V3) : hl [u, v] = dist u v / 2 := by
+  have hset : setOfList [u, v] = ({u, v} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hcc : circumcenter ({u, v} : Set V3) = midpoint ℝ u v := CIRCUMCENTER_2 u v
+  have hexi : ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w := by
+    refine ⟨dist (midpoint ℝ u v) u, ?_⟩
+    rw [hcc]
+    intro w hw
+    rcases Set.mem_insert_iff.mp hw with rfl | hw'
+    · rfl
+    · rcases Set.mem_singleton_iff.mp hw' with rfl
+      simp
+  have key : radV ({u, v} : Set V3) = dist (circumcenter ({u, v} : Set V3)) u :=
+    (Classical.epsilon_spec (p := fun c : ℝ => ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w) hexi) u (Set.mem_insert u {v})
+  have hhl : hl [u, v] = dist (circumcenter ({u, v} : Set V3)) u := by
+    show radV (setOfList [u, v]) = _
+    rw [hset, key]
+  rw [hhl, hcc]
+  simp
+  ring
+
+/-- `hl` of a pair inside PA15's prefix (`HL_2` is declared later in the file,
+and `MCELL_SUBSET_BALL_4` needs it earlier): private copy of the `HL_2` body. -/
+private theorem p15_omega_dist_hdA (V : Set V3) (ul : List V3) (hp : Packing V)
+    (hs : saturated V) (hb : barV V 3 ul) (j : ℕ) (hj : j ≤ 3) :
+    dist (hdV ul) (omegaListN V ul j) < 2 := by
+  obtain ⟨y, hyV, hyd⟩ := hs (omegaListN V ul j)
+  rcases Nat.eq_zero_or_pos j with h0 | hpos
+  · rw [h0, omegaListN, dist_self]
+    norm_num
+  · have hmem := OMEGA_LIST_N_IN_VORONOI_LIST V ul 3 j hb hj
+    rw [voronoiList, voronoiSet] at hmem
+    have hmemF : (voronoiClosed V (hdV ul) : Set V3) ∈
+        {x | ∃ v ∈ setOfList (truncateSimplex j ul), voronoiClosed V v = x} :=
+      ⟨hdV ul, by
+        rw [← HD_TRUNCATE_SIMPLEX ul j (by rw [hb.1]; omega)]
+        exact HD_IN_SET_OF_LIST (truncateSimplex j ul)
+          (by rw [LENGTH_TRUNCATE_SIMPLEX j ul (by rw [hb.1]; omega)]; omega), rfl⟩
+    have has := Set.sInter_subset_of_mem hmemF hmem
+    have h1 : dist (omegaListN V ul j) (hdV ul) ≤ dist (omegaListN V ul j) y := by
+      simpa only [voronoiClosed, Set.mem_setOf_eq] using has y hyV
+    rw [dist_comm]
+    linarith
+
+/-- `VOL_POS_LT_AFF_DIM_3` (AJRIPQN.hl:42-60) inside PA15's prefix (private
+copy of `PackingAuto17.volPosLtAffDim3_p17`, which is not importable). -/
+private theorem p15_volPosAffDim3 (S : Set V3) (hs : MeasurableSet S)
+    (hv : 0 < volume S) : affDim S = 3 := by
+  rcases Set.eq_empty_or_nonempty S with rfl | hne
+  · rw [measure_empty] at hv
+    exact absurd hv (by norm_num)
+  · by_contra hcon
+    have hne' : S ≠ ∅ := (Set.nonempty_iff_ne_empty).mp hne
+    have hfr : (Module.finrank ℝ (vectorSpan ℝ S) : ℤ) = affDim S := by
+      rw [affDim, if_neg hne']
+    have hV3 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+    have hle : Module.finrank ℝ (vectorSpan ℝ S) ≤ 3 := by
+      simpa [hV3] using Submodule.finrank_le (vectorSpan ℝ S)
+    rcases Nat.lt_or_ge (Module.finrank ℝ (vectorSpan ℝ S)) 3 with hlt' | h3
+    · have htop : (vectorSpan ℝ S : Submodule ℝ V3) ≠ ⊤ := by
+        intro htop
+        rw [htop] at hlt'
+        simp [finrank_top, hV3] at hlt'
+      have htop_aff : (affineSpan ℝ S : AffineSubspace ℝ V3) ≠ ⊤ := by
+        intro hE
+        exact htop (AffineSubspace.vectorSpan_eq_top_of_affineSpan_eq_top ℝ V3 V3 hE)
+      have h0 : volume ((affineSpan ℝ S : AffineSubspace ℝ V3) : Set V3) = 0 :=
+        MeasureTheory.Measure.addHaar_affineSubspace volume (affineSpan ℝ S) htop_aff
+      have hmono : volume S ≤ volume ((affineSpan ℝ S : AffineSubspace ℝ V3) : Set V3) :=
+        measure_mono (subset_affineSpan ℝ S)
+      rw [h0] at hmono
+      exact absurd hmono (not_le.mpr hv)
+    · exact hcon (by rw [← hfr]; exact_mod_cast le_antisymm hle h3)
 
 /-- marchal3.hl:831 `MCELL_SUBSET_BALL_4`.
--- NEEDS: 五 case 中四个已有完整初等路线，卡 i=2 的 u0 ≠ u1 一小步（合计
--- ~180-220 行）。地图（供 KIZHLTL2 波 2C 直接施工）：
+-- PROVED (pa15-nli5, ~110 行 + 3 个前置私有助件): the five-case route below,
+-- with `i = 2` closed by the mutual `rconeGe` sum: the two cone inequalities
+-- add to `‖u1-u0‖² ≥ (d(x,u0)+d(x,u1))·d(u0,u1)·a` with
+-- `a = hl (trunc 1 ul)/√2 = d(u0,u1)/(2√2)`, so `d(x,u0)+d(x,u1) ≤ 2√2 < 4`;
+-- `u0 ≠ u1` follows from `barV`'s `voronoiNondg` on the pair `[u0,u1]`
+-- (`affDim = 2`) versus `volPosLtAffDim3` (`affDim = 3` if `u0 = u1`).
+-- 原地图（供 KIZHLTL2 波 2C 参考）：
 -- * X = ∅ 支：p := 0 平凡。
 -- * i ∈ {0,1}：mcell0 ⊆ rogers、mcell1 ⊆ rogers（if-条件真时），而
 --   rogers = hull{omegaListN j | j < 4} ⊆ closedBall (hdV ul) 2 —— 顶点界由
@@ -523,7 +782,185 @@ theorem PACKING_BALL_BOUNDARY (V : Set V3) (p : V3) (k1 k2 : ℝ) (hp : Packing 
 --   （PA13 范本）。HOL 原证走 QZKSYKG2（PA14 GIANT 未移植），Lean 侧必须走
 --   上述初等路线。 -/
 theorem MCELL_SUBSET_BALL_4 (V : Set V3) (X : Set V3) (hp : Packing V) (hs : saturated V)
-    (hm : mcellSet V X) : ∃ p : V3, X ⊆ Metric.ball p 4 := sorry
+    (hm : mcellSet V X) : ∃ p : V3, X ⊆ Metric.ball p 4 := by
+  classical
+  obtain ⟨i, ul, hX, hb⟩ := hm
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+  have hsethd : hdV ul ∈ setOfList ul := HD_IN_SET_OF_LIST ul (by rw [hb.1]; omega)
+  have hlist4 : setOfList ul ⊆ Metric.ball (hdV ul) 4 := p15_barV3ImpFinite2 hp hs hb hsethd
+  have hrog : rogers V ul ⊆ Metric.ball (hdV ul) 4 := by
+    rw [ROGERS_EXPLICIT V ul hs hp hb]
+    refine convexHull_min ?_ (convex_ball _ _)
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl | rfl
+    · rw [Metric.mem_ball, dist_self]; norm_num
+    · exact Metric.mem_ball.mpr (by
+        have h := p15_omega_dist_hdA V ul hp hs hb 1 (by norm_num)
+        rw [dist_comm]; linarith)
+    · exact Metric.mem_ball.mpr (by
+        have h := p15_omega_dist_hdA V ul hp hs hb 2 (by norm_num)
+        rw [dist_comm]; linarith)
+    · exact Metric.mem_ball.mpr (by
+        have h := p15_omega_dist_hdA V ul hp hs hb 3 (by norm_num)
+        rw [dist_comm]; linarith)
+  by_cases h0 : i = 0
+  · refine ⟨hdV ul, ?_⟩
+    have hX0 : X = mcell0 V ul := by rw [hX, h0]; exact (MCELL_EXPLICIT 0 V ul).1
+    rw [hX0, mcell0]
+    exact fun x hx => hrog hx.1
+  by_cases h1 : i = 1
+  · refine ⟨hdV ul, ?_⟩
+    have hX1 : X = mcell1 V ul := by rw [hX, h1]; exact (MCELL_EXPLICIT 1 V ul).2.1
+    rw [hX1, mcell1]
+    by_cases hc : Real.sqrt 2 ≤ hl ul
+    · rw [if_pos hc]
+      exact fun x hx => hrog hx.1.1
+    · rw [if_neg hc]
+      exact Set.empty_subset _
+  by_cases h2 : i = 2
+  · -- i = 2: the two mutual `rconeGe` bounds sum to a diameter bound
+    refine ⟨hdV ul, ?_⟩
+    have hX2 : X = mcell2 V ul := by rw [hX, h2]; exact (MCELL_EXPLICIT 2 V ul).2.2.1
+    rw [hX2, mcell2]
+    by_cases hc : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+    · rw [if_pos hc]
+      have hhd : hdV ul = u0 := by rw [hul]; rfl
+      have htail : hdV ul.tail = u1 := by rw [hul]; rfl
+      have htr1 : truncateSimplex 1 ul = [u0, u1] := by
+        rw [hul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2
+      have ha_val : hl (truncateSimplex 1 ul) / Real.sqrt 2
+          = dist u0 u1 / (2 * Real.sqrt 2) := by
+        rw [htr1, p15_hl_pair2]
+        ring
+      have hsubV : setOfList ul ⊆ V := BARV_SUBSET V 3 ul hb
+      have hu0V : u0 ∈ V := hsubV (by rw [hul]; simp [setOfList])
+      have hu1V : u1 ∈ V := hsubV (by rw [hul]; simp [setOfList])
+      have hu0u1 : u0 ≠ u1 := by
+        intro hEq
+        have hinit : initialSublist [u0, u1] ul := by
+          rw [hul]; exact ⟨[u2, u3], rfl⟩
+        have hnd : voronoiNondg V [u0, u1] := hb.2 [u0, u1] ⟨hinit, by simp⟩
+        obtain ⟨-, -, hdim⟩ := hnd
+        have hlen : (([u0, u1] : List V3).length : ℤ) = 2 := by simp
+        rw [hlen] at hdim
+        have hdim2 : affDim (voronoiList V [u0, u1]) = 2 := by linarith
+        rw [hEq] at hdim2
+        have hvl : voronoiList V [u1, u1] = voronoiClosed V u1 := by
+          have hset : setOfList [u1, u1] = ({u1} : Set V3) := by
+            ext y; simp [setOfList]
+          rw [voronoiList, hset, VORONOI_SET_SING]
+        rw [hvl] at hdim2
+        have hmeas : MeasurableSet (voronoiClosed V u1) :=
+          (CLOSED_VORONOI_CLOSED V u1).measurableSet
+        have hvpos : 0 < volume (voronoiClosed V u1) := by
+          have hb1 : Metric.ball u1 1 ⊆ voronoiClosed V u1 := by
+            intro y hy
+            simp only [voronoiClosed, Set.mem_setOf_eq]
+            intro w hw
+            rw [Metric.mem_ball] at hy
+            rcases eq_or_ne w u1 with rfl | hne
+            · exact le_refl _
+            · have h2' : 2 ≤ dist w u1 := Packing.dist_ge_two hp hw hu1V hne
+              have h3' : dist w u1 ≤ dist w y + dist y u1 := dist_triangle w y u1
+              have hy' : dist y u1 < 1 := hy
+              have h4 : dist w y = dist y w := dist_comm w y
+              linarith
+          have hmono := measure_mono hb1 (μ := volume)
+          have hbpos : 0 < volume (Metric.ball u1 1) := by
+            rw [EuclideanSpace.volume_ball_fin_three]
+            refine ENNReal.mul_pos ?_ ?_
+            · simp
+            · exact (ENNReal.ofReal_pos.mpr (by positivity)).ne'
+          exact lt_of_lt_of_le hbpos hmono
+        have h3 := p15_volPosAffDim3 (voronoiClosed V u1) hmeas hvpos
+        rw [h3] at hdim2
+        norm_num at hdim2
+      have hdpos : 0 < dist u0 u1 := by
+        have h2' : 2 ≤ dist u0 u1 := Packing.dist_ge_two hp hu0V hu1V hu0u1
+        linarith
+      intro x hx
+      simp only [rconeGe, Set.mem_inter_iff, Set.mem_setOf_eq] at hx
+      obtain ⟨⟨hx1, hx2⟩, -⟩ := hx
+      rw [hhd, htail] at hx1 hx2
+      rw [ha_val] at hx1 hx2
+      -- dot identity: the two cone dots sum to ‖u1-u0‖²
+      have hdot : (x - u0) ⬝ᵥ (u1 - u0) + (x - u1) ⬝ᵥ (u0 - u1)
+          = (u1 - u0) ⬝ᵥ (u1 - u0) := by
+        simp only [dotProduct, PiLp.sub_apply, Pi.sub_apply, Fin.sum_univ_three]
+        ring
+      have hdist_norm : dist u0 u1 = ‖u1 - u0‖ := by
+        rw [dist_comm, dist_eq_norm]
+      have hvv : (u1 - u0) ⬝ᵥ (u1 - u0) = dist u0 u1 ^ 2 := by
+        have h1 : (u1 - u0) ⬝ᵥ (u1 - u0) = ‖u1 - u0‖ ^ 2 := by
+          rw [← inner_eq_dot]
+          exact real_inner_self_eq_norm_sq _
+        rw [h1, hdist_norm]
+      have hsum : dist x u0 * dist u1 u0 * (dist u0 u1 / (2 * Real.sqrt 2))
+          + dist x u1 * dist u0 u1 * (dist u0 u1 / (2 * Real.sqrt 2))
+          ≤ (u1 - u0) ⬝ᵥ (u1 - u0) := by
+        rw [← hdot]
+        linarith [hx1, hx2]
+      rw [hvv] at hsum
+      have hd10 : dist u1 u0 = dist u0 u1 := dist_comm u1 u0
+      rw [hd10] at hsum
+      have hs2 : 0 < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+      set c := dist u0 u1 * (dist u0 u1 / (2 * Real.sqrt 2)) with hcdef
+      have hcpos : 0 < c := by
+        rw [hcdef]
+        have h2' : 0 < dist u0 u1 / (2 * Real.sqrt 2) := by positivity
+        exact mul_pos hdpos h2'
+      have hkey : (dist x u0 + dist x u1) * c ≤ dist u0 u1 ^ 2 := by
+        have heq : dist x u0 * dist u0 u1 * (dist u0 u1 / (2 * Real.sqrt 2))
+            + dist x u1 * dist u0 u1 * (dist u0 u1 / (2 * Real.sqrt 2))
+            = (dist x u0 + dist x u1) * c := by
+          rw [hcdef]; ring
+        linarith [hsum, heq]
+      have hcval : dist u0 u1 ^ 2 = c * (2 * Real.sqrt 2) := by
+        rw [hcdef]
+        field_simp
+      have hdx : dist x u0 + dist x u1 ≤ 2 * Real.sqrt 2 := by
+        have h1 : (dist x u0 + dist x u1) * c ≤ (2 * Real.sqrt 2) * c := by
+          rw [hcval] at hkey
+          linarith [hkey]
+        exact le_of_mul_le_mul_right h1 hcpos
+      rw [Metric.mem_ball, hhd]
+      have h4 : 2 * Real.sqrt 2 < 4 := by
+        nlinarith [Real.sq_sqrt (show (0:ℝ) ≤ 2 by norm_num), Real.sqrt_nonneg 2]
+      have hnon : 0 ≤ dist x u1 := dist_nonneg
+      linarith
+    · rw [if_neg hc]
+      exact Set.empty_subset _
+  by_cases h3 : i = 3
+  · refine ⟨hdV ul, ?_⟩
+    have hX3 : X = mcell3 V ul := by rw [hX, h3]; exact (MCELL_EXPLICIT 3 V ul).2.2.2.1
+    rw [hX3, mcell3]
+    by_cases hc : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+    · rw [if_pos hc]
+      obtain ⟨s, -, hdist, hseq⟩ := MXI_EXPLICIT V ul u0 u1 u2 u3 hs hp hb hul hc.1 hc.2
+      refine convexHull_min ?_ (convex_ball _ _)
+      intro z hz
+      rcases hz with hz | hz
+      · exact hlist4 (SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET ul 2 (by rw [hb.1]; norm_num) hz)
+      · rw [Set.mem_singleton_iff] at hz
+        subst hz
+        rw [← hseq, Metric.mem_ball, dist_comm, hdist]
+        nlinarith [Real.sq_sqrt (show (0:ℝ) ≤ 2 by norm_num), Real.sqrt_nonneg 2]
+    · rw [if_neg hc]
+      exact Set.empty_subset _
+  · have h4 : 4 ≤ i := by omega
+    refine ⟨hdV ul, ?_⟩
+    have hX4 : X = mcell4 V ul := by
+      rw [hX]
+      exact (MCELL_EXPLICIT i V ul).2.2.2.2 h4
+    rw [hX4, mcell4]
+    by_cases hc : hl ul < Real.sqrt 2
+    · rw [if_pos hc]
+      refine convexHull_min ?_ (convex_ball _ _)
+      intro z hz
+      exact hlist4 hz
+    · rw [if_neg hc]
+      exact Set.empty_subset _
 
 /-- private `p15_` helper for the future `MCELL_SUBSET_BALL_4` fill (wave 2C):
 every omega point of a `barV V 3` list sits strictly within distance `2` of the
@@ -5019,13 +5456,109 @@ theorem BETA_SET_2_THM {β : Type*} [Nonempty β] (g : Set V3 → β) (u0 v0 : V
     patternPair (fun u v => g {u, v}) {u0, v0} = g {u0, v0} :=
   pre_beta _ _ _ ⟨g, fun _ _ => rfl⟩
 
-/-- marchal3.hl:5854 `SUM_PAIR_2_SET` (needs a `SUM_GROUP` reindexing lemma not
-yet ported). -/
+/-- marchal3.hl:5854 `SUM_PAIR_2_SET` (PROVED, lane pa15-nli5: the ordered
+pair sum over `s ×ˢ s` is fibered over the unordered pair `{p.1, p.2}`, each
+fiber being exactly the two orderings; the private PA18 twin
+`p18_sum_pair_2_set` proved the same statement, this is the PA15 copy). -/
 theorem SUM_PAIR_2_SET (f : Set V3 → ℝ) (s : Set V3) (d : ℝ) (hs : s.Finite) :
     setSum {p : V3 × V3 | p.1 ∈ s ∧ p.2 ∈ s ∧ p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ d}
         (fun p => f {p.1, p.2}) =
-      2 * setSum {e : Set V3 | ∃ m ∈ s, ∃ n ∈ s, m ≠ n ∧ dist m n ≤ d ∧ e = {m, n}} f :=
-  sorry
+      2 * setSum {e : Set V3 | ∃ m ∈ s, ∃ n ∈ s, m ≠ n ∧ dist m n ≤ d ∧ e = {m, n}} f := by
+  classical
+  set O : Set (V3 × V3) := {p : V3 × V3 | p.1 ∈ s ∧ p.2 ∈ s ∧ p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ d}
+    with hOdef
+  set E : Set (Set V3) := {e : Set V3 | ∃ m ∈ s, ∃ n ∈ s, m ≠ n ∧ dist m n ≤ d ∧ e = {m, n}}
+    with hEdef
+  have hOsub : O ⊆ s ×ˢ s := fun p hp => ⟨hp.1, hp.2.1⟩
+  have hOfin : O.Finite := (hs.prod hs).subset hOsub
+  have hEeq : E = (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' O := by
+    ext e
+    simp only [hEdef, hOdef, Set.mem_setOf_eq, Set.mem_image]
+    constructor
+    · rintro ⟨m, hm, n, hn, hne, hdle, rfl⟩
+      exact ⟨(m, n), ⟨hm, hn, hne, hdle⟩, rfl⟩
+    · rintro ⟨p, ⟨hm, hn, hne, hdle⟩, rfl⟩
+      exact ⟨p.1, hm, p.2, hn, hne, hdle, rfl⟩
+  have hEfin : E.Finite := by rw [hEeq]; exact hOfin.image _
+  have hEtf : hEfin.toFinset = hOfin.toFinset.image (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) := by
+    ext e
+    rw [Set.Finite.mem_toFinset hEfin, hEeq, Set.mem_image, Finset.mem_image]
+    simp only [← Set.Finite.mem_toFinset hOfin]
+  have hfib : setSum O (fun p => f ({p.1, p.2} : Set V3))
+      = ∑ e ∈ hEfin.toFinset,
+        ∑ p ∈ hOfin.toFinset.filter
+          (fun p => ({p.1, p.2} : Set V3) = e), f ({p.1, p.2} : Set V3) := by
+    have himg : ∀ p ∈ O, ({p.1, p.2} : Set V3) ∈ E := fun p hp => by
+      rw [hEeq]; exact ⟨p, hp, rfl⟩
+    rw [setSum, dif_pos hOfin, hEtf]
+    exact (Finset.sum_fiberwise_of_maps_to
+      (t := hOfin.toFinset.image (fun p : V3 × V3 => ({p.1, p.2} : Set V3)))
+      (fun p hp => Finset.mem_image.mpr ⟨p, hp, rfl⟩)
+      (fun p => f ({p.1, p.2} : Set V3))).symm
+  have hinner : ∀ e ∈ E,
+      ∑ p ∈ hOfin.toFinset.filter (fun p => ({p.1, p.2} : Set V3) = e),
+        f ({p.1, p.2} : Set V3) = 2 * f e := by
+    intro e he
+    have him : e ∈ (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' O := by
+      rw [← hEeq]; exact he
+    rw [Set.mem_image] at him
+    obtain ⟨p0, hp0, rfl⟩ := him
+    obtain ⟨hm, hn, hne, hdle⟩ := hp0
+    have hmO1 : (p0.1, p0.2) ∈ O := ⟨hm, hn, hne, hdle⟩
+    have hmO2 : (p0.2, p0.1) ∈ O :=
+      ⟨hn, hm, fun h => hne h.symm, by rw [dist_comm]; exact hdle⟩
+    have hcomm : ({p0.2, p0.1} : Set V3) = ({p0.1, p0.2} : Set V3) := by
+      ext x
+      simp
+      tauto
+    have hsub : hOfin.toFinset.filter
+        (fun p => ({p.1, p.2} : Set V3) = ({p0.1, p0.2} : Set V3)) ⊆
+        insert (p0.1, p0.2) ({(p0.2, p0.1)} : Finset (V3 × V3)) := by
+      intro p hp
+      have hpm : p ∈ O :=
+        (Set.Finite.mem_toFinset hOfin).mp (Finset.mem_filter.mp hp).1
+      have hpe : ({p.1, p.2} : Set V3) = ({p0.1, p0.2} : Set V3) :=
+        (Finset.mem_filter.mp hp).2
+      have hmemb2 : p.2 ∈ ({p0.1, p0.2} : Set V3) := by rw [← hpe]; simp
+      have hmemb1 : p.1 ∈ ({p0.1, p0.2} : Set V3) := by rw [← hpe]; simp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmemb1 hmemb2
+      rcases hmemb2 with h21 | h22
+      · rcases hmemb1 with h11 | h12
+        · exact absurd (h11.trans h21.symm) hpm.2.2.1
+        · exact Finset.mem_insert.mpr
+            (Or.inr (Finset.mem_singleton.mpr (Prod.ext h12 h21)))
+      · exact Finset.mem_insert.mpr (Or.inl (Prod.ext (by
+          rcases hmemb1 with h11 | h12
+          · exact h11
+          · exact absurd (h12.trans h22.symm) hpm.2.2.1) h22))
+    have hsup : insert (p0.1, p0.2) ({(p0.2, p0.1)} : Finset (V3 × V3)) ⊆
+        hOfin.toFinset.filter
+          (fun p => ({p.1, p.2} : Set V3) = ({p0.1, p0.2} : Set V3)) := by
+      intro p hp
+      rcases Finset.mem_insert.mp hp with hp1 | hp2
+      · subst hp1
+        exact Finset.mem_filter.mpr
+          ⟨(Set.Finite.mem_toFinset hOfin).mpr hmO1, rfl⟩
+      · rw [Finset.mem_singleton] at hp2
+        subst hp2
+        exact Finset.mem_filter.mpr
+          ⟨(Set.Finite.mem_toFinset hOfin).mpr hmO2, hcomm⟩
+    have hne' : ((p0.1, p0.2) : V3 × V3) ∉ ({(p0.2, p0.1)} : Finset (V3 × V3)) := by
+      intro hcon
+      exact hne ((Prod.mk.injEq _ _ _ _).mp (Finset.mem_singleton.mp hcon)).1
+    have heqf : hOfin.toFinset.filter
+        (fun p => ({p.1, p.2} : Set V3) = ({p0.1, p0.2} : Set V3)) =
+        insert (p0.1, p0.2) ({(p0.2, p0.1)} : Finset (V3 × V3)) :=
+      Finset.ext fun p => ⟨fun hp => hsub hp, fun hp => hsup hp⟩
+    rw [heqf, Finset.sum_insert hne', Finset.sum_singleton, hcomm]
+    ring
+  rw [hfib]
+  have hstep : ∀ e ∈ hEfin.toFinset,
+      ∑ p ∈ hOfin.toFinset.filter (fun p => ({p.1, p.2} : Set V3) = e),
+        f ({p.1, p.2} : Set V3) = 2 * f e := fun e he =>
+    hinner e ((Set.Finite.mem_toFinset hEfin).mp he)
+  rw [Finset.sum_congr rfl hstep, ← Finset.mul_sum]
+  rw [setSum, dif_pos hEfin]
 
 /-- marchal3.hl:5893 `H0_LT_SQRT2`. -/
 theorem H0_LT_SQRT2 : h0 < Real.sqrt 2 := by
@@ -5101,9 +5634,63 @@ theorem CARD_LIST_4_klemma {α : Type*} (s : Set α) (hs : s.Finite) :
     Nat.card_congr (Equiv.Set.prod (s ×ˢ s) s), Nat.card_prod,
     Nat.card_congr (Equiv.Set.prod s s), Nat.card_prod]
 
-/-- marchal3.hl:6065 `BOUNDS_VGEN_klemma`. -/
+/-- marchal3.hl:6065 `BOUNDS_VGEN_klemma` (PROVED, lane pa15-nli5: the
+`Packing.finite_inter_ball` volume-count argument with center `u0`; the unit
+balls are pairwise disjoint and sit in `ball u0 (r+1)`, so the count is at
+most the ball-volume ratio `(r+1)^3`). -/
 theorem BOUNDS_VGEN_klemma (u0 : V3) (V : Set V3) (r : ℝ) (hr : 0 ≤ r) (hp : Packing V) :
-    ((Nat.card ↥(V ∩ Metric.ball u0 r) : ℕ) : ℝ) ≤ (r + 1) ^ 3 := sorry
+    ((Nat.card ↥(V ∩ Metric.ball u0 r) : ℕ) : ℝ) ≤ (r + 1) ^ 3 := by
+  classical
+  have key : ∀ T : Finset V3, (∀ v ∈ T, v ∈ V ∩ Metric.ball u0 r) →
+      (T.card : ℝ) ≤ (r + 1) ^ 3 := by
+    intro T hT
+    have hdisj : (T : Set V3).PairwiseDisjoint (fun v => Metric.ball v 1) := by
+      intro u hu v hv hne
+      have hdist := hp.dist_ge_two (hT u hu).1 (hT v hv).1 hne
+      simp only [Function.onFun]
+      rw [disjoint_iff_inter_eq_empty]
+      by_contra hne'
+      obtain ⟨w, hwu, hwv⟩ := Set.nonempty_iff_ne_empty.mpr hne'
+      have : dist u v ≤ dist u w + dist w v := dist_triangle u w v
+      rw [Metric.mem_ball] at hwu hwv
+      linarith [dist_comm u w ▸ hwu]
+    have hsub : (⋃ v ∈ T, Metric.ball v 1) ⊆ Metric.ball u0 (r + 1) := by
+      intro w hw
+      simp only [mem_iUnion, exists_prop] at hw
+      obtain ⟨v, hvT, hwv⟩ := hw
+      have hvr : dist v u0 < r := Metric.mem_ball.mp (hT v hvT).2
+      rw [Metric.mem_ball] at hwv ⊢
+      calc dist w u0 ≤ dist w v + dist v u0 := dist_triangle w v u0
+      _ < 1 + r := by linarith
+      _ = r + 1 := by ring
+    have hmeas : ∀ v ∈ T, MeasurableSet (Metric.ball v 1) :=
+      fun v _ => measurableSet_ball
+    have hsum := measure_biUnion_finset hdisj hmeas (μ := volume)
+    have hle := measure_mono hsub (μ := volume)
+    rw [hsum] at hle
+    simp only [EuclideanSpace.volume_ball_fin_three] at hle
+    simp only [ENNReal.ofReal_one, one_pow, one_mul] at hle
+    rw [Finset.sum_const, nsmul_eq_mul] at hle
+    have hr1 : (0 : ℝ) ≤ r + 1 := by linarith
+    rw [← ENNReal.ofReal_pow hr1, ← ENNReal.ofReal_natCast,
+        ← ENNReal.ofReal_mul (by positivity), ← ENNReal.ofReal_mul (by positivity),
+        ENNReal.ofReal_le_ofReal_iff (by positivity)] at hle
+    nlinarith [Real.pi_pos]
+  have hfin : (V ∩ Metric.ball u0 r).Finite := by
+    by_contra hinf
+    rw [Set.not_finite] at hinf
+    obtain ⟨T, hTsub, hTcard⟩ :=
+      hinf.exists_subset_card_eq (Nat.floor ((r + 1) ^ 3) + 1)
+    have hbound := key T (fun v hv => hTsub (Finset.mem_coe.mpr hv))
+    rw [hTcard] at hbound
+    push_cast at hbound
+    have hfl : (r + 1) ^ 3 < (Nat.floor ((r + 1) ^ 3) : ℝ) + 1 :=
+      Nat.lt_floor_add_one _
+    linarith
+  have hcard : Nat.card ↥(V ∩ Metric.ball u0 r) = hfin.toFinset.card := by
+    rw [Nat.card_coe_set_eq, Set.ncard_eq_toFinset_card _ hfin]
+  rw [hcard]
+  exact key hfin.toFinset (fun v hv => (Set.Finite.mem_toFinset hfin).mp hv)
 
 /-- marchal3.hl:6142 `BOUNDS_V4_klemma`. -/
 theorem BOUNDS_V4_klemma (u0 : V3) (V : Set V3) (hp : Packing V) :
@@ -5113,10 +5700,115 @@ theorem BOUNDS_V4_klemma (u0 : V3) (V : Set V3) (hp : Packing V) :
   norm_num at hle ⊢
   exact_mod_cast hle
 
-/-- marchal3.hl:6216 `CARD_MCELL_CONTAINS_POINT_klemma`. -/
+/-- marchal3.hl:6216 `CARD_MCELL_CONTAINS_POINT_klemma` (PROVED, lane
+pa15-nli5, `c = 5 * 125^4`): a cell containing `u0` in its vertex set has a
+`cellParams` list all of whose points lie within `4` of `u0`
+(`p15_barV3ImpFinite2`, since `VX ⊆ setOfList`), so the cells inject into
+`(i ≤ 4) × (4-lists over V ∩ ball u0 4)`; `CARD_LIST_4_klemma` +
+`BOUNDS_V4_klemma` give the count. -/
 theorem CARD_MCELL_CONTAINS_POINT_klemma :
     ∃ c : ℕ, ∀ (V : Set V3) (u0 : V3), saturated V → Packing V → u0 ∈ V →
-      Nat.card {X : Set V3 | mcellSet V X ∧ u0 ∈ VX V X} ≤ c := sorry
+      Nat.card {X : Set V3 | mcellSet V X ∧ u0 ∈ VX V X} ≤ c := by
+  classical
+  refine ⟨5 * 125 ^ 4, ?_⟩
+  intro V u0 hs hp hu0
+  set S : Set V3 := V ∩ Metric.ball u0 4 with hS
+  have hSfin : S.Finite := by
+    refine Set.Finite.subset (hp.finite_inter_ball (4 + ‖u0‖)) ?_
+    intro x hx
+    rw [hS] at hx
+    obtain ⟨hxV, hxb⟩ := hx
+    refine ⟨hxV, ?_⟩
+    rw [Metric.mem_ball] at hxb ⊢
+    have hd0 : dist u0 0 = ‖u0‖ := by rw [dist_eq_norm, sub_zero]
+    calc dist x 0 ≤ dist x u0 + dist u0 0 := dist_triangle x u0 0
+      _ < 4 + ‖u0‖ := by rw [hd0]; linarith
+  set L : Set (List V3) := {ul : List V3 | ∃ a b c d : V3, a ∈ S ∧ b ∈ S ∧ c ∈ S ∧
+    d ∈ S ∧ ul = [a, b, c, d]} with hL
+  have hLfin : L.Finite := by
+    have hsub : L ⊆ (fun q : V3 × V3 × V3 × V3 => [q.1, q.2.1, q.2.2.1, q.2.2.2]) ''
+        (S ×ˢ (S ×ˢ (S ×ˢ S))) := by
+      rintro l ⟨a, b, c, d, ha, hb, hc, hd, rfl⟩
+      exact ⟨(a, b, c, d), ⟨ha, hb, hc, hd⟩, rfl⟩
+    exact Set.Finite.subset ((hSfin.prod (hSfin.prod (hSfin.prod hSfin))).image _) hsub
+  have hLcard : Nat.card L = Nat.card S * Nat.card S * Nat.card S * Nat.card S := by
+    rw [hL]
+    have heq : {ul : List V3 | ∃ a b c d : V3, a ∈ S ∧ b ∈ S ∧ c ∈ S ∧ d ∈ S ∧
+        ul = [a, b, c, d]}
+        = {y : List V3 | ∃ u0 ∈ S, ∃ u1 ∈ S, ∃ u2 ∈ S, ∃ u3 ∈ S, y = [u0, u1, u2, u3]} := by
+      ext y
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · rintro ⟨a, b, c, d, ha, hb, hc, hd, rfl⟩
+        exact ⟨a, ha, b, hb, c, hc, d, hd, rfl⟩
+      · rintro ⟨a, ha, b, hb, c, hc, d, hd, rfl⟩
+        exact ⟨a, b, c, d, ha, hb, hc, hd, rfl⟩
+    rw [heq]
+    exact CARD_LIST_4_klemma S hSfin
+  have hsub : {X : Set V3 | mcellSet V X ∧ u0 ∈ VX V X} ⊆
+      (fun t : ℕ × List V3 => mcell t.1 V t.2) '' ((Set.Iic (4 : ℕ)) ×ˢ L) := by
+    intro X hX
+    obtain ⟨hm, hu0vx⟩ := hX
+    obtain ⟨hk4, hbarp, hXp⟩ := p15_cellParams_exists_of_mcellSet V X hm
+    by_cases hnull : nullSet X
+    · exfalso
+      rw [VX, if_pos hnull] at hu0vx
+      simpa using hu0vx
+    by_cases hk0 : (cellParams V X).1 = 0
+    · exfalso
+      rw [VX, if_neg hnull, if_pos hk0] at hu0vx
+      simpa using hu0vx
+    · have hvx : VX V X =
+          setOfList (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+        rw [VX, if_neg hnull, if_neg hk0]
+      have hu0tr : u0 ∈ setOfList (truncateSimplex ((cellParams V X).1 - 1)
+          (cellParams V X).2) := hvx ▸ hu0vx
+      have hlen4 : (cellParams V X).2.length = 4 := by have := hbarp.1; omega
+      obtain ⟨hsubl, -⟩ := (TRUNCATE_SIMPLEX_INITIAL_SUBLIST ((cellParams V X).1 - 1)
+        (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2)
+          (cellParams V X).2).1 ⟨rfl, by omega⟩
+      rcases hsubl with ⟨yl, hyl⟩
+      have hu0list : u0 ∈ setOfList (cellParams V X).2 := by
+        rw [hyl]
+        exact List.mem_append_left _ hu0tr
+      obtain ⟨a, b, c, d, hulp⟩ := BARV_3_EXPLICIT V (cellParams V X).2 hbarp
+      have hball := p15_barV3ImpFinite2 hp hs hbarp hu0list
+      have hpts : ∀ z ∈ setOfList (cellParams V X).2, z ∈ S := by
+        intro z hz
+        rw [hS]
+        exact ⟨BARV_SUBSET V 3 (cellParams V X).2 hbarp hz, hball hz⟩
+      refine ⟨((cellParams V X).1, (cellParams V X).2), ⟨hk4, ?_⟩, hXp.symm⟩
+      exact ⟨a, b, c, d, hpts a (by rw [hulp]; simp [setOfList]),
+        hpts b (by rw [hulp]; simp [setOfList]),
+        hpts c (by rw [hulp]; simp [setOfList]),
+        hpts d (by rw [hulp]; simp [setOfList]), hulp⟩
+  have hIfin : (Set.Iic (4 : ℕ) : Set ℕ).Finite := Set.finite_Iic 4
+  have hdomfin : ((Set.Iic (4 : ℕ)) ×ˢ L).Finite := hIfin.prod hLfin
+  have himgfin : ((fun t : ℕ × List V3 => mcell t.1 V t.2) ''
+      ((Set.Iic (4 : ℕ)) ×ˢ L)).Finite := hdomfin.image _
+  have hIic : (Set.Iic (4 : ℕ)).ncard = 5 := by
+    rw [Set.ncard_Iic_nat]
+  have hS125 : Nat.card S ≤ 125 := by
+    rw [hS]
+    exact BOUNDS_V4_klemma u0 V hp
+  calc Nat.card {X : Set V3 | mcellSet V X ∧ u0 ∈ VX V X}
+      ≤ Nat.card ↥((fun t : ℕ × List V3 => mcell t.1 V t.2) ''
+          ((Set.Iic (4 : ℕ)) ×ˢ L)) := by
+        rw [Nat.card_coe_set_eq, Nat.card_coe_set_eq]
+        exact Set.ncard_le_ncard hsub himgfin
+    _ ≤ Nat.card ↥((Set.Iic (4 : ℕ)) ×ˢ L) := by
+        rw [Nat.card_coe_set_eq, Nat.card_coe_set_eq]
+        exact Set.ncard_image_le hdomfin
+    _ = 5 * (Nat.card S * Nat.card S * Nat.card S * Nat.card S) := by
+        rw [Nat.card_coe_set_eq, Set.ncard_prod, hIic, ← Nat.card_coe_set_eq, hLcard]
+    _ ≤ 5 * 125 ^ 4 := by
+        have h2 : Nat.card S * Nat.card S ≤ 125 * 125 := Nat.mul_le_mul hS125 hS125
+        have h4 : Nat.card S * Nat.card S * Nat.card S * Nat.card S ≤ 125 ^ 4 := by
+          calc Nat.card S * Nat.card S * Nat.card S * Nat.card S
+              = (Nat.card S * Nat.card S) * (Nat.card S * Nat.card S) := by ring
+            _ ≤ (125 * 125) * (125 * 125) := Nat.mul_le_mul h2 h2
+            _ = 125 ^ 4 := by norm_num
+        exact Nat.mul_le_mul_left 5 h4
 
 /-- marchal3.hl:6450 `MCELL_SUBSET_BALL8_2`. -/
 theorem MCELL_SUBSET_BALL8_2 (V : Set V3) (X : Set V3) (v : V3) (hp : Packing V)
