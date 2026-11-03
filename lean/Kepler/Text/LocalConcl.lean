@@ -3218,4 +3218,314 @@ theorem nonlinear_imp_lp_main_estimate_p16_discharged :
 #print axioms JEJTVGB_p16_discharged
 #print axioms nonlinear_imp_lp_main_estimate_p16_discharged
 
+/-! ### S1 wiring capstone (lane localconcl-wiring-w1, 2026-11-03):
+
+the e2e cone consumed only this file's `nonlinear_imp_lp_main_estimate_p16_discharged`
+assembly (via `Kepler.Assembly.linearProgrammingResults`/`textCapstone`); the other
+47 twin-body `*_discharged` registry exits (orphan-scout WIRE table, 2026-11-03 logs,
+`orphan_hist_full.out`) were reachable from NO e2e root.  This capstone re-exposes them
+as ONE conjunction whose first conjunct is exactly that p16 switch statement, so the
+Assembly re-point is statement-preserving (GATE_MODE=REWIRE, RW_DONOR = this name).
+
+Anchors (per the orphan-scout discipline, no fabricated edges): every conjunct is
+asserted in the verbatim wording of its `*_discharged` exit above, and the body is
+the assembly `<exit_1, ..., exit_N>` -- zero new proof obligations, zero new imports,
+debt flows along the proof term per the ASSEMBLY WAVE contract (LEDGER above).
+Per-exit twin pointers: the exit docstrings and the LEDGER (c)/(d) entries.
+Unwired and staying so this wave: the 21 HOLD stubs ((a) no-twin 5, (b) circular
+re-export 11, (c) shape-blocked 5) -- their bodies are bare `sorry` with reason
+recorded; wiring them would only visualize the registry sorry itself.
+-/
+
+/-- S1 aggregate wiring capstone (47 exits + the p16 switch as conjunct 1).
+Conjunct order: orphan-scout WIRE increments, descending.  See the section
+comment above for the wiring discipline and the per-exit anchors. -/
+theorem localconcl_wire_capstone_w1 :
+    (main_nonlinear_terminal_v11 → lp_main_estimate) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s → s.k = 4 → v ∈ MMsV39 s →
+      scsGeneric v) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), isScsV39 s →
+    BBsV39 s vv → taustarV39 s vv < 0 → 3 < s.k →
+    ¬Circular (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3) (v w : V3),
+    isScsV39 s → BBsV39 s vv → taustarV39 s vv < 0 →
+    Lunar v w (Set.range vv)
+      (Set.range fun i => {vv i, vv (i + 1)}) → 3 < s.k →
+    interiorAngle1 0 (Set.range fun i => (vv i, vv (i + 1))) v <
+      Real.pi / 2) ∧
+    (scsArrowV39 {scsStabDiagV39 scs6I1 0 2} {scs5M1, scs3M1}) ∧
+    (∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x5 x6 s : ℝ),
+      0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
+      ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+      x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+      0 < upsX x1 x3 x5 → s = 1 ∨ s = -1 →
+      v3 = mkPlanar2 v0 v1 v2 x1 x2 x3 x5 x6 s →
+      Coplanar ({v0, v1, v2, v3} : Set V3) ∧
+      x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧
+      ∃ t : ℝ, 0 < t ∧ t • cross3 (v3 - v0) (v1 - v0) = s • cross3 (v1 - v0) (v2 - v0)) ∧
+    (scsArrowV39 {scsStabDiagV39 scs6I1 0 3} {scs4M2}) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), isScsV39 s →
+    BBsV39 s vv → taustarV39 s vv < 0 → 3 < s.k →
+    solLocal (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) < Real.pi) ∧
+    (∀ vv : ℕ → V3,
+    ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) ⊆ ballAnnulus →
+    Kepler.Packing ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) →
+    vv 0 ≠ vv 1 → vv 0 ≠ vv 1 → vv 0 ≠ vv 2 → vv 0 ≠ vv 3 →
+    vv 0 ≠ vv 4 → vv 1 ≠ vv 2 → vv 1 ≠ vv 3 → vv 1 ≠ vv 4 →
+    vv 2 ≠ vv 3 → vv 2 ≠ vv 4 → vv 3 ≠ vv 4 →
+    norm (vv 0 - vv 1) = 2 → norm (vv 1 - vv 2) = 2 → norm (vv 2 - vv 3) = 2 →
+    norm (vv 3 - vv 4) = 2 → norm (vv 4 - vv 0) = 2 →
+    ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
+      norm (vv i - vv ((i + 2) % 5)) ≤ 1 + Real.sqrt 5 ∧
+      norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5) ∧
+    (∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ),
+      0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
+      ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+      x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+      0 < upsX x1 x3 x5 →
+      ContinuousAt (fun q => mkPlanar2 v0 v1 q x1 x2 x3 x5 x6 s) v2) ∧
+    (∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ),
+    0 < x1 → 0 < x2 → 0 < x3 → 0 < x4 → 0 < x5 → 0 < x6 →
+    ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+    x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+    0 < deltaX x1 x2 x3 x4 x5 x6 →
+    v3 = mkSimplex1 v0 v1 v2 x1 x2 x3 x4 x5 x6 →
+    ContinuousAt (fun q => mkSimplex1 v0 v1 v2 x1 x2 x3 x4 q x6) x5) ∧
+    (∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ),
+      0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
+      ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+      x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+      0 < upsX x1 x3 x5 →
+      ContinuousAt (fun q => mkPlanar2 v0 v1 v2 x1 x2 q x5 x6 s) x3) ∧
+    (∀ (s t : ScsV39), isScsV39 s → transferV39 s t → scsArrowV39 {s} {t}) ∧
+    (main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (FF : Set (V3 × V3)) (k p1 : ℕ) (v : ℕ → V3),
+      FF = Set.range (fun i => (v i, v (i + 1))) →
+      isScsV39 s → k = s.k → 3 < k → v ∈ MMsV39 s → scsBasicV39 s →
+      scsGeneric v →
+      3 ≤ dist (v (p1 + 1)) (v (p1 + k - 1)) →
+      (∀ i j, scsDiag k i j ∧ psort k (i, j) ≠ psort k (p1 + 1, p1 + k - 1) →
+        s.a i j < dist (v i) (v j)) →
+      (∀ i j, scsDiag k i j → 4 * h0 < s.b i j) →
+      interiorAngle1 0 FF (v p1) < Real.pi →
+      (Real.pi / 2 < interiorAngle1 0 FF (v p1) ∨
+        interiorAngle1 0 FF (v (p1 + k - 1)) < Real.pi) →
+      s.a p1 (p1 + k - 1) = 2 → s.b p1 (p1 + k - 1) ≤ 2 * h0 →
+      2 ≤ dist (v (p1 + 1)) (v p1) →
+      dist (v (p1 + 1)) (v p1) ≤ cstab →
+      dist (v p1) (v (p1 + k - 1)) = 2) ∧
+    (main_nonlinear_terminal_v11 →
+    ∀ (s : ScsV39) (FF : Set (V3 × V3)) (k p1 : ℕ) (v : ℕ → V3),
+      FF = Set.range (fun i => (v i, v (i + 1))) →
+      isScsV39 s → k = s.k → 3 < k → v ∈ MMsV39 s → scsBasicV39 s →
+      scsGeneric v →
+      3 ≤ dist (v (p1 + k - 1)) (v (p1 + 1)) →
+      (∀ i j, scsDiag k i j ∧ psort k (i, j) ≠ psort k (p1 + k - 1, p1 + 1) →
+        s.a i j < dist (v i) (v j)) →
+      (∀ i j, scsDiag k i j → 4 * h0 < s.b i j) →
+      interiorAngle1 0 FF (v p1) < Real.pi →
+      (Real.pi / 2 < interiorAngle1 0 FF (v p1) ∨
+        interiorAngle1 0 FF (v (p1 + 1)) < Real.pi) →
+      s.a p1 (p1 + 1) = 2 → s.b p1 (p1 + 1) ≤ 2 * h0 →
+      2 ≤ dist (v (p1 + k - 1)) (v p1) →
+      dist (v (p1 + k - 1)) (v p1) ≤ cstab →
+      dist (v p1) (v (p1 + 1)) = 2) ∧
+    (∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ),
+    0 < x1 → 0 < x2 → 0 < x3 → 0 < x4 → 0 < x5 → 0 < x6 →
+    ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
+    x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
+    0 < deltaX x1 x2 x3 x4 x5 x6 →
+    v3 = mkSimplex1 v0 v1 v2 x1 x2 x3 x4 x5 x6 →
+    x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧ x4 = dist v3 v2 ^ 2 ∧
+      0 < ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ
+        (crossProduct ((v2 - v0 : V3) : Fin 3 → ℝ) ((v3 - v0 : V3) : Fin 3 → ℝ))) ∧
+    (∀ (f g : ℝ → ℝ) (f' g' h' x y : ℝ),
+    derivedForm True f f' x (Set.univ : Set ℝ) →
+    derivedForm True g g' y (Set.univ : Set ℝ) →
+    derivedForm True (g ∘ f) h' x (Set.univ : Set ℝ) →
+    0 < f' → f x = y → reEqvl h' g') ∧
+    (∀ (s : ScsV39) (i j : ℕ) (c : ℝ),
+    isScsV39 s → s.a i j ≤ c → c ≤ s.b i j → 3 < s.k →
+    ¬(i % s.k = j % s.k) → ¬s.J i j →
+    (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k → ¬(c = s.am i j)) →
+    (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k →
+      2 < s.a i j ∨ 2 * h0 < s.b i j) →
+    scsArrowV39 {s} (setOfList (subdivV39 s i j c))) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), 3 < s.k → isScsV39 s →
+    scsGeneric v → v ∈ MMsV39 s →
+    3 + {i | i < s.k ∧ scsIsStr s v i}.ncard ≤ s.k) ∧
+    (∀ y1 y2 y6 : ℝ,
+    derivedForm (0 < y1 ∧ 0 < y2) (fun q => xrr y1 y2 q) (8 * y6 / (y1 * y2)) y6
+      (Set.univ : Set ℝ)) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
+    v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+    (∀ i j, scsDiag s.k i j → 4 * h0 < s.b i j) → (scsM s).ncard ≤ 1 →
+    3 < s.k →
+    (∀ i, s.a i (i + 1) = 2) →
+    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
+    ∃ i, dist (v i) (v (i + 1)) = 2) ∧
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+      (f : V3 → ℝ → V3) (v w u : V3),
+      ConvexLocalFan V E FF →
+      Lunar v w V E →
+      Deformation f V a b →
+      interiorAngle1 0 FF v < Real.pi →
+      u ∈ V → u ≠ v → u ≠ w →
+      (∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u') →
+      (∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, v, w, u} : Set V3)) →
+      ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+        ConvexLocalFan ((fun v => f v t) '' V)
+          ((fun e => (fun v => f v t) '' e) '' E)
+          ((fun d => (f d.1 t, f d.2 t)) '' FF) ∧
+        Lunar v w ((fun v => f v t) '' V)
+          ((fun e => (fun v => f v t) '' e) '' E)) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
+    scsBasicV39 s → 3 < s.k → v ∈ MMsV39 s →
+    (∀ i j, scsDiag s.k i j → 4 * h0 < s.b i j) →
+    (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
+    (∀ i, s.b i (i + 1) ≤ cstab) → scsGeneric v) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
+    3 < s.k → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+    s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) = 2 * h0 →
+    dist (v i) (v (i + 1)) = 2 →
+    (∀ i j, scsDiag s.k i j → (s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) ∧
+      4 * h0 < s.b i j) →
+    2 < s.b i (i + 1) → s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) →
+    dist (v (i + 1)) (v (i + 2)) = 2) ∧
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+      (f : V3 → ℝ → V3),
+      ConvexLocalFan V E FF →
+      Generic V E →
+      Deformation f V a b →
+      (∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+        interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi) →
+      ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+        ConvexLocalFan ((fun v => f v t) '' V)
+          ((fun e => (fun v => f v t) '' e) '' E)
+          ((fun d => (f d.1 t, f d.2 t)) '' FF) ∧
+        Generic ((fun v => f v t) '' V)
+          ((fun e => (fun v => f v t) '' e) '' E)) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
+    v ∈ MMsV39 s → s.k = 4 → scsBasicV39 s →
+    s.b i (i + 1) ≤ 2 * h0 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
+    xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53) ∧
+    (∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s →
+    isScsV39 s' → scsBasicV39 s → scsBasicV39 s' → scsM s = scsM s' →
+    s.k = s'.k → v ∈ MMsV39 s → BBsV39 s' v → s.d = s'.d →
+    (∀ i, s'.a i (i + 1) = s.a i (i + 1)) →
+    (∀ i j, s.a i j ≤ s'.a i j ∧ s'.b i j ≤ s.b i j) → v ∈ MMsV39 s') ∧
+    (∀ (s : ScsV39) (v : ℕ → V3) (i j : ℕ), isScsV39 s →
+    scsBasicV39 s → v ∈ MMsV39 s → (∀ i, s.b i (i + 1) ≤ cstab) →
+    Lunar (v i) (v j) (Set.range v) (Set.range fun i => {v i, v (i + 1)}) →
+    s.k = 6 ∧ v j = v (i + 3)) ∧
+    (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
+    v ∈ MMsV39 s → 3 < s.k →
+    ¬Coplanar (({0} ∪ Set.range v : Set V3))) ∧
+    (∀ (s : ScsV39) (vv ww : ℕ → V3), isScsV39 s →
+    vv ∈ BBprime2V39 s → BBsV39 s ww →
+    taustarV39 s vv < taustarV39 s ww ∨ BBindexV39 s vv ≤ BBindexV39 s ww) ∧
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ),
+    isScsV39 s → w ∈ MMsV39 s →
+    azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi →
+    k = s.k → 3 < k →
+    ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3) →
+    w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3) →
+    (∀ i, scsDiag k l i → 4 * h0 < s.b l i) → norm (w l) ≠ 2 →
+    (∀ i, scsDiag k l i → s.a l i < dist (w l) (w i)) →
+    (∀ i, ¬s.J l i) →
+    (∀ (V : Set V3) (E : Set (Set V3)) (v : V3), V = Set.range w →
+      E = Set.range (fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E) →
+    s.a l (l + 1) = dist (w l) (w (l + 1)) ∧
+      s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1)))) ∧
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ),
+    isScsV39 s → w ∈ MMsV39 s →
+    azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi →
+    ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3) →
+    w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3) →
+    k = s.k → 3 < k →
+    (j % k = (l + 1) % k ∨ (j + 1) % k = l % k) →
+    s.a j l = dist (w j) (w l) → s.a j l < s.b j l →
+    (∀ i, scsDiag k l i → 4 * h0 < s.b l i) →
+    (∀ i, scsDiag k l i → s.a l i < dist (w l) (w i)) →
+    (∀ i, ¬s.J l i) →
+    (∀ (V : Set V3) (E : Set (Set V3)) (v : V3), V = Set.range w →
+      E = Set.range (fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E) →
+    s.a l (l + 1) = dist (w l) (w (l + 1)) ∧
+      s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1)))) ∧
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ),
+    isScsV39 s → w ∈ MMsV39 s → k = s.k → 3 < k →
+    (∀ i, scsDiag k l i → 4 * h0 < s.b l i) → norm (w l) ≠ 2 →
+    (∀ i, ¬(i % k = l % k) → s.a l i < dist (w l) (w i)) →
+    (∀ i, ¬s.J l i) →
+    (∀ (V : Set V3) (E : Set (Set V3)) (v : V3), V = Set.range w →
+      E = Set.range (fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E) →
+    False) ∧
+    (∀ (u v p : V3), ¬Collinear ℝ ({0, v, p} : Set V3) →
+    ¬Collinear ℝ ({0, u, p} : Set V3) →
+    arcV 0 u p + arcV 0 p v < Real.pi →
+    ¬(0 ∈ convexHull ℝ ({u, v} : Set V3))) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
+    BBsV39 s vv → taustarV39 s vv < 0 → BBprime2V39 s ≠ ∅) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
+    BBsV39 s vv → taustarV39 s vv < 0 → BBprimeV39 s ≠ ∅) ∧
+    (∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s →
+    isScsV39 s' → scsBasicV39 s → scsBasicV39 s' → s.k = s'.k →
+    s.d ≤ s'.d →
+    v ∈ MMsV39 s → BBsV39 s' v →
+    scsArrowV39 {s} {s'}) ∧
+    (∀ s : ScsV39, unadornedV39 s → MMsV39 s = BBprime2V39 s) ∧
+    (∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
+    BBsV39 s vv → taustarV39 s vv < 0 → MMsV39 s ≠ ∅) ∧
+    (scsArrowV39 {scs3M1} {scs3T1, scs3T5}) ∧
+    ((∀ s ∈ sInitListV39, MMsV39 s = ∅) → JEJTVGB_assume_v39) ∧
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop),
+    isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    scsArrowV39 {s} {s', s''}) ∧
+    (main_nonlinear_terminal_v11 →
+    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1}) ∧
+    (∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+    (vv : ℕ → V3),
+    MMsV39 s vv → s.bm p q < 4 → (s.k = 4 ∨ s.bm p q ≤ cstab) → isScsV39 s →
+    d' < 0.9 → scsDiag s.k p q →
+    BBsV39 (scsHalfSliceV39 s p q d' mkj)
+      (fun i => vv (i % (scsHalfSliceV39 s p q d' mkj).k + p % s.k))) ∧
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop) (vv : ℕ → V3),
+    scsHalfSliceV39 s p q d' mkj = s' →
+    scsHalfSliceV39 s q p d'' mkj = s'' →
+    MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    s.d ≤ d' + d'' →
+    dsvV39 s vv ≤ dsvV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      dsvV39 s'' (fun i => vv (i % s''.k + q % s.k))) ∧
+    (∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
+    (mkj : Prop) (vv : ℕ → V3),
+    scsHalfSliceV39 s p q d' mkj = s' →
+    scsHalfSliceV39 s q p d'' mkj = s'' →
+    MMsV39 s vv → isScsV39 s → scsDiag s.k p q → isScsSliceV39 s s' s'' p q →
+    s.d ≤ d' + d'' →
+    taustarV39 s' (fun i => vv (i % s'.k + p % s.k)) +
+      taustarV39 s'' (fun i => vv (i % s''.k + q % s.k)) ≤ taustarV39 s vv) ∧
+    (∀ (s : ScsV39) (i j : ℕ), isScsV39 s →
+    scsBasicV39 s → 3 < s.k → scsDiag s.k i j → s.a i j ≤ cstab →
+    isScsV39 (scsStabDiagV39 s i j) ∧ scsBasicV39 (scsStabDiagV39 s i j)) ∧
+    (scsArrowV39 {scsStabDiagV39 scs4I3 0 2} {scs4T4})
+  := ⟨nonlinear_imp_lp_main_estimate_p16_discharged, GSXRFWM_discharged, JKQEWGV2_discharged,
+      JKQEWGV3_discharged, AQICLXA_discharged, EYYPQDW_discharged, FUNOUYH_discharged,
+      JKQEWGV1_discharged, VPWSHTO_discharged, EYYPQDW3_discharged, PQCSXWG2_discharged,
+      EYYPQDW2_discharged, YXIONXL1_discharged, CJBDXXN_discharged, CUXVZOZ_discharged,
+      PQCSXWG1_discharged, TBRMXRZ1_discharged, UAGHHBM_discharged, AURSIPD_discharged,
+      DRNDRDV_discharged, JCYFMRP_discharged, MHAEYJN_discharged, RRCWNSJ_discharged,
+      TFITSKC_discharged, ZLZTHIC_discharged, ASSWPOW_discharged, MXQTIED_discharged,
+      AXJRPNC_discharged, FEKTYIY_discharged, HXHYTIJ_discharged, IMJXPHRv2_discharged,
+      NUXCOEAv2_discharged, ODXLSTCv2_discharged, PPBTYDQ_discharged, XWITCCN2_discharged,
+      XWITCCN_discharged, XWNHLMD_discharged, unadorned_MMs_discharged, AYQJTMD_discharged,
+      BKOSSGE_discharged, EAPGLE_discharged, LKGRQUI_discharged, OEHDBEN_discharged,
+      QKNVMLB1_discharged, QKNVMLB2_discharged, QKNVMLB3_discharged, YRTAFYH_discharged,
+      ZNLLLDL_discharged⟩
+
+#print axioms localconcl_wire_capstone_w1
+
+
 end Kepler.Text

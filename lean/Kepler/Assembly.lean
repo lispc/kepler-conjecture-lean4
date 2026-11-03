@@ -6982,7 +6982,12 @@ theorem linearProgrammingResults (hnl : TheNonlinearInequalities) :
 theorem textCapstone : TextCapstone := by
   intro a ⟨hTC, ⟨hAllGood, hLPR⟩, hNL⟩
   obtain ⟨hpnn, hox3, hmnt, hlpineq, hpacka, hkcblrqc⟩ := hNL
-  have hmain : lp_main_estimate := nonlinear_imp_lp_main_estimate_p16_discharged hmnt
+  -- S1 接线波（lane localconcl-wiring-w1，2026-11-03）：LocalConcl 47 条 twin-body
+  -- `*_discharged` 注册表出口经聚合 capstone 在锥内消费（conjunct 次序 = orphan-scout
+  -- WIRE 增量降序；每条边的锚 = 各出口 docstring + LocalConcl LEDGER (c)/(d)）。
+  -- conjunct 1 就是下面 p16 switch 的原陈述，re-point 语义不变（定义相等投影）。
+  have hcap := localconcl_wire_capstone_w1
+  have hmain : lp_main_estimate := hcap.1 hmnt
   refine kcImpTheKc ?_
   by_contra hneg
   -- packing 章主结论：¬kc ∧ pnn ∧ ox3q1h → ∃W. packing ∧ ⊆annulus ∧ ¬localAnnulus
