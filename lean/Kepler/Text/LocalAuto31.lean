@@ -875,6 +875,247 @@ theorem WW_DEFOR_RHO_NODE1_p31 {FF : Set (V3 × V3)} {w1 v : V3} {t : ℝ}
         (wwDefor_p31 w1 v t) = rhoNode1 FF v :=
   epsilon_ext_p31 (fun u => WW_DEFOR_FF3_p31 h hw1v hv ht u)
 
+theorem w5cC_hedge_of_LocalFan {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) :
+    ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  obtain ⟨hfan, x, hx, -, -, hreg⟩ := h
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := hreg v hv
+  have hne : (ee v E).Nonempty := by
+    by_contra hce
+    rw [Set.not_nonempty_iff_eq_empty.mp hce, Set.ncard_empty] at h2
+    norm_num at h2
+  obtain ⟨w, hw⟩ := hne
+  exact ⟨w, hw⟩
+
+theorem w5cC_lf2_of_LocalFan {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) : localFan_p2 V E FF :=
+  localFan_p2.of_LocalFan_noIso h (w5cC_hedge_of_LocalFan h)
+
+/-- Genericity keeps every other vertex off the line `0u`. -/
+theorem w5cC_gen_excl {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : LocalFan V E FF) (hg : Generic V E) {u x : V3} (hu : u ∈ V)
+    (hx : x ∈ V) (hne : x ≠ u) : ¬ Collinear ℝ ({0, u, x} : Set V3) :=
+  PROPERTIES_GENERIC_LOCAL_FAN_p9 (w5cC_lf2_of_LocalFan hlf)
+    (fun _ _ => True.intro) hg u hu x hx hne
+
+/-- Off-base genericity kit (the repeated block of HOL
+`GENERIC_HYPOTHESIS_WW_DEFOR`-style arguments at the shrunk vertex `w1`). -/
+theorem w5cC_generic_hyp_offbase {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {w1 : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (ht : t ≠ 0) (hw1V : w1 ∈ V) :
+    ∀ u ∈ V, (1 - t) • w1 ≠ u := by
+  obtain ⟨HS, hd, he, hn, hf, hfan2, hface, hd2⟩ := w5cC_lf2_of_LocalFan hlf
+  have hf0 : (0:V3) ∉ V := hfan2.2.2.2.1
+  intro u hu hhe
+  by_cases huu : u = w1
+  · rw [huu] at hhe
+    have e1 : (t:ℝ) • w1 = w1 - (1 - t) • w1 := by module
+    rw [hhe] at e1
+    have hz : t • w1 = (0:V3) := by simpa using e1
+    have hz0 : w1 = 0 := (smul_eq_zero.mp hz).resolve_left ht
+    have hw1V' : w1 ∈ V := huu ▸ hu
+    exact hf0 (hz0 ▸ hw1V')
+  · refine PROPERTIES_GENERIC_LOCAL_FAN_p9 (w5cC_lf2_of_LocalFan hlf)
+      (fun _ _ => True.intro) hg w1 hw1V u hu huu ?_
+    exact (collinear_triple_iff (x := (0:V3)) (v := w1) (u := u)).mpr
+      (Or.inl (by
+        rw [← hhe]
+        exact mem_affineSpan_pair_iff_exists_lineMap_eq.mpr
+          ⟨1 - t, by rw [AffineMap.lineMap_apply]; simp⟩))
+
+/-- The no-2-cycle exclusion. -/
+theorem w5cC_no2cycle {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v w1 : V3} (hlf : LocalFan V E FF) (hvw : (v, w1) ∈ FF)
+    (hwv : (w1, v) ∈ FF) : False := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hlf' := hlf
+  obtain ⟨hfan, x, hx, -, -, hreg⟩ := hlf'
+  obtain ⟨hVsub, -, -, hf0, hfan6, -⟩ := hfan
+  have hvV : v ∈ V := (LOCAL_FAN_IMP_IN_V2 h2 hvw).1
+  have hr1 : rhoNode1_p2 FF v = w1 := DETER_RHO_NODE h2 hvw
+  have hr2 : rhoNode1_p2 FF w1 = v := DETER_RHO_NODE h2 hwv
+  have hind : ∀ n : ℕ, (rhoNode1_p2 FF)^[n] v ∈ ({v, w1} : Set V3) := by
+    intro n
+    induction n with
+    | zero => simp
+    | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      rcases Set.mem_insert_iff.mp ih with hz | hz
+      · rw [hz, hr1]; simp
+      · rw [hz, hr2]; simp
+  have hmem : ∀ u ∈ V, u = v ∨ u = w1 := by
+    intro u hu
+    have huo : u ∈ orbitF_p2 (rhoNode1_p2 FF) v := by
+      rw [LOCAL_FAN_ORBIT_MAP_V h2 hvV]
+      exact hu
+    obtain ⟨n, hn⟩ := huo
+    have hm := hind n
+    rw [hn] at hm
+    rcases Set.mem_insert_iff.mp hm with hz | hz
+    · exact Or.inl hz
+    · exact Or.inr hz
+  have hsub : ∀ z ∈ (ee v E), z = w1 := by
+    intro z hz
+    have hE : ({v, z} : Set V3) ∈ E := hz
+    have hzV : z ∈ V := by
+      refine hVsub ?_
+      exact Set.mem_sUnion.mpr ⟨({v, z} : Set V3), hE, by simp⟩
+    rcases hmem z hzV with hzv | hzw
+    · rw [hzv] at hE
+      have hvE : ({v} : Set V3) ∈ E := by simpa using hE
+      have hcol : Collinear ℝ ({0, v} : Set V3) := by
+        have h := (collinear_triple_iff (x := (0:V3)) (v := v) (u := v)).mpr
+          (Or.inl (mem_affineSpan_pair_iff_exists_lineMap_eq.mpr
+            ⟨1, by rw [AffineMap.lineMap_apply]; simp⟩))
+        simpa using h
+      have hc2 : Collinear ℝ (insert 0 ({v} : Set V3)) := by
+        rw [show insert (0:V3) ({v} : Set V3) = ({0, v} : Set V3) from rfl]
+        exact hcol
+      exact (hfan6 {v} hvE hc2).elim
+    · exact hzw
+  have hnc : (ee v E).ncard = 2 := hreg v hvV
+  have hle : (ee v E).ncard ≤ ({w1} : Set V3).ncard :=
+    Set.ncard_le_ncard hsub (Set.toFinite _)
+  rw [Set.ncard_singleton] at hle
+  omega
+
+/-- HOL `GENERIC_HYPOTHESIS_WW_DEFOR` (ODXLSTC.hl:973). -/
+theorem w5cC_GENERIC_HYPOTHESIS_WW_DEFOR {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (ht : t ≠ 0) (hv : v ∈ V) (hg : Generic V E) :
+    ∀ x ∈ FF, x.1 ≠ x.2 ∧ (1 - t) • v ≠ x.1 ∧ (1 - t) • v ≠ x.2 := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hkey : ∀ u ∈ V, (1 - t) • v ≠ u :=
+    w5cC_generic_hyp_offbase hlf hg ht hv
+  intro x hx
+  exact ⟨LOCAL_FAN_IN_FF_DISTINCT h2 hx, hkey x.1 ((LOCAL_FAN_IMP_IN_V2 h2 hx).1),
+    hkey x.2 ((LOCAL_FAN_IMP_IN_V2 h2 hx).2)⟩
+
+
+/-! ## The FF4/FF5/FF6 dart-image kit off the base vertex -/
+
+theorem w5cC_WW_DEFOR_FF4 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hvw : (v, w1) ∈ FF)
+    (ht : t ≠ 0) (w : V3) :
+    (w, wwDefor_p31 w1 v t) ∈
+      ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+      (w, v) ∈ FF := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hvV : v ∈ V := (LOCAL_FAN_IMP_IN_V2 h2 hvw).1
+  have hne : v ≠ w1 := fun hh => LOCAL_FAN_IN_FF_DISTINCT h2 hvw hh
+  have hgen := w5cC_generic_hyp_offbase hlf hg ht ((LOCAL_FAN_IMP_IN_V2 h2 hvw).2)
+  have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hne]
+  constructor
+  · rintro ⟨x, hx, hpair⟩
+    have hinj := hpair
+    simp only [Prod.mk.injEq] at hinj
+    obtain ⟨hxa, hxb⟩ := hinj
+    rw [hvw'] at hxb
+    by_cases hyw : x.2 = w1
+    · rw [hyw, wwDefor_apply_p31, if_pos rfl] at hxb
+      exact (hgen v hvV hxb).elim
+    · rw [wwDefor_apply_p31, if_neg hyw] at hxb
+      have hd0 : (x.1, x.2) ∈ FF := hx
+      rw [hxb] at hd0
+      by_cases hxw1 : x.1 = w1
+      · exact absurd (by rw [hxw1] at hd0; exact hd0)
+          (fun hx' => w5cC_no2cycle hlf hx' hvw)
+      · rw [wwDefor_apply_p31, if_neg hxw1] at hxa
+        rw [← hxa, ← hxb]
+        simpa using hx
+  · intro hmem
+    have haw : w ≠ w1 := by
+      intro hcon
+      rw [hcon] at hmem
+      exact w5cC_no2cycle hlf hmem hvw
+    refine ⟨(w, v), hmem, ?_⟩
+    simp only [wwDefor_apply_p31, if_neg haw, if_neg hne]
+
+theorem w5cC_WW_DEFOR_FF5 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hnev : v ≠ w1)
+    (hwv : (w1, v) ∉ FF) (hvw : (v, w1) ∉ FF) (ht : t ≠ 0)
+    (hvV : v ∈ V) (hw1V : w1 ∈ V) (w : V3) :
+    (wwDefor_p31 w1 v t, w) ∈
+      ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+      (v, w) ∈ FF := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hgen := w5cC_generic_hyp_offbase hlf hg ht hw1V
+  have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hnev]
+  constructor
+  · rintro ⟨x, hx, hpair⟩
+    have hinj := hpair
+    simp only [Prod.mk.injEq] at hinj
+    obtain ⟨hxa, hxb⟩ := hinj
+    rw [hvw'] at hxa
+    by_cases hxw1 : x.1 = w1
+    · rw [hxw1, wwDefor_apply_p31, if_pos rfl] at hxa
+      exact (hgen v hvV hxa).elim
+    · rw [wwDefor_apply_p31, if_neg hxw1] at hxa
+      have hxv : x.1 = v := hxa
+      have hd0 : (x.1, x.2) ∈ FF := hx
+      rw [hxv] at hd0
+      have hru : rhoNode1_p2 FF v = x.2 := DETER_RHO_NODE h2 hd0
+      have hrne : rhoNode1_p2 FF v ≠ w1 := by
+        intro hcon
+        rw [hcon] at hru
+        exact hvw (by rw [hru]; exact hd0)
+      have hx2w : x.2 ≠ w1 := by rw [← hru]; exact hrne
+      rw [wwDefor_apply_p31, if_neg hx2w] at hxb
+      rw [← hxb]
+      exact hd0
+  · intro hmem
+    have hbw : w ≠ w1 := by
+      intro hcon
+      rw [hcon] at hmem
+      exact hvw hmem
+    refine ⟨(v, w), hmem, ?_⟩
+    simp only [wwDefor_apply_p31, if_neg hnev, if_neg hbw]
+
+theorem w5cC_WW_DEFOR_FF6 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hnev : v ≠ w1)
+    (hwv : (w1, v) ∉ FF) (hvw : (v, w1) ∉ FF) (ht : t ≠ 0)
+    (hvV : v ∈ V) (hw1V : w1 ∈ V) (w : V3) :
+    (w, wwDefor_p31 w1 v t) ∈
+      ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+      (w, v) ∈ FF := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hgen := w5cC_generic_hyp_offbase hlf hg ht hw1V
+  have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hnev]
+  constructor
+  · rintro ⟨x, hx, hpair⟩
+    have hinj := hpair
+    simp only [Prod.mk.injEq] at hinj
+    obtain ⟨hxa, hxb⟩ := hinj
+    rw [hvw'] at hxb
+    by_cases hyw : x.2 = w1
+    · rw [hyw, wwDefor_apply_p31, if_pos rfl] at hxb
+      exact (hgen v hvV hxb).elim
+    · rw [wwDefor_apply_p31, if_neg hyw] at hxb
+      have hd0 : (x.1, x.2) ∈ FF := hx
+      rw [hxb] at hd0
+      have hd : (x.1, v) ∈ FF := hd0
+      have hivs : ivsRhoNode1_p2 FF v = x.1 := PRE_IVS_RHO_NODE1_DETE h2 hd
+      have hwv' : ivsRhoNode1_p2 FF v ≠ w1 := by
+        intro hcon
+        have hx1 : x.1 = w1 := hivs.symm.trans hcon
+        exact hwv (by rw [← hx1]; exact hd)
+      have hx1w : x.1 ≠ w1 := fun hh => hwv' (hivs.trans hh)
+      rw [wwDefor_apply_p31, if_neg hx1w] at hxa
+      rw [← hxa, ← hxb]
+      simpa using hx
+  · intro hmem
+    have haw : w ≠ w1 := by
+      intro hcon
+      rw [hcon] at hmem
+      exact hwv hmem
+    refine ⟨(w, v), hmem, ?_⟩
+    simp only [wwDefor_apply_p31, if_neg haw, if_neg hnev]
+
+
 /-- HOL `WW_DEFOR_FF4` (ODXLSTC.hl:1222): the local-fan version of `FF3` for
 the incoming dart `(v, w1)`. -/
 theorem WW_DEFOR_FF4_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
@@ -884,13 +1125,7 @@ theorem WW_DEFOR_FF4_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (w, wwDefor_p31 w1 v t) ∈
       ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
       (w, v) ∈ FF := by
-  sorry
-  -- NEEDS (still): the local-fan distinctness kit — `LOCAL_FAN_IMP_IN_V2`,
-  -- `IVS_RHO_NODE1_DETE`, `DETER_RHO_NODE`, `LOFA_IMP_EE_TWO_ELMS_INS_ND`,
-  -- `LOFA_CARD_EE_V_2`. Root blocker: `LocalFan V E FF` is the registry
-  -- stub `fun _ _ _ => True` (LocalAuto1.lean:138), so the hypotheses carry
-  -- no fan structure; the named HOL lemmas exist in this repo only against
-  -- the different predicate `localFan_p2` (LocalAuto5).
+  exact w5cC_WW_DEFOR_FF4 _hlf _hg hvw _ht w
 
 /-- HOL `WW_DEFOR_RHO_NODE2` (ODXLSTC.hl:1306): the `ivs` choice transfers. -/
 theorem WW_DEFOR_RHO_NODE2_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
@@ -910,11 +1145,7 @@ theorem WW_DEFOR_FF5_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (wwDefor_p31 w1 v t, w) ∈
       ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
       (v, w) ∈ FF := by
-  sorry
-  -- NEEDS (still): `GENERIC_HYPOTHESIS_WW_DEFOR` kit +
-  -- `PROPERTIES_GENERIC_LOCAL_FAN` (genericity puts `v` off the
-  -- `affGt {0} {w1}` line, excluding the `(1 - t) % w1 = v` alignment).
-  -- Root blocker: `LocalFan` stub (`True`, LocalAuto1.lean:138).
+  exact w5cC_WW_DEFOR_FF5 _hlf _hg hv hwv _hvw _ht _hvV _hw1V w
 
 /-- HOL `GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE` (ODXLSTC.hl:1454). -/
 theorem GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE_p31 {V : Set V3} {E : Set (Set V3)}
@@ -936,9 +1167,7 @@ theorem WW_DEFOR_FF6_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (w, wwDefor_p31 w1 v t) ∈
       ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
       (w, v) ∈ FF := by
-  sorry
-  -- NEEDS (still): same kit as WW_DEFOR_FF5_p31 (mirror case) — root
-  -- blocker the `LocalFan` stub (`True`, LocalAuto1.lean:138).
+  exact w5cC_WW_DEFOR_FF6 _hlf _hg hv hwv _hvw _ht _hvV _hw1V w
 
 /-- HOL `GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE2` (ODXLSTC.hl:1527). -/
 theorem GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE2_p31 {V : Set V3} {E : Set (Set V3)}
@@ -1081,6 +1310,369 @@ transfers `WW_DEFOR_rho_node1_p31` / `WW_DEFOR_APHA_p31` plus this lemma are
 the ready ingredients for `WW_DEFOR_AZIM_p31`. -/
 
 
+/-- `azim` is congruent in its three ray arguments. -/
+theorem w5cC2_azim_congr {x x' y y' z z' : V3} (hx : x = x') (hy : y = y')
+    (hz : z = z') : azim 0 x y z = azim 0 x' y' z' := by
+  rw [hx, hy, hz]
+
+/-! ## Bridge kit: LA1 `LocalFan` → LA5 `localFan_p2` -/
+
+
+theorem w5cC_WW_DEFOR_AZIM {FF : Set (V3 × V3)} {v : V3} {t : ℝ}
+    (h : ∀ x ∈ FF, x.1 ≠ x.2 ∧ (1 - t) • v ≠ x.1 ∧ (1 - t) • v ≠ x.2) (ht : t < 1) :
+    azim 0 (wwDefor_p31 v v t)
+      (rhoNode1 ((fun uv => (wwDefor_p31 v uv.1 t, wwDefor_p31 v uv.2 t)) '' FF)
+        (wwDefor_p31 v v t))
+      (Classical.epsilon fun a => (a, wwDefor_p31 v v t) ∈
+        (fun uv => (wwDefor_p31 v uv.1 t, wwDefor_p31 v uv.2 t)) '' FF)
+      = azim 0 v (rhoNode1 FF v)
+        (Classical.epsilon fun a => (a, v) ∈ FF) := by
+  have hpos : 0 < 1 - t := by linarith
+  have hvv : wwDefor_p31 v v t = (1 - t) • v := by simp [wwDefor_apply_p31]
+  have key := w5cC2_azim_congr (x := wwDefor_p31 v v t) (x' := (1 - t) • v)
+    (y := rhoNode1 ((fun uv => (wwDefor_p31 v uv.1 t, wwDefor_p31 v uv.2 t)) '' FF)
+      (wwDefor_p31 v v t))
+    (y' := rhoNode1 FF v)
+    (z := Classical.epsilon fun a => (a, wwDefor_p31 v v t) ∈
+      (fun uv => (wwDefor_p31 v uv.1 t, wwDefor_p31 v uv.2 t)) '' FF)
+    (z' := Classical.epsilon fun a => (a, v) ∈ FF)
+    hvv (WW_DEFOR_rho_node1_p31 h) (WW_DEFOR_APHA_p31 h)
+  rw [key]
+  simpa using w5cC_azim_scale (a := 1 - t) (b := 1) (c := 1) hpos one_pos one_pos
+
+theorem w5cC_GENEIRC_WW_DEFOR_AZIM {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hv : v ∈ V) (hg : Generic V E) (ht : t < 1) :
+    azim 0 (wwDefor_p31 v v t)
+      (rhoNode1 ((fun uv => (wwDefor_p31 v uv.1 t, wwDefor_p31 v uv.2 t)) '' FF)
+        (wwDefor_p31 v v t))
+      (Classical.epsilon fun a => (a, wwDefor_p31 v v t) ∈
+        (fun uv => (wwDefor_p31 v uv.1 t, wwDefor_p31 v uv.2 t)) '' FF)
+      = azim 0 v (rhoNode1 FF v)
+        (Classical.epsilon fun a => (a, v) ∈ FF) := by
+  by_cases h0 : t = 0
+  · subst h0
+    have himg : (fun uv => (wwDefor_p31 v uv.1 (0:ℝ), wwDefor_p31 v uv.2 (0:ℝ))) '' FF = FF := by
+      have hF : (fun uv => (wwDefor_p31 v uv.1 (0:ℝ), wwDefor_p31 v uv.2 (0:ℝ))) = id := by
+        funext uv
+        simp [WW_DEFOR_0_ID_p31]
+      rw [hF, Set.image_id]
+    rw [himg, WW_DEFOR_0_ID_p31 v v]
+  · exact w5cC_WW_DEFOR_AZIM
+      (w5cC_GENERIC_HYPOTHESIS_WW_DEFOR hlf h0 hv hg) ht
+
+
+/-! ## The azimuth transfer family -/
+
+theorem w5cC_GENERIC_WW_DEFOR_RHO_NODE1 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hw : (w1, v) ∈ FF)
+    (ht : t ≠ 0) :
+    rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+        (wwDefor_p31 w1 v t) = rhoNode1 FF v := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hwV : w1 ∈ V := (LOCAL_FAN_IMP_IN_V2 h2 hw).1
+  have hvV : v ∈ V := (LOCAL_FAN_IMP_IN_V2 h2 hw).2
+  have hne : v ≠ w1 := fun hh => LOCAL_FAN_IN_FF_DISTINCT h2 hw hh.symm
+  have hgen := w5cC_generic_hyp_offbase hlf hg ht hwV
+  have hrv : rhoNode1_p2 FF v ≠ w1 := by
+    intro hcon
+    have hd : (v, w1) ∈ FF := by
+      rw [← hcon]
+      exact (LOCAL_FAN_RHO_NODE_PROS h2).1 v hvV
+    exact w5cC_no2cycle hlf hd hw
+  have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hne]
+  have hkey : ∀ u, (v, u) ∈
+      ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+      (v, u) ∈ FF := by
+    intro u
+    constructor
+    · rintro ⟨x, hx, hpair⟩
+      have hinj := hpair
+      simp only [Prod.mk.injEq] at hinj
+      obtain ⟨hxa, hxb⟩ := hinj
+      have hxv : x.1 = v := by
+        by_cases hxw1 : x.1 = w1
+        · rw [hxw1, wwDefor_apply_p31, if_pos rfl] at hxa
+          exact (hgen v hvV hxa).elim
+        · rw [wwDefor_apply_p31, if_neg hxw1] at hxa
+          exact hxa
+      by_cases hxw2 : x.2 = w1
+      · have hd0 : (x.1, x.2) ∈ FF := hx
+        rw [hxv, hxw2] at hd0
+        exact absurd hd0 (fun hd' => w5cC_no2cycle hlf hd' hw)
+      · rw [wwDefor_apply_p31, if_neg hxw2] at hxb
+        have hd0 : (x.1, x.2) ∈ FF := hx
+        rw [hxv] at hd0
+        rw [← hxb]
+        exact hd0
+    · intro hmem
+      have hru : rhoNode1_p2 FF v = u := DETER_RHO_NODE h2 hmem
+      rw [← hru] at hmem
+      refine ⟨(v, rhoNode1_p2 FF v), hmem, ?_⟩
+      simp only [wwDefor_apply_p31]
+      rw [if_neg hne, if_neg hrv, hru]
+  rw [hvw']
+  exact epsilon_ext_p31 hkey
+
+theorem w5cC_WW_DEFOR_ALPHA3 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hw : (w1, v) ∈ FF)
+    (ht : t ≠ 0) :
+    (Classical.epsilon fun a => (a, wwDefor_p31 w1 v t) ∈
+        (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+      = (1 - t) • w1 := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hvV : v ∈ V := (LOCAL_FAN_IMP_IN_V2 h2 hw).2
+  have hne : v ≠ w1 := fun hh => LOCAL_FAN_IN_FF_DISTINCT h2 hw hh.symm
+  have hgen := w5cC_generic_hyp_offbase hlf hg ht ((LOCAL_FAN_IMP_IN_V2 h2 hw).1)
+  have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hne]
+  have hc : (1 - t) • w1 ≠ v := hgen v hvV
+  have hkey : ∀ a, (a, wwDefor_p31 w1 v t) ∈
+      ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+      a = (1 - t) • w1 := by
+    intro a
+    constructor
+    · rintro ⟨x, hx, hpair⟩
+      have hinj := hpair
+      simp only [Prod.mk.injEq] at hinj
+      obtain ⟨hxa, hxb⟩ := hinj
+      rw [hvw'] at hxb
+      by_cases hyw : x.2 = w1
+      · rw [hyw, wwDefor_apply_p31, if_pos rfl] at hxb
+        exact (hc hxb).elim
+      · rw [wwDefor_apply_p31, if_neg hyw] at hxb
+        have hd0 : (x.1, x.2) ∈ FF := hx
+        rw [hxb] at hd0
+        have hd : (x.1, v) ∈ FF := hd0
+        have hivs : ivsRhoNode1_p2 FF v = x.1 := PRE_IVS_RHO_NODE1_DETE h2 hd
+        have hw1 : ivsRhoNode1_p2 FF v = w1 := PRE_IVS_RHO_NODE1_DETE h2 hw
+        rw [hw1] at hivs
+        rw [show x.1 = w1 from hivs.symm, wwDefor_apply_p31, if_pos rfl] at hxa
+        exact hxa.symm
+    · intro hae
+      refine ⟨(w1, v), hw, ?_⟩
+      have h1 : wwDefor_p31 w1 w1 t = (1 - t) • w1 := by simp [wwDefor_apply_p31]
+      have h2 : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hne]
+      show (wwDefor_p31 w1 w1 t, wwDefor_p31 w1 v t) = (a, wwDefor_p31 w1 v t)
+      rw [h1, h2, hae]
+  refine (hkey (Classical.epsilon
+    (fun a => (a, wwDefor_p31 w1 v t) ∈
+      ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)))).mp ?_
+  exact Classical.epsilon_spec (p := fun a => (a, wwDefor_p31 w1 v t) ∈
+    ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF))
+    ⟨(1 - t) • w1, (hkey _).mpr rfl⟩
+
+theorem w5cC_GENERIC_WW_DEFOR_RHO_NODE2 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hv : (v, w1) ∈ FF)
+    (ht : t ≠ 0) :
+    rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+        (wwDefor_p31 w1 v t) = (1 - t) • w1 := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hvV : v ∈ V := (LOCAL_FAN_IMP_IN_V2 h2 hv).1
+  have hne : v ≠ w1 := fun hh => LOCAL_FAN_IN_FF_DISTINCT h2 hv hh
+  have hgen := w5cC_generic_hyp_offbase hlf hg ht ((LOCAL_FAN_IMP_IN_V2 h2 hv).2)
+  have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hne]
+  have hkey : ∀ u, (v, u) ∈
+      ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+      u = (1 - t) • w1 := by
+    intro u
+    constructor
+    · rintro ⟨x, hx, hpair⟩
+      have hinj := hpair
+      simp only [Prod.mk.injEq] at hinj
+      obtain ⟨hxa, hxb⟩ := hinj
+      have hxv : x.1 = v := by
+        by_cases hxw1 : x.1 = w1
+        · rw [hxw1, wwDefor_apply_p31, if_pos rfl] at hxa
+          exact (hgen v hvV hxa).elim
+        · rw [wwDefor_apply_p31, if_neg hxw1] at hxa
+          exact hxa
+      have hd0 : (x.1, x.2) ∈ FF := hx
+      rw [hxv] at hd0
+      have hru : rhoNode1_p2 FF v = x.2 := DETER_RHO_NODE h2 hd0
+      have hrw : rhoNode1_p2 FF v = w1 := DETER_RHO_NODE h2 hv
+      rw [hrw] at hru
+      rw [← hru] at hxb
+      rw [wwDefor_apply_p31, if_pos rfl] at hxb
+      exact hxb.symm
+    · intro hae
+      refine ⟨(v, w1), hv, ?_⟩
+      have h1 : wwDefor_p31 w1 w1 t = (1 - t) • w1 := by simp [wwDefor_apply_p31]
+      have h2 : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hne]
+      show (wwDefor_p31 w1 v t, wwDefor_p31 w1 w1 t) = (v, u)
+      rw [h1, h2, hae]
+  rw [hvw']
+  refine (hkey (rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+    v)).mp ?_
+  exact Classical.epsilon_spec (p := fun a => (v, a) ∈
+    ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF))
+    ⟨(1 - t) • w1, (hkey _).mpr rfl⟩
+
+/-! ## The three edge-case azimuth transfers -/
+
+theorem w5cC_AZIM_DEFOR_EDGE1 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hw : (w1, v) ∈ FF)
+    (ht : t < 1) :
+    azim 0 (wwDefor_p31 w1 v t)
+      (rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+        (wwDefor_p31 w1 v t))
+      (Classical.epsilon fun a => (a, wwDefor_p31 w1 v t) ∈
+        (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+      = azim 0 v (rhoNode1 FF v)
+        (Classical.epsilon fun a => (a, v) ∈ FF) := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hne : v ≠ w1 := fun hh => LOCAL_FAN_IN_FF_DISTINCT h2 hw hh.symm
+  have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hne]
+  have hivs : ivsRhoNode1_p2 FF v = w1 := PRE_IVS_RHO_NODE1_DETE h2 hw
+  by_cases h0 : t = 0
+  · subst h0
+    have himg : (fun uv => (wwDefor_p31 w1 uv.1 (0:ℝ), wwDefor_p31 w1 uv.2 (0:ℝ))) '' FF = FF := by
+      have hF : (fun uv => (wwDefor_p31 w1 uv.1 (0:ℝ), wwDefor_p31 w1 uv.2 (0:ℝ))) = id := by
+        funext uv
+        simp [WW_DEFOR_0_ID_p31]
+      rw [hF, Set.image_id]
+    rw [himg, WW_DEFOR_0_ID_p31 w1 v]
+  · have hpos : 0 < 1 - t := by linarith
+    have key := w5cC2_azim_congr (x := wwDefor_p31 w1 v t) (x' := v)
+      (y := rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+        (wwDefor_p31 w1 v t))
+      (y' := rhoNode1 FF v)
+      (z := Classical.epsilon fun a => (a, wwDefor_p31 w1 v t) ∈
+        (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+      (z' := (1 - t) • w1)
+      hvw' (w5cC_GENERIC_WW_DEFOR_RHO_NODE1 hlf hg hw h0)
+      (w5cC_WW_DEFOR_ALPHA3 hlf hg hw h0)
+    rw [key, show (Classical.epsilon fun a => (a, v) ∈ FF) = w1 from hivs]
+    simpa using w5cC_azim_scale (a := 1) (b := 1) (c := 1 - t) one_pos one_pos hpos
+
+theorem w5cC_AZIM_DEFOR_EDGE2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hv : (v, w1) ∈ FF)
+    (ht : t < 1) :
+    azim 0 (wwDefor_p31 w1 v t)
+      (rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+        (wwDefor_p31 w1 v t))
+      (Classical.epsilon fun a => (a, wwDefor_p31 w1 v t) ∈
+        (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+      = azim 0 v (rhoNode1 FF v)
+        (Classical.epsilon fun a => (a, v) ∈ FF) := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  have hne : v ≠ w1 := fun hh => LOCAL_FAN_IN_FF_DISTINCT h2 hv hh
+  have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hne]
+  have hrw : rhoNode1_p2 FF v = w1 := DETER_RHO_NODE h2 hv
+  by_cases h0 : t = 0
+  · subst h0
+    have himg : (fun uv => (wwDefor_p31 w1 uv.1 (0:ℝ), wwDefor_p31 w1 uv.2 (0:ℝ))) '' FF = FF := by
+      have hF : (fun uv => (wwDefor_p31 w1 uv.1 (0:ℝ), wwDefor_p31 w1 uv.2 (0:ℝ))) = id := by
+        funext uv
+        simp [WW_DEFOR_0_ID_p31]
+      rw [hF, Set.image_id]
+    rw [himg, WW_DEFOR_0_ID_p31 w1 v]
+  · have hpos : 0 < 1 - t := by linarith
+    have key := w5cC2_azim_congr (x := wwDefor_p31 w1 v t) (x' := v)
+      (y := rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+        (wwDefor_p31 w1 v t))
+      (y' := (1 - t) • w1)
+      (z := Classical.epsilon fun a => (a, wwDefor_p31 w1 v t) ∈
+        (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+      (z' := Classical.epsilon fun a => (a, v) ∈ FF)
+      hvw' (w5cC_GENERIC_WW_DEFOR_RHO_NODE2 hlf hg hv h0)
+      (WW_DEFOR_RHO_NODE2_p31 hlf hg hv h0)
+    rw [key, show rhoNode1 FF v = w1 from hrw]
+    simpa using w5cC_azim_scale (a := 1) (b := 1 - t) (c := 1) one_pos hpos one_pos
+
+theorem w5cC_AZIM_DEFOR_EDGE3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {w1 v : V3} {t : ℝ}
+    (hlf : LocalFan V E FF) (hg : Generic V E) (hned : v ≠ w1)
+    (hwv : (w1, v) ∉ FF) (hvw : (v, w1) ∉ FF)
+    (hvV : v ∈ V) (hw1V : w1 ∈ V) :
+    azim 0 (wwDefor_p31 w1 v t)
+      (rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+        (wwDefor_p31 w1 v t))
+      (Classical.epsilon fun a => (a, wwDefor_p31 w1 v t) ∈
+        (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
+      = azim 0 v (rhoNode1 FF v)
+        (Classical.epsilon fun a => (a, v) ∈ FF) := by
+  have h2 := w5cC_lf2_of_LocalFan hlf
+  by_cases h0 : t = 0
+  · subst h0
+    have himg : (fun uv => (wwDefor_p31 w1 uv.1 (0:ℝ), wwDefor_p31 w1 uv.2 (0:ℝ))) '' FF = FF := by
+      have hF : (fun uv => (wwDefor_p31 w1 uv.1 (0:ℝ), wwDefor_p31 w1 uv.2 (0:ℝ))) = id := by
+        funext uv
+        simp [WW_DEFOR_0_ID_p31]
+      rw [hF, Set.image_id]
+    rw [himg, WW_DEFOR_0_ID_p31 w1 v]
+  · have hgen := w5cC_generic_hyp_offbase hlf hg h0 hw1V
+    have hvw' : wwDefor_p31 w1 v t = v := by simp [wwDefor_apply_p31, hned]
+    have hkey1 : ∀ u, (v, u) ∈
+        ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+        (v, u) ∈ FF := by
+      intro u
+      constructor
+      · rintro ⟨x, hx, hpair⟩
+        have hinj := hpair
+        simp only [Prod.mk.injEq] at hinj
+        obtain ⟨hxa, hxb⟩ := hinj
+        have hxv : x.1 = v := by
+          by_cases hxw1 : x.1 = w1
+          · rw [hxw1, wwDefor_apply_p31, if_pos rfl] at hxa
+            exact (hgen v hvV hxa).elim
+          · rw [wwDefor_apply_p31, if_neg hxw1] at hxa
+            exact hxa
+        by_cases hxw2 : x.2 = w1
+        · exact (hvw (by rw [← hxv, ← hxw2]; simpa using hx)).elim
+        · rw [wwDefor_apply_p31, if_neg hxw2] at hxb
+          rw [← hxb, ← hxv]
+          simpa using hx
+      · intro hmem
+        have hru : rhoNode1_p2 FF v = u := DETER_RHO_NODE h2 hmem
+        rw [← hru] at hmem
+        have hrne : rhoNode1_p2 FF v ≠ w1 := by
+          intro hcon
+          exact hvw (by rw [← hcon]; exact (LOCAL_FAN_RHO_NODE_PROS h2).1 v hvV)
+        refine ⟨(v, rhoNode1_p2 FF v), hmem, ?_⟩
+        simp only [wwDefor_apply_p31]
+        rw [if_neg hned, if_neg hrne, hru]
+    have hkey2 : ∀ a, (a, wwDefor_p31 w1 v t) ∈
+        ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+        (a, v) ∈ FF := by
+      intro a
+      constructor
+      · rintro ⟨x, hx, hpair⟩
+        have hinj := hpair
+        simp only [Prod.mk.injEq] at hinj
+        obtain ⟨hxa, hxb⟩ := hinj
+        rw [hvw'] at hxb
+        by_cases hyw : x.2 = w1
+        · rw [hyw, wwDefor_apply_p31, if_pos rfl] at hxb
+          exact (hgen v hvV hxb).elim
+        · rw [wwDefor_apply_p31, if_neg hyw] at hxb
+          have hxv2 : x.1 ≠ w1 := by
+            intro hxx
+            exact hwv (by
+              have hx' : (x.1, x.2) ∈ FF := by simpa using hx
+              rw [hxx, hxb] at hx'
+              exact hx')
+          rw [wwDefor_apply_p31, if_neg hxv2] at hxa
+          rw [← hxa, ← hxb]
+          simpa using hx
+      · intro hmem
+        have haw : a ≠ w1 := by
+          intro hcon
+          rw [hcon] at hmem
+          exact hwv hmem
+        refine ⟨(a, v), hmem, ?_⟩
+        simp only [wwDefor_apply_p31, if_neg haw, if_neg hned]
+    have hkey1' : ∀ a, (wwDefor_p31 w1 v t, a) ∈
+        ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
+        (v, a) ∈ FF := by
+      intro a; rw [hvw']; exact hkey1 a
+    exact w5cC2_azim_congr hvw' (epsilon_ext_p31 hkey1') (epsilon_ext_p31 hkey2)
+
+
 /-! ## Section 8: genericity hypothesis and the azimuth transfer -/
 
 /-- HOL `GENERIC_HYPOTHESIS_WW_DEFOR` (ODXLSTC.hl:973): under `local_fan` +
@@ -1089,12 +1681,7 @@ theorem GENERIC_HYPOTHESIS_WW_DEFOR_p31 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {v : V3} {t : ℝ}
     (_hlf : LocalFan V E FF) (_ht : t ≠ 0) (_hv : v ∈ V) (_hg : Generic V E) :
     ∀ x ∈ FF, x.1 ≠ x.2 ∧ (1 - t) • v ≠ x.1 ∧ (1 - t) • v ≠ x.2 := by
-  sorry
-  -- NEEDS (still): `LOCAL_FAN_IN_FF_DISTINCT` (darts have distinct ends) and
-  -- `LOFA_IMP_V_DIFF` + `PROPERTIES_GENERIC_LOCAL_FAN`/`AFF2` (genericity
-  -- puts `v` off `affGt {0} {x.1}` unless `t = 0`). Root blocker: the
-  -- `LocalFan` registry stub is `True` (LocalAuto1.lean:138); the named HOL
-  -- lemmas exist here only against `localFan_p2` (LocalAuto5).
+  exact w5cC_GENERIC_HYPOTHESIS_WW_DEFOR _hlf _ht _hv _hg
 
 /-- HOL `WW_DEFOR_AZIM` (ODXLSTC.hl:954): the interior azimuth at the
 deformed base point equals the original (azimuth scale invariance). -/
@@ -1107,12 +1694,7 @@ theorem WW_DEFOR_AZIM_p31 {FF : Set (V3 × V3)} {v : V3} {t : ℝ}
         (fun uv => (wwDefor_p31 v uv.1 t, wwDefor_p31 v uv.2 t)) '' FF)
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
-  sorry
-  -- NEEDS (still): `AZIM_SPECIAL_SCALE` — azimuth invariance under
-  -- `(1 - t) % v`, `0 < 1 - t` — is NOT ported anywhere (PlanarityAuto8
-  -- documents the gap; Kepler.Geom.Azim/AzimLemmas have no scale lemma).
-  -- With it, the transfers WW_DEFOR_rho_node1_p31 / WW_DEFOR_APHA_p31
-  -- (both proved above) finish this.
+  exact w5cC_WW_DEFOR_AZIM h ht
 
 /-- HOL `GENEIRC_WW_DEFOR_AZIM` (ODXLSTC.hl:1039): the local-fan generic
 version of WW_DEFOR_AZIM (with the `t = 0` identity case). -/
@@ -1126,10 +1708,7 @@ theorem GENEIRC_WW_DEFOR_AZIM_p31 {V : Set V3} {E : Set (Set V3)}
         (fun uv => (wwDefor_p31 v uv.1 t, wwDefor_p31 v uv.2 t)) '' FF)
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
-  sorry
-  -- NEEDS (still): WW_DEFOR_AZIM_p31 via GENERIC_HYPOTHESIS_WW_DEFOR_p31
-  -- (both `sorry`: azim scale lemma unported + `LocalFan` stub `True`);
-  -- the `t = 0` case is WW_DEFOR_0_ID + IMAGE_ID.
+  exact w5cC_GENEIRC_WW_DEFOR_AZIM _hlf _hv _hg _ht
 
 /-- HOL `AZIM_DEFOR_EDGE1` (ODXLSTC.hl:1189): azimuth transfer for the
 outgoing edge dart `(w1, v)`. -/
@@ -1144,10 +1723,7 @@ theorem AZIM_DEFOR_EDGE1_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3
         (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
-  sorry
-  -- NEEDS (still): WW_DEFOR_ALPHA3 (`CHOICE_LEMMA`) +
-  -- GENERIC_WW_DEFOR_RHO_NODE1 + `AZIM_SCALE_ALL` — root blocker the
-  -- `LocalFan` stub (`True`, LocalAuto1.lean:138); `AZIM_SCALE_ALL` unported.
+  exact w5cC_AZIM_DEFOR_EDGE1 _hlf _hg _hw _ht
 
 /-- HOL `AZIM_DEFOR_EDGE2` (ODXLSTC.hl:1365): azimuth transfer for the
 incoming edge dart `(v, w1)`. -/
@@ -1162,10 +1738,7 @@ theorem AZIM_DEFOR_EDGE2_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3
         (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
-  sorry
-  -- NEEDS (still): WW_DEFOR_RHO_NODE2 + GENERIC_WW_DEFOR_RHO_NODE2 +
-  -- `AZIM_SCALE_ALL` — root blocker the `LocalFan` stub (`True`,
-  -- LocalAuto1.lean:138); `AZIM_SCALE_ALL` unported.
+  exact w5cC_AZIM_DEFOR_EDGE2 _hlf _hg _hv _ht
 
 /-- HOL `AZIM_DEFOR_EDGE3` (ODXLSTC.hl:1540): azimuth transfer when `(v, w1)`
 is not a dart of the fan in either order. -/
@@ -1181,10 +1754,7 @@ theorem AZIM_DEFOR_EDGE3_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3
         (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
-  sorry
-  -- NEEDS (still): GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE{,2} (from
-  -- WW_DEFOR_FF5/FF6) + AZIM_SPECIAL_SCALE — root blocker the `LocalFan`
-  -- stub (`True`, LocalAuto1.lean:138); azim scale lemma unported.
+  exact w5cC_AZIM_DEFOR_EDGE3 _hlf _hg _hv _hwv _hvw _hvV _hw1V
 
 /-- HOL `AZIM_DEFORMATION_GENERIC` (ODXLSTC.hl:1566): azimuth transfer under
 `ww_defor w1` for arbitrary `v, w1 ∈ V` — trichotomy over the edge cases.
@@ -1708,6 +2278,138 @@ theorem DSV_WW_DEFOR_EQ_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (t : ℝ)
   unfold dsvV39
   rw [hcong]
 
+/-- Proof twin of `INTERIOR_ANGLE_SAME_WW_DEFOR0_p31` (HOL ODXLSTC.hl:2264). -/
+theorem w5cC_INTERIOR_ANGLE_SAME_WW_DEFOR0 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+    (t : ℝ) (FF : Set (V3 × V3))
+    (hk3 : 3 < k) (his : isScsV39 s) (hk : s.k = k) (hbb : BBsV39 s w)
+    (hbb' : BBsV39 s (fun i => wwDefor_p31 (w l) (w i) t))
+    (hFF : Set.range (fun i => (w i, w (i + 1))) = FF) (ht : t < 1) :
+    interiorAngle1 0
+      (Set.range (fun i => (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t)))
+      (wwDefor_p31 (w l) (w (l % k)) t)
+      = interiorAngle1 0 FF (w (l % k)) := by
+  have hk3' : ¬ (k ≤ 3) := by omega
+  have hk1 : 1 < k := by omega
+  have hper : Periodic w k := by rw [← hk]; exact hbb.2.1
+  have hpl : l % k < k := Nat.mod_lt _ (by omega)
+  have hinj := VV_INJ_p31 s k w hk his hbb
+  have hwp : w (l % k) = w l := periodic_mod_p18 hper l
+  -- the two fans
+  have hlf : LocalFan (Set.range w) (Set.range fun i => {w i, w (i + 1)}) FF := by
+    have h4 := hbb.2.2.2
+    rcases h4 with hle | hc
+    · omega
+    · rw [← hFF]; exact hc.1
+  have h2 : localFan_p2 (Set.range w) (Set.range fun i => {w i, w (i + 1)}) FF :=
+    w5cC_lf2_of_LocalFan hlf
+  have hlf' : LocalFan (Set.range fun i => wwDefor_p31 (w l) (w i) t)
+      (Set.range fun i => {wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t})
+      (Set.range fun i => (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t)) := by
+    have h4 := hbb'.2.2.2
+    rcases h4 with hle | hc
+    · omega
+    · exact hc.1
+  have h2' := w5cC_lf2_of_LocalFan hlf'
+  have hVn : (Set.range w).ncard = k :=
+    CARD_V_EQ_SCS_K1_p31 s k w (Set.range w) hk rfl his hk3 hbb
+  have hVn' : (Set.range fun i => wwDefor_p31 (w l) (w i) t).ncard = k :=
+    CARD_V_EQ_SCS_K1_p31 s k (fun i => wwDefor_p31 (w l) (w i) t) _ hk rfl his hk3 hbb'
+  -- index progression, original fan
+  have hstep : ∀ m, (rhoNode1 FF)^[m] (w (l % k)) = w (m + l % k) :=
+    VV_SUC_EQ_RHO_NODE_PRIME_p35 (s := s) (k := k) (p1 := l % k) (p := 0) (q := 0)
+      (u := w (l % k))
+      (V := Set.range w) (E := Set.range fun i => {w i, w (i + 1)}) (FF := FF) (vv := w)
+      hk rfl rfl rfl hFF his hk3' hbb
+  have hrho : rhoNode1 FF (w (l % k)) = w (1 + l % k) := by
+    simpa using hstep 1
+  have hivs : ivsRhoNode1 FF (w (l % k)) = w (k - 1 + l % k) := by
+    have h := ITER_CARD_MINUS1_EQ_IVS_RN1 h2 (v := w (l % k)) ⟨l % k, rfl⟩
+    rw [hVn] at h
+    exact h.symm.trans (hstep (k - 1))
+  -- index progression, deformed fan
+  have hstep' : ∀ m, (rhoNode1
+      (Set.range fun i => (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t)))^[m]
+      (wwDefor_p31 (w l) (w (l % k)) t) = wwDefor_p31 (w l) (w (m + l % k)) t := by
+    intro m
+    exact VV_SUC_EQ_RHO_NODE_PRIME_p35 (s := s) (k := k) (p1 := l % k) (p := 0) (q := 0)
+      (u := wwDefor_p31 (w l) (w (l % k)) t)
+      (V := Set.range fun i => wwDefor_p31 (w l) (w i) t)
+      (E := Set.range fun i =>
+        {wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t})
+      (FF := Set.range fun i =>
+        (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))
+      (vv := fun i => wwDefor_p31 (w l) (w i) t) hk rfl rfl rfl rfl his hk3' hbb' m
+  have hrho' : rhoNode1 (Set.range fun i =>
+      (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))
+      (wwDefor_p31 (w l) (w (l % k)) t) = wwDefor_p31 (w l) (w (1 + l % k)) t := by
+    simpa using hstep' 1
+  have hivs' : ivsRhoNode1 (Set.range fun i =>
+      (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))
+      (wwDefor_p31 (w l) (w (l % k)) t) = wwDefor_p31 (w l) (w (k - 1 + l % k)) t := by
+    have h := ITER_CARD_MINUS1_EQ_IVS_RN1 h2'
+      (v := wwDefor_p31 (w l) (w (l % k)) t) ⟨l % k, rfl⟩
+    rw [hVn'] at h
+    exact h.symm.trans (hstep' (k - 1))
+  have hL : interiorAngle1 0
+      (Set.range fun i => (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))
+      (wwDefor_p31 (w l) (w (l % k)) t)
+      = azim 0 (wwDefor_p31 (w l) (w (l % k)) t)
+          (wwDefor_p31 (w l) (w (1 + l % k)) t)
+          (wwDefor_p31 (w l) (w (k - 1 + l % k)) t) := by
+    show azim 0 (wwDefor_p31 (w l) (w (l % k)) t)
+      (rhoNode1 (Set.range fun i =>
+        (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))
+        (wwDefor_p31 (w l) (w (l % k)) t))
+      (ivsRhoNode1 (Set.range fun i =>
+        (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))
+        (wwDefor_p31 (w l) (w (l % k)) t)) = _
+    rw [hrho', hivs']
+  have hR : interiorAngle1 0 FF (w (l % k))
+      = azim 0 (w (l % k)) (w (1 + l % k)) (w (k - 1 + l % k)) := by
+    show azim 0 (w (l % k)) (rhoNode1 FF (w (l % k))) (ivsRhoNode1 FF (w (l % k))) = _
+    rw [hrho, hivs]
+  rw [hL, hR]
+  -- the base point is the only scaled one
+  have hne1 : w (1 + l % k) ≠ w l := by
+    intro hcon
+    have h2' : w (l % k + 1) = w (l % k) := by
+      rw [Nat.add_comm (1 : ℕ) (l % k)] at hcon
+      rw [hcon]; exact hwp.symm
+    have h3 : w ((l % k + 1) % k) = w (l % k) :=
+      (periodic_mod_p18 hper (l % k + 1)).trans h2'
+    have hidx : (l % k + 1) % k = l % k := by
+      by_contra hne
+      exact hinj ((l % k + 1) % k) (l % k)
+        ⟨Nat.mod_lt _ (by omega), hpl, hne⟩ h3
+    exact (SUC_MOD_NOT_EQ_p31 hk1 (l % k))
+      (by rw [Nat.mod_eq_of_lt hpl, hidx])
+  have hne2 : w (k - 1 + l % k) ≠ w l := by
+    intro hcon
+    have h3 : w ((k - 1 + l % k) % k) = w (l % k) := by
+      rw [periodic_mod_p18 hper (k - 1 + l % k), hcon, hwp]
+    have hidx : (k - 1 + l % k) % k = l % k := by
+      by_contra hne
+      exact hinj ((k - 1 + l % k) % k) (l % k)
+        ⟨Nat.mod_lt _ (by omega), hpl, hne⟩ h3
+    have hmod : (k - 1 + l % k) % k ≠ l % k := by
+      rcases Nat.eq_zero_or_pos (l % k) with hp0 | hp1
+      · rw [hp0, Nat.add_zero, Nat.mod_eq_of_lt (by omega)]
+        omega
+      · have hge : k ≤ k - 1 + l % k := by omega
+        rw [Nat.mod_eq_sub_mod hge, Nat.mod_eq_of_lt (by omega)]
+        omega
+    exact hmod hidx
+  have hA : wwDefor_p31 (w l) (w (l % k)) t = (1 - t) • (w (l % k)) := by
+    rw [wwDefor_apply_p31, if_pos hwp, hwp]
+  have hB : wwDefor_p31 (w l) (w (1 + l % k)) t = w (1 + l % k) := by
+    rw [wwDefor_apply_p31, if_neg hne1]
+  have hC : wwDefor_p31 (w l) (w (k - 1 + l % k)) t = w (k - 1 + l % k) := by
+    rw [wwDefor_apply_p31, if_neg hne2]
+  rw [hA, hB, hC]
+  simpa using w5cC_azim_scale (v := w (l % k)) (w1 := w (1 + l % k))
+    (w2 := w (k - 1 + l % k)) (a := 1 - t) (b := 1) (c := 1)
+    (by linarith) one_pos one_pos
+
 /-- HOL `INTERIOR_ANGLE_SAME_WW_DEFOR0` (ODXLSTC.hl:2264). -/
 theorem INTERIOR_ANGLE_SAME_WW_DEFOR0_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
     (t : ℝ) (FF : Set (V3 × V3))
@@ -1718,11 +2420,231 @@ theorem INTERIOR_ANGLE_SAME_WW_DEFOR0_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → 
       (Set.range (fun i => (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t)))
       (wwDefor_p31 (w l) (w (l % k)) t)
       = interiorAngle1 0 FF (w (l % k)) := by
-  sorry
-  -- NEEDS (still): `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS`,
-  -- `ITER_CARD_MINUS1_EQ_IVS_RN1`, `VV_SUC_EQ_RHO_NODE_PRIME`,
-  -- `LOFA_IMP_DIS_ELMS23`, `AZIM_SCALE_ALL` — root blocker the `LocalFan`
-  -- stub (`True`, LocalAuto1.lean:138); azim scale lemma unported.
+  exact w5cC_INTERIOR_ANGLE_SAME_WW_DEFOR0 s k l w t FF _hk3 _his _hk _hbb _hbb' _hFF _ht
+
+/-- `x + p` keeps the residue `p` only when `x = 0` (mod `k`). -/
+private theorem w5cC2_mod_shift_ne {k p x : ℕ} (hk : 0 < k) (hp : p < k)
+    (hx0 : 0 < x) (hx : x < k) : (x + p) % k ≠ p := by
+  rcases Nat.lt_or_ge (x + p) k with hlt | hge
+  · rw [Nat.mod_eq_of_lt hlt]; omega
+  · rw [Nat.mod_eq_sub_mod hge, Nat.mod_eq_of_lt (by omega)]; omega
+
+/-- `k - 1 + (x + p)` keeps the residue `p` only when `x = 1` (mod `k`). -/
+private theorem w5cC2_mod_pred_ne {k p x : ℕ} (hk : 1 < k) (hp : p < k)
+    (hx1 : 1 < x) (hx : x < k) : (k - 1 + (x + p)) % k ≠ p := by
+  rcases Nat.lt_or_ge (k - 1 + (x + p)) (2 * k) with hlt | hge
+  · rw [Nat.mod_eq_sub_mod (by omega), Nat.mod_eq_of_lt (by omega)]
+    omega
+  · rw [Nat.mod_eq_sub_mod (by omega), Nat.mod_eq_sub_mod (by omega),
+      Nat.mod_eq_of_lt (by omega)]
+    omega
+
+/-- `1 + (k - 1 + p)` sits at residue `p`. -/
+private theorem w5cC2_mod_succ_eq {k p : ℕ} (hp : p < k) : (1 + (k - 1 + p)) % k = p := by
+  have e : 1 + (k - 1 + p) = k + p := by omega
+  rw [e, Nat.add_mod, Nat.mod_self, Nat.zero_add, Nat.mod_mod, Nat.mod_eq_of_lt hp]
+
+/-- `k - 1 + (1 + p)` sits at residue `p`. -/
+private theorem w5cC2_mod_pred_eq {k p : ℕ} (hp : p < k) : (k - 1 + (1 + p)) % k = p := by
+  have e : k - 1 + (1 + p) = k + p := by omega
+  rw [e, Nat.add_mod, Nat.mod_self, Nat.zero_add, Nat.mod_mod, Nat.mod_eq_of_lt hp]
+
+/-- Proof twin of `INTERIOR_ANGLE_SAME_WW_DEFOR1_p31` (HOL ODXLSTC.hl:2359). -/
+theorem w5cC_INTERIOR_ANGLE_SAME_WW_DEFOR1 (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
+    (t : ℝ) (FF : Set (V3 × V3))
+    (hk3 : 3 < k) (his : isScsV39 s) (hk : s.k = k) (hbb : BBsV39 s w)
+    (hbb' : BBsV39 s (fun i => wwDefor_p31 (w l) (w i) t))
+    (hFF : Set.range (fun i => (w i, w (i + 1))) = FF) (ht : t < 1)
+    (hi1 : 1 ≤ i) (hik : i < k) :
+    interiorAngle1 0
+      (Set.range (fun j => (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t)))
+      ((rhoNode1 (Set.range fun j =>
+        (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t)))^[i]
+        (wwDefor_p31 (w l) (w (l % k)) t))
+      = interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % k))) := by
+  have hk3' : ¬ (k ≤ 3) := by omega
+  have hk1 : 1 < k := by omega
+  have hper : Periodic w k := by rw [← hk]; exact hbb.2.1
+  have hpl : l % k < k := Nat.mod_lt _ (by omega)
+  have hinj := VV_INJ_p31 s k w hk his hbb
+  have hwp : w (l % k) = w l := periodic_mod_p18 hper l
+  have hlf : LocalFan (Set.range w) (Set.range fun j => {w j, w (j + 1)}) FF := by
+    have h4 := hbb.2.2.2
+    rcases h4 with hle | hc
+    · omega
+    · rw [← hFF]; exact hc.1
+  have h2 : localFan_p2 (Set.range w) (Set.range fun j => {w j, w (j + 1)}) FF :=
+    w5cC_lf2_of_LocalFan hlf
+  have hlf' : LocalFan (Set.range fun j => wwDefor_p31 (w l) (w j) t)
+      (Set.range fun j => {wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t})
+      (Set.range fun j => (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t)) := by
+    have h4 := hbb'.2.2.2
+    rcases h4 with hle | hc
+    · omega
+    · exact hc.1
+  have h2' := w5cC_lf2_of_LocalFan hlf'
+  have hVn : (Set.range w).ncard = k :=
+    CARD_V_EQ_SCS_K1_p31 s k w (Set.range w) hk rfl his hk3 hbb
+  have hVn' : (Set.range fun j => wwDefor_p31 (w l) (w j) t).ncard = k :=
+    CARD_V_EQ_SCS_K1_p31 s k (fun j => wwDefor_p31 (w l) (w j) t) _ hk rfl his hk3 hbb'
+  -- orbit from `l % k` (original and deformed)
+  have hstep : ∀ m, (rhoNode1 FF)^[m] (w (l % k)) = w (m + l % k) :=
+    VV_SUC_EQ_RHO_NODE_PRIME_p35 (s := s) (k := k) (p1 := l % k) (p := 0) (q := 0)
+      (u := w (l % k)) (V := Set.range w) (E := Set.range fun j => {w j, w (j + 1)})
+      (FF := FF) (vv := w) hk rfl rfl rfl hFF his hk3' hbb
+  have hstep' : ∀ m, (rhoNode1
+      (Set.range fun j => (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t)))^[m]
+      (wwDefor_p31 (w l) (w (l % k)) t) = wwDefor_p31 (w l) (w (m + l % k)) t := by
+    intro m
+    exact VV_SUC_EQ_RHO_NODE_PRIME_p35 (s := s) (k := k) (p1 := l % k) (p := 0) (q := 0)
+      (u := wwDefor_p31 (w l) (w (l % k)) t)
+      (V := Set.range fun j => wwDefor_p31 (w l) (w j) t)
+      (E := Set.range fun j => {wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t})
+      (FF := Set.range fun j =>
+        (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t))
+      (vv := fun j => wwDefor_p31 (w l) (w j) t) hk rfl rfl rfl rfl his hk3' hbb' m
+  -- orbit restart at `w (i + l % k)`
+  have hstep2 : ∀ m, (rhoNode1 FF)^[m] (w (i + l % k)) = w (m + (i + l % k)) :=
+    VV_SUC_EQ_RHO_NODE_PRIME_p35 (s := s) (k := k) (p1 := i + l % k) (p := 0) (q := 0)
+      (u := w (i + l % k)) (V := Set.range w) (E := Set.range fun j => {w j, w (j + 1)})
+      (FF := FF) (vv := w) hk rfl rfl rfl hFF his hk3' hbb
+  have hstep2' : ∀ m, (rhoNode1
+      (Set.range fun j => (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t)))^[m]
+      (wwDefor_p31 (w l) (w (i + l % k)) t)
+      = wwDefor_p31 (w l) (w (m + (i + l % k))) t := by
+    intro m
+    exact VV_SUC_EQ_RHO_NODE_PRIME_p35 (s := s) (k := k) (p1 := i + l % k) (p := 0) (q := 0)
+      (u := wwDefor_p31 (w l) (w (i + l % k)) t)
+      (V := Set.range fun j => wwDefor_p31 (w l) (w j) t)
+      (E := Set.range fun j => {wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t})
+      (FF := Set.range fun j =>
+        (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t))
+      (vv := fun j => wwDefor_p31 (w l) (w j) t) hk rfl rfl rfl rfl his hk3' hbb' m
+  -- transport the iterated base points
+  have hb : (rhoNode1 FF)^[i] (w (l % k)) = w (i + l % k) := hstep i
+  have hb' : (rhoNode1 (Set.range fun j =>
+      (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t)))^[i]
+      (wwDefor_p31 (w l) (w (l % k)) t) = wwDefor_p31 (w l) (w (i + l % k)) t := hstep' i
+  rw [hb', hb]
+  -- angles at the restarted base point
+  have hrhoI : rhoNode1 FF (w (i + l % k)) = w (1 + (i + l % k)) := by
+    simpa using hstep2 1
+  have hivsI : ivsRhoNode1 FF (w (i + l % k)) = w (k - 1 + (i + l % k)) := by
+    have h := ITER_CARD_MINUS1_EQ_IVS_RN1 h2 (v := w (i + l % k)) ⟨i + l % k, rfl⟩
+    rw [hVn] at h
+    exact h.symm.trans (hstep2 (k - 1))
+  have hrhoI' : rhoNode1 (Set.range fun j =>
+      (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t))
+      (wwDefor_p31 (w l) (w (i + l % k)) t)
+      = wwDefor_p31 (w l) (w (1 + (i + l % k))) t := by
+    simpa using hstep2' 1
+  have hivsI' : ivsRhoNode1 (Set.range fun j =>
+      (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t))
+      (wwDefor_p31 (w l) (w (i + l % k)) t)
+      = wwDefor_p31 (w l) (w (k - 1 + (i + l % k))) t := by
+    have h := ITER_CARD_MINUS1_EQ_IVS_RN1 h2'
+      (v := wwDefor_p31 (w l) (w (i + l % k)) t) ⟨i + l % k, rfl⟩
+    rw [hVn'] at h
+    exact h.symm.trans (hstep2' (k - 1))
+  have hL : interiorAngle1 0
+      (Set.range fun j => (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t))
+      (wwDefor_p31 (w l) (w (i + l % k)) t)
+      = azim 0 (wwDefor_p31 (w l) (w (i + l % k)) t)
+          (wwDefor_p31 (w l) (w (1 + (i + l % k))) t)
+          (wwDefor_p31 (w l) (w (k - 1 + (i + l % k))) t) := by
+    show azim 0 (wwDefor_p31 (w l) (w (i + l % k)) t)
+      (rhoNode1 (Set.range fun j =>
+        (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t))
+        (wwDefor_p31 (w l) (w (i + l % k)) t))
+      (ivsRhoNode1 (Set.range fun j =>
+        (wwDefor_p31 (w l) (w j) t, wwDefor_p31 (w l) (w (j + 1)) t))
+        (wwDefor_p31 (w l) (w (i + l % k)) t)) = _
+    rw [hrhoI', hivsI']
+  have hR : interiorAngle1 0 FF (w (i + l % k))
+      = azim 0 (w (i + l % k)) (w (1 + (i + l % k))) (w (k - 1 + (i + l % k))) := by
+    show azim 0 (w (i + l % k)) (rhoNode1 FF (w (i + l % k)))
+      (ivsRhoNode1 FF (w (i + l % k))) = _
+    rw [hrhoI, hivsI]
+  rw [hL, hR]
+  -- residue facts
+  have hwne : ∀ {x : ℕ}, x % k ≠ l % k → w x ≠ w l := by
+    intro x hmod hcon
+    have h3 : w (x % k) = w (l % k) := by
+      rw [periodic_mod_p18 hper x, hcon, hwp]
+    exact hmod (by
+      by_contra hne
+      exact hinj (x % k) (l % k) ⟨Nat.mod_lt _ (by omega), hpl, hne⟩ h3)
+  have hqne : w (i + l % k) ≠ w l :=
+    hwne (x := i + l % k)
+      (w5cC2_mod_shift_ne (k := k) (p := l % k) (x := i) (by omega) hpl (by omega) hik)
+  by_cases hik1 : i = k - 1
+  · -- the successor point sits on the base line: it is the scaled one
+    have hgt : 1 < i := by omega
+    have h2q_ne : w (k - 1 + (i + l % k)) ≠ w l := by
+      refine hwne (x := k - 1 + (i + l % k)) ?_
+      exact w5cC2_mod_pred_ne (k := k) (p := l % k) (x := i) hk1 hpl hgt hik
+    have hres : (1 + (i + l % k)) % k = l % k := by
+      rw [hik1]
+      exact w5cC2_mod_succ_eq hpl
+    have hweq : w (1 + (i + l % k)) = w l := by
+      have h3 : w ((1 + (i + l % k)) % k) = w (l % k) := by rw [hres]
+      rw [periodic_mod_p18 hper (1 + (i + l % k)), hwp] at h3
+      exact h3
+    have hA : wwDefor_p31 (w l) (w (i + l % k)) t = w (i + l % k) := by
+      rw [wwDefor_apply_p31, if_neg hqne]
+    have hB : wwDefor_p31 (w l) (w (1 + (i + l % k))) t = (1 - t) • w (1 + (i + l % k)) := by
+      rw [wwDefor_apply_p31, if_pos hweq, hweq]
+    have hC : wwDefor_p31 (w l) (w (k - 1 + (i + l % k))) t = w (k - 1 + (i + l % k)) := by
+      rw [wwDefor_apply_p31, if_neg h2q_ne]
+    rw [hA, hB, hC]
+    simpa using w5cC_azim_scale (v := w (i + l % k)) (w1 := w (1 + (i + l % k)))
+      (w2 := w (k - 1 + (i + l % k))) (a := 1) (b := 1 - t) (c := 1)
+      one_pos (by linarith) one_pos
+  · by_cases hi1' : i = 1
+    · -- the predecessor point sits on the base line: it is the scaled one
+      have hgt : 0 < i + 1 := by omega
+      have hlt : i + 1 < k := by omega
+      have h1q : 1 + (i + l % k) = (i + 1) + l % k := by omega
+      have h1q_ne : w (1 + (i + l % k)) ≠ w l := by
+        refine hwne (x := 1 + (i + l % k)) ?_
+        rw [h1q]
+        exact w5cC2_mod_shift_ne (k := k) (p := l % k) (x := i + 1) (by omega) hpl hgt hlt
+      have hres : (k - 1 + (i + l % k)) % k = l % k := by
+        rw [hi1']
+        exact w5cC2_mod_pred_eq hpl
+      have hweq : w (k - 1 + (i + l % k)) = w l := by
+        have h3 : w ((k - 1 + (i + l % k)) % k) = w (l % k) := by rw [hres]
+        rw [periodic_mod_p18 hper (k - 1 + (i + l % k)), hwp] at h3
+        exact h3
+      have hA : wwDefor_p31 (w l) (w (i + l % k)) t = w (i + l % k) := by
+        rw [wwDefor_apply_p31, if_neg hqne]
+      have hB : wwDefor_p31 (w l) (w (1 + (i + l % k))) t = w (1 + (i + l % k)) := by
+        rw [wwDefor_apply_p31, if_neg h1q_ne]
+      have hC : wwDefor_p31 (w l) (w (k - 1 + (i + l % k))) t
+          = (1 - t) • w (k - 1 + (i + l % k)) := by
+        rw [wwDefor_apply_p31, if_pos hweq, hweq]
+      rw [hA, hB, hC]
+      simpa using w5cC_azim_scale (v := w (i + l % k)) (w1 := w (1 + (i + l % k)))
+        (w2 := w (k - 1 + (i + l % k))) (a := 1) (b := 1) (c := 1 - t)
+        one_pos one_pos (by linarith)
+    · -- nothing is scaled
+      have hgt : 0 < i + 1 := by omega
+      have hlt : i + 1 < k := by omega
+      have h1q : 1 + (i + l % k) = (i + 1) + l % k := by omega
+      have h1q_ne : w (1 + (i + l % k)) ≠ w l := by
+        refine hwne (x := 1 + (i + l % k)) ?_
+        rw [h1q]
+        exact w5cC2_mod_shift_ne (k := k) (p := l % k) (x := i + 1) (by omega) hpl hgt hlt
+      have h2q_ne : w (k - 1 + (i + l % k)) ≠ w l := by
+        refine hwne (x := k - 1 + (i + l % k)) ?_
+        exact w5cC2_mod_pred_ne (k := k) (p := l % k) (x := i) hk1 hpl (by omega) hik
+      have hA : wwDefor_p31 (w l) (w (i + l % k)) t = w (i + l % k) := by
+        rw [wwDefor_apply_p31, if_neg hqne]
+      have hB : wwDefor_p31 (w l) (w (1 + (i + l % k))) t = w (1 + (i + l % k)) := by
+        rw [wwDefor_apply_p31, if_neg h1q_ne]
+      have hC : wwDefor_p31 (w l) (w (k - 1 + (i + l % k))) t = w (k - 1 + (i + l % k)) := by
+        rw [wwDefor_apply_p31, if_neg h2q_ne]
+      rw [hA, hB, hC]
 
 /-- HOL `INTERIOR_ANGLE_SAME_WW_DEFOR1` (ODXLSTC.hl:2359): the iterated
 rho_node1 version. -/
@@ -1738,10 +2660,7 @@ theorem INTERIOR_ANGLE_SAME_WW_DEFOR1_p31 (s : ScsV39) (k l i : ℕ) (w : ℕ �
           (fun i => (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))))^[i]
         (wwDefor_p31 (w l) (w (l % k)) t))
       = interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % k))) := by
-  sorry
-  -- NEEDS (still): same kit as INTERIOR_ANGLE_SAME_WW_DEFOR0_p31 plus
-  -- `LOCAL_FAN_ITER_RHO_NODE_IN_V` and the `i = 1 / i = k-1 / interior`
-  -- trichotomy (LocalFan stub `True`, LocalAuto1.lean:138).
+  exact w5cC_INTERIOR_ANGLE_SAME_WW_DEFOR1 s k l i w t FF _hk3 _his _hk _hbb _hbb' _hFF _ht _hi1 _hik
 
 /-- HOL `TAUSTAR_WW_DEFOR` (ODXLSTC.hl:2557): ZLZTHIC + MHAEYJN imply the
 taustar decrease. -/
@@ -1774,11 +2693,7 @@ theorem GENERIC_WW_DEFOR_RHO_NODE1_p31 {V : Set V3} {E : Set (Set V3)}
     (_ht : t ≠ 0) :
     rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
         (wwDefor_p31 w1 v t) = rhoNode1 FF v := by
-  sorry
-  -- NEEDS (still): WW_DEFOR_RHO_NODE1_p31 via GENERIC_HYPOTHESIS_WW_DEFOR_p31
-  -- plus `IVS_RHO_NODE1_DETE`, `DETER_RHO_NODE`, `LOFA_IMP_EE_TWO_ELMS_INS_ND`,
-  -- `LOFA_CARD_EE_V_2` — root blocker the `LocalFan` stub (`True`,
-  -- LocalAuto1.lean:138).
+  exact w5cC_GENERIC_WW_DEFOR_RHO_NODE1 _hlf _hg _hw _ht
 
 /-- HOL `WW_DEFOR_ALPHA3` (ODXLSTC.hl:1144): the `ivs` choice at the deformed
 point is `(1 - t) % w1` for the outgoing edge case. -/
@@ -1789,10 +2704,7 @@ theorem WW_DEFOR_ALPHA3_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)
     (Classical.epsilon fun a => (a, wwDefor_p31 w1 v t) ∈
         (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
       = (1 - t) • w1 := by
-  sorry
-  -- NEEDS (still): `Hypermap_and_fan.CHOICE_LEMMA` + GENERIC_HYPOTHESIS kit +
-  -- `FST_EQ_IF_SAME_SND` — root blocker the `LocalFan` stub (`True`,
-  -- LocalAuto1.lean:138).
+  exact w5cC_WW_DEFOR_ALPHA3 _hlf _hg _hw _ht
 
 /-- HOL `GENERIC_WW_DEFOR_RHO_NODE2` (ODXLSTC.hl:1317): the `rho_node1` at
 the deformed point is `(1 - t) % w1` for the incoming edge case. -/
@@ -1802,7 +2714,4 @@ theorem GENERIC_WW_DEFOR_RHO_NODE2_p31 {V : Set V3} {E : Set (Set V3)}
     (_ht : t ≠ 0) :
     rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
         (wwDefor_p31 w1 v t) = (1 - t) • w1 := by
-  sorry
-  -- NEEDS (still): same kit as WW_DEFOR_ALPHA3_p31 (mirror case,
-  -- `CHOICE_LEMMA` + `DETER_RHO_NODE`) — root blocker the `LocalFan` stub
-  -- (`True`, LocalAuto1.lean:138).
+  exact w5cC_GENERIC_WW_DEFOR_RHO_NODE2 _hlf _hg _hv _ht
