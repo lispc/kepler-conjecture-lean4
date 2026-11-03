@@ -523,14 +523,31 @@ theorem SCS_M_LE_K_p27 (s : ScsV39) :
   rw [h] at hi
   exact False.elim hi
 
-/-- HOL `SCS_M_EQ_1` (JLXFDMJ.hl:159). -/
-theorem SCS_M_EQ_1_p27 (s : ScsV39) (i : ℕ) :
-    3 ≤ s.k → (∀ i, s.a i (i + 1) < s.b i (i + 1)) → isScsV39 s →
-      i ∈ scsM s → (scsM s).ncard = 1 := by
-  sorry
-    -- DISCHARGES: NEEDS the `scs_M` boundary structure (a diagonal value hits
-    -- 2·h0 / 2 exactly once because a < b holds at every edge); the source
-    -- reasons on the `V{0,1,2}` archive cells.
+/-- HOL `SCS_M_EQ_1` (JLXFDMJ.hl:159).  SF-97 (2026-11-03): the first
+rendering (`3 ≤ k → (∀ i, a < b) → isScs → i ∈ scsM s → (scsM s).ncard = 1`)
+inverted the HOL direction and is FALSE (scsgeneric-recon witness: k = 4,
+edges 0 and 1 both pinned at (2.5, 2.6) give `scsM s = {0, 1}`).  HOL takes
+the singleton `scs_M s = {x}` as a premise and concludes the pinned-edge
+shape off `x`; it is the singleton instance of `SCS_M_LE_1_p27`. -/
+theorem SCS_M_EQ_1_p27 (s : ScsV39) (x : ℕ) :
+    scsM s = {x} → isScsV39 s →
+      ∀ i, ¬ (i % s.k = x) → s.b i (i + 1) ≤ 2 * h0 ∧ s.a i (i + 1) = 2 := by
+  intro hM hs
+  have hcard : (scsM s).ncard ≤ 1 := by rw [hM, Set.ncard_singleton]
+  obtain ⟨p, hp⟩ := SCS_M_LE_1_p27 s hcard hs
+  have hx : x ∈ scsM s := by rw [hM]; exact Set.mem_singleton x
+  have hx' := hx
+  simp only [scsM, Set.mem_setOf_eq] at hx'
+  have hxp : x = p % s.k := by
+    by_contra hne
+    have hxx : ¬ (x % s.k = p % s.k) := by rw [Nat.mod_eq_of_lt hx'.1]; exact hne
+    obtain ⟨hb, ha⟩ := hp x hxx
+    rcases hx'.2 with h | h
+    · exact absurd hb (not_le.mpr h)
+    · rw [ha] at h; exact lt_irrefl _ h
+  intro i hi
+  apply hp i
+  rw [← hxp]; exact hi
 
 /-- HOL `JLXFDMJ_concl` (JLXFDMJ.hl:214). The `∀ j` premise uses the faithful
 `j % s.k ∉ scsM s` (HOL `~(j MOD k IN scs_M_v39 s)`). -/
