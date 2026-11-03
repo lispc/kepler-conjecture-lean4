@@ -1,5 +1,12 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-TOTAL_REACHABLE_KEPLER_DECLS 2077226
+K_REACH 2078505
+K_SORRIED 123
+K_AXIOM 624
+K_MODULES 4171
+K_UNIVERSE 2094279
+COVERAGE 2078505 / 2094279
+TOTAL_VALUE_DECLS 2077803
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2077803
 SORRIED 123
 AXIOMS 624
 --- SORRIED ---
@@ -82,20 +89,20 @@ Kepler.Assembly	Kepler.Assembly.nliTskXLLIPLS	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.tameCorrespondenceIso	parent=Kepler.Assembly.textCapstone
 Kepler.Text.LocalAuto20	Kepler.Text.AQICLXA	parent=Kepler.Text.OEHDBEN
 Kepler.Text.LocalAuto20	Kepler.Text.FZIOTEF	parent=Kepler.Text.OEHDBEN
+Kepler.Text.PackingAuto2	Kepler.Text.GRUTOTI1_concl	parent=Kepler.Text.KIZHLTL4
 Kepler.Text.LocalAuto23	Kepler.Text.LFLACKU_p23	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
 Kepler.Text.LocalAuto32	Kepler.Text.MIQMCSN_p32	parent=Kepler.Text.MIQMCSN_discharged
 Kepler.Text.LocalAuto33	Kepler.Text.MM_4I2_IMP_4T2_4T1_p33	parent=Kepler.Text.ARDBZYE_p33
 Kepler.Text.LocalAuto32	Kepler.Text.NWDGKXH_p32	parent=Kepler.Text.NWDGKXH_discharged
 Kepler.Text.LocalAuto22	Kepler.Text.OCBICBY_p22	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
+Kepler.Text.PackingAuto16	Kepler.Text.QZYZMJC	parent=Kepler.Text.KIZHLTL2
 Kepler.Text.LocalAuto33	Kepler.Text.SCS_4I1_IMP_SCS_4I2_p33	parent=Kepler.Text.SCS_4I1_ARROW_SCS_4I2_STAB_4I1_p33
 Kepler.Text.LocalAuto33	Kepler.Text.SCS_4I2_IMP_SCS_4T1_p33	parent=Kepler.Text.ARDBZYE_p33
 Kepler.Text.LocalAuto29	Kepler.Text.SCS_5M2_IMP_SCS_5T1_p29	parent=Kepler.Text.HIJ_STEP_1_p29
 Kepler.Text.LocalAuto20	Kepler.Text.SCS_6I1_BERAK_BY_CSTAB	parent=Kepler.Text.OEHDBEN_PRIME
 Kepler.Text.TameLp	Kepler.Text.TameLp.fully_surrounded_perimeter_bound	parent=Kepler.Text.TameLp.MQMSMAB
-Kepler.Text.PackingAuto2	Kepler.Text.UPFZBZM_concl	parent=Kepler.Text.RDWKARC_concl
 Kepler.Text.LocalAuto32	Kepler.Text.YOBIMPP_p32	parent=Kepler.Text.YOBIMPP_discharged
 Kepler.Text.PackingAuto25	Kepler.Text.cc_prep_model_data	parent=Kepler.Text.LEAF_RANK_PROPS
-Kepler.Text.LocalAuto1	Kepler.Text.main_nonlinear_terminal_v11	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.ox3q1hP25	parent=Kepler.Assembly.textCapstone
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankAzimPointwise	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankCriticalEdge	parent=Kepler.Text.LEAF_RANK_PROPS

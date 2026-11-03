@@ -77,6 +77,29 @@
 `PackingAuto2.UPFZBZM_concl` 出列（−1），PA15×5 / PA16 `QZYZMJC` / PA2 `GRUTOTI1_concl`
 七个真源显形（+7），净 +6。`K_AXIOM` 624 不变。
 
+### 基线 C：批 1 收官 `a522078c`（PA15 五源闭合 + terminal11-T0 陈述物化）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH | **2,078,505**（较基线 B **+203**） |
+| K_SORRIED | **123**（−6 = PA15×5 + LA1 terminal 黑盒撤源） |
+| K_AXIOM | 624 |
+| K_MODULES | 4,171 |
+| K_UNIVERSE | 2,094,279 |
+| COVERAGE | 99.25%（2,078,505 / 2,094,279） |
+| TOTAL (legacy) | 2,077,803 |
+
+- **PA15**（`f8b3e46f`）：`SUM_PAIR_2_SET` / `MCELL_SUBSET_BALL_4` / `PACKING_BALL_BOUNDARY` /
+  `BOUNDS_VGEN_klemma` / `CARD_MCELL_CONTAINS_POINT_klemma` 五源全闭，公理面标准三；
+  另闭 bonus `BOUNDARY_VOLUME`（非源）。
+- **terminal11-T0**（`a522078c`）：`main_nonlinear_terminal_v11` 从 `def … := sorry`（任意
+  Prop，贡献 1 个 sorry 源节点）物化为 109 条具名 `mainEstimate_*` 陈述 + 词表/访问器
+  （零证明风险）；黑盒源出列，树 +~200 条陈述节点，109 条子债在树里可数、可派工。
+  证书 glue（T1）未做，`Kepler.Assembly.nliMainNonlinearTerminalV11` 仍是 sorry 源。
+- 剩余 123 源构成（本基线实测）：Assembly 77 / **PA25 30** / LA32/33/20 各 3 /
+  PA16 `QZYZMJC` 1 / PA2 `GRUTOTI1_concl` 1 / LocalConcl 1 / 其余 LA 单条若干。
+  在飞批 2 直接瞄准其中 QZYZMJC 与 GRUTOTI1_concl。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
