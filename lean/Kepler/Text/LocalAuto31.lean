@@ -942,6 +942,135 @@ theorem GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE2_p31 {V : Set V3} {E : Set (Set V3)}
   epsilon_ext_p31 (fun u =>
     WW_DEFOR_FF6_p31 hlf hg hv hwv hvw ht hvV hw1V u)
 
+
+
+
+
+
+open Kepler.Geom Set Classical
+
+/-- Collinearity through the origin is preserved by independent nonzero
+scalings of the two non-origin points (collinearity leg of the HOL
+`AZIM_SCALE_ALL`). -/
+theorem w5cC_lineMem_smul {v x : V3} (h : x ∈ affineSpan ℝ ({0, v} : Set V3)) :
+    ∃ r : ℝ, x = r • v := by
+  obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp h
+  refine ⟨r, ?_⟩
+  rw [AffineMap.lineMap_apply] at hr
+  simpa using hr.symm
+
+theorem w5cC_smul_lineMem (r : ℝ) (v : V3) :
+    (r • v) ∈ affineSpan ℝ ({0, v} : Set V3) := by
+  refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨r, ?_⟩
+  rw [AffineMap.lineMap_apply]
+  simp
+
+theorem w5cC_collinear3_smul2_fwd {v x : V3} {a b : ℝ} (ha : a ≠ 0) (hb : b ≠ 0)
+    (hcol : Collinear3 0 v x) : Collinear3 0 (a • v) (b • x) := by
+  classical
+  rcases (collinear_triple_iff (x := (0:V3)) (v := v) (u := x)).mp hcol with hu | h0
+  · obtain ⟨r, hr⟩ := w5cC_lineMem_smul hu
+    have hbv : b • x = (b * r / a) • (a • v) := by
+      rw [hr, smul_smul, smul_smul]
+      exact congrArg (fun (s : ℝ) => s • v)
+        (show b * r = (b * r / a) * a from by field_simp)
+    refine (collinear_triple_iff (x := (0:V3)) (v := a • v) (u := b • x)).mpr
+      (Or.inl ?_)
+    rw [hbv]
+    exact w5cC_smul_lineMem _ _
+  · refine (collinear_triple_iff (x := (0:V3)) (v := a • v) (u := b • x)).mpr
+      (Or.inr ?_)
+    rw [← h0, smul_zero]
+
+/-- Collinearity through the origin is invariant under independent nonzero
+scalings of the two non-origin points. -/
+theorem w5cC_collinear3_smul2 {v x : V3} {a b : ℝ} (ha : a ≠ 0) (hb : b ≠ 0) :
+    Collinear3 0 v x ↔ Collinear3 0 (a • v) (b • x) := by
+  constructor
+  · exact w5cC_collinear3_smul2_fwd ha hb
+  · intro hcol
+    have h := w5cC_collinear3_smul2_fwd (a := a⁻¹) (b := b⁻¹)
+      (inv_ne_zero ha) (inv_ne_zero hb) hcol
+    rw [smul_smul, inv_mul_cancel₀ ha, one_smul, smul_smul, inv_mul_cancel₀ hb, one_smul] at h
+    exact h
+
+/-- HOL `AZIM_SCALE_ALL` (azimuth scale invariance): with every scale
+positive, the azimuth at the origin is unchanged by independently scaling the
+axis and the two ray points.  This is the missing `AZIM_SPECIAL_SCALE` /
+`AZIM_SCALE_ALL` recorded in the LocalAuto31 NEEDS markers. -/
+theorem w5cC_azim_scale {v w1 w2 : V3} {a b c : ℝ} (ha : 0 < a) (hb : 0 < b)
+    (hc : 0 < c) :
+    azim 0 (a • v) (b • w1) (c • w2) = azim 0 v w1 w2 := by
+  classical
+  have hiff1 := w5cC_collinear3_smul2 (v := v) (x := w1) (a := a) (b := b)
+    (ne_of_gt ha) (ne_of_gt hb)
+  have hiff2 := w5cC_collinear3_smul2 (v := v) (x := w2) (a := a) (b := c)
+    (ne_of_gt ha) (ne_of_gt hc)
+  show (if Collinear3 0 (a • v) (b • w1) ∨ Collinear3 0 (a • v) (c • w2) then (0:ℝ)
+      else Classical.epsilon (AzimSpec 0 (a • v) (b • w1) (c • w2)))
+    = (if Collinear3 0 v w1 ∨ Collinear3 0 v w2 then (0:ℝ)
+      else Classical.epsilon (AzimSpec 0 v w1 w2))
+  by_cases hcol : Collinear3 0 v w1 ∨ Collinear3 0 v w2
+  · rcases hcol with h | h
+    · rw [if_pos (Or.inl (hiff1.mp h)), if_pos (Or.inl h)]
+    · rw [if_pos (Or.inr (hiff2.mp h)), if_pos (Or.inr h)]
+  · push_neg at hcol
+    have hn1 : ¬ Collinear3 0 (a • v) (b • w1) := fun hh => hcol.1 (hiff1.mpr hh)
+    have hn2 : ¬ Collinear3 0 (a • v) (c • w2) := fun hh => hcol.2 (hiff2.mpr hh)
+    obtain ⟨h0θ, h2piθ, hh1, hh2, hframes⟩ := azim_master 0 v w1 w2
+    have hvne : v ≠ 0 := by
+      intro hzz
+      apply hcol.1
+      rw [hzz]
+      exact (collinear_triple_iff (x := (0:V3)) (v := (0:V3)) (u := w1)).mpr (Or.inr rfl)
+    have hav0 : (a • v) ≠ 0 := by
+      intro hzz
+      apply hn1
+      rw [hzz]
+      exact (collinear_triple_iff (x := (0:V3)) (v := (0:V3)) (u := b • w1)).mpr (Or.inr rfl)
+    refine azim_eq_of_spec (θ := azim 0 v w1 w2) hn1 hn2
+      ⟨h0θ, h2piθ, b * hh1 / a, c * hh2 / a, ?_⟩
+    intro e1 e2 e3 horth hax _
+    have hax' : v = dist v 0 • e3 := by
+      have hna : dist (a • v) 0 = a * dist v 0 := by
+        rw [dist_zero_right, dist_zero_right, norm_smul, Real.norm_eq_abs,
+          abs_of_pos ha]
+      rw [hna, sub_zero] at hax
+      exact smul_right_injective V3 (ne_of_gt ha)
+        (show a • (dist v 0 • e3) = a • v by rw [smul_smul]; exact hax.symm) |>.symm
+    obtain ⟨psi, r1, r2, hs1, hs2, hr1, hr2⟩ :=
+      hframes e1 e2 e3 horth (by rw [sub_zero]; exact hax') hvne
+    rw [sub_zero, sub_zero] at hs1 hs2
+    have hb1 : (b * hh1 / a) • ((a • v : V3) - 0) = b • (hh1 • v) := by
+      rw [sub_zero, smul_smul, smul_smul]
+      exact congrArg (fun (s : ℝ) => s • v)
+        (show (b * hh1 / a) * a = b * hh1 from by field_simp)
+    have hb2 : (c * hh2 / a) • ((a • v : V3) - 0) = c • (hh2 • v) := by
+      rw [sub_zero, smul_smul, smul_smul]
+      exact congrArg (fun (s : ℝ) => s • v)
+        (show (c * hh2 / a) * a = c * hh2 from by field_simp)
+    have hdisp1 : b • w1 = (b * (r1 * Real.cos psi)) • e1
+        + (b * (r1 * Real.sin psi)) • e2 + b • (hh1 • v) := by
+      rw [hs1, smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+    have hdisp2 : c • w2 = (c * (r2 * Real.cos (psi + azim 0 v w1 w2))) • e1
+        + (c * (r2 * Real.sin (psi + azim 0 v w1 w2))) • e2 + c • (hh2 • v) := by
+      conv_lhs => rw [hs2]
+      rw [smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+    refine ⟨psi, b * r1, c * r2, ?_, ?_, ?_, ?_⟩
+    · rw [show ((b • w1 : V3) - 0) = b • w1 from by rw [sub_zero], hdisp1, hb1,
+        mul_assoc b r1 (Real.cos psi), mul_assoc b r1 (Real.sin psi)]
+    · rw [show ((c • w2 : V3) - 0) = c • w2 from by rw [sub_zero], hdisp2, hb2,
+        mul_assoc c r2 (Real.cos (psi + azim 0 v w1 w2)),
+        mul_assoc c r2 (Real.sin (psi + azim 0 v w1 w2))]
+    · exact mul_pos hb (hr1 hcol.1)
+    · exact mul_pos hc (hr2 hcol.2)
+
+/- The `AZIM_SPECIAL_SCALE` / `AZIM_SCALE_ALL` gap recorded in the NEEDS
+markers above is closed by `w5cC_azim_scale` (lane scsgeneric-w5cC); the
+transfers `WW_DEFOR_rho_node1_p31` / `WW_DEFOR_APHA_p31` plus this lemma are
+the ready ingredients for `WW_DEFOR_AZIM_p31`. -/
+
+
 /-! ## Section 8: genericity hypothesis and the azimuth transfer -/
 
 /-- HOL `GENERIC_HYPOTHESIS_WW_DEFOR` (ODXLSTC.hl:973): under `local_fan` +
