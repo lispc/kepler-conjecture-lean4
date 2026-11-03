@@ -1,12 +1,165 @@
-# 主定理 e2e 可达性地图（2026-10-26 上午重跑；池C 两枚锥源出列后）
+# 主定理 e2e 可达性地图（v2，树指标）
 
-> 根 = `Kepler.Assembly.the_kepler_conjecture_from_interfaces`（即
-> `Kepler.Final.the_kepler_conjecture_e2e` 的直接证明项）。
-> 方法 = Lean proof-term 常量遍历（`lean/scripts/e2e_reach_map.lean`），
-> 只跟踪 `Kepler.*` / `_private.Kepler.*`，统计：
-> ①可达 Kepler 声明；②值里**直接**含 `sorryAx` 的声明（债务源）；
-> ③可达 Kepler 公理；④每个债务源的第一个 BFS 父声明。
-> 原始 TSV：[`docs/e2e-reachability-map.tsv`](e2e-reachability-map.tsv)。
+> **v2（2026-11-03）**：验收口径改为「树优先」（DECISIONS 2026-11-03「树越大越好」）：
+> 主指标 = **K-REACH / COVERAGE / SHIMS / ORPHANS**；`K-SORRIED` 为信息项（不设单调目标）；
+> `K-AXIOM` 为护栏。旧版地图（下方「归档：v1」起的 §0–§4）保留作审计，
+> 其中「可达 Kepler 声明 218,326」等读数用的是已废弃计数，不可与 v2 的 K-REACH 直接比较。
+>
+> **树只认 proof-term 可达，不认 import 闭包。** 地图是静态常量依赖遍历：从根出发，
+> 只展开 `ConstantInfo.value? true`（theorem/opaque 的值），子节点只收
+> `Kepler.*` / `_private.Kepler.*`。`import` 进来但不在任何根证明项里的声明**不计入**
+> K-REACH——它们正是 ORPHANS。
+
+## v2.0 指标定义
+
+| 指标 | 定义 | 用途 |
+|---|---|---|
+| **K_REACH** | 根 proof-term 闭包内 distinct Kepler 声明数（树节点；含 axiom/opaque） | 主指标：树越大越好 |
+| **K_SORRIED** | 根闭包内**值里直接含** `sorryAx` 的声明数 | 信息项，不设单调目标 |
+| **K_AXIOM** | 根闭包内 Kepler 公理数（含 `native_decide` 的 `*_native_decide.ax_*`） | 护栏：不得增长 |
+| **K_MODULES** | K_REACH 声明所在的不同模块数 | 树广度 |
+| **K_UNIVERSE** | 当前 env（= `import` 闭包）内 `Kepler.*` / `_private.Kepler.*` 声明总数 | COVERAGE 分母 |
+| **COVERAGE** | K_REACH / K_UNIVERSE | 树覆盖率 |
+| **TOTAL**（legacy） | **有值**的可达声明数（旧 `TOTAL_REACHABLE_KEPLER_DECLS`） | 仅历史对照 |
+| **ORPHANS** | K_UNIVERSE − K_REACH（import 闭包有、树里没有） | 主指标之一 |
+| **SHIMS** | 树内 `Kepler.Text.*_concl` 且存在同名 `*_concl_discharged` / `*_discharged` | 主指标之一 |
+
+> **COVERAGE 分母口径**：`K_UNIVERSE` = 当前 `env.constants` 中根分量为 `Kepler` 或
+> `_private.Kepler` 的全部声明（即本脚本 `import` 闭包载入的 Kepler 声明总数），不是整个
+> Mathlib/全局宇宙。e2e 脚本的 import 闭包 = `Kepler.Assembly` 的传递 import。
+
+### 旧 `TOTAL_REACHABLE_KEPLER_DECLS` 的口径 bug（2026-11-03 记录）
+
+1. **名字与定义不符**：它只统计 `ConstantInfo.value? true` 有值的节点，因此**漏掉**
+   axiom/opaque 等无值声明。HEAD `5384f11d` 实测差 702 = 624 条可达公理 + 78 条其它无值声明。
+2. **历史文档混用两种计数**：2026-10-26 文档写「可达 Kepler 声明 218,326」，而 TSV 的
+   `TOTAL_REACHABLE_KEPLER_DECLS` 是 2,077,226（约 10×），两个数不是同一个仪器产物；
+   v2 起只保留一个定义（K_REACH），旧名不再使用（仅输出兼容行）。
+3. **工单所说「total 把 Mathlib 也算进去」在本 HEAD 仪器上不可复现**：遍历栈只收
+   `isKeplerName` 子节点，且 `TOTAL 2,077,393 < K_UNIVERSE 2,093,836`，远小于任何含
+   Mathlib 的量级。真实缺陷是命名误导 + 「只算有值节点」，不是 Mathlib 泄漏。
+
+## v2.1 当前基线（仪器校准后）
+
+### 基线 A：HEAD `5384f11d`（c1 Stage 1 之前）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH | **2,078,095** |
+| K_SORRIED | **123** |
+| K_AXIOM | 624 |
+| K_MODULES | 4,168 |
+| K_UNIVERSE | 2,093,836 |
+| COVERAGE | 99.25%（2,078,095 / 2,093,836） |
+| TOTAL (legacy) | 2,077,393 |
+| ORPHANS | 15,741 |
+
+- `SORRIED` 的 123 行源清单与 [`docs/e2e-reachability-map.tsv`](e2e-reachability-map.tsv)
+  **逐行一致**（`comm -3` 无输出）：仪器校准通过。
+- `K_SORRIED` 与 v1 的 `SORRIED` 定义相同，因此数值可直接衔接。
+
+### 基线 B：c1 Stage 1 `a31177c9`（PackingConcl 进 e2e）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH | 2,078,302 |
+| K_SORRIED | **129** |
+| K_AXIOM | 624 |
+| K_MODULES | 4,171 |
+| K_UNIVERSE | 2,094,054 |
+| COVERAGE | 99.25%（2,078,302 / 2,094,054） |
+| TOTAL (legacy) | 2,077,600 |
+| ORPHANS | 15,752 |
+
+**129 是真实债显形，不是回归**：c1 新增 `PACKING_CHAPTER_MAIN_CONCLUSION_discharged`、
+把假 `RDWKARC_concl_discharged`（`:= RDWKARC`，而 PA19 `RDWKARC` 是 sorry）改为真 donor
+`rdwkarcConcl_pc`，Assembly 加一行 rewire；e2e 根由此进入 packing chapter。旧假债
+`PackingAuto2.UPFZBZM_concl` 出列（−1），PA15×5 / PA16 `QZYZMJC` / PA2 `GRUTOTI1_concl`
+七个真源显形（+7），净 +6。`K_AXIOM` 624 不变。
+
+## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
+
+**症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
+TSV 是 123。原因不是脚本，而是**共享 `.lake` 被并行车道的 REWIRE/Stage-1 闸测试污染**：
+
+- `lean/.lake/build/lib/lean/Kepler/Text/PackingAuto25.olean`（11:52 重建）里是
+  `rdwkarcConcl_pc` 体，而当时 HEAD 源仍是 `RDWKARC_concl`（源 11:53 被回滚）；
+- `Kepler/Assembly.olean` 也可能是闸测试态而非 HEAD 态。
+
+**修复（standalone，禁 lake）**：在仓外建 scratch farm，硬链接镜像 `.lake` 的 Kepler
+olean，然后用 `git show <ref>:<path>` 的源重建被污染模块：
+
+```bash
+REPO=/Users/zhangzhuo/repos/kepler-conjecture-lean4
+LP=$(cat /tmp/lfainteg/asm_check/leanpath.txt)
+FARM=/tmp/reachfarm
+mkdir -p $FARM/lib $FARM/build/Kepler/Text
+# 1) 镜像（硬链接，不动 .lake）
+cp -Rl $REPO/lean/.lake/build/lib/lean/Kepler $FARM/lib/Kepler
+cp -l  $REPO/lean/.lake/build/lib/lean/Kepler.olean $FARM/lib/Kepler.olean
+# 2) 从 git 源（不是工作树）导出被判污染的模块
+cd $REPO
+git show 5384f11d:lean/Kepler/Text/PackingAuto25.lean > $FARM/build/Kepler/Text/PackingAuto25.lean
+git show 5384f11d:lean/Kepler/Assembly.lean        > $FARM/build/Kepler/Assembly.lean
+rm -f $FARM/lib/Kepler/Text/PackingAuto25.olean $FARM/lib/Kepler/Assembly.olean
+cd $FARM/build
+LEAN_PATH=$FARM/lib:$LP lean -o $FARM/lib/Kepler/Text/PackingAuto25.olean Kepler/Text/PackingAuto25.lean
+LEAN_PATH=$FARM/lib:$LP lean -o $FARM/lib/Kepler/Assembly.olean Kepler/Assembly.lean
+```
+
+> 注意：镜像文件是 `.lake` 的**硬链接**，必须先 `rm` 再让 `lean -o` 写新文件，
+> 否则会写穿到主仓 `.lake`。PA25 编译 ≈21 s，Assembly ≈32 s（本机）。
+
+## v2.3 运行命令（standalone，不用 lake）
+
+```bash
+REPO=/Users/zhangzhuo/repos/kepler-conjecture-lean4
+LP=$(cat /tmp/lfainteg/asm_check/leanpath.txt)
+FARM=/tmp/reachfarm/lib        # 见 §v2.2；HEAD 态 olean farm
+cd $REPO
+
+# 默认根 = e2e
+LEAN_PATH=$FARM:$LP nice -n 19 lean lean/scripts/e2e_reach_map.lean > /tmp/reachmap.out
+
+# 任意根（环境变量 REACH_ROOT）
+LEAN_PATH=$FARM:$LP REACH_ROOT=Kepler.Text.OXLZLEZ \
+  nice -n 19 lean lean/scripts/e2e_reach_map.lean > /tmp/reach_oxlzlez.out
+
+# 节点表（TSV，2M 行；见 §v2.4）
+LEAN_PATH=$FARM:$LP DUMP_TREE=1 \
+  nice -n 19 lean lean/scripts/e2e_reach_map.lean > /tmp/e2e-tree.tsv
+```
+
+读数时间（本机，2.08M 节点）：`reach` ≈ 95–100 s；`K_UNIVERSE` 的
+`env.constants` 全扫描 ≈ 7 min（解释器逐项 fold，脚本默认执行；`DUMP_TREE=1`
+时跳过）。`IO.monoMsNow` 在 `CoreM` 里返回 0（已知坑），计时请用 shell `time`。
+
+## v2.4 DUMP_TREE 节点表（页面树数据）
+
+`DUMP_TREE=1` 输出 `--- TREE ---` 段（TSV，首行表头）：
+
+| 列 | 含义 |
+|---|---|
+| `name` | 声明全名 |
+| `module` | `moduleOf`（`getModuleIdxFor?`；缺失时退化为名字前缀） |
+| `kind` | `theorem` / `def` / `axiom` / `opaque` / `quot` / `induct` / `ctor` / `rec` |
+| `directSorryAx` | 值里**直接**含 `sorryAx` |
+| `parent` | 首次访问的父声明（根为空） |
+| `childCount` | 值里 Kepler 直接依赖的**原始出现次数**（重复常量计多次） |
+| `extCount` | 值里非 Kepler 直接依赖的出现次数 |
+| `depth` | 首次访问深度（DFS 栈序，不是最小 BFS 深度） |
+| `generated` | 机械证书层：模块名含 `Interval.Cases` / `Graphs.CertShards` / `Shard` / `CertTri|Quad|Pent|Hex`，或名字含 `_native_decide` |
+| `treeChildCount` | 以本节点为首次父的子节点数（树边） |
+
+同一段前还有两个模块聚合表：`--- MODULE TOP30 BY NODES ---` 与
+`--- MODULE TOP10 BY SORRIES ---`（列：module / nodes / sorries / maxDepth / generated）。
+
+---
+
+# 归档：v1 地图（2026-10-22 ～ 2026-11-02）
+
+> 以下为 v1 口径历史读数（旧指标 = SORRIED / 可达声明 / 可达公理），保留作审计；
+> 其中「可达 Kepler 声明」用旧计数，不可与 v2 的 K-REACH 直接比较。
 
 ## 0. 头版
 
@@ -160,13 +313,10 @@
 - 只统计**直接**含 `sorryAx` 的声明；间接 taint 通过父边体现。
 - 父边是第一个 BFS 父，不是唯一父；一个源可在多条路径上。
 - 证明项里的死分支也会被计入（与 `#print axioms` 一致，因为内核仍要检查）。
-- 再生成：
-  ```bash
-  cd lean && lake env lean scripts/e2e_reach_map.lean > /tmp/reachmap.out
-  cp /tmp/reachmap.out docs/e2e-reachability-map.tsv
-  ```
-  首次运行会重建 `Assembly.olean`；后续热缓存约数秒。每次落库后重跑并
-  diff 130 行清单，就是最直接的 e2e 债务刻度。
+- 再生成：见顶部 §v2.2/§v2.3（standalone + scratch farm；**不再使用 `lake`**）。
+  v1 曾用 `cd lean && lake env lean scripts/e2e_reach_map.lean`，该命令已废弃：
+  它依赖 `.lake` 共享状态，会被并行车道污染（2026-11-03 事故，见 §v2.2）。
+  每次落库后重跑并 diff SORRIED 清单，就是最直接的 e2e 债务刻度。
 
 ## 6. 建议的下一步
 
