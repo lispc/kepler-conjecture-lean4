@@ -1047,15 +1047,307 @@ theorem DIST_LE2_BB_CASSE_5_p26 (s : ScsV39) (v : ℕ → V3) (hk : s.k = 5)
   rw [Set.ncard_pair (show (i % 5 : ℕ) ≠ (i + 1) % 5 from succ_mod_ne_p26 (by norm_num))] at hle
   omega
 
-/-- HOL `AXJRPNC` (AXJRPNC.hl:380). Proof pending (needs
-`RRCWNSJ` / local fan machinery / lunar EDGE/IVS case elimination). -/
+/-! ### Lane m1a-root-w3: the distance-2 lunar elimination (`helim` of
+`w5sg3b_axjrpnc_p26`) -/
+
+/-- Positive convex combinations of two distinct points lie in their convex
+hull (`conv0_p2` ⊆ `convexHull`). -/
+private theorem w3sg_conv0_subset_convexHull {a b : V3} (hab : a ≠ b) :
+    conv0_p2 ({a, b} : Set V3) ⊆ convexHull ℝ ({a, b} : Set V3) := by
+  intro x hx
+  simp only [conv0_p2, Set.mem_setOf_eq] at hx
+  obtain ⟨f, hfin, hvec, hpos, hsum⟩ := hx
+  have hEq : hfin.toFinset = ({a, b} : Finset V3) := by ext w; simp [hab]
+  rw [hEq] at hvec hsum
+  simp only [Finset.sum_insert (by simp [hab] : ¬(a ∈ ({b} : Finset V3))),
+    Finset.sum_singleton] at hvec hsum
+  have hfa : 0 < f a := hpos a (by simp [hab])
+  have hfb : 0 < f b := hpos b (by simp [hab])
+  rw [convexHull_pair, mem_segment_iff_div]
+  refine ⟨f a, f b, le_of_lt hfa, le_of_lt hfb, by linarith, ?_⟩
+  rw [hsum, div_one, div_one]
+  exact hvec.symm
+
+/-- Distance-2 helper: the LocalAuto1-proved `OIQKKEP_concl` (faithful
+twin, standard axioms), restated here because Section C is below Section B. -/
+private theorem w3sg_oiqkkep (u v : V3) (c : ℝ) (hu : u ∈ ballAnnulus)
+    (hv : v ∈ ballAnnulus) (hc : c < 4) (hdist : dist u v ≤ c) (h2 : 2 ≤ dist u v) :
+    arcV 0 u v ≤ arcLength 2 2 c :=
+  OIQKKEP_concl u v c hu hv hc h2 hdist
+
+/-- Distance-2 helper: the LocalAuto1-proved `PPBTYDQ_concl`. -/
+private theorem w3sg_ppbtydq (u v p : V3) (hu : ¬Collinear ℝ ({0, v, p} : Set V3))
+    (hv : ¬Collinear ℝ ({0, u, p} : Set V3))
+    (harc : arcV 0 u p + arcV 0 p v < Real.pi) :
+    ¬(0 ∈ convexHull ℝ ({u, v} : Set V3)) :=
+  PPBTYDQ_concl u v p hu hv harc
+
+/-- A distance-2 lunar pair is impossible when one of the two intervening
+edges has length `≤ 2*h0` (all edges are `≤ cstab` by `hb`): the two `arcV`
+bounds sum to `< π`, `PPBTYDQ` forbids `0` from the convex hull, while the
+fan's `FAN_SUB_NOT_EQ_COLL_IN_CONV0` puts `0` there. -/
+private theorem w3sg_d2_kill_p26 (s : ScsV39) (v : ℕ → V3) (i : ℕ)
+    (hs : isScsV39 s) (hb : ∀ i, s.b i (i + 1) ≤ cstab) (hv : MMsV39 s v)
+    (h4 : 4 ≤ s.k)
+    (hshort : ‖v i - v (i + 1)‖ ≤ 2 * h0 ∨ ‖v (i + 1) - v (i + 2)‖ ≤ 2 * h0) :
+    ¬ Lunar (v i) (v (i + 2)) (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3)) := by
+  intro hlun
+  have hBB : BBsV39 s v := w5sg_mms_bbs_p26 s v hv
+  have hcfan : ConvexLocalFan (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3))
+      (Set.range fun l : ℕ => (v l, v (l + 1))) :=
+    hBB.2.2.2.resolve_left (by omega)
+  have hclf2 := w5sg_clf2_p26 hcfan
+  obtain ⟨hlf, hFAN⟩ := CVLF_LF_F hclf2
+  have hedge : ∀ l, (v l, v (l + 1)) ∈
+      (Set.range fun l : ℕ => (v l, v (l + 1))) := fun l => ⟨l, rfl⟩
+  have hnc1 : ¬ Collinear ℝ ({0, v i, v (i + 1)} : Set V3) :=
+    LOCAL_FAN_IN_FF_NOT_COLLINEAR (d := (v i, v (i + 1))) hlf (hedge i)
+  have hnc2 : ¬ Collinear ℝ ({0, v (i + 1), v (i + 2)} : Set V3) :=
+    LOCAL_FAN_IN_FF_NOT_COLLINEAR (d := (v (i + 1), v (i + 2))) hlf (hedge (i + 1))
+  have hnc2' : ¬ Collinear ℝ ({0, v (i + 2), v (i + 1)} : Set V3) := by
+    rwa [show ({0, v (i + 2), v (i + 1)} : Set V3) = {0, v (i + 1), v (i + 2)} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hmem_ann : ∀ l, v l ∈ ballAnnulus := fun l => hBB.1 ⟨l, rfl⟩
+  have hdist2 : ∀ l, 2 ≤ dist (v l) (v (l + 1)) := by
+    intro l
+    rw [dist_eq_norm]
+    exact DIST_EDGE_IN_BB_LE_2_p26 s v hBB hs l
+  have hdistc : ∀ l, dist (v l) (v (l + 1)) ≤ cstab := by
+    intro l
+    rw [dist_eq_norm]
+    exact NORM_V_IN_BB_LE_CSTAB_p26 s v hb hBB l
+  have h2h04 : 2 * h0 < (4:ℝ) := by norm_num [h0]
+  have hcst4 : cstab < (4:ℝ) := by norm_num [cstab]
+  have hsum : arcV 0 (v i) (v (i + 1)) + arcV 0 (v (i + 1)) (v (i + 2)) < Real.pi := by
+    have h := arclength_2h0_cstab_p26
+    rcases hshort with h1 | h1
+    · have hb1 : arcV 0 (v i) (v (i + 1)) ≤ arcLength 2 2 (2 * h0) :=
+        w3sg_oiqkkep _ _ _ (hmem_ann i) (hmem_ann (i + 1)) h2h04
+          (by rw [dist_eq_norm]; exact h1) (hdist2 i)
+      have hb2' : arcV 0 (v (i + 1)) (v (i + 2)) ≤ arcLength 2 2 cstab :=
+        w3sg_oiqkkep _ _ _ (hmem_ann (i + 1)) (hmem_ann (i + 2)) hcst4
+          (hdistc (i + 1)) (hdist2 (i + 1))
+      linarith
+    · have hb1' : arcV 0 (v i) (v (i + 1)) ≤ arcLength 2 2 cstab :=
+        w3sg_oiqkkep _ _ _ (hmem_ann i) (hmem_ann (i + 1)) hcst4
+          (hdistc i) (hdist2 i)
+      have hb2 : arcV 0 (v (i + 1)) (v (i + 2)) ≤ arcLength 2 2 (2 * h0) :=
+        w3sg_oiqkkep _ _ _ (hmem_ann (i + 1)) (hmem_ann (i + 2)) h2h04
+          (by rw [dist_eq_norm]; exact h1) (hdist2 (i + 1))
+      linarith
+  have hconv : (0:V3) ∈ convexHull ℝ ({v i, v (i + 2)} : Set V3) := by
+    have hsub : ({v i, v (i + 2)} : Set V3) ⊆ Set.range v := by
+      intro z hz
+      rcases Set.mem_insert_iff.mp hz with rfl | hz
+      · exact ⟨i, rfl⟩
+      · rw [Set.mem_singleton_iff] at hz
+        exact ⟨i + 2, hz.symm⟩
+    have hne : v i ≠ v (i + 2) := hlun.2.2.1
+    have hcol : Collinear ℝ ({0, v i, v (i + 2)} : Set V3) := hlun.2.2.2
+    exact w3sg_conv0_subset_convexHull hne
+      (FAN_SUB_NOT_EQ_COLL_IN_CONV0 hFAN hsub hne hcol)
+  exact (w3sg_ppbtydq (v i) (v (i + 2)) (v (i + 1)) hnc2' hnc1 hsum) hconv
+
+/-- `k = 4`: one of the two arcs between `p` and `p+2` carries an edge of
+length `≤ 2*h0`.  At most two residues are bad (`ncard + 4 ≤ 6`); if both
+edges of the first arc are bad, both edges of the second are good. -/
+private theorem w3sg_short_k4_p26 (s : ScsV39) (v : ℕ → V3) (p : ℕ)
+    (hs : isScsV39 s) (hv : MMsV39 s v) (hk : s.k = 4) :
+    (‖v p - v (p + 1)‖ ≤ 2 * h0 ∨ ‖v (p + 1) - v (p + 2)‖ ≤ 2 * h0) ∨
+    (‖v (p + 2) - v (p + 3)‖ ≤ 2 * h0 ∨ ‖v (p + 3) - v (p + 4)‖ ≤ 2 * h0) := by
+  obtain ⟨-, hk3, -, -, -, -, -, hpa, -, -, hpb, -, -, -, -, -, -, -, -, -, hcard⟩ := hs
+  have hBB : BBsV39 s v := w5sg_mms_bbs_p26 s v hv
+  have hper : Periodic v 4 := hk ▸ hBB.2.1
+  rw [hk] at hpb hcard
+  set BAD : Set ℕ :=
+    {i | i < 4 ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} with hBADdef
+  have hcardBAD : BAD.ncard ≤ 2 := by
+    omega
+  have hfinBAD : BAD.Finite := by
+    rw [hBADdef]
+    exact Set.Finite.subset (Set.finite_Iio 4) (fun x hx => hx.1)
+  have hshift : ∀ l r : ℕ, v (l + r) = v ((l % 4 + r) % 4) := by
+    intro l r
+    rw [← periodic_mod_eq_p23 hper (l + r)]
+    congr 1
+    exact Nat.ModEq.add_right r (Nat.mod_modEq l 4).symm
+  have hbad : ∀ l, 2 * h0 < ‖v l - v (l + 1)‖ → (l % 4) ∈ BAD := by
+    intro l hl
+    have hb_eq : s.b l (l + 1) = s.b (l % 4) ((l % 4) + 1) := by
+      have h1 := periodic2_mod_eq_p26 (by norm_num : 0 < 4) hpb l (l + 1)
+      have hm : (l + 1) % 4 = (l % 4 + 1) % 4 :=
+        Nat.ModEq.add_right 1 (Nat.mod_modEq l 4).symm
+      rw [hm] at h1
+      have h2 : s.b (l % 4) (((l % 4) + 1) % 4) =
+          s.b (l % 4) ((l % 4) + 1) := by
+        have h3 := periodic2_mod_eq_p26 (by norm_num : 0 < 4) hpb (l % 4) ((l % 4) + 1)
+        rw [Nat.mod_mod] at h3
+        exact h3.symm
+      exact h1.trans h2
+    have hdist_eq : dist (v l) (v (l + 1)) = dist (v (l % 4)) (v ((l % 4) + 1)) := by
+      rw [dist_eq_norm, dist_eq_norm]
+      have hv_l : v l = v (l % 4) := (periodic_mod_eq_p23 hper l).symm
+      have hv_l1 : v (l + 1) = v ((l % 4 + 1) % 4) := hshift l 1
+      have hv_r1 : v ((l % 4) + 1) = v ((l % 4 + 1) % 4) :=
+        (periodic_mod_eq_p23 hper ((l % 4) + 1)).symm
+      rw [hv_l, hv_l1, hv_r1]
+    have hdle : dist (v l) (v (l + 1)) ≤ s.b l (l + 1) := (hBB.2.2.1 l (l + 1)).2
+    rw [hb_eq] at hdle
+    rw [← dist_eq_norm] at hl
+    rw [hdist_eq] at hl hdle
+    refine ⟨Nat.mod_lt _ (by norm_num : 0 < 4), Or.inl ?_⟩
+    exact lt_of_lt_of_le hl hdle
+  have hgood : ∀ l, (l % 4) ∉ BAD → ‖v l - v (l + 1)‖ ≤ 2 * h0 := by
+    intro l hmem
+    by_contra hgt
+    push_neg at hgt
+    exact hmem (hbad l hgt)
+  -- residue arithmetic helpers
+  have hm1 : (p + 1) % 4 = (p % 4 + 1) % 4 := Nat.ModEq.add_right 1 (Nat.mod_modEq p 4).symm
+  have hm2 : (p + 2) % 4 = (p % 4 + 2) % 4 := Nat.ModEq.add_right 2 (Nat.mod_modEq p 4).symm
+  have hm3 : (p + 3) % 4 = (p % 4 + 3) % 4 := Nat.ModEq.add_right 3 (Nat.mod_modEq p 4).symm
+  have hp4 : p % 4 < 4 := Nat.mod_lt _ (by norm_num : 0 < 4)
+  have h12 : (p % 4) ≠ ((p + 1) % 4) := by
+    rw [hm1]
+    exact ne_step_mod_p27 (r := p % 4) (c := 1) (by norm_num) (by norm_num) hp4
+  have h13 : (p % 4) ≠ ((p + 2) % 4) := by
+    rw [hm2]
+    exact ne_step_mod_p27 (r := p % 4) (c := 2) (by norm_num) (by norm_num) hp4
+  have h14 : (p % 4) ≠ ((p + 3) % 4) := by
+    rw [hm3]
+    exact ne_step_mod_p27 (r := p % 4) (c := 3) (by norm_num) (by norm_num) hp4
+  have hq1 : (p + 2) % 4 = ((p + 1) % 4 + 1) % 4 := by
+    rw [show p + 2 = (p + 1) + 1 from by omega]
+    exact Nat.ModEq.add_right 1 (Nat.mod_modEq (p + 1) 4).symm
+  have hq2 : (p + 3) % 4 = ((p + 1) % 4 + 2) % 4 := by
+    rw [show p + 3 = (p + 1) + 2 from by omega]
+    exact Nat.ModEq.add_right 2 (Nat.mod_modEq (p + 1) 4).symm
+  have hq4 : (p + 1) % 4 < 4 := Nat.mod_lt _ (by norm_num : 0 < 4)
+  have h23 : ((p + 1) % 4) ≠ ((p + 2) % 4) := by
+    rw [hq1]
+    exact ne_step_mod_p27 (r := (p + 1) % 4) (c := 1) (by norm_num) (by norm_num) hq4
+  have h24 : ((p + 1) % 4) ≠ ((p + 3) % 4) := by
+    rw [hq2]
+    exact ne_step_mod_p27 (r := (p + 1) % 4) (c := 2) (by norm_num) (by norm_num) hq4
+  have htriple : ∀ a b c : ℕ, a ≠ b → a ≠ c → b ≠ c →
+      ({a, b, c} : Set ℕ).ncard = 3 := by
+    intro a b c hab hac hbc
+    rw [Set.ncard_insert_of_notMem (by simp [hab, hac]), Set.ncard_pair hbc]
+  by_cases hA1 : (p % 4) ∈ BAD
+  · by_cases hA2 : ((p + 1) % 4) ∈ BAD
+    · -- both first-arc edges are bad ⇒ both second-arc edges are good
+      right
+      have hB1 : ((p + 2) % 4) ∉ BAD := by
+        intro hmem
+        have hsub : ({(p % 4), ((p + 1) % 4), ((p + 2) % 4)} : Set ℕ) ⊆ BAD := by
+          intro x hx
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+          rcases hx with rfl | rfl | rfl
+          · exact hA1
+          · exact hA2
+          · exact hmem
+        have hle := Set.ncard_le_ncard hsub hfinBAD
+        have h3 := htriple _ _ _ h12 h13 h23
+        omega
+      have hB2 : ((p + 3) % 4) ∉ BAD := by
+        intro hmem
+        have hsub : ({(p % 4), ((p + 1) % 4), ((p + 3) % 4)} : Set ℕ) ⊆ BAD := by
+          intro x hx
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+          rcases hx with rfl | rfl | rfl
+          · exact hA1
+          · exact hA2
+          · exact hmem
+        have hle := Set.ncard_le_ncard hsub hfinBAD
+        have h3 := htriple _ _ _ h12 h14 h24
+        omega
+      exact Or.inl (by simpa [show p + 2 + 1 = p + 3 from by omega] using hgood (p + 2) hB1)
+    · left
+      exact Or.inr (hgood (p + 1) hA2)
+  · left
+    exact Or.inl (hgood p hA1)
+
+/-- The `¬ Lunar (v p) (v (p+2))` premise consumed by
+`w5sg3b_axjrpnc_p26`, for `k = 4, 5, 6`. -/
+private theorem w3sg_helim_p26 (s : ScsV39) (v : ℕ → V3)
+    (hs : isScsV39 s) (hb : ∀ i, s.b i (i + 1) ≤ cstab) (hv : MMsV39 s v)
+    (h4 : 4 ≤ s.k) :
+    ∀ p, ¬ Lunar (v p) (v (p + 2)) (Set.range v)
+      (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3)) := by
+  intro p hlun
+  have hBB : BBsV39 s v := w5sg_mms_bbs_p26 s v hv
+  have hk6 : s.k ≤ 6 := hs.2.2.1
+  rcases (by omega : s.k = 4 ∨ s.k = 5 ∨ s.k = 6) with hk4 | hk5 | hk6
+  · have hshort := w3sg_short_k4_p26 s v p hs hv hk4
+    have hper : Periodic v 4 := hk4 ▸ hBB.2.1
+    rcases hshort with hA | hB
+    · exact w3sg_d2_kill_p26 s v p hs hb hv h4 hA hlun
+    · have hlun2 : Lunar (v (p + 2)) (v (p + 2 + 2)) (Set.range v)
+          (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3)) := by
+        rw [show p + 2 + 2 = p + 4 from by omega, hper p]
+        exact (LUNAR_COMM (v p) (v (p + 2)) (Set.range v)
+          (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3))).mp hlun
+      have hB' : ‖v (p + 2) - v (p + 2 + 1)‖ ≤ 2 * h0 ∨
+          ‖v (p + 2 + 1) - v (p + 2 + 2)‖ ≤ 2 * h0 := by
+        simpa [show p + 2 + 1 = p + 3 from by omega,
+          show p + 2 + 2 = p + 4 from by omega] using hB
+      exact w3sg_d2_kill_p26 s v (p + 2) hs hb hv h4 hB' hlun2
+  · exact w3sg_d2_kill_p26 s v p hs hb hv h4
+      (DIST_LE2_BB_CASSE_5_p26 s v hk5 hBB hs p) hlun
+  · exact w3sg_d2_kill_p26 s v p hs hb hv h4
+      (Or.inl (DIST_LE_2h0_IN_CASES_6_p26 s v hk6 hBB hs p)) hlun
+
+/-- HOL `AXJRPNC` (AXJRPNC.hl:380).  DISCHARGED (2026-11-05, lane
+m1a-root-w3): the private `w5sg3b_axjrpnc_p26` carries the whole case bash
+except the distance-2 lunar elimination `helim`; `w3sg_helim_p26` proves it
+from the now-standard `OIQKKEP_p26` / `PPBTYDQ_p26` + `arclength222h0_p26`
+(`k = 3` dies on `IS_SCS_NOT_COLLINEAR_BBs_CASE_3_p23`). -/
 theorem AXJRPNC_p26 (s : ScsV39) (v : ℕ → V3) (i j : ℕ)
     (hs : isScsV39 s) (hbasic : scsBasicV39 s)
     (hb : ∀ i, s.b i (i + 1) ≤ cstab) (hv : MMsV39 s v)
     (hlunar : Lunar (v i) (v j) (Set.range v)
       (Set.range fun l : ℕ => ({v l, v (l + 1)} : Set V3))) :
     s.k = 6 ∧ v j = v (i + 3) := by
-  sorry
+  by_cases hk3 : s.k = 3
+  · exfalso
+    have hBB : BBsV39 s v := w5sg_mms_bbs_p26 s v hv
+    obtain ⟨hnc1, hnc2, hnc3⟩ := IS_SCS_NOT_COLLINEAR_BBs_CASE_3_p23 s v hs hk3 hBB
+    have hper : Periodic v 3 := hk3 ▸ hBB.2.1
+    have hswap : ∀ x y : ℕ, ({0, v x, v y} : Set V3) = {0, v y, v x} := by
+      intro x y
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    have hnc : ∀ a b : ℕ, a < 3 → b < 3 → a ≠ b →
+        ¬ Collinear ℝ ({0, v a, v b} : Set V3) := by
+      intro a b ha hb hab
+      have hcases : (a = 0 ∧ b = 1) ∨ (a = 0 ∧ b = 2) ∨ (a = 1 ∧ b = 0) ∨
+          (a = 1 ∧ b = 2) ∨ (a = 2 ∧ b = 0) ∨ (a = 2 ∧ b = 1) := by omega
+      rcases hcases with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ |
+        ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+      · rw [hswap 0 1]; exact hnc2
+      · rw [hswap 0 2]; exact hnc3
+      · exact hnc2
+      · exact hnc1
+      · exact hnc3
+      · rw [hswap 2 1]; exact hnc1
+    have hcol : Collinear ℝ ({0, v (i % 3), v (j % 3)} : Set V3) := by
+      have h := hlunar.2.2.2
+      rwa [← periodic_mod_eq_p23 hper i, ← periodic_mod_eq_p23 hper j] at h
+    have hne : v (i % 3) ≠ v (j % 3) := by
+      have h := hlunar.2.2.1
+      rwa [← periodic_mod_eq_p23 hper i, ← periodic_mod_eq_p23 hper j] at h
+    have hres : i % 3 ≠ j % 3 := fun h => hne (by rw [h])
+    exact hnc (i % 3) (j % 3) (Nat.mod_lt _ (by norm_num)) (Nat.mod_lt _ (by norm_num))
+      hres hcol
+  · have h4 : 4 ≤ s.k := by
+      have h3 := hs.2.1
+      have h6 := hs.2.2.1
+      omega
+    exact w5sg3b_axjrpnc_p26 s v i j hs hbasic hb hv hlunar
+      (w3sg_helim_p26 s v hs hb hv h4) h4
 /-! ## Section C: PPBTYDQ -/
 
 /-! ### `_p26` row/flatten helpers for the GBYCPXS fills (2026-09-18)
@@ -1333,13 +1625,14 @@ theorem OIQKKEP_p26 (u v : V3) (c : ℝ) (hu : u ∈ ballAnnulus) (hv : v ∈ ba
     arcV 0 u v ≤ arcLength 2 2 c := by
   exact OIQKKEP_concl u v c hu hv hc h2 hdist
 
-/-- HOL `PPBTYDQ` (PPBTYDQ.hl:92). Proof pending (needs
-convex-hull / arcV angle comparison kit). -/
+/-- HOL `PPBTYDQ` (PPBTYDQ.hl:92).  DISCHARGED (2026-11-05, lane
+m1a-root-w3): the LocalAuto1 W5c-F1 analytic kit proves the faithful twin
+`PPBTYDQ_concl` (same statement, standard axioms). -/
 theorem PPBTYDQ_p26 (u v p : V3) (hu : ¬Collinear ℝ ({0, v, p} : Set V3))
     (hv : ¬Collinear ℝ ({0, u, p} : Set V3))
     (harc : arcV 0 u p + arcV 0 p v < Real.pi) :
-    ¬(0 ∈ convexHull ℝ ({u, v} : Set V3)) := by
-  sorry
+    ¬(0 ∈ convexHull ℝ ({u, v} : Set V3)) :=
+  PPBTYDQ_concl u v p hu hv harc
 
 /-- HOL `XWNHLMD_MM` (PPBTYDQ.hl:560).
 DISCHARGED (2026-09-20): the HOL proof is `TAUSTAR_LE_0_XWNHLMD` +
