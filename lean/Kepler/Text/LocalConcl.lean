@@ -1141,6 +1141,487 @@ theorem la19_wire_capstone_w1 :
 -- [propext, Classical.choice, Quot.sound] and NO sorryAx (the scout group closure is sorried-0).
 #print axioms la19_wire_capstone_w1
 
+/-! ### LA5 materialization capstone (lane lv1314-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV13):
+the 78 public top-level LocalAuto5 clean theorem exits (scout seeds_clean.txt LA5 group -- all 78 clean, GO pure, the file carries zero code sorries;
+0 sorried family exits excluded), of which 78 are statable from LocalConcl and are re-exposed as ONE conjunction below; 0 exits are dropped per the no-forcing rule (each drop named in the theorem docstring).
+Self-contained section: pure insertion, zero new imports (LA5 already visible transitively: LocalConcl:494 imports LocalAuto23, LocalAuto23:111 imports LocalAuto9, LocalAuto9:105 imports LocalAuto5), zero proof obligations
+(body = the exit assembly itself), own `#print axioms` probe (the lv1112 la19 section above and the shared la34 footer below are untouched -- hunk-level disjoint).
+The scoped heartbeat raise mirrors the lv1112 la19 section in this file: a conjunction statement of this size exceeds the default budget during statement elaboration
+(lv910 measured the 71-conjunct PA4 case against the 200000 default; pa21 capstone uses 50000000).
+-/
+
+open Kepler.Text.Fan in
+set_option maxHeartbeats 50000000 in
+
+/-- LA5 materialization capstone (scout lane leftover-mat-scout-2
+workorder LV13, implementation lane lv1314-w1, 2026-11-04).  The
+78 public top-level Kepler.Text.LocalAuto5 theorem exits unreachable from every
+e2e root (scout probe1/probe2: GROUP_VS_CONE fresh sorried-0, standard-three
+axiom face on the axprobe sample); 78 of them are statable from
+LocalConcl and are re-exposed as ONE conjunction.
+Implemented here: 78 of the 78.
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its Kepler.Text.LocalAuto5 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the first depth-0 `:=` by the generator gen_items.py,
+bracket-balance guarded); compiler-generated equation/aux lemmas have no
+source statement anywhere, so their conjunct is the `#check @name` printer
+dump verbatim and each passes a per-item sigtest (the `⟨...⟩` assembly below
+must unify it definitionally with the constant's type; printer dumps with
+proof-term elision `...` are dropped per the lv12-w1 t_eqlemma_microtest
+evidence, each drop named above).  Semantic identity of every conjunct is
+re-verified by that assembly (each element must have exactly its conjunct's
+type); the per-conjunct comments carry each exit's Kepler.Text.LocalAuto5 declaration
+line and file-local docstring HOL anchor.  Conjunct order: the scout
+seed-list order (probe1 SEED list).  Body = the assembly of the exit
+constants -- zero new proof obligations, zero new imports.  The scoped
+`open ... in` prefix before the heartbeat raise (if any) reproduces the
+source file's own open context for the verbatim conjunct texts --
+mechanically computed as the source-file open tokens missing from the
+host's; scoped to this one theorem, zero effect elsewhere in the host.
+Elements @-prefixed by strict-implicit rule (c) (conclusion-head strict-implicit
+binder trap, implicit-lambda feature; see gen_items.py AT_FORCE): Kepler.Text.Affsign_convex.  -/
+theorem la5_wire_capstone_w1 :
+    -- 1. Kepler.Geom.affLe.eq_1 (Kepler.Text.LocalAuto5:0; compiler-generated equation/aux lemma (parent def `affLe` at Geom.Aff:48; no source statement; sigtest = assembly elaboration))
+    (∀ (s t : Set V3), affLe s t = {v | Affsign (fun x => x ≤ 0) s t v}
+    ) ∧
+    -- 2. Kepler.Text.AFF_GE_EQ (Kepler.Text.LocalAuto5:4991; HOL `AFF_GE_EQ`)
+    (∀ {x a b : V3} {t : ℝ} (ht : 0 < t) (heq : a - x = t • (b - x)),
+    affGe ({x} : Set V3) ({a} : Set V3) = affGe ({x} : Set V3) ({b} : Set V3)
+    ) ∧
+    -- 3. Kepler.Text.AFF_GE_MONO_TRANS (Kepler.Text.LocalAuto5:6984; HOL `AFF_GE_MONO_TRANS`)
+    (∀ {S X Y : Set V3} (hsub : S ⊆ X),
+    affGe (X \ S) (Y ∪ S) ⊆ affGe X Y
+    ) ∧
+    -- 4. Kepler.Text.AFF_GT_AFF_LT_INTERPRET (Kepler.Text.LocalAuto5:5340; HOL `AFF_GT_AFF_LT_INTERPRET`)
+    (∀ {x u v w : V3} (hdis1 : Disjoint ({x} : Set V3) ({v, w} : Set V3))
+          (hdis2 : Disjoint ({x} : Set V3) ({u} : Set V3)),
+    (∃ aa bb c : ℝ, aa < 0 ∧ 0 < bb ∧ 0 < c ∧
+          aa • (u - x) = bb • (v - x) + c • (w - x)) ↔
+          ∃ tt : V3, tt ∈ affGt ({x} : Set V3) ({v, w} : Set V3) ∩
+            affLt ({x} : Set V3) ({u} : Set V3)
+    ) ∧
+    -- 5. Kepler.Text.AFF_GT_AFF_LT_INTERPRET2 (Kepler.Text.LocalAuto5:5368; HOL `AFF_GT_AFF_LT_INTERPRET2`)
+    (∀ {x u v w : V3}
+          (hdis : Disjoint ({x} : Set V3) ({u, v, w} : Set V3)),
+    (∃ aa bb c : ℝ, aa < 0 ∧ 0 < bb ∧ 0 < c ∧
+          aa • (u - x) = bb • (v - x) + c • (w - x)) ↔
+          ∃ tt : V3, tt ∈ affGt ({x} : Set V3) ({v, w} : Set V3) ∩
+            affLt ({x} : Set V3) ({u} : Set V3)
+    ) ∧
+    -- 6. Kepler.Text.AFF_GT_LT_INTER_SYM (Kepler.Text.LocalAuto5:5393; HOL `AFF_GT_LT_INTER_SYM`)
+    (∀ {x u v w : V3}
+          (hdis : Disjoint ({x} : Set V3) ({u, v, w} : Set V3))
+          (hne : ¬ (affGt ({x} : Set V3) ({v, w} : Set V3) ∩
+            affLt ({x} : Set V3) ({u} : Set V3) = ∅)),
+    ¬ (affGt ({x} : Set V3) ({u, v} : Set V3) ∩
+          affLt ({x} : Set V3) ({w} : Set V3) = ∅)
+    ) ∧
+    -- 7. Kepler.Text.AFF_GT_LT_INTER_SYM._abel_1_1 (Kepler.Text.LocalAuto5:5393; compiler-generated equation/aux lemma (parent def `AFF_GT_LT_INTER_SYM` at Kepler.Text.LocalAuto5:5393; no source statement; sigtest = assembly elaboration))
+    (∀ {x w : V3}, x - (w - x) - x = -(w - x)
+    ) ∧
+    -- 8. Kepler.Text.AFF_GT_MONO (Kepler.Text.LocalAuto5:7748; HOL `AFF_GT_MONO`)
+    (∀ {X Y S : Set V3} (hS : S ⊆ Y),
+    affGt X Y ⊆ affGt (X ∪ S) (Y \ S)
+    ) ∧
+    -- 9. Kepler.Text.AFF_GT_MONO_TRANS (Kepler.Text.LocalAuto5:7006; no HOL anchor line in file docstring)
+    (∀ {S X Y : Set V3} (hsub : S ⊆ X),
+    affGt (X \ S) (Y ∪ S) ⊆ affGt X Y
+    ) ∧
+    -- 10. Kepler.Text.AFF_GT_SUB_AFF_UNION (Kepler.Text.LocalAuto5:7766; HOL `AFF_GT_SUB_AFF_UNION`)
+    (∀ (X Y : Set V3),
+    affGt X Y ⊆ (affineSpan ℝ (X ∪ Y) : Set V3)
+    ) ∧
+    -- 11. Kepler.Text.AFF_XX_CASES (Kepler.Text.LocalAuto5:5029; HOL `AFF_XX_CASES`)
+    (∀ (x : V3),
+    affLt ({x} : Set V3) ({x} : Set V3) = (∅ : Set V3) ∧
+          affLe ({x} : Set V3) ({x} : Set V3) = ∅ ∧
+          affGt ({x} : Set V3) ({x} : Set V3) = ({x} : Set V3)
+    ) ∧
+    -- 12. Kepler.Text.AZIM_PI_CONVEX_WEDGE (Kepler.Text.LocalAuto5:6140; HOL `AZIM_PI_CONVEX_WEDGE`)
+    (∀ {u v w ww : V3} (h : azim u v w ww = Real.pi),
+    Convex ℝ (wedgeGe_p2 u v w ww)
+    ) ∧
+    -- 13. Kepler.Text.AZIM_PI_WEDGE_GE_CROSS_DOT (Kepler.Text.LocalAuto5:6058; HOL `AZIM_PI_WEDGE_GE_CROSS_DOT`)
+    (∀ {u v w ww : V3} (h : azim u v w ww = Real.pi),
+    wedgeGe_p2 u v w ww = {x : V3 |
+          0 ≤ ((WithLp.toLp 2 (crossProduct ((v - u : V3) : Fin 3 → ℝ)
+            ((w - u : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (x - u))}
+    ) ∧
+    -- 14. Kepler.Text.AZIM_PI_WEDGE_GE_SIN (Kepler.Text.LocalAuto5:6026; HOL `AZIM_PI_WEDGE_GE_SIN`)
+    (∀ {u v w ww : V3} (h : azim u v w ww = Real.pi),
+    wedgeGe_p2 u v w ww = {x : V3 | 0 ≤ Real.sin (azim u v w x)}
+    ) ∧
+    -- 15. Kepler.Text.AZIM_SPEC_DEGENERATE (Kepler.Text.LocalAuto5:6216; HOL `AZIM_SPEC_DEGENERATE`)
+    (∀ (v0 v1 w1 : V3),
+    azim v0 v1 w1 v0 = 0 ∧ azim v0 v1 w1 v1 = 0
+    ) ∧
+    -- 16. Kepler.Text.Affsign_convex (Kepler.Text.LocalAuto5:101; HOL `aff_ge`)
+    (∀ {s t : Set V3},
+    Convex ℝ {v : V3 | Affsign (fun x : ℝ => 0 ≤ x) s t v}
+    ) ∧
+    -- 17. Kepler.Text.CARD_IMAGE_INJ2 (Kepler.Text.LocalAuto5:3010; HOL `CARD_IMAGE_INJ2`)
+    (∀ {α β : Type*} {f : α → β} {A : Set α} {B : Set β}
+          (h : Set.InjOn f A) (hfin : A.Finite),
+    (Set.image f A).ncard = A.ncard
+    ) ∧
+    -- 18. Kepler.Text.CARD_RECUSIVE_EQ (Kepler.Text.LocalAuto5:5610; HOL `CARD_RECUSIVE_EQ`)
+    (∀ {α : Type*} (f : α → α) (x : α) {k : ℕ} (hk : 0 < k),
+    ({f^[n] x | n < k} : Set α).ncard = k ↔
+          ({f^[n] x | n < k - 1} : Set α).ncard = k - 1 ∧
+            ∀ i : ℕ, i < k - 1 → f^[i] x ≠ f^[k - 1] x
+    ) ∧
+    -- 19. Kepler.Text.COLLINEAR_ONCE_VEC_0 (Kepler.Text.LocalAuto5:1596; HOL `COLLINEAR_ONCE_VEC_0`)
+    (∀ {x : V3} (hx : x ≠ 0) (y : V3),
+    Collinear ℝ ({0, x, y} : Set V3) ↔ ∃ t : ℝ, y = t • x
+    ) ∧
+    -- 20. Kepler.Text.COLL_IFF_COLL_CROSS (Kepler.Text.LocalAuto5:7296; HOL `COLL_IFF_COLL_CROSS`)
+    (∀ {v w : V3},
+    Collinear ℝ ({0, v, w} : Set V3) ↔
+          Collinear ℝ ({0, v, (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+            ((w : V3) : Fin 3 → ℝ)) : V3)} : Set V3)
+    ) ∧
+    -- 21. Kepler.Text.CONDS_FOR_INTER_AFF_CONV0 (Kepler.Text.LocalAuto5:4870; HOL `CONDS_FOR_INTER_AFF_CONV0`)
+    (∀ {x v w u t : V3} {t1 t2 t3 t1' t2' ss : ℝ}
+          (ht2 : 0 < t2) (ht3 : 0 < t3) (h1 : t1 + t2 + t3 = ss)
+          (h2 : t = t1 • x + t2 • v + t3 • w) (h3 : t1' + t2' = ss)
+          (h4 : t = t1' • x + t2' • u),
+    ∃ tt : V3, tt ∈ (affineSpan ℝ ({x, u} : Set V3) : Set V3) ∩ conv0_p2 ({v, w} : Set V3)
+    ) ∧
+    -- 22. Kepler.Text.CONDS_IN_CONV2 (Kepler.Text.LocalAuto5:6225; HOL `CONDS_IN_CONV2`)
+    (∀ {v w : V3} {t2 t3 : ℝ} (ht2 : 0 ≤ t2) (ht3 : 0 ≤ t3)
+          (hne : ¬(t2 = 0 ∧ t3 = 0)),
+    (t2 / (t2 + t3)) • v + (t3 / (t2 + t3)) • w ∈ convexHull ℝ ({v, w} : Set V3)
+    ) ∧
+    -- 23. Kepler.Text.CONV0_SUBSET_AFF_GT (Kepler.Text.LocalAuto5:7729; HOL `CONV0_SUBSET_AFF_GT`)
+    (∀ {S SS : Set V3} (hS : S.Finite),
+    conv0_p2 SS ⊆ (affGt S SS : Set V3)
+    ) ∧
+    -- 24. Kepler.Text.CONVEX_WEDGE_LE_PI (Kepler.Text.LocalAuto5:6182; HOL `CONVEX_WEDGE_LE_PI`)
+    (∀ {v0 v1 w1 w2 : V3} (h : azim v0 v1 w1 w2 ≤ Real.pi)
+          (hw1 : ¬ Collinear ℝ ({v0, v1, w1} : Set V3))
+          (hw2 : ¬ Collinear ℝ ({v0, v1, w2} : Set V3)),
+    Convex ℝ (wedgeGe_p2 v0 v1 w1 w2)
+    ) ∧
+    -- 25. Kepler.Text.CONV_SUBSET_AFF_GE (Kepler.Text.LocalAuto5:7713; HOL `CONV_SUBSET_AFF_GE`)
+    (∀ {S SS : Set V3} (hS : S.Finite) (hSS : SS.Finite),
+    convexHull ℝ SS ⊆ (affGe S SS : Set V3)
+    ) ∧
+    -- 26. Kepler.Text.DET_CROSS (Kepler.Text.LocalAuto5:511; HOL `DET_CROSS`)
+    (∀ (x y z : V3),
+    Matrix.det (Matrix.of fun i j => (![x, y, z] : Fin 3 → V3) i j) =
+          (crossProduct ((x : V3) : Fin 3 → ℝ) ((y : V3) : Fin 3 → ℝ))
+            ⬝ᵥ ((z : V3) : Fin 3 → ℝ)
+    ) ∧
+    -- 27. Kepler.Text.DISJOINT_IMP_Z_IN_AFF_GT (Kepler.Text.LocalAuto5:7232; HOL `DISJOINT_IMP_Z_IN_AFF_GT`)
+    (∀ {x y z : V3}
+          (h : Disjoint ({x, y} : Set V3) ({z} : Set V3)),
+    z ∈ affGt ({x, y} : Set V3) ({z} : Set V3)
+    ) ∧
+    -- 28. Kepler.Text.EMPTY_NOT_EXISTS_IN (Kepler.Text.LocalAuto5:6745; HOL `EMPTY_NOT_EXISTS_IN`)
+    (∀ {α : Type*} (a : Set α),
+    a = ∅ ↔ ¬ ∃ x, x ∈ a
+    ) ∧
+    -- 29. Kepler.Text.EXISTS_IN (Kepler.Text.LocalAuto5:5386; HOL `EXISTS_IN`)
+    (∀ {α : Type*} (a : Set α),
+    a ≠ ∅ ↔ ∃ x, x ∈ a
+    ) ∧
+    -- 30. Kepler.Text.FAN_IN_E_DIFF (Kepler.Text.LocalAuto5:1015; HOL `FAN_IN_E_DIFF`)
+    (∀ {V : Set V3} {E : Set (Set V3)} (hfan : FAN 0 V E),
+    ∀ x y : V3, ({x, y} : Set V3) ∈ E →
+          (x, y) ≠ (y, x)
+    ) ∧
+    -- 31. Kepler.Text.FAN_SINGLETON_V_DARTS (Kepler.Text.LocalAuto5:234; HOL `FAN_SINGLETON_V_DARTS`)
+    (∀ {v : V3} (hfan : FAN 0 V E) (hV : V = {v}),
+    dartsOfHyp_p2 E V = ({(v, v)} : Set (V3 × V3))
+    ) ∧
+    -- 32. Kepler.Text.FINITE_CARD1_IMP_SINGLETON (Kepler.Text.LocalAuto5:9093; HOL `FINITE_CARD1_IMP_SINGLETON`)
+    (∀ {α : Type*} {S : Set α} (hS : S.Finite)
+          (h1 : S.ncard = 1),
+    ∃ x, S = {x}
+    ) ∧
+    -- 33. Kepler.Text.FINTE_OF_N_FIRST_ELMS2 (Kepler.Text.LocalAuto5:1050; HOL `FINTE_OF_N_FIRST_ELMS2`)
+    (∀ {α : Type*} (f : α → α) (x : α) (i : ℕ),
+    ({f^[n] x | n < i} : Set α).Finite
+    ) ∧
+    -- 34. Kepler.Text.FIRST_EQ0_LAST_LT_PI (Kepler.Text.LocalAuto5:9149; HOL `FIRST_EQ0_LAST_LT_PI`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) {v0 : V3} (hv0 : v0 ∈ V)
+          {k : ℕ} (hk : V.ncard = k) {vv : ℕ → V3} (hvv : ∀ i : ℕ, (rhoNode1_p2 FF)^[i] v0 = vv i)
+          {bta : ℕ → ℝ} (hbta : ∀ i : ℕ, azim 0 v0 (vv 1) (vv i) = bta i),
+    bta 1 = 0 ∧ bta (k - 1) ≤ Real.pi
+    ) ∧
+    -- 35. Kepler.Text.FIRST_IN_AFF (Kepler.Text.LocalAuto5:7046; HOL `FIRST_IN_AFF`)
+    (∀ (a : V3) (S : Set V3),
+    a ∈ (affineSpan ℝ (insert a S) : Set V3)
+    ) ∧
+    -- 36. Kepler.Text.FOR_AFF_GT_NOT_INTERSECTION2 (Kepler.Text.LocalAuto5:8457; HOL `FOR_AFF_GT_NOT_INTERSECTION2`)
+    (∀ {x y u v : V3} {a1 b1 t : ℝ}
+          (h : a1 • x + b1 • y + t • u = v) (ht : 0 < t) (hs : a1 + b1 + t = 1),
+    u = ((0 - a1) / t) • x + ((0 - b1) / t) • y + (1 / t) • v ∧
+          (0 - a1) / t + (0 - b1) / t + 1 / t = 1 ∧ 0 < 1 / t
+    ) ∧
+    -- 37. Kepler.Text.HYP_MAPS_INVERABLE (Kepler.Text.LocalAuto5:3143; HOL `HYP_MAPS_INVERSABLE`)
+    (∀ {α : Type*} [DecidableEq α] (H : Hypermap α),
+    H.faceMap.symm.trans H.faceMap = Equiv.refl α ∧
+          H.nodeMap.symm.trans H.nodeMap = Equiv.refl α ∧
+          H.edgeMap.symm.trans H.edgeMap = Equiv.refl α ∧
+          H.faceMap.trans H.faceMap.symm = Equiv.refl α ∧
+          H.nodeMap.trans H.nodeMap.symm = Equiv.refl α ∧
+          H.edgeMap.trans H.edgeMap.symm = Equiv.refl α
+    ) ∧
+    -- 38. Kepler.Text.INTERSECTION_LEMMA (Kepler.Text.LocalAuto5:4696; HOL `INTERSECTION_LEMMA`)
+    (∀ {x z u v w : V3} (hxz : z ≠ x)
+          (hdis : Disjoint ({x} : Set V3) ({v, w} : Set V3)) (hxu : x ≠ u)
+          (hne : ¬ (affGt ({x} : Set V3) ({v, w} : Set V3) ∩
+            affLt ({x} : Set V3) ({u} : Set V3) = ∅))
+          (hz : z ∈ affineSpan ℝ ({x, v, w} : Set V3)),
+    ∃ a b t : V3, ({a, b} : Set V3) ⊆ ({u, v, w} : Set V3) ∧
+          t ∈ ((affineSpan ℝ ({x, z} : Set V3) : Set V3) ∩
+            conv0_p2 ({a, b} : Set V3))
+    ) ∧
+    -- 39. Kepler.Text.INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0 (Kepler.Text.LocalAuto5:4893; HOL `INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0`)
+    (∀ {x v w u t : V3}
+          (hdis : Disjoint ({x} : Set V3) ({v, w} : Set V3)) (hxu : u ≠ x)
+          (ht : t ∈ affGt ({x} : Set V3) ({v, w} : Set V3) ∩ affLt ({x} : Set V3) ({u} : Set V3)),
+    ∃ tt : V3, tt ∈ (affineSpan ℝ ({x, u} : Set V3) : Set V3) ∩ conv0_p2 ({v, w} : Set V3)
+    ) ∧
+    -- 40. Kepler.Text.INTER_EQ_EM_EXPAND (Kepler.Text.LocalAuto5:5130; HOL `INTER_EQ_EM_EXPAND`)
+    (∀ {α : Type*} (A B : Set α),
+    A ∩ B = ∅ ↔ ¬ ∃ x, x ∈ A ∧ x ∈ B
+    ) ∧
+    -- 41. Kepler.Text.IN_CONV0_AFF_SUBSET (Kepler.Text.LocalAuto5:4855; HOL `IN_CONV0_AFF_SUBSET`)
+    (∀ {a b x y t : V3} (ht : t ∈ ((affineSpan ℝ ({a, b} : Set V3) :
+          Set V3) ∩ conv0_p2 ({x, y} : Set V3))) (hx : x ∈ (affineSpan ℝ ({a, b} : Set V3) : Set V3)),
+    (affineSpan ℝ ({x, y} : Set V3) : Set V3) ⊆ (affineSpan ℝ ({a, b} : Set V3) : Set V3)
+    ) ∧
+    -- 42. Kepler.Text.IN_CONV0_IMP_COLL_IFF (Kepler.Text.LocalAuto5:7389; HOL `IN_CONV0_IMP_COLL_IFF`)
+    (∀ {a b x v : V3} (hx : x ∈ conv0_p2 ({a, b} : Set V3)),
+    Collinear ℝ ({a, x, v} : Set V3) ↔ Collinear ℝ ({a, b, v} : Set V3)
+    ) ∧
+    -- 43. Kepler.Text.IN_WEDGE_IMP_AZIM_LE (Kepler.Text.LocalAuto5:3084; HOL `IN_WEDGE_IMP_AZIM_LE`)
+    (∀ {v0 v1 w1 w2 x y : V3} (hy : y ∈ wedgeGe_p2 v0 v1 w1 w2)
+          (hxy : azim v0 v1 w1 x ≤ azim v0 v1 w1 y)
+          (hx : ¬ Collinear ℝ ({v0, v1, x} : Set V3))
+          (hy2 : ¬ Collinear ℝ ({v0, v1, y} : Set V3))
+          (hw1 : ¬ Collinear ℝ ({v0, v1, w1} : Set V3)),
+    azim v0 v1 x y ≤ azim v0 v1 w1 w2
+    ) ∧
+    -- 44. Kepler.Text.ITER_CARD_MINUS1_EQ_IVS_RN1 (Kepler.Text.LocalAuto5:9120; HOL `ITER_CARD_MINUS1_EQ_IVS_RN1`)
+    (∀ (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V),
+    (rhoNode1_p2 FF)^[V.ncard - 1] v = ivsRhoNode1_p2 FF v
+    ) ∧
+    -- 45. Kepler.Text.LEMMA_SUBSET_ORBIT_MAP (Kepler.Text.LocalAuto5:5673; HOL `LEMMA_SUBSET_ORBIT_MAP`)
+    (∀ {α : Type*} (p : α → α) (x : α) (n : ℕ),
+    {p^[i] x | i ≤ n} ⊆ orbitF_p2 p x
+    ) ∧
+    -- 46. Kepler.Text.LEMMA_SUBSET_ORBIT_MAP_LT (Kepler.Text.LocalAuto5:5680; HOL `LEMMA_SUBSET_ORBIT_MAP_LT`)
+    (∀ {α : Type*} (p : α → α) (x : α) (n : ℕ),
+    {p^[i] x | i < n} ⊆ orbitF_p2 p x
+    ) ∧
+    -- 47. Kepler.Text.LE_CARDV_IMP_CARD_DETERED (Kepler.Text.LocalAuto5:5655; HOL `LE_CARDV_IMP_CARD_DETERED`)
+    (∀ {α : Type*} {f : α → α} {V : Set α}
+          (horb : ∀ v ∈ V, orbitF_p2 f v = V) {v : α} (hv : v ∈ V),
+    ∀ l : ℕ, l ≤ V.ncard → ({f^[n] v | n < l} : Set α).ncard = l
+    ) ∧
+    -- 48. Kepler.Text.LOCAL_FAN_IN_FF_IN_ORD_PAIRS2 (Kepler.Text.LocalAuto5:6429; HOL `LOCAL_FAN_IN_FF_IN_ORD_PAIRS2`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p2 V E FF) {x y : V3 × V3}
+          (hx : x ∈ FF) (hy : y ∈ FF),
+    ({x.1, x.2} : Set V3) ∈ E ∧ ({y.1, y.2} : Set V3) ∈ E
+    ) ∧
+    -- 49. Kepler.Text.LOCAL_FAN_NOT_SING_FF (Kepler.Text.LocalAuto5:844; HOL `LOCAL_FAN_NOT_SING_FF`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p2 V E FF),
+    ¬ ∃ x : V3 × V3, FF = {x}
+    ) ∧
+    -- 50. Kepler.Text.LOCAL_FAN_NOT_V_SING (Kepler.Text.LocalAuto5:834; HOL `LOCAL_FAN_NOT_V_SING`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p2 V E FF),
+    ¬ ∃ v : V3, V = {v}
+    ) ∧
+    -- 51. Kepler.Text.LOFA_IMAGE_RHO_NODE_IDE (Kepler.Text.LocalAuto5:3099; HOL `LOFA_IMAGE_RHO_NODE_IDE`)
+    (∀ (h : localFan_p2 V E FF),
+    Set.image (rhoNode1_p2 FF) V = V
+    ) ∧
+    -- 52. Kepler.Text.LOFA_IMP_NOT_INCLUDE_VEC0 (Kepler.Text.LocalAuto5:6212; HOL `LOFA_IMP_NOT_INCLUDE_VEC0`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p2 V E FF),
+    ¬((0:V3) ∈ V)
+    ) ∧
+    -- 53. Kepler.Text.LOFA_V_NOT_EMP (Kepler.Text.LocalAuto5:9109; HOL `LOFA_V_NOT_EMP`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p2 V E FF),
+    V ≠ ∅
+    ) ∧
+    -- 54. Kepler.Text.LOOP_MAP_IMP_DIFF_FIRST_ELMS (Kepler.Text.LocalAuto5:2999; HOL `LOOP_MAP_IMP_DIFF_FIRST_ELMS`)
+    (∀ {α : Type*} {f : α → α} {V : Set α}
+          (horb : ∀ v ∈ V, orbitF_p2 f v = V) {v : α} (hv : v ∈ V) {k l : ℕ}
+          (hk : k < V.ncard) (hl : l < k),
+    f^[k] v ≠ f^[l] v
+    ) ∧
+    -- 55. Kepler.Text.MOST_EXPAND_IN_WEDGE_GE (Kepler.Text.LocalAuto5:3519; HOL `MOST_EXPAND_IN_WEDGE_GE`)
+    (∀ {v0 v1 w1 w2 x y : V3}
+          (hw1 : ¬ Collinear ℝ ({v0, v1, w1} : Set V3))
+          (hw2 : ¬ Collinear ℝ ({v0, v1, w2} : Set V3))
+          (hx : ¬ Collinear ℝ ({v0, v1, x} : Set V3))
+          (hy : ¬ Collinear ℝ ({v0, v1, y} : Set V3))
+          (hyw : y ∈ wedgeGe_p2 v0 v1 w1 w2)
+          (hxy : azim v0 v1 w1 x ≤ azim v0 v1 w1 y)
+          (heq : azim v0 v1 x y = azim v0 v1 w1 w2),
+    azim v0 v1 w1 x = 0 ∧ azim v0 v1 y w2 = 0
+    ) ∧
+    -- 56. Kepler.Text.NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT2 (Kepler.Text.LocalAuto5:8513; HOL `NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT2`)
+    (∀ (h : convexLocalFan_p2 V E FF)
+          (hl : lunar_p2 v w V E),
+    ∃ i : ℕ, w = (rhoNode1_p2 FF)^[i] v ∧ i + 1 < V.ncard ∧ ¬(i = 0) ∧ ¬(i = 1) ∧
+          ¬((rhoNode1_p2 FF)^[i + 1] v ∈ affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3))
+    ) ∧
+    -- 57. Kepler.Text.NOT_COLL_IMP_COPL (Kepler.Text.LocalAuto5:7263; HOL `NOT_COLL_IMP_COPL`)
+    (∀ {v w : V3} (h : ¬ Collinear ℝ ({0, v, w} : Set V3)),
+    ¬ Coplanar ({0, v, w, (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+          ((w : V3) : Fin 3 → ℝ)) : V3)} : Set V3)
+    ) ∧
+    -- 58. Kepler.Text.NOT_INTER_EQ_EM_IMP_AFF_SUBSET (Kepler.Text.LocalAuto5:5145; HOL `NOT_INTER_EQ_EM_IMP_AFF_SUBSET`)
+    (∀ {x u v w x' : V3}
+          (hx' : x' ∈ affGt ({x} : Set V3) ({v, w} : Set V3) ∩ affLt ({x} : Set V3) ({u} : Set V3)),
+    (affineSpan ℝ ({x, u} : Set V3) : Set V3) ⊆ affineSpan ℝ ({x, v, w} : Set V3)
+    ) ∧
+    -- 59. Kepler.Text.NOT_X_IN_AFF_X_A (Kepler.Text.LocalAuto5:5091; HOL `NOT_X_IN_AFF_X_A`)
+    (∀ (x a : V3),
+    x ∉ affLt ({x} : Set V3) ({a} : Set V3)
+    ) ∧
+    -- 60. Kepler.Text.ORTHONORMAL_CYCLIC (Kepler.Text.LocalAuto5:209; HOL `ORTHONORMAL_CYCLIC`)
+    (∀ {x y : V3} {U : Set V3} (hxy : ¬(x = y))
+          (hfin : U.Finite)
+          (hdot : ∀ u1 ∈ U, ∀ u2 ∈ U, (u1 - u2) ⬝ᵥ (x - y) = 0)
+          (hinter : U ∩ affineSpan ℝ ({x, y} : Set V3) = ∅),
+    cyclicSet_p3 U x y
+    ) ∧
+    -- 61. Kepler.Text.PGSQVBL (Kepler.Text.LocalAuto5:6334; HOL `PGSQVBL`, HOL `Topology.th1`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {x : V3 × V3} (h : convexLocalFan_p2 V E FF) {v w : V3} (hvw : {v, w} ⊆ V)
+          (hx : x ∈ FF),
+    affGe ({0} : Set V3) ({v, w} : Set V3) ⊆ wedgeInFanGe_p2 x E
+    ) ∧
+    -- 62. Kepler.Text.PLANE_AFFINE_HUL_INTER_P (Kepler.Text.LocalAuto5:1070; HOL `PLANE_AFFINE_HUL_INTER_P`)
+    (∀ {P : Set V3} {x y z : V3} (hP : plane_p2 P)
+          (hsub : ({x, y, z} : Set V3) ⊆ P),
+    ((affineSpan ℝ ({x, (WithLp.toLp 2 (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+          ((z - x : V3) : Fin 3 → ℝ)) : V3) + x} : Set V3) : Set V3) ∩ P) = {x}
+    ) ∧
+    -- 63. Kepler.Text.PRESERABLE_AFF_GE_SUBSET (Kepler.Text.LocalAuto5:4983; HOL `PRESERABLE_AFF_GE_SUBSET`)
+    (∀ {x a b : V3} (ha : a ∈ affGe ({x} : Set V3) ({b} : Set V3)),
+    affGe ({x} : Set V3) ({a} : Set V3) ⊆ affGe ({x} : Set V3) ({b} : Set V3)
+    ) ∧
+    -- 64. Kepler.Text.REAL_LT_DIV_NEG (Kepler.Text.LocalAuto5:4101; HOL `REAL_LT_DIV_NEG`)
+    (∀ {a b : ℝ} (ha : a < 0) (hb : b < 0),
+    0 < a / b
+    ) ∧
+    -- 65. Kepler.Text.SELF_CYCLIC_IMP_FINITE (Kepler.Text.LocalAuto5:3299; HOL `SELF_CYCLIC_IMP_FINITE`)
+    (∀ {α : Type*} (f : α → α) (V : Set α)
+          (h : ∀ x ∈ V, V = orbitF_p2 f x),
+    V.Finite
+    ) ∧
+    -- 66. Kepler.Text.SIN_SUB_PERIODIC (Kepler.Text.LocalAuto5:5702; HOL `SIN_SUB_PERIODIC`)
+    (∀ (x : ℝ),
+    Real.sin x = -Real.sin (x - Real.pi)
+    ) ∧
+    -- 67. Kepler.Text.SUBSET_AFF2_IMP_COLL (Kepler.Text.LocalAuto5:4907; HOL `SUBSET_AFF2_IMP_COLL`)
+    (∀ {S : Set V3} {a b : V3}
+          (h : S ⊆ (affineSpan ℝ ({a, b} : Set V3) : Set V3)),
+    Collinear ℝ S
+    ) ∧
+    -- 68. Kepler.Text.SURJ_IMP_FINITE (Kepler.Text.LocalAuto5:9101; HOL `SURJ_IMP_FINITE`)
+    (∀ {α β : Type*} (f : α → β) {A : Set α} {B : Set β}
+          (hsurj : ∀ b ∈ B, ∃ a ∈ A, f a = b) (hA : A.Finite),
+    B.Finite
+    ) ∧
+    -- 69. Kepler.Text.USEFULL_THHM (Kepler.Text.LocalAuto5:8391; HOL `USEFULL_THHM`)
+    (∀ {b c z w : V3} (h1 : z ∈ affineSpan ℝ ({b, c} : Set V3))
+          (h2 : z ∈ affGt ({b, c} : Set V3) ({w} : Set V3)),
+    w ∈ affineSpan ℝ ({b, c} : Set V3)
+    ) ∧
+    -- 70. Kepler.Text.USEFULL_THHM._abel_1_1 (Kepler.Text.LocalAuto5:8391; compiler-generated equation/aux lemma (parent def `USEFULL_THHM` at Kepler.Text.LocalAuto5:8391; no source statement; sigtest = assembly elaboration))
+    (∀ {b c w : V3} (gx gy gw : ℝ),
+          w = (gx / gw) • b + (gy / gw) • c + w + -((gx / gw) • b) + -((gy / gw) • c)
+    ) ∧
+    -- 71. Kepler.Text.WEDGE_GE_AZIM_LE (Kepler.Text.LocalAuto5:3075; HOL `WEDGE_GE_AZIM_LE`)
+    (∀ (x v0 v1 w1 w2 : V3),
+    x ∈ wedgeGe_p2 v0 v1 w1 w2 ↔ azim v0 v1 w1 x ≤ azim v0 v1 w1 w2
+    ) ∧
+    -- 72. Kepler.Text.azim_in_fan2 (Kepler.Text.LocalAuto5:6202; HOL `azim_in_fan2`)
+    (∀ (x : V3 × V3) (E : Set (Set V3)),
+    azimInFan_p2 x E =
+          if 1 < (EE_p2 x.1 E).ncard then
+            azim 0 x.1 x.2 (azimCycle_p2 (EE_p2 x.1 E) 0 x.1 x.2)
+          else 2 * Real.pi
+    ) ∧
+    -- 73. Kepler.Text.ffOfHyp_p2.eq_1 (Kepler.Text.LocalAuto5:0; compiler-generated equation/aux lemma (parent def `ffOfHyp_p2` at Text.LocalAuto2:169; no source statement; sigtest = assembly elaboration))
+    (∀ (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3),
+          ffOfHyp_p2 x V E d = if d ∈ dartsOfHyp_p2 E V then (d.2, ivsAzimCycle_p2 (EE_p2 d.2 E) x d.2 d.1) else d
+    ) ∧
+    -- 74. Kepler.Text.ivsRhoNode1_p2.eq_1 (Kepler.Text.LocalAuto5:0; compiler-generated equation/aux lemma (parent def `ivsRhoNode1_p2` at Text.LocalAuto2:215; no source statement; sigtest = assembly elaboration))
+    (∀ (FF : Set (V3 × V3)) (v : V3), ivsRhoNode1_p2 FF v = epsilon fun a => (a, v) ∈ FF
+    ) ∧
+    -- 75. Kepler.Text.lemma_in_orbit_iter (Kepler.Text.LocalAuto5:5697; HOL `lemma_in_orbit_iter`)
+    (∀ {α : Type*} (p : α → α) (x : α) (i : ℕ),
+    p^[i] x ∈ orbitF_p2 p x
+    ) ∧
+    -- 76. Kepler.Text.nnOfHyp_p2.eq_1 (Kepler.Text.LocalAuto5:0; compiler-generated equation/aux lemma (parent def `nnOfHyp_p2` at Text.LocalAuto2:160; no source statement; sigtest = assembly elaboration))
+    (∀ (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3),
+          nnOfHyp_p2 x V E d = if d ∈ dartsOfHyp_p2 E V then (d.1, azimCycle_p2 (EE_p2 d.1 E) x d.1 d.2) else d
+    ) ∧
+    -- 77. Kepler.Text.rhoNode1_p2.eq_1 (Kepler.Text.LocalAuto5:0; compiler-generated equation/aux lemma (parent def `rhoNode1_p2` at Text.LocalAuto2:210; no source statement; sigtest = assembly elaboration))
+    (∀ (FF : Set (V3 × V3)) (v : V3), rhoNode1_p2 FF v = epsilon fun w => (v, w) ∈ FF
+    ) ∧
+    -- 78. Kepler.Text.wedge_in_fan_ge2 (Kepler.Text.LocalAuto5:6192; HOL `wedge_in_fan_ge2`)
+    (∀ (x : V3 × V3) (E : Set (Set V3)),
+    wedgeInFanGe_p2 x E =
+          if 1 < (EE_p2 x.1 E).ncard then
+            wedgeGe_p2 0 x.1 x.2 (azimCycle_p2 (EE_p2 x.1 E) 0 x.1 x.2)
+          else {y : V3 | True}
+    ) :=
+⟨_root_.Kepler.Geom.affLe.eq_1, _root_.Kepler.Text.AFF_GE_EQ,
+      @_root_.Kepler.Text.AFF_GE_MONO_TRANS, _root_.Kepler.Text.AFF_GT_AFF_LT_INTERPRET,
+      _root_.Kepler.Text.AFF_GT_AFF_LT_INTERPRET2, _root_.Kepler.Text.AFF_GT_LT_INTER_SYM,
+      _root_.Kepler.Text.AFF_GT_LT_INTER_SYM._abel_1_1, @_root_.Kepler.Text.AFF_GT_MONO,
+      @_root_.Kepler.Text.AFF_GT_MONO_TRANS, @_root_.Kepler.Text.AFF_GT_SUB_AFF_UNION,
+      _root_.Kepler.Text.AFF_XX_CASES, _root_.Kepler.Text.AZIM_PI_CONVEX_WEDGE,
+      _root_.Kepler.Text.AZIM_PI_WEDGE_GE_CROSS_DOT, _root_.Kepler.Text.AZIM_PI_WEDGE_GE_SIN,
+      _root_.Kepler.Text.AZIM_SPEC_DEGENERATE, @_root_.Kepler.Text.Affsign_convex,
+      @_root_.Kepler.Text.CARD_IMAGE_INJ2, _root_.Kepler.Text.CARD_RECUSIVE_EQ,
+      _root_.Kepler.Text.COLLINEAR_ONCE_VEC_0, _root_.Kepler.Text.COLL_IFF_COLL_CROSS,
+      _root_.Kepler.Text.CONDS_FOR_INTER_AFF_CONV0, _root_.Kepler.Text.CONDS_IN_CONV2,
+      @_root_.Kepler.Text.CONV0_SUBSET_AFF_GT, _root_.Kepler.Text.CONVEX_WEDGE_LE_PI,
+      @_root_.Kepler.Text.CONV_SUBSET_AFF_GE, _root_.Kepler.Text.DET_CROSS,
+      _root_.Kepler.Text.DISJOINT_IMP_Z_IN_AFF_GT, _root_.Kepler.Text.EMPTY_NOT_EXISTS_IN,
+      _root_.Kepler.Text.EXISTS_IN, _root_.Kepler.Text.FAN_IN_E_DIFF,
+      _root_.Kepler.Text.FAN_SINGLETON_V_DARTS, _root_.Kepler.Text.FINITE_CARD1_IMP_SINGLETON,
+      _root_.Kepler.Text.FINTE_OF_N_FIRST_ELMS2, _root_.Kepler.Text.FIRST_EQ0_LAST_LT_PI,
+      _root_.Kepler.Text.FIRST_IN_AFF, _root_.Kepler.Text.FOR_AFF_GT_NOT_INTERSECTION2,
+      _root_.Kepler.Text.HYP_MAPS_INVERABLE, @_root_.Kepler.Text.INTERSECTION_LEMMA,
+      _root_.Kepler.Text.INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0,
+      _root_.Kepler.Text.INTER_EQ_EM_EXPAND, @_root_.Kepler.Text.IN_CONV0_AFF_SUBSET,
+      _root_.Kepler.Text.IN_CONV0_IMP_COLL_IFF, _root_.Kepler.Text.IN_WEDGE_IMP_AZIM_LE,
+      _root_.Kepler.Text.ITER_CARD_MINUS1_EQ_IVS_RN1, @_root_.Kepler.Text.LEMMA_SUBSET_ORBIT_MAP,
+      @_root_.Kepler.Text.LEMMA_SUBSET_ORBIT_MAP_LT,
+      _root_.Kepler.Text.LE_CARDV_IMP_CARD_DETERED,
+      _root_.Kepler.Text.LOCAL_FAN_IN_FF_IN_ORD_PAIRS2, _root_.Kepler.Text.LOCAL_FAN_NOT_SING_FF,
+      _root_.Kepler.Text.LOCAL_FAN_NOT_V_SING, _root_.Kepler.Text.LOFA_IMAGE_RHO_NODE_IDE,
+      _root_.Kepler.Text.LOFA_IMP_NOT_INCLUDE_VEC0, _root_.Kepler.Text.LOFA_V_NOT_EMP,
+      _root_.Kepler.Text.LOOP_MAP_IMP_DIFF_FIRST_ELMS,
+      _root_.Kepler.Text.MOST_EXPAND_IN_WEDGE_GE,
+      _root_.Kepler.Text.NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT2,
+      _root_.Kepler.Text.NOT_COLL_IMP_COPL, @_root_.Kepler.Text.NOT_INTER_EQ_EM_IMP_AFF_SUBSET,
+      _root_.Kepler.Text.NOT_X_IN_AFF_X_A, _root_.Kepler.Text.ORTHONORMAL_CYCLIC,
+      @_root_.Kepler.Text.PGSQVBL, _root_.Kepler.Text.PLANE_AFFINE_HUL_INTER_P,
+      @_root_.Kepler.Text.PRESERABLE_AFF_GE_SUBSET, _root_.Kepler.Text.REAL_LT_DIV_NEG,
+      _root_.Kepler.Text.SELF_CYCLIC_IMP_FINITE, _root_.Kepler.Text.SIN_SUB_PERIODIC,
+      _root_.Kepler.Text.SUBSET_AFF2_IMP_COLL, _root_.Kepler.Text.SURJ_IMP_FINITE,
+      _root_.Kepler.Text.USEFULL_THHM, _root_.Kepler.Text.USEFULL_THHM._abel_1_1,
+      _root_.Kepler.Text.WEDGE_GE_AZIM_LE, _root_.Kepler.Text.azim_in_fan2,
+      _root_.Kepler.Text.ffOfHyp_p2.eq_1, _root_.Kepler.Text.ivsRhoNode1_p2.eq_1,
+      _root_.Kepler.Text.lemma_in_orbit_iter, _root_.Kepler.Text.nnOfHyp_p2.eq_1,
+      _root_.Kepler.Text.rhoNode1_p2.eq_1, @_root_.Kepler.Text.wedge_in_fan_ge2⟩
+
+-- Self-check.  Ground truth = `#print axioms`, not prose: expect exactly the standard three
+-- [propext, Classical.choice, Quot.sound] and NO sorryAx (the scout group closure is sorried-0).
+#print axioms la5_wire_capstone_w1
+
 /-! ## Shims (explicit bridging lemmas, documented in the ledger) -/
 
 /-- Bridge for `cross3` continuity (LocalAuto17's helper of the same shape is

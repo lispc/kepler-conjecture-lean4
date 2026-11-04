@@ -2214,6 +2214,467 @@ theorem pa21_capstone_w1 :
 -- (the scout group closure is sorried-0).
 #print axioms pa21_capstone_w1
 
+/-! ### PA18 materialization capstone (lane lv1314-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV14):
+the 80 public top-level PackingAuto18 clean theorem exits (scout seeds_clean.txt PA18 group: 94 exits of which 80 clean; the 14 sorried
+WEDGE/AZIM/arc-length kit stubs `AFFINE_DEPENDENT_EXPLICIT_4`, `AZIM_SPLIT_POINT`, `CLOSED_WEDGE`, `CLOSED_WEDGE_EQ_PI`, `CLOSED_WEDGE_LT_PI`, `IN_CONV0_IMP_AZIM_PI_ALT`, `MCELL_EDGE_FIRST`, `PERMUTE_BARV3`, `WEDGE_GE_ALMOST_DISJOINT`, `YSSKQOY`, `arc_derivative`, `arc_derivative2`, `arc_length1_increasing`, `arc_length2_increasing` are NOT included -- their debt is the file-local leaf/arc geometry kit self-debt (YSSKQOY arc family PackingAuto18:1593-1622) per the scout verdict table), of which 80 are statable from PackingConcl and are
+re-exposed as ONE conjunction below; 0 exits are dropped per the no-forcing rule (each drop named in the theorem docstring).
+Self-contained section: pure insertion, zero new imports (PA18 already visible transitively: PackingConcl:121 imports PackingAuto19, PackingAuto19:134 imports PackingAuto18), zero proof obligations
+(body = the exit assembly itself), own `#print axioms` probe (the lv910 PA4/PA15 sections and the lv8 pa21 / lv1112 pa25 sections are untouched -- hunk-level disjoint).
+The scoped heartbeat raise mirrors the lv910 PA4 section in this file: a conjunction statement of this size exceeds
+the default 200000 budget during statement elaboration (lv910 measured; pa21 capstone uses 50000000).
+-/
+
+open ComplexConjugate in
+set_option maxHeartbeats 50000000 in
+
+/-- PA18 materialization capstone (scout lane leftover-mat-scout-2
+workorder LV14, implementation lane lv1314-w1, 2026-11-04).  The
+80 public top-level Kepler.Text.PackingAuto18 theorem exits unreachable from every
+e2e root (scout probe1/probe2: GROUP_VS_CONE fresh sorried-0, standard-three
+axiom face on the axprobe sample); 80 of them are statable from
+PackingConcl and are re-exposed as ONE conjunction.
+Implemented here: 80 of the 80.
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its Kepler.Text.PackingAuto18 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the first depth-0 `:=` by the generator gen_items.py,
+bracket-balance guarded); compiler-generated equation/aux lemmas have no
+source statement anywhere, so their conjunct is the `#check @name` printer
+dump verbatim and each passes a per-item sigtest (the `⟨...⟩` assembly below
+must unify it definitionally with the constant's type; printer dumps with
+proof-term elision `...` are dropped per the lv12-w1 t_eqlemma_microtest
+evidence, each drop named above).  Semantic identity of every conjunct is
+re-verified by that assembly (each element must have exactly its conjunct's
+type); the per-conjunct comments carry each exit's Kepler.Text.PackingAuto18 declaration
+line and file-local docstring HOL anchor.  Conjunct order: the scout
+seed-list order (probe1 SEED list).  Body = the assembly of the exit
+constants -- zero new proof obligations, zero new imports.  The scoped
+`open ... in` prefix before the heartbeat raise (if any) reproduces the
+source file's own open context for the verbatim conjunct texts --
+mechanically computed as the source-file open tokens missing from the
+host's; scoped to this one theorem, zero effect elsewhere in the host.
+-/
+theorem pa18_wire_capstone_w1 :
+    -- 1. Kepler.Text.AFF_GE_MONO_TRANS_pa18 (Kepler.Text.PackingAuto18:3267; HOL `AFF_GE_MONO_TRANS_pa18`)
+    (∀ {X Y S : Set V3} (h : S ⊆ X),
+    affGe (X \ S) (Y ∪ S) ⊆ affGe X Y
+    ) ∧
+    -- 2. Kepler.Text.AFF_GT_0_2 (Kepler.Text.PackingAuto18:7729; HOL `AFF_GT_0_2`, HOL `affsign`)
+    (∀ (v w : V3),
+    conv0 {v, w} = {y | ∃ t2 t3 : ℝ, 0 < t2 ∧ 0 < t3 ∧ t2 + t3 = 1 ∧
+          y = t2 • v + t3 • w}
+    ) ∧
+    -- 3. Kepler.Text.AFF_GT_SUBSET_AFFINE_HULL (Kepler.Text.PackingAuto18:10767; HOL `AFF_GT_SUBSET_AFFINE_HULL`)
+    (∀ (s t : Set V3),
+    affGt s t ⊆ (affineSpan ℝ (s ∪ t) : Set V3)
+    ) ∧
+    -- 4. Kepler.Text.ARG_0_DIV (Kepler.Text.PackingAuto18:1277; HOL `ARG_0_DIV`)
+    (∀ (u v : ℂ),
+    u / v = 0 ↔ u = 0 ∨ v = 0
+    ) ∧
+    -- 5. Kepler.Text.ARG_CNJ (Kepler.Text.PackingAuto18:1288; HOL `ARG_CNJ`)
+    (∀ (z w : ℂ) (hw : w ≠ 0),
+    Complex.arg (z / w) = Complex.arg (z * conj w)
+    ) ∧
+    -- 6. Kepler.Text.CARD_UNION_EQ (Kepler.Text.PackingAuto18:1349; HOL `CARD_UNION_EQ`)
+    (∀ {α : Type*} {s t u : Set α} (hu : u.Finite)
+          (hst : s ∩ t = ∅) (huni : s ∪ t = u),
+    Nat.card s + Nat.card t = Nat.card u
+    ) ∧
+    -- 7. Kepler.Text.CHI_MSB_IMP_COPLANAR (Kepler.Text.PackingAuto18:2917; HOL `CHI_MSB_IMP_COPLANAR`)
+    (∀ (ul : List V3) (p : V3) (h : chiMsb ul p = 0),
+    Coplanar ({ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, p} : Set V3)
+    ) ∧
+    -- 8. Kepler.Text.CONDS_IN_CONV2_pa18 (Kepler.Text.PackingAuto18:4018; HOL `CONDS_IN_CONV2_pa18`)
+    (∀ {v w : V3} {t2 t3 : ℝ} (h2 : 0 ≤ t2) (h3 : 0 ≤ t3)
+          (hne : ¬(t2 = 0 ∧ t3 = 0)),
+    (t2 / (t2 + t3)) • v + (t3 / (t2 + t3)) • w ∈ convexHull ℝ ({v, w} : Set V3)
+    ) ∧
+    -- 9. Kepler.Text.COS_ARG_VECTOR_ANGLE (Kepler.Text.PackingAuto18:1312; HOL `COS_ARG_VECTOR_ANGLE`)
+    (∀ (u v : ℂ) (hu : u ≠ 0) (hv : v ≠ 0),
+    Real.cos (Complex.arg (u / v)) =
+          Real.cos (Real.arccos (complexDot u v / (‖u‖ * ‖v‖)))
+    ) ∧
+    -- 10. Kepler.Text.DIST_EQ_HALF_PLANE (Kepler.Text.PackingAuto18:2502; HOL `DIST_EQ_HALF_PLANE`)
+    (∀ (x a b : V3),
+    dist x a = dist x b ↔ (a - b) ⬝ᵥ (2 • x - (a + b)) = 0
+    ) ∧
+    -- 11. Kepler.Text.DIST_LE_HALF_PLANE (Kepler.Text.PackingAuto18:2494; HOL `DIST_LE_HALF_PLANE`)
+    (∀ (x a b : V3),
+    dist x a ≤ dist x b ↔ 0 ≤ (a - b) ⬝ᵥ (2 • x - (a + b))
+    ) ∧
+    -- 12. Kepler.Text.DOT_COMPLEX (Kepler.Text.PackingAuto18:1267; HOL `DOT_COMPLEX`)
+    (∀ (x y x' y' : ℝ),
+    complexDot (x + y * Complex.I) (x' + y' * Complex.I) = x * x' + y * y'
+    ) ∧
+    -- 13. Kepler.Text.DOT_RE (Kepler.Text.PackingAuto18:1272; HOL `DOT_RE`)
+    (∀ (z1 z2 : ℂ),
+    complexDot z1 z2 = (z1 * conj z2).re
+    ) ∧
+    -- 14. Kepler.Text.FINITE_CARD1_IMP_SINGLETON_pa18 (Kepler.Text.PackingAuto18:6129; HOL `FINITE_CARD1_IMP_SINGLETON_pa18`)
+    (∀ {α : Type*} {S : Set α}
+          (h : Nat.card S = 1),
+    ∃ x, S = {x}
+    ) ∧
+    -- 15. Kepler.Text.FUZBZGI_0 (Kepler.Text.PackingAuto18:2545; HOL `FUZBZGI_0`)
+    (∀ {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
+          (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
+          (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
+          (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
+          (hfac : ∀ f, FacetOf f (voronoiList V ul) → f = {p1} ∨ f = {p2}),
+    0 < t2
+    ) ∧
+    -- 16. Kepler.Text.FUZBZGI_1 (Kepler.Text.PackingAuto18:2679; HOL `FUZBZGI_1`)
+    (∀ {V : Set V3} {ul : List V3} (hp : Packing V)
+          (hs : saturated V) (hl' : leaf V ul),
+    ∃ p1 p2 : V3, ∃ t1 t2 : ℝ, voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧
+          p1 ≠ p2 ∧ circumcenter (setOfList ul) = t1 • p1 + t2 • p2 ∧ t1 + t2 = 1 ∧
+          0 < t1 ∧ 0 < t2
+    ) ∧
+    -- 17. Kepler.Text.FUZBZGI_1._abel_1_1 (Kepler.Text.PackingAuto18:2679; compiler-generated equation/aux lemma (parent def `FUZBZGI_1` at Kepler.Text.PackingAuto18:2679; no source statement; sigtest = assembly elaboration))
+    (∀ (p1 p2 : V3) (r : ℝ), (1 - r) • p1 + r • p2 = r • p2 + (1 - r) • p1
+    ) ∧
+    -- 18. Kepler.Text.INJ_IFF_SURJ (Kepler.Text.PackingAuto18:1403; HOL `INJ_IFF_SURJ`)
+    (∀ {α β : Type*} {a : Set α} {b : Set β} {f : α → β}
+          (ha : a.Finite) (hb : b.Finite) (hcard : Nat.card a = Nat.card b)
+          (hmem : ∀ x ∈ a, f x ∈ b),
+    Set.InjOn f a ↔ ∀ y ∈ b, ∃ x, x ∈ a ∧ f x = y
+    ) ∧
+    -- 19. Kepler.Text.INJ_SURJ (Kepler.Text.PackingAuto18:1363; HOL `INJ_SURJ`, HOL `INJ f a b`)
+    (∀ {α β : Type*} {a : Set α} {b : Set β} {f : α → β}
+          (ha : a.Finite) (hb : b.Finite) (hcard : Nat.card a = Nat.card b)
+          (hi : Set.InjOn f a) (hmem : ∀ x ∈ a, f x ∈ b),
+    ∀ y ∈ b, ∃ x, x ∈ a ∧ f x = y
+    ) ∧
+    -- 20. Kepler.Text.JDHAWAY_0 (Kepler.Text.PackingAuto18:2937; HOL `JDHAWAY_0`)
+    (∀ {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
+          (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
+          (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
+          (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
+          (hpos : 0 < t1 ∧ 0 < t2),
+    chiMsb ul p1 ≠ 0
+    ) ∧
+    -- 21. Kepler.Text.JDWAWAY (Kepler.Text.PackingAuto18:2988; HOL `JDWAWAY`)
+    (∀ {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
+          (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
+          (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
+          (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
+          (hpos : 0 < t1 ∧ 0 < t2),
+    chiMsb ul p1 ≠ 0 ∧ chiMsb ul p2 ≠ 0 ∧ (chiMsb ul p1 < 0 ↔ 0 < chiMsb ul p2)
+    ) ∧
+    -- 22. Kepler.Text.JDWAWAY._abel_1_1 (Kepler.Text.PackingAuto18:2988; compiler-generated equation/aux lemma (parent def `JDWAWAY` at Kepler.Text.PackingAuto18:2988; no source statement; sigtest = assembly elaboration))
+    (∀ {p1 p2 : V3} {t1 t2 : ℝ}, t1 • p1 + t2 • p2 = t2 • p2 + t1 • p1
+    ) ∧
+    -- 23. Kepler.Text.MCELL2_SUBSET_AFF_GE (Kepler.Text.PackingAuto18:4008; HOL `MCELL2_SUBSET_AFF_GE`)
+    (∀ (V : Set V3) (ul : List V3),
+    mcell2 V ul ⊆ affGe {hdV ul, hdV ul.tail} {mxi V ul, omegaListN V ul 3}
+    ) ∧
+    -- 24. Kepler.Text.MIDPOINT_IN_CONV0 (Kepler.Text.PackingAuto18:7794; HOL `MIDPOINT_IN_CONV0`)
+    (∀ (p q : V3),
+    ((1 / 2 : ℝ) • p + (1 / 2 : ℝ) • q) ∈ conv0 {p, q}
+    ) ∧
+    -- 25. Kepler.Text.PERMUTES_a_PERMUTES_b (Kepler.Text.PackingAuto18:2228; HOL `PERMUTES_a_PERMUTES_b`, HOL `0..a`)
+    (∀ {p : ℕ → ℕ} {a b : ℕ} (hab : a ≤ b)
+          (h : Permutes p ((Finset.range (a + 1) : Finset ℕ))),
+    Permutes p ((Finset.range (b + 1) : Finset ℕ))
+    ) ∧
+    -- 26. Kepler.Text.RE_CEXP_CX (Kepler.Text.PackingAuto18:1283; HOL `RE_CEXP_CX`)
+    (∀ (x : ℝ),
+    (Complex.exp (Complex.I * x)).re = Real.cos x
+    ) ∧
+    -- 27. Kepler.Text.RE_EQVL_IMP_SYM (Kepler.Text.PackingAuto18:1739; HOL `RE_EQVL_IMP_SYM`)
+    (∀ {a b : ℝ} (h : reEqvl a b),
+    reEqvl b a
+    ) ∧
+    -- 28. Kepler.Text.RE_EQVL_REFL (Kepler.Text.PackingAuto18:1770; HOL `RE_EQVL_REFL`)
+    (∀ (a : ℝ),
+    reEqvl a a
+    ) ∧
+    -- 29. Kepler.Text.RE_EQVL_SCALE1 (Kepler.Text.PackingAuto18:1748; HOL `RE_EQVL_SCALE1`)
+    (∀ (a b t : ℝ) (ht : 0 < t),
+    reEqvl (t * a) b ↔ reEqvl a b
+    ) ∧
+    -- 30. Kepler.Text.RE_EQVL_SCALE2 (Kepler.Text.PackingAuto18:1759; HOL `RE_EQVL_SCALE2`)
+    (∀ (a b t : ℝ) (ht : 0 < t),
+    reEqvl a (t * b) ↔ reEqvl a b
+    ) ∧
+    -- 31. Kepler.Text.RE_EQVL_SYM (Kepler.Text.PackingAuto18:1744; HOL `RE_EQVL_SYM`)
+    (∀ (a b : ℝ),
+    reEqvl a b ↔ reEqvl b a
+    ) ∧
+    -- 32. Kepler.Text.RE_NORM_1 (Kepler.Text.PackingAuto18:1302; HOL `RE_NORM_1`)
+    (∀ (z : ℂ) (h : ‖z‖ = 1),
+    z.re = Real.cos (Complex.arg z)
+    ) ∧
+    -- 33. Kepler.Text.SEC_DOT (Kepler.Text.PackingAuto18:1448; HOL `SEC_DOT`)
+    (∀ (u v : V3) (r ψ : ℝ) (hr : 0 < r) (hψ1 : 0 ≤ ψ)
+          (hψ2 : ψ < Real.pi / 2) (hv : ‖v‖ = r / Real.cos ψ) (hu : ‖u‖ = r)
+          (hcos : Real.cos (vectorAngle u v) = Real.cos ψ),
+    u ⬝ᵥ (v - u) = 0
+    ) ∧
+    -- 34. Kepler.Text.SET2_INSERT1 (Kepler.Text.PackingAuto18:6140; HOL `SET2_INSERT1`)
+    (∀ {a b x y z : V3} (hsub : ({a, b} : Set V3) ⊆ {x, y, z})
+          (hne : a ≠ b),
+    ∃ c : V3, ({a, b, c} : Set V3) = {x, y, z}
+    ) ∧
+    -- 35. Kepler.Text.TRI_UPS_X_STRICT_POS (Kepler.Text.PackingAuto18:1430; HOL `TRI_UPS_X_STRICT_POS`)
+    (∀ (a b c : ℝ) (ha : 0 < a) (hb : 0 < b) (hc : 0 ≤ c)
+          (h1 : c < a + b) (h2 : a < b + c) (h3 : b < c + a),
+    0 < upsX (a * a) (b * b) (c * c)
+    ) ∧
+    -- 36. Kepler.Text.WEDGE_GE_NULL (Kepler.Text.PackingAuto18:2058; HOL `WEDGE_GE_NULL`)
+    (∀ (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
+          (h2 : ¬Collinear3 u0 u1 v2) (haz : azim u0 u1 v1 v2 = 0),
+    wedgeGe u0 u1 v1 v2 = affGe {u0, u1} {v1}
+    ) ∧
+    -- 37. Kepler.Text.WEDGE_GE_SPLIT (Kepler.Text.PackingAuto18:7661; HOL `WEDGE_GE_SPLIT`)
+    (∀ (u0 u1 u2 u3 w : V3)
+          (h2 : ¬Collinear3 u0 u1 u2) (h3 : ¬Collinear3 u0 u1 u3)
+          (hw : w ∈ wedge u0 u1 u2 u3),
+    ¬Collinear3 u0 u1 w ∧
+          wedgeGe u0 u1 u2 u3 = wedgeGe u0 u1 u2 w ∪ wedgeGe u0 u1 w u3
+    ) ∧
+    -- 38. Kepler.Text.YBZFUPO (Kepler.Text.PackingAuto18:2188; HOL `YBZFUPO`)
+    (∀ {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated V)
+          (hl' : leaf V ul),
+    ∃ p1 p2 : V3, voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧ p1 ≠ p2 ∧
+          ∀ f, FacetOf f (voronoiList V ul) → f = {p1} ∨ f = {p2}
+    ) ∧
+    -- 39. Kepler.Text.affDim_p7.eq_1 (Kepler.Text.PackingAuto18:0; compiler-generated equation/aux lemma (parent def `affDim_p7` at Text.PolyAuto7:111; no source statement; sigtest = assembly elaboration))
+    (∀ (s : Set V3), affDim_p7 s = if s = ∅ then -1 else ↑(Module.finrank ℝ ↥(vectorSpan ℝ s))
+    ) ∧
+    -- 40. Kepler.Text.affine_invert (Kepler.Text.PackingAuto18:3415; HOL `affine_invert`)
+    (∀ {u : ℝ} {p q : V3} {s : Set V3} (hu : u ≠ 0)
+          (haff : affineSpan ℝ s = s)
+          (hm : (1 - u) • p + u • q ∈ s) (hp : p ∈ s),
+    q ∈ s
+    ) ∧
+    -- 41. Kepler.Text.affine_invert._abel_1_1 (Kepler.Text.PackingAuto18:3415; compiler-generated equation/aux lemma (parent def `affine_invert` at Kepler.Text.PackingAuto18:3415; no source statement; sigtest = assembly elaboration))
+    (∀ {u : ℝ} {p q : V3}, q - p = u⁻¹ • p - p + q - u⁻¹ • p
+    ) ∧
+    -- 42. Kepler.Text.arcLength.eq_1 (Kepler.Text.PackingAuto18:1118; compiler-generated equation/aux lemma (parent def `arcLength` at Kepler.Text.PackingAuto18:1118; no source statement; sigtest = assembly elaboration))
+    (∀ (a b c : ℝ),
+          arcLength a b c = Real.pi / 2 + atn2 (√(upsX (a * a) (b * b) (c * c))) (c * c - a * a - b * b)
+    ) ∧
+    -- 43. Kepler.Text.arc_sym (Kepler.Text.PackingAuto18:1502; HOL `Arc_properties.arc_sym`)
+    (∀ (a b c : ℝ),
+    arcLength a b c = arcLength b a c
+    ) ∧
+    -- 44. Kepler.Text.arclength2 (Kepler.Text.PackingAuto18:1510; HOL `arclength2`)
+    (∀ {h : ℝ} (h1 : 1 ≤ h) (h2 : h ≤ h0),
+    arcLength 2 (2 * h) 2 = Real.arccos (h / 2)
+    ) ∧
+    -- 45. Kepler.Text.ccA0.eq_1 (Kepler.Text.PackingAuto18:1102; compiler-generated equation/aux lemma (parent def `ccA0` at Kepler.Text.PackingAuto18:1102; no source statement; sigtest = assembly elaboration))
+    (∀ (ul : List V3), ccA0 ul = affGt {ul[0]!, ul[1]!} {ul[2]!}
+    ) ∧
+    -- 46. Kepler.Text.cellCluster.eq_1 (Kepler.Text.PackingAuto18:0; compiler-generated equation/aux lemma (parent def `cellCluster` at Text.PackingAuto2:510; no source statement; sigtest = assembly elaboration))
+    (∀ (V e : Set V3), cellCluster V e = {X | e ∈ criticalEdgeX V X ∧ X ∈ mcellSet V}
+    ) ∧
+    -- 47. Kepler.Text.chiMsb.eq_1 (Kepler.Text.PackingAuto18:0; compiler-generated equation/aux lemma (parent def `chiMsb` at Text.SphereKit:64; no source statement; sigtest = assembly elaboration))
+    (∀ (ul : List V3) (p : V3),
+          chiMsb ul p = (crossProduct (ul[1]! - ul[0]!).ofLp) (ul[2]! - ul[0]!).ofLp ⬝ᵥ (p - ul[0]!).ofLp
+    ) ∧
+    -- 48. Kepler.Text.chi_msb_additive_a (Kepler.Text.PackingAuto18:2744; HOL `chi_msb_additive_a`)
+    (∀ (a b c d : V3) (t1 t2 t3 t4 : ℝ) (ht : t1 + t2 + t3 + t4 = 1),
+    chiMsb [t1 • a + t2 • b + t3 • c + t4 • d, b, c] d
+          = t1 * chiMsb [a, b, c] d
+    ) ∧
+    -- 49. Kepler.Text.chi_msb_swap_12 (Kepler.Text.PackingAuto18:2735; HOL `chi_msb_swap_12`)
+    (∀ (a b c d : V3),
+    chiMsb [a, b, c] d = -chiMsb [a, c, b] d
+    ) ∧
+    -- 50. Kepler.Text.clusterGamma.eq_1 (Kepler.Text.PackingAuto18:0; compiler-generated equation/aux lemma (parent def `clusterGamma` at Text.PackingAuto2:525; no source statement; sigtest = assembly elaboration))
+    (∀ (V e : Set V3) (Z : Set (Set V3)),
+          clusterGamma V e Z = setSum Z fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V e X
+    ) ∧
+    -- 51. Kepler.Text.complexDot.eq_1 (Kepler.Text.PackingAuto18:1130; compiler-generated equation/aux lemma (parent def `complexDot` at Kepler.Text.PackingAuto18:1130; no source statement; sigtest = assembly elaboration))
+    (∀ (z1 z2 : ℂ), complexDot z1 z2 = z1.re * z2.re + z1.im * z2.im
+    ) ∧
+    -- 52. Kepler.Text.conv0.eq_1 (Kepler.Text.PackingAuto18:206; compiler-generated equation/aux lemma (parent def `conv0` at Kepler.Text.PackingAuto18:206; no source statement; sigtest = assembly elaboration))
+    (∀ (S : Set V3), conv0 S = affGt ∅ S
+    ) ∧
+    -- 53. Kepler.Text.deltaP.eq_1 (Kepler.Text.PackingAuto18:0; compiler-generated equation/aux lemma (parent def `deltaP` at Text.SphereKit:55; no source statement; sigtest = assembly elaboration))
+    (∀ (x12 x13 x14 x23 x24 x34 : ℝ),
+          deltaP x12 x13 x14 x23 x24 x34 =
+            -(x12 * x13 * x23) - x12 * x14 * x24 - x13 * x14 * x34 - x23 * x24 * x34 +
+                  x12 * x34 * (-x12 + x13 + x14 + x23 + x24 - x34) +
+                x13 * x24 * (x12 - x13 + x14 + x23 - x24 + x34) +
+              x14 * x23 * (x12 + x13 - x14 - x23 + x24 + x34)
+    ) ∧
+    -- 54. Kepler.Text.deltaX.eq_1 (Kepler.Text.PackingAuto18:0; compiler-generated equation/aux lemma (parent def `deltaX` at Text.SphereKit:46; no source statement; sigtest = assembly elaboration))
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          deltaX x1 x2 x3 x4 x5 x6 =
+            x1 * x4 * (-x1 + x2 + x3 - x4 + x5 + x6) + x2 * x5 * (x1 - x2 + x3 + x4 - x5 + x6) +
+                      x3 * x6 * (x1 + x2 - x3 + x4 + x5 - x6) -
+                    x2 * x3 * x4 -
+                  x1 * x3 * x5 -
+                x1 * x2 * x6 -
+              x4 * x5 * x6
+    ) ∧
+    -- 55. Kepler.Text.norm_normalize (Kepler.Text.PackingAuto18:1344; HOL `norm_normalize`)
+    (∀ (v : V3) (h : v ≠ 0),
+    ‖normalize v‖ = 1
+    ) ∧
+    -- 56. Kepler.Text.normalize.eq_1 (Kepler.Text.PackingAuto18:1133; compiler-generated equation/aux lemma (parent def `normalize` at Kepler.Text.PackingAuto18:1133; no source statement; sigtest = assembly elaboration))
+    (∀ (v : V3), normalize v = ‖v‖⁻¹ • v
+    ) ∧
+    -- 57. Kepler.Text.pa18_affSpan2_collinear (Kepler.Text.PackingAuto18:10699; no HOL anchor line in file docstring)
+    (∀ {u0 u1 x : V3}
+          (hx : x ∈ (affineSpan ℝ ({u0, u1} : Set V3) : Set V3)),
+    Collinear3 u0 u1 x
+    ) ∧
+    -- 58. Kepler.Text.pa18_affSpan2_subset_affGe (Kepler.Text.PackingAuto18:10776; HOL `AFFINE_HULL_SUBSET_AFF_GE`)
+    (∀ {u0 u1 v : V3} (h01 : u0 ≠ u1)
+          (hv : v ∉ ({u0, u1} : Set V3)),
+    (affineSpan ℝ ({u0, u1} : Set V3) : Set V3)
+          ⊆ affGe ({u0, u1} : Set V3) ({v} : Set V3)
+    ) ∧
+    -- 59. Kepler.Text.pa18_azim_ne0_ncol (Kepler.Text.PackingAuto18:10873; HOL `Local_lemmas.AZIM_DEGENERATE`)
+    (∀ {u0 u1 v1 v2 : V3} (h : azim u0 u1 v1 v2 ≠ 0),
+    ¬Collinear3 u0 u1 v1 ∧ ¬Collinear3 u0 u1 v2
+    ) ∧
+    -- 60. Kepler.Text.pa18_azim_range (Kepler.Text.PackingAuto18:10894; HOL `Local_lemmas.AZIM_RANGE`)
+    (∀ (u0 u1 v1 v2 : V3),
+    0 ≤ azim u0 u1 v1 v2 ∧ azim u0 u1 v1 v2 < 2 * Real.pi
+    ) ∧
+    -- 61. Kepler.Text.pa18_azim_sym2_ne (Kepler.Text.PackingAuto18:10883; HOL `Local_lemmas.AZIM_EQ_0_SYM2`)
+    (∀ {u0 u1 v1 v2 : V3} (h : azim u0 u1 v1 v2 ≠ 0),
+    azim u0 u1 v2 v1 ≠ 0
+    ) ∧
+    -- 62. Kepler.Text.pa18_ccCell_apex_pos (Kepler.Text.PackingAuto18:4951; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {ul : List V3} (hp : Packing V)
+          (hs : saturated V) (hl' : leaf V ul),
+    ∃ a : V3, a ∈ ccCell V ul ∧ 0 < chiMsb ul a
+    ) ∧
+    -- 63. Kepler.Text.pa18_ccCell_chi_nonneg (Kepler.Text.PackingAuto18:4973; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
+          (hs : saturated V) (hl' : leaf V [u0, u1, u2]),
+    ∀ z ∈ ccCell V [u0, u1, u2], 0 ≤ chiMsb [u0, u1, u2] z
+    ) ∧
+    -- 64. Kepler.Text.pa18_ccCell_swap_ne (Kepler.Text.PackingAuto18:5023; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
+          (hs : saturated V) (hl : leaf V [u0, u1, u2]),
+    ccCell V [u0, u1, u2] ≠ ccCell V [u1, u0, u2]
+    ) ∧
+    -- 65. Kepler.Text.pa18_chi_halfspace_convex (Kepler.Text.PackingAuto18:4941; no HOL anchor line in file docstring)
+    (∀ (ul : List V3),
+    Convex ℝ {z : V3 | 0 ≤ chiMsb ul z}
+    ) ∧
+    -- 66. Kepler.Text.pa18_collinear3_affSpan2 (Kepler.Text.PackingAuto18:10725; HOL `COLLINEAR_3_IN_AFFINE_HULL`)
+    (∀ {u0 u1 x : V3} (h01 : u0 ≠ u1)
+          (hcol : Collinear3 u0 u1 x),
+    x ∈ (affineSpan ℝ ({u0, u1} : Set V3) : Set V3)
+    ) ∧
+    -- 67. Kepler.Text.pa18_collinear3_affSpan2._abel_1_1 (Kepler.Text.PackingAuto18:10725; compiler-generated equation/aux lemma (parent def `pa18_collinear3_affSpan2` at Kepler.Text.PackingAuto18:10725; no source statement; sigtest = assembly elaboration))
+    (∀ {u0 x : V3}, x - u0 + u0 = x
+    ) ∧
+    -- 68. Kepler.Text.pa18_ncol3_disjoint (Kepler.Text.PackingAuto18:10687; HOL `Fan.th3a`)
+    (∀ {u0 u1 v : V3} (h : ¬Collinear3 u0 u1 v),
+    Disjoint ({u0, u1} : Set V3) ({v} : Set V3)
+    ) ∧
+    -- 69. Kepler.Text.pa18_notCollinear3_ne (Kepler.Text.PackingAuto18:10657; HOL `Collect_geom.NOT_COLLINEAR_IMP_2_UNEQUAL`)
+    (∀ {a b c : V3} (h : ¬Collinear3 a b c),
+    a ≠ b ∧ a ≠ c ∧ b ≠ c
+    ) ∧
+    -- 70. Kepler.Text.pa18_nullSet_affGe2 (Kepler.Text.PackingAuto18:10839; HOL `Conforming.NEGLIGIBLE_AFF_GE_2_1`)
+    (∀ (u0 u1 v : V3),
+    nullSet (affGe ({u0, u1} : Set V3) ({v} : Set V3))
+    ) ∧
+    -- 71. Kepler.Text.pa18_nullSet_subset (Kepler.Text.PackingAuto18:10866; HOL `NEGLIGIBLE_SUBSET`)
+    (∀ {s t : Set V3} (hsub : t ⊆ s) (hs : nullSet s),
+    nullSet t
+    ) ∧
+    -- 72. Kepler.Text.pa18_nullSet_union (Kepler.Text.PackingAuto18:10854; HOL `NULLSET_RULES`)
+    (∀ {s t : Set V3} (hs : nullSet s) (ht : nullSet t),
+    nullSet (s ∪ t)
+    ) ∧
+    -- 73. Kepler.Text.pa18c_two_rearrangement_lemma_alt (Kepler.Text.PackingAuto18:6072; HOL `TWO_REARRANGEMENT_LEMMA_ALT`)
+    (∀ {V : Set V3} {ul : List V3}
+          {u0 u1 u2 u3 : V3} (_hp : Packing V) (_hs : saturated V) (_hb : barV V 3 ul)
+          (hul : ul = [u0, u1, u2, u3]),
+    ∃ p : Equiv.Perm ℕ, permutes p (Set.Icc 0 1) ∧
+          [u1, u0, u2, u3] = leftActionList p ul
+    ) ∧
+    -- 74. Kepler.Text.selectd.eq_1 (Kepler.Text.PackingAuto18:1125; compiler-generated equation/aux lemma (parent def `selectd` at Kepler.Text.PackingAuto18:1125; no source statement; sigtest = assembly elaboration))
+    (∀ {α : Type u_1} [inst : Nonempty α] (P : α → Prop) (d : α),
+          selectd P d = if ∃ r, P r then epsilon P else d
+    ) ∧
+    -- 75. Kepler.Text.selectd_cases (Kepler.Text.PackingAuto18:1252; HOL `selectd_cases`)
+    (∀ {α : Type*} [Nonempty α] (P : α → Prop) (d : α),
+    P (selectd P d) ∨ selectd P d = d
+    ) ∧
+    -- 76. Kepler.Text.selectd_exists (Kepler.Text.PackingAuto18:1261; HOL `selectd_exists`)
+    (∀ {α : Type*} [Nonempty α] {P : α → Prop} {d : α}
+          (h : ∃ r, P r),
+    P (selectd P d)
+    ) ∧
+    -- 77. Kepler.Text.truncate_set_of_list (Kepler.Text.PackingAuto18:2390; HOL `truncate_set_of_list`)
+    (∀ {vl : List V3} {k : ℕ}
+          (hk : 0 < k) (hlen : vl.length = k + 1),
+    setOfList vl ⊆ setOfList (truncateSimplex (k - 1) vl) ∪ {vl.getD k 0}
+    ) ∧
+    -- 78. Kepler.Text.upsX.eq_1 (Kepler.Text.PackingAuto18:0; compiler-generated equation/aux lemma (parent def `upsX` at Text.SphereKit:72; no source statement; sigtest = assembly elaboration))
+    (∀ (x1 x2 x6 : ℝ), upsX x1 x2 x6 = -(x1 * x1) - x2 * x2 - x6 * x6 + 2 * x1 * x6 + 2 * x1 * x2 + 2 * x2 * x6
+    ) ∧
+    -- 79. Kepler.Text.ups_x_pos (Kepler.Text.PackingAuto18:1438; HOL `ups_x_pos`)
+    (∀ (a b : ℝ) (h1 : 2 ≤ a) (h2 : a ≤ 2.52) (h3 : 2 ≤ b)
+          (h4 : b ≤ 2.52),
+    0 < upsX (a ^ 2) (b ^ 2) 4
+    ) ∧
+    -- 80. Kepler.Text.yssk_reduction (Kepler.Text.PackingAuto18:1561; HOL `yssk_reduction`)
+    (∀ (hmono : ∀ a1 a2 b1 b2 : ℝ, 2 ≤ a1 → a1 ≤ a2 → a2 ≤ 2 * h0 →
+            2 ≤ b1 → b1 ≤ b2 → b2 ≤ 2 * h0 →
+            0 ≤ arcLength a2 b2 2 - arcLength a1 b2 2 - arcLength a2 b1 2 +
+              arcLength a1 b1 2)
+          {h h' : ℝ} (hh1 : 1 ≤ h) (hh2 : h ≤ h0) (hh1' : 1 ≤ h') (hh2' : h' ≤ h0),
+    Real.arccos (h / 2) + Real.arccos (h' / 2) - Real.pi / 3 ≤
+          arcLength (2 * h) (2 * h') 2
+    ) :=
+⟨@_root_.Kepler.Text.AFF_GE_MONO_TRANS_pa18, _root_.Kepler.Text.AFF_GT_0_2,
+      @_root_.Kepler.Text.AFF_GT_SUBSET_AFFINE_HULL, _root_.Kepler.Text.ARG_0_DIV,
+      _root_.Kepler.Text.ARG_CNJ, _root_.Kepler.Text.CARD_UNION_EQ,
+      _root_.Kepler.Text.CHI_MSB_IMP_COPLANAR, _root_.Kepler.Text.CONDS_IN_CONV2_pa18,
+      _root_.Kepler.Text.COS_ARG_VECTOR_ANGLE, _root_.Kepler.Text.DIST_EQ_HALF_PLANE,
+      _root_.Kepler.Text.DIST_LE_HALF_PLANE, _root_.Kepler.Text.DOT_COMPLEX,
+      _root_.Kepler.Text.DOT_RE, _root_.Kepler.Text.FINITE_CARD1_IMP_SINGLETON_pa18,
+      _root_.Kepler.Text.FUZBZGI_0, _root_.Kepler.Text.FUZBZGI_1,
+      _root_.Kepler.Text.FUZBZGI_1._abel_1_1, _root_.Kepler.Text.INJ_IFF_SURJ,
+      _root_.Kepler.Text.INJ_SURJ, _root_.Kepler.Text.JDHAWAY_0, _root_.Kepler.Text.JDWAWAY,
+      _root_.Kepler.Text.JDWAWAY._abel_1_1, @_root_.Kepler.Text.MCELL2_SUBSET_AFF_GE,
+      _root_.Kepler.Text.MIDPOINT_IN_CONV0, _root_.Kepler.Text.PERMUTES_a_PERMUTES_b,
+      _root_.Kepler.Text.RE_CEXP_CX, _root_.Kepler.Text.RE_EQVL_IMP_SYM,
+      _root_.Kepler.Text.RE_EQVL_REFL, _root_.Kepler.Text.RE_EQVL_SCALE1,
+      _root_.Kepler.Text.RE_EQVL_SCALE2, _root_.Kepler.Text.RE_EQVL_SYM,
+      _root_.Kepler.Text.RE_NORM_1, _root_.Kepler.Text.SEC_DOT, _root_.Kepler.Text.SET2_INSERT1,
+      _root_.Kepler.Text.TRI_UPS_X_STRICT_POS, _root_.Kepler.Text.WEDGE_GE_NULL,
+      _root_.Kepler.Text.WEDGE_GE_SPLIT, _root_.Kepler.Text.YBZFUPO,
+      _root_.Kepler.Text.affDim_p7.eq_1, _root_.Kepler.Text.affine_invert,
+      _root_.Kepler.Text.affine_invert._abel_1_1, _root_.Kepler.Text.arcLength.eq_1,
+      _root_.Kepler.Text.arc_sym, _root_.Kepler.Text.arclength2, _root_.Kepler.Text.ccA0.eq_1,
+      _root_.Kepler.Text.cellCluster.eq_1, _root_.Kepler.Text.chiMsb.eq_1,
+      _root_.Kepler.Text.chi_msb_additive_a, _root_.Kepler.Text.chi_msb_swap_12,
+      _root_.Kepler.Text.clusterGamma.eq_1, _root_.Kepler.Text.complexDot.eq_1,
+      _root_.Kepler.Text.conv0.eq_1, _root_.Kepler.Text.deltaP.eq_1,
+      _root_.Kepler.Text.deltaX.eq_1, _root_.Kepler.Text.norm_normalize,
+      _root_.Kepler.Text.normalize.eq_1, _root_.Kepler.Text.pa18_affSpan2_collinear,
+      @_root_.Kepler.Text.pa18_affSpan2_subset_affGe, _root_.Kepler.Text.pa18_azim_ne0_ncol,
+      _root_.Kepler.Text.pa18_azim_range, _root_.Kepler.Text.pa18_azim_sym2_ne,
+      _root_.Kepler.Text.pa18_ccCell_apex_pos, _root_.Kepler.Text.pa18_ccCell_chi_nonneg,
+      _root_.Kepler.Text.pa18_ccCell_swap_ne, _root_.Kepler.Text.pa18_chi_halfspace_convex,
+      _root_.Kepler.Text.pa18_collinear3_affSpan2,
+      _root_.Kepler.Text.pa18_collinear3_affSpan2._abel_1_1,
+      _root_.Kepler.Text.pa18_ncol3_disjoint, _root_.Kepler.Text.pa18_notCollinear3_ne,
+      _root_.Kepler.Text.pa18_nullSet_affGe2, _root_.Kepler.Text.pa18_nullSet_subset,
+      _root_.Kepler.Text.pa18_nullSet_union,
+      _root_.Kepler.Text.pa18c_two_rearrangement_lemma_alt, _root_.Kepler.Text.selectd.eq_1,
+      _root_.Kepler.Text.selectd_cases, _root_.Kepler.Text.selectd_exists,
+      @_root_.Kepler.Text.truncate_set_of_list, _root_.Kepler.Text.upsX.eq_1,
+      _root_.Kepler.Text.ups_x_pos, _root_.Kepler.Text.yssk_reduction⟩
+
+-- Self-check.  Ground truth = `#print axioms`, not prose: expect exactly the standard three
+-- [propext, Classical.choice, Quot.sound] and NO sorryAx (the scout group closure is sorried-0).
+#print axioms pa18_wire_capstone_w1
+
 /-! ### PA15 materialization capstone (lane lv910-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV10):
 the 31 public top-level PackingAuto15 theorem exits -- all clean (MCELL_ID_MXI 45/0 family; scout seeds_clean.txt PA15 group), of which 31 are statable from PackingConcl and are re-exposed as ONE conjunction below
 (0 dropped per the no-forcing rule, each named in the theorem docstring).  PA15 is visible transitively via the PackingAuto16 import
