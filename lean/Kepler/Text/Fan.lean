@@ -468,6 +468,26 @@ theorem unique_azim_point_fan (hfan : FAN x V E) (hu : {v, u} ∈ E)
       (fan_not_collinear hfan hu) (fan_not_collinear hfan hw)
       (fan_not_collinear hfan hw1)).mp heq)
 
+/-- HOL fan.hl:742 `UNIQUE_SIGMA_FAN`（另处引作 fan.hl:2107）：若 `w` 是
+`u` 之后方位角最小的邻居，则 `sigma_fan x V E v u = w`。 -/
+theorem UNIQUE_SIGMA_FAN {x : V3} {V : Set V3} {E : Set (Set V3)} {v u w : V3}
+    (hne : setOfEdge v V E ≠ {u}) (hfan : FAN x V E) (hu : u ∈ setOfEdge v V E)
+    (hw : w ∈ setOfEdge v V E) (hwu : w ≠ u)
+    (hmin : ∀ w1 : V3, w1 ∈ setOfEdge v V E → w1 ≠ u →
+      azim x v u w ≤ azim x v u w1) :
+    sigmaFan x V E v u = w := by
+  have hpairu : {v, u} ∈ E := (properties_of_setOfEdge_fan x V E v u hfan).mpr hu
+  obtain ⟨hσmem, hσne, hσmin⟩ := SIGMA_FAN hne hfan hu
+  have hle1 : azim x v u (sigmaFan x V E v u) ≤ azim x v u w := hσmin w hw hwu
+  have hle2 : azim x v u w ≤ azim x v u (sigmaFan x V E v u) :=
+    hmin (sigmaFan x V E v u) hσmem hσne
+  have heq : azim x v u (sigmaFan x V E v u) = azim x v u w :=
+    le_antisymm hle1 hle2
+  have hσpair : {v, sigmaFan x V E v u} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr hσmem
+  have hwpair : {v, w} ∈ E := (properties_of_setOfEdge_fan x V E v _ hfan).mpr hw
+  exact unique_azim_point_fan hfan hpairu hσpair hwpair heq
+
 /-- HOL fan.hl:1646 `sum2_azim_fan`（三点角加法；证明走标架极表示，
 不经 cyclic_set 机制）。 -/
 theorem sum2_azim_fan (hfan : FAN x V E)
