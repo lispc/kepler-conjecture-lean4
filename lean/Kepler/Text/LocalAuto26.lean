@@ -1226,6 +1226,14 @@ theorem MXQTIED_BB_p26 (s s' : ScsV39) (v : ℕ → V3)
           exact Or.inl hk3
         · exact Or.inr hclf
 
+/-- `minNum` is attained and is a lower bound on a nonempty set of naturals
+(the `LocalAuto1.la1minNum_spec` clone, private there). -/
+private theorem w2minNum_spec (S : Set ℕ) (hne : S.Nonempty) :
+    minNum S ∈ S ∧ ∀ m ∈ S, minNum S ≤ m := by
+  have hex : ∃ n : ℕ, n ∈ S ∧ ∀ m ∈ S, n ≤ m :=
+    ⟨sInf S, Nat.sInf_mem hne, fun m hm => Nat.sInf_le hm⟩
+  exact Classical.epsilon_spec hex
+
 /-- HOL `MXQTIED_PRIME` (PPBTYDQ.hl:252). Proof pending (needs
 `MXQTIED_BB` / `BB_simplify` machinery for the minimising condition). -/
 theorem MXQTIED_PRIME_p26 (s s' : ScsV39) (v : ℕ → V3)
@@ -1234,7 +1242,16 @@ theorem MXQTIED_PRIME_p26 (s s' : ScsV39) (v : ℕ → V3)
     (hv : v ∈ BBprimeV39 s) (hv' : BBsV39 s' v)
     (ha : ∀ i, s'.a i (i + 1) = s.a i (i + 1))
     (hab : ∀ i j, s.a i j ≤ s'.a i j ∧ s'.b i j ≤ s.b i j) : v ∈ BBprimeV39 s' := by
-  sorry
+  -- DISCHARGED (2026-11-04, lane m1a-root-w2): `MXQTIED_TAU` transfers the
+  -- minimising value and `MXQTIED_BB` the `BBs` window nesting.
+  refine ⟨hv', ?_, ?_⟩
+  · intro w hw'
+    rw [MXQTIED_TAU_p26 s s' w hs hs' hb hb' hM hk hd ha,
+        MXQTIED_TAU_p26 s s' v hs hs' hb hb' hM hk hd ha]
+    exact hv.2.1 w
+      (MXQTIED_BB_p26 s s' w hs hs' hb hb' hM hk hd hw' ha hab)
+  · rw [MXQTIED_TAU_p26 s s' v hs hs' hb hb' hM hk hd ha]
+    exact hv.2.2
 
 /-- HOL `MXQTIED_PRIME2` (PPBTYDQ.hl:241). Proof pending (needs
 `MXQTIED_PRIME` / `MXQTIED_INDEX`). -/
@@ -1244,7 +1261,55 @@ theorem MXQTIED_PRIME2_p26 (s s' : ScsV39) (v : ℕ → V3)
     (hv : v ∈ MMsV39 s) (hv' : BBsV39 s' v)
     (ha : ∀ i, s'.a i (i + 1) = s.a i (i + 1))
     (hab : ∀ i j, s.a i j ≤ s'.a i j ∧ s'.b i j ≤ s.b i j) : v ∈ BBprime2V39 s' := by
-  sorry
+  -- DISCHARGED (2026-11-04, lane m1a-root-w2): `MXQTIED_PRIME` for the
+  -- minimality conjunct; the index conjunct is the HOL `MIN_LEAST` argument:
+  -- a `BBprime s'`-member with strictly smaller `s`-index would itself be
+  -- `BBprime s` (its value is squeezed by `v`'s `s`-minimality), contradicting
+  -- `v`'s `BBindex_min`.
+  have hvp : v ∈ BBprimeV39 s := hv.1.1
+  have hvp' : v ∈ BBprimeV39 s' :=
+    MXQTIED_PRIME_p26 s s' v hs hs' hb hb' hM hk hd hvp hv' ha hab
+  refine ⟨hvp', ?_⟩
+  by_contra hne
+  have himg : (BBindexV39 s' '' BBprimeV39 s').Nonempty := ⟨_, v, hvp', rfl⟩
+  have hle : BBindexMinV39 s' ≤ BBindexV39 s' v :=
+    (w2minNum_spec _ himg).2 _ ⟨v, hvp', rfl⟩
+  have hlt : BBindexMinV39 s' < BBindexV39 s' v :=
+    lt_of_le_of_ne hle (Ne.symm hne)
+  obtain ⟨hmin_mem, -⟩ := w2minNum_spec _ himg
+  obtain ⟨w, hw', hwidx⟩ := hmin_mem
+  have hw'BB : BBsV39 s' w := by
+    have h := hw'
+    simp only [BBprimeV39, Set.mem_setOf_eq] at h
+    exact h.1
+  have hw'min : ∀ u, BBsV39 s' u → taustarV39 s' w ≤ taustarV39 s' u := by
+    have h := hw'
+    simp only [BBprimeV39, Set.mem_setOf_eq] at h
+    exact h.2.1
+  have hltw : BBindexV39 s' w < BBindexV39 s' v := by
+    rw [hwidx]; exact hlt
+  -- w is also `BBprime s` (squeezed between the two minimal values)
+  have hwBB : BBsV39 s w :=
+    MXQTIED_BB_p26 s s' w hs hs' hb hb' hM hk hd hw'BB ha hab
+  have hwv : taustarV39 s w ≤ taustarV39 s v := by
+    rw [← MXQTIED_TAU_p26 s s' w hs hs' hb hb' hM hk hd ha,
+        ← MXQTIED_TAU_p26 s s' v hs hs' hb hb' hM hk hd ha]
+    exact hw'min v hv'
+  have hwneg : taustarV39 s w < 0 := lt_of_le_of_lt hwv hvp.2.2
+  have hwprime : w ∈ BBprimeV39 s :=
+    ⟨hwBB, fun u hu => le_trans hwv (hvp.2.1 u hu), hwneg⟩
+  -- the two index equalities and `BBindex_min`
+  have hbidxw : BBindexV39 s' w = BBindexV39 s w :=
+    MXQTIED_INDEX_p26 s s' w hs hs' hb hb' hM hk hd hw'BB ha hab
+  have hbidxv : BBindexV39 s' v = BBindexV39 s v :=
+    MXQTIED_INDEX_p26 s s' v hs hs' hb hb' hM hk hd hv' ha hab
+  have hlt' : BBindexV39 s w < BBindexV39 s v := by
+    rw [← hbidxw, ← hbidxv]; exact hltw
+  have himgs : (BBindexV39 s '' BBprimeV39 s).Nonempty := ⟨_, w, hwprime, rfl⟩
+  have hminle : BBindexMinV39 s ≤ BBindexV39 s w :=
+    (w2minNum_spec _ himgs).2 _ ⟨w, hwprime, rfl⟩
+  have hveq : BBindexV39 s v = BBindexMinV39 s := hv.1.2
+  omega
 
 /-- HOL `MXQTIED` (PPBTYDQ.hl:231). Proof pending (needs
 `MXQTIED_PRIME2` / `BB_simplify` / `dsv_J_empty`). -/
@@ -1254,7 +1319,12 @@ theorem MXQTIED_p26 (s s' : ScsV39) (v : ℕ → V3)
     (hv : v ∈ MMsV39 s) (hv' : BBsV39 s' v)
     (ha : ∀ i, s'.a i (i + 1) = s.a i (i + 1))
     (hab : ∀ i j, s.a i j ≤ s'.a i j ∧ s'.b i j ≤ s.b i j) : v ∈ MMsV39 s' := by
-  sorry
+  -- DISCHARGED (2026-11-04, lane m1a-root-w2): `MXQTIED_PRIME2` + the
+  -- `unadorned_MMs` conversion for the basic system `s'`.
+  have h2 : v ∈ BBprime2V39 s' :=
+    MXQTIED_PRIME2_p26 s s' v hs hs' hb hb' hM hk hd hv hv' ha hab
+  rw [unadorned_MMs_concl s' hb'.1]
+  exact h2
 
 /-- HOL `OIQKKEP` (PPBTYDQ.hl:172). Delegates to the existing
 `sorry`-based `OIQKKEP_concl` in LocalAuto1. -/

@@ -73,6 +73,10 @@ AYQJTMD.hl lane).
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.PackingAuto2
+-- `sgtrnaf_p12` kernel (2026-11-04, lane m1a-root-w2): the UXCKFPE minimiser
+-- chain (UXCKFPE.hl) re-proved above LA12 by `Kepler.Text.SgtrnafKernel`
+-- (imports LA23 + LA36 only; acyclic w.r.t. LA12, unlike LA27 -> LA24 -> LA20).
+import Kepler.Text.SgtrnafKernel
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -270,14 +274,14 @@ theorem TAUSTAR_LE_TAUSTAR_TRANSFER {s t : ScsV39} {vv : ℕ → V3} (hs : isScs
     rw [if_neg hk3, if_neg hs3]; linarith
 
 set_option linter.unusedVariables false in
-/-- NEEDS: HOL `SGTRNAF` (sgtrnaf.hl:166): `is_scs_v39 s /\ unadorned_v39 s
-/\ vv IN BBs_v39 s /\ taustar_v39 s vv < &0 ==> ~(MMs_v39 s = {})`.  No
-importable port exists; the HOL proof consumes `unadorned_MMs` (the
-`unadorned_MMs_concl` registry item of LocalAuto1) and `UXCKFPE2`
-(uxckfpe.hl, unported), so this anchor stays `sorry` until those land. -/
+/-- HOL `SGTRNAF` (sgtrnaf.hl:166): `is_scs_v39 s /\ unadorned_v39 s
+/\ vv IN BBs_v39 s /\ taustar_v39 s vv < &0 ==> ~(MMs_v39 s = {})`.
+DISCHARGED (2026-11-04, lane m1a-root-w2): `SGTRNAF_krnl` from the upstream
+kernel `Kepler.Text.SgtrnafKernel` (the UXCKFPE minimiser chain re-proved
+above LA12; LA23 + LA36 only).  The declaration statement is unchanged. -/
 theorem sgtrnaf_p12 {s : ScsV39} {vv : ℕ → V3} (hs : isScsV39 s)
     (hu : unadornedV39 s) (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) :
-    MMsV39 s ≠ ∅ := sorry
+    MMsV39 s ≠ ∅ := SGTRNAF_krnl s vv hs hu hBB hta
 
 /-- HOL `NOT_EMPETY_MMS_TRANSFER` (YXIONXL.hl:320; source typo kept).
 Proved modulo the `sgtrnaf_p12` anchor. -/
