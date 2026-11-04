@@ -10514,4 +10514,1034 @@ theorem la34_capstone_w1 :
       @V_DEFORMATION_V3_DEFOR_p34, minWitness_p34, scsA_periodic_p34⟩
 
 #print axioms la34_capstone_w1
+/-! ### LA14 + LA37 + LA17 materialization capstones (lane
+capstone-wire-w1, 2026-11-04): the clean public top-level exits of
+LocalAuto14, LocalAuto37 and LocalAuto17 that the Assembly `textCapstone`
+cone does not yet consume are re-exposed as ONE conjunction each, and the
+three `have hla{14,37,17} := ..._capstone_w1` lines in Assembly.textCapstone
+pull the capstone proof terms into the e2e cone (pure insertion there too).
+All three modules are already imported by this file (LA14 :485, LA17 :488,
+LA37 :508), so zero import changes.  Cleanliness criterion: each exit's
+`#print axioms` face is a subset of the standard three
+[propext, Classical.choice, Quot.sound]; exits carrying sorryAx or a
+non-standard axiom are excluded and named per item in the capstone
+docstrings and logs/gen_report.txt.  Statement drops follow the lv56
+generator rules (module-private constant `✝`, def-kind, universe-
+polymorphic statement).  Extraction purely mechanical (gen_items.py):
+conjuncts are verbatim module source signatures, bodies are the exit
+constants; the `set_option maxHeartbeats 50000000 in` scope mirrors the
+existing large-conjunction sections in this file (LocalConcl:1150
+precedent).  Two environment-alignment scopes mirror module-local
+declarations so the verbatim signatures elaborate under the same name and
+instance resolution as their source modules: LA37 carries the module's own
+`attribute [-instance] dartDecEq2 dartDecEq3` (LocalAuto37:125, required by
+the `hypIso_p37`/`hypermapOfFan` instance arguments) and LA17 carries the
+module's own `open Kepler.Text.Fan` (LocalAuto17:105, required by the
+unqualified `FAN`/`fan7`/`Graph` names).  The exact cone increment is
+re-measured at the orchestrator e2e gate. -/
+
+
+set_option maxHeartbeats 50000000 in
+
+/-- LA14 materialization capstone (lane capstone-wire-w1,
+2026-11-04): the clean public top-level LocalAuto14 theorem exits that are
+statable in Kepler.Text, re-exposed as ONE conjunction so the Assembly
+`textCapstone` cone can consume them (39 of the 54 public
+top-level theorem exits; 15 dropped per the workorder's no-forcing
+rule "抽不出/不一致 → 剔除并如实报", mechanically detected from the
+`#print axioms` / `#check @` probe dumps and the module source; each drop
+is named below with its reason -- 13 carry a sorryAx axiom face
+or a non-standard axiom, the remainder are mechanical statement drops).
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its LA14 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); conjuncts whose source text leaves an autoImplicit variable
+free take the `#check @name` printer dump verbatim (the complete
+signature, marked printer-form in their per-conjunct comment) so the
+capstone itself stays parameter-free; the `#check @name` printer dump is
+retained as cross reference; semantic identity is re-verified by the elaboration of the
+`⟨...⟩` assembly below (each component must unify definitionally with its
+conjunct); per-conjunct comments carry each exit's LA14
+declaration line and file-local docstring HOL anchor.
+Conjunct order: source declaration order.  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la14_capstone_w1 :
+    -- 1. NONPLANAR_OPEN_p14 (LA14:967; no HOL anchor line in file docstring)
+    (∀ (v1 v2 v3 v4 : ℝ → V3) (t : ℝ)
+          (h : ¬ Coplanar ({v1 t, v2 t, v3 t, v4 t} : Set V3))
+          (hc1 : ContinuousAt v1 t) (hc2 : ContinuousAt v2 t) (hc3 : ContinuousAt v3 t)
+          (hc4 : ContinuousAt v4 t),
+          ∃ e : ℝ, 0 < e ∧ ∀ t', |t - t'| < e →
+          ¬ Coplanar ({v1 t', v2 t', v3 t', v4 t'} : Set V3)
+    ) ∧
+    -- 2. COLL_IFF_COLL_CROSS2_p14 (LA14:1002; no HOL anchor line in file docstring)
+    (∀ (v w : V3)
+    ,
+          Collinear ℝ ({0, v, w} : Set V3) ↔
+          Collinear ℝ ({0, w, cross3 v w} : Set V3)
+    ) ∧
+    -- 3. azim_cross_0_p14 (LA14:1027; HOL `azim_cross_0`)
+    (∀ (v w : V3) (h : ¬ Collinear ℝ ({0, v, w} : Set V3))
+    ,
+          ¬ (azim 0 (cross3 v w) v w = 0)
+    ) ∧
+    -- 4. wedge_ge_cross_p14 (LA14:1075; HOL `wedge_ge_cross`)
+    (∀ (v w : V3) (h : ¬ Collinear ℝ ({0, v, w} : Set V3))
+    ,
+          wedgeGe 0 (cross3 v w) v w = affGe ({0, cross3 v w} : Set V3) ({v, w} : Set V3)
+    ) ∧
+    -- 5. azim_lt_pi_cross_p14 (LA14:1195; HOL `azim_lt_pi_cross`)
+    (∀ (u1 u2 u3 : V3)
+    ,
+          (0 < azim 0 u1 u2 u3 ∧ azim 0 u1 u2 u3 < Real.pi) ↔
+          0 < (cross3 u1 u2) ⬝ᵥ u3
+    ) ∧
+    -- 6. generic_alt_p14 (LA14:1306; HOL `generic_alt`)
+    (∀ (u v w : V3) (h1 : ¬ Collinear ℝ ({0, v, w} : Set V3))
+          (h2 : u ≠ 0),
+          affGe ({0} : Set V3) ({v, w} : Set V3) ∩ affLt ({0} : Set V3) ({u} : Set V3) = ∅ ↔
+          ¬ Coplanar ({0, u, v, w} : Set V3) ∨ (-u) ∈ Kepler.Geom.wedge 0 (cross3 v w) w v
+    ) ∧
+    -- 7. vuy1_p14 (LA14:1422; HOL `vuy1`)
+    (∀ (v u0 u1 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v} : Set V3))
+          (h2 : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
+          (h3 : v ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3)),
+          ∃ t0 t1 : ℝ, 0 < t1 ∧ v = t0 • u0 + t1 • u1
+    ) ∧
+    -- 8. vuy3_p14 (LA14:1459; HOL `vuy3`)
+    (∀ (v u0 u1 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v} : Set V3))
+          (h2 : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
+          (h3 : v ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3)),
+          ¬ Collinear ℝ ({0, cross3 u0 u1, v} : Set V3)
+    ) ∧
+    -- 9. vuy4_p14 (LA14:1479; HOL `vuy4`)
+    (∀ (v u0 u1 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v} : Set V3))
+          (h2 : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
+          (h3 : v ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3)),
+          azim 0 (cross3 u0 u1) u0 v < Real.pi
+    ) ∧
+    -- 10. cross_independent_p14 (LA14:1504; HOL `cross_independent`)
+    (∀ (u0 u1 : V3) (h : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
+          (a b c : ℝ) (heq : a • cross3 u0 u1 + b • u0 + c • u1 = 0),
+          a = 0
+    ) ∧
+    -- 11. ybt_inj_p14 (LA14:1519; no HOL anchor line in file docstring)
+    (∀ (u0 u1 v1 v2 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v1} : Set V3))
+          (h2 : ¬ Collinear ℝ ({0, u0, v2} : Set V3))
+          (h3 : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
+          (h4 : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (h5 : v1 ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3))
+          (h6 : v2 ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3)),
+          ¬ (azim 0 (cross3 u0 u1) u0 v1 = azim 0 (cross3 u0 u1) u0 v2)
+    ) ∧
+    -- 12. ybt_inj_0_p14 (LA14:1573; HOL `ybt_inj_0`)
+    (∀ (u0 u1 v2 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v2} : Set V3))
+          (h2 : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
+          (h3 : v2 ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3)),
+          ¬ (azim 0 (cross3 u0 u1) u0 v2 = 0)
+    ) ∧
+    -- 13. ECAU_aff_ge_p14 (LA14:1624; HOL `ECAU_aff_ge`)
+    (∀ (u : ℝ → V3) (r : ℕ)
+          (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
+          (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3)),
+          ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGe ({0, u 0} : Set V3) ({u 1} : Set V3)
+    ) ∧
+    -- 14. collinear_cross_p14 (LA14:1633; HOL `collinear_cross`)
+    (∀ (u : ℕ → V3) (i r : ℕ) (hi : i ≤ r) (hr : 1 ≤ r)
+          (h : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
+          (hu : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3)),
+          ¬ Collinear ℝ ({0, cross3 (u 0) (u 1), u i} : Set V3)
+    ) ∧
+    -- 15. coplanar_in_affine_hull_p14 (LA14:1743; no HOL anchor line in file docstring)
+    (∀ (u v w x : V3)
+          (h1 : ¬ Collinear ℝ ({u, v, w} : Set V3)) (h2 : Coplanar ({x, u, v, w} : Set V3)),
+          x ∈ affineSpan ℝ ({u, v, w} : Set V3)
+    ) ∧
+    -- 16. azim_0_as_closed_p14 (LA14:2417; HOL `azim_0_as_closed`)
+    (∀ (v2 v3 v4 : V3)
+          (h1 : ¬ Collinear ℝ ({0, v2, v3} : Set V3))
+          (h2 : ¬ Collinear ℝ ({0, v2, v4} : Set V3)),
+          azim 0 v2 v3 v4 = 0 ↔
+          Coplanar ({0, v2, v3, v4} : Set V3) ∧
+            0 ≤ (cross3 (cross3 v2 v3) v2) ⬝ᵥ v4
+    ) ∧
+    -- 17. azim_pos_open_p14 (LA14:2597; HOL `azim_pos_open`)
+    (∀ (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
+          (h1 : ∀ x, x ∈ Set.Icc a b → ContinuousAt v2 x)
+          (h2 : ∀ x, x ∈ Set.Icc a b → ContinuousAt v3 x)
+          (h3 : ∀ x, x ∈ Set.Icc a b → ContinuousAt v4 x)
+          (h4 : t ∈ Set.Icc a b)
+          (h5 : ¬ Collinear ℝ ({0, v2 t, v3 t} : Set V3))
+          (h6 : ¬ Collinear ℝ ({0, v2 t, v4 t} : Set V3))
+          (h7 : ¬ (azim 0 (v2 t) (v3 t) (v4 t) = 0)),
+          ∃ e : ℝ, 0 < e ∧ ∀ t', |t' - t| < e →
+          ¬ (azim 0 (v2 t') (v3 t') (v4 t') = 0)
+    ) ∧
+    -- 18. azim_real_continuous_on_p14 (LA14:2633; no HOL anchor line in file docstring)
+    (∀ (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
+          (h1 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v2 x)
+          (h2 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v3 x)
+          (h3 : ∀ x, x ∈ Set.Ioo a b → ContinuousAt v4 x)
+          (h4 : t ∈ Set.Ioo a b)
+          (h5 : ¬ Collinear ℝ ({0, v2 t, v3 t} : Set V3))
+          (h6 : ¬ Collinear ℝ ({0, v2 t, v4 t} : Set V3))
+          (h7 : ¬ (azim 0 (v2 t) (v3 t) (v4 t) = 0)),
+          ∃ e : ℝ, 0 < e ∧
+          ContinuousOn (fun q => azim 0 (v2 q) (v3 q) (v4 q)) (Set.Icc (t - e) (t + e))
+    ) ∧
+    -- 19. azim_pos_iff_nz_p14 (LA14:2734; HOL `azim_pos_iff_nz`)
+    (∀ (v1 v2 v3 v4 : V3)
+    ,
+          0 < azim v1 v2 v3 v4 ↔ azim v1 v2 v3 v4 ≠ 0
+    ) ∧
+    -- 20. NHCXLRV_p14 (LA14:2745; HOL `NHCXLRV`)
+    (∀ (v w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
+          (h1 : Deformation f ({w0, w1, w2, v} : Set V3) a b)
+          (h2 : ¬ Collinear ℝ ({0, f w1 0, f w2 0} : Set V3))
+          (h3 : ¬ Collinear ℝ ({0, f w1 0, f w0 0} : Set V3))
+          (h4 : ¬ Collinear ℝ ({0, f w1 0, f v 0} : Set V3))
+          (h5 : v ∈ Kepler.Geom.wedge 0 w1 w2 w0),
+          ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
+          f v t ∈ Kepler.Geom.wedge 0 (f w1 t) (f w2 t) (f w0 t)
+    ) ∧
+    -- 21. NHCXLRV_ALT_p14 (LA14:2817; no HOL anchor line in file docstring)
+    (∀ (v w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
+          (h1 : Deformation f ({w0, w1, w2, v} : Set V3) a b)
+          (h2 : ¬ Collinear ℝ ({0, w1, w2} : Set V3))
+          (h3 : ¬ Collinear ℝ ({0, w1, w0} : Set V3))
+          (h4 : ¬ Collinear ℝ ({0, w1, v} : Set V3))
+          (h5 : v ∈ Kepler.Geom.wedge 0 w1 w2 w0),
+          ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
+          f v t ∈ Kepler.Geom.wedge 0 (f w1 t) (f w2 t) (f w0 t)
+    ) ∧
+    -- 22. WNWSHJT_p14 (LA14:2833; HOL `WNWSHJT`)
+    (∀ (w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
+          (h1 : Deformation f ({w0, w1, w2} : Set V3) a b)
+          (h2 : ¬ Collinear ℝ ({0, f w1 0, f w2 0} : Set V3))
+          (h3 : ¬ Collinear ℝ ({0, f w1 0, f w0 0} : Set V3))
+          (h4 : 0 < azim 0 w1 w2 w0) (h5 : azim 0 w1 w2 w0 < Real.pi),
+          ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
+          azim 0 (f w1 t) (f w2 t) (f w0 t) < Real.pi
+    ) ∧
+    -- 23. LOFA_IMP_INANGLE_EQ_AZIM_p14 (LA14:2866; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (v : V3) (h1 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (h2 : v ∈ V),
+          interiorAngle1 0 FF v = azimInFan (v, rhoNode1 FF v) E
+    ) ∧
+    -- 24. deformation_rho_node1_equivariant1_p14 (LA14:2884; no HOL anchor line in file docstring)
+    (∀ (f : V3 → ℝ → V3) (V : Set V3)
+          (E : Set (Set V3)) (FF : Set (V3 × V3)) (a b : ℝ) (v : V3) (t : ℝ)
+          (h1 : Deformation f V a b) (h2 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+          (h3 : LocalFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E)
+            ((fun d => (f d.1 t, f d.2 t)) '' FF)) (h4 : v ∈ V),
+          f (rhoNode1 FF v) t =
+          rhoNode1 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t)
+    ) ∧
+    -- 25. deformation_ivs_rho_node1_equivariant1_p14 (LA14:2898; no HOL anchor line in file docstring)
+    (∀ (f : V3 → ℝ → V3) (V : Set V3)
+          (E : Set (Set V3)) (FF : Set (V3 × V3)) (a b : ℝ) (v : V3) (t : ℝ)
+          (h1 : Deformation f V a b) (h2 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+          (h3 : LocalFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E)
+            ((fun d => (f d.1 t, f d.2 t)) '' FF)) (h4 : v ∈ V),
+          f (ivsRhoNode1 FF v) t =
+          ivsRhoNode1 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t)
+    ) ∧
+    -- 26. deformation_subset_p14 (LA14:2911; HOL `deformation_subset`)
+    (∀ (f : V3 → ℝ → V3) (U V : Set V3) (a b : ℝ)
+          (hsub : U ⊆ V) (h : Deformation f V a b),
+          Deformation f U a b
+    ) ∧
+    -- 27. zlz_reduction_p14 (LA14:2949; no HOL anchor line in file docstring)
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
+          (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
+          (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+            interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi)
+          (h5 : ∀ u v w : V3, ∃ e4 : ℝ, ((v, w) ∈ FF ∧ u ∈ V) →
+            0 < e4 ∧ ∀ t, -e4 < t ∧ t < e4 →
+              affGe ({0} : Set V3) ({f v t, f w t} : Set V3) ∩
+                affLt ({0} : Set V3) ({f u t} : Set V3) = ∅)
+          (h6 : ∀ x : V3 × V3, ∃ e3 : ℝ, x ∈ FF →
+            0 < e3 ∧ ∀ t, -e3 < t ∧ t < e3 →
+              ((fun v => f v t) '' V) ⊆ wedgeInFanGe (f x.1 t, f x.2 t)
+                ((fun s => (fun v => f v t) '' s) '' E))
+          (h7 : ∀ x : V3 × V3, ∃ e2 : ℝ, x ∈ FF →
+            0 < e2 ∧ ∀ t, -e2 < t ∧ t < e2 →
+              azimInFan (f x.1 t, f x.2 t) ((fun s => (fun v => f v t) '' s) '' E) ≤ Real.pi),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t, -ε < t ∧ t < ε →
+          ConvexLocalFan ((fun v => f v t) '' V)
+            ((fun s => (fun v => f v t) '' s) '' E)
+            ((fun d => (f d.1 t, f d.2 t)) '' FF) ∧
+          Generic ((fun v => f v t) '' V)
+            ((fun s => (fun v => f v t) '' s) '' E)
+    ) ∧
+    -- 28. real_interval_contains_0_ball_p14 (LA14:3075; HOL `real_interval_contains_0_ball`)
+    (∀ (a b e1 : ℝ) (ha : a < 0) (hb : 0 < b)
+          (he1 : 0 < e1),
+          ∃ e : ℝ, 0 < e ∧ e ≤ e1 ∧ ∀ t, |t| < e → t ∈ Icc a b
+    ) ∧
+    -- 29. zlz_generic_p14 (LA14:3163; HOL `zlz_generic`)
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
+          (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b),
+          ∀ u v w : V3, ∃ e4 : ℝ, ((v, w) ∈ FF ∧ u ∈ V) →
+          0 < e4 ∧ ∀ t, -e4 < t ∧ t < e4 →
+            affGe ({0} : Set V3) ({f v t, f w t} : Set V3) ∩
+              affLt ({0} : Set V3) ({f u t} : Set V3) = ∅
+    ) ∧
+    -- 30. zlz_wedge_skolem_p14 (LA14:3295; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+          (f : V3 → ℝ → V3) (h1 : ConvexLocalFan V E FF)
+          (h2 : ∀ x : V3 × V3, ∀ v : V3, ∃ e3 : ℝ, (x ∈ FF ∧ v ∈ V) →
+            0 < e3 ∧ ∀ t, -e3 < t ∧ t < e3 →
+              f v t ∈ wedgeInFanGe (f x.1 t, f x.2 t)
+                ((fun s => (fun v => f v t) '' s) '' E)),
+          ∀ x : V3 × V3, ∃ e3 : ℝ, x ∈ FF →
+          0 < e3 ∧ ∀ t, -e3 < t ∧ t < e3 →
+            ((fun v => f v t) '' V) ⊆ wedgeInFanGe (f x.1 t, f x.2 t)
+              ((fun s => (fun v => f v t) '' s) '' E)
+    ) ∧
+    -- 31. wedge_ge_refl_p14 (LA14:3323; HOL `wedge_ge_refl`)
+    (∀ (v1 v2 v3 v4 : V3)
+    ,
+          v2 ∈ wedgeGe v1 v2 v3 v4
+    ) ∧
+    -- 32. PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (LA14:3363; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (u v : V3) (h1 : LocalFan V E FF) (h2 : u ∈ V)
+          (h3 : v ∈ V) (h4 : u ≠ v) (h5 : Generic V E),
+          ¬ Collinear ℝ ({0, u, v} : Set V3)
+    ) ∧
+    -- 33. cyclic_set_scale_p14 (LA14:3467; no HOL anchor line in file docstring)
+    (∀ (U : Set V3) (e : V3) (t : ℝ) (ht : t ≠ 0)
+    ,
+          cyclicSet U 0 (t • e) ↔ cyclicSet U 0 e
+    ) ∧
+    -- 34. projection_scale_p14 (LA14:3503; no HOL anchor line in file docstring)
+    (∀ (e u : V3) (t : ℝ) (ht : t ≠ 0)
+    ,
+          projection u (t • e) = projection u e
+    ) ∧
+    -- 35. azim_cycle_scale_p14 (LA14:3615; HOL `azim_cycle_scale`)
+    (∀ (U : Set V3) (e : V3) (t : ℝ) (ht : 0 < t)
+    ,
+          azimCycle_p14 U 0 (t • e) = azimCycle_p14 U 0 e
+    ) ∧
+    -- 36. IDENTIFY_AZIM_CYCLE_SIMPLE_p14 (LA14:3630; HOL `IDENTIFY_AZIM_CYCLE_SIMPLE`)
+    (∀ (W : Set V3) (v w p u : V3)
+          (h1 : ¬ (W ⊆ {p})) (h2 : p ∈ W) (hc : cyclicSet W v w) (h3 : u ≠ p) (h4 : u ∈ W)
+          (h5 : ∀ q : V3, q ≠ p → q ∈ W → q ≠ u → azim v w p u < azim v w p q),
+          azimCycle_p14 W v w p = u
+    ) ∧
+    -- 37. coplanar_cross_scale_p14 (LA14:3712; no HOL anchor line in file docstring)
+    (∀ (u1 u2 v1 v2 : V3)
+          (h1 : Coplanar ({0, u1, u2, v1, v2} : Set V3))
+          (h2 : 0 < (cross3 v1 v2) ⬝ᵥ (cross3 u1 u2)),
+          ∃ t : ℝ, 0 < t ∧ cross3 v1 v2 = t • (cross3 u1 u2)
+    ) ∧
+    -- 38. azim_cycle_distinct_p14 (LA14:3761; no HOL anchor line in file docstring)
+    (∀ (U : Set V3) (e v w : V3) (h1 : U.Finite)
+          (h2 : v ∈ U) (h3 : w ∈ U) (h4 : v ≠ w)
+          (h5 : ∀ x ∈ U, e ⬝ᵥ (cross3 x (azimCycle_p14 U 0 e x)) ≠ 0),
+          0 < azim 0 e v w
+    ) ∧
+    -- 39. azim_cycle_neg_p14 (LA14:4029; no HOL anchor line in file docstring)
+    (∀ (U : Set V3) (e v w : V3) (h1 : U.Finite) (h2 : v ∈ U)
+          (h3 : azimCycle_p14 U 0 e v = w)
+          (h4 : ∀ x ∈ U, e ⬝ᵥ (cross3 x (azimCycle_p14 U 0 e x)) ≠ 0),
+          azimCycle_p14 U 0 (-e) w = v
+    ) :=
+    ⟨@NONPLANAR_OPEN_p14, @COLL_IFF_COLL_CROSS2_p14, azim_cross_0_p14, wedge_ge_cross_p14,
+      azim_lt_pi_cross_p14, generic_alt_p14, vuy1_p14, @vuy3_p14, vuy4_p14,
+      cross_independent_p14, ybt_inj_p14, ybt_inj_0_p14, ECAU_aff_ge_p14,
+      @collinear_cross_p14, coplanar_in_affine_hull_p14, azim_0_as_closed_p14,
+      azim_pos_open_p14, azim_real_continuous_on_p14, azim_pos_iff_nz_p14, NHCXLRV_p14,
+      NHCXLRV_ALT_p14, WNWSHJT_p14, LOFA_IMP_INANGLE_EQ_AZIM_p14,
+      deformation_rho_node1_equivariant1_p14, deformation_ivs_rho_node1_equivariant1_p14,
+      deformation_subset_p14, zlz_reduction_p14, real_interval_contains_0_ball_p14,
+      zlz_generic_p14, zlz_wedge_skolem_p14, wedge_ge_refl_p14,
+      PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14, cyclic_set_scale_p14, projection_scale_p14,
+      azim_cycle_scale_p14, IDENTIFY_AZIM_CYCLE_SIMPLE_p14, coplanar_cross_scale_p14,
+      azim_cycle_distinct_p14, azim_cycle_neg_p14⟩
+
+#print axioms la14_capstone_w1
+
+
+attribute [-instance] dartDecEq2 dartDecEq3 in
+set_option maxHeartbeats 50000000 in
+
+/-- LA37 materialization capstone (lane capstone-wire-w1,
+2026-11-04): the clean public top-level LocalAuto37 theorem exits that are
+statable in Kepler.Text, re-exposed as ONE conjunction so the Assembly
+`textCapstone` cone can consume them (38 of the 49 public
+top-level theorem exits; 11 dropped per the workorder's no-forcing
+rule "抽不出/不一致 → 剔除并如实报", mechanically detected from the
+`#print axioms` / `#check @` probe dumps and the module source; each drop
+is named below with its reason -- 3 carry a sorryAx axiom face
+or a non-standard axiom, the remainder are mechanical statement drops).
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its LA37 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); conjuncts whose source text leaves an autoImplicit variable
+free take the `#check @name` printer dump verbatim (the complete
+signature, marked printer-form in their per-conjunct comment) so the
+capstone itself stays parameter-free; the `#check @name` printer dump is
+retained as cross reference; semantic identity is re-verified by the elaboration of the
+`⟨...⟩` assembly below (each component must unify definitionally with its
+conjunct); per-conjunct comments carry each exit's LA37
+declaration line and file-local docstring HOL anchor.
+Conjunct order: source declaration order.  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la37_capstone_w1 :
+    -- 1. CONS_IMP_CONTINUOUS_ATREAL_p37 (LA37:163; no HOL anchor line in file docstring)
+    (∀ {a b : ℝ} {f : ℝ → V3} {u : V3}
+          (h : ∀ t ∈ Icc a b, f t = u),
+          ∀ t ∈ Icc a b, ContinuousWithinAt f (Icc a b) t
+    ) ∧
+    -- 2. AFF_GT_SUBSET_AFFINE_HULL21_p37 (LA37:612; no HOL anchor line in file docstring)
+    (∀ (u v w : V3)
+    ,
+          affGt {u, v} {w} ⊆ (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)
+    ) ∧
+    -- 3. DISJTINCT_PROPERTY_p37 (LA37:632; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {f : V3 → ℝ → V3} {u : V3} {a b : ℝ}
+          (hV : V.Finite) (hcu : ContinuousAt (f u) 0) (hu0 : f u 0 = u)
+          (ha : a < 0) (hb : 0 < b)
+          (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u'),
+          ∃ e : ℝ, 0 < e ∧ ∀ t u', -e < t ∧ t < e ∧ u' ∈ V ∧ u' ≠ u → f u t ≠ f u' t
+    ) ∧
+    -- 4. EDGE_FORM_IN_LOCAL_FAN_p37 (LA37:691; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {x : Set V3} (h : LocalFan V E FF) (hx : x ∈ E),
+          ∃ u v : V3, u ≠ v ∧ {u, v} = x
+    ) ∧
+    -- 5. EDGE_IN_LOCAL_FAN_DET_RHO_NODE_p37 (LA37:711; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {x : Set V3} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hx : x ∈ E),
+          ∃ v ∈ V, {v, rhoNode1 FF v} = x
+    ) ∧
+    -- 6. TOW_POINTS_IN_IMP_AFF_GT_SUBSET_p37 (LA37:729; no HOL anchor line in file docstring)
+    (∀ {x u v a b : V3}
+          (_h1 : Disjoint ({x, u} : Set V3) ({v} : Set V3))
+          (_ha : a ∈ affGt {x, u} {v}) (_hb : b ∈ affGt {x, u} {v})
+          (_h2 : Disjoint ({x} : Set V3) ({a, b} : Set V3)),
+          affGt {x} {a, b} ⊆ affGt {x, u} {v}
+    ) ∧
+    -- 7. REAL_LT_MUL12_p37 (LA37:793; HOL `REAL_LT_MUL12`)
+    (∀ {a b : ℝ} (hb : 0 < b) (ha : a < 0)
+    ,
+          a * b < 0
+    ) ∧
+    -- 8. COLL_IN_AFF_GT_INTER_EMPTY_p37 (LA37:799; no HOL anchor line in file docstring)
+    (∀ {a b x u : V3}
+          (hnc : ¬Collinear ℝ ({a, b, x} : Set V3)) (hu : u ∈ affGt {a, b} {x}),
+          affGt {a, b} {x} ∩ affLt {a} {u} = ∅
+    ) ∧
+    -- 9. HKIRPEP_ALT_p37 (LA37:916; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {v w : V3} (_h : ConvexLocalFan V E FF) (_hl : Lunar v w V E),
+          (∀ u ∈ V \ {v, w}, interiorAngle1 0 FF u = Real.pi) ∧
+          0 < interiorAngle1 0 FF v ∧
+          interiorAngle1 0 FF v ≤ Real.pi ∧
+          interiorAngle1 0 FF v = interiorAngle1 0 FF w ∧
+          ∃ i j : ℕ, i + j = Set.ncard V ∧ i < Set.ncard V ∧ i ≠ 0 ∧ i ≠ 1 ∧
+            w = (rhoNode1 FF)^[i] v ∧
+            {z | ∃ l, 0 < l ∧ l < i ∧ z = (rhoNode1 FF)^[l] v} =
+              affGt {0, v} {rhoNode1 FF v} ∩ V ∧
+            j < Set.ncard V ∧ j ≠ 0 ∧ j ≠ 1 ∧
+            v = (rhoNode1 FF)^[j] w ∧
+            {z | ∃ l, 0 < l ∧ l < j ∧ z = (rhoNode1 FF)^[l] w} =
+              affGt {0, v} {ivsRhoNode1 FF v} ∩ V
+    ) ∧
+    -- 10. LUNAR_IMP_IN_TWO_HAFLS_PLANE_p37 (LA37:953; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v w : V3} (_h : ConvexLocalFan V E FF)
+          (_hl : Lunar v w V E),
+          ∀ u ∈ V, u ≠ v → u ≠ w →
+          u ∈ affGt {0, v} {rhoNode1 FF v} ∨ u ∈ affGt {0, v} {ivsRhoNode1 FF v}
+    ) ∧
+    -- 11. IN_CONV0_IMP_AFF_EQ1_p37 (LA37:1009; no HOL anchor line in file docstring)
+    (∀ {x y a : V3} (ha : a ∈ openSegment ℝ x y)
+    ,
+          (affineSpan ℝ ({a, x} : Set V3) : Set V3) = (affineSpan ℝ ({a, y} : Set V3) : Set V3)
+    ) ∧
+    -- 12. AFF_LT_SUBSET_AFF11_p37 (LA37:1054; no HOL anchor line in file docstring)
+    (∀ {a b : V3} (_h : Disjoint ({a} : Set V3) ({b} : Set V3))
+    ,
+          affLt {a} {b} ⊆ (affineSpan ℝ ({a, b} : Set V3) : Set V3)
+    ) ∧
+    -- 13. AZIM_PI_LEMMA_p37 (LA37:1091; no HOL anchor line in file docstring)
+    (∀ {u v x y a : V3} {s : Set V3}
+          (_h1 : ¬(affGt {u} s ∩ affLt {u} {a} = ∅))
+          (_h2 : affGt {u} s ⊆ affGt {u, v} {y})
+          (_h3 : a ∈ affGt {u, v} {x})
+          (_h4 : ¬Collinear ℝ ({u, v, x} : Set V3))
+          (_h5 : ¬Collinear ℝ ({u, v, y} : Set V3)),
+          azim u v x y = Real.pi
+    ) ∧
+    -- 14. LOCAL_FAN_SET_E_p37 (LA37:1782; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (_h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E),
+          {p : Set V3 | ∃ v ∈ V, p = {v, rhoNode1 FF v}} = E
+    ) ∧
+    -- 15. LOCAL_FAN_FACE_FF_p37 (LA37:1821; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (_h : LocalFan V E FF),
+          {p : V3 × V3 | ∃ v ∈ V, p = (v, rhoNode1 FF v)} = FF
+    ) ∧
+    -- 16. ORD_PAIRS_INJ_IMAGE_p37 (LA37:1837; no HOL anchor line in file docstring)
+    (∀ {E : Set (Set V3)} {f : V3 → V3}
+          (h : ∀ s ∈ E, Set.InjOn f s),
+          ordPairs_p4 ((fun s => f '' s) '' E) = (fun p => (f p.1, f p.2)) '' ordPairs_p4 E
+    ) ∧
+    -- 17. SET2_DETER_p37 (LA37:1872; no HOL anchor line in file docstring)
+    (∀ {x y a b : V3} {s : Set V3} (hs : s = {x, y}) (ha : a ∈ s)
+          (hb : b ∈ s) (hab : a ≠ b),
+          s = {a, b}
+    ) ∧
+    -- 18. INJ_IMP_BIJ_IMAGE_p37 (LA37:1882; HOL `INJ_IMP_BIJ_IMAGE`)
+    (∀ {f : V3 → V3} {S S' : Set V3}
+          (h : Set.InjOn f S),
+          Set.BijOn f S (f '' S)
+    ) ∧
+    -- 19. BIJ_AND_MAP_COMM_p37 (LA37:2283; no HOL anchor line in file docstring)
+    (∀ {V V' : Set V3} {E E' : Set (Set V3)}
+          {FF : Set (V3 × V3)} {f : V3 → V3} {ff : V3 × V3 → V3 × V3}
+          (_hlf : LocalFan V E FF) (_hbij : Set.BijOn f V V')
+          (_hE : (fun s => f '' s) '' E = E') (_hfan' : Fan.FAN 0 V' E')
+          (_hff : (fun p => (f p.1, f p.2)) = ff),
+          Set.BijOn ff (dartsOfHyp_p4 E V) (dartsOfHyp_p4 E' V') ∧
+          (∀ x ∈ dartsOfHyp_p4 E V,
+            ffOfHyp_p4 0 V' E' (ff x) = ff (ffOfHyp_p4 0 V E x))
+    ) ∧
+    -- 20. NODE_EDGE_COMM_LEMMA_p37 (LA37:2304; no HOL anchor line in file docstring)
+    (∀ {V V' : Set V3} {E E' : Set (Set V3)}
+          {FF : Set (V3 × V3)} {f : V3 → V3} {ff : V3 × V3 → V3 × V3}
+          (_hlf : LocalFan V E FF) (_hbij : Set.BijOn f V V')
+          (_hE : (fun s => f '' s) '' E = E') (_hfan' : Fan.FAN 0 V' E')
+          (_hff : (fun p => (f p.1, f p.2)) = ff),
+          ∀ x ∈ dartsOfHyp_p4 E V,
+          nnOfHyp_p4 0 V' E' (ff x) = ff (nnOfHyp_p4 0 V E x) ∧
+          eeOfHyp_p4 0 V' E' (ff x) = ff (eeOfHyp_p4 0 V E x)
+    ) ∧
+    -- 21. HYP_ISO_LEMMAA_p37 (LA37:2392; no HOL anchor line in file docstring)
+    (∀ {V V' : Set V3} {E E' : Set (Set V3)}
+          {FF : Set (V3 × V3)} {f : V3 → V3}
+          (_hlf : LocalFan V E FF) (_hbij : Set.BijOn f V V')
+          (_hE : (fun s => f '' s) '' E = E') (_hfan : Fan.FAN 0 V E)
+          (_hfan' : Fan.FAN 0 V' E'),
+          hypIso_p37 (fun (p : V3 × V3) => (f p.1, f p.2)) (Fan.hypermapOfFan 0 V E _hfan)
+          (Fan.hypermapOfFan 0 V' E' _hfan')
+    ) ∧
+    -- 22. COMM_THEN_IMAGE_IMAGE_EQ_p37 (LA37:2632; HOL `COMM_THEN_IMAGE_IMAGE_EQ`)
+    (∀ {S A : Set V3} {f g h : V3 → V3}
+          (hcomm : ∀ x ∈ S, f (g x) = h (f x)) (hA : A ⊆ S),
+          f '' (g '' A) = h '' (f '' A)
+    ) ∧
+    -- 23. XRECQNS_UPDATE_p37 (LA37:2869; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {f : V3 → ℝ → V3} {a b : ℝ} (_hd : Deformation f V a b) (_hl : LocalFan V E FF),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
+          LocalFan ((fun v => f v t) '' V)
+            ((fun s => (fun v => f v t) '' s) '' E)
+            ((fun p => (f p.1 t, f p.2 t)) '' FF)
+    ) ∧
+    -- 24. NORM_CROSS_LE_p37 (LA37:2955; no HOL anchor line in file docstring)
+    (∀ (u w : V3)
+    ,
+          ‖cross3_p37 u w‖ ≤ ‖u‖ * ‖w‖
+    ) ∧
+    -- 25. CONT_ATREAL_INJ_PRESERVED_p37 (LA37:2967; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {ff : V3 → ℝ → V3} {r : ℝ}
+          (_hV : V.Finite) (_hc : ∀ v ∈ V, ContinuousAt (ff v) r)
+          (_hinj : Set.InjOn (fun v => ff v r) V),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t - r| < e →
+          Set.InjOn (fun v => ff v t) V
+    ) ∧
+    -- 26. INJ_BIJ_IMAGE_p37 (LA37:3030; HOL `INJ_BIJ_IMAGE`)
+    (∀ {f : V3 → V3} {S S' A : Set V3}
+          (h : Set.InjOn f S) (hA : A ⊆ S),
+          Set.BijOn f A (f '' A)
+    ) ∧
+    -- 27. CONT_ATREAL_REAL_CONTS_p37 (LA37:3036; no HOL anchor line in file docstring)
+    (∀ {f : ℝ → V3} {r : ℝ} {x y : V3}
+          (h : ContinuousAt f r),
+          ContinuousAt
+          (fun s => ((cross3_p37 (f s) y : V3) : Fin 3 → ℝ) ⬝ᵥ
+            ((cross3_p37 x y : V3) : Fin 3 → ℝ)) r
+    ) ∧
+    -- 28. CONTINUOUS_POS_PRES_p37 (LA37:3063; no HOL anchor line in file docstring)
+    (∀ {x y : V3} {a b r : ℝ} {f : ℝ → V3}
+          (_hnc : ¬Collinear ℝ ({x, y, (0 : V3)} : Set V3)) (_hab : f r = a • x + b • y)
+          (_h0 : 0 < a) (_hc : ContinuousAt f r),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → ∀ t1 t2 : ℝ,
+          f (r + t) = t1 • x + t2 • y → 0 < t1
+    ) ∧
+    -- 29. IVS_RHO_NODE_V_IN_FF_p37 (LA37:3158 (autoImplicit parameter leak v; statement = probe printer dump verbatim (complete signature)); no HOL anchor line in file docstring)
+    (∀ {v : Kepler.Geom.V3} {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)}
+          {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)}, LocalFan V E FF → v ∈ V → (ivsRhoNode1 FF v, v) ∈ FF
+    ) ∧
+    -- 30. IN_AFF_GT_IMP_AZIMEQ_p37 (LA37:3178; no HOL anchor line in file docstring)
+    (∀ {u v w x y : V3}
+          (_hx : x ∈ affGt {u, v} {y}),
+          azim u v w x = azim u v w y
+    ) ∧
+    -- 31. IN_AFF_GT_IMP_AZIMEQ2_p37 (LA37:3196; HOL `IN_AFF_GT_IMP_AZIMEQ2`)
+    (∀ {u v x y : V3} (hx : x ∈ affGt {u, v} {y})
+          (w : V3),
+          azim u v w x = azim u v w y
+    ) ∧
+    -- 32. CROSS_IN_SAME_DIRECTION_p37 (LA37:3274; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3} {e : V3}
+          (_hlf : LocalFan V E FF) (_hv : v ∈ V)
+          (_hU : {z | ∃ n ≤ l, z = (rhoNode1 FF)^[n] v} = U)
+          (_hP : PlaneP_p37 P) (_h0 : (0 : V3) ∈ P) (_hUsub : U ⊆ P)
+          (_he : cross3_p37 v (rhoNode1 FF v) = e),
+          ∀ i < l, ∃ k : ℝ, 0 < k ∧
+          cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) = k • e
+    ) ∧
+    -- 33. ITER_CROSS_SAME_DIRECTION_p37 (LA37:3446; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
+          (_hlf : LocalFan V E FF) (_hv : v ∈ V)
+          (_hU : {z | ∃ n ≤ l, z = (rhoNode1 FF)^[n] v} = U)
+          (_hP : PlaneP_p37 P) (_h0 : (0 : V3) ∈ P) (_hUsub : U ⊆ P),
+          ∀ i j, i < l → j < l → ∃ k : ℝ, 0 < k ∧
+          cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) =
+            k • (cross3_p37 ((rhoNode1 FF)^[j] v) ((rhoNode1 FF)^[j + 1] v))
+    ) ∧
+    -- 34. ITER_IN_AFF_GT_2_1_p37 (LA37:3482; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
+          (_hlf : LocalFan V E FF) (_hv : v ∈ V)
+          (_hU : {z | ∃ n ≤ l, z = (rhoNode1 FF)^[n] v} = U)
+          (_hP : PlaneP_p37 P) (_h0 : (0 : V3) ∈ P) (_hUsub : U ⊆ P),
+          ∀ i < l - 1,
+          (rhoNode1 FF)^[i + 2] v ∈
+            affLt {0, (rhoNode1 FF)^[i + 1] v} {(rhoNode1 FF)^[i] v}
+    ) ∧
+    -- 35. AZIM_PI_ITER_LOCAL_FAN_p37 (LA37:3576; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
+          (_hlf : LocalFan V E FF) (_hv : v ∈ V)
+          (_hU : {z | ∃ n ≤ l, z = (rhoNode1 FF)^[n] v} = U)
+          (_hP : PlaneP_p37 P) (_h0 : (0 : V3) ∈ P) (_hUsub : U ⊆ P),
+          ∀ i < l - 1,
+          azim 0 ((rhoNode1 FF)^[i + 1] v) ((rhoNode1 FF)^[i] v)
+            ((rhoNode1 FF)^[i + 2] v) = Real.pi
+    ) ∧
+    -- 36. LOCAL_CONVEX_NOT_COLLINEAR_p37 (LA37:3607; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v w : V3}
+          (_h : ConvexLocalFan V E FF) (_hl : Lunar v w V E),
+          ∀ u ∈ V, u ≠ v → u ≠ w → ¬Collinear ℝ ({0, v, u} : Set V3)
+    ) ∧
+    -- 37. LOCAL_FAN_RHO_NODE_PROS2_p37 (LA37:3626; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (_h : LocalFan V E FF),
+          ∀ x ∈ V, (x, rhoNode1 FF x) ∈ FF
+    ) ∧
+    -- 38. CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p37 (LA37:3684; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (_h : ConvexLocalFan V E FF),
+          ∀ v ∈ V, interiorAngle1 0 FF v = azim 0 v (rhoNode1 FF v) (ivsRhoNode1 FF v)
+    ) :=
+    ⟨CONS_IMP_CONTINUOUS_ATREAL_p37, @AFF_GT_SUBSET_AFFINE_HULL21_p37, DISJTINCT_PROPERTY_p37,
+      EDGE_FORM_IN_LOCAL_FAN_p37, @EDGE_IN_LOCAL_FAN_DET_RHO_NODE_p37,
+      @TOW_POINTS_IN_IMP_AFF_GT_SUBSET_p37, REAL_LT_MUL12_p37,
+      COLL_IN_AFF_GT_INTER_EMPTY_p37, @HKIRPEP_ALT_p37, @LUNAR_IMP_IN_TWO_HAFLS_PLANE_p37,
+      IN_CONV0_IMP_AFF_EQ1_p37, @AFF_LT_SUBSET_AFF11_p37, AZIM_PI_LEMMA_p37,
+      @LOCAL_FAN_SET_E_p37, LOCAL_FAN_FACE_FF_p37, @ORD_PAIRS_INJ_IMAGE_p37, SET2_DETER_p37,
+      @INJ_IMP_BIJ_IMAGE_p37, @BIJ_AND_MAP_COMM_p37, @NODE_EDGE_COMM_LEMMA_p37,
+      @HYP_ISO_LEMMAA_p37, COMM_THEN_IMAGE_IMAGE_EQ_p37, XRECQNS_UPDATE_p37,
+      NORM_CROSS_LE_p37, CONT_ATREAL_INJ_PRESERVED_p37, @INJ_BIJ_IMAGE_p37,
+      CONT_ATREAL_REAL_CONTS_p37, CONTINUOUS_POS_PRES_p37, IVS_RHO_NODE_V_IN_FF_p37,
+      IN_AFF_GT_IMP_AZIMEQ_p37, IN_AFF_GT_IMP_AZIMEQ2_p37, CROSS_IN_SAME_DIRECTION_p37,
+      ITER_CROSS_SAME_DIRECTION_p37, ITER_IN_AFF_GT_2_1_p37, AZIM_PI_ITER_LOCAL_FAN_p37,
+      LOCAL_CONVEX_NOT_COLLINEAR_p37, LOCAL_FAN_RHO_NODE_PROS2_p37,
+      CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p37⟩
+
+#print axioms la37_capstone_w1
+
+
+open Kepler.Text.Fan in
+set_option maxHeartbeats 50000000 in
+
+/-- LA17 materialization capstone (lane capstone-wire-w1,
+2026-11-04): the clean public top-level LocalAuto17 theorem exits that are
+statable in Kepler.Text, re-exposed as ONE conjunction so the Assembly
+`textCapstone` cone can consume them (49 of the 50 public
+top-level theorem exits; 1 dropped per the workorder's no-forcing
+rule "抽不出/不一致 → 剔除并如实报", mechanically detected from the
+`#print axioms` / `#check @` probe dumps and the module source; each drop
+is named below with its reason -- 0 carry a sorryAx axiom face
+or a non-standard axiom, the remainder are mechanical statement drops).
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its LA17 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); conjuncts whose source text leaves an autoImplicit variable
+free take the `#check @name` printer dump verbatim (the complete
+signature, marked printer-form in their per-conjunct comment) so the
+capstone itself stays parameter-free; the `#check @name` printer dump is
+retained as cross reference; semantic identity is re-verified by the elaboration of the
+`⟨...⟩` assembly below (each component must unify definitionally with its
+conjunct); per-conjunct comments carry each exit's LA17
+declaration line and file-local docstring HOL anchor.
+Conjunct order: source declaration order.  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la17_capstone_w1 :
+    -- 1. MOD_EQ_MOD_SHIFT_p17 (LA17:357; HOL `Ocbicby.MOD_EQ_MOD_SHIFT`)
+    (∀ (k i' p p' i : ℕ) (hk : k ≠ 0)
+          (h : (i + p) % k = p' % k),
+          (i' + i + p) % k = (i' + p') % k
+    ) ∧
+    -- 2. SGIN_POW_EQ_p17 (LA17:408; HOL `SGIN_POW_EQ`)
+    (∀ (a : ℝ) (h : a ∈ ({-1, 1} : Set ℝ))
+    ,
+          a ^ 2 = 1
+    ) ∧
+    -- 3. EYYPQDW_COPLANAR_p17 (LA17:414; no HOL anchor line in file docstring)
+    (∀ (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
+          (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5)
+          (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
+            ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+              cross3 v1 (cross3 v1 v2) = v3),
+          Coplanar ({0, v1, v2, v3} : Set V3)
+    ) ∧
+    -- 4. EYYPQDW_NORMV3_p17 (LA17:504; no HOL anchor line in file docstring)
+    (∀ (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
+          (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5)
+          (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
+            ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+              cross3 v1 (cross3 v1 v2) = v3),
+          ‖v3‖ ^ 2 = x3
+    ) ∧
+    -- 5. EYYPQDW_NORM_V3_V1_p17 (LA17:539; no HOL anchor line in file docstring)
+    (∀ (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
+          (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5)
+          (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
+            ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+              cross3 v1 (cross3 v1 v2) = v3),
+          ‖v3 - v1‖ ^ 2 = x5
+    ) ∧
+    -- 6. EYYPQDW_SCALAR_POS_p17 (LA17:577; no HOL anchor line in file docstring)
+    (∀ (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
+          (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5)
+          (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
+            ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+              cross3 v1 (cross3 v1 v2) = v3),
+          ∃ t : ℝ, 0 < t ∧ cross3 v3 v1 = (a * t) • cross3 v1 v2
+    ) ∧
+    -- 7. LIFT_CONTINUOUS_ATREAL_p17 (LA17:613; no HOL anchor line in file docstring)
+    (∀ (x : ℝ)
+    ,
+          ContinuousAt (fun x : ℝ => x) x
+    ) ∧
+    -- 8. LIFT_CONTINUOUS_ATREAL_I_p17 (LA17:617; HOL `LIFT_CONTINUOUS_ATREAL_I`)
+    (∀ (x : ℝ)
+    ,
+          ContinuousAt (fun x : ℝ => (id ∘ id) x) x
+    ) ∧
+    -- 9. EYYPQDW_CONTINUOUS_AT_X_p17 (LA17:622; HOL `EYYPQDW_CONTINUOUS_AT_X`)
+    (∀ (a : ℝ) (v1 v2 : V3)
+          (x1 x2 x3 x4 x5 x6 : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
+          (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5),
+          ContinuousAt (fun x3 => v3DeforV1_p17 a v1 v2 x1 x2 x5 x6 x3) x3
+    ) ∧
+    -- 10. EYYPQDW_CONTINUOUS_AT_V_p17 (LA17:655; HOL `EYYPQDW_CONTINUOUS_AT_V`)
+    (∀ (a : ℝ) (x1 x2 x3 x4 x5 x6 : ℝ) (v1 v2 : V3)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
+          (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5),
+          ContinuousAt (fun w => v3DeforV2_p17 a x1 x2 x3 x5 x6 v1 w) v2
+    ) ∧
+    -- 11. V3_DEFOR_V1_EQV3_DEFOR_V2_p17 (LA17:674; HOL `V3_DEFOR_V1_EQV3_DEFOR_V2`)
+    (∀ (a : ℝ) (v1 v2 : V3) (x1 x2 x5 x6 x3 : ℝ)
+    ,
+          v3DeforV1_p17 a v1 v2 x1 x2 x5 x6 x3 =
+          v3DeforV2_p17 a x1 x2 x3 x5 x6 v1 v2
+    ) ∧
+    -- 12. LIFT_UPS_CONTINUOUS_p17 (LA17:680; HOL `LIFT_UPS_CONTINUOUS`)
+    (∀ (v1 v2 : V3) (x1 x2 x6 : ℝ)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6),
+          ContinuousAt (fun x2 => upsX x1 x2 x6) x2
+    ) ∧
+    -- 13. MK_PLANAR_REP_p17 (LA17:690; no HOL anchor line in file docstring)
+    (∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 a : ℝ)
+    ,
+          mkPlanar2 v0 v1 v2 x1 x2 x3 x5 x6 a - v0 =
+          ((x1 + x3 - x5) / (2 * x1)) • (v1 - v0) +
+            ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+              cross3 (v1 - v0) (cross3 (v1 - v0) (v2 - v0))
+    ) ∧
+    -- 14. EYYPQDW_p17 (LA17:707; no HOL anchor line in file docstring)
+    (∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x5 x6 s : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h5 : 0 < x5) (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+          (hx1 : x1 = dist v1 v0 ^ 2) (hx2 : x2 = dist v2 v0 ^ 2)
+          (hx6 : x6 = dist v1 v2 ^ 2)
+          (hups : 0 < upsX x1 x3 x5) (hs : s = 1 ∨ s = -1)
+          (hv3 : v3 = mkPlanar2 v0 v1 v2 x1 x2 x3 x5 x6 s),
+          Coplanar ({v0, v1, v2, v3} : Set V3) ∧
+          x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧
+          ∃ t : ℝ, 0 < t ∧
+            t • cross3 (v3 - v0) (v1 - v0) = s • cross3 (v1 - v0) (v2 - v0)
+    ) ∧
+    -- 15. MK_PLANAR_V3_DEFOR_V1_p17 (LA17:786; HOL `MK_PLANAR_V3_DEFOR_V1`)
+    (∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 a : ℝ)
+    ,
+          mkPlanar2 v0 v1 v2 x1 x2 x3 x5 x6 a - v0 =
+          v3DeforV1_p17 a (v1 - v0) (v2 - v0) x1 x2 x5 x6 x3
+    ) ∧
+    -- 16. MK_PLANAR_V3_DEFOR_V1_FUN_p17 (LA17:792; HOL `MK_PLANAR_V3_DEFOR_V1_FUN`)
+    (∀ (v0 v1 v2 : V3) (x1 x2 x5 x6 s : ℝ)
+    ,
+          (fun q => mkPlanar2 v0 v1 v2 x1 x2 q x5 x6 s) =
+          (fun x3 => v3DeforV1_p17 s (v1 - v0) (v2 - v0) x1 x2 x5 x6 x3 + v0)
+    ) ∧
+    -- 17. EYYPQDW2_p17 (LA17:800; no HOL anchor line in file docstring)
+    (∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h5 : 0 < x5) (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+          (hx1 : x1 = dist v1 v0 ^ 2) (hx2 : x2 = dist v2 v0 ^ 2)
+          (hx6 : x6 = dist v1 v2 ^ 2)
+          (hups : 0 < upsX x1 x3 x5) (hs : s = 1 ∨ s = -1),
+          ContinuousAt (fun q => mkPlanar2 v0 v1 v2 x1 x2 q x5 x6 s) x3
+    ) ∧
+    -- 18. MK_PLANAR_V3_DEFOR_V2_FUN_p17 (LA17:824; HOL `MK_PLANAR_V3_DEFOR_V2_FUN`)
+    (∀ (v0 v1 : V3) (x1 x2 x3 x5 x6 s : ℝ)
+    ,
+          (fun q => mkPlanar2 v0 v1 q x1 x2 x3 x5 x6 s) =
+          (fun v2 => v3DeforV2_p17 s x1 x2 x3 x5 x6 (v1 - v0) (v2 - v0) + v0)
+    ) ∧
+    -- 19. lemma30000_p17 (LA17:834; HOL `lemma30000`)
+    (∀ (s x3 x5 : ℝ) (v0 v1 v2 : V3)
+    ,
+          (fun v2' => v3DeforV2_p17 s (‖v1 - v0‖ ^ 2) (‖v2 - v0‖ ^ 2) x3 x5
+            (‖v1 - v2‖ ^ 2) (v1 - v0) (v2' - v0)) =
+          (fun v2' => v3DeforV2_p17 s (‖v1 - v0‖ ^ 2) (‖v2 - v0‖ ^ 2) x3 x5
+            (‖v1 - v2‖ ^ 2) (v1 - v0) v2') ∘ fun v2 : V3 => v2 - v0
+    ) ∧
+    -- 20. EYYPQDW3_p17 (LA17:843; no HOL anchor line in file docstring)
+    (∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h5 : 0 < x5) (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+          (hx1 : x1 = dist v1 v0 ^ 2) (hx2 : x2 = dist v2 v0 ^ 2)
+          (hx6 : x6 = dist v1 v2 ^ 2)
+          (hups : 0 < upsX x1 x3 x5) (hs : s = 1 ∨ s = -1),
+          ContinuousAt (fun q => mkPlanar2 v0 v1 q x1 x2 x3 x5 x6 s) v2
+    ) ∧
+    -- 21. SUR_MOD_FUN_p17 (LA17:876; HOL `SUR_MOD_FUN`)
+    (∀ (k p p' : ℕ) (hk : k ≠ 0)
+    ,
+          ∃ i : ℕ, (i + p) % k = p' % k
+    ) ∧
+    -- 22. TRANS_DIAG_p17 (LA17:888; HOL `TRANS_DIAG`)
+    (∀ (k i p p' q q' : ℕ) (hk : k ≠ 0)
+          (h1 : (i + p) % k = p' % k) (h2 : p' + q = p + q'),
+          (i + q) % k = q' % k
+    ) ∧
+    -- 23. scs_components_p17 (LA17:898; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39)
+    ,
+          ScsV39.mk s.k s.d s.a s.am s.bm s.b s.J s.lo s.hi s.str = s
+    ) ∧
+    -- 24. scs_inj_p17 (LA17:904; no HOL anchor line in file docstring)
+    (∀ (s s' : ScsV39) (h1 : scsBasicV39 s) (h1' : scsBasicV39 s')
+          (hd : s.d = s'.d) (hk : s.k = s'.k) (ha : s.a = s'.a) (hb : s.b = s'.b),
+          s = s'
+    ) ∧
+    -- 25. DIAG_PSORT1_p17 (LA17:910 (autoImplicit parameter leak p'; statement = probe printer dump verbatim (complete signature)); HOL `DIAG_PSORT1`)
+    (∀ {p' : ℕ} (k i p i' j q' q : ℕ),
+          k ≠ 0 →
+            (i + p) % k = p' % k →
+              p' + q = p + q' → psort k (i', j) = psort k (p, q) → psort k (i + i', i + j) = psort k (p', q')
+    ) ∧
+    -- 26. DIAG_PSORT2_p17 (LA17:929 (autoImplicit parameter leak p'; statement = probe printer dump verbatim (complete signature)); HOL `DIAG_PSORT2`)
+    (∀ {p' : ℕ} (k i p i' j q' q : ℕ),
+          k ≠ 0 →
+            (i + p) % k = p' % k →
+              p' + q = p + q' → psort k (i + i', i + j) = psort k (p', q') → psort k (i', j) = psort k (p, q)
+    ) ∧
+    -- 27. DIAG_PSORT_p17 (LA17:950 (autoImplicit parameter leak p'; statement = probe printer dump verbatim (complete signature)); HOL `DIAG_PSORT`)
+    (∀ {p' : ℕ} (k i p i' j q' q : ℕ),
+          k ≠ 0 →
+            (i + p) % k = p' % k →
+              p' + q = p + q' → (psort k (i + i', i + j) = psort k (p', q') ↔ psort k (i', j) = psort k (p, q))
+    ) ∧
+    -- 28. TRANS_DIAG_SCS_p17 (LA17:959; no HOL anchor line in file docstring)
+    (∀ (k i' i j : ℕ) (hk : k ≠ 0)
+    ,
+          scsDiag k i' j ↔ scsDiag k (i + i') (i + j)
+    ) ∧
+    -- 29. A_EQ_PSORT_p17 (LA17:972; HOL `A_EQ_PSORT`)
+    (∀ (s : ScsV39) (i j p q : ℕ) (his : isScsV39 s)
+          (h : psort s.k (i, j) = psort s.k (p, q)),
+          s.a i j = s.a p q
+    ) ∧
+    -- 30. B_EQ_PSORT_p17 (LA17:983; HOL `B_EQ_PSORT`)
+    (∀ (s : ScsV39) (i j p q : ℕ) (his : isScsV39 s)
+          (h : psort s.k (i, j) = psort s.k (p, q)),
+          s.b i j = s.b p q
+    ) ∧
+    -- 31. PROPERTY_OF_K_SCS_p17 (LA17:995; HOL `PROPERTY_OF_K_SCS`)
+    (∀ (s : ScsV39) (his : isScsV39 s)
+    ,
+          s.k ≠ 0 ∧ 0 < s.k ∧ 1 < s.k ∧ 2 < s.k
+    ) ∧
+    -- 32. PSORT_PERIODIC_p17 (LA17:1001; HOL `PSORT_PERIODIC`)
+    (∀ (k i j : ℕ) (hk : k ≠ 0)
+    ,
+          psort k (i + k, j) = psort k (i, j) ∧ psort k (i, j + k) = psort k (i, j)
+    ) ∧
+    -- 33. DIAG_NOT_PSORT_p17 (LA17:1010; no HOL anchor line in file docstring)
+    (∀ (k i j : ℕ) (hk : k ≠ 0) (hd : scsDiag k i j)
+          (i' : ℕ),
+          ¬ (psort k (i, j) = psort k (i', i' + 1))
+    ) ∧
+    -- 34. YRTAFYH_p17 (LA17:1129; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (i j : ℕ), isScsV39 s → scsBasicV39 s →
+          3 < s.k → scsDiag s.k i j → s.a i j ≤ cstab →
+          isScsV39 (scsStabDiagV39 s i j) ∧ scsBasicV39 (scsStabDiagV39 s i j)
+    ) ∧
+    -- 35. STAB_IS_SCS_p17 (LA17:1159; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (i j : ℕ) (his : isScsV39 s)
+          (hbas : scsBasicV39 s) (hk : 3 < s.k) (hdiag : scsDiag s.k i j)
+          (ha : s.a i j ≤ cstab),
+          isScsV39 (scsStabDiagV39 s i j)
+    ) ∧
+    -- 36. COMPACT_SPHERE_0_p17 (LA17:1171; HOL `COMPACT_SPHERE_0`)
+    (∀ (a : ℝ)
+    ,
+          IsCompact {x : V3 | ‖x‖ = a}
+    ) ∧
+    -- 37. SEPARATE_CLOSED_CONES_p17 (LA17:1246; no HOL anchor line in file docstring)
+    (∀ (c d : Set V3) (hc : conicP17 c)
+          (hcc : IsClosed c) (hd : conicP17 d) (hdc : IsClosed d)
+          (hint : c ∩ d ⊆ ({0} : Set V3)),
+          ∃ e : ℝ, 0 < e ∧ ∀ x ∈ c, ∀ y ∈ d, dist x y ≥ e * max ‖x‖ ‖y‖
+    ) ∧
+    -- 38. AFF_GE_1_1_0_p17 (LA17:1267; HOL `AFF_GE_1_1_0`)
+    (∀ (v : V3) (hv : v ≠ (0:V3))
+    ,
+          affGe ({0} : Set V3) {v} = {y : V3 | ∃ t : ℝ, 0 ≤ t ∧ y = t • v}
+    ) ∧
+    -- 39. AFF_GE_1_2_0_p17 (LA17:1305; HOL `AFF_GE_1_2_0`)
+    (∀ (v w : V3) (hv : v ≠ (0:V3)) (hw : w ≠ (0:V3))
+    ,
+          affGe ({0} : Set V3) {v, w} =
+          {y : V3 | ∃ a b : ℝ, 0 ≤ a ∧ 0 ≤ b ∧ y = a • v + b • w}
+    ) ∧
+    -- 40. CONIC_AFF_GE_0_p17 (LA17:1373; no HOL anchor line in file docstring)
+    (∀ (s : Set V3) (hfin : s.Finite) (h0 : (0:V3) ∉ s)
+    ,
+          conicP17 (affGe ({0} : Set V3) s)
+    ) ∧
+    -- 41. GMLWKPK_p17 (LA17:2065; no HOL anchor line in file docstring)
+    (∀ (x : V3) (V : Set V3) (E : Set (Set V3)) (hE : Graph E)
+    ,
+          fan7 x V E ↔
+          ∀ e1 ∈ E ∪ {s | ∃ v ∈ V, s = {v}}, ∀ e2 ∈ E ∪ {s | ∃ v ∈ V, s = {v}},
+            (e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3)) ∧
+              (∀ v : V3, e1 ∩ e2 = {v} →
+                affGe {x} e1 ∩ affGe {x} e2 = affGe {x} ({v} : Set V3))
+    ) ∧
+    -- 42. GMLWKPK_ALT_p17 (LA17:2074; no HOL anchor line in file docstring)
+    (∀ (x : V3) (V : Set V3) (E : Set (Set V3)) (hE : Graph E)
+          (hx : ∀ e ∈ E, x ∉ e),
+          fan7 x V E ↔
+          ((∀ e1 ∈ E ∪ {s | ∃ v ∈ V, s = {v}}, ∀ e2 ∈ E ∪ {s | ∃ v ∈ V, s = {v}},
+              e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3)) ∧
+            (∀ e1 ∈ E, ∀ e2 ∈ E, ∀ v : V3, e1 ∩ e2 = {v} →
+              affGe {x} e1 ∩ affGe {x} e2 = affGe {x} ({v} : Set V3)))
+    ) ∧
+    -- 43. GMLWKPK_SIMPLE_p17 (LA17:2085; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (E : Set (Set V3)) (x : V3)
+          (hsup : ⋃₀ E ⊆ V) (hE : Graph E) (h6 : fan6 x V E)
+          (hx : ∀ e ∈ E, x ∉ e),
+          fan7 x V E ↔
+          ∀ e1 ∈ E ∪ {s | ∃ v ∈ V, s = {v}}, ∀ e2 ∈ E ∪ {s | ∃ v ∈ V, s = {v}},
+            e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3)
+    ) ∧
+    -- 44. lemma_1_p17 (LA17:2094; no HOL anchor line in file docstring)
+    (∀ (x : V3) (e : ℝ) (hx : x ≠ (0:V3)) (he : 0 < e)
+    ,
+          ∃ d : ℝ, 0 < d ∧ ∀ x' : V3, dist x x' < d →
+          ∀ z' ∈ affGe ({0} : Set V3) {x'}, ∃ z ∈ affGe ({0} : Set V3) {x},
+            ‖z' - z‖ ≤ e * ‖z‖
+    ) ∧
+    -- 45. lemma_2_p17 (LA17:2195; no HOL anchor line in file docstring)
+    (∀ (x y : V3) (e : ℝ)
+          (hnc : ¬ Collinear ℝ ({0, x, y} : Set V3)) (he : 0 < e),
+          ∃ d : ℝ, 0 < d ∧ ∀ x' y' : V3, dist x x' < d → dist y y' < d →
+          ∀ z' ∈ affGe ({0} : Set V3) {x', y'}, ∃ z ∈ affGe ({0} : Set V3) {x, y},
+            ‖z' - z‖ ≤ e * ‖z‖
+    ) ∧
+    -- 46. MINIMIZE_OVER_2_p17 (LA17:2321; HOL `MINIMIZE_OVER_2`)
+    (∀ {P Q : ℝ → Prop}
+          (h1 : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → P t)
+          (h2 : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → Q t),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → P t ∧ Q t
+    ) ∧
+    -- 47. MINIMIZE_OVER_STRONGER_p17 (LA17:2332; HOL `MINIMIZE_OVER_STRONGER`)
+    (∀ {P Q : ℝ → Prop} (hPQ : ∀ t : ℝ, P t → Q t)
+          (h1 : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → P t),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → Q t
+    ) ∧
+    -- 48. FAN7_SMALL_DEFORMATION_p17 (LA17:2628; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (E : Set (Set V3)) (a b : ℝ)
+          (phii : V3 → ℝ → V3) (hdef : Deformation phii V a b) (hfan : FAN 0 V E),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t → t < e →
+          fan7 (0:V3) ((fun v : V3 => phii v t) '' V)
+            ((fun e' => (fun v : V3 => phii v t) '' e') '' E)
+    ) ∧
+    -- 49. XRECQNS_p17 (LA17:3041; no HOL anchor line in file docstring)
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (f : V3 → ℝ → V3)
+          (hdef : Deformation f V a b) (hfan : FAN 0 V E),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t → t < e →
+          FAN (0:V3) ((fun v : V3 => f v t) '' V)
+            ((fun e' => (fun v : V3 => f v t) '' e') '' E)
+    ) :=
+    ⟨MOD_EQ_MOD_SHIFT_p17, SGIN_POW_EQ_p17, EYYPQDW_COPLANAR_p17, EYYPQDW_NORMV3_p17,
+      EYYPQDW_NORM_V3_V1_p17, EYYPQDW_SCALAR_POS_p17, LIFT_CONTINUOUS_ATREAL_p17,
+      LIFT_CONTINUOUS_ATREAL_I_p17, EYYPQDW_CONTINUOUS_AT_X_p17, EYYPQDW_CONTINUOUS_AT_V_p17,
+      V3_DEFOR_V1_EQV3_DEFOR_V2_p17, LIFT_UPS_CONTINUOUS_p17, MK_PLANAR_REP_p17, EYYPQDW_p17,
+      MK_PLANAR_V3_DEFOR_V1_p17, MK_PLANAR_V3_DEFOR_V1_FUN_p17, EYYPQDW2_p17,
+      MK_PLANAR_V3_DEFOR_V2_FUN_p17, lemma30000_p17, EYYPQDW3_p17, SUR_MOD_FUN_p17,
+      TRANS_DIAG_p17, @scs_components_p17, scs_inj_p17, @DIAG_PSORT1_p17, @DIAG_PSORT2_p17,
+      @DIAG_PSORT_p17, TRANS_DIAG_SCS_p17, A_EQ_PSORT_p17, B_EQ_PSORT_p17,
+      @PROPERTY_OF_K_SCS_p17, PSORT_PERIODIC_p17, DIAG_NOT_PSORT_p17, YRTAFYH_p17,
+      STAB_IS_SCS_p17, COMPACT_SPHERE_0_p17, SEPARATE_CLOSED_CONES_p17, AFF_GE_1_1_0_p17,
+      AFF_GE_1_2_0_p17, CONIC_AFF_GE_0_p17, GMLWKPK_p17, GMLWKPK_ALT_p17, GMLWKPK_SIMPLE_p17,
+      @lemma_1_p17, @lemma_2_p17, MINIMIZE_OVER_2_p17, MINIMIZE_OVER_STRONGER_p17,
+      FAN7_SMALL_DEFORMATION_p17, XRECQNS_p17⟩
+
+#print axioms la17_capstone_w1
 end Kepler.Text
