@@ -895,11 +895,95 @@ theorem wedge_ge_cross_p14 (v w : V3) (h : ¬ Collinear ℝ ({0, v, w} : Set V3)
     wedgeGe 0 (cross3 v w) v w = affGe ({0, cross3 v w} : Set V3) ({v, w} : Set V3) := by
   sorry
 
+/-- w5cA6: `sin (azim …) > 0` characterizes the `(0, π)` range (private
+twin of the LocalAuto21 `sin_azim_pos_p21`, kept local to avoid an import). -/
+private theorem w5cA6_sin_azim_pos (v1 v2 v3 v4 : V3) :
+    0 < Real.sin (azim v1 v2 v3 v4) ↔
+      (0 < azim v1 v2 v3 v4 ∧ azim v1 v2 v3 v4 < Real.pi) := by
+  have hnn : 0 ≤ azim v1 v2 v3 v4 := azim_nonneg v1 v2 v3 v4
+  have h2π : azim v1 v2 v3 v4 < 2 * Real.pi := azim_lt_two_pi v1 v2 v3 v4
+  constructor
+  · intro h
+    rcases lt_or_ge (azim v1 v2 v3 v4) Real.pi with hlt | hge
+    · refine ⟨?_, hlt⟩
+      by_contra hnonpos
+      have h0 : azim v1 v2 v3 v4 = 0 := le_antisymm (not_lt.mp hnonpos) hnn
+      rw [h0] at h
+      simp at h
+    · exfalso
+      have hpos : 0 ≤ azim v1 v2 v3 v4 - Real.pi := by linarith
+      have hle : azim v1 v2 v3 v4 - Real.pi ≤ Real.pi := by linarith
+      have hsn : 0 ≤ Real.sin (azim v1 v2 v3 v4 - Real.pi) :=
+        Real.sin_nonneg_of_nonneg_of_le_pi hpos hle
+      have hsub : Real.sin (azim v1 v2 v3 v4 - Real.pi) = -Real.sin (azim v1 v2 v3 v4) := by
+        rw [Real.sin_sub, Real.cos_pi, Real.sin_pi]
+        ring
+      rw [hsub] at hsn
+      linarith
+  · rintro ⟨h1, h2⟩
+    exact Real.sin_pos_of_mem_Ioo ⟨h1, h2⟩
+
 /-- HOL `azim_lt_pi_cross` (hl:107).  NEEDS: azim sign theory. -/
 theorem azim_lt_pi_cross_p14 (u1 u2 u3 : V3) :
     (0 < azim 0 u1 u2 u3 ∧ azim 0 u1 u2 u3 < Real.pi) ↔
       0 < (cross3 u1 u2) ⬝ᵥ u3 := by
-  sorry
+  have hdotcoe : (cross3 u1 u2) ⬝ᵥ u3 =
+      (crossProduct u1.ofLp u2.ofLp) ⬝ᵥ u3.ofLp := by
+    rw [dot3_eq_p14, coe_cross3_p14]
+  have hdeg : Collinear ℝ ({0, u1, u2} : Set V3) ∨
+      Collinear ℝ ({0, u1, u3} : Set V3) → (cross3 u1 u2) ⬝ᵥ u3 = 0 := by
+    rintro (hc | hc)
+    · have hz : cross3 u1 u2 = 0 := w5cA_collinear_cross3_eq hc
+      rw [hz, dot3_comm_p14, dot3_zero_right_p14]
+    · rcases eq_or_ne u1 0 with h0 | h0
+      · subst h0
+        have hz0 : cross3 (0 : V3) u2 = 0 := by
+          apply w5cA_collinear_cross3_eq
+          simpa using collinear2_p14 (0 : V3) u2
+        rw [hz0, dot3_comm_p14, dot3_zero_right_p14]
+      · obtain ⟨t, ht⟩ := smul_of_collinear0_p14 h0 hc
+        rw [ht]
+        simp only [coe_smul_p14]
+        rw [dot3_smul_right_p14, cross3_dotL_p14, mul_zero]
+  constructor
+  · rintro ⟨hpos, hlt⟩
+    have hnc12 : ¬ Collinear ℝ ({0, u1, u2} : Set V3) := by
+      intro hc
+      have hz : azim 0 u1 u2 u3 = 0 := by
+        unfold azim
+        exact if_pos (Or.inl (show Collinear3 0 u1 u2 from hc))
+      rw [hz] at hpos
+      exact absurd hpos (lt_irrefl 0)
+    have hnc13 : ¬ Collinear ℝ ({0, u1, u3} : Set V3) := by
+      intro hc
+      have hz : azim 0 u1 u2 u3 = 0 := by
+        unfold azim
+        exact if_pos (Or.inr (show Collinear3 0 u1 u3 from hc))
+      rw [hz] at hpos
+      exact absurd hpos (lt_irrefl 0)
+    obtain ⟨t, ht, hsin⟩ := JBDNJJB (u := u1) (v := u2) (w := u3) hnc12 hnc13
+    have hspos : 0 < Real.sin (azim 0 u1 u2 u3) :=
+      Real.sin_pos_of_pos_of_lt_pi hpos hlt
+    rw [hsin] at hspos
+    rw [hdotcoe]
+    exact pos_of_mul_pos_right hspos (le_of_lt ht)
+  · intro hd
+    have hnc12 : ¬ Collinear ℝ ({0, u1, u2} : Set V3) := by
+      intro hc
+      rw [hdeg (Or.inl hc)] at hd
+      exact absurd hd (lt_irrefl 0)
+    have hnc13 : ¬ Collinear ℝ ({0, u1, u3} : Set V3) := by
+      intro hc
+      rw [hdeg (Or.inr hc)] at hd
+      exact absurd hd (lt_irrefl 0)
+    obtain ⟨t, ht, hsin⟩ := JBDNJJB (u := u1) (v := u2) (w := u3) hnc12 hnc13
+    have hprod : 0 < t * ((crossProduct u1.ofLp u2.ofLp) ⬝ᵥ u3.ofLp) := by
+      rw [← hdotcoe]
+      exact mul_pos ht hd
+    have hspos : 0 < Real.sin (azim 0 u1 u2 u3) := by
+      rw [hsin]
+      exact hprod
+    exact (w5cA6_sin_azim_pos 0 u1 u2 u3).mp hspos
 
 /-- HOL `generic_alt` (hl:142).  NEEDS: generic wedge theory. -/
 theorem generic_alt_p14 (u v w : V3) (h1 : ¬ Collinear ℝ ({0, v, w} : Set V3))
@@ -970,7 +1054,25 @@ theorem vuy4_p14 (v u0 u1 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v} : Set V3))
     (h2 : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
     (h3 : v ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3)) :
     azim 0 (cross3 u0 u1) u0 v < Real.pi := by
-  sorry
+  obtain ⟨t0, t1, ht1, hv⟩ := vuy1_p14 v u0 u1 h1 h2 h3
+  have hApos : 0 < (cross3 u0 u1) ⬝ᵥ (cross3 u0 u1) := by
+    have h := inner_cross3_self_pos_p14 u0 u1 h2
+    rwa [inner_eq_dot] at h
+  have htriple : (cross3 (cross3 u0 u1) u0) ⬝ᵥ u1 =
+      (cross3 u0 u1) ⬝ᵥ (cross3 u0 u1) := by
+    rw [dot3_eq_p14, dot3_eq_p14, coe_cross3_p14, coe_cross3_p14]
+    conv_lhs => rw [dotProduct_comm]
+    rw [triple_product_permutation]
+  have hzero : (cross3 (cross3 u0 u1) u0) ⬝ᵥ u0 = 0 := cross3_dotR_p14 _ _
+  have hexp : (cross3 (cross3 u0 u1) u0) ⬝ᵥ v = t1 * ((cross3 u0 u1) ⬝ᵥ (cross3 u0 u1)) := by
+    rw [hv]
+    simp only [coe_add_p14, coe_smul_p14]
+    rw [dot3_add_right_p14, dot3_smul_right_p14, dot3_smul_right_p14, hzero, htriple]
+    ring
+  have hpos : 0 < (cross3 (cross3 u0 u1) u0) ⬝ᵥ v := by
+    rw [hexp]
+    exact mul_pos ht1 hApos
+  exact ((azim_lt_pi_cross_p14 (cross3 u0 u1) u0 v).mpr hpos).2
 
 /-- HOL `cross_independent` (hl:340). -/
 theorem cross_independent_p14 (u0 u1 : V3) (h : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
@@ -2312,7 +2414,22 @@ theorem zlz_wedge_skolem_p14 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3
       0 < e3 ∧ ∀ t, -e3 < t ∧ t < e3 →
         ((fun v => f v t) '' V) ⊆ wedgeInFanGe (f x.1 t, f x.2 t)
           ((fun s => (fun v => f v t) '' s) '' E) := by
-  sorry
+  -- the fan axioms give `V` finite and nonempty
+  obtain ⟨hfan, -⟩ := h1.1
+  obtain ⟨hVfin, hVne⟩ := hfan.2.2.1
+  intro x
+  by_cases hxFF : x ∈ FF
+  · -- skolemize the pointwise `e3` and take its minimum over the finite `V`
+    choose e3 he3 using fun v => h2 x v
+    obtain ⟨v₁, hv₁⟩ : V.Nonempty := Set.nonempty_iff_ne_empty.mpr hVne
+    obtain ⟨v₀, hv₀, hmin⟩ := Set.exists_min_image V e3 hVfin ⟨v₁, hv₁⟩
+    have hpos : 0 < e3 v₀ := (he3 v₀ ⟨hxFF, hv₀⟩).1
+    refine ⟨e3 v₀, fun _ => ⟨hpos, ?_⟩⟩
+    intro t ht y hy
+    obtain ⟨v, hv, rfl⟩ := hy
+    have hle : e3 v₀ ≤ e3 v := hmin v hv
+    exact (he3 v ⟨hxFF, hv⟩).2 t ⟨by linarith [ht.1], by linarith [ht.2]⟩
+  · exact ⟨1, fun h => absurd h hxFF⟩
 
 /-- HOL `wedge_ge_refl` (hl:2076). -/
 theorem wedge_ge_refl_p14 (v1 v2 v3 v4 : V3) : v2 ∈ wedgeGe v1 v2 v3 v4 := by
