@@ -58,12 +58,14 @@ import Kepler.Text.LocalAuto1
 import Kepler.Text.PackingAuto5
 import Kepler.Text.PolyAuto1
 import Mathlib
+import Kepler.Text.V3Coe
 
 set_option maxHeartbeats 5000000
 
 namespace Kepler.Text
 
 open Kepler.Geom Set Classical
+open Kepler.Text.V3Coe
 
 /-! ## Section 0: `_p14` encoding kit -/
 
@@ -1497,6 +1499,347 @@ private theorem w5cA3_continuousAt_of_cos_sin {θ : ℝ → ℝ} {t₀ : ℝ}
   linarith
 
 
+/-! ## w5cA3 kit (waves 3-5): azimuth cos/sin, pointwise continuity,
+and the coplanar 0-or-π dichotomy consumed by `azim_0_as_closed_p14`. -/
+
+/-- w5cA3 波3: 非退化 `azim 0 v2 v3 v4` 的 cos/sin 点式刻画（帧极表示展开）：
+垂直分量 `p = v3 − proj`, `q = v4 − proj` 满足
+`cos θ · ‖p‖‖q‖ = p ⬝ q` 与 `sin θ · ‖v2‖‖p‖‖q‖ = (v3 × v4) ⬝ v2`。 -/
+private theorem w5cA3_azim_cos_sin (v2 v3 v4 : V3) (hv2 : v2 ≠ 0)
+    (h1 : ¬ Collinear3 0 v2 v3) (h2 : ¬ Collinear3 0 v2 v4) :
+    Real.cos (azim 0 v2 v3 v4) *
+        (‖v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2‖ *
+          ‖v4 - ((v4 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2‖)
+      = inner ℝ (v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2)
+          (v4 - ((v4 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2)
+      ∧ Real.sin (azim 0 v2 v3 v4) *
+          (‖v2‖ * (‖v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2‖ *
+            ‖v4 - ((v4 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2‖))
+        = (cross3 v3 v4) ⬝ᵥ v2 := by
+  obtain ⟨E1, E2, E3, hon, halign⟩ := exists_on3_eq_smul v2 hv2
+  have hax : (v2 - 0 : V3) = dist v2 0 • E3 := by
+    rw [dist_eq_norm, sub_zero]; exact halign
+  have hcopy := hon
+  obtain ⟨o11, o22, o33, o12, o13, o23, -⟩ := hcopy
+  have hv2E1 : v2 ⬝ᵥ E1 = 0 := by
+    rw [halign, dot3_smul_left_p14, dot3_comm_p14, o13, mul_zero]
+  have hv2E2 : v2 ⬝ᵥ E2 = 0 := by
+    rw [halign, dot3_smul_left_p14, dot3_comm_p14, o23, mul_zero]
+  have hEv21 : E1 ⬝ᵥ v2 = 0 := by rw [dot3_comm_p14, hv2E1]
+  have hEv22 : E2 ⬝ᵥ v2 = 0 := by rw [dot3_comm_p14, hv2E2]
+  have hv22ne : v2 ⬝ᵥ v2 ≠ 0 := ne_of_gt (dot3_self_pos_p14 hv2)
+  obtain ⟨-, -, hframe⟩ := azim_master 0 v2 v3 v4
+  obtain ⟨hA, hB, hframe⟩ := hframe
+  obtain ⟨psi, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframe E1 E2 E3 hon hax hv2
+  have hr1' : 0 < r1 := hr1 h1
+  have hr2' : 0 < r2 := hr2 h2
+  set theta := azim 0 v2 v3 v4 with hthetadef
+  have hv3 : v3 = (r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2 + hA • v2 := by
+    simpa only [sub_zero] using hrep1
+  have hv4 : v4 = (r2 * Real.cos (psi + theta)) • E1
+      + (r2 * Real.sin (psi + theta)) • E2 + hB • v2 := by
+    simpa only [sub_zero] using hrep2
+  have hv3d : v3 ⬝ᵥ v2 = hA * (v2 ⬝ᵥ v2) := by
+    rw [hv3, dot3_add_left_p14, dot3_add_left_p14, dot3_smul_left_p14,
+      dot3_smul_left_p14, dot3_smul_left_p14, hEv21, hEv22, mul_zero, mul_zero,
+      zero_add, zero_add]
+  have hv4d : v4 ⬝ᵥ v2 = hB * (v2 ⬝ᵥ v2) := by
+    rw [hv4, dot3_add_left_p14, dot3_add_left_p14, dot3_smul_left_p14,
+      dot3_smul_left_p14, dot3_smul_left_p14, hEv21, hEv22, mul_zero, mul_zero,
+      zero_add, zero_add]
+  have hdivA : (hA * (v2 ⬝ᵥ v2)) / (v2 ⬝ᵥ v2) = hA := by
+    rw [mul_div_assoc, div_self hv22ne, mul_one]
+  have hdivB : (hB * (v2 ⬝ᵥ v2)) / (v2 ⬝ᵥ v2) = hB := by
+    rw [mul_div_assoc, div_self hv22ne, mul_one]
+  have hp : v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2
+      = (r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2 := by
+    rw [hv3d, hdivA, hv3]
+    module
+  have hq : v4 - ((v4 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2
+      = (r2 * Real.cos (psi + theta)) • E1 + (r2 * Real.sin (psi + theta)) • E2 := by
+    rw [hv4d, hdivB, hv4]
+    module
+  have hE1u : ‖E1‖ = 1 := by
+    have h2 : ‖E1‖ ^ 2 = (1 : ℝ) ^ 2 := by rw [norm_sq_eq_dot, o11, one_pow]
+    rcases sq_eq_sq_iff_eq_or_eq_neg.mp h2 with hh | hh
+    · exact hh
+    · linarith [norm_nonneg E1]
+  have hE2u : ‖E2‖ = 1 := by
+    have h2 : ‖E2‖ ^ 2 = (1 : ℝ) ^ 2 := by rw [norm_sq_eq_dot, o22, one_pow]
+    rcases sq_eq_sq_iff_eq_or_eq_neg.mp h2 with hh | hh
+    · exact hh
+    · linarith [norm_nonneg E2]
+  have o21 : E2 ⬝ᵥ E1 = 0 := by rw [dot3_comm_p14, o12]
+  have hpn : ‖(r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2‖ = r1 := by
+    have hi : inner ℝ ((r1 * Real.cos psi) • E1) ((r1 * Real.sin psi) • E2) = 0 := by
+      rw [inner_eq_dot, dot3_smul_left_p14, dot3_comm_p14, dot3_smul_left_p14, o21,
+        mul_zero, mul_zero]
+    have hsq2 : ‖(r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2‖ ^ 2
+        = r1 ^ 2 := by
+      rw [pow_two, norm_add_sq_eq_norm_sq_add_norm_sq_real hi, norm_smul, norm_smul,
+        hE1u, hE2u, mul_one, mul_one, Real.norm_eq_abs, Real.norm_eq_abs, ← sq, ← sq,
+        sq_abs, sq_abs, mul_pow, mul_pow, ← mul_add,
+        add_comm (Real.cos psi ^ 2) (Real.sin psi ^ 2),
+        Real.sin_sq_add_cos_sq psi, mul_one]
+    rcases sq_eq_sq_iff_eq_or_eq_neg.mp hsq2 with hh | hh
+    · exact hh
+    · linarith [hh, norm_nonneg ((r1 * Real.cos psi) • E1
+        + (r1 * Real.sin psi) • E2)]
+  have hqn : ‖(r2 * Real.cos (psi + theta)) • E1
+      + (r2 * Real.sin (psi + theta)) • E2‖ = r2 := by
+    have hi : inner ℝ ((r2 * Real.cos (psi + theta)) • E1)
+        ((r2 * Real.sin (psi + theta)) • E2) = 0 := by
+      rw [inner_eq_dot, dot3_smul_left_p14, dot3_comm_p14, dot3_smul_left_p14, o21,
+        mul_zero, mul_zero]
+    have hsq2 : ‖(r2 * Real.cos (psi + theta)) • E1
+        + (r2 * Real.sin (psi + theta)) • E2‖ ^ 2 = r2 ^ 2 := by
+      rw [pow_two, norm_add_sq_eq_norm_sq_add_norm_sq_real hi, norm_smul, norm_smul,
+        hE1u, hE2u, mul_one, mul_one, Real.norm_eq_abs, Real.norm_eq_abs, ← sq, ← sq,
+        sq_abs, sq_abs, mul_pow, mul_pow, ← mul_add,
+        add_comm (Real.cos (psi + theta) ^ 2) (Real.sin (psi + theta) ^ 2),
+        Real.sin_sq_add_cos_sq (psi + theta), mul_one]
+    rcases sq_eq_sq_iff_eq_or_eq_neg.mp hsq2 with hh | hh
+    · exact hh
+    · linarith [hh, norm_nonneg ((r2 * Real.cos (psi + theta)) • E1
+        + (r2 * Real.sin (psi + theta)) • E2)]
+  -- 余弦主式（norm_add_sq_real 路线 + B6-unify）
+  have hcos : Real.cos theta * (r1 * r2)
+      = inner ℝ ((r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2)
+          ((r2 * Real.cos (psi + theta)) • E1
+            + (r2 * Real.sin (psi + theta)) • E2) := by
+    have hcs := Real.cos_sub (psi + theta) psi
+    rw [show psi + theta - psi = theta from by ring] at hcs
+    have hXYnorm : ((r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2)
+        + ((r2 * Real.cos (psi + theta)) • E1
+          + (r2 * Real.sin (psi + theta)) • E2)
+        = ((r1 * Real.cos psi + r2 * Real.cos (psi + theta)) • E1
+          + ((r1 * Real.sin psi + r2 * Real.sin (psi + theta)) • E2)) := by
+      module
+    have hicomb : inner ℝ ((r1 * Real.cos psi + r2 * Real.cos (psi + theta)) • E1)
+        ((r1 * Real.sin psi + r2 * Real.sin (psi + theta)) • E2) = 0 := by
+      rw [inner_eq_dot, dot3_smul_left_p14, dot3_comm_p14, dot3_smul_left_p14, o21,
+        mul_zero, mul_zero]
+    have hcomb : ‖((r1 * Real.cos psi + r2 * Real.cos (psi + theta)) • E1
+        + ((r1 * Real.sin psi + r2 * Real.sin (psi + theta)) • E2))‖ ^ 2
+        = (r1 * Real.cos psi + r2 * Real.cos (psi + theta)) ^ 2
+          + (r1 * Real.sin psi + r2 * Real.sin (psi + theta)) ^ 2 := by
+      rw [pow_two, norm_add_sq_eq_norm_sq_add_norm_sq_real hicomb, norm_smul, norm_smul,
+        hE1u, hE2u, mul_one, mul_one, Real.norm_eq_abs, Real.norm_eq_abs, ← sq, ← sq,
+        sq_abs, sq_abs]
+    have h1 := norm_add_sq_real ((r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2)
+      ((r2 * Real.cos (psi + theta)) • E1 + (r2 * Real.sin (psi + theta)) • E2)
+    rw [hXYnorm, hcomb, hpn, hqn] at h1
+    have hA' : ((r1 * Real.cos psi + r2 * Real.cos (psi + theta)) ^ 2
+          + (r1 * Real.sin psi + r2 * Real.sin (psi + theta)) ^ 2)
+        = r1 ^ 2 + r2 ^ 2 + 2 * ((Real.cos (psi + theta) * Real.cos psi
+            + Real.sin (psi + theta) * Real.sin psi) * (r1 * r2)) := by
+      nlinarith [Real.sin_sq_add_cos_sq psi, Real.sin_sq_add_cos_sq (psi + theta)]
+    have hAB : inner ℝ ((r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2)
+        ((r2 * Real.cos (psi + theta)) • E1 + (r2 * Real.sin (psi + theta)) • E2)
+        = (r1 * r2) * (Real.cos (psi + theta) * Real.cos psi
+          + Real.sin (psi + theta) * Real.sin psi) := by
+      rw [inner_eq_dot]
+      simp only [v3coe, dotProduct_add, add_dotProduct, dotProduct_smul, smul_dotProduct,
+        smul_eq_mul, o11, o12, o21, o22, mul_one, mul_zero, zero_mul, zero_add]
+      ring
+    rw [hA'] at h1
+    rw [hAB] at h1
+    rw [hcs]
+    linarith [h1]
+  -- 正弦主式：先算标架基元的 triple product
+  have hcoev2 : ((v2 : V3) : Fin 3 → ℝ) = ‖v2‖ • ((E3 : V3) : Fin 3 → ℝ) := by
+    have hE3u : ‖E3‖ = 1 := by
+      have h2 : ‖E3‖ ^ 2 = (1 : ℝ) ^ 2 := by rw [norm_sq_eq_dot, o33, one_pow]
+      rcases sq_eq_sq_iff_eq_or_eq_neg.mp h2 with hh | hh
+      · exact hh
+      · linarith [norm_nonneg E3]
+    rw [congrArg (fun w : V3 => ((w : V3) : Fin 3 → ℝ)) halign, coe_smul_p14]
+  have hE12 : (cross3 E1 E2) ⬝ᵥ v2 = ‖v2‖ := by
+    rw [dot3_eq_p14, coe_cross3_p14, on3_cross hon, hcoev2]
+    simp only [dotProduct_smul, smul_eq_mul, ← dot3_eq_p14, o33, mul_one]
+  have hE21 : (cross3 E2 E1) ⬝ᵥ v2 = -‖v2‖ := by
+    rw [dot3_eq_p14, coe_cross3_p14, ← cross_anticomm, neg_dotProduct, on3_cross hon,
+      hcoev2]
+    simp only [dotProduct_smul, smul_eq_mul, ← dot3_eq_p14, o33, mul_one]
+  have hsin : (cross3 v3 v4) ⬝ᵥ v2
+      = ‖v2‖ * (r1 * r2 * (Real.cos psi * Real.sin (psi + theta)
+          - Real.sin psi * Real.cos (psi + theta))) := by
+    rw [hv3, hv4]
+    simp only [w5cA3_triple_addL, w5cA3_triple_smulL, w5cA3_triple_addR,
+      w5cA3_triple_smulR, w5cA3_triple_crossL, w5cA3_triple_crossR,
+      w5cA3_triple_same, mul_zero, zero_mul, add_zero, zero_add]
+    rw [hE12, hE21]
+    ring
+  have hss := Real.sin_sub (psi + theta) psi
+  rw [show psi + theta - psi = theta from by ring] at hss
+  refine ⟨?_, ?_⟩
+  · rw [hp, hq, hpn, hqn, hcos]
+    canonicalize
+  · canonicalGoal
+    rw [hp, hq, hpn, hqn, hsin, hss]
+    canonicalize
+    ring
+
+/-- w5cA3: azim 沿连续曲线的逐点连续性（轴点非退化 + 该点 azim ≠ 0）。 -/
+private theorem w5cA3_continuousAt_azim {v2 v3 v4 : ℝ → V3} {t₀ : ℝ}
+    (hv2c : ContinuousAt v2 t₀) (hv3c : ContinuousAt v3 t₀)
+    (hv4c : ContinuousAt v4 t₀)
+    (h5 : ¬ Collinear ℝ ({0, v2 t₀, v3 t₀} : Set V3))
+    (h6 : ¬ Collinear ℝ ({0, v2 t₀, v4 t₀} : Set V3))
+    (h7 : azim 0 (v2 t₀) (v3 t₀) (v4 t₀) ≠ 0) :
+    ContinuousAt (fun t => azim 0 (v2 t) (v3 t) (v4 t)) t₀ := by
+  have hv20 : v2 t₀ ≠ 0 := by
+    intro hz
+    apply h5
+    rw [hz]
+    simpa using collinear2_p14 0 (v3 t₀)
+  set p : ℝ → V3 := fun t => v3 t - ((v3 t ⬝ᵥ v2 t) / (v2 t ⬝ᵥ v2 t)) • v2 t
+    with hpdef
+  set q : ℝ → V3 := fun t => v4 t - ((v4 t ⬝ᵥ v2 t) / (v2 t ⬝ᵥ v2 t)) • v2 t
+    with hqdef
+  have hdotc2 : ContinuousAt (fun t => v2 t ⬝ᵥ v2 t) t₀ :=
+    w5cA2_continuousAt_dot hv2c hv2c
+  have hd2ne : v2 t₀ ⬝ᵥ v2 t₀ ≠ 0 := ne_of_gt (dot3_self_pos_p14 hv20)
+  have hpc : ContinuousAt p t₀ := by
+    have hd1 : ContinuousAt (fun t => v3 t ⬝ᵥ v2 t) t₀ :=
+      w5cA2_continuousAt_dot hv3c hv2c
+    exact hv3c.sub ((hd1.div hdotc2 hd2ne).smul hv2c)
+  have hqc : ContinuousAt q t₀ := by
+    have hd1 : ContinuousAt (fun t => v4 t ⬝ᵥ v2 t) t₀ :=
+      w5cA2_continuousAt_dot hv4c hv2c
+    exact hv4c.sub ((hd1.div hdotc2 hd2ne).smul hv2c)
+  have hpne : p t₀ ≠ 0 := by
+    intro hz
+    exact absurd hz (w5cA3_perp_ne_zero (v2 t₀) (v3 t₀) hv20 h5)
+  have hqne : q t₀ ≠ 0 := by
+    intro hz
+    exact absurd hz (w5cA3_perp_ne_zero (v2 t₀) (v4 t₀) hv20 h6)
+  have hG1 : ContinuousAt (fun t => p t ⬝ᵥ q t) t₀ :=
+    w5cA2_continuousAt_dot hpc hqc
+  have hG2 : ContinuousAt (fun t => ‖p t‖) t₀ := hpc.norm
+  have hG3 : ContinuousAt (fun t => ‖q t‖) t₀ := hqc.norm
+  have hG4 : ContinuousAt (fun t => (cross3 (v3 t) (v4 t)) ⬝ᵥ v2 t) t₀ :=
+    w5cA2_continuousAt_dot (w5cA2_continuousAt_cross3 hv3c hv4c) hv2c
+  have hG5 : ContinuousAt (fun t => ‖v2 t‖) t₀ := hv2c.norm
+  have hdene : ‖p t₀‖ * ‖q t₀‖ ≠ 0 :=
+    mul_ne_zero (fun hz => hpne (norm_eq_zero.mp hz))
+      (fun hz => hqne (norm_eq_zero.mp hz))
+  have hdene2 : ‖v2 t₀‖ * (‖p t₀‖ * ‖q t₀‖) ≠ 0 :=
+    mul_ne_zero (fun hz => hv20 (norm_eq_zero.mp hz)) hdene
+  have hident : ∀ t, v2 t ≠ 0 → ¬ Collinear3 0 (v2 t) (v3 t) →
+      ¬ Collinear3 0 (v2 t) (v4 t) →
+      Real.cos (azim 0 (v2 t) (v3 t) (v4 t))
+          = (p t ⬝ᵥ q t) / (‖p t‖ * ‖q t‖)
+        ∧ Real.sin (azim 0 (v2 t) (v3 t) (v4 t))
+          = (cross3 (v3 t) (v4 t) ⬝ᵥ v2 t)
+            / (‖v2 t‖ * (‖p t‖ * ‖q t‖)) := by
+    intro t hv2t hn1 hn2
+    obtain ⟨hc, hs⟩ := w5cA3_azim_cos_sin (v2 t) (v3 t) (v4 t) hv2t hn1 hn2
+    have hden : ‖p t‖ * ‖q t‖ ≠ 0 :=
+      mul_ne_zero (fun hz => (w5cA3_perp_ne_zero (v2 t) (v3 t) hv2t hn1)
+          (norm_eq_zero.mp hz))
+        (fun hz => (w5cA3_perp_ne_zero (v2 t) (v4 t) hv2t hn2)
+          (norm_eq_zero.mp hz))
+    refine ⟨?_, ?_⟩
+    · refine mul_right_cancel₀ hden ?_
+      rw [div_mul_cancel₀ _ hden]
+      rw [← inner_eq_dot]
+      exact hc
+    · refine mul_right_cancel₀ (mul_ne_zero (fun hz => hv2t (norm_eq_zero.mp hz)) hden) ?_
+      rw [div_mul_cancel₀ _ (mul_ne_zero (fun hz => hv2t (norm_eq_zero.mp hz)) hden)]
+      exact hs
+  have hnc1 : ContinuousAt (fun t => ‖cross3 (v2 t) (v3 t)‖) t₀ :=
+    (w5cA2_continuousAt_cross3 hv2c hv3c).norm
+  have hnc2 : ContinuousAt (fun t => ‖cross3 (v2 t) (v4 t)‖) t₀ :=
+    (w5cA2_continuousAt_cross3 hv2c hv4c).norm
+  have hne1 : ‖cross3 (v2 t₀) (v3 t₀)‖ ≠ 0 :=
+    ne_of_gt (norm_pos_iff.mpr (cross3_ne_p14 h5))
+  have hne2 : ‖cross3 (v2 t₀) (v4 t₀)‖ ≠ 0 :=
+    ne_of_gt (norm_pos_iff.mpr (cross3_ne_p14 h6))
+  have hne3 : ‖v2 t₀‖ ≠ 0 := ne_of_gt (norm_pos_iff.mpr hv20)
+  obtain ⟨eA, heA, hbA⟩ := w5cA2_eventually_ne hnc1 hne1
+  obtain ⟨eB, heB, hbB⟩ := w5cA2_eventually_ne hnc2 hne2
+  obtain ⟨eC, heC, hbC⟩ := w5cA2_eventually_ne hG5 hne3
+  have htri : ∀ t, dist t t₀ < min eA (min eB eC) →
+      v2 t ≠ 0 ∧ ¬ Collinear3 0 (v2 t) (v3 t) ∧ ¬ Collinear3 0 (v2 t) (v4 t) := by
+    intro t ht
+    have s1 : |t₀ - t| < eA := by
+      rw [← Real.dist_eq, dist_comm]
+      exact lt_of_lt_of_le ht (min_le_left _ _)
+    have s2 : |t₀ - t| < eB := by
+      rw [← Real.dist_eq, dist_comm]
+      exact lt_of_lt_of_le ht (le_trans (min_le_right _ _) (min_le_left _ _))
+    have s3 : |t₀ - t| < eC := by
+      rw [← Real.dist_eq, dist_comm]
+      exact lt_of_lt_of_le ht (le_trans (min_le_right _ _) (min_le_right _ _))
+    refine ⟨fun hz => hbC t s3 (by rw [hz, norm_zero]), fun hcol =>
+      hbA t s1 (by rw [w5cA2_collinear0_iff_cross.mp hcol, norm_zero]),
+      fun hcol => hbB t s2 (by rw [w5cA2_collinear0_iff_cross.mp hcol, norm_zero])⟩
+  have hcos2 : ContinuousAt (fun t => Real.cos (azim 0 (v2 t) (v3 t) (v4 t))) t₀ := by
+    refine (hG1.div (hG2.mul hG3) hdene).congr (Filter.eventually_of_mem
+      (Metric.ball_mem_nhds t₀ (lt_min heA (lt_min heB heC))) (fun t ht => ?_))
+    obtain ⟨hv2t, hn1, hn2⟩ := htri t ht
+    exact (hident t hv2t hn1 hn2).1.symm
+  have hsin2 : ContinuousAt (fun t => Real.sin (azim 0 (v2 t) (v3 t) (v4 t))) t₀ := by
+    refine (hG4.div (hG5.mul (hG2.mul hG3)) hdene2).congr (Filter.eventually_of_mem
+      (Metric.ball_mem_nhds t₀ (lt_min heA (lt_min heB heC))) (fun t ht => ?_))
+    obtain ⟨hv2t, hn1, hn2⟩ := htri t ht
+    exact (hident t hv2t hn1 hn2).2.symm
+  exact w5cA3_continuousAt_of_cos_sin
+    (fun t => azim_nonneg 0 (v2 t) (v3 t) (v4 t))
+    (fun t => azim_lt_two_pi 0 (v2 t) (v3 t) (v4 t)) hcos2 hsin2
+    (lt_of_le_of_ne (azim_nonneg 0 (v2 t₀) (v3 t₀) (v4 t₀)) (Ne.symm h7))
+
+/-- w5cA3: 共面四点组（含原点）的 azim 只能是 0 或 π。 -/
+private theorem w5cA3_azim_0_or_pi (v2 v3 v4 : V3) (hv2 : v2 ≠ 0)
+    (h1 : ¬ Collinear3 0 v2 v3) (h2 : ¬ Collinear3 0 v2 v4)
+    (hcop : Coplanar ({0, v2, v3, v4} : Set V3)) :
+    azim 0 v2 v3 v4 = 0 ∨ azim 0 v2 v3 v4 = Real.pi := by
+  by_cases hc1 : Collinear3 0 v2 v3
+  · exact Or.inl (by unfold azim; rw [if_pos (Or.inl hc1)])
+  by_cases hc2 : Collinear3 0 v2 v4
+  · exact Or.inl (by unfold azim; rw [if_pos (Or.inr hc2)])
+  obtain ⟨h1s, h2s⟩ : ¬ Collinear ℝ ({0, v2, v3} : Set V3) ∧
+      ¬ Collinear ℝ ({0, v2, v4} : Set V3) := ⟨h1, h2⟩
+  have hv20 : v2 ≠ 0 := fun hz => h1s (by rw [hz]; simpa using collinear2_p14 0 v3)
+  have hpne := w5cA3_perp_ne_zero v2 v3 hv20 h1
+  have hqne := w5cA3_perp_ne_zero v2 v4 hv20 h2
+  have hv2E1 : v2 ⬝ᵥ cross3 v3 v4 = 0 := by
+    simpa only [v3coe] using (w5cA2_coplanar_triple).mp hcop
+  rw [dot3_comm_p14] at hv2E1
+  obtain ⟨hc, hs⟩ := w5cA3_azim_cos_sin v2 v3 v4 hv20 h1 h2
+  rw [hv2E1] at hs
+  have hs0 : Real.sin (azim 0 v2 v3 v4) = 0 := by
+    rcases mul_eq_zero.mp hs with h | h
+    · exact h
+    · have hnz := mul_ne_zero (mul_ne_zero (fun hz => hv20 (norm_eq_zero.mp hz))
+          (fun hz => hpne (norm_eq_zero.mp hz)))
+        (fun hz => hqne (norm_eq_zero.mp hz))
+      rw [mul_assoc] at hnz
+      exact absurd h hnz
+  have hθlt : azim 0 v2 v3 v4 < 2 * Real.pi := azim_lt_two_pi 0 v2 v3 v4
+  have hθnn : 0 ≤ azim 0 v2 v3 v4 := azim_nonneg 0 v2 v3 v4
+  obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp hs0
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+  · have hle : (n : ℝ) ≤ -1 := by
+      exact_mod_cast (show (n : ℤ) ≤ -1 from by omega)
+    have hnp : (n : ℝ) * Real.pi ≤ (-1 : ℝ) * Real.pi :=
+      mul_le_mul_of_nonneg_right hle (by positivity)
+    rw [hn] at hnp
+    linarith [Real.pi_pos]
+  · exact Or.inl (by rw [show (n : ℝ) = 0 from by exact_mod_cast hzero, zero_mul] at hn; linarith)
+  · have hge : (n : ℝ) ≥ 1 := by
+      exact_mod_cast (show (n : ℤ) ≥ 1 from by omega)
+    have hle : (n : ℝ) ≤ 1 := by
+      have h1x : (n : ℝ) * Real.pi < 2 * Real.pi := by rwa [hn]
+      have hpi : (0 : ℝ) < Real.pi := Real.pi_pos
+      have hn2 : (n : ℝ) < 2 := lt_of_mul_lt_mul_right h1x (le_of_lt hpi)
+      exact_mod_cast (show (n : ℤ) ≤ 1 from by
+        have hn2' : n < 2 := by exact_mod_cast hn2
+        omega)
+    have hn1 : (n : ℝ) = 1 := by linarith
+    refine Or.inr (by rw [show azim 0 v2 v3 v4 = Real.pi from by
+      rw [hn1] at hn; linarith])
 /-- HOL `azim_0_as_closed` (hl:972).  NEEDS: azim-zero coplanarity theory. -/
 theorem azim_0_as_closed_p14 (v2 v3 v4 : V3)
     (h1 : ¬ Collinear ℝ ({0, v2, v3} : Set V3))
@@ -1504,7 +1847,170 @@ theorem azim_0_as_closed_p14 (v2 v3 v4 : V3)
     azim 0 v2 v3 v4 = 0 ↔
       Coplanar ({0, v2, v3, v4} : Set V3) ∧
         0 ≤ (cross3 (cross3 v2 v3) v2) ⬝ᵥ v4 := by
-  sorry
+  have hv2n : v2 ≠ 0 := by
+    intro hz; apply h1; rw [hz]; simpa using collinear2_p14 0 v3
+  have hv3n : v3 ≠ 0 := by
+    intro hz; apply h1; rw [hz]; simpa using collinear2_p14 v2 0
+  have hv4n : v4 ≠ 0 := by
+    intro hz; apply h2; rw [hz]; simpa using collinear2_p14 v2 0
+  constructor
+  · intro h0
+    have hmem := (azim_eq_zero_iff (v0 := 0) (v1 := v2) (w := v3) (x := v4) h1 h2).mp h0
+    obtain ⟨c, hc, k, hvk⟩ := (affGt_pair_iff (v0 := 0) (v1 := v2) (x := v4) (y := v3)
+      (Ne.symm hv2n) hv4n (fun heq => h2 (by rw [heq]; simpa using collinear2_p14 0 v2))) |>.mp hmem
+    have hv3s : v3 = c • v4 + k • v2 := by simpa only [sub_zero] using hvk
+    refine ⟨?_, ?_⟩
+    · rw [w5cA2_coplanar_triple]
+      simp only [sub_zero]
+      rw [hv3s, dot3_comm_p14, w5cA3_triple_addL, w5cA3_triple_smulL,
+        w5cA3_triple_smulL, w5cA3_triple_same, w5cA3_triple_crossL]
+      simp
+    · have hBAC : (cross3 (cross3 v2 v3) v2) ⬝ᵥ v4
+          = (v2 ⬝ᵥ v2) * (v3 ⬝ᵥ v4) - (v3 ⬝ᵥ v2) * (v2 ⬝ᵥ v4) := by
+        rw [dot3_eq_p14, coe_cross3_p14 (cross3 v2 v3) v2, coe_cross3_p14 v2 v3,
+          cross_cross_eq_smul_sub_smul]
+        simp only [v3coe, sub_dotProduct, smul_dotProduct, smul_eq_mul]
+      have hv3d4 : v3 ⬝ᵥ v4 = c * (v4 ⬝ᵥ v4) + k * (v2 ⬝ᵥ v4) := by
+        rw [hv3s]
+        simp only [v3coe, add_dotProduct, smul_dotProduct, smul_eq_mul]
+      have hv2d3 : v2 ⬝ᵥ v3 = c * (v2 ⬝ᵥ v4) + k * (v2 ⬝ᵥ v2) := by
+        rw [hv3s]
+        simp only [v3coe, dotProduct_add, dotProduct_smul, smul_eq_mul]
+      rw [dot3_comm_p14 v2 v3] at hv2d3
+      have hCS : (v2 ⬝ᵥ v4) ^ 2 ≤ (v2 ⬝ᵥ v2) * (v4 ⬝ᵥ v4) := by
+        have h := abs_real_inner_le_norm (x := v2) (y := v4)
+        rw [inner_eq_dot] at h
+        have h2 : (v2 ⬝ᵥ v4) ^ 2 ≤ (‖v2‖ * ‖v4‖) ^ 2 := by
+          rcases abs_le.mp h with ⟨hneg, hpos⟩
+          exact sq_le_sq' (by linarith) hpos
+        rwa [mul_pow, norm_sq_eq_dot, norm_sq_eq_dot] at h2
+      have hge0 : 0 ≤ (v2 ⬝ᵥ v2) * (v4 ⬝ᵥ v4) - (v2 ⬝ᵥ v4) ^ 2 := by
+        linarith [hCS]
+      rw [hBAC, hv3d4, hv2d3]
+      have hbig : (v2 ⬝ᵥ v2) * (c * (v4 ⬝ᵥ v4) + k * (v2 ⬝ᵥ v4))
+          - (c * (v2 ⬝ᵥ v4) + k * (v2 ⬝ᵥ v2)) * (v2 ⬝ᵥ v4)
+          = c * ((v2 ⬝ᵥ v2) * (v4 ⬝ᵥ v4) - (v2 ⬝ᵥ v4) ^ 2) := by ring
+      rw [hbig]
+      exact mul_nonneg hc.le hge0
+  · rintro ⟨hcop, hT⟩
+    by_contra h0
+    have hv2E1 : v2 ⬝ᵥ cross3 v3 v4 = 0 := by
+      simpa only [v3coe] using (w5cA2_coplanar_triple).mp hcop
+    have hv2n : v2 ≠ 0 := by
+      intro hz; apply h1; rw [hz]; simpa using collinear2_p14 0 v3
+    have hθlt : azim 0 v2 v3 v4 < 2 * Real.pi := azim_lt_two_pi 0 v2 v3 v4
+    have hθnn : 0 ≤ azim 0 v2 v3 v4 := azim_nonneg 0 v2 v3 v4
+    obtain ⟨hc, hs⟩ := w5cA3_azim_cos_sin v2 v3 v4 hv2n h1 h2
+    have hpne := w5cA3_perp_ne_zero v2 v3 hv2n h1
+    have hqne := w5cA3_perp_ne_zero v2 v4 hv2n h2
+    have hv2E1 : v2 ⬝ᵥ cross3 v3 v4 = 0 := by
+      simpa only [v3coe] using (w5cA2_coplanar_triple).mp hcop
+    rw [dot3_comm_p14] at hv2E1
+    rw [hv2E1] at hs
+    have hs0 : Real.sin (azim 0 v2 v3 v4) = 0 := by
+      rcases mul_eq_zero.mp hs with h | h
+      · exact h
+      · have hnz := mul_ne_zero (mul_ne_zero (fun hz => hv2n (norm_eq_zero.mp hz))
+            (fun hz => hpne (norm_eq_zero.mp hz)))
+          (fun hz => hqne (norm_eq_zero.mp hz))
+        rw [mul_assoc] at hnz
+        exact absurd h hnz
+    obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp hs0
+    obtain hn0 : (n : ℝ) = 0 ∨ (n : ℝ) = 1 := by
+      rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+      · exfalso
+        have hle : (n : ℝ) ≤ -1 := by
+          exact_mod_cast (show (n : ℤ) ≤ -1 from by omega)
+        have hnp : (n : ℝ) * Real.pi ≤ (-1 : ℝ) * Real.pi :=
+          mul_le_mul_of_nonneg_right hle (by positivity)
+        rw [hn] at hnp
+        linarith [Real.pi_pos]
+      · exact Or.inl (by exact_mod_cast hzero)
+      · -- n ≥ 1, and n ≤ 1 since θ = n·π < 2π
+        have hge : (n : ℝ) ≥ 1 := by
+          exact_mod_cast (show (n : ℤ) ≥ 1 from by omega)
+        have hle : (n : ℝ) ≤ 1 := by
+          have h1x : (n : ℝ) * Real.pi < 2 * Real.pi := by rwa [hn]
+          have hpi : (0 : ℝ) < Real.pi := Real.pi_pos
+          have hn2 : (n : ℝ) < 2 := lt_of_mul_lt_mul_right h1x (le_of_lt hpi)
+          exact_mod_cast (show (n : ℤ) ≤ 1 from by
+            have hn2' : n < 2 := by exact_mod_cast hn2
+            omega)
+        exact Or.inr (by linarith)
+    rcases hn0 with h0n | h1n
+    · rw [h0n, zero_mul] at hn
+      exact h0 hn.symm
+    · rw [h1n, one_mul] at hn
+      -- θ = π: 帧表示给出 v4 = −λ•v3 + μ•v2, 从而 T < 0 与 hT ≥ 0 矛盾
+      have hπ : azim 0 v2 v3 v4 = Real.pi := hn.symm
+      obtain ⟨E1, E2, E3, hon, halign⟩ := exists_on3_eq_smul v2 hv2n
+      have hax : (v2 - 0 : V3) = dist v2 0 • E3 := by
+        rw [dist_eq_norm, sub_zero]; exact halign
+      have hcopy := hon
+      obtain ⟨o11, o22, o33, o12, o13, o23, -⟩ := hcopy
+      have hv22 : v2 ⬝ᵥ v2 = ‖v2‖ ^ 2 := (norm_sq_eq_dot v2).symm
+      have hv33 : v3 ⬝ᵥ v3 = ‖v3‖ ^ 2 := (norm_sq_eq_dot v3).symm
+      obtain ⟨-, -, hframe⟩ := azim_master 0 v2 v3 v4
+      obtain ⟨hA, hB, hframe⟩ := hframe
+      obtain ⟨psi, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframe E1 E2 E3 hon hax hv2n
+      have hr1' : 0 < r1 := hr1 h1
+      have hr2' : 0 < r2 := hr2 h2
+      have hv3 : v3 = (r1 * Real.cos psi) • E1 + (r1 * Real.sin psi) • E2 + hA • v2 := by
+        simpa only [sub_zero] using hrep1
+      have hv4 : v4 = (r2 * Real.cos (psi + Real.pi)) • E1
+          + (r2 * Real.sin (psi + Real.pi)) • E2 + hB • v2 := by
+        have hrep2' := hrep2
+        rw [hπ] at hrep2'
+        simpa only [sub_zero] using hrep2'
+      have hcospi : Real.cos (psi + Real.pi) = -Real.cos psi := by
+        rw [Real.cos_add, Real.cos_pi, Real.sin_pi]; ring
+      have hsinpi : Real.sin (psi + Real.pi) = -Real.sin psi := by
+        rw [Real.sin_add, Real.cos_pi, Real.sin_pi]; ring
+      rw [hcospi, hsinpi] at hv4
+      have hlr : r2 = r1 * (r2 / r1) := by field_simp
+      rw [hlr] at hv4
+      have hv4s : v4 = -(r2 / r1) • v3 + ((r2 / r1) * hA + hB) • v2 := by
+        rw [hv4, hv3]; module
+      have hBAC : (cross3 (cross3 v2 v3) v2) ⬝ᵥ v4
+          = (v2 ⬝ᵥ v2) * (v3 ⬝ᵥ v4) - (v3 ⬝ᵥ v2) * (v2 ⬝ᵥ v4) := by
+        rw [dot3_eq_p14, coe_cross3_p14 (cross3 v2 v3) v2, coe_cross3_p14 v2 v3,
+          cross_cross_eq_smul_sub_smul]
+        simp only [v3coe, sub_dotProduct, smul_dotProduct, smul_eq_mul]
+      have hv3d4 : v3 ⬝ᵥ v4 = -(r2 / r1) * (v3 ⬝ᵥ v3)
+          + ((r2 / r1) * hA + hB) * (v3 ⬝ᵥ v2) := by
+        rw [hv4s]
+        simp only [v3coe, dotProduct_add, dotProduct_smul, smul_eq_mul]
+      have hv2d4 : v2 ⬝ᵥ v4 = -(r2 / r1) * (v2 ⬝ᵥ v3)
+          + ((r2 / r1) * hA + hB) * (v2 ⬝ᵥ v2) := by
+        rw [hv4s]
+        simp only [v3coe, dotProduct_add, dotProduct_smul, smul_eq_mul]
+      have hTneg : (v2 ⬝ᵥ v2) * (v3 ⬝ᵥ v4) - (v3 ⬝ᵥ v2) * (v2 ⬝ᵥ v4)
+          = -(r2 / r1) * ((v2 ⬝ᵥ v2) * (v3 ⬝ᵥ v3) - (v2 ⬝ᵥ v3) ^ 2) := by
+        rw [hv3d4, hv2d4, dot3_comm_p14 v3 v2]; ring
+      have hv3perp := w5cA3_perp_ne_zero v2 v3 hv2n h1
+      have hp0 : (v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2) ⬝ᵥ v2 = 0 := by
+        have hv22ne' : v2 ⬝ᵥ v2 ≠ 0 := ne_of_gt (dot3_self_pos_p14 hv2n)
+        simp only [v3coe, sub_dotProduct, smul_dotProduct, smul_eq_mul, div_eq_mul_inv]
+        rw [mul_assoc, inv_mul_cancel₀ hv22ne', mul_one, sub_self]
+      have hid : (v2 ⬝ᵥ v2) * (v3 ⬝ᵥ v3) - (v2 ⬝ᵥ v3) ^ 2
+          = (v2 ⬝ᵥ v2) * ‖v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2‖ ^ 2 := by
+        have hp2 : ‖v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2‖ ^ 2
+            = (v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2)
+              ⬝ᵥ (v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2) := norm_sq_eq_dot _
+        rw [hp2]
+        simp only [v3coe, sub_dotProduct, dotProduct_sub, smul_dotProduct,
+          dotProduct_smul, smul_eq_mul]
+        have hv22ne' : v2 ⬝ᵥ v2 ≠ 0 := ne_of_gt (dot3_self_pos_p14 hv2n)
+        field_simp [hv22ne']
+        rw [dotProduct_comm (v3.ofLp) (v2.ofLp)]
+        ring
+      rw [hBAC] at hT
+      rw [hTneg, hid] at hT
+      have hlam : 0 < r2 / r1 := div_pos hr2' hr1'
+      have hP : 0 < (v2 ⬝ᵥ v2) * ‖v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2‖ ^ 2 := by
+        rw [norm_sq_eq_dot]
+        exact mul_pos (dot3_self_pos_p14 hv2n) (dot3_self_pos_p14 hv3perp)
+      linarith [hlam, hP, hT, mul_pos hlam hP]
 
 /-- HOL `REAL_CONTINUOUS_AT_DOT2` (hl:1057; HOL `real^A` rendered as a real
 inner product space; HOL `dot` ↔ `inner ℝ`). -/
@@ -1525,7 +2031,22 @@ theorem azim_pos_open_p14 (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
     (h7 : ¬ (azim 0 (v2 t) (v3 t) (v4 t) = 0)) :
     ∃ e : ℝ, 0 < e ∧ ∀ t', |t' - t| < e →
       ¬ (azim 0 (v2 t') (v3 t') (v4 t') = 0) := by
-  sorry
+  have hv2n : v2 ≠ 0 := by
+    intro hz; apply h5; rw [hz]; simpa using collinear2_p14 0 (v3 t)
+  have hApos : 0 < azim 0 (v2 t) (v3 t) (v4 t) :=
+    lt_of_le_of_ne (azim_nonneg 0 (v2 t) (v3 t) (v4 t)) (Ne.symm h7)
+  have hcont := w5cA3_continuousAt_azim (h1 t h4) (h2 t h4) (h3 t h4) h5 h6 h7
+  obtain ⟨e, he, hball⟩ := Metric.continuousAt_iff.mp hcont
+    (azim 0 (v2 t) (v3 t) (v4 t) / 2) (by linarith [hApos])
+  refine ⟨e, he, fun t' ht' => ?_⟩
+  have hd : dist (azim 0 (v2 t') (v3 t') (v4 t')) (azim 0 (v2 t) (v3 t) (v4 t))
+      < azim 0 (v2 t) (v3 t) (v4 t) / 2 :=
+    hball (by rw [Real.dist_eq]; exact ht')
+  rw [Real.dist_eq] at hd
+  obtain ⟨h2a, h2b⟩ := abs_lt.mp hd
+  intro hzero
+  have hnpos : 0 ≤ azim 0 (v2 t) (v3 t) (v4 t) := azim_nonneg 0 (v2 t) (v3 t) (v4 t)
+  linarith
 
 /-- HOL `azim_real_continuous_on` (hl:1141).  SF-95 (2026-11-03): the four
 `real_interval (a,b)` hypotheses are OPEN intervals in HOL; the first
@@ -1546,7 +2067,95 @@ theorem azim_real_continuous_on_p14 (v2 v3 v4 : ℝ → V3) (t a b : ℝ)
     (h7 : ¬ (azim 0 (v2 t) (v3 t) (v4 t) = 0)) :
     ∃ e : ℝ, 0 < e ∧
       ContinuousOn (fun q => azim 0 (v2 q) (v3 q) (v4 q)) (Set.Icc (t - e) (t + e)) := by
-  sorry
+  have hv2t0 : v2 t ≠ 0 := by
+    intro hz
+    apply h5
+    rw [hz]
+    simpa using collinear2_p14 0 (v3 t)
+  have hcont : ContinuousAt (fun q => azim 0 (v2 q) (v3 q) (v4 q)) t :=
+    w5cA3_continuousAt_azim (h1 t h4) (h2 t h4) (h3 t h4) h5 h6 h7
+  have hApos : 0 < azim 0 (v2 t) (v3 t) (v4 t) :=
+    lt_of_le_of_ne (azim_nonneg 0 (v2 t) (v3 t) (v4 t)) (Ne.symm h7)
+  obtain ⟨e4, he4, hb4⟩ := Metric.continuousAt_iff.mp hcont
+    (azim 0 (v2 t) (v3 t) (v4 t) / 2) (by linarith [hApos])
+  have hposat : ∀ q, dist q t < e4 → ¬ (azim 0 (v2 q) (v3 q) (v4 q) = 0) := by
+    intro q hq
+    have hd := hb4 hq
+    rw [Real.dist_eq] at hd
+    obtain ⟨h2qa, h2qb⟩ := abs_lt.mp hd
+    intro hzero
+    have hnpos : 0 ≤ azim 0 (v2 t) (v3 t) (v4 t) := azim_nonneg 0 (v2 t) (v3 t) (v4 t)
+    linarith
+  have hc1 : ContinuousAt (fun x => ‖cross3 (v2 x) (v3 x)‖) t :=
+    (w5cA2_continuousAt_cross3 (h1 t h4) (h2 t h4)).norm
+  have hc2 : ContinuousAt (fun x => ‖cross3 (v2 x) (v4 x)‖) t :=
+    (w5cA2_continuousAt_cross3 (h1 t h4) (h3 t h4)).norm
+  have hc3 : ContinuousAt (fun x => ‖v2 x‖) t := (h1 t h4).norm
+  obtain ⟨e1, he1, hb1⟩ := w5cA2_eventually_ne hc1
+    (ne_of_gt (norm_pos_iff.mpr (cross3_ne_p14 h5)))
+  obtain ⟨e2, he2, hb2⟩ := w5cA2_eventually_ne hc2
+    (ne_of_gt (norm_pos_iff.mpr (cross3_ne_p14 h6)))
+  obtain ⟨e3, he3, hb3⟩ := w5cA2_eventually_ne hc3
+    (ne_of_gt (norm_pos_iff.mpr hv2t0))
+  set m : ℝ := min (min e1 (min e2 e3)) (min e4 (min ((t - a) / 2) ((b - t) / 2)))
+    with hmd
+  set e : ℝ := m / 2 with hed
+  have h4a : a < t := h4.1
+  have h4b : t < b := h4.2
+  have hmpos : 0 < m := lt_min (lt_min he1 (lt_min he2 he3)) (lt_min he4
+    (lt_min (by linarith) (by linarith)))
+  have hmle1 : m ≤ e1 := le_trans (min_le_left _ _) (min_le_left _ _)
+  have hmle2 : m ≤ e2 :=
+    le_trans (min_le_left _ _) (le_trans (min_le_right _ _) (min_le_left _ _))
+  have hmle3 : m ≤ e3 :=
+    le_trans (min_le_left _ _) (le_trans (min_le_right _ _) (min_le_right _ _))
+  have hmle4 : m ≤ e4 := le_trans (min_le_right _ _) (min_le_left _ _)
+  have hmha : m ≤ (t - a) / 2 :=
+    le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_left _ _))
+  have hmhb : m ≤ (b - t) / 2 :=
+    le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_right _ _))
+  refine ⟨e, by linarith, ?_⟩
+  intro x hx
+  obtain ⟨hxlo, hxhi⟩ := hx
+  have habsle : |x - t| ≤ e := abs_le.mpr ⟨by linarith, by linarith⟩
+  have hxab : x ∈ Set.Ioo a b := ⟨by linarith, by linarith⟩
+  have hm1 : e ≤ e1 := by linarith [hmle1, hed]
+  have hm2 : e ≤ e2 := by linarith [hmle2, hed]
+  have hm3 : e ≤ e3 := by linarith [hmle3, hed]
+  have hm4 : e ≤ e4 := by linarith [hmle4, hed]
+  have hst1 : |t - x| < e1 := by
+    rw [abs_sub_comm]
+    have h11 : e < e1 := by linarith [hmle1, he1, hed]
+    linarith [habsle, h11]
+  have hst2 : |t - x| < e2 := by
+    rw [abs_sub_comm]
+    have h12 : e < e2 := by linarith [hmle2, he2, hed]
+    linarith [habsle, h12]
+  have hst3 : |t - x| < e3 := by
+    rw [abs_sub_comm]
+    have h13 : e < e3 := by linarith [hmle3, he3, hed]
+    linarith [habsle, h13]
+  have hxd : dist x t < e4 := by
+    rw [Real.dist_eq]
+    have h14 : e < e4 := by linarith [hmle4, he4, hed]
+    linarith [habsle, h14]
+  have hcol1 : ¬ Collinear ℝ ({0, v2 x, v3 x} : Set V3) := by
+    intro hcol
+    have hz : cross3 (v2 x) (v3 x) = 0 := w5cA2_collinear0_iff_cross.mp hcol
+    have hzn : ‖cross3 (v2 x) (v3 x)‖ = 0 := by rw [hz, norm_zero]
+    exact hb1 x hst1 hzn
+  have hcol2 : ¬ Collinear ℝ ({0, v2 x, v4 x} : Set V3) := by
+    intro hcol
+    have hz : cross3 (v2 x) (v4 x) = 0 := w5cA2_collinear0_iff_cross.mp hcol
+    have hzn : ‖cross3 (v2 x) (v4 x)‖ = 0 := by rw [hz, norm_zero]
+    exact hb2 x hst2 hzn
+  have hv2xn : ‖v2 x‖ ≠ 0 := by
+    by_contra hzn
+    exact hb3 x hst3 hzn
+  have hv2x : v2 x ≠ 0 := fun hz => hv2xn (by rw [hz, norm_zero])
+  have hposx : ¬ (azim 0 (v2 x) (v3 x) (v4 x) = 0) := hposat x hxd
+  exact (w5cA3_continuousAt_azim (h1 x hxab) (h2 x hxab) (h3 x hxab) hcol1 hcol2
+    hposx).continuousWithinAt
 
 /-- HOL `azim_pos_iff_nz` (hl:1198). -/
 theorem azim_pos_iff_nz_p14 (v1 v2 v3 v4 : V3) :
@@ -2100,6 +2709,209 @@ theorem azim_cycle_distinct_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite)
     rw [← heqq]
     exact hpos
 
+/-! ## w5cA5 kit（wave 5）：azim 轴反向与三点角加法
+
+供 `azim_cycle_neg_p14` 收尾的私助件：`w5cA5_azim_axis_neg`（轴反向
+`azim 0 (-e) x u = azim 0 e u x`，AzimSpec 标架传输）与
+`w5cA5_sum3_azim`（三点角加法；`TopologyFan.azim_sum_core`/`sum3_azim_fan`
+的私孪生，避免为底章模块引入下游 import）。全部只消费 `Kepler.Geom`。 -/
+
+/-- 三点角加法的标架核心（`TopologyFan.azim_sum_core` 的私孪生）。 -/
+private theorem w5cA5_azim_sum_core {x v u w1 w2 : V3} (hxv : v ≠ x)
+    (hncu : ¬ Collinear3 x v u) (hnc1 : ¬ Collinear3 x v w1)
+    (hnc2 : ¬ Collinear3 x v w2) :
+    ∃ n : ℤ, azim x v u w2 =
+      azim x v u w1 + azim x v w1 w2 + (n : ℝ) * (2 * Real.pi) := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - x)
+    (sub_ne_zero.mpr (fun he => hxv he))
+  have hax : (v - x : V3) = dist v x • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, ru, r1, hru, hr1, hzu, hzw1⟩ := azim_frame_spec hncu hnc1 hon hax hxv
+  obtain ⟨ψ2, ru2, r2, hru2, hr2, hzu2, hzw2⟩ := azim_frame_spec hncu hnc2 hon hax hxv
+  obtain ⟨ψ', r1', r2', hr1', hr2', hzw1', hzw2'⟩ :=
+    azim_frame_spec hnc1 hnc2 hon hax hxv
+  have hψu : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ2 : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hru hru2 (hzu.symm.trans hzu2)
+  have hE2 : Complex.exp ((((ψ + azim x v u w1 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp (((ψ' : ℝ) : ℂ) * Complex.I) :=
+    exp_pos_mul_eq hr1 hr1' (hzw1.symm.trans hzw1')
+  have hE1' : Complex.exp ((((ψ2 + azim x v u w2 : ℝ) : ℂ)) * Complex.I)
+      = Complex.exp ((((ψ' + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) :=
+    exp_pos_mul_eq hr2 hr2' (hzw2.symm.trans hzw2')
+  rw [exp_add_I, exp_add_I] at hE1'
+  rw [exp_add_I] at hE2
+  rw [hψu.symm] at hE1'
+  rw [← hE2] at hE1'
+  have hE3 : Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+    have hkey : Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp (((azim x v u w2 : ℝ) : ℂ) * Complex.I)
+      = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        * Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * Complex.I) := by
+      rw [hE1', mul_assoc, ← exp_add_I]
+    exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hE3
+  refine ⟨n, ?_⟩
+  have hc2 : ((azim x v u w2 : ℝ) : ℂ) * Complex.I
+      = ((((azim x v u w1 + azim x v w1 w2 : ℝ)
+          + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
+    rw [hn]
+    push_cast
+    ring
+  exact_mod_cast mul_right_cancel₀ Complex.I_ne_zero hc2
+
+/-- 三点角加法（`TopologyFan.sum3_azim_fan` 的私孪生：三段和 < 2π 版）。 -/
+private theorem w5cA5_sum3_azim {x v u w1 w2 : V3} (hxv : v ≠ x)
+    (hncu : ¬ Collinear3 x v u) (hnc1 : ¬ Collinear3 x v w1)
+    (hnc2 : ¬ Collinear3 x v w2)
+    (hlt : azim x v u w1 + azim x v w1 w2 < 2 * Real.pi) :
+    azim x v u w2 = azim x v u w1 + azim x v w1 w2 := by
+  obtain ⟨n, hc3⟩ := w5cA5_azim_sum_core hxv hncu hnc1 hnc2
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+  · exfalso
+    have hle2 : ((n:ℤ) : ℝ) ≤ -1 := by exact_mod_cast (by omega : (n : ℤ) ≤ -1)
+    have hmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hle2 h2pi.le
+    linarith [hlt, hc3, hmul, azim_nonneg x v u w2]
+  · rw [hzero] at hc3
+    simp only [Int.cast_zero, zero_mul, add_zero] at hc3
+    exact hc3
+  · exfalso
+    have hge : ((n:ℤ) : ℝ) ≥ 1 := by exact_mod_cast (by omega : (n : ℤ) ≥ 1)
+    have hmul : (n:ℝ) * (2 * Real.pi) ≥ (1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hge h2pi.le
+    linarith [hlt, hc3, hmul, azim_nonneg x v u w1,
+      azim_nonneg x v w1 w2, azim_lt_two_pi x v u w2]
+
+/-- 反映恒等式：`cos((π-ψ)+(2π-θ)) = -cos(ψ+θ)`。 -/
+private theorem w5cA5_cos_reflect (ψ θ : ℝ) :
+    Real.cos ((Real.pi - ψ) + (2 * Real.pi - θ)) = -Real.cos (ψ + θ) := by
+  rw [show (Real.pi - ψ) + (2 * Real.pi - θ)
+      = (Real.pi - (ψ + θ)) + 2 * Real.pi from by ring,
+    Real.cos_add_two_pi, Real.cos_pi_sub]
+
+/-- 反映恒等式：`sin((π-ψ)+(2π-θ)) = sin(ψ+θ)`。 -/
+private theorem w5cA5_sin_reflect (ψ θ : ℝ) :
+    Real.sin ((Real.pi - ψ) + (2 * Real.pi - θ)) = Real.sin (ψ + θ) := by
+  rw [show (Real.pi - ψ) + (2 * Real.pi - θ)
+      = (Real.pi - (ψ + θ)) + 2 * Real.pi from by ring,
+    Real.sin_add_two_pi, Real.sin_pi_sub]
+
+/-- 轴反向的 AzimSpec 传输：轴 `-e` 的方位角候选为
+`θ ↦ if θ = 0 then 0 else 2π - θ`（θ = `azim 0 e x u`）。标架取
+`(f1,f2,f3) ↦ (-f1, f2, -f3)`（保持右手系，轴由 `-e` 转为 `e`）。 -/
+private theorem w5cA5_azimSpec_neg {e x u : V3}
+    (hx : ¬ Collinear3 0 e x) (hu : ¬ Collinear3 0 e u) :
+    AzimSpec 0 (-e) x u (if azim 0 e x u = 0 then 0 else 2 * Real.pi - azim 0 e x u) := by
+  obtain ⟨-, -, h1f, h2f, hframes⟩ := azim_master 0 e x u
+  refine ⟨?_, ?_, -h1f, -h2f, ?_⟩
+  · split_ifs with h0
+    · exact le_refl 0
+    · linarith [azim_lt_two_pi 0 e x u]
+  · split_ifs with h0
+    · have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+      linarith
+    · have hpos : 0 < azim 0 e x u := lt_of_le_of_ne (azim_nonneg 0 e x u) (Ne.symm h0)
+      linarith
+  · intro f1 f2 f3 hf hax hw
+    obtain ⟨h11, h22, h33, h12, h13, h23, hhand⟩ := hf
+    have hon : Orthonormal3 (-f1) f2 (-f3) := by
+      refine ⟨?_, h22, ?_, ?_, ?_, ?_, ?_⟩
+      · simpa using h11
+      · simpa using h33
+      · simpa using h12
+      · simpa using h13
+      · simpa using h23
+      · have hcross (a b : Fin 3 → ℝ) : crossProduct (-a) b = -(crossProduct a b) := by
+          rw [map_neg, LinearMap.neg_apply]
+        have hval : crossProduct ((-f1 : V3) : Fin 3 → ℝ) ((f2 : V3) : Fin 3 → ℝ)
+              ⬝ᵥ ((-f3 : V3) : Fin 3 → ℝ)
+            = crossProduct ((f1 : V3) : Fin 3 → ℝ) ((f2 : V3) : Fin 3 → ℝ)
+              ⬝ᵥ ((f3 : V3) : Fin 3 → ℝ) := by
+          simp only [WithLp.ofLp_neg, hcross, neg_dotProduct, dotProduct_neg, neg_neg]
+        rwa [hval]
+    have he : e ≠ 0 := by
+      intro h
+      exact hx (collinear3_of_eq (v := (0:V3)) (w := e) (w1 := x) h)
+    have haxe : (e - 0 : V3) = dist e 0 • (-f3) := by
+      have hax' : -e = dist e 0 • f3 := by
+        have h := hax
+        rw [sub_zero, show dist (-e) 0 = dist e 0 from by simp [dist_eq_norm]] at h
+        exact h
+      rw [sub_zero]
+      calc e = -(-e) := by simp
+        _ = -(dist e 0 • f3) := by rw [hax']
+        _ = dist e 0 • (-f3) := by rw [smul_neg]
+    obtain ⟨ψ, r1, r2, rep1, rep2, hr1, hr2⟩ := hframes (-f1) f2 (-f3) hon haxe he
+    refine ⟨Real.pi - ψ, r1, r2, ?_, ?_, hr1 hx, hr2 hu⟩
+    · have htail : (-h1f) • ((-e) - 0) = h1f • (e - 0) := by
+        rw [sub_zero, sub_zero, neg_smul, smul_neg, neg_neg]
+      have hcos1 : r1 * Real.cos (Real.pi - ψ) = -(r1 * Real.cos ψ) := by
+        rw [Real.cos_pi_sub]; ring
+      rw [rep1, htail, hcos1, Real.sin_pi_sub, neg_smul, smul_neg]
+    · have htail : (-h2f) • ((-e) - 0) = h2f • (e - 0) := by
+        rw [sub_zero, sub_zero, neg_smul, smul_neg, neg_neg]
+      rw [rep2, htail]
+      split_ifs with h0
+      · have hcos1 : r2 * Real.cos ((Real.pi - ψ) + 0)
+            = -(r2 * Real.cos (ψ + azim 0 e x u)) := by
+          rw [add_zero, Real.cos_pi_sub, h0, add_zero]; ring
+        have hsin1 : r2 * Real.sin ((Real.pi - ψ) + 0)
+            = r2 * Real.sin (ψ + azim 0 e x u) := by
+          rw [add_zero, Real.sin_pi_sub, h0, add_zero]
+        rw [hcos1, hsin1, neg_smul, smul_neg]
+      · have hcos1 : r2 * Real.cos ((Real.pi - ψ) + (2 * Real.pi - azim 0 e x u))
+            = -(r2 * Real.cos (ψ + azim 0 e x u)) := by
+          rw [w5cA5_cos_reflect]; ring
+        have hsin1 : r2 * Real.sin ((Real.pi - ψ) + (2 * Real.pi - azim 0 e x u))
+            = r2 * Real.sin (ψ + azim 0 e x u) := by
+          rw [w5cA5_sin_reflect]
+        rw [hcos1, hsin1, neg_smul, smul_neg]
+
+/-- 轴反向：`azim 0 (-e) x u = azim 0 e u x`（HOL `AZIM_COMPL_NEG` 的私孪生）。 -/
+private theorem w5cA5_azim_axis_neg {e x u : V3}
+    (hx : ¬ Collinear3 0 e x) (hu : ¬ Collinear3 0 e u) :
+    azim 0 (-e) x u = azim 0 e u x := by
+  have he : e ≠ 0 := by
+    intro h
+    exact hx (collinear3_of_eq (v := (0:V3)) (w := e) (w1 := x) h)
+  have hneg_col : ∀ z : V3, Collinear3 0 (-e) z → Collinear3 0 e z := by
+    intro z hc
+    have hne : -e ≠ 0 := neg_ne_zero.mpr he
+    obtain ⟨c, hc'⟩ := (collinear3_iff_smul (hw := hne) (v := 0) (w := -e) (w1 := z)).mp hc
+    refine (collinear3_iff_smul (hw := he) (v := 0) (w := e) (w1 := z)).mpr ⟨-c, ?_⟩
+    have hz : z - 0 = c • (-e - 0) := hc'
+    simpa only [sub_zero, smul_neg, neg_smul] using hz
+  have hxn : ¬ Collinear3 0 (-e) x := fun hc => hx (hneg_col x hc)
+  have hun : ¬ Collinear3 0 (-e) u := fun hc => hu (hneg_col u hc)
+  rw [azim_eq_of_spec hxn hun (w5cA5_azimSpec_neg hx hu), azim_compl hx hu]
+
+/-- `IDENTIFY_AZIM_CYCLE_SIMPLE_p14` 的无 `cyclicSet` 版（原证明体不使用该
+假设；此处内联以免为底章构造下游 `cyclicSet` 证据）。 -/
+private theorem w5cA5_identify (W : Set V3) (v w p u : V3)
+    (h1 : ¬ (W ⊆ {p})) (h2 : p ∈ W) (h3 : u ≠ p) (h4 : u ∈ W)
+    (h5 : ∀ q : V3, q ≠ p → q ∈ W → q ≠ u → azim v w p u < azim v w p q) :
+    azimCycle_p14 W v w p = u := by
+  unfold azimCycle_p14
+  rw [if_neg h1]
+  by_contra hne
+  set P : V3 → Prop := fun x => x ≠ p ∧ x ∈ W ∧ ∀ q ∈ W, q ≠ p →
+    azim v w p x < azim v w p q ∨ azim v w p x = azim v w p q ∧
+      ‖projection (x - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖ with hPdef
+  obtain ⟨hne', hmu', hall⟩ :=
+    Classical.epsilon_spec (p := P) ⟨u, h3, h4, fun q hq hpq => by
+      by_cases hqu : q = u
+      · rw [hqu]
+        exact Or.inr ⟨rfl, le_refl _⟩
+      · exact Or.inl (h5 q hpq hq hqu)⟩
+  have hlt := h5 (Classical.epsilon P) hne' hmu' (fun heq => hne heq)
+  rcases hall u h4 h3 with hlt2 | ⟨heq, _⟩
+  · linarith
+  · linarith
+
 /-- HOL `azim_cycle_neg` (hl:2828).  NEEDS: azimuth-cycle negation theory
 (wave-3: helpers `w5cA2_azim_axis_neg` (`azim 0 (-e) x u = azim 0 e u x`,
 frame flip E1 := -E1, E2, E3 := -E3 of the AzimSpec transport) and
@@ -2112,7 +2924,95 @@ theorem azim_cycle_neg_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite) (h2 : v ∈
     (h3 : azimCycle_p14 U 0 e v = w)
     (h4 : ∀ x ∈ U, e ⬝ᵥ (cross3 x (azimCycle_p14 U 0 e x)) ≠ 0) :
     azimCycle_p14 U 0 (-e) w = v := by
-  sorry
+  have he0 : e ≠ 0 := by
+    intro he
+    exact h4 v h2 (by rw [he, dot3_eq_p14, coe_zero_p14, dotProduct_comm,
+      dotProduct_zero])
+  have hnc : ∀ x ∈ U, ¬ Collinear ℝ ({0, e, x} : Set V3) := by
+    intro x hx hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (hw := he0) (v := 0) (w := e)
+      (w1 := x)).mp (by simpa [Collinear3] using hcol)
+    have hc' : x = c • e := by simpa only [sub_zero] using hc
+    apply h4 x hx
+    rw [hc', dot3_eq_p14, coe_cross3_p14, coe_smul_p14, map_smul, LinearMap.smul_apply]
+    simp [dot_self_cross]
+  have hsubv : ¬ (U ⊆ {v}) := by
+    intro hsub
+    have hcv : azimCycle_p14 U 0 e v = v := by rw [azimCycle_p14, if_pos hsub]
+    have hzz : cross3 v v ⬝ᵥ cross3 v v = 0 := by
+      rw [dot3_eq_p14, coe_cross3_p14, cross_self, dotProduct_zero]
+    exact h4 v h2 (by rw [hcv, dot3_self_zero_p14 hzz, dot3_zero_right_p14])
+  obtain ⟨hcy1, hcy2, hcy3⟩ := w5cA_azimCycle_properties (W := U) (p := v) hsubv h1 0 e
+  have hwv : w ≠ v := fun heq => hcy1 (by rw [h3]; exact heq)
+  have hwU : w ∈ U := by rw [← h3]; exact hcy2
+  have hmin : ∀ q ∈ U, q ≠ v →
+      azim 0 e v w < azim 0 e v q ∨ azim 0 e v w = azim 0 e v q := by
+    intro q hq hqv
+    rcases hcy3 q hq hqv with hlt | ⟨heq, -⟩
+    · exact Or.inl (by rwa [h3] at hlt)
+    · exact Or.inr (by rwa [h3] at heq)
+  have hsubw : ¬ (U ⊆ {w}) := by
+    intro hsub
+    exact hwv (hsub h2).symm
+  have hkey : ∀ q ∈ U, q ≠ w → q ≠ v →
+      azim 0 (-e) w v < azim 0 (-e) w q := by
+    intro q hq hqw hqv
+    have hw' : ¬ Collinear3 0 e w := hnc w hwU
+    have hv' : ¬ Collinear3 0 e v := hnc v h2
+    have hq' : ¬ Collinear3 0 e q := hnc q hq
+    rw [w5cA5_azim_axis_neg (x := w) (u := v) hw' hv',
+        w5cA5_azim_axis_neg (x := w) (u := q) hw' hq']
+    rcases hmin q hq hqv with hlt | heq
+    · have hBne : azim 0 e v q ≠ 0 :=
+        ne_of_gt (lt_of_le_of_lt (azim_nonneg 0 e v w) hlt)
+      have hqv' : azim 0 e q v = 2 * Real.pi - azim 0 e v q := by
+        rw [azim_compl hv' hq', if_neg hBne]
+      have hlt2 : azim 0 e q v + azim 0 e v w < 2 * Real.pi := by
+        rw [hqv']; linarith [azim_lt_two_pi 0 e v q]
+      have hadd := w5cA5_sum3_azim (x := 0) (v := e) (u := q) (w1 := v) (w2 := w)
+        he0 hq' hv' hw' hlt2
+      rw [hadd, hqv']
+      linarith [azim_lt_two_pi 0 e v q]
+    · exfalso
+      have hmem : q ∈ affGt ({0, e} : Set V3) {w} :=
+        (azim_eq_azim_iff hv' hw' hq').mp heq
+      have hD0 : azim 0 e q w = 0 :=
+        (azim_eq_zero_iff hq' hw').mpr hmem
+      have hD0' : azim 0 e w q = 0 := by
+        have hc := azim_compl hw' hq'
+        rw [hD0] at hc
+        by_contra hne
+        rw [if_neg hne] at hc
+        linarith [azim_lt_two_pi 0 e w q]
+      obtain ⟨-, hcyw2, hminw⟩ :=
+        w5cA_azimCycle_properties (W := U) (p := w) hsubw h1 0 e
+      have hz0 : azim 0 e w (azimCycle_p14 U 0 e w) = 0 := by
+        rcases hminw q hq hqw with hlt' | ⟨heq', -⟩
+        · rw [hD0'] at hlt'
+          linarith [azim_nonneg 0 e w (azimCycle_p14 U 0 e w)]
+        · exact heq'.trans hD0'
+      have hmem2 : w ∈ affGt ({0, e} : Set V3) {azimCycle_p14 U 0 e w} :=
+        (azim_eq_zero_iff hw' (hnc _ hcyw2)).mp hz0
+      have hcyc0 : azimCycle_p14 U 0 e w ≠ 0 := fun hz =>
+        hnc _ hcyw2 (hz.symm ▸ collinear3_pair_left (v0 := (0:V3)) (v1 := e)
+          (x := 0) rfl)
+      have hcycE : azimCycle_p14 U 0 e w ≠ e := fun hz =>
+        hnc _ hcyw2 (hz.symm ▸ collinear3_pair_right (v0 := (0:V3)) (v1 := e)
+          (x := e) rfl)
+      obtain ⟨c, hc, k, hwk⟩ := (affGt_pair_iff (v0 := 0) (v1 := e)
+        (x := azimCycle_p14 U 0 e w) (y := w) (Ne.symm he0) hcyc0 hcycE).mp hmem2
+      have hwrep : w = c • azimCycle_p14 U 0 e w + k • e := by
+        simpa only [sub_zero] using hwk
+      have hdot0 : e ⬝ᵥ (cross3 w (azimCycle_p14 U 0 e w)) = 0 := by
+        nth_rewrite 1 [hwrep]
+        rw [dot3_eq_p14, coe_cross3_p14, coe_add_p14, coe_smul_p14, coe_smul_p14,
+          map_add, LinearMap.add_apply, map_smul, LinearMap.smul_apply, map_smul,
+          LinearMap.smul_apply, cross_self, smul_zero, zero_add, dotProduct_comm,
+          smul_dotProduct, dotProduct_comm, dot_self_cross, smul_zero]
+      exact h4 w hwU hdot0
+  exact w5cA5_identify U 0 (-e) w v hsubw hwU (Ne.symm hwv) h2
+    (fun q hqw hq hqv => hkey q hq hqw hqv)
+
 
 /-- HOL `XIV_ECAU_BACK` (hl:2938; the hl:2964 hypothesis `// &0 < ...` is
 commented out in the source and not carried).  NEEDS: the XIV
