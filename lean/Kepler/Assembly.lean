@@ -7019,6 +7019,11 @@ theorem textCapstone : TextCapstone := by
   have hla14d := la14_capstone_w4
   have hla16d := la16_capstone_w1
   have hla34e := la34_capstone_w5
+  -- w6 delta 接线波（lane capstone-w6，2026-11-05）：三根 delta capstone
+  -- （11 出口）在锥内消费；纯插入，旧 have 全部未动。
+  have hla6f := la6_capstone_w6
+  have hla18f := @la18_capstone_w6
+  have hla34f := la34_capstone_w6
   -- LV 二期 LV9-15 接线波（lane lv-wire-w3，2026-11-04）：七 capstone 在锥内消费
   have hpa15 := pa15_wire_capstone_w1.{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
   have hpa4 := pa4_wire_capstone_w1.{0}
