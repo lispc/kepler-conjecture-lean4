@@ -5254,6 +5254,81 @@ theorem RHO_FUN_DEFORMATION_V3_DEFOR_p34 (v1 v2 : V3) (x1 x2 x6 a : ℝ)
     exact Real.sqrt_lt_sqrt hx2t.le (by linarith)
   exact w5cC5_rhoFun_lt hlt
 
+/-! ### W9: rho-orbit iteration kit (local twin of LA35 `VV_SUC_EQ_RHO_NODE_PRIME`) -/
+
+/-- `rhoNode1` on a range face at `vv j` is the successor `vv (j+1)`, for an
+abstract periodic/injective cyclic sequence (generalises
+`w5cC4_rhoNode1_range_p34` from `MMs` membership to any such `vv`; the
+deformed sequence is only known to be a `BBs` realisation). -/
+private theorem w9_rhoNode1_range_p34 {vv : ℕ → V3} {k j : ℕ} {FF : Set (V3 × V3)}
+    (hk0 : 0 < k) (hk1 : 1 < k) (hper : ∀ i, vv (i + k) = vv i)
+    (hinj : ∀ i j : ℕ, i % k ≠ j % k → vv i ≠ vv j)
+    (hFF : Set.range (fun i : ℕ => (vv i, vv (i + 1))) = FF) :
+    rhoNode1 FF (vv j) = vv (j + 1) := by
+  have hmem : ∀ a b : V3, (a, b) ∈ FF → ∃ i : ℕ, vv i = a ∧ vv (i + 1) = b :=
+    fun a b => ff_edge_index_p34 hFF
+  rw [rhoNode1]
+  refine epsilon_eq_of_p34 ?_ ?_
+  · intro y hy
+    obtain ⟨i, hi1, hi2⟩ := hmem (vv j) y hy
+    have hres : i % k = j % k := by
+      by_contra hne
+      exact hinj i j hne hi1
+    rw [← hi2, modFold_p34 hk0 hper (i + 1), res_succ_congr_p34 hk1 hres,
+      ← modFold_p34 hk0 hper (j + 1)]
+  · have h : (vv j, vv (j + 1)) ∈ Set.range (fun i : ℕ => (vv i, vv (i + 1))) := ⟨j, rfl⟩
+    rwa [hFF] at h
+
+/-- The `rhoNode1` orbit follows the cyclic ordering (HOL
+`VV_SUC_EQ_RHO_NODE_PRIME`, iterated; QKNVMLB.hl:4024). -/
+private theorem w9_rhoOrbit_p34 {vv : ℕ → V3} {k : ℕ} {FF : Set (V3 × V3)}
+    (hk0 : 0 < k) (hk1 : 1 < k) (hper : ∀ i, vv (i + k) = vv i)
+    (hinj : ∀ i j : ℕ, i % k ≠ j % k → vv i ≠ vv j)
+    (hFF : Set.range (fun i : ℕ => (vv i, vv (i + 1))) = FF) (p1 : ℕ) :
+    ∀ m : ℕ, (rhoNode1 FF)^[m] (vv p1) = vv (m + p1) := by
+  intro m
+  induction m with
+  | zero => simp
+  | succ n ih =>
+    rw [Function.iterate_succ_apply', ih]
+    rw [w9_rhoNode1_range_p34 hk0 hk1 hper hinj hFF]
+    congr 1
+    omega
+
+/-- Distinct residues give distinct vertices on a `BBs` realisation (the
+`w_inj_p34` argument with `MMs` membership replaced by `BBs`; needed for the
+deformed sequence). -/
+private theorem w9_bbs_inj_p34 {s : ScsV39} {k : ℕ} {vv : ℕ → V3}
+    (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hBB : BBsV39 s vv) :
+    ∀ i j : ℕ, i % k ≠ j % k → vv i ≠ vv j := by
+  have hk0 : 0 < k := by omega
+  have hpa : Periodic2 s.a k := by rw [← hkk]; exact hs.2.2.2.2.2.2.2.1
+  intro i j hij hcon
+  have h2le : 2 ≤ s.a (i % k) (j % k) :=
+    hs.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1 (i % k) (j % k)
+      ⟨by rw [hkk]; exact Nat.mod_lt _ hk0, by rw [hkk]; exact Nat.mod_lt _ hk0, hij⟩
+  have hper : ∀ q, vv (q + k) = vv q := by
+    intro q
+    rw [← hkk]
+    exact hBB.2.1 q
+  have hw1 : vv i = vv (i % k) := modFold_p34 hk0 hper i
+  have hw2 : vv j = vv (j % k) := modFold_p34 hk0 hper j
+  have hle : s.a (i % k) (j % k) ≤ dist (vv i) (vv j) := by
+    rw [hw1, hw2]
+    exact (hBB.2.2.1 (i % k) (j % k)).1
+  rw [hcon, dist_self] at hle
+  exact absurd hle (by linarith)
+
+/-- The face of a pointwise-deformed cyclic sequence is the image face
+(unfolds `deformedFF4_p34`). -/
+private theorem w9_deformedFF_range_p34 {w : ℕ → V3} {FF : Set (V3 × V3)}
+    (f : V3 → V3) (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF) :
+    Set.range (fun i : ℕ => (f (w i), f (w (i + 1))))
+      = (fun d : V3 × V3 => (f d.1, f d.2)) '' FF := by
+  rw [← hFF]
+  exact Set.range_comp (fun d : V3 × V3 => (f d.1, f d.2))
+    (fun i : ℕ => (w i, w (i + 1)))
+
 /-- HOL `INTERIOR_ANGLE_SAME_V3_DEFOR1` (IMJXPHR.hl:6051). -/
 theorem INTERIOR_ANGLE_SAME_V3_DEFOR1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
     (v1 v2 : V3) (x1 x2 x6 a e1 : ℝ) (FF : Set (V3 × V3))
@@ -5275,7 +5350,34 @@ theorem INTERIOR_ANGLE_SAME_V3_DEFOR1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → 
         ((rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF))^[i]
           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t)) =
       interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % k))) := by
-  sorry
+  subst ha
+  obtain ⟨e, he, hEq⟩ := DEFORMATION_INTERIOR_ANGLE1_EQ_V3_DEFOR_V1_p34 s k l w v1 v2
+    x1 x2 x6 (-1) FF hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc
+    hx1 hx2 hx6 rfl hFF
+  refine ⟨min e e1, lt_min he he1, fun t i ht0 hte => ?_⟩
+  have hte' : t < e := lt_of_lt_of_le hte (min_le_left _ _)
+  have hte1 : t < e1 := lt_of_lt_of_le hte (min_le_right _ _)
+  have hper : ∀ q, w (q + k) = w q := MMs_periodic_p34 s k w hkk hmw
+  have hinj : ∀ i j : ℕ, i % k ≠ j % k → w i ≠ w j :=
+    fun i j h => w_inj_p34 hk hkk hs hmw i j h
+  have horb := w9_rhoOrbit_p34 (vv := w) (k := k) (FF := FF) (by omega) (by omega) hper
+    hinj hFF (l % k) i
+  have hBB := hBBd t ht0 hte1
+  have hperd : ∀ q, v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (q + k)) t
+      = v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w q) t := by
+    intro q
+    rw [← hkk]
+    exact hBB.2.1 q
+  have hFFd : Set.range (fun q : ℕ => (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w q) t,
+      v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (q + 1)) t))
+      = deformedFF4_p34 x1 x2 x6 v1 v2 t FF :=
+    w9_deformedFF_range_p34 (f := fun v => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) hFF
+  have horbd := w9_rhoOrbit_p34
+    (vv := fun q => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w q) t)
+    (k := k) (FF := deformedFF4_p34 x1 x2 x6 v1 v2 t FF) (by omega) (by omega) hperd
+    (w9_bbs_inj_p34 hk hkk hs hBB) hFFd (l % k) i
+  rw [horbd, horb]
+  exact hEq (w (i + l % k)) t ⟨i + l % k, rfl⟩ (by linarith) hte'
 
 /-- HOL `TAUSTAR_V3_DEFOR` (IMJXPHR.hl:6140; statement `TAUSTAR_V3_DEFOR_concl`,
 IMJXPHR.hl:6119). -/
@@ -7012,7 +7114,34 @@ theorem INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) (w 
         ((rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF))^[i]
           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t)) =
       interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % k))) := by
-  sorry
+  subst ha
+  obtain ⟨e, he, hEq⟩ := DEFORMATION_INTERIOR_ANGLE1_EQ_V3_DEFOR_V1_TWO_CASES_p34 s k l w
+    v1 v2 x1 x2 x6 (-1) FF hk hkk hs hmw hl hlk hx1p hx2p hx6p haz hncW haff hnc
+    hx1 hx2 hx6 rfl hFF
+  refine ⟨min e e1, lt_min he he1, fun t i ht0 hte => ?_⟩
+  have hte' : t < e := lt_of_lt_of_le hte (min_le_left _ _)
+  have hte1 : t < e1 := lt_of_lt_of_le hte (min_le_right _ _)
+  have hper : ∀ q, w (q + k) = w q := MMs_periodic_p34 s k w hkk hmw
+  have hinj : ∀ i j : ℕ, i % k ≠ j % k → w i ≠ w j :=
+    fun i j h => w_inj_p34 hk hkk hs hmw i j h
+  have horb := w9_rhoOrbit_p34 (vv := w) (k := k) (FF := FF) (by omega) (by omega) hper
+    hinj hFF (l % k) i
+  have hBB := hBBd t ht0 hte1
+  have hperd : ∀ q, v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (q + k)) t
+      = v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w q) t := by
+    intro q
+    rw [← hkk]
+    exact hBB.2.1 q
+  have hFFd : Set.range (fun q : ℕ => (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w q) t,
+      v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (q + 1)) t))
+      = deformedFF4_p34 x1 x2 x6 v1 v2 t FF :=
+    w9_deformedFF_range_p34 (f := fun v => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) hFF
+  have horbd := w9_rhoOrbit_p34
+    (vv := fun q => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w q) t)
+    (k := k) (FF := deformedFF4_p34 x1 x2 x6 v1 v2 t FF) (by omega) (by omega) hperd
+    (w9_bbs_inj_p34 hk hkk hs hBB) hFFd (l % k) i
+  rw [horbd, horb]
+  exact hEq (w (i + l % k)) t ⟨i + l % k, rfl⟩ (by linarith) hte'
 
 /-- HOL `TAUSTAR_V3_DEFOR_TWO_CASES` (IMJXPHR.hl:9527; statement
 `TAUSTAR_V3_DEFOR_TWO_CASES_concl`, IMJXPHR.hl:9504). -/
