@@ -2625,6 +2625,19 @@ theorem ITER_CROSS_SAME_DIRECTION_p37 {V : Set V3} {E : Set (Set V3)}
   rw [heq1, heq2, smul_smul]
   field_simp
 
+/-- HOL `LOCAL_FAN_CHARACTER_OF_RHO_NODE3` (local_lemmas.hl:7065) 的本 port 形：
+LA5 `LOCAL_FAN_ITER_RHO_NODE_IN_V` + LA5 `LOCAL_FAN_CHARACTER_OF_RHO_NODE2`
+（对 `w := ρ^[i] v` 逐点应用）。B8 轮 2-strike 止损：主体已写至收尾态
+（Kit-draft-w5cB8.lean，余 6 处机械收尾点已逐条注记），B9 首项照录收口。 -/
+private theorem w5cB7_char3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) (i : ℕ) :
+    ¬Collinear ℝ ({0, (rhoNode1_p2 FF)^[i] v, (rhoNode1_p2 FF)^[i + 1] v} : Set V3) := by
+  have hbase : ¬Collinear ℝ ({0, (rhoNode1_p2 FF)^[i] v,
+      rhoNode1_p2 FF ((rhoNode1_p2 FF)^[i] v)} : Set V3) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h (LOCAL_FAN_ITER_RHO_NODE_IN_V h hv i)
+  rw [(Function.iterate_succ_apply' (rhoNode1_p2 FF) i v)]
+  exact hbase
+
 /-- HOL `ITER_IN_AFF_GT_2_1` (lunar_deform.hl:3486).  NEEDS:
 `Local_lemmas.LOCAL_FAN_CHARACTER_OF_RHO_NODE3`. -/
 theorem ITER_IN_AFF_GT_2_1_p37 {V : Set V3} {E : Set (Set V3)}
