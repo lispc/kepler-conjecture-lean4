@@ -1099,6 +1099,32 @@ theorem EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28 (v1 v2 w : V3) (x1 x2 x5 a : �
   rw [hd, hd2]
   exact Real.sqrt_lt_sqrt (by linarith [hdn, sq_nonneg (‖deform‖)]) (by linarith)
 
+/-- HOL `HYPER_MM_COLLINEAR_TWO_CASES` (predecessor-index variant of
+`HYPER_MM_COLLINEAR_p34`): derived locally from the *proved* successor version
+by the index shift `l ↦ l+k-1` and the periodicity `w (l+k) = w l`.  The LA34
+twin `HYPER_MM_COLLINEAR_TWO_CASES_p34` is still `sorry`, so it cannot be used
+where an exact-standard-three surface is required. -/
+private theorem w5cD_hyperMM_collinear_TWO_CASES_p28 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+    (v1 v2 : V3) (x1 x2 x5 : ℝ)
+    (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s) (hk : 3 < k)
+    (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+    (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) :
+    0 < x1 ∧ 0 < x2 ∧ 0 < x5 ∧ ¬Collinear ℝ ({0, v1, v2} : Set V3) := by
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hmw
+  have hper : w ((l + k - 1) + 1) = w l := by
+    have e : (l + k - 1) + 1 = l + k := by omega
+    rw [e, ← hkk]
+    exact hbb.2.1 l
+  have h := HYPER_MM_COLLINEAR_p34 s k (l + k - 1) w v2 v1 x2 x1 x5 hkk hs hmw hk
+    hlk (by rw [hper, hl]) hx2 hx1 hx5
+  obtain ⟨h2, h1, h5, hnc⟩ := h
+  refine ⟨h1, h2, h5, ?_⟩
+  intro hc
+  apply hnc
+  have e : ({0, v1, v2} : Set V3) = ({0, v2, v1} : Set V3) := by
+    ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  rwa [e] at hc
+
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_EDGE_SUB` (NUXCOEA.hl:927). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_EDGE_SUB_p28 (s : ScsV39) (w : ℕ → V3) (k l : ℕ)
     (v1 v2 : V3) (x1 x2 x5 a : ℝ) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
@@ -1108,7 +1134,43 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_EDGE_SUB_p28 (s : ScsV39) (w : ℕ → V3) 
     (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))}) :
     ∀ j : ℕ, l % k = (j + 1) % k → ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
       dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) < s.b l j := by
-  sorry
+  intro j hj
+  rw [ha]
+  obtain ⟨h1, h2, h5, hnc0⟩ := w5cD_hyperMM_collinear_TWO_CASES_p28 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 hx5
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hik : l + (s.k - 1) = l + k - 1 := by rw [hk]; omega
+  have hncw : ¬ Collinear ℝ ({0, v1, w (l + 1)} : Set V3) := by
+    have hnc' : ¬ Collinear ℝ ({0, w (l + 1), v1} : Set V3) := by
+      simpa only [hik, hl1] using hnc
+    intro hc
+    apply hnc'
+    have e : ({0, v1, w (l + 1)} : Set V3) = ({0, w (l + 1), v1} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [e] at hc
+  have haff' : v2 ∈ affGt {0} {v1, w (l + 1)} := by
+    have haff'' : v2 ∈ affGt {0} {w (l + 1), v1} := by
+      simpa only [hik, hl1, hl] using haff
+    have e : ({w (l + 1), v1} : Set V3) = ({v1, w (l + 1)} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [e] at haff''
+  obtain ⟨ε, hε, hlt⟩ := EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28 v1 v2 (w (l + 1))
+    x1 x2 x5 (-1) h1 h2 h5 hncw hnc0 hx1 hx2 hx5 rfl haff'
+  refine ⟨ε, hε, fun t ht => ?_⟩
+  have hmod : (l + k - 1) % s.k = j % s.k := by
+    rw [hk]
+    exact EQ_SUC_K_SUB3_p28 hj hk3
+  have hwj : w (l + k - 1) = w j :=
+    CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (l + k - 1) j hs hbb hmod
+  have hbi : s.b l (l + k - 1) = s.b l j :=
+    CHANGE_B_SCS_MODR_p28 s hs (l + k - 1) j l hmod
+  have hb : dist v2 v1 ≤ s.b l j := by
+    rw [← hl, ← hl1]
+    calc dist (w l) (w (l + k - 1)) ≤ s.b l (l + k - 1) :=
+          (hbb.2.2.1 l (l + k - 1)).2
+      _ = s.b l j := hbi
+  rw [← hwj, hl1]
+  exact lt_of_lt_of_le (hlt t ht) hb
 
 /-- HOL `DIST_V3_DEFOR_EDGE_SUC` (NUXCOEA.hl:981). -/
 theorem DIST_V3_DEFOR_EDGE_SUC_p28 (s : ScsV39) (w : ℕ → V3) (k l j : ℕ)
@@ -1123,6 +1185,53 @@ theorem DIST_V3_DEFOR_EDGE_SUC_p28 (s : ScsV39) (w : ℕ → V3) (k l j : ℕ)
   exact EXISTS_SMALL_LT_CONST_ADD_p28 v1 v2 (w j) x1 x2 x5 (s.b l j) (-1) h1 h2 h5 hnc
     hx1 hx2 hx5 rfl hlt
 
+/-- Clean copy of HOL `DIST_V3_DEFOR_EDGE_SUC` (NUXCOEA.hl:981) built on the
+local predecessor-index helper (`DIST_V3_DEFOR_EDGE_SUC_p28` at L1114 consumes
+the still-`sorry` LA34 `HYPER_MM_COLLINEAR_TWO_CASES_p34`). -/
+private theorem w5cD_DIST_V3_DEFOR_EDGE_SUC_p28 (s : ScsV39) (w : ℕ → V3) (k l j : ℕ)
+    (v1 v2 : V3) (x1 x2 x5 a : ℝ) (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s)
+    (hm : w ∈ MMsV39 s) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+    (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+    (ha : a = -1) (hj : (l + 1) % k = j % k) (hlt : dist v2 (w j) < s.b l j) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+      dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) < s.b l j := by
+  obtain ⟨h1, h2, h5, hnc⟩ := w5cD_hyperMM_collinear_TWO_CASES_p28 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 hx5
+  exact EXISTS_SMALL_LT_CONST_ADD_p28 v1 v2 (w j) x1 x2 x5 (s.b l j) (-1) h1 h2 h5 hnc
+    hx1 hx2 hx5 rfl hlt
+
+/-- Clean copy of HOL `DEFORMATION_DIST_LE_V3_DEFOR_B_MK` (NUXCOEA.hl:595) built
+on the local predecessor-index helper (`DEFORMATION_DIST_LE_V3_DEFOR_B_MK_p28`
+at L939 has the same proof shape but consumes the still-`sorry` LA34 twin). -/
+private theorem w5cD_B_MK_p28 (s : ScsV39) (w : ℕ → V3) (k l : ℕ)
+    (v1 v2 : V3) (x1 x2 x5 a : ℝ) (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s)
+    (hm : w ∈ MMsV39 s) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+    (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+    (ha : a = -1) (hdiag : ∀ i, scsDiag k l i → 4 * h0 < s.b l i) :
+    ∀ i, scsDiag k l i → ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+      dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) < s.b l i := by
+  intro i hd
+  obtain ⟨h1, h2, h5, hnc⟩ := w5cD_hyperMM_collinear_TWO_CASES_p28 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 hx5
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hz2 : ‖v2‖ ≤ 2 * h0 := by
+    have h := WL_IN_BALL_ANNULUS_p28 s w l hbb
+    rw [hl] at h
+    have h2 : ballAnnulus = Metric.closedBall (0:V3) (2 * h0) \ Metric.ball (0:V3) 2 := rfl
+    rw [h2, Set.mem_sdiff, Metric.mem_closedBall, dist_eq_norm, sub_zero] at h
+    exact h.1
+  have hzi : ‖w i‖ ≤ 2 * h0 := by
+    have h := WL_IN_BALL_ANNULUS_p28 s w i hbb
+    have h2 : ballAnnulus = Metric.closedBall (0:V3) (2 * h0) \ Metric.ball (0:V3) 2 := rfl
+    rw [h2, Set.mem_sdiff, Metric.mem_closedBall, dist_eq_norm, sub_zero] at h
+    exact h.1
+  have hle : dist v2 (w i) ≤ 4 * h0 := by
+    have ht := dist_triangle v2 (0:V3) (w i)
+    rw [dist_zero_right, dist_zero_left] at ht
+    linarith
+  exact EXISTS_SMALL_LT_CONST_ADD_p28 v1 v2 (w i) x1 x2 x5 (s.b l i) (-1) h1 h2 h5 hnc
+    hx1 hx2 hx5 rfl (lt_of_le_of_lt hle (hdiag i hd))
+
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK1` (NUXCOEA.hl:1004). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK1_p28 (s : ScsV39) (w : ℕ → V3) (k l j : ℕ)
     (v1 v2 : V3) (x1 x2 x5 a : ℝ) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
@@ -1134,7 +1243,27 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK1_p28 (s : ScsV39) (w : ℕ → V3)
     (hdiag : ∀ i, scsDiag k l i → 4 * h0 < s.b l i) :
     ∀ i : ℕ, ¬(l % k = i % k) → ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
       dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) < s.b l i := by
-  sorry
+  intro i hne
+  rw [ha]
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  by_cases hsucc : (l + 1) % k = i % k
+  · have hij : i % k = j % k := by
+      rw [← hsucc]
+      exact hj
+    have hij' : i % s.k = j % s.k := by rw [hk]; exact hij
+    have hwi : w i = w j := CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w i j hs hbb hij'
+    have hbi : s.b l i = s.b l j := CHANGE_B_SCS_MODR_p28 s hs i j l hij'
+    have hlt' : dist v2 (w i) < s.b l i := by rw [hwi, hbi]; exact hlt
+    obtain ⟨ε, hε, h⟩ := w5cD_DIST_V3_DEFOR_EDGE_SUC_p28 s w k l i v1 v2 x1 x2 x5 (-1)
+      hk hk3 hs hm hl hl1 hx1 hx2 hx5 rfl hsucc hlt'
+    exact ⟨ε, hε, fun t ht => h t ⟨by linarith [ht.1], ht.2⟩⟩
+  · by_cases hpred : l % k = (i + 1) % k
+    · exact DEFORMATION_DIST_LE_V3_DEFOR_EDGE_SUB_p28 s w k l v1 v2 x1 x2 x5 (-1)
+        hk3 hs hm hk hl hl1 hx1 hx2 hx5 rfl hnc haff i hpred
+    · have hd : scsDiag k l i := ⟨hne, hsucc, hpred⟩
+      obtain ⟨ε, hε, h⟩ := w5cD_B_MK_p28 s w k l v1 v2 x1 x2 x5 (-1)
+        hk hk3 hs hm hl hl1 hx1 hx2 hx5 rfl hdiag i hd
+      exact ⟨ε, hε, fun t ht => h t ⟨by linarith [ht.1], ht.2⟩⟩
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK` (NUXCOEA.hl:1066). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK_p28 (s : ScsV39) (w : ℕ → V3) (k l j : ℕ)
@@ -1917,7 +2046,30 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_EDGE_SUB_TWO_CASES_p28 (s : ScsV39) (w : �
     (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))}) :
     ∀ j : ℕ, (l + 1) % k = j % k → ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
       dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) < s.b l j := by
-  sorry
+  intro j hj
+  rw [ha]
+  obtain ⟨h1, h2, h5, hnc0⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hncw : ¬ Collinear ℝ ({0, v1, w (l + (s.k - 1))} : Set V3) := by
+    simpa only [hl1] using hnc
+  have haff' : v2 ∈ affGt {0} {v1, w (l + (s.k - 1))} := by
+    simpa only [hl, hl1] using haff
+  obtain ⟨ε, hε, hlt⟩ := EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28 v1 v2 (w (l + (s.k - 1)))
+    x1 x2 x5 (-1) h1 h2 h5 hncw hnc0 hx1 hx2 hx5 rfl haff'
+  refine ⟨ε, hε, fun t ht => ?_⟩
+  have hj' : j % s.k = (l + 1) % s.k := by
+    rw [hk]
+    exact hj.symm
+  have hwj : w j = v1 := by
+    rw [CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w j (l + 1) hs hbb hj', hl1]
+  have hb : dist v2 v1 ≤ s.b l j := by
+    rw [← hl, ← hl1]
+    calc dist (w l) (w (l + 1)) ≤ s.b l (l + 1) := (hbb.2.2.1 l (l + 1)).2
+      _ = s.b l j := by
+          rw [← CHANGE_B_SCS_MODR_p28 s hs j (l + 1) l hj']
+  rw [hwj]
+  exact lt_of_lt_of_le (hlt t ht) hb
 
 /-- HOL `DIST_V3_DEFOR_EDGE_SUC_TWO_CASES` (NUXCOEA.hl:4018). -/
 theorem DIST_V3_DEFOR_EDGE_SUC_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k l j : ℕ)
@@ -1944,7 +2096,25 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK1_TWO_CASES_p28 (s : ScsV39) (w : �
     (hdiag : ∀ i, scsDiag k l i → 4 * h0 < s.b l i) :
     ∀ i : ℕ, ¬(l % k = i % k) → ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
       dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) < s.b l i := by
-  sorry
+  intro i hne
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  by_cases hpred : l % k = (i + 1) % k
+  · have hmod : (i + 1) % k = (j + 1) % k := hpred.symm.trans hj
+    have hji : i % k = j % k := Nat.ModEq.add_right_cancel' 1 hmod
+    have hji' : i % s.k = j % s.k := by rw [hk]; exact hji
+    have hwi : w i = w j := CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w i j hs hbb hji'
+    have hbi : s.b l i = s.b l j := CHANGE_B_SCS_MODR_p28 s hs i j l hji'
+    have hlt' : dist v2 (w i) < s.b l i := by rw [hwi, hbi]; exact hlt
+    obtain ⟨ε, hε, h⟩ := DIST_V3_DEFOR_EDGE_SUC_TWO_CASES_p28 s w k l i v1 v2 x1 x2 x5 a
+      hk hk3 hs hm hl hl1 hx1 hx2 hx5 ha hpred hlt'
+    exact ⟨ε, hε, fun t ht => h t ⟨by linarith [ht.1], ht.2⟩⟩
+  · by_cases hsucc : (l + 1) % k = i % k
+    · exact DEFORMATION_DIST_LE_V3_DEFOR_EDGE_SUB_TWO_CASES_p28 s w k l v1 v2 x1 x2 x5 a
+        hk3 hs hm hk hl hl1 hx1 hx2 hx5 ha hnc haff i hsucc
+    · have hd : scsDiag k l i := ⟨hne, hsucc, hpred⟩
+      obtain ⟨ε, hε, h⟩ := DEFORMATION_DIST_LE_V3_DEFOR_B_MK_TWO_CASES_p28 s w k l v1 v2
+        x1 x2 x5 a hk hk3 hs hm hl hl1 hx1 hx2 hx5 ha hdiag i hd
+      exact ⟨ε, hε, fun t ht => h t ⟨by linarith [ht.1], ht.2⟩⟩
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK_TWO_CASES` (NUXCOEA.hl:4109). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
