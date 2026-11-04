@@ -55,6 +55,11 @@ ENCODING NOTES
 
 import Kepler.Geom.AzimLemmas
 import Kepler.Text.LocalAuto1
+import Kepler.Text.AzimBridge
+import Kepler.Text.LocalAuto5
+import Kepler.Text.LocalAuto6
+import Kepler.Text.LocalAuto9
+import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto5
 import Kepler.Text.PolyAuto1
 import Mathlib
@@ -779,6 +784,181 @@ private theorem w5cA2_coplanar_triple {a b c d : V3} :
                 (Submodule.mem_span_pair.mpr ⟨0, -(f 0 - g 0) / (f 1 - g 1),
                   by rw [hdv]; simp⟩)
 
+/-! ## Section 0.5: fan vocabulary bridge (W7)
+
+LA14 is written over the LocalAuto1 `LocalFan` encoding (`hypermapOfFan`);
+the external fan lemmas shipped by LocalAuto5/6/7/9 are stated over the
+LocalAuto2 `localFan_p2` encoding.  Every lemma below is either a
+definitional equality (`rfl`) or a direct consumer of an already proved
+repo lemma (`localFan_p2.of_LocalFan_noIso` (AzimBridge), `EE_elim`,
+`AZIM_CYCLE_EQ_SIGMA_FAN_ALT` (LocalAuto2), `LOCAL_FAN_RHO_NODE_PROS`,
+`DETER_RHO_NODE`, `EXISTS_INVERSE_OF_V`, `IVS_RHO_NODE1_DETE`,
+`FAN_IMP_V_DIFF` (LocalAuto5)); no edge is postulated. -/
+
+/-- W7 bridge (a): every vertex of a `LocalFan` has a neighbour (the
+2-regular conjunct), i.e. the no-isolated hypothesis of
+`localFan_p2.of_LocalFan_noIso` (HOL `LOFA_IMP_EE_TWO_ELMS` FAN-side). -/
+private theorem w5cA7_hedge_of_LocalFan {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) :
+    ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  obtain ⟨hfan, x, hx, -, -, hreg⟩ := h
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := hreg v hv
+  have hne : (ee v E).Nonempty := by
+    by_contra hc
+    rw [Set.not_nonempty_iff_eq_empty.mp hc, Set.ncard_empty] at h2
+    norm_num at h2
+  obtain ⟨w, hw⟩ := hne
+  exact ⟨w, hw⟩
+
+/-- W7 bridge (b): `LocalFan` (LA1 hypermap encoding) implies LA2's
+`localFan_p2`.  Proof = the proved AzimBridge transport
+`localFan_p2.of_LocalFan_noIso` fed with bridge (a). -/
+private theorem w5cA7_localFan_p2 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) : localFan_p2 V E FF :=
+  localFan_p2.of_LocalFan_noIso h (w5cA7_hedge_of_LocalFan h)
+
+/-- W7 bridge (c): the two `rho_node1` spellings are definitionally equal. -/
+private theorem w5cA7_rhoNode1_eq (FF : Set (V3 × V3)) (v : V3) :
+    rhoNode1 FF v = rhoNode1_p2 FF v := rfl
+
+/-- W7 bridge (d): the two `ivs_rho_node1` spellings are definitionally equal. -/
+private theorem w5cA7_ivsRhoNode1_eq (FF : Set (V3 × V3)) (v : V3) :
+    ivsRhoNode1 FF v = ivsRhoNode1_p2 FF v := rfl
+
+/-- W7 bridge (e): the two `interior_angle1` spellings are definitionally
+equal (both bodies are the same `azim x v (rho v) (ivs v)`). -/
+private theorem w5cA7_interiorAngle1_eq (x : V3) (FF : Set (V3 × V3)) (v : V3) :
+    interiorAngle1 x FF v = interiorAngle1_p2 x FF v := rfl
+
+/-- W7 bridge (f): `azim_in_fan` (LA1, `sigmaFan` body) = `azim_in_fan_p2`
+(LA2, `EE`+`azim_cycle` body) on fan darts.  Route: `EE_elim` identifies the
+two guard sets, `AZIM_CYCLE_EQ_SIGMA_FAN_ALT` identifies the successor. -/
+private theorem w5cA7_azimInFan_p2_eq {V : Set V3} {E : Set (Set V3)}
+    (hfan : Fan.FAN 0 V E) {d : V3 × V3} (hd : d ∈ Fan.dart1OfFan V E) :
+    azimInFan d E = azimInFan_p2 d E := by
+  have hw : d.2 ∈ Fan.setOfEdge d.1 V E := by
+    rw [← Fan.properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan]
+    exact hd
+  have hso : Fan.setOfEdge d.1 Set.univ E = Fan.setOfEdge d.1 V E := by
+    rw [← EE_elim hfan d.1]
+    simp [Fan.setOfEdge, EE_p2]
+  have hsf : Fan.sigmaFan 0 Set.univ E d.1 d.2 = Fan.sigmaFan 0 V E d.1 d.2 := by
+    unfold Fan.sigmaFan
+    rw [hso]
+  unfold azimInFan azimInFan_p2
+  by_cases hnc : 1 < (ee d.1 E).ncard
+  · rw [if_pos hnc, if_pos (show 1 < (EE_p2 d.1 E).ncard from hnc), hsf,
+      EE_elim hfan d.1]
+    exact congrArg (azim 0 d.1 d.2) (AZIM_CYCLE_EQ_SIGMA_FAN_ALT hfan hw).symm
+  · rw [if_neg hnc, if_neg (show ¬(1 < (EE_p2 d.1 E).ncard) from hnc)]
+
+/-- W7 bridge (g): `wedge_in_fan_ge` (LA1) = `wedge_in_fan_ge_p2` (LA2) on
+fan darts (same route as bridge (f)). -/
+private theorem w5cA7_wedgeInFanGe_p2_eq {V : Set V3} {E : Set (Set V3)}
+    (hfan : Fan.FAN 0 V E) {d : V3 × V3} (hd : d ∈ Fan.dart1OfFan V E) :
+    wedgeInFanGe d E = wedgeInFanGe_p2 d E := by
+  have hw : d.2 ∈ Fan.setOfEdge d.1 V E := by
+    rw [← Fan.properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan]
+    exact hd
+  have hso : Fan.setOfEdge d.1 Set.univ E = Fan.setOfEdge d.1 V E := by
+    rw [← EE_elim hfan d.1]
+    simp [Fan.setOfEdge, EE_p2]
+  have hsf : Fan.sigmaFan 0 Set.univ E d.1 d.2 = Fan.sigmaFan 0 V E d.1 d.2 := by
+    unfold Fan.sigmaFan
+    rw [hso]
+  have hee : ee d.1 E = Fan.setOfEdge d.1 V E := by
+    rw [← EE_elim hfan d.1]
+    rfl
+  unfold wedgeInFanGe wedgeInFanGe_p2
+  rw [hee, EE_elim hfan d.1, hsf, AZIM_CYCLE_EQ_SIGMA_FAN_ALT hfan hw]
+  rfl
+
+/-- W7 bridge (h): a face dart of a `LocalFan` is a fan dart
+(`AzimBridge.localFan_data` supplies `FF ⊆ dart1OfFan`). -/
+private theorem w5cA7_mem_dart_of_face {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) {x : V3 × V3} (hx : x ∈ FF) :
+    x ∈ Fan.dart1OfFan V E := by
+  obtain ⟨-, d, hd, -, -, hsub, -⟩ := localFan_data h
+  exact hsub hx
+
+/-- W7 bridge (i): the `rho_node1` dart `(v, rho v)` is in `FF`
+(HOL `LOCAL_FAN_RHO_NODE_PROS` Fst, LA5). -/
+private theorem w5cA7_rho_mem_FF {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) {v : V3} (hv : v ∈ V) :
+    (v, rhoNode1 FF v) ∈ FF := by
+  have h2 := w5cA7_localFan_p2 h
+  have hmem := (LOCAL_FAN_RHO_NODE_PROS h2).1 v hv
+  rwa [← w5cA7_rhoNode1_eq] at hmem
+
+/-- W7 bridge (j): the `ivs_rho_node1` dart `(ivs v, v)` is in `FF`
+(via `EXISTS_INVERSE_OF_V` + `IVS_RHO_NODE1_DETE`, both LA5). -/
+private theorem w5cA7_ivs_mem_FF {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) {v : V3} (hv : v ∈ V) :
+    (ivsRhoNode1 FF v, v) ∈ FF := by
+  have h2 := w5cA7_localFan_p2 h
+  obtain ⟨vv, hvv, hrv⟩ := EXISTS_INVERSE_OF_V h2 hv
+  have hd : (vv, v) ∈ FF := by
+    rw [← hrv]
+    exact w5cA7_rho_mem_FF h hvv
+  have hivs : ivsRhoNode1_p2 FF v = vv := IVS_RHO_NODE1_DETE h2 hd
+  rw [w5cA7_ivsRhoNode1_eq, hivs]
+  exact hd
+
+/-- W7 bridge (k): a dart in `FF` determines `rho_node1`
+(HOL `DETER_RHO_NODE`, LA5). -/
+private theorem w5cA7_deter_rho {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) {v w : V3} (hw : (v, w) ∈ FF) :
+    rhoNode1 FF v = w := by
+  rw [w5cA7_rhoNode1_eq]
+  exact DETER_RHO_NODE (w5cA7_localFan_p2 h) hw
+
+/-- W7 bridge (l): a dart in `FF` determines `ivs_rho_node1`
+(HOL `IVS_RHO_NODE1_DETE`, LA5). -/
+private theorem w5cA7_deter_ivs {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) {vv v : V3} (hv : (vv, v) ∈ FF) :
+    ivsRhoNode1 FF v = vv := by
+  rw [w5cA7_ivsRhoNode1_eq]
+  exact IVS_RHO_NODE1_DETE (w5cA7_localFan_p2 h) hv
+
+/-- W7 bridge (n): the p2-vocabulary pointwise inangle identity (same proof
+as LA9's private `p9_inangle_eq_azimInFan`, restated locally so that no
+private name / extra lane import leaks in). -/
+private theorem w5cA7_inangle_eq_azimInFan_p2 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hlf : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
+    interiorAngle1_p2 0 FF v = azimInFan_p2 (v, rhoNode1_p2 FF v) E := by
+  have hpro := LOCAL_FAN_RHO_NODE_PROS2 hlf
+  have hdart : (v, rhoNode1_p2 FF v) ∈ FF := hpro.2 v hv
+  obtain ⟨vv, hvv, hrv⟩ := EXISTS_INVERSE_OF_V hlf hv
+  have hEE : EE_p2 v E = {rhoNode1_p2 FF v, vv} := LOFA_IMP_EE_TWO_ELMS hlf hvv hrv
+  have hcyc : azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v) = vv := by
+    rw [hEE]
+    exact AZIM_CYCLE_TWO_POINT_SET (rhoNode1_p2 FF v) vv 0 v
+  have hinj : Set.InjOn (rhoNode1_p2 FF) V :=
+    (SELF_CYCLIC_IMP_BIJ (rhoNode1_p2 FF) V
+      (fun x hx => (LOCAL_FAN_ORBIT_MAP_V hlf hx).symm)).2.1
+  have hpre : (vv, v) ∈ FF := by rw [← hrv]; exact hpro.2 vv hvv
+  have hivs : ivsRhoNode1_p2 FF v = vv := by
+    refine RHO_NODE_INVERSE_POINT hpre fun ww hw => ?_
+    have hv' : v = rhoNode1_p2 FF ww :=
+      congrArg Prod.snd (hpro.1 (ww, v) hw)
+    exact hinj (LOCAL_FAN_IMP_IN_V2 hlf hw).1 hvv (hv'.symm.trans hrv.symm)
+  show azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v)
+      = azimInFan_p2 (v, rhoNode1_p2 FF v) E
+  rw [hivs]
+  have h2 : azimInFan_p2 (v, rhoNode1_p2 FF v) E
+      = azim 0 v (rhoNode1_p2 FF v) vv := by
+    rw [LOFA_DETERMINE_AZIM_IN_FA hlf hdart]
+    exact congrArg (azim 0 (v, rhoNode1_p2 FF v).1 (v, rhoNode1_p2 FF v).2) hcyc
+  rw [h2]
+
+/-- W7 bridge (m): vertices of a `LocalFan` are off the apex
+(HOL `LOFA_IMP_V_DIFF`, from `FAN_IMP_V_DIFF`, LA5). -/
+private theorem w5cA7_v_ne_zero {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : LocalFan V E FF) {u : V3} (hu : u ∈ V) :
+    u ≠ 0 :=
+  FAN_IMP_V_DIFF h.1 u hu
+
 /-! ## Section 1: the theorems of ZLZTHIC.hl, in source order -/
 
 /-- HOL `NONPLANAR_OPEN` (hl:33): coplanarity is an open condition along
@@ -893,7 +1073,62 @@ theorem azim_cross_0_p14 (v w : V3) (h : ¬ Collinear ℝ ({0, v, w} : Set V3)) 
 /-- HOL `wedge_ge_cross` (hl:85).  NEEDS: wedge characterization. -/
 theorem wedge_ge_cross_p14 (v w : V3) (h : ¬ Collinear ℝ ({0, v, w} : Set V3)) :
     wedgeGe 0 (cross3 v w) v w = affGe ({0, cross3 v w} : Set V3) ({v, w} : Set V3) := by
-  sorry
+  have hc : cross3 v w ≠ 0 := cross3_ne_p14 h
+  have hv0 : v ≠ 0 := by
+    intro hzero
+    exact h (by rw [hzero]; simpa using collinear2_p14 0 w)
+  have hw0 : w ≠ 0 := by
+    intro hzero
+    exact h (by rw [hzero]; simpa using collinear2_p14 v 0)
+  have hncv : ¬ Collinear ℝ ({0, cross3 v w, v} : Set V3) := by
+    intro hcol
+    obtain ⟨t, htv⟩ := smul_of_collinear0_p14 hc hcol
+    have hu0c := inner_cross3_dotL_p14 v w
+    nth_rewrite 2 [htv] at hu0c
+    rw [inner_smul_right] at hu0c
+    rcases mul_eq_zero.mp hu0c with hzero | hczero
+    · rw [hzero, zero_smul] at htv
+      exact hv0 (by rw [htv])
+    · linarith [hczero, inner_cross3_self_pos_p14 v w h]
+  have hncw : ¬ Collinear ℝ ({0, cross3 v w, w} : Set V3) := by
+    intro hcol
+    obtain ⟨t, htw⟩ := smul_of_collinear0_p14 hc hcol
+    have hu0c := inner_cross3_dotR_p14 v w
+    nth_rewrite 2 [htw] at hu0c
+    rw [inner_smul_right] at hu0c
+    rcases mul_eq_zero.mp hu0c with hzero | hczero
+    · rw [hzero, zero_smul] at htw
+      exact hw0 (by rw [htw])
+    · linarith [hczero, inner_cross3_self_pos_p14 v w h]
+  have htriple : (cross3 (cross3 v w) v) ⬝ᵥ w = (cross3 v w) ⬝ᵥ (cross3 v w) := by
+    rw [dot3_eq_p14, dot3_eq_p14, coe_cross3_p14, coe_cross3_p14]
+    conv_lhs => rw [dotProduct_comm]
+    rw [triple_product_permutation]
+  have hdot : 0 < (cross3 (cross3 v w) v) ⬝ᵥ w := by
+    rw [htriple]
+    exact dot3_self_pos_p14 hc
+  obtain ⟨t, ht, hsin⟩ := JBDNJJB (u := cross3 v w) (v := v) (w := w) hncv hncw
+  have hdotcoe : (cross3 (cross3 v w) v) ⬝ᵥ w =
+      (crossProduct (cross3 v w).ofLp v.ofLp) ⬝ᵥ w.ofLp := by
+    rw [dot3_eq_p14, coe_cross3_p14]
+  have hspos : 0 < Real.sin (azim 0 (cross3 v w) v w) := by
+    rw [hsin, ← hdotcoe]
+    exact mul_pos ht hdot
+  have haz : azim 0 (cross3 v w) v w < Real.pi := by
+    rcases lt_or_ge (azim 0 (cross3 v w) v w) Real.pi with hlt | hge
+    · exact hlt
+    · exfalso
+      have hpos : 0 ≤ azim 0 (cross3 v w) v w - Real.pi := by linarith
+      have hle : azim 0 (cross3 v w) v w - Real.pi ≤ Real.pi := by
+        have := azim_lt_two_pi 0 (cross3 v w) v w; linarith
+      have hsn : 0 ≤ Real.sin (azim 0 (cross3 v w) v w - Real.pi) :=
+        Real.sin_nonneg_of_nonneg_of_le_pi hpos hle
+      have hsub : Real.sin (azim 0 (cross3 v w) v w - Real.pi) =
+          -Real.sin (azim 0 (cross3 v w) v w) := by
+        rw [Real.sin_sub, Real.cos_pi, Real.sin_pi]; ring
+      rw [hsub] at hsn
+      linarith
+  exact WEDGE_GE_EQ_AFF_GE haz hncv hncw
 
 /-- w5cA6: `sin (azim …) > 0` characterizes the `(0, π)` range (private
 twin of the LocalAuto21 `sin_azim_pos_p21`, kept local to avoid an import). -/
@@ -922,6 +1157,38 @@ private theorem w5cA6_sin_azim_pos (v1 v2 v3 v4 : V3) :
       linarith
   · rintro ⟨h1, h2⟩
     exact Real.sin_pos_of_mem_Ioo ⟨h1, h2⟩
+
+/-- W7 helper: `{0, v×w, v}` is non-collinear when `{0,v,w}` is. -/
+private theorem w5cA7_not_coll_cross_left {v w : V3}
+    (h : ¬ Collinear ℝ ({0, v, w} : Set V3)) :
+    ¬ Collinear ℝ ({0, cross3 v w, v} : Set V3) := by
+  intro hcol
+  obtain ⟨t, htv⟩ := smul_of_collinear0_p14 (cross3_ne_p14 h) hcol
+  have hu0c := inner_cross3_dotL_p14 v w
+  nth_rewrite 2 [htv] at hu0c
+  rw [inner_smul_right] at hu0c
+  rcases mul_eq_zero.mp hu0c with hzero | hczero
+  · rw [hzero, zero_smul] at htv
+    have hv0 : v ≠ 0 := by
+      intro hh; exact h (by rw [hh]; simpa using collinear2_p14 0 w)
+    exact hv0 (by rw [htv])
+  · linarith [hczero, inner_cross3_self_pos_p14 v w h]
+
+/-- W7 helper: `{0, v×w, w}` is non-collinear when `{0,v,w}` is. -/
+private theorem w5cA7_not_coll_cross_right {v w : V3}
+    (h : ¬ Collinear ℝ ({0, v, w} : Set V3)) :
+    ¬ Collinear ℝ ({0, cross3 v w, w} : Set V3) := by
+  intro hcol
+  obtain ⟨t, htw⟩ := smul_of_collinear0_p14 (cross3_ne_p14 h) hcol
+  have hu0c := inner_cross3_dotR_p14 v w
+  nth_rewrite 2 [htw] at hu0c
+  rw [inner_smul_right] at hu0c
+  rcases mul_eq_zero.mp hu0c with hzero | hczero
+  · rw [hzero, zero_smul] at htw
+    have hw0 : w ≠ 0 := by
+      intro hh; exact h (by rw [hh]; simpa using collinear2_p14 v 0)
+    exact hw0 (by rw [htw])
+  · linarith [hczero, inner_cross3_self_pos_p14 v w h]
 
 /-- HOL `azim_lt_pi_cross` (hl:107).  NEEDS: azim sign theory. -/
 theorem azim_lt_pi_cross_p14 (u1 u2 u3 : V3) :
@@ -985,12 +1252,170 @@ theorem azim_lt_pi_cross_p14 (u1 u2 u3 : V3) :
       exact hprod
     exact (w5cA6_sin_azim_pos 0 u1 u2 u3).mp hspos
 
+/-- W7 helper: `aff_lt {0} {u}` is the open opposite ray (u ≠ 0). -/
+private theorem w5cA7_mem_affLt_ray0 {u y : V3} (hu : u ≠ 0) :
+    y ∈ affLt ({0} : Set V3) ({u} : Set V3) ↔ ∃ t : ℝ, t < 0 ∧ y = t • u := by
+  rw [AFF_LT_1_1_p9 (0:V3) u (Ne.symm hu)]
+  constructor
+  · rintro ⟨t1, t2, ht2, -, hy⟩
+    exact ⟨t2, ht2, by rw [hy]; simp⟩
+  · rintro ⟨t, ht, hy⟩
+    exact ⟨1 - t, t, ht, by ring, by rw [hy]; simp⟩
+
+/-- W7 helper: non-negative coefficients in `span{v,w}` put a point in
+`aff_ge {0} {v,w}`. -/
+private theorem w5cA7_mem_affGe_pair_of_coeff {v w z : V3}
+    (hdisj : Disjoint ({0} : Set V3) ({v, w} : Set V3)) (hvw : v ≠ w)
+    (h : ∃ c d : ℝ, 0 ≤ c ∧ 0 ≤ d ∧ z = c • v + d • w) :
+    z ∈ affGe ({0} : Set V3) ({v, w} : Set V3) := by
+  obtain ⟨c, d, hc, hd, hz⟩ := h
+  rw [mem_affGe_singleton_pair hdisj hvw]
+  exact ⟨1 - c - d, c, d, hc, hd, by ring, by rw [hz]; simp⟩
+
+/-- W7 helper: coordinate form of `aff_ge {0, n} {v, w}` (the axial
+coefficient is free, the `v,w` coefficients are non-negative). -/
+private theorem w5cA7_affGe_axis_decomp {v w n y : V3}
+    (hdis : Disjoint ({0, n} : Set V3) ({v, w} : Set V3)) :
+    y ∈ affGe ({0, n} : Set V3) ({v, w} : Set V3) ↔
+      ∃ b c d : ℝ, y = b • n + c • v + d • w ∧ 0 ≤ c ∧ 0 ≤ d := by
+  rw [AFF_GE_2_2 (0:V3) n v w hdis]
+  constructor
+  · rintro ⟨t1, t2, t3, t4, ht3, ht4, -, hy⟩
+    exact ⟨t2, t3, t4, by rw [hy]; simp, ht3, ht4⟩
+  · rintro ⟨b, c, d, hy, hc, hd⟩
+    exact ⟨1 - b - c - d, b, c, d, hc, hd, by ring, by rw [hy]; simp⟩
+
+/-- W7 helper: `wedge 0 (v×w) w v` is the complement of the axial slab
+`affGe {0, v×w} {v,w}` (via `WEDGE_GE_COMPLEMENT` + `wedge_ge_cross`). -/
+private theorem w5cA7_wedge_compl {v w : V3}
+    (h1 : ¬ Collinear ℝ ({0, v, w} : Set V3)) (z : V3) :
+    z ∈ Kepler.Geom.wedge 0 (cross3 v w) w v ↔
+      z ∉ affGe ({0, cross3 v w} : Set V3) ({v, w} : Set V3) := by
+  have haz0 : azim 0 (cross3 v w) v w ≠ 0 := azim_cross_0_p14 v w h1
+  have hcomp := WEDGE_GE_COMPLEMENT (0:V3) (cross3 v w) v w haz0
+  have hwg := wedge_ge_cross_p14 v w h1
+  have hstep : z ∈ Kepler.Geom.wedge 0 (cross3 v w) w v ↔
+      z ∈ (Set.univ \ wedgeGe 0 (cross3 v w) v w) := by
+    rw [hcomp]
+    exact Iff.rfl
+  rw [hstep, hwg]
+  simp
+
 /-- HOL `generic_alt` (hl:142).  NEEDS: generic wedge theory. -/
 theorem generic_alt_p14 (u v w : V3) (h1 : ¬ Collinear ℝ ({0, v, w} : Set V3))
     (h2 : u ≠ 0) :
     affGe ({0} : Set V3) ({v, w} : Set V3) ∩ affLt ({0} : Set V3) ({u} : Set V3) = ∅ ↔
       ¬ Coplanar ({0, u, v, w} : Set V3) ∨ (-u) ∈ Kepler.Geom.wedge 0 (cross3 v w) w v := by
-  sorry
+  have hv0 : v ≠ 0 := by
+    intro h; exact h1 (by rw [h]; simpa using collinear2_p14 0 w)
+  have hw0 : w ≠ 0 := by
+    intro h; exact h1 (by rw [h]; simpa using collinear2_p14 v 0)
+  have hvw : v ≠ w := by
+    intro h; exact h1 (by simpa [h] using collinear2_p14 0 v)
+  have hn : cross3 v w ≠ 0 := cross3_ne_p14 h1
+  have hnv : cross3 v w ≠ v := by
+    intro he
+    have hdot := cross3_dotL_p14 v w
+    rw [he] at hdot
+    exact hv0 (dot3_self_zero_p14 hdot)
+  have hnw : cross3 v w ≠ w := by
+    intro he
+    have hdot := cross3_dotR_p14 v w
+    rw [he] at hdot
+    exact hw0 (dot3_self_zero_p14 hdot)
+  have hdisj0 : Disjoint ({0} : Set V3) ({v, w} : Set V3) := by
+    refine Set.disjoint_left.mpr ?_
+    intro z hz hz2
+    rw [Set.mem_singleton_iff] at hz
+    subst hz
+    rcases Set.mem_insert_iff.mp hz2 with h | h
+    · exact hv0 h.symm
+    · exact hw0 (Set.mem_singleton_iff.mp h).symm
+  have hdisjn : Disjoint ({0, cross3 v w} : Set V3) ({v, w} : Set V3) := by
+    refine Set.disjoint_left.mpr ?_
+    intro z hz hz2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz hz2
+    rcases hz with rfl | rfl <;> rcases hz2 with h | h
+    · exact hv0 h.symm
+    · exact hw0 h.symm
+    · exact hnv h
+    · exact hnw h
+  have hdotcop : (cross3 v w) ⬝ᵥ u = 0 ↔ Coplanar ({0, u, v, w} : Set V3) := by
+    have h := CROSS_DOT_COPLANAR (x := v) (y := w) (z := u)
+    have hset : ({0, v, w, u} : Set V3) = ({0, u, v, w} : Set V3) := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset] at h
+    exact h
+  constructor
+  · intro hemp
+    by_cases hcop : Coplanar ({0, u, v, w} : Set V3)
+    · right
+      rw [w5cA7_wedge_compl h1]
+      intro hmem
+      obtain ⟨b, c, d, hbd, hc, hd⟩ := (w5cA7_affGe_axis_decomp hdisjn).mp hmem
+      have hnu : (cross3 v w) ⬝ᵥ u = 0 := hdotcop.mpr hcop
+      have hdot : (cross3 v w) ⬝ᵥ (-u) =
+          b * ((cross3 v w) ⬝ᵥ (cross3 v w)) := by
+        have h1 : (cross3 v w) ⬝ᵥ (-u) =
+            (cross3 v w) ⬝ᵥ (b • cross3 v w + c • v + d • w) :=
+          congrArg (fun z : V3 => (cross3 v w) ⬝ᵥ z) hbd
+        rw [h1, dot3_add_right_p14, dot3_add_right_p14, dot3_smul_right_p14,
+          dot3_smul_right_p14, dot3_smul_right_p14, cross3_dotL_p14,
+          cross3_dotR_p14, mul_zero, mul_zero, add_zero, add_zero]
+      have hb0 : b = 0 := by
+        rw [w5cA2_dot_neg_right, hnu, neg_zero] at hdot
+        rcases mul_eq_zero.mp hdot.symm with hb | hn2
+        · exact hb
+        · exact absurd hn2 (ne_of_gt (dot3_self_pos_p14 hn))
+      have hbdeq : (-u) = c • v + d • w := by
+        rw [hbd, hb0, zero_smul, zero_add]
+      have hlt : (-u) ∈ affLt ({0} : Set V3) ({u} : Set V3) := by
+        rw [w5cA7_mem_affLt_ray0 h2]
+        exact ⟨-1, by norm_num, by simp⟩
+      have hge : (-u) ∈ affGe ({0} : Set V3) ({v, w} : Set V3) :=
+        w5cA7_mem_affGe_pair_of_coeff hdisj0 hvw ⟨c, d, hc, hd, hbdeq⟩
+      have hmem : (-u) ∈ affGe ({0} : Set V3) ({v, w} : Set V3) ∩
+          affLt ({0} : Set V3) ({u} : Set V3) := ⟨hge, hlt⟩
+      rw [hemp] at hmem
+      exact hmem
+    · exact Or.inl hcop
+  · rintro (hnc | hw)
+    · rw [Set.eq_empty_iff_forall_notMem]
+      rintro y ⟨hge, hlt⟩
+      obtain ⟨_, c, d, hrest⟩ := (mem_affGe_singleton_pair (x := (0:V3)) (v := v) (w := w) hdisj0 hvw).mp hge
+      obtain ⟨hc, hd, -, hycd⟩ := hrest
+      have hycd' : y = c • v + d • w := by simpa using hycd
+      obtain ⟨t, ht, hyt⟩ := (w5cA7_mem_affLt_ray0 h2).mp hlt
+      have htne : t ≠ 0 := ne_of_lt ht
+      have hu : u = t⁻¹ • y := by
+        rw [hyt, smul_smul, inv_mul_cancel₀ htne, one_smul]
+      have hu2 : u = t⁻¹ • (c • v + d • w) := by rw [hu, hycd']
+      have hnu : (cross3 v w) ⬝ᵥ u = 0 := by
+        have h1 : (cross3 v w) ⬝ᵥ u =
+            (cross3 v w) ⬝ᵥ (t⁻¹ • (c • v + d • w)) :=
+          congrArg (fun z : V3 => (cross3 v w) ⬝ᵥ z) hu2
+        rw [h1, dot3_smul_right_p14, dot3_add_right_p14,
+          dot3_smul_right_p14, dot3_smul_right_p14, cross3_dotL_p14,
+          cross3_dotR_p14, mul_zero, mul_zero, add_zero, mul_zero]
+      exact hnc (hdotcop.mp hnu)
+    · rw [w5cA7_wedge_compl h1] at hw
+      rw [Set.eq_empty_iff_forall_notMem]
+      rintro y ⟨hge, hlt⟩
+      obtain ⟨_, c, d, hrest⟩ := (mem_affGe_singleton_pair (x := (0:V3)) (v := v) (w := w) hdisj0 hvw).mp hge
+      obtain ⟨hc, hd, -, hycd⟩ := hrest
+      have hycd' : y = c • v + d • w := by simpa using hycd
+      obtain ⟨t, ht, hyt⟩ := (w5cA7_mem_affLt_ray0 h2).mp hlt
+      have htne : t ≠ 0 := ne_of_lt ht
+      have hcoef : (-u) = (0:ℝ) • (cross3 v w) + ((-1/t) * c) • v + ((-1/t) * d) • w := by
+        have hy1 : y = t • u := hyt
+        have h1 : (-u) = (-1/t) • y := by
+          rw [hy1, smul_smul, div_mul_cancel₀ (-1) htne, neg_one_smul]
+        rw [h1, hycd', smul_add, smul_smul, smul_smul]
+        simp
+      have hpos : 0 < -1/t := div_pos_of_neg_of_neg (by norm_num) ht
+      exact hw ((w5cA7_affGe_axis_decomp hdisjn).mpr
+        ⟨0, (-1/t) * c, (-1/t) * d, hcoef, mul_nonneg (le_of_lt hpos) hc,
+          mul_nonneg (le_of_lt hpos) hd⟩)
 
 /-- HOL `vuy1` (hl:264). -/
 theorem vuy1_p14 (v u0 u1 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v} : Set V3))
@@ -2279,7 +2704,67 @@ theorem NHCXLRV_p14 (v w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
     (h5 : v ∈ Kepler.Geom.wedge 0 w1 w2 w0) :
     ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
       f v t ∈ Kepler.Geom.wedge 0 (f w1 t) (f w2 t) (f w0 t) := by
-  sorry
+  obtain ⟨h0mem, hcont, hzero⟩ := h1
+  have hw1 : f w1 0 = w1 := hzero w1 (by simp)
+  have hw2 : f w2 0 = w2 := hzero w2 (by simp)
+  have hw0 : f w0 0 = w0 := hzero w0 (by simp)
+  have hv0 : f v 0 = v := hzero v (by simp)
+  obtain ⟨-, hpos, hlt⟩ := h5
+  obtain ⟨c, hAc, hcB⟩ : ∃ c : ℝ, azim 0 w1 w2 v < c ∧ c < azim 0 w1 w2 w0 :=
+    ⟨(azim 0 w1 w2 v + azim 0 w1 w2 w0) / 2, by linarith, by linarith⟩
+  have hAcCont : ContinuousAt (fun t => azim 0 (f w1 t) (f w2 t) (f v t)) 0 := by
+    refine w5cA3_continuousAt_azim (hcont w1 (by simp) 0 h0mem)
+      (hcont w2 (by simp) 0 h0mem) (hcont v (by simp) 0 h0mem) ?_ ?_ ?_
+    · simpa [hw1, hw2] using h2
+    · simpa [hw1, hv0] using h4
+    · rw [hw1, hw2, hv0]
+      exact ne_of_gt hpos
+  have hBcCont : ContinuousAt (fun t => azim 0 (f w1 t) (f w2 t) (f w0 t)) 0 := by
+    refine w5cA3_continuousAt_azim (hcont w1 (by simp) 0 h0mem)
+      (hcont w2 (by simp) 0 h0mem) (hcont w0 (by simp) 0 h0mem) ?_ ?_ ?_
+    · simpa [hw1, hw2] using h2
+    · simpa [hw1, hw0] using h3
+    · rw [hw1, hw2, hw0]
+      exact ne_of_gt (lt_trans hpos hlt)
+  have hA0 : azim 0 (f w1 0) (f w2 0) (f v 0) = azim 0 w1 w2 v := by
+    rw [hw1, hw2, hv0]
+  have hB0 : azim 0 (f w1 0) (f w2 0) (f w0 0) = azim 0 w1 w2 w0 := by
+    rw [hw1, hw2, hw0]
+  obtain ⟨e1, he1, hb1⟩ := Metric.continuousAt_iff.mp hAcCont
+    (azim 0 w1 w2 v / 2) (by linarith)
+  obtain ⟨e2, he2, hb2⟩ := Metric.continuousAt_iff.mp hAcCont
+    (c - azim 0 w1 w2 v) (by linarith)
+  obtain ⟨e3, he3, hb3⟩ := Metric.continuousAt_iff.mp hBcCont
+    (azim 0 w1 w2 w0 - c) (by linarith)
+  refine ⟨min e1 (min e2 e3), lt_min he1 (lt_min he2 he3), ?_⟩
+  intro t ht
+  have ht1 : dist t 0 < e1 := by
+    rw [Real.dist_eq]; simpa using lt_of_lt_of_le ht (min_le_left _ _)
+  have ht23 : dist t 0 < min e2 e3 := by
+    rw [Real.dist_eq]; simpa using lt_of_lt_of_le ht (min_le_right _ _)
+  have ht2 : dist t 0 < e2 := lt_of_lt_of_le ht23 (min_le_left _ _)
+  have ht3 : dist t 0 < e3 := lt_of_lt_of_le ht23 (min_le_right _ _)
+  have h1' := hb1 (x := t) ht1
+  rw [hA0, Real.dist_eq] at h1'
+  have hApos : 0 < azim 0 (f w1 t) (f w2 t) (f v t) := by
+    have := (abs_lt.mp h1').1
+    linarith
+  have h2' := hb2 (x := t) ht2
+  rw [hA0, Real.dist_eq] at h2'
+  have hAlt : azim 0 (f w1 t) (f w2 t) (f v t) < c := by
+    have := (abs_lt.mp h2').2
+    linarith
+  have h3' := hb3 (x := t) ht3
+  rw [hB0, Real.dist_eq] at h3'
+  have hcLt : c < azim 0 (f w1 t) (f w2 t) (f w0 t) := by
+    have := (abs_lt.mp h3').1
+    linarith
+  refine ⟨?_, hApos, lt_trans hAlt hcLt⟩
+  intro hcol
+  have hz : azim 0 (f w1 t) (f w2 t) (f v t) = 0 := by
+    unfold azim
+    rw [if_pos (Or.inr hcol)]
+  linarith
 
 /-- HOL `NHCXLRV_ALT` (hl:1268; the `f w (§0) = w`-rewritten variant).
 NEEDS: deformation wedge-persistence. -/
@@ -2291,7 +2776,12 @@ theorem NHCXLRV_ALT_p14 (v w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
     (h5 : v ∈ Kepler.Geom.wedge 0 w1 w2 w0) :
     ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
       f v t ∈ Kepler.Geom.wedge 0 (f w1 t) (f w2 t) (f w0 t) := by
-  sorry
+  have hz : ∀ u ∈ ({w0, w1, w2, v} : Set V3), f u 0 = u := fun u hu =>
+    h1.2.2 u hu
+  refine NHCXLRV_p14 v w0 w1 w2 f a b h1 ?_ ?_ ?_ h5
+  · simpa [hz w1 (by simp), hz w2 (by simp)] using h2
+  · simpa [hz w1 (by simp), hz w0 (by simp)] using h3
+  · simpa [hz w1 (by simp), hz v (by simp)] using h4
 
 /-- HOL `WNWSHJT` (hl:1295).  NEEDS: azim continuity + deformation kit. -/
 theorem WNWSHJT_p14 (w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
@@ -2301,14 +2791,47 @@ theorem WNWSHJT_p14 (w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b : ℝ)
     (h4 : 0 < azim 0 w1 w2 w0) (h5 : azim 0 w1 w2 w0 < Real.pi) :
     ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
       azim 0 (f w1 t) (f w2 t) (f w0 t) < Real.pi := by
-  sorry
+  obtain ⟨h0mem, hcont, hzero⟩ := h1
+  have hw1 : f w1 0 = w1 := hzero w1 (by simp)
+  have hw2 : f w2 0 = w2 := hzero w2 (by simp)
+  have hw0 : f w0 0 = w0 := hzero w0 (by simp)
+  have hBcCont : ContinuousAt (fun t => azim 0 (f w1 t) (f w2 t) (f w0 t)) 0 := by
+    refine w5cA3_continuousAt_azim (hcont w1 (by simp) 0 h0mem)
+      (hcont w2 (by simp) 0 h0mem) (hcont w0 (by simp) 0 h0mem) ?_ ?_ ?_
+    · simpa [hw1, hw2] using h2
+    · simpa [hw1, hw0] using h3
+    · rw [hw1, hw2, hw0]
+      exact ne_of_gt h4
+  have hB0 : azim 0 (f w1 0) (f w2 0) (f w0 0) = azim 0 w1 w2 w0 := by
+    rw [hw1, hw2, hw0]
+  obtain ⟨e, he, hb⟩ := Metric.continuousAt_iff.mp hBcCont
+    (Real.pi - azim 0 w1 w2 w0) (by linarith)
+  refine ⟨e, he, ?_⟩
+  intro t ht
+  have ht' : dist t 0 < e := by
+    rw [Real.dist_eq]; simpa using ht
+  have h := hb (x := t) ht'
+  rw [hB0, Real.dist_eq] at h
+  have := (abs_lt.mp h).2
+  linarith
 
 /-- HOL `LOFA_IMP_INANGLE_EQ_AZIM` (hl:1325).  NEEDS: fan structure
 (`LocalFan` is the LocalAuto1 skeleton). -/
 theorem LOFA_IMP_INANGLE_EQ_AZIM_p14 (V : Set V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (v : V3) (h1 : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (h2 : v ∈ V) :
     interiorAngle1 0 FF v = azimInFan (v, rhoNode1 FF v) E := by
-  sorry
+  have h2' := w5cA7_localFan_p2 h1
+  have hd : (v, rhoNode1 FF v) ∈ FF := w5cA7_rho_mem_FF h1 h2
+  have hdart : (v, rhoNode1 FF v) ∈ Fan.dart1OfFan V E :=
+    w5cA7_mem_dart_of_face h1 hd
+  have e1 : interiorAngle1 0 FF v = interiorAngle1_p2 0 FF v :=
+    w5cA7_interiorAngle1_eq 0 FF v
+  have e2 : azimInFan (v, rhoNode1 FF v) E =
+      azimInFan_p2 (v, rhoNode1_p2 FF v) E := by
+    rw [w5cA7_rhoNode1_eq]
+    exact w5cA7_azimInFan_p2_eq h1.1 hdart
+  rw [e1, e2]
+  exact w5cA7_inangle_eq_azimInFan_p2 h2' h2
 
 /-- HOL `deformation_rho_node1_equivariant1` (hl:1353).  NEEDS: fan
 structure + deformation theory. -/
@@ -2319,7 +2842,10 @@ theorem deformation_rho_node1_equivariant1_p14 (f : V3 → ℝ → V3) (V : Set 
       ((fun d => (f d.1 t, f d.2 t)) '' FF)) (h4 : v ∈ V) :
     f (rhoNode1 FF v) t =
       rhoNode1 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) := by
-  sorry
+  have hd : (v, rhoNode1 FF v) ∈ FF := w5cA7_rho_mem_FF h2 h4
+  have himg : (f v t, f (rhoNode1 FF v) t) ∈
+      (fun d => (f d.1 t, f d.2 t)) '' FF := Set.mem_image_of_mem _ hd
+  exact (w5cA7_deter_rho h3 himg).symm
 
 /-- HOL `deformation_ivs_rho_node1_equivariant1` (hl:1381).  NEEDS: fan
 structure + deformation theory. -/
@@ -2330,7 +2856,10 @@ theorem deformation_ivs_rho_node1_equivariant1_p14 (f : V3 → ℝ → V3) (V : 
       ((fun d => (f d.1 t, f d.2 t)) '' FF)) (h4 : v ∈ V) :
     f (ivsRhoNode1 FF v) t =
       ivsRhoNode1 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) := by
-  sorry
+  have hd : (ivsRhoNode1 FF v, v) ∈ FF := w5cA7_ivs_mem_FF h2 h4
+  have himg : (f (ivsRhoNode1 FF v) t, f v t) ∈
+      (fun d => (f d.1 t, f d.2 t)) '' FF := Set.mem_image_of_mem _ hd
+  exact (w5cA7_deter_ivs h3 himg).symm
 
 /-- HOL `deformation_subset` (hl:1409). -/
 theorem deformation_subset_p14 (f : V3 → ℝ → V3) (U V : Set V3) (a b : ℝ)
@@ -2392,6 +2921,66 @@ theorem zlz_azim_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 �
         azimInFan (f x.1 t, f x.2 t) ((fun s => (fun v => f v t) '' s) '' E) ≤ Real.pi := by
   sorry
 
+/-- W7 helper: wedge persistence along four continuous curves (the
+curve-level form of `NHCXLRV`, used by `zlz_generic` with the cross-product
+curve `t ↦ f v t × f w t`). -/
+private theorem w5cA7_wedge_persist {w1 w2 w0 vz : ℝ → V3}
+    (hc1 : ContinuousAt w1 0) (hc2 : ContinuousAt w2 0)
+    (hc3 : ContinuousAt w0 0) (hcz : ContinuousAt vz 0)
+    (hnc12 : ¬ Collinear ℝ ({0, w1 0, w2 0} : Set V3))
+    (hnc10 : ¬ Collinear ℝ ({0, w1 0, w0 0} : Set V3))
+    (hnc1z : ¬ Collinear ℝ ({0, w1 0, vz 0} : Set V3))
+    (hpos : 0 < azim 0 (w1 0) (w2 0) (vz 0))
+    (hlt : azim 0 (w1 0) (w2 0) (vz 0) < azim 0 (w1 0) (w2 0) (w0 0)) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
+      vz t ∈ Kepler.Geom.wedge 0 (w1 t) (w2 t) (w0 t) := by
+  obtain ⟨c, hAc, hcB⟩ : ∃ c : ℝ,
+      azim 0 (w1 0) (w2 0) (vz 0) < c ∧ c < azim 0 (w1 0) (w2 0) (w0 0) :=
+    ⟨(azim 0 (w1 0) (w2 0) (vz 0) + azim 0 (w1 0) (w2 0) (w0 0)) / 2,
+      by linarith, by linarith⟩
+  have hAcCont : ContinuousAt (fun t => azim 0 (w1 t) (w2 t) (vz t)) 0 :=
+    w5cA3_continuousAt_azim hc1 hc2 hcz hnc12 hnc1z (ne_of_gt hpos)
+  have hBcCont : ContinuousAt (fun t => azim 0 (w1 t) (w2 t) (w0 t)) 0 :=
+    w5cA3_continuousAt_azim hc1 hc2 hc3 hnc12 hnc10
+      (ne_of_gt (lt_trans hpos hlt))
+  have hA0 : azim 0 (w1 0) (w2 0) (vz 0) = azim 0 (w1 0) (w2 0) (vz 0) := rfl
+  have hB0 : azim 0 (w1 0) (w2 0) (w0 0) = azim 0 (w1 0) (w2 0) (w0 0) := rfl
+  obtain ⟨e1, he1, hb1⟩ := Metric.continuousAt_iff.mp hAcCont
+    (azim 0 (w1 0) (w2 0) (vz 0) / 2) (by linarith)
+  obtain ⟨e2, he2, hb2⟩ := Metric.continuousAt_iff.mp hAcCont
+    (c - azim 0 (w1 0) (w2 0) (vz 0)) (by linarith)
+  obtain ⟨e3, he3, hb3⟩ := Metric.continuousAt_iff.mp hBcCont
+    (azim 0 (w1 0) (w2 0) (w0 0) - c) (by linarith)
+  refine ⟨min e1 (min e2 e3), lt_min he1 (lt_min he2 he3), ?_⟩
+  intro t ht
+  have htd : dist t 0 < min e1 (min e2 e3) := by
+    rw [Real.dist_eq]; simpa using ht
+  have ht1 : dist t 0 < e1 := lt_of_lt_of_le htd (min_le_left _ _)
+  have ht23 : dist t 0 < min e2 e3 := lt_of_lt_of_le htd (min_le_right _ _)
+  have ht2 : dist t 0 < e2 := lt_of_lt_of_le ht23 (min_le_left _ _)
+  have ht3 : dist t 0 < e3 := lt_of_lt_of_le ht23 (min_le_right _ _)
+  have h1' := hb1 (x := t) ht1
+  rw [hA0, Real.dist_eq] at h1'
+  have hApos : 0 < azim 0 (w1 t) (w2 t) (vz t) := by
+    have := (abs_lt.mp h1').1
+    linarith
+  have h2' := hb2 (x := t) ht2
+  rw [hA0, Real.dist_eq] at h2'
+  have hAlt : azim 0 (w1 t) (w2 t) (vz t) < c := by
+    have := (abs_lt.mp h2').2
+    linarith
+  have h3' := hb3 (x := t) ht3
+  rw [hB0, Real.dist_eq] at h3'
+  have hcLt : c < azim 0 (w1 t) (w2 t) (w0 t) := by
+    have := (abs_lt.mp h3').1
+    linarith
+  refine ⟨?_, hApos, lt_trans hAlt hcLt⟩
+  intro hcol
+  have hz : azim 0 (w1 t) (w2 t) (vz t) = 0 := by
+    unfold azim
+    rw [if_pos (Or.inr hcol)]
+  linarith
+
 /-- HOL `zlz_generic` (hl:1852).  NEEDS: terminal deformation theory. -/
 theorem zlz_generic_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
@@ -2400,7 +2989,128 @@ theorem zlz_generic_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
       0 < e4 ∧ ∀ t, -e4 < t ∧ t < e4 →
         affGe ({0} : Set V3) ({f v t, f w t} : Set V3) ∩
           affLt ({0} : Set V3) ({f u t} : Set V3) = ∅ := by
-  sorry
+  intro u v w
+  by_cases hprem : (v, w) ∈ FF ∧ u ∈ V
+  · obtain ⟨hd, huV⟩ := hprem
+    have hlo : LocalFan V E FF := h1.1
+    have hlf2 : localFan_p2 V E FF := w5cA7_localFan_p2 hlo
+    have hvV : v ∈ V := (LOCAL_FAN_IMP_IN_V2 hlf2 hd).1
+    have hwV : w ∈ V := (LOCAL_FAN_IMP_IN_V2 hlf2 hd).2
+    have hu0 : u ≠ 0 := w5cA7_v_ne_zero hlo huV
+    have hrv : rhoNode1 FF v = w := w5cA7_deter_rho hlo hd
+    have hnczero : ¬ Collinear ℝ ({0, v, w} : Set V3) := by
+      have h := LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf2 hvV
+      rwa [show rhoNode1_p2 FF v = w from
+        (w5cA7_rhoNode1_eq FF v).symm.trans hrv] at h
+    have hE : ({v, w} : Set V3) ∈ E := (LOCAL_FAN_IN_FF_IN_ORD_PAIRS2 hlf2 hd hd).1
+    have hgen := h2 v w u hE huV
+    have hga : ¬ Coplanar ({0, u, v, w} : Set V3) ∨
+        (-u) ∈ Kepler.Geom.wedge 0 (cross3 v w) w v :=
+      (generic_alt_p14 u v w hnczero hu0).mp hgen
+    obtain ⟨h0mem, hcont, hzero⟩ := h3
+    have hucont : ContinuousAt (fun t => f u t) 0 := hcont u huV 0 h0mem
+    have hvcont : ContinuousAt (fun t => f v t) 0 := hcont v hvV 0 h0mem
+    have hwcont : ContinuousAt (fun t => f w t) 0 := hcont w hwV 0 h0mem
+    have hGdot_cont : ContinuousAt (fun t => f u t ⬝ᵥ f u t) 0 :=
+      w5cA2_continuousAt_dot hucont hucont
+    have hGdot0 : (fun t => f u t ⬝ᵥ f u t) 0 ≠ 0 := by
+      simp only [hzero u huV]
+      exact ne_of_gt (dot3_self_pos_p14 hu0)
+    obtain ⟨e1, he1, hb1⟩ := w5cA2_eventually_ne hGdot_cont hGdot0
+    have hcross_cont : ContinuousAt (fun t => cross3 (f v t) (f w t)) 0 :=
+      w5cA2_continuousAt_cross3 hvcont hwcont
+    have hGcross_cont : ContinuousAt
+        (fun t => cross3 (f v t) (f w t) ⬝ᵥ cross3 (f v t) (f w t)) 0 :=
+      w5cA2_continuousAt_dot hcross_cont hcross_cont
+    have hGcross0 : (fun t =>
+        cross3 (f v t) (f w t) ⬝ᵥ cross3 (f v t) (f w t)) 0 ≠ 0 := by
+      simp only [hzero v hvV, hzero w hwV]
+      exact ne_of_gt (dot3_self_pos_p14 (cross3_ne_p14 hnczero))
+    obtain ⟨e2, he2, hb2⟩ := w5cA2_eventually_ne hGcross_cont hGcross0
+    rcases hga with hncop | hwedge
+    · have hnp : ¬ Coplanar ({0, f u 0, f v 0, f w 0} : Set V3) := by
+        simpa [hzero u huV, hzero v hvV, hzero w hwV] using hncop
+      obtain ⟨e3, he3, hb3⟩ := NONPLANAR_OPEN_p14 (fun _ => (0:V3))
+        (fun t => f u t) (fun t => f v t) (fun t => f w t) 0 hnp
+        continuousAt_const hucont hvcont hwcont
+      refine ⟨min e1 (min e2 e3), ?_⟩
+      intro _
+      refine ⟨lt_min he1 (lt_min he2 he3), ?_⟩
+      intro t ht
+      have htabs : |t| < min e1 (min e2 e3) := by rw [abs_lt]; exact ht
+      have ht1 : dist t 0 < e1 := by
+        rw [Real.dist_eq]
+        simpa using lt_of_lt_of_le htabs (min_le_left _ _)
+      have htd : dist t 0 < min e1 (min e2 e3) := by
+        rw [Real.dist_eq]; simpa using htabs
+      have ht23 : dist t 0 < min e2 e3 :=
+        lt_of_lt_of_le htd (min_le_right _ _)
+      have ht2 : dist t 0 < e2 := lt_of_lt_of_le ht23 (min_le_left _ _)
+      have ht3 : dist t 0 < e3 := lt_of_lt_of_le ht23 (min_le_right _ _)
+      have hfu_ne : f u t ≠ 0 := by
+        intro hz
+        exact hb1 t (by simpa using ht1) (by rw [hz]; simp)
+      have hncv_t : ¬ Collinear ℝ ({0, f v t, f w t} : Set V3) := by
+        have h2t : (fun t => cross3 (f v t) (f w t) ⬝ᵥ
+            cross3 (f v t) (f w t)) t ≠ 0 := hb2 t (by simpa using ht2)
+        have hcne : cross3 (f v t) (f w t) ≠ 0 := by
+          intro hc
+          exact h2t (by simp [hc])
+        intro hcol
+        exact hcne (w5cA2_collinear0_iff_cross.mp hcol)
+      have hnp_t : ¬ Coplanar ({0, f u t, f v t, f w t} : Set V3) :=
+        hb3 t (by simpa using ht3)
+      exact (generic_alt_p14 (f u t) (f v t) (f w t) hncv_t hfu_ne).mpr
+        (Or.inl hnp_t)
+    · obtain ⟨hnc1z, hpos0, hlt0⟩ := hwedge
+      obtain ⟨e3, he3, hb3⟩ := w5cA7_wedge_persist
+        (w1 := fun t => cross3 (f v t) (f w t)) (w2 := fun t => f w t)
+        (w0 := fun t => f v t) (vz := fun t => -f u t)
+        hcross_cont hwcont hvcont hucont.neg
+        (by simpa [hzero v hvV, hzero w hwV] using
+          w5cA7_not_coll_cross_right hnczero)
+        (by simpa [hzero v hvV, hzero w hwV] using
+          w5cA7_not_coll_cross_left hnczero)
+        (by
+          rw [hzero v hvV, hzero w hwV, hzero u huV]
+          simpa [Collinear3] using hnc1z)
+        (by
+          rw [hzero v hvV, hzero w hwV, hzero u huV]
+          exact hpos0)
+        (by
+          rw [hzero v hvV, hzero w hwV, hzero u huV]
+          exact hlt0)
+      refine ⟨min e1 (min e2 e3), ?_⟩
+      intro _
+      refine ⟨lt_min he1 (lt_min he2 he3), ?_⟩
+      intro t ht
+      have htabs : |t| < min e1 (min e2 e3) := by rw [abs_lt]; exact ht
+      have ht1 : dist t 0 < e1 := by
+        rw [Real.dist_eq]
+        simpa using lt_of_lt_of_le htabs (min_le_left _ _)
+      have htd : dist t 0 < min e1 (min e2 e3) := by
+        rw [Real.dist_eq]; simpa using htabs
+      have ht23 : dist t 0 < min e2 e3 :=
+        lt_of_lt_of_le htd (min_le_right _ _)
+      have ht2 : dist t 0 < e2 := lt_of_lt_of_le ht23 (min_le_left _ _)
+      have ht3 : dist t 0 < e3 := lt_of_lt_of_le ht23 (min_le_right _ _)
+      have hfu_ne : f u t ≠ 0 := by
+        intro hz
+        exact hb1 t (by simpa using ht1) (by rw [hz]; simp)
+      have hncv_t : ¬ Collinear ℝ ({0, f v t, f w t} : Set V3) := by
+        have h2t : (fun t => cross3 (f v t) (f w t) ⬝ᵥ
+            cross3 (f v t) (f w t)) t ≠ 0 := hb2 t (by simpa using ht2)
+        have hcne : cross3 (f v t) (f w t) ≠ 0 := by
+          intro hc
+          exact h2t (by simp [hc])
+        intro hcol
+        exact hcne (w5cA2_collinear0_iff_cross.mp hcol)
+      have hwedge_t : (-f u t) ∈ Kepler.Geom.wedge 0
+          (cross3 (f v t) (f w t)) (f w t) (f v t) :=
+        hb3 t (by simpa using ht3)
+      exact (generic_alt_p14 (f u t) (f v t) (f w t) hncv_t hfu_ne).mpr
+        (Or.inr hwedge_t)
+  · exact ⟨1, fun h => absurd h hprem⟩
 
 /-- HOL `zlz_wedge_skolem` (hl:2007).  NEEDS: terminal deformation
 theory. -/
@@ -2476,7 +3186,8 @@ theorem PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (V : Set V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (u v : V3) (h1 : LocalFan V E FF) (h2 : u ∈ V)
     (h3 : v ∈ V) (h4 : u ≠ v) (h5 : Generic V E) :
     ¬ Collinear ℝ ({0, u, v} : Set V3) := by
-  sorry
+  exact PROPERTIES_GENERIC_LOCAL_FAN_p9 (w5cA7_localFan_p2 h1) (fun _ _ => True.intro) h5
+    u h2 v h3 (Ne.symm h4)
 
 /-- HOL `SKOLEM_EPSILON` (hl:2226). -/
 theorem SKOLEM_EPSILON_p14 {A : Type*} (Q : ℝ → A → Prop) (s : Set A)
