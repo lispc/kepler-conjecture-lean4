@@ -989,13 +989,54 @@ theorem CARD_V_TWO_HAFL_CIRCLE (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w �
     (hvw : v ≠ w) (n n' : ℕ) (hn : (rhoNode1_p2 FF)^[n] v = w)
     (hn' : (rhoNode1_p2 FF)^[n'] w = v) (hnc : n < V.ncard) (hn'c : n' < V.ncard) :
     n + n' = V.ncard :=
-  sorry
+  by
+    -- Orbit counting: `d = n + n'` is a period at `v` (`ρ^[n] v = w`, `ρ^[n'] w = v`)
+    -- and `V.ncard` is a period (`LOFA_IMP_ITER_RHO_NODE_ID2`).  If `d < V.ncard`
+    -- this collides with the pairwise distinctness of the first `V.ncard` iterates
+    -- (`LOFA_IMP_DIS_ELMS23`); if `d > V.ncard` the same lemma kills the residual
+    -- period `d - V.ncard`; hence `d = V.ncard`.
+    have hN : (rhoNode1_p2 FF)^[V.ncard] v = v := LOFA_IMP_ITER_RHO_NODE_ID2 h hv
+    have hd : (rhoNode1_p2 FF)^[n + n'] v = v := by
+      rw [Nat.add_comm n n', Function.iterate_add_apply, hn, hn']
+    have hnpos : 0 < n := by
+      rcases Nat.eq_zero_or_pos n with h0 | hp
+      · exfalso
+        rw [h0] at hn
+        simp only [Function.iterate_zero, id] at hn
+        exact hvw hn
+      · exact hp
+    have hdlt : n + n' < 2 * V.ncard := by omega
+    rcases lt_trichotomy (n + n') V.ncard with hlt | heq | hgt
+    · have hdis := LOFA_IMP_DIS_ELMS23 h hv 0 (n + n') (by omega) hlt
+      simp only [Function.iterate_zero, id] at hdis
+      exact absurd hd hdis
+    · exact heq
+    · set r := n + n' - V.ncard with hr
+      have hrpos : 0 < r := by omega
+      have hrlt : r < V.ncard := by omega
+      have hrv : (rhoNode1_p2 FF)^[r] v = v := by
+        have hdr : n + n' = r + V.ncard := by omega
+        rw [hdr, Function.iterate_add_apply, hN] at hd
+        exact hd
+      have hdis := LOFA_IMP_DIS_ELMS23 h hv 0 r hrpos hrlt
+      simp only [Function.iterate_zero, id] at hdis
+      exact absurd hrv hdis
 
 /-- HOL `DIFFERENCE_IMP_LT_CARDV` (local_lemmas1.hl:4721) — giant. -/
 theorem DIFFERENCE_IMP_LT_CARDV (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
     (m : ℕ) (hm : ∀ n : ℕ, n < m → ¬((rhoNode1_p2 FF)^[n] v = w)) :
     m < V.ncard :=
-  sorry
+  by
+    -- Orbit covering: `w` occurs among the first `V.ncard` iterates of `v`
+    -- (`LOFA_IMP_LT_CARD_SET_V`), so `m ≥ V.ncard` would put that occurrence
+    -- below `m`, contradicting the hypothesis.
+    by_contra hcon
+    have hmN : V.ncard ≤ m := by omega
+    have hset := LOFA_IMP_LT_CARD_SET_V h hv
+    have hmem : w ∈ {(rhoNode1_p2 FF)^[n] v | n < V.ncard} := by
+      rw [hset]; exact hw
+    obtain ⟨n, hnlt, hnw⟩ := hmem
+    exact hm n (by omega) hnw
 
 /-- HOL `LT_CARD_MONO_LOFA` (local_lemmas1.hl:4746) — giant. -/
 theorem LT_CARD_MONO_LOFA (h : localFan_p2 V E FF) (hv : v ∈ V) :
