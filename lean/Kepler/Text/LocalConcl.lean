@@ -2464,6 +2464,789 @@ theorem TFITSKC_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV
       hd h2 (fun j j' hdiag' =>
         ⟨(hdiag j j' hdiag').1.1, (hdiag j j' hdiag').1.2, (hdiag j j' hdiag').2⟩)
 
+/-! ### LV program slot B materialization capstones (lane lv34-w1,
+2026-11-04, after the leftover-mat-scout workorder LV3/LV4): the clean
+top-level public LocalAuto13 exits (68) and LocalAuto9 exits
+(68) that no e2e root reaches are re-exposed as TWO verbatim
+conjunctions -- the sorried exits (LA13: 40 giants, LA9: 9 chapter
+capstones) are excluded one-by-one per the workorder ("sorried 出口
+排除"), their debt owners are the existing queues (LA13: LA1 registry
+`YXIONXL2_concl` line + Local Fan queue; LA9: §2-1 GIANT W2 +
+EJRCFJD_ALT2).  Measured by the scout on baseline I 1e139a28: clean
+subset closures GROUP_SORRIED = 0 (probe2), representative axioms
+standard-three (axprobe); expected cone yield at the lv-wire-w2 wiring
+gate +209 / +180 (+389 pair), K_SORRIED 134 and K_AXIOM 624 unchanged.
+This section is self-contained: pure insertion, zero import changes,
+zero edits to existing content.  Each capstone carries a scoped
+`set_option linter.unusedVariables false in`: the restated exit
+statements keep their original (conclusion-unused) hypothesis binders
+verbatim, and the linter would otherwise emit ~109 noise warnings per
+compile in this file -- the option is statement- and axiom-neutral. -/
+
+set_option linter.unusedVariables false in
+/-- LocalAuto13 materialization capstone (LV program slot B, wave
+lv34-w1, 2026-11-04; scout lane leftover-mat-scout §1-§3, generator
+precedent la35-root-w1 `a8e35ccf`).  The 68 clean top-level public
+LocalAuto13 theorem exits unreachable from every e2e root (probe1
+SEED_PROBES: 68 clean + 40 sorried
+exits excluded per the workorder -- the sorried half is not entered,
+zero of its proof debt flows into this file; group closure of the clean
+subset measured GROUP_SORRIED = 0, so K_SORRIED 134 and K_AXIOM 624 are
+untouched). 3 of the 68 conjuncts are auto-generated equation/structure exits restated from the `#check @name` printer output (no verbatim source declaration exists).
+Anchors (no fabricated edges): every conjunct is asserted in the
+verbatim wording of its LocalAuto13 declaration -- the conjunct text is
+the declaration's source signature (binders + conclusion, copied
+verbatim and mechanically split at the binder/conclusion separator by
+the generator gen_items.py), or the Lean `#check @name` printer dump
+for the auto-generated items (logs/sigprobe_w1.out); semantic identity
+is re-verified by the elaboration of the ⟨…⟩ assembly below (each
+component must unify definitionally with its conjunct); the
+per-conjunct comments carry each exit's LocalAuto13 declaration line and
+file-local docstring HOL anchor.
+Conjunct order: the seed-list order (seeds_clean.txt module block,
+scout logs).  Body = the assembly of the exit constants -- zero new
+proof obligations, zero new imports (LocalAuto13 is already imported
+directly (:484)).
+Wiring (Assembly consumption) is NOT part of this wave -- lane
+lv-wire-w2 owns it; expected cone yield at the wiring gate: +209
+(LA13) / +180 (LA9) per the scout BFS upper bound, +389 for the pair. -/
+theorem la13_capstone_w1 :
+    -- 1. Kepler.Text.BALL_ANNULUS_SYM_0_p13 (LocalAuto13:968; HOL `BALL_ANNULUS_SYM_0`)
+    (∀ (v : V3),
+          -v ∈ ballAnnulus ↔ v ∈ ballAnnulus
+    ) ∧
+    -- 2. Kepler.Text.CARD_EQUI_FF_SYM_0_p13 (LocalAuto13:1147; HOL `CARD_EQUI_FF_SYM_0`)
+    (∀ (vv : ℕ → V3)
+          (h : (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ).Finite),
+          Nat.card (Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ)
+          = Nat.card (Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ)
+    ) ∧
+    -- 3. Kepler.Text.CARD_SYM_0_p13 (LocalAuto13:425; HOL `CARD_SYM_0`)
+    (∀ {A : Set V3} (h : A.Finite),
+          Nat.card (Set.image (fun x : V3 => -x) A) = Nat.card A
+    ) ∧
+    -- 4. Kepler.Text.COLLINEAR_POINT_SYM_0_p13 (LocalAuto13:1482; HOL `COLLINEAR_POINT_SYM_0`)
+    (∀ {v1 w1 : V3} (h : ¬Collinear ℝ ({0, v1, w1} : Set V3)),
+          ¬Collinear ℝ ({0, v1, -w1} : Set V3)
+    ) ∧
+    -- 5. Kepler.Text.COLLINEAR_SYM_0_p13 (LocalAuto13:506; HOL `COLLINEAR_SYM_0`)
+    (∀ {e : Set V3} (h : Collinear ℝ e),
+          Collinear ℝ (Set.image (fun x : V3 => -x) e)
+    ) ∧
+    -- 6. Kepler.Text.COMMUTATIVE_POINT_PAIR_0_p13 (LocalAuto13:1115; HOL `COMMUTATIVE_POINT_PAIR_0`)
+    (∀ {a b : V3 × V3},
+          (fun p : V3 × V3 => (-p.1, -p.2)) a = b ↔ a = (fun p : V3 × V3 => (-p.1, -p.2)) b
+    ) ∧
+    -- 7. Kepler.Text.DART_OF_HYP_VV_p13 (LocalAuto13:1035; HOL `DART_OF_HYP_VV`)
+    (∀ (vv : ℕ → V3),
+          dartsOfHypP13 (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+            (Set.image vv Set.univ)
+          = Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ
+            ∪ Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ
+    ) ∧
+    -- 8. Kepler.Text.DIST_SYM_0_p13 (LocalAuto13:973; HOL `DIST_SYM_0`)
+    (∀ (a b : V3),
+          dist (-a) (-b) = dist a b
+    ) ∧
+    -- 9. Kepler.Text.DIST_SYM_0_p13._abel_1_1 (auto-generated exit, signature = probe printer output)
+    (∀ (a b : V3), -a - -b = -(a - b)
+    ) ∧
+    -- 10. Kepler.Text.DUALNEG_PEROPP_BB_p13 (LocalAuto13:1378; HOL `DUALNEG_PEROPP_BB`)
+    (∀ {s : ScsV39P13} {k : ℕ} (ww : ℕ → V3)
+          (hk : s.k = k) (hbb : BBsV39P13 (scsOppV39P13 s) ww) (hk3 : ¬(k ≤ 3)),
+          (fun i => -(peroppP13 (fun i => -(peroppP13 ww k i)) k i)) = ww
+    ) ∧
+    -- 11. Kepler.Text.DUAL_EXISTS_MOD0_p13 (LocalAuto13:1263; HOL `DUAL_EXISTS_MOD0`)
+    (∀ {k b : ℕ} (hk : k ≠ 0),
+          ∃ n : ℕ, (n * (k - 1)) % k = b % k
+    ) ∧
+    -- 12. Kepler.Text.DUAL_EXISTS_MOD_GE_p13 (LocalAuto13:1295; HOL `DUAL_EXISTS_MOD_GE`)
+    (∀ {k a b : ℕ} (hk : k ≠ 0) (hge : b % k ≤ a % k),
+          ∃ n : ℕ, (n * (k - 1) + a) % k = b % k
+    ) ∧
+    -- 13. Kepler.Text.DUAL_EXISTS_MOD_LE_p13 (LocalAuto13:1284; HOL `DUAL_EXISTS_MOD_LE`)
+    (∀ {k a b : ℕ} (hk : k ≠ 0) (hle : a % k ≤ b % k),
+          ∃ n : ℕ, (n * (k - 1) + a) % k = b % k
+    ) ∧
+    -- 14. Kepler.Text.DUAL_EXISTS_MOD_p13 (LocalAuto13:1306; HOL `DUAL_EXISTS_MOD`)
+    (∀ {k a b : ℕ} (hk : k ≠ 0),
+          ∃ n : ℕ, (n * (k - 1) + a) % k = b % k
+    ) ∧
+    -- 15. Kepler.Text.DUAL_NEG_PEROPP_p13 (LocalAuto13:1369; HOL `DUAL_NEG_PEROPP`)
+    (∀ {k : ℕ} (ww : ℕ → V3) (hk : k ≠ 0)
+          (hper : PeriodicP13 ww k),
+          (fun i => -(peroppP13 (fun i => -(peroppP13 ww k i)) k i)) = ww
+    ) ∧
+    -- 16. Kepler.Text.DUAL_PEROPP2_p13 (LocalAuto13:1353; HOL `DUAL_PEROPP2`)
+    (∀ {α : Sort u} {a : ℕ → ℕ → α} {k : ℕ} (hk : k ≠ 0)
+          (hper : Periodic2P13 a k),
+          peropp2P13 (peropp2P13 a k) k = a
+    ) ∧
+    -- 17. Kepler.Text.DUAL_PEROPP_p13 (LocalAuto13:1330; HOL `DUAL_PEROPP`)
+    (∀ {α : Sort u} {a : ℕ → α} {k : ℕ} (hk : k ≠ 0)
+          (hper : PeriodicP13 a k),
+          peroppP13 (peroppP13 a k) k = a
+    ) ∧
+    -- 18. Kepler.Text.EE_SYM_0_p13 (LocalAuto13:1186; HOL `EE_SYM_0`)
+    (∀ (vv : ℕ → V3) (a : V3),
+          eeP13 (-a) (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
+          = Set.image (fun x : V3 => -x)
+              (eeP13 a (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ))
+    ) ∧
+    -- 19. Kepler.Text.ELEMENT2_SYM_0_p13 (LocalAuto13:430; HOL `ELEMENT2_SYM_0`)
+    (∀ (a b : V3),
+          ({-a, -b} : Set V3) = Set.image (fun x : V3 => -x) ({a, b} : Set V3)
+    ) ∧
+    -- 20. Kepler.Text.EQUI_FF_SYM_0_p13 (LocalAuto13:1132; HOL `EQUI_FF_SYM_0`)
+    (∀ (vv : ℕ → V3) (x : V3 × V3),
+          (x.2, x.1) ∈ Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ
+          ↔ x ∈ Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ
+    ) ∧
+    -- 21. Kepler.Text.EQ_SET_PAIR_SYM_0_p13 (LocalAuto13:1096; HOL `EQ_SET_PAIR_SYM_0`)
+    (∀ {A B : Set (V3 × V3)},
+          Set.image (fun p : V3 × V3 => (-p.1, -p.2)) A
+            = Set.image (fun p : V3 × V3 => (-p.1, -p.2)) B
+          ↔ A = B
+    ) ∧
+    -- 22. Kepler.Text.FINITE_SYM_0_p13 (LocalAuto13:421; HOL `FINITE_SYM_0`)
+    (∀ {A : Set V3} (h : A.Finite),
+          (Set.image (fun x : V3 => -x) A).Finite
+    ) ∧
+    -- 23. Kepler.Text.FST_SND_EQ_PAIR_SYM_0_p13 (LocalAuto13:1127; HOL `FST_SND_EQ_PAIR_SYM_0`)
+    (∀ (x : V3 × V3),
+          (fun p : V3 × V3 => (-p.1, -p.2)) x = (-x.1, -x.2)
+    ) ∧
+    -- 24. Kepler.Text.FST_SND_PAIR_SYM_0_p13 (LocalAuto13:1090; HOL `FST_SND_PAIR_SYM_0`)
+    (∀ (x : V3 × V3),
+          ((fun p : V3 × V3 => (-p.1, -p.2)) x).1 = -x.1
+          ∧ ((fun p : V3 × V3 => (-p.1, -p.2)) x).2 = -x.2
+    ) ∧
+    -- 25. Kepler.Text.FUN_COMMUTATIVE_p13 (LocalAuto13:1164; HOL `FUN_COMMUTATIVE`)
+    (∀ {f g f1 : V3 × V3 → V3 × V3}
+          (h : ∀ x, f (g x) = g (f1 x)),
+          ∀ n x, f^[n] (g x) = g (f1^[n] x)
+    ) ∧
+    -- 26. Kepler.Text.GRAPH_SYM_0_p13 (LocalAuto13:444; HOL `GRAPH_SYM_0`, HOL `graph`)
+    (∀ (vv : ℕ → V3)
+          (h : Kepler.Text.Fan.Graph (Set.image (fun i : ℕ => {vv i, vv (i + 1)}) Set.univ)),
+          Kepler.Text.Fan.Graph (Set.image (fun i : ℕ => {-(vv i), -(vv (i + 1))}) Set.univ)
+    ) ∧
+    -- 27. Kepler.Text.ID_PAIR_SYM_0_p13 (LocalAuto13:1064; HOL `ID_PAIR_SYM_0`)
+    (∀ (A : Set (V3 × V3)),
+          Set.image (fun p : V3 × V3 => (-p.1, -p.2))
+            (Set.image (fun p : V3 × V3 => (-p.1, -p.2)) A)
+          = A
+    ) ∧
+    -- 28. Kepler.Text.ID_SYM_0_p13 (LocalAuto13:1059; HOL `ID_SYM_0`)
+    (∀ (x : V3 × V3),
+          (fun p : V3 × V3 => (-p.1, -p.2)) ((fun p : V3 × V3 => (-p.1, -p.2)) x) = x
+    ) ∧
+    -- 29. Kepler.Text.IMAGE_E_SYM_0_p13 (LocalAuto13:491; HOL `IMAGE_E_SYM_0`)
+    (∀ (vv : ℕ → V3) {e : Set V3}
+          (h : e ∈ Set.image (fun i : ℕ => {-(vv i), -(vv (i + 1))}) Set.univ),
+          Set.image (fun x : V3 => -x) e
+          ∈ Set.image (fun i : ℕ => {vv i, vv (i + 1)}) Set.univ
+    ) ∧
+    -- 30. Kepler.Text.IMAGE_E_UNION_V_SYM_0_p13 (LocalAuto13:558; HOL `IMAGE_E_UNION_V_SYM_0`)
+    (∀ (vv : ℕ → V3) {e : Set V3}
+          (h : e ∈ Set.image (fun i : ℕ => {-(vv i), -(vv (i + 1))}) Set.univ
+            ∪ Set.image (fun v : V3 => {v}) (Set.range fun i => -(vv i))),
+          Set.image (fun x : V3 => -x) e
+          ∈ Set.image (fun i : ℕ => {vv i, vv (i + 1)}) Set.univ
+            ∪ Set.image (fun v : V3 => {v}) (Set.range vv)
+    ) ∧
+    -- 31. Kepler.Text.IMAGE_V_SYM_0_p13 (LocalAuto13:385; HOL `IMAGE_V_SYM_0`)
+    (∀ (vv : ℕ → V3),
+          Set.image (fun i : ℕ => -(vv i)) Set.univ
+          = Set.image (fun x : V3 => -x) (Set.image vv Set.univ)
+    ) ∧
+    -- 32. Kepler.Text.INTER_SYM_0_p13 (LocalAuto13:578; HOL `INTER_SYM_0`)
+    (∀ (e1 e2 : Set V3),
+          Set.image (fun x : V3 => -x) (e1 ∩ e2)
+          = Set.image (fun x : V3 => -x) e1 ∩ Set.image (fun x : V3 => -x) e2
+    ) ∧
+    -- 33. Kepler.Text.IN_EQ_PAIR_SYM_0_p13 (LocalAuto13:1072; HOL `IN_EQ_PAIR_SYM_0`)
+    (∀ {a : V3 × V3} {A : Set (V3 × V3)},
+          (fun p : V3 × V3 => (-p.1, -p.2)) a
+            ∈ Set.image (fun p : V3 × V3 => (-p.1, -p.2)) A
+          ↔ a ∈ A
+    ) ∧
+    -- 34. Kepler.Text.IN_PAIR_SYM_0_p13 (LocalAuto13:1053; HOL `IN_PAIR_SYM_0`)
+    (∀ {a : V3 × V3} {A : Set (V3 × V3)} (h : a ∈ A),
+          (fun p : V3 × V3 => (-p.1, -p.2)) a
+          ∈ Set.image (fun p : V3 × V3 => (-p.1, -p.2)) A
+    ) ∧
+    -- 35. Kepler.Text.IN_SYM_0_p13 (LocalAuto13:371; HOL `IN_SYM_0`)
+    (∀ {a : V3} {A : Set V3} (h : a ∈ A),
+          -a ∈ Set.image (fun x : V3 => -x) A
+    ) ∧
+    -- 36. Kepler.Text.K_SCS_OPP_p13 (LocalAuto13:1327; HOL `K_SCS_OPP`)
+    (∀ (s : ScsV39P13),
+          (scsOppV39P13 s).k = s.k
+    ) ∧
+    -- 37. Kepler.Text.LINAER_SYM_0_p13 (LocalAuto13:573; HOL `LINAER_SYM_0`, HOL `linear f`)
+    ((∀ x y : V3, -(x + y) = -x + -y) ∧ ∀ (c : ℝ) (x : V3), -(c • x) = c • -x
+    ) ∧
+    -- 38. Kepler.Text.MOD_SUC_MOD_p13 (LocalAuto13:623; HOL `MOD_SUC_MOD`)
+    (∀ {k x : ℕ} (hk : 1 < k),
+          (x % k + 1) % k = (x + 1) % k
+    ) ∧
+    -- 39. Kepler.Text.NOT_COLLINEAR_SYM_0_p13 (LocalAuto13:543; HOL `NOT_COLLINEAR_SYM_0`)
+    (∀ {e : Set V3} (h : ¬Collinear ℝ e),
+          ¬Collinear ℝ (Set.image (fun x : V3 => -x) e)
+    ) ∧
+    -- 40. Kepler.Text.NOT_SUBSET_EMPTY_SYM_0_p13 (LocalAuto13:479; HOL `NOT_SUBSET_EMPTY_SYM_0`)
+    (∀ {A : Set V3} (h : ¬(A ⊆ ∅)),
+          ¬(Set.image (fun x : V3 => -x) A ⊆ ∅)
+    ) ∧
+    -- 41. Kepler.Text.NO_IS_EAR_SCS_OPP_p13 (LocalAuto13:1319; HOL `NO_IS_EAR_SCS_OPP`)
+    (∀ (s : ScsV39P13) (hk : ¬(s.k ≤ 3)),
+          ¬(isEarV39P13 (scsOppV39P13 s))
+    ) ∧
+    -- 42. Kepler.Text.NO_IS_EAR_p13 (LocalAuto13:1313; HOL `NO_IS_EAR`)
+    (∀ (s : ScsV39P13) (hk : ¬(s.k ≤ 3)),
+          ¬(isEarV39P13 s)
+    ) ∧
+    -- 43. Kepler.Text.OPP_IMAGE_E_EQ_NEG_p13 (LocalAuto13:933; HOL `OPP_IMAGE_E_EQ_NEG`)
+    (∀ (vv : ℕ → V3) {k : ℕ} (hper : PeriodicP13 vv k)
+          (hk : 1 < k),
+          Set.image (fun i : ℕ =>
+            ({-(vv (k - (i % k + 1))), -(vv (k - ((i + 1) % k + 1)))} : Set V3))
+            Set.univ
+          = Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ
+    ) ∧
+    -- 44. Kepler.Text.OPP_IMAGE_E_EQ_p13 (LocalAuto13:675; HOL `OPP_IMAGE_E_EQ`)
+    (∀ (vv : ℕ → V3) {k : ℕ} (hper : PeriodicP13 vv k)
+          (hk : 1 < k),
+          Set.image (fun i : ℕ => ({vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1))} : Set V3))
+            Set.univ
+          = Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ
+    ) ∧
+    -- 45. Kepler.Text.OPP_IMAGE_F_EQ2_NEG_p13 (LocalAuto13:956; HOL `OPP_IMAGE_F_EQ2_NEG`)
+    (∀ (vv : ℕ → V3) {k : ℕ} (hper : PeriodicP13 vv k)
+          (hk : 1 < k),
+          Set.image (fun i : ℕ =>
+            (-(vv (k - (i % k + 1))), -(vv (k - ((i + 1) % k + 1))))) Set.univ
+          = Set.image (fun i : ℕ => (-(vv (i + 1)), -(vv i))) Set.univ
+    ) ∧
+    -- 46. Kepler.Text.OPP_IMAGE_F_EQ2_p13 (LocalAuto13:826; HOL `OPP_IMAGE_F_EQ2`)
+    (∀ (vv : ℕ → V3) {k : ℕ} (hper : PeriodicP13 vv k)
+          (hk : 1 < k),
+          Set.image
+            (fun i : ℕ => (vv (k - (i % k + 1)), vv (k - ((i + 1) % k + 1)))) Set.univ
+          = Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ
+    ) ∧
+    -- 47. Kepler.Text.OPP_IMAGE_F_EQ_NEG_p13 (LocalAuto13:945; HOL `OPP_IMAGE_F_EQ_NEG`)
+    (∀ (vv : ℕ → V3) {k : ℕ} (hper : PeriodicP13 vv k)
+          (hk : 1 < k),
+          Set.image (fun i : ℕ =>
+            (-(vv (k - ((i + 1) % k + 1))), -(vv (k - (i % k + 1))))) Set.univ
+          = Set.image (fun i : ℕ => (-(vv i), -(vv (i + 1)))) Set.univ
+    ) ∧
+    -- 48. Kepler.Text.OPP_IMAGE_F_EQ_p13 (LocalAuto13:758; HOL `OPP_IMAGE_F_EQ`)
+    (∀ (vv : ℕ → V3) {k : ℕ} (hper : PeriodicP13 vv k)
+          (hk : 1 < k),
+          Set.image
+            (fun i : ℕ => (vv (k - ((i + 1) % k + 1)), vv (k - (i % k + 1)))) Set.univ
+          = Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ
+    ) ∧
+    -- 49. Kepler.Text.OPP_IMAGE_V_EQ_NEG_p13 (LocalAuto13:925; HOL `OPP_IMAGE_V_EQ_NEG`)
+    (∀ (vv : ℕ → V3) {k : ℕ} (hper : PeriodicP13 vv k)
+          (hk : k ≠ 0),
+          Set.image (fun i : ℕ => -(vv (k - (i % k + 1)))) Set.univ
+          = Set.image (fun i : ℕ => -(vv i)) Set.univ
+    ) ∧
+    -- 50. Kepler.Text.OPP_IMAGE_V_EQ_p13 (LocalAuto13:606; HOL `OPP_IMAGE_V_EQ`)
+    (∀ (vv : ℕ → V3) {k : ℕ} (hper : PeriodicP13 vv k)
+          (hk : k ≠ 0),
+          Set.image (fun i : ℕ => vv (k - (i % k + 1))) Set.univ
+          = Set.image vv Set.univ
+    ) ∧
+    -- 51. Kepler.Text.OPP_SUC_MOD_p13 (LocalAuto13:593; HOL `OPP_SUC_MOD`)
+    (∀ {k x : ℕ} (hk : k ≠ 0),
+          k - ((k - (x % k + 1)) % k + 1) = x % k
+    ) ∧
+    -- 52. Kepler.Text.ORD_PAIRS_E_VV_p13 (LocalAuto13:993; HOL `ORD_PAIRS_E_VV`)
+    (∀ (vv : ℕ → V3),
+          ordPairsP13 (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+          = Set.image (fun i : ℕ => (vv i, vv (i + 1))) Set.univ
+            ∪ Set.image (fun i : ℕ => (vv (i + 1), vv i)) Set.univ
+    ) ∧
+    -- 53. Kepler.Text.PAIR_FUN_SYM_0_p13 (LocalAuto13:1046; HOL `PAIR_FUN_SYM_0`)
+    (∀ (vv1 vv2 : ℕ → V3),
+          Set.image (fun i : ℕ => (-(vv1 i), -(vv2 i))) Set.univ
+          = Set.image (fun p : V3 × V3 => (-p.1, -p.2))
+              (Set.image (fun i : ℕ => (vv1 i, vv2 i)) Set.univ)
+    ) ∧
+    -- 54. Kepler.Text.PERIODIC_PROPERTY_p13 (LocalAuto13:601; HOL `periodic`)
+    (∀ {α : Sort u} {f : ℕ → α} {k : ℕ}
+          (hper : PeriodicP13 f k) (hk : k ≠ 0) (j : ℕ),
+          f (j % k) = f j
+    ) ∧
+    -- 55. Kepler.Text.POINT_IN_AFF_LT_SYM_0_p13 (LocalAuto13:1427; HOL `POINT_IN_AFF_LT_SYM_0`)
+    (∀ {v1 w2 : V3}
+          (hd : Disjoint ({0, v1} : Set V3) {w2}),
+          -w2 ∈ affLt ({0, v1} : Set V3) {w2}
+    ) ∧
+    -- 56. Kepler.Text.REFL_SYM_0_p13 (LocalAuto13:486; HOL `REFL_SYM_0`)
+    (∀ (A : Set V3),
+          Set.image (fun x : V3 => -x) (Set.image (fun x : V3 => -x) A) = A
+    ) ∧
+    -- 57. Kepler.Text.SELF_PAIR_EMPTY_VV_p13 (LocalAuto13:1021; HOL `SELF_PAIR_EMPTY_VV`)
+    (∀ (vv : ℕ → V3),
+          selfPairsP13 (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)
+            (Set.image vv Set.univ)
+          = ∅
+    ) ∧
+    -- 58. Kepler.Text.SET_EQ_SYM_0_p13 (LocalAuto13:381; HOL `SET_EQ_SYM_0`)
+    (∀ {A B : Set V3} (h : A = B),
+          Set.image (fun x : V3 => -x) A = Set.image (fun x : V3 => -x) B
+    ) ∧
+    -- 59. Kepler.Text.SUBSET_SYM_0_p13 (LocalAuto13:376; HOL `SUBSET_SYM_0`)
+    (∀ {A B : Set V3} (h : A ⊆ B),
+          Set.image (fun x : V3 => -x) A ⊆ Set.image (fun x : V3 => -x) B
+    ) ∧
+    -- 60. Kepler.Text.SUC_MOD_EQ_MOD_SUC_p13 (LocalAuto13:630; HOL `SUC_MOD_EQ_MOD_SUC`)
+    (∀ {k x : ℕ} (hk : 1 < k),
+          (k - (x % k + 1)) % k = (k - ((x + 1) % k)) % k
+    ) ∧
+    -- 61. Kepler.Text.SUM_PAIR_SYM_0_p13 (LocalAuto13:1225; HOL `SUM_PAIR_SYM_0`)
+    (∀ {s : Set (V3 × V3)} (f : V3 × V3 → ℝ),
+          setSum (Set.image (fun p : V3 × V3 => (-p.1, -p.2)) s) f
+          = setSum s (f ∘ (fun p : V3 × V3 => (-p.1, -p.2)))
+    ) ∧
+    -- 62. Kepler.Text.UNIONS_IMAGE_FAN_SYM_0_p13 (LocalAuto13:397; HOL `UNIONS_IMAGE_FAN_SYM_0`)
+    (∀ (vv : ℕ → V3),
+          ⋃₀ (Set.image (fun i : ℕ => {-(vv i), -(vv (i + 1))}) Set.univ)
+          = Set.image (fun x : V3 => -x)
+              (⋃₀ (Set.image (fun i : ℕ => {vv i, vv (i + 1)}) Set.univ))
+    ) ∧
+    -- 63. Kepler.Text.UNION_SYM_0_p13 (LocalAuto13:525; HOL `UNION_SYM_0`)
+    (∀ (s e : Set V3),
+          Set.image (fun x : V3 => -x) (s ∪ e)
+          = Set.image (fun x : V3 => -x) s ∪ Set.image (fun x : V3 => -x) e
+    ) ∧
+    -- 64. Kepler.Text.VEC0_NOT_COLLINEAR_SYM_0_p13 (LocalAuto13:548; HOL `VEC0_NOT_COLLINEAR_SYM_0`)
+    (∀ {e : Set V3}
+          (h : ¬Collinear ℝ (({0} : Set V3) ∪ e)),
+          ¬Collinear ℝ (({0} : Set V3) ∪ Set.image (fun x : V3 => -x) e)
+    ) ∧
+    -- 65. Kepler.Text.VEC0_SYM_0_p13 (LocalAuto13:531; HOL `VEC0_SYM_0`)
+    (Set.image (fun x : V3 => -x) ({0} : Set V3) = ({0} : Set V3)
+    ) ∧
+    -- 66. Kepler.Text.VEC0_UNION_SYM_0_p13 (LocalAuto13:537; HOL `VEC0_UNION_SYM_0`)
+    (∀ (e : Set V3),
+          Set.image (fun x : V3 => -x) (({0} : Set V3) ∪ e)
+          = ({0} : Set V3) ∪ Set.image (fun x : V3 => -x) e
+    ) ∧
+    -- 67. Kepler.Text.dartsOfHypP13.eq_1 (auto-generated exit, signature = probe printer output)
+    (∀ (E : Set (Set V3)) (V : Set V3), dartsOfHypP13 E V = ordPairsP13 E ∪ selfPairsP13 E V
+    ) ∧
+    -- 68. Kepler.Text.eeP13.eq_1 (auto-generated exit, signature = probe printer output)
+    (∀ (v : V3) (S : Set (Set V3)), eeP13 v S = {w | {v, w} ∈ S}
+    ) :=
+  ⟨BALL_ANNULUS_SYM_0_p13, CARD_EQUI_FF_SYM_0_p13, CARD_SYM_0_p13, COLLINEAR_POINT_SYM_0_p13,
+      COLLINEAR_SYM_0_p13, COMMUTATIVE_POINT_PAIR_0_p13, DART_OF_HYP_VV_p13, DIST_SYM_0_p13,
+      DIST_SYM_0_p13._abel_1_1, DUALNEG_PEROPP_BB_p13, DUAL_EXISTS_MOD0_p13,
+      DUAL_EXISTS_MOD_GE_p13, DUAL_EXISTS_MOD_LE_p13, DUAL_EXISTS_MOD_p13, DUAL_NEG_PEROPP_p13,
+      DUAL_PEROPP2_p13, DUAL_PEROPP_p13, EE_SYM_0_p13, ELEMENT2_SYM_0_p13, EQUI_FF_SYM_0_p13,
+      EQ_SET_PAIR_SYM_0_p13, FINITE_SYM_0_p13, FST_SND_EQ_PAIR_SYM_0_p13, FST_SND_PAIR_SYM_0_p13,
+      FUN_COMMUTATIVE_p13, GRAPH_SYM_0_p13, ID_PAIR_SYM_0_p13, ID_SYM_0_p13, IMAGE_E_SYM_0_p13,
+      IMAGE_E_UNION_V_SYM_0_p13, IMAGE_V_SYM_0_p13, INTER_SYM_0_p13, IN_EQ_PAIR_SYM_0_p13,
+      IN_PAIR_SYM_0_p13, IN_SYM_0_p13, K_SCS_OPP_p13, LINAER_SYM_0_p13, MOD_SUC_MOD_p13,
+      NOT_COLLINEAR_SYM_0_p13, NOT_SUBSET_EMPTY_SYM_0_p13, NO_IS_EAR_SCS_OPP_p13, NO_IS_EAR_p13,
+      OPP_IMAGE_E_EQ_NEG_p13, OPP_IMAGE_E_EQ_p13, OPP_IMAGE_F_EQ2_NEG_p13, OPP_IMAGE_F_EQ2_p13,
+      OPP_IMAGE_F_EQ_NEG_p13, OPP_IMAGE_F_EQ_p13, OPP_IMAGE_V_EQ_NEG_p13, OPP_IMAGE_V_EQ_p13,
+      OPP_SUC_MOD_p13, ORD_PAIRS_E_VV_p13, PAIR_FUN_SYM_0_p13, PERIODIC_PROPERTY_p13,
+      POINT_IN_AFF_LT_SYM_0_p13, REFL_SYM_0_p13, SELF_PAIR_EMPTY_VV_p13, SET_EQ_SYM_0_p13,
+      @SUBSET_SYM_0_p13, SUC_MOD_EQ_MOD_SUC_p13, SUM_PAIR_SYM_0_p13, UNIONS_IMAGE_FAN_SYM_0_p13,
+      UNION_SYM_0_p13, VEC0_NOT_COLLINEAR_SYM_0_p13, VEC0_SYM_0_p13, VEC0_UNION_SYM_0_p13,
+      dartsOfHypP13.eq_1, eeP13.eq_1⟩
+
+set_option linter.unusedVariables false in
+/-- LocalAuto9 materialization capstone (LV program slot B, wave
+lv34-w1, 2026-11-04; scout lane leftover-mat-scout §1-§3, generator
+precedent la35-root-w1 `a8e35ccf`).  The 68 clean top-level public
+LocalAuto9 theorem exits unreachable from every e2e root (probe1
+SEED_PROBES: 68 clean + 9 sorried
+exits excluded per the workorder -- the sorried half is not entered,
+zero of its proof debt flows into this file; group closure of the clean
+subset measured GROUP_SORRIED = 0, so K_SORRIED 134 and K_AXIOM 624 are
+untouched). 12 of the 68 conjuncts are auto-generated equation/structure exits restated from the `#check @name` printer output (no verbatim source declaration exists).
+Anchors (no fabricated edges): every conjunct is asserted in the
+verbatim wording of its LocalAuto9 declaration -- the conjunct text is
+the declaration's source signature (binders + conclusion, copied
+verbatim and mechanically split at the binder/conclusion separator by
+the generator gen_items.py), or the Lean `#check @name` printer dump
+for the auto-generated items (logs/sigprobe_w1.out); semantic identity
+is re-verified by the elaboration of the ⟨…⟩ assembly below (each
+component must unify definitionally with its conjunct); the
+per-conjunct comments carry each exit's LocalAuto9 declaration line and
+file-local docstring HOL anchor.
+Conjunct order: the seed-list order (seeds_clean.txt module block,
+scout logs).  Body = the assembly of the exit constants -- zero new
+proof obligations, zero new imports (LocalAuto9 is already imported
+transitively via LocalAuto23 (:494 → LocalAuto23:111)).
+Wiring (Assembly consumption) is NOT part of this wave -- lane
+lv-wire-w2 owns it; expected cone yield at the wiring gate: +209
+(LA13) / +180 (LA9) per the scout BFS upper bound, +389 for the pair. -/
+theorem la9_capstone_w1 :
+    -- 1. Kepler.Text.AFF_GE_2_2_p9 (LocalAuto9:2455; HOL `AFF_GE_2_2`)
+    (∀ (x u v w : V3) (hd : Disjoint ({x, u} : Set V3) {v, w}),
+          affGe {x, u} {v, w} =
+          {y | ∃ t1 t2 t3 t4 : ℝ, 0 ≤ t3 ∧ 0 ≤ t4 ∧ t1 + t2 + t3 + t4 = 1 ∧
+            y = t1 • x + t2 • u + t3 • v + t4 • w}
+    ) ∧
+    -- 2. Kepler.Text.AFF_GE_3_1_p9 (LocalAuto9:2206; HOL `AFF_GE_3_1`)
+    (∀ (x v u w : V3) (hd : Disjoint ({x, v, u} : Set V3) {w}),
+          affGe {x, v, u} {w} =
+          {y | ∃ t1 t2 t3 t4 : ℝ, 0 ≤ t4 ∧ t1 + t2 + t3 + t4 = 1 ∧
+            y = t1 • x + t2 • v + t3 • u + t4 • w}
+    ) ∧
+    -- 3. Kepler.Text.AFF_GE_3_1_p9._abel_1_4 (auto-generated exit, signature = probe printer output)
+    (∀ (x v u w : V3) (f : V3 → ℝ),
+          f x • x + (f v • v + (f u • u + f w • w)) = f x • x + f v • v + f u • u + f w • w
+    ) ∧
+    -- 4. Kepler.Text.AFF_GE_3_1_p9._abel_1_6 (auto-generated exit, signature = probe printer output)
+    (∀ (x v u w : V3) (t1 t2 t3 t4 : ℝ),
+          t1 • x + t2 • v + t3 • u + t4 • w = t1 • x + (t2 • v + (t3 • u + t4 • w))
+    ) ∧
+    -- 5. Kepler.Text.AFF_GE_EQ_AFF_GE_UNION_p9 (LocalAuto9:2990; HOL `AFF_GE_EQ_AFF_GE_UNION`)
+    (∀ (x v u v1 : V3)
+          (h1 : Disjoint ({x} : Set V3) {v, u})
+          (h2 : Disjoint ({x} : Set V3) {v, v1})
+          (h3 : Disjoint ({x} : Set V3) {v1, u})
+          (h4 : v1 ∈ affGt {x} {v, u}),
+          affGe {x} {v, u} = affGe {x} {v, v1} ∪ affGe {x} {v1, u}
+    ) ∧
+    -- 6. Kepler.Text.AFF_GE_SUBSET_AFF_GE_UNION_p9 (LocalAuto9:2919; HOL `AFF_GE_SUBSET_AFF_GE_UNION`)
+    (∀ (x v u v1 : V3)
+          (h1 : Disjoint ({x} : Set V3) {v, u})
+          (h2 : Disjoint ({x} : Set V3) {v, v1})
+          (h3 : Disjoint ({x} : Set V3) {v1, u})
+          (h4 : v1 ∈ affGt {x} {v, u}),
+          affGe {x} {v, u} ⊆ affGe {x} {v, v1} ∪ affGe {x} {v1, u}
+    ) ∧
+    -- 7. Kepler.Text.AFF_GT_SUBSET_WEDGE_IMP_VERTEX_p9 (LocalAuto9:2116; HOL `AFF_GT_SUBSET_WEDGE_IMP_VERTEX`)
+    (∀ (x v w y z : V3)
+          (h1 : ¬ Collinear ℝ ({x, v, w} : Set V3))
+          (h2 : ¬ Collinear ℝ ({x, v, y} : Set V3))
+          (h3 : ¬ Collinear ℝ ({x, v, z} : Set V3))
+          (h4 : affGt {x} {v, w} ⊆ wedge x v y z),
+          w ∈ wedge x v y z
+    ) ∧
+    -- 8. Kepler.Text.AFF_LT_1_1_p9 (LocalAuto9:1744; HOL `AFF_LT_1_1`)
+    (∀ (x w : V3) (hxw : x ≠ w),
+          affLt {x} {w} =
+          {y | ∃ t1 t2 : ℝ, t2 < 0 ∧ t1 + t2 = 1 ∧ y = t1 • x + t2 • w}
+    ) ∧
+    -- 9. Kepler.Text.AZIM_PI_WEDGE_CROSS_DOT_p9 (LocalAuto9:2070; HOL `AZIM_PI_WEDGE_CROSS_DOT`)
+    (∀ (u v w ww : V3) (h : azim u v w ww = Real.pi),
+          wedge u v w ww = {x | 0 < dot3_p9 (cross3_p9 (v - u) (w - u)) (x - u)}
+    ) ∧
+    -- 10. Kepler.Text.AZIM_PI_WEDGE_SIN_p9 (LocalAuto9:1894; HOL `AZIM_PI_WEDGE_SIN`)
+    (∀ (u v w ww : V3) (h : azim u v w ww = Real.pi),
+          wedge u v w ww = {x | 0 < Real.sin (azim u v w x)}
+    ) ∧
+    -- 11. Kepler.Text.BOUNDED_TRI_SY_p9 (LocalAuto9:3359; HOL `BOUNDED_TRI_SY`)
+    (∀ {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+          {J : Finset (Finset ℕ)} {f : ℕ → ℕ} (_h : triStable_p9 k d s a b J f),
+          Bornology.IsBounded (BSY1body_p9 k a b)
+    ) ∧
+    -- 12. Kepler.Text.BSY1body_p9.eq_1 (auto-generated exit, signature = probe printer output)
+    (∀ (k : ℕ) (a b : ℕ → ℕ → ℝ),
+          BSY1body_p9 k a b =
+            {l |
+              (∀ (j : Fin k), vecmatsV3_p4 l j ∈ ballAnnulus) ∧
+                ∀ (i j : ℕ),
+                  1 ≤ i → i ≤ k → 1 ≤ j → j ≤ k → a i j ≤ ‖rowV3_p9 l i - rowV3_p9 l j‖ ∧ ‖rowV3_p9 l i - rowV3_p9 l j‖ ≤ b i j}
+    ) ∧
+    -- 13. Kepler.Text.CARD_VERTEX_GE_3_LOCAL_FAN_p9 (LocalAuto9:1468; HOL `CARD_VERTEX_GE_3_LOCAL_FAN`)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF),
+          3 ≤ V.ncard
+    ) ∧
+    -- 14. Kepler.Text.CLOSED_TRI_SY_p9 (LocalAuto9:3297; HOL `CLOSED_TRI_SY`)
+    (∀ {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+          {J : Finset (Finset ℕ)} {f : ℕ → ℕ} (_h : triStable_p9 k d s a b J f),
+          IsClosed (BSY1body_p9 k a b)
+    ) ∧
+    -- 15. Kepler.Text.COMPACT_TRI_STABLE_p9 (LocalAuto9:3408; HOL `COMPACT_TRI_STABLE`)
+    (∀ {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+          {J : Finset (Finset ℕ)} {f : ℕ → ℕ} (h : triStable_p9 k d s a b J f),
+          IsCompact (BSY1body_p9 k a b)
+    ) ∧
+    -- 16. Kepler.Text.CONDITION_INANGLE_CROSS_DOT_p9 (LocalAuto9:2136; HOL `CONDITION_INANGLE_CROSS_DOT`)
+    (∀ (x v w y z : V3)
+          (h1 : affGt {x} {v, w} ⊆ wedge x v y z)
+          (h2 : ¬ Collinear ℝ ({x, v, w} : Set V3))
+          (h3 : ¬ Collinear ℝ ({x, v, y} : Set V3))
+          (h4 : ¬ Collinear ℝ ({x, v, z} : Set V3))
+          (h5 : azim x v y z < Real.pi),
+          0 < dot3_p9 (cross3_p9 (v - x) (y - x)) (w - x) ∧
+          0 < dot3_p9 (cross3_p9 (v - x) (w - x)) (z - x)
+    ) ∧
+    -- 17. Kepler.Text.CONTINUOUS_ON_D_FUN_p9 (LocalAuto9:513; HOL `CONTINUOUS_ON_D_FUN`)
+    (∀ (s : StableSyP9) (m : ℕ),
+          ContinuousOn (fun l : FinVec m 3 => dFun_p9 s l) (B_SY1_p9 m s.a_sy s.b_sy)
+    ) ∧
+    -- 18. Kepler.Text.CONTINUOUS_ON_ROW_p9 (LocalAuto9:502; HOL `CONTINUOUS_ON_ROW`)
+    (∀ {m : ℕ} (i : ℕ) (S : Set (FinVec m 3)),
+          ContinuousOn (fun l : FinVec m 3 => rowV3_p9 l i) S
+    ) ∧
+    -- 19. Kepler.Text.CONTINUOUS_ON_TAU_STAR_p9 (LocalAuto9:1242; HOL `CONTINUOUS_ON_TAU_STAR`)
+    (∀ (s : StableSyP9) {m : ℕ}
+          (hm : StableSysHyp_p9 s m),
+          ContinuousOn (fun l : FinVec m 3 => tauStar_p9 s l)
+          (B_SY1_p9 m s.a_sy s.b_sy)
+    ) ∧
+    -- 20. Kepler.Text.CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p9 (LocalAuto9:1525; HOL `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS`)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF),
+          ∀ v ∈ V, interiorAngle1_p2 0 FF v =
+          azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v)
+    ) ∧
+    -- 21. Kepler.Text.EAR_STABLE_SYSTEM_p9 (LocalAuto9:372; HOL `EAR_STABLE_SYSTEM`)
+    (stableSystem_p9 3 0.11 (Finset.Icc 0 2)
+          (aEar0_p9 {{1, 2}}) (bEar0_p9 {{1, 2}})
+          {{1, 2}} (fun i => (1 + i) % 3)
+    ) ∧
+    -- 22. Kepler.Text.EAR_TRI_STABLE_SYSTEM_p9 (LocalAuto9:3270; HOL `EAR_TRI_STABLE_SYSTEM`)
+    (triStable_p9 3 0.11 (Finset.Icc 0 2) (aEar0_p9 {{1, 2}}) (bEar0_p9 {{1, 2}})
+          {{1, 2}} (fun i => (1 + i) % 3)
+    ) ∧
+    -- 23. Kepler.Text.FINITE_J1_SY_p9 (LocalAuto9:498; HOL `FINITE_J1_SY`)
+    (∀ (s : StableSyP9),
+          (J1_SY_p9 s : Set (ℕ × ℕ)).Finite
+    ) ∧
+    -- 24. Kepler.Text.FINITE_J_SY_p9 (LocalAuto9:494; HOL `FINITE_J_SY`)
+    (∀ (s : StableSyP9),
+          (s.J_SY : Set (Finset ℕ)).Finite
+    ) ∧
+    -- 25. Kepler.Text.INDEX_J1_SY_p9 (LocalAuto9:507; HOL `INDEX_J1_SY`)
+    (∀ (s : StableSyP9) {x : ℕ × ℕ} (hx : x ∈ J1_SY_p9 s),
+          1 ≤ x.1 ∧ x.1 ≤ s.k_sy
+    ) ∧
+    -- 26. Kepler.Text.IN_V_IMP_AZIM_LESS_PI (LocalAuto9:1378; HOL `IN_V_IMP_AZIM_LESS_PI`)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) (v : V3) (hv : v ∈ V),
+          ∀ w ∈ V, azim 0 v (rhoNode1_p2 FF v) w ≤ Real.pi
+    ) ∧
+    -- 27. Kepler.Text.MOD_EQ_MOD1_p9 (LocalAuto9:131; HOL `MOD_EQ_MOD1`)
+    (∀ {x1 x2 y n : ℕ} (_hn : n ≠ 0)
+          (h : (y + x1) % n = (y + x2) % n) (_hle : x2 ≤ x1),
+          x1 % n = x2 % n
+    ) ∧
+    -- 28. Kepler.Text.MOD_EQ_MOD_p9 (LocalAuto9:140; HOL `MOD_EQ_MOD`)
+    (∀ {x1 x2 y n : ℕ} (hn : n ≠ 0)
+          (h : (y + x1) % n = (y + x2) % n),
+          x1 % n = x2 % n
+    ) ∧
+    -- 29. Kepler.Text.ORDER_p9 (LocalAuto9:3026; HOL `ORDER`)
+    (∀ {α : Type*} (f : α → α) (x y : α) (n : ℕ)
+          (h : f^[n] x = y) (hmin : ∀ i, 0 < i → i < n → ¬(f^[i] x = y)),
+          f^[order_p9 f x y] x = y ∧
+          ∀ i, 0 < i → i < order_p9 f x y → ¬(f^[i] x = y)
+    ) ∧
+    -- 30. Kepler.Text.PROPERTIES_GENERIC_LOCAL_FAN_p9 (LocalAuto9:1821; HOL `PROPERTIES_GENERIC_LOCAL_FAN`)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (h : localFan_p2 V E FF) (hv0 : ∀ v0 ∈ V, True)
+          (hg : generic_p2 V E) (v0 : V3) (hv0V : v0 ∈ V),
+          ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3)
+    ) ∧
+    -- 31. Kepler.Text.REP_VERTEX_3_LOCAL_FAN_p9 (LocalAuto9:1494; HOL `REP_VERTEX_3_LOCAL_FAN`)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (hcard : V.ncard = 3) (h : convexLocalFan_p2 V E FF),
+          ∃ v : V3, V = {v, rhoNode1_p2 FF v, rhoNode1_p2 FF (rhoNode1_p2 FF v)} ∧
+          v ≠ rhoNode1_p2 FF v ∧
+          rhoNode1_p2 FF v ≠ rhoNode1_p2 FF (rhoNode1_p2 FF v) ∧
+          rhoNode1_p2 FF (rhoNode1_p2 FF v) ≠ v
+    ) ∧
+    -- 32. Kepler.Text.SEQUENTIALLY_DIVH_p9 (LocalAuto9:667; HOL `SEQUENTIALLY_DIVH`, HOL `LIM_*`)
+    (∀ (f g h : ℕ → V3) (a b c : V3)
+          (hf : Filter.Tendsto f Filter.atTop (nhds a))
+          (hg : Filter.Tendsto g Filter.atTop (nhds b))
+          (hh : Filter.Tendsto h Filter.atTop (nhds c))
+          (_hab : ¬ Collinear ℝ ({0, a, b} : Set V3))
+          (_hac : ¬ Collinear ℝ ({0, a, c} : Set V3))
+          (_hn : ∀ n : ℕ, ¬ Collinear ℝ ({0, f n, g n} : Set V3) ∧
+            ¬ Collinear ℝ ({0, f n, h n} : Set V3)),
+          Filter.Tendsto (fun n => dihV 0 (f n) (g n) (h n)) Filter.atTop
+          (nhds (dihV 0 a b c))
+    ) ∧
+    -- 33. Kepler.Text.SOL_LOCAL_FAN_POS_CASE3_p9 (LocalAuto9:1571; HOL `SOL_LOCAL_FAN_POS_CASE3`)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (h : convexLocalFan_p2 V E FF) (hcard : V.ncard = 3),
+          0 ≤ solLocal_p9 E FF
+    ) ∧
+    -- 34. Kepler.Text.TriSyP9.prop (auto-generated exit, signature = probe printer output)
+    (∀ (self : TriSyP9), triStable_p9 self.k_ts self.d_ts self.I_TS self.a_ts self.b_ts self.J_TS self.f_ts
+    ) ∧
+    -- 35. Kepler.Text.UNIQUE_ORDER_p9 (LocalAuto9:3036; HOL `UNIQUE_ORDER`)
+    (∀ {α : Type*} (f : α → α) (x y : α) (n : ℕ)
+          (h : f^[n] x = y) (hmin : ∀ i, 0 < i → i < n → ¬(f^[i] x = y))
+          (hxy : ¬(x = y)),
+          order_p9 f x y = n
+    ) ∧
+    -- 36. Kepler.Text.aEar0_p9.eq_1 (auto-generated exit, signature = probe printer output)
+    (∀ (J : Finset (Finset ℕ)) (i j : ℕ),
+          aEar0_p9 J i j = if i % 3 = j % 3 then 0 else if {i % 3, j % 3} ∈ J then √8 else 2
+    ) ∧
+    -- 37. Kepler.Text.aEar0_p9_mod (LocalAuto9:183; no HOL anchor line in file docstring)
+    (∀ (J : Finset (Finset ℕ)) (i j : ℕ),
+          aEar0_p9 J i (j % 3) = aEar0_p9 J i j
+    ) ∧
+    -- 38. Kepler.Text.aff_ge_subset3_aff_ge_p9 (LocalAuto9:2977; HOL `aff_ge_subset3_aff_ge`)
+    (∀ (x v u v1 : V3)
+          (h1 : Disjoint ({x} : Set V3) {v, u})
+          (h2 : Disjoint ({x} : Set V3) {v, v1})
+          (h3 : v1 ∈ affGt {x} {v, u}),
+          affGe {x} {v, v1} ⊆ affGe {x} {v, u}
+    ) ∧
+    -- 39. Kepler.Text.bEar0_p9.eq_1 (auto-generated exit, signature = probe printer output)
+    (∀ (J : Finset (Finset ℕ)) (i j : ℕ),
+          bEar0_p9 J i j = if i % 3 = j % 3 then 0 else if {i % 3, j % 3} ∈ J then cstab_p4 else 2 * h0
+    ) ∧
+    -- 40. Kepler.Text.bEar0_p9_mod (LocalAuto9:284; no HOL anchor line in file docstring)
+    (∀ (J : Finset (Finset ℕ)) (i j : ℕ),
+          bEar0_p9 J i (j % 3) = bEar0_p9 J i j
+    ) ∧
+    -- 41. Kepler.Text.bsy1body_rows_p9 (LocalAuto9:3403; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} {a b : ℕ → ℕ → ℝ} {l : FinVec k 3}
+          (hl : l ∈ BSY1body_p9 k a b),
+          ∀ j : Fin k, vecmatsV3_p4 l j ∈ ballAnnulus
+    ) ∧
+    -- 42. Kepler.Text.cross3_p9.eq_1 (auto-generated exit, signature = probe printer output)
+    (∀ (u w : V3), cross3_p9 u w = WithLp.toLp 2 ((crossProduct u.ofLp) w.ofLp)
+    ) ∧
+    -- 43. Kepler.Text.dot3_p9.eq_1 (auto-generated exit, signature = probe printer output)
+    (∀ (u w : V3), dot3_p9 u w = u.ofLp ⬝ᵥ w.ofLp
+    ) ∧
+    -- 44. Kepler.Text.earJ_mem_p9 (LocalAuto9:192; HOL `{{1,2}}`)
+    (∀ {e : Finset ℕ}
+          (h : e ∈ ({({1, 2} : Finset ℕ)} : Finset (Finset ℕ))),
+          e = ({1, 2} : Finset ℕ)
+    ) ∧
+    -- 45. Kepler.Text.ear_J_p9 (LocalAuto9:347; no HOL anchor line in file docstring)
+    (∀ i j : ℕ, ({i, j} : Finset ℕ) ∈
+          ({({1, 2} : Finset ℕ)} : Finset (Finset ℕ)) →
+            aEar0_p9 {{1, 2}} i j = Real.sqrt 8 ∧ bEar0_p9 {{1, 2}} i j = cstab_p4
+    ) ∧
+    -- 46. Kepler.Text.ear_card_p9 (LocalAuto9:307; no HOL anchor line in file docstring)
+    (({({1, 2} : Finset ℕ)} : Finset (Finset ℕ)).card + 3 ≤ 6
+    ) ∧
+    -- 47. Kepler.Text.ear_closed_p9 (LocalAuto9:212; no HOL anchor line in file docstring)
+    (∀ x ∈ (Finset.Icc 0 2 : Finset ℕ), (1 + x) % 3 ∈ Finset.Icc 0 2
+    ) ∧
+    -- 48. Kepler.Text.ear_diag_lt_p9 (LocalAuto9:3242; no HOL anchor line in file docstring)
+    (∀ i ∈ (Finset.Icc 0 2 : Finset ℕ),
+          aEar0_p9 {{1, 2}} i i = 0 ∧ bEar0_p9 {{1, 2}} i ((1 + i) % 3) < 4
+    ) ∧
+    -- 49. Kepler.Text.ear_diag_p9 (LocalAuto9:322; no HOL anchor line in file docstring)
+    (∀ i ∈ (Finset.Icc 0 2 : Finset ℕ),
+          aEar0_p9 {{1, 2}} i i = 0 ∧
+            bEar0_p9 {{1, 2}} i ((1 + i) % 3) ≤ cstab_p4
+    ) ∧
+    -- 50. Kepler.Text.ear_ge2_p9 (LocalAuto9:311; no HOL anchor line in file docstring)
+    (∀ i ∈ (Finset.Icc 0 2 : Finset ℕ), ∀ j ∈ Finset.Icc 0 2,
+          i ≠ j → 2 ≤ aEar0_p9 {{1, 2}} i j
+    ) ∧
+    -- 51. Kepler.Text.ear_inj_p9 (LocalAuto9:218; no HOL anchor line in file docstring)
+    (∀ x₁ ∈ (Finset.Icc 0 2 : Finset ℕ), ∀ x₂ ∈ Finset.Icc 0 2,
+          (1 + x₁) % 3 = (1 + x₂) % 3 → x₁ = x₂
+    ) ∧
+    -- 52. Kepler.Text.ear_nofix1_p9 (LocalAuto9:225; no HOL anchor line in file docstring)
+    (∀ x ∈ (Finset.Icc 0 2 : Finset ℕ), (1 + x) % 3 ≠ x
+    ) ∧
+    -- 53. Kepler.Text.ear_nofix2_p9 (LocalAuto9:231; no HOL anchor line in file docstring)
+    (∀ x ∈ (Finset.Icc 0 2 : Finset ℕ),
+          (fun i => (1 + i) % 3)^[2] x ≠ x
+    ) ∧
+    -- 54. Kepler.Text.ear_num_p9 (LocalAuto9:199; no HOL anchor line in file docstring)
+    (Real.sqrt 8 ≤ cstab_p4 ∧ (2:ℝ) ≤ 2 * h0 ∧ 2 * h0 ≤ cstab_p4 ∧
+          (2:ℝ) ≤ Real.sqrt 8
+    ) ∧
+    -- 55. Kepler.Text.ear_period_ab_p9 (LocalAuto9:291; no HOL anchor line in file docstring)
+    (∀ (i j : ℕ),
+          aEar0_p9 {{1, 2}} i j = aEar0_p9 {{1, 2}} i ((fun n => (1 + n) % 3)^[3] j) ∧
+          bEar0_p9 {{1, 2}} i j = bEar0_p9 {{1, 2}} i ((fun n => (1 + n) % 3)^[3] j)
+    ) ∧
+    -- 56. Kepler.Text.ear_period_p9 (LocalAuto9:239; no HOL anchor line in file docstring)
+    (∀ x ∈ (Finset.Icc 0 2 : Finset ℕ),
+          (fun i => (1 + i) % 3)^[3] x = x
+    ) ∧
+    -- 57. Kepler.Text.ear_subset_p9 (LocalAuto9:298; no HOL anchor line in file docstring)
+    (({({1, 2} : Finset ℕ)} : Finset (Finset ℕ)) ⊆
+          (Finset.Icc 0 2).image (fun i => ({i, (1 + i) % 3} : Finset ℕ))
+    ) ∧
+    -- 58. Kepler.Text.ear_sym_p9 (LocalAuto9:247; no HOL anchor line in file docstring)
+    (∀ (i j : ℕ),
+          aEar0_p9 {{1, 2}} i j = aEar0_p9 {{1, 2}} j i ∧
+          bEar0_p9 {{1, 2}} i j = bEar0_p9 {{1, 2}} j i ∧
+          aEar0_p9 {{1, 2}} i j ≤ bEar0_p9 {{1, 2}} i j
+    ) ∧
+    -- 59. Kepler.Text.exist_stable_system_p9 (LocalAuto9:451; HOL `exist_stable_system`)
+    (∃ (k : ℕ) (d : ℝ) (s : Finset ℕ) (a b : ℕ → ℕ → ℝ)
+          (J : Finset (Finset ℕ)), ∃ f : ℕ → ℕ, stableSystem_p9 k d s a b J f
+    ) ∧
+    -- 60. Kepler.Text.exist_tri_stable_p9 (LocalAuto9:3276; HOL `exist_tri_stable`)
+    (∃ (k : ℕ) (d : ℝ) (s : Finset ℕ) (a b : ℕ → ℕ → ℝ)
+          (J : Finset (Finset ℕ)), ∃ f : ℕ → ℕ, triStable_p9 k d s a b J f
+    ) ∧
+    -- 61. Kepler.Text.inter_aff_ge_3_1_is_aff_ge_2_2_p9 (LocalAuto9:2681; HOL `inter_aff_ge_3_1_is_aff_ge_2_2`)
+    (∀ (x v u w : V3)
+          (h : ¬ Coplanar ℝ ({x, v, u, w} : Set V3)),
+          affGe {x, v, u} {w} ∩ affGe {x, u, w} {v} = affGe {x, u} {v, w}
+    ) ∧
+    -- 62. Kepler.Text.inter_aff_ge_3_1_is_aff_ge_2_2_p9._abel_1_3 (auto-generated exit, signature = probe printer output)
+    (∀ (x v u w : V3) (a' b' c' d' : ℝ),
+          a' • x + b' • u + c' • w + d' • v = a' • x + b' • u + d' • v + c' • w
+    ) ∧
+    -- 63. Kepler.Text.inter_aff_ge_3_1_is_aff_ge_2_2_p9._abel_1_5 (auto-generated exit, signature = probe printer output)
+    (∀ (x v u w : V3) (t1 t2 t3 t4 : ℝ),
+          t1 • x + t2 • u + t3 • v + t4 • w = t1 • x + t3 • v + t2 • u + t4 • w
+    ) ∧
+    -- 64. Kepler.Text.inter_aff_ge_3_1_is_aff_ge_2_2_p9._abel_1_6 (auto-generated exit, signature = probe printer output)
+    (∀ (x v u w : V3) (t1 t2 t3 t4 : ℝ),
+          t1 • x + t2 • u + t3 • v + t4 • w = t1 • x + t2 • u + t4 • w + t3 • v
+    ) ∧
+    -- 65. Kepler.Text.iter3_ear_p9 (LocalAuto9:178; no HOL anchor line in file docstring)
+    (∀ (j : ℕ),
+          (fun i => (1 + i) % 3)^[3] j = j % 3
+    ) ∧
+    -- 66. Kepler.Text.nkezLemma1_p9 (LocalAuto9:3057; HOL `lemma1`)
+    (∀ (A : Prop),
+          ¬A ∨ A
+    ) ∧
+    -- 67. Kepler.Text.nkezLemma_p9 (LocalAuto9:2778; HOL `lemma`)
+    (∀ (A : Prop),
+          A ∨ ¬A
+    ) ∧
+    -- 68. Kepler.Text.vecmatsV3_p4.eq_1 (auto-generated exit, signature = probe printer output)
+    (∀ {m : ℕ} (l : FinVec m 3) (j : Fin m), vecmatsV3_p4 l j = WithLp.toLp 2 (vecmats_p4 l j)
+    ) :=
+  ⟨AFF_GE_2_2_p9, AFF_GE_3_1_p9, AFF_GE_3_1_p9._abel_1_4, AFF_GE_3_1_p9._abel_1_6,
+      AFF_GE_EQ_AFF_GE_UNION_p9, @AFF_GE_SUBSET_AFF_GE_UNION_p9,
+      AFF_GT_SUBSET_WEDGE_IMP_VERTEX_p9, AFF_LT_1_1_p9, @AZIM_PI_WEDGE_CROSS_DOT_p9,
+      AZIM_PI_WEDGE_SIN_p9, BOUNDED_TRI_SY_p9, BSY1body_p9.eq_1, CARD_VERTEX_GE_3_LOCAL_FAN_p9,
+      CLOSED_TRI_SY_p9, COMPACT_TRI_STABLE_p9, CONDITION_INANGLE_CROSS_DOT_p9,
+      CONTINUOUS_ON_D_FUN_p9, CONTINUOUS_ON_ROW_p9, CONTINUOUS_ON_TAU_STAR_p9,
+      CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p9, EAR_STABLE_SYSTEM_p9, EAR_TRI_STABLE_SYSTEM_p9,
+      FINITE_J1_SY_p9, FINITE_J_SY_p9, INDEX_J1_SY_p9, IN_V_IMP_AZIM_LESS_PI, MOD_EQ_MOD1_p9,
+      MOD_EQ_MOD_p9, ORDER_p9, PROPERTIES_GENERIC_LOCAL_FAN_p9, REP_VERTEX_3_LOCAL_FAN_p9,
+      SEQUENTIALLY_DIVH_p9, SOL_LOCAL_FAN_POS_CASE3_p9, TriSyP9.prop, UNIQUE_ORDER_p9,
+      aEar0_p9.eq_1, aEar0_p9_mod, @aff_ge_subset3_aff_ge_p9, bEar0_p9.eq_1, bEar0_p9_mod,
+      bsy1body_rows_p9, cross3_p9.eq_1, dot3_p9.eq_1, earJ_mem_p9, ear_J_p9, ear_card_p9,
+      ear_closed_p9, ear_diag_lt_p9, ear_diag_p9, ear_ge2_p9, ear_inj_p9, ear_nofix1_p9,
+      ear_nofix2_p9, ear_num_p9, ear_period_ab_p9, ear_period_p9, @ear_subset_p9, ear_sym_p9,
+      exist_stable_system_p9, exist_tri_stable_p9, inter_aff_ge_3_1_is_aff_ge_2_2_p9,
+      inter_aff_ge_3_1_is_aff_ge_2_2_p9._abel_1_3, inter_aff_ge_3_1_is_aff_ge_2_2_p9._abel_1_5,
+      inter_aff_ge_3_1_is_aff_ge_2_2_p9._abel_1_6, iter3_ear_p9, nkezLemma1_p9, nkezLemma_p9,
+      vecmatsV3_p4.eq_1⟩
+
+#print axioms la13_capstone_w1
+#print axioms la9_capstone_w1
+
 /-- WIRE (real proof, la20-engine-sink-w1) `LocalAuto1.AQICLXA_concl` <- the
 `LKGRQUI_p27` instance `l20es_SLICE_6I1_02` (LA27 engine over `scs6I1 0 2`;
 `d' = 0.103 -> 3M1`, `d'' = 0.616 -> 5M1`) + the clean `YXIONXL3_discharged`
