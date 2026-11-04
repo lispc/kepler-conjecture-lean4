@@ -885,7 +885,10 @@ theorem LOCAL_FAN_RHO_NODE_IVS (h : localFan_p2 V E FF) (hv : v ∈ V) :
 /-- HOL `LOCAL_FAN_IVS_IN_V` (local_lemmas1.hl:3797) — giant. -/
 theorem LOCAL_FAN_IVS_IN_V (h : localFan_p2 V E FF) (hv : v ∈ V) :
     ivsRhoNode1_p2 FF v ∈ V :=
-  sorry
+  by
+    have hivs := ITER_CARD_MINUS1_EQ_IVS_RN1 h hv
+    rw [← hivs]
+    exact LOCAL_FAN_ITER_RHO_NODE_IN_V h hv (V.ncard - 1)
 
 /-- HOL `LF_AZIM_CYCLE_EQ_IVS_ND` (local_lemmas1.hl:3807) — giant. -/
 theorem LF_AZIM_CYCLE_EQ_IVS_ND (h : localFan_p2 V E FF) (hv : v ∈ V) :
@@ -1238,14 +1241,99 @@ theorem UPS_X_CONTS_FUNC (f g h : ℝ → V3) (r : ℝ) (hf : ContinuousAt f r)
     ContinuousAt
       (fun r => upsX_p6 (dist (f r) (g r) ^ 2) (dist (h r) (f r) ^ 2)
         (dist (g r) (h r) ^ 2)) r :=
-  sorry
+  by
+    unfold upsX_p6
+    fun_prop
+
+/-- Continuity at a point of the coordinate cross product of two
+continuous-at maps `ℝ → (Fin 3 → ℝ)` (coordinate expansion). -/
+private lemma w6g_continuousAt_crossProduct {u v : ℝ → (Fin 3 → ℝ)} {r : ℝ}
+    (hu : ContinuousAt u r) (hv : ContinuousAt v r) :
+    ContinuousAt (fun t => crossProduct (u t) (v t)) r := by
+  have hu' : ∀ i, ContinuousAt (fun t : ℝ => u t i) r := fun i => continuousAt_pi.mp hu i
+  have hv' : ∀ i, ContinuousAt (fun t : ℝ => v t i) r := fun i => continuousAt_pi.mp hv i
+  rw [continuousAt_pi]
+  intro i
+  fin_cases i <;> simp [cross_apply] <;>
+    exact ((hu' _).mul (hv' _)).sub ((hu' _).mul (hv' _))
+
+/-- `Collinear3 v0 a b` iff the cross product of the two difference
+vectors vanishes (both directions via `collinear3_iff_smul` and
+`crossProduct_ne_zero_iff_linearIndependent`). -/
+private lemma w6g_collinear3_iff_cross_eq_zero (v0 a b : V3) :
+    Collinear3 v0 a b ↔
+      crossProduct ((a - v0 : V3) : Fin 3 → ℝ) ((b - v0 : V3) : Fin 3 → ℝ) = 0 := by
+  constructor
+  · intro h
+    by_cases ha : a = v0
+    · have hz : ((a - v0 : V3) : Fin 3 → ℝ) = 0 := by
+        rw [ha, sub_self]
+        rfl
+      rw [hz]
+      simp
+    · obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := v0) (w := a) (w1 := b) ha).mp h
+      have hc' : ((b - v0 : V3) : Fin 3 → ℝ) = c • ((a - v0 : V3) : Fin 3 → ℝ) := by
+        rw [hc]
+        rfl
+      rw [hc', map_smul, cross_self, smul_zero]
+  · intro hcross
+    by_contra hcol
+    have hnotli : ¬ LinearIndependent ℝ
+        ![((a - v0 : V3) : Fin 3 → ℝ), ((b - v0 : V3) : Fin 3 → ℝ)] := by
+      intro hli
+      exact (crossProduct_ne_zero_iff_linearIndependent.mpr hli) hcross
+    by_cases hu : ((a - v0 : V3) : Fin 3 → ℝ) = 0
+    · have ha0 : (a - v0 : V3) = 0 := by
+        apply WithLp.ofLp_injective 2
+        simpa using hu
+      exact hcol (collinear3_of_eq (v := v0) (w := a) (w1 := b) (sub_eq_zero.mp ha0))
+    · have hnotall : ¬ ∀ c : ℝ, c • ((a - v0 : V3) : Fin 3 → ℝ)
+          ≠ ((b - v0 : V3) : Fin 3 → ℝ) := by
+        rwa [← LinearIndependent.pair_iff' hu]
+      obtain ⟨c, hc⟩ := not_forall.mp hnotall
+      have hc' : ((b - v0 : V3) : Fin 3 → ℝ) = c • ((a - v0 : V3) : Fin 3 → ℝ) :=
+        (not_not.mp hc).symm
+      have hc3 : (b - v0 : V3) = c • (a - v0 : V3) := by
+        apply WithLp.ofLp_injective 2
+        simpa using hc'
+      have ha : a ≠ v0 := by
+        intro he
+        apply hu
+        rw [he, sub_self]
+        rfl
+      exact hcol ((collinear3_iff_smul (v := v0) (w := a) (w1 := b) ha).mpr ⟨c, hc3⟩)
 
 /-- HOL `CONTINUOUS_PRESERVE_COLLINEAR` (local_lemmas1.hl:6286) — giant. -/
 theorem CONTINUOUS_PRESERVE_COLLINEAR (v0 : V3) (f g : ℝ → V3) (r : ℝ)
     (hf : ContinuousAt f r) (hg : ContinuousAt g r)
     (hnc : ¬ Collinear3 v0 (f r) (g r)) :
     ∃ e : ℝ, 0 < e ∧ ∀ r' : ℝ, |r - r'| < e → ¬ Collinear3 v0 (f r') (g r') :=
-  sorry
+  by
+    have hkey : ∀ t : ℝ, Collinear3 v0 (f t) (g t) ↔
+        crossProduct ((f t - v0 : V3) : Fin 3 → ℝ) ((g t - v0 : V3) : Fin 3 → ℝ) = 0 :=
+      fun t => w6g_collinear3_iff_cross_eq_zero v0 (f t) (g t)
+    have hHne : crossProduct ((f r - v0 : V3) : Fin 3 → ℝ) ((g r - v0 : V3) : Fin 3 → ℝ) ≠ 0 :=
+      fun hz => hnc ((hkey r).mpr hz)
+    have hH : ContinuousAt
+        (fun t : ℝ => crossProduct ((f t - v0 : V3) : Fin 3 → ℝ) ((g t - v0 : V3) : Fin 3 → ℝ)) r := by
+      apply w6g_continuousAt_crossProduct
+      · have h := hf.sub (continuousAt_const : ContinuousAt (fun _ : ℝ => v0) r)
+        fun_prop
+      · have h := hg.sub (continuousAt_const : ContinuousAt (fun _ : ℝ => v0) r)
+        fun_prop
+    have hpos : 0 < ‖crossProduct ((f r - v0 : V3) : Fin 3 → ℝ) ((g r - v0 : V3) : Fin 3 → ℝ)‖ :=
+      norm_pos_iff.mpr hHne
+    obtain ⟨e, he, hball⟩ := Metric.continuousAt_iff.mp hH _ hpos
+    refine ⟨e, he, ?_⟩
+    intro r' hr'
+    have hdist : dist r' r < e := by
+      rw [Real.dist_eq, abs_sub_comm]
+      exact hr'
+    have hlt := hball (x := r') hdist
+    intro hcol
+    have hz := (hkey r').mp hcol
+    rw [hz, dist_zero_left] at hlt
+    exact lt_irrefl _ hlt
 
 /-- HOL `EACH_ELM_PRESERVED_IMP_ALLL` (local_lemmas1.hl:6316) — giant. -/
 theorem EACH_ELM_PRESERVED_IMP_ALLL (phii : V3 → ℝ → V3) (E : Set (Set V3))
@@ -1255,7 +1343,36 @@ theorem EACH_ELM_PRESERVED_IMP_ALLL (phii : V3 → ℝ → V3) (E : Set (Set V3)
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
       ∀ e' ∈ (fun x : Set V3 => (fun v : V3 => phii v t) '' x) '' E,
         ¬ Collinear ℝ (Set.insert (0 : V3) e') :=
-  sorry
+  by
+    classical
+    have aux : ∀ s : Finset (Set V3),
+        (∀ x ∈ (s : Set (Set V3)), ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
+          ¬ Collinear ℝ (Set.insert (0 : V3) ((fun v : V3 => phii v t) '' x))) →
+        ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
+          ∀ e' ∈ (fun x : Set V3 => (fun v : V3 => phii v t) '' x) '' (s : Set (Set V3)),
+            ¬ Collinear ℝ (Set.insert (0 : V3) e') := by
+      intro s
+      induction s using Finset.induction_on with
+      | empty =>
+        intro h1
+        refine ⟨1, zero_lt_one, ?_⟩
+        intro t ht e' he'
+        simp only [Finset.coe_empty, Set.image_empty, Set.mem_empty_iff_false] at he'
+      | insert a s has ih =>
+        intro h1
+        obtain ⟨ea, hea_pos, hea⟩ := h1 a (by simp)
+        obtain ⟨es, hes_pos, hes⟩ := ih (fun x hx => h1 x (by
+          simp only [Finset.coe_insert, Set.mem_insert_iff]
+          exact Or.inr hx))
+        refine ⟨min ea es, lt_min hea_pos hes_pos, ?_⟩
+        intro t ht e' he'
+        simp only [Finset.coe_insert, Set.image_insert_eq, Set.mem_insert_iff] at he'
+        rcases he' with rfl | he'
+        · exact hea t (lt_of_lt_of_le ht (min_le_left ea es))
+        · exact hes t (lt_of_lt_of_le ht (min_le_right ea es)) e' he'
+    have hcoe : (hE.toFinset : Set (Set V3)) = E := hE.coe_toFinset
+    rw [← hcoe]
+    exact aux hE.toFinset (fun x hx => h1 x (by rw [← hcoe]; exact hx))
 
 /-- HOL `ALL_TO_THE_NONPARALLEL_PART` (local_lemmas1.hl:6378) — giant. -/
 theorem ALL_TO_THE_NONPARALLEL_PART (phii : V3 → ℝ → V3) (V : Set V3) (E : Set (Set V3))
