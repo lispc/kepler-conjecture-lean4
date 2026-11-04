@@ -2863,6 +2863,505 @@ theorem HAFL_CIRCLE_FORM_LOCAL_FAN_of_dih {V : Set V3} {E : Set (Set V3)}
     hdihFor HS' hHS'⟩
 
 
+/-! ## Private helpers for the slice-`Simple` residual (R1) -/
+
+/-- `nn_of_hyp` preserves the first coordinate. -/
+private theorem w2_nn_fst {x : V3} {V : Set V3} {E : Set (Set V3)} (d : V3 × V3) :
+    (nnOfHyp_p2 x V E d).1 = d.1 := by
+  simp only [nnOfHyp_p2]
+  split <;> rfl
+
+/-- `azim_cycle` on a singleton is the identity. -/
+private theorem w2_azim_single (p v0 u : V3) : azimCycle_p2 ({p} : Set V3) v0 u p = p := by
+  rw [azimCycle_p2, if_pos (c := (({p} : Set V3) ⊆ {p})) (Set.Subset.refl _)]
+
+/-- `ivs_azim_cycle` on a two-point set returns the other point. -/
+private theorem w2_ivs_pair (a b v0 u : V3) :
+    ivsAzimCycle_p2 ({a, b} : Set V3) v0 u a = b := by
+  by_cases hab : a = b
+  · subst hab
+    rw [ivsAzimCycle_p2, if_neg (c := (({a, a} : Set V3) = ∅)) (by
+      intro h
+      have h2 : (a : V3) ∈ ({a, a} : Set V3) := by simp
+      rw [h] at h2
+      exact absurd h2 (by simp))]
+    have hspec := Classical.epsilon_spec
+      (p := fun z : V3 => z ∈ ({a, a} : Set V3) ∧ azimCycle_p2 ({a, a} : Set V3) v0 u z = a)
+      ⟨a, by simp, by simpa using w2_azim_single a v0 u⟩
+    simpa using hspec.1
+  · rw [ivsAzimCycle_p2, if_neg (c := (({a, b} : Set V3) = ∅)) (by
+      intro h
+      have h2 : (a : V3) ∈ ({a, b} : Set V3) := by simp
+      rw [h] at h2
+      exact absurd h2 (by simp))]
+    have haz_b : azimCycle_p2 ({a, b} : Set V3) v0 u b = a := by
+      rw [Set.pair_comm]
+      exact AZIM_CYCLE_TWO_POINT_SET b a v0 u
+    obtain ⟨h1, h2⟩ := Classical.epsilon_spec
+      (p := fun z : V3 => z ∈ ({a, b} : Set V3) ∧ azimCycle_p2 ({a, b} : Set V3) v0 u z = a)
+      ⟨b, by simp, haz_b⟩
+    rcases (Set.mem_insert_iff.mp h1) with h | h
+    · exfalso
+      rw [h, AZIM_CYCLE_TWO_POINT_SET a b v0 u] at h2
+      exact hab h2.symm
+    · exact Set.mem_singleton_iff.mp h
+
+/-- successor / predecessor index on the cyclic window `0..n`. -/
+private def w2nx (n m : ℕ) : ℕ := if m = n then 0 else m + 1
+
+private def w2pv (n m : ℕ) : ℕ := if m = 0 then n else m - 1
+
+private theorem w2nx_lt {n m : ℕ} (h : m < n) : w2nx n m = m + 1 := by
+  simp only [w2nx]
+  rw [if_neg (ne_of_lt h)]
+
+private theorem w2nx_self (n : ℕ) : w2nx n n = 0 := by
+  simp [w2nx]
+
+private theorem w2pv_pos {n m : ℕ} (h : 0 < m) : w2pv n m = m - 1 := by
+  simp only [w2pv]
+  rw [if_neg (ne_of_gt h)]
+
+private theorem w2pv_idx0 (n : ℕ) : w2pv n 0 = n := by
+  simp [w2pv]
+
+private theorem w2pv_succ (n k : ℕ) : w2pv n (k + 1) = k := by
+  simp only [w2pv]
+  rw [if_neg (by omega)]
+  omega
+
+private theorem w2nx_le {n m : ℕ} (hm : m ≤ n) : w2nx n m ≤ n := by
+  by_cases h : m = n
+  · rw [h, w2nx_self]; omega
+  · rw [w2nx_lt (by omega)]; omega
+
+private theorem w2pv_le {n m : ℕ} (hm : m ≤ n) : w2pv n m ≤ n := by
+  by_cases h : m = 0
+  · rw [h, w2pv_idx0]
+  · rw [w2pv_pos (by omega)]; omega
+
+private theorem w2pv_nx {n m : ℕ} (hm : m ≤ n) : w2pv n (w2nx n m) = m := by
+  by_cases h : m = n
+  · rw [h, w2nx_self, w2pv_idx0]
+  · rw [w2nx_lt (by omega), w2pv_succ]
+
+private theorem w2nx_pv {n m : ℕ} (hm : m ≤ n) : w2nx n (w2pv n m) = m := by
+  by_cases h : m = 0
+  · subst h
+    rw [w2pv_idx0, w2nx_self]
+  · rw [w2pv_pos (by omega)]
+    by_cases h2 : m - 1 = n
+    · omega
+    · rw [w2nx_lt (by omega)]; omega
+
+private theorem w2nx_zero {n k : ℕ} (hk : k ≤ n) : (w2nx n)^[k] 0 = k := by
+  induction k with
+  | zero => rfl
+  | succ j ih =>
+    have hj : j ≤ n := by omega
+    rw [Function.iterate_succ_apply', ih hj]
+    by_cases h : j = n
+    · rw [h, w2nx_self]; omega
+    · rw [w2nx_lt (by omega)]
+
+private theorem w2nx_iter_le (n k : ℕ) : (w2nx n)^[k] 0 ≤ n := by
+  induction k with
+  | zero => simp
+  | succ j ih =>
+    rw [Function.iterate_succ_apply']
+    exact w2nx_le ih
+
+/-! ## R1: the sliced HYP hypermap is `Simple` -/
+
+theorem w2_slice_hyp_simple
+    (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V) (hvw : v ≠ w)
+    (hcol : ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+      ¬ Collinear ℝ ({0, z, t} : Set V3))
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
+    (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
+    (HS' : Hypermap (V3 × V3))
+    (hHS' : IsHyp_p2 0 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) HS') :
+    HS'.Simple := by
+  -- ## 0. the `rho`-orbit enumeration of `fv`
+  obtain ⟨n, hn_card, hn_w⟩ : ∃ n, n < V.ncard ∧ (rhoNode1_p2 FF)^[n] v = w := by
+    have henum := LOOP_SET_DETER_FIRTS_ELMS (f := rhoNode1_p2 FF) (V := V)
+      (fun u hu => LOCAL_FAN_ORBIT_MAP_V h hu) v hv
+    have hwmem : w ∈ ({x : V3 | ∃ n < V.ncard, (rhoNode1_p2 FF)^[n] v = x} : Set V3) := by
+      rw [henum]; exact hw
+    obtain ⟨m, hmc, hmw⟩ := hwmem
+    exact ⟨m, hmc, hmw⟩
+  -- the `m < n` enumeration (inlined `DETERMINE_FV2`, which is stated later in
+  -- the file; only `DETERMINE_FV` is needed)
+  have hfv_min := DETERMINE_FV h hv hw hvw hcol hsub HS hHS hfv
+  have hset_eq : {p : V3 × V3 | ∃ n₀ : ℕ,
+      (∀ m : ℕ, m < n₀ + 1 → ¬((rhoNode1_p2 FF)^[m] v = w)) ∧
+        p = ((rhoNode1_p2 FF)^[n₀] v, (rhoNode1_p2 FF)^[n₀ + 1] v)}
+      = {p : V3 × V3 | ∃ m : ℕ, m < n ∧
+        p = ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v)} := by
+    ext p
+    constructor
+    · rintro ⟨n₀, hn₀c, hn₀p⟩
+      have hn₀lt : n₀ < n := by
+        by_contra hle
+        exact hn₀c n (by omega) hn_w
+      exact ⟨n₀, hn₀lt, hn₀p⟩
+    · rintro ⟨m, hm, hmp⟩
+      refine ⟨m, ?_, hmp⟩
+      intro m' hm' hmeq
+      exact LOFA_IMP_DIS_ELMS23 h hv m' n (by omega) hn_card (hn_w.trans hmeq.symm)
+  have hfv2 : fv = insert (w, v)
+      {p : V3 × V3 | ∃ m : ℕ, m < n ∧
+        p = ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v)} := by
+    rw [hfv_min, hset_eq]
+  set a : ℕ → V3 := fun m => (rhoNode1_p2 FF)^[m] v with ha
+  have han : a n = w := hn_w
+  have ha0 : a 0 = v := rfl
+  have hfv2' : fv = insert (a n, a 0) {p : V3 × V3 | ∃ m, m < n ∧ p = (a m, a (m + 1))} := by
+    rw [hfv2, ← han]
+    rfl
+  have hainj : ∀ m m', m ≤ n → m' ≤ n → a m = a m' → m = m' := by
+    intro m m' hm hm' heq
+    rcases lt_trichotomy m m' with hlt | heq' | hgt
+    · exact absurd heq.symm (LOFA_IMP_DIS_ELMS23 h hv m m' hlt (by omega))
+    · exact heq'
+    · exact absurd heq (LOFA_IMP_DIS_ELMS23 h hv m' m hgt (by omega))
+  have ha0n : a n ≠ a 0 := by
+    intro heq
+    exact hvw (by rw [han, ha0] at heq; exact heq.symm)
+  have hasucc : ∀ m, a (m + 1) = rhoNode1_p2 FF (a m) := fun m =>
+    Function.iterate_succ_apply' (rhoNode1_p2 FF) m v
+  -- membership description of `fv`
+  have hfvm : ∀ p : V3 × V3, p ∈ fv ↔
+      p = (a n, a 0) ∨ ∃ m, m < n ∧ p = (a m, a (m + 1)) := by
+    intro p
+    rw [hfv2']
+    constructor
+    · intro hp
+      rcases Set.mem_insert_iff.mp hp with h | h
+      · exact Or.inl h
+      · exact Or.inr h
+    · intro hp
+      rcases hp with h | h
+      · exact Set.mem_insert_iff.mpr (Or.inl h)
+      · exact Set.mem_insert_iff.mpr (Or.inr h)
+  -- `a m ∈ V` on the window
+  have haV : ∀ m, m ≤ n → a m ∈ V := fun m hm =>
+    LOCAL_FAN_ITER_RHO_NODE_IN_V h hv m
+  -- the polygon dart `(a m, a (next m))`
+  have hgdarts : ∀ m, m ≤ n → (a m, a (w2nx n m)) ∈ fv := by
+    intro m hm
+    rw [hfvm]
+    by_cases hmn : m = n
+    · left
+      subst hmn
+      rw [w2nx_self]
+    · right
+      refine ⟨m, by omega, ?_⟩
+      rw [w2nx_lt (by omega)]
+  -- ## 1. lookups and injectivity
+  have hfst_lookup : ∀ p, p ∈ fv → ∀ m, m ≤ n → p.1 = a m → p = (a m, a (w2nx n m)) := by
+    intro p hp m hm hpm
+    rcases (hfvm p).mp hp with h | ⟨k, hk, hkp⟩
+    · have hnk : a n = a m := by rw [← hpm]; rw [h]
+      have hmn : m = n := (hainj n m (le_refl n) hm hnk).symm
+      subst hmn
+      rw [w2nx_self]
+      exact h
+    · have hkm : a k = a m := by rw [← hpm]; rw [hkp]
+      have hke : k = m := hainj k m (by omega) hm hkm
+      subst hke
+      rw [hkp, w2nx_lt (by omega)]
+  have hsnd_lookup : ∀ p, p ∈ fv → ∀ m, m ≤ n → p.2 = a (w2nx n m) → p = (a m, a (w2nx n m)) := by
+    intro p hp m hm hpm
+    rcases (hfvm p).mp hp with h | ⟨k, hk, hkp⟩
+    · have hz : a 0 = a (w2nx n m) := by rw [← hpm]; rw [h]
+      have hzm : w2nx n m = 0 := hainj (w2nx n m) 0 (w2nx_le hm) (by omega) hz.symm
+      have hmn : m = n := by
+        have h2 := w2pv_nx hm
+        rw [hzm, w2pv_idx0] at h2
+        omega
+      subst hmn
+      rw [w2nx_self]
+      exact h
+    · have hz : a (k + 1) = a (w2nx n m) := by rw [← hpm]; rw [hkp]
+      have hzm : w2nx n m = k + 1 := hainj (w2nx n m) (k + 1) (w2nx_le hm) (by omega) hz.symm
+      have hkm : k = m := by
+        have h2 := w2pv_nx hm
+        rw [hzm, w2pv_succ] at h2
+        omega
+      subst hkm
+      rw [hkp, w2nx_lt (by omega)]
+  have hfst_inj : Set.InjOn Prod.fst fv := by
+    intro p hp q hq hpq
+    obtain ⟨m, hm, hpm⟩ : ∃ m, m ≤ n ∧ p = (a m, a (w2nx n m)) := by
+      rcases (hfvm p).mp hp with h | ⟨k, hk, hkp⟩
+      · exact ⟨n, le_refl n, by rw [h, w2nx_self]⟩
+      · exact ⟨k, by omega, by rw [hkp, w2nx_lt (by omega)]⟩
+    have hqm : q.1 = a m := by rw [← hpq]; rw [hpm]
+    rw [hfst_lookup q hq m hm hqm, hpm]
+  have hsnd_inj : Set.InjOn Prod.snd fv := by
+    intro p hp q hq hpq
+    obtain ⟨m, hm, hpm⟩ : ∃ m, m ≤ n ∧ p = (a m, a (w2nx n m)) := by
+      rcases (hfvm p).mp hp with h | ⟨k, hk, hkp⟩
+      · exact ⟨n, le_refl n, by rw [h, w2nx_self]⟩
+      · exact ⟨k, by omega, by rw [hkp, w2nx_lt (by omega)]⟩
+    have hqm : q.2 = a (w2nx n m) := by rw [← hpq]; rw [hpm]
+    rw [hsnd_lookup q hq m hm hqm, hpm]
+  -- ## 2. `ePrime` membership and the dart set
+  have hmemE : ∀ (u z : V3), ({u, z} : Set V3) ∈ ePrime_p2 (E ∪ {{v, w}}) fv →
+      (u, z) ∈ fv ∨ (z, u) ∈ fv := by
+    intro u z hmem
+    simp only [ePrime_p2, Set.mem_setOf_eq] at hmem
+    obtain ⟨p, q, hpq, -, hpqfv⟩ := hmem
+    have hp : p = u ∨ p = z := by
+      have h1 : p ∈ ({p, q} : Set V3) := by simp
+      rw [← hpq] at h1
+      simpa using h1
+    have hq : q = u ∨ q = z := by
+      have h1 : q ∈ ({p, q} : Set V3) := by simp
+      rw [← hpq] at h1
+      simpa using h1
+    rcases hp with hpu | hpz
+    · rw [hpu] at hpqfv
+      rcases hq with hqu | hqz
+      · rw [hqu] at hpqfv
+        have hzu : z = u := by
+          have h1 : z ∈ ({u, z} : Set V3) := by simp
+          rw [hpq] at h1
+          simpa [hpu, hqu] using h1
+        rw [hzu]; left; exact hpqfv
+      · rw [hqz] at hpqfv
+        left; exact hpqfv
+    · rw [hpz] at hpqfv
+      rcases hq with hqu | hqz
+      · rw [hqu] at hpqfv
+        right; exact hpqfv
+      · rw [hqz] at hpqfv
+        have huz : u = z := by
+          have h1 : u ∈ ({u, z} : Set V3) := by simp
+          rw [hpq] at h1
+          simpa [hpz, hqz] using h1
+        rw [huz]; right; exact hpqfv
+  -- `fv ⊆ darts` needs the carrier pair memberships
+  have hpairE : ∀ p ∈ fv, ({p.1, p.2} : Set V3) ∈ (E ∪ {{v, w}} : Set (Set V3)) := by
+    intro p hp
+    have hdf : (v, rhoNode1_p2 FF v) ∈ (↑HS.darts : Set (V3 × V3)) := by
+      rw [hHS.1]
+      exact Or.inl (Or.inl (LOCAL_FAN_IN_FF_IN_ORD_PAIRS h
+        ((LOCAL_FAN_RHO_NODE_PROS2 h).2 v hv)))
+    have hface : p ∈ HS.face (v, rhoNode1_p2 FF v) := by rw [← hfv]; exact hp
+    have hdfv : p ∈ (↑HS.darts : Set (V3 × V3)) := HS.face_subset_darts hdf hface
+    rw [hHS.1] at hdfv
+    simp only [dartsOfHyp_p2, Set.mem_union, ordPairs_p2, selfPairs_p2, Set.mem_setOf_eq] at hdfv
+    rcases hdfv with hord | hself
+    · exact hord
+    · exfalso
+      obtain ⟨hpeq, -, -⟩ := hself
+      rcases (hfvm p).mp hp with hh | ⟨k, hk, hkp⟩
+      · exact ha0n (by rw [hh] at hpeq; exact hpeq)
+      · have h1 : a k = a (k + 1) := by rw [hkp] at hpeq; exact hpeq
+        exact absurd (hainj k (k + 1) (by omega) (by omega) h1) (by omega)
+  have hfv_darts : ∀ p ∈ fv, p ∈ (↑HS'.darts : Set (V3 × V3)) := by
+    intro p hp
+    rw [hHS'.1]
+    simp only [dartsOfHyp_p2, Set.mem_union, ordPairs_p2, Set.mem_setOf_eq, ePrime_p2]
+    exact Or.inl ⟨p.1, p.2, rfl, hpairE p hp, hp⟩
+  -- every slice dart is `fv` or the reverse of an `fv` dart
+  have hdarts_sub : ∀ x, x ∈ (↑HS'.darts : Set (V3 × V3)) → x ∈ fv ∨ (x.2, x.1) ∈ fv := by
+    intro x hx
+    rw [hHS'.1] at hx
+    simp only [dartsOfHyp_p2, Set.mem_union, ordPairs_p2, selfPairs_p2,
+      Set.mem_setOf_eq] at hx
+    rcases hx with hord | hself
+    · exact hmemE x.1 x.2 hord
+    · exfalso
+      obtain ⟨-, hxv, hEE0⟩ := hself
+      simp only [vPrime_p2, Set.mem_setOf_eq] at hxv
+      obtain ⟨-, b, hbfv⟩ := hxv
+      have hbEE : b ∈ EE_p2 x.1 (ePrime_p2 (E ∪ {{v, w}}) fv) := by
+        simp only [EE_p2, Set.mem_setOf_eq, ePrime_p2]
+        exact ⟨x.1, b, rfl, hpairE (x.1, b) hbfv, hbfv⟩
+      rw [hEE0] at hbEE
+      exact absurd hbEE (by simp)
+  -- ## 3. the neighbour sets `EE (a m)`
+  have hEE : ∀ m, m ≤ n → EE_p2 (a m) (ePrime_p2 (E ∪ {{v, w}}) fv)
+      = ({a (w2pv n m), a (w2nx n m)} : Set V3) := by
+    intro m hm
+    ext y
+    constructor
+    · intro hy
+      simp only [EE_p2, Set.mem_setOf_eq] at hy
+      rcases hmemE (a m) y hy with h | h
+      · have hyv : y = a (w2nx n m) := by
+          have h2 := hfst_lookup (a m, y) h m hm rfl
+          simpa using congrArg Prod.snd h2
+        rw [hyv]; simp
+      · have h0 : w2pv n m ≤ n := w2pv_le hm
+        have hyv : y = a (w2pv n m) := by
+          have h2 := hsnd_lookup (y, a m) h (w2pv n m) h0 (by rw [w2nx_pv hm])
+          simpa using congrArg Prod.fst h2
+        rw [hyv]; simp
+    · intro hy
+      have h0 : w2pv n m ≤ n := w2pv_le hm
+      have h1 : w2nx n m ≤ n := w2nx_le hm
+      rcases (by simpa using hy : y = a (w2pv n m) ∨ y = a (w2nx n m)) with rfl | rfl
+      · -- predecessor direction: `{a (pv m), a m} ∈ ePrime`
+        simp only [EE_p2, Set.mem_setOf_eq, ePrime_p2, Set.mem_setOf_eq]
+        refine ⟨a (w2pv n m), a m, Set.pair_comm _ _, ?_, ?_⟩
+        · by_cases hpz : m = 0
+          · subst hpz
+            rw [w2pv_idx0, han, ha0]
+            exact Or.inr (Set.mem_singleton_iff.mpr (Set.pair_comm v w).symm)
+          · have hpos : 0 < m := by omega
+            rw [w2pv_pos hpos]
+            have hstep : a m = rhoNode1_p2 FF (a (m - 1)) := by
+              have h1' := hasucc (m - 1)
+              have h2' : (m - 1) + 1 = m := by omega
+              rw [h2'] at h1'
+              exact h1'
+            rw [hstep]
+            exact Or.inl (LOCAL_RHO_NODE_PAIR_E h (haV (m - 1) (by omega)))
+        · rw [hfvm]
+          by_cases hpz : m = 0
+          · subst hpz
+            rw [w2pv_idx0]
+            exact Or.inl rfl
+          · right
+            refine ⟨m - 1, by omega, ?_⟩
+            rw [w2pv_pos (by omega)]
+            rw [show m - 1 + 1 = m from by omega]
+      · -- successor direction: `{a m, a (nx m)} ∈ ePrime`
+        simp only [EE_p2, Set.mem_setOf_eq, ePrime_p2, Set.mem_setOf_eq]
+        refine ⟨a m, a (w2nx n m), rfl, ?_, hgdarts m hm⟩
+        by_cases hmn : m = n
+        · subst hmn
+          rw [w2nx_self, han, ha0]
+          exact Or.inr (Set.mem_singleton_iff.mpr (Set.pair_comm v w).symm)
+        · rw [w2nx_lt (by omega), hasucc m]
+          exact Or.inl (LOCAL_RHO_NODE_PAIR_E h (haV m hm))
+  -- ## 4. the face walk on `fv`
+  have hff : ∀ d ∈ (↑HS'.darts : Set (V3 × V3)),
+      HS'.faceMap d =
+        (d.2, ivsAzimCycle_p2 (EE_p2 d.2 (ePrime_p2 (E ∪ {{v, w}}) fv)) 0 d.2 d.1) := by
+    intro d hd
+    have hd' : d ∈ dartsOfHyp_p2 (ePrime_p2 (E ∪ {{v, w}}) fv) (vPrime_p2 V fv) := by
+      rw [← hHS'.1]; exact hd
+    show (HS'.faceMap : V3 × V3 → V3 × V3) d = _
+    rw [hHS'.2.2.2]
+    show (if d ∈ dartsOfHyp_p2 (ePrime_p2 (E ∪ {{v, w}}) fv) (vPrime_p2 V fv) then
+      (d.2, ivsAzimCycle_p2 (EE_p2 d.2 (ePrime_p2 (E ∪ {{v, w}}) fv)) 0 d.2 d.1) else d) = _
+    rw [if_pos hd']
+  have hg_ff : ∀ m, m ≤ n →
+      HS'.faceMap (a m, a (w2nx n m)) = (a (w2nx n m), a (w2nx n (w2nx n m))) := by
+    intro m hm
+    have hgd : (a m, a (w2nx n m)) ∈ (↑HS'.darts : Set (V3 × V3)) := hfv_darts _ (hgdarts m hm)
+    have hstep := hff (a m, a (w2nx n m)) hgd
+    rw [hstep]
+    have h1 : w2nx n m ≤ n := w2nx_le hm
+    have h2 : w2pv n (w2nx n m) = m := w2pv_nx hm
+    rw [hEE (w2nx n m) h1, h2, w2_ivs_pair (a m) (a (w2nx n (w2nx n m))) 0 (a (w2nx n m))]
+  -- the full `faceMap` orbit of the base dart `g 0`
+  have hiter : ∀ k, (HS'.faceMap^[k]) (a 0, a (w2nx n 0))
+      = (a ((w2nx n)^[k] 0), a (w2nx n ((w2nx n)^[k] 0))) := by
+    intro k
+    induction k with
+    | zero => rfl
+    | succ j ih =>
+      have h1 : (HS'.faceMap^[j+1]) (a 0, a (w2nx n 0))
+          = HS'.faceMap ((HS'.faceMap^[j]) (a 0, a (w2nx n 0))) :=
+        Function.iterate_succ_apply' _ _ _
+      rw [h1, ih]
+      rw [show (w2nx n)^[j+1] 0 = w2nx n ((w2nx n)^[j] 0) from
+        Function.iterate_succ_apply' _ _ _]
+      exact hg_ff ((w2nx n)^[j] 0) (w2nx_iter_le n j)
+  have hface_g0 : HS'.face (a 0, a (w2nx n 0)) = fv := by
+    ext z
+    constructor
+    · intro hz
+      rw [Hypermap.face, orbitMap] at hz
+      simp only [Set.mem_setOf_eq] at hz
+      obtain ⟨k, hk⟩ := hz
+      rw [Equiv.Perm.coe_pow] at hk
+      rw [← hk, hiter]
+      exact hgdarts _ (w2nx_iter_le n k)
+    · intro hz
+      rw [Hypermap.face, orbitMap]
+      simp only [Set.mem_setOf_eq]
+      rcases (hfvm z).mp hz with hh | ⟨m, hm, hhm⟩
+      · refine ⟨n, ?_⟩
+        rw [Equiv.Perm.coe_pow, hiter, w2nx_zero (le_refl n), w2nx_self]
+        exact hh.symm
+      · refine ⟨m, ?_⟩
+        rw [Equiv.Perm.coe_pow, hiter, w2nx_zero (by omega), w2nx_lt (by omega)]
+        exact hhm.symm
+  have hface_fv : ∀ z ∈ fv, HS'.face z = fv := by
+    intro z hz
+    have hzface : z ∈ HS'.face (a 0, a (w2nx n 0)) := by rw [hface_g0]; exact hz
+    have h := Hypermap.face_eq_of_mem HS' hzface
+    rw [hface_g0] at h
+    exact h.symm
+  -- faces of non-`fv` darts avoid `fv`
+  have hface_notfv : ∀ x ∈ (↑HS'.darts : Set (V3 × V3)), x ∉ fv →
+      HS'.face x ⊆ {y : V3 × V3 | (y.2, y.1) ∈ fv} := by
+    intro x hx hxn z hz
+    have hznot : z ∉ fv := by
+      intro hzf
+      have h1 : HS'.face z = fv := hface_fv z hzf
+      have h2 : HS'.face x = HS'.face z := Hypermap.face_eq_of_mem HS' hz
+      rw [h1] at h2
+      exact hxn (h2 ▸ HS'.mem_face_self x)
+    have hzd : z ∈ (↑HS'.darts : Set (V3 × V3)) := HS'.face_subset_darts hx hz
+    exact (hdarts_sub z hzd).resolve_left hznot
+  -- ## 5. node orbits keep the first coordinate
+  have hstep_fst : ∀ d : V3 × V3, (HS'.nodeMap d).1 = d.1 := by
+    intro d
+    rw [show (HS'.nodeMap : V3 × V3 → V3 × V3) d
+      = nnOfHyp_p2 0 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) d from
+      congrFun hHS'.2.2.1 d]
+    exact w2_nn_fst d
+  have hniter : ∀ (k : ℕ) (x : V3 × V3), (((HS'.nodeMap)^[k]) x).1 = x.1 := by
+    intro k
+    induction k with
+    | zero => intro x; rfl
+    | succ j ih =>
+      intro x
+      rw [Function.iterate_succ_apply', hstep_fst]
+      exact ih x
+  have hnode_fst : ∀ {x z : V3 × V3}, z ∈ HS'.node x → z.1 = x.1 := by
+    intro x z hz
+    rw [Hypermap.node, orbitMap] at hz
+    simp only [Set.mem_setOf_eq] at hz
+    obtain ⟨k, hk⟩ := hz
+    rw [Equiv.Perm.coe_pow] at hk
+    rw [← hk]
+    exact hniter k x
+  -- ## 6. `Simple`
+  intro x hx
+  ext z
+  constructor
+  · intro hz
+    rw [Set.mem_inter_iff] at hz
+    obtain ⟨hzn, hzf⟩ := hz
+    have hz1 : z.1 = x.1 := hnode_fst hzn
+    by_cases hxfv : x ∈ fv
+    · have hzfv : z ∈ fv := by
+        have h1 := hface_fv x hxfv
+        rw [h1] at hzf
+        exact hzf
+      rw [Set.mem_singleton_iff]
+      exact hfst_inj hzfv hxfv hz1
+    · have hxsw : (x.2, x.1) ∈ fv := (hdarts_sub x hx).resolve_left hxfv
+      have hzsw : (z.2, z.1) ∈ fv := hface_notfv x hx hxfv hzf
+      have hpair : (z.2, z.1) = (x.2, x.1) := hsnd_inj hzsw hxsw hz1
+      rw [Set.mem_singleton_iff]
+      rw [Prod.mk.injEq] at hpair
+      exact Prod.ext hpair.2 hpair.1
+  · intro hz
+    rw [Set.mem_singleton_iff] at hz
+    rw [hz]
+    exact ⟨HS'.mem_node_self x, HS'.mem_face_self x⟩
+
 /-- HOL `HAFL_CIRCLE_FORM_LOCAL_FAN` (local_lemmas1.hl:3077) — giant. -/
 theorem HAFL_CIRCLE_FORM_LOCAL_FAN (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
     (hvw : v ≠ w)
@@ -2871,8 +3370,18 @@ theorem HAFL_CIRCLE_FORM_LOCAL_FAN (h : localFan_p2 V E FF) (hv : v ∈ V) (hw :
     (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
     (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v)) :
-    localFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv :=
-  sorry
+    localFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv := by
+  have hdFF : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS2 h).2 v hv
+  have hdOrd : (v, rhoNode1_p2 FF v) ∈ ordPairs_p2 E := LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hdFF
+  have hd : (v, rhoNode1_p2 FF v) ∈ dartsOfHyp_p2 (E ∪ {{v, w}}) V :=
+    Or.inl (Or.inl hdOrd)
+  exact HAFL_CIRCLE_FORM_LOCAL_FAN_of_dih h hv hw hvw hcol hsub HS hHS hfv
+    (fun HS' hHS' =>
+      DIH_K_HYP_E_PRIME (v := 0) (FF := fv)
+        (PROVE_SLICING_FAN h hv hw hvw hcol hsub) hHS hHS' hd hfv
+        (w2_slice_hyp_simple h hv hw hvw hcol hsub HS hHS hfv HS' hHS')
+        (LOFA_HYP_UNION_CARD_GT2 h hv hw hvw hcol hsub HS hHS hfv))
+
 
 /-- HOL `HAFL_CIRCLE_FORM_LOCAL_FAN2` (local_lemmas1.hl:3742) — giant. -/
 theorem HAFL_CIRCLE_FORM_LOCAL_FAN2 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
