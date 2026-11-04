@@ -515,6 +515,55 @@ private theorem dot_sub_self_p28 (x y : V3) :
 private theorem norm_smul_sq_p28 (t : ℝ) (x : V3) : ‖t • x‖ ^ 2 = t ^ 2 * ‖x‖ ^ 2 := by
   rw [norm_smul, Real.norm_eq_abs, mul_pow, (sq_abs t).symm]
 
+/-- affineSpan triple characterisation (local copy of the LA34 kit lemma;
+`_p34`'s is private). -/
+private theorem w5cD_mem_affSpan3_iff_p28 {x v u z : V3} :
+    z ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) ↔
+      z - x ∈ Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+  have hx : x ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) :=
+    mem_affineSpan _ (Set.mem_insert _ _)
+  have hv : v ∈ ({x, v, u} : Set V3) := by simp
+  have hdir : (affineSpan ℝ ({x, v, u} : Set V3)).direction =
+      Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [direction_affineSpan, vectorSpan_eq_span_vsub_set_left (k := ℝ) hv]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro d ⟨w, hw, he⟩
+      subst he
+      simp only [WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_neg, WithLp.ofLp_zero, WithLp.ofLp_smul,
+    WithLp.ofLp_toLp, WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_neg, WithLp.toLp_zero,
+    WithLp.toLp_smul, WithLp.toLp_ofLp, sub_zero, add_zero, zero_add, inner_eq_dot, norm_sq_eq_dot] at *
+      rcases Set.mem_insert_iff.mp hw with he1 | hw'
+      · rw [he1, vsub_eq_sub]
+        exact Submodule.subset_span (by simp)
+      · rcases Set.mem_insert_iff.mp hw' with he2 | hw''
+        · rw [he2, vsub_self]
+          exact Submodule.zero_mem _
+        · rcases Set.mem_singleton_iff.mp hw'' with he3
+          rw [he3, vsub_eq_sub, show (v : V3) - u = (v - x) - (u - x) from by module]
+          exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+            (Submodule.subset_span (by simp))
+    · rw [Submodule.span_le]
+      intro d hd
+      rcases Set.mem_insert_iff.mp hd with he | hd'
+      · rw [he]
+        exact Submodule.subset_span (by simp)
+      · rw [Set.mem_singleton_iff] at hd'
+        rw [hd']
+        rw [show (u : V3) - x = (v - x) - (v - u) from by module]
+        exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+          (Submodule.subset_span (by simp))
+  constructor
+  · intro hz
+    have hd : z - x ∈ (affineSpan ℝ ({x, v, u} : Set V3)).direction :=
+      AffineSubspace.vsub_mem_direction hz hx
+    rwa [hdir] at hd
+  · intro hspan
+    have hd : z - x ∈ (affineSpan ℝ ({x, v, u} : Set V3)).direction := by
+      rw [hdir]; exact hspan
+    have hm := (AffineSubspace.vadd_mem_iff_mem_direction (v := z - x) hx).mpr hd
+    simpa using hm
+
 /-- The Cayley datum of the re-centred pair `(-v1, v2 - v1)`. -/
 private theorem deforDatum_p28 (v1 v2 : V3) (x1 x2 x5 : ℝ)
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) :
@@ -925,7 +974,55 @@ theorem V3_DEFOR_IN_AFF_GT_V1_MK_p28 (v1 v2 w : V3) (x1 x2 x5 a : ℝ)
     (haff : v2 ∈ affGt {0} {v1, w}) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
       v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 ∈ affGt {0} {v1, w} := by
-  sorry
+  subst a
+  have hncperm : ¬ Collinear ℝ ({0, v2, v1} : Set V3) := by
+    intro hc
+    apply hnc
+    have hset : ({0, v2, v1} : Set V3) = ({0, v1, v2} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [hset] at hc
+  obtain ⟨e', he', hsub⟩ := OPEN_RELA_AFF_GT_p34 v2 v1 w hncperm hncw haff
+  obtain ⟨e'', he'', hdist⟩ :=
+    EXISTS_SMALL_LT_CONST_ADD_p28 v1 v2 v2 x1 x2 x5 e' (-1) h1 h2 h5 hnc hx1 hx2 hx5
+      rfl (by rw [dist_self]; exact he')
+  refine ⟨min e' e'', lt_min he' he'', fun t ht => ?_⟩
+  have ht1 : -e'' < t := by linarith [ht.1, min_le_right e' e'']
+  have ht2 : t < e'' := lt_of_lt_of_le ht.2 (min_le_right e' e'')
+  have hball : v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 ∈
+      Metric.ball v2 e' :=
+    Metric.mem_ball.mpr (hdist t ⟨ht1, ht2⟩)
+  have hspan : v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 ∈
+      Submodule.span ℝ ({v1, v2} : Set V3) := by
+    have hv1mem : v1 ∈ Submodule.span ℝ ({v1, v2} : Set V3) :=
+      Submodule.subset_span (by simp)
+    have hv2mem : v2 ∈ Submodule.span ℝ ({v1, v2} : Set V3) :=
+      Submodule.subset_span (by simp)
+    have hdmem : v2 - v1 ∈ Submodule.span ℝ ({v1, v2} : Set V3) :=
+      Submodule.sub_mem _ hv2mem hv1mem
+    have hsqv : (-v1 : V3) ⬝ᵥ (-v1 : V3) = x1 := by
+      have h := norm_sq_eq_dot (-v1)
+      rw [norm_neg, hx1] at h
+      exact h.symm
+    have hlag : cross3 (-v1) (cross3 (-v1) (v2 - v1))
+        = ((-v1) ⬝ᵥ (v2 - v1)) • (-v1) - x1 • (v2 - v1) := by
+      rw [cross3_lagrange_p28, hsqv]
+      simp only [WithLp.ofLp_sub]
+    have hrw : v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1
+        = (1 - ((x1 + (x5 - t) - x2) / (2 * x1)) -
+              (((-1) / x1) * Real.sqrt (upsX x1 (x5 - t) x2 / upsX x1 x5 x2)) *
+                ((-v1) ⬝ᵥ (v2 - v1))) • v1
+          + (-((((-1) / x1) * Real.sqrt (upsX x1 (x5 - t) x2 / upsX x1 x5 x2))) * x1) •
+              (v2 - v1) := by
+      simp only [v3DeforV1_p17]
+      rw [hlag]
+      module
+    rw [hrw]
+    exact Submodule.add_mem _ (Submodule.smul_mem _ _ hv1mem) (Submodule.smul_mem _ _ hdmem)
+  have haffmem : v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 ∈
+      (affineSpan ℝ ({0, v1, v2} : Set V3) : Set V3) := by
+    rw [w5cD_mem_affSpan3_iff_p28 (x := (0:V3)) (v := v1) (u := v2), sub_zero]
+    simpa only [sub_zero] using hspan
+  exact hsub (Set.mem_inter hball haffmem)
 
 /-- HOL `V3_DEFOR_INCREASING_IN_ANGLE` (NUXCOEA.hl:705). -/
 theorem V3_DEFOR_INCREASING_IN_ANGLE_p28 (v1 v2 w : V3) (x1 x2 x5 a : ℝ)
@@ -1586,7 +1683,27 @@ theorem V3_DEFOR_DEFORMATION_V5_p28 (v1 v2 : V3) (x1 x2 x5 : ℝ) (V : Set V3)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
     (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) :
     ∃ ε : ℝ, 0 < ε ∧ Deformation (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2) V (-ε) ε := by
-  sorry
+  have hnc' : ¬ Collinear ℝ ({0, -v1, v2 - v1} : Set V3) :=
+    fun h => hnc ((COLLINEAR_EQ_SUB_NEG_p28 v1 v2).mp h)
+  have hx1' : ‖-v1‖ ^ 2 = x1 := by rw [norm_neg]; exact hx1
+  have hx6' : ‖(-v1) - (v2 - v1)‖ ^ 2 = x2 := by
+    rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2
+  obtain ⟨e, he, hdef⟩ :=
+    V3_DEFOR_DEFORMATION_p34 (-v1) (v2 - v1) ((fun v => v - v1) '' V) x1 x5 1 1 x2 (-1)
+      h1 h5 one_pos one_pos h2 hnc' hx1' hx5 hx6' rfl
+  obtain ⟨h0mem, hcont, hid⟩ := hdef
+  refine ⟨e, he, ?_⟩
+  rw [Deformation]
+  refine ⟨h0mem, ?_, ?_⟩
+  · intro v hv r hr
+    have hv' : v - v1 ∈ (fun v => v - v1) '' V := ⟨v, hv, rfl⟩
+    exact (hcont (v - v1) hv' r hr).add_const v1
+  · intro v hv
+    have hv' : v - v1 ∈ (fun v => v - v1) '' V := ⟨v, hv, rfl⟩
+    have h := hid (v - v1) hv'
+    show v3DeforV4_p28 (-1) x1 x5 x2 (-v1) (v2 - v1) (v - v1) 0 + v1 = v
+    rw [show v3DeforV4_p28 (-1) x1 x5 x2 (-v1) (v2 - v1) (v - v1) 0 = v - v1 from h]
+    abel
 
 /-- HOL `DEFORMATION_LUNAR_AFFINE_HULL_MK` (NUXCOEA.hl:2929). -/
 theorem DEFORMATION_LUNAR_AFFINE_HULL_MK_p28 (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
@@ -1715,7 +1832,11 @@ theorem DEFORMATION_DIST_LE_MK_A_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k 
     ∀ i : ℕ, ¬(l % k = i % k) ∧ ¬(l % k = (i + 1) % k) →
       ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
         s.a l i < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
-  sorry
+  intro i hcond
+  obtain ⟨h1, h2, h5, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  exact EXISTS_SMALL_LE_CONST_ADD_p28 v1 v2 (w i) x1 x2 x5 (s.a l i) a h1 h2 h5 hnc
+    hx1 hx2 hx5 ha (hi i hcond)
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK_TWO_CASES` (NUXCOEA.hl:3703). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
@@ -1737,7 +1858,27 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_B_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ �
     (hdiag : ∀ i, scsDiag k l i → 4 * h0 < s.b l i) :
     ∀ i, scsDiag k l i → ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
       dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) < s.b l i := by
-  sorry
+  intro i hd
+  obtain ⟨h1, h2, h5, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hz2 : ‖v2‖ ≤ 2 * h0 := by
+    have h := WL_IN_BALL_ANNULUS_p28 s w l hbb
+    rw [hl] at h
+    have h2 : ballAnnulus = Metric.closedBall (0:V3) (2 * h0) \ Metric.ball (0:V3) 2 := rfl
+    rw [h2, Set.mem_sdiff, Metric.mem_closedBall, dist_eq_norm, sub_zero] at h
+    exact h.1
+  have hzi : ‖w i‖ ≤ 2 * h0 := by
+    have h := WL_IN_BALL_ANNULUS_p28 s w i hbb
+    have h2 : ballAnnulus = Metric.closedBall (0:V3) (2 * h0) \ Metric.ball (0:V3) 2 := rfl
+    rw [h2, Set.mem_sdiff, Metric.mem_closedBall, dist_eq_norm, sub_zero] at h
+    exact h.1
+  have hle : dist v2 (w i) ≤ 4 * h0 := by
+    have ht := dist_triangle v2 (0:V3) (w i)
+    rw [dist_zero_right, dist_zero_left] at ht
+    linarith
+  exact EXISTS_SMALL_LT_CONST_ADD_p28 v1 v2 (w i) x1 x2 x5 (s.b l i) a h1 h2 h5 hnc
+    hx1 hx2 hx5 ha (lt_of_le_of_lt hle (hdiag i hd))
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_TWO_CASES` (NUXCOEA.hl:3889). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
@@ -1786,7 +1927,10 @@ theorem DIST_V3_DEFOR_EDGE_SUC_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k l 
     (hj : l % k = (j + 1) % k) (hlt : dist v2 (w j) < s.b l j) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
       dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) < s.b l j := by
-  sorry
+  obtain ⟨h1, h2, h5, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  exact EXISTS_SMALL_LT_CONST_ADD_p28 v1 v2 (w j) x1 x2 x5 (s.b l j) a h1 h2 h5 hnc
+    hx1 hx2 hx5 ha hlt
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK1_TWO_CASES` (NUXCOEA.hl:4042). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK1_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
