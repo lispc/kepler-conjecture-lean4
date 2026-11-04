@@ -759,23 +759,81 @@ theorem COLLINEAR_AZIM_0_OR_PI (u e v w : V3) (hcol : Collinear ℝ ({u, v, w} :
           one_smul, zero_smul, add_zero]⟩
     exact (azim_eq_zero_iff h1 h2).mpr hvg
 
--- W1 注记：HOL 经 ANGLES_ADD_BETWEEN（x ∈ segment [v,w] 的角加法）。
--- Lean 路线：x = u + r•(v-u) + s•(w-u)（r,s > 0，affGt），x' := u + (r+s)⁻¹•(x-u) 严格
--- 位于 segment [v,w] 内（Sbtw ℝ v x' w），由 angle_smul_right_of_pos /
--- angle_smul_left_of_pos 把 ∠vux、∠xuw 归到 x' 处，再用
--- Mathlib angle_add_angle_eq_of_sbtw 收口；v = w 退化情形两角皆 0。
 /-- HOL `ANGLES_ADD_AFF_GE` (polar_fan.hl:74). -/
 theorem ANGLES_ADD_AFF_GE {u v w x : V3} (hv : v ≠ u) (hw : w ≠ u) (hx : x ≠ u)
     (hmem : x ∈ affGt {u} {v, w}) :
     EuclideanGeometry.angle v u x + EuclideanGeometry.angle x u w
       = EuclideanGeometry.angle v u w := by
-  sorry
+  by_cases hvw : v = w
+  · -- degenerate: w = v, so x lies on the open ray u → v
+    subst w
+    have hmem1 : x ∈ affGt {u} {v} := by simpa using hmem
+    obtain ⟨f, hfin, hxsum, hpos, hone⟩ := hmem1
+    have hsum : ∑ z ∈ hfin.toFinset, f z = f u + f v := sum_insert_single_s hfin hv.symm
+    have hsumv : ∑ z ∈ hfin.toFinset, f z • z = f u • u + f v • v :=
+      sum_insert_single_v hfin hv.symm
+    rw [hsum] at hone
+    have hfv : 0 < f v := hpos v (by simp)
+    have hxu : x - u = f v • (v - u) := by
+      rw [hxsum, hsumv]
+      have hfu : f u = 1 - f v := by linarith
+      rw [hfu, sub_smul]
+      module
+    have h1 : EuclideanGeometry.angle v u x = EuclideanGeometry.angle v u v :=
+      EuclideanGeometry.angle_smul_right_of_pos v hfv (by simpa [vsub_eq_sub] using hxu.symm)
+    have h2 : EuclideanGeometry.angle x u v = EuclideanGeometry.angle v u v :=
+      EuclideanGeometry.angle_smul_left_of_pos v hfv (by simpa [vsub_eq_sub] using hxu.symm)
+    rw [h1, h2, EuclideanGeometry.angle_self_of_ne hv]
+    ring
+  · -- v ≠ w: extract x = u + f v • (v-u) + f w • (w-u) with positive coefficients
+    obtain ⟨f, hfin, hxsum, hpos, hone⟩ := hmem
+    have hsums : ∑ z ∈ hfin.toFinset, f z = f u + f v + f w :=
+      sum_insert_pair_s hfin hv.symm hw.symm hvw
+    have hsumv : ∑ z ∈ hfin.toFinset, f z • z = f u • u + f v • v + f w • w :=
+      sum_insert_pair_v hfin hv.symm hw.symm hvw
+    rw [hsums] at hone
+    have hrv : 0 < f v := hpos v (by simp)
+    have hsw : 0 < f w := hpos w (by simp)
+    have hrs : 0 < f v + f w := add_pos hrv hsw
+    have hrsne : f v + f w ≠ 0 := hrs.ne'
+    have hxu : x - u = f v • (v - u) + f w • (w - u) := by
+      rw [hxsum, hsumv]
+      have hfu : f u = 1 - f v - f w := by linarith
+      rw [hfu, sub_smul]
+      module
+    -- x' := u + (fv+fw)⁻¹ • (x-u) lies strictly inside the segment [v,w]
+    let x' : V3 := u + (f v + f w)⁻¹ • (x - u)
+    have hx'u : (f v + f w) • (x' - u) = x - u := by
+      show (f v + f w) • (u + (f v + f w)⁻¹ • (x - u) - u) = x - u
+      rw [add_sub_cancel_left, smul_smul, mul_inv_cancel₀ hrsne, one_smul]
+    have hx'sub : x' - u =
+        (f v / (f v + f w)) • (v - u) + (f w / (f v + f w)) • (w - u) := by
+      show u + (f v + f w)⁻¹ • (x - u) - u = _
+      rw [add_sub_cancel_left, hxu, smul_add, smul_smul, smul_smul, div_eq_inv_mul,
+        div_eq_inv_mul]
+    have hx'line : x' = AffineMap.lineMap v w (f w / (f v + f w)) := by
+      rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+      have hx' : x' = u + (x' - u) := by abel
+      rw [hx', hx'sub]
+      have hab : f v / (f v + f w) + f w / (f v + f w) = 1 := by
+        rw [← add_div, div_self hrsne]
+      have ha : f v / (f v + f w) = 1 - f w / (f v + f w) := by linarith
+      rw [ha]
+      module
+    have hW : Wbtw ℝ v x' w := by
+      rw [Wbtw, affineSegment, Set.mem_image]
+      refine ⟨f w / (f v + f w), ⟨div_pos hsw hrs |>.le, ?_⟩, hx'line.symm⟩
+      rw [div_le_one hrs]
+      linarith
+    have h1 : EuclideanGeometry.angle v u x = EuclideanGeometry.angle v u x' :=
+      EuclideanGeometry.angle_smul_right_of_pos v hrs (by simpa [vsub_eq_sub] using hx'u)
+    have h2 : EuclideanGeometry.angle x u w = EuclideanGeometry.angle x' u w :=
+      EuclideanGeometry.angle_smul_left_of_pos w hrs (by simpa [vsub_eq_sub] using hx'u)
+    calc EuclideanGeometry.angle v u x + EuclideanGeometry.angle x u w
+        = EuclideanGeometry.angle v u x' + EuclideanGeometry.angle x' u w := by rw [h1, h2]
+      _ = EuclideanGeometry.angle v u w :=
+        EuclideanGeometry.angle_add_of_ne_of_ne hv.symm hw.symm hW
 
--- W1 注记：HOL 经 ANGLES_ADD_BETWEEN（x ∈ segment [v,w] 的角加法）。
--- Lean 路线：x = u + r•(v-u) + s•(w-u)（r,s > 0，affGt），x' := u + (r+s)⁻¹•(x-u) 严格
--- 位于 segment [v,w] 内（Sbtw ℝ v x' w），由 angle_smul_right_of_pos /
--- angle_smul_left_of_pos 把 ∠vux、∠xuw 归到 x' 处，再用
--- Mathlib angle_add_angle_eq_of_sbtw 收口；v = w 退化情形两角皆 0。
 /-! ## Borderline case and aff_ge cones (polar_fan.hl:102-273) -/
 
 /-- HOL `AFF_GE_SCALE_LEMMA` (polar_fan.hl:102). -/
