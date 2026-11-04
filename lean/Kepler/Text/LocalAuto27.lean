@@ -101,7 +101,7 @@ FILE MAP
     LocalAuto1 body is still a blanket `sorry`) + the `AYQJTMD_p27`
     contrapositive; zero new sorries, sorry-inherited axiom face — see the
     EAPGLE docstring).
-  Section G (FEKTYIY): `FEKTYIY_p27` (sorry).
+  Section G (FEKTYIY): `FEKTYIY_p27` (proved 2026-11-05, lane m1a-root-w6).
 
   Section H (LKGRQUI): `SLICE_IS_UNADORNED_p27` (proved),
     `LKGRQUI_p27` (sorry).
@@ -111,6 +111,11 @@ FILE MAP
 -/
 
 import Kepler.Text.LocalAuto1
+-- FEKTYIY (2026-11-05, lane m1a-root-w6): the fan-azimuth engine
+-- `AZIM_PI_ITER_LOCAL_FAN_p37` (LA37) and the `interiorAngle1 = azimInFan`
+-- identity `LOFA_IMP_INANGLE_EQ_AZIM_p14` (LA14). Acyclic: LA14's closure
+-- (71 modules) contains neither LA27 nor LA25.
+import Kepler.Text.LocalAuto14
 -- Row/capstone import (2026-09-18 fill wave): LocalAuto24 carries the proved
 -- `UXCKFPE_p24` case assembly (`BBprimeV39 s ≠ ∅` from `BBs` + `taustar < 0`;
 -- its k = 3..6 case lemmas remain `sorry` in that lane). Importability
@@ -929,9 +934,169 @@ theorem EAPGLE_p27 :
 /-- HOL `FEKTYIY` (FEKTYIY.hl:91). -/
 theorem FEKTYIY_p27 : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
     v ∈ MMsV39 s → 3 < s.k → ¬Coplanar (({0} ∪ Set.range v : Set V3)) := by
-  sorry
-    -- DISCHARGES: NEEDS the ball-annulus/non-coplanarity of an equilateral
-    -- `MMs` realisation (`v` not contained in any plane through 0).
+  intro s v hs hMM hk hcop
+  classical
+  -- `MMs` gives the `BBs` realisation and negative taustar
+  -- (the Section-H helper `mm_BBs_taustar_p27` is declared below this point,
+  -- so its two-line unpacking is inlined here)
+  have hMMdata : BBsV39 s v ∧ taustarV39 s v < 0 := by
+    have h := hMM
+    simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h
+    exact ⟨h.1.1.1, h.1.1.2.2⟩
+  obtain ⟨hBB, hta⟩ := hMMdata
+  -- keep `hBB` (the `obtain` below consumes its copy)
+  have hBB' := hBB
+  obtain ⟨-, hper, -, h4⟩ := hBB'
+  let V : Set V3 := Set.range v
+  let E : Set (Set V3) := Set.range fun i : ℕ => ({v i, v (i + 1)} : Set V3)
+  let FF : Set (V3 × V3) := Set.range fun i : ℕ => (v i, v (i + 1))
+  have hclf : ConvexLocalFan V E FF := by
+    rcases h4 with h3 | hcf
+    · omega
+    · exact hcf
+  have hlf : LocalFan V E FF := hclf.1
+  have hedge : ∀ u ∈ V, ∃ w, {u, w} ∈ E := by
+    rintro u ⟨i, rfl⟩
+    exact ⟨v (i + 1), ⟨i, rfl⟩⟩
+  have hlf2 : localFan_p2 V E FF := localFan_p2.of_LocalFan_noIso hlf hedge
+  -- the `rho_node1` orbit runs through the cyclic `v` window
+  have horbit : ∀ p1 m : ℕ, (rhoNode1 FF)^[m] (v p1) = v (m + p1) := by
+    intro p1 m
+    exact VV_SUC_EQ_RHO_NODE_PRIME_p35 s s.k p1 0 0 (v p1) V E FF v
+      rfl rfl rfl rfl rfl hs (by omega) hBB m
+  -- cardinality of the vertex set
+  have hk0 : 0 < s.k := by omega
+  have hdiag : scsDiag s.k 0 2 := by
+    unfold scsDiag
+    have h1 : 1 % s.k = 1 := Nat.mod_eq_of_lt (by omega)
+    have h2 : 2 % s.k = 2 := Nat.mod_eq_of_lt (by omega)
+    have h3 : 3 % s.k = 3 := Nat.mod_eq_of_lt (by omega)
+    rw [Nat.zero_mod, h1, h2, h3]
+    omega
+  have hcard : V.ncard = s.k := CARD_V_EQ_SCS_K_p35 s s.k 0 2 V v rfl rfl hs hdiag hBB
+  -- predecessor identification: `ivs_rho_node1` is the cyclic predecessor
+  have hivs : ∀ i : ℕ, ivsRhoNode1 FF (v i) = v (i + (s.k - 1)) := by
+    intro i
+    have h1 := ITER_CARD_MINUS1_EQ_IVS_RN1 hlf2 (v := v i)
+      (Set.mem_range.mpr ⟨i, rfl⟩)
+    rw [hcard] at h1
+    have h2 : (rhoNode1_p2 FF)^[s.k - 1] (v i) = v (s.k - 1 + i) := horbit i (s.k - 1)
+    rw [h2, Nat.add_comm (s.k - 1) i] at h1
+    exact h1.symm
+  -- successor identification
+  have hrho : ∀ i : ℕ, rhoNode1 FF (v i) = v (i + 1) := by
+    intro i
+    exact DETER_RHO_NODE hlf2 (v := v i) (w := v (i + 1))
+      (Set.mem_range.mpr ⟨i, rfl⟩)
+  -- the fan orbit window is the whole vertex set
+  have hU : {z : V3 | ∃ n ≤ s.k + 1, z = (rhoNode1 FF)^[n] (v 0)} = V := by
+    ext z
+    constructor
+    · rintro ⟨n, hn, rfl⟩
+      rw [horbit 0 n, Nat.add_zero]
+      exact Set.mem_range.mpr ⟨n, rfl⟩
+    · rintro ⟨m, rfl⟩
+      refine ⟨m % s.k, ?_, ?_⟩
+      · have := Nat.mod_lt m hk0; omega
+      · rw [horbit 0 (m % s.k), Nat.add_zero]
+        exact (periodic_mod_eq_p23 hper m).symm
+  -- coplanarity gives a plane through 0 containing all vertices
+  obtain ⟨P, hplane, hsub⟩ := coplanar_eq_coplanar_alt.mp hcop
+  obtain ⟨a, b, c, hnc, rfl⟩ := hplane
+  have h0P : (0 : V3) ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (Or.inl rfl)
+  have hsubV : V ⊆ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) :=
+    fun z hz => hsub (Or.inr hz)
+  have hPlaneP : PlaneP_p37 (affineSpan ℝ ({a, b, c} : Set V3)) := ⟨a, b, c, hnc, rfl⟩
+  -- hence every turn of the rho orbit is a straight angle
+  have hazim_iter := AZIM_PI_ITER_LOCAL_FAN_p37 (V := V) (E := E) (FF := FF)
+    (v := v 0) (l := s.k + 1) (U := V) (P := affineSpan ℝ ({a, b, c} : Set V3))
+    hlf (Set.mem_range.mpr ⟨0, rfl⟩) hU hPlaneP h0P hsubV
+  have hiter : ∀ i < s.k, azim 0 (v i) (v (i + (s.k - 1))) (v (i + 1)) = Real.pi := by
+    intro i hi
+    rcases Nat.eq_zero_or_pos i with hi0 | hipos
+    · subst hi0
+      have h := hazim_iter (s.k - 1) (by omega)
+      rw [horbit 0 (s.k - 1 + 1), horbit 0 (s.k - 1), horbit 0 (s.k - 1 + 2)] at h
+      simp only [Nat.add_zero] at h
+      have e1 : v (s.k - 1 + 1) = v 0 := by
+        rw [show s.k - 1 + 1 = s.k from by omega]
+        simpa using hper 0
+      have e3 : v (s.k - 1 + 2) = v 1 := by
+        rw [show s.k - 1 + 2 = 1 + s.k from by omega]
+        exact hper 1
+      rw [e1, e3] at h
+      simpa [Nat.zero_add] using h
+    · obtain ⟨i', rfl⟩ : ∃ i', i = i' + 1 := ⟨i - 1, by omega⟩
+      have hi' : i' < s.k := by omega
+      have h := hazim_iter i' (by omega)
+      rw [horbit 0 (i' + 1), horbit 0 i', horbit 0 (i' + 2)] at h
+      simp only [Nat.add_zero] at h
+      have e1 : v i' = v (i' + 1 + (s.k - 1)) := by
+        rw [show i' + 1 + (s.k - 1) = i' + s.k from by omega]
+        exact (hper i').symm
+      rw [e1] at h
+      exact h
+  -- complement the azimuth: from `i+k-1 -> i+1` to `i+1 -> i+k-1`
+  have hazim : ∀ i < s.k, azim 0 (v i) (v (i + 1)) (v (i + (s.k - 1))) = Real.pi := by
+    intro i hi
+    rw [AZIM_COMPL_EXT (0 : V3) (v i) (v (i + (s.k - 1))) (v (i + 1))]
+    rw [if_neg (by rw [hiter i hi]; exact Real.pi_ne_zero), hiter i hi]
+    ring
+  -- every fan azimuth of the realisation is a straight angle
+  have hazimFan : ∀ e ∈ FF, azimInFan e E = Real.pi := by
+    rintro e ⟨i, rfl⟩
+    have hin := LOFA_IMP_INANGLE_EQ_AZIM_p14 V E FF (v i) hlf hedge
+      (Set.mem_range.mpr ⟨i, rfl⟩)
+    rw [hrho i] at hin
+    rw [← hin]
+    show azim 0 (v i) (rhoNode1 FF (v i)) (ivsRhoNode1 FF (v i)) = Real.pi
+    rw [hrho i, hivs i]
+    -- fold the index modulo `k`: the finite fan uses the cyclic window only
+    have hperEq : ∀ x y : ℕ, x % s.k = y % s.k → v x = v y := by
+      intro x y hxy
+      rw [← periodic_mod_eq_p23 hper x, ← periodic_mod_eq_p23 hper y, hxy]
+    have hmod1 : v i = v (i % s.k) := hperEq i (i % s.k) (by rw [Nat.mod_mod])
+    have hmod2 : v (i + 1) = v (i % s.k + 1) := by
+      refine hperEq (i + 1) (i % s.k + 1) ?_
+      rw [Nat.add_mod i 1 s.k, Nat.add_mod (i % s.k) 1 s.k, Nat.mod_mod,
+        Nat.mod_eq_of_lt (by omega : 1 < s.k)]
+    have hmod3 : v (i + (s.k - 1)) = v (i % s.k + (s.k - 1)) := by
+      refine hperEq (i + (s.k - 1)) (i % s.k + (s.k - 1)) ?_
+      rw [Nat.add_mod i (s.k - 1) s.k, Nat.add_mod (i % s.k) (s.k - 1) s.k, Nat.mod_mod]
+    rw [hmod1, hmod2, hmod3]
+    exact hazim (i % s.k) (Nat.mod_lt i hk0)
+  -- the dart set is finite and its `sol_local` excess sum vanishes
+  have hperFF : Periodic (fun i : ℕ => (v i, v (i + 1))) s.k := by
+    intro i
+    have h2 : v (i + s.k + 1) = v (i + 1) := by
+      rw [Nat.add_right_comm i s.k 1]
+      exact hper (i + 1)
+    show (v (i + s.k), v (i + s.k + 1)) = (v i, v (i + 1))
+    rw [hper i, h2]
+  have hfinFF : FF.Finite := by
+    show (Set.range fun i : ℕ => (v i, v (i + 1))).Finite
+    rw [range_periodic_image_p23 (fun i : ℕ => (v i, v (i + 1))) s.k hk0 hperFF]
+    exact (Set.finite_Iio s.k).image _
+  have hsum : setSum FF (fun e => azimInFan e E - Real.pi) = 0 := by
+    unfold setSum
+    rw [dif_pos hfinFF]
+    refine Finset.sum_eq_zero (fun e he => ?_)
+    have hmem : e ∈ FF := hfinFF.mem_toFinset.mp he
+    rw [hazimFan e hmem]
+    ring
+  -- contradiction with JKQEWGV1
+  have hJK := JKQEWGV1_p23 s v hs hk hBB hta
+  rw [Set.image_univ, Set.image_univ] at hJK
+  have hsol : solLocal E FF = 2 * Real.pi := by
+    unfold solLocal
+    rw [hsum]
+    ring
+  rw [hsol] at hJK
+  linarith [Real.pi_pos]
+  -- PROVED (2026-11-05, lane m1a-root-w6): under coplanarity the LA37 engine
+  -- `AZIM_PI_ITER_LOCAL_FAN_p37` makes every turn of the rho orbit a straight
+  -- angle, so each `azimInFan` of `FF` is `pi` and `solLocal = 2*pi`, against
+  -- `JKQEWGV1_p23` (`solLocal < pi`).
 
 /-! ## Section H: LKGRQUI -/
 
