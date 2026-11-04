@@ -1305,6 +1305,198 @@ theorem coplanar_in_affine_hull_p14 (u v w x : V3)
   rw [← hABeq]
   exact hsub (by simp)
 
+/-! ## w5cA3 kit B（波 2 连续性 kit，全 private 零 sorry）：圆→角度提升连续性、
+azim 的 cos/sin 点式刻画、azim 沿曲线逐点连续性。-/
+
+/-- w5cA3: triple product is additive in the first cross factor. -/
+private theorem w5cA3_triple_addL (x y z w : V3) :
+    (cross3 (x + y) z) ⬝ᵥ w = (cross3 x z) ⬝ᵥ w + (cross3 y z) ⬝ᵥ w := by
+  simp only [dot3_eq_p14]
+  rw [coe_cross3_p14, coe_add_p14, map_add, LinearMap.add_apply, add_dotProduct]
+  rfl
+
+/-- w5cA3: triple product is homogeneous in the first cross factor. -/
+private theorem w5cA3_triple_smulL (t : ℝ) (x z w : V3) :
+    (cross3 (t • x) z) ⬝ᵥ w = t * ((cross3 x z) ⬝ᵥ w) := by
+  simp only [dot3_eq_p14]
+  rw [coe_cross3_p14, coe_smul_p14, map_smul, LinearMap.smul_apply, smul_dotProduct,
+    smul_eq_mul]
+  rfl
+
+/-- w5cA3: triple product is additive in the second cross factor. -/
+private theorem w5cA3_triple_addR (x y z w : V3) :
+    (cross3 x (y + z)) ⬝ᵥ w = (cross3 x y) ⬝ᵥ w + (cross3 x z) ⬝ᵥ w := by
+  simp only [dot3_eq_p14]
+  rw [coe_cross3_p14, coe_add_p14, map_add, add_dotProduct]
+  rfl
+
+/-- w5cA3: triple product is homogeneous in the second cross factor. -/
+private theorem w5cA3_triple_smulR (t : ℝ) (x z w : V3) :
+    (cross3 x (t • z)) ⬝ᵥ w = t * ((cross3 x z) ⬝ᵥ w) := by
+  simp only [dot3_eq_p14]
+  rw [coe_cross3_p14, coe_smul_p14, map_smul, smul_dotProduct, smul_eq_mul]
+  rfl
+
+/-- w5cA3: triple product vanishes when the dot slot repeats a cross factor. -/
+private theorem w5cA3_triple_crossR (x y : V3) : (cross3 x y) ⬝ᵥ y = 0 := by
+  rw [dot3_comm_p14, dot3_eq_p14, coe_cross3_p14, dot_cross_self]
+
+/-- w5cA3: triple product vanishes when the dot slot repeats the other cross
+factor. -/
+private theorem w5cA3_triple_crossL (x y : V3) : (cross3 x y) ⬝ᵥ x = 0 := by
+  rw [dot3_eq_p14, coe_cross3_p14, dotProduct_comm, dot_self_cross]
+
+/-- w5cA3: triple product vanishes for a repeated cross factor. -/
+private theorem w5cA3_triple_same (x z : V3) : (cross3 x x) ⬝ᵥ z = 0 := by
+  rw [dot3_eq_p14, coe_cross3_p14, cross_self, zero_dotProduct]
+
+/-- w5cA3: dot of a sum in the right slot (via comm to the left slot). -/
+private theorem w5cA3_dot_sumR (x y z : V3) : x ⬝ᵥ (y + z) = y ⬝ᵥ x + z ⬝ᵥ x := by
+  calc x ⬝ᵥ (y + z) = (y + z) ⬝ᵥ x := dot3_comm_p14 x (y + z)
+    _ = y ⬝ᵥ x + z ⬝ᵥ x := dot3_add_left_p14 y z x
+
+/-- w5cA3: the perpendicular component of `v3` against `v2` is nonzero. -/
+private theorem w5cA3_perp_ne_zero (v2 v3 : V3) (hv2 : v2 ≠ 0)
+    (h : ¬ Collinear3 0 v2 v3) :
+    v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2 ≠ 0 := by
+  intro hz
+  apply h
+  have hv : v3 = ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2 := eq_of_sub_eq_zero hz
+  rw [hv]
+  exact collinear0_smulL_p14 v2 _
+
+/-- w5cA3: the perpendicular component against the axis has positive norm. -/
+private theorem w5cA3_perp_norm_pos (v2 v3 : V3) (hv2 : v2 ≠ 0)
+    (h : ¬ Collinear3 0 v2 v3) : 0 < ‖v3 - ((v3 ⬝ᵥ v2) / (v2 ⬝ᵥ v2)) • v2‖ :=
+  norm_pos_iff.mpr (w5cA3_perp_ne_zero v2 v3 hv2 h)
+
+/-- w5cA3: angle-lift continuity on `[0, 2π)`: if `θ t ∈ [0, 2π)` everywhere and
+`cos ∘ θ`, `sin ∘ θ` are continuous at `t₀` with `θ t₀ ∈ (0, 2π)`, then `θ` is
+continuous at `t₀`.  Route: the chord distance `‖e^{iφ} − e^{iθ₀}‖` has a
+positive minimum `c` on the compact set of angles `≥ ε` away from `θ t₀`; small
+`Δcos`/`Δsin` force that distance below `c`. -/
+private theorem w5cA3_continuousAt_of_cos_sin {θ : ℝ → ℝ} {t₀ : ℝ}
+    (hnn : ∀ t, 0 ≤ θ t) (hlt : ∀ t, θ t < 2 * Real.pi)
+    (hC : ContinuousAt (fun t => Real.cos (θ t)) t₀)
+    (hS : ContinuousAt (fun t => Real.sin (θ t)) t₀)
+    (hpos : 0 < θ t₀) : ContinuousAt θ t₀ := by
+  rw [Metric.continuousAt_iff]
+  intro ε hε
+  have hmin1 : 0 < min (θ t₀ / 2) ((2 * Real.pi - θ t₀) / 2) :=
+    lt_min (by linarith [hpos]) (by linarith [hlt t₀])
+  have hmin2 : min (θ t₀ / 2) ((2 * Real.pi - θ t₀) / 2) < θ t₀ :=
+    lt_of_le_of_lt (min_le_left _ _) (by linarith [hpos])
+  have hε'0 : 0 < min ε (min (θ t₀ / 2) ((2 * Real.pi - θ t₀) / 2)) :=
+    lt_min hε hmin1
+  have hw1 : min ε (min (θ t₀ / 2) ((2 * Real.pi - θ t₀) / 2)) < θ t₀ :=
+    lt_of_le_of_lt (min_le_right ε _) hmin2
+  have hw2 : min ε (min (θ t₀ / 2) ((2 * Real.pi - θ t₀) / 2))
+      < 2 * Real.pi - θ t₀ :=
+    lt_of_le_of_lt (min_le_right ε _)
+      (lt_of_le_of_lt (min_le_right _ _) (by linarith [hlt t₀]))
+  set ε' := min ε (min (θ t₀ / 2) ((2 * Real.pi - θ t₀) / 2)) with hε'def
+  have hε'le : ε' ≤ ε := min_le_left _ _
+  -- K := 远离 θ₀ 的角度带的紧覆盖
+  set K : Set ℝ := Set.Icc 0 (θ t₀ - ε') ∪ Set.Icc (θ t₀ + ε') (2 * Real.pi)
+    with hKdef
+  have hKc : IsCompact K := isCompact_Icc.union isCompact_Icc
+  have hKne : K.Nonempty :=
+    ⟨0, Or.inl (Set.mem_Icc.mpr ⟨le_refl 0, show 0 ≤ θ t₀ - ε' from by linarith [hw1]⟩)⟩
+  have hcc : Continuous (fun φ : ℝ =>
+      ‖Complex.exp ((φ : ℂ) * Complex.I)
+        - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖) := by fun_prop
+  obtain ⟨xt, hxK, hxmin⟩ := hKc.exists_isMinOn hKne hcc.continuousOn
+  have hmin : ∀ φ ∈ K,
+      ‖Complex.exp ((xt : ℂ) * Complex.I)
+          - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ ≤
+        ‖Complex.exp ((φ : ℂ) * Complex.I)
+          - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ :=
+    isMinOn_iff.mp hxmin
+  have hxtle : xt ≤ 2 * Real.pi := by
+    rcases hxK with h | h
+    · exact le_trans h.2 (by linarith)
+    · exact h.2
+  have hxtge : 0 ≤ xt := by
+    rcases hxK with h | h
+    · exact h.1
+    · exact le_trans (by linarith) h.1
+  -- c := f xt > 0
+  have hcx : 0 < ‖Complex.exp ((xt : ℂ) * Complex.I)
+      - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ := by
+    by_contra hc0
+    push_neg at hc0
+    have hzero := norm_eq_zero.mp (le_antisymm hc0 (norm_nonneg _))
+    have heq : Complex.exp ((xt : ℂ) * Complex.I)
+        = Complex.exp ((θ t₀ : ℂ) * Complex.I) := eq_of_sub_eq_zero hzero
+    obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp heq
+    have hxr : xt = θ t₀ + (n : ℝ) * (2 * Real.pi) := by
+      have h5 := congrArg Complex.im hn
+      simp only [Complex.mul_im, Complex.add_im, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, Complex.intCast_re, Complex.intCast_im,
+        mul_zero, zero_add, mul_one, add_zero] at h5
+      norm_num at h5
+      linarith
+    rcases Int.lt_trichotomy n 0 with hneg | hzero2 | hpos2
+    · have hle : (n : ℝ) ≤ -1 := by
+        have := (by omega : (n : ℤ) ≤ -1)
+        exact_mod_cast this
+      have hnp : (n : ℝ) * (2 * Real.pi) ≤ (-1 : ℝ) * (2 * Real.pi) :=
+        mul_le_mul_of_nonneg_right hle (by positivity)
+      linarith
+    · rw [show (n : ℝ) = 0 from by exact_mod_cast hzero2, zero_mul, add_zero] at hxr
+      rcases hxK with h | h
+      · linarith [h.2, hε'0]
+      · linarith [h.1, hε'0]
+    · have hge : (n : ℝ) ≥ 1 := by
+        have := (by omega : (n : ℤ) ≥ 1)
+        exact_mod_cast this
+      have hnp : (1 : ℝ) * (2 * Real.pi) ≤ (n : ℝ) * (2 * Real.pi) :=
+        mul_le_mul_of_nonneg_right hge (by positivity)
+      linarith
+  -- 由 hC hS 取窗口
+  obtain ⟨δ₁, hδ₁, hCδ⟩ := Metric.continuousAt_iff.mp hC (‖Complex.exp ((xt : ℂ) * Complex.I) - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ / 3) (by linarith)
+  obtain ⟨δ₂, hδ₂, hSδ⟩ := Metric.continuousAt_iff.mp hS (‖Complex.exp ((xt : ℂ) * Complex.I) - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ / 3) (by linarith)
+  have h2η : ‖Complex.exp ((xt : ℂ) * Complex.I) - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ / 3 + ‖Complex.exp ((xt : ℂ) * Complex.I) - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ / 3 < ‖Complex.exp ((xt : ℂ) * Complex.I) - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ := by linarith
+  refine ⟨min δ₁ δ₂, lt_min hδ₁ hδ₂, fun x hx => ?_⟩
+  have hxδ₁ : dist x t₀ < δ₁ := lt_of_lt_of_le hx (min_le_left _ _)
+  have hxδ₂ : dist x t₀ < δ₂ := lt_of_lt_of_le hx (min_le_right _ _)
+  have hΔ1 : |Real.cos (θ x) - Real.cos (θ t₀)| < ‖Complex.exp ((xt : ℂ) * Complex.I) - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ / 3 := by
+    have h1 := hCδ (show dist x t₀ < δ₁ from hxδ₁)
+    rwa [Real.dist_eq] at h1
+  have hΔ2 : |Real.sin (θ x) - Real.sin (θ t₀)| < ‖Complex.exp ((xt : ℂ) * Complex.I) - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ / 3 := by
+    have h1 := hSδ (show dist x t₀ < δ₂ from hxδ₂)
+    rwa [Real.dist_eq] at h1
+  by_contra hcon
+  rw [Real.dist_eq] at hcon
+  -- θ x ∈ K
+  have hKx : θ x ∈ K := by
+    by_cases h : θ x ≤ θ t₀ - ε'
+    · exact Or.inl (Set.mem_Icc.mpr ⟨hnn x, h⟩)
+    · by_cases h2 : θ t₀ + ε' ≤ θ x
+      · exact Or.inr (Set.mem_Icc.mpr ⟨h2, le_of_lt (hlt x)⟩)
+      · exact absurd (show dist (θ x) (θ t₀) < ε from by
+          rw [Real.dist_eq]
+          exact lt_of_lt_of_le (abs_lt.mpr ⟨ by linarith [not_le.mp h],
+            by linarith [not_le.mp h2]⟩) hε'le) hcon
+  have hge := hmin (θ x) hKx
+  have hfin : ‖Complex.exp ((θ x : ℂ) * Complex.I)
+      - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ < ‖Complex.exp ((xt : ℂ) * Complex.I) - Complex.exp ((θ t₀ : ℂ) * Complex.I)‖ := by
+    refine lt_of_le_of_lt (le_trans (Complex.norm_le_abs_re_add_abs_im _) ?_) h2η
+    have hre : (Complex.exp ((θ x : ℂ) * Complex.I)
+        - Complex.exp ((θ t₀ : ℂ) * Complex.I)).re
+        = Real.cos (θ x) - Real.cos (θ t₀) := by
+      rw [Complex.sub_re, Complex.exp_re, Complex.exp_re]
+      simp [Complex.mul_re, Complex.I_re, Complex.I_im]
+    have him : (Complex.exp ((θ x : ℂ) * Complex.I)
+        - Complex.exp ((θ t₀ : ℂ) * Complex.I)).im
+        = Real.sin (θ x) - Real.sin (θ t₀) := by
+      rw [Complex.sub_im, Complex.exp_im, Complex.exp_im]
+      simp [Complex.mul_re, Complex.I_re, Complex.I_im]
+    rw [hre, him]
+    exact add_le_add hΔ1.le hΔ2.le
+  linarith
+
+
 /-- HOL `azim_0_as_closed` (hl:972).  NEEDS: azim-zero coplanarity theory. -/
 theorem azim_0_as_closed_p14 (v2 v3 v4 : V3)
     (h1 : ¬ Collinear ℝ ({0, v2, v3} : Set V3))
