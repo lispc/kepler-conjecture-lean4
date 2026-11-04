@@ -1490,6 +1490,32 @@ theorem EXISTS_SMALL_LT_CONST_V1_p34 (v1 v2 w : V3) (x1 x2 x6 a c : ℝ)
     exact abs_lt.mpr ht
   exact Set.mem_Iio.mp (hmem t hb)
 
+/-- Early copy of the `MMs` -> `BBs` extraction (the later `mms_bbs_p34`
+lives below the `EDGE`/`BLL` block; this `w5cC3_` twin serves the W2/W3
+distance proofs). -/
+private theorem w5cC3_mms_bbs_p34 {s : ScsV39} {w : ℕ → V3} (hmw : w ∈ MMsV39 s) :
+    BBsV39 s w := by
+  have h := hmw
+  simp only [MMsV39, Set.mem_setOf_eq] at h
+  have h2 := h.1
+  simp only [BBprime2V39, Set.mem_setOf_eq] at h2
+  have h3 := h2.1
+  simp only [BBprimeV39, Set.mem_setOf_eq] at h3
+  exact h3.1
+
+/-- Early copy of `mod_ne_succ_p34` (declared below the `EDGE`/`BLL` block). -/
+private theorem w5cC3_mod_ne_succ_p34 {k l : ℕ} (hk : 2 ≤ k) : l % k ≠ (l + 1) % k := by
+  intro hcon
+  have hk0 : 0 < k := by omega
+  have hm : l % k < k := Nat.mod_lt _ hk0
+  have h2 : (l + 1) % k = (l % k + 1) % k := by
+    rw [Nat.add_mod, Nat.mod_eq_of_lt (by omega : (1:ℕ) < k)]
+  rw [h2] at hcon
+  rcases lt_or_ge (l % k + 1) k with ha | hb
+  · rw [Nat.mod_eq_of_lt ha] at hcon; omega
+  · have hz : l % k + 1 = k := by omega
+    rw [hz, Nat.mod_self] at hcon; omega
+
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_B_SUC` (IMJXPHR.hl:703). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_B_SUC_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
     (v1 v2 : V3) (x1 x2 x6 a : ℝ)
@@ -1501,7 +1527,24 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_B_SUC_p34 (s : ScsV39) (k l : ℕ) (w : ℕ
     ∀ i, scsDiag k l i →
       ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
         dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) < s.b l i := by
-  sorry
+  intro i hdiag_i
+  obtain ⟨h1, h2, h6, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  have hBB := w5cC3_mms_bbs_p34 hmw
+  have hv2 : v2 ∈ ballAnnulus := by
+    have := hBB.1 (Set.mem_range.mpr ⟨l, rfl⟩)
+    rwa [hl] at this
+  have hwi : w i ∈ ballAnnulus := hBB.1 (Set.mem_range.mpr ⟨i, rfl⟩)
+  have hdv : dist v2 0 ≤ 2 * h0 :=
+    Metric.mem_closedBall.mp hv2.1
+  have hdw : dist (w i) 0 ≤ 2 * h0 :=
+    Metric.mem_closedBall.mp hwi.1
+  have htri : dist v2 (w i) ≤ dist v2 0 + dist 0 (w i) := dist_triangle v2 0 (w i)
+  have h4 : dist v2 (w i) ≤ 4 * h0 := by
+    rw [dist_comm 0 (w i)] at htri
+    linarith
+  exact EXISTS_SMALL_LT_CONST_p34 v1 v2 (w i) x1 x2 x6 a (s.b l i)
+    h1 h2 h6 hnc hx1 hx2 hx6 ha (lt_of_le_of_lt h4 (hdiag i hdiag_i))
 
 /-- HOL `xrr_decreasing_lt` (IMJXPHR.hl:758). -/
 theorem xrr_decreasing_lt_p34 (y1 y1' y2 y6 : ℝ) (h1 : 2 ≤ y1) (h1' : 2 ≤ y1')
@@ -1853,7 +1896,27 @@ theorem DEFORMATION_DIST_LE_2_p34 (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
     (ha : a = -1) (hmod : l % k = (i + 1) % k) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
       2 < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) := by
-  sorry
+  obtain ⟨h1, h2, h6, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  have hk0 : 0 < k := by omega
+  have hpa : Periodic2 s.a k := by rw [← hkk]; exact hs.2.2.2.2.2.2.2.1
+  have hik : i % k < k := Nat.mod_lt _ hk0
+  have hlk : l % k < k := Nat.mod_lt _ hk0
+  have hne : i % k ≠ l % k := by
+    intro h
+    have hsucc : i % k ≠ (i + 1) % k := w5cC3_mod_ne_succ_p34 (by omega)
+    exact hsucc (h.trans hmod)
+  have h2res : 2 ≤ s.a (i % k) (l % k) :=
+    hs.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1 (i % k) (l % k)
+      ⟨by rw [hkk]; exact hik, by rw [hkk]; exact hlk, hne⟩
+  have e1 : s.a l i = s.a l (i % k) := modFold_p34 hk0 (fun q => (hpa l q).2) i
+  have e2 : s.a l (i % k) = s.a (i % k) l :=
+    (hs.2.2.2.2.2.2.2.2.2.2.2.2.1 l (i % k)).1
+  have e3 : s.a (i % k) l = s.a (i % k) (l % k) :=
+    modFold_p34 hk0 (fun q => (hpa (i % k) q).2) l
+  have h2le : 2 ≤ s.a l i := by rw [e1, e2, e3]; exact h2res
+  exact EXISTS_SMALL_LE_CONST_p34 v1 v2 (w i) x1 x2 x6 a 2
+    h1 h2 h6 hnc hx1 hx2 hx6 ha (by linarith)
 
 /-- HOL `DEFORMATION_V3_DEFOR_EDGE` (IMJXPHR.hl:1190). -/
 theorem DEFORMATION_V3_DEFOR_EDGE_p34 (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
