@@ -2295,8 +2295,152 @@ theorem FACE_MAP_SLICING_HYP_TRANS_POINT (h : localFan_p2 V E FF) (hv : v ∈ V)
       ¬ Collinear ℝ ({0, z, t} : Set V3))
     (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
     (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS) :
-    HS.faceMap (v, w) = (w, rhoNode1_p2 FF w) :=
-  sorry
+    HS.faceMap (v, w) = (w, rhoNode1_p2 FF w) := by
+  -- Slice fan and the carrier face map.
+  have hkeep := h
+  have hFAN0 : FAN 0 V E := by
+    obtain ⟨-, -, -, -, -, hf, -, -⟩ := hkeep
+    exact hf
+  have hFAN' : FAN 0 V (E ∪ {{v, w}}) :=
+    PROVE_SLICING_FAN h hv hw hvw hcol hsub
+  have hface : (HS.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p2 0 V (E ∪ {{v, w}}) :=
+    hHS.2.2.2
+  rw [hface]
+  -- The diagonal dart `(v, w)` is a carrier dart; read `ff_of_hyp`.
+  have hd : (v, w) ∈ dartsOfHyp_p2 (E ∪ {{v, w}}) V := by
+    rw [Set.union_comm]
+    exact IN_DARTS_EXTENSION (x := v) (y := w)
+      (E := ({{v, w}} : Set (Set V3))) (S := E) (by simp)
+  unfold ffOfHyp_p2
+  rw [if_pos hd]
+  simp only [Prod.mk.injEq, true_and]
+  -- Work in the `_p3` rendering of `ivs_azim_cycle`.
+  rw [show ivsAzimCycle_p2 (EE_p2 w (E ∪ {{v, w}})) 0 w v
+      = ivsAzimCycle_p3 (EE_p3 w (E ∪ {{v, w}})) 0 w v from rfl]
+  have hwv_mem : ({w, v} : Set V3) ∈ E ∪ {{v, w}} := by
+    refine Or.inr ?_
+    rw [Set.mem_singleton_iff]
+    exact (Set.pair_comm v w).symm
+  -- The fan predecessor `x` of `w` along `rho`.
+  obtain ⟨x, hxV, hxw⟩ : ∃ x : V3, x ∈ V ∧ rhoNode1_p2 FF x = w := by
+    have hwimg : w ∈ Set.image (rhoNode1_p2 FF) V := by
+      rw [LOFA_IMAGE_RHO_NODE_IDE h]
+      exact hw
+    simpa only [Set.mem_image] using hwimg
+  have hrho_ne_x : rhoNode1_p2 FF w ≠ x := by
+    have hh := LOCAL_FAN_IMP_NOT_SEMI_IDE h hxV
+    rwa [hxw] at hh
+  -- The augmented neighbour set at `w` is `{v, x, rho w}`.
+  have hEEold : EE_p2 w E = ({rhoNode1_p2 FF w, x} : Set V3) :=
+    LOFA_IMP_EE_TWO_ELMS (vv := x) (v := w) h hxV hxw
+  have hsingle : EE_p2 w ({{v, w}} : Set (Set V3)) = ({v} : Set V3) := by
+    have hh := EE_SING_SING (v := w) (w := v)
+    simpa only [Set.pair_comm v w] using hh
+  have hEEnew : EE_p2 w (E ∪ {{v, w}}) = ({v, x, rhoNode1_p2 FF w} : Set V3) := by
+    rw [EE_UNION w E ({{v, w}} : Set (Set V3)), hEEold, hsingle]
+    ext z
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hEEp3eq : EE_p3 w (E ∪ {{v, w}}) = ({v, x, rhoNode1_p2 FF w} : Set V3) := by
+    change EE_p2 w (E ∪ {{v, w}}) = _
+    exact hEEnew
+  -- The face dart at `w` and the strict point of the slice.
+  have hrho_dart : (w, rhoNode1_p2 FF w) ∈ FF :=
+    (LOCAL_FAN_RHO_NODE_PROS2 h).2 w hw
+  have hrho_mem : rhoNode1_p2 FF w ∈ EE_p2 w (E ∪ {{v, w}}) := by
+    rw [hEEnew]
+    simp
+  have hv0 : (0 : V3) ≠ v := (FAN_IMP_V_DIFF hFAN0 v hv).symm
+  have hw0 : (0 : V3) ≠ w := (FAN_IMP_V_DIFF hFAN0 w hw).symm
+  have hmid1 : (1/2 : ℝ) • v + (1/2 : ℝ) • w ∈ affGt ({0} : Set V3) {v, w} :=
+    sliceW4_affGtPairOfSums hv0 hw0 (Ne.symm hvw)
+      (s := (1/2 : ℝ)) (t := (1/2 : ℝ)) (by norm_num) (by norm_num) _ rfl
+  have hnc_v : ¬ Collinear3 0 w v := by
+    have hraw : ¬ Collinear ℝ ({0, v, w} : Set V3) :=
+      hcol v w (by simp) (by simp [hw, Ne.symm hvw])
+    simpa only [Collinear3, Set.insert_comm, Set.pair_comm] using hraw
+  have hmid2 : (1/2 : ℝ) • v + (1/2 : ℝ) • w ∈ affGt ({0, w} : Set V3) {v} := by
+    rw [COLL_AFF_GT_2_1 0 w v hnc_v]
+    exact ⟨0, 1/2, 1/2, by norm_num, by norm_num, by module⟩
+  have hwedge_eq : wedgeInFanGt_p2 (w, rhoNode1_p2 FF w) E
+      = wedge 0 w (rhoNode1_p2 FF w) x :=
+    WEDGE_IN_FAN_LOFA_DETER (v := x) (w := w) h hxV hxw
+  have hwedge_mem : (1/2 : ℝ) • v + (1/2 : ℝ) • w
+      ∈ wedge 0 w (rhoNode1_p2 FF w) x := by
+    have hh := hsub (w, rhoNode1_p2 FF w) hrho_dart
+    rw [hwedge_eq] at hh
+    exact hh hmid1
+  have hnc_wedge : ¬ Collinear3 0 w ((1/2 : ℝ) • v + (1/2 : ℝ) • w) :=
+    hwedge_mem.1
+  have hazlt : azim 0 w (rhoNode1_p2 FF w) ((1/2 : ℝ) • v + (1/2 : ℝ) • w)
+      < azim 0 w (rhoNode1_p2 FF w) x := hwedge_mem.2.2
+  have hnc_rho : ¬ Collinear3 0 w (rhoNode1_p2 FF w) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h hw
+  have hazEq : azim 0 w (rhoNode1_p2 FF w) ((1/2 : ℝ) • v + (1/2 : ℝ) • w)
+      = azim 0 w (rhoNode1_p2 FF w) v :=
+    (azim_eq_azim_iff_alt (v0 := 0) (v1 := w) (w := rhoNode1_p2 FF w)
+      (x := (1/2 : ℝ) • v + (1/2 : ℝ) • w) (y := v)
+      hnc_rho hnc_wedge hnc_v).mpr hmid2
+  -- `rho w` is a neighbour of `w` in the slice fan, hence a `sigma_fan` point.
+  have hrho_set : rhoNode1_p2 FF w ∈ setOfEdge w V (E ∪ {{v, w}}) := by
+    rw [← FAN_IMP_EE_EQ_SET_OF_EDGE hFAN' w]
+    change rhoNode1_p2 FF w ∈ EE_p2 w (E ∪ {{v, w}})
+    exact hrho_mem
+  have hWnotSub : ¬ (EE_p3 w (E ∪ {{v, w}}) ⊆ ({rhoNode1_p2 FF w} : Set V3)) := by
+    intro hsubW
+    have hxmem : x ∈ EE_p3 w (E ∪ {{v, w}}) := by
+      change x ∈ EE_p2 w (E ∪ {{v, w}})
+      rw [hEEnew]
+      simp
+    have hxr : x = rhoNode1_p2 FF w := by simpa using hsubW hxmem
+    exact hrho_ne_x hxr.symm
+  have hWfin : (EE_p3 w (E ∪ {{v, w}})).Finite := FAN_IMP_FINITE_EE hFAN' w
+  obtain ⟨hazne, hazmem, hazmin⟩ :=
+    AZIM_CYCLE_PROPERTIES (W := EE_p3 w (E ∪ {{v, w}}))
+      (p := rhoNode1_p2 FF w) hWnotSub hWfin 0 w
+  rw [hEEp3eq] at hazne hazmem hazmin
+  have hv_mem_W : v ∈ ({v, x, rhoNode1_p2 FF w} : Set V3) := by
+    rw [← hEEnew]
+    change ({w, v} : Set V3) ∈ E ∪ {{v, w}}
+    exact Or.inr (by rw [Set.mem_singleton_iff]; exact (Set.pair_comm v w).symm)
+  have hsub' : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p2 x E := by
+    intro x hx
+    rw [show ({w, v} : Set V3) = {v, w} from Set.pair_comm w v]
+    exact hsub x hx
+  have hv_ne_rho : v ≠ rhoNode1_p2 FF w := by
+    intro hveq
+    have hmem : (w, v) ∈ FF := by rw [hveq]; exact hrho_dart
+    exact CROSS_PAIR_NOT_IN_FF (v := w) (w := v) h hw hv (Ne.symm hvw) hsub' hmem
+  have hmin := hazmin v hv_mem_W hv_ne_rho
+  -- The cyclic successor of `rho w` is `v` (it cannot be `x`, by the wedge).
+  have haz_eq_v_lit : azimCycle_p3 ({v, x, rhoNode1_p2 FF w} : Set V3) 0 w
+      (rhoNode1_p2 FF w) = v := by
+    rcases Set.mem_insert_iff.mp hazmem with hzv | h2
+    · exact hzv
+    rcases Set.mem_insert_iff.mp h2 with hzx | hzr
+    · exfalso
+      rcases hmin with hlt' | ⟨heq, _⟩
+      · rw [hzx] at hlt'
+        rw [← hazEq] at hlt'
+        linarith
+      · rw [hzx] at heq
+        rw [← hazEq] at heq
+        linarith
+    · exact absurd hzr hazne
+  have haz_eq_v : azimCycle_p3 (EE_p3 w (E ∪ {{v, w}})) 0 w (rhoNode1_p2 FF w) = v := by
+    rw [hEEp3eq]
+    exact haz_eq_v_lit
+  have hsig_cyc : sigmaFan 0 V (E ∪ {{v, w}}) w (rhoNode1_p2 FF w)
+      = azimCycle_p3 (EE_p3 w (E ∪ {{v, w}})) 0 w (rhoNode1_p2 FF w) :=
+    (AZIM_CYCLE_EQ_SIGMA_FAN (x := 0) (V := V) (E := E ∪ {{v, w}}) hFAN'
+      (v := w) (u := rhoNode1_p2 FF w) hrho_set).symm
+  have hsig : sigmaFan 0 V (E ∪ {{v, w}}) w (rhoNode1_p2 FF w) = v := by
+    rw [hsig_cyc, haz_eq_v]
+  rw [IVS_AZIM_EQ_INVERSE_SIGMA_FAN (x := 0) (V := V) (E := E ∪ {{v, w}}) hFAN'
+    (v := w) (u := v) hwv_mem]
+  exact SIG_AND_INVERSE1_SIG (x := 0) (V := V) (E := E ∪ {{v, w}}) hFAN'
+    (u := w) (w := rhoNode1_p2 FF w) (v := v)
+    (Or.inl (LOCAL_RHO_NODE_PAIR_E h hw)) hsig
 
 /-- HOL `FACE_MAP_AT_TURNING_DART1` (local_lemmas1.hl:2641) — giant. -/
 theorem FACE_MAP_AT_TURNING_DART1 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
