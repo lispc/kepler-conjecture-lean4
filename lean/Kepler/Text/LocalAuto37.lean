@@ -2710,4 +2710,41 @@ windows; the Lunar conjunct comes from `SUB_LUNAR_DEFORM_LEMMA_p37`). -/
 theorem MHAEYJN_p37 : MHAEYJN_prop_p37 := by
   sorry
 
+
+/-! ## w5cB7 kit (B7 波): G4 接口的正确形 + p2 桥 — 见 DELIVERY-b7 §1 -/
+
+/-- HOL `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS` (Nkezbfc.hl:214)。本 port 中
+`interiorAngle1 x FF v` 的定义体即 `azim x v (rhoNode1 FF v) (ivsRhoNode1 FF v)`
+（localization.hl:119-120 直译：`ivs_rho_node1` 的 `@a`-选择项与定义同项），
+故本件为定义相等（NKEZBFC 的重型 HOL 证法在本编码下平凡）。 -/
+theorem CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p37 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (_h : ConvexLocalFan V E FF) :
+    ∀ v ∈ V, interiorAngle1 0 FF v = azim 0 v (rhoNode1 FF v) (ivsRhoNode1 FF v) :=
+  fun _ _ => rfl
+
+/-- B7 助件：registry `Lunar` → LA2 `lunar_p2` 桥。两定义逐字同构
+（`circular_p2` ≡ `Circular`，LA2:278 vs LA1:125），定义相等。 -/
+private theorem w5cB7_lunar_p2_of_lunar {v w : V3} {V : Set V3} {E : Set (Set V3)}
+    (hl : Lunar v w V E) : lunar_p2 v w V E := hl
+
+/-! **B7 接口诊断（未入 kit，B8 首项）**：tower-b4 条件形
+`w5cB4_SUB_LUNAR_DF_cond` 的 `hdv/hdw` 槽取半平面锥形
+`affGt {0,v} {ρv} ∩ affLt {0} {u'} = ∅`（对所有像点 `u'` 量词化），该形
+不可满足：对面半 run 像点 `x` 的反向射线 `-c•x` 落入 `affGt {0,v} {ρv}`
+的开半平面（二维坐标反例：`x = α•v + β•ρv, β < 0` ⇒ `-c•x = (-cα)•v +
+(-cβ)•ρv`，`-cβ > 0`）。正确接口为 HOL 逐字 wedge 形
+`∀ s ∈ image E, ∀ u' ∈ image V, aff_gt {0} s ∩ aff_lt {0} {u'} = ∅`
+（lunar_deform.hl:1533-1537），其非 `u`-边情形由 `hl.1`（¬Circular）+
+钉住性直释，含 `u`-边情形由 d-窗口（`w5cB3_affGt_window_all`）+ 段 7b/8
+物料承接——B8 首项：以 wedge 形重建条件件
+（`w5cB3_lunar_window` 直消费体已验证可行，约 10 行）。另：B7 ② 的
+`LOCAL_FAN_CHARACTER_OF_RHO_NODE3` 助件（LA5 两件一线消费，约 2 行）
+与 `ITER_IN_AFF_GT_2_1`/`AZIM_PI_ITER_LOCAL_FAN` 收尾体已写就
+（Kit-draft-w5cB7.lean），本轮试编译遇两处反常 elaboration 心跳超限
+（CHARACTER3 两行应用、cross 线性 simp），2-strike 止损移出，B8 优先
+以隔离探针定位。 -/
+
+/- B7 ② 的 CHARACTER3 助件与 ITER_IN_AFF_GT_2_1 / AZIM_PI_ITER_LOCAL_FAN
+收尾体移至 Kit-draft-w5cB7.lean（elaboration 心跳问题 2-strike 止损，B8 首探）。 -/
+
 end Kepler.Text
