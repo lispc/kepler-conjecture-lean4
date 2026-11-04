@@ -251,6 +251,36 @@
   卫生波删除（rule 2 裸 sorry 删除合法）；低优先。
 - viz 同代重建：17,452 节点（+334 逐位）/ 204 模块 / sorry=134。
 
+### 基线 J：LV1-LV8 程序全额兑现（lv12 `20a26066` / lv8 `a90d292e` / lv-wire-w2 `8f4dab35`）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH（e2e 锥） | **2,081,706（较基线 I +1,432 = LV 程序总账）** |
+| K_SORRIED | **134（±0——只收编零 sorry 干净出口，设计内）** |
+| K_AXIOM | **624（护栏不动）** |
+| K_MODULES | **4,184（+4：LA36/LA38/LA13/LA9 等成为树可达模块）** |
+| K_UNIVERSE | 2,094,462（+11） |
+| ORPHANS_TOTAL（union） | 13,130 → **11,710（−1,420）** |
+
+- 落库链：lv7（LA22 87 支）→ lv56（LA18+LA34 78 支）→ lv34（LA13+LA9 136 支）→
+  lv12（LA36 131 支 + LA38 62 支，自带接线）→ lv8（PA21 110 支，自带接线，重探零
+  缩水）→ lv-wire-w2（textCapstone +5 have 统一接线五 capstone）。合计七 capstone、
+  630 干净出口收编。
+- **总账 vs 侦察：+1,432 vs +1,438，诚实差 −6**（剔除支折损 + 微重叠）——侦察的
+  cone 口径纪律（续 266）经受住了整程序级别的检验。
+- 落库工程记录：四 LocalConcl kit 锚互距远 hunk 不相交、按序 apply 全净；lv8/lv12
+  的 Assembly have 行同锚撞上下文 → PackingConcl hunk `--include` 单独套用 +
+  Assembly have 行编排者机械合并（终态 8 行 have 全为已交付 kit 声明行）；lv-wire
+  裁决采纳 (a)：la13/la9 capstone 自动宇宙泛化 → `.{0}`/`.{0,0}` 实例化（同一 Prop）。
+  Assembly.olean 回灌后 RC=0 0 error。
+- 车道事故两起如实记录（lv7 apply 误打主仓即时还原 cmp 复原；lv-wire 同款一次性
+  套入后自行还原重交正规 kit）。
+- TameSpine 状态实测（用户问询，2026-11-04）：75 文件零外部 importer、bare sorry
+  全岛仅 7（集中 TameList16）、`transformAssumptionSpine` 为显式假设参数（HOL 原文
+  "done modulo AQ assumption"）、**5 岛内文件 import Kepler.Assembly → 岛挂下游，
+  Assembly 链永远不能 import 岛（成环）**——§2b 体逐字 twin 模式的成因；接入通路 =
+  LocalConcl/PackingConcl 侧消费边（实测岛零引用两 Concl）。波 3 架构裁决材料齐备。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
