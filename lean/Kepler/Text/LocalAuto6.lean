@@ -3100,8 +3100,60 @@ theorem CONDS_IN_V_PRIME_NUM2 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w �
     (hfw : fw = HS.face (w, rhoNode1_p2 FF w))
     (hn : n < V.ncard) (hw : (rhoNode1_p2 FF)^[n] v = w) :
     ∀ i : ℕ, i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fw ↔
-      i = 0 ∨ n ≤ i ∧ i < V.ncard :=
-  sorry
+      i = 0 ∨ n ≤ i ∧ i < V.ncard := by
+  -- `hw : w ∈ V` is shadowed by the orbit equation above.
+  have hwV : w ∈ V := hw ▸ LOCAL_FAN_ITER_RHO_NODE_IN_V h hv n
+  -- Orbit length from `w` back to `v`.
+  obtain ⟨n', hn'lt, hn'w, _⟩ := POINT_PRESENTED_IN_RHOND1 h hwV hv
+  have hpair : ({w, v} : Set V3) = {v, w} := Set.pair_comm w v
+  have hcolS : ∀ z t : V3, z ∈ ({w, v} : Set V3) → t ∈ V \ {z} →
+      ¬ Collinear ℝ ({0, z, t} : Set V3) := by
+    intro z t hz ht
+    rw [hpair] at hz
+    exact hcol z t hz ht
+  have hsubS : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p2 x E := by
+    intro x hx
+    rw [hpair]
+    exact hsub x hx
+  have hHS' : IsHyp_p2 0 V (E ∪ {{w, v}}) HS := by
+    rw [hpair]
+    exact hHS
+  have hconds := CONDS_IN_V_PRIME_NUM h hwV hv (Ne.symm hvw) hcolS hsubS HS hHS'
+    hfw hn'lt hn'w
+  have hcard : n + n' = V.ncard :=
+    CARD_V_TWO_HAFL_CIRCLE h hv hwV hvw n n' hw hn'w hn hn'lt
+  have hper : ∀ j : ℕ,
+      (rhoNode1_p2 FF)^[j + n'] w = (rhoNode1_p2 FF)^[j] v :=
+    fun j => by rw [Function.iterate_add_apply, hn'w]
+  have hpern : ∀ k : ℕ,
+      (rhoNode1_p2 FF)^[k + n] v = (rhoNode1_p2 FF)^[k] w :=
+    fun k => by rw [Function.iterate_add_apply, hw]
+  intro i
+  constructor
+  · rintro ⟨hiV, hmem⟩
+    by_cases hi0 : i = 0
+    · exact Or.inl hi0
+    · refine Or.inr ⟨?_, hiV⟩
+      by_contra hnot
+      have hin : i < n := by omega
+      have hklt : i + n' < V.ncard := by omega
+      have hmem' : (rhoNode1_p2 FF)^[i + n'] w ∈ vPrime_p2 V fw := by
+        rw [hper i]
+        exact hmem
+      have hlt := (hconds (i + n')).mp ⟨hklt, hmem'⟩
+      omega
+  · rintro (hi0 | ⟨hni, hiV⟩)
+    · subst hi0
+      refine ⟨by omega, ?_⟩
+      have hm := (hconds n').mpr (by omega : n' < n' + 1)
+      simpa [hn'w] using hm.2
+    · refine ⟨hiV, ?_⟩
+      have hkle : i - n < n' + 1 := by omega
+      have hm := (hconds (i - n)).mpr hkle
+      have heq : (rhoNode1_p2 FF)^[i] v = (rhoNode1_p2 FF)^[i - n] w := by
+        simpa [Nat.sub_add_cancel hni] using hpern (i - n)
+      rw [heq]
+      exact hm.2
 
 /-- HOL `DETERMINE_FV2` (local_lemmas1.hl:4935) — giant. -/
 theorem DETERMINE_FV2 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
@@ -3447,8 +3499,255 @@ theorem PROVE_THE_SLICE_ASSUMPTION (hcl : convexLocalFan_p2 V E FF) (hv : v ∈ 
     (hw : w ∈ V) (hvw : v ≠ w)
     (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E) :
     ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
-      ¬ Collinear ℝ ({0, z, t} : Set V3) :=
-  sorry
+      ¬ Collinear ℝ ({0, z, t} : Set V3) := by
+  -- It suffices to treat the `z = v` side: the `z = w` side is the same
+  -- statement for the swapped pair (`{w,v} = {v,w}`).
+  have key : ∀ (a b : V3), a ∈ V → b ∈ V → a ≠ b →
+      (∀ x ∈ FF, affGt ({0} : Set V3) {a, b} ⊆ wedgeInFanGt_p2 x E) →
+      ∀ t : V3, t ∈ V \ {a} → ¬ Collinear ℝ ({0, a, t} : Set V3) := by
+    intro a b ha hb hab hsub' t ht
+    simp only [Set.mem_sdiff, Set.mem_singleton_iff] at ht
+    obtain ⟨htV, hta⟩ := ht
+    intro hcol
+    have hlf : localFan_p2 V E FF := CVX_LO_IMP_LO hcl
+    have hFAN : FAN 0 V E := by
+      obtain ⟨HS0, _, _, _, _, hFAN, _, _⟩ := hlf
+      exact hFAN
+    have h0a : (0:V3) ≠ a := Ne.symm (FAN_IMP_V_DIFF hFAN a ha)
+    have h0b : (0:V3) ≠ b := Ne.symm (FAN_IMP_V_DIFF hFAN b hb)
+    have hdis_ab : Disjoint ({0} : Set V3) {a, b} := by
+      rw [Set.disjoint_singleton_left]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      exact ⟨h0a, h0b⟩
+    have hdis_ba : Disjoint ({0} : Set V3) {b, a} := by
+      rw [Set.disjoint_singleton_left]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      exact ⟨h0b, h0a⟩
+    have hcollρ : ¬ Collinear ℝ ({0, a, rhoNode1_p2 FF a} : Set V3) :=
+      LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf ha
+    have hdart : (a, rhoNode1_p2 FF a) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS2 hlf).2 a ha
+    have hlfρV : rhoNode1_p2 FF a ∈ V := by
+      simpa using LOCAL_FAN_ITER_RHO_NODE_IN_V hlf ha 1
+    have hunion : (({0} : Set V3) ∪ {a, b}) = ({0, a, b} : Set V3) := by
+      ext x
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    have hsub_at : ({a, t} : Set V3) ⊆ V := by
+      intro x hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with rfl | rfl
+      · exact ha
+      · exact htV
+    rcases CVLF_COLLINEAR_CIRCULAR_LUNAR (v := a) (w := t) hcl hsub_at hcol
+        (Ne.symm hta) with hcirc | hlun
+    · -- circular branch: `KCHMAMG` puts everything in one plane `A`;
+      -- the open cone point `y` is in `A`, so its azimuth is `0` or `π`,
+      -- while the wedge membership forces it into `(0, π)`.
+      obtain ⟨hpi, A, hAplane, h0A, hVA, _⟩ := KCHMAMG hcl hcirc
+      have hangle_pi : azim 0 a (rhoNode1_p2 FF a) (ivsRhoNode1_p2 FF a) = Real.pi := by
+        simpa [interiorAngle1_p2] using hpi a ha
+      have hsubAB : ({0, a, b} : Set V3) ⊆ A := by
+        intro x hx
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+        rcases hx with rfl | rfl | rfl
+        · exact h0A
+        · exact hVA ha
+        · exact hVA hb
+      have hAGt : affGt ({0} : Set V3) {a, b} ⊆ A := by
+        have h1 : affGt ({0} : Set V3) {a, b} ⊆
+            (affineSpan ℝ (({0} : Set V3) ∪ {a, b}) : Set V3) :=
+          AFF_GT_SUB_AFF_UNION _ _
+        have h3 : (affineSpan ℝ ({0, a, b} : Set V3) : Set V3) ⊆ A :=
+          AFF_SUB_PLANE A hAplane hsubAB
+        rw [hunion] at h1
+        exact h1.trans h3
+      obtain ⟨y, hyGt⟩ := exists_in_aff_gt_disjoint 0 a b hdis_ab
+      have hyA : y ∈ A := hAGt hyGt
+      have hsub4 : ({0, a, rhoNode1_p2 FF a, y} : Set V3) ⊆ A := by
+        intro p hp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+        rcases hp with rfl | rfl | rfl | rfl
+        · exact h0A
+        · exact hVA ha
+        · exact hVA hlfρV
+        · exact hyA
+      have hcop : Coplanar ({0, a, rhoNode1_p2 FF a, y} : Set V3) := by
+        obtain ⟨u, v0, w0, -, hEq⟩ := hAplane
+        rw [hEq] at hsub4
+        exact ⟨u, v0, w0, hsub4⟩
+      have haz := (AZIM_COND_FOR_COPLANAR 0 a (rhoNode1_p2 FF a) y).mpr hcop
+      have hyW : y ∈ wedgeInFanGt_p2 (a, rhoNode1_p2 FF a) E := hsub' _ hdart hyGt
+      rw [WEDGE_IN_FAN_LOFA_DETER2 hlf ha] at hyW
+      simp only [wedge, Set.mem_setOf_eq] at hyW
+      rw [hangle_pi] at hyW
+      rcases haz with h0 | hpi'
+      · linarith [hyW.2.1]
+      · linarith [hyW.2.2]
+    · -- lunar branch: `HKIRPEP` gives the orbit positions of `t` and `b`
+      -- (`i` and `n`); compare `n` with `i`.
+      obtain ⟨-, hanglepos, -, -, hi_ex, hj_ex⟩ := HKIRPEP hcl hlun
+      obtain ⟨i, hi_lt, hi0, hi1, hti, himg⟩ := hi_ex
+      obtain ⟨j, hj_lt, hj0, hj1, htj, hjimg⟩ := hj_ex
+      have hcardij : i + j = V.ncard :=
+        CARD_V_TWO_HAFL_CIRCLE hlf ha htV (Ne.symm hta) i j hti.symm htj.symm hi_lt hj_lt
+      obtain ⟨n, hnlt, hnb, hnmin⟩ := POINT_PRESENTED_IN_RHOND1 hlf ha hb
+      by_cases hn0 : n = 0
+      · rw [hn0] at hnb
+        exact hab (by simpa using hnb)
+      · have hnpos : 0 < n := Nat.pos_of_ne_zero hn0
+        by_cases hni : n < i
+        · -- `n < i`: `b` lies in the open cone at `rho a`, so the
+          -- azimuth at `rho a` is `0`, contradicting the wedge.
+          have hbimg : b ∈ (fun l => (rhoNode1_p2 FF)^[l] a) ''
+              {l : ℕ | 0 < l ∧ l < i} :=
+            ⟨n, ⟨hnpos, hni⟩, hnb⟩
+          rw [himg] at hbimg
+          have hbGt : b ∈ affGt ({0, a} : Set V3) ({rhoNode1_p2 FF a} : Set V3) :=
+            hbimg.1
+          have heqGt : affGt ({0, a} : Set V3) ({rhoNode1_p2 FF a} : Set V3) =
+              affGt ({0, a} : Set V3) ({b} : Set V3) :=
+            COLL_IN_AFF_GT_AFF_GT_EQ hcollρ hbGt
+          have hmono : affGt ({0} : Set V3) {b, a} ⊆
+              affGt ({0, a} : Set V3) ({b} : Set V3) := by
+            have hh := AFF_GT_MONO_TRANS (S := ({a} : Set V3))
+              (X := ({0, a} : Set V3)) (Y := ({b} : Set V3)) (by simp)
+            have h1 : (({0, a} : Set V3) \ {a}) = {0} := by
+              ext x
+              simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff]
+              constructor
+              · rintro ⟨hx | hx, hxa⟩
+                · exact hx
+                · exact absurd hx hxa
+              · rintro rfl
+                exact ⟨Or.inl rfl, h0a⟩
+            have h2 : (({b} : Set V3) ∪ {a}) = {b, a} := by
+              ext x
+              simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+            rw [h1, h2] at hh
+            exact hh
+          obtain ⟨y, hyGt_ba⟩ := exists_in_aff_gt_disjoint 0 b a hdis_ba
+          have hba : ({b, a} : Set V3) = {a, b} := Set.pair_comm b a
+          have hyGt_ab : y ∈ affGt ({0} : Set V3) {a, b} := by
+            rwa [hba] at hyGt_ba
+          have hyGt' : y ∈ affGt ({0, a} : Set V3) ({rhoNode1_p2 FF a} : Set V3) := by
+            rw [heqGt]
+            exact hmono hyGt_ba
+          have hcollY : ¬ Collinear ℝ ({0, a, y} : Set V3) :=
+            COLL_IN_AFF_GT_TOO hcollρ hyGt'
+          have haz0 : azim 0 a (rhoNode1_p2 FF a) y = 0 :=
+            (azim_eq_zero_iff_alt hcollρ hcollY).mpr hyGt'
+          have hyW : y ∈ wedgeInFanGt_p2 (a, rhoNode1_p2 FF a) E :=
+            hsub' _ hdart hyGt_ab
+          rw [WEDGE_IN_FAN_LOFA_DETER2 hlf ha] at hyW
+          simp only [wedge, Set.mem_setOf_eq] at hyW
+          rw [haz0] at hyW
+          linarith [hyW.2.1]
+        · have hile : i ≤ n := Nat.le_of_not_lt hni
+          by_cases hnieq : n = i
+          · -- `n = i`: then `b = t`, so `{0,a,b}` is collinear, hence the
+            -- cone point `y` is collinear with `0,a` and its azimuth is `0`.
+            rw [hnieq] at hnb
+            have hbt : b = t := hnb.symm.trans hti.symm
+            have hcol' : Collinear ℝ ({0, a, b} : Set V3) := by
+              rw [hbt]
+              exact hcol
+            obtain ⟨y, hyGt_ab⟩ := exists_in_aff_gt_disjoint 0 a b hdis_ab
+            have hySpan : y ∈ (affineSpan ℝ ({0, a, b} : Set V3) : Set V3) := by
+              have h1 : affGt ({0} : Set V3) {a, b} ⊆
+                  (affineSpan ℝ (({0} : Set V3) ∪ {a, b}) : Set V3) :=
+                AFF_GT_SUB_AFF_UNION _ _
+              rw [hunion] at h1
+              exact h1 hyGt_ab
+            have hyLine : y ∈ (affineSpan ℝ ({0, a} : Set V3) : Set V3) := by
+              have hspan : (affineSpan ℝ ({0, a} : Set V3)) =
+                  (affineSpan ℝ ({0, a, b} : Set V3)) :=
+                hcol'.affineSpan_eq_of_ne (p₁ := (0:V3)) (p₂ := a)
+                  (by simp) (by simp) h0a
+              rw [hspan]
+              exact hySpan
+            have hcollY : Collinear ℝ ({0, a, y} : Set V3) := by
+              have hc := collinear_insert_of_mem_affineSpan_pair (k := ℝ)
+                (p₁ := y) (p₂ := (0:V3)) (p₃ := a) hyLine
+              have hset : ({y, 0, a} : Set V3) = {0, a, y} := by
+                ext x
+                simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+                tauto
+              rwa [hset] at hc
+            have haz0 : azim 0 a (rhoNode1_p2 FF a) y = 0 := by
+              rw [azim]
+              exact if_pos (Or.inr hcollY)
+            have hyW : y ∈ wedgeInFanGt_p2 (a, rhoNode1_p2 FF a) E :=
+              hsub' _ hdart hyGt_ab
+            rw [WEDGE_IN_FAN_LOFA_DETER2 hlf ha] at hyW
+            simp only [wedge, Set.mem_setOf_eq] at hyW
+            rw [haz0] at hyW
+            linarith [hyW.2.1]
+          · -- `i < n`: `b` lies in the open cone at `ivs a`, so the two
+            -- azimuths coincide and the wedge's strict inequality collapses.
+            have hin : i < n := lt_of_le_of_ne hile (Ne.symm hnieq)
+            have hnt : 0 < n - i := Nat.sub_pos_of_lt hin
+            have hltj : n - i < j := by omega
+            have hbimg : b ∈ (fun l => (rhoNode1_p2 FF)^[l] t) ''
+                {l : ℕ | 0 < l ∧ l < j} := by
+              refine ⟨n - i, ⟨hnt, hltj⟩, ?_⟩
+              have h1 : (rhoNode1_p2 FF)^[n - i] t =
+                  (rhoNode1_p2 FF)^[n - i] ((rhoNode1_p2 FF)^[i] a) := by
+                rw [hti]
+              have h2 : (rhoNode1_p2 FF)^[n - i] ((rhoNode1_p2 FF)^[i] a) =
+                  (rhoNode1_p2 FF)^[(n - i) + i] a := by
+                rw [← Function.iterate_add_apply]
+              have h3 : (rhoNode1_p2 FF)^[(n - i) + i] a =
+                  (rhoNode1_p2 FF)^[n] a := by
+                rw [Nat.sub_add_cancel hile]
+              exact h1.trans (h2.trans (h3.trans hnb))
+            rw [hjimg] at hbimg
+            have hbGt : b ∈ affGt ({0, a} : Set V3)
+                ({ivsRhoNode1_p2 FF a} : Set V3) := hbimg.1
+            have hcollIvs : ¬ Collinear ℝ ({0, a, ivsRhoNode1_p2 FF a} : Set V3) :=
+              LOFA_IMP_NOT_COLL_IVS hlf ha
+            have heqGt2 : affGt ({0, a} : Set V3) ({ivsRhoNode1_p2 FF a} : Set V3) =
+                affGt ({0, a} : Set V3) ({b} : Set V3) :=
+              COLL_IN_AFF_GT_AFF_GT_EQ hcollIvs hbGt
+            have hmono2 : affGt ({0} : Set V3) {a, b} ⊆
+                affGt ({0, a} : Set V3) ({b} : Set V3) := by
+              have hh := AFF_GT_MONO (X := ({0} : Set V3)) (Y := ({a, b} : Set V3))
+                (S := ({a} : Set V3)) (by simp)
+              have h1 : (({0} : Set V3) ∪ {a}) = {0, a} := by
+                ext x
+                simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+              have h2 : (({a, b} : Set V3) \ {a}) = {b} := by
+                ext x
+                simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff]
+                constructor
+                · rintro ⟨hx | hx, hxa⟩
+                  · exact absurd hx hxa
+                  · exact hx
+                · rintro rfl
+                  exact ⟨Or.inr rfl, Ne.symm hab⟩
+              rw [h1, h2] at hh
+              exact hh
+            obtain ⟨y, hyGt_ab⟩ := exists_in_aff_gt_disjoint 0 a b hdis_ab
+            have hyGt_ivs : y ∈ affGt ({0, a} : Set V3)
+                ({ivsRhoNode1_p2 FF a} : Set V3) := by
+              rw [heqGt2]
+              exact hmono2 hyGt_ab
+            have hcollY : ¬ Collinear ℝ ({0, a, y} : Set V3) :=
+              COLL_IN_AFF_GT_TOO hcollIvs hyGt_ivs
+            have hazEq : azim 0 a (rhoNode1_p2 FF a) y =
+                azim 0 a (rhoNode1_p2 FF a) (ivsRhoNode1_p2 FF a) :=
+              (azim_eq_azim_iff_alt hcollρ hcollY hcollIvs).mpr hyGt_ivs
+            have hyW : y ∈ wedgeInFanGt_p2 (a, rhoNode1_p2 FF a) E :=
+              hsub' _ hdart hyGt_ab
+            rw [WEDGE_IN_FAN_LOFA_DETER2 hlf ha] at hyW
+            simp only [wedge, Set.mem_setOf_eq] at hyW
+            rw [hazEq] at hyW
+            linarith [hyW.2.2]
+  intro z t hz ht
+  rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with rfl | rfl
+  · exact key _ _ hv hw hvw hsub t ht
+  · refine key _ _ hw hv (Ne.symm hvw) ?_ t ht
+    intro x hx
+    simpa [Set.pair_comm] using hsub x hx
 
 /-- HOL `EJRCFJD` (local_lemmas1.hl:5967) — giant. -/
 theorem EJRCFJD (hcl : convexLocalFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
