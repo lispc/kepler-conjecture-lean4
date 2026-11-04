@@ -109,6 +109,8 @@ import Kepler.Text.LocalAuto4
 import Kepler.Text.AzimBridge
 import Kepler.Text.LocalAuto5
 import Kepler.Text.LocalAuto17
+import Kepler.Text.LocalAuto6
+import Kepler.Text.PlanarityAngle
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -825,10 +827,92 @@ theorem COLL_IN_AFF_GT_INTER_EMPTY_p37 {a b x u : V3}
   have hzero := w5cB_nc_second_coeff_zero hab hax hnc hcoef
   linarith [mul_neg_of_neg_of_pos hs2 ht3', hzero, ht3]
 
+/-! ### G5 kit: LA1→LA2 convex bridge, arc-set rewrite, iterate mod-folding
+
+The `ConvexLocalFan` (LA1) → `convexLocalFan_p2` (LA2) transport is the
+`private` `kcs_clf2` of `CircularSolKit` (and its LocalAuto26 copy
+`w5sg_clf2_p26`); its body is carried here verbatim, with the two private
+helpers (`kcs_hedge`, `kcs_ffSubDart`) re-made locally.  Also the
+`image ↔ set-builder` rewrite for the `LUNA`-arc sets (`HKIRPEP` states the
+arcs as images, the `lunar_deform.hl` statements as set-builders) and the
+iterate mod-folding used by the two-half membership argument. -/
+
+private theorem la37g5_hedge {V : Set V3} {E : Set (Set V3)}
+    (h2reg : ∀ u ∈ V, (ee u E).ncard = 2) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := h2reg v hv
+  have hne : (ee v E) ≠ ∅ := by
+    intro hE
+    rw [hE, Set.ncard_empty] at h2
+    omega
+  obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  exact ⟨w, hw⟩
+
+private theorem la37g5_ffSubDart {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : LocalFan V E FF) : FF ⊆ Fan.dart1OfFan V E := by
+  obtain ⟨-, -, -, -, -, hsub, -⟩ := localFan_data hlf
+  exact hsub
+
+private theorem la37g5_clf2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : ConvexLocalFan V E FF) : convexLocalFan_p2 V E FF := by
+  obtain ⟨hlf, hcvx⟩ := h
+  have hcopy := hlf
+  obtain ⟨hfan, -, -, -, -, h2reg⟩ := hcopy
+  have hlf2 := localFan_p2.of_LocalFan_noIso hlf (la37g5_hedge h2reg)
+  have hsub := la37g5_ffSubDart hlf
+  refine ⟨hlf2, ?_⟩
+  intro d hd
+  refine ⟨?_, ?_⟩
+  · have hb : azimInFan d E = azimInFan_p3 d E :=
+      azimInFan_eq_azimInFan_p3 hfan (hsub hd)
+    show azimInFan_p2 d E ≤ Real.pi
+    rw [show azimInFan_p2 d E = azimInFan_p3 d E from rfl, ← hb]
+    exact (hcvx d hd).1
+  · show V ⊆ wedgeInFanGe_p2 d E
+    rw [show wedgeInFanGe_p2 d E = wedgeInFanGe_p3 d E from rfl,
+      ← wedgeInFanGe_eq_wedgeInFanGe_p3 hfan (hsub hd)]
+    exact (hcvx d hd).2
+
+private theorem la37g5_arc_image (FF : Set (V3 × V3)) (v : V3) (i : ℕ) :
+    ((fun l => (rhoNode1 FF)^[l] v) '' {l : ℕ | 0 < l ∧ l < i})
+      = {z | ∃ l, 0 < l ∧ l < i ∧ z = (rhoNode1 FF)^[l] v} := by
+  ext z
+  simp only [Set.mem_image, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨l, ⟨h1, h2⟩, rfl⟩
+    exact ⟨l, h1, h2, rfl⟩
+  · rintro ⟨l, h1, h2, rfl⟩
+    exact ⟨l, ⟨h1, h2⟩, rfl⟩
+
+private theorem la37g5_iter_mod {α : Type*} {f : α → α} {x : α} {k : ℕ} (_hk : 0 < k)
+    (hper : f^[k] x = x) (m : ℕ) : f^[m] x = f^[m % k] x := by
+  have hstep : ∀ r : ℕ, f^[r + k] x = f^[r] x := by
+    intro r
+    rw [Function.iterate_add_apply f r k x, hper]
+  have hmain : ∀ q r : ℕ, f^[q * k + r] x = f^[r] x := by
+    intro q
+    induction q with
+    | zero =>
+        intro r
+        simp
+    | succ q ih =>
+        intro r
+        have hq : q.succ * k + r = (q * k + r) + k := by
+          rw [Nat.succ_eq_add_one]
+          ring_nf
+        rw [hq, hstep, ih r]
+  calc f^[m] x = f^[m / k * k + m % k] x := by
+        conv_lhs =>
+          rw [show m = m / k * k + m % k from by
+            rw [Nat.mul_comm (m / k) k]
+            exact (Nat.div_add_mod m k).symm]
+    _ = f^[m % k] x := hmain (m / k) (m % k)
+
 /-- HOL `HKIRPEP_ALT` (lunar_deform.hl:316): the lunar two-half circle
 characterisation, `Local_lemmas.HKIRPEP` re-pruned for the deformation
-file.  NEEDS: `Local_lemmas1.CARD_V_TWO_HAFL_CIRCLE` (still `sorry` in
-LocalAuto6). -/
+file.  PROVED (la37-g5-w1): LA5 `HKIRPEP` + LA6 `CARD_V_TWO_HAFL_CIRCLE`
+(the `i + j = ncard` increment) + the `ConvexLocalFan`→`convexLocalFan_p2`
+bridge and the arc-set rewrite of the G5 kit above. -/
 theorem HKIRPEP_ALT_p37 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     {v w : V3} (_h : ConvexLocalFan V E FF) (_hl : Lunar v w V E) :
     (∀ u ∈ V \ {v, w}, interiorAngle1 0 FF u = Real.pi) ∧
@@ -843,16 +927,77 @@ theorem HKIRPEP_ALT_p37 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
         v = (rhoNode1 FF)^[j] w ∧
         {z | ∃ l, 0 < l ∧ l < j ∧ z = (rhoNode1 FF)^[l] w} =
           affGt {0, v} {ivsRhoNode1 FF v} ∩ V := by
-  sorry
+  have hclf : convexLocalFan_p2 V E FF := la37g5_clf2 _h
+  have hl2 : lunar_p2 v w V E := _hl
+  have hvV : v ∈ V := _hl.2.1 (by simp)
+  have hwV : w ∈ V := _hl.2.1 (by simp)
+  obtain ⟨hpi, hpos, hle, heq, hi, hj⟩ := HKIRPEP hclf hl2
+  obtain ⟨i, hiV, hi0, hi1, hwi, harci⟩ := hi
+  obtain ⟨j, hjV, hj0, hj1, hvj, harcj⟩ := hj
+  have hsum : i + j = Set.ncard V :=
+    CARD_V_TWO_HAFL_CIRCLE hclf.1 hvV hwV _hl.2.2.1 i j hwi.symm hvj.symm hiV hjV
+  refine ⟨?_, ?_, ?_, ?_, i, j, hsum, hiV, hi0, hi1, hwi, ?_, hjV, hj0, hj1, hvj, ?_⟩
+  · exact hpi
+  · exact hpos
+  · exact hle
+  · exact heq
+  · rw [← la37g5_arc_image FF v i]
+    exact harci
+  · rw [← la37g5_arc_image FF w j]
+    exact harcj
 
-/-- HOL `LUNAR_IMP_IN_TWO_HAFLS_PLANE` (lunar_deform.hl:358).  NEEDS:
-`HKIRPEP_ALT` + `Local_lemmas.CVX_LO_IMP_LO`. -/
+/-- HOL `LUNAR_IMP_IN_TWO_HAFLS_PLANE` (lunar_deform.hl:358).
+PROVED (la37-g5-w1): the two `HKIRPEP_ALT` arc equalities plus rho-orbit
+mod-folding (`la37g5_iter_mod`) place every vertex of `V \ {v, w}` on one
+of the two `affGt` cones. -/
 theorem LUNAR_IMP_IN_TWO_HAFLS_PLANE_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {v w : V3} (_h : ConvexLocalFan V E FF)
     (_hl : Lunar v w V E) :
     ∀ u ∈ V, u ≠ v → u ≠ w →
       u ∈ affGt {0, v} {rhoNode1 FF v} ∨ u ∈ affGt {0, v} {ivsRhoNode1 FF v} := by
-  sorry
+  have hlf : localFan_p2 V E FF := (CVLF_LF_F (la37g5_clf2 _h)).1
+  have hvV : v ∈ V := _hl.2.1 (by simp)
+  obtain ⟨-, -, -, -, i, j, hsum, hiV, hi0, hi1, hwi, harci, hjV, hj0, hj1, hvj, harcj⟩ :=
+    HKIRPEP_ALT_p37 _h _hl
+  have hper : (rhoNode1 FF)^[i + j] v = v := by
+    rw [show i + j = j + i from Nat.add_comm i j, Function.iterate_add_apply, ← hwi, ← hvj]
+  intro u hu hne1 hne2
+  have hu2 : u ∈ orbitF_p2 (rhoNode1_p2 FF) v := by
+    rw [LOCAL_FAN_ORBIT_MAP_V hlf hvV]
+    exact hu
+  simp only [orbitF_p2, Set.mem_setOf_eq] at hu2
+  obtain ⟨m, hm⟩ := hu2
+  have hf := la37g5_iter_mod (α := V3) (f := rhoNode1 FF) (x := v)
+    (k := i + j) (by omega) hper m
+  have hur : (rhoNode1 FF)^[m % (i + j)] v = u := hf.symm.trans hm
+  rcases Nat.lt_trichotomy (m % (i + j)) i with hri | hri | hri
+  · rcases Nat.eq_zero_or_pos (m % (i + j)) with hr0 | hrpos
+    · rw [hr0, Function.iterate_zero_apply] at hur
+      exact absurd hur.symm hne1
+    · left
+      have huarc : u ∈ {z | ∃ l, 0 < l ∧ l < i ∧ z = (rhoNode1 FF)^[l] v} :=
+        ⟨m % (i + j), hrpos, hri, hur.symm⟩
+      have humem : u ∈ affGt {0, v} {rhoNode1 FF v} ∩ V := by
+        rw [← harci]
+        exact huarc
+      exact humem.1
+  · right
+    rw [hri, ← hwi] at hur
+    exact absurd hur.symm hne2
+  · right
+    have hrlt : m % (i + j) < i + j := Nat.mod_lt _ (by omega)
+    have hsplit : (rhoNode1 FF)^[m % (i + j)] v
+        = (rhoNode1 FF)^[m % (i + j) - i] ((rhoNode1 FF)^[i] v) := by
+      have hradd : m % (i + j) = m % (i + j) - i + i := by omega
+      conv_lhs =>
+        rw [hradd, Function.iterate_add_apply]
+    rw [hsplit, ← hwi] at hur
+    have huarc : u ∈ {z | ∃ l, 0 < l ∧ l < j ∧ z = (rhoNode1 FF)^[l] w} :=
+      ⟨m % (i + j) - i, by omega, by omega, hur.symm⟩
+    have humem : u ∈ affGt {0, v} {ivsRhoNode1 FF v} ∩ V := by
+      rw [← harcj]
+      exact huarc
+    exact humem.1
 
 /-- HOL `IN_CONV0_IMP_AFF_EQ1` (lunar_deform.hl:434).  The twin
 `Local_lemmas.IN_CONV0_IMP_AFF_EQ` lives in the unbuilt LocalAuto5, so
@@ -1584,7 +1729,8 @@ private theorem w5cB4_lunar_of_cover
 /-- `SUB_LUNAR_DEFORM_LEMMA_p37` 的显式条件形：签名与目标逐字一致，另挂窗口
 半径 `d` 与段 7b/8 的两条 HOL 输出（边像锥落半、半锥与 `affLt` 不交）。
 target 体中 `d` 由分段 4/5 的 `w5cB3_affGt_window_all` 产出（其非共线前提
-`¬Collinear {0,v,u}` 属 own-sorry #16 的 `LOCAL_CONVEX_NOT_COLLINEAR` 链），
+`¬Collinear {0,v,u}` 由已净证 `LOCAL_CONVEX_NOT_COLLINEAR_p37` 提供
+（la37-g5-w1）），
 产出后本件即给出目标的结论（标准三）。 -/
 private theorem w5cB4_SUB_LUNAR_DF_cond
     {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
@@ -3453,13 +3599,27 @@ theorem AZIM_PI_ITER_LOCAL_FAN_p37 {V : Set V3} {E : Set (Set V3)}
   exact w5cB_azim_eq_pi_of_affLt (u := 0) (v := (rhoNode1 FF)^[i + 1] v)
     (a := (rhoNode1 FF)^[i] v) (z := (rhoNode1 FF)^[i + 2] v) hncA hncZ hprev
 
-/-- HOL `LOCAL_CONVEX_NOT_COLLINEAR` (lunar_deform.hl:3616).  NEEDS:
-`LUNAR_IMP_IN_TWO_HAFLS_PLANE_p37` + `Local_lemmas.CVX_LO_IMP_LO`. -/
+/-- HOL `LOCAL_CONVEX_NOT_COLLINEAR` (lunar_deform.hl:3616).
+PROVED (la37-g5-w1): `LUNAR_IMP_IN_TWO_HAFLS_PLANE_p37` + the two
+successor/predecessor non-collinearities
+(`LOCAL_FAN_CHARACTER_OF_RHO_NODE2`, `LOFA_IMP_NOT_COLL_IVS`) through
+`PlanarityAngle.aff_gt_imp_not_collinear`. -/
 theorem LOCAL_CONVEX_NOT_COLLINEAR_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {v w : V3}
     (_h : ConvexLocalFan V E FF) (_hl : Lunar v w V E) :
     ∀ u ∈ V, u ≠ v → u ≠ w → ¬Collinear ℝ ({0, v, u} : Set V3) := by
-  sorry
+  have hlf : localFan_p2 V E FF := (CVLF_LF_F (la37g5_clf2 _h)).1
+  have hvV : v ∈ V := _hl.2.1 (by simp)
+  have hrho : ¬ Collinear3 (0 : V3) v (rhoNode1 FF v) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf hvV
+  have hivs : ¬ Collinear3 (0 : V3) v (ivsRhoNode1 FF v) :=
+    LOFA_IMP_NOT_COLL_IVS hlf hvV
+  intro u hu hne1 hne2
+  rcases LUNAR_IMP_IN_TWO_HAFLS_PLANE_p37 _h _hl u hu hne1 hne2 with hum | hum
+  · exact aff_gt_imp_not_collinear (x := (0 : V3)) (v := v)
+      (u := rhoNode1 FF v) (w := u) hrho hum
+  · exact aff_gt_imp_not_collinear (x := (0 : V3)) (v := v)
+      (u := ivsRhoNode1 FF v) (w := u) hivs hum
 
 /-- HOL `LOCAL_FAN_RHO_NODE_PROS2` (lunar_deform.hl:3633).  NEEDS:
 `Local_lemmas.LOCAL_FAN_RHO_NODE_PROS` (fan substance). -/
