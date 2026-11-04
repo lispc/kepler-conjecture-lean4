@@ -755,7 +755,104 @@ theorem IDENTIFY_AZIM_CYCLE {W : Set V3} {v w p u : V3}
       azim v w p u < azim v w p q ∨
         azim v w p u = azim v w p q ∧
           ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖) :
-    azimCycle_p3 W v w p = u := sorry
+    azimCycle_p3 W v w p = u := by
+  obtain ⟨hvw, hWfin, hline, hinter⟩ := h3
+  obtain ⟨hu, huW⟩ := h4
+  obtain ⟨huu1, huu2, huu3⟩ := AZIM_CYCLE_PROPERTIES h1 hWfin v w
+  -- both u and the ε-choice realize the minimum: the lex order is antisymmetric
+  have hkey : azim v w p u = azim v w p (azimCycle_p3 W v w p) ∧
+      ‖projection (u - v) (w - v)‖ ≤ ‖projection (azimCycle_p3 W v w p - v) (w - v)‖ ∧
+      ‖projection (azimCycle_p3 W v w p - v) (w - v)‖ ≤ ‖projection (u - v) (w - v)‖ := by
+    rcases h5 (azimCycle_p3 W v w p) huu2 huu1 with h1' | ⟨h1', h1''⟩
+    · rcases huu3 u huW hu with h2' | ⟨h2', -⟩
+      · linarith
+      · exact absurd h2'.symm h1'.ne
+    · rcases huu3 u huW hu with h2' | ⟨h2', h2''⟩
+      · exact absurd h1'.symm h2'.ne
+      · exact ⟨h1', h1'', h2''⟩
+  -- cyclic_set's exclusion conditions, read off for u and the ε-choice
+  have hmemAFF : ∀ z : V3, z ∈ W → z ∉ affineSpan ℝ ({v, w} : Set V3) := by
+    intro z hz hz2
+    exact (Set.eq_empty_iff_forall_notMem.mp hinter) z (Set.mem_inter hz hz2)
+  have huv : u ≠ v := by
+    intro he
+    refine hmemAFF u huW ?_
+    rw [he]
+    exact mem_affineSpan ℝ (by simp)
+  have huw : u ≠ w := by
+    intro he
+    refine hmemAFF u huW ?_
+    rw [he]
+    exact mem_affineSpan ℝ (by simp)
+  have huucoll : ¬ Collinear ℝ ({v, w, u} : Set V3) := by
+    intro hcol
+    exact hmemAFF u huW
+      (Collinear.mem_affineSpan_of_mem_of_ne hcol (by simp) (by simp) (by simp) hvw)
+  have huucoll2 : ¬ Collinear ℝ ({v, w, azimCycle_p3 W v w p} : Set V3) := by
+    intro hcol
+    exact hmemAFF _ huu2
+      (Collinear.mem_affineSpan_of_mem_of_ne hcol (by simp) (by simp) (by simp) hvw)
+  -- equal azimuths put the ε-choice on the affGt ray through u
+  have haffgt : azimCycle_p3 W v w p ∈ affGt ({v, w} : Set V3) ({u} : Set V3) :=
+    (azim_eq_azim_iff h2 huucoll huucoll2).mp hkey.1
+  obtain ⟨c, hc, h, hray⟩ := (affGt_pair_iff hvw huv huw).mp haffgt
+  -- projection algebra along the ray
+  have proj_add : ∀ (d x y : V3), projection (x + y) d = projection x d + projection y d := by
+    intro d x y
+    rw [projection, projection, projection, WithLp.ofLp_add 2, add_dotProduct, add_div, add_smul]
+    module
+  have proj_smul : ∀ (t : ℝ) (x d : V3), projection (t • x) d = t • projection x d := by
+    intro t x d
+    rw [projection, projection, WithLp.ofLp_smul 2, smul_dotProduct, smul_eq_mul]
+    module
+  have proj_self : ∀ (d : V3),
+      ((d : V3) : Fin 3 → ℝ) ⬝ᵥ ((d : V3) : Fin 3 → ℝ) ≠ 0 → projection d d = 0 := by
+    intro d hd
+    rw [projection, div_self hd, one_smul, sub_self]
+  have hse2 : ((w - v : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - v : V3) : Fin 3 → ℝ) ≠ 0 := by
+    intro hz
+    exact hvw (sub_eq_zero.mp
+      (WithLp.ofLp_injective 2 (dotProduct_self_eq_zero.mp hz))).symm
+  have hproj0 : projection (w - v) (w - v) = 0 := proj_self (w - v) hse2
+  have hprojray : projection (azimCycle_p3 W v w p - v) (w - v)
+      = c • projection (u - v) (w - v) := by
+    rw [hray, proj_add, proj_smul, proj_smul, hproj0, smul_zero, add_zero]
+  have hnormeq : ‖projection (azimCycle_p3 W v w p - v) (w - v)‖
+      = c * ‖projection (u - v) (w - v)‖ := by
+    rw [hprojray, norm_smul, Real.norm_eq_abs, abs_of_pos hc]
+  have hAc : c * ‖projection (u - v) (w - v)‖ = ‖projection (u - v) (w - v)‖ := by
+    have h1' := hkey.2.1
+    have h2' := hkey.2.2
+    rw [hnormeq] at h1' h2'
+    exact le_antisymm h2' h1'
+  have hprod : ‖projection (u - v) (w - v)‖ * (c - 1) = 0 := by
+    have hA := hAc
+    linarith
+  rcases mul_eq_zero.mp hprod with hA0 | hc1
+  · -- ‖proj (u - v)‖ = 0 would put u on the line aff {v, w}
+    exfalso
+    apply hmemAFF u huW
+    have hp0 : projection (u - v) (w - v) = 0 := norm_eq_zero.mp hA0
+    rw [projection] at hp0
+    set t : ℝ := ((u - v : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - v : V3) : Fin 3 → ℝ) /
+      (((w - v : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - v : V3) : Fin 3 → ℝ)) with htdef
+    have huv2 : u - v = t • (w - v) := sub_eq_zero.mp hp0
+    rw [mem_affineSpan_pair_iff_exists_lineMap_eq]
+    refine ⟨t, ?_⟩
+    rw [AffineMap.lineMap_apply]
+    simp only [vsub_eq_sub, vadd_eq_add]
+    rw [← huv2]
+    abel
+  · -- c = 1: the ε-choice and u differ by a multiple of v - w — excluded
+    rw [sub_eq_zero.mp hc1, one_smul] at hray
+    have huu_eq : u = azimCycle_p3 W v w p := by
+      have hkey2 : u - azimCycle_p3 W v w p = h • (v - w) := by
+        have hsplit : u - azimCycle_p3 W v w p
+            = (u - v) - (azimCycle_p3 W v w p - v) := by abel
+        rw [hsplit, hray]
+        module
+      exact hline u huW _ huu2 h hkey2
+    exact huu_eq.symm
 
 /-- WRGCVDR.hl:796 `CYCLIC_SET_IMP_NOT_COLLINEAR`. -/
 theorem CYCLIC_SET_IMP_NOT_COLLINEAR {W : Set V3} {x y : V3} (h : cyclicSet_p3 W x y) :
@@ -1307,7 +1404,100 @@ theorem ELMS_OF_HYPERMAP_HYP {x : V3} {V : Set V3} {E : Set (Set V3)} (_hfan : F
     ∃ H : Hypermap (V3 × V3),
       HYP_p3 x V E = ((↑H.darts : Set (V3 × V3)),
         ((H.edgeMap : V3 × V3 → V3 × V3),
-          ((H.nodeMap : V3 × V3 → V3 × V3), (H.faceMap : V3 × V3 → V3 × V3)))) := sorry
+          ((H.nodeMap : V3 × V3 → V3 × V3), (H.faceMap : V3 × V3 → V3 × V3)))) := by
+  have hfin : (dartsOfHyp_p3 E V).Finite := FAN_IMP_FIMITE_DARTS _hfan
+  have hcoe : (↑hfin.toFinset : Set (V3 × V3)) = dartsOfHyp_p3 E V := hfin.coe_toFinset
+  -- `permutesF_p3` + finiteness ↦ `Set.BijOn` (surjectivity by cardinality)
+  have permutesF_bijOn : ∀ {g : V3 × V3 → V3 × V3},
+      permutesF_p3 g (dartsOfHyp_p3 E V) →
+      Set.BijOn g (dartsOfHyp_p3 E V) (dartsOfHyp_p3 E V) := by
+    intro g hp
+    have himg : g '' (dartsOfHyp_p3 E V) ⊆ dartsOfHyp_p3 E V := fun y hy => by
+      obtain ⟨a, ha, hay⟩ := hy
+      have hg : g a ∈ dartsOfHyp_p3 E V := hp.1 a ha
+      rw [← hay]
+      exact hg
+    have hinj : (g '' (dartsOfHyp_p3 E V)).ncard = (dartsOfHyp_p3 E V).ncard :=
+      Set.InjOn.ncard_image hp.2.2
+    have heq : g '' (dartsOfHyp_p3 E V) = dartsOfHyp_p3 E V :=
+      Set.eq_of_subset_of_ncard_le himg (le_of_eq hinj.symm) hfin
+    exact ⟨hp.1, hp.2.2, fun y hy => by
+      rw [← heq] at hy
+      obtain ⟨a, ha, hay⟩ := hy
+      exact ⟨a, ha, hay⟩⟩
+  have hBe : Set.BijOn (eeOfHyp_p3 x V E) (dartsOfHyp_p3 E V) (dartsOfHyp_p3 E V) :=
+    permutesF_bijOn (EE_OF_HYP_PERMUTES_DARTS x V E)
+  have hBn : Set.BijOn (nnOfHyp_p3 x V E) (dartsOfHyp_p3 E V) (dartsOfHyp_p3 E V) :=
+    permutesF_bijOn (FAN_IMP_NN_OF_HYP_PERMUTES_DARTS _hfan)
+  have hBf : Set.BijOn (ffOfHyp_p3 x V E) (dartsOfHyp_p3 E V) (dartsOfHyp_p3 E V) :=
+    permutesF_bijOn (FAN_IMP_FACE_MAP_PERMUTES_DARTS _hfan)
+  have hBre := bijOn_res hcoe hBe
+  have hBrn := bijOn_res hcoe hBn
+  have hBrf := bijOn_res hcoe hBf
+  have hHe : ((extendPerm hfin.toFinset (eeOfHyp_p3 x V E) hBre :
+      V3 × V3 → V3 × V3)) = eeOfHyp_p3 x V E := by
+    funext d
+    simp only [extendPerm, Equiv.ofBijective_apply, Kepler.Text.Fan.res, hcoe]
+    by_cases hd : d ∈ dartsOfHyp_p3 E V
+    · rw [if_pos hd]
+    · simp only [eeOfHyp_p3, if_neg hd]
+  have hHn : ((extendPerm hfin.toFinset (nnOfHyp_p3 x V E) hBrn :
+      V3 × V3 → V3 × V3)) = nnOfHyp_p3 x V E := by
+    funext d
+    simp only [extendPerm, Equiv.ofBijective_apply, Kepler.Text.Fan.res, hcoe]
+    by_cases hd : d ∈ dartsOfHyp_p3 E V
+    · rw [if_pos hd]
+    · simp only [nnOfHyp_p3, if_neg hd]
+  have hHf : ((extendPerm hfin.toFinset (ffOfHyp_p3 x V E) hBrf :
+      V3 × V3 → V3 × V3)) = ffOfHyp_p3 x V E := by
+    funext d
+    simp only [extendPerm, Equiv.ofBijective_apply, Kepler.Text.Fan.res, hcoe]
+    by_cases hd : d ∈ dartsOfHyp_p3 E V
+    · rw [if_pos hd]
+    · simp only [ffOfHyp_p3, if_neg hd]
+
+  -- the pointwise composition law `e ∘ n ∘ f = id`
+  have ee_eq_eFanPair : ∀ {z : V3 × V3}, z ∈ dartsOfHyp_p3 E V →
+      eeOfHyp_p3 x V E z = eFanPair V E z := by
+    intro z hz
+    show (if z ∈ dartsOfHyp_p3 E V then (z.2, z.1) else z) = eFanPair V E z
+    rw [if_pos hz]
+    rfl
+  have comp : ∀ d : V3 × V3, eeOfHyp_p3 x V E (nnOfHyp_p3 x V E (ffOfHyp_p3 x V E d)) = d := by
+    intro d
+    by_cases hd : d ∈ dartsOfHyp_p3 E V
+    · rcases (Set.mem_union _ _ _).mp hd with hord | hself
+      · have hd1 : d ∈ dart1OfFan V E := hord
+        rw [ffOfHyp_eq_fFanPair _hfan hd1]
+        have hf1 : fFanPair x V E d ∈ dart1OfFan V E := fFanPair_mem_dart1 _hfan hd1
+        rw [nnOfHyp_eq_nFanPair _hfan hf1]
+        have hn1 : nFanPair x V E (fFanPair x V E d) ∈ dartsOfHyp_p3 E V :=
+          Or.inl (nFanPair_mem_dart1 _hfan hf1)
+        rw [ee_eq_eFanPair hn1]
+        exact condition_hypermap_fan _hfan d hd1
+      · rw [ffOfHyp_isolated hself, nnOfHyp_isolated hself]
+        rw [show eeOfHyp_p3 x V E d = (d.2, d.1) from by rw [eeOfHyp_p3, if_pos hd]]
+        exact Prod.ext hself.1.symm hself.1
+    · simp only [ffOfHyp_p3, nnOfHyp_p3, eeOfHyp_p3, if_neg hd]
+  let H : Hypermap (V3 × V3) :=
+    { darts := hfin.toFinset
+      edgeMap := extendPerm hfin.toFinset (eeOfHyp_p3 x V E) hBre
+      nodeMap := extendPerm hfin.toFinset (nnOfHyp_p3 x V E) hBrn
+      faceMap := extendPerm hfin.toFinset (ffOfHyp_p3 x V E) hBrf
+      edgeMap_permutes := extendPerm_permutes
+      nodeMap_permutes := extendPerm_permutes
+      faceMap_permutes := extendPerm_permutes
+      comp_eq_one := by
+        refine Equiv.Perm.ext fun d => ?_
+        simp only [Equiv.Perm.mul_apply, Equiv.Perm.one_apply, hHe, hHn, hHf]
+        exact comp d }
+  refine ⟨H, ?_⟩
+  show HYP_p3 x V E = ((↑hfin.toFinset : Set (V3 × V3)),
+    ((extendPerm hfin.toFinset (eeOfHyp_p3 x V E) hBre : V3 × V3 → V3 × V3),
+      ((extendPerm hfin.toFinset (nnOfHyp_p3 x V E) hBrn : V3 × V3 → V3 × V3),
+        (extendPerm hfin.toFinset (ffOfHyp_p3 x V E) hBrf : V3 × V3 → V3 × V3))))
+  exact Prod.ext hcoe.symm (Prod.ext hHe.symm (Prod.ext hHn.symm hHf.symm))
+
 
 /-- WRGCVDR.hl:2030 `iter_sigma_fan_in_set_of_edge`. -/
 theorem iter_sigma_fan_in_set_of_edge {x : V3} {V : Set V3} {E : Set (Set V3)}
@@ -1768,7 +1958,82 @@ theorem IMP_FAN_V_PRIME_E_PRIME {v : V3} {V : Set V3} {E : Set (Set V3)}
       (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 v V E ∧
       (H.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 v V E ∧
       ∃ x ∈ H.darts, FF = H.face x) :
-    FAN v (vPrime_p3 V FF) (ePrime_p3 E FF) := sorry
+    FAN v (vPrime_p3 V FF) (ePrime_p3 E FF) := by
+  obtain ⟨hUn, hGraph, hfan1, hfan2, hfan6, hfan7⟩ := _hfan
+  obtain ⟨H, hdarts, hedge, hnode, hface, x, hxd, hxFF⟩ := _hH
+  -- FF is a face of H, hence a subset of the darts, hence of `dartsOfHyp`
+  have hFFsub : ∀ d ∈ FF, d ∈ (↑H.darts : Set (V3 × V3)) := by
+    intro d hd
+    rw [hxFF] at hd
+    exact H.face_subset_darts hxd hd
+  have hFFdarts : ∀ d ∈ FF, d ∈ dartsOfHyp_p3 E V := by
+    intro d hd
+    rw [← hdarts]
+    exact hFFsub d hd
+  -- `H.face` is constant on FF
+  have hfaceEq : ∀ d ∈ FF, (H.face d : Set (V3 × V3)) = FF := by
+    intro d hd
+    rw [hxFF] at hd
+    rw [hxFF]
+    exact (H.face_eq_of_mem hd).symm
+  -- face map value on FF (the `ff_of_hyp` computation)
+  have hffd : ∀ d ∈ FF, (H.faceMap : V3 × V3 → V3 × V3) d
+      = (d.2, ivsAzimCycle_p3 (EE_p3 d.2 E) v d.2 d.1) := by
+    intro d hd
+    rw [hface, ffOfHyp_p3, if_pos (hFFdarts d hd)]
+  -- second-end supply: every face dart `(a,b)` has an `ff`-successor `(b,c)` in FF
+  have hstep : ∀ d ∈ FF, ∃ c : V3, (d.2, c) ∈ FF := by
+    intro d hd
+    have hmem : H.faceMap d ∈ H.face d := by
+      simpa using H.pow_faceMap_mem_face d 1
+    rw [hfaceEq d hd] at hmem
+    rw [hffd d hd] at hmem
+    exact ⟨_, hmem⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- ⋃₀ (ePrime) ⊆ vPrime
+    intro z hz
+    obtain ⟨e, he, hze⟩ := hz
+    obtain ⟨a, b, rfl, hEab, hab⟩ := he
+    have hab' : (a, b) ∈ dartsOfHyp_p3 E V := hFFdarts (a, b) hab
+    have hend := IN_DARTS_HYP_IMP_FST_SND_IN_V hUn hab'
+    rcases Set.mem_insert_iff.mp hze with hza | hzb
+    · rw [hza]
+      exact ⟨hend.1, b, hab⟩
+    · rw [Set.mem_singleton_iff] at hzb
+      rw [hzb]
+      obtain ⟨c, hbc⟩ := hstep (a, b) hab
+      exact ⟨hend.2, c, hbc⟩
+  · -- Graph (ePrime)
+    intro e he
+    obtain ⟨a, b, rfl, hEab, -⟩ := he
+    exact hGraph {a, b} hEab
+  · -- fan1 : finite and nonempty
+    refine ⟨hfan1.1.subset (fun z hz => hz.1), ?_⟩
+    have hxFFmem : x ∈ FF := by rw [hxFF]; exact H.mem_face_self x
+    have hx1 : x.1 ∈ V :=
+      (IN_DARTS_HYP_IMP_FST_SND_IN_V hUn (by rw [← hdarts]; exact hxd)).1
+    refine Set.nonempty_iff_ne_empty.mp ⟨x.1, hx1, x.2, ?_⟩
+    simpa using hxFFmem
+  · -- fan2 : apex off the slice vertex set
+    intro h0
+    exact hfan2 h0.1
+  · -- fan6
+    intro e he
+    obtain ⟨a, b, rfl, hEab, -⟩ := he
+    exact hfan6 {a, b} hEab
+  · -- fan7 : transfer through `ePrime ⊆ E`, singletons through `vPrime ⊆ V`
+    intro e1 he1 e2 he2
+    refine hfan7 e1 ?_ e2 ?_
+    · rcases (Set.mem_union _ _ _).mp he1 with h | h
+      · obtain ⟨a, b, rfl, hEab, -⟩ := h
+        exact Set.mem_union_left _ hEab
+      · obtain ⟨u, hu, rfl⟩ := Set.mem_setOf_eq.mp h
+        exact Set.mem_union_right _ (Set.mem_setOf_eq.mpr ⟨u, hu.1, rfl⟩)
+    · rcases (Set.mem_union _ _ _).mp he2 with h | h
+      · obtain ⟨a, b, rfl, hEab, -⟩ := h
+        exact Set.mem_union_left _ hEab
+      · obtain ⟨u, hu, rfl⟩ := Set.mem_setOf_eq.mp h
+        exact Set.mem_union_right _ (Set.mem_setOf_eq.mpr ⟨u, hu.1, rfl⟩)
 
 /-- WRGCVDR.hl:2857 `E_PRIME_SUBSET_E`. -/
 theorem E_PRIME_SUBSET_E (E : Set (Set V3)) (FF : Set (V3 × V3)) :
