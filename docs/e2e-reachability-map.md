@@ -351,6 +351,26 @@
 
 
 
+### 基线 M：w6align 块级补根落库（w6align-roots-w2 `7eca6658`）+ la14 波7（`7077facb`）
+
+| 指标 | 值 |
+|---|---:|
+| UNION K_REACH | **2,103,998（较基线 L +19,760）** |
+| UNION SORRIED_TOTAL | **170（±0：cone 134 + fresh 36）** |
+| UNION K_UNIVERSE | 2,118,801 |
+| UNION COVERAGE | **99.30%**（2,103,998 / 2,118,801） |
+| **ORPHANS_TOTAL** | **14,803（较基线 L 的 34,533 回落 −19,730）** |
+| ROOTS | 164（manual 9/9） |
+| CALIB（orphan 仪器） | K_REACH 2,082,851 与 cone 逐位一致 ✓ |
+| cone（未复跑） | K_REACH 2,082,851（±0）/ SORRIED 134 / AXIOM 624 / K_MODULES 4,184；la14 波7 后 K_UNIVERSE 将 +~22（私助件），K_REACH 不变 |
+
+- **补根生效**：`W6AlignRoots.lean`（20 块级根 + 1 收拢根，覆盖 19,715/19,715）登记为 union 根后，WIRE 实测 increment **19,803**（含 align_* 传递闭包 + `CertOf`/`listAt` 等支撑件）；`w6align` 原根 increment 仍 55（保留，不删）。
+- **ORPHANS 回落核对**：34,533 → 14,803，与「净增 ~19.7k 补根后消失」的预测一致（差 −19,730 vs 预测 −19,715，差 15 为补根传递带出的支撑件计入 reach）。相对基线 J 的 11,710 仍有 +3,093：TameSpine 899 入宇宙 + w6align 岛残余（Basic/Table/私有件 ≈12）+ la14 塔波私助件与其余新增声明的差值——属结构可达性余项，非新债。
+- 仪器：本轮 `orphan_histogram` 复跑 ≈1h（nice 19）；`global_reach_map` 复核在跑（同 164 根，预期逐位一致）。
+- la14 波7（`7077facb`）同批落库：扇词汇表桥 21 私助件 + 10 件闭（own-sorry 26→16，含 `zlz_generic_p14` 巨人），全部标准三；不在锥（塔件未接线），cone ±0。
+
+
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
