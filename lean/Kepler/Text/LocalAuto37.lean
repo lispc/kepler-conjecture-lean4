@@ -86,12 +86,16 @@ Encoding (house conventions, cf. LocalAuto31/34):
   (Affsign coefficient sum = lineMap parametrisation).  `XRECQNS_UPDATE_p37`
   reverted to an honest `sorry` (the registry `LocalFan` upgrade made its old
   `trivial` proof invalid; blocked on `Deformation.XRECQNS`).  The giants
-  (`SUB_LUNAR_DEFORM_LEMMA`, `MHAEYJN_CONVEX_LOCAL_FAN`, `MHAEYJN`, the
-  lunar characterisation chain and the `rho_node1` plane/cross kit) are
-  `sorry` with NEEDS markers naming the blocking kit (the
-  `Local_lemmas`/`Local_lemmas1` twins still carried as `sorry` in
-  LocalAuto5/6, e.g. `CARD_V_TWO_HAFL_CIRCLE`, `COLL_IN_AFF_GT_TOO`,
-  `LOCAL_FAN_CHARACTER_OF_RHO_NODE3`, `RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT`).
+  (`SUB_LUNAR_DEFORM_LEMMA`, `MHAEYJN_CONVEX_LOCAL_FAN`, `MHAEYJN` and the
+  lunar characterisation chain) are `sorry` with NEEDS markers naming the
+  blocking kit.  UPDATE (w5cB5/w5cB6 waves, 2026-11-04): the LocalAuto5
+  fan-rho substance kit (`RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT`,
+  `LOCAL_FAN_RHO_NODE_PROS/PROS2`, `DETER_RHO_NODE`, `LOFA_IN_E_IMP_IN_FF`,
+  `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` ...) is now PROVED and is consumed here
+  through the AzimBridge `localFanEquiv_p35` registry bridge (five items
+  closed at w5cB5, the plane/cross chain at w5cB6).  Still sorried twins:
+  LocalAuto6 `CARD_V_TWO_HAFL_CIRCLE` (HKIRPEP chain) and
+  `LOCAL_FAN_CHARACTER_OF_RHO_NODE3` (nowhere materialised).
 -/
 
 import Kepler.Text.LocalAuto1
@@ -1335,10 +1339,12 @@ private theorem w5cB3_lunar_window
 /-! ## w5cB4 kit (W5c-B 第四波): `SUB_LUNAR_DEFORM_LEMMA` 段 7 / 7b / 8 的条件形
 
 HOL 源 `lunar_deform.hl:695-788`（段 7a）、`1018-1532`（段 7b）、`1533-1750`
-（段 8）。上游 twins（`HKIRPEP_ALT` / `LUNAR_IMP_IN_TWO_HAFLS_PLANE`）与 LA5
-fan-rho 物质件在本 checkout 仍为 `sorry`（按裁定不可消费、不可改），故本区把
-它们的结论作为**显式前提**，交付一面标准三的条件件；`DELIVERY.md` §2 给出逐件
-缺口与下一波总装接口。 -/
+（段 8）。上游 twins（`HKIRPEP_ALT` / `LUNAR_IMP_IN_TWO_HAFLS_PLANE`）仍为
+`sorry`，故本区把它们的结论作为**显式前提**，交付一面标准三的条件件；
+`DELIVERY.md` §2 给出逐件缺口与下一波总装接口。  UPDATE（w5cB5/B6 波）：
+LA5 fan-rho 物质件已全部净证并经 AzimBridge `localFanEquiv_p35` 桥在本文件
+消费（原"仍 sorry、不可消费"注记失效）；LA6 twin `CARD_V_TWO_HAFL_CIRCLE`
+等仍 sorried。 -/
 
 /-- 段 7a（HOL `lunar_deform.hl:695-788`）：设 `V` 的点都可写成
 `rhoNode1 FF` 在 `v` 上的迭代（`LOFA_IMP_LT_CARD_SET_V` 的轨道覆盖形），且
@@ -2362,9 +2368,74 @@ definition before merging. -/
 def PlaneP_p37 (P : Set V3) : Prop :=
   ∃ a b c : V3, ¬Collinear ℝ ({a, b, c} : Set V3) ∧ P = affineSpan ℝ ({a, b, c} : Set V3)
 
+/-- W5c-B6 助件：`⬝ᵥ`（V3 内积）与 Fin 3 → ℝ 点积的传递（定义相等）。 -/
+private theorem w5cB6_dot_ofLp (x y : V3) :
+    (x : V3) ⬝ᵥ (y : V3) = ((x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y : V3) : Fin 3 → ℝ) := rfl
+
+/-- W5c-B6 助件：`cross3_p37` 的点积的 Fin 3 形（定义相等）。 -/
+private theorem w5cB6_cross3_dot (x y z : V3) :
+    cross3_p37 x y ⬝ᵥ z =
+      (crossProduct ((x : V3) : Fin 3 → ℝ) ((y : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((z : V3) : Fin 3 → ℝ) := rfl
+
+/-- W5c-B6 助件：`span ℝ {A, B}` 对 `c • (p₁ -ᵥ p₂) +ᵥ p₃` 封闭
+（纯 Submodule 线性组合）。 -/
+private theorem w5cB6_span_smul_vsub_vadd_mem {A B : V3} (c : ℝ)
+    {p₁ p₂ p₃ : V3} (hp₁ : p₁ ∈ (Submodule.span ℝ {A, B}))
+    (hp₂ : p₂ ∈ (Submodule.span ℝ {A, B}))
+    (hp₃ : p₃ ∈ (Submodule.span ℝ {A, B})) :
+    c • (p₁ -ᵥ p₂) +ᵥ p₃ ∈ (Submodule.span ℝ {A, B}) := by
+  obtain ⟨α, β, hα⟩ := Submodule.mem_span_pair.mp hp₁
+  obtain ⟨μ, ν, hμ⟩ := Submodule.mem_span_pair.mp hp₂
+  obtain ⟨γ, δ, hγ⟩ := Submodule.mem_span_pair.mp hp₃
+  rw [← hα, ← hμ, ← hγ, vadd_eq_add, vsub_eq_sub, smul_sub]
+  refine Submodule.mem_span_pair.mpr ⟨c * α + γ - c * μ, c * β + δ - c * ν, ?_⟩
+  module
+
+/-- W5c-B6 助件：`0` 入座的三点仿射包落在二元线性包内
+（`affineSpan_le` + submodule 即 affine subspace）。 -/
+private theorem w5cB6_mem_span_of_affSpan0 {A B w : V3}
+    (hw : w ∈ (affineSpan ℝ ({0, A, B} : Set V3))) :
+    w ∈ (Submodule.span ℝ {A, B}) := by
+  have hQ : (affineSpan ℝ ({0, A, B} : Set V3)) ≤
+      (AffineSubspace.mk ((Submodule.span ℝ {A, B} : Set V3))
+        (fun c p₁ p₂ p₃ hp₁ hp₂ hp₃ =>
+          w5cB6_span_smul_vsub_vadd_mem c hp₁ hp₂ hp₃)) := by
+    refine affineSpan_le.mpr ?_
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact Submodule.zero_mem _
+    · rcases Set.mem_insert_iff.mp hz with rfl | rfl
+      · exact Submodule.subset_span (Set.mem_insert _ _)
+      · exact Submodule.subset_span (Set.mem_insert_of_mem _ (Set.mem_singleton _))
+  exact hQ hw
+
+/-- W5c-B6 助件：非共线 `{0, A, B}` 确定的平面（`affineSpan {0,A,B} = Q`）内任意点与
+`cross A B` 点积为零——`DET_CROSS`（三重积 = 行列式）+ 双重复行置零。 -/
+private theorem w5cB6_cross_dot_of_mem_affSpan0 {A B z : V3}
+    (hnc : ¬Collinear ℝ ({0, A, B} : Set V3))
+    (hz : z ∈ (affineSpan ℝ ({0, A, B} : Set V3))) :
+    cross3_p37 A B ⬝ᵥ z = 0 := by
+  have hw : z ∈ (Submodule.span ℝ {A, B}) := w5cB6_mem_span_of_affSpan0 hz
+  obtain ⟨α, β, hz'⟩ := Submodule.mem_span_pair.mp hw
+  have hA : cross3_p37 A B ⬝ᵥ A = 0 := by
+    rw [w5cB6_cross3_dot, ← DET_CROSS A B A]
+    exact Matrix.det_zero_of_row_eq (i := (0 : Fin 3)) (j := (2 : Fin 3))
+      (by decide) (by funext j; simp)
+  have hB : cross3_p37 A B ⬝ᵥ B = 0 := by
+    rw [w5cB6_cross3_dot, ← DET_CROSS A B B]
+    exact Matrix.det_zero_of_row_eq (i := (1 : Fin 3)) (j := (2 : Fin 3))
+      (by decide) (by funext j; simp)
+  rw [← hz']
+  simp only [WithLp.ofLp_add, WithLp.ofLp_smul, dotProduct_add, dotProduct_smul,
+    smul_eq_mul, hA, hB]
+  ring
+
 /-- HOL `CROSS_IN_SAME_DIRECTION` (lunar_deform.hl:3389): consecutive
-`rho_node1` crosses point along the initial cross direction.
-NEEDS: `Local_lemmas.RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT`. -/
+`rho_node1` crosses point along the initial cross direction.  消费 LA5 净证
+`RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT`（正点积）+ 平面正交重构：
+`{A, B, e}` 行列式非零（`DET_CROSS`）张成全空间，`C - k•e` 全空间正交故为零。
+（B6 收敛：w5cB5 draft 的 8 处收尾点 (a)-(h) 逐条落定。） -/
 theorem CROSS_IN_SAME_DIRECTION_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3} {e : V3}
     (_hlf : LocalFan V E FF) (_hv : v ∈ V)
@@ -2373,11 +2444,170 @@ theorem CROSS_IN_SAME_DIRECTION_p37 {V : Set V3} {E : Set (Set V3)}
     (_he : cross3_p37 v (rhoNode1 FF v) = e) :
     ∀ i < l, ∃ k : ℝ, 0 < k ∧
       cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) = k • e := by
-  sorry
+  classical
+  have h2 := w5cB5_to_localFan_p2 _hlf
+  have hP2 : plane_p2 P := _hP
+  have hmemV : ∀ n : ℕ, (rhoNode1 FF)^[n] v ∈ V := LOCAL_FAN_ITER_RHO_NODE_IN_V h2 _hv
+  have hUmem : ∀ n : ℕ, n ≤ l → (rhoNode1 FF)^[n] v ∈ U := fun n hn => by
+    rw [← _hU]
+    exact ⟨n, hn, rfl⟩
+  have hU' : {(rhoNode1_p2 FF)^[n] v | n ≤ l} = U := by
+    ext z
+    constructor
+    · rintro ⟨n, hn, rfl⟩
+      rw [← _hU]
+      exact ⟨n, hn, rfl⟩
+    · intro hz
+      rw [← _hU] at hz
+      obtain ⟨n, hn, rfl⟩ := hz
+      exact ⟨n, hn, rfl⟩
+  have he' : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1_p2 FF v : V3) : Fin 3 → ℝ)) : V3) = e := _he
+  have hpos : ∀ i : ℕ, i < l →
+      0 < cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) ⬝ᵥ e :=
+    RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT h2 _hv hU' hP2 _h0 _hUsub he'
+  by_cases hl : l = 0
+  · intro i hi
+    rw [hl] at hi
+    exact absurd hi (Nat.not_lt_zero i)
+  · have h0l : 0 < l := Nat.pos_of_ne_zero hl
+    have h0e : 0 < cross3_p37 v (rhoNode1 FF v) ⬝ᵥ (e : V3) := hpos 0 h0l
+    rw [_he] at h0e
+    have hEpos : 0 < e ⬝ᵥ (e : V3) := h0e
+    have hEne : (e : V3) ≠ 0 := fun h0 => by
+      rw [h0] at hEpos
+      simp at hEpos
+    have hv1 : (rhoNode1 FF)^[1] v ∈ P := _hUsub (hUmem 1 h0l)
+    have hncV : ¬Collinear ℝ ({0, v, rhoNode1 FF v} : Set V3) := by
+      intro hc
+      have hcz := COLLINEAR_CROSS_0 (x := (0 : V3)) (y := v)
+        (z := rhoNode1 FF v) |>.mp hc
+      rw [sub_zero, sub_zero] at hcz
+      have hcz2 : cross3_p37 v (rhoNode1 FF v) = 0 := hcz
+      rw [_he] at hcz2
+      exact hEne hcz2
+    have hPspanV : (affineSpan ℝ ({0, v, rhoNode1 FF v} : Set V3)) = P :=
+      THREE_NOT_COLL_DETER_PLANE hP2
+        (by
+          intro z hz
+          rcases Set.mem_insert_iff.mp hz with rfl | hz
+          · exact _h0
+          · rcases Set.mem_insert_iff.mp hz with rfl | rfl
+            · exact _hUsub (hUmem 0 (Nat.zero_le l))
+            · exact hv1)
+        hncV
+    intro i hi
+    have hAU : (rhoNode1 FF)^[i] v ∈ U := hUmem i (Nat.le_of_lt hi)
+    have hBU : (rhoNode1 FF)^[i + 1] v ∈ U := hUmem (i + 1) (Nat.succ_le_of_lt hi)
+    have hAP : (rhoNode1 FF)^[i] v ∈ P := _hUsub hAU
+    have hBP : (rhoNode1 FF)^[i + 1] v ∈ P := _hUsub hBU
+    have hCpos : 0 < cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) ⬝ᵥ e :=
+      hpos i hi
+    have hCne : cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) ≠ 0 := by
+      intro h0
+      rw [h0] at hCpos
+      simp at hCpos
+    have hncAB : ¬Collinear ℝ ({0, (rhoNode1 FF)^[i] v,
+        (rhoNode1 FF)^[i + 1] v} : Set V3) := by
+      intro hc
+      have hcz := COLLINEAR_CROSS_0 (x := (0 : V3)) (y := (rhoNode1 FF)^[i] v)
+        (z := (rhoNode1 FF)^[i + 1] v) |>.mp hc
+      rw [sub_zero, sub_zero] at hcz
+      exact hCne hcz
+    have hPspanAB : (affineSpan ℝ ({0, (rhoNode1 FF)^[i] v,
+        (rhoNode1 FF)^[i + 1] v} : Set V3)) = P :=
+      THREE_NOT_COLL_DETER_PLANE hP2
+        (by
+          intro z hz
+          rcases Set.mem_insert_iff.mp hz with rfl | hz
+          · exact _h0
+          · rcases Set.mem_insert_iff.mp hz with rfl | rfl
+            · exact hAP
+            · exact hBP)
+        hncAB
+    set A : V3 := (rhoNode1 FF)^[i] v with hAdef
+    set B : V3 := (rhoNode1 FF)^[i + 1] v with hBdef
+    set C : V3 := cross3_p37 A B with hCdef
+    have hCperp : ∀ z ∈ P, C ⬝ᵥ z = 0 := by
+      intro z hzP
+      have hz2 : z ∈ ((affineSpan ℝ ({0, A, B} : Set V3) : Set V3)) :=
+        hPspanAB.symm ▸ hzP
+      exact w5cB6_cross_dot_of_mem_affSpan0 hncAB hz2
+    have heperp : ∀ z ∈ P, cross3_p37 v (rhoNode1 FF v) ⬝ᵥ z = 0 := by
+      intro z hzP
+      have hz2 : z ∈ ((affineSpan ℝ ({0, v, rhoNode1 FF v} : Set V3) : Set V3)) :=
+        hPspanV.symm ▸ hzP
+      exact w5cB6_cross_dot_of_mem_affSpan0 hncV hz2
+    rw [_he] at heperp
+    have hAC : C ⬝ᵥ A = 0 := hCperp A hAP
+    have hBC : C ⬝ᵥ B = 0 := hCperp B hBP
+    have hAE : e ⬝ᵥ A = 0 := heperp A hAP
+    have hBE : e ⬝ᵥ B = 0 := heperp B hBP
+    -- 行列式非零 ⇒ {A', B', e'} 线性无关 ⇒ 张成全空间
+    set Mrow : Fin 3 → Fin 3 → ℝ :=
+      fun i j => (![A, B, e] : Fin 3 → V3) i j with hMrowdef
+    have hdet : Matrix.det (Matrix.of Mrow) ≠ 0 := by
+      intro h0
+      have h1 := DET_CROSS A B e
+      rw [h0] at h1
+      rw [← w5cB6_cross3_dot] at h1
+      linarith [hCpos, h1]
+    have hli : LinearIndependent ℝ Mrow := by
+      refine Matrix.linearIndependent_rows_of_isUnit ?_
+      refine (Matrix.isUnit_iff_isUnit_det (A := Matrix.of Mrow)).mpr ?_
+      exact (isUnit_iff_ne_zero).mpr hdet
+    have htop : (Submodule.span ℝ (Set.range Mrow)) = ⊤ := by
+      refine Submodule.eq_top_of_finrank_eq ?_
+      rw [finrank_span_eq_card hli]
+      simp [Module.finrank_fin_fun]
+    set k : ℝ := C ⬝ᵥ e / (e ⬝ᵥ (e : V3)) with hkdef
+    have hkpos : 0 < k := by rw [hkdef]; exact div_pos hCpos hEpos
+    refine ⟨k, hkpos, ?_⟩
+    have hDfin : ((C - k • e : V3) : Fin 3 → ℝ) = 0 := by
+      apply dotProduct_self_eq_zero.mp
+      have hmem : ((C - k • e : V3) : Fin 3 → ℝ) ∈
+          (Submodule.span ℝ (Set.range Mrow)) := by
+        rw [htop]
+        exact Submodule.mem_top
+      clear hli htop hdet
+      have hperp0 : ∀ u ∈ ((Submodule.span ℝ (Set.range Mrow) : Set (Fin 3 → ℝ))),
+          ((C - k • e : V3) : Fin 3 → ℝ) ⬝ᵥ u = 0 := by
+        intro u hu
+        induction hu using Submodule.span_induction with
+        | mem w hw' =>
+            obtain ⟨j, rfl⟩ := hw'
+            fin_cases j
+            · show ((C - k • e : V3) : Fin 3 → ℝ) ⬝ᵥ ((A : V3) : Fin 3 → ℝ) = 0
+              rw [show ((C - k • e : V3) : Fin 3 → ℝ)
+                  = ((C : V3) : Fin 3 → ℝ) - k • ((e : V3) : Fin 3 → ℝ) from rfl,
+                sub_dotProduct, smul_dotProduct, ← w5cB6_dot_ofLp, ← w5cB6_dot_ofLp,
+                hAC, hAE, hkdef]
+              ring
+            · show ((C - k • e : V3) : Fin 3 → ℝ) ⬝ᵥ ((B : V3) : Fin 3 → ℝ) = 0
+              rw [show ((C - k • e : V3) : Fin 3 → ℝ)
+                  = ((C : V3) : Fin 3 → ℝ) - k • ((e : V3) : Fin 3 → ℝ) from rfl,
+                sub_dotProduct, smul_dotProduct, ← w5cB6_dot_ofLp, ← w5cB6_dot_ofLp,
+                hBC, hBE, hkdef]
+              ring
+            · show ((C - k • e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0
+              rw [show ((C - k • e : V3) : Fin 3 → ℝ)
+                  = ((C : V3) : Fin 3 → ℝ) - k • ((e : V3) : Fin 3 → ℝ) from rfl,
+                sub_dotProduct, smul_dotProduct, ← w5cB6_dot_ofLp, ← w5cB6_dot_ofLp,
+                hkdef, smul_eq_mul]
+              field_simp
+              ring
+        | zero => simp
+        | add x y hx hy ihx ihy => rw [dotProduct_add, ihx, ihy]; ring
+        | smul r x hx ihx => rw [dotProduct_smul, ihx]; ring
+      exact hperp0 _ hmem
+    rw [← sub_eq_zero]
+    show (WithLp.toLp 2 ((C - k • e : V3) : Fin 3 → ℝ) : V3) = 0
+    rw [hDfin]
+    rfl
 
 /-- HOL `ITER_CROSS_SAME_DIRECTION` (lunar_deform.hl:3461): all consecutive
-crosses are positive multiples of one another.  NEEDS:
-`CROSS_IN_SAME_DIRECTION_p37` + division algebra. -/
+crosses are positive multiples of one another.  消费 `CROSS_IN_SAME_DIRECTION_p37`
+两次（`e` 即初始 cross）+ 除法代数。 -/
 theorem ITER_CROSS_SAME_DIRECTION_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
     (_hlf : LocalFan V E FF) (_hv : v ∈ V)
@@ -2386,7 +2616,14 @@ theorem ITER_CROSS_SAME_DIRECTION_p37 {V : Set V3} {E : Set (Set V3)}
     ∀ i j, i < l → j < l → ∃ k : ℝ, 0 < k ∧
       cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) =
         k • (cross3_p37 ((rhoNode1 FF)^[j] v) ((rhoNode1 FF)^[j + 1] v)) := by
-  sorry
+  intro i j hi hj
+  obtain ⟨k1, hk1, heq1⟩ :=
+    CROSS_IN_SAME_DIRECTION_p37 _hlf _hv _hU _hP _h0 _hUsub rfl i hi
+  obtain ⟨k2, hk2, heq2⟩ :=
+    CROSS_IN_SAME_DIRECTION_p37 _hlf _hv _hU _hP _h0 _hUsub rfl j hj
+  refine ⟨k1 / k2, div_pos hk1 hk2, ?_⟩
+  rw [heq1, heq2, smul_smul]
+  field_simp
 
 /-- HOL `ITER_IN_AFF_GT_2_1` (lunar_deform.hl:3486).  NEEDS:
 `Local_lemmas.LOCAL_FAN_CHARACTER_OF_RHO_NODE3`. -/
