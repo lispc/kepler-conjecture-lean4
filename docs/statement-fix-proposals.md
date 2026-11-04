@@ -5974,3 +5974,44 @@ HOL 逐字前提（开区间 ⇒ `a<0<b`）；结论不加强、前提不多加�
 ### (f) 状态
 
 **立案 2026-11-05（la14-wedge-w9 侦察 + 建设性私证）**；分级 A（前提补全型）。按 SF 通道常态化授权可走 STATEMENT-FIX 闸，但本件基于「冻结陈述大概率假」的推断而非显式反例，且用户已休息，**编排者暂不执行，待用户确认**。若批：生成 `docs/statement-fix-proposals-patches/98-la14-zlz-azim-strict.patch`（加 `ha`/`hb` + 体转调 `w9_zlz_azim_strict`），STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto14.lean THM=zlz_azim_p14 SF_ITEM=98`。
+
+## 99. `Deformation` 定义层闭区间 vs HOL 开区间（LocalAuto1:129 vs localization.hl:128-131）— 根因提案（与 SF-98 并案；LA37 两件已获数值反例，LA14 同根）— **待用户裁决，未执行**
+
+### (a) HOL 裁决
+
+`reference/flyspeck/text_formalization/local/localization.hl:128-131`：
+`deformation ff V (a,b) <=> (&0) IN real_interval (a,b) /\
+(! v r. v IN V /\ r IN real_interval (a,b) ==> (ff v) continuous atreal r) /\
+(!v. v IN V ==> ff v (&0) = v)`。
+HOL `real_interval (a,b)`（圆括号）为**开**区间，故 HOL 定义**蕴含** `a < 0 < b`。Lean `Deformation`（`LocalAuto1.lean:129`）把三处都渲染成 `Set.Icc a b`，只给 `a ≤ 0 ≤ b`——定义层保真缺口（非个别陈述）。
+
+### (b) 为假证据（联证）
+
+- **LA37 `MHAEYJN_CONVEX_LOCAL_FAN_p37` / `MHAEYJN_p37`（la37-b11-w1）**：取 `(a,b)=(0,1)`，`f u t = u`（`t ≥ 0`）、`f u t = u + (-t)·n`（`t < 0`，`n ⊥ aff{0,v,w,u}` 且指向坏侧），其余点钉住。数值见证：`u=(0,0,1)`、`ρu=(1,0,1)`、`ivs u=(-1,0,1)` 时 `azim 0 u ρu ivs u = π`，而 `u+0.05·n` 处 `azim = 3.2414 > π` ⇒ `azimInFan > π`，违反 `ConvexLocalFan` 结论。两件冻结陈述只有 `_hd : Deformation f V a b`（无 `ha/hb`），而 `_hpin/_haff` 只在 `Icc a b` 上，结论量化 `t ∈ (-e,e)` 含负侧。
+- **LA14 `zlz_azim_p14`（la14-wedge-w9，SF-98）**：已机检 `Deformation (fun v _ => v) V 0 1` 成立（`a = 0` 合法），π 分支需负半窗吃 `h4`。同根。
+
+### (c) 修复选项
+
+**(a) 根因修复（推荐，HOL 逐字）**：
+```lean
+def Deformation (f : V3 → ℝ → V3) (V : Set V3) (a b : ℝ) : Prop :=
+  (0 : ℝ) ∈ Ioo a b ∧ (∀ v ∈ V, ∀ r ∈ Ioo a b, ContinuousAt (f v) r) ∧
+    ∀ v ∈ V, f v 0 = v
+```
+消费侧自动获得 `a < 0 < b`（SF-98/99 两族陈述可原样证明）；但连续性假设从 `Icc` 收窄为 `Ioo`，**22 处 Deformation 消费站**需适配（多数只需把 `r ∈ Icc` 前提改为 `r ∈ Ioo`，端点处连续性不再可用——须逐站核）；构造站点（`deformation_p2` / `deforId_p28` / 测试用恒等形）须补 `a<0<b`。需 DEF-FIX charter（定义层修复通道）+ 一次适配波。
+
+**(b) 局部补前提（备选，绕过定义）**：给 `MHAEYJN_CONVEX_p37` / `MHAEYJN_p37`（LA37）与 `zlz_azim_p14` / `ZLZTHIC_p14`（LA14）加 `_ha : a < 0` / `_hb : 0 < b`（`SUB_LUNAR` 已有此两前提，塔内先例一致）；缺点：定义仍不保真、跨塔重复（LA34/LA28 孪生需同步）。
+
+### (d) 消费面
+
+- `Deformation` 消费/构造点约 22 处（grep 计；LA14/LA37/LA34/LA28 及 LocalAuto1/2 桥）。
+- 受影响陈述：LA37 `MHAEYJN_CONVEX_LOCAL_FAN_p37` / `MHAEYJN_p37`（已实证假）；LA14 `zlz_azim_p14` / `ZLZTHIC_p14`（同根）；`SUB_LUNAR_p37` 与 `MHAEYJN_prop_p37` 的 `ha/hb` 已是显式前提，不受影响。
+- 修复后 LA37 两件仍有 ~800 行残余证明缺口（G1 rho/ivs 像恒等 / G2 三条例外 azim 不等式依赖 `DIJ_AFF_GE_PARTITION`（LocalAuto6:584 仍 sorry）/ G3 楔包含 / G4 `MINIMIZE_OVER_MEMBERS` 未移植）——**定义修复是必要非充分条件**。
+
+### (e) 极小性
+
+(a) 为 HOL 逐字定义；(b) 局部但定义长期失保真，且需在 LA14/LA34/LA28/LA37 四处重复。建议 (a)，(b) 仅在用户希望先收塔时采用。
+
+### (f) 状态
+
+**立案 2026-11-05（la37-b11-w1 数值反例 + la14-wedge-w9 同根联证）**。**编排者未执行**：定义层改动跨 22 消费站 + 构造站，属重大改形，需用户裁决与 DEF-FIX charter；SF-98 并入本件。若批 (b)，可在 1–2 波内落地并让 LA37/LA14 相关陈述恢复可证（残余证明缺口另计）。
