@@ -1622,6 +1622,316 @@ theorem la5_wire_capstone_w1 :
 -- [propext, Classical.choice, Quot.sound] and NO sorryAx (the scout group closure is sorried-0).
 #print axioms la5_wire_capstone_w1
 
+/-! ### LA28 materialization capstone (lane lv15-la28-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV15):
+the 42 public top-level LocalAuto28 clean theorem exits (scout probe1.out LA28 group: 108 top public thms, of which 66 are sorried -- DEFORMATION_AZIM_* /
+DEFORMATION_DIST_LE_* families, NUXCOEA_p28, IMJXPHRv2_p28 and the remaining giant/registry debts -- excluded at seed construction per the workorder, full
+point-named list in logs/gen_report.txt), of which 42 are statable from LocalConcl and are re-exposed as ONE conjunction below; 0 exits are
+dropped per the no-forcing rule (each drop named in the theorem docstring).
+Self-contained section: pure insertion, zero new imports (LA28 already visible transitively: LocalConcl:499 imports LocalAuto28), zero proof obligations
+(body = the exit assembly itself), own `#print axioms` probe (the lv1112 la19 section and the lv1314-w1 la5 section above, and the Shims section below, are untouched -- hunk-level disjoint).
+The scoped heartbeat raise mirrors the la5 materialization section above: a conjunction statement of this size exceeds the default 200000 budget during statement elaboration.
+-/
+
+set_option maxHeartbeats 50000000 in
+
+/-- LA28 materialization capstone (scout lane leftover-mat-scout-2
+workorder LV15, implementation lane lv15-la28-w1, 2026-11-04).  The
+Kepler.Text.LocalAuto28 file carries 108 public top-level theorem exits; 66 of them are
+sorried (DEFORMATION_AZIM_* / DEFORMATION_DIST_LE_* families, NUXCOEA_p28,
+IMJXPHRv2_p28 and the remaining giant/registry debts -- outside the seed set
+by the workorder, full point-named list in logs/gen_report.txt), and the
+remaining 42 are the sorried-0 clean exits.  Those 42 are
+re-exposed here as ONE conjunction (all statable from LocalConcl).
+Implemented here: 42 of the 42.
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its Kepler.Text.LocalAuto28 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the first depth-0 `:=` by the generator gen_items.py,
+bracket-balance guarded); compiler-generated equation/aux lemmas have no
+source statement anywhere, so their conjunct is the `#check @name` printer
+dump verbatim and each passes a per-item sigtest (the `⟨...⟩` assembly below
+must unify it definitionally with the constant's type; printer dumps with
+proof-term elision `...` are dropped per the lv12-w1 t_eqlemma_microtest
+evidence, each drop named above).  Semantic identity of every conjunct is
+re-verified by that assembly (each element must have exactly its conjunct's
+type); the per-conjunct comments carry each exit's Kepler.Text.LocalAuto28 declaration
+line and file-local docstring HOL anchor.  Conjunct order: the scout
+seed-list order (probe1 SEED list).  Body = the assembly of the exit
+constants -- zero new proof obligations, zero new imports.  The scoped
+`open ... in` prefix before the heartbeat raise (if any) reproduces the
+source file's own open context for the verbatim conjunct texts --
+mechanically computed as the source-file open tokens missing from the
+host's; scoped to this one theorem, zero effect elsewhere in the host.
+-/
+theorem la28_capstone_w1 :
+    -- 1. Kepler.Text.CHANGE_A_SCS_MODL_p28 (Kepler.Text.LocalAuto28:217; HOL `CHANGE_A_SCS_MODL`)
+    (∀ (s : ScsV39) (hs : isScsV39 s) (j j1 l : ℕ)
+          (hj : j % s.k = j1 % s.k),
+    s.a j l = s.a j1 l
+    ) ∧
+    -- 2. Kepler.Text.CHANGE_A_SCS_MODR_p28 (Kepler.Text.LocalAuto28:222; HOL `CHANGE_A_SCS_MODR`)
+    (∀ (s : ScsV39) (hs : isScsV39 s) (j j1 l : ℕ)
+          (hj : j % s.k = j1 % s.k),
+    s.a l j = s.a l j1
+    ) ∧
+    -- 3. Kepler.Text.CHANGE_A_SCS_MOD_p28 (Kepler.Text.LocalAuto28:227; HOL `CHANGE_A_SCS_MOD`)
+    (∀ (s : ScsV39) (hs : isScsV39 s) (j j1 l l1 : ℕ)
+          (hj : j % s.k = j1 % s.k) (hl : l % s.k = l1 % s.k),
+    s.a l j = s.a l1 j1
+    ) ∧
+    -- 4. Kepler.Text.CHANGE_B_SCS_MODL_p28 (Kepler.Text.LocalAuto28:232; HOL `CHANGE_B_SCS_MODL`)
+    (∀ (s : ScsV39) (hs : isScsV39 s) (j j1 l : ℕ)
+          (hj : j % s.k = j1 % s.k),
+    s.b j l = s.b j1 l
+    ) ∧
+    -- 5. Kepler.Text.CHANGE_B_SCS_MODR_p28 (Kepler.Text.LocalAuto28:237; HOL `CHANGE_B_SCS_MODR`)
+    (∀ (s : ScsV39) (hs : isScsV39 s) (j j1 l : ℕ)
+          (hj : j % s.k = j1 % s.k),
+    s.b l j = s.b l j1
+    ) ∧
+    -- 6. Kepler.Text.CHANGE_B_SCS_MOD_p28 (Kepler.Text.LocalAuto28:242; HOL `CHANGE_B_SCS_MOD`)
+    (∀ (s : ScsV39) (hs : isScsV39 s) (j j1 l l1 : ℕ)
+          (hj : j % s.k = j1 % s.k) (hl : l % s.k = l1 % s.k),
+    s.b l j = s.b l1 j1
+    ) ∧
+    -- 7. Kepler.Text.CHANGE_W_IN_BBS_MOD_IS_SCS_p28 (Kepler.Text.LocalAuto28:252; HOL `CHANGE_W_IN_BBS_MOD_IS_SCS`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (j j1 : ℕ)
+          (hs : isScsV39 s) (hbb : BBsV39 s w) (hj : j % s.k = j1 % s.k),
+    w j = w j1
+    ) ∧
+    -- 8. Kepler.Text.CHANGE_W_IN_BBS_MOD_LE3_p28 (Kepler.Text.LocalAuto28:247; HOL `CHANGE_W_IN_BBS_MOD_LE3`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (j j1 : ℕ)
+          (hk : 3 ≤ s.k) (hbb : BBsV39 s w) (hj : j % s.k = j1 % s.k),
+    w j = w j1
+    ) ∧
+    -- 9. Kepler.Text.COLLINEAR_EQ_SUB_NEG_p28 (Kepler.Text.LocalAuto28:288; HOL `COLLINEAR_EQ_SUB_NEG`)
+    (∀ (v1 v2 : V3),
+    Collinear ℝ ({0, -v1, v2 - v1} : Set V3) ↔ Collinear ℝ ({0, v1, v2} : Set V3)
+    ) ∧
+    -- 10. Kepler.Text.DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS_p28 (Kepler.Text.LocalAuto28:764; HOL `DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS`)
+    (∀ (v1 v2 : V3) (x1 x2 x5 a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5) (hnorm : ‖v2‖ = 2)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1),
+    ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+          v3DeforV4_p28 a x1 x5 x2 (-v1) (v2 - v1) (v2 - v1) t + v1 ∈ ballAnnulus
+    ) ∧
+    -- 11. Kepler.Text.DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS_p28._abel_1_1 (Kepler.Text.LocalAuto28:764; compiler-generated equation/aux lemma (parent declaration `DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS_p28` at Kepler.Text.LocalAuto28:764; no source statement; sigtest = assembly elaboration))
+    (∀ (v1 v2 : V3), -v1 - (v2 - v1) = -v2
+    ) ∧
+    -- 12. Kepler.Text.EQ_SUC_K_SUB3_p28 (Kepler.Text.LocalAuto28:117; HOL `EQ_SUC_K_SUB3`)
+    (∀ {k l i : ℕ} (h : l % k = (i + 1) % k) (hk : 3 < k),
+    (l + k - 1) % k = i % k
+    ) ∧
+    -- 13. Kepler.Text.EQ_SUC_K_SUB_p28 (Kepler.Text.LocalAuto28:93; HOL `EQ_SUC_K_SUB`)
+    (∀ {k l i : ℕ} (h : l % k = (i + 1) % k) (hk : 1 < k),
+    (l + k - 1) % k = i % k
+    ) ∧
+    -- 14. Kepler.Text.EXISTS_SMALL_LE_CONST_ADD_p28 (Kepler.Text.LocalAuto28:808; HOL `EXISTS_SMALL_LE_CONST_ADD`)
+    (∀ (v1 v2 w : V3) (x1 x2 x5 c a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1)
+          (hlt : c < dist v2 w),
+    ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+          c < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) w
+    ) ∧
+    -- 15. Kepler.Text.EXISTS_SMALL_LE_CONST_ADD_p28._abel_1_1 (Kepler.Text.LocalAuto28:808; compiler-generated equation/aux lemma (parent declaration `EXISTS_SMALL_LE_CONST_ADD_p28` at Kepler.Text.LocalAuto28:808; no source statement; sigtest = assembly elaboration))
+    (∀ (v1 v2 : V3), -v1 - (v2 - v1) = -v2
+    ) ∧
+    -- 16. Kepler.Text.EXISTS_SMALL_LT_CONST_ADD_p28 (Kepler.Text.LocalAuto28:863; HOL `EXISTS_SMALL_LT_CONST_ADD`)
+    (∀ (v1 v2 w : V3) (x1 x2 x5 c a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1)
+          (hlt : dist v2 w < c),
+    ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+          dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) w < c
+    ) ∧
+    -- 17. Kepler.Text.EXISTS_SMALL_LT_CONST_ADD_p28._abel_1_1 (Kepler.Text.LocalAuto28:863; compiler-generated equation/aux lemma (parent declaration `EXISTS_SMALL_LT_CONST_ADD_p28` at Kepler.Text.LocalAuto28:863; no source statement; sigtest = assembly elaboration))
+    (∀ (v1 v2 : V3), -v1 - (v2 - v1) = -v2
+    ) ∧
+    -- 18. Kepler.Text.EXPAND_PERIODIC_p28 (Kepler.Text.LocalAuto28:257; HOL `EXPAND_PERIODIC`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (l : ℕ) (h : BBsV39 s w),
+    w (l + s.k) = w l
+    ) ∧
+    -- 19. Kepler.Text.EYYPQDW_CONTINUOUS_LIFT_DIST_ADD_p28 (Kepler.Text.LocalAuto28:385; HOL `EYYPQDW_CONTINUOUS_LIFT_DIST_ADD`)
+    (∀ (v1 v2 w v : V3)
+          (x1 x2 x3 x4 x5 x6 a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
+          (h6 : 0 < x6)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5),
+    ContinuousAt (fun y => dist (v3DeforV1_p17 a v1 v2 x1 x2 x5 x6 y + w) v) x3
+    ) ∧
+    -- 20. Kepler.Text.EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28 (Kepler.Text.LocalAuto28:967; HOL `EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE`)
+    (∀ (v1 v2 w : V3) (x1 x2 x5 a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+          (hncw : ¬ Collinear ℝ ({0, v1, w} : Set V3))
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1)
+          (haff : v2 ∈ affGt {0} {v1, w}),
+    ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
+          dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) v1 < dist v2 v1
+    ) ∧
+    -- 21. Kepler.Text.EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28._abel_1_1 (Kepler.Text.LocalAuto28:967; compiler-generated equation/aux lemma (parent declaration `EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28` at Kepler.Text.LocalAuto28:967; no source statement; sigtest = assembly elaboration))
+    (∀ (v1 v2 : V3), -v1 - (v2 - v1) = -v2
+    ) ∧
+    -- 22. Kepler.Text.EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28._abel_1_2 (Kepler.Text.LocalAuto28:967; compiler-generated equation/aux lemma (parent declaration `EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28` at Kepler.Text.LocalAuto28:967; no source statement; sigtest = assembly elaboration))
+    (∀ (v1 v2 : V3) (x1 x2 x5 t : ℝ),
+          v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 - v1 =
+            v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t)
+    ) ∧
+    -- 23. Kepler.Text.E_DEFORMATION_V3_DEFOR_V5_p28 (Kepler.Text.LocalAuto28:354; HOL `E_DEFORMATION_V3_DEFOR_V5`)
+    (∀ (w : ℕ → V3) (x1 x5 x2 t : ℝ) (v1 v2 : V3),
+    Set.range (fun i => {v3DeforV4_p28 (-1) x1 x5 x2 (-v1) (v2 - v1) (w i - v1) t + v1,
+            v3DeforV4_p28 (-1) x1 x5 x2 (-v1) (v2 - v1) (w (i + 1) - v1) t + v1}) =
+          (fun S => (fun v => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t) '' S) ''
+            Set.range (fun i : ℕ => {w i, w (i + 1)})
+    ) ∧
+    -- 24. Kepler.Text.FUN_V3_DEFOR_V5_p28 (Kepler.Text.LocalAuto28:337; HOL `FUN_V3_DEFOR_V5`)
+    (∀ (a x1 x5 x2 : ℝ) (v1 w v : V3),
+    v3DeforV5_p28 a x1 x5 x2 v1 w v = fun t => v3DeforV5_p28 a x1 x5 x2 v1 w v t
+    ) ∧
+    -- 25. Kepler.Text.F_DEFORMATION_V3_DEFOR_V5_p28 (Kepler.Text.LocalAuto28:369; HOL `F_DEFORMATION_V3_DEFOR_V5`)
+    (∀ (w : ℕ → V3) (x1 x5 x2 t : ℝ) (v1 v2 : V3),
+    Set.range (fun i => (v3DeforV4_p28 (-1) x1 x5 x2 (-v1) (v2 - v1) (w i - v1) t + v1,
+            v3DeforV4_p28 (-1) x1 x5 x2 (-v1) (v2 - v1) (w (i + 1) - v1) t + v1)) =
+          (fun uv => (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.1 t,
+            v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.2 t)) ''
+            Set.range (fun i : ℕ => (w i, w (i + 1)))
+    ) ∧
+    -- 26. Kepler.Text.MIN_LEAST_p28 (Kepler.Text.LocalAuto28:306; HOL `MIN_LEAST`)
+    (∀ (X : Set ℕ) (c : ℕ) (hc : c ∈ X),
+    minNum X ∈ X ∧ minNum X ≤ c
+    ) ∧
+    -- 27. Kepler.Text.NORM_LE_2_IN_MMS_p28 (Kepler.Text.LocalAuto28:202; HOL `NORM_LE_2_IN_MMS`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (l : ℕ) (h : w ∈ MMsV39 s),
+    2 ≤ ‖w l‖
+    ) ∧
+    -- 28. Kepler.Text.V3_DEFOR_EQ_IN_FF_MK_SYM_p28 (Kepler.Text.LocalAuto28:1251; HOL `V3_DEFOR_EQ_IN_FF_MK_SYM`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (k l : ℕ) (v1 v2 : V3)
+          (x1 x2 x5 a e t : ℝ) (FF : Set (V3 × V3)) (V : Set V3) (hk3 : 3 < k) (hk : s.k = k)
+          (hs : isScsV39 s) (hm : w ∈ MMsV39 s) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1) (he : 0 < e)
+          (het : -e < t)
+          (hni : ∀ r : ℝ, ∀ i : ℕ, -e < r ∧ r < e ∧ ¬(i % k = l % k) →
+            v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - r) + v1 ≠ w i)
+          (hte : t < e) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+    ∀ a' : V3, (a', v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔
+          (a', v2) ∈ FF
+    ) ∧
+    -- 29. Kepler.Text.V3_DEFOR_EQ_IN_FF_MK_p28 (Kepler.Text.LocalAuto28:1176; HOL `V3_DEFOR_EQ_IN_FF_MK`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (k l : ℕ) (v1 v2 : V3)
+          (x1 x2 x5 a e t : ℝ) (FF : Set (V3 × V3)) (V : Set V3) (hk3 : 3 < k) (hk : s.k = k)
+          (hs : isScsV39 s) (hm : w ∈ MMsV39 s) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1) (he : 0 < e)
+          (het : -e < t)
+          (hni : ∀ r : ℝ, ∀ i : ℕ, -e < r ∧ r < e ∧ ¬(i % k = l % k) →
+            v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - r) + v1 ≠ w i)
+          (hte : t < e) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+    ∀ a' : V3, (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t, a') ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔
+          (v2, a') ∈ FF
+    ) ∧
+    -- 30. Kepler.Text.V_DEFORMATION_V3_DEFOR_V5_p28 (Kepler.Text.LocalAuto28:342; HOL `V_DEFORMATION_V3_DEFOR_V5`)
+    (∀ (w : ℕ → V3) (x1 x5 x2 t : ℝ) (v1 v2 : V3),
+    Set.range (fun i => v3DeforV4_p28 (-1) x1 x5 x2 (-v1) (v2 - v1) (w i - v1) t + v1) =
+          (fun v => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t) '' Set.range w
+    ) ∧
+    -- 31. Kepler.Text.WL_IN_BALL_ANNULUS_p28 (Kepler.Text.LocalAuto28:179; HOL `WL_IN_BALL_ANNULUS`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (l : ℕ) (h : BBsV39 s w),
+    w l ∈ ballAnnulus
+    ) ∧
+    -- 32. Kepler.Text.WL_IN_FF_p28 (Kepler.Text.LocalAuto28:175; HOL `WL_IN_FF`)
+    (∀ (w : ℕ → V3) (l : ℕ),
+    (w l, w (l + 1)) ∈ Set.range (fun i : ℕ => (w i, w (i + 1)))
+    ) ∧
+    -- 33. Kepler.Text.WL_IN_V_p28 (Kepler.Text.LocalAuto28:172; HOL `WL_IN_V`)
+    (∀ (w : ℕ → V3) (l : ℕ),
+    w l ∈ Set.range w
+    ) ∧
+    -- 34. Kepler.Text.W_IN_BB_FUN_EQ_p28 (Kepler.Text.LocalAuto28:317; HOL `W_IN_BB_FUN_EQ`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (x y : ℕ) (hs : isScsV39 s)
+          (hbb : BBsV39 s w) (h : w x = w y),
+    x % s.k = y % s.k
+    ) ∧
+    -- 35. Kepler.Text.collinear_origin_pair_p28 (Kepler.Text.LocalAuto28:262; no HOL anchor line in file docstring)
+    (∀ (a b : V3),
+    Collinear ℝ ({0, a, b} : Set V3) ↔
+          ∃ v : V3, (∃ r : ℝ, a = r • v) ∧ ∃ r : ℝ, b = r • v
+    ) ∧
+    -- 36. Kepler.Text.deformedFF_p28.eq_1 (Kepler.Text.LocalAuto28:399; compiler-generated equation/aux lemma (parent declaration `deformedFF_p28` at Kepler.Text.LocalAuto28:399; no source statement; sigtest = assembly elaboration))
+    (∀ (x1 x5 x2 : ℝ) (v1 v2 : V3) (t : ℝ) (FF : Set (V3 × V3)),
+          deformedFF_p28 x1 x5 x2 v1 v2 t FF =
+            (fun uv => (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.1 t, v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.2 t)) '' FF
+    ) ∧
+    -- 37. Kepler.Text.minNum.eq_1 (Kepler.Text.LocalAuto28:0; compiler-generated equation/aux lemma (parent declaration `minNum` at Text.LocalAuto1:662; no source statement; sigtest = assembly elaboration))
+    (∀ (S : Set ℕ), minNum S = epsilon fun n => n ∈ S ∧ ∀ m ∈ S, n ≤ m
+    ) ∧
+    -- 38. Kepler.Text.modPeriodic2_first_p28 (Kepler.Text.LocalAuto28:207; no HOL anchor line in file docstring)
+    (∀ {α : Sort u} {f : ℕ → ℕ → α} {k : ℕ} (hk : 0 < k)
+          (hper : Periodic2 f k) {j j1 l : ℕ} (hj : j % k = j1 % k),
+    f j l = f j1 l
+    ) ∧
+    -- 39. Kepler.Text.modPeriodic2_second_p28 (Kepler.Text.LocalAuto28:212; no HOL anchor line in file docstring)
+    (∀ {α : Sort u} {f : ℕ → ℕ → α} {k : ℕ} (hk : 0 < k)
+          (hper : Periodic2 f k) {j j1 l : ℕ} (hj : j % k = j1 % k),
+    f l j = f l j1
+    ) ∧
+    -- 40. Kepler.Text.modPeriodic_p28 (Kepler.Text.LocalAuto28:122; no HOL anchor line in file docstring)
+    (∀ {α : Sort u} {f : ℕ → α} {k : ℕ} (hk : 0 < k)
+          (hper : ∀ i, f (i + k) = f i) {j j1 : ℕ} (hj : j % k = j1 % k),
+    f j = f j1
+    ) ∧
+    -- 41. Kepler.Text.v3DeforV4_p28.eq_1 (Kepler.Text.LocalAuto28:78; compiler-generated equation/aux lemma (parent declaration `v3DeforV4_p28` at Kepler.Text.LocalAuto28:78; no source statement; sigtest = assembly elaboration))
+    (∀ (a x1 x2 x6 : ℝ) (v1 w v : V3) (t : ℝ),
+          v3DeforV4_p28 a x1 x2 x6 v1 w v t = if v = w then v3DeforV1_p17 a v1 w x1 x2 x6 x6 (x2 - t) else v
+    ) ∧
+    -- 42. Kepler.Text.v3DeforV5_p28.eq_1 (Kepler.Text.LocalAuto28:83; compiler-generated equation/aux lemma (parent declaration `v3DeforV5_p28` at Kepler.Text.LocalAuto28:83; no source statement; sigtest = assembly elaboration))
+    (∀ (a x1 x5 x2 : ℝ) (v1 v2 v : V3) (t : ℝ),
+          v3DeforV5_p28 a x1 x5 x2 v1 v2 v t = v3DeforV4_p28 a x1 x5 x2 (-v1) (v2 - v1) (v - v1) t + v1
+    ) :=
+⟨_root_.Kepler.Text.CHANGE_A_SCS_MODL_p28, _root_.Kepler.Text.CHANGE_A_SCS_MODR_p28,
+      _root_.Kepler.Text.CHANGE_A_SCS_MOD_p28, _root_.Kepler.Text.CHANGE_B_SCS_MODL_p28,
+      _root_.Kepler.Text.CHANGE_B_SCS_MODR_p28, _root_.Kepler.Text.CHANGE_B_SCS_MOD_p28,
+      _root_.Kepler.Text.CHANGE_W_IN_BBS_MOD_IS_SCS_p28,
+      _root_.Kepler.Text.CHANGE_W_IN_BBS_MOD_LE3_p28,
+      _root_.Kepler.Text.COLLINEAR_EQ_SUB_NEG_p28,
+      _root_.Kepler.Text.DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS_p28,
+      _root_.Kepler.Text.DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS_p28._abel_1_1,
+      _root_.Kepler.Text.EQ_SUC_K_SUB3_p28, _root_.Kepler.Text.EQ_SUC_K_SUB_p28,
+      _root_.Kepler.Text.EXISTS_SMALL_LE_CONST_ADD_p28,
+      _root_.Kepler.Text.EXISTS_SMALL_LE_CONST_ADD_p28._abel_1_1,
+      _root_.Kepler.Text.EXISTS_SMALL_LT_CONST_ADD_p28,
+      _root_.Kepler.Text.EXISTS_SMALL_LT_CONST_ADD_p28._abel_1_1,
+      _root_.Kepler.Text.EXPAND_PERIODIC_p28,
+      _root_.Kepler.Text.EYYPQDW_CONTINUOUS_LIFT_DIST_ADD_p28,
+      _root_.Kepler.Text.EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28,
+      _root_.Kepler.Text.EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28._abel_1_1,
+      _root_.Kepler.Text.EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28._abel_1_2,
+      _root_.Kepler.Text.E_DEFORMATION_V3_DEFOR_V5_p28, _root_.Kepler.Text.FUN_V3_DEFOR_V5_p28,
+      _root_.Kepler.Text.F_DEFORMATION_V3_DEFOR_V5_p28, _root_.Kepler.Text.MIN_LEAST_p28,
+      _root_.Kepler.Text.NORM_LE_2_IN_MMS_p28, _root_.Kepler.Text.V3_DEFOR_EQ_IN_FF_MK_SYM_p28,
+      _root_.Kepler.Text.V3_DEFOR_EQ_IN_FF_MK_p28,
+      _root_.Kepler.Text.V_DEFORMATION_V3_DEFOR_V5_p28,
+      _root_.Kepler.Text.WL_IN_BALL_ANNULUS_p28, _root_.Kepler.Text.WL_IN_FF_p28,
+      _root_.Kepler.Text.WL_IN_V_p28, _root_.Kepler.Text.W_IN_BB_FUN_EQ_p28,
+      _root_.Kepler.Text.collinear_origin_pair_p28, _root_.Kepler.Text.deformedFF_p28.eq_1,
+      _root_.Kepler.Text.minNum.eq_1, _root_.Kepler.Text.modPeriodic2_first_p28,
+      _root_.Kepler.Text.modPeriodic2_second_p28, _root_.Kepler.Text.modPeriodic_p28,
+      _root_.Kepler.Text.v3DeforV4_p28.eq_1, _root_.Kepler.Text.v3DeforV5_p28.eq_1⟩
+
+-- Self-check.  Ground truth = `#print axioms`, not prose: expect exactly the standard three
+-- [propext, Classical.choice, Quot.sound] and no debt axiom (the scout group closure is sorried-0).
+#print axioms la28_capstone_w1
+
 /-! ## Shims (explicit bridging lemmas, documented in the ledger) -/
 
 /-- Bridge for `cross3` continuity (LocalAuto17's helper of the same shape is
