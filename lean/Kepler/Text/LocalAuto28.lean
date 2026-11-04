@@ -906,7 +906,50 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK_p28 (s : ScsV39) (w : ℕ → V3) 
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ i : ℕ, -ε < t ∧ t < ε ∧
         ¬(l % k = i % k) ∧ ¬((l + 1) % k = i % k) →
         s.a l i < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  set S : Finset ℕ := Finset.range k with hS
+  have hstep : ∀ r : ℕ, r ∈ S → ∃ e : ℝ, 0 < e ∧
+      (¬(l % k = r % k) ∧ ¬((l + 1) % k = r % k) → ∀ t : ℝ, -e < t ∧ t < e →
+        s.a l r < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r)) := by
+    intro r hr
+    by_cases hcond : ¬(l % k = r % k) ∧ ¬((l + 1) % k = r % k)
+    · obtain ⟨e0, he0, hprop0⟩ := DEFORMATION_DIST_LE_MK_A_p28 s w k l v1 v2 x1 x2 x5 (-1)
+        hs hm hk hk3 hl hl1 hx1 hx2 hx5 rfl hi r hcond
+      exact ⟨e0, he0, fun _ => hprop0⟩
+    · exact ⟨1, one_pos, fun hc => absurd hc hcond⟩
+  choose e he hprop using hstep
+  have hSne : S.Nonempty := ⟨0, by rw [hS]; exact Finset.mem_range.mpr (by omega)⟩
+  let f : ℕ → ℝ := fun r => if h : r ∈ S then e r h else 1
+  obtain ⟨r0, hr0, hmin⟩ := Finset.exists_min_image S f hSne
+  have hf0 : f r0 = e r0 hr0 := by simp only [f, dif_pos hr0]
+  refine ⟨f r0, by rw [hf0]; exact he r0 hr0, fun t i ht => ?_⟩
+  have hmem : i % k ∈ S := by
+    rw [hS]; exact Finset.mem_range.mpr (Nat.mod_lt _ (by omega))
+  have hf1 : f (i % k) = e (i % k) hmem := by simp only [f, dif_pos hmem]
+  have hle : e r0 hr0 ≤ e (i % k) hmem := by
+    have h' := hmin (i % k) hmem
+    rwa [hf0, hf1] at h'
+  have ht1 : t < e (i % k) hmem := by
+    calc t < f r0 := ht.2.1
+      _ = e r0 hr0 := hf0
+      _ ≤ e (i % k) hmem := hle
+  have ht2 : -e (i % k) hmem < t := by
+    have h2 : -e (i % k) hmem ≤ -e r0 hr0 := neg_le_neg hle
+    have h3 : -e r0 hr0 < t := by rw [← hf0]; exact ht.1
+    linarith
+  have hcondr : ¬(l % k = (i % k) % k) ∧ ¬((l + 1) % k = (i % k) % k) := by
+    refine ⟨?_, ?_⟩
+    · rw [Nat.mod_mod]; exact ht.2.2.1
+    · rw [Nat.mod_mod]; exact ht.2.2.2
+  have hp := hprop (i % k) hmem hcondr t ⟨ht2, ht1⟩
+  have hwi : w (i % k) = w i := by
+    apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i % k) i hs hbb
+    rw [hk, Nat.mod_mod]
+  have hai : s.a l (i % k) = s.a l i := by
+    apply CHANGE_A_SCS_MODR_p28 s hs (i % k) i l
+    rw [hk, Nat.mod_mod]
+  rwa [hwi, hai] at hp
 
 /-- HOL `EXISTS_SMALL_LT_CONST_ADD` (NUXCOEA.hl:569). -/
 theorem EXISTS_SMALL_LT_CONST_ADD_p28 (v1 v2 w : V3) (x1 x2 x5 c a : ℝ)
@@ -1622,7 +1665,43 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK_p28 (s : ScsV39) (w : ℕ → V3) 
     (hdiag : ∀ i, scsDiag k l i → 4 * h0 < s.b l i) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t ∧ t < ε ∧ ¬(l % k = i % k) →
       dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) < s.b l i := by
-  sorry
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  set S : Finset ℕ := Finset.range k with hS
+  have hstep : ∀ r : ℕ, r ∈ S → ∃ e : ℝ, 0 < e ∧
+      (¬(l % k = r % k) → ∀ t : ℝ, 0 < t ∧ t < e →
+        dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r) < s.b l r) := by
+    intro r hr
+    by_cases hne : ¬(l % k = r % k)
+    · obtain ⟨e0, he0, hprop0⟩ := DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK1_p28 s w k l j
+        v1 v2 x1 x2 x5 a hk3 hs hm hk hl hl1 hx1 hx2 hx5 ha hnc haff hj hlt hdiag r hne
+      exact ⟨e0, he0, fun _ => hprop0⟩
+    · exact ⟨1, one_pos, fun hc => absurd hc hne⟩
+  choose e he hprop using hstep
+  have hSne : S.Nonempty := ⟨0, by rw [hS]; exact Finset.mem_range.mpr (by omega)⟩
+  let f : ℕ → ℝ := fun r => if h : r ∈ S then e r h else 1
+  obtain ⟨r0, hr0, hmin⟩ := Finset.exists_min_image S f hSne
+  have hf0 : f r0 = e r0 hr0 := by simp only [f, dif_pos hr0]
+  refine ⟨f r0, by rw [hf0]; exact he r0 hr0, fun t i ht => ?_⟩
+  have hmem : i % k ∈ S := by
+    rw [hS]; exact Finset.mem_range.mpr (Nat.mod_lt _ (by omega))
+  have hf1 : f (i % k) = e (i % k) hmem := by simp only [f, dif_pos hmem]
+  have hle : e r0 hr0 ≤ e (i % k) hmem := by
+    have h' := hmin (i % k) hmem
+    rwa [hf0, hf1] at h'
+  have ht1 : t < e (i % k) hmem := by
+    calc t < f r0 := ht.2.1
+      _ = e r0 hr0 := hf0
+      _ ≤ e (i % k) hmem := hle
+  have hcondr : ¬(l % k = (i % k) % k) := by
+    rw [Nat.mod_mod]; exact ht.2.2
+  have hp := hprop (i % k) hmem hcondr t ⟨ht.1, ht1⟩
+  have hwi : w (i % k) = w i := by
+    apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i % k) i hs hbb
+    rw [hk, Nat.mod_mod]
+  have hbi : s.b l (i % k) = s.b l i := by
+    apply CHANGE_B_SCS_MODR_p28 s hs (i % k) i l
+    rw [hk, Nat.mod_mod]
+  rwa [hwi, hbi] at hp
 
 /-- HOL `DEFORMATION_V3_DEFOR_NOT_IN_V_MK` (NUXCOEA.hl:1189). -/
 theorem DEFORMATION_V3_DEFOR_NOT_IN_V_MK_p28 (s : ScsV39) (w : ℕ → V3) (k l : ℕ)
@@ -2323,7 +2402,52 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK_TWO_CASES_p28 (s : ScsV39) (w : �
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ i : ℕ, -ε < t ∧ t < ε ∧
         ¬(l % k = i % k) ∧ ¬(l % k = (i + 1) % k) →
         s.a l i < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
-  sorry
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  set S : Finset ℕ := Finset.range k with hS
+  have hstep : ∀ r : ℕ, r ∈ S → ∃ e : ℝ, 0 < e ∧
+      (¬(l % k = r % k) ∧ ¬(l % k = (r + 1) % k) → ∀ t : ℝ, -e < t ∧ t < e →
+        s.a l r < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r)) := by
+    intro r hr
+    by_cases hcond : ¬(l % k = r % k) ∧ ¬(l % k = (r + 1) % k)
+    · obtain ⟨e0, he0, hprop0⟩ := DEFORMATION_DIST_LE_MK_A_TWO_CASES_p28 s w k l v1 v2
+        x1 x2 x5 a hs hm hk hk3 hl hl1 hx1 hx2 hx5 ha hi r hcond
+      exact ⟨e0, he0, fun _ => hprop0⟩
+    · exact ⟨1, one_pos, fun hc => absurd hc hcond⟩
+  choose e he hprop using hstep
+  have hSne : S.Nonempty := ⟨0, by rw [hS]; exact Finset.mem_range.mpr (by omega)⟩
+  let f : ℕ → ℝ := fun r => if h : r ∈ S then e r h else 1
+  obtain ⟨r0, hr0, hmin⟩ := Finset.exists_min_image S f hSne
+  have hf0 : f r0 = e r0 hr0 := by simp only [f, dif_pos hr0]
+  refine ⟨f r0, by rw [hf0]; exact he r0 hr0, fun t i ht => ?_⟩
+  have hmem : i % k ∈ S := by
+    rw [hS]; exact Finset.mem_range.mpr (Nat.mod_lt _ (by omega))
+  have hf1 : f (i % k) = e (i % k) hmem := by simp only [f, dif_pos hmem]
+  have hle : e r0 hr0 ≤ e (i % k) hmem := by
+    have h' := hmin (i % k) hmem
+    rwa [hf0, hf1] at h'
+  have ht1 : t < e (i % k) hmem := by
+    calc t < f r0 := ht.2.1
+      _ = e r0 hr0 := hf0
+      _ ≤ e (i % k) hmem := hle
+  have ht2 : -e (i % k) hmem < t := by
+    have h2 : -e (i % k) hmem ≤ -e r0 hr0 := neg_le_neg hle
+    have h3 : -e r0 hr0 < t := by rw [← hf0]; exact ht.1
+    linarith
+  have hsucc : (i % k + 1) % k = (i + 1) % k := by
+    conv_rhs => rw [Nat.add_mod]
+    rw [show (1 : ℕ) % k = 1 from Nat.mod_eq_of_lt (by omega)]
+  have hcondr : ¬(l % k = (i % k) % k) ∧ ¬(l % k = ((i % k) + 1) % k) := by
+    refine ⟨?_, ?_⟩
+    · rw [Nat.mod_mod]; exact ht.2.2.1
+    · rw [hsucc]; exact ht.2.2.2
+  have hp := hprop (i % k) hmem hcondr t ⟨ht2, ht1⟩
+  have hwi : w (i % k) = w i := by
+    apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i % k) i hs hbb
+    rw [hk, Nat.mod_mod]
+  have hai : s.a l (i % k) = s.a l i := by
+    apply CHANGE_A_SCS_MODR_p28 s hs (i % k) i l
+    rw [hk, Nat.mod_mod]
+  rwa [hwi, hai] at hp
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_B_MK_TWO_CASES` (NUXCOEA.hl:3829). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_B_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
@@ -2560,7 +2684,43 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK_TWO_CASES_p28 (s : ScsV39) (w : �
     (hdiag : ∀ i, scsDiag k l i → 4 * h0 < s.b l i) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t ∧ t < ε ∧ ¬(l % k = i % k) →
       dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) < s.b l i := by
-  sorry
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  set S : Finset ℕ := Finset.range k with hS
+  have hstep : ∀ r : ℕ, r ∈ S → ∃ e : ℝ, 0 < e ∧
+      (¬(l % k = r % k) → ∀ t : ℝ, 0 < t ∧ t < e →
+        dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r) < s.b l r) := by
+    intro r hr
+    by_cases hne : ¬(l % k = r % k)
+    · obtain ⟨e0, he0, hprop0⟩ := DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK1_TWO_CASES_p28
+        s w k l j v1 v2 x1 x2 x5 a hk3 hs hm hk hl hl1 hx1 hx2 hx5 ha hnc haff hj hlt hdiag r hne
+      exact ⟨e0, he0, fun _ => hprop0⟩
+    · exact ⟨1, one_pos, fun hc => absurd hc hne⟩
+  choose e he hprop using hstep
+  have hSne : S.Nonempty := ⟨0, by rw [hS]; exact Finset.mem_range.mpr (by omega)⟩
+  let f : ℕ → ℝ := fun r => if h : r ∈ S then e r h else 1
+  obtain ⟨r0, hr0, hmin⟩ := Finset.exists_min_image S f hSne
+  have hf0 : f r0 = e r0 hr0 := by simp only [f, dif_pos hr0]
+  refine ⟨f r0, by rw [hf0]; exact he r0 hr0, fun t i ht => ?_⟩
+  have hmem : i % k ∈ S := by
+    rw [hS]; exact Finset.mem_range.mpr (Nat.mod_lt _ (by omega))
+  have hf1 : f (i % k) = e (i % k) hmem := by simp only [f, dif_pos hmem]
+  have hle : e r0 hr0 ≤ e (i % k) hmem := by
+    have h' := hmin (i % k) hmem
+    rwa [hf0, hf1] at h'
+  have ht1 : t < e (i % k) hmem := by
+    calc t < f r0 := ht.2.1
+      _ = e r0 hr0 := hf0
+      _ ≤ e (i % k) hmem := hle
+  have hcondr : ¬(l % k = (i % k) % k) := by
+    rw [Nat.mod_mod]; exact ht.2.2
+  have hp := hprop (i % k) hmem hcondr t ⟨ht.1, ht1⟩
+  have hwi : w (i % k) = w i := by
+    apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i % k) i hs hbb
+    rw [hk, Nat.mod_mod]
+  have hbi : s.b l (i % k) = s.b l i := by
+    apply CHANGE_B_SCS_MODR_p28 s hs (i % k) i l
+    rw [hk, Nat.mod_mod]
+  rwa [hwi, hbi] at hp
 
 /-- HOL `DEFORMATION_V3_DEFOR_NOT_IN_V_MK_TWO_CASES` (NUXCOEA.hl:4224). -/
 theorem DEFORMATION_V3_DEFOR_NOT_IN_V_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
@@ -2569,7 +2729,9 @@ theorem DEFORMATION_V3_DEFOR_NOT_IN_V_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ →
     (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1) :
     ∀ i : ℕ, ¬(i % k = l % k) → ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
       0 < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
-  sorry
+  rw [ha]
+  intro i hi
+  exact notInVAuxTC_p28 s k l w v1 v2 x1 x2 x5 a hk3 hk hs hm hl hl1 hx1 hx2 hx5 ha i hi
 
 /-- HOL `DEFORMATION_V3_DEFOR_NOT_IN_V_COM_MK_TWO_CASES` (NUXCOEA.hl:4265). -/
 theorem DEFORMATION_V3_DEFOR_NOT_IN_V_COM_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
@@ -2578,7 +2740,36 @@ theorem DEFORMATION_V3_DEFOR_NOT_IN_V_COM_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ
     (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ i : ℕ, -ε < t ∧ t < ε ∧ ¬(i % k = l % k) →
       0 < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
-  sorry
+  rw [ha]
+  have hk0 : 0 < k := by omega
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  set T : Finset ℕ := (Finset.range k).filter (fun j => ¬(j % k = l % k)) with hT
+  have hmem : ∀ i : ℕ, ¬(i % k = l % k) → i % k ∈ T := fun i hi =>
+    Finset.mem_filter.mpr ⟨Finset.mem_range.mpr (Nat.mod_lt _ hk0),
+      by rw [Nat.mod_mod i k]; exact hi⟩
+  have hper : ∀ i : ℕ, w (i + k) = w i := fun i => by rw [← hk]; exact hbb.2.1 i
+  have hmono' : ∀ (j : ℕ) (e : ℝ), (∀ t : ℝ, -e < t ∧ t < e →
+        0 < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j)) →
+      ∀ e' : ℝ, 0 < e' → e' ≤ e →
+      (∀ t : ℝ, -e' < t ∧ t < e' →
+        0 < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j)) := by
+    rintro j e hall e' he' hle t ht
+    exact hall t ⟨lt_of_le_of_lt (neg_le_neg hle) ht.1, ht.2.trans_le hle⟩
+  have hnon : T.Nonempty :=
+    ⟨(l + 1) % k, Finset.mem_filter.mpr ⟨Finset.mem_range.mpr (Nat.mod_lt (l + 1) (by omega)),
+      fun hc => succModNe_p28 (k := k) (by omega)
+        (by rw [Nat.mod_mod] at hc; exact hc)⟩⟩
+  have hpar : ∀ j ∈ T, ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      0 < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) :=
+    fun j hj => notInVAuxTC_p28 s k l w v1 v2 x1 x2 x5 a hk3 hk hs hm hl hl1 hx1 hx2 hx5 ha j
+      (Finset.mem_filter.mp hj).2
+  obtain ⟨e0, he0, hall⟩ :=
+    minWitness_p34 (R := fun j e => ∀ t : ℝ, -e < t ∧ t < e →
+        0 < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j))
+      (T := T) hmono' hnon hpar
+  refine ⟨e0, he0, fun t i ht => ?_⟩
+  rw [← modPeriodic_p28 (f := w) hk0 hper (Nat.mod_mod i k)]
+  exact hall (i % k) (hmem i ht.2.2) t ⟨ht.1, ht.2.1⟩
 
 /-- HOL `DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_MK_TWO_CASES` (NUXCOEA.hl:4366). -/
 theorem DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
@@ -2587,7 +2778,39 @@ theorem DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_MK_TWO_CASES_p28 (s : ScsV39) (w : 
     (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ i : ℕ, -ε < t ∧ t < ε ∧ ¬(i % k = l % k) →
       v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 ≠ w i := by
-  sorry
+  rw [ha]
+  have hk0 : 0 < k := by omega
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  set T : Finset ℕ := (Finset.range k).filter (fun j => ¬(j % k = l % k)) with hT
+  have hmem : ∀ i : ℕ, ¬(i % k = l % k) → i % k ∈ T := fun i hi =>
+    Finset.mem_filter.mpr ⟨Finset.mem_range.mpr (Nat.mod_lt _ hk0),
+      by rw [Nat.mod_mod i k]; exact hi⟩
+  have hper : ∀ i : ℕ, w (i + k) = w i := fun i => by rw [← hk]; exact hbb.2.1 i
+  have hmono' : ∀ (j : ℕ) (e : ℝ), (∀ t : ℝ, -e < t ∧ t < e →
+        0 < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j)) →
+      ∀ e' : ℝ, 0 < e' → e' ≤ e →
+      (∀ t : ℝ, -e' < t ∧ t < e' →
+        0 < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j)) := by
+    rintro j e hall e' he' hle t ht
+    exact hall t ⟨lt_of_le_of_lt (neg_le_neg hle) ht.1, ht.2.trans_le hle⟩
+  have hnon : T.Nonempty :=
+    ⟨(l + 1) % k, Finset.mem_filter.mpr ⟨Finset.mem_range.mpr (Nat.mod_lt (l + 1) (by omega)),
+      fun hc => succModNe_p28 (k := k) (by omega)
+        (by rw [Nat.mod_mod] at hc; exact hc)⟩⟩
+  have hpar : ∀ j ∈ T, ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      0 < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) :=
+    fun j hj => notInVAuxTC_p28 s k l w v1 v2 x1 x2 x5 a hk3 hk hs hm hl hl1 hx1 hx2 hx5 ha j
+      (Finset.mem_filter.mp hj).2
+  obtain ⟨e0, he0, hall⟩ :=
+    minWitness_p34 (R := fun j e => ∀ t : ℝ, -e < t ∧ t < e →
+        0 < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j))
+      (T := T) hmono' hnon hpar
+  refine ⟨e0, he0, fun t i hi => ?_⟩
+  rw [← modPeriodic_p28 (f := w) hk0 hper (Nat.mod_mod i k)]
+  have hd := hall (i % k) (hmem i hi.2.2) t ⟨hi.1, hi.2.1⟩
+  intro con
+  rw [con, dist_self] at hd
+  exact lt_irrefl (0:ℝ) hd
 
 /-- HOL `V3_DEFOR_EQ_IN_FF_MK_TWO_CASES` (NUXCOEA.hl:4388). -/
 theorem V3_DEFOR_EQ_IN_FF_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k l : ℕ) (v1 v2 : V3)
