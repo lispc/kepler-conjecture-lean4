@@ -2638,8 +2638,12 @@ private theorem w5cB7_char3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)
   rw [(Function.iterate_succ_apply' (rhoNode1_p2 FF) i v)]
   exact hbase
 
-/-- HOL `ITER_IN_AFF_GT_2_1` (lunar_deform.hl:3486).  NEEDS:
-`Local_lemmas.LOCAL_FAN_CHARACTER_OF_RHO_NODE3`. -/
+/-- HOL `ITER_IN_AFF_GT_2_1` (lunar_deform.hl:3486)。本 port：`ρ^[i+2] v` 在
+`ρ^i` 关于轴 `0, ρ^{i+1}` 的对侧。证法：`w5cB7_char3` 给非共线 → 三点确定平面
+`P`；`w5cB6_mem_span_of_affSpan0` 把 `ρ^{i+2}` 落入 `span {ρ^i, ρ^{i+1}}`
+（系数 `a b`）；`ITER_CROSS_SAME_DIRECTION_p37` 给 `cross(ρ^{i+1}, ρ^{i+2}) =
+k • cross(ρ^i, ρ^{i+1})`（`k > 0`），线性展开比对得 `a = -k`，再以
+`w5cB_affLt_2_1_mpr` 三系数形（`t3 = -k < 0`）构造。 -/
 theorem ITER_IN_AFF_GT_2_1_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
     (_hlf : LocalFan V E FF) (_hv : v ∈ V)
@@ -2648,10 +2652,92 @@ theorem ITER_IN_AFF_GT_2_1_p37 {V : Set V3} {E : Set (Set V3)}
     ∀ i < l - 1,
       (rhoNode1 FF)^[i + 2] v ∈
         affLt {0, (rhoNode1 FF)^[i + 1] v} {(rhoNode1 FF)^[i] v} := by
-  sorry
+  classical
+  have h2 := w5cB5_to_localFan_p2 _hlf
+  have hP2 : plane_p2 P := _hP
+  have hfan : Fan.FAN 0 V E := _hlf.1
+  have hmemV : ∀ n : ℕ, (rhoNode1 FF)^[n] v ∈ V := LOCAL_FAN_ITER_RHO_NODE_IN_V h2 _hv
+  have hUmem : ∀ n : ℕ, n ≤ l → (rhoNode1 FF)^[n] v ∈ U := fun n hn => by
+    rw [← _hU]
+    exact ⟨n, hn, rfl⟩
+  intro i hi
+  have hmemVi := hmemV i
+  have hmemVi1 := hmemV (i + 1)
+  have h0X : (0 : V3) ≠ (rhoNode1 FF)^[i] v :=
+    Ne.symm (FAN_IMP_V_DIFF hfan ((rhoNode1 FF)^[i] v) hmemVi)
+  have hncXY : ¬Collinear ℝ ({0, (rhoNode1 FF)^[i] v,
+      (rhoNode1 FF)^[i + 1] v} : Set V3) := w5cB7_char3 h2 _hv i
+  have hXYne : (rhoNode1 FF)^[i] v ≠ (rhoNode1 FF)^[i + 1] v := by
+    intro hXY
+    refine hncXY ?_
+    rw [COLLINEAR_CROSS_0 (x := (0 : V3)) (y := (rhoNode1 FF)^[i] v)
+      (z := (rhoNode1 FF)^[i + 1] v), sub_zero, sub_zero, ← hXY, cross_self]
+    rfl
+  have hXP : (rhoNode1 FF)^[i] v ∈ P := _hUsub (hUmem i (by omega))
+  have hYP : (rhoNode1 FF)^[i + 1] v ∈ P := _hUsub (hUmem (i + 1) (by omega))
+  have hZP : (rhoNode1 FF)^[i + 2] v ∈ P := _hUsub (hUmem (i + 2) (by omega))
+  have hPspan : (affineSpan ℝ ({0, (rhoNode1 FF)^[i] v,
+      (rhoNode1 FF)^[i + 1] v} : Set V3)) = P :=
+    THREE_NOT_COLL_DETER_PLANE hP2
+      (by
+        intro q hq
+        rcases Set.mem_insert_iff.mp hq with rfl | hq
+        · exact _h0
+        · rcases Set.mem_insert_iff.mp hq with rfl | rfl
+          · exact hXP
+          · exact hYP)
+      hncXY
+  have hZaff : (rhoNode1 FF)^[i + 2] v ∈
+      ((affineSpan ℝ ({0, (rhoNode1 FF)^[i] v, (rhoNode1 FF)^[i + 1] v} : Set V3) : Set V3)) := by
+    rw [hPspan]
+    exact hZP
+  have hZspan : (rhoNode1 FF)^[i + 2] v ∈
+      (Submodule.span ℝ ({(rhoNode1 FF)^[i] v, (rhoNode1 FF)^[i + 1] v} : Set V3)) :=
+    w5cB6_mem_span_of_affSpan0 hZaff
+  obtain ⟨a, b, hZab⟩ := Submodule.mem_span_pair.mp hZspan
+  obtain ⟨k, hk, hkc⟩ :=
+    ITER_CROSS_SAME_DIRECTION_p37 _hlf _hv _hU _hP _h0 _hUsub (i + 1) i
+      (by omega) (by omega)
+  rw [← hZab] at hkc
+  -- cross 线性展开（B7 轮心跳热点；B9 以具名 `simp only` 集收口，见 DELIVERY-b9 §3）
+  have hlin : cross3_p37 ((rhoNode1 FF)^[i + 1] v)
+      (a • (rhoNode1 FF)^[i] v + b • (rhoNode1 FF)^[i + 1] v) =
+      a • cross3_p37 ((rhoNode1 FF)^[i + 1] v) ((rhoNode1 FF)^[i] v) := by
+    rw [cross3_p37, cross3_p37]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.toLp_smul, map_add, map_smul,
+      cross_self, smul_zero, add_zero]
+  rw [hlin] at hkc
+  have hcXY : cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) ≠ 0 := by
+    intro hcz
+    refine hncXY ?_
+    rw [COLLINEAR_CROSS_0 (x := (0 : V3)) (y := (rhoNode1 FF)^[i] v)
+      (z := (rhoNode1 FF)^[i + 1] v), sub_zero, sub_zero]
+    exact hcz
+  have hak : a = -k := by
+    have h1 : a • cross3_p37 ((rhoNode1 FF)^[i + 1] v) ((rhoNode1 FF)^[i] v) =
+        k • cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) := hkc
+    have hsym : cross3_p37 ((rhoNode1 FF)^[i + 1] v) ((rhoNode1 FF)^[i] v) =
+        -(cross3_p37 ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v)) := by
+      rw [cross3_p37, cross3_p37, ← WithLp.toLp_neg, ← cross_anticomm]
+    rw [hsym, smul_neg, ← neg_smul] at h1
+    have h2' : ((-a) - k) • cross3_p37 ((rhoNode1 FF)^[i] v)
+        ((rhoNode1 FF)^[i + 1] v) = 0 := by
+      rw [sub_smul, h1, sub_self]
+    have h3 := (smul_eq_zero.mp h2').resolve_right hcXY
+    linarith
+  rw [hak] at hZab
+  have h0Y : (0 : V3) ≠ (rhoNode1 FF)^[i + 1] v :=
+    Ne.symm (FAN_IMP_V_DIFF hfan ((rhoNode1 FF)^[i + 1] v) hmemVi1)
+  refine w5cB_affLt_2_1_mpr (u := 0) (v := (rhoNode1 FF)^[i + 1] v)
+    (a := (rhoNode1 FF)^[i] v) (z := (rhoNode1 FF)^[i + 2] v)
+    (t1 := 1 - b + k) (t2 := b) (t3 := -k) h0Y (Ne.symm hXYne) h0X
+    (by linarith) (by ring) ?_
+  rw [smul_zero, zero_add, ← hZab]
+  module
 
-/-- HOL `AZIM_PI_ITER_LOCAL_FAN` (lunar_deform.hl:3589).  NEEDS:
-`ITER_IN_AFF_GT_2_1_p37` + `AZIM_PI_LEMMA_p37`. -/
+/-- HOL `AZIM_PI_ITER_LOCAL_FAN` (lunar_deform.hl:3589)。本 port：
+`ITER_IN_AFF_GT_2_1_p37` 的 `affLt` 成员 + CHARACTER3 两非共线前提
+（`w := ρ^[i+1] v`）→ B2 闭件 `w5cB_azim_eq_pi_of_affLt` 一直消费。 -/
 theorem AZIM_PI_ITER_LOCAL_FAN_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
     (_hlf : LocalFan V E FF) (_hv : v ∈ V)
@@ -2660,7 +2746,23 @@ theorem AZIM_PI_ITER_LOCAL_FAN_p37 {V : Set V3} {E : Set (Set V3)}
     ∀ i < l - 1,
       azim 0 ((rhoNode1 FF)^[i + 1] v) ((rhoNode1 FF)^[i] v)
         ((rhoNode1 FF)^[i + 2] v) = Real.pi := by
-  sorry
+  classical
+  have h2 := w5cB5_to_localFan_p2 _hlf
+  intro i hi
+  have hprev := ITER_IN_AFF_GT_2_1_p37 _hlf _hv _hU _hP _h0 _hUsub i (by omega)
+  have hncA : ¬Collinear ℝ ({0, (rhoNode1 FF)^[i + 1] v,
+      (rhoNode1 FF)^[i] v} : Set V3) := by
+    have hc : ¬Collinear ℝ ({0, (rhoNode1 FF)^[i] v,
+        (rhoNode1 FF)^[i + 1] v} : Set V3) := w5cB7_char3 h2 _hv i
+    rwa [show ({0, (rhoNode1 FF)^[i] v, (rhoNode1 FF)^[i + 1] v} : Set V3) =
+        ({0, (rhoNode1 FF)^[i + 1] v, (rhoNode1 FF)^[i] v} : Set V3) from by
+      ext q
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto] at hc
+  have hncZ : ¬Collinear ℝ ({0, (rhoNode1 FF)^[i + 1] v,
+      (rhoNode1 FF)^[i + 2] v} : Set V3) := w5cB7_char3 h2 _hv (i + 1)
+  exact w5cB_azim_eq_pi_of_affLt (u := 0) (v := (rhoNode1 FF)^[i + 1] v)
+    (a := (rhoNode1 FF)^[i] v) (z := (rhoNode1 FF)^[i + 2] v) hncA hncZ hprev
 
 /-- HOL `LOCAL_CONVEX_NOT_COLLINEAR` (lunar_deform.hl:3616).  NEEDS:
 `LUNAR_IMP_IN_TWO_HAFLS_PLANE_p37` + `Local_lemmas.CVX_LO_IMP_LO`. -/
@@ -2740,24 +2842,91 @@ theorem CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p37 {V : Set V3} {E : Set (Set V3)}
 private theorem w5cB7_lunar_p2_of_lunar {v w : V3} {V : Set V3} {E : Set (Set V3)}
     (hl : Lunar v w V E) : lunar_p2 v w V E := hl
 
-/-! **B7 接口诊断（未入 kit，B8 首项）**：tower-b4 条件形
+/-! **B7 接口诊断（B9 已按此落地，见下）**：tower-b4 条件形
 `w5cB4_SUB_LUNAR_DF_cond` 的 `hdv/hdw` 槽取半平面锥形
 `affGt {0,v} {ρv} ∩ affLt {0} {u'} = ∅`（对所有像点 `u'` 量词化），该形
 不可满足：对面半 run 像点 `x` 的反向射线 `-c•x` 落入 `affGt {0,v} {ρv}`
 的开半平面（二维坐标反例：`x = α•v + β•ρv, β < 0` ⇒ `-c•x = (-cα)•v +
 (-cβ)•ρv`，`-cβ > 0`）。正确接口为 HOL 逐字 wedge 形
 `∀ s ∈ image E, ∀ u' ∈ image V, aff_gt {0} s ∩ aff_lt {0} {u'} = ∅`
-（lunar_deform.hl:1533-1537），其非 `u`-边情形由 `hl.1`（¬Circular）+
-钉住性直释，含 `u`-边情形由 d-窗口（`w5cB3_affGt_window_all`）+ 段 7b/8
-物料承接——B8 首项：以 wedge 形重建条件件
-（`w5cB3_lunar_window` 直消费体已验证可行，约 10 行）。另：B7 ② 的
-`LOCAL_FAN_CHARACTER_OF_RHO_NODE3` 助件（LA5 两件一线消费，约 2 行）
-与 `ITER_IN_AFF_GT_2_1`/`AZIM_PI_ITER_LOCAL_FAN` 收尾体已写就
-（Kit-draft-w5cB7.lean），本轮试编译遇两处反常 elaboration 心跳超限
-（CHARACTER3 两行应用、cross 线性 simp），2-strike 止损移出，B8 优先
-以隔离探针定位。 -/
+（lunar_deform.hl:1533-1537）。**B9 落地**：wedge 条件件
+`w5cB9_SUB_LUNAR_DF_cond`（`w5cB3_lunar_window` 一行消费）+ 非 `u`-边∧
+钉住顶点的直释部分 `w5cB9_hsep_pinned`。含 `u` 边与 `u'=u_t` 两情形仍需
+段 7b/8 两半分解（`LUNAR_IMP_IN_TWO_HAFLS_PLANE_p37` / `HKIRPEP_ALT_p37`，
+G5 边界，未消费）。 **B9 iter 链**：`LOCAL_FAN_CHARACTER_OF_RHO_NODE3` 由
+`w5cB7_char3` 提供；`ITER_IN_AFF_GT_2_1_p37` 与 `AZIM_PI_ITER_LOCAL_FAN_p37`
+已全闭（标准三，见 DELIVERY-b9.md）。 -/
 
-/- B7 ② 的 CHARACTER3 助件与 ITER_IN_AFF_GT_2_1 / AZIM_PI_ITER_LOCAL_FAN
-收尾体移至 Kit-draft-w5cB7.lean（elaboration 心跳问题 2-strike 止损，B8 首探）。 -/
+/-- B9 段 8 部分收口：非 `u`-边情形 + 钉住顶点（`u' ≠ u`）。边像在钉住下
+即原边，`¬Circular`（`Lunar` 首合取）直释 wedge 不交。含 `u` 边与 `u' = u_t`
+两情形需段 7b/8 的两半分解（G5 边界物料），本件不覆盖。 -/
+private theorem w5cB9_hsep_pinned
+    {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {v w : V3}
+    (hl : Lunar v w V E) (hcf : ConvexLocalFan V E FF)
+    {x : Set V3} (hxE : x ∈ E) {u' : V3} (hu'V : u' ∈ V) :
+    affGt ({0} : Set V3) x ∩ affLt ({0} : Set V3) {u'} = ∅ := by
+  obtain ⟨a, b, hab, hx⟩ := EDGE_FORM_IN_LOCAL_FAN_p37 hcf.1 hxE
+  by_contra hne
+  rw [← hx] at hne
+  exact hl.1 ⟨a, b, u', hx ▸ hxE, hu'V, hne⟩
+
+/-- B9 钉住边的像复原：`u ∉ x` 时边像 = 原边（逐点用 `hpin`）。 -/
+private theorem w5cB9_image_eq_of_notMem_u
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {f : V3 → ℝ → V3} {u : V3} {t : ℝ}
+    (hE : ∀ x ∈ E, x ⊆ V) {x : Set V3} (hxE : x ∈ E) (hu : u ∉ x)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u') (ht : t ∈ Icc a b) :
+    (fun z => f z t) '' x = x := by
+  ext z
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    have hyV := hE x hxE hy
+    have hyu : y ≠ u := fun he => hu (he ▸ hy)
+    show f y t ∈ x
+    rw [hpin y hyV (Ne.symm hyu) t ht]
+    exact hy
+  · intro hz
+    refine ⟨z, hz, ?_⟩
+    have hzV := hE x hxE hz
+    have hzu : z ≠ u := fun he => hu (he ▸ hz)
+    exact hpin z hzV (Ne.symm hzu) t ht
+
+/-- B9 段 8 部分收口（像形）：`u ∉ x` 且 `u'' ≠ u` 时 wedge 不交成立。
+剩下 `u' = u_t` 与含 `u` 边两情形需 G5 边界的两半分解物料。 -/
+private theorem w5cB9_hsep_pinned_image
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {f : V3 → ℝ → V3} {u v w : V3} {t : ℝ}
+    (hl : Lunar v w V E) (hcf : ConvexLocalFan V E FF)
+    (hE : ∀ x ∈ E, x ⊆ V) {x : Set V3} (hxE : x ∈ E) (hu : u ∉ x)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+    (ht : t ∈ Icc a b) {u'' : V3} (hu''V : u'' ∈ V) (hu''u : u'' ≠ u) :
+    affGt ({0} : Set V3) ((fun z => f z t) '' x) ∩
+      affLt ({0} : Set V3) {f u'' t} = ∅ := by
+  rw [w5cB9_image_eq_of_notMem_u (V := V) (E := E) (f := f) (u := u)
+    (a := a) (b := b) hE hxE hu hpin ht, hpin u'' hu''V (Ne.symm hu''u) t ht]
+  exact w5cB9_hsep_pinned hl hcf hxE hu''V
+
+/-- **G4 wedge 接口（B9 落地）**：`SUB_LUNAR_DEFORM_LEMMA_p37` 的显式条件形。
+签名与目标逐字一致，另挂窗口半径 `d` 与 HOL 逐字 wedge 前提
+（lunar_deform.hl:1533-1537：每条边像锥与每个顶点像的 `affLt {0}` 不交）。
+由分段 6 `w5cB3_lunar_window` 一行收口；取代 B4 的 `hdv/hdw` 半锥槽
+（B7 已裁定不可满足）。 -/
+private theorem w5cB9_SUB_LUNAR_DF_cond
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {f : V3 → ℝ → V3} {u v w : V3}
+    (_hV : V.Finite) (_hcf : ConvexLocalFan V E FF) (_hl : Lunar v w V E)
+    (_hE : ∀ x ∈ E, x ⊆ V) (_hu0 : f u 0 = u) (_hcu : ContinuousAt (f u) 0)
+    (_hang : interiorAngle1 0 FF v < Real.pi) (_ha : a < 0) (_hb : 0 < b)
+    (_hu : u ∈ V) (_huv : u ≠ v) (_huw : u ≠ w)
+    (_hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+    (_haff : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, v, w, u} : Set V3))
+    (d : ℝ) (hd : 0 < d)
+    (hsep : ∀ t : ℝ, -d < t → t < d → t ∈ Icc a b →
+      ∀ s : Set V3, s ∈ (fun s => (fun z => f z t) '' s) '' E →
+        ∀ u' : V3, u' ∈ (fun z => f z t) '' V →
+        affGt ({0} : Set V3) s ∩ affLt ({0} : Set V3) {u'} = ∅) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      Lunar v w ((fun z => f z t) '' V) ((fun s => (fun z => f z t) '' s) '' E) :=
+  w5cB3_lunar_window (a := a) (b := b) (V := V) (E := E) (f := f)
+    (u := u) (v := v) (w := w) (e := d) _hl _huv _huw _hpin _ha _hb hd hsep
 
 end Kepler.Text
