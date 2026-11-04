@@ -14773,4 +14773,656 @@ theorem misc_capstone_w1 :
       @AQICLXA_SLICE, @AQICLXA, @FUNOUYH_SLICE, @FZIOTEF⟩
 
 #print axioms misc_capstone_w1
+/-! ### w5 delta capstones la3/la6/la14/la16/la34 (lane capstone-w5,
+2026-11-05, roadmap M0b fifth item): every clean public exit newly closed
+or newly added after the w4 generation baseline (64959a80) that had never
+been materialised into any capstone is re-exposed as ONE conjunction per
+module group -- la3_capstone_w1 (8), la6_capstone_w4 (3),
+la14_capstone_w4 (16), la16_capstone_w1 (2, XIVPHKS material moved to
+XivphksKit by dcb7f63d), la34_capstone_w5 (7).  Total 36 exits; the five
+`have hla3d/hla6d/hla14d/hla16d/hla34e` lines in Assembly.textCapstone pull
+the capstone proof terms into the e2e cone (pure insertion there too, after
+hmisc; the w1/w2/w3/w4 capstones stay wired).  Delta definition (measured at
+the lane HEAD f51ed20b vs baseline 64959a80): (a) public top-level `theorem`
+exports with a `sorry` in the baseline declaration body and none at HEAD,
+or (b) public top-level `theorem` exports whose name did not exist at the
+baseline; in both cases the probed `#print axioms` face is exactly
+[propext, Classical.choice, Quot.sound], the statement declares no
+module-private constant, the declaration kind is `theorem`, and it is not
+universe-polymorphic, MINUS the conjunct name set of every existing
+capstone (LocalConcl 28 roots + PackingConcl 5 roots, 1,540 member names;
+intersection 0, verified mechanically).  All 36 are individually exactly
+standard three.  LA10's 17 newly closed exports are out of scope by
+workorder decision (all 17 exact-std3; 2 also universe-polymorphic); note
+LA10 is now transitively reachable via LA6's import added in 697e3dfc, so a
+future wave can wire it without a new LocalConcl import.  LA3 is reachable
+transitively via LocalConcl -> LocalAuto14 -> LocalAuto6 -> LocalAuto3.
+Environment-alignment scopes mirror module-local opens so the verbatim
+signatures elaborate under the same name resolution: LA3 and LA6 carry
+`open Kepler.Text.Fan`, LA14 carries `open Kepler.Text.V3Coe`; every other
+module only opens `Kepler.Geom Set Classical`, already open in this file.
+Zero import changes.  The exact cone increment is re-measured at the
+orchestrator e2e gate. -/
+
+
+open Kepler.Text.Fan in
+set_option maxHeartbeats 50000000 in
+
+/-- la3_capstone_w1 (lane capstone-w5, 2026-11-05): every public top-level
+exit of LocalAuto3 that was newly closed or newly added after the w4
+generation baseline (64959a80) and was never a conjunct of any existing
+capstone, re-exposed as ONE conjunction so the Assembly `textCapstone` cone
+can consume it (8 of the 8 w5 delta exits; 0
+dropped mechanically, reason per name below).  Delta definition (measured,
+not assumed): either (a) a public top-level `theorem` also present at
+64959a80 with a `sorry` in its declaration body (comments stripped) and no
+`sorry` at lane HEAD f51ed20b, or (b) a public top-level `theorem` whose
+name did not exist at 64959a80 at all; in both cases the probed
+`#print axioms` face must be exactly [propext, Classical.choice,
+Quot.sound] (no sorryAx, no other axiom; checked individually for all
+8), the statement must declare no module-private constant (`✝` in the
+`#check @` dump), the declaration kind must be `theorem`, and it must not
+be universe-polymorphic; MINUS the conjunct name set of every existing
+capstone (LocalConcl 28 roots + PackingConcl 5 roots; intersection 0).
+Provenance: conjunct text is the declaration's source signature (binders +
+conclusion, copied verbatim and mechanically split at the binder/conclusion
+separator by scripts/gen_items_w5.py); conjuncts whose source text leaves an
+autoImplicit variable free are emitted from the source signature with the
+printer's leading implicit binder run (module variables + the leaked
+autoImplicit names, printer order) written out explicitly, so the capstone
+itself stays parameter-free while the source's set-literal ascriptions
+(e.g. `({v, w} : Set V3)`) survive (marked printer-form in their
+per-conjunct comment); semantic identity is re-verified by the elaboration
+of the `⟨...⟩` assembly below (each component must unify definitionally with
+its conjunct); per-conjunct comments carry each exit's source line and
+file-local docstring HOL anchor.  Conjunct order: source declaration order.
+Mechanical drops: none.
+Body = the assembly of the exit constants -- zero new proof obligations,
+zero new imports. -/
+theorem la3_capstone_w1 :
+    -- 1. IDENTIFY_AZIM_CYCLE (LA3:751; no HOL anchor line in file docstring)
+    (∀ {W : Set V3} {v w p u : V3}
+          (h1 : ¬(W ⊆ {p})) (h2 : ¬Collinear3 v w p) (h3 : cyclicSet_p3 W v w)
+          (h4 : u ≠ p ∧ u ∈ W)
+          (h5 : ∀ q ∈ W, q ≠ p →
+            azim v w p u < azim v w p q ∨
+              azim v w p u = azim v w p q ∧
+                ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖),
+          azimCycle_p3 W v w p = u
+    ) ∧
+    -- 2. FIRST_AAUHTVE (LA3:1490; no HOL anchor line in file docstring)
+    (∀ {x : V3} {V : Set V3} {E : Set (Set V3)} (_hfan : FAN x V E)
+    ,
+          ∃ H : Hypermap (V3 × V3),
+          (↑H.darts : Set (V3 × V3)) = dartsOfHyp_p3 E V ∧
+          (H.edgeMap : V3 × V3 → V3 × V3) = eeOfHyp_p3 x V E ∧
+          (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 x V E ∧
+          (H.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 x V E ∧
+          (H.edgeMap : V3 × V3 → V3 × V3) ∘ (H.edgeMap : V3 × V3 → V3 × V3) = id
+    ) ∧
+    -- 3. HYP_LEMMA (LA3:1515; no HOL anchor line in file docstring)
+    (∀ {x : V3} {V : Set V3} {E : Set (Set V3)} (_hfan : FAN x V E)
+    ,
+          ∃ H : Hypermap (V3 × V3),
+          (↑H.darts : Set (V3 × V3)) = dartsOfHyp_p3 E V ∧
+          (H.edgeMap : V3 × V3 → V3 × V3) = eeOfHyp_p3 x V E ∧
+          (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 x V E ∧
+          (H.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 x V E
+    ) ∧
+    -- 4. ELMS_OF_HYPERMAP_HYP (LA3:1524; no HOL anchor line in file docstring)
+    (∀ {x : V3} {V : Set V3} {E : Set (Set V3)} (_hfan : FAN x V E)
+    ,
+          ∃ H : Hypermap (V3 × V3),
+          HYP_p3 x V E = ((↑H.darts : Set (V3 × V3)),
+            ((H.edgeMap : V3 × V3 → V3 × V3),
+              ((H.nodeMap : V3 × V3 → V3 × V3), (H.faceMap : V3 × V3 → V3 × V3))))
+    ) ∧
+    -- 5. FAN_IMP_BIJ_V_NODE_OF_HYP (LA3:1919; no HOL anchor line in file docstring)
+    (∀ {x : V3} {V : Set V3} {E : Set (Set V3)}
+          (_hfan : FAN x V E),
+          ∃ H : Hypermap (V3 × V3),
+          (↑H.darts : Set (V3 × V3)) = dartsOfHyp_p3 E V ∧
+          (H.edgeMap : V3 × V3 → V3 × V3) = eeOfHyp_p3 x V E ∧
+          (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 x V E ∧
+          (H.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 x V E ∧
+          Set.BijOn
+            (fun u : V3 =>
+              if u ∈ V then H.node (u, chooseNdPoint_p3 u E V) else (∅ : Set (V3 × V3)))
+            V ((fun y : V3 × V3 => H.node y) '' dartsOfHyp_p3 E V)
+    ) ∧
+    -- 6. LOCAL_FAN_IMP_BIJ_FF_NODES (LA3:1990; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (_h : localFan_p3 V E FF),
+          ∃ H : Hypermap (V3 × V3),
+          (↑H.darts : Set (V3 × V3)) = dartsOfHyp_p3 E V ∧
+          (H.edgeMap : V3 × V3 → V3 × V3) = eeOfHyp_p3 0 V E ∧
+          (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 0 V E ∧
+          (H.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 0 V E ∧
+          Set.BijOn (fun y : V3 × V3 => H.node y) FF
+            ((fun y : V3 × V3 => H.node y) '' dartsOfHyp_p3 E V)
+    ) ∧
+    -- 7. WRGCVDR (LA3:2167; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (_hlf : localFan_p3 V E FF) (hro : V3 → V3),
+          Set.BijOn (fun d : V3 × V3 => d.1) FF V ∧
+          ((∀ x ∈ V, (x, hro x) ∈ FF) →
+            (∀ x ∈ FF, x = (x.1, hro x.1)) →
+            ∀ x ∈ V, V = orbitF_p3 hro x)
+    ) ∧
+    -- 8. IMP_FAN_V_PRIME_E_PRIME (LA3:2247; no HOL anchor line in file docstring)
+    (∀ {v : V3} {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} (_hfan : FAN v V E)
+          (_hH : ∃ H : Hypermap (V3 × V3),
+            (↑H.darts : Set (V3 × V3)) = dartsOfHyp_p3 E V ∧
+            (H.edgeMap : V3 × V3 → V3 × V3) = eeOfHyp_p3 v V E ∧
+            (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 v V E ∧
+            (H.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 v V E ∧
+            ∃ x ∈ H.darts, FF = H.face x),
+          FAN v (vPrime_p3 V FF) (ePrime_p3 E FF)
+    ) :=
+    ⟨IDENTIFY_AZIM_CYCLE, FIRST_AAUHTVE, HYP_LEMMA, ELMS_OF_HYPERMAP_HYP,
+      FAN_IMP_BIJ_V_NODE_OF_HYP, LOCAL_FAN_IMP_BIJ_FF_NODES, @WRGCVDR,
+      @IMP_FAN_V_PRIME_E_PRIME⟩
+
+#print axioms la3_capstone_w1
+
+
+open Kepler.Text.Fan in
+set_option maxHeartbeats 50000000 in
+
+/-- la6_capstone_w4 (lane capstone-w5, 2026-11-05): every public top-level
+exit of LocalAuto6 that was newly closed or newly added after the w4
+generation baseline (64959a80) and was never a conjunct of any existing
+capstone, re-exposed as ONE conjunction so the Assembly `textCapstone` cone
+can consume it (3 of the 3 w5 delta exits; 0
+dropped mechanically, reason per name below).  Delta definition (measured,
+not assumed): either (a) a public top-level `theorem` also present at
+64959a80 with a `sorry` in its declaration body (comments stripped) and no
+`sorry` at lane HEAD f51ed20b, or (b) a public top-level `theorem` whose
+name did not exist at 64959a80 at all; in both cases the probed
+`#print axioms` face must be exactly [propext, Classical.choice,
+Quot.sound] (no sorryAx, no other axiom; checked individually for all
+3), the statement must declare no module-private constant (`✝` in the
+`#check @` dump), the declaration kind must be `theorem`, and it must not
+be universe-polymorphic; MINUS the conjunct name set of every existing
+capstone (LocalConcl 28 roots + PackingConcl 5 roots; intersection 0).
+Provenance: conjunct text is the declaration's source signature (binders +
+conclusion, copied verbatim and mechanically split at the binder/conclusion
+separator by scripts/gen_items_w5.py); conjuncts whose source text leaves an
+autoImplicit variable free are emitted from the source signature with the
+printer's leading implicit binder run (module variables + the leaked
+autoImplicit names, printer order) written out explicitly, so the capstone
+itself stays parameter-free while the source's set-literal ascriptions
+(e.g. `({v, w} : Set V3)`) survive (marked printer-form in their
+per-conjunct comment); semantic identity is re-verified by the elaboration
+of the `⟨...⟩` assembly below (each component must unify definitionally with
+its conjunct); per-conjunct comments carry each exit's source line and
+file-local docstring HOL anchor.  Conjunct order: source declaration order.
+Mechanical drops: none.
+Body = the assembly of the exit constants -- zero new proof obligations,
+zero new imports. -/
+theorem la6_capstone_w4 :
+    -- 1. HAFL_CIRCLE_FORM_LOCAL_FAN_of_dih (LA6:2809; no HOL anchor line in file docstring)
+    (∀ {E : Set (Set V3)} {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v w : V3} {fv : Set (V3 × V3)}
+          (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
+          (hvw : v ≠ w)
+          (hcol : ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+            ¬ Collinear ℝ ({0, z, t} : Set V3))
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
+          (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
+          (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
+          (hdihFor : ∀ HS' : Hypermap (V3 × V3),
+            IsHyp_p2 0 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) HS' →
+            dih2k_p2 HS' fv.ncard),
+          localFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv
+    ) ∧
+    -- 2. CONDS_IN_V_PRIME_NUM2 (LA6:3166 (autoImplicit parameter leak FF, v, w, fw, n; statement = source signature with the printer's leading implicit binders made explicit (keeps source set-literal ascriptions)); HOL `CONDS_IN_V_PRIME_NUM2`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)} {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v w : Kepler.Geom.V3} {fw : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {n : ℕ} (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
+          (hvw : v ≠ w)
+          (hcol : ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+            ¬ Collinear ℝ ({0, z, t} : Set V3))
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
+          (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
+          (hfw : fw = HS.face (w, rhoNode1_p2 FF w))
+          (hn : n < V.ncard) (hw : (rhoNode1_p2 FF)^[n] v = w),
+          ∀ i : ℕ, i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fw ↔
+          i = 0 ∨ n ≤ i ∧ i < V.ncard
+    ) ∧
+    -- 3. PROVE_THE_SLICE_ASSUMPTION (LA6:3570 (autoImplicit parameter leak v, w; statement = source signature with the printer's leading implicit binders made explicit (keeps source set-literal ascriptions)); HOL `PROVE_THE_SLICE_ASSUMPTION`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)} {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v w : Kepler.Geom.V3} (hcl : convexLocalFan_p2 V E FF) (hv : v ∈ V)
+          (hw : w ∈ V) (hvw : v ≠ w)
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E),
+          ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+          ¬ Collinear ℝ ({0, z, t} : Set V3)
+    ) :=
+    ⟨HAFL_CIRCLE_FORM_LOCAL_FAN_of_dih, CONDS_IN_V_PRIME_NUM2, PROVE_THE_SLICE_ASSUMPTION
+⟩
+
+#print axioms la6_capstone_w4
+
+
+open Kepler.Text.V3Coe in
+set_option maxHeartbeats 50000000 in
+
+/-- la14_capstone_w4 (lane capstone-w5, 2026-11-05): every public top-level
+exit of LocalAuto14 that was newly closed or newly added after the w4
+generation baseline (64959a80) and was never a conjunct of any existing
+capstone, re-exposed as ONE conjunction so the Assembly `textCapstone` cone
+can consume it (16 of the 16 w5 delta exits; 0
+dropped mechanically, reason per name below).  Delta definition (measured,
+not assumed): either (a) a public top-level `theorem` also present at
+64959a80 with a `sorry` in its declaration body (comments stripped) and no
+`sorry` at lane HEAD f51ed20b, or (b) a public top-level `theorem` whose
+name did not exist at 64959a80 at all; in both cases the probed
+`#print axioms` face must be exactly [propext, Classical.choice,
+Quot.sound] (no sorryAx, no other axiom; checked individually for all
+16), the statement must declare no module-private constant (`✝` in the
+`#check @` dump), the declaration kind must be `theorem`, and it must not
+be universe-polymorphic; MINUS the conjunct name set of every existing
+capstone (LocalConcl 28 roots + PackingConcl 5 roots; intersection 0).
+Provenance: conjunct text is the declaration's source signature (binders +
+conclusion, copied verbatim and mechanically split at the binder/conclusion
+separator by scripts/gen_items_w5.py); conjuncts whose source text leaves an
+autoImplicit variable free are emitted from the source signature with the
+printer's leading implicit binder run (module variables + the leaked
+autoImplicit names, printer order) written out explicitly, so the capstone
+itself stays parameter-free while the source's set-literal ascriptions
+(e.g. `({v, w} : Set V3)`) survive (marked printer-form in their
+per-conjunct comment); semantic identity is re-verified by the elaboration
+of the `⟨...⟩` assembly below (each component must unify definitionally with
+its conjunct); per-conjunct comments carry each exit's source line and
+file-local docstring HOL anchor.  Conjunct order: source declaration order.
+Mechanical drops: none.
+Body = the assembly of the exit constants -- zero new proof obligations,
+zero new imports. -/
+theorem la14_capstone_w4 :
+    -- 1. w15_char3 (LA14:5126; HOL `LOCAL_FAN_CHARACTER_OF_RHO_NODE3`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (h : LocalFan V E FF) {v : V3} (hv : v ∈ V) (i : ℕ),
+          ¬ Collinear ℝ ({0, (rhoNode1 FF)^[i] v, (rhoNode1 FF)^[i + 1] v} : Set V3)
+    ) ∧
+    -- 2. w15_affLt_swap (LA14:5191; no HOL anchor line in file docstring)
+    (∀ {a b x y : V3}
+          (hx : x ∉ ({a, b} : Set V3)) (hy : y ∉ ({a, b} : Set V3)),
+          y ∈ affLt ({a, b} : Set V3) ({x} : Set V3) ↔
+          x ∈ affLt ({a, b} : Set V3) ({y} : Set V3)
+    ) ∧
+    -- 3. OPPOSITE_SIDES_IMP_INTER (LA14:5225; no HOL anchor line in file docstring)
+    (∀ {va vb vc a b : V3}
+          (hvab : va ≠ vb)
+          (hd : Disjoint ({va, vb} : Set V3) ({vc} : Set V3))
+          (ha : a ∈ affGt ({va, vb} : Set V3) ({vc} : Set V3))
+          (hb : b ∈ affLt ({va, vb} : Set V3) ({vc} : Set V3)),
+          conv0_p2 ({a, b} : Set V3) ∩
+          (affineSpan ℝ ({va, vb} : Set V3) : Set V3) ≠ ∅
+    ) ∧
+    -- 4. SUCCESSIVE_RHO_NODE1_AFF_LT (LA14:5291; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
+          (h : LocalFan V E FF) (hv : v ∈ V)
+          (hU : {(rhoNode1 FF)^[n] v | n ≤ l} = U)
+          (hP : plane_p2 P) (h0 : (0 : V3) ∈ P) (hUsub : U ⊆ P),
+          ∀ i, 0 < i → i < l →
+          (rhoNode1 FF)^[i - 1] v ∈
+            affLt ({0, (rhoNode1 FF)^[i] v} : Set V3) ({(rhoNode1 FF)^[i + 1] v} : Set V3)
+    ) ∧
+    -- 5. TWO_SIDES_SUCESSIVE (LA14:5330; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {v : V3} {l : ℕ} {U P : Set V3}
+          (h : LocalFan V E FF) (hv : v ∈ V)
+          (hU : {(rhoNode1 FF)^[n] v | n ≤ l} = U)
+          (hP : plane_p2 P) (h0 : (0 : V3) ∈ P) (hUsub : U ⊆ P),
+          ∀ i, 0 < i → i < l →
+          conv0_p2 ({(rhoNode1 FF)^[i - 1] v, (rhoNode1 FF)^[i + 1] v} : Set V3) ∩
+            (affineSpan ℝ ({0, (rhoNode1 FF)^[i] v} : Set V3) : Set V3) ≠ ∅
+    ) ∧
+    -- 6. w15_clf2 (LA14:5363; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          (h : ConvexLocalFan V E FF),
+          convexLocalFan_p2 V E FF
+    ) ∧
+    -- 7. CNVX_IMP_INTERIOR_ANGLE_PI (LA14:5386; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
+          (h : ConvexLocalFan V E FF) (hv : v ∈ V)
+          (hU : {(rhoNode1 FF)^[n] v | n ≤ l} = U)
+          (hP : plane_p2 P) (h0 : (0 : V3) ∈ P) (hUsub : U ⊆ P),
+          ∀ i, 0 < i → i < l →
+          interiorAngle1 0 FF ((rhoNode1 FF)^[i] v) = Real.pi
+    ) ∧
+    -- 8. CONV02_SU_CONV2 (LA14:5554; HOL `CONV02_SU_CONV2`)
+    (∀ (a b : V3)
+    ,
+          conv0_p2 ({a, b} : Set V3) ⊆ convexHull ℝ ({a, b} : Set V3)
+    ) ∧
+    -- 9. AZIM_EQ_PI_ALT (LA14:5634; HOL `AZIM_EQ_PI_ALT`)
+    (∀ {u v w : V3}
+          (huv : ¬ Collinear3 0 u v) (huw : ¬ Collinear3 0 u w),
+          azim 0 u v w = Real.pi ↔ w ∈ affLt ({0, u} : Set V3) ({v} : Set V3)
+    ) ∧
+    -- 10. w16_affGe_empty_singleton (LA14:5745; no HOL anchor line in file docstring)
+    (∀ (x : V3)
+    ,
+          affGe ({x} : Set V3) (∅ : Set V3) = {x}
+    ) ∧
+    -- 11. w16_smul_mem_affGe (LA14:5791; no HOL anchor line in file docstring)
+    (∀ {u : V3} (hu : u ≠ 0) {t : ℝ} (ht : 0 ≤ t)
+    ,
+          t • u ∈ affGe ({0} : Set V3) ({u} : Set V3)
+    ) ∧
+    -- 12. w16_smul_mem_affLt (LA14:5798; no HOL anchor line in file docstring)
+    (∀ {u : V3} (hu : u ≠ 0) {t : ℝ} (ht : t < 0)
+    ,
+          t • u ∈ affLt ({0} : Set V3) ({u} : Set V3)
+    ) ∧
+    -- 13. w16_affGt_empty_subset (LA14:5805; no HOL anchor line in file docstring)
+    (∀ {S : Set V3} (h0S : (0:V3) ∉ S)
+    ,
+          affGt (∅ : Set V3) S ⊆ affGt ({0} : Set V3) S
+    ) ∧
+    -- 14. w16_noWrap (LA14:5867; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {v0 : V3} {vv : ℕ → V3} {k i : ℕ}
+          (h : ConvexLocalFan V E FF) (hv0 : v0 ∈ V) (hk : V.ncard = k)
+          (hcol : ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+          (hiter : ∀ n, (rhoNode1 FF)^[n] v0 = vv n)
+          (hi : i + 1 < k),
+          ¬(azim 0 v0 (vv 1) (vv i) = Real.pi ∧ azim 0 v0 (vv 1) (vv (i + 1)) = 0)
+    ) ∧
+    -- 15. MONO_AZIM_AS_BTA_I (LA14:6145; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {v0 : V3} {vv : ℕ → V3} {bta : ℕ → ℝ} {k : ℕ}
+          (h : ConvexLocalFan V E FF) (hv0 : v0 ∈ V) (hk : V.ncard = k)
+          (hcol : ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+          (hiter : ∀ i, (rhoNode1 FF)^[i] v0 = vv i)
+          (hbta : ∀ i, azim 0 v0 (vv 1) (vv i) = bta i),
+          ∀ i j, i < j → j < k → bta i ≤ bta j
+    ) ∧
+    -- 16. EGHNAVX (LA14:6211; no HOL anchor line in file docstring)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {v0 : V3} {vv : ℕ → V3} {bta : ℕ → ℝ} {k : ℕ}
+          (h : ConvexLocalFan V E FF) (hv0 : v0 ∈ V) (hk : V.ncard = k)
+          (hcol : ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+          (hiter : ∀ i, (rhoNode1 FF)^[i] v0 = vv i)
+          (hbta : ∀ i, azim 0 v0 (vv 1) (vv i) = bta i),
+          bta 1 = 0 ∧ bta (k - 1) ≤ Real.pi ∧
+          (∀ i j, i < j → j < k → bta i ≤ bta j) ∧
+          (∀ i, (bta i = 0 ∧ i < k →
+              (∀ j, 0 < j ∧ j < i → interiorAngle1 0 FF (vv j) = Real.pi) ∧
+              ({z : V3 | ∃ n, 0 < n ∧ n ≤ i ∧ vv n = z} ⊆
+                affGt ({0, v0} : Set V3) ({vv 1} : Set V3))) ∧
+            (bta i = bta (k - 1) ∧ 0 < i ∧ i < k - 1 →
+              (∀ j, i < j ∧ j < k → interiorAngle1 0 FF (vv j) = Real.pi) ∧
+              ({z : V3 | ∃ n, i ≤ n ∧ n < k ∧ vv n = z} ⊆
+                affGt ({0, v0} : Set V3) ({vv (k - 1)}))))
+    ) :=
+    ⟨w15_char3, w15_affLt_swap, OPPOSITE_SIDES_IMP_INTER, SUCCESSIVE_RHO_NODE1_AFF_LT,
+      TWO_SIDES_SUCESSIVE, w15_clf2, CNVX_IMP_INTERIOR_ANGLE_PI, @CONV02_SU_CONV2,
+      AZIM_EQ_PI_ALT, w16_affGe_empty_singleton, w16_smul_mem_affGe, w16_smul_mem_affLt,
+      @w16_affGt_empty_subset, w16_noWrap, MONO_AZIM_AS_BTA_I, EGHNAVX⟩
+
+#print axioms la14_capstone_w4
+
+
+set_option maxHeartbeats 50000000 in
+
+/-- la16_capstone_w1 (lane capstone-w5, 2026-11-05): every public top-level
+exit of XivphksKit that was newly closed or newly added after the w4
+generation baseline (64959a80) and was never a conjunct of any existing
+capstone, re-exposed as ONE conjunction so the Assembly `textCapstone` cone
+can consume it (2 of the 2 w5 delta exits; 0
+dropped mechanically, reason per name below).  Delta definition (measured,
+not assumed): either (a) a public top-level `theorem` also present at
+64959a80 with a `sorry` in its declaration body (comments stripped) and no
+`sorry` at lane HEAD f51ed20b, or (b) a public top-level `theorem` whose
+name did not exist at 64959a80 at all; in both cases the probed
+`#print axioms` face must be exactly [propext, Classical.choice,
+Quot.sound] (no sorryAx, no other axiom; checked individually for all
+2), the statement must declare no module-private constant (`✝` in the
+`#check @` dump), the declaration kind must be `theorem`, and it must not
+be universe-polymorphic; MINUS the conjunct name set of every existing
+capstone (LocalConcl 28 roots + PackingConcl 5 roots; intersection 0).
+Provenance: conjunct text is the declaration's source signature (binders +
+conclusion, copied verbatim and mechanically split at the binder/conclusion
+separator by scripts/gen_items_w5.py); conjuncts whose source text leaves an
+autoImplicit variable free are emitted from the source signature with the
+printer's leading implicit binder run (module variables + the leaked
+autoImplicit names, printer order) written out explicitly, so the capstone
+itself stays parameter-free while the source's set-literal ascriptions
+(e.g. `({v, w} : Set V3)`) survive (marked printer-form in their
+per-conjunct comment); semantic identity is re-verified by the elaboration
+of the `⟨...⟩` assembly below (each component must unify definitionally with
+its conjunct); per-conjunct comments carry each exit's source line and
+file-local docstring HOL anchor.  Conjunct order: source declaration order.
+Mechanical drops: none.
+Body = the assembly of the exit constants -- zero new proof obligations,
+zero new imports. -/
+theorem la16_capstone_w1 :
+    -- 1. XIVPHKS_p16 (XIVPHKS:360; no HOL anchor line in file docstring)
+    (∀ (W : ℕ → Set V3) (a d : ℕ → ℕ → ℕ → ℝ) (e : ℝ) (n r : ℕ)
+          (w : ℕ → V3) (hn : 1 ≤ n) (hr : n - 1 = r)
+          (hpair : (Set.Icc (0:ℕ) n).Pairwise fun i j => ¬ Collinear3 0 (w i) (w j))
+          (hd : (fun i j k => dihV 0 (w i) (w j) (w k)) = d)
+          (ha : (fun i j k => azim 0 (w i) (w j) (w k)) = a)
+          (hW : (fun i => wedgeGe 0 (w i) (w (i + 1)) (w (i - 1))) = W)
+          (he : 0 < 2 * e)
+          (h1 : ∀ i ∈ Finset.Icc 1 r, 2 * e < a i (i + 1) (i - 1))
+          (h2 : ∀ i ∈ Finset.Icc 1 r, a i (i + 1) (i - 1) ≤ Real.pi)
+          (h3 : ∀ p q, ({p, q, q + 1} : Finset ℕ) ⊆ Finset.Icc 0 r → p ≠ q →
+            p ≠ q + 1 → d p q (q + 1) < e)
+          (h4 : ∀ p q, ({p, p + 1, q} : Finset ℕ) ⊆ Finset.Icc 0 r → q > p + 1 →
+            d p (p + 1) q < e)
+          (h5 : ∀ p q, ({p + 1, p, q} : Finset ℕ) ⊆ Finset.Icc 0 r → q < p →
+            d (p + 1) p q < e),
+          (∀ k j, j + k ≤ r → w j ∈ W (j + k)) ∧
+          (∀ k j, 1 ≤ j → j + k ≤ r → w (j + k) ∈ W j)
+    ) ∧
+    -- 2. XIVPHKS_SHIFT_p16 (XIVPHKS:620; no HOL anchor line in file docstring)
+    (∀ (W : ℕ → Set V3) (a d : ℕ → ℕ → ℕ → ℝ) (e : ℝ)
+          (r : ℕ) (w : ℕ → V3)
+          (hpair1 : (Set.Icc (0:ℕ) (r + 1)).Pairwise fun i j => ¬ Collinear3 0 (w i) (w j))
+          (hpair2 : (Set.Icc (1:ℕ) (r + 2)).Pairwise fun i j => ¬ Collinear3 0 (w i) (w j))
+          (hd : (fun i j k => dihV 0 (w i) (w j) (w k)) = d)
+          (ha : (fun i j k => azim 0 (w i) (w j) (w k)) = a)
+          (hW : (fun i => wedgeGe 0 (w i) (w (i + 1)) (w (i - 1))) = W)
+          (he : 0 < 2 * e)
+          (h1 : ∀ i ∈ Finset.Icc 1 (r + 1), 2 * e < a i (i + 1) (i - 1))
+          (h2 : ∀ i ∈ Finset.Icc 1 (r + 1), a i (i + 1) (i - 1) ≤ Real.pi)
+          (h3 : ∀ p q, ({p, q, q + 1} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) → p ≠ q →
+            p ≠ q + 1 → d p q (q + 1) < e)
+          (h4 : ∀ p q, ({p, p + 1, q} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) →
+            q > p + 1 → d p (p + 1) q < e)
+          (h5 : ∀ p q, ({p + 1, p, q} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) → q < p →
+            d (p + 1) p q < e),
+          (∀ k j, 1 ≤ j → j + k ≤ r + 1 → w j ∈ W (j + k)) ∧
+          (∀ k j, 1 ≤ j → j + k ≤ r + 1 → w (j + k) ∈ W j)
+    ) :=
+    ⟨XIVPHKS_p16, XIVPHKS_SHIFT_p16
+⟩
+
+#print axioms la16_capstone_w1
+
+
+set_option maxHeartbeats 50000000 in
+
+/-- la34_capstone_w5 (lane capstone-w5, 2026-11-05): every public top-level
+exit of LocalAuto34 that was newly closed or newly added after the w4
+generation baseline (64959a80) and was never a conjunct of any existing
+capstone, re-exposed as ONE conjunction so the Assembly `textCapstone` cone
+can consume it (7 of the 7 w5 delta exits; 0
+dropped mechanically, reason per name below).  Delta definition (measured,
+not assumed): either (a) a public top-level `theorem` also present at
+64959a80 with a `sorry` in its declaration body (comments stripped) and no
+`sorry` at lane HEAD f51ed20b, or (b) a public top-level `theorem` whose
+name did not exist at 64959a80 at all; in both cases the probed
+`#print axioms` face must be exactly [propext, Classical.choice,
+Quot.sound] (no sorryAx, no other axiom; checked individually for all
+7), the statement must declare no module-private constant (`✝` in the
+`#check @` dump), the declaration kind must be `theorem`, and it must not
+be universe-polymorphic; MINUS the conjunct name set of every existing
+capstone (LocalConcl 28 roots + PackingConcl 5 roots; intersection 0).
+Provenance: conjunct text is the declaration's source signature (binders +
+conclusion, copied verbatim and mechanically split at the binder/conclusion
+separator by scripts/gen_items_w5.py); conjuncts whose source text leaves an
+autoImplicit variable free are emitted from the source signature with the
+printer's leading implicit binder run (module variables + the leaked
+autoImplicit names, printer order) written out explicitly, so the capstone
+itself stays parameter-free while the source's set-literal ascriptions
+(e.g. `({v, w} : Set V3)`) survive (marked printer-form in their
+per-conjunct comment); semantic identity is re-verified by the elaboration
+of the `⟨...⟩` assembly below (each component must unify definitionally with
+its conjunct); per-conjunct comments carry each exit's source line and
+file-local docstring HOL anchor.  Conjunct order: source declaration order.
+Mechanical drops: none.
+Body = the assembly of the exit constants -- zero new proof obligations,
+zero new imports. -/
+theorem la34_capstone_w5 :
+    -- 1. DEFORMATION_LUNAR_AFFINE_HULL_p34 (LA34:5128 (autoImplicit parameter leak FF''; statement = source signature with the printer's leading implicit binders made explicit (keeps source set-literal ascriptions)); HOL `DEFORMATION_LUNAR_AFFINE_HULL`)
+    (∀ {FF'' : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 v w1 : V3) (x1 x2 x6 a : ℝ) (V : Set V3) (E : Set (Set V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hl : w l = v2) (hl1 : w (l + 1) = v1) (hn : ‖v2‖ ≠ 2)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hvv2 : v ≠ v2) (hw1v2 : w1 ≠ v2)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF'')
+          (hV : Set.range w = V)
+          (hE : Set.range (fun i : ℕ => {w i, w (i + 1)}) = E)
+          (hlun : Lunar v w1 V E),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t → t < e →
+          v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈ affineSpan ℝ ({0, v, w1, v2} : Set V3)
+    ) ∧
+    -- 2. DEFORMATION_LUNAR_AFFINE_HULL_V1_p34 (LA34:5164; HOL `DEFORMATION_LUNAR_AFFINE_HULL_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 v w1 : V3) (x1 x2 x6 a : ℝ) (V : Set V3) (E : Set (Set V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hl : w l = v2) (hl1 : w (l + 1) = v1) (hn : ‖v2‖ ≠ 2)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hvv2 : v ≠ v2) (hw1v2 : w1 ≠ v2)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = Set.range (fun i : ℕ => (w i, w (i + 1))))
+          (hV : Set.range w = V)
+          (hE : Set.range (fun i : ℕ => {w i, w (i + 1)}) = E)
+          (hlun : Lunar v w1 V E),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, t ∈ Icc (-e) e →
+          v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈ affineSpan ℝ ({0, v, w1, v2} : Set V3)
+    ) ∧
+    -- 3. V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1_p34 (LA34:5213; no HOL anchor line in file docstring)
+    (∀ (hz : ZLZTHIC_prop_p34)
+          (hm : MHAEYJN_prop_p34) (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ) (x1 x2 x6 : ℝ)
+          (v1 v2 : V3) (a : ℝ)
+          (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hk : 3 < k)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hn2 : ¬(2 = ‖v2‖))
+          (hJ : ∀ i, ¬s.J l i)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hlunar : ∀ (V : Set V3) (E : Set (Set V3)) (v : V3), V = Set.range w →
+            E = Set.range (fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+          ConvexLocalFan (Set.range fun i => v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t)
+            (Set.range fun i => {v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t,
+              v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t})
+            (Set.range fun i => (v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t,
+              v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t))
+    ) ∧
+    -- 4. INTERIOR_ANGLE_SAME_V3_DEFOR1_p34 (LA34:5695; HOL `INTERIOR_ANGLE_SAME_V3_DEFOR1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a e1 : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hBBd : ∀ t : ℝ, 0 < t → t < e1 →
+            BBsV39 s (fun i => v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t))
+          (he1 : 0 < e1)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t → t < e →
+          interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+            ((rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF))^[i]
+              (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t)) =
+          interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % k)))
+    ) ∧
+    -- 5. DEFORMATION_LUNAR_AFFINE_HULL_V1_TWO_CASES_p34 (LA34:7394; HOL `DEFORMATION_LUNAR_AFFINE_HULL_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 v w1 : V3) (x1 x2 x6 a : ℝ) (V : Set V3) (E : Set (Set V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1) (hn : ‖v2‖ ≠ 2)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hvv2 : v ≠ v2) (hw1v2 : w1 ≠ v2)
+          (hV : Set.range w = V)
+          (hE : Set.range (fun i : ℕ => {w i, w (i + 1)}) = E)
+          (hlun : Lunar v w1 V E),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, t ∈ Icc (-e) e →
+          v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈ affineSpan ℝ ({0, v, w1, v2} : Set V3)
+    ) ∧
+    -- 6. V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1_TWO_CASES_p34 (LA34:7432; no HOL anchor line in file docstring)
+    (∀ (hz : ZLZTHIC_prop_p34)
+          (hm : MHAEYJN_prop_p34) (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ) (x1 x2 x6 : ℝ)
+          (v1 v2 : V3) (a : ℝ)
+          (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hk : 3 < k)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hn2 : ¬(2 = ‖v2‖))
+          (hJ : ∀ i, ¬s.J l i)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hlunar : ∀ (V : Set V3) (E : Set (Set V3)) (v : V3), V = Set.range w →
+            E = Set.range (fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+          ConvexLocalFan (Set.range fun i => v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t)
+            (Set.range fun i => {v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t,
+              v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t})
+            (Set.range fun i => (v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t,
+              v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t))
+    ) ∧
+    -- 7. INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES_p34 (LA34:7607; HOL `INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a e1 : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hBBd : ∀ t : ℝ, 0 < t → t < e1 →
+            BBsV39 s (fun i => v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t))
+          (he1 : 0 < e1)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t → t < e →
+          interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+            ((rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF))^[i]
+              (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t)) =
+          interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % k)))
+    ) :=
+    ⟨@DEFORMATION_LUNAR_AFFINE_HULL_p34, DEFORMATION_LUNAR_AFFINE_HULL_V1_p34,
+      V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1_p34, INTERIOR_ANGLE_SAME_V3_DEFOR1_p34,
+      DEFORMATION_LUNAR_AFFINE_HULL_V1_TWO_CASES_p34,
+      V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1_TWO_CASES_p34,
+      INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES_p34⟩
+
+#print axioms la34_capstone_w5
 end Kepler.Text
