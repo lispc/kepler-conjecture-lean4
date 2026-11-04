@@ -1957,14 +1957,121 @@ def TAUSTAR_WW_DEFOR_concl_p31 : Prop :=
 imply LEMMA1. -/
 theorem WW_DEFORMATION_CONVEX_LOCAL_FAN_p31 (hz : ZLZTHIC_concl_p31)
     (_hm : MHAEYJN_concl_p31) : LEMMA1_concl_p31 := by
-  sorry
-  -- NEEDS (still): `JKQEWGV2` (MMs realisation is a convex local fan) —
-  -- `JKQEWGV2_p23` (LocalAuto23) is standard-three since 2026-11-02
-  -- (scsgeneric W2'/W5b) and sits in this file's import closure; still
-  -- open: `Deformation.XRECQNS`,
-  -- `Wrgcvdr_cizmrrh.CIZMRRH`, the interior-angle transfer via
-  -- AZIM_DEFORMATION_GENERIC_p31, CARD_V_EQ_SCS_K1_p31 (now proved above)
-  -- and the annulus pin DEFORMATION_IN_BALL_ANNULUS_p31 (proved above).
+  -- DISCHARGES (la31-tower-w1 2026-11-05): source ODXLSTC.hl:1758-1957.
+  -- Route (identical to the LA34 `V3_DEFOR` twin): the `BBs_v39` disjunct
+  -- gives `ConvexLocalFan`; `JKQEWGV2_p23` kills `Circular`; `CIZMRRH`
+  -- (via the `localFan_p3.of_LocalFan` / `hno_of_no_isolated` bridge) gives
+  -- the generic/circular/lunar trichotomy; the generic branch is the
+  -- `hz` (ZLZTHIC) arrow applied to `wwDefor (w l)` with the interior-angle
+  -- transfer `AZIM_DEFORMATION_GENERIC_p31`, the lunar branch is the `hm`
+  -- (MHAEYJN) arrow with `JKQEWGV3_p23` for the `< pi` bound and
+  -- `WW_DEFOR_AFFINE_HULL_p31` for the hull pin; both branches rewrite the
+  -- images with `V_/E_/F_DEFORMATION_WW_DEFOR_p31`.
+  intro s k l w his hmm hk hk3 hdiag hnorm hlt hJ hlunar
+  set w1 : V3 := w l with hw1
+  set V : Set V3 := Set.range w with hV
+  set E : Set (Set V3) := Set.range (fun i => {w i, w (i + 1)}) with hE
+  set FF : Set (V3 × V3) := Set.range (fun i => (w i, w (i + 1))) with hFF
+  have hbb : BBsV39 s w := ((hmm.1).1).1
+  have hta : taustarV39 s w < 0 := ((hmm.1).1).2.2
+  have hsk : ¬ s.k ≤ 3 := by omega
+  have hw1V : w1 ∈ V := by rw [hV, hw1]; exact ⟨l, rfl⟩
+  have hcirc : ¬ Circular V E := by
+    have h := JKQEWGV2_p23 s w his (by omega) hbb hta
+    simpa only [← hV, ← hE, Set.image_univ] using h
+  have hclf : ConvexLocalFan V E FF := by
+    rcases hbb.2.2.2 with h3 | hcf
+    · exact absurd h3 hsk
+    · simpa only [← hV, ← hE, ← hFF] using hcf
+  -- the generic/circular/lunar trichotomy of a local fan
+  have hlf : LocalFan V E FF := hclf.1
+  have hno : dartsOfHyp_p3 E V = Fan.dart1OfFan V E :=
+    hno_of_no_isolated (w5cC_hedge_of_LocalFan hlf)
+  have hlf3 : localFan_p3 V E FF := localFan_p3.of_LocalFan hlf hno
+  have htri := CIZMRRH hlf3
+  -- the deformation, restricted to the half window used by the HOL proof
+  have hdef1 : Deformation (wwDefor_p31 w1) V (-1) 1 :=
+    WW_DEFOR_DEFORMATION_p31 w1 1 V one_pos
+  have hdefh : Deformation (wwDefor_p31 w1) V (-(1 / 2)) (1 / 2) := by
+    refine ⟨⟨by norm_num, by norm_num⟩, ?_, hdef1.2.2⟩
+    intro v hv r hr
+    exact hdef1.2.1 v hv r ⟨by linarith [hr.1], by linarith [hr.2]⟩
+  have hfixh : ∀ u' ∈ V, w1 ≠ u' → ∀ t ∈ Icc (-(1 / 2) : ℝ) (1 / 2),
+      wwDefor_p31 w1 u' t = u' := by
+    intro u' _ hu' t _ht
+    rw [wwDefor_apply_p31, if_neg]
+    exact fun h => hu' h.symm
+  rcases htri with hgen | hcirc3 | hlun3
+  · -- (1) generic: the ZLZTHIC arrow applies
+    have hgen0 : Generic V E := by simpa only [generic_p3, Generic] using hgen.1
+    have hang1 : ∀ v ∈ V, ∀ t ∈ Icc (-(1 / 2) : ℝ) (1 / 2),
+        interiorAngle1 0 FF v = Real.pi →
+        interiorAngle1 0 ((fun d : V3 × V3 =>
+          (wwDefor_p31 w1 d.1 t, wwDefor_p31 w1 d.2 t)) '' FF)
+          (wwDefor_p31 w1 v t) ≤ Real.pi := by
+      intro v hv t ht hpi
+      have hIA : interiorAngle1 0 ((fun d : V3 × V3 =>
+          (wwDefor_p31 w1 d.1 t, wwDefor_p31 w1 d.2 t)) '' FF) (wwDefor_p31 w1 v t)
+          = interiorAngle1 0 FF v :=
+        AZIM_DEFORMATION_GENERIC_p31 (V := V) (E := E) (FF := FF) hlf hgen0 hv hw1V
+          (by linarith [ht.2])
+      rw [hIA, hpi]
+    obtain ⟨eZ, heZ, hZ⟩ := hz (-(1 / 2)) (1 / 2) V E FF (wwDefor_p31 w1)
+      hclf hgen0 hdefh hang1
+    have hpos : 0 < min eZ (1 / 2) / 2 := by
+      have h2 : 0 < min eZ (1 / 2) := lt_min heZ (by norm_num)
+      linarith
+    refine ⟨min eZ (1 / 2) / 2, hpos, ?_⟩
+    intro t ht1 ht2
+    have hle : min eZ (1 / 2) ≤ eZ := min_le_left _ _
+    have hz1 : -eZ < t := by nlinarith
+    have hz2 : t < eZ := by nlinarith
+    have h := (hZ t hz1 hz2).1
+    rw [hV, hE, hFF, V_DEFORMATION_WW_DEFOR_p31 w1 w t,
+      ← E_DEFORMATION_WW_DEFOR_p31 w1 w t,
+      ← F_DEFORMATION_WW_DEFOR_p31 w1 w t] at h
+    exact h
+  · -- (2) circular: excluded by JKQEWGV2
+    exact absurd (by simpa only [circular_p3, Circular] using hcirc3.1) hcirc
+  · -- (3) lunar: the MHAEYJN arrow applies
+    obtain ⟨v, w', hlun3'⟩ := hlun3.1
+    have hlun : Lunar v w' V E := by
+      simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hlun3'
+    have hlun_comm : Lunar w' v V E := by
+      obtain ⟨hnc, hsub, hne, hcol⟩ := hlun
+      exact ⟨hnc, by simpa only [Set.pair_comm] using hsub, hne.symm,
+        by simpa only [Set.pair_comm] using hcol⟩
+    have hang_lt : interiorAngle1 0 FF v < Real.pi := by
+      have h := JKQEWGV3_p23 s w v w' his hbb (by omega) hta
+        (by simpa only [← hV, ← hE, Set.image_univ] using hlun)
+      have h2 : interiorAngle1 0 FF v < Real.pi / 2 := by
+        simpa only [← hFF, Set.image_univ] using h
+      linarith [Real.pi_pos]
+    have hw1ne_v : w1 ≠ v := by
+      intro heq
+      exact hlunar V E w' rfl rfl (heq ▸ hlun_comm)
+    have hw1ne_w' : w1 ≠ w' := by
+      intro heq
+      exact hlunar V E v rfl rfl (heq ▸ hlun)
+    have haffine : ∀ t ∈ Icc (-(1 / 2) : ℝ) (1 / 2),
+        wwDefor_p31 w1 w1 t ∈ affineSpan ℝ ({0, v, w', w1} : Set V3) := by
+      intro t ht
+      exact WW_DEFOR_AFFINE_HULL_p31 w1 v w' (1 / 2) t ht
+    obtain ⟨eM, heM, hM⟩ := _hm (-(1 / 2)) (1 / 2) V E FF (wwDefor_p31 w1) v w' w1
+      hclf hlun hdefh hang_lt hw1V hw1ne_v hw1ne_w' hfixh haffine
+    have hpos : 0 < min eM (1 / 2) / 2 := by
+      have h2 : 0 < min eM (1 / 2) := lt_min heM (by norm_num)
+      linarith
+    refine ⟨min eM (1 / 2) / 2, hpos, ?_⟩
+    intro t ht1 ht2
+    have hle : min eM (1 / 2) ≤ eM := min_le_left _ _
+    have hm1 : -eM < t := by nlinarith
+    have hm2 : t < eM := by nlinarith
+    have h := (hM t hm1 hm2).1
+    rw [hV, hE, hFF, V_DEFORMATION_WW_DEFOR_p31 w1 w t,
+      ← E_DEFORMATION_WW_DEFOR_p31 w1 w t,
+      ← F_DEFORMATION_WW_DEFOR_p31 w1 w t] at h
+    exact h
 
 /-- HOL `CARD_V_EQ_SCS_K1` (ODXLSTC.hl:1961): a BBs realisation image has
 cardinality exactly `scs_k_v39 s`. The HOL route (`IS_SCS_STABLE_SYSTEM` +
@@ -2666,24 +2773,311 @@ theorem INTERIOR_ANGLE_SAME_WW_DEFOR1_p31 (s : ScsV39) (k l i : ℕ) (w : ℕ �
 taustar decrease. -/
 theorem TAUSTAR_WW_DEFOR_p31 (hz : ZLZTHIC_concl_p31) (_hm : MHAEYJN_concl_p31) :
     TAUSTAR_WW_DEFOR_concl_p31 := by
-  sorry
-  -- NEEDS (still): CARD_FF_EQ_WW_DEFORMATION_p31, DSV_WW_DEFOR_EQ_p31
-  -- (proved above), `SUM_AZIM_EQ_ANGLE_LE4` (unported; LocalAuto12/18
-  -- document the gap — only the `_FUN_p18` variant exists),
-  -- INTERIOR_ANGLE_SAME_WW_DEFOR{0,1}_p31 (still `sorry`), and
-  -- `INTERIOR_ANGLE1_POS` — chain-blocked by the `LocalFan` stub
-  -- (`True`, LocalAuto1.lean:138).
+  -- DISCHARGES (la31-tower-w1 2026-11-05): source ODXLSTC.hl:2557-2684.
+  -- `hz`/`hm` are carried for HOL signature fidelity but never consumed: the
+  -- HOL proof is the `tau_fun` sum comparison only (CARD_FF_EQ_WW_DEFORMATION +
+  -- DSV_WW_DEFOR_EQ + SUM_AZIM_EQ_ANGLE_LE4 + INTERIOR_ANGLE_SAME_WW_DEFOR{0,1}
+  -- + rho_fun_decreasing + INTERIOR_ANGLE1_POS), all std-3/proved here.
+  intro s k l w e1 his hmm hk hk3 hdiag hnorm hlt hJ hbbt he1pos he1lt1 hlunar
+  -- ## unpack the `MMs_v39` hypothesis
+  have hbb : BBsV39 s w := ((hmm.1).1).1
+  have hann : Set.range w ⊆ ballAnnulus := MMsV39_annulus_p31 hmm
+  have hkpos : 0 < k := by have := his.2.1; omega
+  have hsk : ¬ s.k ≤ 3 := by omega
+  have hperk : Periodic w k := hk ▸ hbb.2.1
+  have hinj : ∀ a b, a < k → b < k → a ≠ b → w a ≠ w b :=
+    fun a b ha hb hne => VV_INJ_p31 s k w hk his hbb a b ⟨ha, hb, hne⟩
+  have hwl0 : w l ≠ 0 := by
+    have h2 := ballAnnulus_norm_p31 (hann (Set.mem_range_self l))
+    intro hzero
+    rw [hzero, norm_zero] at h2
+    linarith [h2.2]
+  have hlk : l % s.k = l % k := by rw [hk]
+  have hwlm_k : w (l % k) = w l := periodic_mod_p18 hperk l
+  have hwlm : w (l % s.k) = w l := by rw [hlk]; exact hwlm_k
+  -- ## the answer window is exactly the `BBs` window
+  refine ⟨e1, he1pos, ?_⟩
+  intro t ht0 hte1
+  have ht1 : t < 1 := lt_trans hte1 he1lt1
+  have hbbtt : BBsV39 s (fun i => wwDefor_p31 (w l) (w i) t) := hbbt t ht0 hte1
+  -- ## abbreviations
+  set wd : ℕ → V3 := fun i => wwDefor_p31 (w l) (w i) t with hwd
+  set V : Set V3 := Set.range w with hV
+  set Vd : Set V3 := Set.range wd with hVd
+  set E : Set (Set V3) := Set.range (fun i => {w i, w (i + 1)}) with hE
+  set Ed : Set (Set V3) := Set.range (fun i => {wd i, wd (i + 1)}) with hEd
+  set FF : Set (V3 × V3) := Set.range (fun i => (w i, w (i + 1))) with hFF
+  set FFd : Set (V3 × V3) := Set.range (fun i => (wd i, wd (i + 1))) with hFFd
+  -- ## `dsv` and the face count do not move
+  have hdsv : dsvV39 s wd = dsvV39 s w := by
+    have h := DSV_WW_DEFOR_EQ_p31 s k l w t hk his hbb hJ
+    simpa only [hwd] using h
+  have hcard : FFd.ncard = FF.ncard := by
+    have h := CARD_FF_EQ_WW_DEFORMATION_p31 s k l w e1 hk his hk3 hbb hbbt t ht0 hte1
+    simpa only [hwd, ← hFFd, ← hFF] using h
+  -- ## the fan structure and the base interior angle
+  have hclf : ConvexLocalFan V E FF := by
+    rcases hbb.2.2.2 with hle | hcl
+    · exact absurd hle hsk
+    · simpa only [← hV, ← hE, ← hFF] using hcl
+  have hlf2 : localFan_p2 V E FF := w5cC_lf2_of_LocalFan hclf.1
+  have hbase : w (l % s.k) ∈ V := by
+    rw [hV]; exact ⟨l % s.k, rfl⟩
+  have hangpos : 0 < interiorAngle1 0 FF (w (l % s.k)) := by
+    have h := INTERIOR_ANGLE1_POS (V := V) (E := E) (FF := FF) hlf2 hbase
+    simpa only [interiorAngle1, interiorAngle1_p2, rhoNode1, rhoNode1_p2,
+      ivsRhoNode1, ivsRhoNode1_p2] using h
+  -- ## both `tau_fun` sums rewritten to the cyclic `range s.k` form
+  have hsetSum : ∀ f : ℕ → ℝ, setSum {i | i < s.k} f = ∑ i ∈ Finset.range s.k, f i := by
+    intro f
+    rw [setSum]
+    have hfin : {i : ℕ | i < s.k}.Finite := Set.finite_Iio s.k
+    rw [dif_pos hfin]
+    have hEq : hfin.toFinset = Finset.range s.k := by
+      ext i
+      simp [Set.mem_toFinset, Finset.mem_range]
+    rw [hEq]
+  have hsumd := SUM_AZIM_EQ_ANGLE_LE4_p35 s l l (wd (l % s.k)) Vd Ed FFd wd
+    hsk hbbtt his rfl rfl rfl rfl
+  have hsumo := SUM_AZIM_EQ_ANGLE_LE4_p35 s l l (w (l % s.k)) V E FF w
+    hsk hbb his rfl rfl rfl rfl
+  -- ## the whole comparison sits on the single non-fixed vertex `w l`
+  have hfix : ∀ i, 1 ≤ i → i < k → wd (i + l % s.k) = w (i + l % s.k) := by
+    intro i hi1 hik
+    have hmod : (i + l % s.k) % k ≠ l % k := by
+      have hp : l % s.k < k := by
+        have h0 : 0 < s.k := by omega
+        have h1 := Nat.mod_lt l h0
+        omega
+      have h := w5cC2_mod_shift_ne (k := k) (p := l % s.k) (x := i) hkpos hp (by omega) hik
+      rw [hlk] at h ⊢
+      exact h
+    have hne : w (i + l % s.k) ≠ w l := by
+      intro hcon
+      have h1 : w ((i + l % s.k) % k) = w (l % k) := by
+        rw [periodic_mod_p18 hperk (i + l % s.k), periodic_mod_p18 hperk l, hcon]
+      exact hinj ((i + l % s.k) % k) (l % k)
+        (Nat.mod_lt _ hkpos) (Nat.mod_lt _ hkpos) hmod h1
+    show wwDefor_p31 (w l) (w (i + l % s.k)) t = w (i + l % s.k)
+    rw [wwDefor_apply_p31, if_neg hne]
+  have hang1 : ∀ i, 1 ≤ i → i < k →
+      interiorAngle1 0 FFd ((rhoNode1 FFd)^[i] (wd (l % s.k)))
+        = interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % s.k))) := by
+    intro i hi1 hik
+    have h := INTERIOR_ANGLE_SAME_WW_DEFOR1_p31 s k l i w t FF
+      hk3 his hk hbb hbbtt hFF.symm ht1 hi1 hik
+    simpa only [hFFd, hwd, hlk] using h
+  have hterm : ∀ i, 1 ≤ i → i < k →
+      rhoFun (norm (wd (i + l % s.k))) *
+          interiorAngle1 0 FFd ((rhoNode1 FFd)^[i] (wd (l % s.k)))
+        = rhoFun (norm (w (i + l % s.k))) *
+          interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % s.k))) := by
+    intro i hi1 hik
+    rw [hfix i hi1 hik, hang1 i hi1 hik]
+  have hstrict0 :
+      rhoFun (norm (wd (l % s.k))) * interiorAngle1 0 FFd (wd (l % s.k))
+        < rhoFun (norm (w (l % s.k))) * interiorAngle1 0 FF (w (l % s.k)) := by
+    have hwd_eq : wd (l % s.k) = wwDefor_p31 (w l) (w l) t := by
+      show wwDefor_p31 (w l) (w (l % s.k)) t = wwDefor_p31 (w l) (w l) t
+      rw [hwlm]
+    have hrho : rhoFun (norm (wd (l % s.k))) < rhoFun (norm (w (l % s.k))) := by
+      rw [hwd_eq, hwlm]
+      exact rho_fun_decreasing_p31 (w l) t ht0 ht1 hwl0
+    have hang0 : interiorAngle1 0 FFd (wd (l % s.k))
+        = interiorAngle1 0 FF (w (l % s.k)) := by
+      have h := INTERIOR_ANGLE_SAME_WW_DEFOR0_p31 s k l w t FF
+        hk3 his hk hbb hbbtt hFF.symm ht1
+      simpa only [hFFd, hwd, hlk] using h
+    rw [hang0]
+    exact mul_lt_mul_of_pos_right hrho hangpos
+  -- ## the strict sum inequality
+  have hkey : setSum FFd (fun e => rhoFun (norm e.1) * azimInFan e Ed)
+      < setSum FF (fun e => rhoFun (norm e.1) * azimInFan e E) := by
+    rw [← hsumd, ← hsumo, hsetSum, hsetSum]
+    refine Finset.sum_lt_sum ?_ ⟨0, ?_, ?_⟩
+    · intro i hi
+      rw [Finset.mem_range] at hi
+      by_cases hi0 : i = 0
+      · subst hi0
+        simpa only [Nat.zero_add, Function.iterate_zero, id_eq] using le_of_lt hstrict0
+      · have hi1 : 1 ≤ i := by omega
+        have hik : i < k := by rw [← hk]; exact hi
+        exact le_of_eq (hterm i hi1 hik)
+    · rw [Finset.mem_range]; omega
+    · simpa only [Nat.zero_add, Function.iterate_zero, id_eq] using hstrict0
+  -- ## assemble `tau_fun` and `taustar_v39`
+  have htau : tauFun Vd Ed FFd < tauFun V E FF := by
+    unfold tauFun
+    rw [hcard]
+    linarith [hkey]
+  have hfin : taustarV39 s wd < taustarV39 s w := by
+    have h1 : taustarV39 s wd = tauFun Vd Ed FFd - dsvV39 s wd := by
+      rw [taustarV39, if_neg hsk]
+    have h2 : taustarV39 s w = tauFun V E FF - dsvV39 s w := by
+      rw [taustarV39, if_neg hsk]
+    rw [h1, h2, hdsv]
+    exact sub_lt_sub_right htau (dsvV39 s w)
+  exact hfin
 
 /-- HOL `ODXLSTCv2` (ODXLSTC.hl:2692): ZLZTHIC + MHAEYJN imply the
 contradiction ODXLSTCv2_concl. -/
 theorem ODXLSTCv2_p31 (hz : ZLZTHIC_concl_p31) (_hm : MHAEYJN_concl_p31) :
     ODXLSTCv2_concl_p31 := by
-  sorry
-  -- NEEDS (still): WW_DEFORMATION_CONVEX_LOCAL_FAN_p31 + TAUSTAR_WW_DEFOR_p31
-  -- (both still `sorry` above); DEFORMATION_DIST_LE_ALL_COM_p31 /
-  -- DEFORMATION_DIST_LE_BLL_COM_p31 / DEFORMATION_IN_BALL_ANNULUS_p31 (all
-  -- proved above) are ready to be composed into the BBs-viability
-  -- contradiction once the two wrappers land.
+  -- DISCHARGES (la31-tower-w1 2026-11-05): source ODXLSTC.hl:2692-3078.
+  -- Route: assemble the `BBs_v39` kit of the deformed family on the window
+  -- `e1 = min (min (min (min eA eB) eC) eD) 1 / 2` (annulus `eA`, a-bound
+  -- `eB`, b-bound `eC`, convexity `eD`), feed it to `TAUSTAR_WW_DEFOR`
+  -- (HOL ODXLSTC.hl:3042 `MP_TAC TAUSTAR_WW_DEFOR`), and contradict the
+  -- `taustar` minimality carried by `MMs_v39 s w`.
+  intro s k l w hs hmw hk hk3 hdiag hnorm hlt hJ hlunar
+  have hbb : BBsV39 s w := ((hmw.1).1).1
+  have hmin : ∀ ww, BBsV39 s ww → taustarV39 s w ≤ taustarV39 s ww := ((hmw.1).1).2.1
+  have hkpos : 0 < k := by have := hs.2.1; omega
+  have hann : Set.range w ⊆ ballAnnulus := MMsV39_annulus_p31 hmw
+  have hwlann : w l ∈ ballAnnulus := hann (Set.mem_range_self l)
+  -- ## the index kit
+  have hper : Periodic w k := hk ▸ hbb.2.1
+  have hpm : ∀ a, w (a % k) = w a := fun a => periodic_mod_p18 hper a
+  have hpl : l % k < k := Nat.mod_lt _ hkpos
+  have hfinj : ∀ a b, a < k → b < k → a ≠ b → w a ≠ w b :=
+    fun a b ha hb hne => VV_INJ_p31 s k w hk hs hbb a b ⟨ha, hb, hne⟩
+  have hwliff : ∀ i, w i = w l ↔ i % k = l % k := by
+    intro i
+    constructor
+    · intro h
+      have h1 : w (i % k) = w (l % k) := by rw [hpm i, hpm l, h]
+      by_contra hne
+      exact hfinj (i % k) (l % k) (Nat.mod_lt _ hkpos) hpl hne h1
+    · intro h
+      rw [← hpm i, ← hpm l, h]
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, hsym, hchain, hdiag0, _, _, _, _, _, _⟩ := id hs
+  have hpa : Periodic2 s.a s.k := isScsV39_periodic2_a_p31 s hs
+  have hpb : Periodic2 s.b s.k := isScsV39_periodic2_b_p31 s hs
+  have ham : ∀ i j, s.a i j = s.a (i % k) (j % k) := by
+    intro i j
+    have h := (periodic2_mod_p18 hpa i j).symm
+    rwa [hk] at h
+  have hbm : ∀ i j, s.b i j = s.b (i % k) (j % k) := by
+    intro i j
+    have h := (periodic2_mod_p18 hpb i j).symm
+    rwa [hk] at h
+  -- ## the four windows
+  obtain ⟨eA, heA, hannA⟩ := DEFORMATION_IN_BALL_ANNULUS_p31 (Ne.symm hnorm) hwlann
+  obtain ⟨eB, heB, hAll⟩ := DEFORMATION_DIST_LE_ALL_COM_p31 s k l w hs hmw hk hk3 hlt
+  obtain ⟨eC, heC, hBll⟩ := DEFORMATION_DIST_LE_BLL_COM_p31 s k l w hs hmw hk hk3 hdiag
+  obtain ⟨eD, heD, hcf⟩ :=
+    WW_DEFORMATION_CONVEX_LOCAL_FAN_p31 hz _hm s k l w hs hmw hk hk3 hdiag hnorm hlt hJ hlunar
+  set e1 : ℝ := min (min (min (min eA eB) eC) eD) 1 / 2 with he1def
+  have he1pos : 0 < e1 := by
+    have h2 : 0 < min (min (min (min eA eB) eC) eD) 1 :=
+      lt_min (lt_min (lt_min (lt_min heA heB) heC) heD) one_pos
+    rw [he1def]; linarith
+  have he1lt1 : e1 < 1 := by
+    have h2 : min (min (min (min eA eB) eC) eD) 1 ≤ 1 := min_le_right _ _
+    rw [he1def]; nlinarith
+  have he1A : e1 < eA := by
+    have h2 : min (min (min (min eA eB) eC) eD) 1 ≤ eA :=
+      (min_le_left _ _).trans ((min_le_left _ _).trans ((min_le_left _ _).trans (min_le_left _ _)))
+    rw [he1def]; nlinarith
+  have he1B : e1 < eB := by
+    have h2 : min (min (min (min eA eB) eC) eD) 1 ≤ eB :=
+      (min_le_left _ _).trans ((min_le_left _ _).trans ((min_le_left _ _).trans (min_le_right _ _)))
+    rw [he1def]; nlinarith
+  have he1C : e1 < eC := by
+    have h2 : min (min (min (min eA eB) eC) eD) 1 ≤ eC :=
+      (min_le_left _ _).trans ((min_le_left _ _).trans (min_le_right _ _))
+    rw [he1def]; nlinarith
+  have he1D : e1 < eD := by
+    have h2 : min (min (min (min eA eB) eC) eD) 1 ≤ eD :=
+      (min_le_left _ _).trans (min_le_right _ _)
+    rw [he1def]; nlinarith
+  -- ## the `BBs_v39` kit of the deformed family
+  have hbbs : ∀ t, 0 < t → t < e1 → BBsV39 s (fun i => wwDefor_p31 (w l) (w i) t) := by
+    intro t ht0 ht1
+    have hfix : ∀ i, w i = w l → wwDefor_p31 (w l) (w i) t = (1 - t) • (w l) := by
+      intro i hi; rw [wwDefor_apply_p31, if_pos hi]
+    have hkeep : ∀ i, w i ≠ w l → wwDefor_p31 (w l) (w i) t = w i := by
+      intro i hi; rw [wwDefor_apply_p31, if_neg hi]
+    have htA : t < eA := lt_trans ht1 he1A
+    have htB : t < eB := lt_trans ht1 he1B
+    have htC : t < eC := lt_trans ht1 he1C
+    have htD : t < eD := lt_trans ht1 he1D
+    refine ⟨?ann, ?per, ?dist, ?conv⟩
+    · intro x hx
+      obtain ⟨i, rfl⟩ := hx
+      change wwDefor_p31 (w l) (w i) t ∈ ballAnnulus
+      by_cases hi : w i = w l
+      · rw [hfix i hi]; exact hannA t ht0 htA
+      · rw [hkeep i hi]; exact hann (Set.mem_range_self i)
+    · intro i
+      show wwDefor_p31 (w l) (w (i + s.k)) t = wwDefor_p31 (w l) (w i) t
+      rw [hbb.2.1 i]
+    · intro i j
+      by_cases hi : i % k = l % k
+      · by_cases hj : j % k = l % k
+        · -- both indices sit at the moving vertex
+          have hwi : w i = w l := (hwliff i).mpr hi
+          have hwj : w j = w l := (hwliff j).mpr hj
+          have hd0 : dist (wwDefor_p31 (w l) (w i) t) (wwDefor_p31 (w l) (w j) t) = 0 := by
+            rw [hfix i hwi, hfix j hwj, dist_self]
+          have haij : s.a i j = 0 := by
+            rw [ham i j, hi, hj]; exact hdiag0 (l % k)
+          have hab : s.a i j ≤ s.b i j :=
+            le_trans (hchain i j).1 (le_trans (hchain i j).2.1 (hchain i j).2.2)
+          constructor
+          · rw [hd0, haij]
+          · rw [hd0]; exact le_trans (le_of_eq haij.symm) hab
+        · -- only `i` is at the moving vertex
+          have hwi : w i = w l := (hwliff i).mpr hi
+          have hwj : w j ≠ w l := fun h => hj ((hwliff j).mp h)
+          have haij : s.a i j = s.a l j := by rw [ham i j, ham l j, hi]
+          have hbij : s.b i j = s.b l j := by rw [hbm i j, hbm l j, hi]
+          have hdist : dist (wwDefor_p31 (w l) (w i) t) (wwDefor_p31 (w l) (w j) t)
+              = dist ((1 - t) • (w l)) (w j) := by rw [hfix i hwi, hkeep j hwj]
+          constructor
+          · rw [haij, hdist]; exact le_of_lt (hAll t j ht0 htB hj)
+          · rw [hbij, hdist]; exact le_of_lt (hBll t j ht0 htC hj)
+      · by_cases hj : j % k = l % k
+        · -- only `j` is at the moving vertex (symmetric case)
+          have hwj : w j = w l := (hwliff j).mpr hj
+          have hwi : w i ≠ w l := fun h => hi ((hwliff i).mp h)
+          have haij : s.a i j = s.a l i := by
+            rw [ham i j, ham l i, hj]; exact (hsym (i % k) (l % k)).1
+          have hbij : s.b i j = s.b l i := by
+            rw [hbm i j, hbm l i, hj]; exact (hsym (i % k) (l % k)).2.2.2.1
+          have hdist : dist (wwDefor_p31 (w l) (w i) t) (wwDefor_p31 (w l) (w j) t)
+              = dist ((1 - t) • (w l)) (w i) := by
+            rw [hfix j hwj, hkeep i hwi]; exact dist_comm _ _
+          constructor
+          · rw [haij, hdist]; exact le_of_lt (hAll t i ht0 htB hi)
+          · rw [hbij, hdist]; exact le_of_lt (hBll t i ht0 htC hi)
+        · -- neither index moves
+          have hwi : w i ≠ w l := fun h => hi ((hwliff i).mp h)
+          have hwj : w j ≠ w l := fun h => hj ((hwliff j).mp h)
+          have hdist : dist (wwDefor_p31 (w l) (w i) t) (wwDefor_p31 (w l) (w j) t)
+              = dist (w i) (w j) := by rw [hkeep i hwi, hkeep j hwj]
+          rw [hdist]
+          exact hbb.2.2.1 i j
+    · exact Or.inr (hcf t (by linarith) htD)
+  -- ## strict `taustar` decrease vs. `taustar` minimality
+  obtain ⟨e2, he2, htau⟩ :=
+    TAUSTAR_WW_DEFOR_p31 hz _hm s k l w e1 hs hmw hk hk3 hdiag hnorm hlt hJ hbbs
+      he1pos he1lt1 hlunar
+  set t0 : ℝ := min e1 e2 / 2 with ht0def
+  have ht0pos : 0 < t0 := by
+    have h2 : 0 < min e1 e2 := lt_min he1pos he2
+    rw [ht0def]; linarith
+  have ht0e1 : t0 < e1 := by
+    have h2 : min e1 e2 ≤ e1 := min_le_left _ _
+    rw [ht0def]; nlinarith
+  have ht0e2 : t0 < e2 := by
+    have h2 : min e1 e2 ≤ e2 := min_le_right _ _
+    rw [ht0def]; nlinarith
+  have hlt_tau : taustarV39 s (fun i => wwDefor_p31 (w l) (w i) t0) < taustarV39 s w :=
+    htau t0 ht0pos ht0e2
+  have hge : taustarV39 s w ≤ taustarV39 s (fun i => wwDefor_p31 (w l) (w i) t0) :=
+    hmin (fun i => wwDefor_p31 (w l) (w i) t0) (hbbs t0 ht0pos ht0e1)
+  linarith
 
 /-- HOL `GENERIC_WW_DEFOR_RHO_NODE1` (ODXLSTC.hl:1126): the `rho_node1`
 transfer for the outgoing edge dart under `local_fan`. -/
