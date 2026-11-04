@@ -366,7 +366,7 @@
 
 - **补根生效**：`W6AlignRoots.lean`（20 块级根 + 1 收拢根，覆盖 19,715/19,715）登记为 union 根后，WIRE 实测 increment **19,803**（含 align_* 传递闭包 + `CertOf`/`listAt` 等支撑件）；`w6align` 原根 increment 仍 55（保留，不删）。
 - **ORPHANS 回落核对**：34,533 → 14,803，与「净增 ~19.7k 补根后消失」的预测一致（差 −19,730 vs 预测 −19,715，差 15 为补根传递带出的支撑件计入 reach）。相对基线 J 的 11,710 仍有 +3,093：TameSpine 899 入宇宙 + w6align 岛残余（Basic/Table/私有件 ≈12）+ la14 塔波私助件与其余新增声明的差值——属结构可达性余项，非新债。
-- 仪器：本轮 `orphan_histogram` 复跑 ≈1h（nice 19）；`global_reach_map` 复核在跑（同 164 根，预期逐位一致）。
+- 仪器：本轮 `orphan_histogram` 复跑 ≈1h（nice 19）；**`global_reach_map` 复核完成，与 orphan 逐位一致**：UNION K_REACH 2,103,998 / SORRIED 170 / AXIOM 624 / **K_MODULES 4,229** / K_UNIVERSE 2,118,801 / ORPHANS_TOTAL 14,803（public 11,108 + private 3,695）——双仪器交叉验证通过。
 - la14 波7（`7077facb`）同批落库：扇词汇表桥 21 私助件 + 10 件闭（own-sorry 26→16，含 `zlz_generic_p14` 巨人），全部标准三；不在锥（塔件未接线），cone ±0。
 
 
