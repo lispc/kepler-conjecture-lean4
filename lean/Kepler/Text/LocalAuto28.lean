@@ -1024,6 +1024,115 @@ theorem V3_DEFOR_IN_AFF_GT_V1_MK_p28 (v1 v2 w : V3) (x1 x2 x5 a : ℝ)
     simpa only [sub_zero] using hspan
   exact hsub (Set.mem_inter hball haffmem)
 
+/-- HOL `ANGLES_ADD_AFF_GE` (polar_fan.hl:74). -/
+private theorem w5cD_angles_add_aff_ge_p28 {u v w x : V3} (hv : v ≠ u) (hw : w ≠ u) (hx : x ≠ u)
+    (hmem : x ∈ affGt {u} {v, w}) :
+    EuclideanGeometry.angle v u x + EuclideanGeometry.angle x u w
+      = EuclideanGeometry.angle v u w := by
+  by_cases hvw : v = w
+  · -- degenerate: w = v, so x lies on the open ray u → v
+    subst w
+    have hmem1 : x ∈ affGt {u} {v} := by simpa using hmem
+    obtain ⟨f, hfin, hxsum, hpos, hone⟩ := hmem1
+    have hsum : ∑ z ∈ hfin.toFinset, f z = f u + f v := sum_insert_single_s hfin hv.symm
+    have hsumv : ∑ z ∈ hfin.toFinset, f z • z = f u • u + f v • v :=
+      sum_insert_single_v hfin hv.symm
+    rw [hsum] at hone
+    have hfv : 0 < f v := hpos v (by simp)
+    have hxu : x - u = f v • (v - u) := by
+      rw [hxsum, hsumv]
+      have hfu : f u = 1 - f v := by linarith
+      rw [hfu, sub_smul]
+      module
+    have h1 : EuclideanGeometry.angle v u x = EuclideanGeometry.angle v u v :=
+      EuclideanGeometry.angle_smul_right_of_pos v hfv (by simpa [vsub_eq_sub] using hxu.symm)
+    have h2 : EuclideanGeometry.angle x u v = EuclideanGeometry.angle v u v :=
+      EuclideanGeometry.angle_smul_left_of_pos v hfv (by simpa [vsub_eq_sub] using hxu.symm)
+    rw [h1, h2, EuclideanGeometry.angle_self_of_ne hv]
+    ring
+  · -- v ≠ w: extract x = u + f v • (v-u) + f w • (w-u) with positive coefficients
+    obtain ⟨f, hfin, hxsum, hpos, hone⟩ := hmem
+    have hsums : ∑ z ∈ hfin.toFinset, f z = f u + f v + f w :=
+      sum_insert_pair_s hfin hv.symm hw.symm hvw
+    have hsumv : ∑ z ∈ hfin.toFinset, f z • z = f u • u + f v • v + f w • w :=
+      sum_insert_pair_v hfin hv.symm hw.symm hvw
+    rw [hsums] at hone
+    have hrv : 0 < f v := hpos v (by simp)
+    have hsw : 0 < f w := hpos w (by simp)
+    have hrs : 0 < f v + f w := add_pos hrv hsw
+    have hrsne : f v + f w ≠ 0 := hrs.ne'
+    have hxu : x - u = f v • (v - u) + f w • (w - u) := by
+      rw [hxsum, hsumv]
+      have hfu : f u = 1 - f v - f w := by linarith
+      rw [hfu, sub_smul]
+      module
+    -- x' := u + (fv+fw)⁻¹ • (x-u) lies strictly inside the segment [v,w]
+    let x' : V3 := u + (f v + f w)⁻¹ • (x - u)
+    have hx'u : (f v + f w) • (x' - u) = x - u := by
+      show (f v + f w) • (u + (f v + f w)⁻¹ • (x - u) - u) = x - u
+      rw [add_sub_cancel_left, smul_smul, mul_inv_cancel₀ hrsne, one_smul]
+    have hx'sub : x' - u =
+        (f v / (f v + f w)) • (v - u) + (f w / (f v + f w)) • (w - u) := by
+      show u + (f v + f w)⁻¹ • (x - u) - u = _
+      rw [add_sub_cancel_left, hxu, smul_add, smul_smul, smul_smul, div_eq_inv_mul,
+        div_eq_inv_mul]
+    have hx'line : x' = AffineMap.lineMap v w (f w / (f v + f w)) := by
+      rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+      have hx' : x' = u + (x' - u) := by abel
+      rw [hx', hx'sub]
+      have hab : f v / (f v + f w) + f w / (f v + f w) = 1 := by
+        rw [← add_div, div_self hrsne]
+      have ha : f v / (f v + f w) = 1 - f w / (f v + f w) := by linarith
+      rw [ha]
+      module
+    have hW : Wbtw ℝ v x' w := by
+      rw [Wbtw, affineSegment, Set.mem_image]
+      refine ⟨f w / (f v + f w), ⟨div_pos hsw hrs |>.le, ?_⟩, hx'line.symm⟩
+      rw [div_le_one hrs]
+      linarith
+    have h1 : EuclideanGeometry.angle v u x = EuclideanGeometry.angle v u x' :=
+      EuclideanGeometry.angle_smul_right_of_pos v hrs (by simpa [vsub_eq_sub] using hx'u)
+    have h2 : EuclideanGeometry.angle x u w = EuclideanGeometry.angle x' u w :=
+      EuclideanGeometry.angle_smul_left_of_pos w hrs (by simpa [vsub_eq_sub] using hx'u)
+    calc EuclideanGeometry.angle v u x + EuclideanGeometry.angle x u w
+        = EuclideanGeometry.angle v u x' + EuclideanGeometry.angle x' u w := by rw [h1, h2]
+      _ = EuclideanGeometry.angle v u w :=
+        EuclideanGeometry.angle_add_of_ne_of_ne hv.symm hw.symm hW
+
+/-- `cos` of a three-point angle at the origin (vector form of Mathlib's
+`InnerProductGeometry.cos_angle`). -/
+
+private theorem w5cD_cos_angle_zero_p28 (a b : V3) :
+    Real.cos (EuclideanGeometry.angle a 0 b) = inner ℝ a b / (‖a‖ * ‖b‖) := by
+  rw [EuclideanGeometry.angle]
+  simp only [vsub_eq_sub, sub_zero]
+  exact InnerProductGeometry.cos_angle a b
+
+private theorem w5cD_dist_gt_small_p28 (v1 v2 w : V3) (x1 x2 x5 c : ℝ)
+    (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+    (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+    (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+    (hc : c < dist v2 w) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
+      c < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) w := by
+  have hup : 0 < upsX x1 x5 x2 :=
+    upsX_pos_p28 (-v1) (v2 - v1) x1 x5 x2
+      (fun hc' => hnc ((COLLINEAR_EQ_SUB_NEG_p28 v1 v2).1 hc'))
+      (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+  have hcont := deformDistCont_p28 w v1 v2 x1 x2 x5 h1 h2 h5 hnc hx1 hx2 hx5
+  have h0 : dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - 0) + v1) w
+      = dist v2 w := by
+    rw [sub_zero, deforId_p28 v1 v2 x1 x2 x5 h1 hup hx1 hx2 hx5]
+  have hmem0 : dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - 0) + v1) w
+      ∈ Set.Ioi c := by
+    rw [h0]; exact hc
+  obtain ⟨δ, hδ, hd⟩ := Metric.eventually_nhds_iff_ball.1
+    (hcont.eventually (Ioi_mem_nhds hmem0))
+  refine ⟨δ, hδ, fun t ht => hd t ?_⟩
+  rw [Metric.mem_ball, Real.dist_eq, sub_zero, abs_of_pos ht.1]
+  exact ht.2
+
 /-- HOL `V3_DEFOR_INCREASING_IN_ANGLE` (NUXCOEA.hl:705). -/
 theorem V3_DEFOR_INCREASING_IN_ANGLE_p28 (v1 v2 w : V3) (x1 x2 x5 a : ℝ)
     (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
@@ -1033,7 +1142,137 @@ theorem V3_DEFOR_INCREASING_IN_ANGLE_p28 (v1 v2 w : V3) (x1 x2 x5 a : ℝ)
     (haff : v2 ∈ affGt {0} {v1, w}) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
       dist v2 w < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) w := by
-  sorry
+  subst ha
+  have hnc' : ¬ Collinear ℝ ({0, -v1, v2 - v1} : Set V3) := fun hc =>
+    hnc ((COLLINEAR_EQ_SUB_NEG_p28 v1 v2).1 hc)
+  have hup : 0 < upsX x1 x5 x2 :=
+    upsX_pos_p28 (-v1) (v2 - v1) x1 x5 x2 hnc'
+      (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+  obtain ⟨εs, hεs, hseg⟩ := upsX_pos_seg_p28 v1 v2 x1 x2 x5 h1 h2 h5 hnc hx1 hx2 hx5
+  obtain ⟨εa, hεa, hmem⟩ := V3_DEFOR_IN_AFF_GT_V1_MK_p28 v1 v2 w x1 x2 x5 (-1)
+    h1 h2 h5 hnc hx1 hx2 hx5 rfl hncw haff
+  have hv1ne : v1 ≠ 0 := by
+    intro h
+    apply hnc
+    have e : ({0, v1, v2} : Set V3) = ({0, v2} : Set V3) := by
+      rw [h]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [e]; exact collinear_pair ℝ (0 : V3) v2
+  have hwne : w ≠ 0 := by
+    intro h
+    apply hncw
+    have e : ({0, v1, w} : Set V3) = ({0, v1} : Set V3) := by
+      rw [h]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [e]; exact collinear_pair ℝ (0 : V3) v1
+  have hv2ne : v2 ≠ 0 := by
+    intro h
+    apply hnc
+    have e : ({0, v1, v2} : Set V3) = ({0, v1} : Set V3) := by
+      rw [h]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [e]; exact collinear_pair ℝ (0 : V3) v1
+  have hnv1 : 0 < ‖v1‖ := norm_pos_iff.mpr hv1ne
+  have hnv2 : 0 < ‖v2‖ := norm_pos_iff.mpr hv2ne
+  refine ⟨min (min εs εa) (x5 / 2), lt_min (lt_min hεs hεa) (by linarith), ?_⟩
+  intro t ht
+  have hts : t < εs := lt_of_lt_of_le ht.2 (le_trans (min_le_left _ _) (min_le_left _ _))
+  have hta : t < εa := lt_of_lt_of_le ht.2 (le_trans (min_le_left _ _) (min_le_right _ _))
+  have htx : t < x5 / 2 := lt_of_lt_of_le ht.2 (min_le_right _ _)
+  have hup3 : 0 < upsX x1 (x5 - t) x2 := hseg t ⟨by linarith, hts⟩
+  have hx5t : 0 < x5 - t := by linarith
+  set v : V3 := v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) with hv
+  have hdn : ‖v‖ ^ 2 = x5 - t :=
+    EYYPQDW_NORMV3_p17 (-v1) (v2 - v1) v x1 x5 (x5 - t) x2 x2 x2 (-1)
+      h1 h5 hx5t h2 h2 h2 hnc' (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+      (by norm_num) hup3 (by rw [hv]; simp only [v3DeforV1_p17])
+  have hvn : ‖v + v1‖ ^ 2 = x2 := by
+    have h := EYYPQDW_NORM_V3_V1_p17 (-v1) (v2 - v1) v x1 x5 (x5 - t) x2 x2 x2 (-1)
+      h1 h5 hx5t h2 h2 h2 hnc' (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+      (by norm_num) hup3 (by rw [hv]; simp only [v3DeforV1_p17])
+    simpa only [sub_neg_eq_add] using h
+  have hnv : ‖v + v1‖ = ‖v2‖ := by
+    have h2' : ‖v + v1‖ ^ 2 = ‖v2‖ ^ 2 := by rw [hvn, hx2]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp h2'
+  -- ### the scalar identities (EYYPQDW norms, re-read as `cos` numerators)
+  have hinner12 : inner ℝ v1 v2 = (x1 + x2 - x5) / 2 := by
+    have h := norm_sub_sq_real (x := v2) (y := v1)
+    rw [hx5, hx2, hx1] at h
+    rw [real_inner_comm v1 v2] at h
+    linarith
+  have hinner2 : inner ℝ v1 (v + v1) = (x1 + x2 - (x5 - t)) / 2 := by
+    have h := norm_sub_sq_real (x := v + v1) (y := v1)
+    have e : (v + v1) - v1 = v := by abel
+    rw [e, hdn, hvn, hx1] at h
+    rw [real_inner_comm v1 (v + v1)] at h
+    linarith
+  -- ### first angle comparison: `∠ v1 0 (v+v1) < ∠ v1 0 v2`
+  have hcos1 : Real.cos (EuclideanGeometry.angle v1 0 v2)
+      = (x1 + x2 - x5) / (2 * (‖v1‖ * ‖v2‖)) := by
+    rw [w5cD_cos_angle_zero_p28, hinner12, div_div]
+  have hcos2 : Real.cos (EuclideanGeometry.angle v1 0 (v + v1))
+      = (x1 + x2 - (x5 - t)) / (2 * (‖v1‖ * ‖v2‖)) := by
+    rw [w5cD_cos_angle_zero_p28, hinner2, hnv, div_div]
+  have hD : 0 < 2 * (‖v1‖ * ‖v2‖) := mul_pos (by norm_num) (mul_pos hnv1 hnv2)
+  have hcoslt : Real.cos (EuclideanGeometry.angle v1 0 v2) <
+      Real.cos (EuclideanGeometry.angle v1 0 (v + v1)) := by
+    rw [hcos1, hcos2]
+    exact div_lt_div_of_pos_right (by linarith) hD
+  have hangle1 : EuclideanGeometry.angle v1 0 (v + v1) < EuclideanGeometry.angle v1 0 v2 := by
+    rcases lt_trichotomy (EuclideanGeometry.angle v1 0 (v + v1))
+      (EuclideanGeometry.angle v1 0 v2) with h | h | h
+    · exact h
+    · rw [h] at hcoslt; exact absurd hcoslt (lt_irrefl _)
+    · exfalso
+      have hc := Real.cos_lt_cos_of_nonneg_of_le_pi
+        (x := EuclideanGeometry.angle v1 0 v2)
+        (y := EuclideanGeometry.angle v1 0 (v + v1))
+        (EuclideanGeometry.angle_nonneg v1 0 v2)
+        (EuclideanGeometry.angle_le_pi v1 0 (v + v1)) h
+      linarith
+  -- ### `ANGLES_ADD_AFF_GE` on both interior points
+  have hvne : v + v1 ≠ 0 := by
+    intro h0
+    have h : ‖v + v1‖ ^ 2 = 0 := by rw [h0]; simp
+    rw [hvn] at h
+    linarith
+  have hmemv : v + v1 ∈ affGt {0} {v1, w} := hmem t ⟨by linarith, hta⟩
+  have hsum1 := w5cD_angles_add_aff_ge_p28 (u := (0 : V3)) (v := v1) (w := w) (x := v2)
+    hv1ne hwne hv2ne haff
+  have hsum2 := w5cD_angles_add_aff_ge_p28 (u := (0 : V3)) (v := v1) (w := w) (x := v + v1)
+    hv1ne hwne hvne hmemv
+  have hangle2 : EuclideanGeometry.angle v2 0 w < EuclideanGeometry.angle (v + v1) 0 w := by
+    linarith [hsum1, hsum2, hangle1]
+  -- ### second angle comparison: `∠ (v+v1) 0 w < ∠ v2 0 w` → distances
+  have hinner3 : inner ℝ v2 w = (x2 + ‖w‖ ^ 2 - dist v2 w ^ 2) / 2 := by
+    have h := norm_sub_sq_real (x := v2) (y := w)
+    rw [hx2] at h
+    rw [show ‖v2 - w‖ = dist v2 w from (dist_eq_norm v2 w).symm] at h
+    linarith
+  have hinner4 : inner ℝ (v + v1) w = (x2 + ‖w‖ ^ 2 - dist (v + v1) w ^ 2) / 2 := by
+    have h := norm_sub_sq_real (x := v + v1) (y := w)
+    rw [hvn] at h
+    rw [show ‖(v + v1) - w‖ = dist (v + v1) w from
+      (dist_eq_norm (v + v1) w).symm] at h
+    linarith
+  have hcos3 : Real.cos (EuclideanGeometry.angle v2 0 w)
+      = (x2 + ‖w‖ ^ 2 - dist v2 w ^ 2) / (2 * (‖v2‖ * ‖w‖)) := by
+    rw [w5cD_cos_angle_zero_p28, hinner3, div_div]
+  have hcos4 : Real.cos (EuclideanGeometry.angle (v + v1) 0 w)
+      = (x2 + ‖w‖ ^ 2 - dist (v + v1) w ^ 2) / (2 * (‖v2‖ * ‖w‖)) := by
+    rw [w5cD_cos_angle_zero_p28, hinner4, hnv, div_div]
+  have hD2 : 0 < 2 * (‖v2‖ * ‖w‖) :=
+    mul_pos (by norm_num) (mul_pos hnv2 (norm_pos_iff.mpr hwne))
+  have hcoslt2 : Real.cos (EuclideanGeometry.angle (v + v1) 0 w) <
+      Real.cos (EuclideanGeometry.angle v2 0 w) :=
+    Real.cos_lt_cos_of_nonneg_of_le_pi
+      (EuclideanGeometry.angle_nonneg v2 0 w)
+      (EuclideanGeometry.angle_le_pi (v + v1) 0 w) hangle2
+  rw [hcos3, hcos4] at hcoslt2
+  have hsq : (dist v2 w) ^ 2 < (dist (v + v1) w) ^ 2 := by
+    have h := (div_lt_div_iff_of_pos_right hD2).mp hcoslt2
+    linarith
+  nlinarith [dist_nonneg (x := v2) (y := w), dist_nonneg (x := v + v1) (y := w)]
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1` (NUXCOEA.hl:814). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_p28 (s : ScsV39) (w : ℕ → V3) (k l j : ℕ)
@@ -1045,7 +1284,40 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_p28 (s : ScsV39) (w : ℕ → V3)
     (hj : (l + 1) % k = j % k) (haj : s.a l j = dist v2 (w j)) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
       s.a l j < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hper : w ((l + k - 1) + 1) = w l := by
+    have e : (l + k - 1) + 1 = l + k := by omega
+    rw [e, ← hk]
+    exact hbb.2.1 l
+  have hmm := HYPER_MM_COLLINEAR_p34 s k (l + k - 1) w v2 v1 x2 x1 x5 hk hs hm hk3
+    hl1 (by rw [hper, hl]) hx2 hx1 hx5
+  obtain ⟨h2, h1, h5, hnc0'⟩ := hmm
+  have hnc0 : ¬ Collinear ℝ ({0, v1, v2} : Set V3) := by
+    intro hc
+    apply hnc0'
+    have e : ({0, v1, v2} : Set V3) = ({0, v2, v1} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [e] at hc
+  have hik : l + (s.k - 1) = l + k - 1 := by rw [hk]; omega
+  have hwj : w (l + 1) = w j :=
+    CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (l + 1) j hs hbb (by rw [hk]; exact hj)
+  have hsetnc : ({0, v1, w j} : Set V3) = ({0, w (l + 1), w (l + (s.k - 1))} : Set V3) := by
+    have e1 : v1 = w (l + (s.k - 1)) := by rw [hik]; exact hl1.symm
+    rw [e1, hwj]
+    ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  have hsetaff : ({v1, w j} : Set V3) = ({w (l + 1), w (l + (s.k - 1))} : Set V3) := by
+    have e1 : v1 = w (l + (s.k - 1)) := by rw [hik]; exact hl1.symm
+    rw [e1, hwj]
+    ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  have hncw : ¬ Collinear ℝ ({0, v1, w j} : Set V3) := by
+    rw [hsetnc]; exact hnc
+  have haffv2 : v2 ∈ affGt {0} {v1, w j} := by
+    rw [hsetaff, ← hl]
+    exact haff
+  obtain ⟨ε, hε, hlt⟩ := V3_DEFOR_INCREASING_IN_ANGLE_p28 v1 v2 (w j) x1 x2 x5 (-1)
+    h1 h2 h5 hncw hnc0 hx1 hx2 hx5 rfl haffv2
+  exact ⟨ε, hε, fun t ht => by rw [haj]; exact hlt t ht⟩
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_AA_COM_MK` (NUXCOEA.hl:848). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_AA_COM_MK_p28 (s : ScsV39) (w : ℕ → V3) (k l j : ℕ)
@@ -1058,7 +1330,81 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_AA_COM_MK_p28 (s : ScsV39) (w : ℕ → V3)
     (hi : ∀ i : ℕ, ¬(l % k = i % k) ∧ ¬((l + 1) % k = i % k) → s.a l i < dist v2 (w i)) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t ∧ t < ε ∧ ¬(l % k = i % k) →
       s.a l i < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hper : w ((l + k - 1) + 1) = w l := by
+    have e : (l + k - 1) + 1 = l + k := by omega
+    rw [e, ← hk]
+    exact hbb.2.1 l
+  have hmm := HYPER_MM_COLLINEAR_p34 s k (l + k - 1) w v2 v1 x2 x1 x5 hk hs hm hk3
+    hl1 (by rw [hper, hl]) hx2 hx1 hx5
+  obtain ⟨h2, h1, h5, hnc0'⟩ := hmm
+  have hnc0 : ¬ Collinear ℝ ({0, v1, v2} : Set V3) := by
+    intro hc
+    apply hnc0'
+    have e : ({0, v1, v2} : Set V3) = ({0, v2, v1} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [e] at hc
+  -- the neighbour bound (`i ≡ l+1`) from the closed successor-index fold
+  obtain ⟨e1, he1, hlt1⟩ := DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_p28 s w k l j v1 v2 x1 x2 x5
+    (-1) hs hm hk hk3 hl hl1 hx1 hx2 hx5 rfl hnc haff hj haj
+  -- finite radius family over the admissible residues `r < k`, `r ≠ l % k`
+  set S : Finset ℕ := (Finset.range k).filter (fun r => r ≠ l % k) with hS
+  have hstep : ∀ r : ℕ, r ∈ S → ∃ e : ℝ, 0 < e ∧ (∀ t : ℝ, 0 < t ∧ t < e →
+      s.a l r < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r)) := by
+    intro r hr
+    have hrng : r < k := Finset.mem_range.mp (Finset.mem_filter.mp hr).1
+    have hrne : r ≠ l % k := (Finset.mem_filter.mp hr).2
+    by_cases hcase : (l + 1) % k = r % k
+    · refine ⟨e1, he1, fun t ht => ?_⟩
+      have hmod : r % s.k = j % s.k := by
+        rw [hk]
+        exact hcase.symm.trans hj
+      have hwr : w r = w j := CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w r j hs hbb hmod
+      have har : s.a l r = s.a l j := CHANGE_A_SCS_MODR_p28 s hs r j l hmod
+      rw [hwr, har]
+      exact hlt1 t ht
+    · have hne : ¬(l % k = r % k) := by
+        rw [Nat.mod_eq_of_lt hrng]
+        exact fun h => hrne h.symm
+      have hlt : s.a l r < dist v2 (w r) := hi r ⟨hne, hcase⟩
+      exact w5cD_dist_gt_small_p28 v1 v2 (w r) x1 x2 x5 (s.a l r)
+        h1 h2 h5 hnc0 hx1 hx2 hx5 hlt
+  choose e he hprop using hstep
+  have hSne : S.Nonempty := by
+    rcases eq_or_ne (l % k) 0 with h0 | h0
+    · refine ⟨1, ?_⟩
+      rw [hS]
+      exact Finset.mem_filter.mpr
+        ⟨Finset.mem_range.mpr (by omega), by rw [h0]; omega⟩
+    · refine ⟨0, ?_⟩
+      rw [hS]
+      exact Finset.mem_filter.mpr
+        ⟨Finset.mem_range.mpr (by omega), fun h => h0 h.symm⟩
+  let f : ℕ → ℝ := fun r => if h : r ∈ S then e r h else 1
+  obtain ⟨r0, hr0, hmin⟩ := Finset.exists_min_image S f hSne
+  have hf0 : f r0 = e r0 hr0 := by simp only [f, dif_pos hr0]
+  refine ⟨f r0, by rw [hf0]; exact he r0 hr0, fun t i ht => ?_⟩
+  have hmem : i % k ∈ S := by
+    rw [hS]
+    exact Finset.mem_filter.mpr
+      ⟨Finset.mem_range.mpr (Nat.mod_lt _ (by omega)), fun h => ht.2.2 h.symm⟩
+  have hf1 : f (i % k) = e (i % k) hmem := by simp only [f, dif_pos hmem]
+  have hle : e r0 hr0 ≤ e (i % k) hmem := by
+    have h' := hmin (i % k) hmem
+    rwa [hf0, hf1] at h'
+  have ht' : t < e r0 hr0 := by
+    have h2' := ht.2.1
+    rwa [hf0] at h2'
+  have hp := hprop (i % k) hmem t ⟨ht.1, lt_of_lt_of_le ht' hle⟩
+  have hwi : w (i % k) = w i := by
+    apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i % k) i hs hbb
+    rw [hk, Nat.mod_mod]
+  have hai : s.a l (i % k) = s.a l i := by
+    apply CHANGE_A_SCS_MODR_p28 s hs (i % k) i l
+    rw [hk, Nat.mod_mod]
+  rw [hwi, hai] at hp
+  exact hp
 
 /-- HOL `EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE` (NUXCOEA.hl:890). -/
 theorem EYYPQDW_V3_DEFOR_INCREASING_IN_ANGLE_p28 (v1 v2 w : V3) (x1 x2 x5 a : ℝ)
@@ -2020,7 +2366,30 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_TWO_CASES_p28 (s : ScsV39) (w : �
     (hj : l % k = (j + 1) % k) (haj : s.a l j = dist v2 (w j)) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, 0 < t ∧ t < ε →
       s.a l j < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hik : l + (s.k - 1) = l + k - 1 := by rw [hk]; omega
+  obtain ⟨h1, h2, h5, hnc0⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5 hk hs hm hk3
+    hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  -- shift the successor index `l+1` to `l+k-1` for the target point `w j`
+  have hmod : (l + k - 1) % s.k = j % s.k := by
+    rw [hk]
+    exact EQ_SUC_K_SUB3_p28 hj hk3
+  have hwj : w (l + (s.k - 1)) = w j := by
+    rw [hik]
+    exact CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (l + k - 1) j hs hbb hmod
+  have hsetnc : ({0, v1, w j} : Set V3) = ({0, w (l + 1), w (l + (s.k - 1))} : Set V3) := by
+    rw [← hl1, ← hwj]
+  have hsetaff : ({v1, w j} : Set V3) = ({w (l + 1), w (l + (s.k - 1))} : Set V3) := by
+    rw [← hl1, ← hwj]
+  have hncw : ¬ Collinear ℝ ({0, v1, w j} : Set V3) := by
+    rw [hsetnc]; exact hnc
+  have haffv2 : v2 ∈ affGt {0} {v1, w j} := by
+    rw [hsetaff, ← hl]
+    exact haff
+  obtain ⟨ε, hε, hlt⟩ := V3_DEFOR_INCREASING_IN_ANGLE_p28 v1 v2 (w j) x1 x2 x5 (-1)
+    h1 h2 h5 hncw hnc0 hx1 hx2 hx5 rfl haffv2
+  exact ⟨ε, hε, fun t ht => by rw [haj]; exact hlt t ht⟩
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_AA_COM_MK_TWO_CASES` (NUXCOEA.hl:3927). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_AA_COM_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
@@ -2034,7 +2403,70 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_AA_COM_MK_TWO_CASES_p28 (s : ScsV39) (w : �
     (hi : ∀ i : ℕ, ¬(l % k = i % k) ∧ ¬(l % k = (i + 1) % k) → s.a l i < dist v2 (w i)) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t ∧ t < ε ∧ ¬(l % k = i % k) →
       s.a l i < dist (v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  obtain ⟨h1, h2, h5, hnc0⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5 hk hs hm hk3
+    hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  -- the neighbour bound (`(i+1) ≡ l`) from the closed predecessor-index fold
+  obtain ⟨e1, he1, hlt1⟩ := DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_TWO_CASES_p28 s w k l j
+    v1 v2 x1 x2 x5 (-1) hs hm hk hk3 hl hl1 hx1 hx2 hx5 rfl hnc haff hj haj
+  set S : Finset ℕ := (Finset.range k).filter (fun r => r ≠ l % k) with hS
+  have hstep : ∀ r : ℕ, r ∈ S → ∃ e : ℝ, 0 < e ∧ (∀ t : ℝ, 0 < t ∧ t < e →
+      s.a l r < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r)) := by
+    intro r hr
+    have hrng : r < k := Finset.mem_range.mp (Finset.mem_filter.mp hr).1
+    have hrne : r ≠ l % k := (Finset.mem_filter.mp hr).2
+    by_cases hcase : l % k = (r + 1) % k
+    · refine ⟨e1, he1, fun t ht => ?_⟩
+      have hmod : r % s.k = j % s.k := by
+        rw [hk]
+        have h1' : (r + 1) % k = (j + 1) % k := hcase.symm.trans hj
+        exact Nat.ModEq.add_right_cancel' 1 h1'
+      have hwr : w r = w j := CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w r j hs hbb hmod
+      have har : s.a l r = s.a l j := CHANGE_A_SCS_MODR_p28 s hs r j l hmod
+      rw [hwr, har]
+      exact hlt1 t ht
+    · have hne : ¬(l % k = r % k) := by
+        rw [Nat.mod_eq_of_lt hrng]
+        exact fun h => hrne h.symm
+      have hlt : s.a l r < dist v2 (w r) := hi r ⟨hne, hcase⟩
+      exact w5cD_dist_gt_small_p28 v1 v2 (w r) x1 x2 x5 (s.a l r)
+        h1 h2 h5 hnc0 hx1 hx2 hx5 hlt
+  choose e he hprop using hstep
+  have hSne : S.Nonempty := by
+    rcases eq_or_ne (l % k) 0 with h0 | h0
+    · refine ⟨1, ?_⟩
+      rw [hS]
+      exact Finset.mem_filter.mpr
+        ⟨Finset.mem_range.mpr (by omega), by rw [h0]; omega⟩
+    · refine ⟨0, ?_⟩
+      rw [hS]
+      exact Finset.mem_filter.mpr
+        ⟨Finset.mem_range.mpr (by omega), fun h => h0 h.symm⟩
+  let f : ℕ → ℝ := fun r => if h : r ∈ S then e r h else 1
+  obtain ⟨r0, hr0, hmin⟩ := Finset.exists_min_image S f hSne
+  have hf0 : f r0 = e r0 hr0 := by simp only [f, dif_pos hr0]
+  refine ⟨f r0, by rw [hf0]; exact he r0 hr0, fun t i ht => ?_⟩
+  have hmem : i % k ∈ S := by
+    rw [hS]
+    exact Finset.mem_filter.mpr
+      ⟨Finset.mem_range.mpr (Nat.mod_lt _ (by omega)), fun h => ht.2.2 h.symm⟩
+  have hf1 : f (i % k) = e (i % k) hmem := by simp only [f, dif_pos hmem]
+  have hle : e r0 hr0 ≤ e (i % k) hmem := by
+    have h' := hmin (i % k) hmem
+    rwa [hf0, hf1] at h'
+  have ht' : t < e r0 hr0 := by
+    have h2' := ht.2.1
+    rwa [hf0] at h2'
+  have hp := hprop (i % k) hmem t ⟨ht.1, lt_of_lt_of_le ht' hle⟩
+  have hwi : w (i % k) = w i := by
+    apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i % k) i hs hbb
+    rw [hk, Nat.mod_mod]
+  have hai : s.a l (i % k) = s.a l i := by
+    apply CHANGE_A_SCS_MODR_p28 s hs (i % k) i l
+    rw [hk, Nat.mod_mod]
+  rw [hwi, hai] at hp
+  exact hp
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_EDGE_SUB_TWO_CASES` (NUXCOEA.hl:3975). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_EDGE_SUB_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
