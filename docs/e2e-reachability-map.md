@@ -327,6 +327,30 @@
 
 
 
+### 基线 L：w6align 入宇宙 + 塔波余量（w6align `218fa8fe` / V3Coe `4c5a19a8` / la14 `b433a95f`+`6fbff571` / la34 `4ffbb13a` / T11Glue `66b40092` / la37 B9 `1acb2339` / LA28 `2fed904f`）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH（e2e 锥） | **2,082,851（±0——w6align 无消费边、塔波均不在锥内，符合设计）** |
+| K_SORRIED | **134（±0）** |
+| K_AXIOM | **624（±0）** |
+| K_MODULES | 4,184（±0） |
+| K_UNIVERSE（锥 env） | 2,094,886（+114 = 塔波新声明：la34 45 私助件+11 thm、la14 5+7、la37 B9、LA28 6、LV capstones 等） |
+| 口径 II（锥） | **K_REACH_XCASES 22,428 / SORRIED_XCASES 134 / AXIOM_XCASES 624 / K_UNIVERSE_XCASES 32,906（+114）** |
+| **UNION K_REACH** | **2,084,238**（ROOTS 163；manual 8/8） |
+| UNION SORRIED / AXIOM / MODULES | 170 / 624 / 4,207 |
+| UNION K_UNIVERSE | **2,118,771**（W6Align 岛 ~19.7k + TameSpine 899 + 塔波 114 等入宇宙） |
+| UNION COVERAGE | **98.37%**（2,084,238 / 2,118,771） |
+| UNION ORPHANS_TOTAL | **34,533**（public 30,844 / private 3,689）——**w6align 入宇宙的预期副作用**，见下 |
+
+- **W6Align 入宇宙（`218fa8fe`）**：`Kepler.lean` +1 `import Kepler.LP.W6Align`；24 文件 / 19,715 逐图对齐定理 / 零 sorry；根公理面 `[propext]`（严格强于标准三）。**但 `w6align` 值闭包只消费 4 条根文件定理 + 两数据表**（orphan 仪器 WIRE 实测 increment 仅 **55**），19,715 条 `align_*` 全游离 → ORPHANS 净增约 +19.7k。**处置**：块级补根波 `w6align-roots-w2` 在飞（20 条块级根 + 1 收拢根，目标覆盖 ≥19,700/19,715；落地后 ORPHANS 应回到 ~14.8k 量级）。
+- **塔波余量**：本轮两塔攻破——la14 波5/波6（33→29→26，四连续性目标全闭 + 3 件）、la34 W1（60→49，11/11 全闭）、la37 B9（12→10，iter 双闭 + wedge 接口）、LA28 W1（63→58，5 件）；均不在锥（塔件未接线），故 cone ±0；声明面 +114 进宇宙。
+- **T11Glue（`66b40092`）**：新模块 `Kepler/T11Glue.lean`（20/20 支 mainEstimate 债转真证，553 分片受控建成）未 import 进 `Kepler.lean` → 不入宇宙/锥（消费接线另波）。
+- 仪器账单：本轮三仪器同跑（cone ≈26 min / union + orphan ≈1h+，并发 3 进程 nice 19）；orphan 仪器 CALIB K_REACH 2,082,851 与 cone 逐位一致（校准通过）；`ROOTS_NOT_IN_CONE 89/163`。
+- **口径提醒**：union 的 K_UNIVERSE 含 `Kepler.lean` 闭包（W6Align/TameSpine），锥的 K_UNIVERSE 只含 `Kepler.Assembly` 闭包——两口径的分母差在 ORPHANS 对账时必须分开看。
+
+
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
