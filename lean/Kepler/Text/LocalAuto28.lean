@@ -1793,6 +1793,386 @@ theorem DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_MK_p28 (s : ScsV39) (w : ℕ → V3
   rw [con, dist_self] at hd
   exact lt_irrefl (0:ℝ) hd
 
+/-- Dot product against a scalar multiple (right slot). -/
+private theorem w5cD6_dot_smul_right_p28 (u x : V3) (c : ℝ) :
+    (u ⬝ᵥ (c • x)) = c * (u ⬝ᵥ x) := by
+  show (u : Fin 3 → ℝ) ⬝ᵥ ((c • x : V3) : Fin 3 → ℝ)
+    = c * ((u : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ))
+  rw [WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul]
+
+/-- W6 (a) ingredient: three points on the line span{x} are collinear with 0. -/
+private theorem w5cD6_collinear3_zero_of_eq_smul_p28 {u v x : V3} {c d : ℝ}
+    (hu : u = c • x) (hv : v = d • x) : Collinear3 0 u v := by
+  refine (collinear_iff_exists_forall_eq_smul_vadd ({0, u, v} : Set V3)).mpr ⟨0, x, ?_⟩
+  intro p hp
+  rcases hp with rfl | rfl | rfl
+  · exact ⟨0, by simp⟩
+  · exact ⟨c, by rw [hu]; simp⟩
+  · exact ⟨d, by rw [hv]; simp⟩
+
+/-- Distinctness of the three points of a non-collinear triple. -/
+private theorem w5cD6_ne_of_not_collinear3_p28 {a b c : V3} (h : ¬ Collinear3 a b c) :
+    a ≠ b ∧ a ≠ c ∧ b ≠ c := by
+  refine ⟨?_, ?_, ?_⟩
+  · intro hab
+    have hs : ({a, b, c} : Set V3) = ({a, c} : Set V3) := by ext t; simp [hab]
+    exact h (by
+      show Collinear ℝ ({a, b, c} : Set V3)
+      rw [hs]
+      exact collinear_pair ℝ a c)
+  · intro hac
+    have hs : ({a, b, c} : Set V3) = ({a, b} : Set V3) := by ext t; simp [hac, or_comm]
+    exact h (by
+      show Collinear ℝ ({a, b, c} : Set V3)
+      rw [hs]
+      exact collinear_pair ℝ a b)
+  · intro hbc
+    have hs : ({a, b, c} : Set V3) = ({a, b} : Set V3) := by ext t; simp [hbc]
+    exact h (by
+      show Collinear ℝ ({a, b, c} : Set V3)
+      rw [hs]
+      exact collinear_pair ℝ a b)
+
+/-- Epsilon of a uniquely attained predicate. -/
+private theorem w5cD6_epsilon_eq_of_unique_p28 {α : Sort*} [Nonempty α] {p : α → Prop} {a : α}
+    (hp : p a) (hu : ∀ y, p y → y = a) : Classical.epsilon p = a := by
+  have hpred : p = (fun y => y = a) := by
+    funext y
+    exact propext ⟨hu y, fun h => h ▸ hp⟩
+  rw [hpred]
+  exact Classical.epsilon_singleton a
+
+/-- Linear independence of the two rays of a non-collinear triple. -/
+private theorem w5cD6_indep_of_not_collinear3_p28 {u v : V3} (hnc : ¬ Collinear3 0 u v)
+    {a b : ℝ} (h : a • u + b • v = 0) : a = 0 ∧ b = 0 := by
+  obtain ⟨h0u, h0v, -⟩ := w5cD6_ne_of_not_collinear3_p28 hnc
+  have hu0 : u ≠ 0 := fun h => h0u h.symm
+  have hv0 : v ≠ 0 := fun h => h0v h.symm
+  by_cases ha : a = 0
+  · subst ha
+    have hb : b • v = 0 := by simpa using h
+    exact ⟨rfl, (smul_eq_zero.mp hb).resolve_right hv0⟩
+  · exfalso
+    have h1 : a • u = -(b • v) := eq_neg_of_add_eq_zero_left h
+    have hu' : u = (-(b / a)) • v := by
+      calc u = a⁻¹ • (a • u) := by rw [smul_smul, inv_mul_cancel₀ ha, one_smul]
+        _ = a⁻¹ • (-(b • v)) := by rw [h1]
+        _ = (-(b / a)) • v := by
+            rw [smul_neg, smul_smul, neg_smul]
+            congr 1
+            ring
+    exact hnc (w5cD6_collinear3_zero_of_eq_smul_p28 (u := u) (v := v) (x := v)
+      (c := -(b / a)) (d := 1) hu' (by simp))
+
+
+
+/-- W6 (a): `x = r • u + s • v` with `r, s > 0` and `0, u, v` non-collinear
+implies `azim 0 x u v = π`. -/
+private theorem w5cD6_azim_pi_of_pos_combo_p28 {u v x : V3} {r s : ℝ}
+    (hr : 0 < r) (hs : 0 < s) (hnc : ¬ Collinear3 0 u v)
+    (hx : x = r • u + s • v) :
+    azim 0 x u v = Real.pi := by
+  have hrne : r ≠ 0 := ne_of_gt hr
+  have hsne : s ≠ 0 := ne_of_gt hs
+  have hu0 : u ≠ 0 := by
+    rintro rfl
+    exact hnc (w5cD6_collinear3_zero_of_eq_smul_p28 (u := (0 : V3)) (v := v) (x := v)
+      (c := 0) (d := 1) (by simp) (by simp))
+  have hv0 : v ≠ 0 := by
+    rintro rfl
+    exact hnc (w5cD6_collinear3_zero_of_eq_smul_p28 (u := u) (v := (0 : V3)) (x := u)
+      (c := 1) (d := 0) (by simp) (by simp))
+  have hx0 : x ≠ 0 := by
+    rintro h0
+    apply hnc
+    have hsum : r • u + s • v = 0 := by rw [← hx]; exact h0
+    have hru : r • u = -(s • v) := eq_neg_of_add_eq_zero_left hsum
+    have hu : u = (-(s / r)) • v := by
+      calc u = r⁻¹ • (r • u) := by rw [smul_smul, inv_mul_cancel₀ hrne, one_smul]
+        _ = r⁻¹ • (-(s • v)) := by rw [hru]
+        _ = (-(s / r)) • v := by
+            rw [smul_neg, smul_smul, neg_smul]
+            congr 1
+            ring
+    exact w5cD6_collinear3_zero_of_eq_smul_p28 (u := u) (v := v) (x := v)
+      (c := -(s / r)) (d := 1) hu (by simp)
+  have hn1 : ¬ Collinear3 0 x u := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0 : V3)) (w := x) hx0).mp hcol
+    have hu : u = c • x := by simpa using hc
+    have hv : v = ((1 - r * c) / s) • x := by
+      have hsv : s • v = x - r • u := by rw [hx]; module
+      rw [hu] at hsv
+      have h2 : s • v = (1 - r * c) • x := by
+        rw [hsv]
+        module
+      calc v = s⁻¹ • (s • v) := by rw [smul_smul, inv_mul_cancel₀ hsne, one_smul]
+        _ = s⁻¹ • ((1 - r * c) • x) := by rw [h2]
+        _ = ((1 - r * c) / s) • x := by
+            rw [smul_smul]
+            congr 1
+            field_simp
+    exact hnc (w5cD6_collinear3_zero_of_eq_smul_p28 hu hv)
+  have hn2 : ¬ Collinear3 0 x v := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0 : V3)) (w := x) hx0).mp hcol
+    have hv : v = c • x := by simpa using hc
+    have hu : u = ((1 - s * c) / r) • x := by
+      have hru : r • u = x - s • v := by rw [hx]; module
+      rw [hv] at hru
+      have h2 : r • u = (1 - s * c) • x := by
+        rw [hru]
+        module
+      calc u = r⁻¹ • (r • u) := by rw [smul_smul, inv_mul_cancel₀ hrne, one_smul]
+        _ = r⁻¹ • ((1 - s * c) • x) := by rw [h2]
+        _ = ((1 - s * c) / r) • x := by
+            rw [smul_smul]
+            congr 1
+            field_simp
+    exact hnc (w5cD6_collinear3_zero_of_eq_smul_p28 hu hv)
+  refine azim_eq_of_spec hn1 hn2 ?_
+  refine ⟨Real.pi_pos.le, by linarith [Real.pi_pos],
+    (u ⬝ᵥ (‖x‖⁻¹ • x)) / ‖x‖, (v ⬝ᵥ (‖x‖⁻¹ • x)) / ‖x‖, ?_⟩
+  intro e1 e2 e3 he hax hw
+  set d : ℝ := ‖x‖ with hd
+  have hdpos : 0 < d := by rw [hd]; exact norm_pos_iff.mpr hx0
+  have hdne : d ≠ 0 := hdpos.ne'
+  have hxd : x = d • e3 := by
+    have h : x = dist x 0 • e3 := by simpa using hax
+    rwa [dist_zero_right] at h
+  have he3 : e3 = d⁻¹ • x := by
+    rw [hxd, smul_smul, inv_mul_cancel₀ hdne, one_smul]
+  have hzx : zOf e1 e2 (x - 0) = 0 := zOf_axis hax he
+  have hzu_ne : zOf e1 e2 u ≠ 0 := by
+    have h := (zOf_ne_zero_iff (v := (0 : V3)) (w := x) he hax hw u).mpr hn1
+    simpa using h
+  set ψ : ℝ := Complex.arg (zOf e1 e2 u) with hψ
+  set r1 : ℝ := ‖zOf e1 e2 u‖ with hr1def
+  have hr1pos : 0 < r1 := by rw [hr1def]; exact norm_pos_iff.mpr hzu_ne
+  have hzu : zOf e1 e2 (u - 0) = (r1 : ℂ) * Complex.exp ((ψ : ℂ) * Complex.I) := by
+    rw [sub_zero, hψ, hr1def]
+    exact (Complex.norm_mul_exp_arg_mul_I (zOf e1 e2 u)).symm
+  have hrep_u := rep_of_zOf he hax hw u ψ r1 hzu
+  have hcoef_u : (((u - 0 : V3) ⬝ᵥ e3) / dist x 0)
+      = (u ⬝ᵥ (‖x‖⁻¹ • x)) / ‖x‖ := by
+    rw [dist_zero_right, sub_zero, he3, hd]
+    simp only [WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul]
+  have hrep_u' : u - 0 = (r1 * Real.cos ψ) • e1 + (r1 * Real.sin ψ) • e2
+      + ((u ⬝ᵥ (‖x‖⁻¹ • x)) / ‖x‖) • (x - 0) := by
+    rw [← hcoef_u]
+    exact hrep_u
+  have hsplit : v = s⁻¹ • x + (-(s⁻¹ * r)) • u := by
+    have hsv : s • v = x - r • u := by rw [hx]; module
+    calc v = s⁻¹ • (s • v) := by rw [smul_smul, inv_mul_cancel₀ hsne, one_smul]
+      _ = s⁻¹ • (x - r • u) := by rw [hsv]
+      _ = s⁻¹ • x + (-(s⁻¹ * r)) • u := by module
+  have hexp : Complex.exp (((ψ + Real.pi : ℝ) : ℂ) * Complex.I)
+      = -Complex.exp ((ψ : ℂ) * Complex.I) := by
+    rw [show (((ψ + Real.pi : ℝ) : ℂ) * Complex.I)
+        = (ψ : ℂ) * Complex.I + ((Real.pi : ℝ) : ℂ) * Complex.I by
+      push_cast; ring]
+    rw [Complex.exp_add, Complex.exp_pi_mul_I]
+    ring
+  have hvz : zOf e1 e2 (v - 0)
+      = (((r / s) * r1 : ℝ) : ℂ) * Complex.exp (((ψ + Real.pi : ℝ) : ℂ) * Complex.I) := by
+    have h1 : zOf e1 e2 (v - 0)
+        = ((s⁻¹ : ℝ) : ℂ) * zOf e1 e2 x + ((-(s⁻¹ * r) : ℝ) : ℂ) * zOf e1 e2 u := by
+      rw [sub_zero, hsplit, zOf_add, zOf_smul, zOf_smul]
+    rw [h1, show zOf e1 e2 x = 0 from by rw [← sub_zero x]; exact hzx]
+    rw [show zOf e1 e2 u = (r1 : ℂ) * Complex.exp ((ψ : ℂ) * Complex.I) from by
+      simpa using hzu, hexp]
+    push_cast
+    ring
+  have hcoef_v : (((v - 0 : V3) ⬝ᵥ e3) / dist x 0)
+      = (v ⬝ᵥ (‖x‖⁻¹ • x)) / ‖x‖ := by
+    rw [dist_zero_right, sub_zero, he3, hd]
+    simp only [WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul]
+  have hrep_v := rep_of_zOf he hax hw v (ψ + Real.pi) ((r / s) * r1) hvz
+  have hrep_v' : v - 0 = (((r / s) * r1) * Real.cos (ψ + Real.pi)) • e1
+      + (((r / s) * r1) * Real.sin (ψ + Real.pi)) • e2
+      + ((v ⬝ᵥ (‖x‖⁻¹ • x)) / ‖x‖) • (x - 0) := by
+    rw [← hcoef_v]
+    exact hrep_v
+  exact ⟨ψ, r1, (r / s) * r1, hrep_u', hrep_v', hr1pos, mul_pos (div_pos hr hs) hr1pos⟩
+
+/-- W6 (b) ingredient: `Collinear3 0 w` is invariant under shifting along `w`
+and positive scaling of the other point. -/
+private theorem w5cD6_collinear3_shift_p28 {w z : V3} {c h : ℝ} (hc : 0 < c) :
+    Collinear3 0 w (c • z + h • w) ↔ Collinear3 0 w z := by
+  by_cases hw0 : w = 0
+  · subst hw0
+    have h1 : Collinear3 0 (0 : V3) (c • z + h • 0) := by
+      show Collinear ℝ ({0, 0, c • z + h • 0} : Set V3)
+      rw [show ({0, 0, c • z + h • 0} : Set V3) = ({0, c • z + h • 0} : Set V3) from by
+        ext t; simp]
+      exact collinear_pair ℝ 0 _
+    have h2 : Collinear3 0 (0 : V3) z := by
+      show Collinear ℝ ({0, 0, z} : Set V3)
+      rw [show ({0, 0, z} : Set V3) = ({0, z} : Set V3) from by ext t; simp]
+      exact collinear_pair ℝ 0 z
+    exact ⟨fun _ => h2, fun _ => h1⟩
+  · constructor
+    · intro hcol
+      obtain ⟨c', hc'⟩ := (collinear3_iff_smul (v := (0 : V3)) (w := w) hw0).mp hcol
+      have h2 : c • z + h • w = c' • w := by simpa using hc'
+      have h1 : c • z = (c' - h) • w := by
+        have h3 : c • z = c' • w - h • w := by rw [← h2]; module
+        rw [h3]; module
+      have hz : z = ((c' - h) / c) • w := by
+        calc z = c⁻¹ • (c • z) := by rw [smul_smul, inv_mul_cancel₀ hc.ne', one_smul]
+          _ = c⁻¹ • ((c' - h) • w) := by rw [h1]
+          _ = ((c' - h) / c) • w := by
+              rw [smul_smul]
+              congr 1
+              field_simp
+      exact (collinear3_iff_smul (v := (0 : V3)) (w := w) hw0).mpr
+        ⟨(c' - h) / c, by simpa using hz⟩
+    · intro hcol
+      obtain ⟨c', hc'⟩ := (collinear3_iff_smul (v := (0 : V3)) (w := w) hw0).mp hcol
+      have hz : z = c' • w := by simpa using hc'
+      refine (collinear3_iff_smul (v := (0 : V3)) (w := w) hw0).mpr ⟨c * c' + h, ?_⟩
+      rw [hz]
+      module
+
+/-- W6 (b) spec step: shifting the third argument along the axis by a positive
+multiple preserves `AzimSpec`. -/
+private theorem w5cD6_azimSpec_shift_fst_p28 {w z z' : V3} {c h θ : ℝ} (hc : 0 < c)
+    (hspec : AzimSpec 0 w z z' θ) :
+    AzimSpec 0 w (c • z + h • w) z' θ := by
+  obtain ⟨hθ0, hθ1, h1, h2, hframes⟩ := hspec
+  refine ⟨hθ0, hθ1, c * h1 + h, h2, ?_⟩
+  intro e1 e2 e3 he hax hw
+  obtain ⟨ψ, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframes e1 e2 e3 he hax hw
+  refine ⟨ψ, c * r1, r2, ?_, hrep2, mul_pos hc hr1, hr2⟩
+  have e : (c • z + h • w) - 0 = c • (z - 0) + h • (w - 0) := by simp
+  rw [e, hrep1]
+  module
+
+/-- W6 (b) spec step: same for the fourth argument. -/
+private theorem w5cD6_azimSpec_shift_snd_p28 {w z z' : V3} {c h θ : ℝ} (hc : 0 < c)
+    (hspec : AzimSpec 0 w z z' θ) :
+    AzimSpec 0 w z (c • z' + h • w) θ := by
+  obtain ⟨hθ0, hθ1, h1, h2, hframes⟩ := hspec
+  refine ⟨hθ0, hθ1, h1, c * h2 + h, ?_⟩
+  intro e1 e2 e3 he hax hw
+  obtain ⟨ψ, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframes e1 e2 e3 he hax hw
+  refine ⟨ψ, r1, c * r2, hrep1, ?_, hr1, mul_pos hc hr2⟩
+  have e : (c • z' + h • w) - 0 = c • (z' - 0) + h • (w - 0) := by simp
+  rw [e, hrep2]
+  module
+
+/-- W6 (b), third argument: `azim 0 w (c • z + h • w) z' = azim 0 w z z'`. -/
+private theorem w5cD6_azim_shift_smul_fst_p28 (w z z' : V3) (c h : ℝ) (hc : 0 < c) :
+    azim 0 w (c • z + h • w) z' = azim 0 w z z' := by
+  have hcol := w5cD6_collinear3_shift_p28 (w := w) (z := z) (c := c) (h := h) hc
+  by_cases hz' : Collinear3 0 w z'
+  · have hL : Collinear3 0 w (c • z + h • w) ∨ Collinear3 0 w z' := Or.inr hz'
+    have hR : Collinear3 0 w z ∨ Collinear3 0 w z' := Or.inr hz'
+    unfold azim
+    rw [if_pos hL, if_pos hR]
+  · by_cases hz : Collinear3 0 w z
+    · have hL : Collinear3 0 w (c • z + h • w) ∨ Collinear3 0 w z' := Or.inl (hcol.mpr hz)
+      have hR : Collinear3 0 w z ∨ Collinear3 0 w z' := Or.inl hz
+      unfold azim
+      rw [if_pos hL, if_pos hR]
+    · have hndR : ¬ (Collinear3 0 w z ∨ Collinear3 0 w z') := by tauto
+      have hndL : ¬ (Collinear3 0 w (c • z + h • w) ∨ Collinear3 0 w z') := by
+        rw [hcol]; tauto
+      have hspecR : AzimSpec 0 w z z' (azim 0 w z z') := by
+        unfold azim
+        rw [if_neg hndR]
+        exact Classical.epsilon_spec (azimSpec_exists (not_or.mp hndR).1 (not_or.mp hndR).2)
+      have hspecL : AzimSpec 0 w (c • z + h • w) z' (azim 0 w z z') :=
+        w5cD6_azimSpec_shift_fst_p28 (w := w) (z := z) (z' := z') hc hspecR
+      rw [azim_eq_of_spec (not_or.mp hndL).1 (not_or.mp hndL).2 hspecL,
+        azim_eq_of_spec (not_or.mp hndR).1 (not_or.mp hndR).2 hspecR]
+
+/-- W6 (b), fourth argument: `azim 0 w z (c • z' + h • w) = azim 0 w z z'`. -/
+private theorem w5cD6_azim_shift_smul_snd_p28 (w z z' : V3) (c h : ℝ) (hc : 0 < c) :
+    azim 0 w z (c • z' + h • w) = azim 0 w z z' := by
+  have hcol := w5cD6_collinear3_shift_p28 (w := w) (z := z') (c := c) (h := h) hc
+  by_cases hz : Collinear3 0 w z
+  · have hL : Collinear3 0 w z ∨ Collinear3 0 w (c • z' + h • w) := Or.inl hz
+    have hR : Collinear3 0 w z ∨ Collinear3 0 w z' := Or.inl hz
+    unfold azim
+    rw [if_pos hL, if_pos hR]
+  · by_cases hz' : Collinear3 0 w z'
+    · have hL : Collinear3 0 w z ∨ Collinear3 0 w (c • z' + h • w) := Or.inr (hcol.mpr hz')
+      have hR : Collinear3 0 w z ∨ Collinear3 0 w z' := Or.inr hz'
+      unfold azim
+      rw [if_pos hL, if_pos hR]
+    · have hndR : ¬ (Collinear3 0 w z ∨ Collinear3 0 w z') := by tauto
+      have hndL : ¬ (Collinear3 0 w z ∨ Collinear3 0 w (c • z' + h • w)) := by
+        rw [hcol]; tauto
+      have hspecR : AzimSpec 0 w z z' (azim 0 w z z') := by
+        unfold azim
+        rw [if_neg hndR]
+        exact Classical.epsilon_spec (azimSpec_exists (not_or.mp hndR).1 (not_or.mp hndR).2)
+      have hspecL : AzimSpec 0 w z (c • z' + h • w) (azim 0 w z z') :=
+        w5cD6_azimSpec_shift_snd_p28 (w := w) (z := z) (z' := z') hc hspecR
+      rw [azim_eq_of_spec (not_or.mp hndL).1 (not_or.mp hndL).2 hspecL,
+        azim_eq_of_spec (not_or.mp hndR).1 (not_or.mp hndR).2 hspecR]
+
+/-! ### (c) cone coefficient positivity -/
+
+/-- W6 (c): coefficient of `v1` in `d(t) = A_t • v1 + B_t • v2`. -/
+private noncomputable def w5cD6_cA (x1 x2 x5 t : ℝ) : ℝ :=
+  1 - (x1 + (x5 - t) - x2) / (2 * x1) -
+    (((x1 + x2 - x5) / 2) / x1) * Real.sqrt (upsX x1 (x5 - t) x2 / upsX x1 x5 x2)
+
+/-- W6 (c): coefficient of `v2` in `d(t) = A_t • v1 + B_t • v2`. -/
+private noncomputable def w5cD6_cB (x1 x2 x5 t : ℝ) : ℝ :=
+  Real.sqrt (upsX x1 (x5 - t) x2 / upsX x1 x5 x2)
+
+private theorem w5cD6_cB_pos (x1 x2 x5 t : ℝ)
+    (hup : 0 < upsX x1 (x5 - t) x2) (hup5 : 0 < upsX x1 x5 x2) :
+    0 < w5cD6_cB x1 x2 x5 t := by
+  unfold w5cD6_cB
+  exact Real.sqrt_pos.mpr (div_pos hup hup5)
+
+/-- W6 (c): `A_t + B_t r₀ > 0` near `t = 0` whenever `r₀ > 0`
+(continuity argument: the value at `t = 0` is exactly `r₀`). -/
+private theorem w5cD6_cone_coeff_pos_p28 (x1 x2 x5 r0 : ℝ) (h1 : 0 < x1) (h2 : 0 < x2)
+    (h5 : 0 < x5) (hr0 : 0 < r0) (hup5 : 0 < upsX x1 x5 x2) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+      0 < w5cD6_cA x1 x2 x5 t + w5cD6_cB x1 x2 x5 t * r0 := by
+  have hcont : ContinuousAt
+      (fun t : ℝ => w5cD6_cA x1 x2 x5 t + w5cD6_cB x1 x2 x5 t * r0) 0 := by
+    unfold w5cD6_cA w5cD6_cB
+    have hden : upsX x1 x5 x2 ≠ 0 := ne_of_gt hup5
+    have hnum : ContinuousAt (fun t : ℝ => upsX x1 (x5 - t) x2) 0 := by
+      refine Continuous.continuousAt ?_
+      unfold upsX
+      fun_prop
+    have hq : ContinuousAt (fun t : ℝ => upsX x1 (x5 - t) x2 / upsX x1 x5 x2) 0 :=
+      hnum.div continuousAt_const hden
+    have hsq : ContinuousAt
+        (fun t : ℝ => Real.sqrt (upsX x1 (x5 - t) x2 / upsX x1 x5 x2)) 0 :=
+      (Real.continuous_sqrt.continuousAt).comp hq
+    have hlin : ContinuousAt (fun t : ℝ => x1 + (x5 - t) - x2) 0 := by fun_prop
+    exact ((continuousAt_const.sub (hlin.div_const (2 * x1))).sub
+      (continuousAt_const.mul hsq)).add (hsq.mul continuousAt_const)
+  have hsq0 : Real.sqrt (upsX x1 (x5 - 0) x2 / upsX x1 x5 x2) = 1 := by
+    rw [sub_zero, div_self (ne_of_gt hup5), Real.sqrt_one]
+  have hA0 : w5cD6_cA x1 x2 x5 0 = 0 := by
+    have hx1 : (x1 : ℝ) ≠ 0 := ne_of_gt h1
+    show 1 - (x1 + (x5 - 0) - x2) / (2 * x1)
+      - (((x1 + x2 - x5) / 2) / x1) * Real.sqrt (upsX x1 (x5 - 0) x2 / upsX x1 x5 x2) = 0
+    rw [hsq0]
+    field_simp
+    ring
+  have hB0 : w5cD6_cB x1 x2 x5 0 = 1 := by
+    show Real.sqrt (upsX x1 (x5 - 0) x2 / upsX x1 x5 x2) = 1
+    exact hsq0
+  have hval : w5cD6_cA x1 x2 x5 0 + w5cD6_cB x1 x2 x5 0 * r0 = r0 := by
+    rw [hA0, hB0, zero_add, one_mul]
+  have hpos : 0 < w5cD6_cA x1 x2 x5 0 + w5cD6_cB x1 x2 x5 0 * r0 := by
+    rw [hval]; exact hr0
+  obtain ⟨δ, hδ, hd⟩ := Metric.eventually_nhds_iff_ball.1 (hcont.eventually (Ioi_mem_nhds hpos))
+  refine ⟨δ, hδ, fun t ht => hd t ?_⟩
+  rwa [Metric.mem_ball, Real.dist_eq, sub_zero, abs_lt]
+
+
 /-- The re-centred deformation fixes every point except the moving vertex. -/
 private theorem v5apply_p28 (x1 x5 x2 : ℝ) (v1 v2 v : V3) (t : ℝ) :
     v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t =
@@ -1807,6 +2187,38 @@ private theorem v5apply_p28 (x1 x5 x2 : ℝ) (v1 v2 v : V3) (t : ℝ) :
         have h2 := congrArg (fun z : V3 => z + v1) hcon
         simpa using h2)),
       sub_add_cancel]
+
+
+/-- W6 (c) companion: the moving vertex splits as `A_t • v1 + B_t • v2` with the
+explicit coefficients `w5cD6_cA` / `w5cD6_cB` (from `v3_defor_v1` unfolding plus
+the Lagrange identity `cross3 u (cross3 u w) = (u·w) u - (u·u) w`). -/
+private theorem w5cD6_dt_split_p28 (v1 v2 : V3) (x1 x2 x5 t : ℝ) (h1 : 0 < x1)
+    (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) :
+    v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t
+      = w5cD6_cA x1 x2 x5 t • v1 + w5cD6_cB x1 x2 x5 t • v2 := by
+  obtain ⟨huw0, -⟩ := deforDatum_p28 v1 v2 x1 x2 x5 hx1 hx2 hx5
+  have hx1ne : (x1 : ℝ) ≠ 0 := ne_of_gt h1
+  set u : V3 := -v1 with hu
+  set w : V3 := v2 - v1 with hw
+  have hu1 : ‖u‖ ^ 2 = x1 := by rw [hu, norm_neg]; exact hx1
+  have huu : u ⬝ᵥ u = x1 := (norm_sq_eq_dot u).symm.trans hu1
+  have huw : u ⬝ᵥ w = (x1 - x2 + x5) / 2 := by rw [hu, hw]; exact huw0
+  have hc : cross3 u (cross3 u w) = ((x1 - x2 + x5) / 2) • u - x1 • w := by
+    rw [cross3_lagrange_p28, huw, huu]
+  have hv1 : v1 = -u := by rw [hu, neg_neg]
+  have hv2 : v2 = w - u := by rw [hw, hv1]; module
+  rw [v5apply_p28, if_pos rfl]
+  unfold w5cD6_cA w5cD6_cB
+  rw [← hu, ← hw]
+  simp only [v3DeforV1_p17]
+  rw [hc]
+  conv_lhs => rw [hv1]
+  conv_rhs => rw [hv1, hv2]
+  refine PiLp.ext fun i => ?_
+  simp only [WithLp.ofLp_smul, WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_neg,
+    Pi.smul_apply, Pi.add_apply, Pi.sub_apply, Pi.neg_apply, smul_eq_mul]
+  field_simp
+  ring
 
 /-- Membership in the deformed edge set unfolds to the moved endpoints. -/
 private theorem deFFmem_p28 {w : ℕ → V3} {x1 x5 x2 : ℝ} {v1 v2 : V3} {t : ℝ}
@@ -2950,6 +3362,70 @@ theorem V3_DEFOR_EQ_IN_FF_MK_SYM_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k 
       exact succModNe_p28 (k := k) (by omega) hq2
     exact ⟨j, by rw [hfix j hw2]; exact hwi.symm, by rw [hai]⟩
 
+/-! ### W6 generic residual helpers -/
+
+/-- `(l + d) % k ≠ l % k` for `0 < d < k`. -/
+private theorem w5cD6_mod_add_ne_p28 {l d k : ℕ} (hd : 0 < d) (hdk : d < k) :
+    (l + d) % k ≠ l % k := by
+  intro h
+  have hk0 : 0 < k := lt_trans hd hdk
+  have hm : l % k < k := Nat.mod_lt _ hk0
+  have h1 : (l + d) % k = (l % k + d) % k := by
+    rw [Nat.add_mod, Nat.mod_eq_of_lt hdk]
+  rw [h1] at h
+  rcases Nat.lt_or_ge (l % k + d) k with hlt | hge
+  · rw [Nat.mod_eq_of_lt hlt] at h
+    omega
+  · have h3 : (l % k + d) % k = l % k + d - k := by
+      rw [Nat.mod_eq_sub_mod hge, Nat.mod_eq_of_lt (by omega)]
+    rw [h3] at h
+    omega
+
+/-- Successor uniqueness inside `FF = range (w ·, w (·+1))`. -/
+private theorem w5cD6_rho_succ_p28 (s : ScsV39) (w : ℕ → V3) (k j : ℕ) (hk : s.k = k)
+    (hk3 : 3 < k) (hs : isScsV39 s) (hbb : BBsV39 s w) (y : V3)
+    (hy : (w j, y) ∈ Set.range fun i : ℕ => (w i, w (i + 1))) : y = w (j + 1) := by
+  obtain ⟨i, hi⟩ := hy
+  rw [Prod.mk.injEq] at hi
+  obtain ⟨hi1, hi2⟩ := hi
+  have hres : i % k = j % k := by
+    have h := W_IN_BB_FUN_EQ_p28 s w i j hs hbb hi1
+    rwa [hk] at h
+  have hres2 : (i + 1) % k = (j + 1) % k := by
+    have h1 : (i + 1) % k = (i % k + 1) % k := by
+      rw [Nat.add_mod, Nat.mod_eq_of_lt (by omega : 1 < k)]
+    have h2 : (j + 1) % k = (j % k + 1) % k := by
+      rw [Nat.add_mod, Nat.mod_eq_of_lt (by omega : 1 < k)]
+    rw [h1, h2, hres]
+  have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+    (j := i + 1) (j1 := j + 1) (by rw [hk]; exact hres2)
+  rw [← hi2, h]
+
+/-- Predecessor uniqueness inside `FF = range (w ·, w (·+1))`. -/
+private theorem w5cD6_pred_p28 (s : ScsV39) (w : ℕ → V3) (k j : ℕ) (hk : s.k = k)
+    (hk3 : 3 < k) (hs : isScsV39 s) (hbb : BBsV39 s w) (x : V3)
+    (hx : (x, w j) ∈ Set.range fun i : ℕ => (w i, w (i + 1))) : x = w (j + k - 1) := by
+  obtain ⟨i, hi⟩ := hx
+  rw [Prod.mk.injEq] at hi
+  obtain ⟨hi1, hi2⟩ := hi
+  have hres : (i + 1) % k = j % k := by
+    have h := W_IN_BB_FUN_EQ_p28 s w (i + 1) j hs hbb hi2
+    rwa [hk] at h
+  have hres2 : (j + k - 1) % k = i % k := EQ_SUC_K_SUB3_p28 hres.symm hk3
+  have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+    (j := j + k - 1) (j1 := i) (by rw [hk]; exact hres2)
+  rw [← hi1, h]
+
+/-- Coefficient comparison against a pure ray: `a • u + b • v = v ⇒ a = 0 ∧ b = 1`. -/
+private theorem w5cD6_smul_coeff_eq_p28 {u v : V3} (hnc : ¬ Collinear3 0 u v) {a b : ℝ}
+    (h : a • u + b • v = v) : a = 0 ∧ b = 1 := by
+  have h2 : a • u + (b - 1) • v = a • u + b • v - v := by module
+  have hsum : a • u + (b - 1) • v = 0 := by
+    rw [h2, h]
+    module
+  have hind := w5cD6_indep_of_not_collinear3_p28 hnc hsum
+  exact ⟨hind.1, by linarith [hind.2]⟩
+
 /-- HOL `DEFORMATION_AZIM_V3_DEFOR_V1_MK_TWO_CASES` (NUXCOEA.hl:4565). -/
 theorem DEFORMATION_AZIM_V3_DEFOR_V1_MK_TWO_CASES_p28 (s : ScsV39) (k : ℕ) (w : ℕ → V3)
     (l j : ℕ) (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3)) (V : Set V3)
@@ -2972,7 +3448,231 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_MK_TWO_CASES_p28 (s : ScsV39) (k : ℕ) (w 
         (epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
           (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t)) =
       azim 0 v2 (rhoNode1 FF v2) (epPair_p28 FF v2) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  obtain ⟨h1, h2, h5, hnch⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  obtain ⟨-, -, hv12⟩ := w5cD6_ne_of_not_collinear3_p28 hnch
+  have hup : 0 < upsX x1 x5 x2 :=
+    upsX_pos_p28 (-v1) (v2 - v1) x1 x5 x2
+      (fun hc => hnch ((COLLINEAR_EQ_SUB_NEG_p28 v1 v2).1 hc))
+      (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+  obtain ⟨e0, he0, hprop0⟩ := upsX_pos_seg_p28 v1 v2 x1 x2 x5 h1 h2 h5 hnch hx1 hx2 hx5
+  have hidx : l + k - 1 = l + (k - 1) := by omega
+  have hncep : ¬ Collinear3 0 v1 (w (l + k - 1)) := by
+    rw [hk, hl1] at hnc
+    rwa [← hidx] at hnc
+  obtain ⟨h0v1, h0ep, hv1ep⟩ := w5cD6_ne_of_not_collinear3_p28 hncep
+  have haff' : v2 ∈ affGt {0} {v1, w (l + k - 1)} := by
+    rw [hk, hl, hl1] at haff
+    rwa [← hidx] at haff
+  obtain ⟨r0, s0, hr0, hs0, hcone⟩ : ∃ r0 s0 : ℝ, 0 < r0 ∧ 0 < s0 ∧
+      v2 = r0 • v1 + s0 • w (l + k - 1) := by
+    obtain ⟨f, hfin, hsum, hpos, hone⟩ := haff'
+    rw [sum_insert_pair_v hfin h0v1 h0ep hv1ep] at hsum
+    exact ⟨f v1, f (w (l + k - 1)), hpos v1 (by simp), hpos _ (by simp),
+      by rw [hsum]; module⟩
+  obtain ⟨ec, hec, hpropc⟩ := w5cD6_cone_coeff_pos_p28 x1 x2 x5 r0 h1 h2 h5 hr0 hup
+  obtain ⟨ev, hev, hpropv⟩ := DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_MK_TWO_CASES_p28 s w k l
+    v1 v2 x1 x2 x5 (-1) hk3 hk hs hm hl hl1 hx1 hx2 hx5 rfl
+  refine ⟨min (min e0 ec) ev, lt_min (lt_min he0 hec) hev, ?_⟩
+  rintro t ⟨ht1, ht2⟩
+  have hle0 : min (min e0 ec) ev ≤ e0 := le_trans (min_le_left _ _) (min_le_left _ _)
+  have hlec : min (min e0 ec) ev ≤ ec := le_trans (min_le_left _ _) (min_le_right _ _)
+  have hlev : min (min e0 ec) ev ≤ ev := min_le_right _ _
+  have ht_e0 : -e0 < t ∧ t < e0 := ⟨by linarith, by linarith⟩
+  have ht_ec : -ec < t ∧ t < ec := ⟨by linarith, by linarith⟩
+  have ht_ev : -ev < t ∧ t < ev := ⟨by linarith, by linarith⟩
+  by_cases ht0 : t = 0
+  · subst ht0
+    have hvid : ∀ u : V3, v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 u 0 = u := by
+      intro u
+      rw [v5apply_p28 x1 x5 x2 v1 v2 u 0]
+      by_cases hu : u = v2
+      · rw [if_pos hu, hu, sub_zero]
+        exact deforId_p28 v1 v2 x1 x2 x5 h1 hup hx1 hx2 hx5
+      · exact if_neg hu
+    have hFF0 : deformedFF_p28 x1 x5 x2 v1 v2 0 FF = FF := by
+      rw [deformedFF_p28]
+      have hid : (fun uv : V3 × V3 => (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.1 0,
+          v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.2 0)) = id := by
+        funext uv
+        simp only [id, hvid]
+      rw [hid, Set.image_id]
+    rw [hvid v2, hFF0]
+  · set d : V3 := v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t with hddef
+    have hd_eq : d = w5cD6_cA x1 x2 x5 t • v1 + w5cD6_cB x1 x2 x5 t • v2 := by
+      rw [hddef]
+      exact w5cD6_dt_split_p28 v1 v2 x1 x2 x5 t h1 hx1 hx2 hx5
+    have hBpos : 0 < w5cD6_cB x1 x2 x5 t :=
+      w5cD6_cB_pos x1 x2 x5 t (hprop0 t ht_e0) hup
+    have hdval : d = v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 := by
+      rw [hddef, v5apply_p28, if_pos rfl]
+    have hdv2 : d ≠ v2 := by
+      intro hcon
+      rw [hdval] at hcon
+      have hde : v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) = v2 - v1 :=
+        eq_sub_of_add_eq hcon
+      have hnorm := (deforEval_p28 v1 v2 x1 x2 x5 (x5 - t) h1 hup
+        (le_of_lt (hprop0 t ht_e0)) hx1 hx2 hx5).1
+      rw [hde, hx5] at hnorm
+      exact ht0 (by linarith)
+    have hdall : ∀ i : ℕ, d ≠ w i := by
+      intro i hcon
+      have hwi : w (i % k) = w i := by
+        apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i % k) i hs hbb
+        rw [hk, Nat.mod_mod]
+      rw [← hwi] at hcon
+      by_cases hres : (i % k) % k = l % k
+      · have hwv : w (i % k) = v2 := by
+          have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+            (j := i % k) (j1 := l) (by rw [hk]; exact hres)
+          rwa [hl] at h
+        rw [hwv] at hcon
+        exact hdv2 hcon
+      · rw [hdval] at hcon
+        exact hpropv t (i % k) ⟨by linarith, by linarith, hres⟩ hcon
+    have hpred : ∀ x : V3, (x, v2) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) →
+        x = w (l + k - 1) := by
+      intro x hx
+      obtain ⟨j, hj⟩ := hx
+      rw [Prod.mk.injEq] at hj
+      obtain ⟨hj1, hj2⟩ := hj
+      have hres : (j + 1) % k = l % k := by
+        have h := W_IN_BB_FUN_EQ_p28 s w (j + 1) l hs hbb (by rw [hj2, hl])
+        rwa [hk] at h
+      have hres2 : (l + k - 1) % k = j % k := EQ_SUC_K_SUB3_p28 hres.symm hk3
+      have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+        (j := l + k - 1) (j1 := j) (by rw [hk]; exact hres2)
+      rw [h, hj1]
+    have hsucc : ∀ y : V3, (v2, y) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) →
+        y = w (l + 1) := by
+      intro y hy
+      obtain ⟨j, hj⟩ := hy
+      rw [Prod.mk.injEq] at hj
+      obtain ⟨hj1, hj2⟩ := hj
+      have hres : j % k = l % k := by
+        have h := W_IN_BB_FUN_EQ_p28 s w j l hs hbb (by rw [hj1, hl])
+        rwa [hk] at h
+      have hres2 : (j + 1) % k = (l + 1) % k := by
+        rw [Nat.add_mod j 1 k, Nat.add_mod l 1 k, hres]
+      have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+        (j := j + 1) (j1 := l + 1) (by rw [hk]; exact hres2)
+      rw [← hj2, h]
+    have hrhoFF : rhoNode1 FF v2 = v1 := by
+      refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+      · rw [← hFF]
+        exact ⟨l, by rw [Prod.mk.injEq]; exact ⟨hl, hl1⟩⟩
+      · intro y hy
+        exact (hsucc y (by rwa [← hFF] at hy)).trans hl1
+    have hepFF : epPair_p28 FF v2 = w (l + k - 1) := by
+      refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+      · rw [← hFF]
+        refine ⟨l + k - 1, ?_⟩
+        rw [Prod.mk.injEq]
+        refine ⟨rfl, ?_⟩
+        have hmod : ((l + k - 1) + 1) % k = l % k := by
+          rw [show (l + k - 1) + 1 = l + k by omega, Nat.add_mod_right]
+        have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+          (j := (l + k - 1) + 1) (j1 := l) (by rw [hk]; exact hmod)
+        rw [h, hl]
+      · intro a ha
+        exact hpred a (by rwa [← hFF] at ha)
+    have hepne : w (l + k - 1) ≠ v2 := by
+      intro hcon
+      have h : (l + k - 1) % k = l % k := by
+        have hh := W_IN_BB_FUN_EQ_p28 s w (l + k - 1) l hs hbb (by rw [hcon, hl])
+        rwa [hk] at hh
+      rcases Nat.eq_zero_or_pos l with hl0 | hlpos
+      · subst hl0
+        rw [Nat.zero_add, Nat.zero_mod] at h
+        have hlt : k - 1 < k := by omega
+        rw [Nat.mod_eq_of_lt hlt] at h
+        omega
+      · have h1 : l + k - 1 = (l - 1) + k := by omega
+        rw [h1, Nat.add_mod_right] at h
+        have h2 : l = (l - 1) + 1 := by omega
+        rw [h2] at h
+        exact succModNe_p28 (i := l - 1) (by omega) h.symm
+    have hout : ∀ y : V3, (d, y) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF → y = v1 := by
+      intro y hy
+      rw [deFFmem_p28 hFF] at hy
+      obtain ⟨i, hdi, hyi⟩ := hy
+      have hwi2 : w i = v2 := by
+        by_contra hne
+        rw [v5apply_p28, if_neg hne] at hdi
+        exact hdall i hdi
+      have hres : i % k = l % k := by
+        have h := W_IN_BB_FUN_EQ_p28 s w i l hs hbb (by rw [hwi2, hl])
+        rwa [hk] at h
+      have hw1 : w (i + 1) = v1 := by
+        have hres2 : (i + 1) % k = (l + 1) % k := by
+          rw [Nat.add_mod i 1 k, Nat.add_mod l 1 k, hres]
+        have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+          (j := i + 1) (j1 := l + 1) (by rw [hk]; exact hres2)
+        rw [h, hl1]
+      rw [hyi, hw1, v5apply_p28, if_neg hv12]
+    have hin : ∀ a : V3, (a, d) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF → a = w (l + k - 1) := by
+      intro a ha
+      rw [deFFmem_p28 hFF] at ha
+      obtain ⟨i, hai, hdi⟩ := ha
+      have hwi2 : w (i + 1) = v2 := by
+        by_contra hne
+        rw [v5apply_p28, if_neg hne] at hdi
+        exact hdall (i + 1) hdi
+      have hres : (i + 1) % k = l % k := by
+        have h := W_IN_BB_FUN_EQ_p28 s w (i + 1) l hs hbb (by rw [hwi2, hl])
+        rwa [hk] at h
+      have hres2 : (l + k - 1) % k = i % k := EQ_SUC_K_SUB3_p28 hres.symm hk3
+      have hwi : w i = w (l + k - 1) := by
+        have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+          (j := l + k - 1) (j1 := i) (by rw [hk]; exact hres2)
+        exact h.symm
+      have hwit : w i ≠ v2 := by
+        intro hcon
+        have h : i % k = (i + 1) % k := by
+          have hh := W_IN_BB_FUN_EQ_p28 s w i (i + 1) hs hbb (by rw [hcon, hwi2])
+          rwa [hk] at hh
+        exact succModNe_p28 (i := i) (by omega) h.symm
+      have hepne' : w (l + k - 1) ≠ v2 := by rw [← hwi]; exact hwit
+      rw [hai, hwi, v5apply_p28, if_neg hepne']
+    have hrhoL : rhoNode1 (deformedFF_p28 x1 x5 x2 v1 v2 t FF) d = v1 := by
+      refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+      · rw [deFFmem_p28 hFF]
+        refine ⟨l, ?_, ?_⟩
+        · rw [hl]
+        · rw [hl1, v5apply_p28, if_neg hv12]
+      · intro y hy
+        exact hout y hy
+    have hepL : epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF) d = w (l + k - 1) := by
+      refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+      · rw [deFFmem_p28 hFF]
+        refine ⟨l + k - 1, ?_, ?_⟩
+        · rw [v5apply_p28, if_neg hepne]
+        · have hmod : ((l + k - 1) + 1) % k = l % k := by
+            rw [show (l + k - 1) + 1 = l + k by omega, Nat.add_mod_right]
+          have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+            (j := (l + k - 1) + 1) (j1 := l) (by rw [hk]; exact hmod)
+          rw [h, hl, ← hddef]
+      · intro a ha
+        exact hin a ha
+    rw [hrhoL, hepL, hrhoFF, hepFF]
+    have hdcone : d = (w5cD6_cA x1 x2 x5 t + w5cD6_cB x1 x2 x5 t * r0) • v1
+        + (w5cD6_cB x1 x2 x5 t * s0) • w (l + k - 1) := by
+      rw [hd_eq, hcone]
+      module
+    have hpi : azim 0 d v1 (w (l + k - 1)) = Real.pi :=
+      w5cD6_azim_pi_of_pos_combo_p28
+        (u := v1) (v := w (l + k - 1)) (x := d)
+        (r := w5cD6_cA x1 x2 x5 t + w5cD6_cB x1 x2 x5 t * r0)
+        (s := w5cD6_cB x1 x2 x5 t * s0)
+        (hpropc t ht_ec) (mul_pos hBpos hs0) hncep hdcone
+    have hRHS : azim 0 v2 v1 (w (l + k - 1)) = Real.pi := by
+      rw [hk, hl, hl1] at haz
+      rwa [← hidx] at haz
+    rw [hpi, hRHS]
+
 
 /-- HOL `V3_DEFOR_EQ_IN_FF_SUB_MK_TWO_CASES` (NUXCOEA.hl:4698). -/
 theorem V3_DEFOR_EQ_IN_FF_SUB_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k l : ℕ)
@@ -3029,7 +3729,138 @@ theorem DEFORMATION_AZIM_V3_DEFOR_SUB_MK_TWO_CASES_p28 (s : ScsV39) (k : ℕ) (w
         (epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
           (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v1 t)) =
       azim 0 v1 (rhoNode1 FF v1) (epPair_p28 FF v1) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  obtain ⟨h1, h2, h5, hnch⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  obtain ⟨-, -, hv12⟩ := w5cD6_ne_of_not_collinear3_p28 hnch
+  have hup : 0 < upsX x1 x5 x2 :=
+    upsX_pos_p28 (-v1) (v2 - v1) x1 x5 x2
+      (fun hc => hnch ((COLLINEAR_EQ_SUB_NEG_p28 v1 v2).1 hc))
+      (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+  obtain ⟨e0, he0, hprop0⟩ := upsX_pos_seg_p28 v1 v2 x1 x2 x5 h1 h2 h5 hnch hx1 hx2 hx5
+  refine ⟨min e0 x5, lt_min he0 h5, ?_⟩
+  rintro t ⟨ht1, ht2⟩
+  have ht_e0 : -e0 < t ∧ t < e0 :=
+    ⟨by linarith [min_le_left e0 x5], by linarith [min_le_left e0 x5]⟩
+  have ht_x5 : t < x5 := by linarith [min_le_right e0 x5]
+  have hBpos : 0 < w5cD6_cB x1 x2 x5 t :=
+    w5cD6_cB_pos x1 x2 x5 t (hprop0 t ht_e0) hup
+  set d : V3 := v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t with hddef
+  have hdval : d = v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 := by
+    rw [hddef, v5apply_p28, if_pos rfl]
+  have hd_eq : d = w5cD6_cA x1 x2 x5 t • v1 + w5cD6_cB x1 x2 x5 t • v2 := by
+    rw [hddef]
+    exact w5cD6_dt_split_p28 v1 v2 x1 x2 x5 t h1 hx1 hx2 hx5
+  have hdv1 : d ≠ v1 := by
+    intro hcon
+    rw [hdval] at hcon
+    have hde : v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) = 0 := by
+      calc v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t)
+          = v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 - v1 := by
+            module
+        _ = v1 - v1 := by rw [hcon]
+        _ = 0 := by module
+    have hnorm := (deforEval_p28 v1 v2 x1 x2 x5 (x5 - t) h1 hup
+      (le_of_lt (hprop0 t ht_e0)) hx1 hx2 hx5).1
+    have hnorm0 : ‖v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t)‖ ^ 2 = 0 := by
+      rw [hde, norm_zero]
+      norm_num
+    rw [hnorm0] at hnorm
+    linarith
+  have hw2ne : w (l + 2) ≠ v2 := by
+    intro hcon
+    have h : (l + 2) % k = l % k := by
+      have hh := W_IN_BB_FUN_EQ_p28 s w (l + 2) l hs hbb (by rw [hcon, hl])
+      rwa [hk] at hh
+    exact w5cD6_mod_add_ne_p28 (l := l) (d := 2) (by norm_num) (by omega) h
+  have hout : ∀ y : V3, (v1, y) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF → y = w (l + 2) := by
+    intro y hy
+    rw [deFFmem_p28 hFF] at hy
+    obtain ⟨i, hdi, hyi⟩ := hy
+    have hwi2 : w i ≠ v2 := by
+      intro hcon
+      rw [hcon, v5apply_p28, if_pos rfl] at hdi
+      exact hdv1 (hdval.trans hdi.symm)
+    have hdi' : w i = v1 := by
+      rw [hdi, v5apply_p28, if_neg hwi2]
+    have hres : i % k = (l + 1) % k := by
+      have h := W_IN_BB_FUN_EQ_p28 s w i (l + 1) hs hbb (by rw [hdi', hl1])
+      rwa [hk] at h
+    have hres2 : (i + 1) % k = (l + 2) % k := by
+      have h : (i + 1) % k = ((l + 1) + 1) % k := by
+        rw [Nat.add_mod i 1 k, Nat.add_mod (l + 1) 1 k, hres]
+      rwa [show l + 1 + 1 = l + 2 by omega] at h
+    have hw2 : w (i + 1) = w (l + 2) :=
+      modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1 (j := i + 1) (j1 := l + 2)
+        (by rw [hk]; exact hres2)
+    rw [hyi, hw2, v5apply_p28, if_neg hw2ne]
+  have hin : ∀ a : V3, (a, v1) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF → a = d := by
+    intro a ha
+    rw [deFFmem_p28 hFF] at ha
+    obtain ⟨i, hai, hdi⟩ := ha
+    have hwi2 : w (i + 1) ≠ v2 := by
+      intro hcon
+      rw [hcon, v5apply_p28, if_pos rfl] at hdi
+      exact hdv1 (hdval.trans hdi.symm)
+    have hdi' : w (i + 1) = v1 := by
+      rw [hdi, v5apply_p28, if_neg hwi2]
+    have hres : (i + 1) % k = (l + 1) % k := by
+      have h := W_IN_BB_FUN_EQ_p28 s w (i + 1) (l + 1) hs hbb (by rw [hdi', hl1])
+      rwa [hk] at h
+    have hres2 : i % k = l % k := Nat.ModEq.add_right_cancel' 1 hres
+    have hwi : w i = v2 := by
+      have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1 (j := i) (j1 := l)
+        (by rw [hk]; exact hres2)
+      rwa [hl] at h
+    rw [hai, hwi, v5apply_p28, if_pos rfl]
+    rw [hddef, v5apply_p28, if_pos rfl]
+  have hrhoFF : rhoNode1 FF v1 = w (l + 2) := by
+    refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+    · rw [← hFF]
+      refine ⟨l + 1, ?_⟩
+      rw [Prod.mk.injEq]
+      exact ⟨hl1, by rw [show l + 1 + 1 = l + 2 by omega]⟩
+    · intro y hy
+      exact w5cD6_rho_succ_p28 s w k (l + 1) hk hk3 hs hbb y
+        (by rw [hl1]; rwa [← hFF] at hy)
+  have hepFF : epPair_p28 FF v1 = v2 := by
+    refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+    · rw [← hFF]
+      exact ⟨l, by rw [Prod.mk.injEq]; exact ⟨hl, hl1⟩⟩
+    · intro a ha
+      have h := w5cD6_pred_p28 s w k (l + 1) hk hk3 hs hbb a
+        (by rw [hl1]; rwa [← hFF] at ha)
+      rw [h]
+      rw [show l + 1 + k - 1 = l + k by omega]
+      rw [modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1 (j := l + k) (j1 := l)
+        (by rw [hk, Nat.add_mod_right])]
+      exact hl
+  have hrhoL : rhoNode1 (deformedFF_p28 x1 x5 x2 v1 v2 t FF) v1 = w (l + 2) := by
+    refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+    · rw [deFFmem_p28 hFF]
+      refine ⟨l + 1, ?_, ?_⟩
+      · rw [hl1, v5apply_p28, if_neg hv12]
+      · rw [show l + 1 + 1 = l + 2 by omega, v5apply_p28, if_neg hw2ne]
+    · intro y hy
+      exact hout y hy
+  have hepL : epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF) v1 = d := by
+    refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+    · rw [deFFmem_p28 hFF]
+      refine ⟨l, ?_, ?_⟩
+      · rw [hl]
+      · rw [hl1, v5apply_p28, if_neg hv12]
+    · intro a ha
+      exact hin a ha
+  rw [v5apply_p28 x1 x5 x2 v1 v2 v1 t, if_neg hv12, hrhoL, hepL, hrhoFF, hepFF]
+  have hd2 : d = w5cD6_cB x1 x2 x5 t • v2 + w5cD6_cA x1 x2 x5 t • v1 := by
+    rw [hd_eq]
+    module
+  rw [hd2]
+  exact w5cD6_azim_shift_smul_snd_p28 v1 (w (l + 2)) v2 (w5cD6_cB x1 x2 x5 t)
+    (w5cD6_cA x1 x2 x5 t) hBpos
+
 
 /-- HOL `V3_DEFOR_EQ_IN_FF_SUC_MK_TWO_CASES` (NUXCOEA.hl:5052). -/
 theorem V3_DEFOR_EQ_IN_FF_SUC_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k l : ℕ)
@@ -3092,7 +3923,191 @@ theorem DEFORMATION_AZIM_V3_DEFOR_SUC_MK_TWO_CASES_p28 (s : ScsV39) (k : ℕ) (w
           (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (l + k - 1)) t)) =
       azim 0 (w (l + k - 1)) (rhoNode1 FF (w (l + k - 1)))
         (epPair_p28 FF (w (l + k - 1))) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  obtain ⟨h1, h2, h5, hnch⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5
+    hk hs hm hk3 hl hl1 hx1 hx2 (by rw [norm_sub_rev v1 v2]; exact hx5)
+  have hup : 0 < upsX x1 x5 x2 :=
+    upsX_pos_p28 (-v1) (v2 - v1) x1 x5 x2
+      (fun hc => hnch ((COLLINEAR_EQ_SUB_NEG_p28 v1 v2).1 hc))
+      (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+  obtain ⟨e0, he0, hprop0⟩ := upsX_pos_seg_p28 v1 v2 x1 x2 x5 h1 h2 h5 hnch hx1 hx2 hx5
+  have hidx : l + k - 1 = l + (k - 1) := by omega
+  have hncep : ¬ Collinear3 0 v1 (w (l + k - 1)) := by
+    rw [hk, hl1] at hnc
+    rwa [← hidx] at hnc
+  obtain ⟨h0v1, h0ep, hv1ep⟩ := w5cD6_ne_of_not_collinear3_p28 hncep
+  have haff' : v2 ∈ affGt {0} {v1, w (l + k - 1)} := by
+    rw [hk, hl, hl1] at haff
+    rwa [← hidx] at haff
+  obtain ⟨r0, s0, hr0, hs0, hcone⟩ : ∃ r0 s0 : ℝ, 0 < r0 ∧ 0 < s0 ∧
+      v2 = r0 • v1 + s0 • w (l + k - 1) := by
+    obtain ⟨f, hfin, hsum, hpos, hone⟩ := haff'
+    rw [sum_insert_pair_v hfin h0v1 h0ep hv1ep] at hsum
+    exact ⟨f v1, f (w (l + k - 1)), hpos v1 (by simp), hpos _ (by simp),
+      by rw [hsum]; module⟩
+  obtain ⟨ec, hec, hpropc⟩ := w5cD6_cone_coeff_pos_p28 x1 x2 x5 r0 h1 h2 h5 hr0 hup
+  refine ⟨min e0 ec, lt_min he0 hec, ?_⟩
+  rintro t ⟨ht1, ht2⟩
+  have ht_e0 : -e0 < t ∧ t < e0 :=
+    ⟨by linarith [min_le_left e0 ec], by linarith [min_le_left e0 ec]⟩
+  have ht_ec : -ec < t ∧ t < ec :=
+    ⟨by linarith [min_le_right e0 ec], by linarith [min_le_right e0 ec]⟩
+  have hBpos : 0 < w5cD6_cB x1 x2 x5 t :=
+    w5cD6_cB_pos x1 x2 x5 t (hprop0 t ht_e0) hup
+  have halpha : 0 < w5cD6_cA x1 x2 x5 t + w5cD6_cB x1 x2 x5 t * r0 := hpropc t ht_ec
+  set d : V3 := v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t with hddef
+  have hdval : d = v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 := by
+    rw [hddef, v5apply_p28, if_pos rfl]
+  have hd_eq : d = w5cD6_cA x1 x2 x5 t • v1 + w5cD6_cB x1 x2 x5 t • v2 := by
+    rw [hddef]
+    exact w5cD6_dt_split_p28 v1 v2 x1 x2 x5 t h1 hx1 hx2 hx5
+  have hdcone : d = (w5cD6_cA x1 x2 x5 t + w5cD6_cB x1 x2 x5 t * r0) • v1
+      + (w5cD6_cB x1 x2 x5 t * s0) • w (l + k - 1) := by
+    rw [hd_eq, hcone]
+    module
+  have hdep : d ≠ w (l + k - 1) := by
+    intro hcon
+    have h2' : (w5cD6_cA x1 x2 x5 t + w5cD6_cB x1 x2 x5 t * r0) • v1
+        + (w5cD6_cB x1 x2 x5 t * s0) • w (l + k - 1) = w (l + k - 1) := by
+      rw [← hdcone]
+      exact hcon
+    exact halpha.ne' (w5cD6_smul_coeff_eq_p28 hncep h2').1
+  have hepne : w (l + k - 1) ≠ v2 := by
+    intro hcon
+    have h : (l + k - 1) % k = l % k := by
+      have hh := W_IN_BB_FUN_EQ_p28 s w (l + k - 1) l hs hbb (by rw [hcon, hl])
+      rwa [hk] at hh
+    rcases Nat.eq_zero_or_pos l with hl0 | hlpos
+    · subst hl0
+      rw [Nat.zero_add, Nat.zero_mod] at h
+      have hlt : k - 1 < k := by omega
+      rw [Nat.mod_eq_of_lt hlt] at h
+      omega
+    · have h1' : l + k - 1 = (l - 1) + k := by omega
+      rw [h1', Nat.add_mod_right] at h
+      have h2' : l = (l - 1) + 1 := by omega
+      rw [h2'] at h
+      exact succModNe_p28 (i := l - 1) (by omega) h.symm
+  have hwk2ne : w (l + k - 2) ≠ v2 := by
+    intro hcon
+    have h : (l + k - 2) % k = l % k := by
+      have hh := W_IN_BB_FUN_EQ_p28 s w (l + k - 2) l hs hbb (by rw [hcon, hl])
+      rwa [hk] at hh
+    have hidx2 : l + k - 2 = l + (k - 2) := by omega
+    rw [hidx2] at h
+    exact w5cD6_mod_add_ne_p28 (l := l) (d := k - 2) (by omega) (by omega) h
+  have hout : ∀ y : V3, (w (l + k - 1), y) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF → y = d := by
+    intro y hy
+    rw [deFFmem_p28 hFF] at hy
+    obtain ⟨i, hdi, hyi⟩ := hy
+    have hwi2 : w i = w (l + k - 1) := by
+      by_cases hcon : w i = v2
+      · exfalso
+        rw [hcon, v5apply_p28, if_pos rfl] at hdi
+        exact hdep (hdval.trans hdi.symm)
+      · rw [v5apply_p28, if_neg hcon] at hdi
+        exact hdi.symm
+    have hres : i % k = (l + k - 1) % k := by
+      have h := W_IN_BB_FUN_EQ_p28 s w i (l + k - 1) hs hbb hwi2
+      rwa [hk] at h
+    have hres2 : (i + 1) % k = ((l + k - 1) + 1) % k := by
+      have h : (i + 1) % k = (i % k + 1) % k := by
+        rw [Nat.add_mod, Nat.mod_eq_of_lt (by omega : 1 < k)]
+      have h2 : ((l + k - 1) + 1) % k = ((l + k - 1) % k + 1) % k := by
+        rw [Nat.add_mod, Nat.mod_eq_of_lt (by omega : 1 < k)]
+      rw [h, h2, hres]
+    have hw2 : w (i + 1) = w ((l + k - 1) + 1) :=
+      modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+        (j := i + 1) (j1 := (l + k - 1) + 1) (by rw [hk]; exact hres2)
+    rw [hyi, hw2]
+    have hw3 : w ((l + k - 1) + 1) = v2 := by
+      rw [show (l + k - 1) + 1 = l + k by omega]
+      rw [modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1 (j := l + k) (j1 := l)
+        (by rw [hk, Nat.add_mod_right])]
+      exact hl
+    rw [hw3, v5apply_p28, if_pos rfl, hddef, v5apply_p28, if_pos rfl]
+  have hin : ∀ a : V3, (a, w (l + k - 1)) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF →
+      a = w (l + k - 2) := by
+    intro a ha
+    rw [deFFmem_p28 hFF] at ha
+    obtain ⟨i, hai, hdi⟩ := ha
+    have hwi2 : w (i + 1) = w (l + k - 1) := by
+      by_cases hcon : w (i + 1) = v2
+      · exfalso
+        rw [hcon, v5apply_p28, if_pos rfl] at hdi
+        exact hdep (hdval.trans hdi.symm)
+      · rw [v5apply_p28, if_neg hcon] at hdi
+        exact hdi.symm
+    have hres : (i + 1) % k = (l + k - 1) % k := by
+      have h := W_IN_BB_FUN_EQ_p28 s w (i + 1) (l + k - 1) hs hbb hwi2
+      rwa [hk] at h
+    have hres2 : i % k = (l + k - 2) % k := by
+      have h' : i + 1 ≡ (l + k - 2) + 1 [MOD k] := by
+        show (i + 1) % k = ((l + k - 2) + 1) % k
+        rw [show (l + k - 2) + 1 = l + k - 1 by omega]
+        exact hres
+      exact Nat.ModEq.add_right_cancel' 1 h'
+    have hwi : w i = w (l + k - 2) :=
+      modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+        (j := i) (j1 := l + k - 2) (by rw [hk]; exact hres2)
+    rw [hai, hwi, v5apply_p28, if_neg hwk2ne]
+  have hrhoFF : rhoNode1 FF (w (l + k - 1)) = v2 := by
+    refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+    · rw [← hFF]
+      refine ⟨l + k - 1, ?_⟩
+      rw [Prod.mk.injEq]
+      refine ⟨rfl, ?_⟩
+      rw [show (l + k - 1) + 1 = l + k by omega]
+      rw [modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1 (j := l + k) (j1 := l)
+        (by rw [hk, Nat.add_mod_right])]
+      exact hl
+    · intro y hy
+      have h := w5cD6_rho_succ_p28 s w k (l + k - 1) hk hk3 hs hbb y (by rwa [← hFF] at hy)
+      rw [h, show l + k - 1 + 1 = l + k by omega]
+      rw [modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1 (j := l + k) (j1 := l)
+        (by rw [hk, Nat.add_mod_right])]
+      exact hl
+  have hepFF : epPair_p28 FF (w (l + k - 1)) = w (l + k - 2) := by
+    refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+    · rw [← hFF]
+      refine ⟨l + k - 2, ?_⟩
+      rw [Prod.mk.injEq]
+      exact ⟨rfl, by rw [show (l + k - 2) + 1 = l + k - 1 by omega]⟩
+    · intro a ha
+      have h := w5cD6_pred_p28 s w k (l + k - 1) hk hk3 hs hbb a (by rwa [← hFF] at ha)
+      rw [h]
+      rw [show (l + k - 1) + k - 1 = (l + k - 2) + k by omega]
+      rw [modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+        (j := (l + k - 2) + k) (j1 := l + k - 2) (by rw [hk, Nat.add_mod_right])]
+  have hrhoL : rhoNode1 (deformedFF_p28 x1 x5 x2 v1 v2 t FF) (w (l + k - 1)) = d := by
+    refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+    · rw [deFFmem_p28 hFF]
+      refine ⟨l + k - 1, ?_, ?_⟩
+      · rw [v5apply_p28, if_neg hepne]
+      · rw [show (l + k - 1) + 1 = l + k by omega]
+        rw [modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1 (j := l + k) (j1 := l)
+          (by rw [hk, Nat.add_mod_right])]
+        rw [hl, v5apply_p28, if_pos rfl, ← hdval]
+    · intro y hy
+      exact hout y hy
+  have hepL : epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF) (w (l + k - 1))
+      = w (l + k - 2) := by
+    refine w5cD6_epsilon_eq_of_unique_p28 ?_ ?_
+    · rw [deFFmem_p28 hFF]
+      refine ⟨l + k - 2, ?_, ?_⟩
+      · rw [v5apply_p28, if_neg hwk2ne]
+      · rw [show (l + k - 2) + 1 = l + k - 1 by omega, v5apply_p28, if_neg hepne]
+    · intro a ha
+      exact hin a ha
+  rw [v5apply_p28 x1 x5 x2 v1 v2 (w (l + k - 1)) t, if_neg hepne,
+    hrhoL, hepL, hrhoFF, hepFF]
+  rw [hdcone, hcone,
+    w5cD6_azim_shift_smul_fst_p28 (w (l + k - 1)) v1 (w (l + k - 2))
+      (w5cD6_cA x1 x2 x5 t + w5cD6_cB x1 x2 x5 t * r0) (w5cD6_cB x1 x2 x5 t * s0) halpha,
+    w5cD6_azim_shift_smul_fst_p28 (w (l + k - 1)) v1 (w (l + k - 2)) r0 s0 hr0]
+
 
 /-- HOL `V3_DEFOR_EQ_IN_FF_NOT_MK_TWO_CASES` (NUXCOEA.hl:5404). -/
 theorem V3_DEFOR_EQ_IN_FF_NOT_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k l : ℕ)
@@ -3109,7 +4124,139 @@ theorem V3_DEFOR_EQ_IN_FF_NOT_MK_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k 
     (hvV : v ∈ V) :
     ∀ a' : V3, (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t, a') ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔
       (v, a') ∈ FF := by
-  sorry
+  rw [ha] at hni
+  intro a'
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hup : 0 < upsX x1 x5 x2 :=
+    upsX_pos_p28 (-v1) (v2 - v1) x1 x5 x2
+      (fun hc => hnc ((COLLINEAR_EQ_SUB_NEG_p28 v1 v2).1 hc))
+      (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+  have hvid0 : ∀ u : V3, v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 u 0 = u := by
+    intro u
+    rw [v5apply_p28 x1 x5 x2 v1 v2 u 0]
+    by_cases hu : u = v2
+    · rw [if_pos hu, hu, sub_zero]
+      exact deforId_p28 v1 v2 x1 x2 x5 h1 hup hx1 hx2 hx5
+    · exact if_neg hu
+  have hFF0 : deformedFF_p28 x1 x5 x2 v1 v2 0 FF = FF := by
+    rw [deformedFF_p28]
+    have hid : (fun uv : V3 × V3 => (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.1 0,
+        v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.2 0)) = id := by
+      funext uv
+      simp only [id, hvid0]
+    rw [hid, Set.image_id]
+  have hV' : ∀ u : V3, u ∈ V → ∃ j : ℕ, w j = u := by
+    intro u hu
+    have hmem : u ∈ Set.range w := by rw [hV]; exact hu
+    obtain ⟨j, hj⟩ := hmem
+    exact ⟨j, hj⟩
+  have hpred : ∀ x : V3, (x, v2) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) →
+      x = w (l + k - 1) := by
+    intro x hx
+    obtain ⟨j, hj⟩ := hx
+    rw [Prod.mk.injEq] at hj
+    obtain ⟨hj1, hj2⟩ := hj
+    have hres : (j + 1) % k = l % k := by
+      have h := W_IN_BB_FUN_EQ_p28 s w (j + 1) l hs hbb (by rw [hj2, hl])
+      rwa [hk] at h
+    have hres2 : (l + k - 1) % k = j % k := EQ_SUC_K_SUB3_p28 hres.symm hk3
+    have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+      (j := l + k - 1) (j1 := j) (by rw [hk]; exact hres2)
+    rw [h, hj1]
+  have hsucc : ∀ y : V3, (v2, y) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) →
+      y = w (l + 1) := by
+    intro y hy
+    obtain ⟨j, hj⟩ := hy
+    rw [Prod.mk.injEq] at hj
+    obtain ⟨hj1, hj2⟩ := hj
+    have hres : j % k = l % k := by
+      have h := W_IN_BB_FUN_EQ_p28 s w j l hs hbb (by rw [hj1, hl])
+      rwa [hk] at h
+    have hres2 : (j + 1) % k = (l + 1) % k := by
+      rw [Nat.add_mod j 1 k, Nat.add_mod l 1 k, hres]
+    have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+      (j := j + 1) (j1 := l + 1) (by rw [hk]; exact hres2)
+    rw [← hj2, h]
+  have hdval : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t
+      = v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 := by
+    rw [v5apply_p28, if_pos rfl]
+  have hdall_of : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t ≠ v2 →
+      ∀ j : ℕ, v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t ≠ w j := by
+    intro hdv2 j hcon
+    have hwi2 : w (j % k) = w j := by
+      apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (j % k) j hs hbb
+      rw [hk, Nat.mod_mod]
+    rw [← hwi2] at hcon
+    by_cases hres : (j % k) % k = l % k
+    · have hwv : w (j % k) = v2 := by
+        have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+          (j := j % k) (j1 := l) (by rw [hk]; exact hres)
+        rwa [hl] at h
+      rw [hwv] at hcon
+      exact hdv2 hcon
+    · exact hni t (j % k) ⟨het, hte, hres⟩ (hdval.symm.trans hcon)
+  have huniq : ∀ u y : V3, u ≠ v2 → u ≠ w (l + k - 1) → u ∈ V →
+      ((u, y) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔ (u, y) ∈ FF) := by
+    intro u y hu2 huep huV
+    constructor
+    · intro hmem
+      rw [deFFmem_p28 hFF] at hmem
+      obtain ⟨i, hu, hy⟩ := hmem
+      rw [v5apply_p28 x1 x5 x2 v1 v2 (w i) t] at hu
+      rw [v5apply_p28 x1 x5 x2 v1 v2 (w (i + 1)) t] at hy
+      by_cases hwi : w i = v2
+      · rw [if_pos hwi] at hu
+        have hdv2 : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t ≠ v2 := by
+          intro hcon
+          exact hu2 (hu.trans (hdval.symm.trans hcon))
+        obtain ⟨jj, hj⟩ := hV' u huV
+        have hu' : u = v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t := hu.trans hdval.symm
+        exact absurd (hu'.symm.trans hj.symm) (hdall_of hdv2 jj)
+      · rw [if_neg hwi] at hu
+        by_cases hw2 : w (i + 1) = v2
+        · rw [if_pos hw2] at hy
+          have hpair : (u, v2) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) := by
+            refine ⟨i, ?_⟩
+            show (w i, w (i + 1)) = (u, v2)
+            rw [Prod.mk.injEq]
+            exact ⟨hu.symm, hw2⟩
+          exact absurd (hpred u hpair) huep
+        · rw [if_neg hw2] at hy
+          rw [← hFF]
+          refine ⟨i, ?_⟩
+          show (w i, w (i + 1)) = (u, y)
+          rw [Prod.mk.injEq]
+          exact ⟨hu.symm, hy.symm⟩
+    · intro hmem
+      have hmem' : (u, y) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) := by
+        rwa [← hFF] at hmem
+      obtain ⟨i, hi⟩ := hmem'
+      rw [Prod.mk.injEq] at hi
+      obtain ⟨hi1, hi2⟩ := hi
+      rw [deFFmem_p28 hFF]
+      refine ⟨i, ?_, ?_⟩
+      · rw [v5apply_p28 x1 x5 x2 v1 v2 (w i) t, if_neg (by rw [hi1]; exact hu2)]
+        exact hi1.symm
+      · rw [v5apply_p28 x1 x5 x2 v1 v2 (w (i + 1)) t]
+        by_cases hw2 : w (i + 1) = v2
+        · exfalso
+          have hpair : (u, v2) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) := by
+            refine ⟨i, ?_⟩
+            show (w i, w (i + 1)) = (u, v2)
+            rw [Prod.mk.injEq]
+            exact ⟨hi1, hw2⟩
+          exact huep (hpred u hpair)
+        · rw [if_neg hw2]
+          exact hi2.symm
+  have hvne : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t = v := by
+    rw [v5apply_p28, if_neg hv2]
+  by_cases ht0 : t = 0
+  · subst ht0
+    rw [hvid0 v, hFF0]
+  · rw [hvne]
+    exact huniq v a' hv2 hv hvV
+
 
 /-- HOL `V3_DEFOR_EQ_IN_FF_NOT_MK_SYM_TWO_CASES` (NUXCOEA.hl:5513). -/
 theorem V3_DEFOR_EQ_IN_FF_NOT_MK_SYM_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3) (k l : ℕ)
@@ -3126,7 +4273,139 @@ theorem V3_DEFOR_EQ_IN_FF_NOT_MK_SYM_TWO_CASES_p28 (s : ScsV39) (w : ℕ → V3)
     (hvV : v ∈ V) :
     ∀ a' : V3, (a', v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔
       (a', v) ∈ FF := by
-  sorry
+  rw [ha] at hni
+  intro a'
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  have hup : 0 < upsX x1 x5 x2 :=
+    upsX_pos_p28 (-v1) (v2 - v1) x1 x5 x2
+      (fun hc => hnc ((COLLINEAR_EQ_SUB_NEG_p28 v1 v2).1 hc))
+      (by rw [norm_neg]; exact hx1) hx5
+      (by rw [show (-v1) - (v2 - v1) = -v2 by abel, norm_neg]; exact hx2)
+  have hvid0 : ∀ u : V3, v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 u 0 = u := by
+    intro u
+    rw [v5apply_p28 x1 x5 x2 v1 v2 u 0]
+    by_cases hu : u = v2
+    · rw [if_pos hu, hu, sub_zero]
+      exact deforId_p28 v1 v2 x1 x2 x5 h1 hup hx1 hx2 hx5
+    · exact if_neg hu
+  have hFF0 : deformedFF_p28 x1 x5 x2 v1 v2 0 FF = FF := by
+    rw [deformedFF_p28]
+    have hid : (fun uv : V3 × V3 => (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.1 0,
+        v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 uv.2 0)) = id := by
+      funext uv
+      simp only [id, hvid0]
+    rw [hid, Set.image_id]
+  have hV' : ∀ u : V3, u ∈ V → ∃ j : ℕ, w j = u := by
+    intro u hu
+    have hmem : u ∈ Set.range w := by rw [hV]; exact hu
+    obtain ⟨j, hj⟩ := hmem
+    exact ⟨j, hj⟩
+  have hpred : ∀ x : V3, (x, v2) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) →
+      x = w (l + k - 1) := by
+    intro x hx
+    obtain ⟨j, hj⟩ := hx
+    rw [Prod.mk.injEq] at hj
+    obtain ⟨hj1, hj2⟩ := hj
+    have hres : (j + 1) % k = l % k := by
+      have h := W_IN_BB_FUN_EQ_p28 s w (j + 1) l hs hbb (by rw [hj2, hl])
+      rwa [hk] at h
+    have hres2 : (l + k - 1) % k = j % k := EQ_SUC_K_SUB3_p28 hres.symm hk3
+    have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+      (j := l + k - 1) (j1 := j) (by rw [hk]; exact hres2)
+    rw [h, hj1]
+  have hsucc : ∀ y : V3, (v2, y) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) →
+      y = w (l + 1) := by
+    intro y hy
+    obtain ⟨j, hj⟩ := hy
+    rw [Prod.mk.injEq] at hj
+    obtain ⟨hj1, hj2⟩ := hj
+    have hres : j % k = l % k := by
+      have h := W_IN_BB_FUN_EQ_p28 s w j l hs hbb (by rw [hj1, hl])
+      rwa [hk] at h
+    have hres2 : (j + 1) % k = (l + 1) % k := by
+      rw [Nat.add_mod j 1 k, Nat.add_mod l 1 k, hres]
+    have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+      (j := j + 1) (j1 := l + 1) (by rw [hk]; exact hres2)
+    rw [← hj2, h]
+  have hdval : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t
+      = v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 := by
+    rw [v5apply_p28, if_pos rfl]
+  have hdall_of : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t ≠ v2 →
+      ∀ j : ℕ, v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t ≠ w j := by
+    intro hdv2 j hcon
+    have hwi2 : w (j % k) = w j := by
+      apply CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (j % k) j hs hbb
+      rw [hk, Nat.mod_mod]
+    rw [← hwi2] at hcon
+    by_cases hres : (j % k) % k = l % k
+    · have hwv : w (j % k) = v2 := by
+        have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+          (j := j % k) (j1 := l) (by rw [hk]; exact hres)
+        rwa [hl] at h
+      rw [hwv] at hcon
+      exact hdv2 hcon
+    · exact hni t (j % k) ⟨het, hte, hres⟩ (hdval.symm.trans hcon)
+  have huniq : ∀ y u : V3, u ≠ v2 → u ≠ v1 → u ∈ V →
+      ((y, u) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔ (y, u) ∈ FF) := by
+    intro y u hu2 hu1 huV
+    obtain ⟨jj, hj⟩ := hV' u huV
+    constructor
+    · intro hmem
+      rw [deFFmem_p28 hFF] at hmem
+      obtain ⟨i, hy, hu⟩ := hmem
+      rw [v5apply_p28 x1 x5 x2 v1 v2 (w i) t] at hy
+      rw [v5apply_p28 x1 x5 x2 v1 v2 (w (i + 1)) t] at hu
+      by_cases hw2 : w (i + 1) = v2
+      · rw [if_pos hw2] at hu
+        have hdv2 : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t ≠ v2 := by
+          intro hcon
+          exact hu2 (hu.trans (hdval.symm.trans hcon))
+        have hu' : u = v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t := hu.trans hdval.symm
+        exact absurd (hu'.symm.trans hj.symm) (hdall_of hdv2 jj)
+      · rw [if_neg hw2] at hu
+        by_cases hwi : w i = v2
+        · rw [if_pos hwi] at hy
+          have hpair : (v2, u) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) := by
+            refine ⟨i, ?_⟩
+            show (w i, w (i + 1)) = (v2, u)
+            rw [Prod.mk.injEq]
+            exact ⟨hwi, hu.symm⟩
+          exact absurd ((hsucc u hpair).trans hl1) hu1
+        · rw [if_neg hwi] at hy
+          rw [← hFF]
+          refine ⟨i, ?_⟩
+          show (w i, w (i + 1)) = (y, u)
+          rw [Prod.mk.injEq]
+          exact ⟨hy.symm, hu.symm⟩
+    · intro hmem
+      have hmem' : (y, u) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) := by
+        rwa [← hFF] at hmem
+      obtain ⟨i, hi⟩ := hmem'
+      rw [Prod.mk.injEq] at hi
+      obtain ⟨hi1, hi2⟩ := hi
+      rw [deFFmem_p28 hFF]
+      refine ⟨i, ?_, ?_⟩
+      · rw [v5apply_p28 x1 x5 x2 v1 v2 (w i) t]
+        by_cases hwi : w i = v2
+        · exfalso
+          have hpair : (v2, u) ∈ Set.range (fun j : ℕ => (w j, w (j + 1))) := by
+            refine ⟨i, ?_⟩
+            show (w i, w (i + 1)) = (v2, u)
+            rw [Prod.mk.injEq]
+            exact ⟨hwi, hi2⟩
+          exact hu1 ((hsucc u hpair).trans hl1)
+        · rw [if_neg hwi]
+          exact hi1.symm
+      · rw [v5apply_p28 x1 x5 x2 v1 v2 (w (i + 1)) t, if_neg (by rw [hi2]; exact hu2)]
+        exact hi2.symm
+  have hvne : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t = v := by
+    rw [v5apply_p28, if_neg hv2]
+  by_cases ht0 : t = 0
+  · subst ht0
+    rw [hvid0 v, hFF0]
+  · rw [hvne]
+    exact huniq a' v hv2 hv1 hvV
+
 
 /-- HOL `DEFORMATION_AZIM_V3_DEFOR_NOT_MK_TWO_CASES` (NUXCOEA.hl:5620). -/
 theorem DEFORMATION_AZIM_V3_DEFOR_NOT_MK_TWO_CASES_p28 (s : ScsV39) (k : ℕ) (w : ℕ → V3)
@@ -3394,7 +4673,71 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_MK_TWO_CASES_p28 (s : ScsV39) (k : �
         (epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
           (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t)) =
       azim 0 v (rhoNode1 FF v) (epPair_p28 FF v) := by
-  sorry
+  subst ha
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hm
+  obtain ⟨eA, heA, hA⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_MK_TWO_CASES_p28 s k w l j v1 v2
+    x1 x2 x5 (-1) FF V hk hk3 hs hm haz hnc haff hj haj hbj hdiag1 hdiag2 hJ hl hl1
+    hx1 hx2 hx5 rfl hFF hV
+  obtain ⟨eB, heB, hB⟩ := DEFORMATION_AZIM_V3_DEFOR_SUB_MK_TWO_CASES_p28 s k w l j v1 v2
+    x1 x2 x5 (-1) FF V hk hk3 hs hm haz hnc haff hj haj hbj hdiag1 hdiag2 hJ hl hl1
+    hx1 hx2 hx5 rfl hFF hV
+  obtain ⟨eC, heC, hC⟩ := DEFORMATION_AZIM_V3_DEFOR_SUC_MK_TWO_CASES_p28 s k w l j v1 v2
+    x1 x2 x5 (-1) FF V hk hk3 hs hm haz hnc haff hj haj hbj hdiag1 hdiag2 hJ hl hl1
+    hx1 hx2 hx5 rfl hFF hV
+  obtain ⟨eD, heD, hD⟩ := DEFORMATION_AZIM_V3_DEFOR_NOT_MK_TWO_CASES_p28 s k w l j v1 v2
+    x1 x2 x5 (-1) FF V hk hk3 hs hm haz hnc haff hj haj hbj hdiag1 hdiag2 hJ hl hl1
+    hx1 hx2 hx5 rfl hFF hV
+  refine ⟨min (min (min eA eB) eC) eD, lt_min (lt_min (lt_min heA heB) heC) heD, ?_⟩
+  rintro t v ⟨ht1, ht2, hvV⟩
+  have hleA : min (min (min eA eB) eC) eD ≤ eA :=
+    le_trans (min_le_left _ _) (le_trans (min_le_left _ _) (min_le_left _ _))
+  have hleB : min (min (min eA eB) eC) eD ≤ eB :=
+    le_trans (min_le_left _ _) (le_trans (min_le_left _ _) (min_le_right _ _))
+  have hleC : min (min (min eA eB) eC) eD ≤ eC :=
+    le_trans (min_le_left _ _) (min_le_right _ _)
+  have hleD : min (min (min eA eB) eC) eD ≤ eD := min_le_right _ _
+  have hvr : v ∈ Set.range w := by rw [hV]; exact hvV
+  obtain ⟨j0, hj0⟩ := hvr
+  by_cases h2 : j0 % k = l % k
+  · have hv2 : v = v2 := by
+      rw [← hj0]
+      have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+        (j := j0) (j1 := l) (by rw [hk]; exact h2)
+      rw [h, hl]
+    rw [hv2]
+    exact hA t ⟨by linarith, by linarith⟩
+  · by_cases h1c : j0 % k = (l + 1) % k
+    · have hv1 : v = v1 := by
+        rw [← hj0]
+        have h := modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+          (j := j0) (j1 := l + 1) (by rw [hk]; exact h1c)
+        rw [h, hl1]
+      rw [hv1]
+      exact hB t ⟨by linarith, by linarith⟩
+    · by_cases hEc : j0 % k = (l + k - 1) % k
+      · have hvE : v = w (l + k - 1) := by
+          rw [← hj0]
+          exact modPeriodic_p28 (f := w) (by omega : 0 < s.k) hbb.2.1
+            (j := j0) (j1 := l + k - 1) (by rw [hk]; exact hEc)
+        rw [hvE]
+        exact hC t ⟨by linarith, by linarith⟩
+      · have hvne2 : v ≠ v2 := by
+          intro hcon
+          have h := W_IN_BB_FUN_EQ_p28 s w j0 l hs hbb (by rw [hj0, hcon, hl])
+          rw [hk] at h
+          exact h2 h
+        have hvne1 : v ≠ v1 := by
+          intro hcon
+          have h := W_IN_BB_FUN_EQ_p28 s w j0 (l + 1) hs hbb (by rw [hj0, hcon, hl1])
+          rw [hk] at h
+          exact h1c h
+        have hvneE : v ≠ w (l + k - 1) := by
+          intro hcon
+          have h := W_IN_BB_FUN_EQ_p28 s w j0 (l + k - 1) hs hbb (by rw [hj0, hcon])
+          rw [hk] at h
+          exact hEc h
+        exact hD t v ⟨by linarith, by linarith, hvneE, hvne2, hvne1, hvV⟩
+
 
 /-- HOL `DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_AT_ALL_MK_TWO_CASES` (NUXCOEA.hl:5803). -/
 theorem DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_AT_ALL_MK_TWO_CASES_p28 (s : ScsV39)
