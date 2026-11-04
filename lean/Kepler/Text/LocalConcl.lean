@@ -5848,4 +5848,950 @@ theorem localconcl_wire_capstone_w2 :
 
 
 
+/-! ### LA18 + LA34 materialization capstones (lane lv56-w1, program
+slot C = LV5 + LV6, 2026-11-04, after the leftover-mat-scout delivery
+e342ff1b §2-17): the clean public top-level exits of LocalAuto18 (29
+clean of 47 theorem exits) and LocalAuto34 (53 clean of 123) that no e2e
+root reaches are re-exposed as ONE conjunction each -- the 18 + 70
+sorried-exit branches are excluded per the workorder (scout probe1
+per-item BFS closure sorried ≥ 1); both modules are already imported by
+this file (LA18 :489, LA34 :505), so zero import changes.  Scout probe2
+(baseline I 1e139a28): la18 clean-subset group closure +168 fresh vs
+cone (163 LA18 + 5 LA4), la34 +156 (154 LA34 + 2 LA17), GROUP_SORRIED 0
+x2; K_SORRIED 134 / K_AXIOM 624 unchanged at wiring time.  This wave is
+LocalConcl-only (no Assembly re-point; lv-wire-w2 wires all four
+program-C slots in one pass).  Extraction purely mechanical
+(gen_items.py): conjuncts are verbatim module source signatures,
+bodies are the exit constants; drops per the no-forcing rule are
+recorded per item in the capstone docstrings and logs/gen_report.txt.
+The exact kit yield is re-measured at the orchestrator e2e gate. -/
+
+
+/-- LA18 materialization capstone (lane lv56-w1 slot
+LV5, program slot C = LV5+LV6, 2026-11-04, after
+the leftover-mat-scout delivery e342ff1b §1): the clean public top-level
+LocalAuto18 exits unreachable from every e2e
+root -- 29 of 47 theorem exits
+(scout probe1 per-item BFS: clean = closure sorried-0; the 18
+sorried-exit branches are excluded per the workorder, one does not enter,
+each named in the lane gen_report).  Clean-subset group closure (scout
+probe2, baseline I 1e139a28): GROUP_FRESH_VS_CONE 168
+(163 LA18 + 5
+LocalAuto4), GROUP_SORRIED 0, i.e. the new closure is
+sorried-0; K_SORRIED 134 and K_AXIOM 624 unchanged when wired.
+Implemented here: 26 of the 29.  Dropped per the workorder's
+no-forcing rule ("抽不出/不一致 → 剔除并如实报"), mechanically detected
+by the generator:
+  - PERIODIC_IMAGE2_p18: universe-polymorphic statement (free universe in Sort/Type position; would give the capstone a universe parameter and break the future `have hcap := <name>` consumption shape)
+  - periodic2_mod_p18: universe-polymorphic statement (free universe in Sort/Type position; would give the capstone a universe parameter and break the future `have hcap := <name>` consumption shape)
+  - periodic_mod_p18: universe-polymorphic statement (free universe in Sort/Type position; would give the capstone a universe parameter and break the future `have hcap := <name>` consumption shape)
+Anchors (no fabricated edges): every conjunct is asserted in the
+verbatim wording of its LA18 declaration -- the conjunct text is
+the declaration's source signature (binders + conclusion, copied verbatim
+and mechanically split at the binder/conclusion separator by the
+generator gen_items.py; equation-lemma conjuncts have no source text and
+take the `#check @name` printer dump verbatim); the printer dump
+(logs/sigprobe_82.out) is retained as cross reference; semantic identity
+is re-verified by the elaboration of the `⟨...⟩` assembly below (each
+component must unify definitionally with its conjunct); per-conjunct
+comments carry each exit's LA18 declaration line and file-local
+docstring HOL anchor.
+Conjunct order: the scout clean-seed-list order (logs/seeds_clean.txt
+LA18 subset).  Body = the assembly of the exit constants --
+zero new proof obligations, zero new imports. -/
+theorem la18_capstone_w1 :
+    -- 1. BOUNDED_SY_p18 (LA18:259; HOL `BOUNDED_SY`)
+    (∀ {k : ℕ} {a b : ℕ → ℕ → ℝ}
+    ,
+          Bornology.IsBounded (SYset_p18 k a b)
+    ) ∧
+    -- 2. BSY1body_p18.eq_1 (LA18:186 (def BSY1body_p18 there; eq lemma, statement = probe printer dump verbatim); HOL `{matvec v | rows v in ball_annulus ∧ CONDITION1_SY a b v}`)
+    (∀ (k : ℕ) (a b : ℕ → ℕ → ℝ),
+          BSY1body_p18 k a b =
+            {l |
+              (∀ (j : Fin k), vecmatsV3_p4 l j ∈ ballAnnulus) ∧
+                ∀ (i j : ℕ),
+                  1 ≤ i →
+                    i ≤ k → 1 ≤ j → j ≤ k → a i j ≤ ‖rowV3_p18 l i - rowV3_p18 l j‖ ∧ ‖rowV3_p18 l i - rowV3_p18 l j‖ ≤ b i j}
+    ) ∧
+    -- 3. CLOSED_SY_p18 (LA18:239; HOL `CLOSED_SY`)
+    (∀ {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+          {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+          (_hsys : stableSystem_p18 k d s a b J f) (_hs : s = Finset.Iic (k - 1))
+          (_hf : f = fun j => (1 + j) % k) (_hk1 : 1 < k) (_hk2 : 2 < k),
+          IsClosed (SYset_p18 k a b)
+    ) ∧
+    -- 4. POWER_MOD_FUN_p18 (LA18:211; HOL `POWER_MOD_FUN`)
+    (∀ (n i k : ℕ) (_hn : 1 ≤ n) (_hk : 1 < k)
+    ,
+          (fun j => (1 + j) % k)^[n] i = (n + i) % k
+    ) ∧
+    -- 5. REP_NUMSEG_p18 (LA18:1472; HOL `REP_NUMSEG`, HOL `0..(k-1)`)
+    (∀ (k : ℕ) (_hk : k ≠ 0)
+    ,
+          {i : ℕ | i < k} = Finset.range k
+    ) ∧
+    -- 6. SCS_5I1_SLICE_02_p18 (LA18:2224; HOL `SCS_5I1_SLICE_02`)
+    (scsArrowV39 {scsStabDiagV39 scs5I1 0 2}
+          {scsPropEquV39 scs3M1 1, scsPropEquV39 scs4M2 1}
+    ) ∧
+    -- 7. SCS_5I2_SLICE_02_p18 (LA18:2253; HOL `SCS_5I2_SLICE_02`)
+    (scsArrowV39 {scsStabDiagV39 scs5I2 0 2}
+          {scsPropEquV39 scs3T1 1, scsPropEquV39 scs4M3' 1}
+    ) ∧
+    -- 8. SCS_5M1_SLICE_02_p18 (LA18:2282; HOL `SCS_5M1_SLICE_02`)
+    (scsArrowV39 {scsStabDiagV39 scs5M1 0 2}
+          {scsPropEquV39 scs3T4 2, scsPropEquV39 scs4M2 1}
+    ) ∧
+    -- 9. SCS_5M1_SLICE_03_p18 (LA18:2311; HOL `SCS_5M1_SLICE_03`)
+    (scsArrowV39 {scsStabDiagV39 scs5M1 0 3}
+          {scsPropEquV39 scs4M4' 1, scsPropEquV39 scs3M1 1}
+    ) ∧
+    -- 10. SCS_5M1_SLICE_24_p18 (LA18:2340; HOL `SCS_5M1_SLICE_24`)
+    (scsArrowV39 {scsStabDiagV39 scs5M1 2 4}
+          {scsPropEquV39 scs3M1 1, scsPropEquV39 scs4M5' 1}
+    ) ∧
+    -- 11. SCS_DIAG_SCS_5I1_02_p18 (LA18:1518; HOL `SCS_DIAG_SCS_5I1_02`)
+    (scsDiag scs5I1.k 0 2
+    ) ∧
+    -- 12. SCS_DIAG_SCS_5I2_02_p18 (LA18:1525; HOL `SCS_DIAG_SCS_5I2_02`)
+    (scsDiag scs5I2.k 0 2
+    ) ∧
+    -- 13. SCS_DIAG_SCS_5M1_02_p18 (LA18:1532; HOL `SCS_DIAG_SCS_5M1_02`)
+    (scsDiag scs5M1.k 0 2
+    ) ∧
+    -- 14. SCS_DIAG_SCS_5M1_03_p18 (LA18:1539; HOL `SCS_DIAG_SCS_5M1_03`)
+    (scsDiag scs5M1.k 0 3
+    ) ∧
+    -- 15. SCS_DIAG_SCS_5M1_24_p18 (LA18:1546; HOL `SCS_DIAG_SCS_5M1_24`)
+    (scsDiag scs5M1.k 2 4
+    ) ∧
+    -- 16. SUM_NUMSEG4_p18 (LA18:371; HOL `SUM_NUMSEG4`)
+    (∀ (t : ℕ → ℝ)
+    ,
+          ∑ i ∈ Finset.range 5, t i = t 0 + t 1 + t 2 + t 3 + t 4
+    ) ∧
+    -- 17. WJSCPRO_p18 (LA18:267; HOL `WJSCPRO`)
+    (∀ {k : ℕ} {d : ℝ} {s : Finset ℕ} {a b : ℕ → ℕ → ℝ}
+          {J : Finset (Finset ℕ)} {f : ℕ → ℕ}
+          (hsys : stableSystem_p18 k d s a b J f) (hs : s = Finset.Iic (k - 1))
+          (hf : f = fun j => (1 + j) % k) (hk1 : 1 < k) (hk2 : 2 < k),
+          IsCompact (SYset_p18 k a b)
+    ) ∧
+    -- 18. a5_assumption_reduction_p18 (LA18:1092; HOL `a5_assumption_reduction`)
+    (∀ (s : ScsV39) (f : V3 → ℝ → V3)
+          (v : ℕ → V3) (e : ℝ) (his : isScsV39 s) (hk : s.k = 5) (hBB : BBsV39 s v)
+          (hdiag : ∀ i j, scsDiag 5 i j → s.a i j < dist (v i) (v j))
+          (_hdef : Deformation f (Set.range v) (-e) e)
+          (hfix : ∀ (w : V3) (t : ℝ), w ≠ v 4 → w ≠ v 0 → f w t = w)
+          (h40 : ∃ d > 0, ∀ t : ℝ, |t| < d →
+            dist (f (v 4) t) (f (v 0) t) = dist (v 4) (v 0) ∧
+              dist (f (v 4) t) (v 3) = dist (v 4) (v 3))
+          (h01 : ∃ d > 0, ∀ t : ℝ, |t| < d → s.a 0 1 ≤ dist (f (v 0) t) (v 1)),
+          ∀ i j : ℕ, ∃ d > 0, s.a i j = dist (v i) (v j) →
+          ∀ t : ℝ, |t| < d → s.a i j ≤ dist (f (v i) t) (f (v j) t)
+    ) ∧
+    -- 19. b5_assumption_reduction_p18 (LA18:1220; HOL `b5_assumption_reduction`)
+    (∀ (s : ScsV39) (f : V3 → ℝ → V3)
+          (v : ℕ → V3) (e : ℝ) (his : isScsV39 s) (hk : s.k = 5) (hBB : BBsV39 s v)
+          (hbdiag : ∀ i j, scsDiag 5 i j → 4 * h0 < s.b i j)
+          (_hdef : Deformation f (Set.range v) (-e) e)
+          (hfix : ∀ (w : V3) (t : ℝ), w ≠ v 4 → w ≠ v 0 → f w t = w)
+          (h40 : ∃ d > 0, ∀ t : ℝ, |t| < d →
+            dist (f (v 4) t) (f (v 0) t) = dist (v 4) (v 0) ∧
+              dist (f (v 4) t) (v 3) = dist (v 4) (v 3))
+          (h01 : ∃ d > 0, ∀ t : ℝ, |t| < d →
+            dist (f (v 0) t) (v 1) ≤ dist (v 0) (v 1)),
+          ∀ i j : ℕ, ∃ d > 0, dist (v i) (v j) = s.b i j →
+          ∀ t : ℝ, |t| < d → dist (f (v i) t) (f (v j) t) ≤ s.b i j
+    ) ∧
+    -- 20. epsilon_hept_p18 (LA18:405; HOL `epsilon_hept`)
+    (∀ {e e₁ e₂ e₃ e₄ e₅ e₆ : ℝ} (he : 0 < e) (he₁ : 0 < e₁)
+          (he₂ : 0 < e₂) (he₃ : 0 < e₃) (he₄ : 0 < e₄) (he₅ : 0 < e₅)
+          (he₆ : 0 < e₆),
+          ∃ e₇ > 0, (∀ t, |t| < e₇ → |t| < e) ∧ (∀ t, |t| < e₇ → |t| < e₁) ∧
+          (∀ t, |t| < e₇ → |t| < e₂) ∧ (∀ t, |t| < e₇ → |t| < e₃) ∧
+          (∀ t, |t| < e₇ → |t| < e₄) ∧ (∀ t, |t| < e₇ → |t| < e₅) ∧
+          (∀ t, |t| < e₇ → |t| < e₆)
+    ) ∧
+    -- 21. epsilon_hex_p18 (LA18:391; HOL `epsilon_hex`)
+    (∀ {e e₁ e₂ e₃ e₄ e₅ : ℝ} (he : 0 < e) (he₁ : 0 < e₁)
+          (he₂ : 0 < e₂) (he₃ : 0 < e₃) (he₄ : 0 < e₄) (he₅ : 0 < e₅),
+          ∃ e₆ > 0, (∀ t, |t| < e₆ → |t| < e) ∧ (∀ t, |t| < e₆ → |t| < e₁) ∧
+          (∀ t, |t| < e₆ → |t| < e₂) ∧ (∀ t, |t| < e₆ → |t| < e₃) ∧
+          (∀ t, |t| < e₆ → |t| < e₄) ∧ (∀ t, |t| < e₆ → |t| < e₅)
+    ) ∧
+    -- 22. epsilon_pent_p18 (LA18:378; HOL `epsilon_pent`)
+    (∀ {e e₁ e₂ e₃ e₄ : ℝ} (he : 0 < e) (he₁ : 0 < e₁)
+          (he₂ : 0 < e₂) (he₃ : 0 < e₃) (he₄ : 0 < e₄),
+          ∃ e₅ > 0, (∀ t, |t| < e₅ → |t| < e) ∧ (∀ t, |t| < e₅ → |t| < e₁) ∧
+          (∀ t, |t| < e₅ → |t| < e₂) ∧ (∀ t, |t| < e₅ → |t| < e₃) ∧
+          (∀ t, |t| < e₅ → |t| < e₄)
+    ) ∧
+    -- 23. quadratic_at_most_2_roots_p18 (LA18:332; HOL `quadratic_at_most_2_roots`)
+    (∀ (a b c : ℝ)
+    ,
+          ∃ x₁ x₂ : ℝ, ∀ x, a ≠ 0 → a * x ^ 2 + b * x + c = 0 → x = x₁ ∨ x = x₂
+    ) ∧
+    -- 24. re_eqvl_imp_le_p18 (LA18:280; HOL `re_eqvl_imp_le`)
+    (∀ {a b : ℝ} (h : reEqvl a b)
+    ,
+          0 ≤ a ↔ 0 ≤ b
+    ) ∧
+    -- 25. re_eqvl_real_sgn_p18 (LA18:294; HOL `re_eqvl_real_sgn`, HOL `real_sgn`)
+    (∀ {x y : ℝ}
+    ,
+          reEqvl x y ↔ Real.sign x = Real.sign y
+    ) ∧
+    -- 26. real_continuous_finite_range_constant_p18 (LA18:440; HOL `real_continuous_finite_range_constant`)
+    (∀ (f : ℝ → ℝ) (a b : ℝ)
+          (hc : ContinuousOn f (Set.Ioo a b)) (hf : (f '' Set.Ioo a b).Finite),
+          ∃ c, ∀ x ∈ Set.Ioo a b, f x = c
+    ) :=
+    ⟨@BOUNDED_SY_p18, BSY1body_p18.eq_1, CLOSED_SY_p18, POWER_MOD_FUN_p18, REP_NUMSEG_p18,
+      @SCS_5I1_SLICE_02_p18, @SCS_5I2_SLICE_02_p18, @SCS_5M1_SLICE_02_p18,
+      @SCS_5M1_SLICE_03_p18, @SCS_5M1_SLICE_24_p18, SCS_DIAG_SCS_5I1_02_p18,
+      SCS_DIAG_SCS_5I2_02_p18, SCS_DIAG_SCS_5M1_02_p18, SCS_DIAG_SCS_5M1_03_p18,
+      SCS_DIAG_SCS_5M1_24_p18, SUM_NUMSEG4_p18, WJSCPRO_p18, a5_assumption_reduction_p18,
+      b5_assumption_reduction_p18, epsilon_hept_p18, epsilon_hex_p18, epsilon_pent_p18,
+      quadratic_at_most_2_roots_p18, re_eqvl_imp_le_p18, re_eqvl_real_sgn_p18,
+      real_continuous_finite_range_constant_p18⟩
+
+#print axioms la18_capstone_w1
+
+
+/-- LA34 materialization capstone (lane lv56-w1 slot
+LV6, program slot C = LV5+LV6, 2026-11-04, after
+the leftover-mat-scout delivery e342ff1b §1): the clean public top-level
+LocalAuto34 exits unreachable from every e2e
+root -- 53 of 123 theorem exits
+(scout probe1 per-item BFS: clean = closure sorried-0; the 70
+sorried-exit branches are excluded per the workorder, one does not enter,
+each named in the lane gen_report).  Clean-subset group closure (scout
+probe2, baseline I 1e139a28): GROUP_FRESH_VS_CONE 156
+(154 LA34 + 2
+LocalAuto17), GROUP_SORRIED 0, i.e. the new closure is
+sorried-0; K_SORRIED 134 and K_AXIOM 624 unchanged when wired.
+Implemented here: 52 of the 53.  Dropped per the workorder's
+no-forcing rule ("抽不出/不一致 → 剔除并如实报"), mechanically detected
+by the generator:
+  - modFold_p34: universe-polymorphic statement (free universe in Sort/Type position; would give the capstone a universe parameter and break the future `have hcap := <name>` consumption shape)
+Anchors (no fabricated edges): every conjunct is asserted in the
+verbatim wording of its LA34 declaration -- the conjunct text is
+the declaration's source signature (binders + conclusion, copied verbatim
+and mechanically split at the binder/conclusion separator by the
+generator gen_items.py; equation-lemma conjuncts have no source text and
+take the `#check @name` printer dump verbatim); the printer dump
+(logs/sigprobe_82.out) is retained as cross reference; semantic identity
+is re-verified by the elaboration of the `⟨...⟩` assembly below (each
+component must unify definitionally with its conjunct); per-conjunct
+comments carry each exit's LA34 declaration line and file-local
+docstring HOL anchor.
+Conjunct order: the scout clean-seed-list order (logs/seeds_clean.txt
+LA34 subset).  Body = the assembly of the exit constants --
+zero new proof obligations, zero new imports. -/
+theorem la34_capstone_w1 :
+    -- 1. BBS_IMP_CONVEX_LOCAL_FAN_p34 (LA34:494; HOL `BBS_IMP_CONVEX_LOCAL_FAN`)
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3)
+          (hk : 3 < k) (hkk : s.k = k) (hBB : BBsV39 s w),
+          ConvexLocalFan (Set.range w)
+          (Set.range fun i => {w i, w (i + 1)})
+          (Set.range fun i => (w i, w (i + 1)))
+    ) ∧
+    -- 2. CROSS_LAGRANGE1_p34 (LA34:893; HOL `CROSS_LAGRANGE1`)
+    (∀ (x y z : V3)
+    ,
+          cross3 (cross3 x y) z = (x ⬝ᵥ z) • y - (y ⬝ᵥ z) • x
+    ) ∧
+    -- 3. DEFORMATION_SMALL_INTERVAL_p34 (LA34:1048; HOL `DEFORMATION_SMALL_INTERVAL`)
+    (∀ {f : V3 → ℝ → V3} {V : Set V3} {a b c d : ℝ}
+          (h : Deformation f V a b) (hac : a ≤ c) (hc : c < 0) (hd : 0 < d) (hdb : d ≤ b),
+          Deformation f V c d
+    ) ∧
+    -- 4. EQ_W_L_IN_BBS_p34 (LA34:2718; HOL `EQ_W_L_IN_BBS`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (hk : 3 < k) (hkk : s.k = k) (hBB : BBsV39 s w),
+          w ((l + k - 1) + 1) = w l
+    ) ∧
+    -- 5. EXISTS_SMALL_LE_CONST_V1_p34 (LA34:675; HOL `EXISTS_SMALL_LE_CONST_V1`)
+    (∀ (v1 v2 w : V3) (x1 x2 x6 a c : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h6 : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hclt : c < dist v2 w),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+          c < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) w
+    ) ∧
+    -- 6. EXISTS_SMALL_LE_CONST_p34 (LA34:655; HOL `EXISTS_SMALL_LE_CONST`)
+    (∀ (v1 v2 w : V3) (x1 x2 x6 a c : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h6 : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hclt : c < dist v2 w),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+          c < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) w
+    ) ∧
+    -- 7. EXISTS_SMALL_LT_CONST_V1_p34 (LA34:849; HOL `EXISTS_SMALL_LT_CONST_V1`)
+    (∀ (v1 v2 w : V3) (x1 x2 x6 a c : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h6 : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hclt : dist v2 w < c),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+          dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) w < c
+    ) ∧
+    -- 8. EXISTS_SMALL_LT_CONST_p34 (LA34:829; HOL `EXISTS_SMALL_LT_CONST`)
+    (∀ (v1 v2 w : V3) (x1 x2 x6 a c : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h6 : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hclt : dist v2 w < c),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+          dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) w < c
+    ) ∧
+    -- 9. EYYPQDW_CONTINUOUS_LIFT_DIST_p34 (LA34:644; HOL `EYYPQDW_CONTINUOUS_LIFT_DIST`, HOL `lift`)
+    (∀ (v1 v2 v : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
+          (h6 : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5),
+          ContinuousAt (fun y => dist (v3DeforV1_p17 a v1 v2 x1 x2 x5 x6 y) v) x3
+    ) ∧
+    -- 10. E_DEFORMATION_V3_DEFOR_p34 (LA34:2547; HOL `E_DEFORMATION_V3_DEFOR`)
+    (∀ (w : ℕ → V3) (x1 x2 x6 t : ℝ) (v1 v2 : V3)
+    ,
+          Set.range (fun i => {v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w i) t,
+            v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (i + 1)) t}) =
+          (fun e => (fun v => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) '' e) ''
+            Set.range (fun i => {w i, w (i + 1)})
+    ) ∧
+    -- 11. FUN_V3_DEFOR_p34 (LA34:465; HOL `FUN_V3_DEFOR`)
+    (∀ (a x1 x2 x6 : ℝ) (v1 w v : V3)
+    ,
+          v3DeforV4_p34 a x1 x2 x6 v1 w v = fun t => v3DeforV4_p34 a x1 x2 x6 v1 w v t
+    ) ∧
+    -- 12. F_DEFORMATION_V3_DEFOR_p34 (LA34:2562; HOL `F_DEFORMATION_V3_DEFOR`)
+    (∀ (w : ℕ → V3) (x1 x2 x6 t : ℝ) (v1 v2 : V3)
+    ,
+          Set.range (fun i => (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w i) t,
+            v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (i + 1)) t)) =
+          (fun d : V3 × V3 => (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 d.1 t,
+            v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 d.2 t)) ''
+            Set.range (fun i => (w i, w (i + 1)))
+    ) ∧
+    -- 13. MMs_periodic_p34 (LA34:756; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (hkk : s.k = k)
+          (hmw : w ∈ MMsV39 s),
+          ∀ i, w (i + k) = w i
+    ) ∧
+    -- 14. MOD_ADD_SUB_1_p34 (LA34:469; HOL `MOD_ADD_SUB_1`)
+    (∀ {k l : ℕ} (hk : 1 < k)
+    ,
+          ¬((l + k - 1) % k = l % k)
+    ) ∧
+    -- 15. NORM_POS_COLLINEAR_p34 (LA34:584; HOL `NORM_POS_COLLINEAR`)
+    (∀ (v1 v2 : V3) (x1 x2 x6 : ℝ)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6),
+          0 < x1 ∧ 0 < x2 ∧ 0 < x6
+    ) ∧
+    -- 16. UPS_X_POS_SEG_C_p34 (LA34:528; HOL `UPS_X_POS_SEG_C`)
+    (∀ (v1 v2 : V3) (x1 x2 x6 c : ℝ)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (h2 : 0 < x2) (hc : 0 < c),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → 0 < upsX x1 (x2 - t) x6 ∧ 0 < x2 - t ∧ t < c
+    ) ∧
+    -- 17. UPS_X_POS_SEG_p34 (LA34:504; HOL `UPS_X_POS_SEG`)
+    (∀ (v1 v2 : V3) (x1 x2 x6 : ℝ)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (h2 : 0 < x2),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → 0 < upsX x1 (x2 - t) x6 ∧ 0 < x2 - t
+    ) ∧
+    -- 18. V3_DEFOR_EQ_IN_FF_AT_V1_SYM_V1_TWO_CASES_p34 (LA34:3164; HOL `V3_DEFOR_EQ_IN_FF_AT_V1_SYM_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          (Classical.epsilon fun a' : V3 =>
+            (a', w (l + 1)) ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) =
+          v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+    ) ∧
+    -- 19. V3_DEFOR_EQ_IN_FF_AT_V1_SYM_V1_p34 (LA34:1953; HOL `V3_DEFOR_EQ_IN_FF_AT_V1_SYM_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          (Classical.epsilon fun w' : V3 =>
+            (w', v1) ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) =
+          v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+    ) ∧
+    -- 20. V3_DEFOR_EQ_IN_FF_AT_V1_SYM_p34 (LA34:1923; HOL `V3_DEFOR_EQ_IN_FF_AT_V1_SYM`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          (Classical.epsilon fun w' : V3 =>
+            (w', v1) ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) =
+          v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+    ) ∧
+    -- 21. V3_DEFOR_EQ_IN_FF_AT_V1_V1_TWO_CASES_p34 (LA34:3107; HOL `V3_DEFOR_EQ_IN_FF_AT_V1_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ a' : V3, (w (l + 1), a') ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (w (l + 1), a') ∈ FF
+    ) ∧
+    -- 22. V3_DEFOR_EQ_IN_FF_AT_V1_V1_p34 (LA34:1845; HOL `V3_DEFOR_EQ_IN_FF_AT_V1_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ w' : V3, (v1, w') ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v1, w') ∈ FF
+    ) ∧
+    -- 23. V3_DEFOR_EQ_IN_FF_AT_V1_p34 (LA34:1819; HOL `V3_DEFOR_EQ_IN_FF_AT_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ w' : V3, (v1, w') ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v1, w') ∈ FF
+    ) ∧
+    -- 24. V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_V1_TWO_CASES_p34 (LA34:3393; HOL `V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 v : V3) (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hvv1 : v ≠ v1) (hvv2 : v ≠ v2) (hvw : v ≠ w (l + 1))
+          (hvV : v ∈ Set.range w),
+          ∀ w' : V3, (w', v) ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (w', v) ∈ FF
+    ) ∧
+    -- 25. V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_V1_p34 (LA34:2379; HOL `V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 v : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hvv1 : v ≠ v1) (hvv2 : v ≠ v2) (hvw : v ≠ w (l + k - 1))
+          (hvV : v ∈ Set.range w),
+          ∀ w' : V3, (w', v) ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (w', v) ∈ FF
+    ) ∧
+    -- 26. V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_p34 (LA34:2351; HOL `V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 v : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hvv1 : v ≠ v1) (hvv2 : v ≠ v2) (hvw : v ≠ w (l + k - 1))
+          (hvV : v ∈ Set.range w),
+          ∀ w' : V3, (w', v) ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (w', v) ∈ FF
+    ) ∧
+    -- 27. V3_DEFOR_EQ_IN_FF_AT_V_ANY_V1_TWO_CASES_p34 (LA34:3354; HOL `V3_DEFOR_EQ_IN_FF_AT_V_ANY_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 v : V3) (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hvv1 : v ≠ v1) (hvv2 : v ≠ v2) (hvw : v ≠ w (l + 1))
+          (hvV : v ∈ Set.range w),
+          ∀ w' : V3, (v, w') ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v, w') ∈ FF
+    ) ∧
+    -- 28. V3_DEFOR_EQ_IN_FF_AT_V_ANY_V1_p34 (LA34:2313; HOL `V3_DEFOR_EQ_IN_FF_AT_V_ANY_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 v : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hvv1 : v ≠ v1) (hvv2 : v ≠ v2) (hvw : v ≠ w (l + k - 1))
+          (hvV : v ∈ Set.range w),
+          ∀ w' : V3, (v, w') ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v, w') ∈ FF
+    ) ∧
+    -- 29. V3_DEFOR_EQ_IN_FF_AT_V_ANY_p34 (LA34:2285; HOL `V3_DEFOR_EQ_IN_FF_AT_V_ANY`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 v : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hvv1 : v ≠ v1) (hvv2 : v ≠ v2) (hvw : v ≠ w (l + k - 1))
+          (hvV : v ∈ Set.range w),
+          ∀ w' : V3, (v, w') ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v, w') ∈ FF
+    ) ∧
+    -- 30. V3_DEFOR_EQ_IN_FF_AT_W_SYM_V1_TWO_CASES_p34 (LA34:3275; HOL `V3_DEFOR_EQ_IN_FF_AT_W_SYM_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          (Classical.epsilon fun v' : V3 =>
+            (w (l + k - 1), v') ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) =
+          v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+    ) ∧
+    -- 31. V3_DEFOR_EQ_IN_FF_AT_W_SYM_V1_p34 (LA34:2185; HOL `V3_DEFOR_EQ_IN_FF_AT_W_SYM_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          (Classical.epsilon fun v' : V3 =>
+            (w (l + k - 1), v') ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) =
+          v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+    ) ∧
+    -- 32. V3_DEFOR_EQ_IN_FF_AT_W_SYM_p34 (LA34:2158; HOL `V3_DEFOR_EQ_IN_FF_AT_W_SYM`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          (Classical.epsilon fun v' : V3 =>
+            (w (l + k - 1), v') ∈ relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) =
+          v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+    ) ∧
+    -- 33. V3_DEFOR_EQ_IN_FF_AT_W_V1_TWO_CASES_p34 (LA34:3239; HOL `V3_DEFOR_EQ_IN_FF_AT_W_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ v' : V3, (v', w (l + (s.k - 1))) ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v', w (l + (s.k - 1))) ∈ FF
+    ) ∧
+    -- 34. V3_DEFOR_EQ_IN_FF_AT_W_V1_p34 (LA34:2122; HOL `V3_DEFOR_EQ_IN_FF_AT_W_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ v' : V3, (v', w (l + (s.k - 1))) ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v', w (l + (s.k - 1))) ∈ FF
+    ) ∧
+    -- 35. V3_DEFOR_EQ_IN_FF_AT_W_p34 (LA34:2096; HOL `V3_DEFOR_EQ_IN_FF_AT_W`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ v' : V3, (v', w (l + (s.k - 1))) ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v', w (l + (s.k - 1))) ∈ FF
+    ) ∧
+    -- 36. V3_DEFOR_EQ_IN_FF_SYM_V1_TWO_CASES_p34 (LA34:3054; HOL `V3_DEFOR_EQ_IN_FF_SYM_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ w' : V3, (w', v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (w', v2) ∈ FF
+    ) ∧
+    -- 37. V3_DEFOR_EQ_IN_FF_SYM_V1_p34 (LA34:1787; HOL `V3_DEFOR_EQ_IN_FF_SYM_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ w' : V3, (w', v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (w', v2) ∈ FF
+    ) ∧
+    -- 38. V3_DEFOR_EQ_IN_FF_SYM_p34 (LA34:1765; HOL `V3_DEFOR_EQ_IN_FF_SYM`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ w' : V3, (w', v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (w', v2) ∈ FF
+    ) ∧
+    -- 39. V3_DEFOR_EQ_IN_FF_V1_TWO_CASES_p34 (LA34:3002; HOL `V3_DEFOR_EQ_IN_FF_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ w' : V3, (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t), w') ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v2, w') ∈ FF
+    ) ∧
+    -- 40. V3_DEFOR_EQ_IN_FF_V1_p34 (LA34:1692; HOL `V3_DEFOR_EQ_IN_FF_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ w' : V3, (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t), w') ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v2, w') ∈ FF
+    ) ∧
+    -- 41. V3_DEFOR_EQ_IN_FF_p34 (LA34:1670; HOL `V3_DEFOR_EQ_IN_FF`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∀ w' : V3, (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t), w') ∈
+            relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+          (v2, w') ∈ FF
+    ) ∧
+    -- 42. V3_DEFOR_ID_p34 (LA34:556; HOL `V3_DEFOR_ID`)
+    (∀ (v1 w : V3) (x1 x2 x6 a : ℝ)
+          (h1 : 0 < x1) (hnc : ¬Collinear ℝ ({0, v1, w} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖w‖ ^ 2 = x2) (hx6 : ‖v1 - w‖ ^ 2 = x6)
+          (ha : a = -1),
+          v3DeforV1_p17 a v1 w x1 x2 x6 x6 (x2 - 0) = w
+    ) ∧
+    -- 43. V3_DEFOR_RHO_NODE_AT_V1_V1_TWO_CASES_p34 (LA34:3143; HOL `V3_DEFOR_RHO_NODE_AT_V1_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          rhoNode1 (relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
+          (w (l + 1)) = rhoNode1 FF (w (l + 1))
+    ) ∧
+    -- 44. V3_DEFOR_RHO_NODE_AT_V1_V1_p34 (LA34:1902; HOL `V3_DEFOR_RHO_NODE_AT_V1_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          rhoNode1 (relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v1 =
+          rhoNode1 FF v1
+    ) ∧
+    -- 45. V3_DEFOR_RHO_NODE_AT_V1_p34 (LA34:1881; HOL `V3_DEFOR_RHO_NODE_AT_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          rhoNode1 (relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v1 =
+          rhoNode1 FF v1
+    ) ∧
+    -- 46. V3_DEFOR_RHO_NODE_V1_TWO_CASES_p34 (LA34:3034; HOL `V3_DEFOR_RHO_NODE_V1_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          rhoNode1 (relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
+          (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) = rhoNode1 FF v2
+    ) ∧
+    -- 47. V3_DEFOR_RHO_NODE_V1_p34 (LA34:1745; HOL `V3_DEFOR_RHO_NODE_V1`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : -e < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, -e < τ ∧ τ < e → ¬(i % k = l % k) →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          rhoNode1 (relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
+          (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) = rhoNode1 FF v2
+    ) ∧
+    -- 48. V3_DEFOR_RHO_NODE_p34 (LA34:1725; HOL `V3_DEFOR_RHO_NODE`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a e t : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (he : 0 < e) (ht : 0 < t)
+          (hne : ∀ τ : ℝ, ∀ i : ℕ, 0 < τ ∧ τ < e →
+            v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - τ) ≠ w i)
+          (hte : t < e)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          rhoNode1 (relabelFF_p34 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
+          (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) = rhoNode1 FF v2
+    ) ∧
+    -- 49. V3_DEFOR_V1_O_DEF_p34 (LA34:551; HOL `V3_DEFOR_V1_O_DEF`)
+    (∀ (a : ℝ) (v1 w : V3) (x1 x2 x6 : ℝ)
+    ,
+          (fun t => v3DeforV1_p17 a v1 w x1 x2 x6 x6 (x2 - t)) =
+          (fun x3 => v3DeforV1_p17 a v1 w x1 x2 x6 x6 x3) ∘ (fun t => x2 - t)
+    ) ∧
+    -- 50. V_DEFORMATION_V3_DEFOR_p34 (LA34:2541; HOL `V_DEFORMATION_V3_DEFOR`)
+    (∀ (w : ℕ → V3) (x1 x2 x6 t : ℝ) (v1 v2 : V3)
+    ,
+          Set.range (fun i => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w i) t) =
+          (fun v => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) '' Set.range w
+    ) ∧
+    -- 51. minWitness_p34 (LA34:727; no HOL anchor line in file docstring)
+    (∀ {R : ℕ → ℝ → Prop} {T : Finset ℕ}
+          (hmono : ∀ (i : ℕ) (e : ℝ), R i e → ∀ e' : ℝ, 0 < e' → e' ≤ e → R i e')
+          (hne : T.Nonempty)
+          (h : ∀ i ∈ T, ∃ e : ℝ, 0 < e ∧ R i e),
+          ∃ e0 : ℝ, 0 < e0 ∧ ∀ i ∈ T, R i e0
+    ) ∧
+    -- 52. scsA_periodic_p34 (LA34:771; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (k : ℕ) (hs : isScsV39 s) (hkk : s.k = k)
+          (l : ℕ),
+          ∀ i, s.a l (i + k) = s.a l i
+    ) :=
+    ⟨BBS_IMP_CONVEX_LOCAL_FAN_p34, CROSS_LAGRANGE1_p34, DEFORMATION_SMALL_INTERVAL_p34,
+      EQ_W_L_IN_BBS_p34, EXISTS_SMALL_LE_CONST_V1_p34, EXISTS_SMALL_LE_CONST_p34,
+      EXISTS_SMALL_LT_CONST_V1_p34, EXISTS_SMALL_LT_CONST_p34,
+      EYYPQDW_CONTINUOUS_LIFT_DIST_p34, @E_DEFORMATION_V3_DEFOR_p34, FUN_V3_DEFOR_p34,
+      @F_DEFORMATION_V3_DEFOR_p34, MMs_periodic_p34, MOD_ADD_SUB_1_p34,
+      NORM_POS_COLLINEAR_p34, UPS_X_POS_SEG_C_p34, UPS_X_POS_SEG_p34,
+      V3_DEFOR_EQ_IN_FF_AT_V1_SYM_V1_TWO_CASES_p34, V3_DEFOR_EQ_IN_FF_AT_V1_SYM_V1_p34,
+      V3_DEFOR_EQ_IN_FF_AT_V1_SYM_p34, V3_DEFOR_EQ_IN_FF_AT_V1_V1_TWO_CASES_p34,
+      V3_DEFOR_EQ_IN_FF_AT_V1_V1_p34, V3_DEFOR_EQ_IN_FF_AT_V1_p34,
+      V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_V1_TWO_CASES_p34, V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_V1_p34,
+      V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_p34, V3_DEFOR_EQ_IN_FF_AT_V_ANY_V1_TWO_CASES_p34,
+      V3_DEFOR_EQ_IN_FF_AT_V_ANY_V1_p34, V3_DEFOR_EQ_IN_FF_AT_V_ANY_p34,
+      V3_DEFOR_EQ_IN_FF_AT_W_SYM_V1_TWO_CASES_p34, V3_DEFOR_EQ_IN_FF_AT_W_SYM_V1_p34,
+      V3_DEFOR_EQ_IN_FF_AT_W_SYM_p34, V3_DEFOR_EQ_IN_FF_AT_W_V1_TWO_CASES_p34,
+      V3_DEFOR_EQ_IN_FF_AT_W_V1_p34, V3_DEFOR_EQ_IN_FF_AT_W_p34,
+      V3_DEFOR_EQ_IN_FF_SYM_V1_TWO_CASES_p34, V3_DEFOR_EQ_IN_FF_SYM_V1_p34,
+      V3_DEFOR_EQ_IN_FF_SYM_p34, V3_DEFOR_EQ_IN_FF_V1_TWO_CASES_p34,
+      V3_DEFOR_EQ_IN_FF_V1_p34, V3_DEFOR_EQ_IN_FF_p34, V3_DEFOR_ID_p34,
+      V3_DEFOR_RHO_NODE_AT_V1_V1_TWO_CASES_p34, V3_DEFOR_RHO_NODE_AT_V1_V1_p34,
+      V3_DEFOR_RHO_NODE_AT_V1_p34, V3_DEFOR_RHO_NODE_V1_TWO_CASES_p34,
+      V3_DEFOR_RHO_NODE_V1_p34, V3_DEFOR_RHO_NODE_p34, V3_DEFOR_V1_O_DEF_p34,
+      @V_DEFORMATION_V3_DEFOR_p34, minWitness_p34, scsA_periodic_p34⟩
+
+#print axioms la34_capstone_w1
 end Kepler.Text
