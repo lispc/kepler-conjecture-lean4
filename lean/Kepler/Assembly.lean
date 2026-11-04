@@ -6987,6 +6987,8 @@ theorem textCapstone : TextCapstone := by
   -- WIRE 增量降序；每条边的锚 = 各出口 docstring + LocalConcl LEDGER (c)/(d)）。
   -- conjunct 1 就是下面 p16 switch 的原陈述，re-point 语义不变（定义相等投影）。
   have hcap := localconcl_wire_capstone_w2
+  have hla36 := la36_capstone_w1
+  have hla38 := la38_capstone_w1
   have hmain : lp_main_estimate := hcap.1 hmnt
   refine kcImpTheKc ?_
   by_contra hneg

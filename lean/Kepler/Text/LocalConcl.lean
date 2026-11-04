@@ -6625,6 +6625,1526 @@ theorem localconcl_wire_capstone_w2 :
       localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
       localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2⟩
 
+/-! ### LV materialization capstones, slots A1+A2 (lane lv12-w1,
+2026-11-04, after the leftover-mat-scout workorder): the clean public
+top-level LocalAuto36 and LocalAuto38 exits that no e2e root reaches
+(scout account, baseline I HEAD 1e139a28: LA36 149 top-level thm exits
+= 138 clean + 11 sorried; LA38 110 = 74 clean + 36 sorried; clean-group
+closures GROUP_SORRIED = 0, GROUP_FRESH +240 / +212 vs cone, axiom face
+standard-three by axprobe sampling) are re-exposed as TWO conjunctions
+-- 193 clean exits implemented (131 LA36 + 62 LA38),
+19 dropped by the generator under the workorder no-forcing rule
+(LA36: 7 generated-lemma (B_SY1_nc2_p36.eq_1, aPro.eq_1, change_type_v2.eq_1, change_type_v3.eq_1, cycRow_p23.eq_1, scsToStableSyD_p36.congr_simp, vecmats_p4.eq_1), 0 universe-poly; LA38: 4 generated-lemma (funlistAV39.eq_1, lnazim.eq_1, rho.eq_1, taum.eq_1), 8 universe-poly); the 47 sorried exits (LA36 11, LA38 36) are EXCLUDED per
+the workorder, per-branch exclusion lists at
+logs/excl_la36_sorried.txt / excl_la38_sorried.txt (debt owners:
+XWITCCN_CASE family to queue 2-12 wave 2, OWZLKVY terminal stubs to
+5-M1 terminal11/mnt11, HDPLYGY_CASE_3/CARD_SLICE_EQ to 2-1 GIANT);
+LA36's single uncovered orphan (_private...bFlat3_p36.eq_1, a
+module-private derived item) is structurally unreachable, recorded not
+forced.  Zero new proof obligations, zero new imports; K_SORRIED 134
+and K_AXIOM 624 unchanged; the exact kit yield is re-measured at the
+orchestrator e2e gate. -/
+
+/-- LA36 materialization capstone (design lane
+leftover-mat-scout, implementation lane lv12-w1 slot A, 2026-11-04).
+The 131 clean public top-level LA36 exits unreachable from
+every e2e root (top-level thm exits minus the sorried half minus generated-lemma exits; closure GROUP_SORRIED 0) are re-exposed as ONE conjunction.
+Anchors (no fabricated edges): every conjunct is asserted in the
+verbatim wording of its LA36 declaration -- the conjunct text is
+the declaration's source signature (binders + conclusion, copied
+verbatim and mechanically split at the binder/conclusion separator by
+the generator gen_items_lv12w1.py); the Lean `#check @name` printer
+dump (logs/sigprobe_212.out) is retained as a cross reference; semantic
+identity is re-verified by the ⟨...⟩ assembly below (each component
+must unify definitionally with its conjunct); the per-conjunct
+comments carry each exit's LA36 declaration line and file-local
+docstring HOL anchor.  Conjunct order: the clean-seed list order
+(probe1.out, alphabetical per module).  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la36_capstone_w1 :
+    -- 1. Kepler.Text.EQUALITY_V_SY_TAC_5 (LA36:1785; HOL `EQUALITY_V_SY_TAC_5`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5)
+    ,
+          V_SY_p4 (cycRow_p23 vv 5) = Set.range vv
+    ) ∧
+    -- 2. Kepler.Text.EQUALITY_V_SY_TAC_6 (LA36:2119; HOL `EQUALITY_V_SY_TAC_6`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6)
+    ,
+          V_SY_p4 (cycRow_p23 vv 6) = Set.range vv
+    ) ∧
+    -- 3. Kepler.Text.EQ_V_SY_TAC_4 (LA36:2088; HOL `EQ_V_SY_TAC_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4)
+    ,
+          Set.range vv = V_SY_p4 (cycRow_p23 vv 4)
+    ) ∧
+    -- 4. Kepler.Text.INEQUALITY_A_B_SCS_TAC_3 (LA36:1216; HOL `INEQUALITY_A_B_SCS_TAC_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          change_type_v3 s.a (i, j) ≤ dist (vv i) (vv j) ∧
+          dist (vv i) (vv j) ≤ change_type_v3 s.b (i, j)
+    ) ∧
+    -- 5. Kepler.Text.INEQUALITY_A_B_SCS_TAC_30 (LA36:1208; HOL `INEQUALITY_A_B_SCS_TAC_30`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          change_type_v3 s.a (i, j) ≤ dist (vv i) (vv j) ∧
+          dist (vv i) (vv j) ≤ change_type_v3 s.b (i, j)
+    ) ∧
+    -- 6. Kepler.Text.INEQUALITY_A_B_TAC_4 (LA36:2112; HOL `INEQUALITY_A_B_TAC_4`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 7. Kepler.Text.INEQUALITY_A_B_TAC_40 (LA36:2106; HOL `INEQUALITY_A_B_TAC_40`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 8. Kepler.Text.INEQUALITY_A_B_TAC_5 (LA36:1831; HOL `INEQUALITY_A_B_TAC_5`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 9. Kepler.Text.INEQUALITY_A_B_TAC_50 (LA36:1825; HOL `INEQUALITY_A_B_TAC_50`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 10. Kepler.Text.INEQUALITY_A_B_TAC_6 (LA36:2164; HOL `INEQUALITY_A_B_TAC_6`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 11. Kepler.Text.INEQUALITY_A_B_TAC_60 (LA36:2158; HOL `INEQUALITY_A_B_TAC_60`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 12. Kepler.Text.INEQUALITY_PROOF_TAC4 (LA36:1646; HOL `INEQUALITY_PROOF_TAC4`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 13. Kepler.Text.INEQUALITY_PROOF_TAC40 (LA36:1640; HOL `INEQUALITY_PROOF_TAC40`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 14. Kepler.Text.IN_BALL_ANNULUS_ROW_TAC_4 (LA36:1631; HOL `IN_BALL_ANNULUS_ROW_TAC_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4)
+          (hsub : Set.range vv ⊆ ballAnnulus) (i : Fin 4),
+          cycRow_p23 vv 4 i ∈ ballAnnulus
+    ) ∧
+    -- 15. Kepler.Text.IN_BALL_ANNULUS_TAC_4 (LA36:2099; HOL `IN_BALL_ANNULUS_TAC_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4)
+          (hsub : Set.range vv ⊆ ballAnnulus) (i : Fin 4),
+          cycRow_p23 vv 4 i ∈ ballAnnulus
+    ) ∧
+    -- 16. Kepler.Text.IN_BALL_ANNUUS_TAC_5 (LA36:1817; HOL `IN_BALL_ANNUUS_TAC_5`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5)
+          (hsub : Set.range vv ⊆ ballAnnulus) (i : Fin 5),
+          cycRow_p23 vv 5 i ∈ ballAnnulus
+    ) ∧
+    -- 17. Kepler.Text.IN_BALL_ANNUUS_TAC_6 (LA36:2150; HOL `IN_BALL_ANNUUS_TAC_6`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6)
+          (hsub : Set.range vv ⊆ ballAnnulus) (i : Fin 6),
+          cycRow_p23 vv 6 i ∈ ballAnnulus
+    ) ∧
+    -- 18. Kepler.Text.IN_B_SY1_COLLINEAR_CASE_3 (LA36:1487; HOL `IN_B_SY1_COLLINEAR_CASE_3`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
+          (hk : s.k = 3),
+          ∀ l ∈ B_SY1_nc2_p36
+          (fun (i j : Fin 3) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)),
+          ¬Collinear ℝ {0, rowSy_p23 l 0, rowSy_p23 l 1} ∧
+          ¬Collinear ℝ {0, rowSy_p23 l 0, rowSy_p23 l 2} ∧
+          ¬Collinear ℝ {0, rowSy_p23 l 1, rowSy_p23 l 2}
+    ) ∧
+    -- 19. Kepler.Text.IN_NOT_EMPTY_B1_SY_3 (LA36:1400; HOL `IN_NOT_EMPTY_B1_SY_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
+          (hk : s.k = 3) (hper : Periodic vv 3)
+          (hball : ∀ i : Fin 3, cycRow_p23 vv 3 i ∈ ballAnnulus)
+          (hC1 : CONDITION1_SY_p4
+            (fun (i j : Fin 3) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+            (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+            (cycRow_p23 vv 3)),
+          BBsV39 s vv
+    ) ∧
+    -- 20. Kepler.Text.IN_NOT_EMPTY_B1_SY_4 (LA36:1750; HOL `IN_NOT_EMPTY_B1_SY_4`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
+          (hk : s.k = 4) (hper : Periodic vv 4)
+          (hball : ∀ i : Fin 4, cycRow_p23 vv 4 i ∈ ballAnnulus)
+          (hC1 : CONDITION1_SY_p4
+            (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+            (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+            (cycRow_p23 vv 4))
+          (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 4)),
+          BBsV39 s vv
+    ) ∧
+    -- 21. Kepler.Text.IN_NOT_EMPTY_B1_SY_4_3 (LA36:2513; HOL `IN_NOT_EMPTY_B1_SY_4_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
+          (hk : s.k = 4) (hper : Periodic vv 4)
+          (hball : ∀ i : Fin 4, cycRow_p23 vv 4 i ∈ ballAnnulus)
+          (hC1 : CONDITION1_SY_p4
+            (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+            (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+            (cycRow_p23 vv 4))
+          (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 4)),
+          BBsV39 s vv
+    ) ∧
+    -- 22. Kepler.Text.IN_NOT_EMPTY_B1_SY_4_sqrt8 (LA36:2603; HOL `IN_NOT_EMPTY_B1_SY_4_sqrt8`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
+            (aPro 4 (Real.sqrt 8) (2 * h0) 6))
+          (hk : s.k = 4) (hper : Periodic vv 4)
+          (hball : ∀ i : Fin 4, cycRow_p23 vv 4 i ∈ ballAnnulus)
+          (hC1 : CONDITION1_SY_p4
+            (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+            (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+            (cycRow_p23 vv 4))
+          (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 4)),
+          BBsV39 s vv
+    ) ∧
+    -- 23. Kepler.Text.IN_NOT_EMPTY_B1_SY_5 (LA36:1922; HOL `IN_NOT_EMPTY_B1_SY_5`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
+          (hk : s.k = 5) (hper : Periodic vv 5)
+          (hball : ∀ i : Fin 5, cycRow_p23 vv 5 i ∈ ballAnnulus)
+          (hC1 : CONDITION1_SY_p4
+            (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+            (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+            (cycRow_p23 vv 5))
+          (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 5)),
+          BBsV39 s vv
+    ) ∧
+    -- 24. Kepler.Text.IN_NOT_EMPTY_B1_SY_5_pro_cs (LA36:2428; HOL `IN_NOT_EMPTY_B1_SY_5_pro_cs`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
+            (aPro 5 (Real.sqrt 8) (2 * h0) 6))
+          (hk : s.k = 5) (hper : Periodic vv 5)
+          (hball : ∀ i : Fin 5, cycRow_p23 vv 5 i ∈ ballAnnulus)
+          (hC1 : CONDITION1_SY_p4
+            (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+            (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+            (cycRow_p23 vv 5))
+          (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 5)),
+          BBsV39 s vv
+    ) ∧
+    -- 25. Kepler.Text.IN_NOT_EMPTY_B1_SY_5_sqrt8 (LA36:2338; HOL `IN_NOT_EMPTY_B1_SY_5_sqrt8`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
+          (hk : s.k = 5) (hper : Periodic vv 5)
+          (hball : ∀ i : Fin 5, cycRow_p23 vv 5 i ∈ ballAnnulus)
+          (hC1 : CONDITION1_SY_p4
+            (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+            (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+            (cycRow_p23 vv 5))
+          (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 5)),
+          BBsV39 s vv
+    ) ∧
+    -- 26. Kepler.Text.IN_NOT_EMPTY_B1_SY_6 (LA36:2254; HOL `IN_NOT_EMPTY_B1_SY_6`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
+          (hk : s.k = 6) (hper : Periodic vv 6)
+          (hball : ∀ i : Fin 6, cycRow_p23 vv 6 i ∈ ballAnnulus)
+          (hC1 : CONDITION1_SY_p4
+            (fun (i j : Fin 6) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+            (fun (i j : Fin 6) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+            (cycRow_p23 vv 6))
+          (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 6)),
+          BBsV39 s vv
+    ) ∧
+    -- 27. Kepler.Text.IN_NOT_EMPTY_CASE_3 (LA36:1225; HOL `IN_NOT_EMPTY_CASE_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 3),
+          flattenRow_p23 vv 3 ∈ B_SY1_nc2_p36
+          (fun (i j : Fin 3) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+    ) ∧
+    -- 28. Kepler.Text.IN_NOT_EMPTY_CASE_4 (LA36:1651; HOL `IN_NOT_EMPTY_CASE_4`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          flattenRow_p23 vv 4 ∈ B_SY1_p4
+          (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+    ) ∧
+    -- 29. Kepler.Text.IN_NOT_EMPTY_CASE_4_3 (LA36:2467; HOL `IN_NOT_EMPTY_CASE_4_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          flattenRow_p23 vv 4 ∈ B_SY1_p4
+          (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+    ) ∧
+    -- 30. Kepler.Text.IN_NOT_EMPTY_CASE_4_sqrt8 (LA36:2551; HOL `IN_NOT_EMPTY_CASE_4_sqrt8`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
+            (aPro 4 (Real.sqrt 8) (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          flattenRow_p23 vv 4 ∈ B_SY1_p4
+          (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+    ) ∧
+    -- 31. Kepler.Text.IN_NOT_EMPTY_CASE_5 (LA36:1836; HOL `IN_NOT_EMPTY_CASE_5`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          flattenRow_p23 vv 5 ∈ B_SY1_p4
+          (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+    ) ∧
+    -- 32. Kepler.Text.IN_NOT_EMPTY_CASE_5_pro_cs (LA36:2376; HOL `IN_NOT_EMPTY_CASE_5_pro_cs`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
+            (aPro 5 (Real.sqrt 8) (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          flattenRow_p23 vv 5 ∈ B_SY1_p4
+          (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+    ) ∧
+    -- 33. Kepler.Text.IN_NOT_EMPTY_CASE_5_sqrt8 (LA36:2291; HOL `IN_NOT_EMPTY_CASE_5_sqrt8`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          flattenRow_p23 vv 5 ∈ B_SY1_p4
+          (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+    ) ∧
+    -- 34. Kepler.Text.IN_NOT_EMPTY_CASE_6 (LA36:2169; HOL `IN_NOT_EMPTY_CASE_6`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 6),
+          flattenRow_p23 vv 6 ∈ B_SY1_p4
+          (fun (i j : Fin 6) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 6) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+    ) ∧
+    -- 35. Kepler.Text.NOT_COLLINEAR_BBs_CASE_3 (LA36:1467; HOL `NOT_COLLINEAR_BBs_CASE_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
+          (hBB : BBsV39 s vv),
+          ¬Collinear ℝ {0, vv 1, vv 2} ∧ ¬Collinear ℝ {0, vv 1, vv 0} ∧
+          ¬Collinear ℝ {0, vv 2, vv 0}
+    ) ∧
+    -- 36. Kepler.Text.NOT_EMPTY_CASE_3 (LA36:1254; HOL `NOT_EMPTY_CASE_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 3),
+          B_SY1_nc2_p36
+          (fun (i j : Fin 3) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅
+    ) ∧
+    -- 37. Kepler.Text.NOT_EMPTY_CASE_4 (LA36:1664; HOL `NOT_EMPTY_CASE_4`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          B_SY1_p4
+          (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅
+    ) ∧
+    -- 38. Kepler.Text.NOT_EMPTY_CASE_4_3 (LA36:2478; HOL `NOT_EMPTY_CASE_4_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          B_SY1_p4
+          (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅
+    ) ∧
+    -- 39. Kepler.Text.NOT_EMPTY_CASE_4_sqrt8 (LA36:2563; HOL `NOT_EMPTY_CASE_4_sqrt8`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
+            (aPro 4 (Real.sqrt 8) (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          B_SY1_p4
+          (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅
+    ) ∧
+    -- 40. Kepler.Text.NOT_EMPTY_CASE_5 (LA36:1847; HOL `NOT_EMPTY_CASE_5`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          B_SY1_p4
+          (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅
+    ) ∧
+    -- 41. Kepler.Text.NOT_EMPTY_CASE_5_pro_cs (LA36:2388; HOL `NOT_EMPTY_CASE_5_pro_cs`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
+            (aPro 5 (Real.sqrt 8) (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          B_SY1_p4
+          (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅
+    ) ∧
+    -- 42. Kepler.Text.NOT_EMPTY_CASE_5_sqrt8 (LA36:2302; HOL `NOT_EMPTY_CASE_5_sqrt8`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          B_SY1_p4
+          (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅
+    ) ∧
+    -- 43. Kepler.Text.NOT_EMPTY_CASE_6 (LA36:2179; HOL `NOT_EMPTY_CASE_6`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 6),
+          B_SY1_p4
+          (fun (i j : Fin 6) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+          (fun (i j : Fin 6) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅
+    ) ∧
+    -- 44. Kepler.Text.PERIODIC_PROPERTY_p36 (LA36:132; HOL `PERIODIC_PROPERTY`)
+    (∀ {vv : ℕ → V3} {k : ℕ} (_hk : k ≠ 0)
+          (hper : Periodic vv k) (i : ℕ),
+          vv (i % k) = vv i
+    ) ∧
+    -- 45. Kepler.Text.POINT_IN_BBS_IS_NOT_0_3 (LA36:1460; HOL `POINT_IN_BBS_IS_NOT_0_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+    ,
+          ¬(vv 1 = 0) ∧ ¬(vv 2 = 0) ∧ ¬(vv 0 = 0)
+    ) ∧
+    -- 46. Kepler.Text.PROOF_E_EQ_IMAGE_4 (LA36:1611; HOL `PROOF_E_EQ_IMAGE_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4) (x : Set V3)
+          (hx : x ∈ E_SY_p4 (cycRow_p23 vv 4)),
+          x ∈ Set.range (fun i : ℕ => {vv i, vv (i + 1)})
+    ) ∧
+    -- 47. Kepler.Text.PROOF_E_EQ_TAC_4 (LA36:1745; HOL `PROOF_E_EQ_TAC_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4) (i : ℕ)
+    ,
+          {vv i, vv (i + 1)} ∈ E_SY_p4 (cycRow_p23 vv 4)
+    ) ∧
+    -- 48. Kepler.Text.PROOF_E_EQ_TAC_5 (LA36:1910; HOL `PROOF_E_EQ_TAC_5`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5) (i : ℕ)
+    ,
+          {vv i, vv (i + 1)} ∈ E_SY_p4 (cycRow_p23 vv 5)
+    ) ∧
+    -- 49. Kepler.Text.PROOF_E_EQ_TAC_6 (LA36:2242; HOL `PROOF_E_EQ_TAC_6`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6) (i : ℕ)
+    ,
+          {vv i, vv (i + 1)} ∈ E_SY_p4 (cycRow_p23 vv 6)
+    ) ∧
+    -- 50. Kepler.Text.PROVE_EQ_V_SY_TAC_4 (LA36:1600; HOL `PROVE_EQ_V_SY_TAC_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4)
+    ,
+          Set.range vv = V_SY_p4 (cycRow_p23 vv 4)
+    ) ∧
+    -- 51. Kepler.Text.PROVE_E_SY_EQ_5_TAC (LA36:1795; HOL `PROVE_E_SY_EQ_5_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5)
+    ,
+          E_SY_p4 (cycRow_p23 vv 5) = Set.range (fun i : ℕ => {vv i, vv (i + 1)})
+    ) ∧
+    -- 52. Kepler.Text.PROVE_E_SY_EQ_6_TAC (LA36:2129; HOL `PROVE_E_SY_EQ_6_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6)
+    ,
+          E_SY_p4 (cycRow_p23 vv 6) = Set.range (fun i : ℕ => {vv i, vv (i + 1)})
+    ) ∧
+    -- 53. Kepler.Text.PROVE_E_SY_EQ_IMAGE_VV_4 (LA36:1737; HOL `PROVE_E_SY_EQ_IMAGE_VV_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4) (x : Set V3)
+          (hx : x ∈ Set.range (fun i : ℕ => {vv i, vv (i + 1)})),
+          x ∈ E_SY_p4 (cycRow_p23 vv 4)
+    ) ∧
+    -- 54. Kepler.Text.PROVE_E_SY_EQ_IMAGE_VV_5 (LA36:1915; HOL `PROVE_E_SY_EQ_IMAGE_VV_5`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5) (x : Set V3)
+          (hx : x ∈ Set.range (fun i : ℕ => {vv i, vv (i + 1)})),
+          x ∈ E_SY_p4 (cycRow_p23 vv 5)
+    ) ∧
+    -- 55. Kepler.Text.PROVE_E_SY_EQ_IMAGE_VV_6 (LA36:2247; HOL `PROVE_E_SY_EQ_IMAGE_VV_6`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6) (x : Set V3)
+          (hx : x ∈ Set.range (fun i : ℕ => {vv i, vv (i + 1)})),
+          x ∈ E_SY_p4 (cycRow_p23 vv 6)
+    ) ∧
+    -- 56. Kepler.Text.PROVE_E_SY_EQ_INV_5_TAC (LA36:1801; HOL `PROVE_E_SY_EQ_INV_5_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5)
+    ,
+          Set.range (fun i : ℕ => {vv i, vv (i + 1)}) = E_SY_p4 (cycRow_p23 vv 5)
+    ) ∧
+    -- 57. Kepler.Text.PROVE_E_SY_EQ_INV_6_TAC (LA36:2134; HOL `PROVE_E_SY_EQ_INV_6_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6)
+    ,
+          Set.range (fun i : ℕ => {vv i, vv (i + 1)}) = E_SY_p4 (cycRow_p23 vv 6)
+    ) ∧
+    -- 58. Kepler.Text.PROVE_E_SY_EQ_MOD_TAC_4 (LA36:1731; HOL `PROVE_E_SY_EQ_MOD_TAC_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4) (i : ℕ)
+    ,
+          {vv i, vv (i + 1)} ∈ E_SY_p4 (cycRow_p23 vv 4)
+    ) ∧
+    -- 59. Kepler.Text.PROVE_E_SY_EQ_MOD_TAC_5 (LA36:1904; HOL `PROVE_E_SY_EQ_MOD_TAC_5`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5) (i : ℕ)
+    ,
+          {vv i, vv (i + 1)} ∈ E_SY_p4 (cycRow_p23 vv 5)
+    ) ∧
+    -- 60. Kepler.Text.PROVE_E_SY_EQ_MOD_TAC_6 (LA36:2236; HOL `PROVE_E_SY_EQ_MOD_TAC_6`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6) (i : ℕ)
+    ,
+          {vv i, vv (i + 1)} ∈ E_SY_p4 (cycRow_p23 vv 6)
+    ) ∧
+    -- 61. Kepler.Text.PROVE_E_SY_EQ_TAC (LA36:1594; HOL `PROVE_E_SY_EQ_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4)
+    ,
+          E_SY_p4 (cycRow_p23 vv 4) = Set.range (fun i : ℕ => {vv i, vv (i + 1)})
+    ) ∧
+    -- 62. Kepler.Text.PROVE_E_SY_INV_TAC_4 (LA36:2094; HOL `PROVE_E_SY_INV_TAC_4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4)
+    ,
+          Set.range (fun i : ℕ => {vv i, vv (i + 1)}) = E_SY_p4 (cycRow_p23 vv 4)
+    ) ∧
+    -- 63. Kepler.Text.PROVE_F_SY_EQ_TAC (LA36:1606; HOL `PROVE_F_SY_EQ_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4)
+    ,
+          F_SY_p4 (cycRow_p23 vv 4) = Set.range (fun i : ℕ => (vv i, vv (i + 1)))
+    ) ∧
+    -- 64. Kepler.Text.PROVE_INEQUALITY_TAC_3 (LA36:1287; HOL `PROVE_INEQUALITY_TAC_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 65. Kepler.Text.PROVE_INEQUALITY_TAC_30 (LA36:1281; HOL `PROVE_INEQUALITY_TAC_30`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 66. Kepler.Text.PROVE_INEQUALITY_TAC_4 (LA36:1718; HOL `PROVE_INEQUALITY_TAC_4`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 67. Kepler.Text.PROVE_INEQUALITY_TAC_40 (LA36:1712; HOL `PROVE_INEQUALITY_TAC_40`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 68. Kepler.Text.PROVE_INEQUALITY_TAC_5 (LA36:1893; HOL `PROVE_INEQUALITY_TAC_5`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 69. Kepler.Text.PROVE_INEQUALITY_TAC_50 (LA36:1887; HOL `PROVE_INEQUALITY_TAC_50`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 70. Kepler.Text.PROVE_INEQUALITY_TAC_6 (LA36:2225; HOL `PROVE_INEQUALITY_TAC_6`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 71. Kepler.Text.PROVE_INEQUALITY_TAC_60 (LA36:2219; HOL `PROVE_INEQUALITY_TAC_60`)
+    (∀ (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv)
+          (i j : ℕ),
+          s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j
+    ) ∧
+    -- 72. Kepler.Text.PROVE_V_SY_EQ_5_TAC (LA36:1790; HOL `PROVE_V_SY_EQ_5_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5)
+    ,
+          V_SY_p4 (cycRow_p23 vv 5) = Set.range vv
+    ) ∧
+    -- 73. Kepler.Text.PROVE_V_SY_EQ_6_TAC (LA36:2124; HOL `PROVE_V_SY_EQ_6_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6)
+    ,
+          V_SY_p4 (cycRow_p23 vv 6) = Set.range vv
+    ) ∧
+    -- 74. Kepler.Text.PROVE_V_SY_EQ_TAC (LA36:1588; HOL `PROVE_V_SY_EQ_TAC`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4)
+    ,
+          V_SY_p4 (cycRow_p23 vv 4) = Set.range vv
+    ) ∧
+    -- 75. Kepler.Text.ROW_IN_BALL_ANNULUS_3 (LA36:1202; HOL `ROW_IN_BALL_ANNULUS_3`)
+    (∀ (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
+          (th : ℕ),
+          vv th ∈ ballAnnulus
+    ) ∧
+    -- 76. Kepler.Text.SCS_3_IS_TRI_STABLE (LA36:1184; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6)),
+          triStable_p23 s.k 0 (Set.Iic (s.k - 1))
+          (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
+          (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k)
+    ) ∧
+    -- 77. Kepler.Text.SCS_4_3_IS_TRI_STABLE (LA36:2010; HOL `SCS_4_3_IS_TRI_STABLE`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6)),
+          stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
+          (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
+          (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k)
+    ) ∧
+    -- 78. Kepler.Text.SCS_4_IS_TRI_STABLE (LA36:1962; HOL `SCS_4_IS_TRI_STABLE`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6)),
+          stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
+          (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
+          (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k)
+    ) ∧
+    -- 79. Kepler.Text.SCS_4_sqrt8_IS_TRI_STABLE (LA36:2043; HOL `SCS_4_sqrt8_IS_TRI_STABLE`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
+            (aPro 4 (Real.sqrt 8) (2 * h0) 6)),
+          stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
+          (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
+          (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k)
+    ) ∧
+    -- 80. Kepler.Text.SCS_5_IS_TRI_STABLE (LA36:1978; HOL `SCS_5_IS_TRI_STABLE`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6)),
+          stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
+          (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
+          (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k)
+    ) ∧
+    -- 81. Kepler.Text.SCS_5_pro_cs_IS_TRI_STABLE (LA36:2063; HOL `SCS_5_pro_cs_IS_TRI_STABLE`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
+            (aPro 5 (Real.sqrt 8) (2 * h0) 6)),
+          stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
+          (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
+          (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k)
+    ) ∧
+    -- 82. Kepler.Text.SCS_5_sqrt8_IS_TRI_STABLE (LA36:2026; HOL `SCS_5_sqrt8_IS_TRI_STABLE`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6)),
+          stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
+          (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
+          (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k)
+    ) ∧
+    -- 83. Kepler.Text.SCS_6_IS_TRI_STABLE (LA36:1994; HOL `SCS_6_IS_TRI_STABLE`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6)),
+          stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
+          (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
+          (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k)
+    ) ∧
+    -- 84. Kepler.Text.SCS_A_B__EQ_MOD_3 (LA36:1267; HOL `SCS_A_B__EQ_MOD_3`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
+          (i j : ℕ),
+          s.a i j = s.a (i % 3) (j % 3) ∧ s.b i j = s.b (i % 3) (j % 3)
+    ) ∧
+    -- 85. Kepler.Text.SCS_A_B__EQ_MOD_4 (LA36:1704; HOL `SCS_A_B__EQ_MOD_4`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
+          (i j : ℕ),
+          s.a i j = s.a (i % 4) (j % 4) ∧ s.b i j = s.b (i % 4) (j % 4)
+    ) ∧
+    -- 86. Kepler.Text.SCS_A_B__EQ_MOD_4_3 (LA36:2505; HOL `SCS_A_B__EQ_MOD_4_3`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
+          (i j : ℕ),
+          s.a i j = s.a (i % 4) (j % 4) ∧ s.b i j = s.b (i % 4) (j % 4)
+    ) ∧
+    -- 87. Kepler.Text.SCS_A_B__EQ_MOD_4_sqrt8 (LA36:2592; HOL `SCS_A_B__EQ_MOD_4_sqrt8`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
+            (aPro 4 (Real.sqrt 8) (2 * h0) 6))
+          (i j : ℕ),
+          s.a i j = s.a (i % 4) (j % 4) ∧ s.b i j = s.b (i % 4) (j % 4)
+    ) ∧
+    -- 88. Kepler.Text.SCS_A_B__EQ_MOD_5 (LA36:1879; HOL `SCS_A_B__EQ_MOD_5`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
+          (i j : ℕ),
+          s.a i j = s.a (i % 5) (j % 5) ∧ s.b i j = s.b (i % 5) (j % 5)
+    ) ∧
+    -- 89. Kepler.Text.SCS_A_B__EQ_MOD_5_pro_cs (LA36:2417; HOL `SCS_A_B__EQ_MOD_5_pro_cs`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
+            (aPro 5 (Real.sqrt 8) (2 * h0) 6))
+          (i j : ℕ),
+          s.a i j = s.a (i % 5) (j % 5) ∧ s.b i j = s.b (i % 5) (j % 5)
+    ) ∧
+    -- 90. Kepler.Text.SCS_A_B__EQ_MOD_5_sqrt8 (LA36:2329; HOL `SCS_A_B__EQ_MOD_5_sqrt8`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
+          (i j : ℕ),
+          s.a i j = s.a (i % 5) (j % 5) ∧ s.b i j = s.b (i % 5) (j % 5)
+    ) ∧
+    -- 91. Kepler.Text.SCS_A_B__EQ_MOD_6 (LA36:2211; HOL `SCS_A_B__EQ_MOD_6`)
+    (∀ (s : ScsV39)
+          (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
+          (i j : ℕ),
+          s.a i j = s.a (i % 6) (j % 6) ∧ s.b i j = s.b (i % 6) (j % 6)
+    ) ∧
+    -- 92. Kepler.Text.TAUSTAR_EQ_TAU_STAR_3 (LA36:1559; HOL `TAUSTAR_EQ_TAU_STAR_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
+          (hBB : BBsV39 s vv),
+          taustarV39 s vv = tau3 (vv 1) (vv 2) (vv 0)
+    ) ∧
+    -- 93. Kepler.Text.TAUSTAR_EQ_TAU_STAR_4 (LA36:1687; HOL `TAUSTAR_EQ_TAU_STAR_4`)
+    (∀ (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
+          (l : FinVec 4 3)
+          (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4)
+          (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 4 = l),
+          taustarV39 s vv = tauStar_p23 s1 l
+    ) ∧
+    -- 94. Kepler.Text.TAUSTAR_EQ_TAU_STAR_4_3 (LA36:2493; HOL `TAUSTAR_EQ_TAU_STAR_4_3`)
+    (∀ (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
+          (l : FinVec 4 3)
+          (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4)
+          (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 4 = l),
+          taustarV39 s vv = tauStar_p23 s1 l
+    ) ∧
+    -- 95. Kepler.Text.TAUSTAR_EQ_TAU_STAR_4_sqrt8 (LA36:2579; HOL `TAUSTAR_EQ_TAU_STAR_4_sqrt8`)
+    (∀ (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
+          (l : FinVec 4 3)
+          (hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
+            (aPro 4 (Real.sqrt 8) (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4)
+          (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 4 = l),
+          taustarV39 s vv = tauStar_p23 s1 l
+    ) ∧
+    -- 96. Kepler.Text.TAUSTAR_EQ_TAU_STAR_5 (LA36:1862; HOL `TAUSTAR_EQ_TAU_STAR_5`)
+    (∀ (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
+          (l : FinVec 5 3)
+          (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5)
+          (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 5 = l),
+          taustarV39 s vv = tauStar_p23 s1 l
+    ) ∧
+    -- 97. Kepler.Text.TAUSTAR_EQ_TAU_STAR_5_pro_cs (LA36:2404; HOL `TAUSTAR_EQ_TAU_STAR_5_pro_cs`)
+    (∀ (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
+          (l : FinVec 5 3)
+          (hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
+            (aPro 5 (Real.sqrt 8) (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5)
+          (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 5 = l),
+          taustarV39 s vv = tauStar_p23 s1 l
+    ) ∧
+    -- 98. Kepler.Text.TAUSTAR_EQ_TAU_STAR_5_sqrt8 (LA36:2317; HOL `TAUSTAR_EQ_TAU_STAR_5_sqrt8`)
+    (∀ (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
+          (l : FinVec 5 3)
+          (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5)
+          (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 5 = l),
+          taustarV39 s vv = tauStar_p23 s1 l
+    ) ∧
+    -- 99. Kepler.Text.TAUSTAR_EQ_TAU_STAR_6 (LA36:2194; HOL `TAUSTAR_EQ_TAU_STAR_6`)
+    (∀ (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
+          (l : FinVec 6 3)
+          (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 6)
+          (hsS : isScsV39 s) (hs1 : s1 = scsToStableSyD_p36 s hsS (by omega)) (hl : flattenRow_p23 vv 6 = l),
+          taustarV39 s vv = tauStar_p23 s1 l
+    ) ∧
+    -- 100. Kepler.Text.TRI_STABLE_K_EQ_3 (LA36:1454; HOL `TRI_STABLE_K_EQ_3`)
+    (∀ {k : ℕ} {a b : ℕ → ℕ → ℝ} {J : Set (Set ℕ)}
+          (ht : triStable_p23 k 0 (Set.Iic (k - 1)) a b J (fun i => (1 + i) % k)),
+          k = 3 ∧ 2 < k
+    ) ∧
+    -- 101. Kepler.Text.VECTOR_3_3 (LA36:172; HOL `VECTOR_3_3`)
+    (∀ (vv : ℕ → V3)
+    ,
+          cycRow_p23 vv 3 0 = vv 1 ∧ cycRow_p23 vv 3 1 = vv 2 ∧ cycRow_p23 vv 3 2 = vv 0
+    ) ∧
+    -- 102. Kepler.Text.VECTOR_3_4 (LA36:177; HOL `VECTOR_3_4`)
+    (∀ (vv : ℕ → V3)
+    ,
+          cycRow_p23 vv 4 0 = vv 1 ∧ cycRow_p23 vv 4 1 = vv 2 ∧ cycRow_p23 vv 4 2 = vv 3 ∧
+          cycRow_p23 vv 4 3 = vv 0
+    ) ∧
+    -- 103. Kepler.Text.VECTOR_3_5 (LA36:183; HOL `VECTOR_3_5`)
+    (∀ (vv : ℕ → V3)
+    ,
+          cycRow_p23 vv 5 0 = vv 1 ∧ cycRow_p23 vv 5 1 = vv 2 ∧ cycRow_p23 vv 5 2 = vv 3 ∧
+          cycRow_p23 vv 5 3 = vv 4 ∧ cycRow_p23 vv 5 4 = vv 0
+    ) ∧
+    -- 104. Kepler.Text.VECTOR_3_6 (LA36:189; HOL `VECTOR_3_6`)
+    (∀ (vv : ℕ → V3)
+    ,
+          cycRow_p23 vv 6 0 = vv 1 ∧ cycRow_p23 vv 6 1 = vv 2 ∧ cycRow_p23 vv 6 2 = vv 3 ∧
+          cycRow_p23 vv 6 3 = vv 4 ∧ cycRow_p23 vv 6 4 = vv 5 ∧ cycRow_p23 vv 6 5 = vv 0
+    ) ∧
+    -- 105. Kepler.Text.VV_IN_BALL_ANNULUS_TAC_3 (LA36:1275; HOL `VV_IN_BALL_ANNULUS_TAC_3`)
+    (∀ (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
+          (i : ℕ),
+          vv i ∈ ballAnnulus
+    ) ∧
+    -- 106. Kepler.Text.VV_IN_BALL_ANNULUS_TAC_4 (LA36:1699; HOL `VV_IN_BALL_ANNULUS_TAC_4`)
+    (∀ (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
+          (i : ℕ),
+          vv i ∈ ballAnnulus
+    ) ∧
+    -- 107. Kepler.Text.VV_IN_BALL_ANNULUS_TAC_5 (LA36:1874; HOL `VV_IN_BALL_ANNULUS_TAC_5`)
+    (∀ (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
+          (i : ℕ),
+          vv i ∈ ballAnnulus
+    ) ∧
+    -- 108. Kepler.Text.VV_IN_BALL_ANNULUS_TAC_6 (LA36:2206; HOL `VV_IN_BALL_ANNULUS_TAC_6`)
+    (∀ (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
+          (i : ℕ),
+          vv i ∈ ballAnnulus
+    ) ∧
+    -- 109. Kepler.Text.V_E_FF_CASE_4 (LA36:1619; HOL `V_E_FF_CASE_4`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (_hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          V_SY_p4 (cycRow_p23 vv 4) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 4) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
+          F_SY_p4 (cycRow_p23 vv 4) = Set.range (fun i : ℕ => (vv i, vv (i + 1)))
+    ) ∧
+    -- 110. Kepler.Text.V_E_FF_CASE_4_3 (LA36:2456; HOL `V_E_FF_CASE_4_3`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (_hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          V_SY_p4 (cycRow_p23 vv 4) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 4) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
+          F_SY_p4 (cycRow_p23 vv 4) = Set.range (fun i : ℕ => (vv i, vv (i + 1)))
+    ) ∧
+    -- 111. Kepler.Text.V_E_FF_CASE_4_sqrt8 (LA36:2539; HOL `V_E_FF_CASE_4_sqrt8`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (_hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
+            (aPro 4 (Real.sqrt 8) (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 4),
+          V_SY_p4 (cycRow_p23 vv 4) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 4) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
+          F_SY_p4 (cycRow_p23 vv 4) = Set.range (fun i : ℕ => (vv i, vv (i + 1)))
+    ) ∧
+    -- 112. Kepler.Text.V_E_FF_CASE_5 (LA36:1806; HOL `V_E_FF_CASE_5`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (_hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          V_SY_p4 (cycRow_p23 vv 5) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 5) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
+          F_SY_p4 (cycRow_p23 vv 5) = Set.range (fun i : ℕ => (vv i, vv (i + 1)))
+    ) ∧
+    -- 113. Kepler.Text.V_E_FF_CASE_5_pro_cs (LA36:2364; HOL `V_E_FF_CASE_5_pro_cs`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (_hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
+            (aPro 5 (Real.sqrt 8) (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          V_SY_p4 (cycRow_p23 vv 5) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 5) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
+          F_SY_p4 (cycRow_p23 vv 5) = Set.range (fun i : ℕ => (vv i, vv (i + 1)))
+    ) ∧
+    -- 114. Kepler.Text.V_E_FF_CASE_5_sqrt8 (LA36:2280; HOL `V_E_FF_CASE_5_sqrt8`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (_hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 5),
+          V_SY_p4 (cycRow_p23 vv 5) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 5) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
+          F_SY_p4 (cycRow_p23 vv 5) = Set.range (fun i : ℕ => (vv i, vv (i + 1)))
+    ) ∧
+    -- 115. Kepler.Text.V_E_FF_CASE_6 (LA36:2139; HOL `V_E_FF_CASE_6`)
+    (∀ (s : ScsV39) (vv : ℕ → V3)
+          (_hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
+          (hBB : BBsV39 s vv) (hk : s.k = 6),
+          V_SY_p4 (cycRow_p23 vv 6) = Set.range vv ∧
+          E_SY_p4 (cycRow_p23 vv 6) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
+          F_SY_p4 (cycRow_p23 vv 6) = Set.range (fun i : ℕ => (vv i, vv (i + 1)))
+    ) ∧
+    -- 116. Kepler.Text.V_SY_EQ_IMAGE_VV_TAC4 (LA36:1724; HOL `V_SY_EQ_IMAGE_VV_TAC4`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 4) (x : V3)
+          (hx : x ∈ Set.range vv),
+          x ∈ V_SY_p4 (cycRow_p23 vv 4)
+    ) ∧
+    -- 117. Kepler.Text.V_SY_EQ_IMAGE_VV_TAC5 (LA36:1898; HOL `V_SY_EQ_IMAGE_VV_TAC5`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 5) (x : V3)
+          (hx : x ∈ Set.range vv),
+          x ∈ V_SY_p4 (cycRow_p23 vv 5)
+    ) ∧
+    -- 118. Kepler.Text.V_SY_EQ_IMAGE_VV_TAC6 (LA36:2230; HOL `V_SY_EQ_IMAGE_VV_TAC6`)
+    (∀ (vv : ℕ → V3) (hper : Periodic vv 6) (x : V3)
+          (hx : x ∈ Set.range vv),
+          x ∈ V_SY_p4 (cycRow_p23 vv 6)
+    ) ∧
+    -- 119. Kepler.Text.aPro_mod_p36 (LA36:166; no HOL anchor line in file docstring)
+    (∀ (k : ℕ) (p a1 a2 : ℝ) (i j : ℕ)
+    ,
+          aPro k p a1 a2 i j = aPro k p a1 a2 (i % k) (j % k)
+    ) ∧
+    -- 120. Kepler.Text.aPro_symm_p36 (LA36:372; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} {p a1 a2 : ℝ} {i j : ℕ}
+    ,
+          aPro k p a1 a2 i j = aPro k p a1 a2 j i
+    ) ∧
+    -- 121. Kepler.Text.change_type_v2_eq (LA36:138; no HOL anchor line in file docstring)
+    (∀ {s : ScsV39} (hk : 0 < s.k) (hJp : Periodic2 s.J s.k)
+    ,
+          change_type_v2 s.J s.k = scsJSet_p23 s
+    ) ∧
+    -- 122. Kepler.Text.change_type_v2_mkUnadorned_p36 (LA36:402; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} (d : ℝ) (a b : ℕ → ℕ → ℝ)
+    ,
+          change_type_v2 (mkUnadornedV39 k d a b).J k = ∅
+    ) ∧
+    -- 123. Kepler.Text.csAdj_mod_p36 (LA36:161; no HOL anchor line in file docstring)
+    (∀ (k : ℕ) (a1 a2 : ℝ) (i j : ℕ)
+    ,
+          csAdj k a1 a2 i j = csAdj k a1 a2 (i % k) (j % k)
+    ) ∧
+    -- 124. Kepler.Text.csAdj_symm_p36 (LA36:354; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} {a1 a2 : ℝ} {i j : ℕ}
+    ,
+          csAdj k a1 a2 i j = csAdj k a1 a2 j i
+    ) ∧
+    -- 125. Kepler.Text.scsJSet_mkUnadorned_p36 (LA36:410; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} (d : ℝ) (a b : ℕ → ℕ → ℝ)
+    ,
+          scsJSet_p23 (mkUnadornedV39 k d a b) = ∅
+    ) ∧
+    -- 126. Kepler.Text.stable_sy_explicit (LA36:197; HOL `stable_sy_explicit`)
+    (∀ {k : ℕ} {I : Set ℕ} {a b : ℕ → ℕ → ℝ}
+          {J : Set (Set ℕ)} {f : ℕ → ℕ} (hs : stableSystem_p23 k 0 I a b J f),
+          (StableSyP23.k ⟨k, 0, I, a, b, J, f, hs⟩ : ℕ) = k ∧
+          (StableSyP23.d ⟨k, 0, I, a, b, J, f, hs⟩ : ℝ) = 0 ∧
+          (StableSyP23.I ⟨k, 0, I, a, b, J, f, hs⟩ : Set ℕ) = I ∧
+          (StableSyP23.a ⟨k, 0, I, a, b, J, f, hs⟩) = a ∧
+          (StableSyP23.b ⟨k, 0, I, a, b, J, f, hs⟩) = b ∧
+          (StableSyP23.J ⟨k, 0, I, a, b, J, f, hs⟩ : Set (Set ℕ)) = J ∧
+          (StableSyP23.f ⟨k, 0, I, a, b, J, f, hs⟩) = f
+    ) ∧
+    -- 127. Kepler.Text.succModIter_p36 (LA36:296; no HOL anchor line in file docstring)
+    (∀ (k : ℕ) (hk : 0 < k) {j : ℕ} (hj : j < k) (n : ℕ)
+    ,
+          (fun i => (1 + i) % k)^[n] j = (j + n) % k
+    ) ∧
+    -- 128. Kepler.Text.succModIter_pos_p36 (LA36:306; no HOL anchor line in file docstring)
+    (∀ (k : ℕ) (hk : 0 < k) (j n : ℕ) (hn : 0 < n)
+    ,
+          (fun i => (1 + i) % k)^[n] j = (j + n) % k
+    ) ∧
+    -- 129. Kepler.Text.succ_mod_ne_p36 (LA36:286; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} (hk : 1 < k) (n : ℕ)
+    ,
+          n % k ≠ (n + 1) % k
+    ) ∧
+    -- 130. Kepler.Text.torsor_succ_mod_p36 (LA36:318; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} (hk : 0 < k)
+    ,
+          torsor_p23 (Set.Iic (k - 1)) k (fun i => (1 + i) % k)
+    ) ∧
+    -- 131. Kepler.Text.vecmatsV3_flattenRow_p36 (LA36:454; no HOL anchor line in file docstring)
+    (∀ {k : ℕ} (vv : ℕ → V3)
+    ,
+          vecmatsV3_p4 (flattenRow_p23 vv k) = cycRow_p23 vv k
+    ) :=
+    ⟨Kepler.Text.EQUALITY_V_SY_TAC_5, Kepler.Text.EQUALITY_V_SY_TAC_6, Kepler.Text.EQ_V_SY_TAC_4,
+      Kepler.Text.INEQUALITY_A_B_SCS_TAC_3, Kepler.Text.INEQUALITY_A_B_SCS_TAC_30,
+      Kepler.Text.INEQUALITY_A_B_TAC_4, Kepler.Text.INEQUALITY_A_B_TAC_40,
+      Kepler.Text.INEQUALITY_A_B_TAC_5, Kepler.Text.INEQUALITY_A_B_TAC_50,
+      Kepler.Text.INEQUALITY_A_B_TAC_6, Kepler.Text.INEQUALITY_A_B_TAC_60,
+      Kepler.Text.INEQUALITY_PROOF_TAC4, Kepler.Text.INEQUALITY_PROOF_TAC40,
+      Kepler.Text.IN_BALL_ANNULUS_ROW_TAC_4, Kepler.Text.IN_BALL_ANNULUS_TAC_4,
+      Kepler.Text.IN_BALL_ANNUUS_TAC_5, Kepler.Text.IN_BALL_ANNUUS_TAC_6,
+      Kepler.Text.IN_B_SY1_COLLINEAR_CASE_3, Kepler.Text.IN_NOT_EMPTY_B1_SY_3,
+      Kepler.Text.IN_NOT_EMPTY_B1_SY_4, Kepler.Text.IN_NOT_EMPTY_B1_SY_4_3,
+      Kepler.Text.IN_NOT_EMPTY_B1_SY_4_sqrt8, Kepler.Text.IN_NOT_EMPTY_B1_SY_5,
+      Kepler.Text.IN_NOT_EMPTY_B1_SY_5_pro_cs, Kepler.Text.IN_NOT_EMPTY_B1_SY_5_sqrt8,
+      Kepler.Text.IN_NOT_EMPTY_B1_SY_6, Kepler.Text.IN_NOT_EMPTY_CASE_3,
+      Kepler.Text.IN_NOT_EMPTY_CASE_4, Kepler.Text.IN_NOT_EMPTY_CASE_4_3,
+      Kepler.Text.IN_NOT_EMPTY_CASE_4_sqrt8, Kepler.Text.IN_NOT_EMPTY_CASE_5,
+      Kepler.Text.IN_NOT_EMPTY_CASE_5_pro_cs, Kepler.Text.IN_NOT_EMPTY_CASE_5_sqrt8,
+      Kepler.Text.IN_NOT_EMPTY_CASE_6, Kepler.Text.NOT_COLLINEAR_BBs_CASE_3,
+      Kepler.Text.NOT_EMPTY_CASE_3, Kepler.Text.NOT_EMPTY_CASE_4, Kepler.Text.NOT_EMPTY_CASE_4_3,
+      Kepler.Text.NOT_EMPTY_CASE_4_sqrt8, Kepler.Text.NOT_EMPTY_CASE_5,
+      Kepler.Text.NOT_EMPTY_CASE_5_pro_cs, Kepler.Text.NOT_EMPTY_CASE_5_sqrt8,
+      Kepler.Text.NOT_EMPTY_CASE_6, Kepler.Text.PERIODIC_PROPERTY_p36,
+      Kepler.Text.POINT_IN_BBS_IS_NOT_0_3, Kepler.Text.PROOF_E_EQ_IMAGE_4,
+      Kepler.Text.PROOF_E_EQ_TAC_4, Kepler.Text.PROOF_E_EQ_TAC_5, Kepler.Text.PROOF_E_EQ_TAC_6,
+      Kepler.Text.PROVE_EQ_V_SY_TAC_4, Kepler.Text.PROVE_E_SY_EQ_5_TAC,
+      Kepler.Text.PROVE_E_SY_EQ_6_TAC, Kepler.Text.PROVE_E_SY_EQ_IMAGE_VV_4,
+      Kepler.Text.PROVE_E_SY_EQ_IMAGE_VV_5, Kepler.Text.PROVE_E_SY_EQ_IMAGE_VV_6,
+      Kepler.Text.PROVE_E_SY_EQ_INV_5_TAC, Kepler.Text.PROVE_E_SY_EQ_INV_6_TAC,
+      Kepler.Text.PROVE_E_SY_EQ_MOD_TAC_4, Kepler.Text.PROVE_E_SY_EQ_MOD_TAC_5,
+      Kepler.Text.PROVE_E_SY_EQ_MOD_TAC_6, Kepler.Text.PROVE_E_SY_EQ_TAC,
+      Kepler.Text.PROVE_E_SY_INV_TAC_4, Kepler.Text.PROVE_F_SY_EQ_TAC,
+      Kepler.Text.PROVE_INEQUALITY_TAC_3, Kepler.Text.PROVE_INEQUALITY_TAC_30,
+      Kepler.Text.PROVE_INEQUALITY_TAC_4, Kepler.Text.PROVE_INEQUALITY_TAC_40,
+      Kepler.Text.PROVE_INEQUALITY_TAC_5, Kepler.Text.PROVE_INEQUALITY_TAC_50,
+      Kepler.Text.PROVE_INEQUALITY_TAC_6, Kepler.Text.PROVE_INEQUALITY_TAC_60,
+      Kepler.Text.PROVE_V_SY_EQ_5_TAC, Kepler.Text.PROVE_V_SY_EQ_6_TAC,
+      Kepler.Text.PROVE_V_SY_EQ_TAC, Kepler.Text.ROW_IN_BALL_ANNULUS_3,
+      Kepler.Text.SCS_3_IS_TRI_STABLE, Kepler.Text.SCS_4_3_IS_TRI_STABLE,
+      Kepler.Text.SCS_4_IS_TRI_STABLE, Kepler.Text.SCS_4_sqrt8_IS_TRI_STABLE,
+      Kepler.Text.SCS_5_IS_TRI_STABLE, Kepler.Text.SCS_5_pro_cs_IS_TRI_STABLE,
+      Kepler.Text.SCS_5_sqrt8_IS_TRI_STABLE, Kepler.Text.SCS_6_IS_TRI_STABLE,
+      Kepler.Text.SCS_A_B__EQ_MOD_3, Kepler.Text.SCS_A_B__EQ_MOD_4,
+      Kepler.Text.SCS_A_B__EQ_MOD_4_3, Kepler.Text.SCS_A_B__EQ_MOD_4_sqrt8,
+      Kepler.Text.SCS_A_B__EQ_MOD_5, Kepler.Text.SCS_A_B__EQ_MOD_5_pro_cs,
+      Kepler.Text.SCS_A_B__EQ_MOD_5_sqrt8, Kepler.Text.SCS_A_B__EQ_MOD_6,
+      Kepler.Text.TAUSTAR_EQ_TAU_STAR_3, Kepler.Text.TAUSTAR_EQ_TAU_STAR_4,
+      Kepler.Text.TAUSTAR_EQ_TAU_STAR_4_3, Kepler.Text.TAUSTAR_EQ_TAU_STAR_4_sqrt8,
+      Kepler.Text.TAUSTAR_EQ_TAU_STAR_5, Kepler.Text.TAUSTAR_EQ_TAU_STAR_5_pro_cs,
+      Kepler.Text.TAUSTAR_EQ_TAU_STAR_5_sqrt8, Kepler.Text.TAUSTAR_EQ_TAU_STAR_6,
+      Kepler.Text.TRI_STABLE_K_EQ_3, Kepler.Text.VECTOR_3_3, Kepler.Text.VECTOR_3_4,
+      Kepler.Text.VECTOR_3_5, Kepler.Text.VECTOR_3_6, Kepler.Text.VV_IN_BALL_ANNULUS_TAC_3,
+      Kepler.Text.VV_IN_BALL_ANNULUS_TAC_4, Kepler.Text.VV_IN_BALL_ANNULUS_TAC_5,
+      Kepler.Text.VV_IN_BALL_ANNULUS_TAC_6, Kepler.Text.V_E_FF_CASE_4,
+      Kepler.Text.V_E_FF_CASE_4_3, Kepler.Text.V_E_FF_CASE_4_sqrt8, Kepler.Text.V_E_FF_CASE_5,
+      Kepler.Text.V_E_FF_CASE_5_pro_cs, Kepler.Text.V_E_FF_CASE_5_sqrt8,
+      Kepler.Text.V_E_FF_CASE_6, Kepler.Text.V_SY_EQ_IMAGE_VV_TAC4,
+      Kepler.Text.V_SY_EQ_IMAGE_VV_TAC5, Kepler.Text.V_SY_EQ_IMAGE_VV_TAC6,
+      Kepler.Text.aPro_mod_p36, Kepler.Text.aPro_symm_p36, Kepler.Text.change_type_v2_eq,
+      Kepler.Text.change_type_v2_mkUnadorned_p36, Kepler.Text.csAdj_mod_p36,
+      Kepler.Text.csAdj_symm_p36, Kepler.Text.scsJSet_mkUnadorned_p36,
+      Kepler.Text.stable_sy_explicit, Kepler.Text.succModIter_p36,
+      Kepler.Text.succModIter_pos_p36, Kepler.Text.succ_mod_ne_p36,
+      Kepler.Text.torsor_succ_mod_p36, Kepler.Text.vecmatsV3_flattenRow_p36⟩
+
+#print axioms la36_capstone_w1
+
+/-- LA38 materialization capstone (design lane
+leftover-mat-scout, implementation lane lv12-w1 slot A, 2026-11-04).
+The 62 clean public top-level LA38 exits unreachable from
+every e2e root (top-level thm exits minus the sorried half minus generated-lemma exits; closure GROUP_SORRIED 0) are re-exposed as ONE conjunction.
+Anchors (no fabricated edges): every conjunct is asserted in the
+verbatim wording of its LA38 declaration -- the conjunct text is
+the declaration's source signature (binders + conclusion, copied
+verbatim and mechanically split at the binder/conclusion separator by
+the generator gen_items_lv12w1.py); the Lean `#check @name` printer
+dump (logs/sigprobe_212.out) is retained as a cross reference; semantic
+identity is re-verified by the ⟨...⟩ assembly below (each component
+must unify definitionally with its conjunct); the per-conjunct
+comments carry each exit's LA38 declaration line and file-local
+docstring HOL anchor.  Conjunct order: the clean-seed list order
+(probe1.out, alphabetical per module).  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la38_capstone_w1 :
+    -- 1. Kepler.Text.DELTA_Y_POS_4POINTS (LA38:1343; HOL `DELTA_Y_POS_4POINTS`)
+    (∀ (v0 v1 v2 v3 : V3)
+    ,
+          0 ≤ deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+          (dist v1 v3) (dist v1 v2)
+    ) ∧
+    -- 2. Kepler.Text.DIHV_EQ_DIH_Y_4PT (LA38:1440; HOL `DIHV_EQ_DIH_Y`)
+    (∀ (v0 v1 v2 v3 : V3)
+          (h2 : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+          (h3 : ¬ Collinear ℝ ({v0, v1, v3} : Set V3)),
+          dihV v0 v1 v2 v3 =
+          dihY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+            (dist v1 v3) (dist v1 v2)
+    ) ∧
+    -- 3. Kepler.Text.DIHV_NN_4PT (LA38:1474; no HOL anchor line in file docstring)
+    (∀ (v0 v1 v2 v3 : V3)
+          (h2 : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+          (h3 : ¬ Collinear ℝ ({v0, v1, v3} : Set V3)),
+          0 ≤ dihV v0 v1 v2 v3
+    ) ∧
+    -- 4. Kepler.Text.DIH_X_NN (LA38:309; HOL `DIH_X_NN`)
+    (∀ x1 x2 x3 x4 x5 x6 : ℝ,
+          0 < x1 → 0 ≤ deltaX x1 x2 x3 x4 x5 x6 →
+          0 ≤ dihXf x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 5. Kepler.Text.DIH_Y_NN (LA38:320; HOL `DIH_Y_NN`)
+    (∀ y1 y2 y3 y4 y5 y6 : ℝ,
+          0 < y1 → 0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+          0 ≤ dihY y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 6. Kepler.Text.EE_vv (LA38:2223; HOL `EE_vv`)
+    (∀ (vv : ℕ → V3) (k i : ℕ) (hper : Periodic vv k) (hk : 3 ≤ k)
+          (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j),
+          ee (vv i) (Set.range fun i => {vv i, vv (i + 1)}) =
+          {vv (i + 1), vv (i + (k - 1))}
+    ) ∧
+    -- 7. Kepler.Text.ITER_vv_rho_node1 (LA38:2483; HOL `ITER_vv_rho_node1`)
+    (∀ (vv : ℕ → V3) (k j : ℕ) (hper : Periodic vv k)
+          (hk : 3 ≤ k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
+          (i : ℕ),
+          (rhoNode1 (Set.range fun i => (vv i, vv (i + 1))))^[j] (vv i) = vv (i + j)
+    ) ∧
+    -- 8. Kepler.Text.I_LT_J_LT_3_EXPLICIT (LA38:3545; HOL `I_LT_J_LT_3_EXPLICIT`)
+    (∀ (i j : ℕ)
+    ,
+          (i < j ∧ j < 3) ↔ (i = 0 ∧ j = 1) ∨ (i = 0 ∧ j = 2) ∨ (i = 1 ∧ j = 2)
+    ) ∧
+    -- 9. Kepler.Text.I_LT_J_LT_4_EXPLICIT (LA38:3550; HOL `I_LT_J_LT_4_EXPLICIT`)
+    (∀ (i j : ℕ)
+    ,
+          (i < j ∧ j < 4) ↔ (i = 0 ∧ j = 1) ∨ (i = 0 ∧ j = 2) ∨ (i = 0 ∧ j = 3) ∨
+          (i = 1 ∧ j = 2) ∨ (i = 1 ∧ j = 3) ∨ (i = 2 ∧ j = 3)
+    ) ∧
+    -- 10. Kepler.Text.LEMMA_4680581274_delta_issue_ups (LA38:3316; HOL `LEMMA_4680581274_delta_issue_ups`)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ)
+    ,
+          ineqP38 [(4.0, x1, 2.0 * 1.26 * 2.0 * 1.26), (4.0, x2, 2.0 * 1.26 * 2.0 * 1.26),
+          (4.0, x3, 2.0 * 1.26 * 2.0 * 1.26), (3.01 * 3.01, x4, 3.166 * 3.166),
+          (4.0, x5, 4.0), (4.0, x6, 4.0)]
+          (0 < upsX x2 x3 x4 ∨
+            10 + deltaX x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
+            deltaX4 x1 x2 x3 x4 x5 x6 * -1 < 0)
+    ) ∧
+    -- 11. Kepler.Text.MOD_4_EXPLICIT (LA38:1654; HOL `MOD_4_EXPLICIT`)
+    (0 % 4 = 0 ∧ 1 % 4 = 1 ∧ 2 % 4 = 2 ∧ 3 % 4 = 3 ∧ 4 % 4 = 0 ∧ 5 % 4 = 1 ∧
+          6 % 4 = 2
+    ) ∧
+    -- 12. Kepler.Text.NONPARALLEL_BALL_ANNULUS40 (LA38:678; HOL `NONPARALLEL_BALL_ANNULUS40`)
+    (∀ (v w : V3)
+    ,
+          2 ≤ ‖v - w‖ → ‖v - w‖ < 4 → v ∈ ballAnnulus → w ∈ ballAnnulus →
+          ¬ Collinear ℝ ({0, v, w} : Set V3)
+    ) ∧
+    -- 13. Kepler.Text.NONPARALLEL_BALL_ANNULUS40_ALT (LA38:695; HOL `NONPARALLEL_BALL_ANNULUS40_ALT`)
+    (∀ (v w : V3)
+    ,
+          2 ≤ dist v w → dist v w < 4 → v ∈ ballAnnulus → w ∈ ballAnnulus →
+          ¬ Collinear ℝ ({0, v, w} : Set V3)
+    ) ∧
+    -- 14. Kepler.Text.NONPARALLEL_BALL_ANNULUS_ALT (LA38:686; HOL `NONPARALLEL_BALL_ANNULUS_ALT`)
+    (∀ (v w : V3)
+    ,
+          2 ≤ dist v w → dist v w ≤ 3.62 → v ∈ ballAnnulus → w ∈ ballAnnulus →
+          ¬ Collinear ℝ ({0, v, w} : Set V3)
+    ) ∧
+    -- 15. Kepler.Text.REAL_FINITE_MIN_EXISTS_p38 (LA38:2003; HOL `REAL_FINITE_MIN_EXISTS`)
+    (∀ (S : Set ℝ) (hfin : S.Finite)
+          (hne : S.Nonempty),
+          ∃ m, m ∈ S ∧ ∀ x ∈ S, m ≤ x
+    ) ∧
+    -- 16. Kepler.Text.REAL_WLOG_SQUARE2_LEMMA (LA38:2046; HOL `REAL_WLOG_SQUARE2_LEMMA`)
+    (∀ (P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → Prop)
+          (hrot : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+            P y1 y2 y3 y4 y5 y6 = P y2 y3 y4 y1 y6 y5 ∧
+            P y1 y2 y3 y4 y5 y6 = P y1 y4 y3 y2 y6 y5)
+          (hmax : ∀ y1 y2 y3 y4 y5 y6 : ℝ, y2 ≤ y1 → y3 ≤ y1 → y4 ≤ y1 → y4 ≤ y2 →
+            P y1 y2 y3 y4 y5 y6),
+          ∀ y1 y2 y3 y4 y5 y6 : ℝ, P y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 17. Kepler.Text.REAL_WLOG_SQUARE_LEMMA (LA38:2009; HOL `REAL_WLOG_SQUARE_LEMMA`)
+    (∀ (P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → Prop)
+          (hrot : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+            P y1 y2 y3 y4 y5 y6 = P y2 y3 y4 y1 y6 y5)
+          (hmax : ∀ y1 y2 y3 y4 y5 y6 : ℝ, y2 ≤ y1 → y3 ≤ y1 → y4 ≤ y1 →
+            P y1 y2 y3 y4 y5 y6),
+          ∀ y1 y2 y3 y4 y5 y6 : ℝ, P y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 18. Kepler.Text.RHO_LB (LA38:332; HOL `RHO_LB`)
+    (∀ (y : ℝ) (hy : (2 : ℝ) ≤ y)
+    ,
+          1 ≤ rho y
+    ) ∧
+    -- 19. Kepler.Text.SUC_EXPLICIT (LA38:2967; HOL `SUC_EXPLICIT`)
+    (Nat.succ 0 = 1 ∧ Nat.succ 1 = 2 ∧ Nat.succ 2 = 3 ∧ Nat.succ 3 = 4 ∧
+          Nat.succ 4 = 5 ∧ Nat.succ 5 = 6 ∧ Nat.succ 6 = 7 ∧ Nat.succ 7 = 8 ∧
+          Nat.succ 8 = 9
+    ) ∧
+    -- 20. Kepler.Text.UNADORNED_NOT_EAR (LA38:397; HOL `UNADORNED_NOT_EAR`)
+    (∀ (k : ℕ) (d : ℝ) (a b : ℕ → ℕ → ℝ)
+    ,
+          ¬ isEarV39 (mkUnadornedV39 k d a b)
+    ) ∧
+    -- 21. Kepler.Text.convex_local_fan_azim_le_pi (LA38:2715; HOL `convex_local_fan_azim_le_pi`)
+    (∀ (vv : ℕ → V3) (k i : ℕ)
+          (hper : Periodic vv k) (hk : 3 ≤ k)
+          (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
+          (hcf : ConvexLocalFan (Set.range vv)
+            (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))))
+          (hsub : Set.range vv ⊆ ballAnnulus),
+          azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) ≤ Real.pi
+    ) ∧
+    -- 22. Kepler.Text.cs_adj4_EXPLICIT (LA38:2974; HOL `cs_adj4_EXPLICIT`)
+    (∀ (a b : ℝ)
+    ,
+          csAdj 4 a b 0 0 = 0 ∧ csAdj 4 a b 0 1 = a ∧ csAdj 4 a b 0 2 = b ∧
+          csAdj 4 a b 0 3 = a ∧ csAdj 4 a b 1 0 = a ∧ csAdj 4 a b 1 1 = 0 ∧
+          csAdj 4 a b 1 2 = a ∧ csAdj 4 a b 1 3 = b ∧ csAdj 4 a b 2 0 = b ∧
+          csAdj 4 a b 2 1 = a ∧ csAdj 4 a b 2 2 = 0 ∧ csAdj 4 a b 2 3 = a ∧
+          csAdj 4 a b 3 0 = a ∧ csAdj 4 a b 3 1 = b ∧ csAdj 4 a b 3 2 = a ∧
+          csAdj 4 a b 3 3 = 0
+    ) ∧
+    -- 23. Kepler.Text.delta_4680581274 (LA38:2988; HOL `delta_4680581274`)
+    (∀ (y1 y4 : ℝ) (hy1 : cstab ≤ y1) (hy4 : 4 ≤ y4)
+    ,
+          deltaY y1 2 2 y4 2 cstab < 0
+    ) ∧
+    -- 24. Kepler.Text.dsv_fun3 (LA38:533; HOL `dsv_fun3`)
+    (∀ (d : ℝ) (a a' b' b : ℕ → ℕ → ℝ) (f : ℕ → ℕ → Prop)
+          (s s' s'' : ℕ → Prop)
+          (vv : ℕ → V3),
+          dsvV39 (ScsV39.mk 3 d a a' b' b f s s' s'') vv =
+          d + 0.1 * (if isEarV39 (ScsV39.mk 3 d a a' b' b f s s' s'') then 1 else -1) *
+            ((if f 0 1 then cstab - dist (vv 0) (vv 1) else 0) +
+            (if f 1 2 then cstab - dist (vv 1) (vv 2) else 0) +
+            (if f 2 3 then cstab - dist (vv 2) (vv 3) else 0) + 0)
+    ) ∧
+    -- 25. Kepler.Text.dsv_fun4 (LA38:545; HOL `dsv_fun4`)
+    (∀ (d : ℝ) (a a' b' b : ℕ → ℕ → ℝ) (f : ℕ → ℕ → Prop)
+          (s s' s'' : ℕ → Prop)
+          (vv : ℕ → V3),
+          dsvV39 (ScsV39.mk 4 d a a' b' b f s s' s'') vv =
+          d - 0.1 * ((if f 0 1 then cstab - dist (vv 0) (vv 1) else 0) +
+            (if f 1 2 then cstab - dist (vv 1) (vv 2) else 0) +
+            (if f 2 3 then cstab - dist (vv 2) (vv 3) else 0) +
+            (if f 3 4 then cstab - dist (vv 3) (vv 4) else 0) + 0)
+    ) ∧
+    -- 26. Kepler.Text.dsv_unadorned (LA38:407; HOL `dsv_unadorned`)
+    (∀ (k : ℕ) (d : ℝ) (a b : ℕ → ℕ → ℝ) (vv : ℕ → V3)
+    ,
+          dsvV39 (mkUnadornedV39 k d a b) vv = d
+    ) ∧
+    -- 27. Kepler.Text.funlistA_empty (LA38:1725; HOL `funlistA_empty`, HOL `F`)
+    (∀ (k : ℕ)
+    ,
+          funlistAV39 [] False False (A := Prop) k = fun _ _ => False
+    ) ∧
+    -- 28. Kepler.Text.funlist_diag (LA38:1714; HOL `funlist_diag`)
+    (∀ (a : List ((ℕ × ℕ) × ℝ)) (a0 : ℝ) (k i : ℕ)
+    ,
+          funlistV39 a a0 k i i = 0
+    ) ∧
+    -- 29. Kepler.Text.funlist_kik (LA38:3456; HOL `funlist_kik`)
+    (∀ (b : List ((ℕ × ℕ) × ℝ)) (b0 : ℝ) (k i : ℕ)
+    ,
+          funlistV39 b b0 k i k = funlistV39 b b0 k 0 i
+    ) ∧
+    -- 30. Kepler.Text.funlist_sym (LA38:1704; HOL `funlist_sym`)
+    (∀ (k : ℕ) (a : List ((ℕ × ℕ) × ℝ)) (a0 : ℝ) (i j : ℕ)
+    ,
+          funlistV39 a a0 k i j = funlistV39 a a0 k j i
+    ) ∧
+    -- 31. Kepler.Text.is_ear_scs3 (LA38:1864; HOL `is_ear_scs3`)
+    (∀ (a b : ℕ → ℕ → ℝ) (jf : ℕ → ℕ → Prop)
+    ,
+          isEarV39 (ScsV39.mk 3 0.11 a a b b jf (fun _ => False) (fun _ => False)
+            (fun _ => False)) ↔
+          isScsV39 (ScsV39.mk 3 0.11 a a b b jf (fun _ => False) (fun _ => False)
+            (fun _ => False)) ∧ (∀ i, b i i = 0) ∧
+          (∃ i, {j | j < 3 ∧ jf j (j + 1)} = {i} ∧ a i (i + 1) = Real.sqrt 8 ∧
+            b i (i + 1) = cstab ∧
+            (∀ j, j < 3 ∧ j ≠ i → a j (j + 1) = 2 ∧ b j (j + 1) = 2 * h0))
+    ) ∧
+    -- 32. Kepler.Text.is_scs_ear_3603097872 (LA38:1954; HOL `is_scs_ear_3603097872`)
+    (isScsV39 (ScsV39.mk 3 0.11
+          (funlistV39 [((0, 1), Real.sqrt 8)] 2 3) (funlistV39 [((0, 1), Real.sqrt 8)] 2 3)
+          (funlistV39 [((0, 1), cstab)] (2 * h0) 3) (funlistV39 [((0, 1), cstab)] (2 * h0) 3)
+          (funlistAV39 [((0, 1), True)] False False 3)
+          (fun _ => False) (fun _ => False) (fun _ => False))
+    ) ∧
+    -- 33. Kepler.Text.is_scs_funlist (LA38:1731; HOL `is_scs_funlist`)
+    (∀ (k : ℕ) (d a0 b0 : ℝ) (j0 : Prop)
+          (a : List ((ℕ × ℕ) × ℝ)) (b : List ((ℕ × ℕ) × ℝ))
+          (j1 : List ((ℕ × ℕ) × Prop)) (u u' u'' : ℕ → Prop)
+          (h1 : d < 0.9) (h2 : 3 ≤ k) (h3 : k ≤ 6)
+          (h4 : Periodic u k) (h5 : Periodic u' k) (h6 : Periodic u'' k)
+          (h7 : ∀ i j : ℕ, i < j ∧ j < k →
+            funlistV39 a a0 k i j ≤ funlistV39 b b0 k i j)
+          (h8 : ∀ i j : ℕ, i < j ∧ j < k → 2 ≤ funlistV39 a a0 k i j)
+          (h9 : ∀ i : ℕ, i < 3 ∧ k = 3 → funlistV39 b b0 k i (i + 1) < 4)
+          (h10 : ∀ i : ℕ, i < k ∧ 3 < k → funlistV39 b b0 k i (i + 1) ≤ cstab)
+          (h11 : ∀ i j : ℕ, i < j ∧ j < k ∧ funlistAV39 j1 False j0 k i j →
+            funlistV39 a a0 k i j = Real.sqrt 8 ∧ funlistV39 b b0 k i j = cstab)
+          (h12 : ∀ i j : ℕ, i < j ∧ j < k ∧ funlistAV39 j1 False j0 k i j →
+            j = i + 1 ∨ (i = 0 ∧ j + 1 = k))
+          (h13 : {i : ℕ | i < k ∧ (2 * h0 < funlistV39 b b0 k i (i + 1) ∨
+              2 < funlistV39 a a0 k i (i + 1))}.ncard + k ≤ 6),
+          isScsV39 (ScsV39.mk k d (funlistV39 a a0 k) (funlistV39 a a0 k)
+          (funlistV39 b b0 k) (funlistV39 b b0 k) (funlistAV39 j1 False j0 k)
+          u u' u'')
+    ) ∧
+    -- 34. Kepler.Text.is_scs_scs3 (LA38:1883; HOL `is_scs_scs3`)
+    (∀ (d : ℝ) (a : List ((ℕ × ℕ) × ℝ)) (a0 : ℝ)
+          (b : List ((ℕ × ℕ) × ℝ)) (b0 : ℝ) (jf : List ((ℕ × ℕ) × Prop)) (j0 : Prop)
+          (h1 : d < 0.9)
+          (h2 : funlistV39 a a0 3 0 1 ≤ funlistV39 b b0 3 0 1)
+          (h3 : funlistV39 a a0 3 0 2 ≤ funlistV39 b b0 3 0 2)
+          (h4 : funlistV39 a a0 3 1 2 ≤ funlistV39 b b0 3 1 2)
+          (h5 : 2 ≤ funlistV39 a a0 3 0 1)
+          (h6 : 2 ≤ funlistV39 a a0 3 1 2)
+          (h7 : 2 ≤ funlistV39 a a0 3 0 2)
+          (h8 : funlistV39 b b0 3 0 1 < 4)
+          (h9 : funlistV39 b b0 3 0 2 < 4)
+          (h10 : funlistV39 b b0 3 1 2 < 4)
+          (h11 : ∀ i j : ℕ, i < j ∧ j < 3 ∧ funlistAV39 jf False j0 3 i j →
+            funlistV39 a a0 3 i j = Real.sqrt 8 ∧ funlistV39 b b0 3 i j = cstab),
+          isScsV39 (ScsV39.mk 3 d (funlistV39 a a0 3) (funlistV39 a a0 3)
+          (funlistV39 b b0 3) (funlistV39 b b0 3)       (funlistAV39 jf False j0 3)
+          (fun _ => False) (fun _ => False) (fun _ => False))
+    ) ∧
+    -- 35. Kepler.Text.periodic2_SUC_periodic (LA38:3515; HOL `periodic2_SUC_periodic`)
+    (∀ (f : ℕ → ℕ → Prop) (k : ℕ)
+          (h : Periodic2 f k),
+          Periodic (fun i => f i (i + 1)) k
+    ) ∧
+    -- 36. Kepler.Text.periodic2_funlist (LA38:1685; HOL `periodic2_funlist`)
+    (∀ (a : List ((ℕ × ℕ) × ℝ)) (a0 : ℝ) (k : ℕ)
+    ,
+          Periodic2 (funlistV39 a a0 k) k
+    ) ∧
+    -- 37. Kepler.Text.periodic2_mod_reduce (LA38:3478; HOL `periodic2_mod_reduce`)
+    (∀ (P : ℕ → ℕ → Prop) (k : ℕ) (hk : ¬(k = 0))
+          (hper : Periodic2 P k) (hb : ∀ i j : ℕ, i < k ∧ j < k → P i j) (i j : ℕ),
+          P i j
+    ) ∧
+    -- 38. Kepler.Text.periodic2_mod_sym_reduce (LA38:3500; HOL `periodic2_mod_sym_reduce`)
+    (∀ (P : ℕ → ℕ → Prop) (k : ℕ)
+          (hk : ¬(k = 0)) (hper : Periodic2 P k) (hdiag : ∀ i, P i i)
+          (hsym : ∀ i j, P i j = P j i)
+          (htri : ∀ i j, i < j ∧ j < k → P i j) (i j : ℕ),
+          P i j
+    ) ∧
+    -- 39. Kepler.Text.periodic_mod_reduce (LA38:3464; HOL `periodic_mod_reduce`)
+    (∀ (P : ℕ → Prop) (k : ℕ) (hk : ¬(k = 0))
+          (hper : Periodic P k) (hb : ∀ i, i < k → P i) (i : ℕ),
+          P i
+    ) ∧
+    -- 40. Kepler.Text.psort_sym (LA38:1697; HOL `psort_sym`)
+    (∀ (k i j : ℕ)
+    ,
+          psort k (i, j) = psort k (j, i)
+    ) ∧
+    -- 41. Kepler.Text.quadratic_root_upper_bound (LA38:3234; HOL `quadratic_root_upper_bound`)
+    (∀ (a b c e x : ℝ) (ha : 0 < a)
+          (hb : 0 < 2 * a * e + b) (hc : 0 < a * e ^ 2 + b * e + c)
+          (h : a * x ^ 2 + b * x + c = 0),
+          x < e
+    ) ∧
+    -- 42. Kepler.Text.quadratic_square_root_upper_bound (LA38:3251; HOL `quadratic_square_root_upper_bound`)
+    (∀ (a b c e : ℝ) (ha : 0 < a)
+          (hb : 0 < 2 * a * e + b) (hc : 0 < a * e ^ 2 + b * e + c)
+          (hd : 0 ≤ b ^ 2 - 4 * a * c) (hbn : b ≤ 0) (he : 0 ≤ e),
+          Real.sqrt (quadraticRootPlus a b c) < Real.sqrt e
+    ) ∧
+    -- 43. Kepler.Text.scs_unadorned_explicit (LA38:381; HOL `scs_unadorned_explicit`)
+    ((∀ k d a b, (mkUnadornedV39 k d a b).k = k) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).d = d) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).a = a) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).am = a) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).b = b) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).bm = b) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).J = fun _ _ => False) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).lo = fun _ => False) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).hi = fun _ => False) ∧
+          (∀ k d a b, (mkUnadornedV39 k d a b).str = fun _ => False)
+    ) ∧
+    -- 44. Kepler.Text.sq_imp_nn (LA38:3308; HOL `sq_imp_nn`)
+    (∀ (c x : ℝ) (h : c ^ 2 ≤ x)
+    ,
+          0 ≤ x
+    ) ∧
+    -- 45. Kepler.Text.sqrt8_bounds (LA38:3094; HOL `sqrt8_bounds`)
+    (Real.sqrt 8 ≤ 3.01 ∧ 2 ≤ Real.sqrt 8 ∧ Real.sqrt 8 ≤ 3.62
+    ) ∧
+    -- 46. Kepler.Text.sqrt8_flyspeck (LA38:288; HOL `sqrt8_flyspeck`)
+    ((2.828427 : ℝ) < Real.sqrt 8 ∧ Real.sqrt 8 < 2.828428
+    ) ∧
+    -- 47. Kepler.Text.tau3_sym (LA38:3018; HOL `tau3_sym`)
+    (∀ (v0 v1 v2 : V3)
+    ,
+          tau3 v0 v1 v2 = tau3 v0 v2 v1 ∧ tau3 v0 v1 v2 = tau3 v1 v0 v2
+    ) ∧
+    -- 48. Kepler.Text.tau3_taum (LA38:1286; HOL `tau3_taum`)
+    (∀ (v0 v1 v2 : V3)
+    ,
+          v0 ∈ ballAnnulus → v1 ∈ ballAnnulus → v2 ∈ ballAnnulus →
+          2 ≤ dist v0 v1 → 2 ≤ dist v0 v2 → 2 ≤ dist v1 v2 →
+          dist v0 v1 ≤ 3.62 → dist v0 v2 ≤ 3.62 → dist v1 v2 ≤ 3.62 →
+          tau3 v0 v1 v2 =
+            taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1)
+    ) ∧
+    -- 49. Kepler.Text.tau3_taum_40 (LA38:1314; HOL `tau3_taum_40`)
+    (∀ (v0 v1 v2 : V3)
+    ,
+          v0 ∈ ballAnnulus → v1 ∈ ballAnnulus → v2 ∈ ballAnnulus →
+          2 ≤ dist v0 v1 → 2 ≤ dist v0 v2 → 2 ≤ dist v1 v2 →
+          dist v0 v1 < 4 → dist v0 v2 < 4 → dist v1 v2 < 4 →
+          tau3 v0 v1 v2 =
+            taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1)
+    ) ∧
+    -- 50. Kepler.Text.tau3_taum_d (LA38:1492; HOL `tau3_taum_d`)
+    (∀ (d a01 a12 a02 b01 b12 b02 : ℝ)
+          (h1 : 2 ≤ a01) (h2 : 2 ≤ a12) (h3 : 2 ≤ a02)
+          (h4 : b01 ≤ 3.62) (h5 : b12 ≤ 3.62) (h6 : b02 ≤ 3.62)
+          (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+            2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
+            a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
+            0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+            d ≤ taum y1 y2 y3 y4 y5 y6)
+          (v0 v1 v2 : V3),
+          2 ≤ ‖v0‖ → ‖v0‖ ≤ 2 * h0 → 2 ≤ ‖v1‖ → ‖v1‖ ≤ 2 * h0 → 2 ≤ ‖v2‖ →
+          ‖v2‖ ≤ 2 * h0 → a01 ≤ dist v0 v1 → dist v0 v1 ≤ b01 →
+          a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
+          dist v0 v2 ≤ b02 → d ≤ tau3 v0 v1 v2
+    ) ∧
+    -- 51. Kepler.Text.tau3_taum_dfun (LA38:1536; HOL `tau3_taum_dfun`)
+    (∀ (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → ℝ → ℝ → ℝ)
+          (h1 : 2 ≤ a01) (h2 : 2 ≤ a12) (h3 : 2 ≤ a02)
+          (h4 : b01 ≤ 3.62) (h5 : b12 ≤ 3.62) (h6 : b02 ≤ 3.62)
+          (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+            2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
+            a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
+            0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+            d + f y4 y5 y6 ≤ taum y1 y2 y3 y4 y5 y6)
+          (v0 v1 v2 : V3),
+          2 ≤ ‖v0‖ → ‖v0‖ ≤ 2 * h0 → 2 ≤ ‖v1‖ → ‖v1‖ ≤ 2 * h0 → 2 ≤ ‖v2‖ →
+          ‖v2‖ ≤ 2 * h0 → a01 ≤ dist v0 v1 → dist v0 v1 ≤ b01 →
+          a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
+          dist v0 v2 ≤ b02 → d + f (dist v1 v2) (dist v0 v2) (dist v0 v1) ≤ tau3 v0 v1 v2
+    ) ∧
+    -- 52. Kepler.Text.tau_fun_azim (LA38:2422; HOL `tau_fun_azim`)
+    (∀ (vv : ℕ → V3) (k : ℕ) (hper : Periodic vv k) (hk : 3 ≤ k)
+          (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j),
+          tauFun (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+            (Set.range fun i => (vv i, vv (i + 1))) =
+          setSum {i | i < k}
+              (fun i => rhoFun ‖vv i‖ * azim 0 (vv i) (vv (i + 1)) (vv (i + (k - 1)))) -
+            (Real.pi + sol0) * (k - 2)
+    ) ∧
+    -- 53. Kepler.Text.taum_sym2 (LA38:1638; HOL `taum_sym2`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ)
+    ,
+          taum y1 y2 y3 y4 y5 y6 = taum y2 y1 y3 y5 y4 y6 ∧
+          taum y1 y2 y3 y4 y5 y6 = taum y1 y3 y2 y4 y6 y5
+    ) ∧
+    -- 54. Kepler.Text.taustar3 (LA38:566; HOL `taustar3`)
+    (∀ (d : ℝ) (a b : ℕ → ℕ → ℝ)
+          (h : ∀ v0 v1 v2 : V3, 2 ≤ ‖v0‖ → ‖v0‖ ≤ 2 * h0 → 2 ≤ ‖v1‖ →
+            ‖v1‖ ≤ 2 * h0 → 2 ≤ ‖v2‖ → ‖v2‖ ≤ 2 * h0 →
+            a 0 1 ≤ dist v0 v1 → dist v0 v1 ≤ b 0 1 → a 1 2 ≤ dist v1 v2 →
+            dist v1 v2 ≤ b 1 2 → a 0 2 ≤ dist v0 v2 → dist v0 v2 ≤ b 0 2 →
+            d ≤ tau3 v0 v1 v2)
+          (vv : ℕ → V3) (hbb : BBsV39 (mkUnadornedV39 3 d a b) vv),
+          0 ≤ taustarV39 (mkUnadornedV39 3 d a b) vv
+    ) ∧
+    -- 55. Kepler.Text.taustar3_fun (LA38:591; HOL `taustar3_fun`)
+    (∀ (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ → Prop)
+          (h : ∀ v0 v1 v2 : V3, 2 ≤ ‖v0‖ → ‖v0‖ ≤ 2 * h0 → 2 ≤ ‖v1‖ →
+            ‖v1‖ ≤ 2 * h0 → 2 ≤ ‖v2‖ → ‖v2‖ ≤ 2 * h0 →
+            a 0 1 ≤ dist v0 v1 → dist v0 v1 ≤ b 0 1 → a 1 2 ≤ dist v1 v2 →
+            dist v1 v2 ≤ b 1 2 → a 0 2 ≤ dist v0 v2 → dist v0 v2 ≤ b 0 2 →
+            d + 0.1 * (if isEarV39 (ScsV39.mk 3 d a a b b f (fun _ => False)
+                (fun _ => False) (fun _ => False)) then 1 else -1) *
+              ((if f 0 1 then cstab - dist v0 v1 else 0) +
+              (if f 1 2 then cstab - dist v1 v2 else 0) +
+              (if f 2 3 then cstab - dist v2 v0 else 0) + 0) ≤ tau3 v0 v1 v2)
+          (vv : ℕ → V3) (hbb : BBsV39 (ScsV39.mk 3 d a a b b f (fun _ => False)
+            (fun _ => False) (fun _ => False)) vv),
+          0 ≤ taustarV39 (ScsV39.mk 3 d a a b b f (fun _ => False) (fun _ => False)
+          (fun _ => False)) vv
+    ) ∧
+    -- 56. Kepler.Text.terminal_quad_lemma (LA38:3153; HOL `terminal_quad_lemma`)
+    (∀ (d : ℝ) (a b : ℕ → ℕ → ℝ)
+          (h : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ i ≠ j → 0 < a i j)
+          (h2 : ∀ vv : ℕ → V3, Set.range vv ⊆ ballAnnulus → Periodic vv 4 →
+            (∀ i j : ℕ, a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ b i j) →
+            ConvexLocalFan (Set.range vv)
+              (Set.range fun i => {vv i, vv (i + 1)})
+              (Set.range fun i => (vv i, vv (i + 1))) →
+              d ≤ (rhoFun ‖vv 0‖ * azim 0 (vv 0) (vv 1) (vv 3) +
+                rhoFun ‖vv 1‖ * azim 0 (vv 1) (vv 2) (vv 4) +
+                rhoFun ‖vv 2‖ * azim 0 (vv 2) (vv 3) (vv 5) +
+                rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 4) (vv 6) + 0) -
+                (Real.pi + sol0) * (4 - 2))
+          (vv : ℕ → V3) (hbb : BBsV39 (mkUnadornedV39 4 d a b) vv),
+          0 ≤ taustarV39 (mkUnadornedV39 4 d a b) vv
+    ) ∧
+    -- 57. Kepler.Text.vv_azim_le (LA38:2509; HOL `vv_azim_le`)
+    (∀ (vv : ℕ → V3) (k i j : ℕ)
+          (hper : Periodic vv k) (hk : 3 ≤ k)
+          (hsub : Set.range vv ⊆ ballAnnulus)
+          (hd1 : dist (vv i) (vv (i + 1)) < 4)
+          (hd2 : dist (vv i) (vv (i + (k - 1))) < 4)
+          (hd3 : dist (vv i) (vv j) < 4)
+          (hmod : ¬(i % k = j % k))
+          (hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j))
+          (hcf : ConvexLocalFan (Set.range vv)
+            (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))))
+          (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j),
+          azim 0 (vv i) (vv (i + 1)) (vv j) ≤
+          azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1))
+    ) ∧
+    -- 58. Kepler.Text.vv_quad_split012 (LA38:2757; HOL `vv_quad_split012`)
+    (∀ (vv : ℕ → V3)
+          (hper : Periodic vv 4) (hsub : Set.range vv ⊆ ballAnnulus)
+          (hd1 : dist (vv 0) (vv 1) < 4) (hd2 : dist (vv 0) (vv 2) < 4)
+          (hd3 : dist (vv 0) (vv 3) < 4) (hd4 : dist (vv 1) (vv 2) < 4)
+          (hd5 : dist (vv 2) (vv 3) < 4)
+          (hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j))
+          (hcf : ConvexLocalFan (Set.range vv)
+            (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))))
+          (hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j),
+          (rhoFun ‖vv 0‖ * azim 0 (vv 0) (vv 1) (vv 3) +
+            rhoFun ‖vv 1‖ * azim 0 (vv 1) (vv 2) (vv 0) +
+            rhoFun ‖vv 2‖ * azim 0 (vv 2) (vv 3) (vv 1) +
+            rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 0) (vv 2)) -
+          (Real.pi + sol0) * 2 =
+          tau3 (vv 0) (vv 1) (vv 2) + tau3 (vv 2) (vv 3) (vv 0)
+    ) ∧
+    -- 59. Kepler.Text.vv_quad_split123 (LA38:2842; HOL `vv_quad_split123`)
+    (∀ (vv : ℕ → V3)
+          (hper : Periodic vv 4) (hsub : Set.range vv ⊆ ballAnnulus)
+          (hd1 : dist (vv 0) (vv 1) < 4) (hd2 : dist (vv 0) (vv 3) < 4)
+          (hd3 : dist (vv 1) (vv 2) < 4) (hd4 : dist (vv 1) (vv 3) < 4)
+          (hd5 : dist (vv 2) (vv 3) < 4)
+          (hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j))
+          (hcf : ConvexLocalFan (Set.range vv)
+            (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))))
+          (hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j),
+          (rhoFun ‖vv 0‖ * azim 0 (vv 0) (vv 1) (vv 3) +
+            rhoFun ‖vv 1‖ * azim 0 (vv 1) (vv 2) (vv 0) +
+            rhoFun ‖vv 2‖ * azim 0 (vv 2) (vv 3) (vv 1) +
+            rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 0) (vv 2)) -
+          (Real.pi + sol0) * 2 =
+          tau3 (vv 1) (vv 2) (vv 3) + tau3 (vv 3) (vv 0) (vv 1)
+    ) ∧
+    -- 60. Kepler.Text.vv_quad_split_short (LA38:2935; HOL `vv_quad_split_short`)
+    (∀ (vv : ℕ → V3)
+          (hper : Periodic vv 4) (hsub : Set.range vv ⊆ ballAnnulus)
+          (hd1 : dist (vv 0) (vv 1) < 4) (hd2 : dist (vv 0) (vv 3) < 4)
+          (hd3 : dist (vv 0) (vv 2) < 4) (hd4 : dist (vv 1) (vv 2) < 4)
+          (hd5 : dist (vv 1) (vv 3) < 4) (hd6 : dist (vv 2) (vv 3) < 4)
+          (hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j))
+          (hcf : ConvexLocalFan (Set.range vv)
+            (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))))
+          (hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j),
+          ∃ i, i < 2 ∧ dist (vv i) (vv (i + 2)) ≤ dist (vv (i + 1)) (vv (i + 3)) ∧
+          (rhoFun ‖vv 0‖ * azim 0 (vv 0) (vv 1) (vv 3) +
+              rhoFun ‖vv 1‖ * azim 0 (vv 1) (vv 2) (vv 0) +
+              rhoFun ‖vv 2‖ * azim 0 (vv 2) (vv 3) (vv 1) +
+              rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 0) (vv 2)) -
+            (Real.pi + sol0) * 2 =
+            tau3 (vv i) (vv (i + 1)) (vv (i + 2)) +
+              tau3 (vv (i + 2)) (vv (i + 3)) (vv i)
+    ) ∧
+    -- 61. Kepler.Text.vv_rho_node1 (LA38:2459; HOL `vv_rho_node1`)
+    (∀ (vv : ℕ → V3) (k : ℕ) (hper : Periodic vv k) (hk : 3 ≤ k)
+          (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
+          (i : ℕ),
+          rhoNode1 (Set.range fun i => (vv i, vv (i + 1))) (vv i) = vv (i + 1)
+    ) ∧
+    -- 62. Kepler.Text.vv_split_azim (LA38:2560; HOL `vv_split_azim`)
+    (∀ (vv : ℕ → V3) (k i j : ℕ)
+          (hper : Periodic vv k) (hk : 3 ≤ k)
+          (hsub : Set.range vv ⊆ ballAnnulus)
+          (hd1 : dist (vv i) (vv (i + 1)) < 4)
+          (hd2 : dist (vv i) (vv (i + (k - 1))) < 4)
+          (hd3 : dist (vv i) (vv j) < 4)
+          (hmod : ¬(i % k = j % k))
+          (hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j))
+          (hcf : ConvexLocalFan (Set.range vv)
+            (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))))
+          (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j),
+          azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) =
+          azim 0 (vv i) (vv (i + 1)) (vv j) +
+            azim 0 (vv i) (vv j) (vv (i + k - 1))
+    ) :=
+    ⟨Kepler.Text.DELTA_Y_POS_4POINTS, Kepler.Text.DIHV_EQ_DIH_Y_4PT, Kepler.Text.DIHV_NN_4PT,
+      Kepler.Text.DIH_X_NN, Kepler.Text.DIH_Y_NN, Kepler.Text.EE_vv,
+      Kepler.Text.ITER_vv_rho_node1, Kepler.Text.I_LT_J_LT_3_EXPLICIT,
+      Kepler.Text.I_LT_J_LT_4_EXPLICIT, Kepler.Text.LEMMA_4680581274_delta_issue_ups,
+      Kepler.Text.MOD_4_EXPLICIT, Kepler.Text.NONPARALLEL_BALL_ANNULUS40,
+      Kepler.Text.NONPARALLEL_BALL_ANNULUS40_ALT, Kepler.Text.NONPARALLEL_BALL_ANNULUS_ALT,
+      Kepler.Text.REAL_FINITE_MIN_EXISTS_p38, Kepler.Text.REAL_WLOG_SQUARE2_LEMMA,
+      Kepler.Text.REAL_WLOG_SQUARE_LEMMA, Kepler.Text.RHO_LB, Kepler.Text.SUC_EXPLICIT,
+      Kepler.Text.UNADORNED_NOT_EAR, Kepler.Text.convex_local_fan_azim_le_pi,
+      Kepler.Text.cs_adj4_EXPLICIT, Kepler.Text.delta_4680581274, Kepler.Text.dsv_fun3,
+      Kepler.Text.dsv_fun4, Kepler.Text.dsv_unadorned, Kepler.Text.funlistA_empty,
+      Kepler.Text.funlist_diag, Kepler.Text.funlist_kik, Kepler.Text.funlist_sym,
+      Kepler.Text.is_ear_scs3, Kepler.Text.is_scs_ear_3603097872, Kepler.Text.is_scs_funlist,
+      Kepler.Text.is_scs_scs3, Kepler.Text.periodic2_SUC_periodic, Kepler.Text.periodic2_funlist,
+      Kepler.Text.periodic2_mod_reduce, Kepler.Text.periodic2_mod_sym_reduce,
+      Kepler.Text.periodic_mod_reduce, Kepler.Text.psort_sym,
+      Kepler.Text.quadratic_root_upper_bound, Kepler.Text.quadratic_square_root_upper_bound,
+      Kepler.Text.scs_unadorned_explicit, Kepler.Text.sq_imp_nn, Kepler.Text.sqrt8_bounds,
+      Kepler.Text.sqrt8_flyspeck, Kepler.Text.tau3_sym, Kepler.Text.tau3_taum,
+      Kepler.Text.tau3_taum_40, Kepler.Text.tau3_taum_d, Kepler.Text.tau3_taum_dfun,
+      Kepler.Text.tau_fun_azim, Kepler.Text.taum_sym2, Kepler.Text.taustar3,
+      Kepler.Text.taustar3_fun, Kepler.Text.terminal_quad_lemma, Kepler.Text.vv_azim_le,
+      Kepler.Text.vv_quad_split012, Kepler.Text.vv_quad_split123,
+      Kepler.Text.vv_quad_split_short, Kepler.Text.vv_rho_node1, Kepler.Text.vv_split_azim⟩
+
+#print axioms la38_capstone_w1
+
 #print axioms localconcl_wire_capstone_w1
 #print axioms la35_wire_capstone_w1
 #print axioms localconcl_wire_capstone_w2
