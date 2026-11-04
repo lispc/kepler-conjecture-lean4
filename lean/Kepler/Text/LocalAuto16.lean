@@ -836,10 +836,10 @@ theorem FSQKWKK_p16 (v0 v1 v2 v3 : V3) (h : azim v0 v1 v2 v3 ≤ Real.pi) :
 non-collinearity, small-diagonal (`< e`) and ear-angle (`2e < a ≤ π`)
 hypotheses, consecutive wedges absorb the whole chain in both
 directions.  HOL `n - 1 = r` kept verbatim (ℕ truncated subtraction).
-NEEDS: Localization `wedge_ge` unfolding, Local_lemmas
-`AZIM_SPEC_DEGENERATE`, Polar_fan `AZIM_DIHV_SAME_STRONG`, Fan
-`sum3/4/5_azim_fan`, `AZIM_REFL` at the degenerate indices — the full
-induction of the source. -/
+Proved by the source induction: `wedgeGe` unfolding with
+`AZIM_SPEC_DEGENERATE` / `azim_self` at the degenerate indices,
+`AZIM_DIHV_SAME_STRONG`, `FSQKWKK_p16`, and Fan `sum3/4/5_azim_fan`
+(all non-collinearity from `hpair`). -/
 theorem XIVPHKS_p16 (W : ℕ → Set V3) (a d : ℕ → ℕ → ℕ → ℝ) (e : ℝ) (n r : ℕ)
     (w : ℕ → V3) (hn : 1 ≤ n) (hr : n - 1 = r)
     (hpair : (Set.Icc (0:ℕ) n).Pairwise fun i j => ¬ Collinear3 0 (w i) (w j))
@@ -857,12 +857,249 @@ theorem XIVPHKS_p16 (W : ℕ → Set V3) (a d : ℕ → ℕ → ℕ → ℝ) (e 
       d (p + 1) p q < e) :
     (∀ k j, j + k ≤ r → w j ∈ W (j + k)) ∧
     (∀ k j, 1 ≤ j → j + k ≤ r → w (j + k) ∈ W j) := by
-  sorry
+  subst W
+  subst a
+  subst d
+  dsimp only at h1 h2 h3 h4 h5
+  let F : ℕ → Set V3 := fun i => wedgeGe 0 (w i) (w (i + 1)) (w (i - 1))
+  have hrn : r + 1 = n := by omega
+  have hnc : ∀ p q, p ≤ r + 1 → q ≤ r + 1 → p ≠ q → ¬ Collinear3 0 (w p) (w q) := by
+    intro p q hp hq hpne
+    exact hpair (by simp only [Set.mem_Icc]; omega)
+      (by simp only [Set.mem_Icc]; omega) hpne
+  have hne0 : ∀ p, p ≤ r → w p ≠ 0 := by
+    intro p hp h0
+    exact hnc p (p + 1) (by omega) (by omega) (by omega)
+      (by simpa [h0] using
+        collinear3_of_eq (v := (0:V3)) (w := (0:V3)) (w1 := w (p + 1)) rfl)
+  have main : ∀ k, ∀ j, j + k ≤ r →
+      w j ∈ F (j + k) ∧ (1 ≤ j → w (j + k) ∈ F j) := by
+    intro k
+    induction k with
+    | zero =>
+        intro j hj
+        have hdeg := AZIM_SPEC_DEGENERATE (0:V3) (w j) (w (j + 1))
+        have hmem : w j ∈ F j := by
+          refine ⟨?_, ?_⟩
+          · rw [hdeg.2]
+          · rw [hdeg.2]; exact azim_nonneg _ _ _ _
+        exact ⟨hmem, fun _ => hmem⟩
+    | succ k ih =>
+        by_cases hk : k = 0
+        · subst k
+          intro j hj
+          have hm1 : w j ∈ F (j + 1) := by
+            refine ⟨azim_nonneg _ _ _ _, ?_⟩
+            simp
+          have hm2 : w (j + 1) ∈ F j := by
+            refine ⟨?_, ?_⟩
+            · rw [azim_self]
+            · rw [azim_self]; exact azim_nonneg _ _ _ _
+          exact ⟨hm1, fun _ => hm2⟩
+        · have hk1 : 1 ≤ k := by omega
+          intro j hj
+          change w j ∈ F (j + k + 1) ∧ (1 ≤ j → w (j + k + 1) ∈ F j)
+          have hjk : j + k ≤ r := by omega
+          have hjr : j ≤ r := by omega
+          obtain ⟨hA, hB⟩ := ih j hjk
+          have hA' : w j ∈ wedgeGe 0 (w (j + k)) (w (j + k + 1)) (w (j + k - 1)) := by
+            simpa [F] using hA
+          have he' : 0 < e := by linarith
+          have h2eπ : 2 * e < 2 * Real.pi := by
+            have hlt := h1 1 (by simp only [Finset.mem_Icc]; omega)
+            have hle := h2 1 (by simp only [Finset.mem_Icc]; omega)
+            have hlt2 := azim_lt_two_pi 0 (w 1) (w (1 + 1)) (w (1 - 1))
+            linarith
+          constructor
+          · -- direction 1: w j ∈ F (j + k + 1)
+            obtain ⟨hA2, hB2⟩ := ih (j + 1) (by omega)
+            have hshift : (j + 1) + k = j + k + 1 := by omega
+            rw [hshift] at hA2
+            have hA2' : w (j + 1) ∈
+                wedgeGe 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := by
+              simpa [F] using hA2
+            have hB2' : w (j + k + 1) ∈
+                wedgeGe 0 (w (j + 1)) (w (j + 2)) (w j) := by
+              have h := hB2 (by omega)
+              rw [hshift] at h
+              simpa [F] using h
+            have hA2j : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + 1)) ≤
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := hA2'.2
+            have hB2j : azim 0 (w (j + 1)) (w (j + 2)) (w (j + k + 1)) ≤
+                azim 0 (w (j + 1)) (w (j + 2)) (w j) := hB2'.2
+            have hsum4a : azim 0 (w (j + 1)) (w (j + 2)) (w j) =
+                azim 0 (w (j + 1)) (w (j + 2)) (w (j + k + 1)) +
+                azim 0 (w (j + 1)) (w (j + k + 1)) (w j) := by
+              refine sum4_azim_fan (x := 0) (v := w (j + 1)) (u := w (j + 2))
+                (w1 := w (j + k + 1)) (w2 := w j)
+                (hne0 (j + 1) (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc (j + 1) (j + 2) (by omega) (by omega) (by omega)
+              · exact hnc (j + 1) (j + k + 1) (by omega) (by omega) (by omega)
+              · exact hnc (j + 1) j (by omega) (by omega) (by omega)
+              · exact hB2j
+            have hle1 : azim 0 (w (j + 1)) (w (j + k + 1)) (w j) ≤
+                azim 0 (w (j + 1)) (w (j + 2)) (w j) := by
+              rw [hsum4a]
+              have hnn := azim_nonneg 0 (w (j + 1)) (w (j + 2)) (w (j + k + 1))
+              linarith
+            have hpi1 : azim 0 (w (j + 1)) (w (j + 2)) (w j) ≤ Real.pi :=
+              h2 (j + 1) (by simp only [Finset.mem_Icc]; omega)
+            have hpi2 : azim 0 (w (j + 1)) (w (j + k + 1)) (w j) ≤ Real.pi :=
+              le_trans hle1 hpi1
+            have hfsq : azim 0 (w (j + k + 1)) (w j) (w (j + 1)) ≤ Real.pi :=
+              FSQKWKK_p16 0 (w (j + 1)) (w (j + k + 1)) (w j) hpi2
+            have hd5 : azim 0 (w (j + k + 1)) (w j) (w (j + 1)) < e := by
+              rw [AZIM_DIHV_SAME_STRONG
+                (hnc (j + k + 1) j (by omega) (by omega) (by omega))
+                (hnc (j + k + 1) (j + 1) (by omega) (by omega) (by omega)) hfsq]
+              have hsub : ({j + k + 1, j, j + 1} : Finset ℕ) ⊆ Finset.Icc 0 r := by
+                intro x hx
+                simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+                simp only [Finset.mem_Icc]
+                omega
+              exact h3 (j + k + 1) j hsub (by omega) (by omega)
+            have hsum4b : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) =
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + 1)) +
+                azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) := by
+              refine sum4_azim_fan (x := 0) (v := w (j + k + 1)) (u := w (j + k + 2))
+                (w1 := w (j + 1)) (w2 := w (j + k))
+                (hne0 (j + k + 1) (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc (j + k + 1) (j + k + 2) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + 1) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + k) (by omega) (by omega) (by omega)
+              · exact hA2j
+            have hle2 : azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) ≤
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := by
+              rw [hsum4b]
+              have hnn := azim_nonneg 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + 1))
+              linarith
+            have hpi3 : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) ≤ Real.pi :=
+              h2 (j + k + 1) (by simp only [Finset.mem_Icc]; omega)
+            have hpi4 : azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) ≤ Real.pi :=
+              le_trans hle2 hpi3
+            have hd6 : azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) < e := by
+              by_cases hk1' : k = 1
+              · subst k
+                rw [azim_self]
+                linarith
+              · have hk2' : 2 ≤ k := by omega
+                rw [AZIM_DIHV_SAME_STRONG
+                  (hnc (j + k + 1) (j + 1) (by omega) (by omega) (by omega))
+                  (hnc (j + k + 1) (j + k) (by omega) (by omega) (by omega)) hpi4]
+                have hsub : ({j + k + 1, j + k, j + 1} : Finset ℕ) ⊆ Finset.Icc 0 r := by
+                  intro x hx
+                  simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+                  simp only [Finset.mem_Icc]
+                  omega
+                have h5' := h5 (j + k) (j + 1) hsub (by omega)
+                rw [DIHV_SYM_2] at h5'
+                exact h5'
+            have hsum3b : azim 0 (w (j + k + 1)) (w j) (w (j + k)) =
+                azim 0 (w (j + k + 1)) (w j) (w (j + 1)) +
+                azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) := by
+              refine sum3_azim_fan (x := 0) (v := w (j + k + 1)) (u := w j)
+                (w1 := w (j + 1)) (w2 := w (j + k))
+                (hne0 (j + k + 1) (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc (j + k + 1) j (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + 1) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + k) (by omega) (by omega) (by omega)
+              · linarith
+            have hle3 : azim 0 (w (j + k + 1)) (w j) (w (j + k)) ≤
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := by
+              have h1i : 2 * e < azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) :=
+                h1 (j + k + 1) (by simp only [Finset.mem_Icc]; omega)
+              rw [hsum3b]
+              linarith
+            have hsum5 : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) =
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w j) +
+                azim 0 (w (j + k + 1)) (w j) (w (j + k)) := by
+              refine sum5_azim_fan (x := 0) (v := w (j + k + 1)) (u := w (j + k + 2))
+                (w1 := w j) (w2 := w (j + k))
+                (hne0 (j + k + 1) (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc (j + k + 1) (j + k + 2) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) j (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + k) (by omega) (by omega) (by omega)
+              · exact hle3
+            have hfin2 : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w j) ≤
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := by
+              rw [hsum5]
+              have hnn := azim_nonneg 0 (w (j + k + 1)) (w j) (w (j + k))
+              linarith
+            exact ⟨azim_nonneg _ _ _ _, hfin2⟩
+          · -- direction 2: 1 ≤ j → w (j + k + 1) ∈ F j
+            intro hj1
+            have hB' : w (j + k) ∈ wedgeGe 0 (w j) (w (j + 1)) (w (j - 1)) := by
+              simpa [F] using hB hj1
+            have hBj : azim 0 (w j) (w (j + 1)) (w (j + k)) ≤
+                azim 0 (w j) (w (j + 1)) (w (j - 1)) := hB'.2
+            have hAj : azim 0 (w (j + k)) (w (j + k + 1)) (w j) ≤
+                azim 0 (w (j + k)) (w (j + k + 1)) (w (j + k - 1)) := hA'.2
+            have hpi_k : azim 0 (w (j + k)) (w (j + k + 1)) (w (j + k - 1)) ≤ Real.pi :=
+              h2 (j + k) (by simp only [Finset.mem_Icc]; omega)
+            have hstep1 : azim 0 (w (j + k)) (w (j + k + 1)) (w j) ≤ Real.pi :=
+              le_trans hAj hpi_k
+            have hstep2 : azim 0 (w j) (w (j + k)) (w (j + k + 1)) ≤ Real.pi := by
+              have hs : azim 0 (w (j + k + 1)) (w j) (w (j + k)) ≤ Real.pi :=
+                FSQKWKK_p16 0 (w (j + k)) (w (j + k + 1)) (w j) hstep1
+              exact FSQKWKK_p16 0 (w (j + k + 1)) (w j) (w (j + k)) hs
+            have hd3 : azim 0 (w j) (w (j + k)) (w (j + k + 1)) < e := by
+              rw [AZIM_DIHV_SAME_STRONG
+                (hnc j (j + k) (by omega) (by omega) (by omega))
+                (hnc j (j + k + 1) (by omega) (by omega) (by omega)) hstep2]
+              have hsub : ({j, j + k, j + k + 1} : Finset ℕ) ⊆ Finset.Icc 0 r := by
+                intro x hx
+                simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+                simp only [Finset.mem_Icc]
+                omega
+              exact h3 j (j + k) hsub (by omega) (by omega)
+            have hpi_j : azim 0 (w j) (w (j + 1)) (w (j - 1)) ≤ Real.pi :=
+              h2 j (by simp only [Finset.mem_Icc]; omega)
+            have hstep3 : azim 0 (w j) (w (j + 1)) (w (j + k)) ≤ Real.pi :=
+              le_trans hBj hpi_j
+            have hd4 : azim 0 (w j) (w (j + 1)) (w (j + k)) < e := by
+              by_cases hk1' : k = 1
+              · subst k
+                rw [azim_self]
+                linarith
+              · have hk2' : 2 ≤ k := by omega
+                rw [AZIM_DIHV_SAME_STRONG
+                  (hnc j (j + 1) (by omega) (by omega) (by omega))
+                  (hnc j (j + k) (by omega) (by omega) (by omega)) hstep3]
+                have hsub : ({j, j + 1, j + k} : Finset ℕ) ⊆ Finset.Icc 0 r := by
+                  intro x hx
+                  simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+                  simp only [Finset.mem_Icc]
+                  omega
+                exact h4 j (j + k) hsub (by omega)
+            have hsum3 : azim 0 (w j) (w (j + 1)) (w (j + k + 1)) =
+                azim 0 (w j) (w (j + 1)) (w (j + k)) +
+                azim 0 (w j) (w (j + k)) (w (j + k + 1)) := by
+              refine sum3_azim_fan (x := 0) (v := w j) (u := w (j + 1))
+                (w1 := w (j + k)) (w2 := w (j + k + 1))
+                (hne0 j hjr) ?_ ?_ ?_ ?_
+              · exact hnc j (j + 1) (by omega) (by omega) (by omega)
+              · exact hnc j (j + k) (by omega) (by omega) (by omega)
+              · exact hnc j (j + k + 1) (by omega) (by omega) (by omega)
+              · linarith
+            have hfin : azim 0 (w j) (w (j + 1)) (w (j + k + 1)) ≤
+                azim 0 (w j) (w (j + 1)) (w (j - 1)) := by
+              rw [hsum3]
+              have h1j : 2 * e < azim 0 (w j) (w (j + 1)) (w (j - 1)) :=
+                h1 j (by simp only [Finset.mem_Icc]; omega)
+              linarith
+            exact ⟨azim_nonneg _ _ _ _, hfin⟩
+  constructor
+  · intro k j hjk
+    exact (main k j hjk).1
+  · intro k j hj1 hjk
+    exact (main k j hjk).2 hj1
+
 
 /-- HOL `XIVPHKS_SHIFT` (XIVPHKS.hl:278): the same induction with the
 straight angles in `1..(r+1)` (indices shifted by one).
-NEEDS: same kit as `XIVPHKS_p16` plus Local_lemmas1
-`FST_LST_IN_WEDGE_GE`. -/
+Proved by the shifted copy of the `XIVPHKS_p16` induction; the `k = 0`
+step is the `FST_LST_IN_WEDGE_GE` membership inline in `wedgeGe` form
+(both wedges), and all non-collinearity comes from `hpair2`. -/
 theorem XIVPHKS_SHIFT_p16 (W : ℕ → Set V3) (a d : ℕ → ℕ → ℕ → ℝ) (e : ℝ)
     (r : ℕ) (w : ℕ → V3)
     (hpair1 : (Set.Icc (0:ℕ) (r + 1)).Pairwise fun i j => ¬ Collinear3 0 (w i) (w j))
@@ -881,7 +1118,241 @@ theorem XIVPHKS_SHIFT_p16 (W : ℕ → Set V3) (a d : ℕ → ℕ → ℕ → �
       d (p + 1) p q < e) :
     (∀ k j, 1 ≤ j → j + k ≤ r + 1 → w j ∈ W (j + k)) ∧
     (∀ k j, 1 ≤ j → j + k ≤ r + 1 → w (j + k) ∈ W j) := by
-  sorry
+  subst W
+  subst a
+  subst d
+  dsimp only at h1 h2 h3 h4 h5
+  let F : ℕ → Set V3 := fun i => wedgeGe 0 (w i) (w (i + 1)) (w (i - 1))
+  have hnc : ∀ p q, 1 ≤ p → p ≤ r + 2 → 1 ≤ q → q ≤ r + 2 → p ≠ q →
+      ¬ Collinear3 0 (w p) (w q) := by
+    intro p q hp1 hp2 hq1 hq2 hpne
+    exact hpair2 (by simp only [Set.mem_Icc]; omega)
+      (by simp only [Set.mem_Icc]; omega) hpne
+  have hne0 : ∀ p, 1 ≤ p → p ≤ r + 1 → w p ≠ 0 := by
+    intro p hp1 hp2 h0
+    exact hnc p (p + 1) hp1 (by omega) (by omega) (by omega) (by omega)
+      (by simpa [h0] using
+        collinear3_of_eq (v := (0:V3)) (w := (0:V3)) (w1 := w (p + 1)) rfl)
+  have main : ∀ k, ∀ j, 1 ≤ j → j + k ≤ r + 1 →
+      w j ∈ F (j + k) ∧ w (j + k) ∈ F j := by
+    intro k
+    induction k with
+    | zero =>
+        intro j hj1 hj
+        have hdeg := AZIM_SPEC_DEGENERATE (0:V3) (w j) (w (j + 1))
+        have hmem : w j ∈ F j := by
+          refine ⟨?_, ?_⟩
+          · rw [hdeg.2]
+          · rw [hdeg.2]; exact azim_nonneg _ _ _ _
+        exact ⟨hmem, hmem⟩
+    | succ k ih =>
+        by_cases hk : k = 0
+        · subst k
+          intro j hj1 hj
+          have hm1 : w j ∈ F (j + 1) := by
+            refine ⟨azim_nonneg _ _ _ _, ?_⟩
+            simp
+          have hm2 : w (j + 1) ∈ F j := by
+            refine ⟨?_, ?_⟩
+            · rw [azim_self]
+            · rw [azim_self]; exact azim_nonneg _ _ _ _
+          exact ⟨hm1, hm2⟩
+        · have hk1 : 1 ≤ k := by omega
+          intro j hj1 hj
+          change w j ∈ F (j + k + 1) ∧ w (j + k + 1) ∈ F j
+          have hjk : j + k ≤ r + 1 := by omega
+          obtain ⟨hA, hB⟩ := ih j hj1 hjk
+          have hA' : w j ∈ wedgeGe 0 (w (j + k)) (w (j + k + 1)) (w (j + k - 1)) := by
+            simpa [F] using hA
+          have he' : 0 < e := by linarith
+          have h2eπ : 2 * e < 2 * Real.pi := by
+            have hlt := h1 1 (by simp only [Finset.mem_Icc]; omega)
+            have hle := h2 1 (by simp only [Finset.mem_Icc]; omega)
+            have hlt2 := azim_lt_two_pi 0 (w 1) (w (1 + 1)) (w (1 - 1))
+            linarith
+          constructor
+          · -- direction 1: w j ∈ F (j + k + 1)
+            obtain ⟨hA2, hB2⟩ := ih (j + 1) (by omega) (by omega)
+            have hshift : (j + 1) + k = j + k + 1 := by omega
+            rw [hshift] at hA2
+            have hA2' : w (j + 1) ∈
+                wedgeGe 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := by
+              simpa [F] using hA2
+            have hB2' : w (j + k + 1) ∈
+                wedgeGe 0 (w (j + 1)) (w (j + 2)) (w j) := by
+              have h := hB2
+              rw [hshift] at h
+              simpa [F] using h
+            have hA2j : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + 1)) ≤
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := hA2'.2
+            have hB2j : azim 0 (w (j + 1)) (w (j + 2)) (w (j + k + 1)) ≤
+                azim 0 (w (j + 1)) (w (j + 2)) (w j) := hB2'.2
+            have hsum4a : azim 0 (w (j + 1)) (w (j + 2)) (w j) =
+                azim 0 (w (j + 1)) (w (j + 2)) (w (j + k + 1)) +
+                azim 0 (w (j + 1)) (w (j + k + 1)) (w j) := by
+              refine sum4_azim_fan (x := 0) (v := w (j + 1)) (u := w (j + 2))
+                (w1 := w (j + k + 1)) (w2 := w j)
+                (hne0 (j + 1) (by omega) (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc (j + 1) (j + 2) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc (j + 1) (j + k + 1) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc (j + 1) j (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hB2j
+            have hle1 : azim 0 (w (j + 1)) (w (j + k + 1)) (w j) ≤
+                azim 0 (w (j + 1)) (w (j + 2)) (w j) := by
+              rw [hsum4a]
+              have hnn := azim_nonneg 0 (w (j + 1)) (w (j + 2)) (w (j + k + 1))
+              linarith
+            have hpi1 : azim 0 (w (j + 1)) (w (j + 2)) (w j) ≤ Real.pi :=
+              h2 (j + 1) (by simp only [Finset.mem_Icc]; omega)
+            have hpi2 : azim 0 (w (j + 1)) (w (j + k + 1)) (w j) ≤ Real.pi :=
+              le_trans hle1 hpi1
+            have hfsq : azim 0 (w (j + k + 1)) (w j) (w (j + 1)) ≤ Real.pi :=
+              FSQKWKK_p16 0 (w (j + 1)) (w (j + k + 1)) (w j) hpi2
+            have hd5 : azim 0 (w (j + k + 1)) (w j) (w (j + 1)) < e := by
+              rw [AZIM_DIHV_SAME_STRONG
+                (hnc (j + k + 1) j (by omega) (by omega) (by omega) (by omega) (by omega))
+                (hnc (j + k + 1) (j + 1) (by omega) (by omega) (by omega) (by omega) (by omega)) hfsq]
+              have hsub : ({j + k + 1, j, j + 1} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) := by
+                intro x hx
+                simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+                simp only [Finset.mem_Icc]
+                omega
+              exact h3 (j + k + 1) j hsub (by omega) (by omega)
+            have hsum4b : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) =
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + 1)) +
+                azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) := by
+              refine sum4_azim_fan (x := 0) (v := w (j + k + 1)) (u := w (j + k + 2))
+                (w1 := w (j + 1)) (w2 := w (j + k))
+                (hne0 (j + k + 1) (by omega) (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc (j + k + 1) (j + k + 2) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + 1) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + k) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hA2j
+            have hle2 : azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) ≤
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := by
+              rw [hsum4b]
+              have hnn := azim_nonneg 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + 1))
+              linarith
+            have hpi3 : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) ≤ Real.pi :=
+              h2 (j + k + 1) (by simp only [Finset.mem_Icc]; omega)
+            have hpi4 : azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) ≤ Real.pi :=
+              le_trans hle2 hpi3
+            have hd6 : azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) < e := by
+              by_cases hk1' : k = 1
+              · subst k
+                rw [azim_self]
+                linarith
+              · have hk2' : 2 ≤ k := by omega
+                rw [AZIM_DIHV_SAME_STRONG
+                  (hnc (j + k + 1) (j + 1) (by omega) (by omega) (by omega) (by omega) (by omega))
+                  (hnc (j + k + 1) (j + k) (by omega) (by omega) (by omega) (by omega) (by omega)) hpi4]
+                have hsub : ({j + k + 1, j + k, j + 1} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) := by
+                  intro x hx
+                  simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+                  simp only [Finset.mem_Icc]
+                  omega
+                have h5' := h5 (j + k) (j + 1) hsub (by omega)
+                rw [DIHV_SYM_2] at h5'
+                exact h5'
+            have hsum3b : azim 0 (w (j + k + 1)) (w j) (w (j + k)) =
+                azim 0 (w (j + k + 1)) (w j) (w (j + 1)) +
+                azim 0 (w (j + k + 1)) (w (j + 1)) (w (j + k)) := by
+              refine sum3_azim_fan (x := 0) (v := w (j + k + 1)) (u := w j)
+                (w1 := w (j + 1)) (w2 := w (j + k))
+                (hne0 (j + k + 1) (by omega) (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc (j + k + 1) j (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + 1) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + k) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · linarith
+            have hle3 : azim 0 (w (j + k + 1)) (w j) (w (j + k)) ≤
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := by
+              have h1i : 2 * e < azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) :=
+                h1 (j + k + 1) (by simp only [Finset.mem_Icc]; omega)
+              rw [hsum3b]
+              linarith
+            have hsum5 : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) =
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w j) +
+                azim 0 (w (j + k + 1)) (w j) (w (j + k)) := by
+              refine sum5_azim_fan (x := 0) (v := w (j + k + 1)) (u := w (j + k + 2))
+                (w1 := w j) (w2 := w (j + k))
+                (hne0 (j + k + 1) (by omega) (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc (j + k + 1) (j + k + 2) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) j (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc (j + k + 1) (j + k) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hle3
+            have hfin2 : azim 0 (w (j + k + 1)) (w (j + k + 2)) (w j) ≤
+                azim 0 (w (j + k + 1)) (w (j + k + 2)) (w (j + k)) := by
+              rw [hsum5]
+              have hnn := azim_nonneg 0 (w (j + k + 1)) (w j) (w (j + k))
+              linarith
+            exact ⟨azim_nonneg _ _ _ _, hfin2⟩
+          · -- direction 2: w (j + k + 1) ∈ F j
+            have hB' : w (j + k) ∈ wedgeGe 0 (w j) (w (j + 1)) (w (j - 1)) := by
+              simpa [F] using hB
+            have hBj : azim 0 (w j) (w (j + 1)) (w (j + k)) ≤
+                azim 0 (w j) (w (j + 1)) (w (j - 1)) := hB'.2
+            have hAj : azim 0 (w (j + k)) (w (j + k + 1)) (w j) ≤
+                azim 0 (w (j + k)) (w (j + k + 1)) (w (j + k - 1)) := hA'.2
+            have hpi_k : azim 0 (w (j + k)) (w (j + k + 1)) (w (j + k - 1)) ≤ Real.pi :=
+              h2 (j + k) (by simp only [Finset.mem_Icc]; omega)
+            have hstep1 : azim 0 (w (j + k)) (w (j + k + 1)) (w j) ≤ Real.pi :=
+              le_trans hAj hpi_k
+            have hstep2 : azim 0 (w j) (w (j + k)) (w (j + k + 1)) ≤ Real.pi := by
+              have hs : azim 0 (w (j + k + 1)) (w j) (w (j + k)) ≤ Real.pi :=
+                FSQKWKK_p16 0 (w (j + k)) (w (j + k + 1)) (w j) hstep1
+              exact FSQKWKK_p16 0 (w (j + k + 1)) (w j) (w (j + k)) hs
+            have hd3 : azim 0 (w j) (w (j + k)) (w (j + k + 1)) < e := by
+              rw [AZIM_DIHV_SAME_STRONG
+                (hnc j (j + k) (by omega) (by omega) (by omega) (by omega) (by omega))
+                (hnc j (j + k + 1) (by omega) (by omega) (by omega) (by omega) (by omega)) hstep2]
+              have hsub : ({j, j + k, j + k + 1} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) := by
+                intro x hx
+                simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+                simp only [Finset.mem_Icc]
+                omega
+              exact h3 j (j + k) hsub (by omega) (by omega)
+            have hpi_j : azim 0 (w j) (w (j + 1)) (w (j - 1)) ≤ Real.pi :=
+              h2 j (by simp only [Finset.mem_Icc]; omega)
+            have hstep3 : azim 0 (w j) (w (j + 1)) (w (j + k)) ≤ Real.pi :=
+              le_trans hBj hpi_j
+            have hd4 : azim 0 (w j) (w (j + 1)) (w (j + k)) < e := by
+              by_cases hk1' : k = 1
+              · subst k
+                rw [azim_self]
+                linarith
+              · have hk2' : 2 ≤ k := by omega
+                rw [AZIM_DIHV_SAME_STRONG
+                  (hnc j (j + 1) (by omega) (by omega) (by omega) (by omega) (by omega))
+                  (hnc j (j + k) (by omega) (by omega) (by omega) (by omega) (by omega)) hstep3]
+                have hsub : ({j, j + 1, j + k} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) := by
+                  intro x hx
+                  simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+                  simp only [Finset.mem_Icc]
+                  omega
+                exact h4 j (j + k) hsub (by omega)
+            have hsum3 : azim 0 (w j) (w (j + 1)) (w (j + k + 1)) =
+                azim 0 (w j) (w (j + 1)) (w (j + k)) +
+                azim 0 (w j) (w (j + k)) (w (j + k + 1)) := by
+              refine sum3_azim_fan (x := 0) (v := w j) (u := w (j + 1))
+                (w1 := w (j + k)) (w2 := w (j + k + 1))
+                (hne0 j hj1 (by omega)) ?_ ?_ ?_ ?_
+              · exact hnc j (j + 1) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc j (j + k) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · exact hnc j (j + k + 1) (by omega) (by omega) (by omega) (by omega) (by omega)
+              · linarith
+            have hfin : azim 0 (w j) (w (j + 1)) (w (j + k + 1)) ≤
+                azim 0 (w j) (w (j + 1)) (w (j - 1)) := by
+              rw [hsum3]
+              have h1j : 2 * e < azim 0 (w j) (w (j + 1)) (w (j - 1)) :=
+                h1 j (by simp only [Finset.mem_Icc]; omega)
+              linarith
+            exact ⟨azim_nonneg _ _ _ _, hfin⟩
+  constructor
+  · intro k j hj1 hjk
+    exact (main k j hj1 hjk).1
+  · intro k j hj1 hjk
+    exact (main k j hj1 hjk).2
+
 
 /-! ## Section C: BKOSSGE.hl -/
 
@@ -1322,3 +1793,8 @@ sphere-kit copies were deduped into `Kepler.Text.SphereKit` 2026-09-17. -/
 
 #print axioms FSQKWKK_p16
 #print axioms AZIM_DIHV_SAME_STRONG
+
+/-! ## w14 axiom audit (closed items only) -/
+
+#print axioms XIVPHKS_p16
+#print axioms XIVPHKS_SHIFT_p16
