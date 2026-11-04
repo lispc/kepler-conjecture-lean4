@@ -1918,6 +1918,224 @@ theorem DEFORMATION_DIST_LE_2_p34 (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
   exact EXISTS_SMALL_LE_CONST_p34 v1 v2 (w i) x1 x2 x6 a 2
     h1 h2 h6 hnc hx1 hx2 hx6 ha (by linarith)
 
+private theorem w5cC4_suc_k_sub_p34 {k l i : ℕ} (h : l % k = (i + 1) % k) (hk : 1 < k) :
+    (l + k - 1) % k = i % k := by
+  rcases Nat.eq_zero_or_pos l with rfl | hl
+  · have h0k : 0 < k := by omega
+    have hm : i % k < k := Nat.mod_lt _ h0k
+    have h2 : i % k + 1 = k := by
+      have h1 : (i + 1) % k = 0 := by simpa using h.symm
+      rw [Nat.add_mod, Nat.mod_eq_of_lt hk] at h1
+      rcases Nat.lt_or_ge (i % k + 1) k with hlt | hge
+      · rw [Nat.mod_eq_of_lt hlt] at h1; omega
+      · have hsub : i % k + 1 - k < k := by omega
+        have e : i % k + 1 = i % k + 1 - k + k := by omega
+        rw [e, Nat.add_mod_right, Nat.mod_eq_of_lt hsub] at h1
+        omega
+    rw [show 0 + k - 1 = k - 1 by omega, Nat.mod_eq_of_lt (by omega : k - 1 < k)]
+    omega
+  · have h' : ((l - 1) + 1) % k = (i + 1) % k := by rwa [Nat.sub_add_cancel hl]
+    have h'' : (l - 1) % k = i % k :=
+      Nat.ModEq.add_right_cancel' 1 h'
+    have e1 : l + k - 1 = (l - 1) + k := by omega
+    rw [e1, Nat.add_mod_right]
+    exact h''
+
+private theorem w5cC4_coe_cross3_p34 (a b : V3) :
+    ((cross3 a b : V3) : Fin 3 → ℝ) = crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) :=
+  coe_toLp _
+
+private theorem w5cC4_dot_coe_p34 (a b : V3) :
+    (a : Fin 3 → ℝ) ⬝ᵥ (b : Fin 3 → ℝ) = a ⬝ᵥ b := by
+  rw [← dot_toLp, WithLp.toLp_ofLp]
+
+private theorem w5cC4_cross3_lagrange_p34 (a b : V3) :
+    cross3 a (cross3 a b) = (a ⬝ᵥ b) • a - (a ⬝ᵥ a) • b := by
+  rw [cross3, w5cC4_coe_cross3_p34,
+    cross_cross_eq_smul_sub_smul' (a : Fin 3 → ℝ) (a : Fin 3 → ℝ) (b : Fin 3 → ℝ),
+    WithLp.toLp_sub, WithLp.toLp_smul, WithLp.toLp_smul, w5cC4_dot_coe_p34,
+    w5cC4_dot_coe_p34, WithLp.toLp_ofLp, WithLp.toLp_ofLp]
+
+private theorem w5cC4_normsq_smul_p34 (t : ℝ) (v : V3) : ‖t • v‖ ^ 2 = t ^ 2 * ‖v‖ ^ 2 := by
+  rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs]
+
+private theorem w5cC4_normsq_add_orth_p34 (t s : ℝ) (u w : V3) (hd : u ⬝ᵥ w = 0) :
+    ‖t • u + s • w‖ ^ 2 = t ^ 2 * ‖u‖ ^ 2 + s ^ 2 * ‖w‖ ^ 2 := by
+  rw [norm_add_sq_real, real_inner_smul_left, real_inner_smul_right, inner_eq_dot, hd,
+    w5cC4_normsq_smul_p34, w5cC4_normsq_smul_p34]
+  ring
+
+private theorem w5cC4_dot_add_left_p34 (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c := by
+  simp only [WithLp.ofLp_add, add_dotProduct]
+
+private theorem w5cC4_dot_add_right_p34 (a b c : V3) : a ⬝ᵥ (b + c) = a ⬝ᵥ b + a ⬝ᵥ c := by
+  simp only [WithLp.ofLp_add, dotProduct_add]
+
+private theorem w5cC4_dot_sub_left_p34 (a b c : V3) : (a - b) ⬝ᵥ c = a ⬝ᵥ c - b ⬝ᵥ c := by
+  simp only [WithLp.ofLp_sub, sub_dotProduct]
+
+private theorem w5cC4_dot_sub_right_p34 (a b c : V3) : a ⬝ᵥ (b - c) = a ⬝ᵥ b - a ⬝ᵥ c := by
+  simp only [WithLp.ofLp_sub, dotProduct_sub]
+
+private theorem w5cC4_dot_smul_left_p34 (a b : V3) (r : ℝ) : (r • a) ⬝ᵥ b = r * (a ⬝ᵥ b) := by
+  simp only [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+
+private theorem w5cC4_dot_smul_right_p34 (a b : V3) (r : ℝ) : a ⬝ᵥ (r • b) = r * (a ⬝ᵥ b) := by
+  simp only [WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul]
+
+private theorem w5cC4_dot_comm_p34 (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
+  dotProduct_comm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem w5cC4_normsq_double_cross_p34 (v1 v2 : V3) (x1 x2 x6 : ℝ)
+    (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6) :
+    ‖cross3 v1 (cross3 v1 v2)‖ ^ 2 = x1 * upsX x1 x2 x6 / 4 := by
+  have h11 : v1 ⬝ᵥ v1 = x1 := (norm_sq_eq_dot v1).symm.trans hx1
+  have h22 : v2 ⬝ᵥ v2 = x2 := (norm_sq_eq_dot v2).symm.trans hx2
+  have hups4 : upsX x1 x2 x6 = 4 * (x1 * x2 - (v1 ⬝ᵥ v2) ^ 2) := by
+    have hd6 : x6 = x1 + x2 - 2 * (v1 ⬝ᵥ v2) := by
+      have h6e : ‖v1 - v2‖ ^ 2 = ‖v1‖ ^ 2 - 2 * (v1 ⬝ᵥ v2) + ‖v2‖ ^ 2 := by
+        rw [norm_sub_sq_real, inner_eq_dot]
+      rw [← hx6, h6e, hx1, hx2]; ring
+    unfold upsX
+    rw [hd6]
+    ring
+  have hC : cross3 v1 (cross3 v1 v2) = (v1 ⬝ᵥ v2) • v1 - x1 • v2 := by
+    rw [w5cC4_cross3_lagrange_p34, h11]
+  have hinner : inner ℝ ((v1 ⬝ᵥ v2) • v1) (x1 • v2) = (v1 ⬝ᵥ v2) * x1 * (v1 ⬝ᵥ v2) := by
+    rw [real_inner_smul_left, real_inner_smul_right, inner_eq_dot]
+    ring
+  rw [hC, norm_sub_sq_real, w5cC4_normsq_smul_p34, w5cC4_normsq_smul_p34, hinner, hx1, hx2,
+    hups4]
+  ring
+
+private theorem w5cC4_scsA_ge_two_p34 {s : ScsV39} {k : ℕ} (hk0 : 0 < k)
+    (hkk : s.k = k) (hs : isScsV39 s) {i j : ℕ} (hij : i % k ≠ j % k) :
+    2 ≤ s.a i j := by
+  have hpa : Periodic2 s.a k := by rw [← hkk]; exact hs.2.2.2.2.2.2.2.1
+  have hsym : ∀ i j, s.a i j = s.a j i := fun i j =>
+    (hs.2.2.2.2.2.2.2.2.2.2.2.2.1 i j).1
+  have hper1 : ∀ i j, s.a (i + k) j = s.a i j := by
+    intro i j
+    rw [hsym (i + k) j, hsym i j]
+    exact (hpa j i).2
+  have e1 : s.a i j = s.a (i % k) j :=
+    modFold_p34 hk0 (f := fun q => s.a q j) (fun q => hper1 q j) i
+  have e2 : s.a (i % k) j = s.a (i % k) (j % k) :=
+    modFold_p34 hk0 (f := fun q => s.a (i % k) q) (fun q => (hpa (i % k) q).2) j
+  rw [e1, e2]
+  exact hs.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1 (i % k) (j % k)
+    ⟨by rw [hkk]; exact Nat.mod_lt _ hk0, by rw [hkk]; exact Nat.mod_lt _ hk0, hij⟩
+
+private theorem w5cC4_sqrt_ratio_p34 (U U0 : ℝ) (hU : 0 ≤ U) (hU0 : 0 < U0) :
+    (1 - Real.sqrt (U / U0)) ^ 2 * U0 ≤ (U0 - U) ^ 2 / U0 := by
+  set r := Real.sqrt (U / U0) with hrdef
+  have hr : r ^ 2 = U / U0 := Real.sq_sqrt (div_nonneg hU hU0.le)
+  have hr0 : 0 ≤ r := Real.sqrt_nonneg _
+  have hpos : (0:ℝ) < 1 + r := by linarith
+  have hsq : (1 - r) * (1 + r) = (U0 - U) / U0 := by
+    have h1 : (1 - r) * (1 + r) = 1 - r ^ 2 := by ring
+    rw [h1, hr]
+    field_simp
+  have h2 : (U0 - U) = (1 - r) * (1 + r) * U0 := by
+    rw [hsq]; field_simp
+  have hkey : (1 - r) ^ 2 * U0 = (U0 - U) ^ 2 / (U0 * (1 + r) ^ 2) := by
+    rw [h2]
+    field_simp
+  rw [hkey]
+  exact div_le_div_of_nonneg_left (sq_nonneg _) hU0 (by nlinarith [sq_nonneg r, hr0])
+
+private theorem w5cC4_cone_cert_p34 {al be P Q X D1 D2 R2 : ℝ}
+    (ha : 0 < al) (hb : 0 < be) (hs : al + be ≤ 1)
+    (hP : P ≤ R2) (hQ : Q ≤ R2) (hX : 4 ≤ X) (hD1 : 4 ≤ D1) (hD2 : 4 < D2)
+    (hR2 : R2 < 8)
+    (hid : al * D1 + be * D2 = al * P + be * Q - (2 - (al + be)) * X) : False := by
+  nlinarith [mul_nonneg (le_of_lt ha) (sub_nonneg.mpr hP),
+    mul_nonneg (le_of_lt hb) (sub_nonneg.mpr hQ),
+    mul_le_mul_of_nonneg_left hD1 (le_of_lt ha),
+    mul_le_mul_of_nonneg_left (le_of_lt hD2) (le_of_lt hb),
+    mul_nonneg (sub_nonneg.mpr hs) (sub_nonneg.mpr hX)]
+
+private theorem w5cC4_norm_and_dot_p34 (v1 v2 : V3) (x1 x2 x6 t : ℝ)
+    (h1 : 0 < x1) (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2)
+    (hx6 : ‖v1 - v2‖ ^ 2 = x6) :
+    ‖v2 - v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)‖ ^ 2
+        = t ^ 2 / (4 * x1) + (1 - Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) ^ 2
+            * upsX x1 x2 x6 / (4 * x1) ∧
+      (v2 - v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) ⬝ᵥ v1 = t / 2 := by
+  set C : V3 := cross3 v1 (cross3 v1 v2) with hC
+  have hd1 : v1 ⬝ᵥ v1 = x1 := (norm_sq_eq_dot v1).symm.trans hx1
+  have hlag : C = (v1 ⬝ᵥ v2) • v1 - x1 • v2 := by
+    rw [hC, w5cC4_cross3_lagrange_p34, hd1]
+  have horth : v1 ⬝ᵥ C = 0 := by
+    rw [hlag]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul]
+    rw [dotProduct_sub, dotProduct_smul, dotProduct_smul, hd1]
+    ring
+  have hcn2 : ‖C‖ ^ 2 = x1 * upsX x1 x2 x6 / 4 := by
+    rw [hC]; exact w5cC4_normsq_double_cross_p34 v1 v2 x1 x2 x6 hx1 hx2 hx6
+  have hm : x1 + x2 - x6 = 2 * (v1 ⬝ᵥ v2) := by
+    have h6e : ‖v1 - v2‖ ^ 2 = ‖v1‖ ^ 2 - 2 * (v1 ⬝ᵥ v2) + ‖v2‖ ^ 2 := by
+      rw [norm_sub_sq_real, inner_eq_dot]
+    rw [← hx6, h6e, hx1, hx2]; ring
+  have hCsplit : (1 / x1) • C = ((v1 ⬝ᵥ v2) / x1) • v1 - v2 := by
+    rw [hlag, smul_sub, smul_smul, smul_smul]
+    have e1 : (1 / x1) * (v1 ⬝ᵥ v2) = (v1 ⬝ᵥ v2) / x1 := by ring
+    have e2 : (1 / x1) * x1 = 1 := by field_simp
+    rw [e1, e2, one_smul]
+  have hdec : v2 = ((x1 + x2 - x6) / (2 * x1)) • v1 - (1 / x1) • C := by
+    rw [hCsplit, hm]
+    have e : (2 * (v1 ⬝ᵥ v2)) / (2 * x1) = (v1 ⬝ᵥ v2) / x1 := by
+      field_simp
+    rw [e]
+    module
+  have hv3def : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)
+      = ((x1 + (x2 - t) - x6) / (2 * x1)) • v1 +
+        ((-1 / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) • C := by
+    rw [hC]
+    simp only [v3DeforV1_p17]
+  have hvs : v2 - v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)
+      = (t / (2 * x1)) • v1 +
+        (-((1 - Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) / x1)) • C := by
+    rw [hv3def, hdec]
+    have ea : (x1 + x2 - x6) / (2 * x1) - (x1 + (x2 - t) - x6) / (2 * x1)
+        = t / (2 * x1) := by
+      field_simp; ring
+    have eb : -(1 / x1) - (-1 / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)
+        = -((1 - Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) / x1) := by
+      field_simp; ring
+    have hL : ((x1 + x2 - x6) / (2 * x1)) • v1 - (1 / x1) • C
+        - (((x1 + (x2 - t) - x6) / (2 * x1)) • v1 +
+            ((-1 / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) • C)
+        = (((x1 + x2 - x6) / (2 * x1)) - ((x1 + (x2 - t) - x6) / (2 * x1))) • v1
+          + (-(1 / x1) - ((-1 / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6))) • C := by
+      module
+    rw [hL, ea, eb]
+  constructor
+  · rw [hvs,
+      w5cC4_normsq_add_orth_p34 (t / (2 * x1))
+        (-((1 - Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) / x1)) v1 C horth,
+      hx1, hcn2]
+    field_simp [h1.ne']
+    ring
+  · rw [hvs, w5cC4_dot_add_left_p34, w5cC4_dot_smul_left_p34, w5cC4_dot_smul_left_p34,
+      hd1, w5cC4_dot_comm_p34 C v1, horth]
+    field_simp [h1.ne']
+    ring
+
+/-- The `(v2 - v3)·v2 = (t + ‖v2 - v3‖²)/2` identity, via the norm of `v3`. -/
+private theorem w5cC4_u_dot_v2_p34 (v1 v2 v3 : V3) (x1 x2 x6 t : ℝ)
+    (hx2 : ‖v2‖ ^ 2 = x2) (h3 : ‖v3‖ ^ 2 = x2 - t) :
+    (v2 - v3) ⬝ᵥ v2 = (t + ‖v2 - v3‖ ^ 2) / 2 := by
+  have hns : ‖v2 - v3‖ ^ 2 = ‖v2‖ ^ 2 - 2 * (v2 ⬝ᵥ v3) + ‖v3‖ ^ 2 := by
+    rw [norm_sub_sq_real, inner_eq_dot]
+  have hdot : (v2 - v3) ⬝ᵥ v2 = ‖v2‖ ^ 2 - (v2 ⬝ᵥ v3) := by
+    simp only [WithLp.ofLp_sub, sub_dotProduct,
+      dotProduct_comm (v3 : Fin 3 → ℝ) (v2 : Fin 3 → ℝ)]
+    rw [← norm_sq_eq_dot v2]
+  rw [hdot]
+  nlinarith [hns, hx2, h3]
+
+
 /-- HOL `DEFORMATION_V3_DEFOR_EDGE` (IMJXPHR.hl:1190). -/
 theorem DEFORMATION_V3_DEFOR_EDGE_p34 (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
     (v1 v2 : V3) (x1 x2 x6 a : ℝ)
@@ -1931,7 +2149,260 @@ theorem DEFORMATION_V3_DEFOR_EDGE_p34 (s : ScsV39) (k l i : ℕ) (w : ℕ → V3
     (ha : a = -1) (hmod : l % k = (i + 1) % k) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
       dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) < dist v2 (w i) := by
-  sorry
+
+  obtain ⟨h1, h2, h6, hnc0⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  have hk0 : 0 < k := by omega
+  have hBB := w5cC3_mms_bbs_p34 hmw
+  have hperw := MMs_periodic_p34 s k w hkk hmw
+  have hpa : Periodic2 s.a k := by rw [← hkk]; exact hs.2.2.2.2.2.2.2.1
+  -- normalise the `l + (s.k - 1)` index
+  have hnW : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
+  have hnc' : ¬Collinear ℝ ({0, v1, w (l + k - 1)} : Set V3) := by
+    rw [← hl1, ← hnW]; exact hnc
+  have haff' : w l ∈ affGt {0} ({v1, w (l + k - 1)} : Set V3) := by
+    rw [← hl1, ← hnW]; exact haff
+  -- distinctness from non-collinearity
+  have hv1ne : v1 ≠ 0 := by
+    intro hv
+    apply hnc'
+    rw [hv]
+    simpa using collinear_pair ℝ (0 : V3) (w (l + k - 1))
+  have hWne : w (l + k - 1) ≠ 0 := by
+    intro hW
+    apply hnc'
+    rw [hW]
+    have hpair : Collinear ℝ ({0, v1} : Set V3) := collinear_pair ℝ (0 : V3) v1
+    convert hpair using 1
+    ext x; simp [or_comm]
+  have hv1W : v1 ≠ w (l + k - 1) := by
+    intro hW
+    apply hnc'
+    rw [hW]
+    simpa using collinear_pair ℝ (0 : V3) (w (l + k - 1))
+  obtain ⟨α, β, hα, hβ, hcoef0⟩ :=
+    (affGt_zero_pair_char_p34 hv1ne hWne hv1W).mp haff'
+  have hcoef : α • v1 + β • w (l + k - 1) = v2 := by
+    rw [← hl]; exact hcoef0
+  -- i and l+k-1 agree
+  have hWi : w i = w (l + k - 1) := by
+    rw [modFold_p34 hk0 hperw i, ← w5cC4_suc_k_sub_p34 hmod (by omega),
+      ← modFold_p34 hk0 hperw (l + k - 1)]
+  have ha_lt' : s.a l (l + k - 1) < dist v2 (w (l + k - 1)) := by
+    have e_a : s.a l i = s.a l (l + k - 1) := by
+      rw [modFold_p34 hk0 (f := fun q => s.a l q) (fun q => (hpa l q).2) i,
+        ← w5cC4_suc_k_sub_p34 hmod (by omega),
+        modFold_p34 hk0 (f := fun q => s.a l q) (fun q => (hpa l q).2) (l + k - 1)]
+    rw [← hWi, ← e_a]
+    exact ha_lt
+  -- cone certificate inputs
+  have hPle : ‖v1‖ ^ 2 ≤ (2 * h0) ^ 2 := by
+    have hv1mem : v1 ∈ ballAnnulus := by
+      rw [← hl1]
+      exact hBB.1 (Set.mem_range.mpr ⟨l + 1, rfl⟩)
+    have hle : ‖v1‖ ≤ 2 * h0 := by
+      have h' := Metric.mem_closedBall.mp hv1mem.1
+      rwa [dist_zero_right] at h'
+    have h0pos : (0:ℝ) < h0 := by unfold h0; norm_num
+    nlinarith [norm_nonneg v1, hle, h0pos]
+  have hQle : ‖w (l + k - 1)‖ ^ 2 ≤ (2 * h0) ^ 2 := by
+    have hWmem : w (l + k - 1) ∈ ballAnnulus :=
+      hBB.1 (Set.mem_range.mpr ⟨l + k - 1, rfl⟩)
+    have hle : ‖w (l + k - 1)‖ ≤ 2 * h0 := by
+      have h' := Metric.mem_closedBall.mp hWmem.1
+      rwa [dist_zero_right] at h'
+    have h0pos : (0:ℝ) < h0 := by unfold h0; norm_num
+    nlinarith [norm_nonneg (w (l + k - 1)), hle, h0pos]
+  have hXge : 4 ≤ ‖v2‖ ^ 2 := by
+    have hv2mem : v2 ∈ ballAnnulus := by
+      rw [← hl]
+      exact hBB.1 (Set.mem_range.mpr ⟨l, rfl⟩)
+    have h2le : 2 ≤ ‖v2‖ := by
+      by_contra hlt
+      push_neg at hlt
+      exact hv2mem.2 (Metric.mem_ball.mpr (by rwa [dist_zero_right]))
+    nlinarith
+  have hD1ge : 4 ≤ ‖v2 - v1‖ ^ 2 := by
+    have hdist : s.a l (l + 1) ≤ dist (w l) (w (l + 1)) := (hBB.2.2.1 l (l + 1)).1
+    rw [hl, hl1] at hdist
+    have h2a : 2 ≤ s.a l (l + 1) :=
+      w5cC4_scsA_ge_two_p34 hk0 hkk hs (w5cC3_mod_ne_succ_p34 (by omega))
+    have h2d : 2 ≤ dist v2 v1 := le_trans h2a hdist
+    rw [dist_eq_norm] at h2d
+    nlinarith
+  have hD2gt : 4 < ‖v2 - w (l + k - 1)‖ ^ 2 := by
+    have h2a : 2 ≤ s.a l (l + k - 1) := by
+      have hne : l % k ≠ (l + k - 1) % k :=
+        fun h => MOD_ADD_SUB_1_p34 (k := k) (l := l) (by omega) h.symm
+      exact w5cC4_scsA_ge_two_p34 hk0 hkk hs hne
+    have h2d : 2 < dist v2 (w (l + k - 1)) := lt_of_le_of_lt h2a ha_lt'
+    rw [dist_eq_norm] at h2d
+    nlinarith
+  have hR2 : (2 * h0) ^ 2 < 8 := by unfold h0; norm_num
+  have hs1 : 1 < α + β := by
+    by_contra hle
+    push_neg at hle
+    have hP : ‖v1‖ ^ 2 ≤ (2 * h0) ^ 2 := hPle
+    have hQ : ‖w (l + k - 1)‖ ^ 2 ≤ (2 * h0) ^ 2 := hQle
+    have hX : 4 ≤ ‖v2‖ ^ 2 := hXge
+    have hD1 : 4 ≤ ‖v2 - v1‖ ^ 2 := hD1ge
+    have hD2 : 4 < ‖v2 - w (l + k - 1)‖ ^ 2 := hD2gt
+    have hid : α * ‖v2 - v1‖ ^ 2 + β * ‖v2 - w (l + k - 1)‖ ^ 2
+        = α * ‖v1‖ ^ 2 + β * ‖w (l + k - 1)‖ ^ 2 - (2 - (α + β)) * ‖v2‖ ^ 2 := by
+      have hv2e : v2 = α • v1 + β • w (l + k - 1) := hcoef.symm
+      have e1 : ‖v2 - v1‖ ^ 2 = ‖v2‖ ^ 2 - 2 * (v2 ⬝ᵥ v1) + ‖v1‖ ^ 2 := by
+        rw [norm_sub_sq_real, inner_eq_dot]
+      have e2 : ‖v2 - w (l + k - 1)‖ ^ 2
+          = ‖v2‖ ^ 2 - 2 * (v2 ⬝ᵥ w (l + k - 1)) + ‖w (l + k - 1)‖ ^ 2 := by
+        rw [norm_sub_sq_real, inner_eq_dot]
+      have hXeq : ‖v2‖ ^ 2 = α * (v2 ⬝ᵥ v1) + β * (v2 ⬝ᵥ w (l + k - 1)) := by
+        rw [norm_sq_eq_dot v2]
+        nth_rewrite 1 [hv2e]
+        rw [w5cC4_dot_add_left_p34, w5cC4_dot_smul_left_p34, w5cC4_dot_smul_left_p34,
+          w5cC4_dot_comm_p34 v1 v2, w5cC4_dot_comm_p34 (w (l + k - 1)) v2]
+      nlinarith [e1, e2, hXeq]
+    exact w5cC4_cone_cert_p34 hα hβ hle hP hQ hX hD1 hD2 hR2 hid
+  -- small-t construction
+  obtain ⟨eU, heU, hU⟩ := UPS_X_POS_SEG_C_p34 v1 v2 x1 x2 x6 1 hnc0 hx1 hx2 hx6 h2 one_pos
+  have hU0pos : 0 < upsX x1 x2 x6 := upsX_pos_nc_p34 hnc0 hx1 hx2 hx6
+  set M : ℝ := x1 - (x1 + x2 - x6) / 2 with hM
+  have hupsdiff : ∀ t : ℝ,
+      upsX x1 x2 x6 - upsX x1 (x2 - t) x6 = 4 * M * t + t ^ 2 := by
+    intro t
+    rw [hM]
+    unfold upsX
+    ring
+  set K : ℝ := 1 / (4 * x1) + (4 * |M| + 1) ^ 2 / (4 * x1 * upsX x1 x2 x6) with hK
+  have hKpos : 0 < K := by
+    rw [hK]
+    have h4x1 : 0 < 4 * x1 := by linarith
+    have hfirst : 0 < 1 / (4 * x1) := one_div_pos.mpr h4x1
+    have hsecond : 0 ≤ (4 * |M| + 1) ^ 2 / (4 * x1 * upsX x1 x2 x6) := by positivity
+    linarith
+  have hs1pos : 0 < α + β - 1 := by linarith
+  refine ⟨min eU (min 1 ((α + β - 1) / (2 * K))),
+    lt_min heU (lt_min one_pos (div_pos hs1pos (by linarith))), ?_⟩
+  intro t ht
+  have htU : t < eU := lt_of_lt_of_le ht.2 (min_le_left _ _)
+  have htinner : t < min 1 ((α + β - 1) / (2 * K)) :=
+    lt_of_lt_of_le ht.2 (min_le_right _ _)
+  have ht1 : t < 1 := lt_of_lt_of_le htinner (min_le_left _ _)
+  have htE : t < (α + β - 1) / (2 * K) := lt_of_lt_of_le htinner (min_le_right _ _)
+  obtain ⟨hupU, hx2t, -⟩ := hU t ⟨by linarith [ht.1], htU⟩
+  set U : ℝ := upsX x1 (x2 - t) x6 with hUdef
+  set U0 : ℝ := upsX x1 x2 x6 with hU0def
+  set r : ℝ := Real.sqrt (U / U0) with hr
+  have hU0pos' : 0 < U0 := hU0pos
+  have hUpos : 0 < U := hupU
+  have hsqrtle : (1 - r) ^ 2 * U0 ≤ (U0 - U) ^ 2 / U0 :=
+    w5cC4_sqrt_ratio_p34 U U0 hUpos.le hU0pos'
+  have hdiff : U0 - U = 4 * M * t + t ^ 2 := by
+    simpa [hU0def, hUdef] using hupsdiff t
+  have hdiffle : |U0 - U| ≤ (4 * |M| + 1) * t := by
+    rw [hdiff]
+    have ht0 : 0 ≤ t := ht.1.le
+    have h1 : |4 * M * t + t ^ 2| ≤ 4 * |M| * t + t ^ 2 := by
+      have e3 : |4 * M * t| = 4 * |M| * t := by
+        rw [abs_mul, abs_mul, abs_of_nonneg ht0,
+          abs_of_nonneg (show (0:ℝ) ≤ 4 by norm_num)]
+      calc |4 * M * t + t ^ 2| ≤ |4 * M * t| + |t ^ 2| := abs_add_le _ _
+        _ = 4 * |M| * t + t ^ 2 := by rw [e3, abs_of_nonneg (sq_nonneg t)]
+    have h2 : 4 * |M| * t + t ^ 2 ≤ (4 * |M| + 1) * t := by nlinarith [ht0]
+    linarith
+  have hnormu : ‖v2 - v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)‖ ^ 2
+      = t ^ 2 / (4 * x1) + (1 - r) ^ 2 * U0 / (4 * x1) := by
+    have hmain := (w5cC4_norm_and_dot_p34 v1 v2 x1 x2 x6 t h1 hx1 hx2 hx6).1
+    rw [← hUdef, ← hU0def, ← hr] at hmain
+    rw [ha]
+    exact hmain
+  have hKbound : ‖v2 - v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)‖ ^ 2 ≤ t ^ 2 * K := by
+    rw [hnormu]
+    have h4x : (0:ℝ) ≤ 4 * x1 := by linarith
+    have hstep1 : (1 - r) ^ 2 * U0 / (4 * x1) ≤ (U0 - U) ^ 2 / U0 / (4 * x1) :=
+      div_le_div_of_nonneg_right hsqrtle h4x
+    have hsq : (U0 - U) ^ 2 ≤ ((4 * |M| + 1) * t) ^ 2 := by
+      have h := pow_le_pow_left₀ (abs_nonneg (U0 - U)) hdiffle 2
+      rwa [sq_abs] at h
+    have hstep2 : (U0 - U) ^ 2 / U0 / (4 * x1)
+        ≤ ((4 * |M| + 1) * t) ^ 2 / U0 / (4 * x1) := by
+      apply div_le_div_of_nonneg_right _ h4x
+      exact div_le_div_of_nonneg_right hsq hU0pos'.le
+    have hcollapse : ((4 * |M| + 1) * t) ^ 2 / U0 / (4 * x1)
+        = t ^ 2 * ((4 * |M| + 1) ^ 2 / (4 * x1 * U0)) := by
+      field_simp [h1.ne', hU0pos'.ne']
+    calc t ^ 2 / (4 * x1) + (1 - r) ^ 2 * U0 / (4 * x1)
+        ≤ t ^ 2 / (4 * x1) + (U0 - U) ^ 2 / U0 / (4 * x1) := by linarith
+      _ ≤ t ^ 2 / (4 * x1) + ((4 * |M| + 1) * t) ^ 2 / U0 / (4 * x1) := by linarith
+      _ = t ^ 2 * K := by rw [hK, hcollapse]; ring
+  have htK : t ^ 2 * K < t * (α + β - 1) / 2 := by
+    have htK' : t * K < (α + β - 1) / 2 := by
+      calc t * K < ((α + β - 1) / (2 * K)) * K := mul_lt_mul_of_pos_right htE hKpos
+        _ = (α + β - 1) / 2 := by field_simp [hKpos.ne']
+    nlinarith [htK', ht.1]
+  -- final comparison
+  set v3 : V3 := v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) with hv3def
+  have hnorm3 : ‖v3‖ ^ 2 = x2 - t := by
+    rw [hv3def]
+    have hv3 : ((x1 + (x2 - t) - x6) / (2 * x1)) • v1 +
+        ((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) •
+          cross3 v1 (cross3 v1 v2) = v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) := rfl
+    exact EYYPQDW_NORMV3_p17 v1 v2 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t))
+      x1 x2 (x2 - t) x6 x6 x6 a h1 h2 hx2t h6 h6 h6 hnc0 hx1 hx2 hx6
+      (by rw [ha]; norm_num) hupU hv3
+  have hu_dot_v1 : (v2 - v3) ⬝ᵥ v1 = t / 2 := by
+    rw [hv3def, ha]
+    exact (w5cC4_norm_and_dot_p34 v1 v2 x1 x2 x6 t h1 hx1 hx2 hx6).2
+  have hu_dot_v2 : (v2 - v3) ⬝ᵥ v2 = (t + ‖v2 - v3‖ ^ 2) / 2 :=
+    w5cC4_u_dot_v2_p34 v1 v2 v3 x1 x2 x6 t hx2 hnorm3
+  have hdotcoef : (v2 - v3) ⬝ᵥ v2
+      = α * ((v2 - v3) ⬝ᵥ v1) + β * ((v2 - v3) ⬝ᵥ w (l + k - 1)) := by
+    have hcoef_pi : ((α • v1 + β • w (l + k - 1) : V3) : Fin 3 → ℝ) = (v2 : Fin 3 → ℝ) := by
+      rw [hcoef]
+    have h1' : (v2 - v3) ⬝ᵥ (α • v1 + β • w (l + k - 1)) = (v2 - v3) ⬝ᵥ v2 :=
+      congrArg (fun z : Fin 3 → ℝ => (v2 - v3 : V3) ⬝ᵥ z) hcoef_pi
+    have h2' : (v2 - v3) ⬝ᵥ (α • v1 + β • w (l + k - 1))
+        = α * ((v2 - v3) ⬝ᵥ v1) + β * ((v2 - v3) ⬝ᵥ w (l + k - 1)) := by
+      rw [w5cC4_dot_add_right_p34, w5cC4_dot_smul_right_p34, w5cC4_dot_smul_right_p34]
+    exact h1'.symm.trans h2'
+  have huW : (v2 - v3) ⬝ᵥ w (l + k - 1)
+      = ((v2 - v3) ⬝ᵥ v2 - α * ((v2 - v3) ⬝ᵥ v1)) / β := by
+    rw [eq_div_iff hβ.ne']
+    linarith [hdotcoef]
+  have hkey : β * (‖v3 - w (l + k - 1)‖ ^ 2 - ‖v2 - w (l + k - 1)‖ ^ 2)
+      = t * (1 - α - β) + ‖v2 - v3‖ ^ 2 := by
+    have hnormexp : ‖v3 - w (l + k - 1)‖ ^ 2 - ‖v2 - w (l + k - 1)‖ ^ 2
+        = -2 * ((v2 - v3) ⬝ᵥ (v2 - w (l + k - 1))) + ‖v2 - v3‖ ^ 2 := by
+      have e1 : ‖v3 - w (l + k - 1)‖ ^ 2
+          = ‖(v2 - w (l + k - 1)) - (v2 - v3)‖ ^ 2 := by
+        rw [show v3 - w (l + k - 1) = (v2 - w (l + k - 1)) - (v2 - v3) by abel]
+      have e2 : ‖(v2 - w (l + k - 1)) - (v2 - v3)‖ ^ 2
+          = ‖v2 - w (l + k - 1)‖ ^ 2
+            - 2 * ((v2 - v3) ⬝ᵥ (v2 - w (l + k - 1))) + ‖v2 - v3‖ ^ 2 := by
+        rw [norm_sub_sq_real, real_inner_comm (v2 - v3) (v2 - w (l + k - 1)), inner_eq_dot]
+        simp only [WithLp.ofLp_sub]
+      rw [e1, e2]
+      ring
+    rw [hnormexp]
+    have hdotW : (v2 - v3) ⬝ᵥ (v2 - w (l + k - 1))
+        = (v2 - v3) ⬝ᵥ v2 - (v2 - v3) ⬝ᵥ w (l + k - 1) := by
+      rw [w5cC4_dot_sub_right_p34]
+    rw [hdotW, huW, hu_dot_v1, hu_dot_v2]
+    field_simp [hβ.ne']
+    ring
+  have hsqlt : ‖v3 - w (l + k - 1)‖ ^ 2 < ‖v2 - w (l + k - 1)‖ ^ 2 := by
+    have hneg : β * (‖v3 - w (l + k - 1)‖ ^ 2 - ‖v2 - w (l + k - 1)‖ ^ 2) < 0 := by
+      rw [hkey]
+      have hinner : t * (1 - α - β) + ‖v2 - v3‖ ^ 2 < 0 := by
+        nlinarith [htK, hKbound, ht.1]
+      exact hinner
+    by_contra hge
+    push_neg at hge
+    have hnn : 0 ≤ ‖v3 - w (l + k - 1)‖ ^ 2 - ‖v2 - w (l + k - 1)‖ ^ 2 := by linarith
+    exact absurd (mul_nonneg hβ.le hnn) (not_le.mpr hneg)
+  have hlt_norm : ‖v3 - w (l + k - 1)‖ < ‖v2 - w (l + k - 1)‖ :=
+    norm_lt_of_sq_lt_p34 (norm_nonneg _) (norm_nonneg _) hsqlt
+  rw [hWi, dist_eq_norm, dist_eq_norm]
+  exact hlt_norm
 
 /-- HOL `DEFORMATION_DIST_LE_BLL_V3_DEFOR_COM` (IMJXPHR.hl:1598; the first
 `let` of the shadowed pair — the per-index `?e. !t.` form). -/
@@ -1949,7 +2420,62 @@ theorem DEFORMATION_DIST_LE_BLL_V3_DEFOR_COM_p34 (s : ScsV39) (k l : ℕ) (w : �
     ∀ i, ¬(i % k = l % k) →
       ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
         dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) ≤ s.b l i := by
-  sorry
+
+  obtain ⟨h1, h2, h6, hnc0⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  have hk0 : 0 < k := by omega
+  have hBB := w5cC3_mms_bbs_p34 hmw
+  have hperw := MMs_periodic_p34 s k w hkk hmw
+  have hpa : Periodic2 s.a k := by rw [← hkk]; exact hs.2.2.2.2.2.2.2.1
+  have hpb : Periodic2 s.b k := by rw [← hkk]; exact hs.2.2.2.2.2.2.2.2.2.2.1
+  intro i hi
+  by_cases hA : l % k = (i + 1) % k
+  · have e_w : w i = w (l + k - 1) := by
+      rw [modFold_p34 hk0 hperw i, ← w5cC4_suc_k_sub_p34 hA (by omega),
+        ← modFold_p34 hk0 hperw (l + k - 1)]
+    have e_a : s.a l i = s.a l (l + k - 1) := by
+      rw [modFold_p34 hk0 (f := fun q => s.a l q) (fun q => (hpa l q).2) i,
+        ← w5cC4_suc_k_sub_p34 hA (by omega),
+        modFold_p34 hk0 (f := fun q => s.a l q) (fun q => (hpa l q).2) (l + k - 1)]
+    have ha_lt_i : s.a l i < dist v2 (w i) := by
+      rw [e_a, e_w]; exact ha_lt
+    obtain ⟨e, he, hedge⟩ := DEFORMATION_V3_DEFOR_EDGE_p34 s k l i w v1 v2 x1 x2 x6 a
+      hk hkk hs hmw haz hnc haff hl hl1 hn ha_lt_i hx1 hx2 hx6 ha hA
+    refine ⟨e, he, fun t ht => ?_⟩
+    have hb : dist v2 (w i) ≤ s.b l i := by
+      have h' := (hBB.2.2.1 l i).2
+      rwa [hl] at h'
+    exact le_of_lt (lt_of_lt_of_le (hedge t ht) hb)
+  · by_cases hB : (l + 1) % k = i % k
+    · have e_w : w i = v1 := by
+        rw [modFold_p34 hk0 hperw i, ← hB, ← modFold_p34 hk0 hperw (l + 1), hl1]
+      have e_b : s.b l i = s.b l (l + 1) := by
+        rw [modFold_p34 hk0 (f := fun q => s.b l q) (fun q => (hpb l q).2) i, ← hB,
+          modFold_p34 hk0 (f := fun q => s.b l q) (fun q => (hpb l q).2) (l + 1)]
+      obtain ⟨eU, heU, hU⟩ := UPS_X_POS_SEG_p34 v1 v2 x1 x2 x6 hnc0 hx1 hx2 hx6 h2
+      refine ⟨eU, heU, fun t ht => ?_⟩
+      obtain ⟨hup, hx2t⟩ := hU t ⟨by linarith [ht.1], ht.2⟩
+      have hv3 : ((x1 + (x2 - t) - x6) / (2 * x1)) • v1 +
+          ((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) •
+            cross3 v1 (cross3 v1 v2) = v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) := rfl
+      have hsq3 : ‖v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) - v1‖ ^ 2 = x6 :=
+        EYYPQDW_NORM_V3_V1_p17 v1 v2 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t))
+          x1 x2 (x2 - t) x6 x6 x6 a h1 h2 hx2t h6 h6 h6 hnc0 hx1 hx2 hx6
+          (by rw [ha]; norm_num) hup hv3
+      have heqn : ‖v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) - v1‖ = ‖v2 - v1‖ := by
+        rw [← Real.sqrt_sq
+            (norm_nonneg (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) - v1)),
+          hsq3, ← hx6, Real.sqrt_sq (norm_nonneg (v1 - v2)), norm_sub_rev]
+      have hdist : dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) =
+          dist v2 (w i) := by
+        rw [e_w, dist_eq_norm, dist_eq_norm, heqn]
+      rw [hdist, e_w, e_b]
+      have h' := (hBB.2.2.1 l (l + 1)).2
+      rwa [hl, hl1] at h'
+    · have hd : scsDiag k l i := ⟨Ne.symm hi, hB, hA⟩
+      obtain ⟨e, he, hlt⟩ := DEFORMATION_DIST_LE_V3_DEFOR_B_SUC_p34 s k l w v1 v2 x1 x2 x6 a
+        hkk hk hs hmw hl hl1 hx1 hx2 hx6 ha hdiag i hd
+      exact ⟨e, he, fun t ht => le_of_lt (hlt t ht)⟩
 
 /-- HOL `DEFORMATION_DIST_LE_BLL_V3_DEFOR_COM` (IMJXPHR.hl:1696; the
 surviving second `let` of the shadowed pair — the skolemised
@@ -3030,6 +3556,70 @@ theorem V3_DEFOR_EQ_IN_FF_AT_V1_SYM_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ →
     · intro y hy
       exact (relabelFF_shapeS_p34 hfv hcf hcv hvc hinc y).mp hy
     · exact (relabelFF_shapeS_p34 hfv hcf hcv hvc hinc _).mpr rfl
+
+
+/-! ### W4: ivs / rho-node identities on the `range` face -/
+
+/-- `rhoNode1` on the range face at `w l` is the successor vertex `w (l+1)`
+(LA34-vocabulary rendering of the HOL `CARD_V_EQ_SCS_K1`/`CVLF_LF_F` ivs
+step; no `localFan_p2` transport needed). -/
+private theorem w5cC4_rhoNode1_range_p34 {s : ScsV39} {k l : ℕ} {w : ℕ → V3}
+    {FF : Set (V3 × V3)} (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s)
+    (hmw : w ∈ MMsV39 s)
+    (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF) :
+    rhoNode1 FF (w l) = w (l + 1) := by
+  have hk0 : 0 < k := by omega
+  have hinj := w_inj_p34 hk hkk hs hmw
+  have hper : ∀ i, w (i + k) = w i := MMs_periodic_p34 s k w hkk hmw
+  have hmem : ∀ a b : V3, (a, b) ∈ FF → ∃ i : ℕ, w i = a ∧ w (i + 1) = b :=
+    fun a b => ff_edge_index_p34 hFF
+  rw [rhoNode1]
+  refine epsilon_eq_of_p34 ?_ ?_
+  · intro y hy
+    obtain ⟨i, hi1, hi2⟩ := hmem (w l) y hy
+    have hres : i % k = l % k := by
+      by_contra hne
+      exact hinj i l hne hi1
+    rw [← hi2, modFold_p34 hk0 hper (i + 1), res_succ_congr_p34 (by omega) hres,
+      ← modFold_p34 hk0 hper (l + 1)]
+  · have h : (w l, w (l + 1)) ∈ Set.range (fun i : ℕ => (w i, w (i + 1))) := ⟨l, rfl⟩
+    rwa [hFF] at h
+
+/-- `ivsRhoNode1` on the range face at `w l` is the predecessor vertex
+`w (l+k-1)` (HOL `ITER_CARD_MINUS1_EQ_IVS_RN1` content, direct residue
+route). -/
+private theorem w5cC4_ivsRhoNode1_range_p34 {s : ScsV39} {k l : ℕ} {w : ℕ → V3}
+    {FF : Set (V3 × V3)} (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s)
+    (hmw : w ∈ MMsV39 s)
+    (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF) :
+    ivsRhoNode1 FF (w l) = w (l + k - 1) := by
+  have hk0 : 0 < k := by omega
+  have hinj := w_inj_p34 hk hkk hs hmw
+  have hper : ∀ i, w (i + k) = w i := MMs_periodic_p34 s k w hkk hmw
+  have hmem : ∀ a b : V3, (a, b) ∈ FF → ∃ i : ℕ, w i = a ∧ w (i + 1) = b :=
+    fun a b => ff_edge_index_p34 hFF
+  rw [ivsRhoNode1]
+  refine epsilon_eq_of_p34 ?_ ?_
+  · intro y hy
+    obtain ⟨i, hi1, hi2⟩ := hmem y (w l) hy
+    have hres : (i + 1) % k = l % k := by
+      by_contra hne
+      exact hinj (i + 1) l hne hi2
+    rw [← hi1, modFold_p34 hk0 hper i, res_succ_shift_p34 (by omega) hres,
+      ← modFold_p34 hk0 hper (l + k - 1)]
+  · have h : (w (l + k - 1), w (l + k - 1 + 1)) ∈
+        Set.range (fun i : ℕ => (w i, w (i + 1))) := ⟨l + k - 1, rfl⟩
+    rw [hFF] at h
+    simpa [show l + k - 1 + 1 = l + k by omega, hper] using h
+
+/-- `epPair` on the range face at `w l` is the predecessor vertex
+`w (l+k-1)` (HOL `ITER_CARD_MINUS1_EQ_IVS_RN1` in the `epPair` rendering). -/
+private theorem w5cC4_epPair_range_p34 {s : ScsV39} {k l : ℕ} {w : ℕ → V3}
+    {FF : Set (V3 × V3)} (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s)
+    (hmw : w ∈ MMsV39 s)
+    (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF) :
+    epPair_p34 FF (w l) = w (l + k - 1) :=
+  w5cC4_ivsRhoNode1_range_p34 hk hkk hs hmw hFF
 
 /-- HOL `DEFORMATION_AZIM_V3_DEFOR_V1` (IMJXPHR.hl:2535): the azimuth at the
 deformed point stays `pi` under the `v3_defor_v4` deformation of the face. -/
