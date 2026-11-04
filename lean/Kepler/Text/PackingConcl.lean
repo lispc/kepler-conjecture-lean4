@@ -993,4 +993,492 @@ theorem GRHIDFA_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
 #print axioms LUIKGMH_concl_discharged
 #print axioms GRHIDFA_concl_discharged
 
+/-! ### PA21 materialization capstone (lane lv8-pa21-w1, 2026-11-04,
+after the leftover-mat-scout workorder LV8): the 110 public top-level
+PackingAuto21 clean theorem exits that no e2e root reaches, re-exposed
+as ONE conjunction (fresh re-probe measured before this edit; scout logs,
+seeds_clean.txt 1..110).  Self-contained section: pure insertion,
+zero new imports (PA21 already imported at :122), zero proof
+obligations (body = the exit assembly itself).  -/
+
+/-- PA21 materialization capstone (scout lane leftover-mat-scout,
+implementation lane lv8-pa21-w1, 2026-11-04).  The 110 public top-level
+PackingAuto21 theorem exits unreachable from every e2e root (orphan
+census: PA21 294 orphans = 110 top-public clean + 116 private + 66
+simp-derived + 2 defs; fresh re-probe (logs/pa21_probe_fresh.out):
+GROUP_VS_CONE fresh 136 sorried
+0, i.e. the new closure is sorried-0,
+K_SORRIED 134 and the standard-three axiom face
+unchanged) are re-exposed as ONE conjunction (none dropped).
+Anchors (no fabricated edges): every conjunct is asserted in the
+verbatim wording of its exit's complete elaborated signature -- the
+`#check @name` printer dump (logs/pa21_probe_fresh.out), the only
+uniform verbatim source since ~60 of the 110 exits are compiler-
+generated equation lemmas (`*.eq_1` / `*._abel_*`) with no source
+statement anywhere; semantic identity is re-verified by the `⟨...⟩`
+assembly below (each element must unify definitionally with its
+conjunct); the per-conjunct comments carry the exit's PA21 source
+declaration line / HOL docstring anchor where one exists.
+Conjunct order: the scout seed-list order (seeds_clean.txt 1..110,
+probe1 PA21 SEED list sorted).  Body = the assembly of the exit
+constants -- zero new proof obligations, zero new imports. -/
+theorem pa21_capstone_w1 :
+    -- 1. Kepler.Text.ATN2_Y_NEG (PA21:6175; HOL `ATN2_Y_NEG`)
+    (∀ (x y : ℝ), y < 0 → atn2 x y = -(Real.pi / 2) - Real.arctan (x / y)
+    ) ∧
+    -- 2. Kepler.Text.ATN_DIV (PA21:6161; HOL `ATN_DIV`)
+    (∀ (x y : ℝ), 0 < x → 0 < y → Real.arctan (x / y) = Real.pi / 2 - Real.arctan (y / x)
+    ) ∧
+    -- 3. Kepler.Text.BALL_SUBSET_BIS_LE (PA21:9016; HOL `BALL_SUBSET_BIS_LE`)
+    (∀ (u v : V3) (r : ℝ), 2 * r ≤ dist u v → Metric.ball u r ⊆ bisLe u v
+    ) ∧
+    -- 4. Kepler.Text.BALL_SUBSET_BIS_LT (PA21:9029; HOL `BALL_SUBSET_BIS_LT`)
+    (∀ (u v : V3) (r : ℝ), 2 * r ≤ dist u v → Metric.ball u r ⊆ {y | dist y u < dist y v}
+    ) ∧
+    -- 5. Kepler.Text.BIS_LE_INTER (PA21:5958; HOL `BIS_LE_INTER`)
+    (∀ (u0 u1 : V3), bisLe u0 u1 ∩ bisLe u1 u0 = bis u0 u1
+    ) ∧
+    -- 6. Kepler.Text.BIS_LE_UNION (PA21:5968; HOL `BIS_LE_UNION`)
+    (∀ (u0 u1 : V3), bisLe u0 u1 ∪ bisLe u1 u0 = univ
+    ) ∧
+    -- 7. Kepler.Text.BIS_LT_NORM (PA21:7302; HOL `BIS_LT_NORM`)
+    (∀ (u v x : V3), dist x u < dist x v ↔ (x - u).ofLp ⬝ᵥ (v.ofLp - u.ofLp) < ‖v - u‖ ^ 2 / 2
+    ) ∧
+    -- 8. Kepler.Text.CONV_CONVEX_HULL (PA21:5797; HOL `CONV_CONVEX_HULL`)
+    (∀ (s : Set V3), Convex ℝ s ↔ (convexHull ℝ) s = s
+    ) ∧
+    -- 9. Kepler.Text.DIFF_INTER (PA21:5625; HOL `DIFF_INTER`)
+    (∀ (X Y Z : Set V3), X \ Y ∩ Z = (X ∩ Z) \ Y
+    ) ∧
+    -- 10. Kepler.Text.DIST_LAW_OF_COS_ALT (PA21:6143; HOL `DIST_LAW_OF_COS_ALT`)
+    (∀ (u v w : V3),
+          dist v w ^ 2 = dist u v ^ 2 + dist u w ^ 2 - 2 * dist u v * dist u w * Real.cos (arcV u v w)
+    ) ∧
+    -- 11. Kepler.Text.DIST_LAW_OF_COS_ALT._abel_1_1 (PA21:6143 (parent of compiler-generated lemma `DIST_LAW_OF_COS_ALT._abel_1_1`); no HOL anchor line in file docstring)
+    (∀ (u v w : V3), v - u - (w - u) = v - w
+    ) ∧
+    -- 12. Kepler.Text.MCELL1_SOL_RESTRICT (PA21:5773; HOL `MCELL1_SOL_RESTRICT`)
+    (∀ (V X : Set V3) (ul : List V3),
+          saturated V →
+            Packing V →
+              barV V 3 ul → X = mcell1 V ul → ¬nullSet X → sol (elV ul 0) X = sol (elV ul 0) (X ∩ Metric.ball (elV ul 0) √2)
+    ) ∧
+    -- 13. Kepler.Text.MCELL2_PARAM_D_UL (PA21:5896; HOL `MCELL2_PARAM_D_UL`)
+    (∀ (V : Set V3) (ul ul' vl : List V3) (X : Set V3),
+          Packing V →
+            saturated V →
+              X = mcell2 V ul →
+                barV V 3 ul →
+                  ¬nullSet X →
+                    initialSublist ul' ul → vl = (cellParamsD V X ul').2 → X = mcell2 V vl ∧ barV V 3 vl ∧ initialSublist ul' vl
+    ) ∧
+    -- 14. Kepler.Text.NULLSET_MCELL1 (PA21:4647; HOL `NULLSET_MCELL1`)
+    (∀ (V : Set V3) (ul : List V3),
+          Packing V → saturated V → barV V 3 ul → ¬nullSet (mcell1 V ul) → ¬nullSet (rogers V ul)
+    ) ∧
+    -- 15. Kepler.Text.NULL_SDIFF_TRANS (PA21:6579; HOL `NULL_SDIFF_TRANS`)
+    (∀ (X Y Z : Set V3), nullSet (symmDiff X Y) → nullSet (symmDiff Y Z) → nullSet (symmDiff X Z)
+    ) ∧
+    -- 16. Kepler.Text.RADIAL_LE (PA21:9041; HOL `RADIAL_LE`)
+    (∀ (r r' : ℝ) (x : V3) (C : Set V3),
+          r' ≤ r → 0 < r' → radialNorm r x (C ∩ Metric.ball x r) → radialNorm r' x (C ∩ Metric.ball x r')
+    ) ∧
+    -- 17. Kepler.Text.RCONE_GE_COS (PA21:6085; HOL `RCONE_GE_COS`)
+    (∀ (u v : V3) (a : ℝ), u ≠ v → rconeGe u v a = {u} ∪ {x | a ≤ Real.cos (arcV u v x)}
+    ) ∧
+    -- 18. Kepler.Text.RCONE_GT_SCALE (PA21:6036; HOL `RCONE_GT_SCALE`)
+    (∀ (u0 u1 u : V3) (a t : ℝ), 0 < t → u0 + u ∈ rconeGt u0 u1 a → u0 + t • u ∈ rconeGt u0 u1 a
+    ) ∧
+    -- 19. Kepler.Text.RCONE_GT_SCALE._abel_1_1 (PA21:6036 (parent of compiler-generated lemma `RCONE_GT_SCALE._abel_1_1`); no HOL anchor line in file docstring)
+    (∀ (u0 u : V3), u0 + u - u0 = u
+    ) ∧
+    -- 20. Kepler.Text.RCONE_GT_SCALE._abel_1_2 (PA21:6036 (parent of compiler-generated lemma `RCONE_GT_SCALE._abel_1_2`); no HOL anchor line in file docstring)
+    (∀ (u0 u : V3) (t : ℝ), u0 + t • u - u0 = t • u
+    ) ∧
+    -- 21. Kepler.Text.REAL_DIV_NEG (PA21:6170; HOL `REAL_DIV_NEG`)
+    (∀ (x y : ℝ), x / -y = -(x / y)
+    ) ∧
+    -- 22. Kepler.Text.SDIFF_SUBSET (PA21:6566; HOL `SDIFF_SUBSET`)
+    (∀ (X Y Z : Set V3), symmDiff (X ∩ Z) (Y ∩ Z) ⊆ symmDiff X Y
+    ) ∧
+    -- 23. Kepler.Text.SDIFF_SYM (PA21:7338; HOL `SDIFF_SYM`)
+    (∀ (X Y : Set V3), symmDiff X Y = symmDiff Y X
+    ) ∧
+    -- 24. Kepler.Text.SDIFF_TRANS (PA21:6573; HOL `SDIFF_TRANS`)
+    (∀ (X Y Z : Set V3), symmDiff X Z ⊆ symmDiff X Y ∪ symmDiff Y Z
+    ) ∧
+    -- 25. Kepler.Text.compose6.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f p1 p2 p3 p4 p5 p6 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (x1 x2 x3 x4 x5 x6 : ℝ),
+          compose6 f p1 p2 p3 p4 p5 p6 x1 x2 x3 x4 x5 x6 =
+            f (p1 x1 x2 x3 x4 x5 x6) (p2 x1 x2 x3 x4 x5 x6) (p3 x1 x2 x3 x4 x5 x6) (p4 x1 x2 x3 x4 x5 x6) (p5 x1 x2 x3 x4 x5 x6)
+              (p6 x1 x2 x3 x4 x5 x6)
+    ) ∧
+    -- 26. Kepler.Text.constant6.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (c _x1 _x2 _x3 _x4 _x5 _x6 : ℝ), constant6 c _x1 _x2 _x3 _x4 _x5 _x6 = c
+    ) ∧
+    -- 27. Kepler.Text.frustt.eq_1 (PA21:992 (parent of compiler-generated lemma `frustt.eq_1`); no HOL anchor line in file docstring)
+    (∀ (u v : V3) (h a : ℝ), frustt u v h a = frustum u v h a ∩ rconeGt u v a
+    ) ∧
+    -- 28. Kepler.Text.frustum.eq_1 (PA21:987 (parent of compiler-generated lemma `frustum.eq_1`); no HOL anchor line in file docstring)
+    (∀ (u v : V3) (h _a : ℝ),
+          frustum u v h _a = {x | 0 ≤ (x - u).ofLp ⬝ᵥ (v.ofLp - u.ofLp) ∧ (x - u).ofLp ⬝ᵥ (v.ofLp - u.ofLp) ≤ h * ‖v - u‖}
+    ) ∧
+    -- 29. Kepler.Text.gamma2_x_div_azim_v2.eq_1 (PA21:156 (parent of compiler-generated lemma `gamma2_x_div_azim_v2.eq_1`); no HOL anchor line in file docstring)
+    (∀ (m x : ℝ),
+          gamma2_x_div_azim_v2 m x =
+            (8 - x) * √x / 24 - (2 * (2 * mm1 / Real.pi) * (1 - √x / √8) - 8 * mm2 / Real.pi * m * lfun (√x / 2))
+    ) ∧
+    -- 30. Kepler.Text.gamma3fXDivSqrtdelta.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (m4 m5 m6 : ℝ),
+          gamma3fXDivSqrtdelta m4 m5 m6 =
+            constant6 (1 / 12) -
+              (scalar6
+                  (mk456 (rotate5 solEulerXDivSqrtdelta) + mk456 (rotate6 solEulerXDivSqrtdelta) +
+                    mk456 (rotate4 solEulerXDivSqrtdelta))
+                  (2 * mm1 / Real.pi) -
+                scalar6
+                  (scalar6 (uni lfun (scalar6 projY4 0.5)) m4 * mk456 (rotate4 dihXDivSqrtdeltaPosbranch) +
+                      scalar6 (uni lfun (scalar6 projY5 0.5)) m5 * mk456 (rotate5 dihXDivSqrtdeltaPosbranch) +
+                    scalar6 (uni lfun (scalar6 projY6 0.5)) m6 * mk456 (rotate6 dihXDivSqrtdeltaPosbranch))
+                  (8 * mm2 / Real.pi))
+    ) ∧
+    -- 31. Kepler.Text.h0cut.eq_1 (PA21:172 (parent of compiler-generated lemma `h0cut.eq_1`); no HOL anchor line in file docstring)
+    (∀ (x : ℝ), h0cut x = if x ≤ 2 * h0 then 1 else 0
+    ) ∧
+    -- 32. Kepler.Text.initialSublist.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (xl zl : List V3), initialSublist xl zl = ∃ yl, zl = xl ++ yl
+    ) ∧
+    -- 33. Kepler.Text.ldih2XDivSqrtdeltaPosbranch.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          ldih2XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 = rotate2 ldihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 34. Kepler.Text.ldih3XDivSqrtdeltaPosbranch.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          ldih3XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 = rotate3 ldihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 35. Kepler.Text.ldih5XDivSqrtdeltaPosbranch.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          ldih5XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 = rotate5 ldihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 36. Kepler.Text.ldih6XDivSqrtdeltaPosbranch.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          ldih6XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 = rotate6 ldihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 37. Kepler.Text.ldihXDivSqrtdeltaPosbranch.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          ldihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 = lfun (√x1 / 2) * dihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 38. Kepler.Text.mi_201_le_sqrt8 (PA21:1955; no HOL anchor line in file docstring)
+    (2.01 ≤ √8
+    ) ∧
+    -- 39. Kepler.Text.mi_201_le_two_h0 (PA21:1953; no HOL anchor line in file docstring)
+    (2.01 ≤ 2 * h0
+    ) ∧
+    -- 40. Kepler.Text.mi_delta_x4_pos (PA21:2006; HOL `delta_x4_pos`)
+    (∀ (x4 x5 x6 : ℝ), 4 ≤ x4 → 4 ≤ x5 → 0 < x6 → x6 < 8 → 0 < deltaX4 x6 2 x5 2 x4 2
+    ) ∧
+    -- 41. Kepler.Text.mi_dih_gt_pi2 (PA21:3283; HOL `dih_gt_pi2`)
+    (∀ {x1 x2 x3 x4 x5 x6 : ℝ},
+          0 < x1 → 0 < deltaX x1 x2 x3 x4 x5 x6 → Real.pi / 2 < dihXf x1 x2 x3 x4 x5 x6 → deltaX4 x1 x2 x3 x4 x5 x6 < 0
+    ) ∧
+    -- 42. Kepler.Text.mi_eta_y_nn (PA21:1664; HOL `eta_y_nn`)
+    (∀ (y4 y5 y6 : ℝ), 0 ≤ upsX (y4 * y4) (y5 * y5) (y6 * y6) → 0 ≤ eta_y y4 y5 y6
+    ) ∧
+    -- 43. Kepler.Text.mi_gamma3_x_gamma3f (PA21:3846; HOL `gamma3_x_gamma3f`)
+    (∀ (a b c y4 y5 y6 : ℝ),
+          2 * hminus ≤ y4 →
+            2 ≤ y5 →
+              y5 ≤ 2 * hminus →
+                2 ≤ y6 → y6 ≤ 2 * hminus → gamma3f y4 y5 y6 (√2) lmfun = gamma3X (h0cut y4) a b c (y4 * y4) (y5 * y5) (y6 * y6)
+    ) ∧
+    -- 44. Kepler.Text.mi_gamma3fYDivSqrtdelta_arg3 (PA21:2064; HOL `gamma3f_y_div_sqrtdelta_arg3`)
+    (∀ (m4 m5 m6 : ℝ → ℝ) (y1 y2 y3 y4 y5 y6 : ℝ),
+          yOfX (gamma3fXDivSqrtdelta (m4 y4) (m5 y5) (m6 y6)) y1 y2 y3 y4 y5 y6 =
+            yOfX (gamma3fXDivSqrtdelta (m4 y4) (m5 y5) (m6 y6)) 1 1 1 y4 y5 y6
+    ) ∧
+    -- 45. Kepler.Text.mi_lindihpi_gt (PA21:3363; HOL `lindihpi_gt`)
+    (∀ {u x1 x2 x3 x4 x5 x6 : ℝ},
+          |u| < Real.pi / 2 →
+            0 < x1 →
+              deltaX4 x1 x2 x3 x4 x5 x6 < 0 →
+                (Real.pi - u < dihXf x1 x2 x3 x4 x5 x6 ↔
+                  √(4 * x1 * deltaX x1 x2 x3 x4 x5 x6) < -Real.tan u * deltaX4 x1 x2 x3 x4 x5 x6)
+    ) ∧
+    -- 46. Kepler.Text.mi_lindihpi_gt_y (PA21:3501; HOL `lindihpi_gt_y`)
+    (∀ {a y1 y2 y3 y4 y5 y6 : ℝ},
+          0 < y1 →
+            0 < a →
+              0 < deltaY y1 y2 y3 y4 y5 y6 →
+                delta4Y y1 y2 y3 y4 y5 y6 < 0 →
+                  (Real.pi - Real.arctan a < dihY y1 y2 y3 y4 y5 y6 ↔
+                    4 * yOfX x1DeltaX y1 y2 y3 y4 y5 y6 < a ^ 2 * yOfX delta4SquaredX y1 y2 y3 y4 y5 y6)
+    ) ∧
+    -- 47. Kepler.Text.mi_lindihpi_lt (PA21:3320; HOL `lindihpi_lt`)
+    (∀ {u x1 x2 x3 x4 x5 x6 : ℝ},
+          |u| < Real.pi / 2 →
+            0 < x1 →
+              deltaX4 x1 x2 x3 x4 x5 x6 < 0 →
+                (dihXf x1 x2 x3 x4 x5 x6 < Real.pi - u ↔
+                  -Real.tan u * deltaX4 x1 x2 x3 x4 x5 x6 < √(4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+    ) ∧
+    -- 48. Kepler.Text.mi_lindihpi_lt_y (PA21:3450; HOL `lindihpi_lt_y`)
+    (∀ {a y1 y2 y3 y4 y5 y6 : ℝ},
+          0 < y1 →
+            0 < a →
+              0 < deltaY y1 y2 y3 y4 y5 y6 →
+                delta4Y y1 y2 y3 y4 y5 y6 < 0 →
+                  (dihY y1 y2 y3 y4 y5 y6 < Real.pi - Real.arctan a ↔
+                    a ^ 2 * yOfX delta4SquaredX y1 y2 y3 y4 y5 y6 < 4 * yOfX x1DeltaX y1 y2 y3 y4 y5 y6)
+    ) ∧
+    -- 49. Kepler.Text.mi_two_hminus_le_sqrt8 (PA21:1943; no HOL anchor line in file docstring)
+    (2 * hminus ≤ √8
+    ) ∧
+    -- 50. Kepler.Text.mi_two_hminus_le_two_sqrt2 (PA21:1946; no HOL anchor line in file docstring)
+    (2 * hminus ≤ 2 * √2
+    ) ∧
+    -- 51. Kepler.Text.mi_two_hplus_le_two_sqrt2 (PA21:1949; no HOL anchor line in file docstring)
+    (2 * hplus ≤ 2 * √2
+    ) ∧
+    -- 52. Kepler.Text.mi_two_le_two_hminus (PA21:1940; no HOL anchor line in file docstring)
+    (2 ≤ 2 * hminus
+    ) ∧
+    -- 53. Kepler.Text.mi_y_bounds (PA21:1962; HOL `y_bounds`)
+    (∀ (y : ℝ),
+          (y ≤ 2 * hminus → y ≤ √8) ∧
+            (y ≤ √8 → y ≤ 2 * √2) ∧
+              (y ≤ 2 * √2 → y < 4) ∧
+                (y < 2 * hminus → y ≤ 2 * hminus) ∧
+                  (y < 2 * hminus → y ≤ 2 * √2) ∧
+                    (2 ≤ y → 0 < y) ∧
+                      (2 * hminus ≤ y → 2 ≤ y) ∧
+                        (2 ≤ y → 0 ≤ y) ∧
+                          (2 * hminus ≤ y → 0 ≤ y) ∧ (y ≤ 2 * hminus → y ≤ 2 * h0) ∧ (y ≤ 2 * hplus → y ≤ 2 * √2)
+    ) ∧
+    -- 54. Kepler.Text.mk456.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ), mk456 f = compose6 f two6 two6 two6 projX4 projX5 projX6
+    ) ∧
+    -- 55. Kepler.Text.pA_ball_subset_bis_lt (PA21:8445; no HOL anchor line in file docstring)
+    (∀ (u v : V3) (r : ℝ), 2 * r ≤ dist u v → Metric.ball u r ⊆ {y | dist y u < dist y v}
+    ) ∧
+    -- 56. Kepler.Text.pA_coll_of_ne (PA21:8400; no HOL anchor line in file docstring)
+    (∀ {a b : V3}, a = b → Collinear3 a b b
+    ) ∧
+    -- 57. Kepler.Text.pA_sphere_null (PA21:8455; no HOL anchor line in file docstring)
+    (∀ (x : V3) (r : ℝ), volume (Metric.sphere x r) = 0
+    ) ∧
+    -- 58. Kepler.Text.projX4.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (_x1 _x2 _x3 x4 _x5 _x6 : ℝ), projX4 _x1 _x2 _x3 x4 _x5 _x6 = x4
+    ) ∧
+    -- 59. Kepler.Text.projX5.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (_x1 _x2 _x3 _x4 x5 _x6 : ℝ), projX5 _x1 _x2 _x3 _x4 x5 _x6 = x5
+    ) ∧
+    -- 60. Kepler.Text.projX6.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (_x1 _x2 _x3 _x4 _x5 x6 : ℝ), projX6 _x1 _x2 _x3 _x4 _x5 x6 = x6
+    ) ∧
+    -- 61. Kepler.Text.projY4.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (_x1 _x2 _x3 x4 _x5 _x6 : ℝ), projY4 _x1 _x2 _x3 x4 _x5 _x6 = √x4
+    ) ∧
+    -- 62. Kepler.Text.projY5.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (_x1 _x2 _x3 _x4 x5 _x6 : ℝ), projY5 _x1 _x2 _x3 _x4 x5 _x6 = √x5
+    ) ∧
+    -- 63. Kepler.Text.projY6.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (_x1 _x2 _x3 _x4 _x5 x6 : ℝ), projY6 _x1 _x2 _x3 _x4 _x5 x6 = √x6
+    ) ∧
+    -- 64. Kepler.Text.proj_bank_1965189142a (PA21:3547; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_1965189142a
+    ) ∧
+    -- 65. Kepler.Text.proj_bank_1965189142x34 (PA21:3552; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_1965189142x34
+    ) ∧
+    -- 66. Kepler.Text.proj_bank_6096597438a (PA21:3542; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_6096597438a
+    ) ∧
+    -- 67. Kepler.Text.proj_bank_6096597438b (PA21:3537; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_6096597438b
+    ) ∧
+    -- 68. Kepler.Text.proj_bank_BIXPCGWb (PA21:3682; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_BIXPCGWb
+    ) ∧
+    -- 69. Kepler.Text.proj_bank_FHBVYXZa (PA21:3627; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_FHBVYXZa
+    ) ∧
+    -- 70. Kepler.Text.proj_bank_FHBVYXZb (PA21:3622; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_FHBVYXZb
+    ) ∧
+    -- 71. Kepler.Text.proj_bank_GCKBQEA (PA21:3822; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_GCKBQEA
+    ) ∧
+    -- 72. Kepler.Text.proj_bank_GLFVCVK4y4crit (PA21:3712; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_GLFVCVK4y4crit
+    ) ∧
+    -- 73. Kepler.Text.proj_bank_GLFVCVK4y4subcrit (PA21:3702; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_GLFVCVK4y4subcrit
+    ) ∧
+    -- 74. Kepler.Text.proj_bank_GLFVCVK4y4supercrit (PA21:3707; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_GLFVCVK4y4supercrit
+    ) ∧
+    -- 75. Kepler.Text.proj_bank_IXPOTPA (PA21:3522; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_IXPOTPA
+    ) ∧
+    -- 76. Kepler.Text.proj_bank_MKFKQWUhalfwt (PA21:3727; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_MKFKQWUhalfwt
+    ) ∧
+    -- 77. Kepler.Text.proj_bank_PEMKWU (PA21:3577; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_PEMKWU
+    ) ∧
+    -- 78. Kepler.Text.proj_bank_QITNPEA1_1_0 (PA21:3667; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA1_1_0
+    ) ∧
+    -- 79. Kepler.Text.proj_bank_QITNPEA1_1_1 (PA21:3662; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA1_1_1
+    ) ∧
+    -- 80. Kepler.Text.proj_bank_QITNPEA1_1_2 (PA21:3657; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA1_1_2
+    ) ∧
+    -- 81. Kepler.Text.proj_bank_QITNPEA1_2_0 (PA21:3652; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA1_2_0
+    ) ∧
+    -- 82. Kepler.Text.proj_bank_QITNPEA1_2_1 (PA21:3647; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA1_2_1
+    ) ∧
+    -- 83. Kepler.Text.proj_bank_QITNPEA1_2_2 (PA21:3642; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA1_2_2
+    ) ∧
+    -- 84. Kepler.Text.proj_bank_QITNPEA3725403817 (PA21:3567; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA3725403817
+    ) ∧
+    -- 85. Kepler.Text.proj_bank_QITNPEA4003532128a (PA21:3562; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA4003532128a
+    ) ∧
+    -- 86. Kepler.Text.proj_bank_QITNPEA5400790175a (PA21:3587; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA5400790175a
+    ) ∧
+    -- 87. Kepler.Text.proj_bank_QITNPEA5400790175b (PA21:3582; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA5400790175b
+    ) ∧
+    -- 88. Kepler.Text.proj_bank_QITNPEA5814748276 (PA21:3597; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEA5814748276
+    ) ∧
+    -- 89. Kepler.Text.proj_bank_QITNPEAv24003532128 (PA21:3572; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_QITNPEAv24003532128
+    ) ∧
+    -- 90. Kepler.Text.proj_bank_RQWUDDU (PA21:3827; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_RQWUDDU
+    ) ∧
+    -- 91. Kepler.Text.proj_bank_TEWNSCJ (PA21:3532; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_TEWNSCJ
+    ) ∧
+    -- 92. Kepler.Text.proj_bank_TXQTPVC (PA21:3527; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_TXQTPVC
+    ) ∧
+    -- 93. Kepler.Text.proj_bank_ZTGIJCF0 (PA21:3817; no HOL anchor line in file docstring)
+    (pack_nonlinear_non_ox3q1h → bank_ZTGIJCF0
+    ) ∧
+    -- 94. Kepler.Text.rad2X.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          rad2X x1 x2 x3 x4 x5 x6 = rhoX x1 x2 x3 x4 x5 x6 / (deltaX x1 x2 x3 x4 x5 x6 * 4)
+    ) ∧
+    -- 95. Kepler.Text.rhoX.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          rhoX x1 x2 x3 x4 x5 x6 =
+            -x1 * x1 * x4 * x4 - x2 * x2 * x5 * x5 - x3 * x3 * x6 * x6 + 2 * x1 * x2 * x4 * x5 + 2 * x1 * x3 * x4 * x6 +
+              2 * x2 * x3 * x5 * x6
+    ) ∧
+    -- 96. Kepler.Text.rotate2.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (x1 x2 x3 x4 x5 x6 : ℝ),
+          rotate2 f x1 x2 x3 x4 x5 x6 = f x2 x3 x1 x5 x6 x4
+    ) ∧
+    -- 97. Kepler.Text.rotate3.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (x1 x2 x3 x4 x5 x6 : ℝ),
+          rotate3 f x1 x2 x3 x4 x5 x6 = f x3 x1 x2 x6 x4 x5
+    ) ∧
+    -- 98. Kepler.Text.rotate4.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (x1 x2 x3 x4 x5 x6 : ℝ),
+          rotate4 f x1 x2 x3 x4 x5 x6 = f x4 x2 x6 x1 x5 x3
+    ) ∧
+    -- 99. Kepler.Text.rotate5.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (x1 x2 x3 x4 x5 x6 : ℝ),
+          rotate5 f x1 x2 x3 x4 x5 x6 = f x5 x3 x4 x2 x6 x1
+    ) ∧
+    -- 100. Kepler.Text.rotate6.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (x1 x2 x3 x4 x5 x6 : ℝ),
+          rotate6 f x1 x2 x3 x4 x5 x6 = f x6 x1 x5 x3 x4 x2
+    ) ∧
+    -- 101. Kepler.Text.scalar6.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (r x1 x2 x3 x4 x5 x6 : ℝ),
+          scalar6 f r x1 x2 x3 x4 x5 x6 = f x1 x2 x3 x4 x5 x6 * r
+    ) ∧
+    -- 102. Kepler.Text.solEuler156XDivSqrtdelta.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          solEuler156XDivSqrtdelta x1 x2 x3 x4 x5 x6 = rotate6 solEulerXDivSqrtdelta x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 103. Kepler.Text.solEuler246XDivSqrtdelta.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          solEuler246XDivSqrtdelta x1 x2 x3 x4 x5 x6 = rotate4 solEulerXDivSqrtdelta x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 104. Kepler.Text.solEuler345XDivSqrtdelta.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          solEuler345XDivSqrtdelta x1 x2 x3 x4 x5 x6 = rotate5 solEulerXDivSqrtdelta x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 105. Kepler.Text.solX.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ),
+          solX x1 x2 x3 x4 x5 x6 = dihXf x1 x2 x3 x4 x5 x6 + dihXf x2 x3 x1 x5 x6 x4 + dihXf x3 x1 x2 x6 x4 x5 - Real.pi
+    ) ∧
+    -- 106. Kepler.Text.solY.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          solY y1 y2 y3 y4 y5 y6 = dihY y1 y2 y3 y4 y5 y6 + dihY y2 y3 y1 y5 y6 y4 + dihY y3 y1 y2 y6 y4 y5 - Real.pi
+    ) ∧
+    -- 107. Kepler.Text.two6.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (two6 = constant6 2
+    ) ∧
+    -- 108. Kepler.Text.uni.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (f : ℝ → ℝ) (x : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (x1 x2 x3 x4 x5 x6 : ℝ),
+          uni f x x1 x2 x3 x4 x5 x6 = f (x x1 x2 x3 x4 x5 x6)
+    ) ∧
+    -- 109. Kepler.Text.vol3f456.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (m4 : ℝ),
+          vol3f456 m4 =
+            scalar6 (mk456 (rotate5 solX) + mk456 (rotate6 solX) + mk456 (rotate4 solX)) (2 * mm1 / Real.pi) -
+              scalar6
+                (scalar6 (uni lfun (scalar6 projY4 0.5)) m4 * mk456 (rotate4 dihXf) +
+                    uni lfun (scalar6 projY5 0.5) * mk456 (rotate5 dihXf) +
+                  uni lfun (scalar6 projY6 0.5) * mk456 (rotate6 dihXf))
+                (8 * mm2 / Real.pi)
+    ) ∧
+    -- 110. Kepler.Text.volXf.eq_1 (no PA21 source anchor (Lean equation lemma, declaring module per probe SEEDMOD); no HOL anchor line in file docstring)
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ), volXf x1 x2 x3 x4 x5 x6 = √(deltaX x1 x2 x3 x4 x5 x6) / 12
+    ) :=
+    ⟨ATN2_Y_NEG, ATN_DIV, BALL_SUBSET_BIS_LE, BALL_SUBSET_BIS_LT, BIS_LE_INTER, BIS_LE_UNION,
+      BIS_LT_NORM, CONV_CONVEX_HULL, DIFF_INTER, DIST_LAW_OF_COS_ALT,
+      DIST_LAW_OF_COS_ALT._abel_1_1, MCELL1_SOL_RESTRICT, MCELL2_PARAM_D_UL, NULLSET_MCELL1,
+      NULL_SDIFF_TRANS, RADIAL_LE, RCONE_GE_COS, RCONE_GT_SCALE, RCONE_GT_SCALE._abel_1_1,
+      RCONE_GT_SCALE._abel_1_2, REAL_DIV_NEG, @SDIFF_SUBSET, SDIFF_SYM, @SDIFF_TRANS,
+      compose6.eq_1, constant6.eq_1, frustt.eq_1, frustum.eq_1, gamma2_x_div_azim_v2.eq_1,
+      gamma3fXDivSqrtdelta.eq_1, h0cut.eq_1, initialSublist.eq_1,
+      ldih2XDivSqrtdeltaPosbranch.eq_1, ldih3XDivSqrtdeltaPosbranch.eq_1,
+      ldih5XDivSqrtdeltaPosbranch.eq_1, ldih6XDivSqrtdeltaPosbranch.eq_1,
+      ldihXDivSqrtdeltaPosbranch.eq_1, mi_201_le_sqrt8, mi_201_le_two_h0, mi_delta_x4_pos,
+      mi_dih_gt_pi2, mi_eta_y_nn, mi_gamma3_x_gamma3f, mi_gamma3fYDivSqrtdelta_arg3,
+      mi_lindihpi_gt, mi_lindihpi_gt_y, mi_lindihpi_lt, mi_lindihpi_lt_y, mi_two_hminus_le_sqrt8,
+      mi_two_hminus_le_two_sqrt2, mi_two_hplus_le_two_sqrt2, mi_two_le_two_hminus, mi_y_bounds,
+      mk456.eq_1, pA_ball_subset_bis_lt, pA_coll_of_ne, pA_sphere_null, projX4.eq_1, projX5.eq_1,
+      projX6.eq_1, projY4.eq_1, projY5.eq_1, projY6.eq_1, proj_bank_1965189142a,
+      proj_bank_1965189142x34, proj_bank_6096597438a, proj_bank_6096597438b, proj_bank_BIXPCGWb,
+      proj_bank_FHBVYXZa, proj_bank_FHBVYXZb, proj_bank_GCKBQEA, proj_bank_GLFVCVK4y4crit,
+      proj_bank_GLFVCVK4y4subcrit, proj_bank_GLFVCVK4y4supercrit, proj_bank_IXPOTPA,
+      proj_bank_MKFKQWUhalfwt, proj_bank_PEMKWU, proj_bank_QITNPEA1_1_0, proj_bank_QITNPEA1_1_1,
+      proj_bank_QITNPEA1_1_2, proj_bank_QITNPEA1_2_0, proj_bank_QITNPEA1_2_1,
+      proj_bank_QITNPEA1_2_2, proj_bank_QITNPEA3725403817, proj_bank_QITNPEA4003532128a,
+      proj_bank_QITNPEA5400790175a, proj_bank_QITNPEA5400790175b, proj_bank_QITNPEA5814748276,
+      proj_bank_QITNPEAv24003532128, proj_bank_RQWUDDU, proj_bank_TEWNSCJ, proj_bank_TXQTPVC,
+      proj_bank_ZTGIJCF0, rad2X.eq_1, rhoX.eq_1, rotate2.eq_1, rotate3.eq_1, rotate4.eq_1,
+      rotate5.eq_1, rotate6.eq_1, scalar6.eq_1, solEuler156XDivSqrtdelta.eq_1,
+      solEuler246XDivSqrtdelta.eq_1, solEuler345XDivSqrtdelta.eq_1, solX.eq_1, solY.eq_1,
+      two6.eq_1, uni.eq_1, vol3f456.eq_1, volXf.eq_1⟩
+
+-- Self-check.  Ground truth = `#print axioms`, not prose: expect exactly
+-- the standard three [propext, Classical.choice, Quot.sound] and NO sorryAx
+-- (the scout group closure is sorried-0).
+#print axioms pa21_capstone_w1
+
 end Kepler.Text

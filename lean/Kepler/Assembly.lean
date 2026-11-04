@@ -6989,6 +6989,7 @@ theorem textCapstone : TextCapstone := by
   have hcap := localconcl_wire_capstone_w2
   have hla36 := la36_capstone_w1
   have hla38 := la38_capstone_w1
+  have hpa21 := pa21_capstone_w1
   have hmain : lp_main_estimate := hcap.1 hmnt
   refine kcImpTheKc ?_
   by_contra hneg
