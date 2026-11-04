@@ -189,7 +189,11 @@ def mainRun : CoreM Unit := do
     `Kepler.Text.AQIUNPP1,
     `Kepler.Text.ZBHENEI_hypermap,
     `Kepler.Text.XWCNBMA_hypermap,
-    `Kepler.Text.STKBEPH_hypermap]
+    `Kepler.Text.STKBEPH_hypermap,
+    -- W6-A 逐图 archive 对齐数据根（lane w6align-wire-w1；岛落库 cef05bb7：
+    -- 24 模块 + 19,715 逐图对齐定理 align_00000..19714 + 正/逆表 certArchIdx/
+    -- invCertIdx + 族普查 usedFamilies，见 Kepler/LP/W6Align.lean 根定理 w6align）
+    `Kepler.LP.W6Align.w6align]
   let e1 := scan1 env
   let pck := sortNames e1.pck
   let loc := sortNames e1.loc

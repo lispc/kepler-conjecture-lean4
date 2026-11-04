@@ -4,6 +4,7 @@ import Kepler.Statement
 import Kepler.LP.HelloChecker
 -- Phase 3: LP 证书 checker 试点（稀疏整数化对偶/原始证书，内核 decide 检验）
 import Kepler.LP.Cert
+import Kepler.LP.W6Align
 -- Phase 4: 区间算术证书 checker 试点（二进制有理数端点区间 + soundness，内核 decide 检验）
 import Kepler.Interval.Basic
 -- Phase 4: 除法/倒数（divFloorQ 显式误差，Option 语义）+ 区间 recip/div
