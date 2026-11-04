@@ -5935,3 +5935,42 @@ HOL 逐字形；结论不加强、前提不多加。
 ### (f) 状态
 
 **立案 + 应用 2026-11-03 中午**（编排者依常态化授权批 A 级：HOL 逐字锚 + 机检反例 + 消费者 0；用户 2026-11-03「不反对」）。归档 patch `docs/statement-fix-proposals-patches/97-la27-scs-m-eq-1-hol-form.patch`；STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto27.lean THM=SCS_M_EQ_1_p27 SF_ITEM=97`（rule 5 对修后件本身：标准三）。
+
+## 98. LA14 `zlz_azim_p14`（HEAD :3200）冻结陈述缺 `ha : a < 0` / `hb : 0 < b` ⟹ 端点实例（`a = 0` 或 `b = 0`）下 π 分支不可得（SF-95 同源：`Deformation` 区间是闭的 `0 ∈ Set.Icc a b`，HOL `real_interval (a,b)` 为开）— 分级 A（前提补全型 · **立案，待用户裁决，未执行**）
+
+### (a) HOL 裁决
+
+`lean/scripts/local/ZLZTHIC.hl:1664`（`zlz_azim`）：HOL 的 `deformation f V a b` 以 `real_interval (a,b)`（**开**区间）为语义，自带 `a < 0 < b`；Lean `LocalAuto1.Deformation f V a b` 只要求 `0 ∈ Set.Icc a b`，允许 `a = 0` 或 `b = 0`。故冻结陈述（无 `ha`/`hb`）不是 HOL 的逐字形。
+
+### (b) 为假/不可证的机理（la14-wedge-w9 实测）
+
+已机检 `Deformation (fun v _ => v) V 0 1` 成立（`a = 0` 情形合法）。`zlz_azim` 的证明需用负半窗（`t < 0` 一侧）消费 `h4`（`t ∈ Icc a b` 才给 `interiorAngle1` 条件）；`a = 0` 时负半窗含 `t < 0 ∉ Icc a b` 的点，`h4` 无约束，π 分支无法建立。冻结形**至多不可证、极可能为假**（与 SF-95 端点反例同族；本件未给出显式反例实例，强度弱于 SF-97）。
+
+### (c) 修复陈述（加 `ha`/`hb` 两前提；结论面不动；体直接消费已证私助件）
+
+```lean
+theorem zlz_azim_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (f : V3 → ℝ → V3)
+    (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
+    (ha : a < 0) (hb : 0 < b)
+    (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+      interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi) :
+    ∀ x : V3 × V3, ∃ e2 : ℝ, x ∈ FF →
+      0 < e2 ∧ ∀ t, -e2 < t ∧ t < e2 →
+        azimInFan (f x.1 t, f x.2 t) ((fun s => (fun v => f v t) '' s) '' E) ≤ Real.pi :=
+  w9_zlz_azim_strict a b V E FF f h1 h2 h3 ha hb h4
+```
+
+**建设性交付已在库**：`private theorem w9_zlz_azim_strict`（LA14:3097） = 冻结陈述 + `ha : a < 0` + `hb : 0 < b`，完整证明、`#print axioms` 恰标准三（la14-wedge-w9 落库 `fb2f1ae1`）。SF 落地只需给公共陈述加两前提并转调该件（或把证明体搬入）。
+
+### (d) 消费面
+
+全树 grep `zlz_azim_p14`：仅 LA14 自身（声明 + 文档注记），**无调用者**（ZLZTHIC 未总装）。加前提的消费者适配 = 0；未来 ZLZTHIC 总装的上下文已有 `_ha : a < 0` / `_hb : 0 < b`（`SUB_LUNAR`/`MHAEYJN` 陈述即带这两前提），可直供。
+
+### (e) 极小性
+
+HOL 逐字前提（开区间 ⇒ `a<0<b`）；结论不加强、前提不多加。替代方案（全局把 `Deformation` 升为 `Ioo`）改动面覆盖全部 `Deformation` 消费者，不取。
+
+### (f) 状态
+
+**立案 2026-11-05（la14-wedge-w9 侦察 + 建设性私证）**；分级 A（前提补全型）。按 SF 通道常态化授权可走 STATEMENT-FIX 闸，但本件基于「冻结陈述大概率假」的推断而非显式反例，且用户已休息，**编排者暂不执行，待用户确认**。若批：生成 `docs/statement-fix-proposals-patches/98-la14-zlz-azim-strict.patch`（加 `ha`/`hb` + 体转调 `w9_zlz_azim_strict`），STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto14.lean THM=zlz_azim_p14 SF_ITEM=98`。
