@@ -1677,7 +1677,83 @@ theorem collinear_cross_p14 (u : ℕ → V3) (i r : ℕ) (hi : i ≤ r) (hr : 1 
     · linarith [hczero, inner_cross3_self_pos_p14 (u 0) (u 1)
         (h 0 1 (by omega) (by omega) (by omega))]
 
-/-- HOL `YBTASCZ1` (hl:516).  NEEDS: azimuth-cycle ordering kit. -/
+/-! ## w10 kit: half-plane azimuth lexicographic order
+
+`YBTASCZ1/2/3` (hl:516/624/656) are the "azimuth increases with the index
+along the cyclic order" block.  The missing ingredient over the wave-8
+material is the dictionary order on `azim` inside the half-plane
+`aff_ge {0,u0}{u1}`.  The kit has four parts:
+* `w10_exis_smallest` / `w10_azimCycle_properties`: minimum existence and
+  the `AZIM_CYCLE_PROPERTIES`-style characterization of `azimCycle_p14`
+  (the wave-5 copy `w5cA_azimCycle_properties` is declared later in the
+  file, so the epsilon specification is reproduced here);
+* `w10_affGe_of_affGt`: `aff_gt ⊆ aff_ge` (the `vuy1` cone);
+* `w10_u_inj`: distinct indices give distinct cone points;
+* the proofs of `YBTASCZ1/2/3` use `AZIM_BASE_SHIFT_LE` (PackingAuto18) as
+  the base-point shift telescope and `sum4_azim_fan` (TopologyFan) as the
+  three-point azimuth addition. -/
+
+/-- w10: on a finite set not contained in `{p}` there is an
+`azim`-minimal element with the projection-norm tiebreak (the selection
+predicate of `azimCycle_p14` is inhabited). -/
+private theorem w10_exis_smallest {W : Set V3} {v w p : V3}
+    (h1 : ¬(W ⊆ {p})) (hfin : W.Finite) :
+    ∃ u : V3, u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim v w p u < azim v w p q ∨
+        azim v w p u = azim v w p q ∧
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖ := by
+  have hne : {u : V3 | u ∈ W ∧ u ≠ p}.Nonempty := by
+    by_contra hc
+    apply h1
+    intro x hx
+    by_contra hxp
+    exact hc ⟨x, hx, hxp⟩
+  have hf : {u : V3 | u ∈ W ∧ u ≠ p}.Finite := hfin.subset fun x hx => hx.1
+  obtain ⟨q, hqin, hqmin⟩ := Set.exists_min_image
+    {u : V3 | u ∈ W ∧ u ≠ p}
+    (fun x => toLex (azim v w p x, ‖projection (x - v) (w - v)‖)) hf hne
+  refine ⟨q, hqin.2, hqin.1, fun r hr hpr => ?_⟩
+  have h := hqmin r ⟨hr, hpr⟩
+  rw [Prod.Lex.toLex_le_toLex] at h
+  exact h
+
+/-- w10: characterization of `azimCycle_p14` (the `_p14` copy of the
+proved `AZIM_CYCLE_PROPERTIES`), available before the wave-5 block. -/
+private theorem w10_azimCycle_properties {W : Set V3} {p : V3} (hsub : ¬(W ⊆ {p}))
+    (hfin : W.Finite) (v w : V3) :
+    azimCycle_p14 W v w p ≠ p ∧ azimCycle_p14 W v w p ∈ W ∧
+      ∀ q ∈ W, q ≠ p →
+        azim v w p (azimCycle_p14 W v w p) < azim v w p q ∨
+          azim v w p (azimCycle_p14 W v w p) = azim v w p q ∧
+            ‖projection (azimCycle_p14 W v w p - v) (w - v)‖ ≤
+              ‖projection (q - v) (w - v)‖ := by
+  obtain ⟨u, hu1, hu2, hu3⟩ := w10_exis_smallest hsub hfin
+  rw [azimCycle_p14, if_neg hsub]
+  exact Classical.epsilon_spec
+    (p := fun u : V3 => u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim v w p u < azim v w p q ∨
+        azim v w p u = azim v w p q ∧
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖)
+    ⟨u, hu1, hu2, hu3⟩
+
+/-- w10: `affGt s t ⊆ affGe s t`. -/
+private theorem w10_affGe_of_affGt {s t : Set V3} {x : V3} (h : x ∈ affGt s t) :
+    x ∈ affGe s t := by
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := h
+  exact ⟨f, hfin, hsum, fun w hw => le_of_lt (hpos w hw), hone⟩
+
+/-- w10: distinct indices in `Icc 0 r` give distinct cone points. -/
+private theorem w10_u_inj (u : ℕ → V3) (r : ℕ)
+    (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3)) :
+    ∀ i j, i ≤ r → j ≤ r → i ≠ j → u i ≠ u j := by
+  intro i j hi hj hij heq
+  exact h1 i j hi hj hij (by rw [heq]; simpa using collinear2_p14 (0 : V3) (u j))
+
+/-- HOL `YBTASCZ1` (hl:516): azimuth from `u 0` is strictly increasing in
+the cyclic index `i < j`.  Induction on `i`: the base case is `ybt_inj_0_p14`
+plus `azim_nonneg`; the step rules out `azim(u 0,u j) < azim(u 0,u (i+1))`
+by the `AZIM_CYCLE_PROPERTIES` minimality at `u i` and the base shift
+`AZIM_BASE_SHIFT_LE` (`u 0` → `u i`), and closes with `ybt_inj_p14`. -/
 theorem YBTASCZ1_p14 (u : ℕ → V3) (r j : ℕ) (hj : j ≤ r) (hr : 1 ≤ r)
     (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
     (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3))
@@ -1686,9 +1762,80 @@ theorem YBTASCZ1_p14 (u : ℕ → V3) (r j : ℕ) (hj : j ≤ r) (hr : 1 ≤ r)
       azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)) :
     ∀ i, i < j →
       azim 0 (cross3 (u 0) (u 1)) (u 0) (u i) < azim 0 (cross3 (u 0) (u 1)) (u 0) (u j) := by
-  sorry
+  set c : V3 := cross3 (u 0) (u 1) with hcdef
+  have hcross : ∀ i, i ≤ r → ¬ Collinear ℝ ({0, c, u i} : Set V3) := by
+    intro i hi
+    rw [hcdef]
+    exact collinear_cross_p14 u i r hi hr h1 h2
+  have hfin : (u '' Set.Icc 0 r).Finite := h3.2.1
+  have hmem : ∀ i, i ≤ r → u i ∈ u '' Set.Icc 0 r := by
+    intro i hi
+    exact ⟨i, ⟨by omega, hi⟩, rfl⟩
+  have hune : ∀ i j, i ≤ r → j ≤ r → i ≠ j → u i ≠ u j :=
+    w10_u_inj u r h1
+  have main : ∀ i, i < j →
+      azim 0 c (u 0) (u i) < azim 0 c (u 0) (u j) := by
+    intro i
+    induction i with
+    | zero =>
+      intro _hj
+      have hj1 : 1 ≤ j := by omega
+      rw [azim_self]
+      have hjne : azim 0 c (u 0) (u j) ≠ 0 := by
+        rw [hcdef]
+        exact ybt_inj_0_p14 (u 0) (u 1) (u j)
+          (h1 0 j (by omega) hj (by omega))
+          (h1 0 1 (by omega) (by omega) (by omega))
+          (w10_affGe_of_affGt (h2 j hj1 hj))
+      have hnn : 0 ≤ azim 0 c (u 0) (u j) := azim_nonneg _ _ _ _
+      exact lt_of_le_of_ne' hnn hjne
+    | succ i ih =>
+      intro hsucc
+      have hij : i < j := by omega
+      have hir : i < r := by omega
+      have hih : azim 0 c (u 0) (u i) < azim 0 c (u 0) (u j) := ih hij
+      have hne : azim 0 c (u 0) (u (i + 1)) ≠ azim 0 c (u 0) (u j) := by
+        rw [hcdef]
+        exact ybt_inj_p14 (u 0) (u 1) (u (i + 1)) (u j)
+          (h1 0 (i + 1) (by omega) (by omega) (by omega))
+          (h1 0 j (by omega) hj (by omega))
+          (h1 0 1 (by omega) (by omega) (by omega))
+          (h1 (i + 1) j (by omega) hj (by omega))
+          (w10_affGe_of_affGt (h2 (i + 1) (by omega) (by omega)))
+          (w10_affGe_of_affGt (h2 j (by omega) hj))
+      refine lt_of_le_of_ne ?_ hne
+      by_contra hcon
+      push_neg at hcon
+      have hsub : ¬ ((u '' Set.Icc 0 r) ⊆ {u i}) := by
+        intro hsubmem
+        have hmj : u j ∈ (u '' Set.Icc 0 r) := hmem j hj
+        have heqj : u j = u i := by simpa using hsubmem hmj
+        exact hune i j (by omega) hj (by omega) heqj.symm
+      have hcyc := w10_azimCycle_properties (W := u '' Set.Icc 0 r) (p := u i) hsub hfin 0 c
+      obtain ⟨-, -, hmin⟩ := hcyc
+      have h4i : azimCycle_p14 (u '' Set.Icc 0 r) 0 c (u i) = u (i + 1) := h4 i hir
+      have hcyc_le : azim 0 c (u i) (u (i + 1)) ≤ azim 0 c (u i) (u j) := by
+        have hqmem : u j ∈ (u '' Set.Icc 0 r) := hmem j hj
+        have hqp : u j ≠ u i := fun heq => hune i j (by omega) hj (by omega) heq.symm
+        have h := hmin (u j) hqmem hqp
+        rw [h4i] at h
+        rcases h with h | ⟨h, -⟩
+        · exact le_of_lt h
+        · exact le_of_eq h
+      have hshift := AZIM_BASE_SHIFT_LE (0 : V3) c (u 0) (u i) (u (i + 1)) (u j)
+        (hcross 0 (by omega))
+        (hcross i (by omega))
+        (hcross (i + 1) (by omega))
+        (hcross j hj)
+        (le_of_lt (hih.trans hcon))
+        (le_of_lt hih)
+      linarith
+  exact main
 
-/-- HOL `YBTASCZ2` (hl:624).  NEEDS: azimuth-cycle ordering kit. -/
+/-- HOL `YBTASCZ2` (hl:624): the cone-wide angle from `u i` to `u j` is
+below `π`.  `YBTASCZ1_p14` gives `azim(u 0,u i) < azim(u 0,u j)`; the
+three-point addition `sum4_azim_fan` at the base `u 0` and `vuy4_p14`
+(`azim(u 0,u j) < π`) then bound the difference. -/
 theorem YBTASCZ2_p14 (u : ℕ → V3) (r i j : ℕ) (hij : i < j) (hj : j ≤ r) (hr : 1 ≤ r)
     (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
     (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3))
@@ -1696,9 +1843,24 @@ theorem YBTASCZ2_p14 (u : ℕ → V3) (r i j : ℕ) (hij : i < j) (hj : j ≤ r)
     (h4 : ∀ i, i < r →
       azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)) :
     azim 0 (cross3 (u 0) (u 1)) (u i) (u j) < Real.pi := by
-  sorry
+  have hlt := YBTASCZ1_p14 u r j hj hr h1 h2 h3 h4 i hij
+  have hsum := sum4_azim_fan (x := (0 : V3)) (v := cross3 (u 0) (u 1))
+    (u := u 0) (w1 := u i) (w2 := u j)
+    (cross3_ne_p14 (h1 0 1 (by omega) (by omega) (by omega)))
+    (collinear_cross_p14 u 0 r (by omega) hr h1 h2)
+    (collinear_cross_p14 u i r (by omega) hr h1 h2)
+    (collinear_cross_p14 u j r hj hr h1 h2)
+    (le_of_lt hlt)
+  have h4j := vuy4_p14 (u j) (u 0) (u 1)
+    (h1 0 j (by omega) hj (by omega))
+    (h1 0 1 (by omega) (by omega) (by omega))
+    (w10_affGe_of_affGt (h2 j (by omega) hj))
+  have hnn := azim_nonneg (0 : V3) (cross3 (u 0) (u 1)) (u 0) (u i)
+  linarith
 
-/-- HOL `YBTASCZ3` (hl:656).  NEEDS: azimuth-cycle ordering kit. -/
+/-- HOL `YBTASCZ3` (hl:656): the cone-wide angle from `u i` to `u j` is
+positive.  Immediate from `YBTASCZ1_p14` plus the three-point addition
+`sum4_azim_fan` at the base `u 0`. -/
 theorem YBTASCZ3_p14 (u : ℕ → V3) (r i j : ℕ) (hij : i < j) (hj : j ≤ r) (hr : 1 ≤ r)
     (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
     (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3))
@@ -1706,7 +1868,15 @@ theorem YBTASCZ3_p14 (u : ℕ → V3) (r i j : ℕ) (hij : i < j) (hj : j ≤ r)
     (h4 : ∀ i, i < r →
       azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)) :
     0 < azim 0 (cross3 (u 0) (u 1)) (u i) (u j) := by
-  sorry
+  have hlt := YBTASCZ1_p14 u r j hj hr h1 h2 h3 h4 i hij
+  have hsum := sum4_azim_fan (x := (0 : V3)) (v := cross3 (u 0) (u 1))
+    (u := u 0) (w1 := u i) (w2 := u j)
+    (cross3_ne_p14 (h1 0 1 (by omega) (by omega) (by omega)))
+    (collinear_cross_p14 u 0 r (by omega) hr h1 h2)
+    (collinear_cross_p14 u i r (by omega) hr h1 h2)
+    (collinear_cross_p14 u j r hj hr h1 h2)
+    (le_of_lt hlt)
+  linarith
 
 /-- HOL `KCZXLLE` (hl:681).  NEEDS: azimuth-cycle ordering kit. -/
 theorem KCZXLLE_p14 (u : ℕ → V3) (r i j k : ℕ) (hjk : j < k) (hk : k ≤ r) (hr : 1 ≤ r)
