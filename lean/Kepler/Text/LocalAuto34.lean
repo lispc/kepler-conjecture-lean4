@@ -1324,12 +1324,11 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_A_p34 (s : ScsV39) (k l i : ℕ) (w : ℕ �
     ∀ j, ¬(l % k = j % k) → ¬(l % k = (j + 1) % k) →
       ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
         s.a l j < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w j) := by
-  -- NEEDS: the `MMs`-collinearity kit (HYPER_MM_COLLINEAR, still sorried):
-  -- the profile is continuous and strict at `t = 0`, but the strictness
-  -- `s.a l j < dist v2 (w j)` only feeds `v3DeforV1` machinery after
-  -- `¬Collinear {0, v1, v2}` is available, which this per-index lemma's
-  -- hypotheses do not (yet) provide.
-  sorry
+  intro j hj1 hj2
+  obtain ⟨h1, h2, h6, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  exact EXISTS_SMALL_LE_CONST_p34 v1 v2 (w j) x1 x2 x6 a (s.a l j) h1 h2 h6 hnc
+    hx1 hx2 hx6 ha (hbound j hj1 hj2)
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_A_SUC` (IMJXPHR.hl:501). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_A_SUC_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -1342,7 +1341,11 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_A_SUC_p34 (s : ScsV39) (k l : ℕ) (w : ℕ
     ∀ j, ¬(l % k = j % k) → ¬((l + 1) % k = j % k) →
       ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
         s.a l j < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w j) := by
-  sorry
+  intro j hj1 hj2
+  obtain ⟨h1, h2, h6, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  exact EXISTS_SMALL_LE_CONST_p34 v1 v2 (w j) x1 x2 x6 a (s.a l j) h1 h2 h6 hnc
+    hx1 hx2 hx6 ha (hbound j hj1 hj2)
 
 /-- The finite-minimum skolemisation used by every `_COM` lemma: from
 per-index existence and downward closure of the predicate in the radius. -/
@@ -1947,6 +1950,36 @@ theorem DEFORMATION_SMALL_INTERVAL_p34 {f : V3 → ℝ → V3} {V : Set V3} {a b
   intro v hv r hr
   exact hcont v hv r ⟨le_trans hac hr.1, le_trans hr.2 hdb⟩
 
+/-- Early copy of the `MMs` residue injectivity (the later `w_inj_p34`
+lives below the `NOT_IN_V` block; this `w5cC2_` twin serves the W2 dist-le
+proofs). -/
+private theorem w5cC2_w_inj_p34 {s : ScsV39} {k : ℕ} {w : ℕ → V3} (hk : 3 < k)
+    (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s) :
+    ∀ i j : ℕ, i % k ≠ j % k → w i ≠ w j := by
+  have hk0 : 0 < k := by omega
+  have hBB : BBsV39 s w := by
+    have h := hmw
+    simp only [MMsV39, Set.mem_setOf_eq] at h
+    have h2 := h.1
+    simp only [BBprime2V39, Set.mem_setOf_eq] at h2
+    have h3 := h2.1
+    simp only [BBprimeV39, Set.mem_setOf_eq] at h3
+    exact h3.1
+  have hpa : Periodic2 s.a k := by rw [← hkk]; exact hs.2.2.2.2.2.2.2.1
+  intro i j hij hcon
+  have h2le : 2 ≤ s.a (i % k) (j % k) :=
+    hs.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1 (i % k) (j % k)
+      ⟨by rw [hkk]; exact Nat.mod_lt _ hk0, by rw [hkk]; exact Nat.mod_lt _ hk0,
+        fun hc => hij hc⟩
+  have hperW : ∀ q, w (q + k) = w q := MMs_periodic_p34 s k w hkk hmw
+  have hw1 : w i = w (i % k) := modFold_p34 hk0 hperW i
+  have hw2 : w j = w (j % k) := modFold_p34 hk0 hperW j
+  have hle : s.a (i % k) (j % k) ≤ dist (w i) (w j) := by
+    rw [hw1, hw2]
+    exact (hBB.2.2.1 (i % k) (j % k)).1
+  rw [hcon, dist_self] at hle
+  exact absurd hle (by linarith)
+
 /-- HOL `DEFORMATION_V3_DEFOR_NOT_IN_V` (IMJXPHR.hl:1837). -/
 theorem DEFORMATION_V3_DEFOR_NOT_IN_V_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
     (v1 v2 : V3) (x1 x2 x6 a : ℝ)
@@ -1956,7 +1989,34 @@ theorem DEFORMATION_V3_DEFOR_NOT_IN_V_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → 
     (ha : a = -1) :
     ∀ i : ℕ, ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
       0 < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) := by
-  sorry
+  intro i
+  have hk0 : 0 < k := by omega
+  have hper_w := MMs_periodic_p34 s k w hkk hmw
+  obtain ⟨h1, h2, h6, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  rcases eq_or_ne (i % k) (l % k) with hmod | hmod
+  · have hi : w i = v2 := by
+      rw [modFold_p34 hk0 hper_w i, hmod, ← modFold_p34 hk0 hper_w l, hl]
+    obtain ⟨e0, he0, hup⟩ := UPS_X_POS_SEG_C_p34 v1 v2 x1 x2 x6 1 hnc hx1 hx2 hx6 h2 one_pos
+    refine ⟨e0, he0, fun t ht => ?_⟩
+    obtain ⟨hups, hx2t, -⟩ := hup t ⟨by linarith [ht.1, he0], ht.2⟩
+    rw [hi]
+    apply dist_pos.mpr
+    intro hcon
+    have hv3 : ((x1 + (x2 - t) - x6) / (2 * x1)) • v1 +
+        ((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) •
+          cross3 v1 (cross3 v1 v2) =
+        v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) := rfl
+    have hnorm := EYYPQDW_NORMV3_p17 v1 v2 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t))
+      x1 x2 (x2 - t) x6 x6 x6 a h1 h2 hx2t h6 h6 h6 hnc hx1 hx2 hx6 (by simp [ha]) hups hv3
+    have heqx : x2 - t = x2 := by rw [← hnorm, hcon, hx2]
+    linarith
+  · have hwi : w i ≠ v2 := by
+      intro h
+      exact w5cC2_w_inj_p34 hk hkk hs hmw i l hmod (by rw [hl]; exact h)
+    have hdist : 0 < dist v2 (w i) := dist_pos.mpr (Ne.symm hwi)
+    exact EXISTS_SMALL_LE_CONST_p34 v1 v2 (w i) x1 x2 x6 a 0 h1 h2 h6 hnc
+      hx1 hx2 hx6 ha hdist
 
 /-- HOL `DEFORMATION_V3_DEFOR_NOT_IN_V_V1` (IMJXPHR.hl:1911). -/
 theorem DEFORMATION_V3_DEFOR_NOT_IN_V_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -1968,7 +2028,15 @@ theorem DEFORMATION_V3_DEFOR_NOT_IN_V_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ �
     ∀ i : ℕ, ¬(i % k = l % k) →
       ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
         0 < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) := by
-  sorry
+  intro i hmod
+  have hwi : w i ≠ v2 := by
+    intro h
+    exact w5cC2_w_inj_p34 hk hkk hs hmw i l hmod (by rw [hl]; exact h)
+  obtain ⟨h1, h2, h6, hnc⟩ := HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  have hdist : 0 < dist v2 (w i) := dist_pos.mpr (Ne.symm hwi)
+  exact EXISTS_SMALL_LE_CONST_V1_p34 v1 v2 (w i) x1 x2 x6 a 0 h1 h2 h6 hnc
+    hx1 hx2 hx6 ha hdist
 
 /-- HOL `DEFORMATION_V3_DEFOR_NOT_IN_V_COM` (IMJXPHR.hl:1946).  Sits on the
 per-index parent via the finite-minimum argument plus `MMs` periodicity. -/
@@ -3624,7 +3692,19 @@ theorem HYPER_MM_COLLINEAR_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V
     (hl : w l = v2) (hlk : w (l + k - 1) = v1)
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6) :
     0 < x1 ∧ 0 < x2 ∧ 0 < x6 ∧ ¬Collinear ℝ ({0, v1, v2} : Set V3) := by
-  sorry
+  have hper : w ((l + k - 1) + 1) = w l := by
+    have e : (l + k - 1) + 1 = l + k := by omega
+    rw [e]
+    exact MMs_periodic_p34 s k w hkk hmw l
+  have h := HYPER_MM_COLLINEAR_p34 s k (l + k - 1) w v2 v1 x2 x1 x6 hkk hs hmw hk
+    hlk (by rw [hper, hl]) hx2 hx1 (by rw [norm_sub_rev]; exact hx6)
+  obtain ⟨h2, h1, h6, hnc⟩ := h
+  refine ⟨h1, h2, h6, ?_⟩
+  intro hc
+  apply hnc
+  have e : ({0, v1, v2} : Set V3) = ({0, v2, v1} : Set V3) := by
+    ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  rwa [e] at hc
 
 /-- HOL `DEFORMATION_DIST_LE_V3_DEFOR_A_TWO_CASES` (IMJXPHR.hl:6354). -/
 theorem DEFORMATION_DIST_LE_V3_DEFOR_A_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
