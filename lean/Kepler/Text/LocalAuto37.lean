@@ -95,7 +95,13 @@ Encoding (house conventions, cf. LocalAuto31/34):
   through the AzimBridge `localFanEquiv_p35` registry bridge (five items
   closed at w5cB5, the plane/cross chain at w5cB6).  Still sorried twins:
   LocalAuto6 `CARD_V_TWO_HAFL_CIRCLE` (HKIRPEP chain) and
-  `LOCAL_FAN_CHARACTER_OF_RHO_NODE3` (nowhere materialised).
+  `LOCAL_FAN_CHARACTER_OF_RHO_NODE3` (nowhere materialised).  UPDATE
+  (w5cB10 wave, 2026-11-04): the hypermap-iso kit (`BIJ_AND_MAP_COMM`,
+  `NODE_EDGE_COMM_LEMMA`, `HYP_ISO_LEMMAA`) is now PROVED (standard
+  three, via the local-fan two-point neighbour sets); `XRECQNS_UPDATE`
+  remains blocked on the unported `Deformation.XRECQNS` fan-transfer
+  tower (LocalAuto17 `XRECQNS_p17` / `FAN7_SMALL_DEFORMATION_p17` and
+  LocalAuto2 `ALL_TO_THE_NONPARALLEL_PART_ALT` are still `sorry`).
 -/
 
 import Kepler.Text.LocalAuto1
@@ -1730,9 +1736,403 @@ theorem INJ_IMP_BIJ_IMAGE_p37 {f : V3 → V3} {S S' : Set V3}
     (h : Set.InjOn f S) : Set.BijOn f S (f '' S) :=
   ⟨Set.mapsTo_image f S, h, Set.surjOn_image f S⟩
 
+/-! ### B10 hypermap-iso kit (`w5cB10_*` private helpers)
+
+The HOL proofs (`lunar_deform.hl:1938/2308/2612`) run the same core script
+three times: `ELMS_OF_HYPERMAP_HYP` pins the HYP dart set to
+`darts_of_hyp`, the local-fan face `FF` makes every neighbour set a
+two-point set (`FF = face` + `dih2k`), and the transfer is then pure
+set algebra on those two-point sets.  In this file the HYP dart set is
+already `dartsOfHyp_p4`, and `LocalFan`'s 2-regular conjunct makes the
+`self_pairs` branch empty, so the core script reduces to the helpers
+below (no `ELMS_OF_HYPERMAP_HYP`, no `dih2k` card transfer needed). -/
+
+/-- `LocalFan` has no isolated vertices: the 2-regular conjunct supplies an
+edge at every vertex. -/
+private theorem w5cB10_hedge {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : LocalFan V E FF) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  obtain ⟨_hfan, _x0, _hx0, _hFF, _hD, h2reg⟩ := hlf
+  intro v hv
+  have h2 : (EE_p4 v E).ncard = 2 := h2reg v hv
+  by_contra hc
+  have hempty : EE_p4 v E = ∅ := by
+    apply Set.eq_empty_iff_forall_notMem.mpr
+    intro w hw
+    exact hc ⟨w, hw⟩
+  rw [hempty, Set.ncard_empty] at h2
+  omega
+
+/-- Under `LocalFan` the HYP dart set is the fan dart set (no self-pairs). -/
+private theorem w5cB10_hno {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : LocalFan V E FF) : dartsOfHyp_p4 E V = Fan.dart1OfFan V E :=
+  (dartsOfHyp_p4_eq_dartsOfHyp_p3 E V).trans (hno_of_no_isolated (w5cB10_hedge hlf))
+
+/-- The target-side counterpart of `w5cB10_hno`: the vertex bijection carries
+the source edge set, so the deformed fan has no isolated vertices either. -/
+private theorem w5cB10_hno_image {V V' : Set V3} {E E' : Set (Set V3)} {f : V3 → V3}
+    (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hbij : Set.BijOn f V V')
+    (hE : (fun s => f '' s) '' E = E') :
+    dartsOfHyp_p4 E' V' = Fan.dart1OfFan V' E' := by
+  have hedge' : ∀ v' ∈ V', ∃ w', {v', w'} ∈ E' := by
+    intro v' hv'
+    obtain ⟨v, hv, rfl⟩ := hbij.2.2 hv'
+    obtain ⟨w, hw⟩ := hedge v hv
+    refine ⟨f w, ?_⟩
+    show ({f v, f w} : Set V3) ∈ E'
+    rw [← hE]
+    exact ⟨{v, w}, hw, by simp only [Set.image_insert_eq, Set.image_singleton]⟩
+  exact (dartsOfHyp_p4_eq_dartsOfHyp_p3 E' V').trans (hno_of_no_isolated hedge')
+
+/-- Two-point `azimCycle` swap (`_p4` form): on `{a, b}` the epsilon pick
+at `a` is `b` (single-candidate specification, no azimuth comparison). -/
+private theorem w5cB10_azimCycle_pair (a b v0 c : V3) (hab : a ≠ b) :
+    azimCycle_p4 ({a, b} : Set V3) v0 c a = b := by
+  unfold azimCycle_p4
+  split
+  · rename_i hsub
+    have hb : b ∈ ({a, b} : Set V3) := by simp
+    exact absurd (Set.mem_singleton_iff.mp (hsub hb)) hab.symm
+  · rename_i _hsub
+    let P : V3 → Prop := fun z => z ≠ a ∧ z ∈ ({a, b} : Set V3) ∧
+      ∀ q ∈ ({a, b} : Set V3), q ≠ a →
+        azim v0 c a z < azim v0 c a q ∨
+          azim v0 c a z = azim v0 c a q ∧
+            ‖projection (z - v0) (c - v0)‖ ≤ ‖projection (q - v0) (c - v0)‖
+    have hbprop : P b := by
+      refine ⟨hab.symm, by simp, ?_⟩
+      intro q hq hqa
+      rcases Set.mem_insert_iff.mp hq with rfl | hq
+      · exact absurd rfl hqa
+      · rw [Set.mem_singleton_iff] at hq
+        subst hq
+        exact Or.inr ⟨rfl, le_refl _⟩
+    have huniq : ∀ z, P z → z = b := by
+      intro z hz
+      rcases Set.mem_insert_iff.mp hz.2.1 with h | h
+      · exact absurd h hz.1
+      · exact Set.mem_singleton_iff.mp h
+    change Classical.epsilon P = b
+    exact huniq _ (Classical.epsilon_spec ⟨b, hbprop⟩)
+
+/-- Two-point `azimCycle` swap (`_p3` form, for the `ff_of_hyp` bridge). -/
+private theorem w5cB10_azimCycle_pair_p3 (a b v0 c : V3) (hab : a ≠ b) :
+    azimCycle_p3 ({a, b} : Set V3) v0 c a = b := by
+  unfold azimCycle_p3
+  split
+  · rename_i hsub
+    have hb : b ∈ ({a, b} : Set V3) := by simp
+    exact absurd (Set.mem_singleton_iff.mp (hsub hb)) hab.symm
+  · rename_i _hsub
+    let P : V3 → Prop := fun z => z ≠ a ∧ z ∈ ({a, b} : Set V3) ∧
+      ∀ q ∈ ({a, b} : Set V3), q ≠ a →
+        azim v0 c a z < azim v0 c a q ∨
+          azim v0 c a z = azim v0 c a q ∧
+            ‖projection (z - v0) (c - v0)‖ ≤ ‖projection (q - v0) (c - v0)‖
+    have hbprop : P b := by
+      refine ⟨hab.symm, by simp, ?_⟩
+      intro q hq hqa
+      rcases Set.mem_insert_iff.mp hq with rfl | hq
+      · exact absurd rfl hqa
+      · rw [Set.mem_singleton_iff] at hq
+        subst hq
+        exact Or.inr ⟨rfl, le_refl _⟩
+    have huniq : ∀ z, P z → z = b := by
+      intro z hz
+      rcases Set.mem_insert_iff.mp hz.2.1 with h | h
+      · exact absurd h hz.1
+      · exact Set.mem_singleton_iff.mp h
+    change Classical.epsilon P = b
+    exact huniq _ (Classical.epsilon_spec ⟨b, hbprop⟩)
+
+/-- Two-point `ivsAzimCycle` preimage (`_p4` form): on `{a, b}` the
+preimage of `a` is `b`. -/
+private theorem w5cB10_ivs_pair (a b v0 c : V3) (hab : a ≠ b) :
+    ivsAzimCycle_p4 ({a, b} : Set V3) v0 c a = b := by
+  have hba : b ≠ a := hab.symm
+  have hcyc_b : azimCycle_p4 ({a, b} : Set V3) v0 c b = a := by
+    have h := w5cB10_azimCycle_pair b a v0 c hba
+    rwa [Set.pair_comm] at h
+  have hcyc_a : azimCycle_p4 ({a, b} : Set V3) v0 c a = b :=
+    w5cB10_azimCycle_pair a b v0 c hab
+  unfold ivsAzimCycle_p4
+  have hex : ∃ x, x ∈ ({a, b} : Set V3) ∧
+      azimCycle_p4 ({a, b} : Set V3) v0 c x = a :=
+    ⟨b, by simp, hcyc_b⟩
+  rw [dif_pos hex]
+  have hprop := hex.choose_spec
+  rcases Set.mem_insert_iff.mp hprop.1 with h | h
+  · rw [h] at hprop
+    rw [hcyc_a] at hprop
+    exact absurd hprop.2.symm hab
+  · exact Set.mem_singleton_iff.mp h
+
+/-- Two-point `ivsAzimCycle` preimage (`_p3` form). -/
+private theorem w5cB10_ivs_pair_p3 (a b v0 c : V3) (hab : a ≠ b) :
+    ivsAzimCycle_p3 ({a, b} : Set V3) v0 c a = b := by
+  have hba : b ≠ a := hab.symm
+  have hcyc_b : azimCycle_p3 ({a, b} : Set V3) v0 c b = a := by
+    have h := w5cB10_azimCycle_pair_p3 b a v0 c hba
+    rwa [Set.pair_comm] at h
+  unfold ivsAzimCycle_p3
+  have hne : ({a, b} : Set V3) ≠ ∅ := by
+    intro hc
+    have hb : b ∈ ({a, b} : Set V3) := by simp
+    rw [hc] at hb
+    exact absurd hb (by simp)
+  rw [if_neg hne]
+  let P : V3 → Prop := fun z => z ∈ ({a, b} : Set V3) ∧
+    azimCycle_p3 ({a, b} : Set V3) v0 c z = a
+  have hbprop : P b := ⟨by simp, hcyc_b⟩
+  have huniq : ∀ z, P z → z = b := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz.1 with h | h
+    · rw [h] at hz
+      have hcy : azimCycle_p3 ({a, b} : Set V3) v0 c a = a := hz.2
+      rw [w5cB10_azimCycle_pair_p3 a b v0 c hab] at hcy
+      exact h.trans hcy.symm
+    · exact Set.mem_singleton_iff.mp h
+  change Classical.epsilon P = b
+  exact huniq _ (Classical.epsilon_spec ⟨b, hbprop⟩)
+
+/-- Neighbour-set transfer: a vertex bijection carrying the fan edge set
+carries `EE` to `EE` (`{f u, y} ∈ E'` unfolds to `{u, x} ∈ E` using the
+two-point graph condition). -/
+private theorem w5cB10_EE_image {V V' : Set V3} {E E' : Set (Set V3)} {f : V3 → V3}
+    (hbij : Set.BijOn f V V') (hE : (fun s => f '' s) '' E = E')
+    (hG : Kepler.Text.Fan.Graph E) (hsub : ⋃₀ E ⊆ V) {u : V3} (hu : u ∈ V) :
+    EE_p4 (f u) E' = f '' EE_p4 u E := by
+  ext y
+  constructor
+  · intro hy
+    have hy' : ({f u, y} : Set V3) ∈ E' := hy
+    rw [← hE] at hy'
+    obtain ⟨s, hsE, hseq⟩ := hy'
+    obtain ⟨hfin, hcard⟩ := hG s hsE
+    obtain ⟨a, b, hab, hfab⟩ := Finset.card_eq_two.mp hcard
+    have hset : s = {a, b} := by
+      rw [← hfin.coe_toFinset, hfab]
+      simp
+    have haV : a ∈ V := hsub (Set.mem_sUnion_of_mem (by rw [hset]; simp) hsE)
+    have hbV : b ∈ V := hsub (Set.mem_sUnion_of_mem (by rw [hset]; simp) hsE)
+    have hne : f a ≠ f b := fun h => hab (hbij.2.1 haV hbV h)
+    have hseq' : ({f a, f b} : Set V3) = {f u, y} := by
+      rw [← hseq, hset]
+      show ({f a, f b} : Set V3) = f '' ({a, b} : Set V3)
+      rw [Set.image_insert_eq, Set.image_singleton]
+    have ha_in : f a ∈ ({f u, y} : Set V3) := by rw [← hseq']; simp
+    rcases Set.mem_insert_iff.mp ha_in with hfa | hfa
+    · -- `f a = f u`: then `y = f b` and `a = u`
+      have hau : a = u := hbij.2.1 haV hu hfa
+      have hseq2 : ({f u, f b} : Set V3) = {f u, y} := by
+        have h := hseq'
+        rw [hfa] at h
+        exact h
+      have hfb_in : f b ∈ ({f u, y} : Set V3) := by rw [← hseq2]; simp
+      have hne_u : f u ≠ f b := by rw [← hfa]; exact hne
+      have hyb : f b = y := by
+        rcases Set.mem_insert_iff.mp hfb_in with h | h
+        · exact absurd h hne_u.symm
+        · exact Set.mem_singleton_iff.mp h
+      refine ⟨b, ?_, hyb⟩
+      have hEq : ({u, b} : Set V3) = s := by rw [hset, hau]
+      show ({u, b} : Set V3) ∈ E
+      rw [hEq]
+      exact hsE
+    · -- `f a = y`: then `f b = f u` and `b = u`
+      have hfb_in : f b ∈ ({f u, y} : Set V3) := by rw [← hseq']; simp
+      have hfa_ne : f b ≠ y := by rw [← hfa]; exact hne.symm
+      have hfb : f b = f u := by
+        rcases Set.mem_insert_iff.mp hfb_in with h | h
+        · exact h
+        · exact absurd (Set.mem_singleton_iff.mp h) hfa_ne
+      have hbu : b = u := hbij.2.1 hbV hu hfb
+      refine ⟨a, ?_, hfa⟩
+      have hEq : ({u, a} : Set V3) = s := by
+        rw [hset, hbu]
+        exact Set.pair_comm u a
+      show ({u, a} : Set V3) ∈ E
+      rw [hEq]
+      exact hsE
+  · rintro ⟨x, hx, rfl⟩
+    show ({f u, f x} : Set V3) ∈ E'
+    rw [← hE]
+    exact ⟨{u, x}, hx, by simp only [Set.image_insert_eq, Set.image_singleton]⟩
+
+/-- The neighbour set of an interior vertex is the two-point set
+`{other, v}` under `LocalFan`'s 2-regularity. -/
+private theorem w5cB10_EE_pair {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : LocalFan V E FF) {v w : V3} (hxE : ({v, w} : Set V3) ∈ E) (hwV : w ∈ V) :
+    ∃ z, EE_p4 w E = {v, z} ∧ z ≠ v := by
+  obtain ⟨_hfan, _x0, _hx0, _hFF, _hD, h2reg⟩ := hlf
+  have h2w : (EE_p4 w E).ncard = 2 := h2reg w hwV
+  have hvW : v ∈ EE_p4 w E := by
+    show ({w, v} : Set V3) ∈ E
+    rw [Set.pair_comm]
+    exact hxE
+  obtain ⟨z, hWz⟩ : ∃ z, EE_p4 w E = {v, z} := by
+    obtain ⟨a, b, _hab, hW⟩ := Set.ncard_eq_two.mp h2w
+    rw [hW] at hvW
+    rcases Set.mem_insert_iff.mp hvW with h | h
+    · refine ⟨b, ?_⟩
+      rw [hW, ← h]
+    · rw [Set.mem_singleton_iff] at h
+      refine ⟨a, ?_⟩
+      rw [hW, ← h]
+      exact Set.pair_comm a v
+  refine ⟨z, hWz, ?_⟩
+  intro hzv
+  rw [hzv] at hWz
+  rw [hWz] at h2w
+  simp at h2w
+
+/-- Source `ff_of_hyp` read at a dart. -/
+private theorem w5cB10_ff_unfold {V : Set V3} {E : Set (Set V3)} {v w : V3}
+    (hd : (v, w) ∈ dartsOfHyp_p4 E V) :
+    ffOfHyp_p4 0 V E (v, w) = (w, ivsAzimCycle_p4 (EE_p4 w E) 0 w v) := by
+  rw [ffOfHyp_p4, if_pos hd]
+
+/-- On a two-point neighbour set the `_p3` and `_p4` `ff_of_hyp` readings
+coincide (`ivs_azim_cycle` bodies differ, but both pick the unique other
+point). -/
+private theorem w5cB10_ff_p3_eq_p4_pair (x : V3) (V : Set V3) {E : Set (Set V3)}
+    {v w z : V3} (hW : EE_p4 w E = {v, z}) (hzv : z ≠ v) :
+    ffOfHyp_p3 x V E (v, w) = ffOfHyp_p4 x V E (v, w) := by
+  have hvW : v ∈ EE_p4 w E := by rw [hW]; simp
+  have hxE : ({v, w} : Set V3) ∈ E := by
+    have h : ({w, v} : Set V3) ∈ E := hvW
+    rwa [Set.pair_comm] at h
+  have hd4 : (v, w) ∈ dartsOfHyp_p4 E V := by
+    show (v, w) ∈ ordPairs_p4 E ∪ selfPairs_p4 E V
+    exact Set.mem_union_left _ hxE
+  have hd3 : (v, w) ∈ dartsOfHyp_p3 E V := by
+    rw [← dartsOfHyp_p4_eq_dartsOfHyp_p3]
+    exact hd4
+  unfold ffOfHyp_p3 ffOfHyp_p4
+  rw [if_pos hd3, if_pos hd4]
+  have hW3 : EE_p3 w E = {v, z} := by
+    rw [show EE_p3 w E = EE_p4 w E from rfl]
+    exact hW
+  show (w, ivsAzimCycle_p3 (EE_p3 w E) x w v) =
+    (w, ivsAzimCycle_p4 (EE_p4 w E) x w v)
+  rw [hW3, hW, w5cB10_ivs_pair_p3 v z x w hzv.symm,
+    w5cB10_ivs_pair v z x w hzv.symm]
+
+/-- Core transfer: dart bijection + `ff_of_hyp` commutation (HOL
+`BIJ_AND_MAP_COMM` core script, restated for the explicit vertex map). -/
+private theorem w5cB10_bij_and_map_comm {V V' : Set V3} {E E' : Set (Set V3)}
+    {FF : Set (V3 × V3)} {f : V3 → V3}
+    (hlf : LocalFan V E FF) (hbij : Set.BijOn f V V')
+    (hE : (fun s => f '' s) '' E = E') (hfan' : Fan.FAN 0 V' E') :
+    Set.BijOn (fun p : V3 × V3 => (f p.1, f p.2)) (dartsOfHyp_p4 E V) (dartsOfHyp_p4 E' V') ∧
+      (∀ x ∈ dartsOfHyp_p4 E V,
+        ffOfHyp_p4 0 V' E' (f x.1, f x.2) =
+          (f (ffOfHyp_p4 0 V E x).1, f (ffOfHyp_p4 0 V E x).2)) := by
+  have hkeep := hlf
+  obtain ⟨hfan, _x0, _hx0, _hFF, _hD, h2reg⟩ := hlf
+  have hsub : ⋃₀ E ⊆ V := hfan.1
+  have hG : Kepler.Text.Fan.Graph E := hfan.2.1
+  have hedge := w5cB10_hedge hkeep
+  have hno := w5cB10_hno hkeep
+  have hno' := w5cB10_hno_image hedge hbij hE
+  constructor
+  · refine ⟨?_, ?_, ?_⟩
+    · intro p hp
+      rw [hno] at hp
+      rw [hno']
+      show ({f p.1, f p.2} : Set V3) ∈ E'
+      rw [← hE]
+      exact ⟨{p.1, p.2}, hp, by simp only [Set.image_insert_eq, Set.image_singleton]⟩
+    · intro p hp q hq heq
+      rw [hno] at hp hq
+      have hp1 : p.1 ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hp)
+      have hp2 : p.2 ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hp)
+      have hq1 : q.1 ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hq)
+      have hq2 : q.2 ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hq)
+      have h1 : f p.1 = f q.1 := congrArg Prod.fst heq
+      have h2 : f p.2 = f q.2 := congrArg Prod.snd heq
+      exact Prod.ext (hbij.2.1 hp1 hq1 h1) (hbij.2.1 hp2 hq2 h2)
+    · intro q hq
+      rw [hno'] at hq
+      have hq' : ({q.1, q.2} : Set V3) ∈ E' := hq
+      rw [← hE] at hq'
+      obtain ⟨s, hsE, hseq⟩ := hq'
+      obtain ⟨hfin, hcard⟩ := hG s hsE
+      obtain ⟨a, b, hab, hfab⟩ := Finset.card_eq_two.mp hcard
+      have hset : s = {a, b} := by
+        rw [← hfin.coe_toFinset, hfab]
+        simp
+      have haV : a ∈ V := hsub (Set.mem_sUnion_of_mem (by rw [hset]; simp) hsE)
+      have hbV : b ∈ V := hsub (Set.mem_sUnion_of_mem (by rw [hset]; simp) hsE)
+      have hne : f a ≠ f b := fun h => hab (hbij.2.1 haV hbV h)
+      have hseq' : ({f a, f b} : Set V3) = {q.1, q.2} := by
+        rw [← hseq, hset]
+        show ({f a, f b} : Set V3) = f '' ({a, b} : Set V3)
+        rw [Set.image_insert_eq, Set.image_singleton]
+      by_cases hfa : f a = q.1
+      · refine ⟨(a, b), ?_, ?_⟩
+        · rw [hno]
+          show ({a, b} : Set V3) ∈ E
+          rw [← hset]
+          exact hsE
+        · have hfb : f b = q.2 := by
+            have hbin : f b ∈ ({q.1, q.2} : Set V3) := by rw [← hseq']; simp
+            rcases Set.mem_insert_iff.mp hbin with h | h
+            · exact absurd (h.trans hfa.symm) hne.symm
+            · exact Set.mem_singleton_iff.mp h
+          show (f a, f b) = q
+          rw [hfa, hfb]
+      · have hfa2 : f a = q.2 := by
+          have hain : f a ∈ ({q.1, q.2} : Set V3) := by rw [← hseq']; simp
+          rcases Set.mem_insert_iff.mp hain with h | h
+          · exact absurd h hfa
+          · exact Set.mem_singleton_iff.mp h
+        refine ⟨(b, a), ?_, ?_⟩
+        · rw [hno]
+          show ({b, a} : Set V3) ∈ E
+          rw [Set.pair_comm]
+          show ({a, b} : Set V3) ∈ E
+          rw [← hset]
+          exact hsE
+        · have hfb : f b = q.1 := by
+            have hbin : f b ∈ ({q.1, q.2} : Set V3) := by rw [← hseq']; simp
+            rcases Set.mem_insert_iff.mp hbin with h | h
+            · exact h
+            · exact absurd (hfa2.trans (Set.mem_singleton_iff.mp h).symm) hne
+          show (f b, f a) = q
+          rw [hfb, hfa2]
+  · intro x hx
+    rw [hno] at hx
+    cases x with
+    | mk v w =>
+      have hxE : ({v, w} : Set V3) ∈ E := hx
+      have hvV : v ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hxE)
+      have hwV : w ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hxE)
+      have hxd : (v, w) ∈ dartsOfHyp_p4 E V :=
+        Set.mem_union_left _ (show ({v, w} : Set V3) ∈ E from hxE)
+      have hxd' : (f v, f w) ∈ dartsOfHyp_p4 E' V' := by
+        show (f v, f w) ∈ ordPairs_p4 E' ∪ selfPairs_p4 E' V'
+        exact Set.mem_union_left _ (show ({f v, f w} : Set V3) ∈ E' from by
+          rw [← hE]
+          exact ⟨{v, w}, hxE, by simp only [Set.image_insert_eq, Set.image_singleton]⟩)
+      obtain ⟨z, hWz, hzv⟩ := w5cB10_EE_pair hkeep hxE hwV
+      have hzW : z ∈ EE_p4 w E := by rw [hWz]; simp
+      have hzV : z ∈ V := hsub (Set.mem_sUnion_of_mem (by simp)
+        (show ({w, z} : Set V3) ∈ E from hzW))
+      have hfvz : f v ≠ f z := fun h => hzv (hbij.2.1 hvV hzV h).symm
+      have hW' : EE_p4 (f w) E' = f '' EE_p4 w E :=
+        w5cB10_EE_image hbij hE hG hsub hwV
+      rw [w5cB10_ff_unfold hxd', w5cB10_ff_unfold (V := V) (E := E) hxd]
+      show (f w, ivsAzimCycle_p4 (EE_p4 (f w) E') 0 (f w) (f v)) =
+        (f w, f (ivsAzimCycle_p4 (EE_p4 w E) 0 w v))
+      congr 1
+      rw [hW', hWz, Set.image_insert_eq, Set.image_singleton,
+        w5cB10_ivs_pair v z 0 w hzv.symm,
+        w5cB10_ivs_pair (f v) (f z) 0 (f w) hfvz]
+
 /-- HOL `BIJ_AND_MAP_COMM` (lunar_deform.hl:1938): the dart/`ff_of` transfer
-kit.  NEEDS: `Wrgcvdr_cizmrrh.ELMS_OF_HYPERMAP_HYP` + the local-fan
-`hyp_iso` unfolding kit. -/
+kit.  DISCHARGED (B10): the HOL `ELMS_OF_HYPERMAP_HYP` step is replaced by
+`LocalFan`'s 2-regularity (no self-pair darts) + `w5cB10_EE_image` (the
+neighbour sets transfer as two-point images). -/
 theorem BIJ_AND_MAP_COMM_p37 {V V' : Set V3} {E E' : Set (Set V3)}
     {FF : Set (V3 × V3)} {f : V3 → V3} {ff : V3 × V3 → V3 × V3}
     (_hlf : LocalFan V E FF) (_hbij : Set.BijOn f V V')
@@ -1741,10 +2141,19 @@ theorem BIJ_AND_MAP_COMM_p37 {V V' : Set V3} {E E' : Set (Set V3)}
     Set.BijOn ff (dartsOfHyp_p4 E V) (dartsOfHyp_p4 E' V') ∧
       (∀ x ∈ dartsOfHyp_p4 E V,
         ffOfHyp_p4 0 V' E' (ff x) = ff (ffOfHyp_p4 0 V E x)) := by
-  sorry
+  have hcomm := w5cB10_bij_and_map_comm _hlf _hbij _hE _hfan'
+  have hF : ff = fun p : V3 × V3 => (f p.1, f p.2) := _hff.symm
+  constructor
+  · rw [hF]
+    exact hcomm.1
+  · intro x hx
+    rw [hF]
+    exact hcomm.2 x hx
 
 /-- HOL `NODE_EDGE_COMM_LEMMA` (lunar_deform.hl:2308): `nn_of`/`ee_of`
-commutation under the dart map.  NEEDS: same kit as `BIJ_AND_MAP_COMM_p37`. -/
+commutation under the dart map.  DISCHARGED (B10): both maps are read off
+the two-point neighbour sets (`w5cB10_azimCycle_pair`, `ee_of_hyp` is the
+swap), consuming the closed `BIJ_AND_MAP_COMM_p37` for dart membership. -/
 theorem NODE_EDGE_COMM_LEMMA_p37 {V V' : Set V3} {E E' : Set (Set V3)}
     {FF : Set (V3 × V3)} {f : V3 → V3} {ff : V3 × V3 → V3 × V3}
     (_hlf : LocalFan V E FF) (_hbij : Set.BijOn f V V')
@@ -1753,7 +2162,46 @@ theorem NODE_EDGE_COMM_LEMMA_p37 {V V' : Set V3} {E E' : Set (Set V3)}
     ∀ x ∈ dartsOfHyp_p4 E V,
       nnOfHyp_p4 0 V' E' (ff x) = ff (nnOfHyp_p4 0 V E x) ∧
       eeOfHyp_p4 0 V' E' (ff x) = ff (eeOfHyp_p4 0 V E x) := by
-  sorry
+  have hkeep := _hlf
+  obtain ⟨hfan, _x0, _hx0, _hFF, _hD, h2reg⟩ := _hlf
+  have hsub : ⋃₀ E ⊆ V := hfan.1
+  have hG : Kepler.Text.Fan.Graph E := hfan.2.1
+  have hedge := w5cB10_hedge hkeep
+  have hno := w5cB10_hno hkeep
+  have hno' := w5cB10_hno_image hedge _hbij _hE
+  have hbij := (BIJ_AND_MAP_COMM_p37 hkeep _hbij _hE _hfan' _hff).1
+  have hF : ff = fun p : V3 × V3 => (f p.1, f p.2) := _hff.symm
+  intro x hx
+  rw [hno] at hx
+  cases x with
+  | mk v w =>
+    rw [hF]
+    have hxE : ({v, w} : Set V3) ∈ E := hx
+    have hvV : v ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hxE)
+    have hwV : w ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hxE)
+    have hxd : (v, w) ∈ dartsOfHyp_p4 E V :=
+      Set.mem_union_left _ (show ({v, w} : Set V3) ∈ E from hxE)
+    have hxd' : (f v, f w) ∈ dartsOfHyp_p4 E' V' := by
+      show (fun p : V3 × V3 => (f p.1, f p.2)) (v, w) ∈ dartsOfHyp_p4 E' V'
+      rw [← hF]
+      exact hbij.1 hxd
+    constructor
+    · have hxE' : ({w, v} : Set V3) ∈ E := by rw [Set.pair_comm]; exact hxE
+      obtain ⟨z, hWz, hzw⟩ := w5cB10_EE_pair hkeep (v := w) (w := v) hxE' hvV
+      have hzW : z ∈ EE_p4 v E := by rw [hWz]; simp
+      have hzV : z ∈ V := hsub (Set.mem_sUnion_of_mem (by simp)
+        (show ({v, z} : Set V3) ∈ E from hzW))
+      have hfzw : f w ≠ f z := fun h => hzw (_hbij.2.1 hwV hzV h).symm
+      have hW' : EE_p4 (f v) E' = f '' EE_p4 v E :=
+        w5cB10_EE_image _hbij _hE hG hsub hvV
+      rw [nnOfHyp_p4, if_pos hxd', nnOfHyp_p4, if_pos hxd]
+      show (f v, azimCycle_p4 (EE_p4 (f v) E') 0 (f v) (f w)) =
+        (f v, f (azimCycle_p4 (EE_p4 v E) 0 v w))
+      congr 1
+      rw [hW', hWz, Set.image_insert_eq, Set.image_singleton,
+        w5cB10_azimCycle_pair w z 0 v hzw.symm,
+        w5cB10_azimCycle_pair (f w) (f z) 0 (f v) hfzw]
+    · rw [eeOfHyp_p4, if_pos hxd', eeOfHyp_p4, if_pos hxd]
 
 /-- HOL `hyp_iso f (H,HH)` (Hypermap_iso): dart bijection commuting with the
 face/node/edge maps.  Shape reconstructed from this file's consumer lemmas.
@@ -1765,9 +2213,35 @@ def hypIso_p37 {α β : Type*} [DecidableEq α] [DecidableEq β] (f : α → β)
     (∀ p ∈ (H.darts : Set α), (HH.nodeMap : β → β) (f p) = f ((H.nodeMap : α → α) p)) ∧
     (∀ p ∈ (H.darts : Set α), (HH.edgeMap : β → β) (f p) = f ((H.edgeMap : α → α) p))
 
+/-- Bridge: `hypermapOfFan`'s node map = `nnOfHyp_p4` (instance-explicit
+form; `_p3`/`_p4` node readings are definitionally equal). -/
+private theorem w5cB10_nodeMap_eq (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : Fan.FAN x V E) (d : V3 × V3) :
+    (Fan.hypermapOfFan x V E hfan).nodeMap d = nnOfHyp_p4 x V E d :=
+  (congrFun (nnOfHyp_p3_eq_nodeMapLA1_fun (x := x) hfan) d).symm
+
+/-- Bridge: `hypermapOfFan`'s edge map = `eeOfHyp_p4`. -/
+private theorem w5cB10_edgeMap_eq (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : Fan.FAN x V E) (d : V3 × V3) :
+    (Fan.hypermapOfFan x V E hfan).edgeMap d = eeOfHyp_p4 x V E d :=
+  (congrFun (eeOfHyp_p3_eq_edgeMapLA1_fun (x := x) hfan) d).symm
+
+/-- Bridge on a two-point dart: `hypermapOfFan`'s face map = `ffOfHyp_p4`. -/
+private theorem w5cB10_faceMap_eq_pair (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : Fan.FAN x V E) {v w z : V3}
+    (hW : EE_p4 w E = {v, z}) (hzv : z ≠ v) :
+    (Fan.hypermapOfFan x V E hfan).faceMap (v, w) = ffOfHyp_p4 x V E (v, w) := by
+  have hface : (Fan.hypermapOfFan x V E hfan).faceMap (v, w) =
+      ffOfHyp_p3 x V E (v, w) :=
+    (congrFun (ffOfHyp_p3_eq_faceMapLA1_fun (x := x) hfan) (v, w)).symm
+  exact hface.trans (w5cB10_ff_p3_eq_p4_pair x V hW hzv)
+
 /-- HOL `HYP_ISO_LEMMAA` (lunar_deform.hl:2612): the `HYP`-hypermaps of a
-vertex-bijective fan pair are `hyp_iso`.  NEEDS:
-`ELMS_OF_HYPERMAP_HYP` kit + `dih2k` card transfer. -/
+vertex-bijective fan pair are `hyp_iso`.  DISCHARGED (B10): the dart
+bijection is `BIJ_AND_MAP_COMM_p37`'s first conjunct (the HYP dart set is
+`dart1OfFan` on both sides), and the three map commutations are that
+theorem's second conjunct (face) plus `NODE_EDGE_COMM_LEMMA_p37`
+(node/edge) read through the `hypermapOfFan` bridges. -/
 theorem HYP_ISO_LEMMAA_p37 {V V' : Set V3} {E E' : Set (Set V3)}
     {FF : Set (V3 × V3)} {f : V3 → V3}
     (_hlf : LocalFan V E FF) (_hbij : Set.BijOn f V V')
@@ -1775,7 +2249,72 @@ theorem HYP_ISO_LEMMAA_p37 {V V' : Set V3} {E E' : Set (Set V3)}
     (_hfan' : Fan.FAN 0 V' E') :
     hypIso_p37 (fun (p : V3 × V3) => (f p.1, f p.2)) (Fan.hypermapOfFan 0 V E _hfan)
       (Fan.hypermapOfFan 0 V' E' _hfan') := by
-  sorry
+  have hedge := w5cB10_hedge _hlf
+  have hno := w5cB10_hno _hlf
+  have hno' := w5cB10_hno_image hedge _hbij _hE
+  have hcomm := w5cB10_bij_and_map_comm _hlf _hbij _hE _hfan'
+  have hNE := NODE_EDGE_COMM_LEMMA_p37 _hlf _hbij _hE _hfan'
+    (rfl : (fun p : V3 × V3 => (f p.1, f p.2)) = fun p => (f p.1, f p.2))
+  have hkeep := _hlf
+  obtain ⟨hfan0, _x0, _hx0, _hFF, _hD, h2reg⟩ := _hlf
+  have hsub : ⋃₀ E ⊆ V := hfan0.1
+  have hG : Kepler.Text.Fan.Graph E := hfan0.2.1
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · have hA : Set.BijOn (fun p : V3 × V3 => (f p.1, f p.2))
+        (Fan.dart1OfFan V E) (Fan.dart1OfFan V' E') := by
+      have h := hcomm.1
+      rwa [hno, hno'] at h
+    rwa [dartsLA1 0 V E _hfan, dartsLA1 0 V' E' _hfan']
+  · intro p hp
+    have hp1 : p ∈ Fan.dart1OfFan V E := by rwa [dartsLA1 0 V E _hfan] at hp
+    have hpD : p ∈ dartsOfHyp_p4 E V := by rw [hno]; exact hp1
+    cases p with
+    | mk v w =>
+      have hxE : ({v, w} : Set V3) ∈ E := hp1
+      have hwV : w ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hxE)
+      have hvV : v ∈ V := hsub (Set.mem_sUnion_of_mem (by simp) hxE)
+      obtain ⟨z, hWz, hzv⟩ := w5cB10_EE_pair hkeep hxE hwV
+      have hzW : z ∈ EE_p4 w E := by rw [hWz]; simp
+      have hzV : z ∈ V := hsub (Set.mem_sUnion_of_mem (by simp)
+        (show ({w, z} : Set V3) ∈ E from hzW))
+      have hfvz : f v ≠ f z := fun h => hzv (_hbij.2.1 hvV hzV h).symm
+      have hW' : EE_p4 (f w) E' = {f v, f z} := by
+        rw [w5cB10_EE_image _hbij _hE hG hsub hwV, hWz,
+          Set.image_insert_eq, Set.image_singleton]
+      calc (Fan.hypermapOfFan 0 V' E' _hfan').faceMap (f v, f w)
+          = ffOfHyp_p4 0 V' E' (f v, f w) :=
+            w5cB10_faceMap_eq_pair 0 V' E' _hfan' hW' hfvz.symm
+        _ = (f (ffOfHyp_p4 0 V E (v, w)).1, f (ffOfHyp_p4 0 V E (v, w)).2) :=
+            hcomm.2 (v, w) hpD
+        _ = (fun p : V3 × V3 => (f p.1, f p.2))
+              ((Fan.hypermapOfFan 0 V E _hfan).faceMap (v, w)) := by
+            simp only [w5cB10_faceMap_eq_pair 0 V E _hfan hWz hzv]
+  · intro p hp
+    have hp1 : p ∈ Fan.dart1OfFan V E := by rwa [dartsLA1 0 V E _hfan] at hp
+    have hpD : p ∈ dartsOfHyp_p4 E V := by rw [hno]; exact hp1
+    cases p with
+    | mk v w =>
+      calc (Fan.hypermapOfFan 0 V' E' _hfan').nodeMap (f v, f w)
+          = nnOfHyp_p4 0 V' E' (f v, f w) :=
+            w5cB10_nodeMap_eq 0 V' E' _hfan' _
+        _ = (f (nnOfHyp_p4 0 V E (v, w)).1, f (nnOfHyp_p4 0 V E (v, w)).2) :=
+            (hNE (v, w) hpD).1
+        _ = (fun p : V3 × V3 => (f p.1, f p.2))
+              ((Fan.hypermapOfFan 0 V E _hfan).nodeMap (v, w)) := by
+            simp only [w5cB10_nodeMap_eq 0 V E _hfan (v, w)]
+  · intro p hp
+    have hp1 : p ∈ Fan.dart1OfFan V E := by rwa [dartsLA1 0 V E _hfan] at hp
+    have hpD : p ∈ dartsOfHyp_p4 E V := by rw [hno]; exact hp1
+    cases p with
+    | mk v w =>
+      calc (Fan.hypermapOfFan 0 V' E' _hfan').edgeMap (f v, f w)
+          = eeOfHyp_p4 0 V' E' (f v, f w) :=
+            w5cB10_edgeMap_eq 0 V' E' _hfan' _
+        _ = (f (eeOfHyp_p4 0 V E (v, w)).1, f (eeOfHyp_p4 0 V E (v, w)).2) :=
+            (hNE (v, w) hpD).2
+        _ = (fun p : V3 × V3 => (f p.1, f p.2))
+              ((Fan.hypermapOfFan 0 V E _hfan).edgeMap (v, w)) := by
+            simp only [w5cB10_edgeMap_eq 0 V E _hfan (v, w)]
 
 /-- Iterate of the face map stays on the dart set (helper for
 `POWER_COMM_p37`/`IMAGE_FACE_F_p37`). -/
