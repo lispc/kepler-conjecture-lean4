@@ -108,6 +108,7 @@ import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto4
 import Kepler.Text.AzimBridge
 import Kepler.Text.LocalAuto5
+import Kepler.Text.LocalAuto17
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -2639,20 +2640,169 @@ theorem HYP_ISO_DIH2K_PRESERVED_p37 {α β : Type*} [DecidableEq α] [DecidableE
 /-! ## Continuity preservation, the cross/plane kit, and MHAEYJN
 (source 3073-5039) -/
 
-/-- HOL `XRECQNS_UPDATE` (lunar_deform.hl:3073).  GIANT (sorry): the source
-derives this from `Deformation.XRECQNS` (the fan-transfer theorem of
-deformation.hl) + `Wrgcvdr_cizmrrh.LOCAL_FAN_IMP_FAN`; the registry
-`LocalFan` is now the faithful conjunction (FAN witness + hypermap-face +
-dih2k), so the deformed-image fan obligations (FAN of `(f · t) '' V` via the
-continuity/injectivity window of `Deformation`, then the hypermap-face/dih2k
-transfer along the vertex map) are real and blocked on the XRECQNS kit. -/
+/-- B12: the `_p37` copy of HOL `dih2k` and LA1's registry `Dih2k` are the
+same proposition: `H.face` is `orbitMap H.faceMap` by definition, the
+face-union equation differs only by symmetry, and `hasOrders_p37` is
+`hasOrders_p4` (same body) bridged to `HasOrders` by
+`hasOrders_iff_hasOrders_p4`. -/
+private theorem w_b12_dih2k_p37_iff_Dih2k {α : Type*} [DecidableEq α]
+    (H : Hypermap α) (k : ℕ) : dih2k_p37 H k ↔ Dih2k H k := by
+  unfold dih2k_p37 Dih2k Hypermap.face
+  constructor
+  · rintro ⟨h1, h2, h3, h4, h5⟩
+    exact ⟨h1, fun d hd => (h2 d hd).symm,
+      (hasOrders_iff_hasOrders_p4 H.faceMap k).mpr h3,
+      (hasOrders_iff_hasOrders_p4 H.edgeMap 2).mpr h4,
+      (hasOrders_iff_hasOrders_p4 H.nodeMap 2).mpr h5⟩
+  · rintro ⟨h1, h2, h3, h4, h5⟩
+    exact ⟨h1, fun d hd => (h2 d hd).symm,
+      (hasOrders_iff_hasOrders_p4 H.faceMap k).mp h3,
+      (hasOrders_iff_hasOrders_p4 H.edgeMap 2).mp h4,
+      (hasOrders_iff_hasOrders_p4 H.nodeMap 2).mp h5⟩
+
+/-- B12: a `Deformation` is injective on the finite vertex set for small
+times.  Each pair `(v,w)` of distinct vertices is separated at `t = 0`
+(`f v 0 = v`, `f w 0 = w`, continuity); the finite set `V × V` then yields
+a positive minimum radius.  (Local copy: `CONT_ATREAL_INJ_PRESERVED_p37`
+is declared later in this file, after `XRECQNS_UPDATE_p37`.) -/
+private theorem w_b12_inj_window {V : Set V3} {f : V3 → ℝ → V3} {a b : ℝ}
+    (hd : Deformation f V a b) (hV : V.Finite) (hne : V.Nonempty) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → Set.InjOn (fun v => f v t) V := by
+  classical
+  have hpair : ∀ p : V3 × V3, ∃ d : ℝ, 0 < d ∧
+      ((p.1 ∈ V ∧ p.2 ∈ V ∧ p.1 ≠ p.2) → ∀ t : ℝ, |t| < d → f p.1 t ≠ f p.2 t) := by
+    intro p
+    by_cases hp : p.1 ∈ V ∧ p.2 ∈ V ∧ p.1 ≠ p.2
+    · obtain ⟨h1V, h2V, hne'⟩ := hp
+      have hcont : ContinuousAt (fun t => dist (f p.1 t) (f p.2 t)) 0 :=
+        (hd.2.1 p.1 h1V 0 hd.1).dist (hd.2.1 p.2 h2V 0 hd.1)
+      have hne0 : f p.1 0 ≠ f p.2 0 := by
+        rw [hd.2.2 p.1 h1V, hd.2.2 p.2 h2V]
+        exact hne'
+      have hpos : (0 : ℝ) < dist (f p.1 0) (f p.2 0) := dist_pos.mpr hne0
+      obtain ⟨d, hd0, hd1⟩ := Metric.continuousAt_iff.mp hcont
+        (dist (f p.1 0) (f p.2 0) / 2) (by linarith)
+      refine ⟨d, hd0, fun _ t ht heq => ?_⟩
+      have h3 : dist (dist (f p.1 t) (f p.2 t)) (dist (f p.1 0) (f p.2 0)) <
+          dist (f p.1 0) (f p.2 0) / 2 :=
+        hd1 (by simpa [Real.dist_eq] using ht)
+      have h4 : dist (0 : ℝ) (dist (f p.1 0) (f p.2 0)) = dist (f p.1 0) (f p.2 0) := by
+        rw [Real.dist_eq, zero_sub, abs_neg, abs_of_pos hpos]
+      rw [heq, dist_self, h4] at h3
+      linarith
+    · exact ⟨1, one_pos, fun h _ _ => absurd h hp⟩
+  let d : V3 × V3 → ℝ := fun p => Classical.choose (hpair p)
+  have hdpos : ∀ p, 0 < d p := fun p => (Classical.choose_spec (hpair p)).1
+  have hdprop : ∀ p, (p.1 ∈ V ∧ p.2 ∈ V ∧ p.1 ≠ p.2) →
+      ∀ t : ℝ, |t| < d p → f p.1 t ≠ f p.2 t :=
+    fun p => (Classical.choose_spec (hpair p)).2
+  let S : Finset (V3 × V3) := hV.toFinset.product hV.toFinset
+  have hSmem : ∀ p : V3 × V3, p ∈ S ↔ p.1 ∈ V ∧ p.2 ∈ V := by
+    intro p
+    have h1 : p ∈ S ↔ p.1 ∈ hV.toFinset ∧ p.2 ∈ hV.toFinset := Finset.mem_product
+    rw [h1, hV.mem_toFinset, hV.mem_toFinset]
+  have hSne : S.Nonempty := by
+    obtain ⟨v0, hv0⟩ := hne
+    exact ⟨(v0, v0), by rw [hSmem]; exact ⟨hv0, hv0⟩⟩
+  obtain ⟨p0, -, hmin⟩ := Finset.exists_min_image S d hSne
+  refine ⟨d p0, hdpos p0, fun t ht => ?_⟩
+  intro v hv w hw heq
+  by_contra hvw
+  have hpS : (v, w) ∈ S := by rw [hSmem]; exact ⟨hv, hw⟩
+  have ht' : |t| < d (v, w) := lt_of_lt_of_le ht (hmin (v, w) hpS)
+  exact hdprop (v, w) ⟨hv, hw, hvw⟩ t ht' heq
+
+/-- HOL `XRECQNS_UPDATE` (lunar_deform.hl:3073).  DISCHARGED (B12): the fan
+component is LA17's `XRECQNS_p17` (fan transfer: `FAN7_SMALL_DEFORMATION_p17`
++ `w_xrq17_image_fan_data`); the injectivity window is the local
+`w_b12_inj_window` (pairwise separation + finite minimum); the
+hypermap-face/dih2k/2-regular
+components transfer along the vertex bijection through the B10 kit
+(`BIJ_AND_MAP_COMM_p37` / `HYP_ISO_LEMMAA_p37` /
+`HYP_ISO_DIH2K_PRESERVED_p37` + `IMAGE_FACE_F_p37`). -/
 theorem XRECQNS_UPDATE_p37 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     {f : V3 → ℝ → V3} {a b : ℝ} (_hd : Deformation f V a b) (_hl : LocalFan V E FF) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
       LocalFan ((fun v => f v t) '' V)
         ((fun s => (fun v => f v t) '' s) '' E)
-        ((fun p => (f p.1 t, f p.2 t)) '' FF) := sorry
-  -- DISCHARGES: NEEDS deformation.hl `Deformation.XRECQNS` (fan transfer).
+        ((fun p => (f p.1 t, f p.2 t)) '' FF) := by
+  obtain ⟨hfan, x, hx, hFF, hD, h2reg⟩ := _hl
+  have hlf : LocalFan V E FF := ⟨hfan, x, hx, hFF, hD, h2reg⟩
+  obtain ⟨hVfin, hVne⟩ := hfan.2.2.1
+  obtain ⟨einj, heinj, hinj⟩ := w_b12_inj_window (f := f) _hd hVfin
+    (Set.nonempty_iff_ne_empty.mpr hVne)
+  obtain ⟨efan, hefan, hfanz⟩ := XRECQNS_p17 a b V E f _hd hfan
+  refine ⟨min efan einj, lt_min hefan heinj, fun t ht => ?_⟩
+  have ht1 : -efan < t := by
+    have h1 := (abs_lt.mp ht).1
+    have h2 : min efan einj ≤ efan := min_le_left _ _
+    linarith
+  have ht2 : t < efan := by
+    have h1 := (abs_lt.mp ht).2
+    have h2 : min efan einj ≤ efan := min_le_left _ _
+    linarith
+  have htI : |t| < einj := lt_of_lt_of_le ht (min_le_right _ _)
+  let g : V3 → V3 := fun v => f v t
+  show LocalFan (g '' V) ((fun s => g '' s) '' E) ((fun p => (g p.1, g p.2)) '' FF)
+  have hfan' : Fan.FAN 0 (g '' V) ((fun s => g '' s) '' E) := hfanz t ht1 ht2
+  have hbij : Set.BijOn g V (g '' V) :=
+    INJ_IMP_BIJ_IMAGE_p37 (S := V) (S' := g '' V) (hinj t htI)
+  have hcomm := w5cB10_bij_and_map_comm (V' := g '' V)
+    (E' := (fun s => g '' s) '' E) (f := g) hlf hbij rfl hfan'
+  have hno : dartsOfHyp_p4 E V = Fan.dart1OfFan V E := w5cB10_hno hlf
+  have hno' : dartsOfHyp_p4 ((fun s => g '' s) '' E) (g '' V)
+      = Fan.dart1OfFan (g '' V) ((fun s => g '' s) '' E) :=
+    w5cB10_hno_image (V' := g '' V) (E' := (fun s => g '' s) '' E) (f := g)
+      (w5cB10_hedge hlf) hbij rfl
+  have hiso := HYP_ISO_LEMMAA_p37 (V' := g '' V) (E' := (fun s => g '' s) '' E)
+    (f := g) hlf hbij rfl hfan hfan'
+  have hFFsub : FF ⊆ ((Fan.hypermapOfFan 0 V E hfan).darts : Set (V3 × V3)) := by
+    rw [hFF]
+    exact Hypermap.face_subset_darts (Fan.hypermapOfFan 0 V E hfan) hx
+  have hinjpair : Set.InjOn (fun p : V3 × V3 => (g p.1, g p.2)) FF := by
+    intro p hp q hq heq
+    have hp1 : p ∈ Fan.dart1OfFan V E := (dartsLA1 0 V E hfan) ▸ hFFsub hp
+    have hq1 : q ∈ Fan.dart1OfFan V E := (dartsLA1 0 V E hfan) ▸ hFFsub hq
+    have hpD : p ∈ dartsOfHyp_p4 E V := hno.symm ▸ hp1
+    have hqD : q ∈ dartsOfHyp_p4 E V := hno.symm ▸ hq1
+    exact hcomm.1.2.1 hpD hqD heq
+  have hncard : ((fun p : V3 × V3 => (g p.1, g p.2)) '' FF).ncard = FF.ncard :=
+    Set.InjOn.ncard_image hinjpair
+  have hx1 : x ∈ Fan.dart1OfFan V E := (dartsLA1 0 V E hfan) ▸ Finset.mem_coe.mpr hx
+  have hxD : x ∈ dartsOfHyp_p4 E V := hno.symm ▸ hx1
+  have hx'D : (fun p : V3 × V3 => (g p.1, g p.2)) x
+      ∈ dartsOfHyp_p4 ((fun s => g '' s) '' E) (g '' V) := hcomm.1.1 hxD
+  have hx'1 : (g x.1, g x.2) ∈ Fan.dart1OfFan (g '' V) ((fun s => g '' s) '' E) :=
+    hno' ▸ hx'D
+  refine ⟨hfan', (g x.1, g x.2), ?_, ?_, ?_, ?_⟩
+  · exact Finset.mem_coe.mp
+      ((dartsLA1 0 (g '' V) ((fun s => g '' s) '' E) hfan').symm ▸ hx'1)
+  · have hface := IMAGE_FACE_F_p37 hiso x (Finset.mem_coe.mpr hx)
+    rw [hFF]
+    exact hface
+  · have hD37 : dih2k_p37 (Fan.hypermapOfFan 0 V E hfan) FF.ncard :=
+      (w_b12_dih2k_p37_iff_Dih2k (Fan.hypermapOfFan 0 V E hfan) FF.ncard).mpr hD
+    have hD37' := HYP_ISO_DIH2K_PRESERVED_p37
+      (H := Fan.hypermapOfFan 0 V E hfan)
+      (HH := Fan.hypermapOfFan 0 (g '' V) ((fun s => g '' s) '' E) hfan')
+      (f := fun p : V3 × V3 => (g p.1, g p.2))
+      (Fan.hypermapOfFan 0 V E hfan).darts.finite_toSet hD37 hiso
+    rw [hncard]
+    exact (w_b12_dih2k_p37_iff_Dih2k
+      (Fan.hypermapOfFan 0 (g '' V) ((fun s => g '' s) '' E) hfan') FF.ncard).mp hD37'
+  · intro u' hu'
+    obtain ⟨u, hu, rfl⟩ := hu'
+    have hEEV : EE_p4 u E ⊆ V := fun p hp =>
+      hfan.1 (Set.mem_sUnion_of_mem (by simp) hp)
+    have hEEimg : EE_p4 (g u) ((fun s => g '' s) '' E) = g '' EE_p4 u E :=
+      w5cB10_EE_image (V' := g '' V) (E' := (fun s => g '' s) '' E) (f := g)
+        hbij rfl hfan.2.1 hfan.1 hu
+    show (ee (g u) ((fun s => g '' s) '' E)).ncard = 2
+    rw [show ee (g u) ((fun s => g '' s) '' E)
+        = EE_p4 (g u) ((fun s => g '' s) '' E) from rfl, hEEimg,
+      Set.InjOn.ncard_image (fun p hp q hq heq =>
+        hbij.2.1 (hEEV hp) (hEEV hq) heq)]
+    exact h2reg u hu
 
 /-- HOL `NORM_CROSS_LE` (lunar_deform.hl:3200): `|u cross v| <= |u| |v|`
 (via Mathlib's sin-of-angle form of the cross-product norm). -/

@@ -1091,10 +1091,15 @@ theorem LocalFan.of_localFan_p3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 ×
 /-! ## REMAINING notes
 
 The §7 LA4-consumer corollaries (azimCycle_p4/ivsAzimCycle_p4/nnOfHyp_p4/
-ffOfHyp_p4 data, dih2k_p4 ↔ Dih2k, localFan_p4 ↔ LocalFan) are deferred
-pending resolution of the dartDecEq3-vs-instProd instance clash (see §0).
-The component-level data they reduce to is fully proved in the bridges
-above; the remaining work is `@`-explicit `Hypermap` projection pinning.
+ffOfHyp_p4 data, dih2k_p4 ↔ Dih2k, localFan_p4 ↔ LocalFan) were deferred
+pending the dartDecEq3-vs-instProd instance clash (see §0).  DISCHARGED
+(B12) in §9 below: `face_p4_eq_orbitMap`, `dih2k_p4_iff_Dih2k`,
+`hyp_p4_of_fan`, `localFan_p4_of_LocalFan` (registry → `_p4`).  The reverse
+`localFan_p4 → LocalFan` is NOT closable from `_p4` data alone (the
+`LocalFan` 2-regular conjunct is invisible to `hyp_p4`, whose dart layer
+carries no self-pairs); its honest form additionally assumes
+`V ⊆ ⋃₀ E` (cf. LocalAuto36's α2-W2 note), after which the `_p3` route
+`localFan_p4 → localFan_p3 → LocalFan` applies.
 
 -/
 
@@ -1286,5 +1291,91 @@ theorem localFanEquiv_p35 :
           omega
       · exact fun h => Or.inl h
     exact LocalFan.of_localFan_p3 h3 hno
+
+/-! ## §9 `_p4`-consumer corollaries at the instProd instance (B12)
+
+LocalAuto4 does not import LocalAuto3, so `hyp_p4`/`face_p4`/`dih2k_p4`
+and `Fan.hypermapOfFan` are all elaborated at Mathlib's
+`instDecidableEqProd` (the instance is baked into the definitions, not a
+parameter).  `Hypermap` *projections* still need `@`-explicit instance
+pinning in this file (synthesis prefers `dartDecEq3`, cf. §0); the
+`_p4`-definitions themselves are applied plainly. -/
+
+/-- `face_p4` is the `faceMap` orbit on the dart set (HOL `face H x =
+orbit_map (face_map H) x`); the `y ∈ dart H` conjunct of `face_p4` is
+`faceMap_permutes` applied to the orbit index. -/
+theorem face_p4_eq_orbitMap
+    (H : @Hypermap (V3 × V3) (fun a b => instDecidableEqProd a b))
+    (p : V3 × V3)
+    (hp : p ∈ (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b) H :
+      Finset (V3 × V3))) :
+    face_p4 H p =
+      orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b) H) p := by
+  unfold face_p4 orbitMap
+  ext y
+  constructor
+  · rintro ⟨hy, n, hn⟩
+    exact ⟨n, hn⟩
+  · rintro ⟨n, hn⟩
+    refine ⟨?_, n, hn⟩
+    have h2 := (@Hypermap.faceMap_permutes (V3 × V3)
+      (fun a b => instDecidableEqProd a b) H).pow_apply_mem n hp
+    rw [← hn]
+    exact Finset.mem_coe.mp h2
+
+/-- LA4's `dih2k_p4` and LA1's registry `Dih2k` are the same proposition at
+the instProd instance: `face_p4 = orbitMap` (`face_p4_eq_orbitMap`), the
+face-union equation is read by symmetry, and the order data goes through
+`hasOrders_iff_hasOrders_p4`. -/
+theorem dih2k_p4_iff_Dih2k
+    (H : @Hypermap (V3 × V3) (fun a b => instDecidableEqProd a b)) (k : ℕ) :
+    dih2k_p4 H k ↔
+      @Dih2k (V3 × V3) (fun a b => instDecidableEqProd a b) H k := by
+  constructor
+  · rintro ⟨hcard, horb, hof, hoe, hon⟩
+    refine ⟨hcard, ?_,
+      (hasOrders_iff_hasOrders_p4 (@Hypermap.faceMap (V3 × V3)
+        (fun a b => instDecidableEqProd a b) H) k).mpr hof,
+      (hasOrders_iff_hasOrders_p4 (@Hypermap.edgeMap (V3 × V3)
+        (fun a b => instDecidableEqProd a b) H) 2).mpr hoe,
+      (hasOrders_iff_hasOrders_p4 (@Hypermap.nodeMap (V3 × V3)
+        (fun a b => instDecidableEqProd a b) H) 2).mpr hon⟩
+    intro d hd
+    have h2 := horb d hd
+    rw [face_p4_eq_orbitMap H d hd] at h2
+    exact h2.symm
+  · rintro ⟨hcard, horb, hof, hoe, hon⟩
+    refine ⟨hcard, ?_,
+      (hasOrders_iff_hasOrders_p4 (@Hypermap.faceMap (V3 × V3)
+        (fun a b => instDecidableEqProd a b) H) k).mp hof,
+      (hasOrders_iff_hasOrders_p4 (@Hypermap.edgeMap (V3 × V3)
+        (fun a b => instDecidableEqProd a b) H) 2).mp hoe,
+      (hasOrders_iff_hasOrders_p4 (@Hypermap.nodeMap (V3 × V3)
+        (fun a b => instDecidableEqProd a b) H) 2).mp hon⟩
+    intro p hp
+    rw [face_p4_eq_orbitMap H p hp]
+    exact (horb p hp).symm
+
+/-- Under `Fan.FAN` the LA4 junk-site hypermap `hyp_p4` is the fan hypermap
+(`dif_pos`). -/
+theorem hyp_p4_of_fan {x : V3} {V : Set V3} {E : Set (Set V3)} (hfan : FAN x V E) :
+    hyp_p4 x V E = Fan.hypermapOfFan x V E hfan := by
+  unfold hyp_p4
+  exact dif_pos hfan
+
+/-- Registry → `_p4`: LA1's `LocalFan` gives LA4's `localFan_p4` (the
+2-regular conjunct is dropped; the reverse direction needs `V ⊆ ⋃₀ E`,
+see the REMAINING note). -/
+theorem localFan_p4_of_LocalFan {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) : localFan_p4 V E FF := by
+  obtain ⟨hfan, x, hx, hFF, hD, htwo⟩ := h
+  clear htwo
+  have hhp := hyp_p4_of_fan hfan
+  refine ⟨hfan, ⟨x, ?_, ?_⟩, ?_⟩
+  · rw [hhp]; exact hx
+  · rw [hhp, hFF]
+    exact (face_p4_eq_orbitMap (Fan.hypermapOfFan 0 V E hfan) x hx).symm
+  · rw [hhp]
+    exact (dih2k_p4_iff_Dih2k (Fan.hypermapOfFan 0 V E hfan) FF.ncard).mpr hD
 
 end Kepler.Text
