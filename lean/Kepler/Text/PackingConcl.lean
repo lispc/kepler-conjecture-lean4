@@ -128,6 +128,464 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical MeasureTheory EuclideanGeometry
 
+/-! ### PA25 materialization capstone (lane lv1112-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV11):
+the 60 public top-level PackingAuto25 clean theorem exits (scout seeds_clean.txt PA25 group; the 21 sorried
+`real_model_*` / `CC_3_SUM_*` / `leaf_CIHTIUM` / `GAMMAX_008*` family exits are NOT included -- their debt is carried by the
+double-upstream stubs `pack_nonlinear_non_ox3q1h` (PackingAuto21:147) and `ox3q1hP25` (PackingAuto25:90 `Prop := sorry`,
+Oxl_def.hl not ported) per the scout verdict table), of which 60 are statable from PackingConcl and are
+re-exposed as ONE conjunction below; 0 exits are dropped per the no-forcing rule (each drop named in the
+theorem docstring).
+Self-contained section: pure insertion, zero new imports (PA25 already imported at :125), zero proof obligations
+(body = the exit assembly itself), own `#print axioms` probe (the shared pa21 footer untouched; the lv910
+PA4/PA15 sections below/above are untouched -- hunk-level disjoint).
+The scoped heartbeat raise mirrors the lv910 PA4 section in this file: a conjunction statement of this size exceeds
+the default 200000 budget during statement elaboration (lv910 measured; pa21 capstone uses 50000000).
+-/
+
+set_option maxHeartbeats 50000000 in
+
+/-- PA25 materialization capstone (scout lane leftover-mat-scout-2
+workorder LV11, implementation lane lv1112-w1, 2026-11-04).  The
+60 public top-level Kepler.Text.PackingAuto25 theorem exits unreachable from every
+e2e root (scout probe1/probe2: GROUP_VS_CONE fresh sorried-0, standard-three
+axiom face on the axprobe sample); 60 of them are statable from
+PackingConcl and are re-exposed as ONE conjunction.
+Implemented here: 60 of the 60.
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its Kepler.Text.PackingAuto25 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the first depth-0 `:=` by the generator gen_items.py,
+bracket-balance guarded); compiler-generated equation/aux lemmas have no
+source statement anywhere, so their conjunct is the `#check @name` printer
+dump verbatim and each passes a per-item sigtest (the `⟨...⟩` assembly below
+must unify it definitionally with the constant's type; printer dumps with
+proof-term elision `...` are dropped per the lv12-w1 t_eqlemma_microtest
+evidence, each drop named above).  Semantic identity of every conjunct is
+re-verified by that assembly (each element must have exactly its conjunct's
+type); the per-conjunct comments carry each exit's Kepler.Text.PackingAuto25 declaration
+line and file-local docstring HOL anchor.  Conjunct order: the scout
+seed-list order (probe1 SEED list).  Body = the assembly of the exit
+constants -- zero new proof obligations, zero new imports. -/
+theorem pa25_wire_capstone_w1 :
+    -- 1. Kepler.Text.AFF_DEP_COPLANAR (Kepler.Text.PackingAuto25:13347; HOL `AFF_DEP_COPLANAR`)
+    (∀ (a b c d : V3)
+          (hc : Set.ncard ({a, b, c, d} : Set V3) = 4),
+    (affineDependent ({a, b, c, d} : Set V3) ↔ Coplanar ({a, b, c, d} : Set V3))
+    ) ∧
+    -- 2. Kepler.Text.AZIM_ZERO_SHIFT (Kepler.Text.PackingAuto25:13229; HOL `AZIM_ZERO_SHIFT`)
+    (∀ (u0 u1 u2 w w' : V3)
+          (h1 : ¬ Collinear3 u0 u1 u2) (h2 : ¬ Collinear3 u0 u1 w)
+          (h3 : ¬ Collinear3 u0 u1 w'),
+    (azim u0 u1 u2 w = azim u0 u1 u2 w' ↔ azim u0 u1 w w' = 0)
+    ) ∧
+    -- 3. Kepler.Text.CARD_INSERT_INTER_ALT (Kepler.Text.PackingAuto25:474; HOL `CARD_INSERT_INTER_ALT`)
+    (∀ {α : Type*} (a : α) (A B : Set α) (hB : B.Finite),
+    Set.ncard ((insert a A) ∩ B) =
+          (if a ∈ B ∧ a ∉ A then 1 else 0) + Set.ncard (A ∩ B)
+    ) ∧
+    -- 4. Kepler.Text.CC_4_BETA_BUMP_EXPLICIT (Kepler.Text.PackingAuto25:7951; HOL `CC_4_BETA_BUMP_EXPLICIT`)
+    (∀ (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+          (i : ℕ) (hp : Packing V) (hs : saturated V)
+          (hr : leaf_rank V [u0, u1] w0 n f) (hnc : ¬ Collinear3 u0 u1 w0) (hn : 1 < n)
+          (h4 : cc_4 V u0 u1 f i) (hcey : criticalEdgeY (dist u0 u1))
+          (hcey' : criticalEdgeY (dist (f i) (f (i + 1))))
+          (hd1 : dist u0 (f i) < 2 * hminus) (hd2 : dist u0 (f (i + 1)) < 2 * hminus)
+          (hd3 : dist u1 (f i) < 2 * hminus) (hd4 : dist u1 (f (i + 1)) < 2 * hminus),
+    betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) =
+          bump (dist u0 u1 / 2) - bump (dist (f i) (f (i + 1)) / 2)
+    ) ∧
+    -- 5. Kepler.Text.COPLANAR_CONVEX_HULL_COPLANAR (Kepler.Text.PackingAuto25:673; HOL `COPLANAR_CONVEX_HULL_COPLANAR`)
+    (∀ (s : Set V3),
+    Coplanar (convexHull ℝ s) ↔ Coplanar s
+    ) ∧
+    -- 6. Kepler.Text.DIHV_EQ_0_PI_EQ_COPLANAR_ALT (Kepler.Text.PackingAuto25:13149; HOL `DIHV_EQ_0_PI_EQ_COPLANAR_ALT`)
+    (∀ (v0 v1 w1 w2 : V3)
+          (hnc : ¬ Coplanar ({v0, v1, w1, w2} : Set V3)),
+    ¬ (dihV v0 v1 w1 w2 = 0)
+    ) ∧
+    -- 7. Kepler.Text.DIHV_EQ_0_PI_EQ_COPLANAR_ALT._abel_1_3 (Kepler.Text.PackingAuto25:13149; compiler-generated equation/aux lemma (parent def `DIHV_EQ_0_PI_EQ_COPLANAR_ALT` at Kepler.Text.PackingAuto25:13149; no source statement; sigtest = assembly elaboration))
+    (∀ (v0 x : V3), x - v0 + v0 = x
+    ) ∧
+    -- 8. Kepler.Text.DIHV_EQ_0_PI_EQ_COPLANAR_ALT._abel_1_4 (Kepler.Text.PackingAuto25:13149; compiler-generated equation/aux lemma (parent def `DIHV_EQ_0_PI_EQ_COPLANAR_ALT` at Kepler.Text.PackingAuto25:13149; no source statement; sigtest = assembly elaboration))
+    (∀ (v0 w1 : V3), w1 = v0 + (w1 - v0)
+    ) ∧
+    -- 9. Kepler.Text.DIST_IMP_COLLINEAR (Kepler.Text.PackingAuto25:1582; HOL `DIST_IMP_COLLINEAR`)
+    (∀ (u0 u1 u2 : V3)
+          (h1 : 2 ≤ dist u0 u1) (h2 : 2 ≤ dist u0 u2) (h3 : 2 ≤ dist u1 u2)
+          (h4 : dist u0 u1 < 4) (h5 : dist u0 u2 < 4) (h6 : dist u1 u2 < 4),
+    ¬ Collinear3 u0 u1 u2
+    ) ∧
+    -- 10. Kepler.Text.DIST_IMP_COLLINEAR._abel_1_1 (Kepler.Text.PackingAuto25:1582; compiler-generated equation/aux lemma (parent def `DIST_IMP_COLLINEAR` at Kepler.Text.PackingAuto25:1582; no source statement; sigtest = assembly elaboration))
+    (∀ (u0 u1 u2 : V3), u1 - u2 = u1 - u0 - (u2 - u0)
+    ) ∧
+    -- 11. Kepler.Text.DIST_IMP_UPS_X_POS (Kepler.Text.PackingAuto25:1645; HOL `DIST_IMP_UPS_X_POS`)
+    (∀ (u0 u1 u2 : V3)
+          (h1 : 2 ≤ dist u0 u1) (h2 : 2 ≤ dist u0 u2) (h3 : 2 ≤ dist u1 u2)
+          (h4 : dist u0 u1 < 4) (h5 : dist u0 u2 < 4) (h6 : dist u1 u2 < 4),
+    0 < upsX (dist u0 u1 ^ 2) (dist u0 u2 ^ 2) (dist u1 u2 ^ 2)
+    ) ∧
+    -- 12. Kepler.Text.DIST_IMP_UPS_X_POS._abel_1_1 (Kepler.Text.PackingAuto25:1645; compiler-generated equation/aux lemma (parent def `DIST_IMP_UPS_X_POS` at Kepler.Text.PackingAuto25:1645; no source statement; sigtest = assembly elaboration))
+    (∀ (u0 u1 u2 : V3), u1 - u0 - (u2 - u0) = u1 - u2
+    ) ∧
+    -- 13. Kepler.Text.EDGEX_PAIR (Kepler.Text.PackingAuto25:7430; HOL `EDGEX_PAIR`)
+    (∀ (V : Set V3) (X : Set V3) (e : Set V3) (he : e ∈ edgeX V X),
+    ∃ u v : V3, e = {u, v} ∧ u ≠ v
+    ) ∧
+    -- 14. Kepler.Text.ETA_Y_LEMMA (Kepler.Text.PackingAuto25:8851; HOL `ETA_Y_LEMMA`)
+    (∀ (u0 u1 u2 : V3) (r : ℝ) (hnc : ¬ Collinear3 u0 u1 u2)
+          (hr : 0 < r) (hrl : r ≤ hl [u0, u1, u2]),
+    r ^ 2 ≤ eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) ^ 2
+    ) ∧
+    -- 15. Kepler.Text.ETA_Y_LEMMA_ALT (Kepler.Text.PackingAuto25:8866; HOL `ETA_Y_LEMMA_ALT`)
+    (∀ (u0 u1 u2 : V3) (r : ℝ) (hnc : ¬ Collinear3 u0 u1 u2)
+          (hrl : hl [u0, u1, u2] ≤ r),
+    eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) ^ 2 ≤ r ^ 2
+    ) ∧
+    -- 16. Kepler.Text.FM_DEMOD (Kepler.Text.PackingAuto25:904; HOL `FM_DEMOD`)
+    (∀ {α : Type*} {f : ℕ → α} {n : ℕ} (h : periodic f n) (hn : 1 < n)
+          (i : ℕ),
+    f (i % n) = f i ∧ f (i % n + n - 1) = f (i + n - 1)
+    ) ∧
+    -- 17. Kepler.Text.GAMMAX_NO_BETA (Kepler.Text.PackingAuto25:1793; HOL `GAMMAX_NO_BETA`)
+    (∀ (V : Set V3) (ul : List V3) (X : Set V3) (e : Set V3) (k : ℕ)
+          (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul) (hX : X = mcell k V ul)
+          (hn : ¬ nullSet X) (hk : k < 4) (he : e ∈ criticalEdgeX V X)
+          (hg : gammaX V X lmfun ≥ 0),
+    gammaX V X lmfun * criticalWeight V X + betaBumpV1 V e X ≥ 0
+    ) ∧
+    -- 18. Kepler.Text.INITIAL_SUBLIST_TRUNCATE (Kepler.Text.PackingAuto25:13312; HOL `INITIAL_SUBLIST_TRUNCATE`)
+    (∀ (vl ul : List V3) (hl : ul.length = 4)
+          (h1 : initialSublist vl ul)
+          (h2 : ¬ initialSublist vl (truncateSimplex 2 ul)),
+    vl = ul
+    ) ∧
+    -- 19. Kepler.Text.IXPOTPA_MERGED (Kepler.Text.PackingAuto25:12450; HOL `IXPOTPA_MERGED`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
+          (hcey : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
+          (hb3 : 2 ≤ y3) (hb3' : y3 ≤ 2 * hminus)
+          (hb4 : Real.sqrt 8 ≤ y4) (hb4' : y4 ≤ y5 + y6)
+          (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus)
+          (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
+          (hdi1 : dihY y1 y2 y3 y4 y5 y6 ≤ 2.089)
+          (hdi2 : 1.946 ≤ dihY y1 y2 y3 y4 y5 y6)
+          (he1 : eta_y y1 y2 y6 ^ 2 ≤ 1.34 ^ 2) (he2 : eta_y y1 y3 y5 ^ 2 ≤ 1.34 ^ 2),
+    3 * 0.0057 ≤ gamma3f y1 y2 y6 (Real.sqrt 2) lmfun +
+          gamma3f y1 y3 y5 (Real.sqrt 2) lmfun +
+          (dihY y1 y2 y3 y4 y5 y6 -
+              (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
+                dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008
+    ) ∧
+    -- 20. Kepler.Text.JSP_BOUNDS (Kepler.Text.PackingAuto25:12115; HOL `JSP_BOUNDS`)
+    (∀ (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q1h)
+          (hnc : ¬ Collinear3 u0 u1 u2) (hhl : hl [u0, u1, u2] ≤ 1.34)
+          (h1 : 2 * hminus ≤ dist u0 u1) (h2 : 2 ≤ dist u0 u2) (h3 : 2 ≤ dist u1 u2),
+    dist u0 u2 < 2 * hminus ∧ dist u1 u2 < 2 * hminus
+    ) ∧
+    -- 21. Kepler.Text.LEAF_RANKING_LEMMA (Kepler.Text.PackingAuto25:2105; HOL `LEAF_RANKING_LEMMA`)
+    (∀ (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
+          (hn : 0 < n) (hp : Packing V) (hs : saturated V)
+          (hsize : HasSizeP25 (s_leaf V ul) n) (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0),
+    ∃ f : ℕ → V3, f '' (univ : Set ℕ) = s_leaf V ul ∧
+          (∀ i, f (i + n) = f i) ∧
+          (∀ i j, i < n → j < n → i < j →
+            azim (elV ul 0) (elV ul 1) w0 (f i) < azim (elV ul 0) (elV ul 1) w0 (f j))
+    ) ∧
+    -- 22. Kepler.Text.LEAF_RANK_TRUNCATE (Kepler.Text.PackingAuto25:4721; HOL `LEAF_RANK_TRUNCATE`)
+    (∀ (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3),
+    leaf_rank V ul w0 n f = leaf_rank V [elV ul 0, elV ul 1] w0 n f
+    ) ∧
+    -- 23. Kepler.Text.MCELL2_CRITICAL_WEIGHT1 (Kepler.Text.PackingAuto25:11932; HOL `MCELL2_CRITICAL_WEIGHT1`)
+    (∀ (V : Set V3) (X : Set V3) (u0 u1 : V3)
+          (vl : List V3) (hnl : pack_nonlinear_non_ox3q1h) (hp : Packing V)
+          (hs : saturated V) (hcey : criticalEdgeY (dist u0 u1))
+          (hX : X = mcell2 V vl) (he : {u0, u1} ∈ edgeX V X) (hb : barV V 3 vl),
+    criticalWeight V X = 1
+    ) ∧
+    -- 24. Kepler.Text.MCELL3_CRITICAL_WEIGHT (Kepler.Text.PackingAuto25:11967; HOL `MCELL3_CRITICAL_WEIGHT`)
+    (∀ (V : Set V3) (X : Set V3) (u0 u1 v1 v2 : V3)
+          (hnl : pack_nonlinear_non_ox3q1h) (hp : Packing V) (hs : saturated V)
+          (hcey : criticalEdgeY (dist u0 u1)) (hX : X = mcell3 V [u0, u1, v1, v2])
+          (he : {u0, u1} ∈ edgeX V X) (hb : barV V 3 [u0, u1, v1, v2]),
+    criticalWeight V X =
+          1 / (wtcount3Y (dist u0 u1) (dist u0 v1) (dist u1 v1))
+    ) ∧
+    -- 25. Kepler.Text.MCELL3_DIHX (Kepler.Text.PackingAuto25:3016; HOL `MCELL3_DIHX`)
+    (∀ (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated V)
+          (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell3 V ul)
+          (he : {elV ul 0, elV ul 1} ∈ edgeX V X) (hn : ¬ nullSet X),
+    dihX V X (elV ul 0, elV ul 1) =
+          dihV (elV ul 0) (elV ul 1) (elV ul 2) (mxi V ul)
+    ) ∧
+    -- 26. Kepler.Text.MCELL3_EDGE_EXPLICIT (Kepler.Text.PackingAuto25:9581; HOL `MCELL3_EDGE_EXPLICIT`)
+    (∀ (V : Set V3) (u0 u1 u2 u3 : V3) (hp : Packing V)
+          (hs : saturated V) (hn : ¬ nullSet (mcell3 V [u0, u1, u2, u3]))
+          (hb : barV V 3 [u0, u1, u2, u3]),
+    edgeX V (mcell3 V [u0, u1, u2, u3]) =
+          {{u0, u1}, {u0, u2}, {u1, u2}}
+    ) ∧
+    -- 27. Kepler.Text.MCELL3_EXTREME_CARD (Kepler.Text.PackingAuto25:3001; HOL `MCELL3_EXTREME_CARD`)
+    (∀ (V : Set V3) (ul : List V3) (hp : Packing V)
+          (hs : saturated V) (hb : barV V 3 ul)
+          (hn : ¬ nullSet (mcell3 V ul)),
+    Set.ncard ({elV ul 0, elV ul 1, elV ul 2, mxi V ul} : Set V3) = 4
+    ) ∧
+    -- 28. Kepler.Text.MCELL4_EDGE_EXPLICIT (Kepler.Text.PackingAuto25:7448; HOL `MCELL4_EDGE_EXPLICIT`)
+    (∀ (V : Set V3) (u0 u1 u2 u3 : V3) (hp : Packing V)
+          (hs : saturated V) (hn : ¬ nullSet (mcell4 V [u0, u1, u2, u3]))
+          (hb : barV V 3 [u0, u1, u2, u3]),
+    edgeX V (mcell4 V [u0, u1, u2, u3]) =
+          {{u0, u1}, {u0, u2}, {u0, u3}, {u1, u2}, {u1, u3}, {u2, u3}}
+    ) ∧
+    -- 29. Kepler.Text.MOD_PERIOD_BOUNDED_ALT (Kepler.Text.PackingAuto25:822; HOL `MOD_PERIOD_BOUNDED_ALT`)
+    (∀ {k n : ℕ} (hn : n ≠ 0) (hk : k ≠ 0)
+          (x : ℕ) (h : (x + k) % n = x % n),
+    n ≤ k
+    ) ∧
+    -- 30. Kepler.Text.MOD_REFL_ALT (Kepler.Text.PackingAuto25:829; HOL `MOD_REFL_ALT`)
+    (∀ (m : ℕ),
+    m % 1 = 0
+    ) ∧
+    -- 31. Kepler.Text.NUMSEG_LT (Kepler.Text.PackingAuto25:484; HOL `NUMSEG_LT`)
+    (∀ (r : ℕ) (hr : r ≠ 0),
+    (Finset.Icc 0 (r - 1) : Set ℕ) = {i | i < r}
+    ) ∧
+    -- 32. Kepler.Text.ORDER_AZIM_SUM2Pi0 (Kepler.Text.PackingAuto25:13240; HOL `ORDER_AZIM_SUM2Pi0`)
+    (∀ (x y z : V3) (n : ℕ) (g : ℕ → V3)
+          (h1 : ¬ Collinear3 x y z) (h2 : ∀ i, i < n → ¬ Collinear3 x y (g i))
+          (h3 : g n = g 0) (hn : 1 < n)
+          (h4 : ∀ j k, j < n → k < n → j < k → azim x y z (g j) < azim x y z (g k)),
+    ∑ i ∈ Finset.Icc 0 (n - 1), azim x y (g i) (g (i + 1)) = 2 * Real.pi
+    ) ∧
+    -- 33. Kepler.Text.STRICT_SORT_FINITE (Kepler.Text.PackingAuto25:715; HOL `STRICT_SORT_FINITE`)
+    (∀ {α : Type*} [Nonempty α] {lt : α → α → Prop} (s : Set α) (n : ℕ)
+          (hirr : ∀ x y, x ∈ s → y ∈ s → lt x y → lt y x → x = y)
+          (htr : ∀ x y z, x ∈ s → y ∈ s → z ∈ s → lt x y → lt y z → lt x z)
+          (hs : s.Finite ∧ s.ncard = n),
+    ∃ f : ℕ → α, s = f '' Set.Icc 1 n ∧
+          ∀ j k, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k → ¬lt (f k) (f j)
+    ) ∧
+    -- 34. Kepler.Text.S_LEAF_CARD2 (Kepler.Text.PackingAuto25:3481; HOL `S_LEAF_CARD2`)
+    (∀ (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
+          (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)),
+    2 ≤ Set.ncard (s_leaf V [elV ul 0, elV ul 1])
+    ) ∧
+    -- 35. Kepler.Text.S_LEAF_TRUNCATE (Kepler.Text.PackingAuto25:2423; HOL `S_LEAF_TRUNCATE`)
+    (∀ (V : Set V3) (ul : List V3),
+    s_leaf V ul = s_leaf V [elV ul 0, elV ul 1]
+    ) ∧
+    -- 36. Kepler.Text.TEWNSCJ_MERGED (Kepler.Text.PackingAuto25:12563; HOL `TEWNSCJ_MERGED`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
+          (hcey : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
+          (hb3 : 2 ≤ y3) (hb3' : y3 ≤ 2 * hminus)
+          (hb4 : 2 ≤ y4) (hb4' : y4 ≤ Real.sqrt 8)
+          (hrad : 2 ≤ rad2YP25 y1 y2 y3 y4 y5 y6)
+          (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus)
+          (he1 : eta_y y1 y2 y6 ^ 2 ≤ 1.34 ^ 2) (he2 : eta_y y1 y3 y5 ^ 2 ≤ 1.34 ^ 2),
+    a_spine5 + b_spine5 * dihY y1 y2 y3 y4 y5 y6 ≤
+          gamma3f y1 y2 y6 (Real.sqrt 2) lmfun +
+            gamma3f y1 y3 y5 (Real.sqrt 2) lmfun +
+            (dihY y1 y2 y3 y4 y5 y6 -
+                (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
+                  dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008
+    ) ∧
+    -- 37. Kepler.Text.TXQTPVC_MERGED (Kepler.Text.PackingAuto25:12517; HOL `TXQTPVC_MERGED`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
+          (hcey : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
+          (hb3 : 2 ≤ y3) (hb3' : y3 ≤ 2 * hminus)
+          (hb4 : 2 ≤ y4) (hb4' : y4 ≤ y5 + y6)
+          (hrad : 2 ≤ rad2YP25 y1 y2 y3 y4 y5 y6)
+          (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus)
+          (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
+          (hdi1 : dihY y1 y2 y3 y4 y5 y6 ≤ 2.089)
+          (hdi2 : 1.946 ≤ dihY y1 y2 y3 y4 y5 y6)
+          (he1 : eta_y y1 y2 y6 ^ 2 ≤ 1.34 ^ 2) (he2 : eta_y y1 y3 y5 ^ 2 ≤ 1.34 ^ 2),
+    3 * 0.0057 ≤ gamma3f y1 y2 y6 (Real.sqrt 2) lmfun +
+          gamma3f y1 y3 y5 (Real.sqrt 2) lmfun +
+          (dihY y1 y2 y3 y4 y5 y6 -
+              (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
+                dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008
+    ) ∧
+    -- 38. Kepler.Text.bankGenMid.eq_1 (Kepler.Text.PackingAuto25:0; compiler-generated equation/aux lemma (parent def `bankGenMid` at Text.PackingAuto21:678; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ), bankGenMid i = if i = 1 then 1 else 0
+    ) ∧
+    -- 39. Kepler.Text.bank_ZTGIJCF4hi.eq_1 (Kepler.Text.PackingAuto25:0; compiler-generated equation/aux lemma (parent def `bank_ZTGIJCF4hi` at Text.PackingAuto21:847; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ), bank_ZTGIJCF4hi i = if i = 0 then 2 * hminus else √8
+    ) ∧
+    -- 40. Kepler.Text.bank_ZTGIJCF4lo.eq_1 (Kepler.Text.PackingAuto25:0; compiler-generated equation/aux lemma (parent def `bank_ZTGIJCF4lo` at Text.PackingAuto21:844; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ), bank_ZTGIJCF4lo i = if i = 0 then 2 else 2 * hminus
+    ) ∧
+    -- 41. Kepler.Text.betaBumpLb.eq_1 (Kepler.Text.PackingAuto25:0; compiler-generated equation/aux lemma (parent def `betaBumpLb` at Text.IneqClosureDefs:493; no source statement; sigtest = assembly elaboration))
+    (betaBumpLb = -5e-3
+    ) ∧
+    -- 42. Kepler.Text.beta_bumpA_lb0P25 (Kepler.Text.PackingAuto25:10486; HOL `beta_bumpA_lb0`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ)
+          (hdisj : ¬ criticalEdgeY y1 ∨ criticalEdgeY y2 ∨ criticalEdgeY y3 ∨
+            criticalEdgeY y5 ∨ criticalEdgeY y6 ∨ ¬ criticalEdgeY y4),
+    (0 : ℝ) ≤ beta_bumpA_yP25 y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 43. Kepler.Text.beta_bumpA_yP25.eq_1 (Kepler.Text.PackingAuto25:111; compiler-generated equation/aux lemma (parent def `beta_bumpA_yP25` at Kepler.Text.PackingAuto25:111; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 =
+            ((((((if criticalEdgeY y1 then 1 else 0) * if y2 < 2 * hminus then 1 else 0) * if y3 < 2 * hminus then 1 else 0) *
+                    if criticalEdgeY y4 then 1 else 0) *
+                  if y5 < 2 * hminus then 1 else 0) *
+                if y6 < 2 * hminus then 1 else 0) *
+              (bump (y1 / 2) - bump (y4 / 2))
+    ) ∧
+    -- 44. Kepler.Text.c1946 (Kepler.Text.PackingAuto25:12366; HOL `c1946`)
+    (Real.pi - 1.946 < Real.arctan (Real.sqrt 6.45)
+    ) ∧
+    -- 45. Kepler.Text.c2089 (Kepler.Text.PackingAuto25:12318; HOL `c2089`)
+    (Real.arctan (Real.sqrt 3.07) < Real.pi - 2.089
+    ) ∧
+    -- 46. Kepler.Text.cc_4.eq_1 (Kepler.Text.PackingAuto25:439; compiler-generated equation/aux lemma (parent def `cc_4` at Kepler.Text.PackingAuto25:439; no source statement; sigtest = assembly elaboration))
+    (∀ (V : Set V3) (u0 u1 : V3) (f : ℕ → V3) (i : ℕ),
+          cc_4 V u0 u1 f i =
+            ∃ ul, barV V 3 ul ∧ {u0, u1} ∈ edgeX V (mcell4 V ul) ∧ mcell4 V ul ⊆ wedgeGe u0 u1 (f i) (f (i + 1))
+    ) ∧
+    -- 47. Kepler.Text.critical_weight1 (Kepler.Text.PackingAuto25:9894; HOL `critical_weight1`)
+    (∀ (V : Set V3) (u0 u1 u2 : V3)
+          (hcey : criticalEdgeY (dist u0 u1)) (hd1 : dist u0 u2 < 2 * hminus)
+          (hd2 : dist u1 u2 < 2 * hminus) (hk : ccKe V [u0, u1, u2] = 3)
+          (hp : Packing V) (hs : saturated V)
+          (hb : barV V 3 (ccUh V [u0, u1, u2])) (hl' : leaf V [u0, u1, u2])
+          (hnn : ¬ nullSet (ccCell V [u0, u1, u2])),
+    criticalWeight V (ccCell V [u0, u1, u2]) = 1
+    ) ∧
+    -- 48. Kepler.Text.critical_weight1a (Kepler.Text.PackingAuto25:9913; HOL `critical_weight1a`)
+    (∀ (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
+          (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
+          (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
+          (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+          (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f)
+          (hno4 : ¬ cc_4 V u0 u1 f i)
+          (hd : dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus),
+    criticalWeight V (ccCell V [u0, u1, f i]) = 1
+    ) ∧
+    -- 49. Kepler.Text.critical_weight1b (Kepler.Text.PackingAuto25:9927; HOL `critical_weight1b`)
+    (∀ (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
+          (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
+          (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
+          (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+          (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f)
+          (hno4 : ¬ cc_4 V u0 u1 f i)
+          (hd : dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus),
+    criticalWeight V (ccCell V [u1, u0, f (i + 1)]) = 1
+    ) ∧
+    -- 50. Kepler.Text.gamma4fgcy_sym26 (Kepler.Text.PackingAuto25:11611; HOL `gamma4fgcy_sym26`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ),
+    gamma4fgcyP25 y1 y2 y3 y4 y5 y6 f = gamma4fgcyP25 y1 y6 y5 y4 y3 y2 f
+    ) ∧
+    -- 51. Kepler.Text.initial_sublist_cons (Kepler.Text.PackingAuto25:663; HOL `initial_sublist_cons`)
+    (∀ (a b : V3) (x y : List V3),
+    initialSublist (a :: x) (b :: y) ↔ a = b ∧ initialSublist x y
+    ) ∧
+    -- 52. Kepler.Text.mcell3_dihX_dih_y (Kepler.Text.PackingAuto25:9461; HOL `mcell3_dihX_dih_y`)
+    (∀ (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
+          (hnl : pack_nonlinear_non_ox3q1h) (hp : Packing V) (hs : saturated V)
+          (hr : leaf_rank V [u0, u1] w0 n f) (hnc : ¬ Collinear3 u0 u1 w0)
+          (hcey : criticalEdgeY (dist u0 u1)) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n)
+          (hn : 1 < n) (hno4 : ¬ cc_4 V u0 u1 f i),
+    dihX V (ccCell V [u0, u1, f i]) (u0, u1) =
+          dihY (dist u0 u1) (dist u0 (f i)) (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
+            (dist u1 (f i))
+    ) ∧
+    -- 53. Kepler.Text.mcell3_dihXb_dih_y (Kepler.Text.PackingAuto25:9515; HOL `mcell3_dihXb_dih_y`)
+    (∀ (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
+          (hnl : pack_nonlinear_non_ox3q1h) (hp : Packing V) (hs : saturated V)
+          (hr : leaf_rank V [u0, u1] w0 n f) (hnc : ¬ Collinear3 u0 u1 w0)
+          (hcey : criticalEdgeY (dist u0 u1)) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n)
+          (hn : 1 < n) (hno4 : ¬ cc_4 V u0 u1 f i),
+    dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1) =
+          dihY (dist u0 u1) (dist u0 (f (i + 1))) (Real.sqrt 2) (Real.sqrt 2)
+            (Real.sqrt 2) (dist u1 (f (i + 1)))
+    ) ∧
+    -- 54. Kepler.Text.periodic_o (Kepler.Text.PackingAuto25:832; HOL `periodic_o`)
+    (∀ {α β : Type*} (g : α → β) {f : ℕ → α} {n : ℕ}
+          (h : periodic f n),
+    periodic (g ∘ f) n
+    ) ∧
+    -- 55. Kepler.Text.periodic_shift (Kepler.Text.PackingAuto25:836; HOL `periodic_shift`)
+    (∀ {α : Type*} (k : ℕ) {f : ℕ → α} {n : ℕ}
+          (h : periodic f n),
+    periodic (fun i => f (i + k)) n
+    ) ∧
+    -- 56. Kepler.Text.rad2XP25.eq_1 (Kepler.Text.PackingAuto25:98; compiler-generated equation/aux lemma (parent def `rad2XP25` at Kepler.Text.PackingAuto25:98; no source statement; sigtest = assembly elaboration))
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ), rad2XP25 x1 x2 x3 x4 x5 x6 = rad2X x1 x2 x3 x4 x5 x6
+    ) ∧
+    -- 57. Kepler.Text.s_leaf.eq_1 (Kepler.Text.PackingAuto25:391; compiler-generated equation/aux lemma (parent def `s_leaf` at Kepler.Text.PackingAuto25:391; no source statement; sigtest = assembly elaboration))
+    (∀ (V : Set V3) (ul : List V3),
+          s_leaf V ul =
+            {u | leaf V [elV ul 0, elV ul 1, u] ∧ (ccKe V [elV ul 0, elV ul 1, u] = 4 ∨ ccKe V [elV ul 1, elV ul 0, u] = 4)}
+    ) ∧
+    -- 58. Kepler.Text.wtcount6Y_unfold_band (Kepler.Text.PackingAuto25:10529; no HOL anchor line in file docstring)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ)
+          (hc1 : criticalEdgeY y1) (h2 : y2 < 2 * hminus),
+    wtcount6Y y1 y2 y3 y4 y5 y6 =
+          1 + (if criticalEdgeY y3 then 1 else 0) + (if criticalEdgeY y4 then 1 else 0) +
+            (if criticalEdgeY y5 then 1 else 0) + (if criticalEdgeY y6 then 1 else 0)
+    ) ∧
+    -- 59. Kepler.Text.ztg4_shard_finish_m0 (Kepler.Text.PackingAuto25:10600; no HOL anchor line in file docstring)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ)
+          (hc1 : criticalEdgeY y1) (h2 : y2 < 2 * hminus) (h3 : y3 < 2 * hminus)
+          (h4 : y4 < 2 * hminus) (h5 : y5 < 2 * hminus) (h6 : y6 < 2 * hminus)
+          (h2lo : (2 : ℝ) ≤ y2) (h3lo : (2 : ℝ) ≤ y3) (h4lo : (2 : ℝ) ≤ y4)
+          (h5lo : (2 : ℝ) ≤ y5) (h6lo : (2 : ℝ) ≤ y6)
+          (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2)
+          (hshard : bank_ZTGIJCF4_0_0_0_0),
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+            beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+          aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 60. Kepler.Text.ztg4_shard_finish_m1 (Kepler.Text.PackingAuto25:10546; no HOL anchor line in file docstring)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ)
+          (hc1 : criticalEdgeY y1) (h2 : y2 < 2 * hminus) (h3 : y3 < 2 * hminus)
+          (h2lo : (2 : ℝ) ≤ y2) (h3lo : (2 : ℝ) ≤ y3)
+          (h4lo : 2 * hminus ≤ y4) (h4' : y4 ≤ 2 * hplus) (h5 : y5 < 2 * hminus)
+          (h5lo : (2 : ℝ) ≤ y5) (h6 : y6 < 2 * hminus) (h6lo : (2 : ℝ) ≤ y6)
+          (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2)
+          (hshard : bank_ZTGIJCF4_0_1_0_0),
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+            beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 >
+          aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6
+    ) :=
+⟨_root_.Kepler.Text.AFF_DEP_COPLANAR, _root_.Kepler.Text.AZIM_ZERO_SHIFT,
+      _root_.Kepler.Text.CARD_INSERT_INTER_ALT, _root_.Kepler.Text.CC_4_BETA_BUMP_EXPLICIT,
+      _root_.Kepler.Text.COPLANAR_CONVEX_HULL_COPLANAR,
+      _root_.Kepler.Text.DIHV_EQ_0_PI_EQ_COPLANAR_ALT,
+      _root_.Kepler.Text.DIHV_EQ_0_PI_EQ_COPLANAR_ALT._abel_1_3,
+      _root_.Kepler.Text.DIHV_EQ_0_PI_EQ_COPLANAR_ALT._abel_1_4,
+      _root_.Kepler.Text.DIST_IMP_COLLINEAR, _root_.Kepler.Text.DIST_IMP_COLLINEAR._abel_1_1,
+      _root_.Kepler.Text.DIST_IMP_UPS_X_POS, _root_.Kepler.Text.DIST_IMP_UPS_X_POS._abel_1_1,
+      _root_.Kepler.Text.EDGEX_PAIR, _root_.Kepler.Text.ETA_Y_LEMMA,
+      _root_.Kepler.Text.ETA_Y_LEMMA_ALT, _root_.Kepler.Text.FM_DEMOD,
+      _root_.Kepler.Text.GAMMAX_NO_BETA, _root_.Kepler.Text.INITIAL_SUBLIST_TRUNCATE,
+      _root_.Kepler.Text.IXPOTPA_MERGED, _root_.Kepler.Text.JSP_BOUNDS,
+      _root_.Kepler.Text.LEAF_RANKING_LEMMA, _root_.Kepler.Text.LEAF_RANK_TRUNCATE,
+      _root_.Kepler.Text.MCELL2_CRITICAL_WEIGHT1, _root_.Kepler.Text.MCELL3_CRITICAL_WEIGHT,
+      _root_.Kepler.Text.MCELL3_DIHX, _root_.Kepler.Text.MCELL3_EDGE_EXPLICIT,
+      @_root_.Kepler.Text.MCELL3_EXTREME_CARD, _root_.Kepler.Text.MCELL4_EDGE_EXPLICIT,
+      _root_.Kepler.Text.MOD_PERIOD_BOUNDED_ALT, _root_.Kepler.Text.MOD_REFL_ALT,
+      _root_.Kepler.Text.NUMSEG_LT, _root_.Kepler.Text.ORDER_AZIM_SUM2Pi0,
+      _root_.Kepler.Text.STRICT_SORT_FINITE, _root_.Kepler.Text.S_LEAF_CARD2,
+      _root_.Kepler.Text.S_LEAF_TRUNCATE, _root_.Kepler.Text.TEWNSCJ_MERGED,
+      _root_.Kepler.Text.TXQTPVC_MERGED, _root_.Kepler.Text.bankGenMid.eq_1,
+      _root_.Kepler.Text.bank_ZTGIJCF4hi.eq_1, _root_.Kepler.Text.bank_ZTGIJCF4lo.eq_1,
+      _root_.Kepler.Text.betaBumpLb.eq_1, _root_.Kepler.Text.beta_bumpA_lb0P25,
+      _root_.Kepler.Text.beta_bumpA_yP25.eq_1, _root_.Kepler.Text.c1946,
+      _root_.Kepler.Text.c2089, _root_.Kepler.Text.cc_4.eq_1,
+      _root_.Kepler.Text.critical_weight1, _root_.Kepler.Text.critical_weight1a,
+      _root_.Kepler.Text.critical_weight1b, _root_.Kepler.Text.gamma4fgcy_sym26,
+      _root_.Kepler.Text.initial_sublist_cons, _root_.Kepler.Text.mcell3_dihX_dih_y,
+      _root_.Kepler.Text.mcell3_dihXb_dih_y, _root_.Kepler.Text.periodic_o,
+      _root_.Kepler.Text.periodic_shift, _root_.Kepler.Text.rad2XP25.eq_1,
+      _root_.Kepler.Text.s_leaf.eq_1, _root_.Kepler.Text.wtcount6Y_unfold_band,
+      _root_.Kepler.Text.ztg4_shard_finish_m0, _root_.Kepler.Text.ztg4_shard_finish_m1⟩
+
+-- Self-check.  Ground truth = `#print axioms`, not prose: expect exactly the standard three
+-- [propext, Classical.choice, Quot.sound] and NO sorryAx (the scout group closure is sorried-0).
+#print axioms pa25_wire_capstone_w1
+
 /-! ### PA4 materialization capstone (lane lv910-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV9):
 the 71 public top-level PackingAuto4 clean theorem exits (scout seeds_clean.txt PA4 group; the 9 sorried
 BumpP4.MCELL*_PARAM/_CELL_PARAMETERS_EXIST skeleton exits are NOT included -- NO-GO half assigned to the PA17

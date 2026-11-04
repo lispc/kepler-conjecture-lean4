@@ -515,6 +515,632 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical
 
+/-! ### LA19 materialization capstone (lane lv1112-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV12):
+the 110 public top-level LocalAuto19 clean theorem exits (scout seeds_clean.txt LA19 group; the 32 sorried
+`terminal_pent_tau*` / `taud_minimizer_*` / `terminal_hex_*_reduction` / `OWZLKVY4_p19` family exits are NOT included --
+their debt is the terminal nonlinear DB line (OWZLKVY4_p19 LocalAuto19:445 NEEDS-DB: the nonlinear database
+`taud ≤ taum` conjugation; W6a/§5-M1 family) per the scout verdict table), of which 110 are statable from LocalConcl
+and are re-exposed as ONE conjunction below; 0 exits are dropped per the no-forcing rule (each drop named in the theorem
+docstring).
+Self-contained section: pure insertion, zero new imports (LA19 already imported at :490), zero proof obligations
+(body = the exit assembly itself), own `#print axioms` probe (the shared la34 footer untouched).
+The scoped heartbeat raise mirrors the file-level `set_option maxHeartbeats` above: a 110-conjunct statement exceeds
+even the file budget during statement elaboration (lv910 measured the 71-conjunct PA4 case against the 200000 default).
+-/
+
+set_option maxHeartbeats 50000000 in
+
+/-- LA19 materialization capstone (scout lane leftover-mat-scout-2
+workorder LV12, implementation lane lv1112-w1, 2026-11-04).  The
+110 public top-level Kepler.Text.LocalAuto19 theorem exits unreachable from every
+e2e root (scout probe1/probe2: GROUP_VS_CONE fresh sorried-0, standard-three
+axiom face on the axprobe sample); 110 of them are statable from
+LocalConcl and are re-exposed as ONE conjunction.
+Implemented here: 110 of the 110.
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its Kepler.Text.LocalAuto19 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the first depth-0 `:=` by the generator gen_items.py,
+bracket-balance guarded); compiler-generated equation/aux lemmas have no
+source statement anywhere, so their conjunct is the `#check @name` printer
+dump verbatim and each passes a per-item sigtest (the `⟨...⟩` assembly below
+must unify it definitionally with the constant's type; printer dumps with
+proof-term elision `...` are dropped per the lv12-w1 t_eqlemma_microtest
+evidence, each drop named above).  Semantic identity of every conjunct is
+re-verified by that assembly (each element must have exactly its conjunct's
+type); the per-conjunct comments carry each exit's Kepler.Text.LocalAuto19 declaration
+line and file-local docstring HOL anchor.  Conjunct order: the scout
+seed-list order (probe1 SEED list).  Body = the assembly of the exit
+constants -- zero new proof obligations, zero new imports. -/
+theorem la19_wire_capstone_w1 :
+    -- 1. Kepler.Text.OPEN_REAL_INTERVAL_SING_p19 (Kepler.Text.LocalAuto19:455; HOL `OPEN_REAL_INTERVAL_SING`)
+    (∀ (a b c : ℝ),
+    Set.Ioo a b ≠ {c}
+    ) ∧
+    -- 2. Kepler.Text.REAL_WLOG_AAB_SIMPLEX_p19 (Kepler.Text.LocalAuto19:1574; HOL `REAL_WLOG_AAB_SIMPLEX`)
+    (∀ {P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → Prop}
+          (hswap : ∀ y1 y2 y3 y4 y5 y6, P y1 y2 y3 y4 y5 y6 = P y3 y2 y1 y6 y5 y4)
+          (hord : ∀ y1 y2 y3 y4 y5 y6, y4 ≤ y6 → P y1 y2 y3 y4 y5 y6),
+    ∀ y1 y2 y3 y4 y5 y6, P y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 3. Kepler.Text.REAL_WLOG_ABB_SIMPLEX_p19 (Kepler.Text.LocalAuto19:1585; HOL `REAL_WLOG_ABB_SIMPLEX`)
+    (∀ {P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → Prop}
+          (hswap : ∀ y1 y2 y3 y4 y5 y6, P y1 y2 y3 y4 y5 y6 = P y1 y3 y2 y4 y6 y5)
+          (hord : ∀ y1 y2 y3 y4 y5 y6, y6 ≤ y5 → P y1 y2 y3 y4 y5 y6),
+    ∀ y1 y2 y3 y4 y5 y6, P y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 4. Kepler.Text.REAL_WLOG_S3_SIMPLEX_p19 (Kepler.Text.LocalAuto19:1544; HOL `REAL_WLOG_S3_SIMPLEX`)
+    (∀ {P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → Prop}
+          (hcyc : ∀ y1 y2 y3 y4 y5 y6, P y1 y2 y3 y4 y5 y6 = P y3 y1 y2 y6 y4 y5)
+          (hswap : ∀ y1 y2 y3 y4 y5 y6, P y1 y2 y3 y4 y5 y6 = P y2 y1 y3 y5 y4 y6)
+          (hord : ∀ y1 y2 y3 y4 y5 y6, y4 ≤ y6 → y6 ≤ y5 → P y1 y2 y3 y4 y5 y6),
+    ∀ y1 y2 y3 y4 y5 y6, P y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 5. Kepler.Text.abcOfQuadratic_p19_quad (Kepler.Text.LocalAuto19:1014; no HOL anchor line in file docstring)
+    (∀ (A B C : ℝ),
+    abcOfQuadratic_p19 (fun t => A * t * t + B * t + C) = (A, B, C)
+    ) ∧
+    -- 6. Kepler.Text.continuous_preimage_closed_p19 (Kepler.Text.LocalAuto19:777; HOL `continuous_preimage_closed`)
+    (∀ {f : ℝ → ℝ} {s t : Set ℝ}
+          (hs : IsClosed s) (ht : IsClosed t) (hc : ContinuousOn f s),
+    IsClosed {x | x ∈ s ∧ f x ∈ t}
+    ) ∧
+    -- 7. Kepler.Text.continuous_preimage_open_p19 (Kepler.Text.LocalAuto19:788; HOL `continuous_preimage_open`)
+    (∀ {f : ℝ → ℝ} {s t : Set ℝ}
+          (hs : IsOpen s) (ht : IsOpen t) (hc : ContinuousOn f s),
+    IsOpen {x | x ∈ s ∧ f x ∈ t}
+    ) ∧
+    -- 8. Kepler.Text.delta126x_p19.eq_1 (Kepler.Text.LocalAuto19:135; compiler-generated equation/aux lemma (parent def `delta126x_p19` at Kepler.Text.LocalAuto19:135; no source statement; sigtest = assembly elaboration))
+    (∀ (s3 s4 s5 x1 x2 x3 x4 x5 x6 : ℝ),
+          delta126x_p19 s3 s4 s5 x1 x2 x3 x4 x5 x6 = deltaX x1 x2 s3 s4 s5 x6
+    ) ∧
+    -- 9. Kepler.Text.delta135x_p19.eq_1 (Kepler.Text.LocalAuto19:141; compiler-generated equation/aux lemma (parent def `delta135x_p19` at Kepler.Text.LocalAuto19:141; no source statement; sigtest = assembly elaboration))
+    (∀ (s2 s4 s6 x1 x2 x3 x4 x5 x6 : ℝ),
+          delta135x_p19 s2 s4 s6 x1 x2 x3 x4 x5 x6 = deltaX x1 s2 x3 s4 x5 s6
+    ) ∧
+    -- 10. Kepler.Text.delta234x_p19.eq_1 (Kepler.Text.LocalAuto19:138; compiler-generated equation/aux lemma (parent def `delta234x_p19` at Kepler.Text.LocalAuto19:138; no source statement; sigtest = assembly elaboration))
+    (∀ (s1 s5 s6 x1 x2 x3 x4 x5 x6 : ℝ),
+          delta234x_p19 s1 s5 s6 x1 x2 x3 x4 x5 x6 = deltaX s1 x2 x3 x4 s5 s6
+    ) ∧
+    -- 11. Kepler.Text.deltaX_perm_p19 (Kepler.Text.LocalAuto19:1351; no HOL anchor line in file docstring)
+    (∀ (a b c d e f : ℝ),
+    deltaX a b c d e f = deltaX c a b f d e
+    ) ∧
+    -- 12. Kepler.Text.deltaX_swap_p19 (Kepler.Text.LocalAuto19:1478; no HOL anchor line in file docstring)
+    (∀ (a b c d e f : ℝ),
+    deltaX a b c d e f = deltaX a c b d f e
+    ) ∧
+    -- 13. Kepler.Text.deltaX_vert12_p19 (Kepler.Text.LocalAuto19:1369; no HOL anchor line in file docstring)
+    (∀ (a b c d e f : ℝ),
+    deltaX a b c d e f = deltaX b a c e d f
+    ) ∧
+    -- 14. Kepler.Text.deltaY_hasDerivAt_p19 (Kepler.Text.LocalAuto19:474; no HOL anchor line in file docstring)
+    (∀ (t y2 y3 y4 y5 y6 : ℝ),
+    HasDerivAt (fun q => deltaY q y2 y3 y4 y5 y6)
+          (2 * t * deltaX1_p19 (t * t) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)) t
+    ) ∧
+    -- 15. Kepler.Text.delta_diff_p19 (Kepler.Text.LocalAuto19:1006; HOL `delta_diff`)
+    (∀ (x1 z1 x2 x3 x4 x5 x6 : ℝ),
+    deltaX x1 x2 x3 x4 x5 x6
+          = deltaX z1 x2 x3 x4 x5 x6 + deltaX1_p19 x1 x2 x3 x4 x5 x6 * (x1 - z1)
+            + x4 * (x1 - z1) ^ 2
+    ) ∧
+    -- 16. Kepler.Text.delta_y_continuous_p19 (Kepler.Text.LocalAuto19:751; HOL `delta_y_continuous`)
+    (∀ (y2 y3 y4 y5 y6 : ℝ),
+    ContinuousOn (fun q => deltaY q y2 y3 y4 y5 y6) Set.univ
+    ) ∧
+    -- 17. Kepler.Text.delta_y_sym_cases2_p19 (Kepler.Text.LocalAuto19:1276; HOL `delta_y_sym_cases2`)
+    (∀ (y1 y2 y3 y4 y5 y6 a : ℝ),
+    deltaY a y3 y1 y5 2 2 = deltaY a y1 y3 y5 2 2 ∧
+          deltaY a y3 y2 y4 2 2 = deltaY a y2 y3 y4 2 2 ∧
+          deltaY a y2 y1 y6 2 2 = deltaY a y1 y2 y6 2 2
+    ) ∧
+    -- 18. Kepler.Text.deriv_form_taud_p19 (Kepler.Text.LocalAuto19:517; HOL `deriv_form_taud`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ)
+          (hd : 0 < deltaY y1 y2 y3 y4 y5 y6),
+    derivedForm (0 < deltaY y1 y2 y3 y4 y5 y6)
+          (fun q => taudP19 q y2 y3 y4 y5 y6)
+          ((-0.07 * deltaY y1 y2 y3 y4 y5 y6 +
+              muY_p19 y1 y2 y3 * (yOfX deltaX1_p19 y1 y2 y3 y4 y5 y6 * y1) +
+              (sol0 / (2 * h0 - 2)) * Real.sqrt (deltaY y1 y2 y3 y4 y5 y6)) /
+            Real.sqrt (deltaY y1 y2 y3 y4 y5 y6))
+          y1 Set.univ
+    ) ∧
+    -- 19. Kepler.Text.derived_form_F_p19 (Kepler.Text.LocalAuto19:470; HOL `derived_form_F`)
+    (∀ (f : ℝ → ℝ) (f' x : ℝ) (s : Set ℝ),
+    derivedForm False f f' x s
+    ) ∧
+    -- 20. Kepler.Text.derived_form_delta_y_p19 (Kepler.Text.LocalAuto19:508; HOL `derived_form_delta_y`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+    derivedForm True (fun q => deltaY q y2 y3 y4 y5 y6)
+          (yOfX deltaX1_p19 y1 y2 y3 y4 y5 y6 * 2 * y1) y1 Set.univ
+    ) ∧
+    -- 21. Kepler.Text.derived_form_taud_ALT_p19 (Kepler.Text.LocalAuto19:570; HOL `derived_form_taud_ALT`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ)
+          (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) (hy1 : 0 ≤ y1) (hy2 : 0 ≤ y2) (hy3 : 0 ≤ y3),
+    derivedForm (0 < deltaY y1 y2 y3 y4 y5 y6 ∧ 0 ≤ y1 ∧ 0 ≤ y2 ∧ 0 ≤ y3)
+          (fun q => taudP19 q y2 y3 y4 y5 y6)
+          (yOfX taudD1numX_p19 y1 y2 y3 y4 y5 y6 /
+            Real.sqrt (deltaY y1 y2 y3 y4 y5 y6))
+          y1 Set.univ
+    ) ∧
+    -- 22. Kepler.Text.derived_form_taud_D3_p19 (Kepler.Text.LocalAuto19:629; HOL `derived_form_taud_D3`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+    ∃ f' : ℝ, derivedForm (0 < deltaY y1 y2 y3 y4 y5 y6 ∧ 0 < y1 ∧ 0 ≤ y2 ∧ 0 ≤ y3)
+          (fun q => yOfX taudD2numX_p19 q y2 y3 y4 y5 y6 /
+            Real.sqrt (deltaY q y2 y3 y4 y5 y6) ^ 3)
+          f' y1 Set.univ
+    ) ∧
+    -- 23. Kepler.Text.edge2_flatD_sym_p19 (Kepler.Text.LocalAuto19:1293; HOL `edge2_flatD_sym`)
+    (∀ (d y1 y2 y3 a : ℝ),
+    edge2FlatDX1_p19 d y1 y2 y3 a a = edge2FlatDX1_p19 d y2 y1 y3 a a
+    ) ∧
+    -- 24. Kepler.Text.edge2_flatD_x1_delta_lemma2_p19 (Kepler.Text.LocalAuto19:1028; HOL `edge2_flatD_x1_delta_lemma2`)
+    (∀ (d x1 x2 x3 x4 x5 x6 : ℝ)
+          (hd : deltaX x1 x2 x3 x4 x5 x6 = d) (hx4 : 0 < x4)
+          (hΔ : deltaX1_p19 x1 x2 x3 x4 x5 x6 < 0),
+    edge2FlatDX1_p19 d x2 x3 x4 x5 x6 = x1
+    ) ∧
+    -- 25. Kepler.Text.edge2_flatD_x1_sym_cases_p19 (Kepler.Text.LocalAuto19:1305; HOL `edge2_flatD_x1_sym_cases`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+    edge2FlatDX1_p19 0 (y3 * y3) (y2 * y2) (y4 * y4) (2 * 2) (2 * 2)
+            = edge2FlatDX1_p19 0 (y2 * y2) (y3 * y3) (y4 * y4) (2 * 2) (2 * 2) ∧
+          edge2FlatDX1_p19 0 (y3 * y3) (y1 * y1) (y5 * y5) (2 * 2) (2 * 2)
+            = edge2FlatDX1_p19 0 (y1 * y1) (y3 * y3) (y5 * y5) (2 * 2) (2 * 2) ∧
+          edge2FlatDX1_p19 0 (y2 * y2) (y1 * y1) (y6 * y6) (2 * 2) (2 * 2)
+            = edge2FlatDX1_p19 0 (y1 * y1) (y2 * y2) (y6 * y6) (2 * 2) (2 * 2)
+    ) ∧
+    -- 26. Kepler.Text.eulerA_x_sym_cases_p19 (Kepler.Text.LocalAuto19:1326; HOL `eulerA_x_sym_cases`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+    yOfX eulerAx_p19 y2 y1 y3 y5 y4 y6 = yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 ∧
+          yOfX eulerAx_p19 y3 y1 y2 y6 y4 y5 = yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 ∧
+          yOfX eulerAx_p19 y3 y2 y1 y6 y5 y4 = yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 ∧
+          yOfX eulerAx_p19 y1 y3 y2 y4 y6 y5 = yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 27. Kepler.Text.flatTerm2_126x_p19.eq_1 (Kepler.Text.LocalAuto19:193; compiler-generated equation/aux lemma (parent def `flatTerm2_126x_p19` at Kepler.Text.LocalAuto19:193; no source statement; sigtest = assembly elaboration))
+    (∀ (d a b x1 x2 x3 x4 x5 x6 : ℝ),
+          flatTerm2_126x_p19 d a b x1 x2 x3 x4 x5 x6 = flatTerm_p19 √(edge2FlatDX1_p19 d x1 x2 x6 a b)
+    ) ∧
+    -- 28. Kepler.Text.flatTerm2_135x_p19.eq_1 (Kepler.Text.LocalAuto19:198; compiler-generated equation/aux lemma (parent def `flatTerm2_135x_p19` at Kepler.Text.LocalAuto19:198; no source statement; sigtest = assembly elaboration))
+    (∀ (d a b x1 x2 x3 x4 x5 x6 : ℝ),
+          flatTerm2_135x_p19 d a b x1 x2 x3 x4 x5 x6 = flatTerm_p19 √(edge2FlatDX1_p19 d x1 x3 x5 a b)
+    ) ∧
+    -- 29. Kepler.Text.flatTerm2_234x_p19.eq_1 (Kepler.Text.LocalAuto19:203; compiler-generated equation/aux lemma (parent def `flatTerm2_234x_p19` at Kepler.Text.LocalAuto19:203; no source statement; sigtest = assembly elaboration))
+    (∀ (d a b x1 x2 x3 x4 x5 x6 : ℝ),
+          flatTerm2_234x_p19 d a b x1 x2 x3 x4 x5 x6 = flatTerm_p19 √(edge2FlatDX1_p19 d x2 x3 x4 a b)
+    ) ∧
+    -- 30. Kepler.Text.flatTerm_p19.eq_1 (Kepler.Text.LocalAuto19:116; compiler-generated equation/aux lemma (parent def `flatTerm_p19` at Kepler.Text.LocalAuto19:116; no source statement; sigtest = assembly elaboration))
+    (∀ (y : ℝ), flatTerm_p19 y = sol0 * (y - 2 * h0) / (2 * h0 - 2)
+    ) ∧
+    -- 31. Kepler.Text.flat_term_2_p19 (Kepler.Text.LocalAuto19:889; HOL `flat_term_2`)
+    (flatTerm_p19 2 = -sol0
+    ) ∧
+    -- 32. Kepler.Text.flat_term_2h0_p19 (Kepler.Text.LocalAuto19:897; HOL `flat_term_2h0`)
+    (flatTerm_p19 (2 * h0) = 0
+    ) ∧
+    -- 33. Kepler.Text.flat_term_neg_p19 (Kepler.Text.LocalAuto19:382; HOL `flat_term_neg`)
+    (∀ (y : ℝ) (hy : y ≤ 2 * h0),
+    flatTerm_p19 y ≤ 0
+    ) ∧
+    -- 34. Kepler.Text.flat_term_sol0_p19 (Kepler.Text.LocalAuto19:903; HOL `flat_term_sol0`)
+    (∀ (y : ℝ) (hy : 2 ≤ y),
+    -sol0 ≤ flatTerm_p19 y
+    ) ∧
+    -- 35. Kepler.Text.h0_num_p19 (Kepler.Text.LocalAuto19:336; no HOL anchor line in file docstring)
+    (h0 = 1.26 ∧ 2 * h0 = 2.52 ∧ 2 * h0 - 2 = 0.52
+    ) ∧
+    -- 36. Kepler.Text.ineq_sym_s2_aab_p19 (Kepler.Text.LocalAuto19:1450; HOL `ineq_sym_s2_aab`)
+    (∀ {y4 y6 : ℝ} {p : List (ℝ × ℝ × ℝ)} {r : Prop}
+          (hp : ineqP19 p (r ∨ y6 < y4)) (hord : y4 ≤ y6),
+    ineqP19 p r
+    ) ∧
+    -- 37. Kepler.Text.ineq_sym_s2_abb_p19 (Kepler.Text.LocalAuto19:1464; HOL `ineq_sym_s2_abb`)
+    (∀ {y5 y6 : ℝ} {p : List (ℝ × ℝ × ℝ)} {r : Prop}
+          (hp : ineqP19 p (r ∨ y5 < y6)) (hord : y6 ≤ y5),
+    ineqP19 p r
+    ) ∧
+    -- 38. Kepler.Text.ineq_sym_s3_p19 (Kepler.Text.LocalAuto19:1434; HOL `ineq_sym_s3`)
+    (∀ {y4 y5 y6 : ℝ} {p : List (ℝ × ℝ × ℝ)} {r : Prop}
+          (hp : ineqP19 p (r ∨ y6 < y4 ∨ y5 < y6)) (hord : y4 ≤ y6 ∧ y6 ≤ y5),
+    ineqP19 p r
+    ) ∧
+    -- 39. Kepler.Text.mu6X_p19.eq_1 (Kepler.Text.LocalAuto19:113; compiler-generated equation/aux lemma (parent def `mu6X_p19` at Kepler.Text.LocalAuto19:113; no source statement; sigtest = assembly elaboration))
+    (∀ (x1 x2 x3 x4 x5 x6 : ℝ), mu6X_p19 x1 x2 x3 x4 x5 x6 = muY_p19 √x1 √x2 √x3
+    ) ∧
+    -- 40. Kepler.Text.muY_p19.eq_1 (Kepler.Text.LocalAuto19:108; compiler-generated equation/aux lemma (parent def `muY_p19` at Kepler.Text.LocalAuto19:108; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 : ℝ), muY_p19 y1 y2 y3 = 12e-3 + 7e-2 * (2.52 - y1) + 1e-2 * (2.52 * 2 - y2 - y3)
+    ) ∧
+    -- 41. Kepler.Text.mu_y_ft_combine_p19 (Kepler.Text.LocalAuto19:388; HOL `mu_y_ft_combine`)
+    (∀ (y y2 y3 sd : ℝ),
+    muY_p19 y y2 y3 * sd + flatTerm_p19 y
+          = muY_p19 (2 * h0) y2 y3 * sd +
+            (1 - (2 * h0 - 2) * 0.07 * sd / sol0) * flatTerm_p19 y
+    ) ∧
+    -- 42. Kepler.Text.mu_y_sym_cases_p19 (Kepler.Text.LocalAuto19:1340; HOL `mu_y_sym_cases`)
+    (∀ (y1 y2 y3 : ℝ),
+    muY_p19 2 (Real.sqrt (y2 * y2)) (Real.sqrt (y1 * y1))
+            = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y2 * y2)) ∧
+          muY_p19 2 (Real.sqrt (y3 * y3)) (Real.sqrt (y2 * y2))
+            = muY_p19 2 (Real.sqrt (y2 * y2)) (Real.sqrt (y3 * y3)) ∧
+          muY_p19 2 (Real.sqrt (y3 * y3)) (Real.sqrt (y1 * y1))
+            = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y3 * y3))
+    ) ∧
+    -- 43. Kepler.Text.mu_y_sym_p19 (Kepler.Text.LocalAuto19:1336; HOL `mu_y_sym`)
+    (∀ (y1 y2 y3 : ℝ),
+    muY_p19 y1 y2 y3 = muY_p19 y1 y3 y2
+    ) ∧
+    -- 44. Kepler.Text.mud126xV1_p19.eq_1 (Kepler.Text.LocalAuto19:154; compiler-generated equation/aux lemma (parent def `mud126xV1_p19` at Kepler.Text.LocalAuto19:154; no source statement; sigtest = assembly elaboration))
+    (∀ (a b c x1 x2 x3 x4 x5 x6 : ℝ),
+          mud126xV1_p19 a b c x1 x2 x3 x4 x5 x6 = muY_p19 a √x1 √x2 * √(delta126x_p19 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6)
+    ) ∧
+    -- 45. Kepler.Text.mud135xV1_p19.eq_1 (Kepler.Text.LocalAuto19:160; compiler-generated equation/aux lemma (parent def `mud135xV1_p19` at Kepler.Text.LocalAuto19:160; no source statement; sigtest = assembly elaboration))
+    (∀ (a b c x1 x2 x3 x4 x5 x6 : ℝ),
+          mud135xV1_p19 a b c x1 x2 x3 x4 x5 x6 = muY_p19 a √x1 √x3 * √(delta135x_p19 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6)
+    ) ∧
+    -- 46. Kepler.Text.mud234xV1_p19.eq_1 (Kepler.Text.LocalAuto19:166; compiler-generated equation/aux lemma (parent def `mud234xV1_p19` at Kepler.Text.LocalAuto19:166; no source statement; sigtest = assembly elaboration))
+    (∀ (a b c x1 x2 x3 x4 x5 x6 : ℝ),
+          mud234xV1_p19 a b c x1 x2 x3 x4 x5 x6 = muY_p19 a √x2 √x3 * √(delta234x_p19 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6)
+    ) ∧
+    -- 47. Kepler.Text.mudLs126x_p19.eq_1 (Kepler.Text.LocalAuto19:172; compiler-generated equation/aux lemma (parent def `mudLs126x_p19` at Kepler.Text.LocalAuto19:172; no source statement; sigtest = assembly elaboration))
+    (∀ (d1s d2s a b c x1 x2 x3 x4 x5 x6 : ℝ),
+          mudLs126x_p19 d1s d2s a b c x1 x2 x3 x4 x5 x6 =
+            mu6X_p19 (a * a) x1 x2 0 0 0 *
+              (1 / (d1s + d2s) * (delta126x_p19 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6 - d1s * d1s) + d1s)
+    ) ∧
+    -- 48. Kepler.Text.mudLs135x_p19.eq_1 (Kepler.Text.LocalAuto19:179; compiler-generated equation/aux lemma (parent def `mudLs135x_p19` at Kepler.Text.LocalAuto19:179; no source statement; sigtest = assembly elaboration))
+    (∀ (d1s d2s a b c x1 x2 x3 x4 x5 x6 : ℝ),
+          mudLs135x_p19 d1s d2s a b c x1 x2 x3 x4 x5 x6 =
+            mu6X_p19 (a * a) x1 x3 0 0 0 *
+              (1 / (d1s + d2s) * (delta135x_p19 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6 - d1s * d1s) + d1s)
+    ) ∧
+    -- 49. Kepler.Text.mudLs234x_p19.eq_1 (Kepler.Text.LocalAuto19:186; compiler-generated equation/aux lemma (parent def `mudLs234x_p19` at Kepler.Text.LocalAuto19:186; no source statement; sigtest = assembly elaboration))
+    (∀ (d1s d2s a b c x1 x2 x3 x4 x5 x6 : ℝ),
+          mudLs234x_p19 d1s d2s a b c x1 x2 x3 x4 x5 x6 =
+            mu6X_p19 (a * a) x2 x3 0 0 0 *
+              (1 / (d1s + d2s) * (delta234x_p19 (a * a) (b * b) (c * c) x1 x2 x3 x4 x5 x6 - d1s * d1s) + d1s)
+    ) ∧
+    -- 50. Kepler.Text.mud_126_135_p19 (Kepler.Text.LocalAuto19:879; HOL `mud_126_135`)
+    (∀ (y1 y2 y3 y4 y5 y6 y3' y4' y5' : ℝ),
+    mud126xV1_p19 y3' y4' y5' y1 y2 y3 y4 y5 y6
+          = mud135xV1_p19 y3' y4' y5' y1 y3 y2 y4 y6 y5
+    ) ∧
+    -- 51. Kepler.Text.nonfunctional_flat_term2_126_p19 (Kepler.Text.LocalAuto19:1380; HOL `nonfunctional_flat_term2_126`)
+    (∀ (d a b x1 x2 x3 x4 x5 x6 : ℝ),
+    flatTerm2_126x_p19 d a b x1 x2 x3 x4 x5 x6
+          = flatTerm_p19 (Real.sqrt (edge2FlatDX1_p19 d x1 x2 x6 a b))
+    ) ∧
+    -- 52. Kepler.Text.nonfunctional_flat_term2_135_p19 (Kepler.Text.LocalAuto19:1390; HOL `nonfunctional_flat_term2_135`)
+    (∀ (d a b x1 x2 x3 x4 x5 x6 : ℝ),
+    flatTerm2_135x_p19 d a b x1 x2 x3 x4 x5 x6
+          = flatTerm_p19 (Real.sqrt (edge2FlatDX1_p19 d x1 x3 x5 a b))
+    ) ∧
+    -- 53. Kepler.Text.nonfunctional_flat_term2_234_p19 (Kepler.Text.LocalAuto19:1385; HOL `nonfunctional_flat_term2_234`)
+    (∀ (d a b x1 x2 x3 x4 x5 x6 : ℝ),
+    flatTerm2_234x_p19 d a b x1 x2 x3 x4 x5 x6
+          = flatTerm_p19 (Real.sqrt (edge2FlatDX1_p19 d x2 x3 x4 a b))
+    ) ∧
+    -- 54. Kepler.Text.nonfunctional_mu6_x_y_p19 (Kepler.Text.LocalAuto19:427; HOL `nonfunctional_mu6_x_y`)
+    (∀ (x1 x2 x3 a b c : ℝ),
+    mu6X_p19 x1 x2 x3 a b c = muY_p19 (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3)
+    ) ∧
+    -- 55. Kepler.Text.nonfunctional_mudLs_126_p19 (Kepler.Text.LocalAuto19:1395; HOL `nonfunctional_mudLs_126`)
+    (∀ (y1 y2 x3 x4 x5 y6 : ℝ),
+    mudLs126x_p19 4 10 2 2 2 (y1 * y1) (y2 * y2) x3 x4 x5 (y6 * y6)
+          = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y2 * y2))
+              * (1 / 14 * (deltaY 2 y1 y2 y6 2 2 - 16) + 4)
+    ) ∧
+    -- 56. Kepler.Text.nonfunctional_mudLs_135_p19 (Kepler.Text.LocalAuto19:1420; HOL `nonfunctional_mudLs_135`)
+    (∀ (y1 x2 y3 x4 y5 x6 : ℝ),
+    mudLs135x_p19 4 10 2 2 2 (y1 * y1) x2 (y3 * y3) x4 (y5 * y5) x6
+          = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y3 * y3))
+              * (1 / 14 * (deltaY 2 y1 y3 y5 2 2 - 16) + 4)
+    ) ∧
+    -- 57. Kepler.Text.nonfunctional_mudLs_234_p19 (Kepler.Text.LocalAuto19:1409; HOL `nonfunctional_mudLs_234`)
+    (∀ (x1 y2 y3 y4 x5 x6 : ℝ),
+    mudLs234x_p19 4 10 2 2 2 x1 (y2 * y2) (y3 * y3) (y4 * y4) x5 x6
+          = muY_p19 2 (Real.sqrt (y2 * y2)) (Real.sqrt (y3 * y3))
+              * (1 / 14 * (deltaY 2 y2 y3 y4 2 2 - 16) + 4)
+    ) ∧
+    -- 58. Kepler.Text.nonfunctional_mud_126_p19 (Kepler.Text.LocalAuto19:1355; HOL `nonfunctional_mud_126`)
+    (∀ (a b c y1 y2 y3 y4 y5 y6 : ℝ),
+    yOfX (mud126xV1_p19 a b c) y1 y2 y3 y4 y5 y6
+          = muY_p19 a (Real.sqrt (y1 * y1)) (Real.sqrt (y2 * y2))
+              * Real.sqrt (deltaY a y1 y2 y6 b c)
+    ) ∧
+    -- 59. Kepler.Text.nonfunctional_mud_135_p19 (Kepler.Text.LocalAuto19:1373; HOL `nonfunctional_mud_135`)
+    (∀ (a b c y1 y2 y3 y4 y5 y6 : ℝ),
+    yOfX (mud135xV1_p19 a b c) y1 y2 y3 y4 y5 y6
+          = muY_p19 a (Real.sqrt (y1 * y1)) (Real.sqrt (y3 * y3))
+              * Real.sqrt (deltaY a y1 y3 y5 b c)
+    ) ∧
+    -- 60. Kepler.Text.nonfunctional_mud_234_p19 (Kepler.Text.LocalAuto19:1362; HOL `nonfunctional_mud_234`)
+    (∀ (a b c y1 y2 y3 y4 y5 y6 : ℝ),
+    yOfX (mud234xV1_p19 a b c) y1 y2 y3 y4 y5 y6
+          = muY_p19 a (Real.sqrt (y2 * y2)) (Real.sqrt (y3 * y3))
+              * Real.sqrt (deltaY a y2 y3 y4 b c)
+    ) ∧
+    -- 61. Kepler.Text.quadratic_root_imp_discr_nn_p19 (Kepler.Text.LocalAuto19:974; HOL `quadratic_root_imp_discr_nn`)
+    (∀ (a b c x : ℝ)
+          (h : a * x ^ 2 + b * x + c = 0),
+    0 ≤ b * b - 4 * a * c
+    ) ∧
+    -- 62. Kepler.Text.quadratic_root_minus_works_p19 (Kepler.Text.LocalAuto19:958; HOL `quadratic_root_minus_works`)
+    (∀ (a b c : ℝ) (ha : a ≠ 0)
+          (hd : 0 ≤ b * b - 4 * a * c),
+    a * (-(b + Real.sqrt (b * b - 4 * a * c)) / (2 * a)) ^ 2
+          + b * (-(b + Real.sqrt (b * b - 4 * a * c)) / (2 * a)) + c = 0
+    ) ∧
+    -- 63. Kepler.Text.quadratic_root_plus_eq_p19 (Kepler.Text.LocalAuto19:982; HOL `quadratic_root_plus_eq`)
+    (∀ (a b c m x : ℝ) (ha : 0 < a) (hm : m ≤ x)
+          (h : a * x ^ 2 + b * x + c = 0)
+          (hdisj : 0 < 2 * m * a + b ∨ (2 * m * a + b) ^ 2 < b * b - 4 * a * c),
+    quadraticRootPlus a b c = x
+    ) ∧
+    -- 64. Kepler.Text.r755C126_p19.eq_1 (Kepler.Text.LocalAuto19:275; compiler-generated equation/aux lemma (parent def `r755C126_p19` at Kepler.Text.LocalAuto19:275; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755C126_p19 0 y1 y2 y3 y4 y5 y6 = (deltaY 2 y1 y2 y6 2 2 < 0 ∨ deltaY 2.52 y1 y2 y6 2 2 > 0)
+    ) ∧
+    -- 65. Kepler.Text.r755C126_p19.eq_2 (Kepler.Text.LocalAuto19:275; compiler-generated equation/aux lemma (parent def `r755C126_p19` at Kepler.Text.LocalAuto19:275; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755C126_p19 1 y1 y2 y3 y4 y5 y6 = False
+    ) ∧
+    -- 66. Kepler.Text.r755C126_p19.eq_3 (Kepler.Text.LocalAuto19:275; compiler-generated equation/aux lemma (parent def `r755C126_p19` at Kepler.Text.LocalAuto19:275; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755C126_p19 2 y1 y2 y3 y4 y5 y6 = (deltaY 2 y1 y2 y6 2 2 < 100)
+    ) ∧
+    -- 67. Kepler.Text.r755C126_p19.eq_4 (Kepler.Text.LocalAuto19:275; compiler-generated equation/aux lemma (parent def `r755C126_p19` at Kepler.Text.LocalAuto19:275; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755C126_p19 3 y1 y2 y3 y4 y5 y6 = (deltaY 2 y1 y2 y6 2 2 < 16 ∨ deltaY 2 y1 y2 y6 2 2 > 100)
+    ) ∧
+    -- 68. Kepler.Text.r755C126_p19.eq_5 (Kepler.Text.LocalAuto19:275; compiler-generated equation/aux lemma (parent def `r755C126_p19` at Kepler.Text.LocalAuto19:275; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+          (i = 0 → False) →
+            (i = 1 → False) →
+              (i = 2 → False) →
+                (i = 3 → False) → r755C126_p19 i y1 y2 y3 y4 y5 y6 = (deltaY 2 y1 y2 y6 2 2 < 0 ∨ deltaY 2 y1 y2 y6 2 2 > 16)
+    ) ∧
+    -- 69. Kepler.Text.r755C126_shuffle_ikj_p19 (Kepler.Text.LocalAuto19:1517; no HOL anchor line in file docstring)
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+    r755C126_p19 i y1 y3 y2 y4 y6 y5 = r755C135_p19 i y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 70. Kepler.Text.r755C135_p19.eq_1 (Kepler.Text.LocalAuto19:284; compiler-generated equation/aux lemma (parent def `r755C135_p19` at Kepler.Text.LocalAuto19:284; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755C135_p19 0 y1 y2 y3 y4 y5 y6 = (deltaY 2 y1 y3 y5 2 2 < 0 ∨ deltaY 2.52 y1 y3 y5 2 2 > 0)
+    ) ∧
+    -- 71. Kepler.Text.r755C135_p19.eq_2 (Kepler.Text.LocalAuto19:284; compiler-generated equation/aux lemma (parent def `r755C135_p19` at Kepler.Text.LocalAuto19:284; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755C135_p19 1 y1 y2 y3 y4 y5 y6 = False
+    ) ∧
+    -- 72. Kepler.Text.r755C135_p19.eq_3 (Kepler.Text.LocalAuto19:284; compiler-generated equation/aux lemma (parent def `r755C135_p19` at Kepler.Text.LocalAuto19:284; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755C135_p19 2 y1 y2 y3 y4 y5 y6 = (deltaY 2 y1 y3 y5 2 2 < 100)
+    ) ∧
+    -- 73. Kepler.Text.r755C135_p19.eq_4 (Kepler.Text.LocalAuto19:284; compiler-generated equation/aux lemma (parent def `r755C135_p19` at Kepler.Text.LocalAuto19:284; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755C135_p19 3 y1 y2 y3 y4 y5 y6 = (deltaY 2 y1 y3 y5 2 2 < 16 ∨ deltaY 2 y1 y3 y5 2 2 > 100)
+    ) ∧
+    -- 74. Kepler.Text.r755C135_p19.eq_5 (Kepler.Text.LocalAuto19:284; compiler-generated equation/aux lemma (parent def `r755C135_p19` at Kepler.Text.LocalAuto19:284; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+          (i = 0 → False) →
+            (i = 1 → False) →
+              (i = 2 → False) →
+                (i = 3 → False) → r755C135_p19 i y1 y2 y3 y4 y5 y6 = (deltaY 2 y1 y3 y5 2 2 < 0 ∨ deltaY 2 y1 y3 y5 2 2 > 16)
+    ) ∧
+    -- 75. Kepler.Text.r755C135_shuffle_ikj_p19 (Kepler.Text.LocalAuto19:1521; no HOL anchor line in file docstring)
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+    r755C135_p19 i y1 y3 y2 y4 y6 y5 = r755C126_p19 i y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 76. Kepler.Text.r755C234_p19.eq_1 (Kepler.Text.LocalAuto19:266; compiler-generated equation/aux lemma (parent def `r755C234_p19` at Kepler.Text.LocalAuto19:266; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755C234_p19 0 y1 y2 y3 y4 y5 y6 = (deltaY 2 y2 y3 y4 2 2 < 0 ∨ deltaY 2.52 y2 y3 y4 2 2 > 0)
+    ) ∧
+    -- 77. Kepler.Text.r755C234_p19.eq_2 (Kepler.Text.LocalAuto19:266; compiler-generated equation/aux lemma (parent def `r755C234_p19` at Kepler.Text.LocalAuto19:266; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755C234_p19 1 y1 y2 y3 y4 y5 y6 = False
+    ) ∧
+    -- 78. Kepler.Text.r755C234_p19.eq_3 (Kepler.Text.LocalAuto19:266; compiler-generated equation/aux lemma (parent def `r755C234_p19` at Kepler.Text.LocalAuto19:266; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755C234_p19 2 y1 y2 y3 y4 y5 y6 = (deltaY 2 y2 y3 y4 2 2 < 100)
+    ) ∧
+    -- 79. Kepler.Text.r755C234_p19.eq_4 (Kepler.Text.LocalAuto19:266; compiler-generated equation/aux lemma (parent def `r755C234_p19` at Kepler.Text.LocalAuto19:266; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755C234_p19 3 y1 y2 y3 y4 y5 y6 = (deltaY 2 y2 y3 y4 2 2 < 16 ∨ deltaY 2 y2 y3 y4 2 2 > 100)
+    ) ∧
+    -- 80. Kepler.Text.r755C234_p19.eq_5 (Kepler.Text.LocalAuto19:266; compiler-generated equation/aux lemma (parent def `r755C234_p19` at Kepler.Text.LocalAuto19:266; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+          (i = 0 → False) →
+            (i = 1 → False) →
+              (i = 2 → False) →
+                (i = 3 → False) → r755C234_p19 i y1 y2 y3 y4 y5 y6 = (deltaY 2 y2 y3 y4 2 2 < 0 ∨ deltaY 2 y2 y3 y4 2 2 > 16)
+    ) ∧
+    -- 81. Kepler.Text.r755C234_shuffle_ikj_p19 (Kepler.Text.LocalAuto19:1510; no HOL anchor line in file docstring)
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+    r755C234_p19 i y1 y3 y2 y4 y6 y5 = r755C234_p19 i y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 82. Kepler.Text.r755D126_p19.eq_1 (Kepler.Text.LocalAuto19:247; compiler-generated equation/aux lemma (parent def `r755D126_p19` at Kepler.Text.LocalAuto19:247; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D126_p19 0 y1 y2 y3 y4 y5 y6 = yOfX (flatTerm2_126x_p19 0 4 4) y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 83. Kepler.Text.r755D126_p19.eq_2 (Kepler.Text.LocalAuto19:247; compiler-generated equation/aux lemma (parent def `r755D126_p19` at Kepler.Text.LocalAuto19:247; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755D126_p19 1 y1 y2 y3 y4 y5 y6 = 0
+    ) ∧
+    -- 84. Kepler.Text.r755D126_p19.eq_3 (Kepler.Text.LocalAuto19:247; compiler-generated equation/aux lemma (parent def `r755D126_p19` at Kepler.Text.LocalAuto19:247; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D126_p19 2 y1 y2 y3 y4 y5 y6 = yOfX (mud126xV1_p19 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+    ) ∧
+    -- 85. Kepler.Text.r755D126_p19.eq_4 (Kepler.Text.LocalAuto19:247; compiler-generated equation/aux lemma (parent def `r755D126_p19` at Kepler.Text.LocalAuto19:247; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D126_p19 3 y1 y2 y3 y4 y5 y6 = yOfX (mudLs126x_p19 4 10 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+    ) ∧
+    -- 86. Kepler.Text.r755D126_p19.eq_5 (Kepler.Text.LocalAuto19:247; compiler-generated equation/aux lemma (parent def `r755D126_p19` at Kepler.Text.LocalAuto19:247; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+          (i = 0 → False) → (i = 1 → False) → (i = 2 → False) → (i = 3 → False) → r755D126_p19 i y1 y2 y3 y4 y5 y6 = 0 - sol0
+    ) ∧
+    -- 87. Kepler.Text.r755D126_shuffle_ikj_p19 (Kepler.Text.LocalAuto19:1492; no HOL anchor line in file docstring)
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+    r755D126_p19 i y1 y3 y2 y4 y6 y5 = r755D135_p19 i y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 88. Kepler.Text.r755D135_p19.eq_1 (Kepler.Text.LocalAuto19:256; compiler-generated equation/aux lemma (parent def `r755D135_p19` at Kepler.Text.LocalAuto19:256; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D135_p19 0 y1 y2 y3 y4 y5 y6 = yOfX (flatTerm2_135x_p19 0 4 4) y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 89. Kepler.Text.r755D135_p19.eq_2 (Kepler.Text.LocalAuto19:256; compiler-generated equation/aux lemma (parent def `r755D135_p19` at Kepler.Text.LocalAuto19:256; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755D135_p19 1 y1 y2 y3 y4 y5 y6 = 0
+    ) ∧
+    -- 90. Kepler.Text.r755D135_p19.eq_3 (Kepler.Text.LocalAuto19:256; compiler-generated equation/aux lemma (parent def `r755D135_p19` at Kepler.Text.LocalAuto19:256; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D135_p19 2 y1 y2 y3 y4 y5 y6 = yOfX (mud135xV1_p19 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+    ) ∧
+    -- 91. Kepler.Text.r755D135_p19.eq_4 (Kepler.Text.LocalAuto19:256; compiler-generated equation/aux lemma (parent def `r755D135_p19` at Kepler.Text.LocalAuto19:256; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D135_p19 3 y1 y2 y3 y4 y5 y6 = yOfX (mudLs135x_p19 4 10 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+    ) ∧
+    -- 92. Kepler.Text.r755D135_p19.eq_5 (Kepler.Text.LocalAuto19:256; compiler-generated equation/aux lemma (parent def `r755D135_p19` at Kepler.Text.LocalAuto19:256; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+          (i = 0 → False) → (i = 1 → False) → (i = 2 → False) → (i = 3 → False) → r755D135_p19 i y1 y2 y3 y4 y5 y6 = 0 - sol0
+    ) ∧
+    -- 93. Kepler.Text.r755D135_shuffle_ikj_p19 (Kepler.Text.LocalAuto19:1501; no HOL anchor line in file docstring)
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+    r755D135_p19 i y1 y3 y2 y4 y6 y5 = r755D126_p19 i y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 94. Kepler.Text.r755D234_p19.eq_1 (Kepler.Text.LocalAuto19:238; compiler-generated equation/aux lemma (parent def `r755D234_p19` at Kepler.Text.LocalAuto19:238; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D234_p19 0 y1 y2 y3 y4 y5 y6 = yOfX (flatTerm2_234x_p19 0 4 4) y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 95. Kepler.Text.r755D234_p19.eq_2 (Kepler.Text.LocalAuto19:238; compiler-generated equation/aux lemma (parent def `r755D234_p19` at Kepler.Text.LocalAuto19:238; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ), r755D234_p19 1 y1 y2 y3 y4 y5 y6 = 0
+    ) ∧
+    -- 96. Kepler.Text.r755D234_p19.eq_3 (Kepler.Text.LocalAuto19:238; compiler-generated equation/aux lemma (parent def `r755D234_p19` at Kepler.Text.LocalAuto19:238; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D234_p19 2 y1 y2 y3 y4 y5 y6 = yOfX (mud234xV1_p19 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+    ) ∧
+    -- 97. Kepler.Text.r755D234_p19.eq_4 (Kepler.Text.LocalAuto19:238; compiler-generated equation/aux lemma (parent def `r755D234_p19` at Kepler.Text.LocalAuto19:238; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          r755D234_p19 3 y1 y2 y3 y4 y5 y6 = yOfX (mudLs234x_p19 4 10 2 2 2) y1 y2 y3 y4 y5 y6 - sol0
+    ) ∧
+    -- 98. Kepler.Text.r755D234_p19.eq_5 (Kepler.Text.LocalAuto19:238; compiler-generated equation/aux lemma (parent def `r755D234_p19` at Kepler.Text.LocalAuto19:238; no source statement; sigtest = assembly elaboration))
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+          (i = 0 → False) → (i = 1 → False) → (i = 2 → False) → (i = 3 → False) → r755D234_p19 i y1 y2 y3 y4 y5 y6 = 0 - sol0
+    ) ∧
+    -- 99. Kepler.Text.r755D234_shuffle_ikj_p19 (Kepler.Text.LocalAuto19:1483; no HOL anchor line in file docstring)
+    (∀ (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ),
+    r755D234_p19 i y1 y3 y2 y4 y6 y5 = r755D234_p19 i y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 100. Kepler.Text.sol0Pos_p19 (Kepler.Text.LocalAuto19:318; HOL `Flyspeck_constants.bounds`)
+    (0 < sol0
+    ) ∧
+    -- 101. Kepler.Text.sqrt20_p19 (Kepler.Text.LocalAuto19:1169; HOL `sqrt20`)
+    (4.47 ≤ Real.sqrt 20
+    ) ∧
+    -- 102. Kepler.Text.sqrt_secant_approx_p19 (Kepler.Text.LocalAuto19:343; HOL `sqrt_secant_approx`)
+    (∀ {x1 x2 x : ℝ} (ha : 0 ≤ x1) (hb : x1 ≤ x) (hc : x ≤ x2),
+    (1 / (Real.sqrt x1 + Real.sqrt x2)) * (x - x1) + Real.sqrt x1 ≤ Real.sqrt x
+    ) ∧
+    -- 103. Kepler.Text.taudP19.eq_1 (Kepler.Text.LocalAuto19:122; compiler-generated equation/aux lemma (parent def `taudP19` at Kepler.Text.LocalAuto19:122; no source statement; sigtest = assembly elaboration))
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ),
+          taudP19 y1 y2 y3 y4 y5 y6 = flatTerm_p19 y1 + √(deltaY y1 y2 y3 y4 y5 y6) * muY_p19 y1 y2 y3
+    ) ∧
+    -- 104. Kepler.Text.taud_053_p19 (Kepler.Text.LocalAuto19:937; HOL `taud_053`)
+    (∀ (y2 y3 y4 y5 y6 : ℝ)
+          (hy2 : y2 ≤ 2 * h0) (hy3 : y3 ≤ 2 * h0)
+          (hd : 20 ≤ deltaY (2 * h0) y2 y3 y4 y5 y6),
+    0.053 ≤ taudP19 (2 * h0) y2 y3 y4 y5 y6
+    ) ∧
+    -- 105. Kepler.Text.taud_2h0_p19 (Kepler.Text.LocalAuto19:922; HOL `taud_2h0`)
+    (∀ (y2 y3 y4 y5 y6 : ℝ)
+          (hd : 0 ≤ deltaY (2 * h0) y2 y3 y4 y5 y6)
+          (hy2 : y2 ≤ 2 * h0) (hy3 : y3 ≤ 2 * h0),
+    0 ≤ taudP19 (2 * h0) y2 y3 y4 y5 y6
+    ) ∧
+    -- 106. Kepler.Text.taud_continuous_p19 (Kepler.Text.LocalAuto19:756; HOL `taud_continuous`)
+    (∀ (y2 y3 y4 y5 y6 : ℝ),
+    ContinuousOn (fun q => taudP19 q y2 y3 y4 y5 y6)
+          {q | 0 ≤ deltaY q y2 y3 y4 y5 y6}
+    ) ∧
+    -- 107. Kepler.Text.taud_ge_flat_term_p19 (Kepler.Text.LocalAuto19:1157; HOL `taud_ge_flat_term`)
+    (∀ (y1 y2 y3 y4 y5 y6 : ℝ)
+          (h1 : y1 ≤ 2 * h0) (h2 : y2 ≤ 2 * h0) (h3 : y3 ≤ 2 * h0)
+          (hd : 0 ≤ deltaY y1 y2 y3 y4 y5 y6),
+    flatTerm_p19 y1 ≤ taudP19 y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 108. Kepler.Text.taud_minimizer_p19 (Kepler.Text.LocalAuto19:797; HOL `taud_minimizer`)
+    (∀ (a b d y2 y3 y4 y5 y6 : ℝ)
+          (hd : 0 ≤ d)
+          (hne : (Set.Icc a b ∩ {q : ℝ | d ≤ deltaY q y2 y3 y4 y5 y6}) ≠ ∅),
+    ∃ z1 ∈ Set.Icc a b ∩ {q : ℝ | d ≤ deltaY q y2 y3 y4 y5 y6},
+          ∀ y1 ∈ Set.Icc a b ∩ {q : ℝ | d ≤ deltaY q y2 y3 y4 y5 y6},
+            taudP19 z1 y2 y3 y4 y5 y6 ≤ taudP19 y1 y2 y3 y4 y5 y6
+    ) ∧
+    -- 109. Kepler.Text.taud_mud_126_x_p19 (Kepler.Text.LocalAuto19:848; HOL `taud_mud_126_x`)
+    (∀ (y3 y4 y5 y1 y2 y3' y4' y5' y6 : ℝ) (h1 : 0 ≤ y1) (h2 : 0 ≤ y2),
+    yOfX (mud126xV1_p19 y3 y4 y5) y1 y2 y3' y4' y5' y6
+          = taudP19 y3 y1 y2 y6 y4 y5 - flatTerm_p19 y3
+    ) ∧
+    -- 110. Kepler.Text.taud_mud_135_x_p19 (Kepler.Text.LocalAuto19:863; HOL `taud_mud_135_x`)
+    (∀ (y2 y4 y6 y1 y2' y3 y4' y5 y6' : ℝ) (h1 : 0 ≤ y1) (h3 : 0 ≤ y3),
+    yOfX (mud135xV1_p19 y2 y4 y6) y1 y2' y3 y4' y5 y6'
+          = taudP19 y2 y1 y3 y5 y4 y6 - flatTerm_p19 y2
+    ) :=
+⟨_root_.Kepler.Text.OPEN_REAL_INTERVAL_SING_p19, _root_.Kepler.Text.REAL_WLOG_AAB_SIMPLEX_p19,
+      _root_.Kepler.Text.REAL_WLOG_ABB_SIMPLEX_p19, _root_.Kepler.Text.REAL_WLOG_S3_SIMPLEX_p19,
+      _root_.Kepler.Text.abcOfQuadratic_p19_quad,
+      _root_.Kepler.Text.continuous_preimage_closed_p19,
+      _root_.Kepler.Text.continuous_preimage_open_p19, _root_.Kepler.Text.delta126x_p19.eq_1,
+      _root_.Kepler.Text.delta135x_p19.eq_1, _root_.Kepler.Text.delta234x_p19.eq_1,
+      _root_.Kepler.Text.deltaX_perm_p19, _root_.Kepler.Text.deltaX_swap_p19,
+      _root_.Kepler.Text.deltaX_vert12_p19, _root_.Kepler.Text.deltaY_hasDerivAt_p19,
+      _root_.Kepler.Text.delta_diff_p19, _root_.Kepler.Text.delta_y_continuous_p19,
+      _root_.Kepler.Text.delta_y_sym_cases2_p19, _root_.Kepler.Text.deriv_form_taud_p19,
+      _root_.Kepler.Text.derived_form_F_p19, _root_.Kepler.Text.derived_form_delta_y_p19,
+      _root_.Kepler.Text.derived_form_taud_ALT_p19, _root_.Kepler.Text.derived_form_taud_D3_p19,
+      _root_.Kepler.Text.edge2_flatD_sym_p19, _root_.Kepler.Text.edge2_flatD_x1_delta_lemma2_p19,
+      _root_.Kepler.Text.edge2_flatD_x1_sym_cases_p19, _root_.Kepler.Text.eulerA_x_sym_cases_p19,
+      _root_.Kepler.Text.flatTerm2_126x_p19.eq_1, _root_.Kepler.Text.flatTerm2_135x_p19.eq_1,
+      _root_.Kepler.Text.flatTerm2_234x_p19.eq_1, _root_.Kepler.Text.flatTerm_p19.eq_1,
+      _root_.Kepler.Text.flat_term_2_p19, _root_.Kepler.Text.flat_term_2h0_p19,
+      _root_.Kepler.Text.flat_term_neg_p19, _root_.Kepler.Text.flat_term_sol0_p19,
+      _root_.Kepler.Text.h0_num_p19, _root_.Kepler.Text.ineq_sym_s2_aab_p19,
+      _root_.Kepler.Text.ineq_sym_s2_abb_p19, _root_.Kepler.Text.ineq_sym_s3_p19,
+      _root_.Kepler.Text.mu6X_p19.eq_1, _root_.Kepler.Text.muY_p19.eq_1,
+      _root_.Kepler.Text.mu_y_ft_combine_p19, _root_.Kepler.Text.mu_y_sym_cases_p19,
+      _root_.Kepler.Text.mu_y_sym_p19, _root_.Kepler.Text.mud126xV1_p19.eq_1,
+      _root_.Kepler.Text.mud135xV1_p19.eq_1, _root_.Kepler.Text.mud234xV1_p19.eq_1,
+      _root_.Kepler.Text.mudLs126x_p19.eq_1, _root_.Kepler.Text.mudLs135x_p19.eq_1,
+      _root_.Kepler.Text.mudLs234x_p19.eq_1, _root_.Kepler.Text.mud_126_135_p19,
+      _root_.Kepler.Text.nonfunctional_flat_term2_126_p19,
+      _root_.Kepler.Text.nonfunctional_flat_term2_135_p19,
+      _root_.Kepler.Text.nonfunctional_flat_term2_234_p19,
+      _root_.Kepler.Text.nonfunctional_mu6_x_y_p19,
+      _root_.Kepler.Text.nonfunctional_mudLs_126_p19,
+      _root_.Kepler.Text.nonfunctional_mudLs_135_p19,
+      _root_.Kepler.Text.nonfunctional_mudLs_234_p19,
+      _root_.Kepler.Text.nonfunctional_mud_126_p19, _root_.Kepler.Text.nonfunctional_mud_135_p19,
+      _root_.Kepler.Text.nonfunctional_mud_234_p19,
+      _root_.Kepler.Text.quadratic_root_imp_discr_nn_p19,
+      _root_.Kepler.Text.quadratic_root_minus_works_p19,
+      _root_.Kepler.Text.quadratic_root_plus_eq_p19, _root_.Kepler.Text.r755C126_p19.eq_1,
+      _root_.Kepler.Text.r755C126_p19.eq_2, _root_.Kepler.Text.r755C126_p19.eq_3,
+      _root_.Kepler.Text.r755C126_p19.eq_4, _root_.Kepler.Text.r755C126_p19.eq_5,
+      _root_.Kepler.Text.r755C126_shuffle_ikj_p19, _root_.Kepler.Text.r755C135_p19.eq_1,
+      _root_.Kepler.Text.r755C135_p19.eq_2, _root_.Kepler.Text.r755C135_p19.eq_3,
+      _root_.Kepler.Text.r755C135_p19.eq_4, _root_.Kepler.Text.r755C135_p19.eq_5,
+      _root_.Kepler.Text.r755C135_shuffle_ikj_p19, _root_.Kepler.Text.r755C234_p19.eq_1,
+      _root_.Kepler.Text.r755C234_p19.eq_2, _root_.Kepler.Text.r755C234_p19.eq_3,
+      _root_.Kepler.Text.r755C234_p19.eq_4, _root_.Kepler.Text.r755C234_p19.eq_5,
+      _root_.Kepler.Text.r755C234_shuffle_ikj_p19, _root_.Kepler.Text.r755D126_p19.eq_1,
+      _root_.Kepler.Text.r755D126_p19.eq_2, _root_.Kepler.Text.r755D126_p19.eq_3,
+      _root_.Kepler.Text.r755D126_p19.eq_4, _root_.Kepler.Text.r755D126_p19.eq_5,
+      _root_.Kepler.Text.r755D126_shuffle_ikj_p19, _root_.Kepler.Text.r755D135_p19.eq_1,
+      _root_.Kepler.Text.r755D135_p19.eq_2, _root_.Kepler.Text.r755D135_p19.eq_3,
+      _root_.Kepler.Text.r755D135_p19.eq_4, _root_.Kepler.Text.r755D135_p19.eq_5,
+      _root_.Kepler.Text.r755D135_shuffle_ikj_p19, _root_.Kepler.Text.r755D234_p19.eq_1,
+      _root_.Kepler.Text.r755D234_p19.eq_2, _root_.Kepler.Text.r755D234_p19.eq_3,
+      _root_.Kepler.Text.r755D234_p19.eq_4, _root_.Kepler.Text.r755D234_p19.eq_5,
+      _root_.Kepler.Text.r755D234_shuffle_ikj_p19, _root_.Kepler.Text.sol0Pos_p19,
+      _root_.Kepler.Text.sqrt20_p19, _root_.Kepler.Text.sqrt_secant_approx_p19,
+      _root_.Kepler.Text.taudP19.eq_1, _root_.Kepler.Text.taud_053_p19,
+      _root_.Kepler.Text.taud_2h0_p19, @_root_.Kepler.Text.taud_continuous_p19,
+      _root_.Kepler.Text.taud_ge_flat_term_p19, _root_.Kepler.Text.taud_minimizer_p19,
+      _root_.Kepler.Text.taud_mud_126_x_p19, _root_.Kepler.Text.taud_mud_135_x_p19⟩
+
+-- Self-check.  Ground truth = `#print axioms`, not prose: expect exactly the standard three
+-- [propext, Classical.choice, Quot.sound] and NO sorryAx (the scout group closure is sorried-0).
+#print axioms la19_wire_capstone_w1
+
 /-! ## Shims (explicit bridging lemmas, documented in the ledger) -/
 
 /-- Bridge for `cross3` continuity (LocalAuto17's helper of the same shape is
