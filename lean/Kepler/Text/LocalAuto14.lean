@@ -3088,6 +3088,114 @@ theorem real_interval_contains_0_ball_p14 (a b e1 : ℝ) (ha : a < 0) (hb : 0 < 
     exact ⟨le_of_lt (by linarith [habs.left, min_le_left (-a) b]),
       le_of_lt (lt_of_lt_of_le habs.right (min_le_right _ _))⟩
 
+/-- w9 recon: `zlz_azim` under the interval strictness that HOL's *open*
+`real_interval (a,b)` supplies (`a < 0 < b`) but the LocalAuto1 `Deformation`
+encoding (`0 ∈ Set.Icc a b`) does not.  Everything else is proved; this
+lemma is the exact statement of `zlz_azim_p14` with `ha`/`hb` added, so it
+becomes a one-line consumer of this lemma if an SF upgrades the frozen
+statement (or `Deformation`) to the open interval. -/
+private theorem w9_zlz_azim_strict (a b : ℝ) (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
+    (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
+    (ha : a < 0) (hb : 0 < b)
+    (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+      interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi) :
+    ∀ x : V3 × V3, ∃ e2 : ℝ, x ∈ FF →
+      0 < e2 ∧ ∀ t, -e2 < t ∧ t < e2 →
+        azimInFan (f x.1 t, f x.2 t) ((fun s => (fun v => f v t) '' s) '' E) ≤ Real.pi := by
+  rintro ⟨p1, p2⟩
+  by_cases hxFF : (p1, p2) ∈ FF
+  · have hLF : LocalFan V E FF := h1.1
+    have hlf2 : localFan_p2 V E FF := w5cA7_localFan_p2 hLF
+    have hedge : ∀ u ∈ V, ∃ z, {u, z} ∈ E := w5cA7_hedge_of_LocalFan hLF
+    have hp1V : p1 ∈ V := (LOCAL_FAN_IMP_IN_V2 hlf2 hxFF).1
+    have hp2V : p2 ∈ V := (LOCAL_FAN_IMP_IN_V2 hlf2 hxFF).2
+    have hp2 : p2 = rhoNode1 FF p1 := (w5cA7_deter_rho hLF hxFF).symm
+    have hin : interiorAngle1 0 FF p1 = azimInFan (p1, p2) E := by
+      rw [hp2]
+      exact LOFA_IMP_INANGLE_EQ_AZIM_p14 V E FF p1 hLF hedge hp1V
+    obtain ⟨e0, he0, hfan_t⟩ := XRECQNS_UPDATE_p37 (f := f) h3 hLF
+    obtain ⟨e1, he1, he1le, hint⟩ := real_interval_contains_0_ball_p14 a b e0 ha hb he0
+    by_cases hpi : interiorAngle1 0 FF p1 = Real.pi
+    · refine ⟨e1, fun _ => ⟨he1, fun t ht => ?_⟩⟩
+      have htab : |t| < e1 := abs_lt.mpr ht
+      have htI : t ∈ Set.Icc a b := hint t htab
+      have ht0 : |t| < e0 := lt_of_lt_of_le htab he1le
+      have hLFt : LocalFan ((fun v => f v t) '' V)
+          ((fun s => (fun v => f v t) '' s) '' E)
+          ((fun d => (f d.1 t, f d.2 t)) '' FF) := hfan_t t ht0
+      have hptV : f p1 t ∈ (fun v => f v t) '' V := Set.mem_image_of_mem _ hp1V
+      have heq := LOFA_IMP_INANGLE_EQ_AZIM_p14 _ _ _ _
+        hLFt (w5cA7_hedge_of_LocalFan hLFt) hptV
+      have h4' := h4 p1 hp1V t htI hpi
+      rw [heq] at h4'
+      have hrhot := deformation_rho_node1_equivariant1_p14 f V E FF a b p1 t h3
+        hLF hedge hLFt hp1V
+      rw [hp2, hrhot]
+      exact h4'
+    · have hle : interiorAngle1 0 FF p1 ≤ Real.pi := by
+        have hx := h1.2 (p1, p2) hxFF
+        rw [hin]
+        exact hx.1
+      have hlt : interiorAngle1 0 FF p1 < Real.pi := lt_of_le_of_ne hle hpi
+      have hivsV : ivsRhoNode1 FF p1 ∈ V := by
+        rw [w5cA7_ivsRhoNode1_eq]
+        exact LOCAL_FAN_IVS_IN_V hlf2 hp1V
+      have hsub3 : ({ivsRhoNode1 FF p1, p1, p2} : Set V3) ⊆ V := by
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with rfl | rfl | rfl
+        · exact hivsV
+        · exact hp1V
+        · exact hp2V
+      have hdef3 : Deformation f ({ivsRhoNode1 FF p1, p1, p2} : Set V3) a b :=
+        deformation_subset_p14 f _ V a b hsub3 h3
+      have hnc2 : ¬ Collinear ℝ ({0, f p1 0, f p2 0} : Set V3) := by
+        rw [hdef3.2.2 p1 (by simp), hdef3.2.2 p2 (by simp), hp2]
+        simpa [w5cA7_rhoNode1_eq] using LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf2 hp1V
+      have hnc3 : ¬ Collinear ℝ ({0, f p1 0, f (ivsRhoNode1 FF p1) 0} : Set V3) := by
+        rw [hdef3.2.2 p1 (by simp), hdef3.2.2 (ivsRhoNode1 FF p1) (by simp)]
+        simpa [w5cA7_ivsRhoNode1_eq] using LOFA_IMP_NOT_COLL_IVS hlf2 hp1V
+      have hpos0 : 0 < azim 0 p1 p2 (ivsRhoNode1 FF p1) := by
+        rw [hp2]
+        simpa [interiorAngle1, interiorAngle1_p2, w5cA7_rhoNode1_eq, w5cA7_ivsRhoNode1_eq]
+          using INTERIOR_ANGLE1_POS hlf2 hp1V
+      have hlt0 : azim 0 p1 p2 (ivsRhoNode1 FF p1) < Real.pi := by
+        rw [hp2]
+        simpa [interiorAngle1] using hlt
+      obtain ⟨e2, he2, hltpi⟩ :=
+        WNWSHJT_p14 (ivsRhoNode1 FF p1) p1 p2 f a b hdef3 hnc2 hnc3 hpos0 hlt0
+      refine ⟨min e1 e2, fun _ => ⟨lt_min he1 he2, fun t ht => ?_⟩⟩
+      have htab : |t| < min e1 e2 := abs_lt.mpr ht
+      have ht1 : |t| < e1 := lt_of_lt_of_le htab (min_le_left _ _)
+      have ht2 : |t| < e2 := lt_of_lt_of_le htab (min_le_right _ _)
+      have ht0 : |t| < e0 := lt_of_lt_of_le ht1 he1le
+      have hLFt : LocalFan ((fun v => f v t) '' V)
+          ((fun s => (fun v => f v t) '' s) '' E)
+          ((fun d => (f d.1 t, f d.2 t)) '' FF) := hfan_t t ht0
+      have hLF2t : localFan_p2 ((fun v => f v t) '' V)
+          ((fun s => (fun v => f v t) '' s) '' E)
+          ((fun d => (f d.1 t, f d.2 t)) '' FF) := w5cA7_localFan_p2 hLFt
+      have hptV : f p1 t ∈ (fun v => f v t) '' V := Set.mem_image_of_mem _ hp1V
+      have hrhot := deformation_rho_node1_equivariant1_p14 f V E FF a b p1 t h3
+        hLF hedge hLFt hp1V
+      have hivst := deformation_ivs_rho_node1_equivariant1_p14 f V E FF a b p1 t h3
+        hLF hedge hLFt hp1V
+      have himg : (f p1 t, f p2 t) ∈ (fun d => (f d.1 t, f d.2 t)) '' FF :=
+        Set.mem_image_of_mem _ hxFF
+      have hdart : (f p1 t, f p2 t) ∈
+          Fan.dart1OfFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E) :=
+        w5cA7_mem_dart_of_face hLFt himg
+      have key : azimInFan (f p1 t, f p2 t)
+            ((fun s => (fun v => f v t) '' s) '' E)
+          = azim 0 (f p1 t) (f p2 t) (f (ivsRhoNode1 FF p1) t) := by
+        rw [w5cA7_azimInFan_p2_eq hLFt.1 hdart, hp2, hrhot, hivst]
+        simpa [w5cA7_rhoNode1_eq, w5cA7_ivsRhoNode1_eq] using
+          AZIM_IN_FAN_RHOND_IVS_RHOND hLF2t hptV
+      rw [key]
+      exact le_of_lt (hltpi t ht2)
+  · exact ⟨1, fun h => absurd h hxFF⟩
+
 /-- HOL `zlz_azim` (hl:1664).  NEEDS: terminal deformation theory. -/
 theorem zlz_azim_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (f : V3 → ℝ → V3)
@@ -3333,7 +3441,13 @@ theorem wedge_ge_refl_p14 (v1 v2 v3 v4 : V3) : v2 ∈ wedgeGe v1 v2 v3 v4 := by
   rw [h0]
   exact ⟨le_refl 0, azim_nonneg v1 v2 v3 v4⟩
 
-/-- HOL `zlz_wedge_refl` (hl:2085).  NEEDS: terminal deformation theory. -/
+/-- HOL `zlz_wedge_refl` (hl:2085): the three boundary vertices of the fan
+wedge at `w` (`w` itself, its `rho_node1` and `ivs_rho_node1` neighbours)
+stay in the deformed fan wedge for a whole deformation window.  Route: the
+fan transfers (`XRECQNS_UPDATE_p37`), its two neighbour maps are
+equivariant, `WEDGE_IN_FAN_RHOND_IVS_RHOND` names the `p2` wedge as
+`wedgeGe 0 (f w t) (rho) (ivs)`, and the p1/p2 bridge
+`w5cA7_wedgeInFanGe_p2_eq` lands back in the `LocalAuto1` vocabulary. -/
 theorem zlz_wedge_refl_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
     (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
@@ -3343,9 +3457,42 @@ theorem zlz_wedge_refl_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
       ∃ e : ℝ, 0 < e ∧ ∀ t, -e < t ∧ t < e →
         f v t ∈ wedgeInFanGe (f w t, f (rhoNode1 FF w) t)
           ((fun s => (fun v => f v t) '' s) '' E) := by
-  sorry
+  intro v w hw hv
+  have hLF : LocalFan V E FF := h1.1
+  have hedge : ∀ u ∈ V, ∃ z, {u, z} ∈ E := w5cA7_hedge_of_LocalFan hLF
+  obtain ⟨e0, he0, hfan_t⟩ := XRECQNS_UPDATE_p37 (f := f) h3 hLF
+  refine ⟨e0, he0, fun t ht => ?_⟩
+  have htab : |t| < e0 := by rw [abs_lt]; exact ht
+  have hLFt : LocalFan ((fun v => f v t) '' V)
+      ((fun s => (fun v => f v t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF) := hfan_t t htab
+  have hLF2t : localFan_p2 ((fun v => f v t) '' V)
+      ((fun s => (fun v => f v t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF) := w5cA7_localFan_p2 hLFt
+  have hrho := deformation_rho_node1_equivariant1_p14 f V E FF a b w t h3 hLF hedge hLFt hw
+  have hivs := deformation_ivs_rho_node1_equivariant1_p14 f V E FF a b w t h3 hLF hedge hLFt hw
+  have hdFF : (w, rhoNode1 FF w) ∈ FF := w5cA7_rho_mem_FF hLF hw
+  have himg : (f w t, f (rhoNode1 FF w) t) ∈
+      (fun d => (f d.1 t, f d.2 t)) '' FF := Set.mem_image_of_mem _ hdFF
+  have hdart : (f w t, f (rhoNode1 FF w) t) ∈
+      Fan.dart1OfFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E) :=
+    w5cA7_mem_dart_of_face hLFt himg
+  rw [w5cA7_wedgeInFanGe_p2_eq hLFt.1 hdart]
+  have hW := WEDGE_IN_FAN_RHOND_IVS_RHOND hLF2t
+    (v := f w t) (Set.mem_image_of_mem _ hw)
+  rw [hrho, w5cA7_rhoNode1_eq, hW]
+  rcases hv with hvw | hvr | hvi
+  · rw [hvw]
+    exact wedge_ge_refl_p14 0 (f w t) _ _
+  · rw [hvr, hrho]
+    exact (FST_LST_IN_WEDGE_GE 0 (f w t) _ _).1
+  · rw [hvi, hivs]
+    exact (FST_LST_IN_WEDGE_GE 0 (f w t) _ _).2
 
-/-- HOL `zlz_wedge_open` (hl:2133).  NEEDS: terminal deformation theory. -/
+/-- HOL `zlz_wedge_open` (hl:2133): a vertex `v ∈ V` on the open wedge at `w`
+(not just the three boundary vertices of `zlz_wedge_refl`) stays in the
+deformed fan wedge; the bound is the minimum of the fan window and the
+`NHCXLRV_ALT` wedge-persistence window (`v = w` is `zlz_wedge_refl`). -/
 theorem zlz_wedge_open_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
     (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
@@ -3356,7 +3503,60 @@ theorem zlz_wedge_open_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
       ∃ e : ℝ, 0 < e ∧ ∀ t, -e < t ∧ t < e →
         f v t ∈ wedgeInFanGe (f w t, f (rhoNode1 FF w) t)
           ((fun s => (fun v => f v t) '' s) '' E) := by
-  sorry
+  intro v w hv hw hwedge
+  by_cases hvw : v = w
+  · rw [hvw]
+    exact zlz_wedge_refl_p14 a b V E FF f h1 h2 h3 h4 w w hw (by simp)
+  · have hLF : LocalFan V E FF := h1.1
+    have hedge : ∀ u ∈ V, ∃ z, {u, z} ∈ E := w5cA7_hedge_of_LocalFan hLF
+    have hlf2 : localFan_p2 V E FF := w5cA7_localFan_p2 hLF
+    have hrhoV : rhoNode1 FF w ∈ V := by
+      rw [w5cA7_rhoNode1_eq]
+      exact LOFA_IN_V_SO_DO_RHO_NODE_V hlf2 hw
+    have hivsV : ivsRhoNode1 FF w ∈ V := by
+      rw [w5cA7_ivsRhoNode1_eq]
+      exact LOCAL_FAN_IVS_IN_V hlf2 hw
+    have hsub : ({ivsRhoNode1 FF w, w, rhoNode1 FF w, v} : Set V3) ⊆ V := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact hivsV
+      · exact hw
+      · exact hrhoV
+      · exact hv
+    have hdef4 : Deformation f ({ivsRhoNode1 FF w, w, rhoNode1 FF w, v} : Set V3) a b :=
+      deformation_subset_p14 f _ V a b hsub h3
+    have hnc1 : ¬ Collinear ℝ ({0, w, rhoNode1 FF w} : Set V3) := by
+      simpa [w5cA7_rhoNode1_eq] using LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf2 (v := w) hw
+    have hnc2 : ¬ Collinear ℝ ({0, w, ivsRhoNode1 FF w} : Set V3) := by
+      simpa [w5cA7_ivsRhoNode1_eq] using LOFA_IMP_NOT_COLL_IVS hlf2 (v := w) hw
+    have hnc3 : ¬ Collinear ℝ ({0, w, v} : Set V3) :=
+      PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) h2 w hw v hv hvw
+    obtain ⟨e1, he1, hnh⟩ := NHCXLRV_ALT_p14 v (ivsRhoNode1 FF w) w
+      (rhoNode1 FF w) f a b hdef4 hnc1 hnc2 hnc3 hwedge
+    obtain ⟨e0, he0, hfan_t⟩ := XRECQNS_UPDATE_p37 (f := f) h3 hLF
+    refine ⟨min e0 e1, lt_min he0 he1, fun t ht => ?_⟩
+    have htab : |t| < min e0 e1 := abs_lt.mpr ht
+    have ht0 : |t| < e0 := lt_of_lt_of_le htab (min_le_left _ _)
+    have ht1 : |t| < e1 := lt_of_lt_of_le htab (min_le_right _ _)
+    have hLFt : LocalFan ((fun v => f v t) '' V)
+        ((fun s => (fun v => f v t) '' s) '' E)
+        ((fun d => (f d.1 t, f d.2 t)) '' FF) := hfan_t t ht0
+    have hrho := deformation_rho_node1_equivariant1_p14 f V E FF a b w t h3 hLF hedge hLFt hw
+    have hivs := deformation_ivs_rho_node1_equivariant1_p14 f V E FF a b w t h3 hLF hedge hLFt hw
+    have hdFF : (w, rhoNode1 FF w) ∈ FF := w5cA7_rho_mem_FF hLF hw
+    have himg : (f w t, f (rhoNode1 FF w) t) ∈
+        (fun d => (f d.1 t, f d.2 t)) '' FF := Set.mem_image_of_mem _ hdFF
+    have hdart : (f w t, f (rhoNode1 FF w) t) ∈
+        Fan.dart1OfFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E) :=
+      w5cA7_mem_dart_of_face hLFt himg
+    rw [w5cA7_wedgeInFanGe_p2_eq hLFt.1 hdart]
+    have hW := WEDGE_IN_FAN_RHOND_IVS_RHOND (w5cA7_localFan_p2 hLFt)
+      (v := f w t) (Set.mem_image_of_mem _ hw)
+    rw [hrho, w5cA7_rhoNode1_eq, hW]
+    have hnh' := hnh t ht1
+    rw [hrho, w5cA7_rhoNode1_eq, hivs, w5cA7_ivsRhoNode1_eq] at hnh'
+    exact WEDGE_SUBSET_WEDGE_GE 0 (f w t) _ _ hnh'
 
 /-- HOL `PROPERTIES_GENERIC_LOCAL_FAN_ALT` (hl:2217).  NEEDS: fan
 structure (`LocalFan` skeleton) + generic theory. -/
