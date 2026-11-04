@@ -64,6 +64,7 @@ import Kepler.Text.PackingAuto5
 import Kepler.Text.PolyAuto1
 import Mathlib
 import Kepler.Text.V3Coe
+import Kepler.Text.LocalAuto37
 
 set_option maxHeartbeats 5000000
 
@@ -1513,7 +1514,8 @@ theorem cross_independent_p14 (u0 u1 : V3) (h : ¬ Collinear ℝ ({0, u0, u1} : 
   · exact hac h0
   · linarith [hczero, inner_cross3_self_pos_p14 u0 u1 h]
 
-/-- HOL `ybt_inj` (hl:358).  NEEDS: azimuth injectivity on the cone. -/
+/-- HOL `ybt_inj` (hl:358): azimuth is injective on a cone `aff_ge {0,u0} {u1}`
+above the base ray `u0`, seen from the axis `u0 × u1`. -/
 theorem ybt_inj_p14 (u0 u1 v1 v2 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v1} : Set V3))
     (h2 : ¬ Collinear ℝ ({0, u0, v2} : Set V3))
     (h3 : ¬ Collinear ℝ ({0, u0, u1} : Set V3))
@@ -1521,7 +1523,51 @@ theorem ybt_inj_p14 (u0 u1 v1 v2 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v1} : Set
     (h5 : v1 ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3))
     (h6 : v2 ∈ affGe ({0, u0} : Set V3) ({u1} : Set V3)) :
     ¬ (azim 0 (cross3 u0 u1) u0 v1 = azim 0 (cross3 u0 u1) u0 v2) := by
-  sorry
+  obtain ⟨a0, a1, ha1, hv1⟩ := vuy1_p14 v1 u0 u1 h1 h3 h5
+  obtain ⟨b0, b1, hb1, hv2⟩ := vuy1_p14 v2 u0 u1 h2 h3 h6
+  have hcne : cross3 u0 u1 ≠ 0 := cross3_ne_p14 h3
+  have hv20 : v2 ≠ 0 := by
+    intro hzero
+    exact h2 (by rw [hzero]; simpa using collinear2_p14 u0 0)
+  have hncu0 : ¬ Collinear ℝ ({0, cross3 u0 u1, u0} : Set V3) := by
+    intro hcol
+    obtain ⟨t, htu0⟩ := smul_of_collinear0_p14 hcne hcol
+    have hu0c := inner_cross3_dotL_p14 u0 u1
+    nth_rewrite 2 [htu0] at hu0c
+    rw [inner_smul_right] at hu0c
+    rcases mul_eq_zero.mp hu0c with hzero | hczero
+    · rw [hzero, zero_smul] at htu0
+      exact h3 (by rw [htu0]; simpa using collinear2_p14 0 u1)
+    · linarith [hczero, inner_cross3_self_pos_p14 u0 u1 h3]
+  have hncv1 : ¬ Collinear ℝ ({0, cross3 u0 u1, v1} : Set V3) :=
+    vuy3_p14 v1 u0 u1 h1 h3 h5
+  have hncv2 : ¬ Collinear ℝ ({0, cross3 u0 u1, v2} : Set V3) :=
+    vuy3_p14 v2 u0 u1 h2 h3 h6
+  have hnc : v2 ≠ cross3 u0 u1 := by
+    intro heq
+    have hp : inner ℝ (cross3 u0 u1) v2 = 0 := by
+      rw [hv2, inner_add_right, inner_smul_right, inner_smul_right,
+        inner_cross3_dotL_p14, inner_cross3_dotR_p14]
+      ring
+    rw [heq] at hp
+    exact (inner_cross3_self_pos_p14 u0 u1 h3).ne' hp
+  intro haz
+  have hmem : v1 ∈ affGt ({0, cross3 u0 u1} : Set V3) ({v2} : Set V3) :=
+    (azim_eq_azim_iff hncu0 hncv2 hncv1).mp haz.symm
+  obtain ⟨c, hc, k, hvk⟩ :=
+    (affGt_pair_iff (v0 := 0) (v1 := cross3 u0 u1) (x := v2) (y := v1)
+      (Ne.symm hcne) hv20 hnc).mp hmem
+  have hvk' : v1 = c • v2 + k • cross3 u0 u1 := by simpa only [sub_zero] using hvk
+  have hkey : k • cross3 u0 u1 + (c * b0 - a0) • u0 + (c * b1 - a1) • u1 = 0 := by
+    have h0 : c • v2 + k • cross3 u0 u1 = a0 • u0 + a1 • u1 := by rw [← hvk', ← hv1]
+    rw [hv2] at h0
+    have h1' : k • cross3 u0 u1 + (c * b0 - a0) • u0 + (c * b1 - a1) • u1
+        = c • (b0 • u0 + b1 • u1) + k • cross3 u0 u1 - (a0 • u0 + a1 • u1) := by
+      module
+    rw [h1', h0, sub_self]
+  have hk0 : k = 0 := cross_independent_p14 u0 u1 h3 _ _ _ hkey
+  rw [hk0, zero_smul, add_zero] at hvk'
+  exact h4 (by rw [hvk']; exact collinear0_smulR_p14 v2 c)
 
 /-- HOL `ybt_inj_0` (hl:428). -/
 theorem ybt_inj_0_p14 (u0 u1 v2 : V3) (h1 : ¬ Collinear ℝ ({0, u0, v2} : Set V3))
@@ -2867,6 +2913,37 @@ theorem deformation_subset_p14 (f : V3 → ℝ → V3) (U V : Set V3) (a b : ℝ
   obtain ⟨h0, hc, hf⟩ := h
   exact ⟨h0, fun v hv => hc v (hsub hv), fun v hv => hf v (hsub hv)⟩
 
+/-- w8: finite-min Skolemization for positive-radius windows (private copy of
+the later `SKOLEM_EPSILON_p14`, usable at this point of the file). -/
+private theorem w8_skolem_min {A : Type*} (Q : ℝ → A → Prop) (s : Set A)
+    (hmono : ∀ e e' : ℝ, ∀ i : A, 0 < e → e ≤ e' → i ∈ s → (Q e' i → Q e i))
+    (hs : s.Finite) :
+    (∀ i : A, ∃ e : ℝ, 0 < e ∧ (i ∈ s → Q e i)) ↔
+      ∃ e : ℝ, ∀ i : A, 0 < e ∧ (i ∈ s → Q e i) := by
+  constructor
+  · intro hf
+    by_cases hse : s = ∅
+    · subst hse
+      exact ⟨1, fun i => ⟨one_pos, fun hi => absurd hi (by simp)⟩⟩
+    · push_neg at hse
+      obtain ⟨i₀, hi₀⟩ := hse
+      choose g hg using hf
+      have hTne : (hs.toFinset.image g).Nonempty := by
+        refine Finset.nonempty_iff_ne_empty.mpr fun hempty => ?_
+        have hi₀img : g i₀ ∈ hs.toFinset.image g :=
+          Finset.mem_image.mpr ⟨i₀, Set.Finite.mem_toFinset hs |>.mpr hi₀, rfl⟩
+        rw [hempty] at hi₀img
+        simp at hi₀img
+      obtain ⟨j, hj, hgif⟩ := Finset.mem_image.mp (Finset.min'_mem _ hTne)
+      have hmin_eq : (hs.toFinset.image g).min' hTne = g j := hgif.symm
+      have hpos : 0 < (hs.toFinset.image g).min' hTne := hmin_eq ▸ (hg j).1
+      refine ⟨(hs.toFinset.image g).min' hTne, fun i => ⟨hpos, fun hi => ?_⟩⟩
+      have hgi : g i ∈ hs.toFinset.image g :=
+        Finset.mem_image.mpr ⟨i, Set.Finite.mem_toFinset hs |>.mpr hi, rfl⟩
+      exact hmono _ _ _ (hmin_eq ▸ (hg j).1) (Finset.min'_le _ _ hgi) hi ((hg i).2 hi)
+  · rintro ⟨e, hall⟩
+    exact fun i => ⟨e, (hall i).1, (hall i).2⟩
+
 /-- HOL `zlz_reduction` (hl:1418).  NEEDS: the terminal deformation
 theorem (giants `zlz_azim`/`zlz_generic`/`zlz_wedge_*` below). -/
 theorem zlz_reduction_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
@@ -2891,7 +2968,108 @@ theorem zlz_reduction_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
         ((fun d => (f d.1 t, f d.2 t)) '' FF) ∧
       Generic ((fun v => f v t) '' V)
         ((fun s => (fun v => f v t) '' s) '' E) := by
-  sorry
+  obtain ⟨hLF, -⟩ := h1
+  have hLF2 : localFan_p2 V E FF := w5cA7_localFan_p2 hLF
+  have hVfin : V.Finite := LOCAL_FAN_FINITE_V hLF2
+  have hFFfin : FF.Finite := by
+    obtain ⟨HS, -, -, -, -, -, ⟨x0, hx0, hFx0⟩, -⟩ := hLF2
+    refine (HS.darts.finite_toSet).subset ?_
+    rw [hFx0]
+    exact Hypermap.face_subset_darts HS hx0
+  -- (1) LocalFan transfer along the deformation
+  obtain ⟨e1, he1, hLFt⟩ := XRECQNS_UPDATE_p37 (f := f) h3 hLF
+  -- (2) uniform window for `azimInFan <= pi` (from h7)
+  have h7' : ∀ x : V3 × V3, ∃ e2 : ℝ, 0 < e2 ∧ (x ∈ FF →
+      ∀ t, -e2 < t ∧ t < e2 →
+        azimInFan (f x.1 t, f x.2 t) ((fun s => (fun v => f v t) '' s) '' E) ≤ Real.pi) := by
+    intro x
+    obtain ⟨e2, he2⟩ := h7 x
+    by_cases hx : x ∈ FF
+    · obtain ⟨hpos, hprop⟩ := he2 hx
+      exact ⟨e2, hpos, fun _ => hprop⟩
+    · exact ⟨1, one_pos, fun h => absurd h hx⟩
+  obtain ⟨e2, he2⟩ := (w8_skolem_min (A := V3 × V3) (s := FF)
+    (Q := fun e x => ∀ t, -e < t ∧ t < e →
+      azimInFan (f x.1 t, f x.2 t) ((fun s => (fun v => f v t) '' s) '' E) ≤ Real.pi)
+    (fun e e' i _ hle _ hQ t ht => hQ t ⟨by linarith [ht.1], by linarith [ht.2]⟩)
+    hFFfin).mp h7'
+  have he2pos : 0 < e2 := (he2 (0, 0)).1
+  -- (3) uniform window for `V ⊆ wedgeInFanGe` (from h6, already V-uniform)
+  have h6'' : ∀ x : V3 × V3, ∃ e3 : ℝ, 0 < e3 ∧ (x ∈ FF →
+      ∀ t, -e3 < t ∧ t < e3 →
+        ((fun v => f v t) '' V) ⊆ wedgeInFanGe (f x.1 t, f x.2 t)
+          ((fun s => (fun v => f v t) '' s) '' E)) := by
+    intro x
+    obtain ⟨e3, he3⟩ := h6 x
+    by_cases hx : x ∈ FF
+    · obtain ⟨hpos, hprop⟩ := he3 hx
+      exact ⟨e3, hpos, fun _ => hprop⟩
+    · exact ⟨1, one_pos, fun h => absurd h hx⟩
+  obtain ⟨e3, he3⟩ := (w8_skolem_min (A := V3 × V3) (s := FF)
+    (Q := fun e x => ∀ t, -e < t ∧ t < e →
+      ((fun v => f v t) '' V) ⊆ wedgeInFanGe (f x.1 t, f x.2 t)
+        ((fun s => (fun v => f v t) '' s) '' E))
+    (fun e e' i _ hle _ hQ t ht => hQ t ⟨by linarith [ht.1], by linarith [ht.2]⟩)
+    hFFfin).mp h6''
+  have he3pos : 0 < e3 := (he3 (0, 0)).1
+  -- (4) uniform window for the generic (non-planarity) condition (from h5)
+  have h5' : ∀ p : V3 × (V3 × V3), ∃ e4 : ℝ, 0 < e4 ∧ (p ∈ (V ×ˢ FF) →
+      ∀ t, -e4 < t ∧ t < e4 →
+        affGe ({0} : Set V3) ({f p.2.1 t, f p.2.2 t} : Set V3) ∩
+          affLt ({0} : Set V3) ({f p.1 t} : Set V3) = ∅) := by
+    intro p
+    obtain ⟨e4, he4⟩ := h5 p.1 p.2.1 p.2.2
+    by_cases hp : (p.2.1, p.2.2) ∈ FF ∧ p.1 ∈ V
+    · obtain ⟨hpos, hprop⟩ := he4 hp
+      exact ⟨e4, hpos, fun _ => hprop⟩
+    · refine ⟨1, one_pos, fun hmem => absurd ?_ hp⟩
+      rw [Set.mem_prod] at hmem
+      exact ⟨hmem.2, hmem.1⟩
+  obtain ⟨e4, he4⟩ := (w8_skolem_min (A := V3 × (V3 × V3)) (s := V ×ˢ FF)
+    (Q := fun e p => ∀ t, -e < t ∧ t < e →
+      affGe ({0} : Set V3) ({f p.2.1 t, f p.2.2 t} : Set V3) ∩
+        affLt ({0} : Set V3) ({f p.1 t} : Set V3) = ∅)
+    (fun e e' i _ hle _ hQ t ht => hQ t ⟨by linarith [ht.1], by linarith [ht.2]⟩)
+    (hVfin.prod hFFfin)).mp h5'
+  have he4pos : 0 < e4 := (he4 (0, (0, 0))).1
+  refine ⟨min (min e1 e2) (min e3 e4), lt_min (lt_min he1 he2pos) (lt_min he3pos he4pos), ?_⟩
+  intro t ht
+  have ht' := abs_lt.mpr ht
+  have ht1 : |t| < e1 := lt_of_lt_of_le ht' (le_trans (min_le_left _ _) (min_le_left _ _))
+  have hte2 : -e2 < t ∧ t < e2 := abs_lt.mp
+    (lt_of_lt_of_le ht' (le_trans (min_le_left _ _) (min_le_right _ _)))
+  have hte3 : -e3 < t ∧ t < e3 := abs_lt.mp
+    (lt_of_lt_of_le ht' (le_trans (min_le_right _ _) (min_le_left _ _)))
+  have hte4 : -e4 < t ∧ t < e4 := abs_lt.mp
+    (lt_of_lt_of_le ht' (le_trans (min_le_right _ _) (min_le_right _ _)))
+  constructor
+  · refine ⟨hLFt t ht1, ?_⟩
+    rintro ⟨d1, d2⟩ hx
+    obtain ⟨d, hdFF, hdeq⟩ := hx
+    have h1eq : f d.1 t = d1 := congrArg Prod.fst hdeq
+    have h2eq : f d.2 t = d2 := congrArg Prod.snd hdeq
+    rw [← h1eq, ← h2eq]
+    exact ⟨(he2 d).2 hdFF t hte2, (he3 d).2 hdFF t hte3⟩
+  · rintro v' w' u' hE' hV'
+    obtain ⟨u, huV, rfl⟩ := hV'
+    have hLF2t : localFan_p2 ((fun v => f v t) '' V)
+        ((fun s => (fun v => f v t) '' s) '' E)
+        ((fun d => (f d.1 t, f d.2 t)) '' FF) := w5cA7_localFan_p2 (hLFt t ht1)
+    rcases LOFA_IN_E_IMP_IN_FF hLF2t hE' with hd | hd
+    · obtain ⟨d, hdFF, hdeq⟩ := hd
+      have h := (he4 (u, (d.1, d.2))).2 (by
+        rw [Set.mem_prod]; exact ⟨huV, hdFF⟩) t hte4
+      have h1eq : f d.1 t = v' := congrArg Prod.fst hdeq
+      have h2eq : f d.2 t = w' := congrArg Prod.snd hdeq
+      rw [← h1eq, ← h2eq]
+      exact h
+    · obtain ⟨d, hdFF, hdeq⟩ := hd
+      have h := (he4 (u, (d.1, d.2))).2 (by
+        rw [Set.mem_prod]; exact ⟨huV, hdFF⟩) t hte4
+      have h1eq : f d.1 t = w' := congrArg Prod.fst hdeq
+      have h2eq : f d.2 t = v' := congrArg Prod.snd hdeq
+      rw [← h1eq, ← h2eq, Set.pair_comm]
+      exact h
 
 /-- HOL `real_interval_contains_0_ball` (hl:1647). -/
 theorem real_interval_contains_0_ball_p14 (a b e1 : ℝ) (ha : a < 0) (hb : 0 < b)
@@ -3470,13 +3648,113 @@ theorem IDENTIFY_AZIM_CYCLE_SIMPLE_p14 (W : Set V3) (v w p u : V3)
   · linarith
   · linarith
 
-/-- HOL `coplanar_cross_scale` (hl:2745).  NEEDS: plane/span dimension
-theory. -/
+/-- w8: coercion injectivity helper for `V3 = EuclideanSpace ℝ (Fin 3)`. -/
+private theorem w8_coe_inj {x y : V3} (h : ((x : V3) : Fin 3 → ℝ) = ((y : V3) : Fin 3 → ℝ)) :
+    x = y := by
+  simpa using congrArg (fun w : Fin 3 → ℝ => WithLp.toLp 2 w) h
+
+/-- w8: `cross3 a a = 0`. -/
+private theorem w8_cross3_self (a : V3) : cross3 a a = 0 := by
+  refine w8_coe_inj ?_
+  rw [coe_cross3_p14, coe_zero_p14]
+  exact cross_self _
+
+/-- w8: additivity of `cross3` in the left slot. -/
+private theorem w8_cross3_add_left (a b c : V3) :
+    cross3 (a + b) c = cross3 a c + cross3 b c := by
+  refine w8_coe_inj ?_
+  rw [coe_cross3_p14, coe_add_p14, coe_add_p14, coe_cross3_p14, coe_cross3_p14]
+  ext i
+  fin_cases i <;> simp [cross_apply, Pi.add_apply] <;> ring
+
+/-- w8: additivity of `cross3` in the right slot. -/
+private theorem w8_cross3_add_right (a b c : V3) :
+    cross3 a (b + c) = cross3 a b + cross3 a c := by
+  rw [w5cA2_cross3_neg a (b + c), w8_cross3_add_left, w5cA2_cross3_neg b a,
+    w5cA2_cross3_neg c a, neg_add]
+  simp only [neg_neg]
+
+/-- w8: homogeneity of `cross3` in the left slot. -/
+private theorem w8_cross3_smul_left (t : ℝ) (a c : V3) :
+    cross3 (t • a) c = t • cross3 a c := by
+  refine w8_coe_inj ?_
+  rw [coe_cross3_p14, coe_smul_p14, coe_smul_p14, coe_cross3_p14]
+  ext i
+  fin_cases i <;> simp [cross_apply, Pi.smul_apply] <;> ring
+
+/-- w8: homogeneity of `cross3` in the right slot. -/
+private theorem w8_cross3_smul_right (t : ℝ) (a c : V3) :
+    cross3 a (t • c) = t • cross3 a c := by
+  rw [w5cA2_cross3_neg a (t • c), w8_cross3_smul_left, w5cA2_cross3_neg c a]
+  simp only [smul_neg, neg_neg]
+
+/-- w8: `affineSpan {0,u1,u2} ⊆ span {u1,u2}`. -/
+private theorem w8_affineSpan_zero_pair_subset_span (u1 u2 : V3) :
+    (affineSpan ℝ ({0, u1, u2} : Set V3) : Set V3) ⊆
+      Submodule.span ℝ ({u1, u2} : Set V3) := by
+  intro x hx
+  refine affineSpan_induction hx ?_ ?_
+  · intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact Submodule.zero_mem _
+    · exact Submodule.subset_span (by simp)
+    · exact Submodule.subset_span (by simp)
+  · intro c u v w hu hv hw
+    have h1 : u -ᵥ v ∈ Submodule.span ℝ ({u1, u2} : Set V3) :=
+      Submodule.sub_mem _ hu hv
+    have h2 : c • (u -ᵥ v) ∈ Submodule.span ℝ ({u1, u2} : Set V3) :=
+      Submodule.smul_mem _ c h1
+    exact Submodule.add_mem _ h2 hw
+
+/-- HOL `coplanar_cross_scale` (hl:2745): coplanar `v1, v2` whose cross product
+has positive dot with `u1 × u2` give a positive multiple of `u1 × u2`. -/
 theorem coplanar_cross_scale_p14 (u1 u2 v1 v2 : V3)
     (h1 : Coplanar ({0, u1, u2, v1, v2} : Set V3))
     (h2 : 0 < (cross3 v1 v2) ⬝ᵥ (cross3 u1 u2)) :
     ∃ t : ℝ, 0 < t ∧ cross3 v1 v2 = t • (cross3 u1 u2) := by
-  sorry
+  have hnc : ¬ Collinear ℝ ({0, u1, u2} : Set V3) := by
+    intro hcol
+    have hz : cross3 u1 u2 = 0 := w5cA2_collinear0_iff_cross.mp hcol
+    rw [hz, dot3_zero_right_p14] at h2
+    linarith
+  have hsub1 : ({v1, 0, u1, u2} : Set V3) ⊆ ({0, u1, u2, v1, v2} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    rcases hz with rfl | rfl | rfl | rfl <;> simp
+  have hsub2 : ({v2, 0, u1, u2} : Set V3) ⊆ ({0, u1, u2, v1, v2} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    rcases hz with rfl | rfl | rfl | rfl <;> simp
+  have hm1 : v1 ∈ affineSpan ℝ ({0, u1, u2} : Set V3) :=
+    coplanar_in_affine_hull_p14 0 u1 u2 v1 (by simpa using hnc)
+      (h1.subset hsub1)
+  have hm2 : v2 ∈ affineSpan ℝ ({0, u1, u2} : Set V3) :=
+    coplanar_in_affine_hull_p14 0 u1 u2 v2 (by simpa using hnc)
+      (h1.subset hsub2)
+  obtain ⟨a1, b1, hab1⟩ := Submodule.mem_span_pair.mp
+    (w8_affineSpan_zero_pair_subset_span u1 u2 hm1)
+  obtain ⟨a2, b2, hab2⟩ := Submodule.mem_span_pair.mp
+    (w8_affineSpan_zero_pair_subset_span u1 u2 hm2)
+  have hv1 : v1 = a1 • u1 + b1 • u2 := hab1.symm
+  have hv2 : v2 = a2 • u1 + b2 • u2 := hab2.symm
+  have hcross : cross3 v1 v2 = (a1 * b2 - b1 * a2) • cross3 u1 u2 := by
+    rw [hv1, hv2, w8_cross3_add_left, w8_cross3_add_right, w8_cross3_add_right]
+    rw [w8_cross3_smul_left, w8_cross3_smul_right, w8_cross3_smul_left,
+      w8_cross3_smul_right, w8_cross3_smul_left, w8_cross3_smul_right,
+      w8_cross3_smul_left, w8_cross3_smul_right]
+    rw [w8_cross3_self, w8_cross3_self, w5cA2_cross3_neg u1 u2]
+    simp only [smul_zero, zero_add, add_zero, smul_neg, smul_smul]
+    module
+  have hsq : 0 < (cross3 u1 u2) ⬝ᵥ (cross3 u1 u2) := by
+    have h := inner_cross3_self_pos_p14 u1 u2 hnc
+    rwa [inner_eq_dot] at h
+  refine ⟨a1 * b2 - b1 * a2, ?_, hcross⟩
+  have hpos : 0 < (cross3 v1 v2) ⬝ᵥ (cross3 u1 u2) := h2
+  rw [hcross, dot3_smul_left_p14] at hpos
+  by_contra hcon
+  push_neg at hcon
+  nlinarith
 
 /-- HOL `azim_cycle_distinct` (hl:2782).  NEEDS: azimuth-cycle minimality
 theory. -/
