@@ -65,6 +65,7 @@ import Kepler.Text.PolyAuto1
 import Mathlib
 import Kepler.Text.V3Coe
 import Kepler.Text.LocalAuto37
+import Kepler.Text.LocalAuto35
 
 set_option maxHeartbeats 5000000
 
@@ -5462,5 +5463,925 @@ theorem CNVX_IMP_INTERIOR_ANGLE_PI {V : Set V3} {E : Set (Set V3)}
 #print axioms TWO_SIDES_SUCESSIVE
 #print axioms w15_clf2
 #print axioms CNVX_IMP_INTERIOR_ANGLE_PI
+
+/-! ## §0 small self-contained helpers -/
+
+private theorem w16_dot3_eq (x y : V3) :
+    x ⬝ᵥ y = ((x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y : V3) : Fin 3 → ℝ) := rfl
+
+private theorem w16_coe_cross3 (a b : V3) :
+    ((cross3 a b : V3) : Fin 3 → ℝ) =
+      crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ) := rfl
+
+private theorem w16_cross3_dotL (u v : V3) : cross3 u v ⬝ᵥ u = 0 := by
+  rw [w16_dot3_eq, w16_coe_cross3, dotProduct_comm]
+  exact dot_self_cross _ _
+
+private theorem w16_cross3_dotR (u v : V3) : cross3 u v ⬝ᵥ v = 0 := by
+  rw [w16_dot3_eq, w16_coe_cross3, dotProduct_comm]
+  exact dot_cross_self _ _
+
+private theorem w16_dot3_comm (x y : V3) : x ⬝ᵥ y = y ⬝ᵥ x := dotProduct_comm _ _
+
+private theorem w16_dot3_smul_left (t : ℝ) (x z : V3) :
+    (t • x) ⬝ᵥ z = t * (x ⬝ᵥ z) := by
+  rw [w16_dot3_eq, w16_dot3_eq]
+  simp only [WithLp.ofLp_smul]
+  exact smul_dotProduct _ _ _
+
+private theorem w16_dot3_add_right (x y z : V3) : z ⬝ᵥ (x + y) = z ⬝ᵥ x + z ⬝ᵥ y := by
+  rw [w16_dot3_eq, w16_dot3_eq, w16_dot3_eq]
+  simp only [WithLp.ofLp_add]
+  exact dotProduct_add _ _ _
+
+private theorem w16_dot3_smul_right (t : ℝ) (x z : V3) :
+    z ⬝ᵥ (t • x) = t * (z ⬝ᵥ x) := by
+  rw [w16_dot3_eq, w16_dot3_eq]
+  simp only [WithLp.ofLp_smul]
+  rw [dotProduct_smul, smul_eq_mul]
+
+private theorem w16_dot3_self_pos {x : V3} (hx : x ≠ 0) : 0 < x ⬝ᵥ x := by
+  have hn : ‖x‖ ≠ 0 := fun hzero => hx (norm_eq_zero.mp hzero)
+  have h1 : (0:ℝ) < ‖x‖ ^ 2 := sq_pos_iff.mpr hn
+  rwa [norm_sq_eq_dot] at h1
+
+private theorem w16_cross3_ne {u v : V3} (h : ¬ Collinear ℝ ({0, u, v} : Set V3)) :
+    cross3 u v ≠ 0 := by
+  intro hz
+  exact h ((COLLINEAR_CROSS_0 (x := (0:V3)) (y := u) (z := v)).mpr
+    (by simpa [cross3] using hz))
+
+/-- Extraction on an origin-line (copy of LA14's private `smul_of_collinear0_p14`). -/
+private theorem w16_smul_of_collinear0 {c v : V3} (hc : c ≠ 0)
+    (h : Collinear ℝ ({0, c, v} : Set V3)) : ∃ t : ℝ, v = t • c := by
+  obtain ⟨p₀, u, hub⟩ := collinear_iff_exists_forall_eq_smul_vadd _ |>.1 h
+  obtain ⟨r0, h0⟩ := hub 0 (by simp)
+  obtain ⟨r1, h1⟩ := hub c (by simp)
+  obtain ⟨r2, h2⟩ := hub v (by simp)
+  rw [vadd_eq_add] at h0 h1 h2
+  have hpc : p₀ = -(r0 • u) := by
+    rw [eq_neg_iff_add_eq_zero, add_comm]; exact h0.symm
+  have hu : u ≠ 0 := by
+    intro hzero
+    rw [hzero, smul_zero, zero_add, hpc, hzero, smul_zero, neg_zero] at h1
+    exact hc h1
+  have hvc : c = (r1 - r0) • u := by rw [h1, hpc, sub_smul]; module
+  have hvd : v = (r2 - r0) • u := by rw [h2, hpc, sub_smul]; module
+  by_cases hr : r1 - r0 = 0
+  · rw [hr, zero_smul] at hvc; exact absurd hvc hc
+  refine ⟨(r2 - r0) / (r1 - r0), ?_⟩
+  rw [hvd, hvc, smul_smul]
+  field_simp
+
+/-- `LocalFan` → `localFan_p2` (copy of LA14's private `w15_lf2`). -/
+private theorem w16_lf2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) : localFan_p2 V E FF := by
+  obtain ⟨hfan, x0, hx0, hFF0, hD0, h2reg⟩ := h
+  have hne : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+    intro v hv
+    have h2 : (ee v E).ncard = 2 := h2reg v hv
+    have hne' : ee v E ≠ ∅ := by
+      intro hE
+      rw [hE, Set.ncard_empty] at h2
+      omega
+    obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hne'
+    exact ⟨w, hw⟩
+  exact localFan_p2.of_LocalFan_noIso ⟨hfan, x0, hx0, hFF0, hD0, h2reg⟩ hne
+
+/-! ## §1 CONV02_SU_CONV2 (HOL Geomdetail.CONV02_SU_CONV2) -/
+
+/-- HOL `CONV02_SU_CONV2`: `conv0 {a,b} ⊆ conv {a,b}`. -/
+theorem CONV02_SU_CONV2 (a b : V3) :
+    conv0_p2 ({a, b} : Set V3) ⊆ convexHull ℝ ({a, b} : Set V3) := by
+  intro x hx
+  obtain ⟨f, hfin, hvec, hpos, hone⟩ := hx
+  have hT : hfin.toFinset = ({a, b} : Finset V3) := by
+    ext w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_empty_iff_false,
+      false_or, Set.mem_insert_iff, Set.mem_singleton_iff, Finset.mem_insert,
+      Finset.mem_singleton]
+  by_cases hab : a = b
+  · subst b
+    have hT' : hfin.toFinset = ({a} : Finset V3) := by
+      rw [hT]; ext w; simp
+    have h1 : f a = 1 := by
+      rw [hT', Finset.sum_singleton] at hone; exact hone
+    have hx2 : x = a := by
+      rw [hvec, hT', Finset.sum_singleton, h1, one_smul]
+    rw [hx2]
+    exact subset_convexHull ℝ _ (by simp)
+  · have hsum : f a + f b = 1 := by
+      rw [hT, Finset.sum_insert (by simp [hab]), Finset.sum_singleton] at hone
+      exact hone
+    have hx2 : x = f a • a + f b • b := by
+      rw [hvec, hT, Finset.sum_insert (by simp [hab]), Finset.sum_singleton]
+    rw [hx2]
+    exact (convex_convexHull ℝ ({a, b} : Set V3))
+      (subset_convexHull ℝ _ (by simp)) (subset_convexHull ℝ _ (by simp))
+      (hpos a (by simp)).le (hpos b (by simp)).le hsum
+
+/-! ## §2 AZIM_EQ_PI_ALT (public copy of LA2's private `w11_azim_pi_iff_affLt`) -/
+
+/-- `affLt {0,u} {v}` 的三系数提取。 -/
+private theorem w16_affLt_coeffs {u v w : V3} (hu0 : u ≠ 0) (hv0 : v ≠ 0) (huv : u ≠ v)
+    (hw : w ∈ affLt ({0, u} : Set V3) ({v} : Set V3)) :
+    ∃ t1 t2 t3 : ℝ, t3 < 0 ∧ t1 + t2 + t3 = 1 ∧ w = t1 • (0 : V3) + t2 • u + t3 • v := by
+  obtain ⟨f, hfin, hsum, hneg, hone⟩ := hw
+  have htf : hfin.toFinset = ({0, u, v} : Finset V3) := by
+    apply Finset.ext
+    intro q
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  refine ⟨f 0, f u, f v, hneg v (by simp), ?_, ?_⟩
+  · rw [htf, Finset.sum_insert (by simp [hu0.symm, hv0.symm]),
+      Finset.sum_insert (by simp [huv]), Finset.sum_singleton] at hone
+    linarith
+  · rw [htf, Finset.sum_insert (by simp [hu0.symm, hv0.symm]),
+      Finset.sum_insert (by simp [huv]), Finset.sum_singleton] at hsum
+    rw [hsum]
+    abel
+
+/-- 三系数形构造回 `affLt {0,u} {v}`。 -/
+private theorem w16_affLt_of_coeffs {u v w : V3} (hu0 : u ≠ 0) (hv0 : v ≠ 0) (huv : u ≠ v)
+    {t1 t2 t3 : ℝ} (ht3 : t3 < 0) (hsum : t1 + t2 + t3 = 1)
+    (hrep : w = t1 • (0 : V3) + t2 • u + t3 • v) :
+    w ∈ affLt ({0, u} : Set V3) ({v} : Set V3) := by
+  have hfin : (({0, u} : Set V3) ∪ {v} : Set V3).Finite :=
+    ((Set.finite_singleton u).insert 0).union (Set.finite_singleton v)
+  have htf : hfin.toFinset = ({0, u, v} : Finset V3) := by
+    apply Finset.ext
+    intro q
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  refine ⟨fun q => if q = v then t3 else if q = u then t2 else t1, hfin, ?_, ?_, ?_⟩
+  · rw [htf, Finset.sum_insert (by simp [hu0.symm, hv0.symm]),
+      Finset.sum_insert (by simp [huv]), Finset.sum_singleton]
+    simp [hu0.symm, hv0.symm, huv]
+    simpa using hrep
+  · intro q hq
+    simp only [Set.mem_singleton_iff] at hq
+    subst hq
+    simp [hu0.symm, hv0.symm, huv]
+    exact ht3
+  · rw [htf, Finset.sum_insert (by simp [hu0.symm, hv0.symm]),
+      Finset.sum_insert (by simp [huv]), Finset.sum_singleton]
+    simp [hu0.symm, hv0.symm, huv]
+    linarith
+
+/-- HOL `AZIM_EQ_PI_ALT`: `azim 0 u v w = π ↔ w ∈ affLt {0,u} {v}`. -/
+theorem AZIM_EQ_PI_ALT {u v w : V3}
+    (huv : ¬ Collinear3 0 u v) (huw : ¬ Collinear3 0 u w) :
+    azim 0 u v w = Real.pi ↔ w ∈ affLt ({0, u} : Set V3) ({v} : Set V3) := by
+  have hu0 : u ≠ 0 := fun he => huv (by
+    rw [he]; simpa [Collinear3, Set.pair_comm] using collinear_pair ℝ (0:V3) v)
+  have hv0 : v ≠ 0 := fun he => huv (by
+    rw [he]; simpa [Collinear3, Set.pair_comm] using collinear_pair ℝ (0:V3) u)
+  have huvne : u ≠ v := fun he => huv (by
+    rw [he]; simpa [Collinear3, Set.pair_comm] using collinear_pair ℝ (0:V3) v)
+  obtain ⟨e1, e2, e3, hon, halign⟩ := exists_on3_eq_smul (u - 0) (sub_ne_zero.mpr hu0)
+  have hax : (u - 0 : V3) = dist u 0 • e3 := by rw [dist_eq_norm]; exact halign
+  constructor
+  · intro hpi
+    have hvw : v ≠ w := by
+      intro he
+      rw [he, azim_self] at hpi
+      exact Real.pi_pos.ne' hpi.symm
+    obtain ⟨h1, h2, hframes⟩ := (azim_master (0 : V3) u v w).2.2
+    obtain ⟨ψ, r1, r2, repv, repw, hr1, hr2⟩ := hframes e1 e2 e3 hon hax hu0
+    have hr1' : 0 < r1 := hr1 huv
+    have hr2' : 0 < r2 := hr2 huw
+    rw [hpi, Real.cos_add_pi, Real.sin_add_pi] at repw
+    have hkey : w - 0 = (-(r2 / r1)) • (v - 0) + (h2 + (r2 / r1) * h1) • (u - 0) := by
+      rw [repv, repw]
+      simp only [smul_add, smul_smul]
+      have hc1 : (-(r2 / r1)) * (r1 * Real.cos ψ) = -(r2 * Real.cos ψ) := by
+        field_simp
+      have hc2 : (-(r2 / r1)) * (r1 * Real.sin ψ) = -(r2 * Real.sin ψ) := by
+        field_simp
+      have hc3 : (-(r2 / r1)) * h1 + (h2 + (r2 / r1) * h1) = h2 := by ring
+      rw [hc1, hc2, ← hc3]
+      module
+    have hwrep : w = (-(r2 / r1)) • v + (h2 + (r2 / r1) * h1) • u := by
+      simpa using hkey
+    refine w16_affLt_of_coeffs (u := u) (v := v) (w := w) hu0 hv0 huvne
+      (t1 := 1 - (h2 + (r2 / r1) * h1) - (-(r2 / r1)))
+      (t2 := h2 + (r2 / r1) * h1) (t3 := -(r2 / r1)) ?_ ?_ ?_
+    · have : 0 < r2 / r1 := div_pos hr2' hr1'
+      linarith
+    · ring
+    · rw [hwrep]; simp only [smul_zero, zero_add]; exact add_comm _ _
+  · intro hmem
+    obtain ⟨t1, t2, t3, ht3, hsum, hrep⟩ := w16_affLt_coeffs hu0 hv0 huvne hmem
+    obtain ⟨ψ, r1, r2, hr1', hr2', hzv, hzw⟩ :=
+      azim_frame_spec (v := (0 : V3)) (w := u) (w1 := v) (w2 := w) huv huw hon hax hu0
+    have hzu : zOf e1 e2 u = 0 := by
+      simpa using zOf_axis (v := (0 : V3)) (w := u) hax hon
+    have hz0 : zOf e1 e2 (0 : V3) = 0 := by simp [zOf]
+    have hzlin : zOf e1 e2 (w - 0) = ((t3 : ℝ) : ℂ) * zOf e1 e2 (v - 0) := by
+      have hw0 : w - 0 = t1 • (0 : V3) + t2 • u + t3 • v := by rw [sub_zero, hrep]
+      rw [hw0]
+      simp only [zOf_add, zOf_smul, hzu, hz0, mul_zero, add_zero, sub_zero]
+      ring
+    rw [hzv, hzw] at hzlin
+    have hexp : Complex.exp (((ψ + azim 0 u v w : ℝ) : ℂ) * Complex.I)
+        = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+          * Complex.exp (((azim 0 u v w : ℝ) : ℂ) * Complex.I) := by
+      rw [← Complex.exp_add]
+      congr 1
+      push_cast
+      ring
+    rw [hexp] at hzlin
+    have h2 : (((r2 : ℝ) : ℂ) * Complex.exp (((azim 0 u v w : ℝ) : ℂ) * Complex.I))
+        * Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        = (((t3 * r1 : ℝ) : ℂ)) * Complex.exp (((ψ : ℝ) : ℂ) * Complex.I) := by
+      push_cast
+      linear_combination hzlin
+    have hkey := mul_right_cancel₀ (Complex.exp_ne_zero _) h2
+    have hsin : Real.sin (azim 0 u v w) = 0 := by
+      have hi := congrArg Complex.im hkey
+      simp only [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.exp_mul_I,
+        Complex.add_re, Complex.add_im, Complex.I_re, Complex.I_im, mul_zero, zero_mul,
+        add_zero, zero_add, mul_one, mul_add, Complex.cos_ofReal_im,
+        Complex.sin_ofReal_re] at hi
+      have h0 : r2 * Real.sin (azim 0 u v w) = 0 := by linarith [hi]
+      rcases mul_eq_zero.mp h0 with h | h
+      · exact absurd h (ne_of_gt hr2')
+      · exact h
+    have hcos : Real.cos (azim 0 u v w) < 0 := by
+      have hr := congrArg Complex.re hkey
+      simp only [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, Complex.exp_mul_I,
+        Complex.add_re, Complex.add_im, Complex.I_re, Complex.I_im, mul_zero, zero_mul,
+        add_zero, zero_add, mul_one, mul_add, Complex.cos_ofReal_re,
+        Complex.sin_ofReal_im] at hr
+      have h1 : r2 * Real.cos (azim 0 u v w) = t3 * r1 := by linarith [hr]
+      have : t3 * r1 < 0 := mul_neg_of_neg_of_pos ht3 hr1'
+      nlinarith [hr1', hr2', h1]
+    obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp hsin
+    have hpi0 : (0:ℝ) < Real.pi := Real.pi_pos
+    have hθ0 := azim_nonneg 0 u v w
+    have hθπ := azim_lt_two_pi 0 u v w
+    have hn0 : 0 ≤ n := by
+      by_contra hcon
+      push_neg at hcon
+      have hnle : ((n : ℤ) : ℝ) ≤ -1 := by exact_mod_cast (by omega)
+      nlinarith
+    have hn1 : n ≤ 1 := by
+      by_contra hcon
+      push_neg at hcon
+      have hnge : (2 : ℝ) ≤ ((n : ℤ) : ℝ) := by exact_mod_cast (by omega)
+      nlinarith
+    interval_cases n
+    · rw [← hn] at hcos
+      norm_num at hcos
+    · rw [← hn]
+      push_cast
+      ring
+
+/-! ## §3 ray / aff_ge / aff_lt kit -/
+
+/-- `affGe {x} ∅ = {x}`. -/
+theorem w16_affGe_empty_singleton (x : V3) : affGe ({x} : Set V3) (∅ : Set V3) = {x} := by
+  ext y
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have h2 : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false, or_false, Finset.mem_singleton]
+    rw [h2, Finset.sum_singleton] at hsum hone
+    rw [Set.mem_singleton_iff, hsum, hone, one_smul]
+  · intro heq
+    rw [heq]
+    have hfin : (({x} : Set V3) ∪ (∅ : Set V3)).Finite := by simp
+    have hT : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false, or_false, Finset.mem_singleton]
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [hT, Finset.sum_singleton, one_smul]
+    · intro z hz
+      exact zero_le_one
+    · rw [hT, Finset.sum_singleton]
+
+/-- Affsign membership from a two-term representation. -/
+private theorem w16_affsign_single {x u y : V3} (hxu : x ≠ u) {t1 t2 : ℝ}
+    (hy : y = t1 • x + t2 • u) (hsum : t1 + t2 = 1) {sgn : ℝ → Prop} (h2 : sgn t2) :
+    Affsign sgn ({x} : Set V3) ({u} : Set V3) y := by
+  have hfin : (({x} : Set V3) ∪ {u}).Finite :=
+    (Set.finite_singleton x).union (Set.finite_singleton u)
+  have hT : hfin.toFinset = ({x, u} : Finset V3) := by
+    ext w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  refine ⟨fun w => if w = u then t2 else t1, hfin, ?_, ?_, ?_⟩
+  · rw [hT, Finset.sum_insert (by simp [hxu]), Finset.sum_singleton]
+    simp only [if_pos rfl, if_neg hxu, smul_zero, zero_add]
+    exact hy
+  · intro w hw
+    rw [Set.mem_singleton_iff] at hw
+    subst hw
+    simpa using h2
+  · rw [hT, Finset.sum_insert (by simp [hxu]), Finset.sum_singleton]
+    simp only [if_pos rfl, if_neg hxu]
+    exact hsum
+
+/-- `t • u ∈ affGe {0} {u}` for `t ≥ 0`. -/
+theorem w16_smul_mem_affGe {u : V3} (hu : u ≠ 0) {t : ℝ} (ht : 0 ≤ t) :
+    t • u ∈ affGe ({0} : Set V3) ({u} : Set V3) :=
+  w16_affsign_single (x := 0) (u := u) (y := t • u) (sgn := fun x => 0 ≤ x)
+    (by simpa using hu.symm) (t1 := 1 - t) (t2 := t) (by simp) (by ring)
+    (by simpa using ht)
+
+/-- `t • u ∈ affLt {0} {u}` for `t < 0`. -/
+theorem w16_smul_mem_affLt {u : V3} (hu : u ≠ 0) {t : ℝ} (ht : t < 0) :
+    t • u ∈ affLt ({0} : Set V3) ({u} : Set V3) :=
+  w16_affsign_single (x := 0) (u := u) (y := t • u) (sgn := fun x => x < 0)
+    (by simpa using hu.symm) (t1 := 1 - t) (t2 := t) (by simp) (by ring)
+    (by simpa using ht)
+
+/-- `affGt ∅ S ⊆ affGt {0} S` when `0 ∉ S`. -/
+theorem w16_affGt_empty_subset {S : Set V3} (h0S : (0:V3) ∉ S) :
+    affGt (∅ : Set V3) S ⊆ affGt ({0} : Set V3) S := by
+  rintro v ⟨f, hfin, hvec, hpos, hone⟩
+  have hSfin : S.Finite := by simpa using hfin
+  have hfin' : (({0} : Set V3) ∪ S).Finite := hSfin.insert 0
+  have hT : hfin.toFinset = hSfin.toFinset := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_empty_iff_false,
+      false_or]
+  have hT' : hfin'.toFinset = insert (0:V3) hSfin.toFinset := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert]
+  set g : V3 → ℝ := fun w => if w = 0 then 0 else f w with hg
+  have hg_eq : ∀ w ∈ hSfin.toFinset, g w = f w := by
+    intro w hw
+    have hwS : w ∈ S := by simpa using hw
+    have hw0 : w ≠ 0 := fun h => h0S (h ▸ hwS)
+    simp only [hg, if_neg hw0]
+  have hg0 : g (0:V3) = 0 := by simp [hg]
+  refine ⟨g, hfin', ?_, ?_, ?_⟩
+  · rw [hT', Finset.sum_insert (by simp [h0S]), hg0, zero_smul, zero_add]
+    rw [show (∑ w ∈ hSfin.toFinset, g w • w) = ∑ w ∈ hSfin.toFinset, f w • w from by
+      refine Finset.sum_congr rfl ?_
+      intro w hw
+      rw [hg_eq w hw]]
+    rw [← hT]
+    exact hvec
+  · intro w hw
+    have hwS : w ∈ S := hw
+    have hw0 : w ≠ 0 := fun h => h0S (h ▸ hwS)
+    simp only [hg, if_neg hw0]
+    exact hpos w hwS
+  · rw [hT', Finset.sum_insert (by simp [h0S]), hg0, zero_add]
+    rw [show (∑ w ∈ hSfin.toFinset, g w) = ∑ w ∈ hSfin.toFinset, f w from by
+      refine Finset.sum_congr rfl ?_
+      intro w hw
+      rw [hg_eq w hw]]
+    rw [← hT]
+    exact hone
+
+/-! ## §4 cross / triple product kit -/
+
+/-- V3 dot of `cross3` equals the `Fin 3 → ℝ` dot of `crossProduct`. -/
+private theorem w16_cross3_dot_eq (u v w : V3) :
+    (cross3 u v) ⬝ᵥ w =
+      (crossProduct ((u:V3) : Fin 3 → ℝ) ((v:V3) : Fin 3 → ℝ)) ⬝ᵥ ((w:V3) : Fin 3 → ℝ) := by
+  rw [w16_dot3_eq, w16_coe_cross3]
+
+/-- Scalar triple product identity: `((u × v) × u) · v = (u × v) · (u × v)`. -/
+private theorem w16_triple_identity (u v : V3) :
+    (cross3 (cross3 u v) u) ⬝ᵥ v = (cross3 u v) ⬝ᵥ (cross3 u v) := by
+  rw [w16_dot3_eq, w16_coe_cross3, w16_coe_cross3, dotProduct_comm]
+  exact triple_product_permutation ((v:V3) : Fin 3 → ℝ)
+    (crossProduct ((u:V3) : Fin 3 → ℝ) ((v:V3) : Fin 3 → ℝ)) ((u:V3) : Fin 3 → ℝ)
+
+
+/-! ## §5 wrap-corner exclusion (HOL MONO_AZIM_AS_BTA_I, `vb - va = -π` branch) -/
+
+/-- HOL `MONO_AZIM_AS_BTA_I` wrap corner is impossible: no consecutive orbit
+pair has azimuths `(π, 0)` around the axis `(0, v0)` from the reference `vv 1`.
+KCHMAMG / `SEQUENCE_OF_RHO_NODE_IS_SUC` branch of local_lemmas.hl:6740-6927. -/
+theorem w16_noWrap {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v0 : V3} {vv : ℕ → V3} {k i : ℕ}
+    (h : ConvexLocalFan V E FF) (hv0 : v0 ∈ V) (hk : V.ncard = k)
+    (hcol : ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+    (hiter : ∀ n, (rhoNode1 FF)^[n] v0 = vv n)
+    (hi : i + 1 < k) :
+    ¬(azim 0 v0 (vv 1) (vv i) = Real.pi ∧ azim 0 v0 (vv 1) (vv (i + 1)) = 0) := by
+  intro ⟨hva, hvb⟩
+  have hlf2 : localFan_p2 V E FF := w16_lf2 h.1
+  have hclf2 : convexLocalFan_p2 V E FF := w15_clf2 h
+  have hmemV : ∀ n, (rhoNode1 FF)^[n] v0 ∈ V := LOCAL_FAN_ITER_RHO_NODE_IN_V hlf2 hv0
+  have hmemvv : ∀ n, vv n ∈ V := fun n => by rw [← hiter n]; exact hmemV n
+  obtain ⟨-, -, -, -, -, hfan, -, -⟩ := hlf2
+  have hv0ne : v0 ≠ 0 := FAN_IMP_V_DIFF hfan v0 hv0
+  have hv0ne' : (0:V3) ≠ v0 := Ne.symm hv0ne
+  have hvv0 : vv 0 = v0 := (hiter 0).symm
+  -- i ≥ 1
+  have hi0 : 0 < i := by
+    by_contra hcon
+    push_neg at hcon
+    have hi_eq : i = 0 := Nat.le_zero.mp hcon
+    rw [hi_eq] at hva
+    have hz : azim 0 v0 (vv 1) (vv 0) = 0 := by
+      rw [hvv0, azim, if_pos]
+      exact Or.inr (collinear3_pair_right (v0 := (0:V3)) (v1 := v0) (x := v0) rfl)
+    rw [hz] at hva
+    exact absurd hva.symm Real.pi_pos.ne'
+  -- non-collinearity
+  have hne1 : vv 1 ≠ v0 := by
+    have h2 := LOFA_IMP_DIS_ELMS23 hclf2.1 hv0 0 1 (by omega) (by rw [hk]; omega)
+    have h2' : (rhoNode1 FF)^[1] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+    rw [hiter 1, hiter 0] at h2'
+    exact fun hc => h2' (hc.trans hvv0.symm)
+  have hnei : vv i ≠ v0 := by
+    have h2 := LOFA_IMP_DIS_ELMS23 hclf2.1 hv0 0 i (by omega) (by rw [hk]; omega)
+    have h2' : (rhoNode1 FF)^[i] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+    rw [hiter i, hiter 0] at h2'
+    exact fun hc => h2' (hc.trans hvv0.symm)
+  have hnei1 : vv (i + 1) ≠ v0 := by
+    have h2 := LOFA_IMP_DIS_ELMS23 hclf2.1 hv0 0 (i + 1) (by omega) (by rw [hk]; omega)
+    have h2' : (rhoNode1 FF)^[i + 1] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+    rw [hiter (i + 1), hiter 0] at h2'
+    exact fun hc => h2' (hc.trans hvv0.symm)
+  have hnc1 : ¬ Collinear3 0 v0 (vv 1) := hcol (vv 1) (hmemvv 1) hne1
+  have hnci : ¬ Collinear3 0 v0 (vv i) := hcol (vv i) (hmemvv i) hnei
+  have hnci1 : ¬ Collinear3 0 v0 (vv (i + 1)) := hcol (vv (i + 1)) (hmemvv (i + 1)) hnei1
+  have h1ne0 : vv 1 ≠ 0 := FAN_IMP_V_DIFF hfan (vv 1) (hmemvv 1)
+  -- AZIM_EQ_0_ALT / AZIM_EQ_PI_ALT
+  have hgt : vv (i + 1) ∈ affGt ({0, v0} : Set V3) ({vv 1} : Set V3) :=
+    (azim_eq_zero_iff_alt (v0 := 0) (v1 := v0) (w := vv 1) (x := vv (i + 1))
+      hnc1 hnci1).mp hvb
+  have hlt : vv i ∈ affLt ({0, v0} : Set V3) ({vv 1} : Set V3) :=
+    (AZIM_EQ_PI_ALT (u := v0) (v := vv 1) (w := vv i) hnc1 hnci).mp hva
+  -- disjointness
+  have hdis : Disjoint ({0, v0} : Set V3) ({vv 1} : Set V3) := by
+    rw [Set.disjoint_singleton_right]
+    intro hmem
+    rcases Set.mem_insert_iff.mp hmem with hh | hh
+    · refine hnc1 ?_
+      rw [hh]
+      exact collinear3_pair_left (v0 := (0:V3)) (v1 := v0) (x := 0) rfl
+    · refine hnc1 ?_
+      rw [hh]
+      exact collinear3_pair_right (v0 := (0:V3)) (v1 := v0) (x := v0) rfl
+  -- opposite sides
+  have hop := OPPOSITE_SIDES_IMP_INTER (va := 0) (vb := v0) (vc := vv 1)
+    (a := vv (i + 1)) (b := vv i) hv0ne' hdis hgt hlt
+  obtain ⟨p, hpconv, hpspan⟩ := Set.nonempty_iff_ne_empty.mpr hop
+  obtain ⟨t, ht⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hpspan
+  have hpt : p = t • v0 := by rw [← ht]; simp [AffineMap.lineMap_apply]
+  -- the dart (vv i, vv (i+1)) and its edge
+  have hrn : rhoNode1 FF (vv i) = vv (i + 1) := by
+    rw [← hiter (i + 1), show i + 1 = Nat.succ i from rfl,
+      Function.iterate_succ_apply', hiter i]
+  have hFFi : (vv i, vv (i + 1)) ∈ FF := by
+    have h1 : (vv i, rhoNode1_p2 FF (vv i)) ∈ FF :=
+      (LOCAL_FAN_RHO_NODE_PROS2 hclf2.1).2 (vv i) (hmemvv i)
+    have h2 : rhoNode1_p2 FF (vv i) = vv (i + 1) := by
+      show rhoNode1 FF (vv i) = vv (i + 1)
+      exact hrn
+    rwa [h2] at h1
+  have hedge : ({vv i, vv (i + 1)} : Set V3) ∈ E :=
+    (LOCAL_FAN_IN_FF_IN_ORD_PAIRS2 hclf2.1 hFFi hFFi).1
+  -- split on the crossing point side
+  by_cases ht0 : 0 ≤ t
+  · -- Branch A: p on the v0 ray -> p = 0 -> collinear
+    have hpge : p ∈ affGe ({0} : Set V3) ({v0} : Set V3) := by
+      rw [hpt]; exact w16_smul_mem_affGe hv0ne ht0
+    have hpge2 : p ∈ affGe ({0} : Set V3) ({vv (i + 1), vv i} : Set V3) :=
+      CONV_SUBSET_AFF_GE (S := ({0} : Set V3)) (SS := ({vv (i + 1), vv i} : Set V3))
+        (by simp) (by simp) (CONV02_SU_CONV2 (vv (i + 1)) (vv i) hpconv)
+    have h77 := hfan.2.2.2.2.2 ({v0} : Set V3) (Or.inr ⟨v0, hv0, rfl⟩)
+      ({vv i, vv (i + 1)} : Set V3) (Or.inl hedge)
+    have hinter : ({v0} : Set V3) ∩ ({vv i, vv (i + 1)} : Set V3) = ∅ := by
+      rw [Set.eq_empty_iff_forall_notMem]
+      intro z hz
+      obtain ⟨hz1, hz2⟩ := hz
+      rw [Set.mem_singleton_iff] at hz1
+      subst hz1
+      rcases Set.mem_insert_iff.mp hz2 with hh | hh
+      · exact hnei hh.symm
+      · exact hnei1 hh.symm
+    have hp0 : p ∈ ({0} : Set V3) := by
+      have hmem : p ∈ affGe ({0} : Set V3)
+          (({v0} : Set V3) ∩ ({vv i, vv (i + 1)} : Set V3)) := by
+        rw [← h77]
+        refine ⟨hpge, ?_⟩
+        rw [show ({vv i, vv (i + 1)} : Set V3) = ({vv (i + 1), vv i} : Set V3) by
+          ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+        exact hpge2
+      rwa [hinter, w16_affGe_empty_singleton] at hmem
+    have hpzero : p = 0 := by simpa using hp0
+    have h0conv : (0:V3) ∈ convexHull ℝ ({vv (i + 1), vv i} : Set V3) := by
+      rw [← hpzero]
+      exact CONV02_SU_CONV2 (vv (i + 1)) (vv i) hpconv
+    have h0aff : (0:V3) ∈ (affineSpan ℝ ({vv (i + 1), vv i} : Set V3) : Set V3) :=
+      convexHull_subset_affineSpan _ h0conv
+    have hcol0 : Collinear ℝ ({0, vv i, vv (i + 1)} : Set V3) := by
+      have hc : Collinear ℝ ({vv (i + 1), vv i, 0} : Set V3) :=
+        (collinear_triple_iff (x := vv (i + 1)) (v := vv i) (u := 0)).mpr (Or.inl h0aff)
+      have hset : ({0, vv i, vv (i + 1)} : Set V3) = ({vv (i + 1), vv i, 0} : Set V3) := by
+        ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset]
+    have hnc2 := LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hclf2.1 (v := vv i) (hmemvv i)
+    have hnc2' : ¬ Collinear ℝ ({0, vv i, rhoNode1 FF (vv i)} : Set V3) := hnc2
+    rw [hrn] at hnc2'
+    exact hnc2' hcol0
+  · -- Branch B: p on the opposite ray -> circular -> KCHMAMG -> SEQUENCE
+    push_neg at ht0
+    have hplt : p ∈ affLt ({0} : Set V3) ({v0} : Set V3) := by
+      rw [hpt]; exact w16_smul_mem_affLt hv0ne ht0
+    have h0S : (0:V3) ∉ ({vv (i + 1), vv i} : Set V3) := by
+      intro hmem
+      rcases Set.mem_insert_iff.mp hmem with hh | hh
+      · have hz : vv (i + 1) = 0 := hh.symm
+        exact FAN_IMP_V_DIFF hfan (vv (i + 1)) (hmemvv (i + 1)) hz
+      · have hz : vv i = 0 := (Set.mem_singleton_iff.mp hh).symm
+        exact FAN_IMP_V_DIFF hfan (vv i) (hmemvv i) hz
+    have hpgt : p ∈ affGt ({0} : Set V3) ({vv (i + 1), vv i} : Set V3) :=
+      w16_affGt_empty_subset h0S hpconv
+    have hcirc : circular_p2 V E := by
+      refine ⟨vv (i + 1), vv i, v0, ?_, hv0, ?_⟩
+      · have hEq : ({vv (i + 1), vv i} : Set V3) = ({vv i, vv (i + 1)} : Set V3) := by
+          ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+        rw [hEq]; exact hedge
+      · intro hempty
+        have hmem : p ∈ affGt ({0} : Set V3) ({vv (i + 1), vv i} : Set V3) ∩
+            affLt ({0} : Set V3) ({v0} : Set V3) := Set.mem_inter hpgt hplt
+        rw [hempty] at hmem
+        exact hmem
+    obtain ⟨-, A, hAplane, hA0, hAsub, -⟩ := KCHMAMG hclf2 hcirc
+    -- SEQUENCE_OF_RHO_NODE_IS_SUC at v0, window i+1
+    have hUsub : ({(rhoNode1 FF)^[n] v0 | n ≤ i + 1} : Set V3) ⊆ A := by
+      rintro z ⟨n, hn, rfl⟩
+      exact hAsub (hmemV n)
+    have hseq := SEQUENCE_OF_RHO_NODE_IS_SUC (h := hclf2.1) (v := v0) (hv := hv0)
+      (l := i + 1) (U := {(rhoNode1 FF)^[n] v0 | n ≤ i + 1}) (P := A)
+      rfl hAplane hA0 hUsub (e := cross3 v0 (rhoNode1 FF v0)) rfl
+    have hyU : v0 ∈ ({(rhoNode1 FF)^[n] v0 | n ≤ i + 1} : Set V3) :=
+      ⟨0, by omega, by simp⟩
+    have hstrict := hseq (vv i) i (hiter i).symm (by omega) v0 hyU hnei.symm
+      (by
+        show v0 ≠ rhoNode1 FF (vv i)
+        rw [hrn]
+        exact hnei1.symm)
+    -- rewrite the reference e = v0 × vv 1
+    have he1 : rhoNode1 FF v0 = vv 1 := by
+      rw [← hiter 1, show (1:ℕ) = Nat.succ 0 from rfl,
+        Function.iterate_succ_apply', Function.iterate_zero_apply]
+    rw [he1] at hstrict
+    have hrn2 : rhoNode1_p2 FF (vv i) = vv (i + 1) := by
+      show rhoNode1 FF (vv i) = vv (i + 1)
+      exact hrn
+    rw [hrn2] at hstrict
+    -- coefficient representations
+    obtain ⟨c, hcpos, hcoef, hrepr⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := v0) (x := vv 1) (y := vv (i + 1))
+        hv0ne' h1ne0 hne1).mp hgt
+    obtain ⟨t1, t2, t3, ht3, hsum3, hrepr3⟩ := by
+      have h2 := hlt
+      rw [AFF_LT_2_1 (x := (0:V3)) (v := v0) (w := vv 1) hdis, Set.mem_setOf_eq] at h2
+      exact h2
+    have hrepr' : vv (i + 1) = c • vv 1 + hcoef • v0 := by
+      simpa only [sub_zero] using hrepr
+    have hrepr3' : vv i = t2 • v0 + t3 • vv 1 := by
+      simpa only [smul_zero, zero_add] using hrepr3
+    -- triple products
+    have hene : cross3 v0 (vv 1) ≠ 0 := w16_cross3_ne hnc1
+    have hposident : 0 < (cross3 (cross3 v0 (vv 1)) v0) ⬝ᵥ vv 1 := by
+      rw [w16_triple_identity]
+      exact w16_dot3_self_pos hene
+    have hsign1 : 0 < (cross3 (cross3 v0 (vv 1)) v0) ⬝ᵥ vv (i + 1) := by
+      have hsplit : (cross3 (cross3 v0 (vv 1)) v0) ⬝ᵥ vv (i + 1)
+          = c * ((cross3 (cross3 v0 (vv 1)) v0) ⬝ᵥ vv 1) := by
+        rw [hrepr']
+        simp only [WithLp.ofLp_add, WithLp.ofLp_smul, dotProduct_add, dotProduct_smul,
+          smul_eq_mul, w16_cross3_dotR]
+        ring
+      rw [hsplit]
+      exact mul_pos hcpos hposident
+    have hsign2 : (cross3 (cross3 v0 (vv 1)) v0) ⬝ᵥ vv i < 0 := by
+      have hsplit : (cross3 (cross3 v0 (vv 1)) v0) ⬝ᵥ vv i
+          = t3 * ((cross3 (cross3 v0 (vv 1)) v0) ⬝ᵥ vv 1) := by
+        rw [hrepr3']
+        simp only [WithLp.ofLp_add, WithLp.ofLp_smul, dotProduct_add, dotProduct_smul,
+          smul_eq_mul, w16_cross3_dotR]
+        ring
+      rw [hsplit]
+      exact mul_neg_of_neg_of_pos ht3 hposident
+    -- non-collinearity for JBDNJJB
+    have hncev0 : ¬ Collinear3 0 (cross3 v0 (vv 1)) v0 := by
+      intro hc
+      obtain ⟨s, hs⟩ := w16_smul_of_collinear0 hene hc
+      have hdot0 : v0 ⬝ᵥ (cross3 v0 (vv 1)) = 0 := by
+        rw [w16_dot3_comm]; exact w16_cross3_dotL v0 (vv 1)
+      have hdot : s * ((cross3 v0 (vv 1)) ⬝ᵥ (cross3 v0 (vv 1))) = 0 := by
+        rw [← w16_dot3_smul_left, ← hs]
+        exact hdot0
+      have hdd : (0:ℝ) < (cross3 v0 (vv 1)) ⬝ᵥ (cross3 v0 (vv 1)) := w16_dot3_self_pos hene
+      have hs0 : s = 0 := (mul_eq_zero.mp hdot).resolve_right hdd.ne'
+      rw [hs0, zero_smul] at hs
+      exact hv0ne hs
+    have hperp : (cross3 v0 (vv 1)) ⬝ᵥ vv i = 0 := by
+      rw [hrepr3']
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, dotProduct_add, dotProduct_smul,
+        smul_eq_mul, w16_cross3_dotR, w16_cross3_dotL]
+      ring
+    have hperp1 : (cross3 v0 (vv 1)) ⬝ᵥ vv (i + 1) = 0 := by
+      rw [hrepr']
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, dotProduct_add, dotProduct_smul,
+        smul_eq_mul, w16_cross3_dotR, w16_cross3_dotL]
+      ring
+    have hncei : ¬ Collinear3 0 (cross3 v0 (vv 1)) (vv i) := by
+      intro hc
+      obtain ⟨s, hs⟩ := w16_smul_of_collinear0 hene hc
+      have hdd : (0:ℝ) < (cross3 v0 (vv 1)) ⬝ᵥ (cross3 v0 (vv 1)) := w16_dot3_self_pos hene
+      have hzero : s * ((cross3 v0 (vv 1)) ⬝ᵥ (cross3 v0 (vv 1))) = 0 := by
+        rw [← w16_dot3_smul_left, ← hs, w16_dot3_comm]
+        exact hperp
+      have hs0 : s = 0 := (mul_eq_zero.mp hzero).resolve_right hdd.ne'
+      rw [hs0, zero_smul] at hs
+      exact FAN_IMP_V_DIFF hfan (vv i) (hmemvv i) hs
+    have hncei1 : ¬ Collinear3 0 (cross3 v0 (vv 1)) (vv (i + 1)) := by
+      intro hc
+      obtain ⟨s, hs⟩ := w16_smul_of_collinear0 hene hc
+      have hdd : (0:ℝ) < (cross3 v0 (vv 1)) ⬝ᵥ (cross3 v0 (vv 1)) := w16_dot3_self_pos hene
+      have hzero : s * ((cross3 v0 (vv 1)) ⬝ᵥ (cross3 v0 (vv 1))) = 0 := by
+        rw [← w16_dot3_smul_left, ← hs, w16_dot3_comm]
+        exact hperp1
+      have hs0 : s = 0 := (mul_eq_zero.mp hzero).resolve_right hdd.ne'
+      rw [hs0, zero_smul] at hs
+      exact FAN_IMP_V_DIFF hfan (vv (i + 1)) (hmemvv (i + 1)) hs
+    -- sine signs
+    obtain ⟨s1, hs1pos, hs1⟩ := JBDNJJB (u := cross3 v0 (vv 1)) (v := v0) (w := vv i)
+      hncev0 hncei
+    obtain ⟨s2, hs2pos, hs2⟩ := JBDNJJB (u := cross3 v0 (vv 1)) (v := v0)
+      (w := vv (i + 1)) hncev0 hncei1
+    have hsin1 : Real.sin (azim 0 (cross3 v0 (vv 1)) v0 (vv i)) < 0 := by
+      rw [hs1, ← w16_cross3_dot_eq]
+      exact mul_neg_of_pos_of_neg hs1pos hsign2
+    have hsin2 : 0 < Real.sin (azim 0 (cross3 v0 (vv 1)) v0 (vv (i + 1))) := by
+      rw [hs2, ← w16_cross3_dot_eq]
+      exact mul_pos hs2pos hsign1
+    have hpi1 : Real.pi < azim 0 (cross3 v0 (vv 1)) v0 (vv i) :=
+      (SIN_AZIM_NEG_PI_LT 0 (cross3 v0 (vv 1)) v0 (vv i)).mp hsin1
+    have hpi2 : Real.pi < azim 0 (cross3 v0 (vv 1)) v0 (vv (i + 1)) :=
+      lt_trans hpi1 hstrict
+    have hsin2' : Real.sin (azim 0 (cross3 v0 (vv 1)) v0 (vv (i + 1))) < 0 :=
+      (SIN_AZIM_NEG_PI_LT 0 (cross3 v0 (vv 1)) v0 (vv (i + 1))).mpr hpi2
+    linarith [hsin2]
+
+
+/-! ## §6 unconditional MONO_AZIM_AS_BTA_I -/
+
+/-- HOL `MONO_AZIM_AS_BTA_I` (local_lemmas.hl:6448), **unconditional form**:
+the orbit-window azimuth sequence is monotone.  The per-step trig is the
+LA35 `monoStepOrbit_p35` disjunction; its wrap corner `(π, 0)` is killed by
+`w16_noWrap`. -/
+theorem MONO_AZIM_AS_BTA_I {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v0 : V3} {vv : ℕ → V3} {bta : ℕ → ℝ} {k : ℕ}
+    (h : ConvexLocalFan V E FF) (hv0 : v0 ∈ V) (hk : V.ncard = k)
+    (hcol : ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+    (hiter : ∀ i, (rhoNode1 FF)^[i] v0 = vv i)
+    (hbta : ∀ i, azim 0 v0 (vv 1) (vv i) = bta i) :
+    ∀ i j, i < j → j < k → bta i ≤ bta j := by
+  intro i j hij hjk
+  have hlf2 : localFan_p2 V E FF := w16_lf2 h.1
+  have hclf2 : convexLocalFan_p2 V E FF := w15_clf2 h
+  have hmemvv : ∀ n, vv n ∈ V := fun n => by
+    rw [← hiter n]; exact LOCAL_FAN_ITER_RHO_NODE_IN_V hlf2 hv0 n
+  obtain ⟨-, -, -, -, -, hfan, -, -⟩ := hlf2
+  have hv0ne : v0 ≠ 0 := FAN_IMP_V_DIFF hfan v0 hv0
+  have hvv0 : vv 0 = v0 := (hiter 0).symm
+  have hr0 : rhoNode1_p2 FF v0 = vv 1 := by
+    show rhoNode1 FF v0 = vv 1
+    rw [← hiter 1, show (1:ℕ) = Nat.succ 0 from rfl,
+      Function.iterate_succ_apply', Function.iterate_zero_apply]
+  have hne1 : vv 1 ≠ v0 := by
+    have h2 := LOFA_IMP_DIS_ELMS23 hclf2.1 hv0 0 1 (by omega) (by rw [hk]; omega)
+    have h2' : (rhoNode1 FF)^[1] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+    rw [hiter 1, hiter 0] at h2'
+    exact fun hc => h2' (hc.trans hvv0.symm)
+  have hb : ¬ Collinear3 0 v0 (vv 1) := hcol (vv 1) (hmemvv 1) hne1
+  have hvx : ∀ m, 0 < m → m < k → ¬ Collinear3 0 v0 (vv m) := by
+    intro m hm0 hmk
+    refine hcol (vv m) (hmemvv m) ?_
+    have h2 := LOFA_IMP_DIS_ELMS23 hclf2.1 hv0 0 m hm0 (by rw [hk]; exact hmk)
+    have h2' : (rhoNode1 FF)^[m] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+    rw [hiter m, hiter 0] at h2'
+    exact fun hc => h2' (hc.trans hvv0.symm)
+  have hvx0 : ∀ m, 0 < m → m < k → vv m ≠ 0 :=
+    fun m _ _ => FAN_IMP_V_DIFF hfan (vv m) (hmemvv m)
+  have hbnds : ∀ m, 0 < m → m < k → 0 ≤ azim 0 v0 (vv 1) (vv m) ∧
+      azim 0 v0 (vv 1) (vv m) ≤ Real.pi := by
+    intro m _ _
+    refine ⟨azim_nonneg _ _ _ _, ?_⟩
+    have h1 := IN_V_IMP_AZIM_LESS_PI hclf2 v0 hv0 (vv m) (hmemvv m)
+    rwa [hr0] at h1
+  have hdart : ∀ m, m + 1 < k → ¬ Collinear3 0 (vv m) (vv (m + 1)) ∧
+      0 ≤ azim 0 (vv m) (vv (m + 1)) v0 ∧
+      azim 0 (vv m) (vv (m + 1)) v0 ≤ Real.pi := by
+    intro m hmk
+    have hrn : rhoNode1 FF (vv m) = vv (m + 1) := by
+      rw [← hiter (m + 1), show m + 1 = Nat.succ m from rfl,
+        Function.iterate_succ_apply', hiter m]
+    have hnc := LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hclf2.1 (v := vv m) (hmemvv m)
+    have hnc' : ¬ Collinear ℝ ({0, vv m, rhoNode1 FF (vv m)} : Set V3) := hnc
+    rw [hrn] at hnc'
+    refine ⟨hnc', azim_nonneg _ _ _ _, ?_⟩
+    have h1 := IN_V_IMP_AZIM_LESS_PI hclf2 (vv m) (hmemvv m) v0 hv0
+    have h1' : azim 0 (vv m) (rhoNode1 FF (vv m)) v0 ≤ Real.pi := h1
+    rwa [hrn] at h1'
+  have hnowrap : ∀ m, m + 1 < k →
+      ¬(azim 0 v0 (vv 1) (vv m) = Real.pi ∧ azim 0 v0 (vv 1) (vv (m + 1)) = 0) :=
+    fun m hmk => w16_noWrap h hv0 hk hcol hiter hmk
+  have hmono := monoWindowNowrap_p35 (k := k) (v0 := v0) (b := vv 1) (ρ := vv)
+    hvv0 hv0ne hb hvx hvx0 hbnds hdart hnowrap hij hjk
+  rw [← hbta i, ← hbta j]
+  exact hmono
+
+/-! ## §7 EGHNAVX (local_lemmas.hl:7170) -/
+
+/-- HOL `EGHNAVX` (local_lemmas.hl:7170): the five-conjunct orbit-ordering
+package. -/
+theorem EGHNAVX {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v0 : V3} {vv : ℕ → V3} {bta : ℕ → ℝ} {k : ℕ}
+    (h : ConvexLocalFan V E FF) (hv0 : v0 ∈ V) (hk : V.ncard = k)
+    (hcol : ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+    (hiter : ∀ i, (rhoNode1 FF)^[i] v0 = vv i)
+    (hbta : ∀ i, azim 0 v0 (vv 1) (vv i) = bta i) :
+    bta 1 = 0 ∧ bta (k - 1) ≤ Real.pi ∧
+    (∀ i j, i < j → j < k → bta i ≤ bta j) ∧
+    (∀ i, (bta i = 0 ∧ i < k →
+        (∀ j, 0 < j ∧ j < i → interiorAngle1 0 FF (vv j) = Real.pi) ∧
+        ({z : V3 | ∃ n, 0 < n ∧ n ≤ i ∧ vv n = z} ⊆
+          affGt ({0, v0} : Set V3) ({vv 1} : Set V3))) ∧
+      (bta i = bta (k - 1) ∧ 0 < i ∧ i < k - 1 →
+        (∀ j, i < j ∧ j < k → interiorAngle1 0 FF (vv j) = Real.pi) ∧
+        ({z : V3 | ∃ n, i ≤ n ∧ n < k ∧ vv n = z} ⊆
+          affGt ({0, v0} : Set V3) ({vv (k - 1)})))) := by
+  have hlf2 : localFan_p2 V E FF := w16_lf2 h.1
+  have hclf2 : convexLocalFan_p2 V E FF := w15_clf2 h
+  have hmemvv : ∀ n, vv n ∈ V := fun n => by
+    rw [← hiter n]; exact LOCAL_FAN_ITER_RHO_NODE_IN_V hlf2 hv0 n
+  have hvv0 : vv 0 = v0 := (hiter 0).symm
+  obtain ⟨hfirst, hlast⟩ := FIRST_EQ0_LAST_LT_PI hclf2 hv0 hk hiter hbta
+  have hmono := MONO_AZIM_AS_BTA_I h hv0 hk hcol hiter hbta
+  obtain ⟨hfan, x0, hx0, hFF0, hD0, h2reg⟩ := h.1
+  -- the fan has at least two vertices, hence `1 < k`
+  have hk2 : 1 < k := by
+    rw [← hk]
+    have hVfin : V.Finite := hfan.2.2.1.1
+    have hVne : V ≠ ∅ := hfan.2.2.1.2
+    rcases Nat.lt_or_ge V.ncard 2 with hlt | hge
+    · exfalso
+      rcases Nat.eq_zero_or_pos V.ncard with h0 | h0
+      · rw [Set.ncard_eq_zero hVfin] at h0
+        exact hVne h0
+      · have h1 : V.ncard = 1 := by omega
+        obtain ⟨v, hv⟩ := Set.ncard_eq_one.mp h1
+        exact LOCAL_FAN_NOT_V_SING hlf2 ⟨v, hv⟩
+    · omega
+  have hne1 : vv 1 ≠ v0 := by
+    have h2 := LOFA_IMP_DIS_ELMS23 hlf2 hv0 0 1 (by omega) (by rw [hk]; omega)
+    have h2' : (rhoNode1 FF)^[1] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+    rw [hiter 1, hiter 0] at h2'
+    exact fun hc => h2' (hc.trans hvv0.symm)
+  have hnc1 : ¬ Collinear3 0 v0 (vv 1) := hcol (vv 1) (hmemvv 1) hne1
+  refine ⟨hfirst, hlast, hmono, ?_⟩
+  intro i
+  constructor
+  · -- conjunct 4
+    intro ⟨hbi, hik⟩
+    have hsub4 : ({z : V3 | ∃ n, 0 < n ∧ n ≤ i ∧ vv n = z} : Set V3) ⊆
+        affGt ({0, v0} : Set V3) ({vv 1} : Set V3) := by
+      rintro z ⟨n, hn0, hni, rfl⟩
+      have hbn : bta n = 0 := by
+        rcases lt_or_eq_of_le hni with hlt | heq
+        · have h1 := hmono n i hlt hik
+          have h2 : 0 ≤ bta n := by rw [← hbta n]; exact azim_nonneg _ _ _ _
+          linarith
+        · rw [heq]; exact hbi
+      have haz : azim 0 v0 (vv 1) (vv n) = 0 := by rw [hbta n]; exact hbn
+      have hncn : ¬ Collinear3 0 v0 (vv n) := by
+        refine hcol (vv n) (hmemvv n) ?_
+        have h2 := LOFA_IMP_DIS_ELMS23 hlf2 hv0 0 n hn0 (by rw [hk]; omega)
+        have h2' : (rhoNode1 FF)^[n] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+        rw [hiter n, hiter 0] at h2'
+        exact fun hc => h2' (hc.trans hvv0.symm)
+      exact (azim_eq_zero_iff_alt (v0 := 0) (v1 := v0) (w := vv 1) (x := vv n)
+        hnc1 hncn).mp haz
+    constructor
+    · intro j ⟨hj0, hji⟩
+      have hplane : plane_p2 (affineSpan ℝ ({0, v0, vv 1} : Set V3)) :=
+        ⟨0, v0, vv 1, hnc1, rfl⟩
+      have h0mem : (0:V3) ∈ (affineSpan ℝ ({0, v0, vv 1} : Set V3) : Set V3) :=
+        mem_affineSpan ℝ (by simp)
+      have hUsub : ({z : V3 | ∃ n, n ≤ i ∧ vv n = z} : Set V3) ⊆
+          (affineSpan ℝ ({0, v0, vv 1} : Set V3) : Set V3) := by
+        rintro z ⟨n, hni, rfl⟩
+        rcases Nat.eq_zero_or_pos n with h0 | hpos
+        · rw [h0, hvv0]; exact mem_affineSpan ℝ (by simp)
+        · have hmem := hsub4 ⟨n, hpos, hni, rfl⟩
+          have h1 := AFF_GT_SUBSET_AFFINE_HULL ({0, v0} : Set V3) ({vv 1} : Set V3) hmem
+          have hset : (({0, v0} : Set V3) ∪ {vv 1}) = ({0, v0, vv 1} : Set V3) := by
+            ext w
+            simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+            tauto
+          rwa [hset] at h1
+      have hUeq : ({(rhoNode1 FF)^[n] v0 | n ≤ i} : Set V3) =
+          {z : V3 | ∃ n, n ≤ i ∧ vv n = z} := by
+        ext z
+        constructor
+        · rintro ⟨n, hn, rfl⟩; exact ⟨n, hn, (hiter n).symm⟩
+        · rintro ⟨n, hn, rfl⟩; exact ⟨n, hn, hiter n⟩
+      have hang := CNVX_IMP_INTERIOR_ANGLE_PI h hv0 hUeq hplane h0mem hUsub
+      have hj := hang j hj0 hji
+      rwa [hiter j] at hj
+    · exact hsub4
+  · -- conjunct 5
+    intro ⟨hbi, hi0, hik⟩
+    have hk1pos : 0 < k - 1 := by omega
+    have hk1lt : k - 1 < k := by omega
+    have hne_k1 : vv (k - 1) ≠ v0 := by
+      have h2 := LOFA_IMP_DIS_ELMS23 hlf2 hv0 0 (k - 1) hk1pos (by rw [hk]; exact hk1lt)
+      have h2' : (rhoNode1 FF)^[k - 1] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+      rw [hiter (k - 1), hiter 0] at h2'
+      exact fun hc => h2' (hc.trans hvv0.symm)
+    have hnc_k1 : ¬ Collinear3 0 v0 (vv (k - 1)) := hcol _ (hmemvv _) hne_k1
+    have hsub5 : ({z : V3 | ∃ n, i ≤ n ∧ n < k ∧ vv n = z} : Set V3) ⊆
+        affGt ({0, v0} : Set V3) ({vv (k - 1)} : Set V3) := by
+      rintro z ⟨n, hni, hnk, rfl⟩
+      have haz : azim 0 v0 (vv 1) (vv n) = azim 0 v0 (vv 1) (vv (k - 1)) := by
+        rcases lt_or_eq_of_le hni with hlt | heq
+        · rcases lt_or_eq_of_le (show n ≤ k - 1 from by omega) with hnk' | hnk'
+          · have h2 := hmono i n hlt (by omega)
+            have h3 := hmono n (k - 1) hnk' hk1lt
+            have h4 : bta n = bta (k - 1) := by linarith
+            rw [hbta n, hbta (k - 1)]
+            exact h4
+          · rw [hnk']
+        · rw [← heq, hbta i, hbta (k - 1)]
+          exact hbi
+      have hncn : ¬ Collinear3 0 v0 (vv n) := by
+        refine hcol (vv n) (hmemvv n) ?_
+        have h2 := LOFA_IMP_DIS_ELMS23 hlf2 hv0 0 n (by omega) (by rw [hk]; omega)
+        have h2' : (rhoNode1 FF)^[n] v0 ≠ (rhoNode1 FF)^[0] v0 := h2
+        rw [hiter n, hiter 0] at h2'
+        exact fun hc => h2' (hc.trans hvv0.symm)
+      exact (azim_eq_azim_iff (v0 := 0) (v1 := v0) (w := vv 1) (x := vv (k - 1))
+        (y := vv n) hnc1 hnc_k1 hncn).mp haz.symm
+    constructor
+    · intro j ⟨hij, hjk⟩
+      have hplane : plane_p2 (affineSpan ℝ ({0, v0, vv (k - 1)} : Set V3)) :=
+        ⟨0, v0, vv (k - 1), hnc_k1, rfl⟩
+      have h0mem : (0:V3) ∈ (affineSpan ℝ ({0, v0, vv (k - 1)} : Set V3) : Set V3) :=
+        mem_affineSpan ℝ (by simp)
+      have hUsub : ({(rhoNode1 FF)^[n] ((rhoNode1 FF)^[i] v0) | n ≤ k - i} : Set V3) ⊆
+          (affineSpan ℝ ({0, v0, vv (k - 1)} : Set V3) : Set V3) := by
+        rintro z ⟨n, hn, rfl⟩
+        have hiter_add : (rhoNode1 FF)^[n] ((rhoNode1 FF)^[i] v0) = vv (i + n) := by
+          rw [← Function.iterate_add_apply, show n + i = i + n from by omega,
+            hiter (i + n)]
+        rw [hiter_add]
+        rcases lt_or_eq_of_le (show i + n ≤ k from by omega) with hlt | heq
+        · have hmem := hsub5 ⟨i + n, by omega, hlt, rfl⟩
+          have h1 := AFF_GT_SUBSET_AFFINE_HULL ({0, v0} : Set V3)
+            ({vv (k - 1)} : Set V3) hmem
+          have hset : (({0, v0} : Set V3) ∪ {vv (k - 1)}) = ({0, v0, vv (k - 1)} : Set V3) := by
+            ext w
+            simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+            tauto
+          rwa [hset] at h1
+        · have hk_eq : vv (i + n) = v0 := by
+            rw [← hiter (i + n), heq, ← hk]
+            exact LOFA_IMP_ITER_RHO_NODE_ID hlf2 hv0
+          rw [hk_eq]
+          exact mem_affineSpan ℝ (by simp)
+      have hang := CNVX_IMP_INTERIOR_ANGLE_PI (v := (rhoNode1 FF)^[i] v0) (l := k - i)
+        (U := {(rhoNode1 FF)^[n] ((rhoNode1 FF)^[i] v0) | n ≤ k - i})
+        h (by rw [hiter i]; exact hmemvv i) rfl hplane h0mem hUsub
+      have hj0 : 0 < j - i := by omega
+      have hjk' : j - i < k - i := by omega
+      have hj := hang (j - i) hj0 hjk'
+      rwa [show (rhoNode1 FF)^[j - i] ((rhoNode1 FF)^[i] v0) = vv j from by
+        rw [← Function.iterate_add_apply, show j - i + i = j from by omega,
+          hiter j]] at hj
+    · exact hsub5
+
+/-! ## axiom audit -/
+#print axioms CONV02_SU_CONV2
+#print axioms AZIM_EQ_PI_ALT
+#print axioms w16_affGe_empty_singleton
+#print axioms w16_smul_mem_affGe
+#print axioms w16_smul_mem_affLt
+#print axioms w16_affGt_empty_subset
+#print axioms w16_noWrap
+#print axioms MONO_AZIM_AS_BTA_I
+#print axioms EGHNAVX
 
 end Kepler.Text
