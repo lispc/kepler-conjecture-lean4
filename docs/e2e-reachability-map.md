@@ -10,12 +10,27 @@
 > `Kepler.*` / `_private.Kepler.*`。`import` 进来但不在任何根证明项里的声明**不计入**
 > K-REACH——它们正是 ORPHANS。
 
+> **口径 II（2026-11-04 用户裁）：说指标一律剔除机器证书 shard 树
+> `Kepler.Interval.Cases.*`**——头部行 = `K_REACH_XCASES` / `K_SORRIED_XCASES` /
+> `K_AXIOM_XCASES` / `K_UNIVERSE_XCASES`（仪器 `e2e_reach_map.lean` 已原生输出，
+> `isCasesModule` 判定）。理由（2026-11-04 逐模块直方图实测）：Cases.* 单树
+> 2,060,423 节点 = 全锥 **99.0%**（其中 CQITNPEAx3725403817 单根 2,777 shard
+> = 1,853,539），其增长是证书量产的机械副产品而非证明进展；ex-Cases 才反映
+> 人工数学树（Text.*）与 Graphs/Assembly 证书轴的真实增长。全口径行保留输出
+> 不废（审计对照）。**分布表（基线 J 实测）**：Cases.* 2,060,423（3,387 模块）/
+> Text.* 16,718（121）/ Graphs.* 3,369（627）/ Kepler 其余顶层 504（36）/
+> Interval 非 Cases 490（12）/ Assembly 202（1）。**基线 J ex-Cases = K_REACH
+> 21,283 / SORRIED 134 / AXIOM 624 / K_UNIVERSE 32,488**（同轮校验：全口径
+> 四指标与基线 J 逐位一致）。
+
 ## v2.0 指标定义
 
 | 指标 | 定义 | 用途 |
 |---|---|---|
 | **K_REACH** | 根 proof-term 闭包内 distinct Kepler 声明数（树节点；含 axiom/opaque） | 主指标：树越大越好 |
+| **K_REACH_XCASES** | K_REACH 剔除 `Kepler.Interval.Cases.*` 模块（口径 II） | **汇报头部指标** |
 | **K_SORRIED** | 根闭包内**值里直接含** `sorryAx` 的声明数 | 信息项，不设单调目标 |
+| **K_SORRIED_XCASES** | K_SORRIED 剔除 Cases.*（口径 II；Cases 内实测 0） | 汇报头部指标 |
 | **K_AXIOM** | 根闭包内 Kepler 公理数（含 `native_decide` 的 `*_native_decide.ax_*`） | 护栏：不得增长 |
 | **K_MODULES** | K_REACH 声明所在的不同模块数 | 树广度 |
 | **K_UNIVERSE** | 当前 env（= `import` 闭包）内 `Kepler.*` / `_private.Kepler.*` 声明总数 | COVERAGE 分母 |

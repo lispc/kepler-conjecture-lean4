@@ -91,6 +91,11 @@ def isGeneratedModule (m : Name) : Bool :=
   s.contains "Shard" || s.contains "CertTri" || s.contains "CertQuad" ||
   s.contains "CertPent" || s.contains "CertHex"
 
+/-- 口径 II（2026-11-04 用户裁）：汇报头部指标剔除机器证书 shard 树
+`Kepler.Interval.Cases.*`（人工数学 + Graphs/Assembly 证书轴保留在口径内）。 -/
+def isCasesModule (m : Name) : Bool :=
+  (m.toString).startsWith "Kepler.Interval.Cases"
+
 def isGeneratedDecl (m : Name) (n : Name) : Bool :=
   isGeneratedModule m || (n.toString).contains "_native_decide"
 
@@ -117,6 +122,8 @@ structure MapResult where
   sorries : Array (Name × Name) := #[]
   axioms : Array (Name × Name) := #[]
   modules : Std.HashSet Name := {}
+  /-- 口径 II 直方图：模块 → 可达 Kepler 声明数。 -/
+  moduleCounts : Std.HashMap Name Nat := {}
   parents : Std.HashMap Name Name := {}
   nodes : Array NodeRow := #[]
 deriving Inhabited
@@ -142,7 +149,10 @@ partial def reach (env : Environment) (root : Name) (dump : Bool := false) : Map
               if isK then
                 { r with
                   kReach := r.kReach + 1
-                  modules := r.modules.insert (moduleOf env n) }
+                  modules := r.modules.insert (moduleOf env n)
+                  moduleCounts :=
+                    let m := moduleOf env n
+                    r.moduleCounts.insert m (r.moduleCounts.getD m 0 + 1) }
               else r
             match ci.value? true with
             | none =>
@@ -193,6 +203,11 @@ partial def reach (env : Environment) (root : Name) (dump : Bool := false) : Map
 def keplerUniverseSize (env : Environment) : Nat :=
   env.constants.fold (fun acc n _ => if isKeplerName n then acc + 1 else acc) 0
 
+/-- 口径 II：`Kepler.Interval.Cases.*` 之外的 env Kepler 声明数。 -/
+def keplerUniverseSizeXCases (env : Environment) : Nat :=
+  env.constants.fold
+    (fun acc n _ => if isKeplerName n && !isCasesModule (moduleOf env n) then acc + 1 else acc) 0
+
 def defaultRoot : Name := `Kepler.Assembly.the_kepler_conjecture_from_interfaces
 
 #eval show CoreM Unit from do
@@ -211,9 +226,17 @@ def defaultRoot : Name := `Kepler.Assembly.the_kepler_conjecture_from_interfaces
   if dump then
     IO.println "K_UNIVERSE SKIPPED_DUMP_TREE"
     IO.println "COVERAGE SKIPPED_DUMP_TREE"
+    IO.println "K_UNIVERSE_XCASES SKIPPED_DUMP_TREE"
   else
     IO.println s!"K_UNIVERSE {univ}"
     IO.println s!"COVERAGE {r.kReach} / {univ}"
+    IO.println s!"K_UNIVERSE_XCASES {keplerUniverseSizeXCases env}"
+  let xreach := r.moduleCounts.fold (fun acc m c => if isCasesModule m then acc else acc + c) 0
+  let xsor := r.sorries.foldl (fun acc (_, m) => if isCasesModule m then acc else acc + 1) 0
+  let xax := r.axioms.foldl (fun acc (_, m) => if isCasesModule m then acc else acc + 1) 0
+  IO.println s!"K_REACH_XCASES {xreach}"
+  IO.println s!"K_SORRIED_XCASES {xsor}"
+  IO.println s!"K_AXIOM_XCASES {xax}"
   IO.println s!"TOTAL_VALUE_DECLS {r.total}"
   IO.println s!"LEGACY_TOTAL_REACHABLE_KEPLER_DECLS {r.total}"
   IO.println s!"SORRIED {r.sorries.size}"
@@ -253,4 +276,9 @@ def defaultRoot : Name := `Kepler.Assembly.the_kepler_conjecture_from_interfaces
         | none => ""
       let tcc := counts.getD row.name 0
       IO.println s!"{row.name}\t{row.module}\t{row.kind}\t{row.directSorry}\t{p}\t{row.childCount}\t{row.extCount}\t{row.depth}\t{row.generated}\t{tcc}"
+  if !dump then
+    IO.println "--- MODULE HISTOGRAM ---"
+    for (m, c) in r.moduleCounts.toArray.qsort
+        (fun a b => a.2 > b.2 || (a.2 == b.2 && a.1.toString < b.1.toString)) do
+      IO.println s!"{c}\t{m}"
   IO.println "--- END ---"
