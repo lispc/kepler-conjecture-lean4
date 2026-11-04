@@ -102,6 +102,9 @@ import Kepler.Text.LocalAuto26
 import Kepler.Text.LocalAuto27
 import Kepler.Text.LocalAuto28
 import Kepler.Text.SphereKit
+import Kepler.Text.LocalAuto5
+import Kepler.Text.LocalAuto7
+import Kepler.Text.TopologyFan
 import Kepler.Geom.Aff
 import Kepler.Geom.Azim
 import Mathlib
@@ -519,13 +522,315 @@ theorem nonlinear_imp_lp_main_estimate_p16 :
 
 /-! ## Section B: XIVPHKS.hl (wedge-membership induction, Lemma 7.143) -/
 
-/-- HOL `FSQKWKK` (XIVPHKS.hl:17, Lemma 7.141).
-NEEDS: Local_lemmas `SIN_AZIM_POS_PI_LT` / `SIN_AZIM_MUTUAL_SROSS`
-(the azimuth-sine SROSS kit) and `CROSS_TRIPLE`; no counterpart of the
-sine-of-azim layer exists in Kepler.Geom yet. -/
+
+
+
+open Kepler.Geom Set Classical
+
+/-! ## w13 provisional kit: cross3 algebra -/
+
+private theorem w13_cross3_add_left (a b c : V3) :
+    cross3 (a + b) c = cross3 a c + cross3 b c := by
+  apply WithLp.ofLp_injective
+  simp [cross3, map_add]
+
+private theorem w13_cross3_add_right (a b c : V3) :
+    cross3 a (b + c) = cross3 a b + cross3 a c := by
+  apply WithLp.ofLp_injective
+  simp [cross3, map_add]
+
+private theorem w13_cross3_smul_left (t : ℝ) (a b : V3) :
+    cross3 (t • a) b = t • cross3 a b := by
+  apply WithLp.ofLp_injective
+  simp [cross3, map_smul]
+
+private theorem w13_cross3_smul_right (t : ℝ) (a b : V3) :
+    cross3 a (t • b) = t • cross3 a b := by
+  apply WithLp.ofLp_injective
+  simp [cross3, map_smul]
+
+private theorem w13_cross3_self (a : V3) : cross3 a a = 0 := by
+  apply WithLp.ofLp_injective
+  simp [cross3, cross_self]
+
+private theorem w13_cross3_neg_left (a b : V3) : cross3 (-a) b = -cross3 a b := by
+  simpa using w13_cross3_smul_left (-1) a b
+
+private theorem w13_cross3_anticomm (a b : V3) : cross3 b a = -cross3 a b := by
+  apply WithLp.ofLp_injective
+  simp only [cross3, WithLp.ofLp_toLp, WithLp.ofLp_neg]
+  exact (cross_anticomm ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ)).symm
+
+private theorem w13_cross3_cross3 (u v w : V3) :
+    cross3 (cross3 u v) w = (u ⬝ᵥ w) • v - (v ⬝ᵥ w) • u := by
+  apply WithLp.ofLp_injective
+  simp only [cross3, WithLp.ofLp_toLp, WithLp.ofLp_sub, WithLp.ofLp_smul]
+  rw [cross_cross_eq_smul_sub_smul]
+
+private theorem w13_dot3_add_left (x y z : V3) :
+    (x + y) ⬝ᵥ z = x ⬝ᵥ z + y ⬝ᵥ z :=
+  add_dotProduct _ _ _
+
+private theorem w13_dot3_add_right (x y z : V3) :
+    z ⬝ᵥ (x + y) = z ⬝ᵥ x + z ⬝ᵥ y :=
+  dotProduct_add _ _ _
+
+private theorem w13_dot3_smul_left (t : ℝ) (x z : V3) :
+    (t • x) ⬝ᵥ z = t * (x ⬝ᵥ z) :=
+  smul_dotProduct _ _ _
+
+private theorem w13_dot3_smul_right (t : ℝ) (x z : V3) :
+    z ⬝ᵥ (t • x) = t * (z ⬝ᵥ x) :=
+  dotProduct_smul _ _ _
+
+private theorem w13_dot3_comm (x y : V3) : x ⬝ᵥ y = y ⬝ᵥ x :=
+  dotProduct_comm _ _
+
+private theorem w13_dot3_sub_left (x y z : V3) :
+    (x - y) ⬝ᵥ z = x ⬝ᵥ z - y ⬝ᵥ z :=
+  sub_dotProduct _ _ _
+
+private theorem w13_cross3_dot_self_left (a b : V3) : cross3 a b ⬝ᵥ a = 0 := by
+  rw [w13_dot3_comm]
+  exact dot_self_cross ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ)
+
+private theorem w13_exists_smul_of_collinear3_zero {a b : V3}
+    (h : Collinear3 0 a b) : ∃ (z : V3) (sa sb : ℝ),
+      a = sa • z ∧ b = sb • z := by
+  have h0 : (0:V3) ∈ ({0, a, b} : Set V3) := by simp
+  obtain ⟨z, hz⟩ := (collinear_iff_of_mem (k := ℝ) h0).mp h
+  obtain ⟨sa, ha⟩ := hz a (by simp)
+  obtain ⟨sb, hb⟩ := hz b (by simp)
+  exact ⟨z, sa, sb, by simpa using ha, by simpa using hb⟩
+
+private theorem w13_cross3_eq_zero_of_collinear3_zero {a b : V3}
+    (h : Collinear3 0 a b) : cross3 a b = 0 := by
+  obtain ⟨z, sa, sb, ha, hb⟩ := w13_exists_smul_of_collinear3_zero h
+  rw [ha, hb, w13_cross3_smul_left, w13_cross3_smul_right, w13_cross3_self]
+  simp
+
+private theorem w13_triple_eq_zero_of_collinear3_zero_left {u v w : V3}
+    (h : Collinear3 0 u v) : (cross3 u v) ⬝ᵥ w = 0 := by
+  rw [w13_cross3_eq_zero_of_collinear3_zero h]
+  simp
+
+private theorem w13_triple_cyclic (a b c : V3) :
+    (cross3 a b) ⬝ᵥ c = (cross3 c a) ⬝ᵥ b := by
+  rw [show (cross3 a b) ⬝ᵥ c
+        = ((cross3 a b : V3) : Fin 3 → ℝ) ⬝ᵥ ((c:V3) : Fin 3 → ℝ) from rfl,
+      show (cross3 c a) ⬝ᵥ b
+        = ((cross3 c a : V3) : Fin 3 → ℝ) ⬝ᵥ ((b:V3) : Fin 3 → ℝ) from rfl]
+  simp only [cross3, WithLp.ofLp_toLp]
+  rw [dotProduct_comm (crossProduct ((a:V3):Fin 3 → ℝ) ((b:V3):Fin 3 → ℝ)) ((c:V3):Fin 3 → ℝ),
+    triple_product_permutation ((c:V3):Fin 3 → ℝ) ((a:V3):Fin 3 → ℝ) ((b:V3):Fin 3 → ℝ),
+    triple_product_permutation ((a:V3):Fin 3 → ℝ) ((b:V3):Fin 3 → ℝ) ((c:V3):Fin 3 → ℝ),
+    dotProduct_comm ((b:V3):Fin 3 → ℝ) (crossProduct ((c:V3):Fin 3 → ℝ) ((a:V3):Fin 3 → ℝ))]
+
+private theorem w13_triple_eq_zero_of_collinear3_zero_right {u v w : V3}
+    (h : Collinear3 0 u w) : (cross3 u v) ⬝ᵥ w = 0 := by
+  rw [w13_triple_cyclic u v w]
+  exact w13_triple_eq_zero_of_collinear3_zero_left (u := w) (v := u) (w := v)
+    (by
+      have hset : ({0, w, u} : Set V3) = {0, u, w} := by
+        ext x
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [Collinear3, hset]
+      exact h)
+
+/-! ## sine-of-azim sign -/
+
+private theorem w13_cexp_cos_re (r : ℝ) :
+    (Complex.exp ((r : ℂ) * Complex.I)).re = Real.cos r := by
+  have h := congrArg Complex.re (Complex.exp_mul_I (r : ℂ))
+  simpa using h
+
+private theorem w13_cexp_sin_im (r : ℝ) :
+    (Complex.exp ((r : ℂ) * Complex.I)).im = Real.sin r := by
+  have h := congrArg Complex.im (Complex.exp_mul_I (r : ℂ))
+  simpa using h
+
+private theorem w13_sin_azim_eq_pos_mul_triple (u v w : V3) :
+    ∃ c : ℝ, 0 < c ∧ Real.sin (azim 0 u v w) = c * ((cross3 u v) ⬝ᵥ w) := by
+  by_cases hdeg : Collinear3 0 u v ∨ Collinear3 0 u w
+  · refine ⟨1, one_pos, ?_⟩
+    rw [azim, if_pos hdeg, Real.sin_zero, one_mul]
+    symm
+    rcases hdeg with h | h
+    · exact w13_triple_eq_zero_of_collinear3_zero_left h
+    · exact w13_triple_eq_zero_of_collinear3_zero_right h
+  · push_neg at hdeg
+    obtain ⟨h1, h2⟩ := hdeg
+    set θ : ℝ := azim 0 u v w with hθdef
+    have hu : u ≠ 0 := by
+      intro h0
+      exact h1 (by rw [h0]; exact collinear3_of_eq (by simp))
+    -- frame
+    obtain ⟨e1, e2, e3, hon, hualign⟩ := exists_on3_eq_smul u hu
+    have hax : (u - 0 : V3) = dist u 0 • e3 := by
+      simpa only [sub_zero, dist_eq_norm] using hualign
+    have honk := hon
+    obtain ⟨hon1, hon2, hon3, hon12, hon13, hon23, -⟩ := honk
+    have hon21 : e2 ⬝ᵥ e1 = 0 := by rw [w13_dot3_comm, hon12]
+    have hon31 : e3 ⬝ᵥ e1 = 0 := by rw [w13_dot3_comm, hon13]
+    have hon32 : e3 ⬝ᵥ e2 = 0 := by rw [w13_dot3_comm, hon23]
+    obtain ⟨psi, r1, r2, hr1, hr2, hz1, hz2⟩ :=
+      azim_frame_spec (v := (0:V3)) (w := u) (w1 := v) (w2 := w) h1 h2 hon hax hu
+    rw [← hθdef] at hz2
+    -- component readings
+    have hv1 : v ⬝ᵥ e1 = r1 * Real.cos psi := by
+      have h := congrArg Complex.re hz1
+      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+        mul_one] at h
+      rw [w13_cexp_cos_re] at h
+      exact h
+    have hv2 : v ⬝ᵥ e2 = r1 * Real.sin psi := by
+      have h := congrArg Complex.im hz1
+      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+        Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, add_zero,
+        zero_add, mul_one] at h
+      rw [w13_cexp_sin_im] at h
+      simpa only [sub_zero] using h
+    have hw1 : w ⬝ᵥ e1 = r2 * Real.cos (psi + θ) := by
+      have h := congrArg Complex.re hz2
+      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+        mul_one] at h
+      rw [w13_cexp_cos_re] at h
+      exact h
+    have hw2 : w ⬝ᵥ e2 = r2 * Real.sin (psi + θ) := by
+      have h := congrArg Complex.im hz2
+      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+        Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, add_zero,
+        zero_add, mul_one] at h
+      rw [w13_cexp_sin_im] at h
+      simpa only [sub_zero] using h
+    -- cross table
+    have he1e2 : cross3 e1 e2 = e3 := by
+      simp only [cross3, WithLp.ofLp_toLp]
+      rw [on3_cross hon, WithLp.toLp_ofLp]
+    have he3e1 : cross3 e3 e1 = e2 := by
+      have h := w13_cross3_cross3 e1 e2 e1
+      rw [he1e2] at h
+      simpa [hon1, hon21] using h
+    have he3e2 : cross3 e3 e2 = -e1 := by
+      have h21 : cross3 e2 e1 = -e3 := by
+        rw [w13_cross3_anticomm, he1e2]
+      have h := w13_cross3_cross3 e2 e1 e2
+      rw [h21] at h
+      rw [w13_cross3_neg_left] at h
+      have h' : -cross3 e3 e2 = e1 := by simpa [hon2, hon12] using h
+      simpa using congrArg Neg.neg h'
+    have hcross : cross3 u v = ‖u‖ • ((r1 * Real.cos psi) • e2 - (r1 * Real.sin psi) • e1) := by
+      conv_lhs => rw [hualign]
+      rw [on3_expand hon v, hv1, hv2]
+      rw [w13_cross3_smul_left]
+      congr 1
+      rw [w13_cross3_add_right, w13_cross3_add_right]
+      rw [w13_cross3_smul_right, w13_cross3_smul_right, w13_cross3_smul_right]
+      rw [he3e1, he3e2, w13_cross3_self]
+      module
+    have hdot : (cross3 u v) ⬝ᵥ w =
+        ‖u‖ * (r1 * Real.cos psi * (r2 * Real.sin (psi + θ)) -
+          r1 * Real.sin psi * (r2 * Real.cos (psi + θ))) := by
+      rw [hcross, on3_expand hon w, hw1, hw2]
+      simp only [WithLp.ofLp_smul, WithLp.ofLp_sub, WithLp.ofLp_add,
+        smul_dotProduct, sub_dotProduct, dotProduct_add, dotProduct_smul,
+        hon1, hon2, hon3, hon12, hon21, hon13, hon31, hon23, hon32,
+        mul_zero, mul_one, add_zero, zero_add]
+      ring
+    have htrig : r1 * Real.cos psi * (r2 * Real.sin (psi + θ)) -
+        r1 * Real.sin psi * (r2 * Real.cos (psi + θ)) =
+        r1 * r2 * Real.sin θ := by
+      have hs := Real.sin_sub (psi + θ) psi
+      rw [show psi + θ - psi = θ by ring] at hs
+      rw [hs]
+      ring
+    refine ⟨1 / (‖u‖ * r1 * r2), ?_, ?_⟩
+    · have : 0 < ‖u‖ * r1 * r2 := by positivity
+      exact one_div_pos.mpr this
+    · rw [hdot, htrig]
+      have hp : ‖u‖ * r1 * r2 ≠ 0 := by positivity
+      field_simp
+
+
+
+private theorem w13_sin_pos_iff_triple_pos (u v w : V3) :
+    0 < Real.sin (azim 0 u v w) ↔ 0 < (cross3 u v) ⬝ᵥ w := by
+  obtain ⟨c, hc, he⟩ := w13_sin_azim_eq_pos_mul_triple u v w
+  rw [he]
+  exact mul_pos_iff_of_pos_left hc
+
+private theorem w13_sin_neg_iff_triple_neg (u v w : V3) :
+    Real.sin (azim 0 u v w) < 0 ↔ (cross3 u v) ⬝ᵥ w < 0 := by
+  obtain ⟨c, hc, he⟩ := w13_sin_azim_eq_pos_mul_triple u v w
+  rw [he]
+  have h := mul_lt_mul_iff_of_pos_left (a := c) (b := (cross3 u v) ⬝ᵥ w) (c := 0) hc
+  simpa using h
+
+private theorem w13_fsqkwkk_origin (v1 v2 v3 : V3) (h : azim 0 v1 v2 v3 ≤ Real.pi) :
+    azim 0 v2 v3 v1 ≤ Real.pi := by
+  by_cases h1 : v1 = 0
+  · have hz : azim 0 v2 v3 v1 = 0 := by
+      rw [azim, if_pos]
+      right
+      have hc : Collinear3 0 v2 0 :=
+        collinear3_pair_left (v0 := (0:V3)) (v1 := v2) (x := 0) rfl
+      simpa [h1] using hc
+    rw [hz]
+    exact Real.pi_pos.le
+  by_cases h2 : v2 = 0
+  · have hz : azim 0 v2 v3 v1 = 0 := by
+      rw [azim, if_pos]
+      left
+      have hc : Collinear3 0 v3 0 :=
+        collinear3_pair_left (v0 := (0:V3)) (v1 := v3) (x := 0) rfl
+      simpa [h2, Collinear3, Set.insert_comm, Set.pair_comm] using hc
+    rw [hz]
+    exact Real.pi_pos.le
+  by_cases h3 : v3 = 0
+  · have hz : azim 0 v2 v3 v1 = 0 := by
+      rw [azim, if_pos]
+      left
+      have hc : Collinear3 0 v2 0 :=
+        collinear3_pair_left (v0 := (0:V3)) (v1 := v2) (x := 0) rfl
+      simpa [h3] using hc
+    rw [hz]
+    exact Real.pi_pos.le
+  have hsin1 : 0 ≤ Real.sin (azim 0 v1 v2 v3) := by
+    by_contra hc
+    have hlt : Real.sin (azim 0 v1 v2 v3) < 0 := lt_of_not_ge hc
+    have hpi := (SIN_AZIM_NEG_PI_LT 0 v1 v2 v3).mp hlt
+    linarith
+  have htriple1 : 0 ≤ (cross3 v1 v2) ⬝ᵥ v3 := by
+    by_contra hc
+    have hlt : (cross3 v1 v2) ⬝ᵥ v3 < 0 := lt_of_not_ge hc
+    have hs := (w13_sin_neg_iff_triple_neg v1 v2 v3).mpr hlt
+    linarith
+  have hcyc : (cross3 v2 v3) ⬝ᵥ v1 = (cross3 v1 v2) ⬝ᵥ v3 :=
+    w13_triple_cyclic v2 v3 v1
+  have hsin2 : 0 ≤ Real.sin (azim 0 v2 v3 v1) := by
+    by_contra hc
+    have hlt : Real.sin (azim 0 v2 v3 v1) < 0 := lt_of_not_ge hc
+    have hs := (w13_sin_neg_iff_triple_neg v2 v3 v1).mp hlt
+    rw [hcyc] at hs
+    linarith
+  by_contra hc
+  push Not at hc
+  have hs := (SIN_AZIM_NEG_PI_LT 0 v2 v3 v1).mpr hc
+  linarith
+
+
+
+/-- HOL `FSQKWKK` (XIVPHKS.hl:17, Lemma 7.141): azimuth-permutation for
+the cyclic triple.  Proved from the sine-of-azim sign kit above; the
+origin form `w13_fsqkwkk_origin` is translated with `azim_sub_self`. -/
 theorem FSQKWKK_p16 (v0 v1 v2 v3 : V3) (h : azim v0 v1 v2 v3 ≤ Real.pi) :
     azim v0 v2 v3 v1 ≤ Real.pi := by
-  sorry
+  rw [azim_sub_self v0 v1 v2 v3] at h
+  rw [azim_sub_self v0 v2 v3 v1]
+  exact w13_fsqkwkk_origin (v1 - v0) (v2 - v0) (v3 - v0) h
 
 /-- HOL `XIVPHKS` (XIVPHKS.hl:29, Lemma 7.143): under the local
 non-collinearity, small-diagonal (`< e`) and ear-angle (`2e < a ≤ π`)
@@ -1012,3 +1317,8 @@ ear_acute, quad_nonexist_849, quad_diag_362, taum_dih_y,
 real_continuous_dih_y_wrt4/5/6, real_continuous_taum, BKOSSGE,
 SCS_GENERIC_SYM_0, K_SUC_2_MOD_F_SUB_ID, CQAOQLR (16).  The `_p16`
 sphere-kit copies were deduped into `Kepler.Text.SphereKit` 2026-09-17. -/
+
+/-! ## w13 axiom audit (closed items only) -/
+
+#print axioms FSQKWKK_p16
+#print axioms AZIM_DIHV_SAME_STRONG

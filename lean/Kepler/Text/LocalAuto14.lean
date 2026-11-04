@@ -4309,6 +4309,12 @@ theorem SKOLEM_EPSILON_p14 {A : Type*} (Q : ℝ → A → Prop) (s : Set A)
   · rintro ⟨e, hall⟩
     exact fun i => ⟨e, (hall i).1, (hall i).2⟩
 
+/-- HOL `IN_AFFINE_KY_LEMMA1` (marchal2.hl:3055, Lemma 53): a point of `s`
+lies in the affine hull of `s`.  `affine hull` ↔ `affineSpan ℝ`. -/
+private theorem w13_in_affine_ky_lemma1 {x : V3} {s : Set V3} (hx : x ∈ s) :
+    x ∈ affineSpan ℝ s :=
+  subset_affineSpan ℝ s hx
+
 /-- HOL `XIV_DEFORMATION` (hl:2259; the `dihV = dh` hypothesis is rendered
 pointwise).  NEEDS: the XIV wedge-closure argument. -/
 theorem XIV_DEFORMATION_p14 (f : V3 → ℝ → V3) (dh : ℕ × ℕ × ℕ → ℝ) (r : ℕ)
@@ -5088,5 +5094,9 @@ theorem ZLZTHIC_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 ×
       Generic ((fun v => f v t) '' V)
         ((fun s => (fun v => f v t) '' s) '' E) := by
   sorry
+
+/-! ## w13 axiom audit (closed items only) -/
+
+#print axioms w13_in_affine_ky_lemma1
 
 end Kepler.Text

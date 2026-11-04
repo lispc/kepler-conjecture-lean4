@@ -2910,8 +2910,42 @@ theorem POINTS_IN_HAFL_CIRCLE (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w �
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v)) :
     vPrime_p2 V fv = {z | ∃ n : ℕ,
       (∀ m : ℕ, m < n → ¬((rhoNode1_p2 FF)^[m] v = w)) ∧
-        z = (rhoNode1_p2 FF)^[n] v} :=
-  sorry
+        z = (rhoNode1_p2 FF)^[n] v} := by
+  have hfvD := DETERMINE_FV h hv hw hvw hcol hsub HS hHS hfv
+  ext z
+  constructor
+  · intro hz
+    rw [vPrime_p2, Set.mem_setOf_eq] at hz
+    obtain ⟨_, y, hzy⟩ := hz
+    rw [hfvD] at hzy
+    rcases Set.mem_insert_iff.mp hzy with hzy' | hzy'
+    · have hzw : z = w := congrArg Prod.fst hzy'
+      obtain ⟨n, _, hnw, hnmin⟩ := POINT_PRESENTED_IN_RHOND1 h hv hw
+      exact ⟨n, hnmin, hzw.trans hnw.symm⟩
+    · rw [Set.mem_setOf_eq] at hzy'
+      obtain ⟨n, hncond, hpair⟩ := hzy'
+      refine ⟨n, ?_, ?_⟩
+      · intro m hm
+        exact hncond m (by omega)
+      · simpa using congrArg Prod.fst hpair
+  · intro hz
+    rw [Set.mem_setOf_eq] at hz
+    obtain ⟨n, hncond, rfl⟩ := hz
+    rw [vPrime_p2, Set.mem_setOf_eq]
+    refine ⟨LOCAL_FAN_ITER_RHO_NODE_IN_V h hv n, ?_⟩
+    by_cases hwn : (rhoNode1_p2 FF)^[n] v = w
+    · exact ⟨v, by rw [hfvD, hwn]; exact Set.mem_insert _ _⟩
+    · refine ⟨(rhoNode1_p2 FF)^[n + 1] v, ?_⟩
+      rw [hfvD, Set.mem_insert_iff]
+      right
+      rw [Set.mem_setOf_eq]
+      refine ⟨n, ?_, rfl⟩
+      intro m hm
+      by_cases hmn : m < n
+      · exact hncond m hmn
+      · have hmn' : m = n := by omega
+        rw [hmn']
+        exact hwn
 
 /-- HOL `COVEX_OF_LOFA_HALF_CIRCLE` (local_lemmas1.hl:3973) — giant. -/
 theorem COVEX_OF_LOFA_HALF_CIRCLE (hcl : convexLocalFan_p2 V E FF)
@@ -3010,8 +3044,51 @@ theorem CONDS_IN_V_PRIME_NUM (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈
     (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
     (hn : n < V.ncard) (hw : (rhoNode1_p2 FF)^[n] v = w) :
-    ∀ i : ℕ, i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fv ↔ i < n + 1 :=
-  sorry
+    ∀ i : ℕ, i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fv ↔ i < n + 1 := by
+  intro i
+  have hwV : w ∈ V := hw ▸ LOCAL_FAN_ITER_RHO_NODE_IN_V h hv n
+  have hFV := DETERMINE_FV h hv hwV hvw hcol hsub HS hHS hfv
+  constructor
+  · intro ⟨hi, hmem⟩
+    rw [vPrime_p2, Set.mem_setOf_eq] at hmem
+    obtain ⟨_, y, hiy⟩ := hmem
+    rw [hFV] at hiy
+    rcases Set.mem_insert_iff.mp hiy with hins | hT
+    · have hip : (rhoNode1_p2 FF)^[i] v = w := congrArg Prod.fst hins
+      have hpin : (rhoNode1_p2 FF)^[i] v = (rhoNode1_p2 FF)^[n] v := hip.trans hw.symm
+      have hin : i = n := LT_CARD_MONO_LOFA h hv i n ⟨hi, hn, hpin⟩
+      omega
+    · rw [Set.mem_setOf_eq] at hT
+      obtain ⟨n₀, hn₀c, hpair⟩ := hT
+      have hip : (rhoNode1_p2 FF)^[i] v = (rhoNode1_p2 FF)^[n₀] v := congrArg Prod.fst hpair
+      have hn₀lt : n₀ < n := by
+        by_contra hle
+        exact hn₀c n (by omega) hw
+      have hn₀V : n₀ < V.ncard := by omega
+      have hin : i = n₀ := LT_CARD_MONO_LOFA h hv i n₀ ⟨hi, hn₀V, hip⟩
+      omega
+  · intro hi
+    have hiV : i < V.ncard := by omega
+    refine ⟨hiV, ?_⟩
+    rw [vPrime_p2, Set.mem_setOf_eq]
+    refine ⟨LOCAL_FAN_ITER_RHO_NODE_IN_V h hv i, ?_⟩
+    rw [hFV]
+    by_cases hin : i < n
+    · refine ⟨(rhoNode1_p2 FF)^[i + 1] v, ?_⟩
+      rw [Set.mem_insert_iff]
+      right
+      rw [Set.mem_setOf_eq]
+      refine ⟨i, ?_, rfl⟩
+      intro m hm hmeq
+      have hmV : m < V.ncard := by omega
+      have hmn : m = n := LT_CARD_MONO_LOFA h hv m n ⟨hmV, hn, hmeq.trans hw.symm⟩
+      omega
+    · have hni : i = n := by omega
+      refine ⟨v, ?_⟩
+      rw [Set.mem_insert_iff]
+      left
+      have hip : (rhoNode1_p2 FF)^[i] v = w := by rw [hni]; exact hw
+      rw [hip]
 
 /-- HOL `CONDS_IN_V_PRIME_NUM2` (local_lemmas1.hl:4816) — giant. -/
 theorem CONDS_IN_V_PRIME_NUM2 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
@@ -3036,8 +3113,28 @@ theorem DETERMINE_FV2 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
     (hn : n < V.ncard) (hw : (rhoNode1_p2 FF)^[n] v = w) :
     fv = insert (w, v) {p | ∃ m : ℕ, m < n ∧
-      p = ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v)} :=
-  sorry
+      p = ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v)} := by
+  have hwV : w ∈ V := hw ▸ LOCAL_FAN_ITER_RHO_NODE_IN_V h hv n
+  have hFV := DETERMINE_FV h hv hwV hvw hcol hsub HS hHS hfv
+  have hset : {p : V3 × V3 | ∃ n₀ : ℕ,
+      (∀ m : ℕ, m < n₀ + 1 → ¬((rhoNode1_p2 FF)^[m] v = w)) ∧
+        p = ((rhoNode1_p2 FF)^[n₀] v, (rhoNode1_p2 FF)^[n₀ + 1] v)}
+      = {p : V3 × V3 | ∃ m : ℕ, m < n ∧
+        p = ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v)} := by
+    ext p
+    constructor
+    · intro hp
+      obtain ⟨n₀, hn₀c, hn₀p⟩ := hp
+      have hn₀lt : n₀ < n := by
+        by_contra hle
+        exact hn₀c n (by omega) hw
+      exact ⟨n₀, hn₀lt, hn₀p⟩
+    · intro hp
+      obtain ⟨m, hm, hmp⟩ := hp
+      refine ⟨m, ?_, hmp⟩
+      intro m' hm' hmeq
+      exact LOFA_IMP_DIS_ELMS23 h hv m' n (by omega) hn (hw.trans hmeq.symm)
+  rw [hFV, hset]
 
 /-- HOL `INTERIOR_ANGLE_LEM_SLICING_FAN` (local_lemmas1.hl:4988) — giant. -/
 theorem INTERIOR_ANGLE_LEM_SLICING_FAN (hcl : convexLocalFan_p2 V E FF)
