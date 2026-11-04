@@ -15425,4 +15425,262 @@ theorem la34_capstone_w5 :
       INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES_p34⟩
 
 #print axioms la34_capstone_w5
+/-! ### w6 delta capstones la6/la18/la34 (lane capstone-w6,
+2026-11-05, roadmap M0b sixth item): every clean public exit newly closed
+or newly added after the w5 generation baseline (f51ed20b) that had never
+been materialised into any capstone is re-exposed as ONE conjunction per
+module group -- la6_capstone_w6 (8), la18_capstone_w6 (1), la34_capstone_w6
+(2).  Total 11 exits; the three `have hla6f/hla18f/hla34f` lines in
+Assembly.textCapstone pull the capstone proof terms into the e2e cone (pure
+insertion there too, after hla34e; the w1/w2/w3/w4/w5 capstones stay wired).
+Delta definition (measured at the lane HEAD 550697b9 vs baseline f51ed20b):
+(a) public top-level `theorem` exports with a `sorry` in the baseline
+declaration body and none at HEAD, or (b) public top-level `theorem` exports
+whose name did not exist at the baseline; in both cases the probed
+`#print axioms` face is exactly [propext, Classical.choice, Quot.sound], the
+statement declares no module-private constant, the declaration kind is
+`theorem`, and it is not universe-polymorphic, MINUS the conjunct name set
+of every existing capstone (LocalConcl 33 roots + PackingConcl 5 roots,
+1,576 member names; intersection 0, verified mechanically).  All 11 are
+individually exactly standard three.  The w5 delivery's LA18 top-up
+(SUM_AZIM_EQ_ANGLE_LE4_FUN_p18), the LA6 HAFL/HAFL2 closures and the LA6
+MONO_AZIM_AS_BTA_I_p2 cluster, and the LA34 W12 TAUSTAR pair are all
+accounted for.  LA14 w17 was still uncommitted at the lane HEAD (dirty
+worktree, not read) and is recorded as w7 drift.  Environment-alignment
+scopes mirror module-local opens so the verbatim signatures elaborate under
+the same name resolution: LA6 carries `open Kepler.Text.Fan`; LA18 and LA34
+only open `Kepler.Geom Set Classical`, already open in this file.  Zero
+import changes.  The exact cone increment is re-measured at the orchestrator
+e2e gate. -/
+
+
+open Kepler.Text.Fan in
+set_option maxHeartbeats 50000000 in
+
+/-- la6_capstone_w6 (lane capstone-w6, 2026-11-05): every public top-level
+exit of LocalAuto6 that was newly closed or newly added after the w5
+generation baseline (f51ed20b) and was never a conjunct of any existing
+capstone, re-exposed as ONE conjunction so the Assembly `textCapstone` cone
+can consume it (8 of the 8 w6 delta exits; 0
+dropped mechanically, reason per name below).  Delta definition (measured,
+not assumed): either (a) a public top-level `theorem` also present at
+f51ed20b with a `sorry` in its declaration body (comments stripped) and no
+`sorry` at lane HEAD 550697b9, or (b) a public top-level `theorem` whose
+name did not exist at f51ed20b at all; in both cases the probed
+`#print axioms` face must be exactly [propext, Classical.choice,
+Quot.sound] (no sorryAx, no other axiom; checked individually for all
+8), the statement must declare no module-private constant (`✝` in the
+`#check @` dump), the declaration kind must be `theorem`, and it must not
+be universe-polymorphic; MINUS the conjunct name set of every existing
+capstone (LocalConcl 33 roots + PackingConcl 5 roots, 1,576 member names;
+intersection 0).
+Provenance: conjunct text is the declaration's source signature (binders +
+conclusion, copied verbatim and mechanically split at the binder/conclusion
+separator by scripts/gen_items_w6.py); conjuncts whose source text leaves an
+autoImplicit variable free are emitted from the source signature with the
+printer's leading implicit binder run (module variables + the leaked
+autoImplicit names, printer order) written out explicitly, so the capstone
+itself stays parameter-free while the source's set-literal ascriptions
+(e.g. `({v, w} : Set V3)`) survive (marked printer-form in their
+per-conjunct comment); semantic identity is re-verified by the elaboration
+of the `⟨...⟩` assembly below (each component must unify definitionally with
+its conjunct); per-conjunct comments carry each exit's source line and
+file-local docstring HOL anchor.  Conjunct order: source declaration order.
+Mechanical drops: none.
+Body = the assembly of the exit constants -- zero new proof obligations,
+zero new imports. -/
+theorem la6_capstone_w6 :
+    -- 1. w2_slice_hyp_simple (LA6:2976 (autoImplicit parameter leak V, FF, v, w, fv; statement = source signature with the printer's leading implicit binders made explicit (keeps source set-literal ascriptions)); no HOL anchor line in file docstring)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)} {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v w : Kepler.Geom.V3} {fv : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V) (hvw : v ≠ w)
+          (hcol : ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+            ¬ Collinear ℝ ({0, z, t} : Set V3))
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
+          (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
+          (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
+          (HS' : Hypermap (V3 × V3))
+          (hHS' : IsHyp_p2 0 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) HS'),
+          HS'.Simple
+    ) ∧
+    -- 2. HAFL_CIRCLE_FORM_LOCAL_FAN (LA6:3366 (autoImplicit parameter leak FF, v, w, fv; statement = source signature with the printer's leading implicit binders made explicit (keeps source set-literal ascriptions)); HOL `HAFL_CIRCLE_FORM_LOCAL_FAN`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)} {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v w : Kepler.Geom.V3} {fv : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
+          (hvw : v ≠ w)
+          (hcol : ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+            ¬ Collinear ℝ ({0, z, t} : Set V3))
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
+          (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
+          (hfv : fv = HS.face (v, rhoNode1_p2 FF v)),
+          localFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv
+    ) ∧
+    -- 3. HAFL_CIRCLE_FORM_LOCAL_FAN2 (LA6:3387 (autoImplicit parameter leak FF, v, w, fv, fw; statement = source signature with the printer's leading implicit binders made explicit (keeps source set-literal ascriptions)); HOL `HAFL_CIRCLE_FORM_LOCAL_FAN2`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)} {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v w : Kepler.Geom.V3} {fv fw : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
+          (hvw : v ≠ w)
+          (hcol : ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+            ¬ Collinear ℝ ({0, z, t} : Set V3))
+          (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
+          (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
+          (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
+          (hfw : fw = HS.face (w, rhoNode1_p2 FF w)),
+          localFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv ∧
+          localFan_p2 (vPrime_p2 V fw) (ePrime_p2 (E ∪ {{w, v}}) fw) fw
+    ) ∧
+    -- 4. monoStepCore_p2 (LA6:4221; no HOL anchor line in file docstring)
+    (∀ {u b x y : V3} (hu0 : u ≠ 0)
+          (hb : ¬ Collinear3 0 u b) (hx : ¬ Collinear3 0 u x)
+          (hy : ¬ Collinear3 0 u y) (hx0 : x ≠ 0) (hncxy : ¬ Collinear3 0 x y)
+          (hvapi : azim 0 u b x ≤ Real.pi)
+          (hdart0 : 0 ≤ azim 0 x y u) (hdartpi : azim 0 x y u ≤ Real.pi)
+          (hvb0 : 0 ≤ azim 0 u b y),
+          azim 0 u b x ≤ azim 0 u b y ∨
+          (azim 0 u b x = Real.pi ∧ azim 0 u b y = 0)
+    ) ∧
+    -- 5. monoStepOrbit_p2 (LA6:4270; no HOL anchor line in file docstring)
+    (∀ (k : ℕ) {v0 b : V3} (ρ : ℕ → V3)
+          (hr0 : ρ 0 = v0) (hv0 : v0 ≠ 0) (hb : ¬ Collinear3 0 v0 b)
+          (hvx : ∀ i, 0 < i → i < k → ¬ Collinear3 0 v0 (ρ i))
+          (hvx0 : ∀ i, 0 < i → i < k → ρ i ≠ 0)
+          (hbnds : ∀ i, 0 < i → i < k → 0 ≤ azim 0 v0 b (ρ i) ∧
+            azim 0 v0 b (ρ i) ≤ Real.pi)
+          (hdart : ∀ i, i + 1 < k → ¬ Collinear3 0 (ρ i) (ρ (i + 1)) ∧
+            0 ≤ azim 0 (ρ i) (ρ (i + 1)) v0 ∧
+            azim 0 (ρ i) (ρ (i + 1)) v0 ≤ Real.pi) (i : ℕ) (hik : i + 1 < k),
+          azim 0 v0 b (ρ i) ≤ azim 0 v0 b (ρ (i + 1)) ∨
+          (azim 0 v0 b (ρ i) = Real.pi ∧ azim 0 v0 b (ρ (i + 1)) = 0)
+    ) ∧
+    -- 6. monoWindowNowrap_p2 (LA6:4293; no HOL anchor line in file docstring)
+    (∀ (k : ℕ) {v0 b : V3} (ρ : ℕ → V3)
+          (hr0 : ρ 0 = v0) (hv0 : v0 ≠ 0) (hb : ¬ Collinear3 0 v0 b)
+          (hvx : ∀ i, 0 < i → i < k → ¬ Collinear3 0 v0 (ρ i))
+          (hvx0 : ∀ i, 0 < i → i < k → ρ i ≠ 0)
+          (hbnds : ∀ i, 0 < i → i < k → 0 ≤ azim 0 v0 b (ρ i) ∧
+            azim 0 v0 b (ρ i) ≤ Real.pi)
+          (hdart : ∀ i, i + 1 < k → ¬ Collinear3 0 (ρ i) (ρ (i + 1)) ∧
+            0 ≤ azim 0 (ρ i) (ρ (i + 1)) v0 ∧
+            azim 0 (ρ i) (ρ (i + 1)) v0 ≤ Real.pi)
+          (hnowrap : ∀ i, i + 1 < k →
+            ¬(azim 0 v0 b (ρ i) = Real.pi ∧ azim 0 v0 b (ρ (i + 1)) = 0))
+          {i j : ℕ} (hij : i < j) (hjk : j < k),
+          azim 0 v0 b (ρ i) ≤ azim 0 v0 b (ρ j)
+    ) ∧
+    -- 7. w16_noWrap_p2 (LA6:4333; no HOL anchor line in file docstring)
+    (∀ {E : Set (Set V3)} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {v0 : V3} {vv : ℕ → V3} {k i : ℕ}
+          (hcl : convexLocalFan_p2 V E FF) (hv0 : v0 ∈ V) (hk : V.ncard = k)
+          (hcol : ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+          (hiter : ∀ n, (rhoNode1_p2 FF)^[n] v0 = vv n)
+          (hi : i + 1 < k),
+          ¬(azim 0 v0 (vv 1) (vv i) = Real.pi ∧ azim 0 v0 (vv 1) (vv (i + 1)) = 0)
+    ) ∧
+    -- 8. MONO_AZIM_AS_BTA_I_p2 (LA6:4610; no HOL anchor line in file docstring)
+    (∀ {E : Set (Set V3)} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+          {v0 : V3} {vv : ℕ → V3} {bta : ℕ → ℝ} {k : ℕ}
+          (hcl : convexLocalFan_p2 V E FF) (hv0 : v0 ∈ V) (hk : V.ncard = k)
+          (hcol : ∀ v ∈ V, v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+          (hiter : ∀ i, (rhoNode1_p2 FF)^[i] v0 = vv i)
+          (hbta : ∀ i, azim 0 v0 (vv 1) (vv i) = bta i),
+          ∀ i j, i < j → j < k → bta i ≤ bta j
+    ) :=
+    ⟨w2_slice_hyp_simple, HAFL_CIRCLE_FORM_LOCAL_FAN, HAFL_CIRCLE_FORM_LOCAL_FAN2,
+      monoStepCore_p2, monoStepOrbit_p2, monoWindowNowrap_p2, w16_noWrap_p2,
+      MONO_AZIM_AS_BTA_I_p2⟩
+
+#print axioms la6_capstone_w6
+
+
+set_option maxHeartbeats 50000000 in
+
+/-- la18_capstone_w6 (lane capstone-w6, 2026-11-05): every public top-level
+exit of LocalAuto18 that was newly closed or newly added after the w5
+generation baseline (f51ed20b) and was never a conjunct of any existing
+capstone, re-exposed as ONE conjunction so the Assembly `textCapstone` cone
+can consume it (1 of the 1 w6 delta exits; 0
+dropped mechanically, reason per name below).  Delta definition (measured,
+not assumed): either (a) a public top-level `theorem` also present at
+f51ed20b with a `sorry` in its declaration body (comments stripped) and no
+`sorry` at lane HEAD 550697b9, or (b) a public top-level `theorem` whose
+name did not exist at f51ed20b at all; in both cases the probed
+`#print axioms` face must be exactly [propext, Classical.choice,
+Quot.sound] (no sorryAx, no other axiom; checked individually for all
+1), the statement must declare no module-private constant (`✝` in the
+`#check @` dump), the declaration kind must be `theorem`, and it must not
+be universe-polymorphic; MINUS the conjunct name set of every existing
+capstone (LocalConcl 33 roots + PackingConcl 5 roots, 1,576 member names;
+intersection 0).
+Provenance: conjunct text is the declaration's source signature (binders +
+conclusion, copied verbatim and mechanically split at the binder/conclusion
+separator by scripts/gen_items_w6.py); conjuncts whose source text leaves an
+autoImplicit variable free are emitted from the source signature with the
+printer's leading implicit binder run (module variables + the leaked
+autoImplicit names, printer order) written out explicitly, so the capstone
+itself stays parameter-free while the source's set-literal ascriptions
+(e.g. `({v, w} : Set V3)`) survive (marked printer-form in their
+per-conjunct comment); semantic identity is re-verified by the elaboration
+of the `⟨...⟩` assembly below (each component must unify definitionally with
+its conjunct); per-conjunct comments carry each exit's source line and
+file-local docstring HOL anchor.  Conjunct order: source declaration order.
+Mechanical drops: none.
+Body = the assembly of the exit constants -- zero new proof obligations,
+zero new imports. -/
+theorem la18_capstone_w6 :
+    -- 1. SUM_AZIM_EQ_ANGLE_LE4_FUN_p18 (LA18:1885; no HOL anchor line in file docstring)
+    (∀ (ff : V3 → ℝ) (s : ScsV39)
+          (vv : ℕ → V3) (p : ℕ) (u : V3) (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (hk : ¬s.k ≤ 3) (hBB : BBsV39 s vv)
+          (his : isScsV39 s) (hu : vv (p % s.k) = u) (hV : Set.range vv = V)
+          (hE : (Set.range fun i => {vv i, vv (i + 1)}) = E)
+          (hFF : (Set.range fun i => (vv i, vv (i + 1))) = FF),
+          setSum {i | i < s.k}
+            (fun i => ff (vv (i + p % s.k)) *
+              interiorAngle1 0 FF ((rhoNode1_p18 FF)^[i] u)) =
+          setSum FF (fun e => ff e.1 * azimInFan_p18 e E)
+    ) :=
+    SUM_AZIM_EQ_ANGLE_LE4_FUN_p18
+
+#print axioms la18_capstone_w6
+
+
+set_option maxHeartbeats 50000000 in
+
+/-- la34_capstone_w6 (lane capstone-w6, 2026-11-05): every public top-level
+exit of LocalAuto34 that was newly closed or newly added after the w5
+generation baseline (f51ed20b) and was never a conjunct of any existing
+capstone, re-exposed as ONE conjunction so the Assembly `textCapstone` cone
+can consume it (2 of the 2 w6 delta exits; 0
+dropped mechanically, reason per name below).  Delta definition (measured,
+not assumed): either (a) a public top-level `theorem` also present at
+f51ed20b with a `sorry` in its declaration body (comments stripped) and no
+`sorry` at lane HEAD 550697b9, or (b) a public top-level `theorem` whose
+name did not exist at f51ed20b at all; in both cases the probed
+`#print axioms` face must be exactly [propext, Classical.choice,
+Quot.sound] (no sorryAx, no other axiom; checked individually for all
+2), the statement must declare no module-private constant (`✝` in the
+`#check @` dump), the declaration kind must be `theorem`, and it must not
+be universe-polymorphic; MINUS the conjunct name set of every existing
+capstone (LocalConcl 33 roots + PackingConcl 5 roots, 1,576 member names;
+intersection 0).
+Provenance: conjunct text is the declaration's source signature (binders +
+conclusion, copied verbatim and mechanically split at the binder/conclusion
+separator by scripts/gen_items_w6.py); conjuncts whose source text leaves an
+autoImplicit variable free are emitted from the source signature with the
+printer's leading implicit binder run (module variables + the leaked
+autoImplicit names, printer order) written out explicitly, so the capstone
+itself stays parameter-free while the source's set-literal ascriptions
+(e.g. `({v, w} : Set V3)`) survive (marked printer-form in their
+per-conjunct comment); semantic identity is re-verified by the elaboration
+of the `⟨...⟩` assembly below (each component must unify definitionally with
+its conjunct); per-conjunct comments carry each exit's source line and
+file-local docstring HOL anchor.  Conjunct order: source declaration order.
+Mechanical drops: none.
+Body = the assembly of the exit constants -- zero new proof obligations,
+zero new imports. -/
+theorem la34_capstone_w6 :
+    -- 1. TAUSTAR_V3_DEFOR_p34 (LA34:5938; no HOL anchor line in file docstring)
+    (TAUSTAR_V3_DEFOR_concl_p34
+    ) ∧
+    -- 2. TAUSTAR_V3_DEFOR_TWO_CASES_p34 (LA34:7865; no HOL anchor line in file docstring)
+    (TAUSTAR_V3_DEFOR_TWO_CASES_concl_p34
+    ) :=
+    ⟨TAUSTAR_V3_DEFOR_p34, TAUSTAR_V3_DEFOR_TWO_CASES_p34
+⟩
+
+#print axioms la34_capstone_w6
 end Kepler.Text
