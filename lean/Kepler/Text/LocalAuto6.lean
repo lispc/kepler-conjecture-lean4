@@ -893,24 +893,36 @@ theorem LOCAL_FAN_IVS_IN_V (h : localFan_p2 V E FF) (hv : v ∈ V) :
 /-- HOL `LF_AZIM_CYCLE_EQ_IVS_ND` (local_lemmas1.hl:3807) — giant. -/
 theorem LF_AZIM_CYCLE_EQ_IVS_ND (h : localFan_p2 V E FF) (hv : v ∈ V) :
     azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v) = ivsRhoNode1_p2 FF v :=
-  sorry
+  by
+    rw [LOFA_IMP_EE_TWO_ELMS h (LOCAL_FAN_IVS_IN_V h hv) (LOCAL_FAN_RHO_NODE_IVS h hv)]
+    exact AZIM_CYCLE_TWO_POINT_SET _ _ 0 v
 
 /-- HOL `AZIM_IN_FAN_RHOND_IVS_RHOND` (local_lemmas1.hl:3820) — giant. -/
 theorem AZIM_IN_FAN_RHOND_IVS_RHOND (h : localFan_p2 V E FF) (hv : v ∈ V) :
     azimInFan_p2 (v, rhoNode1_p2 FF v) E =
       azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v) :=
-  sorry
+  by
+    have hcard : (1 : ℕ) < (EE_p2 v E).ncard := by
+      rw [LOFA_CARD_EE_V_2 h (LOCAL_FAN_IVS_IN_V h hv) (LOCAL_FAN_RHO_NODE_IVS h hv)]
+      norm_num
+    rw [azimInFan_p2, if_pos hcard]
+    rw [LF_AZIM_CYCLE_EQ_IVS_ND h hv]
 
 /-- HOL `LOFA_IMP_EE_TWO_ELMS_INS_ND` (local_lemmas1.hl:3834) — giant. -/
 theorem LOFA_IMP_EE_TWO_ELMS_INS_ND (h : localFan_p2 V E FF) (hv : v ∈ V) :
     EE_p2 v E = {rhoNode1_p2 FF v, ivsRhoNode1_p2 FF v} :=
-  sorry
+  LOFA_IMP_EE_TWO_ELMS h (LOCAL_FAN_IVS_IN_V h hv) (LOCAL_FAN_RHO_NODE_IVS h hv)
 
 /-- HOL `WEDGE_IN_FAN_RHOND_IVS_RHOND` (local_lemmas1.hl:3844) — giant. -/
 theorem WEDGE_IN_FAN_RHOND_IVS_RHOND (h : localFan_p2 V E FF) (hv : v ∈ V) :
     wedgeInFanGe_p2 (v, rhoNode1_p2 FF v) E =
       wedgeGe_p2 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v) :=
-  sorry
+  by
+    have hcard : (1 : ℕ) < (EE_p2 v E).ncard := by
+      rw [LOFA_CARD_EE_V_2 h (LOCAL_FAN_IVS_IN_V h hv) (LOCAL_FAN_RHO_NODE_IVS h hv)]
+      norm_num
+    rw [wedgeInFanGe_p2, if_pos hcard]
+    rw [LF_AZIM_CYCLE_EQ_IVS_ND h hv]
 
 /-- HOL `IVS_RHO_NODE_DIFF_ID` (local_lemmas1.hl:3866) — giant. -/
 theorem IVS_RHO_NODE_DIFF_ID (h : localFan_p2 V E FF) (hv : v ∈ V) :
