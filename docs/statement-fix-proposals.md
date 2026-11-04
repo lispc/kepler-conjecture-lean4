@@ -6056,3 +6056,29 @@ HOL 逐字；结论从 `=π`（更强）改为 azim 等式（忠实）。
 ### (f) 状态
 
 **立案 2026-11-05（la34-w6）**；编排者已直接核验 HOL 锚。按 SF 通道常态化授权（A 级：HOL 逐字锚 + 内部一致性证据 + 消费面已核）**执行 STATEMENT-FIX 闸**：归档 patch `docs/statement-fix-proposals-patches/100-la34-azim-at-hol-form.patch`；`GATE_MODE=STATEMENT-FIX FILE=Kepler/Text/LocalAuto34.lean THM=DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_p34 SF_ITEM=100`。若用户不认此修正，回滚该提交即可（kit 归档 `~/c17_backup/lane_snapshots/la34-w6/`）。
+
+## 101. LA34 azim `_TWO_CASES` AT 四件冻结右端 `= Real.pi` vs HOL azim 等式形（IMJXPHR.hl:8042/8431/8864/8925 一带）— 分级 A（SF-100 同族 · la34-w7 已按正形完成 4 件证明）
+
+### (a) HOL 裁决
+
+`DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_V1_TWO_CASES`（decl IMJXPHR.hl:8017，结论 :8042）、`..._AT_W_V1_TWO_CASES`（:8406/:8431-8432）、`..._AT_V_ANY_V1_TWO_CASES`（:8838/:8864）、`..._AT_ALL_V1_TWO_CASES`（:8900/:8925-8926）的结论均为 **azim 等式形**（与 SF-100 同族），Lean 冻结形右端为 `= Real.pi`，同属移植误植。
+
+### (b) 证据（la34-w7 实测）
+
+与 SF-100 同机理（HOL 不消费 `haz`；π 形额外断言推不出）。本轮 4 件已按 HOL 形完成证明，均标准三；实现上 relabel 后 `rho/ep` 回 FF、两次 `AZIM_SAME_WITHIN_AFF_GE(_ALT)` 收口。
+
+### (c) 修复（4 条；hypotheses/左端/拓扑一字不动）
+
+右端 `= Real.pi` → HOL azim 等式形。kit 删除面恰 8 行（4 行 `= Real.pi := by` + 4 行 `sorry`），+396/−8；新增 1 条 private `w7_two_cases_avoid_p34`（+60 行，因公开 twin 链 `DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_V1_TWO_CASES_p34` 传递含 sorryAx，纪律禁消费而就地重证；父件闭后可删）。
+
+### (d) 消费面
+
+与 SF-100 相同：LA34 下游 composite 自带 π 假设 ⇒ 兼容；`_discharged`/capstone 未收录这 4 条。
+
+### (e) 极小性
+
+HOL 逐字；结论从 `=π`（更强）改为 azim 等式（忠实）。
+
+### (f) 状态
+
+**立案 2026-11-05（la34-w7，SF-100 同族）**；**执行 STATEMENT-FIX 闸**：归档 patch `docs/statement-fix-proposals-patches/101-la34-azim-at-twocases-hol-form.patch`；`GATE_MODE=STATEMENT-FIX FILE=Kepler/Text/LocalAuto34.lean THM=DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_V1_TWO_CASES_p34 SF_ITEM=101`。若用户不认 SF-100/101，回滚对应提交即可；另侦察发现 `DEFORMATION_AZIM_V3_DEFOR_V1_V1_TWO_CASES_p34`（基座）的 π 形与 HOL azim 形**二者等价**（两侧都是 π）⇒ 可按现形直接证，不需要 SF。
