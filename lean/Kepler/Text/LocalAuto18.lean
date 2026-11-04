@@ -44,7 +44,8 @@ FILE MAP
     `azim_dih_y_p18`, `azim5_reduction_p18`, `L13_LEMMA_p18`,
     `IUNBUIG_p18` (sorry giants; `Deformation` from LocalAuto1).
   Section C (AURSIPD): `REP_NUMSEG_p18`, `PERIODIC_IMAGE2_p18` (proved);
-    `SUM_AZIM_EQ_ANGLE_LE4_FUN_p18`, `AURSIPD_p18` (sorry).
+    `SUM_AZIM_EQ_ANGLE_LE4_FUN_p18` (proved 2026-11-05, la18-sumazim kit),
+    `AURSIPD_p18` (sorry).
   Section D (CNICGSF): the five `SCS_DIAG_*_p18` (proved, decidable);
     the five slice arrows `SCS_*_SLICE_*_p18` (discharged 2026-11-01 as `LKGRQUI_p27` instances; see the la18slice kit);
     the in-file rotation kit `funlistV39_add_period_p18` /
@@ -1474,9 +1475,413 @@ theorem REP_NUMSEG_p18 (k : ℕ) (_hk : k ≠ 0) :
   ext i
   simp [Finset.mem_range]
 
-/-- HOL `SUM_AZIM_EQ_ANGLE_LE4_FUN` (AURSIPD.hl:100). Giant; `ff` is
-carried as an explicit parameter (its HOL home was not locatable in the
-corpus). -/
+/-! ### la18-sumazim kit (lane la18-sumazim-w1, 2026-11-05): the `_p18`
+cyclic-fan transport helpers for `SUM_AZIM_EQ_ANGLE_LE4_FUN_p18`
+
+LA35 proves the `rhoFun`-weighted specialization (`SUM_AZIM_EQ_ANGLE_LE4_p35`,
+LocalAuto35:18316) from its private kit (`vvModEq/vvRhoDet/vvMemEdge/...`,
+LA35:993-18290).  Those helpers are `private`, so the `ff`-general identity is
+re-proved here through the same route, re-instantiated at the `_p18`
+renderings `rhoNode1_p18`/`azimInFan_p18`; the public LA35 theorems
+`VV_INJ_p35` and `VV_SUC_EQ_RHO_NODE_PRIME_p35` (in the import cone through
+`Kepler.Text.LocalAuto27`) supply window injectivity and the rho-orbit.  The
+sum bookkeeping is `setSum_Iio`/`setSum_FF`/`sum_shift` (LA35:18214-18290,
+copied because private). -/
+
+/-- `Classical.epsilon` collapse under a uniqueness hypothesis. -/
+private theorem la18sz_epsFixed {α : Type*} [Nonempty α] {pr : α → Prop} {a : α}
+    (hpa : pr a) (huniq : ∀ y, pr y → y = a) : Classical.epsilon pr = a := by
+  by_contra hne
+  exact hne (huniq _ (Classical.epsilon_spec ⟨a, hpa⟩))
+
+/-- Equal `vv`-values have equal residues (periodicity + window injectivity). -/
+private theorem la18sz_vvModEq {vv : ℕ → V3} {k : ℕ} (hk0 : 0 < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) {i j : ℕ} (h : vv i = vv j) :
+    i % k = j % k := by
+  by_contra hne
+  have h1 : vv (i % k) = vv (j % k) := by
+    rw [periodic_mod_eq_p23 hper i, periodic_mod_eq_p23 hper j, h]
+  exact hinj (i % k) (j % k) (Nat.mod_lt i hk0) (Nat.mod_lt j hk0) hne h1
+
+/-- Successor respects residue equality (periodicity). -/
+private theorem la18sz_vvStep {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k) {i j : ℕ}
+    (h : i % k = j % k) : vv (i + 1) = vv (j + 1) := by
+  have e1 : (i + 1) % k = (i % k + 1) % k := by simp [Nat.add_mod]
+  have e2 : (j + 1) % k = (j % k + 1) % k := by simp [Nat.add_mod]
+  rw [← periodic_mod_eq_p23 hper (i + 1), ← periodic_mod_eq_p23 hper (j + 1), e1, e2, h]
+
+/-- Predecessor respects successor-residue equality. -/
+private theorem la18sz_vvModPred {k : ℕ} {i j : ℕ} (hk0 : 0 < k)
+    (h : (i + 1) % k = (j + 1) % k) : i % k = j % k := by
+  have hik : i % k < k := Nat.mod_lt i hk0
+  have hjk : j % k < k := Nat.mod_lt j hk0
+  have e1 : (i + 1) % k = (i % k + 1) % k := by simp [Nat.add_mod]
+  have e2 : (j + 1) % k = (j % k + 1) % k := by simp [Nat.add_mod]
+  rw [e1, e2] at h
+  have hs : i % k + 1 = j % k + 1 ∨ (i % k + 1 = k ∧ j % k + 1 = k) := by
+    rcases Nat.lt_or_ge (i % k + 1) k with hlt | hge
+    · rw [Nat.mod_eq_of_lt hlt] at h
+      rcases Nat.lt_or_ge (j % k + 1) k with hlt2 | hge2
+      · rw [Nat.mod_eq_of_lt hlt2] at h
+        exact Or.inl h
+      · have h2 : j % k + 1 = k := by omega
+        rw [h2, Nat.mod_self] at h
+        exact absurd h (by omega)
+    · have h2 : i % k + 1 = k := by omega
+      rw [h2, Nat.mod_self] at h
+      rcases Nat.lt_or_ge (j % k + 1) k with hlt2 | hge2
+      · rw [Nat.mod_eq_of_lt hlt2] at h
+        exact absurd h (by omega)
+      · have h3 : j % k + 1 = k := by omega
+        exact Or.inr ⟨h2, h3⟩
+  omega
+
+/-- Mod-k cancellation of a common summand. -/
+private theorem la18sz_modAddCancel {k a b c : ℕ} (h : (a + c) % k = (b + c) % k) :
+    a % k = b % k := by
+  rcases Nat.eq_zero_or_pos k with hk0 | hk0
+  · rw [hk0] at h ⊢
+    simpa [Nat.mod_zero] using h
+  have hak : a % k < k := Nat.mod_lt a hk0
+  have hbk : b % k < k := Nat.mod_lt b hk0
+  have hck : c % k < k := Nat.mod_lt c hk0
+  have e1 : (a + c) % k = (a % k + c % k) % k := by rw [Nat.add_mod]
+  have e2 : (b + c) % k = (b % k + c % k) % k := by rw [Nat.add_mod]
+  rw [e1, e2] at h
+  have d1 : (a % k + c % k) % k = a % k + c % k ∨
+      (a % k + c % k) % k + k = a % k + c % k := by
+    rcases Nat.lt_or_ge (a % k + c % k) k with hlt | hge
+    · exact Or.inl (Nat.mod_eq_of_lt hlt)
+    · refine Or.inr (by
+        have hX : a % k + c % k = (a % k + c % k - k) + k * 1 := by omega
+        rw [hX, Nat.add_mul_mod_self_left,
+          Nat.mod_eq_of_lt (show a % k + c % k - k < k by omega)]
+        omega)
+  have d2 : (b % k + c % k) % k = b % k + c % k ∨
+      (b % k + c % k) % k + k = b % k + c % k := by
+    rcases Nat.lt_or_ge (b % k + c % k) k with hlt | hge
+    · exact Or.inl (Nat.mod_eq_of_lt hlt)
+    · refine Or.inr (by
+        have hY : b % k + c % k = (b % k + c % k - k) + k * 1 := by omega
+        rw [hY, Nat.add_mul_mod_self_left,
+          Nat.mod_eq_of_lt (show b % k + c % k - k < k by omega)]
+        omega)
+  rcases d1 with d1 | d1 <;> rcases d2 with d2 | d2 <;> omega
+
+/-- Unordered-pair equality splits into the two pairings. -/
+private theorem la18sz_pairMem {a w b c : V3} (h : ({a, w} : Set V3) = {b, c}) :
+    (a = b ∨ a = c) ∧ (w = b ∨ w = c) := by
+  have m1 : a ∈ ({b, c} : Set V3) := by rw [← h]; simp
+  have m2 : w ∈ ({b, c} : Set V3) := by rw [← h]; simp
+  refine ⟨?_, ?_⟩
+  · rcases Set.mem_insert_iff.mp m1 with h1 | h1
+    · exact Or.inl h1
+    · exact Or.inr (Set.mem_singleton_iff.mp h1)
+  · rcases Set.mem_insert_iff.mp m2 with h2 | h2
+    · exact Or.inl h2
+    · exact Or.inr (Set.mem_singleton_iff.mp h2)
+
+/-- `k ∣ t` from `i ≡ i + t (mod k)`. -/
+private theorem la18sz_modEqAddCancel {k i t : ℕ} (hk0 : 0 < k) (h : i % k = (i + t) % k) :
+    t % k = 0 := by
+  have h1 : (i % k + t % k) % k = i % k := by
+    have e : (i % k + t % k) % k = (i + t) % k := by rw [Nat.add_mod i t k]
+    rw [e, h]
+  have hik : i % k < k := Nat.mod_lt i hk0
+  have htk : t % k < k := Nat.mod_lt t hk0
+  have d : (i % k + t % k) % k = i % k + t % k ∨
+      (i % k + t % k) % k + k = i % k + t % k := by
+    rcases Nat.lt_or_ge (i % k + t % k) k with hlt | hge
+    · exact Or.inl (Nat.mod_eq_of_lt hlt)
+    · refine Or.inr (by
+        have hX : i % k + t % k = (i % k + t % k - k) + k * 1 := by omega
+        rw [hX, Nat.add_mul_mod_self_left,
+          Nat.mod_eq_of_lt (show i % k + t % k - k < k by omega)]
+        omega)
+  rcases d with d | d <;> omega
+
+/-- `k`-shifted indices carry the same `vv`-value. -/
+private theorem la18sz_vvAddK {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k) (i : ℕ) :
+    vv (i + k) = vv i := by
+  rw [← periodic_mod_eq_p23 hper (i + k), Nat.add_mod_right]
+  exact periodic_mod_eq_p23 hper i
+
+/-- A `1 % k = 0` hypothesis forces `k ≤ 1`. -/
+private theorem la18sz_modOneZero_le {k : ℕ} (h : (1:ℕ) % k = 0) : k ≤ 1 := by
+  rcases Nat.lt_or_ge k 2 with h2 | h2
+  · omega
+  · have h1 : (1:ℕ) % k = 1 := Nat.mod_eq_of_lt (by omega)
+    omega
+
+/-- The vertex and its cyclic successor differ once `3 ≤ k`. -/
+private theorem la18sz_vvNeStep {vv : ℕ → V3} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (i : ℕ) :
+    vv i ≠ vv (i + 1) := by
+  intro hh
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have h := la18sz_modEqAddCancel hk0 (i := i) (t := 1) (la18sz_vvModEq hk0 hper hinj hh)
+  exact absurd hk3 (by have := la18sz_modOneZero_le h; omega)
+
+/-- The vertex and its cyclic predecessor differ once `3 ≤ k`. -/
+private theorem la18sz_vvNePred {vv : ℕ → V3} {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) (i : ℕ) :
+    vv i ≠ vv (i + k - 1) := by
+  intro hh
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hh2 : vv i = vv (i + (k - 1)) := by
+    have hsub : (i + k) - 1 = i + (k - 1) := by omega
+    calc vv i = vv (i + k - 1) := hh
+      _ = vv ((i + k) - 1) := rfl
+      _ = vv (i + (k - 1)) := by rw [hsub]
+  have h := la18sz_modEqAddCancel hk0 (i := i) (t := k - 1)
+    (la18sz_vvModEq hk0 hper hinj hh2)
+  have hmod : (k - 1) % k = k - 1 := Nat.mod_eq_of_lt (by omega)
+  omega
+
+/-- Edge membership in the cyclic edge set: the two neighbours. -/
+private theorem la18sz_vvMemEdge {vv : ℕ → V3} {E : Set (Set V3)} {k : ℕ} (hk3 : 3 ≤ k)
+    (hper : Periodic vv k) (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E) (i : ℕ) (w : V3) :
+    w ∈ ee (vv i) E ↔ w = vv (i + k - 1) ∨ w = vv (i + 1) := by
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hnosing : ∀ j : ℕ, vv j ≠ vv (j + 1) := fun j => la18sz_vvNeStep hk3 hper hinj j
+  show {vv i, w} ∈ E ↔ _
+  constructor
+  · intro hw
+    rw [← hE] at hw
+    obtain ⟨j, hj⟩ := hw
+    obtain ⟨ha, hwbc⟩ := la18sz_pairMem hj.symm
+    rcases ha with hai | hai
+    · have hmod : i % k = j % k := la18sz_vvModEq hk0 hper hinj hai
+      rcases hwbc with hw1 | hw1
+      · exfalso
+        have hsucc : vv j = vv (j + 1) := by
+          have m : vv (j + 1) ∈ ({vv i, w} : Set V3) := by rw [← hj]; simp
+          rw [hw1, hai] at m
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at m
+          exact m.elim (fun h => h.symm) (fun h => h.symm)
+        exact absurd hsucc (hnosing j)
+      · refine Or.inr ?_
+        rw [hw1, la18sz_vvStep hper hmod]
+    · have hmod1 : i % k = (j + 1) % k := la18sz_vvModEq hk0 hper hinj hai
+      rcases hwbc with hw1 | hw1
+      · refine Or.inl ?_
+        have hpred : (i + k - 1) % k = j % k := by
+          have hstep : (i + k - 1 + 1) % k = (j + 1) % k := by
+            rw [show i + k - 1 + 1 = i + k from by omega, Nat.add_mod_right]
+            exact hmod1
+          exact la18sz_vvModPred hk0 hstep
+        rw [hw1, ← periodic_mod_eq_p23 hper j, ← hpred,
+          periodic_mod_eq_p23 hper (i + k - 1)]
+      · exfalso
+        rw [← hai] at hw1
+        have m : vv j ∈ ({vv i, w} : Set V3) := by rw [← hj]; simp
+        rw [hw1] at m
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at m
+        have hvj : vv j = vv i := m.elim id id
+        exact absurd (hvj.trans hai) (hnosing j)
+  · rintro (rfl | rfl)
+    · show {vv i, vv (i + k - 1)} ∈ E
+      rw [← hE]
+      exact Set.mem_range.mpr ⟨i + k - 1, by
+        show {vv (i + k - 1), vv (i + k - 1 + 1)} = {vv i, vv (i + k - 1)}
+        rw [show i + k - 1 + 1 = i + k from by omega, la18sz_vvAddK hper i]
+        ext z
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto⟩
+    · show {vv i, vv (i + 1)} ∈ E
+      rw [← hE]
+      exact Set.mem_range.mpr ⟨i, rfl⟩
+
+/-- Cyclic-fan dart determinism: the rho-successor of a first coordinate is
+unique (the `vv`-fan specialization used inside the angle identity). -/
+private theorem la18sz_vvRhoDet {vv : ℕ → V3} {FF : Set (V3 × V3)} {k : ℕ}
+    (hk0 : 0 < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    {a b : V3} (hab : (a, b) ∈ FF) : rhoNode1 FF a = b := by
+  refine la18sz_epsFixed hab ?_
+  intro y hy
+  rw [← hFF] at hab hy
+  obtain ⟨i, hi⟩ := hab
+  obtain ⟨j, hj⟩ := hy
+  have hia : vv i = a := congrArg Prod.fst hi
+  have hib : vv (i + 1) = b := congrArg Prod.snd hi
+  have hja : vv j = a := congrArg Prod.fst hj
+  have hjy : vv (j + 1) = y := congrArg Prod.snd hj
+  have hmod := la18sz_vvModEq hk0 hper hinj (hia.trans hja.symm)
+  have hstep := la18sz_vvStep hper hmod
+  rw [← hjy, ← hstep]
+  exact hib
+
+/-- Cyclic-fan dart determinism, mirror direction (`ivs_rho_node1`). -/
+private theorem la18sz_vvIvsDet {vv : ℕ → V3} {FF : Set (V3 × V3)} {k : ℕ}
+    (hk0 : 0 < k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
+    {a b : V3} (hab : (a, b) ∈ FF) : ivsRhoNode1 FF b = a := by
+  refine la18sz_epsFixed hab ?_
+  intro c hc
+  rw [← hFF] at hab hc
+  obtain ⟨i, hi⟩ := hab
+  obtain ⟨j, hj⟩ := hc
+  have hia : vv i = a := congrArg Prod.fst hi
+  have hib : vv (i + 1) = b := congrArg Prod.snd hi
+  have hjc : vv j = c := congrArg Prod.fst hj
+  have hjb : vv (j + 1) = b := congrArg Prod.snd hj
+  have hmod1 := la18sz_vvModEq hk0 hper hinj (hib.trans hjb.symm)
+  have hmod2 := la18sz_vvModPred hk0 hmod1
+  rw [← hjc, ← periodic_mod_eq_p23 hper j, ← hmod2, periodic_mod_eq_p23 hper i]
+  exact hia
+
+/-- The interior angle at a cyclic vertex equals the `_p18` fan azimuth of its
+dart (two-point neighbour specialization of `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM`;
+LA35's private `vvInangleEq_p35` re-rendered through `azimCycle_p18`). -/
+private theorem la18sz_vvInangleEq {vv : ℕ → V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {k : ℕ} (hk3 : 3 ≤ k) (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j)
+    (hE : Set.range (fun i => {vv i, vv (i + 1)}) = E)
+    (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF) (i : ℕ) :
+    interiorAngle1 0 FF (vv i) = azimInFan_p18 (vv i, vv (i + 1)) E := by
+  have hk0 : 0 < k := lt_of_le_of_lt (by norm_num) hk3
+  have hstep : vv (i + k - 1) ≠ vv (i + 1) := by
+    intro hh
+    have hmod := la18sz_vvModEq hk0 hper hinj hh
+    have hplus : ((i + k - 1) + 1) % k = ((i + 1) + 1) % k := by
+      have g1 : ((i + k - 1) + 1) % k = ((i + k - 1) % k + 1 % k) % k := by
+        rw [Nat.add_mod]
+      have g2 : ((i + 1) + 1) % k = ((i + 1) % k + 1 % k) % k := by rw [Nat.add_mod]
+      rw [g1, g2, hmod]
+    rw [show (i + k - 1) + 1 = i + k from by omega, Nat.add_mod_right] at hplus
+    have h3 := la18sz_modEqAddCancel hk0 (i := i) (t := 2) hplus
+    have h4 : (2:ℕ) % k = 2 := Nat.mod_eq_of_lt (by omega)
+    omega
+  have hee : EE_p18 (vv i) E = {vv (i + k - 1), vv (i + 1)} := by
+    ext w
+    exact la18sz_vvMemEdge hk3 hper hinj hE i w
+  have hnc : (EE_p18 (vv i) E).ncard = 2 := by
+    rw [hee, Set.ncard_insert_of_notMem
+      (show vv (i + k - 1) ∉ ({vv (i + 1)} : Set V3) from by simp [hstep])]
+    simp
+  have hcond : 1 < (EE_p18 (vv i) E).ncard := by rw [hnc]; omega
+  have hsucc : azimCycle_p18 (EE_p18 (vv i) E) 0 (vv i) (vv (i + 1)) =
+      vv (i + k - 1) := by
+    unfold azimCycle_p18
+    rw [if_neg ?_]
+    · refine la18sz_epsFixed ?_ ?_
+      · refine ⟨hstep, ?_, ?_⟩
+        · rw [hee]; simp
+        · intro q hq hqne
+          rw [hee] at hq
+          rcases Set.mem_insert_iff.mp hq with h | h
+          · right
+            rw [h]
+            exact ⟨rfl, le_refl _⟩
+          · exact absurd (Set.mem_singleton_iff.mp h) hqne
+      · intro y hy
+        obtain ⟨hyne, hyW, -⟩ := hy
+        rw [hee] at hyW
+        rcases Set.mem_insert_iff.mp hyW with h | h
+        · exact h
+        · exact absurd (Set.mem_singleton_iff.mp h) hyne
+    · intro hsub
+      have hmem : vv (i + k - 1) ∈ EE_p18 (vv i) E := by rw [hee]; simp
+      exact hstep (Set.mem_singleton_iff.mp (hsub hmem))
+  have hrho : rhoNode1 FF (vv i) = vv (i + 1) :=
+    la18sz_vvRhoDet hk0 hper hinj hFF (by rw [← hFF]; exact Set.mem_range.mpr ⟨i, rfl⟩)
+  have hivs : ivsRhoNode1 FF (vv i) = vv (i + k - 1) :=
+    la18sz_vvIvsDet hk0 hper hinj hFF (by
+      rw [← hFF]
+      refine Set.mem_range.mpr ⟨i + k - 1, ?_⟩
+      show (vv (i + k - 1), vv (i + k - 1 + 1)) = (vv (i + k - 1), vv i)
+      rw [show i + k - 1 + 1 = i + k from by omega, la18sz_vvAddK hper i])
+  show azim 0 (vv i) (rhoNode1 FF (vv i)) (ivsRhoNode1 FF (vv i))
+    = azimInFan_p18 (vv i, vv (i + 1)) E
+  rw [hrho, hivs, ← hsucc, azimInFan_p18, if_pos hcond]
+
+/-- `setSum` over `{i | i < k}` folds to a `Finset.range k` sum. -/
+private theorem la18sz_setSum_Iio (f : ℕ → ℝ) (k : ℕ) :
+    setSum {i | i < k} f = ∑ i ∈ Finset.range k, f i := by
+  rw [setSum]
+  have hfin : {i | i < k}.Finite := Set.finite_Iio k
+  rw [dif_pos hfin]
+  have hEq : hfin.toFinset = Finset.range k := by
+    ext i
+    simp [Set.mem_toFinset, Finset.mem_range]
+  rw [hEq]
+
+/-- The cyclic dart set folds to a `Finset.range k` sum. -/
+private theorem la18sz_setSum_FF (vv : ℕ → V3) (g : V3 × V3 → ℝ) (k : ℕ) (hk0 : 0 < k)
+    (hper : Periodic vv k)
+    (hinj : ∀ i j, i < k → j < k → i ≠ j → vv i ≠ vv j) :
+    setSum (Set.range (fun i => (vv i, vv (i + 1)))) g
+      = ∑ i ∈ Finset.range k, g (vv i, vv (i + 1)) := by
+  have hperd : Periodic (fun i => (vv i, vv (i + 1))) k := by
+    intro i
+    show (vv (i + k), vv (i + k + 1)) = (vv i, vv (i + 1))
+    rw [hper i, Nat.add_right_comm i k 1, hper (i + 1)]
+  have hrange : Set.range (fun i => (vv i, vv (i + 1)))
+      = (fun i => (vv i, vv (i + 1))) '' Set.Iio k :=
+    range_periodic_image_p23 _ k hk0 hperd
+  have hfin : ((fun i => (vv i, vv (i + 1))) '' Set.Iio k).Finite :=
+    Set.Finite.image _ (Set.finite_Iio k)
+  have hinj3 : ∀ x ∈ (Set.Finite.toFinset (Set.finite_Iio k)),
+      ∀ y ∈ (Set.Finite.toFinset (Set.finite_Iio k)),
+      (vv x, vv (x + 1)) = (vv y, vv (y + 1)) → x = y := by
+    intro x hx y hy hxy
+    have hxk : x < k := by simpa [Set.mem_toFinset, Set.mem_Iio] using hx
+    have hyk : y < k := by simpa [Set.mem_toFinset, Set.mem_Iio] using hy
+    by_contra hne
+    have hfst : vv x = vv y := congrArg Prod.fst hxy
+    exact hinj x y hxk hyk hne hfst
+  have hEq2 : hfin.toFinset =
+      (Set.Finite.toFinset (Set.finite_Iio k)).image (fun i => (vv i, vv (i + 1))) := by
+    ext x
+    simp
+  have hEq3 : (Set.Finite.toFinset (Set.finite_Iio k)) = Finset.range k := by
+    ext i
+    simp [Finset.mem_range]
+  rw [hrange, setSum, dif_pos hfin, hEq2, Finset.sum_image hinj3, hEq3]
+
+/-- Cyclic shift of a `range k` sum. -/
+private theorem la18sz_sum_shift (G : ℕ → ℝ) (k c : ℕ) (hk0 : 0 < k)
+    (hper : Periodic G k) :
+    ∑ i ∈ Finset.range k, G (i + c) = ∑ i ∈ Finset.range k, G i := by
+  have hstep : ∀ i ∈ Finset.range k, G (i + c) = G ((i + c) % k) := fun i _ =>
+    (periodic_mod_eq_p23 hper (i + c)).symm
+  refine Finset.sum_bij (fun i _ => (i + c) % k)
+    (fun i _ => Finset.mem_range.mpr (Nat.mod_lt _ hk0))
+    (fun i hi j hj hij =>
+      have h1 : i % k = j % k := la18sz_modAddCancel (c := c) hij
+      have h2 : i = j := by
+        rw [Nat.mod_eq_of_lt (Finset.mem_range.mp hi),
+          Nat.mod_eq_of_lt (Finset.mem_range.mp hj)] at h1
+        exact h1
+      h2)
+    (fun t ht =>
+      have htk : t < k := Finset.mem_range.mp ht
+      have hck : c % k < k := Nat.mod_lt c hk0
+      have hck2 : c % k ≤ c := Nat.mod_le c k
+      ⟨(t + k - c % k) % k, Finset.mem_range.mpr (Nat.mod_lt _ hk0),
+        by
+          have e1 : Nat.ModEq k ((t + k - c % k) % k) (t + k - c % k) :=
+            Nat.mod_mod_of_dvd _ (Nat.dvd_refl k)
+          have e2 : Nat.ModEq k ((t + k - c % k) % k + c) ((t + k - c % k) + c) :=
+            Nat.ModEq.add_right c e1
+          have e4 : Nat.ModEq k (t + k) t := Nat.add_mod_right t k
+          have gc : Nat.ModEq k c (c % k) :=
+            Nat.ModEq.symm (Nat.mod_mod_of_dvd c (Nat.dvd_refl k))
+          have ee : Nat.ModEq k ((t + k - c % k) + c) ((t + k - c % k) + c % k) :=
+            Nat.ModEq.add_left _ gc
+          have g2 : (t + k - c % k) + c % k = t + k := by omega
+          rw [g2] at ee
+          have hchain : Nat.ModEq k ((t + k - c % k) % k + c) t := e2.trans (ee.trans e4)
+          rw [hchain]
+          exact Nat.mod_eq_of_lt htk⟩)
+    (fun a ha => hstep a ha)
+
+/-- HOL `SUM_AZIM_EQ_ANGLE_LE4_FUN` (AURSIPD.hl:100). `ff` is carried as an
+explicit parameter (its HOL home was not locatable in the corpus). -/
 theorem SUM_AZIM_EQ_ANGLE_LE4_FUN_p18 (ff : V3 → ℝ) (s : ScsV39)
     (vv : ℕ → V3) (p : ℕ) (u : V3) (V : Set V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (hk : ¬s.k ≤ 3) (hBB : BBsV39 s vv)
@@ -1487,10 +1892,39 @@ theorem SUM_AZIM_EQ_ANGLE_LE4_FUN_p18 (ff : V3 → ℝ) (s : ScsV39)
         (fun i => ff (vv (i + p % s.k)) *
           interiorAngle1 0 FF ((rhoNode1_p18 FF)^[i] u)) =
       setSum FF (fun e => ff e.1 * azimInFan_p18 e E) := by
-  sorry
-  -- DISCHARGES: SUM_EQ_GENERAL + the periodicity/injectivity transport of
-  -- HOL AURSIPD.hl:114-197 (PERIODIC_PROPERTY, VV_SUC_EQ_RHO_NODE_PRIME,
-  -- CONVEX_LOFA_IMP_INANGLE_EQ_AZIM — LocalAuto2-side kit).
+  have hk3 : 3 < s.k := by omega
+  have hk0 : 0 < s.k := by omega
+  have hper : Periodic vv s.k := hBB.2.1
+  have hinj : ∀ i j, i < s.k → j < s.k → i ≠ j → vv i ≠ vv j :=
+    fun i j hi hj hne => VV_INJ_p35 s s.k vv rfl his hBB i j ⟨hi, hj, hne⟩
+  have horbit : ∀ m, (rhoNode1_p18 FF)^[m] u = vv (m + p % s.k) := by
+    have h := VV_SUC_EQ_RHO_NODE_PRIME_p35 s s.k (p % s.k) p 0 u V E FF vv
+      rfl hu hV hE hFF his hk hBB
+    exact h
+  have hterm : ∀ i : ℕ,
+      interiorAngle1 0 FF (vv i) = azimInFan_p18 (vv i, vv (i + 1)) E :=
+    fun i => la18sz_vvInangleEq (by omega) hper hinj hE hFF i
+  have hGper : Periodic
+      (fun j => ff (vv j) * azimInFan_p18 (vv j, vv (j + 1)) E) s.k := by
+    intro j
+    show ff (vv (j + s.k)) * azimInFan_p18 (vv (j + s.k), vv (j + s.k + 1)) E
+      = ff (vv j) * azimInFan_p18 (vv j, vv (j + 1)) E
+    rw [hper j, Nat.add_right_comm j s.k 1, hper (j + 1)]
+  have hL : setSum {i | i < s.k}
+      (fun i => ff (vv (i + p % s.k)) *
+        interiorAngle1 0 FF ((rhoNode1_p18 FF)^[i] u))
+      = ∑ i ∈ Finset.range s.k,
+          (fun j => ff (vv j) * azimInFan_p18 (vv j, vv (j + 1)) E)
+            (i + p % s.k) := by
+    rw [la18sz_setSum_Iio]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [horbit i, hterm (i + p % s.k)]
+  have hR : setSum FF (fun e => ff e.1 * azimInFan_p18 e E)
+      = ∑ i ∈ Finset.range s.k,
+          (fun j => ff (vv j) * azimInFan_p18 (vv j, vv (j + 1)) E) i := by
+    rw [← hFF, la18sz_setSum_FF vv (fun e => ff e.1 * azimInFan_p18 e E) s.k hk0 hper hinj]
+  rw [hL, hR]
+  exact la18sz_sum_shift _ s.k (p % s.k) hk0 hGper
 
 /-- HOL `PERIODIC_IMAGE2` (AURSIPD.hl:202). -/
 theorem PERIODIC_IMAGE2_p18 {α : Type*} {f : ℕ → α} {n : ℕ} (hn : n ≠ 0)
@@ -2538,3 +2972,4 @@ end Kepler.Text
 #print axioms Kepler.Text.SCS_5M1_SLICE_02_p18
 #print axioms Kepler.Text.SCS_5M1_SLICE_03_p18
 #print axioms Kepler.Text.SCS_5M1_SLICE_24_p18
+
