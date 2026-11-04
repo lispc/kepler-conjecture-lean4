@@ -3804,10 +3804,10 @@ theorem real_interval_contains_0_ball_p14 (a b e1 : ℝ) (ha : a < 0) (hb : 0 < 
 
 /-- w9 recon: `zlz_azim` under the interval strictness that HOL's *open*
 `real_interval (a,b)` supplies (`a < 0 < b`) but the LocalAuto1 `Deformation`
-encoding (`0 ∈ Set.Icc a b`) does not.  Everything else is proved; this
-lemma is the exact statement of `zlz_azim_p14` with `ha`/`hb` added, so it
-becomes a one-line consumer of this lemma if an SF upgrades the frozen
-statement (or `Deformation`) to the open interval. -/
+encoding (`0 ∈ Set.Icc a b`) did not.  Everything else is proved; this
+lemma is the exact statement of `zlz_azim_p14` with `ha`/`hb` added; SF-99
+(2026-11-05) upgraded `Deformation` to `Set.Ioo`, so `zlz_azim_p14` is now a
+one-line consumer of this lemma. -/
 private theorem w9_zlz_azim_strict (a b : ℝ) (V : Set V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
     (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
@@ -3919,7 +3919,7 @@ theorem zlz_azim_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 �
     ∀ x : V3 × V3, ∃ e2 : ℝ, x ∈ FF →
       0 < e2 ∧ ∀ t, -e2 < t ∧ t < e2 →
         azimInFan (f x.1 t, f x.2 t) ((fun s => (fun v => f v t) '' s) '' E) ≤ Real.pi := by
-  sorry
+  exact w9_zlz_azim_strict a b V E FF f h1 h2 h3 h3.1.1 h3.1.2 h4
 
 /-- W7 helper: wedge persistence along four continuous curves (the
 curve-level form of `NHCXLRV`, used by `zlz_generic` with the cross-product

@@ -2539,9 +2539,9 @@ theorem DEFORMATION_SMALL_INTERVAL_p34 {f : V3 → ℝ → V3} {V : Set V3} {a b
     (h : Deformation f V a b) (hac : a ≤ c) (hc : c < 0) (hd : 0 < d) (hdb : d ≤ b) :
     Deformation f V c d := by
   obtain ⟨h0, hcont, hfix⟩ := h
-  refine ⟨⟨le_of_lt hc, le_of_lt hd⟩, ?_, hfix⟩
+  refine ⟨⟨hc, hd⟩, ?_, hfix⟩
   intro v hv r hr
-  exact hcont v hv r ⟨le_trans hac hr.1, le_trans hr.2 hdb⟩
+  exact hcont v hv r ⟨lt_of_le_of_lt hac hr.1, lt_of_lt_of_le hr.2 hdb⟩
 
 /-- Early copy of the `MMs` residue injectivity (the later `w_inj_p34`
 lives below the `NOT_IN_V` block; this `w5cC2_` twin serves the W2 dist-le

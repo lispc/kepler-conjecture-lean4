@@ -535,7 +535,7 @@ theorem deformation_restrict_p21 (e : ℝ) (f : V3 → ℝ → V3) (V : Set V3) 
     (h : Deformation f V (-e) e) (he : 0 < e') (hs : ∀ t, |t| < e' → |t| < e) :
     Deformation f V (-e') e' := by
   obtain ⟨h0, hc, hfix⟩ := h
-  have he0 : 0 ≤ e := h0.2
+  have he0 : 0 ≤ e := le_of_lt h0.2
   have hee : e' ≤ e := by
     rcases lt_or_ge e e' with hlt | hge
     · have htp : 0 < (e + e') / 2 := by linarith

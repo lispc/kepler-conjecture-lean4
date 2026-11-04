@@ -295,11 +295,11 @@ noncomputable def tauFun_p2 (V : Set V3) (E : Set (Set V3)) (f : Set (V3 × V3))
     (Real.pi + sol0) * ((f.ncard - 2 : ℕ) : ℝ)
 
 /-- HOL `deformation` (localization.hl:128); `real_interval (a,b)` ↦ the
-closed interval `Set.Icc a b`, `continuous atreal` ↦ `ContinuousAt`. NEEDS:
+open interval `Set.Ioo a b`, `continuous atreal` ↦ `ContinuousAt`. NEEDS:
 merge with `LocalAnchors.Deformation`. -/
 def deformation_p2 (ff : V3 → ℝ → V3) (V : Set V3) (a b : ℝ) : Prop :=
-  (0 : ℝ) ∈ Set.Icc a b ∧
-    (∀ v : V3, v ∈ V → ∀ r : ℝ, r ∈ Set.Icc a b → ContinuousAt (ff v) r) ∧
+  (0 : ℝ) ∈ Set.Ioo a b ∧
+    (∀ v : V3, v ∈ V → ∀ r : ℝ, r ∈ Set.Ioo a b → ContinuousAt (ff v) r) ∧
     ∀ v ∈ V, ff v 0 = v
 
 /-- HOL `localization (V,E) FF` (localization.hl:133). -/

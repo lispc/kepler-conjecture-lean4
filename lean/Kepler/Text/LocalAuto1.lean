@@ -127,7 +127,7 @@ def Lunar (v w : V3) (V : Set V3) (E : Set (Set V3)) : Prop :=
 
 /-- HOL `deformation ff V (a,b)` (localization.hl:128). -/
 def Deformation (f : V3 → ℝ → V3) (V : Set V3) (a b : ℝ) : Prop :=
-  (0 : ℝ) ∈ Icc a b ∧ (∀ v ∈ V, ∀ r ∈ Icc a b, ContinuousAt (f v) r) ∧
+  (0 : ℝ) ∈ Ioo a b ∧ (∀ v ∈ V, ∀ r ∈ Ioo a b, ContinuousAt (f v) r) ∧
     ∀ v ∈ V, f v 0 = v
 
 /-- HOL `has_orders f k` (localization.hl:20): the iterates below `k` are
