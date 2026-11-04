@@ -1933,23 +1933,205 @@ theorem arclength_lt_1553_p25 :
     exact hcmp
   linarith
 
+private theorem w5asswp_atn2_eq_arctan {x y : ℝ} (hx : 0 < x) :
+    atn2 x y = Real.arctan (y / x) := by
+  rw [atn2]
+  split_ifs with hb1 hb2 hb3
+  · rfl
+  · have hz : 0 < y / x := div_pos hb2 hx
+    have hinv := Real.arctan_inv_of_pos hz
+    rw [inv_div] at hinv
+    linarith
+  · have hy0 : y < 0 := hb3
+    have hz : y / x < 0 := div_neg_of_neg_of_pos hy0 hx
+    have hinv := Real.arctan_inv_of_neg hz
+    rw [inv_div] at hinv
+    linarith
+  · have hy0 : y = 0 := le_antisymm (by linarith) (by linarith)
+    rw [hy0] at hb1
+    simp at hb1
+    exact absurd hx (not_lt.mpr hb1)
+
+private theorem w5asswp_cos_pi_half_add (w : ℝ) :
+    Real.cos (Real.pi / 2 + w) = -Real.sin w := by
+  rw [Real.cos_add, Real.cos_pi_div_two, Real.sin_pi_div_two]
+  ring
+
+private theorem w5asswp_arctan_mem (z : ℝ) :
+    Real.arctan z < Real.pi / 2 ∧ -Real.pi / 2 < Real.arctan z := by
+  constructor
+  · exact Real.arctan_lt_pi_div_two z
+  · have h := Real.arctan_lt_pi_div_two (-z)
+    rw [Real.arctan_neg] at h
+    linarith
+
+private theorem w5asswp_arclength222_eq_acos {c : ℝ} (hc2 : 2 ≤ c) (hc4 : c < 4) :
+    arcLength 2 2 c = Real.arccos ((8 - c * c) / 8) := by
+  have hc0 : (0:ℝ) ≤ c := by linarith
+  have hpos : (0:ℝ) < 16 - c * c := by nlinarith
+  have hup : upsX (2 * 2) (2 * 2) (c * c) = c ^ 2 * (16 - c * c) := by
+    simp only [upsX]
+    ring
+  have hx : Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)) = c * Real.sqrt (16 - c * c) := by
+    rw [hup, Real.sqrt_mul (sq_nonneg c), Real.sqrt_sq hc0]
+  have hxpos : (0:ℝ) < c * Real.sqrt (16 - c * c) :=
+    mul_pos (by linarith) (Real.sqrt_pos.mpr hpos)
+  have hxne : c * Real.sqrt (16 - c * c) ≠ 0 := ne_of_gt hxpos
+  have hX2Y2 : (c * Real.sqrt (16 - c * c)) ^ 2 + (c * c - 8) ^ 2 = 64 := by
+    have hsq : (c * Real.sqrt (16 - c * c)) ^ 2 = c ^ 2 * (16 - c * c) := by
+      rw [mul_pow, Real.sq_sqrt (by nlinarith : (0:ℝ) ≤ 16 - c * c)]
+    rw [hsq]
+    ring
+  have hdL : arcLength 2 2 c
+      = Real.pi / 2 + atn2 (Real.sqrt (upsX (2 * 2) (2 * 2) (c * c)))
+          (c * c - 2 * 2 - 2 * 2) := rfl
+  have hsimp : (c * c - 2 * 2 - 2 * 2 : ℝ) = c * c - 8 := by ring
+  rw [hdL, hsimp, hx, w5asswp_atn2_eq_arctan hxpos]
+  refine (Real.arccos_eq_of_eq_cos ?_ ?_ ?_).symm
+  · obtain ⟨_, hlo⟩ :=
+      w5asswp_arctan_mem ((c * c - 8) / (c * Real.sqrt (16 - c * c)))
+    linarith [Real.pi_pos]
+  · obtain ⟨hhi, _⟩ :=
+      w5asswp_arctan_mem ((c * c - 8) / (c * Real.sqrt (16 - c * c)))
+    linarith [Real.pi_pos]
+  · rw [w5asswp_cos_pi_half_add, Real.sin_arctan]
+    have hsq0 : Real.sqrt (16 - c * c) ≠ 0 :=
+      fun he => absurd (Real.sqrt_pos.mpr hpos) (by rw [he]; simp)
+    have hsq0b : Real.sqrt (16 - c ^ 2) ≠ 0 := by rw [pow_two]; exact hsq0
+    have hsq2 : (c * Real.sqrt (16 - c * c)) ^ 2 ≠ 0 :=
+      fun he => hxne (pow_eq_zero_iff (by norm_num : (2:ℕ) ≠ 0) |>.mp he)
+    have hsq1 : (1:ℝ) + ((c * c - 8) / (c * Real.sqrt (16 - c * c))) ^ 2
+        = 64 / (c * Real.sqrt (16 - c * c)) ^ 2 := by
+      rw [div_pow, ← div_self hsq2, ← add_div, hX2Y2]
+    rw [hsq1, Real.sqrt_div (by norm_num : (0:ℝ) ≤ 64),
+      show (Real.sqrt 64 : ℝ) = 8 from by norm_num,
+      Real.sqrt_sq (by nlinarith : (0:ℝ) ≤ c * Real.sqrt (16 - c * c))]
+    rw [show ((c * c - 8) / (c * Real.sqrt (16 - c * c))
+          / (8 / (c * Real.sqrt (16 - c * c))) : ℝ) = (c * c - 8) / 8
+      from by field_simp [hsq0b],
+      show (8:ℝ) - c * c = -(c * c - 8) from by ring, neg_div]
+
+private theorem w5asswp_xrr_eq (A C : V3) (hA : A ≠ 0) (hC : C ≠ 0) :
+    xrr (‖A‖) (‖C‖) (dist A C) = 8 * (1 - Real.cos (arcV 0 A C)) := by
+  have hAn : (0:ℝ) < ‖A‖ := norm_pos_iff.mpr hA
+  have hCn : (0:ℝ) < ‖C‖ := norm_pos_iff.mpr hC
+  have hratio : -(1:ℝ) ≤ inner ℝ A C / (‖A‖ * ‖C‖) ∧ inner ℝ A C / (‖A‖ * ‖C‖) ≤ 1 := by
+    have h := abs_real_inner_div_norm_mul_norm_le_one A C
+    rw [abs_le] at h
+    exact h
+  have harc : arcV 0 A C = Real.arccos (inner ℝ A C / (‖A‖ * ‖C‖)) := by
+    simp only [arcV, dist_zero_right, sub_zero, WithLp.ofLp_zero, sub_zero,
+      Kepler.Geom.inner_eq_dot]
+  have hcos : Real.cos (arcV 0 A C) = inner ℝ A C / (‖A‖ * ‖C‖) := by
+    rw [harc, Real.cos_arccos hratio.1 hratio.2]
+  have hdist : dist A C ^ 2 = ‖A‖ ^ 2 + ‖C‖ ^ 2 - 2 * (inner ℝ A C) := by
+    rw [dist_eq_norm, norm_sub_sq_real]
+    ring
+  rw [hcos]
+  simp only [xrr]
+  have hne : ‖A‖ * ‖C‖ ≠ 0 := ne_of_gt (mul_pos hAn hCn)
+  field_simp
+  nlinarith [hdist]
+
 /-- HOL `ASSWPOW` (VASYYAU.hl:154): the `xrr ≤ #15.53` diagonal bound on a
 basic `k = 4` system (the numeric content is exactly the
 `arclength_lt_1553_p25` arcLength constant above).  Faithful twin of the
 LocalAuto1 registry statement `ASSWPOW_concl` (appendix.hl:1452; statement
-verbatim).  DISCHARGES: the HOL original is PROVED (VASYYAU.hl:154) via
-`MMS_IMP_BBPRIME` + `JKQEWGV2` + `BBS_IMP_CONVEX_LOCAL_FAN`/`CVLF_LF_F`
-(fan from BBs) + the `IMJXPHR` diagonal analysis + `ATN2` arcLength bounds +
-the Flyspeck-constants `calc`; that kit is not ported to this lane yet, so
-the twin body is a skeleton `sorry`.  The twin is an INDEPENDENT proof piece
-— NOT derived from the registry `ASSWPOW_concl` — so the LocalConcl wiring
-is not a (b)-style cycle.  NEEDS: the BBS→fan kit and the `IMJXPHR`
-diagonal analysis. -/
+verbatim).  PROVED here via the origin-angle route: with `A = v i`,
+`B = v (i+1)`, `C = v (i+2)` all in the ball annulus (`MMs` gives `BBs`) and
+both short edges `≤ 2 h0` with lower bound `2`, `OIQKKEP_concl` bounds each
+of `arcV 0 A B` / `arcV 0 B C` by `arcLength 2 2 (2 h0)`; the vector angle
+triangle inequality `InnerProductGeometry.angle_le_angle_add_angle` gives
+`arcV 0 A C ≤ 2 * arcLength 2 2 (2 h0) < arcLength 2 2 (sqrt 15.53)` by
+`arclength_lt_1553_p25`, and `xrr = 8 (1 - cos (arcV 0 A C))` closes the
+numeric end.  The twin is an INDEPENDENT proof piece — NOT derived from the
+registry `ASSWPOW_concl` — so the LocalConcl wiring is not a (b)-style
+cycle. -/
 theorem ASSWPOW_p25 (s : ScsV39) (v : ℕ → V3) (i : ℕ) (his : isScsV39 s)
     (hv : v ∈ MMsV39 s) (hk : s.k = 4) (hbasic : scsBasicV39 s)
     (hb1 : s.b i (i + 1) ≤ 2 * h0) (hb2 : s.b (i + 1) (i + 2) ≤ 2 * h0) :
     xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53 := by
-  sorry
+  obtain ⟨hd, hk3, hk6, -, -, -, -, hpa, -, -, -, -, hsym, hch, hdiag0, hdiag,
+    hb3, hbc, -, -, hcard⟩ := his
+  have hbb : BBsV39 s v := hv.1.1.1
+  have hann : ∀ n, v n ∈ ballAnnulus := fun n => hbb.1 ⟨n, rfl⟩
+  have hpa4 : Periodic2 s.a 4 := hk ▸ hpa
+  have hdiag4 : ∀ i j, i < 4 ∧ j < 4 ∧ i ≠ j → 2 ≤ s.a i j := hk ▸ hdiag
+  -- lower/upper bounds on the two short edges
+  have hlow1 : (2:ℝ) ≤ dist (v i) (v (i + 1)) := by
+    have h4a : i % 4 < 4 := Nat.mod_lt _ (by norm_num)
+    have h4b : (i + 1) % 4 < 4 := Nat.mod_lt _ (by norm_num)
+    have hne : i % 4 ≠ (i + 1) % 4 := succ_mod_ne_p25 (k := 4) (by norm_num) i
+    have ha2 : 2 ≤ s.a i (i + 1) := by
+      rw [← periodic2_mod_eq_p25 hpa4 i (i + 1)]
+      exact hdiag4 _ _ ⟨h4a, h4b, hne⟩
+    exact ha2.trans (hbb.2.2.1 i (i + 1)).1
+  have hlow2 : (2:ℝ) ≤ dist (v (i + 1)) (v (i + 2)) := by
+    have h4a : (i + 1) % 4 < 4 := Nat.mod_lt _ (by norm_num)
+    have h4b : (i + 2) % 4 < 4 := Nat.mod_lt _ (by norm_num)
+    have hne : (i + 1) % 4 ≠ (i + 2) % 4 := by
+      have h := succ_mod_ne_p25 (k := 4) (by norm_num) (i + 1)
+      simpa [show (i + 1) + 1 = i + 2 by ring] using h
+    have ha2 : 2 ≤ s.a (i + 1) (i + 2) := by
+      rw [← periodic2_mod_eq_p25 hpa4 (i + 1) (i + 2)]
+      exact hdiag4 _ _ ⟨h4a, h4b, hne⟩
+    exact ha2.trans (hbb.2.2.1 (i + 1) (i + 2)).1
+  have hd1 : dist (v i) (v (i + 1)) ≤ 2 * h0 := (hbb.2.2.1 i (i + 1)).2.trans hb1
+  have hd2 : dist (v (i + 1)) (v (i + 2)) ≤ 2 * h0 :=
+    (hbb.2.2.1 (i + 1) (i + 2)).2.trans hb2
+  have hc4 : 2 * h0 < 4 := by
+    have hh0 : h0 = 1.26 := rfl
+    rw [hh0]; norm_num
+  have hθ1 := OIQKKEP_concl (v i) (v (i + 1)) (2 * h0) (hann i) (hann (i + 1))
+    hc4 hlow1 hd1
+  have hθ2 := OIQKKEP_concl (v (i + 1)) (v (i + 2)) (2 * h0) (hann (i + 1))
+    (hann (i + 2)) hc4 hlow2 hd2
+  have hsum : arcV 0 (v i) (v (i + 2)) ≤ 2 * arcLength 2 2 (2 * h0) := by
+    have htri : arcV 0 (v i) (v (i + 2)) ≤
+        arcV 0 (v i) (v (i + 1)) + arcV 0 (v (i + 1)) (v (i + 2)) := by
+      have h := InnerProductGeometry.angle_le_angle_add_angle (v i) (v (i + 1)) (v (i + 2))
+      simpa [arcV, InnerProductGeometry.angle, Kepler.Geom.inner_eq_dot, dist_eq_norm]
+        using h
+    linarith
+  have hlt : arcV 0 (v i) (v (i + 2)) < arcLength 2 2 (Real.sqrt 15.53) :=
+    lt_of_le_of_lt hsum arclength_lt_1553_p25
+  -- numeric endpoint
+  have hsq : Real.sqrt 15.53 ^ 2 = (15.53 : ℝ) := Real.sq_sqrt (by norm_num)
+  have hnn := Real.sqrt_nonneg (15.53 : ℝ)
+  have hc2 : (2:ℝ) ≤ Real.sqrt 15.53 := by nlinarith
+  have hc4' : Real.sqrt 15.53 < 4 := by nlinarith
+  have hval : arcLength 2 2 (Real.sqrt 15.53) = Real.arccos ((8 - 15.53) / 8) := by
+    rw [w5asswp_arclength222_eq_acos hc2 hc4']
+    congr 1
+    nlinarith [hsq]
+  have hcos0 : Real.cos (arcLength 2 2 (Real.sqrt 15.53)) = (8 - 15.53) / 8 := by
+    rw [hval, Real.cos_arccos (by norm_num) (by norm_num)]
+  have hlepi : arcLength 2 2 (Real.sqrt 15.53) ≤ Real.pi := by
+    rw [hval]; exact Real.arccos_le_pi _
+  have hcos_gt : (8 - 15.53) / 8 < Real.cos (arcV 0 (v i) (v (i + 2))) := by
+    rw [← hcos0]
+    exact Real.cos_lt_cos_of_nonneg_of_le_pi (Real.arccos_nonneg _) hlepi hlt
+  -- nonzero norms
+  have hann2 : ∀ n, (2:ℝ) ≤ ‖v n‖ := by
+    intro n
+    have h := hann n
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_self] at h
+    rw [← dist_zero_right]
+    exact le_of_not_gt h.2
+  have hA : v i ≠ 0 := by
+    intro h
+    have := hann2 i
+    rw [h, norm_zero] at this
+    norm_num at this
+  have hC : v (i + 2) ≠ 0 := by
+    intro h
+    have := hann2 (i + 2)
+    rw [h, norm_zero] at this
+    norm_num at this
+  have hxrr := w5asswp_xrr_eq (v i) (v (i + 2)) hA hC
+  rw [hxrr]
+  nlinarith
 
 /-- HOL `NOT_MOD_4_CASES` (VASYYAU.hl:386). -/
 theorem NOT_MOD_4_CASES_p25 (i p : ℕ) :

@@ -1878,7 +1878,549 @@ theorem YBTASCZ3_p14 (u : ℕ → V3) (r i j : ℕ) (hij : i < j) (hj : j ≤ r)
     (le_of_lt hlt)
   linarith
 
-/-- HOL `KCZXLLE` (hl:681).  NEEDS: azimuth-cycle ordering kit. -/
+/-! ## w12 port kit: the four unported HOL pieces
+
+`AZIM_SCALE_ALL` (flyspeck_multivariate.ml:2373) — public analogue
+`w5cC_azim_scale` exists in LocalAuto31 but is not in the LA14 import
+closure; ported privately here with its collinearity helpers.
+`AFF_GT_MONO_LEFT` (flyspeck_multivariate.ml:1215) — near-relative
+`affGt_mono_base` in ConformingAuto17 (not imported); private port with the
+finiteness hypothesis the Lean `Affsign` encoding forces.
+`UIVNNRR2 = AFF_GT_EQ_AFFINE_HULL` (trig3.hl:192): `aff_gt X {} = aff X`.
+`AFF2_VEC0` (trig2.hl:2648): `aff {0, w} = {x | ∃ k, x = k % w}`.
+-/
+
+/-! ### AZIM_SCALE_ALL -/
+
+/-- Collinearity through the origin: `x` on the line `0 v` is a multiple of `v`. -/
+private theorem w12_lineMem_smul {v x : V3} (h : x ∈ affineSpan ℝ ({0, v} : Set V3)) :
+    ∃ r : ℝ, x = r • v := by
+  obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp h
+  refine ⟨r, ?_⟩
+  rw [AffineMap.lineMap_apply] at hr
+  simpa using hr.symm
+
+private theorem w12_smul_lineMem (r : ℝ) (v : V3) :
+    (r • v) ∈ affineSpan ℝ ({0, v} : Set V3) := by
+  refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨r, ?_⟩
+  rw [AffineMap.lineMap_apply]
+  simp
+
+private theorem w12_collinear3_smul2_fwd {v x : V3} {a b : ℝ} (ha : a ≠ 0) (hb : b ≠ 0)
+    (hcol : Collinear3 0 v x) : Collinear3 0 (a • v) (b • x) := by
+  classical
+  rcases (collinear_triple_iff (x := (0:V3)) (v := v) (u := x)).mp hcol with hu | h0
+  · obtain ⟨r, hr⟩ := w12_lineMem_smul hu
+    have hbv : b • x = (b * r / a) • (a • v) := by
+      rw [hr, smul_smul, smul_smul]
+      exact congrArg (fun (s : ℝ) => s • v)
+        (show b * r = (b * r / a) * a from by field_simp)
+    refine (collinear_triple_iff (x := (0:V3)) (v := a • v) (u := b • x)).mpr
+      (Or.inl ?_)
+    rw [hbv]
+    exact w12_smul_lineMem _ _
+  · refine (collinear_triple_iff (x := (0:V3)) (v := a • v) (u := b • x)).mpr
+      (Or.inr ?_)
+    rw [← h0, smul_zero]
+
+private theorem w12_collinear3_smul2 {v x : V3} {a b : ℝ} (ha : a ≠ 0) (hb : b ≠ 0) :
+    Collinear3 0 v x ↔ Collinear3 0 (a • v) (b • x) := by
+  constructor
+  · exact w12_collinear3_smul2_fwd ha hb
+  · intro hcol
+    have h := w12_collinear3_smul2_fwd (a := a⁻¹) (b := b⁻¹)
+      (inv_ne_zero ha) (inv_ne_zero hb) hcol
+    rw [smul_smul, inv_mul_cancel₀ ha, one_smul, smul_smul, inv_mul_cancel₀ hb, one_smul] at h
+    exact h
+
+/-- HOL `AZIM_SCALE_ALL` (flyspeck_multivariate.ml:2373): with every scale
+positive, the azimuth at the origin is unchanged by independently scaling the
+axis and the two ray points. -/
+private theorem w12_azim_scale_all {v w1 w2 : V3} {a b c : ℝ} (ha : 0 < a) (hb : 0 < b)
+    (hc : 0 < c) :
+    azim 0 (a • v) (b • w1) (c • w2) = azim 0 v w1 w2 := by
+  classical
+  have hiff1 := w12_collinear3_smul2 (v := v) (x := w1) (a := a) (b := b)
+    (ne_of_gt ha) (ne_of_gt hb)
+  have hiff2 := w12_collinear3_smul2 (v := v) (x := w2) (a := a) (b := c)
+    (ne_of_gt ha) (ne_of_gt hc)
+  show (if Collinear3 0 (a • v) (b • w1) ∨ Collinear3 0 (a • v) (c • w2) then (0:ℝ)
+      else Classical.epsilon (AzimSpec 0 (a • v) (b • w1) (c • w2)))
+    = (if Collinear3 0 v w1 ∨ Collinear3 0 v w2 then (0:ℝ)
+      else Classical.epsilon (AzimSpec 0 v w1 w2))
+  by_cases hcol : Collinear3 0 v w1 ∨ Collinear3 0 v w2
+  · rcases hcol with h | h
+    · rw [if_pos (Or.inl (hiff1.mp h)), if_pos (Or.inl h)]
+    · rw [if_pos (Or.inr (hiff2.mp h)), if_pos (Or.inr h)]
+  · push_neg at hcol
+    have hn1 : ¬ Collinear3 0 (a • v) (b • w1) := fun hh => hcol.1 (hiff1.mpr hh)
+    have hn2 : ¬ Collinear3 0 (a • v) (c • w2) := fun hh => hcol.2 (hiff2.mpr hh)
+    obtain ⟨h0θ, h2piθ, hh1, hh2, hframes⟩ := azim_master 0 v w1 w2
+    have hvne : v ≠ 0 := by
+      intro hzz
+      apply hcol.1
+      rw [hzz]
+      exact (collinear_triple_iff (x := (0:V3)) (v := (0:V3)) (u := w1)).mpr (Or.inr rfl)
+    refine azim_eq_of_spec (θ := azim 0 v w1 w2) hn1 hn2
+      ⟨h0θ, h2piθ, b * hh1 / a, c * hh2 / a, ?_⟩
+    intro e1 e2 e3 horth hax _
+    have hax' : v = dist v 0 • e3 := by
+      have hna : dist (a • v) 0 = a * dist v 0 := by
+        rw [dist_zero_right, dist_zero_right, norm_smul, Real.norm_eq_abs,
+          abs_of_pos ha]
+      rw [hna, sub_zero] at hax
+      exact smul_right_injective V3 (ne_of_gt ha)
+        (show a • (dist v 0 • e3) = a • v by rw [smul_smul]; exact hax.symm) |>.symm
+    obtain ⟨psi, r1, r2, hs1, hs2, hr1, hr2⟩ :=
+      hframes e1 e2 e3 horth (by rw [sub_zero]; exact hax') hvne
+    rw [sub_zero, sub_zero] at hs1 hs2
+    have hb1 : (b * hh1 / a) • ((a • v : V3) - 0) = b • (hh1 • v) := by
+      rw [sub_zero, smul_smul, smul_smul]
+      exact congrArg (fun (s : ℝ) => s • v)
+        (show (b * hh1 / a) * a = b * hh1 from by field_simp)
+    have hb2 : (c * hh2 / a) • ((a • v : V3) - 0) = c • (hh2 • v) := by
+      rw [sub_zero, smul_smul, smul_smul]
+      exact congrArg (fun (s : ℝ) => s • v)
+        (show (c * hh2 / a) * a = c * hh2 from by field_simp)
+    have hdisp1 : b • w1 = (b * (r1 * Real.cos psi)) • e1
+        + (b * (r1 * Real.sin psi)) • e2 + b • (hh1 • v) := by
+      rw [hs1, smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+    have hdisp2 : c • w2 = (c * (r2 * Real.cos (psi + azim 0 v w1 w2))) • e1
+        + (c * (r2 * Real.sin (psi + azim 0 v w1 w2))) • e2 + c • (hh2 • v) := by
+      conv_lhs => rw [hs2]
+      rw [smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+    refine ⟨psi, b * r1, c * r2, ?_, ?_, ?_, ?_⟩
+    · rw [show ((b • w1 : V3) - 0) = b • w1 from by rw [sub_zero], hdisp1, hb1,
+        mul_assoc b r1 (Real.cos psi), mul_assoc b r1 (Real.sin psi)]
+    · rw [show ((c • w2 : V3) - 0) = c • w2 from by rw [sub_zero], hdisp2, hb2,
+        mul_assoc c r2 (Real.cos (psi + azim 0 v w1 w2)),
+        mul_assoc c r2 (Real.sin (psi + azim 0 v w1 w2))]
+    · exact mul_pos hb (hr1 hcol.1)
+    · exact mul_pos hc (hr2 hcol.2)
+
+/-! ### AFF_GT_MONO_LEFT -/
+
+/-- HOL `AFF_GT_MONO_LEFT` (flyspeck_multivariate.ml:1215): `affGt` is
+monotone in its left (base) argument.  The Lean `Affsign` encoding carries an
+explicit finiteness witness, so `(s' ∪ t).Finite` is required. -/
+private theorem w12_affGt_mono_left {s s' t : Set V3} (hss : s ⊆ s')
+    (hfin : (s' ∪ t).Finite) : affGt s t ⊆ affGt s' t := by
+  intro y hy
+  simp only [affGt, Set.mem_setOf_eq, Affsign] at hy ⊢
+  obtain ⟨f, hS, hyv, hpos, hsum⟩ := hy
+  have hsub : (s ∪ t : Set V3) ⊆ s' ∪ t := by
+    intro z hz
+    simp only [Set.mem_union] at hz ⊢
+    rcases hz with h | h
+    · exact Or.inl (hss h)
+    · exact Or.inr h
+  have hsubfin : hS.toFinset ⊆ hfin.toFinset := by
+    intro z hz
+    simp only [Set.Finite.mem_toFinset] at hz ⊢
+    exact hsub hz
+  have hgv0 : ∀ z ∈ hfin.toFinset, z ∉ hS.toFinset →
+      (if z ∈ (s ∪ t : Set V3) then f z else 0) = 0 := by
+    intro z hz hzs
+    exact if_neg (fun hcon => hzs (by
+      simp only [Set.Finite.mem_toFinset]
+      exact hcon))
+  have hgvv : ∀ z ∈ hfin.toFinset, z ∉ hS.toFinset →
+      (if z ∈ (s ∪ t : Set V3) then f z else 0) • z = 0 := by
+    intro z hz hzs
+    rw [hgv0 z hz hzs, zero_smul]
+  refine ⟨fun z => if z ∈ (s ∪ t : Set V3) then f z else 0, hfin, ?_, ?_, ?_⟩
+  · show y = ∑ z ∈ hfin.toFinset, (if z ∈ (s ∪ t : Set V3) then f z else 0) • z
+    rw [hyv, ← Finset.sum_subset hsubfin hgvv]
+    exact Finset.sum_congr rfl (fun z hz => by
+      simp only [Set.Finite.mem_toFinset] at hz
+      rw [if_pos hz])
+  · intro z hzt
+    show 0 < (if z ∈ (s ∪ t : Set V3) then f z else 0)
+    have hzt' : z ∈ (s ∪ t : Set V3) := Or.inr hzt
+    rw [if_pos hzt']
+    exact hpos z hzt
+  · show ∑ z ∈ hfin.toFinset, (if z ∈ (s ∪ t : Set V3) then f z else 0) = 1
+    rw [← hsum, ← Finset.sum_subset hsubfin hgv0]
+    exact Finset.sum_congr rfl (fun z hz => by
+      simp only [Set.Finite.mem_toFinset] at hz
+      rw [if_pos hz])
+
+/-! ### UIVNNRR2 = AFF_GT_EQ_AFFINE_HULL -/
+
+/-- The easy half of `AFF_GT_EQ_AFFINE_HULL`: an `affGt`-combination is an
+affine combination. -/
+private theorem w12_affGt_empty_subset_affineSpan {s : Set V3} :
+    affGt s ∅ ⊆ (affineSpan ℝ s : Set V3) := by
+  intro y hy
+  simp only [affGt, Set.mem_setOf_eq, Affsign] at hy
+  obtain ⟨f, hfin, hyv, -, hone⟩ := hy
+  classical
+  have hto : ∀ z ∈ hfin.toFinset, z ∈ s := by
+    intro z hz
+    have hz' : z ∈ s ∪ (∅ : Set V3) := (Set.Finite.mem_toFinset hfin).mp hz
+    simpa using hz'
+  rcases hfin.toFinset.eq_empty_or_nonempty with hem | hne
+  · exfalso
+    have h0 : ∑ z ∈ hfin.toFinset, f z = 0 := by rw [hem]; simp
+    rw [h0] at hone
+    exact zero_ne_one hone
+  · obtain ⟨p, hp⟩ := hne
+    have hps : p ∈ s := hto p hp
+    have hpspan : p ∈ (affineSpan ℝ s : Set V3) := mem_affineSpan ℝ hps
+    have hmem : ∀ z ∈ hfin.toFinset, z - p ∈ (affineSpan ℝ s).direction := by
+      intro z hz
+      exact AffineSubspace.vsub_mem_direction (mem_affineSpan ℝ (hto z hz)) hpspan
+    have hd : (∑ z ∈ hfin.toFinset, f z • (z - p) : V3) ∈
+        (affineSpan ℝ s).direction :=
+      Submodule.sum_mem (p := (affineSpan ℝ s).direction)
+        (fun z hz => Submodule.smul_mem _ _ (hmem z hz))
+    have hsumd : ∑ z ∈ hfin.toFinset, f z • (z - p) = y - p := by
+      have h1 : ∑ z ∈ hfin.toFinset, f z • (z - p)
+          = ∑ z ∈ hfin.toFinset, (f z • z - f z • p) := by
+        refine Finset.sum_congr rfl (fun z _ => ?_)
+        rw [smul_sub]
+      have this : ∑ z ∈ hfin.toFinset, f z • (z - p)
+          = ∑ z ∈ hfin.toFinset, f z • z - (∑ z ∈ hfin.toFinset, f z) • p := by
+        rw [h1, Finset.sum_sub_distrib, Finset.sum_smul]
+      rw [this, hyv, hone, one_smul]
+    have hy' : y = (∑ z ∈ hfin.toFinset, f z • (z - p)) + p := by
+      rw [hsumd]; abel
+    rw [hy']
+    exact AffineSubspace.vadd_mem_of_mem_direction hd hpspan
+
+/-- HOL `UIVNNRR2 = AFF_GT_EQ_AFFINE_HULL` (trig3.hl:192): the strict
+`aff_gt`-cone over a finite set with empty apex is its affine hull. -/
+private theorem w12_affGt_empty_eq_affineSpan {s : Set V3} (hs : s.Finite) :
+    affGt s ∅ = (affineSpan ℝ s : Set V3) := by
+  classical
+  refine Set.Subset.antisymm w12_affGt_empty_subset_affineSpan ?_
+  intro y hy
+  simp only [affGt, Set.mem_setOf_eq, Affsign]
+  rw [Set.union_empty]
+  -- affine combination representation from Mathlib
+  have hrange : Set.range (Subtype.val : s → V3) = s := by
+    ext z
+    constructor
+    · rintro ⟨i, rfl⟩; exact i.2
+    · intro hz; exact ⟨⟨z, hz⟩, rfl⟩
+  have hy' : y ∈ affineSpan ℝ (Set.range (Subtype.val : s → V3)) := by
+    rw [hrange]; exact hy
+  obtain ⟨s', w', hsum', hyrep⟩ :=
+    (mem_affineSpan_iff_eq_affineCombination (k := ℝ) (V := V3) (P := V3)
+      (p1 := y) (p := (Subtype.val : s → V3))).mp hy'
+  rw [Finset.affineCombination_eq_linear_combination _ _ _ hsum'] at hyrep
+  -- the candidate coefficient function on V3
+  set f : V3 → ℝ := fun z =>
+    if h : z ∈ s then (if (⟨z, h⟩ : s) ∈ s' then w' ⟨z, h⟩ else 0) else 0 with hf
+  refine ⟨f, hs, ?_, ?_, ?_⟩
+  · -- vector sum: y = ∑ z ∈ hs.toFinset, f z • z
+    have himg : ∀ i ∈ s', f (i : V3) • (i : V3) = w' i • (i : V3) := by
+      intro i hi
+      have hfval : f (i : V3) = w' i := by
+        simp only [hf]
+        rw [dif_pos i.2]
+        have hsub : (⟨(i : V3), i.2⟩ : s) = i := Subtype.ext rfl
+        rw [if_pos hi, hsub]
+      rw [hfval]
+    have h1 : ∑ z ∈ s'.image (Subtype.val : s → V3), f z • z
+        = ∑ i ∈ s', w' i • (i : V3) := by
+      rw [Finset.sum_image]
+      · exact Finset.sum_congr rfl himg
+      · intro i _ j _ hij
+        exact Subtype.ext hij
+    have h2 : ∑ z ∈ hs.toFinset, f z • z
+        = ∑ z ∈ s'.image (Subtype.val : s → V3), f z • z := by
+      refine (Finset.sum_subset ?_ ?_).symm
+      · intro z hz
+        simp only [Finset.mem_image, Set.Finite.mem_toFinset] at hz ⊢
+        obtain ⟨i, hi, rfl⟩ := hz
+        exact i.2
+      · intro z hz hzt
+        have hzs : z ∈ s := by simpa using (Set.Finite.mem_toFinset hs).mp hz
+        have hfz : f z = 0 := by
+          simp only [hf, dif_pos hzs]
+          by_cases hin : (⟨z, hzs⟩ : s) ∈ s'
+          · exfalso
+            apply hzt
+            refine Finset.mem_image.mpr ⟨⟨z, hzs⟩, hin, ?_⟩
+            rfl
+          · rw [if_neg hin]
+        rw [hfz, zero_smul]
+    rw [h2, h1]
+    exact hyrep
+  · -- positivity on the (empty) apex
+    intro z hz
+    simp at hz
+  · -- scalar sum
+    have himg : ∀ i ∈ s', f (i : V3) = w' i := by
+      intro i hi
+      simp only [hf]
+      rw [dif_pos i.2]
+      have hsub : (⟨(i : V3), i.2⟩ : s) = i := Subtype.ext rfl
+      rw [if_pos hi, hsub]
+    have h1 : ∑ z ∈ s'.image (Subtype.val : s → V3), f z = ∑ i ∈ s', w' i := by
+      rw [Finset.sum_image]
+      · exact Finset.sum_congr rfl himg
+      · intro i _ j _ hij
+        exact Subtype.ext hij
+    have h2 : ∑ z ∈ hs.toFinset, f z = ∑ z ∈ s'.image (Subtype.val : s → V3), f z := by
+      refine (Finset.sum_subset ?_ ?_).symm
+      · intro z hz
+        simp only [Finset.mem_image, Set.Finite.mem_toFinset] at hz ⊢
+        obtain ⟨i, hi, rfl⟩ := hz
+        exact i.2
+      · intro z hz hzt
+        have hzs : z ∈ s := by simpa using (Set.Finite.mem_toFinset hs).mp hz
+        simp only [hf, dif_pos hzs]
+        by_cases hin : (⟨z, hzs⟩ : s) ∈ s'
+        · exfalso
+          apply hzt
+          exact Finset.mem_image.mpr ⟨⟨z, hzs⟩, hin, rfl⟩
+        · rw [if_neg hin]
+    rw [h2, h1, hsum']
+
+/-! ### AFF2_VEC0 -/
+
+/-- HOL `AFF2_VEC0` (trig2.hl:2648): the affine hull of the origin and a
+point `w` is the ray (linear span) of `w`. -/
+private theorem w12_aff2_vec0 (w : V3) :
+    affineSpan ℝ ({0, w} : Set V3) = {x : V3 | ∃ k : ℝ, x = k • w} := by
+  ext x
+  constructor
+  · intro hx
+    have h1 : x ∈ (Submodule.span ℝ ({0, w} : Set V3)).toAffineSubspace :=
+      affineSpan_le_toAffineSubspace_span hx
+    have h2 : x ∈ Submodule.span ℝ ({w} : Set V3) := by
+      rwa [Submodule.mem_toAffineSubspace,
+        show ({0, w} : Set V3) = insert 0 {w} from rfl,
+        Submodule.span_insert_zero] at h1
+    obtain ⟨a, ha⟩ := Submodule.mem_span_singleton.mp h2
+    exact ⟨a, ha.symm⟩
+  · rintro ⟨k, rfl⟩
+    have h := smul_vsub_rev_vadd_mem_affineSpan_pair (k := ℝ) k w (0 : V3)
+    rw [show affineSpan ℝ ({w, (0 : V3)} : Set V3) = affineSpan ℝ ({0, w} : Set V3) by
+      rw [Set.pair_comm]] at h
+    simpa using h
+
+/-! ### Local conv0 extraction (HOL `CONV0_SET2` consumer) -/
+
+/-- Extraction of the strict two-point convex combination. -/
+private theorem w12_conv02_extract {a b x : V3} (hx : x ∈ conv0_p2 ({a, b} : Set V3)) :
+    ∃ α β : ℝ, 0 < α ∧ 0 < β ∧ α + β = 1 ∧ x = α • a + β • b := by
+  obtain ⟨f, hfin, hvec, hpos, hsum⟩ := hx
+  by_cases hab : a = b
+  · subst hab
+    have hEq : hfin.toFinset = ({a} : Finset V3) := by ext w; simp
+    rw [hEq] at hvec hsum
+    simp only [Finset.sum_singleton] at hvec hsum
+    have hfa : f a = 1 := hsum
+    refine ⟨1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+    rw [hvec, hfa]
+    module
+  · have hEq : hfin.toFinset = ({a, b} : Finset V3) := by ext w; simp [hab]
+    rw [hEq] at hvec hsum
+    simp only [Finset.sum_insert (by simp [hab] : ¬(a ∈ ({b} : Finset V3))),
+      Finset.sum_singleton] at hvec hsum
+    exact ⟨f a, f b, hpos a (by simp [hab]), hpos b (by simp [hab]), by linarith, hvec⟩
+
+/-! ### KCZXLLE (HOL hl:681) -/
+
+/-- HOL `KCZXLLE` (hl:681): with the base fan data on `u 0..u r`, the
+azimuth `azim 0 (u i) (u j) (u k)` vanishes whenever `i` lies outside the
+arc `[j,k]`. -/
+private theorem w12_kczxlle (u : ℕ → V3) (r i j k : ℕ) (hjk : j < k) (hk : k ≤ r) (hr : 1 ≤ r)
+    (hii : i ≤ r) (hijk : i < j ∨ k < i)
+    (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
+    (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3))
+    (h3 : cyclicSet (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)))
+    (h4 : ∀ i, i < r →
+      azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)) :
+    azim 0 (u i) (u j) (u k) = 0 := by
+  classical
+  have hj : j ≤ r := le_trans (le_of_lt hjk) hk
+  have hij : i ≠ j := by
+    rintro rfl
+    rcases hijk with h | h
+    · exact lt_irrefl _ h
+    · omega
+  have hik : i ≠ k := by
+    rintro rfl
+    rcases hijk with h | h
+    · omega
+    · exact lt_irrefl _ h
+  have hk1 : 1 ≤ k := by omega
+  have h01 : ¬ Collinear ℝ ({0, u 0, u 1} : Set V3) := h1 0 1 (by omega) (by omega) (by omega)
+  have hu0ne : u 0 ≠ 0 := by
+    intro h
+    exact h01 (by rw [h]; simpa using collinear2_p14 (0 : V3) (u 1))
+  have hu1ne : u 1 ≠ 0 := by
+    intro h
+    exact h01 (by rw [h]; simpa [Set.pair_comm] using collinear2_p14 (u 0) 0)
+  have hu10 : u 1 ≠ u 0 := by
+    intro h
+    exact h01 (by rw [h]; simpa [Set.pair_comm] using collinear2_p14 (u 0) 0)
+  -- every `u m` (m ≤ r) lies in the plane `affineSpan {0, u0, u1}`
+  have hplan : ∀ m, m ≤ r → u m ∈ affineSpan ℝ ({0, u 0, u 1} : Set V3) := by
+    intro m hm
+    by_cases hm0 : m = 0
+    · subst hm0
+      exact mem_affineSpan ℝ (by simp)
+    · have hm1 : 1 ≤ m := by omega
+      have hmem := AFF_GT_MONO (X := ({0, u 0} : Set V3)) (Y := ({u 1} : Set V3))
+        (S := ({u 1} : Set V3)) (by simp) (h2 m hm1 hm)
+      rw [show (({0, u 0} : Set V3) ∪ {u 1}) = ({0, u 0, u 1} : Set V3) by
+            ext z
+            simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+            tauto,
+          show (({u 1} : Set V3) \ {u 1}) = (∅ : Set V3) by simp] at hmem
+      exact w12_affGt_empty_subset_affineSpan hmem
+  have hcop : Coplanar ({0, u i, u j, u k} : Set V3) := by
+    refine ⟨0, u 0, u 1, ?_⟩
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact hplan i hii
+    · exact hplan j hj
+    · exact hplan k hk
+  rcases (AZIM_COND_FOR_COPLANAR 0 (u i) (u j) (u k)).mpr hcop with h0 | hpi
+  · exact h0
+  · exfalso
+    have hnij : ¬ Collinear ℝ ({0, u i, u j} : Set V3) := h1 i j hii hj hij
+    have hnik : ¬ Collinear ℝ ({0, u i, u k} : Set V3) := h1 i k hii hk hik
+    have hinter := ((LDURDPN (u := u i) (v := u j) (w := u k) hnij hnik).mp hpi).2
+    have hne : (affineSpan ℝ ({0, u i} : Set V3) ∩ conv0_p2 ({u j, u k} : Set V3)
+        : Set V3).Nonempty := by
+      rw [Set.nonempty_iff_ne_empty]
+      exact hinter
+    obtain ⟨x, hx⟩ := hne
+    rw [Set.mem_inter_iff] at hx
+    obtain ⟨hxaff, hxconv⟩ := hx
+    -- x = c • u i
+    obtain ⟨c, hc⟩ : ∃ c : ℝ, x = c • u i := by
+      have h := hxaff
+      rwa [w12_aff2_vec0 (u i)] at h
+    -- conv0 {u j, u k} ⊆ affGt {0, u0} {u1}
+    have hconv_aff : ∀ y ∈ conv0_p2 ({u j, u k} : Set V3),
+        y ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3) := by
+      intro y hy
+      obtain ⟨α, β, hα, hβ, hsum, hyab⟩ := w12_conv02_extract hy
+      obtain ⟨cj, hj', hcj, huj⟩ : ∃ cj hj' : ℝ, 0 ≤ cj ∧ u j = cj • u 1 + hj' • u 0 := by
+        by_cases hj0 : j = 0
+        · subst hj0
+          exact ⟨0, 1, le_refl 0, by rw [zero_smul, zero_add, one_smul]⟩
+        · have hj1 : 1 ≤ j := by omega
+          obtain ⟨cj, hcj, hj', hrep⟩ :=
+            (affGt_pair_iff (v0 := 0) (v1 := u 0) (x := u 1) (y := u j)
+              (Ne.symm hu0ne) hu1ne hu10).mp (h2 j hj1 hj)
+          exact ⟨cj, hj', le_of_lt hcj, by simpa only [sub_zero] using hrep⟩
+      obtain ⟨ck, hck, hk', huk⟩ :=
+        (affGt_pair_iff (v0 := 0) (v1 := u 0) (x := u 1) (y := u k)
+          (Ne.symm hu0ne) hu1ne hu10).mp (h2 k hk1 hk)
+      simp only [sub_zero] at huk
+      have hcomb : y = (α * cj + β * ck) • u 1 + (α * hj' + β * hk') • u 0 := by
+        rw [hyab, huj, huk]
+        module
+      refine (affGt_pair_iff (v0 := 0) (v1 := u 0) (x := u 1) (y := y)
+        (Ne.symm hu0ne) hu1ne hu10).mpr
+        ⟨α * cj + β * ck, ?_, α * hj' + β * hk', by simpa only [sub_zero] using hcomb⟩
+      have hβck : 0 < β * ck := mul_pos hβ hck
+      nlinarith [mul_nonneg hα.le hcj]
+    have hxaffGt : x ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3) := hconv_aff x hxconv
+    obtain ⟨t3, ht3, t2, hxrep⟩ :=
+      (affGt_pair_iff (v0 := 0) (v1 := u 0) (x := u 1) (y := x)
+        (Ne.symm hu0ne) hu1ne hu10).mp hxaffGt
+    simp only [sub_zero] at hxrep
+    -- i ≠ 0 (otherwise `u 1` would be collinear with `u 0`)
+    have hi0 : i ≠ 0 := by
+      rintro rfl
+      have hz : t3 • u 1 + (t2 - c) • u 0 = 0 := by
+        have h := hxrep
+        rw [hc] at h
+        calc t3 • u 1 + (t2 - c) • u 0
+            = (t3 • u 1 + t2 • u 0) - c • u 0 := by module
+          _ = 0 := by rw [← h]; abel
+      have hres := not_collinear_dep_p14 h01 (t2 - c) t3 (by simpa [add_comm] using hz)
+      linarith [hres.2]
+    have hi1 : 1 ≤ i := by omega
+    obtain ⟨a, ha, b, huirep⟩ :=
+      (affGt_pair_iff (v0 := 0) (v1 := u 0) (x := u 1) (y := u i)
+        (Ne.symm hu0ne) hu1ne hu10).mp (h2 i hi1 hii)
+    simp only [sub_zero] at huirep
+    -- coefficient comparison: c * a = t3 > 0, hence c > 0
+    have hcpos : 0 < c := by
+      have hz : (c * a - t3) • u 1 + (c * b - t2) • u 0 = 0 := by
+        have h := hxrep
+        rw [hc, huirep, smul_add, smul_smul, smul_smul] at h
+        calc (c * a - t3) • u 1 + (c * b - t2) • u 0
+            = ((c * a) • u 1 + (c * b) • u 0) - (t3 • u 1 + t2 • u 0) := by module
+          _ = 0 := by rw [← h]; abel
+      have hres := not_collinear_dep_p14 h01 (c * b - t2) (c * a - t3)
+        (by simpa [add_comm] using hz)
+      have hca : 0 < c * a := by linarith [hres.2]
+      by_contra hcnon
+      have hcnon' : c ≤ 0 := le_of_not_gt hcnon
+      nlinarith [mul_nonpos_of_nonpos_of_nonneg hcnon' ha.le]
+    -- x lies in the open wedge over (u j, u k)
+    have hncj : ¬ Collinear3 0 (cross3 (u 0) (u 1)) (u j) := collinear_cross_p14 u j r hj hr h1 h2
+    have hnck : ¬ Collinear3 0 (cross3 (u 0) (u 1)) (u k) := collinear_cross_p14 u k r hk hr h1 h2
+    have hposjk : 0 < azim 0 (cross3 (u 0) (u 1)) (u j) (u k) :=
+      YBTASCZ3_p14 u r j k hjk hk hr h1 h2 h3 h4
+    have hltpijk : azim 0 (cross3 (u 0) (u 1)) (u j) (u k) < Real.pi :=
+      YBTASCZ2_p14 u r j k hjk hk hr h1 h2 h3 h4
+    have hxwedge : x ∈ Kepler.Geom.wedge 0 (cross3 (u 0) (u 1)) (u j) (u k) := by
+      rw [Kepler.Geom.wedge_eq_affGt hncj hnck hposjk hltpijk]
+      exact CONV0_SUBSET_AFF_GT (S := ({0, cross3 (u 0) (u 1)} : Set V3)) (by simp) hxconv
+    rw [Kepler.Geom.wedge, Set.mem_setOf_eq] at hxwedge
+    obtain ⟨-, hxpos, hxlt⟩ := hxwedge
+    -- replace `x` by `c • u i` in the azimuth
+    have hxaz : azim 0 (cross3 (u 0) (u 1)) (u j) x
+        = azim 0 (cross3 (u 0) (u 1)) (u j) (u i) := by
+      rw [hc]
+      simpa using w12_azim_scale_all (v := cross3 (u 0) (u 1)) (w1 := u j) (w2 := u i)
+        (a := 1) (b := 1) (c := c) one_pos one_pos hcpos
+    rw [hxaz] at hxpos hxlt
+    rcases hijk with hij' | hki
+    · -- i < j: `azim uj ui ≥ π` while `azim uj uk < π`
+      have hlt2 : azim 0 (cross3 (u 0) (u 1)) (u i) (u j) < Real.pi :=
+        YBTASCZ2_p14 u r i j hij' hj hr h1 h2 h3 h4
+      have hpos2 : 0 < azim 0 (cross3 (u 0) (u 1)) (u i) (u j) :=
+        YBTASCZ3_p14 u r i j hij' hj hr h1 h2 h3 h4
+      have hcompl := AZIM_COMPL_EXT 0 (cross3 (u 0) (u 1)) (u i) (u j)
+      rw [if_neg (ne_of_gt hpos2)] at hcompl
+      have hle : azim 0 (cross3 (u 0) (u 1)) (u j) (u k) ≤ Real.pi := le_of_lt hltpijk
+      linarith
+    · -- k < i: `azim uj ui = azim uj uk + azim uk ui ≥ azim uj uk`
+      have hncu : ¬ Collinear3 0 (cross3 (u 0) (u 1)) (u j) := hncj
+      have hnc1 : ¬ Collinear3 0 (cross3 (u 0) (u 1)) (u k) := hnck
+      have hnc2 : ¬ Collinear3 0 (cross3 (u 0) (u 1)) (u i) :=
+        collinear_cross_p14 u i r hii hr h1 h2
+      have hxv : cross3 (u 0) (u 1) ≠ 0 := cross3_ne_p14 h01
+      have hlt2 : azim 0 (cross3 (u 0) (u 1)) (u k) (u i) < Real.pi :=
+        YBTASCZ2_p14 u r k i hki hii hr h1 h2 h3 h4
+      have hsum3 := sum3_azim_fan (x := (0 : V3)) (v := cross3 (u 0) (u 1))
+        (u := u j) (w1 := u k) (w2 := u i) hxv hncu hnc1 hnc2
+        (by linarith)
+      have hnn : 0 ≤ azim 0 (cross3 (u 0) (u 1)) (u k) (u i) := azim_nonneg _ _ _ _
+      linarith
+
+
+/-- HOL `KCZXLLE_SYM` (hl:931). -/
+private theorem w12_kczxlle_sym (u : ℕ → V3) (r i j k : ℕ) (hk : k ≤ r) (hj : j ≤ r)
+    (hr : 1 ≤ r) (hi : i ≤ r)
+    (hord : (j < k ∧ (i < j ∨ k < i)) ∨ (k < j ∧ (i < k ∨ j < i)))
+    (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
+    (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3))
+    (h3 : cyclicSet (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)))
+    (h4 : ∀ i, i < r →
+      azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)) :
+    azim 0 (u i) (u j) (u k) = 0 := by
+  rcases hord with ⟨hjk, hijk⟩ | ⟨hkj, hijk⟩
+  · exact w12_kczxlle u r i j k hjk hk hr hi hijk h1 h2 h3 h4
+  · refine (AZIM_EQ_0_SYM2 0 (u i) (u j) (u k)).mpr ?_
+    exact w12_kczxlle u r i k j hkj hj hr hi hijk h1 h2 h3 h4
+
+/-- HOL `KCZXLLE` (hl:681). -/
 theorem KCZXLLE_p14 (u : ℕ → V3) (r i j k : ℕ) (hjk : j < k) (hk : k ≤ r) (hr : 1 ≤ r)
     (hii : i ≤ r) (hijk : i < j ∨ k < i)
     (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
@@ -1887,9 +2429,9 @@ theorem KCZXLLE_p14 (u : ℕ → V3) (r i j k : ℕ) (hjk : j < k) (hk : k ≤ r
     (h4 : ∀ i, i < r →
       azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)) :
     azim 0 (u i) (u j) (u k) = 0 := by
-  sorry
+  exact w12_kczxlle u r i j k hjk hk hr hii hijk h1 h2 h3 h4
 
-/-- HOL `KCZXLLE_SYM` (hl:931).  NEEDS: azimuth-cycle ordering kit. -/
+/-- HOL `KCZXLLE_SYM` (hl:931). -/
 theorem KCZXLLE_SYM_p14 (u : ℕ → V3) (r i j k : ℕ) (hk : k ≤ r) (hj : j ≤ r) (hr : 1 ≤ r)
     (hi : i ≤ r) (hord : (j < k ∧ (i < j ∨ k < i)) ∨ (k < j ∧ (i < k ∨ j < i)))
     (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
@@ -1898,7 +2440,7 @@ theorem KCZXLLE_SYM_p14 (u : ℕ → V3) (r i j k : ℕ) (hk : k ≤ r) (hj : j 
     (h4 : ∀ i, i < r →
       azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)) :
     azim 0 (u i) (u j) (u k) = 0 := by
-  sorry
+  exact w12_kczxlle_sym u r i j k hk hj hr hi hord h1 h2 h3 h4
 
 /-- w5cA: a 2-vector family spans something of finrank 2 when linearly
 independent. -/

@@ -1354,10 +1354,275 @@ def PQCSXWG1_concl_p11 : Prop :=
         0 < (v1 - v0) ⬝ᵥ (WithLp.toLp 2
           (crossProduct (WithLp.ofLp (v2 - v0)) (WithLp.ofLp (v3 - v0))) : V3)
 
+private noncomputable def w5pq_crossV (a b : V3) : V3 :=
+  WithLp.toLp 2 (crossProduct (WithLp.ofLp a) (WithLp.ofLp b))
+
+private theorem w5pq_crossV_ofLp (a b : V3) :
+    (w5pq_crossV a b).ofLp = crossProduct (WithLp.ofLp a) (WithLp.ofLp b) :=
+  coe_toLp _
+
+private theorem w5pq_crossV_add (a x y : V3) : w5pq_crossV a (x + y) = w5pq_crossV a x + w5pq_crossV a y := by
+  simp only [w5pq_crossV, WithLp.ofLp_add, map_add, WithLp.toLp_add]
+
+private theorem w5pq_crossV_smul (a : V3) (c : ℝ) (x : V3) : w5pq_crossV a (c • x) = c • w5pq_crossV a x := by
+  simp only [w5pq_crossV, WithLp.ofLp_smul, map_smul, WithLp.toLp_smul]
+
+private theorem inner_w5pq_crossV_left (a b : V3) : inner ℝ (w5pq_crossV a b) a = 0 := by
+  rw [Kepler.Geom.inner_eq_dot, w5pq_crossV_ofLp, dotProduct_comm]
+  exact dot_self_cross (WithLp.ofLp a) (WithLp.ofLp b)
+
+private theorem inner_w5pq_crossV_right (a b : V3) : inner ℝ (w5pq_crossV a b) b = 0 := by
+  rw [Kepler.Geom.inner_eq_dot, w5pq_crossV_ofLp, dotProduct_comm]
+  exact dot_cross_self (WithLp.ofLp a) (WithLp.ofLp b)
+
+private theorem inner_self_w5pq_crossV_left (a b : V3) : inner ℝ a (w5pq_crossV a b) = 0 := by
+  rw [Kepler.Geom.inner_eq_dot, w5pq_crossV_ofLp]
+  exact dot_self_cross (WithLp.ofLp a) (WithLp.ofLp b)
+
+private theorem inner_self_w5pq_crossV_right (a b : V3) : inner ℝ a (w5pq_crossV b a) = 0 := by
+  rw [Kepler.Geom.inner_eq_dot, w5pq_crossV_ofLp]
+  exact dot_cross_self (WithLp.ofLp b) (WithLp.ofLp a)
+
+private theorem inner_w5pq_crossV_self_right (a b : V3) : inner ℝ a (w5pq_crossV b b) = 0 := by
+  rw [Kepler.Geom.inner_eq_dot, w5pq_crossV_ofLp, cross_self]
+  exact dotProduct_zero _
+
+private theorem inner_w5pq_crossV_w5pq_crossV (a b : V3) :
+    inner ℝ a (w5pq_crossV b (w5pq_crossV a b)) = inner ℝ (w5pq_crossV a b) (w5pq_crossV a b) := by
+  rw [Kepler.Geom.inner_eq_dot, Kepler.Geom.inner_eq_dot, w5pq_crossV_ofLp, w5pq_crossV_ofLp]
+  calc WithLp.ofLp a ⬝ᵥ crossProduct (WithLp.ofLp b)
+        (crossProduct (WithLp.ofLp a) (WithLp.ofLp b))
+      = WithLp.ofLp b ⬝ᵥ crossProduct
+          (crossProduct (WithLp.ofLp a) (WithLp.ofLp b)) (WithLp.ofLp a) :=
+        triple_product_permutation _ _ _
+    _ = crossProduct (WithLp.ofLp a) (WithLp.ofLp b) ⬝ᵥ
+          crossProduct (WithLp.ofLp a) (WithLp.ofLp b) :=
+        triple_product_permutation _ _ _
+
+private theorem w5pq_norm_sq_three {S u w : V3} {a b c A B C G : ℝ}
+    (hSu : inner ℝ S u = 0) (hSw : inner ℝ S w = 0)
+    (huu : inner ℝ u u = A) (hww : inner ℝ w w = B) (huw : inner ℝ u w = C)
+    (hSS : inner ℝ S S = G) :
+    ‖a • S + b • u + c • w‖ ^ 2 = a ^ 2 * G + b ^ 2 * A + c ^ 2 * B + 2 * b * c * C := by
+  rw [norm_add_sq_real (a • S + b • u) (c • w), norm_add_sq_real (a • S) (b • u)]
+  have h1 : ‖a • S‖ ^ 2 = a ^ 2 * G := by
+    rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, ← real_inner_self_eq_norm_sq S, hSS]
+  have h2 : ‖b • u‖ ^ 2 = b ^ 2 * A := by
+    rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, ← real_inner_self_eq_norm_sq u, huu]
+  have h3 : ‖c • w‖ ^ 2 = c ^ 2 * B := by
+    rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, ← real_inner_self_eq_norm_sq w, hww]
+  have h4 : inner ℝ (a • S) (b • u) = 0 := by
+    rw [inner_smul_left, inner_smul_right, hSu, mul_zero, mul_zero]
+  have h5 : inner ℝ (a • S) (c • w) = 0 := by
+    rw [inner_smul_left, inner_smul_right, hSw, mul_zero, mul_zero]
+  have h6 : inner ℝ (b • u) (c • w) = b * c * C := by
+    rw [inner_smul_left, inner_smul_right, huw]
+    rw [show (starRingEnd ℝ) b = b from rfl]
+    ring
+  rw [h1, h2, h3, h4, inner_add_left, h5, h6]
+  ring
+
 /-- PQCSXWG.hl:130 `PQCSXWG1` (giant: the distance-realization identity
-for `mk_simplex1`; DISCHARGES). -/
+for `mk_simplex1`; DISCHARGES).  PROVED by the vector route: with
+`u = v1 - v0`, `w = v2 - v0`, `S = u x w` the `mkSimplex1` displacement is
+`(1/upsX)(2 sqrt deltaX . S + deltaX5 . u + deltaX4 . w)`; the three distance
+identities and the triple-product positivity reduce to the polynomial
+identities of `deltaX`/`deltaX4`/`deltaX5`/`upsX` (all by `ring`), using
+`upsX = 4 * ||S||^2` and non-collinearity to keep `upsX` nonzero. -/
 theorem PQCSXWG1_p11 : PQCSXWG1_concl_p11 := by
-  sorry
+  intro v0 v1 v2 v3 x1 x2 x3 x4 x5 x6 h
+  obtain ⟨hx1, hx2, hx3, hx4, hx5, hx6, hnc, hd1, hd2, hd6, hD, hv3⟩ := h
+  set u : V3 := v1 - v0 with hu
+  set w : V3 := v2 - v0 with hw
+  set S : V3 := w5pq_crossV u w with hS
+  set U : ℝ := upsX x1 x2 x6 with hU
+  set D : ℝ := deltaX x1 x2 x3 x4 x5 x6 with hDdef
+  set D4 : ℝ := deltaX4 x1 x2 x3 x4 x5 x6 with hD4def
+  set D5 : ℝ := deltaX5 x1 x2 x3 x4 x5 x6 with hD5def
+  -- ### metric facts
+  have hx1' : ‖u‖ ^ 2 = x1 := by rw [hu, hd1, dist_eq_norm]
+  have hx2' : ‖w‖ ^ 2 = x2 := by rw [hw, hd2, dist_eq_norm]
+  have hx6' : ‖w - u‖ ^ 2 = x6 := by
+    have hsub : w - u = v2 - v1 := by rw [hu, hw]; abel
+    rw [hsub, hd6, dist_eq_norm, norm_sub_rev]
+  have huu : inner ℝ u u = x1 := by
+    rw [real_inner_self_eq_norm_sq, hx1']
+  have hww : inner ℝ w w = x2 := by
+    rw [real_inner_self_eq_norm_sq, hx2']
+  have hc : inner ℝ u w = (x1 + x2 - x6) / 2 := by
+    have hexp : ‖w - u‖ ^ 2 = ‖w‖ ^ 2 + ‖u‖ ^ 2 - 2 * inner ℝ w u := by
+      rw [norm_sub_sq_real]; ring
+    rw [hexp, hx1', hx2'] at hx6'
+    have hcomm : inner ℝ w u = inner ℝ u w := real_inner_comm u w
+    rw [← hcomm]
+    linarith
+  -- ### cross-product facts
+  have hSu : inner ℝ S u = 0 := by rw [hS]; exact inner_w5pq_crossV_left u w
+  have hSw : inner ℝ S w = 0 := by rw [hS]; exact inner_w5pq_crossV_right u w
+  have hSS' : inner ℝ S S = x1 * x2 - ((x1 + x2 - x6) / 2) ^ 2 := by
+    rw [hS, Kepler.Geom.inner_eq_dot, w5pq_crossV_ofLp, cross_dot_cross]
+    have e1 : WithLp.ofLp u ⬝ᵥ WithLp.ofLp u = x1 := by
+      rw [← Kepler.Geom.inner_eq_dot]; exact huu
+    have e2 : WithLp.ofLp w ⬝ᵥ WithLp.ofLp w = x2 := by
+      rw [← Kepler.Geom.inner_eq_dot]; exact hww
+    have e3 : WithLp.ofLp u ⬝ᵥ WithLp.ofLp w = (x1 + x2 - x6) / 2 := by
+      rw [← Kepler.Geom.inner_eq_dot]; exact hc
+    have e4 : WithLp.ofLp w ⬝ᵥ WithLp.ofLp u = (x1 + x2 - x6) / 2 := by
+      rw [← Kepler.Geom.inner_eq_dot, real_inner_comm]; exact hc
+    rw [e1, e2, e3, e4]
+    ring
+  have hSS : inner ℝ S S = U / 4 := by
+    rw [hSS', hU]
+    simp only [upsX]
+    ring
+  have hSne : S ≠ 0 := by
+    intro hS0
+    have hz : crossProduct (WithLp.ofLp u) (WithLp.ofLp w) = 0 := by
+      have := congrArg WithLp.ofLp hS0
+      simpa [hS, w5pq_crossV] using this
+    have hu0 : u ≠ 0 := by
+      intro h0
+      rw [h0] at hx1'
+      simp at hx1'
+      linarith
+    have hu0' : u.ofLp ≠ 0 := by
+      intro h0
+      apply hu0
+      apply WithLp.ofLp_injective 2
+      simpa using h0
+    have hnli : ¬ LinearIndependent ℝ ![u.ofLp, w.ofLp] := by
+      intro hli
+      exact (crossProduct_ne_zero_iff_linearIndependent.mpr hli) hz
+    have hex : ∃ a : ℝ, a • u.ofLp = w.ofLp := by
+      by_contra hcon
+      push Not at hcon
+      exact hnli ((LinearIndependent.pair_iff' hu0').mpr hcon)
+    obtain ⟨a, ha⟩ := hex
+    have haV : a • u = w := by
+      apply WithLp.ofLp_injective 2
+      rw [WithLp.ofLp_smul]
+      exact ha
+    apply hnc
+    show Collinear ℝ ({v0, v1, v2} : Set V3)
+    rw [collinear_iff_exists_forall_eq_smul_vadd]
+    refine ⟨v0, u, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with hp | hp | hp
+    · subst p; exact ⟨0, by simp⟩
+    · subst p; exact ⟨1, by simp [hu]⟩
+    · subst p; refine ⟨a, ?_⟩
+      have ha' : a • u = v2 - v0 := by rw [haV, hw]
+      rw [vadd_eq_add, ha']
+      abel
+  have hUpos : 0 < U := by
+    have hpos : 0 < inner ℝ S S := by
+      rw [real_inner_self_eq_norm_sq]
+      exact pow_pos (norm_pos_iff.mpr hSne) 2
+    rw [hSS] at hpos
+    linarith
+  have hUne : U ≠ 0 := ne_of_gt hUpos
+  -- ### the constructed point
+  have hV : mkSimplex1_p11 v0 v1 v2 x1 x2 x3 x4 x5 x6
+      = v0 + (1 / U) • ((2 * Real.sqrt D) • S + D5 • u + D4 • w) := by
+    simp only [mkSimplex1_p11, hU, hDdef, hD4def, hD5def, hS, hu, hw, w5pq_crossV]
+  rw [hv3, hV] at *
+  clear hv3 hV
+  set V : V3 := v0 + (1 / U) • ((2 * Real.sqrt D) • S + D5 • u + D4 • w) with hVdef
+  -- ### polynomial identities
+  have key3 : D * U + D5 ^ 2 * x1 + D4 ^ 2 * x2
+      + 2 * D5 * D4 * ((x1 + x2 - x6) / 2) = x3 * U ^ 2 := by
+    rw [hDdef, hD4def, hD5def, hU]
+    simp only [deltaX, deltaX4, deltaX5, upsX]
+    ring
+  have key5 : (x3 + x1 - x5) * U
+      = 2 * (D5 * x1 + D4 * ((x1 + x2 - x6) / 2)) := by
+    rw [hD4def, hD5def, hU]
+    simp only [deltaX, deltaX4, deltaX5, upsX]
+    ring
+  have key4 : (x3 + x2 - x4) * U
+      = 2 * (D4 * x2 + D5 * ((x1 + x2 - x6) / 2)) := by
+    rw [hD4def, hD5def, hU]
+    simp only [deltaX, deltaX4, deltaX5, upsX]
+    ring
+  -- ### the vector name
+  have hVeq : V = v0 + (1 / U) • ((2 * Real.sqrt D) • S + D5 • u + D4 • w) := hVdef
+  -- ### norm of the displacement
+  have hsqD : (Real.sqrt D) ^ 2 = D := Real.sq_sqrt (le_of_lt hD)
+  have hnorm3 : ‖V - v0‖ ^ 2 = x3 := by
+    have hX : V - v0 = (1 / U) • ((2 * Real.sqrt D) • S + D5 • u + D4 • w) := by
+      rw [hVeq]; abel
+    rw [hX, norm_smul, Real.norm_eq_abs, mul_pow, sq_abs]
+    rw [w5pq_norm_sq_three (S := S) (u := u) (w := w) (a := 2 * Real.sqrt D) (b := D5)
+      (c := D4) (A := x1) (B := x2) (C := (x1 + x2 - x6) / 2) (G := U / 4)
+      hSu hSw huu hww hc hSS]
+    have hval : (2 * Real.sqrt D) ^ 2 * (U / 4) + D5 ^ 2 * x1 + D4 ^ 2 * x2
+        + 2 * D5 * D4 * ((x1 + x2 - x6) / 2) = x3 * U ^ 2 := by
+      have h4D : (2 * Real.sqrt D) ^ 2 = 4 * D := by
+        rw [mul_pow, hsqD]; norm_num
+      rw [h4D]
+      linear_combination key3
+    rw [hval]
+    field_simp
+  -- ### inner products of the displacement
+  have hVu : inner ℝ (V - v0) u = (D5 * x1 + D4 * ((x1 + x2 - x6) / 2)) / U := by
+    have hX : V - v0 = (1 / U) • ((2 * Real.sqrt D) • S + D5 • u + D4 • w) := by
+      rw [hVeq]; abel
+    rw [hX, inner_smul_left, inner_add_left, inner_add_left, inner_smul_left,
+      inner_smul_left, inner_smul_left, hSu, huu, real_inner_comm u w, hc]
+    simp only [starRingEnd_apply, star_trivial]
+    ring
+  have hVw : inner ℝ (V - v0) w = (D4 * x2 + D5 * ((x1 + x2 - x6) / 2)) / U := by
+    have hX : V - v0 = (1 / U) • ((2 * Real.sqrt D) • S + D5 • u + D4 • w) := by
+      rw [hVeq]; abel
+    rw [hX, inner_smul_left, inner_add_left, inner_add_left, inner_smul_left,
+      inner_smul_left, inner_smul_left, hSw, hc, hww]
+    simp only [starRingEnd_apply, star_trivial]
+    ring
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · -- x3 = dist V v0 ^ 2
+    show x3 = dist V v0 ^ 2
+    rw [dist_eq_norm, ← hnorm3]
+  · -- x5 = dist V v1 ^ 2
+    show x5 = dist V v1 ^ 2
+    have hVv1 : V - v1 = (V - v0) - u := by rw [hu]; abel
+    rw [dist_eq_norm, hVv1, norm_sub_sq_real, hnorm3,
+      ← real_inner_self_eq_norm_sq u, huu, hVu]
+    field_simp
+    linarith [key5]
+  · -- x4 = dist V v2 ^ 2
+    show x4 = dist V v2 ^ 2
+    have hVv2 : V - v2 = (V - v0) - w := by rw [hw]; abel
+    rw [dist_eq_norm, hVv2, norm_sub_sq_real, hnorm3,
+      ← real_inner_self_eq_norm_sq w, hww, hVw]
+    field_simp
+    linarith [key4]
+  · -- positivity of the triple product
+    have hVsub : V - v0 = (1 / U) • ((2 * Real.sqrt D) • S + D5 • u + D4 • w) := by
+      rw [hVeq]; abel
+    have htri : inner ℝ u (w5pq_crossV w (V - v0)) = (1 / U) * (2 * Real.sqrt D) *
+        inner ℝ u (w5pq_crossV w S) := by
+      rw [hVsub, w5pq_crossV_smul, inner_smul_right]
+      rw [w5pq_crossV_add, w5pq_crossV_add, w5pq_crossV_smul, w5pq_crossV_smul, w5pq_crossV_smul]
+      rw [inner_add_right, inner_add_right, inner_smul_right, inner_smul_right,
+        inner_smul_right, inner_w5pq_crossV_self_right u w, inner_self_w5pq_crossV_right u w,
+        mul_zero, mul_zero, add_zero, add_zero]
+      ring
+    have hGS : inner ℝ u (w5pq_crossV w S) = inner ℝ S S := by
+      rw [hS]; exact inner_w5pq_crossV_w5pq_crossV u w
+    have hpos : 0 < inner ℝ u (w5pq_crossV w (V - v0)) := by
+      rw [htri, hGS, hSS]
+      have hs : 0 < Real.sqrt D := Real.sqrt_pos.mpr hD
+      have : (1 / U) * (2 * Real.sqrt D) * (U / 4) = Real.sqrt D / 2 := by
+        field_simp
+        ring
+      rw [this]
+      linarith
+    have hgoal : (v1 - v0) ⬝ᵥ (WithLp.toLp 2 (crossProduct (WithLp.ofLp (v2 - v0))
+        (WithLp.ofLp (V - v0))) : V3) = inner ℝ u (w5pq_crossV w (V - v0)) := by
+      rw [← hu, ← hw, Kepler.Geom.inner_eq_dot, w5pq_crossV_ofLp, WithLp.ofLp_toLp]
+    rw [hgoal]
+    exact hpos
 
 /-- PQCSXWG.hl:214 `CONTINUOUS_MK_SIMPLEX_WITHINREAL` (long continuity
 choreography; DISCHARGES). -/

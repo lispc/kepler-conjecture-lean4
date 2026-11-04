@@ -96,6 +96,7 @@ ENCODING NOTES
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto11
 import Kepler.Text.LocalAuto16
 import Kepler.Text.SphereKit
 import Mathlib
@@ -150,10 +151,26 @@ theorem PQCSXWG1_SYM_p21 (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ)
     (hv3 : v3 = mkSimplex1 v0 v2 v1 x2 x1 x3 x5 x4 x6) :
     x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧ x4 = dist v3 v2 ^ 2 ∧
       (v2 - v0) ⬝ᵥ cross3 (v1 - v0) (v3 - v0) > 0 := by
-  -- DISCHARGES: HOL Pqcsxwg.PQCSXWG1 and Merge_ineq.delta_x_sym — the
-  -- PQCSXWG lane lives on the LocalAuto11/LocalAuto2 side of the `atn2`
-  -- split and is not importable here. NEEDS: merge with that lane.
-  sorry
+  -- PROVED from `LocalAuto11.PQCSXWG1_p11` applied to the swapped triple
+  -- `(v0, v2, v1)` (`mkSimplex1 = mkSimplex1_p11` definitionally):
+  -- `deltaX` is invariant under `x1 <-> x2`, `x4 <-> x5`, the collinearity
+  -- set is permuted, and the swapped conclusion's positivity is exactly the
+  -- `cross3 (v1 - v0) (v3 - v0)` triple product below.
+  have hnc' : ¬ Collinear ℝ ({v0, v2, v1} : Set V3) := by
+    intro hc
+    apply hnc
+    rwa [show ({v0, v2, v1} : Set V3) = {v0, v1, v2} by
+      ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+  have hx6' : x6 = dist v2 v1 ^ 2 := by simpa only [dist_comm] using hx6
+  have hΔ' : 0 < deltaX x2 x1 x3 x5 x4 x6 := by
+    have hsym : deltaX x2 x1 x3 x5 x4 x6 = deltaX x1 x2 x3 x4 x5 x6 := by
+      simp only [deltaX]; ring
+    rw [hsym]; exact hΔ
+  have hv3' : v3 = mkSimplex1_p11 v0 v2 v1 x2 x1 x3 x5 x4 x6 := by
+    rw [hv3]; rfl
+  have hp := PQCSXWG1_p11 v0 v2 v1 v3 x2 x1 x3 x5 x4 x6
+    ⟨h2, h1, h3, h5, h4, h6, hnc', hx2, hx1, hx6', hΔ', hv3'⟩
+  exact ⟨hp.1, hp.2.2.1, hp.2.1, hp.2.2.2⟩
 
 /-- HOL `homog_2x2` (CUXVZOZ.hl:99): invertible 2×2 homogeneous linear
 system has only the trivial solution. -/

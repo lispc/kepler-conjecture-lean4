@@ -101,6 +101,7 @@ import Kepler.Text.LocalAuto4
 import Kepler.Text.LocalAuto8
 import Kepler.Text.LocalAuto23
 import Kepler.Text.AzimBridge
+import Kepler.Text.XwitccnKernel
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -2642,10 +2643,7 @@ theorem XWITCCN_TYPE (k : ℕ) (s : ScsV39) (vv : ℕ → V3)
 `XWITCCN_concl` statement of LocalAuto1 (that lane is `sorry`; here the
 `INST_TYPE` instantiations `k = 3, 2+2, 2+3, 3+3` are carried explicitly). -/
 theorem XWITCCN : ∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
-    BBsV39 s vv → taustarV39 s vv < 0 → BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: XWITCCN_TYPE at k ∈ {3, 4, 5, 6}; NEEDS: the HDPLYGY kit
-  -- (CONTINUOUS_ON_TAU_STAR + MINIMUM_IN_B_SY, HDPLYGY.hl:1831) via the
-  -- eight XWITCCN_CASE_* — everything downstream of HDPLYGY (the fan/
-  -- hypermap bridges, the B_SY1 body bookkeeping, the taustar=tau_star
-  -- transfers) is discharged in this file (Sections 0.5-0.7).
+    BBsV39 s vv → taustarV39 s vv < 0 → BBprimeV39 s ≠ ∅ :=
+  XWITCCN_xw6
+  -- PROVED upstream: `Kepler.Text.XwitccnKernel.XWITCCN_xw6` (the strictly
+  -- upstream copy of the UXCKFPE case bank + `s_init_scs`; see that module).
