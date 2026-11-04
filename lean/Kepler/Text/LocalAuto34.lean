@@ -4866,7 +4866,13 @@ theorem DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_p34 (s : ScsV39) (k l : ℕ) (w : �
       interiorAngle1 0 FF v = Real.pi →
       interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
         (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) ≤ Real.pi := by
-  sorry
+  obtain ⟨e, he, h⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
+    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
+  refine ⟨e, he, fun v t hv ht0 hte hπ => ?_⟩
+  have hEq : interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+      (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) = interiorAngle1 0 FF v := by
+    simpa only [interiorAngle1, ivsRhoNode1, epPair_p34] using h t v ⟨by linarith, hte⟩ hv
+  rw [hEq, hπ]
 
 /-- HOL `DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1` (IMJXPHR.hl:5141). -/
 theorem DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -4885,7 +4891,13 @@ theorem DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_p34 (s : ScsV39) (k l : ℕ) (w 
       interiorAngle1 0 FF v = Real.pi →
       interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
         (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) ≤ Real.pi := by
-  sorry
+  obtain ⟨e, he, h⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
+    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
+  refine ⟨e, he, fun v t hv ht1 ht2 hπ => ?_⟩
+  have hEq : interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+      (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) = interiorAngle1 0 FF v := by
+    simpa only [interiorAngle1, ivsRhoNode1, epPair_p34] using h t v ⟨ht1, ht2⟩ hv
+  rw [hEq, hπ]
 
 /-- HOL `V_DEFORMATION_V3_DEFOR` (IMJXPHR.hl:5175). -/
 theorem V_DEFORMATION_V3_DEFOR_p34 (w : ℕ → V3) (x1 x2 x6 t : ℝ) (v1 v2 : V3) :
@@ -4988,6 +5000,68 @@ theorem V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1_p34 (hz : ZLZTHIC_prop_p34)
           v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t)) := by
   sorry
 
+/-- `_p28`-style quasi-injectivity of an `BBs` realisation, in-file (LA34):
+`w x = w y → x % s.k = y % s.k`. Needed by the `ncard` computation below;
+`W_IN_BB_FUN_EQ_p28` lives in `LocalAuto28`, which imports this file. -/
+private theorem w8_w_in_bb_fun_eq_p34 (s : ScsV39) (w : ℕ → V3) (x y : ℕ)
+    (hs : isScsV39 s) (hbb : BBsV39 s w) (h : w x = w y) : x % s.k = y % s.k := by
+  have hk0 : 0 < s.k := by have := hs.2.1; omega
+  have hper : ∀ i, w (i + s.k) = w i := hbb.2.1
+  have hwx : w (x % s.k) = w x := (modFold_p34 hk0 hper x).symm
+  have hwy : w (y % s.k) = w y := (modFold_p34 hk0 hper y).symm
+  by_contra hne
+  have hdist : dist (w (x % s.k)) (w (y % s.k)) = 0 := by
+    rw [hwx, hwy, h, dist_self]
+  have hle := (hbb.2.2.1 (x % s.k) (y % s.k)).1
+  rw [hdist] at hle
+  have h2le : 2 ≤ s.a (x % s.k) (y % s.k) :=
+    hs.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1 (x % s.k) (y % s.k)
+      ⟨Nat.mod_lt _ hk0, Nat.mod_lt _ hk0, hne⟩
+  linarith
+
+/-- The edge range of a `BBs` realisation has exactly `k` distinct darts. -/
+private theorem w8_card_ff_p34 (s : ScsV39) (w : ℕ → V3) (k : ℕ) (hkk : s.k = k)
+    (hk : 3 < k) (hs : isScsV39 s) (hbb : BBsV39 s w) :
+    (Set.range fun i : ℕ => (w i, w (i + 1))).ncard = k := by
+  have hk0 : 0 < s.k := by have := hs.2.1; omega
+  have hper : ∀ i, w (i + s.k) = w i := hbb.2.1
+  set g : ℕ → V3 × V3 := fun i => (w i, w (i + 1)) with hg
+  have hmods : ∀ i : ℕ, g (i % s.k) = g i := by
+    intro i
+    have h1 : w (i % s.k) = w i := (modFold_p34 hk0 hper i).symm
+    have h2 : w (i % s.k + 1) = w (i + 1) := by
+      rw [modFold_p34 hk0 hper (i % s.k + 1), modFold_p34 hk0 hper (i + 1)]
+      congr 1
+      rw [Nat.add_mod i 1 (s.k), Nat.mod_eq_of_lt (by omega : 1 < s.k)]
+    simp only [hg, h1, h2]
+  have hrange : Set.range g = g '' {i : ℕ | i < k} := by
+    ext x
+    constructor
+    · rintro ⟨i, rfl⟩
+      refine ⟨i % s.k, ?_, hmods i⟩
+      have hlt := Nat.mod_lt i hk0
+      simpa [hkk] using hlt
+    · rintro ⟨i, -, rfl⟩
+      exact ⟨i, rfl⟩
+  have hinj : Set.InjOn g {i : ℕ | i < k} := by
+    intro i hi j hj he
+    simp only [hg, Prod.mk.injEq] at he
+    by_contra hne
+    have hne' : i % s.k ≠ j % s.k := by
+      intro hc
+      have hc' : i % k = j % k := by rwa [hkk] at hc
+      exact hne (by rw [← Nat.mod_eq_of_lt hi, ← Nat.mod_eq_of_lt hj, hc'])
+    have hle : s.a (i % s.k) (j % s.k) ≤ dist (w i) (w j) := by
+      rw [modFold_p34 hk0 hper i, modFold_p34 hk0 hper j]
+      exact (hbb.2.2.1 (i % s.k) (j % s.k)).1
+    rw [he.1, dist_self] at hle
+    have h2le : 2 ≤ s.a (i % s.k) (j % s.k) :=
+      hs.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1 (i % s.k) (j % s.k)
+        ⟨Nat.mod_lt _ hk0, Nat.mod_lt _ hk0, hne'⟩
+    linarith
+  rw [hrange, Set.ncard_image_of_injOn hinj]
+  exact Set.ncard_Iio_nat k
+
 /-- HOL `CARD_FF_EQ_V3_DEFOR_DEFORMATION` (IMJXPHR.hl:5808). -/
 theorem CARD_FF_EQ_V3_DEFOR_DEFORMATION_p34 (s : ScsV39) (k : ℕ) (w : ℕ → V3) (V : Set V3)
     (v1 v2 : V3) (x1 x2 x6 a e1 : ℝ)
@@ -4999,14 +5073,107 @@ theorem CARD_FF_EQ_V3_DEFOR_DEFORMATION_p34 (s : ScsV39) (k : ℕ) (w : ℕ → 
       (Set.range (fun i => (v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t,
           v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t))).ncard =
         (Set.range fun i => (w i, w (i + 1))).ncard := by
-  sorry
+  intro t ht0 hte
+  have h1 := w8_card_ff_p34 s w k hkk hk hs hBB
+  have h2 := w8_card_ff_p34 s (fun i => v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t) k hkk hk hs
+    (hBBd t ht0 hte)
+  rw [h2, h1]
+
+private theorem w8_periodic2_mod_r {α : Sort*} {f : ℕ → ℕ → α} {k : ℕ}
+    (hp : Periodic2 f k) (i m : ℕ) : f i m = f i (m % k) := by
+  have h1 : f i m = f i (m % k + m / k * k) := by
+    conv_lhs => rw [(Nat.mod_add_div m k).symm, Nat.mul_comm k (m / k)]
+  rw [h1]
+  induction m / k with
+  | zero => simp
+  | succ n ih =>
+      have hrw : m % k + (n + 1) * k = (m % k + n * k) + k := by ring
+      rw [hrw, (hp i (m % k + n * k)).2, ih]
+
+/-- HOL `EQ_SUC_K_SUB` (NUXCOEA.hl:156), local copy (LA28 imports this file). -/
+private theorem w8_eq_suc_k_sub {k l i : ℕ} (h : l % k = (i + 1) % k) (hk : 1 < k) :
+    (l + k - 1) % k = i % k := by
+  rcases Nat.eq_zero_or_pos l with rfl | hl
+  · have h0k : 0 < k := by omega
+    have hm : i % k < k := Nat.mod_lt _ h0k
+    have h2 : i % k + 1 = k := by
+      have h1 : (i + 1) % k = 0 := by simpa using h.symm
+      rw [Nat.add_mod, Nat.mod_eq_of_lt hk] at h1
+      rcases Nat.lt_or_ge (i % k + 1) k with hlt | hge
+      · rw [Nat.mod_eq_of_lt hlt] at h1; omega
+      · have hsub : i % k + 1 - k < k := by omega
+        have e : i % k + 1 = i % k + 1 - k + k := by omega
+        rw [e, Nat.add_mod_right, Nat.mod_eq_of_lt hsub] at h1
+        omega
+    rw [show 0 + k - 1 = k - 1 by omega, Nat.mod_eq_of_lt (by omega : k - 1 < k)]
+    omega
+  · have h' : ((l - 1) + 1) % k = (i + 1) % k := by rwa [Nat.sub_add_cancel hl]
+    have h'' : (l - 1) % k = i % k := Nat.ModEq.add_right_cancel' 1 h'
+    have e1 : l + k - 1 = (l - 1) + k := by omega
+    rw [e1, Nat.add_mod_right]
+    exact h''
+
+private theorem w8_setSum_congr {S : Set ℕ} (hS : S.Finite) {f g : ℕ → ℝ}
+    (h : ∀ i ∈ S, f i = g i) : setSum S f = setSum S g := by
+  unfold setSum
+  rw [dif_pos hS, dif_pos hS]
+  exact Finset.sum_congr rfl fun i hi => h i (hS.mem_toFinset.mp hi)
 
 /-- HOL `DSV_V3_DEFOR_EQ` (IMJXPHR.hl:5842). -/
 theorem DSV_V3_DEFOR_EQ_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 : V3) (t a x1 x2 x6 : ℝ)
     (hkk : s.k = k) (hs : isScsV39 s) (hBB : BBsV39 s w)
     (hJ : ∀ i, ¬s.J l i) :
     dsvV39 s (fun i => v3DeforV4_p34 a x1 x2 x6 v1 (w l) (w i) t) = dsvV39 s w := by
-  sorry
+  have hk0 : 0 < s.k := by have := hs.2.1; omega
+  have hJper : Periodic2 s.J s.k := hs.2.2.2.2.2.2.2.2.2.2.2.1
+  have hJsym : ∀ i j, s.J i j = s.J j i :=
+    fun i j => (hs.2.2.2.2.2.2.2.2.2.2.2.2.1 i j).2.2.2.2
+  have hjmod : ∀ i j : ℕ, s.J (i % s.k) (j % s.k) = s.J i j := by
+    intro i j
+    calc s.J (i % s.k) (j % s.k) = s.J (j % s.k) (i % s.k) := hJsym _ _
+      _ = s.J (j % s.k) i := (w8_periodic2_mod_r hJper (j % s.k) i).symm
+      _ = s.J i (j % s.k) := hJsym _ _
+      _ = s.J i j := (w8_periodic2_mod_r hJper i j).symm
+  have hne_l : ∀ i : ℕ, s.J i (i + 1) → w i ≠ w l := by
+    intro i hi heq
+    have hres : i % s.k = l % s.k := w8_w_in_bb_fun_eq_p34 s w i l hs hBB heq
+    have hres1 : (i + 1) % s.k = (l + 1) % s.k := Nat.ModEq.add_right 1 hres
+    have hJli : s.J l (l + 1) := by
+      have h1 : s.J l (l + 1) = s.J (l % s.k) ((l + 1) % s.k) := (hjmod l (l + 1)).symm
+      have h2 : s.J (l % s.k) ((l + 1) % s.k) = s.J (i % s.k) ((i + 1) % s.k) := by
+        rw [← hres, ← hres1]
+      have h3 : s.J (i % s.k) ((i + 1) % s.k) = s.J i (i + 1) := hjmod i (i + 1)
+      rw [h1, h2, h3]
+      exact hi
+    exact hJ (l + 1) hJli
+  have hne_succ : ∀ i : ℕ, s.J i (i + 1) → w (i + 1) ≠ w l := by
+    intro i hi heq
+    have hres : (i + 1) % s.k = l % s.k := w8_w_in_bb_fun_eq_p34 s w (i + 1) l hs hBB heq
+    have hpred : (l + s.k - 1) % s.k = i % s.k :=
+      w8_eq_suc_k_sub hres.symm (by have := hs.2.1; omega)
+    have hJli : s.J l (l + s.k - 1) := by
+      have h1 : s.J l (l + s.k - 1) = s.J (l % s.k) ((l + s.k - 1) % s.k) :=
+        (hjmod l (l + s.k - 1)).symm
+      have h2 : s.J (l % s.k) ((l + s.k - 1) % s.k) = s.J (i % s.k) ((i + 1) % s.k) := by
+        rw [hpred, hres, hJsym (l % s.k) (i % s.k)]
+      have h3 : s.J (i % s.k) ((i + 1) % s.k) = s.J i (i + 1) := hjmod i (i + 1)
+      rw [h1, h2, h3]
+      exact hi
+    exact hJ (l + s.k - 1) hJli
+  have hfin : {i : ℕ | i < s.k ∧ s.J i (i + 1)}.Finite :=
+    (Set.finite_Iio s.k).subset (fun i hi => hi.1)
+  have hsum : setSum {i : ℕ | i < s.k ∧ s.J i (i + 1)}
+      (fun i => cstab - dist (v3DeforV4_p34 a x1 x2 x6 v1 (w l) (w i) t)
+        (v3DeforV4_p34 a x1 x2 x6 v1 (w l) (w (i + 1)) t))
+      = setSum {i : ℕ | i < s.k ∧ s.J i (i + 1)}
+          (fun i => cstab - dist (w i) (w (i + 1))) := by
+    refine w8_setSum_congr hfin ?_
+    intro i hi
+    have hwi : w i ≠ w l := hne_l i hi.2
+    have hwi1 : w (i + 1) ≠ w l := hne_succ i hi.2
+    rw [v3DeforV4_p34, if_neg hwi, v3DeforV4_p34, if_neg hwi1]
+  simp only [dsvV39]
+  rw [hsum]
 
 /-- HOL `DEFORMATION_INTERIOR_ANGLE1_EQ_V3_DEFOR_V1` (IMJXPHR.hl:5975). -/
 theorem DEFORMATION_INTERIOR_ANGLE1_EQ_V3_DEFOR_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -5024,7 +5191,10 @@ theorem DEFORMATION_INTERIOR_ANGLE1_EQ_V3_DEFOR_V1_p34 (s : ScsV39) (k l : ℕ) 
     ∃ e : ℝ, 0 < e ∧ ∀ v : V3, ∀ t : ℝ, v ∈ Set.range w → -e < t → t < e →
       interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
         (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) = interiorAngle1 0 FF v := by
-  sorry
+  obtain ⟨e, he, h⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
+    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
+  refine ⟨e, he, fun v t hv ht1 ht2 => ?_⟩
+  simpa only [interiorAngle1, ivsRhoNode1, epPair_p34] using h t v ⟨ht1, ht2⟩ hv
 
 /-- `sol0 > 0` (appendix constant; `sol0 = 3·arccos(1/3) − π`). -/
 private theorem w5cC5_sol0_pos : 0 < sol0 := by
@@ -5741,7 +5911,15 @@ theorem DEFORMATION_V3_DEFOR_NOT_IN_V_V1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) 
     ∀ i : ℕ, ¬(i % k = l % k) →
       ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
         0 < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) := by
-  sorry
+  intro i hmod
+  obtain ⟨h1, h2, h6, hnc⟩ := HYPER_MM_COLLINEAR_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6
+    hkk hs hmw hk hl hlk hx1 hx2 hx6
+  have hwi : w i ≠ v2 := by
+    intro h
+    exact w5cC2_w_inj_p34 hk hkk hs hmw i l hmod (by rw [hl]; exact h)
+  have hdist : 0 < dist v2 (w i) := dist_pos.mpr (Ne.symm hwi)
+  exact EXISTS_SMALL_LE_CONST_V1_p34 v1 v2 (w i) x1 x2 x6 a 0 h1 h2 h6 hnc
+    hx1 hx2 hx6 ha hdist
 
 /-- HOL `DEFORMATION_V3_DEFOR_NOT_IN_V_COM_V1_TWO_CASES` (IMJXPHR.hl:7299). -/
 theorem DEFORMATION_V3_DEFOR_NOT_IN_V_COM_V1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ)
@@ -5900,7 +6078,72 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_V1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) (
           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t))
         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t)) = Real.pi := by
-  sorry
+  subst ha
+  have hlk' : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
+  have hncW3 : ¬ Collinear3 0 (w (l + 1)) (w (l + k - 1)) := by
+    show ¬ Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3)
+    rw [← hlk']; exact hncW
+  have hncB1 : ¬ Collinear3 0 (w (l + 1)) v1 := by
+    rw [← hlk]; exact hncW3
+  have hnc1B : ¬ Collinear3 0 v1 (w (l + 1)) := w5cC5_collinear3_zero_swap hncB1
+  have hv2gt : v2 ∈ affGt {0} ({v1, w (l + 1)} : Set V3) := by
+    have h : w l ∈ affGt {0} ({w (l + 1), v1} : Set V3) := by
+      simpa only [hlk', hlk] using haff
+    rw [w5cC5_affGt_pair_swap_p34] at h
+    rw [hl] at h
+    exact h
+  obtain ⟨eC, heC, hneC⟩ := DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_V1_TWO_CASES_p34
+    s k l w v1 v2 x1 x2 x6 (-1) hk hkk hs hmw hl hlk hx1 hx2 hx6 rfl
+  obtain ⟨eC', heC', hgtC⟩ := V3_DEFOR_IN_AFF_GT_V1_p34 v1 v2 (w (l + 1)) x1 x2 x6 (-1)
+    hx1p hx2p hx6p hnc hx1 hx2 hx6 rfl hnc1B hv2gt
+  refine ⟨min eC eC' / 2, by positivity, fun t ht => ?_⟩
+  have hleC : min eC eC' / 2 < eC := by
+    have h := min_le_left eC eC'; linarith
+  have hleC' : min eC eC' / 2 < eC' := by
+    have h := min_le_right eC eC'; linarith
+  have htC : -eC < t ∧ t < eC := ⟨by linarith [ht.1, hleC], by linarith [ht.2, hleC]⟩
+  have htC' : -eC' < t ∧ t < eC' := ⟨by linarith [ht.1, hleC'], by linarith [ht.2, hleC']⟩
+  have hDv2 : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t
+      = v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) := by
+    rw [v3DeforV4_p34, if_pos rfl]
+  have hDFF : deformedFF4_p34 x1 x2 x6 v1 v2 t FF
+      = relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF := rfl
+  have hRho : rhoNode1 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
+        (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) = rhoNode1 FF v2 :=
+    V3_DEFOR_RHO_NODE_V1_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6 (-1) eC t FF hk hkk hs hmw
+      hl hlk hx1p hx2p hx6p hnc hx1 hx2 hx6 rfl heC htC.1
+      (fun τ i hτ hmod => hneC τ hτ i hmod) htC.2 hFF
+  have hSYM : ∀ w' : V3, (w', v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) ∈
+        relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF ↔
+      (w', v2) ∈ FF :=
+    V3_DEFOR_EQ_IN_FF_SYM_V1_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6 (-1) eC t FF hk hkk hs hmw
+      hl hlk hx1p hx2p hx6p hnc hx1 hx2 hx6 rfl heC htC.1
+      (fun τ i hτ hmod => hneC τ hτ i hmod) htC.2 hFF
+  have hEP : epPair_p34 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
+        (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) = epPair_p34 FF v2 := by
+    simp only [epPair_p34]
+    congr 1
+    funext y
+    exact propext (hSYM y)
+  have hrFF : rhoNode1 FF v2 = w (l + 1) := by
+    rw [← hl]; exact w5cC4_rhoNode1_range_p34 hk hkk hs hmw hFF
+  have hepFF : epPair_p34 FF v2 = w (l + k - 1) := by
+    rw [← hl]; exact w5cC4_epPair_range_p34 hk hkk hs hmw hFF
+  rw [hDv2, hDFF, hRho, hEP, hrFF, hepFF, hlk]
+  have hgtC' : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
+      affGt {0} ({w (l + 1), v1} : Set V3) := by
+    rw [w5cC5_affGt_pair_swap_p34]
+    exact hgtC t htC'
+  have hdisC : Disjoint ({0} : Set V3) ({w (l + 1), v1} : Set V3) :=
+    w5cC5_disjoint_zero_pair_p34 hncB1
+  have hncfv1 : ¬ Collinear3 0 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v1 :=
+    properties_of_collinear4_points_fan hnc1B (hgtC t htC')
+  have hncfb : ¬ Collinear3 0 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) (w (l + 1)) :=
+    properties_of_collinear4_points_fan hncB1 hgtC'
+  have hLHS : azim 0 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) (w (l + 1)) v1
+      = Real.pi :=
+    aff_gt2_subset_aff_ge hdisC hncfv1 hncfb hgtC'
+  rw [hLHS]
 
 /-- HOL `V3_DEFOR_EQ_IN_FF_AT_V1_V1_TWO_CASES` (IMJXPHR.hl:7713). -/
 theorem V3_DEFOR_EQ_IN_FF_AT_V1_V1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -6675,7 +6918,13 @@ theorem DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_TWO_CASES_p34 (s : ScsV39) (k l 
       interiorAngle1 0 FF v = Real.pi →
       interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
         (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) ≤ Real.pi := by
-  sorry
+  obtain ⟨e, he, h⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_V1_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
+    hk hkk hs hmw hl hlk hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
+  refine ⟨e, he, fun v t hv ht1 ht2 hπ => ?_⟩
+  have hEq : interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+      (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) = interiorAngle1 0 FF v := by
+    simpa only [interiorAngle1, ivsRhoNode1, epPair_p34] using h t v ⟨ht1, ht2⟩ hv
+  rw [hEq, hπ]
 
 /-- HOL `DEFORMATION_LUNAR_AFFINE_HULL_V1_TWO_CASES` (IMJXPHR.hl:9013). -/
 theorem DEFORMATION_LUNAR_AFFINE_HULL_V1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -6737,7 +6986,10 @@ theorem DEFORMATION_INTERIOR_ANGLE1_EQ_V3_DEFOR_V1_TWO_CASES_p34 (s : ScsV39) (k
     ∃ e : ℝ, 0 < e ∧ ∀ v : V3, ∀ t : ℝ, v ∈ Set.range w → -e < t → t < e →
       interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
         (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) = interiorAngle1 0 FF v := by
-  sorry
+  obtain ⟨e, he, h⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_V1_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
+    hk hkk hs hmw hl hlk hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
+  refine ⟨e, he, fun v t hv ht1 ht2 => ?_⟩
+  simpa only [interiorAngle1, ivsRhoNode1, epPair_p34] using h t v ⟨ht1, ht2⟩ hv
 
 /-- HOL `INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES` (IMJXPHR.hl:9431). -/
 theorem INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
