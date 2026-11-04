@@ -6015,3 +6015,17 @@ def Deformation (f : V3 → ℝ → V3) (V : Set V3) (a b : ℝ) : Prop :=
 ### (f) 状态
 
 **立案 2026-11-05（la37-b11-w1 数值反例 + la14-wedge-w9 同根联证）**。**编排者未执行**：定义层改动跨 22 消费站 + 构造站，属重大改形，需用户裁决与 DEF-FIX charter；SF-98 并入本件。若批 (b)，可在 1–2 波内落地并让 LA37/LA14 相关陈述恢复可证（残余证明缺口另计）。
+
+## PROPOSAL-99-AMEND — sf99-scout-w1 测绘结果（2026-11-05，只读）
+
+**结论：根因修复可行，成本比 §99 预估低一个数量级。**
+
+- **站点统计（79 声明级）**：a 黑箱传递 36 + a+stmt 陈述嵌入 22（0 改动）；b 需 Ioo 适配 **2**（`deformation_restrict_p21` LA21:517、`DEFORMATION_SMALL_INTERVAL_p34` LA34:2534，各 2 行）；c 端点连续性 **0**；d 已带 `ha/hb` 1（`w9_zlz_azim_strict` 变冗余）；k0 构造点 13 + k1 2；ROOT `LocalAuto1:129` + **TWIN-ROOT `LocalAuto2:300`**；FALSE-FIX 2（LA37 两件 0 行）+ PROOF-FIX 1（`zlz_azim_p14` 1 行）。
+- **红点**：`deformation_p2`（LocalAuto2:300）是**独立复制的同一定义**（自己三处 `Icc`），根修不传播——必须同一 patch 改两处，否则语义分裂。
+- **LA37 `MHAEYJN_CONVEX/MHAEYJN` 修复后零改动自动恢复**（`_hpin/_haff` 仍 `Icc` 但为更强假设 ⇒ 真但非逐字；同族 6 份假 Prop 全部零改动）。
+- `zlz_azim_p14` 修复后 **1 行转调**已证的 `w9_zlz_azim_strict`（`h3.1.1`/`h3.1.2` 给 `ha/hb`），顺手闭 1 sorry。
+- **零改动机制**：三合取形状不变 ⇒ 6 处 `obtain`、所有投影、`rw [Deformation]` 全存活；连续性应用点均为 `r=0` 或新目标内 Ioo 成员证明；**没有任何站点把 `0 ∈ Icc` 当 Icc 事实外传**（`Set.Ioo_subset_Icc_self` 实测不需要）。
+- **§99 两处订正**：站点数「22」应为 79 声明级（仅 5 需改字）；`deforId_p28` 不是构造点（是 LA28:655 的点态恒等引理）。
+- **建议走 (a)**：与 (b) 闭掉的 sorry 数相同（各 1 个），但 (b) 实际要动 8–10 个声明（含 3 处 arity → 两个 `_discharged` 线与 capstone 元组连带），且会留下 6 份假 Prop、破坏「p34≡p37≡bridge defeq」既有不变量。
+- **波次**：W0 单 patch（5 声明）→ W0 闸（13 文件按依赖序编译；`LocalAuto1` 有 30 直接/53 传递 importer）→ W1 全量重编 → W2 陈述恢复抽检（`(a,b)=(0,1)` 反例应不再可实例化）。
+- **已知边界**：改动后整库编译未做（k0/k1 判定 = 类型级逐点比对 + 两个 standalone Lean 探针，均 EXIT 0）；行号锚点开工 HEAD `0da6672b`，LA14 行号已在新 HEAD 复核。**仍未执行，待用户裁决。**
