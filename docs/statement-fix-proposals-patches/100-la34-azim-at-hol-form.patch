@@ -1,0 +1,657 @@
+diff --git a/lean/Kepler/Text/LocalAuto34.lean b/lean/Kepler/Text/LocalAuto34.lean
+index cb563b11..3d6957c1 100644
+--- a/lean/Kepler/Text/LocalAuto34.lean
++++ b/lean/Kepler/Text/LocalAuto34.lean
+@@ -84,6 +84,7 @@ Encoding:
+ 
+ import Kepler.Text.LocalAuto1
+ import Kepler.Text.LocalAuto17
++import Kepler.Text.LocalAuto7
+ import Mathlib
+ 
+ set_option maxHeartbeats 5000000
+@@ -3860,8 +3861,76 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ
+         (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v1 t))
+         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+-          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v1 t)) = Real.pi := by
+-  sorry
++          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v1 t)) = azim 0 v1 (rhoNode1 FF v1) (epPair_p34 FF v1) := by
++  subst ha
++  have hlk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
++  have haffW : w l ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
++    rw [← hlk]; exact haff
++  have hncW3 : ¬ Collinear3 0 (w (l + 1)) (w (l + k - 1)) := by
++    show ¬ Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3)
++    rw [← hlk]; exact hncW
++  have hnc3 : ¬ Collinear3 0 v1 v2 := hnc
++  have hnc3W : ¬ Collinear ℝ ({0, w (l + 1), w l} : Set V3) := by rw [hl1, hl]; exact hnc
++  have hx1' : ‖w (l + 1)‖ ^ 2 = x1 := by rw [hl1]; exact hx1
++  have hx2' : ‖w l‖ ^ 2 = x2 := by rw [hl]; exact hx2
++  have hx6' : ‖w (l + 1) - w l‖ ^ 2 = x6 := by rw [hl1, hl]; exact hx6
++  obtain ⟨e, he, hne⟩ := DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_p34 s k l w v1 v2 x1 x2 x6 (-1)
++    hk hkk hs hmw hl hl1 hx1 hx2 hx6 rfl
++  obtain ⟨e', he', hgt⟩ := V3_DEFOR_IN_AFF_GT_p34 (w (l + 1)) (w l) (w (l + k - 1))
++    x1 x2 x6 (-1) hx1p hx2p hx6p hnc3W hx1' hx2' hx6' rfl hncW3 haffW
++  refine ⟨min e e' / 2, by positivity, fun t ht => ?_⟩
++  have htpos : 0 < t := ht.1
++  have he1e : min e e' / 2 < e := by have h := min_le_left e e'; linarith
++  have he1e' : min e e' / 2 < e' := by have h := min_le_right e e'; linarith
++  have ht_e : t < e := lt_trans ht.2 he1e
++  have ht_e' : t < e' := lt_trans ht.2 he1e'
++  have hv12 : v1 ≠ v2 := fun hc => hnc3 (by rw [hc]; exact collinear3_pair_right rfl)
++  have hDv1 : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v1 t = v1 := by
++    rw [v3DeforV4_p34, if_neg hv12]
++  have hDFF : deformedFF4_p34 x1 x2 x6 v1 v2 t FF
++      = relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF := rfl
++  have hRho : rhoNode1 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v1
++      = rhoNode1 FF v1 :=
++    V3_DEFOR_RHO_NODE_AT_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) e t FF hk hkk hs hmw hl hl1
++      hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he htpos (fun τ i hτ => hne τ hτ i) ht_e hFF
++  have hEP : epPair_p34 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v1
++      = v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) :=
++    V3_DEFOR_EQ_IN_FF_AT_V1_SYM_p34 s k l w v1 v2 x1 x2 x6 (-1) e t FF hk hkk hs hmw hl hl1
++      hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he htpos (fun τ i hτ => hne τ hτ i) ht_e hFF
++  rw [hDv1, hDFF, hRho, hEP]
++  have hper : ∀ i, w (i + k) = w i := MMs_periodic_p34 s k w hkk hmw
++  have hepFF : epPair_p34 FF v1 = v2 := by
++    rw [← hl1]
++    have h := w5cC4_epPair_range_p34 (l := l + 1) hk hkk hs hmw hFF
++    rw [h, show l + 1 + k - 1 = l + k by omega, hper l, hl]
++  rw [hepFF]
++  have hgt' : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGt {0} ({v1, w (l + k - 1)} : Set V3) := by
++    have h := hgt t ⟨htpos, ht_e'⟩
++    rw [hl1, hl] at h
++    exact h
++  have hncW3' : ¬ Collinear3 0 v1 (w (l + k - 1)) := by rwa [hl1] at hncW3
++  have hncvf : ¬ Collinear3 0 v1 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) := by
++    have h : ¬ Collinear3 0 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v1 :=
++      properties_of_collinear4_points_fan hncW3' hgt'
++    exact w5cC5_collinear3_zero_swap h
++  have hdis : Disjoint ({0} : Set V3) ({v1, w (l + k - 1)} : Set V3) :=
++    w5cC5_disjoint_zero_pair_p34 hncW3'
++  have hmemf : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGe ({0} : Set V3) ({v1, w (l + k - 1)} : Set V3) :=
++    aff_gt_subset_aff_ge hdis hgt'
++  have hmemv2 : v2 ∈ affGe ({0} : Set V3) ({v1, w (l + k - 1)} : Set V3) := by
++    have hh := haffW
++    rw [hl1, hl] at hh
++    exact aff_gt_subset_aff_ge hdis hh
++  have hstep1 : azim 0 v1 (rhoNode1 FF v1) (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t))
++      = azim 0 v1 (rhoNode1 FF v1) (w (l + k - 1)) :=
++    AZIM_SAME_WITHIN_AFF_GE_ALT 0 v1 _ (w (l + k - 1)) (rhoNode1 FF v1) hmemf hncvf hncW3'
++  have hstep2 : azim 0 v1 (rhoNode1 FF v1) v2
++      = azim 0 v1 (rhoNode1 FF v1) (w (l + k - 1)) :=
++    AZIM_SAME_WITHIN_AFF_GE_ALT 0 v1 v2 (w (l + k - 1)) (rhoNode1 FF v1) hmemv2 hnc3 hncW3'
++  rw [hstep1, hstep2]
++
+ 
+ /-- HOL `DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_V1` (IMJXPHR.hl:3402). -/
+ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+@@ -3881,8 +3950,79 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_V1_p34 (s : ScsV39) (k l : ℕ) (w :
+         (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v1 t))
+         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+-          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v1 t)) = Real.pi := by
+-  sorry
++          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v1 t)) = azim 0 v1 (rhoNode1 FF v1) (epPair_p34 FF v1) := by
++  subst ha
++  have hlk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
++  have haffW : w l ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
++    rw [← hlk]; exact haff
++  have hncW3 : ¬ Collinear3 0 (w (l + 1)) (w (l + k - 1)) := by
++    show ¬ Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3)
++    rw [← hlk]; exact hncW
++  have hnc3 : ¬ Collinear3 0 v1 v2 := hnc
++  have hnc3W : ¬ Collinear ℝ ({0, w (l + 1), w l} : Set V3) := by rw [hl1, hl]; exact hnc
++  have hx1' : ‖w (l + 1)‖ ^ 2 = x1 := by rw [hl1]; exact hx1
++  have hx2' : ‖w l‖ ^ 2 = x2 := by rw [hl]; exact hx2
++  have hx6' : ‖w (l + 1) - w l‖ ^ 2 = x6 := by rw [hl1, hl]; exact hx6
++  obtain ⟨e, he, hne⟩ := DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_V1_p34 s k l w v1 v2 x1 x2 x6 (-1)
++    hk hkk hs hmw hl hl1 hx1 hx2 hx6 rfl
++  obtain ⟨e', he', hgt⟩ := V3_DEFOR_IN_AFF_GT_V1_p34 (w (l + 1)) (w l) (w (l + k - 1))
++    x1 x2 x6 (-1) hx1p hx2p hx6p hnc3W hx1' hx2' hx6' rfl hncW3 haffW
++  refine ⟨min e e' / 2, by positivity, fun t ht => ?_⟩
++  have he1e : min e e' / 2 < e := by have h := min_le_left e e'; linarith
++  have he1e' : min e e' / 2 < e' := by have h := min_le_right e e'; linarith
++  have ht_neg : -e < t := by linarith [ht.1, he1e]
++  have ht_e : t < e := lt_trans ht.2 he1e
++  have ht_neg' : -e' < t := by linarith [ht.1, he1e']
++  have ht_e' : t < e' := lt_trans ht.2 he1e'
++  have hv12 : v1 ≠ v2 := fun hc => hnc3 (by rw [hc]; exact collinear3_pair_right rfl)
++  have hDv1 : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v1 t = v1 := by
++    rw [v3DeforV4_p34, if_neg hv12]
++  have hDFF : deformedFF4_p34 x1 x2 x6 v1 v2 t FF
++      = relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF := rfl
++  have hRho : rhoNode1 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v1
++      = rhoNode1 FF v1 :=
++    V3_DEFOR_RHO_NODE_AT_V1_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) e t FF hk hkk hs hmw hl hl1
++      hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he ht_neg
++      (fun τ i hτ hmod => hne τ hτ i hmod) ht_e hFF
++  have hEP : epPair_p34 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v1
++      = v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) :=
++    V3_DEFOR_EQ_IN_FF_AT_V1_SYM_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) e t FF hk hkk hs hmw hl hl1
++      hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he ht_neg
++      (fun τ i hτ hmod => hne τ hτ i hmod) ht_e hFF
++  rw [hDv1, hDFF, hRho, hEP]
++  have hper : ∀ i, w (i + k) = w i := MMs_periodic_p34 s k w hkk hmw
++  have hepFF : epPair_p34 FF v1 = v2 := by
++    rw [← hl1]
++    have h := w5cC4_epPair_range_p34 (l := l + 1) hk hkk hs hmw hFF
++    rw [h, show l + 1 + k - 1 = l + k by omega, hper l, hl]
++  rw [hepFF]
++  have hgt' : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGt {0} ({v1, w (l + k - 1)} : Set V3) := by
++    have h := hgt t ⟨ht_neg', ht_e'⟩
++    rw [hl1, hl] at h
++    exact h
++  have hncW3' : ¬ Collinear3 0 v1 (w (l + k - 1)) := by rwa [hl1] at hncW3
++  have hncvf : ¬ Collinear3 0 v1 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) := by
++    have h : ¬ Collinear3 0 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v1 :=
++      properties_of_collinear4_points_fan hncW3' hgt'
++    exact w5cC5_collinear3_zero_swap h
++  have hdis : Disjoint ({0} : Set V3) ({v1, w (l + k - 1)} : Set V3) :=
++    w5cC5_disjoint_zero_pair_p34 hncW3'
++  have hmemf : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGe ({0} : Set V3) ({v1, w (l + k - 1)} : Set V3) :=
++    aff_gt_subset_aff_ge hdis hgt'
++  have hmemv2 : v2 ∈ affGe ({0} : Set V3) ({v1, w (l + k - 1)} : Set V3) := by
++    have hh := haffW
++    rw [hl1, hl] at hh
++    exact aff_gt_subset_aff_ge hdis hh
++  have hstep1 : azim 0 v1 (rhoNode1 FF v1) (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t))
++      = azim 0 v1 (rhoNode1 FF v1) (w (l + k - 1)) :=
++    AZIM_SAME_WITHIN_AFF_GE_ALT 0 v1 _ (w (l + k - 1)) (rhoNode1 FF v1) hmemf hncvf hncW3'
++  have hstep2 : azim 0 v1 (rhoNode1 FF v1) v2
++      = azim 0 v1 (rhoNode1 FF v1) (w (l + k - 1)) :=
++    AZIM_SAME_WITHIN_AFF_GE_ALT 0 v1 v2 (w (l + k - 1)) (rhoNode1 FF v1) hmemv2 hnc3 hncW3'
++  rw [hstep1, hstep2]
++
+ 
+ /-- HOL `V3_DEFOR_EQ_IN_FF_AT_W` (IMJXPHR.hl:3519). -/
+ theorem V3_DEFOR_EQ_IN_FF_AT_W_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+@@ -4049,8 +4189,107 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_W_p34 (s : ScsV39) (k l : ℕ) (w : ℕ
+         (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l + k - 1)) t))
+         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+-          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l + k - 1)) t)) = Real.pi := by
+-  sorry
++          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l + k - 1)) t)) = azim 0 (w (l + k - 1)) (rhoNode1 FF (w (l + k - 1))) (epPair_p34 FF (w (l + k - 1))) := by
++  subst ha
++  have hlk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
++  have haffW : w l ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
++    rw [← hlk]; exact haff
++  have hncW3 : ¬ Collinear3 0 (w (l + 1)) (w (l + k - 1)) := by
++    show ¬ Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3)
++    rw [← hlk]; exact hncW
++  have hnc3W : ¬ Collinear ℝ ({0, w (l + 1), w l} : Set V3) := by rw [hl1, hl]; exact hnc
++  have hx1' : ‖w (l + 1)‖ ^ 2 = x1 := by rw [hl1]; exact hx1
++  have hx2' : ‖w l‖ ^ 2 = x2 := by rw [hl]; exact hx2
++  have hx6' : ‖w (l + 1) - w l‖ ^ 2 = x6 := by rw [hl1, hl]; exact hx6
++  obtain ⟨e, he, hne⟩ := DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_p34 s k l w v1 v2 x1 x2 x6 (-1)
++    hk hkk hs hmw hl hl1 hx1 hx2 hx6 rfl
++  obtain ⟨e', he', hgt⟩ := V3_DEFOR_IN_AFF_GT_p34 (w (l + 1)) (w l) (w (l + k - 1))
++    x1 x2 x6 (-1) hx1p hx2p hx6p hnc3W hx1' hx2' hx6' rfl hncW3 haffW
++  refine ⟨min e e' / 2, by positivity, fun t ht => ?_⟩
++  have htpos : 0 < t := ht.1
++  have he1e : min e e' / 2 < e := by have h := min_le_left e e'; linarith
++  have he1e' : min e e' / 2 < e' := by have h := min_le_right e e'; linarith
++  have ht_e : t < e := lt_trans ht.2 he1e
++  have ht_e' : t < e' := lt_trans ht.2 he1e'
++  have hper : ∀ i, w (i + k) = w i := MMs_periodic_p34 s k w hkk hmw
++  have hu_ne_v2 : w (l + k - 1) ≠ v2 := by
++    intro hc
++    have hres : (l + k - 1) % k ≠ l % k := by
++      have h := mod_ne_succ_p34 (k := k) (l := l + k - 1) (by omega)
++      rwa [show l + k - 1 + 1 = l + k by omega, Nat.add_mod_right] at h
++    exact (w_inj_p34 hk hkk hs hmw (l + k - 1) l hres) (by rw [hc, hl])
++  have hDv : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l + k - 1)) t = w (l + k - 1) := by
++    rw [v3DeforV4_p34, if_neg hu_ne_v2]
++  have hDFF : deformedFF4_p34 x1 x2 x6 v1 v2 t FF
++      = relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF := rfl
++  have hRho : rhoNode1 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
++        (w (l + k - 1)) = v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) := by
++    simpa only [rhoNode1] using
++      V3_DEFOR_EQ_IN_FF_AT_W_SYM_p34 s k l w v1 v2 x1 x2 x6 (-1) e t FF hk hkk hs hmw hl hl1
++        hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he htpos
++        (fun τ i hτ => hne τ hτ i) ht_e hFF
++  have hEP : epPair_p34 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
++        (w (l + k - 1)) = epPair_p34 FF (w (l + k - 1)) := by
++    simp only [epPair_p34]
++    congr 1
++    funext y
++    exact propext (by
++      have h := V3_DEFOR_EQ_IN_FF_AT_W_p34 s k l w v1 v2 x1 x2 x6 (-1) e t FF hk hkk hs hmw
++        hl hl1 hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he htpos
++        (fun τ i hτ => hne τ hτ i) ht_e hFF y
++      have hidx : l + (k - 1) = l + k - 1 := by omega
++      simpa only [hkk, hidx] using h)
++  rw [hDv, hDFF, hRho, hEP]
++  have hrhoFF : rhoNode1 FF (w (l + k - 1)) = v2 := by
++    have h := w5cC4_rhoNode1_range_p34 (l := l + k - 1) hk hkk hs hmw hFF
++    rw [h, show l + k - 1 + 1 = l + k by omega, hper l, hl]
++  have hepFF : epPair_p34 FF (w (l + k - 1)) = w (l + k - 2) := by
++    have h := w5cC4_epPair_range_p34 (l := l + k - 1) hk hkk hs hmw hFF
++    rw [h, show l + k - 1 + k - 1 = l + k - 2 + k by omega, hper (l + k - 2)]
++  rw [hrhoFF, hepFF]
++  have hgt' : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGt {0} ({v1, w (l + k - 1)} : Set V3) := by
++    have h := hgt t ⟨htpos, ht_e'⟩
++    rw [hl1, hl] at h
++    exact h
++  have hncUV : ¬ Collinear3 0 (w (l + k - 1)) v1 := by
++    simpa only [hl1] using w5cC5_collinear3_zero_swap hncW3
++  have hswap : affGt {0} ({v1, w (l + k - 1)} : Set V3)
++      = affGt {0} ({w (l + k - 1), v1} : Set V3) := w5cC5_affGt_pair_swap_p34
++  have hgtU : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGt {0} ({w (l + k - 1), v1} : Set V3) := by
++    rw [← hswap]; exact hgt'
++  have hncvU : ¬ Collinear3 0 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) (w (l + k - 1)) :=
++    properties_of_collinear4_points_fan hncUV hgtU
++  have hncUf : ¬ Collinear3 0 (w (l + k - 1)) (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) :=
++    w5cC5_collinear3_zero_swap hncvU
++  have hdisU : Disjoint ({0} : Set V3) ({w (l + k - 1), v1} : Set V3) :=
++    w5cC5_disjoint_zero_pair_p34 hncUV
++  have hmemf : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGe ({0} : Set V3) ({w (l + k - 1), v1} : Set V3) :=
++    aff_gt_subset_aff_ge hdisU hgtU
++  have hgtv2U : v2 ∈ affGt {0} ({w (l + k - 1), v1} : Set V3) := by
++    rw [← hswap]
++    have hh := haffW
++    rw [hl1, hl] at hh
++    exact hh
++  have hmemv2 : v2 ∈ affGe ({0} : Set V3) ({w (l + k - 1), v1} : Set V3) :=
++    aff_gt_subset_aff_ge hdisU hgtv2U
++  have hncv2U : ¬ Collinear3 0 v2 (w (l + k - 1)) :=
++    properties_of_collinear4_points_fan hncUV hgtv2U
++  have hncUv2 : ¬ Collinear3 0 (w (l + k - 1)) v2 :=
++    w5cC5_collinear3_zero_swap hncv2U
++  have hstep1 : azim 0 (w (l + k - 1))
++        (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) (w (l + k - 2))
++      = azim 0 (w (l + k - 1)) v1 (w (l + k - 2)) :=
++    AZIM_SAME_WITHIN_AFF_GE 0 (w (l + k - 1)) _ v1 (w (l + k - 2))
++      hmemf hncUf hncUV
++  have hstep2 : azim 0 (w (l + k - 1)) v2 (w (l + k - 2))
++      = azim 0 (w (l + k - 1)) v1 (w (l + k - 2)) :=
++    AZIM_SAME_WITHIN_AFF_GE 0 (w (l + k - 1)) v2 v1 (w (l + k - 2))
++      hmemv2 hncUv2 hncUV
++  rw [hstep1, hstep2]
++
+ 
+ /-- HOL `DEFORMATION_AZIM_V3_DEFOR_V1_AT_W_V1` (IMJXPHR.hl:4154). -/
+ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_W_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+@@ -4070,8 +4309,108 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_W_V1_p34 (s : ScsV39) (k l : ℕ) (w : 
+         (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l + k - 1)) t))
+         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+-          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l + k - 1)) t)) = Real.pi := by
+-  sorry
++          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l + k - 1)) t)) = azim 0 (w (l + k - 1)) (rhoNode1 FF (w (l + k - 1))) (epPair_p34 FF (w (l + k - 1))) := by
++  subst ha
++  have hlk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
++  have haffW : w l ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
++    rw [← hlk]; exact haff
++  have hncW3 : ¬ Collinear3 0 (w (l + 1)) (w (l + k - 1)) := by
++    show ¬ Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3)
++    rw [← hlk]; exact hncW
++  have hnc3W : ¬ Collinear ℝ ({0, w (l + 1), w l} : Set V3) := by rw [hl1, hl]; exact hnc
++  have hx1' : ‖w (l + 1)‖ ^ 2 = x1 := by rw [hl1]; exact hx1
++  have hx2' : ‖w l‖ ^ 2 = x2 := by rw [hl]; exact hx2
++  have hx6' : ‖w (l + 1) - w l‖ ^ 2 = x6 := by rw [hl1, hl]; exact hx6
++  obtain ⟨e, he, hne⟩ := DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_V1_p34 s k l w v1 v2 x1 x2 x6 (-1)
++    hk hkk hs hmw hl hl1 hx1 hx2 hx6 rfl
++  obtain ⟨e', he', hgt⟩ := V3_DEFOR_IN_AFF_GT_V1_p34 (w (l + 1)) (w l) (w (l + k - 1))
++    x1 x2 x6 (-1) hx1p hx2p hx6p hnc3W hx1' hx2' hx6' rfl hncW3 haffW
++  refine ⟨min e e' / 2, by positivity, fun t ht => ?_⟩
++  have he1e : min e e' / 2 < e := by have h := min_le_left e e'; linarith
++  have he1e' : min e e' / 2 < e' := by have h := min_le_right e e'; linarith
++  have ht_neg : -e < t := by linarith [ht.1, he1e]
++  have ht_e : t < e := lt_trans ht.2 he1e
++  have ht_neg' : -e' < t := by linarith [ht.1, he1e']
++  have ht_e' : t < e' := lt_trans ht.2 he1e'
++  have hper : ∀ i, w (i + k) = w i := MMs_periodic_p34 s k w hkk hmw
++  have hu_ne_v2 : w (l + k - 1) ≠ v2 := by
++    intro hc
++    have hres : (l + k - 1) % k ≠ l % k := by
++      have h := mod_ne_succ_p34 (k := k) (l := l + k - 1) (by omega)
++      rwa [show l + k - 1 + 1 = l + k by omega, Nat.add_mod_right] at h
++    exact (w_inj_p34 hk hkk hs hmw (l + k - 1) l hres) (by rw [hc, hl])
++  have hDv : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l + k - 1)) t = w (l + k - 1) := by
++    rw [v3DeforV4_p34, if_neg hu_ne_v2]
++  have hDFF : deformedFF4_p34 x1 x2 x6 v1 v2 t FF
++      = relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF := rfl
++  have hRho : rhoNode1 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
++        (w (l + k - 1)) = v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) := by
++    simpa only [rhoNode1] using
++      V3_DEFOR_EQ_IN_FF_AT_W_SYM_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) e t FF hk hkk hs hmw hl hl1
++        hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he ht_neg
++        (fun τ i hτ hmod => hne τ hτ i hmod) ht_e hFF
++  have hEP : epPair_p34 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF)
++        (w (l + k - 1)) = epPair_p34 FF (w (l + k - 1)) := by
++    simp only [epPair_p34]
++    congr 1
++    funext y
++    exact propext (by
++      have h := V3_DEFOR_EQ_IN_FF_AT_W_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) e t FF hk hkk hs hmw
++        hl hl1 hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he ht_neg
++        (fun τ i hτ hmod => hne τ hτ i hmod) ht_e hFF y
++      have hidx : l + (k - 1) = l + k - 1 := by omega
++      simpa only [hkk, hidx] using h)
++  rw [hDv, hDFF, hRho, hEP]
++  have hrhoFF : rhoNode1 FF (w (l + k - 1)) = v2 := by
++    have h := w5cC4_rhoNode1_range_p34 (l := l + k - 1) hk hkk hs hmw hFF
++    rw [h, show l + k - 1 + 1 = l + k by omega, hper l, hl]
++  have hepFF : epPair_p34 FF (w (l + k - 1)) = w (l + k - 2) := by
++    have h := w5cC4_epPair_range_p34 (l := l + k - 1) hk hkk hs hmw hFF
++    rw [h, show l + k - 1 + k - 1 = l + k - 2 + k by omega, hper (l + k - 2)]
++  rw [hrhoFF, hepFF]
++  have hgt' : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGt {0} ({v1, w (l + k - 1)} : Set V3) := by
++    have h := hgt t ⟨ht_neg', ht_e'⟩
++    rw [hl1, hl] at h
++    exact h
++  have hncUV : ¬ Collinear3 0 (w (l + k - 1)) v1 := by
++    simpa only [hl1] using w5cC5_collinear3_zero_swap hncW3
++  have hswap : affGt {0} ({v1, w (l + k - 1)} : Set V3)
++      = affGt {0} ({w (l + k - 1), v1} : Set V3) := w5cC5_affGt_pair_swap_p34
++  have hgtU : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGt {0} ({w (l + k - 1), v1} : Set V3) := by
++    rw [← hswap]; exact hgt'
++  have hncvU : ¬ Collinear3 0 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) (w (l + k - 1)) :=
++    properties_of_collinear4_points_fan hncUV hgtU
++  have hncUf : ¬ Collinear3 0 (w (l + k - 1)) (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) :=
++    w5cC5_collinear3_zero_swap hncvU
++  have hdisU : Disjoint ({0} : Set V3) ({w (l + k - 1), v1} : Set V3) :=
++    w5cC5_disjoint_zero_pair_p34 hncUV
++  have hmemf : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
++      affGe ({0} : Set V3) ({w (l + k - 1), v1} : Set V3) :=
++    aff_gt_subset_aff_ge hdisU hgtU
++  have hgtv2U : v2 ∈ affGt {0} ({w (l + k - 1), v1} : Set V3) := by
++    rw [← hswap]
++    have hh := haffW
++    rw [hl1, hl] at hh
++    exact hh
++  have hmemv2 : v2 ∈ affGe ({0} : Set V3) ({w (l + k - 1), v1} : Set V3) :=
++    aff_gt_subset_aff_ge hdisU hgtv2U
++  have hncv2U : ¬ Collinear3 0 v2 (w (l + k - 1)) :=
++    properties_of_collinear4_points_fan hncUV hgtv2U
++  have hncUv2 : ¬ Collinear3 0 (w (l + k - 1)) v2 :=
++    w5cC5_collinear3_zero_swap hncv2U
++  have hstep1 : azim 0 (w (l + k - 1))
++        (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) (w (l + k - 2))
++      = azim 0 (w (l + k - 1)) v1 (w (l + k - 2)) :=
++    AZIM_SAME_WITHIN_AFF_GE 0 (w (l + k - 1)) _ v1 (w (l + k - 2))
++      hmemf hncUf hncUV
++  have hstep2 : azim 0 (w (l + k - 1)) v2 (w (l + k - 2))
++      = azim 0 (w (l + k - 1)) v1 (w (l + k - 2)) :=
++    AZIM_SAME_WITHIN_AFF_GE 0 (w (l + k - 1)) v2 v1 (w (l + k - 2))
++      hmemv2 hncUv2 hncUV
++  rw [hstep1, hstep2]
++
+ 
+ /-- HOL `V3_DEFOR_EQ_IN_FF_AT_V_ANY` (IMJXPHR.hl:4296). -/
+ theorem V3_DEFOR_EQ_IN_FF_AT_V_ANY_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 v : V3)
+@@ -4224,8 +4563,33 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_V_ANY_p34 (s : ScsV39) (k l : ℕ) (w :
+         (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t))
+         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+-          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t)) = Real.pi := by
+-  sorry
++          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t)) = azim 0 v (rhoNode1 FF v) (epPair_p34 FF v) := by
++  subst ha
++  obtain ⟨e, he, hne⟩ := DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_p34 s k l w v1 v2 x1 x2 x6 (-1)
++    hk hkk hs hmw hl hl1 hx1 hx2 hx6 rfl
++  refine ⟨e, he, fun t v ht hv1 hv2 hvw hvV => ?_⟩
++  have htpos : 0 < t := ht.1
++  have ht_e : t < e := ht.2
++  have hDv : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t = v := by
++    rw [v3DeforV4_p34, if_neg hv2]
++  have hDFF : deformedFF4_p34 x1 x2 x6 v1 v2 t FF
++      = relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF := rfl
++  have hRho : rhoNode1 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v
++      = rhoNode1 FF v := by
++    simp only [rhoNode1]
++    rw [funext fun y => propext (V3_DEFOR_EQ_IN_FF_AT_V_ANY_p34 s k l w v1 v2 v x1 x2 x6 (-1) e t FF
++      hk hkk hs hmw hl hl1 hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he htpos
++      (fun τ i hτ => hne τ hτ i) ht_e hFF hv1 hv2 hvw hvV y)]
++  have hEP : epPair_p34 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v
++      = epPair_p34 FF v := by
++    simp only [epPair_p34]
++    congr 1
++    funext y
++    exact propext (V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_p34 s k l w v1 v2 v x1 x2 x6 (-1) e t FF
++      hk hkk hs hmw hl hl1 hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he htpos
++      (fun τ i hτ => hne τ hτ i) ht_e hFF hv1 hv2 hvw hvV y)
++  rw [hDv, hDFF, hRho, hEP]
++
+ 
+ /-- HOL `DEFORMATION_AZIM_V3_DEFOR_V1_AT_V_ANY_V1` (IMJXPHR.hl:4887). -/
+ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_V_ANY_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+@@ -4246,8 +4610,33 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_V_ANY_V1_p34 (s : ScsV39) (k l : ℕ) (w
+         (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t))
+         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+-          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t)) = Real.pi := by
+-  sorry
++          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t)) = azim 0 v (rhoNode1 FF v) (epPair_p34 FF v) := by
++  subst ha
++  obtain ⟨e, he, hne⟩ := DEFORMATION_V3_DEFOR_NOT_IN_V_COM_EQ_V1_p34 s k l w v1 v2 x1 x2 x6 (-1)
++    hk hkk hs hmw hl hl1 hx1 hx2 hx6 rfl
++  refine ⟨e, he, fun t v ht hv1 hv2 hvw hvV => ?_⟩
++  have ht_neg : -e < t := ht.1
++  have ht_e : t < e := ht.2
++  have hDv : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t = v := by
++    rw [v3DeforV4_p34, if_neg hv2]
++  have hDFF : deformedFF4_p34 x1 x2 x6 v1 v2 t FF
++      = relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF := rfl
++  have hRho : rhoNode1 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v
++      = rhoNode1 FF v := by
++    simp only [rhoNode1]
++    rw [funext fun y => propext (V3_DEFOR_EQ_IN_FF_AT_V_ANY_V1_p34 s k l w v1 v2 v x1 x2 x6 (-1)
++      e t FF hk hkk hs hmw hl hl1 hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he ht_neg
++      (fun τ i hτ hmod => hne τ hτ i hmod) ht_e hFF hv1 hv2 hvw hvV y)]
++  have hEP : epPair_p34 (relabelFF_p34 (v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t)) v2 FF) v
++      = epPair_p34 FF v := by
++    simp only [epPair_p34]
++    congr 1
++    funext y
++    exact propext (V3_DEFOR_EQ_IN_FF_AT_V_ANY_SYM_V1_p34 s k l w v1 v2 v x1 x2 x6 (-1) e t FF
++      hk hkk hs hmw hl hl1 hx1p hx2p hx6p hncW hnc hx1 hx2 hx6 rfl he ht_neg
++      (fun τ i hτ hmod => hne τ hτ i hmod) ht_e hFF hv1 hv2 hvw hvV y)
++  rw [hDv, hDFF, hRho, hEP]
++
+ 
+ /-- HOL `DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL` (IMJXPHR.hl:4947). -/
+ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+@@ -4267,8 +4656,93 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_p34 (s : ScsV39) (k l : ℕ) (w : 
+         (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t))
+         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+-          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t)) = Real.pi := by
+-  sorry
++          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t)) = azim 0 v (rhoNode1 FF v) (epPair_p34 FF v) := by
++  subst ha
++  have hlk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
++  have haffW : w l ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
++    rw [← hlk]; exact haff
++  have hncW3 : ¬ Collinear3 0 (w (l + 1)) (w (l + k - 1)) := by
++    show ¬ Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3)
++    rw [← hlk]; exact hncW
++  have hnc3W : ¬ Collinear ℝ ({0, w (l + 1), w l} : Set V3) := by rw [hl1, hl]; exact hnc
++  have hx1' : ‖w (l + 1)‖ ^ 2 = x1 := by rw [hl1]; exact hx1
++  have hx2' : ‖w l‖ ^ 2 = x2 := by rw [hl]; exact hx2
++  have hx6' : ‖w (l + 1) - w l‖ ^ 2 = x6 := by rw [hl1, hl]; exact hx6
++  obtain ⟨eA, heA, hA⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_W_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
++    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
++  obtain ⟨eB, heB, hB⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
++    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
++  obtain ⟨eC, heC, hC⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
++    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
++  obtain ⟨eD, heD, hD⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_V_ANY_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
++    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
++  refine ⟨min (min (min eA eB) eC) eD / 2, by positivity, fun t v ht => ?_⟩
++  intro hvV
++  have htpos : 0 < t := ht.1
++  have hleA : min (min (min eA eB) eC) eD / 2 < eA := by
++    have h := le_trans (min_le_left (min (min eA eB) eC) eD)
++      (le_trans (min_le_left (min eA eB) eC) (min_le_left eA eB))
++    linarith
++  have hleB : min (min (min eA eB) eC) eD / 2 < eB := by
++    have h := le_trans (min_le_left (min (min eA eB) eC) eD)
++      (le_trans (min_le_left (min eA eB) eC) (min_le_right eA eB))
++    linarith
++  have hleC : min (min (min eA eB) eC) eD / 2 < eC := by
++    have h := le_trans (min_le_left (min (min eA eB) eC) eD) (min_le_right (min eA eB) eC)
++    linarith
++  have hleD : min (min (min eA eB) eC) eD / 2 < eD := by
++    have h := min_le_right (min (min eA eB) eC) eD
++    linarith
++  have htA : 0 < t ∧ t < eA := ⟨htpos, by linarith [ht.2, hleA]⟩
++  have htB : 0 < t ∧ t < eB := ⟨htpos, by linarith [ht.2, hleB]⟩
++  have htC : 0 < t ∧ t < eC := ⟨htpos, by linarith [ht.2, hleC]⟩
++  have htD : 0 < t ∧ t < eD := ⟨htpos, by linarith [ht.2, hleD]⟩
++  have hper : ∀ i, w (i + k) = w i := MMs_periodic_p34 s k w hkk hmw
++  have hk0 : 0 < k := by omega
++  obtain ⟨j, hj⟩ := hvV
++  by_cases h2 : j % k = l % k
++  · have hv2 : v = v2 := by
++      rw [← hj, modFold_p34 hk0 hper j, h2, ← modFold_p34 hk0 hper l, hl]
++    rw [hv2]
++    rw [hC t htC]
++    have hrho : rhoNode1 FF v2 = v1 := by
++      have h := w5cC4_rhoNode1_range_p34 (l := l) hk hkk hs hmw hFF
++      rwa [hl, hl1] at h
++    have hep : epPair_p34 FF v2 = w (l + k - 1) := by
++      have h := w5cC4_epPair_range_p34 (l := l) hk hkk hs hmw hFF
++      rwa [hl] at h
++    rw [hrho, hep]
++    have haz' : azim 0 v2 v1 (w (l + k - 1)) = Real.pi := by
++      rw [← hl, ← hl1, ← hlk]
++      exact haz
++    exact haz'.symm
++  · by_cases h1c : j % k = (l + 1) % k
++    · have hv1 : v = v1 := by
++        rw [← hj, modFold_p34 hk0 hper j, h1c, ← modFold_p34 hk0 hper (l + 1), hl1]
++      rw [hv1]
++      exact hB t htB
++    · by_cases hEc : j % k = (l + k - 1) % k
++      · have hvW : v = w (l + k - 1) := by
++          rw [← hj, modFold_p34 hk0 hper j, hEc, ← modFold_p34 hk0 hper (l + k - 1)]
++        rw [hvW]
++        exact hA t htA
++      · have hvne2 : v ≠ v2 := by
++          intro hcon
++          exact h2 (by
++            by_contra hne
++            exact (w_inj_p34 hk hkk hs hmw j l hne) (by rw [hj, hcon, hl]))
++        have hvne1 : v ≠ v1 := by
++          intro hcon
++          exact h1c (by
++            by_contra hne
++            exact (w_inj_p34 hk hkk hs hmw j (l + 1) hne) (by rw [hj, hcon, hl1]))
++        have hvneW : v ≠ w (l + k - 1) := by
++          intro hcon
++          exact hEc (by
++            by_contra hne
++            exact (w_inj_p34 hk hkk hs hmw j (l + k - 1) hne) (by rw [hj, hcon]))
++        exact hD t v htD hvne1 hvne2 hvneW ⟨j, hj⟩
++
+ 
+ /-- HOL `DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_V1` (IMJXPHR.hl:5022). -/
+ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+@@ -4288,8 +4762,92 @@ theorem DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_V1_p34 (s : ScsV39) (k l : ℕ) (w :
+         (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+           (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t))
+         (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+-          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t)) = Real.pi := by
+-  sorry
++          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t)) = azim 0 v (rhoNode1 FF v) (epPair_p34 FF v) := by
++  subst ha
++  have hlk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
++  have haffW : w l ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
++    rw [← hlk]; exact haff
++  have hncW3 : ¬ Collinear3 0 (w (l + 1)) (w (l + k - 1)) := by
++    show ¬ Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3)
++    rw [← hlk]; exact hncW
++  have hnc3W : ¬ Collinear ℝ ({0, w (l + 1), w l} : Set V3) := by rw [hl1, hl]; exact hnc
++  have hx1' : ‖w (l + 1)‖ ^ 2 = x1 := by rw [hl1]; exact hx1
++  have hx2' : ‖w l‖ ^ 2 = x2 := by rw [hl]; exact hx2
++  have hx6' : ‖w (l + 1) - w l‖ ^ 2 = x6 := by rw [hl1, hl]; exact hx6
++  obtain ⟨eA, heA, hA⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_W_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
++    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
++  obtain ⟨eB, heB, hB⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
++    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
++  obtain ⟨eC, heC, hC⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
++    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
++  obtain ⟨eD, heD, hD⟩ := DEFORMATION_AZIM_V3_DEFOR_V1_AT_V_ANY_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
++    hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF
++  refine ⟨min (min (min eA eB) eC) eD / 2, by positivity, fun t v ht => ?_⟩
++  intro hvV
++  have hleA : min (min (min eA eB) eC) eD / 2 < eA := by
++    have h := le_trans (min_le_left (min (min eA eB) eC) eD)
++      (le_trans (min_le_left (min eA eB) eC) (min_le_left eA eB))
++    linarith
++  have hleB : min (min (min eA eB) eC) eD / 2 < eB := by
++    have h := le_trans (min_le_left (min (min eA eB) eC) eD)
++      (le_trans (min_le_left (min eA eB) eC) (min_le_right eA eB))
++    linarith
++  have hleC : min (min (min eA eB) eC) eD / 2 < eC := by
++    have h := le_trans (min_le_left (min (min eA eB) eC) eD) (min_le_right (min eA eB) eC)
++    linarith
++  have hleD : min (min (min eA eB) eC) eD / 2 < eD := by
++    have h := min_le_right (min (min eA eB) eC) eD
++    linarith
++  have htA : -eA < t ∧ t < eA := ⟨by linarith [ht.1, hleA], by linarith [ht.2, hleA]⟩
++  have htB : -eB < t ∧ t < eB := ⟨by linarith [ht.1, hleB], by linarith [ht.2, hleB]⟩
++  have htC : -eC < t ∧ t < eC := ⟨by linarith [ht.1, hleC], by linarith [ht.2, hleC]⟩
++  have htD : -eD < t ∧ t < eD := ⟨by linarith [ht.1, hleD], by linarith [ht.2, hleD]⟩
++  have hper : ∀ i, w (i + k) = w i := MMs_periodic_p34 s k w hkk hmw
++  have hk0 : 0 < k := by omega
++  obtain ⟨j, hj⟩ := hvV
++  by_cases h2 : j % k = l % k
++  · have hv2 : v = v2 := by
++      rw [← hj, modFold_p34 hk0 hper j, h2, ← modFold_p34 hk0 hper l, hl]
++    rw [hv2]
++    rw [hC t htC]
++    have hrho : rhoNode1 FF v2 = v1 := by
++      have h := w5cC4_rhoNode1_range_p34 (l := l) hk hkk hs hmw hFF
++      rwa [hl, hl1] at h
++    have hep : epPair_p34 FF v2 = w (l + k - 1) := by
++      have h := w5cC4_epPair_range_p34 (l := l) hk hkk hs hmw hFF
++      rwa [hl] at h
++    rw [hrho, hep]
++    have haz' : azim 0 v2 v1 (w (l + k - 1)) = Real.pi := by
++      rw [← hl, ← hl1, ← hlk]
++      exact haz
++    exact haz'.symm
++  · by_cases h1c : j % k = (l + 1) % k
++    · have hv1 : v = v1 := by
++        rw [← hj, modFold_p34 hk0 hper j, h1c, ← modFold_p34 hk0 hper (l + 1), hl1]
++      rw [hv1]
++      exact hB t htB
++    · by_cases hEc : j % k = (l + k - 1) % k
++      · have hvW : v = w (l + k - 1) := by
++          rw [← hj, modFold_p34 hk0 hper j, hEc, ← modFold_p34 hk0 hper (l + k - 1)]
++        rw [hvW]
++        exact hA t htA
++      · have hvne2 : v ≠ v2 := by
++          intro hcon
++          exact h2 (by
++            by_contra hne
++            exact (w_inj_p34 hk hkk hs hmw j l hne) (by rw [hj, hcon, hl]))
++        have hvne1 : v ≠ v1 := by
++          intro hcon
++          exact h1c (by
++            by_contra hne
++            exact (w_inj_p34 hk hkk hs hmw j (l + 1) hne) (by rw [hj, hcon, hl1]))
++        have hvneW : v ≠ w (l + k - 1) := by
++          intro hcon
++          exact hEc (by
++            by_contra hne
++            exact (w_inj_p34 hk hkk hs hmw j (l + k - 1) hne) (by rw [hj, hcon]))
++        exact hD t v htD hvne1 hvne2 hvneW ⟨j, hj⟩
++
+ 
+ /-- HOL `DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR` (IMJXPHR.hl:5106). -/
+ theorem DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)

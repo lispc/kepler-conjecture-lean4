@@ -6029,3 +6029,30 @@ def Deformation (f : V3 → ℝ → V3) (V : Set V3) (a b : ℝ) : Prop :=
 - **建议走 (a)**：与 (b) 闭掉的 sorry 数相同（各 1 个），但 (b) 实际要动 8–10 个声明（含 3 处 arity → 两个 `_discharged` 线与 capstone 元组连带），且会留下 6 份假 Prop、破坏「p34≡p37≡bridge defeq」既有不变量。
 - **波次**：W0 单 patch（5 声明）→ W0 闸（13 文件按依赖序编译；`LocalAuto1` 有 30 直接/53 传递 importer）→ W1 全量重编 → W2 陈述恢复抽检（`(a,b)=(0,1)` 反例应不再可实例化）。
 - **已知边界**：改动后整库编译未做（k0/k1 判定 = 类型级逐点比对 + 两个 standalone Lean 探针，均 EXIT 0）；行号锚点开工 HEAD `0da6672b`，LA14 行号已在新 HEAD 复核。**仍未执行，待用户裁决。**
+
+## 100. LA34 azim `AT_*` 八件冻结右端 `= Real.pi` vs HOL azim 等式形（IMJXPHR.hl:3291/4014/4829/4947 一带）— 分级 A（移植误植 · 陈述修正 · la34-w6 已按正形完成 8 件证明）
+
+### (a) HOL 裁决
+
+`reference/flyspeck/text_formalization/local/IMJXPHR.hl` 的 `DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1`（:3288 起）结论为
+`azim (vec 0) (v3_defor_v4 (-- &1) x1 x2 x6 v1 v2 v1 t) (rho_node1 (IMAGE (…deformed… ) FF) (v3_defor_v4 … v1 t)) (@a. a, v3_defor_v4 … v1 t IN IMAGE …)` —— **azim 等式形**，右端不是 `pi`。同族 `AT_V1_V1` / `AT_W` / `AT_W_V1` / `AT_V_ANY` / `AT_V_ANY_V1` / `AT_ALL` / `AT_ALL_V1` 同形（:3291/4014/4829/4947 一带）。Lean 冻结形右端写成 `= Real.pi`，为移植误植。**编排者已直接核验 HOL 原文。**
+
+### (b) 机理/证据（la34-w6 实测）
+
+HOL 证明全程不消费 `haz`；令 `t→0+` 可知 π 形额外断言 `azim 0 (w(l+1)) (w(l+2)) (w l) = π`（MMs 的 str-clause 在 `l+1`，`isScsV39` 的 `Periodic s.str` 推不出），否则需 KCHMAMG/`AZIM_COND_FOR_COPLANAR` 级平面化巨型（仓内未证且禁消费）。LA28 孪生同名已证定理（`SUB_MK_p28`@2938、`SUC_MK_p28`@3268、`AT_ALL_MK_p28`@3747）用的正是等式形；LA34 下游 composite 自带 `interiorAngle1 0 FF v = π → …` 假设，等式形足够。**无显式反例**（强度弱于 SF-97，但 HOL 逐字锚已核）。
+
+### (c) 修复（8 条；hypotheses/左端/其余一字不动）
+
+`DEFORMATION_AZIM_V3_DEFOR_V1_AT_{V1,V1_V1,W,W_V1,V_ANY,V_ANY_V1,ALL,ALL_V1}_p34` 右端逐字改回 HOL azim 等式形。la34-w6 已按修正形完成 8 件证明（Work.lean RC=0、8/8 标准三、kit +574/−16，删除面 = 8 行 `= Real.pi := by` + 8 行 `sorry`）。
+
+### (d) 消费面
+
+LA34 下游 composite 自带 π 假设 ⇒ 兼容；同病 `_TWO_CASES` 4 条 AT 件仍 sorry（本波未动；若本件批，建议同波收）。现有 `la34_capstone_{w1,w2,w3}` 均未收录这 8 条（生成时它们仍 sorry），落库后需重跑 capstone 探针。
+
+### (e) 极小性
+
+HOL 逐字；结论从 `=π`（更强）改为 azim 等式（忠实）。
+
+### (f) 状态
+
+**立案 2026-11-05（la34-w6）**；编排者已直接核验 HOL 锚。按 SF 通道常态化授权（A 级：HOL 逐字锚 + 内部一致性证据 + 消费面已核）**执行 STATEMENT-FIX 闸**：归档 patch `docs/statement-fix-proposals-patches/100-la34-azim-at-hol-form.patch`；`GATE_MODE=STATEMENT-FIX FILE=Kepler/Text/LocalAuto34.lean THM=DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_p34 SF_ITEM=100`。若用户不认此修正，回滚该提交即可（kit 归档 `~/c17_backup/lane_snapshots/la34-w6/`）。
