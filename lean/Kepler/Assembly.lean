@@ -6998,6 +6998,11 @@ theorem textCapstone : TextCapstone := by
   have hla14 := la14_capstone_w1
   have hla37 := la37_capstone_w1
   have hla17 := la17_capstone_w1
+  have hla14b := la14_capstone_w2
+  have hla37b := @la37_capstone_w2
+  have hla28b := la28_capstone_w2
+  have hla34b := la34_capstone_w2
+  have hla6 := la6_capstone_w1
   -- LV 二期 LV9-15 接线波（lane lv-wire-w3，2026-11-04）：七 capstone 在锥内消费
   have hpa15 := pa15_wire_capstone_w1.{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
   have hpa4 := pa4_wire_capstone_w1.{0}
