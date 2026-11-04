@@ -21,7 +21,9 @@
 > Text.* 16,718（121）/ Graphs.* 3,369（627）/ Kepler 其余顶层 504（36）/
 > Interval 非 Cases 490（12）/ Assembly 202（1）。**基线 J ex-Cases = K_REACH
 > 21,283 / SORRIED 134 / AXIOM 624 / K_UNIVERSE 32,488**（同轮校验：全口径
-> 四指标与基线 J 逐位一致）。
+> 四指标与基线 J 逐位一致）。**基线 K ex-Cases = K_REACH 22,428（+1,145）/
+> SORRIED 134 / AXIOM 624 / K_UNIVERSE 32,792（+304）**（LV 二期 442 支 +
+> lv-wire-w3 接线；SORRIED/AXIOMS 清单与基线 J 逐行一致）。
 
 ## v2.0 指标定义
 
@@ -295,6 +297,35 @@
   "done modulo AQ assumption"）、**5 岛内文件 import Kepler.Assembly → 岛挂下游，
   Assembly 链永远不能 import 岛（成环）**——§2b 体逐字 twin 模式的成因；接入通路 =
   LocalConcl/PackingConcl 侧消费边（实测岛零引用两 Concl）。波 3 架构裁决材料齐备。
+
+### 基线 K：LV9-LV15 程序 + 接线波（lv910 `56436b12` / lv1112 `b178666a` / lv1314 `672e36b8` / lv15 `a4d2afa1` / lv-wire-w3 `7d5d9699`）
+
+| 指标 | 值 |
+|---|---:|
+| K_REACH（e2e 锥） | **2,082,851（较基线 J +1,145）** |
+| K_SORRIED | **134（±0；SORRIED 清单与基线 J 逐行 diff 空）** |
+| K_AXIOM | **624（护栏不动；AXIOMS 清单与基线 J 逐行一致——仅尾部 histogram 分隔行差异）** |
+| K_MODULES | 4,184（±0——capstone 均落在既有可达模块 LocalConcl / PackingConcl） |
+| K_UNIVERSE | 2,094,772（较 J +310 = LV13-15 三 capstone + 期间塔波/TameSpine 入宇宙声明累积） |
+| 口径 II | **K_REACH_XCASES 22,428（+1,145）/ SORRIED_XCASES 134 / AXIOM_XCASES 624 / K_UNIVERSE_XCASES 32,792（+304）** |
+
+- 落库链：lv910（PA15 31/31 + PA4 41/71）→ lv1112（PA25 60 + LA19 110）→ lv1314
+  （LA5 78 + PA18 80）→ lv15（LA28 42）→ lv-wire-w3（textCapstone +7 have 统一接线
+  pa15/pa4/pa25/la19/la5/pa18/la28）。LV 二期合计 **442 支**干净出口收编。
+- **实测 +1,145 vs 名义 +1,060（侦察界）**，诚实差 +85：PA4 41 支实落组闭包高于按
+  71 支比例折算的侦察值；不修不预设，按实测记账。
+- 宇宙实例化（lv-wire-w2 裁例延伸）：`levelParams` 探针实测 pa15=16 / pa4=1 / pa25=6 /
+  la19=0 / la5=17 / pa18=8 / la28=1，逐件显式 `.{0,…}` 实例化；la5 陈述带 section
+  变量隐式参数（`{V E FF v w}`），以一行 lambda 全称闭包 + 体内显式实例化消费（语义
+  未特化）。
+- Assembly 等价手核：standalone `lean -o` **RC=0 / 0 error / 132 warnings**（与 HEAD
+  基线逐条一致）；meta 探针实证 textCapstone 证明项直接引用 7/7 capstone（负对照 0/7）；
+  e2e 公理面 628 条与基线 **ALL_SAME**（含既有 `sorryAx` 接口债与 624 native_decide
+  ax_*，非本波新增）；`Assembly.olean` 已回灌 `.lake`。
+- 仪器：standalone（LEAN_PATH=`/tmp/lfainteg/asm_check/leanpath.txt`），本轮 wall ≈26 min
+  （机器并行负载下 `K_UNIVERSE` 环境扫描明显慢于文档标定的 7 min，读数本身正常）。
+
+
 
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
