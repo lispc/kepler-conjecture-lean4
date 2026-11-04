@@ -599,10 +599,58 @@ theorem nodeMapQuotient (L : fgraph ℕ) (hL : GoodList L)
     (hypermapOfList (quotientListSpine L N)
         (goodListQuotient L hL hn hnedg hunL)).nodeMap p.getLast!
       = ((hypermapOfList L hL).nodeMap ^ p.length) p.getLast! := by
-  -- NEEDS（2-strike 记账）：hkey 组装（parts_node_power 首步 + getElemLastHead
-  -- 桥 + normal_list node-收缩 + inverse_node_map_quotient 闭合）两次未攻下，
-  -- 陈述逐字冻结，本件 sorry 债务记账（QNL/GLQ 照常消费其陈述）。
-  sorry
+  have hgood : GoodList (quotientListSpine L N) := goodListQuotient L hL hn hnedg hunL
+  obtain ⟨hr1, hr2, hpun, hpne, hsub⟩ := partsUniqNonnil L hL hn hr hp
+  have hpos : 0 < p.length := List.length_pos_of_ne_nil hpne
+  have hmemlast : p.getLast! ∈ p := getLastMem hpne
+  have hidx : p.idxOf p.getLast! = p.length - 1 := idxOfGetLast hpun hpne
+  -- 首步：nodeMap^(len-1) (LAST p) = HD p（parts_node_power + indexl_LAST）
+  have hstep := partsNodePower L hL hn hr hp hmemlast (k := p.length - 1)
+    (by rw [hidx])
+  have hstep0 : ((hypermapOfList L hL).nodeMap ^ (p.length - 1)) p.getLast!
+      = p[0]'(by omega) := by
+    rw [hstep]
+    exact getElemCon
+      (by have := List.idxOf_lt_length_iff.mpr hmemlast; omega) (by omega)
+      (by rw [hidx]; omega)
+  have h0 : p[0]'(by omega) = p.head! := by
+    obtain ⟨a, t, rfl⟩ := List.exists_cons_of_ne_nil hpne
+    rfl
+  have hA : (hypermapOfList L hL).nodeMap p.head!
+      = ((hypermapOfList L hL).nodeMap ^ p.length) p.getLast! := by
+    rw [show p.length = 1 + (p.length - 1) from by omega, pow_add, pow_one,
+      Equiv.Perm.mul_apply, hstep0]
+    congr 1
+    exact h0.symm
+  -- node-收缩：RHS ∈ node (LAST p) ⊆ N.flatten（normal_list 末合取）
+  have hB : ((hypermapOfList L hL).nodeMap ^ p.length) p.getLast!
+      ∈ (hypermapOfList L hL).node p.getLast! :=
+    pow_apply_mem_orbitMap _ _ _
+  have hPflat : p.getLast! ∈ N.flatten := List.mem_flatten.mpr ⟨r, hr, hsub p.getLast! hmemlast⟩
+  have hC : ((hypermapOfList L hL).nodeMap ^ p.length) p.getLast! ∈ N.flatten :=
+    hn.2.2.2.2 p.getLast! hPflat hB
+  -- flatten 分解 → part 载体（parts_flatten）：NM (HD p) 落入某 r' ∈ N 的某 part p'
+  have hD : (hypermapOfList L hL).nodeMap p.head! ∈ N.flatten := by
+    rw [hA]; exact hC
+  obtain ⟨r', hr'N, hx⟩ := List.mem_flatten.mp hD
+  obtain ⟨hr1', hr2'⟩ := normalListUniqNonnil hn hr'N
+  obtain ⟨p', hp', hxp'⟩ := List.mem_flatten.mp (by
+    rw [partsFlatten L hr1' hr2']; exact hx)
+  -- parts_node_map_hd：NM (HD p) ∈ p' ⇒ NM.symm (LAST p') = HD p ⇒ LAST p' = NM^len (LAST p)
+  have hsymm' := partsNodeMapHd L hL hn hr hr'N hp hp' hxp'
+  have hp'hd : p'.getLast! = (hypermapOfList L hL).nodeMap p.head! := by
+    rw [← hsymm']
+    exact (Equiv.apply_symm_apply _ _).symm
+  have hp'last : p'.getLast! = ((hypermapOfList L hL).nodeMap ^ p.length) p.getLast! :=
+    hp'hd.trans hA
+  -- inverse_node_map_quotient 收口：f_list (e_list (LAST p')) = HD p ∈ p
+  obtain ⟨_, _, hpun', hp'ne, _⟩ := partsUniqNonnil L hL hn hr'N hp'
+  have hd' : p'.getLast! ∈ listOfDarts L := partsDarts L hn hr'N hp' (getLastMem hp'ne)
+  have hmem' : fList L (eList p'.getLast!) ∈ p := by
+    rw [← inverseNodeMapList hL hd', hsymm']
+    exact List.head!_mem_self hpne
+  have hkey := (inverseNodeMapQuotient L hL hn hnedg hunL hr'N hr hp' hp).mpr hmem'
+  rw [Equiv.apply_eq_iff_eq_symm_apply, ← hp'last, hkey]
 /-- **HOL `quotient_node_lemma`**（tame_list.hl:9685-:9790）
 `i <= k /\ ... /\ inverse (node_map (hypermap_of_list L)) = ivs /\
 MEM (LAST p1) p1 /\ MEM p1 (parts L r1) /\ MEM r1 N /\
@@ -687,9 +735,41 @@ theorem quotientNodeLemma (L : fgraph ℕ) (hL : GoodList L)
           exact Hypermap.nodeMap_symm_mem_node _
             (mem_orbitMap_self
               (hypermapOfList (quotientListSpine L N) hgood).nodeMap p₁.getLast!)
-        · -- NEEDS（2-strike 记账）：大支 k+1 > len p₂——幂分裂 + node_map_quotient +
-          -- 归纳假设 + lemma_inverse_in_node 链的组装两次未攻下，本支 sorry。
-          sorry
+        · -- 大支：幂分裂 + node_map_quotient + 归纳假设 + nodeMap_symm_mem_node
+          have hlenpos : 0 < p₂.length := List.length_pos_of_ne_nil hp2ne
+          have hmle : k + 1 - p₂.length ≤ k := by omega
+          have hq := nodeMapQuotient L hL hgn hn hnedg hunL hr₂ hp₂
+          rw [show (k : ℕ) + 1 = k + 1 - p₂.length + p₂.length from by omega,
+            pow_add, Equiv.Perm.mul_apply, ← hq] at hcanc
+          -- hcanc : nodeMap^(k+1-len p₂) (nodeMap_ql (LAST p₂)) = LAST p₁
+          have hNivs : (hypermapOfList (quotientListSpine L N) hgood).nodeMap p₂.getLast!
+              = (ivs ^ (k + 1 - p₂.length)) p₁.getLast! := by
+            rw [← hivs]
+            have hc := powSymmCancel (hypermapOfList L hL).nodeMap.symm (k + 1 - p₂.length)
+              ((hypermapOfList (quotientListSpine L N) hgood).nodeMap p₂.getLast!)
+            simp only [Equiv.symm_symm] at hc
+            rw [← hc, hcanc]
+          have hdart₂ : p₂.getLast! ∈ listOfDarts (quotientListSpine L N) := by
+            rw [← hw]; exact hd
+          have hdartN : (hypermapOfList (quotientListSpine L N) hgood).nodeMap p₂.getLast!
+              ∈ listOfDarts (quotientListSpine L N) := by
+            have hdF : p₂.getLast!
+                ∈ (hypermapOfList (quotientListSpine L N) hgood).darts :=
+              List.mem_toFinset.mpr hdart₂
+            have hsub := Hypermap.node_subset_darts
+              (hypermapOfList (quotientListSpine L N) hgood) hdF
+            have h3 := hsub (pow_apply_mem_orbitMap _ 1 _)
+            rw [darts_hypermapOfList (quotientListSpine L N) hgood] at h3
+            exact h3
+          have hmemN : (ivs ^ (k + 1 - p₂.length)) p₁.getLast! ∈ nodq :=
+            ih (k + 1 - p₂.length) hmle
+              (by rw [← hNivs]; exact hdartN)
+          rw [hw, ← hnodq,
+            show p₂.getLast! = (hypermapOfList (quotientListSpine L N) hgood).nodeMap.symm
+              ((hypermapOfList (quotientListSpine L N) hgood).nodeMap p₂.getLast!) from
+              (Equiv.symm_apply_apply _ _).symm]
+          exact Hypermap.nodeMap_symm_mem_node _
+            (by rw [hnodq, hNivs]; exact hmemN)
   exact main k i hi hdart
 
 /-! ### §4 good_list_nodes 商章（tame_list.hl:9792-:9903） -/
@@ -717,10 +797,86 @@ theorem goodListNodesCondition2 (L : fgraph ℕ) (hL : GoodList L)
     (hcond : ∀ d d' : ℕ × ℕ, d ∈ listOfDarts L → d' ∈ listOfDarts L →
       d.1 = d'.1 → d' ∈ (hypermapOfList L hL).node d) :
     GoodListNodesTl L hL := by
-  -- NEEDS（2-strike 记账）：node = FST-类双向刻画 + nodeSet/nodesOfListSet
-  -- antisymm 的 setOf/Finset bound 换形多轮未攻下，陈述逐字冻结，
-  -- 本件 sorry 债务记账（GLQ 照常消费其陈述）。
-  sorry
+  have hnd := hL.1
+  -- 一步保 FST：nodeMap d = e_list (prev_el (find_face L d) d)，前驱第二分量 = FST d
+  have hfst1 : ∀ d ∈ listOfDarts L, ((hypermapOfList L hL).nodeMap d).1 = d.1 := by
+    intro d hd
+    have hnd' : (↑(hypermapOfList L hL).darts : Set (ℕ × ℕ)) d := by
+      rw [darts_hypermapOfList L hL]; exact hd
+    rw [TameLp.nodeMap_hypermapOfList L hL hnd']
+    exact prevElListPairsSnd (TameLp.la7_findFace_nodup L d hnd) ((dart_in_face L d).mpr hd)
+  -- node 幂的 dart 封闭
+  have hzD : ∀ n : ℕ, ∀ z ∈ listOfDarts L,
+      ((hypermapOfList L hL).nodeMap ^ n) z ∈ listOfDarts L := by
+    intro n z hz
+    have h := (hypermapOfList L hL).nodeMap_permutes.pow_apply_mem n
+      (List.mem_toFinset.mpr hz)
+    have hS : (↑(hypermapOfList L hL).darts : Set (ℕ × ℕ))
+        (((hypermapOfList L hL).nodeMap ^ n) z) := h
+    rw [darts_hypermapOfList L hL] at hS
+    exact hS
+  -- node = FST-类双向刻画：轨道给 ⊆（node 幂保 FST）、假设给 ⊇
+  have hclass : ∀ d ∈ listOfDarts L, ∀ y : ℕ × ℕ,
+      y ∈ (hypermapOfList L hL).node d ↔ y ∈ listOfDarts L ∧ y.1 = d.1 := by
+    intro d hd y
+    constructor
+    · intro hy
+      simp only [Hypermap.node, orbitMap, Set.mem_setOf_eq] at hy
+      obtain ⟨k, rfl⟩ := hy
+      induction k with
+      | zero => simpa using hd
+      | succ m ih =>
+        rw [pow_succ', Equiv.Perm.mul_apply, hfst1 _ ih.1]
+        exact ⟨hzD 1 _ ih.1, ih.2⟩
+    · intro hy
+      exact hcond d y hd hy.1 hy.2.symm
+  have horbit : ∀ d ∈ listOfDarts L,
+      (hypermapOfList L hL).node d = {y | y ∈ listOfDarts L ∧ y.1 = d.1} :=
+    fun d hd => Set.ext fun y => hclass d hd y
+  -- FST d 是行元素 → 入 elements（flatten + listPairs 词典）
+  have hfstEl : ∀ d ∈ listOfDarts L, d.1 ∈ listOfElements L := by
+    intro d hd
+    obtain ⟨q, hq, hdq⟩ := List.mem_flatten.mp hd
+    obtain ⟨l, hl, rfl⟩ := List.mem_map.mp hq
+    have hlen := TameLp.la7_length_listPairs l
+    have hk : (listPairs l).idxOf d < (listPairs l).length := List.idxOf_lt_length_iff.mpr hdq
+    have hkl : (listPairs l).idxOf d < l.length := by rw [← hlen]; exact hk
+    have hposl : 0 < l.length :=
+      Nat.lt_of_lt_of_eq (List.length_pos_of_mem hdq) hlen
+    have hml : ((listPairs l).idxOf d + 1) % l.length < l.length := Nat.mod_lt _ hposl
+    have h1 := listPairsGetElemT (j := (listPairs l).idxOf d) hkl hk hml
+    have h2 : (listPairs l)[(listPairs l).idxOf d]'hk = d := getElem_idxOf hdq
+    have hfst : d.1 = l[(listPairs l).idxOf d]'hkl := by
+      calc d.1 = ((listPairs l)[(listPairs l).idxOf d]'hk).1 := (congrArg Prod.fst h2).symm
+        _ = l[(listPairs l).idxOf d]'hkl := (congrArg Prod.fst h1)
+    rw [hfst]
+    exact List.mem_eraseDups.mpr
+      (List.mem_flatten.mpr ⟨l, hl, List.getElem_mem hkl⟩)
+  -- 集合族相等：nodeSet = {轨道 d} = {FST 类} = nodesOfListSet
+  refine Set.ext fun o => ?_
+  constructor
+  · intro ho
+    simp only [Hypermap.nodeSet, setOfOrbits, Set.mem_image,
+      Set.mem_setOf_eq, Finset.mem_coe] at ho
+    obtain ⟨d, hdF, hoEq⟩ := ho
+    have hS : (↑(hypermapOfList L hL).darts : Set (ℕ × ℕ)) d := hdF
+    rw [darts_hypermapOfList L hL] at hS
+    rw [← hoEq]
+    show (hypermapOfList L hL).node d ∈ TameLp.nodesOfListSet L
+    rw [horbit d hS]
+    exact ⟨d.1, hfstEl d hS, rfl⟩
+  · intro ho
+    simp only [TameLp.nodesOfListSet, Set.mem_image, Set.mem_setOf_eq] at ho
+    obtain ⟨x, hxEl, hxS⟩ := ho
+    obtain ⟨l, hl, hxl⟩ := List.mem_flatten.mp
+      (List.mem_eraseDups.mp (by show x ∈ listOfElements L; exact hxEl))
+    obtain ⟨w, hd₀⟩ := listPairsMemExists hxl
+    have hd₀E : (x, w) ∈ listOfDarts L :=
+      List.mem_flatten.mpr ⟨listPairs l, List.mem_map.mpr ⟨l, hl, rfl⟩, hd₀⟩
+    rw [← hxS]
+    simp only [Hypermap.nodeSet, setOfOrbits, Set.mem_image,
+      Set.mem_setOf_eq, Finset.mem_coe]
+    exact ⟨(x, w), List.mem_toFinset.mpr hd₀E, horbit (x, w) hd₀E⟩
 /-- **HOL `good_list_nodes_quotient`**（tame_list.hl:9865-:9901，别名 PMBRINH）
 `good_list L /\ good_list_nodes L /\ normal_list L N /\
 is_edge_nondegenerate (hypermap_of_list L) /\ all uniq L ==>
@@ -771,9 +927,18 @@ private theorem quotientDartAtomChoice (L : fgraph ℕ) (hL : GoodList L)
     (hx : x ∈ listOfDarts (quotientListSpine L N)) :
     setOfListSpine (findAtomSpine L N x)
       = (hypermapOfList L hL).atomChoice (loopFamilyOfListSpine N) x := by
-  -- NEEDS（2-strike 记账）：find_atom_part/atom_choice_part 的 rw 实例化链
-  -- 多轮未攻下，本私件 sorry（下游 iso capstone 同步 sorry）。
-  sorry
+  -- part = atom（find_atom_part + atom_choice_part 词典）：ql-dart 分解为
+  -- LAST p，findAtomSpine 给出 p 本身，atomChoice 经 atomChoice_eq_atom 落到
+  -- atom (loopOfListSpine r)，再由 atomLastP 收口为 setOfListSpine p。
+  obtain ⟨p, r, hp, hr, rfl⟩ := (memListOfDartsQuotient L hL hn hnedg hunL x).mp hx
+  obtain ⟨hr1, hr2⟩ := normalListUniqNonnil hn hr
+  have hpne : p ≠ [] := partsAllNonnil L hr1 hr2 p hp
+  have hdart : p.getLast! ∈ (loopOfListSpine r).darts :=
+    (inDartLoopOfList hr1 hr2 p.getLast!).mpr
+      ((partsUniqNonnil L hL hn hr hp).2.2.2.2 p.getLast! (getLastMem hpne))
+  rw [findAtomPart L hn hr hp, Hypermap.atomChoice_eq_atom (hypermapOfList L hL)
+    (normalListNormal hL hgn hres hn) ⟨r, hr, rfl⟩ hdart]
+  exact (atomLastP L hL hn hnedg hunL hr hp).symm
 /-- 私件（P2）：ql 的 dart 是自身 atom 的 head（head_of_atom_parts，批 11）。 -/
 private theorem quotientDartHeadOfAtom (L : fgraph ℕ) (hL : GoodList L)
     (hgn : GoodListNodesTl L hL) (hres : (hypermapOfList L hL).IsRestricted)
@@ -781,9 +946,12 @@ private theorem quotientDartHeadOfAtom (L : fgraph ℕ) (hL : GoodList L)
     (hunL : ∀ l ∈ L, l.Nodup) {x : ℕ × ℕ}
     (hx : x ∈ listOfDarts (quotientListSpine L N)) :
     (hypermapOfList L hL).headOfAtom (loopFamilyOfListSpine N) x = x := by
-  -- NEEDS（2-strike 记账）：head_of_atom_parts 实例化链多轮未攻下，
-  -- 本私件 sorry（下游 iso capstone 同步 sorry）。
-  sorry
+  -- head_of_atom_parts 直取：ql-dart = LAST p 是自身 atom 的 head。
+  have hnedg := hres.edgeNondegenerate
+  obtain ⟨p, r, hp, hr, rfl⟩ := (memListOfDartsQuotient L hL hn hnedg hunL x).mp hx
+  obtain ⟨hr1, hr2⟩ := normalListUniqNonnil hn hr
+  have hpne : p ≠ [] := partsAllNonnil L hr1 hr2 p hp
+  exact headOfAtomParts L hL hgn hres hn hunL hr hp (getLastMem hpne)
 /-- **HOL `quotient_list_iso_quotient`**（tame_list.hl:8223-:8363）
 `is_restricted (hypermap_of_list L) /\ good_list_nodes L /\ normal_list L N /\
 is_edge_nondegenerate (hypermap_of_list L) /\ good_list L /\ all uniq L ==>
@@ -803,9 +971,119 @@ theorem quotientListIsoQuotient (L : fgraph ℕ) (hL : GoodList L)
         (goodListQuotient L hL hn hnedg hunL)).Iso
       ((hypermapOfList L hL).quotientHypermap
         (normalListNormal hL hgn hres hn)) := by
-  -- NEEDS（2-strike 记账）：本件依赖 P1/P2 私件（均已 sorry），
-  -- BijOn = atom_list_bij 已就位，陈述逐字冻结，本件 sorry 债务记账。
-  sorry
+  have hgood : GoodList (quotientListSpine L N) := goodListQuotient L hL hn hnedg hunL
+  have hnf : (hypermapOfList L hL).IsNormalFamily (loopFamilyOfListSpine N) :=
+    normalListNormal hL hgn hres hn
+  -- BijOn = atom_list_bij（批 11），两侧 darts 集换形到 Iso 词典
+  have hbij : Set.BijOn
+      (fun d : ℕ × ℕ => setOfListSpine (findAtomSpine L N d))
+      ↑(hypermapOfList (quotientListSpine L N) hgood).darts
+      ↑((hypermapOfList L hL).quotientHypermap hnf).darts := by
+    have hb := atomListBij L hL hn hnedg hunL
+    rw [darts_hypermapOfList (quotientListSpine L N) hgood]
+    have hGdart : ↑((hypermapOfList L hL).quotientHypermap hnf).darts
+        = (hypermapOfList L hL).atomsOfFamily (loopFamilyOfListSpine N) := by
+      show (↑(Set.Finite.toFinset ((hypermapOfList L hL).atomsOfFamily_finite hnf)) :
+          Set (Set (ℕ × ℕ))) = _
+      exact Set.Finite.coe_toFinset _
+    rw [hGdart]
+    exact hb
+  -- edge 分量：e_quotient_via_atom_choice + P1/P2 + eList 全局性（edgeMap 两
+  -- 侧同为 eList）
+  have hE : ∀ x ∈ (hypermapOfList (quotientListSpine L N) hgood).darts,
+      ((hypermapOfList L hL).quotientHypermap hnf).edgeMap
+        (setOfListSpine (findAtomSpine L N x))
+        = setOfListSpine (findAtomSpine L N
+          ((hypermapOfList (quotientListSpine L N) hgood).edgeMap x)) := by
+    intro z hz
+    have hzS : (↑(hypermapOfList (quotientListSpine L N) hgood).darts :
+        Set (ℕ × ℕ)) z := hz
+    rw [darts_hypermapOfList (quotientListSpine L N) hgood] at hzS
+    have hz' : z ∈ listOfDarts (quotientListSpine L N) := hzS
+    obtain ⟨p, r, hp, hr, rfl⟩ :=
+      (memListOfDartsQuotient L hL hn hnedg hunL z).mp hz'
+    obtain ⟨hr1, hr2⟩ := normalListUniqNonnil hn hr
+    have hpne : p ≠ [] := partsAllNonnil L hr1 hr2 p hp
+    have hxQ := (memListOfDartsQuotient L hL hn hnedg hunL p.getLast!).mpr
+      ⟨p, r, hp, hr, rfl⟩
+    have hxdL : p.getLast! ∈ listOfDarts L := partsDarts L hn hr hp (getLastMem hpne)
+    have hxdL' : (↑(hypermapOfList L hL).darts : Set (ℕ × ℕ)) p.getLast! := by
+      rw [darts_hypermapOfList L hL]; exact hxdL
+    have hxQ' : (↑(hypermapOfList (quotientListSpine L N) hgood).darts :
+        Set (ℕ × ℕ)) p.getLast! := by
+      rw [darts_hypermapOfList (quotientListSpine L N) hgood]; exact hxQ
+    have hdart : p.getLast! ∈ (loopOfListSpine r).darts :=
+      (inDartLoopOfList hr1 hr2 p.getLast!).mpr
+        ((partsUniqNonnil L hL hn hr hp).2.2.2.2 p.getLast! (getLastMem hpne))
+    have hmemfam : p.getLast! ∈ Hypermap.dartsOfFamily (loopFamilyOfListSpine N) :=
+      Hypermap.mem_dartsOfFamily ⟨r, hr, rfl⟩ hdart
+    have hP1 := quotientDartAtomChoice L hL hgn hres hn hnedg hunL hxQ
+    have hfe := quotientDartAtomChoice L hL hgn hres hn hnedg hunL
+      (hgood.2.2 p.getLast! hxQ)
+    have hP2 := quotientDartHeadOfAtom L hL hgn hres hn hunL hxQ
+    have ekey := (Hypermap.eQuotientPerm_via_atomChoice
+      (hypermapOfList L hL) hnf hmemfam).2.2
+    have hGedge : ((hypermapOfList L hL).quotientHypermap hnf).edgeMap =
+        ((hypermapOfList L hL).fQuotientPerm hnf)⁻¹ *
+        ((hypermapOfList L hL).nQuotientPerm hnf)⁻¹ := rfl
+    rw [hGedge, hP1, ekey, hP2,
+      TameLp.edgeMap_hypermapOfList (quotientListSpine L N) hgood hxQ',
+      TameLp.edgeMap_hypermapOfList L hL hxdL']
+    exact hfe.symm
+  -- face 分量：f_quotient_via_atom_choice + P1/P2 + f_list_quotient(alt) +
+  -- atom 词典（atomChoice_eq_atom/atomEqLast/atomLastP）
+  have hF : ∀ x ∈ (hypermapOfList (quotientListSpine L N) hgood).darts,
+      ((hypermapOfList L hL).quotientHypermap hnf).faceMap
+        (setOfListSpine (findAtomSpine L N x))
+        = setOfListSpine (findAtomSpine L N
+          ((hypermapOfList (quotientListSpine L N) hgood).faceMap x)) := by
+    intro z hz
+    have hzS : (↑(hypermapOfList (quotientListSpine L N) hgood).darts :
+        Set (ℕ × ℕ)) z := hz
+    rw [darts_hypermapOfList (quotientListSpine L N) hgood] at hzS
+    have hz' : z ∈ listOfDarts (quotientListSpine L N) := hzS
+    obtain ⟨p, r, hp, hr, rfl⟩ :=
+      (memListOfDartsQuotient L hL hn hnedg hunL z).mp hz'
+    obtain ⟨hr1, hr2⟩ := normalListUniqNonnil hn hr
+    have hpne : p ≠ [] := partsAllNonnil L hr1 hr2 p hp
+    have hxQ := (memListOfDartsQuotient L hL hn hnedg hunL p.getLast!).mpr
+      ⟨p, r, hp, hr, rfl⟩
+    have hxdL : p.getLast! ∈ listOfDarts L := partsDarts L hn hr hp (getLastMem hpne)
+    have hxdL' : (↑(hypermapOfList L hL).darts : Set (ℕ × ℕ)) p.getLast! := by
+      rw [darts_hypermapOfList L hL]; exact hxdL
+    have hxQ' : (↑(hypermapOfList (quotientListSpine L N) hgood).darts :
+        Set (ℕ × ℕ)) p.getLast! := by
+      rw [darts_hypermapOfList (quotientListSpine L N) hgood]; exact hxQ
+    have hdart : p.getLast! ∈ (loopOfListSpine r).darts :=
+      (inDartLoopOfList hr1 hr2 p.getLast!).mpr
+        ((partsUniqNonnil L hL hn hr hp).2.2.2.2 p.getLast! (getLastMem hpne))
+    have hmemfam : p.getLast! ∈ Hypermap.dartsOfFamily (loopFamilyOfListSpine N) :=
+      Hypermap.mem_dartsOfFamily ⟨r, hr, rfl⟩ hdart
+    have hP1 := quotientDartAtomChoice L hL hgn hres hn hnedg hunL hxQ
+    have hP2 := quotientDartHeadOfAtom L hL hgn hres hn hunL hxQ
+    have fkey := (Hypermap.fQuotient_via_atomChoice
+      (hypermapOfList L hL) hnf hmemfam).2.2
+    have hGface : ((hypermapOfList L hL).quotientHypermap hnf).faceMap =
+        (hypermapOfList L hL).fQuotientPerm hnf := rfl
+    have hp'mem : nextEl (partsSpine L r) p ∈ partsSpine L r := nextEl_mem_of_mem hp
+    have hfmQ : fList (quotientListSpine L N) p.getLast!
+        = (nextEl (partsSpine L r) p).getLast! :=
+      (fListQuotient L hL hn hnedg hunL hr hr hp hp'mem).mpr rfl
+    have hfind' : findAtomSpine L N (nextEl (partsSpine L r) p).getLast!
+        = nextEl (partsSpine L r) p := findAtomPart L hn hr hp'mem
+    have hflmem : fList L p.getLast! ∈ nextEl (partsSpine L r) p :=
+      (fListQuotientAlt L hL hn hr hr hp hp'mem).mp rfl
+    have hflr : fList L p.getLast! ∈ r :=
+      (partsUniqNonnil L hL hn hr hp'mem).2.2.2.2 (fList L p.getLast!) hflmem
+    rw [hGface, Hypermap.fQuotientPerm_apply, hP1, fkey, hP2,
+      faceMap_hypermapOfList L hL hxdL',
+      faceMap_hypermapOfList (quotientListSpine L N) hgood hxQ', hfmQ, hfind',
+      Hypermap.atomChoice_eq_atom (hypermapOfList L hL) hnf ⟨r, hr, rfl⟩
+        ((inDartLoopOfList hr1 hr2 _).mpr hflr),
+      atomEqLast L hL hn hnedg hunL hr hp'mem hflmem]
+    exact atomLastP L hL hn hnedg hunL hr hp'mem
+  refine ⟨fun d => setOfListSpine (findAtomSpine L N d), hbij,
+    fun x hx => ⟨hE x hx, isoNodeCommOfEdgeFace hE hF x hx, hF x hx⟩⟩
 /-- **HOL `marked_list_is_node_nondegenerate`**（tame_list.hl:9362-:9411）
 `good_list L /\ good_list_nodes L /\ good_list_nodes (quotient_list L N) /\
 marked_list L N r d ==> is_node_nondegenerate (quotient (hypermap_of_list L)

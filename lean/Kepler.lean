@@ -112,3 +112,10 @@ import Kepler.Graphs
 -- Phase 5: 文字证明移植 —— hypermap 核心定义层
 import Kepler.Text.Hypermap
 import Kepler.Text.HypermapConcl
+
+-- TameSpine island (wave 1): 最小根集入宇宙（T72 近线性链 + T57 悬空支 +
+-- TameOpposite1），传递带入全部 75 岛文件/899 公开声明。
+-- 车道 tamespine-wire-w1；与 w6align 的 LP.W6Align import（头部区）零 hunk 冲突。
+import Kepler.Text.TameSpine.TameList72
+import Kepler.Text.TameSpine.TameList57
+import Kepler.Text.TameSpine.TameOpposite1
