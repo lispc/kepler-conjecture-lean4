@@ -11544,4 +11544,821 @@ theorem la17_capstone_w1 :
       FAN7_SMALL_DEFORMATION_p17, XRECQNS_p17⟩
 
 #print axioms la17_capstone_w1
+/-! ### Incremental delta capstones la14/la37/la28/la34/la6 (lane
+capstone-refresh-w2, 2026-11-04, roadmap M0b second item): the 45 exits
+that became clean after the w1 baseline (HEAD 4a8f8914) are re-exposed as
+ONE conjunction per module and the five `have hla{14b,37b,28b,34b,6}` lines
+in Assembly.textCapstone pull the capstone proof terms into the e2e cone
+(pure insertion there too, after hla17; the w1 capstones stay wired).
+Delta definition (measured, not assumed): current source declaration kind
+is `theorem`, current `#print axioms` face is exactly the standard three
+[propext, Classical.choice, Quot.sound] with no sorryAx (all 45 delta exits
+are individually exactly standard three), the exit was not already a
+conjunct of the module's w1 capstone, and it is not universe-polymorphic
+or module-private.  The newly-closed set is the source-body sorry set
+difference between HEAD 4a8f8914 and the current tree, restricted to
+public `theorem` exports; counts match the four closing waves exactly:
+LA14 W9+W10 5, LA37 B11 1, LA28 W7 14, LA34 W5 9, LA6 sweep-w3 16.
+Statement drops follow the lv56 generator rules (module-private constant
+`✝`, def-kind, universe-polymorphic statement); none fired here.
+Extraction purely mechanical (gen_items.py): conjuncts are verbatim module
+source signatures, bodies are the exit constants; the `set_option
+maxHeartbeats 50000000 in` scope mirrors the existing large-conjunction
+sections in this file.  Environment-alignment scopes mirror module-local
+declarations so the verbatim signatures elaborate under the same name,
+instance and open resolution as their source modules: LA37 carries the
+module's own `attribute [-instance] dartDecEq2 dartDecEq3` (LocalAuto37:125)
+and LA6 carries the module's own `open Kepler.Text.Fan` (LocalAuto6:48).
+All five modules are already imported by this file (LA14 :485, LA28 :499,
+LA34 :505, LA37 :508, LA6 :511), so zero import changes.  The exact cone
+increment is re-measured at the orchestrator e2e gate. -/
+
+
+set_option maxHeartbeats 50000000 in
+
+/-- LA14 incremental capstone (lane capstone-refresh-w2,
+2026-11-04): the public top-level LocalAuto14 theorem exits that became
+clean after the w1 baseline (HEAD 4a8f8914) and are statable in
+Kepler.Text, re-exposed as ONE conjunction so the Assembly `textCapstone`
+cone can consume them (5 of the 5 newly-closed exits; 0
+dropped per the workorder's no-forcing rule "抽不出/不一致 → 剔除并如实报",
+mechanically detected from the `#print axioms` / `#check @` probe dumps
+and the module source; each drop is named below with its reason --
+0 carry a sorryAx axiom face or a non-standard axiom, the
+remainder are mechanical statement drops).  Provenance: these exits were dropped from `la14_capstone_w1` at w1 generation as sorryAx-carrying and became clean in wave W9+W10; the existing `la14_capstone_w1` is left untouched (incremental, no rewiring).
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its LA14 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); conjuncts whose source text leaves an autoImplicit variable
+free take the `#check @name` printer dump verbatim (the complete
+signature, marked printer-form in their per-conjunct comment) so the
+capstone itself stays parameter-free; the `#check @name` printer dump is
+retained as cross reference; semantic identity is re-verified by the elaboration of the
+`⟨...⟩` assembly below (each component must unify definitionally with its
+conjunct); per-conjunct comments carry each exit's LA14
+declaration line and file-local docstring HOL anchor.
+Conjunct order: source declaration order.  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la14_capstone_w2 :
+    -- 1. YBTASCZ1_p14 (LA14:1757; no HOL anchor line in file docstring)
+    (∀ (u : ℕ → V3) (r j : ℕ) (hj : j ≤ r) (hr : 1 ≤ r)
+          (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
+          (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3))
+          (h3 : cyclicSet (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)))
+          (h4 : ∀ i, i < r →
+            azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)),
+          ∀ i, i < j →
+          azim 0 (cross3 (u 0) (u 1)) (u 0) (u i) < azim 0 (cross3 (u 0) (u 1)) (u 0) (u j)
+    ) ∧
+    -- 2. YBTASCZ2_p14 (LA14:1839; no HOL anchor line in file docstring)
+    (∀ (u : ℕ → V3) (r i j : ℕ) (hij : i < j) (hj : j ≤ r) (hr : 1 ≤ r)
+          (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
+          (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3))
+          (h3 : cyclicSet (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)))
+          (h4 : ∀ i, i < r →
+            azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)),
+          azim 0 (cross3 (u 0) (u 1)) (u i) (u j) < Real.pi
+    ) ∧
+    -- 3. YBTASCZ3_p14 (LA14:1864; no HOL anchor line in file docstring)
+    (∀ (u : ℕ → V3) (r i j : ℕ) (hij : i < j) (hj : j ≤ r) (hr : 1 ≤ r)
+          (h1 : ∀ i j, i ≤ r → j ≤ r → i ≠ j → ¬ Collinear ℝ ({0, u i, u j} : Set V3))
+          (h2 : ∀ i, 1 ≤ i → i ≤ r → u i ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3))
+          (h3 : cyclicSet (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)))
+          (h4 : ∀ i, i < r →
+            azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u i) = u (i + 1)),
+          0 < azim 0 (cross3 (u 0) (u 1)) (u i) (u j)
+    ) ∧
+    -- 4. zlz_wedge_refl_p14 (LA14:3621; no HOL anchor line in file docstring)
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
+          (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
+          (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+            interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi),
+          ∀ v w : V3, w ∈ V → v ∈ ({w, rhoNode1 FF w, ivsRhoNode1 FF w} : Set V3) →
+          ∃ e : ℝ, 0 < e ∧ ∀ t, -e < t ∧ t < e →
+            f v t ∈ wedgeInFanGe (f w t, f (rhoNode1 FF w) t)
+              ((fun s => (fun v => f v t) '' s) '' E)
+    ) ∧
+    -- 5. zlz_wedge_open_p14 (LA14:3666; no HOL anchor line in file docstring)
+    (∀ (a b : ℝ) (V : Set V3) (E : Set (Set V3))
+          (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
+          (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
+          (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+            interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi),
+          ∀ v w : V3, v ∈ V → w ∈ V →
+          v ∈ Kepler.Geom.wedge 0 w (rhoNode1 FF w) (ivsRhoNode1 FF w) →
+          ∃ e : ℝ, 0 < e ∧ ∀ t, -e < t ∧ t < e →
+            f v t ∈ wedgeInFanGe (f w t, f (rhoNode1 FF w) t)
+              ((fun s => (fun v => f v t) '' s) '' E)
+    ) :=
+    ⟨YBTASCZ1_p14, YBTASCZ2_p14, YBTASCZ3_p14, @zlz_wedge_refl_p14, zlz_wedge_open_p14
+⟩
+
+#print axioms la14_capstone_w2
+
+
+attribute [-instance] dartDecEq2 dartDecEq3 in
+set_option maxHeartbeats 50000000 in
+
+/-- LA37 incremental capstone (lane capstone-refresh-w2,
+2026-11-04): the public top-level LocalAuto37 theorem exits that became
+clean after the w1 baseline (HEAD 4a8f8914) and are statable in
+Kepler.Text, re-exposed as ONE conjunction so the Assembly `textCapstone`
+cone can consume them (1 of the 1 newly-closed exits; 0
+dropped per the workorder's no-forcing rule "抽不出/不一致 → 剔除并如实报",
+mechanically detected from the `#print axioms` / `#check @` probe dumps
+and the module source; each drop is named below with its reason --
+0 carry a sorryAx axiom face or a non-standard axiom, the
+remainder are mechanical statement drops).  Provenance: these exits were dropped from `la37_capstone_w1` at w1 generation as sorryAx-carrying and became clean in wave B11; the existing `la37_capstone_w1` is left untouched (incremental, no rewiring).
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its LA37 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); conjuncts whose source text leaves an autoImplicit variable
+free take the `#check @name` printer dump verbatim (the complete
+signature, marked printer-form in their per-conjunct comment) so the
+capstone itself stays parameter-free; the `#check @name` printer dump is
+retained as cross reference; semantic identity is re-verified by the elaboration of the
+`⟨...⟩` assembly below (each component must unify definitionally with its
+conjunct); per-conjunct comments carry each exit's LA37
+declaration line and file-local docstring HOL anchor.
+Conjunct order: source declaration order.  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la37_capstone_w2 :
+    -- 1. SUB_LUNAR_DEFORM_LEMMA_p37 (LA37:2250; no HOL anchor line in file docstring)
+    (∀ {a b : ℝ} {V : Set V3} {E : Set (Set V3)}
+          {FF : Set (V3 × V3)} {f : V3 → ℝ → V3} {u v w : V3}
+          (_hV : V.Finite) (_hcf : ConvexLocalFan V E FF) (_hl : Lunar v w V E)
+          (_hE : ∀ x ∈ E, x ⊆ V) (_hu0 : f u 0 = u) (_hcu : ContinuousAt (f u) 0)
+          (_hang : interiorAngle1 0 FF v < Real.pi) (_ha : a < 0) (_hb : 0 < b)
+          (_hu : u ∈ V) (_hv : u ≠ v) (_hw : u ≠ w)
+          (_hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+          (_haff : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, v, w, u} : Set V3)),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+          Lunar v w ((fun z => f z t) '' V) ((fun s => (fun z => f z t) '' s) '' E)
+    ) :=
+    @SUB_LUNAR_DEFORM_LEMMA_p37
+
+#print axioms la37_capstone_w2
+
+
+set_option maxHeartbeats 50000000 in
+
+/-- LA28 incremental capstone (lane capstone-refresh-w2,
+2026-11-04): the public top-level LocalAuto28 theorem exits that became
+clean after the w1 baseline (HEAD 4a8f8914) and are statable in
+Kepler.Text, re-exposed as ONE conjunction so the Assembly `textCapstone`
+cone can consume them (14 of the 14 newly-closed exits; 0
+dropped per the workorder's no-forcing rule "抽不出/不一致 → 剔除并如实报",
+mechanically detected from the `#print axioms` / `#check @` probe dumps
+and the module source; each drop is named below with its reason --
+0 carry a sorryAx axiom face or a non-standard axiom, the
+remainder are mechanical statement drops).  Provenance: these exits were dropped from `la28_capstone_w1` at w1 generation as sorryAx-carrying and became clean in wave W7; the existing `la28_capstone_w1` is left untouched (incremental, no rewiring).
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its LA28 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); conjuncts whose source text leaves an autoImplicit variable
+free take the `#check @name` printer dump verbatim (the complete
+signature, marked printer-form in their per-conjunct comment) so the
+capstone itself stays parameter-free; the `#check @name` printer dump is
+retained as cross reference; semantic identity is re-verified by the elaboration of the
+`⟨...⟩` assembly below (each component must unify definitionally with its
+conjunct); per-conjunct comments carry each exit's LA28
+declaration line and file-local docstring HOL anchor.
+Conjunct order: source declaration order.  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la28_capstone_w2 :
+    -- 1. DEFORMATION_AZIM_V3_DEFOR_V1_MK_p28 (LA28:2626; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
+          (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3)) (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : j % k = (l + 1) % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+          azim 0 (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t)
+            (rhoNode1 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t))
+            (epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v2 t)) =
+          azim 0 v2 (rhoNode1 FF v2) (epPair_p28 FF v2)
+    ) ∧
+    -- 2. V3_DEFOR_EQ_IN_FF_SUB_MK_SYM_p28 (LA28:2901; HOL `V3_DEFOR_EQ_IN_FF_SUB_MK_SYM`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (k l : ℕ) (v1 v2 : V3)
+          (x1 x2 x5 a e t : ℝ) (FF : Set (V3 × V3)) (V : Set V3) (hk3 : 3 < k) (hk : s.k = k)
+          (hs : isScsV39 s) (hm : w ∈ MMsV39 s) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1) (he : 0 < e)
+          (het : -e < t)
+          (hni : ∀ r : ℝ, ∀ i : ℕ, -e < r ∧ r < e ∧ ¬(i % k = l % k) →
+            v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - r) + v1 ≠ w i)
+          (hte : t < e) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∀ a' : V3, (a', v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v1 t) ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔
+          (a', v1) ∈ FF
+    ) ∧
+    -- 3. DEFORMATION_AZIM_V3_DEFOR_SUB_MK_p28 (LA28:2938; HOL `DEFORMATION_AZIM_V3_DEFOR_SUB_MK`)
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
+          (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3)) (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : j % k = (l + 1) % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+          azim 0 (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v1 t)
+            (rhoNode1 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v1 t))
+            (epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v1 t)) =
+          azim 0 v1 (rhoNode1 FF v1) (epPair_p28 FF v1)
+    ) ∧
+    -- 4. V3_DEFOR_EQ_IN_FF_SUC_MK_p28 (LA28:3156; HOL `V3_DEFOR_EQ_IN_FF_SUC_MK`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (k l : ℕ) (v1 v2 : V3)
+          (x1 x2 x5 a e t : ℝ) (FF : Set (V3 × V3)) (V : Set V3) (hk3 : 3 < k) (hk : s.k = k)
+          (hs : isScsV39 s) (hm : w ∈ MMsV39 s) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1) (he : 0 < e)
+          (het : -e < t)
+          (hni : ∀ r : ℝ, ∀ i : ℕ, -e < r ∧ r < e ∧ ¬(i % k = l % k) →
+            v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - r) + v1 ≠ w i)
+          (hte : t < e) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∀ a' : V3,
+          (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (l + 1)) t, a') ∈ deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔
+          (w (l + 1), a') ∈ FF
+    ) ∧
+    -- 5. V3_DEFOR_EQ_IN_FF_SUC_MK_SYM_p28 (LA28:3199; HOL `V3_DEFOR_EQ_IN_FF_SUC_MK_SYM`)
+    (∀ (s : ScsV39) (w : ℕ → V3) (k l : ℕ) (v1 v2 : V3)
+          (x1 x2 x5 a e t : ℝ) (FF : Set (V3 × V3)) (V : Set V3) (hk3 : 3 < k) (hk : s.k = k)
+          (hs : isScsV39 s) (hm : w ∈ MMsV39 s) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (h1 : 0 < x1) (h2 : 0 < x2) (h5 : 0 < x5)
+          (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3)) (hx1 : ‖v1‖ ^ 2 = x1)
+          (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5) (ha : a = -1) (he : 0 < e)
+          (het : -e < t)
+          (hni : ∀ r : ℝ, ∀ i : ℕ, -e < r ∧ r < e ∧ ¬(i % k = l % k) →
+            v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - r) + v1 ≠ w i)
+          (hte : t < e) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+            (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (l + 1)) t) =
+          v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1
+    ) ∧
+    -- 6. DEFORMATION_AZIM_V3_DEFOR_SUC_MK_p28 (LA28:3268; HOL `DEFORMATION_AZIM_V3_DEFOR_SUC_MK`)
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
+          (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3)) (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : j % k = (l + 1) % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, -ε < t ∧ t < ε →
+          azim 0 (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (l + 1)) t)
+            (rhoNode1 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (l + 1)) t))
+            (epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (l + 1)) t)) =
+          azim 0 (w (l + 1)) (rhoNode1 FF (w (l + 1))) (epPair_p28 FF (w (l + 1)))
+    ) ∧
+    -- 7. V3_DEFOR_EQ_IN_FF_NOT_MK_p28 (LA28:3487 (autoImplicit parameter leak v; statement = probe printer dump verbatim (complete signature)); HOL `V3_DEFOR_EQ_IN_FF_NOT_MK`)
+    (∀ {v : Kepler.Geom.V3} (s : Kepler.Text.ScsV39) (w : ℕ → Kepler.Geom.V3)
+          (k l : ℕ) (v1 v2 : Kepler.Geom.V3) (x1 x2 x5 a e t : ℝ) (FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3))
+          (V : Set Kepler.Geom.V3),
+          3 < k →
+            s.k = k →
+              Kepler.Text.isScsV39 s →
+                w ∈ Kepler.Text.MMsV39 s →
+                  w l = v2 →
+                    w (l + k - 1) = v1 →
+                      0 < x1 →
+                        0 < x2 →
+                          0 < x5 →
+                            ¬Collinear ℝ {0, v1, v2} →
+                              ‖v1‖ ^ 2 = x1 →
+                                ‖v2‖ ^ 2 = x2 →
+                                  ‖v2 - v1‖ ^ 2 = x5 →
+                                    a = -1 →
+                                      0 < e →
+                                        -e < t →
+                                          (∀ (r : ℝ) (i : ℕ),
+                                              -e < r ∧ r < e ∧ ¬i % k = l % k →
+                                                Kepler.Text.v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - r) + v1 ≠ w i) →
+                                            t < e →
+                                              (Set.range fun i => (w i, w (i + 1))) = FF →
+                                                Set.range w = V →
+                                                  v ≠ v1 →
+                                                    v ≠ v2 →
+                                                      v ≠ w (l + 1) →
+                                                        v ∈ V →
+                                                          ∀ (a' : Kepler.Geom.V3),
+                                                            (Kepler.Text.v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t, a') ∈
+                                                                Kepler.Text.deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔
+                                                              (v, a') ∈ FF
+    ) ∧
+    -- 8. V3_DEFOR_EQ_IN_FF_NOT_MK_SYM_p28 (LA28:3508 (autoImplicit parameter leak v; statement = probe printer dump verbatim (complete signature)); HOL `V3_DEFOR_EQ_IN_FF_NOT_MK_SYM`)
+    (∀ {v : Kepler.Geom.V3} (s : Kepler.Text.ScsV39) (w : ℕ → Kepler.Geom.V3)
+          (k l : ℕ) (v1 v2 : Kepler.Geom.V3) (x1 x2 x5 a e t : ℝ) (FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3))
+          (V : Set Kepler.Geom.V3),
+          3 < k →
+            s.k = k →
+              Kepler.Text.isScsV39 s →
+                w ∈ Kepler.Text.MMsV39 s →
+                  w l = v2 →
+                    w (l + k - 1) = v1 →
+                      0 < x1 →
+                        0 < x2 →
+                          0 < x5 →
+                            ¬Collinear ℝ {0, v1, v2} →
+                              ‖v1‖ ^ 2 = x1 →
+                                ‖v2‖ ^ 2 = x2 →
+                                  ‖v2 - v1‖ ^ 2 = x5 →
+                                    a = -1 →
+                                      0 < e →
+                                        -e < t →
+                                          (∀ (r : ℝ) (i : ℕ),
+                                              -e < r ∧ r < e ∧ ¬i % k = l % k →
+                                                Kepler.Text.v3DeforV1_p17 a (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - r) + v1 ≠ w i) →
+                                            t < e →
+                                              (Set.range fun i => (w i, w (i + 1))) = FF →
+                                                Set.range w = V →
+                                                  v ≠ v1 →
+                                                    v ≠ v2 →
+                                                      v ≠ w (l + 1) →
+                                                        v ∈ V →
+                                                          ∀ (a' : Kepler.Geom.V3),
+                                                            (a', Kepler.Text.v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t) ∈
+                                                                Kepler.Text.deformedFF_p28 x1 x5 x2 v1 v2 t FF ↔
+                                                              (a', v) ∈ FF
+    ) ∧
+    -- 9. DEFORMATION_AZIM_V3_DEFOR_NOT_MK_p28 (LA28:3528; HOL `DEFORMATION_AZIM_V3_DEFOR_NOT_MK`)
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
+          (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3)) (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : j % k = (l + 1) % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ v : V3, -ε < t ∧ t < ε ∧ v ≠ v1 ∧ v ≠ v2 ∧ v ≠ w (l + 1) ∧
+            v ∈ V →
+          azim 0 (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t)
+            (rhoNode1 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t))
+            (epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t)) =
+          azim 0 v (rhoNode1 FF v) (epPair_p28 FF v)
+    ) ∧
+    -- 10. DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_MK_p28 (LA28:3747; HOL `DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_MK`)
+    (∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3)
+          (l j : ℕ) (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3)) (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : j % k = (l + 1) % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ v : V3, -ε < t ∧ t < ε ∧ v ∈ V →
+          azim 0 (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t)
+            (rhoNode1 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t))
+            (epPair_p28 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t)) =
+          azim 0 v (rhoNode1 FF v) (epPair_p28 FF v)
+    ) ∧
+    -- 11. DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_AT_ALL_MK_p28 (LA28:3830; HOL `DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_AT_ALL_MK`)
+    (∀ (s : ScsV39) (k : ℕ)
+          (w : ℕ → V3) (l j : ℕ) (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3))
+          (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : j % k = (l + 1) % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ v : V3, -ε < t ∧ t < ε ∧ v ∈ V →
+          interiorAngle1 0 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+            (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t) = interiorAngle1 0 FF v
+    ) ∧
+    -- 12. DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_LE_PI_AT_ALL_MK_p28 (LA28:3853; HOL `DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_LE_PI_AT_ALL_MK`)
+    (∀ (s : ScsV39) (k : ℕ)
+          (w : ℕ → V3) (l j : ℕ) (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3))
+          (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : j % k = (l + 1) % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ v : V3, -ε < t ∧ t < ε ∧ v ∈ V ∧
+            interiorAngle1 0 FF v = Real.pi →
+          interiorAngle1 0 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+            (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t) ≤ Real.pi
+    ) ∧
+    -- 13. DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_AT_ALL_MK_TWO_CASES_p28 (LA28:5975; HOL `DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_AT_ALL_MK_TWO_CASES`)
+    (∀ (s : ScsV39)
+          (k : ℕ) (w : ℕ → V3) (l j : ℕ) (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3))
+          (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : (j + 1) % k = l % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ v : V3, -ε < t ∧ t < ε ∧ v ∈ V →
+          interiorAngle1 0 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+            (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t) = interiorAngle1 0 FF v
+    ) ∧
+    -- 14. DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_LE_PI_AT_ALL_MK_TWO_CASES_p28 (LA28:6000; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39)
+          (k : ℕ) (w : ℕ → V3) (l j : ℕ) (v1 v2 : V3) (x1 x2 x5 a : ℝ) (FF : Set (V3 × V3))
+          (V : Set V3)
+          (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hm : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+          (hj : (j + 1) % k = l % k) (haj : s.a j l = dist (w j) (w l))
+          (hbj : dist (w j) (w l) < s.b j l)
+          (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+          (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+          (hJ : ∀ i, ¬ s.J l i) (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx5 : ‖v2 - v1‖ ^ 2 = x5)
+          (ha : a = -1) (hFF : (Set.range fun i : ℕ => (w i, w (i + 1))) = FF)
+          (hV : Set.range w = V),
+          ∃ ε : ℝ, 0 < ε ∧ ∀ t : ℝ, ∀ v : V3, -ε < t ∧ t < ε ∧ v ∈ V ∧
+            interiorAngle1 0 FF v = Real.pi →
+          interiorAngle1 0 (deformedFF_p28 x1 x5 x2 v1 v2 t FF)
+            (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 v t) ≤ Real.pi
+    ) :=
+    ⟨DEFORMATION_AZIM_V3_DEFOR_V1_MK_p28, V3_DEFOR_EQ_IN_FF_SUB_MK_SYM_p28,
+      DEFORMATION_AZIM_V3_DEFOR_SUB_MK_p28, V3_DEFOR_EQ_IN_FF_SUC_MK_p28,
+      V3_DEFOR_EQ_IN_FF_SUC_MK_SYM_p28, DEFORMATION_AZIM_V3_DEFOR_SUC_MK_p28,
+      V3_DEFOR_EQ_IN_FF_NOT_MK_p28, V3_DEFOR_EQ_IN_FF_NOT_MK_SYM_p28,
+      DEFORMATION_AZIM_V3_DEFOR_NOT_MK_p28, DEFORMATION_AZIM_V3_DEFOR_V1_AT_ALL_MK_p28,
+      DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_AT_ALL_MK_p28,
+      DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_LE_PI_AT_ALL_MK_p28,
+      DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_AT_ALL_MK_TWO_CASES_p28,
+      DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_LE_PI_AT_ALL_MK_TWO_CASES_p28⟩
+
+#print axioms la28_capstone_w2
+
+
+set_option maxHeartbeats 50000000 in
+
+/-- LA34 incremental capstone (lane capstone-refresh-w2,
+2026-11-04): the public top-level LocalAuto34 theorem exits that became
+clean after the w1 baseline (HEAD 4a8f8914) and are statable in
+Kepler.Text, re-exposed as ONE conjunction so the Assembly `textCapstone`
+cone can consume them (9 of the 9 newly-closed exits; 0
+dropped per the workorder's no-forcing rule "抽不出/不一致 → 剔除并如实报",
+mechanically detected from the `#print axioms` / `#check @` probe dumps
+and the module source; each drop is named below with its reason --
+0 carry a sorryAx axiom face or a non-standard axiom, the
+remainder are mechanical statement drops).  Provenance: these exits were dropped from `la34_capstone_w1` at w1 generation as sorryAx-carrying and became clean in wave W5; the existing `la34_capstone_w1` is left untouched (incremental, no rewiring).
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its LA34 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); conjuncts whose source text leaves an autoImplicit variable
+free take the `#check @name` printer dump verbatim (the complete
+signature, marked printer-form in their per-conjunct comment) so the
+capstone itself stays parameter-free; the `#check @name` printer dump is
+retained as cross reference; semantic identity is re-verified by the elaboration of the
+`⟨...⟩` assembly below (each component must unify definitionally with its
+conjunct); per-conjunct comments carry each exit's LA34
+declaration line and file-local docstring HOL anchor.
+Conjunct order: source declaration order.  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la34_capstone_w2 :
+    -- 1. DEFORMATION_AZIM_V3_DEFOR_V1_p34 (LA34:3670; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+          azim 0 (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t)
+            (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+              (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t))
+            (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+              (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t)) = Real.pi
+    ) ∧
+    -- 2. DEFORMATION_AZIM_V3_DEFOR_V1_V1_p34 (LA34:3758; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 : V3)
+          (x1 x2 x6 a : ℝ) (FF : Set (V3 × V3))
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hl1 : w (l + 1) = v1)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hFF : Set.range (fun i : ℕ => (w i, w (i + 1))) = FF),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+          azim 0 (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t)
+            (rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+              (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t))
+            (epPair_p34 (deformedFF4_p34 x1 x2 x6 v1 v2 t FF)
+              (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t)) = Real.pi
+    ) ∧
+    -- 3. RHO_FUN_DEFORMATION_V3_DEFOR_p34 (LA34:4494; HOL `RHO_FUN_DEFORMATION_V3_DEFOR`)
+    (∀ (v1 v2 : V3) (x1 x2 x6 a : ℝ)
+          (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+          (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+          rhoFun ‖(v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) : V3)‖ < rhoFun ‖v2‖
+    ) ∧
+    -- 4. DEFORMATION_DIST_LE_V3_DEFOR_A_TWO_CASES_p34 (LA34:4625; HOL `DEFORMATION_DIST_LE_V3_DEFOR_A_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a : ℝ)
+          (hs : isScsV39 s) (hmw : w ∈ MMsV39 s) (hkk : s.k = k) (hk : 3 < k)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hbound : ∀ j, ¬(l % k = j % k) → ¬((l + 1) % k = j % k) → s.a l j < dist v2 (w j)),
+          ∀ j, ¬(l % k = j % k) → ¬((l + 1) % k = j % k) →
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+            s.a l j < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w j)
+    ) ∧
+    -- 5. DEFORMATION_DIST_LE_V3_DEFOR_A_SUC_TWO_CASES_p34 (LA34:4642; HOL `DEFORMATION_DIST_LE_V3_DEFOR_A_SUC_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a : ℝ)
+          (hs : isScsV39 s) (hmw : w ∈ MMsV39 s) (hkk : s.k = k) (hk : 3 < k)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hbound : ∀ j, ¬(l % k = j % k) → ¬(l % k = (j + 1) % k) → s.a l j < dist v2 (w j)),
+          ∀ j, ¬(l % k = j % k) → ¬(l % k = (j + 1) % k) →
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+            s.a l j < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w j)
+    ) ∧
+    -- 6. DEFORMATION_DIST_LE_V3_DEFOR_B_SUC_TWO_CASES_p34 (LA34:4714; HOL `DEFORMATION_DIST_LE_V3_DEFOR_B_SUC_TWO_CASES`)
+    (∀ (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a : ℝ)
+          (hkk : s.k = k) (hk : 3 < k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1)
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hdiag : ∀ i, scsDiag k l i → 4 * h0 < s.b l i),
+          ∀ i, scsDiag k l i →
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+            dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) < s.b l i
+    ) ∧
+    -- 7. DEFORMATION_DIST_LE_2_TWO_CASES_p34 (LA34:4744; HOL `DEFORMATION_DIST_LE_2_TWO_CASES`)
+    (∀ (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a : ℝ)
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1) (hn : ‖v2‖ ≠ 2)
+          (ha_lt : s.a l i < dist v2 (w i))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hmod : (l + 1) % k = i % k),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+          2 < dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i)
+    ) ∧
+    -- 8. DEFORMATION_V3_DEFOR_EDGE_TWO_CASES_p34 (LA34:4778; HOL `DEFORMATION_V3_DEFOR_EDGE_TWO_CASES`)
+    (∀ (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
+          (v1 v2 : V3) (x1 x2 x6 a : ℝ)
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1) (hn : ‖v2‖ ≠ 2)
+          (ha_lt : s.a l i < dist v2 (w i))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1) (hmod : (l + 1) % k = i % k),
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+          dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) < dist v2 (w i)
+    ) ∧
+    -- 9. DEFORMATION_DIST_LE_BLL_V3_DEFOR_COM_TWO_CASES_p34 (LA34:5053; no HOL anchor line in file docstring)
+    (∀ (s : ScsV39) (k l : ℕ)
+          (w : ℕ → V3) (v1 v2 : V3) (x1 x2 x6 a : ℝ)
+          (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+          (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+          (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (haff : w l ∈ affGt {0} ({w (l + 1), w (l + (s.k - 1))} : Set V3))
+          (hl : w l = v2) (hlk : w (l + k - 1) = v1) (hn : ‖v2‖ ≠ 2)
+          (ha_lt : s.a l (l + 1) < dist v2 (w (l + 1)))
+          (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+          (ha : a = -1)
+          (hdiag : ∀ i, scsDiag k l i → 4 * h0 < s.b l i),
+          ∀ i, ¬(i % k = l % k) →
+          ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+            dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) (w i) ≤ s.b l i
+    ) :=
+    ⟨DEFORMATION_AZIM_V3_DEFOR_V1_p34, DEFORMATION_AZIM_V3_DEFOR_V1_V1_p34,
+      RHO_FUN_DEFORMATION_V3_DEFOR_p34, DEFORMATION_DIST_LE_V3_DEFOR_A_TWO_CASES_p34,
+      DEFORMATION_DIST_LE_V3_DEFOR_A_SUC_TWO_CASES_p34,
+      DEFORMATION_DIST_LE_V3_DEFOR_B_SUC_TWO_CASES_p34, DEFORMATION_DIST_LE_2_TWO_CASES_p34,
+      DEFORMATION_V3_DEFOR_EDGE_TWO_CASES_p34,
+      DEFORMATION_DIST_LE_BLL_V3_DEFOR_COM_TWO_CASES_p34⟩
+
+#print axioms la34_capstone_w2
+
+
+open Kepler.Text.Fan in
+set_option maxHeartbeats 50000000 in
+
+/-- LA6 incremental capstone (lane capstone-refresh-w2,
+2026-11-04): the public top-level LocalAuto6 theorem exits that became
+clean after the w1 baseline (HEAD 4a8f8914) and are statable in
+Kepler.Text, re-exposed as ONE conjunction so the Assembly `textCapstone`
+cone can consume them (16 of the 16 newly-closed exits; 0
+dropped per the workorder's no-forcing rule "抽不出/不一致 → 剔除并如实报",
+mechanically detected from the `#print axioms` / `#check @` probe dumps
+and the module source; each drop is named below with its reason --
+0 carry a sorryAx axiom face or a non-standard axiom, the
+remainder are mechanical statement drops).  Provenance: LA6 had no w1 capstone; this is its first capstone and covers only the exits newly cleaned by the LA6 sweep wave sweep-w3 (own-sorry 43 -> 27); the remaining 27 sorried exits are excluded.
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its LA6 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the binder/conclusion separator by the generator
+gen_items.py); conjuncts whose source text leaves an autoImplicit variable
+free take the `#check @name` printer dump verbatim (the complete
+signature, marked printer-form in their per-conjunct comment) so the
+capstone itself stays parameter-free; the `#check @name` printer dump is
+retained as cross reference; semantic identity is re-verified by the elaboration of the
+`⟨...⟩` assembly below (each component must unify definitionally with its
+conjunct); per-conjunct comments carry each exit's LA6
+declaration line and file-local docstring HOL anchor.
+Conjunct order: source declaration order.  Body = the assembly of the
+exit constants -- zero new proof obligations, zero new imports. -/
+theorem la6_capstone_w1 :
+    -- 1. NOT_COLL_ORTHONORMAL (LA6:318; HOL `NOT_COLL_ORTHONORMAL`)
+    (∀ {x y : V3} (h : ¬ Collinear3 0 x y)
+    ,
+          ∃ u : V3, u ∈ affineSpan ℝ ({0, x, y} : Set V3) ∧ ‖u‖ = 1 ∧ x ⬝ᵥ u = 0
+    ) ∧
+    -- 2. CONTINUOUS_FUN_DISTINCT_FINITE_SET (LA6:596; HOL `CONTINUOUS_FUN_DISTINCT_FINITE_SET`)
+    (∀ {ff : V3 → ℝ → V3} {r : ℝ} {v0 : V3} (V : Set V3)
+          (hV : V.Finite) (h1 : ∀ v1 ∈ V, v1 ≠ v0 → ff v0 r ≠ ff v1 r)
+          (h2 : ∀ v ∈ insert v0 V, ContinuousAt (ff v) r),
+          ∃ d : ℝ, 0 < d ∧ ∀ t : ℝ, |t - r| < d → ∀ v1 ∈ V, v1 ≠ v0 → ff v0 t ≠ ff v1 t
+    ) ∧
+    -- 3. CONTINUOUS_ATREAL_INJ_PRESERVED (LA6:632; HOL `CONTINUOUS_ATREAL_INJ_PRESERVED`)
+    (∀ {ff : V3 → ℝ → V3} {r : ℝ} (V : Set V3)
+          (hV : V.Finite) (h1 : ∀ v1 ∈ V, ∀ v2 ∈ V, v1 ≠ v2 → ff v1 r ≠ ff v2 r)
+          (h2 : ∀ v ∈ V, ContinuousAt (ff v) r),
+          ∃ d : ℝ, 0 < d ∧ ∀ t : ℝ, |t - r| < d →
+          ∀ v1 ∈ V, ∀ v2 ∈ V, v1 ≠ v2 → ff v1 t ≠ ff v2 t
+    ) ∧
+    -- 4. CONTINUOUS_ATREAL_DISTINCT_FINITE (LA6:669; HOL `CONTINUOUS_ATREAL_DISTINCT_FINITE`)
+    (∀ {ff : V3 → ℝ → V3} {r : ℝ} {v0 : V3} (V : Set V3)
+          (hV : V.Finite) (h1 : ∀ v1 ∈ V, ff v1 r ≠ v0)
+          (h2 : ∀ v ∈ V, ContinuousAt (ff v) r),
+          ∃ d : ℝ, 0 < d ∧ ∀ t : ℝ, |t - r| < d → ∀ v1 ∈ V, ff v1 t ≠ v0
+    ) ∧
+    -- 5. DIJ_AFF_GE_PARTITION (LA6:719; HOL `DIJ_AFF_GE_PARTITION`)
+    (∀ {u v w : V3} (h : Disjoint ({u, v} : Set V3) ({w} : Set V3))
+    ,
+          affGe ({u, v} : Set V3) ({w} : Set V3) =
+          {z | z ∈ affineSpan ℝ ({u, v} : Set V3)} ∪
+            affGt ({u, v} : Set V3) ({w} : Set V3)
+    ) ∧
+    -- 6. AFF_GE_WEDGE_DISJOINTION (LA6:802; HOL `AFF_GE_WEDGE_DISJOINTION`)
+    (∀ (v0 v1 w1 w2 : V3)
+    ,
+          affGe ({v0, v1} : Set V3) ({w1} : Set V3) ∩ wedge v0 v1 w1 w2 = ∅ ∧
+          affGe ({v0, v1} : Set V3) ({w2} : Set V3) ∩ wedge v0 v1 w1 w2 = ∅
+    ) ∧
+    -- 7. AZIM_POS_IMP_CYCLIC_SET (LA6:919; HOL `AZIM_POS_IMP_CYCLIC_SET`)
+    (∀ {v0 v1 w1 w2 : V3} (h : 0 < azim v0 v1 w1 w2)
+    ,
+          cyclicSet_p3 {w1, w2} v0 v1
+    ) ∧
+    -- 8. CROSS_PAIR_NOT_IN_FF (LA6:1043 (autoImplicit parameter leak v, w; statement = probe printer dump verbatim (complete signature)); HOL `CROSS_PAIR_NOT_IN_FF`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)}
+          {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v w : Kepler.Geom.V3},
+          Kepler.Text.localFan_p2 V E FF →
+            v ∈ V → w ∈ V → v ≠ w → (∀ x ∈ FF, Kepler.Geom.affGt {0} {v, w} ⊆ Kepler.Text.wedgeInFanGt_p2 x E) → (v, w) ∉ FF
+    ) ∧
+    -- 9. FACE_MAP_ADD_SET2_EQ (LA6:1137; HOL `FACE_MAP_ADD_SET2_EQ`)
+    (∀ {V : Set V3} {E : Set (Set V3)} (HS1 HS2 : Hypermap (V3 × V3)) (a b x y : V3)
+          (hd : (x, y) ∈ dartsOfHyp_p2 (E ∪ {{a, b}}) V) (hya : y ≠ a) (hyb : y ≠ b)
+          (hE1 : FAN 0 V E) (hE2 : FAN 0 V (E ∪ {{a, b}}))
+          (hHS1 : IsHyp_p2 0 V (E ∪ {{a, b}}) HS1) (hHS2 : IsHyp_p2 0 V E HS2),
+          HS1.faceMap (x, y) = HS2.faceMap (x, y)
+    ) ∧
+    -- 10. LOCAL_FACE_MAP_RHO_NODE1 (LA6:1178 (autoImplicit parameter leak x, y; statement = probe printer dump verbatim (complete signature)); HOL `LOCAL_FACE_MAP_RHO_NODE1`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)}
+          {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {x y : Kepler.Geom.V3},
+          Kepler.Text.localFan_p2 V E FF →
+            ∀ (HS : Kepler.Text.Hypermap (Kepler.Geom.V3 × Kepler.Geom.V3)),
+              Kepler.Text.IsHyp_p2 0 V E HS →
+                (x, y) ∈ FF → HS.faceMap (x, y) = (Kepler.Text.rhoNode1_p2 FF x, Kepler.Text.rhoNode1_p2 FF y)
+    ) ∧
+    -- 11. LOCAL_FAN_SIMPLE_HYP (LA6:1237; HOL `LOCAL_FAN_SIMPLE_HYP`)
+    (∀ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} (h : localFan_p2 V E FF)
+          (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V E HS),
+          HS.Simple
+    ) ∧
+    -- 12. WEDGE_IN_FAN_LOFA_DETER (LA6:1284 (autoImplicit parameter leak v, w; statement = probe printer dump verbatim (complete signature)); HOL `WEDGE_IN_FAN_LOFA_DETER`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)}
+          {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v w : Kepler.Geom.V3},
+          Kepler.Text.localFan_p2 V E FF →
+            v ∈ V →
+              Kepler.Text.rhoNode1_p2 FF v = w →
+                Kepler.Text.wedgeInFanGt_p2 (w, Kepler.Text.rhoNode1_p2 FF w) E =
+                  Kepler.Text.wedge 0 w (Kepler.Text.rhoNode1_p2 FF w) v
+    ) ∧
+    -- 13. LOCAL_FAN_ORBIT_MAP_VITERFF (LA6:1328 (autoImplicit parameter leak v; statement = probe printer dump verbatim (complete signature)); HOL `LOCAL_FAN_ORBIT_MAP_VITERFF`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)}
+          {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v : Kepler.Geom.V3},
+          Kepler.Text.localFan_p2 V E FF →
+            v ∈ V → ∀ (n : ℕ), ((Kepler.Text.rhoNode1_p2 FF)^[n] v, (Kepler.Text.rhoNode1_p2 FF)^[n + 1] v) ∈ FF
+    ) ∧
+    -- 14. WEDGE_IN_FAN_LOFA_DETER2 (LA6:1685 (autoImplicit parameter leak v; statement = probe printer dump verbatim (complete signature)); HOL `WEDGE_IN_FAN_LOFA_DETER2`)
+    (∀ {V : Set Kepler.Geom.V3} {E : Set (Set Kepler.Geom.V3)}
+          {FF : Set (Kepler.Geom.V3 × Kepler.Geom.V3)} {v : Kepler.Geom.V3},
+          Kepler.Text.localFan_p2 V E FF →
+            v ∈ V →
+              Kepler.Text.wedgeInFanGt_p2 (v, Kepler.Text.rhoNode1_p2 FF v) E =
+                Kepler.Text.wedge 0 v (Kepler.Text.rhoNode1_p2 FF v) (Kepler.Text.ivsRhoNode1_p2 FF v)
+    ) ∧
+    -- 15. AFF_SUB_PLANE (LA6:1698; HOL `AFF_SUB_PLANE`)
+    (∀ (P : Set V3) (hP : plane_p2 P) {S : Set V3} (hS : S ⊆ P)
+    ,
+          ∀ z ∈ affineSpan ℝ S, z ∈ P
+    ) ∧
+    -- 16. LUNAR_DEFORM_PRESERVE_NORM (LA6:1745; no HOL anchor line in file docstring)
+    (∀ {e1 e2 e3 : V3} (horth : Orthonormal3 e1 e2 e3)
+          (t : ℝ) (x : V3),
+          ‖lunarDeform e1 e2 e3 t x‖ = ‖x‖
+    ) :=
+    ⟨NOT_COLL_ORTHONORMAL, CONTINUOUS_FUN_DISTINCT_FINITE_SET, CONTINUOUS_ATREAL_INJ_PRESERVED,
+      CONTINUOUS_ATREAL_DISTINCT_FINITE, DIJ_AFF_GE_PARTITION, AFF_GE_WEDGE_DISJOINTION,
+      AZIM_POS_IMP_CYCLIC_SET, @CROSS_PAIR_NOT_IN_FF, FACE_MAP_ADD_SET2_EQ,
+      @LOCAL_FACE_MAP_RHO_NODE1, @LOCAL_FAN_SIMPLE_HYP, @WEDGE_IN_FAN_LOFA_DETER,
+      @LOCAL_FAN_ORBIT_MAP_VITERFF, @WEDGE_IN_FAN_LOFA_DETER2, AFF_SUB_PLANE,
+      LUNAR_DEFORM_PRESERVE_NORM⟩
+
+#print axioms la6_capstone_w1
 end Kepler.Text
