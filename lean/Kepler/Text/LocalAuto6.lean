@@ -2619,8 +2619,168 @@ theorem DETERMINE_FV (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v)) :
     fv = insert (w, v) {p | ∃ n : ℕ,
       (∀ m : ℕ, m < n + 1 → ¬((rhoNode1_p2 FF)^[m] v = w)) ∧
-        p = ((rhoNode1_p2 FF)^[n] v, (rhoNode1_p2 FF)^[n + 1] v)} :=
-  sorry
+        p = ((rhoNode1_p2 FF)^[n] v, (rhoNode1_p2 FF)^[n + 1] v)} := by
+  have hkeep := h
+  -- the `E`-hypermap of the local fan
+  obtain ⟨H, hHdarts, hHedge, hHnode, hHface, hFAN0, hHmem, hHdih⟩ := h
+  have hH : IsHyp_p2 0 V E H := ⟨hHdarts, hHedge, hHnode, hHface⟩
+  have hFANsl : FAN 0 V (E ∪ {{v, w}}) :=
+    PROVE_SLICING_FAN hkeep hv hw hvw hcol hsub
+  -- `w` occurs in the rho-orbit of `v`; take the least such index `n₀`
+  have hwOrb : w ∈ orbitF_p2 (rhoNode1_p2 FF) v := by
+    rw [LOCAL_FAN_ORBIT_MAP_V hkeep hv]
+    exact hw
+  obtain ⟨m₀, hm₀⟩ := hwOrb
+  have hex : ∃ n : ℕ, (rhoNode1_p2 FF)^[n] v = w := ⟨m₀, hm₀⟩
+  set n₀ := Nat.find hex with hn₀def
+  have hn₀ : (rhoNode1_p2 FF)^[n₀] v = w := by
+    rw [hn₀def]
+    exact Nat.find_spec hex
+  have hn₀min : ∀ m, (rhoNode1_p2 FF)^[m] v = w → n₀ ≤ m := by
+    intro m hm
+    rw [hn₀def]
+    exact Nat.find_min' hex hm
+  have hmin : ∀ m < n₀, (rhoNode1_p2 FF)^[m] v ≠ w := by
+    intro m hm heq
+    have hle := hn₀min m heq
+    omega
+  have hn₀pos : 0 < n₀ := by
+    rcases Nat.eq_zero_or_pos n₀ with h0 | hpos
+    · exfalso
+      rw [h0] at hn₀
+      simp only [Function.iterate_zero_apply] at hn₀
+      exact hvw hn₀
+    · exact hpos
+  have hn₀card : n₀ < V.ncard := by
+    have henum := LOOP_SET_DETER_FIRTS_ELMS (f := rhoNode1_p2 FF) (V := V)
+      (fun u hu => LOCAL_FAN_ORBIT_MAP_V hkeep hu) v hv
+    have hwmem : w ∈ ({x : V3 | ∃ n < V.ncard, (rhoNode1_p2 FF)^[n] v = x} : Set V3) := by
+      rw [henum]
+      exact hw
+    obtain ⟨m, hmcard, hmw⟩ := hwmem
+    have hle := hn₀min m hmw
+    omega
+  -- one rho-step is one face-map step, as long as the target is not `v` or `w`
+  have hstep : ∀ j : ℕ, j + 1 < n₀ →
+      HS.faceMap ((rhoNode1_p2 FF)^[j] v, (rhoNode1_p2 FF)^[j + 1] v)
+        = ((rhoNode1_p2 FF)^[j + 1] v, (rhoNode1_p2 FF)^[j + 2] v) := by
+    intro j hj
+    set x := (rhoNode1_p2 FF)^[j] v with hxdef
+    set y := (rhoNode1_p2 FF)^[j + 1] v with hydef
+    have hxV : x ∈ V := by
+      rw [hxdef]
+      exact LOCAL_FAN_ITER_RHO_NODE_IN_V hkeep hv j
+    have hdFF : (x, y) ∈ FF := by
+      have hd := LOCAL_FAN_ORBIT_MAP_VITERFF hkeep hv j
+      simpa only [hxdef, hydef] using hd
+    have hxyE : ({x, y} : Set V3) ∈ E := by
+      have hpair := LOCAL_RHO_NODE_PAIR_E hkeep hxV
+      have hrho : rhoNode1_p2 FF x = y := by
+        rw [hxdef, hydef]
+        exact (Function.iterate_succ_apply' (rhoNode1_p2 FF) j v).symm
+      rwa [hrho] at hpair
+    have hd : (x, y) ∈ dartsOfHyp_p2 (E ∪ {{v, w}}) V :=
+      IN_DARTS_EXTENSION (x := x) (y := y) (E := E) (S := ({{v, w}} : Set (Set V3))) hxyE
+    have hyv : y ≠ v := by
+      rw [hydef]
+      have hdis := LOFA_IMP_DIS_ELMS23 hkeep hv 0 (j + 1) (by omega) (by omega)
+      simpa using hdis
+    have hyw : y ≠ w := by
+      rw [hydef]
+      exact hmin (j + 1) (by omega)
+    have hP1 : HS.faceMap (x, y) = H.faceMap (x, y) :=
+      FACE_MAP_ADD_SET2_EQ HS H v w x y hd hyv hyw hFAN0 hFANsl hHS hH
+    have hP2 : H.faceMap (x, y) = (rhoNode1_p2 FF x, rhoNode1_p2 FF y) :=
+      LOCAL_FACE_MAP_RHO_NODE1 hkeep H hH hdFF
+    rw [hP1, hP2]
+    have hxy : rhoNode1_p2 FF x = y := DETER_RHO_NODE hkeep hdFF
+    have hyz : rhoNode1_p2 FF y = (rhoNode1_p2 FF)^[j + 2] v := by
+      rw [hydef]
+      exact (Function.iterate_succ_apply' (rhoNode1_p2 FF) (j + 1) v).symm
+    rw [hxy, hyz]
+  -- face-map iterates follow the rho iterates up to `n₀`
+  have hiter : ∀ j : ℕ, j < n₀ →
+      (HS.faceMap ^ j) (v, rhoNode1_p2 FF v)
+        = ((rhoNode1_p2 FF)^[j] v, (rhoNode1_p2 FF)^[j + 1] v) := by
+    intro j
+    induction j with
+    | zero =>
+        intro _
+        simp
+    | succ j ih =>
+        intro hj
+        have hj' : j < n₀ := by omega
+        rw [pow_succ', Equiv.Perm.mul_apply, ih hj']
+        exact hstep j (by omega)
+  -- the `n₀`-th face-map iterate is the turning dart `(w, v)`
+  have hn1 : n₀ - 1 + 1 = n₀ := Nat.sub_add_cancel (by omega : 1 ≤ n₀)
+  have hclosing : (HS.faceMap ^ n₀) (v, rhoNode1_p2 FF v) = (w, v) := by
+    have hprev := hiter (n₀ - 1) (by omega)
+    have hdFF : ((rhoNode1_p2 FF)^[n₀ - 1] v, w) ∈ FF := by
+      have hd := LOCAL_FAN_ORBIT_MAP_VITERFF hkeep hv (n₀ - 1)
+      rwa [hn1, hn₀] at hd
+    have hsucc : HS.faceMap ^ n₀ = HS.faceMap * HS.faceMap ^ (n₀ - 1) := by
+      conv_lhs => rw [← hn1]
+      rw [pow_succ']
+    rw [hsucc, Equiv.Perm.mul_apply, hprev, hn1, hn₀]
+    exact FACE_MAP_AT_TURNING_DART1 hkeep hv hw hvw hcol hsub HS hHS hdFF
+  -- and the next step returns to the start
+  have hclose2 : (HS.faceMap ^ (n₀ + 1)) (v, rhoNode1_p2 FF v)
+      = (v, rhoNode1_p2 FF v) := by
+    have hswap := FACE_MAP_SLICING_HYP_TRANS_POINT (v := w) (w := v) hkeep hw hv
+      (Ne.symm hvw)
+      (by
+        intro z t hz ht
+        exact hcol z t (by rwa [Set.pair_comm w v] at hz) ht)
+      (by
+        intro d hd
+        rw [Set.pair_comm w v]
+        exact hsub d hd)
+      HS (by simpa only [Set.pair_comm w v] using hHS)
+    rw [pow_succ', Equiv.Perm.mul_apply, hclosing]
+    exact hswap
+  -- the face orbit is cyclic with period `n₀ + 1`
+  have hcyc := orbit_cyclic HS.faceMap (x := (v, rhoNode1_p2 FF v)) (m := n₀ + 1)
+    (by omega) hclose2
+  have hrange : (↑(Finset.range (n₀ + 1)) : Set ℕ) = {k : ℕ | k < n₀ + 1} := by
+    ext k
+    exact Finset.mem_range
+  rw [hrange] at hcyc
+  rw [hfv]
+  change orbitMap HS.faceMap (v, rhoNode1_p2 FF v)
+      = insert (w, v) {p | ∃ n : ℕ,
+        (∀ m : ℕ, m < n + 1 → ¬((rhoNode1_p2 FF)^[m] v = w)) ∧
+          p = ((rhoNode1_p2 FF)^[n] v, (rhoNode1_p2 FF)^[n + 1] v)}
+  rw [hcyc]
+  ext p
+  constructor
+  · rintro ⟨k, hk, hkp⟩
+    have hk' : k < n₀ + 1 := hk
+    rcases Nat.lt_or_eq_of_le (by omega : k ≤ n₀) with hklt | hkeq
+    · right
+      refine ⟨k, ?_, ?_⟩
+      · intro m hm
+        exact hmin m (by omega)
+      · rw [← hkp]
+        exact hiter k hklt
+    · left
+      rw [← hkp, hkeq]
+      exact hclosing
+  · intro hp
+    rcases hp with hpw | ⟨n, hcond, hpn⟩
+    · refine ⟨n₀, ?_, ?_⟩
+      · simp
+      · rw [hpw]
+        exact hclosing
+    · have hnlt : n < n₀ := by
+        by_contra hcon
+        have hlt : n₀ < n + 1 := by omega
+        exact hcond n₀ hlt hn₀
+      refine ⟨n, ?_, ?_⟩
+      · simp only [Set.mem_setOf_eq]
+        omega
+      · rw [hpn]
+        exact hiter n hnlt
 
 /-- HOL `CARD_IS_LEAST_CYCLE` (local_lemmas1.hl:3056) — giant. -/
 theorem CARD_IS_LEAST_CYCLE (h : localFan_p2 V E FF) (hv : v ∈ V) (n : ℕ)
