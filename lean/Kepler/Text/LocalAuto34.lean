@@ -461,6 +461,532 @@ private theorem deforV1_dist_cont_p34 (a : ℝ) (v1 v2 y : V3) (x1 x2 x6 : ℝ)
     (continuousAt_const.sub continuousAt_id)
   exact hdist.comp hshift
 
+/-! ### Private coe/dot/cross3 kit (ported from the TopologyFan private
+block; `cross3` here is the public `PackingAuto18` one, same body). -/
+
+private theorem coe_smul_p34 (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
+
+private theorem coe_zero_p34 : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+
+private theorem coe_sub_p34 (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+private theorem toLp_smul_p34 (t : ℝ) (p : Fin 3 → ℝ) :
+    (WithLp.toLp 2 (t • p) : V3) = t • (WithLp.toLp 2 p : V3) := by
+  rw [show t • (WithLp.toLp 2 p : V3) =
+      WithLp.toLp 2 ((t • (WithLp.toLp 2 p : V3) : Fin 3 → ℝ)) from
+    (WithLp.toLp_ofLp 2 _).symm]
+
+private theorem crossProduct_smul_left_p34 (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct (t • p) r = t • crossProduct p r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply]
+
+private theorem cross3_smul_left_p34 (t : ℝ) (a b : V3) :
+    cross3 (t • a) b = t • cross3 a b := by
+  rw [cross3, cross3, coe_smul_p34, crossProduct_smul_left_p34, toLp_smul_p34]
+
+private theorem dot_coe_p34 (a b : V3) :
+    (a : Fin 3 → ℝ) ⬝ᵥ (b : Fin 3 → ℝ) = a ⬝ᵥ b := rfl
+
+private theorem dot_comm_p34 (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
+  dotProduct_comm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem zero_dot_p34 (a : V3) : (0 : V3) ⬝ᵥ a = 0 :=
+  zero_dotProduct (a : Fin 3 → ℝ)
+
+private theorem smul_dot_p34 (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) :=
+  smul_dotProduct t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem add_dot_p34 (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c :=
+  add_dotProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem sub_dot_p34 (a b c : V3) : (a - b) ⬝ᵥ c = a ⬝ᵥ c - b ⬝ᵥ c :=
+  sub_dotProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem dot_sub_p34 (a b c : V3) : a ⬝ᵥ (b - c) = a ⬝ᵥ b - a ⬝ᵥ c :=
+  dotProduct_sub (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem dot_smul_p34 (a b : V3) (t : ℝ) : a ⬝ᵥ (t • b) = t * (a ⬝ᵥ b) :=
+  dotProduct_smul t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem cross3_eq_p34 (a b : V3) :
+    cross3 a b = WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) := rfl
+
+private theorem cross3_dot_left_p34 (a b : V3) : a ⬝ᵥ cross3 a b = 0 := by
+  rw [cross3, dotProduct_comm, dot_toLp, dotProduct_comm, triple_product_permutation]
+  exact dot_cross_self _ _
+
+private theorem cross3_dot_right_p34 (a b : V3) : b ⬝ᵥ cross3 a b = 0 := by
+  rw [cross3, dotProduct_comm, dot_toLp, dotProduct_comm]
+  exact dot_cross_self _ _
+
+private theorem cross3_cross3_p34 (a b c : V3) :
+    cross3 (cross3 a b) c = ((a : Fin 3 → ℝ) ⬝ᵥ (c : Fin 3 → ℝ)) • b -
+      ((b : Fin 3 → ℝ) ⬝ᵥ (c : Fin 3 → ℝ)) • a := by
+  rw [cross3_eq_p34, cross3_eq_p34, cross_cross_eq_smul_sub_smul]
+  simp
+
+private theorem cross3_dot_self_p34 (a b : V3) :
+    cross3 a b ⬝ᵥ cross3 a b = (a ⬝ᵥ a) * (b ⬝ᵥ b) - (a ⬝ᵥ b) * (b ⬝ᵥ a) := by
+  rw [cross3_eq_p34, dot_toLp, coe_toLp, cross_dot_cross, dot_coe_p34, dot_coe_p34,
+    dot_coe_p34, dot_coe_p34]
+
+/-! ### Distinctness helpers (from `¬ Collinear ℝ {x, v, u}`). -/
+
+private theorem ncol_vx_p34 {x v u : V3} (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) : v ≠ x :=
+  fun he => hnc (collinear3_of_eq he)
+
+private theorem ncol_ux_p34 {x v u : V3} (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) : u ≠ x := by
+  intro he
+  apply hnc
+  rw [he]
+  simpa using collinear_pair ℝ v x
+
+private theorem ncol_uv_p34 {x v u : V3} (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) : u ≠ v := by
+  intro he
+  apply hnc
+  rw [he]
+  simpa using collinear_pair ℝ x v
+
+/-- Shifted collinearity: `{0, v-x, u-x}` vs `{x, v, u}`. -/
+private theorem ncol_shift_p34 {x v u : V3} (hvx : v ≠ x) :
+    Collinear ℝ ({0, v - x, u - x} : Set V3) ↔ Collinear ℝ ({x, v, u} : Set V3) := by
+  have h1 : Collinear ℝ ({0, v - x, u - x} : Set V3) ↔ ∃ c : ℝ, u - x = c • (v - x) := by
+    show Collinear3 (0:V3) (v - x) (u - x) ↔ _
+    rw [collinear3_iff_smul (sub_ne_zero.mpr hvx)]
+    simp only [sub_zero]
+  have h2 : Collinear ℝ ({x, v, u} : Set V3) ↔ ∃ c : ℝ, u - x = c • (v - x) := by
+    show Collinear3 x v u ↔ _
+    exact collinear3_iff_smul hvx
+  exact h1.trans h2.symm
+
+/-! ### eFan facts (ports of the TopologyFan kit). -/
+
+private theorem e3Fan_dot_self_p34 (hvx : v ≠ x) (u : V3) :
+    e3Fan_p34 x v u ⬝ᵥ e3Fan_p34 x v u = 1 := by
+  have h1 : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+  rw [e3Fan_p34, coe_smul_p34, smul_dotProduct, dotProduct_smul, smul_eq_mul,
+    ← norm_sq_eq_dot, smul_eq_mul]
+  have h2 : ‖v - x‖⁻¹ * (‖v - x‖⁻¹ * ‖v - x‖ ^ 2) = 1 := by field_simp [h1]
+  exact h2
+
+private theorem e3Fan_cross_ux_ne_zero_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    cross3 (e3Fan_p34 x v u) (u - x) ≠ 0 := by
+  intro hzero
+  have hvx : v ≠ x := ncol_vx_p34 hnc
+  -- |cross|² = |ux|² - (ux·e3)² = 0 ⟹ ux = t•e3 ⟹ 共线
+  have hsq : (u - x) ⬝ᵥ (u - x) =
+      ((u - x) ⬝ᵥ e3Fan_p34 x v u) * ((u - x) ⬝ᵥ e3Fan_p34 x v u) := by
+    have h1 : cross3 (e3Fan_p34 x v u) (u - x) ⬝ᵥ cross3 (e3Fan_p34 x v u) (u - x) = 0 := by
+      rw [hzero, coe_zero_p34, zero_dotProduct]
+    rw [cross3_eq_p34, dot_toLp, coe_toLp, cross_dot_cross, dot_coe_p34, dot_coe_p34,
+      dot_coe_p34, dot_coe_p34, e3Fan_dot_self_p34 hvx u,
+      dotProduct_comm ((u - x : V3) : Fin 3 → ℝ) ((e3Fan_p34 x v u : V3) : Fin 3 → ℝ)] at h1
+    rw [← coe_sub_p34]
+    rw [dotProduct_comm ((u - x : V3) : Fin 3 → ℝ) ((e3Fan_p34 x v u : V3) : Fin 3 → ℝ)]
+    linarith [h1]
+  have hp : ((u - x) - ((u - x) ⬝ᵥ e3Fan_p34 x v u) • e3Fan_p34 x v u) ⬝ᵥ
+      ((u - x) - ((u - x) ⬝ᵥ e3Fan_p34 x v u) • e3Fan_p34 x v u) = 0 := by
+    have he3 : e3Fan_p34 x v u ⬝ᵥ e3Fan_p34 x v u = 1 := e3Fan_dot_self_p34 hvx u
+    rw [← coe_sub_p34] at hsq
+    -- 变量化：(u-x)、e3Fan 变为原子变量，绕开复合 coercion 的混合形态
+    set ux : V3 := u - x with hux
+    set e3 : V3 := e3Fan_p34 x v u with he3s
+    have hcomm : e3 ⬝ᵥ ux = ux ⬝ᵥ e3 := dotProduct_comm _ _
+    have hp' : (ux - (ux ⬝ᵥ e3) • e3) ⬝ᵥ (ux - (ux ⬝ᵥ e3) • e3) = 0 := by
+      simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, dotProduct_sub,
+        dotProduct_smul, smul_dotProduct, smul_eq_mul, he3, hcomm] at hsq ⊢
+      nlinarith [hsq]
+    exact hp'
+  have hp0 : (u - x) - ((u - x) ⬝ᵥ e3Fan_p34 x v u) • e3Fan_p34 x v u = 0 := by
+    have h3 : ‖(u - x) - ((u - x) ⬝ᵥ e3Fan_p34 x v u) • e3Fan_p34 x v u‖ ^ 2 = 0 := by
+      rw [norm_sq_eq_dot]; exact hp
+    exact norm_eq_zero.mp ((pow_eq_zero_iff (by norm_num : (2:ℕ) ≠ 0)).mp h3)
+  have hux : u - x = ((u - x) ⬝ᵥ e3Fan_p34 x v u) • e3Fan_p34 x v u := sub_eq_zero.mp hp0
+  have h2 : ((u - x) ⬝ᵥ e3Fan_p34 x v u) • e3Fan_p34 x v u =
+      (((u - x) ⬝ᵥ e3Fan_p34 x v u) * ‖v - x‖⁻¹) • (v - x) := by
+    rw [e3Fan_p34, smul_smul]
+  exact hnc ((collinear3_iff_smul hvx).mpr
+    ⟨((u - x) ⬝ᵥ e3Fan_p34 x v u) * ‖v - x‖⁻¹, by rw [← h2]; exact hux⟩)
+
+private theorem e2Fan_dot_self_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    e2Fan_p34 x v u ⬝ᵥ e2Fan_p34 x v u = 1 := by
+  have hn : ‖cross3 (e3Fan_p34 x v u) (u - x)‖ ≠ 0 :=
+    norm_ne_zero_iff.mpr (e3Fan_cross_ux_ne_zero_p34 hnc)
+  rw [e2Fan_p34, coe_smul_p34, smul_dotProduct, dotProduct_smul, smul_eq_mul,
+    ← norm_sq_eq_dot, smul_eq_mul]
+  have h2 : ‖cross3 (e3Fan_p34 x v u) (u - x)‖⁻¹ *
+      (‖cross3 (e3Fan_p34 x v u) (u - x)‖⁻¹ * ‖cross3 (e3Fan_p34 x v u) (u - x)‖ ^ 2) = 1 := by
+    field_simp [hn]
+  exact h2
+
+private theorem e2Fan_dot_e3_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    e2Fan_p34 x v u ⬝ᵥ e3Fan_p34 x v u = 0 := by
+  rw [e2Fan_p34, coe_smul_p34, smul_dotProduct,
+    dotProduct_comm ((cross3 (e3Fan_p34 x v u) (u - x) : V3) : Fin 3 → ℝ)
+      ((e3Fan_p34 x v u : V3) : Fin 3 → ℝ),
+    cross3_dot_left_p34, smul_zero]
+
+private theorem e1Fan_dot_self_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    e1Fan_p34 x v u ⬝ᵥ e1Fan_p34 x v u = 1 := by
+  have hvx : v ≠ x := ncol_vx_p34 hnc
+  rw [e1Fan_p34, cross3_eq_p34, dot_toLp, coe_toLp, cross_dot_cross, dot_coe_p34,
+    dot_coe_p34, dot_coe_p34, dot_coe_p34, e2Fan_dot_self_p34 hnc,
+    e3Fan_dot_self_p34 hvx u,
+    dotProduct_comm ((e3Fan_p34 x v u : V3) : Fin 3 → ℝ) ((e2Fan_p34 x v u : V3) : Fin 3 → ℝ),
+    e2Fan_dot_e3_p34 hnc]
+  ring
+
+private theorem e1Fan_dot_e2_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    e1Fan_p34 x v u ⬝ᵥ e2Fan_p34 x v u = 0 := by
+  rw [e1Fan_p34,
+    dotProduct_comm ((cross3 (e2Fan_p34 x v u) (e3Fan_p34 x v u) : V3) : Fin 3 → ℝ)
+      ((e2Fan_p34 x v u : V3) : Fin 3 → ℝ)]
+  exact cross3_dot_left_p34 _ _
+
+private theorem e1Fan_dot_e3_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    e1Fan_p34 x v u ⬝ᵥ e3Fan_p34 x v u = 0 := by
+  rw [e1Fan_p34,
+    dotProduct_comm ((cross3 (e2Fan_p34 x v u) (e3Fan_p34 x v u) : V3) : Fin 3 → ℝ)
+      ((e3Fan_p34 x v u : V3) : Fin 3 → ℝ)]
+  exact cross3_dot_right_p34 _ _
+
+private theorem dot_e2Fan_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    (u - x) ⬝ᵥ e2Fan_p34 x v u = 0 := by
+  rw [e2Fan_p34, coe_smul_p34, dotProduct_smul, cross3_dot_right_p34, smul_zero]
+
+private theorem vdot_e2Fan_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    (v - x) ⬝ᵥ e2Fan_p34 x v u = 0 := by
+  rw [e2Fan_p34, coe_smul_p34, dotProduct_smul, e3Fan_p34, cross3_smul_left_p34, coe_smul_p34,
+    dotProduct_smul, cross3_dot_left_p34, smul_zero, smul_zero]
+
+private theorem e1Fan_eq_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    e1Fan_p34 x v u = ‖cross3 (e3Fan_p34 x v u) (u - x)‖⁻¹ •
+      ((u - x) - ((u - x) ⬝ᵥ e3Fan_p34 x v u) • e3Fan_p34 x v u) := by
+  have hvx : v ≠ x := ncol_vx_p34 hnc
+  rw [e1Fan_p34, e2Fan_p34, cross3_smul_left_p34, cross3, cross3, dot_toLp, coe_toLp,
+    cross_cross_eq_smul_sub_smul, dot_coe_p34, dot_coe_p34,
+    e3Fan_dot_self_p34 hvx u, one_smul]
+  try simp only [WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_neg, WithLp.ofLp_zero, WithLp.ofLp_smul,
+    WithLp.ofLp_toLp, WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_neg, WithLp.toLp_zero,
+    WithLp.toLp_smul, WithLp.toLp_ofLp, sub_zero, add_zero, zero_add, inner_eq_dot, norm_sq_eq_dot]
+
+private theorem udot_e1Fan_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    0 < (u - x) ⬝ᵥ e1Fan_p34 x v u := by
+  have hvx : v ≠ x := ncol_vx_p34 hnc
+  have hn : 0 < ‖cross3 (e3Fan_p34 x v u) (u - x)‖ :=
+    norm_pos_iff.mpr (e3Fan_cross_ux_ne_zero_p34 hnc)
+  have h1 : (u - x) ⬝ᵥ e1Fan_p34 x v u = ‖cross3 (e3Fan_p34 x v u) (u - x)‖ := by
+    rw [e1Fan_eq_p34 hnc, coe_smul_p34, dotProduct_smul,
+      coe_sub_p34 (u - x) (((u - x) ⬝ᵥ e3Fan_p34 x v u) • e3Fan_p34 x v u), coe_smul_p34,
+      dotProduct_sub, dotProduct_smul, smul_eq_mul]
+    have hsq : (u - x) ⬝ᵥ (u - x) - ((u - x) ⬝ᵥ e3Fan_p34 x v u) *
+        ((u - x) ⬝ᵥ e3Fan_p34 x v u) =
+        cross3 (e3Fan_p34 x v u) (u - x) ⬝ᵥ cross3 (e3Fan_p34 x v u) (u - x) := by
+      rw [cross3_eq_p34, dot_toLp, coe_toLp, cross_dot_cross, dot_coe_p34, dot_coe_p34,
+        dot_coe_p34, dot_coe_p34, e3Fan_dot_self_p34 hvx u,
+        dotProduct_comm ((u - x : V3) : Fin 3 → ℝ) ((e3Fan_p34 x v u : V3) : Fin 3 → ℝ)]
+      simp only [coe_sub_p34]
+      ring
+    simp only [coe_sub_p34, smul_eq_mul] at hsq ⊢
+    rw [hsq, ← norm_sq_eq_dot]
+    have h2 : ‖cross3 (e3Fan_p34 x v u) (u - x)‖⁻¹ * ‖cross3 (e3Fan_p34 x v u) (u - x)‖ ^ 2 =
+        ‖cross3 (e3Fan_p34 x v u) (u - x)‖ := by
+      field_simp [ne_of_gt hn]
+    exact h2
+  rw [h1]
+  exact hn
+
+private theorem vdot_e1Fan_p34 (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    (v - x) ⬝ᵥ e1Fan_p34 x v u = 0 := by
+  rw [e1Fan_p34, cross3_eq_p34, dotProduct_comm, dot_toLp, dotProduct_comm,
+    triple_product_permutation, e3Fan_p34, coe_smul_p34, crossProduct_smul_left_p34,
+    cross_self, smul_zero, dotProduct_zero]
+
+/-! ### Strict Gram positivity and the spanning helper. -/
+
+private theorem gram_pos_p34 {A B : V3} (hncAB : ¬ Collinear ℝ ({0, A, B} : Set V3)) :
+    (0:ℝ) < (A ⬝ᵥ A) * (B ⬝ᵥ B) - (A ⬝ᵥ B) * (B ⬝ᵥ A) := by
+  obtain ⟨h1, h2⟩ := nc_norm_pos_p34 hncAB
+  have hdc : B ⬝ᵥ A = A ⬝ᵥ B := dotProduct_comm _ _
+  have hcs : |A ⬝ᵥ B| < ‖A‖ * ‖B‖ := by
+    rw [← inner_eq_dot]
+    rcases lt_or_eq_of_le (abs_real_inner_le_norm A B) with h | h
+    · exact h
+    · exfalso
+      rw [← Real.norm_eq_abs] at h
+      obtain ⟨r, -, hr⟩ :=
+        (norm_inner_eq_norm_iff (𝕜 := ℝ) (norm_pos_iff.mp h1) (norm_pos_iff.mp h2)).mp h
+      exact absurd hr (nc_not_smul_p34 hncAB r)
+  have hsq : (A ⬝ᵥ B) ^ 2 < (A ⬝ᵥ A) * (B ⬝ᵥ B) := by
+    have h2v : (‖A‖ * ‖B‖) ^ 2 = (A ⬝ᵥ A) * (B ⬝ᵥ B) := by
+      have e1 : (‖A‖ * ‖B‖) ^ 2 = ‖A‖ ^ 2 * ‖B‖ ^ 2 := by rw [sq]; ring
+      rw [e1, ← norm_sq_eq_dot, ← norm_sq_eq_dot]
+    have hd2' : (A ⬝ᵥ B) ^ 2 = |A ⬝ᵥ B| ^ 2 := (sq_abs _).symm
+    have hneg : -(‖A‖ * ‖B‖) < |A ⬝ᵥ B| := by
+      linarith [hcs, abs_nonneg (A ⬝ᵥ B)]
+    rw [hd2', ← h2v]
+    exact sq_lt_sq' hneg hcs
+  rw [hdc]
+  linarith
+
+private theorem cross3_ne_zero_p34 {a b : V3} (hncAB : ¬ Collinear ℝ ({0, a, b} : Set V3)) :
+    cross3 a b ≠ 0 := by
+  intro h
+  have hgram := gram_pos_p34 hncAB
+  have hdot : cross3 a b ⬝ᵥ cross3 a b = (a ⬝ᵥ a) * (b ⬝ᵥ b) - (a ⬝ᵥ b) * (b ⬝ᵥ a) :=
+    cross3_dot_self_p34 a b
+  rw [h, coe_zero_p34, zero_dotProduct] at hdot
+  linarith [hdot, hgram]
+
+/-- Spanning: a vector orthogonal to `cross3 A B` lies in `span {A, B}`
+(non-collinear case). -/
+private theorem mem_span_AB_of_dot_cross_p34 {A B p : V3}
+    (hncAB : ¬ Collinear ℝ ({0, A, B} : Set V3))
+    (hp : p ⬝ᵥ cross3 A B = 0) :
+    p ∈ Submodule.span ℝ ({A, B} : Set V3) := by
+  obtain ⟨h1, h2⟩ := nc_norm_pos_p34 hncAB
+  have hba : B ⬝ᵥ A = A ⬝ᵥ B := dotProduct_comm _ _
+  have hgram := gram_pos_p34 hncAB
+  rw [hba] at hgram
+  have hBB : (0:ℝ) < B ⬝ᵥ B := by
+    have h := pow_pos h2 2
+    rwa [norm_sq_eq_dot] at h
+  have hN := cross3_dot_self_p34 A B
+  rw [hba] at hN
+  have hli : LinearIndependent ℝ ![A, B, cross3 A B] := by
+    rw [Fintype.linearIndependent_iff]
+    intro g hg j
+    simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons] at hg
+    have hd : ∀ e : V3, (g 0 • A + g 1 • B + g 2 • cross3 A B) ⬝ᵥ e = 0 := by
+      intro e
+      rw [hg]
+      exact zero_dotProduct (e : Fin 3 → ℝ)
+    -- the N-coefficient dies against the Gram determinant
+    have hNdot := hd (cross3 A B)
+    rw [add_dot_p34, add_dot_p34, smul_dot_p34, smul_dot_p34, smul_dot_p34,
+      cross3_dot_left_p34, cross3_dot_right_p34, hN] at hNdot
+    simp only [mul_zero, zero_add, add_zero] at hNdot
+    have hg2 : g 2 = 0 := by
+      rcases mul_eq_zero.mp hNdot with h | h
+      · exact h
+      · rw [h] at hgram; norm_num at hgram
+    have hd0 := hd
+    rw [hg2, zero_smul, add_zero] at hd0
+    have hA : g 0 * (A ⬝ᵥ A) + g 1 * (A ⬝ᵥ B) = 0 := by
+      have hA0 := hd0 A
+      rw [add_dot_p34, smul_dot_p34, smul_dot_p34, hba] at hA0
+      exact hA0
+    have hB : g 0 * (A ⬝ᵥ B) + g 1 * (B ⬝ᵥ B) = 0 := by
+      have hB0 := hd0 B
+      rw [add_dot_p34, smul_dot_p34, smul_dot_p34] at hB0
+      exact hB0
+    have hcomb : (g 0 * (A ⬝ᵥ A) + g 1 * (A ⬝ᵥ B)) * (B ⬝ᵥ B)
+        - (g 0 * (A ⬝ᵥ B) + g 1 * (B ⬝ᵥ B)) * (A ⬝ᵥ B)
+        = g 0 * ((A ⬝ᵥ A) * (B ⬝ᵥ B) - (A ⬝ᵥ B) * (A ⬝ᵥ B)) := by
+      ring
+    have hg0 : g 0 = 0 := by
+      have h2c := hcomb
+      rw [hA, hB, zero_mul, zero_mul, sub_self] at h2c
+      rcases mul_eq_zero.mp h2c.symm with h | h
+      · exact h
+      · rw [h] at hgram; norm_num at hgram
+    have hg1 : g 1 = 0 := by
+      rw [hg0, zero_mul, zero_add] at hB
+      rcases mul_eq_zero.mp hB with h | h
+      · exact h
+      · rw [h] at hBB; norm_num at hBB
+    fin_cases j
+    · exact hg0
+    · exact hg1
+    · exact hg2
+  have hspan : Submodule.span ℝ (Set.range ![A, B, cross3 A B]) = ⊤ :=
+    hli.span_eq_top_of_card_eq_finrank (by simp [finrank_euclideanSpace])
+  have hmem : p ∈ Submodule.span ℝ (Set.range ![A, B, cross3 A B]) :=
+    hspan.symm ▸ Submodule.mem_top
+  rw [Finsupp.mem_span_range_iff_exists_finsupp] at hmem
+  obtain ⟨c, hc⟩ := hmem
+  have hp' : p = c 0 • A + c 1 • B + c 2 • cross3 A B := by
+    rw [← hc, Finsupp.sum,
+      Finset.sum_subset (Finset.subset_univ _) (fun i _ hi => by
+        rw [Finsupp.notMem_support_iff.mp hi, zero_smul])]
+    simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+  -- the expansion dotted with N kills the A- and B-coefficients
+  rw [hp'] at hp
+  rw [add_dot_p34, add_dot_p34, smul_dot_p34, smul_dot_p34, smul_dot_p34,
+    cross3_dot_left_p34, cross3_dot_right_p34, hN] at hp
+  simp only [mul_zero, zero_add, add_zero] at hp
+  rcases mul_eq_zero.mp hp with h | h
+  · rw [hp', h, zero_smul, add_zero]
+    exact Submodule.mem_span_pair.mpr ⟨c 0, c 1, rfl⟩
+  · rw [h] at hgram; norm_num at hgram
+
+/-! ### affineSpan triple characterisation. -/
+
+private theorem mem_affSpan3_iff_p34 {x v u z : V3} :
+    z ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) ↔
+      z - x ∈ Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+  have hx : x ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) :=
+    mem_affineSpan _ (Set.mem_insert _ _)
+  have hv : v ∈ ({x, v, u} : Set V3) := by simp
+  have hdir : (affineSpan ℝ ({x, v, u} : Set V3)).direction =
+      Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [direction_affineSpan, vectorSpan_eq_span_vsub_set_left (k := ℝ) hv]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro d ⟨w, hw, he⟩
+      subst he
+      simp only [WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_neg, WithLp.ofLp_zero, WithLp.ofLp_smul,
+    WithLp.ofLp_toLp, WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_neg, WithLp.toLp_zero,
+    WithLp.toLp_smul, WithLp.toLp_ofLp, sub_zero, add_zero, zero_add, inner_eq_dot, norm_sq_eq_dot] at *
+      rcases Set.mem_insert_iff.mp hw with he1 | hw'
+      · rw [he1, vsub_eq_sub]
+        exact Submodule.subset_span (by simp)
+      · rcases Set.mem_insert_iff.mp hw' with he2 | hw''
+        · rw [he2, vsub_self]
+          exact Submodule.zero_mem _
+        · rcases Set.mem_singleton_iff.mp hw'' with he3
+          rw [he3, vsub_eq_sub, show (v : V3) - u = (v - x) - (u - x) from by module]
+          exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+            (Submodule.subset_span (by simp))
+    · rw [Submodule.span_le]
+      intro d hd
+      rcases Set.mem_insert_iff.mp hd with he | hd'
+      · rw [he]
+        exact Submodule.subset_span (by simp)
+      · rw [Set.mem_singleton_iff] at hd'
+        rw [hd']
+        rw [show (u : V3) - x = (v - x) - (v - u) from by module]
+        exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+          (Submodule.subset_span (by simp))
+  constructor
+  · intro hz
+    have hd : z - x ∈ (affineSpan ℝ ({x, v, u} : Set V3)).direction :=
+      AffineSubspace.vsub_mem_direction hz hx
+    rwa [hdir] at hd
+  · intro hspan
+    have hd : z - x ∈ (affineSpan ℝ ({x, v, u} : Set V3)).direction := by
+      rw [hdir]; exact hspan
+    have hm := (AffineSubspace.vadd_mem_iff_mem_direction (v := z - x) hx).mpr hd
+    simpa using hm
+
+/-! ### affGt {0} {x, y} pair characterisation. -/
+
+private theorem affGt_zero_pair_char_p34 {x y w : V3}
+    (hx : x ≠ 0) (hy : y ≠ 0) (hxy : x ≠ y) :
+    w ∈ affGt {0} {x, y} ↔ ∃ β γ : ℝ, 0 < β ∧ 0 < γ ∧ β • x + γ • y = w := by
+  have hx0 : (0:V3) ≠ x := Ne.symm hx
+  have hy0 : (0:V3) ≠ y := Ne.symm hy
+  have hfin : (({0} : Set V3) ∪ {x, y} : Set V3).Finite := by simp
+  have hset : ({0} ∪ {x, y} : Set V3) = ({0, x, y} : Set V3) := by
+    ext q; simp; tauto
+  have h4 : hfin.toFinset = ({0, x, y} : Finset V3) := by
+    ext q
+    rw [Set.Finite.mem_toFinset, hset]
+    simp
+  have hsum3 : ∀ (F : V3 → ℝ), (∑ q ∈ ({0, x, y} : Finset V3), F q) = F 0 + (F x + F y) := by
+    intro F
+    rw [Finset.sum_insert (by simp [hx0, hy0]), Finset.sum_insert (by simp [hxy]),
+      Finset.sum_singleton]
+  have hsum3v : ∀ (F : V3 → ℝ), (∑ q ∈ ({0, x, y} : Finset V3), F q • q)
+      = F 0 • 0 + (F x • x + F y • y) := by
+    intro F
+    rw [Finset.sum_insert (by simp [hx0, hy0]), Finset.sum_insert (by simp [hxy]),
+      Finset.sum_singleton]
+  constructor
+  · rintro ⟨f, g, hsum, hpos, hone⟩
+    rw [h4, hsum3v] at hsum
+    simp only [smul_zero, zero_add] at hsum
+    exact ⟨f x, f y, hpos x (by simp), hpos y (by simp), hsum.symm⟩
+  · rintro ⟨β, γ, hβ, hγ, hw⟩
+    have hF0 : ((if (0:V3) = x then β else if (0:V3) = y then γ else 1 - β - γ):ℝ)
+        = 1 - β - γ := by simp [hx0, hy0]
+    have hFx : ((if (x:V3) = x then β else if (x:V3) = y then γ else 1 - β - γ):ℝ) = β := by
+      simp
+    have hFy : ((if (y:V3) = x then β else if (y:V3) = y then γ else 1 - β - γ):ℝ) = γ := by
+      simp [hxy.symm]
+
+    refine ⟨fun p => if p = x then β else if p = y then γ else 1 - β - γ, hfin, ?_, ?_, ?_⟩
+    · rw [h4, hsum3v, hF0, hFx, hFy]
+      simp only [smul_zero, zero_add]
+      rw [hw]
+    · intro q hq
+      rcases Set.mem_insert_iff.mp hq with he | he
+      · rw [he]
+        simpa using hβ
+      · rw [he]
+        simpa [hxy.symm] using hγ
+    · rw [h4, hsum3, hF0, hFx, hFy]
+      ring
+
+private theorem norm_lt_of_sq_lt_p34 {a c : ℝ} (ha : 0 ≤ a) (hc : 0 ≤ c)
+    (h : c ^ 2 < a ^ 2) : c < a := by
+  by_contra hle
+  push_neg at hle
+  exact absurd (sq_le_sq' (show -(c:ℝ) ≤ a from by linarith [ha, hc]) hle) (by linarith)
+
+private theorem norm_le_of_sq_le_p34 {a c : ℝ} (ha : 0 ≤ a) (hc : 0 ≤ c)
+    (h : c ^ 2 ≤ a ^ 2) : c ≤ a := by
+  by_contra hgt
+  push_neg at hgt
+  nlinarith [hgt, ha, hc, h]
+
+/-- A point `w` within `z ⬝ vv / (2‖vv‖)` of `z` keeps the `vv`-dot positive
+(radius form of continuity of `· ⬝ᵥ vv` at `z`). -/
+private theorem dot_close_pos_p34 {w z vv : V3} (hvv : ‖vv‖ ≠ 0)
+    (hz : (0:ℝ) < z ⬝ᵥ vv) (hwz : ‖w - z‖ < z ⬝ᵥ vv / (2 * ‖vv‖)) :
+    (0:ℝ) < w ⬝ᵥ vv := by
+  have hcs : |(w - z) ⬝ᵥ vv| ≤ ‖w - z‖ * ‖vv‖ := by
+    rw [← inner_eq_dot]
+    exact abs_real_inner_le_norm (w - z) vv
+  have hkey : z ⬝ᵥ vv / (2 * ‖vv‖) * ‖vv‖ = z ⬝ᵥ vv / 2 := by
+    field_simp [hvv]
+  have hposvv : (0:ℝ) < ‖vv‖ := lt_of_le_of_ne (norm_nonneg vv) (Ne.symm hvv)
+  have hlt : ‖w - z‖ * ‖vv‖ < z ⬝ᵥ vv / 2 := by
+    have h2 := mul_lt_mul_of_pos_right hwz hposvv
+    rwa [hkey] at h2
+  have hwz' : (w - z) ⬝ᵥ vv = w ⬝ᵥ vv - z ⬝ᵥ vv :=
+    sub_dotProduct (w : Fin 3 → ℝ) (z : Fin 3 → ℝ) (vv : Fin 3 → ℝ)
+  have hlow : -(w ⬝ᵥ vv - z ⬝ᵥ vv) < z ⬝ᵥ vv / 2 := by
+    have h1 : -(w ⬝ᵥ vv - z ⬝ᵥ vv) ≤ |(w - z) ⬝ᵥ vv| := by
+      rw [hwz']
+      have h0 := le_abs_self (-(w ⬝ᵥ vv - z ⬝ᵥ vv))
+      rwa [abs_neg] at h0
+    linarith [h1, hlt]
+  have hnn := norm_nonneg vv
+  linarith
+
+/-! ### e2Fan as a smul of the cross product; orthogonality transfer. -/
+
+private theorem e2Fan_eq_smul_cross_p34 {x v u : V3} (hvx : v ≠ x)
+    (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) :
+    e2Fan_p34 x v u = (‖cross3 (e3Fan_p34 x v u) (u - x)‖⁻¹ * ‖v - x‖⁻¹) •
+      cross3 (v - x) (u - x) := by
+  rw [e2Fan_p34, e3Fan_p34, cross3_smul_left_p34, smul_smul]
+
+private theorem dot_cross_of_dot_e2_p34 {x v u p : V3} (hvx : v ≠ x)
+    (hnc : ¬ Collinear ℝ ({x, v, u} : Set V3)) (hp : p ⬝ᵥ e2Fan_p34 x v u = 0) :
+    p ⬝ᵥ cross3 (v - x) (u - x) = 0 := by
+  rw [e2Fan_eq_smul_cross_p34 hvx hnc] at hp
+  have ht : (‖cross3 (e3Fan_p34 x v u) (u - x)‖⁻¹ * ‖v - x‖⁻¹) ≠ 0 :=
+    mul_ne_zero (inv_ne_zero (norm_ne_zero_iff.mpr (e3Fan_cross_ux_ne_zero_p34 hnc)))
+      (inv_ne_zero (norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)))
+  have hp' : (‖cross3 (e3Fan_p34 x v u) (u - x)‖⁻¹ * ‖v - x‖⁻¹) *
+      (p ⬝ᵥ cross3 (v - x) (u - x)) = 0 := by
+    simp only [WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_neg, WithLp.ofLp_zero, WithLp.ofLp_smul,
+    WithLp.ofLp_toLp, WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_neg, WithLp.toLp_zero,
+    WithLp.toLp_smul, WithLp.toLp_ofLp, sub_zero, add_zero, zero_add, inner_eq_dot, norm_sq_eq_dot] at *
+    simpa only [dotProduct_smul, smul_eq_mul] using hp
+  rcases mul_eq_zero.mp hp' with h | h
+  · exact absurd h ht
+  · exact h
+
+
 /-- HOL `FUN_V3_DEFOR` (IMJXPHR.hl:91). -/
 theorem FUN_V3_DEFOR_p34 (a x1 x2 x6 : ℝ) (v1 w v : V3) :
     v3DeforV4_p34 a x1 x2 x6 v1 w v = fun t => v3DeforV4_p34 a x1 x2 x6 v1 w v t := rfl
@@ -568,7 +1094,31 @@ theorem V3_DEFOR_DEFORMATION_p34 (v1 w : V3) (V : Set V3) (x1 x2 x4 x5 x6 a : �
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖w‖ ^ 2 = x2) (hx6 : ‖v1 - w‖ ^ 2 = x6)
     (ha : a = -1) :
     ∃ e : ℝ, 0 < e ∧ Deformation (v3DeforV4_p34 a x1 x2 x6 v1 w) V (-e) e := by
-  sorry
+
+  obtain ⟨e0, he0, hup⟩ := UPS_X_POS_SEG_p34 v1 w x1 x2 x6 hnc hx1 hx2 hx6 h2
+  refine ⟨e0 / 2, by linarith [he0], ⟨by constructor <;> linarith [he0], ?_, ?_⟩⟩
+  · intro v hv r hr
+    by_cases hvw : v = w
+    · show ContinuousAt (fun t => v3DeforV4_p34 a x1 x2 x6 v1 w v t) r
+      simp only [v3DeforV4_p34, if_pos hvw]
+      have hshift : ContinuousAt (fun t : ℝ => x2 - t) r :=
+        continuousAt_const.sub continuousAt_id
+      have hmem := hup r ⟨by linarith [hr.1, he0], by linarith [hr.2, he0]⟩
+      have hmain : ContinuousAt (fun x3 => v3DeforV1_p17 a v1 w x1 x2 x6 x6 x3) (x2 - r) :=
+        EYYPQDW_CONTINUOUS_AT_X_p17 a v1 w x1 x2 (x2 - r) x6 x6 x6 h1 h2
+          (by linarith [hmem.2]) h6 h6 h6 hnc hx1 hx2 hx6 (by simp [ha]) hmem.1
+      exact hmain.comp hshift
+    · show ContinuousAt (fun t => v3DeforV4_p34 a x1 x2 x6 v1 w v t) r
+      simp only [v3DeforV4_p34, if_neg hvw]
+      exact continuousAt_const
+  · intro v hv
+    by_cases hvw : v = w
+    · show v3DeforV4_p34 a x1 x2 x6 v1 w v 0 = v
+      simp only [v3DeforV4_p34, if_pos hvw]
+      rw [hvw]
+      exact V3_DEFOR_ID_p34 v1 w x1 x2 x6 a h1 hnc hx1 hx2 hx6 ha
+    · show v3DeforV4_p34 a x1 x2 x6 v1 w v 0 = v
+      simp only [v3DeforV4_p34, if_neg hvw]
 
 /-- HOL `V3_DEFOR_IN_BALL_ANNULUS_DEFORMATION` (IMJXPHR.hl:279). -/
 theorem V3_DEFOR_IN_BALL_ANNULUS_DEFORMATION_p34 (v1 v2 : V3) (x1 x2 x6 a : ℝ)
@@ -578,7 +1128,53 @@ theorem V3_DEFOR_IN_BALL_ANNULUS_DEFORMATION_p34 (v1 v2 : V3) (x1 x2 x6 a : ℝ)
     (ha : a = -1) (hball : v2 ∈ ballAnnulus) (hn : ‖v2‖ ≠ 2) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
       v3DeforV4_p34 a x1 x2 x6 v1 v2 v2 t ∈ ballAnnulus := by
-  sorry
+
+  unfold ballAnnulus at hball ⊢
+  obtain ⟨hcl, hnb⟩ := hball
+  have hd2 : dist v2 0 ≤ 2 * h0 := Metric.mem_closedBall.mp hcl
+  have hnorm2 : ‖v2‖ ≤ 2 * h0 := by
+    rwa [dist_eq_norm, sub_zero] at hd2
+  have hge2 : ¬ (dist v2 0 < 2) := fun hmem => hnb hmem
+  have hgt2 : (2:ℝ) < ‖v2‖ := by
+    have h3 : (2:ℝ) ≤ ‖v2‖ := by
+      have h3' : (2:ℝ) ≤ dist v2 0 := le_of_not_gt hge2
+      rwa [dist_eq_norm, sub_zero] at h3'
+    exact lt_of_le_of_ne h3 (Ne.symm hn)
+  have hx4 : (4:ℝ) < x2 := by
+    rw [← hx2]
+    nlinarith [hgt2]
+  obtain ⟨c0, hc0, hup⟩ := UPS_X_POS_SEG_C_p34 v1 v2 x1 x2 x6 ((x2 - 4) / 2)
+    hnc hx1 hx2 hx6 h2 (by linarith [hx4])
+  refine ⟨c0, hc0, fun t ht => ?_⟩
+  obtain ⟨hups, hx2t, htlt⟩ :=
+    hup t ⟨by linarith [ht.1, hc0], ht.2⟩
+  have hv3 : ((x1 + (x2 - t) - x6) / (2 * x1)) • v1 +
+      ((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) •
+        cross3 v1 (cross3 v1 v2) = v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) := rfl
+  have hnorm := EYYPQDW_NORMV3_p17 v1 v2 (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t))
+    x1 x2 (x2 - t) x6 x6 x6 a h1 h2 hx2t h6 h6 h6 hnc hx1 hx2 hx6 (by simp [ha]) hups hv3
+  rw [v3DeforV4_p34, if_pos rfl]
+  constructor
+  · -- in the closed ball of radius 2 * h0
+    refine Metric.mem_closedBall.mpr ?_
+    rw [dist_eq_norm, sub_zero]
+    apply norm_le_of_sq_le_p34 (by norm_num [h0]) (norm_nonneg _)
+    have hx2le : ‖v2‖ ^ 2 ≤ (2 * h0) ^ 2 := by
+      exact sq_le_sq' (by linarith [norm_nonneg v2]) hnorm2
+    rw [hnorm]
+    linarith
+  · -- not in the open ball of radius 2
+    intro hm
+    rw [Metric.mem_ball] at hm
+    rw [dist_eq_norm, sub_zero] at hm
+    have h2t : (2:ℝ) * t < x2 - 4 := by
+      rw [lt_div_iff₀ (by norm_num : (0:ℝ) < 2)] at htlt
+      linarith [htlt, hc0]
+    have hnorm4 : (2:ℝ) < ‖v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)‖ := by
+      apply norm_lt_of_sq_lt_p34 (norm_nonneg _) (by norm_num)
+      rw [hnorm]
+      linarith
+    linarith
 
 /-- HOL `NORM_POS_COLLINEAR` (IMJXPHR.hl:321). -/
 theorem NORM_POS_COLLINEAR_p34 (v1 v2 : V3) (x1 x2 x6 : ℝ)
@@ -637,7 +1233,33 @@ theorem HYPER_MM_COLLINEAR_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (v1 v2 
     (hl : w l = v2) (hl1 : w (l + 1) = v1)
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6) :
     0 < x1 ∧ 0 < x2 ∧ 0 < x6 ∧ ¬Collinear ℝ ({0, v1, v2} : Set V3) := by
-  sorry
+
+  have hBB : BBsV39 s w := by
+    have h := hmw
+    simp only [MMsV39, Set.mem_setOf_eq] at h
+    have h2 := h.1
+    simp only [BBprime2V39, Set.mem_setOf_eq] at h2
+    have h3 := h2.1
+    simp only [BBprimeV39, Set.mem_setOf_eq] at h3
+    exact h3.1
+  have hclf := BBS_IMP_CONVEX_LOCAL_FAN_p34 s k w hk hkk hBB
+  obtain ⟨hlf, -⟩ := hclf
+  obtain ⟨hfan, -, -, -, -, -⟩ := hlf
+  obtain ⟨-, -, -, -, hfan6, -⟩ := hfan
+  have hed : ({v2, v1} : Set V3) ∈
+      Set.range (fun i : ℕ => ({w i, w (i + 1)} : Set V3)) := by
+    refine ⟨l, ?_⟩
+    show ({w l, w (l + 1)} : Set V3) = ({v2, v1} : Set V3)
+    rw [hl, hl1]
+  have hncins := hfan6 ({v2, v1} : Set V3) hed
+  have hnc' : ¬ Collinear ℝ ({0, v1, v2} : Set V3) := by
+    intro hc
+    apply hncins
+    have hset : ({0, v2, v1} : Set V3) = ({0, v1, v2} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [hset]
+  exact (NORM_POS_COLLINEAR_p34 v1 v2 x1 x2 x6 hnc' hx1 hx2 hx6).imp id
+    (fun h => ⟨h.1, h.2, hnc'⟩)
 
 /-- HOL `EYYPQDW_CONTINUOUS_LIFT_DIST` (IMJXPHR.hl:404); the HOL `lift`
 wrapper is dropped (`ℝ`-valued `dist`). -/
@@ -882,12 +1504,79 @@ theorem DEFORMATION_DIST_LE_V3_DEFOR_B_SUC_p34 (s : ScsV39) (k l : ℕ) (w : ℕ
 theorem xrr_decreasing_lt_p34 (y1 y1' y2 y6 : ℝ) (h1 : 2 ≤ y1) (h1' : 2 ≤ y1')
     (h2 : 2 ≤ y2) (h6 : 2 ≤ y6) (h2h : y2 ≤ 2 * h0) (hlt : y1 < y1') :
     xrr y1' y2 y6 < xrr y1 y2 y6 := by
-  sorry
+
+  have hh0 : (0:ℝ) < 2 - h0 * h0 := by norm_num [h0]
+  have h4 : (4:ℝ) ≤ y1 * y1' := by
+    have hy1' : (2:ℝ) < y1' := lt_of_le_of_lt h1 hlt
+    nlinarith [mul_nonneg (sub_nonneg.mpr h1) (by linarith [hy1']), sub_nonneg.mpr h1,
+      sub_nonneg.mpr (le_of_lt hy1')]
+  have hc : y2 * y2 - y6 * y6 < y1 * y1' := by
+    have h2sq : y2 * y2 ≤ 4 * (h0 * h0) := by
+      nlinarith [sq_nonneg (2 * h0 - y2), sq_nonneg (2 * h0 + y2)]
+    have h6sq : (2:ℝ) * 2 ≤ y6 * y6 := by
+      nlinarith [sq_nonneg (y6 - 2)]
+    linarith
+  have hkey : (0:ℝ) < (y1' * y1' + y2 * y2 - y6 * y6) / y1'
+      - (y1 * y1 + y2 * y2 - y6 * y6) / y1 := by
+    have hEq : (y1' * y1' + y2 * y2 - y6 * y6) / y1'
+        - (y1 * y1 + y2 * y2 - y6 * y6) / y1
+        = (y1' - y1) * ((y1 * y1' - (y2 * y2 - y6 * y6)) / (y1 * y1')) := by
+      field_simp
+      ring
+    rw [hEq]
+    exact mul_pos (by linarith [hlt]) (div_pos (by linarith [hc]) (by nlinarith))
+  have hd : (0:ℝ) < (y1' * y1' + y2 * y2 - y6 * y6) / (2 * y1' * y2)
+      - (y1 * y1 + y2 * y2 - y6 * y6) / (2 * y1 * y2) := by
+    have hEq : (y1' * y1' + y2 * y2 - y6 * y6) / (2 * y1' * y2)
+        - (y1 * y1 + y2 * y2 - y6 * y6) / (2 * y1 * y2)
+        = ((y1' * y1' + y2 * y2 - y6 * y6) / y1'
+            - (y1 * y1 + y2 * y2 - y6 * y6) / y1) / (2 * y2) := by
+      field_simp
+    rw [hEq]
+    exact div_pos hkey (by linarith)
+  simp only [xrr]
+  linarith
 
 /-- HOL `exp_aff_gt_by_dot` (IMJXPHR.hl:801). -/
 theorem exp_aff_gt_by_dot_p34 (x v u : V3) (hnc : ¬Collinear ℝ {x, v, u}) :
     affGt {x, v} {u} = {w : V3 | (w - x) ⬝ᵥ e2Fan_p34 x v u = 0 ∧ 0 < (w - x) ⬝ᵥ e1Fan_p34 x v u} := by
-  sorry
+
+  have hvx : v ≠ x := ncol_vx_p34 hnc
+  have hux : u ≠ x := ncol_ux_p34 hnc
+  have huv : u ≠ v := ncol_uv_p34 hnc
+  ext w
+  have hchar := affGt_pair_iff (v0 := x) (v1 := v) (x := u) (y := w) (Ne.symm hvx) hux huv
+  rw [hchar, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨c, hc, h, hw⟩
+    refine ⟨?_, ?_⟩
+    · rw [hw]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        smul_dotProduct, dotProduct_smul, smul_eq_mul, dot_e2Fan_p34 hnc, vdot_e2Fan_p34 hnc]
+      ring
+    · rw [hw]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        smul_dotProduct, dotProduct_smul, smul_eq_mul, vdot_e1Fan_p34 hnc, zero_mul, mul_zero,
+        add_zero]
+      exact mul_pos hc (udot_e1Fan_p34 hnc)
+  · rintro ⟨he2, he1p⟩
+    have hNdot : (w - x) ⬝ᵥ cross3 (v - x) (u - x) = 0 :=
+      dot_cross_of_dot_e2_p34 hvx hnc he2
+    have hsp : (w - x) ∈ Submodule.span ℝ ({v - x, u - x} : Set V3) :=
+      mem_span_AB_of_dot_cross_p34 (A := v - x) (B := u - x) (p := w - x)
+        (fun hc => hnc ((ncol_shift_p34 hvx).mp hc)) hNdot
+    obtain ⟨a, b, hab⟩ := Submodule.mem_span_pair.mp hsp
+    have hdot1 : (w - x) ⬝ᵥ e1Fan_p34 x v u = b * ((u - x) ⬝ᵥ e1Fan_p34 x v u) := by
+      rw [← hab]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        smul_dotProduct, dotProduct_smul, smul_eq_mul, vdot_e1Fan_p34 hnc, zero_mul, mul_zero,
+        add_zero, zero_add]
+    rw [hdot1] at he1p
+    have hbpos : (0:ℝ) < b := by
+      by_contra hbn
+      push_neg at hbn
+      nlinarith [mul_nonneg (le_of_lt (udot_e1Fan_p34 hnc)) (by linarith : (0:ℝ) ≤ -b)]
+    exact ⟨b, hbpos, a, by rw [add_comm]; exact hab.symm⟩
 
 /-- HOL `CROSS_LAGRANGE1` (IMJXPHR.hl:804; restated verbatim at :876). -/
 theorem CROSS_LAGRANGE1_p34 (x y z : V3) :
@@ -898,12 +1587,37 @@ theorem CROSS_LAGRANGE1_p34 (x y z : V3) :
 /-- HOL `exp_aff_by_dot` (IMJXPHR.hl:872). -/
 theorem exp_aff_by_dot_p34 (x v u : V3) (hnc : ¬Collinear ℝ {x, v, u}) :
     affineSpan ℝ ({x, v, u} : Set V3) = {w : V3 | (w - x) ⬝ᵥ e2Fan_p34 x v u = 0} := by
-  sorry
+
+  have hvx : v ≠ x := ncol_vx_p34 hnc
+  ext z
+  rw [mem_affSpan3_iff_p34, Set.mem_setOf_eq]
+  constructor
+  · rw [Submodule.mem_span_pair]
+    rintro ⟨a, b, hab⟩
+    rw [← hab]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul, dot_e2Fan_p34 hnc, vdot_e2Fan_p34 hnc]
+    ring
+  · intro hz
+    exact mem_span_AB_of_dot_cross_p34 (fun hc => hnc ((ncol_shift_p34 hvx).mp hc))
+      (dot_cross_of_dot_e2_p34 hvx hnc hz)
 
 /-- HOL `IN_AFF_EQ_DOT_E2_FAN` (IMJXPHR.hl:940). -/
 theorem IN_AFF_EQ_DOT_E2_FAN_p34 (x y z : V3) (hnc : ¬Collinear ℝ ({0, x, y} : Set V3)) :
     e2Fan_p34 0 x y ⬝ᵥ z = 0 ↔ z ∈ affineSpan ℝ ({0, x, y} : Set V3) := by
-  sorry
+
+  have h1 := exp_aff_by_dot_p34 0 x y hnc
+  have h2 : z ∈ (affineSpan ℝ ({0, x, y} : Set V3) : Set V3) ↔
+      (z - (0 : V3)) ⬝ᵥ e2Fan_p34 0 x y = 0 := by
+    rw [h1]
+    simp only [Set.mem_setOf_eq]
+  have h3 : (e2Fan_p34 0 x y ⬝ᵥ z = 0) ↔
+      ((z - (0 : V3)) ⬝ᵥ e2Fan_p34 0 x y = 0) := by
+    rw [sub_zero]
+    constructor
+    · intro hz; rwa [dot_comm_p34] at hz
+    · intro hz; rwa [dot_comm_p34]
+  exact h3.trans h2.symm
 
 /-- HOL `OPEN_RELA_AFF_GT` (IMJXPHR.hl:951). -/
 theorem OPEN_RELA_AFF_GT_p34 (z x y : V3)
@@ -911,7 +1625,101 @@ theorem OPEN_RELA_AFF_GT_p34 (z x y : V3)
     (h2 : ¬Collinear ℝ ({0, x, y} : Set V3))
     (hz : z ∈ affGt {0} {x, y}) :
     ∃ e : ℝ, 0 < e ∧ Metric.ball z e ∩ affineSpan ℝ ({0, x, z} : Set V3) ⊆ affGt {0} {x, y} := by
-  sorry
+
+  have hx0 : x ≠ 0 := ncol_vx_p34 (x := 0) (v := x) (u := y) h2
+  have hy0 : y ≠ 0 := ncol_ux_p34 (x := 0) (v := x) (u := y) h2
+  have hxy : x ≠ y := Ne.symm (ncol_uv_p34 (x := 0) (v := x) (u := y) h2)
+  obtain ⟨β, γ, hβ, hγ, hzcoef⟩ :=
+    (affGt_zero_pair_char_p34 hx0 hy0 hxy).mp hz
+  have h2p : ({0, y, x} : Set V3) = ({0, x, y} : Set V3) := by ext q; simp; tauto
+  have h2' : ¬ Collinear ℝ ({0, y, x} : Set V3) := fun hc => h2 (by rwa [h2p] at hc)
+  have hxz1 : x ⬝ᵥ e1Fan_p34 0 x y = 0 := by
+    have hh := vdot_e1Fan_p34 (x := (0:V3)) (v := x) (u := y) h2
+    rwa [sub_zero] at hh
+  have hyp : (0:ℝ) < y ⬝ᵥ e1Fan_p34 0 x y := by
+    have hh := udot_e1Fan_p34 (x := (0:V3)) (v := x) (u := y) h2
+    rwa [sub_zero] at hh
+  have hyx1 : y ⬝ᵥ e1Fan_p34 0 y x = 0 := by
+    have hh := vdot_e1Fan_p34 (x := (0:V3)) (v := y) (u := x) h2'
+    rwa [sub_zero] at hh
+  have hxp : (0:ℝ) < x ⬝ᵥ e1Fan_p34 0 y x := by
+    have hh := udot_e1Fan_p34 (x := (0:V3)) (v := y) (u := x) h2'
+    rwa [sub_zero] at hh
+  have hz1 : z ⬝ᵥ e1Fan_p34 0 x y = γ * (y ⬝ᵥ e1Fan_p34 0 x y) := by
+    rw [← hzcoef]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul, hxz1]
+    ring
+  have hz1p : (0:ℝ) < z ⬝ᵥ e1Fan_p34 0 x y := by rw [hz1]; exact mul_pos hγ hyp
+  have hz1' : z ⬝ᵥ e1Fan_p34 0 y x = β * (x ⬝ᵥ e1Fan_p34 0 y x) := by
+    rw [← hzcoef]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul, hyx1]
+    ring
+  have hz1'p : (0:ℝ) < z ⬝ᵥ e1Fan_p34 0 y x := by rw [hz1']; exact mul_pos hβ hxp
+  have hne1 : ‖e1Fan_p34 0 x y‖ ≠ 0 := by
+    intro h0
+    have hzero : e1Fan_p34 0 x y = 0 := norm_eq_zero.mp h0
+    simpa [hzero] using hz1p
+  have hne1' : ‖e1Fan_p34 0 y x‖ ≠ 0 := by
+    intro h0
+    have hzero : e1Fan_p34 0 y x = 0 := norm_eq_zero.mp h0
+    simpa [hzero] using hz1'p
+  have hn2e1 : (0:ℝ) < 2 * ‖e1Fan_p34 0 x y‖ := by
+    have hnn := norm_nonneg (e1Fan_p34 0 x y)
+    have hpos : (0:ℝ) < ‖e1Fan_p34 0 x y‖ := lt_of_le_of_ne hnn (Ne.symm hne1)
+    linarith
+  have hn2e1' : (0:ℝ) < 2 * ‖e1Fan_p34 0 y x‖ := by
+    have hnn := norm_nonneg (e1Fan_p34 0 y x)
+    have hpos : (0:ℝ) < ‖e1Fan_p34 0 y x‖ := lt_of_le_of_ne hnn (Ne.symm hne1')
+    linarith
+  refine ⟨min (z ⬝ᵥ e1Fan_p34 0 x y / (2 * ‖e1Fan_p34 0 x y‖))
+      (z ⬝ᵥ e1Fan_p34 0 y x / (2 * ‖e1Fan_p34 0 y x‖)),
+    lt_min (div_pos hz1p hn2e1) (div_pos hz1'p hn2e1'), ?_⟩
+  intro q hq
+  obtain ⟨hball, haff⟩ := hq
+  have hspan := (mem_affSpan3_iff_p34 (x := (0:V3)) (v := x) (u := z)).mp haff
+  simp only [sub_zero] at hspan
+  obtain ⟨b, c, hbc⟩ := Submodule.mem_span_pair.mp hspan
+  have hcz : c • z = (c * β) • x + (c * γ) • y := by rw [← hzcoef]; module
+  have hd : ‖q - z‖ < min (z ⬝ᵥ e1Fan_p34 0 x y / (2 * ‖e1Fan_p34 0 x y‖))
+      (z ⬝ᵥ e1Fan_p34 0 y x / (2 * ‖e1Fan_p34 0 y x‖)) := by
+    rw [Metric.mem_ball] at hball
+    rwa [dist_eq_norm] at hball
+  have hd1 : ‖q - z‖ < z ⬝ᵥ e1Fan_p34 0 x y / (2 * ‖e1Fan_p34 0 x y‖) :=
+    lt_of_lt_of_le hd (min_le_left _ _)
+  have hd1' : ‖q - z‖ < z ⬝ᵥ e1Fan_p34 0 y x / (2 * ‖e1Fan_p34 0 y x‖) :=
+    lt_of_lt_of_le hd (min_le_right _ _)
+  have hq1p : (0:ℝ) < q ⬝ᵥ e1Fan_p34 0 x y :=
+    dot_close_pos_p34 hne1 hz1p hd1
+  have hq1'p : (0:ℝ) < q ⬝ᵥ e1Fan_p34 0 y x :=
+    dot_close_pos_p34 hne1' hz1'p hd1'
+  have hq1 : q ⬝ᵥ e1Fan_p34 0 x y = c * (z ⬝ᵥ e1Fan_p34 0 x y) := by
+    rw [← hbc, hcz]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul, hxz1, hz1]
+    ring
+  have hq1' : q ⬝ᵥ e1Fan_p34 0 y x = (b + c * β) * (x ⬝ᵥ e1Fan_p34 0 y x) := by
+    rw [← hbc, hcz]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul, hyx1, hz1']
+    ring
+  have hcpos : (0:ℝ) < c := by
+    by_contra hcn
+    push_neg at hcn
+    have hprod : c * (z ⬝ᵥ e1Fan_p34 0 x y) ≤ 0 := by
+      nlinarith [mul_nonneg (le_of_lt hz1p) (by linarith : (0:ℝ) ≤ -c)]
+    linarith [hq1, hprod, hq1p]
+  have hbcpos : (0:ℝ) < b + c * β := by
+    by_contra hcn
+    push_neg at hcn
+    have hprod : (b + c * β) * (x ⬝ᵥ e1Fan_p34 0 y x) ≤ 0 := by
+      nlinarith [mul_nonneg (le_of_lt hxp) (by linarith : (0:ℝ) ≤ -(b + c * β))]
+    linarith [hq1', hprod, hq1'p]
+  have hqcoef : (b + c * β) • x + (c * γ) • y = q := by
+    rw [← hbc, hcz]; module
+  exact ((affGt_zero_pair_char_p34 hx0 hy0 hxy).mpr
+    ⟨b + c * β, c * γ, hbcpos, mul_pos hcpos hγ, hqcoef⟩)
 
 /-- HOL `V3_DEFOR_IN_AFF_GT` (IMJXPHR.hl:1026). -/
 theorem V3_DEFOR_IN_AFF_GT_p34 (v1 v2 w : V3) (x1 x2 x6 a : ℝ)
@@ -923,7 +1731,45 @@ theorem V3_DEFOR_IN_AFF_GT_p34 (v1 v2 w : V3) (x1 x2 x6 a : ℝ)
     (hv2 : v2 ∈ affGt {0} {v1, w}) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
       v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) ∈ affGt {0} {v1, w} := by
-  sorry
+
+  have hncperm : ¬ Collinear ℝ ({0, v2, v1} : Set V3) := by
+    intro hc
+    have hset : ({0, v2, v1} : Set V3) = ({0, v1, v2} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset] at hc
+    exact hnc hc
+  obtain ⟨e', he', hsub⟩ := OPEN_RELA_AFF_GT_p34 v2 v1 w hncperm hnc2 hv2
+  obtain ⟨e'', he'', hdist⟩ := EXISTS_SMALL_LT_CONST_p34 v1 v2 v2 x1 x2 x6 a e' h1 h2 h6
+    hnc hx1 hx2 hx6 ha (by rw [dist_self]; linarith)
+  refine ⟨min e' e'', lt_min he' he'', fun t ht => ?_⟩
+  have ht2 : t < e'' := lt_of_lt_of_le ht.2 (min_le_right _ _)
+  have hdist'' : dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 < e' :=
+    hdist t ⟨ht.1, ht2⟩
+  have hballmem : v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) ∈ Metric.ball v2 e' :=
+    Metric.mem_ball.mpr hdist''
+  have hd1 : v1 ⬝ᵥ v1 = x1 := (norm_sq_eq_dot v1).symm.trans hx1
+  have hcross : cross3 v1 (cross3 v1 v2) = (v1 ⬝ᵥ v2) • v1 - x1 • v2 := by
+    rw [cross3, cross3, cross_cross_eq_smul_sub_smul', hd1]
+    simp
+  have hcombo : v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+      = ((x1 + (x2 - t) - x6) / (2 * x1)) • v1
+        + ((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) •
+          ((v1 ⬝ᵥ v2) • v1 - x1 • v2) := by
+    simp only [v3DeforV1_p17]
+    rw [hcross]
+  have haffmem : v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+      ∈ (affineSpan ℝ ({0, v1, v2} : Set V3) : Set V3) := by
+    rw [mem_affSpan3_iff_p34, sub_zero]
+    rw [Submodule.mem_span_pair]
+    refine ⟨((x1 + (x2 - t) - x6) / (2 * x1)) +
+        ((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) * (v1 ⬝ᵥ v2),
+      -(((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) * x1), ?_⟩
+    rw [hcombo]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_neg, WithLp.ofLp_zero, WithLp.ofLp_smul,
+    WithLp.ofLp_toLp, WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_neg, WithLp.toLp_zero,
+    WithLp.toLp_smul, WithLp.toLp_ofLp, sub_zero, add_zero, zero_add, inner_eq_dot, norm_sq_eq_dot] at *
+    module
+  exact hsub ⟨hballmem, haffmem⟩
 
 /-- HOL `V3_DEFOR_IN_AFF_GT_V1` (IMJXPHR.hl:1075). -/
 theorem V3_DEFOR_IN_AFF_GT_V1_p34 (v1 v2 w : V3) (x1 x2 x6 a : ℝ)
@@ -935,13 +1781,61 @@ theorem V3_DEFOR_IN_AFF_GT_V1_p34 (v1 v2 w : V3) (x1 x2 x6 a : ℝ)
     (hv2 : v2 ∈ affGt {0} {v1, w}) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
       v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) ∈ affGt {0} {v1, w} := by
-  sorry
+
+  have hncperm : ¬ Collinear ℝ ({0, v2, v1} : Set V3) := by
+    intro hc
+    have hset : ({0, v2, v1} : Set V3) = ({0, v1, v2} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset] at hc
+    exact hnc hc
+  obtain ⟨e', he', hsub⟩ := OPEN_RELA_AFF_GT_p34 v2 v1 w hncperm hnc2 hv2
+  obtain ⟨e'', he'', hdist⟩ := EXISTS_SMALL_LT_CONST_V1_p34 v1 v2 v2 x1 x2 x6 a e' h1 h2 h6
+    hnc hx1 hx2 hx6 ha (by rw [dist_self]; linarith)
+  refine ⟨min e' e'' / 2, div_pos (lt_min he' he'') (by norm_num), fun t ht => ?_⟩
+  have ht1 : -e'' < t := by linarith [ht.1, min_le_right e' e'', he'']
+  have ht2 : t < e'' := by linarith [ht.2, min_le_right e' e'', he'']
+  have hdist'' : dist (v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)) v2 < e' :=
+    hdist t ⟨ht1, ht2⟩
+  have hballmem : v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t) ∈ Metric.ball v2 e' :=
+    Metric.mem_ball.mpr hdist''
+  have hd1 : v1 ⬝ᵥ v1 = x1 := (norm_sq_eq_dot v1).symm.trans hx1
+  have hcross : cross3 v1 (cross3 v1 v2) = (v1 ⬝ᵥ v2) • v1 - x1 • v2 := by
+    rw [cross3, cross3, cross_cross_eq_smul_sub_smul', hd1]
+    simp
+  have hcombo : v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+      = ((x1 + (x2 - t) - x6) / (2 * x1)) • v1
+        + ((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) •
+          ((v1 ⬝ᵥ v2) • v1 - x1 • v2) := by
+    simp only [v3DeforV1_p17]
+    rw [hcross]
+  have haffmem : v3DeforV1_p17 a v1 v2 x1 x2 x6 x6 (x2 - t)
+      ∈ (affineSpan ℝ ({0, v1, v2} : Set V3) : Set V3) := by
+    rw [mem_affSpan3_iff_p34, sub_zero]
+    rw [Submodule.mem_span_pair]
+    refine ⟨((x1 + (x2 - t) - x6) / (2 * x1)) +
+        ((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) * (v1 ⬝ᵥ v2),
+      -(((a / x1) * Real.sqrt (upsX x1 (x2 - t) x6 / upsX x1 x2 x6)) * x1), ?_⟩
+    rw [hcombo]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_neg, WithLp.ofLp_zero, WithLp.ofLp_smul,
+    WithLp.ofLp_toLp, WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_neg, WithLp.toLp_zero,
+    WithLp.toLp_smul, WithLp.toLp_ofLp, sub_zero, add_zero, zero_add, inner_eq_dot, norm_sq_eq_dot] at *
+    module
+  exact hsub ⟨hballmem, haffmem⟩
 
 /-- HOL `xrr_increasing_le` (IMJXPHR.hl:1130). -/
 theorem xrr_increasing_le_p34 (y1 y2 y6 y6' : ℝ) (h1 : 0 < y1) (h2 : 0 < y2)
     (h6 : 0 ≤ y6) (h6' : y6 ≤ y6') :
     xrr y1 y2 y6 ≤ xrr y1 y2 y6' := by
-  sorry
+
+  have hpos : (0:ℝ) < 2 * y1 * y2 := by nlinarith
+  have hsq : y6 * y6 ≤ y6' * y6' := by
+    nlinarith [sq_nonneg (y6' - y6), h6, h6']
+  have hd : y1 * y1 + y2 * y2 - y6' * y6' ≤ y1 * y1 + y2 * y2 - y6 * y6 := by linarith
+  have key : (y1 * y1 + y2 * y2 - y6' * y6') / (2 * y1 * y2)
+      ≤ (y1 * y1 + y2 * y2 - y6 * y6) / (2 * y1 * y2) := by
+    exact div_le_div_of_nonneg_right hd (by linarith)
+  simp only [xrr]
+  linarith
 
 /-- HOL `DEFORMATION_DIST_LE_2` (IMJXPHR.hl:1143). -/
 theorem DEFORMATION_DIST_LE_2_p34 (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
