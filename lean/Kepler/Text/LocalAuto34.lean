@@ -86,6 +86,7 @@ import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto7
 import Kepler.Text.CircularSolKit
+import Kepler.Text.LocalAuto23
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -5195,6 +5196,16 @@ theorem DEFORMATION_LUNAR_AFFINE_HULL_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ �
 
 /-! ## Section 3: the composite registry arrows -/
 
+/-- `Lunar v w` is symmetric (`LUNAR_COMM` in the LA1 vocabulary). -/
+private theorem w11_lunar_comm (v w : V3) (V : Set V3) (E : Set (Set V3)) :
+    Lunar v w V E ↔ Lunar w v V E := by
+  have hp : ({v, w} : Set V3) = {w, v} := Set.pair_comm v w
+  have hc : ({0, v, w} : Set V3) = {0, w, v} := by
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  simp only [Lunar, hp, hc, ne_comm]
+
 /-- HOL `V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1` (IMJXPHR.hl:5535; shape
 `mk_imp (ZLZTHIC_concl, mk_imp (MHAEYJN_concl, V3_DEFOR_CONVEX_LOCAL_FAN_concl))`).
 DISCHARGES: proving this closes the `ZLZTHIC`/`MHAEYJN` antecedents for the
@@ -5220,7 +5231,136 @@ theorem V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1_p34 (hz : ZLZTHIC_prop_p34)
           v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t})
         (Set.range fun i => (v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t,
           v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t)) := by
-  sorry
+  subst ha
+  set V : Set V3 := Set.range w with hV
+  set E : Set (Set V3) := Set.range (fun i => {w i, w (i + 1)}) with hE
+  set FF : Set (V3 × V3) := Set.range (fun i => (w i, w (i + 1))) with hFF
+  have hBB : BBsV39 s w := mms_bbs_p34 hmw
+  have hta : taustarV39 s w < 0 := by
+    have h1 := hmw
+    simp only [MMsV39, Set.mem_setOf_eq] at h1
+    have h2 := h1.1
+    simp only [BBprime2V39, Set.mem_setOf_eq] at h2
+    have h3 := h2.1
+    simp only [BBprimeV39, Set.mem_setOf_eq] at h3
+    exact h3.2.2
+  have hcirc : ¬ Circular V E := by
+    have h := JKQEWGV2_p23 s w hs (by omega) hBB hta
+    simpa [V, E, Set.image_univ] using h
+  have hclf : ConvexLocalFan V E FF := by
+    have h := BBS_IMP_CONVEX_LOCAL_FAN_p34 s k w hk hkk hBB
+    simpa [V, E, FF] using h
+  obtain ⟨hx1p, hx2p, hx6p, hnc⟩ :=
+    HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6 hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  -- the generic/circular/lunar trichotomy of a local fan
+  have hlf : LocalFan V E FF := hclf.1
+  obtain ⟨hfan, x, hxD, hFFeq, hDih, hreg⟩ := hlf
+  have hlf' : LocalFan V E FF := ⟨hfan, x, hxD, hFFeq, hDih, hreg⟩
+  have hno : dartsOfHyp_p3 E V = Fan.dart1OfFan V E := hno_of_no_isolated (w10_hedge hreg)
+  have hlf3 : localFan_p3 V E FF := localFan_p3.of_LocalFan hlf' hno
+  have htri := CIZMRRH hlf3
+  -- deformation and interior-angle witnesses
+  obtain ⟨e3, he3, hdef3⟩ :=
+    V3_DEFOR_DEFORMATION_p34 v1 v2 V x1 x2 x2 x2 x6 (-1) hx1p hx2p hx2p hx2p hx6p
+      hnc hx1 hx2 hx6 rfl
+  obtain ⟨e4, he4, hang4⟩ :=
+    DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
+      hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF.symm
+  rcases htri with hgen | hcirc3 | hlun3
+  · -- (1) generic: the ZLZTHIC arrow applies
+    have hgen0 : Generic V E := by
+      simpa only [generic_p3, Generic] using hgen.1
+    set e1 : ℝ := min e3 e4 / 2 with he1def
+    have he1pos : 0 < e1 := by
+      have h : 0 < min e3 e4 := lt_min he3 he4
+      rw [he1def]; linarith
+    have he1lt3 : e1 < e3 := by
+      have h2 : min e3 e4 ≤ e3 := min_le_left _ _
+      rw [he1def]; nlinarith
+    have he1lt4 : e1 < e4 := by
+      have h2 : min e3 e4 ≤ e4 := min_le_right _ _
+      rw [he1def]; nlinarith
+    have hdef1 : Deformation (fun v t => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) V (-e1) e1 :=
+      DEFORMATION_SMALL_INTERVAL_p34 hdef3 (by linarith) (by linarith) he1pos
+        (le_of_lt he1lt3)
+    have hang1 : ∀ v ∈ V, ∀ t ∈ Icc (-e1) e1,
+        interiorAngle1 0 FF v = Real.pi →
+        interiorAngle1 0 ((fun d : V3 × V3 => (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 d.1 t,
+          v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 d.2 t)) '' FF)
+          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) ≤ Real.pi := by
+      intro v hv t ht hpi
+      exact hang4 v t (hV ▸ hv) (by linarith [ht.1]) (by linarith [ht.2]) hpi
+    obtain ⟨eps, heps, hconcl⟩ := hz (-e1) e1 V E FF
+      (fun v t => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) hclf hgen0 hdef1 hang1
+    refine ⟨eps, heps, fun t ht => ?_⟩
+    have h := (hconcl t ht).1
+    rw [V_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2,
+        E_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2,
+        F_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2, ← hV, ← hE, ← hFF]
+    exact h
+  · -- (2) circular: excluded by JKQEWGV2
+    exact absurd (by simpa only [circular_p3, Circular] using hcirc3.1) hcirc
+  · -- (3) lunar: the MHAEYJN arrow applies
+    obtain ⟨vv, w1, hlun3'⟩ := hlun3.1
+    have hlun : Lunar vv w1 V E := by
+      simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hlun3'
+    have hang_lt : interiorAngle1 0 FF vv < Real.pi / 2 := by
+      have h := JKQEWGV3_p23 s w vv w1 hs hBB (by omega) hta (by
+        simpa [V, E, Set.image_univ] using hlun)
+      simpa [FF, Set.image_univ] using h
+    have hv2V : v2 ∈ V := by
+      rw [hV]; exact ⟨l, hl⟩
+    have hv2ne_v : v2 ≠ vv := by
+      intro h
+      have hwl : w l = vv := hl.trans h
+      have hneg : ¬ Lunar w1 vv V E := by
+        have h' := hlunar V E w1 rfl rfl
+        rwa [hwl] at h'
+      exact hneg ((w11_lunar_comm vv w1 V E).mp hlun)
+    have hv2ne_w1 : v2 ≠ w1 := by
+      intro h
+      have hneg : ¬ Lunar vv v2 V E := by
+        have h' := hlunar V E vv rfl rfl
+        rwa [hl] at h'
+      exact hneg (h.symm ▸ hlun)
+    obtain ⟨e5, he5, haff5⟩ :=
+      DEFORMATION_LUNAR_AFFINE_HULL_V1_p34 s k l w v1 v2 vv w1 x1 x2 x6 (-1) V E
+        hk hkk hs hmw haz hncW haff hl hl1 (fun h => hn2 h.symm) hx1 hx2 hx6 rfl
+        (Ne.symm hv2ne_v) (Ne.symm hv2ne_w1) rfl hV.symm hE.symm hlun
+    set e1 : ℝ := min (min e3 e4) e5 / 2 with he1def
+    have he1pos : 0 < e1 := by
+      have h : 0 < min (min e3 e4) e5 := lt_min (lt_min he3 he4) he5
+      rw [he1def]; linarith
+    have he1lt3 : e1 < e3 := by
+      have h2 : min (min e3 e4) e5 ≤ e3 := (min_le_left _ _).trans (min_le_left _ _)
+      rw [he1def]; nlinarith
+    have he1lt4 : e1 < e4 := by
+      have h2 : min (min e3 e4) e5 ≤ e4 := (min_le_left _ _).trans (min_le_right _ _)
+      rw [he1def]; nlinarith
+    have he1lt5 : e1 < e5 := by
+      have h2 : min (min e3 e4) e5 ≤ e5 := min_le_right _ _
+      rw [he1def]; nlinarith
+    have hdef1 : Deformation (fun v t => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) V (-e1) e1 :=
+      DEFORMATION_SMALL_INTERVAL_p34 hdef3 (by linarith) (by linarith) he1pos
+        (le_of_lt he1lt3)
+    have hfix : ∀ u' ∈ V, v2 ≠ u' → ∀ t ∈ Icc (-e1) e1,
+        v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 u' t = u' := by
+      intro u' _ hu' t _ht
+      simp only [v3DeforV4_p34, if_neg (Ne.symm hu')]
+    have haffine : ∀ t ∈ Icc (-e1) e1,
+        v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈
+          affineSpan ℝ ({0, vv, w1, v2} : Set V3) := by
+      intro t ht
+      exact haff5 t ⟨by linarith [ht.1], by linarith [ht.2]⟩
+    obtain ⟨eps, heps, hconcl⟩ := hm (-e1) e1 V E FF
+      (fun v t => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) vv w1 v2
+      hclf hlun hdef1 (by linarith [Real.pi_pos]) hv2V hv2ne_v hv2ne_w1 hfix haffine
+    refine ⟨eps, heps, fun t ht => ?_⟩
+    have h := (hconcl t ht).1
+    rw [V_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2,
+        E_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2,
+        F_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2, ← hV, ← hE, ← hFF]
+    exact h
 
 /-- `_p28`-style quasi-injectivity of an `BBs` realisation, in-file (LA34):
 `w x = w y → x % s.k = y % s.k`. Needed by the `ncard` computation below;
@@ -7310,7 +7450,136 @@ theorem V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1_TWO_CASES_p34 (hz : ZLZTHIC_pro
           v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t})
         (Set.range fun i => (v3DeforV4_p34 a x1 x2 x6 v1 v2 (w i) t,
           v3DeforV4_p34 a x1 x2 x6 v1 v2 (w (i + 1)) t)) := by
-  sorry
+  subst ha
+  set V : Set V3 := Set.range w with hV
+  set E : Set (Set V3) := Set.range (fun i => {w i, w (i + 1)}) with hE
+  set FF : Set (V3 × V3) := Set.range (fun i => (w i, w (i + 1))) with hFF
+  have hBB : BBsV39 s w := mms_bbs_p34 hmw
+  have hta : taustarV39 s w < 0 := by
+    have h1 := hmw
+    simp only [MMsV39, Set.mem_setOf_eq] at h1
+    have h2 := h1.1
+    simp only [BBprime2V39, Set.mem_setOf_eq] at h2
+    have h3 := h2.1
+    simp only [BBprimeV39, Set.mem_setOf_eq] at h3
+    exact h3.2.2
+  have hcirc : ¬ Circular V E := by
+    have h := JKQEWGV2_p23 s w hs (by omega) hBB hta
+    simpa [V, E, Set.image_univ] using h
+  have hclf : ConvexLocalFan V E FF := by
+    have h := BBS_IMP_CONVEX_LOCAL_FAN_p34 s k w hk hkk hBB
+    simpa [V, E, FF] using h
+  obtain ⟨hx1p, hx2p, hx6p, hnc⟩ :=
+    HYPER_MM_COLLINEAR_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6 hkk hs hmw hk hl hlk hx1 hx2 hx6
+  -- the generic/circular/lunar trichotomy of a local fan
+  have hlf : LocalFan V E FF := hclf.1
+  obtain ⟨hfan, x, hxD, hFFeq, hDih, hreg⟩ := hlf
+  have hlf' : LocalFan V E FF := ⟨hfan, x, hxD, hFFeq, hDih, hreg⟩
+  have hno : dartsOfHyp_p3 E V = Fan.dart1OfFan V E := hno_of_no_isolated (w10_hedge hreg)
+  have hlf3 : localFan_p3 V E FF := localFan_p3.of_LocalFan hlf' hno
+  have htri := CIZMRRH hlf3
+  -- deformation and interior-angle witnesses
+  obtain ⟨e3, he3, hdef3⟩ :=
+    V3_DEFOR_DEFORMATION_p34 v1 v2 V x1 x2 x2 x2 x6 (-1) hx1p hx2p hx2p hx2p hx6p
+      hnc hx1 hx2 hx6 rfl
+  obtain ⟨e4, he4, hang4⟩ :=
+    DEFORMATION_INTERIOR_ANGLE1_V3_DEFOR_V1_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6 (-1) FF
+      hk hkk hs hmw hl hlk hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hFF.symm
+  rcases htri with hgen | hcirc3 | hlun3
+  · -- (1) generic: the ZLZTHIC arrow applies
+    have hgen0 : Generic V E := by
+      simpa only [generic_p3, Generic] using hgen.1
+    set e1 : ℝ := min e3 e4 / 2 with he1def
+    have he1pos : 0 < e1 := by
+      have h : 0 < min e3 e4 := lt_min he3 he4
+      rw [he1def]; linarith
+    have he1lt3 : e1 < e3 := by
+      have h2 : min e3 e4 ≤ e3 := min_le_left _ _
+      rw [he1def]; nlinarith
+    have he1lt4 : e1 < e4 := by
+      have h2 : min e3 e4 ≤ e4 := min_le_right _ _
+      rw [he1def]; nlinarith
+    have hdef1 : Deformation (fun v t => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) V (-e1) e1 :=
+      DEFORMATION_SMALL_INTERVAL_p34 hdef3 (by linarith) (by linarith) he1pos
+        (le_of_lt he1lt3)
+    have hang1 : ∀ v ∈ V, ∀ t ∈ Icc (-e1) e1,
+        interiorAngle1 0 FF v = Real.pi →
+        interiorAngle1 0 ((fun d : V3 × V3 => (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 d.1 t,
+          v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 d.2 t)) '' FF)
+          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) ≤ Real.pi := by
+      intro v hv t ht hpi
+      exact hang4 v t (hV ▸ hv) (by linarith [ht.1]) (by linarith [ht.2]) hpi
+    obtain ⟨eps, heps, hconcl⟩ := hz (-e1) e1 V E FF
+      (fun v t => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) hclf hgen0 hdef1 hang1
+    refine ⟨eps, heps, fun t ht => ?_⟩
+    have h := (hconcl t ht).1
+    rw [V_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2,
+        E_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2,
+        F_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2, ← hV, ← hE, ← hFF]
+    exact h
+  · -- (2) circular: excluded by JKQEWGV2
+    exact absurd (by simpa only [circular_p3, Circular] using hcirc3.1) hcirc
+  · -- (3) lunar: the MHAEYJN arrow applies
+    obtain ⟨vv, w1, hlun3'⟩ := hlun3.1
+    have hlun : Lunar vv w1 V E := by
+      simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hlun3'
+    have hang_lt : interiorAngle1 0 FF vv < Real.pi / 2 := by
+      have h := JKQEWGV3_p23 s w vv w1 hs hBB (by omega) hta (by
+        simpa [V, E, Set.image_univ] using hlun)
+      simpa [FF, Set.image_univ] using h
+    have hv2V : v2 ∈ V := by
+      rw [hV]; exact ⟨l, hl⟩
+    have hv2ne_v : v2 ≠ vv := by
+      intro h
+      have hwl : w l = vv := hl.trans h
+      have hneg : ¬ Lunar w1 vv V E := by
+        have h' := hlunar V E w1 rfl rfl
+        rwa [hwl] at h'
+      exact hneg ((w11_lunar_comm vv w1 V E).mp hlun)
+    have hv2ne_w1 : v2 ≠ w1 := by
+      intro h
+      have hneg : ¬ Lunar vv v2 V E := by
+        have h' := hlunar V E vv rfl rfl
+        rwa [hl] at h'
+      exact hneg (h.symm ▸ hlun)
+    obtain ⟨e5, he5, haff5⟩ :=
+      DEFORMATION_LUNAR_AFFINE_HULL_V1_TWO_CASES_p34 s k l w v1 v2 vv w1 x1 x2 x6 (-1) V E
+        hk hkk hs hmw haz hncW haff hl hlk (fun h => hn2 h.symm) hx1 hx2 hx6 rfl
+        (Ne.symm hv2ne_v) (Ne.symm hv2ne_w1) hV.symm hE.symm hlun
+    set e1 : ℝ := min (min e3 e4) e5 / 2 with he1def
+    have he1pos : 0 < e1 := by
+      have h : 0 < min (min e3 e4) e5 := lt_min (lt_min he3 he4) he5
+      rw [he1def]; linarith
+    have he1lt3 : e1 < e3 := by
+      have h2 : min (min e3 e4) e5 ≤ e3 := (min_le_left _ _).trans (min_le_left _ _)
+      rw [he1def]; nlinarith
+    have he1lt4 : e1 < e4 := by
+      have h2 : min (min e3 e4) e5 ≤ e4 := (min_le_left _ _).trans (min_le_right _ _)
+      rw [he1def]; nlinarith
+    have he1lt5 : e1 < e5 := by
+      have h2 : min (min e3 e4) e5 ≤ e5 := min_le_right _ _
+      rw [he1def]; nlinarith
+    have hdef1 : Deformation (fun v t => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) V (-e1) e1 :=
+      DEFORMATION_SMALL_INTERVAL_p34 hdef3 (by linarith) (by linarith) he1pos
+        (le_of_lt he1lt3)
+    have hfix : ∀ u' ∈ V, v2 ≠ u' → ∀ t ∈ Icc (-e1) e1,
+        v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 u' t = u' := by
+      intro u' _ hu' t _ht
+      simp only [v3DeforV4_p34, if_neg (Ne.symm hu')]
+    have haffine : ∀ t ∈ Icc (-e1) e1,
+        v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈
+          affineSpan ℝ ({0, vv, w1, v2} : Set V3) := by
+      intro t ht
+      exact haff5 t ⟨by linarith [ht.1], by linarith [ht.2]⟩
+    obtain ⟨eps, heps, hconcl⟩ := hm (-e1) e1 V E FF
+      (fun v t => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v t) vv w1 v2
+      hclf hlun hdef1 (by linarith [Real.pi_pos]) hv2V hv2ne_v hv2ne_w1 hfix haffine
+    refine ⟨eps, heps, fun t ht => ?_⟩
+    have h := (hconcl t ht).1
+    rw [V_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2,
+        E_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2,
+        F_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2, ← hV, ← hE, ← hFF]
+    exact h
 
 /-- HOL `DEFORMATION_INTERIOR_ANGLE1_EQ_V3_DEFOR_V1_TWO_CASES`
 (IMJXPHR.hl:9397). -/
