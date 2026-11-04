@@ -34,6 +34,7 @@ Encoding (HOL → Lean):
   real-arithmetic kit is proved.
 -/
 
+import Kepler.Text.ConicCapVolume
 import Kepler.Text.LocalAuto2
 import Kepler.Text.LocalAuto3
 import Kepler.Text.LocalAuto5
@@ -2673,10 +2674,218 @@ theorem WEDGE_IN_FAN_LOFA_DETER2 (h : localFan_p2 V E FF) (hv : v ∈ V) :
   have hr : rhoNode1_p2 FF (ivsRhoNode1_p2 FF v) = v := LOCAL_FAN_RHO_NODE_IVS h hv
   exact WEDGE_IN_FAN_LOFA_DETER (v := ivsRhoNode1_p2 FF v) (w := v) h hivsV hr
 
-/-- HOL `AZIM_COND_FOR_COPLANAR` (local_lemmas1.hl:5620) — giant. -/
+/-- 三点仿射包 membership 的双系数刻画（差落在 `span {b-a, c-a}`）。 -/
+private theorem w11_exists_combo_of_mem_affineSpan3 {a b c z : V3}
+    (hz : z ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3)) :
+    ∃ d1 d2 : ℝ, z = a + d1 • (b - a) + d2 • (c - a) := by
+  have h1 : z -ᵥ a ∈ vectorSpan ℝ ({a, b, c} : Set V3) :=
+    vsub_mem_vectorSpan_of_mem_affineSpan_of_mem_affineSpan (SetLike.mem_coe.mp hz)
+      (mem_affineSpan ℝ (by simp))
+  rw [vectorSpan_eq_span_vsub_set_right ℝ
+    (by simp : a ∈ ({a, b, c} : Set V3))] at h1
+  have hle : Submodule.span ℝ ((· -ᵥ a) '' ({a, b, c} : Set V3)) ≤
+      Submodule.span ℝ ({b - a, c - a} : Set V3) := by
+    refine Submodule.span_le.mpr ?_
+    rintro p ⟨z', hz'set, hp⟩
+    dsimp only at hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz'set
+    rcases hz'set with hz' | hz' | hz'
+    · rw [← hp, hz', vsub_self]
+      exact Submodule.zero_mem _
+    · rw [← hp, hz', vsub_eq_sub]
+      exact Submodule.subset_span (by simp)
+    · rw [← hp, hz', vsub_eq_sub]
+      exact Submodule.subset_span (by simp)
+  obtain ⟨d1, d2, hd⟩ := Submodule.mem_span_pair.mp (hle h1)
+  have hd' : d1 • (b - a) + d2 • (c - a) = z - a := by
+    rw [hd, vsub_eq_sub]
+  refine ⟨d1, d2, ?_⟩
+  calc z = a + (z - a) := by abel
+    _ = a + (d1 • (b - a) + d2 • (c - a)) := by rw [hd']
+    _ = a + d1 • (b - a) + d2 • (c - a) := by abel
+
+/-- 共面提取的抽象 ℂ 核心：两组实系数组合共用一对复数 P、Q，且轴向组合
+为零、w 侧组合非零时，v 侧组合是 w 侧组合的实倍数。 -/
+private theorem w11_complex_mul_of_span_two {P Q zv zw : ℂ}
+    {β1 β2 α1 α2 γ1 γ2 : ℝ}
+    (hzu : ((β1 : ℝ) : ℂ) * P + ((β2 : ℝ) : ℂ) * Q = 0)
+    (hzv : zv = ((α1 : ℝ) : ℂ) * P + ((α2 : ℝ) : ℂ) * Q)
+    (hzw : zw = ((γ1 : ℝ) : ℂ) * P + ((γ2 : ℝ) : ℂ) * Q)
+    (hβ : β1 ≠ 0 ∨ β2 ≠ 0) (hzw0 : zw ≠ 0) :
+    ∃ μ : ℝ, zv = ((μ : ℝ) : ℂ) * zw := by
+  by_cases hβ1 : β1 = 0
+  · have hβ2 : β2 ≠ 0 := by
+      rcases hβ with h | h
+      · exact absurd hβ1 h
+      · exact h
+    have hβ2' : ((β2 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hβ2
+    have h1 : ((β2 : ℝ) : ℂ) * Q = 0 := by
+      have h1' := hzu
+      rw [hβ1, Complex.ofReal_zero, zero_mul, zero_add] at h1'
+      exact h1'
+    have hQ : Q = 0 := by
+      have h2 : Q = (((β2 : ℝ) : ℂ)⁻¹ * ((β2 : ℝ) : ℂ)) * Q := by
+        rw [inv_mul_cancel₀ hβ2', one_mul]
+      calc Q = (((β2 : ℝ) : ℂ)⁻¹ * ((β2 : ℝ) : ℂ)) * Q := h2
+        _ = ((β2 : ℝ) : ℂ)⁻¹ * (((β2 : ℝ) : ℂ) * Q) := by ring
+        _ = ((β2 : ℝ) : ℂ)⁻¹ * 0 := by rw [h1]
+        _ = 0 := by rw [mul_zero]
+    have hγ1 : γ1 ≠ 0 := by
+      intro h0
+      rw [hzw, h0, hQ] at hzw0
+      simp at hzw0
+    have hd1 : ((α1 / γ1 : ℝ) : ℂ) * ((γ1 : ℝ) : ℂ) = ((α1 : ℝ) : ℂ) := by
+      exact_mod_cast div_mul_cancel₀ α1 hγ1
+    refine ⟨α1 / γ1, ?_⟩
+    rw [hzv, hzw, hQ, mul_add, ← mul_assoc, hd1]
+    simp [mul_zero]
+  · have hβ1' : ((β1 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hβ1
+    have hP : P = ((-(β2 / β1) : ℝ) : ℂ) * Q := by
+      have h1 : ((β1 : ℝ) : ℂ) * P = -((β2 : ℝ) : ℂ) * Q := by
+        linear_combination hzu
+      have h2 : P = (((β1 : ℝ) : ℂ)⁻¹ * ((β1 : ℝ) : ℂ)) * P := by
+        rw [inv_mul_cancel₀ hβ1', one_mul]
+      calc P = (((β1 : ℝ) : ℂ)⁻¹ * ((β1 : ℝ) : ℂ)) * P := h2
+        _ = ((β1 : ℝ) : ℂ)⁻¹ * (((β1 : ℝ) : ℂ) * P) := by ring
+        _ = ((β1 : ℝ) : ℂ)⁻¹ * (-((β2 : ℝ) : ℂ) * Q) := by rw [h1]
+        _ = ((-(β2 / β1) : ℝ) : ℂ) * Q := by
+            push_cast
+            field_simp [hβ1']
+    have hzvQ : zv = ((α2 - α1 * β2 / β1 : ℝ) : ℂ) * Q := by
+      rw [hzv, hP]; push_cast; ring
+    have hzwQ : zw = ((γ2 - γ1 * β2 / β1 : ℝ) : ℂ) * Q := by
+      rw [hzw, hP]; push_cast; ring
+    have hκ : γ2 - γ1 * β2 / β1 ≠ 0 := by
+      intro h0
+      rw [hzwQ, h0] at hzw0
+      simp at hzw0
+    have hd2 : (((α2 - α1 * β2 / β1 : ℝ) / (γ2 - γ1 * β2 / β1 : ℝ) : ℝ) : ℂ)
+        * ((γ2 - γ1 * β2 / β1 : ℝ) : ℂ) = ((α2 - α1 * β2 / β1 : ℝ) : ℂ) := by
+      exact_mod_cast div_mul_cancel₀ _ hκ
+    refine ⟨(α2 - α1 * β2 / β1) / (γ2 - γ1 * β2 / β1), ?_⟩
+    rw [hzvQ, hzwQ, ← mul_assoc, hd2]
+
+/-- HOL `AZIM_EQ_0_PI_EQ_COPLANAR`（Multivariate-flyspeck.ml:3161）的解析
+替代：四点 {x,u,v,w} 共面且 v、w 都不在轴 xu 上时，v-x 与 w-x 在轴向
+正交标架下的 ℂ 平面坐标成实倍数，故 θ = azim x u w v 的相位 e^{iθ} 为
+实数，即 sin θ = 0，结合 0 ≤ θ < 2π 得 θ ∈ {0, π}。 -/
+private theorem w11_azim_eq_0_or_pi_of_coplanar {x u v w : V3}
+    (hncv : ¬ Collinear3 x u v) (hncw : ¬ Collinear3 x u w)
+    (hcop : Coplanar ({x, u, v, w} : Set V3)) :
+    azim x u w v = 0 ∨ azim x u w v = Real.pi := by
+  have hux : u ≠ x := fun he => hncw (collinear3_of_eq he)
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (u - x) (sub_ne_zero.mpr hux)
+  have hax : (u - x : V3) = dist u x • f3 := by rw [dist_eq_norm]; exact halign
+  have hzwne : zOf f1 f2 (w - x) ≠ 0 := (zOf_ne_zero_iff hon hax hux w).mpr hncw
+  obtain ⟨ψ, rb, ra, hrb, hra, hzwrep, hzvrep⟩ := azim_frame_spec hncw hncv hon hax hux
+  -- 共面性 → 公共平面表示 → ℂ 坐标实相关
+  obtain ⟨μ, hμ⟩ : ∃ μ : ℝ, zOf f1 f2 (v - x) = ((μ : ℝ) : ℂ) * zOf f1 f2 (w - x) := by
+    obtain ⟨a, b, c, hsub⟩ := hcop
+    have hxS : x ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have huS : u ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have hvS : v ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have hwS : w ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    obtain ⟨ξ1, ξ2, hξ⟩ := w11_exists_combo_of_mem_affineSpan3 hxS
+    obtain ⟨β1, β2, hβ⟩ := w11_exists_combo_of_mem_affineSpan3 huS
+    obtain ⟨α1, α2, hα⟩ := w11_exists_combo_of_mem_affineSpan3 hvS
+    obtain ⟨γ1, γ2, hγ⟩ := w11_exists_combo_of_mem_affineSpan3 hwS
+    have hvx : v - x = (α1 - ξ1) • (b - a) + (α2 - ξ2) • (c - a) := by
+      rw [hα, hξ]; module
+    have hwx : w - x = (γ1 - ξ1) • (b - a) + (γ2 - ξ2) • (c - a) := by
+      rw [hγ, hξ]; module
+    have huxc : u - x = (β1 - ξ1) • (b - a) + (β2 - ξ2) • (c - a) := by
+      rw [hβ, hξ]; module
+    have hzlin : ∀ p q : V3, ∀ d1 d2 : ℝ, p - q = d1 • (b - a) + d2 • (c - a) →
+        zOf f1 f2 (p - q) = ((d1 : ℝ) : ℂ) * zOf f1 f2 (b - a)
+          + ((d2 : ℝ) : ℂ) * zOf f1 f2 (c - a) := by
+      intro p q d1 d2 hd
+      rw [hd, zOf_add, zOf_smul, zOf_smul]
+    have hzc := hzlin v x (α1 - ξ1) (α2 - ξ2) hvx
+    have hzd := hzlin w x (γ1 - ξ1) (γ2 - ξ2) hwx
+    have hzu0 := hzlin u x (β1 - ξ1) (β2 - ξ2) huxc
+    have hf3z : zOf f1 f2 f3 = 0 := by
+      obtain ⟨-, -, -, -, h13, h23, -⟩ := hon
+      unfold zOf
+      rw [dotProduct_comm f3 f1, dotProduct_comm f3 f2, h13, h23]
+      norm_num
+    rw [hax, zOf_smul, hf3z, mul_zero] at hzu0
+    have hne2 : β1 - ξ1 ≠ 0 ∨ β2 - ξ2 ≠ 0 := by
+      by_contra hcon
+      push_neg at hcon
+      apply hux
+      have hzero : u - x = 0 := by
+        rw [huxc, hcon.1, hcon.2]
+        module
+      exact sub_eq_zero.mp hzero
+    exact w11_complex_mul_of_span_two hzu0.symm hzc hzd hne2 hzwne
+  -- 相位：ra • e^{i(ψ+θ)} = μ • rb • e^{iψ} ⟹ ra • e^{iθ} = μ • rb ∈ ℝ
+  have hkey : ((ra : ℝ) : ℂ) * Complex.exp (((azim x u w v : ℝ) : ℂ) * Complex.I)
+      = ((μ * rb : ℝ) : ℂ) := by
+    have h1 : ((ra : ℝ) : ℂ)
+          * Complex.exp ((((ψ + azim x u w v : ℝ) : ℂ)) * Complex.I)
+        = ((μ : ℝ) : ℂ) * (((rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)) := by
+      rw [← hzvrep, ← hzwrep]
+      exact hμ
+    have hexp : Complex.exp ((((ψ + azim x u w v : ℝ) : ℂ)) * Complex.I)
+        = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+          * Complex.exp (((azim x u w v : ℝ) : ℂ) * Complex.I) := by
+      rw [← Complex.exp_add]
+      congr 1
+      push_cast
+      ring
+    rw [hexp] at h1
+    have h2 : ((ra : ℝ) : ℂ) * Complex.exp (((azim x u w v : ℝ) : ℂ) * Complex.I)
+          * Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        = ((μ * rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * Complex.I) := by
+      push_cast
+      linear_combination h1
+    exact mul_right_cancel₀ (Complex.exp_ne_zero _) h2
+  have hsin : Real.sin (azim x u w v) = 0 := by
+    have h := congrArg Complex.im hkey
+    simp only [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.exp_mul_I,
+      Complex.add_re, Complex.add_im, Complex.I_re, Complex.I_im, Complex.sin_ofReal_re,
+      Complex.cos_ofReal_im, mul_zero, add_zero, zero_mul, zero_add, mul_one, mul_add] at h
+    rcases mul_eq_zero.mp h with h' | h'
+    · exact absurd h' (by exact_mod_cast (ne_of_gt hra))
+    · exact h'
+  obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp hsin
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have hn0 : (0:ℤ) ≤ n := by
+    by_contra hcon
+    push_neg at hcon
+    have hnle : ((n:ℤ) : ℝ) ≤ -1 := by exact_mod_cast (by omega)
+    have hθn : azim x u w v < 0 := by rw [← hn]; nlinarith [hnle, hpi]
+    exact absurd (azim_nonneg x u w v) (not_le.mpr hθn)
+  have hn2 : n < 2 := by
+    by_contra hcon
+    push_neg at hcon
+    have hnge : (2:ℝ) ≤ ((n:ℤ) : ℝ) := by exact_mod_cast (by omega)
+    have hθbig : 2 * Real.pi ≤ azim x u w v := by rw [← hn]; nlinarith [hnge, hpi]
+    exact absurd hθbig (not_le.mpr (azim_lt_two_pi x u w v))
+  rcases (show n = 0 ∨ n = 1 by omega) with rfl | rfl
+  · exact Or.inl (by rw [← hn]; push_cast; norm_num)
+  · exact Or.inr (by rw [← hn]; push_cast; norm_num)
+
+/-- HOL `AZIM_COND_FOR_COPLANAR` (local_lemmas1.hl:5620): the azimuth is `0`
+or `π` iff the four points are coplanar. -/
 theorem AZIM_COND_FOR_COPLANAR (v0 v1 w1 w2 : V3) :
-    azim v0 v1 w1 w2 = 0 ∨ azim v0 v1 w1 w2 = Real.pi ↔ Coplanar {v0, v1, w1, w2} :=
-  sorry
+    azim v0 v1 w1 w2 = 0 ∨ azim v0 v1 w1 w2 = Real.pi ↔ Coplanar {v0, v1, w1, w2} := by
+
+  constructor
+  · intro h
+    exact AZIM_EQ_0_PI_IMP_COPLANAR v0 v1 w1 w2 h
+  · intro hcop
+    by_cases hc1 : Collinear3 v0 v1 w1
+    · exact Or.inl (by rw [azim, if_pos (Or.inl hc1)])
+    by_cases hc2 : Collinear3 v0 v1 w2
+    · exact Or.inl (by rw [azim, if_pos (Or.inr hc2)])
+    · have hset : ({v0, v1, w2, w1} : Set V3) = {v0, v1, w1, w2} := by
+        ext q
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      have hcop' : Coplanar ({v0, v1, w2, w1} : Set V3) := by rw [hset]; exact hcop
+      exact w11_azim_eq_0_or_pi_of_coplanar (x := v0) (u := v1) (v := w2) (w := w1)
+        hc2 hc1 hcop'
 
 /-- HOL `AFF_SUB_PLANE` (local_lemmas1.hl:5640). -/
 theorem AFF_SUB_PLANE (P : Set V3) (hP : plane_p2 P) {S : Set V3} (hS : S ⊆ P) :
