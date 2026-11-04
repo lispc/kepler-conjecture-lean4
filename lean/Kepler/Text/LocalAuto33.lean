@@ -1960,14 +1960,82 @@ theorem SCS_4I2_3_LE_A_p33 (v : ℕ → V3) (hbb : BBsV39 scs4I2 v) (i j : ℕ)
   rw [a_diag_4I2_p33 i j hd] at h
   exact h
 
-/-- HOL `ear_acute` (ARDBZYE.hl:1751).  NEEDS: `main_nonlinear_terminal_v11`
-(y-row 2..2h0, y5 ≥ 3 ⇒ dih_y < π/2). -/
+/-- `atn2 x y` is negative whenever `y < 0` (both branches of the definition). -/
+private theorem atn2_neg_of_y_neg_p33 {x y : ℝ} (hy : y < 0) : atn2 x y < 0 := by
+  unfold atn2
+  by_cases h : |y| < x
+  · rw [if_pos h]
+    refine Real.arctan_lt_zero.mpr ?_
+    exact div_neg_of_neg_of_pos hy (by linarith [abs_nonneg y])
+  · rw [if_neg h, if_neg (by linarith), if_pos hy]
+    have := Real.neg_pi_div_two_lt_arctan (x / y)
+    linarith
+
+/-- The upsilon determinant factors as a Heron product. -/
+private theorem upsX_factor_p33 (a b c : ℝ) :
+    upsX (a * a) (b * b) (c * c) = (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c) := by
+  unfold upsX
+  ring
+
+/-- `ups_x a² b² c² > 0` forces the triangle inequality `c < a + b`. -/
+private theorem ups_triangle_p33 {a b c : ℝ} (ha : 0 < a) (hb : 0 < b) (hc : 0 < c)
+    (h : 0 < upsX (a * a) (b * b) (c * c)) : c < a + b := by
+  by_contra hle
+  push_neg at hle
+  have hfac := upsX_factor_p33 a b c
+  have h4 : a + b - c ≤ 0 := by linarith
+  have h2 : 0 < -a + b + c := by nlinarith
+  have h3 : 0 < a - b + c := by nlinarith
+  have h1 : 0 < a + b + c := by linarith
+  have hprod : 0 < (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c) := by
+    rw [← hfac]
+    simpa only [pow_two] using h
+  have hnonpos : (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c) ≤ 0 := by
+    have hab : 0 ≤ (a + b + c) * (-a + b + c) * (a - b + c) := by positivity
+    exact mul_nonpos_of_nonneg_of_nonpos hab h4
+  linarith
+
+/-- HOL `ear_acute` (ARDBZYE.hl:1751): the `main_nonlinear_terminal_v11`
+instance `2485876245a` (`delta4Y > 0` over the box) plus the `dihY`/atn2
+rendering and the Heron factorization of `upsX` (which yields `y5 < y1 + y3`,
+hence the registry's `y5 ≤ 2 * 2.52`).  PROVED 2026-11-05 (m1a-root-w4). -/
 theorem ear_acute_p33 (_hmn : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 →
       2 ≤ y3 → y3 ≤ 2 * h0 → 2 ≤ y4 → y4 ≤ 2 * h0 → 2 ≤ y6 → y6 ≤ 2 * h0 →
       3 ≤ y5 → 0 < upsX (y1 ^ 2) (y3 ^ 2) (y5 ^ 2) →
-      dihY y1 y2 y3 y4 y5 y6 < Real.pi / 2 := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl ear_acute (terminal_nonlinear instance).
+      dihY y1 y2 y3 y4 y5 y6 < Real.pi / 2 := by
+  intro y1 y2 y3 y4 y5 y6 hy1 hy1u hy2 hy2u hy3 hy3u hy4 hy4u hy6 hy6u hy5 hups
+  have h0val : h0 = (1.26 : ℝ) := rfl
+  have h2h0 : (2 : ℝ) * h0 = 2.52 := by rw [h0val]; norm_num
+  have h1pos : (0 : ℝ) < y1 := by linarith
+  have h3pos : (0 : ℝ) < y3 := by linarith
+  have h5pos : (0 : ℝ) < y5 := by linarith
+  have hups' : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5) := by
+    simpa only [pow_two] using hups
+  have hupper : y5 < y1 + y3 := ups_triangle_p33 h1pos h3pos h5pos hups'
+  have hy5u : y5 ≤ 2 * (2.52 : ℝ) := by
+    have h1u : y1 ≤ 2 * h0 := hy1u
+    have h3u : y3 ≤ 2 * h0 := hy3u
+    nlinarith
+  -- registry entry
+  have hreg : mainEstimate_2485876245a :=
+    _hmn "2485876245a" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have hdelta : 0 < delta4Y y1 y2 y3 y4 y5 y6 :=
+    hreg y1 y2 y3 y4 y5 y6 hy1 (by rw [← h2h0]; exact hy1u) hy2 (by rw [← h2h0]; exact hy2u)
+      hy3 (by rw [← h2h0]; exact hy3u) hy4 (by rw [← h2h0]; exact hy4u) (by linarith) hy5u
+      hy6 (by rw [← h2h0]; exact hy6u)
+  -- unfold dihY into its atn2 form
+  have hdih : dihY y1 y2 y3 y4 y5 y6
+      = Real.pi / 2 + atn2
+          (Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6))
+          (-(delta4Y y1 y2 y3 y4 y5 y6)) := by
+    simp only [dihY, dihXf, deltaY, delta4Y, yOfX]
+  rw [hdih]
+  have hneg : atn2 (Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6))
+      (-(delta4Y y1 y2 y3 y4 y5 y6)) < 0 :=
+    atn2_neg_of_y_neg_p33 (by linarith)
+  linarith
+
 
 /-- HOL `SCS_DIAG_4_ADD2` (ARDBZYE.hl:1787). -/
 theorem SCS_DIAG_4_ADD2_p33 (i : ℕ) : scsDiag 4 (i + 1) (i + 3) :=

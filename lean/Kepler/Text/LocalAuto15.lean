@@ -56,13 +56,18 @@ FILL LEDGER (proof-fill worker, this wave): `NORM_COS_ANGLE_LT_p15`
   `Real.strictAntiOn_arccos` proof (no external blocker existed; the other
   12 remain the chapter's contract registry — no proved blockers found in
   LocalAuto1-38 / PackingAuto1-25 / Fan / Geom for them).
+  M1a root-w4 (2026-11-05): `POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR_p15` was
+  DISCHARGED (12 -> 11 sorries) by the segment variance (Stewart) identity:
+  on `v = p•u + q•w` (`p,q ≥ 0`, `p+q = 1`) one has
+  `‖v‖² = p‖u‖² + q‖w‖² - p q ‖u-w‖²`; the annulus caps `‖u‖²,‖w‖² ≤ (2h0)²`
+  and packing forces `p‖u-w‖ ≥ 2`, `q‖u-w‖ ≥ 2`, so
+  `‖v‖² ≤ (2h0)² - 4 = 2.3504 < 4 ≤ ‖v‖²`.
 
 DISCHARGES (remaining `sorry`): `MAX_COPLANAR_4POINT_p15`,
   `SUM_4ANGLE_4POINT_EQ_2PI_p15`, `EQ_DIAGONAL_MIN_p15`,
   `TWO_DIAGONAL_AT_MOST_p15`, `MAX_IF_COPLANAR_p15`,
   `MAX_IF_COPLANAR1_p15`, `TWO_DIAGONAL_AT_MOST1_p15`, `VPWSHTO1_p15`,
-  `VPWSHTO200_p15`, `VPWSHTO2_p15`, `VPWSHTO_p15`,
-  `POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR_p15`.
+  `VPWSHTO200_p15`, `VPWSHTO2_p15`, `VPWSHTO_p15`.
 -/
 
 import Kepler.Text.LocalAuto4
@@ -409,13 +414,112 @@ theorem VPWSHTO_p15 : ∀ vv : ℕ → V3,
   sorry
 
 /-- HOL `POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR` (VPWSHTO.hl:2114): no annulus
-packing point lies on the closed segment between two others. -/
+packing point lies on the closed segment between two others.
+PROVED 2026-11-05 (m1a-root-w4): Stewart/variance identity + the annulus
+upper bound `2 * h0 = 2.52`; no external blocker. -/
 theorem POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR_p15 : ∀ u v w : V3,
     ({u, v, w} : Set V3) ⊆ ballAnnulus →
     Kepler.Packing ({u, v, w} : Set V3) →
     u ≠ v → u ≠ w → v ≠ w →
     v ∉ segment ℝ u w := by
-  sorry
+  intro u v w hsub hp huv huw hvw hvseg
+  -- annulus membership gives the two norm bounds
+  have hu_ann : u ∈ ballAnnulus := hsub (by simp)
+  have hv_ann : v ∈ ballAnnulus := hsub (by simp)
+  have hw_ann : w ∈ ballAnnulus := hsub (by simp)
+  rw [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+    dist_eq_norm, sub_zero] at hu_ann hv_ann hw_ann
+  obtain ⟨hu_hi, hu_lo⟩ := hu_ann
+  obtain ⟨hv_hi, hv_lo⟩ := hv_ann
+  obtain ⟨hw_hi, hw_lo⟩ := hw_ann
+  have hu2 : 2 ≤ ‖u‖ := le_of_not_gt hu_lo
+  have hv2 : 2 ≤ ‖v‖ := le_of_not_gt hv_lo
+  have hw2 : 2 ≤ ‖w‖ := le_of_not_gt hw_lo
+  -- unpack the segment membership as an affine combination
+  rw [mem_segment_iff_div] at hvseg
+  obtain ⟨a, b, ha, hb, hab, heq⟩ := hvseg
+  set p : ℝ := a / (a + b) with hp_def
+  set q : ℝ := b / (a + b) with hq_def
+  have hp0 : 0 ≤ p := div_nonneg ha (le_of_lt hab)
+  have hq0 : 0 ≤ q := div_nonneg hb (le_of_lt hab)
+  have hpq1 : p + q = 1 := by
+    rw [hp_def, hq_def, ← add_div, div_self (ne_of_gt hab)]
+  have hveq : p • u + q • w = v := heq
+  -- the two pieces of the segment
+  have hcpos : 0 < dist u w := dist_pos.mpr huw
+  have hcnonneg : 0 ≤ dist u w := le_of_lt hcpos
+  have hvu : v - u = q • (w - u) := by
+    rw [← hveq, show p = 1 - q by linarith]
+    module
+  have hvw' : v - w = p • (u - w) := by
+    rw [← hveq, show q = 1 - p by linarith]
+    module
+  have hdist_vu : dist v u = q * dist u w := by
+    rw [dist_eq_norm, dist_eq_norm, hvu, norm_smul, Real.norm_eq_abs,
+      abs_of_nonneg hq0, norm_sub_rev w u]
+  have hdist_vw : dist v w = p * dist u w := by
+    rw [dist_eq_norm, dist_eq_norm, hvw', norm_smul, Real.norm_eq_abs,
+      abs_of_nonneg hp0]
+  -- packing gives both pieces at least 2
+  have hpv : v ∈ ({u, v, w} : Set V3) := by simp
+  have hpu : u ∈ ({u, v, w} : Set V3) := by simp
+  have hpw : w ∈ ({u, v, w} : Set V3) := by simp
+  have h2vw : 2 ≤ dist v w := Packing.dist_ge_two hp hpv hpw hvw
+  have h2vu : 2 ≤ dist v u := Packing.dist_ge_two hp hpv hpu (Ne.symm huv)
+  -- hence p, q > 0
+  have hppos : 0 < p := by
+    rcases eq_or_lt_of_le hp0 with h | h
+    · rw [← h] at hdist_vw
+      simp only [zero_mul] at hdist_vw
+      linarith
+    · exact h
+  have hqpos : 0 < q := by
+    rcases eq_or_lt_of_le hq0 with h | h
+    · rw [← h] at hdist_vu
+      simp only [zero_mul] at hdist_vu
+      linarith
+    · exact h
+  -- the variance identity
+  have hvar : ‖v‖ ^ 2 = p * ‖u‖ ^ 2 + q * ‖w‖ ^ 2 - p * q * ‖u - w‖ ^ 2 := by
+    have hexp : ‖v‖ ^ 2
+        = p ^ 2 * ‖u‖ ^ 2 + 2 * (p * q) * inner ℝ u w + q ^ 2 * ‖w‖ ^ 2 := by
+      rw [← hveq, norm_add_sq_real]
+      simp only [norm_smul, Real.norm_eq_abs, real_inner_smul_left,
+        real_inner_smul_right, mul_pow, sq_abs]
+      ring
+    have hsub : ‖u - w‖ ^ 2 = ‖u‖ ^ 2 - 2 * inner ℝ u w + ‖w‖ ^ 2 :=
+      norm_sub_sq_real u w
+    rw [hexp, hsub]
+    have hp1 : p = 1 - q := by linarith
+    rw [hp1]
+    ring
+  -- numerically: (2 h0)^2 - 4 < 4
+  have hnum : (2 * h0) ^ 2 - 4 < 4 := by
+    have hh : h0 = 1.26 := rfl
+    rw [hh]
+    norm_num
+  -- pool the bounds
+  have hub : ‖u‖ ^ 2 ≤ (2 * h0) ^ 2 := by
+    have h2h0 : 0 ≤ 2 * h0 := by
+      have hh : h0 = 1.26 := rfl
+      rw [hh]; norm_num
+    nlinarith [norm_nonneg u]
+  have hwb : ‖w‖ ^ 2 ≤ (2 * h0) ^ 2 := by
+    have h2h0 : 0 ≤ 2 * h0 := by
+      have hh : h0 = 1.26 := rfl
+      rw [hh]; norm_num
+    nlinarith [norm_nonneg w]
+  have h4pq : 4 ≤ p * q * ‖u - w‖ ^ 2 := by
+    rw [hdist_vw] at h2vw
+    rw [hdist_vu] at h2vu
+    have hmul : (2 : ℝ) * 2 ≤ (p * dist u w) * (q * dist u w) :=
+      mul_le_mul h2vw h2vu (by norm_num) (by nlinarith [h2vw])
+    have hdw : ‖u - w‖ = dist u w := by rw [dist_eq_norm]
+    rw [hdw]
+    nlinarith [hmul]
+  -- final arithmetic
+  have hvc : 4 ≤ ‖v‖ ^ 2 := by nlinarith [norm_nonneg v]
+  nlinarith [hvar, hub, hwb, h4pq, hvc, hppos, hqpos]
 
 private theorem triple_subset5_p15 {vv : ℕ → V3} {a b c : ℕ} (ha : a < 5) (hb : b < 5)
     (hc : c < 5) :
