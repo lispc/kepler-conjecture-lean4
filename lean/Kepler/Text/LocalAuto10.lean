@@ -44,12 +44,11 @@ Encoding notes (per Kepler/Text/Polytope.lean conventions):
   bindings (`ENF_RULE`, `MP_TAC2`, `TR_ENF_TAC`, the local `ge`) have no
   Lean counterpart; `ENF_RULE`'s two instances are inlined into
   `EDGE_MAP_RESO_INVERSE`, `TR_ENF_TAC`'s content into `ENF_IMAGE_ITSELF`.
-- Giant proofs are stated and `sorry`-marked (DISCHARGES registry); the
-  mechanical/forwarding layer is proved.
+- All 12 originally unproved giant proofs of the DISCHARGES registry are
+  now discharged; the mechanical/forwarding layer remains alongside them.
 
-DISCHARGES: nothing yet (this file is the LVDUCXU contract registry; the
-sorried giants are discharged by a later wave, after which the `sorry`s
-disappear).
+DISCHARGES: complete (the LVDUCXU contract registry is fully proved; no
+unfinished proof remains in this file).
 -/
 
 import Kepler.Text.LocalAuto3
@@ -1220,8 +1219,125 @@ theorem FF_DISJOINT_ITS_IMAGE_CARD_EQ {v : V3} {V : Set V3} {E : Set (Set V3)}
     (hx : x ∈ dartsOfHyp_p3 E V) (hFF : FF = H1.face x) (hsimp : H2.Simple)
     (hcard : 2 < Set.ncard FF) :
     FF ∩ ((H2.nodeMap : V3 × V3 → V3 × V3) '' FF) = ∅ ∧
-      Set.ncard FF = Set.ncard ((H2.nodeMap : V3 × V3 → V3 × V3) '' FF) :=
-  sorry
+      Set.ncard FF = Set.ncard ((H2.nodeMap : V3 × V3 → V3 × V3) '' FF) := by
+  have hface2 : FF = H2.face x := LOCALIZE_PRESERVE_FACE _hfan h1 h2 hx hFF
+  have hx_FF : x ∈ FF := by rw [hFF]; exact H1.mem_face_self x
+  have hx_d2 : x ∈ H2.darts := by
+    have h : x ∈ (↑H2.darts : Set (V3 × V3)) := by
+      rw [h2.1]
+      exact IN_DARTS_FF_IMP_DARTS_E_PRIME_V_PRIME hx hx_FF
+    exact h
+  -- No dart of `FF` is fixed by the localized node map.
+  have hno : ∀ z ∈ FF, (H2.nodeMap : V3 × V3 → V3 × V3) z ≠ z := by
+    rintro ⟨a, b⟩ hz hfix
+    have hz_face : (a, b) ∈ H2.face x := by rw [← hface2]; exact hz
+    have hz_d2 : (a, b) ∈ H2.darts := H2.face_subset_darts hx_d2 hz_face
+    have hface_ab : H2.face (a, b) = FF :=
+      (H2.face_eq_of_mem hz_face).symm.trans hface2.symm
+    -- generic hypermap identities of the localized carrier
+    have h_inv2_pt : ∀ d : V3 × V3, (H2.nodeMap : V3 × V3 → V3 × V3) d =
+        (H2.edgeMap.symm : V3 × V3 → V3 × V3)
+          ((H2.faceMap.symm : V3 × V3 → V3 × V3) d) := by
+      intro d
+      have h := congrFun (congrArg
+        (fun p : Equiv.Perm (V3 × V3) => (p : V3 × V3 → V3 × V3))
+        H2.inverse2_hypermap_maps.2.1) d
+      simpa [Equiv.Perm.mul_apply] using h
+    have hedge_sq : (H2.edgeMap * H2.edgeMap : Equiv.Perm (V3 × V3)) = 1 := by
+      apply Equiv.ext
+      intro d
+      rw [Equiv.Perm.mul_apply, Equiv.Perm.one_apply, h2.2.1]
+      show eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF)
+          (eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) d) = d
+      by_cases hd : d ∈ dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF)
+      · have h1' : eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) d = (d.2, d.1) := by
+          rw [eeOfHyp_p3, if_pos hd]
+        have hsw : (d.2, d.1) ∈ dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF) := by
+          rw [← h1']
+          exact (EE_OF_HYP_PERMUTES_DARTS v (vPrime_p3 V FF) (ePrime_p3 E FF)).1 d hd
+        have h2' : eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) (d.2, d.1) =
+            ((d.2, d.1).2, (d.2, d.1).1) := by
+          rw [eeOfHyp_p3, if_pos hsw]
+        rw [h1', h2']
+      · have h1' : eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) d = d := by
+          rw [eeOfHyp_p3, if_neg hd]
+        rw [h1', h1']
+    have hinv_e : (H2.edgeMap.symm : Equiv.Perm (V3 × V3)) = H2.edgeMap :=
+      (EDGE_MAP_RESO_INVERSE H2).1.mp hedge_sq
+    have hinv_e_fun : (H2.edgeMap.symm : V3 × V3 → V3 × V3) =
+        (H2.edgeMap : V3 × V3 → V3 × V3) :=
+      congrArg (fun p : Equiv.Perm (V3 × V3) => (p : V3 × V3 → V3 × V3)) hinv_e
+    -- `f⁻¹ x₀ = e x₀`
+    have hnf : (H2.edgeMap.symm : V3 × V3 → V3 × V3)
+        ((H2.faceMap.symm : V3 × V3 → V3 × V3) (a, b)) = (a, b) := by
+      rw [← h_inv2_pt]
+      exact hfix
+    have hf_inv : (H2.faceMap.symm : V3 × V3 → V3 × V3) (a, b) =
+        (H2.edgeMap : V3 × V3 → V3 × V3) (a, b) := by
+      have h := congrArg (H2.edgeMap : V3 × V3 → V3 × V3) hnf
+      rwa [Equiv.apply_symm_apply] at h
+    have hfe : (H2.faceMap : V3 × V3 → V3 × V3)
+        ((H2.edgeMap : V3 × V3 → V3 × V3) (a, b)) = (a, b) := by
+      have h := congrArg (H2.faceMap : V3 × V3 → V3 × V3) hf_inv
+      rw [Equiv.apply_symm_apply] at h
+      exact h.symm
+    -- `y = f x₀` lies on the face and `n y = e x₀`
+    have hy_d2 : (H2.faceMap : V3 × V3 → V3 × V3) (a, b) ∈ H2.darts :=
+      H2.faceMap_apply_mem hz_d2
+    have hy_face_ab : (H2.faceMap : V3 × V3 → V3 × V3) (a, b) ∈ H2.face (a, b) := by
+      simpa using H2.pow_faceMap_mem_face (a, b) 1
+    have hy_face : H2.face ((H2.faceMap : V3 × V3 → V3 × V3) (a, b)) = FF :=
+      (H2.face_eq_of_mem hy_face_ab).symm.trans hface_ab
+    have hny : (H2.nodeMap : V3 × V3 → V3 × V3)
+        ((H2.faceMap : V3 × V3 → V3 × V3) (a, b)) =
+        (H2.edgeMap : V3 × V3 → V3 × V3) (a, b) := by
+      rw [h_inv2_pt (H2.faceMap (a, b)), Equiv.symm_apply_apply, hinv_e_fun]
+    have he_face : (H2.edgeMap : V3 × V3 → V3 × V3) (a, b) ∈ FF := by
+      rw [← hf_inv]
+      have h := Hypermap.faceMap_symm_mem_face H2 (H2.mem_face_self (a, b))
+      rw [hface_ab] at h
+      exact h
+    have he_inter : (H2.edgeMap : V3 × V3 → V3 × V3) (a, b) ∈
+        H2.node ((H2.faceMap : V3 × V3 → V3 × V3) (a, b)) ∩
+          H2.face ((H2.faceMap : V3 × V3 → V3 × V3) (a, b)) := by
+      constructor
+      · rw [Hypermap.node, ← hny]
+        exact apply_mem_orbitMap H2.nodeMap _
+      · rw [hy_face]
+        exact he_face
+    have hey : (H2.edgeMap : V3 × V3 → V3 × V3) (a, b) =
+        (H2.faceMap : V3 × V3 → V3 × V3) (a, b) := by
+      have hmem := hsimp _ hy_d2
+      rw [hmem] at he_inter
+      exact Set.mem_singleton_iff.mp he_inter
+    -- hence the face map is a 2-cycle at `(a,b)`, so the face has card ≤ 2
+    have hf2 : (H2.faceMap ^ 2) ((a, b) : V3 × V3) = (a, b) := by
+      rw [pow_two, Equiv.Perm.mul_apply, ← hey]
+      exact hfe
+    have hle := card_orbit_le H2.faceMap (by norm_num : (2 : ℕ) ≠ 0) hf2
+    have hle' : Set.ncard FF ≤ 2 := by
+      rw [← hface_ab]
+      simpa [Hypermap.face] using hle
+    omega
+  constructor
+  · refine Set.eq_empty_iff_forall_notMem.mpr fun y hy => ?_
+    rw [Set.mem_inter_iff, Set.mem_image] at hy
+    obtain ⟨hyFF, z, hzFF, hzy⟩ := hy
+    have hz_face : z ∈ H2.face x := by rw [← hface2]; exact hzFF
+    have hz_d2 : z ∈ H2.darts := H2.face_subset_darts hx_d2 hz_face
+    have hy_node : y ∈ H2.node z := by
+      rw [Hypermap.node, ← hzy]
+      exact apply_mem_orbitMap H2.nodeMap z
+    have hy_face : y ∈ H2.face z := by
+      have hface_z : H2.face z = H2.face x := (H2.face_eq_of_mem hz_face).symm
+      rw [hface_z, ← hface2]
+      exact hyFF
+    have hmem := hsimp z hz_d2
+    have hy_inter : y ∈ H2.node z ∩ H2.face z := ⟨hy_node, hy_face⟩
+    rw [hmem] at hy_inter
+    have hyz : y = z := Set.mem_singleton_iff.mp hy_inter
+    exact hno z hzFF (hzy.trans hyz)
+  · exact (Set.ncard_image_of_injective FF H2.nodeMap.injective).symm
 
 /-! ## dih2k of the localized hypermap (LVDUCXU.hl:1673, 1829, 1838, 2088) -/
 
@@ -1483,8 +1599,106 @@ theorem DIH_K_HYP_E_PRIME {v : V3} {V : Set V3} {E : Set (Set V3)}
     (h2 : IsHypOn_p10 v (vPrime_p3 V FF) (ePrime_p3 E FF) H2) {x : V3 × V3}
     (hx : x ∈ dartsOfHyp_p3 E V) (hFF : FF = H1.face x) (hsimp : H2.Simple)
     (hcard : 2 < Set.ncard FF) :
-    dih2k_p3 H2 (Set.ncard FF) :=
-  sorry
+    dih2k_p3 H2 (Set.ncard FF) := by
+  have hface2 : FF = H2.face x := LOCALIZE_PRESERVE_FACE _hfan h1 h2 hx hFF
+  have hx_FF : x ∈ FF := by rw [hFF]; exact H1.mem_face_self x
+  have hx_d2 : x ∈ H2.darts := by
+    have h : x ∈ (↑H2.darts : Set (V3 × V3)) := by
+      rw [h2.1]
+      exact IN_DARTS_FF_IMP_DARTS_E_PRIME_V_PRIME hx hx_FF
+    exact h
+  have hgt1 : 1 < Set.ncard FF := by omega
+  -- the localized edge map is an involution (it swaps each dart)
+  have hedge_sq : (H2.edgeMap * H2.edgeMap : Equiv.Perm (V3 × V3)) = 1 := by
+    apply Equiv.ext
+    intro d
+    rw [Equiv.Perm.mul_apply, Equiv.Perm.one_apply, h2.2.1]
+    show eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF)
+        (eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) d) = d
+    by_cases hd : d ∈ dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF)
+    · have h1' : eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) d = (d.2, d.1) := by
+        rw [eeOfHyp_p3, if_pos hd]
+      have hsw : (d.2, d.1) ∈ dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF) := by
+        rw [← h1']
+        exact (EE_OF_HYP_PERMUTES_DARTS v (vPrime_p3 V FF) (ePrime_p3 E FF)).1 d hd
+      have h2' : eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) (d.2, d.1) =
+          ((d.2, d.1).2, (d.2, d.1).1) := by
+        rw [eeOfHyp_p3, if_pos hsw]
+      rw [h1', h2']
+    · have h1' : eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) d = d := by
+        rw [eeOfHyp_p3, if_neg hd]
+      rw [h1', h1']
+  -- `has_orders edge 2`: involution, nontrivial
+  have hedge2 : hasOrders_p3 (H2.edgeMap : V3 × V3 → V3 × V3) 2 := by
+    rw [HAS_ORD2_INTERPRET]
+    constructor
+    · funext d
+      have h := congrFun (congrArg
+        (fun p : Equiv.Perm (V3 × V3) => (p : V3 × V3 → V3 × V3)) hedge_sq) d
+      simpa [Equiv.Perm.mul_apply] using h
+    · intro hid
+      -- `edge = id` would force `node = face⁻¹`, hence `face x = {x}`
+      have hid' : H2.edgeMap = (1 : Equiv.Perm (V3 × V3)) := by
+        refine Equiv.ext (fun d => ?_)
+        simpa using congrFun hid d
+      have hnf : (H2.nodeMap * H2.faceMap : Equiv.Perm (V3 × V3)) = 1 := by
+        have hc := H2.hypermap_cyclic.1
+        rw [hid'] at hc
+        simpa using hc
+      have hn : H2.nodeMap = H2.faceMap.symm := eq_inv_of_mul_eq_one_left hnf
+      have hnode_face : H2.node x = H2.face x := by
+        rw [Hypermap.node, hn]
+        exact H2.faceMap_permutes.orbitMap_symm x
+      have hsimple := hsimp x hx_d2
+      rw [hnode_face] at hsimple
+      have hFFsing : FF = {x} := by
+        rw [hface2]
+        simpa [Set.inter_self] using hsimple
+      rw [hFFsing, Set.ncard_singleton] at hcard
+      omega
+  have hdisj : H2.face x ∩ ((H2.nodeMap : V3 × V3 → V3 × V3) '' H2.face x) = ∅ := by
+    rw [← hface2]
+    exact (FF_DISJOINT_ITS_IMAGE_CARD_EQ _hfan h1 h2 hx hFF hsimp hcard).1
+  -- the dart set covers `face x` together with its node image
+  have hcover : (↑H2.darts : Set (V3 × V3)) =
+      H2.face x ∪ ((H2.nodeMap : V3 × V3 → V3 × V3) '' H2.face x) := by
+    have hdarts : (↑H2.darts : Set (V3 × V3)) = FF ∪ (eeOfHyp_p3 v V E) '' FF := by
+      rw [h2.1]
+      exact FAN_FACE_GT1_IMAGE_EE_OF_HYP _hfan h1 hx hFF hgt1
+    have hee_on : ∀ y ∈ FF, (eeOfHyp_p3 v V E) y = (H2.edgeMap : V3 × V3 → V3 × V3) y := by
+      intro y hy
+      rw [h2.2.1]
+      exact CARD_GT1_EE_OF_HYP_E_PRIME_EQ _hfan h1 h2 hx hFF hgt1 y hy
+    have himg_e : (eeOfHyp_p3 v V E) '' FF =
+        (H2.edgeMap : V3 × V3 → V3 × V3) '' FF :=
+      IDE_ON_S_IMP_SAME_IMAGE hee_on
+    have hFFf : FF = (H2.faceMap : V3 × V3 → V3 × V3) '' FF := by
+      rw [hface2]
+      exact (ENF_IMAGE_ITSELF H2 x).2.2
+    have hmul : (H2.nodeMap * H2.faceMap : Equiv.Perm (V3 × V3)) = H2.edgeMap := by
+      have hc := H2.hypermap_cyclic.1
+      have h1' : H2.nodeMap * H2.faceMap = H2.edgeMap⁻¹ := eq_inv_of_mul_eq_one_left hc
+      rw [h1']
+      exact inv_eq_of_mul_eq_one_left hedge_sq
+    have hcomp : (H2.edgeMap : V3 × V3 → V3 × V3) =
+        (H2.nodeMap : V3 × V3 → V3 × V3) ∘ (H2.faceMap : V3 × V3 → V3 × V3) := by
+      funext d
+      have h := congrFun (congrArg
+        (fun p : Equiv.Perm (V3 × V3) => (p : V3 × V3 → V3 × V3)) hmul) d
+      simpa [Equiv.Perm.mul_apply] using h.symm
+    have himg_ne : (H2.edgeMap : V3 × V3 → V3 × V3) '' FF =
+        (H2.nodeMap : V3 × V3 → V3 × V3) '' FF := by
+      calc (H2.edgeMap : V3 × V3 → V3 × V3) '' FF
+          = ((H2.nodeMap : V3 × V3 → V3 × V3) ∘
+              (H2.faceMap : V3 × V3 → V3 × V3)) '' FF := by rw [hcomp]
+        _ = (H2.nodeMap : V3 × V3 → V3 × V3) ''
+              ((H2.faceMap : V3 × V3 → V3 × V3) '' FF) := by rw [Set.image_comp]
+        _ = (H2.nodeMap : V3 × V3 → V3 × V3) '' FF := by rw [← hFFf]
+    rw [← hface2, hdarts, himg_e, himg_ne]
+  have hres := (DIH2K_FACE_SIMPLIZED (H := H2) (x := x)).mp
+    ⟨hedge2, hx_d2, hsimp, hdisj, hcover⟩
+  rw [← hface2] at hres
+  exact hres.1
 
 /-! ## The name theorem (LVDUCXU.hl:2249) -/
 
@@ -1501,7 +1715,22 @@ theorem LVDUCXU {V : Set V3} {E : Set (Set V3)}
         wedgeInFanGe_p3 y E = wedgeInFanGe_p3 y (ePrime_p3 E FF) ∧
         wedgeInFanGt_p3 y E = wedgeInFanGt_p3 y (ePrime_p3 E FF)) ∧
       (2 < Set.ncard FF ∧ H2.Simple →
-        localFan_p3 (vPrime_p3 V FF) (ePrime_p3 E FF) FF) :=
-  sorry
+        localFan_p3 (vPrime_p3 V FF) (ePrime_p3 E FF) FF) := by
+  have hface2 : FF = H2.face x := LOCALIZE_PRESERVE_FACE _hfan h1 h2 hx hFF
+  have hx_FF : x ∈ FF := by rw [hFF]; exact H1.mem_face_self x
+  refine ⟨hface2, ?_, ?_⟩
+  · intro y hy
+    exact ⟨AZIM_IN_FAN_EQ_IZIM_E_PRIME _hfan h1 hx hFF hy,
+      (WEDGE_IN_FAN_EQ_WITH_E_PRIME _hfan h1 hx hFF hy).1,
+      (WEDGE_IN_FAN_EQ_WITH_E_PRIME _hfan h1 hx hFF hy).2⟩
+  · rintro ⟨hcard, hsimp⟩
+    refine ⟨H2, h2.1, h2.2.1, h2.2.2.1, h2.2.2.2, ?_, ?_, ?_⟩
+    · exact lvd_fan_vPrime_ePrime _hfan h1 hx hFF
+    · refine ⟨x, ?_, hface2⟩
+      have h : x ∈ (↑H2.darts : Set (V3 × V3)) := by
+        rw [h2.1]
+        exact IN_DARTS_FF_IMP_DARTS_E_PRIME_V_PRIME hx hx_FF
+      exact h
+    · exact DIH_K_HYP_E_PRIME _hfan h1 h2 hx hFF hsimp hcard
 
 end Kepler.Text
