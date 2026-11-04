@@ -5936,7 +5936,7 @@ HOL 逐字形；结论不加强、前提不多加。
 
 **立案 + 应用 2026-11-03 中午**（编排者依常态化授权批 A 级：HOL 逐字锚 + 机检反例 + 消费者 0；用户 2026-11-03「不反对」）。归档 patch `docs/statement-fix-proposals-patches/97-la27-scs-m-eq-1-hol-form.patch`；STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto27.lean THM=SCS_M_EQ_1_p27 SF_ITEM=97`（rule 5 对修后件本身：标准三）。
 
-## 98. LA14 `zlz_azim_p14`（HEAD :3200）冻结陈述缺 `ha : a < 0` / `hb : 0 < b` ⟹ 端点实例（`a = 0` 或 `b = 0`）下 π 分支不可得（SF-95 同源：`Deformation` 区间是闭的 `0 ∈ Set.Icc a b`，HOL `real_interval (a,b)` 为开）— 分级 A（前提补全型 · **立案，待用户裁决，未执行**）
+## 98. LA14 `zlz_azim_p14`（HEAD :3200）冻结陈述缺 `ha : a < 0` / `hb : 0 < b` ⟹ 端点实例（`a = 0` 或 `b = 0`）下 π 分支不可得（SF-95 同源：`Deformation` 区间是闭的 `0 ∈ Set.Icc a b`，HOL `real_interval (a,b)` 为开）— 分级 A（前提补全型 · **已由 SF-99 根修解决（2026-11-05），陈述未改**）
 
 ### (a) HOL 裁决
 
@@ -5973,9 +5973,9 @@ HOL 逐字前提（开区间 ⇒ `a<0<b`）；结论不加强、前提不多加�
 
 ### (f) 状态
 
-**立案 2026-11-05（la14-wedge-w9 侦察 + 建设性私证）**；分级 A（前提补全型）。按 SF 通道常态化授权可走 STATEMENT-FIX 闸，但本件基于「冻结陈述大概率假」的推断而非显式反例，且用户已休息，**编排者暂不执行，待用户确认**。若批：生成 `docs/statement-fix-proposals-patches/98-la14-zlz-azim-strict.patch`（加 `ha`/`hb` + 体转调 `w9_zlz_azim_strict`），STATEMENT-FIX 闸 `FILE=Kepler/Text/LocalAuto14.lean THM=zlz_azim_p14 SF_ITEM=98`。
+**立案 2026-11-05（la14-wedge-w9 侦察 + 建设性私证）**；分级 A（前提补全型）。**已由 SF-99 根修解决（2026-11-05，方案 (a)）**：`Deformation` 升 `Ioo`，`zlz_azim_p14` 已一行转调 `w9_zlz_azim_strict` 闭合，**陈述未改**，本件 (c) 的加前提方案未采用（见 PROPOSAL-99-EXECUTED）。
 
-## 99. `Deformation` 定义层闭区间 vs HOL 开区间（LocalAuto1:129 vs localization.hl:128-131）— 根因提案（与 SF-98 并案；LA37 两件已获数值反例，LA14 同根）— **待用户裁决，未执行**
+## 99. `Deformation` 定义层闭区间 vs HOL 开区间（LocalAuto1:129 vs localization.hl:128-131）— 根因提案（与 SF-98 并案；LA37 两件已获数值反例，LA14 同根）— **已执行（2026-11-05，用户批准方案 (a)；见 PROPOSAL-99-EXECUTED）**
 
 ### (a) HOL 裁决
 
@@ -6004,7 +6004,7 @@ def Deformation (f : V3 → ℝ → V3) (V : Set V3) (a b : ℝ) : Prop :=
 
 ### (d) 消费面
 
-- `Deformation` 消费/构造点约 22 处（grep 计；LA14/LA37/LA34/LA28 及 LocalAuto1/2 桥）。
+- `Deformation` 消费/构造点约 22 处（§99 初估；AMEND 实测 **79 声明级站点、仅 5 个需改字**；LA14/LA37/LA34/LA28 及 LocalAuto1/2 桥）。
 - 受影响陈述：LA37 `MHAEYJN_CONVEX_LOCAL_FAN_p37` / `MHAEYJN_p37`（已实证假）；LA14 `zlz_azim_p14` / `ZLZTHIC_p14`（同根）；`SUB_LUNAR_p37` 与 `MHAEYJN_prop_p37` 的 `ha/hb` 已是显式前提，不受影响。
 - 修复后 LA37 两件仍有 ~800 行残余证明缺口（G1 rho/ivs 像恒等 / G2 三条例外 azim 不等式依赖 `DIJ_AFF_GE_PARTITION`（LocalAuto6:584 仍 sorry）/ G3 楔包含 / G4 `MINIMIZE_OVER_MEMBERS` 未移植）——**定义修复是必要非充分条件**。
 
@@ -6029,6 +6029,43 @@ def Deformation (f : V3 → ℝ → V3) (V : Set V3) (a b : ℝ) : Prop :=
 - **建议走 (a)**：与 (b) 闭掉的 sorry 数相同（各 1 个），但 (b) 实际要动 8–10 个声明（含 3 处 arity → 两个 `_discharged` 线与 capstone 元组连带），且会留下 6 份假 Prop、破坏「p34≡p37≡bridge defeq」既有不变量。
 - **波次**：W0 单 patch（5 声明）→ W0 闸（13 文件按依赖序编译；`LocalAuto1` 有 30 直接/53 传递 importer）→ W1 全量重编 → W2 陈述恢复抽检（`(a,b)=(0,1)` 反例应不再可实例化）。
 - **已知边界**：改动后整库编译未做（k0/k1 判定 = 类型级逐点比对 + 两个 standalone Lean 探针，均 EXIT 0）；行号锚点开工 HEAD `0da6672b`，LA14 行号已在新 HEAD 复核。**仍未执行，待用户裁决。**
+
+## PROPOSAL-99-EXECUTED — 执行记录（2026-11-05，用户批准方案 (a)）
+
+**裁决与通道**：用户「按你建议执行吧」（2026-11-05 早）→ 方案 (a) 根修。
+走 2026-09-29「planar 编码定义纠正」立项的 DEF-FIX 通道；章程
+`docs/def-fix-charters/sf99/`（README + 5 个逐文件 gate 围栏，HOL 锚
+`localization.hl:128` / `localization.hl:131`）。落库 **`fe6ec9c2`**。
+
+**改动（5 声明 / 12 行，零陈述改动）**：
+
+| 文件 | 声明 | 改动 |
+|---|---|---|
+| `LocalAuto1:129` | `Deformation` | 三处 `Icc` → `Ioo`（ROOT） |
+| `LocalAuto2:300` | `deformation_p2` | 同 patch（TWIN-ROOT；独立复制体，防语义分裂） |
+| `LocalAuto21:534` | `deformation_restrict_p21` | `he0 : 0 ≤ e := le_of_lt h0.2`（k1） |
+| `LocalAuto34:2538` | `DEFORMATION_SMALL_INTERVAL_p34` | 首合取 `⟨hc,hd⟩` + 成员严格化（k1） |
+| `LocalAuto14:3914` | `zlz_azim_p14` | `sorry` → 一行转调 `w9_zlz_azim_strict … h3.1.1 h3.1.2 h4`（own-sorry −1） |
+
+**验收（全部实测）**：
+
+- 5 × `GATE_MODE=DEF-FIX` **GATE-PASS**（LA1/LA2/LA21/LA34/LA14；`DF_SORRY_NET` 0/0/0/0/−1）。
+- 依赖序 14 模块 `lake build` 全绿：LA1 → LA2 → LA17 → LA14 → LA18 → LA21 → LA23
+  → LA28 → LA31 → LA34 → LA37 → LocalBridge → LocalConcl（+ LA6）；每次 gate 的
+  rule 4b 另建 Text 七根（Hypermap / PackingConcl / LocalConcl / LocalBridge /
+  TameLp / AzimBridge / ContraFan）。
+- **W2**：`#print Deformation` / `#print deformation_p2` 均 `Set.Ioo`；
+  `¬ Deformation (fun v _ => v) univ 0 1` 已机器证明（`(a,b)=(0,1)` 反例不再可
+  实例化）；`zlz_azim_p14` 恰 `[propext, Classical.choice, Quot.sound]`；
+  LA37 文件零 diff（陈述字节不变）。
+- **W1（Assembly 岛协议）**：standalone `lean -o` RC=0 / 0 error；根公理面
+  **628 行 / 37,969 B / sha `97fba420…` 与基线逐字节相同**；`Assembly.olean`
+  回灌（新旧 sha 同为 `670ed26e…`，证明项未变）。
+
+**遗留**：LA37 `MHAEYJN_CONVEX_LOCAL_FAN_p37` / `MHAEYJN_p37` 陈述恢复真值，
+但证明缺口仍在（G1/G3/G4；G2 的 `DIJ_AFF_GE_PARTITION` 已由 LA6 波闭合），
+由 `la37-mhaeyjn-w1` 接管；`_hpin/_haff/h4` 的 `Icc`（更强假设 ⇒ 真但非逐字）
+单独立项。
 
 ## 100. LA34 azim `AT_*` 八件冻结右端 `= Real.pi` vs HOL azim 等式形（IMJXPHR.hl:3291/4014/4829/4947 一带）— 分级 A（移植误植 · 陈述修正 · la34-w6 已按正形完成 8 件证明）
 

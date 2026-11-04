@@ -3,6 +3,23 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-05 — SF-99 定义层根修执行（用户批准方案 (a)）
+
+**拍板**（用户，2026-11-05 早，听取 SF-99 展开说明后答「按你建议执行吧」）：
+
+1. **对象**：`Deformation`（`LocalAuto1.lean:129`）与独立复制体 `deformation_p2`
+   （`LocalAuto2.lean:300`）由 `Set.Icc a b` 改为 `Set.Ioo a b`，对齐 HOL
+   `real_interval (a,b)`（`localization.hl:128-131`，开区间 ⇒ `a < 0 < b`）。
+2. **通道**：`GATE_MODE=DEF-FIX`（2026-09-29「planar 编码定义纠正」立项的闸模式）；
+   章程 `docs/def-fix-charters/sf99/`（README + 5 个逐文件围栏），用户批准后逐字应用。
+3. **范围**：5 声明/12 行；零陈述改动；`zlz_azim_p14` 一行转调已证的
+   `w9_zlz_azim_strict`（own-sorry −1）；LA37 两件 + 6 份 Prop 孪生零改动恢复真值。
+4. **验收**：5×DEF-FIX GATE-PASS；14 模块依赖序 + Text 七根全绿；Assembly 岛协议
+   根公理面 628 行/37,969B/sha `97fba420…` 逐字节不变；落库 `fe6ec9c2`。
+5. **回退**：单 commit `git revert fe6ec9c2`；无数据迁移。
+6. **遗留**：LA37 MHAEYJN 证明缺口（G1/G3/G4）另立项；`_hpin/_haff/h4` 的 `Icc`
+   （更强假设）单独立项。
+
 ## 2026-11-03 — 树增长物化程序 A/B/C 获批；Hypermap / LA35 提到队首（用户「同意」+「hypermap 和 la35 优先级提到 pending queue 最前面」）
 
 **拍板**（用户，2026-11-03 深夜，在 orphan-scout 量尺结论呈报后）：
