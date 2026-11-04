@@ -3393,8 +3393,36 @@ theorem HAFL_CIRCLE_FORM_LOCAL_FAN2 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw 
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
     (hfw : fw = HS.face (w, rhoNode1_p2 FF w)) :
     localFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv ∧
-      localFan_p2 (vPrime_p2 V fw) (ePrime_p2 (E ∪ {{w, v}}) fw) fw :=
-  sorry
+      localFan_p2 (vPrime_p2 V fw) (ePrime_p2 (E ∪ {{w, v}}) fw) fw := by
+  constructor
+  · exact HAFL_CIRCLE_FORM_LOCAL_FAN h hv hw hvw hcol hsub HS hHS hfv
+  · -- the `fw` side is the same theorem with `v` and `w` exchanged
+    have hHSw : IsHyp_p2 0 V (E ∪ {{w, v}}) HS := by
+      have hEq : (E ∪ {{w, v}} : Set (Set V3)) = E ∪ {{v, w}} := by
+        rw [Set.pair_comm w v]
+      rw [hEq]
+      exact hHS
+    have hcolw : ∀ z t : V3, z ∈ ({w, v} : Set V3) → t ∈ V \ {z} →
+        ¬ Collinear ℝ ({0, z, t} : Set V3) := by
+      intro z t hz ht
+      exact hcol z t (by rwa [Set.pair_comm w v] at hz) ht
+    have hsubw : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p2 x E := by
+      intro d hd
+      rw [Set.pair_comm w v]
+      exact hsub d hd
+    have hdFF : (w, rhoNode1_p2 FF w) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS2 h).2 w hw
+    have hdOrd : (w, rhoNode1_p2 FF w) ∈ ordPairs_p2 E :=
+      LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hdFF
+    have hd : (w, rhoNode1_p2 FF w) ∈ dartsOfHyp_p2 (E ∪ {{w, v}}) V :=
+      Or.inl (Or.inl hdOrd)
+    exact HAFL_CIRCLE_FORM_LOCAL_FAN_of_dih (v := w) (w := v) (fv := fw)
+      h hw hv (Ne.symm hvw) hcolw hsubw HS hHSw hfw
+      (fun HS' hHS' =>
+        DIH_K_HYP_E_PRIME (v := 0) (FF := fw)
+          (PROVE_SLICING_FAN h hw hv (Ne.symm hvw) hcolw hsubw) hHSw hHS' hd hfw
+          (w2_slice_hyp_simple (v := w) (w := v) (fv := fw)
+            h hw hv (Ne.symm hvw) hcolw hsubw HS hHSw hfw HS' hHS')
+          (LOFA_HYP_UNION_CARD_GT2 h hw hv (Ne.symm hvw) hcolw hsubw HS hHSw hfw))
 
 /-- HOL `LOCAL_FAN_RHO_NODE_IVS` (local_lemmas1.hl:3768) — giant. -/
 theorem LOCAL_FAN_RHO_NODE_IVS (h : localFan_p2 V E FF) (hv : v ∈ V) :
