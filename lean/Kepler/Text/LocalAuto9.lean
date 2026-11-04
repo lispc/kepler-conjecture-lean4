@@ -660,6 +660,17 @@ private theorem fw5_continuousAt_dihV (a b c : V3)
   exact hfinal.congr (Filter.Eventually.of_forall
     (fun q => (fw5_dihV_eq q.1 q.2.1 q.2.2).symm))
 
+/-- Public re-export of the private `fw5_continuousAt_dihV` (the
+`SEQUENTIALLY_DIVH` kernel), so that other ports may compose it with a
+continuous curve `t ↦ (v2 t, v3 t, v4 t)` (HOL
+`REAL_CONTINUOUS_ATREAL_DIHV_COMPOSE`).  Pure forwarding lemma: the
+private body above is untouched. -/
+theorem fw5_continuousAt_dihV_p9 (a b c : V3)
+    (hab : ¬ Collinear ℝ ({0, a, b} : Set V3))
+    (hac : ¬ Collinear ℝ ({0, a, c} : Set V3)) :
+    ContinuousAt (fun q : V3 × V3 × V3 => dihV 0 q.1 q.2.1 q.2.2) (a, b, c) :=
+  fw5_continuousAt_dihV a b c hab hac
+
 /-- HOL `SEQUENTIALLY_DIVH` (Hdplygy.hl:594)：二面角在非共线三元组处序列
 连续。体 = 846 行 HOL `LIM_*` 链的 Mathlib 压缩：`dihV` 的 arccos 闭式
 （`fw5_dihV_eq`）在非退化点连续（`fw5_continuousAt_dihV`），`Tendsto`

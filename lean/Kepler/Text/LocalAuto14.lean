@@ -66,6 +66,7 @@ import Mathlib
 import Kepler.Text.V3Coe
 import Kepler.Text.LocalAuto37
 import Kepler.Text.LocalAuto35
+import Kepler.Text.XivphksKit
 
 set_option maxHeartbeats 5000000
 
@@ -4341,6 +4342,416 @@ theorem XIV_DEFORMATION_p14 (f : V3 → ℝ → V3) (dh : ℕ × ℕ × ℕ → 
       f (w (r + 1)) t ∈ wedgeGe 0 (f (w 1) t) (f (w 2) t) (f (w 0) t) := by
   sorry
 
+/-- w17 kit: the pair window `(Icc 0 (r+1))² ∪ (Icc 1 (r+2))²` minus the
+diagonal — the index family over which `XIV_DEFORMATION` (HOL
+ZLZTHIC.hl:2259) needs a uniform non-collinearity radius. -/
+private def w17_pairs (r : ℕ) : Set (ℕ × ℕ) :=
+  {p | (p.1 ∈ Set.Icc 0 (r + 1) ∧ p.2 ∈ Set.Icc 0 (r + 1) ∧ p.1 ≠ p.2) ∨
+       (p.1 ∈ Set.Icc 1 (r + 2) ∧ p.2 ∈ Set.Icc 1 (r + 2) ∧ p.1 ≠ p.2)}
+
+/-- w17 kit: the triple window over which the `dihV`-consistency radius is
+taken (`dh = 0` triples with all indices in `1..r+1`). -/
+private def w17_triples (r : ℕ) : Set (ℕ × ℕ × ℕ) :=
+  Set.Icc 1 (r + 1) ×ˢ (Set.Icc 1 (r + 1) ×ˢ Set.Icc 1 (r + 1))
+
+private theorem w17_pairs_finite (r : ℕ) : (w17_pairs r).Finite := by
+  refine Set.Finite.subset ((Set.finite_Icc (0:ℕ) (r + 2)).prod
+    (Set.finite_Icc (0:ℕ) (r + 2))) ?_
+  rintro ⟨i, j⟩ (⟨hi, hj, -⟩ | ⟨hi, hj, -⟩)
+  · exact ⟨⟨Nat.zero_le i, by have := hi.2; omega⟩,
+      ⟨Nat.zero_le j, by have := hj.2; omega⟩⟩
+  · exact ⟨⟨Nat.zero_le i, by have := hi.2; omega⟩,
+      ⟨Nat.zero_le j, by have := hj.2; omega⟩⟩
+
+private theorem w17_triples_finite (r : ℕ) : (w17_triples r).Finite :=
+  (Set.finite_Icc 1 (r + 1)).prod
+    ((Set.finite_Icc 1 (r + 1)).prod (Set.finite_Icc 1 (r + 1)))
+
+/-- w17 kit: uniform non-collinearity radius over `w17_pairs`
+(HOL `NONCOLLINEAR_OPEN` = `CONTINUOUS_PRESERVE_COLLINEAR` + `SKOLEM_EPSILON`). -/
+private theorem w17_nc_window (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3) (a b : ℝ)
+    (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
+    (h2 : Set.Pairwise (Set.Icc 0 (r + 1)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+    (h3 : Set.Pairwise (Set.Icc 1 (r + 2)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3)) :
+    ∃ dc : ℝ, 0 < dc ∧ ∀ p ∈ w17_pairs r, ∀ t, |t| < dc →
+      ¬ Collinear ℝ ({0, f (w p.1) t, f (w p.2) t} : Set V3) := by
+  have hz : ∀ i, i ≤ r + 2 → f (w i) 0 = w i := fun i hi => by
+    have hwin : w i ∈ w '' Set.Icc 0 (r + 2) :=
+      Set.mem_image_of_mem w (by simp only [Set.mem_Icc]; omega)
+    exact h1.2.2 (w i) hwin
+  have hcont0 : ∀ i, i ≤ r + 2 → ContinuousAt (fun t => f (w i) t) 0 := fun i hi => by
+    have hwin : w i ∈ w '' Set.Icc 0 (r + 2) :=
+      Set.mem_image_of_mem w (by simp only [Set.mem_Icc]; omega)
+    exact h1.2.1 (w i) hwin 0 h1.1
+  have hncopen : ∀ (m n : ℕ)
+      (hpair : Set.Pairwise (Set.Icc m n) fun i j =>
+        ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+      (i j : ℕ), i ∈ Set.Icc m n → j ∈ Set.Icc m n → i ≠ j → n ≤ r + 2 →
+      ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
+        ¬ Collinear ℝ ({0, f (w i) t, f (w j) t} : Set V3) := by
+    intro m n hpair i j hi hj hij hn
+    have hi2 : i ≤ r + 2 := le_trans hi.2 hn
+    have hj2 : j ≤ r + 2 := le_trans hj.2 hn
+    have hnc : ¬ Collinear3 0 (w i) (w j) := hpair hi hj hij
+    obtain ⟨e, he, hb⟩ := CONTINUOUS_PRESERVE_COLLINEAR (0 : V3)
+      (fun t => f (w i) t) (fun t => f (w j) t) 0 (hcont0 i hi2) (hcont0 j hj2)
+      (by simpa only [hz i hi2, hz j hj2] using hnc)
+    exact ⟨e, he, fun t ht => hb t (by simpa using ht)⟩
+  let Q : ℝ → ℕ × ℕ → Prop := fun e p => ∀ t, |t| < e →
+    ¬ Collinear ℝ ({0, f (w p.1) t, f (w p.2) t} : Set V3)
+  have hm : ∀ p : ℕ × ℕ, ∃ e : ℝ, 0 < e ∧ (p ∈ w17_pairs r → Q e p) := by
+    intro p
+    by_cases hp : p ∈ w17_pairs r
+    · rcases hp with ⟨hi, hj, hij⟩ | ⟨hi, hj, hij⟩
+      · exact (hncopen 0 (r + 1) h2 p.1 p.2 hi hj hij (by omega)).imp
+          (fun e he => ⟨he.1, fun _ => he.2⟩)
+      · exact (hncopen 1 (r + 2) h3 p.1 p.2 hi hj hij (by omega)).imp
+          (fun e he => ⟨he.1, fun _ => he.2⟩)
+    · exact ⟨1, one_pos, fun h => absurd h hp⟩
+  have hmono : ∀ e e' : ℝ, ∀ i : ℕ × ℕ, 0 < e → e ≤ e' → i ∈ w17_pairs r →
+      (Q e' i → Q e i) := by
+    intro e e' i _ heei _ hq t ht
+    exact hq t (lt_of_lt_of_le ht heei)
+  obtain ⟨dc, hall⟩ := (SKOLEM_EPSILON_p14 Q (w17_pairs r) hmono
+    (w17_pairs_finite r)).mp hm
+  exact ⟨dc, (hall (0, 0)).1, fun p hp t ht => (hall p).2 hp t ht⟩
+
+/-- w17 kit: `dihV` along a continuous triple of deformation curves is
+`ContinuousAt` (HOL `REAL_CONTINUOUS_ATREAL_DIHV_COMPOSE`), via the LA9
+forwarding lemma `fw5_continuousAt_dihV_p9`. -/
+private theorem w17_continuousAt_dihV_comp {v2 v3 v4 : ℝ → V3} {t₀ : ℝ}
+    (hc2 : ContinuousAt v2 t₀) (hc3 : ContinuousAt v3 t₀)
+    (hc4 : ContinuousAt v4 t₀)
+    (hn23 : ¬ Collinear ℝ ({0, v2 t₀, v3 t₀} : Set V3))
+    (hn24 : ¬ Collinear ℝ ({0, v2 t₀, v4 t₀} : Set V3)) :
+    ContinuousAt (fun t => dihV 0 (v2 t) (v3 t) (v4 t)) t₀ :=
+  ContinuousAt.comp (x := t₀) (f := fun t => (v2 t, v3 t, v4 t))
+    (g := fun q : V3 × V3 × V3 => dihV 0 q.1 q.2.1 q.2.2)
+    (fw5_continuousAt_dihV_p9 (v2 t₀) (v3 t₀) (v4 t₀) hn23 hn24)
+    (hc2.prodMk (hc3.prodMk hc4))
+
+/-- w17 kit: uniform `dihV` consistency radius — every `dh = 0` triple in
+`w17_triples` has `dihV < cc` along the deformation. -/
+private theorem w17_dih_window (f : V3 → ℝ → V3) (dh : ℕ × ℕ × ℕ → ℝ) (r : ℕ)
+    (w : ℕ → V3) (a b : ℝ)
+    (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
+    (h2 : Set.Pairwise (Set.Icc 0 (r + 1)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+    (h4 : ∀ i j k, dihV 0 (w i) (w j) (w k) = dh (i, j, k))
+    (cc : ℝ) (hcc : 0 < cc) :
+    ∃ dd : ℝ, 0 < dd ∧ ∀ p ∈ w17_triples r,
+      p.1 ≠ p.2.1 → p.1 ≠ p.2.2 → dh p = 0 → ∀ t, |t| < dd →
+        dihV 0 (f (w p.1) t) (f (w p.2.1) t) (f (w p.2.2) t) < cc := by
+  have hz : ∀ i, i ≤ r + 2 → f (w i) 0 = w i := fun i hi => by
+    have hwin : w i ∈ w '' Set.Icc 0 (r + 2) :=
+      Set.mem_image_of_mem w (by simp only [Set.mem_Icc]; omega)
+    exact h1.2.2 (w i) hwin
+  have hcont0 : ∀ i, i ≤ r + 2 → ContinuousAt (fun t => f (w i) t) 0 := fun i hi => by
+    have hwin : w i ∈ w '' Set.Icc 0 (r + 2) :=
+      Set.mem_image_of_mem w (by simp only [Set.mem_Icc]; omega)
+    exact h1.2.1 (w i) hwin 0 h1.1
+  let Q : ℝ → ℕ × ℕ × ℕ → Prop := fun e p =>
+    p.1 ≠ p.2.1 → p.1 ≠ p.2.2 → dh p = 0 → ∀ t, |t| < e →
+      dihV 0 (f (w p.1) t) (f (w p.2.1) t) (f (w p.2.2) t) < cc
+  have hm : ∀ p : ℕ × ℕ × ℕ, ∃ e : ℝ, 0 < e ∧ (p ∈ w17_triples r → Q e p) := by
+    intro p
+    by_cases hp : p ∈ w17_triples r
+    · by_cases hA : p.1 = p.2.1
+      · exact ⟨1, one_pos, fun _ hne => absurd hA hne⟩
+      · by_cases hB : p.1 = p.2.2
+        · exact ⟨1, one_pos, fun _ _ hne => absurd hB hne⟩
+        · by_cases hdh0 : dh p = 0
+          · have hz1 : p.1 ≤ r + 2 := by have := hp.1.2; omega
+            have hz21 : p.2.1 ≤ r + 2 := by have := hp.2.1.2; omega
+            have hz22 : p.2.2 ≤ r + 2 := by have := hp.2.2.2; omega
+            have hnc1 : ¬ Collinear ℝ
+                ({0, f (w p.1) 0, f (w p.2.1) 0} : Set V3) := by
+              have h := h2 ⟨Nat.zero_le p.1, hp.1.2⟩
+                ⟨Nat.zero_le p.2.1, hp.2.1.2⟩ hA
+              simpa only [hz p.1 hz1, hz p.2.1 hz21] using h
+            have hnc2 : ¬ Collinear ℝ
+                ({0, f (w p.1) 0, f (w p.2.2) 0} : Set V3) := by
+              have h := h2 ⟨Nat.zero_le p.1, hp.1.2⟩
+                ⟨Nat.zero_le p.2.2, hp.2.2.2⟩ hB
+              simpa only [hz p.1 hz1, hz p.2.2 hz22] using h
+            have hcon : ContinuousAt (fun t =>
+                dihV 0 (f (w p.1) t) (f (w p.2.1) t) (f (w p.2.2) t)) 0 :=
+              w17_continuousAt_dihV_comp (hcont0 p.1 hz1) (hcont0 p.2.1 hz21)
+                (hcont0 p.2.2 hz22) hnc1 hnc2
+            obtain ⟨e, he, hb⟩ := Metric.continuousAt_iff.mp hcon cc hcc
+            refine ⟨e, he, fun _ _ _ hdh t ht => ?_⟩
+            have hdist : dist (dihV 0 (f (w p.1) t) (f (w p.2.1) t) (f (w p.2.2) t))
+                (dihV 0 (f (w p.1) 0) (f (w p.2.1) 0) (f (w p.2.2) 0)) < cc :=
+              hb (by simpa [Real.dist_eq] using ht)
+            have hv0 : dihV 0 (f (w p.1) 0) (f (w p.2.1) 0) (f (w p.2.2) 0) = 0 := by
+              rw [hz p.1 hz1, hz p.2.1 hz21, hz p.2.2 hz22,
+                h4 p.1 p.2.1 p.2.2]
+              simpa using hdh0
+            rw [hv0, Real.dist_eq] at hdist
+            simpa using (abs_lt.mp hdist).2
+          · exact ⟨1, one_pos, fun _ _ _ h => absurd h hdh0⟩
+    · exact ⟨1, one_pos, fun h => absurd h hp⟩
+  have hmono : ∀ e e' : ℝ, ∀ i : ℕ × ℕ × ℕ, 0 < e → e ≤ e' → i ∈ w17_triples r →
+      (Q e' i → Q e i) := by
+    intro e e' i _ heei _ hq hne1 hne2 hdh t ht
+    exact hq hne1 hne2 hdh t (lt_of_lt_of_le ht heei)
+  obtain ⟨dd, hall⟩ := (SKOLEM_EPSILON_p14 Q (w17_triples r) hmono
+    (w17_triples_finite r)).mp hm
+  exact ⟨dd, (hall (0, 0, 0)).1, fun p hp hne1 hne2 hdh t ht =>
+    (hall p).2 hp hne1 hne2 hdh t ht⟩
+
+/-- w17 kit: the global azimuth floor `c` from the pointwise floors `h6`
+(HOL: finite min of the pointwise floors). -/
+private theorem w17_azim_floor (r : ℕ) (w : ℕ → V3)
+    (h6 : ∀ i, i ∈ Set.Icc 1 (r + 1) →
+      0 < azim 0 (w i) (w (i + 1)) (w (i - 1))) :
+    ∃ c : ℝ, 0 < c ∧ ∀ i, i ∈ Set.Icc 1 (r + 1) →
+      c < azim 0 (w i) (w (i + 1)) (w (i - 1)) := by
+  let Q : ℝ → ℕ → Prop := fun e i => e < azim 0 (w i) (w (i + 1)) (w (i - 1))
+  have hm : ∀ i : ℕ, ∃ e : ℝ, 0 < e ∧ (i ∈ Set.Icc 1 (r + 1) → Q e i) := by
+    intro i
+    by_cases hi : i ∈ Set.Icc 1 (r + 1)
+    · exact ⟨azim 0 (w i) (w (i + 1)) (w (i - 1)) / 2, half_pos (h6 i hi),
+        fun _ => half_lt_self (h6 i hi)⟩
+    · exact ⟨1, one_pos, fun h => absurd h hi⟩
+  have hmono : ∀ e e' : ℝ, ∀ i : ℕ, 0 < e → e ≤ e' → i ∈ Set.Icc 1 (r + 1) →
+      (Q e' i → Q e i) := by
+    intro e e' i _ hee _ hq
+    exact lt_of_le_of_lt hee hq
+  obtain ⟨c, hall⟩ := (SKOLEM_EPSILON_p14 Q (Set.Icc 1 (r + 1)) hmono
+    (Set.finite_Icc 1 (r + 1))).mp hm
+  exact ⟨c, (hall 0).1, fun i hi => (hall i).2 hi⟩
+
+/-- w17 kit: the azimuth floor persists along the deformation (HOL
+`REAL_CONTINUOUS_ATREAL_AZIM_COMPOSE` = `w5cA3_continuousAt_azim`). -/
+private theorem w17_azim_floor_window (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3)
+    (a b : ℝ)
+    (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
+    (h2 : Set.Pairwise (Set.Icc 0 (r + 1)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+    (h3 : Set.Pairwise (Set.Icc 1 (r + 2)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+    (cc : ℝ) (hcc0 : 0 ≤ cc)
+    (hcc : ∀ i, i ∈ Set.Icc 1 (r + 1) →
+      cc < azim 0 (w i) (w (i + 1)) (w (i - 1))) :
+    ∃ daz : ℝ, 0 < daz ∧ ∀ i, i ∈ Set.Icc 1 (r + 1) → ∀ t, |t| < daz →
+      cc < azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) := by
+  have hz : ∀ i, i ≤ r + 2 → f (w i) 0 = w i := fun i hi => by
+    have hwin : w i ∈ w '' Set.Icc 0 (r + 2) :=
+      Set.mem_image_of_mem w (by simp only [Set.mem_Icc]; omega)
+    exact h1.2.2 (w i) hwin
+  have hcont0 : ∀ i, i ≤ r + 2 → ContinuousAt (fun t => f (w i) t) 0 := fun i hi => by
+    have hwin : w i ∈ w '' Set.Icc 0 (r + 2) :=
+      Set.mem_image_of_mem w (by simp only [Set.mem_Icc]; omega)
+    exact h1.2.1 (w i) hwin 0 h1.1
+  let Q : ℝ → ℕ → Prop := fun e i => ∀ t, |t| < e →
+    cc < azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t)
+  have hm : ∀ i : ℕ, ∃ e : ℝ, 0 < e ∧ (i ∈ Set.Icc 1 (r + 1) → Q e i) := by
+    intro i
+    by_cases hi : i ∈ Set.Icc 1 (r + 1)
+    · have hi1 : 1 ≤ i := hi.1
+      have hi2 : i ≤ r + 1 := hi.2
+      have hm1 : i ≤ r + 2 := by omega
+      have hm2 : i + 1 ≤ r + 2 := by omega
+      have hm0 : i - 1 ≤ r + 2 := by omega
+      have hci : ContinuousAt
+          (fun t => azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t)) 0 := by
+        refine w5cA3_continuousAt_azim (hcont0 i hm1) (hcont0 (i + 1) hm2)
+          (hcont0 (i - 1) hm0) ?_ ?_ ?_
+        · have h := h3 ⟨by omega, by omega⟩ ⟨by omega, by omega⟩
+            (by omega : i ≠ i + 1)
+          simpa only [hz i hm1, hz (i + 1) hm2] using h
+        · have h := h2 ⟨Nat.zero_le _, by omega⟩ ⟨Nat.zero_le _, by omega⟩
+            (by omega : i ≠ i - 1)
+          simpa only [hz i hm1, hz (i - 1) hm0] using h
+        · rw [hz i hm1, hz (i + 1) hm2, hz (i - 1) hm0]
+          exact ne_of_gt (lt_of_le_of_lt hcc0 (hcc i hi))
+      obtain ⟨d, hd, hbb⟩ := Metric.continuousAt_iff.mp hci
+        (azim 0 (w i) (w (i + 1)) (w (i - 1)) - cc) (by linarith [hcc i hi])
+      refine ⟨d, hd, fun _ t ht => ?_⟩
+      have hdist : dist (azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t))
+          (azim 0 (f (w i) 0) (f (w (i + 1)) 0) (f (w (i - 1)) 0)) <
+          azim 0 (w i) (w (i + 1)) (w (i - 1)) - cc :=
+        hbb (by simpa [Real.dist_eq] using ht)
+      rw [hz i hm1, hz (i + 1) hm2, hz (i - 1) hm0, Real.dist_eq] at hdist
+      have hlt := (abs_lt.mp hdist).1
+      linarith
+    · exact ⟨1, one_pos, fun h => absurd h hi⟩
+  have hmono : ∀ e e' : ℝ, ∀ i : ℕ, 0 < e → e ≤ e' → i ∈ Set.Icc 1 (r + 1) →
+      (Q e' i → Q e i) := by
+    intro e e' i _ heei _ hq t ht
+    exact hq t (lt_of_lt_of_le ht heei)
+  obtain ⟨daz, hall⟩ := (SKOLEM_EPSILON_p14 Q (Set.Icc 1 (r + 1)) hmono
+    (Set.finite_Icc 1 (r + 1))).mp hm
+  exact ⟨daz, (hall 0).1, fun i hi t ht => (hall i).2 hi t ht⟩
+
+/-- w17 kit: uniform radius for `h5`'s `azim ≤ π` (HOL: skolemize the
+pointwise `azim ≤ pi`). -/
+private theorem w17_azim_pi_window (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3)
+    (h5 : ∀ i, i ∈ Set.Icc 1 (r + 1) → ∃ e2 : ℝ, 0 < e2 ∧ ∀ t, |t| < e2 →
+      azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) ≤ Real.pi) :
+    ∃ d2 : ℝ, 0 < d2 ∧ ∀ i, i ∈ Set.Icc 1 (r + 1) → ∀ t, |t| < d2 →
+      azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) ≤ Real.pi := by
+  let Q : ℝ → ℕ → Prop := fun e i => ∀ t, |t| < e →
+    azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) ≤ Real.pi
+  have hm : ∀ i : ℕ, ∃ e : ℝ, 0 < e ∧ (i ∈ Set.Icc 1 (r + 1) → Q e i) := by
+    intro i
+    by_cases hi : i ∈ Set.Icc 1 (r + 1)
+    · obtain ⟨e, he, hb⟩ := h5 i hi
+      exact ⟨e, he, fun _ => hb⟩
+    · exact ⟨1, one_pos, fun h => absurd h hi⟩
+  have hmono : ∀ e e' : ℝ, ∀ i : ℕ, 0 < e → e ≤ e' → i ∈ Set.Icc 1 (r + 1) →
+      (Q e' i → Q e i) := by
+    intro e e' i _ heei _ hq t ht
+    exact hq t (lt_of_lt_of_le ht heei)
+  obtain ⟨d2, hall⟩ := (SKOLEM_EPSILON_p14 Q (Set.Icc 1 (r + 1)) hmono
+    (Set.finite_Icc 1 (r + 1))).mp hm
+  exact ⟨d2, (hall 0).1, fun i hi t ht => (hall i).2 hi t ht⟩
+
+/-- w17: `XIV_DEFORMATION` (HOL ZLZTHIC.hl:2259) in the *strict* interval
+form: the frozen `_p14` statement plus `a < 0 < b`.  HOL's `deformation`
+runs over the open `real_interval (a,b)`, whereas the LocalAuto1
+`Deformation` encoding (`0 ∈ Set.Icc a b`) does not record the sign
+conditions; this private form is therefore the SF-99 bridge: once the public
+statement / `Deformation` carries `ha`/`hb`, `XIV_DEFORMATION_p14` is a
+one-line consumer of this lemma.  All hypotheses and the conclusion are the
+frozen statement verbatim, with `ha`/`hb` inserted after `h1`.
+
+Proof = HOL ZLZTHIC.hl:2259–2518 compressed: uniform non-collinearity radius
+(`w17_nc_window`), dih-consistency radius at `c/2` (`w17_dih_window`), azim
+floor `c` (`w17_azim_floor`) and its persistence radius
+(`w17_azim_floor_window`), `h5`'s `azim ≤ π` radius
+(`w17_azim_pi_window`); then a 4-ary `min` and `XIVPHKS_SHIFT_p16` at
+`j = 1`, `k = r`. -/
+private theorem w17_xiv_deformation_strict (f : V3 → ℝ → V3) (dh : ℕ × ℕ × ℕ → ℝ) (r : ℕ)
+    (w : ℕ → V3) (a b : ℝ)
+    (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
+    (ha : a < 0) (hb : 0 < b)
+    (h2 : Set.Pairwise (Set.Icc 0 (r + 1)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+    (h3 : Set.Pairwise (Set.Icc 1 (r + 2)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+    (h4 : ∀ i j k, dihV 0 (w i) (w j) (w k) = dh (i, j, k))
+    (h5 : ∀ i, i ∈ Set.Icc 1 (r + 1) → ∃ e2 : ℝ, 0 < e2 ∧ ∀ t, |t| < e2 →
+      azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) ≤ Real.pi)
+    (h6 : ∀ i, i ∈ Set.Icc 1 (r + 1) →
+      0 < azim 0 (w i) (w (i + 1)) (w (i - 1)))
+    (h7 : ∀ p q, ({p, q, q + 1} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p ≠ q → p ≠ q + 1 →
+      dh (p, q, q + 1) = 0)
+    (h8 : ∀ p q, ({p, p + 1, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p + 1 < q →
+      dh (p, p + 1, q) = 0)
+    (h9 : ∀ p q, ({p + 1, p, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → q < p →
+      dh (p + 1, p, q) = 0) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
+      f (w 1) t ∈ wedgeGe 0 (f (w (r + 1)) t) (f (w (r + 2)) t) (f (w r) t) ∧
+      f (w (r + 1)) t ∈ wedgeGe 0 (f (w 1) t) (f (w 2) t) (f (w 0) t) := by
+  have _ha := ha
+  have _hb := hb
+  obtain ⟨dc, hdcpos, hdc⟩ := w17_nc_window f r w a b h1 h2 h3
+  obtain ⟨c, hcpos, hc⟩ := w17_azim_floor r w h6
+  obtain ⟨dd, hddpos, hdd⟩ := w17_dih_window f dh r w a b h1 h2 h4 (c / 2) (by linarith)
+  obtain ⟨daz, hdazpos, hdaz⟩ :=
+    w17_azim_floor_window f r w a b h1 h2 h3 c (le_of_lt hcpos) hc
+  obtain ⟨d2, hd2pos, hd2⟩ := w17_azim_pi_window f r w h5
+  set eS : ℝ := c / 2 with heSdef
+  have heSpos : 0 < eS := by rw [heSdef]; linarith
+  have h2eS : 2 * eS = c := by rw [heSdef]; ring
+  refine ⟨min eS (min dc (min dd (min daz d2))), ?_, ?_⟩
+  · exact lt_min heSpos (lt_min hdcpos (lt_min hddpos (lt_min hdazpos hd2pos)))
+  · intro t ht
+    have htE : |t| < eS := lt_of_lt_of_le ht (min_le_left _ _)
+    have htR : |t| < min dc (min dd (min daz d2)) :=
+      lt_of_lt_of_le ht (min_le_right _ _)
+    have htC : |t| < dc := lt_of_lt_of_le htR (min_le_left _ _)
+    have htR2 : |t| < min dd (min daz d2) := lt_of_lt_of_le htR (min_le_right _ _)
+    have htD : |t| < dd := lt_of_lt_of_le htR2 (min_le_left _ _)
+    have htR3 : |t| < min daz d2 := lt_of_lt_of_le htR2 (min_le_right _ _)
+    have htA : |t| < daz := lt_of_lt_of_le htR3 (min_le_left _ _)
+    have htP : |t| < d2 := lt_of_lt_of_le htR3 (min_le_right _ _)
+    have hpair1 : (Set.Icc 0 (r + 1)).Pairwise fun i j =>
+        ¬ Collinear3 0 (f (w i) t) (f (w j) t) := by
+      intro i hi j hj hij
+      exact hdc (i, j) (Or.inl ⟨hi, hj, hij⟩) t htC
+    have hpair2 : (Set.Icc 1 (r + 2)).Pairwise fun i j =>
+        ¬ Collinear3 0 (f (w i) t) (f (w j) t) := by
+      intro i hi j hj hij
+      exact hdc (i, j) (Or.inr ⟨hi, hj, hij⟩) t htC
+    have h1shift : ∀ i ∈ Finset.Icc 1 (r + 1),
+        2 * eS < azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) := by
+      intro i hi
+      rw [h2eS]
+      exact hdaz i (by simpa using hi) t htA
+    have h2shift : ∀ i ∈ Finset.Icc 1 (r + 1),
+        azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) ≤ Real.pi := by
+      intro i hi
+      exact hd2 i (by simpa using hi) t htP
+    have h3shift : ∀ p q, ({p, q, q + 1} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) →
+        p ≠ q → p ≠ q + 1 →
+        dihV 0 (f (w p) t) (f (w q) t) (f (w (q + 1)) t) < eS := by
+      intro p q hsub hpq hpq1
+      have hmem : ∀ x ∈ ({p, q, q + 1} : Finset ℕ), x ∈ Set.Icc 1 (r + 1) :=
+        fun x hx => by simpa using hsub hx
+      have hp : p ∈ Set.Icc 1 (r + 1) := hmem p (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hq : q ∈ Set.Icc 1 (r + 1) := hmem q (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hq1 : q + 1 ∈ Set.Icc 1 (r + 1) := hmem (q + 1) (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hdh : dh (p, q, q + 1) = 0 := h7 p q (by
+        intro x hx
+        have hx' : x ∈ ({p, q, q + 1} : Finset ℕ) := by simpa using hx
+        exact hmem x hx') hpq hpq1
+      exact hdd (p, q, q + 1) ⟨hp, hq, hq1⟩ hpq hpq1 hdh t htD
+    have h4shift : ∀ p q, ({p, p + 1, q} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) →
+        q > p + 1 → dihV 0 (f (w p) t) (f (w (p + 1)) t) (f (w q) t) < eS := by
+      intro p q hsub hq
+      have hmem : ∀ x ∈ ({p, p + 1, q} : Finset ℕ), x ∈ Set.Icc 1 (r + 1) :=
+        fun x hx => by simpa using hsub hx
+      have hp : p ∈ Set.Icc 1 (r + 1) := hmem p (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hp1 : p + 1 ∈ Set.Icc 1 (r + 1) := hmem (p + 1) (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hqI : q ∈ Set.Icc 1 (r + 1) := hmem q (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hpq : p ≠ p + 1 := by omega
+      have hpq' : p ≠ q := by omega
+      have hpq1 : p + 1 < q := by omega
+      have hdh : dh (p, p + 1, q) = 0 := h8 p q (by
+        intro x hx
+        have hx' : x ∈ ({p, p + 1, q} : Finset ℕ) := by simpa using hx
+        exact hmem x hx') hpq1
+      exact hdd (p, p + 1, q) ⟨hp, hp1, hqI⟩ hpq hpq' hdh t htD
+    have h5shift : ∀ p q, ({p + 1, p, q} : Finset ℕ) ⊆ Finset.Icc 1 (r + 1) →
+        q < p → dihV 0 (f (w (p + 1)) t) (f (w p) t) (f (w q) t) < eS := by
+      intro p q hsub hq
+      have hmem : ∀ x ∈ ({p + 1, p, q} : Finset ℕ), x ∈ Set.Icc 1 (r + 1) :=
+        fun x hx => by simpa using hsub hx
+      have hp1 : p + 1 ∈ Set.Icc 1 (r + 1) := hmem (p + 1) (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hp : p ∈ Set.Icc 1 (r + 1) := hmem p (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hqI : q ∈ Set.Icc 1 (r + 1) := hmem q (by
+        simp only [Finset.mem_insert, Finset.mem_singleton]; tauto)
+      have hne1 : p + 1 ≠ p := by omega
+      have hne2 : p + 1 ≠ q := by omega
+      have hdh : dh (p + 1, p, q) = 0 := h9 p q (by
+        intro x hx
+        have hx' : x ∈ ({p + 1, p, q} : Finset ℕ) := by simpa using hx
+        exact hmem x hx') hq
+      exact hdd (p + 1, p, q) ⟨hp1, hp, hqI⟩ hne1 hne2 hdh t htD
+    have hshift := XIVPHKS_SHIFT_p16
+      (fun i => wedgeGe 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t))
+      (fun i j k => azim 0 (f (w i) t) (f (w j) t) (f (w k) t))
+      (fun i j k => dihV 0 (f (w i) t) (f (w j) t) (f (w k) t))
+      eS r (fun i => f (w i) t) hpair1 hpair2 rfl rfl rfl
+      (by rw [h2eS]; exact hcpos) h1shift h2shift h3shift h4shift h5shift
+    refine ⟨?_, ?_⟩
+    · simpa only [Nat.add_comm 1 r, Nat.add_sub_cancel] using
+        hshift.1 r 1 (by norm_num) (by omega)
+    · simpa only [Nat.add_comm 1 r] using hshift.2 r 1 (by norm_num) (by omega)
+
 /-- HOL `XIV_ECAU` (hl:2562).  NEEDS: the XIV wedge-closure argument. -/
 theorem XIV_ECAU_p14 (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3) (a b : ℝ)
     (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
@@ -6383,5 +6794,16 @@ theorem EGHNAVX {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
 #print axioms w16_noWrap
 #print axioms MONO_AZIM_AS_BTA_I
 #print axioms EGHNAVX
+
+/-! ## w17 axiom audit (XIV_DEFORMATION strict form kit) -/
+#print axioms w17_pairs_finite
+#print axioms w17_triples_finite
+#print axioms w17_nc_window
+#print axioms w17_continuousAt_dihV_comp
+#print axioms w17_dih_window
+#print axioms w17_azim_floor
+#print axioms w17_azim_floor_window
+#print axioms w17_azim_pi_window
+#print axioms w17_xiv_deformation_strict
 
 end Kepler.Text
