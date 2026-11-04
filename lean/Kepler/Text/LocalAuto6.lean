@@ -38,6 +38,7 @@ import Kepler.Text.ConicCapVolume
 import Kepler.Text.LocalAuto2
 import Kepler.Text.LocalAuto3
 import Kepler.Text.LocalAuto5
+import Kepler.Text.LocalAuto10
 import Kepler.Text.Polytope
 import Kepler.Text.Fan
 import Mathlib
@@ -2790,6 +2791,77 @@ theorem CARD_IS_LEAST_CYCLE (h : localFan_p2 V E FF) (hv : v ∈ V) (n : ℕ)
   have hp : 0 < n := by omega
   have hne := LOFA_IMP_DIS_ELMS23 h hv 0 n hp hlt
   exact hne (by rw [hn]; rfl)
+
+/-- **HAFL assembly with the `dih2k` residual explicit.**
+
+Hypotheses are the frozen LA6 statement's, plus
+`hdihFor`: the localized-carrier `dih2k` transfer (`DIH_K_HYP_E_PRIME`
+specialized to the slice carriers, uniform in the carrier `HS'`).
+
+Proof route (HOL local_lemmas1.hl:3077):
+1. `PROVE_SLICING_FAN` → `FAN 0 V (E ∪ {{v,w}})` (LA6, closed);
+2. the base dart `d = (v, rhoNode1 FF v)` is a carrier dart;
+3. `IMP_FAN_V_PRIME_E_PRIME` (LA3, closed) → `FAN 0 (vPrime V fv) (ePrime E' fv)`;
+4. `HYP_LEMMA` (LA3, closed) → the slice carrier hypermap `HS'`;
+5. `LOCALIZE_PRESERVE_FACE` (LA10, closed) → `fv = HS'.face d`;
+6. the slice base-dart membership;
+7. `localFan_p2` fields. -/
+theorem HAFL_CIRCLE_FORM_LOCAL_FAN_of_dih {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w : V3} {fv : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
+    (hvw : v ≠ w)
+    (hcol : ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+      ¬ Collinear ℝ ({0, z, t} : Set V3))
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
+    (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
+    (hdihFor : ∀ HS' : Hypermap (V3 × V3),
+      IsHyp_p2 0 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) HS' →
+      dih2k_p2 HS' fv.ncard) :
+    localFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv := by
+  -- (1) the augmented carrier still carries a fan
+  have hfanAug : FAN 0 V (E ∪ {{v, w}}) :=
+    PROVE_SLICING_FAN h hv hw hvw hcol hsub
+  -- (2) the base dart `(v, rho v)` is a carrier dart
+  have hdFF : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS2 h).2 v hv
+  have hdOrd : (v, rhoNode1_p2 FF v) ∈ ordPairs_p2 E :=
+    LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hdFF
+  have hdOrd' : (v, rhoNode1_p2 FF v) ∈ ordPairs_p2 (E ∪ {{v, w}}) :=
+    Or.inl hdOrd
+  have hd : (v, rhoNode1_p2 FF v) ∈ dartsOfHyp_p2 (E ∪ {{v, w}}) V :=
+    Or.inl hdOrd'
+  have hdD : (v, rhoNode1_p2 FF v) ∈ (↑HS.darts : Set (V3 × V3)) := by
+    rw [hHS.1]; exact hd
+  -- (3) + (4): the slice fan and its HYP carrier
+  have hH : ∃ H : Hypermap (V3 × V3),
+      (↑H.darts : Set (V3 × V3)) = dartsOfHyp_p3 (E ∪ {{v, w}}) V ∧
+      (H.edgeMap : V3 × V3 → V3 × V3) = eeOfHyp_p3 0 V (E ∪ {{v, w}}) ∧
+      (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 0 V (E ∪ {{v, w}}) ∧
+      (H.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 0 V (E ∪ {{v, w}}) ∧
+      ∃ x ∈ H.darts, fv = H.face x :=
+    ⟨HS, hHS.1, hHS.2.1, hHS.2.2.1, hHS.2.2.2,
+      (v, rhoNode1_p2 FF v), Finset.mem_coe.mp hdD, hfv⟩
+  have hfanSl : FAN 0 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) :=
+    IMP_FAN_V_PRIME_E_PRIME hfanAug hH
+  obtain ⟨HS', hHS'⟩ := HYP_LEMMA hfanSl
+  -- (5) localization preserves the face
+  have hface : fv = HS'.face (v, rhoNode1_p2 FF v) :=
+    LOCALIZE_PRESERVE_FACE (v := 0) hfanAug hHS hHS' hd hfv
+  -- (6) the slice base-dart membership
+  have hdfv : (v, rhoNode1_p2 FF v) ∈ fv := by
+    rw [hfv]; exact HS.mem_face_self _
+  have hpair : ({v, rhoNode1_p2 FF v} : Set V3) ∈ ePrime_p2 (E ∪ {{v, w}}) fv :=
+    ⟨v, rhoNode1_p2 FF v, rfl, Or.inl hdOrd, hdfv⟩
+  have hd' : (v, rhoNode1_p2 FF v) ∈
+      dartsOfHyp_p2 (ePrime_p2 (E ∪ {{v, w}}) fv) (vPrime_p2 V fv) :=
+    Or.inl hpair
+  have hdD' : (v, rhoNode1_p2 FF v) ∈ (↑HS'.darts : Set (V3 × V3)) := by
+    rw [hHS'.1]; exact hd'
+  -- (7) assemble `localFan_p2`
+  exact ⟨HS', hHS'.1, hHS'.2.1, hHS'.2.2.1, hHS'.2.2.2, hfanSl,
+    ⟨(v, rhoNode1_p2 FF v), Finset.mem_coe.mp hdD', hface⟩,
+    hdihFor HS' hHS'⟩
+
 
 /-- HOL `HAFL_CIRCLE_FORM_LOCAL_FAN` (local_lemmas1.hl:3077) — giant. -/
 theorem HAFL_CIRCLE_FORM_LOCAL_FAN (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
