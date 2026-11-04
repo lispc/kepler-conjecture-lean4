@@ -190,7 +190,9 @@ def mainRun : CoreM Unit := do
     -- W6-A 逐图 archive 对齐数据根（lane w6align-wire-w1；岛落库 cef05bb7：
     -- 24 模块 + 19,715 逐图对齐定理 align_00000..19714 + 正/逆表 certArchIdx/
     -- invCertIdx + 族普查 usedFamilies，见 Kepler/LP/W6Align.lean 根定理 w6align）
-    `Kepler.LP.W6Align.w6align]
+    `Kepler.LP.W6Align.w6align,
+    -- W6-A 块级补根（lane w6align-roots-w2）：19,715 条 align_* 的块级合取入口
+    `Kepler.LP.W6AlignRoots.w6align_all]
   let enum := enumerateRoots env
   let pck := sortNames enum.packingConcl
   let loc := sortNames enum.localConcl
