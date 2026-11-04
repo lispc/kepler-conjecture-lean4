@@ -87,6 +87,7 @@ import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto7
 import Kepler.Text.CircularSolKit
 import Kepler.Text.LocalAuto23
+import Kepler.Text.LocalAuto35
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -5741,10 +5742,216 @@ theorem INTERIOR_ANGLE_SAME_V3_DEFOR1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → 
   rw [horbd, horb]
   exact hEq (w (i + l % k)) t ⟨i + l % k, rfl⟩ (by linarith) hte'
 
+/-- Common core of the two `TAUSTAR_V3_DEFOR` twins: one `v3_defor_v4` step
+at `v2` strictly decreases `taustar_v39`, given the pointwise interior-angle
+constancy `hang` (supplied by the corresponding `INTERIOR_ANGLE_SAME_*`
+lemma) and the `BBs` deformation hypothesis.  The `tau_fun` comparison is
+termwise: the `i = 0` summand contracts because `rho_fun ∘ norm` contracts at
+the moving point `v2` and the undirected interior angle is positive, while
+every later summand is unchanged (the deformation fixes the vertices
+`w (i + l % k) ≠ w l`). -/
+private theorem w12_taustar_core_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+    (x1 x2 x6 e1 : ℝ) (v1 v2 : V3)
+    (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+    (hl : w l = v2)
+    (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+    (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+    (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
+    (hJ : ∀ i, ¬s.J l i)
+    (hBBd : ∀ t : ℝ, 0 < t → t < e1 →
+      BBsV39 s (fun i => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w i) t))
+    (he1 : 0 < e1)
+    (hang : ∃ eA : ℝ, 0 < eA ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t → t < eA →
+      interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t
+          (Set.range fun i : ℕ => (w i, w (i + 1))))
+        ((rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t
+          (Set.range fun i : ℕ => (w i, w (i + 1)))))^[i]
+          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t)) =
+      interiorAngle1 0 (Set.range fun i : ℕ => (w i, w (i + 1)))
+        ((rhoNode1 (Set.range fun i : ℕ => (w i, w (i + 1))))^[i] (w (l % k)))) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t ∧ t < e →
+      taustarV39 s (fun i => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w i) t) <
+        taustarV39 s w := by
+  obtain ⟨eA, heA, hAng⟩ := hang
+  have hsk0 : 0 < s.k := by have := hs.2.1; omega
+  have hsk3 : ¬ s.k ≤ 3 := by omega
+  have hBB : BBsV39 s w := mms_bbs_p34 hmw
+  have hwl : w (l % s.k) = v2 := by
+    rw [(modFold_p34 hsk0 hBB.2.1 l).symm, hl]
+  have hlmod : l % s.k = l % k := by rw [hkk]
+  have hwlk : w (l % k) = v2 := by rw [← hlmod]; exact hwl
+  set V : Set V3 := Set.range w with hVdef
+  set E : Set (Set V3) := Set.range fun i => ({w i, w (i + 1)} : Set V3) with hEdef
+  set FF : Set (V3 × V3) := Set.range fun i => (w i, w (i + 1)) with hFFdef
+  obtain ⟨eR, heR, hRho⟩ :=
+    RHO_FUN_DEFORMATION_V3_DEFOR_p34 v1 v2 x1 x2 x6 (-1)
+      hx1p hx2p hx6p hnc hx1 hx2 hx6 rfl
+  have hcard : ∀ t : ℝ, 0 < t → t < e1 →
+      (Set.range (fun i : ℕ => (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w i) t,
+        v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (i + 1)) t))).ncard =
+      (Set.range fun i : ℕ => (w i, w (i + 1))).ncard :=
+    CARD_FF_EQ_V3_DEFOR_DEFORMATION_p34 s k w V v1 v2 x1 x2 x6 (-1) e1
+      hkk rfl hs hk hBB hBBd
+  have hpos : 0 < interiorAngle1 0 FF (w (l % s.k)) := by
+    have hclf : ConvexLocalFan V E FF := by
+      have h := BBS_IMP_CONVEX_LOCAL_FAN_p34 s k w hk hkk hBB
+      simpa only [V, E, FF] using h
+    obtain ⟨-, -, -, -, -, h2reg⟩ := hclf.1
+    have hno : dartsOfHyp_p3 E V = Fan.dart1OfFan V E := hno_of_no_isolated (w10_hedge h2reg)
+    have hlf2 : localFan_p2 V E FF :=
+      localFan_p2.of_localFan_p3 (localFan_p3.of_LocalFan hclf.1 hno)
+    exact INTERIOR_ANGLE1_POS hlf2 (v := w (l % s.k)) ⟨l % s.k, rfl⟩
+  set e : ℝ := min (min eA eR) e1 / 2 with hedef
+  refine ⟨e, ?_, ?_⟩
+  · have h3 : 0 < min (min eA eR) e1 := lt_min (lt_min heA heR) he1
+    rw [hedef]; linarith
+  · intro t ht
+    obtain ⟨ht0, hte⟩ := ht
+    have hA : t < eA := by
+      have hle : min (min eA eR) e1 ≤ eA := (min_le_left _ _).trans (min_le_left _ _)
+      rw [hedef] at hte; linarith
+    have hR : t < eR := by
+      have hle : min (min eA eR) e1 ≤ eR := (min_le_left _ _).trans (min_le_right _ _)
+      rw [hedef] at hte; linarith
+    have h1e : t < e1 := by
+      have hle : min (min eA eR) e1 ≤ e1 := min_le_right _ _
+      rw [hedef] at hte; linarith
+    set w' : ℕ → V3 := fun i => v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w i) t with hw'def
+    have hBB' : BBsV39 s w' := by
+      rw [hw'def]
+      exact hBBd t ht0 h1e
+    set E' : Set (Set V3) := Set.range fun i => ({w' i, w' (i + 1)} : Set V3) with hE'def
+    set FF' : Set (V3 × V3) := Set.range fun i => (w' i, w' (i + 1)) with hFF'def
+    have hFF'eq : FF' = deformedFF4_p34 x1 x2 x6 v1 v2 t FF := by
+      rw [hFF'def, hw'def, hFFdef]
+      exact F_DEFORMATION_V3_DEFOR_p34 w x1 x2 x6 t v1 v2
+    set g' : ℕ → ℝ := fun i => rhoFun ‖w' (i + l % s.k)‖ *
+      interiorAngle1 0 FF' ((rhoNode1 FF')^[i] (w' (l % s.k))) with hg'def
+    set g : ℕ → ℝ := fun i => rhoFun ‖w (i + l % s.k)‖ *
+      interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % s.k))) with hgdef
+    have hSz' : setSum {i | i < s.k} g' = setSum FF' (fun e => rhoFun ‖e.1‖ * azimInFan e E') :=
+      SUM_AZIM_EQ_ANGLE_LE4_p35 s l 0 (w' (l % s.k)) (Set.range w') E' FF' w'
+        hsk3 hBB' hs rfl rfl rfl rfl
+    have hSz : setSum {i | i < s.k} g = setSum FF (fun e => rhoFun ‖e.1‖ * azimInFan e E) :=
+      SUM_AZIM_EQ_ANGLE_LE4_p35 s l 0 (w (l % s.k)) V E FF w
+        hsk3 hBB hs rfl rfl rfl rfl
+    have hsetSum : ∀ (f : ℕ → ℝ) (K : ℕ),
+        setSum {i | i < K} f = ∑ i ∈ Finset.range K, f i := by
+      intro f K
+      rw [setSum]
+      have hfin : {i | i < K}.Finite := Set.finite_Iio K
+      rw [dif_pos hfin]
+      have hEq : hfin.toFinset = Finset.range K := by
+        ext i
+        simp [Set.mem_toFinset, Finset.mem_range]
+      rw [hEq]
+    have hterm0 : g' 0 < g 0 := by
+      have hg'0 : g' 0 = rhoFun ‖v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % s.k)) t‖ *
+          interiorAngle1 0 FF' (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % s.k)) t) := by
+        rw [hg'def]
+        simp only [hw'def, Nat.zero_add, Function.iterate_zero_apply]
+      have hg0 : g 0 = rhoFun ‖w (l % s.k)‖ * interiorAngle1 0 FF (w (l % s.k)) := by
+        rw [hgdef]
+        simp only [Nat.zero_add, Function.iterate_zero_apply]
+      rw [hg'0, hg0, hlmod]
+      have hAng0 : interiorAngle1 0 FF'
+          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t) =
+          interiorAngle1 0 FF (w (l % k)) := by
+        have h := hAng t 0 ht0 hA
+        rw [← hFF'eq] at h
+        simpa only [Function.iterate_zero_apply] using h
+      rw [hAng0]
+      have hrho0 : rhoFun ‖v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t‖ <
+          rhoFun ‖w (l % k)‖ := by
+        have hwv : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t =
+            v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) := by
+          rw [hwlk]
+          exact if_pos rfl
+        rw [hwv, hwlk]
+        exact hRho t ⟨ht0, hR⟩
+      have hposk : 0 < interiorAngle1 0 FF (w (l % k)) := by
+        rw [← hlmod]
+        exact hpos
+      exact mul_lt_mul_of_pos_right hrho0 hposk
+    have htail : ∀ i ∈ Finset.range (s.k - 1), g' (i + 1) = g (i + 1) := by
+      intro i hi
+      have hiK : i + 1 < s.k := by
+        have := Finset.mem_range.mp hi
+        omega
+      have hres : (i + 1 + l % s.k) % s.k ≠ (l % s.k) % s.k := by
+        have hm : l % s.k < s.k := Nat.mod_lt _ hsk0
+        intro h
+        rcases Nat.lt_or_ge (i + 1 + l % s.k) s.k with h2 | h2
+        · rw [Nat.mod_eq_of_lt h2, Nat.mod_eq_of_lt hm] at h
+          omega
+        · have h3 : i + 1 + l % s.k - s.k < s.k := by omega
+          rw [Nat.mod_eq_sub_mod h2, Nat.mod_eq_of_lt h3, Nat.mod_eq_of_lt hm] at h
+          have h4 : i + 1 + l % s.k = (i + 1 + l % s.k - s.k) + s.k := by omega
+          rw [h] at h4
+          omega
+      have hfix : w' (i + 1 + l % s.k) = w (i + 1 + l % s.k) := by
+        have hres' : (i + 1 + l % s.k) % k ≠ (l % s.k) % k := by
+          rw [← hkk]
+          exact hres
+        have hne : w (i + 1 + l % s.k) ≠ v2 := by
+          intro he
+          exact w_inj_p34 hk hkk hs hmw (i + 1 + l % s.k) (l % s.k) hres' (by rw [he, hwl])
+        show v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (i + 1 + l % s.k)) t =
+          w (i + 1 + l % s.k)
+        simp only [v3DeforV4_p34, if_neg hne]
+      have hAngj : interiorAngle1 0 FF' ((rhoNode1 FF')^[i + 1] (w' (l % s.k))) =
+          interiorAngle1 0 FF ((rhoNode1 FF)^[i + 1] (w (l % s.k))) := by
+        have h := hAng t (i + 1) ht0 hA
+        rw [← hFF'eq] at h
+        simpa only [hw'def, hlmod] using h
+      have hg'j : g' (i + 1) = rhoFun ‖w' (i + 1 + l % s.k)‖ *
+          interiorAngle1 0 FF' ((rhoNode1 FF')^[i + 1] (w' (l % s.k))) := by
+        rw [hg'def]
+      have hgj : g (i + 1) = rhoFun ‖w (i + 1 + l % s.k)‖ *
+          interiorAngle1 0 FF ((rhoNode1 FF)^[i + 1] (w (l % s.k))) := by
+        rw [hgdef]
+      rw [hg'j, hgj, hfix, hAngj]
+    have hsum_lt : setSum {i | i < s.k} g' < setSum {i | i < s.k} g := by
+      rw [hsetSum g' s.k, hsetSum g s.k]
+      rw [show s.k = s.k - 1 + 1 from (Nat.sub_add_cancel (by omega)).symm]
+      rw [Finset.sum_range_succ', Finset.sum_range_succ']
+      exact add_lt_add_of_le_of_lt (le_of_eq (Finset.sum_congr rfl htail)) hterm0
+    have hcard' : FF'.ncard = FF.ncard := by
+      rw [hFF'def, hw'def, hFFdef]
+      exact hcard t ht0 h1e
+    have htau : tauFun (Set.range w') E' FF' < tauFun V E FF := by
+      simp only [tauFun]
+      rw [← hSz', ← hSz, hcard']
+      exact sub_lt_sub_right hsum_lt _
+    have hdsv : dsvV39 s w' = dsvV39 s w := by
+      rw [hw'def, ← hl]
+      exact DSV_V3_DEFOR_EQ_p34 s k l w v1 t (-1) x1 x2 x6 hkk hs hBB hJ
+    have hL : taustarV39 s w' = tauFun (Set.range w') E' FF' - dsvV39 s w' := by
+      rw [taustarV39, if_neg hsk3]
+    have hR : taustarV39 s w = tauFun V E FF - dsvV39 s w := by
+      rw [taustarV39, if_neg hsk3]
+    rw [hL, hR, hdsv]
+    exact sub_lt_sub_right htau _
+
 /-- HOL `TAUSTAR_V3_DEFOR` (IMJXPHR.hl:6140; statement `TAUSTAR_V3_DEFOR_concl`,
 IMJXPHR.hl:6119). -/
 theorem TAUSTAR_V3_DEFOR_p34 : TAUSTAR_V3_DEFOR_concl_p34 := by
-  sorry
+  intro s k w l x1 x2 x6 a e1 v1 v2 hk hkk hs hmw hl hl1 hx1p hx2p hx6p
+    haz hncW haff hnc hx1 hx2 hx6 ha hn2 hJ hBBd he1
+  subst ha
+  have hang : ∃ eA : ℝ, 0 < eA ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t → t < eA →
+      interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t
+          (Set.range fun i : ℕ => (w i, w (i + 1))))
+        ((rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t
+          (Set.range fun i : ℕ => (w i, w (i + 1)))))^[i]
+          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t)) =
+      interiorAngle1 0 (Set.range fun i : ℕ => (w i, w (i + 1)))
+        ((rhoNode1 (Set.range fun i : ℕ => (w i, w (i + 1))))^[i] (w (l % k))) :=
+    INTERIOR_ANGLE_SAME_V3_DEFOR1_p34 s k l w v1 v2 x1 x2 x6 (-1) e1
+      (Set.range fun i : ℕ => (w i, w (i + 1)))
+      hk hkk hs hmw hl hl1 hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hBBd he1 rfl
+  exact w12_taustar_core_p34 s k l w x1 x2 x6 e1 v1 v2 hk hkk hs hmw hl
+    hx1p hx2p hx6p hnc hx1 hx2 hx6 hJ hBBd he1 hang
 
 /-- HOL `EQ_W_L_IN_BBS` (IMJXPHR.hl:6299). -/
 theorem EQ_W_L_IN_BBS_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -7656,7 +7863,22 @@ theorem INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) (w 
 /-- HOL `TAUSTAR_V3_DEFOR_TWO_CASES` (IMJXPHR.hl:9527; statement
 `TAUSTAR_V3_DEFOR_TWO_CASES_concl`, IMJXPHR.hl:9504). -/
 theorem TAUSTAR_V3_DEFOR_TWO_CASES_p34 : TAUSTAR_V3_DEFOR_TWO_CASES_concl_p34 := by
-  sorry
+  intro s k w l x1 x2 x6 a e1 v1 v2 hk hkk hs hmw hl hlk hx1p hx2p hx6p
+    haz hncW haff hnc hx1 hx2 hx6 ha hn2 hJ hBBd he1
+  subst ha
+  have hang : ∃ eA : ℝ, 0 < eA ∧ ∀ t : ℝ, ∀ i : ℕ, 0 < t → t < eA →
+      interiorAngle1 0 (deformedFF4_p34 x1 x2 x6 v1 v2 t
+          (Set.range fun i : ℕ => (w i, w (i + 1))))
+        ((rhoNode1 (deformedFF4_p34 x1 x2 x6 v1 v2 t
+          (Set.range fun i : ℕ => (w i, w (i + 1)))))^[i]
+          (v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 (w (l % k)) t)) =
+      interiorAngle1 0 (Set.range fun i : ℕ => (w i, w (i + 1)))
+        ((rhoNode1 (Set.range fun i : ℕ => (w i, w (i + 1))))^[i] (w (l % k))) :=
+    INTERIOR_ANGLE_SAME_V3_DEFOR1_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6 (-1) e1
+      (Set.range fun i : ℕ => (w i, w (i + 1)))
+      hk hkk hs hmw hl hlk hx1p hx2p hx6p haz hncW haff hnc hx1 hx2 hx6 rfl hBBd he1 rfl
+  exact w12_taustar_core_p34 s k l w x1 x2 x6 e1 v1 v2 hk hkk hs hmw hl
+    hx1p hx2p hx6p hnc hx1 hx2 hx6 hJ hBBd he1 hang
 
 /-- HOL `IMJXPHR` (IMJXPHR.hl:9703; shape `mk_imp (ZLZTHIC_concl,
 mk_imp (MHAEYJN_concl, IMJXPHR_concl))`, conclusion IMJXPHR_concl_p34 =
