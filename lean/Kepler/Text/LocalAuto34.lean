@@ -85,6 +85,7 @@ Encoding:
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto7
+import Kepler.Text.CircularSolKit
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -4935,6 +4936,193 @@ theorem F_DEFORMATION_V3_DEFOR_p34 (w : ℕ → V3) (x1 x2 x6 t : ℝ) (v1 v2 : 
     obtain ⟨i, rfl⟩ := hp
     exact ⟨i, by simp⟩
 
+/-! ### W10: LA5 bridge for the lunar affine-hull items
+
+`LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI` (LocalAuto5:6766) is consumed through
+`import Kepler.Text.CircularSolKit`; its axiom face is exactly
+`[propext, Classical.choice, Quot.sound]` (kernel `#print axioms`, see
+`logs/probe_ax.log`).  The LA1→LA2 convex-local-fan transport below is a
+verbatim copy of `CircularSolKit.kcs_clf2` together with its two private
+prerequisites (they are `private` in that module, hence not importable). -/
+
+/-- 2-regularity ⇒ every vertex lies on some edge. -/
+private theorem w10_hedge {V : Set V3} {E : Set (Set V3)}
+    (h2reg : ∀ u ∈ V, (ee u E).ncard = 2) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := h2reg v hv
+  have hne : (ee v E) ≠ ∅ := by
+    intro hE
+    rw [hE, Set.ncard_empty] at h2
+    omega
+  obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  exact ⟨w, hw⟩
+
+/-- `localFan_p2 ⇒ FF ⊆ dart1OfFan` (pattern of LocalAuto9:1422-1428). -/
+private theorem w10_ffSubDart {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hlf : localFan_p2 V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
+    FF ⊆ Fan.dart1OfFan V E := by
+  obtain ⟨H, hd, -, -, -, -, hface, -⟩ := hlf
+  obtain ⟨z, hzd, hFF⟩ := hface
+  intro d hdF
+  have hsub := H.face_subset_darts hzd (hFF ▸ hdF)
+  rw [hd] at hsub
+  exact (hno_p2_of_no_isolated hedge) ▸ hsub
+
+/-- Transport the LA1 `ConvexLocalFan` hypothesis to the LA2
+`convexLocalFan_p2` encoding (verbatim copy of `CircularSolKit.kcs_clf2`,
+`private` there). -/
+private theorem w10_clf2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : ConvexLocalFan V E FF) : convexLocalFan_p2 V E FF := by
+  obtain ⟨hlf, hcvx⟩ := h
+  have hcopy := hlf
+  obtain ⟨hfan, -, -, -, -, h2reg⟩ := hcopy
+  have hlf2 := localFan_p2.of_LocalFan_noIso hlf (w10_hedge h2reg)
+  have hsub := w10_ffSubDart hlf2 (w10_hedge h2reg)
+  refine ⟨hlf2, ?_⟩
+  intro d hd
+  refine ⟨?_, ?_⟩
+  · have hb : azimInFan d E = azimInFan_p3 d E :=
+      azimInFan_eq_azimInFan_p3 hfan (hsub hd)
+    show azimInFan_p2 d E ≤ Real.pi
+    rw [show azimInFan_p2 d E = azimInFan_p3 d E from rfl, ← hb]
+    exact (hcvx d hd).1
+  · show V ⊆ wedgeInFanGe_p2 d E
+    rw [show wedgeInFanGe_p2 d E = wedgeInFanGe_p3 d E from rfl,
+      ← wedgeInFanGe_eq_wedgeInFanGe_p3 hfan (hsub hd)]
+    exact (hcvx d hd).2
+
+/-- Common core of the three `DEFORMATION_LUNAR_AFFINE_HULL*` items: the
+`v3_defor_v4` image stays in the strict cone `affGt {0} {v1, u}`, which sits
+in `aff {0, v1, u}`; the LUNAR statement of LocalAuto5 places both
+neighbour slots of `v2` (`rhoNode1 FF v2 = w (l+1)` and
+`ivsRhoNode1 FF v2 = w (l+k-1)`, the `w5cC4` special values) in
+`aff {v2, v, w1}`, so `{0, v1, u} ⊆ aff {v2, v, w1} ⊆ aff {0, v, w1, v2}`.
+`hpair` is the only variant-dependent slot: the non-twin items have
+`v1 = w (l+1)` and `u = w (l+k-1)`, the `TWO_CASES` twin has `v1 = w (l+k-1)`
+and `u = w (l+1)`.  The conclusion uses the closed `Icc (-e) e` shape; the
+strict-cone input is consumed at `e/2`. -/
+private theorem w10_lunar_hull_core_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
+    (v1 v2 v w1 u : V3) (x1 x2 x6 : ℝ) (V : Set V3) (E : Set (Set V3))
+    (hk : 3 < k) (hkk : s.k = k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+    (hncW : ¬Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3))
+    (haffW : v2 ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3))
+    (hpair : ({v1, u} : Set V3) = ({w (l + 1), w (l + k - 1)} : Set V3))
+    (hx1p : 0 < x1) (hx2p : 0 < x2) (hx6p : 0 < x6)
+    (hnc3 : ¬Collinear ℝ ({0, v1, v2} : Set V3))
+    (hvv2 : v ≠ v2) (hw1v2 : w1 ≠ v2)
+    (hV : Set.range w = V)
+    (hE : Set.range (fun i : ℕ => ({w i, w (i + 1)} : Set V3)) = E)
+    (hlun : Lunar v w1 V E) (hl : w l = v2)
+    (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, t ∈ Icc (-e) e →
+      v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈
+        affineSpan ℝ ({0, v, w1, v2} : Set V3) := by
+  -- the `v3DeforV1` image stays in the strict cone at `{v1, u}`
+  obtain ⟨e₀, he₀, hgt⟩ := V3_DEFOR_IN_AFF_GT_V1_p34 v1 v2 u x1 x2 x6 (-1)
+    hx1p hx2p hx6p hnc3 hx1 hx2 hx6 rfl (by rw [hpair]; exact hncW)
+    (by rw [hpair]; exact haffW)
+  -- the cone sits in `aff {0, v1, u} = aff {0, w (l+1), w (l+k-1)}`
+  have hset0 : ({0, v1, u} : Set V3) = ({0, w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [hpair]
+  have hcone : affGt {0} ({v1, u} : Set V3) ⊆
+      (affineSpan ℝ ({0, v1, u} : Set V3) : Set V3) := by
+    refine subset_trans (AFF_GT_SUB_AFF_UNION {0} ({v1, u} : Set V3)) ?_
+    intro z hz
+    refine affineSpan_mono ℝ ?_ hz
+    intro q hq
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+  -- LUNAR: both neighbour slots of `v2` lie in `aff {v2, v, w1}`
+  have hBB : BBsV39 s w := by
+    have h := hmw
+    simp only [MMsV39, Set.mem_setOf_eq] at h
+    have h2 := h.1
+    simp only [BBprime2V39, Set.mem_setOf_eq] at h2
+    have h3 := h2.1
+    simp only [BBprimeV39, Set.mem_setOf_eq] at h3
+    exact h3.1
+  have hclf : ConvexLocalFan (Set.range w)
+      (Set.range fun i => ({w i, w (i + 1)} : Set V3))
+      (Set.range fun i => (w i, w (i + 1))) :=
+    BBS_IMP_CONVEX_LOCAL_FAN_p34 s k w hk hkk hBB
+  have hclf2 := w10_clf2 hclf
+  have hlun' : lunar_p2 v w1 (Set.range w)
+      (Set.range fun i => ({w i, w (i + 1)} : Set V3)) := by
+    rw [← hV, ← hE] at hlun
+    exact hlun
+  have hL := LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI (V := Set.range w)
+    (E := Set.range fun i => ({w i, w (i + 1)} : Set V3))
+    (FF := Set.range fun i => (w i, w (i + 1))) (v := v) (w := w1) hclf2 hlun'
+  obtain ⟨h0c, hspec⟩ := hL
+  have hv2mem : v2 ∈ Set.range w \ ({v, w1} : Set V3) := by
+    refine ⟨⟨l, ?_⟩, ?_⟩
+    · rw [hl]
+    · simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      exact ⟨fun h => hvv2 h.symm, fun h => hw1v2 h.symm⟩
+  obtain ⟨-, hrho_mem, hivs_mem⟩ := hspec v2 hv2mem
+  have hrho : rhoNode1_p2 (Set.range fun i : ℕ => (w i, w (i + 1))) v2 = w (l + 1) := by
+    calc rhoNode1_p2 (Set.range fun i : ℕ => (w i, w (i + 1))) v2
+        = rhoNode1 (Set.range fun i : ℕ => (w i, w (i + 1))) v2 := rfl
+      _ = w (l + 1) := by
+        have h := w5cC4_rhoNode1_range_p34 (FF := Set.range fun i : ℕ => (w i, w (i + 1)))
+          (k := k) (l := l) (w := w) (s := s) hk hkk hs hmw rfl
+        rwa [hl] at h
+  have hivs : ivsRhoNode1_p2 (Set.range fun i : ℕ => (w i, w (i + 1))) v2 = w (l + k - 1) := by
+    calc ivsRhoNode1_p2 (Set.range fun i : ℕ => (w i, w (i + 1))) v2
+        = ivsRhoNode1 (Set.range fun i : ℕ => (w i, w (i + 1))) v2 := rfl
+      _ = w (l + k - 1) := by
+        have h := w5cC4_ivsRhoNode1_range_p34 (FF := Set.range fun i : ℕ => (w i, w (i + 1)))
+          (k := k) (l := l) (w := w) (s := s) hk hkk hs hmw rfl
+        rwa [hl] at h
+  rw [hrho] at hrho_mem
+  rw [hivs] at hivs_mem
+  -- `0 ∈ aff {v2, v, w1}` from `0 ∈ conv0 {v, w1}`
+  have h0span : (0:V3) ∈ (affineSpan ℝ ({v2, v, w1} : Set V3) : Set V3) := by
+    have hEq : (affineSpan ℝ ({v, w1} : Set V3) : Set V3) = affineSpan ℝ ({v, 0} : Set V3) :=
+      IN_CONV0_IMP_AFF_EQ (x := v) (y := w1) (a := 0) h0c
+    have h0v0 : (0:V3) ∈ (affineSpan ℝ ({v, 0} : Set V3) : Set V3) :=
+      right_mem_affineSpan_pair _ _ _
+    have h0vw : (0:V3) ∈ (affineSpan ℝ ({v, w1} : Set V3) : Set V3) := by
+      rw [hEq]
+      exact h0v0
+    refine affineSpan_mono ℝ ?_ h0vw
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    tauto
+  have hsub3 : ({0, w (l + 1), w (l + k - 1)} : Set V3) ⊆
+      (affineSpan ℝ ({v2, v, w1} : Set V3) : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact h0span
+    · exact hrho_mem
+    · exact hivs_mem
+  have hspan3 : (affineSpan ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3) : Set V3) ⊆
+      affineSpan ℝ ({v2, v, w1} : Set V3) :=
+    S_SUBSET_IMP_AFF_S_TOO hsub3
+  refine ⟨e₀ / 2, by linarith, fun t ht => ?_⟩
+  rw [Set.mem_Icc] at ht
+  have ht1 : -e₀ < t := by linarith [ht.1]
+  have ht2 : t < e₀ := by linarith [ht.2]
+  have hdef : v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t
+      = v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) := by
+    rw [v3DeforV4_p34, if_pos rfl]
+  rw [hdef]
+  have hmemgt : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
+      affGt {0} ({v1, u} : Set V3) :=
+    hgt t ⟨ht1, ht2⟩
+  have hmem1 : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
+      (affineSpan ℝ ({0, v1, u} : Set V3) : Set V3) := hcone hmemgt
+  have hmem2 : v3DeforV1_p17 (-1) v1 v2 x1 x2 x6 x6 (x2 - t) ∈
+      (affineSpan ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3) : Set V3) := by
+    rw [← hset0]
+    exact hmem1
+  have hmem3 := hspan3 hmem2
+  refine affineSpan_mono ℝ ?_ hmem3
+  intro z hz
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+  tauto
+
 /-- HOL `DEFORMATION_LUNAR_AFFINE_HULL` (IMJXPHR.hl:5233). -/
 theorem DEFORMATION_LUNAR_AFFINE_HULL_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
     (v1 v2 v w1 : V3) (x1 x2 x6 a : ℝ) (V : Set V3) (E : Set (Set V3))
@@ -4951,7 +5139,25 @@ theorem DEFORMATION_LUNAR_AFFINE_HULL_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → 
     (hlun : Lunar v w1 V E) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, 0 < t → t < e →
       v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈ affineSpan ℝ ({0, v, w1, v2} : Set V3) := by
-  sorry
+  subst ha
+  have hlkk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
+  have hncW3 : ¬Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hlkk]
+    exact hncW
+  have haffW : v2 ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hlkk, ← hl]
+    exact haff
+  obtain ⟨hx1p, hx2p, hx6p, hnc3⟩ :=
+    HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6 hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  have hpair : ({v1, w (l + k - 1)} : Set V3) =
+      ({w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hl1]
+  obtain ⟨e, he, hmem⟩ := w10_lunar_hull_core_p34 s k l w v1 v2 v w1 (w (l + k - 1))
+    x1 x2 x6 V E hk hkk hs hmw hncW3 haffW hpair hx1p hx2p hx6p hnc3 hvv2 hw1v2
+    hV hE hlun hl hx1 hx2 hx6
+  refine ⟨e, he, fun t ht hte => hmem t ?_⟩
+  rw [Set.mem_Icc]
+  constructor <;> linarith
 
 /-- HOL `DEFORMATION_LUNAR_AFFINE_HULL_V1` (IMJXPHR.hl:5343). -/
 theorem DEFORMATION_LUNAR_AFFINE_HULL_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -4969,7 +5175,23 @@ theorem DEFORMATION_LUNAR_AFFINE_HULL_V1_p34 (s : ScsV39) (k l : ℕ) (w : ℕ �
     (hlun : Lunar v w1 V E) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, t ∈ Icc (-e) e →
       v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈ affineSpan ℝ ({0, v, w1, v2} : Set V3) := by
-  sorry
+  subst ha
+  have hlkk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
+  have hncW3 : ¬Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hlkk]
+    exact hncW
+  have haffW : v2 ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hlkk, ← hl]
+    exact haff
+  obtain ⟨hx1p, hx2p, hx6p, hnc3⟩ :=
+    HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x6 hkk hs hmw hk hl hl1 hx1 hx2 hx6
+  have hpair : ({v1, w (l + k - 1)} : Set V3) =
+      ({w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hl1]
+  obtain ⟨e, he, hmem⟩ := w10_lunar_hull_core_p34 s k l w v1 v2 v w1 (w (l + k - 1))
+    x1 x2 x6 V E hk hkk hs hmw hncW3 haffW hpair hx1p hx2p hx6p hnc3 hvv2 hw1v2
+    hV hE hlun hl hx1 hx2 hx6
+  exact ⟨e, he, hmem⟩
 
 /-! ## Section 3: the composite registry arrows -/
 
@@ -7043,7 +7265,26 @@ theorem DEFORMATION_LUNAR_AFFINE_HULL_V1_TWO_CASES_p34 (s : ScsV39) (k l : ℕ) 
     (hlun : Lunar v w1 V E) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, t ∈ Icc (-e) e →
       v3DeforV4_p34 (-1) x1 x2 x6 v1 v2 v2 t ∈ affineSpan ℝ ({0, v, w1, v2} : Set V3) := by
-  sorry
+  subst ha
+  have hlkk : l + (s.k - 1) = l + k - 1 := by rw [hkk]; omega
+  have hncW3 : ¬Collinear ℝ ({0, w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hlkk]
+    exact hncW
+  have haffW : v2 ∈ affGt {0} ({w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hlkk, ← hl]
+    exact haff
+  obtain ⟨hx1p, hx2p, hx6p, hnc3⟩ :=
+    HYPER_MM_COLLINEAR_TWO_CASES_p34 s k l w v1 v2 x1 x2 x6 hkk hs hmw hk hl hlk hx1 hx2 hx6
+  have hpair : ({v1, w (l + 1)} : Set V3) =
+      ({w (l + 1), w (l + k - 1)} : Set V3) := by
+    rw [← hlk]
+    ext q
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  obtain ⟨e, he, hmem⟩ := w10_lunar_hull_core_p34 s k l w v1 v2 v w1 (w (l + 1))
+    x1 x2 x6 V E hk hkk hs hmw hncW3 haffW hpair hx1p hx2p hx6p hnc3 hvv2 hw1v2
+    hV hE hlun hl hx1 hx2 hx6
+  exact ⟨e, he, hmem⟩
 
 /-- HOL `V3_DEFOR_DEFORMATION_CONVEX_LOCAL_FAN_V1_TWO_CASES` (IMJXPHR.hl:9171;
 shape `mk_imp (ZLZTHIC_concl, mk_imp (MHAEYJN_concl,
