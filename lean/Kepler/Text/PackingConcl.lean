@@ -128,6 +128,281 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical MeasureTheory EuclideanGeometry
 
+/-! ### PA4 materialization capstone (lane lv910-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV9):
+the 71 public top-level PackingAuto4 clean theorem exits (scout seeds_clean.txt PA4 group; the 9 sorried
+BumpP4.MCELL*_PARAM/_CELL_PARAMETERS_EXIST skeleton exits are NOT included -- NO-GO half assigned to the PA17
+spare-parts line by the scout), of which 41 are statable from PackingConcl and are re-exposed as ONE conjunction below;
+30 exits are dropped per the no-forcing rule (their statements name PackingAuto4-module PRIVATE constants -- the `private abbrev ccBoolModelP4` /
+CC4P4 kit family -- and cannot be restated outside the module; each drop is named in the theorem docstring).
+Self-contained section: pure insertion, zero new imports (PA4 already imported at :109), zero proof obligations (body = the exit assembly itself).
+The scoped heartbeat raise mirrors the file's own `set_option maxHeartbeats` usage (see the pa21 section below): the conjunction statement exceeds the default
+200000 budget during statement elaboration (measured on the first compile attempt; the pa21 capstone uses 50000000).
+-/
+
+set_option maxHeartbeats 50000000 in
+
+/-- PA4 materialization capstone (scout lane leftover-mat-scout-2
+workorder LV9, implementation lane lv910-w1, 2026-11-04).  The
+71 public top-level Kepler.Text.PackingAuto4 theorem exits unreachable from every
+e2e root (scout probe1/probe2: GROUP_VS_CONE fresh sorried-0, standard-three
+axiom face on the axprobe sample); 41 of them are statable from
+PackingConcl and are re-exposed as ONE conjunction.
+Implemented here: 41 of the 71.  Dropped per the workorder no-forcing rule, mechanically detected by the generator:
+--   Kepler.Text.BumpP4.BETA_BUMP_INVOLUTION_BIJ: statement names module-private constant(s) BumpP4.BIJP4 (unstatable from PackingConcl)
+--   Kepler.Text.CARD5_1074_LE_QYI: statement names module-private constant(s) Text.ccAzimP4, Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.aSpine5P4, Text.bSpine5P4, Text.cc4CellP4, Text.ccAzimP4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccGgP4, Text.ccQyP4, Text.ccRealModelP4, Text.periodicP4 (unstatable from PackingConcl)
+--   Kepler.Text.CC_4CELL_QUQX: statement names module-private constant(s) Text.CC4P4, Text.cc4CellP4, Text.ccQuP4, Text.ccQxP4 (unstatable from PackingConcl)
+--   Kepler.Text.CC_CARD_LESS_THAN_5: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.CHQSQEY: statement names module-private constant(s) Text.cc4CellP4, Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccRealModelP4, Text.ccSizeP4 (unstatable from PackingConcl)
+--   Kepler.Text.EXISTS_QY_CARD5: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccQyP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.GRHIDFA: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.GRHIDFA_ALT: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.IPVICGW: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccRealModelP4, Text.ccSmallP4 (unstatable from PackingConcl)
+--   Kepler.Text.IPVICGW_C33: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccRealModelP4, Text.ccSmallP4 (unstatable from PackingConcl)
+--   Kepler.Text.IPVICGW_C43_C44: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccRealModelP4, Text.ccSmallP4 (unstatable from PackingConcl)
+--   Kepler.Text.LEAST_BOUND_CC_GG: statement names module-private constant(s) Text.ccEpsP4, Text.CC4P4, Text.ccGgP4, Text.ccQuP4, Text.ccQxP4, Text.ccQyP4 (unstatable from PackingConcl)
+--   Kepler.Text.LITTLE_CC_GG3AA: statement names module-private constant(s) Text.ccGg3aP4, Text.ccQyP4, Text.CC4P4, Text.ccGg3aP4, Text.ccGgP4, Text.ccQuP4, Text.ccQxP4, Text.ccQyP4, Text.periodicP4, Text.periodicPropP4 (unstatable from PackingConcl)
+--   Kepler.Text.LITTLE_CC_GG3BB: statement names module-private constant(s) Text.CC4P4, Text.ccGg3bP4, Text.ccGgP4, Text.ccQuP4, Text.ccQxP4, Text.ccQyP4 (unstatable from PackingConcl)
+--   Kepler.Text.LUIKGMH: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.LXDEYBO: statement names module-private constant(s) Text.cc4CellP4, Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccRealModelP4, Text.ccSizeP4 (unstatable from PackingConcl)
+--   Kepler.Text.MTMLSRF: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.cc4CellP4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccGgP4, Text.ccQuP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.NOT_QY_LEM: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccRealModelP4, Text.ccQyP4 (unstatable from PackingConcl)
+--   Kepler.Text.PERIODIC_IMAGE_EQUAL: statement names module-private constant(s) Text.periodicP4 (unstatable from PackingConcl)
+--   Kepler.Text.PRE_IPVICGW: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.QU_OR_QXY: statement names module-private constant(s) Text.CC4P4, Text.ccQuP4, Text.ccQxP4, Text.ccQyP4 (unstatable from PackingConcl)
+--   Kepler.Text.QX_NN00: statement names module-private constant(s) Text.CC4P4, Text.ccBoolModelP4, Text.ccGgP4, Text.ccQxP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.QY_NN00: statement names module-private constant(s) Text.CC4P4, Text.ccBoolModelP4, Text.ccGgP4, Text.ccQyP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.RSIWAMP: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.THREE_LE_CC_CARD: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccCardP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.UNIQUE_QY: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccQyP4, Text.ccRealModelP4, Text.ccQyP4 (unstatable from PackingConcl)
+--   Kepler.Text.UNIQUE_QY2: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccQyP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.UNPNFVW: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.ccQyP4, Text.CC4P4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccRealModelP4, Text.ccSizeP4 (unstatable from PackingConcl)
+--   Kepler.Text.UTEOITF: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.cc4CellP4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+--   Kepler.Text.WKR_COMPTED: statement names module-private constant(s) Text.ccCardP4, Text.ccGgP4, Text.CC4P4, Text.cc4CellP4, Text.ccBoolModelP4, Text.ccBoolPrepP4, Text.ccRealModelP4 (unstatable from PackingConcl)
+
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its Kepler.Text.PackingAuto4 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the first depth-0 `:=` by the generator gen_items.py,
+bracket-balance guarded); compiler-generated equation lemmas have no source
+statement anywhere, so their conjunct is the `#check @name` printer dump
+verbatim and each passes a per-item sigtest (the `⟨...⟩` assembly below must
+unify it definitionally with the constant's type).  Semantic identity of
+every conjunct is re-verified by that assembly (each element must have
+exactly its conjunct's type); the per-conjunct comments carry each exit's
+Kepler.Text.PackingAuto4 declaration line and file-local docstring HOL anchor.
+Conjunct order: the scout seed-list order (probe1 SEED list,
+seeds_clean.txt).  Body = the assembly of the exit constants -- zero new
+proof obligations, zero new imports. -/
+theorem pa4_wire_capstone_w1 :
+    -- 1. Kepler.Text.BumpP4.BETA_BUMP_ALT (Kepler.Text.PackingAuto4:2180; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (X : Set V3) (r : Set V3 → Set V3) (e : Set V3)
+          (_hs : saturated V) (_hp : Packing V) (_hm : X ∈ mcellSet V)
+          (hr : (fun e => VX V X \ e) = r),
+    betaBump V e X =
+          if ¬nullSet X ∧ e ∈ criticalEdgeX V X ∧ r e ∈ criticalEdgeX V X ∧
+              (∀ f ∈ edgeX V X, f = e ∨ f = r e ∨ f ∈ subcriticalEdgeX V X) then
+            bump (radV e) - bump (radV (r e))
+          else 0
+    ) ∧
+    -- 2. Kepler.Text.BumpP4.BETA_ORDERED_PAIR_THM (Kepler.Text.PackingAuto4:1320; no HOL anchor line in file docstring)
+    (∀ {α β γ : Type} (g : α → β → γ) (x : α × β),
+    (fun p => g p.1 p.2) x = g x.1 x.2
+    ) ∧
+    -- 3. Kepler.Text.BumpP4.BIJ_SUM (Kepler.Text.PackingAuto4:1324; no HOL anchor line in file docstring)
+    (∀ {α β : Type} [Fintype α] [Fintype β] (A : Set α) (B : Set β)
+          (f : β → ℝ) (ab : α ≃ β) (_h : Set.BijOn ab A B),
+    setSum A (fun a => f (ab a)) = setSum B f
+    ) ∧
+    -- 4. Kepler.Text.BumpP4.CARD2_EDGEX (Kepler.Text.PackingAuto4:1939; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (X : Set V3) (e : Set V3) (he : e ∈ edgeX V X),
+    Nat.card e = 2
+    ) ∧
+    -- 5. Kepler.Text.BumpP4.CRITICAL_EDGEX_ALT (Kepler.Text.PackingAuto4:2042; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (X : Set V3) (e : Set V3),
+    e ∈ criticalEdgeX V X ↔ e ∈ edgeX V X ∧ hminus ≤ radV e ∧ radV e ≤ hplus
+    ) ∧
+    -- 6. Kepler.Text.BumpP4.EDGE_MCELL_EL (Kepler.Text.PackingAuto4:1877; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (X : Set V3) (e : Set V3) (he : e ∈ edgeX V X),
+    ∃ u v : V3, e = {u, v} ∧ u ≠ v
+    ) ∧
+    -- 7. Kepler.Text.BumpP4.EL_EXPLICIT (Kepler.Text.PackingAuto4:1342; no HOL anchor line in file docstring)
+    (∀ (h : V3) (t : List V3),
+    elV (h :: t) 0 = h ∧ elV (h :: t) 1 = hdV t
+    ) ∧
+    -- 8. Kepler.Text.BumpP4.HDTFNFZ_SUBSET (Kepler.Text.PackingAuto4:1543; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (ul : List V3) (k : ℕ) (X : Set V3)
+          (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul) (_hX : X = mcell k V ul),
+    VX V X ⊆ V ∩ X
+    ) ∧
+    -- 9. Kepler.Text.BumpP4.LENGTH1 (Kepler.Text.PackingAuto4:1349; no HOL anchor line in file docstring)
+    (∀ {α : Type} [Inhabited α] (ul : List α) (h : ul.length = 1),
+    ul = [ul.getD 0 default]
+    ) ∧
+    -- 10. Kepler.Text.BumpP4.LENGTH2 (Kepler.Text.PackingAuto4:1357; no HOL anchor line in file docstring)
+    (∀ {α : Type} [Inhabited α] (ul : List α) (h : ul.length = 2),
+    ul = [ul.getD 0 default, ul.getD 1 default]
+    ) ∧
+    -- 11. Kepler.Text.BumpP4.LENGTH3 (Kepler.Text.PackingAuto4:1366; no HOL anchor line in file docstring)
+    (∀ {α : Type} [Inhabited α] (ul : List α) (h : ul.length = 3),
+    ul = [ul.getD 0 default, ul.getD 1 default, ul.getD 2 default]
+    ) ∧
+    -- 12. Kepler.Text.BumpP4.LENGTH4 (Kepler.Text.PackingAuto4:1376; no HOL anchor line in file docstring)
+    (∀ {α : Type} [Inhabited α] (ul : List α) (h : ul.length = 4),
+    ul = [ul.getD 0 default, ul.getD 1 default, ul.getD 2 default,
+          ul.getD 3 default]
+    ) ∧
+    -- 13. Kepler.Text.BumpP4.MCELL0 (Kepler.Text.PackingAuto4:1678; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (ul : List V3),
+    mcell0 V ul = mcell 0 V ul
+    ) ∧
+    -- 14. Kepler.Text.BumpP4.MCELL3_SET_OF_LIST_VX (Kepler.Text.PackingAuto4:1832; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (ul : List V3) (X : Set V3)
+          (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell3 V ul)
+          (_hn : ¬nullSet X) (_hb : barV V 3 ul),
+    setOfList (truncateSimplex 2 ul) = V ∩ X
+    ) ∧
+    -- 15. Kepler.Text.BumpP4.MCELL4_EDGE_OPP (Kepler.Text.PackingAuto4:2084; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (ul : List V3) (_hp : Packing V)
+          (_hs : saturated V) (_hb : barV V 3 ul) (_hn : ¬nullSet (mcell4 V ul)),
+    VX V (mcell4 V ul) \ {elV ul 0, elV ul 1} = {elV ul 2, elV ul 3}
+    ) ∧
+    -- 16. Kepler.Text.BumpP4.MCELL4_SET_OF_LIST_VX (Kepler.Text.PackingAuto4:1818; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (ul : List V3) (X : Set V3)
+          (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell4 V ul)
+          (_hn : ¬nullSet X) (_hb : barV V 3 ul),
+    setOfList ul = V ∩ X
+    ) ∧
+    -- 17. Kepler.Text.BumpP4.MCELL4_VX (Kepler.Text.PackingAuto4:1786; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (ul : List V3) (X : Set V3) (_hp : Packing V)
+          (_hs : saturated V) (_hX : X = mcell4 V ul) (_hb : barV V 3 ul),
+    VX V X ⊆ setOfList (cellParams V X).2
+    ) ∧
+    -- 18. Kepler.Text.BumpP4.MCELL_BUMP_OPP (Kepler.Text.PackingAuto4:2136; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (ul : List V3) (_hp : Packing V)
+          (_hs : saturated V) (_hb : barV V 3 ul) (_hn : ¬nullSet (mcell4 V ul))
+          (_hc : ({elV ul 2, elV ul 3} : Set V3) ∉ criticalEdgeX V (mcell4 V ul)),
+    betaBump V {elV ul 0, elV ul 1} (mcell4 V ul) = 0
+    ) ∧
+    -- 19. Kepler.Text.BumpP4.REAL_ABS_TRIANGLE_BOUND (Kepler.Text.PackingAuto4:2386; no HOL anchor line in file docstring)
+    (∀ (a b x : ℝ) (ha : a ≤ x) (hb : x ≤ b),
+    abs x ≤ abs a + abs b
+    ) ∧
+    -- 20. Kepler.Text.BumpP4.SUBCRITICAL_EDGEX_ALT (Kepler.Text.PackingAuto4:2063; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (X : Set V3) (e : Set V3),
+    e ∈ subcriticalEdgeX V X ↔ e ∈ edgeX V X ∧ radV e < hminus
+    ) ∧
+    -- 21. Kepler.Text.BumpP4.VORONOI_V (Kepler.Text.PackingAuto4:1560; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (w : V3) (hw : w ∈ V),
+    V ∩ voronoiClosed V w = {w}
+    ) ∧
+    -- 22. Kepler.Text.BumpP4.V_CELL0_EMPTY (Kepler.Text.PackingAuto4:1573; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (vl : List V3) (_hs : saturated V)
+          (_hp : Packing V) (_hb : barV V 3 vl),
+    V ∩ mcell0 V vl = ∅
+    ) ∧
+    -- 23. Kepler.Text.BumpP4.set_of_list2 (Kepler.Text.PackingAuto4:1409; no HOL anchor line in file docstring)
+    (∀ {α : Type} [Inhabited α] (ul : List α) (h : ul.length = 2),
+    setOfList ul = {ul.getD 0 default, ul.getD 1 default}
+    ) ∧
+    -- 24. Kepler.Text.BumpP4.set_of_list2_explicit (Kepler.Text.PackingAuto4:1388; no HOL anchor line in file docstring)
+    (∀ {α : Type} (a b : α),
+    setOfList [a, b] = {a, b}
+    ) ∧
+    -- 25. Kepler.Text.BumpP4.set_of_list3 (Kepler.Text.PackingAuto4:1422; no HOL anchor line in file docstring)
+    (∀ {α : Type} [Inhabited α] (ul : List α) (h : ul.length = 3),
+    setOfList ul =
+          {ul.getD 0 default, ul.getD 1 default, ul.getD 2 default}
+    ) ∧
+    -- 26. Kepler.Text.BumpP4.set_of_list3_explicit (Kepler.Text.PackingAuto4:1395; no HOL anchor line in file docstring)
+    (∀ {α : Type} (a b c : α),
+    setOfList [a, b, c] = {a, b, c}
+    ) ∧
+    -- 27. Kepler.Text.BumpP4.set_of_list4 (Kepler.Text.PackingAuto4:1439; no HOL anchor line in file docstring)
+    (∀ {α : Type} [Inhabited α] (ul : List α) (h : ul.length = 4),
+    setOfList ul =
+          {ul.getD 0 default, ul.getD 1 default, ul.getD 2 default,
+            ul.getD 3 default}
+    ) ∧
+    -- 28. Kepler.Text.CARD_MOD_NUMSEG (Kepler.Text.PackingAuto4:515; no HOL anchor line in file docstring)
+    (∀ (n m i : ℕ) (_hm : m ≤ n),
+    Nat.card {x : ℕ | ∃ k < m, x = (i + k) % n} = m
+    ) ∧
+    -- 29. Kepler.Text.FINITE_INITIAL_SEG2 (Kepler.Text.PackingAuto4:509; no HOL anchor line in file docstring)
+    (∀ (n : ℕ),
+    {i : ℕ | i < n}.Finite
+    ) ∧
+    -- 30. Kepler.Text.MOD_INJ1 (Kepler.Text.PackingAuto4:384; no HOL anchor line in file docstring)
+    (∀ (n k : ℕ) (hn : n ≠ 0) (hk : k < n) (hk0 : k ≠ 0) (x : ℕ),
+    x % n ≠ (x + k) % n
+    ) ∧
+    -- 31. Kepler.Text.MOD_NUMSEG (Kepler.Text.PackingAuto4:519; no HOL anchor line in file docstring)
+    (∀ (n i : ℕ) (hn : n ≠ 0),
+    (Finset.Icc 0 (n - 1) : Set ℕ) = (fun x => (i + x) % n) '' {x | x < n}
+    ) ∧
+    -- 32. Kepler.Text.MOD_PERIOD_BOUNDED (Kepler.Text.PackingAuto4:444; no HOL anchor line in file docstring)
+    (∀ (n k : ℕ) (hn : n ≠ 0) (hk : k ≠ 0) (x : ℕ),
+    (x + k) % n = x % n → n ≤ k
+    ) ∧
+    -- 33. Kepler.Text.MOD_PERIOD_BOUNDED2 (Kepler.Text.PackingAuto4:452; no HOL anchor line in file docstring)
+    (∀ (nn m i k : ℕ) (hnn : nn ≠ 0) (hmk : m ≤ k)
+          (h : (i + k) % nn ∈ (fun x => (i + x) % nn) '' {x | x < m}),
+    nn ≤ k
+    ) ∧
+    -- 34. Kepler.Text.NUMSEG_INTER_22 (Kepler.Text.PackingAuto4:586; no HOL anchor line in file docstring)
+    (∀ (nn i x : ℕ) (hnn : nn ≠ 0),
+    (i ≤ x ∧ x ≤ i + nn - 1) ↔ ∃ k < nn, x = i + k
+    ) ∧
+    -- 35. Kepler.Text.NUMSEG_SET_VER (Kepler.Text.PackingAuto4:503; no HOL anchor line in file docstring)
+    (∀ (m : ℕ),
+    (Finset.Icc 0 m : Set ℕ) = {i | i ≤ m}
+    ) ∧
+    -- 36. Kepler.Text.SUM_BETA (Kepler.Text.PackingAuto4:273; no HOL anchor line in file docstring)
+    (∀ {α : Type*} (S : Set α) (f : α → ℝ),
+    setSum S (fun x => f x) = setSum S f
+    ) ∧
+    -- 37. Kepler.Text.SUM_POS_LT_NUMSEG (Kepler.Text.PackingAuto4:266; no HOL anchor line in file docstring)
+    (∀ (m n : ℕ) (f : ℕ → ℝ) (hmn : m ≤ n)
+          (h : ∀ p, m ≤ p → p ≤ n → 0 < f p),
+    0 < Finset.sum (Finset.Icc m n) f
+    ) ∧
+    -- 38. Kepler.Text.THREE_MOD_CONSECUTIVES (Kepler.Text.PackingAuto4:429; no HOL anchor line in file docstring)
+    (∀ (i n : ℕ) (hi : 0 < i) (hn : 3 ≤ n),
+    ¬((i - 1) % n = i % n ∨ i % n = (i + 1) % n ∨ (i + 1) % n = (i - 1) % n)
+    ) ∧
+    -- 39. Kepler.Text.betaBump.eq_1 (Kepler.Text.PackingAuto4:1040; compiler-generated equation lemma (parent def `betaBump` at Kepler.Text.PackingAuto4:1040; no source statement; sigtest = assembly elaboration))
+    (∀ (V e X : Set V3),
+          betaBump V e X =
+            if
+                X ∈ mcellSet V ∧
+                  ¬nullSet X ∧
+                    e ∈ criticalEdgeX V X ∧
+                      VX V X \ e ∈ criticalEdgeX V X ∧ ∀ f ∈ edgeX V X, f = e ∨ f = VX V X \ e ∨ f ∈ subcriticalEdgeX V X then
+              bump (radV e) - bump (radV (VX V X \ e))
+            else 0
+    ) ∧
+    -- 40. Kepler.Text.hplus.eq_1 (Kepler.Text.PackingAuto4:0; compiler-generated equation lemma (parent def `hplus` at PA2:436; no source statement; sigtest = assembly elaboration))
+    (hplus = 1.3254
+    ) ∧
+    -- 41. Kepler.Text.subcriticalEdgeX.eq_1 (Kepler.Text.PackingAuto4:0; compiler-generated equation lemma (parent def `subcriticalEdgeX` at PA2:484; no source statement; sigtest = assembly elaboration))
+    (∀ (V X : Set V3),
+          subcriticalEdgeX V X = {e | ∃ u v, e = {u, v} ∧ e ∈ edgeX V X ∧ hl [u, v] < hminus}
+    ) :=
+    ⟨BumpP4.BETA_BUMP_ALT, BumpP4.BETA_ORDERED_PAIR_THM, BumpP4.BIJ_SUM, BumpP4.CARD2_EDGEX,
+      BumpP4.CRITICAL_EDGEX_ALT, BumpP4.EDGE_MCELL_EL, BumpP4.EL_EXPLICIT,
+      @BumpP4.HDTFNFZ_SUBSET, BumpP4.LENGTH1, BumpP4.LENGTH2, BumpP4.LENGTH3, BumpP4.LENGTH4,
+      BumpP4.MCELL0, BumpP4.MCELL3_SET_OF_LIST_VX, BumpP4.MCELL4_EDGE_OPP,
+      BumpP4.MCELL4_SET_OF_LIST_VX, @BumpP4.MCELL4_VX, BumpP4.MCELL_BUMP_OPP,
+      BumpP4.REAL_ABS_TRIANGLE_BOUND, BumpP4.SUBCRITICAL_EDGEX_ALT, BumpP4.VORONOI_V,
+      BumpP4.V_CELL0_EMPTY, BumpP4.set_of_list2, BumpP4.set_of_list2_explicit,
+      BumpP4.set_of_list3, BumpP4.set_of_list3_explicit, BumpP4.set_of_list4, CARD_MOD_NUMSEG,
+      FINITE_INITIAL_SEG2, MOD_INJ1, MOD_NUMSEG, MOD_PERIOD_BOUNDED, MOD_PERIOD_BOUNDED2,
+      NUMSEG_INTER_22, NUMSEG_SET_VER, SUM_BETA, SUM_POS_LT_NUMSEG, THREE_MOD_CONSECUTIVES,
+      betaBump.eq_1, hplus.eq_1, subcriticalEdgeX.eq_1⟩
+
+-- Self-check.  Ground truth = `#print axioms`, not prose: expect exactly the standard three
+-- [propext, Classical.choice, Quot.sound] and NO sorryAx (the scout group closure is sorried-0).
+#print axioms pa4_wire_capstone_w1
+
 /-! ## Discharges (PackingAuto2 `pack_concl.hl` interfaces) -/
 
 /-- `PackingAuto2.GLTVHUM_concl` (Auto2:548), discharged by
@@ -1480,5 +1755,197 @@ theorem pa21_capstone_w1 :
 -- the standard three [propext, Classical.choice, Quot.sound] and NO sorryAx
 -- (the scout group closure is sorried-0).
 #print axioms pa21_capstone_w1
+
+/-! ### PA15 materialization capstone (lane lv910-w1, 2026-11-04, after the leftover-mat-scout-2 workorder LV10):
+the 31 public top-level PackingAuto15 theorem exits -- all clean (MCELL_ID_MXI 45/0 family; scout seeds_clean.txt PA15 group), of which 31 are statable from PackingConcl and are re-exposed as ONE conjunction below
+(0 dropped per the no-forcing rule, each named in the theorem docstring).  PA15 is visible transitively via the PackingAuto16 import
+(PackingAuto16:117 imports PackingAuto15; no import cycle, scout-verified).  Self-contained section: pure insertion,
+zero proof obligations (body = the exit assembly itself).  -/
+
+/-- PA15 materialization capstone (scout lane leftover-mat-scout-2
+workorder LV10, implementation lane lv910-w1, 2026-11-04).  The
+31 public top-level Kepler.Text.PackingAuto15 theorem exits unreachable from every
+e2e root (scout probe1/probe2: GROUP_VS_CONE fresh sorried-0, standard-three
+axiom face on the axprobe sample); 31 of them are statable from
+PackingConcl and are re-exposed as ONE conjunction.
+Implemented here: 31 of the 31.
+Anchors (no fabricated edges): every conjunct is asserted in the verbatim
+wording of its Kepler.Text.PackingAuto15 declaration -- the conjunct text is the
+declaration's source signature (binders + conclusion, copied verbatim and
+mechanically split at the first depth-0 `:=` by the generator gen_items.py,
+bracket-balance guarded); compiler-generated equation lemmas have no source
+statement anywhere, so their conjunct is the `#check @name` printer dump
+verbatim and each passes a per-item sigtest (the `⟨...⟩` assembly below must
+unify it definitionally with the constant's type).  Semantic identity of
+every conjunct is re-verified by that assembly (each element must have
+exactly its conjunct's type); the per-conjunct comments carry each exit's
+Kepler.Text.PackingAuto15 declaration line and file-local docstring HOL anchor.
+Conjunct order: the scout seed-list order (probe1 SEED list,
+seeds_clean.txt).  Body = the assembly of the exit constants -- zero new
+proof obligations, zero new imports. -/
+theorem pa15_wire_capstone_w1 :
+    -- 1. Kepler.Text.AFFINE_HULL_3_INSERT (Kepler.Text.PackingAuto15:2869; no HOL anchor line in file docstring)
+    (∀ (a : V3) (S : Set V3) (h : a ∈ (affineSpan ℝ S : Set V3)),
+    (affineSpan ℝ (insert a S) : Set V3) = (affineSpan ℝ S : Set V3)
+    ) ∧
+    -- 2. Kepler.Text.BETA_PAIR_THM (Kepler.Text.PackingAuto15:4715; no HOL anchor line in file docstring)
+    (∀ {β : Type*} [Nonempty β] (g : V3 → V3 → β) (u' v' : V3)
+          (h : ∀ u v : V3, g u v = g v u),
+    patternPair g {u', v'} = g u' v'
+    ) ∧
+    -- 3. Kepler.Text.BETA_SET_2_THM (Kepler.Text.PackingAuto15:6247; no HOL anchor line in file docstring)
+    (∀ {β : Type*} [Nonempty β] (g : Set V3 → β) (u0 v0 : V3),
+    patternPair (fun u v => g {u, v}) {u0, v0} = g {u0, v0}
+    ) ∧
+    -- 4. Kepler.Text.BOUNDED_SING (Kepler.Text.PackingAuto15:1866; no HOL anchor line in file docstring)
+    (∀ (a : V3),
+    Bornology.IsBounded ({a} : Set V3)
+    ) ∧
+    -- 5. Kepler.Text.BOUND_GAMMA_X_lmfun (Kepler.Text.PackingAuto15:6973; no HOL anchor line in file docstring)
+    (∃ c : ℝ, ∀ (V : Set V3) (X : Set V3), Packing V → saturated V → mcellSet V X →
+          gammaX V X lmfun ≤ c
+    ) ∧
+    -- 6. Kepler.Text.CARD_BOUNDARY_INT_BALL_BOUND (Kepler.Text.PackingAuto15:787; no HOL anchor line in file docstring)
+    (∀ (x : V3) (k1 k2 : ℝ),
+    ∃ C : ℝ, ∀ r : ℝ, 1 ≤ r →
+          (((Nat.card ↥((intBall x (r + k1)) \ (intBall x (r - k2))) : ℕ) : ℝ)) ≤ C * r ^ 2
+    ) ∧
+    -- 7. Kepler.Text.CARD_BOUNDARY_INT_BALL_BOUND_1 (Kepler.Text.PackingAuto15:703; no HOL anchor line in file docstring)
+    (∀ (x : V3) (k1 k2 : ℝ) (hk1 : 0 < k1) (hk2 : 0 < k2),
+    ∃ C : ℝ, ∀ r : ℝ, 1 ≤ r →
+          (((Nat.card ↥((intBall x (r + k1)) \ (intBall x (r - k2))) : ℕ) : ℝ)) ≤ C * r ^ 2
+    ) ∧
+    -- 8. Kepler.Text.CARD_EDGEX_LE_16 (Kepler.Text.PackingAuto15:6751; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (X : Set V3) (hp : Packing V) (hs : saturated V)
+          (hm : mcellSet V X),
+    Nat.card (edgeX V X) ≤ 16
+    ) ∧
+    -- 9. Kepler.Text.CARD_LIST_klemma (Kepler.Text.PackingAuto15:6371; no HOL anchor line in file docstring)
+    (∀ {α : Type*} (s : Set α) (t : Set (List α)) (hs : s.Finite)
+          (ht : t.Finite),
+    Nat.card {y : List α | ∃ u0 ∈ s, ∃ y1 ∈ t, y = u0 :: y1} = Nat.card s * Nat.card t
+    ) ∧
+    -- 10. Kepler.Text.CARD_LIST_klemma_2 (Kepler.Text.PackingAuto15:6388; no HOL anchor line in file docstring)
+    (∀ {α : Type*} (s : Set α) (t : Set (List α)) (hs : s.Finite)
+          (ht : t.Finite),
+    Nat.card {y : List α | ∃ u0 ∈ s, ∃ y1 ∈ t, y = u0 :: y1} = Nat.card s * Nat.card t
+    ) ∧
+    -- 11. Kepler.Text.CONIC_CAP_AFF_GT_EQ_0 (Kepler.Text.PackingAuto15:4479; no HOL anchor line in file docstring)
+    (∀ (v0 v1 : V3) (a r : ℝ) (w1 w2 : V3) (ha : a < 1) (hr : 0 < r)
+          (h : volume.real (conicCap v0 v1 r a ∩ affGt {v0, v1} {w1, w2}) = 0),
+    Coplanar ℝ ({v0, v1, w1, w2} : Set V3)
+    ) ∧
+    -- 12. Kepler.Text.CONIC_CAP_WEDGE_EQ_0 (Kepler.Text.PackingAuto15:4432; no HOL anchor line in file docstring)
+    (∀ (v0 v1 : V3) (a r : ℝ) (w1 w2 : V3) (ha : a < 1) (hr : 0 < r)
+          (h : volume.real (conicCap v0 v1 r a ∩ wedge v0 v1 w1 w2) = 0),
+    Coplanar ℝ ({v0, v1, w1, w2} : Set V3)
+    ) ∧
+    -- 13. Kepler.Text.CONTINUOUS_ON_LIFT_DOT2 (Kepler.Text.PackingAuto15:3080; no HOL anchor line in file docstring)
+    (∀ {X : Type*} [TopologicalSpace X] {s : Set X}
+          {f g : X → V3} (hf : ContinuousOn f s) (hg : ContinuousOn g s),
+    ContinuousOn (fun x : X => (fun _ : Fin 1 => f x ⬝ᵥ g x)) s
+    ) ∧
+    -- 14. Kepler.Text.FINITE_LIST_KY_LEMMA_2 (Kepler.Text.PackingAuto15:4630; no HOL anchor line in file docstring)
+    (∀ {α : Type*} (s : Set α) (hs : s.Finite),
+    {y : List α | ∃ u0 ∈ s, ∃ u1 ∈ s, y = [u0, u1]}.Finite
+    ) ∧
+    -- 15. Kepler.Text.LEFT_ACTION_LIST_2_EXISTS (Kepler.Text.PackingAuto15:5049; HOL `0..2`)
+    (∀ {α : Type*} [Inhabited α] (u0 u1 u2 d x y z : α)
+          (hcard : Nat.card ({u0, u1, u2, d} : Set α) = 4) (hset : ({x, y, z} : Set α) = {u0, u1, u2}),
+    ∃ p : Equiv.Perm ℕ, permutes p (Set.Iic 2) ∧
+          [x, y, z, d] = leftActionList p [u0, u1, u2, d]
+    ) ∧
+    -- 16. Kepler.Text.LEFT_ACTION_LIST_3_EXISTS (Kepler.Text.PackingAuto15:5083; HOL `0..3`)
+    (∀ {α : Type*} [Inhabited α] (u0 u1 u2 u3 x y z t : α)
+          (hcard : Nat.card ({u0, u1, u2, u3} : Set α) = 4)
+          (hset : ({x, y, z, t} : Set α) = {u0, u1, u2, u3}),
+    ∃ p : Equiv.Perm ℕ, permutes p (Set.Iic 3) ∧
+          [x, y, z, t] = leftActionList p [u0, u1, u2, u3]
+    ) ∧
+    -- 17. Kepler.Text.LIFT_DIV_CONTINUOUS_ON (Kepler.Text.PackingAuto15:3099; no HOL anchor line in file docstring)
+    (∀ {X : Type*} [TopologicalSpace X] {s : Set X}
+          {f g : X → ℝ} (hf : ContinuousOn (fun x : X => (fun _ : Fin 1 => f x)) s)
+          (hg : ContinuousOn (fun x : X => (fun _ : Fin 1 => g x)) s)
+          (h0 : ∀ x ∈ s, g x ≠ 0),
+    ContinuousOn (fun x : X => (fun _ : Fin 1 => f x / g x)) s
+    ) ∧
+    -- 18. Kepler.Text.LIFT_DOT_CONTINUOUS_ON (Kepler.Text.PackingAuto15:3110; no HOL anchor line in file docstring)
+    (∀ (a b : V3) (s : Set V3),
+    ContinuousOn (fun x : V3 => (fun _ : Fin 1 => (x - a) ⬝ᵥ b)) s
+    ) ∧
+    -- 19. Kepler.Text.LIFT_MUL_CONTINUOUS_ON (Kepler.Text.PackingAuto15:3089; no HOL anchor line in file docstring)
+    (∀ {X : Type*} [TopologicalSpace X] {s : Set X}
+          {f g : X → ℝ} (hf : ContinuousOn (fun x : X => (fun _ : Fin 1 => f x)) s)
+          (hg : ContinuousOn (fun x : X => (fun _ : Fin 1 => g x)) s),
+    ContinuousOn (fun x : X => (fun _ : Fin 1 => f x * g x)) s
+    ) ∧
+    -- 20. Kepler.Text.LIFT_NORM_CONTINUOUS_ON (Kepler.Text.PackingAuto15:3118; no HOL anchor line in file docstring)
+    (∀ (a : V3) (s : Set V3),
+    ContinuousOn (fun x : V3 => (fun _ : Fin 1 => norm (x - a))) s
+    ) ∧
+    -- 21. Kepler.Text.MCELL_ID_MXI (Kepler.Text.PackingAuto15:2860; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (i j : ℕ) (ul vl : List V3) (hp : Packing V)
+          (hs : saturated V) (hul : barV V 3 ul) (hvl : barV V 3 vl) (hhd : hdV ul = hdV vl)
+          (heq : mcell i V ul = mcell j V vl) (hnel : ¬nullSet (mcell i V ul))
+          (hi : i ∈ ({2, 3} : Set ℕ)) (hj : j ∈ ({2, 3} : Set ℕ)),
+    mxi V ul = mxi V vl
+    ) ∧
+    -- 22. Kepler.Text.MEASURABLE_BALL_AFF_GE (Kepler.Text.PackingAuto15:4624; HOL `measurable`)
+    (∀ (z : V3) (r : ℝ) (s t : Set V3),
+    NullMeasurableSet (Metric.ball z r ∩ affGe s t) volume
+    ) ∧
+    -- 23. Kepler.Text.REAL_DIV_LE_1_TACTICS (Kepler.Text.PackingAuto15:1917; no HOL anchor line in file docstring)
+    (∀ (m n : ℝ) (hn : 0 < n) (h : m ≤ n),
+    m / n ≤ 1
+    ) ∧
+    -- 24. Kepler.Text.REAL_DIV_LT_1_TACTICS (Kepler.Text.PackingAuto15:1921; no HOL anchor line in file docstring)
+    (∀ (m n : ℝ) (hn : 0 < n) (h : m < n),
+    m / n < 1
+    ) ∧
+    -- 25. Kepler.Text.SUBSPACE_BOUNDED_EQ_TRIVIAL (Kepler.Text.PackingAuto15:1873; HOL `real^N`)
+    (∀ (s : Submodule ℝ V3),
+    Bornology.IsBounded (s : Set V3) ↔ (s : Set V3) = {0}
+    ) ∧
+    -- 26. Kepler.Text.WELLDEFINED_FUNCTION_2 (Kepler.Text.PackingAuto15:4681; no HOL anchor line in file docstring)
+    (∀ {A B C D : Type*} [Nonempty D] (s : A → B → C)
+          (t : A → B → D),
+    (∃ f : C → D, ∀ x y, f (s x y) = t x y) ↔
+          ∀ x x' y y', s x y = s x' y' → t x y = t x' y'
+    ) ∧
+    -- 27. Kepler.Text.gamma_y_lmfun_bound2 (Kepler.Text.PackingAuto15:6757; no HOL anchor line in file docstring)
+    (∃ d : ℝ, ∀ (V : Set V3) (X : Set V3) (e : Set V3), Packing V → saturated V →
+          mcellSet V X → edgeX V X e → gammaY V X lmfun e ≤ d
+    ) ∧
+    -- 28. Kepler.Text.gamma_y_pos_le (Kepler.Text.PackingAuto15:6362; no HOL anchor line in file docstring)
+    (∀ (V : Set V3) (X : Set V3) (e : Set V3) (hp : Packing V)
+          (hs : saturated V) (hm : mcellSet V X) (he : edgeX V X e),
+    0 ≤ gammaY V X lmfun e
+    ) ∧
+    -- 29. Kepler.Text.p15w1_intBall_finite (Kepler.Text.PackingAuto15:487; no HOL anchor line in file docstring)
+    (∀ (c : V3) (r : ℝ),
+    (intBall c r).Finite
+    ) ∧
+    -- 30. Kepler.Text.pre_beta (Kepler.Text.PackingAuto15:4663; HOL `\{u,v}. g u v`)
+    (∀ {β : Type*} [Nonempty β] (g : V3 → V3 → β) (u' v' : V3)
+          (h : ∃ f : Set V3 → β, ∀ u v : V3, f {u, v} = g u v),
+    patternPair g {u', v'} = g u' v'
+    ) ∧
+    -- 31. Kepler.Text.well_defined_unordered_pair (Kepler.Text.PackingAuto15:4698; no HOL anchor line in file docstring)
+    (∀ {β : Type*} [Nonempty β] (g : V3 → V3 → β),
+    (∃ f : Set V3 → β, ∀ u v : V3, f {u, v} = g u v) ↔ ∀ u v : V3, g u v = g v u
+    ) :=
+    ⟨AFFINE_HULL_3_INSERT, BETA_PAIR_THM, BETA_SET_2_THM, BOUNDED_SING, BOUND_GAMMA_X_lmfun,
+      CARD_BOUNDARY_INT_BALL_BOUND, CARD_BOUNDARY_INT_BALL_BOUND_1, CARD_EDGEX_LE_16,
+      CARD_LIST_klemma, CARD_LIST_klemma_2, CONIC_CAP_AFF_GT_EQ_0, CONIC_CAP_WEDGE_EQ_0,
+      CONTINUOUS_ON_LIFT_DOT2, FINITE_LIST_KY_LEMMA_2, LEFT_ACTION_LIST_2_EXISTS,
+      LEFT_ACTION_LIST_3_EXISTS, LIFT_DIV_CONTINUOUS_ON, LIFT_DOT_CONTINUOUS_ON,
+      LIFT_MUL_CONTINUOUS_ON, LIFT_NORM_CONTINUOUS_ON, MCELL_ID_MXI, MEASURABLE_BALL_AFF_GE,
+      REAL_DIV_LE_1_TACTICS, REAL_DIV_LT_1_TACTICS, SUBSPACE_BOUNDED_EQ_TRIVIAL,
+      WELLDEFINED_FUNCTION_2, gamma_y_lmfun_bound2, gamma_y_pos_le, p15w1_intBall_finite,
+      pre_beta, well_defined_unordered_pair⟩
+
+-- Self-check.  Ground truth = `#print axioms`, not prose: expect exactly the standard three
+-- [propext, Classical.choice, Quot.sound] and NO sorryAx (the scout group closure is sorried-0).
+#print axioms pa15_wire_capstone_w1
 
 end Kepler.Text
