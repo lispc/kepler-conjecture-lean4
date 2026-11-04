@@ -96,6 +96,8 @@ Encoding (house conventions, cf. LocalAuto31/34):
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto4
+import Kepler.Text.AzimBridge
+import Kepler.Text.LocalAuto5
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -104,6 +106,12 @@ set_option linter.unusedVariables false
 namespace Kepler.Text
 
 open Kepler.Geom Set Classical
+
+-- LA2/LA3 的 `dartDecEq2`/`dartDecEq3`（DecidableEq (V3×V3) 的非可计算实例）
+-- 会改变本文件既有净证的实例解析（`faceMap_mem_iter_p37` 实测被破坏：
+-- synthesis 出 `dartDecEq3` 而冻结态 inferred `instDecidableEqProd`）；
+-- 本文件冻结态按旧解析 elaborate，故在本地摘除（须置于 namespace/open 之后）。
+attribute [-instance] dartDecEq2 dartDecEq3
 
 /-! ## Local twin defs (`_p37` copies) -/
 
@@ -677,13 +685,30 @@ theorem EDGE_FORM_IN_LOCAL_FAN_p37 {V : Set V3} {E : Set (Set V3)}
   rw [← Set.Finite.coe_toFinset hfin, hset]
   simp
 
-/-- HOL `EDGE_IN_LOCAL_FAN_DET_RHO_NODE` (lunar_deform.hl:185).  NEEDS:
-`Local_lemmas.LOFA_IN_E_IMP_IN_FF` + `Local_lemmas.DETER_RHO_NODE` twins
-(still `sorry` in LocalAuto5). -/
+/-- W5c-B5 助件：registry `LocalFan` → LA2 `localFan_p2` 编码桥
+（经 AzimBridge 的 α2 等价 `localFanEquiv_p35 : LocalFan ↔ localFan_p3`，
+`_p2`/`_p3` 定义相等）。LA5 fan-rho kit 的消费入口。 -/
+private theorem w5cB5_to_localFan_p2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) : localFan_p2 V E FF :=
+  localFan_p2.of_localFan_p3 (localFanEquiv_p35.mp h)
+
+/-- HOL `EDGE_IN_LOCAL_FAN_DET_RHO_NODE` (lunar_deform.hl:185).  消费 LA5 净证
+`LOFA_IN_E_IMP_IN_FF` + `DETER_RHO_NODE`（`localFan_p2` 编码，经桥进入）+
+本文件已净的 `EDGE_FORM_IN_LOCAL_FAN_p37`。 -/
 theorem EDGE_IN_LOCAL_FAN_DET_RHO_NODE_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {x : Set V3} (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hx : x ∈ E) :
     ∃ v ∈ V, {v, rhoNode1 FF v} = x := by
-  sorry
+  obtain ⟨a, b, hab, hset⟩ := EDGE_FORM_IN_LOCAL_FAN_p37 h hx
+  have hxE : ({a, b} : Set V3) ∈ E := by rw [hset]; exact hx
+  rcases LOFA_IN_E_IMP_IN_FF (w5cB5_to_localFan_p2 h) hxE with hd | hd
+  · have hrho : rhoNode1 FF a = b := DETER_RHO_NODE (w5cB5_to_localFan_p2 h) hd
+    exact ⟨a, (WRGCVDR_BIJ (w5cB5_to_localFan_p2 h)).1 hd, by rw [hrho, ← hset]⟩
+  · have hrho : rhoNode1 FF b = a := DETER_RHO_NODE (w5cB5_to_localFan_p2 h) hd
+    refine ⟨b, (WRGCVDR_BIJ (w5cB5_to_localFan_p2 h)).1 hd, ?_⟩
+    rw [hrho, ← hset]
+    ext q
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
 
 /-- HOL `TOW_POINTS_IN_IMP_AFF_GT_SUBSET` (lunar_deform.hl:209; source
 spelling kept).  NEEDS: the `AFF_GT_2_1`/`AFF_GT_1_2` affine-coordinate
@@ -1598,14 +1623,55 @@ the registry `LocalFan` stub carries no `E` data. -/
 theorem LOCAL_FAN_SET_E_p37 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (_h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
     {p : Set V3 | ∃ v ∈ V, p = {v, rhoNode1 FF v}} = E := by
-  sorry
+  have h2 := w5cB5_to_localFan_p2 _h
+  have hpros := LOCAL_FAN_RHO_NODE_PROS2 h2
+  ext x
+  constructor
+  · rintro ⟨v, hvV, hvdef⟩
+    have hd : (v, rhoNode1_p2 FF v) ∈ dartsOfHyp_p2 E V := by
+      rw [LOFA_DARTS_FF_UNION_SWITCH_FF h2]
+      exact Set.mem_union_left _ (hpros.2 v hvV)
+    rw [hvdef]
+    have hd' : (v, rhoNode1_p2 FF v) ∈ ordPairs_p2 E ∪ selfPairs_p2 E V := hd
+    rcases Set.mem_or_mem_of_mem_union hd' with hd | hd
+    · exact hd
+    · exfalso
+      obtain ⟨hfan, -, -, -, -, h2reg⟩ := _h
+      simp only [selfPairs_p2, Set.mem_setOf_eq] at hd
+      obtain ⟨-, hvV', hEE⟩ := hd
+      have hee : (ee v E).ncard = 2 := h2reg v hvV
+      have hdef : EE_p2 v E = ee v E := rfl
+      rw [← hdef, hEE, Set.ncard_empty V3] at hee
+      omega
+  · intro hx
+    obtain ⟨a, b, hab, hset⟩ := EDGE_FORM_IN_LOCAL_FAN_p37 _h hx
+    have hxE : ({a, b} : Set V3) ∈ E := by rw [hset]; exact hx
+    rw [← hset]
+    rcases LOFA_IN_E_IMP_IN_FF h2 hxE with hd | hd
+    · have hrho : rhoNode1 FF a = b := DETER_RHO_NODE h2 hd
+      exact ⟨a, (WRGCVDR_BIJ h2).1 hd, by rw [hrho]⟩
+    · have hrho : rhoNode1 FF b = a := DETER_RHO_NODE h2 hd
+      refine ⟨b, (WRGCVDR_BIJ h2).1 hd, ?_⟩
+      rw [hrho]
+      ext q
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
 
 /-- HOL `LOCAL_FAN_FACE_FF` (lunar_deform.hl:1856).  NEEDS:
 `Local_lemmas.LOCAL_FAN_RHO_NODE_PROS`/`PROS2` twins. -/
 theorem LOCAL_FAN_FACE_FF_p37 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (_h : LocalFan V E FF) :
     {p : V3 × V3 | ∃ v ∈ V, p = (v, rhoNode1 FF v)} = FF := by
-  sorry
+  have h2 := w5cB5_to_localFan_p2 _h
+  have hpros := LOCAL_FAN_RHO_NODE_PROS2 h2
+  ext p
+  constructor
+  · rintro ⟨v, hvV, hvdef⟩
+    rw [hvdef]
+    exact hpros.2 v hvV
+  · intro hp
+    have hp' : p = (p.1, rhoNode1_p2 FF p.1) := hpros.1 p hp
+    exact ⟨p.1, (WRGCVDR_BIJ h2).1 hp, hp'⟩
 
 /-- HOL `ORD_PAIRS_INJ_IMAGE` (lunar_deform.hl:1881): `ord_pairs` commutes
 with a piecewise-injective vertex map. -/
@@ -2251,7 +2317,19 @@ twins (fan substance beyond the registry stub). -/
 theorem IVS_RHO_NODE_V_IN_FF_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (_h : LocalFan V E FF) (hv : v ∈ V) :
     (ivsRhoNode1 FF v, v) ∈ FF := by
-  sorry
+  have h2 := w5cB5_to_localFan_p2 _h
+  obtain ⟨hfan, -, -, -, -, h2reg⟩ := _h
+  have hee : (ee v E).ncard = 2 := h2reg v hv
+  obtain ⟨w1, w2, hw12, hset⟩ := Set.ncard_eq_two.mp hee
+  have h1mem : w1 ∈ (ee v E) := by rw [hset]; simp
+  have h2mem : w2 ∈ (ee v E) := by rw [hset]; simp
+  have hE1 : ({v, w1} : Set V3) ∈ E := h1mem
+  have hE2 : ({v, w2} : Set V3) ∈ E := h2mem
+  rcases LOFA_IN_E_IMP_IN_FF h2 hE1 with hd | hd
+  · rcases LOFA_IN_E_IMP_IN_FF h2 hE2 with hd2 | hd2
+    · exact absurd (congrArg Prod.snd ((WRGCVDR_BIJ h2).2.1 hd hd2 rfl)) hw12
+    · exact Classical.epsilon_spec (p := fun a : V3 => (a, v) ∈ FF) ⟨w2, hd2⟩
+  · exact Classical.epsilon_spec (p := fun a : V3 => (a, v) ∈ FF) ⟨w1, hd⟩
 
 /-- HOL `IN_AFF_GT_IMP_AZIMEQ` (lunar_deform.hl:3348): `azim` is constant
 along `aff_gt {u,v} {y}` rays.  NEEDS: `AZIM_DEGENERATE` + the
@@ -2347,7 +2425,7 @@ theorem LOCAL_CONVEX_NOT_COLLINEAR_p37 {V : Set V3} {E : Set (Set V3)}
 theorem LOCAL_FAN_RHO_NODE_PROS2_p37 {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} (_h : LocalFan V E FF) :
     ∀ x ∈ V, (x, rhoNode1 FF x) ∈ FF := by
-  sorry
+  exact (LOCAL_FAN_RHO_NODE_PROS2 (w5cB5_to_localFan_p2 _h)).2
 
 /-- HOL `MHAEYJN_CONVEX_LOCAL_FAN` (lunar_deform.hl:3644): the
 `ConvexLocalFan` conclusion of MHAEYJN without the lunar conjunct.
