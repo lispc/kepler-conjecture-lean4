@@ -5099,4 +5099,368 @@ theorem ZLZTHIC_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 ×
 
 #print axioms w13_in_affine_ky_lemma1
 
+/-! ## w15: GATE-B three-piece port (HOL local_lemmas.hl:6448/7036/7080) -/
+
+/-- w15: 2-regularity gives no isolated vertices. -/
+private theorem w15_hedge {V : Set V3} {E : Set (Set V3)}
+    (h2reg : ∀ u ∈ V, (ee u E).ncard = 2) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := h2reg v hv
+  have hne : ee v E ≠ ∅ := by
+    intro hE
+    rw [hE, Set.ncard_empty] at h2
+    omega
+  obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  exact ⟨w, hw⟩
+
+/-- w15: `LocalFan` → `localFan_p2` (the 2-regularity conjunct supplies the
+no-isolated-vertex side condition). -/
+private theorem w15_lf2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) : localFan_p2 V E FF := by
+  obtain ⟨hfan, x0, hx0, hFF0, hD0, h2reg⟩ := h
+  exact localFan_p2.of_LocalFan_noIso ⟨hfan, x0, hx0, hFF0, hD0, h2reg⟩ (w15_hedge h2reg)
+
+/-- w15: consecutive orbit points at a local-fan vertex are non-collinear with
+`0` (HOL `LOCAL_FAN_CHARACTER_OF_RHO_NODE3`, local_lemmas.hl:7065). -/
+theorem w15_char3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) {v : V3} (hv : v ∈ V) (i : ℕ) :
+    ¬ Collinear ℝ ({0, (rhoNode1 FF)^[i] v, (rhoNode1 FF)^[i + 1] v} : Set V3) := by
+  have h2 := w15_lf2 h
+  have hbase : ¬ Collinear ℝ
+      ({0, (rhoNode1 FF)^[i] v, rhoNode1 FF ((rhoNode1 FF)^[i] v)} : Set V3) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 (LOCAL_FAN_ITER_RHO_NODE_IN_V h2 hv i)
+  have hgoal : (rhoNode1 FF)^[i + 1] v = rhoNode1 FF ((rhoNode1 FF)^[i] v) := by
+    rw [show i + 1 = Nat.succ i from rfl, Function.iterate_succ_apply']
+  rw [hgoal]
+  exact hbase
+
+/-- w15: the third point of a non-collinear triple is off the pair. -/
+private theorem w15_ncol_third_notMem {a c d : V3}
+    (h : ¬ Collinear ℝ ({a, c, d} : Set V3)) : d ∉ ({a, c} : Set V3) := by
+  intro hd
+  apply h
+  have hsub : ({a, c, d} : Set V3) ⊆ ({a, c} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    rcases hz with rfl | rfl | rfl
+    · exact Or.inl rfl
+    · exact Or.inr rfl
+    · rcases hd with rfl | rfl
+      · exact Or.inl rfl
+      · exact Or.inr rfl
+  exact (Collinear.subset hsub (collinear_pair (k := ℝ) (p₁ := a) (p₂ := c) : Collinear ℝ ({a, c} : Set V3)))
+
+/-- w15: the middle point of a non-collinear triple is off the pair. -/
+private theorem w15_ncol_mid_notMem {a c d : V3}
+    (h : ¬ Collinear ℝ ({a, c, d} : Set V3)) : c ∉ ({a, d} : Set V3) := by
+  intro hc
+  apply h
+  have hsub : ({a, c, d} : Set V3) ⊆ ({a, d} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    rcases hz with rfl | rfl | rfl
+    · exact Or.inl rfl
+    · rcases hc with rfl | rfl
+      · exact Or.inl rfl
+      · exact Or.inr rfl
+    · exact Or.inr rfl
+  exact (Collinear.subset hsub (collinear_pair (k := ℝ) (p₁ := a) (p₂ := d) : Collinear ℝ ({a, d} : Set V3)))
+
+private theorem w15_div_combo {t1 t2 t3 : ℝ} (ht3 : t3 ≠ 0) (hsum : t1 + t2 + t3 = 1) :
+    -(t1 / t3) + -(t2 / t3) + 1 / t3 = 1 := by
+  have h : -(t1 / t3) + -(t2 / t3) + 1 / t3 = (-t1 - t2 + 1) / t3 := by
+    field_simp
+    ring
+  rw [h, div_eq_one_iff_eq ht3]
+  linarith
+
+private theorem w15_div_combo_vec {a b x y : V3} {t1 t2 t3 : ℝ} (ht3 : t3 ≠ 0)
+    (hy : y = t1 • a + t2 • b + t3 • x) :
+    x = (-(t1 / t3)) • a + (-(t2 / t3)) • b + (1 / t3) • y := by
+  subst hy
+  rw [smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+  have h1 : (1 / t3) * t3 = 1 := by field_simp
+  have h2 : (1 / t3) * t1 = t1 / t3 := by ring
+  have h3 : (1 / t3) * t2 = t2 / t3 := by ring
+  rw [h1, h2, h3]
+  match_scalars <;> ring
+
+/-- w15: `affLt {a,b} {x}` is symmetric in `x` and the member `y`, both off the
+pair `{a,b}`. -/
+theorem w15_affLt_swap {a b x y : V3}
+    (hx : x ∉ ({a, b} : Set V3)) (hy : y ∉ ({a, b} : Set V3)) :
+    y ∈ affLt ({a, b} : Set V3) ({x} : Set V3) ↔
+      x ∈ affLt ({a, b} : Set V3) ({y} : Set V3) := by
+  have hdx : Disjoint ({a, b} : Set V3) ({x} : Set V3) := by
+    rwa [Set.disjoint_singleton_right]
+  have hdy : Disjoint ({a, b} : Set V3) ({y} : Set V3) := by
+    rwa [Set.disjoint_singleton_right]
+  rw [AFF_LT_2_1 hdx, AFF_LT_2_1 hdy]
+  constructor
+  · rintro ⟨t1, t2, t3, ht3, hsum, hy'⟩
+    refine ⟨-(t1 / t3), -(t2 / t3), 1 / t3,
+      div_neg_of_pos_of_neg one_pos ht3, ?_, ?_⟩
+    · exact w15_div_combo ht3.ne hsum
+    · exact w15_div_combo_vec ht3.ne hy'
+  · rintro ⟨s1, s2, s3, hs3, hsum, hx'⟩
+    refine ⟨-(s1 / s3), -(s2 / s3), 1 / s3,
+      div_neg_of_pos_of_neg one_pos hs3, ?_, ?_⟩
+    · exact w15_div_combo hs3.ne hsum
+    · exact w15_div_combo_vec hs3.ne hx'
+
+private theorem w15_affine_cancel {X Y : V3} {mu lam h c t2 t3 : ℝ}
+    (h1 : mu * c + lam * t3 = 0) :
+    mu • (h • X + c • Y) + lam • (t2 • X + t3 • Y)
+      = (mu * h + lam * t2) • X := by
+  have hh : mu • (h • X + c • Y) + lam • (t2 • X + t3 • Y)
+      = (mu * h + lam * t2) • X + (mu * c + lam * t3) • Y := by module
+  rw [hh, h1, zero_smul, add_zero]
+
+/-- w15: `OPPOSITE_SIDES_IMP_INTER` (local_lemmas.hl:6324): a point of the open
+`vc`-cone and one of the opposite open half-plane force the segment `conv0 {a,b}`
+to cross `aff {va, vb}`.  (The extra `hvab` is not needed by HOL's `DISJOINT`
+alone in the degenerate `va = vb` case; the caller always has it.  `vc` off
+`aff {va,vb}` turns out not to be needed by this proof.) -/
+theorem OPPOSITE_SIDES_IMP_INTER {va vb vc a b : V3}
+    (hvab : va ≠ vb)
+    (hd : Disjoint ({va, vb} : Set V3) ({vc} : Set V3))
+    (ha : a ∈ affGt ({va, vb} : Set V3) ({vc} : Set V3))
+    (hb : b ∈ affLt ({va, vb} : Set V3) ({vc} : Set V3)) :
+    conv0_p2 ({a, b} : Set V3) ∩
+      (affineSpan ℝ ({va, vb} : Set V3) : Set V3) ≠ ∅ := by
+  have hvcbs : vc ∉ ({va, vb} : Set V3) := Set.disjoint_right.mp hd (Set.mem_singleton vc)
+  have hvca : vc ≠ va := by
+    intro h
+    apply hvcbs
+    rw [h]
+    exact Set.mem_insert va {vb}
+  have hvcb : vc ≠ vb := by
+    intro h
+    apply hvcbs
+    rw [h]
+    exact Set.mem_insert_of_mem va (Set.mem_singleton vb)
+  obtain ⟨c, hc, h, hha⟩ :=
+    (affGt_pair_iff (v0 := va) (v1 := vb) (x := vc) (y := a) hvab hvca hvcb).mp ha
+  obtain ⟨t1, t2, t3, ht3, hsum, hbeq⟩ :
+      ∃ t1 t2 t3 : ℝ, t3 < 0 ∧ t1 + t2 + t3 = 1 ∧
+        b = t1 • va + t2 • vb + t3 • vc := by
+    have h2 := hb
+    rw [AFF_LT_2_1 hd, Set.mem_setOf_eq] at h2
+    exact h2
+  have haeq : a = (1 - c - h) • va + h • vb + c • vc := by
+    have h2 : a = (a - va) + va := by abel
+    rw [h2, hha]
+    module
+  have haeq' : a - va = h • (vb - va) + c • (vc - va) := by
+    rw [hha, add_comm]
+  have hbeq' : b - va = t2 • (vb - va) + t3 • (vc - va) := by
+    have ht1 : t1 = 1 - t2 - t3 := by linarith
+    rw [hbeq, ht1]
+    module
+  have hden : 0 < c - t3 := by linarith
+  set lam : ℝ := c / (c - t3) with hlam
+  set mu : ℝ := -t3 / (c - t3) with hmu
+  have hmu_pos : 0 < mu := by rw [hmu]; exact div_pos (by linarith) hden
+  have hlam_pos : 0 < lam := by rw [hlam]; exact div_pos hc hden
+  have hsum' : mu + lam = 1 := by
+    rw [hmu, hlam]; field_simp; ring
+  have hkey : mu * c + lam * t3 = 0 := by
+    rw [hmu, hlam]; field_simp; ring
+  set p : V3 := mu • a + lam • b with hp
+  have hconv : p ∈ conv0_p2 ({a, b} : Set V3) := by
+    have h1 := IN_CONV0 (x := a) (y := b) (a := mu) (b := lam) hmu_pos hlam_pos
+    rw [hsum', div_one, one_smul, ← hp] at h1
+    exact h1
+  have hpsub : p - va = (mu * h + lam * t2) • (vb - va) := by
+    have h2 : mu • (a - va) + lam • (b - va) = mu • a + lam • b - (mu + lam) • va := by
+      rw [smul_sub, smul_sub, add_smul]; abel
+    have e1 : mu • a + lam • b - va = mu • (a - va) + lam • (b - va) := by
+      rw [h2, hsum', one_smul]
+    rw [hp, e1, haeq', hbeq', w15_affine_cancel hkey]
+  have haff : p ∈ (affineSpan ℝ ({va, vb} : Set V3) : Set V3) := by
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨mu * h + lam * t2, ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, ← hpsub]
+    abel
+  exact Set.nonempty_iff_ne_empty.mp ⟨p, hconv, haff⟩
+
+/-- w15: `SUCCESSIVE_RHO_NODE1_AFF_LT` (local_lemmas.hl:6928): three consecutive
+orbit points put the previous one in the open half-plane opposite the next one
+across the axis `{0, ρ^i v}`.  Reduces to LA37's `ITER_IN_AFF_GT_2_1_P37` (the
+`i`-shifted statement) plus the side-swap `w15_affLt_swap`. -/
+theorem SUCCESSIVE_RHO_NODE1_AFF_LT {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
+    (h : LocalFan V E FF) (hv : v ∈ V)
+    (hU : {(rhoNode1 FF)^[n] v | n ≤ l} = U)
+    (hP : plane_p2 P) (h0 : (0 : V3) ∈ P) (hUsub : U ⊆ P) :
+    ∀ i, 0 < i → i < l →
+      (rhoNode1 FF)^[i - 1] v ∈
+        affLt ({0, (rhoNode1 FF)^[i] v} : Set V3) ({(rhoNode1 FF)^[i + 1] v} : Set V3) := by
+  intro i hi hil
+  have hU' : {z | ∃ n ≤ l, z = (rhoNode1 FF)^[n] v} = U := by
+    rw [← hU]
+    ext z
+    constructor
+    · rintro ⟨n, hn, rfl⟩; exact ⟨n, hn, rfl⟩
+    · rintro ⟨n, hn, rfl⟩; exact ⟨n, hn, rfl⟩
+  have hP' : PlaneP_p37 P := hP
+  have hj : i - 1 < l - 1 := by omega
+  have hstep := ITER_IN_AFF_GT_2_1_p37 (V := V) (E := E) (FF := FF) (v := v) (l := l)
+    (U := U) (P := P) h hv hU' hP' h0 hUsub (i - 1) hj
+  have e2 : i - 1 + 2 = i + 1 := by omega
+  have e1 : i - 1 + 1 = i := by omega
+  rw [e2, e1] at hstep
+  have hnc1 : ¬ Collinear ℝ
+      ({0, (rhoNode1 FF)^[i - 1] v, (rhoNode1 FF)^[i] v} : Set V3) := by
+    have hh := w15_char3 h hv (i - 1)
+    rwa [show i - 1 + 1 = i from by omega] at hh
+  have hnc2 : ¬ Collinear ℝ
+      ({0, (rhoNode1 FF)^[i] v, (rhoNode1 FF)^[i + 1] v} : Set V3) :=
+    w15_char3 h hv i
+  have hx : (rhoNode1 FF)^[i - 1] v ∉ ({0, (rhoNode1 FF)^[i] v} : Set V3) :=
+    w15_ncol_mid_notMem hnc1
+  have hy : (rhoNode1 FF)^[i + 1] v ∉ ({0, (rhoNode1 FF)^[i] v} : Set V3) :=
+    w15_ncol_third_notMem hnc2
+  exact (w15_affLt_swap (x := (rhoNode1 FF)^[i - 1] v)
+    (y := (rhoNode1 FF)^[i + 1] v) hx hy).mp hstep
+
+/-- w15: `TWO_SIDES_SUCESSIVE` (local_lemmas.hl:7036): for `0 < i < l` the
+segment joining the two orbit neighbours of `ρ^i v` crosses the axis
+`aff {0, ρ^i v}`. -/
+theorem TWO_SIDES_SUCESSIVE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {v : V3} {l : ℕ} {U P : Set V3}
+    (h : LocalFan V E FF) (hv : v ∈ V)
+    (hU : {(rhoNode1 FF)^[n] v | n ≤ l} = U)
+    (hP : plane_p2 P) (h0 : (0 : V3) ∈ P) (hUsub : U ⊆ P) :
+    ∀ i, 0 < i → i < l →
+      conv0_p2 ({(rhoNode1 FF)^[i - 1] v, (rhoNode1 FF)^[i + 1] v} : Set V3) ∩
+        (affineSpan ℝ ({0, (rhoNode1 FF)^[i] v} : Set V3) : Set V3) ≠ ∅ := by
+  intro i hi hil
+  have hlt := SUCCESSIVE_RHO_NODE1_AFF_LT h hv hU hP h0 hUsub i hi hil
+  have hnc := w15_char3 h hv i
+  have hdis : Disjoint ({0, (rhoNode1 FF)^[i] v} : Set V3)
+      ({(rhoNode1 FF)^[i + 1] v} : Set V3) := by
+    rw [Set.disjoint_singleton_right]
+    exact w15_ncol_third_notMem hnc
+  have hgt : (rhoNode1 FF)^[i + 1] v ∈
+      affGt ({0, (rhoNode1 FF)^[i] v} : Set V3)
+        ({(rhoNode1 FF)^[i + 1] v} : Set V3) :=
+    DISJOINT_IMP_Z_IN_AFF_GT hdis
+  have hmemV : (rhoNode1 FF)^[i] v ∈ V :=
+    LOCAL_FAN_ITER_RHO_NODE_IN_V (w15_lf2 h) hv i
+  have hvab : (0 : V3) ≠ (rhoNode1 FF)^[i] v :=
+    (FAN_IMP_V_DIFF h.1 ((rhoNode1 FF)^[i] v) hmemV).symm
+  have hint := OPPOSITE_SIDES_IMP_INTER (va := 0) (vb := (rhoNode1 FF)^[i] v)
+    (vc := (rhoNode1 FF)^[i + 1] v) (a := (rhoNode1 FF)^[i + 1] v)
+    (b := (rhoNode1 FF)^[i - 1] v) hvab hdis hgt hlt
+  rw [show ({(rhoNode1 FF)^[i - 1] v, (rhoNode1 FF)^[i + 1] v} : Set V3)
+        = ({(rhoNode1 FF)^[i + 1] v, (rhoNode1 FF)^[i - 1] v} : Set V3) by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  exact hint
+
+/-- w15: `ConvexLocalFan` (LA1) → `convexLocalFan_p2` (LA2) transport, the
+public twin of LA37's private `la37g5_clf2` / CircularSolKit's `kcs_clf2`. -/
+theorem w15_clf2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : ConvexLocalFan V E FF) : convexLocalFan_p2 V E FF := by
+  obtain ⟨hlf, hcvx⟩ := h
+  have hcopy := hlf
+  obtain ⟨hfan, -, -, -, -, h2reg⟩ := hcopy
+  obtain ⟨-, -, -, -, -, hsub, -⟩ := localFan_data hlf
+  have hlf2 := localFan_p2.of_LocalFan_noIso hlf (w15_hedge h2reg)
+  refine ⟨hlf2, ?_⟩
+  intro d hd
+  refine ⟨?_, ?_⟩
+  · have hb : azimInFan d E = azimInFan_p3 d E := azimInFan_eq_azimInFan_p3 hfan (hsub hd)
+    show azimInFan_p2 d E ≤ Real.pi
+    rw [show azimInFan_p2 d E = azimInFan_p3 d E from rfl, ← hb]
+    exact (hcvx d hd).1
+  · show V ⊆ wedgeInFanGe_p2 d E
+    rw [show wedgeInFanGe_p2 d E = wedgeInFanGe_p3 d E from rfl,
+      ← wedgeInFanGe_eq_wedgeInFanGe_p3 hfan (hsub hd)]
+    exact (hcvx d hd).2
+
+/-- w15: `CNVX_IMP_INTERIOR_ANGLE_PI` (local_lemmas.hl:7080): in a convex local
+fan, every interior orbit vertex of a plane-carried orbit window has interior
+angle `π`.  Port of the HOL chain `CVX_LO_IMP_LO` → `TWO_SIDES_SUCESSIVE` →
+`OZQVSFF`. -/
+theorem CNVX_IMP_INTERIOR_ANGLE_PI {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v : V3} {l : ℕ} {U P : Set V3}
+    (h : ConvexLocalFan V E FF) (hv : v ∈ V)
+    (hU : {(rhoNode1 FF)^[n] v | n ≤ l} = U)
+    (hP : plane_p2 P) (h0 : (0 : V3) ∈ P) (hUsub : U ⊆ P) :
+    ∀ i, 0 < i → i < l →
+      interiorAngle1 0 FF ((rhoNode1 FF)^[i] v) = Real.pi := by
+  intro i hi hil
+  have hclf2 := w15_clf2 h
+  have hlf2 : localFan_p2 V E FF := CVX_LO_IMP_LO hclf2
+  have hmemV : ∀ n, (rhoNode1 FF)^[n] v ∈ V := LOCAL_FAN_ITER_RHO_NODE_IN_V hlf2 hv
+  have hUmem : ∀ n, n ≤ l → (rhoNode1 FF)^[n] v ∈ U := by
+    intro n hn
+    rw [← hU]
+    exact ⟨n, hn, rfl⟩
+  have hts := TWO_SIDES_SUCESSIVE h.1 hv hU hP h0 hUsub i hi hil
+  set a1 : V3 := (rhoNode1 FF)^[i - 1] v with ha1
+  set a2 : V3 := (rhoNode1 FF)^[i] v with ha2
+  set a3 : V3 := (rhoNode1 FF)^[i + 1] v with ha3
+  have hnc1 : ¬ Collinear ℝ ({0, a2, a3} : Set V3) := w15_char3 h.1 hv i
+  have hnc2 : ¬ Collinear ℝ ({0, a2, a1} : Set V3) := by
+    have hh := w15_char3 h.1 hv (i - 1)
+    rw [show i - 1 + 1 = i from by omega] at hh
+    rwa [show ({0, a2, a1} : Set V3) = ({0, a1, a2} : Set V3) by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hdis1 : a3 ∉ (affineSpan ℝ ({0, a2} : Set V3) : Set V3) := by
+    intro hm
+    exact hnc1 (collinear_triple_iff.mpr (Or.inl hm))
+  have hdis2 : a1 ∉ (affineSpan ℝ ({0, a2} : Set V3) : Set V3) := by
+    intro hm
+    exact hnc2 (collinear_triple_iff.mpr (Or.inl hm))
+  have hempty : ({a3, a1} : Set V3) ∩
+      (affineSpan ℝ ({0, a2} : Set V3) : Set V3) = ∅ := by
+    ext z
+    constructor
+    · intro hz
+      obtain ⟨hz1, hz2⟩ := hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz1
+      rcases hz1 with rfl | rfl
+      · exact absurd hz2 hdis1
+      · exact absurd hz2 hdis2
+    · intro hz
+      exact hz.elim
+  have hspan : (affineSpan ℝ ({a2, 0} : Set V3) : Set V3) =
+      (affineSpan ℝ ({0, a2} : Set V3) : Set V3) := by
+    rw [show ({a2, 0} : Set V3) = ({0, a2} : Set V3) by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hne : ¬ (((affineSpan ℝ ({a2, 0} : Set V3) : Set V3) ∩
+      conv0_p2 ({a1, a3} : Set V3)) = ∅) := by
+    intro hE
+    apply hts
+    rw [hspan, Set.inter_comm] at hE
+    exact hE
+  have hsub : ({a3, a2, a1} : Set V3) ⊆ V := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact hmemV (i + 1)
+    · exact hmemV i
+    · exact hmemV (i - 1)
+  have hsub2 : ({0, a3, a2, a1} : Set V3) ⊆ P := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl | rfl
+    · exact h0
+    · exact hUsub (hUmem (i + 1) (by omega))
+    · exact hUsub (hUmem i (by omega))
+    · exact hUsub (hUmem (i - 1) (by omega))
+  exact (OZQVSFF hclf2 (u := a3) (v := a2) (w := a1) (P := P)
+    hsub hP hsub2 hempty hne).1
+
+/-! ## w15 axiom audit (GATE-B three-piece port) -/
+
+#print axioms w15_char3
+#print axioms w15_affLt_swap
+#print axioms OPPOSITE_SIDES_IMP_INTER
+#print axioms SUCCESSIVE_RHO_NODE1_AFF_LT
+#print axioms TWO_SIDES_SUCESSIVE
+#print axioms w15_clf2
+#print axioms CNVX_IMP_INTERIOR_ANGLE_PI
+
 end Kepler.Text

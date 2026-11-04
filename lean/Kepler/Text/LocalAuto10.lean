@@ -644,8 +644,39 @@ theorem CARD_FF_GT1_FF_SUBSET {v : V3} {V : Set V3} {E : Set (Set V3)}
     (_hfan : FAN v V E) {HS : Hypermap (V3 × V3)} (hHS : IsHypOn_p10 v V E HS)
     {FF : Set (V3 × V3)} {x : V3 × V3} (hFF : FF = HS.face x)
     (hcard : 1 < Set.ncard FF) :
-    ∀ y ∈ FF, {y.1, y.2} ∈ E :=
-  sorry
+    ∀ y ∈ FF, {y.1, y.2} ∈ E := by
+  have hxmem : x ∈ HS.darts := by
+    by_contra hx
+    have hfix : HS.faceMap x = x := HS.faceMap_permutes x hx
+    have hface : HS.face x = {x} := orbitMap_eq_singleton hfix
+    rw [hFF, hface, Set.ncard_singleton] at hcard
+    omega
+  intro y hy
+  have hyface : y ∈ HS.face x := by rw [← hFF]; exact hy
+  have hyd : y ∈ HS.darts := HS.face_subset_darts hxmem hyface
+  have hyd' : y ∈ dartsOfHyp_p3 E V := by
+    have h : y ∈ (↑HS.darts : Set (V3 × V3)) := hyd
+    rwa [hHS.1] at h
+  rcases (Set.mem_union _ _ _).mp hyd' with ho | hs
+  · exact ho
+  · exfalso
+    obtain ⟨h12, -, hEE⟩ := hs
+    have hfix : HS.faceMap y = y := by
+      rw [hHS.2.2.2]
+      show ffOfHyp_p3 v V E y = y
+      rw [show ffOfHyp_p3 v V E y =
+        if y ∈ dartsOfHyp_p3 E V then
+          (y.2, ivsAzimCycle_p3 (EE_p3 y.2 E) v y.2 y.1) else y from rfl, if_pos hyd']
+      have hEE' : EE_p3 y.2 E = ∅ := by rw [← h12]; exact hEE
+      rw [show ivsAzimCycle_p3 (EE_p3 y.2 E) v y.2 y.1 =
+        if EE_p3 y.2 E = ∅ then y.1 else
+          Classical.epsilon fun x => x ∈ EE_p3 y.2 E ∧
+            azimCycle_p3 (EE_p3 y.2 E) v y.2 x = y.1 from rfl, if_pos hEE']
+      exact PAIR_EQ2.mpr ⟨h12.symm, h12⟩
+    have hface : HS.face y = {y} := orbitMap_eq_singleton hfix
+    have hsame : HS.face x = HS.face y := HS.face_eq_of_mem hyface
+    rw [hFF, hsame, hface, Set.ncard_singleton] at hcard
+    omega
 
 /-- LVDUCXU.hl:1273 `DARTS_E_PRIME_GT1_SWITCH` (giant — DISCHARGES registry). -/
 theorem DARTS_E_PRIME_GT1_SWITCH {v : V3} {V : Set V3} {E : Set (Set V3)}
@@ -654,7 +685,7 @@ theorem DARTS_E_PRIME_GT1_SWITCH {v : V3} {V : Set V3} {E : Set (Set V3)}
     (hcard : 1 < Set.ncard FF) :
     dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF) =
       FF ∪ {p : V3 × V3 | (p.2, p.1) ∈ FF} :=
-  sorry
+  DARTS_E_PRIME_EQ_FF_UNION_SWITCH (CARD_FF_GT1_FF_SUBSET _hfan hHS hFF hcard)
 
 /-- LVDUCXU.hl:1285 `FAN_FACE_GT1_IMAGE_EE_OF_HYP` (giant — DISCHARGES
 registry). -/
@@ -663,8 +694,31 @@ theorem FAN_FACE_GT1_IMAGE_EE_OF_HYP {v : V3} {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {x : V3 × V3} (hx : x ∈ dartsOfHyp_p3 E V)
     (hFF : FF = HS.face x) (hcard : 1 < Set.ncard FF) :
     dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF) =
-      FF ∪ (eeOfHyp_p3 v V E) '' FF :=
-  sorry
+      FF ∪ (eeOfHyp_p3 v V E) '' FF := by
+  rw [DARTS_E_PRIME_GT1_SWITCH _hfan hHS hFF hcard]
+  congr 1
+  have hxmem : x ∈ HS.darts := by
+    have h : x ∈ (↑HS.darts : Set (V3 × V3)) := by rw [hHS.1]; exact hx
+    exact h
+  have hFFsub : FF ⊆ dartsOfHyp_p3 E V := by
+    intro z hz
+    have hz' := HS.face_subset_darts hxmem (by rw [← hFF]; exact hz)
+    have h : z ∈ (↑HS.darts : Set (V3 × V3)) := hz'
+    rwa [hHS.1] at h
+  ext p
+  constructor
+  · intro hp
+    refine ⟨(p.2, p.1), hp, ?_⟩
+    rw [show eeOfHyp_p3 v V E (p.2, p.1) = (p.1, p.2) from by
+      rw [show eeOfHyp_p3 v V E (p.2, p.1) =
+        if (p.2, p.1) ∈ dartsOfHyp_p3 E V then ((p.2, p.1).2, (p.2, p.1).1)
+        else (p.2, p.1) from rfl, if_pos (hFFsub hp)]]
+  · rintro ⟨q, hq, rfl⟩
+    have hq' : q ∈ dartsOfHyp_p3 E V := hFFsub hq
+    rw [show eeOfHyp_p3 v V E q = (q.2, q.1) from by
+      rw [show eeOfHyp_p3 v V E q =
+        if q ∈ dartsOfHyp_p3 E V then (q.2, q.1) else q from rfl, if_pos hq']]
+    simpa using hq
 
 /-- LVDUCXU.hl:1313 `CARD_GT1_EE_OF_HYP_E_PRIME_EQ` (giant — DISCHARGES
 registry). -/
@@ -672,8 +726,24 @@ theorem CARD_GT1_EE_OF_HYP_E_PRIME_EQ {v : V3} {V : Set V3} {E : Set (Set V3)}
     (_hfan : FAN v V E) {H1 H2 : Hypermap (V3 × V3)} (h1 : IsHypOn_p10 v V E H1)
     (h2 : IsHypOn_p10 v (vPrime_p3 V FF) (ePrime_p3 E FF) H2) {x : V3 × V3}
     (hx : x ∈ dartsOfHyp_p3 E V) (hFF : FF = H1.face x) (hcard : 1 < Set.ncard FF) :
-    ∀ x ∈ FF, eeOfHyp_p3 v V E x = eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) x :=
-  sorry
+    ∀ x ∈ FF, eeOfHyp_p3 v V E x = eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) x := by
+  intro y hy
+  have hxmem : x ∈ H1.darts := by
+    have h : x ∈ (↑H1.darts : Set (V3 × V3)) := by rw [h1.1]; exact hx
+    exact h
+  have hyd : y ∈ dartsOfHyp_p3 E V := by
+    have hy' := H1.face_subset_darts hxmem (by rw [← hFF]; exact hy)
+    have h : y ∈ (↑H1.darts : Set (V3 × V3)) := hy'
+    rwa [h1.1] at h
+  have hyd' : y ∈ dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF) :=
+    IN_DARTS_FF_IMP_DARTS_E_PRIME_V_PRIME hyd hy
+  rw [show eeOfHyp_p3 v V E y = (y.2, y.1) from by
+        rw [show eeOfHyp_p3 v V E y =
+          if y ∈ dartsOfHyp_p3 E V then (y.2, y.1) else y from rfl, if_pos hyd],
+      show eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) y = (y.2, y.1) from by
+        rw [show eeOfHyp_p3 v (vPrime_p3 V FF) (ePrime_p3 E FF) y =
+          if y ∈ dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF) then (y.2, y.1)
+          else y from rfl, if_pos hyd']]
 
 /-- LVDUCXU.hl:1423 `FF_DISJOINT_ITS_IMAGE_CARD_EQ` (giant — DISCHARGES
 registry). -/
@@ -695,8 +765,62 @@ theorem SIMPLE_FACE_DISJOINT_NODE_MAP_2 {α : Type*} [DecidableEq α] {H : Hyper
     (hdisj : H.face x ∩ ((H.nodeMap : α → α) '' H.face x) = ∅)
     (hcover : (↑H.darts : Set α) = H.face x ∪ ((H.nodeMap : α → α) '' H.face x)) :
     ∀ x ∈ H.darts, (H.nodeMap : α → α) x ≠ x ∧
-      (H.nodeMap : α → α) ((H.nodeMap : α → α) x) = x :=
-  sorry
+      (H.nodeMap : α → α) ((H.nodeMap : α → α) x) = x := by
+  have hface_sub : H.face x ⊆ (↑H.darts : Set α) := H.face_subset_darts hx
+  have hkey : ∀ z ∈ H.face x,
+      (H.nodeMap : α → α) ((H.nodeMap : α → α) z) = z := by
+    intro z hzf
+    have hzd : z ∈ H.darts := hface_sub hzf
+    have hnz_notf : (H.nodeMap : α → α) z ∉ H.face x := by
+      intro hmem
+      have hboth : (H.nodeMap : α → α) z ∈
+          H.face x ∩ ((H.nodeMap : α → α) '' H.face x) :=
+        ⟨hmem, ⟨z, hzf, rfl⟩⟩
+      rw [hdisj] at hboth
+      exact hboth
+    have hnz_d : (H.nodeMap : α → α) z ∈ H.darts := H.nodeMap_apply_mem hzd
+    have hnnz_d : (H.nodeMap : α → α) ((H.nodeMap : α → α) z) ∈ H.darts :=
+      H.nodeMap_apply_mem hnz_d
+    have hnnz_cover : (H.nodeMap : α → α) ((H.nodeMap : α → α) z) ∈
+        H.face x ∪ ((H.nodeMap : α → α) '' H.face x) := by
+      have h : (H.nodeMap : α → α) ((H.nodeMap : α → α) z) ∈ (↑H.darts : Set α) := hnnz_d
+      rwa [hcover] at h
+    have hnnz_f : (H.nodeMap : α → α) ((H.nodeMap : α → α) z) ∈ H.face x := by
+      rcases hnnz_cover with h | ⟨w, hwf, hwz⟩
+      · exact h
+      · exfalso
+        have hw : w = (H.nodeMap : α → α) z := H.nodeMap.injective hwz
+        exact hnz_notf (hw ▸ hwf)
+    have hfacez : H.face z = H.face x := (H.face_eq_of_mem hzf).symm
+    have hmem_node : (H.nodeMap : α → α) ((H.nodeMap : α → α) z) ∈ H.node z := by
+      have h := pow_apply_mem_orbitMap H.nodeMap 2 z
+      simpa [Hypermap.node, pow_two] using h
+    have hmem : (H.nodeMap : α → α) ((H.nodeMap : α → α) z) ∈
+        H.node z ∩ H.face z := ⟨hmem_node, hfacez ▸ hnnz_f⟩
+    have hsingle := hsimple z hzd
+    rw [hsingle] at hmem
+    exact hmem
+  intro y hy
+  constructor
+  · intro hny
+    have hy' : y ∈ (↑H.darts : Set α) := hy
+    rw [hcover] at hy'
+    rcases hy' with hyf | ⟨z, hzf, hzy⟩
+    · have hboth : y ∈ H.face x ∩ ((H.nodeMap : α → α) '' H.face x) :=
+        ⟨hyf, ⟨y, hyf, hny⟩⟩
+      rw [hdisj] at hboth
+      exact hboth
+    · have hzy' : z = y := H.nodeMap.injective (hzy.trans hny.symm)
+      have hyf : y ∈ H.face x := hzy' ▸ hzf
+      have hboth : y ∈ H.face x ∩ ((H.nodeMap : α → α) '' H.face x) :=
+        ⟨hyf, ⟨z, hzf, hzy⟩⟩
+      rw [hdisj] at hboth
+      exact hboth
+  · have hy' : y ∈ (↑H.darts : Set α) := hy
+    rw [hcover] at hy'
+    rcases hy' with hyf | ⟨z, hzf, hzy⟩
+    · exact hkey y hyf
+    · rw [← hzy, hkey z hzf]
 
 /-- LVDUCXU.hl:1829 `DIH2K_IMP_SIMPLE_HYPERMAP2` (forwarding of the
 importable `DIH2K_IMP_SIMPLE_HYPERMAP`). -/
