@@ -7938,6 +7938,931 @@ theorem pad2d3d_SUB (x y : ℂ) :
       simp [pad2d3dP22, WithLp.ofLp_toLp]
   rw [← hcoe (pad2d3dP22 x - pad2d3dP22 y), h1, hcoe (pad2d3dP22 (x - y))]
 
+/-! ### PA22 w5 affine-transfer kit: orthonormal frame coordinate isometry,
+`polyhedron`/`FacetOf`/`affDim`/`ncard`/`convexHull` transfer, planar (`ℂ`)
+drop of a plane polyhedron, the `azim` ↔ `holArg` bridge, radial/ball transfer,
+and the positive-real scaling (radius-normalization) layer for `ℂ`
+polyhedra.  All items are `private` with the `p22w5_` prefix; consumed by the
+`EUSOTYP_general` reduction. -/
+
+/-- Helper: the frame columns are orthonormal. -/
+private theorem p22w5_fin3_dotA {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) :
+    ∀ i j : Fin 3, (![e1, e2, e3] : Fin 3 → V3) i ⬝ᵥ (![e1, e2, e3] : Fin 3 → V3) j
+      = if i = j then 1 else 0 := by
+  intro i j
+  fin_cases i <;> fin_cases j <;>
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+      Matrix.tail_cons, Matrix.head_cons, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
+  · simp [h.1]
+  · simp [h.2.2.2.1]
+  · simp [h.2.2.2.2.1]
+  · simp [dotProduct_comm (e2 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), h.2.2.2.1]
+  · simp [h.2.1]
+  · simp [h.2.2.2.2.2.1]
+  · simp [dotProduct_comm (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), h.2.2.2.2.1]
+  · simp [dotProduct_comm (e3 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ), h.2.2.2.2.2.1]
+  · simp [h.2.2.1]
+
+/-- The orthonormal basis attached to a right-handed frame. -/
+private noncomputable def p22w5_on3OB {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) :
+    OrthonormalBasis (Fin 3) ℝ V3 :=
+  OrthonormalBasis.mk (v := ![e1, e2, e3]) (by
+    rw [orthonormal_iff_ite]
+    intro i j
+    rw [inner_eq_dot]
+    exact p22w5_fin3_dotA h i j) (by
+    intro x _
+    rw [on3_expand h x]
+    exact Submodule.add_mem _
+      (Submodule.add_mem _
+        (Submodule.smul_mem _ _ (Submodule.subset_span ⟨0, by simp⟩))
+        (Submodule.smul_mem _ _ (Submodule.subset_span ⟨1, by simp⟩)))
+      (Submodule.smul_mem _ _ (Submodule.subset_span ⟨2, by simp⟩)))
+
+private theorem p22w5_on3OB_apply {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (i : Fin 3) :
+    p22w5_on3OB h i = ![e1, e2, e3] i := by
+  simp [p22w5_on3OB]
+
+/-- The coordinate isometry of the frame `e1, e2, e3`. -/
+private noncomputable def p22w5_F {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) :
+    V3 ≃ₗᵢ[ℝ] V3 :=
+  (p22w5_on3OB h).repr
+
+/-- Equality of `V3` points reduces to component equality. -/
+private theorem p22w5_v3_eq {a b : V3} (h : (a : Fin 3 → ℝ) = (b : Fin 3 → ℝ)) : a = b := by
+  rw [← WithLp.toLp_ofLp 2 a, ← WithLp.toLp_ofLp 2 b, h]
+
+private theorem p22w5_F_apply_apply {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (x : V3)
+    (i : Fin 3) : p22w5_F h x i = x ⬝ᵥ ![e1, e2, e3] i := by
+  have h1 := OrthonormalBasis.repr_apply_apply (p22w5_on3OB h) x i
+  rw [inner_eq_dot] at h1
+  rw [p22w5_on3OB_apply] at h1
+  rw [dotProduct_comm] at h1
+  simpa [p22w5_F] using h1
+
+private theorem p22w5_F_apply {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (x : V3) :
+    p22w5_F h x = WithLp.toLp 2 ![x ⬝ᵥ e1, x ⬝ᵥ e2, x ⬝ᵥ e3] := by
+  refine p22w5_v3_eq ?_
+  funext i
+  rw [show (p22w5_F h x : Fin 3 → ℝ) i = p22w5_F h x i from rfl]
+  rw [p22w5_F_apply_apply]
+  fin_cases i <;> simp
+
+
+/-! ### 2. Frame lemmas -/
+
+/-- The standard `i`-th unit vector in `V3`. -/
+private noncomputable def p22w5_ez (i : Fin 3) : V3 := EuclideanSpace.single i 1
+
+private theorem p22w5_F_e {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (i : Fin 3) :
+    p22w5_F h (![e1, e2, e3] i) = p22w5_ez i := by
+  have h1 := OrthonormalBasis.repr_self (p22w5_on3OB h) i
+  rw [p22w5_on3OB_apply] at h1
+  simpa [p22w5_F, p22w5_ez] using h1
+
+private theorem p22w5_ez_apply (i j : Fin 3) :
+    (p22w5_ez i : Fin 3 → ℝ) j = if i = j then 1 else 0 := by
+  simp [p22w5_ez, eq_comm]
+
+private theorem p22w5_F_axis {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (c : ℝ) :
+    p22w5_F h (c • e3) = c • p22w5_ez 2 := by
+  have he3 : p22w5_F h e3 = p22w5_ez 2 := by simpa using p22w5_F_e h 2
+  rw [show (p22w5_F h) (c • e3) = c • p22w5_F h e3 from map_smul (p22w5_F h) c e3, he3]
+
+private theorem p22w5_F_inner {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (x y : V3) :
+    (p22w5_F h x) ⬝ᵥ (p22w5_F h y) = x ⬝ᵥ y := by
+  rw [← inner_eq_dot, ← inner_eq_dot]
+  exact LinearIsometryEquiv.inner_map_map _ x y
+
+private theorem p22w5_F_norm {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (x : V3) :
+    ‖p22w5_F h x‖ = ‖x‖ := (p22w5_F h).norm_map x
+
+private theorem p22w5_F_dist {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (x y : V3) :
+    dist (p22w5_F h x) (p22w5_F h y) = dist x y := by
+  rw [dist_eq_norm, dist_eq_norm, ← map_sub, p22w5_F_norm]
+
+private theorem p22w5_dropout_F {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (x : V3) :
+    dropout3P22 (p22w5_F h x) = zOf e1 e2 x := by
+  refine Complex.ext ?_ ?_
+  · simp [dropout3P22, zOf, p22w5_F_apply, WithLp.ofLp_toLp]
+  · simp [dropout3P22, zOf, p22w5_F_apply, WithLp.ofLp_toLp]
+
+
+/-! ### 3. Affine image transfer (orthonormal frame + translation) -/
+
+/-- The affine frame map `x ↦ F x + t`. -/
+private noncomputable def p22w5_aff (F : V3 ≃ₗᵢ[ℝ] V3) (t x : V3) : V3 := F x + t
+
+private theorem p22w5_aff_injective (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) :
+    Function.Injective (p22w5_aff F t) := by
+  intro x y hxy
+  have h1 : F x = F y := by
+    have h2 := congrArg (fun z => z - t) hxy
+    simpa [p22w5_aff] using h2
+  exact F.injective h1
+
+private theorem p22w5_aff_surjective (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) :
+    Function.Surjective (p22w5_aff F t) := by
+  intro y
+  exact ⟨F.symm (y - t), by simp [p22w5_aff]⟩
+
+private noncomputable def p22w5_affMap (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) : V3 →ᵃ[ℝ] V3 where
+  toFun := p22w5_aff F t
+  linear := F.toLinearMap
+  map_vadd' := by
+    intro p v
+    show p22w5_aff F t (v +ᵥ p) = F v +ᵥ p22w5_aff F t p
+    simp only [p22w5_aff, vadd_eq_add, map_add]
+    abel
+
+private theorem p22w5_aff_dot (F : V3 ≃ₗᵢ[ℝ] V3) (a x : V3) :
+    (F a) ⬝ᵥ (F x) = a ⬝ᵥ x := by
+  rw [← inner_eq_dot, ← inner_eq_dot]
+  exact LinearIsometryEquiv.inner_map_map F a x
+
+private theorem p22w5_dot_symm (F : V3 ≃ₗᵢ[ℝ] V3) (a z : V3) :
+    a ⬝ᵥ (F.symm z) = (F a) ⬝ᵥ z := by
+  have h := p22w5_aff_dot F a (F.symm z)
+  rw [LinearIsometryEquiv.apply_symm_apply] at h
+  exact h.symm
+
+private theorem p22w5_dot_add (a x y : V3) : a ⬝ᵥ (x + y) = a ⬝ᵥ x + a ⬝ᵥ y := by
+  show a.ofLp ⬝ᵥ (x.ofLp + y.ofLp) = a.ofLp ⬝ᵥ x.ofLp + a.ofLp ⬝ᵥ y.ofLp
+  rw [dotProduct_add]
+
+private theorem p22w5_dot_sub (a x y : V3) : a ⬝ᵥ (x - y) = a ⬝ᵥ x - a ⬝ᵥ y := by
+  show a.ofLp ⬝ᵥ (x.ofLp - y.ofLp) = a.ofLp ⬝ᵥ x.ofLp - a.ofLp ⬝ᵥ y.ofLp
+  rw [dotProduct_sub]
+
+private theorem p22w5_image_openSegment (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) (a b : V3) :
+    p22w5_aff F t '' openSegment ℝ a b
+      = openSegment ℝ (p22w5_aff F t a) (p22w5_aff F t b) :=
+  image_openSegment ℝ (p22w5_affMap F t) a b
+
+private theorem p22w5_convex_image (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) {s : Set V3}
+    (hs : Convex ℝ s) : Convex ℝ (p22w5_aff F t '' s) := by
+  simpa [p22w5_affMap, p22w5_aff] using Convex.affine_image (p22w5_affMap F t) hs
+
+private theorem p22w5_faceOf_image (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) {c P : Set V3}
+    (hface : FaceOf c P) : FaceOf (p22w5_aff F t '' c) (p22w5_aff F t '' P) := by
+  refine ⟨Set.image_mono hface.1, p22w5_convex_image F t hface.2.1, ?_⟩
+  intro a b x ha hb hx hseg
+  obtain ⟨a', ha', rfl⟩ := ha
+  obtain ⟨b', hb', rfl⟩ := hb
+  obtain ⟨x', hx', rfl⟩ := hx
+  rw [← p22w5_image_openSegment] at hseg
+  obtain ⟨y, hy, hxy⟩ := hseg
+  have hyx : y = x' := p22w5_aff_injective F t hxy
+  rw [hyx] at hy
+  obtain ⟨ha'c, hb'c⟩ := hface.2.2 a' b' x' ha' hb' hx' hy
+  exact ⟨⟨a', ha'c, rfl⟩, ⟨b', hb'c, rfl⟩⟩
+
+private theorem p22w5_affDim_image (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) (s : Set V3) :
+    affDim (p22w5_aff F t '' s) = affDim s := by
+  simp only [affDim]
+  by_cases hse : s = ∅
+  · subst hse; simp
+  · have hne : p22w5_aff F t '' s ≠ ∅ := fun hc => hse (Set.image_eq_empty.mp hc)
+    rw [if_neg hne, if_neg hse]
+    have hmap := AffineMap.map_vectorSpan (f := p22w5_affMap F t) (s := s)
+    have himg : (⇑(p22w5_affMap F t) : V3 → V3) = p22w5_aff F t := rfl
+    rw [himg] at hmap
+    rw [← hmap]
+    exact congrArg ((↑) : ℕ → ℤ)
+      (LinearEquiv.finrank_map_eq F.toLinearEquiv (vectorSpan ℝ s))
+
+private theorem p22w5_image_halfspace (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) {a : V3} {b : ℝ} :
+    p22w5_aff F t '' {x : V3 | a ⬝ᵥ x ≤ b}
+      = {y : V3 | (F a) ⬝ᵥ y ≤ b + (F a) ⬝ᵥ t} := by
+  ext y
+  constructor
+  · rintro ⟨x, hx, rfl⟩
+    show (F a).ofLp ⬝ᵥ (F x + t).ofLp ≤ b + (F a).ofLp ⬝ᵥ t.ofLp
+    rw [WithLp.ofLp_add, dotProduct_add]
+    have h1 : (F a).ofLp ⬝ᵥ (F x).ofLp = a.ofLp ⬝ᵥ x.ofLp := p22w5_aff_dot F a x
+    rw [h1]
+    have hxb : a.ofLp ⬝ᵥ x.ofLp ≤ b := hx
+    linarith
+  · intro hy
+    refine ⟨F.symm (y - t), ?_, ?_⟩
+    · show a.ofLp ⬝ᵥ (F.symm (y - t)).ofLp ≤ b
+      rw [p22w5_dot_symm F a (y - t), WithLp.ofLp_sub, dotProduct_sub]
+      have hyb : (F a).ofLp ⬝ᵥ y.ofLp ≤ b + (F a).ofLp ⬝ᵥ t.ofLp := hy
+      linarith
+    · show p22w5_aff F t (F.symm (y - t)) = y
+      rw [p22w5_aff, LinearIsometryEquiv.apply_symm_apply]
+      abel
+
+private theorem p22w5_image_sInter (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) (S : Set (Set V3)) :
+    p22w5_aff F t '' (⋂₀ S) = ⋂₀ ((fun h => p22w5_aff F t '' h) '' S) := by
+  ext y
+  constructor
+  · rintro ⟨x, hx, rfl⟩
+    exact Set.mem_sInter.2 (fun g hg => by
+      obtain ⟨h, hh, rfl⟩ := hg
+      exact ⟨x, Set.mem_sInter.1 hx h hh, rfl⟩)
+  · intro hy
+    have hmem : ∀ h ∈ S, ∃ x, x ∈ h ∧ p22w5_aff F t x = y := by
+      intro h hh
+      have h1 := Set.mem_sInter.1 hy (p22w5_aff F t '' h) ⟨h, hh, rfl⟩
+      obtain ⟨x, hx, hxy⟩ := h1
+      exact ⟨x, hx, hxy⟩
+    by_cases hS : S = ∅
+    · subst hS
+      rw [Set.sInter_empty]
+      obtain ⟨x, hx⟩ := p22w5_aff_surjective F t y
+      exact ⟨x, Set.mem_univ x, hx⟩
+    · obtain ⟨h0, hh0⟩ := Set.nonempty_iff_ne_empty.mpr hS
+      obtain ⟨x0, -, hx0y⟩ := hmem h0 hh0
+      refine ⟨x0, ?_, hx0y⟩
+      refine Set.mem_sInter.2 (fun h hh => ?_)
+      obtain ⟨x, hx, hxy⟩ := hmem h hh
+      have hxeq : x = x0 := p22w5_aff_injective F t (hxy.trans hx0y.symm)
+      rwa [hxeq] at hx
+
+private theorem p22w5_polyhedron_image (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) {P : Set V3}
+    (hP : polyhedron P) : polyhedron (p22w5_aff F t '' P) := by
+  obtain ⟨Fam, hfin, hPeq, hhalf⟩ := hP
+  refine ⟨(fun h => p22w5_aff F t '' h) '' Fam, hfin.image _, ?_, ?_⟩
+  · rw [hPeq, p22w5_image_sInter]
+  · rintro g ⟨h, hh, rfl⟩
+    obtain ⟨a, b, ha, hh_eq⟩ := hhalf h hh
+    refine ⟨F a, b + (F a) ⬝ᵥ t, ?_, ?_⟩
+    · intro h0
+      exact ha (F.injective (by rw [h0, map_zero]))
+    · rw [hh_eq]
+      exact p22w5_image_halfspace F t
+
+private theorem p22w5_isBounded_image (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) {s : Set V3}
+    (hs : Bornology.IsBounded s) : Bornology.IsBounded (p22w5_aff F t '' s) := by
+  obtain ⟨r, hr⟩ := (Metric.isBounded_iff_subset_closedBall (0 : V3)).1 hs
+  refine (Metric.isBounded_iff_subset_closedBall t).2 ⟨r, ?_⟩
+  intro y hy
+  obtain ⟨x, hx, rfl⟩ := hy
+  have hxr : x ∈ Metric.closedBall (0 : V3) r := hr hx
+  rw [Metric.mem_closedBall, dist_zero_right] at hxr
+  rw [Metric.mem_closedBall, dist_eq_norm]
+  have hsub : p22w5_aff F t x - t = F x := by rw [p22w5_aff]; abel
+  rw [hsub, LinearIsometryEquiv.norm_map]
+  exact hxr
+
+private theorem p22w5_aff_inv_comp (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) :
+    p22w5_aff F.symm (-(F.symm t)) ∘ p22w5_aff F t = id := by
+  funext x
+  show p22w5_aff F.symm (-(F.symm t)) (F x + t) = x
+  rw [p22w5_aff, map_add, LinearIsometryEquiv.symm_apply_apply]
+  abel
+
+private theorem p22w5_aff_comp_inv (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) :
+    p22w5_aff F t ∘ p22w5_aff F.symm (-(F.symm t)) = id := by
+  funext x
+  show p22w5_aff F t (F.symm x + (-(F.symm t))) = x
+  rw [p22w5_aff, map_add, map_neg, LinearIsometryEquiv.apply_symm_apply,
+    LinearIsometryEquiv.apply_symm_apply]
+  abel
+
+private theorem p22w5_image_aff_inv (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) (s : Set V3) :
+    p22w5_aff F.symm (-(F.symm t)) '' (p22w5_aff F t '' s) = s := by
+  rw [← Set.image_comp, p22w5_aff_inv_comp, Set.image_id]
+
+private theorem p22w5_image_aff_fwd (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) (s : Set V3) :
+    p22w5_aff F t '' (p22w5_aff F.symm (-(F.symm t)) '' s) = s := by
+  rw [← Set.image_comp, p22w5_aff_comp_inv, Set.image_id]
+
+private theorem p22w5_facetOf_image (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) {c P : Set V3} :
+    FacetOf (p22w5_aff F t '' c) (p22w5_aff F t '' P) ↔ FacetOf c P := by
+  constructor
+  · intro h
+    refine ⟨?_, ?_, ?_⟩
+    · have h1 := p22w5_faceOf_image F.symm (-(F.symm t)) h.1
+      rwa [p22w5_image_aff_inv, p22w5_image_aff_inv] at h1
+    · intro hc
+      exact h.2.1 (by rw [hc, Set.image_empty])
+    · rw [← p22w5_affDim_image F t c, ← p22w5_affDim_image F t P]
+      exact h.2.2
+  · intro h
+    refine ⟨p22w5_faceOf_image F t h.1, ?_, ?_⟩
+    · intro hc
+      exact h.2.1 (Set.image_eq_empty.mp hc)
+    · rw [p22w5_affDim_image, p22w5_affDim_image]
+      exact h.2.2
+
+private theorem p22w5_facet_ncard (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) {P : Set V3} {n : ℕ}
+    (hn : ({c : Set V3 | FacetOf c P}).Finite ∧ ({c : Set V3 | FacetOf c P}).ncard = n) :
+    ({c : Set V3 | FacetOf c (p22w5_aff F t '' P)}).Finite ∧
+      ({c : Set V3 | FacetOf c (p22w5_aff F t '' P)}).ncard = n := by
+  have hseteq : {d : Set V3 | FacetOf d (p22w5_aff F t '' P)}
+      = (fun c => p22w5_aff F t '' c) '' {c : Set V3 | FacetOf c P} := by
+    ext d
+    constructor
+    · intro hd
+      refine ⟨p22w5_aff F.symm (-(F.symm t)) '' d, ?_, ?_⟩
+      · simp only [Set.mem_setOf_eq]
+        rw [← p22w5_facetOf_image F t, p22w5_image_aff_fwd]
+        simpa only [Set.mem_setOf_eq] using hd
+      · show p22w5_aff F t '' (p22w5_aff F.symm (-(F.symm t)) '' d) = d
+        rw [p22w5_image_aff_fwd]
+    · rintro ⟨c, hc, rfl⟩
+      exact (p22w5_facetOf_image F t).2 hc
+  refine ⟨?_, ?_⟩
+  · rw [hseteq]
+    exact hn.1.image _
+  · rw [hseteq]
+    refine (Set.InjOn.ncard_image ?_).trans hn.2
+    intro c1 hc1 c2 hc2 heq
+    have h1 := congrArg (fun s => p22w5_aff F.symm (-(F.symm t)) '' s) heq
+    rwa [p22w5_image_aff_inv, p22w5_image_aff_inv] at h1
+
+private theorem p22w5_convexHull_image (F : V3 ≃ₗᵢ[ℝ] V3) (t : V3) (s : Set V3) :
+    p22w5_aff F t '' (convexHull ℝ s) = convexHull ℝ (p22w5_aff F t '' s) := by
+  refine Set.Subset.antisymm ?_ ?_
+  · have hconv : Convex ℝ (convexHull ℝ (p22w5_aff F t '' s)) := convex_convexHull ℝ _
+    have hpre : Convex ℝ (p22w5_aff F t ⁻¹' (convexHull ℝ (p22w5_aff F t '' s))) :=
+      Convex.affine_preimage (p22w5_affMap F t) hconv
+    have hsub : s ⊆ p22w5_aff F t ⁻¹' (convexHull ℝ (p22w5_aff F t '' s)) := by
+      intro x hx
+      exact subset_convexHull ℝ _ ⟨x, hx, rfl⟩
+    intro y hy
+    obtain ⟨x, hx, rfl⟩ := hy
+    exact convexHull_min hsub hpre hx
+  · refine convexHull_min ?_ (p22w5_convex_image F t (convex_convexHull ℝ s))
+    exact Set.image_mono (subset_convexHull ℝ s)
+
+
+/-! ### 4. Planar (`ℂ`) drop of a plane polyhedron -/
+
+private theorem p22w5_dot2_one (z : ℂ) : dot2 1 z = z.re := by simp [dot2]
+
+private theorem p22w5_dot2_neg_one (z : ℂ) : dot2 (-1) z = -z.re := by simp [dot2]
+
+/-- First two coordinates of a `V3` vector (a planar normal). -/
+private def p22w5_rho (a : V3) : ℂ :=
+  Complex.mk ((a : Fin 3 → ℝ) 0) ((a : Fin 3 → ℝ) 1)
+
+private theorem p22w5_dot_pad (a : V3) (z : ℂ) :
+    a ⬝ᵥ pad2d3dP22 z = dot2 (p22w5_rho a) z := by
+  simp only [dot2, p22w5_rho, pad2d3dP22, WithLp.ofLp_toLp, dotProduct, Fin.sum_univ_three,
+    Complex.mul_re, Complex.star_def, Complex.conj_re, Complex.conj_im, Complex.ofReal_re,
+    Complex.ofReal_im, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+    Matrix.tail_cons, Matrix.head_cons, Complex.add_re, Complex.add_im, zero_mul, add_zero,
+    Complex.mul_im, Complex.I_re, Complex.I_im, mul_zero, sub_zero]
+  ring
+
+private theorem p22w5_rho_zero_iff (a : V3) :
+    p22w5_rho a = 0 ↔ (a : Fin 3 → ℝ) 0 = 0 ∧ (a : Fin 3 → ℝ) 1 = 0 := by
+  constructor
+  · intro h
+    have h1 := congrArg Complex.re h
+    have h2 := congrArg Complex.im h
+    simpa [p22w5_rho] using ⟨h1, h2⟩
+  · rintro ⟨h1, h2⟩
+    exact Complex.ext (by simpa [p22w5_rho] using h1) (by simpa [p22w5_rho] using h2)
+
+private theorem p22w5_dropout_inj_plane :
+    ∀ u v : V3, (u : Fin 3 → ℝ) 2 = 0 → (v : Fin 3 → ℝ) 2 = 0 →
+      dropout3P22 u = dropout3P22 v → u = v := by
+  intro u v hu hv h
+  rw [← pad2d3d_dropout u hu, ← pad2d3d_dropout v hv, h]
+
+/-- `dropout3P22` commutes with `sInter` on the `z = 0` plane. -/
+private theorem p22w5_dropout_sInter (Fam : Set (Set V3)) :
+    dropout3P22 '' (⋂₀ Fam ∩ {u : V3 | (u : Fin 3 → ℝ) 2 = 0})
+      = ⋂₀ ((fun h => dropout3P22 '' (h ∩ {u : V3 | (u : Fin 3 → ℝ) 2 = 0})) '' Fam) := by
+  ext z
+  constructor
+  · rintro ⟨u, ⟨hu, hu2⟩, rfl⟩
+    exact Set.mem_sInter.2 (fun g hg => by
+      obtain ⟨h, hh, rfl⟩ := hg
+      exact ⟨u, ⟨Set.mem_sInter.1 hu h hh, hu2⟩, rfl⟩)
+  · intro hz
+    have hmem : ∀ h ∈ Fam, ∃ u, u ∈ h ∧ (u : Fin 3 → ℝ) 2 = 0 ∧ dropout3P22 u = z := by
+      intro h hh
+      have h1 := Set.mem_sInter.1 hz _ ⟨h, hh, rfl⟩
+      obtain ⟨u, ⟨hu, hu2⟩, huz⟩ := h1
+      exact ⟨u, hu, hu2, huz⟩
+    by_cases hF : Fam = ∅
+    · subst hF
+      simp only [Set.image_empty, Set.sInter_empty, Set.univ_inter, Set.mem_univ, iff_true]
+      refine ⟨pad2d3dP22 z, ?_, dropout_pad2d3d z⟩
+      simp [pad2d3dP22, WithLp.ofLp_toLp]
+    · obtain ⟨h0, hh0⟩ := Set.nonempty_iff_ne_empty.mpr hF
+      obtain ⟨u0, -, hu0_2, hu0z⟩ := hmem h0 hh0
+      refine ⟨u0, ⟨?_, hu0_2⟩, hu0z⟩
+      refine Set.mem_sInter.2 (fun h hh => ?_)
+      obtain ⟨u, hu, hu2, huz⟩ := hmem h hh
+      have huu : u = u0 := p22w5_dropout_inj_plane u u0 hu2 hu0_2 (huz.trans hu0z.symm)
+      rwa [huu] at hu
+
+/-- A `V3` polyhedron lying in the `z = 0` plane projects to a `ℂ` polyhedron. -/
+private theorem p22w5_polyhedronC_of_polyhedron_plane {P : Set V3}
+    (hz : ∀ u ∈ P, (u : Fin 3 → ℝ) 2 = 0) (hP : polyhedron P) :
+    polyhedronC (dropout3P22 '' P) := by
+  classical
+  obtain ⟨Fam, hfin, hPeq, hhalf⟩ := hP
+  have hex : ∀ h ∈ Fam, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b} := hhalf
+  set aF : Set V3 → V3 := fun h =>
+    if hh : ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b}
+    then Classical.choose hh else 0 with haF
+  set bF : Set V3 → ℝ := fun h =>
+    if hh : ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b}
+    then Classical.choose (Classical.choose_spec hh) else 0 with hbF
+  have hspec : ∀ h ∈ Fam, aF h ≠ 0 ∧ h = {x : V3 | aF h ⬝ᵥ x ≤ bF h} := by
+    intro h hh
+    have h1 : aF h = Classical.choose (hex h hh) := by rw [haF]; exact dif_pos (hex h hh)
+    have h2 : bF h = Classical.choose (Classical.choose_spec (hex h hh)) := by
+      rw [hbF]; exact dif_pos (hex h hh)
+    have h3 := Classical.choose_spec (Classical.choose_spec (hex h hh))
+    rw [h1, h2]
+    exact h3
+  -- the projected halfspaces
+  have hhalfproj : ∀ h ∈ Fam, dropout3P22 '' (h ∩ {u : V3 | (u : Fin 3 → ℝ) 2 = 0})
+      = {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h} := by
+    intro h hh
+    obtain ⟨-, hheq⟩ := hspec h hh
+    have key : ∀ S : Set V3, S = {x : V3 | aF h ⬝ᵥ x ≤ bF h} →
+        dropout3P22 '' (S ∩ {u : V3 | (u : Fin 3 → ℝ) 2 = 0})
+          = {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h} := by
+      intro S hS
+      rw [hS]
+      ext z
+      constructor
+      · rintro ⟨u, ⟨hu, hu2⟩, rfl⟩
+        show dot2 (p22w5_rho (aF h)) (dropout3P22 u) ≤ bF h
+        rw [← p22w5_dot_pad (aF h) (dropout3P22 u), pad2d3d_dropout u hu2]
+        exact hu
+      · intro hzz
+        refine ⟨pad2d3dP22 z, ⟨?_, ?_⟩, dropout_pad2d3d z⟩
+        · show (aF h).ofLp ⬝ᵥ (pad2d3dP22 z).ofLp ≤ bF h
+          rw [p22w5_dot_pad]
+          exact hzz
+        · simp [pad2d3dP22, WithLp.ofLp_toLp]
+    exact key h hheq
+  have hdrop : dropout3P22 '' P
+      = ⋂₀ ((fun h => {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h}) '' Fam) := by
+    have hsub : (⋂₀ Fam) ⊆ {u : V3 | (u : Fin 3 → ℝ) 2 = 0} := by
+      intro u hu
+      exact hz u (by rw [hPeq]; exact hu)
+    have h1 : dropout3P22 '' P = dropout3P22 '' (⋂₀ Fam ∩ {u : V3 | (u : Fin 3 → ℝ) 2 = 0}) := by
+      rw [hPeq, Set.inter_eq_left.2 hsub]
+    rw [h1, p22w5_dropout_sInter]
+    have himg : (fun h => dropout3P22 '' (h ∩ {u : V3 | (u : Fin 3 → ℝ) 2 = 0})) '' Fam
+        = (fun h => {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h}) '' Fam := by
+      ext g
+      constructor
+      · rintro ⟨h, hh, rfl⟩; exact ⟨h, hh, (hhalfproj h hh).symm⟩
+      · rintro ⟨h, hh, rfl⟩; exact ⟨h, hh, hhalfproj h hh⟩
+    rw [himg]
+  set A : Set ℂ := {z : ℂ | dot2 1 z ≤ 0} with hA
+  set B : Set ℂ := {z : ℂ | dot2 (-1) z ≤ -1} with hB
+  have hAB : ⋂₀ ({A, B} : Set (Set ℂ)) = ∅ := by
+    rw [Set.sInter_pair, hA, hB]
+    ext z
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq, Set.notMem_empty, iff_false, not_and]
+    intro h1 h2
+    rw [p22w5_dot2_one] at h1
+    rw [p22w5_dot2_neg_one] at h2
+    linarith
+  set D : Set (Set V3) := {h ∈ Fam | p22w5_rho (aF h) = 0} with hD
+  set E : Set (Set V3) := Fam \ D with hE
+  have hEfam : E ⊆ Fam := Set.sdiff_subset
+  by_cases hemp : ∃ h ∈ D, bF h < 0
+  · obtain ⟨h0, hh0D, hb0⟩ := hemp
+    have hh0Fam : h0 ∈ Fam := hh0D.1
+    have hsub : dropout3P22 '' P ⊆ {z : ℂ | dot2 (p22w5_rho (aF h0)) z ≤ bF h0} := by
+      rw [hdrop]
+      exact Set.sInter_subset_of_mem ⟨h0, hh0Fam, rfl⟩
+    have hemp' : {z : ℂ | dot2 (p22w5_rho (aF h0)) z ≤ bF h0} = ∅ := by
+      ext z
+      simp only [Set.mem_setOf_eq, Set.notMem_empty, iff_false]
+      have hdeg : p22w5_rho (aF h0) = 0 := hh0D.2
+      rw [hdeg]
+      simp only [dot2, zero_mul, Complex.zero_re]
+      linarith
+    have hPemp : dropout3P22 '' P = ∅ := by
+      rw [hemp'] at hsub
+      exact Set.subset_empty_iff.mp hsub
+    refine ⟨({A, B} : Set (Set ℂ)), Set.toFinite _, ?_, ?_⟩
+    · rw [hPemp, hAB]
+    · intro g hg
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hg
+      rcases hg with rfl | rfl
+      · exact ⟨1, 0, one_ne_zero, rfl⟩
+      · exact ⟨-1, -1, neg_ne_zero.mpr one_ne_zero, rfl⟩
+  · push Not at hemp
+    have hDuniv : ∀ h ∈ D, {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h} = univ := by
+      intro h hhD
+      have hdeg : p22w5_rho (aF h) = 0 := hhD.2
+      have hb : 0 ≤ bF h := hemp h hhD
+      ext z
+      simp only [Set.mem_setOf_eq, Set.mem_univ, iff_true, hdeg, dot2, zero_mul,
+        Complex.zero_re]
+      exact hb
+    have hfam : Fam = D ∪ E := by
+      rw [hE]
+      ext h
+      simp only [Set.mem_union, Set.mem_sdiff, Set.mem_setOf_eq]
+      constructor
+      · intro hh
+        by_cases hD : h ∈ Fam ∧ p22w5_rho (aF h) = 0
+        · exact Or.inl hD
+        · exact Or.inr ⟨hh, hD⟩
+      · rintro (hD | hE')
+        · exact hD.1
+        · exact hE'.1
+    have hsplit : ⋂₀ ((fun h => {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h}) '' Fam)
+        = ⋂₀ ((fun h => {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h}) '' E) := by
+      conv_lhs => rw [hfam, Set.image_union]
+      rw [Set.sInter_union]
+      have huniv : ⋂₀ ((fun h => {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h}) '' D) = univ := by
+        refine Set.sInter_eq_univ.2 ?_
+        rintro g ⟨h, hhD, rfl⟩
+        exact hDuniv h hhD
+      rw [huniv, Set.univ_inter]
+    refine ⟨(fun h => {z : ℂ | dot2 (p22w5_rho (aF h)) z ≤ bF h}) '' E,
+      hfin.subset hEfam |>.image _, ?_, ?_⟩
+    · rw [hdrop, hsplit]
+    · rintro g ⟨h, hhE, rfl⟩
+      refine ⟨p22w5_rho (aF h), bF h, ?_, rfl⟩
+      intro hzero
+      exact hhE.2 ⟨hEfam hhE, hzero⟩
+
+
+/-! ### 5. `azim` ↔ `holArg` bridge -/
+
+/-- The value of `holArg` on a positive multiple of a unit ray. -/
+private theorem p22w5_holArg_pos_mul_exp (r θ : ℝ) (hr : 0 < r)
+    (hθ0 : 0 ≤ θ) (hθ1 : θ < 2 * Real.pi) :
+    holArg ((r : ℂ) * Complex.exp (θ * Complex.I)) = θ := by
+  set z : ℂ := (r : ℂ) * Complex.exp (↑θ * Complex.I) with hzdef
+  have hzne : z ≠ 0 := by
+    rw [hzdef]
+    exact mul_ne_zero (Complex.ofReal_ne_zero.mpr hr.ne') (Complex.exp_ne_zero _)
+  have hnorm : ‖z‖ = r := by
+    rw [hzdef, norm_mul, Complex.norm_exp, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr]
+    have h0 : (↑θ * Complex.I).re = 0 := by simp
+    rw [h0, Real.exp_zero, mul_one]
+  have hzrep : z = (r : ℂ) * (Real.cos θ + Real.sin θ * Complex.I) := by
+    rw [hzdef, Complex.exp_mul_I, ← Complex.ofReal_cos, ← Complex.ofReal_sin]
+  have hcs := p22_holArg_cos_sin z hzne
+  rw [hnorm, Complex.real_smul] at hcs
+  have hrc : (r : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hr.ne'
+  have key : (Real.cos (holArg z) + Complex.I * Real.sin (holArg z))
+      = (Real.cos θ + Real.sin θ * Complex.I) := by
+    refine mul_left_cancel₀ hrc ?_
+    rw [hcs, hzrep]
+  have hcos : Real.cos (holArg z) = Real.cos θ := by
+    have h := congrArg Complex.re key
+    simpa [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+      Complex.ofReal_im, zero_mul, mul_zero, sub_zero, add_zero,
+      Complex.cos_ofReal_re] using h
+  have hsin : Real.sin (holArg z) = Real.sin θ := by
+    have h := congrArg Complex.im key
+    simpa [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+      Complex.ofReal_im, zero_mul, mul_zero, mul_one, zero_add, add_zero,
+      Complex.sin_ofReal_re] using h
+  exact p22_cos_sin_eq (holArg z) θ (p22_holArg_nonneg z) (p22_holArg_lt_two_pi z)
+    hθ0 hθ1 hcos hsin
+
+/-- `azim` equals the `holArg` of the planar ratio in a frame aligned with the axis. -/
+private theorem p22w5_azim_eq_holArg {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3)
+    {v w y1 y2 : V3} (hax : w - v = dist w v • e3) (hwv : w ≠ v)
+    (h1 : zOf e1 e2 (y1 - v) ≠ 0) (h2 : zOf e1 e2 (y2 - v) ≠ 0) :
+    azim v w y1 y2 = holArg (zOf e1 e2 (y2 - v) / zOf e1 e2 (y1 - v)) := by
+  have hnc1 : ¬ Collinear3 v w y1 := (zOf_ne_zero_iff h hax hwv y1).mp h1
+  have hnc2 : ¬ Collinear3 v w y2 := (zOf_ne_zero_iff h hax hwv y2).mp h2
+  obtain ⟨haz0, haz1, h1c, h2c, hspec⟩ := azim_master v w y1 y2
+  obtain ⟨ψ, r1, r2, rep1, rep2, hr1, hr2⟩ := hspec e1 e2 e3 h hax hwv
+  have hpos1 : 0 < r1 := hr1 hnc1
+  have hpos2 : 0 < r2 := hr2 hnc2
+  have hz1 : zOf e1 e2 (y1 - v) = (r1 : ℂ) * Complex.exp (↑ψ * Complex.I) :=
+    zOf_of_rep h hax rep1
+  have hz2 : zOf e1 e2 (y2 - v)
+      = (r2 : ℂ) * Complex.exp (↑(ψ + azim v w y1 y2) * Complex.I) :=
+    zOf_of_rep h hax rep2
+  have hratio : zOf e1 e2 (y2 - v) / zOf e1 e2 (y1 - v)
+      = (r2 / r1 : ℝ) * Complex.exp (↑(azim v w y1 y2) * Complex.I) := by
+    have hE : Complex.exp (↑(ψ + azim v w y1 y2) * Complex.I)
+        = Complex.exp (↑ψ * Complex.I) * Complex.exp (↑(azim v w y1 y2) * Complex.I) := by
+      rw [← Complex.exp_add]
+      congr 1
+      push_cast
+      ring
+    have hr1c : (r1 : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hpos1.ne'
+    have hEc : Complex.exp (↑ψ * Complex.I) ≠ 0 := Complex.exp_ne_zero _
+    have hcast : (r2 : ℂ) = (r1 : ℂ) * ((r2 / r1 : ℝ) : ℂ) := by
+      rw [← Complex.ofReal_mul, mul_div_cancel₀ r2 hpos1.ne']
+    rw [hz2, hz1, hE, div_eq_iff (mul_ne_zero hr1c hEc), hcast]
+    ring
+  rw [hratio]
+  exact (p22w5_holArg_pos_mul_exp (r2 / r1) (azim v w y1 y2) (div_pos hpos2 hpos1)
+    haz0 haz1).symm
+
+/-- `azim` ↔ `holArg` on the frame's planar projection `dropout (G ·)`. -/
+private theorem p22w5_azim_eq_holArg_dropout {e1 e2 e3 : V3}
+    (h : Orthonormal3 e1 e2 e3) {u0 u1 : V3}
+    (hax : u1 - u0 = dist u1 u0 • e3) (hu : u1 ≠ u0) {y1 y2 : V3}
+    (h1 : dropout3P22 (p22w5_aff (p22w5_F h) (-(p22w5_F h u0)) y1) ≠ 0)
+    (h2 : dropout3P22 (p22w5_aff (p22w5_F h) (-(p22w5_F h u0)) y2) ≠ 0) :
+    azim u0 u1 y1 y2
+      = holArg (dropout3P22 (p22w5_aff (p22w5_F h) (-(p22w5_F h u0)) y2)
+          / dropout3P22 (p22w5_aff (p22w5_F h) (-(p22w5_F h u0)) y1)) := by
+  have hdrop : ∀ y : V3, p22w5_aff (p22w5_F h) (-(p22w5_F h u0)) y
+      = p22w5_F h (y - u0) := by
+    intro y
+    rw [p22w5_aff, map_sub]
+    abel
+  have hz : ∀ y : V3, dropout3P22 (p22w5_aff (p22w5_F h) (-(p22w5_F h u0)) y)
+      = zOf e1 e2 (y - u0) := by
+    intro y
+    rw [hdrop y, p22w5_dropout_F]
+  rw [hz y1] at h1
+  rw [hz y2] at h2
+  rw [hz y1, hz y2]
+  exact p22w5_azim_eq_holArg h hax hu h1 h2
+
+
+/-! ### 6. Radial transfer lemmas (ball / norm) -/
+
+private theorem p22w5_aff_dist (F : V3 ≃ₗᵢ[ℝ] V3) (t x y : V3) :
+    dist (p22w5_aff F t x) (p22w5_aff F t y) = dist x y := by
+  rw [dist_eq_norm, dist_eq_norm]
+  have h : p22w5_aff F t x - p22w5_aff F t y = F (x - y) := by
+    simp only [p22w5_aff, map_sub]; abel
+  rw [h, LinearIsometryEquiv.norm_map]
+
+private theorem p22w5_aff_anchor (F : V3 ≃ₗᵢ[ℝ] V3) (u0 : V3) :
+    p22w5_aff F (-(F u0)) u0 = 0 := by
+  rw [p22w5_aff]; abel
+
+private theorem p22w5_dot2_selfC (w : ℂ) : dot2 w w = ‖w‖ ^ 2 := by
+  rw [dot2_expand, Complex.sq_norm, Complex.normSq_apply]
+
+private theorem p22w5_norm_pad (z : ℂ) : ‖pad2d3dP22 z‖ = ‖z‖ := by
+  have h1 : ‖pad2d3dP22 z‖ ^ 2 = ‖z‖ ^ 2 := by
+    rw [Kepler.Geom.norm_sq_eq_dot, pad2d3d_dot_v, p22w5_dot2_selfC]
+  nlinarith [norm_nonneg (pad2d3dP22 z), norm_nonneg z]
+
+/-- A non-apex point of the plane has nonzero planar coordinate. -/
+private theorem p22w5_zOf_ne_zero_of_plane {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3)
+    {u0 u1 u2 : V3} (hax : u1 - u0 = dist u1 u0 • e3) (hu : u1 ≠ u0)
+    (hu2 : u2 ≠ u0) (hA : (u2 - u0) ⬝ᵥ (u1 - u0) = 0) :
+    zOf e1 e2 (u2 - u0) ≠ 0 := by
+  have hd : dist u1 u0 ≠ 0 := dist_ne_zero.mpr hu
+  have h3 : (u2 - u0) ⬝ᵥ e3 = 0 := by
+    have h1 : (u2 - u0).ofLp ⬝ᵥ (dist u1 u0 • e3).ofLp = 0 := by
+      rw [show (dist u1 u0 • e3 : V3) = (u1 - u0) from hax.symm]
+      exact hA
+    rw [WithLp.ofLp_smul, dotProduct_smul] at h1
+    exact (mul_eq_zero.mp h1).resolve_left hd
+  intro hz
+  have hre : (u2 - u0) ⬝ᵥ e1 = 0 := by
+    have h1 := congrArg Complex.re hz
+    simpa [zOf] using h1
+  have him : (u2 - u0) ⬝ᵥ e2 = 0 := by
+    have h1 := congrArg Complex.im hz
+    simpa [zOf] using h1
+  have hexp := on3_expand h (u2 - u0)
+  rw [hre, him, h3, zero_smul, zero_smul, zero_smul, add_zero, add_zero] at hexp
+  exact hu2 (sub_eq_zero.mp hexp)
+
+/-! ### 7. Radius normalization: positive real scaling of a `ℂ` set
+
+`EUSOTYP_simple` is stated with `r n : ℕ` (HOL has `&0 < r` with `r` real), while
+`EUSOTYP_general` uses `r : ℝ`; the reduction therefore needs a scaling layer
+normalising the planar radius.  The transfer lemmas are stated for a complex
+multiplier `d` (the real case is the instantiation `d = (c : ℂ)` with `c > 0`,
+where the halfspace normal is preserved). -/
+
+private noncomputable def p22w5_scaleLin (d : ℂ) : ℂ →ₗ[ℝ] ℂ where
+  toFun z := d * z
+  map_add' x y := by simp [mul_add]
+  map_smul' r x := by
+    show d * ((r : ℂ) * x) = (r : ℂ) * (d * x)
+    ring
+
+private noncomputable def p22w5_scaleEquiv (d : ℂ) (hd : d ≠ 0) : ℂ ≃ₗ[ℝ] ℂ where
+  toFun z := d * z
+  invFun z := d⁻¹ * z
+  left_inv z := by
+    show d⁻¹ * (d * z) = z
+    rw [← mul_assoc, inv_mul_cancel₀ hd, one_mul]
+  right_inv z := by
+    show d * (d⁻¹ * z) = z
+    rw [← mul_assoc, mul_inv_cancel₀ hd, one_mul]
+  map_add' x y := by simp [mul_add]
+  map_smul' r x := by
+    show d * ((r : ℂ) * x) = (r : ℂ) * (d * x)
+    ring
+
+private theorem p22w5_mul_dot2C (a z : ℂ) (c : ℝ) :
+    dot2 a ((c : ℂ) * z) = c * dot2 a z := by
+  rw [dot2_expand, dot2_expand]
+  have h1 : ((c : ℂ) * z).re = c * z.re := by simp
+  have h2 : ((c : ℂ) * z).im = c * z.im := by simp
+  rw [h1, h2]
+  ring
+
+private theorem p22w5_image_sInter_inj {g : ℂ → ℂ} (hinj : Function.Injective g)
+    (hsurj : Function.Surjective g) (S : Set (Set ℂ)) :
+    g '' (⋂₀ S) = ⋂₀ ((fun h => g '' h) '' S) := by
+  ext y
+  constructor
+  · rintro ⟨x, hx, rfl⟩
+    exact Set.mem_sInter.2 (fun t ht => by
+      obtain ⟨h, hh, rfl⟩ := ht
+      exact ⟨x, Set.mem_sInter.1 hx h hh, rfl⟩)
+  · intro hy
+    have hmem : ∀ h ∈ S, ∃ x, x ∈ h ∧ g x = y := by
+      intro h hh
+      have h1 := Set.mem_sInter.1 hy (g '' h) ⟨h, hh, rfl⟩
+      obtain ⟨x, hx, hxy⟩ := h1
+      exact ⟨x, hx, hxy⟩
+    by_cases hS : S = ∅
+    · subst hS
+      simp only [Set.image_empty, Set.sInter_empty, Set.mem_univ, iff_true]
+      obtain ⟨x, hx⟩ := hsurj y
+      exact ⟨x, Set.mem_univ x, hx⟩
+    · obtain ⟨h0, hh0⟩ := Set.nonempty_iff_ne_empty.mpr hS
+      obtain ⟨x0, -, hx0y⟩ := hmem h0 hh0
+      refine ⟨x0, ?_, hx0y⟩
+      refine Set.mem_sInter.2 (fun h hh => ?_)
+      obtain ⟨x, hx, hxy⟩ := hmem h hh
+      have hxeq : x = x0 := hinj (hxy.trans hx0y.symm)
+      rwa [hxeq] at hx
+
+private theorem p22w5_convex_mul_imageC (d : ℂ) {s : Set ℂ} (hs : Convex ℝ s) :
+    Convex ℝ ((fun z => d * z) '' s) := by
+  have h1 : Convex ℝ ((p22w5_scaleLin d) '' s) := hs.linear_image (p22w5_scaleLin d)
+  simpa [p22w5_scaleLin] using h1
+
+private theorem p22w5_image_openSegment_mulC (d : ℂ) (a b : ℂ) :
+    (fun z => d * z) '' openSegment ℝ a b = openSegment ℝ (d * a) (d * b) :=
+  image_openSegment ℝ ((p22w5_scaleLin d).toAffineMap) a b
+
+private theorem p22w5_faceOfC_mulC (d : ℂ) (hd : d ≠ 0) {t s : Set ℂ} (h : faceOfC t s) :
+    faceOfC ((fun z => d * z) '' t) ((fun z => d * z) '' s) := by
+  refine ⟨Set.image_mono h.1, p22w5_convex_mul_imageC d h.2.1, ?_⟩
+  intro a b x ha hb hx hseg
+  obtain ⟨a', ha', rfl⟩ := ha
+  obtain ⟨b', hb', rfl⟩ := hb
+  obtain ⟨x', hx', rfl⟩ := hx
+  rw [← p22w5_image_openSegment_mulC] at hseg
+  obtain ⟨y, hy, hxy⟩ := hseg
+  have hyx : y = x' := by
+    have h1 := congrArg (fun w => d⁻¹ * w) hxy
+    simp only [← mul_assoc, inv_mul_cancel₀ hd, one_mul] at h1
+    exact h1
+  rw [hyx] at hy
+  obtain ⟨ha'c, hb'c⟩ := h.2.2 a' b' x' ha' hb' hx' hy
+  exact ⟨⟨a', ha'c, rfl⟩, ⟨b', hb'c, rfl⟩⟩
+
+private theorem p22w5_affDimC_mulC (d : ℂ) (hd : d ≠ 0) (s : Set ℂ) :
+    affDimC ((fun z => d * z) '' s) = affDimC s := by
+  simp only [affDimC]
+  by_cases hse : s = ∅
+  · subst hse; simp
+  · have hne : (fun z => d * z) '' s ≠ ∅ := fun hcc => hse (Set.image_eq_empty.mp hcc)
+    rw [if_neg hne, if_neg hse]
+    have hmap := AffineMap.map_vectorSpan (f := (p22w5_scaleLin d).toAffineMap) (s := s)
+    have himg : (⇑((p22w5_scaleLin d).toAffineMap) : ℂ → ℂ) = fun z => d * z := rfl
+    rw [himg] at hmap
+    rw [← hmap]
+    exact congrArg ((↑) : ℕ → ℤ)
+      (LinearEquiv.finrank_map_eq (p22w5_scaleEquiv d hd) (vectorSpan ℝ s))
+
+private theorem p22w5_mulC_inv_comp (d e : ℂ) (hde : e * d = 1) :
+    (fun z => e * z) ∘ (fun z => d * z) = id := by
+  funext z
+  rw [Function.comp_apply]
+  show e * (d * z) = z
+  rw [← mul_assoc, hde, one_mul]
+
+private theorem p22w5_mulC_comp_inv (d e : ℂ) (hde : d * e = 1) :
+    (fun z => d * z) ∘ (fun z => e * z) = id := by
+  funext z
+  rw [Function.comp_apply]
+  show d * (e * z) = z
+  rw [← mul_assoc, hde, one_mul]
+
+private theorem p22w5_image_mulC_inv (d e : ℂ) (hde : e * d = 1) (s : Set ℂ) :
+    (fun z => e * z) '' ((fun z => d * z) '' s) = s := by
+  rw [← Set.image_comp, p22w5_mulC_inv_comp d e hde, Set.image_id]
+
+private theorem p22w5_image_mulC_fwd (d e : ℂ) (hde : d * e = 1) (s : Set ℂ) :
+    (fun z => d * z) '' ((fun z => e * z) '' s) = s := by
+  rw [← Set.image_comp, p22w5_mulC_comp_inv d e hde, Set.image_id]
+
+private theorem p22w5_facetOfC_mulC (d e : ℂ) (hd : d ≠ 0) (hde : e * d = 1) {f P : Set ℂ} :
+    facetOfC ((fun z => d * z) '' f) ((fun z => d * z) '' P) ↔ facetOfC f P := by
+  have he : e ≠ 0 := by
+    intro h0
+    rw [h0, zero_mul] at hde
+    exact zero_ne_one hde
+  constructor
+  · intro h
+    refine ⟨?_, ?_, ?_⟩
+    · have h1 := p22w5_faceOfC_mulC e he h.1
+      rwa [p22w5_image_mulC_inv d e hde, p22w5_image_mulC_inv d e hde] at h1
+    · intro hf
+      exact h.2.1 (by rw [hf, Set.image_empty])
+    · rw [← p22w5_affDimC_mulC d hd f, ← p22w5_affDimC_mulC d hd P]
+      exact h.2.2
+  · intro h
+    refine ⟨p22w5_faceOfC_mulC d hd h.1, ?_, ?_⟩
+    · intro hf
+      exact h.2.1 (Set.image_eq_empty.mp hf)
+    · rw [p22w5_affDimC_mulC d hd, p22w5_affDimC_mulC d hd]
+      exact h.2.2
+
+private theorem p22w5_mulC_injective (d : ℂ) (hd : d ≠ 0) :
+    Function.Injective (fun z : ℂ => d * z) := by
+  intro a b hab
+  have h1 := congrArg (fun w => d⁻¹ * w) hab
+  simp only [← mul_assoc, inv_mul_cancel₀ hd, one_mul] at h1
+  exact h1
+
+private theorem p22w5_mulC_surjective (d : ℂ) (hd : d ≠ 0) :
+    Function.Surjective (fun z : ℂ => d * z) := by
+  intro y
+  refine ⟨d⁻¹ * y, ?_⟩
+  show d * (d⁻¹ * y) = y
+  rw [← mul_assoc, mul_inv_cancel₀ hd, one_mul]
+
+private theorem p22w5_polyhedronC_scale (c : ℝ) (hc : 0 < c) {P : Set ℂ}
+    (hP : polyhedronC P) : polyhedronC ((fun z => (c : ℂ) * z) '' P) := by
+  obtain ⟨Fam, hfin, hPeq, hhalf⟩ := hP
+  have hcne : c ≠ 0 := hc.ne'
+  have hcC : (c : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hcne
+  refine ⟨(fun h => (fun z => (c : ℂ) * z) '' h) '' Fam, hfin.image _, ?_, ?_⟩
+  · rw [hPeq]
+    exact p22w5_image_sInter_inj (p22w5_mulC_injective (c : ℂ) hcC)
+      (p22w5_mulC_surjective (c : ℂ) hcC) Fam
+  · rintro g ⟨h, hh, rfl⟩
+    obtain ⟨a, b, ha, hheq⟩ := hhalf h hh
+    refine ⟨a, c * b, ha, ?_⟩
+    rw [hheq]
+    ext w
+    constructor
+    · rintro ⟨z, hz, rfl⟩
+      show dot2 a ((c : ℂ) * z) ≤ c * b
+      rw [p22w5_mul_dot2C]
+      exact mul_le_mul_of_nonneg_left hz hc.le
+    · intro hw
+      refine ⟨(c : ℂ)⁻¹ * w, ?_, ?_⟩
+      · show dot2 a ((c : ℂ)⁻¹ * w) ≤ b
+        rw [show (c : ℂ)⁻¹ = ((c⁻¹ : ℝ) : ℂ) from (Complex.ofReal_inv c).symm]
+        rw [p22w5_mul_dot2C]
+        have h1 : c⁻¹ * (c * b) = b := by
+          rw [← mul_assoc, inv_mul_cancel₀ hcne, one_mul]
+        rw [← h1]
+        exact mul_le_mul_of_nonneg_left hw (le_of_lt (inv_pos.mpr hc))
+      · show (c : ℂ) * ((c : ℂ)⁻¹ * w) = w
+        rw [← mul_assoc, mul_inv_cancel₀ hcC, one_mul]
+
+private theorem p22w5_facet_ncardC_scale (c : ℝ) (hc : 0 < c) {P : Set ℂ} {n : ℕ}
+    (hn : ({f : Set ℂ | facetOfC f P}).Finite ∧ ({f : Set ℂ | facetOfC f P}).ncard = n) :
+    ({f : Set ℂ | facetOfC f ((fun z => (c : ℂ) * z) '' P)}).Finite ∧
+      ({f : Set ℂ | facetOfC f ((fun z => (c : ℂ) * z) '' P)}).ncard = n := by
+  have hcne : c ≠ 0 := hc.ne'
+  have hcC : (c : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hcne
+  have hde : (c : ℂ)⁻¹ * (c : ℂ) = 1 := inv_mul_cancel₀ hcC
+  have hseteq : {g : Set ℂ | facetOfC g ((fun z => (c : ℂ) * z) '' P)}
+      = (fun f => (fun z => (c : ℂ) * z) '' f) '' {f : Set ℂ | facetOfC f P} := by
+    ext g
+    constructor
+    · intro hg
+      refine ⟨(fun z => (c : ℂ)⁻¹ * z) '' g, ?_, ?_⟩
+      · simp only [Set.mem_setOf_eq]
+        refine (p22w5_facetOfC_mulC (c : ℂ) ((c : ℂ)⁻¹) hcC hde
+          (f := (fun z => (c : ℂ)⁻¹ * z) '' g) (P := P)).1 ?_
+        rwa [p22w5_image_mulC_fwd (c : ℂ) ((c : ℂ)⁻¹) (mul_inv_cancel₀ hcC)]
+      · show (fun z => (c : ℂ) * z) '' ((fun z => (c : ℂ)⁻¹ * z) '' g) = g
+        exact p22w5_image_mulC_fwd (c : ℂ) ((c : ℂ)⁻¹) (mul_inv_cancel₀ hcC) g
+    · rintro ⟨f, hf, rfl⟩
+      exact (p22w5_facetOfC_mulC (c : ℂ) ((c : ℂ)⁻¹) hcC hde).2 hf
+  refine ⟨?_, ?_⟩
+  · rw [hseteq]
+    exact hn.1.image _
+  · rw [hseteq]
+    refine (Set.InjOn.ncard_image ?_).trans hn.2
+    intro f1 hf1 f2 hf2 heq
+    have h1 := congrArg (fun s => (fun z => (c : ℂ)⁻¹ * z) '' s) heq
+    rwa [p22w5_image_mulC_inv (c : ℂ) ((c : ℂ)⁻¹) hde,
+      p22w5_image_mulC_inv (c : ℂ) ((c : ℂ)⁻¹) hde] at h1
+
+private theorem p22w5_isBoundedC_scale (c : ℝ) (hc : 0 ≤ c) {P : Set ℂ}
+    (hP : Bornology.IsBounded P) : Bornology.IsBounded ((fun z => (c : ℂ) * z) '' P) := by
+  obtain ⟨R, hR⟩ := (Metric.isBounded_iff_subset_closedBall (0 : ℂ)).1 hP
+  refine (Metric.isBounded_iff_subset_closedBall (0 : ℂ)).2 ⟨c * R, ?_⟩
+  rintro w ⟨z, hz, rfl⟩
+  have hz' : ‖z‖ ≤ R := by
+    have h := hR hz
+    rwa [Metric.mem_closedBall, dist_zero_right] at h
+  rw [Metric.mem_closedBall, dist_zero_right, norm_mul, Complex.norm_real, Real.norm_eq_abs,
+    abs_of_nonneg hc]
+  exact mul_le_mul_of_nonneg_left hz' hc
+
 /-- HOL `EUSOTYP_general` (counting_spheres.hl:2336). GIANT. -/
 theorem EUSOTYP_general (P A : Set V3) (n : ℕ) (s : Set (Set V3)) (r : ℝ)
     (u0 u1 u2 : V3) (hP : polyhedron P) (hb : Bornology.IsBounded P) (hPA : P ⊆ A)
