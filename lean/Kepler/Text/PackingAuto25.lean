@@ -9714,7 +9714,36 @@ theorem real_model_gckb (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
     ∀ i, 0.606 ≤ azim_mcell V f u0 u1 i := by
-  sorry
+  intro i
+  have hbank := proj_bank_GCKBQEA hnl
+  have hq8 : Real.sqrt 8 = 2 * Real.sqrt 2 := mi_sqrt8_eq
+  by_cases h4 : cc_4 V u0 u1 f i
+  · obtain ⟨hlo1, hhi1, hd02lo, hd02hi, hd03lo, hd03hi, hd23lo, hd23hi, hd12lo, hd12hi,
+      hd13lo, hd13hi, -, -⟩ :=
+      MCELL4_DOMAIN V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey hr h4
+    have haz := c_4_azim_mcell_dih_y V u0 u1 w0 n f i hn hp hs hsize h0 h1 hper hnc
+      hcey hr h4
+    rw [haz]
+    have hb := hbank (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+      hlo1 hhi1 hd02lo (le_trans (le_of_lt hd02hi) (le_of_eq hq8.symm))
+      hd03lo (le_trans (le_of_lt hd03hi) (le_of_eq hq8.symm))
+      hd23lo (le_trans (le_of_lt hd23hi) (le_of_eq hq8.symm))
+      hd13lo (le_trans (le_of_lt hd13hi) (le_of_eq hq8.symm))
+      hd12lo (le_trans (le_of_lt hd12hi) (le_of_eq hq8.symm))
+    linarith
+  · obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+      hd02lo, hd03lo, hd12lo, hd13lo, -, hd02hi, hd03hi, hd12hi, hd13hi,
+      -, -, -, -, haz, y4, hy4lo, hy4hi, -, hdih, -, -⟩ :=
+      CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn h4
+    rw [haz]
+    have hb := hbank (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+      (dist u1 (f (i + 1))) (dist u1 (f i))
+      hcey.1 hcey.2 hd02lo (le_trans hd02hi (le_of_eq hq8.symm)) hd03lo
+      (le_trans hd03hi (le_of_eq hq8.symm)) hy4lo (le_trans hy4hi (le_of_eq hq8.symm))
+      hd13lo (le_trans hd13hi (le_of_eq hq8.symm)) hd12lo (le_trans hd12hi (le_of_eq hq8.symm))
+    linarith
+
 
 /-- HOL `real_model_sum_azim`: the wedge dihedral sum is `2*pi`. -/
 theorem real_model_sum_azim (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -12214,6 +12243,138 @@ theorem gamma4fgcy_POS (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
     rw [heq] at hrad
     linarith
 
+private theorem p25w5_wtcount6Y_sym26 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    wtcount6Y y1 y2 y3 y4 y5 y6 = wtcount6Y y1 y6 y5 y4 y3 y2 := by
+  unfold wtcount6Y wtcount3Y
+  omega
+
+private theorem p25w5_wtcount6Y_sym23 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    wtcount6Y y1 y2 y3 y4 y5 y6 = wtcount6Y y1 y3 y2 y4 y6 y5 := by
+  unfold wtcount6Y wtcount3Y
+  omega
+
+private theorem p25w5_QITNPEA_9063653052 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hnl : pack_nonlinear_non_ox3q1h)
+    (h1lo : 2 * hminus ≤ y1) (h1hi : y1 ≤ 2 * hplus)
+    (h2lo : 2 ≤ y2) (h2hi : y2 < 2 * hminus)
+    (h3lo : 2 * hminus ≤ y3) (h3hi : y3 ≤ Real.sqrt 8)
+    (h4lo : 2 ≤ y4) (h4hi : y4 ≤ Real.sqrt 8)
+    (h5lo : 2 ≤ y5) (h5hi : y5 < 2 * hminus)
+    (h6lo : 2 ≤ y6) (h6hi : y6 < 2 * hminus)
+    (hrad : yOfX rad2X y1 y2 y3 y4 y5 y6 < 2) :
+    0.0057 < gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun /
+      (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) := by
+  classical
+  have hc1 : criticalEdgeY y1 := ⟨h1lo, h1hi⟩
+  have hn2 : ¬ criticalEdgeY y2 := fun hc => absurd h2hi (not_lt.mpr hc.1)
+  have hn5 : ¬ criticalEdgeY y5 := fun hc => absurd h5hi (not_lt.mpr hc.1)
+  have hn6 : ¬ criticalEdgeY y6 := fun hc => absurd h6hi (not_lt.mpr hc.1)
+  have hwtR : (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ)
+      = 1 + (if criticalEdgeY y3 then (1 : ℝ) else 0) +
+        (if criticalEdgeY y4 then (1 : ℝ) else 0) := by
+    unfold wtcount6Y wtcount3Y
+    rw [if_pos hc1, if_neg hn2, if_neg hn5, if_neg hn6]
+    push_cast
+    ring
+  have hradE : yOfX rad2X y1 y2 y3 y4 y5 y6
+      = rad2YP25 y1 y2 y3 y4 y5 y6 := rfl
+  have hnoRad : ∀ h : yOfX rad2X y1 y2 y3 y4 y5 y6 > 2, False := by
+    intro h; rw [hradE] at h; exact absurd h (not_lt.mpr (le_of_lt hrad))
+  by_cases hc3 : criticalEdgeY y3
+  · by_cases hc4 : criticalEdgeY y4
+    · have hb := proj_bank_QITNPEA1_1_1 hnl y1 y2 y3 y4 y5 y6 h1lo h1hi h2lo
+        (le_of_lt h2hi) hc3.1 hc3.2 hc4.1 hc4.2 h5lo (le_of_lt h5hi) h6lo (le_of_lt h6hi)
+      rcases hb with hgt | hbad
+      · have hden : (1 + bankGenMid 1 + bankGenMid 1 : ℝ)
+            = (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) := by
+          rw [hwtR]; norm_num [bankGenMid, hc3, hc4]
+        rw [hden] at hgt; exact hgt
+      · exfalso; exact hnoRad hbad
+    · by_cases h4s : y4 < 2 * hminus
+      · have hb := proj_bank_QITNPEA1_1_0 hnl y1 y2 y3 y4 y5 y6 h1lo h1hi h2lo
+          (le_of_lt h2hi) hc3.1 hc3.2 h4lo (le_of_lt h4s) h5lo (le_of_lt h5hi) h6lo
+          (le_of_lt h6hi)
+        rcases hb with hgt | hbad
+        · have hden : (1 + bankGenMid 1 + bankGenMid 0 : ℝ)
+              = (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) := by
+            rw [hwtR]; simp [bankGenMid, hc3, hc4]
+          rw [hden] at hgt; exact hgt
+        · exfalso; exact hnoRad hbad
+      · have h4big : 2 * hplus < y4 := by
+          by_contra hle
+          exact hc4 ⟨le_of_not_gt h4s, le_of_not_gt hle⟩
+        have hb := proj_bank_QITNPEA1_1_2 hnl y1 y2 y3 y4 y5 y6 h1lo h1hi h2lo
+          (le_of_lt h2hi) hc3.1 hc3.2 (le_of_lt h4big) h4hi h5lo (le_of_lt h5hi) h6lo
+          (le_of_lt h6hi)
+        rcases hb with hgt | hbad
+        · have hden : (1 + bankGenMid 1 + bankGenMid 2 : ℝ)
+              = (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) := by
+            rw [hwtR]; simp [bankGenMid, hc3, hc4]
+          rw [hden] at hgt; exact hgt
+        · exfalso; exact hnoRad hbad
+  · have h3big : 2 * hplus < y3 := by
+      by_contra hle
+      exact hc3 ⟨h3lo, le_of_not_gt hle⟩
+    by_cases hc4 : criticalEdgeY y4
+    · have hb := proj_bank_QITNPEA1_2_1 hnl y1 y2 y3 y4 y5 y6 h1lo h1hi h2lo
+        (le_of_lt h2hi) (le_of_lt h3big) h3hi hc4.1 hc4.2 h5lo (le_of_lt h5hi) h6lo
+        (le_of_lt h6hi)
+      rcases hb with hgt | hbad
+      · have hden : (1 + bankGenMid 2 + bankGenMid 1 : ℝ)
+            = (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) := by
+          rw [hwtR]; norm_num [bankGenMid, hc3, hc4]
+        rw [hden] at hgt; exact hgt
+      · exfalso; exact hnoRad hbad
+    · by_cases h4s : y4 < 2 * hminus
+      · have hb := proj_bank_QITNPEA1_2_0 hnl y1 y2 y3 y4 y5 y6 h1lo h1hi h2lo
+          (le_of_lt h2hi) (le_of_lt h3big) h3hi h4lo (le_of_lt h4s) h5lo (le_of_lt h5hi)
+          h6lo (le_of_lt h6hi)
+        rcases hb with hgt | hbad
+        · have hden : (1 + bankGenMid 2 + bankGenMid 0 : ℝ)
+              = (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) := by
+            rw [hwtR]; simp [bankGenMid, hc3, hc4]
+          rw [hden] at hgt; exact hgt
+        · exfalso; exact hnoRad hbad
+      · have h4big : 2 * hplus < y4 := by
+          by_contra hle
+          exact hc4 ⟨le_of_not_gt h4s, le_of_not_gt hle⟩
+        have hb := proj_bank_QITNPEA1_2_2 hnl y1 y2 y3 y4 y5 y6 h1lo h1hi h2lo
+          (le_of_lt h2hi) (le_of_lt h3big) h3hi (le_of_lt h4big) h4hi h5lo (le_of_lt h5hi)
+          h6lo (le_of_lt h6hi)
+        rcases hb with hgt | hbad
+        · have hden : (1 + bankGenMid 2 + bankGenMid 2 : ℝ)
+              = (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) := by
+            rw [hwtR]; simp [bankGenMid, hc3, hc4]
+          rw [hden] at hgt; exact hgt
+        · exfalso; exact hnoRad hbad
+
+
+
+private theorem p25w5_rhoX_sym26 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rhoX x1 x2 x3 x4 x5 x6 = rhoX x1 x6 x5 x4 x3 x2 := by
+  unfold rhoX; ring
+
+private theorem p25w5_rad2YP25_sym26 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    rad2YP25 y1 y2 y3 y4 y5 y6 = rad2YP25 y1 y6 y5 y4 y3 y2 := by
+  unfold rad2YP25 rad2XP25 rad2X
+  rw [p25w5_rhoX_sym26 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6),
+    p25w4_deltaX_sym26 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)]
+
+private theorem p25w5_wtcount6Y_perm (y1 y2 y3 y4 y5 y6 : ℝ) :
+    wtcount6Y y1 y2 y3 y4 y5 y6 = wtcount6Y y1 y5 y6 y4 y2 y3 := by
+  unfold wtcount6Y wtcount3Y
+  omega
+
+private theorem p25w5_gamma4fgcy_perm (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) :
+    gamma4fgcyP25 y1 y2 y3 y4 y5 y6 f = gamma4fgcyP25 y1 y5 y6 y4 y2 y3 f := by
+  rw [p25w4_gamma4fgcy_sym23 y1 y2 y3 y4 y5 y6 f,
+    gamma4fgcy_sym26 y1 y3 y2 y4 y6 y5 f]
+
+private theorem p25w5_rad2YP25_perm (y1 y2 y3 y4 y5 y6 : ℝ) :
+    rad2YP25 y1 y2 y3 y4 y5 y6 = rad2YP25 y1 y5 y6 y4 y2 y3 := by
+  rw [p25w4_rad2YP25_sym23 y1 y2 y3 y4 y5 y6,
+    p25w5_rad2YP25_sym26 y1 y3 y2 y4 y6 y5]
+
 /-- HOL `real_model_gamma8`. -/
 theorem real_model_gamma8 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
@@ -12228,7 +12389,73 @@ theorem real_model_gamma8 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3
           (dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus) ∧
           ¬ (dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus)) →
       0.0057 ≤ gg_mcell V f u0 u1 i := by
-  sorry
+  intro i hcase
+  obtain ⟨⟨h4, -⟩, ⟨hd02, hd12⟩, hnotboth⟩ := hcase
+  have hnot : ¬ ((dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus) ∧
+      dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus ∧
+      criticalEdgeY (dist (f i) (f (i + 1)))) := by
+    rintro ⟨-, h3, h5, -⟩
+    exact hnotboth ⟨h3, h5⟩
+  have hgg := GG_MCELL_NONBETA V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey h4 hnot hr
+  obtain ⟨hlo1, hhi1, hd02lo, hd02hi, hd03lo, hd03hi, hd23lo, hd23hi, hd12lo, hd12hi,
+    hd13lo, hd13hi, hrad2lt, -⟩ :=
+    MCELL4_DOMAIN V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey hr h4
+  have hq8 : Real.sqrt 8 = 2 * Real.sqrt 2 := mi_sqrt8_eq
+  have hu3 : dist u0 (f (i + 1)) ≤ Real.sqrt 8 :=
+    le_trans (le_of_lt hd03hi) (le_of_eq hq8.symm)
+  have hu4 : dist (f i) (f (i + 1)) ≤ Real.sqrt 8 :=
+    le_trans (le_of_lt hd23hi) (le_of_eq hq8.symm)
+  have hu5 : dist u1 (f (i + 1)) ≤ Real.sqrt 8 :=
+    le_trans (le_of_lt hd13hi) (le_of_eq hq8.symm)
+  rw [hgg]
+  rw [show gamma4fgcyP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun
+      = gamma4fgcy (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun from rfl]
+  by_cases hB : dist u1 (f (i + 1)) < 2 * hminus
+  · have hA : 2 * hminus ≤ dist u0 (f (i + 1)) := by
+      by_contra hA
+      exact hnotboth ⟨not_le.mp hA, hB⟩
+    exact le_of_lt (p25w5_QITNPEA_9063653052 (dist u0 u1) (dist u0 (f i))
+      (dist u0 (f (i + 1))) (dist (f i) (f (i + 1))) (dist u1 (f (i + 1)))
+      (dist u1 (f i)) hnl hlo1 hhi1 hd02lo hd02 hA hu3 hd23lo hu4 hd13lo hB hd12lo hd12
+      hrad2lt)
+  · have hA : dist u0 (f (i + 1)) < 2 * hminus := by
+      by_contra hA
+      exact leaf_CIHTIUM V u0 u1 (f (i + 1)) hnl hp hs
+        (LEAF_RANK_LEAF V u0 u1 w0 n f (i + 1) hr) hcey (not_lt.mp hA) (not_lt.mp hB)
+    have hz := p25w5_QITNPEA_9063653052 (dist u0 u1) (dist u1 (f i))
+      (dist u1 (f (i + 1))) (dist (f i) (f (i + 1))) (dist u0 (f (i + 1)))
+      (dist u0 (f i)) hnl hlo1 hhi1 hd12lo hd12 (le_of_not_gt hB) hu5 hd23lo hu4
+      hd03lo hA hd02lo hd02 (by
+        have h1 : yOfX rad2X (dist u0 u1) (dist u1 (f i)) (dist u1 (f (i + 1)))
+            (dist (f i) (f (i + 1))) (dist u0 (f (i + 1))) (dist u0 (f i))
+            = rad2YP25 (dist u0 u1) (dist u1 (f i)) (dist u1 (f (i + 1)))
+              (dist (f i) (f (i + 1))) (dist u0 (f (i + 1))) (dist u0 (f i)) := rfl
+        rw [h1, ← p25w5_rad2YP25_sym26 (dist u0 u1) (dist u0 (f i))
+          (dist u0 (f (i + 1))) (dist (f i) (f (i + 1))) (dist u1 (f (i + 1)))
+          (dist u1 (f i))]
+        exact hrad2lt)
+    rw [show gamma4fgcy (dist u0 u1) (dist u1 (f i)) (dist u1 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u0 (f (i + 1))) (dist u0 (f i)) lmfun
+        = gamma4fgcy (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun from by
+      rw [show gamma4fgcy (dist u0 u1) (dist u1 (f i)) (dist u1 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u0 (f (i + 1))) (dist u0 (f i)) lmfun
+          = gamma4fgcyP25 (dist u0 u1) (dist u1 (f i)) (dist u1 (f (i + 1)))
+            (dist (f i) (f (i + 1))) (dist u0 (f (i + 1))) (dist u0 (f i)) lmfun
+          from rfl,
+        ← gamma4fgcy_sym26 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun]
+      rfl] at hz
+    rw [show (wtcount6Y (dist u0 u1) (dist u1 (f i)) (dist u1 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u0 (f (i + 1))) (dist u0 (f i)) : ℝ)
+        = (wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) : ℝ) from by
+      rw [p25w5_wtcount6Y_sym26 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))]] at hz
+    exact le_of_lt hz
 
 /-- HOL `real_model_gamma8b`. -/
 theorem real_model_gamma8b (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -12244,7 +12471,101 @@ theorem real_model_gamma8b (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V
           (dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus) ∧
           ¬ (dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus)) →
       0.0057 ≤ gg_mcell V f u0 u1 i := by
-  sorry
+  intro i hcase
+  obtain ⟨⟨h4, -⟩, ⟨hd03, hd13⟩, hnotboth⟩ := hcase
+  have hnot : ¬ ((dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus) ∧
+      dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus ∧
+      criticalEdgeY (dist (f i) (f (i + 1)))) := by
+    rintro ⟨⟨h2, h6⟩, -, -, -⟩
+    exact hnotboth ⟨h2, h6⟩
+  have hgg := GG_MCELL_NONBETA V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey h4 hnot hr
+  obtain ⟨hlo1, hhi1, hd02lo, hd02hi, hd03lo, hd03hi, hd23lo, hd23hi, hd12lo, hd12hi,
+    hd13lo, hd13hi, hrad2lt, -⟩ :=
+    MCELL4_DOMAIN V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey hr h4
+  have hq8 : Real.sqrt 8 = 2 * Real.sqrt 2 := mi_sqrt8_eq
+  have hu2 : dist u0 (f i) ≤ Real.sqrt 8 :=
+    le_trans (le_of_lt hd02hi) (le_of_eq hq8.symm)
+  have hu3 : dist u0 (f (i + 1)) ≤ Real.sqrt 8 :=
+    le_trans (le_of_lt hd03hi) (le_of_eq hq8.symm)
+  have hu4 : dist (f i) (f (i + 1)) ≤ Real.sqrt 8 :=
+    le_trans (le_of_lt hd23hi) (le_of_eq hq8.symm)
+  have hu6 : dist u1 (f i) ≤ Real.sqrt 8 :=
+    le_trans (le_of_lt hd12hi) (le_of_eq hq8.symm)
+  rw [hgg]
+  rw [show gamma4fgcyP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun
+      = gamma4fgcy (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun from rfl]
+  by_cases hC : dist u0 (f i) < 2 * hminus
+  · have hD : 2 * hminus ≤ dist u1 (f i) := by
+      by_contra hD
+      exact hnotboth ⟨hC, not_le.mp hD⟩
+    have hz := p25w5_QITNPEA_9063653052 (dist u0 u1) (dist u1 (f (i + 1)))
+      (dist u1 (f i)) (dist (f i) (f (i + 1))) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      hnl hlo1 hhi1 hd13lo hd13 hD hu6 hd23lo hu4 hd02lo hC hd03lo hd03
+      (by
+        have h1 : yOfX rad2X (dist u0 u1) (dist u1 (f (i + 1))) (dist u1 (f i))
+            (dist (f i) (f (i + 1))) (dist u0 (f i)) (dist u0 (f (i + 1)))
+            = rad2YP25 (dist u0 u1) (dist u1 (f (i + 1))) (dist u1 (f i))
+              (dist (f i) (f (i + 1))) (dist u0 (f i)) (dist u0 (f (i + 1))) := rfl
+        rw [h1, ← p25w5_rad2YP25_perm (dist u0 u1) (dist u0 (f i))
+          (dist u0 (f (i + 1))) (dist (f i) (f (i + 1))) (dist u1 (f (i + 1)))
+          (dist u1 (f i))]
+        exact hrad2lt)
+    rw [show gamma4fgcy (dist u0 u1) (dist u1 (f (i + 1))) (dist u1 (f i))
+        (dist (f i) (f (i + 1))) (dist u0 (f i)) (dist u0 (f (i + 1))) lmfun
+        = gamma4fgcy (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun from by
+      rw [show gamma4fgcy (dist u0 u1) (dist u1 (f (i + 1))) (dist u1 (f i))
+          (dist (f i) (f (i + 1))) (dist u0 (f i)) (dist u0 (f (i + 1))) lmfun
+          = gamma4fgcyP25 (dist u0 u1) (dist u1 (f (i + 1))) (dist u1 (f i))
+            (dist (f i) (f (i + 1))) (dist u0 (f i)) (dist u0 (f (i + 1))) lmfun
+          from rfl,
+        ← p25w5_gamma4fgcy_perm (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun]
+      rfl] at hz
+    rw [show (wtcount6Y (dist u0 u1) (dist u1 (f (i + 1))) (dist u1 (f i))
+        (dist (f i) (f (i + 1))) (dist u0 (f i)) (dist u0 (f (i + 1))) : ℝ)
+        = (wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) : ℝ) from by
+      rw [p25w5_wtcount6Y_perm (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))]] at hz
+    exact le_of_lt hz
+  · have hD : dist u1 (f i) < 2 * hminus := by
+      by_contra hD
+      exact leaf_CIHTIUM V u0 u1 (f i) hnl hp hs (LEAF_RANK_LEAF V u0 u1 w0 n f i hr)
+        hcey (not_lt.mp hC) (not_lt.mp hD)
+    have hz := p25w5_QITNPEA_9063653052 (dist u0 u1) (dist u0 (f (i + 1)))
+      (dist u0 (f i)) (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1)))
+      hnl hlo1 hhi1 hd03lo hd03 (le_of_not_gt hC) hu2 hd23lo hu4 hd12lo hD hd13lo hd13
+      (by
+        have h1 : yOfX rad2X (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+            (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1)))
+            = rad2YP25 (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+              (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1))) := rfl
+        rw [h1, ← p25w4_rad2YP25_sym23 (dist u0 u1) (dist u0 (f i))
+          (dist u0 (f (i + 1))) (dist (f i) (f (i + 1))) (dist u1 (f (i + 1)))
+          (dist u1 (f i))]
+        exact hrad2lt)
+    rw [show gamma4fgcy (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+        (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1))) lmfun
+        = gamma4fgcy (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun from by
+      rw [show gamma4fgcy (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+          (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1))) lmfun
+          = gamma4fgcyP25 (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+            (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1))) lmfun from rfl,
+        ← p25w4_gamma4fgcy_sym23 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun]
+      rfl] at hz
+    rw [show (wtcount6Y (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+        (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1))) : ℝ)
+        = (wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) : ℝ) from by
+      rw [p25w5_wtcount6Y_sym23 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))]] at hz
+    exact le_of_lt hz
 
 /-- HOL `real_model_gaz9`. -/
 theorem real_model_gaz9 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
