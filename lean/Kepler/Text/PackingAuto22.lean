@@ -7366,12 +7366,537 @@ theorem POLYSORT_BIJ2 (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u :
       (∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
         holArg (facet_rep_a P (f j) / u) <
           holArg (facet_rep_a P (f k) / u)) := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:1964 §3a
+  classical
+  -- injectivity of the holArg sort key on the facet set
+  have hinj : Set.InjOn (fun c : Set ℂ => holArg (facet_rep_a P c / u)) s := by
+    intro c1 hc1 c2 hc2 harg
+    have hf1 : facetOfC c1 P := by
+      have h1 : c1 ∈ s := hc1
+      rw [hs] at h1
+      exact h1
+    have hf2 : facetOfC c2 P := by
+      have h1 : c2 ∈ s := hc2
+      rw [hs] at h1
+      exact h1
+    exact poly_sort_antisym P u c1 c2 r hP hr hrad
+      ⟨hf1, hf2, le_of_eq harg⟩ ⟨hf2, hf1, le_of_eq harg.symm⟩ hu
+  obtain ⟨f0, hf0im, hf0mono⟩ := p22_enum_sorted (α := Set ℂ) hsize.1 hsize.2 hinj
+  -- totalize f0 so that f (n+1) = f 1
+  set f : ℕ → Set ℂ := fun i => if i ∈ Set.Icc 1 n then f0 i else f0 1 with hf
+  have hfI : ∀ i : ℕ, i ∈ Set.Icc 1 n → f i = f0 i := by
+    intro i hi
+    simp only [hf]
+    simp [hi]
+  have hfO : ∀ i : ℕ, i ∉ Set.Icc 1 n → f i = f0 1 := by
+    intro i hi
+    simp only [hf]
+    simp [hi]
+  have hfim : s = f '' Set.Icc 1 n := by
+    rw [hf0im]
+    ext c
+    constructor
+    · rintro ⟨i, hi, rfl⟩
+      exact ⟨i, hi, hfI i hi⟩
+    · rintro ⟨i, hi, rfl⟩
+      exact ⟨i, hi, (hfI i hi).symm⟩
+  have hfmem : ∀ i : ℕ, i ∈ Set.Icc 1 n → f i ∈ s := by
+    intro i hi
+    have h1 : f i ∈ f '' Set.Icc 1 n := ⟨i, hi, rfl⟩
+    rw [← hfim] at h1
+    exact h1
+  have hfBij : Set.BijOn f (Set.Icc 1 n) s := by
+    refine ⟨hfmem, ?_, ?_⟩
+    · intro i hi k hk hik
+      have hi' : f i = f0 i := hfI i hi
+      have hk' : f k = f0 k := hfI k hk
+      rw [hi', hk'] at hik
+      rcases lt_trichotomy i k with hlt | heq | hgt
+      · have := hf0mono i k hi hk hlt
+        rw [hik] at this
+        exact absurd this (lt_irrefl _)
+      · exact heq
+      · have := hf0mono k i hk hi hgt
+        rw [← hik] at this
+        exact absurd this (lt_irrefl _)
+    · intro c hc
+      have h1 : c ∈ f0 '' Set.Icc 1 n := by rw [← hf0im]; exact hc
+      obtain ⟨i, hi, rfl⟩ := h1
+      exact ⟨i, hi, hfI i hi⟩
+  -- period
+  have hper : f (n + 1) = f 1 := by
+    have hnot : n + 1 ∉ Set.Icc 1 n := by
+      simp only [Set.mem_Icc]
+      omega
+    rw [hfO (n + 1) hnot]
+    by_cases h1 : (1 : ℕ) ∈ Set.Icc 1 n
+    · rw [hfI 1 h1]
+    · rw [hfO 1 h1]
+  -- the cyclic inequality from ARG_ORDER
+  have hcyc : ∀ i k : ℕ, i ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → i ≠ k →
+      holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) ≤
+        holArg (facet_rep_a P (f k) / facet_rep_a P (f i)) := by
+    have hnz : ∀ i : ℕ, i ∈ Finset.Icc 1 n → facet_rep_a P (f i) ≠ 0 := by
+      intro i hi
+      have hfi : f i ∈ s := hfmem i (by simpa using hi)
+      have hfac : facetOfC (f i) P := by
+        have h1 : f i ∈ s := hfi
+        rw [hs] at h1
+        exact h1
+      exact facet_rep_nz P (f i) hP hfac
+    have hmono : ∀ i j : ℕ, i ∈ Finset.Icc 1 n → j ∈ Finset.Icc 1 n → i < j →
+        holArg (facet_rep_a P (f i) / u) < holArg (facet_rep_a P (f j) / u) := by
+      intro i j hi hj hij
+      rw [hfI i (by simpa using hi), hfI j (by simpa using hj)]
+      exact hf0mono i j (by simpa using hi) (by simpa using hj) hij
+    have hperh : (fun i => facet_rep_a P (f i)) (n + 1) = (fun i => facet_rep_a P (f i)) 1 := by
+      simp only
+      rw [hper]
+    have harg := ARG_ORDER u (fun i => facet_rep_a P (f i)) n hu hnz hmono hperh
+    intro i k hi hk hik
+    exact harg i k (by simpa using hi) (by simpa using hk) hik
+  -- the < pi conjunct via facet_arg_lt_pi
+  have hltpi : ∀ i : ℕ, i ∈ Set.Icc 1 n →
+      holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) < Real.pi := by
+    intro i hi
+    by_contra hcon
+    push_neg at hcon
+    have hfi : f i ∈ s := hfmem i hi
+    have hfc : facetOfC (f i) P := by
+      have h1 : f i ∈ s := hfi
+      rw [hs] at h1
+      exact h1
+    obtain ⟨c', hc'fac, hc'pos, hc'lt⟩ :=
+      facet_arg_lt_pi P (f i) r hP hb hfc hr hrad
+    -- convert arg bounds to holArg bounds
+    have hc'holpos : 0 < holArg (facet_rep_a P c' / facet_rep_a P (f i)) := by
+      simp only [holArg]
+      rw [if_pos (le_of_lt hc'pos)]
+      exact hc'pos
+    have hc'hollt : holArg (facet_rep_a P c' / facet_rep_a P (f i)) < Real.pi := by
+      simp only [holArg]
+      rw [if_pos (le_of_lt hc'pos)]
+      exact hc'lt
+    -- c' is in the enumeration
+    have hc's : c' ∈ s := by
+      rw [hs]
+      exact hc'fac
+    obtain ⟨j, hj, hjc⟩ := hfBij.2.2 hc's
+    by_cases hji : i = j
+    · -- c' = f i, so the ratio is 1 and its holArg is 0
+      have hz : facet_rep_a P c' / facet_rep_a P (f i) = 1 := by
+        rw [← hji] at hjc
+        rw [← hjc]
+        have hne : facet_rep_a P (f i) ≠ 0 := by
+          exact facet_rep_nz P (f i) hP hfc
+        exact div_self hne
+      rw [hz] at hc'holpos
+      have hz0 : holArg (1 : ℂ) = 0 := by simp [holArg, Complex.arg_one]
+      rw [hz0] at hc'holpos
+      exact lt_irrefl 0 hc'holpos
+    · have hle := hcyc i j hi hj hji
+      rw [hjc] at hle
+      have hlt : holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) < Real.pi :=
+        lt_of_le_of_lt hle hc'hollt
+      exact absurd hlt (not_lt.mpr hcon)
+  -- the final u-order conjunct
+  have huord : ∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
+      holArg (facet_rep_a P (f j) / u) <
+        holArg (facet_rep_a P (f k) / u) := by
+    intro j k hj hk hjk
+    rw [hfI j hj, hfI k hk]
+    exact hf0mono j k hj hk hjk
+  exact ⟨f, hfim, hfBij, hcyc, hltpi, hper, huord⟩
+
 
 /-- HOL `EMPTY_NOT_EXISTS_IN` (counting_spheres.hl:2104). -/
 theorem EMPTY_NOT_EXISTS_IN {α : Type*} (a : Set α) :
     a = ∅ ↔ ¬ ∃ x : α, x ∈ a := by
   simp [Set.eq_empty_iff_forall_notMem]
+
+/-- `holArg` is unchanged by multiplication with a positive real. -/
+private theorem p22w4_holArg_real_mul (t : ℝ) (ht : 0 < t) (z : ℂ) :
+    holArg ((t : ℂ) * z) = holArg z := by
+  simp only [holArg, Complex.arg_real_mul z ht]
+
+/-- `holArg` of a real positive scaling on the left. -/
+private theorem p22w4_holArg_smul (t : ℝ) (ht : 0 < t) (z : ℂ) :
+    holArg (t • z) = holArg z := by
+  rw [Complex.real_smul]
+  exact p22w4_holArg_real_mul t ht z
+
+/-- Bilinearity of `dot2` for real scalars. -/
+private theorem p22w4_dot2_smul_smul (a b : ℝ) (u v : ℂ) :
+    dot2 (a • u) (b • v) = a * b * dot2 u v := by
+  rw [dot2_smul_right]
+  have h : dot2 (a • u) v = a * dot2 u v := by
+    rw [dot2_comm, dot2_smul_right, dot2_comm]
+  rw [h]
+  ring
+
+/-- `dot2` of two unit rays is the cosine of the angle difference. -/
+private theorem p22w4_dot2_cosI (θ φ : ℝ) :
+    dot2 (Real.cos θ + Complex.I * Real.sin θ)
+      (Real.cos φ + Complex.I * Real.sin φ) = Real.cos (φ - θ) := by
+  rw [dot2_expand, p22_cosI_sin_re, p22_cosI_sin_im,
+    p22_cosI_sin_re, p22_cosI_sin_im, Real.cos_sub]
+  ring
+
+/-- The polar form turns `dot2` into `‖g‖‖h‖cos (holArg h - holArg g)`. -/
+private theorem p22w4_dot2_polar {g h : ℂ} (hg : g ≠ 0) (hh : h ≠ 0) :
+    dot2 g h = ‖g‖ * ‖h‖ * Real.cos (holArg h - holArg g) := by
+  conv_lhs => rw [← p22_holArg_cos_sin g hg, ← p22_holArg_cos_sin h hh]
+  rw [p22w4_dot2_smul_smul, p22w4_dot2_cosI]
+
+/-- If the angle difference from `g` to `h` has cosine `cos ψ` and `h` has the
+bisector norm `‖g‖ / cos ψ`, then `dot2 g h = ‖g‖²`. -/
+private theorem p22w4_dot2_eq_norm_sq {g h : ℂ} {ψ : ℝ} (hg : g ≠ 0) (hh : h ≠ 0)
+    (hcosd : Real.cos (holArg h - holArg g) = Real.cos ψ)
+    (hnorm : ‖h‖ = ‖g‖ / Real.cos ψ) (hcos : 0 < Real.cos ψ) :
+    dot2 g h = ‖g‖ ^ 2 := by
+  have hg0 : (0 : ℝ) < ‖g‖ := norm_pos_iff.mpr hg
+  have hcosne : Real.cos ψ ≠ 0 := ne_of_gt hcos
+  rw [p22w4_dot2_polar hg hh, hcosd, hnorm]
+  field_simp
+
+/-- A bounded planar polyhedron containing a ball has at least one facet
+(facet existence from the minimal halfspace representation). -/
+
+private theorem p22w4_facet_exists_planar (P : Set ℂ) (hP : polyhedronC P)
+    (hb : Bornology.IsBounded P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
+    ∃ c : Set ℂ, facetOfC c P := by
+  obtain ⟨F, hF, hs, a, b, hFprop, hmin⟩ := p22_minrep_skolem hP
+  have hFne : F.Nonempty := by
+    rcases F.eq_empty_or_nonempty with h0 | hne
+    · exfalso
+      -- with `F = ∅`, `P` is its own affine hull
+      have hPaff : P = (affineSpan ℝ P : Set ℂ) := by
+        rw [hs, h0]
+        simp
+      -- the radius ball lies in `P`
+      have hball : Metric.ball (0 : ℂ) r ⊆ P := by
+        intro p hp
+        exact hrad p (by simpa using hp)
+      have h0P : (0 : ℂ) ∈ P := hball (Metric.mem_ball_self hr)
+      -- the direction of the affine hull is everything
+      have hdir : (affineSpan ℝ P).direction = ⊤ := by
+        rw [eq_top_iff]
+        intro v _
+        by_cases hv0 : v = 0
+        · subst hv0
+          exact Submodule.zero_mem _
+        have hvn : 0 < ‖v‖ := norm_pos_iff.mpr hv0
+        set c : ℝ := r / (2 * ‖v‖) with hc
+        have hcpos : 0 < c := div_pos hr (mul_pos two_pos hvn)
+        have hcv : ‖c • v‖ < r := by
+          rw [norm_smul, Real.norm_eq_abs, abs_of_pos hcpos, hc]
+          rw [div_mul_eq_mul_div, div_lt_iff₀ (by positivity)]
+          field_simp
+          linarith
+        have hmem : c • v ∈ (affineSpan ℝ P).direction := by
+          have hvP : c • v ∈ P := hball (by simpa using hcv)
+          have hvaff : c • v ∈ (affineSpan ℝ P : Set ℂ) := subset_affineSpan ℝ P hvP
+          have := AffineSubspace.vsub_mem_direction hvaff (subset_affineSpan ℝ P h0P)
+          simpa using this
+        have hscale : c⁻¹ • (c • v) = v := by
+          rw [smul_smul, inv_mul_cancel₀ (ne_of_gt hcpos), one_smul]
+        rw [← hscale]
+        exact Submodule.smul_mem _ _ hmem
+      have htop : (affineSpan ℝ P : Set ℂ) = Set.univ := by
+        refine Set.eq_univ_of_forall fun x => ?_
+        have hxdir : x - (0 : ℂ) ∈ (affineSpan ℝ P).direction := by
+          rw [hdir]
+          exact Submodule.mem_top
+        have hx : (x - 0) +ᵥ (0 : ℂ) ∈ (affineSpan ℝ P : Set ℂ) :=
+          AffineSubspace.vadd_mem_of_mem_direction hxdir (subset_affineSpan ℝ P h0P)
+        simpa using hx
+      have hPuniv : P = Set.univ := hPaff.trans htop
+      -- unboundedness contradiction
+      obtain ⟨C, hC⟩ := Metric.isBounded_iff.1 hb
+      have hCnn : 0 ≤ C := by
+        have h1 := hC h0P h0P
+        rwa [dist_self] at h1
+      have hxP : ((C + 1 : ℝ) : ℂ) ∈ P := by
+        rw [hPuniv]
+        exact Set.mem_univ _
+      have hd := hC hxP h0P
+      rw [dist_eq_norm, sub_zero, Complex.norm_real, Real.norm_eq_abs,
+        abs_of_nonneg (by linarith : (0 : ℝ) ≤ C + 1)] at hd
+      linarith
+    · exact hne
+  obtain ⟨h, hhF⟩ := hFne
+  refine ⟨P ∩ {x : ℂ | dot2 (a h) x = b h}, ?_⟩
+  exact (facetOfCPolyhedronExplicit a b hF hs hFprop hmin _).2 ⟨h, hhF, rfl⟩
+
+/-- If `holArg (h/g) = ψ`, then the cosine of the angle difference matches. -/
+private theorem p22w4_cos_diff_of_holArg_div {g h : ℂ} (hg : g ≠ 0) (hh : h ≠ 0) {ψ : ℝ}
+    (harg : holArg (h / g) = ψ) : Real.cos (holArg h - holArg g) = Real.cos ψ := by
+  have hd := p22w2_holArg_div hg hh
+  rw [harg] at hd
+  rw [hd]
+  by_cases hle : holArg g ≤ holArg h
+  · rw [if_pos hle]
+  · rw [if_neg hle, Real.cos_add_two_pi]
+
+/-- Symmetric version: if `holArg (g/h) = ψ`, the cosine of `holArg h - holArg g`
+still matches. -/
+private theorem p22w4_cos_diff_of_holArg_div_symm {g h : ℂ} (hg : g ≠ 0) (hh : h ≠ 0) {ψ : ℝ}
+    (harg : holArg (g / h) = ψ) : Real.cos (holArg h - holArg g) = Real.cos ψ := by
+  have h1 : Real.cos (holArg g - holArg h) = Real.cos ψ :=
+    p22w4_cos_diff_of_holArg_div hh hg harg
+  rw [show holArg h - holArg g = -(holArg g - holArg h) by ring, Real.cos_neg]
+  exact h1
+
+
+/-- Set.Icc-indexed core of `EUSOTYP_simple` (scratch). -/
+private theorem p22w4_EUSOTYP_simple_set (P : Set ℂ) (s : Set (Set ℂ)) (r n : ℕ) (u2 : ℂ)
+    (hP : polyhedronC P) (hb : Bornology.IsBounded P) (hs : s = {c : Set ℂ | facetOfC c P})
+    (hsize : s.Finite ∧ s.ncard = n) (hr : 0 < r) (hu : u2 ≠ 0)
+    (hrad : ∀ p2 : ℂ, ‖p2‖ < r → p2 ∈ P) :
+    ∃ g h : ℕ → ℂ,
+      (∀ i : ℕ, i ∈ Set.Icc 1 n → g i ∈ P ∧ ‖g i‖ = r) ∧
+      g (n + 1) = g 1 ∧
+      (∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
+        holArg (g j / u2) < holArg (g k / u2)) ∧
+      (∀ i : ℕ, i ∈ Set.Icc 1 n → h i ∈ P ∧
+        ‖h i‖ = r / Real.cos (holArg (g (i + 1) / g i) / 2)) ∧
+      (∀ i : ℕ, i ∈ Set.Icc 1 n →
+        holArg (h i / g i) = holArg (g (i + 1) / g i) / 2 ∧
+        holArg (g (i + 1) / h i) = holArg (g (i + 1) / g i) / 2) ∧
+      (∀ i : ℕ, i ∈ Set.Icc 1 n →
+        dot2 (g i) (h i - g i) = 0 ∧ dot2 (g (i + 1)) (h i - g (i + 1)) = 0) ∧
+      1 < n ∧
+      (∀ i : ℕ, i ∈ Set.Icc 1 n → g i ≠ 0) ∧
+      (∀ i : ℕ, i ∈ Set.Icc 1 n → h i ≠ 0) ∧
+      (∀ i : ℕ, i ∈ Set.Icc 1 n → holArg (g (i + 1) / g i) < Real.pi) := by
+  classical
+  obtain ⟨f, hfim, hfBij, hfcyc, hfltpi, hfper, hfuord⟩ :=
+    POLYSORT_BIJ2 P n s (r : ℝ) u2 hs hb hP (by exact_mod_cast hr) hrad hu hsize
+  have hrR : (0 : ℝ) < (r : ℝ) := by exact_mod_cast hr
+  have hrne : ((r : ℝ) : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt hrR)
+  have hfac : ∀ i : ℕ, i ∈ Set.Icc 1 n → facetOfC (f i) P := by
+    intro i hi
+    have h1 : f i ∈ s := hfBij.1 hi
+    rw [hs] at h1
+    exact h1
+  have hfac_next : ∀ i : ℕ, i ∈ Set.Icc 1 n → facetOfC (f (i + 1)) P := by
+    intro i hi
+    have hi' := Set.mem_Icc.mp hi
+    rcases lt_or_eq_of_le hi'.2 with hlt | heq
+    · exact hfac (i + 1) (Set.mem_Icc.mpr ⟨by omega, by omega⟩)
+    · rw [heq, hfper]
+      exact hfac 1 (Set.mem_Icc.mpr ⟨le_refl 1, by omega⟩)
+  -- ## 1 < n
+  obtain ⟨c0, hc0⟩ := p22w4_facet_exists_planar P hP hb hrR hrad
+  have hn1 : 1 < n := by
+    by_contra hcon
+    have hnle : n ≤ 1 := not_lt.mp hcon
+    have hc0s : c0 ∈ s := by rw [hs]; exact hc0
+    obtain ⟨j, hj, hjc⟩ := hfBij.2.2 hc0s
+    obtain ⟨c', hc'fac, hc'pos, hc'lt⟩ := facet_arg_lt_pi P c0 (r : ℝ) hP hb hc0 hrR hrad
+    have hc's : c' ∈ s := by rw [hs]; exact hc'fac
+    obtain ⟨k, hk, hkc⟩ := hfBij.2.2 hc's
+    have hj1 : j = 1 := by
+      have := Set.mem_Icc.mp hj
+      omega
+    have hk1 : k = 1 := by
+      have := Set.mem_Icc.mp hk
+      omega
+    have hc'eq : c' = c0 := by
+      rw [← hkc, hk1, ← hj1, hjc]
+    have hrat : facet_rep_a P c' / facet_rep_a P c0 = 1 := by
+      rw [hc'eq]
+      exact div_self (facet_rep_nz P c0 hP hc0)
+    rw [hrat, Complex.arg_one] at hc'pos
+    norm_num at hc'pos
+  -- ## the `g` walk
+  set g : ℕ → ℂ := fun i => ((r : ℝ) : ℂ) * facet_rep_a P (f i) with hgdef
+  have hgnorm : ∀ i : ℕ, i ∈ Set.Icc 1 n → ‖g i‖ = (r : ℝ) := by
+    intro i hi
+    simp only [hgdef]
+    rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_pos hrR,
+      (facet_rep_props P (f i) hP (hfac i hi)).1, mul_one]
+  have hgne : ∀ i : ℕ, i ∈ Set.Icc 1 n → g i ≠ 0 := by
+    intro i hi
+    simp only [hgdef]
+    exact mul_ne_zero hrne (facet_rep_nz P (f i) hP (hfac i hi))
+  have hgP : ∀ i : ℕ, i ∈ Set.Icc 1 n → g i ∈ P := by
+    intro i hi
+    simp only [hgdef]
+    simpa only [Complex.real_smul] using
+      facet_rep_in_poly P (f i) (r : ℝ) hP (hfac i hi) hrR hrad
+  have hgper : g (n + 1) = g 1 := by
+    simp only [hgdef, hfper]
+  have hgr : ∀ i : ℕ, g (i + 1) / g i =
+      facet_rep_a P (f (i + 1)) / facet_rep_a P (f i) := by
+    intro i
+    simp only [hgdef]
+    field_simp [hrne]
+  -- `holArg (g j / u2)` only depends on the facet normal
+  have hguord : ∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
+      holArg (g j / u2) < holArg (g k / u2) := by
+    intro j k hj hk hjk
+    have e1 : ((r : ℝ) : ℂ) * facet_rep_a P (f j) / u2 =
+        ((r : ℝ) : ℂ) * (facet_rep_a P (f j) / u2) := by ring
+    have e2 : ((r : ℝ) : ℂ) * facet_rep_a P (f k) / u2 =
+        ((r : ℝ) : ℂ) * (facet_rep_a P (f k) / u2) := by ring
+    show holArg (((r : ℝ) : ℂ) * facet_rep_a P (f j) / u2) <
+      holArg (((r : ℝ) : ℂ) * facet_rep_a P (f k) / u2)
+    rw [e1, e2, p22w4_holArg_real_mul (r : ℝ) hrR, p22w4_holArg_real_mul (r : ℝ) hrR]
+    exact hfuord j k hj hk hjk
+  -- ## the `h` bisector walk
+  set h : ℕ → ℂ := fun i => bisector_point P (f i) (f (i + 1)) r with hhdef
+  have hprop : ∀ i : ℕ, i ∈ Set.Icc 1 n →
+      h i ∈ P ∧ ‖h i‖ = r / Real.cos (holArg (g (i + 1) / g i) / 2) ∧
+      holArg (h i / g i) = holArg (g (i + 1) / g i) / 2 ∧
+      holArg (g (i + 1) / h i) = holArg (g (i + 1) / g i) / 2 := by
+    intro i hi
+    set ψ : ℝ := holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) / 2 with hψdef
+    have hmin : ∀ c'' : Set ℂ, facetOfC c'' P →
+        holArg (facet_rep_a P c'' / facet_rep_a P (f i)) < 2 * ψ → c'' = f i := by
+      intro c'' hc'' hlt
+      by_contra hne
+      have hc''s : c'' ∈ s := by rw [hs]; exact hc''
+      obtain ⟨k, hk, hkc⟩ := hfBij.2.2 hc''s
+      have hki : i ≠ k := by
+        intro hik
+        apply hne
+        rw [← hkc, hik]
+      have hle := hfcyc i k hi hk hki
+      rw [hkc] at hle
+      have h2psi : 2 * ψ = holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) := by
+        rw [hψdef]; ring
+      rw [h2psi] at hlt
+      linarith
+    have hlt : ψ < Real.pi / 2 := by
+      rw [hψdef]
+      linarith [hfltpi i hi]
+    have hne_c : f (i + 1) ≠ f i := by
+      intro heq
+      rcases lt_or_eq_of_le (Set.mem_Icc.mp hi).2 with hltin | hin
+      · -- i + 1 and i are both in the index range
+        have h1 : i + 1 = i := hfBij.2.1
+          (Set.mem_Icc.mpr ⟨by omega, by omega⟩) hi heq
+        omega
+      · -- i = n: use the wrap-around and injectivity at 1 < n
+        have h2 : f (n + 1) = f n := by
+          rw [← hin]
+          exact heq
+        have h1 : f n = f 1 := by
+          rw [← h2, hfper]
+        have h2 : n = 1 := hfBij.2.1
+          (Set.mem_Icc.mpr ⟨by omega, le_refl n⟩)
+          (Set.mem_Icc.mpr ⟨le_refl 1, by omega⟩) h1
+        omega
+    have hbp := bisector_point_props P (f i) (f (i + 1)) (r : ℝ) ψ hP (hfac i hi)
+      (hfac_next i hi) hrR hrad hψdef hmin hlt hne_c
+    obtain ⟨hbpP, hbpnorm, hbparg1, hbparg2⟩ := hbp
+    have hbn : ‖h i‖ = (r : ℝ) / Real.cos ψ := by
+      rw [hhdef]
+      exact hbpnorm
+    have hbpne : h i ≠ 0 := by
+      intro h0
+      have hpos : 0 < (r : ℝ) / Real.cos ψ := div_pos hrR (Real.cos_pos_of_mem_Ioo
+        ⟨by linarith [p22_holArg_nonneg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)), Real.pi_pos],
+         hlt⟩)
+      rw [h0, norm_zero] at hbn
+      linarith
+    have hcne : facet_rep_a P (f i) ≠ 0 := facet_rep_nz P (f i) hP (hfac i hi)
+    -- ratios against `g`
+    have e1 : h i / g i =
+        ((1 / (r : ℝ) : ℝ) : ℂ) * (bisector_point P (f i) (f (i + 1)) (r : ℝ) /
+          facet_rep_a P (f i)) := by
+      simp only [hgdef, hhdef]
+      rw [div_eq_mul_inv, div_eq_mul_inv, mul_inv_rev, one_mul, ← Complex.ofReal_inv]
+      ring
+    have e2 : g (i + 1) / h i =
+        ((r : ℝ) : ℂ) * (facet_rep_a P (f (i + 1)) /
+          bisector_point P (f i) (f (i + 1)) (r : ℝ)) := by
+      simp only [hgdef, hhdef]
+      rw [div_eq_mul_inv, div_eq_mul_inv]
+      ring
+    have hratio : holArg (g (i + 1) / g i) =
+        holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) := by
+      rw [hgr i]
+    have h1r : 0 < (1 / (r : ℝ) : ℝ) := one_div_pos.mpr hrR
+    refine ⟨hbpP, ?_, ?_, ?_⟩
+    · rw [hbpnorm, hratio]
+    · rw [e1, p22w4_holArg_real_mul (1 / (r : ℝ)) h1r, hbparg1, hratio]
+    · rw [e2, p22w4_holArg_real_mul (r : ℝ) hrR, hbparg2, hratio]
+  -- ## assemble
+  refine ⟨g, h, ?_, hgper, hguord, ?_, ?_, ?_, hn1, hgne, ?_, ?_⟩
+  · intro i hi
+    exact ⟨hgP i hi, hgnorm i hi⟩
+  · intro i hi
+    exact ⟨(hprop i hi).1, (hprop i hi).2.1⟩
+  · intro i hi
+    exact ⟨(hprop i hi).2.2.1, (hprop i hi).2.2.2⟩
+  · intro i hi
+    -- orthogonality of the bisector foot
+    set ψ : ℝ := holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) / 2 with hψdef
+    have hψeq : ψ = holArg (g (i + 1) / g i) / 2 := by
+      rw [hψdef, hgr i]
+    have hcospos : 0 < Real.cos ψ := Real.cos_pos_of_mem_Ioo
+      ⟨by linarith [p22_holArg_nonneg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)), Real.pi_pos],
+       by rw [hψdef]; linarith [hfltpi i hi]⟩
+    have hψlt : ψ < Real.pi / 2 := by
+      rw [hψdef]; linarith [hfltpi i hi]
+    have hgic : g i ≠ 0 := hgne i hi
+    have hginc : g (i + 1) ≠ 0 := by
+      rcases lt_or_eq_of_le (Set.mem_Icc.mp hi).2 with hltin | hin
+      · exact hgne (i + 1) (Set.mem_Icc.mpr ⟨by omega, by omega⟩)
+      · rw [hin, hgper]
+        exact hgne 1 (Set.mem_Icc.mpr ⟨le_refl 1, by omega⟩)
+    have hhi : h i ≠ 0 := by
+      intro h0
+      have hpos : 0 < (r : ℝ) / Real.cos ψ := div_pos hrR hcospos
+      have hn := (hprop i hi).2.1
+      rw [h0, norm_zero, ← hψeq] at hn
+      linarith
+    have harg1 : holArg (h i / g i) = ψ := by
+      rw [hψeq]
+      exact (hprop i hi).2.2.1
+    have harg2 : holArg (g (i + 1) / h i) = ψ := by
+      rw [hψeq]
+      exact (hprop i hi).2.2.2
+    have hcosd1 : Real.cos (holArg (h i) - holArg (g i)) = Real.cos ψ :=
+      p22w4_cos_diff_of_holArg_div hgic hhi harg1
+    have hnorm1 : ‖h i‖ = ‖g i‖ / Real.cos ψ := by
+      rw [(hprop i hi).2.1, ← hψeq, hgnorm i hi]
+    have hdot1 : dot2 (g i) (h i) = ‖g i‖ ^ 2 :=
+      p22w4_dot2_eq_norm_sq hgic hhi hcosd1 hnorm1 hcospos
+    have hgn : ‖g (i + 1)‖ = (r : ℝ) := by
+      rcases lt_or_eq_of_le (Set.mem_Icc.mp hi).2 with hltin | hin
+      · exact hgnorm (i + 1) (Set.mem_Icc.mpr ⟨by omega, by omega⟩)
+      · rw [hin, hgper]
+        exact hgnorm 1 (Set.mem_Icc.mpr ⟨le_refl 1, by omega⟩)
+    have hnorm2 : ‖h i‖ = ‖g (i + 1)‖ / Real.cos ψ := by
+      rw [(hprop i hi).2.1, ← hψeq, hgn]
+    have hcosd2 : Real.cos (holArg (h i) - holArg (g (i + 1))) = Real.cos ψ :=
+      p22w4_cos_diff_of_holArg_div_symm hginc hhi harg2
+    have hdot2 : dot2 (g (i + 1)) (h i) = ‖g (i + 1)‖ ^ 2 :=
+      p22w4_dot2_eq_norm_sq hginc hhi hcosd2 hnorm2 hcospos
+    refine ⟨?_, ?_⟩
+    · rw [dot2_sub_r, hdot1, p22_dot2_self]
+      ring
+    · rw [dot2_sub_r, hdot2, p22_dot2_self]
+      ring
+  · intro i hi
+    -- `h` is nonzero
+    set ψ : ℝ := holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) / 2 with hψdef
+    have hcospos : 0 < Real.cos ψ := Real.cos_pos_of_mem_Ioo
+      ⟨by linarith [p22_holArg_nonneg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)), Real.pi_pos],
+       by rw [hψdef]; linarith [hfltpi i hi]⟩
+    have hψeq : ψ = holArg (g (i + 1) / g i) / 2 := by
+      rw [hψdef, hgr i]
+    intro h0
+    have hpos : 0 < (r : ℝ) / Real.cos ψ := div_pos hrR hcospos
+    have hn := (hprop i hi).2.1
+    rw [h0, norm_zero, ← hψeq] at hn
+    linarith
+  · intro i hi
+    rw [hgr i]
+    exact hfltpi i hi
+
 
 /-- HOL `EUSOTYP_simple` (counting_spheres.hl:2112). GIANT.
 SF27 statement-fix (minesweep report §3): all `Complex.arg`s are lifted to
@@ -7399,7 +7924,9 @@ theorem EUSOTYP_simple (P : Set ℂ) (s : Set (Set ℂ)) (r n : ℕ) (u2 : ℂ)
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → g i ≠ 0) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ≠ 0) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → holArg (g (i + 1) / g i) < Real.pi) := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:2112 §3a
+  have hmain := p22w4_EUSOTYP_simple_set P s r n u2 hP hb hs hsize hr hu hrad
+  simpa only [Finset.mem_Icc, Set.mem_Icc] using hmain
+
 
 /-- HOL `pad2d3d_SUB` (counting_spheres.hl:2325). -/
 theorem pad2d3d_SUB (x y : ℂ) :
@@ -9226,6 +9753,229 @@ theorem CONE0_FCHANGED_SCALE (p f : Set V3) (u0 u1 u2 : V3) (t : ℝ)
   rw [CONE0_SCALE t u0 u1 u2 hd ht]
   exact CONE0_FCHANGED p f (t • u0) u1 u2 hp hb hi hf hnc hsub
 
+open Complex MeasureTheory
+
+private theorem p22w4_cexp_sin_im (r : ℝ) : (Complex.exp ((r : ℂ) * Complex.I)).im = Real.sin r :=
+  Complex.exp_ofReal_mul_I_im r
+private theorem p22w4_exists_combo_of_mem_affineSpan3 {a b c z : V3}
+    (hz : z ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3)) :
+    ∃ d1 d2 : ℝ, z = a + d1 • (b - a) + d2 • (c - a) := by
+  have h1 : z -ᵥ a ∈ vectorSpan ℝ ({a, b, c} : Set V3) :=
+    vsub_mem_vectorSpan_of_mem_affineSpan_of_mem_affineSpan (SetLike.mem_coe.mp hz)
+      (mem_affineSpan ℝ (by simp))
+  rw [vectorSpan_eq_span_vsub_set_right ℝ
+    (by simp : a ∈ ({a, b, c} : Set V3))] at h1
+  have hle : Submodule.span ℝ ((· -ᵥ a) '' ({a, b, c} : Set V3)) ≤
+      Submodule.span ℝ ({b - a, c - a} : Set V3) := by
+    refine Submodule.span_le.mpr ?_
+    rintro p ⟨z', hz'set, hp⟩
+    dsimp only at hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz'set
+    rcases hz'set with hz' | hz' | hz'
+    · rw [← hp, hz', vsub_self]
+      exact Submodule.zero_mem _
+    · rw [← hp, hz', vsub_eq_sub]
+      exact Submodule.subset_span (by simp)
+    · rw [← hp, hz', vsub_eq_sub]
+      exact Submodule.subset_span (by simp)
+  obtain ⟨d1, d2, hd⟩ := Submodule.mem_span_pair.mp (hle h1)
+  have hd' : d1 • (b - a) + d2 • (c - a) = z - a := by
+    rw [hd, vsub_eq_sub]
+  refine ⟨d1, d2, ?_⟩
+  calc z = a + (z - a) := by abel
+    _ = a + (d1 • (b - a) + d2 • (c - a)) := by rw [hd']
+    _ = a + d1 • (b - a) + d2 • (c - a) := by abel
+
+/-- 共面提取的抽象 ℂ 核心：两组实系数组合共用一对复数 P、Q，且轴向组合
+为零、w 侧组合非零时，v 侧组合是 w 侧组合的实倍数。 -/
+private theorem p22w4_complex_mul_of_span_two {P Q zv zw : ℂ}
+    {β1 β2 α1 α2 γ1 γ2 : ℝ}
+    (hzu : ((β1 : ℝ) : ℂ) * P + ((β2 : ℝ) : ℂ) * Q = 0)
+    (hzv : zv = ((α1 : ℝ) : ℂ) * P + ((α2 : ℝ) : ℂ) * Q)
+    (hzw : zw = ((γ1 : ℝ) : ℂ) * P + ((γ2 : ℝ) : ℂ) * Q)
+    (hβ : β1 ≠ 0 ∨ β2 ≠ 0) (hzw0 : zw ≠ 0) :
+    ∃ μ : ℝ, zv = ((μ : ℝ) : ℂ) * zw := by
+  by_cases hβ1 : β1 = 0
+  · have hβ2 : β2 ≠ 0 := by
+      rcases hβ with h | h
+      · exact absurd hβ1 h
+      · exact h
+    have hβ2' : ((β2 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hβ2
+    have h1 : ((β2 : ℝ) : ℂ) * Q = 0 := by
+      have h1' := hzu
+      rw [hβ1, Complex.ofReal_zero, zero_mul, zero_add] at h1'
+      exact h1'
+    have hQ : Q = 0 := by
+      have h2 : Q = (((β2 : ℝ) : ℂ)⁻¹ * ((β2 : ℝ) : ℂ)) * Q := by
+        rw [inv_mul_cancel₀ hβ2', one_mul]
+      calc Q = (((β2 : ℝ) : ℂ)⁻¹ * ((β2 : ℝ) : ℂ)) * Q := h2
+        _ = ((β2 : ℝ) : ℂ)⁻¹ * (((β2 : ℝ) : ℂ) * Q) := by ring
+        _ = ((β2 : ℝ) : ℂ)⁻¹ * 0 := by rw [h1]
+        _ = 0 := by rw [mul_zero]
+    have hγ1 : γ1 ≠ 0 := by
+      intro h0
+      rw [hzw, h0, hQ] at hzw0
+      simp at hzw0
+    have hd1 : ((α1 / γ1 : ℝ) : ℂ) * ((γ1 : ℝ) : ℂ) = ((α1 : ℝ) : ℂ) := by
+      exact_mod_cast div_mul_cancel₀ α1 hγ1
+    refine ⟨α1 / γ1, ?_⟩
+    rw [hzv, hzw, hQ, mul_add, ← mul_assoc, hd1]
+    simp [mul_zero]
+  · have hβ1' : ((β1 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hβ1
+    have hP : P = ((-(β2 / β1) : ℝ) : ℂ) * Q := by
+      have h1 : ((β1 : ℝ) : ℂ) * P = -((β2 : ℝ) : ℂ) * Q := by
+        linear_combination hzu
+      have h2 : P = (((β1 : ℝ) : ℂ)⁻¹ * ((β1 : ℝ) : ℂ)) * P := by
+        rw [inv_mul_cancel₀ hβ1', one_mul]
+      calc P = (((β1 : ℝ) : ℂ)⁻¹ * ((β1 : ℝ) : ℂ)) * P := h2
+        _ = ((β1 : ℝ) : ℂ)⁻¹ * (((β1 : ℝ) : ℂ) * P) := by ring
+        _ = ((β1 : ℝ) : ℂ)⁻¹ * (-((β2 : ℝ) : ℂ) * Q) := by rw [h1]
+        _ = ((-(β2 / β1) : ℝ) : ℂ) * Q := by
+            push_cast
+            field_simp [hβ1']
+    have hzvQ : zv = ((α2 - α1 * β2 / β1 : ℝ) : ℂ) * Q := by
+      rw [hzv, hP]; push_cast; ring
+    have hzwQ : zw = ((γ2 - γ1 * β2 / β1 : ℝ) : ℂ) * Q := by
+      rw [hzw, hP]; push_cast; ring
+    have hκ : γ2 - γ1 * β2 / β1 ≠ 0 := by
+      intro h0
+      rw [hzwQ, h0] at hzw0
+      simp at hzw0
+    have hd2 : (((α2 - α1 * β2 / β1 : ℝ) / (γ2 - γ1 * β2 / β1 : ℝ) : ℝ) : ℂ)
+        * ((γ2 - γ1 * β2 / β1 : ℝ) : ℂ) = ((α2 - α1 * β2 / β1 : ℝ) : ℂ) := by
+      exact_mod_cast div_mul_cancel₀ _ hκ
+    refine ⟨(α2 - α1 * β2 / β1) / (γ2 - γ1 * β2 / β1), ?_⟩
+    rw [hzvQ, hzwQ, ← mul_assoc, hd2]
+
+/-- HOL `AZIM_EQ_0_PI_EQ_COPLANAR`（Multivariate-flyspeck.ml:3161）的解析
+替代：四点 {x,u,v,w} 共面且 v、w 都不在轴 xu 上时，v-x 与 w-x 在轴向
+正交标架下的 ℂ 平面坐标成实倍数，故 θ = azim x u w v 的相位 e^{iθ} 为
+实数，即 sin θ = 0，结合 0 ≤ θ < 2π 得 θ ∈ {0, π}。 -/
+private theorem p22w4_azim_eq_0_or_pi_of_coplanar {x u v w : V3}
+    (hncv : ¬ Collinear3 x u v) (hncw : ¬ Collinear3 x u w)
+    (hcop : Coplanar ({x, u, v, w} : Set V3)) :
+    azim x u w v = 0 ∨ azim x u w v = Real.pi := by
+  have hux : u ≠ x := fun he => hncw (collinear3_of_eq he)
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (u - x) (sub_ne_zero.mpr hux)
+  have hax : (u - x : V3) = dist u x • f3 := by rw [dist_eq_norm]; exact halign
+  have hzwne : zOf f1 f2 (w - x) ≠ 0 := (zOf_ne_zero_iff hon hax hux w).mpr hncw
+  obtain ⟨ψ, rb, ra, hrb, hra, hzwrep, hzvrep⟩ := azim_frame_spec hncw hncv hon hax hux
+  -- 共面性 → 公共平面表示 → ℂ 坐标实相关
+  obtain ⟨μ, hμ⟩ : ∃ μ : ℝ, zOf f1 f2 (v - x) = ((μ : ℝ) : ℂ) * zOf f1 f2 (w - x) := by
+    obtain ⟨a, b, c, hsub⟩ := hcop
+    have hxS : x ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have huS : u ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have hvS : v ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have hwS : w ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    obtain ⟨ξ1, ξ2, hξ⟩ := p22w4_exists_combo_of_mem_affineSpan3 hxS
+    obtain ⟨β1, β2, hβ⟩ := p22w4_exists_combo_of_mem_affineSpan3 huS
+    obtain ⟨α1, α2, hα⟩ := p22w4_exists_combo_of_mem_affineSpan3 hvS
+    obtain ⟨γ1, γ2, hγ⟩ := p22w4_exists_combo_of_mem_affineSpan3 hwS
+    have hvx : v - x = (α1 - ξ1) • (b - a) + (α2 - ξ2) • (c - a) := by
+      rw [hα, hξ]; module
+    have hwx : w - x = (γ1 - ξ1) • (b - a) + (γ2 - ξ2) • (c - a) := by
+      rw [hγ, hξ]; module
+    have huxc : u - x = (β1 - ξ1) • (b - a) + (β2 - ξ2) • (c - a) := by
+      rw [hβ, hξ]; module
+    have hzlin : ∀ p q : V3, ∀ d1 d2 : ℝ, p - q = d1 • (b - a) + d2 • (c - a) →
+        zOf f1 f2 (p - q) = ((d1 : ℝ) : ℂ) * zOf f1 f2 (b - a)
+          + ((d2 : ℝ) : ℂ) * zOf f1 f2 (c - a) := by
+      intro p q d1 d2 hd
+      rw [hd, zOf_add, zOf_smul, zOf_smul]
+    have hzc := hzlin v x (α1 - ξ1) (α2 - ξ2) hvx
+    have hzd := hzlin w x (γ1 - ξ1) (γ2 - ξ2) hwx
+    have hzu0 := hzlin u x (β1 - ξ1) (β2 - ξ2) huxc
+    have hf3z : zOf f1 f2 f3 = 0 := by
+      obtain ⟨-, -, -, -, h13, h23, -⟩ := hon
+      unfold zOf
+      rw [dotProduct_comm f3 f1, dotProduct_comm f3 f2, h13, h23]
+      norm_num
+    rw [hax, zOf_smul, hf3z, mul_zero] at hzu0
+    have hne2 : β1 - ξ1 ≠ 0 ∨ β2 - ξ2 ≠ 0 := by
+      by_contra hcon
+      push_neg at hcon
+      apply hux
+      have hzero : u - x = 0 := by
+        rw [huxc, hcon.1, hcon.2]
+        module
+      exact sub_eq_zero.mp hzero
+    exact p22w4_complex_mul_of_span_two hzu0.symm hzc hzd hne2 hzwne
+  -- 相位：ra • e^{i(ψ+θ)} = μ • rb • e^{iψ} ⟹ ra • e^{iθ} = μ • rb ∈ ℝ
+  have hkey : ((ra : ℝ) : ℂ) * Complex.exp (((azim x u w v : ℝ) : ℂ) * I)
+      = ((μ * rb : ℝ) : ℂ) := by
+    have h1 : ((ra : ℝ) : ℂ)
+          * Complex.exp ((((ψ + azim x u w v : ℝ) : ℂ)) * I)
+        = ((μ : ℝ) : ℂ) * (((rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I)) := by
+      rw [← hzvrep, ← hzwrep]
+      exact hμ
+    have hexp : Complex.exp ((((ψ + azim x u w v : ℝ) : ℂ)) * I)
+        = Complex.exp (((ψ : ℝ) : ℂ) * I)
+          * Complex.exp (((azim x u w v : ℝ) : ℂ) * I) := by
+      rw [← Complex.exp_add]
+      congr 1
+      push_cast
+      ring
+    rw [hexp] at h1
+    have h2 : ((ra : ℝ) : ℂ) * Complex.exp (((azim x u w v : ℝ) : ℂ) * I)
+          * Complex.exp (((ψ : ℝ) : ℂ) * I)
+        = ((μ * rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I) := by
+      push_cast
+      linear_combination h1
+    exact mul_right_cancel₀ (Complex.exp_ne_zero _) h2
+  have hsin : Real.sin (azim x u w v) = 0 := by
+    have h := congrArg Complex.im hkey
+    simp only [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, p22w4_cexp_sin_im,
+      mul_zero, add_zero, zero_mul] at h
+    rcases mul_eq_zero.mp h with h' | h'
+    · exact absurd h' (by exact_mod_cast (ne_of_gt hra))
+    · exact h'
+  obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp hsin
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have hn0 : (0:ℤ) ≤ n := by
+    by_contra hcon
+    push_neg at hcon
+    have hnle : ((n:ℤ) : ℝ) ≤ -1 := by exact_mod_cast (by omega)
+    have hθn : azim x u w v < 0 := by rw [← hn]; nlinarith [hnle, hpi]
+    exact absurd (azim_nonneg x u w v) (not_le.mpr hθn)
+  have hn2 : n < 2 := by
+    by_contra hcon
+    push_neg at hcon
+    have hnge : (2:ℝ) ≤ ((n:ℤ) : ℝ) := by exact_mod_cast (by omega)
+    have hθbig : 2 * Real.pi ≤ azim x u w v := by rw [← hn]; nlinarith [hnge, hpi]
+    exact absurd hθbig (not_le.mpr (azim_lt_two_pi x u w v))
+  rcases (show n = 0 ∨ n = 1 by omega) with rfl | rfl
+  · exact Or.inl (by rw [← hn]; push_cast; norm_num)
+  · exact Or.inr (by rw [← hn]; push_cast; norm_num)
+
+/-- `dihV` takes values in `[0, π]`. -/
+private theorem p22w4_dihV_mem_Icc (a b c d : V3) :
+    0 ≤ dihV a b c d ∧ dihV a b c d ≤ Real.pi := by
+  unfold dihV arcV
+  exact ⟨Real.arccos_nonneg _, Real.arccos_le_pi _⟩
+
+/-- The nondegenerate dihedral hypotheses exclude coplanarity. -/
+private theorem p22w4_notCoplanar_of_orth {v w0 w1 : V3}
+    (hnc : ¬ Collinear3 0 v w0) (hnc1 : ¬ Collinear3 0 v w1)
+    (hpos : 0 < dihV 0 v w0 w1) (hlt : dihV 0 v w0 w1 < Real.pi) :
+    ¬ Coplanar ({0, v, w0, w1} : Set V3) := by
+  intro hcop
+  have haz := p22w4_azim_eq_0_or_pi_of_coplanar (x := 0) (u := v) (v := w0) (w := w1)
+    hnc hnc1 hcop
+  rcases haz with h0 | hpi
+  · have hltpi : azim 0 v w1 w0 < Real.pi := by rw [h0]; exact Real.pi_pos
+    have hd : dihV 0 v w1 w0 = 0 := by
+      rw [← azim_dihv_same hnc1 hnc hltpi, h0]
+    rw [DIHV_SYM_2, hd] at hpos
+    exact lt_irrefl 0 hpos
+  · have hge : Real.pi ≤ azim 0 v w1 w0 := by rw [hpi]
+    have hd : dihV 0 v w1 w0 = Real.pi := by
+      have h := azim_dihv_compl hnc1 hnc hge
+      rw [hpi] at h
+      linarith
+    rw [DIHV_SYM_2, hd] at hlt
+    exact absurd hlt (by linarith)
+
+
 /-- HOL `gotcjah_sol_half` (counting_spheres.hl:3879). GIANT. -/
 theorem gotcjah_sol_half (c3 : Set V3) (v : V3) (b : ℝ) (P W : Set V3) (t rho : ℝ)
     (bet : ℝ) (w0 w1 : V3) (s : ℝ)
@@ -9244,7 +9994,202 @@ theorem gotcjah_sol_half (c3 : Set V3) (v : V3) (b : ℝ) (P W : Set V3) (t rho 
       MeasurableSet (X ∩ normballP22 0 rho) ∧
       radialNorm rho 0 (X ∩ normballP22 0 rho) ∧
       bet - asn (Real.sin bet * t) = sol 0 X := by
-  sorry
+  classical
+  have hcp : ¬ Coplanar ({0, v, w0, w1} : Set V3) :=
+    p22w4_notCoplanar_of_orth hnc hnc1 hpos hlt
+  have hne := p22_notCoplanar_ne0 hcp
+  have hdis : Disjoint ({0} : Set V3) ({v, w0, w1} : Set V3) := by
+    rw [Set.disjoint_singleton_left]
+    intro h0
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h0
+    rcases h0 with h | h | h
+    · exact hne.1 h.symm
+    · exact hne.2.1 h.symm
+    · exact hne.2.2 h.symm
+  -- the positive cone is closed under positive rescalings
+  have hcone : ∀ y : V3, y ∈ cone0P22 0 {v, w0, w1} → ∀ c : ℝ, 0 < c →
+      c • y ∈ cone0P22 0 {v, w0, w1} := by
+    intro y hy c hc
+    have hy' : y ∈ affGt ({0} : Set V3) ({v, w0, w1} : Set V3) := hy
+    have hy'' : ∃ t1 t2 t3 t4 : ℝ, 0 < t2 ∧ 0 < t3 ∧ 0 < t4 ∧
+        t1 + t2 + t3 + t4 = 1 ∧ y = t1 • (0 : V3) + t2 • v + t3 • w0 + t4 • w1 :=
+      (Set.ext_iff.mp (AFF_GT_1_3 (0 : V3) v w0 w1 hdis) y).mp hy'
+    obtain ⟨t1, t2, t3, t4, h2', h3', h4', hsum, hyeq⟩ := hy''
+    have hgoal : c • y ∈ affGt ({0} : Set V3) ({v, w0, w1} : Set V3) := by
+      rw [AFF_GT_1_3 (0 : V3) v w0 w1 hdis]
+      refine ⟨c * t1 + (1 - c), c * t2, c * t3, c * t4,
+        mul_pos hc h2', mul_pos hc h3', mul_pos hc h4', ?_, ?_⟩
+      · have e : c * t1 + (1 - c) + c * t2 + c * t3 + c * t4
+            = c * (t1 + t2 + t3 + t4) + (1 - c) := by ring
+        rw [e, hsum]
+        ring
+      · rw [hyeq]
+        module
+    exact hgoal
+  -- membership in `W` through the scaled cone
+  have hsubc : ({s • v, w0, w1} : Set V3) ⊆ c3 := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl
+    · exact hsv
+    · exact hw0
+    · exact hw1
+  have hXW : cone0P22 0 {v, w0, w1} ⊆ W := by
+    rw [← hfc]
+    exact CONE0_FCHANGED_SCALE P c3 v w0 w1 s hP hbP hi hf hcp hsubc hs
+  -- openness, measurability and radiality of the ball trace
+  have hXopen : IsOpen (cone0P22 0 {v, w0, w1}) := by
+    show IsOpen (affGt ({0} : Set V3) {v, w0, w1})
+    exact OPEN_AFF_GT_1_3 0 v w0 w1 hcp
+  have hmeas : MeasurableSet (cone0P22 0 {v, w0, w1} ∩ normballP22 0 rho) := by
+    show MeasurableSet (cone0P22 0 {v, w0, w1} ∩ Metric.ball (0 : V3) rho)
+    exact hXopen.measurableSet.inter measurableSet_ball
+  have hrad : radialNorm rho 0 (cone0P22 0 {v, w0, w1} ∩ normballP22 0 rho) := by
+    refine ⟨fun x hx => hx.2, ?_⟩
+    intro u hu c hc hcrho
+    have hu1 : u ∈ cone0P22 0 {v, w0, w1} := by
+      have h := hu
+      simp only [normballP22, zero_add, Set.mem_inter_iff, Metric.mem_ball,
+        dist_eq_norm, sub_zero] at h
+      exact h.1
+    have hmem1 : c • u ∈ cone0P22 0 {v, w0, w1} := hcone u hu1 c hc
+    have hmem2 : c • u ∈ normballP22 0 rho := by
+      rw [normballP22, Metric.mem_ball, dist_eq_norm, sub_zero, norm_smul,
+        Real.norm_eq_abs, abs_of_pos hc]
+      exact hcrho
+    have hpair : c • u ∈ cone0P22 0 {v, w0, w1} ∩ normballP22 0 rho :=
+      ⟨hmem1, hmem2⟩
+    simpa using hpair
+  -- an interior point, giving positive volume
+  have hvolpos : 0 < volume (cone0P22 0 {v, w0, w1} ∩ Metric.ball (0 : V3) rho) := by
+    set eps : ℝ := rho / (2 * (‖v + w0 + w1‖ + 1)) with heps
+    have hposden : 0 < 2 * (‖v + w0 + w1‖ + 1) := by positivity
+    have hepspos : 0 < eps := div_pos hrho hposden
+    have hptX : eps • (v + w0 + w1) ∈ cone0P22 0 {v, w0, w1} := by
+      have hy' : eps • (v + w0 + w1) ∈
+          affGt ({0} : Set V3) ({v, w0, w1} : Set V3) := by
+        rw [AFF_GT_1_3 (0 : V3) v w0 w1 hdis]
+        refine ⟨1 - 3 * eps, eps, eps, eps, hepspos, hepspos, hepspos, ?_, ?_⟩
+        · ring
+        · module
+      exact hy'
+    have hptball : eps • (v + w0 + w1) ∈ Metric.ball (0 : V3) rho := by
+      rw [Metric.mem_ball, dist_eq_norm, sub_zero, norm_smul, Real.norm_eq_abs,
+        abs_of_pos hepspos]
+      have h1 : eps * ‖v + w0 + w1‖ = rho / 2 * (‖v + w0 + w1‖ /
+          (‖v + w0 + w1‖ + 1)) := by
+        rw [heps]
+        field_simp
+      have h2 : ‖v + w0 + w1‖ / (‖v + w0 + w1‖ + 1) < 1 := by
+        rw [div_lt_one (by positivity)]
+        linarith
+      have h3 : rho / 2 * (‖v + w0 + w1‖ / (‖v + w0 + w1‖ + 1)) < rho / 2 := by
+        have := mul_lt_mul_of_pos_left h2 (by linarith : (0:ℝ) < rho / 2)
+        simpa using this
+      linarith
+    have hne : (cone0P22 0 {v, w0, w1} ∩ Metric.ball (0 : V3) rho).Nonempty :=
+      ⟨_, hptX, hptball⟩
+    exact (hXopen.inter Metric.isOpen_ball).measure_pos volume hne
+  -- the solid-angle volume formula
+  have hvol := volume_solid_triangle (v0 := (0 : V3)) (v1 := v) (v2 := w0) (v3 := w1)
+    (r := rho) hrho hcp
+  have hvol' : volume (cone0P22 0 {v, w0, w1} ∩ Metric.ball (0 : V3) rho) =
+      ENNReal.ofReal ((dihV 0 v w0 w1 + dihV 0 w0 w1 v + dihV 0 w1 v w0 - Real.pi)
+        * rho ^ 3 / 3) := by
+    show volume (affGt ({0} : Set V3) {v, w0, w1} ∩ Metric.ball (0 : V3) rho) = _
+    rw [Set.inter_comm]
+    exact hvol
+  have hVpos : 0 < (dihV 0 v w0 w1 + dihV 0 w0 w1 v + dihV 0 w1 v w0 - Real.pi)
+      * rho ^ 3 / 3 := by
+    have h := hvolpos
+    rw [hvol'] at h
+    rwa [ENNReal.ofReal_pos] at h
+  -- the three dihedral terms
+  have hB : dihV 0 w0 w1 v = Real.pi / 2 := by
+    rw [DIHV_SYM_2]
+    exact dih_dot w0 v w1 hne.2.1 h1 h2
+  have hcpw : ¬ Coplanar ({0, w1, v, w0} : Set V3) := by
+    rw [show ({0, w1, v, w0} : Set V3) = ({0, v, w0, w1} : Set V3) from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hcp
+  have hsloc := sloc2_ortho w1 v w0 hcpw hB
+  rw [hbet, hcos] at hsloc
+  have hCmem := p22w4_dihV_mem_Icc 0 w1 v w0
+  have hC : dihV 0 w1 v w0 = acs (Real.sin bet * t) := by
+    have h1' := Real.arccos_eq_of_eq_cos hCmem.1 hCmem.2 hsloc.symm
+    simpa only [acs] using h1'.symm
+  have hVsum : dihV 0 v w0 w1 + dihV 0 w0 w1 v + dihV 0 w1 v w0 - Real.pi
+      = bet - asn (Real.sin bet * t) := by
+    rw [hbet, hB, hC]
+    have hars : asn (Real.sin bet * t) =
+        Real.pi / 2 - acs (Real.sin bet * t) := by
+      simp only [asn, acs]
+      exact Real.arcsin_eq_pi_div_two_sub_arccos _
+    rw [hars]
+    ring
+  -- assemble
+  refine ⟨cone0P22 0 {v, w0, w1}, rfl, ?_, hmeas, hrad, ?_⟩
+  · intro x hx
+    exact ⟨cone0_subset_lune 0 v w0 w1 hx, hXW hx⟩
+  · have hreal : volume.real (cone0P22 0 {v, w0, w1} ∩ Metric.ball (0 : V3) rho) =
+        (dihV 0 v w0 w1 + dihV 0 w0 w1 v + dihV 0 w1 v w0 - Real.pi) * rho ^ 3 / 3 := by
+      rw [Measure.real_def, hvol', ENNReal.toReal_ofReal (le_of_lt hVpos)]
+    rw [sol_spec hrho hmeas hrad, hreal, hVsum]
+    field_simp
+
+
+/-- `radialNorm` is stable under finite unions. -/
+private theorem p22w4_radial_union (r : ℝ) (v0 : V3) (A B : Set V3)
+    (hA : radialNorm r v0 A) (hB : radialNorm r v0 B) :
+    radialNorm r v0 (A ∪ B) := by
+  refine ⟨Set.union_subset hA.1 hB.1, ?_⟩
+  intro u hu t ht htu
+  rcases hu with hu | hu
+  · exact Or.inl (hA.2 u hu t ht htu)
+  · exact Or.inr (hB.2 u hu t ht htu)
+
+/-- `sol` vanishes on the empty set. -/
+private theorem p22w4_sol_empty (x : V3) : sol x (∅ : Set V3) = 0 := by
+  have hr : (0 : ℝ) < 1 := by norm_num
+  have hm : MeasurableSet ((∅ : Set V3) ∩ Metric.ball x 1) := by
+    rw [Set.empty_inter]
+    exact MeasurableSet.empty
+  have hrad : radialNorm 1 x ((∅ : Set V3) ∩ Metric.ball x 1) := by
+    rw [Set.empty_inter]
+    refine ⟨Set.empty_subset _, ?_⟩
+    intro u hu
+    exact (Set.notMem_empty (x := x + u) hu).elim
+  rw [sol_spec hr hm hrad, Set.empty_inter, Measure.real_def, measure_empty]
+  norm_num
+
+/-- `sol` is additive on disjoint sets. -/
+private theorem p22w4_sol_disjoint_union (x : V3) (s t : Set V3) (r : ℝ)
+    (hr : r > 0)
+    (hms : MeasurableSet (s ∩ Metric.ball x r))
+    (hmt : MeasurableSet (t ∩ Metric.ball x r))
+    (hdisj : Disjoint s t)
+    (hrs : radialNorm r x (s ∩ Metric.ball x r))
+    (hrt : radialNorm r x (t ∩ Metric.ball x r)) :
+    sol x (s ∪ t) = sol x s + sol x t := by
+  have hunion : (s ∪ t) ∩ Metric.ball x r =
+      (s ∩ Metric.ball x r) ∪ (t ∩ Metric.ball x r) :=
+    Set.union_inter_distrib_right s t (Metric.ball x r)
+  have hmunion : MeasurableSet ((s ∪ t) ∩ Metric.ball x r) := by
+    rw [hunion]
+    exact hms.union hmt
+  have hrunion : radialNorm r x ((s ∪ t) ∩ Metric.ball x r) := by
+    rw [hunion]
+    refine ⟨Set.union_subset hrs.1 hrt.1, ?_⟩
+    intro u hu t' ht' htu
+    rcases hu with hu | hu
+    · exact Or.inl (hrs.2 u hu t' ht' htu)
+    · exact Or.inr (hrt.2 u hu t' ht' htu)
+  have hdisj_ball : Disjoint (s ∩ Metric.ball x r) (t ∩ Metric.ball x r) :=
+    hdisj.mono Set.inter_subset_left Set.inter_subset_left
+  rw [sol_spec hr hmunion hrunion, sol_spec hr hms hrs, sol_spec hr hmt hrt,
+    hunion, measureReal_union hdisj_ball hmt]
+  ring
+
 
 /-- HOL `gotcjah_sol_lemma` (counting_spheres.hl:3985). GIANT. -/
 theorem gotcjah_sol_lemma (c3 : Set V3) (v : V3) (b : ℝ) (P W : Set V3) (t rho : ℝ)
@@ -9266,7 +10211,95 @@ theorem gotcjah_sol_lemma (c3 : Set V3) (v : V3) (b : ℝ) (P W : Set V3) (t rho
       MeasurableSet (X ∩ normballP22 0 rho) ∧
       radialNorm rho 0 (X ∩ normballP22 0 rho) ∧
       2 * (bet - asn (Real.sin bet * t)) = sol 0 X := by
-  sorry
+  classical
+  -- the two dihedral values, and the degenerate case split
+  have hdih1 : dihV 0 v w0 w1 = bet := by
+    have hπ : azim 0 v w0 w1 < Real.pi := by rw [h01]; linarith [Real.pi_pos]
+    rw [← azim_dihv_same hnc0 hnc1 hπ, h01]
+  have hdih2 : dihV 0 v w1 w2 = bet := by
+    have hπ : azim 0 v w1 w2 < Real.pi := by rw [h12]; linarith [Real.pi_pos]
+    rw [← azim_dihv_same hnc1 hnc2 hπ, h12]
+  rcases eq_or_lt_of_le (azim_nonneg 0 v w0 w2) with haz0 | hazpos
+  · -- degenerate: empty set
+    have hbet0 : bet = 0 := by rw [← hbet, ← haz0]; norm_num
+    refine ⟨∅, ?_, ?_, ?_, ?_⟩
+    · exact Set.empty_subset _
+    · simp only [Set.empty_inter]
+      exact MeasurableSet.empty
+    · rw [Set.empty_inter]
+      refine ⟨Set.empty_subset _, ?_⟩
+      intro u hu
+      exact (Set.notMem_empty (x := (0 : V3) + u) hu).elim
+    · rw [p22w4_sol_empty, hbet0]
+      have hsin : Real.sin (0 : ℝ) * t = 0 := by rw [Real.sin_zero, zero_mul]
+      rw [hsin, show asn 0 = 0 from by simp [asn]]
+      ring
+  · -- nondegenerate: glue the two half wedges
+    have hbetpos : 0 < bet := by rw [← hbet]; linarith
+    have hbetlt : bet < Real.pi / 2 := by rw [← hbet]; linarith
+    have hbetltpi : bet < Real.pi := by linarith [Real.pi_pos]
+    have hpos1 : 0 < dihV 0 v w0 w1 := by rw [hdih1]; exact hbetpos
+    have hlt1 : dihV 0 v w0 w1 < Real.pi := by rw [hdih1]; exact hbetltpi
+    have hdih2' : dihV 0 v w2 w1 = bet := by
+      rw [DIHV_SYM_2]
+      exact hdih2
+    have hpos2 : 0 < dihV 0 v w2 w1 := by rw [hdih2']; exact hbetpos
+    have hlt2 : dihV 0 v w2 w1 < Real.pi := by rw [hdih2']; exact hbetltpi
+    obtain ⟨X1, hX1eq, hX1sub, hX1meas, hX1rad, hX1sol⟩ :=
+      gotcjah_sol_half c3 v b P W t rho bet w0 w1 s hP hbP hb hi hf hfc
+        ht hrho hs hPA hsub hv hvv hcos0 hsv hw0 hw1 hnc0 hnc1 hpos1 hlt1
+        hdih1 h1 h2
+    obtain ⟨X2, hX2eq, hX2sub, hX2meas, hX2rad, hX2sol⟩ :=
+      gotcjah_sol_half c3 v b P W t rho bet w2 w1 s hP hbP hb hi hf hfc
+        ht hrho hs hPA hsub hv hvv hcos2 hsv hw2 hw1 hnc2 hnc1 hpos2 hlt2
+        hdih2' h3 h4
+    -- `w1` lies in the big wedge
+    have hw1wedge : w1 ∈ wedge 0 v w0 w2 := by
+      refine ⟨hnc1, ?_, ?_⟩
+      · rw [h01]; exact hbetpos
+      · rw [h01]
+        linarith
+    -- both half cones land in the big wedge
+    have hwedge1 : wedge 0 v w0 w1 = affGt ({0, v} : Set V3) {w0, w1} :=
+      wedge_eq_affGt hnc0 hnc1 (by rw [h01]; exact hbetpos) (by rw [h01]; exact hbetltpi)
+    have hwedge2 : wedge 0 v w1 w2 = affGt ({0, v} : Set V3) {w1, w2} :=
+      wedge_eq_affGt hnc1 hnc2 (by rw [h12]; exact hbetpos) (by rw [h12]; exact hbetltpi)
+    have hsplit := WEDGE_SPLIT 0 v w0 w2 w1 hnc0 hnc2 hw1wedge
+    have hX1aff : X1 ⊆ affGt ({0, v} : Set V3) {w0, w1} :=
+      fun x hx => (hX1sub hx).1
+    have hX1W : X1 ⊆ wedge 0 v w0 w1 := by
+      rw [hwedge1]
+      exact hX1aff
+    have hX2aff : X2 ⊆ affGt ({0, v} : Set V3) {w2, w1} :=
+      fun x hx => (hX2sub hx).1
+    have hX2W : X2 ⊆ wedge 0 v w1 w2 := by
+      rw [hwedge2]
+      simpa only [Set.pair_comm] using hX2aff
+    have hX1big : X1 ⊆ wedge 0 v w0 w2 := fun x hx => hsplit.2.2.1 (hX1W hx)
+    have hX2big : X2 ⊆ wedge 0 v w0 w2 := fun x hx => hsplit.2.2.2 (hX2W hx)
+    have hdisj_wedges : Disjoint (wedge 0 v w0 w1) (wedge 0 v w1 w2) := by
+      rw [Set.disjoint_iff_inter_eq_empty]
+      exact hsplit.2.1
+    have hdisj : Disjoint X1 X2 := Disjoint.mono hX1W hX2W hdisj_wedges
+    refine ⟨X1 ∪ X2, ?_, ?_, ?_, ?_⟩
+    · intro x hx
+      rcases hx with hx | hx
+      · exact ⟨hX1big hx, (hX1sub hx).2⟩
+      · exact ⟨hX2big hx, (hX2sub hx).2⟩
+    · have hunion : (X1 ∪ X2) ∩ normballP22 0 rho =
+          (X1 ∩ normballP22 0 rho) ∪ (X2 ∩ normballP22 0 rho) :=
+        Set.union_inter_distrib_right X1 X2 (normballP22 0 rho)
+      rw [hunion]
+      exact hX1meas.union hX2meas
+    · have hunion : (X1 ∪ X2) ∩ normballP22 0 rho =
+          (X1 ∩ normballP22 0 rho) ∪ (X2 ∩ normballP22 0 rho) :=
+        Set.union_inter_distrib_right X1 X2 (normballP22 0 rho)
+      rw [hunion]
+      exact p22w4_radial_union rho 0 _ _ hX1rad hX2rad
+    · rw [p22w4_sol_disjoint_union 0 X1 X2 rho hrho hX1meas hX2meas hdisj
+        hX1rad hX2rad, ← hX1sol, ← hX2sol]
+      ring
+
 
 /-- HOL `c3_lemma` (counting_spheres.hl:4128). -/
 theorem c3_lemma (c3 : Set V3) (v : V3) (b : ℝ) (hsub : c3 ⊆ {p : V3 | p ⬝ᵥ v = b})
