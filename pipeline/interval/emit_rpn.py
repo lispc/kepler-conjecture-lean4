@@ -178,6 +178,29 @@ def load_defs(path):
     return defs
 
 
+def strip_def_header(name, body):
+    """剥掉零参定义体里残留的定义头 LHS。
+
+    parse_defs.split_header 只认 `NAME params = body` 形式；对
+    `let f = new_definition `(f : type) = rhs``（带类型标注的零参定义），
+    括号前缀让 split_header 返回 None，于是整句 `(f) = rhs` 被当成 body，
+    LHS 的 f 成了对自身的引用。这里仅当 LHS 恰为定义自身名时取出 rhs——
+    HOL 的 `(f:type) = rhs` 就是 f 的定义。其它 `=` 原样返回，绝不改写
+    真实等式约束。"""
+    if not isinstance(body, dict) or body.get("op") != "=":
+        return body
+    args = body.get("args") or []
+    if len(args) != 2:
+        return body
+    lhs = args[0]
+    while isinstance(lhs, dict) and set(lhs) == {"paren"}:
+        lhs = lhs["paren"]
+    if isinstance(lhs, dict) and (lhs.get("const") == name
+                                  or lhs.get("var") == name):
+        return args[1]
+    return body
+
+
 def parse_dec(s):
     """十进制字面量 → 精确 Fraction（不用 float）。"""
     return Fraction(s)
@@ -384,6 +407,7 @@ class RPNEmitter(object):
         self.dropped_choice_eqs = 0
         self.eq_lits = set()          # 被丢弃的特征方程里的字面量（抽查对齐用）
         self.identity_lits = set()    # acos/asin 半角恒等式引入的常量
+        self.inline_stack = []        # 零参定义内联栈（环检测：报环路径不递归）
 
     # ------------------------------------------------------------- atoms
     def numeral(self, node):
@@ -531,11 +555,19 @@ class RPNEmitter(object):
         d = self.defs.get(name)
         if d is not None:
             if not d["params"]:
-                body = d["body_ast"]
+                body = strip_def_header(name, d["body_ast"])
                 if isinstance(body, dict) and "choice" in body:
                     self.register_choice(name, body["choice"], env)
                     return ("chc", name)
-                return self.ev(body, {})     # 内联（SMT 版走 define-fun 白名单）
+                if name in self.inline_stack:       # 真·语义环：报路径，不递归
+                    k = self.inline_stack.index(name)
+                    raise Skip("recursive constant definition: %s"
+                               % " -> ".join(self.inline_stack[k:] + [name]))
+                self.inline_stack.append(name)
+                try:
+                    return self.ev(body, {})     # 内联（SMT 版走 define-fun 白名单）
+                finally:
+                    self.inline_stack.pop()
             return Closure(name, d["params"], d["body_ast"], {}, [])
         if name == "pi":                     # dReal 无 pi，SMT 版以 define-fun 出现
             return ("mul", ("k", Fraction(4)), ("atan", ("k", Fraction(1))))
@@ -680,6 +712,10 @@ class RPNEmitter(object):
                 return self.ite_of(("cmp", cmp, a, b), a, b)
             v = self.lookup(sym, {})
             if not isinstance(v, Closure):
+                # 零参定义内联出来的 6-向量值（PointWise/TupleVal）被当作
+                # 函数应用：与下面 head 已是值的分支一致，逐点施加参数。
+                if isinstance(v, (PointWise, TupleVal)):
+                    return self.apply_value(v, vals)
                 raise Skip("application of non-function %r" % sym)
             cl = v
         elif isinstance(head, (Closure, PointWise, TupleVal)):

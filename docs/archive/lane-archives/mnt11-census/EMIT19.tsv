@@ -1,0 +1,20 @@
+id	family	root_cause	emitted	probe_status	leaves	nodes	wall_s	ops	T_pred_s	bucket	notes
+prep-1347067436	1347067436	a1+a2	yes	limit		2000000	46.796	1085	na	C	mu6_x 定义头自引用(RecursionError)；修后暴露第二个代码缺口: 零参定义内联成6-向量值后被当函数应用(ev_app 只认 Closure)；pending=15；2M 节点封顶；queue_route=R1
+prep-6601228004	6601228004	a1+a2	yes	limit		2000000	38.579	523	na	C	mu6_x 定义头自引用(RecursionError)；修后暴露第二个代码缺口: 零参定义内联成6-向量值后被当函数应用(ev_app 只认 Closure)；pending=17；2M 节点封顶；queue_route=R1
+prep-6877738680	6877738680	a1+a2	yes	limit		2000000	62.372	1081	na	C	mu6_x 定义头自引用(RecursionError)；修后暴露第二个代码缺口: 零参定义内联成6-向量值后被当函数应用(ev_app 只认 Closure)；pending=19；2M 节点封顶；queue_route=R1
+prep-9692636487	9692636487	a1+a2	yes	limit		2000000	38.011	523	na	C	mu6_x 定义头自引用(RecursionError)；修后暴露第二个代码缺口: 零参定义内联成6-向量值后被当函数应用(ev_app 只认 Closure)；pending=15；2M 节点封顶；queue_route=R1
+prep-7550003505 0 0 3	7550003505	a1	yes	timeout			180.004	33238	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 0 1 3	7550003505	a1	yes	timeout			180.014	32013	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 0 3 3	7550003505	a1	yes	timeout			180.013	35545	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 0 3 4	7550003505	a1	yes	timeout			180.014	35383	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 1 1 3	7550003505	a1	yes	timeout			180.013	30808	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 1 3 3	7550003505	a1	yes	timeout			180.015	34330	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 1 3 4	7550003505	a1	yes	timeout			180.014	34168	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 3 3 3	7550003505	a1	yes	timeout			180.004	37862	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 3 3 4	7550003505	a1	yes	timeout			180.014	37700	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 3 4 4	7550003505	a1	yes	timeout			180.014	37548	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R2
+prep-7550003505 0 2 3	7550003505	a1	yes	timeout			180.004	35440	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R3
+prep-7550003505 1 2 3	7550003505	a1	yes	timeout			180.005	34225	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R3
+prep-7550003505 2 2 3	7550003505	a1	yes	timeout			180.014	37662	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R3
+prep-7550003505 2 3 3	7550003505	a1	yes	timeout			180.011	37757	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R3
+prep-7550003505 2 3 4	7550003505	a1	yes	timeout			180.007	37595	na	C	mu6_x 定义头自引用(RecursionError)；.hl 里是 `(mu6_x:type) = rhs`，parse_defs 对带类型标注的零参定义未剥 LHS；180s 墙钟；queue_route=R3

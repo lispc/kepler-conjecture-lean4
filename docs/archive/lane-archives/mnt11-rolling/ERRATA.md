@@ -145,3 +145,25 @@ C 档 82 条里唯一 `closed` 的是 `5744538693`（**936,162 叶 / T_pred 11.5
 ① 修 `emit_rpn.py` 的递归（19 条，纯 Python，最便宜）；② 给 9 条 limit 换 `--bbg --disj-gd` 路线；
 ③ 解释 53 条不收敛的共性（case 划分 / 区间宽度）。在此之前，主线仍走**按声明粒度可单条闭的**
 `nliRest*` 43 条与 `nliTsk*` 7 条。
+
+## E5（2026-11-06，`emitrec-19` 收尾）19 条 `no_case` 的根因是**解析伪影**，不是语义环
+
+E4 §2.2 说「19 条提 `recursionlimit` 到 200k 仍立即复发，疑似定义展开成环」。已定案：
+
+- **根因（19/19 同一条）**：`nonlin_def.hl:404` 的 `let mu6_x = new_definition `(mu6_x : real→…) = rhs``
+  是**带类型标注的零参定义**，LHS 是定义头。`parse_defs.split_header` 只认 `NAME params = body`，
+  对 `( mu6_x ) = rhs` 返回 `None`（`parse_defs.py:651`）⇒ 整句 `(mu6_x) = rhs` 落进 body，
+  LHS 里的 `mu6_x` 变成对自身的引用 ⇒ `lookup` 的无参定义内联与 `ev` 自环 ⇒ `RecursionError`。
+- **不是数学问题**：唯一重复名就是定义头 `mu6_x → mu6_x`；真实内联栈 15 条 mixed 为
+  `mu6_x → mu6_x`，4 条 poly 为 `taud_D{1,2}_num_x → mu6_x → mu6_x`。**无语义环。**
+- **修复**（`pipeline/interval/emit_rpn.py`，+38/−2，4 个 hunk）：① `strip_def_header` 仅在
+  LHS 恰为定义自身名时取 rhs（其它 `=` 原样返回，不改写真实等式约束）；② 无参内联加
+  `inline_stack` 环检测（报环路径而非递归）；③ `ev_app` 接受零参定义内联出的
+  `PointWise/TupleVal` 六向量值（`apply_value`）。
+- **回归实测**：修后 812/812 全发射（原 793/812），**793 条旧 case 逐字节 sha256 全等**；
+  编排者独立复跑 3 条旧 case（`1117202051`/`2073661826`/`2125338128`）sha256 全等，
+  19 条重发 `emitted=19 / skipped=0 / 中点冒烟 OK 19 ERR 0`。
+- **但这 19 条仍然拿不到证书**：探针 `closed 0 / limit 4（pending 15–19）/ timeout 15`，
+  全落 C 档 ⇒ **E4 的「全 88 条不可排期」结论不变**；要动它们必须上 disj 专用路线或
+  limit 阶梯，不是加墙钟。
+- 产物：[`mnt11-census/EMIT19.tsv`](../mnt11-census/EMIT19.tsv)（19 行逐条 status/pending/wall）。
