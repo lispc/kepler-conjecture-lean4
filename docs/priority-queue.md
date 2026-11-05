@@ -46,6 +46,8 @@
 | `la-registry-mnt11-sf-scout` | **只读侦察**：为 ④ SF 钉材料——四条 `_concl` 的 HOL 条件式 anchor 已由编排者坐实（`VASYYAU.hl:292/720/1126/2366`；`TUAPYYU` :640 是无条件证明，已排除）；本车道验证 + 消费者断链面 + **`localconcl_wire_capstone_w2` 47 合取是否连带** + SF 提案正文与归档补丁 | 在飞（发车 2026-11-06） |
 | `reduction5-scout` | **只读侦察**（⑤）：`jcajydu` 先移植 `Reduction5` 的边界——HOL `reduction5.hl`(160 行)/`JCAJYDU.hl`(99 行) 全貌、**`IsHypermapOfListTl` vs HOL hypermap 是否同一概念**、**TameSpine 岛 75 文件是否已有移植**（决定工作量差一个数量级）、Lean 侧真实规模 vs 裁决估计 1,500–3,000 行、落点（新叶模块 vs 并入 TameCorrBase vs 岛内）、子波切分 | 在飞（发车 2026-11-06） |
 | `mnt11-rolling`（**常驻**） | **M0 分诊**：109 条 `mainEstimate_*` 逐条定 `PROVED`/`PROVABLE`/`NEEDS-CERT`/`NEEDS-MATH`（`PROVABLE` 须探针 RC=0，`PROVED` 须 `#print axioms` 实测）+ `T11Glue` olean 可行性 + 20 条已证件接线价值 + `WORKORDER-M1` | 在飞（常驻，发车 2026-11-06） |
+| `island-deassembly-scout` | **只读侦察**（用户 2026-11-06 批「先立项侦查」）：TameSpine 岛去 Assembly 化。编排者实测**只有 5 个岛文件**直接 import Assembly、只引用 **10 个** Assembly 声明，且 `Keystone.lean:54` 有 `HypermapIso ↔ Hypermap.Iso := Iff.rfl` ⇒ 核心假设「多数引用就地改指低层对应物、不必搬声明」；本车道证实/证伪 + 十个声明逐个判决（REDIRECT/HOIST/KEEP）+ 爆炸半径 + 环的最终验证 + GO/NO-GO | 在飞（发车 2026-11-06） |
+| `tamecorr-iso-scout` | **只读侦察**（hTC 第三件 W3）：`WMLNYMD.hl` 1,515 行 / 56 个 `prove*` 块 的规模与前置。必查：两份同名 `TamePlanarHypermap`（`Assembly:2138` vs `TameLp:489`）是否定义级相等；W3 **能否不依赖 Reduction5/jcajydu/岛去 Assembly 化而独立开工**；岛内是否已有 WMLNYMD 移植 | 在飞（发车 2026-11-06） |
 | （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；**进度 17/23 完成（486/490/493/494/495/497–505），506 在编，零失败**；完成后重跑基线 | 进行中 |
 
 > 已落库车道（114+ 行）见 [`history/lanes-landed.md`](history/lanes-landed.md)。
