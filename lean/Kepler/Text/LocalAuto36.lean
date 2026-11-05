@@ -1769,16 +1769,12 @@ theorem XWITCCN_CASE_4 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 4) :
     BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES (HOL XWITCCN.hl:3118 walk): SCS_4_IS_TRI_STABLE +
-  -- NOT_EMPTY_CASE_4 + stable_sy_explicit + HDPLYGY minimiser x over
-  -- `B_SY1_p4` + re-decode x's cyclic rows to `vv1` with
-  -- IN_NOT_EMPTY_B1_SY_4 (now PROVED) + TAUSTAR_EQ_TAU_STAR_4 applied to
-  -- both vv1 and the arbitrary ww ∈ BBs (IN_NOT_EMPTY_CASE_4, now PROVED)
-  -- + hta < 0 transfer.  NEEDS: the HDPLYGY kit only —
-  -- `CONTINUOUS_ON_TAU_STAR` (tau_star continuous on B_SY1) +
-  -- `MINIMUM_IN_B_SY` (minimiser existence; HDPLYGY.hl:1831) — the fan/
-  -- hypermap and body-set bookkeeping is fully discharged by Sections 0.6/0.7.
+  -- Kernel transfer: the generic `isScsV39`-level case (XwitccnKernel) is
+  -- stronger than the concrete-table statement.
+  apply XWITCCN_CASE_4_IS_SCS_xw6 s vv _ hBB _ hta
+  · rw [hs]
+    exact s_init_scs_xw6 _ (by simp [sInitListV39])
+  · subst hs; rfl
 
 /-! ## Section 3: the k = 5 system `5I1` (XWITCCN.hl:3232-4071) -/
 
@@ -1939,9 +1935,10 @@ theorem XWITCCN_CASE_5 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 5) :
     BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: as XWITCCN_CASE_4 at k = 5 (NEEDS the HDPLYGY kit only;
-  -- body/fan bookkeeping discharged by Sections 0.6/0.7).
+  apply XWITCCN_CASE_5_IS_SCS_xw6 s vv _ hBB _ hta
+  · rw [hs]
+    exact s_init_scs_xw6 _ (by simp [sInitListV39])
+  · subst hs; rfl
 
 /-! ## Section 3.5: the remaining `IS_TRI_STABLE` statements (source lines
 471-1270, grouped; each is the k-wise twin of `SCS_3_IS_TRI_STABLE`) -/
@@ -2271,9 +2268,10 @@ theorem XWITCCN_CASE_6 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 6) :
     BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: as XWITCCN_CASE_4 at k = 6 (NEEDS the HDPLYGY kit only;
-  -- body/fan bookkeeping discharged by Sections 0.6/0.7).
+  apply XWITCCN_CASE_6_IS_SCS_xw6 s vv _ hBB _ hta
+  · rw [hs]
+    exact s_init_scs_xw6 _ (by simp [sInitListV39])
+  · subst hs; rfl
 
 /-! ## Section 5: the `5_sqrt8` system (XWITCCN.hl:4973-5670) -/
 
@@ -2633,11 +2631,10 @@ type `M` with `scs_k_v39 s = dimindex(:M)`; the `k` is explicit here. -/
 theorem XWITCCN_TYPE (k : ℕ) (s : ScsV39) (vv : ℕ → V3)
     (hmem : s ∈ sInitListV39) (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0)
     (hk : s.k = k) : BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: XWITCCN_CASE_3 / _4 / _5 / _6 / _4_3 / _4_sqrt8 / _5_sqrt8 /
-  -- _5_pro_cs, assembled by the explicit `s_init_list_v39` eight-element
-  -- case split (LENGTH_s_init_list, LocalAuto1).  NEEDS: those eight cases,
-  -- i.e. ultimately the HDPLYGY kit only (see XWITCCN_CASE_4).
+  exact XWITCCN_xw6 s vv hmem hBB hta
+  -- The kernel capstone `XWITCCN_xw6` already quantifies over all of
+  -- `sInitListV39` (via `s_init_scs_xw6` + `UXCKFPE_xw6`), so the explicit
+  -- eight-way `k` split is not needed here.
 
 /-- HOL `XWITCCN` (XWITCCN.hl:7980): the master conclusion. Twin of the
 `XWITCCN_concl` statement of LocalAuto1 (that lane is `sorry`; here the
