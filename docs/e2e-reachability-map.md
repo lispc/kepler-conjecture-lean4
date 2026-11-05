@@ -407,6 +407,83 @@
   2,079,707」的文档都是旧账。
 
 
+### 基线 O：八笔落库 @ `7c120676`（2026-11-06）
+
+> **测量时点**：cone 16:48 / union 17:04（均早于 `b07a1722` 的 Assembly 重建）；
+> `17:22`–`17:25` 两轮岛协议重建 Assembly（Adm3 realify + NliBanks）后，
+> `18:20` 又跑了一次 `orphan_histogram` 直方图（= 本表的**补测列**）。
+> 直方图与 union 是同一仪器口径（164 根），可直接对账。
+
+| 指标 | cone（e2e 锥） | union（多根） |
+|---|---:|---:|
+| K_REACH | **2,086,156（较 N +205）** | **2,107,294（较 N +205）** |
+| K_SORRIED | **100（较 N −19）；补测 99** | **136（较 N −19）；补测 135** |
+| K_AXIOM | 624（±0） | 624（±0） |
+| K_MODULES | 4,195（+1） | 4,240（+1） |
+| K_UNIVERSE | 2,099,010（+1,328） | 2,122,916（+1,328） |
+| COVERAGE | **99.388%** | **99.264%** |
+| 口径 II | XCASES 25,733（+205）/ 100 / 624 / 37,030（+1,328） | — |
+| ORPHANS_TOTAL | — | **15,622（public 11,297 / private 4,325；较 N +1,123）；补测 15,624** |
+| ROOTS | 1 | 164（未变） |
+| SHIMS | — | 22（sorried 2，未变） |
+
+- **口径 II 逐位对齐**：XCASES 的 ΔK_REACH = +205 = 全口径 ΔK_REACH，
+  ΔK_UNIVERSE = +1,328 = 全口径 ΔK_UNIVERSE ⇒ **本轮增长 100% 在 Cases 之外**，
+  `Kepler.Interval.Cases.*` 一个声明没动（证书层未触碰）。
+- **SORRIED 100 → 99**：`b07a1722`（Adm3 realify + `NliBanks.nliRestBIXPCGWb`）把
+  `nliRestBIXPCGWb` 从 `sorry` 转标准三；补测（直方图跑）实测
+  `UNION K_SORRIED_E2E_CONE 99` / `UNION K_SORRIED_TOTAL 135`，与预期逐位一致。
+- **K_REACH +205 的来源**：`NliBanks`（211 行，全被 `nliRestBIXPCGWb` 引用）+
+  PA22/PA25/LA6/LA28 的接线件 + 岛去 Assembly 化后的 `TameSpine` 折转。
+  **K_MODULES +1 = `PackingAuto22` 首次进 env**（Assembly `04db48c7` 新增
+  `import Kepler.Text.PackingAuto22`）。
+- **本轮 TSV 未重写**：`docs/e2e-reachability-map.tsv` 仍停基线 N；本表 =
+  cone 输出 `/tmp/baseline_e2e_2026-11-06.txt`（277 KB）+
+  union `/tmp/baseline_global_2026-11-06.txt`（89 KB）+
+  直方图 `/tmp/orphan_hist_now.out`（259 KB）。
+
+#### ORPHANS +1,123 的归因（已闭环，非回归）
+
+**先看恒等式**：ΔORPHANS = ΔK_UNIVERSE − ΔK_REACH = 1,328 − 205 = **1,123**。
+孤儿增长不是独立现象，就是「宇宙涨得比树快」的差。
+
+**直方图两点对账**（K3 `orphan_hist_K3.out` 2026-11-04 19:34 → 本轮
+`orphan_hist_now.out` 2026-11-06 18:20，同仪器同 164 根）：
+
+| 节 | K3 | 本轮 | Δ |
+|---|---:|---:|---:|
+| HIST（非生成层，逐模块） | 13,231 | 14,052 | +821 |
+| GENERATED（证书层，单列） | 1,572 | 1,572 | **0** |
+| 合计 = ORPHANS_TOTAL | 14,803 | 15,624 | +821 |
+
+**主因单点可证**：`Kepler.Text.PackingAuto22` 孤儿 **983**，全库 TOP1，而
+K3 时该模块**根本不在 env**（`MODULE Kepler.Text.PackingAuto22` 0 命中）。
+它是在 N→O 窗口内由 `04db48c7` 引进 env 的 ⇒ **983/1,123 = 87.5% 的孤儿增长
+是 PA22 一个模块**，与「23 个重建 shard」无关（GENERATED 层 Δ=0 直接否证该假设）。
+
+**其余 +140 是净值**（差额已按模块分解，非拍脑袋）：
+
+- 新增未接线材料（正）：`LocalAuto7` +219 / `LocalAuto6` +115 / `LocalAuto16` +85 /
+  `XwitccnKernel` +61 / `LocalAuto10` +44 / `PackingAuto25` +24 / `LocalAuto33` +16 /
+  `XivphksKit` +15 / `LocalAuto21` +13 / `LocalAuto2` +13 …
+- 被接线回收（负）：`LocalAuto31` −149 / `LocalAuto37` −138 / `LocalAuto14` −119 /
+  `LocalAuto34` −96 / `LocalAuto3` −82 / `LocalAuto28` −75 / `LocalAuto17` −47 /
+  `LocalAuto26` −40 …（塔群闭合把孤儿转进树的直接兑现）
+- **K3→O 新入 env 的模块共 10 个**：`NliBanks`、`LkgrquiKernel`、`LocalAuto10`、
+  `LocalAuto6`、`LocalAuto7`、`OdxlstcBridge`、`PackingAuto22`、`SgtrnafKernel`、
+  `XivphksKit`、`XwitccnKernel`。其中 **`NliBanks` 孤儿 = 0**（11 条声明全被
+  `nliRestBIXPCGWb` 的证明项引用）——**新模块不等于新孤儿**，差别只在「有没有被树引用」。
+
+**结论**：ORPHANS 增长是「材料先行、接线滞后」的正常库存，PA22 那 983 条会在
+poly 簇接线（`fcdjdot` 柱③ = `pa22-poly-defix`）落地后逐批转入 K_REACH。
+**不是回归，不需要处理**；后续看 ORPHANS 应看「GENERATED 层 + 塔群回收是否继续下降」，
+而不是单看总数。
+
+**口径提醒（与基线 N 同）**：`K_UNIVERSE` 对 `.lake` 新鲜度敏感。本轮 +1,328 里
+混有闸重编带来的 olean 覆盖面变化（N 时期已记录同类 +2,796），跨基线比较只看
+K_REACH / SORRIED / AXIOM 三项更可靠。
+
+
 
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
