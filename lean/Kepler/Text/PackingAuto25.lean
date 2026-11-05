@@ -2755,17 +2755,6 @@ theorem LEAF_RANK_BIJ (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
       {X | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X} := by
   sorry
 
-/-- HOL `LEAF_RANK_GRUTOTI` (consumes GRUTOTI via `REUHADY`; the sum of the
-wedge azim-mcells around the stem is `2*pi`). -/
-theorem LEAF_RANK_GRUTOTI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
-    (hn : 1 < n) (hp : Packing V) (hs : saturated V)
-    (hsize : HasSizeP25 (s_leaf V ul) n) (h0 : elV ul 0 ∈ V) (h1 : elV ul 1 ∈ V)
-    (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0) (hr : leaf_rank V ul w0 n f)
-    (hhl : hl [elV ul 0, elV ul 1] < Real.sqrt 2) :
-    ∑ i ∈ Finset.Icc 0 (n - 1), azim_mcell V f (elV ul 0) (elV ul 1) i =
-      2 * Real.pi := by
-  sorry
-
 /-- HOL `LEAF_RANK_GG_SUM`: the per-wedge gg sums telescope to the full
 edge sum over all cells carrying the stem edge. -/
 theorem LEAF_RANK_GG_SUM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -3248,7 +3237,10 @@ theorem TSKAJXY_3 (V : Set V3) (X : Set V3) (ul : List V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell3 V ul) (hn : ¬ nullSet X) :
     gammaX V X lmfun ≥ 0 := by
-  sorry
+  -- pa25-rolling-w2: 直接消费 PA21 的 3-胞 capstone（`cell3_from_ineq` 几何层已完成）
+  have _ := hn
+  exact TSKAJXY034W2.p21h_cell3_branch (V := V) (X := X) hs hp
+    (cell3_from_ineq_thm hnl.1) hb (i := 3) rfl (by rw [hX, BumpP4.MCELL3])
 
 /-- HOL `MCELL4_LEAF2`.
 2026-10-12 转真（零新债）：HOL leaf_cell.hl:1881 原路线照搬——`hl ul < sqrt 2`
@@ -12088,7 +12080,70 @@ theorem CC_2_PROPS (V : Set V3) (X : Set V3) (u0 u1 : V3) (vl : List V3)
           dihX V X (u0, u1) ∧
       0 < dihX V X (u0, u1) ∧
       0.008 * dihX V X (u0, u1) < gammaX V X lmfun := by
-  sorry
+  have _ := hnl
+  subst hX
+  -- X is nondegenerate: an empty cell has no edges
+  have hnu : ¬ nullSet (mcell2 V vl) := by
+    intro hnull
+    rw [BumpP4.MCELL2] at hnull
+    have hempt := BumpP4.RIJRIED V vl 2 hnull
+    rw [← BumpP4.MCELL2] at hempt
+    rw [hempt] at he
+    exact Set.notMem_empty _ he
+  -- the stem edge is the pair of the first two bar vertices
+  have hed : ({u0, u1} : Set V3) = ({elV vl 0, elV vl 1} : Set V3) :=
+    BumpP4.MCELL2_EDGE V vl _ hs hp hb he
+  have he' : ({elV vl 0, elV vl 1} : Set V3) ∈ edgeX V (mcell2 V vl) := hed ▸ he
+  -- gammaX closed form (GAMMAX_GAMMA2_X)
+  obtain ⟨-, hG⟩ := GAMMAX_GAMMA2_X V (mcell2 V vl) vl
+    (dist (elV vl 0) (elV vl 1)) (dist (elV vl 0) (mxi V vl))
+    (dist (elV vl 0) (omegaListN V vl 3)) (dist (mxi V vl) (omegaListN V vl 3))
+    (dist (elV vl 1) (omegaListN V vl 3)) (dist (elV vl 1) (mxi V vl))
+    hs hp hb rfl hnu rfl rfl rfl rfl rfl rfl
+  -- the dihedral bridge: dihX = dihV = dihY
+  have hncpl := NOT_COPLANAR_EXTREME_MCELL2 V vl hp hs hb hnu
+  have hfan := notcoplanar_imp_notcollinear_fan hncpl
+  have hc2 : ¬ Collinear ℝ ({elV vl 0, elV vl 1, mxi V vl} : Set V3) := hfan.2.1
+  have hc3 : ¬ Collinear ℝ ({elV vl 0, elV vl 1, omegaListN V vl 3} : Set V3) :=
+    hfan.2.2
+  have hby : dihV (elV vl 0) (elV vl 1) (mxi V vl) (omegaListN V vl 3)
+      = dihY (dist (elV vl 0) (elV vl 1)) (dist (elV vl 0) (mxi V vl))
+          (dist (elV vl 0) (omegaListN V vl 3)) (dist (mxi V vl) (omegaListN V vl 3))
+          (dist (elV vl 1) (omegaListN V vl 3)) (dist (elV vl 1) (mxi V vl)) :=
+    DIHV_EQ_DIH_Y_4PT_B _ _ _ _ hc2 hc3
+  have hdih : dihX V (mcell2 V vl) (elV vl 0, elV vl 1)
+      = dihY (dist (elV vl 0) (elV vl 1)) (dist (elV vl 0) (mxi V vl))
+          (dist (elV vl 0) (omegaListN V vl 3)) (dist (mxi V vl) (omegaListN V vl 3))
+          (dist (elV vl 1) (omegaListN V vl 3)) (dist (elV vl 1) (mxi V vl)) := by
+    rw [MCELL2_DIHX V (mcell2 V vl) vl hs hp hb rfl hnu, hby]
+  -- align the stem pair with the bar head pair
+  have hy1u : dist (elV vl 0) (elV vl 1) = dist u0 u1 := by
+    rcases (pair_eq_pair_iff.mp hed) with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+    · rfl
+    · rw [dist_comm]
+  have hdihu : dihX V (mcell2 V vl) (elV vl 0, elV vl 1)
+      = dihX V (mcell2 V vl) (u0, u1) := by
+    rcases (pair_eq_pair_iff.mp hed) with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+    · rfl
+    · exact DIHX_SYM V (mcell2 V vl) (elV vl 0) (elV vl 1) hp hs
+        ⟨2, vl, (BumpP4.MCELL2 V vl).symm, hb⟩ he'
+  -- positivity of the dihedral
+  have hpos : 0 < dihX V (mcell2 V vl) (u0, u1) := by
+    have hp0 := MCELL2_DIHX_POS V (mcell2 V vl) vl hs hp hb rfl he'
+    rwa [hdihu] at hp0
+  -- gamma2 ≥ 0.008 on the critical stem box (GRKIBMP A V2)
+  have h008 : (0.008 : ℝ) <
+      gamma2_x_div_azim_v2 (h0cut (dist u0 u1)) (dist u0 u1 * dist u0 u1) := by
+    have hy2 : (2 : ℝ) ≤ dist u0 u1 := le_trans mi_two_le_two_hminus hcey.1
+    have hhp : dist u0 u1 ≤ 2 * hplus := hcey.2
+    exact bank_GRKIBMPAV2_proof (dist u0 u1) 1 1 1 1 1 hy2 hhp
+      (by norm_num) (by norm_num) (by norm_num) (by norm_num)
+      (by norm_num) (by norm_num) (by norm_num) (by norm_num)
+      (by norm_num) (by norm_num)
+  refine ⟨hnu, ?_, hpos, ?_⟩
+  · rw [hG, ← hdih, hy1u, hdihu]
+  · rw [hG, ← hdih, hy1u, hdihu]
+    exact mul_lt_mul_of_pos_right h008 hpos
 
 /-- HOL `MCELL2_CRITICAL_WEIGHT1`. -/
 theorem MCELL2_CRITICAL_WEIGHT1 (V : Set V3) (X : Set V3) (u0 u1 : V3)
@@ -12182,7 +12237,105 @@ theorem real_model_cell23 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3
           gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
             criticalWeight V (ccCell V [u1, u0, f (i + 1)]) ≤
         gg_mcell V f u0 u1 i := by
-  sorry
+  intro i hno4
+  -- two cc-cells carry no beta bump
+  obtain ⟨-, -, -, hbbA, hbbB, -⟩ :=
+    CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  -- gg_mcell 3-cell split
+  have hgg : gg_mcell V f u0 u1 i =
+      (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X)
+          (ccCell V [u0, u1, f i]) +
+      (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X)
+          (ccCell V [u1, u0, f (i + 1)]) +
+      setSum {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
+          X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
+          X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]}
+        (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X) := by
+    unfold gg_mcell
+    exact CC_3_SUM_fn V u0 u1 w0 n f i
+      (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X)
+      hnl hn hp hs hsize h0 h1 hper hno4 hnc hcey hr
+  -- remainder sum is nonnegative cell by cell
+  have hRnn : 0 ≤
+      setSum {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
+          X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
+          X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]}
+        (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X) := by
+    have hfinS : ({X : Set V3 | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
+        X ⊆ wedgeGe u0 u1 (f i) (f (i + 1))} : Set (Set V3)).Finite :=
+      Set.Finite.subset (FINITE_EDGE_X2 V {u0, u1} u0 u1 hp hs rfl)
+        (fun z hz => ⟨hz.1, hz.2.1⟩)
+    have hfinR : ({X : Set V3 | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
+        X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
+        X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]} :
+        Set (Set V3)).Finite :=
+      Set.Finite.subset hfinS (fun z hz => ⟨hz.1, hz.2.1, hz.2.2.1⟩)
+    rw [setSum, dif_pos hfinR]
+    refine Finset.sum_nonneg fun X hX => ?_
+    obtain ⟨hm, he, hsub, hXA, hXB⟩ := hfinR.mem_toFinset.mp hX
+    obtain ⟨k, ul, hXeq, hb⟩ := hm
+    have hnn : ¬ nullSet X := by
+      intro hnull
+      have hE : edgeX V X = ∅ := by
+        rw [hXeq] at hnull
+        rw [hXeq]
+        exact BumpP4.RIJRIED V ul k hnull
+      rw [hE] at he
+      exact absurd he (by simp)
+    rcases lt_or_ge k 2 with hk2 | hk2
+    · -- k ≤ 1: no edges
+      have hk1 : k ≤ 1 := by omega
+      have hE := BumpP4.EDGE_IMP_K2 V ul k hs hp hb hk1
+      rw [hXeq] at he
+      rw [hE] at he
+      exact absurd he (by simp)
+    · rcases lt_or_ge k 3 with hk3 | hk3
+      · -- k = 2
+        have hk2' : k = 2 := by omega
+        have hk4 : k < 4 := by omega
+        have hX2 : X = mcell2 V ul := by
+          rw [hXeq, hk2', BumpP4.MCELL2]
+        have hg : gammaX V X lmfun ≥ 0 :=
+          TSKAJXY_2 V X ul hnl hs hp hb hX2
+        have hcrit : ({u0, u1} : Set V3) ∈ criticalEdgeX V X :=
+          (critical_edgeX_critical_edge_y V X u0 u1).2 ⟨he, hcey⟩
+        exact GAMMAX_NO_BETA V ul X {u0, u1} k hp hs hb hXeq hnn hk4 hcrit hg
+      · rcases lt_or_ge k 4 with hk4 | hk4
+        · -- k = 3
+          have hk3' : k = 3 := by omega
+          have hX3 : X = mcell 3 V ul := by rw [hXeq, hk3']
+          have hg : gammaX V X lmfun ≥ 0 :=
+            TSKAJXY034W2.p21h_cell3_branch (V := V) (X := X) hs hp
+              (cell3_from_ineq_thm hnl.1) hb hk3' hXeq
+          have hcrit : ({u0, u1} : Set V3) ∈ criticalEdgeX V X :=
+            (critical_edgeX_critical_edge_y V X u0 u1).2 ⟨he, hcey⟩
+          exact GAMMAX_NO_BETA V ul X {u0, u1} k hp hs hb hXeq hnn hk4 hcrit hg
+        · -- k ≥ 4: would be a 4-cell in the wedge
+          have hk4ge : 4 ≤ k := by omega
+          have hX4 : X = mcell4 V ul := by
+            rw [hXeq]
+            simp only [mcell]
+            rw [if_neg (by omega), if_neg (by omega), if_neg (by omega),
+              if_neg (by omega)]
+          have he4 : {u0, u1} ∈ edgeX V (mcell4 V ul) := by rwa [hX4] at he
+          have hsub4 : mcell4 V ul ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) := by
+            rwa [hX4] at hsub
+          exact absurd ⟨ul, hb, he4, hsub4⟩ hno4
+  -- beta bumps vanish on the two cc cells; finish by arithmetic
+  have hstepA :
+      (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X)
+          (ccCell V [u0, u1, f i]) =
+        gammaX V (ccCell V [u0, u1, f i]) lmfun *
+          criticalWeight V (ccCell V [u0, u1, f i]) := by
+    simp [hbbA]
+  have hstepB :
+      (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X)
+          (ccCell V [u1, u0, f (i + 1)]) =
+        gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+          criticalWeight V (ccCell V [u1, u0, f (i + 1)]) := by
+    simp [hbbB]
+  rw [hgg, hstepA, hstepB]
+  linarith
 
 /-- HOL `real_model_cell23_008`. -/
 theorem real_model_cell23_008 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -13459,6 +13612,31 @@ theorem ORDER_AZIM_SUM2Pi0 (x y z : V3) (n : ℕ) (g : ℕ → V3)
     exact comp 0 (n - 1) (by omega) (by omega)
   linarith [tel (n - 1) (by omega) (Nat.le_refl _)]
 
+/-- HOL `LEAF_RANK_GRUTOTI` (consumes GRUTOTI via `REUHADY`; the sum of the
+wedge azim-mcells around the stem is `2*pi`). -/
+theorem LEAF_RANK_GRUTOTI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
+    (hn : 1 < n) (hp : Packing V) (hs : saturated V)
+    (hsize : HasSizeP25 (s_leaf V ul) n) (h0 : elV ul 0 ∈ V) (h1 : elV ul 1 ∈ V)
+    (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0) (hr : leaf_rank V ul w0 n f)
+    (hhl : hl [elV ul 0, elV ul 1] < Real.sqrt 2) :
+    ∑ i ∈ Finset.Icc 0 (n - 1), azim_mcell V f (elV ul 0) (elV ul 1) i =
+      2 * Real.pi := by
+  have _ := h0; have _ := h1
+  have _ := hhl
+  have hm : ∀ j, f j ∈ s_leaf V ul := by
+    intro j
+    have h1' : f j ∈ f '' (Set.univ : Set ℕ) := ⟨j, Set.mem_univ _, rfl⟩
+    rw [hr.1] at h1'
+    exact h1'
+  have hcol : ∀ i, i < n → ¬ Collinear3 (elV ul 0) (elV ul 1) (f i) := by
+    intro i _
+    exact GBEWYFX (V := V) (ul := [elV ul 0, elV ul 1, f i]) hp hs (hm i).1
+  have hper0 : f n = f 0 := by simpa using hr.2.1 0
+  have hsum := ORDER_AZIM_SUM2Pi0 (elV ul 0) (elV ul 1) w0 n f hnc hcol hper0 hn hr.2.2
+  rw [← hsum]
+  exact Finset.sum_congr rfl fun i _ =>
+    LEAF_RANK_REUHADY V ul w0 n f i hn hp hs hsize hnc hr
+
 private theorem p25_take_append_cancel {α : Type*} {l1 l2 : List α} (n : ℕ)
     (h : n ≤ l1.length) : (l1 ++ l2).take n = l1.take n := by
   induction l1 generalizing n with
@@ -13548,6 +13726,52 @@ theorem HL_IMP_BARV (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated
     (hnc : ¬ Coplanar (setOfList ul)) (hsub : setOfList ul ⊆ V)
     (hhl : hl ul < Real.sqrt 2) (hb : barV V 2 (truncateSimplex 2 ul))
     (hlen : ul.length = 4) : barV V 3 ul := by
-  sorry
+  -- pa25-rolling-w2: 展开 `barV`。前三个真初段子表由 `barV V 2` 前提供给
+  -- （`truncateSimplex 2` 恰为前三项，`p25rpi_init_shift` 搬运初段性）；
+  -- 全长四元表 = `ul` 自身，其 voronoi 面是外心单点
+  -- （`p25rpi_vor4_affDim0`，非共面 + 半径 < √2）。
+  obtain ⟨u0, u1, u2, u3, hul⟩ : ∃ a b c d : V3, ul = [a, b, c, d] := by
+    cases ul with
+    | nil => simp at hlen
+    | cons a t =>
+      cases t with
+      | nil => simp at hlen
+      | cons b t =>
+        cases t with
+        | nil => simp at hlen
+        | cons c t =>
+          cases t with
+          | nil => simp at hlen
+          | cons d t =>
+            cases t with
+            | nil => exact ⟨a, b, c, d, rfl⟩
+            | cons e t' => simp at hlen
+  subst hul
+  refine ⟨rfl, ?_⟩
+  intro vl hvl
+  obtain ⟨hinit, hpos⟩ := hvl
+  have hb3 : barV V 2 [u0, u1, u2] := by
+    rwa [show truncateSimplex 2 [u0, u1, u2, u3] = [u0, u1, u2] from
+      (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2] at hb
+  rcases Nat.lt_or_ge vl.length 4 with hlt | hge
+  · -- short prefix: transfer initiality to the 3-point truncation
+    exact hb3.2 vl ⟨p25rpi_init_shift hinit (by omega), hpos⟩
+  · -- full prefix: the four points themselves
+    have hvl4 : vl = [u0, u1, u2, u3] :=
+      p25rpi_init_self hinit (by have := p25rpi_init_len hinit; omega)
+    subst hvl4
+    have hset : setOfList [u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+      ext x; simp [setOfList]
+    have hncop : ¬ Coplanar ({u0, u1, u2, u3} : Set V3) := hset ▸ hnc
+    have hSV : ({u0, u1, u2, u3} : Set V3) ⊆ V := hset ▸ hsub
+    have hrad : radV ({u0, u1, u2, u3} : Set V3) < Real.sqrt 2 := by
+      have hh : hl [u0, u1, u2, u3] = radV ({u0, u1, u2, u3} : Set V3) := by
+        show radV (setOfList [u0, u1, u2, u3]) = radV ({u0, u1, u2, u3} : Set V3)
+        rw [hset]
+      rwa [hh] at hhl
+    have hv := p25rpi_vor4_affDim0 V hp u0 u1 u2 u3 hSV hncop hrad
+    refine ⟨by norm_num, hsub, ?_⟩
+    rw [voronoiList, hset, hv.2]
+    norm_num
 
 end Kepler.Text
