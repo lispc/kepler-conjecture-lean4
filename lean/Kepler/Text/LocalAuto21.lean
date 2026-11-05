@@ -1166,12 +1166,60 @@ theorem tau3_taum_nonplanar_p21 (v0 v1 v2 : V3)
     (hnc : ¬ Coplanar ({0, v0, v1, v2} : Set V3)) :
     tau3 v0 v1 v2 =
       taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
-  -- DISCHARGES: HOL Nonlinear_lemma.taum_123, Sphere.rhazim/rhazim2/rhazim3,
-  -- node2_y/node3_y, sol0_const1 and Merge_ineq.DIHV_EQ_DIH_Y (dihV = dih_y
-  -- off the coplanar locus); the dih_y bridge is not on this side.
-  -- NEEDS: the DIHV_EQ_DIH_Y bridge (the `taum` body itself is the real
-  -- `Kepler.Text.SphereKit.taum` since DEDUP 2026-09-17).
-  sorry
+  have hcopl : ∀ {z w w1 w2 : V3}, Collinear3 z w w1 → Coplanar ({z, w, w1, w2} : Set V3) := by
+    intro z w w1 w2 hc
+    by_cases hzw : z = w
+    · subst hzw
+      have hset : ({z, z, w1, w2} : Set V3) = {z, w1, w2} := by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [hset]
+      exact coplanar_triple z w1 w2
+    · have hwz : w ≠ z := fun h => hzw h.symm
+      have hspan : w1 ∈ (affineSpan ℝ ({z, w} : Set V3) : Set V3) := by
+        obtain ⟨c, hsmul⟩ := (collinear3_iff_smul (w := w) (v := z) hwz).mp hc
+        refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨c, ?_⟩
+        rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+        exact (sub_eq_iff_eq_add.mp hsmul).symm
+      refine ⟨z, w, w2, ?_⟩
+      intro p hp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+      rcases hp with hz | hw | hw1' | hw2
+      · rw [hz]; exact mem_affineSpan ℝ (by simp)
+      · rw [hw]; exact mem_affineSpan ℝ (by simp)
+      · rw [hw1']
+        refine affineSpan_mono ℝ ?_ hspan
+        intro q hq
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+        tauto
+      · rw [hw2]; exact mem_affineSpan ℝ (by simp)
+  have hswap : ∀ {a b c : V3}, Collinear3 a b c → Collinear3 a c b := by
+    intro a b c h
+    unfold Collinear3
+    rw [show ({a, c, b} : Set V3) = {a, b, c} from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact h
+  have hn01 : ¬ Collinear3 0 v0 v1 := fun hc => hnc (hcopl hc)
+  have hn02 : ¬ Collinear3 0 v0 v2 := fun hc =>
+    hnc (by
+      have h := hcopl (z := 0) (w := v0) (w1 := v2) (w2 := v1) hc
+      have hset : ({0, v0, v2, v1} : Set V3) = ({0, v0, v1, v2} : Set V3) := by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at h)
+  have hn12 : ¬ Collinear3 0 v1 v2 := fun hc =>
+    hnc (by
+      have h := hcopl (z := 0) (w := v1) (w1 := v2) (w2 := v0) hc
+      have hset : ({0, v1, v2, v0} : Set V3) = ({0, v0, v1, v2} : Set V3) := by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at h)
+  have hn10 : ¬ Collinear3 0 v1 v0 := fun hc => hn01 (hswap hc)
+  have hn20 : ¬ Collinear3 0 v2 v0 := fun hc => hn02 (hswap hc)
+  have hn21 : ¬ Collinear3 0 v2 v1 := fun hc => hn12 (hswap hc)
+  rw [taum_dih_y_p16 ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1)]
+  unfold tau3
+  rw [DIHV_EQ_DIH_Y_4PT_B 0 v0 v1 v2 hn01 hn02,
+      DIHV_EQ_DIH_Y_4PT_B 0 v1 v2 v0 hn12 hn10,
+      DIHV_EQ_DIH_Y_4PT_B 0 v2 v0 v1 hn20 hn21]
+  simp only [dist_comm, dist_zero_right]
 
 /-- 三点共线 ⟹ 加点后共面（`{z,w,w1,w2}`）；用于从 `¬ Coplanar` 反推
 `¬ Collinear3`（LuneVolume 同名私件不在本闭包内，此处重证）。 -/
