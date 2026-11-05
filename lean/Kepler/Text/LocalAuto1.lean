@@ -4865,8 +4865,10 @@ theorem ASSWPOW_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s 
     xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53 := by
   sorry
 
-/-- HOL `YEBWJNG_concl` (appendix.hl:1457). Proof pending. -/
-theorem YEBWJNG_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+/-- HOL `YEBWJNG_concl` (appendix.hl:1457). Proof pending. HOL form is
+conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:292). -/
+theorem YEBWJNG_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →
@@ -4888,8 +4890,10 @@ theorem TUAPYYU_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s 
       dist (v p) (v (p + 1)) = s.b p (p + 1) := by
   sorry
 
-/-- HOL `WKZZEEH_concl` (appendix.hl:1473). Proof pending. -/
-theorem WKZZEEH_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+/-- HOL `WKZZEEH_concl` (appendix.hl:1473). Proof pending. HOL form is
+conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:720). -/
+theorem WKZZEEH_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →
@@ -4899,8 +4903,10 @@ theorem WKZZEEH_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s 
     ¬(dist (v p) (v (p + 3)) = cstab ∧ dist (v p) (v (p + 1)) = cstab) := by
   sorry
 
-/-- HOL `PWEIWBZ_concl` (appendix.hl:1481). Proof pending. -/
-theorem PWEIWBZ_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+/-- HOL `PWEIWBZ_concl` (appendix.hl:1481). Proof pending. HOL form is
+conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:1126). -/
+theorem PWEIWBZ_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →
@@ -4909,8 +4915,10 @@ theorem PWEIWBZ_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s 
     s.a p (p + 1) = 2 → dist (v p) (v (p + 1)) = 2 := by
   sorry
 
-/-- HOL `VASYYAU_concl` (appendix.hl:1489). Proof pending. -/
-theorem VASYYAU_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+/-- HOL `VASYYAU_concl` (appendix.hl:1489). Proof pending. HOL form is
+conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:2366). -/
+theorem VASYYAU_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →

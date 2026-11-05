@@ -6239,3 +6239,153 @@ HOL 逐字；结论从 `=π`（更强）改为 azim 等式（忠实）。
 ### (f) 状态
 
 **立案 2026-11-05（la34-w7，SF-100 同族）**；**执行 STATEMENT-FIX 闸**：归档 patch `docs/statement-fix-proposals-patches/101-la34-azim-at-twocases-hol-form.patch`；`GATE_MODE=STATEMENT-FIX FILE=Kepler/Text/LocalAuto34.lean THM=DEFORMATION_AZIM_V3_DEFOR_V1_AT_V1_V1_TWO_CASES_p34 SF_ITEM=101`。若用户不认 SF-100/101，回滚对应提交即可；另侦察发现 `DEFORMATION_AZIM_V3_DEFOR_V1_V1_TWO_CASES_p34`（基座）的 π 形与 HOL azim 形**二者等价**（两侧都是 π）⇒ 可按现形直接证，不需要 SF。
+
+## 102. LA1 注册表四件 `YEBWJNG_concl` / `WKZZEEH_concl` / `PWEIWBZ_concl` / `VASYYAU_concl` 漏 `main_nonlinear_terminal_v11` 前提（HOL 条件式 `mnt11 ==> (!s v p. …)`；补前提恢复保真度）— 分级 **A**（移植漏前提 · Lean 陈述强于 HOL 可证形式 · 用户 2026-11-06 四项裁决第 2 条 · 补丁面 = LA1 四陈述 + LA25 四转发 + LocalConcl 四 `_discharged` 绑定；`localconcl_wire_capstone_w2` 零影响）
+
+> 侦查来源：`la-registry-mnt11-sf-scout`（2026-11-05，只读）。patch 基准 HEAD `91972db0`；复核时 HEAD 已推进到 `424b8ff7`/`7e5ed1c1`，三文件 blob 逐字节相同（`LocalAuto1=1dedac24…`、`LocalAuto25=5a695121…`、`LocalConcl=750c0b46…`），`git apply --check` 在 `7e5ed1c1` PASS。
+> 归档补丁：`docs/statement-fix-proposals-patches/102-la1-registry-mnt11-premise.patch`（162 行，`git apply --check` 于 HEAD `424b8ff7` PASS）。
+
+### (a) HOL 裁决
+
+`reference/flyspeck/text_formalization/local/VASYYAU.hl` 对四件均给出**条件式**证明（`main_nonlinear_terminal_v11 ==> (!s v p. …)`），而 `appendix.hl` 只给出**无条件** `_concl` 命题绑定（`let X_concl = \`!s v p. …\``），全语料无这四条无条件命题的证明：
+
+| Lean（`lean/Kepler/Text/LocalAuto1.lean`，HEAD `424b8ff7`） | appendix 绑定 | HOL **可证**形式（前提锚） |
+|---|---|---|
+| `YEBWJNG_concl` :4869 | `appendix.hl:1457`（仅 `let`） | `VASYYAU.hl:292` `let YEBWJNG= prove_by_refinement(\`main_nonlinear_terminal_v11 ==> (!s v p. …)\`)` |
+| `WKZZEEH_concl` :4892 | `appendix.hl:1473`（仅 `let`） | `VASYYAU.hl:720` `let WKZZEEH = prove_by_refinement(\`main_nonlinear_terminal_v11 ==> (!s v p. …)\`)` |
+| `PWEIWBZ_concl` :4903 | `appendix.hl:1481`（仅 `let`） | `VASYYAU.hl:1126` `let PWEIWBZ = prove_by_refinement(\`main_nonlinear_terminal_v11 ==> (!s v p. …)\`)` |
+| `VASYYAU_concl` :4913 | `appendix.hl:1489`（仅 `let`） | `VASYYAU.hl:2366` `let VASYYAU = prove_by_refinement(\`main_nonlinear_terminal_v11 ==> (!s v p. …)\`)` |
+
+**同批排除项（勿误纳）**：`TUAPYYU_concl`（LA1:4880）在 `VASYYAU.hl:640` 是**无条件证明** `prove(TUAPYYU_concl, STRIP_TAC THEN MP_TAC TUAPYYU1 THEN RESA_TAC THEN MP_TAC Jotswix.NEHXMWH …)`，**不补前提**；本次复核未发现任何证据推翻该排除。
+
+### (b) 机理/证据（本车道实测）
+
+1. **前提的 Lean 载体**：`main_nonlinear_terminal_v11` 的全名是 `Kepler.Text.main_nonlinear_terminal_v11`，声明于 `LocalAuto1.lean:2139`：
+   `def main_nonlinear_terminal_v11 : Prop := ∀ id ∈ mainNonlinearTerminalV11Ids_t11, get_main_nonlinear id`。
+   与四条 `_concl` 同 namespace（`namespace Kepler.Text`，LA1:81），且声明行 2139 在四条（4869+）之前 ⇒ 文件内可直接引用、无需新 import。探针 `#check @Kepler.Text.main_nonlinear_terminal_v11` 输出 `Prop`（logs/probe_a_types.log）。
+2. **两种候选形态实测**（`/tmp/mnt11sf/probe_b_shapes.lean`，全绿，logs/probe_b_shapes.log）：
+   - 形态 A `theorem X (h : main_nonlinear_terminal_v11) : ∀ (s) (v) (p), …`
+   - 形态 B `theorem X : main_nonlinear_terminal_v11 → ∀ (s) (v) (p), …`
+   - `#check @vasA` 与 `#check @vasB` 打印**完全相同的类型** `main_nonlinear_terminal_v11 → ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), …`（A 即 B 的唯一语法差别是冒号位置）。
+   - 形态 C（`∀` 在前、前提作末位参数）也能编译，但其参数顺序是 `mnt11` 最后，与 HOL `mnt11 ==> (!s v p. …)` 的蕴含序不一致，且对下游同样破位（不能省 `h`）⇒ **不采用**。
+3. **破位实测**（`/tmp/mnt11sf/probe_c_break.log`）：以旧调用形 `X s v p his …` 应用新陈述，Lean 报
+   `Application type mismatch: The argument s has type ScsV39 … but is expected to have type main_nonlinear_terminal_v11 … in the application X s`；
+   把前提改成隐式 `{h : main_nonlinear_terminal_v11}` 也不能救：
+   `error: don't know how to synthesize implicit argument h`。
+   ⇒ 四种形态都无法免除同 patch 改写调用点。
+4. **补丁后真编译**（非仅探针）：把改后的 LA1 经 `lean -R <shadow> -o …` 编成 olean（0 error，仅 sorry warnings），`#check` 四条均为 `Kepler.Text.main_nonlinear_terminal_v11 → ∀ …`；`#print axioms Kepler.Text.VASYYAU_concl` = `[propext, sorryAx, Classical.choice, Quot.sound]`（logs/compile_patched_LA1.log、logs/probe_new_types.log）。改后的 `LocalAuto25.lean` 在同一 shadow 下 **0 error** 编译通过（logs/compile_patched_LA25.log）。
+
+### (c) 修复（4 条 `_concl` + 4 条 `_p25` + 4 条 `_discharged`；hypotheses/body 一字不动）
+
+**只能动陈述前缀**：在 `theorem X_concl` 与 `:` 之间插入 `(h : main_nonlinear_terminal_v11)`，`∀` 绑定顺序、全部 hypotheses、结论逐字不变。以 VASYYAU 为例（其余三条同形，仅结论尾部不同）：
+
+```lean
+-- 旧（HEAD 424b8ff7，LocalAuto1.lean:4913）
+theorem VASYYAU_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+    scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+    ……（逐字不动）
+-- 新（SF-102）
+theorem VASYYAU_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+    scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+    (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j) →
+    (∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
+    scsIsStr s v p →
+    (dist (v p) (v (p + 1)) = s.a p (p + 1) ∧
+      dist (v p) (v (p + 3)) = s.a p (p + 3)) := by
+  sorry
+```
+
+四条 `_concl` 的逐字新前缀：
+
+```lean
+theorem YEBWJNG_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+theorem WKZZEEH_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+theorem PWEIWBZ_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+theorem VASYYAU_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+```
+
+四个 docstring 同步补一句 HOL 条件式锚（`main_nonlinear_terminal_v11 ==> (!s v p. …)`，`VASYYAU.hl:292/720/1126/2366`），只改注释、不触陈述。
+
+**LA25 四转发**（`lean/Kepler/Text/LocalAuto25.lean`）——同 patch 必改，否则编译断：
+
+```lean
+-- 旧 :2387 / 新 :2388
+theorem WKZZEEH_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+-- 新
+theorem WKZZEEH_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+-- 旧 :2396 / 新 :2397
+  WKZZEEH_concl s v p his hbasic hk hv hdiag hval h1 h2 h3
+-- 新
+  WKZZEEH_concl h s v p his hbasic hk hv hdiag hval h1 h2 h3
+```
+`PWEIWBZ_p25`（旧 :2530 / 转发 :2537）、`VASYYAU_p25`（旧 :2541 / 转发 :2549）、`YEBWJNG_p25`（旧 :2553 / 转发 :2561）同型（加 `(h : …)` 首参、转发处插 `h`）。
+
+**LocalConcl 四绑定**（`lean/Kepler/Text/LocalConcl.lean`）——四件在 HOLD (b) 名单（:226-240），body 均为裸 `sorry`，**不因 SF 编译断裂**；但按用户裁决「连带改 LocalConcl 绑定」对齐陈述：
+
+```lean
+-- 旧 :4954 / 新 :4955
+theorem YEBWJNG_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+-- 新
+theorem YEBWJNG_discharged (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+```
+`WKZZEEH_discharged`（旧 :4966）、`PWEIWBZ_discharged`（:4978）、`VASYYAU_discharged`（:4990）同型。
+
+### (d) 消费面（全树 grep；明细 `CONSUMERS.tsv`）
+
+- 只有 **3 个 .lean 文件** 引用这四个名字：`LocalAuto1.lean`（定义 4 处）、`LocalAuto25.lean`（四 `_p25` 的**定义 + 位置转发**共 8 处）、`LocalConcl.lean`（四 `_discharged` 4 处 + HOLD(b) docstring 2 行）。
+- **实测编译断裂 = 4 处，全在 LA25**（四个 `_concl` 位置转发：:2396/:2537/:2549/:2561；错误原文
+  `Application type mismatch: The argument s has type ScsV39 … but is expected to have type main_nonlinear_terminal_v11 … in the application WKZZEEH_concl s`）。
+  为使 `h` 可用，同 patch 另改四个 `_p25` 头（共 **8 处编辑**）；本 patch 已全部改写，实测 0 error。
+- `LocalConcl` 四 `_discharged`：body 裸 `sorry` ⇒ **不破**（只做陈述对齐）。
+- **`localconcl_wire_capstone_w2`（:7057）不含这四件**：实测其陈述 49 个顶层合取 = `(mnt11 → lp_main_estimate)` ∧（la35 71 项组）∧（S1 47 项），`awk` 在 :7057-:7997 范围对 `YEBWJNG|WKZZEEH|PWEIWBZ|VASYYAU` **零命中**；`localconcl_wire_capstone_w1`（:5443，实测 134 顶层合取 / 87 个编号注释）同范围亦零命中。机理：四件属 HOLD (b)「circular re-export」，capstone 布线时**故意排除**（LocalConcl:226-240 明列 `YEBWJNG/WKZZEEH/PWEIWBZ/VASYYAU`）。
+- 锥：`Assembly.textCapstone`（Assembly.lean:6989-7035）只消费 `hcap.1`（= `mnt11 → lp_main_estimate`），与四件无关 ⇒ **capstone 陈述与 Assembly 编译均零变化**。
+- `LocalAuto32.lean` 的 5 处 `VASYYAU` 全是 NEEDS 注释（:1000/:1124/:1257/:1274/:1374），零代码引用。
+- 无任何 `_p25` / `_discharged` 的下游消费者（全树仅 docstring 提及）。
+
+### (e) 极小性
+
+只加一条 HOL 前提（`mnt11`），其余 hypotheses/结论/绑定顺序逐字不动；HOL 的 `mnt11 ==> (!s v p. …)` 蕴含序保持在前。不是弱化：原陈述比 HOL 可证形式强（不可证），补前提 = 恢复规格保真度。下游编辑面 8 处（4 处编译断裂 + 4 处头改写；若计 LocalConcl 对齐则 12 处），远低于 30 处阈值。
+
+### (f) 状态
+
+**立案 2026-11-05（`la-registry-mnt11-sf-scout`，只读侦察；用户 2026-11-06 四项裁决第 2 条批准走 SF）**。归档补丁 `docs/statement-fix-proposals-patches/102-la1-registry-mnt11-premise.patch`；`git apply --check` 于 HEAD `424b8ff7` PASS（/tmp 影子树实应用后与 patch 生成副本逐字节一致）。补丁后 LA1 / LA25 均 standalone 编译 0 error（shadow olean 探针）。
+
+闸命令（每条从 `lean/` 运行；`SF_ITEM` = 本文件节号 `102`，`LANE_FILES` 为 lean-relative 逗号列表）：
+
+```bash
+cd lean
+GATE_MODE=STATEMENT-FIX \
+  SF_PATCH=docs/statement-fix-proposals-patches/102-la1-registry-mnt11-premise.patch \
+  SF_ITEM=102 \
+  LANE_FILES=Kepler/Text/LocalAuto1.lean,Kepler/Text/LocalAuto25.lean,Kepler/Text/LocalConcl.lean \
+  bash scripts/auto_gate.sh Kepler/Text/LocalAuto1.lean YEBWJNG_concl
+
+GATE_MODE=STATEMENT-FIX \
+  SF_PATCH=docs/statement-fix-proposals-patches/102-la1-registry-mnt11-premise.patch \
+  SF_ITEM=102 \
+  LANE_FILES=Kepler/Text/LocalAuto1.lean,Kepler/Text/LocalAuto25.lean,Kepler/Text/LocalConcl.lean \
+  bash scripts/auto_gate.sh Kepler/Text/LocalAuto1.lean WKZZEEH_concl
+
+GATE_MODE=STATEMENT-FIX \
+  SF_PATCH=docs/statement-fix-proposals-patches/102-la1-registry-mnt11-premise.patch \
+  SF_ITEM=102 \
+  LANE_FILES=Kepler/Text/LocalAuto1.lean,Kepler/Text/LocalAuto25.lean,Kepler/Text/LocalConcl.lean \
+  bash scripts/auto_gate.sh Kepler/Text/LocalAuto1.lean PWEIWBZ_concl
+
+GATE_MODE=STATEMENT-FIX \
+  SF_PATCH=docs/statement-fix-proposals-patches/102-la1-registry-mnt11-premise.patch \
+  SF_ITEM=102 \
+  LANE_FILES=Kepler/Text/LocalAuto1.lean,Kepler/Text/LocalAuto25.lean,Kepler/Text/LocalConcl.lean \
+  bash scripts/auto_gate.sh Kepler/Text/LocalAuto1.lean VASYYAU_concl
+```
+
+验收口径：四件 SF 后仍是 `sorry`，`#print axioms` 仍含 `sorryAx`（实测 `[propext, sorryAx, Classical.choice, Quot.sound]`）——**不以标准三为验收**；本 SF 的关键验收 = **陈述与 HOL 条件式 `mnt11 ==> (!s v p. …)` 同形**（`#check` 输出以 `main_nonlinear_terminal_v11 →` 开头）+ `git apply --check` PASS + LA25 转发链 0 error。注意 `auto_gate.sh` 的 `## ${SF_ITEM}.` 节须含 `(a) HOL` 字样（本文件 `### (a) HOL 裁决` 满足）。

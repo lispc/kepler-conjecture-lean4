@@ -2384,7 +2384,8 @@ theorem B_LE_2h0_2_SCS_M_4_1_p25 (s : ScsV39) (his : isScsV39 s) (hk : s.k = 4)
 
 /-- HOL `WKZZEEH` (VASYYAU.hl:720). Re-export of the LocalAuto1 registry
 twin `WKZZEEH_concl`. -/
-theorem WKZZEEH_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+theorem WKZZEEH_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
     (hbasic : scsBasicV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s)
     (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j)
@@ -2393,7 +2394,7 @@ theorem WKZZEEH_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
     (h1 : ¬scsIsStr s v p) (h2 : ¬scsIsStr s v (p + 1))
     (h3 : ¬scsIsStr s v (p + 3)) :
     ¬(dist (v p) (v (p + 3)) = cstab ∧ dist (v p) (v (p + 1)) = cstab) :=
-  WKZZEEH_concl s v p his hbasic hk hv hdiag hval h1 h2 h3
+  WKZZEEH_concl h s v p his hbasic hk hv hdiag hval h1 h2 h3
 
 /-- HOL `BASIC_IMP_NOT_J` (VASYYAU.hl:915). -/
 theorem BASIC_IMP_NOT_J_p25 (s : ScsV39) (hb : scsBasicV39 s) (p i : ℕ) :
@@ -2527,18 +2528,20 @@ theorem h0_CSTAB_LT_4_p25 :
 
 /-- HOL `PWEIWBZ` (VASYYAU.hl:1126). Re-export of the LocalAuto1 registry
 twin `PWEIWBZ_concl`. -/
-theorem PWEIWBZ_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+theorem PWEIWBZ_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
     (hbasic : scsBasicV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s)
     (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j)
     (hval : ∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
     (ha : s.a p (p + 1) = 2) : dist (v p) (v (p + 1)) = 2 :=
-  PWEIWBZ_concl s v p his hbasic hk hv hdiag hval ha
+  PWEIWBZ_concl h s v p his hbasic hk hv hdiag hval ha
 
 /-- HOL `VASYYAU` (VASYYAU.hl:2366): the master str-case conclusion.
 Re-export of the LocalAuto1 registry twin `VASYYAU_concl`. -/
-theorem VASYYAU_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+theorem VASYYAU_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
     (hbasic : scsBasicV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s)
     (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j)
@@ -2546,11 +2549,12 @@ theorem VASYYAU_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
     (hstr : scsIsStr s v p) :
     dist (v p) (v (p + 1)) = s.a p (p + 1) ∧ dist (v p) (v (p + 3)) = s.a p (p + 3) :=
-  VASYYAU_concl s v p his hbasic hk hv hdiag hval hstr
+  VASYYAU_concl h s v p his hbasic hk hv hdiag hval hstr
 
 /-- HOL `YEBWJNG` (VASYYAU.hl:292). Re-export of the LocalAuto1 registry
 twin `YEBWJNG_concl`. -/
-theorem YEBWJNG_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+theorem YEBWJNG_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
     (hbasic : scsBasicV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s)
     (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j)
@@ -2558,4 +2562,4 @@ theorem YEBWJNG_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
     (h1 : ¬scsIsStr s v p) (h2 : ¬scsIsStr s v (p + 1)) (ha : s.a p (p + 1) = 2) :
     dist (v p) (v (p + 1)) = 2 :=
-  YEBWJNG_concl s v p his hbasic hk hv hdiag hval h1 h2 ha
+  YEBWJNG_concl h s v p his hbasic hk hv hdiag hval h1 h2 ha

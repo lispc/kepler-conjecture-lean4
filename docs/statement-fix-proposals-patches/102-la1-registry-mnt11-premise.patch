@@ -1,0 +1,162 @@
+--- a/lean/Kepler/Text/LocalAuto1.lean
++++ b/lean/Kepler/Text/LocalAuto1.lean
+@@ -4865,8 +4865,10 @@
+     xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53 := by
+   sorry
+ 
+-/-- HOL `YEBWJNG_concl` (appendix.hl:1457). Proof pending. -/
+-theorem YEBWJNG_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
++/-- HOL `YEBWJNG_concl` (appendix.hl:1457). Proof pending. HOL form is
++conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:292). -/
++theorem YEBWJNG_concl (h : main_nonlinear_terminal_v11) :
++    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j) →
+@@ -4888,8 +4890,10 @@
+       dist (v p) (v (p + 1)) = s.b p (p + 1) := by
+   sorry
+ 
+-/-- HOL `WKZZEEH_concl` (appendix.hl:1473). Proof pending. -/
+-theorem WKZZEEH_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
++/-- HOL `WKZZEEH_concl` (appendix.hl:1473). Proof pending. HOL form is
++conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:720). -/
++theorem WKZZEEH_concl (h : main_nonlinear_terminal_v11) :
++    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j) →
+@@ -4899,8 +4903,10 @@
+     ¬(dist (v p) (v (p + 3)) = cstab ∧ dist (v p) (v (p + 1)) = cstab) := by
+   sorry
+ 
+-/-- HOL `PWEIWBZ_concl` (appendix.hl:1481). Proof pending. -/
+-theorem PWEIWBZ_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
++/-- HOL `PWEIWBZ_concl` (appendix.hl:1481). Proof pending. HOL form is
++conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:1126). -/
++theorem PWEIWBZ_concl (h : main_nonlinear_terminal_v11) :
++    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j) →
+@@ -4909,8 +4915,10 @@
+     s.a p (p + 1) = 2 → dist (v p) (v (p + 1)) = 2 := by
+   sorry
+ 
+-/-- HOL `VASYYAU_concl` (appendix.hl:1489). Proof pending. -/
+-theorem VASYYAU_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
++/-- HOL `VASYYAU_concl` (appendix.hl:1489). Proof pending. HOL form is
++conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:2366). -/
++theorem VASYYAU_concl (h : main_nonlinear_terminal_v11) :
++    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j) →
+--- a/lean/Kepler/Text/LocalAuto25.lean
++++ b/lean/Kepler/Text/LocalAuto25.lean
+@@ -2384,7 +2384,8 @@
+ 
+ /-- HOL `WKZZEEH` (VASYYAU.hl:720). Re-export of the LocalAuto1 registry
+ twin `WKZZEEH_concl`. -/
+-theorem WKZZEEH_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
++theorem WKZZEEH_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
++    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+     (hbasic : scsBasicV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s)
+     (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j)
+@@ -2393,7 +2394,7 @@
+     (h1 : ¬scsIsStr s v p) (h2 : ¬scsIsStr s v (p + 1))
+     (h3 : ¬scsIsStr s v (p + 3)) :
+     ¬(dist (v p) (v (p + 3)) = cstab ∧ dist (v p) (v (p + 1)) = cstab) :=
+-  WKZZEEH_concl s v p his hbasic hk hv hdiag hval h1 h2 h3
++  WKZZEEH_concl h s v p his hbasic hk hv hdiag hval h1 h2 h3
+ 
+ /-- HOL `BASIC_IMP_NOT_J` (VASYYAU.hl:915). -/
+ theorem BASIC_IMP_NOT_J_p25 (s : ScsV39) (hb : scsBasicV39 s) (p i : ℕ) :
+@@ -2527,18 +2528,20 @@
+ 
+ /-- HOL `PWEIWBZ` (VASYYAU.hl:1126). Re-export of the LocalAuto1 registry
+ twin `PWEIWBZ_concl`. -/
+-theorem PWEIWBZ_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
++theorem PWEIWBZ_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
++    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+     (hbasic : scsBasicV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s)
+     (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j)
+     (hval : ∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
+     (ha : s.a p (p + 1) = 2) : dist (v p) (v (p + 1)) = 2 :=
+-  PWEIWBZ_concl s v p his hbasic hk hv hdiag hval ha
++  PWEIWBZ_concl h s v p his hbasic hk hv hdiag hval ha
+ 
+ /-- HOL `VASYYAU` (VASYYAU.hl:2366): the master str-case conclusion.
+ Re-export of the LocalAuto1 registry twin `VASYYAU_concl`. -/
+-theorem VASYYAU_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
++theorem VASYYAU_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
++    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+     (hbasic : scsBasicV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s)
+     (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j)
+@@ -2546,11 +2549,12 @@
+       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
+     (hstr : scsIsStr s v p) :
+     dist (v p) (v (p + 1)) = s.a p (p + 1) ∧ dist (v p) (v (p + 3)) = s.a p (p + 3) :=
+-  VASYYAU_concl s v p his hbasic hk hv hdiag hval hstr
++  VASYYAU_concl h s v p his hbasic hk hv hdiag hval hstr
+ 
+ /-- HOL `YEBWJNG` (VASYYAU.hl:292). Re-export of the LocalAuto1 registry
+ twin `YEBWJNG_concl`. -/
+-theorem YEBWJNG_p25 (s : ScsV39) (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
++theorem YEBWJNG_p25 (h : main_nonlinear_terminal_v11) (s : ScsV39)
++    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s)
+     (hbasic : scsBasicV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s)
+     (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j)
+@@ -2558,4 +2562,4 @@
+       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
+     (h1 : ¬scsIsStr s v p) (h2 : ¬scsIsStr s v (p + 1)) (ha : s.a p (p + 1) = 2) :
+     dist (v p) (v (p + 1)) = 2 :=
+-  YEBWJNG_concl s v p his hbasic hk hv hdiag hval h1 h2 ha
++  YEBWJNG_concl h s v p his hbasic hk hv hdiag hval h1 h2 ha
+--- a/lean/Kepler/Text/LocalConcl.lean
++++ b/lean/Kepler/Text/LocalConcl.lean
+@@ -4951,7 +4951,8 @@
+ 
+ /-- HOLD (b) `YEBWJNG_concl`: cycle path
+ `YEBWJNG_concl -> LA25.YEBWJNG_p25 (LA25:1566, proof = `YEBWJNG_concl ...`). -/
+-theorem YEBWJNG_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
++theorem YEBWJNG_discharged (h : main_nonlinear_terminal_v11) :
++    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j) →
+@@ -4963,7 +4964,8 @@
+ 
+ /-- HOLD (b) `WKZZEEH_concl`: cycle path
+ `WKZZEEH_concl -> LA25.WKZZEEH_p25 (LA25:1400, proof = `WKZZEEH_concl ...`). -/
+-theorem WKZZEEH_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
++theorem WKZZEEH_discharged (h : main_nonlinear_terminal_v11) :
++    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j) →
+@@ -4975,7 +4977,8 @@
+ 
+ /-- HOLD (b) `PWEIWBZ_concl`: cycle path
+ `PWEIWBZ_concl -> LA25.PWEIWBZ_p25 (LA25:1543, proof = `PWEIWBZ_concl ...`). -/
+-theorem PWEIWBZ_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
++theorem PWEIWBZ_discharged (h : main_nonlinear_terminal_v11) :
++    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j) →
+@@ -4987,7 +4990,8 @@
+ /-- HOLD (b) `VASYYAU_concl`: cycle path
+ `VASYYAU_concl -> LA25.VASYYAU_p25 (LA25:1554, proof = `VASYYAU_concl ...`);
+ the six `VASYYAU.hl` LA32 mentions are NEEDS-comments, not twins. -/
+-theorem VASYYAU_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
++theorem VASYYAU_discharged (h : main_nonlinear_terminal_v11) :
++    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+       4 * h0 < s.b i j) →

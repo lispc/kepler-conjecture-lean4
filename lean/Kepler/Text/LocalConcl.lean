@@ -4951,7 +4951,8 @@ theorem TUAPYYU_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV
 
 /-- HOLD (b) `YEBWJNG_concl`: cycle path
 `YEBWJNG_concl -> LA25.YEBWJNG_p25 (LA25:1566, proof = `YEBWJNG_concl ...`). -/
-theorem YEBWJNG_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+theorem YEBWJNG_discharged (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →
@@ -4963,7 +4964,8 @@ theorem YEBWJNG_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV
 
 /-- HOLD (b) `WKZZEEH_concl`: cycle path
 `WKZZEEH_concl -> LA25.WKZZEEH_p25 (LA25:1400, proof = `WKZZEEH_concl ...`). -/
-theorem WKZZEEH_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+theorem WKZZEEH_discharged (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →
@@ -4975,7 +4977,8 @@ theorem WKZZEEH_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV
 
 /-- HOLD (b) `PWEIWBZ_concl`: cycle path
 `PWEIWBZ_concl -> LA25.PWEIWBZ_p25 (LA25:1543, proof = `PWEIWBZ_concl ...`). -/
-theorem PWEIWBZ_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+theorem PWEIWBZ_discharged (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →
@@ -4987,7 +4990,8 @@ theorem PWEIWBZ_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV
 /-- HOLD (b) `VASYYAU_concl`: cycle path
 `VASYYAU_concl -> LA25.VASYYAU_p25 (LA25:1554, proof = `VASYYAU_concl ...`);
 the six `VASYYAU.hl` LA32 mentions are NEEDS-comments, not twins. -/
-theorem VASYYAU_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+theorem VASYYAU_discharged (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →

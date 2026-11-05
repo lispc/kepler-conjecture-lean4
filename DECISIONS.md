@@ -3,6 +3,44 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-06 — Reduction5 口径改口 + PA22 `k` 因子一并走 SF（用户裁决）
+
+**背景**：`reduction5-scout`（只读）实测推翻了两项既有判断。
+
+**拍板 1（用户选「接受口径 + 先发 W0」）：`Reduction5` 从"一波"改为"长周期背景工程"**。
+
+- **实测规模**：最小闭包（`reduction1..5` + `betwn_core*`，18,887 有效 HOL 行）
+  → Lean **24,400–39,400 行**；真实模块闭包（45 模块 / 48,052 未移植有效行）
+  → **63,100–102,000 行**。原裁决「1,500–3,000 行」**低 8–26 倍**（真实闭包低 21–42 倍）。
+  倍数取自本仓实测经验比（`tame_list` 1.30x / `AUQTZYZ` 1.60x / `DANGEYJ` 1.70x /
+  `RXOKSKC` 2.07x / `hypermap` 0.91x）。
+- **`jcajydu` 本体反而比原估计乐观**：约 **100–250 行**（原估 300–800），
+  但四个装配件 `RXOKSKC`/`JXBJOAB`/`GNBEVVU`/`DAKEFCC` 锁在环后。
+- **两项判定**：① TameSpine 岛**没有** `Reduction5` 移植（是移植不是接线；
+  岛 75 文件头注映射 0 个 `reduction*.hl`）；② HOL `hypermap` 与 Lean
+  `IsHypermapOfListTl` **是同一概念**（类型层/实例层/规格层逐槽对上，
+  `TameCorrBase` 的 `isHypermapOfListTl_iff_eq_hypermapOfList` 把规格≡构造接起来）
+  ⇒ 施工口径：落到 `hypermapOfList L hL` 的构造形，不停在 `∃ H` 形。
+- **落点（已定）**：两级新叶 `Kepler/Text/Reduction5Base.lean`（defs）+
+  `Kepler/Text/Reduction5.lean`（theorems），唯一 import 走 `TameLp` + `Graphs.ListAux`
+  （两者闭包零 `Kepler.Assembly`，而 `Assembly` 今天已 import `TameLp` ⇒ 可被 Assembly 直接消费、零环）。
+  **否决**并入 `TameCorrBase`（毁其 174 行可审计不变式）与落岛（74/75 成环 ⇒ e2e 收益恒 0）。
+- **强制前置**：reduction 链的 `core`/`parts`/`quotient_list`/`transform_list`/`ntrans`/
+  `rtrans`/`ytrans`/`ztrans`/`transform_count`/`ifbetwn` 等**只在岛内定义**，必须从 HOL 重落
+  （这就是 W0）。`betwn`/`split_at` 已在 `Kepler.Graphs.ListAux`（环自由）。
+- **执行**：W0 立刻发（600–950 行，环自由，standalone RC=0 + 标准三可独立验收）；
+  W1–W5 按波滚动，单笔 ≤450 行。落库瞬间对锥/union **+0**；W5 装配才解锁子树。
+- **另立一项**（scout 建议，**未批**，等用户单独裁决）：「岛去 Assembly 化」
+  —— 岛 74/75 经 `TameList1:37 import Kepler.Assembly` 传递成环，它是 `jcajydu`
+  与全部 A9 接口从"建好"到"接电"的总闸，但属高风险重构。
+
+**拍板 2（用户选「一并走 SF」）：`regular_spherical_polygon_area_asnFnhk` 的 `k` 因子一并修**。
+
+- `PackingAuto22.lean:2712` 陈述右端为 `2 * Real.pi - 2 * k * asnFnhkP22 h k 1 1 1 1`，
+  HOL `counting_spheres.hl:946` **无 `k` 因子** ⇒ 陈述比 HOL 强且真化后为**假命题**。
+- 与 `_797` 真化（DEF-FIX）**同批处理但分两笔**：SF 修陈述（先），DEF-FIX 改定义体（后）。
+  两者同文件不同行，但 `auto_gate.sh` 的 diff-vs-patch 比对要求树面只含本笔改动 ⇒ **必须串行落库**。
+
 ## 2026-11-06 — mnt11 设常驻车道（用户指令）
 
 **拍板**（用户，2026-11-06）：「好，之后一直保留一个 lane 做 mnt11 吧」。
