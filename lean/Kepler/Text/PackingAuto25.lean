@@ -10564,6 +10564,147 @@ theorem critical_weight1b (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3
   exact p25w6_cc3_weight_wit V u1 u0 (f (i + 1)) ((ccUh V [u1, u0, f (i + 1)]).getD 3 0)
     hp hs hlist e0 e1 e2 hbar hcell hnn hcey' hd.2 hd.1
 
+private theorem p25w8_deltaX_sym14 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x1 x2 x3 x4 x5 x6 = deltaX x4 x5 x3 x1 x2 x6 := by
+  unfold deltaX; ring
+
+private theorem p25w8_rhoX_sym14 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rhoX x1 x2 x3 x4 x5 x6 = rhoX x4 x5 x3 x1 x2 x6 := by
+  unfold rhoX; ring
+
+private theorem p25w8_rad2X_sym14 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rad2X x1 x2 x3 x4 x5 x6 = rad2X x4 x5 x3 x1 x2 x6 := by
+  unfold rad2X
+  rw [p25w8_rhoX_sym14, p25w8_deltaX_sym14]
+
+/-- `ups_x` at squared edge lengths of a nondegenerate face triangle:
+`(a+b+c)(a+b-c)(a-b+c)(-a+b+c) > 0` for `2 ≤ a,b,c < 4`. -/
+private theorem p25w8_upsX_sq_pos (a b c : ℝ)
+    (ha : 2 ≤ a) (hb : 2 ≤ b) (hc : 2 ≤ c)
+    (ha' : a < 4) (hb' : b < 4) (hc' : c < 4) :
+    0 < upsX (a * a) (b * b) (c * c) := by
+  have hfac : upsX (a * a) (b * b) (c * c)
+      = (a + b + c) * (a + b - c) * (a - b + c) * (-a + b + c) := by
+    unfold upsX; ring
+  rw [hfac]
+  repeat' apply mul_pos
+  · linarith
+  · linarith
+  · linarith
+  · linarith
+
+/-- HOL `rad2_x_eta_x` (merge_ineq.hl:3844): the squared circumradius of the
+face triangle `(x4,x5,x6)` is at most the squared circumradius of the
+tetrahedron.  Polynomial identity `rho·ups = chi² + 4·delta·x4x5x6`
+(same `chi` as `EDGE_LE_2RAD`) + `chi² ≥ 0` + cross multiplication. -/
+theorem p25w8_rad2_x_eta_x (x1 x2 x3 x4 x5 x6 : ℝ)
+    (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6)
+    (hup : 0 < upsX x4 x5 x6) (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) :
+    etaX x4 x5 x6 ^ 2 ≤ rad2X x1 x2 x3 x4 x5 x6 := by
+  have hpos : 0 < x4 * x5 * x6 := mul_pos (mul_pos h4 h5) h6
+  have heta : etaX x4 x5 x6 ^ 2 = x4 * x5 * x6 / upsX x4 x5 x6 := by
+    unfold etaX
+    exact Real.sq_sqrt (le_of_lt (div_pos hpos hup))
+  have hchi0 : (x4 * x5 * x6) * (4 * deltaX x1 x2 x3 x4 x5 x6)
+      ≤ upsX x4 x5 x6 * rhoX x1 x2 x3 x4 x5 x6 := by
+    have hid : rhoX x1 x2 x3 x4 x5 x6 * upsX x4 x5 x6
+        = (-x1*x4*x4 + x1*x4*x5 + x2*x4*x5 - x2*x5*x5 + x1*x4*x6 + x3*x4*x6
+            + x2*x5*x6 + x3*x5*x6 - 2*x4*x5*x6 - x3*x6*x6) ^ 2
+          + 4 * deltaX x1 x2 x3 x4 x5 x6 * (x4 * x5 * x6) := by
+      simp only [rhoX, deltaX, upsX]
+      ring
+    have hcomm : 4 * deltaX x1 x2 x3 x4 x5 x6 * (x4 * x5 * x6)
+        = (x4 * x5 * x6) * (4 * deltaX x1 x2 x3 x4 x5 x6) := by ring
+    have hsq := sq_nonneg ((-x1*x4*x4 + x1*x4*x5 + x2*x4*x5 - x2*x5*x5 + x1*x4*x6
+      + x3*x4*x6 + x2*x5*x6 + x3*x5*x6 - 2*x4*x5*x6 - x3*x6*x6 : ℝ))
+    linarith
+  rw [heta]
+  have hd0 : 0 < deltaX x1 x2 x3 x4 x5 x6 * 4 := by linarith
+  rw [rad2X]
+  rw [div_le_div_iff₀ hup hd0]
+  linarith [hchi0]
+
+/-- HOL `rad2_eta2` (merge_ineq.hl:3869). -/
+theorem p25w8_rad2_eta2 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (h1 : 2 ≤ y1) (h2 : 2 ≤ y2) (h6 : 2 ≤ y6)
+    (h1' : y1 < 4) (h2' : y2 < 4) (h6' : y6 < 4)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) :
+    eta_y y1 y2 y6 ^ 2 < 2 := by
+  have hy1 : 0 < y1 := by linarith
+  have hy2 : 0 < y2 := by linarith
+  have hy6 : 0 < y6 := by linarith
+  have hp1 : 0 < y1 * y1 := mul_pos hy1 hy1
+  have hp2 : 0 < y2 * y2 := mul_pos hy2 hy2
+  have hp6 : 0 < y6 * y6 := mul_pos hy6 hy6
+  have hup := p25w8_upsX_sq_pos y1 y2 y6 h1 h2 h6 h1' h2' h6'
+  have hd' : 0 < deltaX (y4 * y4) (y5 * y5) (y3 * y3) (y1 * y1) (y2 * y2)
+      (y6 * y6) := by
+    rw [p25w8_deltaX_sym14]
+    exact hd
+  have hrad' : rad2X (y4 * y4) (y5 * y5) (y3 * y3) (y1 * y1) (y2 * y2)
+      (y6 * y6) < 2 := by
+    rw [p25w8_rad2X_sym14]
+    exact hrad
+  have heta := p25w8_rad2_x_eta_x (y4 * y4) (y5 * y5) (y3 * y3) (y1 * y1)
+    (y2 * y2) (y6 * y6) hp1 hp2 hp6 hup hd'
+  have heq : eta_y y1 y2 y6 ^ 2
+      = etaX (y1 * y1) (y2 * y2) (y6 * y6) ^ 2 := rfl
+  rw [heq]
+  linarith
+
+theorem p25w8_g_quqya (hnl : pack_nonlinear_non_ox3q1h) (y1 y2 y3 y4 y5 y6 : ℝ)
+    (h1 : 2 * hminus ≤ y1) (h1' : y1 ≤ 2 * hplus)
+    (h2 : 2 ≤ y2) (h2' : y2 < 2 * hminus)
+    (h3 : 2 ≤ y3) (h3' : y3 < 2 * hminus)
+    (h4 : 2 ≤ y4) (h4' : y4 < 2 * hminus)
+    (h5 : 2 ≤ y5) (h5' : y5 < 2 * hminus)
+    (h6 : 2 ≤ y6) (h6' : y6 < 2 * hminus)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2) :
+    0 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun +
+      gamma3f y1 y2 y6 (Real.sqrt 2) lmfun := by
+  have h8 : ∀ y : ℝ, 2 ≤ y → y < 2 * hminus → y ≤ Real.sqrt 8 :=
+    fun _ _ hy' => le_trans (le_of_lt hy') mi_two_hminus_le_sqrt8
+  have hFW := proj_bank_FWGKMBZ hnl y1 y2 y3 y4 y5 y6 h1 h1' h2 (h8 y2 h2 h2')
+    h3 (h8 y3 h3 h3') h4 (h8 y4 h4 h4') h5 (h8 y5 h5 h5') h6 (h8 y6 h6 h6')
+  have hdelta : 0 < deltaY y1 y2 y3 y4 y5 y6 := hFW
+  have h2le : (2 : ℝ) ≤ y1 := le_trans mi_two_le_two_hminus h1
+  have h2hm4 : 2 * hminus < 4 := by linarith [mi_hminus_prop.2.1]
+  have h1lt4 : y1 < 4 := by
+    have hhp4 : 2 * hplus < 4 := by norm_num [hplus]
+    linarith
+  have h2lt4 : y2 < 4 := by linarith
+  have h6lt4 : y6 < 4 := by linarith
+  have heta2 := p25w8_rad2_eta2 y1 y2 y3 y4 y5 y6 h2le h2 h6
+    h1lt4 h2lt4 h6lt4 hrad hdelta
+  have heta_nn : 0 ≤ eta_y y1 y2 y6 := by
+    unfold eta_y etaY etaX
+    exact Real.sqrt_nonneg _
+  have heta_lt : eta_y y1 y2 y6 < Real.sqrt 2 := Real.lt_sqrt_of_sq_lt heta2
+  have h2'22 : y2 ≤ 2 * Real.sqrt 2 :=
+    le_trans (le_of_lt h2') mi_two_hminus_le_two_sqrt2
+  have h6'22 : y6 ≤ 2 * Real.sqrt 2 :=
+    le_trans (le_of_lt h6') mi_two_hminus_le_two_sqrt2
+  have hg3 : 0 ≤ gamma3f y1 y2 y6 (Real.sqrt 2) lmfun :=
+    cell3_from_ineq_thm (proj_cell3_bank hnl) y1 y2 y6 h2le h2 h6
+      (le_trans h1' mi_two_hplus_le_two_sqrt2) h2'22 h6'22 heta_lt
+  have hFHa := proj_bank_FHBVYXZa hnl y1 y2 y3 y4 y5 y6 h1 h1' h2 (le_of_lt h2')
+    h3 (le_of_lt h3') h4 (le_of_lt h4') h5 (le_of_lt h5') h6 (le_of_lt h6')
+  have hFHb := proj_bank_FHBVYXZb hnl y1 y2 y3 y4 y5 y6 h1 h1' h2 (le_of_lt h2')
+    h3 (le_of_lt h3') h4 (le_of_lt h4') h5 (le_of_lt h5') h6 (le_of_lt h6')
+  have heq : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+  by_cases he134 : eta_y y1 y2 y6 ^ 2 < 1.34 ^ 2
+  · rcases hFHb with hg | hr | he
+    · linarith
+    · rw [heq] at hrad
+      linarith
+    · linarith
+  · rcases hFHa with hg | hr | he
+    · linarith
+    · rw [heq] at hrad
+      linarith
+    · exact absurd he he134
+
 /-- HOL `real_model_quqy`. -/
 theorem real_model_quqy (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
@@ -10578,7 +10719,28 @@ theorem real_model_quqy (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
       0 ≤ gg_mcell V f u0 u1 i +
         gammaX V (ccCell V [u0, u1, f (i + 1)]) lmfun *
           criticalWeight V (ccCell V [u0, u1, f (i + 1)]) := by
-  sorry
+  intro i h
+  obtain ⟨⟨h4, ⟨hd02, hd12⟩, hd03, hd13, hd4⟩, hno4'⟩ := h
+  have hgg := GG_MCELL_QUARTER V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey h4 ⟨hd02, hd12⟩ hd03 hd13 hd4 hr
+  have hcw := critical_weight1a V u0 u1 w0 n f (i + 1) hnl hn hp hs hsize h0 h1
+    hper hnc hcey hr hno4' ⟨hd03, hd13⟩
+  have hgX := mcell3_gammaX_gamma3f V u0 u1 w0 n f (i + 1) hnl hp hs hr hnc hcey
+    hsize hn hno4'
+  obtain ⟨hb01, hb01', hb02, hlt02, hb03, hlt03, hb04, hlt04, hb06, hlt06, hb05,
+    hlt05, hrad, hdelta⟩ := MCELL4_DOMAIN V u0 u1 w0 n f i hnl hn hp hs hsize
+    h0 h1 hper hnc hcey hr h4
+  rw [hgg, hcw, hgX, mul_one]
+  rw [p25w4_gamma4fgcy_sym23]
+  have hradP : rad2YP25 (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+      (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1))) < 2 := by
+    rw [← p25w4_rad2YP25_sym23]
+    exact hrad
+  exact p25w8_g_quqya hnl (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+    (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1)))
+    hb01 hb01' hb03 hd03 hb02 hd02 hb04 hd4
+    hb06 hd12 hb05 hd13 hradP
+
 
 /-- HOL `real_model_quqy_sym`. -/
 theorem real_model_quqy_sym (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -10595,7 +10757,30 @@ theorem real_model_quqy_sym (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → 
       0 ≤ gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
           criticalWeight V (ccCell V [u1, u0, f (i + 1)]) +
         gg_mcell V f u0 u1 (i + 1) := by
-  sorry
+  intro i h
+  obtain ⟨⟨h4, ⟨hd03, hd13⟩, hd04, hd14, hd34⟩, hno4⟩ := h
+  have hcw := critical_weight1b V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey hr hno4 ⟨hd03, hd13⟩
+  have hgX := mcell3_gammaXb_gamma3f V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize
+    hn hno4
+  have hgg := GG_MCELL_QUARTER V u0 u1 w0 n f (i + 1) hnl hn hp hs hsize h0 h1
+    hper hnc hcey h4 ⟨hd03, hd13⟩ hd04 hd14 hd34 hr
+  obtain ⟨hb01, hb01', hb02, hlt02, hb03, hlt03, hb04, hlt04, hb06, hlt06, hb05,
+    hlt05, hrad, hdelta⟩ := MCELL4_DOMAIN V u0 u1 w0 n f (i + 1) hnl hn hp hs hsize
+    h0 h1 hper hnc hcey hr h4
+  rw [hcw, hgX, hgg, mul_one]
+  have hA := p25w8_g_quqya hnl (dist u0 u1) (dist u0 (f (i + 1)))
+    (dist u0 (f (i + 1 + 1))) (dist (f (i + 1)) (f (i + 1 + 1)))
+    (dist u1 (f (i + 1 + 1))) (dist u1 (f (i + 1)))
+    hb01 hb01' hb02 hd03 hb03 hd04 hb04 hd34
+    hb05 hd14 hb06 hd13 hrad
+  have hA' : 0 ≤ gamma4fgcyP25 (dist u0 u1) (dist u0 (f (i + 1)))
+      (dist u0 (f (i + 1 + 1))) (dist (f (i + 1)) (f (i + 1 + 1)))
+      (dist u1 (f (i + 1 + 1))) (dist u1 (f (i + 1))) lmfun +
+      gamma3f (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1)))
+        (Real.sqrt 2) lmfun := hA
+  linarith
+
 
 /-! ## 编译窗预估
 
@@ -12180,6 +12365,92 @@ theorem real_model_ztg4 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
   rw [show a_spine5 = aSpine5 from rfl, show b_spine5 = bSpine5 from rfl]
   exact le_of_lt hz
 
+theorem p25w8_gamma10_gamma11 (hnl : pack_nonlinear_non_ox3q1h)
+    (y1 y2 y3 y4 y5 y6 : ℝ)
+    (h1lo : 2 * hminus ≤ y1) (h1hi : y1 ≤ 2 * hplus)
+    (h2lo : 2 ≤ y2) (h2hi : y2 < 2 * hminus)
+    (h3lo : 2 ≤ y3) (h3hi : y3 < 2 * hminus)
+    (h4lo : 2 * hminus ≤ y4) (h4hi : y4 ≤ Real.sqrt 8)
+    (h5lo : 2 ≤ y5) (h5hi : y5 < 2 * hminus)
+    (h6lo : 2 ≤ y6) (h6hi : y6 < 2 * hminus)
+    (hrad : rad2YP25 y1 y2 y3 y4 y5 y6 < 2) :
+    0.0057 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun /
+        (wtcount6Y y1 y2 y3 y4 y5 y6 : ℝ) +
+      beta_bumpA_yP25 y1 y2 y3 y4 y5 y6 +
+      gamma3f y1 y2 y6 (Real.sqrt 2) lmfun := by
+  have h8 : ∀ y : ℝ, 2 ≤ y → y < 2 * hminus → y ≤ Real.sqrt 8 :=
+    fun _ _ hy' => le_trans (le_of_lt hy') mi_two_hminus_le_sqrt8
+  have hFW := proj_bank_FWGKMBZ hnl y1 y2 y3 y4 y5 y6 h1lo h1hi h2lo
+    (h8 y2 h2lo h2hi) h3lo (h8 y3 h3lo h3hi) (le_trans mi_two_le_two_hminus h4lo) h4hi
+    h5lo (h8 y5 h5lo h5hi) h6lo (h8 y6 h6lo h6hi)
+  have hdelta : 0 < deltaY y1 y2 y3 y4 y5 y6 := hFW
+  have h2le : (2 : ℝ) ≤ y1 := le_trans mi_two_le_two_hminus h1lo
+  have h2hm4 : 2 * hminus < 4 := by linarith [mi_hminus_prop.2.1]
+  have h1lt4 : y1 < 4 := by
+    have hhp4 : 2 * hplus < 4 := by norm_num [hplus]
+    linarith
+  have h2lt4 : y2 < 4 := by linarith
+  have h6lt4 : y6 < 4 := by linarith
+  have heta2 := p25w8_rad2_eta2 y1 y2 y3 y4 y5 y6 h2le h2lo h6lo
+    h1lt4 h2lt4 h6lt4 hrad hdelta
+  have heta_lt : eta_y y1 y2 y6 < Real.sqrt 2 := Real.lt_sqrt_of_sq_lt heta2
+  have h2'22 : y2 ≤ 2 * Real.sqrt 2 :=
+    le_trans (le_of_lt h2hi) mi_two_hminus_le_two_sqrt2
+  have h6'22 : y6 ≤ 2 * Real.sqrt 2 :=
+    le_trans (le_of_lt h6hi) mi_two_hminus_le_two_sqrt2
+  have hg3 : 0 ≤ gamma3f y1 y2 y6 (Real.sqrt 2) lmfun :=
+    cell3_from_ineq_thm (proj_cell3_bank hnl) y1 y2 y6 h2le h2lo h6lo
+      (le_trans h1hi mi_two_hplus_le_two_sqrt2) h2'22 h6'22 heta_lt
+  have hGL := proj_bank_GLFVCVK4 hnl y1 y2 y3 y4 y5 y6 h1lo h1hi h2lo
+    (h8 y2 h2lo h2hi) h3lo (h8 y3 h3lo h3hi) (le_trans mi_two_le_two_hminus h4lo) h4hi
+    h5lo (h8 y5 h5lo h5hi) h6lo (h8 y6 h6lo h6hi)
+  have hgpos : 0 < gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun := by
+    rcases hGL with hg | hn | hr
+    · exact hg
+    · obtain ⟨-, h2c, h3c, h4c, h5c, h6c⟩ := ztg4w1_quarter_norm2hh y1 y2 y3 y4 y5 y6 hn
+      linarith
+    · have hradY : yOfX rad2X y1 y2 y3 y4 y5 y6 < 2 := hrad
+      linarith
+  have hSub : 0.0057 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + betaBumpLb +
+      gamma3f y1 y2 y6 (Real.sqrt 2) lmfun := by
+    by_cases he134 : eta_y y1 y2 y6 ^ 2 < 1.34 ^ 2
+    · have hQb := proj_bank_QITNPEA5400790175b hnl y1 y2 y3 y4 y5 y6 h1lo h1hi
+        h2lo (le_of_lt h2hi) h3lo (le_of_lt h3hi) h4lo h4hi h5lo (le_of_lt h5hi)
+        h6lo (le_of_lt h6hi)
+      rcases hQb with hq | hr | he
+      · linarith
+      · have hradY : yOfX rad2X y1 y2 y3 y4 y5 y6 < 2 := hrad
+        linarith
+      · linarith
+    · have hQa := proj_bank_QITNPEA5400790175a hnl y1 y2 y3 y4 y5 y6 h1lo h1hi
+        h2lo (le_of_lt h2hi) h3lo (le_of_lt h3hi) h4lo h4hi h5lo (le_of_lt h5hi)
+        h6lo (le_of_lt h6hi)
+      rcases hQa with hq | hr | he
+      · linarith
+      · have hradY : yOfX rad2X y1 y2 y3 y4 y5 y6 < 2 := hrad
+        linarith
+      · exact absurd he he134
+  have hbm := betaBumpLb_le_beta_bumpA_yP25 y1 y2 y3 y4 y5 y6
+  have hc1 : criticalEdgeY y1 := ⟨h1lo, h1hi⟩
+  have hn2 : ¬ criticalEdgeY y2 := fun hc => absurd h2hi (not_lt.mpr hc.1)
+  have hn3 : ¬ criticalEdgeY y3 := fun hc => absurd h3hi (not_lt.mpr hc.1)
+  have hn5 : ¬ criticalEdgeY y5 := fun hc => absurd h5hi (not_lt.mpr hc.1)
+  have hn6 : ¬ criticalEdgeY y6 := fun hc => absurd h6hi (not_lt.mpr hc.1)
+  by_cases hc4 : criticalEdgeY y4
+  · have hwt : wtcount6Y y1 y2 y3 y4 y5 y6 = 2 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_pos hc4, if_neg hn5, if_neg hn6]
+    rw [hwt]
+    norm_num
+    linarith
+  · have hwt : wtcount6Y y1 y2 y3 y4 y5 y6 = 1 := by
+      unfold wtcount6Y wtcount3Y
+      rw [if_pos hc1, if_neg hn2, if_neg hn3, if_neg hc4, if_neg hn5, if_neg hn6]
+    rw [hwt]
+    norm_num
+    linarith
+
+set_option maxHeartbeats 8000000 in
 /-- HOL `real_model_gamma10`. -/
 theorem real_model_gamma10 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
@@ -12198,8 +12469,35 @@ theorem real_model_gamma10 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V
       0.0057 ≤ gg_mcell V f u0 u1 i +
         gammaX V (ccCell V [u0, u1, f (i + 1)]) lmfun *
           criticalWeight V (ccCell V [u0, u1, f (i + 1)]) := by
-  sorry
+  intro i h
+  obtain ⟨⟨h4, hnot⟩, ⟨⟨hd02, hd12⟩, hd03, hd13⟩, hno4'⟩ := h
+  have hgg := GG_MCELL_GENERAL V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey h4 hr
+  have hcw := critical_weight1a V u0 u1 w0 n f (i + 1) hnl hn hp hs hsize h0 h1
+    hper hnc hcey hr hno4' ⟨hd03, hd13⟩
+  have hgX := mcell3_gammaX_gamma3f V u0 u1 w0 n f (i + 1) hnl hp hs hr hnc hcey
+    hsize hn hno4'
+  obtain ⟨hb01, hb01', hb02, hlt02, hb03, hlt03, hb04, hlt04, hb06, hlt06, hb05,
+    hlt05, hrad, hdelta⟩ := MCELL4_DOMAIN V u0 u1 w0 n f i hnl hn hp hs hsize
+    h0 h1 hper hnc hcey hr h4
+  have h4lo : 2 * hminus ≤ dist (f i) (f (i + 1)) := by
+    by_contra hcon
+    exact hnot ⟨hd02, hd12, hd03, hd13, not_le.mp hcon⟩
+  have h4hi : dist (f i) (f (i + 1)) ≤ Real.sqrt 8 := by
+    rw [mi_sqrt8_eq]
+    exact le_of_lt hlt04
+  rw [hgg, hcw, hgX, mul_one]
+  rw [gamma4fgcy_sym23P25, wtcount6_y_sym23, beta_bumpA_y_sym23]
+  have hradP : rad2YP25 (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i))
+      (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1))) < 2 := by
+    rw [← rad2YP25_sym23P25]
+    exact hrad
+  exact p25w8_gamma10_gamma11 hnl (dist u0 u1) (dist u0 (f (i + 1)))
+    (dist u0 (f i)) (dist (f i) (f (i + 1))) (dist u1 (f i)) (dist u1 (f (i + 1)))
+    hb01 hb01' hb03 hd03 hb02 hd02 h4lo h4hi hb06 hd12 hb05 hd13 hradP
 
+
+set_option maxHeartbeats 8000000 in
 /-- HOL `real_model_gamma11`. -/
 theorem real_model_gamma11 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
@@ -12218,7 +12516,41 @@ theorem real_model_gamma11 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V
       0.0057 ≤ gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
           criticalWeight V (ccCell V [u1, u0, f (i + 1)]) +
         gg_mcell V f u0 u1 (i + 1) := by
-  sorry
+  intro i h
+  obtain ⟨⟨h4, hnot⟩, ⟨⟨hd03, hd13⟩, hd04, hd14⟩, hno4⟩ := h
+  have hcw := critical_weight1b V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey hr hno4 ⟨hd03, hd13⟩
+  have hgX := mcell3_gammaXb_gamma3f V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize
+    hn hno4
+  have hgg := GG_MCELL_GENERAL V u0 u1 w0 n f (i + 1) hnl hn hp hs hsize h0 h1
+    hper hnc hcey h4 hr
+  obtain ⟨hb01, hb01', hb02, hlt02, hb03, hlt03, hb04, hlt04, hb06, hlt06, hb05,
+    hlt05, hrad, hdelta⟩ := MCELL4_DOMAIN V u0 u1 w0 n f (i + 1) hnl hn hp hs hsize
+    h0 h1 hper hnc hcey hr h4
+  have h4lo : 2 * hminus ≤ dist (f (i + 1)) (f (i + 1 + 1)) := by
+    by_contra hcon
+    exact hnot ⟨hd03, hd13, hd04, hd14, not_le.mp hcon⟩
+  have h4hi : dist (f (i + 1)) (f (i + 1 + 1)) ≤ Real.sqrt 8 := by
+    rw [mi_sqrt8_eq]
+    exact le_of_lt hlt04
+  rw [hcw, hgX, hgg, mul_one]
+  have hA := p25w8_gamma10_gamma11 hnl (dist u0 u1) (dist u0 (f (i + 1)))
+    (dist u0 (f (i + 1 + 1))) (dist (f (i + 1)) (f (i + 1 + 1)))
+    (dist u1 (f (i + 1 + 1))) (dist u1 (f (i + 1)))
+    hb01 hb01' hb02 hd03 hb03 hd04 h4lo h4hi hb05 hd14 hb06 hd13 hrad
+  have hA' : 0.0057 ≤ gamma4fgcyP25 (dist u0 u1) (dist u0 (f (i + 1)))
+      (dist u0 (f (i + 1 + 1))) (dist (f (i + 1)) (f (i + 1 + 1)))
+      (dist u1 (f (i + 1 + 1))) (dist u1 (f (i + 1))) lmfun /
+        (wtcount6Y (dist u0 u1) (dist u0 (f (i + 1)))
+          (dist u0 (f (i + 1 + 1))) (dist (f (i + 1)) (f (i + 1 + 1)))
+          (dist u1 (f (i + 1 + 1))) (dist u1 (f (i + 1))) : ℝ) +
+      beta_bumpA_yP25 (dist u0 u1) (dist u0 (f (i + 1)))
+        (dist u0 (f (i + 1 + 1))) (dist (f (i + 1)) (f (i + 1 + 1)))
+        (dist u1 (f (i + 1 + 1))) (dist u1 (f (i + 1))) +
+      gamma3f (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1)))
+        (Real.sqrt 2) lmfun := hA
+  linarith
+
 
 /-- HOL `leaf_CIHTIUM` (the certified bound makes long leaves impossible). -/
 theorem leaf_CIHTIUM (V : Set V3) (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q1h)
