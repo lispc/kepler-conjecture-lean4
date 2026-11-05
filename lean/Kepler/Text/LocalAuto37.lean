@@ -4379,11 +4379,633 @@ private theorem w_b14_span_swap {v u q : V3}
             abel
   exact hv.symm
 
+/-- `azim` 在 `{v, w, w2}` 共线时归零（右侧情形的语法桥）。 -/
+private theorem w_b15_azim_eq_zero_of_collinear3 {v w w1 w2 : V3}
+    (h : Collinear3 v w w2) : azim v w w1 w2 = 0 := by
+  unfold azim
+  exact if_pos (Or.inr h)
+
+/-- 系数形 `ut = c • u + h • p`（`c > 0`）⇒ `ut ∈ affGt {0, p} {u}`。 -/
+private theorem w_b15_mem_affGt_of_coeff {p u ut : V3} {c h : ℝ}
+    (h0p : (0 : V3) ≠ p) (hu0 : u ≠ (0 : V3)) (hup : u ≠ p)
+    (hc : 0 < c) (hdec : ut = c • u + h • p) :
+    ut ∈ affGt {0, p} {u} := by
+  rw [affGt_pair_iff (v0 := (0 : V3)) (v1 := p) (x := u) (y := ut) h0p hu0 hup]
+  exact ⟨c, hc, h, by simpa using hdec⟩
+
+/-- 逐 dart 凸性：单个 dart `(p, ρp)` 在像扇上的 `azim ≤ π` 与 `V_t ⊆ wedge`。 -/
+private theorem w_b14_dart_convex
+    {a b : ℝ} {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {f : V3 → ℝ → V3}
+    {v w u : V3}
+    (hcf : ConvexLocalFan V E FF) (hl : Lunar v w V E) (hd : Deformation f V a b)
+    (hu : u ∈ V) (huv : u ≠ v) (huw : u ≠ w)
+    (hpin : ∀ u' ∈ V, u ≠ u' → ∀ t ∈ Icc a b, f u' t = u')
+    (haff : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, v, w, u} : Set V3))
+    {e1 : ℝ} (he1 : 0 < e1)
+    (hLFt : ∀ t : ℝ, |t| < e1 → LocalFan ((fun z => f z t) '' V)
+      ((fun s => (fun z => f z t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF))
+    (p : V3) (hp : p ∈ V) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
+      (∀ z ∈ V, azim 0 (f p t) (f (rhoNode1 FF p) t) (f z t) ≤
+        azim 0 (f p t) (f (rhoNode1 FF p) t) (f (ivsRhoNode1 FF p) t)) ∧
+      azim 0 (f p t) (f (rhoNode1 FF p) t) (f (ivsRhoNode1 FF p) t) ≤ Real.pi := by
+  classical
+  -- ===== 共享前件 =====
+  have hlf : LocalFan V E FF := hcf.1
+  have hcvx : ∀ x ∈ FF, azimInFan x E ≤ Real.pi ∧ V ⊆ wedgeInFanGe x E := hcf.2
+  have hfan : Fan.FAN 0 V E := hlf.1
+  have h0V : (0 : V3) ∉ V := hfan.2.2.2.1
+  obtain ⟨ha, hb⟩ := hd.1
+  have hu0 : f u 0 = u := hd.2.2 u hu
+  have hcu : ContinuousAt (f u) 0 := hd.2.1 u hu 0 hd.1
+  have hclf : convexLocalFan_p2 V E FF := la37g5_clf2 hcf
+  have hlu : lunar_p2 v w V E := hl
+  have hu0' : u ≠ 0 := fun he => h0V (he ▸ hu)
+  have hv0 : (0 : V3) ≠ v := by
+    intro he
+    exact h0V (he ▸ hl.2.1 (by simp))
+  have hwV : w ∈ V := hl.2.1 (by simp)
+  have hw0 : (0 : V3) ≠ w := by
+    intro he
+    exact h0V (he ▸ hwV)
+  have hnc_vu : ¬ Collinear ℝ ({0, v, u} : Set V3) :=
+    LOCAL_CONVEX_NOT_COLLINEAR_p37 hcf hl u hu huv huw
+  have hlf2 : localFan_p2 V E FF := w5cB5_to_localFan_p2 hlf
+  have hnf : V.Finite := hfan.2.2.1.1
+  -- 内点结构：ιu, ρu ∈ affSpan {u,v,w}
+  have hinter := (LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI hclf hlu).2 u (by
+    simp only [Set.mem_diff, Set.mem_insert_iff, Set.mem_singleton_iff]
+    exact ⟨hu, by tauto⟩)
+  -- q, r ∈ V 与非共线
+  have hqV : rhoNode1 FF p ∈ V :=
+    (LOCAL_FAN_IMP_IN_V2 hlf2 (LOCAL_FAN_RHO_NODE_PROS2_p37 hlf p hp)).2
+  have hrV : ivsRhoNode1 FF p ∈ V := LOCAL_FAN_IVS_IN_V hlf2 hp
+  have hnc_pq : ¬ Collinear ℝ ({0, p, rhoNode1 FF p} : Set V3) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf2 hp
+  have hnc_pr : ¬ Collinear ℝ ({0, p, ivsRhoNode1 FF p} : Set V3) :=
+    LOFA_IMP_NOT_COLL_IVS hlf2 hp
+  -- A_0 ≤ π 与 V ⊆ wedge_0
+  have hA0le : azim 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) ≤ Real.pi := by
+    have h := (hcvx (p, rhoNode1 FF p) (LOCAL_FAN_RHO_NODE_PROS2_p37 hlf p hp)).1
+    rwa [w_b13_azimInFan_eq_azim hlf hp] at h
+  have hsub : V ⊆ wedgeGe 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) := by
+    have h := (hcvx (p, rhoNode1 FF p) (LOCAL_FAN_RHO_NODE_PROS2_p37 hlf p hp)).2
+    rwa [w_b13_wedgeInFanGe_eq_wedgeGe hlf hp] at h
+  -- 内点：A_0 = π 与半空间刻画
+  have hpi_int : p ≠ v → p ≠ w → azim 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) = Real.pi :=
+    fun hpv hpw => (HKIRPEP_ALT_p37 hcf hl).1 p (by simp [hp, hpv, hpw])
+  have hhalf : p ≠ v → p ≠ w →
+      wedgeGe 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) =
+        {x : V3 | 0 ≤ cross3_p37 p (rhoNode1 FF p) ⬝ᵥ x} := by
+    intro hpv hpw
+    rw [show wedgeGe 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) =
+      wedgeGe_p2 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) from rfl]
+    simpa [cross3_p37, sub_zero] using
+      (AZIM_PI_WEDGE_GE_CROSS_DOT (u := (0 : V3)) (v := p)
+        (w := rhoNode1 FF p) (ww := ivsRhoNode1 FF p) (hpi_int hpv hpw))
+  -- B-1 窗与分解
+  obtain ⟨dB1, hdB1, hB1⟩ := w5cB3_affGt_window (a := a) (b := b) (V := V) (E := E)
+    (f := f) (u := u) (v := v) (w := w) hl hnc_vu hu0 hcu haff
+  have hrepr : ∀ t : ℝ, |t| < dB1 → t ∈ Icc a b →
+      ∃ c h : ℝ, 0 < c ∧ f u t = c • u + h • v := by
+    intro t ht htIcc
+    obtain ⟨c, hc, h, hh⟩ := (affGt_pair_iff (v0 := (0 : V3)) (v1 := v) (x := u)
+      (y := f u t) hv0 hu0' huv).mp (hB1 t ht htIcc)
+    exact ⟨c, h, hc, by simpa using hh⟩
+  -- p = w 的 affGt（K1 换基）
+  have haffGt_w : ∀ t : ℝ, |t| < dB1 → t ∈ Icc a b → f u t ∈ affGt {0, w} {u} := by
+    intro t ht htIcc
+    obtain ⟨c, h, hc, hdec⟩ := hrepr t ht htIcc
+    obtain ⟨c0, hc0, hwv⟩ := w_b13_w_eq_neg_smul hcf hl
+    have hc0ne : c0 ≠ 0 := ne_of_lt hc0
+    have hv_eq : v = c0⁻¹ • w := by
+      rw [hwv, smul_smul, inv_mul_cancel₀ hc0ne, one_smul]
+    refine (affGt_pair_iff (v0 := (0 : V3)) (v1 := w) (x := u) (y := f u t)
+      hw0 hu0' huw).mpr ⟨c, hc, h / c0, ?_⟩
+    rw [hdec, hv_eq, smul_smul, div_eq_mul_inv]
+    abel
+  -- 区间窗
+  have hIcc : ∀ t : ℝ, |t| < min (-a) b → t ∈ Icc a b := by
+    intro t ht
+    have h := abs_lt.mp ht
+    constructor
+    · linarith [h.1, min_le_left (-a) b]
+    · linarith [h.2, min_le_right (-a) b]
+  -- affSpan {0,v,u} = affSpan {0,v,w,u}
+  have hwmem0 : w ∈ (affineSpan ℝ ({0, v} : Set V3) : Set V3) :=
+    hl.2.2.2.mem_affineSpan_of_mem_of_ne (p₁ := (0 : V3)) (p₂ := v) (p₃ := w)
+      (by simp) (by simp) (by simp) hv0
+  have hspanEq : (affineSpan ℝ ({0, v, w, u} : Set V3)) =
+      affineSpan ℝ ({0, v, u} : Set V3) := by
+    have hwmem' : w ∈ (affineSpan ℝ ({0, v, u} : Set V3) : Set V3) :=
+      affineSpan_mono ℝ (by
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+        tauto) hwmem0
+    have hset : ({0, v, w, u} : Set V3) = insert w ({0, v, u} : Set V3) := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset, affineSpan_insert_eq_affineSpan ℝ hwmem']
+  -- u_t ∈ span {v,u}
+  have hutS : ∀ t : ℝ, t ∈ Icc a b →
+      f u t ∈ (Submodule.span ℝ ({v, u} : Set V3) : Set V3) := by
+    intro t htIcc
+    rw [← w_b14_affSpan_zero_eq_span (A := v) (B := u), ← hspanEq]
+    exact haff t htIcc
+  -- affSpan {u,v,w} ⊆ affSpan {0,v,u}
+  have hsubUVW : (affineSpan ℝ ({u, v, w} : Set V3) : Set V3) ⊆
+      (affineSpan ℝ ({0, v, u} : Set V3) : Set V3) := by
+    refine affineSpan_le.mpr ?_
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · exact affineSpan_mono ℝ (by
+        intro a ha
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha ⊢
+        tauto) hwmem0
+  -- q, r ∈ span {v,u}
+  have hqrS : rhoNode1 FF u ∈ (Submodule.span ℝ ({v, u} : Set V3) : Set V3) ∧
+      ivsRhoNode1 FF u ∈ (Submodule.span ℝ ({v, u} : Set V3) : Set V3) := by
+    rw [← w_b14_affSpan_zero_eq_span (A := v) (B := u)]
+    exact ⟨hsubUVW hinter.2.1, hsubUVW hinter.2.2⟩
+  by_cases hpu : p = u
+  · -- ===== Case D: p = u（轴在动） =====
+    subst p
+    have hq_ne : rhoNode1 FF u ≠ u :=
+      fun he => hnc_pq (by rw [he]; simpa using collinear_pair ℝ (0 : V3) u)
+    have hr_ne : ivsRhoNode1 FF u ≠ u :=
+      fun he => hnc_pr (by rw [he]; simpa using collinear_pair ℝ (0 : V3) u)
+    have hA0pi : azim 0 u (rhoNode1 FF u) (ivsRhoNode1 FF u) = Real.pi :=
+      hpi_int huv huw
+    have hhalf2u : wedgeGe 0 u (rhoNode1 FF u) (ivsRhoNode1 FF u) =
+        {x : V3 | 0 ≤ cross3_p37 u (rhoNode1 FF u) ⬝ᵥ x} := by
+      rw [show wedgeGe 0 u (rhoNode1 FF u) (ivsRhoNode1 FF u) =
+        wedgeGe_p2 0 u (rhoNode1 FF u) (ivsRhoNode1 FF u) from rfl]
+      simpa [cross3_p37, sub_zero] using
+        (AZIM_PI_WEDGE_GE_CROSS_DOT (u := (0 : V3)) (v := u)
+          (w := rhoNode1 FF u) (ww := ivsRhoNode1 FF u) hA0pi)
+    -- 换基窗：u_t = c • u + h • q（c > 0）
+    have hvspan_q : v ∈ (Submodule.span ℝ ({rhoNode1 FF u, u} : Set V3) : Set V3) := by
+      have h := w_b14_span_swap (v := v) (u := u) (q := rhoNode1 FF u)
+        hnc_vu hnc_pq hqrS.1
+      rwa [show ({u, rhoNode1 FF u} : Set V3) = ({rhoNode1 FF u, u} : Set V3) from by
+        ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+    have hutS' : ∀ t' ∈ Icc a b, f u t' ∈ affineSpan ℝ ({0, rhoNode1 FF u, u} : Set V3) := by
+      intro t' htIcc'
+      show f u t' ∈ (affineSpan ℝ ({0, rhoNode1 FF u, u} : Set V3) : Set V3)
+      have hsub' : (Submodule.span ℝ ({v, u} : Set V3) : Set V3) ⊆
+          (Submodule.span ℝ ({rhoNode1 FF u, u} : Set V3) : Set V3) := by
+        refine Submodule.span_le.mpr ?_
+        intro x hx
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+        rcases hx with rfl | rfl
+        · exact hvspan_q
+        · exact Submodule.subset_span (by simp)
+      have hmem : f u t' ∈ (Submodule.span ℝ ({rhoNode1 FF u, u} : Set V3) : Set V3) :=
+        hsub' (hutS t' htIcc')
+      simpa only [← w_b14_affSpan_zero_eq_span (A := rhoNode1 FF u) (B := u)] using hmem
+    have hnc_q_u : ¬ Collinear ℝ ({0, rhoNode1 FF u, u} : Set V3) := by
+      rw [show ({0, rhoNode1 FF u, u} : Set V3) = ({0, u, rhoNode1 FF u} : Set V3) from by
+        ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+      exact hnc_pq
+    obtain ⟨eD2, heD2, hD2⟩ := w_b14_affGt_pair (u := u) (p := rhoNode1 FF u) (f := f)
+      (a := a) (b := b) hnc_q_u hu0 hcu hutS'
+    refine ⟨min e1 (min dB1 (min eD2 (min (-a) b))),
+      lt_min he1 (lt_min hdB1 (lt_min heD2 (lt_min (by linarith) hb))), ?_⟩
+    intro t ht
+    have ht1 : |t| < e1 := lt_of_lt_of_le ht (min_le_left _ _)
+    have htB1 : |t| < dB1 := lt_of_lt_of_le ht
+      (le_trans (min_le_right _ _) (min_le_left _ _))
+    have htD : |t| < eD2 := lt_of_lt_of_le ht
+      (le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_left _ _)))
+    have htI : |t| < min (-a) b := lt_of_lt_of_le ht
+      (le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_right _ _)))
+    have htIcc : t ∈ Icc a b := hIcc t htI
+    have hfix_q : f (rhoNode1 FF u) t = rhoNode1 FF u := hpin _ hqV (Ne.symm hq_ne) t htIcc
+    have hfix_r : f (ivsRhoNode1 FF u) t = ivsRhoNode1 FF u := hpin _ hrV (Ne.symm hr_ne) t htIcc
+    rw [hfix_q, hfix_r]
+    -- ρ_t 步进
+    have hstep1 : rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (ivsRhoNode1 FF u) = f u t := by
+      have h1 : f (rhoNode1 FF (ivsRhoNode1 FF u)) t =
+          rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (f (ivsRhoNode1 FF u) t) :=
+        w_b13_rho_image hlf (hLFt t ht1) hrV
+      have hrho_r : rhoNode1 FF (ivsRhoNode1 FF u) = u :=
+        DETER_RHO_NODE hlf2 (IVS_RHO_NODE_V_IN_FF_p37 hlf hu)
+      rw [hrho_r, hfix_r] at h1
+      exact h1.symm
+    have hstep2 : rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (f u t) = rhoNode1 FF u := by
+      have h1 : f (rhoNode1 FF u) t =
+          rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (f u t) :=
+        w_b13_rho_image hlf (hLFt t ht1) hu
+      rw [hfix_q] at h1
+      exact h1.symm
+    -- U 集合
+    have hUeq : {z : V3 | ∃ n : ℕ, n ≤ 2 ∧
+        z = ((rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF))^[n]) (ivsRhoNode1 FF u)} =
+        ({ivsRhoNode1 FF u, f u t, rhoNode1 FF u} : Set V3) := by
+      ext z
+      constructor
+      · rintro ⟨n, hn, rfl⟩
+        have hn3 : n = 0 ∨ n = 1 ∨ n = 2 := by omega
+        rcases hn3 with rfl | rfl | rfl
+        · simp
+        · rw [Function.iterate_one, hstep1]; simp
+        · rw [show ((rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF))^[2])
+              (ivsRhoNode1 FF u) =
+              rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF)
+                (rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (ivsRhoNode1 FF u))
+              from rfl, hstep1, hstep2]
+          simp
+      · intro hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with rfl | rfl | rfl
+        · exact ⟨0, by norm_num, by simp⟩
+        · exact ⟨1, by norm_num, by rw [Function.iterate_one, hstep1]⟩
+        · exact ⟨2, by norm_num, by
+            rw [show ((rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF))^[2])
+                (ivsRhoNode1 FF u) =
+                rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF)
+                  (rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (ivsRhoNode1 FF u))
+                from rfl, hstep1, hstep2]⟩
+    -- 平面
+    have hP : PlaneP_p37 (affineSpan ℝ ({0, v, u} : Set V3)) :=
+      ⟨0, v, u, hnc_vu, rfl⟩
+    have hUsub : ({ivsRhoNode1 FF u, f u t, rhoNode1 FF u} : Set V3) ⊆
+        (affineSpan ℝ ({0, v, u} : Set V3) : Set V3) := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl
+      · rw [w_b14_affSpan_zero_eq_span (A := v) (B := u)]
+        exact hqrS.2
+      · rw [w_b14_affSpan_zero_eq_span (A := v) (B := u)]
+        exact hutS t htIcc
+      · rw [w_b14_affSpan_zero_eq_span (A := v) (B := u)]
+        exact hqrS.1
+    have hrVt : ivsRhoNode1 FF u ∈ (fun z => f z t) '' V :=
+      hfix_r ▸ Set.mem_image_of_mem (fun z => f z t) hrV
+    have hiter := AZIM_PI_ITER_LOCAL_FAN_p37
+      (V := (fun z => f z t) '' V) (E := (fun s => (fun z => f z t) '' s) '' E)
+      (FF := (fun p => (f p.1 t, f p.2 t)) '' FF)
+      (v := ivsRhoNode1 FF u) (l := 2)
+      (U := ({ivsRhoNode1 FF u, f u t, rhoNode1 FF u} : Set V3))
+      (P := affineSpan ℝ ({0, v, u} : Set V3))
+      (hLFt t ht1) hrVt hUeq hP (mem_affineSpan ℝ (by simp)) hUsub 0 (by norm_num)
+    have hiterπ : azim 0 (f u t) (ivsRhoNode1 FF u) (rhoNode1 FF u) = Real.pi := by
+      have h := hiter
+      simp only [Nat.zero_add] at h
+      rw [Function.iterate_one, Function.iterate_zero, id,
+        show ((rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF))^[2])
+            (ivsRhoNode1 FF u) =
+            rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF)
+              (rhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (ivsRhoNode1 FF u))
+            from rfl,
+        hstep1, hstep2] at h
+      exact h
+    -- 非共线（形变扇）
+    have hnc_uq_t : ¬ Collinear ℝ ({0, f u t, rhoNode1 FF u} : Set V3) := by
+      have h := LOCAL_FAN_CHARACTER_OF_RHO_NODE2 (w5cB5_to_localFan_p2 (hLFt t ht1))
+        (Set.mem_image_of_mem (fun z => f z t) hu)
+      rwa [show rhoNode1_p2 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f u t) =
+        rhoNode1 FF u from hstep2] at h
+    have hnc_ur_t : ¬ Collinear ℝ ({0, f u t, ivsRhoNode1 FF u} : Set V3) := by
+      have hivs_u : ivsRhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (f u t) =
+          ivsRhoNode1 FF u := by
+        have h1 : f (ivsRhoNode1 FF u) t =
+            ivsRhoNode1 ((fun p => (f p.1 t, f p.2 t)) '' FF) (f u t) :=
+          w_b13_ivs_image hlf (hLFt t ht1) hu
+        rw [hfix_r] at h1
+        exact h1.symm
+      have h := LOFA_IMP_NOT_COLL_IVS (w5cB5_to_localFan_p2 (hLFt t ht1))
+        (Set.mem_image_of_mem (fun z => f z t) hu)
+      rwa [show ivsRhoNode1_p2 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f u t) =
+        ivsRhoNode1 FF u from hivs_u] at h
+    -- A_t = π
+    have hAtπ : azim 0 (f u t) (rhoNode1 FF u) (ivsRhoNode1 FF u) = Real.pi := by
+      have h := azim_compl (z := (0 : V3)) (w := f u t)
+        (w1 := rhoNode1 FF u) (w2 := ivsRhoNode1 FF u) hnc_uq_t hnc_ur_t
+      rw [hiterπ] at h
+      by_cases h0 : azim 0 (f u t) (rhoNode1 FF u) (ivsRhoNode1 FF u) = 0
+      · rw [if_pos h0] at h
+        linarith
+      · rw [if_neg h0] at h
+        linarith
+    -- W 支：半空间 + 换基
+    obtain ⟨c, h, hc, hdec⟩ := hD2 t htD htIcc
+    have hcross : cross3_p37 (f u t) (rhoNode1 FF u) = c • cross3_p37 u (rhoNode1 FF u) := by
+      rw [hdec, cross3_p37, cross3_p37]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.toLp_smul, map_add, map_smul,
+        LinearMap.add_apply, LinearMap.smul_apply, cross_self, smul_zero, add_zero]
+    have hmemV : ∀ z ∈ V, 0 ≤ cross3_p37 (f u t) (rhoNode1 FF u) ⬝ᵥ z := by
+      intro z hz
+      have hz0 : 0 ≤ cross3_p37 u (rhoNode1 FF u) ⬝ᵥ z := by
+        have h := hsub hz
+        rwa [hhalf2u] at h
+      rw [hcross]
+      simp only [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+      exact mul_nonneg (le_of_lt hc) hz0
+    refine ⟨?_, le_of_eq hAtπ⟩
+    intro z hz
+    by_cases hzu : z = u
+    · rw [hzu]
+      rw [show azim 0 (f u t) (rhoNode1 FF u) (f u t) = 0 from
+        w_b15_azim_eq_zero_of_collinear3 (v := (0 : V3)) (w := f u t)
+          (w1 := rhoNode1 FF u) (w2 := f u t)
+          (collinear3_pair_right (v0 := (0 : V3)) (v1 := f u t) rfl)]
+      exact azim_nonneg _ _ _ _
+    · have hfz : f z t = z := hpin z hz (Ne.symm hzu) t htIcc
+      rw [hfz]
+      have hhalfD : wedgeGe 0 (f u t) (rhoNode1 FF u) (ivsRhoNode1 FF u) =
+          {x : V3 | 0 ≤ cross3_p37 (f u t) (rhoNode1 FF u) ⬝ᵥ x} := by
+        rw [show wedgeGe 0 (f u t) (rhoNode1 FF u) (ivsRhoNode1 FF u) =
+          wedgeGe_p2 0 (f u t) (rhoNode1 FF u) (ivsRhoNode1 FF u) from rfl]
+        simpa [cross3_p37, sub_zero] using
+          (AZIM_PI_WEDGE_GE_CROSS_DOT (u := (0 : V3)) (v := f u t)
+            (w := rhoNode1 FF u) (ww := ivsRhoNode1 FF u) hAtπ)
+      have hmemz : z ∈ wedgeGe 0 (f u t) (rhoNode1 FF u) (ivsRhoNode1 FF u) := by
+        rw [hhalfD]
+        exact hmemV z hz
+      have hle := (WEDGE_GE_AZIM_LE z 0 (f u t) (rhoNode1 FF u)
+        (ivsRhoNode1 FF u)).mp hmemz
+      rwa [hAtπ] at hle ⊢
+  · by_cases hqu : rhoNode1 FF p = u
+    · -- ===== Case B: q = u =====
+      have hp_ne : p ≠ u := hpu
+      have hnc_pu : ¬ Collinear ℝ ({0, p, u} : Set V3) := by rwa [hqu] at hnc_pq
+      have hru : ivsRhoNode1 FF p ≠ u := by
+        intro hru_eq
+        have hA0 : azim 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) = 0 := by
+          rw [hqu, hru_eq, azim_self]
+        have hpos : 0 < azim 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) :=
+          INTERIOR_ANGLE1_POS hlf2 hp
+        linarith
+      have hspan_pu : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, p, u} : Set V3) := by
+        intro t htIcc
+        show f u t ∈ (affineSpan ℝ ({0, p, u} : Set V3) : Set V3)
+        have hvspan_pu : v ∈ (Submodule.span ℝ ({p, u} : Set V3) : Set V3) := by
+          by_cases hpv : p = v
+          · rw [hpv]
+            exact Submodule.subset_span (by simp)
+          · by_cases hpw : p = w
+            · -- v = c0⁻¹ • w = c0⁻¹ • p
+              obtain ⟨c0, hc0, hwv⟩ := w_b13_w_eq_neg_smul hcf hl
+              have hc0ne : c0 ≠ 0 := ne_of_lt hc0
+              have h1 : v = c0⁻¹ • w := by
+                rw [hwv, smul_smul, inv_mul_cancel₀ hc0ne, one_smul]
+              have hv_eq : v = c0⁻¹ • p := by rw [h1, ← hpw]
+              rw [hv_eq]
+              exact Submodule.smul_mem _ _ (Submodule.subset_span (by simp))
+            · -- p 内点：p = ιu ∈ span {v,u}
+              have hmem_pu : (p, u) ∈ FF := by
+                rw [← hqu]; exact LOCAL_FAN_RHO_NODE_PROS2_p37 hlf p hp
+              have hp_eq_ivs : p = ivsRhoNode1 FF u := by
+                have h := IVS_RHO_NODE1_DETE hlf2 hmem_pu
+                exact h.symm
+              have hpP0 : p ∈ (affineSpan ℝ ({u, v, w} : Set V3) : Set V3) := by
+                rw [hp_eq_ivs]
+                exact hinter.2.2
+              have hpP : p ∈ (Submodule.span ℝ ({v, u} : Set V3) : Set V3) := by
+                rw [← w_b14_affSpan_zero_eq_span (A := v) (B := u)]
+                exact hsubUVW hpP0
+              have hvspan : v ∈ (Submodule.span ℝ ({u, p} : Set V3) : Set V3) :=
+                w_b14_span_swap (v := v) (u := u) (q := p) hnc_vu
+                  (by
+                    rw [show ({0, u, p} : Set V3) = ({0, p, u} : Set V3) from by
+                      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+                    exact hnc_pu) hpP
+              rwa [show ({u, p} : Set V3) = ({p, u} : Set V3) from by
+                ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hvspan
+        have hsub' : (Submodule.span ℝ ({v, u} : Set V3) : Set V3) ⊆
+            (Submodule.span ℝ ({p, u} : Set V3) : Set V3) := by
+          refine Submodule.span_le.mpr ?_
+          intro x hx
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+          rcases hx with rfl | rfl
+          · exact hvspan_pu
+          · exact Submodule.subset_span (by simp)
+        have hmem : f u t ∈ (Submodule.span ℝ ({p, u} : Set V3) : Set V3) :=
+          hsub' (hutS t htIcc)
+        simpa only [← w_b14_affSpan_zero_eq_span (A := p) (B := u)] using hmem
+      obtain ⟨eB, heB, hBwin⟩ := w_b14_affGt_pair (u := u) (p := p) (f := f)
+        (a := a) (b := b) hnc_pu hu0 hcu hspan_pu
+      refine ⟨min eB (min (-a) b), lt_min heB (lt_min (by linarith) hb), ?_⟩
+      intro t ht
+      have htB : |t| < eB := lt_of_lt_of_le ht (min_le_left _ _)
+      have htI : |t| < min (-a) b := lt_of_lt_of_le ht (min_le_right _ _)
+      have htIcc : t ∈ Icc a b := hIcc t htI
+      rw [hqu]
+      have hfp : f p t = p := hpin p hp (Ne.symm hp_ne) t htIcc
+      rw [hfp]
+      have hmem : f u t ∈ affGt {0, p} {u} := by
+        rw [affGt_pair_iff (v0 := (0 : V3)) (v1 := p) (x := u) (y := f u t)
+          (by intro he; exact h0V (he ▸ hp)) hu0' (Ne.symm hp_ne)]
+        obtain ⟨c, h, hc, hdec⟩ := hBwin t htB htIcc
+        exact ⟨c, hc, h, by simpa using hdec⟩
+      have hput : ¬ Collinear ℝ ({0, p, f u t} : Set V3) := by
+        intro hcc
+        exact hnc_pu ((w5cB_collinear3_affGt_transfer (u := (0 : V3)) (v := p)
+          (y := u) hmem).mp hcc)
+      have hrt : f (ivsRhoNode1 FF p) t = ivsRhoNode1 FF p :=
+        hpin _ hrV (Ne.symm hru) t htIcc
+      have hAt : azim 0 p (f u t) (ivsRhoNode1 FF p) = azim 0 p u (ivsRhoNode1 FF p) := by
+        by_cases hcol : Collinear ℝ ({0, p, ivsRhoNode1 FF p} : Set V3)
+        · rw [w_b15_azim_eq_zero_of_collinear3 (v := (0 : V3)) (w := p)
+              (w1 := f u t) (w2 := ivsRhoNode1 FF p) hcol,
+            w_b15_azim_eq_zero_of_collinear3 (v := (0 : V3)) (w := p)
+              (w1 := u) (w2 := ivsRhoNode1 FF p) hcol]
+        · exact w_b14_azim_ref_swap hcol hnc_pu hput hmem
+      refine ⟨?_, ?_⟩
+      · intro z hz
+        by_cases hzu : z = u
+        · rw [hzu, azim_self]
+          exact azim_nonneg _ _ _ _
+        · have hfz : f z t = z := hpin z hz (Ne.symm hzu) t htIcc
+          rw [hfz]
+          have hzsw : azim 0 p (f u t) z = azim 0 p u z := by
+            by_cases hcol : Collinear ℝ ({0, p, z} : Set V3)
+            · rw [w_b15_azim_eq_zero_of_collinear3 (v := (0 : V3)) (w := p)
+                  (w1 := f u t) (w2 := z) hcol,
+                w_b15_azim_eq_zero_of_collinear3 (v := (0 : V3)) (w := p)
+                  (w1 := u) (w2 := z) hcol]
+            · exact w_b14_azim_ref_swap hcol hnc_pu hput hmem
+          rw [hrt, hzsw, hAt]
+          have hh := (WEDGE_GE_AZIM_LE z 0 p (rhoNode1 FF p)
+            (ivsRhoNode1 FF p)).mp (hsub hz)
+          rwa [hqu] at hh
+      · rw [hrt, hAt]
+        simpa [hqu] using hA0le
+    · by_cases hru : ivsRhoNode1 FF p = u
+      · -- ===== Case C: r = u（q ≠ u） =====
+        have hp_ne : p ≠ u := hpu
+        have hnc_pu : ¬ Collinear ℝ ({0, p, u} : Set V3) := by rwa [hru] at hnc_pr
+        -- p = ρu ∈ span {v,u}
+        have hmem_up : (ivsRhoNode1 FF p, p) ∈ FF := IVS_RHO_NODE_V_IN_FF_p37 hlf hp
+        have hrho_up : rhoNode1 FF u = p := by
+          rw [← hru]
+          exact DETER_RHO_NODE hlf2 hmem_up
+        have hpP : p ∈ (Submodule.span ℝ ({v, u} : Set V3) : Set V3) := by
+          rw [← w_b14_affSpan_zero_eq_span (A := v) (B := u), ← hrho_up]
+          exact hsubUVW hinter.2.1
+        have hspan_pu : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, p, u} : Set V3) := by
+          intro t htIcc
+          show f u t ∈ (affineSpan ℝ ({0, p, u} : Set V3) : Set V3)
+          have hvspan_pu : v ∈ (Submodule.span ℝ ({p, u} : Set V3) : Set V3) := by
+            have hvspan : v ∈ (Submodule.span ℝ ({u, p} : Set V3) : Set V3) :=
+              w_b14_span_swap (v := v) (u := u) (q := p) hnc_vu
+                (by
+                  rw [show ({0, u, p} : Set V3) = ({0, p, u} : Set V3) from by
+                    ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+                  exact hnc_pu) hpP
+            rwa [show ({u, p} : Set V3) = ({p, u} : Set V3) from by
+              ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hvspan
+          have hsub' : (Submodule.span ℝ ({v, u} : Set V3) : Set V3) ⊆
+              (Submodule.span ℝ ({p, u} : Set V3) : Set V3) := by
+            refine Submodule.span_le.mpr ?_
+            intro x hx
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+            rcases hx with rfl | rfl
+            · exact hvspan_pu
+            · exact Submodule.subset_span (by simp)
+          have hmem : f u t ∈ (Submodule.span ℝ ({p, u} : Set V3) : Set V3) :=
+            hsub' (hutS t htIcc)
+          simpa only [← w_b14_affSpan_zero_eq_span (A := p) (B := u)] using hmem
+        obtain ⟨eC, heC, hCwin⟩ := w_b14_affGt_pair (u := u) (p := p) (f := f)
+          (a := a) (b := b) hnc_pu hu0 hcu hspan_pu
+        refine ⟨min eC (min (-a) b), lt_min heC (lt_min (by linarith) hb), ?_⟩
+        intro t ht
+        have htC : |t| < eC := lt_of_lt_of_le ht (min_le_left _ _)
+        have htI : |t| < min (-a) b := lt_of_lt_of_le ht (min_le_right _ _)
+        have htIcc : t ∈ Icc a b := hIcc t htI
+        rw [hru]
+        have hfp : f p t = p := hpin p hp (Ne.symm hp_ne) t htIcc
+        rw [hfp]
+        have hmem : f u t ∈ affGt {0, p} {u} := by
+          rw [affGt_pair_iff (v0 := (0 : V3)) (v1 := p) (x := u) (y := f u t)
+            (by intro he; exact h0V (he ▸ hp)) hu0' (Ne.symm hp_ne)]
+          obtain ⟨c, h, hc, hdec⟩ := hCwin t htC htIcc
+          exact ⟨c, hc, h, by simpa using hdec⟩
+        have hAt : azim 0 p (rhoNode1 FF p) (f u t) = azim 0 p (rhoNode1 FF p) u :=
+          IN_AFF_GT_IMP_AZIMEQ2_p37 hmem (rhoNode1 FF p)
+        have hfq : f (rhoNode1 FF p) t = rhoNode1 FF p :=
+          hpin _ hqV (Ne.symm hqu) t htIcc
+        rw [hfq]
+        refine ⟨?_, ?_⟩
+        · intro z hz
+          by_cases hzu : z = u
+          · rw [hzu, hAt]
+          · have hfz : f z t = z := hpin z hz (Ne.symm hzu) t htIcc
+            rw [hfz, hAt]
+            have hh := (WEDGE_GE_AZIM_LE z 0 p (rhoNode1 FF p)
+              (ivsRhoNode1 FF p)).mp (hsub hz)
+            rwa [hru] at hh
+        · rw [hAt]
+          simpa [hru] using hA0le
+      · -- ===== Case A: 固定 dart（p, q, r 皆 ≠ u） =====
+        have hp_ne : p ≠ u := hpu
+        by_cases hpv : p = v
+        · -- p = v：target 交换（B-1 窗）
+          rw [hpv] at hp hp_ne hqV hrV hqu hru hsub hA0le ⊢
+          refine ⟨min e1 (min dB1 (min (-a) b)),
+            lt_min he1 (lt_min hdB1 (lt_min (by linarith) hb)), ?_⟩
+          intro t ht
+          have ht1 : |t| < e1 := lt_of_lt_of_le ht (min_le_left _ _)
+          have htB1 : |t| < dB1 := lt_of_lt_of_le ht
+            (le_trans (min_le_right _ _) (min_le_left _ _))
+          have htI : |t| < min (-a) b := lt_of_lt_of_le ht
+            (le_trans (min_le_right _ _) (min_le_right _ _))
+          have htIcc : t ∈ Icc a b := hIcc t htI
+          have hfp : f v t = v := hpin v hp (Ne.symm hp_ne) t htIcc
+          have hfq : f (rhoNode1 FF v) t = rhoNode1 FF v :=
+            hpin _ hqV (Ne.symm hqu) t htIcc
+          have hfr : f (ivsRhoNode1 FF v) t = ivsRhoNode1 FF v :=
+            hpin _ hrV (Ne.symm hru) t htIcc
+          rw [hfp, hfq, hfr]
+          have hmem : f u t ∈ affGt {0, v} {u} := hB1 t htB1 htIcc
+          have hAt : azim 0 v (rhoNode1 FF v) (f u t) =
+              azim 0 v (rhoNode1 FF v) u :=
+            IN_AFF_GT_IMP_AZIMEQ2_p37 hmem (rhoNode1 FF v)
+          refine ⟨?_, ?_⟩
+          · intro z hz
+            by_cases hzu : z = u
+            · rw [hzu, hAt]
+              exact (WEDGE_GE_AZIM_LE u 0 v (rhoNode1 FF v) (ivsRhoNode1 FF v)).mp (hsub hu)
+            · have hfz : f z t = z := hpin z hz (Ne.symm hzu) t htIcc
+              rw [hfz]
+              exact (WEDGE_GE_AZIM_LE z 0 v (rhoNode1 FF v) (ivsRhoNode1 FF v)).mp (hsub hz)
+          · exact hA0le
+        · by_cases hpw : p = w
+          · -- p = w：target 交换（K1 换基窗）
+            rw [hpw] at hp hp_ne hqV hrV hqu hru hsub hA0le ⊢
+            refine ⟨min e1 (min dB1 (min (-a) b)),
+              lt_min he1 (lt_min hdB1 (lt_min (by linarith) hb)), ?_⟩
+            intro t ht
+            have ht1 : |t| < e1 := lt_of_lt_of_le ht (min_le_left _ _)
+            have htB1 : |t| < dB1 := lt_of_lt_of_le ht
+              (le_trans (min_le_right _ _) (min_le_left _ _))
+            have htI : |t| < min (-a) b := lt_of_lt_of_le ht
+              (le_trans (min_le_right _ _) (min_le_right _ _))
+            have htIcc : t ∈ Icc a b := hIcc t htI
+            have hfp : f w t = w := hpin w hp (Ne.symm hp_ne) t htIcc
+            have hfq : f (rhoNode1 FF w) t = rhoNode1 FF w :=
+              hpin _ hqV (Ne.symm hqu) t htIcc
+            have hfr : f (ivsRhoNode1 FF w) t = ivsRhoNode1 FF w :=
+              hpin _ hrV (Ne.symm hru) t htIcc
+            rw [hfp, hfq, hfr]
+            have hmem : f u t ∈ affGt {0, w} {u} := haffGt_w t htB1 htIcc
+            have hAt : azim 0 w (rhoNode1 FF w) (f u t) =
+                azim 0 w (rhoNode1 FF w) u :=
+              IN_AFF_GT_IMP_AZIMEQ2_p37 hmem (rhoNode1 FF w)
+            refine ⟨?_, ?_⟩
+            · intro z hz
+              by_cases hzu : z = u
+              · rw [hzu, hAt]
+                exact (WEDGE_GE_AZIM_LE u 0 w (rhoNode1 FF w) (ivsRhoNode1 FF w)).mp (hsub hu)
+              · have hfz : f z t = z := hpin z hz (Ne.symm hzu) t htIcc
+                rw [hfz]
+                exact (WEDGE_GE_AZIM_LE z 0 w (rhoNode1 FF w) (ivsRhoNode1 FF w)).mp (hsub hz)
+            · exact hA0le
+          · -- p 内点：半空间 + K2
+            have hpi := hpi_int hpv hpw
+            have hhalfp := hhalf hpv hpw
+            have hK2 : cross3_p37 p (rhoNode1 FF p) ⬝ᵥ v = 0 :=
+              w_b13_cross_rho_v_eq_zero hcf hl hp hpv hpw
+            have hmemV : 0 ≤ cross3_p37 p (rhoNode1 FF p) ⬝ᵥ u := by
+              have h := hsub hu
+              rwa [hhalfp] at h
+            refine ⟨min dB1 (min (-a) b), lt_min hdB1 (lt_min (by linarith) hb), ?_⟩
+            intro t ht
+            have htB1 : |t| < dB1 := lt_of_lt_of_le ht (min_le_left _ _)
+            have htI : |t| < min (-a) b := lt_of_lt_of_le ht (min_le_right _ _)
+            have htIcc : t ∈ Icc a b := hIcc t htI
+            have hfp : f p t = p := hpin p hp (Ne.symm hp_ne) t htIcc
+            have hfq : f (rhoNode1 FF p) t = rhoNode1 FF p :=
+              hpin _ hqV (Ne.symm hqu) t htIcc
+            have hfr : f (ivsRhoNode1 FF p) t = ivsRhoNode1 FF p :=
+              hpin _ hrV (Ne.symm hru) t htIcc
+            rw [hfp, hfq, hfr]
+            obtain ⟨c, h, hc, hdec⟩ := hrepr t htB1 htIcc
+            have hhalfu : 0 ≤ cross3_p37 p (rhoNode1 FF p) ⬝ᵥ f u t :=
+              w_b14_halfspace (n := cross3_p37 p (rhoNode1 FF p)) (u := u) (v := v)
+                (ut := f u t) (c := c) (h := h) hK2 hmemV hdec hc
+            refine ⟨?_, ?_⟩
+            · intro z hz
+              by_cases hzu : z = u
+              · rw [hzu]
+                have hmem_w : f u t ∈ wedgeGe 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) := by
+                  rw [hhalfp]
+                  exact hhalfu
+                exact (WEDGE_GE_AZIM_LE (f u t) 0 p (rhoNode1 FF p)
+                  (ivsRhoNode1 FF p)).mp hmem_w
+              · have hfz : f z t = z := hpin z hz (Ne.symm hzu) t htIcc
+                rw [hfz]
+                exact (WEDGE_GE_AZIM_LE z 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p)).mp (hsub hz)
+            · exact hA0le
 /-- HOL `MHAEYJN_CONVEX_LOCAL_FAN` (lunar_deform.hl:3644): the
 `ConvexLocalFan` conclusion of MHAEYJN without the lunar conjunct.
-GIANT (sorry): combines `SUB_LUNAR_DEFORM_LEMMA_p37` with the
-`XRECQNS_UPDATE` fan-transfer kit (`Wrgcvdr_cizmrrh.LOCAL_FAN_IMP_FAN`,
-`UNIONS_SUBSET`, epsilon min). -/
+PROVED (la37-mhaeyjn-w3): `XRECQNS_UPDATE_p37` gives the `LocalFan`
+transfer; the two convexity conjuncts are the per-dart `w_b14_dart_convex`
+windows minimised over the finite vertex set `V`. -/
 theorem MHAEYJN_CONVEX_LOCAL_FAN_p37 {a b : ℝ} {V : Set V3} {E : Set (Set V3)}
     {FF : Set (V3 × V3)} {f : V3 → ℝ → V3} {v w u : V3}
     (_hcf : ConvexLocalFan V E FF) (_hl : Lunar v w V E) (_hd : Deformation f V a b)
@@ -4395,7 +5017,71 @@ theorem MHAEYJN_CONVEX_LOCAL_FAN_p37 {a b : ℝ} {V : Set V3} {E : Set (Set V3)}
       ConvexLocalFan ((fun z => f z t) '' V)
         ((fun s => (fun z => f z t) '' s) '' E)
         ((fun p => (f p.1 t, f p.2 t)) '' FF) := by
-  sorry
+  obtain ⟨e1, he1, hLFt⟩ := XRECQNS_UPDATE_p37 _hd _hcf.1
+  have hlf2 : localFan_p2 V E FF := w5cB5_to_localFan_p2 _hcf.1
+  have hfan0 : Fan.FAN 0 V E := _hcf.1.1
+  have hVfin : V.Finite := hfan0.2.2.1.1
+  have hVne : V.Nonempty := Set.nonempty_iff_ne_empty.mpr hfan0.2.2.1.2
+  have hex : ∀ p : V3, p ∈ V → ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
+      (∀ z ∈ V, azim 0 (f p t) (f (rhoNode1 FF p) t) (f z t) ≤
+        azim 0 (f p t) (f (rhoNode1 FF p) t) (f (ivsRhoNode1 FF p) t)) ∧
+      azim 0 (f p t) (f (rhoNode1 FF p) t) (f (ivsRhoNode1 FF p) t) ≤ Real.pi :=
+    fun p hp => w_b14_dart_convex _hcf _hl _hd _hu _hv _hw _hpin _haff he1 hLFt p hp
+  let d : V3 → ℝ := fun p => if hp : p ∈ V then Classical.choose (hex p hp) else 1
+  have hdpos : ∀ p ∈ V, 0 < d p := by
+    intro p hp
+    dsimp only [d]
+    rw [dif_pos hp]
+    exact (Classical.choose_spec (hex p hp)).1
+  have hdprop : ∀ p ∈ V, ∀ t : ℝ, |t| < d p →
+      (∀ z ∈ V, azim 0 (f p t) (f (rhoNode1 FF p) t) (f z t) ≤
+        azim 0 (f p t) (f (rhoNode1 FF p) t) (f (ivsRhoNode1 FF p) t)) ∧
+      azim 0 (f p t) (f (rhoNode1 FF p) t) (f (ivsRhoNode1 FF p) t) ≤ Real.pi := by
+    intro p hp
+    dsimp only [d]
+    rw [dif_pos hp]
+    exact (Classical.choose_spec (hex p hp)).2
+  obtain ⟨p0, hp0mem, hmin⟩ := Finset.exists_min_image hVfin.toFinset d (by
+    obtain ⟨v0, hv0⟩ := hVne
+    exact ⟨v0, by simpa using hv0⟩)
+  have hp0V : p0 ∈ V := by simpa using hp0mem
+  refine ⟨min e1 (d p0), lt_min he1 (hdpos p0 hp0V), ?_⟩
+  intro t ht
+  have ht1 : |t| < e1 := by
+    rw [abs_lt]
+    exact ⟨lt_of_le_of_lt (neg_le_neg (min_le_left _ _)) ht.1,
+      lt_of_lt_of_le ht.2 (min_le_left _ _)⟩
+  have htD0 : |t| < d p0 := by
+    rw [abs_lt]
+    exact ⟨lt_of_le_of_lt (neg_le_neg (min_le_right _ _)) ht.1,
+      lt_of_lt_of_le ht.2 (min_le_right _ _)⟩
+  have hLFtm : LocalFan ((fun z => f z t) '' V)
+      ((fun s => (fun z => f z t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF) := hLFt t ht1
+  refine ⟨hLFtm, ?_⟩
+  intro x hx
+  obtain ⟨⟨p, q⟩, hpq, rfl⟩ := hx
+  show azimInFan (f p t, f q t) ((fun s => (fun z => f z t) '' s) '' E) ≤ Real.pi ∧
+    (fun z => f z t) '' V ⊆ wedgeInFanGe (f p t, f q t) ((fun s => (fun z => f z t) '' s) '' E)
+  have hpV : p ∈ V := (LOCAL_FAN_IMP_IN_V2 hlf2 hpq).1
+  have hq : q = rhoNode1 FF p := (DETER_RHO_NODE hlf2 hpq).symm
+  have hw : |t| < d p := lt_of_lt_of_le htD0 (hmin p (hVfin.mem_toFinset.mpr hpV))
+  have hconj := hdprop p hpV t hw
+  have hrho : f (rhoNode1 FF p) t =
+      rhoNode1 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f p t) :=
+    w_b13_rho_image _hcf.1 hLFtm hpV
+  have hivs : f (ivsRhoNode1 FF p) t =
+      ivsRhoNode1 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f p t) :=
+    w_b13_ivs_image _hcf.1 hLFtm hpV
+  have hmemV : f p t ∈ (fun z => f z t) '' V := Set.mem_image_of_mem _ hpV
+  rw [hq]
+  constructor
+  · rw [hrho, w_b13_azimInFan_eq_azim hLFtm hmemV, ← hrho, ← hivs]
+    exact hconj.2
+  · intro z' hz'
+    obtain ⟨z, hzV, rfl⟩ := hz'
+    rw [hrho, w_b13_wedgeInFanGe_eq_wedgeGe hLFtm hmemV, ← hrho, ← hivs]
+    exact ⟨azim_nonneg _ _ _ _, hconj.1 z hzV⟩
 
 /-- The registry `MHAEYJN_concl` (appendix.hl:25) as a `Prop`: the
 `real_interval (a,b)` ↔ `Icc a b` rendering, verbatim `_p37` copy.
@@ -4419,11 +5105,28 @@ def MHAEYJN_prop_p37 : Prop :=
         ((fun e => (fun v => f v t) '' e) '' E)
 
 /-- HOL `MHAEYJN` (lunar_deform.hl:4985): the lunar deformation registry
-conclusion.  GIANT (sorry): needs `MHAEYJN_CONVEX_LOCAL_FAN_p37` +
-`SUB_LUNAR_DEFORM_LEMMA_p37` (the `if e < e' then e else e'` min of the two
-windows; the Lunar conjunct comes from `SUB_LUNAR_DEFORM_LEMMA_p37`). -/
+conclusion.  PROVED (la37-mhaeyjn-w3): the `if e < e' then e else e'` min of
+the windows of `MHAEYJN_CONVEX_LOCAL_FAN_p37` (first conjunct) and
+`SUB_LUNAR_DEFORM_LEMMA_p37` (lunar conjunct). -/
 theorem MHAEYJN_p37 : MHAEYJN_prop_p37 := by
-  sorry
+  unfold MHAEYJN_prop_p37
+  intro a b V E FF f v w u hcf hl hd hang hu huv huw hpin haff
+  obtain ⟨e1, he1, hconv⟩ :=
+    MHAEYJN_CONVEX_LOCAL_FAN_p37 hcf hl hd hang hu huv huw hpin haff
+  have hfan0 : Fan.FAN 0 V E := hcf.1.1
+  have hVfin : V.Finite := hfan0.2.2.1.1
+  have hedge : ∀ x ∈ E, x ⊆ V := fun x hx y hy => hfan0.1 ⟨x, hx, hy⟩
+  obtain ⟨e2, he2, hlun⟩ := SUB_LUNAR_DEFORM_LEMMA_p37 hVfin hcf hl hedge
+    (hd.2.2 u hu) (hd.2.1 u hu 0 hd.1) hang hd.1.1 hd.1.2 hu huv huw hpin haff
+  refine ⟨min e1 e2, lt_min he1 he2, ?_⟩
+  intro t ht
+  have ht1 : -e1 < t ∧ t < e1 :=
+    ⟨lt_of_le_of_lt (neg_le_neg (min_le_left _ _)) ht.1,
+      lt_of_lt_of_le ht.2 (min_le_left _ _)⟩
+  have ht2 : -e2 < t ∧ t < e2 :=
+    ⟨lt_of_le_of_lt (neg_le_neg (min_le_right _ _)) ht.1,
+      lt_of_lt_of_le ht.2 (min_le_right _ _)⟩
+  exact ⟨hconv t ht1, hlun t ht2⟩
 
 
 /-! ## w5cB7 kit (B7 波): G4 接口的正确形 + p2 桥 — 见 DELIVERY-b7 §1 -/
