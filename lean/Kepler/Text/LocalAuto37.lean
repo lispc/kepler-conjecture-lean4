@@ -4261,6 +4261,124 @@ private theorem w_b13_cross_rho_v_eq_zero {V : Set V3} {E : Set (Set V3)}
     simpa [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul] using hmemW
   nlinarith [hmemV, hW, hc]
 
+/-! ## la37-mhaeyjn-w2 施工区：MHAEYJN 装配（B-1 系数窗 / 逐 dart 凸性 / 总装）
+
+本节只加 `private` 件（前缀 `w_b14_`）。路线（对应 HOL `lunar_deform.hl:3644-4950`；
+其 490 行弧索引簿记由 K1/K2 + `LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI` 整体绕过）：
+
+* **B-1**：`u_t ∈ affineSpan {0,p,u}` + 连续 ⇒ `u_t = c • u + h • p`（`c > 0`），
+  由 `CONTINUOUS_POS_PRES_p37`（HOL `ss` 窗）逐对给出。
+* **逐 dart**：A2 像映射 + A3c registry 桥把目标化为
+  `azim 0 p_t q_t r_t ≤ π` 与 `∀ z ∈ V, azim 0 p_t q_t z_t ≤ azim 0 p_t q_t r_t`；
+  只有 `{p,q,r} ∩ {u} ≠ ∅` 的四个支需要工作：
+  - 固定 dart（三者皆非 `u`）：`z ≠ u` 用 t=0 凸性；`z = u` 用 target 交换
+    （`p = v/w`）或 `AZIM_PI_WEDGE_GE_CROSS_DOT` 半空间 + K2（`p` 内点）。
+  - `q = u`：reference 交换（`azim_compl` + target 交换）⇒ 整个 `azim` 阵列不变。
+  - `r = u`：target 交换 ⇒ `A_t = A_0`。
+  - `p = u`：`AZIM_PI_ITER_LOCAL_FAN_p37`（形变扇，`l = 2`，基 `r = ιu`）给
+    `azim 0 u_t r q = π`，`azim_compl` 转成 `A_t = π`；`W` 支用半空间
+    `u_t = c' • u + h' • q`（`c' > 0`，K2 + 换基）。 -/
+
+/-- `affineSpan {0, A, B} = span {A, B}`（集合相等）。 -/
+private theorem w_b14_affSpan_zero_eq_span {A B : V3} :
+    (affineSpan ℝ ({0, A, B} : Set V3) : Set V3) =
+      (Submodule.span ℝ ({A, B} : Set V3) : Set V3) := by
+  rw [show ({0, A, B} : Set V3) = insert 0 ({A, B} : Set V3) from by
+    ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]]
+  exact affineSpan_insert_zero _
+
+/-- B-1 泛用系数窗：`u_t` 在 `affineSpan {0, p, u}` 内连续、`u_0 = u` ⇒ 窗口内
+`u_t = c • u + h • p`（`c > 0`）。 -/
+private theorem w_b14_affGt_pair
+    {a b : ℝ} {f : V3 → ℝ → V3} {u p : V3}
+    (hnc : ¬ Collinear ℝ ({0, p, u} : Set V3))
+    (hu0 : f u 0 = u) (hcu : ContinuousAt (f u) 0)
+    (hspan : ∀ t ∈ Icc a b, f u t ∈ affineSpan ℝ ({0, p, u} : Set V3)) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e → t ∈ Icc a b →
+      ∃ c h : ℝ, 0 < c ∧ f u t = c • u + h • p := by
+  classical
+  have hnc' : ¬ Collinear ℝ ({u, p, (0 : V3)} : Set V3) := by
+    rw [show ({u, p, (0 : V3)} : Set V3) = ({0, p, u} : Set V3) from by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hnc
+  obtain ⟨e, he, hpos⟩ := CONTINUOUS_POS_PRES_p37 (x := u) (y := p) (a := 1) (b := 0)
+    (r := 0) (f := fun s => f u s) hnc' (by simpa using hu0) one_pos hcu
+  refine ⟨e, he, fun t ht htIcc => ?_⟩
+  have hmem : f u t ∈ (Submodule.span ℝ ({u, p} : Set V3) : Set V3) := by
+    have h1 : f u t ∈ (affineSpan ℝ ({0, u, p} : Set V3) : Set V3) := by
+      rw [show ({0, u, p} : Set V3) = ({0, p, u} : Set V3) from by
+        ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+      exact hspan t htIcc
+    rwa [w_b14_affSpan_zero_eq_span (A := u) (B := p)] at h1
+  obtain ⟨c, h, hdec⟩ := Submodule.mem_span_pair.mp hmem
+  exact ⟨c, h, hpos t ht c h (by simpa using hdec.symm), hdec.symm⟩
+
+/-- reference 交换：`ut ∈ affGt {0,p} {u}` ⇒ `azim 0 p ut z = azim 0 p u z`
+（`azim_compl` + `IN_AFF_GT_IMP_AZIMEQ2_p37` 的 target 交换）。 -/
+private theorem w_b14_azim_ref_swap {p u ut z : V3}
+    (hpz : ¬ Collinear ℝ ({0, p, z} : Set V3))
+    (hpu : ¬ Collinear ℝ ({0, p, u} : Set V3))
+    (hput : ¬ Collinear ℝ ({0, p, ut} : Set V3))
+    (hmem : ut ∈ affGt {0, p} {u}) :
+    azim 0 p ut z = azim 0 p u z := by
+  have h1 : azim 0 p z ut = azim 0 p z u := IN_AFF_GT_IMP_AZIMEQ2_p37 hmem z
+  have h2 : azim 0 p ut z =
+      if azim 0 p z ut = 0 then 0 else 2 * Real.pi - azim 0 p z ut :=
+    azim_compl (z := (0 : V3)) (w := p) (w1 := z) (w2 := ut) hpz hput
+  have h3 : azim 0 p u z =
+      if azim 0 p z u = 0 then 0 else 2 * Real.pi - azim 0 p z u :=
+    azim_compl (z := (0 : V3)) (w := p) (w1 := z) (w2 := u) hpz hpu
+  rw [h2, h3, h1]
+
+/-- 半空间闭性：`n ⊥ v`、`n·u ≥ 0`、`ut = c • u + h • v`（`c > 0`）⇒ `0 ≤ n·ut`。 -/
+private theorem w_b14_halfspace {n u v ut : V3} {c h : ℝ}
+    (hnv : n ⬝ᵥ v = 0) (hnu : 0 ≤ n ⬝ᵥ u)
+    (hut : ut = c • u + h • v) (hc : 0 < c) :
+    0 ≤ n ⬝ᵥ ut := by
+  rw [hut]
+  simp only [WithLp.ofLp_add, WithLp.ofLp_smul, dotProduct_add, dotProduct_smul,
+    smul_eq_mul, hnv, mul_zero, add_zero]
+  exact mul_nonneg (le_of_lt hc) hnu
+
+/-- 换基：`q ∈ span {v,u}` + 两组非共线 ⇒ `v ∈ span {u,q}`（显式系数，免维数）。 -/
+private theorem w_b14_span_swap {v u q : V3}
+    (hvu : ¬ Collinear ℝ ({0, v, u} : Set V3))
+    (huq : ¬ Collinear ℝ ({0, u, q} : Set V3))
+    (hq : q ∈ (Submodule.span ℝ ({v, u} : Set V3) : Set V3)) :
+    v ∈ (Submodule.span ℝ ({u, q} : Set V3) : Set V3) := by
+  classical
+  obtain ⟨α, β, hqeq⟩ := Submodule.mem_span_pair.mp hq
+  have hα : α ≠ 0 := by
+    intro hα0
+    apply huq
+    have hq2 : q = β • u := by rw [← hqeq, hα0, zero_smul, zero_add]
+    rw [hq2]
+    rcases eq_or_ne β 0 with hβ | hβ
+    · rw [hβ, zero_smul]
+      have hset : ({0, u, (0 : V3)} : Set V3) = ({0, u} : Set V3) := by
+        ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [hset]
+      exact collinear_pair ℝ (0 : V3) u
+    · refine (collinear3_iff_smul (v := (0 : V3)) (w := u) (w1 := β • u) ?_).mpr
+        ⟨β, by rw [sub_zero, sub_zero]⟩
+      intro he
+      apply huq
+      rw [he]
+      simpa using collinear_pair ℝ (0 : V3) q
+  refine Submodule.mem_span_pair.mpr ⟨α⁻¹ * (-β), α⁻¹, ?_⟩
+  have hαv : α • v = q - β • u := by
+    rw [← hqeq]
+    module
+  have hv : v = (α⁻¹ * (-β)) • u + α⁻¹ • q := by
+    calc v = α⁻¹ • (α • v) := (inv_smul_smul₀ hα v).symm
+      _ = α⁻¹ • (q - β • u) := by rw [hαv]
+      _ = α⁻¹ • q - α⁻¹ • (β • u) := by rw [smul_sub]
+      _ = α⁻¹ • q - (α⁻¹ * β) • u := by rw [smul_smul]
+      _ = (α⁻¹ * (-β)) • u + α⁻¹ • q := by
+            rw [show α⁻¹ * (-β) = -(α⁻¹ * β) by ring, neg_smul]
+            abel
+  exact hv.symm
+
 /-- HOL `MHAEYJN_CONVEX_LOCAL_FAN` (lunar_deform.hl:3644): the
 `ConvexLocalFan` conclusion of MHAEYJN without the lunar conjunct.
 GIANT (sorry): combines `SUB_LUNAR_DEFORM_LEMMA_p37` with the
