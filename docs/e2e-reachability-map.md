@@ -371,6 +371,43 @@
 
 
 
+### 基线 N：全库重跑 @ `7c59149c`（2026-11-05，AGENTS.md 落库时点）
+
+> **这是 2026-11-05 的实测值，TSV 已按本轮 cone 输出重写。**
+> 测量时点 = `7c59149c`；其后同日的 LA16（5 件）、LA6（ARCV 3 件）、PA22（2 件 +
+> 2 DEF-FIX）三笔落库**未计入**本轮数字。
+
+| 指标 | cone（e2e 锥） | union（多根） |
+|---|---:|---:|
+| K_REACH | **2,085,951（较 L +3,100）** | **2,107,089（较 M +3,091）** |
+| K_SORRIED | **119（较 L −15）** | **155（较 M −15）** |
+| K_AXIOM | 624（±0） | 624（±0） |
+| K_MODULES | 4,194（+10） | 4,239（+10） |
+| K_UNIVERSE | 2,097,682（+2,796） | 2,121,588（+2,787） |
+| COVERAGE | **99.458%** | **99.316%** |
+| 口径 II | XCASES 25,528 / 119 / 624 / 35,702 | — |
+| ORPHANS_TOTAL | — | **14,499（public 10,794 / private 3,705；较 M −304）** |
+| ROOTS | 1 | 164（PackingConcl 62 + LocalConcl 92 + manual 9/9 + e2e） |
+| SHIMS | — | 22（sorried 2） |
+
+- **SORRIED 首破 120**：cone 135（TSV E）→ 134（L）→ **119**。−15 来自塔群与 registry
+  的连续闭合（LA37 2、LA14 塔、LA34 registry、LA28 registry、LA31 三件等，逐件不再
+  在值里含 `sorryAx`）。这与 `docs/priority-queue.md` 的塔群账本方向一致。
+- **K_REACH +3,100 的来源**：不是单个大波，是 L 之后多笔落库的累积（删/改证明项同时
+  改变可达闭包）；K_MODULES +10 = 新增可达模块（PA23、W6Align 等已入宇宙）。
+- **K_UNIVERSE +2,796 主要是 `.lake` 覆盖面变化**：本轮闸把七个 Text 根与
+  LocalAuto6/16/22/28/36/37 重新编过，`import` 闭包内可枚举的 Kepler 声明比旧
+  olean 状态多。**这个数对 olean 新鲜度敏感，跨基线比较要谨慎**。
+- 仪器：cone（`e2e_reach_map.lean`）+ union（`global_reach_map.lean`）并跑，`nice 19`；
+  跑前先岛协议重建 `Kepler.Assembly.olean`（1:04）并回灌 `.lake`，否则仪器读 11-05
+  07:29 的旧 Assembly。cone 输出 4,956 行（**新增 `--- MODULE HISTOGRAM ---` 节**，
+  旧 TSV 无此节），已整体写入 `docs/e2e-reachability-map.tsv`；union 原始输出存
+  `docs/assets/instruments/union-reach-2026-11-05.out`。
+- **口径提醒**：TSV 现在是基线 N（不再停在 E）。任何引用「SORRIED 135 / K_REACH
+  2,079,707」的文档都是旧账。
+
+
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的

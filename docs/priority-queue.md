@@ -7,17 +7,18 @@
 > **北极限**：`#print axioms Kepler.the_kepler_conjecture_e2e`（Final.lean:22）=
 > `[propext, Classical.choice, Quot.sound]`。
 > **数字口径（2026-11-05 起）**：本文件里的指标是「最后实测」，不是实时值——
-> 每条都带 commit 与日期。`docs/e2e-reachability-map.tsv` 当前停在**基线 E**
-> （`2,079,707` / SORRIED 135），落后 md 两个基线，**不再作为唯一刻度**；
+> 每条都带 commit 与日期。当前实测 = **基线 N @`7c59149c`**
+> （cone `K_REACH 2,085,951` / SORRIED 119 / AXIOM 624；union `2,107,089` /
+> ORPHANS 14,499）。`docs/e2e-reachability-map.tsv` 已按基线 N 重写（2026-11-05）。
 > 引用前先看 `docs/e2e-reachability-map.md` 的最新 baseline 一节。
 > **历史**：续1–续344 的日志在 [`history/changelog-archive.md`](history/changelog-archive.md)；
 > 已落库车道表在 [`history/lanes-landed.md`](history/lanes-landed.md)。
 
 ## 0. 里程碑对表
 
-| 里程碑 | 定义 | 现状（2026-11-03 晚，续 258 后） |
+| 里程碑 | 定义 | 现状（**2026-11-05 实测，基线 N @`7c59149c`**） |
 |---|---|---|
-| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **基线 L：cone K_REACH 2,082,851（±0）/ SORRIED 134 / AXIOM 624 / K_MODULES 4,184 / K_UNIVERSE 2,094,886；口径 II ex-Cases = 22,428 / 134 / 624 / 32,906；UNION K_REACH 2,084,238 / ROOTS 163 / K_UNIVERSE 2,118,771 / COVERAGE 98.37% / ORPHANS 34,533（public 30,844 + private 3,689）**。ORPHANS 高位 = w6align 入宇宙的预期副作用（`w6align` 根只收 4 条根文件定理，19,715 条 `align_*` 游离，WIRE increment 仅 55）→ 块级补根波在飞（目标回 ~14.8k）。详见 `docs/e2e-reachability-map.md` 基线 J/K/L |
+| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **基线 N：cone K_REACH 2,085,951（较 L +3,100）/ SORRIED 119（−15）/ AXIOM 624（±0）/ K_MODULES 4,194 / K_UNIVERSE 2,097,682；口径 II ex-Cases = 25,528 / 119 / 624 / 35,702；UNION K_REACH 2,107,089 / ROOTS 164 / K_UNIVERSE 2,121,588 / COVERAGE 99.316% / ORPHANS 14,499（public 10,794 + private 3,705）/ SHIMS 22（sorried 2）**。SORRIED 首破 120 = 塔群连续闭合的直接兑现。K_UNIVERSE 对 `.lake` 新鲜度敏感，跨基线比较谨慎。详见 `docs/e2e-reachability-map.md` 基线 N（旧基线 K/L/M 保留） |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 624 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -41,14 +42,14 @@
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `pa22-giant-w4` | PA22 GOTCJAH 链 5 件 + 三处 DEF-FIX 判定 | 在飞 |
-| `la16-gap-w1` | LA16 真缺口 5 件（B 类孪生搬 body 2 + C 类本地装配 3） | 在飞 |
-| `la6-arcv-w1` | LA6 ARCV 三件（侦察先行 + `ARCV_DETER_DIRECTION` 优先，止损 450 行/件） | 在飞 |
+| `la16-cont-w1` | LA16 D 类连续性 4 件（Route B clean：本地 atn2 kit ~90–130 行，不碰 LA22 taint） | 在飞 |
+| `la28-nuxcoea-w1` | `NUXCOEA_p28` =2 半边 580–750 行 + `NUXCOEAv2_p28` | 在飞 |
+| `pa22-affine-transfer-w1` | 正交标架转移 kit 400–600 行（解锁 `EUSOTYP_general` → `EUSOTYP2_general` → `GOTCJAH`） | 在飞 |
 
-> 已落库车道（114 行，含 2026-10-25 至 2026-11-05 的全部批次）见
+> 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
-> 本轮刚落：`la28-registry-w2` 4/5（LA28 8→4）、`la36-kernel-w2` 5/5（LA36 7→2）、
-> `docs-audit-w1`（文档重整两批）。
+> 上一轮刚落：`la16-gap-w1` 5/5（LA16 11→6）、`la6-arcv-w1` 3/3（LA6 5→2）、
+> `pa22-giant-w4` 2/5 + 2 DEF-FIX（PA22 19→17）。
 
 ## 2. 排队（按序补位）
 
@@ -154,6 +155,7 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-05（18:20，续358）**：**三笔落库 + 地图仪器重跑出基线 N + 补位三条**。① **LA16 `3b072604`（11→6）**：5/5 闭——`taum_dih_y`←LA38 孪生搬 body、`ear_acute`←LA33、`K_SUC_2_MOD_F_SUB_ID` 本地模算术、两件 quad 走 LA38 移植的 `DELTA_Y_POS_4POINTS` 私有 kit（+157 行）。**工单勘误**：文献槽位实际是 `(d34,d23,d13,d12,d14,d24)`（`[v3;v4;v2;v1]`），不是 `(d21,d23,d24,d34,d14,d13)`；按工单顺序 `linarith` 闭不了。GATE-PASS。② **LA6 `4019cb54`（5→2）**：ARCV 三件全闭（124/72/238 行），3/3 标准三；余 `LUNAR_DEFORM_INJ` + 尾部总装。③ **PA22 `b6063c90`（19→17）**：`gotcjah_sol_half` + `gotcjah_sol_lemma` + **两处 DEF-FIX 真证关闭**（`POLYSORT_BIJ2`/`EUSOTYP_simple`，均无需改陈述；`insert_v` 不在路径上，保留）；`EUSOTYP_general`/`EUSOTYP2_general`/`GOTCJAH` 如实 BLOCKED——缺正交标架转移 kit（非 DEF-FIX 问题）。④ **仪器重跑**：岛协议重建 Assembly（1:04）+ 回灌 `.lake`，然后 cone + union 并跑（`nice 19`），出**基线 N @`7c59149c`**：cone `K_REACH 2,085,951`（+3,100 vs L）/ **`SORRIED 119`（−15，首破 120）** / AXIOM 624 / MODULES 4,194 / UNIVERSE 2,097,682；union `2,107,089` / SORRIED 155 / COVERAGE 99.316% / **ORPHANS 14,499**（−304）/ ROOTS 164 / SHIMS 22。`docs/e2e-reachability-map.tsv` 已整体重写（4,956 行，新增 MODULE HISTOGRAM 节），union 原始输出存 `docs/assets/instruments/`。K_UNIVERSE +2,796 主要是 `.lake` 覆盖面变化（闸重编了七个 Text 根与 LA6/16/22/28/36/37），跨基线比较需谨慎。⑤ 补位：`la16-cont-w1`（D 类 4 件，本地 atn2 kit 干净路线）/ `la28-nuxcoea-w1`（=2 半边 580–750 行）/ `pa22-affine-transfer-w1`（正交标架 kit）。⑥ 塔群：LA6 2 / LA14 0 / LA16 6 / LA28 4 / LA31 0 / LA34 0 / LA36 2 / LA37 0（总 **14**）。⑦ 池 3/5。
 - **2026-11-05（17:10，续357）**：**文档重整两批落库（`6cf601c9` + `151c6f81` + `431ee3f3`）+ LA28 w2 `8aca9969`（8→4）+ LA36 w2 `7ee332ff`（7→2）+ 补位 la16-gap-w1 / la6-arcv-w1**。① **文档**：`docs-audit-w1` 审计（161 md / 33,115 行）后按用户三项裁决执行——Phase 1 把 106 个历史件纯 `git mv` 进 `docs/archive/`（scouts 56 / handoffs 18 / projects 21 / lane-archives 8 / maps·design·templates 3），`--numstat` 实测 106 个 0/0 纯 rename；17 处当前文档引用改写 + 新增 `archive/README.md` 索引（16 个仍被引用的归档件）。根级五总览收敛为三件：`STATUS.md`/`HANDOFF.md`/`DEBT.md` → `archive/root/*-2026-10-23.md`，`PLAN.md` 标 2026-10-10 快照并删现状节，`README.md`/`README.zh.md` 中英同步改状态段（数字只指向 priority-queue，不手抄），`DECISIONS.md` 保留为根级唯一 current。`priority-queue.md` **650→170 行**：365 条日志搬 `history/changelog-archive.md`（含日期勘误头注），114 行车道表搬 `history/lanes-landed.md`，保留续345–356 共 13 条 + 指针；头注把「TSV 是唯一刻度」改为「last verified + stale」（TSV 实测停在基线 E，落后 md 两个基线）。`statement-fix-proposals.md` 加 108 条编号索引头（零正文改动、不改 `auto_gate.sh`）。旧目录收尾：2 个 kit `.diff` + 1 个 `.json` 进 archive，`docs/scouts/` 只剩 14 个数据 TSV + 新 README。② **LA28 w2**：4/5 闭（`IMJXPHRv2`/`ODXLSTCv2` 一行装配；`V3_DEFOR_CONVEX_LOCAL_FAN_MK(_TWO_CASES)` LA34 同构移植 271 行），4/4 标准三，GATE-PASS，8→4；`NUXCOEAv2` 实测**不是一行**（= `NUXCOEA` 同一声明的弱前件形，一行会注入 sorryAx），机器验证等价方向后拒做，与 `NUXCOEA_p28` 同批立项（剩 580–750 行）。③ **LA36 w2**：5/5 闭（`CASE_3`/`CASE_5_sqrt8`/`CASE_4_3` w1 模板 + `CASE_5_pro_cs`/`CASE_4_sqrt8` aPro 桥），标准三，GATE-PASS，7→2；余两条死叶 GIANT（`CARD_SLICE_EQ`/`HDPLYGY_CASE_3`，无消费者）保持延后。④ 补位：`la16-gap-w1`（B 类孪生 2 + C 类装配 3）/ `la6-arcv-w1`（ARCV 三件侦察先行）。⑤ 塔群：LA14 0 / **LA28 4** / LA34 0 / LA37 0 / LA17 0；LA6 5；LA31 0；LA16 11；**LA36 2**（总 **22**）。⑥ 池 3/5。
 - **2026-11-05（16:25，续356）**：**PA22 w3 三件闭（`02369c06`，22→19）+ w4 GOTCJAH 发车**。① 3/3 标准三，GATE-PASS，+653/−3（删除面恰 3 条 sorry）；`BIJ_FACET2_EDGE`（`b e := convexHull ℝ e` + 线段相等⇒端点对相等的私件；满射用 `EDGE_OF_FACET_EDGE` + w2 的 `SEGMENT_EDGE_ONTO`）/ `polyhedron_3_facets`（最小表示：`ncard ≤ 2` 造无界射线 rank-nullity 取核向量 + 约束↔facet 单射违反最小性 + `Set.ncard_le_ncard_of_injOn`）/ `facet_3_facets`（对 facet 套上件：`FACE_OF_POLYHEDRON_POLYHEDRON` + 有界 + `FACET_AFF_DIM_2`）；6 个 `p22w4_` 前缀 private helper，零新增 import。② **第 4 件 `polyhedron_edge_sum` 如实止损**：实为 Euler 型界（等价 `E ≤ 3F − 6`），HOL 原证直接消费 `BIJ_FACET_HYPERFACE`/`BIJ_DART_POLYEDGE`（现桩下为假）与空洞化的 `POLYHEDRON_TGJISOK`（`darts = ∅`），import 闭包内无 polyhedron Euler 定理 → 判「阻塞上游」不写伪证。③ 剩余 19：GOTCJAH 链 5 / 跨车道 PA18 三条 `YSSKQOY_VECTOR*` / stub-blocked 8 / `EXISTS_M_POLYHEDRON`（等 YSSKQOY）/ `polyhedron_edge_sum`（等 fan 接线）/ `POLYHEDRON_FACET_SUM_4Pi`（fan lane）。④ **w4 发车**：GOTCJAH 链 5 件，任务书要求先判定三处 DEF-FIX sorry（`insert_v`/`POLYSORT_BIJ2`/`EUSOTYP_simple`）是否在路径上、能否真证、是否需改陈述——不许直接开写。⑤ 池 4/5：`docs-audit-w1` / `la28-registry-w2` / `la36-kernel-w2` / `pa22-giant-w4`。
 - **2026-11-05（15:40，续355）**：**双塔塌：LA37 `baedee24`（2→0）+ LA36 kernel w1 `162bd61e`（11→7）；补位 la28-registry-w2 / la36-kernel-w2**。① **LA37**：`w_b14_dart_convex`（574 行，四支分派：固定 dart / `q=u` / `r=u` / `p=u`）先闭，再用它 + `XRECQNS_UPDATE_p37` 闭 `MHAEYJN_CONVEX_LOCAL_FAN_p37`（`LocalFan` 转移 + 逐 dart 窗对有限 `V` 取 min 给两条凸性合取），最后与 `SUB_LUNAR_DEFORM_LEMMA_p37` 取窗 min 闭 `MHAEYJN_p37`；两目标恰标准三；+709/−8（删除面恰 2 sorry + 2 段过时 docstring）；三块冻结陈述逐字节相同；GATE-PASS @`MHAEYJN_p37`。落地修正：`mem_span_pair` 方向歧义改 `Submodule.span_le` 彻底绕开；`subst hzu` 会反向改名（`z=u` 把 `u` 改成 `z`）→ 全改 `rw`；`cross3_p37` 展开的 `simp only` 须含 `LinearMap.add_apply`/`smul_apply`；`affineSpan` 的 SetLike vs Set 用 `show … : Set V3` 归一。② **LA36**：`XWITCCN_TYPE` + `CASE_4/5/6` 四件全闭，模板 = kernel 通用定理 + `s_init_scs_xw6` membership；4/4 标准三；GATE-PASS @`XWITCCN_TYPE`；+18/−21 删除面恰 4 sorry；own-sorry 11→7，剩 `CASE_3`/`CASE_5_sqrt8`/`CASE_4_3`（各 8–12 行）+ `CASE_5_pro_cs`/`CASE_4_sqrt8`（aPro 桥 20–30 行）+ 两条死叶 GIANT（`CARD_SLICE_EQ`/`HDPLYGY_CASE_3`）。③ 补位两车道：`la28-registry-w2`（墙已倒：三条 premise-free 一行装配 + `V3_DEFOR_CONVEX×2`，不碰 `NUXCOEA_p28` 巨人与两条 MIS-PORT）/ `la36-kernel-w2`（余下 5 件，目标 7→2）。④ 池 4/5：`pa22-giant-w3` / `docs-audit-w1` / `la28-registry-w2` / `la36-kernel-w2`。塔群：LA14 0 / LA28 8 / LA34 0 / **LA37 0** / LA17 0；LA6 5；LA31 0；LA16 11；**LA36 7**（总 **31**）。
