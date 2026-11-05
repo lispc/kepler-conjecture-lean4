@@ -3,6 +3,29 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-06 — LA21/LA18 终端锚点重编码（R-fix；用户裁决）
+
+**拍板**（用户，2026-11-06，在 `la21-general482-recon-w1` 的证据呈报后选 **R-fix**）：
+
+1. **问题**：`LocalAuto21.lean:140` 的
+   `def mainNonlinearTerminalV11_p21 : Prop := ∀ y : Fin 6 → ℝ, (2 ≤ y 0 ∧ … ∧ y 4 = 2 ∧ y 5 = 2)`
+   **可反驳**——取 `y ≡ 0` 与 `2 ≤ y 0` 矛盾；探针 `not_p21_anchor` 已用标准三证出
+   `¬ mainNonlinearTerminalV11_p21`。HOL `local/terminal.hl:37` 的
+   `main_nonlinear_terminal_v11` 是 **109 条不等式的合取**，不是「∀ y 都落在盒子里」。
+   `LocalAuto18.lean:206` 的 `mainNonlinearTerminalV11_p18` 同病（30 处引用）。
+2. **修法**：把两个锚点改成 `main_nonlinear_terminal_v11`（`LocalAuto1.lean:2139`，
+   109 合取的忠实渲染）的**定义别名**；盒谓词 `MainNonlinearTerminalV11_p21/p18`
+   保留（作为普通谓词，不再当锚点）。走 **DEF-FIX 通道**（章程
+   `docs/def-fix-charters/p21-anchor/`），闸模式 `GATE_MODE=DEF-FIX`。
+3. **影响**：`LocalConcl.p21_anchor := sorry` 从此代表**真银行债**而非假命题；
+   LA21 全链（`general_482` / `CUXVZOZ_p21` / `CJBDXXN_p21`）的陈述恢复真值，
+   其 864 行证明工作重新有意义。
+4. **拒绝的选项**：R-freeze（冻结 LA21 链）与 R-ex（承认空真、5 行 `ex falso` 闭合）——
+   后者会得到无数学内容的真命题，并让 `p21_anchor` 变成「已证矛盾」，污染信任审计。
+5. **验收**：DEF-FIX GATE-PASS（各文件）；受影响文件依赖序全绿（LA18/19/21 →
+   LocalConcl）；`#print mainNonlinearTerminalV11_p21` 显示别名；零新增 sorry。
+6. **回退**：单 commit `git revert`。
+
 ## 2026-11-06 — tame-correspondence 三波程序获批（用户「好」）
 
 **拍板**（用户，2026-11-06，在 `jcajydu` / `tameCorrespondenceIso` 工作量评估后）：

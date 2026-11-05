@@ -1,0 +1,21 @@
+== post-edit static import graph audit (working tree = HEAD + lane edits) ==
+cycle count:
+0
+LA16 closure size after edge:
+113
+LA26 closure size after edge:
+110
+edge LA16->LA33:
+SAFE Kepler.Text.LocalAuto16 -> Kepler.Text.LocalAuto33 (no path Kepler.Text.LocalAuto33 ->* Kepler.Text.LocalAuto16)
+edge LA26->LA28:
+SAFE Kepler.Text.LocalAuto26 -> Kepler.Text.LocalAuto28 (no path Kepler.Text.LocalAuto28 ->* Kepler.Text.LocalAuto26)
+reverse path LA33 ->* LA16:
+NO PATH
+reverse path LA28 ->* LA26:
+NO PATH
+proposed LA20->LA27:
+CYCLE-IF-ADDED path Kepler.Text.LocalAuto27 ->* Kepler.Text.LocalAuto20:
+Kepler.Text.LocalAuto27 -> Kepler.Text.LocalAuto24 -> Kepler.Text.LocalAuto20
+proposed LA20->OdxlstcBridge:
+CYCLE-IF-ADDED path Kepler.Text.OdxlstcBridge ->* Kepler.Text.LocalAuto20:
+Kepler.Text.OdxlstcBridge -> Kepler.Text.LocalAuto31 -> Kepler.Text.LocalAuto18 -> Kepler.Text.LocalAuto27 -> Kepler.Text.LocalAuto24 -> Kepler.Text.LocalAuto20

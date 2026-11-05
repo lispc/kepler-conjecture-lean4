@@ -1,0 +1,60 @@
+^D/tmp/la1-bimport-w1/probe16_base.lean:201:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+/tmp/la1-bimport-w1/probe16_base.lean:582:2: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+/tmp/la1-bimport-w1/probe16_base.lean:668:29: warning: This simp argument is unused:
+  sub_dotProduct
+
+Hint: Omit it from the simp argument list.
+  simp only [dotProduct_sub, s̵u̵b̵_̵d̵o̵t̵P̵r̵o̵d̵u̵c̵t̵,̵ ̵dotProduct_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/tmp/la1-bimport-w1/probe16_base.lean:1806:8: warning: declaration uses `sorry`
+'Kepler.Text.FSQKWKK_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.AZIM_DIHV_SAME_STRONG' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.XIVPHKS_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.XIVPHKS_SHIFT_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.DELTA_Y_POS_4POINTS_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.ear_acute_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.quad_nonexist_849_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.quad_diag_362_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.taum_dih_y_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.K_SUC_2_MOD_F_SUB_ID_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.atn2_eq_arctan_div_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.continuousAt_atn2_comp_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.continuousAt_dihXf_wrt4_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.continuousAt_dihXf_wrt5_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.continuousAt_dihXf_wrt6_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.continuousAt_dihY_wrt4_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.continuousAt_dihY_wrt5_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.continuousAt_dihY_wrt6_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.deltaY_rot231564_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.deltaY_rot312645_p16' depends on axioms: [propext, choice, Quot.sound]
+'_private.probe16_base.0.Kepler.Text.upsX_swap12_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.real_continuous_dih_y_wrt4_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.real_continuous_dih_y_wrt5_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.real_continuous_dih_y_wrt6_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.real_continuous_taum_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.SCS_GENERIC_SYM_0_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.FSQKWKK_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.XIVPHKS_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.XIVPHKS_SHIFT_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.ear_acute_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.quad_nonexist_849_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.quad_diag_362_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.taum_dih_y_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.K_SUC_2_MOD_F_SUB_ID_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.real_continuous_taum_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.SCS_GENERIC_SYM_0_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.BKOSSGE_p16' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.JEJTVGB_p16' depends on axioms: [propext, sorryAx, choice, Quot.sound]

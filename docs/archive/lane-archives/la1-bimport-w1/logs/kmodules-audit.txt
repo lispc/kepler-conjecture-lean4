@@ -1,0 +1,29 @@
+== K_MODULES (docs/e2e-reachability-map.tsv header) ==
+ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
+K_REACH 2085951
+K_SORRIED 119
+K_AXIOM 624
+K_MODULES 4194
+== each newly entered module already has reachable declarations in the map ==
+LocalAuto33      0
+LocalAuto29      0
+LocalAuto28      0
+LocalAuto18      0
+LocalAuto31      0
+LocalAuto34      0
+OdxlstcBridge    0
+== per-module map rows (module<TAB>decl) ==
+582	Kepler.Text.LocalAuto33
+466	Kepler.Text.LocalAuto34
+435	Kepler.Text.LocalAuto28
+432	Kepler.Text.LocalAuto29
+224	Kepler.Text.LocalAuto18
+161	Kepler.Text.LocalAuto31
+5	Kepler.Text.OdxlstcBridge
+LocalAuto33      1
+LocalAuto29      1
+LocalAuto28      1
+LocalAuto18      1
+LocalAuto31      1
+LocalAuto34      1
+OdxlstcBridge    1

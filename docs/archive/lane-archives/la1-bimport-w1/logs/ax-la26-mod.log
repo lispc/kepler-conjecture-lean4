@@ -1,0 +1,84 @@
+^D/tmp/la1-bimport-w1/probe26_mod.lean:250:4: warning: Try `simp at this` instead of `simpa using this`
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+/tmp/la1-bimport-w1/probe26_mod.lean:833:8: warning: declaration uses `sorry`
+/tmp/la1-bimport-w1/probe26_mod.lean:986:2: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+/tmp/la1-bimport-w1/probe26_mod.lean:1028:2: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+/tmp/la1-bimport-w1/probe26_mod.lean:1064:69: warning: This simp argument is unused:
+  hab
+
+Hint: Omit it from the simp argument list.
+  simp ̵[̵h̵a̵b̵]̵
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/tmp/la1-bimport-w1/probe26_mod.lean:1069:41: warning: This simp argument is unused:
+  hab
+
+Hint: Omit it from the simp argument list.
+  simp ̵[̵h̵a̵b̵]̵
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/tmp/la1-bimport-w1/probe26_mod.lean:1209:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+/tmp/la1-bimport-w1/probe26_mod.lean:2040:8: warning: declaration uses `sorry`
+/tmp/la1-bimport-w1/probe26_mod.lean:2071:8: warning: declaration uses `sorry`
+'Kepler.Text.PPBTYDQ_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.AXJRPNC_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.BB_RHO_NODE_IVS_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.DIST_LE_2h0_IN_CASES_6_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.DIST_EDGE_IN_BB_LE_2_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.NORM_V_IN_BB_LE_CSTAB_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.XWNHLMD_MM_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.MXQTIED_TAU_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.SCS_BASIC_DSV_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.J_EMPY_CASES_6_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.BB_F_SUC_PRE_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.LUNAR_IN_V_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.WL_IN_E_p26' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.RRCWNSJ_p26' depends on axioms: [propext, sorryAx, choice, Quot.sound]
+ODXLSTCv2_p28 : ∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ),
+  isScsV39 s →
+    w ∈ MMsV39 s →
+      s.k = k →
+        3 < k →
+          (∀ (i : ℕ), scsDiag k l i → 4 * h0 < s.b l i) →
+            ‖w l‖ ≠ 2 →
+              (∀ (i : ℕ), ¬i % k = l % k → s.a l i < dist (w l) (w i)) →
+                (∀ (i : ℕ), ¬s.J l i) →
+                  (∀ (V : Set V3) (E : Set (Set V3)) (v : V3),
+                      V = range w → (E = range fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E) →
+                    False
+IMJXPHRv2_p28 : ∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ),
+  s.k = k →
+    isScsV39 s →
+      w ∈ MMsV39 s →
+        azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi →
+          3 < k →
+            ¬Collinear ℝ {0, w (l + 1), w (l + (s.k - 1))} →
+              w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))} →
+                (∀ (i : ℕ), scsDiag k l i → 4 * h0 < s.b l i) →
+                  ‖w l‖ ≠ 2 →
+                    (∀ (i : ℕ), scsDiag k l i → s.a l i < dist (w l) (w i)) →
+                      (∀ (i : ℕ), ¬s.J l i) →
+                        (∀ (V : Set V3) (E : Set (Set V3)) (v : V3),
+                            V = range w → (E = range fun i => {w i, w (i + 1)}) → ¬Lunar v (w l) V E) →
+                          s.a l (l + 1) = dist (w l) (w (l + 1)) ∧ s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1)))
+'Kepler.Text.ODXLSTCv2_p28' depends on axioms: [propext, choice, Quot.sound]
+'Kepler.Text.IMJXPHRv2_p28' depends on axioms: [propext, choice, Quot.sound]

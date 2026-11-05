@@ -1,0 +1,14 @@
+^D'Kepler.Text.LKGRQUI_p27' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Kepler.Text.LKGRQUI_krnl' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Kepler.Text.AQICLXA_SLICE' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Kepler.Text.FUNOUYH_SLICE' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Kepler.Text.LKGRQUI_discharged' depends on axioms: [propext, Classical.choice, Quot.sound]
+/tmp/la1-bimport-w1/bridge_probe.lean:11:14: error(lean.unknownIdentifier): Unknown constant `Kepler.Text.OEHDBEN_p20`
+'Kepler.Text.AQICLXA' depends on axioms: [propext, Classical.choice, Quot.sound]
+/tmp/la1-bimport-w1/bridge_probe.lean:13:14: error(lean.unknownIdentifier): Unknown constant `Kepler.Text.FUNOUYH`
+Kepler.Text.LKGRQUI_p27 : ∀ (s s' s'' : Kepler.Text.ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop),
+  Kepler.Text.isScsV39 s →
+    Kepler.Text.scsDiag s.k p q → Kepler.Text.isScsSliceV39 s s' s'' p q → Kepler.Text.scsArrowV39 {s} {s', s''}
+Kepler.Text.LKGRQUI_krnl : ∀ (s s' s'' : Kepler.Text.ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop),
+  Kepler.Text.isScsV39 s →
+    Kepler.Text.scsDiag s.k p q → Kepler.Text.isScsSliceV39 s s' s'' p q → Kepler.Text.scsArrowV39 {s} {s', s''}
