@@ -21,18 +21,18 @@ checker** 支撑——不信任任何生成器/求解器的代码本身。
 - **陈述保真是唯一质量阀门**：终版陈述与 Flyspeck `the_kepler_conjecture`
   语义一致；所有折算登记于 `docs/statement-fidelity.md`；陈述改动仅经 SF 通道
   （`docs/statement-fix-proposals.md`）。
-- **诚实记账**：sorry 必须带 `-- NEEDS` 注记；债务账本（`DEBT.md`）与端到端
-  定理的实时公理面是客观进度刻度。不可复现的证据一律降级，不保留。
+- **诚实记账**：sorry 必须带 `-- NEEDS` 注记；实时运营账本
+  （`docs/priority-queue.md`）与端到端定理的实时公理面是客观进度刻度。
+  不可复现的证据一律降级，不保留。数字要么带 commit 与日期实测，要么标 stale
+  ——**禁止在文档之间手抄**。
 
 ## 仓库结构
 
 ```
 kepler-conjecture-lean4/
 ├── README.md / README.zh.md
-├── PLAN.md                 # 权威计划 + 当前战略
-├── STATUS.md               # 实时进度看板（每批次刷新）
-├── DEBT.md                 # sorry 债务账本（脚本生成）
-├── DECISIONS.md            # 决策日志
+├── PLAN.md                 # 2026-10-10 计划快照（不是当前状态）
+├── DECISIONS.md            # 决策日志（根级唯一 current 文档）
 ├── lean/                   # Lean 4 工程（toolchain v4.32.2，elan 锁定）
 │   ├── Kepler/Statement.lean     # Phase 1：定理陈述
 │   ├── Kepler/Final.lean         # Phase 6：端到端定理 the_kepler_conjecture_e2e
@@ -46,11 +46,12 @@ kepler-conjecture-lean4/
 ├── pipeline/               # 不受信任的生成器与求解器封装（永不入可信基）
 ├── certificates/           # 证书登记处（SHA-256 + 复现命令）
 ├── reference/              # 只读参考克隆（flyspeck 等，LOCK.md 锁 hash）
-└── docs/                   # 根层 = 常住参考；
-    ├── scouts/             #   侦察报告（写完即归档）
-    ├── handoffs/           #   lane 交接与班次日志
-    ├── projects/           #   专项设计与路线图
-    ├── assets/             #   产物/草稿/探针日志
+└── docs/
+    ├── README.md           # 导航：想查什么去哪个文件
+    ├── priority-queue.md   # 唯一实时账本：在飞 + 排队 + 最近日志
+    ├── archive/            # 历史（scouts / handoffs / projects / lane-archives /
+    │                       #   根级旧总览）。只读证词，不是当前状态。
+    ├── assets/             # 产物/草稿/探针日志
     └── statement-fix-proposals-patches/  # SF 通道补丁存档（活跃）
 ```
 
@@ -68,19 +69,34 @@ make reprove   # 从零重建 + 审计——Definition of Done
 注：重型重计算（LP 重跑、非线性证书重放）当前挂起等强机器，见 `PLAN.md`
 §5 计算约束表；纯 Lean 编译工作在本机基线（笔记本）上全部可行。
 
-## 当前状态（2026-10-10）
+## 状态（2026-11-05）
+
+端到端对象 `Kepler.the_kepler_conjecture_e2e` 已立。其实时公理面 = **628 行**
+= 624 个 `native_decide` 图枚举 shard 公理 + `propext` + `Classical.choice` +
+`Quot.sound` + `sorryAx`。624 个 shard 是 Phase 2 的特许计算；`sorryAx` 是剩余
+接口债，目标是只剩标准三公理。
+
+阶段级状态（定性——**实时数字只有一个出处**）：
 
 | Phase | 内容 | 状态 |
 |---|---|---|
-| 1 | 定理陈述 | ✅ 完成（占位 sorry 待终版退役） |
-| 2 | tame 平面图枚举 | ✅ 19,715 图 + 完备性证书，内核验证 |
-| 3 | 线性规划 | ✅ 43,078 终端 LP 内核验证（重跑产物待补，见 PLAN §5） |
-| 4 | 非线性不等式 | 🟡 求解层 68/176 可信闭合，内核 8 案；重计算挂起 |
-| 5 | 文字证明移植 | 🟡 hypermap/fan/topology/planarity/Conforming/polyhedron 收官；packing+local 骨架 100%，滚动批次填证中 |
-| 6 | 集成与交付 | 🟡 端到端对象 `the_kepler_conjecture_e2e` 已立；余 3 个冻结接口 sorry + 终版去重 |
+| 1 | 定理陈述 | ✅ 陈述已定稿；`Statement.lean` 的 sanctioned 占位 sorry 待终版退役 |
+| 2 | tame 平面图枚举 | ✅ 19,715 图 + 完备性证书；624 个内核验证 shard 公理 |
+| 3 | 线性规划 | ✅ 43,078 终端 LP 证书已核；e2e 锥上只有 1 个 hLP 债点。~42.9k LP 叶带在锥外，是另一笔债 |
+| 4 | 非线性不等式 | 🟡 hNL：`Assembly.lean` 里仍有 `nli*` 接口声明；重型农场重放挂起 |
+| 5 | 文字证明移植 | 🟡 几何塔群大部分已塌（LA14 / LA31 / LA34 / LA37 归零）；余塔债 + ~70 条 Text 层 hTC 移植 |
+| 6 | 集成与交付 | 🟡 e2e 已立；capstone 出口已接入 `Assembly`；余接口收尾 + 信任审计 |
 
-权威的实时信息源：`STATUS.md`（看板）、`DEBT.md`（债务账本）、`PLAN.md`
-（计划与战略）、`DECISIONS.md`（决策日志）。主定理的实时债务图：
+**数字在哪读**：唯一实时账本是
+[`docs/priority-queue.md`](docs/priority-queue.md)——在飞车道、排队、最近落库、
+塔群看板。指标定义与 cone / union 可达基线在
+[`docs/e2e-reachability-map.md`](docs/e2e-reachability-map.md)。旧看板
+（`STATUS.md` / `HANDOFF.md` / `DEBT.md`）已归档到
+[`docs/archive/root/`](docs/archive/root/)，冻结于 2026-10-23，只作证词。
+决策见 [`DECISIONS.md`](DECISIONS.md)；阶段计划见 [`PLAN.md`](PLAN.md)
+（2026-10-10 快照，不是当前状态）。
+
+主定理的实时债务图仍然是一条命令：
 
 ```lean
 #print axioms Kepler.the_kepler_conjecture_e2e

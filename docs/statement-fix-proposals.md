@@ -8,6 +8,126 @@
 
 > **通道授权更新（2026-10-28，用户）**：SF 通道常态化——分级 A/B 移植误植修正与占位真化，编排者判定合理即直接走闸执行（提交与 changelog 充分披露），无须逐案呈批；用户可随时叫停。方向存疑或语义强化争议较大的个案仍先呈后批。
 
+<!-- BEGIN SF INDEX（生成于 2026-11-05；正文未改，拆分延后） -->
+
+## 索引（108 条；状态写在各节的 (f) 状态行）
+
+> 用法：按编号或关键词找到条目 → 跳到右侧行号（`## N.` 标题所在行）。
+> 本索引由脚本生成；正文条目未做任何改动。
+
+| § | 标题 | 分级 | 行 |
+|---|---|---|---|
+| 0 | 总表与分级统计 |  | 131 |
+| 1 | `SUM_INTER` | A | 153 |
+| 2 | `regular_spherical_polygon_area_asnFnhk` | B | 223 |
+| 3 | `vol_solid_triangle_ortho` | B | 245 |
+| 4 | `EDGE_PAIR_pr23` | B | 269 |
+| 5 | `BIJ_FACET_HYPERFACE` | B | 288 |
+| 6 | `HYPERFACE_EXISTS` | B | 312 |
+| 7 | `RELATIVE_INTERIOR_AFFINE_FACE` | A | 333 |
+| 8 | `BIJ_DART_POLYEDGE` | B | 373 |
+| 9 | `PACK_INEQ_DEF_A_797` | B | 393 |
+| 10 | `MCELL4_EDGE` vs `MCELL_EDGE` 裁决 |  | 417 |
+| 11 | 机器验证状态与环境事故注记 |  | 449 |
+| 12 | 给修复波的执行顺序建议 |  | 484 |
+| 13 | `DUUNHOR_concl` | A′ | 499 |
+| 14' | r2 总表与分级统计 |  | 543 |
+| 15' | 项 11 `facet_rep_uniq` | A | 572 |
+| 16' | 项 12 `affine_facet_hyper` | C | 598 |
+| 17' | 项 13a `pad2d3d_facet` | C | 630 |
+| 18' | 项 14 `ARG_ORDER` | A′ | 662 |
+| 19' | 项 15 `KSOQKWL` | A′ | 690 |
+| 20' | 项 16 `IVFICRK` |  | 731 |
+| 21' | 项 1 复核（r2）— SUM_INTER 补丁更正后重归队列 |  | 750 |
+| 22' | 项 13（R1 增补）r2 进展 |  | 760 |
+| 23' | r2 执行顺序建议（修复波） |  | 773 |
+| 24' | 项 17 `tau3_taum_d`/`tau3_taum_dfun` | A′ | 795 |
+| 18 | `grutoti_volD_pos` | A′ | 1014 |
+| 19 | PA21 `LEFT_ACTION_LIST_1_PROPERTIES_ALT` 缺 tail-fixedness 假设（为假） |  | 1103 |
+| 20 | PA14 `QZKSYKG1` 弱 permutes 编码下为假（junk-slot 反例） |  | 1127 |
+| 21 | PA23 `grutoti_cell_vol` 冻结签名缺边胞前提（GT-3b/c 波立案） |  | 1145 |
+| 22 | PA22 `ARG_ORDER` 用 `Complex.arg`（值域 (−π,π]）而 flyspeck 依赖 [0,2π) 的 `… |  | 1180 |
+| 23 | PA7:995 `NOT_ID_IMP_LISTS_NOT_EQ` | A′ | 1195 |
+| 24 | PA7:1003 `NOT_ID_IMP_EXISTS_MAX_EQ_TRUNCATE_SIMPLEX` | A′ | 1208 |
+| 25 | PA2:3146 `KSOQKWL_concl`（+ PackingConcl:286 穿透）— 分级 A′（批 A，**延期**） | A′ | 1218 |
+| 26 | PA5:132 `PERMUTES_TRIVIAL` |  | 1235 |
+| 27 | PA22 holArg 四件（`insert_v`:1910 / `poly_sort_fn`:1940 / `POLYSORT_BI… | M | 1248 |
+| 28 | PA23 `grutoti_cell_vol` 缺窄性前提（k=2/3/4 臂解锁条件）— 分级 A′ | A′ | 1261 |
+| 29 | PA23 `grutoti_cell_vol` ε-junk 角（cellParams 逆序表）— 分级 A′ | A′ | 1282 |
+| 30 | PA22 bisector 家族 holArg 同缺陷（SF22+27 应用波发现）— 分级 M | M | 1297 |
+| 31 | PA23 `grutoti_sum_volD` 前提面不足——冻结陈述可反驳 | M | 1321 |
+| 32 | PA23 `p23_grutoti_cap_measure_cover` 缺 region 门（hcov 覆盖恒等式）— 分级 A（S… | A | 1369 |
+| 33 | PA23 `grutoti_pivot` 缺 region 门与 hw* 窄性（楔形 pivot 恒等式）— 分级 A（STATEME… | A | 1395 |
+| 34 | PA22 `BIJ_SUM` 跨模块公共撞名（LocalBridge 不可构建）— 分级 A（名字空间修复） | A | 1418 |
+| 35 | IneqClosureDefs `rho` 与 LocalAuto1 `rho` 跨模块公共撞名（Assembly 不可构建）— 分级… | A | 1436 |
+| 36 | Assembly `CertifiedIneqHolds` 占位语义落实（T1 展开波随件）— 分级 A（def 语义修正） | A | 1457 |
+| 37 | PA2:5477 `MXI_EXISTS_concl`（+ PackingConcl:336 穿透 + 4 调用点加参）— 分级 A（… | A | 1474 |
+| 38 | PA14 `QZKSYKG2` 冻结 comprehension 欠尾固定合取项（弱 permutes 族不可消费，AJRIPQN 闭… | A | 1562 |
+| 39 | Assembly `KcblrqcIneqDef` 占位统一（`:= True` → TameLp 真切片，MQMSMAB 终接线唯一… | A | 1654 |
+| 40 | LA11 `x1DeltaY_p11` def 体误抄纠正（δ_x1 偏导 → HOL 逐字 `delta_x`；冻结定理在其上为假）… | A | 1743 |
+| 41 | PA3 `a_spine5`/`b_spine5` opaque 常数体揭示（sphere.hl:632/634 逐字；`TEWNSC… | A | 1774 |
+| 42 | CertTM `TaylorM.sqrt` 证书粒度根治（`Dyadic.sqrtRel` 固定 2⁻⁸⁰ 相对粒度；var-at-p… | A | 1874 |
+| 43 | PA22 `localAnnulusInequalityP22` 桩换本体（pack_defs.hl:202-203 逐字；四占位消费… | A | 1991 |
+| 44 | PA24 `p24_cell_cap_dihX` 冻结语句补五前提（hw1+hw3+hw4+hn+hwit；HL 原生前提整条丢失+骨… | A | 2041 |
+| 45 | PA24 `p24_cell_cap_dihX` hwit 前提加门（SF-44 应用批 1 行联动微调；门下 hwit 为装配链正式… | A | 2085 |
+| 46 | PA24 `p24_cap_wedge_cover`（scaffold 3）冻结覆盖语句点态形 → HL 测度级原文形（移植期真加强形… | A | 2124 |
+| 47 | PA24 `p24_cap_wedge_cover_strong` 末合取点态 hcov → 测度级零迹形（SF-46 联动：墙 B … | A | 2167 |
+| 48 | PA12 `LEFT_ACTION_LIST_PROPERTIES` 新件立案（S₃ action kit 补尾固定 `hfix`；A… | B | 2207 |
+| 49 | PA21 `bank_BIXPCGW9455898160` 符号纠正（HOL `> -0.00569`，Lean 误写 `> +0.0… | A | 2286 |
+| 50 | PA18 `CFFONNL` 前提回归 HOL 原序（`hne : X ≠ ccCell V ul`；A7 `pa18_ccCell_… | A | 2345 |
+| 51 | PA21 `bank_TSKAJXYGXSA` 内括号符号回归 HOL 原文（`1/12 − (X − Y)`，Lean 误植为 `1… | A | 2452 |
+| 52 | PA24 换接去 shim：`p24_edgeX_of_leaf23` 不再消费 PA2 sorried 桩 `RVFXZBU2_co… | A | 2523 |
+| 53 | PA4 azim 求和区间两处误植：`ccRealModelP4`（:197）与 `CARD5_1074_LE_QYI`（:519）的… | A | 2564 |
+| 54 | LA1 `LocalFan` 弱编码 foundation 桩族加 `hedge` 前提 | A | 2612 |
+| 55 | LA1:121 `Generic` 的 `affGt` → `affGe` | B | 2640 |
+| 56 | LA2:273 `circular_p2` 的 `affGe` → `affGt` | B | 2662 |
+| 58 | SphereKit:143 `num1` 定义体缺 `−32(x5−x6)(e2−e3)` 项 | A | 2693 |
+| 57 | `Assembly.GoodListNodes` 占位真化（`:1528` `True` → Spine 同体真形）— 分级 B（占位… | B | 2715 |
+| 59 | `Assembly.FinalGraph` 占位真化（:1518 `True` → `GoodGraph.FinalGraphSpin… | B | 2737 |
+| 60 | `Assembly.AllUniq` 占位真化（:1520 `True` → `AllUniqSpine` 体逐字；第 4 支）— 分… | B | 2893 |
+| 61 | `Assembly.GoodFacesV3` 占位真化（:1522 `True` → `GoodFacesV3Spine` 体逐字 +… | B | 3020 |
+| 62 | `Assembly.VerticesSet2Eq` 占位真化（:1524 `True` → `VerticesSet2EqSpine`… | B | 3211 |
+| 63 | `VPWSHTO_concl` 结论槽幻影 ∃v1u1w2 形 → PRIME 的 ∃i 对角上界形（LA15 已证孪生同形） | B | 3360 |
+| 64 | `QKNVMLB1_concl` 索引约定 `(i+p)%k'` → `i%k'+p%k`（RULING 孪生忠实先例） | B | 3445 |
+| 65 | `QKNVMLB2_concl` 索引约定 `(i+p)%k'` → `i%k'+p%k`（同上） | B | 3513 |
+| 66 | `QKNVMLB3_concl` 索引约定 `(i+p)%k'` → `i%k'+p%k`（同上） | B | 3582 |
+| 67 | `YXIONXL2_concl` 补原证 `3<s.k` 前提 | B | 3653 |
+| 68 | `LKGRQUI_concl` 补 `scsDiag`+`isScsSlice` 前提（三文件同车，与 w1asm 装配同签名） | B | 3718 |
+| 69 | `TBRMXRZ1_concl` 摘要形为假命题，四槽复合差 → OCBICBY.hl:1158 原证形（闸上以 LA22 已证孪生逐… | B | 3799 |
+| 70 | `SYNQIWN_concl` k=3 残影 → mnt11+6 路 hears 原证形 | B | 3887 |
+| 71 | `XWNHLMD_concl` 补原证 `s.d≤s'.d` 前提 | B | 3965 |
+| 72 | `CQAOQLR_concl` → CQAOQLR.hl:233 文件级注册表形 | B | 4035 |
+| 73 | `OEHDBEN_concl` 尾槽 3T1→3M1 + 补 mnt11 | B | 4112 |
+| 74 | `LFLACKU_concl` 幻影形 → JOTSWIX `{3I1}→∅` 正本形 | B | 4186 |
+| 75 | PA25 `beta_bumpA_yP25` def 填体 + `beta_bumpA_y_sym23` 证填（合并单 patch 双… | B | 4257 |
+| 76 | PA25 `GG_MCELL_GENERAL` 证填 + `real_model_ztg4` 收割装配（SF-75 落定后串行）— 分… | B | 4306 |
+| 77 | `is_scs_funlist_basic_p22` 单-d 有损陈述 → HOL 双表 da/db 正本形（OCBICBY.hl:2… | B | 4357 |
+| 78 | `XYOFCGX_concl` 接口缺 `Packing V` → 向已证正本 Rogers.hl:6559 归正（出口 Packin… | B | 4491 |
+| 79 | `IVFICRK_concl` 第二合取支缺两前提 → 向已证正本 Rogers.hl:9929 归正（出口 PackingConcl… | B | 4575 |
+| 80 | LA24 k=3 体集 builder 有损陈述 → HOL 成员行索引正本形（UXCKFPE.hl:1878/:1926）— 分级 … | B | 4653 |
+| 81 | `StableSyP23` 的 `stable := sorry` 常量级污染（`scsToStableSy_p23` LA23:23… | B | 4819 |
+| 82 | `scsToStableSy_p23` 的 `d := 0` 槽失真（LA23 def :224 区域，SF-81a 修后形）— 分级… |  | 4986 |
+| 83 | LA35 `CARD_FF_EQ_CARD_SLICE_FF_p35` / `CARD_SLICE_FF_LE_3_p35` 的冻结假… |  | 5096 |
+| 84 | LA24 Section B B1 `MM_5Ix_IMP_MM_5M2` 四件结论槽成员式↛正本非空式（HEAD :338/:352… |  | 5163 |
+| 85 | LA1 `WKEIDFT_concl`（HEAD :2286，**M0 在册行**，triage :136）冻结陈述丢四组 guard… |  | 5233 |
+| 86 | LA35 `SUM_AZIM_EQ_ANGLE_EQ4_p35` 冻结丢 `IsHypE_p35` 载体（EQ4 根陈述为假，1 行修… |  | 5266 |
+| 87 | LA1 注册表 `QKNVMLB{1,2,3}_concl` appendix 形与 corpus 正本形指标分歧（appendix … |  | 5327 |
+| 89 | LA23 `bodyClosed_p23`（HEAD :1207，docstring :1186-1206）泛性陈述丢 HOL `CL… |  | 5369 |
+| 90 | LA24 Section B1 `MM_5{I1,I2,I3,M1}_IMP_MM_5M2` 四件结论槽成员式↛正本非空式（SF-84… |  | 5452 |
+| 91 | LA23 `continuousOn_tauFun_p23`（HEAD :1180，docstring :1162-1179）叶 so… |  | 5601 |
+| 92 | LA4 `constraintSystem_p4`（HEAD :886，周期条款 ：890）f-周期条款全域量词 × LA11 `li… |  | 5764 |
+| 93 | LA23 `bodyClosed_p23`（HEAD :1240）叶 sorry 陈述严格强于 HOL `CLOSED_SY`（WJS… |  | 5865 |
+| 94 | `CLOSED_SY_cs`（ClosedSyKit:126）/ LA18 `CLOSED_SY_p18`（:239）/ `WJSCP… |  | 5924 |
+| 95 | LA14 `azim_real_continuous_on_p14`（HEAD :1347）四处 `Set.Icc a b` ⟹ 严格… |  | 5961 |
+| 96 | LA14 `azim_cycle_neg2_p14`（HEAD :1936）移植自 ZLZTHIC.hl:2897 **OCaml 注… |  | 6001 |
+| 97 | LA27 `SCS_M_EQ_1_p27`（HEAD :527）方向倒置 ⟹ 与 HOL `SCS_M_EQ_1`（JLXFDMJ.h… |  | 6027 |
+| 98 | LA14 `zlz_azim_p14`（HEAD :3200）冻结陈述缺 `ha : a < 0` / `hb : 0 < b` ⟹ … | A | 6059 |
+| 99 | `Deformation` 定义层闭区间 vs HOL 开区间（LocalAuto1:129 vs localization.hl:1… |  | 6098 |
+| 100 | LA34 azim `AT_*` 八件冻结右端 `= Real.pi` vs HOL azim 等式形（IMJXPHR.hl:3291… | A | 6190 |
+| 101 | LA34 azim `_TWO_CASES` AT 四件冻结右端 `= Real.pi` vs HOL azim 等式形（IMJXPH… | A | 6217 |
+
+<!-- END SF INDEX -->
+
 ## 0. 总表与分级统计
 
 | # | 陈述 | Lean 位置 | HOL 原文 | 偏差性质 | 分级 |

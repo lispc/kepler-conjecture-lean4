@@ -29,19 +29,19 @@ code is ever trusted.
   semantically aligned with Flyspeck's `the_kepler_conjecture`; all deviations
   are registered in `docs/statement-fidelity.md`, and statement changes only
   land through the SF channel (`docs/statement-fix-proposals.md`).
-- **Honest accounting.** Sorries carry `-- NEEDS` annotations; the debt ledger
-  (`DEBT.md`) and the live axiom face of the end-to-end theorem are the
-  objective progress meters. Unverifiable evidence is downgraded, not kept.
+- **Honest accounting.** Sorries carry `-- NEEDS` annotations; the live
+  operational ledger (`docs/priority-queue.md`) and the live axiom face of the
+  end-to-end theorem are the objective progress meters. Unverifiable evidence
+  is downgraded, not kept. Numbers are either measured (with a commit and date)
+  or marked stale — never hand-copied between documents.
 
 ## Repository layout
 
 ```
 kepler-conjecture-lean4/
 ├── README.md / README.zh.md
-├── PLAN.md                 # authoritative plan + current strategy (Chinese)
-├── STATUS.md               # live progress dashboard (refreshed per batch)
-├── DEBT.md                 # sorry debt ledger (generated)
-├── DECISIONS.md            # decision log
+├── PLAN.md                 # 2026-10-10 plan snapshot (not current status)
+├── DECISIONS.md            # decision log (the only current root-level doc)
 ├── lean/                   # the Lean 4 project (toolchain v4.32.2, elan-pinned)
 │   ├── Kepler/Statement.lean     # Phase 1: the theorem statement
 │   ├── Kepler/Final.lean         # Phase 6: end-to-end theorem `the_kepler_conjecture_e2e`
@@ -55,11 +55,12 @@ kepler-conjecture-lean4/
 ├── pipeline/               # untrusted generators/solver wrappers (never trusted)
 ├── certificates/           # certificate registry (SHA-256 + reproduction commands)
 ├── reference/              # read-only clones (flyspeck et al., LOCK.md pins hashes)
-└── docs/                   # living references at root level;
-    ├── scouts/             #   recon reports (filed once written)
-    ├── handoffs/           #   lane handoffs & session logs
-    ├── projects/           #   per-lane designs & roadmaps
-    ├── assets/             #   artifacts/drafts/probe logs
+└── docs/
+    ├── README.md           # navigation: what to read for what
+    ├── priority-queue.md   # the live ledger: in-flight + queue + recent log
+    ├── archive/            # history (scouts / handoffs / projects / lane-archives /
+    │                       #   root docs). Read-only testimony, not current state.
+    ├── assets/             # artifacts/drafts/probe logs
     └── statement-fix-proposals-patches/  # SF-channel patch archive (active)
 ```
 
@@ -79,20 +80,37 @@ Note: heavy recomputation (LP re-run, nonlinear certificate replays) is
 currently deferred pending a strong machine; see the compute-constraint table
 in `PLAN.md` §5. Pure Lean compilation work runs on the baseline laptop.
 
-## Current status (2026-10-10)
+## Status (as of 2026-11-05)
+
+The end-to-end object `Kepler.the_kepler_conjecture_e2e` stands. Its live axiom
+face is **628 lines** = 624 `native_decide` graph shard axioms + `propext` +
+`Classical.choice` + `Quot.sound` + `sorryAx`. The 624 shard axioms are the
+chartered Phase-2 computation; `sorryAx` is the remaining interface debt, and
+the target is the standard three axioms alone.
+
+Phase-level status (qualitative — **live numbers live in one place only**):
 
 | Phase | Content | Status |
 |---|---|---|
-| 1 | Theorem statement | ✅ done (placeholder sorry to retire at final assembly) |
-| 2 | Tame plane graph enumeration | ✅ 19,715 graphs + completeness certificates, kernel-verified |
-| 3 | Linear programming | ✅ 43,078 terminal LPs kernel-verified (re-run artifacts pending, see PLAN §5) |
-| 4 | Nonlinear inequalities | 🟡 solver layer 68/176 trusted-closed, 8 cases kernel-closed; heavy compute deferred |
-| 5 | Text proof porting | 🟡 hypermap/fan/topology/planarity/Conforming/polyhedron complete; packing+local skeletons 100%, proof filling in rolling batches |
-| 6 | Integration & delivery | 🟡 end-to-end object `the_kepler_conjecture_e2e` stands; 3 frozen interface sorries + final dedup remain |
+| 1 | Theorem statement | ✅ statement fixed; the sanctioned `Statement.lean` placeholder sorry retires at final assembly |
+| 2 | Tame plane graph enumeration | ✅ 19,715 graphs + completeness certificates; 624 kernel-checked shard axioms |
+| 3 | Linear programming | ✅ 43,078 terminal LP certificates checked; the e2e cone carries a single hLP debt point. The ~42.9k LP leaf band is outside the cone and is a different debt |
+| 4 | Nonlinear inequalities | 🟡 hNL: `nli*` interface declarations in `Assembly.lean` remain; heavy farm replay deferred |
+| 5 | Text proof porting | 🟡 geometry towers largely collapsed (LA14 / LA31 / LA34 / LA37 at zero); remaining tower debt + ~70 Text-level hTC ports |
+| 6 | Integration & delivery | 🟡 e2e stands; capstone exits wired into `Assembly`; final interface cleanup + trust audit remain |
 
-The authoritative, continuously updated sources of truth are `STATUS.md`
-(dashboard), `DEBT.md` (debt ledger), `PLAN.md` (plan + strategy), and
-`DECISIONS.md` (decision log). The live debt graph of the main theorem is:
+**Where to read the numbers.** There is exactly one live ledger:
+[`docs/priority-queue.md`](docs/priority-queue.md) — in-flight lanes, queue,
+recent landings, and the tower dashboard. Metric definitions and the cone /
+union reachability baselines are in
+[`docs/e2e-reachability-map.md`](docs/e2e-reachability-map.md). Older
+dashboards (`STATUS.md`, `HANDOFF.md`, `DEBT.md`) are archived under
+[`docs/archive/root/`](docs/archive/root/) as read-only testimony frozen at
+2026-10-23. Decisions are in
+[`DECISIONS.md`](DECISIONS.md); the phase plan (a 2026-10-10 snapshot, not
+current status) is in [`PLAN.md`](PLAN.md).
+
+The live debt graph of the main theorem is still one command:
 
 ```lean
 #print axioms Kepler.the_kepler_conjecture_e2e

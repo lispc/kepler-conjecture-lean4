@@ -6,11 +6,13 @@
 > 2014 年 Flyspeck 项目完成形式化（HOL Light/Isabelle，11 人年）。
 > 本项目的目标不是"重新发明证明"，而是用 2026 年的工具链**以证书化计算范式重造一个
 > 端到端形式化证明**，并沉淀一条可复用的"求解器 → 证书 → 形式化 checker"流水线。
-> 实时进度看板 = `STATUS.md`（每批次刷新）；债务刻度 = `DEBT.md`；长期决策 =
-> `DECISIONS.md`；端到端对象 = `lean/Kepler/Final.lean` 的
+> **⚠️ 本文是 2026-10-10 的计划快照，不是当前状态。**
+> 当前的实时进度、在飞车道、排队项与塔群债务一律以 `docs/priority-queue.md` 为准；
+> 长期决策以 `DECISIONS.md` 为准；端到端对象 = `lean/Kepler/Final.lean` 的
 > `the_kepler_conjecture_e2e`（2026-10-10 立）。
-> `HANDOFF.md` 为接手入口交接文档（2026-10-10 曾退役，2026-10-12 用户令恢复；
-> 原始版本见 `git show 4ca2e550:HANDOFF.md`）。
+> 历史上的三份现状文档已于 2026-11-05 归档到
+> `docs/archive/root/`（`STATUS-2026-10-23.md` / `HANDOFF-2026-10-23.md` /
+> `DEBT-2026-10-23.md`）——只读证词，数字停在其写作时点。
 
 ---
 
@@ -63,7 +65,9 @@ main 于 2026-09-17 起允许携带 sorry 债务（债务刻度 = `DEBT.md`）�
 生产环境 2026-09-28 从旧 128 核服务器迁移至 Apple M3 Pro 12 核/36GB（重型计算
 挂起，见 §5 计算约束）。
 
-## 3. 环境现状
+## 3. 环境（2026-10-10 时点快照）
+
+> 本节冻结于 2026-10-10；求解器/磁盘/机器的当前情况请查 `DECISIONS.md` 最新条目。
 
 - **现行基线**：Apple M3 Pro 12 核 / 36GB（2026-09-28 起；旧 128 核/503G 服务器
   报废，磁盘不可恢复，代码与文档零损失）。
@@ -75,7 +79,10 @@ main 于 2026-09-17 起允许携带 sorry 债务（债务刻度 = `DEBT.md`）�
 - LLM 工人 = ZCode sub agents（opencode CLI 已退役）；编排者 = 主 agent，
   滚动批次制（用户 2026-10-10 令：每批清空即开下一批 3-5 线）。
 
-## 4. 分阶段计划与现状
+## 4. 分阶段计划（2026-10-10 时点快照；现状见 `docs/priority-queue.md`）
+
+> **本节以下所有"现状/当前"字样都停在 2026-10-10，不可当作实时状态。**
+> 例如 Phase 5 的"移交 opencode"、Phase 3 的"换机丢失产物"均已被后续工作推翻或续上。
 
 ### Phase 1 — 定理陈述形式化 ✅
 
@@ -207,11 +214,11 @@ e2e ＝ nonlinearInequalities ⊕ lpArchiveCertificates ⊕ textCapstone
 ```
 kepler-conjecture-lean4/
 ├── README.md / README.zh.md  # 项目门面（英文 / 中文等价版）
-├── PLAN.md                 # 本文档（计划 + 当前战略）
-├── STATUS.md               # 实时进度看板（每批次刷新）
-├── DEBT.md                 # sorry 债务账本（debt_ledger.py 生成）
-├── DECISIONS.md            # 决策日志
-├── HANDOFF.md              # 交接入口（接手 agent 从这读起；2026-10-12 复活）
+├── PLAN.md                 # 本文档（2026-10-10 计划快照）
+├── DECISIONS.md            # 决策日志（根级唯一 current 文档）
+├── docs/
+│   ├── priority-queue.md   # 当前状态：在飞 + 排队 + 最近日志
+│   └── archive/root/       # STATUS/HANDOFF/DEBT 的历史副本（2026-10-23 冻结）
 ├── lean/
 │   ├── Kepler/Statement.lean     # Phase 1（占位待终版退役）
 │   ├── Kepler/Final.lean         # Phase 6 终装配（e2e 承载）
