@@ -30,6 +30,7 @@ import Kepler.Text.PackingAuto21
 import Kepler.Text.PackingAuto22
 import Kepler.Text.PackingAuto25
 import Kepler.NliBanks
+import Kepler.NliBanks2
 import Kepler.Text.Hypermap
 import Kepler.Text.ContraFan
 import Kepler.Text.LocalAuto16
@@ -932,7 +933,7 @@ theorem nliTskRIBCYXUsym : bank_TSKAJXYRIBCYXUsym := sorry
 `bank_TSKAJXYTADIAMB`，盒 [2hplus,√8]²×[2,√8]⁴，结论
 `2 < yOfX rad2X …`（外接半径平方））。资产状态：deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliTskTADIAMB : bank_TSKAJXYTADIAMB := sorry
+theorem nliTskTADIAMB : bank_TSKAJXYTADIAMB := Kepler.NliBanks2.nliTSKAJXYTADIAMB
 
 /-- 1b 7/10：HOL ineq entry `TSKAJXY-WKGUESB sym`（ineq.hl:281；PA21
 `bank_TSKAJXYWKGUESBsym`，盒 [2hplus,√8]×[2.01,2hmin]×[2,2hmin]×
@@ -1597,19 +1598,22 @@ theorem nliRestBIXPCGWb : bank_BIXPCGWb := Kepler.NliBanks.nliRestBIXPCGWb
 同 rest 33；PA21 `bank_BIXPCGW1738910218a2` /
 `proj_bank_BIXPCGW1738910218a2`）。资产状态：deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestBIXPCGW1738910218a2 : bank_BIXPCGW1738910218a2 := sorry
+theorem nliRestBIXPCGW1738910218a2 : bank_BIXPCGW1738910218a2 :=
+  Kepler.NliBanks2.nliBIXPCGW1738910218a2
 
 /-- rest 35/62：HOL ineq entry `BIXPCGW 7080972881 a2`（ineq.hl:721，盒
 [2hmin,2hplus]×[2hmin,√8]×[2,√8]⁴；PA21 `bank_BIXPCGW7080972881a2` /
 `proj_bank_BIXPCGW7080972881a2`）。资产状态：deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestBIXPCGW7080972881a2 : bank_BIXPCGW7080972881a2 := sorry
+theorem nliRestBIXPCGW7080972881a2 : bank_BIXPCGW7080972881a2 :=
+  Kepler.NliBanks2.nliBIXPCGW7080972881a2
 
 /-- rest 36/62：HOL ineq entry `BIXPCGW 6652007036 a2`（ineq.hl:701，盒
 [2hmin,2hplus]×[2,√8]⁵；PA21 `bank_BIXPCGW6652007036a2` /
 `proj_bank_BIXPCGW6652007036a2`）。资产状态：deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestBIXPCGW6652007036a2 : bank_BIXPCGW6652007036a2 := sorry
+theorem nliRestBIXPCGW6652007036a2 : bank_BIXPCGW6652007036a2 :=
+  Kepler.NliBanks2.nliBIXPCGW6652007036a2
 
 /-- rest 37/62：HOL ineq entry `GLFVCVK4 2477216213 y4subcrit`
 （ineq.hl:675，盒 [2hmin,2hplus]×[2hmin,√8]×[2,2hmin]⁴；PA21
