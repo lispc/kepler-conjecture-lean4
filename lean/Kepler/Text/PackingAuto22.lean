@@ -106,6 +106,7 @@ import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
 import Kepler.Text.PackingAuto15
 import Kepler.Text.Polytope
+import Kepler.Text.P22EdgeCount
 import Kepler.Text.IneqClosureDefs
 import Kepler.Text.PolyAuto7
 import Kepler.Text.ConformingAuto23
@@ -14054,6 +14055,34 @@ theorem polyhedron_sum_sum_edge (P : Set V3) (hb : Bornology.IsBounded P)
   push_cast
   rfl
 
+/-- `#darts = 2 * #edges` for a bounded polyhedron with nonempty interior
+(N2/N3 of the face-scout verdict, with `dFanP22_eq_dart1` + the general fan
+dart-count from `P22EdgeCount`). -/
+theorem p22_darts_card_eq_two_mul_edges (P : Set V3) (hb : Bornology.IsBounded P)
+    (hp : polyhedron P) (hi : (0 : V3) ∈ interior P) :
+    (hypermapOfPolyhedronP22 P hb hp hi).darts.card = 2 * (edges P).ncard := by
+  have hfan : Fan.FAN 0 (verticesP22 P) (edgesP22 P) := fanOfPolyhedronP22 P hb hp hi
+  have hset : ((hypermapOfPolyhedronP22 P hb hp hi).darts : Set Dart3)
+      = Fan.dart1OfFan (verticesP22 P) (edgesP22 P) := by
+    simpa only [dFanP22, hypermapOfPolyhedronP22, verticesP22, edgesP22] using
+      dFanP22_eq_dart1 0 (verticesP22 P) (edgesP22 P) hfan
+  rw [← Set.ncard_coe_finset, hset]
+  exact p22_dart1OfFan_ncard_eq_two_mul 0 (verticesP22 P) (edgesP22 P) hfan
+
+/-- N2: the (facet, edge) incidence count is bounded by the number of darts. -/
+theorem p22_incidences_le_darts (P : Set V3) (hb : Bornology.IsBounded P)
+    (hp : polyhedron P) (hi : (0 : V3) ∈ interior P) :
+    ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard
+      ≤ (hypermapOfPolyhedronP22 P hb hp hi).darts.card := by
+  have h2 : ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard
+      ≤ 2 * (edges P).ncard :=
+    p22_incidences_le_two_mul_edges P hp hb hi (fun e he => by
+      obtain ⟨v, w, hvw⟩ := SEGMENT_EDGE_ONTO P e hp hb he
+      exact ⟨(v, w), hvw⟩)
+  have h1 : (hypermapOfPolyhedronP22 P hb hp hi).darts.card = 2 * (edges P).ncard :=
+    p22_darts_card_eq_two_mul_edges P hb hp hi
+  omega
+
 open Classical in
 /-- HOL `polyhedron_edge_sum` (counting_spheres.hl:5476). GIANT. -/
 theorem polyhedron_edge_sum (P : Set V3) (n : ℝ) (hb : Bornology.IsBounded P)
@@ -14063,7 +14092,51 @@ theorem polyhedron_edge_sum (P : Set V3) (n : ℝ) (hb : Bornology.IsBounded P)
     (hn : 2 ≤ n) :
     (∑ f ∈ hsize.1.toFinset,
         (({e : Set V3 | FacetOf e f}).ncard : ℝ)) ≤ 6 * n - 12 := by
-  sorry
+  -- N1: the left-hand side is the (facet, edge) incidence count
+  have hN1 := polyhedron_sum_sum_edge P hb hp hsize.1
+  -- N2 / N3: incidences ≤ darts = 2 * #edges
+  have hM : ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard
+      ≤ (hypermapOfPolyhedronP22 P hb hp hi).darts.card :=
+    p22_incidences_le_darts P hb hp hi
+  -- N4: Euler end
+  have hEuler := POLYHEDRON_TGJISOK P hb hp hi
+  -- N5: `numberOfFaces = #facets = #hsize.1.toFinset`
+  have hFaces : (hypermapOfPolyhedronP22 P hb hp hi).numberOfFaces
+      = hsize.1.toFinset.card := by
+    obtain ⟨b, hbij⟩ := BIJ_FACET_HYPERFACE P hp hb hi
+    have hcard := Set.BijOn.ncard_eq hbij
+    have h1 : (hypermapOfPolyhedronP22 P hb hp hi).numberOfFaces
+        = ({f : Set V3 | FacetOf f P}).ncard := hcard.symm
+    rw [h1]
+    exact Set.ncard_eq_toFinset_card ({f : Set V3 | FacetOf f P}) hsize.1
+  have hcards : (hsize.1.toFinset.card : ℝ) = n := by
+    rw [← Set.ncard_eq_toFinset_card ({f : Set V3 | FacetOf f P}) hsize.1]
+    exact hsize.2
+  have h12 : 12 ≤ 6 * hsize.1.toFinset.card := by
+    have h2 : 2 ≤ hsize.1.toFinset.card := by
+      have h2n : (2 : ℝ) ≤ (({f : Set V3 | FacetOf f P}).ncard : ℝ) := by
+        rw [hsize.2]
+        exact hn
+      have h2nat : 2 ≤ ({f : Set V3 | FacetOf f P}).ncard := by exact_mod_cast h2n
+      rwa [Set.ncard_eq_toFinset_card ({f : Set V3 | FacetOf f P}) hsize.1] at h2nat
+    omega
+  have hMnat : ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard
+      ≤ 6 * hsize.1.toFinset.card - 12 := by
+    refine le_trans hM ?_
+    rw [hFaces] at hEuler
+    exact hEuler
+  have hMnat' : ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard + 12
+      ≤ 6 * hsize.1.toFinset.card := by omega
+  have hMreal : (({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard : ℝ) + 12
+      ≤ 6 * (hsize.1.toFinset.card : ℝ) := by
+    have h : ((({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard + 12 : ℕ) : ℝ)
+        ≤ ((6 * hsize.1.toFinset.card : ℕ) : ℝ) := Nat.cast_le.2 hMnat'
+    push_cast at h
+    linarith
+  calc (∑ f ∈ hsize.1.toFinset, (({e : Set V3 | FacetOf e f}).ncard : ℝ))
+      = (({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard : ℝ) := hN1
+    _ ≤ 6 * (hsize.1.toFinset.card : ℝ) - 12 := by linarith
+    _ = 6 * n - 12 := by rw [hcards]
 
 /-- HOL `FACET_RELEVANT` (counting_spheres.hl:5624). GIANT. -/
 theorem FACET_RELEVANT (V : Set (V3 × ℝ)) (p : V3) (v0 : V3 × ℝ)

@@ -307,3 +307,34 @@ W3 的正向半（`p22_dart_edge_mem_edges`，13471）用了 **286 行**自建�
   - `lean/Kepler/Text/PackingAuto3.lean:35` `weakly_saturated`；`:388` `TARJJUW`
   - `lean/Kepler/Text/Hypermap.lean:1026` `numberOfFaces`；`:1637` `darts_card_le`
   - HOL：`lean/scripts/packing/counting_spheres.hl:5476` `polyhedron_edge_sum`；`:5888` `EXISTS_M_POLYHEDRON`；`:1527` `weak_saturation`；`reference/flyspeck/text_formalization/fan/CFYXFTY.hl:1065` `EDGES0_SUBSET_FAN`
+
+---
+
+## 回执（2026-11-06，`pa22-edge-two`）：**`#9 polyhedron_edge_sum` 已闭，270–400 行的估算是准的**
+
+四步全 DONE，零 GAP。落地：`P22EdgeFacets.lean` 426 行（本体 280）+ `P22EdgeCount.lean` 195 行
++ PA22 内 74 行装配；**patch 的全部删除面 = 1 行 `sorry`**，`#9` 陈述逐字未动。
+
+实测（编排者复核）：`polyhedron_edge_sum`、`p22_edge_facets_ncard_le_two`、
+`p22_darts_card_eq_two_mul_edges`、`p22_incidences_le_darts` 四件
+`#print axioms` 全 = `[propext, Classical.choice, Quot.sound]`；
+PA22 整文件 `declaration uses sorry` **6 → 5**；编译 1:43.03 / RC=0 / 0 error。
+
+### §2.1 第 6 步的符号分类**有漏洞**（车道发现并修正）
+
+我在 `§2.1` 写的「`αu + βv = 0`，`u,v ≤ 0` 四情形都归零」**不成立**：`αβ < 0` 时有非零解。
+正确做法是**改解另一个法向**：
+
+```
+α > 0 > β  ⇒  a₁ = (1/α)·a₃ + (−β/α)·a₂      两系数皆正 ⇒ f₁ ⊆ f₃ ⇒ 两 facet 相等
+```
+
+四情形由此闭合。**结论不变但更强**：`EDGE_TWO` **不需要 `hb`**、不需要方向 B、不需要 `#8`
+（`hb` 只是为对齐 `#9` 的签名保留）。这条修正已写入 `P22EdgeFacets.lean` 的注释。
+
+### `#10` 的剩余账（没有变）
+
+`#10 EXISTS_M_POLYHEDRON` 仍差三件，且**第一件不是数学**：
+① `weaklySaturatedP22 := True` 定义洞（PA22:357，当前陈述**为假**，须 DEF-FIX）；
+② 全树缺失的 `RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT_ALT`；
+③ `#10` 本体 300–450 行装配。
