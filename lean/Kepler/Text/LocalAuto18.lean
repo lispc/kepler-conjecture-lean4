@@ -45,7 +45,7 @@ FILE MAP
     `IUNBUIG_p18` (sorry giants; `Deformation` from LocalAuto1).
   Section C (AURSIPD): `REP_NUMSEG_p18`, `PERIODIC_IMAGE2_p18` (proved);
     `SUM_AZIM_EQ_ANGLE_LE4_FUN_p18` (proved 2026-11-05, la18-sumazim kit),
-    `AURSIPD_p18` (sorry).
+    `AURSIPD_p18` (proved 2026-11-05, la18-aursipd kit).
   Section D (CNICGSF): the five `SCS_DIAG_*_p18` (proved, decidable);
     the five slice arrows `SCS_*_SLICE_*_p18` (discharged 2026-11-01 as `LKGRQUI_p27` instances; see the la18slice kit);
     the in-file rotation kit `funlistV39_add_period_p18` /
@@ -1937,14 +1937,431 @@ theorem PERIODIC_IMAGE2_p18 {α : Type*} {f : ℕ → α} {n : ℕ} (hn : n ≠ 
     have hx : x % n < n := Nat.mod_lt x (by omega)
     exact ⟨x % n, hx, by rw [periodic_mod_p18 hper x]⟩
 
+/-! ## Section C aux: AURSIPD assembly kit (lane la18-aursipd-w1) -/
+
+private theorem la18au_azimInFan_p18_eq {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hLF : LocalFan V E FF) {d : V3 × V3} (hd : d ∈ FF) :
+    azimInFan_p18 d E = azimInFan d E := by
+  have hfan : Fan.FAN 0 V E := hLF.1
+  obtain ⟨-, d0, hd0, -, -, hsub, -⟩ := localFan_data hLF
+  have hdart : d ∈ Fan.dart1OfFan V E := hsub hd
+  have hdE : ({d.1, d.2} : Set V3) ∈ E := hdart
+  have hw : d.2 ∈ Fan.setOfEdge d.1 V E := by
+    rw [← Fan.properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan]
+    exact hdE
+  have hso : Fan.setOfEdge d.1 Set.univ E = Fan.setOfEdge d.1 V E := by
+    rw [← EE_elim hfan d.1]
+    simp [Fan.setOfEdge, EE_p2]
+  have hsf : Fan.sigmaFan 0 Set.univ E d.1 d.2 = Fan.sigmaFan 0 V E d.1 d.2 := by
+    unfold Fan.sigmaFan
+    rw [hso]
+  have hcyc : azimCycle_p18 (EE_p18 d.1 E) 0 d.1 d.2
+      = azimCycle_p2 (Fan.setOfEdge d.1 V E) 0 d.1 d.2 := by
+    rw [show EE_p18 d.1 E = Fan.setOfEdge d.1 V E from by
+      rw [← EE_elim hfan d.1]; rfl]
+    rfl
+  unfold azimInFan_p18 azimInFan
+  by_cases hnc : 1 < (EE_p18 d.1 E).ncard
+  · have hnc2 : 1 < (ee d.1 E).ncard := hnc
+    rw [if_pos hnc, if_pos hnc2, hcyc, AZIM_CYCLE_EQ_SIGMA_FAN_ALT hfan hw, ← hsf]
+  · have hnc2 : ¬ 1 < (ee d.1 E).ncard := hnc
+    rw [if_neg hnc, if_neg hnc2]
+
+/-- Arc propagation: along a run of straight (`azim = π`) vertices, all vertices
+of the run lie in the plane through `0`, `v a`, `v (a+1)`. -/
+private theorem la18au_arc_mem (v : ℕ → V3) (k a b : ℕ)
+    (hk3 : 3 < k) (hper : Periodic v k)
+    (hinj : ∀ x y, x < k → y < k → x ≠ y → v x ≠ v y)
+    (hgen : ∀ x y : ℕ, v x ≠ v y → ¬ Collinear ℝ ({0, v x, v y} : Set V3))
+    (hflat : ∀ t, a < t → t < b →
+      azim 0 (v t) (v (t + 1)) (v (t + (k - 1))) = Real.pi)
+    (_hb : b < a + k) :
+    ∀ t, a ≤ t → t ≤ b → v t ∈ affineSpan ℝ ({0, v a, v (a + 1)} : Set V3) := by
+  have hk0 : 0 < k := by omega
+  let P : AffineSubspace ℝ V3 := affineSpan ℝ ({0, v a, v (a + 1)} : Set V3)
+  have hva : v a ∈ P := mem_affineSpan ℝ (by simp)
+  have hva1 : v (a + 1) ∈ P := mem_affineSpan ℝ (by simp)
+  have hstep : ∀ t, a + 1 ≤ t → t < b → v (t - 1) ∈ P → v t ∈ P → v (t + 1) ∈ P := by
+    intro t hat htb hprev hvt
+    have hflat_t := hflat t (by omega) htb
+    have hper1 : v (t + (k - 1)) = v (t - 1) := by
+      have he : t + (k - 1) = (t - 1) + k := by omega
+      rw [he, hper (t - 1)]
+    have hcop0 : Coplanar ({0, v t, v (t + 1), v (t - 1)} : Set V3) :=
+      AZIM_EQ_0_PI_IMP_COPLANAR 0 (v t) (v (t + 1)) (v (t - 1))
+        (Or.inr (by rw [← hper1]; exact hflat_t))
+    have hcop : Coplanar ({v (t + 1), 0, v t, v (t - 1)} : Set V3) := by
+      have hs : ({v (t + 1), 0, v t, v (t - 1)} : Set V3) = {0, v t, v (t + 1), v (t - 1)} := by
+        ext z
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hs]
+      exact hcop0
+    have hne : v t ≠ v (t - 1) := by
+      intro heq
+      have hmod : t % k = (t - 1) % k := by
+        by_contra hne'
+        exact hinj (t % k) ((t - 1) % k) (Nat.mod_lt _ hk0) (Nat.mod_lt _ hk0) hne'
+          (by rw [periodic_mod_eq_p23 hper t, periodic_mod_eq_p23 hper (t - 1)]; exact heq)
+      have hA : (t % k + 1) % k = ((t - 1) % k + 1) % k := by rw [hmod]
+      have hB : ((t - 1) % k + 1) % k = ((t - 1) + 1) % k := by
+        rw [Nat.add_mod (t - 1) 1 k, Nat.mod_eq_of_lt (by omega : (1:ℕ) < k)]
+      have hC : ((t - 1) + 1) % k = t % k := by
+        rw [Nat.sub_add_cancel (by omega : 1 ≤ t)]
+      have hmodstep : (t % k + 1) % k = t % k := hA.trans (hB.trans hC)
+      rcases lt_or_ge (t % k + 1) k with hlt | hge
+      · rw [Nat.mod_eq_of_lt hlt] at hmodstep
+        omega
+      · have hr : t % k < k := Nat.mod_lt _ hk0
+        have heqk : t % k + 1 = k := by omega
+        rw [heqk, Nat.mod_self] at hmodstep
+        omega
+    have hnc : ¬ Collinear ℝ ({0, v t, v (t - 1)} : Set V3) := hgen t (t - 1) hne
+    have hmem := coplanar_in_affine_hull_p14 0 (v t) (v (t - 1)) (v (t + 1)) hnc hcop
+    have hle : affineSpan ℝ ({0, v t, v (t - 1)} : Set V3) ≤ P := by
+      rw [affineSpan_le]
+      intro x hx
+      rcases hx with rfl | rfl | rfl
+      · exact mem_affineSpan ℝ (by simp)
+      · exact hvt
+      · exact hprev
+    exact hle hmem
+  have hmain : ∀ t, a + 1 ≤ t → t ≤ b → v t ∈ P := by
+    intro t
+    induction t using Nat.strong_induction_on with
+    | _ t ih =>
+      intro hat htb
+      by_cases ht : t = a + 1
+      · rw [ht]
+        exact hva1
+      · have ht2 : a + 2 ≤ t := by omega
+        have hb1 : t - 1 < b := by omega
+        have h1 : a + 1 ≤ t - 1 := by omega
+        have hprev : v ((t - 1) - 1) ∈ P := by
+          rcases Nat.eq_or_lt_of_le (by omega : a ≤ (t - 1) - 1) with heq | hlt
+          · rw [← heq]
+            exact hva
+          · exact ih ((t - 1) - 1) (by omega) (by omega) (by omega)
+        have hvt : v (t - 1) ∈ P := by
+          rcases Nat.eq_or_lt_of_le h1 with heq | hlt
+          · rw [← heq]
+            exact hva1
+          · exact ih (t - 1) (by omega) h1 (by omega)
+        have hstepv := hstep (t - 1) h1 hb1 hprev hvt
+        simpa [Nat.sub_add_cancel (by omega : 1 ≤ t)] using hstepv
+  intro t hat htb
+  rcases Nat.eq_or_lt_of_le hat with heq | hlt
+  · rw [← heq]
+    exact hva
+  · exact hmain t (by omega) htb
+
 /-- HOL `AURSIPD` (AURSIPD.hl:218): the stratum-count bound. Giant. -/
 theorem AURSIPD_p18 : ∀ (s : ScsV39) (v : ℕ → V3),
     3 < s.k → isScsV39 s → scsGeneric v → v ∈ MMsV39 s →
     3 + {i : ℕ | i < s.k ∧ scsIsStr s v i}.ncard ≤ s.k := by
-  sorry
-  -- DISCHARGES: the stratum is `{i | azim ... = pi}`; the bound comes from
-  -- CARD_SUBSET over `0..k-1` plus the scs diagonal-count budget
-  -- (isScsV39's final conjunct) in HOL AURSIPD.hl:218-1850.
+  intro s v hk3 his hgen0 hMM
+  classical
+  let V : Set V3 := Set.range v
+  let E : Set (Set V3) := Set.range fun i : ℕ => ({v i, v (i + 1)} : Set V3)
+  let FF : Set (V3 × V3) := Set.range fun i : ℕ => (v i, v (i + 1))
+  have hk0 : 0 < s.k := by omega
+  have hBB : BBsV39 s v := by
+    have h := hMM
+    simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h
+    exact h.1.1.1
+  have hta : taustarV39 s v < 0 := by
+    have h := hMM
+    simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h
+    exact h.1.1.2.2
+  have hper : Periodic v s.k := hBB.2.1
+  have hinj : ∀ i j, i < s.k → j < s.k → i ≠ j → v i ≠ v j := by
+    intro i j hi hj hne
+    exact VV_INJ_p35 s s.k v rfl his hBB i j ⟨hi, hj, hne⟩
+  have hclf : ConvexLocalFan V E FF := by
+    rcases hBB.2.2.2 with hle | hcf
+    · omega
+    · exact hcf
+  have hedge : ∀ u ∈ V, ∃ w, {u, w} ∈ E := by
+    rintro u ⟨i, rfl⟩
+    exact ⟨v (i + 1), ⟨i, rfl⟩⟩
+  have hlf2 : localFan_p2 V E FF := localFan_p2.of_LocalFan_noIso hclf.1 hedge
+  have hgen : Generic V E := hgen0
+  have hgen_ncol : ∀ x y : ℕ, v x ≠ v y → ¬ Collinear ℝ ({0, v x, v y} : Set V3) := by
+    intro x y hxy
+    exact PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 V E FF (v x) (v y) hclf.1
+      (Set.mem_range.mpr ⟨x, rfl⟩) (Set.mem_range.mpr ⟨y, rfl⟩) hxy hgen
+  have hsol : solLocal E FF < Real.pi := by
+    have h := JKQEWGV1_p23 s v his hk3 hBB hta
+    simpa only [Set.image_univ] using h
+  have hdiag : scsDiag s.k 0 2 := by
+    unfold scsDiag
+    have h1 : 1 % s.k = 1 := Nat.mod_eq_of_lt (by omega)
+    have h2 : 2 % s.k = 2 := Nat.mod_eq_of_lt (by omega)
+    have h3 : 3 % s.k = 3 := Nat.mod_eq_of_lt (by omega)
+    rw [Nat.zero_mod, h1, h2, h3]
+    omega
+  have hcardV : V.ncard = s.k := CARD_V_EQ_SCS_K_p35 s s.k 0 2 V v rfl rfl his hdiag hBB
+  have hcardFF : FF.ncard = s.k := by
+    rw [LOFA_IMP_CARD_FF_V_EQ hlf2, hcardV]
+  have hrho : ∀ i, rhoNode1 FF (v i) = v (i + 1) := by
+    intro i
+    exact DETER_RHO_NODE hlf2 (v := v i) (w := v (i + 1)) (Set.mem_range.mpr ⟨i, rfl⟩)
+  have horbit : ∀ p1 m : ℕ, (rhoNode1 FF)^[m] (v p1) = v (m + p1) := by
+    intro p1 m
+    exact VV_SUC_EQ_RHO_NODE_PRIME_p35 s s.k p1 0 0 (v p1) V E FF v
+      rfl rfl rfl rfl rfl his (by omega) hBB m
+  have hivs : ∀ i, ivsRhoNode1 FF (v i) = v (i + (s.k - 1)) := by
+    intro i
+    have h1 := ITER_CARD_MINUS1_EQ_IVS_RN1 hlf2 (v := v i) (Set.mem_range.mpr ⟨i, rfl⟩)
+    rw [hcardV] at h1
+    have h2 : (rhoNode1_p2 FF)^[s.k - 1] (v i) = v (s.k - 1 + i) := horbit i (s.k - 1)
+    rw [h2, Nat.add_comm (s.k - 1) i] at h1
+    exact h1.symm
+  let a : ℕ → ℝ := fun i => interiorAngle1 0 FF (v i)
+  have hstr_angle : ∀ i, scsIsStr s v i → a i = Real.pi := by
+    intro i hstr
+    have h1 : a i = azim 0 (v i) (v (i + 1)) (v (i + (s.k - 1))) := by
+      unfold a interiorAngle1
+      rw [hrho i, hivs i]
+    exact h1.trans hstr
+  have hanle : ∀ i, 0 ≤ a i := by
+    intro i
+    unfold a interiorAngle1
+    exact azim_nonneg _ _ _ _
+  have hiter0 : ∀ i, (rhoNode1_p18 FF)^[i] (v 0) = v i := by
+    intro i
+    exact horbit 0 i
+  have hSUM0 := SUM_AZIM_EQ_ANGLE_LE4_FUN_p18 (fun _ => (1:ℝ)) s v 0 (v 0) V E FF
+    (by omega) hBB his (by simp) rfl rfl rfl
+  have hSUM : setSum {i : ℕ | i < s.k} a = setSum FF (fun e => azimInFan_p18 e E) := by
+    simpa [a, hiter0] using hSUM0
+  have hfoldL : setSum {i : ℕ | i < s.k} a = ∑ i ∈ Finset.range s.k, a i :=
+    la18sz_setSum_Iio a s.k
+  have hfoldFF : setSum FF (fun e => azimInFan_p18 e E)
+      = ∑ i ∈ Finset.range s.k, azimInFan_p18 (v i, v (i + 1)) E := by
+    change setSum (Set.range fun i : ℕ => (v i, v (i + 1)))
+      (fun e => azimInFan_p18 e E) = _
+    exact la18sz_setSum_FF v (fun e => azimInFan_p18 e E) s.k hk0 hper hinj
+  have hsum_p18 : (∑ i ∈ Finset.range s.k, a i)
+      = ∑ i ∈ Finset.range s.k, azimInFan_p18 (v i, v (i + 1)) E := by
+    rw [← hfoldL, hSUM, hfoldFF]
+  have hsum_canon : (∑ i ∈ Finset.range s.k, a i)
+      = ∑ i ∈ Finset.range s.k, azimInFan (v i, v (i + 1)) E := by
+    rw [hsum_p18]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    exact la18au_azimInFan_p18_eq hclf.1 (Set.mem_range.mpr ⟨i, rfl⟩)
+  have hsol_eq : solLocal E FF
+      = 2 * Real.pi + (∑ i ∈ Finset.range s.k, a i) - (s.k : ℝ) * Real.pi := by
+    unfold solLocal
+    have hsub : setSum FF (fun e => azimInFan e E - Real.pi)
+        = ∑ i ∈ Finset.range s.k, (azimInFan (v i, v (i + 1)) E - Real.pi) := by
+      change setSum (Set.range fun i : ℕ => (v i, v (i + 1)))
+        (fun e => azimInFan e E - Real.pi) = _
+      exact la18sz_setSum_FF v (fun e => azimInFan e E - Real.pi) s.k hk0 hper hinj
+    rw [hsub, Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range]
+    have hsum' : (∑ i ∈ Finset.range s.k, azimInFan (v i, v (i + 1)) E)
+        = ∑ i ∈ Finset.range s.k, a i := hsum_canon.symm
+    rw [hsum']
+    simp only [nsmul_eq_mul]
+    ring
+  have hsum_expr : (∑ i ∈ Finset.range s.k, a i)
+      = ((s.k : ℝ) - 2) * Real.pi + solLocal E FF := by
+    have h := hsol_eq
+    linarith
+  have htotal_lt : (∑ i ∈ Finset.range s.k, a i) < ((s.k : ℝ) - 1) * Real.pi := by
+    rw [hsum_expr]
+    nlinarith [hsol, Real.pi_pos]
+  have hsum_ge : ∀ (St : Finset ℕ), St ⊆ Finset.range s.k →
+      (∀ i ∈ St, scsIsStr s v i) → (St.card : ℝ) * Real.pi ≤ ∑ i ∈ Finset.range s.k, a i := by
+    intro St hsub hstr
+    have h1 : (∑ i ∈ St, a i) = (St.card : ℝ) * Real.pi := by
+      calc (∑ i ∈ St, a i) = ∑ i ∈ St, Real.pi :=
+            Finset.sum_congr rfl (fun i hi => hstr_angle i (hstr i hi))
+        _ = (St.card : ℝ) * Real.pi := by
+            simp [Finset.sum_const, nsmul_eq_mul]
+    have h2 : (∑ i ∈ St, a i) ≤ ∑ i ∈ Finset.range s.k, a i :=
+      Finset.sum_le_sum_of_subset_of_nonneg hsub (fun i _ _ => hanle i)
+    linarith
+  set St : Finset ℕ := (Finset.range s.k).filter (fun i => scsIsStr s v i) with hStdef
+  set Tt : Finset ℕ := (Finset.range s.k).filter (fun i => ¬ scsIsStr s v i) with hTtdef
+  have hSTcard : St.card + Tt.card = s.k := by
+    have h := Finset.filter_card_add_filter_neg_card_eq_card
+      (s := Finset.range s.k) (p := fun i => scsIsStr s v i)
+    simpa [hStdef, hTtdef, Finset.card_range] using h
+  have hcard_le : St.card ≤ s.k := by
+    have h := Finset.card_le_card
+      (Finset.filter_subset (fun i => scsIsStr s v i) (Finset.range s.k))
+    simpa [hStdef, Finset.card_range] using h
+  have hgoal : 3 + St.card ≤ s.k := by
+    by_contra hcon
+    push_neg at hcon
+    have hcases : St.card = s.k - 2 ∨ St.card = s.k - 1 ∨ St.card = s.k := by omega
+    rcases hcases with h2 | h1c | h0c
+    · -- exactly two exceptions: all other turns are straight, forcing coplanarity
+      have hTt2 : Tt.card = 2 := by
+        have := hSTcard
+        omega
+      obtain ⟨i0, j0, hi0j0, hTt_eq0⟩ := Finset.card_eq_two.mp hTt2
+      have geo : ∀ p q : ℕ, p < q → Tt = {p, q} → False := by
+        intro p q hpq hTt_eq
+        have hpk : p < s.k := by
+          have hmem : p ∈ Tt := by rw [hTt_eq]; simp
+          have h := (Finset.mem_filter.mp hmem).1
+          simpa using h
+        have hqk : q < s.k := by
+          have hmem : q ∈ Tt := by rw [hTt_eq]; simp
+          have h := (Finset.mem_filter.mp hmem).1
+          simpa using h
+        have hflat : ∀ t, t < s.k → t ≠ p → t ≠ q → scsIsStr s v t := by
+          intro t htk htp htq
+          by_contra hnt
+          have hmem : t ∈ Tt := by
+            rw [hTtdef, Finset.mem_filter]
+            exact ⟨Finset.mem_range.mpr htk, hnt⟩
+          rw [hTt_eq] at hmem
+          simp only [Finset.mem_insert, Finset.mem_singleton] at hmem
+          rcases hmem with h | h
+          · exact htp h
+          · exact htq h
+        have hflat1 : ∀ t, p < t → t < q →
+            azim 0 (v t) (v (t + 1)) (v (t + (s.k - 1))) = Real.pi := by
+          intro t hpt htq
+          exact hflat t (by omega) (by omega) (by omega)
+        have hflat2 : ∀ t, q < t → t < p + s.k →
+            azim 0 (v t) (v (t + 1)) (v (t + (s.k - 1))) = Real.pi := by
+          intro t hqt htp
+          have htmod : t % s.k < s.k := Nat.mod_lt _ hk0
+          have hnei : t % s.k ≠ p := by
+            intro heq
+            have ht_eq : t = s.k * (t / s.k) + p := by
+              rw [← heq]
+              exact (Nat.div_add_mod t s.k).symm
+            have ht_i : t - p = s.k * (t / s.k) := by omega
+            have hpos : 0 < t - p := by omega
+            have hlt' : t - p < s.k := by omega
+            have hdvd : s.k ∣ t - p := ⟨t / s.k, by rw [ht_i]⟩
+            have hle := Nat.le_of_dvd hpos hdvd
+            omega
+          have hnej : t % s.k ≠ q := by
+            intro heq
+            have ht_eq : t = s.k * (t / s.k) + q := by
+              rw [← heq]
+              exact (Nat.div_add_mod t s.k).symm
+            have ht_j : t - q = s.k * (t / s.k) := by omega
+            have hpos : 0 < t - q := by omega
+            have hlt' : t - q < s.k := by omega
+            have hdvd : s.k ∣ t - q := ⟨t / s.k, by rw [ht_j]⟩
+            have hle := Nat.le_of_dvd hpos hdvd
+            omega
+          have hstr := hflat (t % s.k) htmod hnei hnej
+          have hv1 : v t = v (t % s.k) := (periodic_mod_eq_p23 hper t).symm
+          have hv2 : v (t + 1) = v (t % s.k + 1) := by
+            have hmod : (t + 1) % s.k = (t % s.k + 1) % s.k := by
+              rw [Nat.add_mod t 1 s.k, Nat.mod_eq_of_lt (by omega : (1:ℕ) < s.k)]
+            calc v (t + 1) = v ((t + 1) % s.k) := (periodic_mod_eq_p23 hper (t + 1)).symm
+              _ = v ((t % s.k + 1) % s.k) := by rw [hmod]
+              _ = v (t % s.k + 1) := periodic_mod_eq_p23 hper (t % s.k + 1)
+          have hv3 : v (t + (s.k - 1)) = v (t % s.k + (s.k - 1)) := by
+            have hmod : (t + (s.k - 1)) % s.k = (t % s.k + (s.k - 1)) % s.k := by
+              rw [Nat.add_mod t (s.k - 1) s.k,
+                Nat.mod_eq_of_lt (by omega : s.k - 1 < s.k)]
+            calc v (t + (s.k - 1)) = v ((t + (s.k - 1)) % s.k) :=
+                  (periodic_mod_eq_p23 hper (t + (s.k - 1))).symm
+              _ = v ((t % s.k + (s.k - 1)) % s.k) := by rw [hmod]
+              _ = v (t % s.k + (s.k - 1)) := periodic_mod_eq_p23 hper (t % s.k + (s.k - 1))
+          rw [hv1, hv2, hv3]
+          exact hstr
+        have harc1 := la18au_arc_mem v s.k p q hk3 hper hinj hgen_ncol hflat1 (by omega)
+        have harc2 := la18au_arc_mem v s.k q (p + s.k) hk3 hper hinj hgen_ncol hflat2 (by omega)
+        have hP1_le : affineSpan ℝ ({0, v p, v (p + 1)} : Set V3)
+            ≤ affineSpan ℝ ({0, v p, v q} : Set V3) := by
+          rw [affineSpan_le]
+          intro x hx
+          rcases hx with rfl | rfl | rfl
+          · exact mem_affineSpan ℝ (by simp)
+          · exact mem_affineSpan ℝ (by simp)
+          · have hnc : ¬ Collinear ℝ ({0, v p, v q} : Set V3) :=
+              hgen_ncol p q (hinj p q hpk hqk (by omega))
+            have hcop : Coplanar ({v (p + 1), 0, v p, v q} : Set V3) := by
+              refine ⟨0, v p, v (p + 1), ?_⟩
+              intro z hz
+              rcases hz with rfl | rfl | rfl | rfl
+              · exact mem_affineSpan ℝ (by simp)
+              · exact mem_affineSpan ℝ (by simp)
+              · exact mem_affineSpan ℝ (by simp)
+              · exact harc1 q (by omega) (by omega)
+            exact coplanar_in_affine_hull_p14 0 (v p) (v q) (v (p + 1)) hnc hcop
+        have hQsub : affineSpan ℝ ({0, v q, v (q + 1)} : Set V3)
+            ≤ affineSpan ℝ ({0, v p, v q} : Set V3) := by
+          rw [affineSpan_le]
+          intro x hx
+          rcases hx with rfl | rfl | rfl
+          · exact mem_affineSpan ℝ (by simp)
+          · exact mem_affineSpan ℝ (by simp)
+          · have hnc : ¬ Collinear ℝ ({0, v p, v q} : Set V3) :=
+              hgen_ncol p q (hinj p q hpk hqk (by omega))
+            have hcop : Coplanar ({v (q + 1), 0, v p, v q} : Set V3) := by
+              refine ⟨0, v q, v (q + 1), ?_⟩
+              intro z hz
+              rcases hz with rfl | rfl | rfl | rfl
+              · exact mem_affineSpan ℝ (by simp)
+              · exact mem_affineSpan ℝ (by simp)
+              · have hiQ : v (p + s.k) ∈ affineSpan ℝ ({0, v q, v (q + 1)} : Set V3) :=
+                  harc2 (p + s.k) (by omega) (le_refl _)
+                have hp_eq : v (p + s.k) = v p := hper p
+                rw [hp_eq] at hiQ
+                exact hiQ
+              · exact mem_affineSpan ℝ (by simp)
+            exact coplanar_in_affine_hull_p14 0 (v p) (v q) (v (q + 1)) hnc hcop
+        have hPall : ∀ t, v t ∈ affineSpan ℝ ({0, v p, v q} : Set V3) := by
+          intro t
+          have htmod : t % s.k < s.k := Nat.mod_lt _ hk0
+          have hvmod : v t = v (t % s.k) := (periodic_mod_eq_p23 hper t).symm
+          rw [hvmod]
+          by_cases hti : t % s.k < p
+          · have hmem := harc2 (t % s.k + s.k) (by omega) (by omega)
+            have heq : v (t % s.k + s.k) = v (t % s.k) := hper (t % s.k)
+            rw [heq] at hmem
+            exact hQsub hmem
+          · have hge : p ≤ t % s.k := by omega
+            by_cases hle : t % s.k ≤ q
+            · exact hP1_le (harc1 (t % s.k) hge hle)
+            · exact hQsub (harc2 (t % s.k) (by omega) (by omega))
+        have hcopv : Coplanar ({0} ∪ Set.range v : Set V3) := by
+          refine ⟨0, v p, v q, ?_⟩
+          intro z hz
+          rcases hz with rfl | hz
+          · exact mem_affineSpan ℝ (by simp)
+          · obtain ⟨t, rfl⟩ := hz
+            exact hPall t
+        exact (FEKTYIY_p27 s v his hMM hk3) hcopv
+      rcases lt_or_gt_of_ne hi0j0 with hlt | hgt
+      · exact geo i0 j0 hlt hTt_eq0
+      · exact geo j0 i0 hgt (by
+          rw [hTt_eq0]
+          ext t
+          simp only [Finset.mem_insert, Finset.mem_singleton]
+          tauto)
+    · -- one exception
+      have hge := hsum_ge St (by rw [hStdef]; exact Finset.filter_subset _ _)
+        (fun i hi => by rw [hStdef] at hi; exact (Finset.mem_filter.mp hi).2)
+      rw [h1c] at hge
+      have hcast : ((s.k - 1 : ℕ) : ℝ) = (s.k : ℝ) - 1 := by
+        rw [Nat.cast_sub (by omega : 1 ≤ s.k)]
+        norm_num
+      rw [hcast] at hge
+      nlinarith [hge, htotal_lt, Real.pi_pos]
+    · -- all str
+      have hge := hsum_ge St (by rw [hStdef]; exact Finset.filter_subset _ _)
+        (fun i hi => by rw [hStdef] at hi; exact (Finset.mem_filter.mp hi).2)
+      rw [h0c] at hge
+      nlinarith [hge, htotal_lt, Real.pi_pos]
+  have hset : {i : ℕ | i < s.k ∧ scsIsStr s v i} = (St : Set ℕ) := by
+    ext t
+    rw [hStdef]
+    simp
+  rw [hset, Set.ncard_coe_finset]
+  exact hgoal
 
 /-! ## Section D: CNICGSF (Cnicgsf.hl) -/
 
