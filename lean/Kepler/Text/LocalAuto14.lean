@@ -5850,36 +5850,6 @@ theorem XIV_ECAU_BACK_p14 (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3) (a 
     exact hdih0 (p + 1) p q hp1I hpI hqI (by omega) (by omega) haz
   exact XIV_DEFORMATION_p14 f dh r w a b h1 h9 h10 (fun i j k => rfl) h11 h12 hZ7 hZ8 hZ9
 
-/-- HOL `zlz_wedge_boundary` (hl:3130).  NEEDS: terminal deformation
-theory. -/
-theorem zlz_wedge_boundary_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
-    (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
-    (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
-    (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
-      interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi) :
-    ∀ x : V3 × V3, ∀ v : V3, ∃ e3 : ℝ, (x ∈ FF ∧ v ∈ V) →
-      0 < e3 ∧ ∀ t, -e3 < t ∧ t < e3 →
-        f v t ∈ wedgeInFanGe (f x.1 t, f x.2 t)
-          ((fun s => (fun v => f v t) '' s) '' E) := by
-  sorry
-
-/-- HOL `ZLZTHIC` (hl:3742) — the chapter terminal lemma; shape-matches
-`ZLZTHIC_concl` (LocalAuto1, appendix.hl:45).  NEEDS: the assembled
-zlz chain (`zlz_reduction`, `zlz_generic`, `zlz_wedge_skolem`,
-`zlz_wedge_boundary`, `zlz_azim`). -/
-theorem ZLZTHIC_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
-    (f : V3 → ℝ → V3)
-    (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
-    (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
-      interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi) :
-    ∃ ε : ℝ, 0 < ε ∧ ∀ t, -ε < t ∧ t < ε →
-      ConvexLocalFan ((fun v => f v t) '' V)
-        ((fun s => (fun v => f v t) '' s) '' E)
-        ((fun d => (f d.1 t, f d.2 t)) '' FF) ∧
-      Generic ((fun v => f v t) '' V)
-        ((fun s => (fun v => f v t) '' s) '' E) := by
-  sorry
-
 /-! ## w13 axiom audit (closed items only) -/
 
 #print axioms w13_in_affine_ky_lemma1
@@ -7157,6 +7127,741 @@ theorem EGHNAVX {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
           hiter j]] at hj
     · exact hsub5
 
+/-! ### w19: `zlz_wedge_boundary` private kit -/
+
+/-- HOL `WEDGE_GE_WEDGE` (REUHADY.hl:77): the closed wedge is the open
+wedge together with its two boundary azimuth level sets.  Local private
+copy (`PackingAuto24.wedgeGeWedge` lies outside LA14's import face). -/
+private theorem w19_wedgeGeWedge (v0 v1 w1 w2 : V3) :
+    wedgeGe v0 v1 w1 w2 =
+      Kepler.Geom.wedge v0 v1 w1 w2 ∪ ({z | azim v0 v1 w1 z = 0} ∪
+        {z | azim v0 v1 w1 z = azim v0 v1 w1 w2}) := by
+  ext z
+  have hb := azim_nonneg v0 v1 w1 w2
+  simp only [wedgeGe, Kepler.Geom.wedge, Set.mem_setOf_eq, Set.mem_union]
+  constructor
+  · rintro ⟨hle1, hle2⟩
+    by_cases h0 : azim v0 v1 w1 z = 0
+    · exact Or.inr (Or.inl h0)
+    · rcases lt_or_eq_of_le hle2 with hlt | heq
+      · refine Or.inl ⟨?_, ?_, hlt⟩
+        · intro hc
+          exact h0 (by unfold azim; exact if_pos (Or.inr hc))
+        · exact lt_of_le_of_ne hle1 (Ne.symm h0)
+      · exact Or.inr (Or.inr heq)
+  · rintro (h | h | h)
+    · obtain ⟨-, hlt, hle2⟩ := h
+      exact ⟨by linarith, hle2.le⟩
+    · exact ⟨h.symm.le, by rw [h]; exact hb⟩
+    · exact ⟨h ▸ hb, h.le⟩
+
+/-- w19: `azim_in_fan` at the dart `(u0, rho_node1 u0)` of the deformed fan
+is the deformed `azim 0 (f u0 t) (f u1 t) (f u2 t)` (S6.2 bridge of the
+workorder; `azimInFan` uses the `p2` kit of LocalAuto2). -/
+private theorem w19_azim_rhond {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {f : V3 → ℝ → V3} {a b : ℝ} {u0 u1 u2 : V3} {t : ℝ}
+    (h3 : Deformation f V a b) (hLF : LocalFan V E FF)
+    (hedge : ∀ u ∈ V, ∃ z, {u, z} ∈ E)
+    (hLFt : LocalFan ((fun v => f v t) '' V)
+      ((fun s => (fun v => f v t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF))
+    (hu0 : u0 ∈ V) (hρ : rhoNode1 FF u0 = u1) (hivs : ivsRhoNode1 FF u0 = u2)
+    (h : azimInFan (f u0 t, f u1 t) ((fun s => (fun v => f v t) '' s) '' E) ≤ Real.pi) :
+    azim 0 (f u0 t) (f u1 t) (f u2 t) ≤ Real.pi := by
+  have hlf2t : localFan_p2 ((fun v => f v t) '' V)
+      ((fun s => (fun v => f v t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF) := w5cA7_localFan_p2 hLFt
+  have hd : (u0, rhoNode1 FF u0) ∈ FF := w5cA7_rho_mem_FF hLF hu0
+  have himg : (f u0 t, f u1 t) ∈ ((fun d => (f d.1 t, f d.2 t)) '' FF) := by
+    have h1 := Set.mem_image_of_mem (fun d => (f d.1 t, f d.2 t)) hd
+    rwa [hρ] at h1
+  have hdart : (f u0 t, f u1 t) ∈
+      Fan.dart1OfFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E) :=
+    w5cA7_mem_dart_of_face hLFt himg
+  have hρt := deformation_rho_node1_equivariant1_p14 f V E FF a b u0 t h3 hLF hedge hLFt hu0
+  have hivst := deformation_ivs_rho_node1_equivariant1_p14 f V E FF a b u0 t h3 hLF hedge hLFt hu0
+  rw [w5cA7_azimInFan_p2_eq hLFt.1 hdart, ← hρ, hρt, w5cA7_rhoNode1_eq] at h
+  have hW := AZIM_IN_FAN_RHOND_IVS_RHOND hlf2t (v := f u0 t) (Set.mem_image_of_mem _ hu0)
+  rw [hW] at h
+  rw [← w5cA7_rhoNode1_eq, ← hρt, hρ, ← w5cA7_ivsRhoNode1_eq, ← hivst, hivs] at h
+  exact h
+
+
+/-- w19: back-translation of a `wedgeGe` membership at the dart
+`(w, rho_node1 w)` of the deformed fan into `wedgeInFanGe` (S6.1/S9 of the
+workorder): `wedgeInFanGe` is `wedgeGe 0 v (rho v) (ivs v)`, and
+`rho`/`ivs` are equivariant along the deformation. -/
+private theorem w19_wedge_back {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {f : V3 → ℝ → V3} {a b : ℝ} {w v : V3} {t : ℝ}
+    (h3 : Deformation f V a b) (hLF : LocalFan V E FF)
+    (hedge : ∀ u ∈ V, ∃ z, {u, z} ∈ E)
+    (hLFt : LocalFan ((fun v => f v t) '' V)
+      ((fun s => (fun v => f v t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF))
+    (hw : w ∈ V) (hxrho : (w, rhoNode1 FF w) ∈ FF)
+    (h : f v t ∈ wedgeGe 0 (f w t) (f (rhoNode1 FF w) t) (f (ivsRhoNode1 FF w) t)) :
+    f v t ∈ wedgeInFanGe (f w t, f (rhoNode1 FF w) t)
+      ((fun s => (fun v => f v t) '' s) '' E) := by
+  have hlf2t : localFan_p2 ((fun v => f v t) '' V)
+      ((fun s => (fun v => f v t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF) := w5cA7_localFan_p2 hLFt
+  have himg : (f w t, f (rhoNode1 FF w) t) ∈
+      ((fun d => (f d.1 t, f d.2 t)) '' FF) :=
+    Set.mem_image_of_mem (fun d => (f d.1 t, f d.2 t)) hxrho
+  have hdart : (f w t, f (rhoNode1 FF w) t) ∈
+      Fan.dart1OfFan ((fun v => f v t) '' V) ((fun s => (fun v => f v t) '' s) '' E) :=
+    w5cA7_mem_dart_of_face hLFt himg
+  rw [w5cA7_wedgeInFanGe_p2_eq hLFt.1 hdart]
+  have hW := WEDGE_IN_FAN_RHOND_IVS_RHOND hlf2t (v := f w t) (Set.mem_image_of_mem _ hw)
+  have hρt := deformation_rho_node1_equivariant1_p14 f V E FF a b w t h3 hLF hedge hLFt hw
+  have hivst := deformation_ivs_rho_node1_equivariant1_p14 f V E FF a b w t h3 hLF hedge hLFt hw
+  rw [hρt, w5cA7_rhoNode1_eq, hW]
+  rw [← w5cA7_rhoNode1_eq, ← hρt, ← w5cA7_ivsRhoNode1_eq, ← hivst]
+  exact h
+
+/-- HOL `zlz_wedge_boundary` (hl:3130). -/
+theorem zlz_wedge_boundary_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) (f : V3 → ℝ → V3)
+    (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
+    (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+      interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi) :
+    ∀ x : V3 × V3, ∀ v : V3, ∃ e3 : ℝ, (x ∈ FF ∧ v ∈ V) →
+      0 < e3 ∧ ∀ t, -e3 < t ∧ t < e3 →
+        f v t ∈ wedgeInFanGe (f x.1 t, f x.2 t)
+          ((fun s => (fun v => f v t) '' s) '' E) := by
+  classical
+  intro x v
+  by_cases hprem : x ∈ FF ∧ v ∈ V
+  · obtain ⟨hxFF, hvV⟩ := hprem
+    have hLF : LocalFan V E FF := h1.1
+    have hlf2 : localFan_p2 V E FF := w5cA7_localFan_p2 hLF
+    have hedge : ∀ u ∈ V, ∃ z, {u, z} ∈ E := w5cA7_hedge_of_LocalFan hLF
+    have hfun : (rhoNode1 FF : V3 → V3) = rhoNode1_p2 FF := rfl
+    set w : V3 := x.1 with hwdef
+    have hw2 : x.2 = rhoNode1 FF w := by
+      rw [hwdef]
+      exact (w5cA7_deter_rho hLF hxFF).symm
+    have hxrho : (w, rhoNode1 FF w) ∈ FF := by
+      have h : (x.1, x.2) ∈ FF := hxFF
+      rw [← hwdef, hw2] at h
+      exact h
+    have hwV : w ∈ V := (LOCAL_FAN_IMP_IN_V2 hlf2 hxrho).1
+    obtain ⟨e0, he0, hfan_t⟩ := XRECQNS_UPDATE_p37 (f := f) h3 hLF
+    rw [hw2]
+    by_cases hbd : v ∈ ({w, rhoNode1 FF w, ivsRhoNode1 FF w} : Set V3)
+    · obtain ⟨e, he, hprop⟩ := zlz_wedge_refl_p14 a b V E FF f h1 h2 h3 h4 v w hwV hbd
+      exact ⟨e, fun _ => ⟨he, hprop⟩⟩
+    · by_cases hopen : v ∈ Kepler.Geom.wedge 0 w (rhoNode1 FF w) (ivsRhoNode1 FF w)
+      · obtain ⟨e, he, hprop⟩ := zlz_wedge_open_p14 a b V E FF f h1 h2 h3 h4 v w hvV hwV hopen
+        exact ⟨e, fun _ => ⟨he, hprop⟩⟩
+      · have hwedgeGe : v ∈ wedgeGe 0 w (rhoNode1 FF w) (ivsRhoNode1 FF w) := by
+          have hsub : V ⊆ wedgeInFanGe ((w, rhoNode1 FF w)) E :=
+            (h1.2 (w, rhoNode1 FF w) hxrho).2
+          have hmem := hsub hvV
+          rw [w5cA7_wedgeInFanGe_p2_eq hLF.1 (w5cA7_mem_dart_of_face hLF hxrho),
+              w5cA7_rhoNode1_eq] at hmem
+          have hW := WEDGE_IN_FAN_RHOND_IVS_RHOND hlf2 (v := w) hwV
+          rw [hW] at hmem
+          exact hmem
+        have hdisj : azim 0 w (rhoNode1 FF w) v = 0 ∨
+            azim 0 w (rhoNode1 FF w) v = azim 0 w (rhoNode1 FF w) (ivsRhoNode1 FF w) := by
+          have h := hwedgeGe
+          rw [w19_wedgeGeWedge] at h
+          rcases h with hop | h0 | hivs
+          · exact absurd hop hopen
+          · exact Or.inl h0
+          · exact Or.inr hivs
+        obtain ⟨r, hrlt, hrv⟩ : ∃ r : ℕ, r < V.ncard ∧ v = (rhoNode1 FF)^[r] w := by
+          have hcover : {z : V3 | ∃ n, n < V.ncard ∧ (rhoNode1 FF)^[n] w = z} = V := by
+            rw [hfun]
+            exact LOFA_IMP_LT_CARD_SET_V hlf2 (v := w) hwV
+          have hmem : v ∈ ({z : V3 | ∃ n, n < V.ncard ∧ (rhoNode1 FF)^[n] w = z} : Set V3) := by
+            rw [hcover]
+            exact hvV
+          obtain ⟨r, hrlt, hrw⟩ := hmem
+          exact ⟨r, hrlt, hrw.symm⟩
+        have hr0 : r ≠ 0 := by
+          rintro rfl
+          apply hbd
+          have hv : v = w := by simpa using hrv
+          simp [hv]
+        have hr1 : r ≠ 1 := by
+          rintro rfl
+          apply hbd
+          have hv : v = rhoNode1 FF w := by simpa using hrv
+          simp [hv]
+        have hrN1 : r ≠ V.ncard - 1 := by
+          rintro rfl
+          apply hbd
+          have hivs : (rhoNode1 FF)^[V.ncard - 1] w = ivsRhoNode1 FF w := by
+            rw [hfun]
+            exact ITER_CARD_MINUS1_EQ_IVS_RN1 hlf2 hwV
+          have hv : v = ivsRhoNode1 FF w := by rw [hrv, hivs]
+          simp [hv]
+        have h1r : 1 < r := by
+          have h0 : 0 < r := Nat.pos_of_ne_zero hr0
+          exact lt_of_le_of_ne h0 (Ne.symm hr1)
+        have hleN1 : r ≤ V.ncard - 1 := by omega
+        have hrk : r < V.ncard - 1 := lt_of_le_of_ne hleN1 hrN1
+        let vv : ℕ → V3 := fun i => (rhoNode1 FF)^[i] w
+        let bta : ℕ → ℝ := fun i => azim 0 w (rhoNode1 FF w) (vv i)
+        have hcol : ∀ z ∈ V, z ≠ w → ¬ Collinear ℝ ({0, w, z} : Set V3) :=
+          fun z hz hzw =>
+            PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 V E FF w z hLF hwV hz (Ne.symm hzw) h2
+        have hEG := EGHNAVX (V := V) (E := E) (FF := FF) (v0 := w) (vv := vv) (bta := bta)
+          (k := V.ncard) h1 hwV rfl hcol (fun i => rfl) (fun i => rfl)
+        obtain ⟨hbta1, hbtalast, hmono, hconj⟩ := hEG
+        have hvv1 : vv 1 = rhoNode1 FF w := rfl
+        have hvvr : vv r = v := by
+          show (rhoNode1 FF)^[r] w = v
+          exact hrv.symm
+        have hvvlast : vv (V.ncard - 1) = ivsRhoNode1 FF w := by
+          show (rhoNode1 FF)^[V.ncard - 1] w = ivsRhoNode1 FF w
+          rw [hfun]
+          exact ITER_CARD_MINUS1_EQ_IVS_RN1 hlf2 hwV
+        rcases hdisj with h0 | hback
+        · -- forward branch: `azim 0 w (rho w) v = 0`
+          have hbr : bta r = 0 := by
+            show azim 0 w (vv 1) (vv r) = 0
+            rw [hvvr]
+            exact h0
+          have h4r := (hconj r).1 ⟨hbr, hrlt⟩
+          let u : ℕ → V3 := fun i => (rhoNode1 FF)^[i] (ivsRhoNode1 FF w)
+          have hivsV : ivsRhoNode1 FF w ∈ V := LOCAL_FAN_IVS_IN_V hlf2 hwV
+          have hρivs : rhoNode1 FF (ivsRhoNode1 FF w) = w := LOCAL_FAN_RHO_NODE_IVS hlf2 hwV
+          have hu0 : u 0 = ivsRhoNode1 FF w := rfl
+          have hu1 : u 1 = w := hρivs
+          have huV : ∀ i, u i ∈ V := by
+            intro i
+            show (rhoNode1 FF)^[i] (ivsRhoNode1 FF w) ∈ V
+            exact LOCAL_FAN_ITER_RHO_NODE_IN_V hlf2 hivsV i
+          have huS : ∀ i, u (i+1) = (rhoNode1 FF)^[i] w := by
+            intro i
+            show (rhoNode1 FF)^[i+1] (ivsRhoNode1 FF w) = (rhoNode1 FF)^[i] w
+            rw [Function.iterate_succ_apply, hρivs]
+          have huS' : ∀ i, 1 ≤ i → u i = (rhoNode1 FF)^[i-1] w := by
+            intro i hi
+            have h := huS (i - 1)
+            rwa [Nat.sub_add_cancel hi] at h
+          have hu2 : u 2 = rhoNode1 FF w := by
+            simpa using huS 1
+          have hρuL : ∀ i, 1 ≤ i → rhoNode1 FF (u i) = u (i+1) := by
+            intro i hi
+            show rhoNode1 FF ((rhoNode1 FF)^[i] (ivsRhoNode1 FF w)) =
+              (rhoNode1 FF)^[i+1] (ivsRhoNode1 FF w)
+            rw [Function.iterate_succ_apply']
+          have hivsuL : ∀ i, 1 ≤ i → ivsRhoNode1 FF (u i) = u (i-1) := by
+            intro i hi
+            by_cases hi1 : i = 1
+            · subst hi1
+              have hd : (u 0, u 1) ∈ FF := by
+                rw [hu0, hu1]
+                exact w5cA7_ivs_mem_FF hLF hwV
+              exact w5cA7_deter_ivs hLF hd
+            · have hi2 : 1 < i := by omega
+              have hd : (u (i-1), u i) ∈ FF := by
+                have h1 := w5cA7_rho_mem_FF hLF (huV (i-1))
+                rw [hρuL (i-1) (by omega), Nat.sub_add_cancel (by omega : 1 ≤ i)] at h1
+                exact h1
+              exact w5cA7_deter_ivs hLF hd
+          have hu_last : u (r+1) = v := by
+            rw [huS r]
+            exact hrv.symm
+          have hsubV : (u '' Set.Icc 0 (r+2)) ⊆ V := by
+            rintro z ⟨i, -, rfl⟩
+            exact huV i
+          have h1' : Deformation f (u '' Set.Icc 0 (r+2)) a b :=
+            deformation_subset_p14 f _ V a b hsubV h3
+          have h2' : ∀ i, i ∈ Set.Icc 2 (r+1) →
+              u i ∈ affGt ({0, u 1} : Set V3) ({u 2} : Set V3) := by
+            intro i hi
+            have hi2 : 2 ≤ i := hi.1
+            have hir : i ≤ r + 1 := hi.2
+            have hri : i - 1 ≤ r := by omega
+            have hui : u i = vv (i - 1) := by
+              rw [huS' i (by omega)]
+            have hmem : vv (i - 1) ∈ affGt ({0, w} : Set V3) ({vv 1} : Set V3) :=
+              h4r.2 ⟨i - 1, by omega, hri, rfl⟩
+            rw [hui, hu1, hu2]
+            exact hmem
+          let U : Set V3 := {z : V3 | ∃ n, n ≤ r ∧ (rhoNode1 FF)^[n] w = z}
+          have hUeq : (u '' Set.Icc 1 (r+1)) = U := by
+            ext z
+            constructor
+            · rintro ⟨i, hi, rfl⟩
+              have hir' : i ≤ r + 1 := hi.2
+              exact ⟨i - 1, by omega, (huS' i hi.1).symm⟩
+            · rintro ⟨n, hn, rfl⟩
+              exact ⟨n + 1, ⟨by omega, by omega⟩, huS n⟩
+          have hnc0 : ¬ Collinear ℝ ({0, w, rhoNode1 FF w} : Set V3) := by
+            simpa [w5cA7_rhoNode1_eq] using LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlf2 hwV
+          have hP : plane_p2 (affineSpan ℝ ({0, w, rhoNode1 FF w} : Set V3)) :=
+            ⟨0, w, rhoNode1 FF w, hnc0, rfl⟩
+          have h0P : (0 : V3) ∈ affineSpan ℝ ({0, w, rhoNode1 FF w} : Set V3) :=
+            mem_affineSpan ℝ (by simp)
+          have hUsub : U ⊆ affineSpan ℝ ({0, w, rhoNode1 FF w} : Set V3) := by
+            rintro z ⟨n, hn, rfl⟩
+            rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+            · rw [hn0, Function.iterate_zero_apply]
+              exact mem_affineSpan ℝ (by simp)
+            · have hmem : vv n ∈ affGt ({0, w} : Set V3) ({vv 1} : Set V3) :=
+                h4r.2 ⟨n, hnpos, hn, rfl⟩
+              have h := AFF_GT_SUBSET_AFFINE_HULL ({0, w} : Set V3) ({vv 1} : Set V3) hmem
+              have hset : (({0, w} : Set V3) ∪ {vv 1}) = ({0, w, rhoNode1 FF w} : Set V3) := by
+                have hv1 : vv 1 = rhoNode1 FF w := rfl
+                rw [hv1]
+                ext q
+                simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+                tauto
+              rwa [hset] at h
+          obtain ⟨hcycK, -, hazcycK, -⟩ :=
+            KOMWBWC (E_ := E) (V_ := V)
+              (P := affineSpan ℝ ({0, w, rhoNode1 FF w} : Set V3))
+              (U := U) (l := r) (FF_ := FF) (e := cross3 w (rhoNode1 FF w))
+              (ls := (rhoNode1 FF)^[r] w) hlf2 hwV rfl hP h0P hUsub rfl
+          have h3' : cyclicSet (u '' Set.Icc 1 (r+1)) 0 (cross3 (u 1) (u 2)) := by
+            rw [hUeq, hu1, hu2]
+            exact hcycK
+          have h4' : ∀ i, i ∈ Set.Icc 1 r →
+              azimCycle_p14 (u '' Set.Icc 1 (r+1)) 0 (cross3 (u 1) (u 2)) (u i) = u (i+1) := by
+            intro i hi
+            have hi1 : 1 ≤ i := hi.1
+            have hir : i ≤ r := hi.2
+            have hcycU : azimCycle_p2 U 0 (cross3 w (rhoNode1 FF w)) (u i) = rhoNode1 FF (u i) :=
+              hazcycK (u i) (i - 1) (huS' i hi1) (by omega)
+            have hconv : azimCycle_p14 (u '' Set.Icc 1 (r+1)) 0 (cross3 (u 1) (u 2)) (u i)
+                = azimCycle_p2 U 0 (cross3 w (rhoNode1 FF w)) (u i) := by
+              rw [hUeq, hu1, hu2]
+              rfl
+            rw [hconv, hcycU, hρuL i hi1]
+          have huSp : ∀ i, 1 ≤ i → u i = (rhoNode1_p2 FF)^[i-1] w := by
+            intro i hi
+            rw [huS' i hi, hfun]
+          have hivs_wp : u 0 = (rhoNode1_p2 FF)^[V.ncard - 1] w := by
+            have hivs_w : u 0 = (rhoNode1 FF)^[V.ncard - 1] w := by
+              show ivsRhoNode1 FF w = (rhoNode1 FF)^[V.ncard - 1] w
+              rw [hfun]
+              exact (ITER_CARD_MINUS1_EQ_IVS_RN1 hlf2 hwV).symm
+            rw [hivs_w, hfun]
+          have h5' : Set.Pairwise (Set.Icc 0 (r+1)) fun i j =>
+              ¬ Collinear ℝ ({0, u i, u j} : Set V3) := by
+            intro i hi j hj hij
+            have hir : i ≤ r + 1 := hi.2
+            have hjr : j ≤ r + 1 := hj.2
+            have hne : u i ≠ u j := by
+              intro heq
+              by_cases hi0 : i = 0
+              · subst hi0
+                by_cases hj0 : j = 0
+                · exact hij (by rw [hj0])
+                · have hj1' : 1 ≤ j := Nat.pos_of_ne_zero hj0
+                  have hui : u 0 = (rhoNode1_p2 FF)^[V.ncard - 1] w := hivs_wp
+                  have huj : u j = (rhoNode1_p2 FF)^[j - 1] w := huSp j hj1'
+                  have hjlt : j - 1 < V.ncard := by omega
+                  have hk := LT_CARD_MONO_LOFA hlf2 hwV (V.ncard - 1) (j - 1)
+                    ⟨by omega, hjlt, by rw [← hui, ← huj]; exact heq⟩
+                  have hlt : j - 1 < V.ncard - 1 := by omega
+                  omega
+              · by_cases hj0 : j = 0
+                · subst hj0
+                  have hi1' : 1 ≤ i := Nat.pos_of_ne_zero hi0
+                  have hui : u i = (rhoNode1_p2 FF)^[i - 1] w := huSp i hi1'
+                  have huj : u 0 = (rhoNode1_p2 FF)^[V.ncard - 1] w := hivs_wp
+                  have hilt : i - 1 < V.ncard := by omega
+                  have hk := LT_CARD_MONO_LOFA hlf2 hwV (i - 1) (V.ncard - 1)
+                    ⟨hilt, by omega, by rw [← hui, ← huj]; exact heq⟩
+                  have hlt : i - 1 < V.ncard - 1 := by omega
+                  omega
+                · have hi1' : 1 ≤ i := Nat.pos_of_ne_zero hi0
+                  have hj1' : 1 ≤ j := Nat.pos_of_ne_zero hj0
+                  have hui : u i = (rhoNode1_p2 FF)^[i - 1] w := huSp i hi1'
+                  have huj : u j = (rhoNode1_p2 FF)^[j - 1] w := huSp j hj1'
+                  have hilt : i - 1 < V.ncard := by omega
+                  have hjlt : j - 1 < V.ncard := by omega
+                  have hk := LT_CARD_MONO_LOFA hlf2 hwV (i - 1) (j - 1)
+                    ⟨hilt, hjlt, by rw [← hui, ← huj]; exact heq⟩
+                  have hEq : i = j := by omega
+                  exact hij hEq
+            exact PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 V E FF (u i) (u j)
+              hLF (huV i) (huV j) hne h2
+          have h6' : Set.Pairwise (Set.Icc 1 (r+2)) fun i j =>
+              ¬ Collinear ℝ ({0, u i, u j} : Set V3) := by
+            intro i hi j hj hij
+            have hi1 : 1 ≤ i := hi.1
+            have hir : i ≤ r + 2 := hi.2
+            have hj1 : 1 ≤ j := hj.1
+            have hjr : j ≤ r + 2 := hj.2
+            have hne : u i ≠ u j := by
+              intro heq
+              have hui : u i = (rhoNode1_p2 FF)^[i - 1] w := huSp i hi1
+              have huj : u j = (rhoNode1_p2 FF)^[j - 1] w := huSp j hj1
+              have hilt : i - 1 < V.ncard := by omega
+              have hjlt : j - 1 < V.ncard := by omega
+              have hk := LT_CARD_MONO_LOFA hlf2 hwV (i - 1) (j - 1)
+                ⟨hilt, hjlt, by rw [← hui, ← huj]; exact heq⟩
+              have hEq : i = j := by omega
+              exact hij hEq
+            exact PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 V E FF (u i) (u j)
+              hLF (huV i) (huV j) hne h2
+          have h7' : ∀ i, i ∈ Set.Icc 1 (r+1) →
+              ∃ e2 : ℝ, 0 < e2 ∧ ∀ t, |t| < e2 →
+                azim 0 (f (u i) t) (f (u (i+1)) t) (f (u (i-1)) t) ≤ Real.pi := by
+            intro i hi
+            have hi1 : 1 ≤ i := hi.1
+            obtain ⟨e2, he2⟩ := zlz_azim_p14 a b V E FF f h1 h2 h3 h4
+              (u i, rhoNode1 FF (u i))
+            have hmemFF : (u i, rhoNode1 FF (u i)) ∈ FF := w5cA7_rho_mem_FF hLF (huV i)
+            obtain ⟨he2pos, hprop⟩ := he2 hmemFF
+            refine ⟨min e0 e2, lt_min he0 he2pos, fun t ht => ?_⟩
+            have ht0 : |t| < e0 := lt_of_lt_of_le ht (min_le_left _ _)
+            have ht2 : |t| < e2 := lt_of_lt_of_le ht (min_le_right _ _)
+            have hLFt := hfan_t t ht0
+            have hE := hprop t (abs_lt.mp ht2)
+            rw [hρuL i hi1] at hE
+            exact w19_azim_rhond h3 hLF hedge hLFt (huV i) (hρuL i hi1) (hivsuL i hi1) hE
+          have h8' : ∀ i, i ∈ Set.Icc 1 (r+1) →
+              0 < azim 0 (u i) (u (i+1)) (u (i-1)) := by
+            intro i hi
+            have hi1 : 1 ≤ i := hi.1
+            have hpos : 0 < interiorAngle1 0 FF (u i) := by
+              rw [w5cA7_interiorAngle1_eq]
+              exact INTERIOR_ANGLE1_POS hlf2 (huV i)
+            rw [CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p37 h1 (u i) (huV i),
+              hρuL i hi1, hivsuL i hi1] at hpos
+            exact hpos
+          obtain ⟨eX, heX, hwedgeX⟩ :=
+            XIV_ECAU_p14 f r u a b h1' h2' h3' h4' h5' h6' h7' h8'
+          refine ⟨min e0 eX, fun _ => ⟨lt_min he0 heX, fun t ht => ?_⟩⟩
+          have habs : |t| < min e0 eX := abs_lt.mpr ht
+          have ht0 : |t| < e0 := lt_of_lt_of_le habs (min_le_left _ _)
+          have htX : |t| < eX := lt_of_lt_of_le habs (min_le_right _ _)
+          have hLFt := hfan_t t ht0
+          have hX2 : f v t ∈ wedgeGe 0 (f w t) (f (rhoNode1 FF w) t) (f (ivsRhoNode1 FF w) t) := by
+            have h := (hwedgeX t htX).2
+            rw [hu_last, hu1, hu2, hu0] at h
+            exact h
+          exact w19_wedge_back h3 hLF hedge hLFt hwV hxrho hX2
+        · -- backward branch: `azim 0 w (rho w) v = azim 0 w (rho w) (ivs w)`
+          have hbr5 : bta r = bta (V.ncard - 1) := by
+            show azim 0 w (vv 1) (vv r) = azim 0 w (vv 1) (vv (V.ncard - 1))
+            rw [hvvr, hvvlast]
+            exact hback
+          have h0r : 0 < r := Nat.pos_of_ne_zero hr0
+          have h5r := (hconj r).2 ⟨hbr5, h0r, hrk⟩
+          set r' : ℕ := V.ncard - r with hr'def
+          have hr'pos1 : 1 ≤ r' := by omega
+          have hr'lt : r' < V.ncard - 1 := by omega
+          have hsum : r' + r = V.ncard := by omega
+          have hper_w : (rhoNode1 FF)^[V.ncard] w = w := by
+            rw [hfun]
+            exact LOFA_IMP_ITER_RHO_NODE_ID2 hlf2 hwV
+          have hper_v : (rhoNode1 FF)^[V.ncard] v = v := by
+            rw [hfun]
+            exact LOFA_IMP_ITER_RHO_NODE_ID2 hlf2 hvV
+          have hivs_v : ivsRhoNode1 FF v = (rhoNode1 FF)^[V.ncard - 1] v := by
+            rw [hfun]
+            exact (ITER_CARD_MINUS1_EQ_IVS_RN1 hlf2 hvV).symm
+          let u : ℕ → V3 := fun i => (rhoNode1 FF)^[i] (ivsRhoNode1 FF v)
+          have hivsV : ivsRhoNode1 FF v ∈ V := LOCAL_FAN_IVS_IN_V hlf2 hvV
+          have hρivs : rhoNode1 FF (ivsRhoNode1 FF v) = v := LOCAL_FAN_RHO_NODE_IVS hlf2 hvV
+          have hu0 : u 0 = ivsRhoNode1 FF v := rfl
+          have hu1 : u 1 = v := hρivs
+          have huV : ∀ i, u i ∈ V := by
+            intro i
+            show (rhoNode1 FF)^[i] (ivsRhoNode1 FF v) ∈ V
+            exact LOCAL_FAN_ITER_RHO_NODE_IN_V hlf2 hivsV i
+          have huS : ∀ i, u (i+1) = (rhoNode1 FF)^[i] v := by
+            intro i
+            show (rhoNode1 FF)^[i+1] (ivsRhoNode1 FF v) = (rhoNode1 FF)^[i] v
+            rw [Function.iterate_succ_apply, hρivs]
+          have huS' : ∀ i, 1 ≤ i → u i = (rhoNode1 FF)^[i-1] v := by
+            intro i hi
+            have h := huS (i - 1)
+            rwa [Nat.sub_add_cancel hi] at h
+          have hu_vv : ∀ i, 1 ≤ i → u i = vv (i - 1 + r) := by
+            intro i hi
+            rw [huS' i hi]
+            show (rhoNode1 FF)^[i-1] v = (rhoNode1 FF)^[i-1+r] w
+            rw [hrv, ← Function.iterate_add_apply]
+          have hρuL : ∀ i, 1 ≤ i → rhoNode1 FF (u i) = u (i+1) := by
+            intro i hi
+            show rhoNode1 FF ((rhoNode1 FF)^[i] (ivsRhoNode1 FF v)) =
+              (rhoNode1 FF)^[i+1] (ivsRhoNode1 FF v)
+            rw [Function.iterate_succ_apply']
+          have hivsuL : ∀ i, 1 ≤ i → ivsRhoNode1 FF (u i) = u (i-1) := by
+            intro i hi
+            by_cases hi1 : i = 1
+            · subst hi1
+              have hd : (u 0, u 1) ∈ FF := by
+                rw [hu0, hu1]
+                exact w5cA7_ivs_mem_FF hLF hvV
+              exact w5cA7_deter_ivs hLF hd
+            · have hi2 : 1 < i := by omega
+              have hd : (u (i-1), u i) ∈ FF := by
+                have h1 := w5cA7_rho_mem_FF hLF (huV (i-1))
+                rw [hρuL (i-1) (by omega), Nat.sub_add_cancel (by omega : 1 ≤ i)] at h1
+                exact h1
+              exact w5cA7_deter_ivs hLF hd
+          have hu_last1 : u (r'+1) = w := by
+            have h := huS' (r'+1) (by omega)
+            rw [show (r'+1) - 1 = r' by omega] at h
+            rw [h, hrv, ← Function.iterate_add_apply, hsum, hper_w]
+          have hu_last2 : u (r'+2) = rhoNode1 FF w := by
+            have h := huS (r'+1)
+            rw [show (r' + 1) + 1 = r' + 2 by omega] at h
+            rw [h, hrv, ← Function.iterate_add_apply]
+            rw [show r' + 1 + r = V.ncard + 1 by omega]
+            rw [Function.iterate_succ_apply', hper_w]
+          have hu_last0 : u r' = ivsRhoNode1 FF w := by
+            rcases Nat.eq_zero_or_pos r' with h0 | hpos
+            · omega
+            · rw [huS' r' hpos]
+              rw [hrv, ← Function.iterate_add_apply]
+              rw [show r' - 1 + r = V.ncard - 1 by omega]
+              rw [hfun]
+              exact ITER_CARD_MINUS1_EQ_IVS_RN1 hlf2 hwV
+          have hsubV : (u '' Set.Icc 0 (r'+2)) ⊆ V := by
+            rintro z ⟨i, -, rfl⟩
+            exact huV i
+          have h1' : Deformation f (u '' Set.Icc 0 (r'+2)) a b :=
+            deformation_subset_p14 f _ V a b hsubV h3
+          have h2' : 1 ≤ r' := hr'pos1
+          have h3' : ∀ i, i ∈ Set.Icc 1 r' →
+              u i ∈ affGt ({0, u (r'+1)} : Set V3) ({u r'} : Set V3) := by
+            intro i hi
+            have hi1 : 1 ≤ i := hi.1
+            have hir : i ≤ r' := hi.2
+            have hmem : vv (i - 1 + r) ∈ affGt ({0, w} : Set V3) ({vv (V.ncard - 1)} : Set V3) := by
+              refine h5r.2 ⟨i - 1 + r, ?_, ?_, rfl⟩
+              · omega
+              · omega
+            rw [hu_vv i hi1, hu_last1, hu_last0]
+            simpa [hvvlast] using hmem
+          let U' : Set V3 := {z : V3 | ∃ n, n ≤ r' ∧ (rhoNode1 FF)^[n] v = z}
+          have hU'eq : (u '' Set.Icc 1 (r'+1)) = U' := by
+            ext z
+            constructor
+            · rintro ⟨i, hi, rfl⟩
+              have hir' : i ≤ r' + 1 := hi.2
+              exact ⟨i - 1, by omega, (huS' i hi.1).symm⟩
+            · rintro ⟨n, hn, rfl⟩
+              exact ⟨n + 1, ⟨by omega, by omega⟩, huS n⟩
+          have hnc0' : ¬ Collinear ℝ ({0, w, ivsRhoNode1 FF w} : Set V3) := by
+            simpa [w5cA7_ivsRhoNode1_eq] using LOFA_IMP_NOT_COLL_IVS hlf2 hwV
+          have hP' : plane_p2 (affineSpan ℝ ({0, w, ivsRhoNode1 FF w} : Set V3)) :=
+            ⟨0, w, ivsRhoNode1 FF w, hnc0', rfl⟩
+          have h0P' : (0 : V3) ∈ affineSpan ℝ ({0, w, ivsRhoNode1 FF w} : Set V3) :=
+            mem_affineSpan ℝ (by simp)
+          have hU'sub : U' ⊆ affineSpan ℝ ({0, w, ivsRhoNode1 FF w} : Set V3) := by
+            rintro z ⟨n, hn, rfl⟩
+            rcases Nat.lt_or_ge n r' with hlt | hge
+            · have hmem : vv (n + r) ∈ affGt ({0, w} : Set V3) ({vv (V.ncard - 1)} : Set V3) := by
+                refine h5r.2 ⟨n + r, ?_, ?_, rfl⟩
+                · omega
+                · omega
+              have h := AFF_GT_SUBSET_AFFINE_HULL ({0, w} : Set V3) ({vv (V.ncard - 1)} : Set V3) hmem
+              have hset : (({0, w} : Set V3) ∪ {vv (V.ncard - 1)}) =
+                  ({0, w, ivsRhoNode1 FF w} : Set V3) := by
+                rw [hvvlast]
+                ext q
+                simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+                tauto
+              have hnv : (rhoNode1 FF)^[n] v = vv (n + r) := by
+                rw [hrv, ← Function.iterate_add_apply]
+              rw [hnv]
+              rwa [hset] at h
+            · have hn' : n = r' := by omega
+              have hw : (rhoNode1 FF)^[r'] v = w := by
+                rw [hrv, ← Function.iterate_add_apply, hsum, hper_w]
+              rw [hn', hw]
+              exact mem_affineSpan ℝ (by simp)
+          obtain ⟨hcycK', hposK', hazcycK', hlastK'⟩ :=
+            KOMWBWC (E_ := E) (V_ := V)
+              (P := affineSpan ℝ ({0, w, ivsRhoNode1 FF w} : Set V3))
+              (U := U') (l := r') (FF_ := FF) (e := cross3 v (rhoNode1 FF v))
+              (ls := (rhoNode1 FF)^[r'] v) hlf2 hvV rfl hP' h0P' hU'sub rfl
+          have h4' : cyclicSet (u '' Set.Icc 1 (r'+1)) 0 (cross3 (u 1) (u 2)) := by
+            have hu2 : u 2 = rhoNode1 FF v := by simpa using huS 1
+            rw [hU'eq, hu1, hu2]
+            exact hcycK'
+          have h5' : ∀ i, i ∈ Set.Icc 1 r' →
+              0 < (cross3 (u i) (u (i+1))) ⬝ᵥ (cross3 (u 1) (u 2)) := by
+            intro i hi
+            have hi1 : 1 ≤ i := hi.1
+            have hir : i ≤ r' := hi.2
+            have h := hposK' (i - 1) (by omega)
+            rw [Nat.sub_add_cancel hi1] at h
+            rw [huS' i hi1, huS i, hu1, huS 1]
+            simpa [hfun, Function.iterate_one, cross3] using h
+          have h6' : ({u 1, u 2} : Set V3) ⊆ affGt ({0, u (r'+1)} : Set V3) ({u r'} : Set V3) := by
+            intro z hz
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+            rcases hz with rfl | rfl
+            · rw [hu1, hu_last1, hu_last0]
+              have hmem : vv r ∈ affGt ({0, w} : Set V3) ({vv (V.ncard - 1)} : Set V3) :=
+                h5r.2 ⟨r, by omega, by omega, rfl⟩
+              simpa [hvvr, hvvlast] using hmem
+            · have hu2v : u 2 = vv (r+1) := by
+                rw [huS 1, hrv, ← Function.iterate_add_apply, Nat.add_comm 1 r]
+              rw [hu2v, hu_last1, hu_last0]
+              have hmem : vv (r+1) ∈ affGt ({0, w} : Set V3) ({vv (V.ncard - 1)} : Set V3) :=
+                h5r.2 ⟨r+1, by omega, by omega, rfl⟩
+              simpa [hvvlast] using hmem
+          have h7' : ∀ i, i ∈ Set.Icc 1 r' →
+              azimCycle_p14 (u '' Set.Icc 1 (r'+1)) 0 (cross3 (u 1) (u 2)) (u i) = u (i+1) := by
+            intro i hi
+            have hi1 : 1 ≤ i := hi.1
+            have hir : i ≤ r' := hi.2
+            have hcycU : azimCycle_p2 U' 0 (cross3 v (rhoNode1 FF v)) (u i) = rhoNode1 FF (u i) :=
+              hazcycK' (u i) (i - 1) (huS' i hi1) (by omega)
+            have hconv : azimCycle_p14 (u '' Set.Icc 1 (r'+1)) 0 (cross3 (u 1) (u 2)) (u i)
+                = azimCycle_p2 U' 0 (cross3 v (rhoNode1 FF v)) (u i) := by
+              have hu2 : u 2 = rhoNode1 FF v := by simpa using huS 1
+              rw [hU'eq, hu1, hu2]
+              rfl
+            rw [hconv, hcycU, hρuL i hi1]
+          have h8' : azimCycle_p14 (u '' Set.Icc 1 (r'+1)) 0 (cross3 (u 1) (u 2)) (u (r'+1)) = u 1 := by
+            have hcard : r' < FF.ncard := by
+              rw [LOFA_IMP_CARD_FF_V_EQ hlf2]
+              omega
+            have hlast := hlastK' rfl hcard
+            have hu_r1 : u (r'+1) = (rhoNode1 FF)^[r'] v := huS r'
+            have hconv : azimCycle_p14 (u '' Set.Icc 1 (r'+1)) 0 (cross3 (u 1) (u 2)) (u (r'+1))
+                = azimCycle_p2 U' 0 (cross3 v (rhoNode1 FF v)) ((rhoNode1 FF)^[r'] v) := by
+              have hu2 : u 2 = rhoNode1 FF v := by simpa using huS 1
+              rw [hU'eq, hu1, hu2, hu_r1]
+              rfl
+            rw [hconv, hlast, hu1]
+          have huSp : ∀ i, 1 ≤ i → u i = (rhoNode1_p2 FF)^[i-1] v := by
+            intro i hi
+            rw [huS' i hi, hfun]
+          have hivs_vp : u 0 = (rhoNode1_p2 FF)^[V.ncard - 1] v := by
+            have h0 : u 0 = (rhoNode1 FF)^[V.ncard - 1] v := by
+              show ivsRhoNode1 FF v = (rhoNode1 FF)^[V.ncard - 1] v
+              rw [hfun]
+              exact (ITER_CARD_MINUS1_EQ_IVS_RN1 hlf2 hvV).symm
+            rw [h0, hfun]
+          have h9' : Set.Pairwise (Set.Icc 0 (r'+1)) fun i j =>
+              ¬ Collinear ℝ ({0, u i, u j} : Set V3) := by
+            intro i hi j hj hij
+            have hir : i ≤ r' + 1 := hi.2
+            have hjr : j ≤ r' + 1 := hj.2
+            have hne : u i ≠ u j := by
+              intro heq
+              by_cases hi0 : i = 0
+              · subst hi0
+                by_cases hj0 : j = 0
+                · exact hij (by rw [hj0])
+                · have hj1' : 1 ≤ j := Nat.pos_of_ne_zero hj0
+                  have hui : u 0 = (rhoNode1_p2 FF)^[V.ncard - 1] v := hivs_vp
+                  have huj : u j = (rhoNode1_p2 FF)^[j - 1] v := huSp j hj1'
+                  have hjlt : j - 1 < V.ncard := by omega
+                  have hk := LT_CARD_MONO_LOFA hlf2 hvV (V.ncard - 1) (j - 1)
+                    ⟨by omega, hjlt, by rw [← hui, ← huj]; exact heq⟩
+                  have hlt : j - 1 < V.ncard - 1 := by omega
+                  omega
+              · by_cases hj0 : j = 0
+                · subst hj0
+                  have hi1' : 1 ≤ i := Nat.pos_of_ne_zero hi0
+                  have hui : u i = (rhoNode1_p2 FF)^[i - 1] v := huSp i hi1'
+                  have huj : u 0 = (rhoNode1_p2 FF)^[V.ncard - 1] v := hivs_vp
+                  have hilt : i - 1 < V.ncard := by omega
+                  have hk := LT_CARD_MONO_LOFA hlf2 hvV (i - 1) (V.ncard - 1)
+                    ⟨hilt, by omega, by rw [← hui, ← huj]; exact heq⟩
+                  have hlt : i - 1 < V.ncard - 1 := by omega
+                  omega
+                · have hi1' : 1 ≤ i := Nat.pos_of_ne_zero hi0
+                  have hj1' : 1 ≤ j := Nat.pos_of_ne_zero hj0
+                  have hui : u i = (rhoNode1_p2 FF)^[i - 1] v := huSp i hi1'
+                  have huj : u j = (rhoNode1_p2 FF)^[j - 1] v := huSp j hj1'
+                  have hilt : i - 1 < V.ncard := by omega
+                  have hjlt : j - 1 < V.ncard := by omega
+                  have hk := LT_CARD_MONO_LOFA hlf2 hvV (i - 1) (j - 1)
+                    ⟨hilt, hjlt, by rw [← hui, ← huj]; exact heq⟩
+                  have hEq : i = j := by omega
+                  exact hij hEq
+            exact PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 V E FF (u i) (u j)
+              hLF (huV i) (huV j) hne h2
+          have h10' : Set.Pairwise (Set.Icc 1 (r'+2)) fun i j =>
+              ¬ Collinear ℝ ({0, u i, u j} : Set V3) := by
+            intro i hi j hj hij
+            have hi1 : 1 ≤ i := hi.1
+            have hir : i ≤ r' + 2 := hi.2
+            have hj1 : 1 ≤ j := hj.1
+            have hjr : j ≤ r' + 2 := hj.2
+            have hne : u i ≠ u j := by
+              intro heq
+              have hui : u i = (rhoNode1_p2 FF)^[i - 1] v := huSp i hi1
+              have huj : u j = (rhoNode1_p2 FF)^[j - 1] v := huSp j hj1
+              have hilt : i - 1 < V.ncard := by omega
+              have hjlt : j - 1 < V.ncard := by omega
+              have hk := LT_CARD_MONO_LOFA hlf2 hvV (i - 1) (j - 1)
+                ⟨hilt, hjlt, by rw [← hui, ← huj]; exact heq⟩
+              have hEq : i = j := by omega
+              exact hij hEq
+            exact PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 V E FF (u i) (u j)
+              hLF (huV i) (huV j) hne h2
+          have h11' : ∀ i, i ∈ Set.Icc 1 (r'+1) →
+              ∃ e2 : ℝ, 0 < e2 ∧ ∀ t, |t| < e2 →
+                azim 0 (f (u i) t) (f (u (i+1)) t) (f (u (i-1)) t) ≤ Real.pi := by
+            intro i hi
+            have hi1 : 1 ≤ i := hi.1
+            obtain ⟨e2, he2⟩ := zlz_azim_p14 a b V E FF f h1 h2 h3 h4
+              (u i, rhoNode1 FF (u i))
+            have hmemFF : (u i, rhoNode1 FF (u i)) ∈ FF := w5cA7_rho_mem_FF hLF (huV i)
+            obtain ⟨he2pos, hprop⟩ := he2 hmemFF
+            refine ⟨min e0 e2, lt_min he0 he2pos, fun t ht => ?_⟩
+            have ht0 : |t| < e0 := lt_of_lt_of_le ht (min_le_left _ _)
+            have ht2 : |t| < e2 := lt_of_lt_of_le ht (min_le_right _ _)
+            have hLFt := hfan_t t ht0
+            have hE := hprop t (abs_lt.mp ht2)
+            rw [hρuL i hi1] at hE
+            exact w19_azim_rhond h3 hLF hedge hLFt (huV i) (hρuL i hi1) (hivsuL i hi1) hE
+          have h12' : ∀ i, i ∈ Set.Icc 1 (r'+1) →
+              0 < azim 0 (u i) (u (i+1)) (u (i-1)) := by
+            intro i hi
+            have hi1 : 1 ≤ i := hi.1
+            have hpos : 0 < interiorAngle1 0 FF (u i) := by
+              rw [w5cA7_interiorAngle1_eq]
+              exact INTERIOR_ANGLE1_POS hlf2 (huV i)
+            rw [CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS_p37 h1 (u i) (huV i),
+              hρuL i hi1, hivsuL i hi1] at hpos
+            exact hpos
+          obtain ⟨eX, heX, hwedgeX⟩ :=
+            XIV_ECAU_BACK_p14 f r' u a b h1' h2' h3' h4' h5' h6' h7' h8' h9' h10' h11' h12'
+          refine ⟨min e0 eX, fun _ => ⟨lt_min he0 heX, fun t ht => ?_⟩⟩
+          have habs : |t| < min e0 eX := abs_lt.mpr ht
+          have ht0 : |t| < e0 := lt_of_lt_of_le habs (min_le_left _ _)
+          have htX : |t| < eX := lt_of_lt_of_le habs (min_le_right _ _)
+          have hLFt := hfan_t t ht0
+          have hX1 : f v t ∈ wedgeGe 0 (f w t) (f (rhoNode1 FF w) t) (f (ivsRhoNode1 FF w) t) := by
+            have h := (hwedgeX t htX).1
+            rw [hu1, hu_last1, hu_last2, hu_last0] at h
+            exact h
+          exact w19_wedge_back h3 hLF hedge hLFt hwV hxrho hX1
+  · exact ⟨1, fun h => absurd h hprem⟩
+
+/-- HOL `ZLZTHIC` (hl:3742) — the chapter terminal lemma; shape-matches
+`ZLZTHIC_concl` (LocalAuto1, appendix.hl:45).  Assembly of the `zlz` chain
+(`zlz_reduction` over `zlz_generic`, `zlz_wedge_skolem`+`zlz_wedge_boundary`
+and `zlz_azim`). -/
+theorem ZLZTHIC_p14 (a b : ℝ) (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (f : V3 → ℝ → V3)
+    (h1 : ConvexLocalFan V E FF) (h2 : Generic V E) (h3 : Deformation f V a b)
+    (h4 : ∀ v ∈ V, ∀ t ∈ Icc a b, interiorAngle1 0 FF v = Real.pi →
+      interiorAngle1 0 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) ≤ Real.pi) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ t, -ε < t ∧ t < ε →
+      ConvexLocalFan ((fun v => f v t) '' V)
+        ((fun s => (fun v => f v t) '' s) '' E)
+        ((fun d => (f d.1 t, f d.2 t)) '' FF) ∧
+      Generic ((fun v => f v t) '' V)
+        ((fun s => (fun v => f v t) '' s) '' E) := by
+  exact zlz_reduction_p14 a b V E FF f h1 h2 h3 h4
+    (zlz_generic_p14 a b V E FF f h1 h2 h3)
+    (zlz_wedge_skolem_p14 V E FF f h1
+      (zlz_wedge_boundary_p14 a b V E FF f h1 h2 h3 h4))
+    (zlz_azim_p14 a b V E FF f h1 h2 h3 h4)
+
 /-! ## axiom audit -/
 #print axioms CONV02_SU_CONV2
 #print axioms AZIM_EQ_PI_ALT
@@ -7183,5 +7888,8 @@ theorem EGHNAVX {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
 #print axioms XIV_DEFORMATION_p14
 #print axioms XIV_ECAU_p14
 #print axioms XIV_ECAU_BACK_p14
+/-! ### w19 axiom audit (boundary closure) -/
+#print axioms zlz_wedge_boundary_p14
+#print axioms ZLZTHIC_p14
 end Kepler.Text
 
