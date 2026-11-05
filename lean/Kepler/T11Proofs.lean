@@ -18,6 +18,7 @@
   read-only.  No placeholder proofs and no extra axioms.
 -/
 import Kepler.Text.LocalAuto1
+import Kepler.Interval.Cases.C8405387449
 
 namespace Kepler.Text
 namespace T11Proofs
@@ -106,6 +107,70 @@ theorem t11_6843920790 : mainEstimate_6843920790 := by
     · have := hq3 hC hD; nlinarith [h1, h1u, h2, h2u, h3, h3u, hdlo, hdhi, hD]
     · push_neg at hD
       have := hq4 hC hD; nlinarith [h1, h1u, h2, h2u, h3, h3u, hdlo, hdhi, hD.le]
+
+/-! ## `8405387449` — glued from `Kepler.Interval.Cases.C8405387449` -/
+
+open Kepler.Interval
+
+set_option maxHeartbeats 2000000 in
+private theorem eval_C8405387449 (ρ : Fin 6 → ℝ) :
+    (Kepler.Interval.Cases.C8405387449Expr).evalReal ρ
+      = -(4 * (ρ 0 * deltaX (ρ 0) (ρ 1) (ρ 2) (ρ 3) (ρ 4) (ρ 5))
+          + (-193 / 50 : ℝ) * (deltaX4 (ρ 0) (ρ 1) (ρ 2) (ρ 3) (ρ 4) (ρ 5)) ^ 2) := by
+  dsimp only [Kepler.Interval.Cases.C8405387449Expr, IExpr.evalReal, deltaX, deltaX4]
+  simp only [Dyadic.toReal_def]
+  norm_num
+  ring
+
+set_option maxHeartbeats 2000000 in
+/-- HOL `Main_estimate` `8405387449`: `4·x1Δy < 3.86·Δ₄y² ∨ Δy < 0` on its box. -/
+theorem t11_8405387449 : mainEstimate_8405387449 := by
+  intro y1 y2 y3 y4 y5 y6 h1 h1' h2 h2' h3 h3' h4 h4' h5 h5' h6 h6'
+  let ρ : Fin 6 → ℝ := ![y1 * y1, y2 * y2, y3 * y3, y4 * y4, y5 * y5, y6 * y6]
+  have hv0 : ρ 0 = y1 * y1 := rfl
+  have hv1 : ρ 1 = y2 * y2 := rfl
+  have hv2 : ρ 2 = y3 * y3 := rfl
+  have hv3 : ρ 3 = y4 * y4 := rfl
+  have hv4 : ρ 4 = y5 * y5 := rfl
+  have hv5 : ρ 5 = y6 * y6 := rfl
+  have h6l : (2.52 : ℝ) ≤ y6 := by
+    have h : (2 : ℝ) * Kepler.Text.h0 = 2.52 := by norm_num [Kepler.Text.h0]
+    linarith
+  have hρ0 : boxMem Kepler.Interval.Cases.C8405387449Box
+      ![y1 * y1, y2 * y2, y3 * y3, y4 * y4, y5 * y5, y6 * y6] := by
+    intro i
+    fin_cases i
+    · show (⟨⟨4, 0⟩, ⟨4, 0⟩⟩ : DInterval).mem (y1 * y1)
+      constructor <;> rw [Dyadic.toReal_def] <;> norm_num <;> nlinarith [h1, h1']
+    · show (⟨⟨4, 0⟩, ⟨213084065, -25⟩⟩ : DInterval).mem (y2 * y2)
+      constructor <;> rw [Dyadic.toReal_def] <;> norm_num <;> nlinarith [h2, h2']
+    · show (⟨⟨4, 0⟩, ⟨213084065, -25⟩⟩ : DInterval).mem (y3 * y3)
+      constructor <;> rw [Dyadic.toReal_def] <;> norm_num <;> nlinarith [h3, h3']
+    · show (⟨⟨4, 0⟩, ⟨4, 0⟩⟩ : DInterval).mem (y4 * y4)
+      constructor <;> rw [Dyadic.toReal_def] <;> norm_num <;> nlinarith [h4, h4']
+    · show (⟨⟨9728208299, -30⟩, ⟨13531831337, -30⟩⟩ : DInterval).mem (y5 * y5)
+      constructor <;> rw [Dyadic.toReal_def] <;> norm_num <;> nlinarith [h5, h5']
+    · show (⟨⟨6818690079, -30⟩, ⟨2432052075, -28⟩⟩ : DInterval).mem (y6 * y6)
+      constructor <;> rw [Dyadic.toReal_def] <;> norm_num <;> nlinarith [h6l, h6']
+  have hρ : boxMem Kepler.Interval.Cases.C8405387449Box ρ := hρ0
+  obtain ⟨g, hg, hge⟩ := Kepler.Interval.Cases.C8405387449_pos ρ hρ
+  simp only [Kepler.Interval.Cases.C8405387449Goals, List.mem_cons,
+    List.not_mem_nil, or_false] at hg
+  rcases hg with rfl | rfl
+  · simp only [DisjGoal.eval] at hge
+    change 0 < (Kepler.Interval.Cases.C8405387449Expr).evalReal ρ at hge
+    rw [eval_C8405387449] at hge
+    rw [hv0, hv1, hv2, hv3, hv4, hv5] at hge
+    left
+    unfold x1DeltaY_t11 delta4SquaredY_t11
+    nlinarith
+  · simp only [DisjGoal.eval, IExpr.evalReal, Dyadic.toReal_def] at hge
+    norm_num at hge
+    right
+    rw [hv0, hv1, hv2, hv3, hv4, hv5] at hge
+    unfold deltaY deltaX
+    ring_nf at hge ⊢
+    linarith
 
 end T11Proofs
 end Kepler.Text
