@@ -38,7 +38,7 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 下午，池 **4/5**）
+## 1. 在飞（2026-11-06 下午，池 **5/5**；其中 1 个为 mnt11 常驻编制）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
@@ -46,6 +46,7 @@
 | `797-defix-scout` | **只读侦察**：为 `_797`/`PackIneqDefA` 真化 DEF-FIX 章程钉事实——`atn2`/`upsX`/`asnFnhk` 进 PA22 闭包的环与 `rho` 撞名、5 条 HOL ineq 正文、`packIneqDefAP22` 三形状裁决、断链清单、**shard 面零漂移核查** | 在飞（发车 2026-11-06） |
 | `la-registry-mnt11-sf-scout` | **只读侦察**：为 ④ SF 钉材料——四条 `_concl` 的 HOL 条件式 anchor 已由编排者坐实（`VASYYAU.hl:292/720/1126/2366`；`TUAPYYU` :640 是无条件证明，已排除）；本车道验证 + 消费者断链面 + **`localconcl_wire_capstone_w2` 47 合取是否连带** + SF 提案正文与归档补丁 | 在飞（发车 2026-11-06） |
 | `reduction5-scout` | **只读侦察**（⑤）：`jcajydu` 先移植 `Reduction5` 的边界——HOL `reduction5.hl`(160 行)/`JCAJYDU.hl`(99 行) 全貌、**`IsHypermapOfListTl` vs HOL hypermap 是否同一概念**、**TameSpine 岛 75 文件是否已有移植**（决定工作量差一个数量级）、Lean 侧真实规模 vs 裁决估计 1,500–3,000 行、落点（新叶模块 vs 并入 TameCorrBase vs 岛内）、子波切分 | 在飞（发车 2026-11-06） |
+| `mnt11-rolling`（**常驻**） | **M0 分诊**：109 条 `mainEstimate_*` 逐条定 `PROVED`/`PROVABLE`/`NEEDS-CERT`/`NEEDS-MATH`（`PROVABLE` 须探针 RC=0，`PROVED` 须 `#print axioms` 实测）+ `T11Glue` olean 可行性 + 20 条已证件接线价值 + `WORKORDER-M1` | 在飞（常驻，发车 2026-11-06） |
 | （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；**进度 12/23 完成（486/490/493/494/495/497/498/499/500/501/502/503），504 在编，零失败**；完成后重跑基线 | 进行中 |
 
 > 已落库车道（114+ 行）见 [`history/lanes-landed.md`](history/lanes-landed.md)。
