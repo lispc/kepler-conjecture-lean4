@@ -1,0 +1,74 @@
+hol_name	hol_line	lean_name	lean_loc	category	axioms	notes
+tame9a_correspondence	42	—	—	MISSING	—	D2(直接给 tame_correspondence1). HOL: tame_9a(hypermap_of_list(fgraph g)) ∧ good_list(fgraph g) ⇒ tame9a g. 近载体: TameLp.hypermapOfList 四字段律(TameLp:5220-5244)、TameLp.elementsOfList; 无图级对应定理. TRUE-GAP.
+tame10_correspondence	107	—	—	MISSING	—	D2. HOL: 上述 + good_list_nodes + vertices_set2=elements_of_list ⇒ tame10 g. 近载体: Graphs.tame10 def、TameSpine.GoodGraph.VerticesSet2EqSpine def; 无定理. TRUE-GAP.
+finalGraph_except	139	—	—	MISSING	—	T. HOL: finalGraph g ∧ perm_eq(facesAt_v2,facesAt) ⇒ except g v = LEN(filter 5≤len facesAt_v2). 近载体: Graphs.except; List.Perm.filter. NEAR-TRIVIAL(1 行 Perm.filter 论证).
+facesAt2_list	176	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ v∈vertices_set2 ⇒ map FST(facesAt_v2 g v)=facesAt_list(fgraph g)v. 近载体: GoodGraph.facesAtV2 def、TameLp.elementsOfList; 缺 fgraph=map FST faces + FILTER 交换. TRUE-GAP.
+good_graph_perm_eq_facesAt	190	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ v∈vertices_set2 ⇒ perm_eq(facesAt_v2,facesAt). 现 GoodGraphV4 第 5 合取=GoodFacesV3 即此命题, 载体=投影 hgg.2.2.2.2.1 (Assembly:2238/GoodGraph:83); 无 named theorem. NEAR-TRIVIAL(1 行).
+LENGTH_facesAt	199	—	—	MISSING	—	T. HOL: 同上 ⇒ 两 facesAt 长度相等. 由 GoodFacesV3 的 List.Perm.length_eq 一行. NEAR-TRIVIAL.
+tame11a_good_graph	212	—	—	MISSING	—	D2. HOL: good_graph_v4 ∧ tame11a_list(fgraph g) ⇒ tame11a g. 近载体: Graphs.tame11a def、facesAt2_list/LENGTH_facesAt(本表). TRUE-GAP.
+good_final_filter	229	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ v∈vertices_set2 ⇒ FILTER(SND f∧P f)(facesAt_v2)=FILTER P(facesAt_v2). 需 FinalGraph(无 nonFinal 面); 近载体: FinalGraph def、Graph.final. TRUE-GAP.
+length_good_final_filter	249	—	—	MISSING	—	T. HOL: 同条件下 facesAt 版长度相等. 近载体: List.filter_congr/Perm. NEAR-ASSET.
+good_type_filter	271	—	—	MISSING	—	T. HOL: FILTER(P∘len)(facesAt_list(fgraph g)v)=MAP FST(FILTER(P∘len∘FST)(facesAt_v2 g v)). 依赖 facesAt2_list + map/filter 交换. TRUE-GAP.
+except_list_except	289	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ v∈vertices_set2 ⇒ except_list(fgraph g)v=except g v. 近载体: Graphs.except、except_list def(本表); 缺 filter 长度桥. NEAR-ASSET.
+tame11b_list_tame11b	308	—	—	MISSING	—	D2. HOL: good_graph_v4 ∧ tame11b_list(fgraph g) ⇒ tame11b g. 近载体: Graphs.tame11b def、LENGTH_facesAt/except_list_except(本表). TRUE-GAP.
+length_filter_facesAt	334	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ v∈vertices_set2 ⇒ LEN(FILTER P facesAt_v2)=LEN(FILTER P facesAt). 由 Perm ⇒ filter Perm. NEAR-TRIVIAL.
+tri_list_tri	349	—	—	MISSING	—	T. HOL: tri_list(fgraph g)v=tri g v. 近载体: Graphs.tri(def 于 Graph.lean:134)、good_type_filter/length_filter_facesAt. NEAR-ASSET.
+quad_list_quad	365	—	—	MISSING	—	T. HOL: quad_list(fgraph g)v=quad g v. 同上. NEAR-ASSET.
+vertextype_list_vertextype	381	—	—	MISSING	—	T. HOL: vertextype_list(fgraph g)v=vertextype g v. 三槽 tri/quad/except 已分证; NEAR-TRIVIAL.
+tame12o_list_tame12o	397	—	—	MISSING	—	D2. HOL: good_graph_v4 ∧ tame12o_list(fgraph g) ⇒ tame12o g. 近载体: Graphs.tame12o def、vertextype_list_vertextype(本表). TRUE-GAP.
+admissible1_list_admissible1	421	—	—	MISSING	—	T. HOL: admissible1_list w(fgraph g) ⇒ admissible1(w∘FST)g. 近载体: Graphs.admissible₁ def. NEAR-ASSET.
+sumn_rot	435	—	—	MISSING	—	T. HOL: sumn(rot n f)=sumn f. 近载体: core List.sum_append/List.rotate; Mathlib 无现成 sum_rotate. NEAR-TRIVIAL(2-5 行).
+sumn_perm_eq	446	—	—	MISSING	—	T. HOL: perm_eq f g ⇒ sumn f=sumn g. 近载体: List.Perm; Mathlib 无 Perm.sum_eq. NEAR-TRIVIAL(归纳 5-10 行).
+sumn_facesAt	474	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ v∈vertices_set2 ⇒ sumn(MAP f facesAt_v2)=sumn(MAP f facesAt). 由 perm_eq + sumn_perm_eq. NEAR-ASSET.
+admissible2_list_admissible2	492	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ admissible2_list ⇒ admissible2(w∘FST)g. 近载体: Graphs.admissible₂; 依赖 tri/quad/except/sumn_facesAt. TRUE-GAP.
+admissible3_list_admissible3	521	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ admissible3_list ⇒ admissible3(w∘FST)g. 近载体: Graphs.admissible₃; 依赖 vertextype/sumn_perm_eq. TRUE-GAP.
+tame13a_list_tame13a_lemma	555	—	—	MISSING	—	T. HOL: good_graph_v4 ∧ tame13a_list(fgraph g) ⇒ ∃w admissible'(w∘FST)g ∧ sum<tgt. 三 adm 对应件组装. TRUE-GAP.
+tame13a_list_tame13a	574	—	—	MISSING	—	D2. HOL: good_graph_v4 ∧ tame13a_list(fgraph g) ⇒ tame13a g. 近载体: Graphs.tame13a def; 依赖上件. TRUE-GAP.
+set_of_n_meeting_node	594	—	—	MISSING	—	T(97 行, 本组最大). HOL: good_list/good_list_nodes/MEM d ⇒ BIJ(set_of_list∘list_pairs)(filter P facesAt_list L(FST d))={face(hypermap_of_list L)y | …}. 近载体: TameLp.setOf*MeetingNode defs、TameSpine.cardFaceOfList/memFaceLemma; 无 list↔hypermap 面集双射定理. TRUE-GAP.
+card_set_of_n_meeting_node	691	—	—	MISSING	—	T. HOL: 上式取 CARD ⇒ ncard 等式. 依赖上件 + cardFaceOfList. TRUE-GAP.
+card_set_of_n_meeting_node_pqr	722	—	—	MISSING	—	T. HOL: CARD(set_of_triangles/quadrilaterals/exceptional_meeting_node(hypermap_of_list L)x)=tri_list/quad_list/except_list L(FST x). 依赖上件. TRUE-GAP.
+type_of_node_vertextype	745	—	—	MISSING	—	T. HOL: type_of_node(hypermap_of_list L)x=vertextype_list L(FST x). 近载体: TameLp.typeOfNode def、上件. TRUE-GAP.
+tame11_correspondence	757	—	—	MISSING	—	D2. HOL: good_list/good_list_nodes/all uniq + tame_11a/11b/12o(hypermap_of_list L) ⇒ tame11a_list L ∧ tame11b_list L. 依赖 set_of_n/card 组. TRUE-GAP.
+tame12o_correspondence	813	—	—	MISSING	—	D2. HOL: … + tame_12o(hypermap_of_list L) ⇒ tame12o_list L. 依赖 type_of_node_vertextype. TRUE-GAP.
+floor_lemma	844	—	—	MISSING	—	T. HOL: 0≤y ⇒ ∃m:ℕ, m≤y<y<m+1. Mathlib: Nat.floor_le + Nat.lt_floor_add_one; 无同名件. NEAR-TRIVIAL(2 行).
+nfloor_exists	857	—	—	MISSING	—	T. HOL: 0≤x ⇒ ∃n, n≤x*d<n+1 (nfloor 规格存在性). 同 floor_lemma 之于 x*d. NEAR-TRIVIAL.
+wt_floor_nn	898	—	—	MISSING	—	T. HOL: x∈dart H ∧ adm_1 H w ⇒ 0≤w(face H x). 近载体: TameLp.Adm1、dTame≥0 表. NEAR-ASSET.
+wt_floor_le_wt	910	—	—	MISSING	—	T. HOL: adm_1 H w ⇒ (wt_floor w(face H x):ℤ)≤w(face H x)*10000. 依赖 nfloor 规格 + adm_1. NEAR-ASSET.
+total_weight_floor	942	—	—	MISSING	—	T. HOL: adm_1 H w ∧ total_weight H w<tgt ⇒ nsum(face_set H)(wt_floor w)<squanderTarget. 依赖 wt_floor 逐点不等式 + 求和单调. TRUE-GAP.
+adm_1_floor_adm_1	971	—	—	MISSING	—	T. HOL: adm_1 H w ∧ tame_9a H ⇒ adm_1_floor H(wt_floor w). floor 核心之一. TRUE-GAP.
+FINITE_set_of_face_meeting_node	1005	—	—	MISSING	—	T. HOL: FINITE(set_of_face_meeting_node H x). 近载体: Hypermap.faceOrbit_finite (orbit 有限); 无 named theorem. NEAR-TRIVIAL.
+FINITE_set_of_n_meeting_node	1020	—	—	MISSING	—	T. HOL: 三类 meeting_node 集均有限. 同上, 子集有限. NEAR-TRIVIAL.
+set_of_n_meeting_node_union	1031	—	—	MISSING	—	T. HOL: tame_9a H ⇒ set_of_face = tri ∪ quad ∪ exceptional. 近载体: TameLp.setOf* defs; 需 tame_9a 排除 ≥7 面. TRUE-GAP.
+b_tame_explicit	1052	—	—	MISSING	—	T. HOL: b_tame 15 个表值显式. 近载体: TameLp.bTame def; simp[bTame]+norm_num 逐值. NEAR-TRIVIAL.
+squanderVertex_explicit	1075	—	—	MISSING	—	T. HOL: squanderVertex 15 个表值显式. 近载体: Graphs.squanderVertex def; decide/simp 逐值. NEAR-TRIVIAL.
+vertextypes_explicit	1098	—	—	MISSING	—	T. HOL: 在 total_weight<tgt/tame_9a/adm_1/adm_2/… 下 (p,q) 仅落在容许表. 依赖 b_tame/squanderVertex 表 + adm_2. TRUE-GAP.
+no_except_empty	1137	—	—	MISSING	—	T. HOL: CARD(exceptional meeting node)=0 ⇒ 集={}. Mathlib Set.ncard_eq_zero 一行. NEAR-TRIVIAL.
+no_except_wfloor	1148	—	—	MISSING	—	T. HOL: 该集空 ∧ x∈dart ⇒ wt_floor w(face x)=nfloor 10000(w(face x)). 依赖 wt_floor def. NEAR-TRIVIAL.
+set_of_exceptional_meeting_node_identity	1172	—	—	MISSING	—	T. HOL: x∈dart H ∧ y∈node H x ⇒ set_of_exceptional_meeting_node H x = … H y. 轨道不变性. TRUE-GAP.
+adm_2_floor_adm_2	1181	—	—	MISSING	—	T(65 行). HOL: tame_9a/adm_1/adm_2/total_weight<tgt ⇒ adm_2_floor H(wt_floor w). floor 核心; 依赖 vertextypes_explicit/有限性/并集. TRUE-GAP.
+adm_3_floor_adm_3	1246	—	—	MISSING	—	T(47 行). HOL: tame_9a/adm_1/adm_3 ⇒ adm_3_floor H(wt_floor w). floor 核心; 需忠实 Adm3(a_tame). TRUE-GAP.
+tame_13_a_floor_tame_13_a	1293	—	—	MISSING	—	T. HOL: tame_13a H ∧ tame_9a H ⇒ tame_13a_floor H. 三 adm_floor 桥组装 + total_weight_floor. NEAR-ASSET.
+sumn_cons	1305	Kepler.Text.TameSpine.sumnCons	lean/Kepler/Text/TameSpine/TameList45.lean:117	EXISTS-STD3	[propext]	T. HOL: sumn(h::hs)=h+sumn hs. 逐字已有(= List.sum_cons); 与 tame_list.hl:12593 同名重复绑定. 注意: 该岛模块传递 import Assembly(74/75), Assembly 不可反向消费; 但 core List.sum_cons 可直接用.
+sumn_nsum	1313	—	—	MISSING	—	T. HOL: uniq s ⇒ sumn(map f s)=nsum(set_of_list s)f. 近载体: Finset.sum_coe_sort/Set.ncard; 需先定义 nat 版 nsum. NEAR-TRIVIAL.
+uniq_facesAt_list	1330	—	—	MISSING	—	T. HOL: good_list L ⇒ uniq(facesAt_list L v). 依赖 findFace 的 Nodup; 近载体 TameLp.findFaceDarts_nodup. TRUE-GAP.
+BIJ_NSUM	1342	—	—	MISSING	—	T. HOL: FINITE A ∧ BIJ ab A B ⇒ nsum A(f∘ab)=nsum B f. 近载体: Finset.sum_bij. NEAR-TRIVIAL.
+tame13a_correspondence	1360	—	—	MISSING	—	D2(113 行, 本体最大). HOL: good_list/good_list_nodes/all uniq ∧ tame_9a ∧ tame_13a(hypermap_of_list L) ⇒ tame13a_list L. floor 机制 + type_of_node + nsum 的总装. TRUE-GAP.
+tame_correspondence1	1473	—	—	MISSING	—	D1(直接给主定理). HOL: good_graph_v4 ∧ tame_9a/10/11a/11b/12o/13a(hypermap_of_list(fgraph g)) ⇒ tame(Import_tame_classification). 六件对应组装. TRUE-GAP.
+tame_correspondence_iso	1498	Kepler.Assembly.tameCorrespondenceIso	lean/Kepler/Assembly.lean:2450	EXISTS-TAINTED	[propext, sorryAx, Classical.choice, Quot.sound]	TARGET. HOL: good_graph_v4 g ∧ tame_planar_hypermap H ∧ iso H(hypermap_of_list(fgraph g)) ⇒ tame g. Lean 载体=Assembly 接口, 证明体=sorry(污染根=自身); 陈述差: 显式 H'+hIs(而非 iso 到 canonical list hypermap), 且 TamePlanarHypermap 的 Adm3=True(见 B). 唯一直接前置=tame_correspondence1; 外部=Oxaxucs 六 iso 件 + iso_imp_hyp_iso.
+tame11a_list	170	—	—	MISSING	—	DEF. tame11a_list L ⇔ ∀v∈elements_of_list L, 3≤LEN(facesAt_list L v). 近载体: Graphs.tame11a; list 面全缺.
+except_list	286	—	—	MISSING	—	DEF. except_list L v = LEN(filter 5≤len facesAt_list L v). 近载体: Graphs.except; list 面缺.
+tame11b_list	304	—	—	MISSING	—	DEF. tame11b_list L ⇔ degree≤(except=0?7:6). 近载体: Graphs.tame11b; list 面缺.
+tri_list	325	—	—	MISSING	—	DEF. tri_list L v = LEN(filter len=3 facesAt_list). 近载体: Graphs.tri; list 面缺.
+quad_list	328	—	—	MISSING	—	DEF. quad_list L v = LEN(filter len=4 facesAt_list). 近载体: Graphs.quad; list 面缺.
+vertextype_list	331	—	—	MISSING	—	DEF. vertextype_list L v=(tri,quad,except). 近载体: Graphs.vertextype; list 面缺.
+tame12o_list	392	—	—	MISSING	—	DEF. tame12o_list L ⇔ except≠0 ∧ deg=6 ⇒ vertextype=(5,0,1). 近载体: Graphs.tame12o; list 面缺.
+admissible1_list	418	—	—	MISSING	—	DEF. admissible1_list w L ⇔ ∀f∈L, squanderFace(len f)≤w f. 近载体: Graphs.admissible₁ (Graph 面).
+admissible2_list	487	—	—	MISSING	—	DEF. admissible2_list w L: except=0 ⇒ squanderVertex(tri,quad)≤sumn(map w facesAt_list). 近载体: Graphs.admissible₂.
+admissible3_list	516	—	—	MISSING	—	DEF. admissible3_list w L: vertextype=(5,0,1) ⇒ sumn(map w(filter tri facesAt_list))≥excessTCount. 近载体: Graphs.admissible₃.
+tame13a_list	550	—	—	MISSING	—	DEF. tame13a_list L ⇔ ∃w, adm1_list∧adm2_list∧adm3_list∧sumn(map w L)<squanderTarget. 近载体: Graphs.tame13a.
+nfloor	875	—	—	MISSING	—	DEF(spec). nfloor d x = ⌊x*d⌋ (new_specification 存在性). 近载体: Mathlib Nat.floor; 需新定义 nfloor.
+wt_floor	878	—	—	MISSING	—	DEF. wt_floor w f = if card f>4 then squanderFace(card f) else nfloor 10000(w f). 近载体: TameLp.bTame/setSum、Graphs.squanderFace.
+adm_1_floor	881	—	—	MISSING	—	DEF. adm_1_floor H w ⇔ ∀x∈dart, w(face x)≥squanderFace(card(face x)). 近载体: TameLp.Adm1.
+adm_2_floor	884	—	—	MISSING	—	DEF. adm_2_floor H w: no exceptional ⇒ nsum(setOfFace)w ≥ squanderVertex(tri,quad). 近载体: TameLp.Adm2.
+adm_3_floor	890	—	—	MISSING	—	DEF. adm_3_floor H w: type=(5,0,1) ⇒ nsum(setOfTriangles)w ≥ excessTCount. 近载体: TameLp.Adm3.
+tame_13a_floor	894	—	—	MISSING	—	DEF. tame_13a_floor H ⇔ ∃w, adm_1/2/3_floor∧nsum(faceSet)w<squanderTarget. 近载体: TameLp.Tame13a.
