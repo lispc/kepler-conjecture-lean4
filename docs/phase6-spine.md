@@ -101,7 +101,7 @@ import_tame_classification ∧ linear_programming_results ∧ the_nonlinear_ineq
 **里程碑重定义**：下一个 milestone = **M5′ 主定理端到端可达**。骨架即本脊柱——
 `Kepler.Assembly.the_kepler_conjecture_from_interfaces : TheKeplerConjecture` 已在
 main 编译。目标 = 其 sorryAx 可达债务图完全枚举 + 按杠杆率分段归零。
-度量 = 单一数字（主定理可达 sorry 数）+ DAG（`docs/e2e-debt-map.md`，Step 0 产出）。
+度量 = 单一数字（主定理可达 sorry 数）+ DAG（`docs/archive/maps/e2e-debt-map-2026-09-29.md`，Step 0 产出）。
 
 ### 6.1 装配链真伪现状（2026-09-28 逐件核对）
 
@@ -128,7 +128,7 @@ LA16 `nonlinear_imp_lp_main_estimate_p16`（term 级，LocalAuto16:192）。
 
 - **Step 0 instrumentation**（本机，~1–2h，本波收工后立即）：刷新探针 + 写
   spine-debt 枚举工具（从 `the_kepler_conjecture_from_interfaces` 遍历 Lean 环境
-  依赖闭包，枚举 value 含 sorryAx 的常量 → 自动生成 `docs/e2e-debt-map.md`，
+  依赖闭包，枚举 value 含 sorryAx 的常量 → 自动生成 `docs/archive/maps/e2e-debt-map-2026-09-29.md`，
   DEBT.md 主定理可达节改由工具生成）+ M5′ 写进 STATUS。
 - **Step 1 廉价接口波**（sub-agent）：`isoOppositeEq`（置换代数）、
   `contraveningNegative`（V↦−V 对称）、`localAnnulusInequalityScriptL`

@@ -151,7 +151,7 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   `p22_face_of_affine_rint` 逐字填证通过——免豁免、无需加前提，修复波第 1 顺位）、
   `BIJ_DART_POLYEDGE`、`PACK_INEQ_DEF_A_797`（卡 arclength 落地）。
 - **PA22 r2 新增疑似假 4 枚（2026-09-28 立项）——【2026-09-29：DEF-FIX 定义纠正
-  已落地，`docs/projects/archive/planar-encoding-fix.md` §2 补丁已应用】**：`facetOfC` 补 ≠∅+affDimC、
+  已落地，`docs/archive/projects/archive/planar-encoding-fix.md` §2 补丁已应用】**：`facetOfC` 补 ≠∅+affDimC、
   `polyhedronC` 改 H-表示、`cone0P22` 改严格 `affGt`。据此：
   项 12 `affine_facet_hyper` 与项 13a `pad2d3d_facet` **定义纠正已落地**（陈述即
   HOL 镜像，解冻前置就绪；仍冻结待 §2.3 kit：affDimC kit / FACET_OF_POLYHEDRONC
@@ -348,7 +348,7 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
   AZIM_EQ_0_GE_ALT2 的证明版）、`pa18_affGe_affGt_of_ncol`、
   `pa18_collinear3_line_affGe`。cc 簇最短解锁路径：**MHFTTZN3（PA6:848）可由
   MHFTTZN4+BARV_CIRCUMCENTER_EXISTS+XYOFCGX(PA7:343) 自证**（⚠ 时效：PA7 r2 已
-  整体回退，BARV_CIRCUMCENTER_EXISTS 等待按 `docs/projects/archive/pa7-proofdump.md` 落盘，
+  整体回退，BARV_CIRCUMCENTER_EXISTS 等待按 `docs/archive/projects/archive/pa7-proofdump.md` 落盘，
   见 PA6+PA7 条）→ JDHAWAY_0 →
   cc_pe_exists → PA25 全通；FUZBZGI_0 链另需 PA12 VORONOI_LIST_3_SINGLETON_EXPLICIT。
   azim 工具箱全在 `Geom/AzimLemmas.lean`（azim_eq_azim_iff(_alt)/azim_compl/
@@ -389,7 +389,7 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
 - **PA6+PA7**（wave2-r2 零净填充，两文件 pristine 双绿 = 干净起跑线）：r2 写好
   env-0-error 的 PA7 19 枚 + PA6 多枚，被 lake build ~50 系统性偏差打回
   （**env-lean 假绿最大实证**，见 §6）。证明全文 + 逐错误诊断落盘于
-  `docs/projects/archive/pa7-proofdump.md`（下一轮按图施工）。下一轮优先级：① PA7 逐枚落盘
+  `docs/archive/projects/archive/pa7-proofdump.md`（下一轮按图施工）。下一轮优先级：① PA7 逐枚落盘
   （HL_DECREASE/投影簇/TRUNCATE kit 等，多为小错）② PA6 MHFTTZN3 +
   p6_affdep_of_dim（PA18 钥匙；**BARV_AFFINE_INDEPENDENT 解锁链**：
   MHFTTZN_lemma2.1 → `List.toFinset_card_le` →
@@ -435,7 +435,7 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
   另需 affDim(∩超平面)=affDim−1（Polytope.lean:203 `affDim_hyperplane` 可作原料）。
   PA18 钥匙三件套（MHFTTZN1 + BARV_IMP_LENGTH_EQ_CARD[PA7,仍 sorry] +
   p6_affdep_of_dim）可闭合 `BARV_AFFINE_INDEPENDENT`（PA7:374）。
-- **ContraFan**（2 remaining；2026-09-29 侦察结案，见 docs/scouts/contrafan-scout.md）：
+- **ContraFan**（2 remaining；2026-09-29 侦察结案，见 docs/archive/scouts/contrafan-scout.md）：
   两枚陈述与 HOL 逐字同义无弱编码。CF-3 = `LEMMA_3_POINTS_FINAL`（:400）走路线 B：
   Mathlib `angle_eq_angle_add_add_angle_add_of_mem_span` + 纯有理数余弦界
   （cos ≤ 2719/3969、cos ≥ 1031/7938，数值见证已手算）+ 现成 `annulus_ray_absurd`，
@@ -957,7 +957,7 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
 - **PA6+PA7 回退事件（2026-09-28）**：env-lean 0-error / lake ~50 error 的**最大规模
   假绿实证**——偏差模式（`⬝ᵥ` 的 WithLp.ofLp 包裹形状、`mpr ⟨w⟩` 方向、beta-redex
   上的匿名构造器）固化进 §5.4 PA6+PA7 条，分量法为唯一稳定解；预算耗尽前整体
-  回退 pristine 保住双绿基线，证明文本落盘 `docs/projects/archive/pa7-proofdump.md`——"宁可零填充
+  回退 pristine 保住双绿基线，证明文本落盘 `docs/archive/projects/archive/pa7-proofdump.md`——"宁可零填充
   不留半成品"是正确止损。同日 `.lake/packages/mathlib` 波内第二次中途消失
   （`lake exe cache get` 11 秒恢复）——共享包目录稳定性存疑，波收尾排查根因。
 - **Wave 2/2r 收官（2026-09-28 深夜）**：五 lane 过闸（PA18/PA4/LA38/PA22/LA5）+
@@ -967,7 +967,7 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
   再犯一次：LANE_FILES 替换式忘带 lane 文件自身（第 3 次）——已写进本条防再犯。
 - **脊柱探针本机结构性阻塞**：spine_axioms.py 信任 Graphs 缓存 olean，本机没有
   （重型计算档）；已 mac 移植（SPINE_CACHE_ROOT）入库，Graphs olean 就位即复跑。
-  M5′ 度量暂走 docs/e2e-debt-map.md（结构性手工图，每波更新）。
+  M5′ 度量暂走 docs/archive/maps/e2e-debt-map-2026-09-29.md（结构性手工图，每波更新）。
 - **修复工单模式定型**：编排者统一构建→精确错误清单+回退规程（30 分钟修不动=
   逐字节还原 HEAD 该定理）→修理工一次清多文件编译错（本轮 PA18 3+PA4 3+LA38
   ~19 全清）。比逐 lane 打回快一个量级。
@@ -976,7 +976,7 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
 
 - **SUM_GAMMAX 全链闭合**（波1 `78abe340` + 主装配 `b419ddd3`）：PA19
   NEGLIGIBLE_FUNC 上游四巨物全实化，仅剩 GRUTOTI 系。施工图
-  `docs/handoffs/sum-gammax-handoff.md`（含勘误：PACKING_BALL_BOUNDARY 5 参；
+  `docs/archive/handoffs/sum-gammax-handoff.md`（含勘误：PACKING_BALL_BOUNDARY 5 参；
   set 局部定义方程不作 simp 引理；`p18_setSum_prod` DescProduct 桥）。
 - **⑤ 桥**（`30dbe14f`）：PA2 GLTVHUM_concl 真证（53→52），PA6:1025
   背引用+PackingConcl discharge 路由 olean 重建即转真；PA4 cellParams

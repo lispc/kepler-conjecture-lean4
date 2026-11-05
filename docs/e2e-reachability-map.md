@@ -622,6 +622,6 @@ LEAN_PATH=$FARM:$LP DUMP_TREE=1 \
    8 `nliTskBank` → 7 `nliCell3Bank`。
 4. **LP 端到端审计**：在填 `lpArchiveCertificatesDebt` 之前完成
    （`leanprover/lp-verify` + 原始 `formal_lp` 证书，见
-   `docs/scouts/lean4-ecosystem-scout.md`）。
+   `docs/archive/scouts/lean4-ecosystem-scout.md`）。
 5. **WQPRRDY 记账**：PA7:3976 仍是 sorry 但不在锥；若未来有消费者，
    会被拉回地图，届时按 B4 的 private kit 逐 k 处理。

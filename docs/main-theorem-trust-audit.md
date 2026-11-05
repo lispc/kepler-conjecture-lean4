@@ -165,7 +165,7 @@ pipeline/Lean 批次。
    的接口节；同时确认 `DUUNHOR_concl` 的前提加强不影响最终接口。
 5. **P2 — shim 清理批**：`MXI_EXISTS_concl` 成环、`RVFXZBU2_concl`
    R3 家族、`qzksykg*_p17` 副本、PA10 off-path 三 sorry，统一入
-   `docs/e2e-debt-map.md` 的邻居节，标"在锥/不在锥/替代路"。
+   `docs/archive/maps/e2e-debt-map-2026-09-29.md` 的邻居节，标"在锥/不在锥/替代路"。
 
 ## 6. 与当前战线的对应
 
@@ -174,7 +174,7 @@ pipeline/Lean 批次。
   PA24/REUHADY1（后者当前只在 PackingConcl 邻近层）。
 - **PA24/REUHADY1**：不是"不重要"，而是"当前 e2e 不 import"；它是
   pack_concl 合并层的核心，需要在 PackingConcl 接线前完成，但不阻塞
-  e2e 主定理。这个区分应写进下一版 `docs/e2e-debt-map.md` 的派工依据。
+  e2e 主定理。这个区分应写进下一版 `docs/archive/maps/e2e-debt-map-2026-09-29.md` 的派工依据。
 - **gen-10 / W8**：与 e2e 公理面正交（Phase 2 可信计算），但 624 shard
   公理与 251k 树是最终可信基座的一部分；gen-10 的 opt-in 落地不改变
   公理面，只改变计算成本。
@@ -190,4 +190,4 @@ pipeline/Lean 批次。
   234/2814/2876/5071（AJRIPQN 引用）。
 - `lean/Kepler/Text/PackingConcl.lean`：337/343、384、388/393、400/405
   （四个 `*_concl_discharged` sorry）。
-- `docs/phase6-spine.md`、`docs/statement-fidelity.md`、`docs/scouts/ajripqn-scout.md`。
+- `docs/phase6-spine.md`、`docs/statement-fidelity.md`、`docs/archive/scouts/ajripqn-scout.md`。

@@ -27,7 +27,7 @@
 1. **获批**：A = Hypermap 物化（1,299 孤儿，侦察先行）；B = LA35（741）+ CertTM（618，先核 SF-42 TM demo 健全性）物化；C = 孤儿岛接入（Text.LP 205 + Text.TameSpine 75 + 8 个零 import 消费者单文件，~+300）。
 2. **提级**：补位首发序 = hypermap-mat-scout → la35-mat-scout → CertTM 侦察 → 孤儿岛接入（queue §2 头注 + §2-13..16）。
 3. **未批**：D = 机械证书层解冻（Interval.Cases 13,293 + LP 证书 ~952 在 universe 外）——仍待用户解冻令，编排者不单方面动。
-4. **量级口径**（orphan-scout，`docs/scouts/orphan-scout.md`）：现有根集合内可测上行 ≤ 1,214（接线）+ 5,644（影子上界）；>13K 增长只能来自新根物化与证书层解冻。接线波（S1 `localconcl-wiring-w1`）预期 SORRIED 可视化上升，K_AXIOM 624 为护栏。
+4. **量级口径**（orphan-scout，`docs/archive/scouts/orphan-scout.md`）：现有根集合内可测上行 ≤ 1,214（接线）+ 5,644（影子上界）；>13K 增长只能来自新根物化与证书层解冻。接线波（S1 `localconcl-wiring-w1`）预期 SORRIED 可视化上升，K_AXIOM 624 为护栏。
 
 ## 2026-11-03 — lane 选题原则改为「最快增大 e2e tree」；T0 接口物化记录（用户「同意」）
 
@@ -128,7 +128,7 @@ SF-89b（LA23 `bodyClosed_p23` 前提升级为全 `stableSystem_p23` 载体，§
 ## 2026-10-13 — Phase 4 求解策略路由表批准（用户"按建议全部批准"）
 
 - **原问题形式废止**："TM vs BBTreeGD 二选一"经 W1/W1b/W2 三波受控实验修正为
-  **按表达式族路由的混合策略**（详见 docs/projects/phase4-routing-decision.md）。
+  **按表达式族路由的混合策略**（详见 docs/archive/projects/phase4-routing-decision.md）。
   实证：TM 多项式族碾压（TADIAMB 251k 叶 100%@101.2s）与 sqrt 族结构性无力
   （TEWNSCJ closed=0 非正底 100%）并存；BBTreeGD 广覆盖骨干（BIX 92.9%）与
   锐边界 438× 叶膨胀并存——二选一必有一半错。
@@ -284,7 +284,7 @@ axioms**（1 条/shard；确切 shard 数以全量重演实际发射为准，str
   批准时定案）；
 - 审计口径：propext + Quot.sound + N 条 `..._native.native_decide.ax_1_1`；
   出现 sorryAx / Classical.choice / 任何非预期公理即 fail；
-- native axiom 计数随轮次入 `docs/handoffs/549-lane-log.md` 阶段位置节（可度量、
+- native axiom 计数随轮次入 `docs/archive/handoffs/549-lane-log.md` 阶段位置节（可度量、
   可对账）。
 
 **结构配套**：发射器默认产 50 叶合取 shard（模块叶数上限沿用管线缺口单的

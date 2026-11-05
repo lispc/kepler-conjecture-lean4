@@ -92,7 +92,7 @@ CARD/sum 无限集约定）：`setSum` 的按集合 junk 约定与 HOL 支撑集
 **(e) 分级：A**（加前提即闭合，反例已核，零消费者波及）。
 
 **(f) 状态（2026-10-12 用户批准；应用波复核记录）**：批准见
-docs/projects/archive/sf-decision-batch-2026-10-12.md 项 1。应用波（LocalAuto38
+docs/archive/projects/archive/sf-decision-batch-2026-10-12.md 项 1。应用波（LocalAuto38
 车道）复核发现本修复**已随 `ddc3683e`（2026-09-29，STATEMENT-FIX 闸 PASS）
 落地**：以 ddc3683e^ 为基 `git apply` 本补丁成功，且应用产物 SUM_INTER 区域
 与现树 LocalAuto38.lean:426-454 逐字节一致；全树零消费者复核依旧成立；
@@ -497,7 +497,7 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 **(e) 分级：C**（零补丁；`12-affine_facet_hyper.patch` 为裁决存档）。
 
 **(f) DEF-FIX 状态（2026-09-29）：解冻前置已就绪** —— planar 编码定义纠正
-（`docs/projects/archive/planar-encoding-fix.md` §2 补丁）已落地：新 `facetOfC` 自带 ≠∅ + `affDimC`
+（`docs/archive/projects/archive/planar-encoding-fix.md` §2 补丁）已落地：新 `facetOfC` 自带 ≠∅ + `affDimC`
 条件、新 `polyhedronC` 为 HOL 镜像，本项陈述在新定义下即真（HOL 镜像）。
 仍按 (d) 冻结至重填 kit（affDimC 超平面 kit → §2.3 表）落地后入重填队列
 （章程 §3c：中等档，kit 后）。
@@ -529,7 +529,7 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 **(e) 分级：C**（`13-pad2d3d_facet.patch` 为裁决存档；编号 13 双占见 14' 注）。
 
 **(f) DEF-FIX 状态（2026-09-29）：解冻前置已就绪** —— planar 编码定义纠正
-（`docs/projects/archive/planar-encoding-fix.md` §2 补丁）已落地：结论侧 `facetOfC` 已含 ≠∅ +
+（`docs/archive/projects/archive/planar-encoding-fix.md` §2 补丁）已落地：结论侧 `facetOfC` 已含 ≠∅ +
 `affDimC` 条件，前提/结论计数口径统一（HOL 镜像），(b) 的 ∅ 混入反例不再成立。
 仍按 (d) 冻结至重填 kit（`FACET_OF_LINEAR_IMAGE` ℂ 版，§2.3 表）落地后入重填
 队列（章程 §3c：GIANT 档）。
@@ -665,7 +665,7 @@ PA4:1370 等 9 处"缺件"注记与 PA17:275/304、PackingConcl:132 的孪生注
 
 # 第三轮提案（r3，2026-09-28 增补）
 
-> LA38 `tau3_taum` 陈述补陈（officer lane；立项依据 `docs/e2e-debt-map.md:31`
+> LA38 `tau3_taum` 陈述补陈（officer lane；立项依据 `docs/archive/maps/e2e-debt-map-2026-09-29.md:31`
 > B 表行）。纪律同前：**零 .lean 改动**，交付 = 本文件增补 +
 > `docs/statement-fix-proposals-patches/17-tau3_taum_dist_bound.patch`（可贴性
 > `git apply --check` 已验；本 lane 只读纪律未跑 lake，编译验收留给修复波）。
@@ -792,7 +792,7 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
 编译与闸门验收待修复波）。
 
 ### (g) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
-docs/projects/archive/sf-decision-batch-2026-10-12.md 项 17。应用波（LocalAuto38
+docs/archive/projects/archive/sf-decision-batch-2026-10-12.md 项 17。应用波（LocalAuto38
 车道）复核发现本修复**已于 2026-09-29 落地且超出本提案**：陈述补陈随
 `5bcb4e11`（STATEMENT-FIX 闸 PASS，h1-h6 与 (c) 节提案陈述逐字一致），
 两定理证明体已随 `8939b636` 填成真证零 sorry（ballAnnulus 成员 + `tau3_taum`
@@ -805,7 +805,7 @@ LocalAuto38.lean:1492-1574）；全树零直接消费点复核依旧成立；
 
 ## merge-ineq-bank. 波 0 ——银行结构化 + eta_y 重指向（Merge_ineq 通道章程 §2）
 
-> 立项与章程：`docs/projects/archive/merge-ineq-channel.md`（编排者审定通过，见章程末
+> 立项与章程：`docs/archive/projects/archive/merge-ineq-channel.md`（编排者审定通过，见章程末
 > "附：编排者审定意见"）。本条目为波 0（陈述级）的**执行存档**：补丁已于
 > 2026-09-29 落地 `lean/Kepler/Text/PackingAuto21.lean`（下称 PA21），构建
 > 与台账验收实测见 (f)。补丁正文不再重复誊写，以章程 §2.1/§2.2 为准。
@@ -903,7 +903,7 @@ GRUTOTI.hl 全文只有一条定理 `GRUTOTI1_concl`（:48-58），其前提显�
 （:7983-8000，经 `VOLUME_CONIC_CAP` 消元），其证明上下文含
 `~(u0 = u1)`。故 HOL 侧该断言**从来是在 `u0 ≠ u1` 下陈述的**。
 `VOLUME_CONIC_CAP` 源在 flyspeck_multivariate.ml（本地 reference 树无源，
-docs/scouts/grutoti-scout.md §5.1），无法逐字对照；但 Lean 侧 GT-1 已落地的
+docs/archive/scouts/grutoti-scout.md §5.1），无法逐字对照；但 Lean 侧 GT-1 已落地的
 `ConicCapVolume.volumeConicCapPos`（kernel 验证的帽体积公式正性件，
 :961）携带同样的 `hne : v0 ≠ v1` 前提，与退化情形一致：
 `ConicCapVolume.ccv_conicCap_empty`（:154，已证）机器见证
@@ -939,7 +939,7 @@ private theorem grutoti_volD_pos (u0 u1 : V3) (r d : ℝ) (hr : 0 < r) (hd : 0 <
 ### (d) 消费面
 
 全树 grep：`grutoti_volD_pos` 零外部消费者（PA23 零 importer，
-PackingConcl 不经 PA23 走线，docs/scouts/grutoti-scout.md §0.2），唯一调用点是同文件
+PackingConcl 不经 PA23 走线，docs/archive/scouts/grutoti-scout.md §0.2），唯一调用点是同文件
 capstone `GRUTOTI` 内一处（补丁 ③）。属 GT-2/GT-3/GT-4 收口时
 `GRUTOTI1_concl_discharged` 断流链的前置件。
 
@@ -955,7 +955,7 @@ capstone `GRUTOTI` 内一处（补丁 ③）。属 GT-2/GT-3/GT-4 收口时
 编译 0 error；应用待编排者 GATE_MODE=STATEMENT-FIX）。
 
 ### (g) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
-docs/projects/archive/sf-decision-batch-2026-10-12.md 项 18。续作车道（PA23）复核
+docs/archive/projects/archive/sf-decision-batch-2026-10-12.md 项 18。续作车道（PA23）复核
 发现本修复**已随 `54fe4ee2`（2026-09-30，用户批准 2026-09-30）应用落地**，
 (f) 的"草案待审"状态行已过时：机器实证——以 54fe4ee2^ 为基 `git apply`
 本补丁成功，且应用产物与 54fe4ee2 树的 PackingAuto23.lean **逐字节一致**
@@ -1040,7 +1040,7 @@ k=2 核走 `volumeConicCapWedge` + mcell2 形；k=3 走 `AZIM_COMPL_EXT`
 同批，待用户拍板）。
 
 ### (d) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
-docs/projects/archive/sf-decision-batch-2026-10-12.md 项 21。续作车道（PA23）复核
+docs/archive/projects/archive/sf-decision-batch-2026-10-12.md 项 21。续作车道（PA23）复核
 发现本修复**已随 `3aef75fa`（2026-09-30，用户已批准，GATE_MODE=STATEMENT-FIX
 过）应用落地**——签名补 `(he : {u0, u1} ∈ edgeX V X)`（执行形把 (b) 节
 `e ∈ edgeX V X` 具象为 `{u0,u1} ∈ edgeX V X`，与 (a) 节 §D–§H 边胞语境
@@ -1075,7 +1075,7 @@ arg(h2/h1)=π−0.1 > −π/2=arg(h3/h1)，结论不成立。
 ## 23. PA7:995 `NOT_ID_IMP_LISTS_NOT_EQ` — 分级 A′（补 `hfix`，批 A）
 
 ### (a) HOL 出处：flyspeck permutes（Library/perms.ml）为 complement-fixing，
-`p permutes Icc 0 k` 即 `∀ j > k, p j = j`；扫雷报告 C2-1（docs/scouts/encoding-risk-sweep.md
+`p permutes Icc 0 k` 即 `∀ j > k, p j = j`；扫雷报告 C2-1（docs/archive/scouts/encoding-risk-sweep.md
 §2.1，探针 P1-P3 机器反例）。缺陷：弱编码下 junk 对换 `(k+1 k+2)` 满足全部
 前提而结论假（文件内注记自认 unprovable）。
 
@@ -1259,7 +1259,7 @@ HOL 原文在全称语境携带 region 见证（`c ≤ d`、`hl/√2 ≤ d`、`c
 
 d 充分小时 `rconeGt u0 u1 d` 严格大于 `rconeGt u0 u1 (hl/√2)`，差锥区含非携
 边胞的正测度迹，`⋃₀ 迹 = D` 不成立。精确反例可沿 SF31 的 ∅-思路变体构造，
-立案阶段以侦察地图（docs/scouts/tiwwfyq-coverage-scout.md §2 缺口 G1）为准。
+立案阶段以侦察地图（docs/archive/scouts/tiwwfyq-coverage-scout.md §2 缺口 G1）为准。
 
 ### (c) 修复方案
 
@@ -1550,7 +1550,7 @@ section 前提 `ineqs := kcblrqc_ineq_def` 消费）。`Kepler.Text.TameLp.lean:
 (5,0,1) 行 tauVEF 和 ≥ 0.6366；TameLp:495-509 保真注记 + :506 自认
 「两处接口在 G4 落地后统一」）。
 
-占位的两类病并发（scout `docs/scouts/mqmsmab-scout.md` §6.1 分类）：
+占位的两类病并发（scout `docs/archive/scouts/mqmsmab-scout.md` §6.1 分类）：
 ①**不可证**——`mqmsmab` 的 `hkcblrqc` 前提需供出 `TameLp.KcblrqcIneqDef`
 真切片（`KCBLRQC`/`BDJYFFB1/2`/`SZIPOAS`/`CDTETAT` 的 `hineq` 前提是
 DIH_Y_INEQ 等机器不等式，**不可能从 `True` 推出**），A10 终接线死锁；
@@ -2086,7 +2086,7 @@ content（R1-GIANT，墙 A 复活），按"覆盖链 R1-free"取向定案。该 
 
 ## 48. PA12 `LEFT_ACTION_LIST_PROPERTIES` 新件立案（S₃ action kit 补尾固定 `hfix`；AJRIPQN B1 前置）— 分级 B（新增陈述保真立案）
 
-**立案：2026-10-21，AJRIPQN 分期侦察报告（`docs/scouts/ajripqn-scout.md` §4 B1）
+**立案：2026-10-21，AJRIPQN 分期侦察报告（`docs/archive/scouts/ajripqn-scout.md` §4 B1）
 产出；用户批准（2026-10-22，"SF-48：批准。AJRIPQN B1：发"）——B1 车道即行
 开工。** 对象 = **新增**定理 `Kepler.Text.LEFT_ACTION_LIST_PROPERTIES`（落
 PA12），不触碰任何冻结陈述。机理：HOL `permutes` 是 complement-fixing
@@ -2166,7 +2166,7 @@ Text roots 8789 jobs、主仓 `lake build Kepler` 9359 jobs 全绿。陈述与 (
 ## 49. PA21 `bank_BIXPCGW9455898160` 符号纠正（HOL `> -0.00569`，Lean 误写 `> +0.00569`）— 分级 A（statement 保真修正 · 假陈述修复）
 
 **立案：2026-10-22，`nliPackNonlinearRest` 侦察车道
-（`docs/scouts/nli-rest-scout.md` §2.3）产出，编排者复核 HOL 原文与
+（`docs/archive/scouts/nli-rest-scout.md` §2.3）产出，编排者复核 HOL 原文与
 pipeline AST；用户批准（2026-10-22，"Sf 批准"）——本项即行应用。** 对象 = PA21:596
 `bank_BIXPCGW9455898160` 的结论常量符号。机理：HOL `ineq.hl:985` 为
 `gamma4fgcy ... > -- #0.00569`（HOL `--` 是一元负号），同条 doc 自述
@@ -2491,7 +2491,7 @@ PA4 文件级预期 29→9）。
 
 ## 54. LA1 `LocalFan` 弱编码 foundation 桩族加 `hedge` 前提 — 分级 A（编码缺前提 · 机器反例实锤）
 
-**证据链**：`docs/scouts/la1-localfan-scout.md`（2026-10-26，含机器探针 probeA/B/E 与 PROBE_OUTPUT）。LA1 `LocalFan`（LocalAuto1.lean:157）dart 底座 = `dart1OfFan`（纯边对，不排孤立顶点），HOL `local_fan`（localization.hl:66 = `ord_pairs ∪ self_pairs` 含自环、内部可证每顶点度数恰 2 local_lemmas.hl:1967）——LA1 编码拿不到该事实。junk ε 下（本 toolchain 实证 `Classical.epsilon` 空分支值 = `choice h`，ε junk-collapse 是定理，probeA）：
+**证据链**：`docs/archive/scouts/la1-localfan-scout.md`（2026-10-26，含机器探针 probeA/B/E 与 PROBE_OUTPUT）。LA1 `LocalFan`（LocalAuto1.lean:157）dart 底座 = `dart1OfFan`（纯边对，不排孤立顶点），HOL `local_fan`（localization.hl:66 = `ord_pairs ∪ self_pairs` 含自环、内部可证每顶点度数恰 2 local_lemmas.hl:1967）——LA1 编码拿不到该事实。junk ε 下（本 toolchain 实证 `Classical.epsilon` 空分支值 = `choice h`，ε junk-collapse 是定理，probeA）：
 
 - **6 枚机器反例可闭合**：RHO_NODE1_INJECTIVE、ITER_IVS_RHO_IDD、ITER_RHO_IVS_IDD、LOFA_IMP_ITER_IVS_RHO_NODE_ID、LOCAL_FAN_ORBIT_MAP_EXPLICIT(_IVS)（probeB 双点夹逼链）；LA37:398 **无条件假**（孤立点给 `{v, junk} ∈ LHS\E`）。
 - **需新前提**：IVS_IN_V 族、GENERIC_LOCAL_FAN_AZIM_POS、FAN_PERIMETER 族 4 枚（LA7:1741-1764）、BGMIFTE 结论 1/3。
