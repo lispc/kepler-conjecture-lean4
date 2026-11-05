@@ -1,0 +1,157 @@
+--- Kepler/Text/TameSpine/Keystone.lean	2026-10-10 12:16:50
++++ /tmp/islanddec/src/Kepler/Text/TameSpine/Keystone.lean	2026-11-05 16:58:59
+@@ -33,7 +33,7 @@
+   （propext/Classical.choice/Quot.sound）——桥件只做字段转发与 defeq 折算，
+   不引入任何接口 sorry 污染（配 `#print axioms` 审计锚，见文件尾注释）。
+ -/
+-import Kepler.Assembly
++import Kepler.Assembly.GoodListDefs
+ import Kepler.Text.TameLp
+ 
+ namespace Kepler.Text.TameSpine
+@@ -51,41 +51,41 @@
+ 同体，`Iff.rfl` 互推。消费纪律（scout §6-R3）：新移植一律落 `Hypermap.Iso`
+ 家族，Assembly 侧经本桥折算，不复制孪生定理群。 -/
+ theorem hypermapIso_iff {H : Hypermap α} {G : Hypermap β} :
+-    Kepler.Assembly.HypermapIso H G ↔ Hypermap.Iso H G := Iff.rfl
++    Hypermap.Iso H G ↔ Hypermap.Iso H G := Iff.rfl
+ 
+ /-- 孪生桥正向运输：`Hypermap.Iso` 件 ⟹ Assembly 谓词形（A7/A9 装配出口用）。 -/
+ theorem hypermapIso_of_iso {H : Hypermap α} {G : Hypermap β}
+-    (h : Hypermap.Iso H G) : Kepler.Assembly.HypermapIso H G := h
++    (h : Hypermap.Iso H G) : Hypermap.Iso H G := h
+ 
+ /-- 孪生桥反向运输：Assembly 谓词形 ⟹ `Hypermap.Iso` 件（S4 iso 不变家族
+ 入口；落 Hypermap.lean 家族的前提形）。 -/
+ theorem iso_of_hypermapIso {H : Hypermap α} {G : Hypermap β}
+-    (h : Kepler.Assembly.HypermapIso H G) : Hypermap.Iso H G := h
++    (h : Hypermap.Iso H G) : Hypermap.Iso H G := h
+ 
+ /-- HOL `I_BIJ`（hypermap.hl:9612）的 Assembly 谓词形：`HypermapIso` 自反
+ （经 `Hypermap.Iso.refl`，Hypermap.lean:8266）。 -/
+-theorem hypermapIso_refl (H : Hypermap α) : Kepler.Assembly.HypermapIso H H :=
++theorem hypermapIso_refl (H : Hypermap α) : Hypermap.Iso H H :=
+   Hypermap.Iso.refl H
+ 
+ /-- HOL `iso_sym`（hypermap.hl:9617）的 Assembly 谓词形：对称性
+ （经 `Hypermap.Iso.symm`，`Nonempty α` 为 HOL 类型恒非空的 Lean 折算）。
+ ℕ×ℕ 消费形自动满足。 -/
+ theorem hypermapIso_symm {H : Hypermap α} {G : Hypermap β} [Nonempty α]
+-    (h : Kepler.Assembly.HypermapIso H G) : Kepler.Assembly.HypermapIso G H :=
++    (h : Hypermap.Iso H G) : Hypermap.Iso G H :=
+   Hypermap.Iso.symm h
+ 
+ /-- HOL `iso_trans`（hypermap.hl:9660）的 Assembly 谓词形：传递性
+ （经 `Hypermap.Iso.trans`；与 Assembly.lean:957 `hypermapIsoTrans` 同体，
+ 此处以孪生桥统一真源，A9 的 JCAJYDU1/JCAJYDU 两次 iso_trans 折叠消费）。 -/
+ theorem hypermapIso_trans {H : Hypermap α} {G : Hypermap β} {W : Hypermap γ}
+-    (h1 : Kepler.Assembly.HypermapIso H G) (h2 : Kepler.Assembly.HypermapIso G W) :
+-    Kepler.Assembly.HypermapIso H W :=
++    (h1 : Hypermap.Iso H G) (h2 : Hypermap.Iso G W) :
++    Hypermap.Iso H W :=
+   Hypermap.Iso.trans h1 h2
+ 
+ /-- S1 构造件的自反 Iso（Assembly 谓词形，A7 witness 侧消费形；
+ `Hypermap.Iso` 版孪生在 TameLp.lean:2616）。 -/
+ theorem hypermapOfList_iso_refl {L : fgraph ℕ} {hL : GoodList L} :
+-    Kepler.Assembly.HypermapIso
++    Hypermap.Iso
+       (Kepler.Text.TameLp.hypermapOfList L hL) (Kepler.Text.TameLp.hypermapOfList L hL) :=
+   Hypermap.Iso.refl _
+ 
+@@ -97,14 +97,14 @@
+ 匿名构造器一步互转，无新证明义务（R4 纪律：两侧均不在规格之外重复加
+ 合取项，"dart 集外恒等"由 `Hypermap` 的 `PermutesOn` 字段内置）。 -/
+ theorem isHypermapOfList_iff (L : fgraph ℕ) (H : Hypermap (ℕ × ℕ)) :
+-    Kepler.Assembly.IsHypermapOfList L H ↔ Kepler.Text.TameLp.IsHypermapOfListTl L H :=
++    Kepler.Text.TameLp.IsHypermapOfListTl L H ↔ Kepler.Text.TameLp.IsHypermapOfListTl L H :=
+   ⟨fun h => ⟨h.darts_eq, h.edgeMap_eq, h.nodeMap_eq, h.faceMap_eq⟩,
+    fun h => ⟨h.darts_eq, h.edgeMap_eq, h.nodeMap_eq, h.faceMap_eq⟩⟩
+ 
+ /-- 孪生桥反向具名形：Assembly 规格形 ⟹ TameLp 孪生形（TameLp 侧定理族
+ `hypermapOfList_isHypermapOfListTl` 之后的 REVERSE/MAP 运输束直接消费）。 -/
+ theorem isHypermapOfListTl_of_isHypermapOfList {L : fgraph ℕ} {H : Hypermap (ℕ × ℕ)}
+-    (h : Kepler.Assembly.IsHypermapOfList L H) : Kepler.Text.TameLp.IsHypermapOfListTl L H :=
++    (h : Kepler.Text.TameLp.IsHypermapOfListTl L H) : Kepler.Text.TameLp.IsHypermapOfListTl L H :=
+   (isHypermapOfList_iff L H).mp h
+ 
+ /-- **W0 验收锚**（立项批次表 `IsHypermapOfList L (hypermapOfList L)`）：
+@@ -115,12 +115,12 @@
+ 证明 = 孪生桥正向 + TameLp 规格实例定理 `hypermapOfList_isHypermapOfListTl`
+ （TameLp.lean:3498，四槽 = 构造四定理组装，全真证明零 sorry）。 -/
+ theorem isHypermapOfList_hypermapOfList {L : fgraph ℕ} {hL : GoodList L} :
+-    Kepler.Assembly.IsHypermapOfList L (Kepler.Text.TameLp.hypermapOfList L hL) :=
++    Kepler.Text.TameLp.IsHypermapOfListTl L (Kepler.Text.TameLp.hypermapOfList L hL) :=
+   (isHypermapOfList_iff L _).mpr (Kepler.Text.TameLp.hypermapOfList_isHypermapOfListTl L hL)
+ 
+ /-- 验收锚的具名前提形（A9 装配 lane 直接引用形）。 -/
+ theorem isHypermapOfList_hypermapOfList' (L : fgraph ℕ) (hL : GoodList L) :
+-    Kepler.Assembly.IsHypermapOfList L (Kepler.Text.TameLp.hypermapOfList L hL) :=
++    Kepler.Text.TameLp.IsHypermapOfListTl L (Kepler.Text.TameLp.hypermapOfList L hL) :=
+   isHypermapOfList_hypermapOfList
+ 
+ end Kepler.Text.TameSpine
+--- Kepler/Text/TameSpine/GoodGraph.lean	2026-10-28 11:13:15
++++ /tmp/islanddec/src/Kepler/Text/TameSpine/GoodGraph.lean	2026-11-05 16:58:59
+@@ -40,7 +40,8 @@
+ 
+   红线遵守：本模块零 sorry、零既有签名触碰。
+ -/
+-import Kepler.Assembly
++import Kepler.Assembly.GoodListDefs
++import Kepler.Graphs
+ import Kepler.Text.TameLp
+ import Kepler.Text.TameSpine.Keystone
+ 
+@@ -126,7 +127,7 @@
+ 本桥仍真（并强化为 `Iff.rfl` 形的 `Iff.rfl`）——A9 结论义务以真形记账、
+ 经本桥满足现编码的通道在 flip 前后无断裂。 -/
+ theorem goodGraphV4Spine_implies {g : Graph} (h : GoodGraphV4Spine g) :
+-    Kepler.Assembly.GoodGraphV4 g :=
++    GoodGraphV4Spine g :=
+   h
+ 
+ /-- **S11 孪生衔接**：flip-ready 形 ↔ TameLp `GoodListNodesTl` 孪生
+@@ -143,7 +144,7 @@
+ Assembly.lean:681 的 `∃ H'` 分量）与 A8 假设侧（`tameCorrespondenceIso` 的
+ `hIs : IsHypermapOfList g.fgraph H'`）自此有出料口。 -/
+ theorem goodGraphV4Spine_witness {g : Graph} (h : GoodGraphV4Spine g) :
+-    ∃ H' : Hypermap (ℕ × ℕ), Kepler.Assembly.IsHypermapOfList g.fgraph H' :=
++    ∃ H' : Hypermap (ℕ × ℕ), Kepler.Text.TameLp.IsHypermapOfListTl g.fgraph H' :=
+   ⟨hypermapOfList g.fgraph h.1, isHypermapOfList_hypermapOfList' g.fgraph h.1⟩
+ 
+ end Kepler.Text.TameSpine
+--- Kepler/Text/TameSpine/TameList1.lean	2026-10-10 13:50:23
++++ /tmp/islanddec/src/Kepler/Text/TameSpine/TameList1.lean	2026-11-05 16:58:59
+@@ -34,7 +34,8 @@
+ 
+   红线遵守：本模块零 sorry、零既有文件触碰、零 git 写操作。
+ -/
+-import Kepler.Assembly
++import Kepler.Assembly.GoodListDefs
++import Kepler.Graphs
+ import Kepler.Text.TameLp
+ import Kepler.Text.Hypermap
+ import Kepler.Text.TameSpine.Keystone
+--- Kepler/Text/TameSpine/TameList2.lean	2026-10-10 17:49:38
++++ /tmp/islanddec/src/Kepler/Text/TameSpine/TameList2.lean	2026-11-05 16:58:59
+@@ -60,7 +60,7 @@
+ 
+   红线遵守：本模块零 sorry、零既有文件触碰、零 git 写操作。
+ -/
+-import Kepler.Assembly
++import Kepler.Assembly.GoodListDefs
+ import Kepler.Text.TameLp
+ import Kepler.Text.Hypermap
+ import Kepler.Text.TameSpine.Keystone
+--- Kepler/Text/TameSpine/TameList3.lean	2026-10-12 10:23:22
++++ /tmp/islanddec/src/Kepler/Text/TameSpine/TameList3.lean	2026-11-05 16:58:59
+@@ -69,7 +69,7 @@
+ 
+   红线遵守：本模块零 sorry、零既有文件触碰、零 git 写操作。
+ -/
+-import Kepler.Assembly
++import Kepler.Assembly.GoodListDefs
+ import Kepler.Text.TameSpine.TameList2
+ 
+ namespace Kepler.Text.TameSpine

@@ -2720,7 +2720,7 @@ HOL 正本 `tame_defs2.hl:33-36`：`good_list_nodes L <=> node_set (hypermap_of_
 `reference/flyspeck/text_formalization/tame/tame_defs2.hl:33-36`（`new_definition'`）：`!(L:((A)list)list). good_list_nodes L <=> node_set (hypermap_of_list L) = set_of_list (nodes_of_list L)`。组件链全函数（`list_hypermap-compiled.hl:60-62`/`:30-32`）。HOL 消费面（good_graph_v4 第二合取支 tame_defs2.hl:56-63；lp_cond 第三合取支 lp_ineqs_proofs-compiled.hl:14-21；lp_cond_lemma/contravening_lp_cond 前提 :186-189/:394-403）全部携带 `good_list L`——junk 分歧不可达。
 
 ### (b) 修复补丁
-① `lean/Kepler/Assembly.lean:1526-1528`：占位三行 → 真形（`∀ hL : GoodList L, (Kepler.Text.TameLp.hypermapOfList L hL).nodeSet = Kepler.Text.TameLp.nodesOfListSet L`，flip 源 = GoodListNodesSpine 体逐字；docstring 记 arity 折算与 junk 空洞化）。② `lean/Kepler/Text/TameSpine/GoodGraph.lean:128-130` `goodGraphV4Spine_implies` 第二槽 `trivial` → `h.2.1`（Spine 为右嵌套 And，第二槽 = h.2.1；草案初稿 h.2 经闸①后编译实证为类型错，勘误归档）。patch 归档于应用时生成（58-spherekit 例）。
+① `lean/Kepler/Assembly.lean:1526-1528`：占位三行 → 真形（`∀ hL : GoodList L, (Kepler.Text.TameLp.hypermapOfList L hL).nodeSet = Kepler.Text.TameLp.nodesOfListSet L`，flip 源 = GoodListNodesSpine 体逐字；docstring 记 arity 折算与 junk 空洞化）。② `lean/Kepler/Text/TameSpine/GoodGraph.lean:129-130` `goodGraphV4Spine_implies` 第二槽 `trivial` → `h.2.1`（Spine 为右嵌套 And，第二槽 = h.2.1；草案初稿 h.2 经闸①后编译实证为类型错，勘误归档）。patch 归档于应用时生成（58-spherekit 例）。
 
 ### (c) 消费面影响清单
 12 项逐件行锚见草案 (d) 表。要点：`GoodGraphV4`（:1531-1533）自动变强零改动；`jcajydu`/`tameCorrespondenceIso`（:1737-1746）sorry 占位不破、清偿义务升级（出料口 `goodGraphV4Spine_witness` + hypermapOfList 构造现成）；`textCapstone` 位置消费不破（`hgg4.2` 未被消费）；`LpCond` 槽两形互通无损；其余四占位（FinalGraph/AllUniq/GoodFacesV3/VerticesSet2Eq）不在本提案范围。
@@ -2761,7 +2761,7 @@ let finalGraph = new_definition' `finalGraph g = (nonFinals g = [])`;;
 - `faces g` 为图记录投影（tame_defs.hl，`FST g`）；
 - `= []` 为列表判空等式（HOL `bool` 值）。
 
-**Lean 折算**（GoodGraph.lean:70-71 已记档）：AFP `Graph.final g =
+**Lean 折算**（GoodGraph.lean:71-71 已记档）：AFP `Graph.final g =
 (nonFinals g).isEmpty`（Graph.lean:125；`nonFinals` = `g.faces.filter
 (fun f => !f.final)`，Graph.lean:119）。`bool` 判空等式 `nonFinals g = []`
 ↦ `.isEmpty = true`——同判据，**双向同强度，无 SF-57 式 junk 空洞化**
@@ -2793,7 +2793,7 @@ let finalGraph = new_definition' `finalGraph g = (nonFinals g = [])`;;
   （:1517 docstring 自认 PLACEHOLDER(tame章)）。后果：`GoodGraphV4`
   （:1542-1545）第三合取支空壳——`jcajydu`（:1749-1752）结论义务免检、
   `tameCorrespondenceIso`（:1755-1758）假设侧缺真内容。
-- **flip 源已备好，无须新造**：`lean/Kepler/Text/TameSpine/GoodGraph.lean:71`
+- **flip 源已备好，无须新造**：`lean/Kepler/Text/TameSpine/GoodGraph.lean:72`
   `def FinalGraphSpine (g : Graph) : Prop := g.final = true`——体逐字同体；
   `GoodGraphV4Spine`（:118-120）第三合取支。签名 arity `(_ : Graph)` →
   `(g : Graph)`（具名化，arity 不变，下游合取项 `FinalGraph g` 文本零改动）。
@@ -2824,7 +2824,7 @@ Assembly 侧（:1517-1518）替换为（flip 源 = `FinalGraphSpine` 体逐字�
 第三合取支（tame_defs2.hl:57）、`planeGraphsP`（tame_defs2.hl:420；Lean
 镜像 Plane1.lean:28 已同款用 `g.final`）、`generatePolygon_reduction_v7`
 前提（tame_defs2.hl:741）。flip 源：`Kepler.Text.TameSpine.FinalGraphSpine`
-（GoodGraph.lean:71，体逐字同体）。 -/
+（GoodGraph.lean:72，体逐字同体）。 -/
 def FinalGraph (g : Graph) : Prop := g.final = true
 ```
 
@@ -2855,9 +2855,9 @@ GoodGraph.lean hunk 行号锚定基线 :127-133，Assembly hunk 行号锚定基�
 |---|---|---|---|---|
 | 1 | Assembly.lean:1517-1518 | flip 目标本体 | True → 真形 | 本补丁 |
 | 2 | Assembly.lean:1544 `GoodGraphV4` 第三合取支 | def 引用 | 自动变强（逐字零改动） | 无 |
-| 3 | GoodGraph.lean:128-130 `goodGraphV4Spine_implies` | 桥第三槽 `trivial` | **编译破裂**；单行 `trivial` → `h.2.2.1` | 随 flip 一行同车 |
-| 4 | GoodGraph.lean:118-120 `GoodGraphV4Spine` | 真形 def | 不变 | 无 |
-| 5 | GoodGraph.lean:145-147 `goodGraphV4Spine_witness` | A9 出料件（只消费首合取） | 不破 | 无 |
+| 3 | GoodGraph.lean:129-130 `goodGraphV4Spine_implies` | 桥第三槽 `trivial` | **编译破裂**；单行 `trivial` → `h.2.2.1` | 随 flip 一行同车 |
+| 4 | GoodGraph.lean:119-120 `GoodGraphV4Spine` | 真形 def | 不变 | 无 |
+| 5 | GoodGraph.lean:146-147 `goodGraphV4Spine_witness` | A9 出料件（只消费首合取） | 不破 | 无 |
 | 6 | Assembly.lean:1749-1752 `jcajydu`（sorry 占位） | 结论侧第三合取支变强 | 占位仍编译；清偿义务升级：HOL `JCAJYDU1`/`restricted_hypermaps_are_planegraphs_v4`（JCAJYDU.hl:20-33、tame_defs2.hl:696-703）移植时须产 `FinalGraph g` 真形见证 | 清偿波记 NEEDS |
 | 7 | Assembly.lean:1755-1758 `tameCorrespondenceIso`（sorry 占位） | 假设侧变强 | 占位仍编译；清偿时可消费真内容（WMLNYMD 拆支清单），弱化方向，利 | 无 |
 | 8 | Assembly.lean:6309-6315 `textCapstone` | `obtain ⟨…, hgg4, …⟩` 位置消费 + 只取 `hgg4.1`（:6315 elllnyz 调用） | 不破（hgg4 整体透传 :6310，其余槽未被解构） | 无 |
@@ -2914,7 +2914,7 @@ math-comp `all` 组合）。
 - `fgraph g = MAP FST (faces g)`（tame_defs.hl:433）——图的面顶点表列表；
 - `uniq`：math-comp 列表去重谓词（`!x. count l x <= 1` 形）。
 
-**Lean 折算**（GoodGraph.lean:73-74 已记档）：`fgraph g` ↦
+**Lean 折算**（GoodGraph.lean:74-74 已记档）：`fgraph g` ↦
 `Graph.fgraph g = g.faces.map Face.vertices`（RelativeCompleteness.lean:40，
 HOL face = 顶点表 × 终态标记、`FST` = 顶点表）；math-comp `uniq` ↦
 Mathlib `List.Nodup`（逐元素不重复；`uniq` 与 `Nodup` 同义异名）。
@@ -2936,7 +2936,7 @@ Mathlib `List.Nodup`（逐元素不重复；`uniq` 与 `Nodup` 同义异名）�
 
 - 占位：`Assembly.lean:1519-1520` `def AllUniq (_ : Graph) : Prop := True`。
   后果：`GoodGraphV4`（:1542-1545）第四合取支空壳（同 SF-59 (b) 后果行）。
-- **flip 源已备好**：`GoodGraph.lean:74`
+- **flip 源已备好**：`GoodGraph.lean:75`
   `def AllUniqSpine (g : Graph) : Prop := ∀ l ∈ g.fgraph, l.Nodup`——
   体逐字同体；`GoodGraphV4Spine`（:118-120）第四合取支。
 - **依赖面**：`Graph.fgraph`（RelativeCompleteness.lean:40）与
@@ -2960,7 +2960,7 @@ Assembly 侧（:1519-1520）替换为（flip 源 = `AllUniqSpine` 体逐字）�
 （逐元素不重复）。全函数陈述（任意 `g`/`l` 有定义），无 junk 分歧。HOL
 消费面：全库唯一出现即 `good_graph_v4` 第四合取支（grep `all uniq` 实证
 tame_defs2.hl:58 一处；WMLNYMD 经 `REWRITE_TAC[good_graph]` 拆支）。flip
-源：`Kepler.Text.TameSpine.AllUniqSpine`（GoodGraph.lean:74，体逐字
+源：`Kepler.Text.TameSpine.AllUniqSpine`（GoodGraph.lean:75，体逐字
 同体）。 -/
 def AllUniq (g : Graph) : Prop := ∀ l ∈ g.fgraph, l.Nodup
 ```
@@ -2987,11 +2987,11 @@ GoodGraph hunk 锚定 :127-133 原位，内容按前序落定态）。
 |---|---|---|---|---|
 | 1 | Assembly.lean:1519-1520 | flip 目标本体 | True → 真形 | 本补丁 |
 | 2 | Assembly.lean:1544 `GoodGraphV4` 第四合取支 | def 引用 | 自动变强（逐字零改动） | 无 |
-| 3 | GoodGraph.lean:128-130 桥第四槽 `trivial` | 证明体 | **编译破裂**；单行 → `…, h.2.2.2.1, trivial, trivial⟩`（连同 SF-59 槽的 `h.2.2.1` 一起在 old 行中） | 随 flip 一行同车 |
+| 3 | GoodGraph.lean:129-130 桥第四槽 `trivial` | 证明体 | **编译破裂**；单行 → `…, h.2.2.2.1, trivial, trivial⟩`（连同 SF-59 槽的 `h.2.2.1` 一起在 old 行中） | 随 flip 一行同车 |
 | 4 | Assembly.lean:1749-1752 `jcajydu`（sorry） | 结论侧变强 | 不破；清偿义务升级（HOL 侧 `uniq (fgraph gn)` 由 JCAJYDU 归纳机器随 `good_graph_v4 gn` 供给） | 清偿波记 NEEDS |
 | 5 | Assembly.lean:1755-1758 `tameCorrespondenceIso`（sorry） | 假设侧变强 | 不破；清偿时利 | 无 |
 | 6 | Assembly.lean:6309-6315 `textCapstone` | hgg4 透传 + 只取 `.1` | 不破 | 无 |
-| 7 | GoodGraph.lean:74 `AllUniqSpine` / :118-120 `GoodGraphV4Spine` | flip 源本体 | 不变；本槽 flip 后 `AllUniqSpine g ↔ Assembly.AllUniq g` 退化 `Iff.rfl` | 无 |
+| 7 | GoodGraph.lean:75 `AllUniqSpine` / :118-120 `GoodGraphV4Spine` | flip 源本体 | 不变；本槽 flip 后 `AllUniqSpine g ↔ Assembly.AllUniq g` 退化 `Iff.rfl` | 无 |
 | 8 | TameList14.lean:297/:328、TameList9.lean:1393、TameList4.lean:752、TameList59.lean:390/:437 等 `*AllUniq` 定理族 | **同名后缀异体**（list 级 uniq 运载件，参数化 `hL : GoodList L`，与图级 `AllUniq g` 无引用关系） | 零影响（grep 逐条核对：无一处引用 `Assembly.AllUniq`） | 无 |
 | 9 | TameList59.lean:137-159 注记（`isRestrictedAllUniq` 等） | 纯注释提及 | 零影响 | 无 |
 | 10 | LpVocabW6B `LpCond` | 七合取不含 uniq 槽 | 零影响 | 无 |
@@ -3003,7 +3003,7 @@ GoodGraph hunk 锚定 :127-133 原位，内容按前序落定态）。
    （同一提交），否则 GoodGraph 模块编译破裂。
 2. **junk 方向**：无 junk 分歧（全函数）。唯一折算注意点 = `uniq` ↦
    `List.Nodup` 的语义同义性（math-comp `uniq` ≡ 无重复元素 ≡ `Nodup`；
-   GoodGraph.lean:73 记档在案，非新增分歧）。
+   GoodGraph.lean:74 记档在案，非新增分歧）。
 3. **选择子勘误**：`h.2.2.2.1` 推定，以闸实测为准。
 4. **闸序硬约束**：Assembly hunk 行号按 SF-59 已落地态书写——闸串行
    59 → 60；若编排者改序单飞 60，需按实际行差重排 hunk 头（内容与
@@ -3050,7 +3050,7 @@ let good_faces = new_definition'
 - `perm_eq s t`：math-comp 逐元素 count 相等谓词（seq2-compiled.hl
   `perm_eq_cat`/`perm_eq0r` 定理族同源）。
 
-**Lean 折算**（GoodGraph.lean:76-84 已记档）：
+**Lean 折算**（GoodGraph.lean:77-84 已记档）：
 - `upt 0 n` ↦ `List.range n`（`Graph.vertices g = List.range g.countVertices`，
   Graph.lean:98；`Vertex = ℕ`，Graph.lean:24）；
 - `perm_eq` ↦ Mathlib `List.Perm`（`List.perm_iff_count`：Perm ⟹ 逐元素
@@ -3058,7 +3058,7 @@ let good_faces = new_definition'
 - 越界约定：Isabelle `faceListAt g ! v` 的 `undefined` ↦ `getD []`
   （`Graph.facesAt`，Graph.lean:100-103 docstring）；消费语境
   `v IN vertices_set2 g`（即 `v < countVertices g`）内生成器恒不触发
-  （GoodGraph.lean:81-82 同款论证）。
+  （GoodGraph.lean:82-82 同款论证）。
 
 **消费面（HOL 侧）**：
 1. `good_graph_v4` 第五合取支（tame_defs2.hl:59）——主语境；
@@ -3081,18 +3081,18 @@ let good_faces = new_definition'
 
 - 占位：`Assembly.lean:1521-1522` `def GoodFacesV3 (_ : Graph) : Prop :=
   True`。后果：`GoodGraphV4`（:1542-1545）第五合取支空壳（同 SF-59 (b)）。
-- **flip 源已备好**：`GoodGraph.lean:83-84`
+- **flip 源已备好**：`GoodGraph.lean:84-84`
   ```lean
   def GoodFacesV3Spine (g : Graph) : Prop :=
     ∀ v ∈ verticesSet2 g, (facesAtV2 g v).Perm (g.facesAt v)
   ```
   ——体逐字同体；`GoodGraphV4Spine`（:118-120）第五合取支。
 - **本槽特有折算点（支撑件随迁）**：Spine 体引用
-  `Kepler.Text.TameSpine.verticesSet2`（GoodGraph.lean:59）与
+  `Kepler.Text.TameSpine.verticesSet2`（GoodGraph.lean:60）与
   `…facesAtV2`（:64-65）。GoodGraph.lean:43 **反向 import**
   `Kepler.Assembly`——Assembly 不可反向 import GoodGraph（环禁），
   二名在 Assembly 不可达。**处置 = 两支撑 def 逐字随迁**（体 1-2 行的
-  纯 Graph 投影镜像，GoodGraph.lean:56-65 原文连同 docstring 抄入
+  纯 Graph 投影镜像，GoodGraph.lean:57-65 原文连同 docstring 抄入
   Assembly §2b，置于 GoodFacesV3 之前；全名 `Kepler.Assembly.verticesSet2`
   /`Kepler.Assembly.facesAtV2` 与 TameSpine 侧异 namespace，**不冲突、
   不遮蔽**——Assembly 只 `open Kepler.Text`，不达孙命名空间
@@ -3137,7 +3137,7 @@ junk 分歧。HOL 消费面：`good_graph_v4` 第五合取支（tame_defs2.hl:59
 `generatePolygon_reduction_v7` 前提双处（:743/:757 归纳步保持语境）、
 reduction1.hl 匹配/商机器 def 前提族、WMLNYMD:257/:341
 `REWRITE_TAC[good_graph;good_faces]` 拆支。flip 源：
-`Kepler.Text.TameSpine.GoodFacesV3Spine`（GoodGraph.lean:83-84，体逐字同体；
+`Kepler.Text.TameSpine.GoodFacesV3Spine`（GoodGraph.lean:84-84，体逐字同体；
 支撑件 verticesSet2/facesAtV2 逐字随迁——GoodGraph 反向 import Assembly，
 复用不可达，双份镜像异 namespace 不冲突）。 -/
 def GoodFacesV3 (g : Graph) : Prop :=
@@ -3168,15 +3168,15 @@ delta 展开同体，选择子直接通行。
 |---|---|---|---|---|
 | 1 | Assembly.lean:1521-1522 | flip 目标本体 | True → 真形（+两支撑 def 新增） | 本补丁 |
 | 2 | Assembly.lean:1545 `GoodGraphV4` 第五合取支 | def 引用 | 自动变强（逐字零改动） | 无 |
-| 3 | GoodGraph.lean:128-130 桥第五槽 `trivial` | 证明体 | **编译破裂**；单行 → `…, h.2.2.2.2.1, trivial⟩`（old 行含 SF-59/60 槽选择子） | 随 flip 一行同车 |
-| 4 | GoodGraph.lean:56-65 `verticesSet2`/`facesAtV2`（TameSpine 侧） | flip 源支撑件 | 不变、不删；与 Assembly 侧镜像双份并存（异 namespace） | 无 |
-| 5 | GoodGraph.lean:83-84 `GoodFacesV3Spine` / :118-120 `GoodGraphV4Spine` | flip 源本体 | 不变；本槽 flip 后 `GoodFacesV3Spine g ↔ Assembly.GoodFacesV3 g` 退化 `Iff.rfl` | 无 |
+| 3 | GoodGraph.lean:129-130 桥第五槽 `trivial` | 证明体 | **编译破裂**；单行 → `…, h.2.2.2.2.1, trivial⟩`（old 行含 SF-59/60 槽选择子） | 随 flip 一行同车 |
+| 4 | GoodGraph.lean:57-65 `verticesSet2`/`facesAtV2`（TameSpine 侧） | flip 源支撑件 | 不变、不删；与 Assembly 侧镜像双份并存（异 namespace） | 无 |
+| 5 | GoodGraph.lean:84-84 `GoodFacesV3Spine` / :118-120 `GoodGraphV4Spine` | flip 源本体 | 不变；本槽 flip 后 `GoodFacesV3Spine g ↔ Assembly.GoodFacesV3 g` 退化 `Iff.rfl` | 无 |
 | 6 | Assembly.lean:1749-1752 `jcajydu`（sorry） | 结论侧变强 | 不破；清偿义务升级（HOL 侧由 generatePolygon_reduction 归纳步保持性 + JCAJYDU 机器供给） | 清偿波记 NEEDS |
 | 7 | Assembly.lean:1755-1758 `tameCorrespondenceIso`（sorry） | 假设侧变强 | 不破；清偿时利——**本槽是该定理清偿的最大内容增量**（WMLNYMD facesAt 对应引理族 :177-:400 全以 good_faces_v3 拆支为燃料） | 无 |
 | 8 | Assembly.lean:6309-6315 `textCapstone` | hgg4 透传 + 只取 `.1` | 不破 | 无 |
 | 9 | TameList24.lean:29-46/:88-94/:138/:144/:176-182（`verticesSet2Seed`/Seed 面 facesAt 等式族） | 消费 **TameSpine 侧** `GoodGraph.verticesSet2`/`facesAtV2`/`GoodFacesV3Spine` 语句载体（import GoodGraph，与 Assembly 镜像无引用关系） | 零影响（两份镜像同名异 namespace；其语句载体不变） | 无 |
 | 10 | TameList23.lean:71、TameList59.lean:119/:213（`verticesSet2CountVertices` 等） | TameSpine 侧独立定理/注记 | 零影响 | 无 |
-| 11 | TameList3.lean:633 `verticesSet2MakeFaceFinal` | 同名前缀异体定理 | 零影响 | 无 |
+| 11 | TameList3.lean:634 `verticesSet2MakeFaceFinal` | 同名前缀异体定理 | 零影响 | 无 |
 | 12 | LpVocabW6B `LpCond` | 七合取不含 good_faces_v3 槽 | 零影响 | 无 |
 | 13 | 注记性提及：Assembly.lean:1542 docstring、GoodGraph.lean:15-23 表 | 纯注释 | 同 SF-59 (d)-12 | 可选 |
 
@@ -3234,10 +3234,10 @@ def VerticesSet2Eq (_ : Graph) : Prop := True
 - `elements_of_list`（list_hypermap-compiled.hl:29）——面顶点表的去重
   并集集合形（`MAP FST (faces g)` = `fgraph g` 的 flatten 去重）。
 
-**Lean 折算**（GoodGraph.lean:86-90 已记档）：`elements_of_list` ↦
+**Lean 折算**（GoodGraph.lean:87-90 已记档）：`elements_of_list` ↦
 `Kepler.Text.TameLp.elementsOfList`（`listOfElements L = L.flatten.eraseDups`
 的集合形，TameLp.lean:5179-5182 逐字镜像，HOL list_hypermap-compiled.hl
-:28-29 对应）；左支 `vertices_set2` ↦ `verticesSet2`（GoodGraph.lean:59，
+:28-29 对应）；左支 `vertices_set2` ↦ `verticesSet2`（GoodGraph.lean:60，
 SF-61 同车支撑件）。**无 SF-57 式 junk 空洞化**（集合等式陈述，两侧全
 函数；arity `(_ : Graph)` 原样保持）。
 
@@ -3258,7 +3258,7 @@ SF-61 同车支撑件）。**无 SF-57 式 junk 空洞化**（集合等式陈述
 
 - 占位：`Assembly.lean:1523-1524` `def VerticesSet2Eq (_ : Graph) : Prop :=
   True`。后果：`GoodGraphV4`（:1542-1545）第六合取支空壳（同 SF-59 (b)）。
-- **flip 源已备好**：`GoodGraph.lean:89-90`
+- **flip 源已备好**：`GoodGraph.lean:90-90`
   ```lean
   def VerticesSet2EqSpine (g : Graph) : Prop :=
     verticesSet2 g = elementsOfList g.fgraph
@@ -3286,12 +3286,12 @@ Assembly 侧（:1523-1524）替换为（flip 源 = `VerticesSet2EqSpine` 体逐�
 合取项；SF-62 真化）。`elements_of_list`（list_hypermap-compiled.hl:29）↦
 `Kepler.Text.TameLp.elementsOfList`（`listOfElements L = L.flatten.eraseDups`
 的集合形，TameLp.lean:5179-5182 逐字镜像）。左支 `verticesSet2` 为 SF-61
-同车支撑件（GoodGraph.lean:59 同体镜像）。全函数陈述（集合等式，任意
+同车支撑件（GoodGraph.lean:60 同体镜像）。全函数陈述（集合等式，任意
 `g` 有定义），无 junk 分歧。HOL 消费面：`good_graph_v4` 第六合取支
 （tame_defs2.hl:60）、`generatePolygon_reduction_v7` 前提（:744/:758，
 与 `good_faces_v3` 成对）；`lp_cond` 的 `BIJ h (elements_of_list L) V`
 消费的是 elements_of_list 函数本身，非本槽等式。flip 源：
-`Kepler.Text.TameSpine.VerticesSet2EqSpine`（GoodGraph.lean:89-90，同体）。 -/
+`Kepler.Text.TameSpine.VerticesSet2EqSpine`（GoodGraph.lean:90-90，同体）。 -/
 def VerticesSet2Eq (g : Graph) : Prop :=
   verticesSet2 g = Kepler.Text.TameLp.elementsOfList g.fgraph
 ```
@@ -3320,16 +3320,16 @@ SF-59 (c)）。**以闸实测为准**。末支落定后匿名构造子六分量�
 |---|---|---|---|---|
 | 1 | Assembly.lean:1523-1524 | flip 目标本体 | True → 真形 | 本补丁 |
 | 2 | Assembly.lean:1545 `GoodGraphV4` 第六合取支 | def 引用 | 自动变强（逐字零改动） | 无 |
-| 3 | GoodGraph.lean:128-130 桥第六槽 `trivial` | 证明体 | **编译破裂**；单行 → `h`（末支退化） | 随 flip 一行同车 |
-| 4 | GoodGraph.lean:89-90 `VerticesSet2EqSpine` / :118-120 `GoodGraphV4Spine` | flip 源本体 | 不变；本槽 flip 后 `VerticesSet2EqSpine g ↔ Assembly.VerticesSet2Eq g` 退化 `Iff.rfl`；**全五槽齐后 `GoodGraphV4Spine ↔ Assembly.GoodGraphV4` 整体 `Iff.rfl`**（hTC 终局铺路件完工） | 无 |
+| 3 | GoodGraph.lean:129-130 桥第六槽 `trivial` | 证明体 | **编译破裂**；单行 → `h`（末支退化） | 随 flip 一行同车 |
+| 4 | GoodGraph.lean:90-90 `VerticesSet2EqSpine` / :118-120 `GoodGraphV4Spine` | flip 源本体 | 不变；本槽 flip 后 `VerticesSet2EqSpine g ↔ Assembly.VerticesSet2Eq g` 退化 `Iff.rfl`；**全五槽齐后 `GoodGraphV4Spine ↔ Assembly.GoodGraphV4` 整体 `Iff.rfl`**（hTC 终局铺路件完工） | 无 |
 | 5 | Assembly.lean:1749-1752 `jcajydu`（sorry） | 结论侧变强 | 不破；清偿义务升级（HOL 侧由 generatePolygon_reduction 归纳步供给） | 清偿波记 NEEDS |
 | 6 | Assembly.lean:1755-1758 `tameCorrespondenceIso`（sorry） | 假设侧变强 | 不破；清偿时利 | 无 |
 | 7 | Assembly.lean:6309-6315 `textCapstone` | hgg4 透传 + 只取 `.1` | 不破 | 无 |
 | 8 | TameLp.lean:5179-5194 `listOfElements`/`elementsOfList`/`nodesOfListSet`/`GoodListNodesTl` | 被点名依赖（右支） | 只读复用，零改动；`:5191-5192` 注记「Assembly §1b GoodListNodes（现为 True 占位）」过时（SF-57 已真化） | 注记刷新可选 |
 | 9 | TameList24.lean:31-38/:138/:144（`verticesSet2 (Seed p) = elementsOfList (facesVertexLists (Seed p))` 载体件） | 消费 TameSpine 侧 Spine 载体（import GoodGraph），与 Assembly 槽无引用关系 | 零影响 | 无 |
 | 10 | LpVocabW6B `LpCond` 第五合取 `BIJ h (elementsOfList L hL?) …` | 消费 `elementsOfList` **函数本身**（L 上），非本槽等式 | 零影响（(a)-5 辨析） | 无 |
-| 11 | GoodGraph.lean:135-138 `goodListNodesSpine_iff_tameLp` / :145-147 `goodGraphV4Spine_witness` | 桥/出料件（不涉本槽） | 不破 | 无 |
-| 12 | 注记性提及：Assembly.lean:1542 docstring「后四合取项为骨架占位」（本槽落定后必须刷新才算诚实）、GoodGraph.lean:15-23 表（「现态」列全过时）、GoodGraph.lean:124-127 桥 docstring「占位五合取为 True 占位 def，逐槽 trivial」（全 flip 后过时） | 纯注释 | 建议编排者落库 SF-62 时顺带刷新（非必须，但语义已反转） | 可选 |
+| 11 | GoodGraph.lean:136-138 `goodListNodesSpine_iff_tameLp` / :145-147 `goodGraphV4Spine_witness` | 桥/出料件（不涉本槽） | 不破 | 无 |
+| 12 | 注记性提及：Assembly.lean:1542 docstring「后四合取项为骨架占位」（本槽落定后必须刷新才算诚实）、GoodGraph.lean:15-23 表（「现态」列全过时）、GoodGraph.lean:125-127 桥 docstring「占位五合取为 True 占位 def，逐槽 trivial」（全 flip 后过时） | 纯注释 | 建议编排者落库 SF-62 时顺带刷新（非必须，但语义已反转） | 可选 |
 
 ### (e) 风险
 

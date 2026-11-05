@@ -34,7 +34,8 @@
 
   红线遵守：本模块零 sorry、零既有文件触碰、零 git 写操作。
 -/
-import Kepler.Assembly
+import Kepler.Assembly.GoodListDefs
+import Kepler.Graphs
 import Kepler.Text.TameLp
 import Kepler.Text.Hypermap
 import Kepler.Text.TameSpine.Keystone

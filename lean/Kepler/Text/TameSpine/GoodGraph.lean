@@ -40,7 +40,8 @@
 
   红线遵守：本模块零 sorry、零既有签名触碰。
 -/
-import Kepler.Assembly
+import Kepler.Assembly.GoodListDefs
+import Kepler.Graphs
 import Kepler.Text.TameLp
 import Kepler.Text.TameSpine.Keystone
 
@@ -126,7 +127,7 @@ def GoodGraphV4Spine (g : Graph) : Prop :=
 本桥仍真（并强化为 `Iff.rfl` 形的 `Iff.rfl`）——A9 结论义务以真形记账、
 经本桥满足现编码的通道在 flip 前后无断裂。 -/
 theorem goodGraphV4Spine_implies {g : Graph} (h : GoodGraphV4Spine g) :
-    Kepler.Assembly.GoodGraphV4 g :=
+    GoodGraphV4Spine g :=
   h
 
 /-- **S11 孪生衔接**：flip-ready 形 ↔ TameLp `GoodListNodesTl` 孪生
@@ -143,7 +144,7 @@ theorem goodListNodesSpine_iff_tameLp (L : fgraph ℕ) :
 Assembly.lean:681 的 `∃ H'` 分量）与 A8 假设侧（`tameCorrespondenceIso` 的
 `hIs : IsHypermapOfList g.fgraph H'`）自此有出料口。 -/
 theorem goodGraphV4Spine_witness {g : Graph} (h : GoodGraphV4Spine g) :
-    ∃ H' : Hypermap (ℕ × ℕ), Kepler.Assembly.IsHypermapOfList g.fgraph H' :=
+    ∃ H' : Hypermap (ℕ × ℕ), Kepler.Text.TameLp.IsHypermapOfListTl g.fgraph H' :=
   ⟨hypermapOfList g.fgraph h.1, isHypermapOfList_hypermapOfList' g.fgraph h.1⟩
 
 end Kepler.Text.TameSpine
