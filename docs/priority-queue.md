@@ -37,17 +37,18 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-05 午后，池 **4/5**）
+## 1. 在飞（2026-11-05 傍晚，池 **3/5**）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `docs-audit-w1` | 全局文档只读审计（矛盾/重复/迁移/入口重写） | 已交付，Phase 1 落库中 |
-| `la28-registry-w2` | LA28 registry 5 件（三条 premise-free + `V3_DEFOR_CONVEX×2`） | 已交付 4/5（8→4） |
-| `la36-kernel-w2` | LA36 余下 5 件 kernel 搬运（7→2） | 已交付 5/5 |
 | `pa22-giant-w4` | PA22 GOTCJAH 链 5 件 + 三处 DEF-FIX 判定 | 在飞 |
+| `la16-gap-w1` | LA16 真缺口 5 件（B 类孪生搬 body 2 + C 类本地装配 3） | 在飞 |
+| `la6-arcv-w1` | LA6 ARCV 三件（侦察先行 + `ARCV_DETER_DIRECTION` 优先，止损 450 行/件） | 在飞 |
 
-> 已落库车道（112 行，含 2026-10-25 至 2026-11-05 的全部批次）见
+> 已落库车道（114 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
+> 本轮刚落：`la28-registry-w2` 4/5（LA28 8→4）、`la36-kernel-w2` 5/5（LA36 7→2）、
+> `docs-audit-w1`（文档重整两批）。
 
 ## 2. 排队（按序补位）
 
@@ -153,6 +154,7 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-05（17:10，续357）**：**文档重整两批落库（`6cf601c9` + `151c6f81` + `431ee3f3`）+ LA28 w2 `8aca9969`（8→4）+ LA36 w2 `7ee332ff`（7→2）+ 补位 la16-gap-w1 / la6-arcv-w1**。① **文档**：`docs-audit-w1` 审计（161 md / 33,115 行）后按用户三项裁决执行——Phase 1 把 106 个历史件纯 `git mv` 进 `docs/archive/`（scouts 56 / handoffs 18 / projects 21 / lane-archives 8 / maps·design·templates 3），`--numstat` 实测 106 个 0/0 纯 rename；17 处当前文档引用改写 + 新增 `archive/README.md` 索引（16 个仍被引用的归档件）。根级五总览收敛为三件：`STATUS.md`/`HANDOFF.md`/`DEBT.md` → `archive/root/*-2026-10-23.md`，`PLAN.md` 标 2026-10-10 快照并删现状节，`README.md`/`README.zh.md` 中英同步改状态段（数字只指向 priority-queue，不手抄），`DECISIONS.md` 保留为根级唯一 current。`priority-queue.md` **650→170 行**：365 条日志搬 `history/changelog-archive.md`（含日期勘误头注），114 行车道表搬 `history/lanes-landed.md`，保留续345–356 共 13 条 + 指针；头注把「TSV 是唯一刻度」改为「last verified + stale」（TSV 实测停在基线 E，落后 md 两个基线）。`statement-fix-proposals.md` 加 108 条编号索引头（零正文改动、不改 `auto_gate.sh`）。旧目录收尾：2 个 kit `.diff` + 1 个 `.json` 进 archive，`docs/scouts/` 只剩 14 个数据 TSV + 新 README。② **LA28 w2**：4/5 闭（`IMJXPHRv2`/`ODXLSTCv2` 一行装配；`V3_DEFOR_CONVEX_LOCAL_FAN_MK(_TWO_CASES)` LA34 同构移植 271 行），4/4 标准三，GATE-PASS，8→4；`NUXCOEAv2` 实测**不是一行**（= `NUXCOEA` 同一声明的弱前件形，一行会注入 sorryAx），机器验证等价方向后拒做，与 `NUXCOEA_p28` 同批立项（剩 580–750 行）。③ **LA36 w2**：5/5 闭（`CASE_3`/`CASE_5_sqrt8`/`CASE_4_3` w1 模板 + `CASE_5_pro_cs`/`CASE_4_sqrt8` aPro 桥），标准三，GATE-PASS，7→2；余两条死叶 GIANT（`CARD_SLICE_EQ`/`HDPLYGY_CASE_3`，无消费者）保持延后。④ 补位：`la16-gap-w1`（B 类孪生 2 + C 类装配 3）/ `la6-arcv-w1`（ARCV 三件侦察先行）。⑤ 塔群：LA14 0 / **LA28 4** / LA34 0 / LA37 0 / LA17 0；LA6 5；LA31 0；LA16 11；**LA36 2**（总 **22**）。⑥ 池 3/5。
 - **2026-11-05（16:25，续356）**：**PA22 w3 三件闭（`02369c06`，22→19）+ w4 GOTCJAH 发车**。① 3/3 标准三，GATE-PASS，+653/−3（删除面恰 3 条 sorry）；`BIJ_FACET2_EDGE`（`b e := convexHull ℝ e` + 线段相等⇒端点对相等的私件；满射用 `EDGE_OF_FACET_EDGE` + w2 的 `SEGMENT_EDGE_ONTO`）/ `polyhedron_3_facets`（最小表示：`ncard ≤ 2` 造无界射线 rank-nullity 取核向量 + 约束↔facet 单射违反最小性 + `Set.ncard_le_ncard_of_injOn`）/ `facet_3_facets`（对 facet 套上件：`FACE_OF_POLYHEDRON_POLYHEDRON` + 有界 + `FACET_AFF_DIM_2`）；6 个 `p22w4_` 前缀 private helper，零新增 import。② **第 4 件 `polyhedron_edge_sum` 如实止损**：实为 Euler 型界（等价 `E ≤ 3F − 6`），HOL 原证直接消费 `BIJ_FACET_HYPERFACE`/`BIJ_DART_POLYEDGE`（现桩下为假）与空洞化的 `POLYHEDRON_TGJISOK`（`darts = ∅`），import 闭包内无 polyhedron Euler 定理 → 判「阻塞上游」不写伪证。③ 剩余 19：GOTCJAH 链 5 / 跨车道 PA18 三条 `YSSKQOY_VECTOR*` / stub-blocked 8 / `EXISTS_M_POLYHEDRON`（等 YSSKQOY）/ `polyhedron_edge_sum`（等 fan 接线）/ `POLYHEDRON_FACET_SUM_4Pi`（fan lane）。④ **w4 发车**：GOTCJAH 链 5 件，任务书要求先判定三处 DEF-FIX sorry（`insert_v`/`POLYSORT_BIJ2`/`EUSOTYP_simple`）是否在路径上、能否真证、是否需改陈述——不许直接开写。⑤ 池 4/5：`docs-audit-w1` / `la28-registry-w2` / `la36-kernel-w2` / `pa22-giant-w4`。
 - **2026-11-05（15:40，续355）**：**双塔塌：LA37 `baedee24`（2→0）+ LA36 kernel w1 `162bd61e`（11→7）；补位 la28-registry-w2 / la36-kernel-w2**。① **LA37**：`w_b14_dart_convex`（574 行，四支分派：固定 dart / `q=u` / `r=u` / `p=u`）先闭，再用它 + `XRECQNS_UPDATE_p37` 闭 `MHAEYJN_CONVEX_LOCAL_FAN_p37`（`LocalFan` 转移 + 逐 dart 窗对有限 `V` 取 min 给两条凸性合取），最后与 `SUB_LUNAR_DEFORM_LEMMA_p37` 取窗 min 闭 `MHAEYJN_p37`；两目标恰标准三；+709/−8（删除面恰 2 sorry + 2 段过时 docstring）；三块冻结陈述逐字节相同；GATE-PASS @`MHAEYJN_p37`。落地修正：`mem_span_pair` 方向歧义改 `Submodule.span_le` 彻底绕开；`subst hzu` 会反向改名（`z=u` 把 `u` 改成 `z`）→ 全改 `rw`；`cross3_p37` 展开的 `simp only` 须含 `LinearMap.add_apply`/`smul_apply`；`affineSpan` 的 SetLike vs Set 用 `show … : Set V3` 归一。② **LA36**：`XWITCCN_TYPE` + `CASE_4/5/6` 四件全闭，模板 = kernel 通用定理 + `s_init_scs_xw6` membership；4/4 标准三；GATE-PASS @`XWITCCN_TYPE`；+18/−21 删除面恰 4 sorry；own-sorry 11→7，剩 `CASE_3`/`CASE_5_sqrt8`/`CASE_4_3`（各 8–12 行）+ `CASE_5_pro_cs`/`CASE_4_sqrt8`（aPro 桥 20–30 行）+ 两条死叶 GIANT（`CARD_SLICE_EQ`/`HDPLYGY_CASE_3`）。③ 补位两车道：`la28-registry-w2`（墙已倒：三条 premise-free 一行装配 + `V3_DEFOR_CONVEX×2`，不碰 `NUXCOEA_p28` 巨人与两条 MIS-PORT）/ `la36-kernel-w2`（余下 5 件，目标 7→2）。④ 池 4/5：`pa22-giant-w3` / `docs-audit-w1` / `la28-registry-w2` / `la36-kernel-w2`。塔群：LA14 0 / LA28 8 / LA34 0 / **LA37 0** / LA17 0；LA6 5；LA31 0；LA16 11；**LA36 7**（总 **31**）。
 - **2026-11-05（14:20，续354）**：**全局文档审计车道发车（`docs-audit-w1`，用户「现在乱的没法看了」）**。① 现状实测：`docs/` 130 个 md / 33,115 行；仓根另有 `STATUS.md` 56KB、`DECISIONS.md` 32KB、`HANDOFF.md` 30KB、`PLAN.md` 17.7KB、`DEBT.md` 8.5KB、`README.md`/`README.zh.md` 各 5–6KB（除 DECISIONS 外多停 10-23）。② 已识别的三处结构性病灶：**变更日志日期与序号不对应**（续306 标 11-05、续335 标 11-06、续344 标 11-06、续352 标 11-05；实为按序号追加、日期手写漂移）；**同一指标在 5+ 处手抄**（SORRIED/AXIOM/K_REACH/塔群 sorry/池大小）；**五个"总览"并存**（STATUS/HANDOFF/PLAN/DEBT/priority-queue）。③ 任务书六问：inventory.tsv 全量清单（role/currency/authority/dup_group）、CONTRADICTIONS.md 指标横向比对（真值源指回代码/TSV/commit，UNRESOLVED 如实标）、OVERLAPS.md 重复组（四张 e2e 图 / 两本 axiom 账 / 五个总览 / 6121 行 statement-fix-proposals 切分）、PRIORITY-QUEUE-PLAN.md 专项（日志切分 + 防再烂机制）、MIGRATION.md + `migrate-dryrun.sh`（默认干跑、`--apply` 才动、含 md 内相对链接改写清单）、README.docs/README.root 重写草案。④ 车道只读、禁重型计算、零 tracked 改动，产物在 `~/c17_backup/lane_snapshots/docs-audit-w1/`；执行顺序与需用户拍板项（删档 / 拆 proposals / 根五总览存废）由 DELIVERY 给出。⑤ 池 4/5。
