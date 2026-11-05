@@ -1,0 +1,9 @@
+^D/tmp/p21-anchor-defix-w1/probe_p18.lean:6:15: error: Application type mismatch: The argument
+  fun x => 0
+has type
+  ?m.5 → ℕ
+but is expected to have type
+  String
+in the application
+  h fun x => 0
+'not_p18_anchor' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]

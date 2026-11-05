@@ -91,7 +91,9 @@ ENCODING NOTES
     as an explicit `V3 → ℝ` parameter of the statement. NEEDS: locate the
     HOL def at merge.
   - `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop) ↔
-    `mainNonlinearTerminalV11_p18 := ∀ y, MainNonlinearTerminalV11 y`.
+    `mainNonlinearTerminalV11_p18 := main_nonlinear_terminal_v11` (alias of the
+    `LocalAuto1` 109-entry registry conjunction; DEF-FIX charter
+    `docs/def-fix-charters/p21-anchor/`).
   - No `native_decide` anywhere; `sorry` bodies carry `-- DISCHARGES:`
     markers naming the missing HOL inputs.
 -/
@@ -201,9 +203,13 @@ def MainNonlinearTerminalV11_p18 (y : Fin 6 → ℝ) : Prop :=
     3.01 ≤ y 3 ∧ y 3 ≤ 3.915 ∧
     y 4 = 2 ∧ y 5 = 2
 
-/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37) as a bare Prop;
-opaque in scripts/local (164 uses). -/
-def mainNonlinearTerminalV11_p18 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p18 y
+/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37) as a bare Prop:
+**alias of `LocalAuto1.main_nonlinear_terminal_v11`** (the closed conjunction of
+the 109 registry entries), per DEF-FIX charter
+`docs/def-fix-charters/p21-anchor/`. The box predicate
+`MainNonlinearTerminalV11_p18` above stays a plain predicate (it is no longer
+the anchor). -/
+def mainNonlinearTerminalV11_p18 : Prop := main_nonlinear_terminal_v11
 
 /-! ## Section A: WJSCPRO (Wjscpro.hl) -/
 

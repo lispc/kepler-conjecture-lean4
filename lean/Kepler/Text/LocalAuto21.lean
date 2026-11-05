@@ -86,8 +86,9 @@ ENCODING NOTES
     `scs_generic` ↔ `scsGeneric`, `scs_diag` ↔ `scsDiag`, `psort` ↔ `psort`
     (LocalAuto1). `BBprime_v39 s v` ↔ `v ∈ BBprimeV39 s`.
   - `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop) ↔
-    `mainNonlinearTerminalV11_p21 := ∀ y, MainNonlinearTerminalV11 y`
-    (anchor below; twin of LocalAuto18's `_p18` rendering). NEEDS: merge.
+    `mainNonlinearTerminalV11_p21 := main_nonlinear_terminal_v11` (alias of the
+    `LocalAuto1` 109-entry registry conjunction; twin of LocalAuto18's `_p18`;
+    DEF-FIX charter `docs/def-fix-charters/p21-anchor/`).
   - The HOL source's `let assumptions = ...` (CUXVZOZ.hl:2391) is a term
     abbreviation, not a theorem — not ported. The `//`-commented azim
     assumption inside `deformation_BBs` is dropped as in the source.
@@ -134,10 +135,12 @@ def MainNonlinearTerminalV11_p21 (y : Fin 6 → ℝ) : Prop :=
     cstab ≤ y 3 ∧ y 3 ≤ 3.915 ∧
     y 4 = 2 ∧ y 5 = 2
 
-/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop); rendered
-as the closed conjunction over the `MainNonlinearTerminalV11_p21` anchor box.
-Twin of LocalAuto18's `mainNonlinearTerminalV11_p18`. NEEDS: merge. -/
-def mainNonlinearTerminalV11_p21 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p21 y
+/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop): **alias of
+`LocalAuto1.main_nonlinear_terminal_v11`** (the closed conjunction of the 109
+registry entries), per DEF-FIX charter `docs/def-fix-charters/p21-anchor/`.
+The box predicate `MainNonlinearTerminalV11_p21` above stays a plain predicate
+(it is no longer the anchor); twin of LocalAuto18's `mainNonlinearTerminalV11_p18`. -/
+def mainNonlinearTerminalV11_p21 : Prop := main_nonlinear_terminal_v11
 
 /-! ## Section A: PQCSXWG simplex completion kit -/
 

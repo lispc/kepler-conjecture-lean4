@@ -1,0 +1,590 @@
+^D/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:158:34: warning: Variable name `d` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:345:6: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:349:6: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:428:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:436:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:471:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:486:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:508:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:531:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:552:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:614:8: warning: This simp argument is unused:
+  Complex.I_re
+
+Hint: Omit it from the simp argument list.
+  simp only [Complex.ofReal_re, Complex.mul_re, Complex.ofReal_im, C̵o̵m̵p̵l̵e̵x̵.̵I̵_̵r̵e̵,̵ ̵Complex.I_im, mul_zero,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲sub_zero] at h11
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:614:22: warning: This simp argument is unused:
+  Complex.I_im
+
+Hint: Omit it from the simp argument list.
+  simp only [Complex.ofReal_re, Complex.mul_re, Complex.ofReal_im, Complex.I_re, C̵o̵m̵p̵l̵e̵x̵.̵I̵_̵i̵m̵,̵ ̵mul_zero,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲sub_zero] at h11
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:1381:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:1392:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:1441:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:1457:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:1482:8: warning: This simp argument is unused:
+  Finset.mem_range
+
+Hint: Omit it from the simp argument list.
+  simp ̵[̵F̵i̵n̵s̵e̵t̵.̵m̵e̵m̵_̵r̵a̵n̵g̵e̵]̵
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2194:14: warning: `Finset.filter_card_add_filter_neg_card_eq_card` has been deprecated: Use `Finset.card_filter_add_card_filter_not` instead
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2203:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2522:56: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2532:56: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2566:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2575:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2584:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2593:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2619:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2628:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2637:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2646:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2672:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2681:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2690:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2699:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2725:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2734:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2743:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2752:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2778:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2778:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2787:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2787:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2796:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2796:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2805:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2805:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2831:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2831:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2840:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2840:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2849:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2849:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2858:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2858:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2884:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2884:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2893:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2893:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2902:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2902:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2911:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2911:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2937:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2937:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2946:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2946:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2955:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2955:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2964:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2964:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2990:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2990:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2999:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:2999:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3008:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3008:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3017:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3017:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq02, la18slice_sing_ne02, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3043:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3043:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3052:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3052:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3061:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3061:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3070:12: warning: This simp argument is unused:
+  csAdj
+
+Hint: Omit it from the simp argument list.
+  simp [̵c̵s̵A̵d̵j̵,̵ ̵f̵u̵n̵l̵i̵s̵t̵V̵3̵9̵,̵[̲f̲u̲n̲l̲i̲s̲t̲V̲3̲9̲,̲ psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲Set.mem_insert_iff, Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3070:91: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [csAdj, funlistV39, psort, assocdV39, la18slice_pair_eq03, la18slice_sing_ne03, ̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵
+          Set.mem_singleton_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3238:4: warning: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto18.lean:3241:4: warning: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+'Kepler.Text.SCS_5I1_SLICE_02_p18' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Kepler.Text.SCS_5I2_SLICE_02_p18' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Kepler.Text.SCS_5M1_SLICE_02_p18' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Kepler.Text.SCS_5M1_SLICE_03_p18' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Kepler.Text.SCS_5M1_SLICE_24_p18' depends on axioms: [propext, Classical.choice, Quot.sound]

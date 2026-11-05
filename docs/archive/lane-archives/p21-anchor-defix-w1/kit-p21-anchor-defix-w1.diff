@@ -1,0 +1,274 @@
+diff --git a/lean/Kepler/Text/LocalAuto18.lean b/lean/Kepler/Text/LocalAuto18.lean
+index 51ee1117..523176e3 100644
+--- a/lean/Kepler/Text/LocalAuto18.lean
++++ b/lean/Kepler/Text/LocalAuto18.lean
+@@ -91,7 +91,9 @@ ENCODING NOTES
+     as an explicit `V3 → ℝ` parameter of the statement. NEEDS: locate the
+     HOL def at merge.
+   - `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop) ↔
+-    `mainNonlinearTerminalV11_p18 := ∀ y, MainNonlinearTerminalV11 y`.
++    `mainNonlinearTerminalV11_p18 := main_nonlinear_terminal_v11` (alias of the
++    `LocalAuto1` 109-entry registry conjunction; DEF-FIX charter
++    `docs/def-fix-charters/p21-anchor/`).
+   - No `native_decide` anywhere; `sorry` bodies carry `-- DISCHARGES:`
+     markers naming the missing HOL inputs.
+ -/
+@@ -201,9 +203,13 @@ def MainNonlinearTerminalV11_p18 (y : Fin 6 → ℝ) : Prop :=
+     3.01 ≤ y 3 ∧ y 3 ≤ 3.915 ∧
+     y 4 = 2 ∧ y 5 = 2
+ 
+-/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37) as a bare Prop;
+-opaque in scripts/local (164 uses). -/
+-def mainNonlinearTerminalV11_p18 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p18 y
++/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37) as a bare Prop:
++**alias of `LocalAuto1.main_nonlinear_terminal_v11`** (the closed conjunction of
++the 109 registry entries), per DEF-FIX charter
++`docs/def-fix-charters/p21-anchor/`. The box predicate
++`MainNonlinearTerminalV11_p18` above stays a plain predicate (it is no longer
++the anchor). -/
++def mainNonlinearTerminalV11_p18 : Prop := main_nonlinear_terminal_v11
+ 
+ /-! ## Section A: WJSCPRO (Wjscpro.hl) -/
+ 
+diff --git a/lean/Kepler/Text/LocalAuto21.lean b/lean/Kepler/Text/LocalAuto21.lean
+index 69e455b8..a1eac705 100644
+--- a/lean/Kepler/Text/LocalAuto21.lean
++++ b/lean/Kepler/Text/LocalAuto21.lean
+@@ -86,8 +86,9 @@ ENCODING NOTES
+     `scs_generic` ↔ `scsGeneric`, `scs_diag` ↔ `scsDiag`, `psort` ↔ `psort`
+     (LocalAuto1). `BBprime_v39 s v` ↔ `v ∈ BBprimeV39 s`.
+   - `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop) ↔
+-    `mainNonlinearTerminalV11_p21 := ∀ y, MainNonlinearTerminalV11 y`
+-    (anchor below; twin of LocalAuto18's `_p18` rendering). NEEDS: merge.
++    `mainNonlinearTerminalV11_p21 := main_nonlinear_terminal_v11` (alias of the
++    `LocalAuto1` 109-entry registry conjunction; twin of LocalAuto18's `_p18`;
++    DEF-FIX charter `docs/def-fix-charters/p21-anchor/`).
+   - The HOL source's `let assumptions = ...` (CUXVZOZ.hl:2391) is a term
+     abbreviation, not a theorem — not ported. The `//`-commented azim
+     assumption inside `deformation_BBs` is dropped as in the source.
+@@ -134,10 +135,12 @@ def MainNonlinearTerminalV11_p21 (y : Fin 6 → ℝ) : Prop :=
+     cstab ≤ y 3 ∧ y 3 ≤ 3.915 ∧
+     y 4 = 2 ∧ y 5 = 2
+ 
+-/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop); rendered
+-as the closed conjunction over the `MainNonlinearTerminalV11_p21` anchor box.
+-Twin of LocalAuto18's `mainNonlinearTerminalV11_p18`. NEEDS: merge. -/
+-def mainNonlinearTerminalV11_p21 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p21 y
++/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop): **alias of
++`LocalAuto1.main_nonlinear_terminal_v11`** (the closed conjunction of the 109
++registry entries), per DEF-FIX charter `docs/def-fix-charters/p21-anchor/`.
++The box predicate `MainNonlinearTerminalV11_p21` above stays a plain predicate
++(it is no longer the anchor); twin of LocalAuto18's `mainNonlinearTerminalV11_p18`. -/
++def mainNonlinearTerminalV11_p21 : Prop := main_nonlinear_terminal_v11
+ 
+ /-! ## Section A: PQCSXWG simplex completion kit -/
+ 
+diff --git a/docs/def-fix-charters/p21-anchor/README.md b/docs/def-fix-charters/p21-anchor/README.md
+new file mode 100644
+index 00000000..11c143f7
+--- /dev/null
++++ b/docs/def-fix-charters/p21-anchor/README.md
+@@ -0,0 +1,124 @@
++# DEF-FIX 章程：LA21/LA18 终端锚点重编码（2026-11-05，编排者拟；用户 2026-11-06 批准 R-fix）
++
++> 依据：`DECISIONS.md` R-fix 裁决（2026-11-05，commit `9acef227`）+ `la21-general482-recon-w1`
++> `EVIDENCE.md` §G（探针 `not_p21_anchor` 以标准三 axioms 证出 `¬ mainNonlinearTerminalV11_p21`）。
++> 用户裁决：**走根修定义（R-fix）**，不作 R-freeze / R-ex。闸模式 = `GATE_MODE=DEF-FIX`，
++> `DF_PATCH=` 本目录 `gate-<file>.md`（每个被改文件一份，闸门一次只核对一个 `$FILE` 的围栏）。
++
++## 0. 一句话
++
++Lean `mainNonlinearTerminalV11_p21` / `_p18` 把 HOL 的 109 条 `main_estimate` 合取
++错误地渲染成「所有 `Fin 6 → ℝ` 都落在终端盒里」的 `∀ y` 命题（`y ≡ 0` 即反例）；本修把
++两个 `def` 的体改成 `main_nonlinear_terminal_v11`（`LocalAuto1` 的 registry 合取），
++盒谓词 `MainNonlinearTerminalV11_p21` / `_p18` 原样保留为普通谓词。
++
++## 1. 对象与 HOL 锚
++
++- HOL 定义：`reference/flyspeck/text_formalization/local/terminal.hl:37`
++  `main_nonlinear_terminal_v11`（109 条 `Main_estimate` 的合取，
++  `end_itlist (curry mk_conj)` 构建）。
++- Lean 忠实渲染（canonical）：`lean/Kepler/Text/LocalAuto1.lean:2139`
++  `def main_nonlinear_terminal_v11 : Prop := ∀ id ∈ mainNonlinearTerminalV11Ids_t11, get_main_nonlinear id`；
++  registry 长度 = 109（`LocalAuto1.lean:2015` `mainNonlinearTerminalV11Ids_t11_length`）。
++- 冻结错误锚（本修对象，改动前）：
++  - `lean/Kepler/Text/LocalAuto21.lean:140` `def mainNonlinearTerminalV11_p21 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p21 y`
++  - `lean/Kepler/Text/LocalAuto18.lean:206` `def mainNonlinearTerminalV11_p18 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p18 y`
++- 语义差：HOL 的假设是「registry 的 109 条不等式全部成立」；旧编码是「盒谓词对
++  一切点成立」，后者对 `y ≡ 0` 即被 `2 ≤ y 0` 反驳（HOL 命题本身并不蕴含
++  `∀ y` 量化的盒约束；盒约束只在 `main_estimate` 的具体 `y` 站点上消费）。
++
++## 2. 改动范围（2 个声明 / 2 行定义体；另 2 处 docstring 说明）
++
++| 文件 | 声明 | 改行 | 性质 |
++|---|---|---|---|
++| `LocalAuto21.lean` | `mainNonlinearTerminalV11_p21` | 1 | ANCHOR：`∀ y, box y` → `main_nonlinear_terminal_v11`（别名） |
++| `LocalAuto18.lean` | `mainNonlinearTerminalV11_p18` | 1 | ANCHOR：同上（孪生） |
++
++- 盒谓词 `MainNonlinearTerminalV11_p21`（LA21:131）与 `MainNonlinearTerminalV11_p18`
++  （LA18:199）**原样保留**，降为普通谓词，不再是锚点。
++- 另改 2 处 docstring（LA21 ENCODING NOTES + 锚点前注释；LA18 同）说明别名关系并指向
++  本目录；**不改任何陈述（statement）**，不新增/删除 `sorry`，净 sorry = 0。
++- 零新 import：两个文件均已有 `import Kepler.Text.LocalAuto1`（LA21:98 / LA18:99 邻域）。
++
++### 2.1 逐文件 diff 围栏（与实际 `git diff` 逐字一致）
++
++`lean/Kepler/Text/LocalAuto21.lean`：
++
++```diff
++-    `mainNonlinearTerminalV11_p21 := ∀ y, MainNonlinearTerminalV11 y`
++-    (anchor below; twin of LocalAuto18's `_p18` rendering). NEEDS: merge.
+++    `mainNonlinearTerminalV11_p21 := main_nonlinear_terminal_v11` (alias of the
+++    `LocalAuto1` 109-entry registry conjunction; twin of LocalAuto18's `_p18`;
+++    DEF-FIX charter `docs/def-fix-charters/p21-anchor/`).
++-/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop); rendered
++-as the closed conjunction over the `MainNonlinearTerminalV11_p21` anchor box.
++-Twin of LocalAuto18's `mainNonlinearTerminalV11_p18`. NEEDS: merge. -/
++-def mainNonlinearTerminalV11_p21 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p21 y
+++/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop): **alias of
+++`LocalAuto1.main_nonlinear_terminal_v11`** (the closed conjunction of the 109
+++registry entries), per DEF-FIX charter `docs/def-fix-charters/p21-anchor/`.
+++The box predicate `MainNonlinearTerminalV11_p21` above stays a plain predicate
+++(it is no longer the anchor); twin of LocalAuto18's `mainNonlinearTerminalV11_p18`. -/
+++def mainNonlinearTerminalV11_p21 : Prop := main_nonlinear_terminal_v11
++```
++
++`lean/Kepler/Text/LocalAuto18.lean`：
++
++```diff
++-    `mainNonlinearTerminalV11_p18 := ∀ y, MainNonlinearTerminalV11 y`.
+++    `mainNonlinearTerminalV11_p18 := main_nonlinear_terminal_v11` (alias of the
+++    `LocalAuto1` 109-entry registry conjunction; DEF-FIX charter
+++    `docs/def-fix-charters/p21-anchor/`).
++-/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37) as a bare Prop;
++-opaque in scripts/local (164 uses). -/
++-def mainNonlinearTerminalV11_p18 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p18 y
+++/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37) as a bare Prop:
+++**alias of `LocalAuto1.main_nonlinear_terminal_v11`** (the closed conjunction of
+++the 109 registry entries), per DEF-FIX charter
+++`docs/def-fix-charters/p21-anchor/`. The box predicate
+++`MainNonlinearTerminalV11_p18` above stays a plain predicate (it is no longer
+++the anchor). -/
+++def mainNonlinearTerminalV11_p18 : Prop := main_nonlinear_terminal_v11
++```
++
++围栏按闸门 §2.1 的 `-`/`+` 行比对；两文件的围栏分别只出现在各自的
++`gate-LocalAuto18.md` / `gate-LocalAuto21.md` 中（闸门一次只核一个 `$FILE`）。
++
++## 3. 破坏面与验收
++
++- 全库引用测绘：两锚共 **28 处代码引用**（LA18 2 处签名、LA19 23 处签名、
++  LA21 3 处签名、LocalConcl `p21_anchor` 1 处），另 1 处文档提及（LA19:8/51 注释）。
++  逐处核验见 `BREAKAGE.md`（交付快照根下）。
++- **零处从盒子里取约束**：所有 `h : mainNonlinearTerminalV11_p21/_p18` 的
++  消费者要么体为 `sorry`（未使用 `h`），要么仅把 `h` 原样转交给下游定理
++  （`CUXVZOZ_p21`/`CJBDXXN_p21` → `general_482_deformation_p21`；
++  `terminal_hex_126/135_reduction_p19` → `terminal_hex_234_reduction_p19`）；
++  无 `h (fun i => …)`、`h y`、`h ⟨…⟩`、`h.1`/`h.2` 站点。**不需要改任何证明或陈述。**
++- 受影响文件按依赖序编译：`LocalAuto18` → `LocalAuto19` → `LocalAuto21`
++  →（import 链）`LocalConcl`；均 RC=0、零 error。
++- 旧命题消失验证：探针 `not_p21_anchor`（`h (fun _ => 0)` + `linarith`）改后在
++  `mainNonlinearTerminalV11_p21` 上**编译失败**（`h` 不再是 `Fin 6 → ℝ` 的函数），
++  证明旧 `∀ y` 命题已不存在；改前同一探针以标准三 axioms 通过。
++- `#print mainNonlinearTerminalV11_p21` / `#print mainNonlinearTerminalV11_p18`
++  均显示 `:= main_nonlinear_terminal_v11`。
++- 回退：本 patch 整体 `git revert` 一个 commit（或反向 `git apply` kit）。
++- 风险：`p21_anchor`（LocalConcl:1994）仍是 `sorry`，其债务从「假命题的 sorry」
++  变为「registry 合取的 sorry」；`main_nonlinear_terminal_v11` 本身未证明
++  （109 条 `mainEstimate_*` 是 T0/T1 债务），本修只纠正编码、不产生新证明义务。
++
++## 4. 逐文件闸门
++
++```sh
++cd lean
++GATE_MODE=DEF-FIX DF_PATCH=docs/def-fix-charters/p21-anchor/gate-LocalAuto18.md \
++  DF_ANCHORS="terminal.hl:37" DF_NAMES="mainNonlinearTerminalV11_p18" DF_SORRY_NET=0 \
++  LANE_FILES="Kepler/Text/LocalAuto16.lean,Kepler/Text/LocalAuto26.lean,Kepler/Text/LocalAuto18.lean,Kepler/Text/LocalAuto21.lean" \
++  bash scripts/auto_gate.sh Kepler/Text/LocalAuto18.lean mainNonlinearTerminalV11_p18
++
++GATE_MODE=DEF-FIX DF_PATCH=docs/def-fix-charters/p21-anchor/gate-LocalAuto21.md \
++  DF_ANCHORS="terminal.hl:37" DF_NAMES="mainNonlinearTerminalV11_p21" DF_SORRY_NET=0 \
++  LANE_FILES="Kepler/Text/LocalAuto16.lean,Kepler/Text/LocalAuto26.lean,Kepler/Text/LocalAuto18.lean,Kepler/Text/LocalAuto21.lean" \
++  bash scripts/auto_gate.sh Kepler/Text/LocalAuto21.lean mainNonlinearTerminalV11_p21
++```
++（`DF_PATCH` 按仓库根解析；`auto_gate.sh` 内部会补 `$REPO_ROOT/`。`LANE_FILES`
++按当轮实际脏文件补齐——并行车道在跑时须列入所有其 tracked 改动。）
+diff --git a/docs/def-fix-charters/p21-anchor/gate-LocalAuto18.md b/docs/def-fix-charters/p21-anchor/gate-LocalAuto18.md
+new file mode 100644
+index 00000000..fcc2ea43
+--- /dev/null
++++ b/docs/def-fix-charters/p21-anchor/gate-LocalAuto18.md
+@@ -0,0 +1,33 @@
++# DEF-FIX 闸门章程 · `LocalAuto18.lean`（LA18 终端锚点重编码）
++
++HOL 锚：`reference/flyspeck/text_formalization/local/terminal.hl:37`
++（`main_nonlinear_terminal_v11`，109 条 `Main_estimate` 的合取）。
++
++对象：`mainNonlinearTerminalV11_p18`（`LocalAuto18.lean:212`，改前 206）。
++只改定义体：`∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p18 y` →
++`main_nonlinear_terminal_v11`（`LocalAuto1.lean:2139` 的 registry 合取）。
++盒谓词 `MainNonlinearTerminalV11_p18`（LA18:199）原样保留，不是锚点。
++
++### 2.1 改动围栏
++
++```diff
++-    `mainNonlinearTerminalV11_p18 := ∀ y, MainNonlinearTerminalV11 y`.
+++    `mainNonlinearTerminalV11_p18 := main_nonlinear_terminal_v11` (alias of the
+++    `LocalAuto1` 109-entry registry conjunction; DEF-FIX charter
+++    `docs/def-fix-charters/p21-anchor/`).
++-/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37) as a bare Prop;
++-opaque in scripts/local (164 uses). -/
++-def mainNonlinearTerminalV11_p18 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p18 y
+++/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37) as a bare Prop:
+++**alias of `LocalAuto1.main_nonlinear_terminal_v11`** (the closed conjunction of
+++the 109 registry entries), per DEF-FIX charter
+++`docs/def-fix-charters/p21-anchor/`. The box predicate
+++`MainNonlinearTerminalV11_p18` above stays a plain predicate (it is no longer
+++the anchor). -/
+++def mainNonlinearTerminalV11_p18 : Prop := main_nonlinear_terminal_v11
++```
++
++### 2.2 白名单与范围外
++
++- `DF_NAMES="mainNonlinearTerminalV11_p18"`；`DF_SORRY_NET=0`。
++- 本文件其余行零改动；孪生 `LocalAuto21.lean` 见 `gate-LocalAuto21.md`。
+diff --git a/docs/def-fix-charters/p21-anchor/gate-LocalAuto21.md b/docs/def-fix-charters/p21-anchor/gate-LocalAuto21.md
+new file mode 100644
+index 00000000..552a9be1
+--- /dev/null
++++ b/docs/def-fix-charters/p21-anchor/gate-LocalAuto21.md
+@@ -0,0 +1,34 @@
++# DEF-FIX 闸门章程 · `LocalAuto21.lean`（LA21 终端锚点重编码）
++
++HOL 锚：`reference/flyspeck/text_formalization/local/terminal.hl:37`
++（`main_nonlinear_terminal_v11`，109 条 `Main_estimate` 的合取）。
++
++对象：`mainNonlinearTerminalV11_p21`（`LocalAuto21.lean:143`，改前 140）。
++只改定义体：`∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p21 y` →
++`main_nonlinear_terminal_v11`（`LocalAuto1.lean:2139` 的 registry 合取）。
++盒谓词 `MainNonlinearTerminalV11_p21`（LA21:131）原样保留，不是锚点。
++
++### 2.1 改动围栏
++
++```diff
++-    `mainNonlinearTerminalV11_p21 := ∀ y, MainNonlinearTerminalV11 y`
++-    (anchor below; twin of LocalAuto18's `_p18` rendering). NEEDS: merge.
+++    `mainNonlinearTerminalV11_p21 := main_nonlinear_terminal_v11` (alias of the
+++    `LocalAuto1` 109-entry registry conjunction; twin of LocalAuto18's `_p18`;
+++    DEF-FIX charter `docs/def-fix-charters/p21-anchor/`).
++-/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop); rendered
++-as the closed conjunction over the `MainNonlinearTerminalV11_p21` anchor box.
++-Twin of LocalAuto18's `mainNonlinearTerminalV11_p18`. NEEDS: merge. -/
++-def mainNonlinearTerminalV11_p21 : Prop := ∀ y : Fin 6 → ℝ, MainNonlinearTerminalV11_p21 y
+++/-- HOL `main_nonlinear_terminal_v11` (terminal.hl:37, bare Prop): **alias of
+++`LocalAuto1.main_nonlinear_terminal_v11`** (the closed conjunction of the 109
+++registry entries), per DEF-FIX charter `docs/def-fix-charters/p21-anchor/`.
+++The box predicate `MainNonlinearTerminalV11_p21` above stays a plain predicate
+++(it is no longer the anchor); twin of LocalAuto18's `mainNonlinearTerminalV11_p18`. -/
+++def mainNonlinearTerminalV11_p21 : Prop := main_nonlinear_terminal_v11
++```
++
++### 2.2 白名单与范围外
++
++- `DF_NAMES="mainNonlinearTerminalV11_p21"`；`DF_SORRY_NET=0`。
++- 本文件其余行零改动；孪生 `LocalAuto18.lean` 见 `gate-LocalAuto18.md`。

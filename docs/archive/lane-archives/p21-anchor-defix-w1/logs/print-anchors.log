@@ -1,0 +1,6 @@
+^Ddef Kepler.Text.mainNonlinearTerminalV11_p21 : Prop :=
+main_nonlinear_terminal_v11
+def Kepler.Text.mainNonlinearTerminalV11_p18 : Prop :=
+main_nonlinear_terminal_v11
+Kepler.Text.mainNonlinearTerminalV11_p21 : Prop
+Kepler.Text.mainNonlinearTerminalV11_p18 : Prop

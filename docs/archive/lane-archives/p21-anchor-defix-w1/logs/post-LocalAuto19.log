@@ -1,0 +1,234 @@
+^D/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:113:37: warning: Variable name `x4` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:113:40: warning: Variable name `x5` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:113:43: warning: Variable name `x6` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:135:34: warning: Variable name `x3` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:135:37: warning: Variable name `x4` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:135:40: warning: Variable name `x5` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:138:28: warning: Variable name `x1` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:138:40: warning: Variable name `x5` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:138:43: warning: Variable name `x6` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:141:31: warning: Variable name `x2` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:141:37: warning: Variable name `x4` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:141:43: warning: Variable name `x6` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:194:12: warning: Variable name `x3` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:194:15: warning: Variable name `x4` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:194:18: warning: Variable name `x5` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:199:9: warning: Variable name `x2` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:199:15: warning: Variable name `x4` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:199:21: warning: Variable name `x6` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:204:6: warning: Variable name `x1` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:204:18: warning: Variable name `x5` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:204:21: warning: Variable name `x6` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:235:5: warning: `lo` has been deprecated: Use `MonomialOrder.linearOrderSyn` instead
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:266:40: warning: Variable name `y1` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:266:52: warning: Variable name `y5` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:266:55: warning: Variable name `y6` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:275:46: warning: Variable name `y3` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:275:49: warning: Variable name `y4` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:275:52: warning: Variable name `y5` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:284:43: warning: Variable name `y2` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:284:49: warning: Variable name `y4` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:284:55: warning: Variable name `y6` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:295:65: warning: Variable name `b1` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:330:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:433:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:447:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:571:5: warning: Variable name `hd` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:617:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:741:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:822:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:835:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:923:5: warning: Variable name `hd` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:929:33: warning: This simp argument is unused:
+  zero_mul
+
+Hint: Omit it from the simp argument list.
+  simp only [sub_self, mul_zero, zero_m̵u̵l̵,̵ ̵z̵e̵r̵o̵_̵div, zero_add]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1077:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1090:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1099:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1109:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1118:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1127:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1137:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1148:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1159:5: warning: Variable name `hd` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1175:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1186:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1197:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1208:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1219:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1230:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1240:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1251:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1262:8: warning: declaration uses `sorry`
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1280:23: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1280:32: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1285:8: warning: declaration uses `sorry`
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1333:9: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1515:6: warning: 'rw [(delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2).2.1]' tactic does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1515:6: warning: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1529:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1536:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1599:8: warning: declaration uses `sorry`
+/Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/Kepler/Text/LocalAuto19.lean:1618:8: warning: declaration uses `sorry`
