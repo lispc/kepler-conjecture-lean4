@@ -8863,6 +8863,87 @@ private theorem p22w5_isBoundedC_scale (c : ℝ) (hc : 0 ≤ c) {P : Set ℂ}
     abs_of_nonneg hc]
   exact mul_le_mul_of_nonneg_left hz' hc
 
+/-! ### PA22 w6 assembly kit: bookkeeping for the `EUSOTYP_general` reduction
+
+Glue between the w5 affine-transfer kit and the planar `ℂ` statement
+`EUSOTYP_simple` (as consumed by `EUSOTYP_general`): the centred frame map
+`x ↦ F x - F u0`, its planar inverse `H z = F⁻¹ (pad z) + u0`, injectivity of
+`zOf e1 e2` on the plane orthogonal to `e3`, and the real-scaling identity for
+the first `dot2` argument.  All items are `private`, `p22w6_` prefix. -/
+
+/-- The centred frame map as a difference: `p22w5_aff F (-(F u0)) x = F (x - u0)`. -/
+private theorem p22w6_aff_apply (F : V3 ≃ₗᵢ[ℝ] V3) (u0 x : V3) :
+    p22w5_aff F (-(F u0)) x = F (x - u0) := by
+  rw [p22w5_aff, map_sub]
+  abel
+
+/-- The second frame coordinate is the `e3` dot product. -/
+private theorem p22w6_second_eq_dot {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (x : V3) :
+    (p22w5_F h x : Fin 3 → ℝ) 2 = x ⬝ᵥ e3 := by
+  rw [p22w5_F_apply_apply]
+  simp
+
+/-- `zOf e1 e2` of the inverse plane embedding of `z` is `z`. -/
+private theorem p22w6_zOf_F_symm_pad {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (z : ℂ) :
+    zOf e1 e2 ((p22w5_F h).symm (pad2d3dP22 z)) = z := by
+  have h1 : p22w5_F h ((p22w5_F h).symm (pad2d3dP22 z)) = pad2d3dP22 z :=
+    LinearIsometryEquiv.apply_symm_apply _ _
+  have h2 : dropout3P22 (p22w5_F h ((p22w5_F h).symm (pad2d3dP22 z))) = z := by
+    rw [h1, dropout_pad2d3d]
+  rwa [p22w5_dropout_F] at h2
+
+/-- The inverse plane embedding lands in the plane orthogonal to `e3`. -/
+private theorem p22w6_dot_F_symm_pad_e3 {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) (z : ℂ) :
+    ((p22w5_F h).symm (pad2d3dP22 z)) ⬝ᵥ e3 = 0 := by
+  have hFe3 : p22w5_F h e3 = p22w5_ez 2 := by simpa using p22w5_F_e h 2
+  have hrho : p22w5_rho (p22w5_ez 2) = 0 := by
+    refine Complex.ext ?_ ?_
+    · simp [p22w5_rho, p22w5_ez]
+    · simp [p22w5_rho, p22w5_ez]
+  have hz : (pad2d3dP22 z) ⬝ᵥ p22w5_ez 2 = 0 := by
+    rw [dotProduct_comm, p22w5_dot_pad, hrho]
+    simp [dot2]
+  calc ((p22w5_F h).symm (pad2d3dP22 z)) ⬝ᵥ e3
+      = e3 ⬝ᵥ ((p22w5_F h).symm (pad2d3dP22 z)) := dotProduct_comm _ _
+    _ = (p22w5_F h e3) ⬝ᵥ (pad2d3dP22 z) := p22w5_dot_symm (p22w5_F h) e3 (pad2d3dP22 z)
+    _ = (pad2d3dP22 z) ⬝ᵥ p22w5_ez 2 := by rw [hFe3, dotProduct_comm]
+    _ = 0 := hz
+
+/-- `zOf e1 e2` is injective on the plane orthogonal to `e3`. -/
+private theorem p22w6_zOf_inj {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) {x y : V3}
+    (hx : x ⬝ᵥ e3 = 0) (hy : y ⬝ᵥ e3 = 0) (hxy : zOf e1 e2 x = zOf e1 e2 y) : x = y := by
+  have h1 : x ⬝ᵥ e1 = y ⬝ᵥ e1 := by
+    have hc := congrArg Complex.re hxy
+    simpa [zOf] using hc
+  have h2 : x ⬝ᵥ e2 = y ⬝ᵥ e2 := by
+    have hc := congrArg Complex.im hxy
+    simpa [zOf] using hc
+  have h3 : (x - y) ⬝ᵥ e1 = 0 := by
+    rw [WithLp.ofLp_sub, sub_dotProduct, h1, sub_self]
+  have h4 : (x - y) ⬝ᵥ e2 = 0 := by
+    rw [WithLp.ofLp_sub, sub_dotProduct, h2, sub_self]
+  have h5 : (x - y) ⬝ᵥ e3 = 0 := by
+    rw [WithLp.ofLp_sub, sub_dotProduct, hx, hy]
+    simp
+  have hexp := on3_expand h (x - y)
+  rw [h3, h4, h5, zero_smul, zero_smul, zero_smul, add_zero, add_zero] at hexp
+  exact sub_eq_zero.mp hexp
+
+/-- `F⁻¹ (pad (zOf e1 e2 x)) = x` for `x` in the plane orthogonal to `e3`. -/
+private theorem p22w6_F_symm_pad_zOf {e1 e2 e3 : V3} (h : Orthonormal3 e1 e2 e3) {x : V3}
+    (hx : x ⬝ᵥ e3 = 0) : (p22w5_F h).symm (pad2d3dP22 (zOf e1 e2 x)) = x := by
+  refine p22w6_zOf_inj h (p22w6_dot_F_symm_pad_e3 h (zOf e1 e2 x)) hx ?_
+  exact p22w6_zOf_F_symm_pad h (zOf e1 e2 x)
+
+/-- Real scaling of the first argument of the planar dot product `dot2`. -/
+private theorem p22w6_dot2_smul_left (a z : ℂ) (c : ℝ) :
+    dot2 ((c : ℂ) * a) z = c * dot2 a z := by
+  rw [dot2_expand, dot2_expand]
+  have h1 : ((c : ℂ) * a).re = c * a.re := by simp
+  have h2 : ((c : ℂ) * a).im = c * a.im := by simp
+  rw [h1, h2]
+  ring
+
 /-- HOL `EUSOTYP_general` (counting_spheres.hl:2336). GIANT. -/
 theorem EUSOTYP_general (P A : Set V3) (n : ℕ) (s : Set (Set V3)) (r : ℝ)
     (u0 u1 u2 : V3) (hP : polyhedron P) (hb : Bornology.IsBounded P) (hPA : P ⊆ A)
@@ -8887,7 +8968,283 @@ theorem EUSOTYP_general (P A : Set V3) (n : ℕ) (s : Set (Set V3)) (r : ℝ)
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → g i ≠ u0) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ≠ u0) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → azim u0 u1 (g i) (g (i + 1)) < Real.pi) := by
-  sorry
+  classical
+  -- ## 1. Orthonormal frame with third axis along `u1 - u0`
+  obtain ⟨e1, e2, e3, hON, hax0⟩ := exists_on3_eq_smul (u1 - u0) (sub_ne_zero.mpr hu1)
+  have hax : u1 - u0 = dist u1 u0 • e3 := by rw [dist_eq_norm]; exact hax0
+  have hdpos : 0 < dist u1 u0 := dist_pos.mpr hu1
+  have hdne : dist u1 u0 ≠ 0 := ne_of_gt hdpos
+  -- ## 2. `A` is the plane orthogonal to `e3`
+  have hax' : (u1 : Fin 3 → ℝ) - (u0 : Fin 3 → ℝ) = dist u1 u0 • (e3 : Fin 3 → ℝ) := by
+    have h := congrArg (fun x : V3 => (x : Fin 3 → ℝ)) hax
+    simpa using h
+  have hdot_e3 : ∀ v : V3, v ∈ A → (v - u0) ⬝ᵥ e3 = 0 := by
+    intro v hv
+    have h1 : (v - u0) ⬝ᵥ (u1 - u0) = 0 := (hA v).mp hv
+    rw [hax', dotProduct_smul, smul_eq_mul] at h1
+    exact (mul_eq_zero.mp h1).resolve_left hdne
+  have hP_plane : ∀ v : V3, v ∈ P → (v - u0) ⬝ᵥ e3 = 0 :=
+    fun v hv => hdot_e3 v (hPA hv)
+  -- ## 3. The centred frame map `G x = F x - F u0`
+  set F : V3 ≃ₗᵢ[ℝ] V3 := p22w5_F hON with hF
+  set t : V3 := -(F u0) with ht
+  set G : V3 → V3 := p22w5_aff F t with hG
+  have hG_apply : ∀ x : V3, G x = F x - F u0 := by
+    intro x
+    rw [hG, ht, p22w5_aff]
+    abel
+  have hdrop_G : ∀ x : V3, dropout3P22 (G x) = zOf e1 e2 (x - u0) := by
+    intro x
+    have h1 : G x = F (x - u0) := by rw [hG_apply]; exact (map_sub F x u0).symm
+    rw [h1, hF]
+    exact p22w5_dropout_F hON (x - u0)
+  have hG_second : ∀ v : V3, v ∈ A → (G v : Fin 3 → ℝ) 2 = 0 := by
+    intro v hv
+    have h1 : G v = F (v - u0) := by rw [hG_apply]; exact (map_sub F v u0).symm
+    rw [h1, hF, p22w6_second_eq_dot hON (v - u0)]
+    exact hdot_e3 v hv
+  have hGplane : ∀ u ∈ G '' P, (u : Fin 3 → ℝ) 2 = 0 := by
+    rintro u ⟨v, hv, rfl⟩
+    exact hG_second v (hPA hv)
+  -- ## 4. Plane projections `P'` (dropped) and `P''` (radius normalised)
+  set c : ℝ := r⁻¹ with hcdef
+  have hcpos : 0 < c := inv_pos.mpr hr
+  have hrc : (r : ℂ) * (c : ℂ) = 1 := by
+    rw [hcdef, ← Complex.ofReal_mul, mul_inv_cancel₀ (ne_of_gt hr), Complex.ofReal_one]
+  set P' : Set ℂ := dropout3P22 '' (G '' P) with hP'def
+  set P'' : Set ℂ := (fun z => (c : ℂ) * z) '' P' with hP''def
+  have hpolyG : polyhedron (G '' P) := by
+    rw [hG]
+    exact p22w5_polyhedron_image F t hP
+  have hpolyC' : polyhedronC P' := by
+    rw [hP'def]
+    exact p22w5_polyhedronC_of_polyhedron_plane hGplane hpolyG
+  have hpolyC'' : polyhedronC P'' := by
+    rw [hP''def]
+    exact p22w5_polyhedronC_scale c hcpos hpolyC'
+  -- ## 5. Boundedness
+  have hbG : Bornology.IsBounded (G '' P) := by
+    rw [hG]
+    exact p22w5_isBounded_image F t hb
+  have hbP' : Bornology.IsBounded P' := by
+    obtain ⟨R, hR⟩ := (Metric.isBounded_iff_subset_closedBall (0 : V3)).1 hbG
+    refine (Metric.isBounded_iff_subset_closedBall (0 : ℂ)).2 ⟨R, ?_⟩
+    rintro z ⟨u, hu, rfl⟩
+    have hzu : ‖dropout3P22 u‖ = ‖u‖ := by
+      rw [← p22w5_norm_pad (dropout3P22 u), pad2d3d_dropout u (hGplane u hu)]
+    have huR : ‖u‖ ≤ R := by
+      have h := hR hu
+      rwa [Metric.mem_closedBall, dist_zero_right] at h
+    rw [Metric.mem_closedBall, dist_zero_right, hzu]
+    exact huR
+  have hbP'' : Bornology.IsBounded P'' := by
+    rw [hP''def]
+    exact p22w5_isBoundedC_scale c hcpos.le hbP'
+  -- ## 6. Facet families have the same cardinality
+  have hsizeP : ({f : Set V3 | FacetOf f P}).Finite ∧
+      ({f : Set V3 | FacetOf f P}).ncard = n := by
+    rw [hs] at hsize
+    exact hsize
+  have hnG : ({f : Set V3 | FacetOf f (G '' P)}).Finite ∧
+      ({f : Set V3 | FacetOf f (G '' P)}).ncard = n := by
+    rw [hG]
+    exact p22w5_facet_ncard F t hsizeP
+  have hn' : ({f : Set ℂ | facetOfC f P'}).Finite ∧
+      ({f : Set ℂ | facetOfC f P'}).ncard = n := by
+    rw [hP'def]
+    exact pad2d3d_facet (G '' P) n hpolyG hGplane hnG
+  have hn'' : ({f : Set ℂ | facetOfC f P''}).Finite ∧
+      ({f : Set ℂ | facetOfC f P''}).ncard = n := by
+    rw [hP''def]
+    exact p22w5_facet_ncardC_scale c hcpos hn'
+  -- ## 7. The reference ray `u2` in planar coordinates
+  set u2' : ℂ := dropout3P22 (G u2) with hu2'def
+  have hu2'_ne : u2' ≠ 0 := by
+    rw [hu2'def, hdrop_G]
+    exact p22w5_zOf_ne_zero_of_plane hON hax hu1 hu2 ((hA u2).mp hu2A)
+  set u2'' : ℂ := (c : ℂ) * u2' with hu2''def
+  have hu2''_ne : u2'' ≠ 0 := by
+    rw [hu2''def]
+    exact mul_ne_zero (Complex.ofReal_ne_zero.mpr (ne_of_gt hcpos)) hu2'_ne
+  have hru2'' : (r : ℂ) * u2'' = u2' := by
+    rw [hu2''def, hcdef, ← mul_assoc, ← Complex.ofReal_mul, mul_inv_cancel₀ (ne_of_gt hr),
+      Complex.ofReal_one, one_mul]
+  -- ## 8. Radius hypothesis after normalisation
+  have hH_axis : ∀ z : ℂ, (F.symm (pad2d3dP22 z)) ⬝ᵥ (u1 - u0) = 0 := by
+    intro z
+    rw [hax', dotProduct_smul, smul_eq_mul, hF, p22w6_dot_F_symm_pad_e3 hON z, mul_zero]
+  have hA_H : ∀ z : ℂ, (F.symm (pad2d3dP22 z) + u0) ∈ A := by
+    intro z
+    rw [hA]
+    have h1 : (F.symm (pad2d3dP22 z) + u0) - u0 = F.symm (pad2d3dP22 z) := by abel
+    rw [h1]
+    exact hH_axis z
+  have hrad'' : ∀ p2 : ℂ, ‖p2‖ < 1 → p2 ∈ P'' := by
+    intro p2 hp2
+    have hwlt : ‖(r : ℂ) * p2‖ < r := by
+      rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_pos hr]
+      nlinarith
+    have hmemP : (F.symm (pad2d3dP22 ((r : ℂ) * p2)) + u0) ∈ P := by
+      refine hrad _ ?_ (hA_H _)
+      rw [dist_eq_norm]
+      have hsub : (F.symm (pad2d3dP22 ((r : ℂ) * p2)) + u0) - u0
+          = F.symm (pad2d3dP22 ((r : ℂ) * p2)) := by abel
+      rw [hsub, hF, LinearIsometryEquiv.norm_map, p22w5_norm_pad]
+      exact hwlt
+    have hmem' : (r : ℂ) * p2 ∈ P' := by
+      rw [hP'def]
+      refine ⟨pad2d3dP22 ((r : ℂ) * p2), ?_, dropout_pad2d3d _⟩
+      refine ⟨F.symm (pad2d3dP22 ((r : ℂ) * p2)) + u0, hmemP, ?_⟩
+      rw [hG_apply, map_add, LinearIsometryEquiv.apply_symm_apply]
+      module
+    rw [hP''def]
+    refine ⟨(r : ℂ) * p2, hmem', ?_⟩
+    change (c : ℂ) * ((r : ℂ) * p2) = p2
+    rw [hcdef, ← mul_assoc, ← Complex.ofReal_mul, inv_mul_cancel₀ (ne_of_gt hr),
+      Complex.ofReal_one, one_mul]
+  -- ## 9. Apply `EUSOTYP_simple` at radius `1`
+  obtain ⟨g', h', hg'P, hg'cyc, hg'ord, hh'P, hh'ang, hh'dot, hn1, hg'nz, hh'nz, hg'lt⟩ :=
+    EUSOTYP_simple P'' {f : Set ℂ | facetOfC f P''} 1 n u2'' hpolyC'' hbP'' rfl hn''
+      (by norm_num) hu2''_ne (by simpa using hrad'')
+  -- ## 10. The planar inverse `H` and the round trip identities
+  set H : ℂ → V3 := fun z => F.symm (pad2d3dP22 z) + u0 with hHdef
+  have hGH : ∀ z : ℂ, G (H z) = pad2d3dP22 z := by
+    intro z
+    rw [hHdef, hG_apply, map_add, LinearIsometryEquiv.apply_symm_apply]
+    module
+  have hHG : ∀ v : V3, v ∈ A → H (dropout3P22 (G v)) = v := by
+    intro v hv
+    rw [hHdef, hF, hdrop_G v]
+    simp only []
+    rw [p22w6_F_symm_pad_zOf hON (hdot_e3 v hv)]
+    module
+  have hH_sub : ∀ z : ℂ, H z - u0 = F.symm (pad2d3dP22 z) := by
+    intro z
+    rw [hHdef]
+    module
+  have hHP : ∀ z : ℂ, z ∈ P' → H z ∈ P := by
+    intro z hz
+    rw [hP'def] at hz
+    obtain ⟨u, hu, rfl⟩ := hz
+    obtain ⟨v, hv, rfl⟩ := hu
+    rw [hHG v (hPA hv)]
+    exact hv
+  have hscale_mem : ∀ z : ℂ, z ∈ P'' → (r : ℂ) * z ∈ P' := by
+    intro z hz
+    rw [hP''def] at hz
+    obtain ⟨w, hw, rfl⟩ := hz
+    rwa [← mul_assoc, hrc, one_mul]
+  have hu2_H : H ((r : ℂ) * u2'') = u2 := by
+    rw [hru2'', hu2'def]
+    exact hHG u2 hu2A
+  -- ## 11. The `azim` ↔ `holArg` bridge on the scaled points
+  have haz : ∀ a b : ℂ, a ≠ 0 → b ≠ 0 →
+      azim u0 u1 (H ((r : ℂ) * a)) (H ((r : ℂ) * b)) = holArg (b / a) := by
+    intro a b ha hb
+    have h1 : dropout3P22 (p22w5_aff F t (H ((r : ℂ) * a))) ≠ 0 := by
+      rw [← hG, hGH, dropout_pad2d3d]
+      exact mul_ne_zero (Complex.ofReal_ne_zero.mpr (ne_of_gt hr)) ha
+    have h2 : dropout3P22 (p22w5_aff F t (H ((r : ℂ) * b))) ≠ 0 := by
+      rw [← hG, hGH, dropout_pad2d3d]
+      exact mul_ne_zero (Complex.ofReal_ne_zero.mpr (ne_of_gt hr)) hb
+    have hbr := p22w5_azim_eq_holArg_dropout hON hax hu1 h1 h2
+    rw [← hF, ← ht, ← hG] at hbr
+    simp only [hGH, dropout_pad2d3d] at hbr
+    rw [hbr, mul_div_mul_left b a (Complex.ofReal_ne_zero.mpr (ne_of_gt hr))]
+  -- ## 12. Index bookkeeping at the wrap-around point `n + 1`
+  have hg'_succ_nz : ∀ i : ℕ, i ∈ Finset.Icc 1 n → g' (i + 1) ≠ 0 := by
+    intro i hi
+    rw [Finset.mem_Icc] at hi
+    by_cases hlt : i + 1 ≤ n
+    · exact hg'nz (i + 1) (Finset.mem_Icc.mpr ⟨by omega, hlt⟩)
+    · have hin : i = n := by omega
+      rw [hin, hg'cyc]
+      exact hg'nz 1 (Finset.mem_Icc.mpr ⟨le_refl 1, by omega⟩)
+  have hcos_ne : ∀ i : ℕ, i ∈ Finset.Icc 1 n →
+      Real.cos (holArg (g' (i + 1) / g' i) / 2) ≠ 0 := by
+    intro i hi hc
+    have hn := (hh'P i hi).2
+    rw [hc] at hn
+    simp only [div_zero] at hn
+    exact hh'nz i hi (norm_eq_zero.mp hn)
+  -- ## 13. Norm/dot/nonzero bookkeeping for the scaled points
+  have hdist_g : ∀ i : ℕ, i ∈ Finset.Icc 1 n → dist (H ((r : ℂ) * g' i)) u0 = r := by
+    intro i hi
+    rw [dist_eq_norm, hH_sub, hF, LinearIsometryEquiv.norm_map, p22w5_norm_pad, norm_mul,
+      Complex.norm_real, Real.norm_eq_abs, abs_of_pos hr, (hg'P i hi).2]
+    norm_num
+  have hnorm_h : ∀ i : ℕ, i ∈ Finset.Icc 1 n →
+      ‖H ((r : ℂ) * h' i) - u0‖
+        = r / Real.cos (azim u0 u1 (H ((r : ℂ) * g' i)) (H ((r : ℂ) * g' (i + 1))) / 2) := by
+    intro i hi
+    have hgg := haz (g' i) (g' (i + 1)) (hg'nz i hi) (hg'_succ_nz i hi)
+    rw [hH_sub, hF, LinearIsometryEquiv.norm_map, p22w5_norm_pad, norm_mul, Complex.norm_real,
+      Real.norm_eq_abs, abs_of_pos hr, (hh'P i hi).2, hgg]
+    simp only [Nat.cast_one, one_div, div_eq_mul_inv]
+    ring
+  have hdot_g : ∀ i : ℕ, i ∈ Finset.Icc 1 n →
+      (H ((r : ℂ) * g' i) - u0) ⬝ᵥ (H ((r : ℂ) * h' i) - H ((r : ℂ) * g' i)) = 0 := by
+    intro i hi
+    have hdiff : H ((r : ℂ) * h' i) - H ((r : ℂ) * g' i)
+        = F.symm (pad2d3dP22 ((r : ℂ) * h' i))
+          - F.symm (pad2d3dP22 ((r : ℂ) * g' i)) := by
+      rw [← hH_sub, ← hH_sub]
+      module
+    rw [hH_sub, ← WithLp.ofLp_sub, hdiff, ← map_sub, pad2d3d_SUB, hF, p22w5_aff_dot,
+      pad2d3d_dot_v, ← mul_sub, p22w5_mul_dot2C, p22w6_dot2_smul_left, (hh'dot i hi).1]
+    ring
+  have hdot_g' : ∀ i : ℕ, i ∈ Finset.Icc 1 n →
+      (H ((r : ℂ) * g' (i + 1)) - u0)
+        ⬝ᵥ (H ((r : ℂ) * h' i) - H ((r : ℂ) * g' (i + 1))) = 0 := by
+    intro i hi
+    have hdiff : H ((r : ℂ) * h' i) - H ((r : ℂ) * g' (i + 1))
+        = F.symm (pad2d3dP22 ((r : ℂ) * h' i))
+          - F.symm (pad2d3dP22 ((r : ℂ) * g' (i + 1))) := by
+      rw [← hH_sub, ← hH_sub]
+      module
+    rw [hH_sub, ← WithLp.ofLp_sub, hdiff, ← map_sub, pad2d3d_SUB, hF, p22w5_aff_dot,
+      pad2d3d_dot_v, ← mul_sub, p22w5_mul_dot2C, p22w6_dot2_smul_left, (hh'dot i hi).2]
+    ring
+  have hg_ne : ∀ i : ℕ, i ∈ Finset.Icc 1 n → H ((r : ℂ) * g' i) ≠ u0 := by
+    intro i hi h0
+    have h1 := hdist_g i hi
+    rw [h0, dist_self] at h1
+    linarith
+  have hh_ne : ∀ i : ℕ, i ∈ Finset.Icc 1 n → H ((r : ℂ) * h' i) ≠ u0 := by
+    intro i hi h0
+    have h1 := hnorm_h i hi
+    rw [h0, sub_self, norm_zero] at h1
+    rw [haz (g' i) (g' (i + 1)) (hg'nz i hi) (hg'_succ_nz i hi)] at h1
+    exact (div_ne_zero (ne_of_gt hr) (hcos_ne i hi)) h1.symm
+  -- ## 14. Assembly of the ten conclusions
+  refine ⟨fun i => H ((r : ℂ) * g' i), fun i => H ((r : ℂ) * h' i),
+    ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · intro i hi
+    exact ⟨hHP _ (hscale_mem (g' i) (hg'P i hi).1), hdist_g i hi⟩
+  · show H ((r : ℂ) * g' (n + 1)) = H ((r : ℂ) * g' 1)
+    rw [hg'cyc]
+  · intro i hi
+    exact ⟨hHP _ (hscale_mem (h' i) (hh'P i hi).1), hnorm_h i hi⟩
+  · intro j k hj hk hjk
+    have h1 := haz u2'' (g' j) hu2''_ne (hg'nz j hj)
+    have h2 := haz u2'' (g' k) hu2''_ne (hg'nz k hk)
+    rw [hu2_H] at h1 h2
+    rw [h1, h2]
+    exact hg'ord j k hj hk hjk
+  · intro i hi
+    have hgg := haz (g' i) (g' (i + 1)) (hg'nz i hi) (hg'_succ_nz i hi)
+    have hgh := haz (g' i) (h' i) (hg'nz i hi) (hh'nz i hi)
+    have hhg := haz (h' i) (g' (i + 1)) (hh'nz i hi) (hg'_succ_nz i hi)
+    exact ⟨by rw [hgh, hgg]; exact (hh'ang i hi).1,
+      by rw [hhg, hgg]; exact (hh'ang i hi).2⟩
+  · intro i hi
+    exact ⟨hdot_g i hi, hdot_g' i hi⟩
+  · exact hn1
+  · exact hg_ne
+  · exact hh_ne
+  · intro i hi
+    rw [haz (g' i) (g' (i + 1)) (hg'nz i hi) (hg'_succ_nz i hi)]
+    exact hg'lt i hi
 
 /-! ### azim-order toolkit (local helpers for the wedge/sum block below)
 
