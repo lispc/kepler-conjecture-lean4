@@ -1831,6 +1831,69 @@ theorem RELATIVE_INTERIOR_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) :
         (s ∩ {y : V3 | a i ⬝ᵥ y = b i})).2 ⟨i, hiF, rfl⟩
     exact hxnof' _ hfacet ⟨hxS, hieq⟩
 
+/-! ## #9-ALT RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT_ALT
+(HOL `counting_spheres.hl:5518`; consumed by `EXISTS_M_POLYHEDRON` #10).
+Placed after the #14 kit only to reuse its private `affineSpan_subset_hyperplane`
+(`:1496`); this is a pure addition after `RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT`
+(`:874`), whose statement and proof are untouched. -/
+
+/-- HOL `RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT_ALT` (counting_spheres.hl:5518):
+`p` is tight only at the constraint `v0` and strictly inside all the other
+constraints of the finite family `h`; then `p` lies in the relative interior of
+`P ∩ {x | a v0 ⬝ᵥ x = b v0}`. Unlike `RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT`,
+no irredundancy hypothesis is needed: the proof takes the ball radius from the
+(minimum of the) positive margins of the finitely many strict inequalities. -/
+theorem RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT_ALT {V : Set V3} {P : Set V3}
+    (h : V3 → Set V3) (a : V3 → V3) (b : V3 → ℝ) (p v0 : V3)
+    (hV : V.Finite)
+    (hh : ∀ v ∈ V, h v = {x : V3 | a v ⬝ᵥ x ≤ b v})
+    (hP : P = ⋂ v ∈ V, h v)
+    (hv0 : v0 ∈ V)
+    (hpv : a v0 ⬝ᵥ p = b v0)
+    (hrest : ∀ w ∈ V, w ≠ v0 → a w ⬝ᵥ p < b w) :
+    p ∈ intrinsicInterior ℝ (P ∩ {x : V3 | a v0 ⬝ᵥ x = b v0}) := by
+  classical
+  haveI : Finite V := hV
+  set S : Set V3 := P ∩ {x : V3 | a v0 ⬝ᵥ x = b v0} with hS
+  -- `p` itself lies in the slice
+  have hpP : p ∈ P := by
+    rw [hP]
+    refine Set.mem_iInter₂.2 fun w hw => ?_
+    rw [hh w hw]
+    by_cases hwv : w = v0
+    · subst hwv
+      exact le_of_eq hpv
+    · exact le_of_lt (hrest w hw hwv)
+  have hpS : p ∈ S := ⟨hpP, hpv⟩
+  -- the strict constraints define an open neighbourhood of `p`
+  set O : Set V3 :=
+    ⋂ w : {w : ↥V // w.1 ≠ v0}, {x : V3 | a w.1.1 ⬝ᵥ x < b w.1.1} with hO
+  have hOopen : IsOpen O := by
+    rw [hO]
+    exact isOpen_iInter_of_finite fun w => isOpen_lt
+      (continuous_const.dotProduct (PiLp.continuous_ofLp 2 _)) continuous_const
+  have hpO : p ∈ O := by
+    rw [hO, Set.mem_iInter]
+    intro w
+    exact hrest w.1.1 w.1.2 w.2
+  obtain ⟨δ, hδ0, hballδ⟩ := Metric.isOpen_iff.1 hOopen p hpO
+  refine mem_rint_iff.2 ⟨hpS, δ, hδ0, fun x hx => ?_⟩
+  obtain ⟨hxball, hxaff⟩ := hx
+  -- the affine hull of the slice stays in the tight hyperplane of `v0`
+  have hxH : a v0 ⬝ᵥ x = b v0 :=
+    affineSpan_subset_hyperplane (t := S) (fun y hy => hy.2) p hpv hxaff
+  refine ⟨?_, hxH⟩
+  rw [hP]
+  refine Set.mem_iInter₂.2 fun w hw => ?_
+  rw [hh w hw]
+  by_cases hwv : w = v0
+  · subst hwv
+    exact le_of_eq hxH
+  · have hxO : x ∈ O := hballδ (Metric.mem_ball.2 hxball)
+    rw [hO] at hxO
+    have hxlt : a w ⬝ᵥ x < b w := Set.mem_iInter.1 hxO ⟨⟨w, hw⟩, hwv⟩
+    exact Set.mem_setOf.2 (le_of_lt hxlt)
+
 /-! ## #18 FACE_OF_POLYHEDRON_SUBSET_FACET (S3) -/
 
 /-- HOL `FACE_OF_POLYHEDRON_SUBSET_FACET` (polytope.ml:70): every nonempty
