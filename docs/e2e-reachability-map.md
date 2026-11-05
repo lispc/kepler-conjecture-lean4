@@ -407,6 +407,40 @@
   2,079,707」的文档都是旧账。
 
 
+### 基线 P：十六笔落库 @ `f5e988c8`（2026-11-06）
+
+> **测量时点**：`04:10` 用 `lake env lean -o` 重建 `Kepler.Assembly.olean`
+> （**RC=0 / 0 error / `declaration uses sorry` 64**，40.7 s；岛协议的
+> `/tmp/lfainteg/asm_check/leanpath.txt` 已被系统清掉，改用 `lake env lean` 等价路径），
+> 随后 `04:11–04:24` 跑 cone 仪器（`nice 19`）。**本轮只跑 cone**，union 未重测。
+
+| 指标 | cone（e2e 锥） | 较基线 O |
+|---|---:|---|
+| K_REACH | **2,086,774** | +618 |
+| **K_SORRIED** | **82** | **−17（O 补测 99）** |
+| K_AXIOM | **624** | **±0（全期不变）** |
+| K_MODULES | 4,238 | +43 |
+| K_UNIVERSE | 2,099,882 | +872 |
+| COVERAGE | **99.375%**（2,086,774 / 2,099,882） | — |
+
+口径 II（剔除 `Kepler.Interval.Cases.*`）：
+**K_REACH_XCASES 26,351 / SORRIED_XCASES 82 / AXIOM_XCASES 624 / K_UNIVERSE_XCASES 37,902**。
+
+**SORRIED 99 → 82 的逐笔归因**（−17，逐条可查）：
+
+| 笔 | 数量 | commit |
+|---|---:|---|
+| 12 条 nli 银行接线 | −12 | `a6e13301` / `fc41f981` |
+| `bank_TSKAJXYRIBCYXUsharp`（gamma4-w4） | −1 | `d7dc8376` |
+| `ZTGIJCF4_0_1_1_1` / `MKFKQWUhalfwt` / `GCKBQEA`（nli-unknown-w3） | −3 | `c6c722a2` |
+| `polyhedron_edge_sum`（pa22-edge-two，#9 在锥内） | −1 | `07df3e53` |
+
+**注**：派生账曾算到 83，实测 82 —— 差 1 就是 `#9`：它本来也在锥内因而是 SORRIED 成员，
+闭掉它同样 −1。这条印证了"派生账要逐笔对 commit、最终以仪器为准"的口径。
+
+**K_AXIOM 624 全期不变**仍是硬约束：本基线新增的 872 个 universe 声明、618 个 reach 声明
+全是证明项/私助，零新公理。
+
 ### 基线 O：八笔落库 @ `7c120676`（2026-11-06）
 
 > **测量时点**：cone 16:48 / union 17:04（均早于 `b07a1722` 的 Assembly 重建）；
