@@ -42,15 +42,16 @@
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `la16-sym-w1` | LA16 E 类 `SCS_GENERIC_SYM_0_p16`（150–250 行，索引/aff 侦察先行；`CQAOQLR` 仍等 TFITSKC） | 在飞 |
-| `la28-nuxcoea-w1` | `NUXCOEA_p28` =2 半边 580–750 行 + `NUXCOEAv2_p28` | 在飞 |
 | `pa22-affine-transfer-w1` | 正交标架转移 kit 400–600 行（解锁 `EUSOTYP_general` → `EUSOTYP2_general` → `GOTCJAH`） | 在飞 |
-| `pa25-rolling-w1` | **PA25 滚动系列**（用户「Pa25启动维持一条lane」）：39 own-sorry 清点（锥内 19）+ 首批模板族收割 | 在飞 |
+| `pa25-rolling-w2` | **PA25 滚动 w2**：`real_model_cell23` 首选 + `CC_2_PROPS`/`HL_IMP_BARV`；交 w3 工单 | 在飞 |
+| `la27-tfitskc-w1` | `TFITSKCv1_p27` + `TFITSKC_p27`（锥内直源 + LA16 `CQAOQLR` 的唯一上游） | 在飞 |
+| `la6-lunar-w1` | `LUNAR_DEFORM_INJ`（HOL `local_lemmas1.hl:679`）+ 尾部总装；侦察先行 | 在飞 |
 
 > 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
-> 上一轮刚落：`la16-gap-w1` 5/5（11→6）、`la6-arcv-w1` 3/3（5→2）、
-> `pa22-giant-w4` 2/5 + 2 DEF-FIX（19→17）、`la16-cont-w1` 4/4（**LA16 6→2**）。
+> 最近刚落：`la16-gap-w1` 5/5（11→6）、`la6-arcv-w1` 3/3（5→2）、`pa22-giant-w4` 2/5+2 DEF-FIX（19→17）、
+> `la16-cont-w1` 4/4（6→2）、`la16-sym-w1` 1/1（**LA16 2→1**）、`pa25-rolling-w1` 4/4（**PA25 39→35，锥内 19→18**）、
+> `la28-nuxcoea-w1` 2/2（**LA28 4→2，NUXCOEA 巨人双闭**）。
 > **长期占槽**：`pa22-*` 与 `pa25-*` 是两条滚动系列（用户指令），一波完即由编排者续发下一波。
 
 ## 2. 排队（按序补位）
@@ -157,6 +158,7 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-05（21:00，续361）**：**四笔连落：LA16 E `da76c405`（2→1）+ PA25 w1 `b3714b64`（39→35，锥内 19→18）+ LA28 NUXCOEA 巨人 `ad7e9dba`（4→2）+ 补位 pa25-w2 / la27-tfitskc / la6-lunar**。① **LA16 E**：`SCS_GENERIC_SYM_0_p16` 214 行（5 私有件 + sign-generic 核心 `affsignNegPt_p16` 一次覆盖 `aff_ge`/`aff_lt` + `interNeg`/`reflNeg` 收口）；关键收紧——HOL 走两条 range 等式，本波只需成员形式「对边仍是边」`oppEdgeIndex_p16`，省掉满射方向；2→1，只剩 `CQAOQLR_p16`（等 TFITSKC）。② **PA25 w1 4/4**：`MCELL3_DOMAIN`（hnl-free 独立几何 89 行，`GBEWYFX`+`OAPVION2_concl`+`RADV_ETAY`）/ `pkLeafRankAzimPointwise`（锥内直源，4 行一行实例化 `LEAF_RANK_REUHADY`）/ `CC_3_SUM_SET`（`NO_4CELL_IMP_K3`+`STEM_EDGEX`+集合 ext）/ `CC_3_SUM_fn`（46+17 行）；+168/−6；清点 INVENTORY 40×12 与 w2 工单已交。③ **LA28 NUXCOEA 双闭**：`NUXCOEA_p28`（=2 半边）+ `NUXCOEAv2_p28`，+839/−2，2/2 标准三，GATE-PASS；**LA28 宣布「除 2 条冻结 MIS-PORT 外全清」**。关键技术点：`haj` 只白送一条边（另一条须走 `v3DeforV5` 形变）；终局只能用 `BBindex`（`TAUSTAR_V3_DEFOR_MK` 给的是相等不是下降，撞不了最小性）→ 证紧边集真子集 `T' ⊂ T` 撞 `BBindex = BBindexMin`，与 HOL `NUXCOEA.hl:6955–7085` 一致；两支各需额外连续性窗口 `EXISTS_SMALL_LE_CONST_ADD_p28`；`hnorm2 : ‖w l‖ = 2` 这次真被消费（只在 `DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS_p28`），故 =2/≠2 必须顶层分叉。④ 补位：`pa25-rolling-w2`（`real_model_cell23` 首选——w1 的 `CC_3_SUM_fn` 已把 `gg_mcell` 拆成两 cc 胞 + rest，rest 逐胞用 `TSKAJXY_2`/`cell3_from_ineq_thm hnl.1` + `MCELL3_DOMAIN`，不需 `EDGE_IMP_K23`）/ `la27-tfitskc-w1`（锥内直源 + LA16 唯一上游）/ `la6-lunar-w1`（`LUNAR_DEFORM_INJ` + 尾部总装，侦察先行）。⑤ 塔群：LA6 2 / LA14 0 / LA16 1 / **LA28 2（全冻结）** / LA31 0 / LA34 0 / LA36 2 / LA37 0（总 **7**）。⑥ 池 4/5。
 - **2026-11-05（19:30，续360）**：**LA16 连续性四件闭（`e6491fa6`，6→2）+ 补位 `la16-sym-w1`**。① 4 件：`real_continuous_dih_y_wrt4/5/6_p16`（各 8 行）+ `real_continuous_taum_p16`（27 行），4/4 标准三，GATE-PASS，+234/−20。② **本地 atn2 连续性套件 167 行**（核心仅 36 行，1123–1158）：关键数学点 = `atn2` 在 `0 < x` 右半平面三支恒等于 `Real.arctan (y/x)`，所以**不需要 Mathlib 的 `atan2`**；`dihXf` 槽位连续性化为 `sqrt`/多项式（`fun_prop`）+ `ContinuousAt.congr`，`dihY` 用 `q ↦ q*q` 复合。③ `real_continuous_taum`：`taum` 展开为三项 `rho*dihY`，第二三项的参数旋转由 `deltaY_rot231564/312645`（`unfold; ring`）+ `upsX_swap12` 完成。④ 零 LA22 taint（未消费任何仍-sorry 的 `derived_form_dih_x_wrt_x*_p22`），零新增 import。⑤ LA16 剩 **2**：E `SCS_GENERIC_SYM_0_p16`（在飞）+ F `CQAOQLR_p16`（等 `TFITSKC_p27/concl`，任务书要求派工时先 `#print axioms TFITSKC*`）。⑥ 池 4/5。
 - **2026-11-05（18:55，续359）**：**PA25 滚动车道发车（`pa25-rolling-w1`，用户「Pa25启动维持一条lane吧」）+ 无重型计算天花板分析**。① 按基线 N TSV 逐条分类锥内 119 条 SORRIED：**nli 73 / lp 1 / hTC Assembly 3 / Text 40 / LocalConcl anchor 2**。结论：无重型计算下可做完文本层 45 条（40 Text + 3 hTC + 2 anchor），**锥内地板 = 74（73 nli + 1 lp）**；旧 M1a 目标的「89」口径与实测不符，应以 TSV 为准。② **反直觉发现**：塔群剩的 14 条基本不在锥内——LA6/LA16/LA36 与 LA28 两条 MIS-PORT 都不在 119 清单里（LA28 只有 `NUXCOEAv2_p28` 在锥上，`NUXCOEA_p28` 本体不可达）→ 「塔群清零」≠「锥内债务清零」。③ PA25 实测：13,391 行 / **39 own-sorry**，其中**锥内 19 条**（`real_model_*` 15 + `pkLeafRank×2` + `cc_prep_model_data` + `ox3q1hP25`）；锥外 20 条（MCELL_WEDGE_UNIQUE / LEAF_RANK×3 / CELL_CLUSTER×2 / CC_* 等）。④ **`ox3q1hP25` 是 `def ... : Prop := sorry`**（定义体是 sorry），填属 DEF-FIX 级陈述决策（HOL 锚 `Oxl_def.hl`），任务书明确禁止本车道动手。⑤ w1 任务 = 39 条清点（12 列 INVENTORY）+ 首批 2–5 件（依赖全绿 / 非 hnl / 非 ox3q1h / <300 行）+ `WORKORDER-w2.md` 交下一波。⑥ 池 4/5。
 - **2026-11-05（18:20，续358）**：**三笔落库 + 地图仪器重跑出基线 N + 补位三条**。① **LA16 `3b072604`（11→6）**：5/5 闭——`taum_dih_y`←LA38 孪生搬 body、`ear_acute`←LA33、`K_SUC_2_MOD_F_SUB_ID` 本地模算术、两件 quad 走 LA38 移植的 `DELTA_Y_POS_4POINTS` 私有 kit（+157 行）。**工单勘误**：文献槽位实际是 `(d34,d23,d13,d12,d14,d24)`（`[v3;v4;v2;v1]`），不是 `(d21,d23,d24,d34,d14,d13)`；按工单顺序 `linarith` 闭不了。GATE-PASS。② **LA6 `4019cb54`（5→2）**：ARCV 三件全闭（124/72/238 行），3/3 标准三；余 `LUNAR_DEFORM_INJ` + 尾部总装。③ **PA22 `b6063c90`（19→17）**：`gotcjah_sol_half` + `gotcjah_sol_lemma` + **两处 DEF-FIX 真证关闭**（`POLYSORT_BIJ2`/`EUSOTYP_simple`，均无需改陈述；`insert_v` 不在路径上，保留）；`EUSOTYP_general`/`EUSOTYP2_general`/`GOTCJAH` 如实 BLOCKED——缺正交标架转移 kit（非 DEF-FIX 问题）。④ **仪器重跑**：岛协议重建 Assembly（1:04）+ 回灌 `.lake`，然后 cone + union 并跑（`nice 19`），出**基线 N @`7c59149c`**：cone `K_REACH 2,085,951`（+3,100 vs L）/ **`SORRIED 119`（−15，首破 120）** / AXIOM 624 / MODULES 4,194 / UNIVERSE 2,097,682；union `2,107,089` / SORRIED 155 / COVERAGE 99.316% / **ORPHANS 14,499**（−304）/ ROOTS 164 / SHIMS 22。`docs/e2e-reachability-map.tsv` 已整体重写（4,956 行，新增 MODULE HISTOGRAM 节），union 原始输出存 `docs/assets/instruments/`。K_UNIVERSE +2,796 主要是 `.lake` 覆盖面变化（闸重编了七个 Text 根与 LA6/16/22/28/36/37），跨基线比较需谨慎。⑤ 补位：`la16-cont-w1`（D 类 4 件，本地 atn2 kit 干净路线）/ `la28-nuxcoea-w1`（=2 半边 580–750 行）/ `pa22-affine-transfer-w1`（正交标架 kit）。⑥ 塔群：LA6 2 / LA14 0 / LA16 6 / LA28 4 / LA31 0 / LA34 0 / LA36 2 / LA37 0（总 **14**）。⑦ 池 3/5。
