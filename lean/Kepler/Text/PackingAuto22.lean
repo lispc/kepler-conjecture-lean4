@@ -13173,6 +13173,367 @@ theorem INJ_EDGES_FACE_pr23 (p : Set V3) (f : Set Dart3) (y1 y : Dart3)
     rwa [← edgesP22_eq_edgesP7 p] at h
   exact hnot (EDGE_pr23 0 (verticesP22 p) (edgesP22 p) y y1 hfan hcard hyD1 hy1D hpr hne).symm
 
+/-! ## W3 partial: `CFYXFTY1` forward half (dart edges are facet edges)
+
+The HOL `Cfyxfty.CFYXFTY0/1` chain is not ported.  The lemmas below prove the
+`SUBSET_EDGES0_FAN` inclusion `{{pr2 e, pr3 e} | e ∈ f} ⊆ edges f1` directly
+(from the spherical-coordinate chart of `rwDartFan` plus the face property;
+no `CONVEX_OPEN_AFF_GT_FACE` chain needed).  The converse inclusion
+(`edges f1 ⊆ {{pr2 e, pr3 e} | e ∈ f}`) is still missing, so
+`BIJ_EDGES_DART_FACE` remains unproved. -/
+
+section P22W3
+open Filter
+open scoped Topology
+
+/-- Scaling a point of a convex set by `c ∈ (0,1)` lands in the interior when
+the origin is an interior point. -/
+private theorem p22_scale_mem_interior {p : Set V3} (hp : Convex ℝ p)
+    (h0 : (0 : V3) ∈ interior p) {y : V3} (hy : y ∈ p) {c : ℝ} (hc0 : 0 < c)
+    (hc1 : c < 1) : c • y ∈ interior p := by
+  have ht : (1 - c) ∈ Set.Ioc (0 : ℝ) 1 := ⟨by linarith, by linarith⟩
+  have h := hp.add_smul_sub_mem_interior (x := y) (y := (0 : V3)) hy h0 ht
+  have heq : y + (1 - c) • ((0 : V3) - y) = c • y := by module
+  rwa [heq] at h
+
+/-- An interior point is not an extreme point. -/
+private theorem p22_extreme_not_interior {p : Set V3} {v : V3}
+    (hv : v ∈ Set.extremePoints ℝ p) (hint : v ∈ interior p) : False := by
+  obtain ⟨r, hr0, hrball⟩ := Metric.mem_nhds_iff.mp (mem_interior_iff_mem_nhds.mp hint)
+  obtain ⟨u0, hu0⟩ : ∃ u0 : V3, u0 ≠ 0 := exists_ne 0
+  have hu0n : 0 < ‖u0‖ := norm_pos_iff.mpr hu0
+  set u : V3 := (r / (2 * ‖u0‖)) • u0 with hu
+  have hunorm : ‖u‖ = r / 2 := by
+    rw [hu, norm_smul, Real.norm_eq_abs, abs_of_pos (by positivity)]
+    field_simp
+  have hune : u ≠ 0 := by
+    intro h
+    rw [h, norm_zero] at hunorm
+    linarith
+  have hx1 : v + u ∈ Metric.ball v r := by
+    rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, hunorm]
+    linarith
+  have hx2 : v - u ∈ Metric.ball v r := by
+    rw [Metric.mem_ball, dist_eq_norm, show v - u - v = -u by abel, norm_neg, hunorm]
+    linarith
+  have h1p : v + u ∈ p := hrball hx1
+  have h2p : v - u ∈ p := hrball hx2
+  have hmem : v ∈ openSegment ℝ (v + u) (v - u) := by
+    refine ⟨1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+    module
+  have hEq := ((mem_extremePoints.mp hv).2 (v + u) h1p (v - u) h2p hmem).1
+  have hzero : u = 0 := by
+    have h' : v + u = v + 0 := by simpa using hEq
+    exact add_left_cancel h'
+  exact hune hzero
+
+/-- A facet of a bounded polyhedron with `0` in the interior does not contain `0`. -/
+private theorem p22_facet_zero_not_mem (p f1 : Set V3) (hp : polyhedron p)
+    (hi : (0 : V3) ∈ interior p) (hf1 : FacetOf f1 p) : (0 : V3) ∉ f1 := by
+  have hne : f1 ≠ p := by
+    intro h
+    rw [h] at hf1
+    have h2 := hf1.2.2
+    linarith
+  exact fun h0 => (Set.disjoint_left.1 (faceOf_disjoint_interior hf1.1 hne) h0) hi
+
+/-- **Forward half of `CFYXFTY1`**: if `d` is a dart of a face `f` whose chamber
+is `fchanged f1`, then the first endpoint of `d` lies in the facet `f1`.
+
+The proof uses the explicit spherical-coordinate chart of `rwDartFan`
+(`rw_dart_is_image_set_spherical_coordinate`): points of the chamber with fixed
+radius `‖d.1‖` and shrinking polar angle `ψ` converge to `d.1`, so `d.1` lies in
+the closed cone over `f1`.  Comparing the cone parameter of `d.1 = t • y`
+(`y ∈ f1`) against `1` either puts `0` in `f1` (using the face property) or puts
+`d.1` in the interior of `p` (contradicting extremality). -/
+theorem p22_dart_fst_mem_facet (p : Set V3) (f : Set Dart3) (f1 : Set V3)
+    (hb : Bornology.IsBounded p) (hp : polyhedron p) (hi : (0 : V3) ∈ interior p)
+    (hf : f ∈ (hypermapOfPolyhedronP22 p hb hp hi).faceSet)
+    (hf1 : FacetOf f1 p)
+    (hlead : fchanged f1 = dartsetLeadsIntoFanP22 0 (verticesP22 p) (edgesP22 p) f)
+    {d : Dart3} (hd : d ∈ f) : d.1 ∈ f1 := by
+  classical
+  let V : Set V3 := verticesP22 p
+  let E : Set (Set V3) := edgesP22 p
+  let hfan : Fan.FAN 0 V E := fanOfPolyhedronP22 p hb hp hi
+  have hcard : ∀ v ∈ V, 1 < (Fan.setOfEdge v V E).ncard := by
+    intro v hv
+    have h := CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON hb hp hi v hv
+    rwa [← edgesP22_eq_edgesP7 p] at h
+  have h80 : Kepler.Text.Fan.fan80 0 V E := by
+    have h := POLYTOPE_FAN80 hb hp hi
+    rwa [← edgesP22_eq_edgesP7 p] at h
+  -- `d` is a dart of the fan
+  have hfkeep := hf
+  obtain ⟨x, hx, hfx⟩ := hf
+  have hdD : d ∈ ((hypermapOfPolyhedronP22 p hb hp hi).darts : Set Dart3) := by
+    refine Hypermap.face_subset_darts (hypermapOfPolyhedronP22 p hb hp hi) hx ?_
+    show d ∈ orbitMap (hypermapOfPolyhedronP22 p hb hp hi).faceMap x
+    rwa [hfx]
+  have hd1 : d ∈ Fan.dart1OfFan V E := by
+    rw [← dFanP22_eq_dart1 0 V E hfan]
+    exact hdD
+  have hEW : ({d.1, d.2} : Set V3) ∈ E := by
+    simpa only [Fan.dart1OfFan, Set.mem_setOf_eq] using hd1
+  obtain ⟨hd1V, _⟩ := Fan.fan_mem_of_edge hfan hEW
+  have hv0 : d.1 ≠ 0 := by
+    intro h
+    exact hfan.2.2.2.1 (h ▸ hd1V)
+  -- the chamber of `d` is `fchanged f1`
+  have hleads : dartsetLeadsIntoFanP22 0 V E f = dartLeadsInto 0 V E d.1 d.2 :=
+    DARTSET_LEADS_INTO_FAN hfan hcard h80 hfkeep d hd
+  have hU : fchanged f1 = dartLeadsInto 0 V E d.1 d.2 := hlead.trans hleads
+  obtain ⟨h0, h0pos, hspec⟩ :=
+    dartLeadsInto_spec (x := (0 : V3)) (v := d.1) (u := d.2) hfan hEW
+  -- thresholds
+  set s : ℝ := min (h0 / 2) (Real.pi / 4) with hsdef
+  have hs0 : 0 < s := lt_min (by linarith) (by positivity)
+  have hsh : s < h0 := lt_of_le_of_lt (min_le_left _ _) (by linarith)
+  have hspi : s < Real.pi / 2 :=
+    lt_of_le_of_lt (min_le_right _ _) (by linarith [Real.pi_pos])
+  -- azimuth aperture is positive
+  have hazf : 0 < azimFan 0 V E d.1 d.2 := by
+    have h1 : 1 < (Fan.setOfEdge d.1 V E).ncard := hcard d.1 hd1V
+    have h2 := h80 d.1 d.2 hEW
+    rw [azimFan, if_pos (show (Fan.setOfEdge d.1 V E).ncard > 1 from h1)]
+    exact h2.1
+  set θ0 : ℝ := azimFan 0 V E d.1 d.2 / 2 with hθ0def
+  -- explicit spherical-coordinate points
+  set tvec : ℝ → V3 := fun ψ => (WithLp.toLp 2 ![‖d.1‖, θ0, ψ] : V3) with htvecdef
+  have ht0 : ∀ ψ : ℝ, (tvec ψ) 0 = ‖d.1‖ := by intro ψ; simp [tvec]
+  have ht1 : ∀ ψ : ℝ, (tvec ψ) 1 = θ0 := by intro ψ; simp [tvec]
+  have ht2 : ∀ ψ : ℝ, (tvec ψ) 2 = ψ := by intro ψ; simp [tvec]
+  have hmem_rfan : ∀ ψ : ℝ, 0 < ψ → ψ < s →
+      tvec ψ ∈ rFan (azim 0 d.1 d.2 d.2) (azimFan 0 V E d.1 d.2) s := by
+    intro ψ hψ0 hψs
+    simp only [rFan, Set.mem_setOf_eq]
+    refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · rw [ht0]
+      exact norm_pos_iff.mpr hv0
+    · rw [ht1, azim_self, hθ0def]
+      linarith
+    · rw [ht1, hθ0def]
+      linarith
+    · rw [ht2]
+      exact hψ0
+    · rw [ht2]
+      exact hψs
+  have hmem_rw : ∀ ψ : ℝ, 0 < ψ → ψ < s →
+      changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ) ∈
+        rwDartFan 0 V E (0, d.1, d.2, Fan.sigmaFan 0 V E d.1 d.2) (Real.cos s) := by
+    intro ψ hψ0 hψs
+    rw [← rw_dart_is_image_set_spherical_coordinate (x := (0 : V3)) (v := d.1) (u := d.2)
+      (h := s) hfan hEW hs0 hspi]
+    exact ⟨tvec ψ, hmem_rfan ψ hψ0 hψs, rfl⟩
+  have hmemU : ∀ ψ : ℝ, 0 < ψ → ψ < s →
+      changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ) ∈ fchanged f1 := by
+    intro ψ hψ0 hψs
+    rw [hU]
+    exact (hspec s (changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)) hs0 hsh
+      (hmem_rw ψ hψ0 hψs)).1 (hmem_rw ψ hψ0 hψs)
+  -- closed form of the curve
+  let qfun : ℝ → V3 :=
+    (fun ψ => (‖d.1‖ * Real.cos θ0 * Real.sin ψ) • e1Fan 0 d.1 d.2) +
+    (fun ψ => (‖d.1‖ * Real.sin θ0 * Real.sin ψ) • e2Fan 0 d.1 d.2) +
+    (fun ψ => (‖d.1‖ * Real.cos ψ) • e3Fan 0 d.1 d.2)
+  have hq_form : ∀ ψ : ℝ, changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ) = qfun ψ := by
+    intro ψ
+    simp only [changeSphericalCoordinateFan, qfun, Pi.add_apply, zero_add]
+    rw [ht0 ψ, ht1 ψ, ht2 ψ]
+  have hq0 : qfun 0 = d.1 := by
+    simp only [qfun, Pi.add_apply, Real.sin_zero, Real.cos_zero, mul_zero, zero_mul,
+      zero_smul, add_zero, one_mul, mul_one, zero_add]
+    rw [e3Fan, sub_zero, smul_smul, mul_inv_cancel₀ (norm_ne_zero_iff.mpr hv0), one_smul]
+  have hq_cont : Continuous qfun := by
+    have h1 : Continuous fun ψ : ℝ =>
+        (‖d.1‖ * Real.cos θ0 * Real.sin ψ) • e1Fan 0 d.1 d.2 :=
+      (continuous_const.mul Real.continuous_sin).smul continuous_const
+    have h2 : Continuous fun ψ : ℝ =>
+        (‖d.1‖ * Real.sin θ0 * Real.sin ψ) • e2Fan 0 d.1 d.2 :=
+      (continuous_const.mul Real.continuous_sin).smul continuous_const
+    have h3 : Continuous fun ψ : ℝ =>
+        (‖d.1‖ * Real.cos ψ) • e3Fan 0 d.1 d.2 :=
+      (continuous_const.mul Real.continuous_cos).smul continuous_const
+    exact (h1.add h2).add h3
+  have hq_tend : Tendsto (fun ψ : ℝ => changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ))
+      (𝓝[>] (0 : ℝ)) (𝓝 d.1) := by
+    have hcont' : Continuous fun ψ : ℝ => changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ) := by
+      rw [show (fun ψ : ℝ => changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)) = qfun
+        from funext hq_form]
+      exact hq_cont
+    have h2 : Tendsto (fun ψ : ℝ => changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ))
+        (𝓝 (0 : ℝ)) (𝓝 d.1) := by
+      have h4 : (fun ψ : ℝ => changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)) 0 = d.1 := by
+        simpa only [hq_form 0] using hq0
+      simpa only [h4] using hcont'.tendsto 0
+    exact h2.mono_left nhdsWithin_le_nhds
+  -- `f1` is compact and avoids the origin
+  have hf1ne : f1.Nonempty := Set.nonempty_iff_ne_empty.mpr hf1.2.1
+  have hf1closed : IsClosed f1 := POLYHEDRON_IMP_CLOSED (FACE_OF_POLYHEDRON_POLYHEDRON hp hf1.1)
+  have hf1bdd : Bornology.IsBounded f1 := hb.subset hf1.1.1
+  have hf1compact : IsCompact f1 := Metric.isCompact_of_isClosed_isBounded hf1closed hf1bdd
+  have h0f1 : (0 : V3) ∉ f1 := p22_facet_zero_not_mem p f1 hp hi hf1
+  obtain ⟨δ, hδpos, hδle⟩ : ∃ δ : ℝ, 0 < δ ∧ ∀ y ∈ f1, δ ≤ ‖y‖ := by
+    obtain ⟨x0, hx0, hmin⟩ := hf1compact.exists_isMinOn hf1ne (f := fun y => ‖y‖)
+      continuous_norm.continuousOn
+    exact ⟨‖x0‖, norm_pos_iff.mpr (fun h => h0f1 (h ▸ hx0)), fun y hy => hmin hy⟩
+  -- the truncation cone `K = [0,T] • f1`
+  set T : ℝ := (‖d.1‖ + 1) / δ with hTdef
+  set K : Set V3 := {x : V3 | ∃ t ∈ Set.Icc (0 : ℝ) T, ∃ y ∈ f1, x = t • y} with hKdef
+  have hKcompact : IsCompact K := by
+    have hcont : Continuous fun q : ℝ × V3 => q.1 • q.2 := continuous_fst.smul continuous_snd
+    have h : IsCompact ((fun q : ℝ × V3 => q.1 • q.2) '' (Set.Icc (0 : ℝ) T ×ˢ f1)) :=
+      (isCompact_Icc.prod hf1compact).image hcont
+    convert h using 2
+    ext z
+    constructor
+    · rintro ⟨t, ht, y, hy, rfl⟩
+      exact ⟨(t, y), ⟨ht, hy⟩, rfl⟩
+    · rintro ⟨⟨t, y⟩, ⟨ht, hy⟩, rfl⟩
+      exact ⟨t, ht, y, hy, rfl⟩
+  -- eventually `q ψ ∈ K`
+  have hq_mem_K : ∀ᶠ ψ in 𝓝[>] (0 : ℝ),
+      changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ) ∈ K := by
+    have hlt_s : ∀ᶠ ψ in 𝓝[>] (0 : ℝ), ψ < s :=
+      (eventually_lt_nhds hs0).filter_mono nhdsWithin_le_nhds
+    have hnorm : ∀ᶠ ψ in 𝓝[>] (0 : ℝ),
+        ‖changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)‖ < ‖d.1‖ + 1 := by
+      have hdist : ∀ᶠ ψ in 𝓝[>] (0 : ℝ),
+          dist (changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)) d.1 < 1 :=
+        hq_tend.eventually (Metric.ball_mem_nhds d.1 one_pos)
+      filter_upwards [hdist] with ψ hψ
+      have h1 : ‖changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ) - d.1‖ < 1 := by
+        rwa [dist_eq_norm] at hψ
+      have h2 : ‖changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)‖
+          ≤ ‖changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ) - d.1‖ + ‖d.1‖ := by
+        conv_lhs => rw [← sub_add_cancel
+          (changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)) d.1]
+        exact norm_add_le _ _
+      linarith
+    filter_upwards [self_mem_nhdsWithin, hlt_s, hnorm] with ψ hψpos hψs hψnorm
+    obtain ⟨y, t, hxy, hy, ht⟩ := hmemU ψ hψpos hψs
+    refine ⟨t, ⟨le_of_lt ht, ?_⟩, y, intrinsicInterior_subset hy, hxy⟩
+    have htnorm : t * ‖y‖ = ‖changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)‖ := by
+      rw [hxy, norm_smul, Real.norm_eq_abs, abs_of_pos ht]
+    have hyδ : δ ≤ ‖y‖ := hδle y (intrinsicInterior_subset hy)
+    have hyn : (0 : ℝ) < ‖y‖ := lt_of_lt_of_le hδpos hyδ
+    calc t = t * ‖y‖ / ‖y‖ := by field_simp
+      _ = ‖changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)‖ / ‖y‖ := by rw [htnorm]
+      _ ≤ (‖d.1‖ + 1) / δ := by
+          rw [div_le_div_iff₀ (by positivity) hδpos]
+          calc ‖changeSphericalCoordinateFan 0 d.1 d.2 (tvec ψ)‖ * δ
+              ≤ (‖d.1‖ + 1) * δ :=
+                mul_le_mul_of_nonneg_right hψnorm.le hδpos.le
+            _ ≤ (‖d.1‖ + 1) * ‖y‖ :=
+                mul_le_mul_of_nonneg_left hyδ (by positivity)
+      _ = T := rfl
+  have hd1K : d.1 ∈ K :=
+    hKcompact.isClosed.mem_of_tendsto hq_tend hq_mem_K
+  obtain ⟨t, htIcc, y, hyf1, hxy⟩ := hd1K
+  obtain ⟨ht0, _⟩ := htIcc
+  -- three-way case analysis on the cone parameter
+  have htpos : 0 < t := by
+    rcases lt_or_eq_of_le ht0 with h | h
+    · exact h
+    · exfalso
+      apply hv0
+      rw [hxy, ← h, zero_smul]
+  rcases lt_trichotomy t 1 with ht1 | ht1 | ht1
+  · -- `t < 1`: `d.1 = t • y` lies in `interior p`, contradicting extremality
+    have hyint : d.1 ∈ interior p := by
+      rw [hxy]
+      exact p22_scale_mem_interior (POLYHEDRON_IMP_CONVEX hp) hi (hf1.1.1 hyf1) htpos ht1
+    exact (p22_extreme_not_interior
+      (show d.1 ∈ Set.extremePoints ℝ p from hd1V) hyint).elim
+  · -- `t = 1`: done
+    rw [hxy, ht1, one_smul]
+    exact hyf1
+  · -- `t > 1`: `y = t⁻¹ • d.1` is in the open segment `(0, d.1)`, forcing `0 ∈ f1`
+    have hyseg : y ∈ openSegment ℝ (0 : V3) d.1 := by
+      have ht1' : 0 < 1 / t := one_div_pos.mpr htpos
+      refine ⟨1 - 1 / t, 1 / t, ?_, ht1', ?_, ?_⟩
+      · have hlt : 1 / t < 1 := by
+          rw [div_lt_one htpos]
+          exact ht1
+        linarith
+      · ring
+      · rw [smul_zero, zero_add, hxy, smul_smul]
+        have h1 : (1 / t) * t = 1 := by
+          rw [one_div, inv_mul_cancel₀ (ne_of_gt htpos)]
+        rw [h1, one_smul]
+    have h0p : (0 : V3) ∈ p := interior_subset hi
+    have hdp : d.1 ∈ p := extremePoints_subset hd1V
+    exact (h0f1 (hf1.1.2.2 (0 : V3) d.1 y h0p hdp hyf1 hyseg).1).elim
+
+
+/-- The underlying edge of a dart of `f` is an edge of the facet `f1`
+(the `SUBSET_EDGES0_FAN` inclusion `{{pr2 e, pr3 e} | e ∈ f} ⊆ edges f1`). -/
+theorem p22_dart_edge_mem_edges (p : Set V3) (f : Set Dart3) (f1 : Set V3)
+    (hb : Bornology.IsBounded p) (hp : polyhedron p) (hi : (0 : V3) ∈ interior p)
+    (hf : f ∈ (hypermapOfPolyhedronP22 p hb hp hi).faceSet)
+    (hf1 : FacetOf f1 p)
+    (hlead : fchanged f1 = dartsetLeadsIntoFanP22 0 (verticesP22 p) (edgesP22 p) f)
+    {d : Dart3} (hd : d ∈ f) : ({d.1, d.2} : Set V3) ∈ edges f1 := by
+  classical
+  let V : Set V3 := verticesP22 p
+  let E : Set (Set V3) := edgesP22 p
+  let hfan : Fan.FAN 0 V E := fanOfPolyhedronP22 p hb hp hi
+  have hfkeep := hf
+  -- `d ∈ dart1OfFan`
+  obtain ⟨x, hx, hfx⟩ := hf
+  have hdD : d ∈ ((hypermapOfPolyhedronP22 p hb hp hi).darts : Set Dart3) := by
+    refine Hypermap.face_subset_darts (hypermapOfPolyhedronP22 p hb hp hi) hx ?_
+    show d ∈ orbitMap (hypermapOfPolyhedronP22 p hb hp hi).faceMap x
+    rwa [hfx]
+  have hd1 : d ∈ Fan.dart1OfFan V E := by
+    rw [← dFanP22_eq_dart1 0 V E hfan]
+    exact hdD
+  have hEW : ({d.1, d.2} : Set V3) ∈ E := by
+    simpa only [Fan.dart1OfFan, Set.mem_setOf_eq] using hd1
+  -- the next dart of the face is the swapped-pair face map
+  have hdface : (Fan.hypermapOfFan 0 V E hfan).faceMap d ∈ f := by
+    have hd' : d ∈ orbitMap (hypermapOfPolyhedronP22 p hb hp hi).faceMap x := by
+      rwa [← hfx] at hd
+    have hmem : (Fan.hypermapOfFan 0 V E hfan).faceMap d
+        ∈ orbitMap (Fan.hypermapOfFan 0 V E hfan).faceMap d := by
+      simpa using pow_apply_mem_orbitMap (Fan.hypermapOfFan 0 V E hfan).faceMap 1 d
+    have heq : orbitMap (Fan.hypermapOfFan 0 V E hfan).faceMap d
+        = orbitMap (hypermapOfPolyhedronP22 p hb hp hi).faceMap x :=
+      orbitMap_eq_of_mem (Fan.hypermapOfFan 0 V E hfan).faceMap_permutes hd'
+    rw [heq] at hmem
+    rwa [hfx] at hmem
+  have hfaceMap : (Fan.hypermapOfFan 0 V E hfan).faceMap d = Fan.fFanPair 0 V E d := by
+    unfold Fan.hypermapOfFan Fan.extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Fan.res
+    rw [if_pos (by simpa [(Fan.finite_dart1_fan hfan).coe_toFinset] using hd1)]
+  -- both endpoints lie in the facet
+  have hv1 : d.1 ∈ f1 :=
+    p22_dart_fst_mem_facet p f f1 hb hp hi hfkeep hf1 hlead hd
+  have hv2 : d.2 ∈ f1 := by
+    have h := p22_dart_fst_mem_facet p f f1 hb hp hi hfkeep hf1 hlead hdface
+    rwa [hfaceMap] at h
+    -- `(fFanPair d).1 = d.2 = d.2` definitionally
+  -- `{d.1, d.2}` is an edge of `p`
+  have hedgep : edgeOf (segment ℝ d.1 d.2) p := by
+    have hEdges : ({d.1, d.2} : Set V3) ∈ edges p := by
+      simpa only [V, E, verticesP22, edgesP22] using hEW
+    rw [edges, Set.mem_setOf_eq] at hEdges
+    obtain ⟨v, w, hvw, hedge⟩ := hEdges
+    have hseg : segment ℝ d.1 d.2 = segment ℝ v w := by
+      rcases Set.pair_eq_pair_iff.mp hvw with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+      · rfl
+      · exact segment_symm ℝ _ _
+    rwa [hseg]
+  -- hence it is an edge of the facet
+  have hface1 : FaceOf (segment ℝ d.1 d.2) f1 := by
+    rw [faceOf_face hf1.1]
+    exact ⟨hedgep.1, hf1.1.2.1.segment_subset hv1 hv2⟩
+  rw [edges, Set.mem_setOf_eq]
+  exact ⟨d.1, d.2, rfl, hface1, hedgep.2⟩
+
+end P22W3
+
 /-- HOL `BIJ_EDGES_DART_FACE` (counting_spheres.hl:5178): `edges f1` is in
 bijection with the face orbit `f`.  HOL's proof rewrites
 `edges f1 = {{pr2 e, pr3 e} | e ∈ f}` via `Cfyxfty.CFYXFTY0/1` (NOT ported in
