@@ -2708,12 +2708,15 @@ theorem bisector_point_props (P c c' : Set ℂ) (r : ℝ) (psi : ℝ)
     psi hP hc hc' hr hrad hpsi hmin hlt hne
 
 /-- HOL `regular_spherical_polygon_area_asnFnhk` (counting_spheres.hl:945).
-GIANT (relies on the Ysskqoy `asnFnhk` kit). -/
+GIANT (relies on the Ysskqoy `asnFnhk` kit).  SF-103: the right-hand side is
+`2 * asnFnhk h k 1 1 1 1` — HOL carries no outer `k` here, because `asnFnhk`
+already multiplies by `k` (`sphere.hl:786-787`); contrast `…_797` below,
+whose `asn` does not. -/
 theorem regular_spherical_polygon_area_asnFnhk (h : ℝ) (k : ℕ) (hk : 3 ≤ k)
     (hh : 1 ≤ h ∧ h ≤ h0) :
     regularSphericalPolygonAreaP22
         (h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2) k =
-      2 * Real.pi - 2 * k * asnFnhkP22 h k 1 1 1 1 := by
+      2 * Real.pi - 2 * asnFnhkP22 h k 1 1 1 1 := by
   sorry
 
 /-- HOL `regular_spherical_polygon_area_797` (counting_spheres.hl:955). -/

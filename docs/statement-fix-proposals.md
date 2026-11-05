@@ -6389,3 +6389,105 @@ GATE_MODE=STATEMENT-FIX \
 ```
 
 验收口径：四件 SF 后仍是 `sorry`，`#print axioms` 仍含 `sorryAx`（实测 `[propext, sorryAx, Classical.choice, Quot.sound]`）——**不以标准三为验收**；本 SF 的关键验收 = **陈述与 HOL 条件式 `mnt11 ==> (!s v p. …)` 同形**（`#check` 输出以 `main_nonlinear_terminal_v11 →` 开头）+ `git apply --check` PASS + LA25 转发链 0 error。注意 `auto_gate.sh` 的 `## ${SF_ITEM}.` 节须含 `(a) HOL` 字样（本文件 `### (a) HOL 裁决` 满足）。
+
+## 103. PA22 `regular_spherical_polygon_area_asnFnhk` 右端多乘一个 `k`（HOL `counting_spheres.hl:946` 无此因子；`asnFnhk` 定义本身已含 `k`）— 分级 **A**（移植误植 · 陈述修正 · 用户 2026-11-06 裁决「一并走 SF」· 补丁面 = PA22 单陈述 + docstring）
+
+> 侦查来源：`797-defix-scout`（2026-11-05，只读）在 `_797` 真化准备中发现；编排者复核 HOL 原文确认。
+> 归档补丁：`docs/statement-fix-proposals-patches/103-pa22-asnfnhk-k-factor.patch`。
+
+### (a) HOL 裁决
+
+`reference/flyspeck/text_formalization/packing/counting_spheres.hl:944-951`：
+
+```
+let regular_spherical_polygon_area_asnFnhk = prove_by_refinement(
+  `!h k . (3 <= k /\ &1 <= h /\ h <= h0) ==>
+  (regular_spherical_polygon_area (h * sqrt3 / #4.0 + sqrt (&1 - (h/ &2) pow 2) / &2) (&k) =
+     &2 * pi - &2 * asnFnhk h (&k) (&1) (&1) (&1) (&1))`,
+```
+
+右端是 `&2 * pi - &2 * asnFnhk h k 1 1 1 1` —— **外层没有 `k`**。
+
+关键在于 `asnFnhk` 的**定义本身已经含 `k`**（`general/sphere.hl:786-787`）：
+
+```
+let asnFnhk = new_definition `asnFnhk h k x3 x4 x5 x6 =
+  k * asn (( h * sqrt3 / #4.0 + sqrt(&1 - (h/ &2) pow 2)/ &2) * sin (pi/ k))`;
+```
+
+所以 `2 * asnFnhk h k 1 1 1 1 = 2 * k * asn(θ(h)·sin(π/k))`，与同族 `regular_spherical_polygon_area_797`
+（`counting_spheres.hl:955-959`，HOL 原文 `&2 * pi - &2 * (&k) * asn (...)`，**那里的 `k` 是显式写在外层的**）
+形式一致。
+
+**Lean 现陈述**（`lean/Kepler/Text/PackingAuto22.lean:2712-2717`，HEAD `2a7ed0b2`）：
+
+```lean
+theorem regular_spherical_polygon_area_asnFnhk (h : ℝ) (k : ℕ) (hk : 3 ≤ k)
+    (hh : 1 ≤ h ∧ h ≤ h0) :
+    regularSphericalPolygonAreaP22
+        (h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2) k =
+      2 * Real.pi - 2 * k * asnFnhkP22 h k 1 1 1 1 := by
+  sorry
+```
+
+`2 * Real.pi - 2 * k * asnFnhkP22 h k 1 1 1 1` —— **多了一个 `k`**（`k` 出现两次：一次在外层、一次在 `asnFnhkP22` 的参数里）。
+
+⇒ 陈述比 HOL 强且**为假**：真化 `asnFnhkP22`（`:= asnFnhk`）之后，右端 = `2π − 2k·asnFnhk`，
+比正确值多除以一个 `k` 量级，与 LHS（正面积）不可能相等。
+
+### (b) 机理/证据
+
+1. `asnFnhkP22` 当前是假桩 `:= 0`（PA22:284），所以现在这条陈述左右两端都不是真实量，`sorry` 掩盖了它。
+   `_797` 真化（DEF-FIX，同批第二笔）会把 `asnFnhkP22` 换成 `IneqClosureDefs.asnFnhk`（真体含 `k`），
+   此陈述随即变成可反驳命题 —— 所以**必须先修陈述、再真化定义**。
+2. `IneqClosureDefs.asnFnhk`（`:727-729`）与 HOL 定义逐字同形（含 `k * Real.arcsin (...)`），
+   `797-defix-scout` 实测 `rfl` 级对应；本 SF 与它无耦合，只改 PA22 这一条陈述。
+3. 同族交叉校验：`regular_spherical_polygon_area_797`（PA22:2720-2724）右端是
+   `2 * Real.pi - 2 * k * asn (Real.cos 0.797 * Real.sin (Real.pi / k))` —— 这里 `k` 在**外层**、
+   被乘的是 `asn`（不含 `k`），与 HOL 一致。两族对照正好把「`k` 该出现在哪」钉死。
+
+### (c) 修复
+
+删掉右端多出的 `k`，其余逐字不动：
+
+```lean
+-- 旧（PackingAuto22.lean:2710-2717）
+/-- HOL `regular_spherical_polygon_area_asnFnhk` (counting_spheres.hl:945).
+GIANT (relies on the Ysskqoy `asnFnhk` kit). -/
+theorem regular_spherical_polygon_area_asnFnhk (h : ℝ) (k : ℕ) (hk : 3 ≤ k)
+    (hh : 1 ≤ h ∧ h ≤ h0) :
+    regularSphericalPolygonAreaP22
+        (h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2) k =
+      2 * Real.pi - 2 * k * asnFnhkP22 h k 1 1 1 1 := by
+  sorry
+-- 新（SF-103）
+/-- HOL `regular_spherical_polygon_area_asnFnhk` (counting_spheres.hl:945).
+GIANT (relies on the Ysskqoy `asnFnhk` kit).  SF-103: the right-hand side is
+`2 * asnFnhk h k 1 1 1 1` — HOL carries no outer `k` here, because `asnFnhk`
+already multiplies by `k` (`sphere.hl:786-787`); contrast `…_797` below,
+whose `asn` does not. -/
+theorem regular_spherical_polygon_area_asnFnhk (h : ℝ) (k : ℕ) (hk : 3 ≤ k)
+    (hh : 1 ≤ h ∧ h ≤ h0) :
+    regularSphericalPolygonAreaP22
+        (h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2) k =
+      2 * Real.pi - 2 * asnFnhkP22 h k 1 1 1 1 := by
+  sorry
+```
+
+### (d) 消费面
+
+- 本条仍是 `sorry`（本 SF 不闭合它，只把陈述修对）；`nlinarith` 类证明能否接上属后续波。
+- 全树 grep：该定理名零外部引用（仅 PA22 内部声明）。**锥 / Assembly / 624 shard 面零影响**。
+- 与 `_797` DEF-FIX 的顺序：**本笔先落**（改陈述）→ 再落 DEF-FIX（改 `asnFnhkP22`/`arclength22`/`packIneqDefAP22` 定义体）。
+  两笔同文件不同行，但 `auto_gate.sh` 的「树面 diff ⊆ 本章程补丁」比对要求逐笔干净 ⇒ 必须串行。
+
+### (e) 极小性
+
+只删一个 `k`，函数签名、绑定、前提、结论形状全不动；修正后与 HOL 逐字同形。不是弱化：原陈述为假命题。
+
+### (f) 状态
+
+**立案 2026-11-06（`797-defix-scout` 证据 + 编排者复核 HOL 原文；用户裁决「一并走 SF」）**。
+归档补丁 `docs/statement-fix-proposals-patches/103-pa22-asnfnhk-k-factor.patch`；
+闸命令：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/103-pa22-asnfnhk-k-factor.patch SF_ITEM=103 LANE_FILES=Kepler/Text/PackingAuto22.lean bash scripts/auto_gate.sh Kepler/Text/PackingAuto22.lean regular_spherical_polygon_area_asnFnhk`。
+验收口径：非标准三（仍是 sorry），关键验收 = 陈述与 `counting_spheres.hl:946` 同形。
