@@ -1,0 +1,131 @@
+### mathlib checkout: /Users/zhangzhuo/repos/kepler-conjecture-lean4/lean/.lake/packages/mathlib
+### (mathlib4 v4.32.2, per lean/lake-manifest.json)
+
+==================================================================
+## NEGATIVE RESULTS (the decisive ones)
+==================================================================
+
+$ find Mathlib -name '*Polytope*' -o -name '*Polyhedron*'
+  -> (empty: no Polytope/Polyhedron module at all)
+
+$ grep -rnE '^namespace (Polytope|ConvexPolytope)' Mathlib/
+  -> (empty)
+
+$ grep -rnE 'structure Polytope|def Polytope' Mathlib/
+  -> (empty: no polytope structure / face lattice / Euler formula)
+
+$ grep -rlnE 'Euler.*polytope|polytope.*Euler' Mathlib/Geometry Mathlib/Combinatorics
+  -> (empty: no Euler formula for polytopes anywhere)
+
+$ ls Mathlib/Geometry/
+Convex
+Diffeology
+Euclidean
+Group
+Manifold
+Polygon
+RingedSpace
+  -> no Convex/Polytope* subdir; face theory exists only for pointed cones
+
+==================================================================
+## POSITIVE RESULTS (exact names, usable)
+==================================================================
+
+--- Mathlib/Analysis/Convex/Intrinsic.lean (intrinsic interior) ---
+61:def intrinsicInterior (s : Set P) : Set P :=
+75:theorem mem_intrinsicInterior :
+89:theorem intrinsicInterior_subset : intrinsicInterior 𝕜 s ⊆ s :=
+450:protected theorem Set.Nonempty.intrinsicInterior (hscv : Convex ℝ s) (hsne : s.Nonempty) :
+
+--- Mathlib/Analysis/Convex/Extreme.lean (extreme points) ---
+133:theorem mem_extremePoints : x ∈ A.extremePoints 𝕜 ↔
+143:theorem mem_extremePoints_iff_left : x ∈ A.extremePoints 𝕜 ↔
+257:theorem mem_extremePoints_iff_forall_segment : x ∈ A.extremePoints 𝕜 ↔
+
+--- Mathlib/Analysis/Convex/Exposed.lean (exposed faces: definition only) ---
+55:def IsExposed (A B : Set E) : Prop :=
+72:theorem isExposed_empty : IsExposed 𝕜 A ∅ := fun ⟨_, hx⟩ => by
+140:theorem sInter [IsOrderedRing 𝕜] [ContinuousAdd 𝕜] {F : Finset (Set E)} (hF : F.Nonempty)
+
+--- Mathlib/Geometry/Convex/Cone/Face/Basic.lean (cones only) ---
+50:structure IsFaceOf (F C : PointedCone R M) : Prop where
+74:theorem isFaceOf_iff_le (h₁ : F₁.IsFaceOf C) (h₂ : F₂.IsFaceOf C) :
+94:theorem inf_left (h₁ : F₁.IsFaceOf C) (h₂ : F₂.IsFaceOf C) : (F₁ ⊓ F₂).IsFaceOf C :=
+
+--- Mathlib/LinearAlgebra/Span/Defs.lean ---
+518:theorem mem_span_pair {x y z : M} :
+
+--- Mathlib/LinearAlgebra/FiniteDimensional/Lemmas.lean (rank-nullity) ---
+173:theorem finrank_range_add_finrank_ker [FiniteDimensional K V] (f : V →ₗ[K] V₂) :
+
+--- Mathlib/LinearAlgebra/FiniteDimensional/Basic.lean ---
+251:theorem eq_of_le_of_finrank_le {S₁ S₂ : Submodule K V} [FiniteDimensional K S₂] (hle : S₁ ≤ S₂)
+259:theorem eq_of_le_of_finrank_eq {S₁ S₂ : Submodule K V} [FiniteDimensional K S₂] (hle : S₁ ≤ S₂)
+272:theorem eq_of_le_of_finrank_le (h_le : F ≤ E) (h_finrank : finrank K E ≤ finrank K F) : F = E :=
+278:theorem eq_of_le_of_finrank_eq (h_le : F ≤ E) (h_finrank : finrank K F = finrank K E) : F = E :=
+
+--- Mathlib/LinearAlgebra/Dimension/Constructions.lean ---
+445:theorem finrank_span_le_card (s : Set M) [Fintype s] : finrank R (span R s) ≤ s.toFinset.card :=
+460:theorem finrank_span_eq_card [Nontrivial R] {ι : Type*} [Fintype ι] {b : ι → M}
+
+--- Mathlib/Data/Set/Card.lean (ncard toolkit) ---
+925:theorem ncard_le_ncard_of_injOn {t : Set β} (f : α → β) (hf : ∀ a ∈ s, f a ∈ t) (f_inj : InjOn f s)
+704:theorem ncard_prod {s : Set α} {t : Set β} : (s ×ˢ t).ncard = s.ncard * t.ncard := by
+1335:theorem two_lt_ncard_iff (hs : s.Finite := by toFinite_tac) :
+1339:theorem two_lt_ncard (hs : s.Finite := by toFinite_tac) :
+935:theorem BijOn.ncard_eq {t : Set β} (h : Set.BijOn f s t) : s.ncard = t.ncard := ncard_congr' h.equiv
+
+--- Mathlib/Data/Set/Card/Arithmetic.lean ---
+110:lemma Finite.ncard_biUnion {t : Set ι} (ht : t.Finite) {s : ι → Set α} (hs : ∀ i ∈ t, (s i).Finite)
+136:lemma Finite.ncard_biUnion_le {t : Set ι} (ht : t.Finite) (s : ι → Set α) :
+
+--- Mathlib/Algebra/BigOperators/Group/Finset/Basic.lean (fiberwise count) ---
+979:theorem card_eq_sum_card_fiberwise [DecidableEq M] {f : ι → M} {s : Finset ι} {t : Finset M}
+
+==================================================================
+## IN-REPO (not mathlib) -- the real face toolkit used by Route A
+==================================================================
+33:noncomputable def affDim (s : Set V3) : ℤ :=
+42:def FaceOf (t s : Set V3) : Prop :=
+47:def FacetOf (f s : Set V3) : Prop :=
+51:def edgeOf (e s : Set V3) : Prop :=
+56:def edges (s : Set V3) : Set (Set V3) :=
+60:def polyhedron (s : Set V3) : Prop :=
+104:theorem faceOf_face {f s t : Set V3} (h : FaceOf t s) :
+121:theorem faceOf_inter {s t1 t2 : Set V3} (h1 : FaceOf t1 s) (h2 : FaceOf t2 s) :
+155:theorem affDim_mono {s t : Set V3} (hsub : s ⊆ t) (hs : s.Nonempty) :
+252:theorem mem_rint_iff {s : Set V3} {x : V3} :
+369:theorem subset_of_faceOf {t s u : Set V3} (hface : FaceOf t s) (husub : u ⊆ s)
+416:theorem faceOf_eq {s t u : Set V3} (ht : FaceOf t s) (hu : FaceOf u s)
+1061:theorem FACE_OF_AFF_DIM_LT {f s : Set V3} (hsc : Convex ℝ s) (hface : FaceOf f s)
+1755:theorem FACET_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) {c : Set V3}
+1770:theorem FACE_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) {c : Set V3}
+1793:theorem RELATIVE_INTERIOR_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) :
+1896:theorem FINITE_POLYHEDRON_EXTREME_POINTS {s : Set V3} (hsp : polyhedron s) :
+
+--- private dotRight + 'finrank ker = 2' template (Polytope.lean:193 / :238) ---
+193:private def dotRight (a : V3) : V3 →ₗ[ℝ] ℝ where
+238:  have h1 : Module.finrank ℝ (LinearMap.ker (dotRight a)) = 2 := by
+239:    have hnk := LinearMap.finrank_range_add_finrank_ker (dotRight a)
+
+--- PackingAuto22 in-tree assets cited by the verdict ---
+357:def weaklySaturatedP22 (V : Set V3) (r c : ℝ) : Prop := True
+6853:theorem card_packing_annulus :
+6883:theorem weak_saturation (W S : Set V3) (r : ℝ) (hr : 2 ≤ r ∧ r ≤ 2 * h0)
+10587:theorem FACET_AFF_DIM_2 (p f : Set V3) (hp : polyhedron p)
+12615:theorem rcone_refl (v : V3) (t : ℝ) (ht : t < 1) (hv : v ≠ 0) : v ∈ rconeGt 0 v t := by
+12628:theorem rcone_dot_pos (v : V3) (t : ℝ) (p : V3) (ht : 0 < t)
+12636:theorem cos_bounds_0_Pi2 (x : ℝ) (h1 : 0 < x) (h2 : x < Real.pi / 2) :
+12704:theorem rcone_gt_facet (gv gw : ℝ) (v w q p : V3) (h1 : 0 < gv ∧ gv < Real.pi / 2)
+12866:theorem WBLARHH_BIJ (p : Set V3) (hb : Bornology.IsBounded p) (hp : polyhedron p)
+12895:theorem BIJ_FACET_HYPERFACE (p : Set V3) (hp : polyhedron p) (hb : Bornology.IsBounded p)
+13038:theorem POLYHEDRON_TGJISOK (p : Set V3) (hb : Bornology.IsBounded p)
+13543:theorem BIJ_EDGES_DART_FACE (p : Set V3) (f : Set Dart3) (f1 : Set V3)
+13553:theorem SEGMENT_EDGE_ONTO (p : Set V3) (e : Set V3) (hp : polyhedron p)
+13730:theorem EDGE_OF_FACET_EDGE (p c e : Set V3) (hp : polyhedron p)
+13977:theorem BIJ_DART_POLYEDGE (P : Set V3) (hb : Bornology.IsBounded P)
+14002:theorem polyhedron_sum_sum_edge (P : Set V3) (hb : Bornology.IsBounded P)
+14059:theorem polyhedron_edge_sum (P : Set V3) (n : ℝ) (hb : Bornology.IsBounded P)
+14163:theorem FACET_OF_POLYHEDRON_EXPLICIT_ALT (V : Set (V3 × ℝ)) (P : Set V3)
+14329:theorem EXISTS_M_POLYHEDRON (V : Set V3) (theta : V3 → ℝ) (r : ℝ) (n : ℝ)
+15720:theorem SATURATE_BALL_ANNULUS (W S : Set V3) (r : ℝ) (hP : Packing W)
