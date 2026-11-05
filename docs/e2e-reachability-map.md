@@ -150,7 +150,7 @@
   docstring + LocalConcl LEDGER (c)/(d)。
 - **`pa16-qzyzmjc`**（`2dea72f0`）：`QZYZMJC` 真证出列（连带私有巨件 `mcellSetNotEmpty`
   翻绿标准三）；axiom 面如实带 sorryAx（继承锥内既有链）。`GRUTOTI1_concl` 未闭合
-  （Lane-draft 归档，见 `docs/lane-archives/pa2-grutoti1-concl/`）。
+  （Lane-draft 归档，见 `docs/archive/lane-archives/pa2-grutoti1-concl/`）。
 - **仪器事故与修复**（queue 续 261 详载）：Assembly 级模块闸 `lake build Kepler.Assembly`
   会触发 Interval.Cases shard 全量重编（几千文件）——闸被掐后遗留 12 个 shard olean 缺失；
   修复 = 6 路并行独立 `lean -o` 重编（0 error）+ Assembly.olean 独立重建（c1 等价手核路线）。

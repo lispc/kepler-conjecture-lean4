@@ -23,7 +23,7 @@
 - **验收口径（2026-11-03 起，用户拍板）**：主指标 = **K-REACH / COVERAGE / SHIMS / ORPHANS**；
   `K-SORRIED` 为信息项（不设单调目标）；`K-AXIOM` 为护栏。own-sorry 只作台账，不作为验收闸。
 - **未落库工件入库归档**：`kit-*.diff` + `DELIVERY.md` + `Evidence.md` 必须放
-  `docs/lane-archives/<lane>/`（Work.lean 不入库，可由 kit + HEAD 重建）；主仓 tracked 改动仅限落库文件。
+  `docs/archive/lane-archives/<lane>/`（Work.lean 不入库，可由 kit + HEAD 重建）；主仓 tracked 改动仅限落库文件。
 - **REWIRE 闸**（陈述冻结的证明项换 donor）：`GATE_MODE=REWIRE RW_ALLOW=<allowlist> RW_DONOR=<donor>
   LANE_FILES="a,b" bash scripts/auto_gate.sh <file> <THM>`；删除行必须在 allowlist，且不得删声明头/签名。
 

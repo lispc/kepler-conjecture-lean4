@@ -61,6 +61,8 @@
   `archive/lane-archives/`（8）— 只读；内部旧链接不回溯修复。
 - `archive/root/` — `STATUS.md` / `HANDOFF.md` / `DEBT.md` 的根级历史副本，
   冻结于 2026-10-23。
+- [`scouts/`](scouts/) — 只剩**机器可读数据表**（14 个 TSV，见其 README）；
+  侦察报告已全部归档。
 - [`assets/`](assets/) — 产物、探针日志、草稿（不在文档索引内逐件登记）。
 
 ## 维护规则（三条）

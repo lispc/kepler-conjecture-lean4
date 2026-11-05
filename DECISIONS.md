@@ -67,7 +67,7 @@
    全量接线 + 假 discharge 清理 + 多根覆盖。
 3. **批准 `REWIRE` 闸模式**：`auto_gate.sh` 新增 `GATE_MODE=REWIRE`（`RW_ALLOW` allowlist + `RW_DONOR`
    + 禁删声明头/签名），用于“陈述冻结的证明项换 donor”。F1 kit 回归测试 PASS；空 allowlist 负测试 PASS。
-4. **未落库工件入库归档**：`docs/lane-archives/<lane>/` 放 `kit.diff` + `DELIVERY.md` + `Evidence.md`
+4. **未落库工件入库归档**：`docs/archive/lane-archives/<lane>/` 放 `kit.diff` + `DELIVERY.md` + `Evidence.md`
    （Work.lean 不入库，可由 kit + HEAD 重建）。
 5. **build 覆盖**：零 importer 装配文件（PackingConcl 等）加入周期性 typecheck，防止静默腐烂。
 6. **批 1 三槽**：`packingconcl-c1-stage1` / `map-metrics-v2` / `tower-b4`。
