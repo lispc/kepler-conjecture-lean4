@@ -1,0 +1,631 @@
+diff --git a/lean/Kepler/Text/PackingAuto25.lean b/lean/Kepler/Text/PackingAuto25.lean
+--- a/lean/Kepler/Text/PackingAuto25.lean
++++ b/lean/Kepler/Text/PackingAuto25.lean
+@@ -9743,7 +9743,69 @@
+       (le_trans hd03hi (le_of_eq hq8.symm)) hy4lo (le_trans hy4hi (le_of_eq hq8.symm))
+       hd13lo (le_trans hd13hi (le_of_eq hq8.symm)) hd12lo (le_trans hd12hi (le_of_eq hq8.symm))
+     linarith
++
+ 
++/-- `ORDER_AZIM_SUM2Pi0` 的前置私拷贝（原文在本文件末尾；`real_model_sum_azim`
++的位置早于它，故按同体复制一份，零新债）。 -/
++private theorem p25w6_order_azim_sum2pi0 (x y z : V3) (n : ℕ) (g : ℕ → V3)
++    (h1 : ¬ Collinear3 x y z) (h2 : ∀ i, i < n → ¬ Collinear3 x y (g i))
++    (h3 : g n = g 0) (hn : 1 < n)
++    (h4 : ∀ j k, j < n → k < n → j < k → azim x y z (g j) < azim x y z (g k)) :
++    ∑ i ∈ Finset.Icc 0 (n - 1), azim x y (g i) (g (i + 1)) = 2 * Real.pi := by
++  have hcol : ∀ i, i < n → ¬ Collinear3 x y (g i) := h2
++  have key : ∀ p q, p < q → q < n →
++      azim x y (g p) (g q) = azim x y z (g q) - azim x y z (g p) := by
++    intro p q hpq hqn
++    have hchain : azim x y z (g p) < azim x y z (g q) := h4 p q (by omega) hqn hpq
++    have h := AZIM_BASE_SHIFT_LE x y z (g p) (g p) (g q)
++      h1 (hcol p (by omega)) (hcol p (by omega)) (hcol q (by omega)) (le_refl _) hchain.le
++    rw [azim_self] at h
++    linarith
++  have comp : ∀ p q, p < q → q < n →
++      azim x y (g q) (g p)
++        = 2 * Real.pi - (azim x y z (g q) - azim x y z (g p)) := by
++    intro p q hpq hqn
++    have hchain : azim x y z (g p) < azim x y z (g q) := h4 p q (by omega) hqn hpq
++    have hpos : (0:ℝ) < azim x y (g p) (g q) := by
++      rw [key p q hpq hqn]; linarith
++    have hc := azim_compl (hcol p (by omega)) (hcol q (by omega))
++    rw [key p q hpq hqn,
++      if_neg (by rw [← key p q hpq hqn]; exact ne_of_gt hpos)] at hc
++    exact hc
++  have hIcc : Finset.Icc 0 (n - 1) = Finset.range n := by
++    ext i
++    simp only [Finset.mem_Icc, Finset.mem_range]
++    omega
++  rw [hIcc]
++  -- telescope: sum over range m of azim (g i) (g (i+1)) = a_m - a_0
++  have tel : ∀ m, 1 ≤ m → m ≤ n - 1 →
++      ∑ i ∈ Finset.range m, azim x y (g i) (g (i + 1))
++        = azim x y z (g m) - azim x y z (g 0) := by
++    intro m hm1 hm2
++    induction m with
++    | zero => omega
++    | succ k ih =>
++      rw [Finset.sum_range_succ]
++      rcases Nat.eq_zero_or_pos k with hk0 | hk1
++      · subst hk0
++        simp only [Finset.sum_range_zero, Finset.sum_empty, zero_add]
++        have hstep := key 0 1 (by omega) (by omega)
++        linarith
++      · have hkm : k ≤ n - 1 := by omega
++        have hstep := key k (k + 1) (by omega) (by omega)
++        linarith [ih hk1 hkm]
++  have hsplit : ∑ i ∈ Finset.range n, azim x y (g i) (g (i + 1))
++      = (∑ i ∈ Finset.range (n - 1), azim x y (g i) (g (i + 1)))
++        + azim x y (g (n - 1)) (g n) := by
++    have hs := Finset.sum_range_succ (fun i => azim x y (g i) (g (i + 1))) (n - 1)
++    rw [show n - 1 + 1 = n from by omega] at hs
++    exact hs
++  rw [hsplit]
++  have hwrap : azim x y (g (n - 1)) (g n) = 2 * Real.pi
++      - (azim x y z (g (n - 1)) - azim x y z (g 0)) := by
++    rw [h3]
++    exact comp 0 (n - 1) (by omega) (by omega)
++  linarith [tel (n - 1) (by omega) (Nat.le_refl _)]
+ 
+ /-- HOL `real_model_sum_azim`: the wedge dihedral sum is `2*pi`. -/
+ theorem real_model_sum_azim (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+@@ -9752,7 +9814,19 @@
+     (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+     ∑ i ∈ Finset.Icc 0 (n - 1), azim_mcell V f u0 u1 i = 2 * Real.pi := by
+-  sorry
++  have hfmem : ∀ j, f j ∈ s_leaf V [u0, u1] := by
++    intro j
++    have h1' : f j ∈ f '' (Set.univ : Set ℕ) := ⟨j, Set.mem_univ _, rfl⟩
++    rw [hr.1] at h1'
++    exact h1'
++  have hcol : ∀ i, i < n → ¬ Collinear3 u0 u1 (f i) := by
++    intro i _
++    exact GBEWYFX (V := V) (ul := [u0, u1, f i]) hp hs (hfmem i).1
++  have hper0 : f n = f 0 := by simpa using hr.2.1 0
++  have hgrut := p25w6_order_azim_sum2pi0 u0 u1 w0 n f hnc hcol hper0 hn hr.2.2
++  rw [← hgrut]
++  exact Finset.sum_congr rfl fun i _ =>
++    LEAF_RANK_REUHADY V [u0, u1] w0 n f i hn hp hs hsize hnc hr
+ 
+ /-! ### T4 展开波（2026-10-08）：leaf_rank 见证层 —— `LEAF_RANK_PROPS` 前提树
+ 显式化（T 线 T4，PLAN.md §5；对齐 Assembly §2a' T1 先例与 SF31 debt-bridge 形：
+@@ -13062,7 +13136,295 @@
+     rw [hempt] at he
+     exact Set.notMem_empty _ he
+   exact p25w6_weight3_core V u0 u1 v1 v2 hp hs hnu hcey he hb
++
++/-! ### w6 008 桥（pa25-rolling-w6）
++
++`cell3_008_from_ineq` 的 Lean 实装：三张银行（`QZECFIC wt1`/`wt2 A`/`CIHTIUM`）
+++ `undiv_gamma3_nn`（x-空间 → y-空间 rescaling，`p25w6_dihY_bridge` 供
++`dih_y = sqrt(delta_x) * dih_x_div_sqrtdelta_posbranch`）。下游
++`MCELL3_008` / `GAMMAX_008a,b` / `real_model_008` / `real_model_cell23_008` /
++`real_model_gr` 全部消费本块；零 sorry / 零新 import。 -/
++
++/-- 换位 kit：`dihY y1 y2 s s s y6 = dihY y1 s y6 s y2 s`（rev ∘ 23-换位）。 -/
++private theorem p25w6_dihY_swap (y1 y2 y6 : ℝ) :
++    dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
++      = dihY y1 (Real.sqrt 2) y6 (Real.sqrt 2) y2 (Real.sqrt 2) := by
++  rw [p25m_dihY_rev y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6]
++  exact p25w4_dihY_sym23 y1 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y2
+ 
++private theorem p25w6_matan (z : ℝ) (hz : 0 < z) :
++    matan z = Real.arctan (Real.sqrt z) / Real.sqrt z := by
++  rw [matan, if_neg (ne_of_gt hz), if_pos hz]
++
++private theorem p25w6_dihXf_atn (x1 x2 x3 x4 x5 x6 : ℝ) (h1 : 0 < x1)
++    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) :
++    dihXf x1 x2 x3 x4 x5 x6
++      = Real.pi / 2 - Real.arctan (deltaX4 x1 x2 x3 x4 x5 x6
++          / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) := by
++  have hA : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) :=
++    Real.sqrt_pos.mpr (by positivity)
++  unfold dihXf
++  rw [p25w_atn2_eq_arctan hA]
++  rw [show (-deltaX4 x1 x2 x3 x4 x5 x6 / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
++      = -(deltaX4 x1 x2 x3 x4 x5 x6 / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) from
++    by ring, Real.arctan_neg]
++  ring
++
++private theorem p25w6_dihalg (a d d4 D : ℝ) (ha : 0 < a) (hd : 0 < d) (hd4 : 0 < d4)
++    (hD : D = d) :
++    Real.pi / 2 - Real.arctan (d4 / Real.sqrt (4 * a * d))
++      = Real.sqrt D * (Real.sqrt (4 * a) / d4 * matan (4 * a * d / d4 ^ 2)) := by
++  set z : ℝ := Real.sqrt (4 * a * d) / d4 with hzdef
++  have harg : 0 < 4 * a * d / d4 ^ 2 := by positivity
++  have hsqd : Real.sqrt (4 * a * d / d4 ^ 2) = z := by
++    rw [hzdef, show 4 * a * d / d4 ^ 2 = (Real.sqrt (4 * a * d) / d4) ^ 2 by
++      rw [div_pow, Real.sq_sqrt (by positivity)]]
++    exact Real.sqrt_sq (le_of_lt (by positivity : 0 < Real.sqrt (4 * a * d) / d4))
++  have hmat : matan (4 * a * d / d4 ^ 2) = Real.arctan z / z := by
++    rw [p25w6_matan _ harg, hsqd]
++  have hcomp : Real.arctan z = Real.pi / 2 - Real.arctan (d4 / Real.sqrt (4 * a * d)) := by
++    have h : Real.arctan ((d4 / Real.sqrt (4 * a * d))⁻¹)
++        = Real.pi / 2 - Real.arctan (d4 / Real.sqrt (4 * a * d)) :=
++      Real.arctan_inv_of_pos (div_pos hd4 (Real.sqrt_pos.mpr (by positivity)))
++    have hinv : (d4 / Real.sqrt (4 * a * d))⁻¹ = z := by
++      rw [hzdef]; field_simp
++    rw [← h, hinv]
++  rw [← hcomp, hmat, hD, hzdef]
++  have hsq : Real.sqrt d * Real.sqrt (4 * a) = Real.sqrt (4 * a * d) := by
++    rw [mul_comm]
++    exact (Real.sqrt_mul (by positivity : (0:ℝ) ≤ 4 * a) d).symm
++  field_simp [ne_of_gt (Real.sqrt_pos.mpr hd), ne_of_gt hd4]
++  exact hsq.symm
++
++private theorem p25w6_dihXf_bridge (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
++    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) (hd4 : 0 < deltaX4 x1 x2 x3 x4 x5 x6) :
++    dihXf x1 x2 x3 x4 x5 x6
++      = Real.sqrt (deltaX x1 x2 x3 x4 x5 x6)
++        * dihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 := by
++  rw [p25w6_dihXf_atn x1 x2 x3 x4 x5 x6 hx1 hd]
++  unfold dihXDivSqrtdeltaPosbranch
++  dsimp only
++  exact p25w6_dihalg x1 (deltaX x1 x2 x3 x4 x5 x6) (deltaX4 x1 x2 x3 x4 x5 x6)
++    (deltaX x1 x2 x3 x4 x5 x6) hx1 hd hd4 rfl
++
++private theorem p25w6_dihY_bridge (y4 y5 y6 : ℝ)
++    (h4 : 2 ≤ y4) (h4' : y4 ≤ Real.sqrt 8)
++    (h5 : 2 ≤ y5) (h5' : y5 ≤ Real.sqrt 8)
++    (h6 : 2 ≤ y6) (h6' : y6 ≤ Real.sqrt 8)
++    (het : eta_y y4 y5 y6 < Real.sqrt 2) :
++    dihY y4 (Real.sqrt 2) y6 (Real.sqrt 2) y5 (Real.sqrt 2)
++      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
++        * yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
++            y4 y5 y6 := by
++  have hs2 : (Real.sqrt 2 * Real.sqrt 2 : ℝ) = 2 := Real.mul_self_sqrt (by norm_num)
++  have hd0 : 0 < deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) :=
++    (mi_ETA_Y_BOUNDS y4 y5 y6 h4 h4' h5 h5' h6 h6' het).2
++  have hd : deltaX (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2
++      = deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
++    simp only [deltaX]; ring
++  have hD : 0 < deltaX (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
++    rw [hd]; exact hd0
++  have hd4 : 0 < deltaX4 (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
++    rw [show deltaX4 (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2
++        = y4 * y4 * (y5 * y5 + y6 * y6 - y4 * y4) by simp only [deltaX4]; ring]
++    have h5sq : (4:ℝ) ≤ y5 * y5 := by nlinarith
++    have h6sq : (4:ℝ) ≤ y6 * y6 := by nlinarith
++    have h4lt : y4 * y4 < 8 := by
++      have hlt := (mi_ETA_Y_LE_IMP_LT_ALL y4 y5 y6 h4 h4' h5 h5' h6 h6' het).1
++      have h8 : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
++      nlinarith
++    exact mul_pos (by positivity) (by linarith)
++  have hX : yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
++      y4 y5 y6 = dihXDivSqrtdeltaPosbranch (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
++    unfold yOfX
++    rw [hs2]
++    rfl
++  have hunf : dihY y4 (Real.sqrt 2) y6 (Real.sqrt 2) y5 (Real.sqrt 2)
++      = dihXf (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
++    unfold dihY
++    rw [hs2]
++  rw [hX, hunf, ← hd]
++  exact p25w6_dihXf_bridge (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2
++    (by positivity) hD hd4
++
++private theorem p25w6_undiv_gamma3_nn (y4 y5 y6 w w' : ℝ) (hw' : 0 < w')
++    (hg : 0 ≤ gamma3f y4 y5 y6 (Real.sqrt 2) lmfun)
++    (h4 : 2 ≤ y4) (h5 : 2 ≤ y5) (h6 : 2 ≤ y6)
++    (h4' : y4 ≤ 2 * Real.sqrt 2) (h5' : y5 ≤ 2 * Real.sqrt 2)
++    (h6' : y6 ≤ 2 * hminus)
++    (het : eta_y y4 y5 y6 < Real.sqrt 2)
++    (hwle : w' ≤ w)
++    (hbank : 0.008 * yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2) (Real.sqrt 2)
++        (Real.sqrt 2) y4 y5 y6
++      < yOfX (gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1)
++          (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 / w) :
++    0.008 * dihY y4 (Real.sqrt 2) y6 (Real.sqrt 2) y5 (Real.sqrt 2)
++      < gamma3f y4 y5 y6 (Real.sqrt 2) lmfun / w' := by
++  have hs2 : (Real.sqrt 2 * Real.sqrt 2 : ℝ) = 2 := Real.mul_self_sqrt (by norm_num)
++  have h8a : y4 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h4'
++  have h8b : y5 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h5'
++  have h8c : y6 ≤ Real.sqrt 8 := le_trans h6' mi_two_hminus_le_sqrt8
++  have hDpos : 0 < deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) :=
++    (mi_ETA_Y_BOUNDS y4 y5 y6 h4 h8a h5 h8b h6 h8c het).2
++  have hcut6 : h0cut y6 = 1 := by
++    simp only [h0cut, if_pos (le_trans h6' mi_two_hminus_le_two_h0)]
++  have hgamma : gamma3f y4 y5 y6 (Real.sqrt 2) lmfun
++      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
++        * yOfX (gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1)
++            (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 := by
++    have hG := mi_gamma3f_gamma3f_x_div_sqrtdelta (2:ℝ) 2 2 y4 y5 y6 h4 h5 h6 h4' h5'
++      (by rw [← mi_sqrt8_eq]; exact h8c) het
++    rw [hcut6] at hG
++    have hY : yOfX (gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1)
++        (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6
++        = gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1 2 2 2
++            (y4 * y4) (y5 * y5) (y6 * y6) := by
++      unfold yOfX
++      rw [hs2]
++    rw [hY, hG]
++    ring
++  have hdih : 0.008 * dihY y4 (Real.sqrt 2) y6 (Real.sqrt 2) y5 (Real.sqrt 2)
++      = Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
++        * (0.008 * yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2) (Real.sqrt 2)
++            (Real.sqrt 2) y4 y5 y6) := by
++    rw [p25w6_dihY_bridge y4 y5 y6 h4 h8a h5 h8b h6 h8c het]
++    ring
++  have hsqrt : 0 < Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6)) :=
++    Real.sqrt_pos.mpr hDpos
++  have hmul := mul_lt_mul_of_pos_left hbank hsqrt
++  have hR : Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
++        * (yOfX (gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1)
++            (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 / w)
++      = gamma3f y4 y5 y6 (Real.sqrt 2) lmfun / w := by
++    calc Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
++          * (yOfX (gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1)
++              (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 / w)
++        = (Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6))
++            * yOfX (gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1)
++                (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6) / w := by ring
++      _ = gamma3f y4 y5 y6 (Real.sqrt 2) lmfun / w := by rw [← hgamma]
++  rw [← hdih, hR] at hmul
++  have hmono : gamma3f y4 y5 y6 (Real.sqrt 2) lmfun / w
++      ≤ gamma3f y4 y5 y6 (Real.sqrt 2) lmfun / w' :=
++    div_le_div_of_nonneg_left hg hw' hwle
++  linarith
++
++private theorem p25w6_cell3_008_aux (hb : cell3_bank) :
++    ∀ y1 y2 y6 : ℝ, 2 * hminus ≤ y1 → 2 ≤ y2 → 2 ≤ y6 → y1 ≤ 2 * hplus →
++      y2 ≤ 2 * Real.sqrt 2 → y6 ≤ 2 * Real.sqrt 2 →
++      eta_y y1 y2 y6 < Real.sqrt 2 →
++      0.008 * dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 ≤
++        gamma3f y1 y2 y6 (Real.sqrt 2) lmfun / (wtcount3Y y1 y2 y6 : ℝ) := by
++  have h_wt1 : bank_QZECFICwt1 := hb.2.2.2.1
++  have h_wt2 : bank_QZECFICwt2A := hb.2.2.2.2.1
++  have h_ciht : bank_CIHTIUM := hb.2.2.2.2.2.1
++  -- sorted-case core: `y6 <= y2`
++  have sorted : ∀ y1 y2 y6 : ℝ, 2 * hminus ≤ y1 → 2 ≤ y2 → 2 ≤ y6 →
++      y1 ≤ 2 * hplus → y2 ≤ 2 * Real.sqrt 2 → y6 ≤ 2 * Real.sqrt 2 →
++      eta_y y1 y2 y6 < Real.sqrt 2 → y6 ≤ y2 →
++      0.008 * dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 ≤
++        gamma3f y1 y2 y6 (Real.sqrt 2) lmfun / (wtcount3Y y1 y2 y6 : ℝ) := by
++    intro y1 y2 y6 h1 h2 h6 h1' h2' h6' het hle
++    classical
++    have hs2 : (Real.sqrt 2 * Real.sqrt 2 : ℝ) = 2 := Real.mul_self_sqrt (by norm_num)
++    have h2le : 2 ≤ y1 := le_trans mi_two_le_two_hminus h1
++    have h1_22 : y1 ≤ 2 * Real.sqrt 2 := le_trans h1' mi_two_hplus_le_two_sqrt2
++    have h8a : y1 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h1_22
++    have h8b : y2 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h2'
++    have h8c : y6 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h6'
++    -- eta_y^2 < 2
++    have hups := (mi_ETA_Y_BOUNDS y1 y2 y6 h2le h8a h2 h8b h6 h8c het).1
++    have hq0 : 0 ≤ (y1 * y1) * (y2 * y2) * (y6 * y6)
++        / upsX (y1 * y1) (y2 * y2) (y6 * y6) :=
++      div_nonneg (by positivity) (le_of_lt hups)
++    have het2 : eta_y y1 y2 y6 ^ 2 < 2 := by
++      have hq2 : (y1 * y1) * (y2 * y2) * (y6 * y6)
++          / upsX (y1 * y1) (y2 * y2) (y6 * y6) < 2 :=
++        (Real.sqrt_lt_sqrt_iff hq0).mp het
++      have hsq : eta_y y1 y2 y6 ^ 2 = (y1 * y1) * (y2 * y2) * (y6 * y6)
++          / upsX (y1 * y1) (y2 * y2) (y6 * y6) := by
++        show Real.sqrt ((y1 * y1) * (y2 * y2) * (y6 * y6)
++          / upsX (y1 * y1) (y2 * y2) (y6 * y6)) ^ 2 = _
++        exact Real.sq_sqrt hq0
++      rw [hsq]; exact hq2
++    -- gamma3f nonneg from cell3_from_ineq_thm
++    have hg : 0 ≤ gamma3f y1 y2 y6 (Real.sqrt 2) lmfun :=
++      cell3_from_ineq_thm hb y1 y2 y6 h2le h2 h6 h1_22 h2' h6' het
++    rcases lt_or_ge y2 (2 * hminus) with h2lt | h2ge
++    · -- y2 < 2hmin: wt1 fires, weight 1
++      have h6lt : y6 < 2 * hminus := lt_of_le_of_lt hle h2lt
++      have hcut2 : h0cut y2 = 1 := by
++        simp only [h0cut, if_pos (le_trans (le_of_lt h2lt) mi_two_hminus_le_two_h0)]
++      have hw : wtcount3Y y1 y2 y6 = 1 := by
++        unfold wtcount3Y
++        have hc1 : criticalEdgeY y1 := ⟨h1, h1'⟩
++        have hc2 : ¬ criticalEdgeY y2 := fun hc => absurd hc.1 (not_le.mpr h2lt)
++        have hc6 : ¬ criticalEdgeY y6 := fun hc => absurd hc.1 (not_le.mpr h6lt)
++        rw [if_pos hc1, if_neg hc2, if_neg hc6]
++      obtain hbank | heta := h_wt1 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
++        y1 y2 y6 le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl h1 h1' h2
++        (le_of_lt h2lt) h6 (le_of_lt h6lt)
++      · have hbank' : 0.008 * yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2)
++            (Real.sqrt 2) (Real.sqrt 2) y1 y2 y6
++            < yOfX (gamma3fXDivSqrtdelta (h0cut y1) (h0cut y2) 1)
++                (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y1 y2 y6 / 1 := by
++          rw [hcut2]
++          simpa using hbank
++        have h := p25w6_undiv_gamma3_nn y1 y2 y6 1 1 one_pos hg h2le h2 h6
++          h1_22 h2' (le_of_lt h6lt) het (le_refl 1) hbank'
++        rw [← p25w6_dihY_swap y1 y2 y6] at h
++        rw [hw]
++        simpa using le_of_lt h
++      · linarith [het2]
++    · -- y2 >= 2hmin: CIHTIUM forces y6 < 2hmin; wt2 A fires, weight 2
++      have h6lt : y6 < 2 * hminus := by
++        rcases lt_or_ge y6 (2 * hminus) with h | h
++        · exact h
++        · exfalso
++          have hbig := h_ciht 1 1 1 y1 y2 y6 le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl
++            h1 h8a h2ge h8b h h8c
++          linarith [het2]
++      obtain hbank | heta := h_wt2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
++        y1 y2 y6 le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl h1 h8a h2ge h8b h6
++        (le_of_lt h6lt)
++      · by_cases h2c : criticalEdgeY y2
++        · have hw : wtcount3Y y1 y2 y6 = 2 := by
++            unfold wtcount3Y
++            have hc1 : criticalEdgeY y1 := ⟨h1, h1'⟩
++            have hc6 : ¬ criticalEdgeY y6 := fun hc => absurd hc.1 (not_le.mpr h6lt)
++            rw [if_pos hc1, if_pos h2c, if_neg hc6]
++          have h := p25w6_undiv_gamma3_nn y1 y2 y6 2 2 (by norm_num) hg h2le h2 h6
++            h1_22 h2' (le_of_lt h6lt) het (le_refl 2) hbank
++          rw [← p25w6_dihY_swap y1 y2 y6] at h
++          rw [hw]
++          simpa using le_of_lt h
++        · have hw : wtcount3Y y1 y2 y6 = 1 := by
++            unfold wtcount3Y
++            have hc1 : criticalEdgeY y1 := ⟨h1, h1'⟩
++            have hc6 : ¬ criticalEdgeY y6 := fun hc => absurd hc.1 (not_le.mpr h6lt)
++            rw [if_pos hc1, if_neg h2c, if_neg hc6]
++          have h := p25w6_undiv_gamma3_nn y1 y2 y6 2 1 one_pos hg h2le h2 h6
++            h1_22 h2' (le_of_lt h6lt) het (by norm_num) hbank
++          rw [← p25w6_dihY_swap y1 y2 y6] at h
++          rw [hw]
++          simpa using le_of_lt h
++      · linarith [het2]
++  intro y1 y2 y6 h1 h2 h6 h1' h2' h6' het
++  rcases le_or_gt y6 y2 with hle | hlt
++  · exact sorted y1 y2 y6 h1 h2 h6 h1' h2' h6' het hle
++  · -- swap y2/y6 via symmetry
++    have het' : eta_y y1 y6 y2 < Real.sqrt 2 := by
++      rwa [← (mi_eta_y_sym y1 y2 y6).2]
++    have h := sorted y1 y6 y2 h1 h6 h2 h1' h6' h2' het' (le_of_lt hlt)
++    rw [show dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
++        = dihY y1 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y2 from
++      p25m_dihY_rev y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6]
++    rw [show gamma3f y1 y2 y6 (Real.sqrt 2) lmfun
++        = gamma3f y1 y6 y2 (Real.sqrt 2) lmfun from (mi_gamma3f_sym y1 y2 y6).1]
++    rw [show wtcount3Y y1 y2 y6 = wtcount3Y y1 y6 y2 from by
++      unfold wtcount3Y; omega]
++    exact h
++
+ /-- HOL `MCELL3_008`. -/
+ theorem MCELL3_008 (V : Set V3) (X : Set V3) (u0 u1 : V3) (ul : List V3)
+     (hnl : pack_nonlinear_non_ox3q1h) (hp : Packing V) (hs : saturated V)
+@@ -13070,7 +13432,76 @@
+     (he : {u0, u1} ∈ edgeX V X) (hb : barV V 3 ul) :
+     0.008 * dihX V X (u0, u1) ≤
+       gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X := by
+-  sorry
++  subst hX
++  -- non-null: an empty cell carries no edge
++  have hnu : ¬ nullSet (mcell3 V ul) := by
++    intro hnull
++    rw [BumpP4.MCELL3] at hnull
++    have hempt := BumpP4.RIJRIED V ul 3 hnull
++    rw [← BumpP4.MCELL3] at hempt
++    rw [hempt] at he
++    exact Set.notMem_empty _ he
++  -- normalize the stem: edge endpoints become the first two list entries
++  obtain ⟨vl, hbvl, hu0, hu1, hcell⟩ :=
++    MCELL3_EDGE_FIRST (V := V) (ul := ul) hs hp hb he
++  have h4 : vl.length = 4 := hbvl.1
++  let v1 := vl.getD 2 0
++  let v2 := vl.getD 3 0
++  have hvl_eq : vl = [u0, u1, v1, v2] := by
++    have hl4 : vl = [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0, vl.getD 3 0] := by
++      cases vl with
++      | nil => simp at h4
++      | cons a t =>
++        cases t with
++        | nil => simp at h4
++        | cons b t =>
++          cases t with
++          | nil => simp at h4
++          | cons c t =>
++            cases t with
++            | nil => simp at h4
++            | cons d t =>
++              cases t with
++              | nil => rfl
++              | cons e t => simp at h4
++    rw [hl4, ← hu0, ← hu1]
++  have hXeq : mcell3 V ul = mcell3 V [u0, u1, v1, v2] := by rw [hcell, hvl_eq]
++  rw [hXeq]
++  have hb' : barV V 3 [u0, u1, v1, v2] := by rw [← hvl_eq]; exact hbvl
++  have hnu' : ¬ nullSet (mcell3 V [u0, u1, v1, v2]) := by rw [← hXeq]; exact hnu
++  have hnu3 : ¬ nullSet (mcell 3 V [u0, u1, v1, v2]) := by
++    rw [← BumpP4.MCELL3]; exact hnu'
++  have he' : {u0, u1} ∈ edgeX V (mcell3 V [u0, u1, v1, v2]) := by rw [← hXeq]; exact he
++  -- gammaX / dihX closed forms from the PA20 assembly
++  have hres := gammaX_gamma3f (V := V) (X := mcell3 V [u0, u1, v1, v2])
++    (ul := [u0, u1, v1, v2]) (u0 := u0) (u1 := u1) (u2 := v1) (u3 := v2)
++    (y4 := dist u1 v1) (y5 := dist u0 v1) (y6 := dist u0 u1)
++    hs hp hb' (BumpP4.MCELL3 V [u0, u1, v1, v2]) hnu' rfl rfl rfl rfl
++  have hgX := hres.2.2.2.2.2.2.2
++  have hdX := hres.2.2.2.2.1
++  have hcw := MCELL3_CRITICAL_WEIGHT V (mcell3 V [u0, u1, v1, v2]) u0 u1 v1 v2 hnl
++    hp hs hcey rfl he' hb'
++  have hbb : betaBumpV1 V ({u0, u1} : Set V3) (mcell3 V [u0, u1, v1, v2]) = 0 :=
++    BumpP4.MCELL_BUMP_0 V [u0, u1, v1, v2] {u0, u1} 3 (by omega) hp hs hb' hnu3
++  -- the y-space box and eta bound from MCELL3_DOMAIN
++  have hdom := MCELL3_DOMAIN V [u0, u1, v1, v2] hs hp hb' hnu'
++  have h2 : 2 ≤ dist u1 v1 := hdom.2.1
++  have h6 : 2 ≤ dist u0 v1 := hdom.2.2.1
++  have h2' : dist u1 v1 ≤ 2 * Real.sqrt 2 := le_of_lt hdom.2.2.2.2.1
++  have h6' : dist u0 v1 ≤ 2 * Real.sqrt 2 := le_of_lt hdom.2.2.2.2.2.1
++  have het : eta_y (dist u0 u1) (dist u1 v1) (dist u0 v1) < Real.sqrt 2 := by
++    rw [(mi_eta_y_sym (dist u0 u1) (dist u1 v1) (dist u0 v1)).2]
++    exact hdom.2.2.2.2.2.2.2
++  -- weight swap: `wtcount3_y d01 d02 d12 = wtcount3_y d01 d12 d02`
++  have hwtw : wtcount3Y (dist u0 u1) (dist u0 v1) (dist u1 v1) =
++      wtcount3Y (dist u0 u1) (dist u1 v1) (dist u0 v1) := by
++    unfold wtcount3Y
++    omega
++  rw [hgX, hdX, hcw, hwtw, hbb, add_zero]
++  rw [← (mi_gamma3f_sym (dist u0 u1) (dist u1 v1) (dist u0 v1)).2]
++  have h008 := p25w6_cell3_008_aux (proj_cell3_bank hnl) (dist u0 u1) (dist u1 v1)
++    (dist u0 v1) hcey.1 h2 h6 hcey.2 h2' h6' het
++  simpa [mul_one_div, div_eq_mul_inv] using h008
+ 
+ /-- HOL `real_model_008`: the non-cc-cell remainder has weight ≥ `0.008`
+ times its dihedral. -/
+@@ -13088,7 +13519,51 @@
+         X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
+         X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]}
+         (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X) := by
+-  sorry
++  have hfinS : ({X : Set V3 | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
++      X ⊆ wedgeGe u0 u1 (f i) (f (i + 1))} : Set (Set V3)).Finite :=
++    Set.Finite.subset (FINITE_EDGE_X2 V {u0, u1} u0 u1 hp hs rfl)
++      (fun z hz => ⟨hz.1, hz.2.1⟩)
++  have hfinR : ({X : Set V3 | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
++      X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
++      X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]} :
++      Set (Set V3)).Finite :=
++    Set.Finite.subset hfinS (fun z hz => ⟨hz.1, hz.2.1, hz.2.2.1⟩)
++  simp only [setSum, dif_pos hfinR]
++  refine Finset.sum_le_sum fun X hX => ?_
++  obtain ⟨hm, he, hsub, hXA, hXB⟩ := hfinR.mem_toFinset.mp hX
++  have hnn : ¬ nullSet X := by
++    intro hnull
++    obtain ⟨k, ul, hXeq, hb⟩ := hm
++    have hE : edgeX V X = ∅ := by
++      rw [hXeq] at hnull
++      rw [hXeq]
++      exact BumpP4.RIJRIED V ul k hnull
++    rw [hE] at he
++    exact absurd he (by simp)
++  obtain ⟨k, v1, v2, hb, hk, hXeq⟩ :=
++    EDGE_IMP_K23 V X u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hno4 hnc hcey hr
++      hm he hsub
++  have hk4 : k < 4 := by rcases hk with h | h <;> omega
++  have hnm : ¬ nullSet (mcell k V [u0, u1, v1, v2]) := by rw [← hXeq]; exact hnn
++  have hbb : betaBumpV1 V ({u0, u1} : Set V3) X = 0 := by
++    rw [hXeq]
++    exact BumpP4.MCELL_BUMP_0 V [u0, u1, v1, v2] {u0, u1} k hk4 hp hs hb hnm
++  rcases hk with hk2 | hk3
++  · -- k = 2
++    have hX2 : X = mcell2 V [u0, u1, v1, v2] := by rw [hXeq, hk2, BumpP4.MCELL2]
++    have hcw := MCELL2_CRITICAL_WEIGHT1 V X u0 u1 [u0, u1, v1, v2] hnl hp hs hcey
++      hX2 he hb
++    have h008 := (CC_2_PROPS V X u0 u1 [u0, u1, v1, v2] hnl hp hs hcey hX2 he hb).2.2.2
++    rw [hcw, hbb, add_zero, mul_one]
++    exact le_of_lt h008
++  · -- k = 3
++    have hX3 : X = mcell 3 V [u0, u1, v1, v2] := by rw [hXeq, hk3]
++    have he3 : {u0, u1} ∈ edgeX V (mcell 3 V [u0, u1, v1, v2]) := by
++      rw [← hX3]; exact he
++    have h3 := MCELL3_008 V (mcell 3 V [u0, u1, v1, v2]) u0 u1
++      [u0, u1, v1, v2] hnl hp hs (BumpP4.MCELL3 V [u0, u1, v1, v2]).symm hcey he3 hb
++    rw [hX3]
++    exact h3
+ 
+ /-- HOL `real_model_cell23`. -/
+ theorem real_model_cell23 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+@@ -13217,7 +13692,40 @@
+             0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+           0.008 * azim_mcell V f u0 u1 i ≤
+         gg_mcell V f u0 u1 i := by
+-  sorry
++  intro i hno4
++  have haz := CC_3_SUM_fn V u0 u1 w0 n f i (fun X => dihX V X (u0, u1))
++    hnl hn hp hs hsize h0 h1 hper hno4 hnc hcey hr
++  have hgg := CC_3_SUM_fn V u0 u1 w0 n f i
++    (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X)
++    hnl hn hp hs hsize h0 h1 hper hno4 hnc hcey hr
++  obtain ⟨-, -, -, hbbA, hbbB, -⟩ :=
++    CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
++  have h008 := real_model_008 V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper
++    hnc hcey hr hno4
++  -- linearity of the remainder sum
++  have hfinS : ({X : Set V3 | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
++      X ⊆ wedgeGe u0 u1 (f i) (f (i + 1))} : Set (Set V3)).Finite :=
++    Set.Finite.subset (FINITE_EDGE_X2 V {u0, u1} u0 u1 hp hs rfl)
++      (fun z hz => ⟨hz.1, hz.2.1⟩)
++  have hfinR : ({X : Set V3 | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
++      X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
++      X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]} :
++      Set (Set V3)).Finite :=
++    Set.Finite.subset hfinS (fun z hz => ⟨hz.1, hz.2.1, hz.2.2.1⟩)
++  have hlin : setSum {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
++        X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
++        X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]}
++        (fun X => 0.008 * dihX V X (u0, u1)) =
++      0.008 * setSum {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
++        X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
++        X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]}
++        (fun X => dihX V X (u0, u1)) := by
++    simp only [setSum, dif_pos hfinR]
++    exact (Finset.mul_sum (s := hfinR.toFinset)
++      (f := fun X => dihX V X (u0, u1)) (a := 0.008)).symm
++  rw [azim_mcell, gg_mcell, haz, hgg, hbbA, hbbB]
++  simp only [add_zero] at h008 ⊢
++  linarith [h008, hlin]
+ 
+ /-- HOL `GAMMAX_008a`. -/
+ theorem GAMMAX_008a (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
+@@ -13229,7 +13737,21 @@
+     0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1) ≤
+       gammaX V (ccCell V [u0, u1, f i]) lmfun *
+         criticalWeight V (ccCell V [u0, u1, f i]) := by
+-  sorry
++  obtain ⟨hk3a, hbarA, -, hbbA, -, -, -, -, -, -, -, -, -, -, hleafA, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hnnA, -, -, -⟩ :=
++    CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
++  have hstem := STEM_EDGEX (V := V) (ul := [u0, u1, f i]) hp hs hleafA
++  have e0 := (EL_CC_UH (V := V) (ul := [u0, u1, f i]) hp hs hleafA).1
++  have e1 := (EL_CC_UH (V := V) (ul := [u0, u1, f i]) hp hs hleafA).2.1
++  simp only [List.getD_cons_zero, List.getD_cons_succ] at e0 e1
++  rw [e0, e1] at hstem
++  have hX : ccCell V [u0, u1, f i] = mcell3 V (ccUh V [u0, u1, f i]) := by
++    unfold ccCell
++    rw [hk3a]
++    exact (BumpP4.MCELL3 V (ccUh V [u0, u1, f i])).symm
++  have h3 := MCELL3_008 V (ccCell V [u0, u1, f i]) u0 u1
++    (ccUh V [u0, u1, f i]) hnl hp hs hX hcey hstem hbarA
++  rw [hbbA, add_zero] at h3
++  exact h3
+ 
+ /-- HOL `GAMMAX_008b`. -/
+ theorem GAMMAX_008b (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
+@@ -13241,7 +13763,27 @@
+     0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1) ≤
+       gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+         criticalWeight V (ccCell V [u1, u0, f (i + 1)]) := by
+-  sorry
++  obtain ⟨-, -, hbarB, -, hbbB, hk3b, -, -, -, -, -, -, -, -, -, -, hleafB, -, -, -, -, -, -, -, -, -, -, -, -, -, hnnB, -, -⟩ :=
++    CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
++  have hstem := STEM_EDGEX (V := V) (ul := [u1, u0, f (i + 1)]) hp hs hleafB
++  have e0B := (EL_CC_UH (V := V) (ul := [u1, u0, f (i + 1)]) hp hs hleafB).1
++  have e1B := (EL_CC_UH (V := V) (ul := [u1, u0, f (i + 1)]) hp hs hleafB).2.1
++  simp only [List.getD_cons_zero, List.getD_cons_succ] at e0B e1B
++  rw [e0B, e1B] at hstem
++  have hset : ({u1, u0} : Set V3) = {u0, u1} := by
++    ext z
++    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
++    tauto
++  rw [hset] at hstem
++  have hk3b' : ccKe V [u1, u0, f (i + 1)] = 3 := hk3b
++  have hX : ccCell V [u1, u0, f (i + 1)] = mcell3 V (ccUh V [u1, u0, f (i + 1)]) := by
++    unfold ccCell
++    rw [hk3b']
++    exact (BumpP4.MCELL3 V (ccUh V [u1, u0, f (i + 1)])).symm
++  have h3 := MCELL3_008 V (ccCell V [u1, u0, f (i + 1)]) u0 u1
++    (ccUh V [u1, u0, f (i + 1)]) hnl hp hs hX hcey hstem hbarB
++  rw [hbbB, add_zero] at h3
++  exact h3
+ 
+ /-- HOL `real_model_3a`. -/
+ theorem real_model_3a (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+@@ -13289,7 +13831,14 @@
+     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+     ∀ i, ¬ cc_4 V u0 u1 f i →
+       0.008 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
+-  sorry
++  intro i hno4
++  have h := real_model_cell23_008 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper
++    hnc hcey hr i hno4
++  have ha := GAMMAX_008a V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
++    hcey hr hno4
++  have hb := GAMMAX_008b V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
++    hcey hr hno4
++  linarith
+ 
+ /-- HOL `JSP_BOUNDS`. -/
+ theorem JSP_BOUNDS (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q1h)

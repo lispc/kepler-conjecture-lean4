@@ -38,17 +38,17 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 下午，池 **0/5**——落库窗口）
+## 1. 在飞（2026-11-06 下午，池 **2/5**）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| — | 当前无子车道；编排者在落库 + 重跑基线 | — |
+| `pa25-rolling-w7` | **PA25 收尾波**：`pema`/`pemb` → `txq`/`tew` → `gamma10`/`gamma11`（全锥内；目标 12→≤6，或宣布章节除 DEFHOLE 外收尾） | 在飞 |
+| `tamecorr-w1`（resume） | `TameCorrBase` 改造：**摘掉 Assembly import**，全部押到 `TameLp.IsHypermapOfListTl`，Assembly 层留给 W2 一行 `iff` | 在飞 |
+| （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；完成后重跑基线 | 进行中 |
 
-> 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
-> [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
-> 本轮待落：`pa25-rolling-w6`（7 件，19→12）/ `pa22-yssksqoy-pillars`（2 件，16→14）/
-> `TameCorrBase`（186 行新模块，闸无 HEAD 版本→改走等价验收）。
-> 刚落：`p21-anchor-defix`（`87fdfdad`，DEF-FIX 双 GATE-PASS）、`la1-bimport`（`dcc5e36f`，2 条 import 边）。
+> 已落库车道（114+ 行）见 [`history/lanes-landed.md`](history/lanes-landed.md)。
+> 本轮已落：`p21-anchor-defix`（`87fdfdad`，DEF-FIX 双 PASS）、`pa25-rolling-w6`（`3e2698a2`，19→12，锥内 −7）、
+> `pa22-yssksqoy-pillars`（`726faa79`，15→13）、`la1-bimport`（`dcc5e36f`，2 条 import 边）。
 
 > 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
@@ -191,6 +191,12 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-06（15:10，续378）**：**四项裁决全采纳 + 三笔落库（p21 DEF-FIX / PA25 w6 / PA22 两件）+ TameCorrBase 改造 + 发车 w7**。① **裁决**（`ddd78919`）：`_797` 真化（移植 `arclength2` + `PackIneqDefA` 改真合取，DEF-FIX，hNL 诚实 +1）/ 四条 registry 补 `mnt11`（SF）/ `jcajydu` 先移 `Reduction5`（不加前提）/ 五件 corpus-unproved 销账（LA A 类根 29→24）。队列 δ→ε→ζ→η（`bdc22f79`）。
+  ② **`p21-anchor-defix` `87fdfdad`**（DEF-FIX 双 GATE-PASS）：两锚点改 `main_nonlinear_terminal_v11` 别名；28 个签名假设类型变但 24 个 body 是 sorry 且 `h` 未用、4 个已证件仅转发；旧探针 `not_p21_anchor` 现按预期编译失败。
+  ③ **PA25 w6 `3e2698a2`**（19→12，**锥内 −7**）：`cell3_008_from_ineq` 桥 + 九件里 7 件（`MCELL3_008`/`real_model_008`/`cell23_008`/`GAMMAX_008a,b`/`gr`/`sum_azim`），+556/−7。
+  ④ **PA22 `726faa79`**（15→13）：`YSSKQOY_VECTOR` 未走 PA18 银行（不在闭包），改用纯 Mathlib arccos 单调性——把 HOL 三段压成两变量不等式，导数核因子化 `16(b−2)(b+2)(2a²−b²+4) ≥ 0`；`GOTCJAH` 按 HOL 证路装配。**但 `DLWCHEM_full`/`XULJEPR_full` 未转干净**——剩余债是 3 个独立 GIANT（`EXISTS_M_POLYHEDRON`/`polyhedron_edge_sum`/`POLYHEDRON_FACET_SUM_4Pi`），不是"只因 YSSKQOY"。
+  ⑤ **`TameCorrBase` 未落库**：它 import Assembly → 拉 `Interval.Cases`，而闸的构建中断留下 **23 个 shard olean 缺失**（Shard486/490/493–511 等），连带 Assembly 无法重建、基线重跑阻塞。已杀孤儿进程（内存曾只剩 74MB）+ 起**串行** `nice -n 19 lake build` 逐 shard 重建。同时判明该模块不必碰 Assembly（`TameLp.IsHypermapOfListTl` + `hypermapOfList_isHypermapOfListTl` 已在库、四字段逐字相同、`↔` 引理已有），已 resume 原车道把它**改押 TameLp 侧**。
+  ⑥ 发车 `pa25-rolling-w7`（`pema`/`pemb` → `txq`/`tew` → `gamma10`/`gamma11`，全锥内，目标 12→≤6）。池 2/5。
 - **2026-11-06（11:20，续376）**：**LA1 B 类根 2 条 import 边落库（`dcc5e36f`，8 个根解锁，0 闭合）**。① `LocalAuto16 += LocalAuto33`（解锁 `AUEAHEH`/`VQFYMZY`/`BNAWVNH`/`RAWZDIB`/`MFKLVDK`/`RYPDIXT` 六个 `_p33` donor）/ `LocalAuto26 += LocalAuto28`（`ODXLSTCv2_p28`/`IMJXPHRv2_p28`）。五项审计全过：全图 **SCC=0**、正反 BFS 无环、warning 谱面逐条一致（LA16 4→4 / LA26 9→9，仅行号漂移）、**12+14 件 axiom 零漂移**、与消费者及 89/93 下游重名 0、全局 K_MODULES **±0**（新入 7 模块已在图），每模块闭包 +2（LA16 实测含 LA29，纠正 RANKED 的 +1）/ +5（如预测）。两文件 RC=0、own-sorry 不变（1→1 / 3→3）。② **`LKGRQUI` 桥判不可建且不必要**：`LA27→LA24→LA20` 已成环，且 `OdxlstcBridge→LA31→LA18→LA27→LA24→LA20` 亦成环；`LKGRQUI_concl` 在 LA1 之外**零代码引用**，LA20 侧 `AQICLXA_SLICE`/`FUNOUYH_SLICE` 已由 `LkgrquiKernel.LKGRQUI_krnl` 闭净（六件探针全标准三）。LA20/桥文件零改动。③ **主验收未达**：`RRCWNSJ_p26` 仍 sorry——import 解掉了原来的 B1 阻塞（两引擎可达且标准三），但残余 `hnoLunar` 是 HOL **600 行耳朵析取**（`MMs` 的变分一阶条件），全树无 `2 < dist` 类耳朵引理，`MMsV39` 只记全局 `taustar`/`BBindex` 最小性 → 判"新形式化，不是 150–250 行胶水"，不落半成品。④ LA16 侧 0 闭合：唯一消费者 `JEJTVGB_p16` 仍吃 A 类 `FYSSVEV`/`ARDBZYE`/`HIJQAHA`/`NWDGKXH`/`YOBIMPP`/`MIQMCSN`/`OEHDBEN`，六个 donor 现在只差一次改写。
 - **2026-11-06（10:10，续375）**：**`general_482` 侦察收工 + 用户裁 R-fix（重编码 LA21/LA18 锚点）+ 发车 `p21-anchor-defix`/`tamecorr-w1`**。① **编码地雷**：`LocalAuto21.lean:140` 的 `mainNonlinearTerminalV11_p21 : Prop := ∀ y : Fin 6 → ℝ, box y` **可反驳**（`y ≡ 0` 撞 `2 ≤ y 0`；探针 `not_p21_anchor` 用标准三证出 `¬`）；`LocalAuto18.lean:206` 的 `_p18` 同病（30 处引用）。HOL `terminal.hl:37` 的 `main_nonlinear_terminal_v11` 是 **109 条不等式合取**，不是「∀ y 落盒」。后果：LA21 全链（`general_482`/`CUXVZOZ_p21`/`CJBDXXN_p21`）**空真**，`LocalConcl.p21_anchor := sorry` 等于「证假命题」。**用户裁决 R-fix**：两锚点改为 `main_nonlinear_terminal_v11`(LA1:2139) 的别名，走 DEF-FIX 通道（章程 `docs/def-fix-charters/p21-anchor/`），拒绝 R-freeze / R-ex。决策已入 `DECISIONS.md`。
   ② **8 件规模**：S 2（`deformation_BBs_ALT_p21` 123、`tau3_azim_p21` 27）/ M 3（251/367/234）/ L 1（`general_482` 本体 **864 行估**）/ BLOCKED 2（`deform_planar`、`_second_version`）。**第一波可独立交付**：`tau3_azim_p21` + `tau3_taum_nonplanar_p21` + `azim_dominated_split_p21` = HOL 61 行 → **Lean ≈82 行，1.5–2h**（前两件骨架已编译通过）。
