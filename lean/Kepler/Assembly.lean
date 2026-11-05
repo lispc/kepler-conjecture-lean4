@@ -29,6 +29,7 @@ import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
 import Kepler.Text.PackingAuto22
 import Kepler.Text.PackingAuto25
+import Kepler.NliBanks
 import Kepler.Text.Hypermap
 import Kepler.Text.ContraFan
 import Kepler.Text.LocalAuto16
@@ -1586,9 +1587,11 @@ theorem nliRestBIXPCGW7274157868a : bank_BIXPCGW7274157868a := sorry
 
 /-- rest 33/62：HOL ineq entry `BIXPCGW b`（ineq.hl:758，盒
 [2hmin,2hplus]×[2,√8]²×[2,2hplus]×[2,√8]²；PA21 `bank_BIXPCGWb` /
-`proj_bank_BIXPCGWb`）。资产状态：deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestBIXPCGWb : bank_BIXPCGWb := sorry
+`proj_bank_BIXPCGWb`）。资产状态：**真证**（2026-11-06 `nli-bank-triage` M1）。
+证法：`deltaX` 对每个变量单独凹 ⇒ 盒上最小值在角点；有理放大盒 64 个角点
+`norm_num` 判决（min 92.559 > 92 > 60，真最小 96.11）。实现在
+`Kepler/NliBanks.lean`（211 行，只 import `PackingAuto21`，无环）。 -/
+theorem nliRestBIXPCGWb : bank_BIXPCGWb := Kepler.NliBanks.nliRestBIXPCGWb
 
 /-- rest 34/62：HOL ineq entry `BIXPCGW 1738910218 a2`（ineq.hl:739，盒
 同 rest 33；PA21 `bank_BIXPCGW1738910218a2` /
@@ -2097,9 +2100,13 @@ def Adm2 (H : Hypermap α) (w : Set α → ℝ) : Prop :=
         (setOfQuadrilateralsMeetingNode H x).ncard ≤
       setSumSpec (setOfFaceMeetingNode H x) w
 
-/-- `adm_3`。PLACEHOLDER(tame章)：结论子句待抄录（adm_3 尾部）。 -/
+/-- `adm_3`（HOL `tame_defs.hl:124-127`；`a_tame = 0.63` 内联为 `aTame`）。
+DEF-FIX `adm3-realify`（2026-11-06）：原为形状占位（`True` 尾，严格弱于 HOL 的
+`adm_3`），现抄回真结论。抄回后本文件 `TamePlanarHypermap` 与
+`Kepler.Text.TameLp.TamePlanarHypermap` 的 12 个槽全 defeq（其余 11 槽已 defeq）。 -/
 def Adm3 (H : Hypermap α) (w : Set α → ℝ) : Prop :=
-  ∀ x ∈ H.darts, typeOfNode H x = (5, 0, 1) → True
+  ∀ x ∈ H.darts, typeOfNode H x = (5, 0, 1) →
+    Kepler.Text.TameLp.aTame ≤ setSum (setOfTrianglesMeetingNode H x) w
 
 /-- `admissible_weight`。 -/
 def AdmissibleWeight (H : Hypermap α) (w : Set α → ℝ) : Prop :=
@@ -2372,7 +2379,7 @@ private theorem b3_tamePlanarHypermap {α : Type*} [DecidableEq α] {H : Hyperma
   refine ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, ?_⟩
   obtain ⟨w, ha, hlt⟩ := h12
   obtain ⟨ha1, ha2, ha3⟩ := ha
-  exact ⟨w, ⟨ha1, ha2, fun x _ _ => trivial⟩, hlt⟩
+  exact ⟨w, ⟨ha1, ha2, ha3⟩, hlt⟩
 
 /-- MQMSMAB 终接线本体：消费 TameLp `hypermapOfFanTl` 版帽石 `MQMSMAB`
 （commit 67f65438），经 B4 十二短引理换实例 + B3 语义桥收 §2b 裸版结论。
