@@ -63,6 +63,22 @@
 
 ## 2. 排队（按序补位）
 
+> **队首（用户 2026-11-06 提级，插到所有原有条目之前）**：
+> - **2-α `pa22-fcdjdot-pillars-w1`** —— `fcdjdot` 柱③ + 本体装配。
+>   已知：柱① `scriptLAttainsMaxInBallAnnulus` ✅、柱② `fnjlbxsCore` ✅、柱④ `bijScriptL` / `localAnnulusInequalityScriptL` ✅；
+>   柱③ `DLWCHEM_full` / `XULJEPR_full` 结构已装配，但 `#print axioms` 实测 `[propext, **sorryAx**, choice, Quot.sound]`
+>   （吃 `YSSKQOY_VECTOR` :13584、`EXISTS_M_POLYHEDRON` :13062 等）。工单：
+>   ① 侦察 PA22 余 16 条 sorry 里哪几条**真在**两件的证明项内（逐级 `#print axioms` + 体内 grep，不要按名字猜）；
+>   ② 按依赖序清：`YSSKQOY_VECTOR` → `YSSKQOY_VECTOR2`/`_ALT`(:13602/:13609) → `EXISTS_M_POLYHEDRON`
+>      → `PACK_INEQ_DEF_A_797`(:13595) → `POLYHEDRON_FACET_SUM_4Pi`(:13951)；后两件是巨人，先判是否真在路径上，不在就跳过；
+>   ③ 柱③ 转标准三后写 `fcdjdot` 本体（四柱拼装，估 200–400 行；注释 `Assembly:4237-4340` 有计划）。
+>   **额外裁决点**：`packIneqDefAP22 := True`（PA22:306）是占位定义——柱③ 真化时须同时决定是否把 `pack_ineq_def_a` 补成真形（DEF-FIX/P6-E），否则证的是弱化命题。车道只报告，不自行改陈述。
+> - **2-β `la21-general482-w1`**（用户 2026-11-06「等有空车道了接下来做」）—— `general_482_deformation_p21`
+>   根簇。规模实测：HOL `local/CUXVZOZ.hl` 4,348 行，本体 :3649 起 640 行，7 条前置跨 :322–:3649（≈3,300 行）；
+>   解锁面 = 4 条锥内（`JCYFMRP_p27` / `SCS_4I1_IMP_SCS_4I2` / `SCS_4I2_IMP_SCS_4T1` / `TFITSKC`）+ LA16 `CQAOQLR`。
+>   形态：**先侦察波**（把 7 条前置按依赖序切成 2–3 个子波、逐条给 HOL 锚与可证性判定），再按子波发；不指望一条车道收。
+> **（以上两条占用下一个空出的槽位，顺序 α → β）**
+
 > **提级（用户 2026-11-03 晚：「同意」物化程序 A/B/C + 「hypermap 和 la35 优先级提到 pending queue 最前面」）**：补位首发序 = **§2-13 `hypermap-mat-scout` → §2-14 `la35-mat-scout`** → CertTM 物化侦察（§2-15）→ 孤儿岛接入（§2-16）→ 其余按原序。三侦察已收工（续 264），落地波 certtm-root-w1 / hypermap-root-w1 / la35-root-w1 **3/3 在飞**；任一完成即按 §2 原序补位（下一口 = §2-16 孤儿岛接入或侦察建议的波 2）。
 
 0. `已批·提级首发` **nli-prep-w1 切界层数学预处理波**（在飞，§1）（用户 2026-10-26 提级）：QITNPEAv2 主攻——rad2X 纯多项式支样板链先行（一行级粘合）→ 切界叶 prep 剖分（沿 disj 曲面加人工分割面）/ 单调性通道（HOL doc 自注 rad2 单调）双路试闭；任务书已立 `lane_snapshots/nli-prep-w1/TASK.md`；RQWUDDU 留下一波复用通道。预期样板链 + 部分切界叶 = 锥 −2 的一半。
@@ -165,6 +181,8 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-06（05:10，续372）**：**队首插两条（用户提级）+ RRCWNSJ BLOCKED 但暴露 A/B 两类根**。① **队首 2-α `pa22-fcdjdot-pillars-w1`**（用户「优先级提到最前面」）：柱③ `DLWCHEM_full`/`XULJEPR_full` 结构已装配但探针实测带 `sorryAx`（吃 `YSSKQOY_VECTOR`:13584 / `EXISTS_M_POLYHEDRON`:13062），工单 = 逐级探针定真依赖 → 按序清 → 柱③转干净后写 `fcdjdot` 本体（200–400 行）；附带裁决点 `packIneqDefAP22 := True`(PA22:306) 是否真化。② **队首 2-β `la21-general482-w1`**（用户「等有空车道了接下来做」）：实测 HOL `CUXVZOZ.hl` 4,348 行（本体 :3649 起 640 行，7 前置跨 :322–:3649 ≈3,300 行），先侦察切 2–3 子波；解锁 4 条锥内 + LA16 `CQAOQLR`。两条占下两个空槽，序 α→β。
+  ③ `la26-rrcwnsj-w1` **BLOCKED（0 闭合）**，但结论重要：先前担心的 `JCYFMRP_V3`/`JLXFDMJ` 实测**不需要**（HOL `RRCWNSJ.hl` grep = 0）；真阻塞 = `ODXLSTCv2_concl`(LA1:2917) / `IMJXPHRv2_concl`(LA1:2928)，在 LA26 闭包内但带 sorryAx；**clean 孪生 `ODXLSTCv2_p28`(LA28:8077) / `IMJXPHRv2_p28`(LA28:8057) 实测标准三，只是 LA28 不在 LA26 的 import 闭包内**（BFS 复核无环）。→ 由此把 registry 根分两类：**A 类**（孪生也带债，需真证：`VASYYAU`/`TUAPYYU`/`PWEIWBZ`/`SCS_4T3_IS_SCS_p32`）与 **B 类**（孪生已证标准三，只差 wave→wave import 边，机械可解：`ODXLSTCv2`/`IMJXPHRv2`）。已要求 `la1-roots-recon-w1` 对全部 `*_concl` 标 A/B 并重排 TOP-2。车道另交可复用降维件 `w5sgd_generic_of_no_lunar_p26`（标准三），因目标体仍 sorry 暂不入库。
 - **2026-11-06（04:20，续371）**：**LA32 4M6 梯子全 BLOCKED（0/5）+ 分诊 `CLEAN` 口径被实测推翻（两条勘误）+ 发车 `la1-roots-recon-w1`**。① `la32-4m6-w1` 五件全 BLOCKED：`EXTREMAL_SCS_4M6_p32` 本体就用 `PWEIWBZ`×3 / `VASYYAU`×2 / `TUAPYYU`×1，后四件全部经它，另加 in-file `SCS_4T3_IS_SCS_p32`(:247) sorry。根实测（`#print axioms` 全名）：`VASYYAU_concl`(LA1:4913) / `TUAPYYU_concl`(:4880) / `PWEIWBZ_concl`(:4903) / `SCS_4T3_IS_SCS_p32`(LA32:247)，四条全 `[propext, sorryAx, choice, Quot.sound]`。
   ② **勘误 A（指标口径）**：分诊把 `VASYYAU_p25`(LA25:2541) 判 CLEAN，实测**带 sorryAx**——它只是 LA1 `VASYYAU_concl` 的再导出，债在 registry 里。**"已证"≠"公理面干净"**。
   ③ **勘误 B（可达性口径）**：`SET_STAB_4M6_ARROW_4T5_p33`(LA33:4298) 确实已证，但 **LA32 不 import LA33**，探针 `unknown identifier`，零新 import 下不可用。分诊的 `CLEAN = 递归闭包 0 sorry` 是 grep 口径，未验 import 可达性与 axioms。
