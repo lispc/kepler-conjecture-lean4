@@ -38,13 +38,14 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 下午，池 **3/5**）
+## 1. 在飞（2026-11-06 下午，池 **4/5**）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
 | `pa25-rolling-w8` | **PA25 收 w8**：★ W8-A `p25w8_rad2_eta2` 分析核（含 `rad2_x_eta_x` + `UPS_X_POS`）→ W8-B 锥内四件 `gamma10`/`gamma11`/`quqy`/`quqy_sym` 同波 → W8-C 锥外四件只侦察。工单 = `docs/archive/lane-archives/pa25-rolling-w7/WORKORDER-w8.md` | 在飞（发车 2026-11-06） |
 | `la21-wave1`（续） | **W1-C 收尾**：`tau3_taum_nonplanar_p21`。两件已落 `2080f7f5`（29→27）；第三件**非 BLOCKED**——车道实测 `LocalAuto38Bridge` 在闭包内（`LA21→LA11:117→LA2:82→PA20:58→LA38Bridge`），`DIHV_EQ_DIH_Y_4PT_B` 标准三可达，探针已 RC=0，现按 `5ccd6212` 基线落成正式证明 | 在飞（续跑 2026-11-06） |
 | `797-defix-scout` | **只读侦察**：为 `_797`/`PackIneqDefA` 真化 DEF-FIX 章程钉事实——`atn2`/`upsX`/`asnFnhk` 进 PA22 闭包的环与 `rho` 撞名、5 条 HOL ineq 正文、`packIneqDefAP22` 三形状裁决、断链清单、**shard 面零漂移核查** | 在飞（发车 2026-11-06） |
+| `la-registry-mnt11-sf-scout` | **只读侦察**：为 ④ SF 钉材料——四条 `_concl` 的 HOL 条件式 anchor 已由编排者坐实（`VASYYAU.hl:292/720/1126/2366`；`TUAPYYU` :640 是无条件证明，已排除）；本车道验证 + 消费者断链面 + **`localconcl_wire_capstone_w2` 47 合取是否连带** + SF 提案正文与归档补丁 | 在飞（发车 2026-11-06） |
 | （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；**进度 7/23 完成（486/490/493/494/495/497/498），499 在编，零失败**；完成后重跑基线 | 进行中 |
 
 > 已落库车道（114+ 行）见 [`history/lanes-landed.md`](history/lanes-landed.md)。
