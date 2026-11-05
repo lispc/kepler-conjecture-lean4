@@ -38,15 +38,14 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 凌晨，池 **5/5**）
+## 1. 在飞（2026-11-06 上午，池 **4/5**）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `pa22-yssksqoy-pillars-w1` | **队首 2-α 施工波**：`fcdjdot` 柱③ 的 YSSKQOY 链——`YSSKQOY_VECTOR`(:13919) 必闭 + `PACK_INEQ_DEF_A_797`/`YSSKQOY_VECTOR2`/`_ALT`；主验收 = `DLWCHEM_full`/`XULJEPR_full` 转标准三 | 在飞 |
-| `pa22-fcdjdot-pillars-recon-w1` | **只读**：柱③ 真依赖闭包（读证明体逐层展开）+ 逐件 class + `POLYHEDRON_FACET_SUM_4Pi` 是否在路径 + 波次切分 | 在飞 |
-| `pa25-rolling-w5` | **PA25 滚动 w5**：`real_model_gamma8` + `gamma8b`（**锥内 ×2**）→ 3 胞 kit 批量（gamma10/11、pema/pemb、txq/tew）→ 008 kit 链；交 w6 工单 | 在飞 |
-| `la33-straight-w1` | `SCS_4I2_STRAIGHT_p33` + `SCS_4I2_STRAIGHT_ALL_p33` + `MM_4I2_IMP_4T2_4T1_p33`（S+S+M，210–310 行，后件锥内） | 在飞 |
-| `la1-roots-recon-w1` | **只读**：LA1 registry 仍-sorry `*_concl` 根节点全量分诊（A/B 两类标注 / donor axioms / 消费方闭包可达性）+ 与 `general_482` 是否同源 + 下批 2 条车道建议 | 在飞 |
+| `pa22-yssksqoy-pillars-w1` | **队首 2-α**：`YSSKQOY_VECTOR`(:13919) 尝试 + 已按侦察改道（`_797` 判 DEFHOLE 只报告；余力转 `GOTCJAH`） | 在飞 |
+| `la1-bimport-w1` | LA1 B 类根：8 条 wave→wave import 边 + `OdxlstcBridge`（`LKGRQUI`）+ **主验收 `RRCWNSJ_p26` 闭合**（锥内 −1） | 在飞 |
+| `pa25-rolling-w6` | **PA25 滚动 w6**：`cell3_008_from_ineq` 桥（单点解锁九件）→ `gamma10`/`gamma11` → `real_model_sum_azim`（~20 行） | 在飞 |
+| `la21-general482-recon-w1` | **队首 2-β 侦察**：`general_482` 根簇 8 件逐件台账 + 依赖偏序 + 2–3 波切分 + 6 条被解锁件的"是否只差它"验证 | 在飞 |
 
 > 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
@@ -185,6 +184,9 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-06（08:20，续374）**：**四笔落库/收工：LA33 STRAIGHT 两件 `924a48e3`（11→9）+ PA25 w5 三件 `7cdf4570`（22→19，锥内 −3）+ 柱③侦察收工（8 件全在路径，`_797` 是 DEFHOLE）+ LA1 根侦察收工（79 根 = 50 B + 29 A）**。① **LA33**：`SCS_4I2_STRAIGHT_p33` + `_ALL_p33` 闭（`ear_acute_p33` 的 `dihY < π/2` 经 `azim = dihV = dihY` 搬到 `azim < π/2`，`azim ≥ π` 支由 CLF 楔形界排除，两半角沿扇区相加）；+330/−6，两件标准三，3 个 `_p33` 私助件。`MM_4I2` 仍 BLOCKED——`>3` 分支要 `EDGE_EQ_2_4I2_ALL` → `CJBDXXN_p21` → `general_482`（lane 用随机搜索证实纯度量约束推不出"边=2"，该支确需终端形变内容）。② **PA25 w5**：`real_model_gamma8` + `gamma8b` + `gckb` 三件全锥内闭；gamma8 支新造 `p25w5_QITNPEA_9063653052`（`QITNPEA4_9063653052_weak_ALT` 的 Lean 重推：六张 `QITNPEA1` 银行按 y3/y4 临界性分六支 + `wtcount6Y` 记账）；8 个 `p25w5_*` 私件，+324/−3。**残件九件的唯一闸门 = `cell3_008_from_ineq` 桥**（w6 首选）。
+  ③ **柱③侦察（`pa22-fcdjdot-pillars-recon-w1`）**：真依赖 **8 条全在路径、可跳过 0**——`YSSKQOY_VECTOR`/`YSSKQOY_VECTOR2`/`_ALT`/`GOTCJAH`/`polyhedron_edge_sum`/`EXISTS_M_POLYHEDRON`/`POLYHEDRON_FACET_SUM_4Pi`/`PACK_INEQ_DEF_A_797`；枢纽 = 私件 `existsM_polyhedron_sums`。分类 S0 / M2（`GOTCJAH` 200–350、`YSSKQOY_VECTOR2_ALT` 120–200）/ L3 / BLOCKED2 / **DEFHOLE1**。**关键发现**：`PACK_INEQ_DEF_A_797` 因 `arclength22 := 0`(13592) **陈述可反驳**（v = −v0 时 LHS ≈ 1.3206 < 0 = RHS）→ 必须先改陈述 + 裁决 `packIneqDefAP22 := True` 是否真化；`POLYHEDRON_FACET_SUM_4Pi` 在路径上但吃 `POLYHEDRON_CONFORMING_FAN`(sorry) + 三件 ABSENT ⇒ BLOCKED。**本体必须落 `Assembly.lean`**（四柱里三件是 Assembly private），且 **Assembly 现在无法 import PA22**：`Kepler.Text.sqrt3` 双胞胎（PA22:176 vs IneqClosureDefs:719）报 `environment already contains` ⇒ 需独立车道 + 冻结面审计。波次：W1 `GOTCJAH`（无阻塞）→ W2 `EXISTS_M_POLYHEDRON`（350–500）→ W3 Ysskqoy+`arclength` 真化；三波落完柱③**仍带** sorryAx（尾件）。
+  ④ **LA1 根侦察**：97 个 `*_concl` 里 79 仍 sorry；**50 B 类**（donor 标准三，只差 import 边）/ **29 A 类**；donor 不在消费方闭包内 17（9 B + 8 A）。**归因勘误**：锥消费 `LocalConcl.X_discharged` 而非 registry 原件，`JCYFMRP_concl`/`RRCWNSJ_concl`/`JLXFDMJ_concl`/`TFITSKC_concl` 零外部引用；真上游只有 6 个（LA25 循环再导出：`TUAPYYU`/`WGDHPPI`/`WKZZEEH`/`PWEIWBZ`/`VASYYAU`/`YEBWJNG`）。`general_482` 与 `VASYYAU` 同源（`VASYYAU.hl` 6 处调 `Cuxvzoz.CUXVZOZ`）。→ 发车 `la1-bimport-w1`（8 边 + 1 桥，主验收 `RRCWNSJ_p26`）。**两项待用户裁决**：(a) 四条 registry 陈述省略 HOL 需要的 `mnt11` 前提（SF 级）；(b) `HFNXPZA`/`EFLYGAU`/`BJTDWPS` 无 HOL 证明块。⑤ 发车 `pa25-rolling-w6` 与 `la21-general482-recon-w1`（2-β）。⑥ 池 4/5。
 - **2026-11-06（06:00，续373）**：**PA22 `EUSOTYP2_general` 真证（`f1f41235`，16→15）+ 队首 2-α 施工波发车（YSSKQOY 链）**。① `EUSOTYP2_general`：上波 5 类阻塞全修——`affDim_hyperplane` 换序（集合转写）、`sub_zero` 改 `simp only`、单点/双点 azim 平移分离（`haz` 改用整对测点 `p22_azim_axis_shift`，只留一条单点件，`rw [hpred]` 走 `Classical.epsilon` 消心跳超时，仅该件 `maxHeartbeats 12000000`）；新增 5 条 private 补件 103 行（含 **V3 版 `affine_facet_hyper`**）+ 233 行证明体。+336/−1，`#print axioms` 标准三，GATE-PASS @`EUSOTYP2_general`，陈述 26 行逐字节冻结。② **队首 2-α 发车 `pa22-yssksqoy-pillars-w1`**（用户提级）：目标 `YSSKQOY_VECTOR`(:13919) 必闭 + `PACK_INEQ_DEF_A_797`(:13930) / `YSSKQOY_VECTOR2`(:13937) / `_ALT`(:13944)；**主验收 = `DLWCHEM_full`/`XULJEPR_full` 的 `#print axioms` 转标准三**（这两件是 `fcdjdot` 柱③ 的装配体，现带 sorryAx）。③ 同批只读侦察 `pa22-fcdjdot-pillars-recon-w1` 在跑：柱③ 真依赖闭包逐层展开 + 逐件 class + 判定 `POLYHEDRON_FACET_SUM_4Pi`/`PACK_INEQ_DEF_A_797` 是否 OFF-PATH + 波次切分。④ 注意：`packIneqDefAP22 := True`(PA22:306) 是占位定义，柱③ 真化时必须同时裁决 `pack_ineq_def_a` 是否补成真形，否则证的是弱化命题；车道只报告不改陈述。⑤ 池 5/5。
 - **2026-11-06（05:10，续372）**：**队首插两条（用户提级）+ RRCWNSJ BLOCKED 但暴露 A/B 两类根**。① **队首 2-α `pa22-fcdjdot-pillars-w1`**（用户「优先级提到最前面」）：柱③ `DLWCHEM_full`/`XULJEPR_full` 结构已装配但探针实测带 `sorryAx`（吃 `YSSKQOY_VECTOR`:13584 / `EXISTS_M_POLYHEDRON`:13062），工单 = 逐级探针定真依赖 → 按序清 → 柱③转干净后写 `fcdjdot` 本体（200–400 行）；附带裁决点 `packIneqDefAP22 := True`(PA22:306) 是否真化。② **队首 2-β `la21-general482-w1`**（用户「等有空车道了接下来做」）：实测 HOL `CUXVZOZ.hl` 4,348 行（本体 :3649 起 640 行，7 前置跨 :322–:3649 ≈3,300 行），先侦察切 2–3 子波；解锁 4 条锥内 + LA16 `CQAOQLR`。两条占下两个空槽，序 α→β。
   ③ `la26-rrcwnsj-w1` **BLOCKED（0 闭合）**，但结论重要：先前担心的 `JCYFMRP_V3`/`JLXFDMJ` 实测**不需要**（HOL `RRCWNSJ.hl` grep = 0）；真阻塞 = `ODXLSTCv2_concl`(LA1:2917) / `IMJXPHRv2_concl`(LA1:2928)，在 LA26 闭包内但带 sorryAx；**clean 孪生 `ODXLSTCv2_p28`(LA28:8077) / `IMJXPHRv2_p28`(LA28:8057) 实测标准三，只是 LA28 不在 LA26 的 import 闭包内**（BFS 复核无环）。→ 由此把 registry 根分两类：**A 类**（孪生也带债，需真证：`VASYYAU`/`TUAPYYU`/`PWEIWBZ`/`SCS_4T3_IS_SCS_p32`）与 **B 类**（孪生已证标准三，只差 wave→wave import 边，机械可解：`ODXLSTCv2`/`IMJXPHRv2`）。已要求 `la1-roots-recon-w1` 对全部 `*_concl` 标 A/B 并重排 TOP-2。车道另交可复用降维件 `w5sgd_generic_of_no_lunar_p26`（标准三），因目标体仍 sorry 暂不入库。
