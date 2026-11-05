@@ -7175,6 +7175,835 @@ def ZLZTHIC_prop_p28 : Prop :=
       Generic ((fun v => f v t) '' V)
         ((fun e => (fun v => f v t) '' e) '' E)
 
+private theorem w1minNum_spec (S : Set ℕ) (hne : S.Nonempty) :
+    minNum S ∈ S ∧ ∀ m ∈ S, minNum S ≤ m := by
+  have hex : ∃ n : ℕ, n ∈ S ∧ ∀ m ∈ S, n ≤ m :=
+    ⟨sInf S, Nat.sInf_mem hne, fun m hm => Nat.sInf_le hm⟩
+  exact Classical.epsilon_spec hex
+
+private theorem w1bbindexMin_le (s : ScsV39) {v : ℕ → V3} (hv : v ∈ BBprimeV39 s) :
+    BBindexMinV39 s ≤ BBindexV39 s v := by
+  have himg : (BBindexV39 s '' BBprimeV39 s).Nonempty := ⟨BBindexV39 s v, v, hv, rfl⟩
+  exact (w1minNum_spec _ himg).2 _ ⟨v, hv, rfl⟩
+
+/-- Successor preserves residue equality. -/
+private theorem w1_mod_succ {k a b : ℕ} (h : a % k = b % k) : (a + 1) % k = (b + 1) % k := by
+  rw [Nat.add_mod a 1 k, Nat.add_mod b 1 k, h]
+
+/-- Reduction of a shifted residue. -/
+private theorem w1_mod_succ' (x k : ℕ) : (x % k + 1) % k = (x + 1) % k := by
+  rw [Nat.add_mod x 1 k, Nat.add_mod (x % k) 1 k, Nat.mod_mod]
+
+/-- `j ≡ l+1` case of `NUXCOEA`: the `l+1` edge is tight by `haj`, the `l+k-1`
+edge is forced by the `MK` deformation (BBindex minimality). -/
+private theorem w1_nuxcoea_case1 (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
+    (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+    (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+    (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+    (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+    (hj : j % k = (l + 1) % k)
+    (haj : s.a j l = dist (w j) (w l)) (hbj : dist (w j) (w l) < s.b j l)
+    (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+    (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+    (hJ : ∀ i, ¬ s.J l i)
+    (h2norm : ‖w l‖ = 2)
+    (hlunar : ∀ (V : Set V3) (E : Set (Set V3)) (v : V3),
+      V = Set.range w → E = (Set.range fun i : ℕ => {w i, w (i + 1)}) →
+        ¬ Lunar v (w l) V E) :
+    s.a l (l + 1) = dist (w l) (w (l + 1)) ∧
+    s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1))) := by
+  have hkpos : 0 < k := by omega
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hmw
+  have hmin : ∀ ww, BBsV39 s ww → taustarV39 s w ≤ taustarV39 s ww := by
+    have h1 := hmw
+    simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h1
+    exact h1.1.1.2.1
+  have hneg : taustarV39 s w < 0 := by
+    have h1 := hmw
+    simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h1
+    exact h1.1.1.2.2
+  have hidxmin : BBindexV39 s w = BBindexMinV39 s := by
+    have h1 := hmw
+    simp only [MMsV39, BBprime2V39, Set.mem_setOf_eq] at h1
+    exact h1.1.2
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, hsym, hchain, hdiag0, _, _, _, _, _, _⟩ := id hs
+  have hpa : Periodic2 s.a s.k := hs.2.2.2.2.2.2.2.1
+  have hpb : Periodic2 s.b s.k := hs.2.2.2.2.2.2.2.2.2.2.1
+  have hpa' : Periodic2 s.a k := by rw [← hk]; exact hpa
+  have hpb' : Periodic2 s.b k := by rw [← hk]; exact hpb
+  have hfolda : ∀ q, s.a l q = s.a l (q % k) := fun q =>
+    modPeriodic2_second_p28 hkpos hpa' (Nat.mod_mod q k).symm
+  have hfoldb : ∀ q, s.b l q = s.b l (q % k) := fun q =>
+    modPeriodic2_second_p28 hkpos hpb' (Nat.mod_mod q k).symm
+  have hperw : Periodic w k := by rw [← hk]; exact hbb.2.1
+  have hfoldw : ∀ q, w q = w (q % k) := fun q =>
+    modPeriodic_p28 hkpos hperw (Nat.mod_mod q k).symm
+  have hA : s.a l (l + 1) = dist (w l) (w (l + 1)) := by
+    have h1 : s.a l (l + 1) = s.a l j := by rw [hfolda (l + 1), ← hj, ← hfolda j]
+    have h2 : w (l + 1) = w j := by rw [hfoldw (l + 1), ← hj, ← hfoldw j]
+    rw [h1, h2, (hsym l j).1]
+    exact haj.trans (dist_comm (w j) (w l))
+  refine ⟨hA, ?_⟩
+  have hsub : l + (k - 1) = l + k - 1 := by omega
+  rw [hsub]
+  by_contra hne
+  have hltB : s.a l (l + k - 1) < dist (w l) (w (l + k - 1)) :=
+    lt_of_le_of_ne (hbb.2.2.1 l (l + k - 1)).1 hne
+  set v2 : V3 := w l with hv2
+  set v1 : V3 := w (l + k - 1) with hv1
+  set x1 : ℝ := ‖v1‖ ^ 2 with hx1def
+  set x2 : ℝ := ‖v2‖ ^ 2 with hx2def
+  set x5 : ℝ := ‖v2 - v1‖ ^ 2 with hx5def
+  have hnorm2 : ‖v2‖ = 2 := by simpa [hv2] using h2norm
+  have hwlann : v2 ∈ ballAnnulus := by
+    simpa [hv2] using WL_IN_BALL_ANNULUS_p28 s w l hbb
+  have hwliff : ∀ i : ℕ, w i = v2 ↔ i % k = l % k := by
+    intro i
+    constructor
+    · intro h
+      have h1 : w (i % k) = w (l % k) := by rw [← hfoldw i, ← hfoldw l, h, hv2]
+      have h' := W_IN_BB_FUN_EQ_p28 s w (i % k) (l % k) hs hbb h1
+      rw [hk, Nat.mod_mod, Nat.mod_mod] at h'
+      exact h'
+    · intro h
+      rw [hfoldw i, hv2, hfoldw l, h]
+  obtain ⟨hx1p, hx2p, hx5p, hncv⟩ :=
+    w5cD_hyperMM_collinear_TWO_CASES_p28 s k l w v1 v2 x1 x2 x5 hk hs hmw hk3
+      hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm
+  obtain ⟨eA, heA, hannA⟩ :=
+    DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS_p28 v1 v2 x1 x2 x5 (-1) hx1p hx2p hx5p hnorm2 hncv
+      hx1def.symm hx2def.symm hx5def.symm rfl
+  have hajj : s.a l j = dist v2 (w j) := by
+    rw [(hsym l j).1, hv2, dist_comm]
+    exact haj
+  have hltj : dist v2 (w j) < s.b l j := by
+    rw [hv2, dist_comm, (hsym l j).2.2.2.1]
+    exact hbj
+  obtain ⟨eAc, heAc, hAw⟩ :=
+    DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_p28 s w k l j v1 v2 x1 x2 x5 (-1) hs hmw hk hk3
+      hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm rfl hnc haff hj.symm hajj
+  have hbound : ∀ i : ℕ, ¬(l % k = i % k) ∧ ¬((l + 1) % k = i % k) →
+      s.a l i < dist v2 (w i) := by
+    intro i hcond
+    obtain ⟨h1, h2⟩ := hcond
+    by_cases hiq : i % k = (l + k - 1) % k
+    · have ea : s.a l i = s.a l (l + k - 1) := by rw [hfolda i, hiq, ← hfolda (l + k - 1)]
+      have ew : w i = w (l + k - 1) := by rw [hfoldw i, hiq, ← hfoldw (l + k - 1)]
+      rw [ea, ew, hv2]
+      exact hltB
+    · have hd : scsDiag k l i := ⟨h1, h2, fun h3 => hiq (EQ_SUC_K_SUB3_p28 h3 hk3).symm⟩
+      exact hdiag2 i hd
+  obtain ⟨eAA, heAA, hAAw⟩ :=
+    DEFORMATION_DIST_LE_V3_DEFOR_AA_COM_MK_p28 s w k l j v1 v2 x1 x2 x5 (-1) hs hmw hk hk3
+      hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm rfl hnc haff hj.symm hajj hbound
+  obtain ⟨eB, heB, hBw⟩ :=
+    DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK_p28 s w k l j v1 v2 x1 x2 x5 (-1) hk3 hs hmw hk
+      hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm rfl hnc haff hj.symm hltj hdiag1
+  obtain ⟨eD, heD, hDw⟩ :=
+    V3_DEFOR_CONVEX_LOCAL_FAN_MK_p28 s k w l j v1 v2 x1 x2 x5 (-1) hk hk3 hs hmw haz hnc haff
+      hj haj hbj hdiag1 hdiag2 hJ hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm rfl
+      hnorm2 hlunar
+  obtain ⟨eF, heF, hFw⟩ :=
+    EXISTS_SMALL_LE_CONST_ADD_p28 v1 v2 (w (l + k - 1)) x1 x2 x5 (s.a l (l + k - 1)) (-1)
+      hx1p hx2p hx5p hncv hx1def.symm hx2def.symm hx5def.symm rfl hltB
+  set e1 : ℝ := min (min (min (min eAc eAA) eB) eD) eA / 2 with he1def
+  have he1pos : 0 < e1 := by
+    have h2 : 0 < min (min (min (min eAc eAA) eB) eD) eA :=
+      lt_min (lt_min (lt_min (lt_min heAc heAA) heB) heD) heA
+    rw [he1def]; linarith
+  have he1Ac : e1 < eAc := by
+    have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eAc :=
+      (min_le_left _ _).trans ((min_le_left _ _).trans ((min_le_left _ _).trans (min_le_left _ _)))
+    rw [he1def]; nlinarith
+  have he1AA : e1 < eAA := by
+    have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eAA :=
+      (min_le_left _ _).trans ((min_le_left _ _).trans ((min_le_left _ _).trans (min_le_right _ _)))
+    rw [he1def]; nlinarith
+  have he1B : e1 < eB := by
+    have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eB :=
+      (min_le_left _ _).trans ((min_le_left _ _).trans (min_le_right _ _))
+    rw [he1def]; nlinarith
+  have he1D : e1 < eD := by
+    have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eD :=
+      (min_le_left _ _).trans (min_le_right _ _)
+    rw [he1def]; nlinarith
+  have he1Ann : e1 < eA := by
+    have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eA := min_le_right _ _
+    rw [he1def]; nlinarith
+  have hbbs : ∀ t : ℝ, 0 < t → t < e1 →
+      BBsV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t) := by
+    intro t ht0 ht1
+    have htAnn : t < eA := lt_trans ht1 he1Ann
+    have htAc : t < eAc := lt_trans ht1 he1Ac
+    have htAA : t < eAA := lt_trans ht1 he1AA
+    have htB : t < eB := lt_trans ht1 he1B
+    have htD : t < eD := lt_trans ht1 he1D
+    have hmove : ∀ i, w i = v2 →
+        v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t =
+          v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 := by
+      intro i hi
+      rw [v3DeforV5_p28, hi, v3DeforV4_p28, if_pos rfl]
+    have hkeep : ∀ i, w i ≠ v2 → v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t = w i := by
+      intro i hi
+      rw [v3DeforV5_p28, v3DeforV4_p28]
+      have hne' : w i - v1 ≠ v2 - v1 := by
+        intro h
+        exact hi (by
+          have h2 := congrArg (fun z : V3 => z + v1) h
+          simpa using h2)
+      rw [if_neg hne', sub_add_cancel]
+    have hAA_at : ∀ r : ℕ, ¬(l % k = r % k) →
+        s.a l r < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r) := by
+      intro r hr
+      have h := hAAw t (r % k) ⟨ht0, htAA, by rw [Nat.mod_mod]; exact hr⟩
+      rwa [← hfolda r, ← hfoldw r] at h
+    have hB_at : ∀ r : ℕ, ¬(l % k = r % k) →
+        dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r) < s.b l r := by
+      intro r hr
+      have h := hBw t (r % k) ⟨ht0, htB, by rw [Nat.mod_mod]; exact hr⟩
+      rwa [← hfoldb r, ← hfoldw r] at h
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · intro x hx
+      obtain ⟨i, rfl⟩ := hx
+      change v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t ∈ ballAnnulus
+      by_cases hi : w i = v2
+      · rw [hmove i hi]
+        have h := hannA t ⟨by linarith only [heA, ht0], htAnn⟩
+        rwa [v3DeforV4_p28, if_pos rfl] at h
+      · rw [hkeep i hi]
+        exact hbb.1 (Set.mem_range_self i)
+    · intro i
+      show v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + s.k)) t =
+        v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t
+      rw [hbb.2.1 i]
+    · intro i j
+      by_cases hi : i % k = l % k
+      · by_cases hj' : j % k = l % k
+        · have hwi : w i = v2 := (hwliff i).mpr hi
+          have hwj : w j = v2 := (hwliff j).mpr hj'
+          have hdist0 : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w j) t) = 0 := by
+            rw [hmove i hwi, hmove j hwj, dist_self]
+          have haij : s.a i j = 0 := by
+            rw [CHANGE_A_SCS_MODL_p28 s hs i l j (by rw [hk]; exact hi),
+              CHANGE_A_SCS_MODR_p28 s hs j l l (by rw [hk]; exact hj'),
+              hdiag0 l]
+          have hab : s.a i j ≤ s.b i j :=
+            le_trans (hchain i j).1 (le_trans (hchain i j).2.1 (hchain i j).2.2)
+          constructor
+          · rw [hdist0, haij]
+          · rw [hdist0]; exact le_trans (le_of_eq haij.symm) hab
+        · have hwi : w i = v2 := (hwliff i).mpr hi
+          have hwj : w j ≠ v2 := fun h => hj' ((hwliff j).mp h)
+          have haij : s.a i j = s.a l j :=
+            CHANGE_A_SCS_MODL_p28 s hs i l j (by rw [hk]; exact hi)
+          have hbij : s.b i j = s.b l j :=
+            CHANGE_B_SCS_MODL_p28 s hs i l j (by rw [hk]; exact hi)
+          have hdist : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w j) t)
+              = dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) := by
+            rw [hmove i hwi, hkeep j hwj]
+          have hne1 : ¬(l % k = (j % k) % k) := by
+            rw [Nat.mod_mod]; exact fun h => hj' h.symm
+          constructor
+          · rw [haij, hdist]
+            exact le_of_lt (hAA_at j (fun h => hj' h.symm))
+          · rw [hbij, hdist]
+            exact le_of_lt (hB_at j (fun h => hj' h.symm))
+      · by_cases hj' : j % k = l % k
+        · have hwj : w j = v2 := (hwliff j).mpr hj'
+          have hwi : w i ≠ v2 := fun h => hi ((hwliff i).mp h)
+          have haij : s.a i j = s.a l i := by
+            rw [CHANGE_A_SCS_MODR_p28 s hs j l i (by rw [hk]; exact hj')]
+            exact (hsym i l).1
+          have hbij : s.b i j = s.b l i := by
+            rw [CHANGE_B_SCS_MODR_p28 s hs j l i (by rw [hk]; exact hj')]
+            exact (hsym i l).2.2.2.1
+          have hdist : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w j) t)
+              = dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
+            rw [hkeep i hwi, hmove j hwj, dist_comm]
+          have hne1 : ¬(l % k = (i % k) % k) := by
+            rw [Nat.mod_mod]; exact fun h => hi h.symm
+          constructor
+          · rw [haij, hdist]
+            exact le_of_lt (hAA_at i (fun h => hi h.symm))
+          · rw [hbij, hdist]
+            exact le_of_lt (hB_at i (fun h => hi h.symm))
+        · have hwi : w i ≠ v2 := fun h => hi ((hwliff i).mp h)
+          have hwj : w j ≠ v2 := fun h => hj' ((hwliff j).mp h)
+          have hdist : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w j) t) = dist (w i) (w j) := by
+            rw [hkeep i hwi, hkeep j hwj]
+          rw [hdist]
+          exact hbb.2.2.1 i j
+    · refine Or.inr ?_
+      simpa only [v3DeforV5_p28] using hDw t ⟨by linarith, htD⟩
+  obtain ⟨eT, heT, htau⟩ :=
+    TAUSTAR_V3_DEFOR_MK_p28 s k w l j v1 v2 x1 x2 x5 (-1) e1 hk hk3 hs hmw haz hnc haff hj haj
+      hbj hdiag1 hdiag2 hJ hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm rfl
+      (fun t ht => hbbs t ht.1 ht.2) he1pos
+  set t0 : ℝ := min (min e1 eT) eF / 2 with ht0def
+  have ht0pos : 0 < t0 := by
+    have h2 : 0 < min (min e1 eT) eF := lt_min (lt_min he1pos heT) heF
+    rw [ht0def]; linarith
+  have ht0e1 : t0 < e1 := by
+    have h2 : min (min e1 eT) eF ≤ e1 := (min_le_left _ _).trans (min_le_left _ _)
+    rw [ht0def]; nlinarith
+  have ht0eT : t0 < eT := by
+    have h2 : min (min e1 eT) eF ≤ eT := (min_le_left _ _).trans (min_le_right _ _)
+    rw [ht0def]; nlinarith
+  have ht0eF : t0 < eF := by
+    have h2 : min (min e1 eT) eF ≤ eF := min_le_right _ _
+    rw [ht0def]; nlinarith
+  have hbbs0 : BBsV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0) :=
+    hbbs t0 ht0pos ht0e1
+  have htaut : taustarV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+      = taustarV39 s w := htau t0 ⟨ht0pos, ht0eT⟩
+  have hbbprime : (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0) ∈ BBprimeV39 s := by
+    refine ⟨hbbs0, ?_, ?_⟩
+    · intro ww hww
+      rw [htaut]
+      exact hmin ww hww
+    · rw [htaut]
+      exact hneg
+  have hleidx : BBindexMinV39 s ≤
+      BBindexV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0) :=
+    w1bbindexMin_le s hbbprime
+  have hltidx : BBindexV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+      < BBindexV39 s w := by
+    have hmove0 : ∀ i, w i = v2 →
+        v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0 =
+          v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1 := by
+      intro i hi
+      rw [v3DeforV5_p28, hi, v3DeforV4_p28, if_pos rfl]
+    have hkeep0 : ∀ i, w i ≠ v2 → v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0 = w i := by
+      intro i hi
+      rw [v3DeforV5_p28, v3DeforV4_p28]
+      have hne' : w i - v1 ≠ v2 - v1 := by
+        intro h
+        exact hi (by
+          have h2 := congrArg (fun z : V3 => z + v1) h
+          simpa using h2)
+      rw [if_neg hne', sub_add_cancel]
+    have hltl1 : s.a l (l + 1) <
+        dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1) (w (l + 1)) := by
+      have h := hAw t0 ⟨ht0pos, lt_trans ht0e1 he1Ac⟩
+      rwa [show s.a l j = s.a l (l + 1) from by rw [hfolda j, hj, ← hfolda (l + 1)],
+        show w j = w (l + 1) from by rw [hfoldw j, hj, ← hfoldw (l + 1)]] at h
+    have hltlk1 : s.a l (l + k - 1) <
+        dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1) (w (l + k - 1)) :=
+      hFw t0 ⟨by linarith, ht0eF⟩
+    have hne11 : ¬(l % k = (l + 1) % k) :=
+      fun h => succModNe_p28 (k := k) (i := l) (by omega) h.symm
+    have hsub2 : {i : ℕ | i < s.k ∧ s.a i (i + 1) =
+        dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+          (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + 1)) t0)} ⊂
+        {i : ℕ | i < s.k ∧ s.a i (i + 1) = dist (w i) (w (i + 1))} := by
+      constructor
+      · intro i hi'
+        obtain ⟨hik, hieq⟩ := hi'
+        refine ⟨hik, ?_⟩
+        by_contra hne'
+        by_cases hcase : w i = v2
+        · have hcase2 : w (i + 1) ≠ v2 := by
+            intro h
+            have h1 := (hwliff i).mp hcase
+            have h2 := (hwliff (i + 1)).mp h
+            exact succModNe_p28 (k := k) (i := i) (by omega) (by rw [h2, h1])
+          have h1 : s.a i (i + 1) = s.a l (l + 1) := by
+            rw [CHANGE_A_SCS_MODL_p28 s hs i l (i + 1) (by rw [hk]; exact (hwliff i).mp hcase)]
+            exact CHANGE_A_SCS_MODR_p28 s hs (i + 1) (l + 1) l
+              (by rw [hk]; exact w1_mod_succ (a := i) (b := l) ((hwliff i).mp hcase))
+          have h2 : w (i + 1) = w (l + 1) :=
+            CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i + 1) (l + 1) hs hbb
+              (by rw [hk]; exact w1_mod_succ (a := i) (b := l) ((hwliff i).mp hcase))
+          have h3 : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + 1)) t0)
+              = dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1)
+                (w (l + 1)) := by
+            rw [hmove0 i hcase, hkeep0 (i + 1) hcase2, h2]
+          rw [h1, h3] at hieq
+          exact absurd hieq (ne_of_lt hltl1)
+        · by_cases hcase2 : w (i + 1) = v2
+          · have h1 : s.a i (i + 1) = s.a l (l + k - 1) := by
+              have hmod : (i + 1) % k = l % k := (hwliff (i + 1)).mp hcase2
+              have hmodi : i % k = (l + k - 1) % k := (EQ_SUC_K_SUB3_p28 hmod.symm hk3).symm
+              rw [CHANGE_A_SCS_MODL_p28 s hs i (l + k - 1) (i + 1) (by rw [hk]; exact hmodi)]
+              rw [CHANGE_A_SCS_MODR_p28 s hs (i + 1) l (l + k - 1) (by rw [hk]; exact hmod)]
+              exact (hsym (l + k - 1) l).1
+            have h2 : w i = w (l + k - 1) := by
+              have hmodi : i % k = (l + k - 1) % k :=
+                (EQ_SUC_K_SUB3_p28 ((hwliff (i + 1)).mp hcase2).symm hk3).symm
+              rw [hfoldw i, hmodi, ← hfoldw (l + k - 1)]
+            have h3 : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+                (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + 1)) t0)
+                = dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1)
+                  (w (l + k - 1)) := by
+              rw [hkeep0 i hcase, hmove0 (i + 1) hcase2, h2, dist_comm]
+            rw [h1, h3] at hieq
+            exact absurd hieq (ne_of_lt hltlk1)
+          · rw [hkeep0 i hcase, hkeep0 (i + 1) hcase2] at hieq
+            exact hne' hieq
+      · intro hsubm
+        have hmemT : l % k ∈ {i : ℕ | i < s.k ∧ s.a i (i + 1) = dist (w i) (w (i + 1))} := by
+          refine ⟨by rw [hk]; exact Nat.mod_lt _ hkpos, ?_⟩
+          have e1' : s.a (l % k) ((l % k) + 1) = s.a l (l + 1) := by
+            rw [CHANGE_A_SCS_MODL_p28 s hs (l % k) l ((l % k) + 1) (by rw [hk, Nat.mod_mod])]
+            exact CHANGE_A_SCS_MODR_p28 s hs ((l % k) + 1) (l + 1) l
+              (by rw [hk]; exact w1_mod_succ (Nat.mod_mod l k))
+          have e2' : dist (w (l % k)) (w ((l % k) + 1)) = dist (w l) (w (l + 1)) := by
+            have hwl' : w (l % k) = w l :=
+              CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (l % k) l hs hbb (by rw [hk, Nat.mod_mod])
+            have hwl2' : w ((l % k) + 1) = w (l + 1) :=
+              CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w ((l % k) + 1) (l + 1) hs hbb
+                (by rw [hk]; exact w1_mod_succ (Nat.mod_mod l k))
+            rw [hwl', hwl2']
+          rw [e1', e2']
+          exact hA
+        have hnotmem : l % k ∉ {i : ℕ | i < s.k ∧ s.a i (i + 1) =
+            dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+              (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + 1)) t0)} := by
+          intro hmem
+          obtain ⟨-, htight⟩ := hmem
+          have e1' : s.a (l % k) ((l % k) + 1) = s.a l (l + 1) := by
+            rw [CHANGE_A_SCS_MODL_p28 s hs (l % k) l ((l % k) + 1) (by rw [hk, Nat.mod_mod])]
+            exact CHANGE_A_SCS_MODR_p28 s hs ((l % k) + 1) (l + 1) l
+              (by rw [hk]; exact w1_mod_succ (Nat.mod_mod l k))
+          have hmv : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (l % k)) t0 =
+              v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1 :=
+            hmove0 (l % k) ((hwliff (l % k)).mpr (by rw [Nat.mod_mod]))
+          have hkp : w ((l % k) + 1) ≠ v2 := by
+            intro h
+            have h2 := (hwliff ((l % k) + 1)).mp h
+            exact succModNe_p28 (k := k) (i := l % k) (by omega) (by rw [h2, Nat.mod_mod])
+          have hkp2 : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w ((l % k) + 1)) t0 = w (l + 1) := by
+            rw [hkeep0 ((l % k) + 1) hkp]
+            exact CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w ((l % k) + 1) (l + 1) hs hbb
+              (by rw [hk]; exact w1_mod_succ (Nat.mod_mod l k))
+          rw [e1', hmv, hkp2] at htight
+          exact absurd htight (ne_of_lt hltl1)
+        exact hnotmem (hsubm hmemT)
+    have hfin : {i : ℕ | i < s.k ∧ s.a i (i + 1) = dist (w i) (w (i + 1))}.Finite :=
+      (Set.finite_Iio s.k).subset (fun i hi => hi.1)
+    have := Set.ncard_lt_ncard hsub2 hfin
+    simpa only [BBindexV39] using this
+  rw [hidxmin] at hltidx
+  linarith
+
+/-- `(j+1) ≡ l` case of `NUXCOEA`: the `l+k-1` edge is tight by `haj`, the
+`l+1` edge is forced by the `TWO_CASES` deformation (BBindex minimality). -/
+private theorem w1_nuxcoea_case2 (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
+    (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hmw : w ∈ MMsV39 s)
+    (haz : azim 0 (w l) (w (l + 1)) (w (l + (s.k - 1))) = Real.pi)
+    (hnc : ¬ Collinear ℝ ({0, w (l + 1), w (l + (s.k - 1))} : Set V3))
+    (haff : w l ∈ affGt {0} {w (l + 1), w (l + (s.k - 1))})
+    (hj : (j + 1) % k = l % k)
+    (haj : s.a j l = dist (w j) (w l)) (hbj : dist (w j) (w l) < s.b j l)
+    (hdiag1 : ∀ i, scsDiag k l i → 4 * h0 < s.b l i)
+    (hdiag2 : ∀ i, scsDiag k l i → s.a l i < dist (w l) (w i))
+    (hJ : ∀ i, ¬ s.J l i)
+    (h2norm : ‖w l‖ = 2)
+    (hlunar : ∀ (V : Set V3) (E : Set (Set V3)) (v : V3),
+      V = Set.range w → E = (Set.range fun i : ℕ => {w i, w (i + 1)}) →
+        ¬ Lunar v (w l) V E) :
+    s.a l (l + 1) = dist (w l) (w (l + 1)) ∧
+    s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1))) := by
+  have hkpos : 0 < k := by omega
+  have hbb : BBsV39 s w := MMS_IMP_BBS_p28 s w hmw
+  have hmin : ∀ ww, BBsV39 s ww → taustarV39 s w ≤ taustarV39 s ww := by
+    have h1 := hmw
+    simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h1
+    exact h1.1.1.2.1
+  have hneg : taustarV39 s w < 0 := by
+    have h1 := hmw
+    simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at h1
+    exact h1.1.1.2.2
+  have hidxmin : BBindexV39 s w = BBindexMinV39 s := by
+    have h1 := hmw
+    simp only [MMsV39, BBprime2V39, Set.mem_setOf_eq] at h1
+    exact h1.1.2
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, hsym, hchain, hdiag0, _, _, _, _, _, _⟩ := id hs
+  have hpa : Periodic2 s.a s.k := hs.2.2.2.2.2.2.2.1
+  have hpb : Periodic2 s.b s.k := hs.2.2.2.2.2.2.2.2.2.2.1
+  have hpa' : Periodic2 s.a k := by rw [← hk]; exact hpa
+  have hpb' : Periodic2 s.b k := by rw [← hk]; exact hpb
+  have hfolda : ∀ q, s.a l q = s.a l (q % k) := fun q =>
+    modPeriodic2_second_p28 hkpos hpa' (Nat.mod_mod q k).symm
+  have hfoldb : ∀ q, s.b l q = s.b l (q % k) := fun q =>
+    modPeriodic2_second_p28 hkpos hpb' (Nat.mod_mod q k).symm
+  have hperw : Periodic w k := by rw [← hk]; exact hbb.2.1
+  have hfoldw : ∀ q, w q = w (q % k) := fun q =>
+    modPeriodic_p28 hkpos hperw (Nat.mod_mod q k).symm
+  have hmodi : (l + k - 1) % k = j % k := EQ_SUC_K_SUB3_p28 hj.symm hk3
+  have hB : s.a l (l + k - 1) = dist (w l) (w (l + k - 1)) := by
+    have h1 : s.a l (l + k - 1) = s.a l j := by rw [hfolda (l + k - 1), hmodi, ← hfolda j]
+    have h2 : w (l + k - 1) = w j := by rw [hfoldw (l + k - 1), hmodi, ← hfoldw j]
+    rw [h1, h2, (hsym l j).1]
+    exact haj.trans (dist_comm (w j) (w l))
+  refine ⟨?_, ?_⟩
+  · by_contra hne
+    have hltA : s.a l (l + 1) < dist (w l) (w (l + 1)) :=
+      lt_of_le_of_ne (hbb.2.2.1 l (l + 1)).1 hne
+    set v2 : V3 := w l with hv2
+    set v1 : V3 := w (l + 1) with hv1
+    set x1 : ℝ := ‖v1‖ ^ 2 with hx1def
+    set x2 : ℝ := ‖v2‖ ^ 2 with hx2def
+    set x5 : ℝ := ‖v2 - v1‖ ^ 2 with hx5def
+    have hnorm2 : ‖v2‖ = 2 := by simpa [hv2] using h2norm
+    have hwlann : v2 ∈ ballAnnulus := by
+      simpa [hv2] using WL_IN_BALL_ANNULUS_p28 s w l hbb
+    have hwliff : ∀ i : ℕ, w i = v2 ↔ i % k = l % k := by
+      intro i
+      constructor
+      · intro h
+        have h1 : w (i % k) = w (l % k) := by rw [← hfoldw i, ← hfoldw l, h, hv2]
+        have h' := W_IN_BB_FUN_EQ_p28 s w (i % k) (l % k) hs hbb h1
+        rw [hk, Nat.mod_mod, Nat.mod_mod] at h'
+        exact h'
+      · intro h
+        rw [hfoldw i, hv2, hfoldw l, h]
+    obtain ⟨hx1p, hx2p, hx5p, hncv⟩ :=
+      HYPER_MM_COLLINEAR_p34 s k l w v1 v2 x1 x2 x5 hk hs hmw hk3
+        hv2.symm hv1.symm hx1def.symm hx2def.symm
+        (by simpa only [norm_sub_rev] using hx5def.symm)
+    obtain ⟨eA, heA, hannA⟩ :=
+      DEFORMATION_MK_DEFOR_IN_BALL_ANNULUS_p28 v1 v2 x1 x2 x5 (-1) hx1p hx2p hx5p hnorm2 hncv
+        hx1def.symm hx2def.symm hx5def.symm rfl
+    have hajj : s.a l j = dist v2 (w j) := by
+      rw [(hsym l j).1, hv2, dist_comm]
+      exact haj
+    have hltj : dist v2 (w j) < s.b l j := by
+      rw [hv2, dist_comm, (hsym l j).2.2.2.1]
+      exact hbj
+    obtain ⟨eAc, heAc, hAw⟩ :=
+      DEFORMATION_DIST_LE_V3_DEFOR_A_COM_MK1_TWO_CASES_p28 s w k l j v1 v2 x1 x2 x5 (-1)
+        hs hmw hk hk3 hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm rfl hnc haff
+        hj.symm hajj
+    have hbound : ∀ i : ℕ, ¬(l % k = i % k) ∧ ¬(l % k = (i + 1) % k) →
+        s.a l i < dist v2 (w i) := by
+      intro i hcond
+      obtain ⟨h1, h2⟩ := hcond
+      by_cases hiq : i % k = (l + 1) % k
+      · have ea : s.a l i = s.a l (l + 1) := by rw [hfolda i, hiq, ← hfolda (l + 1)]
+        have ew : w i = w (l + 1) := by rw [hfoldw i, hiq, ← hfoldw (l + 1)]
+        rw [ea, ew, hv2]
+        exact hltA
+      · have hd : scsDiag k l i := ⟨h1, fun h => hiq h.symm, h2⟩
+        exact hdiag2 i hd
+    obtain ⟨eAA, heAA, hAAw⟩ :=
+      DEFORMATION_DIST_LE_V3_DEFOR_AA_COM_MK_TWO_CASES_p28 s w k l j v1 v2 x1 x2 x5 (-1)
+        hs hmw hk hk3 hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm rfl hnc haff
+        hj.symm hajj hbound
+    obtain ⟨eB, heB, hBw⟩ :=
+      DEFORMATION_DIST_LE_V3_DEFOR_B_COM_MK_TWO_CASES_p28 s w k l j v1 v2 x1 x2 x5 (-1)
+        hk3 hs hmw hk hv2.symm hv1.symm hx1def.symm hx2def.symm hx5def.symm rfl hnc haff
+        hj.symm hltj hdiag1
+    obtain ⟨eD, heD, hDw⟩ :=
+      V3_DEFOR_CONVEX_LOCAL_FAN_MK_TWO_CASES_p28 s k w l j v1 v2 x1 x2 x5 (-1) hk hk3 hs hmw
+        haz hnc haff hj haj hbj hdiag1 hdiag2 hJ hv2.symm hv1.symm hx1def.symm hx2def.symm
+        hx5def.symm rfl hnorm2 hlunar
+    obtain ⟨eF, heF, hFw⟩ :=
+      EXISTS_SMALL_LE_CONST_ADD_p28 v1 v2 (w (l + 1)) x1 x2 x5 (s.a l (l + 1)) (-1)
+        hx1p hx2p hx5p hncv hx1def.symm hx2def.symm hx5def.symm rfl (by rw [hv2]; exact hltA)
+    set e1 : ℝ := min (min (min (min eAc eAA) eB) eD) eA / 2 with he1def
+    have he1pos : 0 < e1 := by
+      have h2 : 0 < min (min (min (min eAc eAA) eB) eD) eA :=
+        lt_min (lt_min (lt_min (lt_min heAc heAA) heB) heD) heA
+      rw [he1def]; linarith
+    have he1Ac : e1 < eAc := by
+      have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eAc :=
+        (min_le_left _ _).trans ((min_le_left _ _).trans ((min_le_left _ _).trans (min_le_left _ _)))
+      rw [he1def]; nlinarith
+    have he1AA : e1 < eAA := by
+      have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eAA :=
+        (min_le_left _ _).trans ((min_le_left _ _).trans ((min_le_left _ _).trans (min_le_right _ _)))
+      rw [he1def]; nlinarith
+    have he1B : e1 < eB := by
+      have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eB :=
+        (min_le_left _ _).trans ((min_le_left _ _).trans (min_le_right _ _))
+      rw [he1def]; nlinarith
+    have he1D : e1 < eD := by
+      have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eD :=
+        (min_le_left _ _).trans (min_le_right _ _)
+      rw [he1def]; nlinarith
+    have he1Ann : e1 < eA := by
+      have h2 : min (min (min (min eAc eAA) eB) eD) eA ≤ eA := min_le_right _ _
+      rw [he1def]; nlinarith
+    have hbbs : ∀ t : ℝ, 0 < t → t < e1 →
+        BBsV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t) := by
+      intro t ht0 ht1
+      have htAnn : t < eA := lt_trans ht1 he1Ann
+      have htAA : t < eAA := lt_trans ht1 he1AA
+      have htB : t < eB := lt_trans ht1 he1B
+      have htD : t < eD := lt_trans ht1 he1D
+      have hmove : ∀ i, w i = v2 →
+          v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t =
+            v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1 := by
+        intro i hi
+        rw [v3DeforV5_p28, hi, v3DeforV4_p28, if_pos rfl]
+      have hkeep : ∀ i, w i ≠ v2 → v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t = w i := by
+        intro i hi
+        rw [v3DeforV5_p28, v3DeforV4_p28]
+        have hne' : w i - v1 ≠ v2 - v1 := by
+          intro h
+          exact hi (by
+            have h2 := congrArg (fun z : V3 => z + v1) h
+            simpa using h2)
+        rw [if_neg hne', sub_add_cancel]
+      have hAA_at : ∀ r : ℕ, ¬(l % k = r % k) →
+          s.a l r < dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r) := by
+        intro r hr
+        have h := hAAw t (r % k) ⟨ht0, htAA, by rw [Nat.mod_mod]; exact hr⟩
+        rwa [← hfolda r, ← hfoldw r] at h
+      have hB_at : ∀ r : ℕ, ¬(l % k = r % k) →
+          dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w r) < s.b l r := by
+        intro r hr
+        have h := hBw t (r % k) ⟨ht0, htB, by rw [Nat.mod_mod]; exact hr⟩
+        rwa [← hfoldb r, ← hfoldw r] at h
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · intro x hx
+        obtain ⟨i, rfl⟩ := hx
+        change v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t ∈ ballAnnulus
+        by_cases hi : w i = v2
+        · rw [hmove i hi]
+          have h := hannA t ⟨by linarith only [heA, ht0], htAnn⟩
+          rwa [v3DeforV4_p28, if_pos rfl] at h
+        · rw [hkeep i hi]
+          exact hbb.1 (Set.mem_range_self i)
+      · intro i
+        show v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + s.k)) t =
+          v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t
+        rw [hbb.2.1 i]
+      · intro i j
+        by_cases hi : i % k = l % k
+        · by_cases hj' : j % k = l % k
+          · have hwi : w i = v2 := (hwliff i).mpr hi
+            have hwj : w j = v2 := (hwliff j).mpr hj'
+            have hdist0 : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t)
+                (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w j) t) = 0 := by
+              rw [hmove i hwi, hmove j hwj, dist_self]
+            have haij : s.a i j = 0 := by
+              rw [CHANGE_A_SCS_MODL_p28 s hs i l j (by rw [hk]; exact hi),
+                CHANGE_A_SCS_MODR_p28 s hs j l l (by rw [hk]; exact hj'),
+                hdiag0 l]
+            have hab : s.a i j ≤ s.b i j :=
+              le_trans (hchain i j).1 (le_trans (hchain i j).2.1 (hchain i j).2.2)
+            constructor
+            · rw [hdist0, haij]
+            · rw [hdist0]; exact le_trans (le_of_eq haij.symm) hab
+          · have hwi : w i = v2 := (hwliff i).mpr hi
+            have hwj : w j ≠ v2 := fun h => hj' ((hwliff j).mp h)
+            have haij : s.a i j = s.a l j :=
+              CHANGE_A_SCS_MODL_p28 s hs i l j (by rw [hk]; exact hi)
+            have hbij : s.b i j = s.b l j :=
+              CHANGE_B_SCS_MODL_p28 s hs i l j (by rw [hk]; exact hi)
+            have hdist : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t)
+                (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w j) t)
+                = dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w j) := by
+              rw [hmove i hwi, hkeep j hwj]
+            constructor
+            · rw [haij, hdist]
+              exact le_of_lt (hAA_at j (fun h => hj' h.symm))
+            · rw [hbij, hdist]
+              exact le_of_lt (hB_at j (fun h => hj' h.symm))
+        · by_cases hj' : j % k = l % k
+          · have hwj : w j = v2 := (hwliff j).mpr hj'
+            have hwi : w i ≠ v2 := fun h => hi ((hwliff i).mp h)
+            have haij : s.a i j = s.a l i := by
+              rw [CHANGE_A_SCS_MODR_p28 s hs j l i (by rw [hk]; exact hj')]
+              exact (hsym i l).1
+            have hbij : s.b i j = s.b l i := by
+              rw [CHANGE_B_SCS_MODR_p28 s hs j l i (by rw [hk]; exact hj')]
+              exact (hsym i l).2.2.2.1
+            have hdist : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t)
+                (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w j) t)
+                = dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t) + v1) (w i) := by
+              rw [hkeep i hwi, hmove j hwj, dist_comm]
+            constructor
+            · rw [haij, hdist]
+              exact le_of_lt (hAA_at i (fun h => hi h.symm))
+            · rw [hbij, hdist]
+              exact le_of_lt (hB_at i (fun h => hi h.symm))
+          · have hwi : w i ≠ v2 := fun h => hi ((hwliff i).mp h)
+            have hwj : w j ≠ v2 := fun h => hj' ((hwliff j).mp h)
+            have hdist : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t)
+                (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w j) t) = dist (w i) (w j) := by
+              rw [hkeep i hwi, hkeep j hwj]
+            rw [hdist]
+            exact hbb.2.2.1 i j
+      · refine Or.inr ?_
+        simpa only [v3DeforV5_p28] using hDw t ⟨by linarith, htD⟩
+    obtain ⟨eT, heT, htau⟩ :=
+      TAUSTAR_V3_DEFOR_MK_TWO_CASES_p28 s k w l j v1 v2 x1 x2 x5 (-1) e1 hk hk3 hs hmw haz
+        hnc haff hj haj hbj hdiag1 hdiag2 hJ hv2.symm hv1.symm hx1def.symm hx2def.symm
+        hx5def.symm rfl (fun t ht => hbbs t ht.1 ht.2) he1pos
+    set t0 : ℝ := min (min e1 eT) eF / 2 with ht0def
+    have ht0pos : 0 < t0 := by
+      have h2 : 0 < min (min e1 eT) eF := lt_min (lt_min he1pos heT) heF
+      rw [ht0def]; linarith
+    have ht0e1 : t0 < e1 := by
+      have h2 : min (min e1 eT) eF ≤ e1 := (min_le_left _ _).trans (min_le_left _ _)
+      rw [ht0def]; nlinarith
+    have ht0eT : t0 < eT := by
+      have h2 : min (min e1 eT) eF ≤ eT := (min_le_left _ _).trans (min_le_right _ _)
+      rw [ht0def]; nlinarith
+    have ht0eF : t0 < eF := by
+      have h2 : min (min e1 eT) eF ≤ eF := min_le_right _ _
+      rw [ht0def]; nlinarith
+    have hbbs0 : BBsV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0) :=
+      hbbs t0 ht0pos ht0e1
+    have htaut : taustarV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+        = taustarV39 s w := htau t0 ⟨ht0pos, ht0eT⟩
+    have hbbprime : (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0) ∈ BBprimeV39 s := by
+      refine ⟨hbbs0, ?_, ?_⟩
+      · intro ww hww
+        rw [htaut]
+        exact hmin ww hww
+      · rw [htaut]
+        exact hneg
+    have hleidx : BBindexMinV39 s ≤
+        BBindexV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0) :=
+      w1bbindexMin_le s hbbprime
+    have hltidx : BBindexV39 s (fun i => v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+        < BBindexV39 s w := by
+      have hmove0 : ∀ i, w i = v2 →
+          v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0 =
+            v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1 := by
+        intro i hi
+        rw [v3DeforV5_p28, hi, v3DeforV4_p28, if_pos rfl]
+      have hkeep0 : ∀ i, w i ≠ v2 → v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0 = w i := by
+        intro i hi
+        rw [v3DeforV5_p28, v3DeforV4_p28]
+        have hne' : w i - v1 ≠ v2 - v1 := by
+          intro h
+          exact hi (by
+            have h2 := congrArg (fun z : V3 => z + v1) h
+            simpa using h2)
+        rw [if_neg hne', sub_add_cancel]
+      have hltl1 : s.a l (l + 1) <
+          dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1) (w (l + 1)) :=
+        hFw t0 ⟨by linarith, ht0eF⟩
+      have hltlk1 : s.a l (l + k - 1) <
+          dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1) (w (l + k - 1)) := by
+        have h := hAw t0 ⟨ht0pos, lt_trans ht0e1 he1Ac⟩
+        rwa [show s.a l j = s.a l (l + k - 1) from by rw [hfolda j, ← hmodi, ← hfolda (l + k - 1)],
+          show w j = w (l + k - 1) from by rw [hfoldw j, ← hmodi, ← hfoldw (l + k - 1)]] at h
+      have hmod2 : (((l + k - 1) % k) + 1) % k = l % k := by
+        rw [w1_mod_succ' (l + k - 1) k, show (l + k - 1) + 1 = l + k by omega,
+          Nat.add_mod_right]
+      have hsub2 : {i : ℕ | i < s.k ∧ s.a i (i + 1) =
+          dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+            (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + 1)) t0)} ⊂
+          {i : ℕ | i < s.k ∧ s.a i (i + 1) = dist (w i) (w (i + 1))} := by
+        constructor
+        · intro i hi'
+          obtain ⟨hik, hieq⟩ := hi'
+          refine ⟨hik, ?_⟩
+          by_contra hne'
+          by_cases hcase : w i = v2
+          · have hcase2 : w (i + 1) ≠ v2 := by
+              intro h
+              have h1 := (hwliff i).mp hcase
+              have h2 := (hwliff (i + 1)).mp h
+              exact succModNe_p28 (k := k) (i := i) (by omega) (by rw [h2, h1])
+            have h1 : s.a i (i + 1) = s.a l (l + 1) := by
+              rw [CHANGE_A_SCS_MODL_p28 s hs i l (i + 1) (by rw [hk]; exact (hwliff i).mp hcase)]
+              exact CHANGE_A_SCS_MODR_p28 s hs (i + 1) (l + 1) l
+                (by rw [hk]; exact w1_mod_succ (a := i) (b := l) ((hwliff i).mp hcase))
+            have h2 : w (i + 1) = w (l + 1) :=
+              CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (i + 1) (l + 1) hs hbb
+                (by rw [hk]; exact w1_mod_succ (a := i) (b := l) ((hwliff i).mp hcase))
+            have h3 : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+                (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + 1)) t0)
+                = dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1)
+                  (w (l + 1)) := by
+              rw [hmove0 i hcase, hkeep0 (i + 1) hcase2, h2]
+            rw [h1, h3] at hieq
+            exact absurd hieq (ne_of_lt hltl1)
+          · by_cases hcase2 : w (i + 1) = v2
+            · have h1 : s.a i (i + 1) = s.a l (l + k - 1) := by
+                have hmod : (i + 1) % k = l % k := (hwliff (i + 1)).mp hcase2
+                have hmodi' : i % k = (l + k - 1) % k := (EQ_SUC_K_SUB3_p28 hmod.symm hk3).symm
+                rw [CHANGE_A_SCS_MODL_p28 s hs i (l + k - 1) (i + 1) (by rw [hk]; exact hmodi')]
+                rw [CHANGE_A_SCS_MODR_p28 s hs (i + 1) l (l + k - 1) (by rw [hk]; exact hmod)]
+                exact (hsym (l + k - 1) l).1
+              have h2 : w i = w (l + k - 1) := by
+                have hmodi' : i % k = (l + k - 1) % k :=
+                  (EQ_SUC_K_SUB3_p28 ((hwliff (i + 1)).mp hcase2).symm hk3).symm
+                rw [hfoldw i, hmodi', ← hfoldw (l + k - 1)]
+              have h3 : dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+                  (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + 1)) t0)
+                  = dist (v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1)
+                    (w (l + k - 1)) := by
+                rw [hkeep0 i hcase, hmove0 (i + 1) hcase2, h2, dist_comm]
+              rw [h1, h3] at hieq
+              exact absurd hieq (ne_of_lt hltlk1)
+            · rw [hkeep0 i hcase, hkeep0 (i + 1) hcase2] at hieq
+              exact hne' hieq
+        · intro hsubm
+          have hmemT : (l + k - 1) % k ∈
+              {i : ℕ | i < s.k ∧ s.a i (i + 1) = dist (w i) (w (i + 1))} := by
+            refine ⟨by rw [hk]; exact Nat.mod_lt _ hkpos, ?_⟩
+            have e1' : s.a ((l + k - 1) % k) (((l + k - 1) % k) + 1) = s.a l (l + k - 1) := by
+              rw [CHANGE_A_SCS_MODL_p28 s hs ((l + k - 1) % k) (l + k - 1) (((l + k - 1) % k) + 1)
+                (by rw [hk, Nat.mod_mod])]
+              rw [CHANGE_A_SCS_MODR_p28 s hs (((l + k - 1) % k) + 1) l (l + k - 1)
+                (by rw [hk]; exact hmod2)]
+              exact (hsym (l + k - 1) l).1
+            have e2' : dist (w ((l + k - 1) % k)) (w (((l + k - 1) % k) + 1))
+                = dist (w (l + k - 1)) (w l) := by
+              have h1 : w ((l + k - 1) % k) = w (l + k - 1) :=
+                CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w ((l + k - 1) % k) (l + k - 1) hs hbb
+                  (by rw [hk, Nat.mod_mod])
+              have h2 : w (((l + k - 1) % k) + 1) = w l :=
+                CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (((l + k - 1) % k) + 1) l hs hbb
+                  (by rw [hk]; exact hmod2)
+              rw [h1, h2]
+            rw [e1', e2', dist_comm]
+            exact hB
+          have hnotmem : (l + k - 1) % k ∉ {i : ℕ | i < s.k ∧ s.a i (i + 1) =
+              dist (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w i) t0)
+                (v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (i + 1)) t0)} := by
+            intro hmem
+            obtain ⟨-, htight⟩ := hmem
+            have e1' : s.a ((l + k - 1) % k) (((l + k - 1) % k) + 1) = s.a l (l + k - 1) := by
+              rw [CHANGE_A_SCS_MODL_p28 s hs ((l + k - 1) % k) (l + k - 1) (((l + k - 1) % k) + 1)
+                (by rw [hk, Nat.mod_mod])]
+              rw [CHANGE_A_SCS_MODR_p28 s hs (((l + k - 1) % k) + 1) l (l + k - 1)
+                (by rw [hk]; exact hmod2)]
+              exact (hsym (l + k - 1) l).1
+            have hne_v2 : w ((l + k - 1) % k) ≠ v2 := by
+              intro h
+              have h2 := (hwliff ((l + k - 1) % k)).mp h
+              rw [Nat.mod_mod] at h2
+              have h3 : (l + (k - 1)) % k = l % k := by
+                rw [show l + (k - 1) = l + k - 1 by omega]
+                exact h2
+              exact w5cD6_mod_add_ne_p28 (l := l) (by omega) (by omega) h3
+            have hmv : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w ((l + k - 1) % k)) t0
+                = w (l + k - 1) := by
+              rw [hkeep0 ((l + k - 1) % k) hne_v2]
+              exact CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w ((l + k - 1) % k) (l + k - 1) hs hbb
+                (by rw [hk, Nat.mod_mod])
+            have hmv2 : v3DeforV5_p28 (-1) x1 x5 x2 v1 v2 (w (((l + k - 1) % k) + 1)) t0
+                = v3DeforV1_p17 (-1) (-v1) (v2 - v1) x1 x5 x2 x2 (x5 - t0) + v1 := by
+              have hthis : w (((l + k - 1) % k) + 1) = v2 := by
+                rw [CHANGE_W_IN_BBS_MOD_IS_SCS_p28 s w (((l + k - 1) % k) + 1) l hs hbb
+                  (by rw [hk]; exact hmod2)]
+              exact hmove0 _ hthis
+            rw [e1', hmv, hmv2, dist_comm] at htight
+            exact absurd htight (ne_of_lt hltlk1)
+          exact hnotmem (hsubm hmemT)
+      have hfin : {i : ℕ | i < s.k ∧ s.a i (i + 1) = dist (w i) (w (i + 1))}.Finite :=
+        (Set.finite_Iio s.k).subset (fun i hi => hi.1)
+      have := Set.ncard_lt_ncard hsub2 hfin
+      simpa only [BBindexV39] using this
+    rw [hidxmin] at hltidx
+    linarith
+  · have hsub : l + (k - 1) = l + k - 1 := by omega
+    rw [hsub, hB]
+
 /-- HOL `NUXCOEA` (NUXCOEA.hl:6469; `mk_imp (ZLZTHIC_concl, mk_imp
 (MHAEYJN_concl, NUXCOEA_concl))`).  DISCHARGES: proving this discharges the
 `ZLZTHIC_p14`/`MHAEYJN` registry antecedents for the a-edge pin. -/
@@ -7194,7 +8023,14 @@ theorem NUXCOEA_p28 (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
         ¬ Lunar v (w l) V E) :
     s.a l (l + 1) = dist (w l) (w (l + 1)) ∧
     s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1))) := by
-  sorry
+  by_cases h2 : ‖w l‖ = 2
+  · rcases hj with hj | hj
+    · exact w1_nuxcoea_case1 s k w l j hk hk3 hs hmw haz hnc haff hj haj hbj hdiag1 hdiag2
+        hJ h2 hlunar
+    · exact w1_nuxcoea_case2 s k w l j hk hk3 hs hmw haz hnc haff hj haj hbj hdiag1 hdiag2
+        hJ h2 hlunar
+  · exact IMJXPHR_p34 hz hm s k w l hk hs hmw haz hk3 hnc haff hdiag1
+      (Ne.symm h2) hdiag2 hJ hlunar
 
 /-- HOL `NUXCOEAv2` (NUXCOEA.hl:7711; `NUXCOEA_concl` without the
 `ZLZTHIC`/`MHAEYJN` antecedents, via `NUXCOEA` + the registry theorems). -/
@@ -7213,7 +8049,8 @@ theorem NUXCOEAv2_p28 (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ)
         ¬ Lunar v (w l) V E) :
     s.a l (l + 1) = dist (w l) (w (l + 1)) ∧
     s.a l (l + (k - 1)) = dist (w l) (w (l + (k - 1))) := by
-  sorry
+  exact NUXCOEA_p28 s k w l j ZLZTHIC_p14 MHAEYJN_p37 hk hk3 hs hmw haz hnc haff hj haj
+    hbj hdiag1 hdiag2 hJ hlunar
 
 /-- HOL `IMJXPHRv2` (NUXCOEA.hl:7717; statement `IMJXPHR_concl`,
 IMJXPHR.hl:9682). -/
