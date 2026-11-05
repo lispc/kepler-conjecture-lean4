@@ -3163,9 +3163,84 @@ theorem MCELL3_DOMAIN (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packi
       dist (elV ul 0) (elV ul 1) < 2 * Real.sqrt 2 ∧
       eta_y (dist (elV ul 0) (elV ul 1)) (dist (elV ul 0) (elV ul 2))
           (dist (elV ul 1) (elV ul 2)) < Real.sqrt 2 := by
-  -- NEEDS(2026-10-23 pa25wim): 深域条件件(leaf_cell.hl 对应段), 2≤dist≤2√2 界 +
-  -- eta_y(纯实工具, PA21:166 已有 def)界属 non-mechanical 内容, 需独立侦察 lane。
-  sorry
+  -- pa25-rolling-w1: 纯几何装配，hnl-free。
+  -- ① mcell3 非空 ⇒ 定义条件 `hl (trunc 2) < √2`；
+  -- ② truncSimplex 2 ul 是 3 点叶（barV 2 + 半径条件）；
+  -- ③ 三点几何：非共线（GBEWYFX）、边长 ≤ 2R（OAPVION2_concl + 三角不等式）、
+  --    packing 下界、eta_y = R（RADV_ETAY）。
+  have hmc : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul := by
+    by_cases h : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+    · exact h
+    · exfalso
+      apply hn
+      unfold mcell3
+      rw [if_neg h]
+      exact measure_empty
+  have hb2 : barV V 2 (truncateSimplex 2 ul) :=
+    TRUNCATE_SIMPLEX_BARV V 2 3 ul hb (by omega)
+  have hleaf : leaf V (truncateSimplex 2 ul) := ⟨hb2, hmc.1⟩
+  have htr : truncateSimplex 2 ul = [elV ul 0, elV ul 1, elV ul 2] := by
+    rw [BARV3_TRUNC2 hb]
+    simp [elV]
+  have hl3 : leaf V [elV ul 0, elV ul 1, elV ul 2] := by
+    rwa [← htr]
+  set a : V3 := elV ul 0 with ha
+  set b : V3 := elV ul 1 with hb'
+  set c : V3 := elV ul 2 with hc'
+  have hl3' : leaf V [a, b, c] := by
+    simpa [ha, hb', hc'] using hl3
+  have hnc : ¬ Collinear3 a b c := by
+    intro hcol
+    exact GBEWYFX (V := V) (ul := [a, b, c]) hp hs hl3' (by simpa using hcol)
+  have hab : a ≠ b := ne₁₂_of_not_collinear hnc
+  have hac : a ≠ c := ne₁₃_of_not_collinear hnc
+  have hbc : b ≠ c := ne₂₃_of_not_collinear hnc
+  have haff : ¬ affineDependent ({a, b, c} : Set V3) := p25_not_affdep3 hab hac hbc hnc
+  have hset : setOfList [a, b, c] = ({a, b, c} : Set V3) := by
+    ext q; simp [setOfList]
+  have hrad : radV ({a, b, c} : Set V3) < Real.sqrt 2 := by
+    have h2 : hl [a, b, c] < Real.sqrt 2 := hl3'.2
+    rw [hl, hset] at h2
+    exact h2
+  have dp0 := OAPVION2_concl ({a, b, c} : Set V3) haff a (by simp)
+  have dp1 := OAPVION2_concl ({a, b, c} : Set V3) haff b (by simp)
+  have dp2 := OAPVION2_concl ({a, b, c} : Set V3) haff c (by simp)
+  have f0 : dist a (circumcenter ({a, b, c} : Set V3)) = radV ({a, b, c} : Set V3) := by
+    rw [dist_comm a (circumcenter ({a, b, c} : Set V3))]; exact dp0.symm
+  have f1 : dist b (circumcenter ({a, b, c} : Set V3)) = radV ({a, b, c} : Set V3) := by
+    rw [dist_comm b (circumcenter ({a, b, c} : Set V3))]; exact dp1.symm
+  have g1 : dist (circumcenter ({a, b, c} : Set V3)) b = radV ({a, b, c} : Set V3) :=
+    dp1.symm
+  have g2 : dist (circumcenter ({a, b, c} : Set V3)) c = radV ({a, b, c} : Set V3) :=
+    dp2.symm
+  have tbc : dist b c ≤ dist b (circumcenter ({a, b, c} : Set V3)) +
+      dist (circumcenter ({a, b, c} : Set V3)) c :=
+    dist_triangle b (circumcenter ({a, b, c} : Set V3)) c
+  have tac : dist a c ≤ dist a (circumcenter ({a, b, c} : Set V3)) +
+      dist (circumcenter ({a, b, c} : Set V3)) c :=
+    dist_triangle a (circumcenter ({a, b, c} : Set V3)) c
+  have tab : dist a b ≤ dist a (circumcenter ({a, b, c} : Set V3)) +
+      dist (circumcenter ({a, b, c} : Set V3)) b :=
+    dist_triangle a (circumcenter ({a, b, c} : Set V3)) b
+  rw [f1, g2] at tbc
+  rw [f0, g2] at tac
+  rw [f0, g1] at tab
+  have hbc2 : dist b c < 2 * Real.sqrt 2 := by linarith
+  have hac2 : dist a c < 2 * Real.sqrt 2 := by linarith
+  have hab2 : dist a b < 2 * Real.sqrt 2 := by linarith
+  have hsub : setOfList [a, b, c] ⊆ V := BARV_SUBSET V 2 [a, b, c] hl3'.1
+  have hmemV : ∀ p ∈ ({a, b, c} : Set V3), p ∈ V := by
+    intro p hp'
+    rw [← hset] at hp'
+    exact hsub hp'
+  refine ⟨hnc, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact hp.dist_ge_two (hmemV b (by simp)) (hmemV c (by simp)) hbc
+  · exact hp.dist_ge_two (hmemV a (by simp)) (hmemV c (by simp)) hac
+  · exact hp.dist_ge_two (hmemV a (by simp)) (hmemV b (by simp)) hab
+  · exact hbc2
+  · exact hac2
+  · exact hab2
+  · rw [← RADV_ETAY a b c hnc]; exact hrad
 
 /-- HOL `TSKAJXY_3` (the 3-cell case of the TSKAJXY bank; consumes
 `pack_nonlinear_non_ox3q1h`). -/
@@ -9268,7 +9343,11 @@ theorem pkLeafRankAzimPointwise (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ 
     (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
     ∀ i, azim_mcell V f u0 u1 i = azim u0 u1 (f i) (f (i + 1)) := by
-  sorry
+  -- pa25-rolling-w1: 直接实例化已证的 `LEAF_RANK_REUHADY`（:2719，wedge 内
+  -- Marchal 胞 dihedral 和 = 张角）于 `ul = [u0, u1]`；`elV [u0, u1] 0/1`
+  -- 与 `u0/u1` 定义性同体，无需额外几何。
+  intro i
+  exact LEAF_RANK_REUHADY V [u0, u1] w0 n f i hn hp hs hsize hnc hr
 
 /-- HOL `LEAF_RANK_PROPS`: the full leaf-rank extraction from a failing
 cell-cluster inequality (the case-analysis engine).
@@ -11870,6 +11949,26 @@ theorem real_model_azim2 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     rw [hr2] at h
     exact absurd h (not_lt.mpr (le_of_lt hrad2lt))
 
+/-- 私件（pa25-rolling-w1）：`setSum` 单点插入分解（PA25 的 import 闭包不含
+TameLp，故按 TameLp `setSum_insert` 同型重镜像）。 -/
+private theorem p25w1_setSum_insert {α : Type*} {s : Set α} {a : α} (ha : a ∉ s)
+    (hs : s.Finite) (f : α → ℝ) : setSum (insert a s) f = f a + setSum s f := by
+  rw [setSum, setSum, dif_pos (hs.insert a), dif_pos hs,
+    Set.Finite.toFinset_insert (hs.insert a)]
+  exact Finset.sum_insert (by simpa using ha)
+
+/-- 私件（pa25-rolling-w1）：两次插入的和分解（CC_3_SUM_fn 的记账核）。 -/
+private theorem p25w1_setSum_insert_insert {α : Type*} {a b : α} {R : Set α}
+    (hab : a ≠ b) (ha : a ∉ R) (hb : b ∉ R) (hR : R.Finite) (f : α → ℝ) :
+    setSum (insert a (insert b R)) f = f a + f b + setSum R f := by
+  have ha' : a ∉ insert b R := by
+    intro h
+    rcases Set.mem_insert_iff.mp h with h1 | h1
+    · exact hab h1
+    · exact ha h1
+  rw [p25w1_setSum_insert ha' (hR.insert b) f, p25w1_setSum_insert hb hR f]
+  ring
+
 /-- HOL `CC_3_SUM_SET`: the 3-cell wedge cell set splits into the two
 cc-cells plus the rest. -/
 theorem CC_3_SUM_SET (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -11884,7 +11983,53 @@ theorem CC_3_SUM_SET (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i 
         {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
           X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
           X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]}) := by
-  sorry
+  -- pa25-rolling-w1: 纯集合代数 —— 只需两枚 cc 胞（及其茎边、入楔）在集合内。
+  -- `NO_4CELL_IMP_K3` 给两胞入楔与互异；叶性/getD 投影取 `p25m_cc3_wit(_b)`；
+  -- `CC_CELL_IN_MCELL_SET` + `STEM_EDGEX` 给 mcellSet/edgeX 成员。
+  have hd := NO_4CELL_IMP_K3 V (wedgeGe u0 u1 (f i) (f (i + 1))) [u0, u1] w0 n f i
+    hp hs hr hnc rfl hn (by simpa [cc_4, elV] using hno4)
+  obtain ⟨-, -, hsubA, hsubB, hne⟩ := hd
+  obtain ⟨-, hleafA, -, -, e0A, e1A, -, -, -⟩ :=
+    p25m_cc3_wit V u0 u1 w0 n f i hp hs hr hnc hn hno4
+  obtain ⟨-, hleafB, -, -, e0B, e1B, -, -, -⟩ :=
+    p25m_cc3_wit_b V u0 u1 w0 n f i hp hs hr hnc hn hno4
+  have hedgeA : ({u0, u1} : Set V3) ∈ edgeX V (ccCell V [u0, u1, f i]) := by
+    have hE := STEM_EDGEX (V := V) (ul := [u0, u1, f i]) hp hs hleafA
+    have hpair : ({(ccUh V [u0, u1, f i]).getD 0 0,
+        (ccUh V [u0, u1, f i]).getD 1 0} : Set V3) = {u0, u1} := by
+      rw [e0A, e1A]
+    rwa [hpair] at hE
+  have hedgeB : ({u0, u1} : Set V3) ∈ edgeX V (ccCell V [u1, u0, f (i + 1)]) := by
+    have hE := STEM_EDGEX (V := V) (ul := [u1, u0, f (i + 1)]) hp hs hleafB
+    have hpair : ({(ccUh V [u1, u0, f (i + 1)]).getD 0 0,
+        (ccUh V [u1, u0, f (i + 1)]).getD 1 0} : Set V3) = {u0, u1} := by
+      rw [e0B, e1B]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rwa [hpair] at hE
+  have hmemA : ccCell V [u0, u1, f i] ∈
+      {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
+        X ⊆ wedgeGe u0 u1 (f i) (f (i + 1))} :=
+    ⟨CC_CELL_IN_MCELL_SET (V := V) (ul := [u0, u1, f i]) hs hp hleafA, hedgeA, hsubA⟩
+  have hmemB : ccCell V [u1, u0, f (i + 1)] ∈
+      {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
+        X ⊆ wedgeGe u0 u1 (f i) (f (i + 1))} :=
+    ⟨CC_CELL_IN_MCELL_SET (V := V) (ul := [u1, u0, f (i + 1)]) hs hp hleafB,
+      hedgeB, hsubB⟩
+  refine Set.ext fun X => ?_
+  simp only [Set.mem_setOf_eq, Set.mem_insert_iff]
+  constructor
+  · intro hX
+    by_cases hXa : X = ccCell V [u0, u1, f i]
+    · exact Or.inl hXa
+    · by_cases hXb : X = ccCell V [u1, u0, f (i + 1)]
+      · exact Or.inr (Or.inl hXb)
+      · exact Or.inr (Or.inr ⟨hX.1, hX.2.1, hX.2.2, hXa, hXb⟩)
+  · rintro (rfl | rfl | ⟨hm, he, hsub, -, -⟩)
+    · exact hmemA
+    · exact hmemB
+    · exact ⟨hm, he, hsub⟩
 
 /-- HOL `CC_3_SUM_fn`: the corresponding sum split. -/
 theorem CC_3_SUM_fn (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -11899,7 +12044,24 @@ theorem CC_3_SUM_fn (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i :
         setSum {X | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
           X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
           X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]} fn := by
-  sorry
+  -- 集合拆分（CC_3_SUM_SET）+ 两次插入和分解；rest 有限性由 `FINITE_EDGE_X2`
+  -- 的边族有限集下取。
+  have hfinS : ({X : Set V3 | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
+      X ⊆ wedgeGe u0 u1 (f i) (f (i + 1))} : Set (Set V3)).Finite :=
+    Set.Finite.subset (FINITE_EDGE_X2 V {u0, u1} u0 u1 hp hs rfl)
+      (fun z hz => ⟨hz.1, hz.2.1⟩)
+  have hfinR : ({X : Set V3 | mcellSet V X ∧ {u0, u1} ∈ edgeX V X ∧
+      X ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧
+      X ≠ ccCell V [u0, u1, f i] ∧ X ≠ ccCell V [u1, u0, f (i + 1)]} :
+      Set (Set V3)).Finite :=
+    Set.Finite.subset hfinS (fun z hz => ⟨hz.1, hz.2.1, hz.2.2.1⟩)
+  have hne : ccCell V [u0, u1, f i] ≠ ccCell V [u1, u0, f (i + 1)] := by
+    have hd := NO_4CELL_IMP_K3 V (wedgeGe u0 u1 (f i) (f (i + 1))) [u0, u1] w0 n f i
+      hp hs hr hnc rfl hn (by simpa [cc_4, elV] using hno4)
+    exact hd.2.2.2.2
+  rw [CC_3_SUM_SET V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hno4 hnc hcey hr]
+  exact p25w1_setSum_insert_insert hne
+    (fun h => h.2.2.2.1 rfl) (fun h => h.2.2.2.2 rfl) hfinR fn
 
 /-- HOL `EDGE_IMP_K23`: every wedge cell over the stem edge is a 2- or
 3-cell. -/
