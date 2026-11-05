@@ -46,7 +46,7 @@
 | `pa25-rolling-w5` | **PA25 滚动 w5**：`real_model_gamma8` + `gamma8b`（**锥内 ×2**）→ 3 胞 kit 批量（gamma10/11、pema/pemb、txq/tew）→ 008 kit 链；交 w6 工单 | 在飞 |
 | `la26-rrcwnsj-w1` | `RRCWNSJ_p26`（M，250–400 行）——先做 ≤100 行可行性探针：`JCYFMRP_V3_p29`/`JLXFDMJ_p27` 若真必需即判 BLOCKED | 在飞 |
 | `la33-straight-w1` | `SCS_4I2_STRAIGHT_p33` + `SCS_4I2_STRAIGHT_ALL_p33` + `MM_4I2_IMP_4T2_4T1_p33`（S+S+M，210–310 行，后件锥内） | 在飞 |
-| `la32-4m6-w1` | 4M6 五件梯子 `EXTREMAL_SCS_4M6` → `BB_4M6_IMP_scs_4T3` → `MM_4M6_IMP_MM_4T3` → `SCS_4M6_ARROW_..._STAB_4M6` → `NWDGKXH_p32`（260–340 行，末件锥内） | 在飞 |
+| `la1-roots-recon-w1` | **只读**：LA1 registry 仍-sorry `*_concl` 根节点全量分诊（statement / HOL 锚 / donor axioms / 消费方闭包可达性 / class）+ 与 `general_482` 是否同源 + 下批 2 条车道建议 | 在飞 |
 
 > 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
@@ -165,6 +165,11 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-06（04:20，续371）**：**LA32 4M6 梯子全 BLOCKED（0/5）+ 分诊 `CLEAN` 口径被实测推翻（两条勘误）+ 发车 `la1-roots-recon-w1`**。① `la32-4m6-w1` 五件全 BLOCKED：`EXTREMAL_SCS_4M6_p32` 本体就用 `PWEIWBZ`×3 / `VASYYAU`×2 / `TUAPYYU`×1，后四件全部经它，另加 in-file `SCS_4T3_IS_SCS_p32`(:247) sorry。根实测（`#print axioms` 全名）：`VASYYAU_concl`(LA1:4913) / `TUAPYYU_concl`(:4880) / `PWEIWBZ_concl`(:4903) / `SCS_4T3_IS_SCS_p32`(LA32:247)，四条全 `[propext, sorryAx, choice, Quot.sound]`。
+  ② **勘误 A（指标口径）**：分诊把 `VASYYAU_p25`(LA25:2541) 判 CLEAN，实测**带 sorryAx**——它只是 LA1 `VASYYAU_concl` 的再导出，债在 registry 里。**"已证"≠"公理面干净"**。
+  ③ **勘误 B（可达性口径）**：`SET_STAB_4M6_ARROW_4T5_p33`(LA33:4298) 确实已证，但 **LA32 不 import LA33**，探针 `unknown identifier`，零新 import 下不可用。分诊的 `CLEAN = 递归闭包 0 sorry` 是 grep 口径，未验 import 可达性与 axioms。
+  ④ 已向两条在飞车道（`la33-straight-w1`/`la26-rrcwnsj-w1`）下发强制口径：开工前对每个前置同时验 (a) `#check` 过（在目标文件 import 闭包内）(b) `#print axioms` 无 `sorryAx`；任一不满足即判 BLOCKED。
+  ⑤ **发车 `la1-roots-recon-w1`**（只读）：穷举 LocalAuto1 全部仍-sorry `*_concl`，与 `LocalConcl` 的 `_discharged` donor 交叉，实测 donor 的 axioms 与消费方闭包可达性，判定每条根的 class（S/M/L/BLOCKED/DEFHOLE）与修复路径，并核 `VASYYAU`/`TUAPYYU`/`PWEIWBZ` 是否与 `general_482_deformation_p21` 同源——若是则合并成「LA1+LA21 根簇」一条车道。⑥ 池 5/5。勘误同时入 `docs/archive/lane-archives/cone-text-triage-w1/`（见其 ERRATA 节）。
 - **2026-11-06（03:05，续370）**：**PA25 滚动 w4 三件闭（`c831efac`，25→22，锥内 17→16）+ 发车 w5**。① `gamma4fgcy_POS`（`proj_bank_GLFVCVK4` 三分支：γ>0 支 `exact`（`gamma4fgcyP25 = gamma4fgcy` 定义性相等）、norm2hh 支撞 `hnot`、rad2 支 `rfl` 桥 + `linarith`）/ `cc_prep_model_data`（**锥内**：HOL :4021–4185 相邻性，`ccUh [u0,u1,f(i+1)]` + `CC_KE_34` 分案，`ccKe=4` 走 `K4_CC_WI_ALT`，`ccKe=3` 走 `S_LEAF_SYM` + `K4_CC_WIM` 回卷楔撞 `¬cc_4 i`）/ `EDGE_IMP_K23`（`mcellSet` 取参，k≤1 `BumpP4.EDGE_IMP_K2`、k≥4 归一 `mcell4` 撞 `hno4`、k=2/3 PA18 `MCELL2/3_EDGE_FIRST` + `BARV_3_EXPLICIT`——**刻意避开仍 sorry 的 `MCELL_EDGE_FIRST`**）。② +157/−3（只删 3 行 sorry），三件标准三，GATE-PASS @`cc_prep_model_data`；整文件 14,547 行 / 22 裸 sorry / 0 error。③ **w5 发车**（`WORKORDER-w5.md`）：W5-A `real_model_gamma8` + `gamma8b`（锥内×2，先判 `GG_MCELL_BETA`/`NONBETA` 再选 `GLFVCVK4y4*` 三张 bank）/ W5-B 3 胞 kit 批量（gamma10/11、pema/pemb、txq/tew、gckb）/ W5-C 008 kit 链（`GAMMAX_008a` 仿 `real_model_3a/3b`）。w4 未留新的可复用件（三件证明全内联，无 `p25w4_*` 声明）。④ 池 5/5。
 - **2026-11-06（02:10，续369）**：**锥内 Text 残债分诊收工（`cone-text-triage-w1`）+ 按 TOP-3 发三条车道 + 口径修正：`main_nonlinear_terminal_v11` 已不是银行债**。① 分诊 19 行（排除 PA25/LA11/已闭 AURSIPD/LocalConcl anchor）：**S 档 0 / M 档 1（`RRCWNSJ_p26`）/ L 档 1（`SCS_5M2_IMP_SCS_5T1_p29`）/ BLOCKED 16 / DEFHOLE 0 / 快照过时 1（`NUXCOEAv2_p28` 已闭）**。**无重型计算可清总量 = 3 条锥内行 / ~8 个证明项 / ~700–1000 行**——Text 层已接近枯竭，不是"最大证明子树"的主战场（主战场在 PA25/PA22 与 hNL/hLP）。
   ② **口径修正（最重要）**：`main_nonlinear_terminal_v11` 已由 terminal11-T0 物化为**真定义**（`LocalAuto1.lean:2139`，109 条 `mainEstimate_*` 均为具体 Prop）；探针 `#print axioms` = `[propext, Classical.choice, Quot.sound]`、**无 sorryAx**。故 13 条签名含 mnt11 的锥内件**不是银行债**，其阻塞全部来自具体依赖——分诊表无一行判 MNT11。此结论推翻此前"mnt11 是银行债"的默认口径。
