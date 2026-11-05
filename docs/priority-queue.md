@@ -77,7 +77,11 @@
 >   根簇。规模实测：HOL `local/CUXVZOZ.hl` 4,348 行，本体 :3649 起 640 行，7 条前置跨 :322–:3649（≈3,300 行）；
 >   解锁面 = 4 条锥内（`JCYFMRP_p27` / `SCS_4I1_IMP_SCS_4I2` / `SCS_4I2_IMP_SCS_4T1` / `TFITSKC`）+ LA16 `CQAOQLR`。
 >   形态：**先侦察波**（把 7 条前置按依赖序切成 2–3 个子波、逐条给 HOL 锚与可证性判定），再按子波发；不指望一条车道收。
-> **（以上两条占用下一个空出的槽位，顺序 α → β）**
+> - **2-γ `tame-correspondence-w1`**（用户 2026-11-06「好」；DECISIONS 同日条）—— hTC 两件合成三波程序：
+>   **W1** P6-C 桥（`IsHypermapOfList L (hypermapOfList L)`，`TameLp` 侧构造已在）+ `RXOKSKC.hl`(1,105 行) 移植，产出**新模块**不动 Assembly；
+>   **W2** `jcajydu`（HOL 99 行本体，消费 W1）；**W3** `tameCorrespondenceIso`（`WMLNYMD.hl` 1,515 行 / 40+ 引理）。
+>   实测闭包 ≈2,000–4,500 HOL 行（不是整章 91,841 行）；`asfutbf`/`elllnyz` 已收口。每波验收 `#print axioms` 标准三。
+> **（以上三条占后续空槽位，顺序 α → β → γ）**
 
 > **提级（用户 2026-11-03 晚：「同意」物化程序 A/B/C + 「hypermap 和 la35 优先级提到 pending queue 最前面」）**：补位首发序 = **§2-13 `hypermap-mat-scout` → §2-14 `la35-mat-scout`** → CertTM 物化侦察（§2-15）→ 孤儿岛接入（§2-16）→ 其余按原序。三侦察已收工（续 264），落地波 certtm-root-w1 / hypermap-root-w1 / la35-root-w1 **3/3 在飞**；任一完成即按 §2 原序补位（下一口 = §2-16 孤儿岛接入或侦察建议的波 2）。
 

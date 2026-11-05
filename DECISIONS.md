@@ -3,6 +3,33 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-06 — tame-correspondence 三波程序获批（用户「好」）
+
+**拍板**（用户，2026-11-06，在 `jcajydu` / `tameCorrespondenceIso` 工作量评估后）：
+把 hTC 剩下的两件**合成一个三波程序**，不各开独立车道。
+
+1. **W1 — P6-C 桥 + `RXOKSKC` 移植**：目标 `IsHypermapOfList L (hypermapOfList L)`
+   （`TameLp` 侧构造已存在，`Assembly.lean:2231` 在用；缺的是 Assembly 层桥），
+   外加 HOL `RXOKSKC.hl`（1,105 行）的列表/唯一性机器。产出**新模块**，不动 Assembly。
+2. **W2 — `jcajydu`**：HOL `JCAJYDU.hl` 本体 99 行（单证明，把列表版结论提升到任意
+   hypermap，核心一步 `INTRO_TAC Rxokskc.RXOKSKC`），消费 W1 产物。
+3. **W3 — `tameCorrespondenceIso`**：HOL `WMLNYMD.hl` 1,515 行 / 40+ 引理
+   （`tame9a/10/11a/11b/12o` 的图谓词↔列表谓词对应、`finalGraph_except`、
+   `facesAt2_list`、长度/过滤/三角四边形分类簿记）。
+
+**理由（实测，非估计）**：两件的真实闭包 ≈ 2,000–4,500 行 HOL，而不是 `tame/` 整章的
+91,841 行 / 4.6MB——`jcajydu` 本体只有 99 行，`WMLNYMD` 才是主体；两件共享同一座
+graph↔list↔hypermap 桥；`asfutbf`（`hypermap_of_fan_neg`）与 `elllnyz` 早已收口。
+
+**验收**：每波 `#print axioms` = 标准三；W2/W3 落库后 `Assembly.jcajydu` /
+`tameCorrespondenceIso` 的 sorry 消失，`textCapstone` 公理面相应收窄。
+
+**排期**：队列 2-γ，排在 2-α（`fcdjdot` 柱③）与 2-β（`general_482` 侦察）之后，
+不占当前池。
+
+**风险/止损**：W1 若发现 `TameLp.hypermapOfList` 与 `Assembly.IsHypermapOfList` 语义有
+偏差，可能触发 SF/DEF-FIX 裁决——届时停手报告，不自行改陈述。
+
 ## 2026-11-05 — SF-99 定义层根修执行（用户批准方案 (a)）
 
 **拍板**（用户，2026-11-05 早，听取 SF-99 展开说明后答「按你建议执行吧」）：
