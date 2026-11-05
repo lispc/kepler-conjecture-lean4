@@ -15055,19 +15055,312 @@ theorem YSSKQOY_VECTOR (v w : V3) (theta : V3 → ℝ)
   linarith
 
 
+/-! ### `_797` support kit (ACS_ARCLENGTH / arcVarc bridges)
+
+HOL side: `ACS_ARCLENGTH` (trig1.hl:562) and `arcVarc` (trig1.hl:608).  Both
+were absent from the whole tree (`LuneVolume.arcV` is the direct arccos
+definition; `arcLengthICD` is the `atn2` form), so the two bridges below are
+proved here as private lemmas.  The analytic core is the `atn2 ↔ arccos`
+rendering: a verbatim private re-proof of `p38_atn2_arccos`
+(LocalAuto38.lean:827 — private and outside the PA22 closure). -/
+
+/-- Analytic core (private re-proof of `p38_atn2_arccos`,
+LocalAuto38.lean:827): `π/2 + atn2 s (−t) = arccos (t / √(s²+t²))` on
+`0 ≤ s`, `0 < s² + t²`. -/
+private theorem p22w5_atn2_arccos {s t : ℝ} (hs : 0 ≤ s) (hr : 0 < s ^ 2 + t ^ 2) :
+    Real.pi / 2 + atn2 s (-t) = Real.arccos (t / Real.sqrt (s * s + t * t)) := by
+  have hr0 : 0 < s * s + t * t := by
+    have h9 : s * s = s ^ 2 := by ring
+    have h10 : t * t = t ^ 2 := by ring
+    rw [h9, h10]
+    exact hr
+  have hr' : Real.sqrt (s * s + t * t) ≠ 0 := ne_of_gt (Real.sqrt_pos.mpr hr0)
+  rw [atn2]
+  split
+  · next h =>
+    -- branch `|−t| < s`: atn2 = arctan (−t/s)
+    have hs1 : 0 < s := by
+      rcases abs_lt.mp h with ⟨h1, h2⟩
+      have h9 : -t = -1 * t := by ring
+      linarith
+    have hden : Real.sqrt (1 + (-(t / s)) ^ 2) = Real.sqrt (s * s + t * t) / s := by
+      have he : 1 + (-(t / s)) ^ 2 = (s * s + t * t) / (s * s) := by
+        field_simp
+      rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+        Real.sqrt_mul_self (le_of_lt hs1)]
+    have hcos : t / Real.sqrt (s * s + t * t)
+        = Real.cos (Real.pi / 2 + Real.arctan (-(t / s))) := by
+      rw [Real.cos_add, Real.cos_pi_div_two, Real.sin_pi_div_two, Real.sin_arctan,
+        hden]
+      field_simp [show s ≠ 0 from ne_of_gt hs1, hr']
+      ring
+    rw [hcos, show -t / s = -(t / s) from by ring]
+    exact (Real.arccos_cos
+      (x := Real.pi / 2 + Real.arctan (-(t / s)))
+      (by linarith [Real.neg_pi_div_two_lt_arctan (-(t / s))])
+      (by linarith [Real.arctan_lt_pi_div_two (-(t / s))])).symm
+  · next h1 =>
+    split
+    · next h2 =>
+      -- branch `0 < −t`: atn2 = π/2 − arctan (s/(−t))
+      have hyt : t < 0 := by
+        have h9 : -t = -1 * t := by ring
+        linarith
+      have ht0 : (t : ℝ) ≠ 0 := ne_of_lt hyt
+      have hden : Real.sqrt (1 + (s / -t) ^ 2) = Real.sqrt (s * s + t * t) / -t := by
+        have he : 1 + (s / -t) ^ 2 = (s * s + t * t) / (t * t) := by
+          rw [div_pow, show (-t) ^ 2 = t ^ 2 from by ring,
+            eq_div_iff (mul_ne_zero ht0 ht0)]
+          field_simp
+          ring
+        rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+          show (t * t) = t ^ 2 from by ring, Real.sqrt_sq_eq_abs, abs_of_neg hyt]
+      have hcos : t / Real.sqrt (s * s + t * t)
+          = Real.cos (Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t))) := by
+        have eA : Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t))
+            = Real.pi - Real.arctan (s / -t) := by ring
+        rw [eA, Real.cos_pi_sub, Real.cos_arctan, hden]
+        field_simp [ht0, hr']
+      rw [hcos]
+      have hA0 : 0 ≤ s / -t := div_nonneg hs (le_of_lt h2)
+      exact (Real.arccos_cos
+        (x := Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t)))
+        (by linarith [Real.arctan_nonneg.mpr hA0, Real.arctan_lt_pi_div_two (s / -t),
+          Real.pi_pos])
+        (by linarith [Real.arctan_nonneg.mpr hA0, Real.arctan_lt_pi_div_two (s / -t),
+          Real.pi_pos])).symm
+    · next h3 =>
+      split
+      · next h4 =>
+        -- branch `−t < 0`: atn2 = −π/2 − arctan (s/(−t))
+        have hyt : 0 < t := by
+          have h9 : -t = -1 * t := by ring
+          linarith
+        have ht0 : (t : ℝ) ≠ 0 := ne_of_gt hyt
+        have hden : Real.sqrt (1 + (s / -t) ^ 2) = Real.sqrt (s * s + t * t) / t := by
+          have he : 1 + (s / -t) ^ 2 = (s * s + t * t) / (t * t) := by
+            rw [div_pow, show (-t) ^ 2 = t ^ 2 from by ring,
+              eq_div_iff (mul_ne_zero ht0 ht0)]
+            field_simp
+            ring
+          rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+            show (t * t) = t ^ 2 from by ring, Real.sqrt_sq_eq_abs, abs_of_pos hyt]
+        have hcos : t / Real.sqrt (s * s + t * t)
+            = Real.cos (Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t))) := by
+          have eA : Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t))
+              = -(Real.arctan (s / -t)) := by ring
+          rw [eA, Real.cos_neg, Real.cos_arctan, hden]
+          field_simp [ht0, hr']
+        rw [hcos]
+        have hA0 : s / -t ≤ 0 := div_nonpos_of_nonneg_of_nonpos hs (le_of_lt h4)
+        have hA1 : Real.arctan (s / -t) ≤ 0 := by
+          have h2x : 0 ≤ -(s / -t) := by linarith
+          have h3x := Real.arctan_nonneg.mpr h2x
+          rw [Real.arctan_neg] at h3x
+          linarith
+        exact (Real.arccos_cos
+          (x := Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t)))
+          (by linarith)
+          (by linarith [Real.neg_pi_div_two_lt_arctan (s / -t), Real.pi_pos])).symm
+      · next h5 =>
+        -- junk branch: `−t = 0` and `s = 0` contradict `0 < s² + t²`
+        exfalso
+        have h6 : -t = 0 := le_antisymm (not_lt.mp h3) (not_lt.mp h5)
+        have ht0 : t = 0 := by
+          have h9 : -t = -1 * t := by ring
+          linarith
+        have h7 : s = 0 := by
+          have h8 : ¬ (0 < s) := fun hc => h1 (by simpa [h6] using hc)
+          linarith
+        rw [h7, ht0] at hr0
+        norm_num at hr0
+
+/-- #11: HOL `ACS_ARCLENGTH` (trig1.hl:562) — the `arclength ↔ acs` bridge:
+`arcLengthICD a b c = acs ((a²+b²-c²)/(2ab))` for genuine triangle sides. -/
+private theorem p22w5_arcLengthICD_eq_acs {a b c : ℝ}
+    (ha : 0 < a) (hb : 0 < b) (hc0 : 0 ≤ c) (hc1 : c ≤ a + b)
+    (hc2 : a ≤ b + c) (hc3 : b ≤ c + a) :
+    arcLengthICD a b c = acs ((a * a + b * b - c * c) / (2 * a * b)) := by
+  have hu_eq : upsX (a * a) (b * b) (c * c)
+      = (c - (a - b)) * (c + (a - b)) * ((a + b) - c) * ((a + b) + c) := by
+    simp only [upsX]; ring
+  have h1 : 0 ≤ c - (a - b) := by linarith
+  have h2 : 0 ≤ c + (a - b) := by linarith
+  have h3 : 0 ≤ (a + b) - c := by linarith
+  have h4 : 0 ≤ (a + b) + c := by linarith
+  have hu : 0 ≤ upsX (a * a) (b * b) (c * c) := by
+    rw [hu_eq]
+    exact mul_nonneg (mul_nonneg (mul_nonneg h1 h2) h3) h4
+  have hs2 : Real.sqrt (upsX (a * a) (b * b) (c * c)) ^ 2
+      = upsX (a * a) (b * b) (c * c) := Real.sq_sqrt hu
+  have hst : Real.sqrt (upsX (a * a) (b * b) (c * c)) ^ 2
+        + (a * a + b * b - c * c) ^ 2 = 4 * a * a * b * b := by
+    rw [hs2]; simp only [upsX]; ring
+  have hr : 0 < Real.sqrt (upsX (a * a) (b * b) (c * c)) ^ 2
+      + (a * a + b * b - c * c) ^ 2 := by
+    rw [hst]; positivity
+  have hsqrt : Real.sqrt (Real.sqrt (upsX (a * a) (b * b) (c * c))
+        * Real.sqrt (upsX (a * a) (b * b) (c * c))
+        + (a * a + b * b - c * c) * (a * a + b * b - c * c)) = 2 * a * b := by
+    have e1 : Real.sqrt (upsX (a * a) (b * b) (c * c))
+          * Real.sqrt (upsX (a * a) (b * b) (c * c))
+        = Real.sqrt (upsX (a * a) (b * b) (c * c)) ^ 2 := by ring
+    have e2 : (a * a + b * b - c * c) * (a * a + b * b - c * c)
+        = (a * a + b * b - c * c) ^ 2 := by ring
+    rw [e1, e2, hst, show 4 * a * a * b * b = (2 * a * b) ^ 2 by ring,
+      Real.sqrt_sq (by positivity)]
+  have hkey := p22w5_atn2_arccos (s := Real.sqrt (upsX (a * a) (b * b) (c * c)))
+    (t := a * a + b * b - c * c) (Real.sqrt_nonneg _) hr
+  rw [hsqrt] at hkey
+  unfold arcLengthICD acs
+  rw [show c * c - a * a - b * b = -(a * a + b * b - c * c) by ring]
+  exact hkey
+
+/-- `arcLengthICD` is symmetric in its first two arguments. -/
+private theorem p22w5_arcLengthICD_comm (a b c : ℝ) :
+    arcLengthICD a b c = arcLengthICD b a c := by
+  unfold arcLengthICD
+  rw [show upsX (a * a) (b * b) (c * c) = upsX (b * b) (a * a) (c * c) from by
+        simp only [upsX]; ring,
+      show c * c - a * a - b * b = c * c - b * b - a * a from by ring]
+
+/-- Planar cosine law (local copy of the `p38_cos_law` pattern). -/
+private theorem p22w5_cos_law (x y : V3) :
+    2 * (x ⬝ᵥ y) = ‖x‖ * ‖x‖ + ‖y‖ * ‖y‖ - dist x y * dist x y := by
+  have h := norm_sub_sq_real x y
+  rw [inner_eq_dot] at h
+  rw [dist_eq_norm]
+  linarith
+
+/-- #11b: HOL `arcVarc` (trig1.hl:608) instance at the origin:
+`arcV 0 v w = arclength22 ‖v‖ ‖w‖ (dist v w)`. -/
+private theorem p22w5_arcV_eq_arclength22 (v w : V3) (hv : v ≠ 0) (hw : w ≠ 0) :
+    arcV 0 v w = arclength22 ‖v‖ ‖w‖ (dist v w) := by
+  have ha : 0 < ‖v‖ := norm_pos_iff.mpr hv
+  have hb : 0 < ‖w‖ := norm_pos_iff.mpr hw
+  have hd : 0 ≤ dist v w := dist_nonneg
+  have htri1 : dist v w ≤ ‖v‖ + ‖w‖ := by
+    have h := norm_sub_le v w
+    rwa [dist_eq_norm]
+  have htri2 : ‖v‖ ≤ ‖w‖ + dist v w := by
+    have h : ‖v‖ ≤ ‖v - w‖ + ‖w‖ := by
+      calc ‖v‖ = ‖(v - w) + w‖ :=
+            congrArg (fun x : V3 => ‖x‖) (by abel : v = (v - w) + w)
+        _ ≤ ‖v - w‖ + ‖w‖ := norm_add_le _ _
+    rw [dist_eq_norm]
+    linarith
+  have htri3 : ‖w‖ ≤ dist v w + ‖v‖ := by
+    have h : ‖w‖ ≤ ‖v‖ + ‖v - w‖ := by
+      calc ‖w‖ = ‖v - (v - w)‖ :=
+            congrArg (fun x : V3 => ‖x‖) (by abel : w = v - (v - w))
+        _ ≤ ‖v‖ + ‖v - w‖ := norm_sub_le v (v - w)
+    rw [dist_eq_norm]
+    linarith
+  have hcos := p22w5_cos_law v w
+  have harg : (‖v‖ * ‖v‖ + ‖w‖ * ‖w‖ - dist v w * dist v w) / (2 * ‖v‖ * ‖w‖)
+      = (v ⬝ᵥ w) / (‖v‖ * ‖w‖) := by
+    have e : (v ⬝ᵥ w)
+        = (‖v‖ * ‖v‖ + ‖w‖ * ‖w‖ - dist v w * dist v w) / 2 := by
+      linarith [hcos]
+    rw [e]
+    field_simp [ne_of_gt ha, ne_of_gt hb]
+  have hbri := p22w5_arcLengthICD_eq_acs ha hb hd htri1 htri2 htri3
+  have harcV : arcV 0 v w = Real.arccos ((v ⬝ᵥ w) / (‖v‖ * ‖w‖)) := by
+    simp only [arcV, sub_zero, WithLp.ofLp_zero, dist_zero_right]
+  rw [harcV]
+  unfold arclength22
+  rw [hbri]
+  unfold acs
+  rw [harg]
+
+/-- `arcV 0` is symmetric in its two arguments (HOL `arcV` symmetry). -/
+private theorem p22w5_arcV_comm (a b : V3) (ha : a ≠ 0) (hb : b ≠ 0) :
+    arcV 0 a b = arcV 0 b a := by
+  rw [p22w5_arcV_eq_arclength22 a b ha hb,
+      p22w5_arcV_eq_arclength22 b a hb ha]
+  unfold arclength22
+  rw [p22w5_arcLengthICD_comm ‖a‖ ‖b‖ (dist a b), dist_comm a b]
+
 /-- HOL `PACK_INEQ_DEF_A_797` (counting_spheres.hl:6540). GIANT. -/
 theorem PACK_INEQ_DEF_A_797 (v v0 : V3) (hpa : packIneqDefAP22)
     (hv0 : ‖v0‖ = 2) (hd : 2 * h0 ≤ dist v v0)
     (hv : 2 ≤ ‖v‖ ∧ ‖v‖ ≤ 2 * h0) :
     0.797 + acs (‖v‖ / 4) - Real.pi / 6 < arclength22 (‖v‖) 2 (dist v v0) := by
-  sorry
+  have h2h0pos : (0:ℝ) < 2 * h0 := by rw [h0]; norm_num
+  have hv52 : ‖v‖ ≤ 2.52 := by
+    have h := hv.2
+    rw [h0] at h
+    norm_num at h
+    linarith
+  have hW := hpa.2.1 (‖v‖ ^ 2) 4 ((2 * h0) ^ 2) 1 1 1
+    (by nlinarith [hv.1])
+    (pow_le_pow_left₀ (norm_nonneg v) hv52 2)
+    (by norm_num) (by norm_num)
+    (le_refl _) (le_refl _)
+    (by norm_num) (by norm_num) (by norm_num) (by norm_num)
+    (by norm_num) (by norm_num)
+  rw [Real.sqrt_sq (by linarith [hv.1]),
+      show Real.sqrt 4 = 2 by
+        rw [show (4:ℝ) = 2 ^ 2 by norm_num, Real.sqrt_sq (by norm_num)],
+      Real.sqrt_sq (le_of_lt h2h0pos)] at hW
+  have hmono : arclength22 ‖v‖ 2 (2 * h0) ≤ arclength22 ‖v‖ 2 (dist v v0) := by
+    have ha : 0 < ‖v‖ := by linarith [hv.1]
+    have htri1 : dist v v0 ≤ ‖v‖ + 2 := by
+      have h := norm_sub_le v v0
+      rw [hv0] at h
+      rwa [dist_eq_norm]
+    have htri2 : ‖v‖ ≤ 2 + dist v v0 := by
+      have h : ‖v‖ ≤ ‖v - v0‖ + ‖v0‖ := by
+        calc ‖v‖ = ‖(v - v0) + v0‖ :=
+              congrArg (fun x : V3 => ‖x‖) (by abel : v = (v - v0) + v0)
+          _ ≤ ‖v - v0‖ + ‖v0‖ := norm_add_le _ _
+      rw [hv0] at h
+      rw [← dist_eq_norm] at h
+      linarith
+    have htri3 : 2 ≤ dist v v0 + ‖v‖ := by
+      have h : ‖v0‖ ≤ ‖v0 - v‖ + ‖v‖ := by
+        calc ‖v0‖ = ‖(v0 - v) + v‖ :=
+              congrArg (fun x : V3 => ‖x‖) (by abel : v0 = (v0 - v) + v)
+          _ ≤ ‖v0 - v‖ + ‖v‖ := norm_add_le _ _
+      rw [hv0] at h
+      rw [← dist_eq_norm] at h
+      rw [dist_comm] at h
+      linarith
+    have hA : (0:ℝ) ≤ 2 * h0 := le_of_lt h2h0pos
+    have hAle : 2 * h0 ≤ ‖v‖ + 2 := by linarith
+    have hB : ‖v‖ ≤ 2 + 2 * h0 := by linarith [hv.1, hv.2]
+    have hC : (2:ℝ) ≤ 2 * h0 + ‖v‖ := by
+      have h : (2:ℝ) ≤ 2 * h0 := by rw [h0]; norm_num
+      linarith [hv.1]
+    unfold arclength22
+    rw [p22w5_arcLengthICD_eq_acs ha (by norm_num) hA hAle hB hC,
+        p22w5_arcLengthICD_eq_acs ha (by norm_num) dist_nonneg htri1 htri2 htri3]
+    unfold acs
+    apply Real.arccos_le_arccos
+    have hsq : (2 * h0) ^ 2 ≤ dist v v0 ^ 2 := pow_le_pow_left₀ hA hd 2
+    have hden : (0:ℝ) < 2 * ‖v‖ * 2 := by positivity
+    rw [div_le_div_iff₀ hden hden]
+    exact mul_le_mul_of_nonneg_right (by nlinarith) (le_of_lt hden)
+  linarith
 
 /-- HOL `YSSKQOY_VECTOR2` (counting_spheres.hl:6599). GIANT. -/
 theorem YSSKQOY_VECTOR2 (v0 w : V3) (hv0 : v0 ∈ ballAnnulus) (hw : w ∈ ballAnnulus)
     (hwv0 : w ≠ v0) (hd : 2 * h0 ≤ dist w v0) (hpa : packIneqDefAP22)
     (hv0n : ‖v0‖ = 2) :
     0.797 + acs (‖w‖ / 4) - Real.pi / 6 ≤ arcV 0 v0 w := by
-  sorry
+  have hwn := (ckq_in_ball_annulus w).mp hw
+  have h797 := PACK_INEQ_DEF_A_797 w v0 hpa hv0n hd ⟨hwn.1, hwn.2.1⟩
+  have h1 : arclength22 ‖w‖ 2 (dist w v0) = arclength22 ‖v0‖ ‖w‖ (dist v0 w) := by
+    unfold arclength22
+    rw [p22w5_arcLengthICD_comm ‖w‖ 2 (dist w v0), ← hv0n, dist_comm v0 w]
+  have hv0ne : v0 ≠ 0 := by
+    intro h
+    rw [h] at hv0n
+    simp at hv0n
+  have harc := p22w5_arcV_eq_arclength22 v0 w hv0ne hwn.2.2
+  rw [h1] at h797
+  rw [← harc] at h797
+  exact le_of_lt h797
 
 /-- HOL `YSSKQOY_VECTOR2_ALT` (counting_spheres.hl:6624). GIANT. -/
 theorem YSSKQOY_VECTOR2_ALT (V : Set V3) (v w v0 : V3) (theta : V3 → ℝ)
@@ -15077,7 +15370,40 @@ theorem YSSKQOY_VECTOR2_ALT (V : Set V3) (v w v0 : V3) (theta : V3 → ℝ)
     (hpa : packIneqDefAP22) (hv0n : ‖v0‖ = 2)
     (htheta : (fun v => if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) = theta) :
     theta v + theta w ≤ arcV 0 v w := by
-  sorry
+  have hv0ne : v0 ≠ 0 := by
+    intro h
+    rw [h] at hv0n
+    simp at hv0n
+  by_cases hvv : v = v0
+  · have htv : theta v = 0.797 := by rw [← htheta]; simp [hvv]
+    by_cases hwv : w = v0
+    · exact absurd (hvv.trans hwv.symm) hvw
+    · have hd' : 2 * h0 ≤ dist w v0 := hfar w hw hwv
+      have hY := YSSKQOY_VECTOR2 v0 w (hV hv0) (hV hw) hwv hd' hpa hv0n
+      have htw : theta w = acs (‖w‖ / 4) - Real.pi / 6 := by
+        rw [← htheta]; simp [hwv]
+      rw [htv, htw, hvv]
+      linarith
+  · have hvv2 : 2 ≤ ‖v‖ := ((ckq_in_ball_annulus v).mp (hV hv)).1
+    have hvne : v ≠ 0 := by
+      intro h
+      rw [h, norm_zero] at hvv2
+      norm_num at hvv2
+    have htv : theta v = acs (‖v‖ / 4) - Real.pi / 6 := by
+      rw [← htheta]; simp [hvv]
+    by_cases hwv : w = v0
+    · have hd' : 2 * h0 ≤ dist v v0 := hfar v hv hvv
+      have hY := YSSKQOY_VECTOR2 v0 v (hV hv0) (hV hv) hvv hd' hpa hv0n
+      have htw : theta w = 0.797 := by rw [← htheta]; simp [hwv]
+      rw [htv, htw, hwv, p22w5_arcV_comm v v0 hvne hv0ne]
+      linarith
+    · have hd' : 2 ≤ dist v w := hP.dist_ge_two hv hw hvw
+      have hY := YSSKQOY_VECTOR v w (fun x => acs (‖x‖ / 4) - Real.pi / 6)
+        (hV hv) (hV hw) hvw hd' rfl
+      have htw : theta w = acs (‖w‖ / 4) - Real.pi / 6 := by
+        rw [← htheta]; simp [hwv]
+      rw [htv, htw]
+      exact hY
 
 /-- HOL `ACS_ROOT32` (counting_spheres.hl:6657). -/
 theorem ACS_ROOT32 : acs (Real.sqrt 3 / 2) = Real.pi / 6 := by
