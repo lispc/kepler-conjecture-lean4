@@ -82,12 +82,12 @@ ENCODING NOTES
     XIVPHKS inductions (NEEDS `sum3/4/5_azim_fan`,
     `AZIM_DIHV_SAME_STRONG`, the Localization wedge kit), the
     continuity suite `real_continuous_dih_y_wrt4/5/6` /
-    `real_continuous_taum`, `SCS_GENERIC_SYM_0` (NEEDS the Xwitccn /
-    In_sym_0 symmetry kit), and the assembly giant `CQAOQLR_p16`
+    `real_continuous_taum`, and the assembly giant `CQAOQLR_p16`
     (NEEDS TFITSKC / MM_SCS_OPP / OPP_IS_SCS / CHANGE_*_SCS_MOD).
     Wave w15 (`la16-gap-w1`, 2026-11-05) closed `ear_acute`, the quad
     pair `quad_nonexist_849` / `quad_diag_362`, `taum_dih_y` and
-    `K_SUC_2_MOD_F_SUB_ID`.
+    `K_SUC_2_MOD_F_SUB_ID`; wave w17 (`la16-sym-w1`, 2026-11-05) closed
+    `SCS_GENERIC_SYM_0`.
 
 DISCHARGES: `BKOSSGE_p16` is verbatim
   `LocalAuto1.BKOSSGE_concl` (`scsArrowV39 {scs3M1} {scs3T1, scs3T5}`);
@@ -1410,15 +1410,220 @@ theorem A_B_J_SCS_OPP_p16 (s : ScsV39) :
 theorem ELEMENT1_SYM_0_p16 (a : V3) : ({-a} : Set V3) = (fun x : V3 => -x) '' {a} := by
   simp
 
+/-! ## `SCS_GENERIC_SYM_0` kit (Xwitccn / In_sym_0 symmetry, CQAOQLR.hl:83-175)
+
+Sign-negation transfer for the `scs_generic` hypothesis.  The proof follows
+the HOL route: the opposite-index ranges are the negated ranges
+(`OPP_IMAGE_V_EQ_NEG` / `OPP_IMAGE_E_EQ_NEG`; the edge form is inlined as
+`oppEdgeIndex_p16`), `Generic` is applied at `(-v', -w, -u)`, and the
+conclusion is pulled back through `AFF_GE_VEC0_SYM_0` /
+`AFF_LT_VEC0_SYM_0` (sign-generic core `affsignNegPt_p16`) and
+`REFL_SYM_0` / `INTER_SYM_0`.  All items are private; the `*_SYM_0` names
+are the HOL anchors. -/
+
+/-- The negation map on `V3` is injective (shared step of the `*_SYM_0` kit). -/
+private theorem negInjSym_p16 : Function.Injective (fun x : V3 => -x) :=
+  fun _ _ h => by simpa using h
+
+/-- HOL `ELEMENT2_SYM_0`: `{--a, --b} = IMAGE (λx. --x) {a,b}`. -/
+private theorem element2Neg_p16 (a b : V3) :
+    ({-a, -b} : Set V3) = Set.image (fun x : V3 => -x) ({a, b} : Set V3) := by
+  rw [Set.image_insert_eq, Set.image_singleton]
+
+/-- HOL `REFL_SYM_0`: negation is an involution on sets. -/
+private theorem reflNeg_p16 (A : Set V3) :
+    Set.image (fun x : V3 => -x) (Set.image (fun x : V3 => -x) A) = A := by
+  simp
+
+/-- HOL `INTER_SYM_0`: negation distributes over `∩` (it is injective). -/
+private theorem interNeg_p16 (e1 e2 : Set V3) :
+    Set.image (fun x : V3 => -x) (e1 ∩ e2)
+      = Set.image (fun x : V3 => -x) e1 ∩ Set.image (fun x : V3 => -x) e2 := by
+  ext x
+  simp only [Set.mem_inter_iff, Set.mem_image]
+  constructor
+  · rintro ⟨y, ⟨hy1, hy2⟩, rfl⟩
+    exact ⟨⟨y, hy1, rfl⟩, ⟨y, hy2, rfl⟩⟩
+  · rintro ⟨⟨y1, hy1, rfl⟩, ⟨y2, hy2, hy12⟩⟩
+    have hyy : y1 = y2 := neg_inj.mp hy12.symm
+    exact ⟨y1, ⟨hy1, hyy ▸ hy2⟩, rfl⟩
+
+/-- HOL `VEC0_SYM_0`: the origin is fixed by negation. -/
+private theorem vec0Neg_p16 :
+    Set.image (fun x : V3 => -x) ({0} : Set V3) = ({0} : Set V3) := by
+  ext x
+  simp
+
+/-! ### affine transfer with `{0}` base -/
+
+/-- HOL `AFF_GE_VEC0_SYM_0` / `AFF_LT_VEC0_SYM_0`, sign-generic core:
+if `w` is an `sgn`-combination of `{0} ∪ (-e)` then `-w` is one of `{0} ∪ e`
+(the coefficients are transported by `f ↦ f ∘ neg`, the extreme value `0`
+being fixed by negation). -/
+private theorem affsignNegPt_p16 {e : Set V3} {w : V3} {sgn : ℝ → Prop}
+    (hw : Affsign sgn ({0} : Set V3) (Set.image (fun x : V3 => -x) e) w) :
+    Affsign sgn ({0} : Set V3) e (-w) := by
+  obtain ⟨f, hfin, hwv, hfp, hfsum⟩ := hw
+  have hU : Set.image (fun x : V3 => -x) (({0} : Set V3) ∪ e)
+      = ({0} : Set V3) ∪ Set.image (fun x : V3 => -x) e := by
+    rw [Set.image_union, vec0Neg_p16]
+  have hfinA : ((({0} : Set V3) ∪ e : Set V3)).Finite :=
+    (Set.finite_image_iff negInjSym_p16.injOn).mp (by rw [hU]; exact hfin)
+  have heq : hfin.toFinset = hfinA.toFinset.image (fun x : V3 => -x) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_image,
+      Set.mem_union, Set.mem_singleton_iff]
+    constructor
+    · rintro (rfl | ⟨y, hy, rfl⟩)
+      · exact ⟨0, Or.inl rfl, by simp⟩
+      · exact ⟨y, Or.inr hy, rfl⟩
+    · rintro ⟨a, (rfl | hy), rfl⟩
+      · exact Or.inl (by simp)
+      · exact Or.inr ⟨a, hy, rfl⟩
+  refine ⟨fun y => f (-y), hfinA, ?_, ?_, ?_⟩
+  · calc -w = ∑ x ∈ hfin.toFinset, f x • (-x) := by
+          rw [hwv]
+          simp only [Finset.sum_neg_distrib, smul_neg]
+      _ = ∑ x ∈ hfinA.toFinset.image (fun x : V3 => -x), f x • (-x) := by rw [heq]
+      _ = ∑ y ∈ hfinA.toFinset, f (-y) • y := by
+          simp only [Finset.sum_image (f := fun z : V3 => f z • (-z))
+            (g := fun x : V3 => -x) negInjSym_p16.injOn, neg_neg]
+  · intro z hz
+    exact hfp (-z) ⟨z, hz, rfl⟩
+  · show (∑ y ∈ hfinA.toFinset, f (-y)) = 1
+    rw [← Finset.sum_image (f := f) (g := fun x : V3 => -x) negInjSym_p16.injOn, ← heq]
+    exact hfsum
+
+/-- HOL `AFF_GE_VEC0_SYM_0`: `aff_ge {vec 0} (IMAGE (λx. --x) e)`
+`= IMAGE (λx. --x) (aff_ge {vec 0} e)`. -/
+private theorem affGeNeg_p16 (e : Set V3) :
+    affGe ({0} : Set V3) (Set.image (fun x : V3 => -x) e)
+      = Set.image (fun x : V3 => -x) (affGe ({0} : Set V3) e) := by
+  ext v
+  constructor
+  · intro hv
+    have hv' : Affsign (fun x : ℝ => 0 ≤ x) ({0} : Set V3)
+        (Set.image (fun x : V3 => -x) e) v := hv
+    refine ⟨-v, ?_, by simp⟩
+    show Affsign (fun x : ℝ => 0 ≤ x) ({0} : Set V3) e (-v)
+    exact affsignNegPt_p16 (sgn := fun x : ℝ => 0 ≤ x) hv'
+  · rintro ⟨u, hu, rfl⟩
+    show Affsign (fun x : ℝ => 0 ≤ x) ({0} : Set V3)
+      (Set.image (fun x : V3 => -x) e) (-u)
+    refine affsignNegPt_p16 (sgn := fun x : ℝ => 0 ≤ x)
+      (e := Set.image (fun x : V3 => -x) e) ?_
+    rw [reflNeg_p16 e]
+    exact hu
+
+/-- HOL `AFF_LT_VEC0_SYM_0`: `aff_lt {vec 0} (IMAGE (λx. --x) e)`
+`= IMAGE (λx. --x) (aff_lt {vec 0} e)`. -/
+private theorem affLtNeg_p16 (e : Set V3) :
+    affLt ({0} : Set V3) (Set.image (fun x : V3 => -x) e)
+      = Set.image (fun x : V3 => -x) (affLt ({0} : Set V3) e) := by
+  ext v
+  constructor
+  · intro hv
+    have hv' : Affsign (fun x : ℝ => x < 0) ({0} : Set V3)
+        (Set.image (fun x : V3 => -x) e) v := hv
+    refine ⟨-v, ?_, by simp⟩
+    show Affsign (fun x : ℝ => x < 0) ({0} : Set V3) e (-v)
+    exact affsignNegPt_p16 (sgn := fun x : ℝ => x < 0) hv'
+  · rintro ⟨u, hu, rfl⟩
+    show Affsign (fun x : ℝ => x < 0) ({0} : Set V3)
+      (Set.image (fun x : V3 => -x) e) (-u)
+    refine affsignNegPt_p16 (sgn := fun x : ℝ => x < 0)
+      (e := Set.image (fun x : V3 => -x) e) ?_
+    rw [reflNeg_p16 e]
+    exact hu
+
+/-! ### opposite-edge index arithmetic -/
+
+/-- A `k`-periodic sequence satisfies `v k = v 0`. -/
+private theorem periodicZero_p16 {v : ℕ → V3} {k : ℕ} (hper : Periodic v k) :
+    v k = v 0 := by
+  have h := hper 0
+  rwa [Nat.zero_add] at h
+
+/-- The opposite of an edge is an edge (HOL `OPP_IMAGE_E_EQ`, membership
+form): every `{v (k - SUC (i MOD k)), v (k - SUC (SUC i MOD k))}` is some
+`{v j, v (SUC j)}`. -/
+private theorem oppEdgeIndex_p16 {v : ℕ → V3} {k : ℕ} (hk : 1 < k)
+    (hper : Periodic v k) (i : ℕ) :
+    ∃ j : ℕ, ({v (k - (i % k + 1)), v (k - ((i + 1) % k + 1))} : Set V3)
+      = ({v j, v (j + 1)} : Set V3) := by
+  have hp : i % k < k := Nat.mod_lt _ (by omega)
+  have hq : (i + 1) % k = (i % k + 1) % k := by
+    rw [Nat.add_mod, Nat.mod_eq_of_lt hk]
+  rcases Nat.lt_or_ge (i % k + 1) k with hlt | hge
+  · refine ⟨k - (i % k) - 2, ?_⟩
+    have hq' : (i + 1) % k = i % k + 1 := by rw [hq, Nat.mod_eq_of_lt hlt]
+    have e1 : k - (i % k + 1) = k - (i % k) - 2 + 1 := by omega
+    have e2 : k - (i % k + 1 + 1) = k - (i % k) - 2 := by omega
+    rw [hq', e1, e2, Set.pair_comm]
+  · have hpk : i % k + 1 = k := by omega
+    refine ⟨k - 1, ?_⟩
+    have hq0 : (i + 1) % k = 0 := by rw [hq, hpk, Nat.mod_self]
+    have e1 : k - (i % k + 1) = 0 := by rw [hpk, Nat.sub_self]
+    have e2 : k - ((i + 1) % k + 1) = k - 1 := by rw [hq0]
+    have hk1 : k - 1 + 1 = k := by omega
+    rw [e1, e2, hk1, periodicZero_p16 hper, Set.pair_comm]
+
 /-- HOL `SCS_GENERIC_SYM_0` (CQAOQLR.hl:156).
-NEEDS: the Xwitccn / In_sym_0 symmetry kit — OPP_IMAGE_V_EQ_NEG,
-OPP_IMAGE_E_EQ_NEG, ELEMENT2_SYM_0, AFF_GE_VEC0_SYM_0,
-AFF_LT_VEC0_SYM_0, REFL_SYM_0, SET_EQ_SYM_0 — none of it is in the
-corpus yet. -/
+DISCHARGED 2026-11-05 (`la16-sym-w1`): opposite-index range transport
+(`OPP_IMAGE_V_EQ_NEG` is immediate, `OPP_IMAGE_E_EQ_NEG` is inlined as
+`oppEdgeIndex_p16`) plus the `{0}`-base affine transfer
+`AFF_GE_VEC0_SYM_0` / `AFF_LT_VEC0_SYM_0` and `REFL/INTER_SYM_0`.
+`BBsV39` supplies `Periodic v s.k`, `isScsV39` supplies `3 ≤ s.k`; no
+sorry-bearing upstream is consumed. -/
 theorem SCS_GENERIC_SYM_0_p16 (s : ScsV39) (v : ℕ → V3) (h1 : BBsV39 s v)
     (h2 : isScsV39 s) (h3 : scsGeneric v) :
     scsGeneric (fun i => -(v (s.k - (i % s.k + 1)))) := by
-  sorry
+  have hper : Periodic v s.k := by
+    have h := h1
+    unfold BBsV39 at h
+    exact h.2.1
+  have hk3 : 3 ≤ s.k := by
+    have h := h2
+    unfold isScsV39 at h
+    exact h.2.1
+  have hk : 1 < s.k := by omega
+  unfold scsGeneric Generic at h3 ⊢
+  intro v' w u hmem hu
+  obtain ⟨i, hi⟩ := hmem
+  obtain ⟨j, hj⟩ := hu
+  have hV : -u ∈ Set.range v := by
+    refine ⟨s.k - (j % s.k + 1), ?_⟩
+    rw [← hj]
+    simp
+  have hE : ({-v', -w} : Set V3) ∈ Set.range (fun i => ({v i, v (i + 1)} : Set V3)) := by
+    have hstep : ({-v', -w} : Set V3)
+        = Set.image (fun x : V3 => -x)
+            ({-(v (s.k - (i % s.k + 1))), -(v (s.k - ((i + 1) % s.k + 1)))} : Set V3) := by
+      rw [element2Neg_p16, ← hi]
+    rw [hstep]
+    have hneg : Set.image (fun x : V3 => -x)
+        ({-(v (s.k - (i % s.k + 1))), -(v (s.k - ((i + 1) % s.k + 1)))} : Set V3)
+        = ({v (s.k - (i % s.k + 1)), v (s.k - ((i + 1) % s.k + 1))} : Set V3) := by
+      rw [← element2Neg_p16 (-(v (s.k - (i % s.k + 1))))
+        (-(v (s.k - ((i + 1) % s.k + 1))))]
+      simp
+    rw [hneg]
+    obtain ⟨m, hm⟩ := oppEdgeIndex_p16 hk hper i
+    rw [hm]
+    exact ⟨m, rfl⟩
+  have hgen := h3 (-v') (-w) (-u) hE hV
+  have hkey : Set.image (fun x : V3 => -x)
+      (affGe ({0} : Set V3) {v', w} ∩ affLt ({0} : Set V3) {u}) = ∅ := by
+    rw [interNeg_p16, ← affGeNeg_p16 {v', w}, ← affLtNeg_p16 {u},
+      ← element2Neg_p16 v' w, ← ELEMENT1_SYM_0_p16 u]
+    exact hgen
+  calc affGe ({0} : Set V3) {v', w} ∩ affLt ({0} : Set V3) {u}
+      = Set.image (fun x : V3 => -x)
+          (Set.image (fun x : V3 => -x)
+            (affGe ({0} : Set V3) {v', w} ∩ affLt ({0} : Set V3) {u})) :=
+        (reflNeg_p16 _).symm
+    _ = Set.image (fun x : V3 => -x) ∅ := by rw [hkey]
+    _ = ∅ := by simp
 
 /-- HOL `CQAOQLR_concl` (CQAOQLR.hl:233, term-level `let` registry). -/
 def CQAOQLR_concl_p16 : Prop :=
@@ -1610,8 +1815,8 @@ UPS_X_STD_POS, quad_nonexist_849, quad_diag_362, taum_dih_y,
 K_SUC_2_MOD_SUB, K_SUC_2_MOD_SUB_ID, SUC_OPP_ID, K_SUC_2_MOD_F_SUB_ID,
 A_B_J_SCS_OPP, ELEMENT1_SYM_0, UNADORNED_OPP, BASIC_OPP, DIAG_OPP,
 FSQKWKK, XIVPHKS, XIVPHKS_SHIFT, real_continuous_dih_y_wrt4/5/6,
-real_continuous_taum (26).  Sorried (symmetry / assembly):
-SCS_GENERIC_SYM_0, CQAOQLR (2).  The `_p16` sphere-kit copies were deduped
+real_continuous_taum, SCS_GENERIC_SYM_0 (27).  Sorried (assembly):
+CQAOQLR (1).  The `_p16` sphere-kit copies were deduped
 into `Kepler.Text.SphereKit` 2026-09-17. -/
 
 /-! ## w13 axiom audit (closed items only) -/
@@ -1650,3 +1855,7 @@ into `Kepler.Text.SphereKit` 2026-09-17. -/
 #print axioms real_continuous_dih_y_wrt5_p16
 #print axioms real_continuous_dih_y_wrt6_p16
 #print axioms real_continuous_taum_p16
+
+/-! ## w17 axiom audit (closed items only, 2026-11-05 `la16-sym-w1`) -/
+
+#print axioms SCS_GENERIC_SYM_0_p16
