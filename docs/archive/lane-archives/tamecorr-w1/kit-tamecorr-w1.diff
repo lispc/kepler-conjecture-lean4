@@ -1,0 +1,180 @@
+diff --git a/lean/Kepler/Text/TameCorrBase.lean b/lean/Kepler/Text/TameCorrBase.lean
+new file mode 100644
+index 00000000..0d0cf686
+--- /dev/null
++++ b/lean/Kepler/Text/TameCorrBase.lean
+@@ -0,0 +1,174 @@
++/-
++  Kepler.Text.TameCorrBase — tame-correspondence 三波程序 W1：
++  **`IsHypermapOfListTl` 规格收口**（唯一性 / 典范性 / 求值律），供 W2 `jcajydu` 消费。
++
++  立项：`docs/priority-queue.md` §2-γ（DECISIONS.md 2026-11-06 三波程序获批）。
++
++  ┌─ 为什么不 import `Kepler.Assembly`（刻意，非疏漏）─────────────────
++  │ ① **构建成本/可用性**：`Kepler.Assembly` → `Kepler.Interval.Cases.*`
++  │    （23 个证书 shard）。shard olean 缺失/重建期间，任何 import Assembly
++  │    的模块都**无法验证**，不能落库。本模块只依赖 `Kepler.Text.TameLp`
++  │    （其 import 闭包 = Hypermap/Fan/GoodListDefs/TopologyFan/
++  │    PackingAuto2/LocalAuto2,16/AzimLemmas/Conforming*/ContraFan/
++  │    LuneVolume，**零 `Kepler.Interval`**），故与 shard 重建解耦。
++  │ ② **语义无损失**：`Assembly.IsHypermapOfList`（Assembly.lean:194）与
++  │    `TameLp.IsHypermapOfListTl`（TameLp.lean:6126）四槽**逐字同体**，
++  │    匿名构造器一步互转即可（两结构同名字段 `darts_eq`/`edgeMap_eq`/
++  │    `nodeMap_eq`/`faceMap_eq`）。
++  │ ③ **装配层一行搬运，留给 W2**：在 Assembly 内部（W2 填 `jcajydu` 时）
++  │    只需写
++  │      `⟨h.darts_eq, h.edgeMap_eq, h.nodeMap_eq, h.faceMap_eq⟩`（Tl → Assembly）
++  │      `⟨h.darts_eq, h.edgeMap_eq, h.nodeMap_eq, h.faceMap_eq⟩`（Assembly → Tl）
++  │    即 `Assembly.IsHypermapOfList L H ↔ TameLp.IsHypermapOfListTl L H`
++  │    （同库另有 `TameSpine.Keystone.isHypermapOfList_iff:99` 的转发形，
++  │    但该模块 import Assembly，本波不取）。**本模块的每条定理在 Assembly
++  │    谓词层都是零成本可搬的**，搬运义务显式登记给 W2。
++  └────────────────────────────────────────────────────────────────
++
++  **已存在、本模块刻意不重复的件**（直接引用）：
++  · `TameLp.hypermapOfList`（构造，:5188）
++  · `TameLp.darts_hypermapOfList` / `edgeMap_` / `nodeMap_` / `faceMap_hypermapOfList`
++    （四字段求值律，:5220/:5225/:5231/:5238）
++  · `TameLp.hypermapOfList_isHypermapOfListTl`（规格实例定理，:6139）
++
++  **本模块增量**（TameLp 侧的 W2 缺件）：
++  ① `Finset`/`List` 形求值律（规格只给 `Set` 相等）；
++  ② 规格解**唯一性**（dart 集外用 `PermutesOn` 钉死）；
++  ③ **典范性** `IsHypermapOfListTl L H ↔ H = hypermapOfList L hL`；
++  ④ 见证同构降级 `hypermapIso_of_isHypermapOfListTl`。
++
++  **import 闭包（无环证明）**：本模块唯一 import = `Kepler.Text.TameLp`。
++  `grep -rn "import Kepler.Text.TameCorrBase" lean/` 零命中 ⇒ 本模块是**叶子**
++  （只新增入边、不新增环）。不引入 instance / `@[simp]` / abbrev（零全局泄漏）。
++
++  红线：零 sorry / admit / native_decide；零 `open Classical`；不改任何既有声明。
++-/
++import Kepler.Text.TameLp
++
++namespace Kepler.Text.TameCorrBase
++
++open Kepler.Assembly (listOfDarts GoodList)
++open Kepler.Graphs (fgraph)
++
++/-! ## 1. 规格实例定理的 arity 形
++
++`TameLp.hypermapOfList_isHypermapOfListTl` 的 `hL` 是显式参数；下游
++`GoodListNodes` 一类消费点是 `∀ hL : GoodList L, …` 内量化形，这里补一条
++免重新打包 proof 参数的转发件。 -/
++
++/-- 规格实例定理的 `∀ hL`（arity 保持）形。 -/
++theorem hypermapOfList_isHypermapOfListTl_arity (L : fgraph ℕ) :
++    ∀ hL : GoodList L,
++      Kepler.Text.TameLp.IsHypermapOfListTl L (Kepler.Text.TameLp.hypermapOfList L hL) :=
++  fun hL => Kepler.Text.TameLp.hypermapOfList_isHypermapOfListTl L hL
++
++/-! ## 2. 求值律：dart 集的 `Finset` / `List` 形（W2 辅助件）
++
++`IsHypermapOfListTl.darts_eq` 只给 `Set` 相等；下游（`Graph.fgraph` 对齐、
++基数计算、`mem` 判定）多用 `Finset`/`List`，故把 `Set ↔ Finset ↔ List`
++三形态一次收口。 -/
++
++/-- `hypermapOfList` 的 dart 集 `Finset` 形：`darts = (listOfDarts L).toFinset`。 -/
++theorem darts_hypermapOfList_finset (L : fgraph ℕ) (hL : GoodList L) :
++    (Kepler.Text.TameLp.hypermapOfList L hL).darts = (listOfDarts L).toFinset := by
++  refine Finset.ext fun x => ?_
++  have hx := Set.ext_iff.mp (Kepler.Text.TameLp.darts_hypermapOfList L hL) x
++  simpa using hx
++
++/-- `hypermapOfList` 的 dart 成员判定（`List` 形）。 -/
++theorem mem_darts_hypermapOfList_iff (L : fgraph ℕ) (hL : GoodList L) {d : ℕ × ℕ} :
++    d ∈ (Kepler.Text.TameLp.hypermapOfList L hL).darts ↔ d ∈ listOfDarts L := by
++  rw [darts_hypermapOfList_finset L hL, List.mem_toFinset]
++
++/-- 任意满足规格的 `H`，其 dart 集 `Finset` 形亦为 `(listOfDarts L).toFinset`
++（规格 + `Finset.ext`；W2 见证替换用）。 -/
++theorem isHypermapOfListTl_darts_finset {L : fgraph ℕ}
++    {H : Kepler.Text.Hypermap (ℕ × ℕ)} (h : Kepler.Text.TameLp.IsHypermapOfListTl L H) :
++    H.darts = (listOfDarts L).toFinset := by
++  refine Finset.ext fun x => ?_
++  have hx := Set.ext_iff.mp h.darts_eq x
++  simpa using hx
++
++/-- 任意满足规格的 `H`，dart 成员判定（`List` 形）。 -/
++theorem isHypermapOfListTl_mem_darts_iff {L : fgraph ℕ}
++    {H : Kepler.Text.Hypermap (ℕ × ℕ)} (h : Kepler.Text.TameLp.IsHypermapOfListTl L H)
++    {d : ℕ × ℕ} : d ∈ H.darts ↔ d ∈ listOfDarts L := by
++  rw [isHypermapOfListTl_darts_finset h, List.mem_toFinset]
++
++/-! ## 3. 唯一性 / 典范性：规格解在构造意义下唯一
++
++`IsHypermapOfListTl L _` 的 dart 集被 `darts_eq` 钉死，三映射在 dart 集上被
++`*_eq` 钉死、在 dart 集外由 `Hypermap` 的 `PermutesOn` 字段（`∀ x ∉ s, f x = x`）
++钉死——故规格的任一解都**恒等于** canonical 构造 `hypermapOfList L hL`。
++这是 W2 把 `∃ H', IsHypermapOfListTl … ∧ Iso H H'` 的见证换成 canonical 构造、
++并把"两个规格见证"之间的同构义务降为 `refl` 的杠杆。 -/
++
++/-- **规格唯一性**：同一 `L` 的两个规格解相等。 -/
++theorem isHypermapOfListTl_unique {L : fgraph ℕ} {H₁ H₂ : Kepler.Text.Hypermap (ℕ × ℕ)}
++    (h₁ : Kepler.Text.TameLp.IsHypermapOfListTl L H₁)
++    (h₂ : Kepler.Text.TameLp.IsHypermapOfListTl L H₂) : H₁ = H₂ := by
++  have hdarts : H₁.darts = H₂.darts := by
++    rw [isHypermapOfListTl_darts_finset h₁, isHypermapOfListTl_darts_finset h₂]
++  have hedge : H₁.edgeMap = H₂.edgeMap := by
++    refine Equiv.ext fun x => ?_
++    by_cases hx : x ∈ H₁.darts
++    · rw [h₁.edgeMap_eq x hx, h₂.edgeMap_eq x (hdarts ▸ hx)]
++    · have hx₂ : x ∉ H₂.darts := hdarts ▸ hx
++      rw [H₁.edgeMap_permutes x hx, H₂.edgeMap_permutes x hx₂]
++  have hnode : H₁.nodeMap = H₂.nodeMap := by
++    refine Equiv.ext fun x => ?_
++    by_cases hx : x ∈ H₁.darts
++    · rw [h₁.nodeMap_eq x hx, h₂.nodeMap_eq x (hdarts ▸ hx)]
++    · have hx₂ : x ∉ H₂.darts := hdarts ▸ hx
++      rw [H₁.nodeMap_permutes x hx, H₂.nodeMap_permutes x hx₂]
++  have hface : H₁.faceMap = H₂.faceMap := by
++    refine Equiv.ext fun x => ?_
++    by_cases hx : x ∈ H₁.darts
++    · rw [h₁.faceMap_eq x hx, h₂.faceMap_eq x (hdarts ▸ hx)]
++    · have hx₂ : x ∉ H₂.darts := hdarts ▸ hx
++      rw [H₁.faceMap_permutes x hx, H₂.faceMap_permutes x hx₂]
++  obtain ⟨d₁, e₁, n₁, f₁, p₁, p₂, p₃, p₄⟩ := H₁
++  obtain ⟨d₂, e₂, n₂, f₂, q₁, q₂, q₃, q₄⟩ := H₂
++  -- 证明字段（`PermutesOn`/`comp_eq_one`）依赖数据字段，`rw` 的 motive 不合法；
++  -- `subst` 做依赖消去后两侧只剩 Prop 证明项，由证明无关性 `rfl` 收。
++  subst hdarts
++  subst hedge
++  subst hnode
++  subst hface
++  rfl
++
++/-- **典范性**：任一规格解等于 canonical 构造（`hL` 只用于给出 canonical 见证）。 -/
++theorem isHypermapOfListTl_eq_hypermapOfList {L : fgraph ℕ} {hL : GoodList L}
++    {H : Kepler.Text.Hypermap (ℕ × ℕ)} (h : Kepler.Text.TameLp.IsHypermapOfListTl L H) :
++    H = Kepler.Text.TameLp.hypermapOfList L hL :=
++  isHypermapOfListTl_unique h (Kepler.Text.TameLp.hypermapOfList_isHypermapOfListTl L hL)
++
++/-- **典范性（iff 形，W2 首选消费形）**：在 `GoodList L` 前提下，"满足规格"
++与"等于 canonical 构造"等价。正向 = 唯一性；反向 = 规格实例定理。 -/
++theorem isHypermapOfListTl_iff_eq_hypermapOfList {L : fgraph ℕ} {hL : GoodList L}
++    {H : Kepler.Text.Hypermap (ℕ × ℕ)} :
++    Kepler.Text.TameLp.IsHypermapOfListTl L H ↔ H = Kepler.Text.TameLp.hypermapOfList L hL :=
++  ⟨fun h => isHypermapOfListTl_eq_hypermapOfList (hL := hL) h,
++   fun h => h ▸ Kepler.Text.TameLp.hypermapOfList_isHypermapOfListTl L hL⟩
++
++/-- 同一 `L` 的任意两个规格解互为同构：W2 里"见证换成 canonical 构造后
++`Iso` 义务自动闭合"的一步件（`Hypermap.Iso.refl` 经唯一性运输）。 -/
++theorem hypermapIso_of_isHypermapOfListTl {L : fgraph ℕ}
++    {H₁ H₂ : Kepler.Text.Hypermap (ℕ × ℕ)}
++    (h₁ : Kepler.Text.TameLp.IsHypermapOfListTl L H₁)
++    (h₂ : Kepler.Text.TameLp.IsHypermapOfListTl L H₂) :
++    Kepler.Text.Hypermap.Iso H₁ H₂ := by
++  rw [isHypermapOfListTl_unique h₁ h₂]
++  exact Kepler.Text.Hypermap.Iso.refl H₂
++
++end Kepler.Text.TameCorrBase
++
++/-! 公理审计锚（编译日志即审计记录；预期 `[propext, Classical.choice, Quot.sound]`）。 -/
++#print axioms Kepler.Text.TameCorrBase.hypermapOfList_isHypermapOfListTl_arity
++#print axioms Kepler.Text.TameCorrBase.darts_hypermapOfList_finset
++#print axioms Kepler.Text.TameCorrBase.mem_darts_hypermapOfList_iff
++#print axioms Kepler.Text.TameCorrBase.isHypermapOfListTl_darts_finset
++#print axioms Kepler.Text.TameCorrBase.isHypermapOfListTl_unique
++#print axioms Kepler.Text.TameCorrBase.isHypermapOfListTl_eq_hypermapOfList
++#print axioms Kepler.Text.TameCorrBase.isHypermapOfListTl_iff_eq_hypermapOfList
++#print axioms Kepler.Text.TameCorrBase.hypermapIso_of_isHypermapOfListTl
