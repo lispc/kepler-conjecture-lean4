@@ -2443,6 +2443,207 @@ theorem MCELL_AVOID_LEAVES (V : Set V3) (ul : List V3) (X : Set V3) (hp : Packin
       (fun u _ => NULLSET_AFF_2_1 (elV ul 0) (elV ul 1) u)
   exact hn (measure_mono_null hsub hnull)
 
+/-! ### Wedge-order disjointness kit (private PA22-side twins, w3)
+
+`WEDGE_ORDER_DISJOINT` lives in `PackingAuto22`, which is outside this
+file's import closure; the three helpers below are verbatim twins of the
+PA22 private pieces (`p22_y_ne_x` / `p22_wedge_bounds` /
+`p22_wedge_disjoint_aux`), re-derived on the public azim kit
+(`sum4_azim_fan`, `azim_compl`, `azim_nonneg`, `azim_lt_two_pi`). -/
+
+/-- `¬ Collinear3 x y z` separates the two axis points. -/
+private theorem p25w3_y_ne_x {x y z : V3} (h : ¬ Collinear3 x y z) : y ≠ x := by
+  intro hxy
+  exact h (by rw [hxy]; exact collinear3_of_eq rfl)
+
+/-- Wedge membership pins `p` strictly between `u` and `u'` in the
+`azim x y z ·` order. -/
+private theorem p25w3_wedge_bounds {x y z p u u' : V3} (hxy : y ≠ x)
+    (hz : ¬ Collinear3 x y z) (hp : ¬ Collinear3 x y p) (hu : ¬ Collinear3 x y u)
+    (hu' : ¬ Collinear3 x y u')
+    (hpw : p ∈ wedge x y u u') (hord : azim x y z u ≤ azim x y z u') :
+    azim x y z u < azim x y z p ∧ azim x y z p < azim x y z u' := by
+  have hdec : azim x y z u' = azim x y z u + azim x y u u' :=
+    sum4_azim_fan hxy hz hu hu' hord
+  rw [wedge, Set.mem_setOf_eq] at hpw
+  obtain ⟨-, hpa, hpb⟩ := hpw
+  rcases le_total (azim x y z u) (azim x y z p) with hc | hc
+  · have hcp : azim x y z p = azim x y z u + azim x y u p :=
+      sum4_azim_fan hxy hz hu hp hc
+    exact ⟨by linarith, by linarith⟩
+  · exfalso
+    have hcp : azim x y z u = azim x y z p + azim x y p u :=
+      sum4_azim_fan hxy hz hp hu hc
+    have hcu : azim x y p u ≠ 0 := by
+      intro h0
+      have h := azim_compl hp hu
+      rw [if_pos h0] at h
+      linarith
+    have hcomp : azim x y u p = 2 * Real.pi - azim x y p u := by
+      have h := azim_compl hp hu
+      rwa [if_neg hcu] at h
+    have hlt := azim_lt_two_pi x y z u'
+    have hnn := azim_nonneg x y z p
+    linarith
+
+/-- Core of `p25w3_wedge_order_disjoint`: for `j < k` the two cyclic wedges
+are disjoint (`j, k ∈ [1, n]`, with `g (n+1) = g 1` closing the cycle). -/
+private theorem p25w3_wedge_disjoint_aux (x y z : V3) (n : ℕ) (g : ℕ → V3)
+    (h1 : ¬ Collinear3 x y z)
+    (h2 : ∀ i : ℕ, i ∈ Finset.Icc 1 n → ¬ Collinear3 x y (g i))
+    (h3 : g (n + 1) = g 1)
+    (h4 : ∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j < k →
+      azim x y z (g j) < azim x y z (g k))
+    {j k : ℕ} (hjk : j < k) (hjn : j ∈ Finset.Icc 1 n) (hkn : k ∈ Finset.Icc 1 n) :
+    (wedge x y (g j) (g (j + 1)) ∩ wedge x y (g k) (g (k + 1))) = ∅ := by
+  have hxy : y ≠ x := p25w3_y_ne_x h1
+  have hn1 : 1 ≤ n := by
+    have hk := Finset.mem_Icc.mp hkn
+    omega
+  have hjn' := Finset.mem_Icc.mp hjn
+  have hkn' := Finset.mem_Icc.mp hkn
+  have h1I : (1 : ℕ) ∈ Finset.Icc 1 n := by
+    refine Finset.mem_Icc.mpr ?_
+    omega
+  have hnI : n ∈ Finset.Icc 1 n := by
+    refine Finset.mem_Icc.mpr ?_
+    omega
+  have hmem_j1 : (j + 1 : ℕ) ∈ Finset.Icc 1 n := by
+    refine Finset.mem_Icc.mpr ?_
+    omega
+  have hgj1 : ¬ Collinear3 x y (g (j + 1)) := h2 (j + 1) hmem_j1
+  have hgk1 : ¬ Collinear3 x y (g (k + 1)) := by
+    rcases Nat.lt_or_ge k n with hk | hk
+    · have hmem : (k + 1 : ℕ) ∈ Finset.Icc 1 n := by
+        refine Finset.mem_Icc.mpr ?_
+        omega
+      exact h2 (k + 1) hmem
+    · have hkeq : k = n := by omega
+      rw [hkeq, h3]
+      exact h2 1 h1I
+  have hordj : azim x y z (g j) ≤ azim x y z (g (j + 1)) :=
+    le_of_lt (h4 j (j + 1) hjn hmem_j1 (by omega))
+  have hA1j : azim x y z (g 1) ≤ azim x y z (g j) := by
+    rcases lt_trichotomy 1 j with h | h | h
+    · exact le_of_lt (h4 1 j h1I hjn h)
+    · rw [h]
+    · omega
+  have hAn : azim x y z (g 1) < azim x y z (g n) := h4 1 n h1I hnI (by omega)
+  have hstepAn : azim x y z (g n) = azim x y z (g 1) + azim x y (g 1) (g n) :=
+    sum4_azim_fan hxy h1 (h2 1 h1I) (h2 n hnI) hAn.le
+  have hgn : azim x y (g 1) (g n) ≠ 0 := by
+    have hnn := azim_nonneg x y (g 1) (g n)
+    intro h0; rw [h0] at hstepAn; linarith
+  have hcomp1 : azim x y (g n) (g 1)
+      = 2 * Real.pi - (azim x y z (g n) - azim x y z (g 1)) := by
+    have h := azim_compl (h2 1 h1I) (h2 n hnI)
+    rw [if_neg hgn] at h
+    linarith
+  rw [Set.eq_empty_iff_forall_notMem]
+  intro p hp
+  obtain ⟨hp1, hp2⟩ := hp
+  have hpnc1 : ¬ Collinear3 x y p := hp1.1
+  rcases Nat.lt_or_ge k n with hklt | hkeq
+  · -- both wedges are interval wedges: the order intervals are disjoint
+    have hmem_k1 : (k + 1 : ℕ) ∈ Finset.Icc 1 n := by
+      refine Finset.mem_Icc.mpr ?_
+      omega
+    have hordk : azim x y z (g k) ≤ azim x y z (g (k + 1)) :=
+      le_of_lt (h4 k (k + 1) hkn hmem_k1 (by omega))
+    have hb1 := p25w3_wedge_bounds hxy h1 hpnc1 (h2 j hjn) hgj1 hp1 hordj
+    have hb2 := p25w3_wedge_bounds hxy h1 hpnc1 (h2 k hkn) hgk1 hp2 hordk
+    obtain ⟨hb11, hb12⟩ := hb1
+    obtain ⟨hb21, hb22⟩ := hb2
+    have hmid : azim x y z (g (j + 1)) ≤ azim x y z (g k) := by
+      rcases lt_trichotomy (j + 1) k with hlt' | heq' | hgt'
+      · exact le_of_lt (h4 (j + 1) k hmem_j1 hkn hlt')
+      · rw [heq']
+      · exact absurd hgt' (by omega)
+    exfalso
+    linarith
+  · -- wrap case k = n: the wrap wedge is the complementary arc
+    have hkeq : k = n := by omega
+    rw [hkeq, h3] at hp2
+    rw [wedge, Set.mem_setOf_eq] at hp2
+    obtain ⟨-, hlow2, hhigh2⟩ := hp2
+    have hb1 := p25w3_wedge_bounds hxy h1 hpnc1 (h2 j hjn) hgj1 hp1 hordj
+    obtain ⟨hb11, hb12⟩ := hb1
+    have hmid : azim x y z (g (j + 1)) ≤ azim x y z (g n) := by
+      rcases lt_trichotomy (j + 1) n with h | h | h
+      · exact le_of_lt (h4 (j + 1) n hmem_j1 hnI h)
+      · rw [h]
+      · exact absurd h (by omega)
+    rcases lt_trichotomy (azim x y z (g n)) (azim x y z p) with hcase | hcase | hcase
+    · exfalso
+      linarith
+    · have hstepP : azim x y z (g n) = azim x y z p + azim x y p (g n) :=
+        sum4_azim_fan hxy h1 hpnc1 (h2 n hnI) (le_of_eq hcase.symm)
+      have hcomp2 : azim x y (g n) p = 0 := by
+        have h := azim_compl hpnc1 (h2 n hnI)
+        rw [if_pos (by linarith : azim x y p (g n) = 0)] at h
+        exact h
+      exfalso
+      linarith
+    · have hstepP : azim x y z (g n) = azim x y z p + azim x y p (g n) :=
+        sum4_azim_fan hxy h1 hpnc1 (h2 n hnI) (le_of_lt hcase)
+      have hzpos : 0 < azim x y p (g n) := by linarith
+      have hcomp2 : azim x y (g n) p = 2 * Real.pi - azim x y p (g n) := by
+        have h := azim_compl hpnc1 (h2 n hnI)
+        rwa [if_neg (ne_of_gt hzpos)] at h
+      exfalso
+      linarith
+
+/-- Public form: distinct cyclic wedges over a strictly ordered ray family
+are disjoint. -/
+private theorem p25w3_wedge_order_disjoint (x y z : V3) (n : ℕ) (g : ℕ → V3)
+    (h1 : ¬ Collinear3 x y z)
+    (h2 : ∀ i : ℕ, i ∈ Finset.Icc 1 n → ¬ Collinear3 x y (g i))
+    (h3 : g (n + 1) = g 1)
+    (h4 : ∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j < k →
+      azim x y z (g j) < azim x y z (g k)) :
+    ∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j ≠ k →
+      (wedge x y (g j) (g (j + 1)) ∩ wedge x y (g k) (g (k + 1))) = ∅ := by
+  intro j k hj hk hjk
+  rcases lt_trichotomy j k with hlt | heq | hgt
+  · exact p25w3_wedge_disjoint_aux x y z n g h1 h2 h3 h4 hlt hj hk
+  · exact absurd heq hjk
+  · rw [Set.inter_comm]
+    exact p25w3_wedge_disjoint_aux x y z n g h1 h2 h3 h4 hgt hk hj
+
+/-- `leaf_rank` form: the open wedges of distinct leaves are disjoint. -/
+private theorem p25w3_wedge_disjoint_leaves (V : Set V3) (ul : List V3) (w0 : V3)
+    (n : ℕ) (f : ℕ → V3)
+    (hp : Packing V) (hs : saturated V)
+    (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0)
+    (hr : leaf_rank V ul w0 n f) :
+    ∀ i j, i < n → j < n → i ≠ j →
+      (wedge (elV ul 0) (elV ul 1) (f i) (f (i + 1)) ∩
+        wedge (elV ul 0) (elV ul 1) (f j) (f (j + 1))) = ∅ := by
+  set g : ℕ → V3 := fun k => f (k - 1) with hgdef
+  have h2 : ∀ i : ℕ, i ∈ Finset.Icc 1 n → ¬ Collinear3 (elV ul 0) (elV ul 1) (g i) := by
+    intro i hi
+    have hi' := Finset.mem_Icc.mp hi
+    have hlt : i - 1 < n := by omega
+    simpa [g] using LEAF_RANK_COLLINEAR V ul w0 n f (i - 1) hp hs hr
+  have h3 : g (n + 1) = g 1 := by
+    simp only [g]
+    have hper := hr.2.1 0
+    simpa using hper
+  have h4 : ∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j < k →
+      azim (elV ul 0) (elV ul 1) w0 (g j) < azim (elV ul 0) (elV ul 1) w0 (g k) := by
+    intro j k hj hk hjk
+    have hj' := Finset.mem_Icc.mp hj
+    have hk' := Finset.mem_Icc.mp hk
+    have hjm : j - 1 < n := by omega
+    have hkm : k - 1 < n := by omega
+    have hlt : j - 1 < k - 1 := by omega
+    simpa [g] using hr.2.2 (j - 1) (k - 1) hjm hkm hlt
+  intro i j hi hj hij
+  have hidis := p25w3_wedge_order_disjoint (elV ul 0) (elV ul 1) w0 n g hnc h2 h3 h4
+    (i + 1) (j + 1) (by refine Finset.mem_Icc.mpr ?_; omega)
+    (by refine Finset.mem_Icc.mpr ?_; omega) (by omega)
+  simpa [g] using hidis
+
 /-- HOL `MCELL_WEDGE_UNIQUE`: a non-null cell with the stem edge sits in at
 most one leaf wedge. -/
 theorem MCELL_WEDGE_UNIQUE (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -2454,7 +2655,46 @@ theorem MCELL_WEDGE_UNIQUE (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : 
     ∀ i j, i < n → j < n →
       X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1)) →
       X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f j) (f (j + 1)) → i = j := by
-  sorry
+  classical
+  have _ := hm
+  have _ := he
+  have _ := hsize
+  have hcol : ∀ k, ¬ Collinear3 (elV ul 0) (elV ul 1) (f k) := fun k =>
+    LEAF_RANK_COLLINEAR V ul w0 n f k hp hs hr
+  intro i j hi hj hWi hWj
+  by_contra hne
+  by_cases hn1 : n ≤ 1
+  · omega
+  have hdis := p25w3_wedge_disjoint_leaves V ul w0 n f hp hs hnc hr i j hi hj hne
+  have hsub : X ⊆ affGe ({elV ul 0, elV ul 1} : Set V3) ({f i} : Set V3) ∪
+      affGe ({elV ul 0, elV ul 1} : Set V3) ({f (i + 1)} : Set V3) ∪
+      affGe ({elV ul 0, elV ul 1} : Set V3) ({f j} : Set V3) ∪
+      affGe ({elV ul 0, elV ul 1} : Set V3) ({f (j + 1)} : Set V3) := by
+    intro z hz
+    have h1 := WEDGE_WEDGE_GE (elV ul 0) (elV ul 1) (f i) (f (i + 1)) (hcol i)
+      (hcol (i + 1)) (hWi hz)
+    have h2 := WEDGE_WEDGE_GE (elV ul 0) (elV ul 1) (f j) (f (j + 1)) (hcol j)
+      (hcol (j + 1)) (hWj hz)
+    rcases h1 with (hw1 | hA) | hB
+    · rcases h2 with (hw2 | hAj) | hBj
+      · have hmem : z ∈ (wedge (elV ul 0) (elV ul 1) (f i) (f (i + 1)) ∩
+            wedge (elV ul 0) (elV ul 1) (f j) (f (j + 1))) := ⟨hw1, hw2⟩
+        rw [hdis] at hmem
+        exact absurd hmem (Set.notMem_empty z)
+      · exact Or.inl (Or.inr hAj)
+      · exact Or.inr hBj
+    · exact Or.inl (Or.inl (Or.inl hA))
+    · exact Or.inl (Or.inl (Or.inr hB))
+  have hnull : volume (affGe ({elV ul 0, elV ul 1} : Set V3) ({f i} : Set V3) ∪
+      affGe ({elV ul 0, elV ul 1} : Set V3) ({f (i + 1)} : Set V3) ∪
+      affGe ({elV ul 0, elV ul 1} : Set V3) ({f j} : Set V3) ∪
+      affGe ({elV ul 0, elV ul 1} : Set V3) ({f (j + 1)} : Set V3)) = 0 := by
+    refine measure_union_null (measure_union_null (measure_union_null ?_ ?_) ?_) ?_
+    · exact NULLSET_AFF_2_1 _ _ _
+    · exact NULLSET_AFF_2_1 _ _ _
+    · exact NULLSET_AFF_2_1 _ _ _
+    · exact NULLSET_AFF_2_1 _ _ _
+  exact hn (measure_mono_null hsub hnull)
 
 /-- HOL `LEAF_RANK_PERIODIC`. -/
 theorem LEAF_RANK_PERIODIC (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -2753,7 +2993,29 @@ theorem LEAF_RANK_BIJ (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
         {elV ul 0, elV ul 1} ∈ edgeX V p.2 ∧
         p.2 ⊆ wedgeGe (elV ul 0) (elV ul 1) (f p.1) (f (p.1 + 1))}
       {X | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X} := by
-  sorry
+  classical
+  have _ := h0
+  have _ := h1
+  -- the stem edge forces a non-null cell (`VX` is empty on null cells)
+  have hnotnull : ∀ (Y : Set V3), {elV ul 0, elV ul 1} ∈ edgeX V Y → ¬ nullSet Y := by
+    intro Y hY hnull
+    obtain ⟨a, b, -, ha, -, -⟩ := hY
+    rw [VX, if_pos hnull] at ha
+    exact ha
+  refine ⟨?_, ?_, ?_⟩
+  · rintro ⟨i, Y⟩ ⟨-, hYset, hYedge, -⟩
+    exact ⟨hYset, hYedge⟩
+  · rintro ⟨i, Y⟩ ⟨hi, hYset, hYedge, hYw⟩ ⟨j, Z⟩ ⟨hj, hZset, hZedge, hZw⟩ hYZ
+    have hYZ' : Y = Z := hYZ
+    rw [hYZ'] at hYset hYedge hYw
+    have hij : i = j := MCELL_WEDGE_UNIQUE V ul w0 n f Z hp hs hsize hnc hr hZset
+      (hnotnull Z hZedge) hZedge i j hi hj hYw hZw
+    rw [hij, hYZ']
+  · rintro X ⟨hXset, hXedge⟩
+    have hXnn : ¬ nullSet X := hnotnull X hXedge
+    obtain ⟨i, hi, hWi⟩ :=
+      MCELL_IN_WEDGE V ul w0 n f X hn hp hs hsize hnc hr hXset hXnn hXedge
+    exact ⟨(i, X), ⟨hi, hXset, hXedge, hWi⟩, rfl⟩
 
 /-- HOL `LEAF_RANK_GG_SUM`: the per-wedge gg sums telescope to the full
 edge sum over all cells carrying the stem edge. -/
@@ -2764,7 +3026,119 @@ theorem LEAF_RANK_GG_SUM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : �
     ∑ i ∈ Finset.Icc 0 (n - 1), gg_mcell V f (elV ul 0) (elV ul 1) i =
       setSum {X | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X} fun X =>
         gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {elV ul 0, elV ul 1} X := by
-  sorry
+  classical
+  have _ := h0
+  have _ := h1
+  simp only [gg_mcell]
+  have hSfin : ({X : Set V3 | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X}).Finite :=
+    FINITE_EDGE_X2 V {elV ul 0, elV ul 1} (elV ul 0) (elV ul 1) hp hs rfl
+  have hnotnull : ∀ Y : Set V3, {elV ul 0, elV ul 1} ∈ edgeX V Y → ¬ nullSet Y := by
+    intro Y hY hnull
+    obtain ⟨a, b, -, ha, -, -⟩ := hY
+    rw [VX, if_pos hnull] at ha
+    exact ha
+  have hdisj : ∀ i j, i < n → j < n → i ≠ j →
+      ({X : Set V3 | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+          X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))} ∩
+        {X : Set V3 | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+          X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f j) (f (j + 1))}) = ∅ := by
+    intro i j hi hj hij
+    rw [Set.eq_empty_iff_forall_notMem]
+    rintro X ⟨⟨hXm, hXe, hXW⟩, ⟨-, -, hXW'⟩⟩
+    exact hij (MCELL_WEDGE_UNIQUE V ul w0 n f X hp hs hsize hnc hr hXm
+      (hnotnull X hXe) hXe i j hi hj hXW hXW')
+  have hsum_union : ∀ A B : Set (Set V3), A.Finite → B.Finite → A ∩ B = ∅ →
+      setSum (A ∪ B) (fun X => gammaX V X lmfun * criticalWeight V X +
+          betaBumpV1 V {elV ul 0, elV ul 1} X) =
+        setSum A (fun X => gammaX V X lmfun * criticalWeight V X +
+          betaBumpV1 V {elV ul 0, elV ul 1} X) +
+        setSum B (fun X => gammaX V X lmfun * criticalWeight V X +
+          betaBumpV1 V {elV ul 0, elV ul 1} X) := by
+    intro A B hA hB hAB
+    have hU : (A ∪ B).Finite := hA.union hB
+    rw [setSum, dif_pos hU, setSum, dif_pos hA, setSum, dif_pos hB,
+      Set.Finite.toFinset_union hA hB hU, Finset.sum_union]
+    rw [Finset.disjoint_iff_inter_eq_empty, Finset.eq_empty_iff_forall_notMem]
+    intro x hx
+    rw [Finset.mem_inter] at hx
+    have hmem : x ∈ A ∩ B := ⟨hA.mem_toFinset.mp hx.1, hB.mem_toFinset.mp hx.2⟩
+    rw [hAB] at hmem
+    exact hmem
+  have key : ∀ t : Finset ℕ, (∀ i ∈ t, i < n) →
+      ∑ i ∈ t, setSum {X : Set V3 | mcellSet V X ∧
+          {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+          X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))}
+        (fun X => gammaX V X lmfun * criticalWeight V X +
+          betaBumpV1 V {elV ul 0, elV ul 1} X) =
+      setSum (⋃ i ∈ (t : Set ℕ), {X : Set V3 | mcellSet V X ∧
+          {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+          X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))})
+        (fun X => gammaX V X lmfun * criticalWeight V X +
+          betaBumpV1 V {elV ul 0, elV ul 1} X) := by
+    intro t
+    induction t using Finset.induction_on with
+    | empty =>
+        intro _
+        simp [setSum]
+    | insert a t ha ih =>
+        intro ht
+        rw [Finset.sum_insert ha, ih (fun i hi => ht i (Finset.mem_insert_of_mem hi))]
+        have ha_lt : a < n := ht a (Finset.mem_insert_self a t)
+        rw [Finset.coe_insert, Set.biUnion_insert]
+        have hBfin : (⋃ i ∈ ((t : Finset ℕ) : Set ℕ), {X : Set V3 | mcellSet V X ∧
+            {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+            X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))}).Finite :=
+          hSfin.subset (fun X hX => by
+            rw [Set.mem_iUnion] at hX
+            obtain ⟨i, hi⟩ := hX
+            rw [Set.mem_iUnion] at hi
+            obtain ⟨-, hXi⟩ := hi
+            exact ⟨hXi.1, hXi.2.1⟩)
+        have hAf : ({X : Set V3 | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+            X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f a) (f (a + 1))}).Finite :=
+          hSfin.subset (fun X hX => ⟨hX.1, hX.2.1⟩)
+        have hAB : ({X : Set V3 | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+            X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f a) (f (a + 1))} ∩
+            (⋃ i ∈ ((t : Finset ℕ) : Set ℕ), {X : Set V3 | mcellSet V X ∧
+              {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+              X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))})) = ∅ := by
+          rw [Set.eq_empty_iff_forall_notMem]
+          rintro X ⟨hXa, hXU⟩
+          rw [Set.mem_iUnion] at hXU
+          obtain ⟨i, hi⟩ := hXU
+          rw [Set.mem_iUnion] at hi
+          obtain ⟨hit, hXi⟩ := hi
+          have hi_lt : i < n := ht i (Finset.mem_insert_of_mem hit)
+          have hia : a ≠ i := by
+            intro hEq
+            exact ha (hEq ▸ hit)
+          have hd := hdisj a i ha_lt hi_lt hia
+          rw [Set.eq_empty_iff_forall_notMem] at hd
+          exact hd X ⟨hXa, hXi⟩
+        rw [hsum_union _ _ hAf hBfin hAB]
+  have hcover : (⋃ i ∈ ((Finset.Icc 0 (n - 1) : Finset ℕ) : Set ℕ),
+      {X : Set V3 | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X ∧
+        X ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))}) =
+      {X : Set V3 | mcellSet V X ∧ {elV ul 0, elV ul 1} ∈ edgeX V X} := by
+    ext X
+    constructor
+    · intro hX
+      rw [Set.mem_iUnion] at hX
+      obtain ⟨i, hi⟩ := hX
+      rw [Set.mem_iUnion] at hi
+      obtain ⟨-, hXi⟩ := hi
+      exact ⟨hXi.1, hXi.2.1⟩
+    · intro hX
+      obtain ⟨i, hi, hWi⟩ := MCELL_IN_WEDGE V ul w0 n f X hn hp hs hsize hnc hr
+        hX.1 (hnotnull X hX.2) hX.2
+      refine Set.mem_iUnion.mpr ⟨i, ?_⟩
+      refine Set.mem_iUnion.mpr ⟨?_, ⟨hX.1, hX.2, hWi⟩⟩
+      rw [Finset.mem_coe, Finset.mem_Icc]
+      omega
+  have hind := key (Finset.Icc 0 (n - 1)) (fun i hi => by
+    rw [Finset.mem_Icc] at hi
+    omega)
+  rw [hind, hcover]
 
 /-- Private helper (2026-10-23 pa25dihx): `dihV` of a non-coplanar quadruple
 never vanishes — Ne-form copy of `DIHV_EQ_0_PI_EQ_COPLANAR_ALT` (file tail,
@@ -11672,7 +12046,23 @@ theorem leaf_CIHTIUM (V : Set V3) (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q
     (hp : Packing V) (hs : saturated V) (hl' : leaf V [u0, u1, u2])
     (hcey : criticalEdgeY (dist u0 u1)) (hd1 : 2 * hminus ≤ dist u0 u2)
     (hd2 : 2 * hminus ≤ dist u1 u2) : False := by
-  sorry
+  obtain ⟨-, -, -, -, -, hciht, -⟩ := hnl.1
+  have hdom := LEAF_DOMAIN V [u0, u1, u2] hs hp hl'
+  simp [elV] at hdom
+  obtain ⟨-, hd12lo, hd02lo, hd01lo, hd12hi, hd02hi, hd01hi, heta⟩ := hdom
+  have h01lo : 2 * hminus ≤ dist u0 u1 := hcey.1
+  have h01hi : dist u0 u1 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; linarith
+  have h02hi : dist u0 u2 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; linarith
+  have h12hi : dist u1 u2 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; linarith
+  have hgt : eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) ^ 2 > 2 :=
+    hciht 1 1 1 (dist u0 u1) (dist u0 u2) (dist u1 u2)
+      (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num)
+      (by norm_num) h01lo h01hi hd1 h02hi hd2 h12hi
+  have hnn : 0 ≤ eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) := by
+    unfold eta_y etaY etaX
+    exact Real.sqrt_nonneg _
+  nlinarith [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by norm_num),
+    Real.sqrt_nonneg (2 : ℝ)]
 
 /-- HOL `gamma4fgcy_sym26`.  The `delta_x`/`delta_x4`/`dih_y` family is
 invariant under the edge-endpoint swap `(2 6) (3 5)` (vertex swap `v0 ↔ v1`)
@@ -12905,6 +13295,211 @@ theorem TEWNSCJ_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
   · linarith
   · linarith
 
+/-! ### Coplanar ⇒ azimuth ∈ {0, π} kit (private `Planarity`-side twins, w3)
+
+`azim_eq_0_or_pi_of_coplanar` (Planarity.lean:2272) is private and outside
+this file's import closure; the four helpers below are verbatim twins of the
+`Planarity` private pieces (`exists_combo_of_mem_affineSpan3`,
+`complex_mul_of_span_two`, `azim_eq_0_or_pi_of_coplanar`) plus the
+`cexp_sin_im` scalar identity, re-derived on the public `Kepler.Geom` azim
+frame (`zOf`, `azim_frame_spec`, `exists_on3_eq_smul`). -/
+
+/-- `(exp (r * I)).im = sin r` (private twin; the `Planarity`/`LuneVolume`
+originals are `private` and outside this file's closure). -/
+private theorem p25w3_cexp_sin_im (r : ℝ) :
+    (Complex.exp ((r : ℂ) * Complex.I)).im = Real.sin r :=
+  Complex.exp_ofReal_mul_I_im r
+
+private theorem p25w3_exists_combo_of_mem_affineSpan3 {a b c z : V3}
+    (hz : z ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3)) :
+    ∃ d1 d2 : ℝ, z = a + d1 • (b - a) + d2 • (c - a) := by
+  have h1 : z -ᵥ a ∈ vectorSpan ℝ ({a, b, c} : Set V3) :=
+    vsub_mem_vectorSpan_of_mem_affineSpan_of_mem_affineSpan (SetLike.mem_coe.mp hz)
+      (mem_affineSpan ℝ (by simp))
+  rw [vectorSpan_eq_span_vsub_set_right ℝ
+    (by simp : a ∈ ({a, b, c} : Set V3))] at h1
+  have hle : Submodule.span ℝ ((· -ᵥ a) '' ({a, b, c} : Set V3)) ≤
+      Submodule.span ℝ ({b - a, c - a} : Set V3) := by
+    refine Submodule.span_le.mpr ?_
+    rintro p ⟨z', hz'set, hp⟩
+    dsimp only at hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz'set
+    rcases hz'set with hz' | hz' | hz'
+    · rw [← hp, hz', vsub_self]
+      exact Submodule.zero_mem _
+    · rw [← hp, hz', vsub_eq_sub]
+      exact Submodule.subset_span (by simp)
+    · rw [← hp, hz', vsub_eq_sub]
+      exact Submodule.subset_span (by simp)
+  obtain ⟨d1, d2, hd⟩ := Submodule.mem_span_pair.mp (hle h1)
+  have hd' : d1 • (b - a) + d2 • (c - a) = z - a := by
+    rw [hd, vsub_eq_sub]
+  refine ⟨d1, d2, ?_⟩
+  calc z = a + (z - a) := by abel
+    _ = a + (d1 • (b - a) + d2 • (c - a)) := by rw [hd']
+    _ = a + d1 • (b - a) + d2 • (c - a) := by abel
+
+/-- 共面提取的抽象 ℂ 核心：两组实系数组合共用一对复数 P、Q，且轴向组合
+为零、w 侧组合非零时，v 侧组合是 w 侧组合的实倍数。 -/
+private theorem p25w3_complex_mul_of_span_two {P Q zv zw : ℂ}
+    {β1 β2 α1 α2 γ1 γ2 : ℝ}
+    (hzu : ((β1 : ℝ) : ℂ) * P + ((β2 : ℝ) : ℂ) * Q = 0)
+    (hzv : zv = ((α1 : ℝ) : ℂ) * P + ((α2 : ℝ) : ℂ) * Q)
+    (hzw : zw = ((γ1 : ℝ) : ℂ) * P + ((γ2 : ℝ) : ℂ) * Q)
+    (hβ : β1 ≠ 0 ∨ β2 ≠ 0) (hzw0 : zw ≠ 0) :
+    ∃ μ : ℝ, zv = ((μ : ℝ) : ℂ) * zw := by
+  by_cases hβ1 : β1 = 0
+  · have hβ2 : β2 ≠ 0 := by
+      rcases hβ with h | h
+      · exact absurd hβ1 h
+      · exact h
+    have hβ2' : ((β2 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hβ2
+    have h1 : ((β2 : ℝ) : ℂ) * Q = 0 := by
+      have h1' := hzu
+      rw [hβ1, Complex.ofReal_zero, zero_mul, zero_add] at h1'
+      exact h1'
+    have hQ : Q = 0 := by
+      have h2 : Q = (((β2 : ℝ) : ℂ)⁻¹ * ((β2 : ℝ) : ℂ)) * Q := by
+        rw [inv_mul_cancel₀ hβ2', one_mul]
+      calc Q = (((β2 : ℝ) : ℂ)⁻¹ * ((β2 : ℝ) : ℂ)) * Q := h2
+        _ = ((β2 : ℝ) : ℂ)⁻¹ * (((β2 : ℝ) : ℂ) * Q) := by ring
+        _ = ((β2 : ℝ) : ℂ)⁻¹ * 0 := by rw [h1]
+        _ = 0 := by rw [mul_zero]
+    have hγ1 : γ1 ≠ 0 := by
+      intro h0
+      rw [hzw, h0, hQ] at hzw0
+      simp at hzw0
+    have hd1 : ((α1 / γ1 : ℝ) : ℂ) * ((γ1 : ℝ) : ℂ) = ((α1 : ℝ) : ℂ) := by
+      exact_mod_cast div_mul_cancel₀ α1 hγ1
+    refine ⟨α1 / γ1, ?_⟩
+    rw [hzv, hzw, hQ, mul_add, ← mul_assoc, hd1]
+    simp [mul_zero]
+  · have hβ1' : ((β1 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hβ1
+    have hP : P = ((-(β2 / β1) : ℝ) : ℂ) * Q := by
+      have h1 : ((β1 : ℝ) : ℂ) * P = -((β2 : ℝ) : ℂ) * Q := by
+        linear_combination hzu
+      have h2 : P = (((β1 : ℝ) : ℂ)⁻¹ * ((β1 : ℝ) : ℂ)) * P := by
+        rw [inv_mul_cancel₀ hβ1', one_mul]
+      calc P = (((β1 : ℝ) : ℂ)⁻¹ * ((β1 : ℝ) : ℂ)) * P := h2
+        _ = ((β1 : ℝ) : ℂ)⁻¹ * (((β1 : ℝ) : ℂ) * P) := by ring
+        _ = ((β1 : ℝ) : ℂ)⁻¹ * (-((β2 : ℝ) : ℂ) * Q) := by rw [h1]
+        _ = ((-(β2 / β1) : ℝ) : ℂ) * Q := by
+            push_cast
+            field_simp [hβ1']
+    have hzvQ : zv = ((α2 - α1 * β2 / β1 : ℝ) : ℂ) * Q := by
+      rw [hzv, hP]; push_cast; ring
+    have hzwQ : zw = ((γ2 - γ1 * β2 / β1 : ℝ) : ℂ) * Q := by
+      rw [hzw, hP]; push_cast; ring
+    have hκ : γ2 - γ1 * β2 / β1 ≠ 0 := by
+      intro h0
+      rw [hzwQ, h0] at hzw0
+      simp at hzw0
+    have hd2 : (((α2 - α1 * β2 / β1 : ℝ) / (γ2 - γ1 * β2 / β1 : ℝ) : ℝ) : ℂ)
+        * ((γ2 - γ1 * β2 / β1 : ℝ) : ℂ) = ((α2 - α1 * β2 / β1 : ℝ) : ℂ) := by
+      exact_mod_cast div_mul_cancel₀ _ hκ
+    refine ⟨(α2 - α1 * β2 / β1) / (γ2 - γ1 * β2 / β1), ?_⟩
+    rw [hzvQ, hzwQ, ← mul_assoc, hd2]
+
+/-- HOL `AZIM_EQ_0_PI_EQ_COPLANAR`（Multivariate-flyspeck.ml:3161）的解析
+替代：四点 {x,u,v,w} 共面且 v、w 都不在轴 xu 上时，v-x 与 w-x 在轴向
+正交标架下的 ℂ 平面坐标成实倍数，故 θ = azim x u w v 的相位 e^{iθ} 为
+实数，即 sin θ = 0，结合 0 ≤ θ < 2π 得 θ ∈ {0, π}。 -/
+private theorem p25w3_azim_eq_0_or_pi_of_coplanar {x u v w : V3}
+    (hncv : ¬ Collinear3 x u v) (hncw : ¬ Collinear3 x u w)
+    (hcop : Coplanar ({x, u, v, w} : Set V3)) :
+    azim x u w v = 0 ∨ azim x u w v = Real.pi := by
+  have hux : u ≠ x := fun he => hncw (collinear3_of_eq he)
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (u - x) (sub_ne_zero.mpr hux)
+  have hax : (u - x : V3) = dist u x • f3 := by rw [dist_eq_norm]; exact halign
+  have hzwne : zOf f1 f2 (w - x) ≠ 0 := (zOf_ne_zero_iff hon hax hux w).mpr hncw
+  obtain ⟨ψ, rb, ra, hrb, hra, hzwrep, hzvrep⟩ := azim_frame_spec hncw hncv hon hax hux
+  -- 共面性 → 公共平面表示 → ℂ 坐标实相关
+  obtain ⟨μ, hμ⟩ : ∃ μ : ℝ, zOf f1 f2 (v - x) = ((μ : ℝ) : ℂ) * zOf f1 f2 (w - x) := by
+    obtain ⟨a, b, c, hsub⟩ := hcop
+    have hxS : x ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have huS : u ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have hvS : v ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have hwS : w ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    obtain ⟨ξ1, ξ2, hξ⟩ := p25w3_exists_combo_of_mem_affineSpan3 hxS
+    obtain ⟨β1, β2, hβ⟩ := p25w3_exists_combo_of_mem_affineSpan3 huS
+    obtain ⟨α1, α2, hα⟩ := p25w3_exists_combo_of_mem_affineSpan3 hvS
+    obtain ⟨γ1, γ2, hγ⟩ := p25w3_exists_combo_of_mem_affineSpan3 hwS
+    have hvx : v - x = (α1 - ξ1) • (b - a) + (α2 - ξ2) • (c - a) := by
+      rw [hα, hξ]; module
+    have hwx : w - x = (γ1 - ξ1) • (b - a) + (γ2 - ξ2) • (c - a) := by
+      rw [hγ, hξ]; module
+    have huxc : u - x = (β1 - ξ1) • (b - a) + (β2 - ξ2) • (c - a) := by
+      rw [hβ, hξ]; module
+    have hzlin : ∀ p q : V3, ∀ d1 d2 : ℝ, p - q = d1 • (b - a) + d2 • (c - a) →
+        zOf f1 f2 (p - q) = ((d1 : ℝ) : ℂ) * zOf f1 f2 (b - a)
+          + ((d2 : ℝ) : ℂ) * zOf f1 f2 (c - a) := by
+      intro p q d1 d2 hd
+      rw [hd, zOf_add, zOf_smul, zOf_smul]
+    have hzc := hzlin v x (α1 - ξ1) (α2 - ξ2) hvx
+    have hzd := hzlin w x (γ1 - ξ1) (γ2 - ξ2) hwx
+    have hzu0 := hzlin u x (β1 - ξ1) (β2 - ξ2) huxc
+    have hf3z : zOf f1 f2 f3 = 0 := by
+      obtain ⟨-, -, -, -, h13, h23, -⟩ := hon
+      unfold zOf
+      rw [dotProduct_comm f3 f1, dotProduct_comm f3 f2, h13, h23]
+      norm_num
+    rw [hax, zOf_smul, hf3z, mul_zero] at hzu0
+    have hne2 : β1 - ξ1 ≠ 0 ∨ β2 - ξ2 ≠ 0 := by
+      by_contra hcon
+      push_neg at hcon
+      apply hux
+      have hzero : u - x = 0 := by
+        rw [huxc, hcon.1, hcon.2]
+        module
+      exact sub_eq_zero.mp hzero
+    exact p25w3_complex_mul_of_span_two hzu0.symm hzc hzd hne2 hzwne
+  -- 相位：ra • e^{i(ψ+θ)} = μ • rb • e^{iψ} ⟹ ra • e^{iθ} = μ • rb ∈ ℝ
+  have hkey : ((ra : ℝ) : ℂ) * Complex.exp (((azim x u w v : ℝ) : ℂ) * Complex.I)
+      = ((μ * rb : ℝ) : ℂ) := by
+    have h1 : ((ra : ℝ) : ℂ)
+          * Complex.exp ((((ψ + azim x u w v : ℝ) : ℂ)) * Complex.I)
+        = ((μ : ℝ) : ℂ) * (((rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)) := by
+      rw [← hzvrep, ← hzwrep]
+      exact hμ
+    have hexp : Complex.exp ((((ψ + azim x u w v : ℝ) : ℂ)) * Complex.I)
+        = Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+          * Complex.exp (((azim x u w v : ℝ) : ℂ) * Complex.I) := by
+      rw [← Complex.exp_add]
+      congr 1
+      push_cast
+      ring
+    rw [hexp] at h1
+    have h2 : ((ra : ℝ) : ℂ) * Complex.exp (((azim x u w v : ℝ) : ℂ) * Complex.I)
+          * Complex.exp (((ψ : ℝ) : ℂ) * Complex.I)
+        = ((μ * rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * Complex.I) := by
+      push_cast
+      linear_combination h1
+    exact mul_right_cancel₀ (Complex.exp_ne_zero _) h2
+  have hsin : Real.sin (azim x u w v) = 0 := by
+    have h := congrArg Complex.im hkey
+    simp only [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, p25w3_cexp_sin_im,
+      mul_zero, add_zero, zero_mul] at h
+    rcases mul_eq_zero.mp h with h' | h'
+    · exact absurd h' (by exact_mod_cast (ne_of_gt hra))
+    · exact h'
+  obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp hsin
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have hn0 : (0:ℤ) ≤ n := by
+    by_contra hcon
+    push_neg at hcon
+    have hnle : ((n:ℤ) : ℝ) ≤ -1 := by exact_mod_cast (by omega)
+    have hθn : azim x u w v < 0 := by rw [← hn]; nlinarith [hnle, hpi]
+    exact absurd (azim_nonneg x u w v) (not_le.mpr hθn)
+  have hn2 : n < 2 := by
+    by_contra hcon
+    push_neg at hcon
+    have hnge : (2:ℝ) ≤ ((n:ℤ) : ℝ) := by exact_mod_cast (by omega)
+    have hθbig : 2 * Real.pi ≤ azim x u w v := by rw [← hn]; nlinarith [hnge, hpi]
+    exact absurd hθbig (not_le.mpr (azim_lt_two_pi x u w v))
+  rcases (show n = 0 ∨ n = 1 by omega) with rfl | rfl
+  · exact Or.inl (by rw [← hn]; push_cast; norm_num)
+  · exact Or.inr (by rw [← hn]; push_cast; norm_num)
+
 /-- HOL `CC_3_AZIM_LT_PI_COPLANAR`. -/
 theorem CC_3_AZIM_LT_PI_COPLANAR (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i : ℕ) (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V)
@@ -12914,7 +13509,28 @@ theorem CC_3_AZIM_LT_PI_COPLANAR (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ
     (hr : leaf_rank V [u0, u1] w0 n f)
     (hapi : azim u0 u1 (f i) (f (i + 1)) < Real.pi) :
     ¬ Coplanar ({u0, u1, f i, f (i + 1)} : Set V3) := by
-  sorry
+  have _ := hnl
+  have _ := hsize
+  have _ := h0
+  have _ := h1
+  have _ := hper
+  have _ := hcey
+  have _ := hno4
+  intro hcop
+  have hnc1 : ¬ Collinear3 u0 u1 (f i) := by
+    simpa [elV] using LEAF_RANK_COLLINEAR V [u0, u1] w0 n f i hp hs hr
+  have hnc2 : ¬ Collinear3 u0 u1 (f (i + 1)) := by
+    simpa [elV] using LEAF_RANK_COLLINEAR V [u0, u1] w0 n f (i + 1) hp hs hr
+  have hset : ({u0, u1, f i, f (i + 1)} : Set V3) =
+      ({u0, u1, f (i + 1), f i} : Set V3) := by
+    ext q
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [hset] at hcop
+  rcases p25w3_azim_eq_0_or_pi_of_coplanar hnc2 hnc1 hcop with h | h
+  · have hz := LEAF_RANK_AZIM_NZ V [u0, u1] w0 n f i hs hp hr hn hnc
+    exact hz (by simpa [elV] using h)
+  · linarith
 
 /-- HOL `real_model_txq`. -/
 theorem real_model_txq (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
