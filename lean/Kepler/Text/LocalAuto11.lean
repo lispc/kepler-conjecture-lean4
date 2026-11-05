@@ -1624,6 +1624,122 @@ theorem PQCSXWG1_p11 : PQCSXWG1_concl_p11 := by
     rw [hgoal]
     exact hpos
 
+/-! ### w11 kit for the `PQCSXWG2` continuity chain
+
+Private helpers for `CONTINUOUS_MK_SIMPLEX_WITHINREAL_p11` /
+`PQCSXWG2_WITHINREAL_p11`.  `w11_cos_law` is the cosine law (Gram bracket
+`2·(x·y) = ‖x‖² + ‖y‖² − dist x y²`), `w11_upsX_pos_of_noncollinear` is the
+`Collect_geom2.NOT_COL_EQ_UPS_X_POS` bridge re-derived on this import lane
+(`ups_x = 4·(‖u‖²‖w‖² − (u·w)²)` via `w11_cos_law` + the Cauchy–Schwarz
+equality case), and `w11_continuousWithinAt_crossV` is the cross-product
+continuity (`CONTINUOUS_CROSS` in HOL) through the component formula. -/
+
+private theorem w11_coe_sub (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+private theorem w11_cos_law (x y : V3) :
+    2 * (x ⬝ᵥ y) = ‖x‖ * ‖x‖ + ‖y‖ * ‖y‖ - dist x y * dist x y := by
+  have h1 : dist x y * dist x y
+      = ((x - y : V3) : Fin 3 → ℝ) ⬝ᵥ ((x - y : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two]
+    exact norm_sq_eq_dot (x - y)
+  have h2 : ‖x‖ * ‖x‖ = (x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ) := by
+    rw [← norm_sq_eq_dot, pow_two]
+  have h3 : ‖y‖ * ‖y‖ = (y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ) := by
+    rw [← norm_sq_eq_dot, pow_two]
+  rw [h1, h2, h3, w11_coe_sub]
+  simp only [dotProduct_sub, dotProduct_comm]
+  ring
+
+private theorem w11_collinear_dup (a b : V3) : Collinear ℝ ({a, a, b} : Set V3) := by
+  have h : ({a, a, b} : Set V3) = {a, b} := by ext z; simp
+  rw [h]
+  exact collinear_pair ℝ a b
+
+private theorem w11_continuous_cross :
+    Continuous (fun p : (Fin 3 → ℝ) × (Fin 3 → ℝ) => crossProduct p.1 p.2) := by
+  rw [continuous_pi_iff]
+  intro i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val] <;> fun_prop
+
+private theorem w11_continuousWithinAt_crossV {u w : ℝ → V3} {s : Set ℝ} {a : ℝ}
+    (hu : ContinuousWithinAt u s a) (hw : ContinuousWithinAt w s a) :
+    ContinuousWithinAt (fun t => (WithLp.toLp 2 (crossProduct (WithLp.ofLp (u t))
+      (WithLp.ofLp (w t))) : V3)) s a := by
+  have h1 : ContinuousWithinAt (fun t => (u t : Fin 3 → ℝ)) s a :=
+    (PiLp.continuous_ofLp (p := 2) (β := fun _ : Fin 3 => ℝ)).continuousAt.comp_continuousWithinAt
+      hu
+  have h2 : ContinuousWithinAt (fun t => (w t : Fin 3 → ℝ)) s a :=
+    (PiLp.continuous_ofLp (p := 2) (β := fun _ : Fin 3 => ℝ)).continuousAt.comp_continuousWithinAt
+      hw
+  have h3 : ContinuousWithinAt (fun t => crossProduct (u t : Fin 3 → ℝ)
+      (w t : Fin 3 → ℝ)) s a :=
+    w11_continuous_cross.continuousAt.comp_continuousWithinAt (h1.prodMk h2)
+  exact (PiLp.continuous_toLp (p := 2) (β := fun _ : Fin 3 => ℝ)).continuousAt.comp_continuousWithinAt
+    h3
+
+private theorem w11_upsX_pos_of_noncollinear {v0 v1 v2 : V3} {x1 x2 x6 : ℝ}
+    (hnc : ¬ Collinear3 v0 v1 v2)
+    (hx1 : x1 = dist v1 v0 ^ 2) (hx2 : x2 = dist v2 v0 ^ 2)
+    (hx6 : x6 = dist v1 v2 ^ 2) :
+    0 < upsX x1 x2 x6 := by
+  set u : V3 := v1 - v0 with hu
+  set w : V3 := v2 - v0 with hw
+  have hu_ne : u ≠ 0 := by
+    intro h0
+    apply hnc
+    have hv1 : v1 = v0 := sub_eq_zero.mp (by rw [← hu]; exact h0)
+    rw [hv1]
+    exact w11_collinear_dup v0 v2
+  have hnc' : ∀ c : ℝ, w ≠ c • u := by
+    intro c hc
+    apply hnc
+    by_cases hv1 : v1 = v0
+    · rw [hv1]
+      exact w11_collinear_dup v0 v2
+    · rw [collinear3_iff_smul hv1]
+      exact ⟨c, by rw [← hu, ← hw]; exact hc⟩
+  have hgram : 0 < (‖u‖ * ‖u‖) * (‖w‖ * ‖w‖) - (u ⬝ᵥ w) * (u ⬝ᵥ w) := by
+    by_contra hle
+    have hAB : (‖u‖ * ‖u‖) * (‖w‖ * ‖w‖) ≤ (u ⬝ᵥ w) * (u ⬝ᵥ w) :=
+      by linarith [not_lt.mp hle]
+    have hcs : |u ⬝ᵥ w| ≤ ‖u‖ * ‖w‖ := by
+      rw [← inner_eq_dot]
+      exact abs_real_inner_le_norm (x := u) (y := w)
+    have hBA : (u ⬝ᵥ w) * (u ⬝ᵥ w) ≤ (‖u‖ * ‖u‖) * (‖w‖ * ‖w‖) := by
+      calc (u ⬝ᵥ w) * (u ⬝ᵥ w)
+          = |u ⬝ᵥ w| * |u ⬝ᵥ w| := (abs_mul_abs_self _).symm
+        _ ≤ (‖u‖ * ‖w‖) * (‖u‖ * ‖w‖) := by
+            nlinarith [hcs, abs_nonneg (u ⬝ᵥ w),
+              mul_nonneg (norm_nonneg u) (norm_nonneg w)]
+        _ = (‖u‖ * ‖u‖) * (‖w‖ * ‖w‖) := by ring
+    have habs : |u ⬝ᵥ w| = ‖u‖ * ‖w‖ := by
+      refine (mul_self_inj_of_nonneg (abs_nonneg _)
+        (mul_nonneg (norm_nonneg _) (norm_nonneg _))).mp ?_
+      rw [abs_mul_abs_self]
+      linarith
+    have hinner : ‖inner ℝ u w‖ = ‖u‖ * ‖w‖ := by
+      rw [inner_eq_dot, Real.norm_eq_abs]
+      exact habs
+    rcases ((norm_inner_eq_norm_tfae ℝ u w).out 0 2).mp hinner with h0 | ⟨c, hc⟩
+    · exact hu_ne h0
+    · exact hnc' c hc
+  have hups_gram : upsX (‖u‖ * ‖u‖) (‖w‖ * ‖w‖) (dist u w * dist u w)
+      = 4 * ((‖u‖ * ‖u‖) * (‖w‖ * ‖w‖) - (u ⬝ᵥ w) * (u ⬝ᵥ w)) := by
+    have h : 2 * (u ⬝ᵥ w) = ‖u‖ * ‖u‖ + ‖w‖ * ‖w‖ - dist u w * dist u w :=
+      w11_cos_law u w
+    simp only [upsX]
+    linear_combination
+      (2 * (u ⬝ᵥ w) + ‖u‖ * ‖u‖ + ‖w‖ * ‖w‖ - dist u w * dist u w) * h
+  have e1 : x1 = ‖u‖ * ‖u‖ := by rw [hx1, dist_eq_norm, ← hu]; ring
+  have e2 : x2 = ‖w‖ * ‖w‖ := by rw [hx2, dist_eq_norm, ← hw]; ring
+  have hvw : v1 - v2 = u - w := by rw [hu, hw]; abel
+  have e6 : x6 = dist u w * dist u w := by
+    rw [hx6, dist_eq_norm, hvw, ← dist_eq_norm]
+    ring
+  rw [e1, e2, e6, hups_gram]
+  linarith
+
 /-- PQCSXWG.hl:214 `CONTINUOUS_MK_SIMPLEX_WITHINREAL` (long continuity
 choreography; DISCHARGES). -/
 theorem CONTINUOUS_MK_SIMPLEX_WITHINREAL_p11
@@ -1638,7 +1754,56 @@ theorem CONTINUOUS_MK_SIMPLEX_WITHINREAL_p11
     ContinuousWithinAt
       (fun t => mkSimplex1_p11 (v0 t) (v1 t) (v2 t) (x1 t) (x2 t) (x3 t)
         (x4 t) (x5 t) (x6 t)) s a := by
-  sorry
+  -- `hd` is not consumed: Mathlib's `Real.sqrt` is continuous everywhere (HOL
+  -- needs the sign disjunction only for `sqrt` on `real^N`); kept for fidelity
+  -- with the frozen statement.
+  have hdne : deltaX (x1 a) (x2 a) (x3 a) (x4 a) (x5 a) (x6 a) ≠ 0 := ne_of_gt hd
+  have hfun : (fun t => mkSimplex1_p11 (v0 t) (v1 t) (v2 t) (x1 t) (x2 t) (x3 t)
+        (x4 t) (x5 t) (x6 t))
+      = fun t => v0 t + (1 / upsX (x1 t) (x2 t) (x6 t)) •
+          ((2 * Real.sqrt (deltaX (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t))) •
+              ((WithLp.toLp 2 (crossProduct (WithLp.ofLp (v1 t - v0 t))
+                (WithLp.ofLp (v2 t - v0 t))) : V3))
+            + deltaX5 (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t) • (v1 t - v0 t)
+            + deltaX4 (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t) • (v2 t - v0 t)) := rfl
+  rw [hfun]
+  have hUp : ContinuousWithinAt (fun t => upsX (x1 t) (x2 t) (x6 t)) s a := by
+    unfold upsX; fun_prop
+  have hU : ContinuousWithinAt (fun t => 1 / upsX (x1 t) (x2 t) (x6 t)) s a :=
+    ContinuousWithinAt.div (f := fun _ => (1 : ℝ)) continuousWithinAt_const hUp hups
+  have hDp : ContinuousWithinAt
+      (fun t => deltaX (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t)) s a := by
+    unfold deltaX; fun_prop
+  have hS : ContinuousWithinAt
+      (fun t => 2 * Real.sqrt (deltaX (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t))) s a :=
+    continuousWithinAt_const.mul hDp.sqrt
+  have hC : ContinuousWithinAt (fun t => (WithLp.toLp 2 (crossProduct
+      (WithLp.ofLp (v1 t - v0 t)) (WithLp.ofLp (v2 t - v0 t))) : V3)) s a :=
+    w11_continuousWithinAt_crossV (hv1.sub hv0) (hv2.sub hv0)
+  have h5 : ContinuousWithinAt
+      (fun t => deltaX5 (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t)) s a := by
+    unfold deltaX5; fun_prop
+  have h4 : ContinuousWithinAt
+      (fun t => deltaX4 (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t)) s a := by
+    unfold deltaX4; fun_prop
+  have hA : ContinuousWithinAt (fun t =>
+      (2 * Real.sqrt (deltaX (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t))) •
+        ((WithLp.toLp 2 (crossProduct (WithLp.ofLp (v1 t - v0 t))
+          (WithLp.ofLp (v2 t - v0 t))) : V3))) s a := hS.smul hC
+  have hB : ContinuousWithinAt (fun t =>
+      deltaX5 (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t) • (v1 t - v0 t)) s a :=
+    h5.smul (hv1.sub hv0)
+  have hD : ContinuousWithinAt (fun t =>
+      deltaX4 (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t) • (v2 t - v0 t)) s a :=
+    h4.smul (hv2.sub hv0)
+  have hInner : ContinuousWithinAt (fun t =>
+      (2 * Real.sqrt (deltaX (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t))) •
+          ((WithLp.toLp 2 (crossProduct (WithLp.ofLp (v1 t - v0 t))
+            (WithLp.ofLp (v2 t - v0 t))) : V3))
+        + deltaX5 (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t) • (v1 t - v0 t)
+        + deltaX4 (x1 t) (x2 t) (x3 t) (x4 t) (x5 t) (x6 t) • (v2 t - v0 t)) s a :=
+    (hA.add hB).add hD
+  exact ContinuousWithinAt.add hv0 (hU.smul hInner)
 
 /-- PQCSXWG.hl:256 `PQCSXWG2_WITHINREAL` (giant through
 `CONTINUOUS_MK_SIMPLEX_WITHINREAL_p11` and
@@ -1658,7 +1823,8 @@ theorem PQCSXWG2_WITHINREAL_p11
     ContinuousWithinAt
       (fun t => mkSimplex1_p11 (v0 t) (v1 t) (v2 t) (x1 t) (x2 t) (x3 t)
         (x4 t) (x5 t) (x6 t)) s a := by
-  sorry
+  refine CONTINUOUS_MK_SIMPLEX_WITHINREAL_p11 ?_ hd hv0 hv1 hv2 hx1c hx2c hx3c hx4c hx5c hx6c
+  exact ne_of_gt (w11_upsX_pos_of_noncollinear hnc hx1 hx2 hx6)
 
 /-- PQCSXWG.hl:282 `PQCSXWG2_ATREAL`. -/
 theorem PQCSXWG2_ATREAL_p11
