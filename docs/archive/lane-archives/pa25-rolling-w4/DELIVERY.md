@@ -8,9 +8,13 @@
   **主仓 tracked 零改动，工作期间仓内零未跟踪文件**）
 - 终稿：`Work.lean`，**MD5 `2fe12c2150f5aee916d5fd89efda08ca`**，
   **14,547 行 / 22 裸 `sorry` / 23 条编译器 sorry 警告 / 0 error**
-- patch：`patch-pa25-rolling-w4.diff`（相对 `4ab6a8e7`，只含 PA25），
-  **+157 / −3，3 hunks**；在 `4ab6a8e7` 上 `git apply --check` = **PASS (RC=0)**，
+- patch：`patch-pa25-rolling-w4.diff`（相对 `4ab6a8e7` 的 PA25 字节，只含 PA25），
+  **+157 / −3，3 hunks**；`git apply --check` = **PASS (RC=0)**，
   `git apply --stat` 只显示 `lean/Kepler/Text/PackingAuto25.lean`
+- **HEAD 漂移说明**：本波期间主仓 HEAD 由并发车道推进到 `8c003d0d`（PA22/队列变更），
+  但 `4ab6a8e7..8c003d0d` 对 `PackingAuto25.lean` 零 diff（两处 MD5 均
+  `ca2eaedb3d421951635dd07119dbde9e`）；patch 在 `8c003d0d` 上重跑
+  `git apply --check` 仍 RC=0。
 
 ## 1. 本波闭合 3 件（全部 `#print axioms` = 标准三，零 `sorryAx`）
 
@@ -73,8 +77,9 @@ RESULT=PASS
 
 ## 5. 预算自报
 
-- 工具调用：约 56 / 120；墙钟：约 1.3h / 3h。
-- 全文件 standalone 编译 4 次：基线、W4-A 后、W4-B 后、W4-C+axioms（均 RC=0）。
+- 工具调用：约 60 / 120；墙钟：约 0.4h（12:50–13:10）/ 3h。
+- 全文件 standalone 编译 5 次：基线、W4-A 后、W4-B 后、W4-C+axioms、终稿
+  `Work.lean` 本身（均 RC=0；终稿 `logs/final_WORK.log`：0 error / 23 sorry 警告）。
 - 探针：`probe_A`/`probe_A2`/`probe_B`/`probe_C` 各 1–3 轮，全部 `nice -n 19` 单进程串行。
 
 ## 6. 复核命令（编排者用）

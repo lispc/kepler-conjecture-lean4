@@ -1,7 +1,9 @@
 # pa25-rolling-w4 — 归档说明
 
 - **基线 HEAD**：`4ab6a8e7`（PA25 `14,393` 行 / 25 裸 `sorry` / 26 编译器 sorry 警告，
-  MD5 `ca2eaedb3d421951635dd07119dbde9e`）。
+  MD5 `ca2eaedb3d421951635dd07119dbde9e`）。本波期间并发车道把 HEAD 推到
+  `8c003d0d`，但 `4ab6a8e7..8c003d0d` 对 PA25 零 diff（MD5 同上；kit 在新 HEAD
+  上 `git apply --check` 仍 PASS）。
 - **本波闭合 3 件**：`gamma4fgcy_POS`、`cc_prep_model_data`（锥内）、`EDGE_IMP_K23`；
   own-sorry 25 → 22，编译器 sorry 警告 26 → 23，整文件 standalone RC=0 / 0 error。
 - **为什么不直接改主仓**：本车道硬约束是「主仓 tracked 零改动」，代码以 kit 形式交付，

@@ -86,7 +86,13 @@ apply-check RC=0
 ```
 
 hunk 边界：`grep -c '^@@'` = **3**；每个 hunk 只删 `-  sorry` 一行
-（`grep -n '^-'` 除 diff 头 = 3）。`git status --porcelain` 在工作前后均为空。
+（`grep -n '^-'` 除 diff 头 = 3）。工作期间 `git status --porcelain`（tracked）为空。
+
+**HEAD 漂移复核**：本波期间并发车道把主仓 HEAD 从 `4ab6a8e7` 推到 `8c003d0d`；
+`git diff --stat 4ab6a8e7..HEAD -- lean/Kepler/Text/PackingAuto25.lean` 输出为空，
+两处 PA25 MD5 均 `ca2eaedb3d421951635dd07119dbde9e`。patch 在 `8c003d0d` 上重跑
+`git apply --check` 仍 **RC=0**、`--stat` 仍只列该文件（见 `logs/final_checks.log`）。
+另：`cone-text-triage-w1/` 的 4 个未跟踪文件属并发车道，非本车道产物，未触碰。
 
 ## E6. 地图搬债审计读数
 
@@ -106,3 +112,14 @@ for n in …; do grep -c "Kepler.Text.$n	" docs/e2e-reachability-map.tsv; done
 - 全文件 diff 仅 3 hunk，无任何 `def`/statement 行改动；624 shard 面（K_AXIOM）
   与 import 闭包零漂移。
 - 未新增 `import`；未新增 `open Classical`（含局部形式）。
+
+## E8. 终稿 Work.lean 本身整文件复核（最终权威读数）
+
+```sh
+LEAN_PATH=$(cat /tmp/lfainteg/asm_check/leanpath.txt) nice -n 19 \
+  script -q logs/final_WORK.log lean /Users/zhangzhuo/c17_backup/lane_snapshots/pa25-rolling-w4/Work.lean
+echo "RC=$?"
+tr -d '\r' < logs/final_WORK.clean.log | grep -c ': error:'
+tr -d '\r' < logs/final_WORK.clean.log | grep -c 'declaration uses `sorry`'
+```
+读数：**RC=0**；`: error:` = **0**；sorry 警告 = **23**。

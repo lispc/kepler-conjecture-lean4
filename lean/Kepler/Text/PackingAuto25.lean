@@ -6312,7 +6312,83 @@ theorem cc_prep_model_data (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (u0
     (hn : 1 < n) (hp : Packing V) (hs : saturated V)
     (hnc : ¬ Collinear3 u0 u1 w0) (hr : leaf_rank V [u0, u1] w0 n f) :
     cc_bool_prep_v11 (cc_data_v8 V f u0 u1) := by
-  sorry
+  -- HOL OXLZLEZ3.hl:4021-4185 镜像（adjacency）：`¬cc_4 i` 反推 `cc_4 (i+1)`。
+  -- 见证 `ccUh [u0,u1,f(i+1)]`；`ccKe = 4` 支 `K4_CC_WI_ALT` 直接入楔，
+  -- `ccKe = 3` 支由 `s_leaf` 换位（`S_LEAF_SYM`）知反向茎 `ccKe = 4`，
+  -- `K4_CC_WIM` 把该胞送入回卷楔 `(i+1)+(n-1) = i`，撞 `¬cc_4 i`。
+  intro i hqy
+  rw [cc_qy_v11] at hqy ⊢
+  have hn0 : n ≠ 0 := by omega
+  have hper : periodic f n := LEAF_RANK_PERIODIC V [u0, u1] w0 n f hr
+  -- `ccUh` 的前两个槽 = 茎端点（`EL_CC_UH` + `getD` 归一）
+  have hget : ∀ (a b c : V3), leaf V [a, b, c] →
+      (ccUh V [a, b, c]).getD 0 0 = a ∧ (ccUh V [a, b, c]).getD 1 0 = b := by
+    intro a b c hlf
+    obtain ⟨e0, e1, -⟩ := EL_CC_UH (V := V) (ul := [a, b, c]) hp hs hlf
+    exact ⟨by simpa using e0, by simpa using e1⟩
+  have hnext : cc_4 V u0 u1 f (i + 1) := by
+    have hleaf : leaf V [u0, u1, f (i + 1)] :=
+      s_leaf_leaf V [u0, u1] (f (i + 1))
+        (LEAF_RANK_S_LEAF V [u0, u1] w0 n f (i + 1) hr)
+    rcases CC_KE_34 V [u0, u1, f (i + 1)] with hk3 | hk4
+    · -- k = 3：换位茎上是 4-胞，回卷入楔 i，撞 hqy
+      exfalso
+      have hmem' : f (i + 1) ∈ s_leaf V [u1, u0] := by
+        rw [S_LEAF_SYM V u0 u1 hp hs]
+        exact LEAF_RANK_S_LEAF V [u0, u1] w0 n f (i + 1) hr
+      rw [S_LEAF_SET, Set.mem_setOf_eq] at hmem'
+      obtain ⟨hleaf', hd⟩ := hmem'
+      have hk4b : ccKe V [u1, u0, f (i + 1)] = 4 := by
+        rcases hd with h4 | h4
+        · exact h4
+        · have h3 : ccKe V [u0, u1, f (i + 1)] = 4 := h4
+          rw [h3] at hk3
+          norm_num at hk3
+      have hbar' : barV V 3 (ccUh V [u1, u0, f (i + 1)]) :=
+        ((Classical.choose_spec (cc_uh_exists V [u1, u0, f (i + 1)])) hp hs hleaf').1
+      have hcc' : ccCell V [u1, u0, f (i + 1)] =
+          mcell4 V (ccUh V [u1, u0, f (i + 1)]) := by
+        show mcell (ccKe V [u1, u0, f (i + 1)]) V (ccUh V [u1, u0, f (i + 1)]) = _
+        rw [hk4b]
+        simp [mcell]
+      have hfpre : f ((i + 1) + (n - 1)) = f i := by
+        rw [show (i + 1) + (n - 1) = i + n - 1 + 1 from by omega]
+        exact F_SUC_PRE hn0 hper i
+      have hsub' := K4_CC_WIM V [u0, u1] w0 n f (i + 1) hp hs hr hnc hn hk4b
+      have hsubM : mcell4 V (ccUh V [u1, u0, f (i + 1)]) ⊆
+          wedgeGe u0 u1 (f i) (f (i + 1)) := by
+        rw [hfpre] at hsub'
+        rw [← hcc']
+        exact hsub'
+      have hleaf'' : leaf V [u1, u0, f (i + 1)] := hleaf'
+      have hstem' := STEM_EDGEX hp hs hleaf''
+      rw [hcc'] at hstem'
+      obtain ⟨g0, g1⟩ := hget u1 u0 (f (i + 1)) hleaf''
+      rw [g0, g1] at hstem'
+      rw [Set.pair_comm] at hstem'
+      exact hqy ⟨ccUh V [u1, u0, f (i + 1)], hbar', hstem', hsubM⟩
+    · -- k = 4：`ccUh` 自身在楔 (i+1) 内
+      have hbar : barV V 3 (ccUh V [u0, u1, f (i + 1)]) :=
+        ((Classical.choose_spec (cc_uh_exists V [u0, u1, f (i + 1)])) hp hs hleaf).1
+      have hcc : ccCell V [u0, u1, f (i + 1)] =
+          mcell4 V (ccUh V [u0, u1, f (i + 1)]) := by
+        show mcell (ccKe V [u0, u1, f (i + 1)]) V (ccUh V [u0, u1, f (i + 1)]) = _
+        rw [hk4]
+        simp [mcell]
+      have hstem := STEM_EDGEX hp hs hleaf
+      rw [hcc] at hstem
+      obtain ⟨g0, g1⟩ := hget u0 u1 (f (i + 1)) hleaf
+      rw [g0, g1] at hstem
+      have hsub : mcell4 V (ccUh V [u0, u1, f (i + 1)]) ⊆
+          wedgeGe u0 u1 (f (i + 1)) (f (i + 1 + 1)) := by
+        have h := K4_CC_WI_ALT V [u0, u1] w0 n f (i + 1) hp hs hr hnc hn hk4
+        have h1 : ccCell V [u0, u1, f (i + 1)] ⊆
+            wedgeGe u0 u1 (f (i + 1)) (f (i + 1 + 1)) := h
+        rw [hcc] at h1
+        exact h1
+      exact ⟨ccUh V [u0, u1, f (i + 1)], hbar, hstem, hsub⟩
+  intro h
+  exact h hnext
 
 /-- HOL `LEAF_DOMAIN`.
 leaf-rank 波（2026-10-08）转真（装配级）：叶面非退化由 `GBEWYFX`（PA18 ✅），
@@ -12127,7 +12203,16 @@ theorem gamma4fgcy_POS (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
     (hb4 : 2 ≤ y4) (hb4' : y4 ≤ Real.sqrt 8) (hb5 : 2 ≤ y5) (hb5' : y5 ≤ Real.sqrt 8)
     (hb6 : 2 ≤ y6) (hb6' : y6 ≤ Real.sqrt 8) :
     0 < gamma4fgcyP25 y1 y2 y3 y4 y5 y6 lmfun := by
-  sorry
+  obtain ⟨hy1lo, hy1hi⟩ := hcey
+  have hin := proj_bank_GLFVCVK4 hnl y1 y2 y3 y4 y5 y6 hy1lo hy1hi
+    hb2 hb2' hb3 hb3' hb4 hb4' hb5 hb5' hb6 hb6'
+  rcases hin with hg | hn | hr
+  · exact hg
+  · obtain ⟨-, h2, h3, h4, h5, h6⟩ := ztg4w1_quarter_norm2hh y1 y2 y3 y4 y5 y6 hn
+    exact absurd ⟨h2, h3, h4, h5, h6⟩ hnot
+  · have heq : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+    rw [heq] at hrad
+    linarith
 
 /-- HOL `real_model_gamma8`. -/
 theorem real_model_gamma8 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -12457,7 +12542,76 @@ theorem EDGE_IMP_K23 (V : Set V3) (X : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : �
     (hX : X ⊆ wedgeGe u0 u1 (f i) (f (i + 1))) :
     ∃ k v1 v2, barV V 3 [u0, u1, v1, v2] ∧ (k = 2 ∨ k = 3) ∧
       X = mcell k V [u0, u1, v1, v2] := by
-  sorry
+  -- HOL OXLZLEZ3.hl:7549 镜像：`X ∈ mcellSet` 取参数 `(k, ul)`；`k ≤ 1` 由
+  -- `BumpP4.EDGE_IMP_K2`（edgeX = ∅）排除；`k ≥ 4` 归一到 `mcell4` 撞 `hno4`；
+  -- `k = 2/3` 分别用 PA18 已证 `MCELL2/3_EDGE_FIRST` 重根，再拼回四元表。
+  have _ := hnl
+  have _ := hn
+  have _ := hsize
+  have _ := h0
+  have _ := h1
+  have _ := hper
+  have _ := hnc
+  have _ := hcey
+  have _ := hr
+  obtain ⟨k, ul, rfl, hbar⟩ := hm
+  rcases Nat.lt_or_ge k 2 with hk2 | hk2
+  · have hk1 : k ≤ 1 := by omega
+    have hem := BumpP4.EDGE_IMP_K2 V ul k hs hp hbar hk1
+    rw [hem] at he
+    exact absurd he (Set.notMem_empty _)
+  rcases Nat.lt_or_ge k 3 with hk3 | hk3
+  · -- k = 2
+    have hk : k = 2 := by omega
+    subst hk
+    obtain ⟨vl, hbvl, hu0, hu1, hcell⟩ := MCELL2_EDGE_FIRST hs hp hbar he
+    obtain ⟨a, b, c, d, hvlab⟩ := BARV_3_EXPLICIT V vl hbvl
+    have hlist : vl = [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0, vl.getD 3 0] := by
+      subst hvlab
+      simp
+    refine ⟨2, vl.getD 2 0, vl.getD 3 0, ?_, Or.inl rfl, ?_⟩
+    · have h1 : [u0, u1, vl.getD 2 0, vl.getD 3 0] = vl := by
+        rw [hlist, hu0, hu1]
+        rfl
+      rw [h1]
+      exact hbvl
+    · have h1 : [u0, u1, vl.getD 2 0, vl.getD 3 0] = vl := by
+        rw [hlist, hu0, hu1]
+        rfl
+      have hmc : mcell 2 V ul = mcell2 V ul := by
+        simp [mcell]
+      rw [hmc, hcell, h1]
+      rfl
+  rcases Nat.lt_or_ge k 4 with hk4 | hk4
+  · -- k = 3
+    have hk : k = 3 := by omega
+    subst hk
+    obtain ⟨vl, hbvl, hu0, hu1, hcell⟩ := MCELL3_EDGE_FIRST hs hp hbar he
+    obtain ⟨a, b, c, d, hvlab⟩ := BARV_3_EXPLICIT V vl hbvl
+    have hlist : vl = [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0, vl.getD 3 0] := by
+      subst hvlab
+      simp
+    refine ⟨3, vl.getD 2 0, vl.getD 3 0, ?_, Or.inr rfl, ?_⟩
+    · have h1 : [u0, u1, vl.getD 2 0, vl.getD 3 0] = vl := by
+        rw [hlist, hu0, hu1]
+        rfl
+      rw [h1]
+      exact hbvl
+    · have h1 : [u0, u1, vl.getD 2 0, vl.getD 3 0] = vl := by
+        rw [hlist, hu0, hu1]
+        rfl
+      have hmc : mcell 3 V ul = mcell3 V ul := by
+        simp [mcell]
+      rw [hmc, hcell, h1]
+      rfl
+  · -- k ≥ 4：mcell k = mcell4，撞 hno4
+    exfalso
+    have hmc : mcell k V ul = mcell4 V ul := by
+      unfold mcell
+      rw [if_neg (by omega : ¬ k = 0), if_neg (by omega : ¬ k = 1),
+        if_neg (by omega : ¬ k = 2), if_neg (by omega : ¬ k = 3)]
+    rw [hmc] at he hX
+    exact hno4 ⟨ul, hbar, he, hX⟩
 
 /-- HOL `CC_2_PROPS`. -/
 theorem CC_2_PROPS (V : Set V3) (X : Set V3) (u0 u1 : V3) (vl : List V3)
