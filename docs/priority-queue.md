@@ -42,8 +42,9 @@
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `pa25-rolling-w7` | **PA25 收尾波**：`pema`/`pemb` → `txq`/`tew` → `gamma10`/`gamma11`（全锥内；目标 12→≤6，或宣布章节除 DEFHOLE 外收尾） | 在飞 |
-| （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；完成后重跑基线 | 进行中 |
+| `pa25-rolling-w7` | **PA25 收尾波**：`pema`/`pemb` → `txq`/`tew` → `gamma10`/`gamma11`（全锥内；目标 12→≤6，或宣布章节除 DEFHOLE 外收尾）。中途简报：4/6 已闭（pema/pemb/txq/tew），own-sorry 12→8，整文件 RC=0；W7-C（gamma10/gamma11）侦察显示比预估重（需重建 70 行 ALT 装配），30 min 不收敛则交 WORKORDER-w8 | 在飞 |
+| `la21-wave1` | **LA21 三件**：`azim_dominated_split_p21` + `tau3_azim_p21`（真证，桥已预验在 import 闭包内）+ `tau3_taum_nonplanar_p21`（只做 BLOCKED 裁决：`DIHV_EQ_DIH_Y_4PT` 仅 LA38/LA38Bridge，不在闭包） | 在飞（发车 2026-11-06） |
+| （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；**进度 5/23 完成（486/490/493/494/495），497 在编，零失败**；完成后重跑基线 | 进行中 |
 
 > 已落库车道（114+ 行）见 [`history/lanes-landed.md`](history/lanes-landed.md)。
 > 本轮已落：`p21-anchor-defix`（`87fdfdad`，DEF-FIX 双 PASS）、`pa25-rolling-w6`（`3e2698a2`，19→12，锥内 −7）、
@@ -85,7 +86,7 @@
 > - **2-δ `pa22-packineq-defix-w1`**（用户 2026-11-06 裁「真化」，DECISIONS 同日条）—— 移植 HOL `arclength2`（`YSSKQOY.hl:297`）+ `arcV↔arclength` 桥；`PackIneqDefA` 从 `:= True` 改成三条具名不等式（`UKBRPFE`/`WAZLDCD`/`BIEFJHU`）真合取。走 **DEF-FIX**。代价：hNL 诚实 +1；收益：`_797` 变真命题、`XULJEPR` 有望转标准三。
 > - **2-ε `la-registry-mnt11-sf`**（用户同日裁「补前提」）—— `VASYYAU`/`PWEIWBZ`/`WKZZEEH`/`YEBWJNG` 四条 `_concl` 补 `main_nonlinear_terminal_v11` 前提（走 **SF**），连带 LA25 re-export 与 `LocalConcl` 绑定。恢复保真度，不是弱化。
 > - **2-ζ `reduction5-scout`**（用户同日裁「先移植」）—— 摸 `Reduction5.restricted_hypermaps_are_planegraphs_thm` 的边界（估 1,500–3,000 行），为 `jcajydu` W2 铺路；侦察先行，不施工。
-> - **2-η（docs-only，无车道）** —— `HFNXPZA`/`EQTTNZI1/2`/`EFLYGAU`/`BJTDWPS` 标 `CORPUS-UNPROVED` 并从待施工清单移除（LA A 类根 29→24）。
+> - **2-η（docs-only，无车道）** ✅ **已落（2026-11-06）** —— `HFNXPZA`/`EQTTNZI1/2`/`EFLYGAU`/`BJTDWPS` 标 `CORPUS-UNPROVED` 并从待施工清单移除（LA A 类根 29→24）。落点：`docs/axiom-ledger.md` §2.2 裁决注 + 五行判词缀 `·CORPUS-UNPROVED`。不删 sorry、不改陈述、零消费者 ⇒ 对锥/union 零影响。
 > **（以上占用后续空槽，顺序 δ → ε → ζ → η）**
 
 > **提级（用户 2026-11-03 晚：「同意」物化程序 A/B/C + 「hypermap 和 la35 优先级提到 pending queue 最前面」）**：补位首发序 = **§2-13 `hypermap-mat-scout` → §2-14 `la35-mat-scout`** → CertTM 物化侦察（§2-15）→ 孤儿岛接入（§2-16）→ 其余按原序。三侦察已收工（续 264），落地波 certtm-root-w1 / hypermap-root-w1 / la35-root-w1 **3/3 在飞**；任一完成即按 §2 原序补位（下一口 = §2-16 孤儿岛接入或侦察建议的波 2）。

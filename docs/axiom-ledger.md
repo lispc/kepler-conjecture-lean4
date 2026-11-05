@@ -184,14 +184,22 @@ LA33 −11、LA17 −1、mnt11_anchor −1、WKEIDFT 须 phase-2）每闭一根 
 > QKNVMLB 组须 LocalConcl 加 `import Kepler.Text.LocalAuto35`（无环已验）。C=17：
 > (a) 无孪生 5、(b) 注册表桩循环再出口 11（接线零债集中价值，OTMTOTJ 判例区分）、
 > JLXFDMJ mod-transfer 真桥 1。B 批落地后 LocalConcl 出口残面 24→17、文件债 26→19。
+>
+> **2026-11-06 裁决（`DECISIONS.md` 四项接口/陈述裁决 第 4 条，`ddd78919`）**：
+> `HFNXPZA` / `EQTTNZI1` / `EQTTNZI2` / `EFLYGAU` / `BJTDWPS` 五件判 **`CORPUS-UNPROVED`**——
+> 上游语料只有 `appendix.hl:710/1110/1115/1500/1506` 的 `let X_concl = \`...\`` 绑定，
+> **无证明文件、无 proved lemma、名字全语料不再出现**；其消费的 `restriction_typ*_v39` 零外部消费者。
+> 动作：**从"待施工"清单移除**，保留 sorry 但不再当债追（不删 sorry、不改陈述）。
+> 本表下列五行的判词缀 `·CORPUS-UNPROVED`，`污染根/缺口` 栏保留原始归因备查。
+> LA 的 A 类根口径随之 **29 → 24**。零消费者，对锥/union 零影响。
 
 | 声明全名 | 文件:行 | 类别 | axiom 面 | 污染根/缺口 | 判词 | 备注（孪生/同形） | 台账来源 |
 |---|---|---|---|---|---|---|---|
-| Kepler.Text.HFNXPZA_discharged | LocalConcl.lean:1113 | 装配出口 | —（出口自体 sorryAx） | 缺口=上游证缺席（class iii，k=3 二面角和<2π 无任何 lane 证明）；通道=M1 port 证填（真新数学） | 不可接（C） | 无（corpus 唯 appendix.hl:710 registry let；无 proved lemma；无 HFNXPZA.hl 证明文件；k=3 lane 无 dihV …；同形？— | m1asm-w1/CLASSIFY |
-| Kepler.Text.EQTTNZI1_discharged | LocalConcl.lean:1127 | 装配出口 | — | 缺口=上游证缺席（iii）；通道=port 证填或删除裁决 | 不可接（C） | 无（appendix.hl:1110 let；restriction_typ1_v39 为零消费者死端 new_definition）；同形？— | m1asm-w1/CLASSIFY |
-| Kepler.Text.EQTTNZI2_discharged | LocalConcl.lean:1139 | 装配出口 | — | 缺口=上游证缺席（iii）；通道=port 证填或删除裁决 | 不可接（C） | 无（appendix.hl:1115 let；同 EQTTNZI1 死端形）；同形？— | m1asm-w1/CLASSIFY |
-| Kepler.Text.EFLYGAU_discharged | LocalConcl.lean:1178 | 装配出口 | — | 缺口=上游证缺席（iii）；通道=port 证填 | 不可接（C） | 无（appendix.hl:1500 let；scs_arrow {4M7}{4M6'} 无任何证明；近邻 MM_4M7_IMP_STAB_4M7 是不同陈述）；同形？— | m1asm-w1/CLASSIFY |
-| Kepler.Text.BJTDWPS_discharged | LocalConcl.lean:1190 | 装配出口 | — | 缺口=上游证缺席（iii）；通道=port 证填 | 不可接（C） | 无（appendix.hl:1506 let；scs_arrow {4M8}{4M6',3T7} 无任何证明）；同形？— | m1asm-w1/CLASSIFY |
+| Kepler.Text.HFNXPZA_discharged | LocalConcl.lean:1113 | 装配出口 | —（出口自体 sorryAx） | 缺口=上游证缺席（class iii，k=3 二面角和<2π 无任何 lane 证明）；通道=M1 port 证填（真新数学） | 不可接·CORPUS-UNPROVED（C） | 无（corpus 唯 appendix.hl:710 registry let；无 proved lemma；无 HFNXPZA.hl 证明文件；k=3 lane 无 dihV …；同形？— | m1asm-w1/CLASSIFY |
+| Kepler.Text.EQTTNZI1_discharged | LocalConcl.lean:1127 | 装配出口 | — | 缺口=上游证缺席（iii）；通道=port 证填或删除裁决 | 不可接·CORPUS-UNPROVED（C） | 无（appendix.hl:1110 let；restriction_typ1_v39 为零消费者死端 new_definition）；同形？— | m1asm-w1/CLASSIFY |
+| Kepler.Text.EQTTNZI2_discharged | LocalConcl.lean:1139 | 装配出口 | — | 缺口=上游证缺席（iii）；通道=port 证填或删除裁决 | 不可接·CORPUS-UNPROVED（C） | 无（appendix.hl:1115 let；同 EQTTNZI1 死端形）；同形？— | m1asm-w1/CLASSIFY |
+| Kepler.Text.EFLYGAU_discharged | LocalConcl.lean:1178 | 装配出口 | — | 缺口=上游证缺席（iii）；通道=port 证填 | 不可接·CORPUS-UNPROVED（C） | 无（appendix.hl:1500 let；scs_arrow {4M7}{4M6'} 无任何证明；近邻 MM_4M7_IMP_STAB_4M7 是不同陈述）；同形？— | m1asm-w1/CLASSIFY |
+| Kepler.Text.BJTDWPS_discharged | LocalConcl.lean:1190 | 装配出口 | — | 缺口=上游证缺席（iii）；通道=port 证填 | 不可接·CORPUS-UNPROVED（C） | 无（appendix.hl:1506 let；scs_arrow {4M8}{4M6',3T7} 无任何证明）；同形？— | m1asm-w1/CLASSIFY |
 | Kepler.Text.ZITHLQN_discharged | LocalConcl.lean:1231 | 装配出口 | — | 缺口=循环再出口（接线债根=同陈述 LA1 注册表桩，零债集中价值；HOLD(b) 判例在案，实测 LA25:1002-1003 原文）；通道=LA25 ZITHLQN 案件银行证填 | 不可接·循环再出口（C(b)） | LA25.ZITHLQN_p25（LA25:1002，体=ZITHLQN_concl h 注册表再出口）；同形？同形但孪生即注册表 sorry 镜像 | m1asm-w1/CLASSIFY |
 | Kepler.Text.WGDHPPI_discharged | LocalConcl.lean:1238 | 装配出口 | — | 同上（实测 LA25:1009-1011） | 不可接·循环再出口（C(b)） | LA25.WGDHPPI_p25（LA25:1009，体=WGDHPPI_concl 调用）；同形？同形但同上 | m1asm-w1/CLASSIFY |
 | Kepler.Text.TUAPYYU_discharged | LocalConcl.lean:1245 | 装配出口 | — | 同上（实测 LA25:1282） | 不可接·循环再出口（C(b)） | LA25.TUAPYYU_p25（LA25:1282，体=fun _ => TUAPYYU_concl）；同形？同形但同上 | m1asm-w1/CLASSIFY |
