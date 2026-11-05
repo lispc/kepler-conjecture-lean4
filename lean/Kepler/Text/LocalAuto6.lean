@@ -29,9 +29,9 @@ Encoding (HOL → Lean):
   SphereKit's `upsX` is the sphere.hl Gram form; `upsX_p6` renders the
   packing_defs `½(x1+x2+x6+√…)` function and STAYS here (plan §3).
 - The local-fan slicing chapter (FACE_MAP_*, HAFL_CIRCLE_*, DETERMINE_FV*,
-  SUM_INTERIOR_AGL_LEMMA, THE_SLICING_INTO_2_LEMMA, EJRCFJD, ...) is
-  stated verbatim with `sorry` (giants); the arcV / wedge / continuity /
-  real-arithmetic kit is proved.
+  SUM_INTERIOR_AGL_LEMMA, THE_SLICING_INTO_2_LEMMA, EJRCFJD, ...) and the
+  lunar-deform giants (LUNAR_DEFORM_INJ, ALL_TO_THE_NONPARALLEL_PART) are
+  proved; this file has no unfinished declarations.
 -/
 
 import Kepler.Text.ConicCapVolume
@@ -926,11 +926,247 @@ theorem ORTHONORMAL_NOT_COLLINEAR {e1 e2 e3 : V3} (horth : Orthonormal3 e1 e2 e3
   rw [hpar, hc0, zero_smul, norm_zero] at hn1
   norm_num at hn1
 
-/-- HOL `LUNAR_DEFORM_INJ` (local_lemmas1.hl:679) — giant. -/
+/-- HOL `LUNAR_DEFORM_PRESERVE_NORM` (local_lemmas1.hl:43) — giant
+(needs the spherical-coordinate expansion of `x` in the frame). -/
+theorem LUNAR_DEFORM_PRESERVE_NORM {e1 e2 e3 : V3} (horth : Orthonormal3 e1 e2 e3)
+    (t : ℝ) (x : V3) : ‖lunarDeform e1 e2 e3 t x‖ = ‖x‖ := by
+  set aa : ℝ := (1 - t) * azim 0 e3 e1 x with haa
+  set bb : ℝ := arcV 0 e3 x with hbb
+  set A : ℝ := ‖x‖ * Real.cos aa * Real.sin bb with hA
+  set B : ℝ := ‖x‖ * Real.sin aa * Real.sin bb with hB
+  set C : ℝ := ‖x‖ * Real.cos bb with hC
+  have hu : lunarDeform e1 e2 e3 t x = A • e1 + B • e2 + C • e3 := by
+    rw [lunarDeform, ← haa, ← hbb, ← hA, ← hB, ← hC]
+  have h11 : e1 ⬝ᵥ e1 = 1 := horth.1
+  have h22 : e2 ⬝ᵥ e2 = 1 := horth.2.1
+  have h33 : e3 ⬝ᵥ e3 = 1 := horth.2.2.1
+  have h12 : e1 ⬝ᵥ e2 = 0 := horth.2.2.2.1
+  have h13 : e1 ⬝ᵥ e3 = 0 := horth.2.2.2.2.1
+  have h23 : e2 ⬝ᵥ e3 = 0 := horth.2.2.2.2.2.1
+  have h21 : e2 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact h12
+  have h31 : e3 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact h13
+  have h32 : e3 ⬝ᵥ e2 = 0 := by rw [dotProduct_comm]; exact h23
+  have hsq : ‖A • e1 + B • e2 + C • e3‖ ^ 2 = ‖x‖ ^ 2 := by
+    rw [← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq]
+    simp only [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
+      inner_eq_dot, h11, h22, h33, h12, h21, h13, h31, h23, h32]
+    have hxx : x ⬝ᵥ x = ‖x‖ ^ 2 := by rw [← inner_eq_dot, real_inner_self_eq_norm_sq]
+    have hsin : Real.sin aa ^ 2 + Real.cos aa ^ 2 = 1 := Real.sin_sq_add_cos_sq aa
+    have hsin2 : Real.sin bb ^ 2 + Real.cos bb ^ 2 = 1 := Real.sin_sq_add_cos_sq bb
+    rw [hA, hB, hC, hxx]
+    ring_nf
+    linear_combination (‖x‖ ^ 2 * Real.sin bb ^ 2) * hsin + (‖x‖ ^ 2) * hsin2
+  have hnn : 0 ≤ ‖A • e1 + B • e2 + C • e3‖ := norm_nonneg _
+  have hnn2 : 0 ≤ ‖x‖ := norm_nonneg _
+  rw [hu]
+  rcases (sq_eq_sq_iff_eq_or_eq_neg.mp hsq) with h | h
+  · exact h
+  · have hx0 : ‖x‖ = 0 := by linarith
+    rw [hx0] at h ⊢
+    linarith
+
+/-- Coefficient uniqueness in an expansion over an orthonormal frame
+(helper for `LUNAR_DEFORM_INJ`). -/
+private theorem w6l_lc_eq_of_eq {e1 e2 e3 : V3} (horth : Orthonormal3 e1 e2 e3)
+    {a1 b1 c1 a2 b2 c2 : ℝ}
+    (h : a1 • e1 + b1 • e2 + c1 • e3 = a2 • e1 + b2 • e2 + c2 • e3) :
+    a1 = a2 ∧ b1 = b2 ∧ c1 = c2 := by
+  have hli := on3_linearIndependent horth
+  rw [Fintype.linearIndependent_iff] at hli
+  have hsum : (∑ i, (![a1 - a2, b1 - b2, c1 - c2] : Fin 3 → ℝ) i •
+      (![e1, e2, e3] : Fin 3 → V3) i) = 0 := by
+    rw [Fin.sum_univ_three]
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+      Matrix.tail_cons, Matrix.head_cons, sub_smul]
+    have hassoc : a1 • e1 - a2 • e1 + (b1 • e2 - b2 • e2) + (c1 • e3 - c2 • e3)
+        = (a1 • e1 + b1 • e2 + c1 • e3) - (a2 • e1 + b2 • e2 + c2 • e3) := by abel
+    rw [hassoc, h, sub_self]
+  have h0 := hli _ hsum 0
+  have h1 := hli _ hsum 1
+  have h2 := hli _ hsum 2
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+    Matrix.tail_cons, Matrix.head_cons] at h0 h1 h2
+  exact ⟨by linarith, by linarith, by linarith⟩
+
+/-- `‖x‖ cos (arcV 0 v x) = v ⬝ᵥ x` for a unit `v` and nonzero `x`
+(helper for `LUNAR_DEFORM_INJ`). -/
+private theorem w6l_norm_mul_cos {v : V3} (hv : ‖v‖ = 1) {x : V3} (hx : x ≠ 0) :
+    ‖x‖ * Real.cos (arcV 0 v x) = v ⬝ᵥ x := by
+  have hv0 : v ≠ 0 := by
+    intro h
+    rw [h, norm_zero] at hv
+    norm_num at hv
+  rw [w1_cos_arcV_zero hv0 hx, hv, one_mul, inner_eq_dot]
+  exact mul_div_cancel₀ _ (norm_ne_zero_iff.mpr hx)
+
+/-- `lunarDeform` fixes vectors along the `e3` axis (helper for `LUNAR_DEFORM_INJ`). -/
+private theorem w6l_deform_smul_e3 {e1 e2 e3 : V3} (horth : Orthonormal3 e1 e2 e3)
+    (t a : ℝ) : lunarDeform e1 e2 e3 t (a • e3) = a • e3 := by
+  have h3 : ‖e3‖ = 1 := by
+    have h := norm_sq_eq_dot e3
+    rw [horth.2.2.1] at h
+    nlinarith [norm_nonneg e3]
+  have he3 : e3 ≠ 0 := by
+    intro h
+    rw [h, norm_zero] at h3
+    norm_num at h3
+  by_cases ha : a = 0
+  · subst ha
+    simp [lunarDeform]
+  · have hx0 : a • e3 ≠ 0 := by
+      intro h
+      rcases smul_eq_zero.mp h with h' | h'
+      · exact ha h'
+      · exact he3 h'
+    have hcol : Collinear3 0 e3 (a • e3) :=
+      (collinear3_iff_smul (v := 0) (w := e3) (w1 := a • e3) he3).mpr ⟨a, by simp⟩
+    have haz : azim 0 e3 e1 (a • e3) = 0 := w1_azim_eq_zero_of_collinear hcol
+    have hsin : Real.sin (arcV 0 e3 (a • e3)) = 0 :=
+      COLLINEAR_SIN_ARCV_0 hcol hx0.symm he3.symm
+    have hcos : ‖a • e3‖ * Real.cos (arcV 0 e3 (a • e3)) = a := by
+      rw [w6l_norm_mul_cos h3 hx0]
+      simp [WithLp.ofLp_smul, dotProduct_smul, horth.2.2.1]
+    rw [lunarDeform, haz, hsin, hcos]
+    simp
+
+/-- Two angles in `[0, 2π)` with equal sine and cosine are equal
+(helper for `LUNAR_DEFORM_INJ`). -/
+private theorem w6l_ang_eq_of_sin_cos {a b : ℝ} (hs : Real.sin a = Real.sin b)
+    (hc : Real.cos a = Real.cos b) (ha0 : 0 ≤ a) (ha2 : a < 2 * Real.pi)
+    (hb0 : 0 ≤ b) (hb2 : b < 2 * Real.pi) : a = b := by
+  have hsin : Real.sin (a - b) = 0 := by
+    rw [Real.sin_sub, hs, hc]
+    ring
+  have hcos : Real.cos (a - b) = 1 := by
+    rw [Real.cos_sub, hs, hc]
+    nlinarith [Real.sin_sq_add_cos_sq b]
+  obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp hsin
+  have hnlo : (-2 : ℤ) < n := by
+    have h1 : -(2 * Real.pi) < (n : ℝ) * Real.pi := by linarith
+    have h2 : (-2 : ℝ) < (n : ℝ) := by nlinarith [Real.pi_pos]
+    exact_mod_cast h2
+  have hnhi : n < 2 := by
+    have h1 : (n : ℝ) * Real.pi < 2 * Real.pi := by linarith
+    have h2 : (n : ℝ) < 2 := by nlinarith [Real.pi_pos]
+    exact_mod_cast h2
+  interval_cases n
+  · have hpi : a - b = -Real.pi := by
+      rw [← hn]; push_cast; ring
+    rw [hpi, Real.cos_neg, Real.cos_pi] at hcos
+    norm_num at hcos
+  · have hpi : a - b = 0 := by
+      rw [← hn]; push_cast; ring
+    linarith
+  · have hpi : a - b = Real.pi := by
+      rw [← hn]; push_cast; ring
+    rw [hpi, Real.cos_pi] at hcos
+    norm_num at hcos
+
 theorem LUNAR_DEFORM_INJ {e1 e2 e3 : V3} (horth : Orthonormal3 e1 e2 e3) {t : ℝ}
     (ht1 : 0 ≤ t) (ht2 : t < 1) :
-    ∀ x y : V3, lunarDeform e1 e2 e3 t x = lunarDeform e1 e2 e3 t y → x = y :=
-  sorry
+    ∀ x y : V3, lunarDeform e1 e2 e3 t x = lunarDeform e1 e2 e3 t y → x = y := by
+  intro x y hxy
+  have hpres : ∀ u : V3, ‖lunarDeform e1 e2 e3 t u‖ = ‖u‖ :=
+    fun u => LUNAR_DEFORM_PRESERVE_NORM horth t u
+  by_cases hx0 : x = 0
+  · have hdx : lunarDeform e1 e2 e3 t x = 0 := by
+      have h := hpres x
+      rw [hx0, norm_zero] at h
+      rw [hx0]
+      exact norm_eq_zero.mp h
+    have hy0 : y = 0 := by
+      have h := hpres y
+      rw [← hxy, hdx, norm_zero] at h
+      exact norm_eq_zero.mp h.symm
+    rw [hx0, hy0]
+  · have hr : 0 < ‖x‖ := norm_pos_iff.mpr hx0
+    have hnorm : ‖x‖ = ‖y‖ := by
+      rw [← hpres x, ← hpres y, hxy]
+    have hry : 0 < ‖y‖ := by rw [← hnorm]; exact hr
+    have hxy' :
+        (‖x‖ * Real.cos ((1 - t) * azim 0 e3 e1 x) * Real.sin (arcV 0 e3 x)) • e1 +
+        (‖x‖ * Real.sin ((1 - t) * azim 0 e3 e1 x) * Real.sin (arcV 0 e3 x)) • e2 +
+        (‖x‖ * Real.cos (arcV 0 e3 x)) • e3 =
+        (‖y‖ * Real.cos ((1 - t) * azim 0 e3 e1 y) * Real.sin (arcV 0 e3 y)) • e1 +
+        (‖y‖ * Real.sin ((1 - t) * azim 0 e3 e1 y) * Real.sin (arcV 0 e3 y)) • e2 +
+        (‖y‖ * Real.cos (arcV 0 e3 y)) • e3 := by
+      simpa only [lunarDeform] using hxy
+    obtain ⟨h1c, h2c, h3c⟩ := w6l_lc_eq_of_eq horth hxy'
+    have hcosφ : Real.cos (arcV 0 e3 x) = Real.cos (arcV 0 e3 y) := by
+      have h3' := h3c
+      rw [hnorm] at h3'
+      exact mul_left_cancel₀ (ne_of_gt hry) h3'
+    have hφ : arcV 0 e3 x = arcV 0 e3 y := (COS_ARCV_EQ_ARCV 0 e3 x 0 e3 y).mp hcosφ
+    have hsin_y : Real.sin (arcV 0 e3 y) = Real.sin (arcV 0 e3 x) := by rw [hφ]
+    by_cases hsin : Real.sin (arcV 0 e3 x) = 0
+    · -- degenerate branch: both x and y lie on the e3 axis, where deform is the identity
+      have he3 : e3 ≠ 0 := by
+        intro h
+        have h33 : e3 ⬝ᵥ e3 = 1 := horth.2.2.1
+        rw [h] at h33
+        simpa using h33
+      have hsin_y' : Real.sin (arcV 0 e3 y) = 0 := by rw [hsin_y]; exact hsin
+      have hy0 : y ≠ 0 := by
+        intro h
+        rw [h, norm_zero] at hnorm
+        linarith
+      have hcolx : Collinear3 0 e3 x :=
+        w1_arcv_zero_or_pi_collinear he3 hx0 ((SIN_ARCV_EQ_0_EQ_LAP 0 e3 x).mp hsin)
+      have hcoly : Collinear3 0 e3 y :=
+        w1_arcv_zero_or_pi_collinear he3 hy0 ((SIN_ARCV_EQ_0_EQ_LAP 0 e3 y).mp hsin_y')
+      obtain ⟨a, ha⟩ := (collinear3_iff_smul (v := 0) (w := e3) (w1 := x) he3).mp hcolx
+      obtain ⟨b, hb⟩ := (collinear3_iff_smul (v := 0) (w := e3) (w1 := y) he3).mp hcoly
+      rw [sub_zero, sub_zero] at ha hb
+      have hxa : lunarDeform e1 e2 e3 t x = x := by rw [ha, w6l_deform_smul_e3 horth]
+      have hya : lunarDeform e1 e2 e3 t y = y := by rw [hb, w6l_deform_smul_e3 horth]
+      rw [← hxa, ← hya]
+      exact hxy
+    · -- nondegenerate branch
+      have hsin_y_ne : Real.sin (arcV 0 e3 y) ≠ 0 := by rw [hsin_y]; exact hsin
+      have hu1 : Real.cos ((1 - t) * azim 0 e3 e1 x) =
+          Real.cos ((1 - t) * azim 0 e3 e1 y) := by
+        have h1' := h1c
+        rw [hnorm] at h1'
+        rw [hφ] at h1'
+        exact mul_left_cancel₀ (ne_of_gt hry) (mul_right_cancel₀ hsin_y_ne h1')
+      have hu2 : Real.sin ((1 - t) * azim 0 e3 e1 x) =
+          Real.sin ((1 - t) * azim 0 e3 e1 y) := by
+        have h2' := h2c
+        rw [hnorm] at h2'
+        rw [hφ] at h2'
+        exact mul_left_cancel₀ (ne_of_gt hry) (mul_right_cancel₀ hsin_y_ne h2')
+      have hang : (1 - t) * azim 0 e3 e1 x = (1 - t) * azim 0 e3 e1 y := by
+        have hzx := AZIM_RANGE 0 e3 e1 x
+        have hzy := AZIM_RANGE 0 e3 e1 y
+        have htpos : 0 < 1 - t := by linarith
+        have htle : 1 - t ≤ 1 := by linarith
+        have hb1 : 0 ≤ (1 - t) * azim 0 e3 e1 x := mul_nonneg htpos.le hzx.1
+        have hb2 : (1 - t) * azim 0 e3 e1 x < 2 * Real.pi :=
+          lt_of_le_of_lt (by
+            calc (1 - t) * azim 0 e3 e1 x ≤ 1 * azim 0 e3 e1 x :=
+                  mul_le_mul_of_nonneg_right htle hzx.1
+              _ = azim 0 e3 e1 x := one_mul _) hzx.2
+        have hb3 : 0 ≤ (1 - t) * azim 0 e3 e1 y := mul_nonneg htpos.le hzy.1
+        have hb4 : (1 - t) * azim 0 e3 e1 y < 2 * Real.pi :=
+          lt_of_le_of_lt (by
+            calc (1 - t) * azim 0 e3 e1 y ≤ 1 * azim 0 e3 e1 y :=
+                  mul_le_mul_of_nonneg_right htle hzy.1
+              _ = azim 0 e3 e1 y := one_mul _) hzy.2
+        exact w6l_ang_eq_of_sin_cos hu2 hu1 hb1 hb2 hb3 hb4
+      have haz : azim 0 e3 e1 x = azim 0 e3 e1 y := by
+        have htpos : 0 < 1 - t := by linarith
+        exact mul_left_cancel₀ (ne_of_gt htpos) hang
+      rcases AZIM_AND_ARCV_EQ_IMP_PARA (v0 := 0) (u := e3) (v := e1) (x := x) (y := y)
+        (ORTHONORMAL_NOT_COLLINEAR horth) haz hφ with hy | ⟨s, hs0, hsx⟩
+      · rw [hy, norm_zero] at hnorm
+        linarith
+      · rw [sub_zero, sub_zero] at hsx
+        have hs1 : s = 1 := by
+          have hns : ‖x‖ = s * ‖y‖ := by
+            rw [hsx, norm_smul, Real.norm_eq_abs, abs_of_nonneg hs0]
+          rw [hnorm] at hns
+          nlinarith
+        rw [hsx, hs1, one_smul]
 
 /-- HOL `GRAPH_IMAGE_IMAGE` (local_lemmas1.hl:801). -/
 theorem GRAPH_IMAGE_IMAGE {E : Set (Set V3)} (f : V3 → V3) (hE : Graph E)
@@ -6555,45 +6791,6 @@ theorem REAL_POS_LT_MUL {a b x y : ℝ} (ha : 0 ≤ a) (hab : a < b) (hx : 0 ≤
     (hxy : x < y) : a * x < b * y := by
   nlinarith
 
-/-- HOL `LUNAR_DEFORM_PRESERVE_NORM` (local_lemmas1.hl:43) — giant
-(needs the spherical-coordinate expansion of `x` in the frame). -/
-theorem LUNAR_DEFORM_PRESERVE_NORM {e1 e2 e3 : V3} (horth : Orthonormal3 e1 e2 e3)
-    (t : ℝ) (x : V3) : ‖lunarDeform e1 e2 e3 t x‖ = ‖x‖ := by
-  set aa : ℝ := (1 - t) * azim 0 e3 e1 x with haa
-  set bb : ℝ := arcV 0 e3 x with hbb
-  set A : ℝ := ‖x‖ * Real.cos aa * Real.sin bb with hA
-  set B : ℝ := ‖x‖ * Real.sin aa * Real.sin bb with hB
-  set C : ℝ := ‖x‖ * Real.cos bb with hC
-  have hu : lunarDeform e1 e2 e3 t x = A • e1 + B • e2 + C • e3 := by
-    rw [lunarDeform, ← haa, ← hbb, ← hA, ← hB, ← hC]
-  have h11 : e1 ⬝ᵥ e1 = 1 := horth.1
-  have h22 : e2 ⬝ᵥ e2 = 1 := horth.2.1
-  have h33 : e3 ⬝ᵥ e3 = 1 := horth.2.2.1
-  have h12 : e1 ⬝ᵥ e2 = 0 := horth.2.2.2.1
-  have h13 : e1 ⬝ᵥ e3 = 0 := horth.2.2.2.2.1
-  have h23 : e2 ⬝ᵥ e3 = 0 := horth.2.2.2.2.2.1
-  have h21 : e2 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact h12
-  have h31 : e3 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact h13
-  have h32 : e3 ⬝ᵥ e2 = 0 := by rw [dotProduct_comm]; exact h23
-  have hsq : ‖A • e1 + B • e2 + C • e3‖ ^ 2 = ‖x‖ ^ 2 := by
-    rw [← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq]
-    simp only [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
-      inner_eq_dot, h11, h22, h33, h12, h21, h13, h31, h23, h32]
-    have hxx : x ⬝ᵥ x = ‖x‖ ^ 2 := by rw [← inner_eq_dot, real_inner_self_eq_norm_sq]
-    have hsin : Real.sin aa ^ 2 + Real.cos aa ^ 2 = 1 := Real.sin_sq_add_cos_sq aa
-    have hsin2 : Real.sin bb ^ 2 + Real.cos bb ^ 2 = 1 := Real.sin_sq_add_cos_sq bb
-    rw [hA, hB, hC, hxx]
-    ring_nf
-    linear_combination (‖x‖ ^ 2 * Real.sin bb ^ 2) * hsin + (‖x‖ ^ 2) * hsin2
-  have hnn : 0 ≤ ‖A • e1 + B • e2 + C • e3‖ := norm_nonneg _
-  have hnn2 : 0 ≤ ‖x‖ := norm_nonneg _
-  rw [hu]
-  rcases (sq_eq_sq_iff_eq_or_eq_neg.mp hsq) with h | h
-  · exact h
-  · have hx0 : ‖x‖ = 0 := by linarith
-    rw [hx0] at h ⊢
-    linarith
-
 /-- HOL `COS_ARCV` (local_lemmas1.hl:827). -/
 theorem COS_ARCV (v0 u w : V3) :
     Real.cos (arcV v0 u w) =
@@ -6798,7 +6995,26 @@ theorem EACH_ELM_PRESERVED_IMP_ALLL (phii : V3 → ℝ → V3) (E : Set (Set V3)
     rw [← hcoe]
     exact aux hE.toFinset (fun x hx => h1 x (by rw [← hcoe]; exact hx))
 
-/-- HOL `ALL_TO_THE_NONPARALLEL_PART` (local_lemmas1.hl:6378) — giant. -/
+/-- Combine five `∃ e > 0` eventual statements (helper for the tail assembly). -/
+private theorem w6l_tow5 (P Q R S T : ℝ → Prop)
+    (hP : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → P t)
+    (hQ : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → Q t)
+    (hR : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → R t)
+    (hS : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → S t)
+    (hT : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → T t) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → P t ∧ Q t ∧ R t ∧ S t ∧ T t := by
+  obtain ⟨e1, he1, h1⟩ := TOW_REAL_EXISTS_COMBINED P Q hP hQ
+  obtain ⟨e2, he2, h2⟩ :=
+    TOW_REAL_EXISTS_COMBINED (fun t => P t ∧ Q t) R ⟨e1, he1, h1⟩ hR
+  obtain ⟨e3, he3, h3⟩ :=
+    TOW_REAL_EXISTS_COMBINED (fun t => (P t ∧ Q t) ∧ R t) S ⟨e2, he2, h2⟩ hS
+  obtain ⟨e4, he4, h4⟩ :=
+    TOW_REAL_EXISTS_COMBINED (fun t => ((P t ∧ Q t) ∧ R t) ∧ S t) T ⟨e3, he3, h3⟩ hT
+  refine ⟨e4, he4, fun t ht => ?_⟩
+  obtain ⟨⟨⟨⟨hp, hq⟩, hr⟩, hs⟩, ht'⟩ := h4 t ht
+  exact ⟨hp, hq, hr, hs, ht'⟩
+
+/-- HOL `ALL_TO_THE_NONPARALLEL_PART` (local_lemmas1.hl:6378). -/
 theorem ALL_TO_THE_NONPARALLEL_PART (phii : V3 → ℝ → V3) (V : Set V3) (E : Set (Set V3))
     (a b : ℝ) (hdef : deformation_p2 phii V a b) (hfan : FAN 0 V E) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
@@ -6810,7 +7026,116 @@ theorem ALL_TO_THE_NONPARALLEL_PART (phii : V3 → ℝ → V3) (V : Set V3) (E :
         fan2 0 ((fun v : V3 => phii v t) '' V)
           ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E) ∧
         fan6 0 ((fun v : V3 => phii v t) '' V)
-          ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E) :=
-  sorry
+          ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E) := by
+  obtain ⟨hsub, hgraph, hfan1, hfan2, hfan6, _hfan7⟩ := hfan
+  obtain ⟨h0mem, hcont, hfix⟩ := hdef
+  obtain ⟨hVfin, hVne⟩ := hfan1
+  have hP1 : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      (⋃₀ ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E)) ⊆
+          (fun v : V3 => phii v t) '' V := by
+    refine ⟨1, one_pos, fun t _ => ?_⟩
+    have hunion : (⋃₀ ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E))
+        = (fun v : V3 => phii v t) '' (⋃₀ E) := by
+      ext y
+      constructor
+      · intro hy
+        obtain ⟨z, ⟨s, hsE, rfl⟩, v, hv, rfl⟩ := hy
+        exact ⟨v, ⟨s, hsE, hv⟩, rfl⟩
+      · intro hy
+        obtain ⟨v, ⟨s, hsE, hv⟩, rfl⟩ := hy
+        exact ⟨(fun v : V3 => phii v t) '' s, ⟨s, hsE, rfl⟩, v, hv, rfl⟩
+    rw [hunion]
+    exact Set.image_mono hsub
+  have hP2 : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      Graph ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E) := by
+    have hinjall : ∀ v1 ∈ V, ∀ v2 ∈ V, v1 ≠ v2 → phii v1 0 ≠ phii v2 0 := by
+      intro v1 hv1 v2 hv2 hne
+      rw [hfix v1 hv1, hfix v2 hv2]
+      exact hne
+    have hcontall : ∀ v ∈ V, ContinuousAt (phii v) 0 :=
+      fun v hv => hcont v hv 0 h0mem
+    obtain ⟨d, hdpos, hd⟩ := CONTINUOUS_ATREAL_INJ_PRESERVED V hVfin hinjall hcontall
+    refine ⟨d, hdpos, fun t ht => ?_⟩
+    have htabs : |t - 0| < d := by rw [sub_zero]; exact abs_lt.mpr ht
+    intro e' he'
+    obtain ⟨x, hxE, rfl⟩ := he'
+    obtain ⟨hxfin, hxcard⟩ := hgraph x hxE
+    have hxn : x.ncard = 2 := by
+      rw [Set.ncard_eq_toFinset_card x hxfin]
+      exact hxcard
+    obtain ⟨p, q, hpq, hxeq⟩ := Set.ncard_eq_two.mp hxn
+    have hpV : p ∈ V := hsub ⟨x, hxE, by rw [hxeq]; simp⟩
+    have hqV : q ∈ V := hsub ⟨x, hxE, by rw [hxeq]; simp⟩
+    have hinjOn : Set.InjOn (fun v : V3 => phii v t) x := by
+      intro v1 hv1 v2 hv2 h
+      by_contra hne
+      exact hd t htabs v1 (hsub ⟨x, hxE, hv1⟩) v2 (hsub ⟨x, hxE, hv2⟩) hne h
+    have hncard_img : ((fun v : V3 => phii v t) '' x).ncard = 2 := by
+      rw [hxeq, Set.image_pair]
+      exact (SET2_HAS_SIZE2 (phii p t) (phii q t)).mpr (by
+        intro h
+        exact hpq (hinjOn (by rw [hxeq]; simp) (by rw [hxeq]; simp) h))
+    refine ⟨hxfin.image _, ?_⟩
+    rw [← Set.ncard_eq_toFinset_card ((fun v : V3 => phii v t) '' x) (hxfin.image _)]
+    exact hncard_img
+  have hP3 : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      fan1 0 ((fun v : V3 => phii v t) '' V)
+        ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E) := by
+    refine ⟨1, one_pos, fun t _ => ?_⟩
+    refine ⟨hVfin.image _, ?_⟩
+    intro h
+    exact hVne (Set.image_eq_empty.mp h)
+  have hP4 : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      fan2 0 ((fun v : V3 => phii v t) '' V)
+        ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E) := by
+    have hne0 : ∀ v ∈ V, phii v 0 ≠ 0 := by
+      intro v hv h
+      rw [hfix v hv] at h
+      exact hfan2 (h ▸ hv)
+    have hcontall : ∀ v ∈ V, ContinuousAt (phii v) 0 :=
+      fun v hv => hcont v hv 0 h0mem
+    obtain ⟨d, hdpos, hd⟩ := CONTINUOUS_ATREAL_DISTINCT_FINITE V hVfin hne0 hcontall
+    refine ⟨d, hdpos, fun t ht => ?_⟩
+    have htabs : |t - 0| < d := by rw [sub_zero]; exact abs_lt.mpr ht
+    intro hmem
+    obtain ⟨v, hv, hveq⟩ := hmem
+    exact hd t htabs v hv hveq
+  have hP5 : ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e →
+      fan6 0 ((fun v : V3 => phii v t) '' V)
+        ((fun s : Set V3 => (fun v : V3 => phii v t) '' s) '' E) := by
+    have hUfin : (⋃₀ E).Finite := hVfin.subset hsub
+    have hEfin : E.Finite := (hUfin.powerset).subset (fun x hx =>
+      Set.mem_powerset (fun v hv => ⟨x, hx, hv⟩))
+    have hper : ∀ x ∈ E, ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
+        ¬ Collinear ℝ (Set.insert (0 : V3) ((fun v : V3 => phii v t) '' x)) := by
+      intro x hxE
+      obtain ⟨hxfin, hxcard⟩ := hgraph x hxE
+      have hxn : x.ncard = 2 := by
+        rw [Set.ncard_eq_toFinset_card x hxfin]
+        exact hxcard
+      obtain ⟨p, q, hpq, hxeq⟩ := Set.ncard_eq_two.mp hxn
+      have hpV : p ∈ V := hsub ⟨x, hxE, by rw [hxeq]; simp⟩
+      have hqV : q ∈ V := hsub ⟨x, hxE, by rw [hxeq]; simp⟩
+      have hnc6 : ¬ Collinear3 0 p q := by
+        have h6 := hfan6 x hxE
+        rw [hxeq] at h6
+        simpa [Collinear3] using h6
+      have hcp : ContinuousAt (phii p) 0 := hcont p hpV 0 h0mem
+      have hcq : ContinuousAt (phii q) 0 := hcont q hqV 0 h0mem
+      obtain ⟨e, he, hep⟩ := CONTINUOUS_PRESERVE_COLLINEAR 0 (phii p) (phii q) 0 hcp hcq
+        (by rwa [hfix p hpV, hfix q hqV])
+      refine ⟨e, he, fun t ht => ?_⟩
+      have ht' : |0 - t| < e := by rw [zero_sub, abs_neg]; exact ht
+      have hres := hep t ht'
+      rw [hxeq, Set.image_pair]
+      exact hres
+    obtain ⟨e, he, hall⟩ := EACH_ELM_PRESERVED_IMP_ALLL phii E hper hEfin
+    refine ⟨e, he, fun t ht => ?_⟩
+    exact hall t (abs_lt.mpr ht)
+  obtain ⟨e, he, hall⟩ := w6l_tow5 _ _ _ _ _ hP1 hP2 hP3 hP4 hP5
+  refine ⟨e, he, ?_⟩
+  intro t ht
+  obtain ⟨h1', h2', h3', h4', h5'⟩ := hall t ht
+  exact ⟨h1', h2', h3', h4', h5'⟩
 
 end Kepler.Text
