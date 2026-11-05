@@ -76,18 +76,18 @@ ENCODING NOTES
     `A_B_J_SCS_OPP_p16` is an `Iff` where HOL has `=`.
   - `JEJTVGB_assume_v39` / `JEJTVGB_concl` / `CQAOQLR_concl` /
     `lp_main_estimate` are Prop-valued defs (the statement registry,
-    as in LocalAuto1).  The giants keep `sorry` bodies: the 23-arrow
-    breakdown (NEEDS the terminal-arrows-to-empty theorem OCBICBY,
-    `s_init_list_alt` and `scs_arrow_sing_empty`), both XIVPHKS
-    inductions (NEEDS `sum3/4/5_azim_fan`, `AZIM_DIHV_SAME_STRONG`,
-    the Localization wedge kit), `ear_acute` /
-    `quad_nonexist_849` / `quad_diag_362` (NEEDS the nonlinear
-    registry entries `get_main_nonlinear "2485876245a"` /
-    `"8495326405"` / `"2171548893"`), `taum_dih_y` (NEEDS the real
-    `taum` definition), `SCS_GENERIC_SYM_0` (NEEDS the Xwitccn /
-    In_sym_0 symmetry kit), and the two assembly giants `BKOSSGE_p16`
-    and `CQAOQLR_p16` (NEEDS TFITSKC / MM_SCS_OPP / OPP_IS_SCS /
-    CHANGE_*_SCS_MOD).
+    as in LocalAuto1).  The remaining giants keep `sorry` bodies: the
+    23-arrow breakdown (NEEDS the terminal-arrows-to-empty theorem
+    OCBICBY, `s_init_list_alt` and `scs_arrow_sing_empty`), both
+    XIVPHKS inductions (NEEDS `sum3/4/5_azim_fan`,
+    `AZIM_DIHV_SAME_STRONG`, the Localization wedge kit), the
+    continuity suite `real_continuous_dih_y_wrt4/5/6` /
+    `real_continuous_taum`, `SCS_GENERIC_SYM_0` (NEEDS the Xwitccn /
+    In_sym_0 symmetry kit), and the assembly giant `CQAOQLR_p16`
+    (NEEDS TFITSKC / MM_SCS_OPP / OPP_IS_SCS / CHANGE_*_SCS_MOD).
+    Wave w15 (`la16-gap-w1`, 2026-11-05) closed `ear_acute`, the quad
+    pair `quad_nonexist_849` / `quad_diag_362`, `taum_dih_y` and
+    `K_SUC_2_MOD_F_SUB_ID`.
 
 DISCHARGES: `BKOSSGE_p16` is verbatim
   `LocalAuto1.BKOSSGE_concl` (`scsArrowV39 {scs3M1} {scs3T1, scs3T5}`);
@@ -554,36 +554,320 @@ theorem cos_bounds_0_pi_p16 (z : ℝ) (h1 : 0 < z) (h2 : z < Real.pi) :
   rw [Real.cos_zero] at h2'
   exact ⟨hc, h2'⟩
 
-/-- HOL `ear_acute` (BKOSSGE.hl:33).
-NEEDS: Terminal.get_main_nonlinear "2485876245a" (the nonlinear registry
-entry; lives in main_nonlinear_terminal_v11, another wave),
-Trigonometry.IHIQXLM, Tskajxy.ATN2_Y_NEG, ATN_BOUNDS, and the
-`dih_x_alt` rendering of `dih_y`. -/
+/-- Helper (ported 2026-11-05 from LA33's `atn2_neg_of_y_neg_p33`):
+`atn2 x y` is negative whenever `y < 0` (both branches of the
+definition). -/
+private theorem atn2_neg_of_y_neg_p16 {x y : ℝ} (hy : y < 0) : atn2 x y < 0 := by
+  unfold atn2
+  by_cases h : |y| < x
+  · rw [if_pos h]
+    refine Real.arctan_lt_zero.mpr ?_
+    exact div_neg_of_neg_of_pos hy (by linarith [abs_nonneg y])
+  · rw [if_neg h, if_neg (by linarith), if_pos hy]
+    have := Real.neg_pi_div_two_lt_arctan (x / y)
+    linarith
+
+/-- Helper (ported 2026-11-05 from LA33's `upsX_factor_p33`): the
+upsilon determinant factors as a Heron product. -/
+private theorem upsX_factor_p16 (a b c : ℝ) :
+    upsX (a * a) (b * b) (c * c) = (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c) := by
+  unfold upsX
+  ring
+
+/-- Helper (ported 2026-11-05 from LA33's `ups_triangle_p33`):
+`ups_x a² b² c² > 0` forces the triangle inequality `c < a + b`. -/
+private theorem ups_triangle_p16 {a b c : ℝ} (ha : 0 < a) (hb : 0 < b) (hc : 0 < c)
+    (h : 0 < upsX (a * a) (b * b) (c * c)) : c < a + b := by
+  by_contra hle
+  push_neg at hle
+  have hfac := upsX_factor_p16 a b c
+  have h4 : a + b - c ≤ 0 := by linarith
+  have h2 : 0 < -a + b + c := by nlinarith
+  have h3 : 0 < a - b + c := by nlinarith
+  have h1 : 0 < a + b + c := by linarith
+  have hprod : 0 < (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c) := by
+    rw [← hfac]
+    simpa only [pow_two] using h
+  have hnonpos : (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c) ≤ 0 := by
+    have hab : 0 ≤ (a + b + c) * (-a + b + c) * (a - b + c) := by positivity
+    exact mul_nonpos_of_nonneg_of_nonpos hab h4
+  linarith
+
+/-- HOL `ear_acute` (BKOSSGE.hl:33).  PROVED 2026-11-05 (`la16-gap-w1`):
+proof body ported verbatim from LA33's `ear_acute_p33`
+(standard-three); the registry instance `2485876245a` comes from the
+hypothesis `main_nonlinear_terminal_v11`, and the `dihY`/atn2 rendering
+plus the Heron factorization of `upsX` close the bound. -/
 theorem ear_acute_p16 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       2 ≤ y4 → y4 ≤ 2 * h0 → 2 ≤ y6 → y6 ≤ 2 * h0 → 3 ≤ y5 →
       0 < upsX (y1 * y1) (y3 * y3) (y5 * y5) →
       dihY y1 y2 y3 y4 y5 y6 < Real.pi / 2 := by
-  sorry
+  intro y1 y2 y3 y4 y5 y6 hy1 hy1u hy2 hy2u hy3 hy3u hy4 hy4u hy6 hy6u hy5 hups
+  have h0val : h0 = (1.26 : ℝ) := rfl
+  have h2h0 : (2 : ℝ) * h0 = 2.52 := by rw [h0val]; norm_num
+  have h1pos : (0 : ℝ) < y1 := by linarith
+  have h3pos : (0 : ℝ) < y3 := by linarith
+  have h5pos : (0 : ℝ) < y5 := by linarith
+  have hupper : y5 < y1 + y3 := ups_triangle_p16 h1pos h3pos h5pos hups
+  have hy5u : y5 ≤ 2 * (2.52 : ℝ) := by
+    have h1u : y1 ≤ 2 * h0 := hy1u
+    have h3u : y3 ≤ 2 * h0 := hy3u
+    nlinarith
+  -- registry entry
+  have hreg : mainEstimate_2485876245a :=
+    h "2485876245a" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have hdelta : 0 < delta4Y y1 y2 y3 y4 y5 y6 :=
+    hreg y1 y2 y3 y4 y5 y6 hy1 (by rw [← h2h0]; exact hy1u) hy2 (by rw [← h2h0]; exact hy2u)
+      hy3 (by rw [← h2h0]; exact hy3u) hy4 (by rw [← h2h0]; exact hy4u) (by linarith) hy5u
+      hy6 (by rw [← h2h0]; exact hy6u)
+  -- unfold dihY into its atn2 form
+  have hdih : dihY y1 y2 y3 y4 y5 y6
+      = Real.pi / 2 + atn2
+          (Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6))
+          (-(delta4Y y1 y2 y3 y4 y5 y6)) := by
+    simp only [dihY, dihXf, deltaY, delta4Y, yOfX]
+  rw [hdih]
+  have hneg : atn2 (Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6))
+      (-(delta4Y y1 y2 y3 y4 y5 y6)) < 0 :=
+    atn2_neg_of_y_neg_p16 (by linarith)
+  linarith
 
-/-- HOL `quad_nonexist_849` (BKOSSGE.hl:69).
-NEEDS: Terminal.get_main_nonlinear "8495326405" and
-Terminal.DELTA_Y_POS_4POINTS. -/
+/-! ### `DELTA_Y_POS_4POINTS` kit (ported 2026-11-05 from LA38)
+
+The quad registry pair below needs the Cayley–Menger nonnegativity
+`DELTA_Y_POS_4POINTS`; LA16's import face does not contain it (and
+importing `LocalAuto38` would drag 36 unrelated sorries into the
+dependency graph), so the proved LA38 kit is copied here as a private
+block: `p16_cos_law`, `p16_deltaX_gram_aux`, `p16_det_gram_eq`,
+`p16_det_gram_nn` and `p16_deltaY_pos_4` (all standard-three in LA38),
+with the wrapper `DELTA_Y_POS_4POINTS_p16`.  Bodies are verbatim except
+for the `p38_` → `p16_` rename. -/
+
+private theorem p16_coe_sub (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+private theorem p16_coe_smul (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
+
+private theorem p16_coe_zero : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+
+/-- The cosine law — `2·(x⬝y)` from the squared lengths. -/
+private theorem p16_cos_law (x y : V3) :
+    2 * (x ⬝ᵥ y) = ‖x‖ * ‖x‖ + ‖y‖ * ‖y‖ - dist x y * dist x y := by
+  have h1 : dist x y * dist x y
+      = ((x - y : V3) : Fin 3 → ℝ) ⬝ᵥ ((x - y : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two]
+    exact norm_sq_eq_dot (x - y)
+  have h2 : ‖x‖ * ‖x‖ = (x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ) := by
+    rw [← norm_sq_eq_dot, pow_two]
+  have h3 : ‖y‖ * ‖y‖ = (y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ) := by
+    rw [← norm_sq_eq_dot, pow_two]
+  rw [h1, h2, h3, p16_coe_sub]
+  simp only [dotProduct_sub, sub_dotProduct, dotProduct_comm]
+  ring
+
+/-- The Gram-form of `delta_x` with the Gram entries given directly
+(`2p = a+b−f`, `2q = a+c−e`, `2r = b+c−d`). -/
+private theorem p16_deltaX_gram_aux (a b c d e f p q r : ℝ)
+    (hp : 2 * p = a + b - f) (hq : 2 * q = a + c - e) (hr : 2 * r = b + c - d) :
+    deltaX a b c d e f =
+      4 * (a * (b * c - r ^ 2) - p * (p * c - q * r) + q * (p * r - b * q)) := by
+  have hd : d = b + c - 2 * r := by linarith
+  have he : e = a + c - 2 * q := by linarith
+  have hf : f = a + b - 2 * p := by linarith
+  subst hd; subst he; subst hf
+  simp only [deltaX]
+  ring
+
+/-- The Gram determinant of three vectors equals the determinant of the
+matrix with those rows, squared. -/
+private theorem p16_det_gram_eq (u v w : Fin 3 → ℝ) :
+    u ⬝ᵥ u * (v ⬝ᵥ v * w ⬝ᵥ w - (v ⬝ᵥ w) ^ 2)
+      - (u ⬝ᵥ v) * ((u ⬝ᵥ v) * w ⬝ᵥ w - (u ⬝ᵥ w) * (v ⬝ᵥ w))
+      + (u ⬝ᵥ w) * ((u ⬝ᵥ v) * (v ⬝ᵥ w) - v ⬝ᵥ v * (u ⬝ᵥ w))
+      = Matrix.det
+          (Matrix.of fun i j =>
+            (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i ⬝ᵥ
+              (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j) := by
+  rw [Matrix.det_fin_three]
+  simp [dotProduct, Matrix.of_apply, mul_comm]
+  ring
+
+private theorem p16_det_gram_nn (u v w : Fin 3 → ℝ) :
+    0 ≤ u ⬝ᵥ u * (v ⬝ᵥ v * w ⬝ᵥ w - (v ⬝ᵥ w) ^ 2)
+      - (u ⬝ᵥ v) * ((u ⬝ᵥ v) * w ⬝ᵥ w - (u ⬝ᵥ w) * (v ⬝ᵥ w))
+      + (u ⬝ᵥ w) * ((u ⬝ᵥ v) * (v ⬝ᵥ w) - v ⬝ᵥ v * (u ⬝ᵥ w)) := by
+  have hdet := p16_det_gram_eq u v w
+  have hGM : (Matrix.of fun i j =>
+      (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i ⬝ᵥ
+        (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j)
+      = (Matrix.of fun i j => (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j) *
+        (Matrix.of fun i j => (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j i) := by
+    ext i j
+    simp [Matrix.mul_apply, dotProduct, Matrix.of_apply]
+  have hdMt : Matrix.det (Matrix.of fun i j =>
+      (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j i)
+      = Matrix.det (Matrix.of fun i j =>
+        (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j) := by
+    rw [← show Matrix.transpose (Matrix.of fun i j =>
+          (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j i)
+        = (Matrix.of fun i j => (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j) from rfl,
+      Matrix.det_transpose]
+  rw [hdet, hGM, Matrix.det_mul, hdMt]
+  linarith [sq_nonneg (Matrix.det (Matrix.of fun i j =>
+    (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j)), pow_two (Matrix.det (Matrix.of
+    fun i j => (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j))]
+
+/-- Cayley–Menger nonnegativity for a tetrahedron with apex `0` — the
+`DELTA_Y_POS_4POINTS` content. -/
+private theorem p16_deltaY_pos_4 (v0 v1 v2 v3 : V3) :
+    0 ≤ deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+      (dist v1 v3) (dist v1 v2) := by
+  have hA : dist v0 v1 * dist v0 v1
+      = ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v1 - v0 : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two, norm_sub_rev]
+    exact norm_sq_eq_dot (v1 - v0)
+  have hB : dist v0 v2 * dist v0 v2
+      = ((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two, norm_sub_rev]
+    exact norm_sq_eq_dot (v2 - v0)
+  have hC : dist v0 v3 * dist v0 v3
+      = ((v3 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two, norm_sub_rev]
+    exact norm_sq_eq_dot (v3 - v0)
+  have hP : 2 * (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ))
+      = ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v1 - v0 : V3) : Fin 3 → ℝ)
+        + ((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ)
+        - dist v1 v2 * dist v1 v2 := by
+    have hc := p16_cos_law (v1 - v0) (v2 - v0)
+    rw [show ‖(v1 - v0 : V3)‖ = dist v0 v1 from by rw [dist_eq_norm, norm_sub_rev],
+      show ‖(v2 - v0 : V3)‖ = dist v0 v2 from by rw [dist_eq_norm, norm_sub_rev]] at hc
+    rw [hA, hB] at hc
+    rw [show dist v1 v2 = dist (v1 - v0) (v2 - v0) from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right]]
+    exact hc
+  have hQ : 2 * (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      = ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v1 - v0 : V3) : Fin 3 → ℝ)
+        + ((v3 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ)
+        - dist v1 v3 * dist v1 v3 := by
+    have hc := p16_cos_law (v1 - v0) (v3 - v0)
+    rw [show ‖(v1 - v0 : V3)‖ = dist v0 v1 from by rw [dist_eq_norm, norm_sub_rev],
+      show ‖(v3 - v0 : V3)‖ = dist v0 v3 from by rw [dist_eq_norm, norm_sub_rev]] at hc
+    rw [hA, hC] at hc
+    rw [show dist v1 v3 = dist (v1 - v0) (v3 - v0) from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right]]
+    exact hc
+  have hR : 2 * (((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      = ((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ)
+        + ((v3 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ)
+        - dist v2 v3 * dist v2 v3 := by
+    have hc := p16_cos_law (v2 - v0) (v3 - v0)
+    rw [show ‖(v2 - v0 : V3)‖ = dist v0 v2 from by rw [dist_eq_norm, norm_sub_rev],
+      show ‖(v3 - v0 : V3)‖ = dist v0 v3 from by rw [dist_eq_norm, norm_sub_rev]] at hc
+    rw [hB, hC] at hc
+    rw [show dist v2 v3 = dist (v2 - v0) (v3 - v0) from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right]]
+    exact hc
+  rw [deltaY, hA, hB, hC,
+    p16_deltaX_gram_aux
+      (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v1 - v0 : V3) : Fin 3 → ℝ))
+      (((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ))
+      (((v3 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      (dist v2 v3 * dist v2 v3) (dist v1 v3 * dist v1 v3)
+      (dist v1 v2 * dist v1 v2)
+      (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ))
+      (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      (((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      hP hQ hR]
+  linarith [p16_det_gram_nn ((v1 - v0 : V3) : Fin 3 → ℝ)
+    ((v2 - v0 : V3) : Fin 3 → ℝ) ((v3 - v0 : V3) : Fin 3 → ℝ)]
+
+/-- HOL `DELTA_Y_POS_4POINTS` (terminal.hl:537), ported from LA38
+(standard-three): the Cayley–Menger nonnegativity used by the quad
+registry pair below. -/
+private theorem DELTA_Y_POS_4POINTS_p16 (v0 v1 v2 v3 : V3) :
+    0 ≤ deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+      (dist v1 v3) (dist v1 v2) :=
+  p16_deltaY_pos_4 v0 v1 v2 v3
+
+/-- HOL `quad_nonexist_849` (BKOSSGE.hl:69).  PROVED 2026-11-05
+(`la16-gap-w1`): project the `8495326405` registry entry at
+`(d34, d23, d13, d12, d14, d24)`, use the triangle bound for the two
+long diagonals, and contradict `DELTA_Y_POS_4POINTS_p16`. -/
 theorem quad_nonexist_849_p16 (h : main_nonlinear_terminal_v11) :
     ¬ ∃ (v1 v2 v3 v4 : V3), dist v1 v2 = 2 ∧ dist v2 v3 = 2 ∧ dist v3 v4 = 2 ∧
       dist v1 v4 = 2 * h0 ∧ cstab ≤ dist v1 v3 ∧ cstab ≤ dist v2 v4 := by
-  sorry
+  rintro ⟨v1, v2, v3, v4, h12, h23, h34, h14, h13, h24⟩
+  have hreg : mainEstimate_8495326405 :=
+    h "8495326405" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have hpos := DELTA_Y_POS_4POINTS_p16 v3 v4 v2 v1
+  have hneg : deltaY 2 2 (dist v1 v3) 2 (2 * h0) (dist v2 v4) < 0 := by
+    refine hreg 2 2 (dist v1 v3) 2 (2 * h0) (dist v2 v4)
+      ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+    · norm_num
+    · norm_num
+    · norm_num
+    · norm_num
+    · simpa [cstab] using h13
+    · calc dist v1 v3 ≤ dist v1 v2 + dist v2 v3 := dist_triangle v1 v2 v3
+        _ = 4 := by rw [h12, h23]; norm_num
+        _ ≤ 6 := by norm_num
+    · norm_num
+    · norm_num
+    · norm_num
+    · norm_num
+    · simpa [cstab] using h24
+    · calc dist v2 v4 ≤ dist v2 v3 + dist v3 v4 := dist_triangle v2 v3 v4
+        _ = 4 := by rw [h23, h34]; norm_num
+        _ ≤ 6 := by norm_num
+  have hpos' : 0 ≤ deltaY 2 2 (dist v1 v3) 2 (2 * h0) (dist v2 v4) := by
+    simpa [h12, h23, h34, h14, dist_comm] using hpos
+  linarith
 
 /-- HOL `quad_diag_362` (BKOSSGE.hl:92): the shorter diagonal of a
-cstab quad is below 3.62.
-NEEDS: Terminal.get_main_nonlinear "2171548893" and
-Terminal.DELTA_Y_POS_4POINTS. -/
+cstab quad is below 3.62.  PROVED 2026-11-05 (`la16-gap-w1`): negate,
+project the `2171548893` registry entry at
+`(d34, d23, d13, d12, d14, d24)`, and contradict
+`DELTA_Y_POS_4POINTS_p16`. -/
 theorem quad_diag_362_p16 (h : main_nonlinear_terminal_v11) :
     ∀ (v1 v2 v3 v4 : V3), dist v1 v2 = 2 → dist v2 v3 = cstab →
       dist v3 v4 = 2 → dist v1 v4 = cstab →
       dist v1 v3 ≤ 3.62 ∨ dist v2 v4 ≤ 3.62 := by
-  sorry
+  intro v1 v2 v3 v4 h12 h23 h34 h14
+  by_contra hcon
+  rw [not_or] at hcon
+  have hd13 : 3.62 < dist v1 v3 := not_le.mp hcon.1
+  have hd24 : 3.62 < dist v2 v4 := not_le.mp hcon.2
+  have hreg : mainEstimate_2171548893 :=
+    h "2171548893" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have hpos := DELTA_Y_POS_4POINTS_p16 v3 v4 v2 v1
+  have hc : cstab = 3.01 := rfl
+  have hneg : deltaY 2 cstab (dist v1 v3) 2 cstab (dist v2 v4) < 0 := by
+    refine hreg 2 cstab (dist v1 v3) 2 cstab (dist v2 v4)
+      ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+    · norm_num
+    · norm_num
+    · rw [hc]
+    · rw [hc]
+    · linarith
+    · calc dist v1 v3 ≤ dist v1 v2 + dist v2 v3 := dist_triangle v1 v2 v3
+        _ = 2 + cstab := by rw [h12, h23]
+        _ = 5.01 := by rw [hc]; norm_num
+        _ ≤ 6 := by norm_num
+    · norm_num
+    · norm_num
+    · rw [hc]
+    · rw [hc]
+    · linarith
+    · calc dist v2 v4 ≤ dist v2 v3 + dist v3 v4 := dist_triangle v2 v3 v4
+        _ = cstab + 2 := by rw [h23, h34]
+        _ = 5.01 := by rw [hc]; norm_num
+        _ ≤ 6 := by norm_num
+  have hpos' : 0 ≤ deltaY 2 cstab (dist v1 v3) 2 cstab (dist v2 v4) := by
+    simpa [h12, h23, h34, h14, dist_comm] using hpos
+  linarith
 
 /-- HOL `INV_ARCLENGTH` (BKOSSGE.hl:114): on `(0, π)` the `arclength`
 functional inverts the chord-length formula.  The `atn2` unfolding of
@@ -728,16 +1012,99 @@ theorem INV_ARCLENGTH_p16 (y1 y3 z : ℝ) (hz1 : 0 < z) (hz2 : z < Real.pi)
     else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y) else Real.pi)
     (fun _ _ => rfl) |>.symm
 
-/-- HOL `taum_dih_y` (BKOSSGE.hl:168).
-NEEDS: Sphere.sol_y / lnazim / rho unfoldings and
-Nonlinear_lemma.sol0_const1 (the canonical `taum` body is available via
-SphereKit since DEDUP 2026-09-17). -/
-theorem taum_dih_y_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
+/-- Helper (ported 2026-11-05 from LA38's `p38_dihY222222`): the
+regular tetrahedron dihedral — `dih_y` at the all-2s point is
+`arccos (1/3)`. -/
+private theorem dihY222222_p16 : dihY 2 2 2 2 2 2 = Real.arccos (1 / 3) := by
+  have hdx : (deltaX 4 4 4 4 4 4 : ℝ) = 128 := by norm_num [deltaX]
+  have hdx4 : (deltaX4 4 4 4 4 4 4 : ℝ) = 16 := by norm_num [deltaX4]
+  have hd : dihY 2 2 2 2 2 2 = Real.pi / 2 + atn2 (Real.sqrt 2048) (-16) := by
+    simp only [dihY, dihXf]
+    norm_num [hdx, hdx4]
+  have hsqrt2 : Real.sqrt (2048 : ℝ) = 32 * Real.sqrt 2 := by
+    rw [show (2048 : ℝ) = 1024 * 2 by norm_num, Real.sqrt_mul (by norm_num)]
+    norm_num
+  have hsq2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+  have hs : Real.sin (Real.arctan (1 / (2 * Real.sqrt 2))) = 1 / 3 := by
+    rw [Real.sin_arctan]
+    have hden : (1 : ℝ) + (1 / (2 * Real.sqrt 2)) ^ 2 = 9 / 8 := by
+      have e1 : (1 / (2 * Real.sqrt 2)) ^ 2 = 1 / (2 * Real.sqrt 2) ^ 2 := by
+        rw [one_div_pow]
+      have e2 : (2 * Real.sqrt 2) ^ 2 = 8 := by rw [mul_pow, hsq2]; norm_num
+      rw [e1, e2]
+      norm_num
+    have hr8 : Real.sqrt (9 / 8) = 3 / (2 * Real.sqrt 2) := by
+      have hval : (9 / 8 : ℝ) = (3 / (2 * Real.sqrt 2)) ^ 2 := by
+        rw [div_pow, mul_pow, hsq2]
+        norm_num
+      rw [hval, Real.sqrt_sq (by positivity)]
+    rw [hden, hr8]
+    field_simp
+  have hθ : Real.arcsin (1 / 3) = Real.arctan (1 / (2 * Real.sqrt 2)) := by
+    rw [← hs]
+    obtain ⟨hm1, hm2⟩ := Real.arctan_mem_Ioo (1 / (2 * Real.sqrt 2))
+    exact Real.arcsin_sin' ⟨le_of_lt hm1, le_of_lt hm2⟩
+  have hv : atn2 (32 * Real.sqrt 2) (-16) = -(Real.arcsin (1 / 3)) := by
+    have h1s : (1 : ℝ) < Real.sqrt 2 :=
+      (Real.lt_sqrt (x := (1 : ℝ)) (by norm_num)).mpr (by norm_num)
+    have hbr : |(-16 : ℝ)| < 32 * Real.sqrt 2 := by
+      rw [abs_of_neg (by norm_num : (-16 : ℝ) < 0), neg_neg]
+      calc (16 : ℝ) = 16 * 1 := by ring
+        _ < 16 * (2 * Real.sqrt 2) :=
+          mul_lt_mul_of_pos_left (by linarith) (by positivity)
+        _ = 32 * Real.sqrt 2 := by ring
+    have hconv : (-16 : ℝ) / (32 * Real.sqrt 2) = -(1 / (2 * Real.sqrt 2)) := by
+      field_simp
+      ring
+    simp only [atn2, hbr, if_true, hconv, Real.arctan_neg, ← hθ]
+  rw [hd, hsqrt2, hv, Real.arccos_eq_pi_div_two_sub_arcsin (1 / 3)]
+  ring
+
+/-- Helper (ported 2026-11-05 from LA38's `p38_const1_eq`):
+`const1 = sol0 / π` — the all-2s solid angle is three
+regular-tetrahedron dihedrals minus π, i.e. exactly `sol0`. -/
+private theorem const1_eq_p16 : const1 = sol0 / Real.pi := by
+  have hs0 : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
+  have hsol : solY 2 2 2 2 2 2 = 3 * Real.arccos (1 / 3) - Real.pi := by
+    show dihY 2 2 2 2 2 2 + dihY 2 2 2 2 2 2 + dihY 2 2 2 2 2 2 - Real.pi = _
+    rw [dihY222222_p16]
+    ring
+  show solY 2 2 2 2 2 2 / Real.pi = sol0 / Real.pi
+  rw [hs0, hsol]
+
+/-- Helper (ported 2026-11-05 from LA38's `p38_taum_dih_y`): the
+pure-arithmetic half of the HOL `taum_dih_y` bridge — `taum` is
+`Σ rho(yᵢ)·dihYᵢ − (π + sol0)` once `const1 = sol0/π` is known. -/
+private theorem taum_dih_y_aux_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
     taum y1 y2 y3 y4 y5 y6 =
       rho y1 * dihY y1 y2 y3 y4 y5 y6 +
         rho y2 * dihY y2 y3 y1 y5 y6 y4 +
         rho y3 * dihY y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) := by
-  sorry
+  have hc : const1 = sol0 / Real.pi := const1_eq_p16
+  have ht : (2 : ℝ) * h0 - 2 ≠ 0 := by norm_num [h0]
+  have hly : ∀ y : ℝ, ly y = 1 - (y - 2) / (2 * h0 - 2) := by
+    intro y
+    have h252 : (2.52 - 2 : ℝ) = 2 * h0 - 2 := by norm_num [h0]
+    show 1 + (y - 2) * (0 - 1) / (2.52 - 2) = 1 - (y - 2) / (2 * h0 - 2)
+    rw [h252]
+    ring
+  show solY y1 y2 y3 y4 y5 y6 * (1 + const1) -
+    const1 * (lnazim y1 y2 y3 y4 y5 y6 +
+      lnazim y2 y3 y1 y5 y6 y4 + lnazim y3 y1 y2 y6 y4 y5) = _
+  simp only [solY, lnazim, hc, hly, rho]
+  field_simp [ht, Real.pi_ne_zero]
+  ring
+
+/-- HOL `taum_dih_y` (BKOSSGE.hl:168).  PROVED 2026-11-05
+(`la16-gap-w1`): proof body ported verbatim from LA38's
+`p38_taum_dih_y` (standard-three); `SphereKit`'s real `taum` body is
+unfolded with `const1 = sol0/π` and `ly` normalized. -/
+theorem taum_dih_y_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    taum y1 y2 y3 y4 y5 y6 =
+      rho y1 * dihY y1 y2 y3 y4 y5 y6 +
+        rho y2 * dihY y2 y3 y1 y5 y6 y4 +
+        rho y3 * dihY y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) :=
+  taum_dih_y_aux_p16 y1 y2 y3 y4 y5 y6
 
 /-- HOL `real_continuous_dih_y_wrt4` (BKOSSGE.hl:181).
 NEEDS: Ocbicby.derived_form_dih_x_wrt_x4 (the `dih_x` derivative in the
@@ -940,13 +1307,96 @@ theorem DIAG_OPP_p16 (k i j : ℕ) (hk : 3 < k) (h : scsDiag k i j) :
       rw [hip1] at h2
       exact h2 hjq.symm
 
-/-- HOL `K_SUC_2_MOD_F_SUB_ID` (CQAOQLR.hl:133).
-NEEDS: the HOL `SUC_MOD_EQ_MOD_SUC` / `MOD_SUC_MOD` modular-kit route
-(the `i + k - 1` slot needs the `i % k = 0` / `i % k ≥ 1` split on
-`(i + k - 1) % k`, which resists a short `omega` rendering). -/
+/-- HOL `K_SUC_2_MOD_F_SUB_ID` (CQAOQLR.hl:133).  PROVED 2026-11-05
+(`la16-gap-w1`): split on `i % k` (zero, `k-2`, `k-1`, and the strict
+middle), reduce both `(i+2) % k` and `(i+k-1) % k` through
+`Nat.mod_add_mod` / `Nat.add_mod`, and close each branch with
+`Nat.mod_eq_of_lt` + `omega`. -/
 theorem K_SUC_2_MOD_F_SUB_ID_p16 {k i : ℕ} (hk : 1 < k) :
     (k - ((i + 2) % k + 1) + 3) % k = (k - ((i + k - 1) % k + 1)) % k := by
-  sorry
+  set q := i % k with hqdef
+  have hq : q < k := Nat.mod_lt _ (by omega)
+  have e2 : (i + 2) % k = (q + 2) % k := by
+    rw [hqdef]
+    exact (Nat.mod_add_mod i k 2).symm
+  have ek : (i + k - 1) % k = (q + k - 1) % k := by
+    have h1 : i + k - 1 = i + (k - 1) := by omega
+    have h2 : q + k - 1 = q + (k - 1) := by omega
+    rw [h1, h2, hqdef, Nat.add_mod, Nat.mod_eq_of_lt (by omega : k - 1 < k)]
+  rw [e2, ek]
+  rcases Nat.eq_zero_or_pos q with hq0 | hqp
+  · rw [hq0]
+    have hL : (k - (((0:ℕ) + 2) % k + 1) + 3) % k = 0 := by
+      rcases eq_or_lt_of_le (show 2 ≤ k by omega) with hk2 | hk3
+      · subst hk2; norm_num
+      · rw [Nat.mod_eq_of_lt (by omega : 2 < k)]
+        have h : k - (2 + 1) + 3 = k := by omega
+        rw [h, Nat.mod_self]
+    have hR : (k - (((0:ℕ) + k - 1) % k + 1)) % k = 0 := by
+      have h1 : (0 + k - 1) % k = k - 1 := by
+        rw [show (0:ℕ) + k - 1 = k - 1 by omega]
+        exact Nat.mod_eq_of_lt (by omega : k - 1 < k)
+      rw [h1]
+      have h2 : k - (k - 1 + 1) = 0 := by omega
+      rw [h2, Nat.zero_mod]
+    rw [hL, hR]
+  · rcases lt_trichotomy q (k - 2) with hlt | heq | hgt
+    · -- 1 ≤ q ≤ k-3
+      have hqk : q + 2 < k := by omega
+      have hL : (k - ((q + 2) % k + 1) + 3) % k = k - q := by
+        rw [Nat.mod_eq_of_lt hqk]
+        have h : k - (q + 2 + 1) + 3 = k - q := by omega
+        rw [h, Nat.mod_eq_of_lt (by omega : k - q < k)]
+      have hR : (k - ((q + k - 1) % k + 1)) % k = k - q := by
+        have h1 : q + k - 1 = (q - 1) + k := by omega
+        have h2 : ((q - 1) + k) % k = q - 1 := by
+          rw [Nat.add_mod, Nat.mod_eq_of_lt (by omega : q - 1 < k), Nat.mod_self,
+            Nat.add_zero, Nat.mod_eq_of_lt (by omega : q - 1 < k)]
+        rw [h1, h2]
+        have h3 : k - (q - 1 + 1) = k - q := by omega
+        rw [h3, Nat.mod_eq_of_lt (by omega : k - q < k)]
+      rw [hL, hR]
+    · -- q = k-2 (so k ≥ 3)
+      have hk3 : 3 ≤ k := by omega
+      have hL : (k - ((q + 2) % k + 1) + 3) % k = 2 := by
+        rw [heq, show k - 2 + 2 = k by omega, Nat.mod_self]
+        have h : k - (0 + 1) + 3 = k + 2 := by omega
+        rw [h]
+        simp only [Nat.add_mod, Nat.mod_self, Nat.zero_add,
+          Nat.mod_eq_of_lt (by omega : 2 < k)]
+      have hR : (k - ((q + k - 1) % k + 1)) % k = 2 := by
+        rw [heq]
+        have h1 : k - 2 + k - 1 = (k - 3) + k := by omega
+        have h2 : ((k - 3) + k) % k = k - 3 := by
+          rw [Nat.add_mod, Nat.mod_eq_of_lt (by omega : k - 3 < k), Nat.mod_self,
+            Nat.add_zero, Nat.mod_eq_of_lt (by omega : k - 3 < k)]
+        rw [h1, h2]
+        have h3 : k - (k - 3 + 1) = 2 := by omega
+        rw [h3, Nat.mod_eq_of_lt (by omega : 2 < k)]
+      rw [hL, hR]
+    · -- q = k-1
+      have hqk1 : q = k - 1 := by omega
+      have hk2 : 2 ≤ k := by omega
+      have hL : (k - ((q + 2) % k + 1) + 3) % k = 1 := by
+        rw [hqk1, show k - 1 + 2 = k + 1 by omega]
+        have h2 : (k + 1) % k = 1 := by
+          rw [Nat.add_mod, Nat.mod_self, Nat.zero_add]
+          simp only [Nat.mod_eq_of_lt (by omega : 1 < k)]
+        rw [h2]
+        have h3 : k - (1 + 1) + 3 = k + 1 := by omega
+        rw [h3]
+        exact h2
+      have hR : (k - ((q + k - 1) % k + 1)) % k = 1 := by
+        rw [hqk1]
+        have h1 : k - 1 + k - 1 = (k - 2) + k := by omega
+        have h2 : ((k - 2) + k) % k = k - 2 := by
+          rw [Nat.add_mod, Nat.mod_eq_of_lt (by omega : k - 2 < k), Nat.mod_self,
+            Nat.add_zero, Nat.mod_eq_of_lt (by omega : k - 2 < k)]
+        rw [h1, h2]
+        have h3 : k - (k - 2 + 1) = 1 := by omega
+        rw [h3]
+        exact Nat.mod_eq_of_lt (by omega : 1 < k)
+      rw [hL, hR]
 
 /-- HOL `CQAOQLR` (CQAOQLR.hl:247): the ear-reciprocity conclusion.
 NEEDS: TFITSKC, MM_SCS_OPP, OPP_IS_SCS, SCS_GENERIC_SYM_0_p16,
@@ -959,14 +1409,13 @@ theorem CQAOQLR_p16 : CQAOQLR_concl_p16 := by
 CQAOQLR.hl item is carried above (the XIVPHKS.hl items now live in
 `Kepler.Text.XivphksKit` and are re-exported through the import).
 Proved: SCS_ARROW_TRANS_SING, lp_main_estimate_JEJTVGB,
-nonlinear_imp_lp_main_estimate, cos_bounds_0_pi, INV_ARCLENGTH,
-UPS_X_STD_POS, K_SUC_2_MOD_SUB, K_SUC_2_MOD_SUB_ID, SUC_OPP_ID,
+nonlinear_imp_lp_main_estimate, cos_bounds_0_pi, ear_acute, INV_ARCLENGTH,
+UPS_X_STD_POS, quad_nonexist_849, quad_diag_362, taum_dih_y,
+K_SUC_2_MOD_SUB, K_SUC_2_MOD_SUB_ID, SUC_OPP_ID, K_SUC_2_MOD_F_SUB_ID,
 A_B_J_SCS_OPP, ELEMENT1_SYM_0, UNADORNED_OPP, BASIC_OPP, DIAG_OPP,
-FSQKWKK, XIVPHKS, XIVPHKS_SHIFT (17).  Sorried (giants / registry):
-JEJTVGB_case_breakdown, JEJTVGB, ear_acute, quad_nonexist_849,
-quad_diag_362, taum_dih_y, real_continuous_dih_y_wrt4/5/6,
-real_continuous_taum, BKOSSGE, SCS_GENERIC_SYM_0,
-K_SUC_2_MOD_F_SUB_ID, CQAOQLR (13).  The `_p16`
+FSQKWKK, XIVPHKS, XIVPHKS_SHIFT (22).  Sorried (continuity suite /
+symmetry / assembly): real_continuous_dih_y_wrt4/5/6,
+real_continuous_taum, SCS_GENERIC_SYM_0, CQAOQLR (6).  The `_p16`
 sphere-kit copies were deduped into `Kepler.Text.SphereKit` 2026-09-17. -/
 
 /-! ## w13 axiom audit (closed items only) -/
@@ -978,3 +1427,12 @@ sphere-kit copies were deduped into `Kepler.Text.SphereKit` 2026-09-17. -/
 
 #print axioms XIVPHKS_p16
 #print axioms XIVPHKS_SHIFT_p16
+
+/-! ## w15 axiom audit (closed items only, 2026-11-05 `la16-gap-w1`) -/
+
+#print axioms DELTA_Y_POS_4POINTS_p16
+#print axioms ear_acute_p16
+#print axioms quad_nonexist_849_p16
+#print axioms quad_diag_362_p16
+#print axioms taum_dih_y_p16
+#print axioms K_SUC_2_MOD_F_SUB_ID_p16
