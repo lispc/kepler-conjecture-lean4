@@ -3,6 +3,35 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-06 — 四项接口/陈述裁决（用户「你的建议都同意」）
+
+**拍板**（用户，2026-11-06，在四项展开说明后全盘采纳编排者建议）：
+
+1. **`_797` / `arclength22` / `packIneqDefAP22` → 真化（选项 A，DEF-FIX）**。
+   `arclength22 := 0`（PA22:13927）使 `PACK_INEQ_DEF_A_797` 可反驳（`v = −v0` 时
+   LHS `1.3206 > 0 = RHS`）；`packIneqDefAP22`/`Assembly.PackIneqDefA` 是 `:= True` 桩。
+   修法：移植 HOL `arclength2`（`YSSKQOY.hl:297`）+ `arcV↔arclength` 桥，
+   `PackIneqDefA` 改成三条具名不等式（`UKBRPFE`/`WAZLDCD`/`BIEFJHU`）的真合取
+   （与 `LpIneqs` 的 `AllCertified` 同型）。**代价**：hNL 分量诚实 +1；
+   `XULJEPR` 由此有希望转标准三。走 DEF-FIX 通道。
+2. **四条 registry 陈述 → 补 `mnt11` 前提（选项 A，SF 通道）**。
+   对象：`VASYYAU`/`PWEIWBZ`/`WKZZEEH`/`YEBWJNG` 的 `_concl`。HOL 证明需要
+   `main_nonlinear_terminal_v11`，Lean 陈述省了它 → 陈述比规格强且不可证；
+   LA25 的 `_p25` 又由这些 sorry 定义 → 循环。加前提 = **恢复保真度**，
+   不是弱化。连带改 LA25 re-export 与 `LocalConcl` 绑定。
+3. **`jcajydu` G1 → 先移植 `Reduction5`（选项 B）**。HOL `JCAJYDU` 是
+   "列表级命题 ⇒ hypermap 级结论"的归约；Lean 只写了结论半，列表级命题
+   （`Reduction5.restricted_hypermaps_are_planegraphs_thm`）全仓只有注释。
+   **不加前提**（那会把未证假设塞进 e2e 信任链），先证列表级命题
+   （估 1,500–3,000 行），`jcajydu` 本体随后降到 300–800 行。
+   下一步 = `reduction5-scout` 摸边界。
+4. **`HFNXPZA`/`EQTTNZI1`/`EQTTNZI2`/`EFLYGAU`/`BJTDWPS` → 销账（选项 A）**。
+   五件是上游语料的**陈述级欠债**：只有 `appendix.hl:710/1110/1115/1500/1506`
+   的 `let X_concl = \`...\`` 绑定，无证明文件、名字全语料不再出现、消费的
+   `restriction_typ*_v39` 零外部消费者（`LocalConcl` 2026-09-21 RULING IV）。
+   动作：标 `CORPUS-UNPROVED`，从"待施工"清单移除，保留 sorry 不再当债追；
+   LA 的 A 类根口径 29 → 24。零消费者，对锥无影响。
+
 ## 2026-11-06 — LA21/LA18 终端锚点重编码（R-fix；用户裁决）
 
 **拍板**（用户，2026-11-06，在 `la21-general482-recon-w1` 的证据呈报后选 **R-fix**）：
