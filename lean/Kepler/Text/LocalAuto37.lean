@@ -4131,6 +4131,136 @@ theorem LOCAL_FAN_RHO_NODE_PROS2_p37 {V : Set V3} {E : Set (Set V3)}
     ∀ x ∈ V, (x, rhoNode1 FF x) ∈ FF := by
   exact (LOCAL_FAN_RHO_NODE_PROS2 (w5cB5_to_localFan_p2 _h)).2
 
+/-! ## la37-mhaeyjn-w1 施工区：MHAEYJN 私有地基（A2 像映射 / A3c registry 桥 / K1 / K2）
+
+本节只加 `private` 件（前缀 `w_b13_`），不触碰两个目标的陈述。
+A2 两件是 LA14 `deformation_{rho,ivs}_node1_equivariant1_p14` 的 LA37 私有重证
+（LA14 import LA37，反向不可达）；A3c 桥消费 LA37 已有的 public
+`azimInFan_eq_azimInFan_p3` / `wedgeInFanGe_eq_wedgeInFanGe_p3`（AzimBridge）
+加 LA6 `WEDGE_IN_FAN_RHOND_IVS_RHOND` / `AZIM_IN_FAN_RHOND_IVS_RHOND`。 -/
+
+/-- A2/G1a：`rhoNode1` 沿形变的像映射。 -/
+private theorem w_b13_rho_image {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {f : V3 → ℝ → V3} {t : ℝ} {v : V3}
+    (hLF : LocalFan V E FF)
+    (hLFt : LocalFan ((fun z => f z t) '' V)
+      ((fun s => (fun z => f z t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF)) (hv : v ∈ V) :
+    f (rhoNode1 FF v) t =
+      rhoNode1 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) := by
+  have hd : (v, rhoNode1 FF v) ∈ FF := LOCAL_FAN_RHO_NODE_PROS2_p37 hLF v hv
+  have himg : (f v t, f (rhoNode1 FF v) t) ∈
+      (fun d => (f d.1 t, f d.2 t)) '' FF := Set.mem_image_of_mem _ hd
+  exact (DETER_RHO_NODE (w5cB5_to_localFan_p2 hLFt) himg).symm
+
+/-- A2/G1b：`ivsRhoNode1` 的像映射。 -/
+private theorem w_b13_ivs_image {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {f : V3 → ℝ → V3} {t : ℝ} {v : V3}
+    (hLF : LocalFan V E FF)
+    (hLFt : LocalFan ((fun z => f z t) '' V)
+      ((fun s => (fun z => f z t) '' s) '' E)
+      ((fun d => (f d.1 t, f d.2 t)) '' FF)) (hv : v ∈ V) :
+    f (ivsRhoNode1 FF v) t =
+      ivsRhoNode1 ((fun d => (f d.1 t, f d.2 t)) '' FF) (f v t) := by
+  have hd : (ivsRhoNode1 FF v, v) ∈ FF := IVS_RHO_NODE_V_IN_FF_p37 (v := v) hLF hv
+  have himg : (f (ivsRhoNode1 FF v) t, f v t) ∈
+      (fun d => (f d.1 t, f d.2 t)) '' FF := Set.mem_image_of_mem _ hd
+  exact (IVS_RHO_NODE1_DETE (w5cB5_to_localFan_p2 hLFt) himg).symm
+
+/-- A3c-a：face dart `(v, ρv)` 上 registry `azimInFan` = `azim 0 v ρv ιv`。 -/
+private theorem w_b13_azimInFan_eq_azim {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hLF : LocalFan V E FF) {v : V3} (hv : v ∈ V) :
+    azimInFan (v, rhoNode1 FF v) E =
+      azim 0 v (rhoNode1 FF v) (ivsRhoNode1 FF v) := by
+  have hfan : Fan.FAN 0 V E := hLF.1
+  have hdart : (v, rhoNode1 FF v) ∈ Fan.dart1OfFan V E :=
+    la37g5_ffSubDart hLF (LOCAL_FAN_RHO_NODE_PROS2_p37 hLF v hv)
+  rw [azimInFan_eq_azimInFan_p3 hfan hdart,
+    show azimInFan_p3 (v, rhoNode1 FF v) E =
+      azimInFan_p2 (v, rhoNode1 FF v) E from rfl]
+  exact AZIM_IN_FAN_RHOND_IVS_RHOND (w5cB5_to_localFan_p2 hLF) hv
+
+/-- A3c-b：face dart `(v, ρv)` 上 registry `wedgeInFanGe` = `wedgeGe 0 v ρv ιv`
+（消去 `sigmaFan`）。 -/
+private theorem w_b13_wedgeInFanGe_eq_wedgeGe {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hLF : LocalFan V E FF) {v : V3} (hv : v ∈ V) :
+    wedgeInFanGe (v, rhoNode1 FF v) E =
+      wedgeGe 0 v (rhoNode1 FF v) (ivsRhoNode1 FF v) := by
+  have hfan : Fan.FAN 0 V E := hLF.1
+  have hdart : (v, rhoNode1 FF v) ∈ Fan.dart1OfFan V E :=
+    la37g5_ffSubDart hLF (LOCAL_FAN_RHO_NODE_PROS2_p37 hLF v hv)
+  rw [wedgeInFanGe_eq_wedgeInFanGe_p3 hfan hdart,
+    show wedgeInFanGe_p3 (v, rhoNode1 FF v) E =
+      wedgeInFanGe_p2 (v, rhoNode1 FF v) E from rfl]
+  exact WEDGE_IN_FAN_RHOND_IVS_RHOND (w5cB5_to_localFan_p2 hLF) hv
+
+/-- K1：`0 ∈ conv0 {v,w}`（`LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI` 首合取）给出
+lunar 两侧的对径性 `w = c • v`，`c < 0`。 -/
+private theorem w_b13_w_eq_neg_smul {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w : V3} (hcf : ConvexLocalFan V E FF)
+    (hl : Lunar v w V E) :
+    ∃ c : ℝ, c < 0 ∧ w = c • v := by
+  obtain ⟨h0mem, -⟩ := LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI (la37g5_clf2 hcf)
+    (show lunar_p2 v w V E from hl)
+  unfold conv0_p2 Affsign at h0mem
+  obtain ⟨f, hfin, hsum, hpos, -⟩ := h0mem
+  have hvw : v ≠ w := hl.2.2.1
+  have h2f : hfin.toFinset = ({v, w} : Finset V3) := by
+    ext q
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_empty_iff_false,
+      false_or, Set.mem_insert_iff, Set.mem_singleton_iff, Finset.mem_insert,
+      Finset.mem_singleton]
+  rw [h2f, Finset.sum_insert (by simp [hvw]), Finset.sum_singleton] at hsum
+  have hfv : 0 < f v := hpos v (by simp)
+  have hfw : 0 < f w := hpos w (by simp)
+  refine ⟨-(f v / f w), ?_, ?_⟩
+  · have hq : 0 < f v / f w := div_pos hfv hfw
+    linarith
+  · have hkey : f w • w = (-(f v)) • v := by
+      have h0 : f v • v + f w • w = (0:V3) := by rw [← hsum]
+      rw [neg_smul]
+      exact eq_neg_iff_add_eq_zero.mpr (by rw [add_comm]; exact h0)
+    have h1 : (f w)⁻¹ • (f w • w) = w := inv_smul_smul₀ (ne_of_gt hfw) w
+    calc w = (f w)⁻¹ • (f w • w) := h1.symm
+      _ = (f w)⁻¹ • ((-(f v)) • v) := by rw [hkey]
+      _ = ((f w)⁻¹ * (-(f v))) • v := by rw [smul_smul]
+      _ = (-(f v / f w)) • v := by
+        rw [show (f w)⁻¹ * (-(f v)) = -(f v / f w) by
+          rw [div_eq_mul_inv]; ring]
+
+/-- K2：内点 dart `(p, ρp)`（`interiorAngle1 = π`，HKIRPEP）的法向
+`p × ρp` 与 lunar 方向 `v` 正交。 -/
+private theorem w_b13_cross_rho_v_eq_zero {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} {v w p : V3} (hcf : ConvexLocalFan V E FF)
+    (hl : Lunar v w V E) (hp : p ∈ V) (hpv : p ≠ v) (hpw : p ≠ w) :
+    cross3_p37 p (rhoNode1 FF p) ⬝ᵥ v = 0 := by
+  have hpi := (HKIRPEP_ALT_p37 hcf hl).1 p (by simp [hp, hpv, hpw])
+  have hazim : azim 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) = Real.pi := hpi
+  obtain ⟨hlf, hcvx⟩ := hcf
+  have hvV : v ∈ V := hl.2.1 (by simp)
+  have hwedge := w_b13_wedgeInFanGe_eq_wedgeGe hlf hp
+  have hsub : V ⊆ wedgeGe 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) := by
+    have h := (hcvx (p, rhoNode1 FF p) (LOCAL_FAN_RHO_NODE_PROS2_p37 hlf p hp)).2
+    rwa [hwedge] at h
+  have hhalf2 : wedgeGe_p2 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) =
+      {x : V3 | 0 ≤ cross3_p37 p (rhoNode1 FF p) ⬝ᵥ x} := by
+    simpa [cross3_p37, sub_zero] using
+      (AZIM_PI_WEDGE_GE_CROSS_DOT (u := (0 : V3)) (v := p)
+        (w := rhoNode1 FF p) (ww := ivsRhoNode1 FF p) hazim)
+  have hhalf : wedgeGe 0 p (rhoNode1 FF p) (ivsRhoNode1 FF p) =
+      {x : V3 | 0 ≤ cross3_p37 p (rhoNode1 FF p) ⬝ᵥ x} := hhalf2
+  have hmemV : 0 ≤ cross3_p37 p (rhoNode1 FF p) ⬝ᵥ v := by
+    have h := hsub hvV
+    rwa [hhalf] at h
+  have hmemW : 0 ≤ cross3_p37 p (rhoNode1 FF p) ⬝ᵥ w := by
+    have h := hsub (hl.2.1 (by simp : w ∈ ({v, w} : Set V3)))
+    rwa [hhalf] at h
+  obtain ⟨c, hc, hweq⟩ := w_b13_w_eq_neg_smul ⟨hlf, hcvx⟩ hl
+  subst hweq
+  have hW : 0 ≤ c * (cross3_p37 p (rhoNode1 FF p) ⬝ᵥ v) := by
+    simpa [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul] using hmemW
+  nlinarith [hmemV, hW, hc]
+
 /-- HOL `MHAEYJN_CONVEX_LOCAL_FAN` (lunar_deform.hl:3644): the
 `ConvexLocalFan` conclusion of MHAEYJN without the lunar conjunct.
 GIANT (sorry): combines `SUB_LUNAR_DEFORM_LEMMA_p37` with the
@@ -4280,5 +4410,13 @@ private theorem w5cB9_SUB_LUNAR_DF_cond
       Lunar v w ((fun z => f z t) '' V) ((fun s => (fun z => f z t) '' s) '' E) :=
   w5cB3_lunar_window (a := a) (b := b) (V := V) (E := E) (f := f)
     (u := u) (v := v) (w := w) (e := d) _hl _huv _huw _hpin _ha _hb hd hsep
+
+/-! ## la37-mhaeyjn-w1 证据块：已证私有件的公理面 -/
+#print axioms w_b13_rho_image
+#print axioms w_b13_ivs_image
+#print axioms w_b13_azimInFan_eq_azim
+#print axioms w_b13_wedgeInFanGe_eq_wedgeGe
+#print axioms w_b13_w_eq_neg_smul
+#print axioms w_b13_cross_rho_v_eq_zero
 
 end Kepler.Text
