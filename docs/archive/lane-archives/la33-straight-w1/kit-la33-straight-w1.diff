@@ -1,0 +1,360 @@
+diff --git a/lean/Kepler/Text/LocalAuto33.lean b/lean/Kepler/Text/LocalAuto33.lean
+index 82c7827..5f64204 100644
+--- a/lean/Kepler/Text/LocalAuto33.lean
++++ b/lean/Kepler/Text/LocalAuto33.lean
+@@ -135,6 +135,20 @@ DISCHARGES (2026-10-28, la33-w2; 3 of the remaining 16): the master `4I2`
+   hypothesis (口径 B) and the three leaves.  Master-cone direct-source net
+   estimate (lane probe, M0/M1): +1 (rows out: `ARDBZYE_p33`/`FYSSVEV_p33`;
+   attributed rows in: the three leaves) — 编排者裁决.
++
++DISCHARGES (2026-11-05, la33-straight-w1; 2 more): `SCS_4I2_STRAIGHT_p33` and
++  `SCS_4I2_STRAIGHT_ALL_p33` — the ear bound `ear_acute_p33` transported to
++  the azimuth through `azim = dihV` (`azim_dihv_same`/`_compl`) and
++  `dihV = dihY` (`DIHV_EQ_DIH_Y_4PT_B`), the `azim >= pi` branch killed by
++  the convex-local-fan wedge bound `azim <= pi`; the two half-angles are
++  then summed with `sum4_azim_fan` along the fan sector, and the four
++  residues follow by 4-periodicity.  New private helpers:
++  `upsX_pos_of_noncollinear_p33`, `azim_lt_half_pi_of_dihY_p33`,
++  `azim_lt_half_pi_of_dihY_swap_p33` (zero new sorry, standard three).
++  `MM_4I2_IMP_4T2_4T1_p33` stays: its `3 < dist` branch needs
++  `EDGE_EQ_2_4I2_ALL_p33`, i.e. the `CJBDXXN`/`general_482_deformation`
++  check-completeness leg (LocalAuto21, outside this file's import closure) —
++  gap list in the lane DELIVERY.
+ -/
+ 
+ import Kepler.Text.FanBaseKit
+@@ -2054,18 +2068,328 @@ theorem EDGE_4I2_LE_2H0_p33 (v : ℕ → V3) (hbb : BBsV39 scs4I2 v) (i : ℕ) :
+   rw [a_edge_4I2_p33] at ha
+   exact ⟨hb, ha⟩
+ 
+-/-- HOL `SCS_4I2_STRAIGHT` (ARDBZYE.hl:1813).  NEEDS: `ear_acute_p33` via
+-the y-coordinates of the `4I2` realisation. -/
++-- lane la33-straight-w1 kit: the `upsX`-positivity Gram lemma and the two
++-- `azim`/`dihY` ear bridges consumed by `SCS_4I2_STRAIGHT_p33`.
++
++private theorem upsX_pos_of_noncollinear_p33 {v1 v2 : V3}
++    (hnc : ¬ Collinear ℝ ({(0:V3), v1, v2} : Set V3)) :
++    0 < upsX (‖v1‖ ^ 2) (‖v2‖ ^ 2) (dist v1 v2 ^ 2) := by
++  have hv1 : v1 ≠ 0 := by
++    intro h; subst h
++    exact hnc (by simpa using collinear_pair ℝ (0:V3) v2)
++  have hgsq : 0 < (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) - (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2) := by
++    by_contra hle
++    have hAB : (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) ≤ (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2) := by
++      linarith [not_lt.mp hle]
++    have hcs : |v1 ⬝ᵥ v2| ≤ ‖v1‖ * ‖v2‖ := by
++      rw [← inner_eq_dot]
++      exact abs_real_inner_le_norm (x := v1) (y := v2)
++    have hBA : (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2) ≤ (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) := by
++      calc (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2)
++          = |v1 ⬝ᵥ v2| * |v1 ⬝ᵥ v2| := (abs_mul_abs_self _).symm
++        _ ≤ (‖v1‖ * ‖v2‖) * (‖v1‖ * ‖v2‖) := by
++            nlinarith [hcs, abs_nonneg (v1 ⬝ᵥ v2),
++              mul_nonneg (norm_nonneg v1) (norm_nonneg v2)]
++        _ = (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) := by ring
++    have hsqm : (‖v1‖ * ‖v2‖) * (‖v1‖ * ‖v2‖) = (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) := by
++      ring
++    have habs : |v1 ⬝ᵥ v2| = ‖v1‖ * ‖v2‖ := by
++      refine (mul_self_inj_of_nonneg (abs_nonneg _)
++        (mul_nonneg (norm_nonneg _) (norm_nonneg _))).mp ?_
++      rw [abs_mul_abs_self, hsqm]
++      linarith
++    have hinner : ‖inner ℝ v1 v2‖ = ‖v1‖ * ‖v2‖ := by
++      rw [inner_eq_dot, Real.norm_eq_abs]; exact habs
++    rcases ((norm_inner_eq_norm_tfae ℝ v1 v2).out 0 2).mp hinner with h0 | ⟨c, hc⟩
++    · exact hv1 h0
++    · exact hnc (collinear3_iff_smul (v := (0:V3)) (w := v1) (w1 := v2) hv1 |>.mpr
++        ⟨c, by simpa using hc⟩)
++  have hcos : 2 * (v1 ⬝ᵥ v2) = ‖v1‖ ^ 2 + ‖v2‖ ^ 2 - ‖v1 - v2‖ ^ 2 := by
++    have h := norm_sub_sq_real v1 v2
++    rw [inner_eq_dot] at h
++    linarith
++  have hupseq : upsX (‖v1‖ ^ 2) (‖v2‖ ^ 2) (‖v1 - v2‖ ^ 2)
++      = 4 * ((‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) - (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2)) := by
++    simp only [upsX]
++    linear_combination (2 * (v1 ⬝ᵥ v2) + ‖v1‖ ^ 2 + ‖v2‖ ^ 2 - ‖v1 - v2‖ ^ 2) * hcos
++  rw [dist_eq_norm, hupseq]
++  linarith
++
++/-- `azim 0 b c d < π/2` from the `dihY` ear bound (first/second ray order). -/
++private theorem azim_lt_half_pi_of_dihY_p33 (b c d : V3)
++    (hnc1 : ¬ Collinear3 0 b c) (hnc2 : ¬ Collinear3 0 b d)
++    (hle : azim 0 b c d ≤ Real.pi)
++    (hdih : dihY ‖b‖ ‖c‖ ‖d‖ (dist c d) (dist b d) (dist b c) < Real.pi / 2) :
++    azim 0 b c d < Real.pi / 2 := by
++  rcases lt_or_ge (azim 0 b c d) Real.pi with hlt | hge
++  · have hsame := azim_dihv_same hnc1 hnc2 hlt
++    have hbr := DIHV_EQ_DIH_Y_4PT_B 0 b c d hnc1 hnc2
++    rw [hsame, hbr]
++    simpa only [dist_zero_left] using hdih
++  · have hcompl := azim_dihv_compl hnc1 hnc2 hge
++    have hbr := DIHV_EQ_DIH_Y_4PT_B 0 b c d hnc1 hnc2
++    have h2 : azim 0 b c d = 2 * Real.pi - dihY ‖b‖ ‖c‖ ‖d‖ (dist c d) (dist b d) (dist b c) := by
++      rw [hcompl, hbr]
++      simp only [dist_zero_left]
++    linarith [Real.pi_pos]
++
++/-- `azim 0 b c d < π/2` from the `dihY` ear bound (swapped ray order). -/
++private theorem azim_lt_half_pi_of_dihY_swap_p33 (b c d : V3)
++    (hnc1 : ¬ Collinear3 0 b c) (hnc2 : ¬ Collinear3 0 b d)
++    (hle : azim 0 b c d ≤ Real.pi)
++    (hdih : dihY ‖b‖ ‖d‖ ‖c‖ (dist c d) (dist b c) (dist b d) < Real.pi / 2) :
++    azim 0 b c d < Real.pi / 2 := by
++  rcases lt_or_ge (azim 0 b c d) Real.pi with hlt | hge
++  · have hsame := azim_dihv_same hnc1 hnc2 hlt
++    have hsym := DIHV_SYM_2 0 b c d
++    have hbr := DIHV_EQ_DIH_Y_4PT_B 0 b d c hnc2 hnc1
++    rw [hsame, hsym, hbr]
++    simpa only [dist_zero_left, dist_zero_right, dist_comm] using hdih
++  · have hcompl := azim_dihv_compl hnc1 hnc2 hge
++    have hsym := DIHV_SYM_2 0 b c d
++    have hbr := DIHV_EQ_DIH_Y_4PT_B 0 b d c hnc2 hnc1
++    have h2 : azim 0 b c d = 2 * Real.pi - dihY ‖b‖ ‖d‖ ‖c‖ (dist c d) (dist b c) (dist b d) := by
++      rw [hcompl, hsym, hbr]
++      simp only [dist_zero_left, dist_zero_right, dist_comm]
++    linarith [Real.pi_pos]
++
++/-- HOL `SCS_4I2_STRAIGHT` (ARDBZYE.hl:1813).  DISCHARGED 2026-11-05
++(la33-straight-w1): the ear bound `ear_acute_p33` transported through the
++`azim = dihV`/`dihV = dihY` bridge (the `azim >= pi` branch is killed by the
++convex-local-fan wedge bound `azim <= pi`), then the two half-angles are
++summed along the fan sector `(v i, v(i+1), v(i+2), v(i+3))`. -/
+ theorem SCS_4I2_STRAIGHT_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3) (i : ℕ)
+-    (hv : v ∈ MMsV39 scs4I2) : azim 0 (v i) (v (i + 1)) (v (i + 3)) < Real.pi := sorry
++    (hv : v ∈ MMsV39 scs4I2) : azim 0 (v i) (v (i + 1)) (v (i + 3)) < Real.pi := by
++  have hbb : BBsV39 scs4I2 v := MMs_imp_BBs_p33 hv
++  have hscs : isScsV39 scs4I2 := SCS_4I2_IS_SCS_p33
++  have hp : Periodic v 4 := by
++    have h := hbb.2.1
++    rwa [K_SCS_4I2_p33] at h
++  have hmod : ∀ n, v n = v (n % 4) := by
++    intro n
++    have key : ∀ m, v (n % 4 + 4 * m) = v (n % 4) := by
++      intro m
++      induction m with
++      | zero => simp
++      | succ k ih =>
++        have he : n % 4 + 4 * (k + 1) = (n % 4 + 4 * k) + 4 := by omega
++        rw [he, hp (n % 4 + 4 * k)]
++        exact ih
++    have h := key (n / 4)
++    rwa [Nat.mod_add_div n 4] at h
++  have hvne : ∀ a b : ℕ, a % 4 ≠ b % 4 → v a ≠ v b := by
++    intro a b hab h
++    exact hab ((BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb a b).mp h)
++  have hnorm : ∀ k, 2 ≤ ‖v k‖ ∧ ‖v k‖ ≤ 2 * h0 := fun k =>
++    ballAnnulus_norm_bounds (hbb.1 ⟨k, rfl⟩)
++  have hedge_le : ∀ k, dist (v k) (v (k + 1)) ≤ 2 * h0 :=
++    fun k => (EDGE_4I2_LE_2H0_p33 v hbb k).1
++  have hedge_ge : ∀ k, 2 ≤ dist (v k) (v (k + 1)) :=
++    fun k => (EDGE_4I2_LE_2H0_p33 v hbb k).2
++  have hdiag02 : 3 ≤ dist (v i) (v (i + 2)) :=
++    SCS_4I2_3_LE_A_p33 v hbb i (i + 2) (SCS_DIAG_4_ADD0_p33 i)
++  have hedge3_le : dist (v i) (v (i + 3)) ≤ 2 * h0 := by
++    have h := hedge_le (i + 3)
++    have he : v (i + 3 + 1) = v i := by
++      rw [show i + 3 + 1 = i + 4 by omega, hp i]
++    rw [he, dist_comm] at h
++    exact h
++  have hedge3_ge : 2 ≤ dist (v i) (v (i + 3)) := by
++    have h := hedge_ge (i + 3)
++    have he : v (i + 3 + 1) = v i := by
++      rw [show i + 3 + 1 = i + 4 by omega, hp i]
++    rw [he, dist_comm] at h
++    exact h
++  -- fan data
++  have hclf : ConvexLocalFan (Set.range v)
++      (Set.range fun k => ({v k, v (k + 1)} : Set V3))
++      (Set.range fun k => (v k, v (k + 1))) :=
++    BBS_IMP_CONVEX_LOCAL_FAN_p34 scs4I2 4 v (by norm_num) K_SCS_4I2_p33 hbb
++  have hfan : LocalFan (Set.range v)
++      (Set.range fun k => ({v k, v (k + 1)} : Set V3))
++      (Set.range fun k => (v k, v (k + 1))) := hclf.1
++  have hcvx := hclf.2
++  have hdart : (v i, v (i + 1)) ∈ Set.range (fun k => (v k, v (k + 1))) := ⟨i, rfl⟩
++  -- neighbour set at v i
++  have hneigh : ee (v i) (Set.range fun k => ({v k, v (k + 1)} : Set V3))
++      = {v (i + 1), v (i + 3)} := by
++    ext w
++    constructor
++    · intro hw
++      simp only [ee, Set.mem_setOf_eq] at hw
++      obtain ⟨k, hk⟩ := hw
++      have hk1 : v k ∈ ({v i, w} : Set V3) := hk ▸ (by simp : v k ∈ ({v k, v (k + 1)} : Set V3))
++      have hk2 : v (k + 1) ∈ ({v i, w} : Set V3) :=
++        hk ▸ (by simp : v (k + 1) ∈ ({v k, v (k + 1)} : Set V3))
++      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hk1 hk2
++      have hgoal : w = v (i + 1) ∨ w = v (i + 3) := by
++        rcases hk1 with h1 | h1 <;> rcases hk2 with h2 | h2
++        · exfalso
++          have h1' : k % 4 = i % 4 := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb k i).mp h1
++          have h2' : (k + 1) % 4 = i % 4 := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb (k + 1) i).mp h2
++          omega
++        · left
++          have hkmod : (k + 1) % 4 = (i + 1) % 4 := by
++            have h1' : k % 4 = i % 4 := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb k i).mp h1
++            omega
++          rw [← h2, hmod (k + 1), hmod (i + 1), hkmod]
++        · right
++          have hkmod : k % 4 = (i + 3) % 4 := by
++            have h2' : (k + 1) % 4 = i % 4 := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb (k + 1) i).mp h2
++            omega
++          rw [← h1, hmod k, hmod (i + 3), hkmod]
++        · exfalso
++          have h1' : (k + 1) % 4 = k % 4 :=
++            (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb (k + 1) k).mp (by rw [h2, ← h1])
++          omega
++      simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using hgoal
++    · intro hw
++      have hw' : w = v (i + 1) ∨ w = v (i + 3) := by
++        simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using hw
++      rcases hw' with h | h
++      · rw [h]
++        exact Set.mem_range_self i
++      · rw [h]
++        refine ⟨i + 3, ?_⟩
++        show ({v (i + 3), v (i + 3 + 1)} : Set V3) = {v i, v (i + 3)}
++        rw [show i + 3 + 1 = i + 4 by omega, hp i]
++        exact Set.pair_comm _ _
++  have hcard : 1 < (ee (v i) (Set.range fun k => ({v k, v (k + 1)} : Set V3))).ncard := by
++    rw [hneigh]
++    have hne : v (i + 1) ≠ v (i + 3) := hvne (i + 1) (i + 3) (by omega)
++    rw [Set.ncard_pair hne]
++    norm_num
++  -- fan successor is v (i+3)
++  have hsete : Kepler.Text.Fan.setOfEdge (v i) Set.univ
++      (Set.range fun k => ({v k, v (k + 1)} : Set V3)) = {v (i + 1), v (i + 3)} := by
++    rw [show Kepler.Text.Fan.setOfEdge (v i) Set.univ
++        (Set.range fun k => ({v k, v (k + 1)} : Set V3))
++        = ee (v i) (Set.range fun k => ({v k, v (k + 1)} : Set V3)) from by
++      ext w
++      simp only [Kepler.Text.Fan.setOfEdge, ee, Set.mem_setOf_eq, Set.mem_univ, and_true]]
++    exact hneigh
++  have hsigma : Kepler.Text.Fan.sigmaFan 0 Set.univ
++      (Set.range fun k => ({v k, v (k + 1)} : Set V3)) (v i) (v (i + 1)) = v (i + 3) := by
++    have hne1 : ({v (i + 1), v (i + 3)} : Set V3) ≠ {v (i + 1)} := by
++      intro h
++      have hmem : v (i + 3) ∈ ({v (i + 1)} : Set V3) := by
++        rw [← h]; simp
++      exact hvne (i + 3) (i + 1) (by omega) (by simpa using hmem)
++    rw [Kepler.Text.Fan.sigmaFan, hsete, if_neg hne1]
++    have hP : (fun w => w ∈ ({v (i + 1), v (i + 3)} : Set V3) ∧ w ≠ v (i + 1) ∧
++        ∀ w1 ∈ ({v (i + 1), v (i + 3)} : Set V3), w1 ≠ v (i + 1) →
++          azim 0 (v i) (v (i + 1)) w ≤ azim 0 (v i) (v (i + 1)) w1) (v (i + 3)) := by
++      refine ⟨?_, ?_, ?_⟩
++      · simp
++      · exact hvne (i + 3) (i + 1) (by omega)
++      · intro w1 hw1 hw1ne
++        rcases (by simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using hw1) with h | h
++        · exact absurd h hw1ne
++        · rw [h]
++    have huniq : ∀ w, (fun w => w ∈ ({v (i + 1), v (i + 3)} : Set V3) ∧ w ≠ v (i + 1) ∧
++        ∀ w1 ∈ ({v (i + 1), v (i + 3)} : Set V3), w1 ≠ v (i + 1) →
++          azim 0 (v i) (v (i + 1)) w ≤ azim 0 (v i) (v (i + 1)) w1) w → w = v (i + 3) := by
++      intro w hw
++      obtain ⟨hw1, hw2, -⟩ := hw
++      rcases (by simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using hw1) with h | h
++      · exact absurd h hw2
++      · exact h
++    exact huniq _ (Classical.epsilon_spec (p := fun w => w ∈ ({v (i + 1), v (i + 3)} : Set V3) ∧
++      w ≠ v (i + 1) ∧ ∀ w1 ∈ ({v (i + 1), v (i + 3)} : Set V3), w1 ≠ v (i + 1) →
++        azim 0 (v i) (v (i + 1)) w ≤ azim 0 (v i) (v (i + 1)) w1) ⟨v (i + 3), hP⟩)
++  -- azim values
++  have haz : azimInFan (v i, v (i + 1)) (Set.range fun k => ({v k, v (k + 1)} : Set V3))
++      = azim 0 (v i) (v (i + 1)) (v (i + 3)) := by
++    rw [Kepler.Text.azimInFan, if_pos hcard, hsigma]
++  have hle_a : azim 0 (v i) (v (i + 1)) (v (i + 3)) ≤ Real.pi := by
++    have h := (hcvx (v i, v (i + 1)) hdart).1
++    rwa [haz] at h
++  have hwedge : ∀ w ∈ Set.range v,
++      azim 0 (v i) (v (i + 1)) w ≤ azim 0 (v i) (v (i + 1)) (v (i + 3)) := by
++    intro w hw
++    have h := (hcvx (v i, v (i + 1)) hdart).2 hw
++    rw [Kepler.Text.wedgeInFanGe, if_pos hcard, hsigma] at h
++    exact h.2
++  have hle_a1 : azim 0 (v i) (v (i + 1)) (v (i + 2))
++      ≤ azim 0 (v i) (v (i + 1)) (v (i + 3)) := hwedge (v (i + 2)) ⟨i + 2, rfl⟩
++  -- non-collinearity from Generic
++  have hgen : scsGeneric v := SCS_4I2_GENERIC_p33 v hv
++  have hnc : ∀ a b : V3, a ∈ Set.range v → b ∈ Set.range v → a ≠ b →
++      ¬ Collinear ℝ ({0, a, b} : Set V3) := by
++    intro a b ha hb hne
++    exact PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (Set.range v)
++      (Set.range fun k => ({v k, v (k + 1)} : Set V3))
++      (Set.range fun k => (v k, v (k + 1))) a b hfan ha hb hne hgen
++  have hnc01 : ¬ Collinear3 0 (v i) (v (i + 1)) :=
++    hnc (v i) (v (i + 1)) ⟨i, rfl⟩ ⟨i + 1, rfl⟩ (hvne i (i + 1) (by omega))
++  have hnc02 : ¬ Collinear3 0 (v i) (v (i + 2)) :=
++    hnc (v i) (v (i + 2)) ⟨i, rfl⟩ ⟨i + 2, rfl⟩ (hvne i (i + 2) (by omega))
++  have hnc03 : ¬ Collinear3 0 (v i) (v (i + 3)) :=
++    hnc (v i) (v (i + 3)) ⟨i, rfl⟩ ⟨i + 3, rfl⟩ (hvne i (i + 3) (by omega))
++  -- ear bounds
++  have hups02 : 0 < upsX (‖v i‖ ^ 2) (‖v (i + 2)‖ ^ 2) (dist (v i) (v (i + 2)) ^ 2) :=
++    upsX_pos_of_noncollinear_p33 hnc02
++  have hear1 : dihY (‖v i‖) (‖v (i + 1)‖) (‖v (i + 2)‖) (dist (v (i + 1)) (v (i + 2)))
++      (dist (v i) (v (i + 2))) (dist (v i) (v (i + 1))) < Real.pi / 2 :=
++    ear_acute_p33 _hmn (‖v i‖) (‖v (i + 1)‖) (‖v (i + 2)‖) (dist (v (i + 1)) (v (i + 2)))
++      (dist (v i) (v (i + 2))) (dist (v i) (v (i + 1)))
++      (hnorm i).1 (hnorm i).2 (hnorm (i + 1)).1 (hnorm (i + 1)).2
++      (hnorm (i + 2)).1 (hnorm (i + 2)).2 (hedge_ge (i + 1)) (hedge_le (i + 1))
++      (hedge_ge i) (hedge_le i) hdiag02 hups02
++  have hear2 : dihY (‖v i‖) (‖v (i + 3)‖) (‖v (i + 2)‖) (dist (v (i + 2)) (v (i + 3)))
++      (dist (v i) (v (i + 2))) (dist (v i) (v (i + 3))) < Real.pi / 2 :=
++    ear_acute_p33 _hmn (‖v i‖) (‖v (i + 3)‖) (‖v (i + 2)‖) (dist (v (i + 2)) (v (i + 3)))
++      (dist (v i) (v (i + 2))) (dist (v i) (v (i + 3)))
++      (hnorm i).1 (hnorm i).2 (hnorm (i + 3)).1 (hnorm (i + 3)).2
++      (hnorm (i + 2)).1 (hnorm (i + 2)).2 (hedge_ge (i + 2)) (hedge_le (i + 2))
++      hedge3_ge hedge3_le hdiag02 hups02
++  have hxv : v i ≠ 0 := by
++    intro h0
++    have h2 := (hnorm i).1
++    rw [h0, norm_zero] at h2
++    linarith
++  have hsum : azim 0 (v i) (v (i + 1)) (v (i + 3))
++      = azim 0 (v i) (v (i + 1)) (v (i + 2)) + azim 0 (v i) (v (i + 2)) (v (i + 3)) :=
++    sum4_azim_fan (x := 0) (v := v i) (u := v (i + 1)) (w1 := v (i + 2)) (w2 := v (i + 3))
++      hxv hnc01 hnc02 hnc03 hle_a1
++  -- first angle
++  have ha1 : azim 0 (v i) (v (i + 1)) (v (i + 2)) < Real.pi / 2 :=
++    azim_lt_half_pi_of_dihY_p33 (v i) (v (i + 1)) (v (i + 2)) hnc01 hnc02
++      (le_trans hle_a1 hle_a) hear1
++  -- second angle bound from the split
++  have hle_a2 : azim 0 (v i) (v (i + 2)) (v (i + 3)) ≤ Real.pi := by
++    have h0 := azim_nonneg 0 (v i) (v (i + 1)) (v (i + 2))
++    linarith
++  have ha2 : azim 0 (v i) (v (i + 2)) (v (i + 3)) < Real.pi / 2 :=
++    azim_lt_half_pi_of_dihY_swap_p33 (v i) (v (i + 2)) (v (i + 3)) hnc02 hnc03 hle_a2 hear2
++  linarith
+   -- DISCHARGES: NEEDS ARDBZYE.hl SCS_4I2_STRAIGHT.
+ 
+-/-- HOL `SCS_4I2_STRAIGHT_ALL` (ARDBZYE.hl:1919).  NEEDS: as
+-`SCS_4I2_STRAIGHT_p33`, instantiated at the four residues. -/
++/-- HOL `SCS_4I2_STRAIGHT_ALL` (ARDBZYE.hl:1919).  DISCHARGED 2026-11-05
++(la33-straight-w1): the four residues instantiated from
++`SCS_4I2_STRAIGHT_p33` with the 4-periodicity rewrites `v 4 = v 0`,
++`v 5 = v 1`, `v 6 = v 2`. -/
+ theorem SCS_4I2_STRAIGHT_ALL_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3)
+     (hv : v ∈ MMsV39 scs4I2) :
+     azim 0 (v 0) (v 1) (v 3) < Real.pi ∧ azim 0 (v 1) (v 2) (v 0) < Real.pi ∧
+-      azim 0 (v 2) (v 3) (v 1) < Real.pi ∧ azim 0 (v 3) (v 0) (v 2) < Real.pi := sorry
++      azim 0 (v 2) (v 3) (v 1) < Real.pi ∧ azim 0 (v 3) (v 0) (v 2) < Real.pi := by
++  have hp : Periodic v 4 := by
++    have h := (MMs_imp_BBs_p33 hv).2.1
++    rwa [K_SCS_4I2_p33] at h
++  have e4 : v 4 = v 0 := by simpa using hp 0
++  have e5 : v 5 = v 1 := by simpa using hp 1
++  have e6 : v 6 = v 2 := by simpa using hp 2
++  have h0 : azim 0 (v 0) (v 1) (v 3) < Real.pi := SCS_4I2_STRAIGHT_p33 _hmn v 0 hv
++  have h1 : azim 0 (v 1) (v 2) (v 0) < Real.pi := by
++    have h : azim 0 (v 1) (v 2) (v 4) < Real.pi := SCS_4I2_STRAIGHT_p33 _hmn v 1 hv
++    rwa [e4] at h
++  have h2 : azim 0 (v 2) (v 3) (v 1) < Real.pi := by
++    have h : azim 0 (v 2) (v 3) (v 5) < Real.pi := SCS_4I2_STRAIGHT_p33 _hmn v 2 hv
++    rwa [e5] at h
++  have h3 : azim 0 (v 3) (v 0) (v 2) < Real.pi := by
++    have h : azim 0 (v 3) (v 4) (v 6) < Real.pi := SCS_4I2_STRAIGHT_p33 _hmn v 3 hv
++    rwa [e4, e6] at h
++  exact ⟨h0, h1, h2, h3⟩
+   -- DISCHARGES: NEEDS ARDBZYE.hl SCS_4I2_STRAIGHT_ALL.
+ 
+ /-- HOL `EDGE_EQ_2_4I2` (ARDBZYE.hl:1965).  NEEDS: the terminal case bank. -/

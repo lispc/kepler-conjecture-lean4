@@ -1,0 +1,104 @@
+# DEPS.txt — fcdjdot 柱③ (DLWCHEM_full / XULJEPR_full) true dependency closure
+# lane: pa22-fcdjdot-pillars-recon-w1 (READ-ONLY)
+# source pin: git 117511bb, lean/Kepler/Text/PackingAuto22.lean sha256 1397802c4cf13190c9af1e51382d2273ab29decf033ed7f85e2f7f93ac585ed0 (14434 lines)
+#             lean/Kepler/Assembly.lean         sha256 91beaba05d77934c63b91d0af2659f58b39f08e3f3c70d5a6b8b7e0a1b6a09fd
+# NOTE live tree @dcb1a0fb has the pa22-eusotyp2 patch applied (14769 lines): live = pinned + 103 for EUSOTYP2_general only,
+#      pinned + 335 for every line after its body (all other rows here). Rows below 10827 are unchanged.
+# method: comment-stripped block parse + whole-word name-edge BFS from the 4 roots (depth<=4, unbounded re-check => same set),
+#         then #print axioms on every leaf. Raw output: EVIDENCE.md, probe1.log, probe2.log, probe3b.log.
+# std3 = [propext, Classical.choice, Quot.sound]
+# columns: decl <TAB> line@117511bb <TAB> live_line <TAB> status <TAB> axioms <TAB> referenced_by <TAB> class <TAB> on_path
+#
+# ===== D0 roots (proved, sorryAx-carrying) =====
+DLWCHEM_full	14252	14587	proved	sorryAx	ROOT; planned consumer Assembly.fcdjdot	BODY	path
+XULJEPR_full	14288	14623	proved	sorryAx	ROOT; planned consumer Assembly.fcdjdot	BODY	path
+DLWCHEM_of_stub_bridge	14346	14681	proved	sorryAx	SF swap bridge; no current consumer	OFF-PATH	off
+XULJEPR_of_stub_bridge	14353	14688	proved	sorryAx	SF swap bridge; no current consumer	OFF-PATH	off
+#
+# ===== D1 direct deps of the roots =====
+fat_lemma1	311	311	proved	std3	DLWCHEM_full / XULJEPR_full	def	-
+LMFUN_INEQ_CENTER_IMP_13	13902	14237	proved	std3	DLWCHEM_full	def	-
+SATURATE_BALL_ANNULUS	13930	14265	proved	std3	DLWCHEM_full / XULJEPR_full	def	-
+THETA_BOUNDS	13633	13968	proved	std3	DLWCHEM_full / XULJEPR_full	def	-
+facet_3_facets	13574	13909	proved	std3	DLWCHEM_full / XULJEPR_full	def	-
+DLWCHEM_VECTOR_sumReal	13966	14301	proved	std3	DLWCHEM_full	def	-
+XULJEPR_VECTOR_sumReal	14045	14380	proved	std3	XULJEPR_full	def	-
+existsM_polyhedron_sums	14179	14514	proved	sorryAx (PRIVATE; body calls the 4 D2 decls at :14199/:14205/:14222/:14238)	PIVOT for all 4 D2 decls	HUB	path
+YSSKQOY_VECTOR	13584	13919	sorry	sorryAx	DLWCHEM_full:14267	L	YES
+YSSKQOY_VECTOR2_ALT	13609	13944	sorry	sorryAx	XULJEPR_full:14318	M	YES
+#
+# ===== D2 still-sorry reached through the pivot existsM_polyhedron_sums =====
+GOTCJAH	11950	12285	sorry	sorryAx	existsM_polyhedron_sums:14222	M	YES
+polyhedron_edge_sum	12792	13127	sorry	sorryAx	existsM_polyhedron_sums:14205	BLOCKED	YES
+EXISTS_M_POLYHEDRON	13062	13397	sorry	sorryAx	existsM_polyhedron_sums:14199	L	YES
+POLYHEDRON_FACET_SUM_4Pi	13951	14286	sorry	sorryAx	existsM_polyhedron_sums:14238	BLOCKED	YES
+#
+# ===== HOL-intent additions: Lean bodies are `sorry`, so the syntactic scan cannot see these edges;
+# ===== the HOL proofs of the sorry items above name them, so a faithful port needs them. =====
+YSSKQOY_VECTOR2	13602	13937	sorry	sorryAx	HOL YSSKQOY_VECTOR2_ALT (counting_spheres.hl:6599) calls it in 2 of 4 branches	M	YES-via-HOL
+PACK_INEQ_DEF_A_797	13595	13930	sorry	sorryAx	HOL YSSKQOY_VECTOR2 (counting_spheres.hl:6599) calls it	DEFHOLE	YES-via-HOL
+#
+# ===== proved leaves, probed std3 =====
+DLWCHEM_sum	5716	5716	proved	std3	DLWCHEM_VECTOR_sumReal	def	-
+XULJEPR_sum	5769	5769	proved	std3	XULJEPR_VECTOR_sumReal	def	-
+BIEFJHU_explicit	5518	5518	proved	std3	DLWCHEM_sum	def	-
+UKBRPFE_explicit	5636	5636	proved	std3	XULJEPR_sum	def	-
+FACET_SOL_NN	13777	14112	proved	std3	existsM_polyhedron_sums	def	-
+FCHANGED_MEASURABLE	9852	9852	proved	std3	FACET_SOL_NN	def	-
+regularSphericalPolygonAreaP22	290	290	proved	std3	DLWCHEM_VECTOR_sumReal	def	-
+weaklySaturatedP22	298	298	proved	std3	EXISTS_M_POLYHEDRON	def	-
+packIneqDefAP22	306	306	proved	none (:= True)	DLWCHEM_full / XULJEPR_full	STUB	-
+PackIneqDefA (Assembly)	279	279	proved	none (:= True)	fcdjdot hpa	STUB	-
+arclength22	13592	13927	proved	std3	only PACK_INEQ_DEF_A_797	STUB (:= 0)	-
+#
+# ===== GOTCJAH prerequisites: all proved+CLEAN => GOTCJAH is UNBLOCKED =====
+gotcjah_prep	11647	11982	proved	std3	GOTCJAH	def	-
+gotcjah_sol_lemma	11477	11812	proved	std3	GOTCJAH	def	-
+convex_sum_corollary	11902	12237	proved	std3	GOTCJAH	def	-
+ORDER_AZIM_SUM2Pi	9534	9534	proved	std3	GOTCJAH	def	-
+SOL_SUBSET	11937	12272	proved	std3	GOTCJAH	def	-
+FCHANGED_RADIAL	10006	10006	proved	std3	GOTCJAH	def	-
+EMPTY_NOT_EXISTS_IN	7512	7512	proved	std3	GOTCJAH	def	-
+WEDGE_ORDER_DISJOINT	9518	9518	proved	std3	GOTCJAH	def	-
+EUSOTYP2_general	10827	10930	proved (landed by pa22-eusotyp2-assembly-w1)	std3	GOTCJAH	def	-
+#
+# ===== EXISTS_M_POLYHEDRON prerequisites: all proved+CLEAN => UNBLOCKED =====
+FACET_OF_POLYHEDRON_EXPLICIT_ALT	12896	13231	proved	std3	EXISTS_M_POLYHEDRON	def	-
+rcone_gt_facet	12054	12389	proved	std3	EXISTS_M_POLYHEDRON	def	-
+rcone_refl	11965	12300	proved	std3	EXISTS_M_POLYHEDRON	def	-
+rcone_dot_pos	11978	12313	proved	std3	EXISTS_M_POLYHEDRON	def	-
+cos_bounds_0_Pi2	11986	12321	proved	std3	EXISTS_M_POLYHEDRON	def	-
+#
+# ===== polyhedron_edge_sum blockers =====
+BIJ_FACET_HYPERFACE	12177	12512	sorry	sorryAx	HOL polyhedron_edge_sum:5476	BLOCKED	upstream
+BIJ_DART_POLYEDGE	12710	13045	sorry	sorryAx	HOL polyhedron_edge_sum:5476	BLOCKED	upstream
+POLYHEDRON_TGJISOK	12216	12551	proved	std3	HOL polyhedron_edge_sum:5476	VACUOUS	upstream
+# POLYHEDRON_TGJISOK is clean but vacuous: it quantifies over hypermap1OfFanxP22 (PackingAuto22:237) whose darts := ∅,
+# so "darts.card <= 6*faces - 12" carries no Euler content; the real E<=3F-6 is not in the tree.
+polyhedron_sum_sum_edge	12735	13070	proved	std3	HOL polyhedron_edge_sum:5476	def	-
+FINITE_EDGE	12718	13053	proved	std3	HOL polyhedron_edge_sum:5476	def	-
+#
+# ===== POLYHEDRON_FACET_SUM_4Pi blockers =====
+POLYHEDRON_CONFORMING_FAN	12185	12520	sorry	sorryAx	HOL POLYHEDRON_FACET_SUM_4Pi:6245	BLOCKED	upstream
+POLYHEDRON_FAN	-	-	ABSENT	-	HOL POLYHEDRON_FACET_SUM_4Pi:6245	BLOCKED	upstream
+AMHFNXP_BIJ	-	-	ABSENT	-	HOL POLYHEDRON_FACET_SUM_4Pi:6245	BLOCKED	upstream
+SUM_SOL_IN_FACE_SET_EQ_4PI	-	-	ABSENT (only a NEEDS note pointing at ConformingAuto6.lean:735)	-	HOL POLYHEDRON_FACET_SUM_4Pi:6245	BLOCKED	upstream
+#
+# ===== YSSKQOY upstream (PackingAuto18): the real cost behind YSSKQOY_VECTOR =====
+YSSKQOY	PackingAuto18:1622	-	sorry	sorryAx	HOL Ysskqoy.YSSKQOY (YSSKQOY.hl:531)	L	upstream
+arc_derivative	PackingAuto18:1593	-	sorry	sorryAx	HOL YSSKQOY.hl:365	L	upstream
+arc_derivative2	PackingAuto18:1601	-	sorry	sorryAx	HOL YSSKQOY.hl:400	L	upstream
+arc_length2_increasing	PackingAuto18:1608	-	sorry	sorryAx	HOL YSSKQOY.hl:447	L	upstream
+arc_length1_increasing	PackingAuto18:1614	-	sorry	sorryAx	HOL YSSKQOY.hl:491	L	upstream
+arcLength	PackingAuto18:1118	-	proved	std3	HOL sphere.hl:258	READY	-
+arclength2	PackingAuto18:1510	-	proved	std3	HOL YSSKQOY.hl:297	READY	-
+yssk_reduction	PackingAuto18:1570	-	proved	std3	HOL YSSKQOY.hl:316	READY	-
+arc_sym	PackingAuto18:1502	-	proved	std3	HOL YSSKQOY.hl	READY	-
+arcV<->arcLength bridge	-	-	ABSENT (HOL Trigonometry1.arcVarc + ACS_ARCLENGTH)	-	HOL YSSKQOY_VECTOR:6490	BLOCKER	upstream
+#
+# ===== other own-sorry decls of PA22 @117511bb, NOT in pillar-3 closure =====
+regular_spherical_polygon_area_asnFnhk	2712	2712	sorry	sorryAx	none	OFF-PATH	off
+vol_solid_triangle_ortho	6669	6669	sorry	sorryAx	none	OFF-PATH	off
+EDGE_PAIR_pr23	12224	12559	sorry	sorryAx	none	OFF-PATH	off
+HYPERFACE_EXISTS	12702	13037	sorry	sorryAx	none	OFF-PATH	off
+insert_v	1980	1980	sorry	sorryAx	none	OFF-PATH	off
