@@ -1,0 +1,89 @@
+id	class	leaf_tier	tier_source	probe_status	leaves	nodes	wall_s	ops	T_pred_s	T_pred_min	rounds	bucket	needs_stage_a	notes
+2445657182	mixed	T6	static	timeout			180.014	27245				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+9096461391	mixed	T6	static	timeout			180.014	27245				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+OMKYNLT 3336871894	mixed	T6	static	timeout			180.014	27229				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5541487347	mixed	T6	static	timeout			180.005	27233				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+6833979866	mixed	T6	static	timeout			180.007	27233				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+4010906068	mixed	T6	static	timeout			180.011	27233				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7881254908	mixed	T6	static	timeout			180.008	27240				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5026777310a	mixed	T6	static	timeout			180.012	27314				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5405130650	mixed	T6	static	timeout			180.005	27324				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+3603097872	mixed	T6	static	timeout			180.008	27319				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+2468307358	mixed	T6	static	timeout			180.014	27233				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+4680581274 delta issue-cayleyR	poly	T3	static	timeout			180.044	1604				C	false	180s wall cap; stdout buffered, no pending count; C: not closed at 2M/180s
+4680581274 delta issue-cayleytr	poly	T6	measured	closed	75965	151929	4.320	598	6065.046	101.08	2	B	false	reuse M4/prep probe (not rerun)
+4680581274 2x	mixed	T6	static	timeout			180.014	27233				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+4680581274 1x	poly	T6	measured	closed	133228	266455	2.799	223	6640.084	110.67	2	B	true	reuse M4/prep probe (not rerun); S: stage-A +>=15min, batch-FAIL risk
+5550839403	mixed	T3	static	limit		2000000	23.224	572				C	true	2M-node cap; pending=37; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+8405387449	poly	T6	measured	closed	40785	81569	0.592	229	2052.301	34.21	1	A	false	reuse M4/prep probe (not rerun)
+5557288534	mixed	T3	static	closed	4264	8527	0.150	572	331.569	5.53	1	A	true	2M cap/180s; cert emitted then deleted (bytes=1993079); S: stage-A +>=15min, batch-FAIL risk
+1348932091	mixed	T3	static	limit		2000000	23.129	572				C	true	2M-node cap; pending=35; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5202826650 a	mixed	T5	static	timeout			180.019	22731				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+4821120729	sqrt	T2	static	closed	1	1	0.012	46	0.036	0.00	1	A	true	2M cap/180s; cert emitted then deleted (bytes=838); S: stage-A +>=15min, batch-FAIL risk
+6762190381	mixed	T5	static	timeout			180.014	27308				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 4 4 4	mixed	T6	static	timeout			180.011	37406				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 3 4 4	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 3 3 4	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 3 3 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 2 4 4	mixed	T6	static	timeout			180.014	37453				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 2 3 4	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 2 3 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 2 2 4	mixed	T6	static	timeout			180.014	37510				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 2 2 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 2 2 2	mixed	T6	static	timeout			180.004	37577				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 1 4 4	mixed	T6	static	timeout			180.014	34026				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 1 3 4	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 1 3 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 1 2 4	mixed	T6	static	timeout			180.011	34073				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 1 2 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 1 2 2	mixed	T6	static	timeout			180.010	34140				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 1 1 4	mixed	T6	static	timeout			180.005	30656				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 1 1 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 1 1 2	mixed	T6	static	timeout			180.014	30713				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 1 1 1	mixed	T6	static	timeout			180.014	27296				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 4 4	mixed	T6	static	timeout			180.014	35241				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 3 4	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 0 3 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 0 2 4	mixed	T6	static	timeout			180.008	35288				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 2 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 0 2 2	mixed	T6	static	timeout			180.009	35355				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 1 4	mixed	T6	static	timeout			180.012	31861				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 1 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 0 1 2	mixed	T6	static	timeout			180.012	31918				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 1 1	mixed	T6	static	timeout			180.014	28501				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 0 4	mixed	T6	static	timeout			180.014	33086				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 0 3	mixed	T0	static	no_case								C	true	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); S: stage-A +>=15min, batch-FAIL risk; C: no probe leaves
+7550003505 0 0 2	mixed	T6	static	timeout			180.011	33143				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 0 1	mixed	T6	static	timeout			180.014	29716				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7550003505 0 0 0	mixed	T6	static	timeout			180.011	30941				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5744538693	poly	T2	static	closed	936162	1872323	11.713	155	41565.593	692.76	12	C	false	2M cap/180s; cert emitted then deleted (bytes=299219613)
+7823243247	sqrt	T1	static	limit		2000000	11.439	120				C	true	2M-node cap; pending=19; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+9692636487	poly	T0	static	no_case								C	false	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); C: no probe leaves
+6877738680	poly	T0	static	no_case								C	false	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); C: no probe leaves
+7439076204	sqrt	T1	static	limit		2000000	7.902	83				C	true	2M-node cap; pending=15; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+6459846571	sqrt	T1	static	closed	36047	72093	0.439	83	1392.856	23.21	1	A	true	2M cap/180s; cert emitted then deleted (bytes=16636754); S: stage-A +>=15min, batch-FAIL risk
+1008824382	mixed	T6	static	timeout			180.011	29599				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+8875146520	mixed	T6	static	timeout			180.013	28696				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+1586903463	mixed	T6	static	timeout			180.007	28637				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+1948775510	mixed	T6	static	timeout			180.012	28660				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5708641738	mixed	T6	static	timeout			180.007	27343				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+2565248885	mixed	T6	static	timeout			180.003	31746				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5429238960	mixed	T5	static	timeout			180.013	30686				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+2320951108	mixed	T6	static	timeout			180.014	30586				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7997589055	mixed	T6	static	timeout			180.008	33929				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5546286427	mixed	T6	static	timeout			180.014	28403				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7903347843	mixed	T6	static	timeout			180.014	30586				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+3665919985	mixed	T6	static	timeout			180.008	27233				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+6601228004	poly	T0	static	no_case								C	false	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); C: no probe leaves
+1347067436	poly	T0	static	no_case								C	false	queue emit_status=skip:recursion limit; no case JSON, unprobeable (no Lean, no emit_lean); C: no probe leaves
+2314572187	mixed	T6	static	timeout			180.014	27443				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7796879304	mixed	T5	static	timeout			180.341	22848				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+6789182745	mixed	T3	static	limit		2000000	13.468	572				C	true	2M-node cap; pending=15; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+4887115291	mixed	T3	static	limit		2000000	23.297	574				C	true	2M-node cap; pending=21; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+7175074394	poly	T2	static	limit		2000000	13.414	236				C	false	2M-node cap; pending=15; C: not closed at 2M/180s
+4828966562	poly	T1	static	timeout			180.631	43				C	false	180s wall cap; stdout buffered, no pending count; C: not closed at 2M/180s
+1834976363	poly	T1	static	limit		2000000	22.575	104				C	false	2M-node cap; pending=609; C: not closed at 2M/180s
+9563139965 f	mixed	T6	static	timeout			180.004	27233				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+9563139965 e	mixed	T6	static	timeout			180.014	27238				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+9563139965 d	mixed	T6	static	timeout			180.006	27258				C	true	180s wall cap; stdout buffered, no pending count; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
+5691615370	sqrt	T2	static	limit		2000000	12.417	143				C	true	2M-node cap; pending=9; S: stage-A +>=15min, batch-FAIL risk; C: not closed at 2M/180s
