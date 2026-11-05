@@ -100,6 +100,10 @@ ENCODING NOTES
 import Kepler.Text.CircularSolKit
 import Kepler.Text.LocalAuto23
 import Kepler.Text.LocalAuto27
+-- LA1 root unlock (lane la1-bimport-w1): the clean `_p28` engines
+-- (`ODXLSTCv2_p28` / `IMJXPHRv2_p28`) live in LocalAuto28, which this
+-- module could not previously see.  Static import DAG: no path LA28 ->* LA26.
+import Kepler.Text.LocalAuto28
 import Mathlib
 
 set_option maxHeartbeats 5000000

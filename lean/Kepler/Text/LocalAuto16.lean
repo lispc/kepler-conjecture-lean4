@@ -102,6 +102,11 @@ import Kepler.Text.LocalAuto23
 import Kepler.Text.LocalAuto26
 import Kepler.Text.LocalAuto27
 import Kepler.Text.LocalAuto28
+-- LA1 root unlock (lane la1-bimport-w1): the clean `*_p33` donors
+-- (`AUEAHEH_p33`, `VQFYMZY_p33`, `BNAWVNH_p33`, `RAWZDIB_p33`,
+-- `MFKLVDK_p33`, `RYPDIXT_p33`) live in LocalAuto33, which this module
+-- could not previously see.  Static import DAG: no path LA33 ->* LA16.
+import Kepler.Text.LocalAuto33
 import Kepler.Text.SphereKit
 import Kepler.Text.LocalAuto5
 import Kepler.Text.LocalAuto7
