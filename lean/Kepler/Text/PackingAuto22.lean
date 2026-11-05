@@ -2754,7 +2754,12 @@ theorem regular_spherical_polygon_area_asnFnhk (h : ℝ) (k : ℕ) (hk : 3 ≤ k
     regularSphericalPolygonAreaP22
         (h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2) k =
       2 * Real.pi - 2 * asnFnhkP22 h k 1 1 1 1 := by
-  sorry
+  -- 真化后本件是定义级等式（`4.0 = 4` 是唯一缺口）：两边展开到同一个 `asn`
+  -- 项上，`regularSphericalPolygonAreaP22` 的 `max 0` 与 `asnFnhkP22` 的 `k *`
+  -- 逐字对齐，`ring` 收口。`pa22-fanstub-scout` 的 `probe_easy.lean` 判 PROVABLE。
+  have h4 : (4.0 : ℝ) = 4 := by norm_num
+  simp only [regularSphericalPolygonAreaP22, asnFnhkP22, asnFnhk, asn, h4]
+  ring
 
 /-- HOL `regular_spherical_polygon_area_797` (counting_spheres.hl:955). -/
 theorem regular_spherical_polygon_area_797 (k : ℕ) (hk : 3 ≤ k) :
