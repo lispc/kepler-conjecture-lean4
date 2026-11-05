@@ -38,15 +38,17 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 上午，池 **4/5**）
+## 1. 在飞（2026-11-06 下午，池 **0/5**——落库窗口）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `p21-anchor-defix-w1` | **2-β 前置（用户 2026-11-06 裁 R-fix）**：`mainNonlinearTerminalV11_p21/p18` 重编码为 `main_nonlinear_terminal_v11` 别名 + DEF-FIX 章程三份 + 破坏面核验 | 在飞 |
-| `tamecorr-w1` | **2-γ W1**：P6-C 桥 `IsHypermapOfList L (hypermapOfList L)` + `RXOKSKC` 机器；只建 `TameCorrBase.lean` | 在飞 |
-| `pa22-yssksqoy-pillars-w1` | **队首 2-α**：`YSSKQOY_VECTOR`(:13919) 尝试 + 已按侦察改道（`_797` 判 DEFHOLE 只报告；余力转 `GOTCJAH`） | 在飞 |
-| `la1-bimport-w1` | LA1 B 类根：8 条 wave→wave import 边 + `OdxlstcBridge`（`LKGRQUI`）+ **主验收 `RRCWNSJ_p26` 闭合**（锥内 −1） | 在飞 |
-| `pa25-rolling-w6` | **PA25 滚动 w6**：`cell3_008_from_ineq` 桥（单点解锁九件）→ `gamma10`/`gamma11` → `real_model_sum_azim`（~20 行） | 在飞 |
+| — | 当前无子车道；编排者在落库 + 重跑基线 | — |
+
+> 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
+> [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
+> 本轮待落：`pa25-rolling-w6`（7 件，19→12）/ `pa22-yssksqoy-pillars`（2 件，16→14）/
+> `TameCorrBase`（186 行新模块，闸无 HEAD 版本→改走等价验收）。
+> 刚落：`p21-anchor-defix`（`87fdfdad`，DEF-FIX 双 GATE-PASS）、`la1-bimport`（`dcc5e36f`，2 条 import 边）。
 
 > 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
@@ -81,7 +83,11 @@
 >   **W1** P6-C 桥（`IsHypermapOfList L (hypermapOfList L)`，`TameLp` 侧构造已在）+ `RXOKSKC.hl`(1,105 行) 移植，产出**新模块**不动 Assembly；
 >   **W2** `jcajydu`（HOL 99 行本体，消费 W1）；**W3** `tameCorrespondenceIso`（`WMLNYMD.hl` 1,515 行 / 40+ 引理）。
 >   实测闭包 ≈2,000–4,500 HOL 行（不是整章 91,841 行）；`asfutbf`/`elllnyz` 已收口。每波验收 `#print axioms` 标准三。
-> **（以上三条占后续空槽位，顺序 α → β → γ）**
+> - **2-δ `pa22-packineq-defix-w1`**（用户 2026-11-06 裁「真化」，DECISIONS 同日条）—— 移植 HOL `arclength2`（`YSSKQOY.hl:297`）+ `arcV↔arclength` 桥；`PackIneqDefA` 从 `:= True` 改成三条具名不等式（`UKBRPFE`/`WAZLDCD`/`BIEFJHU`）真合取。走 **DEF-FIX**。代价：hNL 诚实 +1；收益：`_797` 变真命题、`XULJEPR` 有望转标准三。
+> - **2-ε `la-registry-mnt11-sf`**（用户同日裁「补前提」）—— `VASYYAU`/`PWEIWBZ`/`WKZZEEH`/`YEBWJNG` 四条 `_concl` 补 `main_nonlinear_terminal_v11` 前提（走 **SF**），连带 LA25 re-export 与 `LocalConcl` 绑定。恢复保真度，不是弱化。
+> - **2-ζ `reduction5-scout`**（用户同日裁「先移植」）—— 摸 `Reduction5.restricted_hypermaps_are_planegraphs_thm` 的边界（估 1,500–3,000 行），为 `jcajydu` W2 铺路；侦察先行，不施工。
+> - **2-η（docs-only，无车道）** —— `HFNXPZA`/`EQTTNZI1/2`/`EFLYGAU`/`BJTDWPS` 标 `CORPUS-UNPROVED` 并从待施工清单移除（LA A 类根 29→24）。
+> **（以上占用后续空槽，顺序 δ → ε → ζ → η）**
 
 > **提级（用户 2026-11-03 晚：「同意」物化程序 A/B/C + 「hypermap 和 la35 优先级提到 pending queue 最前面」）**：补位首发序 = **§2-13 `hypermap-mat-scout` → §2-14 `la35-mat-scout`** → CertTM 物化侦察（§2-15）→ 孤儿岛接入（§2-16）→ 其余按原序。三侦察已收工（续 264），落地波 certtm-root-w1 / hypermap-root-w1 / la35-root-w1 **3/3 在飞**；任一完成即按 §2 原序补位（下一口 = §2-16 孤儿岛接入或侦察建议的波 2）。
 
