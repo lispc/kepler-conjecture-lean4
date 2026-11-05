@@ -27,6 +27,7 @@ import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
+import Kepler.Text.PackingAuto22
 import Kepler.Text.PackingAuto25
 import Kepler.Text.Hypermap
 import Kepler.Text.ContraFan
@@ -274,9 +275,11 @@ def idsLpIneqs : List String := []
 `linear_programming_results` 的前提——此处同样被两处共享。 -/
 def LpIneqs : Prop := AllCertified idsLpIneqs
 
-/-- PLACEHOLDER(P6-E)：HOL `pack_ineq_def_a` 分量（PA22 `packIneqDefAP22` 同形
-占位；G4 证书数据库过滤形态落地后真化）。 -/
-def PackIneqDefA : Prop := True
+/-- HOL `pack_ineq_def_a` 分量（`YSSKQOY.hl:30-31`）：真合取本体已真化在
+`Kepler.Text.PackingAuto22.packIneqDefAP22`（`UKBRPFE_bank ∧ WAZLDCD_bank ∧
+BIEFJHU_bank`，三族 = `ineq.hl:1587-1662` 的 5 条逐字盒式），本处只做转发，
+不再持独立 `True` 副本（DEF-FIX charter `docs/def-fix-charters/packineq-797/`）。 -/
+def PackIneqDefA : Prop := Kepler.Text.packIneqDefAP22
 
 /-- PLACEHOLDER(P6-E)：HOL `kcblrqc_ineq_def` 分量（无既有 Lean 对应物；
 新造占位，语义由 G4/P6-E 填实）。 -/
