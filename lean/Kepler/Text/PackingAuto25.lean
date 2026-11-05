@@ -13870,6 +13870,59 @@ theorem JSP_BOUNDS (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q1h)
   have h1' : 2 * hminus ≤ dist u1 u0 := by rw [dist_comm]; exact h1
   exact JSPEVYT_EXPLICIT u1 u0 u2 hnl hnc' hhl' h1' h3
 
+/-! ### w7 私有 kit（pema/pemb 装配；零 sorry / 零新 import）
+
+`p25w7_rhoX_sym23` / `p25w7_rad2X_sym23` / `p25w7_rad2Y_sym23` = PA21
+`p21i_rhoX_sym23` / `p21i_rad2X_sym23` / `p21i_rad2Y_sym23` 的本文件私拷
+（上游 `TSKAJXY034W3` 内 `private`，跨文件不可见）。`dihY` 的 23-换位直接用
+本文件既证 `p25w4_dihY_sym23`（PA25:9475）。 -/
+
+private theorem p25w7_rhoX_sym23 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rhoX x1 x2 x3 x4 x5 x6 = rhoX x1 x3 x2 x4 x6 x5 := by
+  unfold rhoX; ring
+
+private theorem p25w7_rad2X_sym23 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    rad2X x1 x2 x3 x4 x5 x6 = rad2X x1 x3 x2 x4 x6 x5 := by
+  unfold rad2X
+  rw [p25w4_deltaX_sym23, p25w7_rhoX_sym23]
+
+private theorem p25w7_rad2Y_sym23 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    rad2YP25 y1 y2 y3 y4 y5 y6 = rad2YP25 y1 y3 y2 y4 y6 y5 := by
+  show rad2XP25 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+    = rad2XP25 (y1 * y1) (y3 * y3) (y2 * y2) (y4 * y4) (y6 * y6) (y5 * y5)
+  exact p25w7_rad2X_sym23 _ _ _ _ _ _
+
+/-- HOL `nonf_gamma23_keep135_x` 的 y-空间展开（`gamma23Full8X` 同款）：
+`yOfX (gamma23Keep135X (h0cut y1)) y1..y6 = gamma3f y1 y3 y5 √2 + (dihY y1..y6 -
+dihY y1 √2 y3 √2 y5 √2) * 0.008`。`gamma23Keep135X` 的两个 `compose6` 分量由
+`IneqClosureDefs` 的 `rfl` 钉扎直接展开，`gamma3_x_gamma3f` 用 PA21
+`mi_gamma3_x_gamma3f`。 -/
+private theorem p25w7_gamma23Keep135X_yOfX_eq (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : criticalEdgeY y1) (hb3 : 2 ≤ y3) (hb3' : y3 ≤ 2 * hminus)
+    (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) :
+    yOfX (gamma23Keep135X (h0cut y1)) y1 y2 y3 y4 y5 y6
+      = gamma3f y1 y3 y5 (Real.sqrt 2) lmfun
+        + (dihY y1 y2 y3 y4 y5 y6
+            - dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2)) * 0.008 := by
+  have hsq2 : (Real.sqrt 2 * Real.sqrt 2 : ℝ) = 2 := Real.mul_self_sqrt (by norm_num)
+  have he0 : dihY y1 y2 y3 y4 y5 y6
+      = dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := rfl
+  have hd : dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2)
+      = dihXf (y1 * y1) 2 (y3 * y3) 2 (y5 * y5) 2 := by
+    show dihXf (y1 * y1) (Real.sqrt 2 * Real.sqrt 2) (y3 * y3)
+      (Real.sqrt 2 * Real.sqrt 2) (y5 * y5) (Real.sqrt 2 * Real.sqrt 2) = _
+    rw [hsq2]
+  rw [show yOfX (gamma23Keep135X (h0cut y1)) y1 y2 y3 y4 y5 y6
+      = gamma23Keep135X (h0cut y1) (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+          (y5 * y5) (y6 * y6) from rfl,
+    show gamma23Keep135X (h0cut y1) (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+          (y5 * y5) (y6 * y6)
+      = gamma3X (h0cut y1) 0 0 0 (y1 * y1) (y3 * y3) (y5 * y5)
+        + (dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+            - dihXf (y1 * y1) 2 (y3 * y3) 2 (y5 * y5) 2) * 0.008 from rfl,
+    mi_gamma3_x_gamma3f 0 0 0 y1 y3 y5 hy1.1 hb3 hb3' hb5 hb5',
+    ← he0, hd]
+
 /-- HOL `real_model_pema`. -/
 theorem real_model_pema (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
@@ -13880,7 +13933,108 @@ theorem real_model_pema (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
         hl [u0, u1, f i] < 1.34 ∧ ¬ (hl [u0, u1, f (i + 1)] < 1.34) ∧
         azim_mcell V f u0 u1 i < 1.074 →
       a_spine5 + b_spine5 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
-  sorry
+  intro i h
+  obtain ⟨hno4, hltA, hnltB, hazlt⟩ := h
+  have hc23 := real_model_cell23_008 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper
+    hnc hcey hr i hno4
+  have hgB := GAMMAX_008b V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey hr hno4
+  obtain ⟨-, -, -, -, -, -, -, -, -, hcolA, hcolB, -, -, -, -, -, -, hd01, hd02,
+    hd03, hd12, hd13, hu01, hu02, hu03, hu12, hu13, hetA, hetB, -, -, hazm, hy4⟩ :=
+    CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  obtain ⟨y4, hy4lo, hy4hi, hy4d, hy4dih, hy4rad2, hy4last⟩ := hy4
+  have hjA := JSP_BOUNDS u0 u1 (f i) hnl hcolA (le_of_lt hltA) hcey.1 hd02 hd12
+  have hbneg : b_spine5 ≤ 0 := by unfold b_spine5; norm_num
+  have hy4ub : y4 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact hy4hi
+  have hb2' : dist u0 (f (i + 1)) ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact hu03
+  have hb6' : dist u1 (f (i + 1)) ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact hu13
+  -- the PEMKWU bank in the (2 3)(5 6)-swapped order
+  have hbank := proj_bank_PEMKWU hnl (dist u0 u1) (dist u0 (f (i + 1)))
+    (dist u0 (f i)) y4 (dist u1 (f i)) (dist u1 (f (i + 1)))
+    hcey.1 hcey.2 hd03 hb2' hd02 (le_of_lt hjA.1) hy4lo hy4ub hd12 (le_of_lt hjA.2)
+    hd13 hb6'
+  have hbridge := p25w7_gamma23Keep135X_yOfX_eq (dist u0 u1) (dist u0 (f (i + 1)))
+    (dist u0 (f i)) y4 (dist u1 (f i)) (dist u1 (f (i + 1))) hcey hd02 (le_of_lt hjA.1)
+    hd12 (le_of_lt hjA.2)
+  rw [hbridge] at hbank
+  -- cell quantities
+  have hcwA := critical_weight1a V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey hr hno4 hjA
+  have hgA := mcell3_gammaX_gamma3f V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdA := mcell3_dihX_dih_y V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdA' : dihY (dist u0 u1) (Real.sqrt 2) (dist u0 (f i)) (Real.sqrt 2)
+      (dist u1 (f i)) (Real.sqrt 2) = dihX V (ccCell V [u0, u1, f i]) (u0, u1) := by
+    rw [hdA]
+    exact (p25w4_dihY_sym23 _ _ _ _ _ _).symm
+  have hEq : gamma3f (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) (Real.sqrt 2) lmfun
+        + (dihY (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i)) y4
+              (dist u1 (f i)) (dist u1 (f (i + 1)))
+            - dihX V (ccCell V [u0, u1, f i]) (u0, u1)) * 0.008
+      = (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+            criticalWeight V (ccCell V [u0, u1, f i]) -
+          0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+        0.008 * dihY (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i)) y4
+          (dist u1 (f i)) (dist u1 (f (i + 1))) := by
+    rw [hgA, hcwA]
+    ring
+  have hdyle : dihY (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i)) y4
+      (dist u1 (f i)) (dist u1 (f (i + 1))) ≤ azim_mcell V f u0 u1 i := by
+    rw [hazm]
+    rw [← p25w4_dihY_sym23 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+      (dist u1 (f (i + 1))) (dist u1 (f i))]
+    exact hy4dih
+  -- eta_y facts
+  have hetaBnn : 0 ≤ eta_y (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1))) :=
+    ETA_Y_POS_LE_ALT u0 u1 (f (i + 1))
+  have hetaAnn : 0 ≤ eta_y (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) :=
+    ETA_Y_POS_LE_ALT u0 u1 (f i)
+  have hsqrt2sq : Real.sqrt 2 ^ 2 = (2 : ℝ) := Real.sq_sqrt (by norm_num)
+  have hetB2 : eta_y (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1))) ^ 2 < 2 := by
+    nlinarith [hetB, hetaBnn, hsqrt2sq, Real.sqrt_nonneg 2]
+  have hetA134 : eta_y (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) ^ 2 ≤ (1.34 : ℝ) ^ 2 :=
+    ETA_Y_LEMMA_ALT u0 u1 (f i) 1.34 hcolA (le_of_lt hltA)
+  have hlt134B : (1.34 : ℝ) ^ 2 ≤ eta_y (dist u0 u1) (dist u0 (f (i + 1)))
+      (dist u1 (f (i + 1))) ^ 2 :=
+    ETA_Y_LEMMA u0 u1 (f (i + 1)) 1.34 hcolB (by norm_num) (not_lt.mp hnltB)
+  rcases hbank with h1 | h2 | h3 | h4 | h5 | h6
+  · have hmain : a_spine5 + b_spine5 * dihY (dist u0 u1) (dist u0 (f (i + 1)))
+        (dist u0 (f i)) y4 (dist u1 (f i)) (dist u1 (f (i + 1)))
+        < (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+              criticalWeight V (ccCell V [u0, u1, f i]) -
+            0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+          0.008 * dihY (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i)) y4
+            (dist u1 (f i)) (dist u1 (f (i + 1))) := by
+      have h1' := h1
+      rw [hdA'] at h1'
+      rw [← hEq]
+      exact h1'
+    have hmul : b_spine5 * azim_mcell V f u0 u1 i ≤
+        b_spine5 * dihY (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i)) y4
+          (dist u1 (f i)) (dist u1 (f (i + 1))) :=
+      mul_le_mul_of_nonpos_left hdyle hbneg
+    have hgap : (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+            criticalWeight V (ccCell V [u0, u1, f i]) -
+          0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+        0.008 * dihY (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i)) y4
+          (dist u1 (f i)) (dist u1 (f (i + 1)))
+        ≤ (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+              criticalWeight V (ccCell V [u0, u1, f i]) -
+            0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+          0.008 * azim_mcell V f u0 u1 i := by
+      linarith [hdyle]
+    have hfinal : (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+            criticalWeight V (ccCell V [u0, u1, f i]) -
+          0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+        0.008 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
+      linarith [hc23, hgB]
+    linarith [hmain, hmul, hgap, hfinal]
+  · have h2' : rad2YP25 (dist u0 u1) (dist u0 (f (i + 1))) (dist u0 (f i)) y4
+        (dist u1 (f i)) (dist u1 (f (i + 1))) < 2 := h2
+    rw [p25w7_rad2Y_sym23] at h2'
+    linarith [hy4rad2, h2']
+  · linarith [hdyle, hazlt, h3]
+  · linarith [hetB2, h4]
+  · linarith [hlt134B, h5]
+  · linarith [hetA134, h6]
 
 /-- HOL `real_model_pemb`. -/
 theorem real_model_pemb (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -13892,7 +14046,105 @@ theorem real_model_pemb (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
         ¬ (hl [u0, u1, f i] < 1.34) ∧ hl [u0, u1, f (i + 1)] < 1.34 ∧
         azim_mcell V f u0 u1 i < 1.074 →
       a_spine5 + b_spine5 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
-  sorry
+  intro i h
+  obtain ⟨hno4, hnltA, hltB, hazlt⟩ := h
+  have hc23 := real_model_cell23_008 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper
+    hnc hcey hr i hno4
+  have hgA := GAMMAX_008a V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey hr hno4
+  obtain ⟨-, -, -, -, -, -, -, -, -, hcolA, hcolB, -, -, -, -, -, -, hd01, hd02,
+    hd03, hd12, hd13, hu01, hu02, hu03, hu12, hu13, hetA, hetB, -, -, hazm, hy4⟩ :=
+    CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  obtain ⟨y4, hy4lo, hy4hi, hy4d, hy4dih, hy4rad2, hy4last⟩ := hy4
+  have hjB := JSP_BOUNDS u0 u1 (f (i + 1)) hnl hcolB (le_of_lt hltB) hcey.1 hd03 hd13
+  have hbneg : b_spine5 ≤ 0 := by unfold b_spine5; norm_num
+  have hy4ub : y4 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact hy4hi
+  have hb2' : dist u0 (f i) ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact hu02
+  have hb6' : dist u1 (f i) ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact hu12
+  -- the PEMKWU bank in the natural order
+  have hbank := proj_bank_PEMKWU hnl (dist u0 u1) (dist u0 (f i))
+    (dist u0 (f (i + 1))) y4 (dist u1 (f (i + 1))) (dist u1 (f i))
+    hcey.1 hcey.2 hd02 hb2' hd03 (le_of_lt hjB.1) hy4lo hy4ub hd13 (le_of_lt hjB.2)
+    hd12 hb6'
+  have hbridge := p25w7_gamma23Keep135X_yOfX_eq (dist u0 u1) (dist u0 (f i))
+    (dist u0 (f (i + 1))) y4 (dist u1 (f (i + 1))) (dist u1 (f i)) hcey hd03
+    (le_of_lt hjB.1) hd13 (le_of_lt hjB.2)
+  rw [hbridge] at hbank
+  -- cell quantities
+  have hcwB := critical_weight1b V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey hr hno4 hjB
+  have hgB := mcell3_gammaXb_gamma3f V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdB := mcell3_dihXb_dih_y V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdB' : dihY (dist u0 u1) (Real.sqrt 2) (dist u0 (f (i + 1))) (Real.sqrt 2)
+      (dist u1 (f (i + 1))) (Real.sqrt 2) = dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1) := by
+    rw [hdB]
+    exact (p25w4_dihY_sym23 _ _ _ _ _ _).symm
+  have hEq : gamma3f (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1)))
+          (Real.sqrt 2) lmfun
+        + (dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+              (dist u1 (f (i + 1))) (dist u1 (f i))
+            - dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) * 0.008
+      = (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+            criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+          0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+        0.008 * dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+          (dist u1 (f (i + 1))) (dist u1 (f i)) := by
+    rw [hgB, hcwB]
+    ring
+  have hdyle : dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+      (dist u1 (f (i + 1))) (dist u1 (f i)) ≤ azim_mcell V f u0 u1 i := by
+    rw [hazm]
+    exact hy4dih
+  -- eta_y facts
+  have hetaAnn : 0 ≤ eta_y (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) :=
+    ETA_Y_POS_LE_ALT u0 u1 (f i)
+  have hsqrt2sq : Real.sqrt 2 ^ 2 = (2 : ℝ) := Real.sq_sqrt (by norm_num)
+  have hetA2 : eta_y (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) ^ 2 < 2 := by
+    nlinarith [hetA, hetaAnn, hsqrt2sq, Real.sqrt_nonneg 2]
+  have hlt134A : (1.34 : ℝ) ^ 2 ≤ eta_y (dist u0 u1) (dist u0 (f i))
+      (dist u1 (f i)) ^ 2 :=
+    ETA_Y_LEMMA u0 u1 (f i) 1.34 hcolA (by norm_num) (not_lt.mp hnltA)
+  have hetB134 : eta_y (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1))) ^ 2
+      ≤ (1.34 : ℝ) ^ 2 :=
+    ETA_Y_LEMMA_ALT u0 u1 (f (i + 1)) 1.34 hcolB (le_of_lt hltB)
+  rcases hbank with h1 | h2 | h3 | h4 | h5 | h6
+  · have h1' := h1
+    rw [hdB'] at h1'
+    have hmain : a_spine5 + b_spine5 * dihY (dist u0 u1) (dist u0 (f i))
+        (dist u0 (f (i + 1))) y4 (dist u1 (f (i + 1))) (dist u1 (f i))
+        < (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+              criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+            0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+          0.008 * dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+            (dist u1 (f (i + 1))) (dist u1 (f i)) := by
+      rw [← hEq]
+      exact h1'
+    have hmul : b_spine5 * azim_mcell V f u0 u1 i ≤
+        b_spine5 * dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+          (dist u1 (f (i + 1))) (dist u1 (f i)) :=
+      mul_le_mul_of_nonpos_left hdyle hbneg
+    have hgap : (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+            criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+          0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+        0.008 * dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+          (dist u1 (f (i + 1))) (dist u1 (f i))
+        ≤ (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+              criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+            0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+          0.008 * azim_mcell V f u0 u1 i := by
+      linarith [hdyle]
+    have hfinal : (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+            criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+          0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+        0.008 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
+      linarith [hc23, hgA]
+    linarith [hmain, hmul, hgap, hfinal]
+  · have h2' : rad2YP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+        (dist u1 (f (i + 1))) (dist u1 (f i)) < 2 := h2
+    linarith [hy4rad2, h2']
+  · linarith [hdyle, hazlt, h3]
+  · linarith [hetA2, h4]
+  · linarith [hlt134A, h5]
+  · linarith [hetB134, h6]
 
 /-- Taylor 下界包络：`arctan t ≥ t - t³/3 + t⁵/5 - t⁷/7 + t⁹/9 - t¹¹/11`（`[0,∞)`）。
 导数误差 `+u¹²/(1+u²) ≥ 0`，FTC 于 `0`。 -/
@@ -14566,7 +14818,111 @@ theorem real_model_txq (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
         hl [u0, u1, f i] < 1.34 ∧ hl [u0, u1, f (i + 1)] < 1.34 ∧
         1.946 ≤ azim_mcell V f u0 u1 i ∧ azim_mcell V f u0 u1 i ≤ 2.089 →
       3.0 * 0.0057 ≤ gg_mcell V f u0 u1 i := by
-  sorry
+  intro i h
+  obtain ⟨hno4, hltA, hltB, hge, hle⟩ := h
+  have hc23 := real_model_cell23_008 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper
+    hnc hcey hr i hno4
+  obtain ⟨-, -, -, -, -, -, -, -, -, hcolA, hcolB, -, -, -, -, -, -, hd01, hd02,
+    hd03, hd12, hd13, -, -, -, -, -, -, -, -, -, hazm, -⟩ :=
+    CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  -- JSP edge bounds
+  have hjA := JSP_BOUNDS u0 u1 (f i) hnl hcolA (le_of_lt hltA) hcey.1 hd02 hd12
+  have hjB := JSP_BOUNDS u0 u1 (f (i + 1)) hnl hcolB (le_of_lt hltB) hcey.1 hd03 hd13
+  obtain ⟨hj02, hj12⟩ := hjA
+  obtain ⟨hj03, hj13⟩ := hjB
+  -- azim < pi and azim = dihY
+  have hpi : azim u0 u1 (f i) (f (i + 1)) < Real.pi := by
+    rw [← hazm]
+    linarith [hle, Real.pi_gt_three]
+  have haz : azim_mcell V f u0 u1 i =
+      dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := by
+    rw [hazm, azim_dihv_same hcolA hcolB hpi]
+    exact DIHV_EQ_DIH_Y_4PT_B u0 u1 (f i) (f (i + 1)) hcolA hcolB
+  -- non-coplanarity and deltaY > 0
+  have hncop : ¬ Coplanar ({u0, u1, f i, f (i + 1)} : Set V3) :=
+    CC_3_AZIM_LT_PI_COPLANAR V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hno4 hr hpi
+  have hd : 0 < deltaY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) :=
+    (coplanar_delta_y u0 u1 (f i) (f (i + 1))).mp hncop
+  -- rad2 >= 2
+  have hradVle : Real.sqrt 2 ≤ radV ({u0, u1, f i, f (i + 1)} : Set V3) := by
+    refine not_lt.mp ?_
+    intro hlt
+    obtain ⟨ul, hsub, hbar, hedge⟩ :=
+      RAD_PI_IMP_WEDGE4 V f w0 n i u0 u1 hn hp hs hnc hr hpi hlt
+    exact hno4 ⟨ul, hbar, hedge, hsub⟩
+  have hrad2 : (2 : ℝ) ≤ rad2YP25 (dist u0 u1) (dist u0 (f i))
+      (dist u0 (f (i + 1))) (dist (f i) (f (i + 1))) (dist u1 (f (i + 1)))
+      (dist u1 (f i)) := by
+    have hG := GDRQXLGv3 u0 u1 (f i) (f (i + 1)) hncop
+    have hY : rad2YP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+        = radV ({u0, u1, f i, f (i + 1)} : Set V3) ^ 2 := by
+      show rad2XP25 (dist u0 u1 * dist u0 u1) (dist u0 (f i) * dist u0 (f i))
+          (dist u0 (f (i + 1)) * dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1)) * dist (f i) (f (i + 1)))
+          (dist u1 (f (i + 1)) * dist u1 (f (i + 1)))
+          (dist u1 (f i) * dist u1 (f i)) = radV ({u0, u1, f i, f (i + 1)} : Set V3) ^ 2
+      rw [hG]
+      simp only [pow_two]
+    rw [hY, pow_two]
+    have hmul := mul_self_le_mul_self (Real.sqrt_nonneg 2) hradVle
+    rwa [Real.mul_self_sqrt (by norm_num : (0:ℝ) ≤ 2)] at hmul
+  -- eta bounds
+  have he1 : eta_y (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) ^ 2 ≤ 1.34 ^ 2 :=
+    ETA_Y_LEMMA_ALT u0 u1 (f i) 1.34 hcolA (le_of_lt hltA)
+  have he2 : eta_y (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1))) ^ 2
+      ≤ 1.34 ^ 2 :=
+    ETA_Y_LEMMA_ALT u0 u1 (f (i + 1)) 1.34 hcolB (le_of_lt hltB)
+  -- the merged numeric inequality
+  have hbank := TXQTPVC_MERGED (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+    (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) hnl hcey
+    hd02 (le_of_lt hj02) hd03 (le_of_lt hj03)
+    (DIST_I_SUCI V u0 u1 w0 n f i hnl hn hp hs hnc hr)
+    (by
+      have ht := dist_triangle (f i) u1 (f (i + 1))
+      have h1 : dist (f i) u1 = dist u1 (f i) := dist_comm _ _
+      linarith)
+    hrad2 hd13 (le_of_lt hj13) hd12 (le_of_lt hj12) hd
+    (by rw [← haz]; exact hle) (by rw [← haz]; exact hge) he1 he2
+  -- rewrite the cc-cell quantities
+  have hcwA := critical_weight1a V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey hr hno4 ⟨hj02, hj12⟩
+  have hcwB := critical_weight1b V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey hr hno4 ⟨hj03, hj13⟩
+  have hgA := mcell3_gammaX_gamma3f V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hgB := mcell3_gammaXb_gamma3f V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdA := mcell3_dihX_dih_y V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdB := mcell3_dihXb_dih_y V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdB' : dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1) =
+      dihY (dist u0 u1) (Real.sqrt 2) (dist u0 (f (i + 1))) (Real.sqrt 2)
+        (dist u1 (f (i + 1))) (Real.sqrt 2) := by
+    rw [hdB]
+    exact p25w4_dihY_sym23 _ _ _ _ _ _
+  have hEq :
+      gamma3f (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) (Real.sqrt 2) lmfun
+        + gamma3f (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1)))
+            (Real.sqrt 2) lmfun
+        + (dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+              (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+            - (dihY (dist u0 u1) (dist u0 (f i)) (Real.sqrt 2) (Real.sqrt 2)
+                  (Real.sqrt 2) (dist u1 (f i))
+              + dihY (dist u0 u1) (Real.sqrt 2) (dist u0 (f (i + 1)))
+                  (Real.sqrt 2) (dist u1 (f (i + 1))) (Real.sqrt 2))) * 0.008
+      = (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+            criticalWeight V (ccCell V [u0, u1, f i]) -
+          0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+        (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+            criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+          0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+        0.008 * azim_mcell V f u0 u1 i := by
+    rw [hgA, hgB, hdA, hdB', hcwA, hcwB, ← haz]
+    ring
+  have h3 : (3.0 : ℝ) * 0.0057 = 3 * 0.0057 := by norm_num
+  rw [h3]
+  linarith [hbank, hEq, hc23]
 
 /-- HOL `real_model_tew`. -/
 theorem real_model_tew (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -14577,7 +14933,89 @@ theorem real_model_tew (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     ∀ i, ¬ cc_4 V u0 u1 f i ∧
         hl [u0, u1, f i] < 1.34 ∧ hl [u0, u1, f (i + 1)] < 1.34 →
       a_spine5 + b_spine5 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
-  sorry
+  intro i h
+  obtain ⟨hno4, hltA, hltB⟩ := h
+  have hc23 := real_model_cell23_008 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper
+    hnc hcey hr i hno4
+  obtain ⟨-, -, -, -, -, -, -, -, -, hcolA, hcolB, -, -, -, -, -, -, hd01, hd02,
+    hd03, hd12, hd13, -, -, -, -, -, -, -, -, -, hazm, hy4⟩ :=
+    CC_3_PROPS V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hjA := JSP_BOUNDS u0 u1 (f i) hnl hcolA (le_of_lt hltA) hcey.1 hd02 hd12
+  have hjB := JSP_BOUNDS u0 u1 (f (i + 1)) hnl hcolB (le_of_lt hltB) hcey.1 hd03 hd13
+  obtain ⟨hj02, hj12⟩ := hjA
+  obtain ⟨hj03, hj13⟩ := hjB
+  obtain ⟨y4, hy4lo, hy4hi, hy4d, hy4dih, hy4rad2, hy4last⟩ := hy4
+  have hy4ub : y4 ≤ Real.sqrt 8 := by
+    rw [mi_sqrt8_eq]
+    exact hy4hi
+  have hbneg : b_spine5 ≤ 0 := by unfold b_spine5; norm_num
+  have he1 : eta_y (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) ^ 2 ≤ 1.34 ^ 2 :=
+    ETA_Y_LEMMA_ALT u0 u1 (f i) 1.34 hcolA (le_of_lt hltA)
+  have he2 : eta_y (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1))) ^ 2
+      ≤ 1.34 ^ 2 :=
+    ETA_Y_LEMMA_ALT u0 u1 (f (i + 1)) 1.34 hcolB (le_of_lt hltB)
+  have hbank := TEWNSCJ_MERGED (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+    y4 (dist u1 (f (i + 1))) (dist u1 (f i)) hnl hcey
+    hd02 (le_of_lt hj02) hd03 (le_of_lt hj03) hy4lo hy4ub
+    hy4rad2 hd13 (le_of_lt hj13) hd12 (le_of_lt hj12) he1 he2
+  have hcwA := critical_weight1a V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey hr hno4 ⟨hj02, hj12⟩
+  have hcwB := critical_weight1b V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc
+    hcey hr hno4 ⟨hj03, hj13⟩
+  have hgA := mcell3_gammaX_gamma3f V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hgB := mcell3_gammaXb_gamma3f V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdA := mcell3_dihX_dih_y V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdB := mcell3_dihXb_dih_y V u0 u1 w0 n f i hnl hp hs hr hnc hcey hsize hn hno4
+  have hdB' : dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1) =
+      dihY (dist u0 u1) (Real.sqrt 2) (dist u0 (f (i + 1))) (Real.sqrt 2)
+        (dist u1 (f (i + 1))) (Real.sqrt 2) := by
+    rw [hdB]
+    exact p25w4_dihY_sym23 _ _ _ _ _ _
+  have hEq :
+      gamma3f (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) (Real.sqrt 2) lmfun
+        + gamma3f (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1)))
+            (Real.sqrt 2) lmfun
+        + (dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+              y4 (dist u1 (f (i + 1))) (dist u1 (f i))
+            - (dihY (dist u0 u1) (dist u0 (f i)) (Real.sqrt 2) (Real.sqrt 2)
+                  (Real.sqrt 2) (dist u1 (f i))
+              + dihY (dist u0 u1) (Real.sqrt 2) (dist u0 (f (i + 1)))
+                  (Real.sqrt 2) (dist u1 (f (i + 1))) (Real.sqrt 2))) * 0.008
+      = (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+            criticalWeight V (ccCell V [u0, u1, f i]) -
+          0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+        (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+            criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+          0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+        0.008 * dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          y4 (dist u1 (f (i + 1))) (dist u1 (f i)) := by
+    rw [hgA, hgB, hdA, hdB', hcwA, hcwB]
+    ring
+  have hdyle : dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      y4 (dist u1 (f (i + 1))) (dist u1 (f i)) ≤ azim_mcell V f u0 u1 i := by
+    rw [hazm]
+    exact hy4dih
+  have hgap : (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+            criticalWeight V (ccCell V [u0, u1, f i]) -
+          0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+        (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+            criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+          0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+        0.008 * dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          y4 (dist u1 (f (i + 1))) (dist u1 (f i))
+      ≤ (gammaX V (ccCell V [u0, u1, f i]) lmfun *
+            criticalWeight V (ccCell V [u0, u1, f i]) -
+          0.008 * dihX V (ccCell V [u0, u1, f i]) (u0, u1)) +
+        (gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun *
+            criticalWeight V (ccCell V [u1, u0, f (i + 1)]) -
+          0.008 * dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1)) +
+        0.008 * azim_mcell V f u0 u1 i := by
+    linarith [hdyle]
+  have hmul : b_spine5 * azim_mcell V f u0 u1 i ≤
+      b_spine5 * dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        y4 (dist u1 (f (i + 1))) (dist u1 (f i)) :=
+    mul_le_mul_of_nonpos_left hdyle hbneg
+  linarith [hbank, hEq, hgap, hc23, hmul]
 
 /-! ### T4 展开波（2026-10-08）：real-model 切片层 —— `cc_real_model_data`
 前提树显式化
