@@ -1,0 +1,355 @@
+diff --git a/lean/Kepler/Text/PackingAuto22.lean b/lean/Kepler/Text/PackingAuto22.lean
+index 769f071..ee8eda0 100644
+--- a/lean/Kepler/Text/PackingAuto22.lean
++++ b/lean/Kepler/Text/PackingAuto22.lean
+@@ -10823,6 +10823,109 @@ theorem azim_axis (t : ℝ) (u1 u w : V3)
+     _ = azim 0 (u1 - t • u1) u w :=
+           (p22_azim_axis_shift (u1 - t • u1) u w (-(t / (1 - t)))).symm
+ 
++
++/-- HOL `rcone_def_alt` (counting_spheres.hl:4561), local copy: the original is
++declared later in the file than `EUSOTYP2_general`. -/
++private theorem p22w7_rcone_def_alt (v : V3) (t : ℝ) (p : V3) :
++    p ∈ rconeGt 0 v t ↔ ‖p‖ * ‖v‖ * t < p ⬝ᵥ v := by
++  simp [rconeGt, dist_zero_right]
++
++/-- `arcV 0 p v` is Mathlib's vector angle, local copy (the original
++`p22_arcV_eq_angle` is declared later in the file). -/
++private theorem p22w7_arcV_eq_angle (p v : V3) :
++    arcV 0 p v = InnerProductGeometry.angle p v := by
++  rw [arcV, InnerProductGeometry.angle, dist_zero_right, dist_zero_right]
++  congr 1
++  rw [← inner_eq_dot]
++  simp
++
++/-- `V3` affine-hull transfer for a facet contained in a hyperplane: every point
++of the hyperplane lies in the affine hull of the facet. -/
++private theorem p22w7_mem_affineSpan_of_mem_hyperplane {P c : Set V3} {v : V3} {b : ℝ}
++    (hp : polyhedron P) (hi : (0 : V3) ∈ interior P) (hf : FacetOf c P)
++    (hcA : c ⊆ {p : V3 | p ⬝ᵥ v = b}) (hv : v ≠ 0) {u0 : V3}
++    (hu0 : u0 ∈ {p : V3 | p ⬝ᵥ v = b}) : u0 ∈ (affineSpan ℝ c : Set V3) := by
++  classical
++  have hHne : ({p : V3 | p ⬝ᵥ v = b} : Set V3) ≠ ∅ :=
++    Set.nonempty_iff_ne_empty.mp ⟨u0, hu0⟩
++  have hdimc : Module.finrank ℝ (vectorSpan ℝ c) = 2 := by
++    have h := FACET_AFF_DIM_2 P c hp hi hf
++    rw [affDim, if_neg hf.2.1] at h
++    exact_mod_cast h
++  have hdimH : Module.finrank ℝ (vectorSpan ℝ ({p : V3 | p ⬝ᵥ v = b})) = 2 := by
++    have hset : ({p : V3 | p ⬝ᵥ v = b} : Set V3) = {x : V3 | v ⬝ᵥ x = b} := by
++      ext p
++      rw [Set.mem_setOf_eq, Set.mem_setOf_eq, dotProduct_comm]
++    have hne : ({x : V3 | v ⬝ᵥ x = b} : Set V3) ≠ ∅ := by
++      rw [← hset]
++      exact hHne
++    have h := affDim_hyperplane hv b
++    rw [affDim, if_neg hne] at h
++    rw [hset]
++    exact_mod_cast h
++  have hdir : (affineSpan ℝ c).direction
++      = (affineSpan ℝ ({p : V3 | p ⬝ᵥ v = b})).direction := by
++    rw [direction_affineSpan, direction_affineSpan]
++    exact Submodule.eq_of_le_of_finrank_eq (vectorSpan_mono ℝ hcA) (by rw [hdimc, hdimH])
++  have hST : (affineSpan ℝ c : AffineSubspace ℝ V3) ≤
++      affineSpan ℝ ({p : V3 | p ⬝ᵥ v = b}) :=
++    affineSpan_mono ℝ hcA
++  have hsub : (affineSpan ℝ ({p : V3 | p ⬝ᵥ v = b}) : Set V3) ⊆
++      (affineSpan ℝ c : Set V3) := by
++    intro t ht
++    obtain ⟨c0, hc0⟩ := Set.nonempty_iff_ne_empty.mpr hf.2.1
++    have hc0S : c0 ∈ (affineSpan ℝ c : AffineSubspace ℝ V3) := subset_affineSpan ℝ c hc0
++    have hd : t -ᵥ c0 ∈ (affineSpan ℝ c).direction := by
++      rw [hdir]
++      exact AffineSubspace.vsub_mem_direction ht (hST hc0S)
++    have hvadd := AffineSubspace.vadd_mem_of_mem_direction hd hc0S
++    simpa using hvadd
++  exact hsub (subset_affineSpan ℝ _ hu0)
++
++/-- `AzimSpec` is unchanged by shifting the first measured point along the axis
++(`h1` absorbs the shift). -/
++private theorem p22w7_azimSpec_base_shift {a p q : V3} {θ : ℝ} (s : ℝ) :
++    AzimSpec 0 a (p + s • a) q θ ↔ AzimSpec 0 a p q θ := by
++  unfold AzimSpec
++  constructor
++  · rintro ⟨hθ0, hθ1, hA, hB, hsp⟩
++    refine ⟨hθ0, hθ1, hA - s, hB, ?_⟩
++    intro e1 e2 e3 hON hax hne
++    obtain ⟨psi, r1, r2, hp, hq, hr1, hr2⟩ := hsp e1 e2 e3 hON hax hne
++    refine ⟨psi, r1, r2, ?_, hq, hr1, hr2⟩
++    simp only [sub_zero] at hp hq ⊢
++    calc p = (p + s • a) - s • a := by abel
++      _ = ((r1 * Real.cos psi) • e1 + (r1 * Real.sin psi) • e2 + hA • a) - s • a := by
++            rw [hp]
++      _ = (r1 * Real.cos psi) • e1 + (r1 * Real.sin psi) • e2 + (hA - s) • a := by
++            rw [sub_smul]; abel
++  · rintro ⟨hθ0, hθ1, hA, hB, hsp⟩
++    refine ⟨hθ0, hθ1, hA + s, hB, ?_⟩
++    intro e1 e2 e3 hON hax hne
++    obtain ⟨psi, r1, r2, hp, hq, hr1, hr2⟩ := hsp e1 e2 e3 hON hax hne
++    refine ⟨psi, r1, r2, ?_, hq, hr1, hr2⟩
++    simp only [sub_zero] at hp hq ⊢
++    calc p + s • a
++        = ((r1 * Real.cos psi) • e1 + (r1 * Real.sin psi) • e2 + hA • a) + s • a := by
++            rw [hp]
++      _ = (r1 * Real.cos psi) • e1 + (r1 * Real.sin psi) • e2 + (hA + s) • a := by
++            rw [add_smul]; abel
++
++set_option maxHeartbeats 12000000 in
++/-- `azim` is unchanged by shifting the first measured point along the axis. -/
++private theorem p22w7_azim_base_shift (a p q : V3) (s : ℝ) :
++    azim 0 a (p + s • a) q = azim 0 a p q := by
++  have hc : (Collinear3 0 a (p + s • a) ∨ Collinear3 0 a q) ↔
++      (Collinear3 0 a p ∨ Collinear3 0 a q) :=
++    or_congr (p22_collinear3_axis_shift s).symm Iff.rfl
++  have hpred : AzimSpec 0 a (p + s • a) q = AzimSpec 0 a p q :=
++    funext fun θ => propext (p22w7_azimSpec_base_shift (a := a) (p := p) (q := q) (θ := θ) s)
++  by_cases hdeg : Collinear3 0 a (p + s • a) ∨ Collinear3 0 a q
++  · unfold azim
++    rw [if_pos hdeg, if_pos (hc.mp hdeg)]
++  · unfold azim
++    rw [if_neg hdeg, if_neg (hc.not.mp hdeg), hpred]
++
+ /-- HOL `EUSOTYP2_general` (counting_spheres.hl:3411). GIANT. -/
+ theorem EUSOTYP2_general (P : Set V3) (c3 : Set V3) (A : Set V3) (n : ℕ) (t : ℝ)
+     (u v : V3) (b : ℝ) (hp : polyhedron P) (hb : Bornology.IsBounded P)
+@@ -10849,7 +10952,239 @@ theorem EUSOTYP2_general (P : Set V3) (c3 : Set V3) (A : Set V3) (n : ℕ) (t :
+       (∀ i : ℕ, i ∈ Finset.Icc 1 n → ¬ Collinear3 0 v (g i)) ∧
+       (∀ i : ℕ, i ∈ Finset.Icc 1 n → ¬ Collinear3 0 v (h i)) ∧
+       (∀ i : ℕ, i ∈ Finset.Icc 1 n → azim 0 v (g i) (g (i + 1)) < Real.pi) := by
+-  sorry
++  classical
++  -- ## 1. The axis vector is nonzero
++  have hv : v ≠ 0 := by
++    intro h0
++    exact hcv (by rw [h0]; exact collinear3_of_eq rfl)
++  have hvv : 0 < v ⬝ᵥ v := by
++    rw [← norm_sq_eq_dot]
++    exact pow_pos (norm_pos_iff.mpr hv) 2
++  have hvvne : v ⬝ᵥ v ≠ 0 := ne_of_gt hvv
++  have hnv : 0 < ‖v‖ := norm_pos_iff.mpr hv
++  have hnvne : ‖v‖ ≠ 0 := ne_of_gt hnv
++  -- ## 2. The three axis points of the reduction
++  set u0 : V3 := (b / (v ⬝ᵥ v)) • v with hu0def
++  set u1 : V3 := u0 + v with hu1def
++  set cc : ℝ := (b - u ⬝ᵥ v) / (v ⬝ᵥ v) with hccdef
++  set u2 : V3 := u + cc • v with hu2def
++  have hu0dot : u0 ⬝ᵥ v = b := by
++    have h1 : (b / (v ⬝ᵥ v)) * (v ⬝ᵥ v) = b := div_mul_cancel₀ b hvvne
++    rw [hu0def]
++    show ((b / (v ⬝ᵥ v)) • v) ⬝ᵥ v = b
++    rw [dotV_smul_left, h1]
++  have hu0norm : ‖u0‖ = b / ‖v‖ := by
++    have h1 : b / (v ⬝ᵥ v) * ‖v‖ = b / ‖v‖ := by
++      rw [← norm_sq_eq_dot v, pow_two]
++      field_simp
++    rw [hu0def, norm_smul, Real.norm_eq_abs, abs_of_pos (div_pos hbpos hvv), h1]
++  have hu2dot : u2 ⬝ᵥ v = b := by
++    have h1 : ((b - u ⬝ᵥ v) / (v ⬝ᵥ v)) * (v ⬝ᵥ v) = b - u ⬝ᵥ v :=
++      div_mul_cancel₀ _ hvvne
++    rw [hu2def]
++    show (u + cc • v) ⬝ᵥ v = b
++    rw [dotV_add_left, dotV_smul_left, hccdef, h1]
++    ring
++  have hu1_sub : u1 - u0 = v := by rw [hu1def]; abel
++  -- ## 3. Distinctness of the axis points
++  have hu1ne : u1 ≠ u0 := by
++    rw [hu1def]
++    intro hcon
++    have h0 : v = 0 := by
++      have h' := congrArg (fun x : V3 => x - u0) hcon
++      simpa using h'
++    exact hv h0
++  have hu2ne : u2 ≠ u0 := by
++    intro hcon
++    apply hcv
++    rw [collinear3_iff_smul hv]
++    refine ⟨b / (v ⬝ᵥ v) - cc, ?_⟩
++    rw [hu2def, hu0def] at hcon
++    simp only [sub_zero]
++    rw [sub_smul, ← hcon]
++    abel
++  -- ## 4. The foot `u0` lies on the facet
++  have hc3H : c3 ⊆ {p : V3 | p ⬝ᵥ v = b} := by
++    intro p hpc
++    rw [← hAeq]
++    exact hc3A hpc
++  have hu0rcone : u0 ∈ rconeGt 0 v t := by
++    rw [p22w7_rcone_def_alt, hu0norm, hu0dot, div_mul_cancel₀ b hnvne]
++    nlinarith
++  have hu0c3 : u0 ∈ c3 := by
++    have h1 : u0 ∈ fchanged c3 := hsub1 hu0rcone
++    have h2 : u0 ∈ (affineSpan ℝ c3 : Set V3) :=
++      p22w7_mem_affineSpan_of_mem_hyperplane hp hi hfac hc3H hv
++        (by show u0 ⬝ᵥ v = b; exact hu0dot)
++    have h3 : u0 ∈ intrinsicInterior ℝ c3 := by
++      rw [← FCHANGED_AFFINE P c3 hp hb hi hfac]
++      exact ⟨h1, h2⟩
++    exact intrinsicInterior_subset h3
++  -- ## 5. The radius disk of `RDISK_R`
++  obtain ⟨r, hrpos, hrdisk1, hrdisk2⟩ := RDISK_R v u0 b t hbpos hv hvv ht1 ht2 hu0def
++  have hrad' : ∀ p : V3, dist p u0 < r → p ∈ A → p ∈ c3 := by
++    intro p hpdist hpA
++    have hpA' : p ∈ A := hpA
++    have hpb : p ⬝ᵥ v = b := by
++      rw [hAeq] at hpA'
++      exact hpA'
++    exact hsub2 ⟨hrdisk1 p hpdist hpb, hpA⟩
++  -- ## 6. The plane equation in EUSOTYP_general's form
++  have hAfn : ∀ p : V3, p ∈ A ↔ (p - u0) ⬝ᵥ (u1 - u0) = 0 := by
++    intro p
++    have h1 : (p - u0) ⬝ᵥ (u1 - u0) = p ⬝ᵥ v - b := by
++      have hsub : (p - u0) ⬝ᵥ (u1 - u0) = (p - u0) ⬝ᵥ v := by
++        congr 1
++        simpa using congrArg (fun x : V3 => (x : Fin 3 → ℝ)) hu1_sub
++      rw [hsub]
++      show (p - u0) ⬝ᵥ v = p ⬝ᵥ v - b
++      rw [dotV_sub_left, hu0dot]
++    rw [hAeq, Set.mem_setOf_eq, h1, sub_eq_zero]
++  -- ## 7. Apply `EUSOTYP_general` to the facet
++  obtain ⟨g, h, hgP, hgc, hhP, hord, hang, hdot, hn1, hgne, hhne, hlt⟩ :=
++    EUSOTYP_general c3 A n {c : Set V3 | FacetOf c c3} r u0 u1 u2
++      (FACE_OF_POLYHEDRON_POLYHEDRON hp hfac.1) (hb.subset hfac.1.1) hc3A rfl hsize
++      hrpos hu2ne hu1ne hu0c3 (by rw [hAeq]; exact hu2dot) hAfn hrad'
++  -- ## 8. Transfer `azim` from `(u0, u1)` to `(0, v)`
++  have haz : ∀ a c : V3, azim u0 u1 a c = azim 0 v a c := by
++    intro a c
++    have ha : a - u0 = a + (-(b / (v ⬝ᵥ v))) • v := by
++      rw [hu0def, neg_smul]; abel
++    have hc : c - u0 = c + (-(b / (v ⬝ᵥ v))) • v := by
++      rw [hu0def, neg_smul]; abel
++    rw [p22_azim_trans u0 u1 a c, hu1_sub, ha, hc]
++    exact (p22_azim_axis_shift v a c (-(b / (v ⬝ᵥ v)))).symm
++  -- ## 9. `g` wraps around, so `g (i+1) ∈ c3` for every `i ∈ Icc 1 n`
++  have hg_succ : ∀ i : ℕ, i ∈ Finset.Icc 1 n → g (i + 1) ∈ c3 := by
++    intro i hi
++    rw [Finset.mem_Icc] at hi
++    by_cases hlt' : i + 1 ≤ n
++    · exact (hgP (i + 1) (Finset.mem_Icc.mpr ⟨by omega, hlt'⟩)).1
++    · have hin : i = n := by omega
++      rw [hin, hgc]
++      exact (hgP 1 (Finset.mem_Icc.mpr ⟨le_refl 1, by omega⟩)).1
++  -- ## 10. The ten conclusions
++  refine ⟨g, h, ?_, hgc, ?_, ?_, ?_, ?_, hn1, ?_, ?_, ?_⟩
++  · -- `cos (arcV 0 v (g i)) = t` from `RDISK_R` at `u0`
++    intro i hi
++    refine ⟨(hgP i hi).1, ?_⟩
++    have hgb : g i ⬝ᵥ v = b := by
++      have h' : g i ∈ ({p : V3 | p ⬝ᵥ v = b} : Set V3) := by
++        rw [← hAeq]
++        exact hc3A (hgP i hi).1
++      exact h'
++    have hact : arcV 0 u0 (g i) = arcV 0 v (g i) := by
++      rw [p22w7_arcV_eq_angle, p22w7_arcV_eq_angle, hu0def]
++      exact InnerProductGeometry.angle_smul_left_of_pos v (g i) (div_pos hbpos hvv)
++    rw [← hact]
++    exact hrdisk2 (g i) (hgP i hi).2 hgb
++  · intro i hi
++    exact (hhP i hi).1
++  · -- the `azim` order is measured from `u` on the plane `A`
++    intro j k hj hk hjk
++    have h1 : azim u0 u1 u2 (g j) = azim 0 v u (g j) := by
++      rw [haz u2 (g j), hu2def]
++      exact p22w7_azim_base_shift v u (g j) cc
++    have h2 : azim u0 u1 u2 (g k) = azim 0 v u (g k) := by
++      rw [haz u2 (g k), hu2def]
++      exact p22w7_azim_base_shift v u (g k) cc
++    rw [← h1, ← h2]
++    exact hord j k hj hk hjk
++  · intro i hi
++    have h1 : azim u0 u1 (g i) (h i) = azim 0 v (g i) (h i) := haz (g i) (h i)
++    have h2 : azim u0 u1 (h i) (g (i + 1)) = azim 0 v (h i) (g (i + 1)) :=
++      haz (h i) (g (i + 1))
++    have h3 : azim u0 u1 (g i) (g (i + 1)) = azim 0 v (g i) (g (i + 1)) :=
++      haz (g i) (g (i + 1))
++    rw [← h1, ← h2, ← h3]
++    exact hang i hi
++  · -- dot conditions: the plane direction and the foot `u0 ∥ v`
++    intro i hi
++    have hgiv : g i ⬝ᵥ v = b := by
++      have h' : g i ∈ ({p : V3 | p ⬝ᵥ v = b} : Set V3) := by
++        rw [← hAeq]
++        exact hc3A (hgP i hi).1
++      exact h'
++    have hgi1v : g (i + 1) ⬝ᵥ v = b := by
++      have h' : g (i + 1) ∈ ({p : V3 | p ⬝ᵥ v = b} : Set V3) := by
++        rw [← hAeq]
++        exact hc3A (hg_succ i hi)
++      exact h'
++    have hhiv : h i ⬝ᵥ v = b := by
++      have h' : h i ∈ ({p : V3 | p ⬝ᵥ v = b} : Set V3) := by
++        rw [← hAeq]
++        exact hc3A (hhP i hi).1
++      exact h'
++    have hdv1 : (h i - g i) ⬝ᵥ v = 0 := by rw [dotV_sub_left, hhiv, hgiv, sub_self]
++    have hdv2 : (h i - g (i + 1)) ⬝ᵥ v = 0 := by
++      rw [dotV_sub_left, hhiv, hgi1v, sub_self]
++    refine ⟨hdv1, hdv2, ?_, ?_⟩
++    · have h1 : (h i - g i) ⬝ᵥ (g i - u0) = 0 := by
++        rw [dotProduct_comm]
++        exact (hdot i hi).1
++      have h2 : (h i - g i) ⬝ᵥ u0 = 0 := by
++        rw [hu0def, WithLp.ofLp_smul, dotV_smul_right, hdv1, mul_zero]
++      have hsum : (h i - g i) ⬝ᵥ g i
++          = (h i - g i) ⬝ᵥ (g i - u0) + (h i - g i) ⬝ᵥ u0 := by
++        rw [← dotV_add_right]
++        congr 1
++        module
++      rw [hsum, h1, h2, add_zero]
++    · have h1 : (h i - g (i + 1)) ⬝ᵥ (g (i + 1) - u0) = 0 := by
++        rw [dotProduct_comm]
++        exact (hdot i hi).2
++      have h2 : (h i - g (i + 1)) ⬝ᵥ u0 = 0 := by
++        rw [hu0def, WithLp.ofLp_smul, dotV_smul_right, hdv2, mul_zero]
++      have hsum : (h i - g (i + 1)) ⬝ᵥ g (i + 1)
++          = (h i - g (i + 1)) ⬝ᵥ (g (i + 1) - u0) + (h i - g (i + 1)) ⬝ᵥ u0 := by
++        rw [← dotV_add_right]
++        congr 1
++        module
++      rw [hsum, h1, h2, add_zero]
++  · -- non-collinearity of `g i`: its plane coordinate pins it to `u0`
++    intro i hi hcol
++    have hgiv : g i ⬝ᵥ v = b := by
++      have h' : g i ∈ ({p : V3 | p ⬝ᵥ v = b} : Set V3) := by
++        rw [← hAeq]
++        exact hc3A (hgP i hi).1
++      exact h'
++    rw [collinear3_iff_smul hv] at hcol
++    obtain ⟨c, hc⟩ := hcol
++    have hc' : g i = c • v := by simpa using hc
++    have h1 : c * (v ⬝ᵥ v) = b := by
++      have h2 : g i ⬝ᵥ v = b := hgiv
++      rw [hc'] at h2
++      rw [dotV_smul_left] at h2
++      exact h2
++    have hc_eq : c = b / (v ⬝ᵥ v) := by
++      rw [eq_div_iff hvvne]
++      exact h1
++    have hge : g i = u0 := by rw [hc', hc_eq, hu0def]
++    have hd := (hgP i hi).2
++    rw [hge, dist_self] at hd
++    linarith
++  · -- non-collinearity of `h i` (using `h i ≠ u0` from the reduction)
++    intro i hi hcol
++    have hhiv : h i ⬝ᵥ v = b := by
++      have h' : h i ∈ ({p : V3 | p ⬝ᵥ v = b} : Set V3) := by
++        rw [← hAeq]
++        exact hc3A (hhP i hi).1
++      exact h'
++    rw [collinear3_iff_smul hv] at hcol
++    obtain ⟨c, hc⟩ := hcol
++    have hc' : h i = c • v := by simpa using hc
++    have h1 : c * (v ⬝ᵥ v) = b := by
++      have h2 : h i ⬝ᵥ v = b := hhiv
++      rw [hc'] at h2
++      rw [dotV_smul_left] at h2
++      exact h2
++    have hc_eq : c = b / (v ⬝ᵥ v) := by
++      rw [eq_div_iff hvvne]
++      exact h1
++    exact hhne i hi (by rw [hc', hc_eq, hu0def])
++  · intro i hi
++    rw [← haz (g i) (g (i + 1))]
++    exact hlt i hi
+ 
+ /-- `affGt` monotonicity for the `cone0 ⊆ wedge` landing: with a common
+ underlying finite set, strengthening the free part and weakening the positive
