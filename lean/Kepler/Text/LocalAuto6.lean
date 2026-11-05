@@ -4668,6 +4668,106 @@ theorem MONO_AZIM_AS_BTA_I_p2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V
     hvv0 hv0ne hb hvx hvx0 hbnds hdart hnowrap hij hjk
   rw [← hbta i, ← hbta j]
   exact hmono
+/-- Orbit-length bookkeeping for the half circle (local copy of
+`CARD_V_TWO_HAFL_CIRCLE`, declared later in this file). -/
+private theorem w4c_card_two_hafl (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
+    (hvw : v ≠ w) (n n' : ℕ) (hn : (rhoNode1_p2 FF)^[n] v = w)
+    (hn' : (rhoNode1_p2 FF)^[n'] w = v) (hnc : n < V.ncard) (hn'c : n' < V.ncard) :
+    n + n' = V.ncard := by
+  have hN : (rhoNode1_p2 FF)^[V.ncard] v = v := LOFA_IMP_ITER_RHO_NODE_ID2 h hv
+  have hd : (rhoNode1_p2 FF)^[n + n'] v = v := by
+    rw [Nat.add_comm n n', Function.iterate_add_apply, hn, hn']
+  have hnpos : 0 < n := by
+    rcases Nat.eq_zero_or_pos n with h0 | hp
+    · exfalso
+      rw [h0] at hn
+      simp only [Function.iterate_zero, id] at hn
+      exact hvw hn
+    · exact hp
+  have hdlt : n + n' < 2 * V.ncard := by omega
+  rcases lt_trichotomy (n + n') V.ncard with hlt | heq | hgt
+  · have hdis := LOFA_IMP_DIS_ELMS23 h hv 0 (n + n') (by omega) hlt
+    simp only [Function.iterate_zero, id] at hdis
+    exact absurd hd hdis
+  · exact heq
+  · set r := n + n' - V.ncard with hr
+    have hrpos : 0 < r := by omega
+    have hrlt : r < V.ncard := by omega
+    have hrv : (rhoNode1_p2 FF)^[r] v = v := by
+      have hdr : n + n' = r + V.ncard := by omega
+      rw [hdr, Function.iterate_add_apply, hN] at hd
+      exact hd
+    have hdis := LOFA_IMP_DIS_ELMS23 h hv 0 r hrpos hrlt
+    simp only [Function.iterate_zero, id] at hdis
+    exact absurd hrv hdis
+
+/-- Clean `fv` enumeration (local copy of `DETERMINE_FV2`, declared later in
+this file). -/
+private theorem w4c_determine_fv2 (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
+    (hvw : v ≠ w)
+    (hcol : ∀ z t : V3, z ∈ ({v, w} : Set V3) → t ∈ V \ {z} →
+      ¬ Collinear ℝ ({0, z, t} : Set V3))
+    (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
+    (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
+    (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
+    (hn : n < V.ncard) (hw : (rhoNode1_p2 FF)^[n] v = w) :
+    fv = insert (w, v) {p | ∃ m : ℕ, m < n ∧
+      p = ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v)} := by
+  have hwV : w ∈ V := hw ▸ LOCAL_FAN_ITER_RHO_NODE_IN_V h hv n
+  have hFV := DETERMINE_FV h hv hwV hvw hcol hsub HS hHS hfv
+  have hset : {p : V3 × V3 | ∃ n₀ : ℕ,
+      (∀ m : ℕ, m < n₀ + 1 → ¬((rhoNode1_p2 FF)^[m] v = w)) ∧
+        p = ((rhoNode1_p2 FF)^[n₀] v, (rhoNode1_p2 FF)^[n₀ + 1] v)}
+      = {p : V3 × V3 | ∃ m : ℕ, m < n ∧
+        p = ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v)} := by
+    ext p
+    constructor
+    · intro hp
+      obtain ⟨n₀, hn₀c, hn₀p⟩ := hp
+      have hn₀lt : n₀ < n := by
+        by_contra hle
+        exact hn₀c n (by omega) hw
+      exact ⟨n₀, hn₀lt, hn₀p⟩
+    · intro hp
+      obtain ⟨m, hm, hmp⟩ := hp
+      refine ⟨m, ?_, hmp⟩
+      intro m' hm' hmeq
+      exact LOFA_IMP_DIS_ELMS23 h hv m' n (by omega) hn (hw.trans hmeq.symm)
+  rw [hFV, hset]
+
+/-- `azim` vanishes when the last point is the axis vertex. -/
+private theorem w4c_azim_vertex_last (x v u : V3) : azim x v u v = 0 := by
+  rw [azim]
+  exact if_pos (Or.inr (by
+    have h : ({x, v, v} : Set V3) = {x, v} := by ext z; simp [or_assoc]
+    rw [Collinear3, h]
+    exact collinear_pair ℝ x v))
+
+/-- Slice-dart convexity interface: once the two slice neighbours of a dart
+`(a,b)` are identified as `b = rho_fv a`, `c = ivs_fv a` and the azimuth
+bounds are available, both `convex_local_fan` conjuncts at that dart follow. -/
+private theorem w4c_slice_dart_convex {v w : V3} {fv : Set (V3 × V3)} {a b c : V3}
+    (hLF : localFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv)
+    (hd : (a, b) ∈ fv) (hd' : (c, a) ∈ fv)
+    (hpi : azim 0 a b c ≤ Real.pi)
+    (hle : ∀ z ∈ vPrime_p2 V fv, azim 0 a b z ≤ azim 0 a b c) :
+    azimInFan_p2 (a, b) (ePrime_p2 (E ∪ {{v, w}}) fv) ≤ Real.pi ∧
+      vPrime_p2 V fv ⊆ wedgeInFanGe_p2 (a, b) (ePrime_p2 (E ∪ {{v, w}}) fv) := by
+  have ha : a ∈ vPrime_p2 V fv := (LOCAL_FAN_IMP_IN_V hLF hd hd).1
+  have hrho : rhoNode1_p2 fv a = b := DETER_RHO_NODE hLF hd
+  have hivs : ivsRhoNode1_p2 fv a = c := IVS_RHO_NODE1_DETE hLF hd'
+  have hazim : azimInFan_p2 (a, b) (ePrime_p2 (E ∪ {{v, w}}) fv) = azim 0 a b c := by
+    rw [← hrho, AZIM_IN_FAN_RHOND_IVS_RHOND hLF ha, hivs]
+  have hwedge : wedgeInFanGe_p2 (a, b) (ePrime_p2 (E ∪ {{v, w}}) fv) = wedgeGe_p2 0 a b c := by
+    rw [← hrho, WEDGE_IN_FAN_RHOND_IVS_RHOND hLF ha, hivs]
+  constructor
+  · rw [hazim]
+    exact hpi
+  · rw [hwedge]
+    intro z hz
+    simp only [wedgeGe_p2, Set.mem_setOf_eq]
+    exact ⟨azim_nonneg 0 a b z, hle z hz⟩
+
 /-- HOL `COVEX_OF_LOFA_HALF_CIRCLE` (local_lemmas1.hl:3973) — giant. -/
 theorem COVEX_OF_LOFA_HALF_CIRCLE (hcl : convexLocalFan_p2 V E FF)
     (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V) (hvw : v ≠ w)
@@ -4676,8 +4776,219 @@ theorem COVEX_OF_LOFA_HALF_CIRCLE (hcl : convexLocalFan_p2 V E FF)
     (hsub : ∀ x ∈ FF, affGt ({0} : Set V3) {v, w} ⊆ wedgeInFanGt_p2 x E)
     (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v)) :
-    convexLocalFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv :=
-  sorry
+    convexLocalFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv := by
+  obtain ⟨n, hnlt, hnv, -⟩ := POINT_PRESENTED_IN_RHOND1 h hv hw
+  have hnpos : 0 < n := by
+    rcases Nat.eq_zero_or_pos n with h0 | hp
+    · rw [h0, Function.iterate_zero] at hnv
+      exact absurd hnv hvw
+    · exact hp
+  obtain ⟨n', hn'lt, hn'w, -⟩ := POINT_PRESENTED_IN_RHOND1 (v := w) (w := v) h hw hv
+  have hcard : n + n' = V.ncard :=
+    w4c_card_two_hafl h hv hw hvw n n' hnv hn'w hnlt hn'lt
+  have hFV := w4c_determine_fv2 h hv hw hvw hcol hsub HS hHS hfv hnlt hnv
+  have hLF := HAFL_CIRCLE_FORM_LOCAL_FAN h hv hw hvw hcol hsub HS hHS hfv
+  have hmemfv : ∀ m : ℕ, m < n →
+      ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v) ∈ fv := by
+    intro m hm
+    rw [hFV, Set.mem_insert_iff]
+    right
+    exact ⟨m, hm, rfl⟩
+  have hmemwv : (w, v) ∈ fv := by
+    rw [hFV]
+    exact Set.mem_insert _ _
+  -- orbit parametrizations and their monotone azimuth windows
+  let bv : ℕ → ℝ := fun i => azim 0 v (rhoNode1_p2 FF v) ((rhoNode1_p2 FF)^[i] v)
+  have hmonov : ∀ i j, i < j → j < V.ncard → bv i ≤ bv j :=
+    MONO_AZIM_AS_BTA_I_p2 (v0 := v) (vv := fun i => (rhoNode1_p2 FF)^[i] v)
+      (bta := bv) (k := V.ncard) hcl hv rfl
+      (fun z hz hzv => hcol v z (by simp) ⟨hz, hzv⟩) (fun i => rfl) (fun i => rfl)
+  have hbvle : ∀ i j, i ≤ j → j < V.ncard → bv i ≤ bv j := by
+    intro i j hij hj
+    rcases Nat.lt_or_eq_of_le hij with hlt | heq
+    · exact hmonov i j hlt hj
+    · subst heq
+      exact le_rfl
+  have hbvn : bv n = azim 0 v (rhoNode1_p2 FF v) w := by
+    dsimp only [bv]
+    rw [hnv]
+  have hbvn_pi : bv n ≤ Real.pi := by
+    have h1 := hbvle n (V.ncard - 1) (by omega) (by omega)
+    have h2 : bv (V.ncard - 1) = azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v) := by
+      dsimp only [bv]
+      rw [ITER_CARD_MINUS1_EQ_IVS_RN1 h hv]
+    have h3 := IN_V_IMP_AZIM_LESS_PI hcl v hv (ivsRhoNode1_p2 FF v) (LOCAL_FAN_IVS_IN_V h hv)
+    rw [h2] at h1
+    exact h1.trans h3
+  let bw : ℕ → ℝ := fun j => azim 0 w (rhoNode1_p2 FF w) ((rhoNode1_p2 FF)^[j] w)
+  have hmonow : ∀ i j, i < j → j < V.ncard → bw i ≤ bw j :=
+    MONO_AZIM_AS_BTA_I_p2 (v0 := w) (vv := fun j => (rhoNode1_p2 FF)^[j] w)
+      (bta := bw) (k := V.ncard) hcl hw rfl
+      (fun z hz hzw => hcol w z (by simp) ⟨hz, hzw⟩) (fun j => rfl) (fun j => rfl)
+  have hbwle : ∀ i j, i ≤ j → j < V.ncard → bw i ≤ bw j := by
+    intro i j hij hj
+    rcases Nat.lt_or_eq_of_le hij with hlt | heq
+    · exact hmonow i j hlt hj
+    · subst heq
+      exact le_rfl
+  -- every slice vertex is an orbit point with index at most `n`
+  have hzrep : ∀ z ∈ vPrime_p2 V fv, ∃ i : ℕ, i < n + 1 ∧
+      z = (rhoNode1_p2 FF)^[i] v := by
+    intro z hz
+    rw [POINTS_IN_HAFL_CIRCLE h hv hw hvw hcol hsub HS hHS hfv] at hz
+    obtain ⟨k, hkmin, hzk⟩ := hz
+    have hk_le : k ≤ n := by
+      by_contra hle
+      exact hkmin n (by omega) hnv
+    exact ⟨k, by omega, hzk⟩
+  refine ⟨hLF, ?_⟩
+  intro p hp
+  have hpcases : p = (w, v) ∨ ∃ m : ℕ, m < n ∧
+      p = ((rhoNode1_p2 FF)^[m] v, (rhoNode1_p2 FF)^[m + 1] v) := by
+    rw [hFV] at hp
+    rcases Set.mem_insert_iff.mp hp with h | h
+    · exact Or.inl h
+    · rw [Set.mem_setOf_eq] at h
+      obtain ⟨m, hm, hmp⟩ := h
+      exact Or.inr ⟨m, hm, hmp⟩
+  rcases hpcases with hpw | ⟨m, hmn, hmp⟩
+  · -- diagonal dart `(w, v)`
+    rw [hpw]
+    have hw0 : w ≠ 0 := by
+      obtain ⟨_, _, _, _, _, hFAN, _, _⟩ := h
+      exact FAN_IMP_V_DIFF hFAN w hw
+    have hncu : ¬ Collinear3 0 w (rhoNode1_p2 FF w) := LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h hw
+    have hncv : ¬ Collinear3 0 w v :=
+      hcol w v (by simp) ⟨hv, by simpa using hvw⟩
+    have hcK : (rhoNode1_p2 FF)^[n - 1] v = (rhoNode1_p2 FF)^[V.ncard - 1] w := by
+      conv_lhs => rw [← hn'w]
+      rw [← Function.iterate_add_apply, show n - 1 + n' = V.ncard - 1 by omega]
+    have hbwK : bw (V.ncard - 1) =
+        azim 0 w (rhoNode1_p2 FF w) ((rhoNode1_p2 FF)^[n - 1] v) := by
+      dsimp only [bw]
+      rw [hcK]
+    have hbwn' : bw n' = azim 0 w (rhoNode1_p2 FF w) v := by
+      dsimp only [bw]
+      rw [hn'w]
+    have hbKpi : bw (V.ncard - 1) ≤ Real.pi := by
+      have hπw := IN_V_IMP_AZIM_LESS_PI hcl w hw (ivsRhoNode1_p2 FF w) (LOCAL_FAN_IVS_IN_V h hw)
+      have heq : bw (V.ncard - 1) =
+          azim 0 w (rhoNode1_p2 FF w) (ivsRhoNode1_p2 FF w) := by
+        dsimp only [bw]
+        rw [ITER_CARD_MINUS1_EQ_IVS_RN1 h hw]
+      rwa [heq]
+    have hncc : ¬ Collinear3 0 w ((rhoNode1_p2 FF)^[n - 1] v) := by
+      have hne : (rhoNode1_p2 FF)^[n - 1] v ≠ w := by
+        intro he
+        have hd := LOFA_IMP_DIS_ELMS23 h hv (n - 1) n (by omega) hnlt
+        exact hd (he.trans hnv.symm).symm
+      exact hcol w _ (by simp)
+        ⟨LOCAL_FAN_ITER_RHO_NODE_IN_V h hv (n - 1), by simpa using hne⟩
+    have hle_c : bw n' ≤ bw (V.ncard - 1) :=
+      hbwle n' (V.ncard - 1) (by omega) (by omega)
+    have hsumc := sum4_azim_fan (x := 0) (v := w) (u := rhoNode1_p2 FF w)
+      (w1 := v) (w2 := (rhoNode1_p2 FF)^[n - 1] v)
+      hw0 hncu hncv hncc (by simpa only [hbwn', hbwK] using hle_c)
+    have hazc : azim 0 w v ((rhoNode1_p2 FF)^[n - 1] v) =
+        bw (V.ncard - 1) - bw n' := by
+      rw [← hbwn', ← hbwK] at hsumc
+      linarith
+    refine w4c_slice_dart_convex (v := v) (w := w) (a := w) (b := v)
+      (c := (rhoNode1_p2 FF)^[n - 1] v) hLF hmemwv ?_ ?_ ?_
+    · rw [← hnv]
+      have h := hmemfv (n - 1) (by omega)
+      simpa [show n - 1 + 1 = n by omega] using h
+    · rw [hazc]
+      have h1 : 0 ≤ bw n' := by
+        dsimp only [bw]
+        exact azim_nonneg _ _ _ _
+      linarith
+    · intro z hz
+      obtain ⟨i, hi_le, hiz⟩ := hzrep z hz
+      by_cases hin : i = n
+      · rw [hiz, hin, hnv, w4c_azim_vertex_last]
+        exact azim_nonneg 0 w v ((rhoNode1_p2 FF)^[n - 1] v)
+      · have hilt : i < n := by omega
+        rw [hiz]
+        have hai : (rhoNode1_p2 FF)^[i] v = (rhoNode1_p2 FF)^[i + n'] w := by
+          conv_lhs => rw [← hn'w]
+          rw [← Function.iterate_add_apply]
+        have hbwi : bw (i + n') =
+            azim 0 w (rhoNode1_p2 FF w) ((rhoNode1_p2 FF)^[i] v) := by
+          dsimp only [bw]
+          rw [hai]
+        have hnei : (rhoNode1_p2 FF)^[i] v ≠ w := by
+          intro he
+          have hd := LOFA_IMP_DIS_ELMS23 h hv i n hilt hnlt
+          exact hd (he.trans hnv.symm).symm
+        have hnci : ¬ Collinear3 0 w ((rhoNode1_p2 FF)^[i] v) :=
+          hcol w _ (by simp)
+            ⟨LOCAL_FAN_ITER_RHO_NODE_IN_V h hv i, by simpa using hnei⟩
+        have hle_i : azim 0 w (rhoNode1_p2 FF w) v ≤
+            azim 0 w (rhoNode1_p2 FF w) ((rhoNode1_p2 FF)^[i] v) := by
+          have h := hbwle n' (i + n') (by omega) (by omega)
+          simpa only [hbwn', hbwi] using h
+        have hsum_i := sum4_azim_fan (x := 0) (v := w) (u := rhoNode1_p2 FF w)
+          (w1 := v) (w2 := (rhoNode1_p2 FF)^[i] v)
+          hw0 hncu hncv hnci hle_i
+        have haz_i : azim 0 w v ((rhoNode1_p2 FF)^[i] v) = bw (i + n') - bw n' := by
+          rw [← hbwn', ← hbwi] at hsum_i
+          linarith
+        calc azim 0 w v ((rhoNode1_p2 FF)^[i] v) = bw (i + n') - bw n' := haz_i
+          _ ≤ bw (V.ncard - 1) - bw n' := by
+              have h := hbwle (i + n') (V.ncard - 1) (by omega) (by omega)
+              linarith
+          _ = azim 0 w v ((rhoNode1_p2 FF)^[n - 1] v) := hazc.symm
+  · -- darts `(rho^[m] v, rho^[m+1] v)` of the orbit
+    rw [hmp]
+    rcases Nat.eq_zero_or_pos m with hm0 | hmpos
+    · -- leading dart `(v, rho v)`, closing neighbour `w`
+      subst hm0
+      have hd0 : (v, rhoNode1_p2 FF v) ∈ fv := by
+        simpa using hmemfv 0 hnpos
+      refine w4c_slice_dart_convex (v := v) (w := w) (a := v)
+        (b := rhoNode1_p2 FF v) (c := w) hLF hd0 hmemwv ?_ ?_
+      · rw [← hbvn]
+        exact hbvn_pi
+      · intro z hz
+        obtain ⟨i, hi_le, hiz⟩ := hzrep z hz
+        rw [hiz, ← hbvn]
+        change bv i ≤ bv n
+        exact hbvle i n (by omega) hnlt
+    · -- interior dart, predecessor `rho^[m-1] v`
+      have hd' : ((rhoNode1_p2 FF)^[m - 1] v, (rhoNode1_p2 FF)^[m] v) ∈ fv := by
+        have h := hmemfv (m - 1) (by omega)
+        simpa [show m - 1 + 1 = m by omega] using h
+      have hρm : rhoNode1_p2 FF ((rhoNode1_p2 FF)^[m] v) =
+          (rhoNode1_p2 FF)^[m + 1] v :=
+        (Function.iterate_succ_apply' (rhoNode1_p2 FF) m v).symm
+      have hivsm : ivsRhoNode1_p2 FF ((rhoNode1_p2 FF)^[m] v) =
+          (rhoNode1_p2 FF)^[m - 1] v := by
+        have hstep : (rhoNode1_p2 FF)^[m] v =
+            rhoNode1_p2 FF ((rhoNode1_p2 FF)^[m - 1] v) := by
+          have h1 := Function.iterate_succ_apply' (rhoNode1_p2 FF) (m - 1) v
+          simpa [Nat.succ_eq_add_one, Nat.sub_add_cancel (by omega : 1 ≤ m)] using h1
+        rw [hstep]
+        exact IVS_RHO_IDD h (LOCAL_FAN_ITER_RHO_NODE_IN_V h hv (m - 1))
+      refine w4c_slice_dart_convex (v := v) (w := w)
+        (a := (rhoNode1_p2 FF)^[m] v) (b := (rhoNode1_p2 FF)^[m + 1] v)
+        (c := (rhoNode1_p2 FF)^[m - 1] v) hLF (hmemfv m hmn) hd' ?_ ?_
+      · have hπ := IN_V_IMP_AZIM_LESS_PI hcl ((rhoNode1_p2 FF)^[m] v)
+          (LOCAL_FAN_ITER_RHO_NODE_IN_V h hv m)
+          ((rhoNode1_p2 FF)^[m - 1] v) (LOCAL_FAN_ITER_RHO_NODE_IN_V h hv (m - 1))
+        rwa [hρm] at hπ
+      · intro z hz
+        have hzV : z ∈ V := by
+          have hz' : z ∈ V ∧ ∃ y : V3, (z, y) ∈ fv := by
+            simpa only [vPrime_p2, Set.mem_setOf_eq] using hz
+          exact hz'.1
+        have hdFF : ((rhoNode1_p2 FF)^[m] v, rhoNode1_p2 FF ((rhoNode1_p2 FF)^[m] v)) ∈ FF :=
+          (LOCAL_FAN_RHO_NODE_PROS2 h).2 _ (LOCAL_FAN_ITER_RHO_NODE_IN_V h hv m)
+        have hwz := (hcl.2 _ hdFF).2 hzV
+        rw [WEDGE_IN_FAN_RHOND_IVS_RHOND h (LOCAL_FAN_ITER_RHO_NODE_IN_V h hv m)] at hwz
+        simp only [wedgeGe_p2, Set.mem_setOf_eq] at hwz
+        rw [hρm, hivsm] at hwz
+        exact hwz.2
 
 /-- HOL `COVEX_OF_LOFA_HALF_CIRCLE2` (local_lemmas1.hl:4650) — giant. -/
 theorem COVEX_OF_LOFA_HALF_CIRCLE2 (hcl : convexLocalFan_p2 V E FF)
@@ -4689,8 +5000,24 @@ theorem COVEX_OF_LOFA_HALF_CIRCLE2 (hcl : convexLocalFan_p2 V E FF)
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
     (hfw : fw = HS.face (w, rhoNode1_p2 FF w)) :
     convexLocalFan_p2 (vPrime_p2 V fv) (ePrime_p2 (E ∪ {{v, w}}) fv) fv ∧
-      convexLocalFan_p2 (vPrime_p2 V fw) (ePrime_p2 (E ∪ {{w, v}}) fw) fw :=
-  sorry
+      convexLocalFan_p2 (vPrime_p2 V fw) (ePrime_p2 (E ∪ {{w, v}}) fw) fw := by
+  constructor
+  · exact COVEX_OF_LOFA_HALF_CIRCLE hcl h hv hw hvw hcol hsub HS hHS hfv
+  · have hpair : ({w, v} : Set V3) = {v, w} := Set.pair_comm w v
+    have hcolw : ∀ z t : V3, z ∈ ({w, v} : Set V3) → t ∈ V \ {z} →
+        ¬ Collinear ℝ ({0, z, t} : Set V3) := by
+      intro z t hz ht
+      rw [hpair] at hz
+      exact hcol z t hz ht
+    have hsubw : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p2 x E := by
+      intro x hx
+      have h := hsub x hx
+      rwa [← hpair] at h
+    have hHSw : IsHyp_p2 0 V (E ∪ {{w, v}}) HS := by
+      rw [hpair]
+      exact hHS
+    exact COVEX_OF_LOFA_HALF_CIRCLE (v := w) (w := v) (fv := fw)
+      hcl h hw hv (Ne.symm hvw) hcolw hsubw HS hHSw hfw
 
 /-- HOL `CARD_V_TWO_HAFL_CIRCLE` (local_lemmas1.hl:4671) — giant. -/
 theorem CARD_V_TWO_HAFL_CIRCLE (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
@@ -4918,8 +5245,82 @@ theorem INTERIOR_ANGLE_LEM_SLICING_FAN (hcl : convexLocalFan_p2 V E FF)
     (HS : Hypermap (V3 × V3)) (hHS : IsHyp_p2 0 V (E ∪ {{v, w}}) HS)
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
     (hfw : fw = HS.face (w, rhoNode1_p2 FF w)) :
-    interiorAngle1_p2 0 fv v + interiorAngle1_p2 0 fw v = interiorAngle1_p2 0 FF v :=
-  sorry
+    interiorAngle1_p2 0 fv v + interiorAngle1_p2 0 fw v = interiorAngle1_p2 0 FF v := by
+  obtain ⟨n, hnlt, hnv, -⟩ := POINT_PRESENTED_IN_RHOND1 h hv hw
+  have hnpos : 0 < n := by
+    rcases Nat.eq_zero_or_pos n with h0 | hp
+    · rw [h0, Function.iterate_zero] at hnv
+      exact absurd hnv hvw
+    · exact hp
+  have hFVn := DETERMINE_FV2 h hv hw hvw hcol hsub HS hHS hfv hnlt hnv
+  obtain ⟨n', hn'lt, hn'v, -⟩ := POINT_PRESENTED_IN_RHOND1 (v := w) (w := v) h hw hv
+  have hn'pos : 0 < n' := by
+    rcases Nat.eq_zero_or_pos n' with h0 | hp
+    · rw [h0, Function.iterate_zero] at hn'v
+      exact absurd hn'v hvw.symm
+    · exact hp
+  have hHSw : IsHyp_p2 0 V (E ∪ {{w, v}}) HS := by
+    have he : E ∪ {{w, v}} = E ∪ {{v, w}} := by rw [Set.pair_comm]
+    rwa [he]
+  have hcolw : ∀ z t : V3, z ∈ ({w, v} : Set V3) → t ∈ V \ {z} →
+      ¬ Collinear ℝ ({0, z, t} : Set V3) := by
+    intro z t hz ht
+    exact hcol z t (by rwa [Set.pair_comm] at hz) ht
+  have hsubw : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p2 x E := by
+    intro x hx
+    have h := hsub x hx
+    rwa [Set.pair_comm v w] at h
+  have hFVw := DETERMINE_FV2 (v := w) (w := v) (fv := fw) (n := n')
+    h hw hv (Ne.symm hvw) hcolw hsubw HS hHSw hfw hn'lt hn'v
+  have hLF := HAFL_CIRCLE_FORM_LOCAL_FAN h hv hw hvw hcol hsub HS hHS hfv
+  have hLF2 := HAFL_CIRCLE_FORM_LOCAL_FAN2 h hv hw hvw hcol hsub HS hHS hfv hfw
+  -- fv: rho = rho_FF v, ivs = w (closing dart)
+  have hd1 : (v, rhoNode1_p2 FF v) ∈ fv := by
+    rw [hFVn, Set.mem_insert_iff]
+    right
+    refine ⟨0, hnpos, ?_⟩
+    simp
+  have hd2 : (w, v) ∈ fv := by
+    rw [hFVn]
+    exact Set.mem_insert _ _
+  have hrho_fv : rhoNode1_p2 fv v = rhoNode1_p2 FF v := DETER_RHO_NODE hLF hd1
+  have hivs_fv : ivsRhoNode1_p2 fv v = w := IVS_RHO_NODE1_DETE hLF hd2
+  -- fw: rho = w (closing dart), ivs = ivs_FF v
+  have hd3 : (v, w) ∈ fw := by
+    rw [hFVw]
+    exact Set.mem_insert _ _
+  have hrho_fw : rhoNode1_p2 fw v = w := DETER_RHO_NODE hLF2.2 hd3
+  have hcard := CARD_V_TWO_HAFL_CIRCLE h hv hw hvw n n' hnv hn'v hnlt hn'lt
+  have hd4 : (ivsRhoNode1_p2 FF v, v) ∈ fw := by
+    rw [hFVw, Set.mem_insert_iff]
+    right
+    refine ⟨n' - 1, by omega, ?_⟩
+    have hleft : (rhoNode1_p2 FF)^[n' - 1] w = ivsRhoNode1_p2 FF v := by
+      rw [← hnv, ← Function.iterate_add_apply]
+      rw [show n' - 1 + n = V.ncard - 1 by omega]
+      exact ITER_CARD_MINUS1_EQ_IVS_RN1 h hv
+    have hstep : (rhoNode1_p2 FF)^[n' - 1 + 1] w = v := by
+      rw [show n' - 1 + 1 = n' by omega]
+      exact hn'v
+    rw [hleft, hstep]
+  have hivs_fw : ivsRhoNode1_p2 fw v = ivsRhoNode1_p2 FF v := IVS_RHO_NODE1_DETE hLF2.2 hd4
+  simp only [interiorAngle1_p2]
+  rw [hrho_fv, hivs_fv, hrho_fw, hivs_fw]
+  -- the two half-angles sum to the full angle by `sum4_azim_fan`
+  have hdFF : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS2 h).2 v hv
+  have hwmem : w ∈ wedgeGe_p2 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v) := by
+    have hVsub := (hcl.2 (v, rhoNode1_p2 FF v) hdFF).2
+    have hmem := hVsub hw
+    rwa [WEDGE_IN_FAN_RHOND_IVS_RHOND h hv] at hmem
+  have hxv : v ≠ 0 := by
+    obtain ⟨_, _, _, _, _, hFAN, _, _⟩ := h
+    exact FAN_IMP_V_DIFF hFAN v hv
+  have hncu : ¬ Collinear3 0 v (rhoNode1_p2 FF v) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h hv
+  have hnc1 : ¬ Collinear3 0 v w := hcol v w (by simp) ⟨hw, by simpa using hvw.symm⟩
+  have hnc2 : ¬ Collinear3 0 v (ivsRhoNode1_p2 FF v) := LOFA_IMP_NOT_COLL_IVS h hv
+  exact (sum4_azim_fan (x := 0) (v := v) (u := rhoNode1_p2 FF v)
+    (w1 := w) (w2 := ivsRhoNode1_p2 FF v) hxv hncu hnc1 hnc2 hwmem.2).symm
 
 /-- HOL `INTERIOR_ANGLE_LEM_SLICING_FAN2` (local_lemmas1.hl:5121) — giant. -/
 theorem INTERIOR_ANGLE_LEM_SLICING_FAN2 (hcl : convexLocalFan_p2 V E FF)
@@ -4931,8 +5332,22 @@ theorem INTERIOR_ANGLE_LEM_SLICING_FAN2 (hcl : convexLocalFan_p2 V E FF)
     (hfv : fv = HS.face (v, rhoNode1_p2 FF v))
     (hfw : fw = HS.face (w, rhoNode1_p2 FF w)) :
     interiorAngle1_p2 0 fv v + interiorAngle1_p2 0 fw v = interiorAngle1_p2 0 FF v ∧
-      interiorAngle1_p2 0 fw w + interiorAngle1_p2 0 fv w = interiorAngle1_p2 0 FF w :=
-  sorry
+      interiorAngle1_p2 0 fw w + interiorAngle1_p2 0 fv w = interiorAngle1_p2 0 FF w := by
+  constructor
+  · exact INTERIOR_ANGLE_LEM_SLICING_FAN hcl h hv hw hvw hcol hsub HS hHS hfv hfw
+  · have hHSw : IsHyp_p2 0 V (E ∪ {{w, v}}) HS := by
+      have he : E ∪ {{w, v}} = E ∪ {{v, w}} := by rw [Set.pair_comm]
+      rwa [he]
+    have hcolw : ∀ z t : V3, z ∈ ({w, v} : Set V3) → t ∈ V \ {z} →
+        ¬ Collinear ℝ ({0, z, t} : Set V3) := by
+      intro z t hz ht
+      exact hcol z t (by rwa [Set.pair_comm] at hz) ht
+    have hsubw : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p2 x E := by
+      intro x hx
+      have h := hsub x hx
+      rwa [Set.pair_comm v w] at h
+    exact INTERIOR_ANGLE_LEM_SLICING_FAN (v := w) (w := v) (fv := fw) (fw := fv)
+      hcl h hw hv (Ne.symm hvw) hcolw hsubw HS hHSw hfw hfv
 
 /-- HOL `INTERIOR_AGL_EQ` (local_lemmas1.hl:5148) — giant. -/
 theorem INTERIOR_AGL_EQ (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
@@ -4945,8 +5360,81 @@ theorem INTERIOR_AGL_EQ (h : localFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
     (hn : n < V.ncard) (hw : (rhoNode1_p2 FF)^[n] v = w) :
     ∀ i : ℕ, 0 < i ∧ i < n →
       interiorAngle1_p2 0 fv ((rhoNode1_p2 FF)^[i] v) =
-        interiorAngle1_p2 0 FF ((rhoNode1_p2 FF)^[i] v) :=
-  sorry
+        interiorAngle1_p2 0 FF ((rhoNode1_p2 FF)^[i] v) := by
+  intro i hi
+  have hwV : w ∈ V := hw ▸ LOCAL_FAN_ITER_RHO_NODE_IN_V h hv n
+  have hFV2 := DETERMINE_FV2 h hv hwV hvw hcol hsub HS hHS hfv hn hw
+  have hLF := HAFL_CIRCLE_FORM_LOCAL_FAN h hv hwV hvw hcol hsub HS hHS hfv
+  have hdart : ((rhoNode1_p2 FF)^[i] v, (rhoNode1_p2 FF)^[i + 1] v) ∈ fv := by
+    rw [hFV2, Set.mem_insert_iff]
+    right
+    exact ⟨i, hi.2, rfl⟩
+  have hdart' : ((rhoNode1_p2 FF)^[i - 1] v, (rhoNode1_p2 FF)^[i] v) ∈ fv := by
+    rw [hFV2, Set.mem_insert_iff]
+    right
+    refine ⟨i - 1, by omega, ?_⟩
+    rw [show i - 1 + 1 = i by omega]
+  have hrho : rhoNode1_p2 fv ((rhoNode1_p2 FF)^[i] v) = (rhoNode1_p2 FF)^[i + 1] v :=
+    DETER_RHO_NODE hLF hdart
+  have hivs : ivsRhoNode1_p2 fv ((rhoNode1_p2 FF)^[i] v) = (rhoNode1_p2 FF)^[i - 1] v :=
+    IVS_RHO_NODE1_DETE hLF hdart'
+  have hrhoFF : rhoNode1_p2 FF ((rhoNode1_p2 FF)^[i] v) = (rhoNode1_p2 FF)^[i + 1] v :=
+    (Function.iterate_succ_apply' (rhoNode1_p2 FF) i v).symm
+  have hivsFF : ivsRhoNode1_p2 FF ((rhoNode1_p2 FF)^[i] v) = (rhoNode1_p2 FF)^[i - 1] v := by
+    have hstep : (rhoNode1_p2 FF)^[i] v = rhoNode1_p2 FF ((rhoNode1_p2 FF)^[i - 1] v) := by
+      have h1 := Function.iterate_succ_apply' (rhoNode1_p2 FF) (i - 1) v
+      simpa [Nat.succ_eq_add_one, Nat.sub_add_cancel hi.1] using h1
+    rw [hstep]
+    exact IVS_RHO_IDD h (LOCAL_FAN_ITER_RHO_NODE_IN_V h hv (i - 1))
+  simp only [interiorAngle1_p2]
+  rw [hrho, hivs, hrhoFF, hivsFF]
+
+/-- Local `SUM_UNION` for `setSum` on `ℕ` (the importable copy lives in
+`TameLp`, outside this file's import cone). -/
+private theorem w4c_setSum_union_disjoint {s t : Set ℕ} {f : ℕ → ℝ}
+    (hd : Disjoint s t) (hs : s.Finite) (ht : t.Finite) :
+    setSum (s ∪ t) f = setSum s f + setSum t f := by
+  rw [setSum, setSum, setSum, dif_pos (hs.union ht), dif_pos hs, dif_pos ht,
+    Set.Finite.toFinset_union hs ht]
+  have hd' : Disjoint hs.toFinset ht.toFinset := by
+    rw [Finset.disjoint_left]
+    intro a ha hta
+    exact (Set.disjoint_left.mp hd) ((Set.Finite.mem_toFinset hs).mp ha)
+      ((Set.Finite.mem_toFinset ht).mp hta)
+  exact Finset.sum_union hd'
+
+/-- Local `SUM_CLAUSES` insert for `setSum`. -/
+private theorem w4c_setSum_insert {s : Set ℕ} {a : ℕ} (ha : a ∉ s) (hs : s.Finite)
+    (f : ℕ → ℝ) : setSum (insert a s) f = f a + setSum s f := by
+  rw [setSum, setSum, dif_pos (hs.insert a), dif_pos hs,
+    Set.Finite.toFinset_insert (hs.insert a)]
+  exact Finset.sum_insert (by simpa using ha)
+
+/-- `setSum` on the empty set. -/
+private theorem w4c_setSum_empty (f : ℕ → ℝ) : setSum (∅ : Set ℕ) f = 0 := by
+  rw [setSum, dif_pos Set.finite_empty]
+  simp
+
+/-- `setSum` on a singleton. -/
+private theorem w4c_setSum_singleton (a : ℕ) (f : ℕ → ℝ) :
+    setSum ({a} : Set ℕ) f = f a := by
+  simp [setSum]
+
+/-- `setSum` on a two-element set. -/
+private theorem w4c_setSum_pair {a b : ℕ} (hab : a ≠ b) (f : ℕ → ℝ) :
+    setSum ({a, b} : Set ℕ) f = f a + f b := by
+  have h1 : ({a, b} : Set ℕ) = insert a ({b} : Set ℕ) := rfl
+  rw [h1, w4c_setSum_insert (by simpa using hab) (Set.finite_singleton b) f,
+    w4c_setSum_singleton]
+
+/-- `setSum` congruence on a fixed finite set. -/
+private theorem w4c_setSum_congr {s : Set ℕ} {f g : ℕ → ℝ}
+    (h : ∀ i ∈ s, f i = g i) : setSum s f = setSum s g := by
+  unfold setSum
+  by_cases hs : s.Finite
+  · simp only [dif_pos hs]
+    exact Finset.sum_congr rfl (fun i hi => h i ((Set.Finite.mem_toFinset hs).mp hi))
+  · simp only [dif_neg hs]
 
 /-- HOL `SUM_INTERIOR_AGL_LEMMA` (local_lemmas1.hl:5212) — giant. -/
 theorem SUM_INTERIOR_AGL_LEMMA (hcl : convexLocalFan_p2 V E FF)
@@ -4963,8 +5451,148 @@ theorem SUM_INTERIOR_AGL_LEMMA (hcl : convexLocalFan_p2 V E FF)
         setSum {i | i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fv}
             (fun i => g i * interiorAngle1_p2 0 fv ((rhoNode1_p2 FF)^[i] v)) +
           setSum {i | i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fw}
-            (fun i => g i * interiorAngle1_p2 0 fw ((rhoNode1_p2 FF)^[i] v)) :=
-  sorry
+            (fun i => g i * interiorAngle1_p2 0 fw ((rhoNode1_p2 FF)^[i] v)) := by
+  intro g
+  obtain ⟨n, hnlt, hnv, -⟩ := POINT_PRESENTED_IN_RHOND1 h hv hw
+  obtain ⟨n', hn'lt, hn'w, -⟩ := POINT_PRESENTED_IN_RHOND1 (v := w) (w := v) h hw hv
+  have hnpos : 0 < n := by
+    rcases Nat.eq_zero_or_pos n with h0 | hp
+    · rw [h0, Function.iterate_zero] at hnv
+      exact absurd hnv hvw
+    · exact hp
+  have hpair : ({w, v} : Set V3) = {v, w} := Set.pair_comm w v
+  have hcolS : ∀ z t : V3, z ∈ ({w, v} : Set V3) → t ∈ V \ {z} →
+      ¬ Collinear ℝ ({0, z, t} : Set V3) := by
+    intro z t hz ht
+    rw [hpair] at hz
+    exact hcol z t hz ht
+  have hsubS : ∀ x ∈ FF, affGt ({0} : Set V3) {w, v} ⊆ wedgeInFanGt_p2 x E := by
+    intro x hx
+    rw [hpair]
+    exact hsub x hx
+  have hHS' : IsHyp_p2 0 V (E ∪ {{w, v}}) HS := by
+    rw [hpair]
+    exact hHS
+  have hcard : n + n' = V.ncard :=
+    CARD_V_TWO_HAFL_CIRCLE h hv hw hvw n n' hnv hn'w hnlt hn'lt
+  have hmemfv : ∀ i : ℕ,
+      i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fv ↔ i < n + 1 :=
+    fun i => CONDS_IN_V_PRIME_NUM h hv hw hvw hcol hsub HS hHS hfv hnlt hnv i
+  have hmemfw : ∀ i : ℕ, i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fw ↔
+      i = 0 ∨ n ≤ i ∧ i < V.ncard :=
+    fun i => CONDS_IN_V_PRIME_NUM2 h hv hw hvw hcol hsub HS hHS hfw hnlt hnv i
+  have hfvset : {i : ℕ | i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fv} =
+      {i : ℕ | i < n + 1} := by
+    ext i
+    simpa only [Set.mem_setOf_eq] using hmemfv i
+  have hfwset : {i : ℕ | i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fw} =
+      {i : ℕ | i = 0 ∨ n ≤ i ∧ i < V.ncard} := by
+    ext i
+    simpa only [Set.mem_setOf_eq] using hmemfw i
+  have hU1 : ({i : ℕ | i < n + 1} : Set ℕ) =
+      {i : ℕ | 0 < i ∧ i < n} ∪ {0, n} := by
+    ext i
+    simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hU2 : ({i : ℕ | i = 0 ∨ n ≤ i ∧ i < V.ncard} : Set ℕ) =
+      {i : ℕ | n < i ∧ i < V.ncard} ∪ {0, n} := by
+    ext i
+    simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hU3 : ({i : ℕ | i < V.ncard} : Set ℕ) =
+      {i : ℕ | 0 < i ∧ i < n} ∪ ({i : ℕ | n < i ∧ i < V.ncard} ∪ {0, n}) := by
+    ext i
+    simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hd1 : Disjoint ({i : ℕ | 0 < i ∧ i < n} : Set ℕ) ({0, n} : Set ℕ) := by
+    rw [Set.disjoint_left]
+    intro i hi hj
+    simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff] at hi hj
+    omega
+  have hd2 : Disjoint ({i : ℕ | n < i ∧ i < V.ncard} : Set ℕ) ({0, n} : Set ℕ) := by
+    rw [Set.disjoint_left]
+    intro i hi hj
+    simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff] at hi hj
+    omega
+  have hd3 : Disjoint ({i : ℕ | 0 < i ∧ i < n} : Set ℕ)
+      ({i : ℕ | n < i ∧ i < V.ncard} : Set ℕ) := by
+    rw [Set.disjoint_left]
+    intro i hi hj
+    simp only [Set.mem_setOf_eq] at hi hj
+    omega
+  have hd3' : Disjoint ({i : ℕ | 0 < i ∧ i < n} : Set ℕ)
+      ({i : ℕ | n < i ∧ i < V.ncard} ∪ {0, n}) := by
+    rw [Set.disjoint_left]
+    intro i hi hj
+    simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff] at hi hj
+    omega
+  have hf1 : ({i : ℕ | 0 < i ∧ i < n} : Set ℕ).Finite :=
+    Set.Finite.subset (Set.finite_Iio n) (fun i hi => by
+      simp only [Set.mem_setOf_eq, Set.mem_Iio] at hi ⊢
+      omega)
+  have hf2 : ({i : ℕ | n < i ∧ i < V.ncard} : Set ℕ).Finite :=
+    Set.Finite.subset (Set.finite_Iio V.ncard) (fun i hi => by
+      simp only [Set.mem_setOf_eq, Set.mem_Iio] at hi ⊢
+      omega)
+  have hfE : ({0, n} : Set ℕ).Finite := (Set.finite_singleton n).insert 0
+  have hpairFF : setSum ({0, n} : Set ℕ)
+      (fun i => g i * interiorAngle1_p2 0 FF ((rhoNode1_p2 FF)^[i] v)) =
+      g 0 * interiorAngle1_p2 0 FF v + g n * interiorAngle1_p2 0 FF w := by
+    rw [w4c_setSum_pair (by omega : (0 : ℕ) ≠ n)]
+    simp [Function.iterate_zero, hnv]
+  have hpairA : setSum ({0, n} : Set ℕ)
+      (fun i => g i * interiorAngle1_p2 0 fv ((rhoNode1_p2 FF)^[i] v)) =
+      g 0 * interiorAngle1_p2 0 fv v + g n * interiorAngle1_p2 0 fv w := by
+    rw [w4c_setSum_pair (by omega : (0 : ℕ) ≠ n)]
+    simp [Function.iterate_zero, hnv]
+  have hpairB : setSum ({0, n} : Set ℕ)
+      (fun i => g i * interiorAngle1_p2 0 fw ((rhoNode1_p2 FF)^[i] v)) =
+      g 0 * interiorAngle1_p2 0 fw v + g n * interiorAngle1_p2 0 fw w := by
+    rw [w4c_setSum_pair (by omega : (0 : ℕ) ≠ n)]
+    simp [Function.iterate_zero, hnv]
+  have hS1eq : setSum ({i : ℕ | 0 < i ∧ i < n} : Set ℕ)
+      (fun i => g i * interiorAngle1_p2 0 fv ((rhoNode1_p2 FF)^[i] v)) =
+      setSum ({i : ℕ | 0 < i ∧ i < n} : Set ℕ)
+        (fun i => g i * interiorAngle1_p2 0 FF ((rhoNode1_p2 FF)^[i] v)) := by
+    apply w4c_setSum_congr
+    intro i hi
+    obtain ⟨hi0, hin⟩ := hi
+    rw [INTERIOR_AGL_EQ h hv hw hvw hcol hsub HS hHS hfv hnlt hnv i ⟨hi0, hin⟩]
+  have hS2eq : setSum ({i : ℕ | n < i ∧ i < V.ncard} : Set ℕ)
+      (fun i => g i * interiorAngle1_p2 0 fw ((rhoNode1_p2 FF)^[i] v)) =
+      setSum ({i : ℕ | n < i ∧ i < V.ncard} : Set ℕ)
+        (fun i => g i * interiorAngle1_p2 0 FF ((rhoNode1_p2 FF)^[i] v)) := by
+    apply w4c_setSum_congr
+    intro i hi
+    obtain ⟨hni, hiK⟩ := hi
+    have hper : (rhoNode1_p2 FF)^[i] v = (rhoNode1_p2 FF)^[i - n] w := by
+      conv_lhs => rw [← Nat.sub_add_cancel (by omega : n ≤ i)]
+      rw [Function.iterate_add_apply, hnv]
+    have hj := INTERIOR_AGL_EQ (v := w) (w := v) (fv := fw) (n := n')
+      h hw hv (Ne.symm hvw) hcolS hsubS HS hHS' hfw hn'lt hn'w (i - n)
+      ⟨by omega, by omega⟩
+    rw [hper, hj]
+  have hL : setSum ({i : ℕ | i < V.ncard} : Set ℕ)
+      (fun i => g i * interiorAngle1_p2 0 FF ((rhoNode1_p2 FF)^[i] v)) =
+      setSum ({i : ℕ | 0 < i ∧ i < n} : Set ℕ)
+          (fun i => g i * interiorAngle1_p2 0 FF ((rhoNode1_p2 FF)^[i] v)) +
+        setSum ({i : ℕ | n < i ∧ i < V.ncard} : Set ℕ)
+          (fun i => g i * interiorAngle1_p2 0 FF ((rhoNode1_p2 FF)^[i] v)) +
+        (g 0 * interiorAngle1_p2 0 FF v + g n * interiorAngle1_p2 0 FF w) := by
+    rw [hU3]
+    rw [w4c_setSum_union_disjoint hd3' hf1 (hf2.union hfE)]
+    rw [w4c_setSum_union_disjoint hd2 hf2 hfE]
+    rw [hpairFF]
+    ring
+  rw [hfvset, hfwset, hU1, hU2]
+  rw [w4c_setSum_union_disjoint hd1 hf1 hfE]
+  rw [w4c_setSum_union_disjoint hd2 hf2 hfE]
+  rw [hS1eq, hS2eq, hpairA, hpairB]
+  rw [hL]
+  have h0 := (INTERIOR_ANGLE_LEM_SLICING_FAN2 hcl h hv hw hvw hcol hsub HS hHS hfv hfw).1
+  have hn2 := (INTERIOR_ANGLE_LEM_SLICING_FAN2 hcl h hv hw hvw hcol hsub HS hHS hfv hfw).2
+  linear_combination - (g 0) * h0 - (g n) * hn2
 
 /-- HOL `THE_SLICING_INTO_2_LEMMA` (local_lemmas1.hl:5580) — giant. -/
 theorem THE_SLICING_INTO_2_LEMMA (hcl : convexLocalFan_p2 V E FF)
@@ -4983,8 +5611,9 @@ theorem THE_SLICING_INTO_2_LEMMA (hcl : convexLocalFan_p2 V E FF)
           setSum {i | i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fv}
               (fun i => g i * interiorAngle1_p2 0 fv ((rhoNode1_p2 FF)^[i] v)) +
             setSum {i | i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fw}
-              (fun i => g i * interiorAngle1_p2 0 fw ((rhoNode1_p2 FF)^[i] v))) :=
-  sorry
+              (fun i => g i * interiorAngle1_p2 0 fw ((rhoNode1_p2 FF)^[i] v))) := by
+  have hcvx := COVEX_OF_LOFA_HALF_CIRCLE2 hcl h hv hw hvw hcol hsub HS hHS hfv hfw
+  exact ⟨hcvx.1, hcvx.2, SUM_INTERIOR_AGL_LEMMA hcl h hv hw hvw hcol hsub HS hHS hfv hfw⟩
 
 /-- HOL `WEDGE_IN_FAN_LOFA_DETER2` (local_lemmas1.hl:5609) — giant. -/
 theorem WEDGE_IN_FAN_LOFA_DETER2 (h : localFan_p2 V E FF) (hv : v ∈ V) :
@@ -5485,8 +6114,10 @@ theorem EJRCFJD (hcl : convexLocalFan_p2 V E FF) (hv : v ∈ V) (hw : w ∈ V)
           setSum {i | i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fv}
               (fun i => g i * interiorAngle1_p2 0 fv ((rhoNode1_p2 FF)^[i] v)) +
             setSum {i | i < V.ncard ∧ (rhoNode1_p2 FF)^[i] v ∈ vPrime_p2 V fw}
-              (fun i => g i * interiorAngle1_p2 0 fw ((rhoNode1_p2 FF)^[i] v))) :=
-  sorry
+              (fun i => g i * interiorAngle1_p2 0 fw ((rhoNode1_p2 FF)^[i] v))) := by
+  have hcol := PROVE_THE_SLICE_ASSUMPTION hcl hv hw hvw hsub
+  have h : localFan_p2 V E FF := CVX_LO_IMP_LO hcl
+  exact THE_SLICING_INTO_2_LEMMA hcl h hv hw hvw hcol hsub HS hHS hfv hfw
 
 /-- HOL `DIST_TRIANGLE_AS_ABS` (local_lemmas1.hl:6001). -/
 theorem DIST_TRIANGLE_AS_ABS (x y z : V3) : |dist x y - dist x z| ≤ dist y z := by
