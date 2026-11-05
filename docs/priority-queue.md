@@ -39,22 +39,18 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 下午，池 **4/5**；其中 1 个为 mnt11 常驻编制）
+## 1. 在飞（2026-11-06 晚，池 **5/5**；其中 1 个为 mnt11 常驻编制）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `797-defix-scout` | **只读侦察**：为 `_797`/`PackIneqDefA` 真化 DEF-FIX 章程钉事实——`atn2`/`upsX`/`asnFnhk` 进 PA22 闭包的环与 `rho` 撞名、5 条 HOL ineq 正文、`packIneqDefAP22` 三形状裁决、断链清单、**shard 面零漂移核查** | 在飞（发车 2026-11-06） |
-| `la-registry-mnt11-sf-scout` | **只读侦察**：为 ④ SF 钉材料——四条 `_concl` 的 HOL 条件式 anchor 已由编排者坐实（`VASYYAU.hl:292/720/1126/2366`；`TUAPYYU` :640 是无条件证明，已排除）；本车道验证 + 消费者断链面 + **`localconcl_wire_capstone_w2` 47 合取是否连带** + SF 提案正文与归档补丁 | 在飞（发车 2026-11-06） |
-| `reduction5-scout` | **只读侦察**（⑤）：`jcajydu` 先移植 `Reduction5` 的边界——HOL `reduction5.hl`(160 行)/`JCAJYDU.hl`(99 行) 全貌、**`IsHypermapOfListTl` vs HOL hypermap 是否同一概念**、**TameSpine 岛 75 文件是否已有移植**（决定工作量差一个数量级）、Lean 侧真实规模 vs 裁决估计 1,500–3,000 行、落点（新叶模块 vs 并入 TameCorrBase vs 岛内）、子波切分 | 在飞（发车 2026-11-06） |
-| `mnt11-rolling`（**常驻**） | **M0 分诊**：109 条 `mainEstimate_*` 逐条定 `PROVED`/`PROVABLE`/`NEEDS-CERT`/`NEEDS-MATH`（`PROVABLE` 须探针 RC=0，`PROVED` 须 `#print axioms` 实测）+ `T11Glue` olean 可行性 + 20 条已证件接线价值 + `WORKORDER-M1` | 在飞（常驻，发车 2026-11-06） |
-| `island-deassembly-scout` | **只读侦察**（用户 2026-11-06 批「先立项侦查」）：TameSpine 岛去 Assembly 化。编排者实测**只有 5 个岛文件**直接 import Assembly、只引用 **10 个** Assembly 声明，且 `Keystone.lean:54` 有 `HypermapIso ↔ Hypermap.Iso := Iff.rfl` ⇒ 核心假设「多数引用就地改指低层对应物、不必搬声明」；本车道证实/证伪 + 十个声明逐个判决（REDIRECT/HOIST/KEEP）+ 爆炸半径 + 环的最终验证 + GO/NO-GO | 在飞（发车 2026-11-06） |
-| `tamecorr-iso-scout` | **只读侦察**（hTC 第三件 W3）：`WMLNYMD.hl` 1,515 行 / 56 个 `prove*` 块 的规模与前置。必查：两份同名 `TamePlanarHypermap`（`Assembly:2138` vs `TameLp:489`）是否定义级相等；W3 **能否不依赖 Reduction5/jcajydu/岛去 Assembly 化而独立开工**；岛内是否已有 WMLNYMD 移植 | 在飞（发车 2026-11-06） |
-| `nli-bank-triage` | **只读侦察**（回答用户「77 条本机能不能做」）：68 条 sorried 不等式银行（`nliRest*` 55 / `nliTsk*` 8 / `nliCell3*` 5）逐条判 `PURE-LEAN`/`NEEDS-CERT`/`NEEDS-MATH`；`PURE-LEAN` 必须真探针 RC=0；查模板杠杆（`ZTGIJCF4tmpl`×16、`QITNPEA1tmpl`×6 若能证 `∀` 参数即一次闭 22 条）；查新文件证 `Kepler.Assembly.nliRest*` 的合法性与环 | 在飞（发车 2026-11-06） |
-| （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；**进度 17/23 完成（486/490/493/494/495/497–505），506 在编，零失败**；完成后重跑基线 | 进行中 |
+| `mnt11-rolling`（**常驻**） | M4：3 条 `probe.status=closed` 证书，先收口 `8405387449` | 在飞（常驻）。`T11Proofs.lean` 已加 `t11_8405387449` 证书胶合（import `Interval.Cases.C8405387449` + `eval_C8405387449` 归约 + 两分支 `nlinarith`），501 个 `C8405387449*` shard 已 staged —— **落库前编排者逐行审 diff**（tracked 文件 + 大批新增） |
+| `tamecorr-w3`（滚动系列） | `tameCorrespondenceIso` 实体移植：本体 56 个 prove 块 | 在飞（W3-W9）。**本体 53/56 已闭**（G1/G2/G3/G4/G5/G6/G7 全满，9 模块 2,676 行 80 件全标准三）；W3-W9 = G8 最后一公里（`facesOfList`/`uniq_faces_of_list`/`face_set_eq_list` ~60–75 行 → `tame13a_correspondence` 250–320 行）；之后 W3-W10 = `tame_correspondence1`(:1473)/主定理，**上游还差 S4 `Oxaxucs` iso 族 24 件（1.04–1.29k 行）**，工单已备 |
+| `pa22-poly-w3` | `Cfyxfty.CFYXFTY0/1` → 闭 #8 `BIJ_DART_POLYEDGE` + `BIJ_EDGES_DART_FACE`，再做 #9 `polyhedron_edge_sum` | 在飞。W0–W2 已落库（`483cb2ee`，闸 PASS，sorry 13→10）；柱③ 余 #8/#9/#14/#10/#13 |
+| `gamma4-w3` | `volY`→`dihY`→`solY`→`vol4f`→`gamma4fgcy` 偏导链（上一波 dihXf 层 6 槽公式 + 5/6 符号已落 `4f6993d9`） | 在飞。本波不要求证出 gamma4f 最终符号 |
+| `nli-unknown-w1` | 68 条银行里 16 条 `UNKNOWN` 的前 5 条（盒余量 25%→2.4% 排序） | 在飞。证明写 `NliBanks2.lean`，Assembly 侧由编排者一行接线 |
 
-> 已落库车道（114+ 行）见 [`history/lanes-landed.md`](history/lanes-landed.md)。
-> 本轮已落：`p21-anchor-defix`（`87fdfdad`，DEF-FIX 双 PASS）、`pa25-rolling-w6`（`3e2698a2`，19→12，锥内 −7）、
-> `pa22-yssksqoy-pillars`（`726faa79`，15→13）、`la1-bimport`（`dcc5e36f`，2 条 import 边）。
+> **本轮已落（2026-11-06）**：`island-deassembly`（`272b52c0`）、`sf103`+`packineq-797-defix`（`8bc9fabb`/`db8330da`/`04db48c7`）、`adm3-realify`+`NliBanks`（`b07a1722`，锥内 SORRIED 100→99）、`tamecorr-w3` 九波（`13d51852`…`69f5616a`）、`gamma4-sharp`+ERRATA（`eb9e0987`/`18fd7a22`）、`gamma4-w2` 导数 kit（`4f6993d9`）、`pa22-poly-defix` W0–W2（`483cb2ee`，DEF-FIX 闸 PASS）、基线 O 写档（`286eafe8`）。
+> 已落库车道全表见 [`history/lanes-landed.md`](history/lanes-landed.md)。
 
 > 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
