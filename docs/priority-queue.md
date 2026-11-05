@@ -38,13 +38,15 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 凌晨，池 **3/5**）
+## 1. 在飞（2026-11-06 凌晨，池 **5/5**）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
 | `pa22-eusotyp2-assembly-w1` | `EUSOTYP2_general` 装配（上波已留 386 行草稿 + 5 类阻塞修法）→ 之后才是 `GOTCJAH` | 在飞 |
 | `pa25-rolling-w4` | **PA25 滚动 w4**：`gamma4fgcy_POS`（~20 行，路线已实测）+ `cc_prep_model_data`（**锥内**，~200）+ `EDGE_IMP_K23`；交 w5 工单 | 在飞 |
-| `cone-text-triage-w1` | 只读分诊：锥内 Text 层剩余 SORRIED 逐条七列（依赖递归 ≥2 层 / 可证性分档 S·M·L·BLOCKED·DEFHOLE）+ 下批 3 条车道建议 | 在飞 |
+| `la26-rrcwnsj-w1` | `RRCWNSJ_p26`（M，250–400 行）——先做 ≤100 行可行性探针：`JCYFMRP_V3_p29`/`JLXFDMJ_p27` 若真必需即判 BLOCKED | 在飞 |
+| `la33-straight-w1` | `SCS_4I2_STRAIGHT_p33` + `SCS_4I2_STRAIGHT_ALL_p33` + `MM_4I2_IMP_4T2_4T1_p33`（S+S+M，210–310 行，后件锥内） | 在飞 |
+| `la32-4m6-w1` | 4M6 五件梯子 `EXTREMAL_SCS_4M6` → `BB_4M6_IMP_scs_4T3` → `MM_4M6_IMP_MM_4T3` → `SCS_4M6_ARROW_..._STAB_4M6` → `NWDGKXH_p32`（260–340 行，末件锥内） | 在飞 |
 
 > 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
@@ -163,6 +165,10 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-06（02:10，续369）**：**锥内 Text 残债分诊收工（`cone-text-triage-w1`）+ 按 TOP-3 发三条车道 + 口径修正：`main_nonlinear_terminal_v11` 已不是银行债**。① 分诊 19 行（排除 PA25/LA11/已闭 AURSIPD/LocalConcl anchor）：**S 档 0 / M 档 1（`RRCWNSJ_p26`）/ L 档 1（`SCS_5M2_IMP_SCS_5T1_p29`）/ BLOCKED 16 / DEFHOLE 0 / 快照过时 1（`NUXCOEAv2_p28` 已闭）**。**无重型计算可清总量 = 3 条锥内行 / ~8 个证明项 / ~700–1000 行**——Text 层已接近枯竭，不是"最大证明子树"的主战场（主战场在 PA25/PA22 与 hNL/hLP）。
+  ② **口径修正（最重要）**：`main_nonlinear_terminal_v11` 已由 terminal11-T0 物化为**真定义**（`LocalAuto1.lean:2139`，109 条 `mainEstimate_*` 均为具体 Prop）；探针 `#print axioms` = `[propext, Classical.choice, Quot.sound]`、**无 sorryAx**。故 13 条签名含 mnt11 的锥内件**不是银行债**，其阻塞全部来自具体依赖——分诊表无一行判 MNT11。此结论推翻此前"mnt11 是银行债"的默认口径。
+  ③ **BLOCKED 最大单根 = `general_482_deformation_p21`**（`LocalAuto21.lean:1178`，640 HOL 行、自身 7 条前置全 sorry）——直接/间接卡 5 条（`JCYFMRP_p27` / `SCS_4I1_IMP_SCS_4I2_p33` / `SCS_4I2_IMP_SCS_4T1_p33` / `TFITSKC_p27` 经 `TFITSKCv1_p27` / 自身）。其余归并：LA32 4M7/4M8 箭头叶族卡 2、`RRCWNSJ`+`SCS_6M1_IMP_SCS_6T1` 卡 1、三个 MISSING 簇（`UAGHHBM_p30` 的 `restrictionCs isScs` 0 命中 / TameLp 的 Local_lemmas 三件 0 命中 / `OCBICBY_p22` 缺 12 条 `empty_*`）卡 3、独立深链 3（`VPWSHTO_p15` 整章 11 sorries / `URRPHBZ2` 的 Rogers giant / `LFLACKU_p23` 的 `TAUM_STD_POS`+`taustar_taum_dfun`）。
+  ④ 发车三条（池 5/5）：`la26-rrcwnsj-w1`（含 ≤100 行可行性探针，专查 `JCYFMRP_V3_p29`/`JLXFDMJ_p27` 是否真必需）/ `la33-straight-w1`（S+S+M 一条链）/ `la32-4m6-w1`（五件梯子，末件 `NWDGKXH_p32` 锥内）。三条均附"mnt11 已非银行债"的口径修正。分诊全文入库 `docs/archive/lane-archives/cone-text-triage-w1/`。
 - **2026-11-06（01:30，续368）**：**PA22 `EUSOTYP_general` 真证（`9a03a60b`，17→16）+ 发车 `pa22-eusotyp2-assembly-w1`**。① 358 insertions / 1 deletion（删除行仅被替换的 `sorry`）：7 条 `private p22w6_*` bookkeeping（81 行）+ 277 行证明体；整文件 EXIT:0，`#print axioms EUSOTYP_general` = `[propext, choice, Quot.sound]`，陈述切片与基线逐字节相同（含 `EUSOTYP_simple` 冻结回归）。② **关键简化**：参考射线 `u2''` 与产出点乘同一个半径 `r`，桥里的复数比 `(r·g')/(r·u2'')` 与 `g'/u2''` 逐字相同 → **省掉 w5 建议的 `holArg` 正实缩放引理**。③ **两处上游判断被推翻**（已写进 w6 工单）：`EUSOTYP2_general` **不是**一行 SPECL——HOL 证明 ~160 行，要构造 `u0/u1/u2`、证 `u0 ∈ affine hull c3`（本仓缺 V3 版 `affine_facet_hyper`）、跑 `RDISK_R`、搬 10 个合取；且 `GOTCJAH` 传递依赖 `EUSOTYP2_general`（HOL :4377 显式 `ISPECL`），**不可能先收 GOTCJAH**。④ 上波留了 386 行草稿（V3 仿射包补件 + `azim` 沿轴平移不变性 4 条 + 10 段证明体）与 5 类实测阻塞修法（声明顺序 / `affDim_hyperplane` 换序 / `sub_zero` 假设目标分治 / 6 处心跳超时 / `facet_affDim_2` 可用性），w6 车道直接续写，不再从零侦察。⑤ 池 3/5。
 - **2026-11-06（00:35，续367）**：**LA11 锥内一件闭（`4ab6a8e7`，22→20）：`PQCSXWG2_WITHINREAL_p11` + 上游 `CONTINUOUS_MK_SIMPLEX_WITHINREAL_p11`**。① 侦察：`mkSimplex1_p11 = v0 + (1/upsX) • (2√deltaX • (v1−v0)×(v2−v0) + deltaX5 • (v1−v0) + deltaX4 • (v2−v0))`，let 链 `rfl` 一次展开；HOL 的 `POLY_CONT_TAC` 在 Lean 侧由 `unfold; fun_prop` 接管。② **关键缺口**：`Collect_geom2.NOT_COL_EQ_UPS_X_POS` 的 Lean 桥 `ea2_upsX_pos_iff` 在 `Kepler.Text.EulerSimplexGeom`，**不在 LocalAuto11 的 import 闭包内**（闭包走 LocalAuto2/4 → Polytope/Fan/PA2/3/5/20 → LA38Bridge → SphereKit；EulerSimplexGeom 只 import SphereKit+LuneVolume，零交集）。零新 import 约束下就地重推：`collinear3_iff_smul` + `norm_sq_eq_dot`/`inner_eq_dot`（`Kepler.Geom.Azim` 已在闭包），模板取 `LA38Bridge.p38_upsX_pos_noncollinear` 并补 p38 缺的 `u = 0` 退化支。
   ③ 结果：+168/−2，两件标准三；**`PQCSXWG2_ATREAL_p11` / `PQCSXWG2_p11` 同步转干净（证明体未改）→ 整条 `PQCSXWG2` 链 sorryAx 断根**；锥内 SORRIED −1。`hd`（`0 < deltaX`，HOL 也未用）用一行 `have hdne := ne_of_gt hd` 消费，保 warning 谱面不变。④ 同批归档 `docs/archive/lane-archives/la11-mksimplex-cont-w1/`（kit+DELIVERY+Evidence+RECON）；`la32-miqmcsn-w1` 的 BLOCKED 报告与解锁工单同批入库（该归档文件实际随 `6c27796d`/`4ab6a8e7` 两笔一并提交，事后记账）。
