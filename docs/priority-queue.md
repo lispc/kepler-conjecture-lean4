@@ -43,7 +43,6 @@
 | 车道 | 任务 | 状态 |
 |---|---|---|
 | `pa25-rolling-w7` | **PA25 收尾波**：`pema`/`pemb` → `txq`/`tew` → `gamma10`/`gamma11`（全锥内；目标 12→≤6，或宣布章节除 DEFHOLE 外收尾） | 在飞 |
-| `tamecorr-w1`（resume） | `TameCorrBase` 改造：**摘掉 Assembly import**，全部押到 `TameLp.IsHypermapOfListTl`，Assembly 层留给 W2 一行 `iff` | 在飞 |
 | （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；完成后重跑基线 | 进行中 |
 
 > 已落库车道（114+ 行）见 [`history/lanes-landed.md`](history/lanes-landed.md)。
@@ -191,6 +190,7 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-06（15:40，续379）**：**`TameCorrBase` 改造完成并落库（`aa567796`，174 行，8/8 标准三）**。① 摘掉 `import Kepler.Assembly`，全文件只剩 `import Kepler.Text.TameLp`；闭包零 `Kepler.Interval`，是无任何 importers 的叶子模块。② 结论全部改押 `TameLp.IsHypermapOfListTl`：`darts_hypermapOfList_finset` / `isHypermapOfListTl_darts_finset` / `isHypermapOfListTl_unique` / `isHypermapOfListTl_eq_hypermapOfList`（典范性）/ `isHypermapOfListTl_iff_eq_hypermapOfList` / `hypermapIso_of_isHypermapOfListTl`；不重复引用 `TameLp.hypermapOfList_isHypermapOfListTl`(:6139) 与四字段求值律(:5220/5225/5231/5238)。③ 验收：standalone RC=0 / 0 error / 0 warning / 0 sorry（编排者独立复跑复核）；8/8 `#print axioms` = 标准三。**阴性对照**：同 `LEAN_PATH` 下 `import Kepler.Assembly` 探针 rc=1（缺 Shard490.olean），本模块 rc=0——证明依赖确已摘净。④ **闸不适用**：`auto_gate.sh` 规则读 `git show HEAD:$FILE`，新文件直接 fatal；本轮以"standalone RC=0 + axioms 探针 + 独立复跑"作等价验收，并在 commit message 记录。⑤ Assembly 层 `IsHypermapOfList` 的搬运留给 W2 一行 `iff`（`isHypermapOfList_iff_isHypermapOfListTl`）。⑥ 池 1/5（仅 w7）。
 - **2026-11-06（15:10，续378）**：**四项裁决全采纳 + 三笔落库（p21 DEF-FIX / PA25 w6 / PA22 两件）+ TameCorrBase 改造 + 发车 w7**。① **裁决**（`ddd78919`）：`_797` 真化（移植 `arclength2` + `PackIneqDefA` 改真合取，DEF-FIX，hNL 诚实 +1）/ 四条 registry 补 `mnt11`（SF）/ `jcajydu` 先移 `Reduction5`（不加前提）/ 五件 corpus-unproved 销账（LA A 类根 29→24）。队列 δ→ε→ζ→η（`bdc22f79`）。
   ② **`p21-anchor-defix` `87fdfdad`**（DEF-FIX 双 GATE-PASS）：两锚点改 `main_nonlinear_terminal_v11` 别名；28 个签名假设类型变但 24 个 body 是 sorry 且 `h` 未用、4 个已证件仅转发；旧探针 `not_p21_anchor` 现按预期编译失败。
   ③ **PA25 w6 `3e2698a2`**（19→12，**锥内 −7**）：`cell3_008_from_ineq` 桥 + 九件里 7 件（`MCELL3_008`/`real_model_008`/`cell23_008`/`GAMMAX_008a,b`/`gr`/`sum_azim`），+556/−7。
