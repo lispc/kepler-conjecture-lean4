@@ -7857,11 +7857,162 @@ theorem RDISK_R (v u0 : V3) (b t : ℝ) (hb : 0 < b) (hv : v ≠ 0) (hvv : 0 < v
       field_simp [ne_of_gt hvv']
     rw [arcV, Real.cos_arccos (by rw [hz]; linarith) (by rw [hz]; linarith), hz]
 
+/-- `affDim f = 2` for a facet of a polyhedron through the origin (local copy
+of `FACET_AFF_DIM_2`, which is declared later in the file; needed by
+`FCHANGED_MEASURABLE`). -/
+private theorem p22w1_facet_affDim_2 (p f : Set V3) (hp : polyhedron p)
+    (hi : (0 : V3) ∈ interior p) (hf : FacetOf f p) : affDim f = 2 := by
+  have hap : affineSpan ℝ p = ⊤ := by
+    have h1 : affineSpan ℝ (interior p) = ⊤ :=
+      isOpen_interior.affineSpan_eq_top ⟨(0 : V3), hi⟩
+    rw [eq_top_iff, ← h1]
+    exact affineSpan_mono ℝ interior_subset
+  have hvtop : vectorSpan ℝ p = ⊤ := by
+    rw [← direction_affineSpan ℝ p, hap, AffineSubspace.direction_top]
+  have hpne : p ≠ ∅ := Set.nonempty_iff_ne_empty.mp ⟨(0 : V3), interior_subset hi⟩
+  have hpd : affDim p = 3 := by
+    rw [affDim, if_neg hpne, hvtop, finrank_top]
+    exact_mod_cast finrank_euclideanSpace_fin
+  rw [hf.2.2, hpd]
+  norm_num
+
 /-- HOL `FCHANGED_MEASURABLE` (counting_spheres.hl:2940). GIANT. -/
 theorem FCHANGED_MEASURABLE (p f : Set V3) (r : ℝ) (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (hi : (0 : V3) ∈ interior p) (hf : FacetOf f p) :
     MeasurableSet (fchanged f ∩ normballP22 0 r) := by
-  sorry
+  obtain ⟨a, b, ha, hple, hfeq⟩ := FACET_OF_POLYHEDRON hp hf
+  have hdotcont : Continuous (fun x : V3 => a ⬝ᵥ x) := by
+    have h : (fun x : V3 => a ⬝ᵥ x) = fun x : V3 => inner ℝ a x := by
+      funext x; exact (inner_eq_dot a x).symm
+    rw [h]
+    exact continuous_const.inner continuous_id
+  have hnorma : 0 < ‖a‖ := norm_pos_iff.mpr ha
+  have haa : 0 < a ⬝ᵥ a := by
+    rw [← norm_sq_eq_dot]; exact pow_pos hnorma 2
+  -- b > 0
+  have hbpos : 0 < b := by
+    have hbnonneg : 0 ≤ b := by
+      have h := hple (interior_subset hi)
+      simpa using h
+    rcases lt_or_eq_of_le hbnonneg with hlt | heq
+    · exact hlt
+    · exfalso
+      obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp isOpen_interior 0 hi
+      have hyball : (ε / (2 * ‖a‖)) • a ∈ Metric.ball (0 : V3) ε := by
+        rw [Metric.mem_ball, dist_zero_right]
+        have h1 : ‖(ε / (2 * ‖a‖)) • a‖ = ε / 2 := by
+          have hA : (0:ℝ) ≤ ε / (2 * ‖a‖) := div_nonneg hε.le (by positivity)
+          rw [norm_smul, Real.norm_of_nonneg hA]
+          field_simp
+        rw [h1]; linarith
+      have hple_y := hple (interior_subset (hball hyball))
+      rw [← heq] at hple_y
+      have hle0 : a ⬝ᵥ ((ε / (2 * ‖a‖)) • a) ≤ 0 := hple_y
+      have hdoty : 0 < a ⬝ᵥ ((ε / (2 * ‖a‖)) • a) := by
+        rw [dotV_smul_right, ← norm_sq_eq_dot]
+        have hpos : (0:ℝ) < ε / (2 * ‖a‖) := div_pos hε (by positivity)
+        nlinarith [sq_pos_of_pos hnorma]
+      linarith
+  -- facet points lie on the hyperplane a·x = b
+  have hfH : f ⊆ {y : V3 | a ⬝ᵥ y = b} := by
+    intro y hy
+    rw [hfeq] at hy
+    exact hy.2
+  -- affineSpan f equals affineSpan of the hyperplane set
+  have hHne : ({y : V3 | a ⬝ᵥ y = b} : Set V3).Nonempty := by
+    refine ⟨(b / (a ⬝ᵥ a)) • a, ?_⟩
+    show a ⬝ᵥ ((b / (a ⬝ᵥ a)) • a) = b
+    rw [dotV_smul_right]
+    field_simp
+  have hdimH : Module.finrank ℝ (vectorSpan ℝ ({y : V3 | a ⬝ᵥ y = b} : Set V3)) = 2 := by
+    have hne : ({y : V3 | a ⬝ᵥ y = b} : Set V3) ≠ ∅ :=
+      Set.nonempty_iff_ne_empty.mp hHne
+    have h := affDim_hyperplane ha b
+    rw [affDim, if_neg hne] at h
+    exact_mod_cast h
+  have hdimf : Module.finrank ℝ (vectorSpan ℝ f) = 2 := by
+    have h := p22w1_facet_affDim_2 p f hp hi hf
+    rw [affDim, if_neg hf.2.1] at h
+    exact_mod_cast h
+  have hdirl : vectorSpan ℝ f ≤ vectorSpan ℝ ({y : V3 | a ⬝ᵥ y = b} : Set V3) :=
+    vectorSpan_mono ℝ hfH
+  have hdireq : vectorSpan ℝ f = vectorSpan ℝ ({y : V3 | a ⬝ᵥ y = b} : Set V3) :=
+    Submodule.eq_of_le_of_finrank_eq hdirl (by rw [hdimf, hdimH])
+  have hAHeq : (affineSpan ℝ f : AffineSubspace ℝ V3) =
+      affineSpan ℝ ({y : V3 | a ⬝ᵥ y = b} : Set V3) := by
+    have hle : (affineSpan ℝ f : AffineSubspace ℝ V3) ≤ affineSpan ℝ ({y : V3 | a ⬝ᵥ y = b} : Set V3) :=
+      affineSpan_mono ℝ hfH
+    obtain ⟨y0, hy0f⟩ := Set.nonempty_iff_ne_empty.mpr hf.2.1
+    have hy0A : y0 ∈ affineSpan ℝ f := subset_affineSpan ℝ f hy0f
+    have hy0B : y0 ∈ affineSpan ℝ ({y : V3 | a ⬝ᵥ y = b} : Set V3) := hle hy0A
+    rw [AffineSubspace.eq_iff_direction_eq_of_mem hy0A hy0B,
+      direction_affineSpan, direction_affineSpan]
+    exact hdireq
+  have hAHeq' : (affineSpan ℝ f : Set V3) =
+      (affineSpan ℝ ({y : V3 | a ⬝ᵥ y = b} : Set V3) : Set V3) :=
+    congrArg (fun A : AffineSubspace ℝ V3 => (A : Set V3)) hAHeq
+  -- relative interior of f as an open subset of the hyperplane
+  obtain ⟨O, hOopen, hOeq⟩ := isOpen_induced_iff.mp
+    (show IsOpen (interior ((↑) ⁻¹' f : Set (affineSpan ℝ f))) from isOpen_interior)
+  have hrintO : intrinsicInterior ℝ f = (affineSpan ℝ f : Set V3) ∩ O := by
+    rw [intrinsicInterior, ← hOeq, Set.image_preimage_eq_inter_range,
+      Subtype.range_coe, Set.inter_comm]
+  -- the cone parametrisation x ↦ (b / (a·x)) • x
+  set U : Set V3 := {x : V3 | 0 < a ⬝ᵥ x} with hUdef
+  have hUopen : IsOpen U := isOpen_lt continuous_const hdotcont
+  set g : V3 → V3 := fun x => (b / (a ⬝ᵥ x)) • x with hgdef
+  have hgcont : ContinuousOn g U := by
+    have h1 : ContinuousOn (fun x : V3 => b / (a ⬝ᵥ x)) U :=
+      ContinuousOn.div continuous_const.continuousOn hdotcont.continuousOn
+        (fun x hx => ne_of_gt hx)
+    have h2 : ContinuousOn (fun x : V3 => x) U := continuous_id.continuousOn
+    have h3 : ContinuousOn ((fun x : V3 => b / (a ⬝ᵥ x)) • (fun x : V3 => x)) U :=
+      h1.smul h2
+    convert h3 using 1
+    ext x
+    rfl
+  have hSopen : IsOpen (U ∩ g ⁻¹' O) := hgcont.isOpen_inter_preimage hUopen hOopen
+  have hSeq : fchanged f = U ∩ g ⁻¹' O := by
+    ext x
+    constructor
+    · rintro ⟨v1, t, rfl, hv1, ht⟩
+      have hv1f : v1 ∈ f := (mem_rint_iff.mp hv1).1
+      have hav : a ⬝ᵥ v1 = b := hfH hv1f
+      have hax : a ⬝ᵥ (t • v1) = t * b := by
+        rw [dotV_smul_right, hav]
+      refine ⟨?_, ?_⟩
+      · show 0 < a ⬝ᵥ (t • v1)
+        rw [hax]; exact mul_pos ht hbpos
+      · show g (t • v1) ∈ O
+        have hgv : g (t • v1) = v1 := by
+          show (b / (a ⬝ᵥ (t • v1))) • (t • v1) = v1
+          rw [hax]
+          field_simp
+          rw [smul_smul, one_div, inv_mul_cancel₀ (ne_of_gt ht), one_smul]
+        rw [hgv]
+        have hv1O : v1 ∈ intrinsicInterior ℝ f := hv1
+        rw [hrintO] at hv1O
+        exact hv1O.2
+    · rintro ⟨hxU, hxO⟩
+      have haxne : a ⬝ᵥ x ≠ 0 := ne_of_gt hxU
+      have hgH : g x ∈ (affineSpan ℝ f : Set V3) := by
+        rw [hAHeq']
+        refine subset_affineSpan ℝ _ ?_
+        show a ⬝ᵥ ((b / (a ⬝ᵥ x)) • x) = b
+        rw [dotV_smul_right]
+        field_simp
+      have hgO : g x ∈ intrinsicInterior ℝ f := by
+        rw [hrintO]
+        exact ⟨hgH, hxO⟩
+      refine ⟨g x, a ⬝ᵥ x / b, ?_, hgO, div_pos hxU hbpos⟩
+      show x = (a ⬝ᵥ x / b) • g x
+      show x = (a ⬝ᵥ x / b) • ((b / (a ⬝ᵥ x)) • x)
+      rw [smul_smul]
+      have hcancel : (a ⬝ᵥ x / b) * (b / (a ⬝ᵥ x)) = 1 := by
+        field_simp
+      rw [hcancel, one_smul]
+  rw [hSeq]
+  exact hSopen.measurableSet.inter Metric.isOpen_ball.measurableSet
 
 /-- HOL `RADIAL_NORMBALL` (counting_spheres.hl:2968). -/
 theorem RADIAL_NORMBALL (p : V3) (r : ℝ) : radialNorm r p (normballP22 p r) := by
@@ -8477,7 +8628,67 @@ theorem CONE0_FCHANGED (p f : Set V3) (u0 u1 u2 : V3) (hp : polyhedron p)
     (hb : Bornology.IsBounded p) (hi : (0 : V3) ∈ interior p) (hf : FacetOf f p)
     (hc : ¬ Collinear3 u0 u1 u2) (hsub : {u0, u1, u2} ⊆ f) :
     cone0P22 0 {u0, u1, u2} ⊆ fchanged f := by
-  sorry
+  have hfne : f ≠ p := by
+    intro hcon
+    have hdim := hf.2.2
+    rw [hcon] at hdim
+    omega
+  have h0f : (0 : V3) ∉ f := by
+    have hdisj := faceOf_disjoint_interior hf.1 hfne
+    exact fun hmem => Set.disjoint_left.1 hdisj hmem hi
+  have h0s : (0 : V3) ∉ ({u0, u1, u2} : Set V3) := fun hmem => h0f (hsub hmem)
+  have hu01 : u0 ≠ u1 := fun he => hc (collinear3_of_eq he.symm)
+  have hfin : ({u0, u1, u2} : Set V3).Finite := by
+    exact (Set.finite_singleton u2).insert u1 |>.insert u0
+  have hcard : 1 < ({u0, u1, u2} : Set V3).ncard := by
+    have h2 : ({u0, u1} : Set V3).ncard ≤ ({u0, u1, u2} : Set V3).ncard :=
+      Set.ncard_le_ncard (by intro x hx; simp only [Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hx ⊢; tauto) hfin
+    have hp2 : ({u0, u1} : Set V3).ncard = 2 := Set.ncard_pair hu01
+    omega
+  -- convex hull subset, affine span equality, relative interior inclusion
+  have hconvsub : convexHull ℝ ({u0, u1, u2} : Set V3) ⊆ f :=
+    convexHull_min hsub hf.1.2.1
+  have hfne' : f ≠ ∅ := hf.2.1
+  have hfdim : affDim f = 2 := FACET_AFF_DIM_2 p f hp hi hf
+  have hsd : affDim ({u0, u1, u2} : Set V3) = 2 := NOT_COLLINEAR_AFF_DIM_2 u0 u1 u2 hc
+  have hfr : Module.finrank ℝ (vectorSpan ℝ f) = 2 := by
+    rw [affDim, if_neg hfne'] at hfdim
+    exact_mod_cast hfdim
+  have hsne : ({u0, u1, u2} : Set V3) ≠ ∅ := by
+    intro h0
+    have hm : u0 ∈ ({u0, u1, u2} : Set V3) := by simp
+    rw [h0] at hm
+    exact hm
+  have hsr : Module.finrank ℝ (vectorSpan ℝ ({u0, u1, u2} : Set V3)) = 2 := by
+    rw [affDim, if_neg hsne] at hsd
+    exact_mod_cast hsd
+  have hdirle : vectorSpan ℝ ({u0, u1, u2} : Set V3) ≤ vectorSpan ℝ f :=
+    vectorSpan_mono ℝ hsub
+  have hdireq : vectorSpan ℝ ({u0, u1, u2} : Set V3) = vectorSpan ℝ f :=
+    Submodule.eq_of_le_of_finrank_eq hdirle (by rw [hsr, hfr])
+  have haffeq : affineSpan ℝ ({u0, u1, u2} : Set V3) = affineSpan ℝ f := by
+    have hle : affineSpan ℝ ({u0, u1, u2} : Set V3) ≤ affineSpan ℝ f :=
+      affineSpan_mono ℝ hsub
+    have hmem : u0 ∈ affineSpan ℝ ({u0, u1, u2} : Set V3) :=
+      subset_affineSpan ℝ _ (by simp)
+    have hmemf : u0 ∈ affineSpan ℝ f := hle hmem
+    rw [AffineSubspace.eq_iff_direction_eq_of_mem hmem hmemf]
+    rw [direction_affineSpan, direction_affineSpan]
+    exact hdireq
+  have haffeqCH : affineSpan ℝ (convexHull ℝ ({u0, u1, u2} : Set V3)) = affineSpan ℝ f := by
+    rw [affineSpan_convexHull, haffeq]
+  have hrint : intrinsicInterior ℝ (convexHull ℝ ({u0, u1, u2} : Set V3)) ⊆
+      intrinsicInterior ℝ f := by
+    intro x hx
+    rw [mem_rint_iff] at hx ⊢
+    obtain ⟨hxconv, ε, hε, hball⟩ := hx
+    refine ⟨hconvsub hxconv, ε, hε, ?_⟩
+    rw [← haffeqCH]
+    exact fun y hy => hconvsub (hball hy)
+  refine subset_trans (CONE0_FCHANGED_AFF_GT _ hfin hcard h0s) ?_
+  rintro x ⟨v1, t, hv, hv1, ht⟩
+  exact ⟨v1, t, hv, hrint hv1, ht⟩
 
 /-! ### Azim axis bridge (private helpers for `collinear_translate_axis`/`azim_axis`)
 
@@ -8668,11 +8879,31 @@ theorem EUSOTYP2_general (P : Set V3) (c3 : Set V3) (A : Set V3) (n : ℕ) (t : 
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → azim 0 v (g i) (g (i + 1)) < Real.pi) := by
   sorry
 
+/-- `affGt` monotonicity for the `cone0 ⊆ wedge` landing: with a common
+underlying finite set, strengthening the free part and weakening the positive
+part preserves membership. -/
+private theorem p22w1_affGt_subset_union {s t s' t' : Set V3}
+    (h : s ∪ t = s' ∪ t') (ht : t' ⊆ t) (hs : s ⊆ s' ∪ t') :
+    affGt s t ⊆ affGt s' t' := by
+  rintro x ⟨f, hfin, hx, hpos, hsum⟩
+  have hfin' : (s' ∪ t').Finite := by rw [← h]; exact hfin
+  have hts : hfin'.toFinset = hfin.toFinset := by
+    apply Finset.coe_inj.mp
+    rw [hfin'.coe_toFinset, hfin.coe_toFinset, ← h]
+  refine ⟨f, hfin', ?_, ?_, ?_⟩
+  · rw [hts]; exact hx
+  · intro w hw; exact hpos w (ht hw)
+  · rw [hts]; exact hsum
+
 /-- HOL `CONE0_SUBSET_WEDGE` (counting_spheres.hl:3752). GIANT. -/
 theorem CONE0_SUBSET_WEDGE (v u w : V3) (h1 : ¬ Collinear3 0 v u)
     (h2 : ¬ Collinear3 0 v w) (h3 : 0 < azim 0 v u w) (h4 : azim 0 v u w < Real.pi) :
     cone0P22 0 {v, u, w} ⊆ wedge 0 v u w := by
-  sorry
+  show cone0P22 0 {v, u, w} ⊆ Kepler.Geom.wedge 0 v u w
+  rw [wedge_eq_affGt h1 h2 h3 h4]
+  show affGt ({0} : Set V3) {v, u, w} ⊆ affGt ({0, v} : Set V3) {u, w}
+  refine p22w1_affGt_subset_union ?_ (by simp) (by simp)
+  ext y; simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
 
 /-- HOL `CONE0_AFF_GT` (counting_spheres.hl:3770). -/
 theorem CONE0_AFF_GT (x : V3) (U : Set V3) : cone0P22 x U = affGt {x} U := rfl
