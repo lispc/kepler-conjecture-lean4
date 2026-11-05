@@ -1575,12 +1575,12 @@ theorem XWITCCN_CASE_3 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 3) :
     BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: SCS_3_IS_TRI_STABLE + TRI_STABLE_K_EQ_3 + NOT_EMPTY_CASE_3
-  -- + IN_B_SY1_COLLINEAR_CASE_3 + HDPLYGY_CASE_3 (minimiser x) +
-  -- IN_NOT_EMPTY_B1_SY_3 + TAUSTAR_EQ_TAU_STAR_3 (hta < 0 transfer).
-  -- NEEDS: `HDPLYGY_CASE_3` above (the only open input; the fan/hypermap
-  -- bookkeeping inputs are all discharged in this file).
+  -- Kernel transfer: the generic `isScsV39`-level case (XwitccnKernel) is
+  -- stronger than the concrete-table statement.
+  apply XWITCCN_CASE_3_IS_SCS_xw6 s vv _ hBB _ hta
+  · rw [hs]
+    exact s_init_scs_xw6 _ (by simp [sInitListV39])
+  · subst hs; rfl
 
 /-! ## Section 2: the k = 4 system `4I1` (XWITCCN.hl:2429-3231) -/
 
@@ -2353,9 +2353,12 @@ theorem XWITCCN_CASE_5_sqrt8 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 5) :
     BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: as XWITCCN_CASE_5 over the `5_sqrt8` system (NEEDS the
-  -- HDPLYGY kit only; body/fan bookkeeping discharged by Sections 0.6/0.7).
+  -- Kernel transfer: the generic `isScsV39`-level case (XwitccnKernel) is
+  -- stronger than the concrete-table statement.
+  apply XWITCCN_CASE_5_IS_SCS_xw6 s vv _ hBB _ hta
+  · rw [hs]
+    exact s_init_scs_xw6 _ (by simp [sInitListV39])
+  · subst hs; rfl
 
 /-! ## Section 6: the `5_pro_cs` system (XWITCCN.hl:5671-6450) -/
 
@@ -2445,9 +2448,28 @@ theorem XWITCCN_CASE_5_pro_cs (s : ScsV39) (vv : ℕ → V3)
       (aPro 5 (Real.sqrt 8) (2 * h0) 6))
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 5) :
     BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: as XWITCCN_CASE_5 over the `5_pro_cs` system (NEEDS the
-  -- HDPLYGY kit only; body/fan bookkeeping discharged by Sections 0.6/0.7).
+  -- Kernel transfer through the `aPro` bridge: unfold `aPro` to the literal
+  -- lambda and rewrite with the kernel's entry-7 tables, then apply the
+  -- generic `isScsV39`-level case.
+  apply XWITCCN_CASE_5_IS_SCS_xw6 s vv _ hBB _ hta
+  · rw [hs]
+    have hA : aPro 5 (2 * h0) 2 (2 * h0) =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+          ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 := by
+      change (fun i j => if i % 5 = j % 5 then 0
+        else if ({i % 5, j % 5} : Set ℕ) = {0, 1} then 2 * h0
+        else if j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5 then 2 else 2 * h0) = _
+      exact init7a_xw6
+    have hB : aPro 5 (Real.sqrt 8) (2 * h0) 6 =
+        funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((0, 3), 6),
+          ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 := by
+      change (fun i j => if i % 5 = j % 5 then 0
+        else if ({i % 5, j % 5} : Set ℕ) = {0, 1} then Real.sqrt 8
+        else if j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5 then 2 * h0 else 6) = _
+      exact init7b_xw6
+    rw [hA, hB]
+    exact SCS_5I3_IS_SCS_xw6
+  · subst hs; rfl
 
 /-! ## Section 7: the `4_3` system (XWITCCN.hl:6451-7175) -/
 
@@ -2528,9 +2550,12 @@ theorem XWITCCN_CASE_4_3 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 4) :
     BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: as XWITCCN_CASE_4 over the `4_3` system (NEEDS the
-  -- HDPLYGY kit only; body/fan bookkeeping discharged by Sections 0.6/0.7).
+  -- Kernel transfer: the generic `isScsV39`-level case (XwitccnKernel) is
+  -- stronger than the concrete-table statement.
+  apply XWITCCN_CASE_4_IS_SCS_xw6 s vv _ hBB _ hta
+  · rw [hs]
+    exact s_init_scs_xw6 _ (by simp [sInitListV39])
+  · subst hs; rfl
 
 /-! ## Section 8: the `4_sqrt8` system (XWITCCN.hl:7262-7940) -/
 
@@ -2620,9 +2645,26 @@ theorem XWITCCN_CASE_4_sqrt8 (s : ScsV39) (vv : ℕ → V3)
       (aPro 4 (Real.sqrt 8) (2 * h0) 6))
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 4) :
     BBprimeV39 s ≠ ∅ := by
-  sorry
-  -- DISCHARGES: as XWITCCN_CASE_4 over the `4_sqrt8` system (NEEDS the
-  -- HDPLYGY kit only; body/fan bookkeeping discharged by Sections 0.6/0.7).
+  -- Kernel transfer through the `aPro` bridge: unfold `aPro` to the literal
+  -- lambda and rewrite with the kernel's entry-8 tables, then apply the
+  -- generic `isScsV39`-level case.
+  apply XWITCCN_CASE_4_IS_SCS_xw6 s vv _ hBB _ hta
+  · rw [hs]
+    have hA : aPro 4 (2 * h0) 2 (Real.sqrt 8) =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 := by
+      change (fun i j => if i % 4 = j % 4 then 0
+        else if ({i % 4, j % 4} : Set ℕ) = {0, 1} then 2 * h0
+        else if j % 4 = (i + 1) % 4 ∨ (j + 1) % 4 = i % 4 then 2 else Real.sqrt 8) = _
+      exact init8a_xw6
+    have hB : aPro 4 (Real.sqrt 8) (2 * h0) 6 =
+        funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 := by
+      change (fun i j => if i % 4 = j % 4 then 0
+        else if ({i % 4, j % 4} : Set ℕ) = {0, 1} then Real.sqrt 8
+        else if j % 4 = (i + 1) % 4 ∨ (j + 1) % 4 = i % 4 then 2 * h0 else 6) = _
+      exact init8b_xw6
+    rw [hA, hB]
+    exact init8_isScs_xw6
+  · subst hs; rfl
 
 /-! ## Section 9: the master conclusions (XWITCCN.hl:7941-8020) -/
 
