@@ -38,21 +38,24 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-05 深夜，池 **4/5**）
+## 1. 在飞（2026-11-06 凌晨，池 **3/5**）
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
 | `pa22-eusotyp-assembly-w1` | `EUSOTYP_general` 装配（250–350 行，半径归一化 + kit 胶水）→ `EUSOTYP2_general` → `GOTCJAH` | 在飞 |
-| `pa25-rolling-w3` | **PA25 滚动 w3**：`MCELL_WEDGE_UNIQUE`（连带 `LEAF_RANK_BIJ`）+ `leaf_CIHTIUM` + `CC_3_AZIM_LT_PI_COPLANAR`；交 w4 工单 | 在飞 |
-| `la32-miqmcsn-w1` | LA32 三条锥内箭头装配：`NWDGKXH_p32` / `YOBIMPP_p32` / `MIQMCSN_p32`；侦察先行（依赖箭头若仍 sorry 即 BLOCKED，不搬债） | 在飞 |
-| `la11-mksimplex-cont-w1` | LA11 锥内一件：`PQCSXWG2_WITHINREAL_p11`（+ 其上游 `CONTINUOUS_MK_SIMPLEX_WITHINREAL_p11`） | 在飞 |
+| `pa25-rolling-w4` | **PA25 滚动 w4**：`gamma4fgcy_POS`（~20 行，路线已实测）+ `cc_prep_model_data`（**锥内**，~200）+ `EDGE_IMP_K23`；交 w5 工单 | 在飞 |
+| `cone-text-triage-w1` | 只读分诊：锥内 Text 层剩余 SORRIED 逐条七列（依赖递归 ≥2 层 / 可证性分档 S·M·L·BLOCKED·DEFHOLE）+ 下批 3 条车道建议 | 在飞 |
 
 > 已落库车道（114+ 行，含 2026-10-25 至 2026-11-05 的全部批次）见
 > [`history/lanes-landed.md`](history/lanes-landed.md)。本表只留在飞。
 > 最近刚落：`la16-gap-w1` 5/5（11→6）、`la6-arcv-w1` 3/3（5→2）、`pa22-giant-w4` 2/5+2 DEF-FIX（19→17）、
 > `la16-cont-w1` 4/4（6→2）、`la16-sym-w1` 1/1（**LA16 2→1**）、`pa25-rolling-w1` 4/4（**PA25 39→35，锥内 19→18**）、
 > `la28-nuxcoea-w1` 2/2（**LA28 4→2，NUXCOEA 巨人双闭**）、`pa25-rolling-w2` 5/5（**PA25 35→30，锥内 18→17**）、
-> `pa22-affine-transfer-w1` kit 925 行（17→17，铺路）、`la6-lunar-w1` 2/2（**LA6 2→0**）、`la18-aursipd-w1` 1/1（12→11）。
+> `pa22-affine-transfer-w1` kit 925 行（17→17，铺路）、`la6-lunar-w1` 2/2（**LA6 2→0**）、`la18-aursipd-w1` 1/1（12→11）、
+> `pa25-rolling-w3` 5/5（30→25）、`la11-mksimplex-cont-w1` 2/2（**LA11 22→20，锥内 −1**）。
+> **BLOCKED 判定**：`la32-miqmcsn-w1`——三条锥内箭头全堵在 in-file sorry 链上，根为 7 个 registry/`isScs` 件
+> （`VASYYAU_concl`/`LKGRQUI_concl`/`YXIONXL2_concl`/`YXIONXL3_concl`/`SCS_4T3_IS_SCS_p32`/`SCS_3T7_IS_SCS_p32`/`isScsV39 scs3T3`），
+> 0 闭合；依赖树与解锁判据在 `docs/archive/lane-archives/la32-miqmcsn-w1/`。
 > **拒收**：`la27-tfitskc-w1` 的 `TFITSKC_p27` 结构闭合属**搬债**（仍含 `sorryAx`），按 AGENTS §2 不落库（诊断已入档，见续362）。
 > **长期占槽**：`pa22-*` 与 `pa25-*` 是两条滚动系列（用户指令），一波完即由编排者续发下一波。
 
@@ -160,6 +163,9 @@
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
+- **2026-11-06（00:35，续367）**：**LA11 锥内一件闭（`4ab6a8e7`，22→20）：`PQCSXWG2_WITHINREAL_p11` + 上游 `CONTINUOUS_MK_SIMPLEX_WITHINREAL_p11`**。① 侦察：`mkSimplex1_p11 = v0 + (1/upsX) • (2√deltaX • (v1−v0)×(v2−v0) + deltaX5 • (v1−v0) + deltaX4 • (v2−v0))`，let 链 `rfl` 一次展开；HOL 的 `POLY_CONT_TAC` 在 Lean 侧由 `unfold; fun_prop` 接管。② **关键缺口**：`Collect_geom2.NOT_COL_EQ_UPS_X_POS` 的 Lean 桥 `ea2_upsX_pos_iff` 在 `Kepler.Text.EulerSimplexGeom`，**不在 LocalAuto11 的 import 闭包内**（闭包走 LocalAuto2/4 → Polytope/Fan/PA2/3/5/20 → LA38Bridge → SphereKit；EulerSimplexGeom 只 import SphereKit+LuneVolume，零交集）。零新 import 约束下就地重推：`collinear3_iff_smul` + `norm_sq_eq_dot`/`inner_eq_dot`（`Kepler.Geom.Azim` 已在闭包），模板取 `LA38Bridge.p38_upsX_pos_noncollinear` 并补 p38 缺的 `u = 0` 退化支。
+  ③ 结果：+168/−2，两件标准三；**`PQCSXWG2_ATREAL_p11` / `PQCSXWG2_p11` 同步转干净（证明体未改）→ 整条 `PQCSXWG2` 链 sorryAx 断根**；锥内 SORRIED −1。`hd`（`0 < deltaX`，HOL 也未用）用一行 `have hdne := ne_of_gt hd` 消费，保 warning 谱面不变。④ 同批归档 `docs/archive/lane-archives/la11-mksimplex-cont-w1/`（kit+DELIVERY+Evidence+RECON）；`la32-miqmcsn-w1` 的 BLOCKED 报告与解锁工单同批入库（该归档文件实际随 `6c27796d`/`4ab6a8e7` 两笔一并提交，事后记账）。
+- **2026-11-06（00:20，续366）**：**PA25 滚动 w3 五件闭（`6c27796d`，30→25，锥内 17→17）+ 发车 w4**。① `MCELL_WEDGE_UNIQUE`（50 行 + 201 行支撑 kit）：移植 PA22 `WEDGE_ORDER_DISJOINT` 私件链（5 个 `p25w3_wedge_*` 孪生）+ PA18 已证公开 `WEDGE_WEDGE_GE` 拆闭楔 → X 落 4 个 `affGe` 之并 → 零测撞 `¬ nullSet`；`LEAF_RANK_BIJ`（33 行）= InjOn 由上件、SurjOn 由 `MCELL_IN_WEDGE`、域内茎边 ⇒ 非 null（`VX` 在 null 胞为 `∅`）。② `LEAF_RANK_GG_SUM`（121 行，余量件）= `Finset.induction_on` + 内联 `setSum` 不交并加法 + `⋃ᵢ Sᵢ = S`；**leaf-rank 链 BIJ + GG_SUM 自此齐备**。③ `leaf_CIHTIUM`（22 行）= `bank_CIHTIUM(1,1,1,d01,d02,d12)` 给 `eta_y²>2` 撞 `LEAF_DOMAIN` 的 `η<√2`；`CC_3_AZIM_LT_PI_COPLANAR`（31 行 + 205 行 kit）移植 `Planarity:2272` 共面⇒`azim∈{0,π}` 私件。④ +621/−5（只删 5 行 sorry），五件 `#print axioms` 全标准三，GATE-PASS @`LEAF_RANK_GG_SUM`；own-sorry 30→25（编译器口径 31→26，差 1 = 冻结的 `ox3q1hP25` 定义体）。⑤ **w4 发车**（`WORKORDER-w4.md`）：`gamma4fgcy_POS`（~20 行，`proj_bank_GLFVCVK4` 三分支，路线已在 w3 探针实测 EXIT=0，INVENTORY 估 200 实为 ~20）/ `cc_prep_model_data`（**锥内** ~200，HOL `OXLZLEZ3.hl:4021–4185` 相邻性）/ `EDGE_IMP_K23`（~300，hnl 条件件）。w3 留下的两条硬侦察：闭包内**无** `setSum` 不交并加法引理（相关件全 private 且在 LA*/FanBaseKit）；新私件用 `p25w4_` 前缀。
 - **2026-11-05（23:55，续365）**：**LA18 `AURSIPD_p18` 真证（`b89ee8b4`，own-sorry 12→11）+ 补位 la32-miqmcsn / la11-mksimplex-cont**。① 审计先行：`BBS_IMP_CONVEX_LOCAL_FAN_p34`（LA34:1025）与 `MMS_IMP_BBS_p28`（LA28:194）实测均 `[propext, Classical.choice, Quot.sound]`；LA34 import LA18 成环，故按 `BBsV39`/`MMsV39` 定义投影**就地展开**，不新增跨文件依赖。
   ② 证明路线：`MMs → BBs → ConvexLocalFan → localFan_p2`；`JKQEWGV1_p23` 给 `solLocal < π`；`DETER_RHO_NODE` + `ITER_CARD_MINUS1_EQ_IVS_RN1` 把内角化为 `azim 0 (v i) (v (i+1)) (v (i+k-1))`；`SUM_AZIM_EQ_ANGLE_LE4_FUN_p18`（`ff≡1, p=0`）+ `solLocal` 定义得 `Σ angle_i = (k−2)π + solLocal < (k−1)π`；反设 strata 数 `≥ k−2`——`k`/`k−1` 直接矛盾，`k−2` 用新证 arc 引理（连续 `azim = π` 的顶点链共面）证全体顶点与 `0` 共面，撞 `FEKTYIY_p27`。
   ③ 验证：+422/−5（删除面 = 1 条 sorry + 3 行过时 DISCHARGES 注释），陈述切片与 `f64b3987` 逐字相同，GATE-PASS @`AURSIPD_p18`，锥内 SORRIED 少 1（基线 N 之后累计已落 5）。
