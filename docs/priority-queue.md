@@ -48,6 +48,7 @@
 | `mnt11-rolling`（**常驻**） | **M0 分诊**：109 条 `mainEstimate_*` 逐条定 `PROVED`/`PROVABLE`/`NEEDS-CERT`/`NEEDS-MATH`（`PROVABLE` 须探针 RC=0，`PROVED` 须 `#print axioms` 实测）+ `T11Glue` olean 可行性 + 20 条已证件接线价值 + `WORKORDER-M1` | 在飞（常驻，发车 2026-11-06） |
 | `island-deassembly-scout` | **只读侦察**（用户 2026-11-06 批「先立项侦查」）：TameSpine 岛去 Assembly 化。编排者实测**只有 5 个岛文件**直接 import Assembly、只引用 **10 个** Assembly 声明，且 `Keystone.lean:54` 有 `HypermapIso ↔ Hypermap.Iso := Iff.rfl` ⇒ 核心假设「多数引用就地改指低层对应物、不必搬声明」；本车道证实/证伪 + 十个声明逐个判决（REDIRECT/HOIST/KEEP）+ 爆炸半径 + 环的最终验证 + GO/NO-GO | 在飞（发车 2026-11-06） |
 | `tamecorr-iso-scout` | **只读侦察**（hTC 第三件 W3）：`WMLNYMD.hl` 1,515 行 / 56 个 `prove*` 块 的规模与前置。必查：两份同名 `TamePlanarHypermap`（`Assembly:2138` vs `TameLp:489`）是否定义级相等；W3 **能否不依赖 Reduction5/jcajydu/岛去 Assembly 化而独立开工**；岛内是否已有 WMLNYMD 移植 | 在飞（发车 2026-11-06） |
+| `nli-bank-triage` | **只读侦察**（回答用户「77 条本机能不能做」）：68 条 sorried 不等式银行（`nliRest*` 55 / `nliTsk*` 8 / `nliCell3*` 5）逐条判 `PURE-LEAN`/`NEEDS-CERT`/`NEEDS-MATH`；`PURE-LEAN` 必须真探针 RC=0；查模板杠杆（`ZTGIJCF4tmpl`×16、`QITNPEA1tmpl`×6 若能证 `∀` 参数即一次闭 22 条）；查新文件证 `Kepler.Assembly.nliRest*` 的合法性与环 | 在飞（发车 2026-11-06） |
 | （后台，非车道） | 23 个缺失 Interval shard 串行 `nice -n 19 lake build` 重建（1–3h）；**进度 17/23 完成（486/490/493/494/495/497–505），506 在编，零失败**；完成后重跑基线 | 进行中 |
 
 > 已落库车道（114+ 行）见 [`history/lanes-landed.md`](history/lanes-landed.md)。
