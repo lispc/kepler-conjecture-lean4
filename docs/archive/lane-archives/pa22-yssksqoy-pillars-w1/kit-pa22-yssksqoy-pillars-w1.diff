@@ -1,0 +1,450 @@
+diff --git a/lean/Kepler/Text/PackingAuto22.lean b/lean/Kepler/Text/PackingAuto22.lean
+index ee8eda0..43cc0bc 100644
+--- a/lean/Kepler/Text/PackingAuto22.lean
++++ b/lean/Kepler/Text/PackingAuto22.lean
+@@ -12281,6 +12281,19 @@ theorem SOL_SUBSET (x : V3) (s t : Set V3) (r : ℝ) (hr : 0 < r)
+     (ne_of_lt (lt_of_le_of_lt (MeasureTheory.measure_mono Set.inter_subset_right)
+       (MeasureTheory.measure_ball_lt_top (μ := MeasureTheory.volume) (x := x) (r := r))))
+ 
++private theorem p22g_sum_Icc_eq_range (n : ℕ) (F : ℕ → ℝ) :
++    (∑ i ∈ Finset.Icc 1 n, F i) = ∑ i ∈ Finset.range n, F (i + 1) := by
++  induction n with
++  | zero => simp
++  | succ m ih =>
++    have hins : Finset.Icc 1 (m + 1) = insert (m + 1) (Finset.Icc 1 m) := by
++      ext i
++      simp only [Finset.mem_Icc, Finset.mem_insert]
++      omega
++    rw [hins, Finset.sum_insert (by simp only [Finset.mem_Icc]; omega), ih,
++      Finset.sum_range_succ]
++    ring
++
+ /-- HOL `GOTCJAH` (counting_spheres.hl:4366, via GOTCJAH_concl). GIANT. -/
+ theorem GOTCJAH (c : Set V3) (v : V3) (b : ℝ) (P : Set V3) (WF : Set V3) (t : ℝ)
+     (n : ℕ) (hP : polyhedron P) (hbP : Bornology.IsBounded P) (hb : 0 < b)
+@@ -12289,7 +12302,209 @@ theorem GOTCJAH (c : Set V3) (v : V3) (b : ℝ) (P : Set V3) (WF : Set V3) (t :
+     (hc : c = P ∩ {p : V3 | p ⬝ᵥ v = b} ∧ rconeGt 0 v t ⊆ WF)
+     (hsize : ({u : Set V3 | FacetOf u c}).Finite ∧ ({u : Set V3 | FacetOf u c}).ncard = n) :
+     2 * Real.pi - 2 * n * asn (t * Real.sin (Real.pi / n)) ≤ sol 0 WF := by
+-  sorry
++  classical
++  -- ## 1. preparation
++  set A : Set V3 := {p : V3 | p ⬝ᵥ v = b} with hAdef
++  set u0 : V3 := (b / (v ⬝ᵥ v)) • v with hu0def
++  obtain ⟨hcPA, hsub⟩ := hc
++  have hPA : P ∩ A = c := by rw [← hcPA]
++  obtain ⟨hcA, hv0, hvv, _hu0cone, hu0c, hconeA, u, hncv⟩ :=
++    gotcjah_prep c v b P WF t n u0 A hP hbP hb hi hf hAdef hu0def hfc ht hPA hsub hsize
++  -- ## 2. enumerate the facet's edges
++  have hsub1 : rconeGt 0 v t ⊆ fchanged c := by rw [hfc]; exact hsub
++  obtain ⟨g, h, hg, hgcyc, hh, hord, hhalf, hperp, hn1, hgnc, hhnc, hazimlt⟩ :=
++    EUSOTYP2_general P c A n t u v b hP hbP hi hf hcA hPA hAdef hsize hb ht.1 ht.2 hncv hsub1 hconeA
++  -- ## 3. per-index wedge piece from `gotcjah_sol_lemma`
++  have hnext : ∀ i : ℕ, i ∈ Finset.Icc 1 n → i + 1 ∈ Finset.Icc 1 n ∨ i = n := by
++    intro i hi
++    rw [Finset.mem_Icc] at hi
++    by_cases h : i + 1 ≤ n
++    · left; rw [Finset.mem_Icc]; omega
++    · right; omega
++  have hg_next : ∀ i : ℕ, i ∈ Finset.Icc 1 n → g (i + 1) ∈ c ∧ Real.cos (arcV 0 v (g (i + 1))) = t := by
++    intro i hi
++    rcases hnext i hi with hin | hieq
++    · exact hg (i + 1) hin
++    · have : i + 1 = n + 1 := by omega
++      rw [this, hgcyc]
++      exact hg 1 (by rw [Finset.mem_Icc]; omega)
++  have hnc_next : ∀ i : ℕ, i ∈ Finset.Icc 1 n → ¬ Collinear3 0 v (g (i + 1)) := by
++    intro i hi
++    rcases hnext i hi with hin | hieq
++    · exact hgnc (i + 1) hin
++    · have : i + 1 = n + 1 := by omega
++      rw [this, hgcyc]
++      exact hgnc 1 (by rw [Finset.mem_Icc]; omega)
++  have hiP : (0 : V3) ∈ interior P := hi
++  have hex : ∀ i : ℕ, i ∈ Finset.Icc 1 n → ∃ X : Set V3,
++      X ⊆ wedge 0 v (g i) (g (i + 1)) ∩ WF ∧
++      MeasurableSet (X ∩ normballP22 0 1) ∧
++      radialNorm 1 0 (X ∩ normballP22 0 1) ∧
++      2 * (azim 0 v (g i) (g (i + 1)) / 2 - asn (Real.sin (azim 0 v (g i) (g (i + 1)) / 2) * t))
++        = sol 0 X := by
++    intro i hi
++    have hlt := hazimlt i hi
++    have hp := hperp i hi
++    obtain ⟨X, hXsub, hXmeas, hXrad, hXsol⟩ :=
++      gotcjah_sol_lemma c v b P WF t 1 (azim 0 v (g i) (g (i + 1)) / 2) (g i) (h i) (g (i + 1))
++        (b / (v ⬝ᵥ v)) hP hbP hb hiP hf hfc ht (by norm_num) (div_pos hb hvv)
++        hPA hsub hv0 hvv (hg i hi).2 (hg_next i hi).2
++        (by rw [← hu0def]; exact hu0c) (hg i hi).1 (hh i hi) (hg_next i hi).1
++        (hgnc i hi) (hhnc i hi) (hnc_next i hi) rfl hlt (hhalf i hi).1 (hhalf i hi).2
++        hp.1 hp.2.2.1 hp.2.1 hp.2.2.2
++    exact ⟨X, hXsub, hXmeas, hXrad, hXsol⟩
++  let X : ℕ → Set V3 := fun i =>
++    if hi : i ∈ Finset.Icc 1 n then Classical.choose (hex i hi) else ∅
++  have hX : ∀ i (hi : i ∈ Finset.Icc 1 n),
++      X i ⊆ wedge 0 v (g i) (g (i + 1)) ∩ WF ∧
++      MeasurableSet (X i ∩ normballP22 0 1) ∧
++      radialNorm 1 0 (X i ∩ normballP22 0 1) ∧
++      2 * (azim 0 v (g i) (g (i + 1)) / 2 - asn (Real.sin (azim 0 v (g i) (g (i + 1)) / 2) * t))
++        = sol 0 (X i) := by
++    intro i hi
++    have hspec := Classical.choose_spec (hex i hi)
++    have hXi : X i = Classical.choose (hex i hi) := by
++      unfold X
++      exact dif_pos hi
++    rw [hXi]
++    exact hspec
++  -- ## 4. pairwise disjointness
++  have hdisj : ∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j ≠ k → Disjoint (X j) (X k) := by
++    intro j k hj hk hjk
++    rw [Set.disjoint_left]
++    intro z hzj hzk
++    have h1 : z ∈ wedge 0 v (g j) (g (j + 1)) := ((hX j hj).1 hzj).1
++    have h2 : z ∈ wedge 0 v (g k) (g (k + 1)) := ((hX k hk).1 hzk).1
++    have hwd := WEDGE_ORDER_DISJOINT 0 v u n g hncv hgnc hgcyc hord j k hj hk hjk
++    have hmem : z ∈ wedge 0 v (g j) (g (j + 1)) ∩ wedge 0 v (g k) (g (k + 1)) := ⟨h1, h2⟩
++    rw [hwd] at hmem
++    exact hmem
++  -- ## 5. sum of half-azimuths is pi
++  have hazsum := ORDER_AZIM_SUM2Pi 0 v u n g hncv hgnc hgcyc hn1 hord
++  have hsum_pi : ∑ i ∈ Finset.Icc 1 n, azim 0 v (g i) (g (i + 1)) / 2 = Real.pi := by
++    calc ∑ i ∈ Finset.Icc 1 n, azim 0 v (g i) (g (i + 1)) / 2
++        = ∑ i ∈ Finset.Icc 1 n, (1 / 2) * azim 0 v (g i) (g (i + 1)) := by
++          refine Finset.sum_congr rfl (fun i _ => by ring)
++      _ = (1 / 2) * ∑ i ∈ Finset.Icc 1 n, azim 0 v (g i) (g (i + 1)) := by
++          rw [Finset.mul_sum]
++      _ = Real.pi := by rw [hazsum]; ring
++  -- ## 6. Jensen bound
++  have hsum_range : ∑ i ∈ Finset.range n, azim 0 v (g (i + 1)) (g (i + 2)) / 2 = Real.pi := by
++    rw [← p22g_sum_Icc_eq_range n (fun i => azim 0 v (g i) (g (i + 1)) / 2)]
++    exact hsum_pi
++  have hbet_bounds : ∀ i : ℕ, i < n →
++      0 ≤ azim 0 v (g (i + 1)) (g (i + 2)) / 2 ∧ azim 0 v (g (i + 1)) (g (i + 2)) / 2 ≤ Real.pi := by
++    intro i hi
++    have hiI : i + 1 ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
++    have hlt := hazimlt (i + 1) hiI
++    have hnn := azim_nonneg 0 v (g (i + 1)) (g (i + 2))
++    constructor <;> linarith
++  have hconv := GOTCJAH_convex_sum n t (fun i => azim 0 v (g (i + 1)) (g (i + 2)) / 2) Real.pi
++    (by omega) (by
++      have hn1' : (1:ℝ) ≤ n := by exact_mod_cast Nat.le_of_lt hn1
++      nlinarith [Real.pi_pos]) Real.pi_pos.le ht hsum_range hbet_bounds
++  -- ## 7. termwise identity
++  have hterm : ∀ i ∈ Finset.range n,
++      2 * (azim 0 v (g (i + 1)) (g (i + 2)) / 2
++        - asn (Real.sin (azim 0 v (g (i + 1)) (g (i + 2)) / 2) * t)) = sol 0 (X (i + 1)) := by
++    intro i hi
++    rw [Finset.mem_range] at hi
++    have hiI : i + 1 ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
++    exact (hX (i + 1) hiI).2.2.2
++  have h2sum : 2 * (∑ i ∈ Finset.range n,
++      (azim 0 v (g (i + 1)) (g (i + 2)) / 2
++        - asn (Real.sin (azim 0 v (g (i + 1)) (g (i + 2)) / 2) * t)))
++      = ∑ i ∈ Finset.range n, sol 0 (X (i + 1)) := by
++    rw [Finset.mul_sum]
++    exact Finset.sum_congr rfl hterm
++  -- ## 8. sol additivity on the partial unions
++  have hstep : ∀ m : ℕ, (⋃ i ∈ Finset.range (m + 1), X (i + 1))
++      = (⋃ i ∈ Finset.range m, X (i + 1)) ∪ X (m + 1) := by
++    intro m
++    ext z
++    simp only [Set.mem_iUnion, Finset.mem_range, Set.mem_union]
++    constructor
++    · rintro ⟨i, hi, hz⟩
++      by_cases h : i < m
++      · exact Or.inl ⟨i, h, hz⟩
++      · right
++        rwa [show i = m from by omega] at hz
++    · rintro (⟨i, hi, hz⟩ | hz)
++      · exact ⟨i, by omega, hz⟩
++      · exact ⟨m, by omega, hz⟩
++  have hPmeas : ∀ m : ℕ, m ≤ n →
++      MeasurableSet ((⋃ i ∈ Finset.range m, X (i + 1)) ∩ normballP22 0 1) ∧
++      radialNorm 1 0 ((⋃ i ∈ Finset.range m, X (i + 1)) ∩ normballP22 0 1) := by
++    intro m
++    induction m with
++    | zero =>
++      intro _
++      have hempty : (⋃ i ∈ Finset.range 0, X (i + 1)) = (∅ : Set V3) := by simp
++      rw [hempty, Set.empty_inter]
++      exact ⟨MeasurableSet.empty, ⟨Set.empty_subset _, fun u hu => absurd hu (Set.notMem_empty u)⟩⟩
++    | succ m ih =>
++      intro hm
++      have hle : m ≤ n := by omega
++      have hmI : m + 1 ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
++      have hprev := ih hle
++      have hXm : MeasurableSet (X (m + 1) ∩ normballP22 0 1) ∧
++          radialNorm 1 0 (X (m + 1) ∩ normballP22 0 1) :=
++        ⟨(hX (m + 1) hmI).2.1, (hX (m + 1) hmI).2.2.1⟩
++      rw [hstep m, Set.union_inter_distrib_right]
++      exact ⟨hprev.1.union hXm.1, p22w4_radial_union 1 0 _ _ hprev.2 hXm.2⟩
++  have hdisjU : ∀ m : ℕ, m + 1 ≤ n →
++      Disjoint (⋃ i ∈ Finset.range m, X (i + 1)) (X (m + 1)) := by
++    intro m hm
++    rw [Set.disjoint_left]
++    intro z hz hz2
++    simp only [Set.mem_iUnion, Finset.mem_range] at hz
++    obtain ⟨i, hi, hzi⟩ := hz
++    have hiI : i + 1 ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
++    have hmI : m + 1 ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
++    have hne : i + 1 ≠ m + 1 := by omega
++    have hd := hdisj (i + 1) (m + 1) hiI hmI hne
++    rw [Set.disjoint_left] at hd
++    exact hd hzi hz2
++  have hsolU : ∀ m : ℕ, m ≤ n →
++      sol 0 (⋃ i ∈ Finset.range m, X (i + 1)) = ∑ i ∈ Finset.range m, sol 0 (X (i + 1)) := by
++    intro m
++    induction m with
++    | zero =>
++      intro _
++      have hempty : (⋃ i ∈ Finset.range 0, X (i + 1)) = (∅ : Set V3) := by simp
++      rw [hempty, p22w4_sol_empty, Finset.range_zero, Finset.sum_empty]
++    | succ m ih =>
++      intro hm
++      have hle : m ≤ n := by omega
++      have hmI : m + 1 ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
++      have hprev := hPmeas m hle
++      have hXm := (hX (m + 1) hmI)
++      rw [hstep m, p22w4_sol_disjoint_union 0 _ _ 1 (by norm_num) hprev.1 hXm.2.1
++        (hdisjU m hm) hprev.2 hXm.2.2.1, ih hle, Finset.sum_range_succ]
++  -- ## 9. the union sits in WF
++  have hUsub : (⋃ i ∈ Finset.range n, X (i + 1)) ⊆ WF := by
++    intro z hz
++    simp only [Set.mem_iUnion, Finset.mem_range] at hz
++    obtain ⟨i, hi, hzi⟩ := hz
++    have hiI : i + 1 ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
++    exact ((hX (i + 1) hiI).1 hzi).2
++  have hWFmeas : MeasurableSet (WF ∩ normballP22 0 1) := by
++    rw [← hfc]
++    exact FCHANGED_MEASURABLE P c 1 hbP hP hi hf
++  have hWFrad : radialNorm 1 0 (WF ∩ normballP22 0 1) := by
++    rw [← hfc]
++    exact FCHANGED_RADIAL P c 1 hbP hP hi hf
++  have hle : sol 0 (⋃ i ∈ Finset.range n, X (i + 1)) ≤ sol 0 WF :=
++    SOL_SUBSET 0 _ WF 1 (by norm_num) (hPmeas n le_rfl).1 hWFmeas hUsub (hPmeas n le_rfl).2 hWFrad
++  -- ## 10. assemble
++  have hsolU_n := hsolU n le_rfl
++  have hconv' : Real.pi - (n : ℝ) * asn (t * Real.sin (Real.pi / n))
++      ≤ ∑ i ∈ Finset.range n,
++        (azim 0 v (g (i + 1)) (g (i + 2)) / 2
++          - asn (Real.sin (azim 0 v (g (i + 1)) (g (i + 2)) / 2) * t)) := by
++    simpa only [mul_comm (t : ℝ) (Real.sin _)] using hconv
++  linarith
++
+ 
+ /-- HOL `rcone_def_alt` (counting_spheres.hl:4561). -/
+ theorem rcone_def_alt (v : V3) (t : ℝ) (p : V3) :
+@@ -13915,13 +14130,213 @@ theorem facet_3_facets (p f : Set V3) (hp : polyhedron p)
+   · rw [FACET_AFF_DIM_2 p f hp hi hf]
+     norm_num
+ 
++/-! ### YSSKQOY_VECTOR 支撑件（ACS + MVT 直接证法）
++
++`YSSKQOY_VECTOR` 的核心是两变量三角不等式
++`acs(a/4) + acs(b/4) - π/3 ≤ arccos((a²+b²-4)/(2ab))`（`2 ≤ a,b ≤ 2.52`）。
++证法：固定 `b`，令 `F(a,b) = acs(a/4) + acs(b/4) - π/3 - arccos((a²+b²-4)/(2ab))`；
++证明 `F` 对 `a` 单调不增（`antitoneOn_of_deriv_nonpos`），且 `F(2,b) = 0`。
++导数非正的代数核：`(a²-b²+4)√(16-a²) ≤ a√(4a²b²-(a²+b²-4)²)`，平方后即
++`16(b-2)(b+2)(2a²-b²+4) ≥ 0`（在盒上三因子皆非负）。 -/
++
++private noncomputable def yssF (x b : ℝ) : ℝ :=
++  acs (x / 4) + (acs (b / 4) - Real.pi / 3) - Real.arccos ((x ^ 2 + b ^ 2 - 4) / (2 * x * b))
++
++private lemma yssF_two {b : ℝ} (hb : 2 ≤ b) : yssF 2 b = 0 := by
++  unfold yssF
++  have hd : ((2 : ℝ) ^ 2 + b ^ 2 - 4) / (2 * 2 * b) = b / 4 := by
++    field_simp
++    ring
++  have h1 : acs ((2 : ℝ) / 4) = Real.pi / 3 := by
++    rw [show (2 : ℝ) / 4 = 1 / 2 from by norm_num, acs, ← Real.cos_pi_div_three]
++    exact Real.arccos_cos (by linarith [Real.pi_pos]) (by linarith [Real.pi_pos])
++  rw [hd, h1, acs]
++  ring
++
++private lemma yssF_hasDerivAt {b x : ℝ} (hb : 2 ≤ b) (hb' : b ≤ 2.52) (hx : 2 ≤ x) (hx' : x ≤ 2.52) :
++    HasDerivAt (fun x => yssF x b)
++      (-(1 / Real.sqrt (16 - x ^ 2)) +
++        (x ^ 2 - b ^ 2 + 4) / (2 * x ^ 2 * b) *
++          (1 / Real.sqrt (1 - ((x ^ 2 + b ^ 2 - 4) / (2 * x * b)) ^ 2))) x := by
++  have hx0 : (0:ℝ) < x := by linarith
++  have hb0 : (0:ℝ) < b := by linarith
++  have hxa : HasDerivAt (fun y : ℝ => y / 4) (1/4) x := by
++    simpa using (hasDerivAt_id x).div_const 4
++  have hne1 : x/4 ≠ -1 := by intro h; nlinarith
++  have hne2 : x/4 ≠ 1 := by intro h; nlinarith
++  have hacs1 : HasDerivAt (fun y : ℝ => acs (y/4)) (-(1/Real.sqrt (16 - x^2))) x := by
++    have hbase : HasDerivAt Real.arccos (-(1/Real.sqrt (1 - (x/4)^2))) (x/4) :=
++      Real.hasDerivAt_arccos hne1 hne2
++    have hcomp := HasDerivAt.comp x (h := fun y : ℝ => y/4) (h₂ := Real.arccos) hbase hxa
++    have hval : -(1 / Real.sqrt (1 - (x/4)^2)) * (1/4) = -(1/Real.sqrt (16 - x^2)) := by
++      have hs : Real.sqrt (1 - (x/4)^2) = Real.sqrt (16 - x^2)/4 := by
++        rw [show (1:ℝ) - (x/4)^2 = (16 - x^2)/16 by ring]
++        rw [Real.sqrt_div (by nlinarith : (0:ℝ) ≤ 16 - x^2) 16]
++        norm_num
++      rw [hs]
++      field_simp
++    rw [← hval]
++    exact hcomp
++  have hden0 : (2 * x * b) ≠ 0 := by positivity
++  have hd : HasDerivAt (fun y : ℝ => (y ^ 2 + b ^ 2 - 4) / (2 * y * b))
++      ((x ^ 2 - b ^ 2 + 4) / (2 * x ^ 2 * b)) x := by
++    have hnum : HasDerivAt (fun y : ℝ => y ^ 2 + b ^ 2 - 4) (2 * x) x := by
++      have h := (hasDerivAt_pow 2 x).const_add (b^2 - 4)
++      simpa [mul_comm, mul_left_comm, mul_assoc] using h
++    have hden : HasDerivAt (fun y : ℝ => 2 * y * b) (2 * b) x := by
++      have h := ((hasDerivAt_id x).const_mul (2:ℝ)).mul_const b
++      simpa [mul_comm, mul_left_comm, mul_assoc] using h
++    have hdiv := hnum.div hden hden0
++    have hval : (2 * x * (2 * x * b) - (x ^ 2 + b ^ 2 - 4) * (2 * b)) / (2 * x * b)^2
++        = (x ^ 2 - b ^ 2 + 4) / (2 * x ^ 2 * b) := by
++      field_simp
++      ring
++    rw [← hval]
++    exact hdiv
++  have hd1 : ((x ^ 2 + b ^ 2 - 4) / (2 * x * b)) ≠ 1 := by
++    intro h
++    rw [div_eq_one_iff_eq hden0] at h
++    nlinarith [sq_nonneg (x - b)]
++  have hd1' : ((x ^ 2 + b ^ 2 - 4) / (2 * x * b)) ≠ -1 := by
++    intro h
++    rw [div_eq_iff hden0] at h
++    nlinarith [sq_nonneg (x + b)]
++  have hcompd : HasDerivAt (fun y : ℝ => Real.arccos ((y ^ 2 + b ^ 2 - 4) / (2 * y * b)))
++      (-(1 / Real.sqrt (1 - ((x ^ 2 + b ^ 2 - 4) / (2 * x * b)) ^ 2)) *
++        ((x ^ 2 - b ^ 2 + 4) / (2 * x ^ 2 * b))) x := by
++    have hbase : HasDerivAt Real.arccos
++        (-(1 / Real.sqrt (1 - ((x ^ 2 + b ^ 2 - 4) / (2 * x * b)) ^ 2)))
++        ((x ^ 2 + b ^ 2 - 4) / (2 * x * b)) := Real.hasDerivAt_arccos hd1' hd1
++    exact HasDerivAt.comp (x := x) (h := fun y : ℝ => (y ^ 2 + b ^ 2 - 4) / (2 * y * b))
++      (h₂ := Real.arccos) hbase hd
++  have hconst : HasDerivAt (fun _ : ℝ => acs (b/4) - Real.pi/3) 0 x := hasDerivAt_const _ _
++  have hcomb := (hacs1.add hconst).sub hcompd
++  have hval2 : (-(1/Real.sqrt (16 - x^2)) + 0) - (-(1/Real.sqrt (1 - ((x^2+b^2-4)/(2*x*b))^2)) *
++      ((x^2-b^2+4)/(2*x^2*b)))
++      = -(1/Real.sqrt (16 - x^2)) + (x^2-b^2+4)/(2*x^2*b) *
++          (1/Real.sqrt (1 - ((x^2+b^2-4)/(2*x*b))^2)) := by ring
++  rw [hval2] at hcomb
++  exact hcomb
++
++private lemma yssF_deriv_nonpos {b x : ℝ} (hb : 2 ≤ b) (hb' : b ≤ 2.52) (hx : 2 < x) (hx' : x < 2.52) :
++    -(1 / Real.sqrt (16 - x ^ 2)) +
++      (x ^ 2 - b ^ 2 + 4) / (2 * x ^ 2 * b) *
++        (1 / Real.sqrt (1 - ((x ^ 2 + b ^ 2 - 4) / (2 * x * b)) ^ 2)) ≤ 0 := by
++  have hx0 : (0:ℝ) < x := by linarith
++  have hb0 : (0:ℝ) < b := by linarith
++  set Q : ℝ := x^2 + b^2 - 4 with hQ
++  set d : ℝ := Q / (2*x*b) with hd
++  have hlt1 : d < 1 := by
++    rw [hd, div_lt_one (by positivity)]
++    rw [hQ]; nlinarith [sq_nonneg (x - b)]
++  have hgt1 : -1 < d := by
++    rw [hd, lt_div_iff₀ (by positivity)]
++    rw [hQ]; nlinarith [sq_nonneg (x + b)]
++  have h1md : 0 < 1 - d^2 := by nlinarith
++  have hS1 : 0 < Real.sqrt (16 - x^2) := Real.sqrt_pos.2 (by nlinarith)
++  have h22 : 0 < 2*x*b := by positivity
++  have hrad : 0 < 4*x^2*b^2 - Q^2 := by
++    have hfac : 4*x^2*b^2 - Q^2 = ((x+b)^2 - 4) * (4 - (x-b)^2) := by rw [hQ]; ring
++    rw [hfac]
++    have h1 : 0 < (x+b)^2 - 4 := by nlinarith
++    have h2 : 0 < 4 - (x-b)^2 := by nlinarith [sq_nonneg (x-b)]
++    exact mul_pos h1 h2
++  have hS2eq : Real.sqrt (1 - d^2) = Real.sqrt (4*x^2*b^2 - Q^2) / (2*x*b) := by
++    rw [hd, show 1 - (Q/(2*x*b))^2 = (4*x^2*b^2 - Q^2)/(2*x*b)^2 by field_simp; ring]
++    rw [Real.sqrt_div (by linarith : (0:ℝ) ≤ 4*x^2*b^2 - Q^2) ((2*x*b)^2)]
++    rw [Real.sqrt_sq (le_of_lt h22)]
++  have hkey : (x^2 - b^2 + 4) * Real.sqrt (16 - x^2) ≤ x * Real.sqrt (4*x^2*b^2 - Q^2) := by
++    have hL0 : 0 ≤ (x^2 - b^2 + 4) * Real.sqrt (16 - x^2) :=
++      mul_nonneg (by nlinarith) (Real.sqrt_nonneg _)
++    have hR0 : 0 ≤ x * Real.sqrt (4*x^2*b^2 - Q^2) :=
++      mul_nonneg (le_of_lt hx0) (Real.sqrt_nonneg _)
++    have hsq : ((x^2 - b^2 + 4) * Real.sqrt (16 - x^2))^2 ≤ (x * Real.sqrt (4*x^2*b^2 - Q^2))^2 := by
++      rw [mul_pow, mul_pow, Real.sq_sqrt (by nlinarith : (0:ℝ) ≤ 16 - x^2),
++          Real.sq_sqrt (le_of_lt hrad)]
++      have hD : 16*(b-2)*(b+2)*(2*x^2 - b^2 + 4) = x^2*(4*x^2*b^2 - Q^2) - (x^2-b^2+4)^2*(16-x^2) := by
++        rw [hQ]; ring
++      have hD0 : 0 ≤ 16*(b-2)*(b+2)*(2*x^2-b^2+4) := by
++        have h1 : 0 ≤ b-2 := by linarith
++        have h2 : 0 ≤ b+2 := by linarith
++        have h3 : 0 ≤ 2*x^2 - b^2 + 4 := by nlinarith
++        nlinarith [mul_nonneg (mul_nonneg (by norm_num : (0:ℝ) ≤ 16) (mul_nonneg h1 h2)) h3]
++      linarith
++    have h := sq_le_sq.mp hsq
++    rwa [abs_of_nonneg hL0, abs_of_nonneg hR0] at h
++  have hB : (x^2 - b^2 + 4) / (2*x^2*b) * (1/Real.sqrt (1-d^2))
++      = (x^2 - b^2 + 4)/(x * Real.sqrt (4*x^2*b^2 - Q^2)) := by
++    rw [hS2eq]
++    field_simp
++  rw [hB]
++  have hfin : (x^2 - b^2 + 4)/(x * Real.sqrt (4*x^2*b^2 - Q^2)) ≤ 1/Real.sqrt (16 - x^2) := by
++    rw [div_le_div_iff₀ (by positivity : 0 < x * Real.sqrt (4*x^2*b^2 - Q^2)) hS1]
++    simpa using hkey
++  linarith
++
++private lemma yssF_antitone {b : ℝ} (hb : 2 ≤ b) (hb' : b ≤ 2.52) :
++    AntitoneOn (fun x => yssF x b) (Set.Icc 2 2.52) := by
++  refine antitoneOn_of_deriv_nonpos (convex_Icc 2 2.52) ?_ ?_ ?_
++  · intro x hx
++    exact (yssF_hasDerivAt hb hb' hx.1 hx.2).continuousAt.continuousWithinAt
++  · intro x hx
++    have hx' : x ∈ Set.Ioo (2:ℝ) 2.52 := by rwa [interior_Icc] at hx
++    exact (yssF_hasDerivAt hb hb' (le_of_lt hx'.1) (le_of_lt hx'.2)).differentiableAt.differentiableWithinAt
++  · intro x hx
++    have hx' : x ∈ Set.Ioo (2:ℝ) 2.52 := by rwa [interior_Icc] at hx
++    rw [(yssF_hasDerivAt hb hb' (le_of_lt hx'.1) (le_of_lt hx'.2)).deriv]
++    exact yssF_deriv_nonpos hb hb' hx'.1 hx'.2
++
++private theorem yss_scalar {a b : ℝ} (ha : 2 ≤ a) (ha' : a ≤ 2.52) (hb : 2 ≤ b) (hb' : b ≤ 2.52) :
++    acs (a/4) + acs (b/4) - Real.pi/3 ≤ Real.arccos ((a^2+b^2-4)/(2*a*b)) := by
++  have hle : yssF a b ≤ yssF 2 b :=
++    yssF_antitone hb hb' (show (2:ℝ) ∈ Set.Icc 2 2.52 by norm_num) ⟨ha, ha'⟩ ha
++  have h2 : yssF 2 b = 0 := yssF_two hb
++  have hle' : yssF a b ≤ 0 := by rw [← h2]; exact hle
++  unfold yssF at hle'
++  linarith
++
+ /-- HOL `YSSKQOY_VECTOR` (counting_spheres.hl:6490). GIANT (Ysskqoy bank). -/
+ theorem YSSKQOY_VECTOR (v w : V3) (theta : V3 → ℝ)
+     (hv : v ∈ ballAnnulus) (hw : w ∈ ballAnnulus) (hvw : v ≠ w)
+     (hd : 2 ≤ dist v w)
+     (htheta : (fun v => acs (‖v‖ / 4) - Real.pi / 6) = theta) :
+     theta v + theta w ≤ arcV 0 v w := by
+-  sorry
++  have hvn := (ckq_in_ball_annulus v).mp hv
++  have hwn := (ckq_in_ball_annulus w).mp hw
++  have hv2 : 2 ≤ ‖v‖ := hvn.1
++  have hw2 : 2 ≤ ‖w‖ := hwn.1
++  have hv52 : ‖v‖ ≤ 2.52 := by
++    have h := hvn.2.1
++    rw [h0] at h
++    norm_num at h
++    linarith
++  have hw52 : ‖w‖ ≤ 2.52 := by
++    have h := hwn.2.1
++    rw [h0] at h
++    norm_num at h
++    linarith
++  have hsc := yss_scalar hv2 hv52 hw2 hw52
++  have harcV : arcV 0 v w = Real.arccos ((v ⬝ᵥ w) / (‖v‖ * ‖w‖)) := by
++    simp only [arcV, sub_zero, WithLp.ofLp_zero, dist_zero_right]
++  have hdot : 2 * (v ⬝ᵥ w) = ‖v‖^2 + ‖w‖^2 - dist v w^2 := by
++    have h := norm_sub_sq_real v w
++    rw [inner_eq_dot] at h
++    rw [dist_eq_norm]
++    linarith
++  have hden : 0 < ‖v‖ * ‖w‖ := by
++    have h1 : 0 < ‖v‖ := by linarith
++    have h2 : 0 < ‖w‖ := by linarith
++    positivity
++  have hfrac : (v ⬝ᵥ w) / (‖v‖ * ‖w‖) ≤ (‖v‖^2 + ‖w‖^2 - 4) / (2 * ‖v‖ * ‖w‖) := by
++    rw [div_le_div_iff₀ hden (by positivity : 0 < 2 * ‖v‖ * ‖w‖)]
++    have hd4 : (4:ℝ) ≤ dist v w ^ 2 := by nlinarith
++    nlinarith [hdot]
++  rw [← htheta]
++  have hstep : Real.arccos ((‖v‖^2+‖w‖^2-4)/(2*‖v‖*‖w‖)) ≤ arcV 0 v w := by
++    rw [harcV]
++    exact Real.arccos_le_arccos hfrac
++  linarith
++
+ 
+ /-- NEEDS HOL `arclength` (pack1.hl; PackingAuto1, no olean). Stub: 0. -/
+ noncomputable def arclength22 (r h : ℝ) (d : ℝ) : ℝ := 0
