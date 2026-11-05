@@ -15405,19 +15405,42 @@ theorem SATURATE_BALL_ANNULUS (W S : Set V3) (r : ℝ) (hP : Packing W)
   exact ⟨V, hVa, hVp, hVws, hVfin, hWV, hVsep, hnot,
     LMFUN_INEQ_CENTER_IMP_13 V hVfin hVa hnot⟩
 
-/-! ### F. HOL `POLYHEDRON_FACET_SUM_4Pi`（counting_spheres.hl:6252）—— NEEDS
-Conforming lane：HOL 证路 = `POLYHEDRON_FAN` + `POLYHEDRON_CONFORMING_FAN` +
-`AMHFNXP_BIJ` + `SUM_SOL_IN_FACE_SET_EQ_4PI`；后者 Lean 侧已有 in-tree 桥
-（ConformingAuto6.lean:735，`hypermapOfFan` API），但 PA22 的
-vertices/edges/topologicalComponentYfan 仍是桩（见文件头部 NEEDS 清单），
-须等 fan lane 接线后回填。脚手架 `sorry` 逐条记账。-/
+/-! ### F. HOL `POLYHEDRON_FACET_SUM_4Pi`（counting_spheres.hl:6252）
+装配（HOL 证路）：`fanOfPolyhedronP22`（`POLYHEDRON_FAN`）+
+`conformingFanOfPolyhedronP22`（#5 `POLYHEDRON_CONFORMING_FAN`）喂
+`SUM_SOL_IN_FACE_SET_EQ_4PI`；`AMHFNXP_BIJ`（facet ↔ 拓扑分量双射）把
+facet 上的 `sol ∘ fchanged` 和搬到拓扑分量上，再用 `setSum ↔ finsum` 桥
+（`FINITE_POLYHEDRON_FACETS`）对齐 `setSum`。不吃 #8 反向。 -/
 
 theorem POLYHEDRON_FACET_SUM_4Pi (P : Set V3) (hp : polyhedron P)
     (hb : Bornology.IsBounded P) (hi : (0 : V3) ∈ interior P) :
     setSum {c : Set V3 | FacetOf c P} (fun c => sol 0 (fchanged c)) = 4 * Real.pi := by
-  -- NEEDS Conforming lane: POLYHEDRON_FAN + POLYHEDRON_CONFORMING_FAN +
-  -- AMHFNXP_BIJ + SUM_SOL_IN_FACE_SET_EQ_4PI (ConformingAuto6.lean:735)
-  sorry
+  classical
+  have hfan : Fan.FAN 0 (verticesP22 P) (edgesP22 P) := fanOfPolyhedronP22 P hb hp hi
+  have hconf : conformingFan 0 (verticesP22 P) (edgesP22 P) hfan :=
+    conformingFanOfPolyhedronP22 P hb hp hi
+  -- `AMHFNXP_BIJ`：`fchanged` 是 facet 集到 yfan 拓扑分量的双射。
+  have hbij : Set.BijOn (fun c : Set V3 => fchanged c) {c : Set V3 | FacetOf c P}
+      (Fan.topologicalComponentYfan 0 (verticesP22 P) (edgesP22 P)) := by
+    rw [edgesP22_eq_edgesP7]
+    simpa [verticesP22, fchanged_p7, fchanged, FacetOf_p7, FacetOf, FaceOf_p7, FaceOf,
+      affDim_p7, affDim] using AMHFNXP_BIJ hb (show polyhedron_p7 P from hp) hi
+  -- 拓扑分量上的 `sol` 和 = 面集上的 `sol` 和 = 4π。
+  have hcomp : (∑ᶠ U ∈ Fan.topologicalComponentYfan 0 (verticesP22 P) (edgesP22 P),
+      sol 0 U) = 4 * Real.pi := by
+    rw [SUM_SOL_IN_TOPOLOGICAL_COMPONENET_EQ_IN_FACE_SET hfan hconf]
+    exact SUM_SOL_IN_FACE_SET_EQ_4PI hfan hconf
+  -- 按 `fchanged` 把 facet 上的和重指标到拓扑分量上。
+  have hbijsum : (∑ᶠ c ∈ {c : Set V3 | FacetOf c P}, sol 0 (fchanged c))
+      = ∑ᶠ U ∈ Fan.topologicalComponentYfan 0 (verticesP22 P) (edgesP22 P), sol 0 U :=
+    finsum_mem_eq_of_bijOn (fun c : Set V3 => fchanged c) hbij (fun c _ => rfl)
+  -- facet 集有限，`setSum` 与 `finsum` 一致。
+  have hfin : {c : Set V3 | FacetOf c P}.Finite := FINITE_POLYHEDRON_FACETS hp
+  have hset : setSum {c : Set V3 | FacetOf c P} (fun c => sol 0 (fchanged c))
+      = ∑ᶠ c ∈ {c : Set V3 | FacetOf c P}, sol 0 (fchanged c) := by
+    rw [setSum, dif_pos hfin]
+    exact (finsum_mem_eq_finite_toFinset_sum (fun c => sol 0 (fchanged c)) hfin).symm
+  rw [hset, hbijsum, hcomp]
 
 /-! ### G. HOL `DLWCHEM_VECTOR_sum` / `XULJEPR_VECTOR_sum`
 （counting_spheres.hl:6814/:6905），对照真定义 `localAnnulusInequality` 的
