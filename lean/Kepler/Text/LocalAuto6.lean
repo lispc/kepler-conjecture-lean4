@@ -386,11 +386,133 @@ theorem NORM1_NOT_0 {x : V3} (h : ‖x‖ = 1) : x ≠ (0 : V3) := by
   rw [hx, norm_zero] at h
   norm_num at h
 
-/-- HOL `ARCV_DETER_DIRECTION` (local_lemmas1.hl:269) — giant. -/
+/-- `cos` of `arcV` at the origin (helper for `ARCV_DETER_DIRECTION`). -/
+private theorem w1_cos_arcV_zero {u w : V3} (hu : u ≠ 0) (hw : w ≠ 0) :
+    Real.cos (arcV 0 u w) = inner ℝ u w / (‖u‖ * ‖w‖) := by
+  rw [arcV_eq]
+  simp only [dist_zero_right, sub_zero]
+  have hden : 0 < ‖u‖ * ‖w‖ := mul_pos (norm_pos_iff.mpr hu) (norm_pos_iff.mpr hw)
+  have hb := abs_real_inner_le_norm u w
+  have h1 : -1 ≤ inner ℝ u w / (‖u‖ * ‖w‖) := by
+    rw [le_div_iff₀ hden]
+    linarith [neg_abs_le (inner ℝ u w)]
+  have h2 : inner ℝ u w / (‖u‖ * ‖w‖) ≤ 1 := by
+    rw [div_le_one hden]
+    exact le_trans (le_abs_self _) hb
+  exact Real.cos_arccos h1 h2
+
+/-- HOL `ARCV_DETER_DIRECTION` (local_lemmas1.hl:269). -/
 theorem ARCV_DETER_DIRECTION {x y u : V3} {tu ty : ℝ} (hty : 0 < ty)
     (hx : x = tu • u + ty • y) (hcol : ¬ Collinear3 0 u y) (hnx : ‖x‖ = 1)
-    (hny : ‖y‖ = 1) (harc : arcV 0 u x = arcV 0 u y) : x = y :=
-  sorry
+    (hny : ‖y‖ = 1) (harc : arcV 0 u x = arcV 0 u y) : x = y := by
+  have hu0 : u ≠ 0 := by
+    intro hu
+    apply hcol
+    rw [hu]
+    exact collinear3_of_eq rfl
+  have hy0 : y ≠ 0 := by
+    intro hy
+    rw [hy, norm_zero] at hny
+    norm_num at hny
+  have hx0 : x ≠ 0 := by
+    intro hx'
+    rw [hx', norm_zero] at hnx
+    norm_num at hnx
+  -- angle equality -> inner products against u equal
+  have hcos : Real.cos (arcV 0 u x) = Real.cos (arcV 0 u y) := congrArg Real.cos harc
+  rw [w1_cos_arcV_zero hu0 hx0, w1_cos_arcV_zero hu0 hy0] at hcos
+  have hux : inner ℝ u x = inner ℝ u y := by
+    rw [hnx, hny, mul_one] at hcos
+    exact (div_left_inj' (norm_ne_zero_iff.mpr hu0)).mp hcos
+  -- two scalar equations
+  have hE1 : tu * (inner ℝ u u) + ty * (inner ℝ u y) = inner ℝ u y := by
+    have h : inner ℝ u x = tu * inner ℝ u u + ty * inner ℝ u y := by
+      rw [hx, inner_add_right, real_inner_smul_right, real_inner_smul_right]
+    rw [← h]
+    exact hux
+  have hE2 : tu ^ 2 * (inner ℝ u u) + 2 * tu * ty * (inner ℝ u y) + ty ^ 2 = 1 := by
+    have hyy : inner ℝ y y = 1 := by
+      rw [real_inner_self_eq_norm_sq, hny]
+      norm_num
+    have hxx : inner ℝ x x = 1 := by
+      rw [real_inner_self_eq_norm_sq, hnx]
+      norm_num
+    have hexp : inner ℝ x x =
+        tu ^ 2 * inner ℝ u u + 2 * tu * ty * inner ℝ u y + ty ^ 2 * inner ℝ y y := by
+      rw [hx]
+      simp only [inner_add_left, inner_add_right,
+        real_inner_smul_right, real_inner_comm]
+      ring
+    have hexp' : inner ℝ x x =
+        tu ^ 2 * inner ℝ u u + 2 * tu * ty * inner ℝ u y + ty ^ 2 := by
+      rw [hexp, hyy, mul_one]
+    rw [← hexp', hxx]
+  have ha_pos : 0 < inner ℝ u u := by
+    rw [real_inner_self_eq_norm_sq]
+    have h := norm_pos_iff.mpr hu0
+    positivity
+  by_cases hb0 : inner ℝ u y = 0
+  · have htu : tu = 0 := by
+      have h' : tu * inner ℝ u u = 0 := by
+        simpa [hb0] using hE1
+      exact (mul_eq_zero.mp h').resolve_right (ne_of_gt ha_pos)
+    have hty1 : ty = 1 := by
+      have hsq : ty ^ 2 = 1 := by
+        rw [hb0, htu] at hE2
+        simpa using hE2
+      rcases sq_eq_one_iff.mp hsq with h | h
+      · exact h
+      · linarith
+    rw [hx, htu, hty1, zero_smul, one_smul, zero_add]
+  · have hb_sq_lt : (inner ℝ u y) ^ 2 < inner ℝ u u := by
+      have hb_abs : |inner ℝ u y| ≤ ‖u‖ := by
+        have h := abs_real_inner_le_norm u y
+        rwa [hny, mul_one] at h
+      have hne : |inner ℝ u y| ≠ ‖u‖ := by
+        intro heq
+        have hnormeq : ‖inner ℝ u y‖ = ‖u‖ * ‖y‖ := by
+          rw [Real.norm_eq_abs, hny, heq, mul_one]
+        obtain ⟨r, _hr, hyr⟩ := (norm_inner_eq_norm_iff hu0 hy0).mp hnormeq
+        apply hcol
+        exact (collinear3_iff_smul (v := 0) (w := u) (w1 := y) hu0).mpr
+          ⟨r, by simpa using hyr⟩
+      have hlt : |inner ℝ u y| < ‖u‖ := lt_of_le_of_ne hb_abs hne
+      have h2 : (|inner ℝ u y|) ^ 2 < ‖u‖ ^ 2 := by
+        nlinarith [hlt, abs_nonneg (inner ℝ u y), norm_nonneg u]
+      rwa [sq_abs, ← real_inner_self_eq_norm_sq] at h2
+    by_cases hty1 : ty = 1
+    · have htu : tu = 0 := by
+        have h' : tu * inner ℝ u u = 0 := by
+          rw [hty1] at hE1
+          linarith
+        exact (mul_eq_zero.mp h').resolve_right (ne_of_gt ha_pos)
+      rw [hx, htu, hty1, zero_smul, one_smul, zero_add]
+    · have htu_eq : tu * (inner ℝ u u) = (inner ℝ u y) * (1 - ty) := by
+        have h' : tu * (inner ℝ u u) = inner ℝ u y - ty * inner ℝ u y := by
+          linarith
+        rw [h']; ring
+      have htu_val : tu = (inner ℝ u y) * (1 - ty) / (inner ℝ u u) := by
+        rw [eq_div_iff (ne_of_gt ha_pos)]
+        exact htu_eq
+      have hE2sub := hE2
+      rw [htu_val] at hE2sub
+      field_simp [ne_of_gt ha_pos] at hE2sub
+      have hkey : (1 - ty ^ 2) * (1 - (inner ℝ u y) ^ 2 / (inner ℝ u u)) = 0 := by
+        field_simp [ne_of_gt ha_pos]
+        nlinarith
+      have hfrac_ne : 1 - (inner ℝ u y) ^ 2 / (inner ℝ u u) ≠ 0 := by
+        intro hz
+        have hz' : (inner ℝ u y) ^ 2 / (inner ℝ u u) = 1 := by linarith
+        field_simp [ne_of_gt ha_pos] at hz'
+        linarith
+      have hty_sq : ty ^ 2 = 1 := by
+        have hz : 1 - ty ^ 2 = 0 := (mul_eq_zero.mp hkey).resolve_right hfrac_ne
+        linarith
+      have hty_one : ty = 1 := by
+        rcases sq_eq_one_iff.mp hty_sq with h | h
+        · exact h
+        · linarith
+      exact absurd hty_one hty1
 
 /-- HOL `NORM_NORMIZE` (local_lemmas1.hl:359; HOL form is
 `Trigonometry2.NOT_VEC0_UNITABLE` rewritten by `GSYM normize`). -/
@@ -400,16 +522,318 @@ theorem NORM_NORMIZE {v : V3} (h : v ≠ (0 : V3)) : ‖normize v‖ = 1 := by
   rw [normize, norm_smul, Real.norm_eq_abs, abs_of_pos (div_pos one_pos hvp)]
   field_simp
 
-/-- HOL `ARCV_EQ_IMP_NORMIZE` (local_lemmas1.hl:363) — giant. -/
+/-- HOL `ARCV_EQ_IMP_NORMIZE` (local_lemmas1.hl:363). -/
 theorem ARCV_EQ_IMP_NORMIZE {x y u : V3} (hgt : x ∈ affGt ({0, u} : Set V3) ({y} : Set V3))
-    (hcol : ¬ Collinear3 0 u y) (harc : arcV 0 u x = arcV 0 u y) : normize x = normize y :=
-  sorry
+    (hcol : ¬ Collinear3 0 u y) (harc : arcV 0 u x = arcV 0 u y) : normize x = normize y := by
+  have hu0 : u ≠ 0 := by
+    intro hu
+    apply hcol
+    rw [hu]
+    exact collinear3_of_eq rfl
+  have hy0 : y ≠ 0 := by
+    intro hy
+    apply hcol
+    rw [hy]
+    exact collinear3_pair_left rfl
+  have hset := COLL_AFF_GT_2_1 (0 : V3) u y hcol
+  rw [hset] at hgt
+  obtain ⟨t1, t2, t3, ht3, hsum, hxeq⟩ := hgt
+  have hx : x = t2 • u + t3 • y := by
+    rw [hxeq, smul_zero, zero_add]
+  have hx0 : x ≠ 0 := by
+    intro hxzero
+    apply hcol
+    refine (COLL_EQ_DEPENDENT u y).mpr ⟨t2, t3, ?_, ?_⟩
+    · intro hboth
+      exact absurd hboth.2 (ne_of_gt ht3)
+    · rw [← hx, hxzero]
+  have hxnorm_pos : 0 < ‖x‖ := norm_pos_iff.mpr hx0
+  have hynorm_pos : 0 < ‖y‖ := norm_pos_iff.mpr hy0
+  have hnx1 : ‖(1 / ‖x‖) • x‖ = 1 := by
+    simpa [normize] using NORM_NORMIZE hx0
+  have hny1 : ‖(1 / ‖y‖) • y‖ = 1 := by
+    simpa [normize] using NORM_NORMIZE hy0
+  have hy_ny : y = ‖y‖ • ((1 / ‖y‖) • y) := by
+    rw [smul_smul, one_div, mul_inv_cancel₀ (norm_ne_zero_iff.mpr hy0), one_smul]
+  have hrepr : (1 / ‖x‖) • x =
+      ((1 / ‖x‖) * t2) • u + ((1 / ‖x‖) * t3 * ‖y‖) • ((1 / ‖y‖) • y) := by
+    calc (1 / ‖x‖) • x = ((1 / ‖x‖) * t2) • u + ((1 / ‖x‖) * t3) • y := by
+          rw [hx, smul_add, smul_smul, smul_smul]
+      _ = ((1 / ‖x‖) * t2) • u +
+            ((1 / ‖x‖) * t3) • (‖y‖ • ((1 / ‖y‖) • y)) := by
+          conv_lhs => rw [hy_ny]
+      _ = ((1 / ‖x‖) * t2) • u +
+            (((1 / ‖x‖) * t3) * ‖y‖) • ((1 / ‖y‖) • y) := by rw [smul_smul]
+  have hcoef_pos : 0 < (1 / ‖x‖) * t3 * ‖y‖ := by
+    have h1 : 0 < 1 / ‖x‖ := div_pos one_pos hxnorm_pos
+    positivity
+  have hcol_ny : ¬ Collinear3 0 u ((1 / ‖y‖) • y) := by
+    intro hc
+    obtain ⟨c, hc'⟩ := (collinear3_iff_smul (v := 0) (w := u)
+      (w1 := (1 / ‖y‖) • y) hu0).mp hc
+    apply hcol
+    refine (collinear3_iff_smul (v := 0) (w := u) (w1 := y) hu0).mpr
+      ⟨‖y‖ * c, ?_⟩
+    have hc'' : (1 / ‖y‖) • y = c • u := by simpa using hc'
+    have hcalc : y = (‖y‖ * c) • u := by
+      calc y = ‖y‖ • ((1 / ‖y‖) • y) := hy_ny
+        _ = ‖y‖ • (c • u) := by rw [hc'']
+        _ = (‖y‖ * c) • u := by rw [smul_smul]
+    simpa [sub_zero] using hcalc
+  have hscale_x : arcV 0 u x = arcV 0 u ((1 / ‖x‖) • x) := by
+    have h := WHEN_A_B_POS_ARCV_STABLE (a := 1) (b := 1 / ‖x‖)
+      (x := u) (y := x) one_pos (div_pos one_pos hxnorm_pos)
+    simpa using h
+  have hscale_y : arcV 0 u y = arcV 0 u ((1 / ‖y‖) • y) := by
+    have h := WHEN_A_B_POS_ARCV_STABLE (a := 1) (b := 1 / ‖y‖)
+      (x := u) (y := y) one_pos (div_pos one_pos hynorm_pos)
+    simpa using h
+  have harc_norm : arcV 0 u ((1 / ‖x‖) • x) = arcV 0 u ((1 / ‖y‖) • y) := by
+    rw [← hscale_x, ← hscale_y]
+    exact harc
+  have hmain := ARCV_DETER_DIRECTION (x := (1 / ‖x‖) • x)
+    (y := (1 / ‖y‖) • y) (u := u) (tu := (1 / ‖x‖) * t2)
+    (ty := (1 / ‖x‖) * t3 * ‖y‖) hcoef_pos hrepr hcol_ny hnx1 hny1 harc_norm
+  simpa [normize] using hmain
 
-/-- HOL `AZIM_AND_ARCV_EQ_IMP_PARA` (local_lemmas1.hl:443) — giant. -/
+private theorem w1_arcV_translate (a u w : V3) :
+    arcV a u w = arcV 0 (u - a) (w - a) := by
+  rw [arcV, arcV]
+  simp [dist_eq_norm]
+
+private theorem w1_collinear3_translate {a u z : V3} (hu : u ≠ a) :
+    Collinear3 a u z ↔ Collinear3 0 (u - a) (z - a) := by
+  rw [collinear3_iff_smul (v := a) (w := u) (w1 := z) hu,
+      collinear3_iff_smul (v := 0) (w := u - a) (w1 := z - a)
+        (sub_ne_zero.mpr hu)]
+  simp
+
+private theorem w1_sin_arcv_eq_zero_lap (x y z : V3) :
+    Real.sin (arcV x y z) = 0 ↔ arcV x y z = 0 ∨ arcV x y z = Real.pi := by
+  have h1 : 0 ≤ arcV x y z := by
+    rw [arcV_eq]
+    exact Real.arccos_nonneg _
+  have h2 : arcV x y z ≤ Real.pi := by
+    rw [arcV_eq]
+    exact Real.arccos_le_pi _
+  constructor
+  · intro h
+    obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp h
+    rcases lt_trichotomy n 0 with hn' | hn' | hn'
+    · have hnc : (n : ℝ) < 0 := by exact_mod_cast hn'
+      have hlt : (n : ℝ) * Real.pi < 0 := by nlinarith [hnc, Real.pi_pos]
+      rw [← hn] at h1
+      linarith
+    · rw [hn'] at hn
+      simp at hn
+      exact Or.inl hn.symm
+    · have hge : (1 : ℤ) ≤ n := by omega
+      have hge' : (1 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hge
+      rw [← hn] at h2
+      have heq : (n : ℝ) * Real.pi = Real.pi :=
+        le_antisymm h2 (by nlinarith [hge', Real.pi_pos])
+      have hn1 : (n : ℝ) = 1 := by nlinarith [Real.pi_pos, heq]
+      rw [hn1] at hn
+      simp at hn
+      exact Or.inr hn.symm
+  · rintro (h | h)
+    · rw [h, Real.sin_zero]
+    · rw [h, Real.sin_pi]
+
+private theorem w1_azim_eq_zero_of_collinear {v0 u v z : V3}
+    (h : Collinear3 v0 u z) : azim v0 u v z = 0 := by
+  unfold azim
+  exact if_pos (Or.inr h)
+
+private theorem w1_arcv_zero_or_pi_collinear {a u w : V3}
+    (hu : u ≠ a) (hw : w ≠ a)
+    (h : arcV a u w = 0 ∨ arcV a u w = Real.pi) : Collinear3 a u w := by
+  have hden : 0 < dist u a * dist w a :=
+    mul_pos (dist_pos.mpr hu) (dist_pos.mpr hw)
+  have hb := abs_real_inner_le_norm (u - a) (w - a)
+  have hb' : |inner ℝ (u - a) (w - a)| ≤ dist u a * dist w a := by
+    simpa [dist_eq_norm] using hb
+  have hbnd : -1 ≤ inner ℝ (u - a) (w - a) / (dist u a * dist w a) ∧
+      inner ℝ (u - a) (w - a) / (dist u a * dist w a) ≤ 1 := by
+    constructor
+    · rw [le_div_iff₀ hden]
+      linarith [neg_abs_le (inner ℝ (u - a) (w - a)), hb']
+    · rw [div_le_one hden]
+      exact le_trans (le_abs_self _) hb'
+  have habs : |inner ℝ (u - a) (w - a) / (dist u a * dist w a)| = 1 := by
+    rcases h with h | h
+    · rw [arcV_eq] at h
+      have h1 : inner ℝ (u - a) (w - a) / (dist u a * dist w a) = 1 :=
+        le_antisymm hbnd.2 (Real.arccos_eq_zero.mp h)
+      rw [h1, abs_one]
+    · rw [arcV_eq] at h
+      have h1 : inner ℝ (u - a) (w - a) / (dist u a * dist w a) = -1 :=
+        le_antisymm (Real.arccos_eq_pi.mp h) hbnd.1
+      rw [h1, abs_neg, abs_one]
+  have hnorm : ‖inner ℝ (u - a) (w - a)‖ = ‖u - a‖ * ‖w - a‖ := by
+    have h1 : |inner ℝ (u - a) (w - a)| = dist u a * dist w a := by
+      rw [abs_div, abs_of_pos hden, div_eq_iff (ne_of_gt hden)] at habs
+      linarith
+    rw [Real.norm_eq_abs, h1, dist_eq_norm, dist_eq_norm]
+  have hu' : u - a ≠ 0 := sub_ne_zero.mpr hu
+  have hw' : w - a ≠ 0 := sub_ne_zero.mpr hw
+  obtain ⟨r, _hr, hr⟩ := (norm_inner_eq_norm_iff hu' hw').mp hnorm
+  exact (collinear3_iff_smul (v := a) (w := u) (w1 := w) hu).mpr ⟨r, hr⟩
+
+private theorem w1_arcv_line_smul_eq {u : V3} (hu : u ≠ 0) {a b : ℝ}
+    (h : arcV 0 u (a • u) = arcV 0 u (b • u)) :
+    (a = 0 ∧ b = 0) ∨ 0 < a * b := by
+  have hA := ARCV_ORI_DIRECTIONS hu a
+  have hB := ARCV_ORI_DIRECTIONS hu b
+  by_cases ha0 : a = 0
+  · left
+    refine ⟨ha0, ?_⟩
+    by_contra hb0
+    have hz : arcV 0 u (b • u) = Real.pi / 2 := by
+      have hdeg : arcV 0 u ((0:ℝ) • u) = Real.pi / 2 := by
+        simpa using (ARCV_DEGENERATE (0:V3) u).2
+      rw [ha0] at h
+      rw [← h]
+      exact hdeg
+    rcases lt_or_gt_of_ne hb0 with hbneg | hbpos
+    · have hpi := hB.2.mpr hbneg
+      rw [hpi] at hz
+      linarith [Real.pi_pos]
+    · have hzero := hB.1.mpr hbpos
+      rw [hzero] at hz
+      linarith [Real.pi_pos]
+  · right
+    rcases lt_or_gt_of_ne ha0 with haneg | hapos
+    · have hpi := hA.2.mpr haneg
+      rw [hpi] at h
+      have hbneg : b < 0 := hB.2.mp h.symm
+      nlinarith
+    · have hzero := hA.1.mpr hapos
+      rw [hzero] at h
+      have hbpos : 0 < b := hB.1.mp h.symm
+      nlinarith
+
+/-- HOL `AZIM_AND_ARCV_EQ_IMP_PARA` (local_lemmas1.hl:443). -/
 theorem AZIM_AND_ARCV_EQ_IMP_PARA {v0 u v x y : V3} (hcol : ¬ Collinear3 v0 u v)
     (haz : azim v0 u v x = azim v0 u v y) (harc : arcV v0 u x = arcV v0 u y) :
-    y = v0 ∨ ∃ t : ℝ, 0 ≤ t ∧ x - v0 = t • (y - v0) :=
-  sorry
+    y = v0 ∨ ∃ t : ℝ, 0 ≤ t ∧ x - v0 = t • (y - v0) := by
+  have hv0u : v0 ≠ u := by
+    intro h
+    apply hcol
+    rw [h]
+    exact collinear3_of_eq rfl
+  by_cases hycol : Collinear3 v0 u y
+  · have hzy : azim v0 u v y = 0 := w1_azim_eq_zero_of_collinear hycol
+    by_cases hxcol : Collinear3 v0 u x
+    · obtain ⟨a, ha⟩ := (collinear3_iff_smul (v := v0) (w := u) (w1 := x)
+        (Ne.symm hv0u)).mp hxcol
+      obtain ⟨b, hb⟩ := (collinear3_iff_smul (v := v0) (w := u) (w1 := y)
+        (Ne.symm hv0u)).mp hycol
+      by_cases hb0 : b = 0
+      · left
+        rw [← sub_eq_zero, hb, hb0, zero_smul]
+      · right
+        have hu' : u - v0 ≠ 0 := sub_ne_zero.mpr (Ne.symm hv0u)
+        have hline : arcV 0 (u - v0) (a • (u - v0)) =
+            arcV 0 (u - v0) (b • (u - v0)) := by
+          calc arcV 0 (u - v0) (a • (u - v0))
+              = arcV 0 (u - v0) (x - v0) := by rw [← ha]
+            _ = arcV v0 u x := (w1_arcV_translate v0 u x).symm
+            _ = arcV v0 u y := harc
+            _ = arcV 0 (u - v0) (y - v0) := w1_arcV_translate v0 u y
+            _ = arcV 0 (u - v0) (b • (u - v0)) := by rw [← hb]
+        rcases w1_arcv_line_smul_eq hu' hline with ⟨_ha0, hbzero⟩ | hab
+        · exact absurd hbzero hb0
+        · refine ⟨a / b, ?_, ?_⟩
+          · have hdiv : 0 < a / b := by
+              rcases lt_or_gt_of_ne hb0 with hbneg | hbpos
+              · have haneg : a < 0 := by nlinarith [hab, hbneg]
+                exact div_pos_of_neg_of_neg haneg hbneg
+              · have hapos : 0 < a := by nlinarith [hab, hbpos]
+                exact div_pos hapos hbpos
+            exact le_of_lt hdiv
+          · rw [ha, hb, smul_smul]
+            field_simp [hb0]
+    · by_cases hyv0 : y = v0
+      · exact Or.inl hyv0
+      · exfalso
+        have hxnotv0 : x ≠ v0 := fun h => hxcol (collinear3_pair_left h)
+        have hsin_y : Real.sin (arcV v0 u y) = 0 :=
+          COLLINEAR_SIN_ARCV_0 hycol (fun h => hyv0 h.symm) hv0u
+        have hsin_x : Real.sin (arcV v0 u x) = 0 := by rw [harc]; exact hsin_y
+        have harc_x : arcV v0 u x = 0 ∨ arcV v0 u x = Real.pi :=
+          (w1_sin_arcv_eq_zero_lap v0 u x).mp hsin_x
+        exact hxcol (w1_arcv_zero_or_pi_collinear (Ne.symm hv0u) hxnotv0 harc_x)
+  · by_cases hxcol : Collinear3 v0 u x
+    · by_cases hxv0 : x = v0
+      · right
+        exact ⟨0, le_refl 0, by rw [hxv0, sub_self, zero_smul]⟩
+      · exfalso
+        have hsin_x : Real.sin (arcV v0 u x) = 0 :=
+          COLLINEAR_SIN_ARCV_0 hxcol (fun h => hxv0 h.symm) hv0u
+        have hsin_y : Real.sin (arcV v0 u y) = 0 := by rw [← harc]; exact hsin_x
+        have harc_y : arcV v0 u y = 0 ∨ arcV v0 u y = Real.pi :=
+          (w1_sin_arcv_eq_zero_lap v0 u y).mp hsin_y
+        have hyv0 : y ≠ v0 := fun h => hycol (collinear3_pair_left h)
+        exact hycol (w1_arcv_zero_or_pi_collinear (Ne.symm hv0u) hyv0 harc_y)
+    · have hyv0 : y ≠ v0 := fun h => hycol (collinear3_pair_left h)
+      obtain ⟨t1, t2, t3, ht3, hsum, hxeq⟩ := by
+        have hset := COLL_AFF_GT_2_1 v0 u y hycol
+        have hmem : x ∈ affGt ({v0, u} : Set V3) {y} :=
+          (azim_eq_azim_iff_alt (v0 := v0) (v1 := u) (w := v) (x := x) (y := y)
+            hcol hxcol hycol).mp haz
+        rwa [hset] at hmem
+      have hxsub : x - v0 = t2 • (u - v0) + t3 • (y - v0) := by
+        have ht1 : t1 = 1 - t2 - t3 := by linarith
+        rw [hxeq, ht1]
+        module
+      have hcol_y' : ¬ Collinear3 0 (u - v0) (y - v0) := by
+        intro h
+        exact hycol ((w1_collinear3_translate (Ne.symm hv0u)).mpr h)
+      have hgt : (x - v0) ∈ affGt ({0, u - v0} : Set V3) ({y - v0} : Set V3) := by
+        have hset := COLL_AFF_GT_2_1 (0 : V3) (u - v0) (y - v0) hcol_y'
+        rw [hset]
+        refine ⟨t1, t2, t3, ht3, hsum, ?_⟩
+        rw [smul_zero, zero_add]
+        exact hxsub
+      have harc' : arcV 0 (u - v0) (x - v0) = arcV 0 (u - v0) (y - v0) := by
+        rw [← w1_arcV_translate v0 u x, ← w1_arcV_translate v0 u y]
+        exact harc
+      have hnorm := ARCV_EQ_IMP_NORMIZE (x := x - v0) (y := y - v0)
+        (u := u - v0) hgt hcol_y' harc'
+      have hx'0 : x - v0 ≠ 0 := sub_ne_zero.mpr (fun h => hxcol (collinear3_pair_left h))
+      have hy'0 : y - v0 ≠ 0 := sub_ne_zero.mpr hyv0
+      set s : ℝ := ‖x - v0‖ / ‖y - v0‖ with hs
+      have hs_eq : x - v0 = s • (y - v0) := by
+        have h := hnorm
+        rw [normize, normize] at h
+        calc x - v0 = (‖x - v0‖ * (1 / ‖x - v0‖)) • (x - v0) := by
+              rw [one_div, mul_inv_cancel₀ (norm_ne_zero_iff.mpr hx'0), one_smul]
+          _ = ‖x - v0‖ • ((1 / ‖x - v0‖) • (x - v0)) := by rw [smul_smul]
+          _ = ‖x - v0‖ • ((1 / ‖y - v0‖) • (y - v0)) := by rw [h]
+          _ = s • (y - v0) := by
+              rw [hs, smul_smul]
+              congr 1
+              field_simp
+      have hs_pos : 0 < s := by
+        rw [hs]
+        exact div_pos (norm_pos_iff.mpr hx'0) (norm_pos_iff.mpr hy'0)
+      have hlin : ∀ a b : ℝ, a • (u - v0) + b • (y - v0) = 0 → a = 0 ∧ b = 0 := by
+        intro a b hab
+        by_contra hne
+        exact hycol ((w1_collinear3_translate (Ne.symm hv0u)).mpr
+          ((COLL_EQ_DEPENDENT (u - v0) (y - v0)).mpr ⟨a, b, hne, hab⟩))
+      have hz : t2 • (u - v0) + (t3 - s) • (y - v0) = 0 := by
+        have hxsub' := hxsub
+        rw [hs_eq] at hxsub'
+        rw [sub_smul, hxsub']
+        module
+      have ht2 : t2 = 0 := (hlin t2 (t3 - s) hz).1
+      have ht3s : t3 = s := by
+        have := (hlin t2 (t3 - s) hz).2
+        linarith
+      refine Or.inr ⟨t3, le_of_lt (by rw [ht3s]; exact hs_pos), ?_⟩
+      rw [hxsub, ht2, zero_smul, zero_add]
 
 /-- HOL `NORM_CAUCHY_SCHWARZ_FRAC2` (local_lemmas1.hl:635). -/
 theorem NORM_CAUCHY_SCHWARZ_FRAC2 (u v : V3) :
