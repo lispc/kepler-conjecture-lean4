@@ -4317,31 +4317,6 @@ private theorem w13_in_affine_ky_lemma1 {x : V3} {s : Set V3} (hx : x ∈ s) :
     x ∈ affineSpan ℝ s :=
   subset_affineSpan ℝ s hx
 
-/-- HOL `XIV_DEFORMATION` (hl:2259; the `dihV = dh` hypothesis is rendered
-pointwise).  NEEDS: the XIV wedge-closure argument. -/
-theorem XIV_DEFORMATION_p14 (f : V3 → ℝ → V3) (dh : ℕ × ℕ × ℕ → ℝ) (r : ℕ)
-    (w : ℕ → V3) (a b : ℝ)
-    (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
-    (h2 : Set.Pairwise (Set.Icc 0 (r + 1)) fun i j =>
-      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
-    (h3 : Set.Pairwise (Set.Icc 1 (r + 2)) fun i j =>
-      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
-    (h4 : ∀ i j k, dihV 0 (w i) (w j) (w k) = dh (i, j, k))
-    (h5 : ∀ i, i ∈ Set.Icc 1 (r + 1) → ∃ e2 : ℝ, 0 < e2 ∧ ∀ t, |t| < e2 →
-      azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) ≤ Real.pi)
-    (h6 : ∀ i, i ∈ Set.Icc 1 (r + 1) →
-      0 < azim 0 (w i) (w (i + 1)) (w (i - 1)))
-    (h7 : ∀ p q, ({p, q, q + 1} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p ≠ q → p ≠ q + 1 →
-      dh (p, q, q + 1) = 0)
-    (h8 : ∀ p q, ({p, p + 1, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p + 1 < q →
-      dh (p, p + 1, q) = 0)
-    (h9 : ∀ p q, ({p + 1, p, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → q < p →
-      dh (p + 1, p, q) = 0) :
-    ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
-      f (w 1) t ∈ wedgeGe 0 (f (w (r + 1)) t) (f (w (r + 2)) t) (f (w r) t) ∧
-      f (w (r + 1)) t ∈ wedgeGe 0 (f (w 1) t) (f (w 2) t) (f (w 0) t) := by
-  sorry
-
 /-- w17 kit: the pair window `(Icc 0 (r+1))² ∪ (Icc 1 (r+2))²` minus the
 diagonal — the index family over which `XIV_DEFORMATION` (HOL
 ZLZTHIC.hl:2259) needs a uniform non-collinearity radius. -/
@@ -4752,7 +4727,33 @@ private theorem w17_xiv_deformation_strict (f : V3 → ℝ → V3) (dh : ℕ × 
         hshift.1 r 1 (by norm_num) (by omega)
     · simpa only [Nat.add_comm 1 r] using hshift.2 r 1 (by norm_num) (by omega)
 
-/-- HOL `XIV_ECAU` (hl:2562).  NEEDS: the XIV wedge-closure argument. -/
+/-- HOL `XIV_DEFORMATION` (hl:2259; the `dihV = dh` hypothesis is rendered
+pointwise). -/
+theorem XIV_DEFORMATION_p14 (f : V3 → ℝ → V3) (dh : ℕ × ℕ × ℕ → ℝ) (r : ℕ)
+    (w : ℕ → V3) (a b : ℝ)
+    (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
+    (h2 : Set.Pairwise (Set.Icc 0 (r + 1)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+    (h3 : Set.Pairwise (Set.Icc 1 (r + 2)) fun i j =>
+      ¬ Collinear ℝ ({0, w i, w j} : Set V3))
+    (h4 : ∀ i j k, dihV 0 (w i) (w j) (w k) = dh (i, j, k))
+    (h5 : ∀ i, i ∈ Set.Icc 1 (r + 1) → ∃ e2 : ℝ, 0 < e2 ∧ ∀ t, |t| < e2 →
+      azim 0 (f (w i) t) (f (w (i + 1)) t) (f (w (i - 1)) t) ≤ Real.pi)
+    (h6 : ∀ i, i ∈ Set.Icc 1 (r + 1) →
+      0 < azim 0 (w i) (w (i + 1)) (w (i - 1)))
+    (h7 : ∀ p q, ({p, q, q + 1} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p ≠ q → p ≠ q + 1 →
+      dh (p, q, q + 1) = 0)
+    (h8 : ∀ p q, ({p, p + 1, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p + 1 < q →
+      dh (p, p + 1, q) = 0)
+    (h9 : ∀ p q, ({p + 1, p, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → q < p →
+      dh (p + 1, p, q) = 0) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
+      f (w 1) t ∈ wedgeGe 0 (f (w (r + 1)) t) (f (w (r + 2)) t) (f (w r) t) ∧
+      f (w (r + 1)) t ∈ wedgeGe 0 (f (w 1) t) (f (w 2) t) (f (w 0) t) := by
+  exact w17_xiv_deformation_strict f dh r w a b h1 h1.1.1 h1.1.2
+    h2 h3 h4 h5 h6 h7 h8 h9
+
+/-- HOL `XIV_ECAU` (hl:2562). -/
 theorem XIV_ECAU_p14 (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3) (a b : ℝ)
     (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
     (h2 : ∀ i, i ∈ Set.Icc 2 (r + 1) → w i ∈ affGt ({0, w 1} : Set V3) ({w 2} : Set V3))
@@ -4770,7 +4771,125 @@ theorem XIV_ECAU_p14 (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3) (a b : �
     ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
       f (w 1) t ∈ wedgeGe 0 (f (w (r + 1)) t) (f (w (r + 2)) t) (f (w r) t) ∧
       f (w (r + 1)) t ∈ wedgeGe 0 (f (w 1) t) (f (w 2) t) (f (w 0) t) := by
-  sorry
+  classical
+  let dh : ℕ × ℕ × ℕ → ℝ := fun p => dihV 0 (w p.1) (w p.2.1) (w p.2.2)
+  -- Azimuth zero for the shifted family `u i = w (i+1)` (HOL `KCZXLLE_SYM`,
+  -- applied to `w o SUC`), in the three index patterns consumed below.
+  have haz0 : ∀ i j k, i ∈ Set.Icc 1 (r + 1) → j ∈ Set.Icc 1 (r + 1) →
+      k ∈ Set.Icc 1 (r + 1) →
+      ((j < k ∧ (i < j ∨ k < i)) ∨ (k < j ∧ (i < k ∨ j < i))) →
+      azim 0 (w i) (w j) (w k) = 0 := by
+    intro i j k hi hj hk hord
+    rcases Nat.eq_zero_or_pos r with hr0 | hrpos
+    · subst hr0
+      exfalso
+      simp only [Set.mem_Icc] at hi hj hk
+      rcases hord with ⟨hjk, -⟩ | ⟨hkj, -⟩ <;> omega
+    · have hr1 : 1 ≤ r := hrpos
+      let u : ℕ → V3 := fun n => w (n + 1)
+      have hiI : 1 ≤ i ∧ i ≤ r + 1 := by simpa only [Set.mem_Icc] using hi
+      have hjI : 1 ≤ j ∧ j ≤ r + 1 := by simpa only [Set.mem_Icc] using hj
+      have hkI : 1 ≤ k ∧ k ≤ r + 1 := by simpa only [Set.mem_Icc] using hk
+      have h1u : ∀ a b, a ≤ r → b ≤ r → a ≠ b →
+          ¬ Collinear ℝ ({0, u a, u b} : Set V3) := by
+        intro a b ha hb hab
+        exact h5 (by simp only [Set.mem_Icc]; omega)
+          (by simp only [Set.mem_Icc]; omega) (by omega)
+      have h2u : ∀ a, 1 ≤ a → a ≤ r →
+          u a ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3) := by
+        intro a ha1 haR
+        exact h2 (a + 1) (by simp only [Set.mem_Icc]; omega)
+      have hset : u '' Set.Icc 0 r = w '' Set.Icc 1 (r + 1) := by
+        ext z
+        constructor
+        · rintro ⟨n, hn, rfl⟩
+          exact ⟨n + 1, by simp only [Set.mem_Icc] at hn ⊢; omega, rfl⟩
+        · rintro ⟨n, hn, rfl⟩
+          have hn1 : 1 ≤ n := by simp only [Set.mem_Icc] at hn; omega
+          exact ⟨n - 1, by simp only [Set.mem_Icc] at hn ⊢; omega, by
+            show w (n - 1 + 1) = w n
+            rw [Nat.sub_add_cancel hn1]⟩
+      have h3u : cyclicSet (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) := by
+        rw [hset]
+        exact h3
+      have h4u : ∀ a, a < r →
+          azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u a) = u (a + 1) := by
+        intro a ha
+        rw [hset]
+        exact h4 (a + 1) (by simp only [Set.mem_Icc]; omega)
+      have hord' : ((j - 1) < (k - 1) ∧ ((i - 1) < (j - 1) ∨ (k - 1) < (i - 1))) ∨
+          ((k - 1) < (j - 1) ∧ ((i - 1) < (k - 1) ∨ (j - 1) < (i - 1))) := by
+        rcases hord with ⟨hjk, hij | hki⟩ | ⟨hkj, hik | hji⟩
+        · exact Or.inl ⟨by omega, Or.inl (by omega)⟩
+        · exact Or.inl ⟨by omega, Or.inr (by omega)⟩
+        · exact Or.inr ⟨by omega, Or.inl (by omega)⟩
+        · exact Or.inr ⟨by omega, Or.inr (by omega)⟩
+      have key := KCZXLLE_SYM_p14 u r (i - 1) (j - 1) (k - 1)
+        (by omega) (by omega) hr1 (by omega) hord' h1u h2u h3u h4u
+      have hi' : i - 1 + 1 = i := Nat.sub_add_cancel hiI.1
+      have hj' : j - 1 + 1 = j := Nat.sub_add_cancel hjI.1
+      have hk' : k - 1 + 1 = k := Nat.sub_add_cancel hkI.1
+      show azim 0 (w i) (w j) (w k) = 0
+      rw [← hi', ← hj', ← hk']
+      exact key
+  -- `azim = 0` on a non-degenerate triple forces `dihV = 0`
+  -- (`AZIM_DIHV_SAME_STRONG`, HOL's `azim_dihv_same` route).
+  have hdih0 : ∀ i j k, i ∈ Set.Icc 1 (r + 1) → j ∈ Set.Icc 1 (r + 1) →
+      k ∈ Set.Icc 1 (r + 1) → i ≠ j → i ≠ k →
+      azim 0 (w i) (w j) (w k) = 0 → dihV 0 (w i) (w j) (w k) = 0 := by
+    intro i j k hi hj hk hij hik haz
+    have hi0 : i ∈ Set.Icc 0 (r + 1) := by simp only [Set.mem_Icc] at hi ⊢; omega
+    have hj0 : j ∈ Set.Icc 0 (r + 1) := by simp only [Set.mem_Icc] at hj ⊢; omega
+    have hk0 : k ∈ Set.Icc 0 (r + 1) := by simp only [Set.mem_Icc] at hk ⊢; omega
+    have hncj : ¬ Collinear ℝ ({0, w i, w j} : Set V3) := h5 hi0 hj0 hij
+    have hnck : ¬ Collinear ℝ ({0, w i, w k} : Set V3) := h5 hi0 hk0 hik
+    have hle : azim 0 (w i) (w j) (w k) ≤ Real.pi := by
+      rw [haz]
+      exact Real.pi_pos.le
+    have hs := AZIM_DIHV_SAME_STRONG (v := (0 : V3)) (w := w i) (v1 := w j) (v2 := w k)
+      hncj hnck hle
+    rw [haz] at hs
+    exact hs.symm
+  have hZ7 : ∀ p q, ({p, q, q + 1} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p ≠ q →
+      p ≠ q + 1 → dh (p, q, q + 1) = 0 := by
+    intro p q hsub hp hq
+    have hpI : p ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hqI : q ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hq1I : q + 1 ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hord : (q < q + 1 ∧ (p < q ∨ q + 1 < p)) ∨
+        (q + 1 < q ∧ (p < q + 1 ∨ q < p)) := by
+      left
+      exact ⟨Nat.lt_succ_self q, by omega⟩
+    have haz : azim 0 (w p) (w q) (w (q + 1)) = 0 :=
+      haz0 p q (q + 1) hpI hqI hq1I hord
+    exact hdih0 p q (q + 1) hpI hqI hq1I hp hq haz
+  have hZ8 : ∀ p q, ({p, p + 1, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p + 1 < q →
+      dh (p, p + 1, q) = 0 := by
+    intro p q hsub hpq
+    have hpI : p ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hp1I : p + 1 ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hqI : q ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hord : (p + 1 < q ∧ (p < p + 1 ∨ q < p)) ∨
+        (q < p + 1 ∧ (p < q ∨ p + 1 < p)) := by
+      left
+      exact ⟨hpq, Or.inl (Nat.lt_succ_self p)⟩
+    have haz : azim 0 (w p) (w (p + 1)) (w q) = 0 :=
+      haz0 p (p + 1) q hpI hp1I hqI hord
+    exact hdih0 p (p + 1) q hpI hp1I hqI (by omega) (by omega) haz
+  have hZ9 : ∀ p q, ({p + 1, p, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → q < p →
+      dh (p + 1, p, q) = 0 := by
+    intro p q hsub hqp
+    have hp1I : p + 1 ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hpI : p ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hqI : q ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hord : (p < q ∧ (p + 1 < p ∨ q < p + 1)) ∨
+        (q < p ∧ (p + 1 < q ∨ p < p + 1)) := by
+      right
+      exact ⟨hqp, Or.inr (Nat.lt_succ_self p)⟩
+    have haz : azim 0 (w (p + 1)) (w p) (w q) = 0 :=
+      haz0 (p + 1) p q hp1I hpI hqI hord
+    exact hdih0 (p + 1) p q hp1I hpI hqI (by omega) (by omega) haz
+  exact XIV_DEFORMATION_p14 f dh r w a b h1 h5 h6 (fun i j k => rfl) h7 h8 hZ7 hZ8 hZ9
 
 /-- w5cA: the affine span of `{0, t • e}` equals that of `{0, e}` for `t ≠ 0`. -/
 private theorem w5cA_affineSpan_pair_smul (e : V3) (t : ℝ) (ht : t ≠ 0) :
@@ -5451,8 +5570,7 @@ theorem azim_cycle_neg_p14 (U : Set V3) (e v w : V3) (h1 : U.Finite) (h2 : v ∈
 
 
 /-- HOL `XIV_ECAU_BACK` (hl:2938; the hl:2964 hypothesis `// &0 < ...` is
-commented out in the source and not carried).  NEEDS: the XIV
-wedge-closure argument. -/
+commented out in the source and not carried). -/
 theorem XIV_ECAU_BACK_p14 (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3) (a b : ℝ)
     (h1 : Deformation f (w '' Set.Icc 0 (r + 2)) a b)
     (h2 : 1 ≤ r)
@@ -5475,7 +5593,262 @@ theorem XIV_ECAU_BACK_p14 (f : V3 → ℝ → V3) (r : ℕ) (w : ℕ → V3) (a 
     ∃ e : ℝ, 0 < e ∧ ∀ t, |t| < e →
       f (w 1) t ∈ wedgeGe 0 (f (w (r + 1)) t) (f (w (r + 2)) t) (f (w r) t) ∧
       f (w (r + 1)) t ∈ wedgeGe 0 (f (w 1) t) (f (w 2) t) (f (w 0) t) := by
-  sorry
+  classical
+  let dh : ℕ × ℕ × ℕ → ℝ := fun p => dihV 0 (w p.1) (w p.2.1) (w p.2.2)
+  let u : ℕ → V3 := fun i => w ((r + 1) - i)
+  have hene : cross3 (w 1) (w 2) ≠ 0 := by
+    refine cross3_ne_p14 ?_
+    exact h10 (by simp only [Set.mem_Icc]; omega) (by simp only [Set.mem_Icc]; omega)
+      (by norm_num)
+  -- positivity at `i = r`, then the HOL `coplanar_cross_scale` step
+  have hpos_r : 0 < (cross3 (w r) (w (r + 1))) ⬝ᵥ (cross3 (w 1) (w 2)) :=
+    h5 r (by simp only [Set.mem_Icc]; omega)
+  have hcop : Coplanar ({0, w 1, w 2, w r, w (r + 1)} : Set V3) := by
+    refine ⟨0, w (r + 1), w r, ?_⟩
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · have hmem : w 1 ∈ affGt ({0, w (r + 1)} : Set V3) ({w r} : Set V3) := h6 (by simp)
+      have h := AFF_GT_SUBSET_AFFINE_HULL ({0, w (r + 1)} : Set V3) ({w r} : Set V3) hmem
+      have hset : (({0, w (r + 1)} : Set V3) ∪ {w r}) = ({0, w (r + 1), w r} : Set V3) := by
+        ext q
+        simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rwa [hset] at h
+    · have hmem : w 2 ∈ affGt ({0, w (r + 1)} : Set V3) ({w r} : Set V3) := h6 (by simp)
+      have h := AFF_GT_SUBSET_AFFINE_HULL ({0, w (r + 1)} : Set V3) ({w r} : Set V3) hmem
+      have hset : (({0, w (r + 1)} : Set V3) ∪ {w r}) = ({0, w (r + 1), w r} : Set V3) := by
+        ext q
+        simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rwa [hset] at h
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+  obtain ⟨t0, ht0pos, ht0⟩ :=
+    coplanar_cross_scale_p14 (w 1) (w 2) (w r) (w (r + 1)) hcop hpos_r
+  have hUeq : u '' Set.Icc 0 r = w '' Set.Icc 1 (r + 1) := by
+    ext z
+    constructor
+    · rintro ⟨n, hn, rfl⟩
+      exact ⟨(r + 1) - n, by simp only [Set.mem_Icc] at hn ⊢; omega, rfl⟩
+    · rintro ⟨n, hn, rfl⟩
+      have hn1 : 1 ≤ n := by simp only [Set.mem_Icc] at hn; omega
+      have hnle : n ≤ r + 1 := by simp only [Set.mem_Icc] at hn; omega
+      refine ⟨(r + 1) - n, by simp only [Set.mem_Icc] at hn ⊢; omega, ?_⟩
+      show w ((r + 1) - ((r + 1) - n)) = w n
+      rw [show (r + 1) - ((r + 1) - n) = n from by omega]
+  have hcross_u : cross3 (u 0) (u 1) = (-t0) • cross3 (w 1) (w 2) := by
+    show cross3 (w (r + 1)) (w r) = (-t0) • cross3 (w 1) (w 2)
+    rw [w5cA2_cross3_neg (w (r + 1)) (w r), ht0, neg_smul]
+  have hcycU : cyclicSet (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) := by
+    rw [hcross_u, hUeq]
+    exact (cyclic_set_scale_p14 (w '' Set.Icc 1 (r + 1)) (cross3 (w 1) (w 2)) (-t0)
+      (by linarith)).mpr h4
+  -- HOL's `azim_cycle` block: `0 < e ⬝ (x × azimCycle x)` for every `x ∈ U`
+  have hposcond : ∀ x ∈ (w '' Set.Icc 1 (r + 1)),
+      cross3 (w 1) (w 2) ⬝ᵥ
+        cross3 x (azimCycle_p14 (w '' Set.Icc 1 (r + 1)) 0 (cross3 (w 1) (w 2)) x) ≠ 0 := by
+    rintro x ⟨j, hj, rfl⟩
+    have hjI : 1 ≤ j ∧ j ≤ r + 1 := by simpa only [Set.mem_Icc] using hj
+    by_cases hjr : j = r + 1
+    · subst hjr
+      rw [h8]
+      have hnc1 : ¬ Collinear ℝ ({0, w 1, w (r + 1)} : Set V3) :=
+        h10 (by simp only [Set.mem_Icc]; omega) (by simp only [Set.mem_Icc]; omega)
+          (by omega)
+      have hnc2 : ¬ Collinear ℝ ({0, w r, w (r + 1)} : Set V3) :=
+        h10 (by simp only [Set.mem_Icc]; omega) (by simp only [Set.mem_Icc]; omega)
+          (by omega)
+      have hwr1 : w (r + 1) ≠ 0 := by
+        intro h0
+        apply hnc1
+        rw [h0]
+        simpa using collinear2_p14 (w 1) (0 : V3)
+      have hwr0 : w r ≠ 0 := by
+        intro h0
+        apply hnc2
+        rw [h0]
+        simpa using collinear2_p14 (0 : V3) (w (r + 1))
+      have hwrne : w r ≠ w (r + 1) := by
+        intro heq
+        apply hnc2
+        rw [heq]
+        simpa using collinear2_p14 (0 : V3) (w (r + 1))
+      obtain ⟨c, hcpos, k, hck⟩ :=
+        (affGt_pair_iff (v0 := (0 : V3)) (v1 := w (r + 1)) (x := w r) (y := w 1)
+          (Ne.symm hwr1) hwr0 hwrne).mp (h6 (by simp))
+      have hw1 : w 1 = c • w r + k • w (r + 1) := by simpa using hck
+      have hcne : c ≠ 0 := by
+        intro hc0
+        have hw1' : w 1 = k • w (r + 1) := by rw [hw1, hc0, zero_smul, zero_add]
+        have hcol : Collinear ℝ ({0, w 1, w (r + 1)} : Set V3) := by
+          rw [hw1']
+          exact collinear0_smulR_p14 (w (r + 1)) k
+        exact h10 (by simp only [Set.mem_Icc]; omega) (by simp only [Set.mem_Icc]; omega)
+          (by omega) hcol
+      have hcross1 : cross3 (w (r + 1)) (w 1) = c • cross3 (w (r + 1)) (w r) := by
+        rw [hw1, w8_cross3_add_right, w8_cross3_smul_right, w8_cross3_smul_right,
+          w8_cross3_self]
+        simp
+      have hmul : (cross3 (w 1) (w 2)) ⬝ᵥ (c • cross3 (w (r + 1)) (w r))
+          = c * ((cross3 (w 1) (w 2)) ⬝ᵥ cross3 (w (r + 1)) (w r)) :=
+        dot3_smul_right_p14 c (cross3 (w (r + 1)) (w r)) (cross3 (w 1) (w 2))
+      have hval1 : (cross3 (w 1) (w 2)) ⬝ᵥ cross3 (w (r + 1)) (w 1)
+          = c * ((cross3 (w 1) (w 2)) ⬝ᵥ cross3 (w (r + 1)) (w r)) := by
+        rw [hcross1]
+        exact hmul
+      have hvneg : cross3 (w (r + 1)) (w r) = -(t0 • cross3 (w 1) (w 2)) := by
+        rw [w5cA2_cross3_neg (w (r + 1)) (w r), ht0]
+      have hnegdot : (cross3 (w 1) (w 2)) ⬝ᵥ (-(t0 • cross3 (w 1) (w 2)))
+          = -(t0 * ((cross3 (w 1) (w 2)) ⬝ᵥ (cross3 (w 1) (w 2)))) := by
+        rw [show (cross3 (w 1) (w 2)) ⬝ᵥ (-(t0 • cross3 (w 1) (w 2)))
+            = -((cross3 (w 1) (w 2)) ⬝ᵥ (t0 • cross3 (w 1) (w 2))) from
+          w5cA2_dot_neg_right _ _]
+        rw [show (cross3 (w 1) (w 2)) ⬝ᵥ (t0 • cross3 (w 1) (w 2))
+            = t0 * ((cross3 (w 1) (w 2)) ⬝ᵥ (cross3 (w 1) (w 2))) from
+          dot3_smul_right_p14 t0 _ _]
+      have hval2 : (cross3 (w 1) (w 2)) ⬝ᵥ cross3 (w (r + 1)) (w r)
+          = -(t0 * ((cross3 (w 1) (w 2)) ⬝ᵥ (cross3 (w 1) (w 2)))) := by
+        rw [hvneg]
+        exact hnegdot
+      have hne2 : (cross3 (w 1) (w 2)) ⬝ᵥ cross3 (w (r + 1)) (w r) ≠ 0 := by
+        rw [hval2]
+        have hd : 0 < (cross3 (w 1) (w 2)) ⬝ᵥ (cross3 (w 1) (w 2)) :=
+          dot3_self_pos_p14 hene
+        have hpos : 0 < t0 * ((cross3 (w 1) (w 2)) ⬝ᵥ (cross3 (w 1) (w 2))) :=
+          mul_pos ht0pos hd
+        linarith
+      rw [hval1]
+      exact mul_ne_zero hcne hne2
+    · have hjr' : j ≤ r := by omega
+      rw [h7 j (by simp only [Set.mem_Icc]; omega)]
+      have hp : 0 < (cross3 (w j) (w (j + 1))) ⬝ᵥ (cross3 (w 1) (w 2)) :=
+        h5 j (by simp only [Set.mem_Icc]; omega)
+      rw [dot3_comm_p14]
+      exact ne_of_gt hp
+  -- reversed `azimCycle`: HOL's `azim_cycle_scale` + `azim_cycle_neg`
+  have h4u : ∀ a, a < r →
+      azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (u 0) (u 1)) (u a) = u (a + 1) := by
+    intro a ha
+    have hcs : cross3 (u 0) (u 1) = t0 • (-(cross3 (w 1) (w 2))) := by
+      show cross3 (w (r + 1)) (w r) = t0 • (-(cross3 (w 1) (w 2)))
+      rw [w5cA2_cross3_neg (w (r + 1)) (w r), ht0, smul_neg]
+    have hfinU : (u '' Set.Icc 0 r).Finite := hcycU.2.1
+    have hv : u (a + 1) ∈ u '' Set.Icc 0 r :=
+      ⟨a + 1, by simp only [Set.mem_Icc]; omega, rfl⟩
+    have h3neg : azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (w 1) (w 2)) (u (a + 1)) = u a := by
+      rw [hUeq]
+      have h1 := h7 (r - a) (by simp only [Set.mem_Icc]; omega)
+      have harg1 : u (a + 1) = w (r - a) := by
+        show w ((r + 1) - (a + 1)) = w (r - a)
+        rw [show (r + 1) - (a + 1) = r - a from by omega]
+      have harg2 : w ((r - a) + 1) = u a := by
+        show w ((r - a) + 1) = w ((r + 1) - a)
+        rw [show (r - a) + 1 = (r + 1) - a from by omega]
+      rw [harg1, ← harg2]
+      exact h1
+    have h4cond : ∀ x ∈ u '' Set.Icc 0 r,
+        cross3 (w 1) (w 2) ⬝ᵥ
+          cross3 x (azimCycle_p14 (u '' Set.Icc 0 r) 0 (cross3 (w 1) (w 2)) x) ≠ 0 := by
+      intro x hx
+      have hx' : x ∈ w '' Set.Icc 1 (r + 1) := by rw [← hUeq]; exact hx
+      rw [hUeq]
+      exact hposcond x hx'
+    rw [hcs, azim_cycle_scale_p14 (u '' Set.Icc 0 r) (-(cross3 (w 1) (w 2))) t0 ht0pos]
+    exact azim_cycle_neg_p14 (u '' Set.Icc 0 r) (cross3 (w 1) (w 2)) (u (a + 1)) (u a)
+      hfinU hv h3neg h4cond
+  -- Azimuth zero in the reversed order (`KCZXLLE_SYM` at `u i = w ((r+1)-i)`)
+  have haz0 : ∀ i j k, i ∈ Set.Icc 1 (r + 1) → j ∈ Set.Icc 1 (r + 1) →
+      k ∈ Set.Icc 1 (r + 1) →
+      ((j < k ∧ (i < j ∨ k < i)) ∨ (k < j ∧ (i < k ∨ j < i))) →
+      azim 0 (w i) (w j) (w k) = 0 := by
+    intro i j k hi hj hk hord
+    have hiI : 1 ≤ i ∧ i ≤ r + 1 := by simpa only [Set.mem_Icc] using hi
+    have hjI : 1 ≤ j ∧ j ≤ r + 1 := by simpa only [Set.mem_Icc] using hj
+    have hkI : 1 ≤ k ∧ k ≤ r + 1 := by simpa only [Set.mem_Icc] using hk
+    have h1u : ∀ a b, a ≤ r → b ≤ r → a ≠ b →
+        ¬ Collinear ℝ ({0, u a, u b} : Set V3) := by
+      intro a b ha hb hab
+      exact h9 (by simp only [Set.mem_Icc]; omega)
+        (by simp only [Set.mem_Icc]; omega) (by omega)
+    have h2u : ∀ a, 1 ≤ a → a ≤ r →
+        u a ∈ affGt ({0, u 0} : Set V3) ({u 1} : Set V3) := by
+      intro a ha1 haR
+      exact h3 ((r + 1) - a) (by simp only [Set.mem_Icc]; omega)
+    have hord' : ((r + 1) - j) < ((r + 1) - k) ∧
+          (((r + 1) - i) < ((r + 1) - j) ∨ ((r + 1) - k) < ((r + 1) - i)) ∨
+        ((r + 1) - k) < ((r + 1) - j) ∧
+          (((r + 1) - i) < ((r + 1) - k) ∨ ((r + 1) - j) < ((r + 1) - i)) := by
+      rcases hord with ⟨hjk, hij | hki⟩ | ⟨hkj, hik | hji⟩
+      · exact Or.inr ⟨by omega, Or.inr (by omega)⟩
+      · exact Or.inr ⟨by omega, Or.inl (by omega)⟩
+      · exact Or.inl ⟨by omega, Or.inr (by omega)⟩
+      · exact Or.inl ⟨by omega, Or.inl (by omega)⟩
+    have key := KCZXLLE_SYM_p14 u r ((r + 1) - i) ((r + 1) - j) ((r + 1) - k)
+      (by omega) (by omega) h2 (by omega) hord' h1u h2u hcycU h4u
+    have hii : (r + 1) - ((r + 1) - i) = i := by omega
+    have hjj : (r + 1) - ((r + 1) - j) = j := by omega
+    have hkk : (r + 1) - ((r + 1) - k) = k := by omega
+    show azim 0 (w i) (w j) (w k) = 0
+    rw [← hii, ← hjj, ← hkk]
+    exact key
+  have hdih0 : ∀ i j k, i ∈ Set.Icc 1 (r + 1) → j ∈ Set.Icc 1 (r + 1) →
+      k ∈ Set.Icc 1 (r + 1) → i ≠ j → i ≠ k →
+      azim 0 (w i) (w j) (w k) = 0 → dihV 0 (w i) (w j) (w k) = 0 := by
+    intro i j k hi hj hk hij hik haz
+    have hi0 : i ∈ Set.Icc 0 (r + 1) := by simp only [Set.mem_Icc] at hi ⊢; omega
+    have hj0 : j ∈ Set.Icc 0 (r + 1) := by simp only [Set.mem_Icc] at hj ⊢; omega
+    have hk0 : k ∈ Set.Icc 0 (r + 1) := by simp only [Set.mem_Icc] at hk ⊢; omega
+    have hncj : ¬ Collinear ℝ ({0, w i, w j} : Set V3) := h9 hi0 hj0 hij
+    have hnck : ¬ Collinear ℝ ({0, w i, w k} : Set V3) := h9 hi0 hk0 hik
+    have hle : azim 0 (w i) (w j) (w k) ≤ Real.pi := by
+      rw [haz]
+      exact Real.pi_pos.le
+    have hs := AZIM_DIHV_SAME_STRONG (v := (0 : V3)) (w := w i) (v1 := w j) (v2 := w k)
+      hncj hnck hle
+    rw [haz] at hs
+    exact hs.symm
+  have hZ7 : ∀ p q, ({p, q, q + 1} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p ≠ q →
+      p ≠ q + 1 → dh (p, q, q + 1) = 0 := by
+    intro p q hsub hp hq
+    have hpI : p ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hqI : q ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hq1I : q + 1 ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hord : (q < q + 1 ∧ (p < q ∨ q + 1 < p)) ∨
+        (q + 1 < q ∧ (p < q + 1 ∨ q < p)) := by
+      left
+      exact ⟨Nat.lt_succ_self q, by omega⟩
+    have haz : azim 0 (w p) (w q) (w (q + 1)) = 0 :=
+      haz0 p q (q + 1) hpI hqI hq1I hord
+    exact hdih0 p q (q + 1) hpI hqI hq1I hp hq haz
+  have hZ8 : ∀ p q, ({p, p + 1, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → p + 1 < q →
+      dh (p, p + 1, q) = 0 := by
+    intro p q hsub hpq
+    have hpI : p ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hp1I : p + 1 ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hqI : q ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hord : (p + 1 < q ∧ (p < p + 1 ∨ q < p)) ∨
+        (q < p + 1 ∧ (p < q ∨ p + 1 < p)) := by
+      left
+      exact ⟨hpq, Or.inl (Nat.lt_succ_self p)⟩
+    have haz : azim 0 (w p) (w (p + 1)) (w q) = 0 :=
+      haz0 p (p + 1) q hpI hp1I hqI hord
+    exact hdih0 p (p + 1) q hpI hp1I hqI (by omega) (by omega) haz
+  have hZ9 : ∀ p q, ({p + 1, p, q} : Set ℕ) ⊆ Set.Icc 1 (r + 1) → q < p →
+      dh (p + 1, p, q) = 0 := by
+    intro p q hsub hqp
+    have hp1I : p + 1 ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hpI : p ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hqI : q ∈ Set.Icc 1 (r + 1) := hsub (by simp)
+    have hord : (p < q ∧ (p + 1 < p ∨ q < p + 1)) ∨
+        (q < p ∧ (p + 1 < q ∨ p < p + 1)) := by
+      right
+      exact ⟨hqp, Or.inr (Nat.lt_succ_self p)⟩
+    have haz : azim 0 (w (p + 1)) (w p) (w q) = 0 :=
+      haz0 (p + 1) p q hp1I hpI hqI hord
+    exact hdih0 (p + 1) p q hp1I hpI hqI (by omega) (by omega) haz
+  exact XIV_DEFORMATION_p14 f dh r w a b h1 h9 h10 (fun i j k => rfl) h11 h12 hZ7 hZ8 hZ9
 
 /-- HOL `zlz_wedge_boundary` (hl:3130).  NEEDS: terminal deformation
 theory. -/
@@ -6806,4 +7179,9 @@ theorem EGHNAVX {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
 #print axioms w17_azim_pi_window
 #print axioms w17_xiv_deformation_strict
 
+/-! ### w18 axiom audit (XIV closure) -/
+#print axioms XIV_DEFORMATION_p14
+#print axioms XIV_ECAU_p14
+#print axioms XIV_ECAU_BACK_p14
 end Kepler.Text
+
