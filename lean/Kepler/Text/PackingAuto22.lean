@@ -7162,6 +7162,108 @@ theorem ARG_INV_ALT (u x y : ℂ) (hu : u ≠ 0) (hx : x ≠ 0) (hy : y ≠ 0)
       rw [if_pos (by linarith : (0:ℝ) ≤ -Complex.arg (y / x)), if_neg hge]
       ring
 
+private theorem p22w2_cosI_norm (a : ℝ) : ‖Real.cos a + Complex.I * Real.sin a‖ = 1 := by
+  have h := Complex.norm_cos_add_sin_mul_I a
+  simpa [Complex.ofReal_cos, Complex.ofReal_sin, mul_comm] using h
+
+private theorem p22w2_cosI_ne (a : ℝ) : Real.cos a + Complex.I * Real.sin a ≠ 0 := by
+  intro h0
+  have hn := p22w2_cosI_norm a
+  rw [h0, norm_zero] at hn
+  exact zero_ne_one hn
+
+private theorem p22w2_cosI_mul (a b : ℝ) :
+    (Real.cos (b - a) + Complex.I * Real.sin (b - a)) *
+      (Real.cos a + Complex.I * Real.sin a) = Real.cos b + Complex.I * Real.sin b := by
+  have hc : Real.cos b = Real.cos (b - a) * Real.cos a - Real.sin (b - a) * Real.sin a := by
+    have h := Real.cos_add (b - a) a
+    rwa [show b - a + a = b from by ring] at h
+  have hs : Real.sin b = Real.sin (b - a) * Real.cos a + Real.cos (b - a) * Real.sin a := by
+    have h := Real.sin_add (b - a) a
+    rwa [show b - a + a = b from by ring] at h
+  refine Complex.ext ?_ ?_
+  · rw [Complex.mul_re, p22_cosI_sin_re, p22_cosI_sin_im, p22_cosI_sin_re,
+      p22_cosI_sin_im, p22_cosI_sin_re, hc]
+  · rw [Complex.mul_im, p22_cosI_sin_re, p22_cosI_sin_im, p22_cosI_sin_re,
+      p22_cosI_sin_im, p22_cosI_sin_im, hs]
+    ring
+
+private theorem p22w2_cosI_div (a b : ℝ) :
+    (Real.cos b + Complex.I * Real.sin b) / (Real.cos a + Complex.I * Real.sin a) =
+      Real.cos (b - a) + Complex.I * Real.sin (b - a) := by
+  rw [div_eq_iff (p22w2_cosI_ne a)]
+  exact (p22w2_cosI_mul a b).symm
+
+private theorem p22w2_holArg_eq_of_repr {q : ℂ} (hq : q ≠ 0) {ψ : ℝ}
+    (hψnn : 0 ≤ ψ) (hψlt : ψ < 2 * Real.pi)
+    (hrepr : q = (‖q‖ : ℝ) • (Real.cos ψ + Complex.I * Real.sin ψ)) :
+    holArg q = ψ := by
+  have hrep := p22_holArg_cos_sin q hq
+  have hqn : ‖q‖ ≠ 0 := norm_ne_zero_iff.mpr hq
+  have heq : Real.cos (holArg q) + Complex.I * Real.sin (holArg q)
+      = Real.cos ψ + Complex.I * Real.sin ψ := by
+    have h1 : (‖q‖ : ℝ) • (Real.cos (holArg q) + Complex.I * Real.sin (holArg q)) = q :=
+      hrep
+    have h2 : (‖q‖ : ℝ) • (Real.cos ψ + Complex.I * Real.sin ψ) = q := hrepr.symm
+    exact smul_right_injective ℂ hqn (h1.trans h2.symm)
+  have hc : Real.cos (holArg q) = Real.cos ψ := by
+    have h := congrArg Complex.re heq
+    rwa [p22_cosI_sin_re, p22_cosI_sin_re] at h
+  have hs : Real.sin (holArg q) = Real.sin ψ := by
+    have h := congrArg Complex.im heq
+    rwa [p22_cosI_sin_im, p22_cosI_sin_im] at h
+  exact p22_cos_sin_eq _ _ (p22_holArg_nonneg q) (p22_holArg_lt_two_pi q)
+    hψnn hψlt hc hs
+
+private theorem p22w2_holArg_div {z1 z2 : ℂ} (h1 : z1 ≠ 0) (h2 : z2 ≠ 0) :
+    holArg (z2 / z1) =
+      if holArg z1 ≤ holArg z2 then holArg z2 - holArg z1
+      else holArg z2 - holArg z1 + 2 * Real.pi := by
+  classical
+  have hq : z2 / z1 ≠ 0 := div_ne_zero h2 h1
+  have h1nn := p22_holArg_nonneg z1
+  have h1lt := p22_holArg_lt_two_pi z1
+  have h2nn := p22_holArg_nonneg z2
+  have h2lt := p22_holArg_lt_two_pi z2
+  have hz1n : (‖z1‖ : ℝ) ≠ 0 := norm_ne_zero_iff.mpr h1
+  have hz2n : (‖z2‖ : ℝ) ≠ 0 := norm_ne_zero_iff.mpr h2
+  have hsub : z2 / z1 =
+      (↑‖z2‖ * (Real.cos (holArg z2) + Complex.I * Real.sin (holArg z2))) /
+        (↑‖z1‖ * (Real.cos (holArg z1) + Complex.I * Real.sin (holArg z1))) := by
+    have e1 : z1 = (‖z1‖ : ℝ) • (Real.cos (holArg z1) + Complex.I * Real.sin (holArg z1)) :=
+      (p22_holArg_cos_sin z1 h1).symm
+    have e2 : z2 = (‖z2‖ : ℝ) • (Real.cos (holArg z2) + Complex.I * Real.sin (holArg z2)) :=
+      (p22_holArg_cos_sin z2 h2).symm
+    conv_lhs => rw [e2, e1, Complex.real_smul, Complex.real_smul]
+  have hqz : z2 / z1 = ((‖z2‖ / ‖z1‖ : ℝ) : ℂ) *
+      (Real.cos (holArg z2 - holArg z1) + Complex.I * Real.sin (holArg z2 - holArg z1)) := by
+    rw [hsub]
+    calc (↑‖z2‖ * (Real.cos (holArg z2) + Complex.I * Real.sin (holArg z2))) /
+          (↑‖z1‖ * (Real.cos (holArg z1) + Complex.I * Real.sin (holArg z1)))
+        = (↑‖z2‖ / ↑‖z1‖) *
+          ((Real.cos (holArg z2) + Complex.I * Real.sin (holArg z2)) /
+           (Real.cos (holArg z1) + Complex.I * Real.sin (holArg z1))) := by
+            field_simp [hz1n, p22w2_cosI_ne (holArg z1)]
+      _ = (↑(‖z2‖ / ‖z1‖)) *
+          (Real.cos (holArg z2 - holArg z1) + Complex.I * Real.sin (holArg z2 - holArg z1)) := by
+            rw [p22w2_cosI_div, Complex.ofReal_div]
+  have hqnorm : ‖z2 / z1‖ = ‖z2‖ / ‖z1‖ := by rw [norm_div]
+  have hqrepr : z2 / z1 = (‖z2 / z1‖ : ℝ) •
+      (Real.cos (holArg z2 - holArg z1) + Complex.I * Real.sin (holArg z2 - holArg z1)) := by
+    rw [hqnorm, hqz, Complex.real_smul]
+  by_cases hle : holArg z1 ≤ holArg z2
+  · rw [if_pos hle]
+    refine p22w2_holArg_eq_of_repr hq ?_ ?_ hqrepr
+    · linarith
+    · linarith
+  · rw [if_neg hle]
+    have hlt : holArg z2 < holArg z1 := not_le.mp hle
+    refine p22w2_holArg_eq_of_repr hq ?_ ?_ ?_
+    · linarith
+    · linarith
+    · rw [Real.cos_add_two_pi, Real.sin_add_two_pi]
+      exact hqrepr
+
 /-- HOL `ARG_ORDER` (counting_spheres.hl:1822). GIANT.
 SF22 statement-fix (minesweep report §3): the `Complex.arg`s (range
 `(-π, π]`) are lifted to `holArg` (range `[0, 2π)`, the Ysskqoy `Arg` kit,
@@ -7181,7 +7283,68 @@ theorem ARG_ORDER (u : ℂ) (h : ℕ → ℂ) (n : ℕ) (hu : u ≠ 0)
     (h3 : h (n + 1) = h 1) :
     ∀ i j : ℕ, i ∈ Finset.Icc 1 n → j ∈ Finset.Icc 1 n → i ≠ j →
       holArg (h (i + 1) / h i) ≤ holArg (h j / h i) := by
-  sorry
+  intro i j hi hj hij
+  obtain ⟨hi1, hin⟩ := Finset.mem_Icc.mp hi
+  obtain ⟨hj1, hjn⟩ := Finset.mem_Icc.mp hj
+  have hn1 : 1 ≤ n := le_trans hi1 hin
+  let θ : ℕ → ℝ := fun k => holArg (h k / u)
+  have hmono : ∀ a b : ℕ, a ∈ Finset.Icc 1 n → b ∈ Finset.Icc 1 n → a < b →
+      θ a < θ b := fun a b ha hb hab => h2 a b ha hb hab
+  have hθ0 : ∀ k, 0 ≤ θ k := fun k => p22_holArg_nonneg _
+  have hθ2 : ∀ k, θ k < 2 * Real.pi := fun k => p22_holArg_lt_two_pi _
+  have hri : h i ≠ 0 := h1 i hi
+  have hratio : ∀ a : ℕ, a ∈ Finset.Icc 1 n → (h a / u) / (h i / u) = h a / h i := by
+    intro a ha
+    field_simp [hu, h1 a ha, hri]
+  have hdiv : ∀ a b : ℕ, a ∈ Finset.Icc 1 n → b ∈ Finset.Icc 1 n →
+      holArg ((h b / u) / (h a / u)) =
+        if θ a ≤ θ b then θ b - θ a else θ b - θ a + 2 * Real.pi := by
+    intro a b ha hb
+    exact p22w2_holArg_div (div_ne_zero (h1 a ha) hu) (div_ne_zero (h1 b hb) hu)
+  by_cases hni : i = n
+  · -- i = n: numerator h (n+1) = h 1
+    subst i
+    have h1mem : 1 ∈ Finset.Icc 1 n := Finset.mem_Icc.mpr ⟨le_refl 1, hn1⟩
+    have hlt1n : θ 1 < θ n := by
+      apply hmono 1 n h1mem hi
+      omega
+    have hjn' : j < n := lt_of_le_of_ne hjn (Ne.symm hij)
+    have hltjn : θ j < θ n := hmono j n hj hi hjn'
+    have hL : holArg (h 1 / h n) = θ 1 - θ n + 2 * Real.pi := by
+      rw [← hratio 1 h1mem, hdiv n 1 hi h1mem, if_neg (not_le.mpr hlt1n)]
+    have hR : holArg (h j / h n) = θ j - θ n + 2 * Real.pi := by
+      rw [← hratio j hj, hdiv n j hi hj, if_neg (not_le.mpr hltjn)]
+    have hθ1j : θ 1 ≤ θ j := by
+      rcases eq_or_lt_of_le hj1 with h1j | h1j
+      · rw [← h1j]
+      · exact le_of_lt (hmono 1 j h1mem hj h1j)
+    rw [h3, hL, hR]
+    linarith
+  · -- i < n: numerator h (i+1)
+    have hin' : i < n := lt_of_le_of_ne hin hni
+    have ha : i + 1 ∈ Finset.Icc 1 n := Finset.mem_Icc.mpr ⟨by omega, by omega⟩
+    have hzia : h (i + 1) ≠ 0 := h1 (i + 1) ha
+    have hltia : θ i < θ (i + 1) := hmono i (i + 1) hi ha (by omega)
+    have hL : holArg (h (i + 1) / h i) = θ (i + 1) - θ i := by
+      rw [← hratio (i + 1) ha, hdiv i (i + 1) hi ha, if_pos (le_of_lt hltia)]
+    by_cases hji : j < i
+    · -- j < i
+      have hltji : θ j < θ i := hmono j i hj hi hji
+      have hR : holArg (h j / h i) = θ j - θ i + 2 * Real.pi := by
+        rw [← hratio j hj, hdiv i j hi hj, if_neg (not_le.mpr hltji)]
+      rw [hL, hR]
+      linarith [hθ2 (i + 1), hθ0 j]
+    · -- j > i
+      have hji' : i < j := lt_of_le_of_ne (le_of_not_gt hji) hij
+      have hltij : θ i < θ j := hmono i j hi hj hji'
+      have hR : holArg (h j / h i) = θ j - θ i := by
+        rw [← hratio j hj, hdiv i j hi hj, if_pos (le_of_lt hltij)]
+      have hθaj : θ (i + 1) ≤ θ j := by
+        rcases eq_or_lt_of_le (show i + 1 ≤ j by omega) with heq | hlt
+        · rw [heq]
+        · exact le_of_lt (hmono (i + 1) j ha hj hlt)
+      rw [hL, hR]
+      linarith
 
 /-- HOL `POLYSORT_BIJ2` (counting_spheres.hl:1964). GIANT.
 SF27 statement-fix (minesweep report §3): the three `Complex.arg` comparisons
@@ -9818,7 +9981,160 @@ theorem BIJ_EDGES_DART_FACE (p : Set V3) (f : Set Dart3) (f1 : Set V3)
 theorem SEGMENT_EDGE_ONTO (p : Set V3) (e : Set V3) (hp : polyhedron p)
     (hb : Bornology.IsBounded p) (he : edgeOf e p) :
     ∃ v w : V3, e = segment ℝ v w := by
-  sorry
+  have hdim1 : affDim e = 1 := he.2
+  have hene : e.Nonempty := by
+    rw [Set.nonempty_iff_ne_empty]
+    intro h
+    rw [h, affDim_empty] at hdim1
+    norm_num at hdim1
+  have hb_e : Bornology.IsBounded e := hb.subset he.1.1
+  have hcl_e : IsClosed e :=
+    POLYHEDRON_IMP_CLOSED (FACE_OF_POLYHEDRON_POLYHEDRON hp he.1)
+  -- two distinct points of e
+  obtain ⟨v, w, hvw, hv, hw⟩ : ∃ v w : V3, v ≠ w ∧ v ∈ e ∧ w ∈ e := by
+    by_contra hcon
+    push_neg at hcon
+    obtain ⟨v0, hv0⟩ := hene
+    have hsingle : e = {v0} :=
+      Set.eq_singleton_iff_unique_mem.2 ⟨hv0, fun y hy => by
+        by_contra hne
+        exact hcon v0 y (fun h => hne h.symm) hv0 hy⟩
+    rw [hsingle, affDim_singleton] at hdim1
+    norm_num at hdim1
+  -- e lies on the line through v, w
+  have hmem : ∀ z ∈ ({v, w} : Set V3), z ∈ e := by
+    intro z hz
+    rcases Set.mem_insert_iff.1 hz with rfl | hz
+    · exact hv
+    · rw [Set.mem_singleton_iff] at hz
+      exact hz ▸ hw
+  have hvspan : vectorSpan ℝ {v, w} = vectorSpan ℝ e := by
+    refine Submodule.eq_of_le_of_finrank_le (vectorSpan_mono ℝ hmem) ?_
+    have h1 : vectorSpan ℝ {v, w} = ℝ ∙ (w - v) := by
+      rw [vectorSpan_pair_rev, vsub_eq_sub]
+    have h2 : Module.finrank ℝ (ℝ ∙ (w - v)) = 1 :=
+      finrank_span_singleton (sub_ne_zero.2 (Ne.symm hvw))
+    have h3 : (Module.finrank ℝ (vectorSpan ℝ e) : ℤ) = 1 := by
+      have h3' : affDim e = (Module.finrank ℝ (vectorSpan ℝ e) : ℤ) := by
+        simp only [affDim, if_neg (Set.nonempty_iff_ne_empty.1 hene)]
+      rw [h3'] at hdim1
+      exact hdim1
+    rw [h1, h2]
+    exact_mod_cast h3.le
+  have hspane : (affineSpan ℝ {v, w} : Set V3) = (affineSpan ℝ e : Set V3) := by
+    have hsp' : affineSpan ℝ {v, w} = affineSpan ℝ e :=
+      AffineSubspace.eq_of_direction_eq_of_nonempty_of_le
+        (by rw [direction_affineSpan, direction_affineSpan, hvspan])
+        ⟨v, subset_affineSpan ℝ {v, w} (Set.mem_insert v {w})⟩ (affineSpan_mono ℝ hmem)
+    rw [hsp']
+  have hes : e ⊆ (affineSpan ℝ {v, w} : Set V3) := by
+    rw [hspane]
+    exact subset_affineSpan ℝ e
+  -- compactness of e
+  have hcont : ∀ a : V3, Continuous fun y : V3 => a ⬝ᵥ y := fun a =>
+    continuous_const.dotProduct (PiLp.continuous_ofLp 2 _)
+  have hecpt : IsCompact e := Metric.isCompact_of_isClosed_isBounded hcl_e hb_e
+  -- coordinate on the line, endpoints of e as min/max of the coordinate
+  set d : V3 := w - v with hd
+  have hd0 : d ≠ 0 := sub_ne_zero.2 (Ne.symm hvw)
+  have hdd : d ⬝ᵥ d ≠ 0 := fun h => hd0 (by simpa using dotProduct_self_eq_zero.1 h)
+  have hddpos : 0 < d ⬝ᵥ d := by
+    have hnn : 0 ≤ d.ofLp ⬝ᵥ d.ofLp := by
+      rw [dotProduct]
+      exact Finset.sum_nonneg fun i _ => mul_self_nonneg _
+    exact lt_of_le_of_ne hnn (Ne.symm hdd)
+  have hcoord : ∀ y ∈ e, ∃ μ : ℝ, y - v = μ • d ∧ (y - v) ⬝ᵥ d = μ * (d ⬝ᵥ d) := by
+    intro y hy
+    have hy' : y ∈ (affineSpan ℝ {v, w} : Set V3) := hes hy
+    obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.1 hy'
+    have hyr : y = (1 - r) • v + r • w := by
+      rw [← hr, AffineMap.lineMap_apply]
+      simp only [vsub_eq_sub, vadd_eq_add]
+      module
+    refine ⟨r, ?_, ?_⟩
+    · rw [hyr]
+      module
+    · rw [show y - v = r • d from by rw [hyr]; module]
+      rw [dotV_smul_left]
+  have hcc : Continuous fun y : V3 => (y - v) ⬝ᵥ d / (d ⬝ᵥ d) := by
+    refine Continuous.div ?_ continuous_const fun _ => hdd
+    have hA : Continuous fun y : V3 => y ⬝ᵥ d :=
+      Continuous.dotProduct (PiLp.continuous_ofLp 2 _) continuous_const
+    have hB : Continuous fun y : V3 => v ⬝ᵥ d := continuous_const
+    refine Continuous.congr (hA.sub hB) fun y => (dotV_sub_left y v d).symm
+  obtain ⟨ymin, hymin, hmin⟩ := hecpt.exists_isMinOn hene hcc.continuousOn
+  obtain ⟨ymax, hymax, hmax⟩ := hecpt.exists_isMaxOn hene hcc.continuousOn
+  obtain ⟨α, hα, hcα⟩ := hcoord ymin hymin
+  obtain ⟨β, hβ, hcβ⟩ := hcoord ymax hymax
+  have hmin' : ∀ y ∈ e, α * (d ⬝ᵥ d) ≤ (y - v) ⬝ᵥ d := fun y hy => by
+    have h0 : ((ymin - v) ⬝ᵥ d) / (d ⬝ᵥ d) ≤ ((y - v) ⬝ᵥ d) / (d ⬝ᵥ d) := hmin hy
+    rw [hcα] at h0
+    rw [le_div_iff₀ hddpos, div_mul_cancel₀ _ (ne_of_gt hddpos)] at h0
+    exact h0
+  have hmax' : ∀ y ∈ e, (y - v) ⬝ᵥ d ≤ β * (d ⬝ᵥ d) := fun y hy => by
+    have h0 : ((ymin - v) ⬝ᵥ d) / (d ⬝ᵥ d) ≤ ((y - v) ⬝ᵥ d) / (d ⬝ᵥ d) := hmin hy
+    have h1 : ((y - v) ⬝ᵥ d) / (d ⬝ᵥ d) ≤ ((ymax - v) ⬝ᵥ d) / (d ⬝ᵥ d) := hmax hy
+    rw [hcβ, div_le_iff₀ hddpos, div_mul_cancel₀ _ (ne_of_gt hddpos)] at h1
+    exact h1
+  have hαβ : α < β := by
+    by_contra hcon
+    push_neg at hcon
+    have hall : ∀ y ∈ e, y = ymin := by
+      intro y hy
+      obtain ⟨μ, hμ, hcμ⟩ := hcoord y hy
+      have h1 : α * (d ⬝ᵥ d) ≤ μ * (d ⬝ᵥ d) := (hmin' y hy).trans hcμ.le
+      have h2 : μ * (d ⬝ᵥ d) ≤ β * (d ⬝ᵥ d) := by rw [← hcμ]; exact hmax' y hy
+      have hαle : α ≤ μ := le_of_mul_le_mul_right h1 hddpos
+      have hμle : μ ≤ β := le_of_mul_le_mul_right h2 hddpos
+      have hcyeq : μ = α := le_antisymm (le_trans hμle hcon) hαle
+      have hμeq : y - v = α • d := by rw [← hcyeq]; exact hμ
+      have heq2 : ymin - v = y - v := by rw [hα, ← hμeq]
+      calc y = v + (y - v) := by module
+        _ = v + (ymin - v) := by rw [← heq2]
+        _ = ymin := by module
+    rw [Set.eq_singleton_iff_unique_mem.2 ⟨hymin, hall⟩, affDim_singleton] at hdim1
+    norm_num at hdim1
+  have hminmax : ymin ≠ ymax := by
+    intro hcon
+    have h1 : α = β := by
+      rw [hcon] at hα
+      have h2' : (α • d) ⬝ᵥ d = (β • d) ⬝ᵥ d := by rw [hα.symm, hβ]
+      rw [dotV_smul_left, dotV_smul_left] at h2'
+      exact mul_left_injective₀ (ne_of_gt hddpos) h2'
+    linarith [hαβ]
+  -- e = segment ℝ ymin ymax
+  have hseg : e = segment ℝ ymin ymax := by
+    refine Set.ext fun y => ?_
+    constructor
+    · intro hy
+      obtain ⟨μ, hμ, hcμ⟩ := hcoord y hy
+      have h1 : α ≤ μ := le_of_mul_le_mul_right ((hmin' y hy).trans hcμ.le) hddpos
+      have h2 : μ ≤ β := le_of_mul_le_mul_right
+        (by rw [← hcμ]; exact hmax' y hy) hddpos
+      have hβ0 : β - α ≠ 0 := ne_of_gt (sub_pos.2 hαβ)
+      have hβpos : 0 < β - α := sub_pos.2 hαβ
+      set t : ℝ := (β - μ) / (β - α) with htdef
+      obtain ⟨ht01a, ht01b⟩ : t ∈ Set.Icc (0 : ℝ) 1 :=
+        ⟨div_nonneg (by linarith) hβpos.le, (div_le_one hβpos).2 (by linarith)⟩
+      have htmul : t * α + (1 - t) * β = μ := by
+        rw [htdef]
+        field_simp
+        linarith
+      have hy' : y = v + μ • d := by rw [← hμ]; module
+      have hy1 : ymin = v + α • d := by rw [← hα]; module
+      have hy2 : ymax = v + β • d := by rw [← hβ]; module
+      have hkey : t • ymin + (1 - t) • ymax = v + μ • d := by
+        rw [hy1, hy2]
+        have e1 : t • (v + α • d) + (1 - t) • (v + β • d)
+            = (t + (1 - t)) • v + (t * α + (1 - t) * β) • d := by
+          rw [smul_add, smul_add, smul_smul, smul_smul]
+          module
+        rw [e1, show t + (1 - t) = 1 from by ring, one_smul, htmul]
+      rw [hy']
+      exact ⟨t, 1 - t, ht01a, by linarith, by ring, hkey⟩
+    · intro hy
+      exact Convex.segment_subset he.1.2.1 hymin hymax hy
+  exact ⟨ymin, ymax, hseg⟩
 
 /-- HOL `EDGE_OF_FACET_OF` (counting_spheres.hl:5217). GIANT. -/
 theorem EDGE_OF_FACET_OF (p c e : Set V3) (hp : polyhedron p)
@@ -9892,7 +10208,55 @@ theorem polyhedron_sum_sum_edge (P : Set V3) (hb : Bornology.IsBounded P)
     (∑ f ∈ hf.toFinset,
         (({e : Set V3 | FacetOf e f}).ncard : ℝ)) =
       (({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard : ℝ) := by
-  sorry
+  classical
+  have hslice : ∀ f ∈ (hf.toFinset : Set (Set V3)),
+      ({e : Set V3 | FacetOf e f}).Finite := by
+    intro f hfmem
+    exact FINITE_POLYHEDRON_FACETS
+      (FACE_OF_POLYHEDRON_POLYHEDRON hp ((Set.Finite.mem_toFinset hf).mp hfmem).1)
+  have hdisj : (hf.toFinset : Set (Set V3)).PairwiseDisjoint
+      (fun f => ({f} : Set (Set V3)) ×ˢ ({e : Set V3 | FacetOf e f})) := by
+    intro f _ g _ hfg
+    refine Set.disjoint_left.2 ?_
+    rintro ⟨x, y⟩ ⟨hx1, -⟩ ⟨hx2, -⟩
+    rw [Set.mem_singleton_iff] at hx1 hx2
+    exact hfg (hx1.symm.trans hx2)
+  have hdecomp : ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1})
+      = ⋃ f ∈ (hf.toFinset : Set (Set V3)),
+          ({f} : Set (Set V3)) ×ˢ ({e : Set V3 | FacetOf e f}) := by
+    ext fe
+    constructor
+    · rintro ⟨h1, h2⟩
+      exact Set.mem_biUnion ((Set.Finite.mem_toFinset hf).2 h1)
+        (Set.mk_mem_prod (Set.mem_singleton _) h2)
+    · intro hmem
+      obtain ⟨f, hfmem, hFe⟩ := Set.mem_iUnion₂.1 hmem
+      obtain ⟨hfe1, hfe2⟩ := Set.mem_prod.1 hFe
+      rw [Set.mem_singleton_iff] at hfe1
+      subst hfe1
+      exact ⟨(Set.Finite.mem_toFinset hf).1 hfmem, hfe2⟩
+  have hmain : ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard
+      = ∑ᶠ f ∈ (hf.toFinset : Set (Set V3)),
+          ((({f} : Set (Set V3)) ×ˢ ({e : Set V3 | FacetOf e f})).ncard) := by
+    rw [hdecomp]
+    exact Set.Finite.ncard_biUnion hf.toFinset.finite_toSet
+      (fun f hft => Set.Finite.prod (Set.finite_singleton f) (hslice f hft)) hdisj
+  have hterm : ∀ f ∈ hf.toFinset,
+      ((({f} : Set (Set V3)) ×ˢ ({e : Set V3 | FacetOf e f})).ncard)
+        = ({e : Set V3 | FacetOf e f}).ncard := by
+    intro f _
+    rw [Set.ncard_prod, Set.ncard_singleton, one_mul]
+  have hsum_eq : ∑ᶠ f ∈ (hf.toFinset : Set (Set V3)),
+      ((({f} : Set (Set V3)) ×ˢ ({e : Set V3 | FacetOf e f})).ncard)
+      = ∑ f ∈ hf.toFinset, ({e : Set V3 | FacetOf e f}).ncard := by
+    rw [finsum_mem_eq_finite_toFinset_sum _ hf.toFinset.finite_toSet]
+    have hfin_eq : hf.toFinset.finite_toSet.toFinset = hf.toFinset := by
+      apply Finset.coe_inj.1
+      rw [Set.Finite.coe_toFinset, Set.Finite.coe_toFinset]
+    rw [hfin_eq, Finset.sum_congr rfl (fun f hfmem => by rw [hterm f hfmem])]
+  rw [hmain, hsum_eq]
+  push_cast
+  rfl
 
 open Classical in
 /-- HOL `polyhedron_edge_sum` (counting_spheres.hl:5476). GIANT. -/
@@ -10009,7 +10373,161 @@ theorem FACET_OF_POLYHEDRON_EXPLICIT_ALT (V : Set (V3 × ℝ)) (P : Set V3)
       ∀ w ∈ V, w ≠ v → w.1 ⬝ᵥ p < w.2) :
     Set.BijOn (fun v : V3 × ℝ => P ∩ {p : V3 | v.1 ⬝ᵥ p = v.2}) V
       {c : Set V3 | FacetOf c P} := by
-  sorry
+  classical
+  let f : V3 × ℝ → Set V3 := fun v => {p : V3 | v.1 ⬝ᵥ p ≤ v.2}
+  let F : Set (Set V3) := f '' V
+  let g : V3 × ℝ → Set V3 := fun v => P ∩ {p : V3 | v.1 ⬝ᵥ p = v.2}
+  change Set.BijOn g V {c : Set V3 | FacetOf c P}
+  let sel : Set V3 → V3 × ℝ := fun h =>
+    if hh : h ∈ F then Classical.choose (show ∃ x, x ∈ V ∧ f x = h from hh) else 0
+  let a : Set V3 → V3 := fun h => (sel h).1
+  let b : Set V3 → ℝ := fun h => (sel h).2
+  -- selector facts
+  have hsel_spec : ∀ h (hh : h ∈ F), sel h ∈ V ∧ f (sel h) = h := by
+    intro h hh
+    show (if hh' : h ∈ F then
+        Classical.choose (show ∃ x, x ∈ V ∧ f x = h from hh') else 0) ∈ V ∧
+      f (if hh' : h ∈ F then
+        Classical.choose (show ∃ x, x ∈ V ∧ f x = h from hh') else 0) = h
+    rw [dif_pos hh]
+    exact Classical.choose_spec (show ∃ x, x ∈ V ∧ f x = h from hh)
+  have hsel_mem : ∀ h (hh : h ∈ F), sel h ∈ V := fun h hh => (hsel_spec h hh).1
+  have hsel_f : ∀ h (hh : h ∈ F), f (sel h) = h := fun h hh => (hsel_spec h hh).2
+  -- injectivity of f on V (from strict separation via FACET_RELEVANT)
+  have hinj : Set.InjOn f V := by
+    intro v hv w hw heq
+    by_contra hne
+    obtain ⟨p, hpv, hprest⟩ := hstrict v hv
+    obtain ⟨t, ht, htrest⟩ := FACET_RELEVANT V p v hV hVpos hpv hv hprest
+    have hmem : t • p ∈ f w := by
+      show w.1 ⬝ᵥ (t • p) ≤ w.2
+      exact le_of_lt (htrest w hw (fun h => hne h.symm))
+    rw [← heq] at hmem
+    exact absurd hmem (not_le.mpr ht)
+  -- the constraint set representation
+  have hFfin : F.Finite := hV.image f
+  have hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h} := by
+    intro h hh
+    have hmem := hsel_mem h hh
+    have hfeq := hsel_f h hh
+    refine ⟨?_, ?_⟩
+    · show (sel h).1 ≠ 0
+      exact hVne (sel h) hmem
+    · show h = {x : V3 | (sel h).1 ⬝ᵥ x ≤ (sel h).2}
+      exact hfeq.symm
+  have hsint : (⋂₀ F : Set V3) = P := by
+    show (⋂₀ (f '' V) : Set V3) = P
+    rw [Set.sInter_image]
+    exact hint
+  have hsP : P = (affineSpan ℝ P : Set V3) ∩ ⋂₀ F := by
+    rw [hsint]
+    symm
+    rw [Set.inter_eq_right]
+    exact subset_affineSpan ℝ P
+  -- points satisfying the strict separation lie in P
+  have hpP : ∀ v0 ∈ V, ∀ p : V3, v0.1 ⬝ᵥ p = v0.2 →
+      (∀ w ∈ V, w ≠ v0 → w.1 ⬝ᵥ p < w.2) → p ∈ P := by
+    intro v0 hv0 p hpv hrest
+    rw [← hint]
+    refine Set.mem_iInter₂.2 ?_
+    intro w hw
+    show w.1 ⬝ᵥ p ≤ w.2
+    by_cases hwv : w = v0
+    · subst hwv
+      linarith
+    · exact le_of_lt (hrest w hw hwv)
+  -- scalar multiples of a point of P stay in the affine span
+  have hsmem_aff : ∀ p : V3, p ∈ P → ∀ t : ℝ, t • p ∈ (affineSpan ℝ P : Set V3) := by
+    intro p hp t
+    have h0 : (0 : V3) ∈ (affineSpan ℝ P : Set V3) :=
+      subset_affineSpan ℝ P (interior_subset hi)
+    have hp' : p ∈ (affineSpan ℝ P : Set V3) := subset_affineSpan ℝ P hp
+    have hsub : ({0, p} : Set V3) ⊆ (affineSpan ℝ P : Set V3) := by
+      intro z hz
+      rcases Set.mem_insert_iff.1 hz with rfl | hz
+      · exact h0
+      · rw [Set.mem_singleton_iff] at hz
+        exact hz ▸ hp'
+    have hle : affineSpan ℝ ({0, p} : Set V3) ≤ (affineSpan ℝ P) := affineSpan_le.2 hsub
+    have hline : AffineMap.lineMap (0 : V3) p t ∈ affineSpan ℝ ({0, p} : Set V3) :=
+      AffineMap.lineMap_mem_affineSpan_pair t (0 : V3) p
+    have hmem : AffineMap.lineMap (0 : V3) p t ∈ (affineSpan ℝ P : Set V3) := hle hline
+    have hlin : AffineMap.lineMap (0 : V3) p t = t • p := by
+      rw [AffineMap.lineMap_apply]
+      simp only [vsub_eq_sub, vadd_eq_add, sub_zero, zero_add, one_smul]
+      module
+    rwa [hlin] at hmem
+  -- irredundancy: every proper subfamily cuts P strictly
+  have hmin : ∀ F' : Set (Set V3), F' ⊂ F →
+      P ⊂ (affineSpan ℝ P : Set V3) ∩ ⋂₀ F' := by
+    intro F' hF'
+    obtain ⟨h0, hh0F, hh0F'⟩ := Set.exists_of_ssubset hF'
+    have hh0Fimg : h0 ∈ f '' V := hh0F
+    obtain ⟨v0, hv0V, hv0eq⟩ := hh0Fimg
+    obtain ⟨p, hpv, hprest⟩ := hstrict v0 hv0V
+    have hpP' : p ∈ P := hpP v0 hv0V p hpv hprest
+    obtain ⟨t, ht, htrest⟩ := FACET_RELEVANT V p v0 hV hVpos hpv hv0V hprest
+    have hnotP : t • p ∉ P := by
+      rw [← hint]
+      intro hmem
+      have h0mem := (Set.mem_iInter₂.1 hmem) v0 hv0V
+      simp only [Set.mem_setOf_eq, WithLp.ofLp_smul] at h0mem
+      linarith
+    have htp_rhs : t • p ∈ (affineSpan ℝ P : Set V3) ∩ ⋂₀ F' := by
+      refine ⟨hsmem_aff p hpP' t, ?_⟩
+      rw [Set.mem_sInter]
+      intro h hhF'
+      have hhF : h ∈ F := hF'.1 hhF'
+      have hne : h ≠ h0 := fun heq => hh0F' (heq ▸ hhF')
+      have hhimg : h ∈ f '' V := hhF
+      obtain ⟨w, hwV, hweq⟩ := hhimg
+      have hwv0 : w ≠ v0 := by
+        intro hwv
+        apply hne
+        rw [← hweq, hwv, hv0eq]
+      have hlt := htrest w hwV hwv0
+      rw [← hweq]
+      show w.1 ⬝ᵥ (t • p) ≤ w.2
+      exact le_of_lt hlt
+    refine ⟨?_, ?_⟩
+    · refine Set.subset_inter (subset_affineSpan ℝ P) ?_
+      rw [← hsint]
+      exact Set.sInter_subset_sInter hF'.1
+    · intro hRsub
+      exact hnotP (hRsub htp_rhs)
+  -- the explicit facet characterization
+  have hchar : ∀ c : Set V3, FacetOf c P ↔
+      ∃ h, h ∈ F ∧ c = P ∩ {x : V3 | a h ⬝ᵥ x = b h} :=
+    fun c => FACET_OF_POLYHEDRON_EXPLICIT a b hFfin hsP hFprop hmin c
+  -- sel inverts f on V
+  have hsel_eq : ∀ v ∈ V, sel (f v) = v := by
+    intro v hv
+    have hm : f v ∈ F := ⟨v, hv, rfl⟩
+    exact hinj (hsel_mem (f v) hm) hv (hsel_f (f v) hm)
+  refine ⟨?_, ?_, ?_⟩
+  · -- MapsTo
+    intro v hv
+    refine (hchar (g v)).2 ?_
+    refine ⟨f v, ⟨v, hv, rfl⟩, ?_⟩
+    show P ∩ {p : V3 | v.1 ⬝ᵥ p = v.2}
+      = P ∩ {x : V3 | (sel (f v)).1 ⬝ᵥ x = (sel (f v)).2}
+    rw [hsel_eq v hv]
+  · -- InjOn
+    intro v hv w hw heq
+    by_contra hne
+    obtain ⟨p, hpv, hprest⟩ := hstrict v hv
+    have hpP' : p ∈ P := hpP v hv p hpv hprest
+    have hmem : p ∈ g v := ⟨hpP', hpv⟩
+    rw [heq] at hmem
+    have hlt := hprest w hw (fun h => hne h.symm)
+    have hweq2 : w.1 ⬝ᵥ p = w.2 := by simpa using hmem.2
+    linarith
+  · -- SurjOn
+    intro c hc
+    obtain ⟨h, hhF, hceq⟩ := (hchar c).1 hc
+    refine ⟨sel h, hsel_mem h hhF, ?_⟩
+    show P ∩ {p : V3 | (sel h).1 ⬝ᵥ p = (sel h).2} = c
+    rw [hceq]
 
 /-- HOL `EXISTS_M_POLYHEDRON` (counting_spheres.hl:5888). GIANT. -/
 theorem EXISTS_M_POLYHEDRON (V : Set V3) (theta : V3 → ℝ) (r : ℝ) (n : ℝ)
