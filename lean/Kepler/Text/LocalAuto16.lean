@@ -1106,38 +1106,215 @@ theorem taum_dih_y_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
         rho y3 * dihY y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) :=
   taum_dih_y_aux_p16 y1 y2 y3 y4 y5 y6
 
-/-- HOL `real_continuous_dih_y_wrt4` (BKOSSGE.hl:181).
-NEEDS: Ocbicby.derived_form_dih_x_wrt_x4 (the `dih_x` derivative in the
-`y4` slot, via Calc_derivative.derived_form) and the
-continuity-under-composition kit. -/
+/-! ### Local `atn2` continuity kit (Route B, clean)
+
+`atn2` is this repository's own two-argument arctangent (`SphereKit.atn2`);
+Mathlib has no `Real.atan2`.  The `dih_y`/`taum` continuity suite is therefore
+closed here with a small local kit instead of consuming Ocbicby's
+still-open `derived_form_dih_x_wrt_x{4,5,6}_p22`.  On the open half-plane
+`x > 0`, `atn2 x y` is exactly `Real.arctan (y / x)`, so continuity in a
+`dih_y` slot reduces to `Real.continuous_arctan` composed with a rational
+function.  The `sqrt` argument of `dih_x` is positive at the base point
+because `deltaY > 0` and `y1 > 0`; the `upsX` hypotheses are not needed for
+continuity (they enter only the derivative kit of Ocbicby). -/
+
+/-- `atn2 x y = Real.arctan (y / x)` on the right half-plane `0 < x`
+(all three branches of the `atn2` definition agree there). -/
+private theorem atn2_eq_arctan_div_p16 {x y : ℝ} (hx : 0 < x) :
+    atn2 x y = Real.arctan (y / x) := by
+  unfold atn2
+  by_cases h : |y| < x
+  · rw [if_pos h]
+  · rw [if_neg h]
+    have hy0 : y ≠ 0 := by
+      intro h0
+      rw [h0, abs_zero] at h
+      linarith
+    by_cases hy : 0 < y
+    · rw [if_pos hy]
+      have hpos : 0 < y / x := div_pos hy hx
+      have hinv : x / y = (y / x)⁻¹ := by field_simp
+      rw [hinv, Real.arctan_inv_of_pos hpos]
+      ring
+    · rw [if_neg hy]
+      have hyn : y < 0 := lt_of_le_of_ne (not_lt.mp hy) hy0
+      rw [if_pos hyn]
+      have hneg : y / x < 0 := div_neg_of_neg_of_pos hyn hx
+      have hinv : x / y = (y / x)⁻¹ := by field_simp
+      rw [hinv, Real.arctan_inv_of_neg hneg]
+      ring
+
+/-- Chain rule for `atn2` at a point where the first argument is positive:
+continuity of `q ↦ atn2 (f q) (g q)` from continuity of `f` and `g`. -/
+private theorem continuousAt_atn2_comp_p16 {f g : ℝ → ℝ} {q0 : ℝ}
+    (hf : ContinuousAt f q0) (hg : ContinuousAt g q0) (hpos : 0 < f q0) :
+    ContinuousAt (fun q => atn2 (f q) (g q)) q0 := by
+  have hcont : ContinuousAt (fun q => Real.arctan (g q / f q)) q0 :=
+    Real.continuous_arctan.continuousAt.comp' (hg.div hf hpos.ne')
+  refine hcont.congr ?_
+  filter_upwards [hf.eventually (isOpen_Ioi.mem_nhds hpos)] with q hq
+  exact (atn2_eq_arctan_div_p16 hq).symm
+
+/-- `dihXf` is continuous in its fourth slot at points where the `atn2` first
+argument `sqrt (4 x1 deltaX)` is positive. -/
+private theorem continuousAt_dihXf_wrt4_p16 (x1 x2 x3 x4 x5 x6 : ℝ)
+    (h1 : 0 < x1) (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) :
+    ContinuousAt (fun q => dihXf x1 x2 x3 q x5 x6) x4 := by
+  have hF : ContinuousAt (fun q => Real.sqrt (4 * x1 * deltaX x1 x2 x3 q x5 x6)) x4 :=
+    Real.continuous_sqrt.continuousAt.comp' (by unfold deltaX; fun_prop)
+  have hG : ContinuousAt (fun q => -(deltaX4 x1 x2 x3 q x5 x6)) x4 := by
+    unfold deltaX4
+    fun_prop
+  have hpos : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := by
+    apply Real.sqrt_pos.mpr
+    positivity
+  have hmain := continuousAt_atn2_comp_p16 hF hG hpos
+  have hfin : ContinuousAt (fun q => Real.pi / 2 +
+      atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 q x5 x6))
+        (-(deltaX4 x1 x2 x3 q x5 x6))) x4 :=
+    (continuousAt_const (y := Real.pi / 2)).add hmain
+  simpa only [dihXf] using hfin
+
+/-- `dihXf` is continuous in its fifth slot. -/
+private theorem continuousAt_dihXf_wrt5_p16 (x1 x2 x3 x4 x5 x6 : ℝ)
+    (h1 : 0 < x1) (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) :
+    ContinuousAt (fun q => dihXf x1 x2 x3 x4 q x6) x5 := by
+  have hF : ContinuousAt (fun q => Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 q x6)) x5 :=
+    Real.continuous_sqrt.continuousAt.comp' (by unfold deltaX; fun_prop)
+  have hG : ContinuousAt (fun q => -(deltaX4 x1 x2 x3 x4 q x6)) x5 := by
+    unfold deltaX4
+    fun_prop
+  have hpos : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := by
+    apply Real.sqrt_pos.mpr
+    positivity
+  have hmain := continuousAt_atn2_comp_p16 hF hG hpos
+  have hfin : ContinuousAt (fun q => Real.pi / 2 +
+      atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 q x6))
+        (-(deltaX4 x1 x2 x3 x4 q x6))) x5 :=
+    (continuousAt_const (y := Real.pi / 2)).add hmain
+  simpa only [dihXf] using hfin
+
+/-- `dihXf` is continuous in its sixth slot. -/
+private theorem continuousAt_dihXf_wrt6_p16 (x1 x2 x3 x4 x5 x6 : ℝ)
+    (h1 : 0 < x1) (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) :
+    ContinuousAt (fun q => dihXf x1 x2 x3 x4 x5 q) x6 := by
+  have hF : ContinuousAt (fun q => Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 q)) x6 :=
+    Real.continuous_sqrt.continuousAt.comp' (by unfold deltaX; fun_prop)
+  have hG : ContinuousAt (fun q => -(deltaX4 x1 x2 x3 x4 x5 q)) x6 := by
+    unfold deltaX4
+    fun_prop
+  have hpos : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := by
+    apply Real.sqrt_pos.mpr
+    positivity
+  have hmain := continuousAt_atn2_comp_p16 hF hG hpos
+  have hfin : ContinuousAt (fun q => Real.pi / 2 +
+      atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 q))
+        (-(deltaX4 x1 x2 x3 x4 x5 q))) x6 :=
+    (continuousAt_const (y := Real.pi / 2)).add hmain
+  simpa only [dihXf] using hfin
+
+/-- `dihY` is continuous in its fourth slot (`dihXf` at `x4 = y4 * y4`). -/
+private theorem continuousAt_dihY_wrt4_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) :
+    ContinuousAt (fun q => dihY y1 y2 y3 q y5 y6) y4 := by
+  have hx1 : 0 < y1 * y1 := mul_pos hy1 hy1
+  have hd' : 0 < deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := by
+    simpa only [deltaY] using hd
+  have hsq : ContinuousAt (fun q : ℝ => q * q) y4 := by fun_prop
+  have h : ContinuousAt (fun q => dihXf (y1 * y1) (y2 * y2) (y3 * y3) (q * q)
+      (y5 * y5) (y6 * y6)) y4 :=
+    (continuousAt_dihXf_wrt4_p16 (y1 * y1) (y2 * y2) (y3 * y3)
+      (y4 * y4) (y5 * y5) (y6 * y6) hx1 hd').comp (f := fun q : ℝ => q * q) hsq
+  simpa only [dihY] using h
+
+/-- `dihY` is continuous in its fifth slot. -/
+private theorem continuousAt_dihY_wrt5_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) :
+    ContinuousAt (fun q => dihY y1 y2 y3 y4 q y6) y5 := by
+  have hx1 : 0 < y1 * y1 := mul_pos hy1 hy1
+  have hd' : 0 < deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := by
+    simpa only [deltaY] using hd
+  have hsq : ContinuousAt (fun q : ℝ => q * q) y5 := by fun_prop
+  have h : ContinuousAt (fun q => dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+      (q * q) (y6 * y6)) y5 :=
+    (continuousAt_dihXf_wrt5_p16 (y1 * y1) (y2 * y2) (y3 * y3)
+      (y4 * y4) (y5 * y5) (y6 * y6) hx1 hd').comp (f := fun q : ℝ => q * q) hsq
+  simpa only [dihY] using h
+
+/-- `dihY` is continuous in its sixth slot. -/
+private theorem continuousAt_dihY_wrt6_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) :
+    ContinuousAt (fun q => dihY y1 y2 y3 y4 y5 q) y6 := by
+  have hx1 : 0 < y1 * y1 := mul_pos hy1 hy1
+  have hd' : 0 < deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := by
+    simpa only [deltaY] using hd
+  have hsq : ContinuousAt (fun q : ℝ => q * q) y6 := by fun_prop
+  have h : ContinuousAt (fun q => dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+      (y5 * y5) (q * q)) y6 :=
+    (continuousAt_dihXf_wrt6_p16 (y1 * y1) (y2 * y2) (y3 * y3)
+      (y4 * y4) (y5 * y5) (y6 * y6) hx1 hd').comp (f := fun q : ℝ => q * q) hsq
+  simpa only [dihY] using h
+
+/-- `deltaY` is invariant under the slot permutation `(1 2 3)(4 5 6)` used
+by the second term of `taum_dih_y_p16` (a polynomial symmetry of `deltaX`). -/
+private theorem deltaY_rot231564_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y2 y3 y1 y5 y6 y4 = deltaY y1 y2 y3 y4 y5 y6 := by
+  unfold deltaY deltaX
+  ring
+
+/-- `deltaY` is invariant under the slot permutation `(1 3 2)(4 6 5)` used
+by the third term of `taum_dih_y_p16` (the inverse rotation). -/
+private theorem deltaY_rot312645_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y3 y1 y2 y6 y4 y5 = deltaY y1 y2 y3 y4 y5 y6 := by
+  unfold deltaY deltaX
+  ring
+
+/-- `upsX` is symmetric in its first two arguments. -/
+private theorem upsX_swap12_p16 (a b c : ℝ) : upsX a b c = upsX b a c := by
+  unfold upsX
+  ring
+
+/-- HOL `real_continuous_dih_y_wrt4` (BKOSSGE.hl:181).  PROVED 2026-11-05
+(`la16-cont-w1`, Route B clean): `dihY` in the `y4` slot is `dihXf` at
+`x4 = y4 * y4`, whose only non-polynomial ingredient is `atn2`, continuous
+at a positive first argument via the local `atn2` kit.  No Ocbicby
+`derived_form_dih_x_wrt_x4` input (that upstream is still unproved). -/
 theorem real_continuous_dih_y_wrt4_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hdy : 0 < deltaY y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
     (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
     (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
     ContinuousAt (fun q => dihY y1 y2 y3 q y5 y6) y4 := by
-  sorry
+  have _ := hu1
+  have _ := hu2
+  exact continuousAt_dihY_wrt4_p16 y1 y2 y3 y4 y5 y6 hy1 hdy
 
-/-- HOL `real_continuous_dih_y_wrt5` (BKOSSGE.hl:211).
-NEEDS: Ocbicby.derived_form_dih_x_wrt_x5. -/
+/-- HOL `real_continuous_dih_y_wrt5` (BKOSSGE.hl:211).  PROVED 2026-11-05
+(`la16-cont-w1`, Route B clean), same local `atn2` kit as `wrt4`. -/
 theorem real_continuous_dih_y_wrt5_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hdy : 0 < deltaY y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
     (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
     (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
     ContinuousAt (fun q => dihY y1 y2 y3 y4 q y6) y5 := by
-  sorry
+  have _ := hu1
+  have _ := hu2
+  exact continuousAt_dihY_wrt5_p16 y1 y2 y3 y4 y5 y6 hy1 hdy
 
-/-- HOL `real_continuous_dih_y_wrt6` (BKOSSGE.hl:241).
-NEEDS: Ocbicby.derived_form_dih_x_wrt_x6. -/
+/-- HOL `real_continuous_dih_y_wrt6` (BKOSSGE.hl:241).  PROVED 2026-11-05
+(`la16-cont-w1`, Route B clean), same local `atn2` kit as `wrt4`. -/
 theorem real_continuous_dih_y_wrt6_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hdy : 0 < deltaY y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
     (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
     (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
     ContinuousAt (fun q => dihY y1 y2 y3 y4 y5 q) y6 := by
-  sorry
+  have _ := hu1
+  have _ := hu2
+  exact continuousAt_dihY_wrt6_p16 y1 y2 y3 y4 y5 y6 hy1 hdy
 
-/-- HOL `real_continuous_taum` (BKOSSGE.hl:271).
-NEEDS: `taum_dih_y_p16` (the real `taum`), Merge_ineq.delta_y_sym /
-ups_x_sym and the `real_continuous_dih_y_wrt*_p16` suite. -/
+/-- HOL `real_continuous_taum` (BKOSSGE.hl:271).  PROVED 2026-11-05
+(`la16-cont-w1`, Route B clean): rewrite `taum` by `taum_dih_y_p16` and
+apply the `dih_y` slot suite to the three rotated `dihY` terms.  The two
+rotations are `deltaY` permutation identities (`ring`) plus one `upsX`
+swap; no Ocbicby `derived_form_*` input. -/
 theorem real_continuous_taum_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hdy : 0 < deltaY y1 y2 y3 y4 y5 y6)
     (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3)
@@ -1145,7 +1322,26 @@ theorem real_continuous_taum_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hu2 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4))
     (hu3 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
     ContinuousAt (fun q => taum y1 y2 y3 q y5 y6) y4 := by
-  sorry
+  have hd1 : 0 < deltaY y2 y3 y1 y5 y6 y4 := by
+    rw [deltaY_rot231564_p16]
+    exact hdy
+  have hd2 : 0 < deltaY y3 y1 y2 y6 y4 y5 := by
+    rw [deltaY_rot312645_p16]
+    exact hdy
+  have h1 := real_continuous_dih_y_wrt4_p16 y1 y2 y3 y4 y5 y6 hdy hy1 hu1 hu3
+  have h2 := real_continuous_dih_y_wrt6_p16 y2 y3 y1 y5 y6 y4 hd1 hy2 hu2
+    (by rw [upsX_swap12_p16]; exact hu1)
+  have h3 := real_continuous_dih_y_wrt5_p16 y3 y1 y2 y6 y4 y5 hd2 hy3
+    (by rw [upsX_swap12_p16]; exact hu3) (by rw [upsX_swap12_p16]; exact hu2)
+  have hsum : ContinuousAt (fun q =>
+      rho y1 * dihY y1 y2 y3 q y5 y6 +
+        rho y2 * dihY y2 y3 y1 y5 y6 q +
+        rho y3 * dihY y3 y1 y2 y6 q y5 - (Real.pi + sol0)) y4 :=
+    (((continuousAt_const.mul h1).add (continuousAt_const.mul h2)).add
+      (continuousAt_const.mul h3)).sub continuousAt_const
+  refine hsum.congr ?_
+  filter_upwards with q
+  exact (taum_dih_y_p16 y1 y2 y3 q y5 y6).symm
 
 /-- HOL `UPS_X_STD_POS` (BKOSSGE.hl:291); via PackingAuto18's
 `TRI_UPS_X_STRICT_POS` with the `h0 = 1.26` box. -/
@@ -1413,10 +1609,10 @@ nonlinear_imp_lp_main_estimate, cos_bounds_0_pi, ear_acute, INV_ARCLENGTH,
 UPS_X_STD_POS, quad_nonexist_849, quad_diag_362, taum_dih_y,
 K_SUC_2_MOD_SUB, K_SUC_2_MOD_SUB_ID, SUC_OPP_ID, K_SUC_2_MOD_F_SUB_ID,
 A_B_J_SCS_OPP, ELEMENT1_SYM_0, UNADORNED_OPP, BASIC_OPP, DIAG_OPP,
-FSQKWKK, XIVPHKS, XIVPHKS_SHIFT (22).  Sorried (continuity suite /
-symmetry / assembly): real_continuous_dih_y_wrt4/5/6,
-real_continuous_taum, SCS_GENERIC_SYM_0, CQAOQLR (6).  The `_p16`
-sphere-kit copies were deduped into `Kepler.Text.SphereKit` 2026-09-17. -/
+FSQKWKK, XIVPHKS, XIVPHKS_SHIFT, real_continuous_dih_y_wrt4/5/6,
+real_continuous_taum (26).  Sorried (symmetry / assembly):
+SCS_GENERIC_SYM_0, CQAOQLR (2).  The `_p16` sphere-kit copies were deduped
+into `Kepler.Text.SphereKit` 2026-09-17. -/
 
 /-! ## w13 axiom audit (closed items only) -/
 
@@ -1436,3 +1632,21 @@ sphere-kit copies were deduped into `Kepler.Text.SphereKit` 2026-09-17. -/
 #print axioms quad_diag_362_p16
 #print axioms taum_dih_y_p16
 #print axioms K_SUC_2_MOD_F_SUB_ID_p16
+
+/-! ## w16 axiom audit (closed items only, 2026-11-05 `la16-cont-w1`) -/
+
+#print axioms atn2_eq_arctan_div_p16
+#print axioms continuousAt_atn2_comp_p16
+#print axioms continuousAt_dihXf_wrt4_p16
+#print axioms continuousAt_dihXf_wrt5_p16
+#print axioms continuousAt_dihXf_wrt6_p16
+#print axioms continuousAt_dihY_wrt4_p16
+#print axioms continuousAt_dihY_wrt5_p16
+#print axioms continuousAt_dihY_wrt6_p16
+#print axioms deltaY_rot231564_p16
+#print axioms deltaY_rot312645_p16
+#print axioms upsX_swap12_p16
+#print axioms real_continuous_dih_y_wrt4_p16
+#print axioms real_continuous_dih_y_wrt5_p16
+#print axioms real_continuous_dih_y_wrt6_p16
+#print axioms real_continuous_taum_p16
