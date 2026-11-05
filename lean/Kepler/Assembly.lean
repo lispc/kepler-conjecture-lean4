@@ -31,6 +31,7 @@ import Kepler.Text.PackingAuto22
 import Kepler.Text.PackingAuto25
 import Kepler.NliBanks
 import Kepler.NliBanks2
+import Kepler.Text.TameCorrMain
 import Kepler.Text.Hypermap
 import Kepler.Text.ContraFan
 import Kepler.Text.LocalAuto16
@@ -2457,11 +2458,19 @@ theorem jcajydu {α : Type*} [DecidableEq α] (H : Hypermap α) (hres : H.IsRest
       ∃ H' : Hypermap (ℕ × ℕ), IsHypermapOfList g.fgraph H' ∧ HypermapIso H H' := by
   sorry
 
-/-- 接口占位：HOL `Wmlnymd.tame_correspondence_iso`（WMLNYMD.hl）。 -/
+/-- HOL `Wmlnymd.tame_correspondence_iso`（WMLNYMD.hl:1498）。
+
+2026-11-06 填证（`tamecorr-w3` 车道 W3-W11b）：真证明在 Assembly-free 模块
+`Kepler.Text.TameCorrMain.tameCorrespondenceIso`（70 行，标准三）。三个桥的实测判决：
+`HypermapIso ↔ Hypermap.Iso` 与 `GoodGraphV4`（Assembly ↔ `TameCorrList` 镜像）、
+`TamePlanarHypermap`（Assembly ↔ TameLp）**全部 defeq**；`IsHypermapOfList ↔
+IsHypermapOfListTl` 是不同 structure 常量，四字段匿名构造器各一行折算。 -/
 theorem tameCorrespondenceIso {α : Type*} [DecidableEq α] (g : Graph) (H : Hypermap α)
     (H' : Hypermap (ℕ × ℕ)) (hgg : GoodGraphV4 g) (ht : TamePlanarHypermap H)
     (hiso : HypermapIso H H') (hIs : IsHypermapOfList g.fgraph H') : tame g := by
-  sorry
+  have hIs' : Kepler.Text.TameLp.IsHypermapOfListTl g.fgraph H' :=
+    ⟨hIs.darts_eq, hIs.edgeMap_eq, hIs.nodeMap_eq, hIs.faceMap_eq⟩
+  exact Kepler.Text.TameCorrMain.tameCorrespondenceIso g H H' hgg ht hiso hIs'
 
 /-! 收获记录（elllnyz，2026-10-12 A7 填证 lane；原 2026-09-28 接口占位注记转此归档）：
 HOL `Elllnyz.ELLLNYZ`（ELLLNYZ.hl:548-587）已收口，定理块依依赖序移至 §2c.4'
