@@ -44,7 +44,7 @@ FILE MAP (all 62 HOL theorems, source order; `_p21` suffix throughout)
     `dihV_obtuse_mono_p21` (from a+b), `real_continuous_abs_p21` (proved).
   Section H (terminal chain): `deformation_restrict` lives above; here
     `MMs_minimize_tau_fun_p21` (sorry), `solve_mod_k_p21` (Section D),
-    `tau3_taum_nonplanar_p21`, `tau3_azim_p21` (sorry),
+    `tau3_taum_nonplanar_p21`, `tau3_azim_p21` (proved),
     `general_482_deformation_p21` (sorry giant), `CUXVZOZ_p21` and
     `CJBDXXN_p21` (each from `general_482_deformation_p21` by instantiating
     `p0`/`p2` — the HOL proofs are exactly these substitutions).
@@ -673,10 +673,20 @@ theorem azim_dominated_split_p21 (v0 v1 v2 v3 v4 v0' v1' v2' v3' v4' : V3)
     (hd1 : azim v0' v1' v2' v3' ≤ azim v0 v1 v2 v3)
     (hd2 : azim v0' v1' v3' v4' ≤ azim v0 v1 v3 v4) :
     azim v0' v1' v2' v3' + azim v0' v1' v3' v4' = azim v0' v1' v2' v4' := by
-  -- DISCHARGES: HOL Fan.sum3_azim_fan (the split identity on a fan) +
-  -- Local_lemmas.AZIM_RANGE bookkeeping; the sum3 fan kit is not on this
-  -- side. NEEDS: merge with the Fan azimuth-addition lane.
-  sorry
+  have hxv : v1' ≠ v0' := by
+    intro he
+    apply h1
+    have hset : ({v0', v1', v3'} : Set V3) = {v0', v3'} := by
+      rw [he]
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact collinear_pair ℝ v0' v3'
+  have hlt : azim v0' v1' v2' v3' + azim v0' v1' v3' v4' < 2 * Real.pi := by
+    have hle : azim v0' v1' v2' v3' + azim v0' v1' v3' v4' ≤ azim v0 v1 v2 v4 := by
+      rw [← hsplit]
+      exact add_le_add hd1 hd2
+    exact lt_of_le_of_lt hle (azim_lt_two_pi v0 v1 v2 v4)
+  exact (sum3_azim_fan hxv h3 h1 h2 hlt).symm
 
 /-- HOL `MOD_SHIFT` (CUXVZOZ.hl:2674). -/
 theorem MOD_SHIFT_p21 (k a b c : ℕ) (_hk : k ≠ 0) (h : a % k = b % k) :
@@ -1163,6 +1173,43 @@ theorem tau3_taum_nonplanar_p21 (v0 v1 v2 : V3)
   -- `Kepler.Text.SphereKit.taum` since DEDUP 2026-09-17).
   sorry
 
+/-- 三点共线 ⟹ 加点后共面（`{z,w,w1,w2}`）；用于从 `¬ Coplanar` 反推
+`¬ Collinear3`（LuneVolume 同名私件不在本闭包内，此处重证）。 -/
+private theorem collinear3_coplanar4 {z w w1 w2 : V3} (hc : Collinear3 z w w1) :
+    Coplanar ({z, w, w1, w2} : Set V3) := by
+  by_cases hzw : z = w
+  · subst hzw
+    have hset : ({z, z, w1, w2} : Set V3) = {z, w1, w2} := by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact coplanar_triple z w1 w2
+  · have hwz : w ≠ z := fun h => hzw h.symm
+    have hspan : w1 ∈ (affineSpan ℝ ({z, w} : Set V3) : Set V3) := by
+      obtain ⟨c, hsmul⟩ := (collinear3_iff_smul (w := w) (v := z) hwz).mp hc
+      refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨c, ?_⟩
+      rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+      exact (sub_eq_iff_eq_add.mp hsmul).symm
+    refine ⟨z, w, w2, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with hz | hw | hw1' | hw2
+    · rw [hz]; exact mem_affineSpan ℝ (by simp)
+    · rw [hw]; exact mem_affineSpan ℝ (by simp)
+    · rw [hw1']
+      refine affineSpan_mono ℝ ?_ hspan
+      intro q hq
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+      tauto
+    · rw [hw2]; exact mem_affineSpan ℝ (by simp)
+
+/-- `Collinear3` 的后两位对换。 -/
+private theorem collinear3_swap23 {a b c : V3} (h : Collinear3 a b c) :
+    Collinear3 a c b := by
+  unfold Collinear3
+  rw [show ({a, c, b} : Set V3) = {a, b, c} from by
+    ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  exact h
+
 /-- HOL `tau3_azim` (CUXVZOZ.hl:3629): the azimuth rendering of `tau3`. -/
 theorem tau3_azim_p21 (v0 v1 v2 : V3)
     (hnc : ¬ Coplanar ({0, v0, v1, v2} : Set V3))
@@ -1170,11 +1217,32 @@ theorem tau3_azim_p21 (v0 v1 v2 : V3)
     tau3 v0 v1 v2 = rho ‖v0‖ * azim 0 v0 v1 v2 +
         rho ‖v1‖ * azim 0 v1 v2 v0 + rho ‖v2‖ * azim 0 v2 v0 v1 -
         (Real.pi + sol0) := by
-  -- DISCHARGES: HOL Polar_fan.AZIM_DIHV_SAME_STRONG (azim = dihV on the
-  -- rhazim slots, strong form) + Xivphks.FSQKWKK (azim range on non-collinear
-  -- triples); not ported on this side.
-  -- NEEDS: merge with the Polar_fan lane.
-  sorry
+  have hn01 : ¬ Collinear3 0 v0 v1 := fun hc => hnc (collinear3_coplanar4 hc)
+  have hn02 : ¬ Collinear3 0 v0 v2 := fun hc =>
+    hnc (by
+      have h := collinear3_coplanar4 (z := 0) (w := v0) (w1 := v2) (w2 := v1) hc
+      have hset : ({0, v0, v2, v1} : Set V3) = ({0, v0, v1, v2} : Set V3) := by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at h)
+  have hn12 : ¬ Collinear3 0 v1 v2 := fun hc =>
+    hnc (by
+      have h := collinear3_coplanar4 (z := 0) (w := v1) (w1 := v2) (w2 := v0) hc
+      have hset : ({0, v1, v2, v0} : Set V3) = ({0, v0, v1, v2} : Set V3) := by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at h)
+  have hn10 : ¬ Collinear3 0 v1 v0 := fun hc => hn01 (collinear3_swap23 hc)
+  have hn20 : ¬ Collinear3 0 v2 v0 := fun hc => hn02 (collinear3_swap23 hc)
+  have hn21 : ¬ Collinear3 0 v2 v1 := fun hc => hn12 (collinear3_swap23 hc)
+  have hπ2 : azim 0 v1 v2 v0 ≤ Real.pi := FSQKWKK_p16 0 v0 v1 v2 haz
+  have hπ3 : azim 0 v2 v0 v1 ≤ Real.pi := FSQKWKK_p16 0 v1 v2 v0 hπ2
+  have e1 : dihV 0 v0 v1 v2 = azim 0 v0 v1 v2 :=
+    (AZIM_DIHV_SAME_STRONG hn01 hn02 haz).symm
+  have e2 : dihV 0 v1 v2 v0 = azim 0 v1 v2 v0 :=
+    (AZIM_DIHV_SAME_STRONG hn12 hn10 hπ2).symm
+  have e3 : dihV 0 v2 v0 v1 = azim 0 v2 v0 v1 :=
+    (AZIM_DIHV_SAME_STRONG hn20 hn21 hπ3).symm
+  unfold tau3
+  rw [e1, e2, e3]
 
 /-- HOL `general_482_deformation` (CUXVZOZ.hl:3649, 640 lines): the master
 482-cell deformation theorem. -/
