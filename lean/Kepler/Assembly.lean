@@ -33,6 +33,8 @@ import Kepler.NliBanks
 import Kepler.NliBanks2
 import Kepler.NliBanks3
 import Kepler.NliBanks4
+import Kepler.NliBanks5
+import Kepler.NliBanks8
 import Kepler.Text.TameCorrMain
 import Kepler.Text.Gamma4Feed
 import Kepler.Text.Hypermap
@@ -1666,7 +1668,8 @@ theorem nliRestGLFVCVK4 : bank_GLFVCVK4 := sorry
 `bank_MKFKQWUhalfwt` / `proj_bank_MKFKQWUhalfwt`）。资产状态：
 deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestMKFKQWUhalfwt : bank_MKFKQWUhalfwt := sorry
+theorem nliRestMKFKQWUhalfwt : bank_MKFKQWUhalfwt :=
+  Kepler.NliBanks5.nliRestMKFKQWUhalfwt
 
 /-- rest 43/62：HOL ineq entry `MKFKQWU`（ineq.hl:502，盒
 [2hmin,2hplus]×[2hmin,√8]²×[2,√8]×[2hmin,√8]²；PA21 `bank_MKFKQWU` /
@@ -1732,7 +1735,8 @@ theorem nliRestZTGIJCF4_1_0_0_0 : bank_ZTGIJCF4_1_0_0_0 := sorry
 `bank_ZTGIJCF4_0_1_1_1` / `proj_bank_ZTGIJCF4_0_1_1_1`）。资产状态：
 deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestZTGIJCF4_0_1_1_1 : bank_ZTGIJCF4_0_1_1_1 := sorry
+theorem nliRestZTGIJCF4_0_1_1_1 : bank_ZTGIJCF4_0_1_1_1 :=
+  Kepler.NliBanks5.nliRestZTGIJCF4_0_1_1_1
 
 /-- rest 53/62：HOL idv `ZTGIJCF4 0 1 1 0 1821661595`（同循环；PA21
 `bank_ZTGIJCF4_0_1_1_0` / `proj_bank_ZTGIJCF4_0_1_1_0`）。资产状态：
@@ -1793,7 +1797,8 @@ theorem nliRestZTGIJCF0 : bank_ZTGIJCF0 := by
 [2hmin,2hplus]×[2,√8]⁵；PA21 `bank_GCKBQEA` / `proj_bank_GCKBQEA`）。
 资产状态：deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestGCKBQEA : bank_GCKBQEA := sorry
+theorem nliRestGCKBQEA : bank_GCKBQEA :=
+  Kepler.NliBanks8.nliRestGCKBQEA
 
 /-- rest 62/62：HOL ineq entry `RQWUDDU`（ineq.hl:1332，盒同 rest 61；
 PA21 `bank_RQWUDDU` / `proj_bank_RQWUDDU`）。资产状态：
