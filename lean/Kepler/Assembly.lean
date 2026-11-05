@@ -34,6 +34,7 @@ import Kepler.NliBanks2
 import Kepler.NliBanks3
 import Kepler.NliBanks4
 import Kepler.Text.TameCorrMain
+import Kepler.Text.Gamma4Feed
 import Kepler.Text.Hypermap
 import Kepler.Text.ContraFan
 import Kepler.Text.LocalAuto16
@@ -922,9 +923,15 @@ theorem nliTskIYOUOBFsharpv2 : bank_TSKAJXYIYOUOBFsharpv2 := sorry
 theorem nliTskIYOUOBFsym : bank_TSKAJXYIYOUOBFsym := sorry
 
 /-- 1b 4/10：HOL ineq entry `TSKAJXY-RIBCYXU sharp`（ineq.hl:165；PA21
-`bank_TSKAJXYRIBCYXUsharp`，盒 [2,2.001]⁶）。资产状态：deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliTskRIBCYXUsharp : bank_TSKAJXYRIBCYXUsharp := sorry
+`bank_TSKAJXYRIBCYXUsharp`，盒 [2,2.001]⁶）。
+
+**2026-11-05 真证（`gamma4-w4` 车道）**：证书路线对本件不可能（角点恰为 0），走
+坐标单调性：`Kepler.Text.Gamma4Feed.g4d_bank_RIBCYXUsharp` 在 `[2,2.001]⁶` 上
+给出 `∂gamma4fgcy/∂yᵢ ≥ 0.0207 > 0`（六槽），经 PA21
+`bank_TSKAJXYRIBCYXUsharp_of_mono` 装配；`#print axioms` = 标准三。
+支撑层 8 模块 2,228 行（`Gamma4EnvAtoms/Env/EnvNum/Mono0/Mono/Mono2/VolY/Feed`）。 -/
+theorem nliTskRIBCYXUsharp : bank_TSKAJXYRIBCYXUsharp :=
+  Kepler.Text.g4d_bank_RIBCYXUsharp
 
 /-- 1b 5/10：HOL ineq entry `TSKAJXY-RIBCYXU sym`（ineq.hl:183；PA21
 `bank_TSKAJXYRIBCYXUsym`，盒 [2.001,2hmin]×[2,2hmin]⁵，析取八排序支）。
