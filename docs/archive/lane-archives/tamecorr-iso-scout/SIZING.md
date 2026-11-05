@@ -38,6 +38,26 @@
 | Assembly 接线 + `Adm3` DEF-FIX | — | **50–150** | 主定理体替换（~10 行）、`Adm3` 逐字改真（~10 行）、公开/复用 b3 桥（~20 行）、证明项 import 与实例搬运。 |
 | **上游合计** | — | **1,550–2,360** | 不含本体 |
 
+### 3.1 ERRATA（2026-11-06，W3-W10 实测后收紧）
+
+上表第 3 行 `OXAXUCS.hl` iso 族估 **1,040–1,290** 行，前提是「任意 `H'` 都要维护列表对应」。
+**W3-W10 实测推翻这个前提**：
+
+```
+isHypermapOfListTl_iff_eq_hypermapOfList : IsHypermapOfListTl L H ↔ H = hypermapOfList L hL
+```
+
+`.mp` 直接给出 `H' = hypermapOfList L hL`，三条使用路线（① 直接取等式；② 目标侧任意 `P` 上
+`rw [hEq]`；③ 假设侧 `Iso H H'` 运输成 `Iso H (hypermapOfList L hL)`）**全部实测编译通过**，
+已固化成公开件 `Kepler.Text.TameCorrIso.isHypermapOfListTl_eq_canonical`（标准三）。
+
+**后果**：六件 `tame*_iso` 的目标可统一取 canonical，**18 件支撑 iso 可省**（其结论已被六件迁移覆盖）。
+剩余 3 件估 **~270–410 行**（`tame11bIso` ~10 / `tame12oIso` ~80–120 / `tame13aIso` ~120–180），
+不是 1,040–1,290。上游合计从 1,550–2,360 降到 **~800–1,500**；W3 端到端从 4.2–5.4k 降到 **~3.4–4.5k**。
+
+**教训（与 gamma4/NliBanks 同类）**：规模估计里的「必须对任意参数维护对应」通常是最大头，
+但仓里已有的**典范性/唯一性**件往往能把它整体消掉——估阶段应先把「唯一性/典范性」件找出来。
+
 ## 4. W3 端到端
 
 ```
