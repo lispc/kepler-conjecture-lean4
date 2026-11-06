@@ -716,7 +716,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_bounds._native.native_decide.ax_1_1
 Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_no_finals._native.native_decide.ax_1_1
 Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 --- MODULE HISTOGRAM ---
-2255	Kepler.Text.LocalAuto35
+2253	Kepler.Text.LocalAuto35
 1027	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1254
 1027	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1760
 1027	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard178
@@ -4104,10 +4104,10 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 213	Kepler.Interval.Cases.CFWGKMBZ.Shard81
 212	Kepler.Interval.Cases.CFWGKMBZ.Shard462
 211	Kepler.Text.LocalAuto20
+211	Kepler.Text.LocalAuto22
 210	Kepler.Interval.Cases.CFWGKMBZ.Shard409
 209	Kepler.Interval.Cases.CFWGKMBZ.Shard90
 209	Kepler.Text.LocalAuto13
-209	Kepler.Text.LocalAuto22
 201	Kepler.Interval.Cases.CFWGKMBZ.Shard170
 200	Kepler.Interval.Cases.CFWGKMBZ.Shard494
 200	Kepler.Text.PackingAuto4
