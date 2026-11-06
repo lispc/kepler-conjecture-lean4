@@ -22,6 +22,7 @@
   `"3397113841"` 端到端闭合 = 会师点）。
 -/
 import Kepler.Statement
+import Kepler.NliBanks16
 import Kepler.Graphs
 import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
@@ -910,7 +911,7 @@ theorem nliCell3Bank : cell3_bank :=
 solEuler/ldih 四项和折减 `1/12`，析取第二支 `deltaX < 0`）。资产状态：
 deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliTskGXSA : bank_TSKAJXYGXSA := sorry
+theorem nliTskGXSA : bank_TSKAJXYGXSA := Kepler.NliBanks16.bank_TSKAJXYGXSA_proved
 
 /-- 1b 2/10：HOL ineq entry `TSKAJXY-IYOUOBF sharp v2`（ineq.hl:242；PA21
 `bank_TSKAJXYIYOUOBFsharpv2`，盒 [2hplus,√8]×[2,2.001]²×[2,2hmin]×
