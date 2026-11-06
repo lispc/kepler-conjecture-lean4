@@ -46,7 +46,10 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 15:40，池 **5/5**，用户「维持 5 车道」）
+## 1. 在飞（2026-11-06 16:45，池 **4/5 → 3**）
+
+> **用户 2026-11-06 指令：近期限流频繁，并行度逐渐降到 3。** 已在飞的 4 条跑完为止，
+> **不补位**，落到 3 之后**封顶 3**（这也回到 `AGENTS.md` §3 的原始规定）。
 
 > 上一批五条全部收工（`goodlist-reshard-pilot` ✅ 落库 / `textside-triage` ✅ 落库 /
 > `cert-cost-scout` ✅ / `rmo-merge` BLOCKED / `rrcwnsj-p26` BLOCKED / `lp-idfix` 交付但**编排者压着未落**），
