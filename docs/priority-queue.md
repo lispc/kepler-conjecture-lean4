@@ -14,6 +14,7 @@
 > union 本轮未重测（仍引基线 O：2,107,294 / ORPHANS 15,622，PA22 单模块 983 = +1,123 的 87.5%）。
 > `docs/e2e-reachability-map.tsv` 仍按基线 N（2026-11-05，待重写）。
 > 引用前先看 `docs/e2e-reachability-map.md` 的最新 baseline 一节。
+> **接手先读**：[`handoff-2026-11-06.md`](handoff-2026-11-06.md)（现状 / 用户已定的 4 项裁决 / 下一步工作单 / 死路与红旗清单）。
 > **历史**：续1–续344 的日志在 [`history/changelog-archive.md`](history/changelog-archive.md)；
 > 已落库车道表在 [`history/lanes-landed.md`](history/lanes-landed.md)。
 
