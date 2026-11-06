@@ -37,7 +37,7 @@ CLASSES = ["Tri", "Quad", "Pent", "Hex"]
 # Measured: 100 graphs/shard => 20-22 s wall, ~7.5 GB peak RSS (2026-11-06,
 # goodlist-reshard-pilot).  Adding a class here is a pure施工 change; the
 # emitted `GoodListAll.lean` re-chains it automatically.
-KERNEL_RESHARD = {"Tri": 100, "Quad": 100}
+KERNEL_RESHARD = {"Tri": 100, "Quad": 100, "Pent": 100, "Hex": 100}
 def slice_size(cls):
     return KERNEL_RESHARD.get(cls, SLICE)
 
@@ -149,14 +149,21 @@ def gen_shard(cls, i, k, total):
 
 
 def class_total_term(cls, k):
-    """Nested `all_of_take_drop` term combining the k shard theorems."""
+    """Nested combiner term for the k shard theorems.
+
+    `k == 1`: the single shard is the class total.
+    `k >= 2`: the first shard (`D.take 100`, no `drop`) is combined with the
+    tail by `all_of_take_drop`; the tail is chained by `all_drop_of_split`,
+    which is **symbolic** (only `List.drop_drop` / take-append rewrites, no
+    large concrete-list defeq).  Measured: the old `all_of_take_drop`-only
+    right nest blew the 8 GB lane red line on Pent (k = 161, 92.58 s).
+    """
     if k == 1:
         return shard_thm(cls, 0)
-    # all_of_take_drop (h1 := shard_i) (h2 := rest), implicit l/n inferred
     term = shard_thm(cls, k - 1)
-    for i in range(k - 2, -1, -1):
-        term = f"all_of_take_drop {shard_thm(cls, i)}\n      ({term})"
-    return term
+    for i in range(k - 2, 0, -1):
+        term = f"all_drop_of_split {shard_thm(cls, i)}\n      ({term})"
+    return f"all_of_take_drop {shard_thm(cls, 0)}\n      ({term})"
 
 
 def gen_combiner(counts):
@@ -174,15 +181,18 @@ def gen_combiner(counts):
              "tameArchiveLists`",
              "  （HOL `ALL good_list tame_archive_lists`，"
              "the_kepler_conjecture.hl 装配的 good_list 支）。",
-             "-/", imports, "",
+             "-/", "import Kepler.Assembly.GoodListChain", imports, "",
              "open Kepler.Graphs", "",
              "namespace Kepler.Assembly", ""]
     zh = {"Tri": "Tri（三角形种子）", "Quad": "Quad", "Pent": "Pent", "Hex": "Hex"}
     for c in CLASSES:
         parts.append(f"set_option maxRecDepth 1000000 in")
+        parts.append(f"set_option maxHeartbeats 0 in")
         parts.append(f"/-- {c} 类闭合：{counts[c]} 图，{ks[c]} 分片。 -/")
         parts.append(f"theorem allGood{c} : {c}Data.all goodListB = true :=")
         parts.append(f"  {class_total_term(c, ks[c])}")
+        parts.append("")
+        parts.append(f"#print axioms allGood{c}")
         parts.append("")
     parts.append("""/-- HOL `ALL good_list tame_archive_lists`：全 archive 逐图 `good_list`。 -/
 theorem goodListArchiveAll : AllGoodList tameArchiveLists := by
