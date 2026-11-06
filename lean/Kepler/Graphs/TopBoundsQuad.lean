@@ -1,0 +1,24 @@
+/-
+  Kepler/Graphs/TopBoundsQuad — `topBounds` / Quad 全类闭合（机器生成）。
+
+  生成器：`lean/scripts/gen_top_shards.py`；请勿手改。
+  单片：全类 286 项一次 `decide +kernel`（纯内核，无 native_decide）。
+-/
+import Kepler.Graphs.CertCheck
+import Kepler.Graphs.CertData.QuadTop
+import Kepler.Graphs.ReshardDefs
+
+namespace Kepler.Graphs
+
+set_option maxRecDepth 1000000 in
+set_option maxHeartbeats 0 in
+/-- Quad `topBounds` 全类闭合：286 项，单片。 -/
+theorem topBoundsQuadAll : (List.range QuadTopChildren.length).all (fun i => (QuadTopChildren[i]!).all (fun t => (t.1 && decide (t.2 < QuadFrontier.length)) || (!t.1 && decide (t.2 < QuadTop.length)))) = true := by
+  decide +kernel
+
+#print axioms topBoundsQuadAll
+
+#print axioms all_of_take_drop_b
+#print axioms all_drop_of_split_b
+
+end Kepler.Graphs

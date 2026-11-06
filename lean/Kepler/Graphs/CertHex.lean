@@ -2,6 +2,7 @@
 Hex seed (p = 3) enumeration certificate wiring.
 Evaluation-side file: `native_decide` allowed (DECISIONS.md 2026-08-10);
 every assembly proof is a pure kernel proof.  Mirrors CertTri.lean.
+ERRATA 2026-11-06（goodlist-w3）：`hex_top_bounds`、`hex_top_no_finals`、`hex_archive_pre` 的证明体已改为指向 `Kepler.Graphs.*All`（纯内核分片 + 符号链），不再是 native_decide；陈述未动。
 -/
 import Kepler.Graphs.CertCheck
 import Kepler.Graphs.CertData.HexTop
@@ -296,6 +297,9 @@ import Kepler.Graphs.CertShards.HexR2.K001
 import Kepler.Graphs.CertShards.HexR2.K002
 import Kepler.Graphs.CertShards.HexR2.K003
 import Kepler.Graphs.CertShards.HexR2.K004
+import Kepler.Graphs.TopBoundsHex
+import Kepler.Graphs.TopFinalsHex
+import Kepler.Graphs.ArchivePreHex
 
 set_option maxRecDepth 100000
 
@@ -312,8 +316,7 @@ theorem hex_top_replay : (List.range HexTop.length).all (fun i =>
 theorem hex_top_bounds : (List.range HexTopChildren.length).all (fun i =>
     (HexTopChildren[i]!).all (fun t =>
       (t.1 && decide (t.2 < HexFrontier.length)) ||
-        (!t.1 && decide (t.2 < HexTop.length)))) = true := by
-  native_decide
+        (!t.1 && decide (t.2 < HexTop.length)))) = true := topBoundsHexAll
 
 /-- `HexTop` is closed under `next_tame 3` up to `HexFrontier`. -/
 theorem hex_top_closed : ∀ x ∈ HexTop, ∀ c ∈ next_tame 3 x,
@@ -321,16 +324,14 @@ theorem hex_top_closed : ∀ x ∈ HexTop, ∀ c ∈ next_tame 3 x,
   closed_of_replay rfl hex_top_replay hex_top_bounds
 
 /-- No final graphs in the Hex top. -/
-theorem hex_top_no_finals : (HexTop.all (fun g => !g.final)) = true := by
-  native_decide
+theorem hex_top_no_finals : (HexTop.all (fun g => !g.final)) = true := topFinalsHexAll
 
 theorem hex_top_final_archive :
     ∀ g ∈ HexTop, g.final = true → inIso g.fgraph Archive :=
   top_final_archive_of_no_finals hex_top_no_finals
 
 /-- Every `HexData` entry satisfies `pre_iso_test`. -/
-theorem hex_archive_pre : (HexData.all (fun a => preIsoTestB a)) = true := by
-  native_decide
+theorem hex_archive_pre : (HexData.all (fun a => preIsoTestB a)) = true := archivePreHexAll
 
 theorem hex_archive_pre_iso : ∀ a ∈ HexData, pre_iso_test a := fun a ha =>
   preIsoTestB_correct ((List.all_eq_true.mp hex_archive_pre) a ha)

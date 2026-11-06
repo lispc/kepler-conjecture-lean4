@@ -34,10 +34,15 @@ Verified here:
 
 Deviation from the task spec: `List.get!` does not exist in Lean v4.32.2;
 the equivalent `l[i]!` (`getElem!`) notation is used throughout.
+ERRATA 2026-11-06（goodlist-w3）：`tri_top_replay`、`tri_top_bounds`、`tri_top_no_finals`、`tri_archive_pre` 的证明体已改为指向 `Kepler.Graphs.*All`（纯内核分片 + 符号链），不再是 native_decide；陈述未动。
 -/
 import Kepler.Graphs.CertCheck
 import Kepler.Graphs.CertData.TriTop
 import Kepler.Graphs.Worklist
+import Kepler.Graphs.TopReplayTri
+import Kepler.Graphs.TopBoundsTri
+import Kepler.Graphs.TopFinalsTri
+import Kepler.Graphs.ArchivePreTri
 
 namespace Kepler.Graphs
 
@@ -50,15 +55,13 @@ live in CertCheck.lean (shared with the generated seed wirings). -/
 children table entries. -/
 theorem tri_top_replay : (List.range TriTop.length).all (fun i =>
     decide (next_tame 0 TriTop[i]! =
-      (TriTopChildren[i]!).map (resolveChild TriTop TriFrontier))) = true := by
-  native_decide
+      (TriTopChildren[i]!).map (resolveChild TriTop TriFrontier))) = true := topReplayTriAll
 
 /-- Bounds: every tagged child index is in range of its target list. -/
 theorem tri_top_bounds : (List.range TriTopChildren.length).all (fun i =>
     (TriTopChildren[i]!).all (fun t =>
       (t.1 && decide (t.2 < TriFrontier.length)) ||
-        (!t.1 && decide (t.2 < TriTop.length)))) = true := by
-  native_decide
+        (!t.1 && decide (t.2 < TriTop.length)))) = true := topBoundsTriAll
 
 /-- `TriTop` is closed under `next_tame 0` up to `TriFrontier`. -/
 theorem tri_top_closed : ∀ x ∈ TriTop, ∀ c ∈ next_tame 0 x,
@@ -67,8 +70,7 @@ theorem tri_top_closed : ∀ x ∈ TriTop, ∀ c ∈ next_tame 0 x,
 
 /-! ### Top final coverage (Tri: vacuous) -/
 
-theorem tri_top_no_finals : (TriTop.all (fun g => !g.final)) = true := by
-  native_decide
+theorem tri_top_no_finals : (TriTop.all (fun g => !g.final)) = true := topFinalsTriAll
 
 theorem tri_top_final_archive :
     ∀ g ∈ TriTop, g.final = true → inIso g.fgraph Archive :=
@@ -76,8 +78,7 @@ theorem tri_top_final_archive :
 
 /-! ### Archive-side `pre_iso_test` -/
 
-theorem tri_archive_pre : (TriData.all (fun a => preIsoTestB a)) = true := by
-  native_decide
+theorem tri_archive_pre : (TriData.all (fun a => preIsoTestB a)) = true := archivePreTriAll
 
 theorem tri_archive_pre_iso : ∀ a ∈ TriData, pre_iso_test a := fun a ha =>
   preIsoTestB_correct ((List.all_eq_true.mp tri_archive_pre) a ha)

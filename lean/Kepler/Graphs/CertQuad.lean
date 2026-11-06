@@ -2,6 +2,7 @@
 Quad seed (p = 1) enumeration certificate wiring.
 Evaluation-side file: `native_decide` allowed (DECISIONS.md 2026-08-10);
 every assembly proof is a pure kernel proof.  Mirrors CertTri.lean.
+ERRATA 2026-11-06（goodlist-w3）：`quad_top_replay`、`quad_top_bounds`、`quad_top_no_finals`、`quad_archive_pre` 的证明体已改为指向 `Kepler.Graphs.*All`（纯内核分片 + 符号链），不再是 native_decide；陈述未动。
 -/
 import Kepler.Graphs.CertCheck
 import Kepler.Graphs.CertData.QuadTop
@@ -98,6 +99,10 @@ import Kepler.Graphs.CertShards.QuadR.K076
 import Kepler.Graphs.CertShards.QuadR.K077
 import Kepler.Graphs.CertShards.QuadR.K078
 import Kepler.Graphs.CertShards.QuadR.K079
+import Kepler.Graphs.TopReplayQuad
+import Kepler.Graphs.TopBoundsQuad
+import Kepler.Graphs.TopFinalsQuad
+import Kepler.Graphs.ArchivePreQuad
 
 set_option maxRecDepth 100000
 
@@ -107,15 +112,13 @@ namespace Kepler.Graphs
 children table entries. -/
 theorem quad_top_replay : (List.range QuadTop.length).all (fun i =>
     decide (next_tame 1 QuadTop[i]! =
-      (QuadTopChildren[i]!).map (resolveChild QuadTop QuadFrontier))) = true := by
-  native_decide
+      (QuadTopChildren[i]!).map (resolveChild QuadTop QuadFrontier))) = true := topReplayQuadAll
 
 /-- Bounds: every tagged child index is in range of its target list. -/
 theorem quad_top_bounds : (List.range QuadTopChildren.length).all (fun i =>
     (QuadTopChildren[i]!).all (fun t =>
       (t.1 && decide (t.2 < QuadFrontier.length)) ||
-        (!t.1 && decide (t.2 < QuadTop.length)))) = true := by
-  native_decide
+        (!t.1 && decide (t.2 < QuadTop.length)))) = true := topBoundsQuadAll
 
 /-- `QuadTop` is closed under `next_tame 1` up to `QuadFrontier`. -/
 theorem quad_top_closed : ∀ x ∈ QuadTop, ∀ c ∈ next_tame 1 x,
@@ -123,16 +126,14 @@ theorem quad_top_closed : ∀ x ∈ QuadTop, ∀ c ∈ next_tame 1 x,
   closed_of_replay rfl quad_top_replay quad_top_bounds
 
 /-- No final graphs in the Quad top. -/
-theorem quad_top_no_finals : (QuadTop.all (fun g => !g.final)) = true := by
-  native_decide
+theorem quad_top_no_finals : (QuadTop.all (fun g => !g.final)) = true := topFinalsQuadAll
 
 theorem quad_top_final_archive :
     ∀ g ∈ QuadTop, g.final = true → inIso g.fgraph Archive :=
   top_final_archive_of_no_finals quad_top_no_finals
 
 /-- Every `QuadData` entry satisfies `pre_iso_test`. -/
-theorem quad_archive_pre : (QuadData.all (fun a => preIsoTestB a)) = true := by
-  native_decide
+theorem quad_archive_pre : (QuadData.all (fun a => preIsoTestB a)) = true := archivePreQuadAll
 
 theorem quad_archive_pre_iso : ∀ a ∈ QuadData, pre_iso_test a := fun a ha =>
   preIsoTestB_correct ((List.all_eq_true.mp quad_archive_pre) a ha)

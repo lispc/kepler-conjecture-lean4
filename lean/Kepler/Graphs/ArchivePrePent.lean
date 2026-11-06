@@ -1,0 +1,341 @@
+/-
+  Kepler/Graphs/ArchivePrePent — `archivePre` / Pent 全类组合（机器生成）。
+
+  生成器：`lean/scripts/gen_top_shards.py`；请勿手改。
+  纯内核：161 个 `decide +kernel` 分片经 `all_of_take_drop_b` 串成原陈述。
+-/
+import Kepler.Graphs.ArchivePrePentShardS000
+import Kepler.Graphs.ArchivePrePentShardS001
+import Kepler.Graphs.ArchivePrePentShardS002
+import Kepler.Graphs.ArchivePrePentShardS003
+import Kepler.Graphs.ArchivePrePentShardS004
+import Kepler.Graphs.ArchivePrePentShardS005
+import Kepler.Graphs.ArchivePrePentShardS006
+import Kepler.Graphs.ArchivePrePentShardS007
+import Kepler.Graphs.ArchivePrePentShardS008
+import Kepler.Graphs.ArchivePrePentShardS009
+import Kepler.Graphs.ArchivePrePentShardS010
+import Kepler.Graphs.ArchivePrePentShardS011
+import Kepler.Graphs.ArchivePrePentShardS012
+import Kepler.Graphs.ArchivePrePentShardS013
+import Kepler.Graphs.ArchivePrePentShardS014
+import Kepler.Graphs.ArchivePrePentShardS015
+import Kepler.Graphs.ArchivePrePentShardS016
+import Kepler.Graphs.ArchivePrePentShardS017
+import Kepler.Graphs.ArchivePrePentShardS018
+import Kepler.Graphs.ArchivePrePentShardS019
+import Kepler.Graphs.ArchivePrePentShardS020
+import Kepler.Graphs.ArchivePrePentShardS021
+import Kepler.Graphs.ArchivePrePentShardS022
+import Kepler.Graphs.ArchivePrePentShardS023
+import Kepler.Graphs.ArchivePrePentShardS024
+import Kepler.Graphs.ArchivePrePentShardS025
+import Kepler.Graphs.ArchivePrePentShardS026
+import Kepler.Graphs.ArchivePrePentShardS027
+import Kepler.Graphs.ArchivePrePentShardS028
+import Kepler.Graphs.ArchivePrePentShardS029
+import Kepler.Graphs.ArchivePrePentShardS030
+import Kepler.Graphs.ArchivePrePentShardS031
+import Kepler.Graphs.ArchivePrePentShardS032
+import Kepler.Graphs.ArchivePrePentShardS033
+import Kepler.Graphs.ArchivePrePentShardS034
+import Kepler.Graphs.ArchivePrePentShardS035
+import Kepler.Graphs.ArchivePrePentShardS036
+import Kepler.Graphs.ArchivePrePentShardS037
+import Kepler.Graphs.ArchivePrePentShardS038
+import Kepler.Graphs.ArchivePrePentShardS039
+import Kepler.Graphs.ArchivePrePentShardS040
+import Kepler.Graphs.ArchivePrePentShardS041
+import Kepler.Graphs.ArchivePrePentShardS042
+import Kepler.Graphs.ArchivePrePentShardS043
+import Kepler.Graphs.ArchivePrePentShardS044
+import Kepler.Graphs.ArchivePrePentShardS045
+import Kepler.Graphs.ArchivePrePentShardS046
+import Kepler.Graphs.ArchivePrePentShardS047
+import Kepler.Graphs.ArchivePrePentShardS048
+import Kepler.Graphs.ArchivePrePentShardS049
+import Kepler.Graphs.ArchivePrePentShardS050
+import Kepler.Graphs.ArchivePrePentShardS051
+import Kepler.Graphs.ArchivePrePentShardS052
+import Kepler.Graphs.ArchivePrePentShardS053
+import Kepler.Graphs.ArchivePrePentShardS054
+import Kepler.Graphs.ArchivePrePentShardS055
+import Kepler.Graphs.ArchivePrePentShardS056
+import Kepler.Graphs.ArchivePrePentShardS057
+import Kepler.Graphs.ArchivePrePentShardS058
+import Kepler.Graphs.ArchivePrePentShardS059
+import Kepler.Graphs.ArchivePrePentShardS060
+import Kepler.Graphs.ArchivePrePentShardS061
+import Kepler.Graphs.ArchivePrePentShardS062
+import Kepler.Graphs.ArchivePrePentShardS063
+import Kepler.Graphs.ArchivePrePentShardS064
+import Kepler.Graphs.ArchivePrePentShardS065
+import Kepler.Graphs.ArchivePrePentShardS066
+import Kepler.Graphs.ArchivePrePentShardS067
+import Kepler.Graphs.ArchivePrePentShardS068
+import Kepler.Graphs.ArchivePrePentShardS069
+import Kepler.Graphs.ArchivePrePentShardS070
+import Kepler.Graphs.ArchivePrePentShardS071
+import Kepler.Graphs.ArchivePrePentShardS072
+import Kepler.Graphs.ArchivePrePentShardS073
+import Kepler.Graphs.ArchivePrePentShardS074
+import Kepler.Graphs.ArchivePrePentShardS075
+import Kepler.Graphs.ArchivePrePentShardS076
+import Kepler.Graphs.ArchivePrePentShardS077
+import Kepler.Graphs.ArchivePrePentShardS078
+import Kepler.Graphs.ArchivePrePentShardS079
+import Kepler.Graphs.ArchivePrePentShardS080
+import Kepler.Graphs.ArchivePrePentShardS081
+import Kepler.Graphs.ArchivePrePentShardS082
+import Kepler.Graphs.ArchivePrePentShardS083
+import Kepler.Graphs.ArchivePrePentShardS084
+import Kepler.Graphs.ArchivePrePentShardS085
+import Kepler.Graphs.ArchivePrePentShardS086
+import Kepler.Graphs.ArchivePrePentShardS087
+import Kepler.Graphs.ArchivePrePentShardS088
+import Kepler.Graphs.ArchivePrePentShardS089
+import Kepler.Graphs.ArchivePrePentShardS090
+import Kepler.Graphs.ArchivePrePentShardS091
+import Kepler.Graphs.ArchivePrePentShardS092
+import Kepler.Graphs.ArchivePrePentShardS093
+import Kepler.Graphs.ArchivePrePentShardS094
+import Kepler.Graphs.ArchivePrePentShardS095
+import Kepler.Graphs.ArchivePrePentShardS096
+import Kepler.Graphs.ArchivePrePentShardS097
+import Kepler.Graphs.ArchivePrePentShardS098
+import Kepler.Graphs.ArchivePrePentShardS099
+import Kepler.Graphs.ArchivePrePentShardS100
+import Kepler.Graphs.ArchivePrePentShardS101
+import Kepler.Graphs.ArchivePrePentShardS102
+import Kepler.Graphs.ArchivePrePentShardS103
+import Kepler.Graphs.ArchivePrePentShardS104
+import Kepler.Graphs.ArchivePrePentShardS105
+import Kepler.Graphs.ArchivePrePentShardS106
+import Kepler.Graphs.ArchivePrePentShardS107
+import Kepler.Graphs.ArchivePrePentShardS108
+import Kepler.Graphs.ArchivePrePentShardS109
+import Kepler.Graphs.ArchivePrePentShardS110
+import Kepler.Graphs.ArchivePrePentShardS111
+import Kepler.Graphs.ArchivePrePentShardS112
+import Kepler.Graphs.ArchivePrePentShardS113
+import Kepler.Graphs.ArchivePrePentShardS114
+import Kepler.Graphs.ArchivePrePentShardS115
+import Kepler.Graphs.ArchivePrePentShardS116
+import Kepler.Graphs.ArchivePrePentShardS117
+import Kepler.Graphs.ArchivePrePentShardS118
+import Kepler.Graphs.ArchivePrePentShardS119
+import Kepler.Graphs.ArchivePrePentShardS120
+import Kepler.Graphs.ArchivePrePentShardS121
+import Kepler.Graphs.ArchivePrePentShardS122
+import Kepler.Graphs.ArchivePrePentShardS123
+import Kepler.Graphs.ArchivePrePentShardS124
+import Kepler.Graphs.ArchivePrePentShardS125
+import Kepler.Graphs.ArchivePrePentShardS126
+import Kepler.Graphs.ArchivePrePentShardS127
+import Kepler.Graphs.ArchivePrePentShardS128
+import Kepler.Graphs.ArchivePrePentShardS129
+import Kepler.Graphs.ArchivePrePentShardS130
+import Kepler.Graphs.ArchivePrePentShardS131
+import Kepler.Graphs.ArchivePrePentShardS132
+import Kepler.Graphs.ArchivePrePentShardS133
+import Kepler.Graphs.ArchivePrePentShardS134
+import Kepler.Graphs.ArchivePrePentShardS135
+import Kepler.Graphs.ArchivePrePentShardS136
+import Kepler.Graphs.ArchivePrePentShardS137
+import Kepler.Graphs.ArchivePrePentShardS138
+import Kepler.Graphs.ArchivePrePentShardS139
+import Kepler.Graphs.ArchivePrePentShardS140
+import Kepler.Graphs.ArchivePrePentShardS141
+import Kepler.Graphs.ArchivePrePentShardS142
+import Kepler.Graphs.ArchivePrePentShardS143
+import Kepler.Graphs.ArchivePrePentShardS144
+import Kepler.Graphs.ArchivePrePentShardS145
+import Kepler.Graphs.ArchivePrePentShardS146
+import Kepler.Graphs.ArchivePrePentShardS147
+import Kepler.Graphs.ArchivePrePentShardS148
+import Kepler.Graphs.ArchivePrePentShardS149
+import Kepler.Graphs.ArchivePrePentShardS150
+import Kepler.Graphs.ArchivePrePentShardS151
+import Kepler.Graphs.ArchivePrePentShardS152
+import Kepler.Graphs.ArchivePrePentShardS153
+import Kepler.Graphs.ArchivePrePentShardS154
+import Kepler.Graphs.ArchivePrePentShardS155
+import Kepler.Graphs.ArchivePrePentShardS156
+import Kepler.Graphs.ArchivePrePentShardS157
+import Kepler.Graphs.ArchivePrePentShardS158
+import Kepler.Graphs.ArchivePrePentShardS159
+import Kepler.Graphs.ArchivePrePentShardS160
+
+namespace Kepler.Graphs
+
+set_option maxRecDepth 1000000 in
+/-- Pent `archivePre` 全类闭合：16080 项，161 分片。 -/
+theorem archivePrePentAll : (PentData).all (fun a => preIsoTestB a) = true :=
+  all_of_take_drop_b archivePrePentS000
+      (all_drop_of_split_b archivePrePentS001
+      (all_drop_of_split_b archivePrePentS002
+      (all_drop_of_split_b archivePrePentS003
+      (all_drop_of_split_b archivePrePentS004
+      (all_drop_of_split_b archivePrePentS005
+      (all_drop_of_split_b archivePrePentS006
+      (all_drop_of_split_b archivePrePentS007
+      (all_drop_of_split_b archivePrePentS008
+      (all_drop_of_split_b archivePrePentS009
+      (all_drop_of_split_b archivePrePentS010
+      (all_drop_of_split_b archivePrePentS011
+      (all_drop_of_split_b archivePrePentS012
+      (all_drop_of_split_b archivePrePentS013
+      (all_drop_of_split_b archivePrePentS014
+      (all_drop_of_split_b archivePrePentS015
+      (all_drop_of_split_b archivePrePentS016
+      (all_drop_of_split_b archivePrePentS017
+      (all_drop_of_split_b archivePrePentS018
+      (all_drop_of_split_b archivePrePentS019
+      (all_drop_of_split_b archivePrePentS020
+      (all_drop_of_split_b archivePrePentS021
+      (all_drop_of_split_b archivePrePentS022
+      (all_drop_of_split_b archivePrePentS023
+      (all_drop_of_split_b archivePrePentS024
+      (all_drop_of_split_b archivePrePentS025
+      (all_drop_of_split_b archivePrePentS026
+      (all_drop_of_split_b archivePrePentS027
+      (all_drop_of_split_b archivePrePentS028
+      (all_drop_of_split_b archivePrePentS029
+      (all_drop_of_split_b archivePrePentS030
+      (all_drop_of_split_b archivePrePentS031
+      (all_drop_of_split_b archivePrePentS032
+      (all_drop_of_split_b archivePrePentS033
+      (all_drop_of_split_b archivePrePentS034
+      (all_drop_of_split_b archivePrePentS035
+      (all_drop_of_split_b archivePrePentS036
+      (all_drop_of_split_b archivePrePentS037
+      (all_drop_of_split_b archivePrePentS038
+      (all_drop_of_split_b archivePrePentS039
+      (all_drop_of_split_b archivePrePentS040
+      (all_drop_of_split_b archivePrePentS041
+      (all_drop_of_split_b archivePrePentS042
+      (all_drop_of_split_b archivePrePentS043
+      (all_drop_of_split_b archivePrePentS044
+      (all_drop_of_split_b archivePrePentS045
+      (all_drop_of_split_b archivePrePentS046
+      (all_drop_of_split_b archivePrePentS047
+      (all_drop_of_split_b archivePrePentS048
+      (all_drop_of_split_b archivePrePentS049
+      (all_drop_of_split_b archivePrePentS050
+      (all_drop_of_split_b archivePrePentS051
+      (all_drop_of_split_b archivePrePentS052
+      (all_drop_of_split_b archivePrePentS053
+      (all_drop_of_split_b archivePrePentS054
+      (all_drop_of_split_b archivePrePentS055
+      (all_drop_of_split_b archivePrePentS056
+      (all_drop_of_split_b archivePrePentS057
+      (all_drop_of_split_b archivePrePentS058
+      (all_drop_of_split_b archivePrePentS059
+      (all_drop_of_split_b archivePrePentS060
+      (all_drop_of_split_b archivePrePentS061
+      (all_drop_of_split_b archivePrePentS062
+      (all_drop_of_split_b archivePrePentS063
+      (all_drop_of_split_b archivePrePentS064
+      (all_drop_of_split_b archivePrePentS065
+      (all_drop_of_split_b archivePrePentS066
+      (all_drop_of_split_b archivePrePentS067
+      (all_drop_of_split_b archivePrePentS068
+      (all_drop_of_split_b archivePrePentS069
+      (all_drop_of_split_b archivePrePentS070
+      (all_drop_of_split_b archivePrePentS071
+      (all_drop_of_split_b archivePrePentS072
+      (all_drop_of_split_b archivePrePentS073
+      (all_drop_of_split_b archivePrePentS074
+      (all_drop_of_split_b archivePrePentS075
+      (all_drop_of_split_b archivePrePentS076
+      (all_drop_of_split_b archivePrePentS077
+      (all_drop_of_split_b archivePrePentS078
+      (all_drop_of_split_b archivePrePentS079
+      (all_drop_of_split_b archivePrePentS080
+      (all_drop_of_split_b archivePrePentS081
+      (all_drop_of_split_b archivePrePentS082
+      (all_drop_of_split_b archivePrePentS083
+      (all_drop_of_split_b archivePrePentS084
+      (all_drop_of_split_b archivePrePentS085
+      (all_drop_of_split_b archivePrePentS086
+      (all_drop_of_split_b archivePrePentS087
+      (all_drop_of_split_b archivePrePentS088
+      (all_drop_of_split_b archivePrePentS089
+      (all_drop_of_split_b archivePrePentS090
+      (all_drop_of_split_b archivePrePentS091
+      (all_drop_of_split_b archivePrePentS092
+      (all_drop_of_split_b archivePrePentS093
+      (all_drop_of_split_b archivePrePentS094
+      (all_drop_of_split_b archivePrePentS095
+      (all_drop_of_split_b archivePrePentS096
+      (all_drop_of_split_b archivePrePentS097
+      (all_drop_of_split_b archivePrePentS098
+      (all_drop_of_split_b archivePrePentS099
+      (all_drop_of_split_b archivePrePentS100
+      (all_drop_of_split_b archivePrePentS101
+      (all_drop_of_split_b archivePrePentS102
+      (all_drop_of_split_b archivePrePentS103
+      (all_drop_of_split_b archivePrePentS104
+      (all_drop_of_split_b archivePrePentS105
+      (all_drop_of_split_b archivePrePentS106
+      (all_drop_of_split_b archivePrePentS107
+      (all_drop_of_split_b archivePrePentS108
+      (all_drop_of_split_b archivePrePentS109
+      (all_drop_of_split_b archivePrePentS110
+      (all_drop_of_split_b archivePrePentS111
+      (all_drop_of_split_b archivePrePentS112
+      (all_drop_of_split_b archivePrePentS113
+      (all_drop_of_split_b archivePrePentS114
+      (all_drop_of_split_b archivePrePentS115
+      (all_drop_of_split_b archivePrePentS116
+      (all_drop_of_split_b archivePrePentS117
+      (all_drop_of_split_b archivePrePentS118
+      (all_drop_of_split_b archivePrePentS119
+      (all_drop_of_split_b archivePrePentS120
+      (all_drop_of_split_b archivePrePentS121
+      (all_drop_of_split_b archivePrePentS122
+      (all_drop_of_split_b archivePrePentS123
+      (all_drop_of_split_b archivePrePentS124
+      (all_drop_of_split_b archivePrePentS125
+      (all_drop_of_split_b archivePrePentS126
+      (all_drop_of_split_b archivePrePentS127
+      (all_drop_of_split_b archivePrePentS128
+      (all_drop_of_split_b archivePrePentS129
+      (all_drop_of_split_b archivePrePentS130
+      (all_drop_of_split_b archivePrePentS131
+      (all_drop_of_split_b archivePrePentS132
+      (all_drop_of_split_b archivePrePentS133
+      (all_drop_of_split_b archivePrePentS134
+      (all_drop_of_split_b archivePrePentS135
+      (all_drop_of_split_b archivePrePentS136
+      (all_drop_of_split_b archivePrePentS137
+      (all_drop_of_split_b archivePrePentS138
+      (all_drop_of_split_b archivePrePentS139
+      (all_drop_of_split_b archivePrePentS140
+      (all_drop_of_split_b archivePrePentS141
+      (all_drop_of_split_b archivePrePentS142
+      (all_drop_of_split_b archivePrePentS143
+      (all_drop_of_split_b archivePrePentS144
+      (all_drop_of_split_b archivePrePentS145
+      (all_drop_of_split_b archivePrePentS146
+      (all_drop_of_split_b archivePrePentS147
+      (all_drop_of_split_b archivePrePentS148
+      (all_drop_of_split_b archivePrePentS149
+      (all_drop_of_split_b archivePrePentS150
+      (all_drop_of_split_b archivePrePentS151
+      (all_drop_of_split_b archivePrePentS152
+      (all_drop_of_split_b archivePrePentS153
+      (all_drop_of_split_b archivePrePentS154
+      (all_drop_of_split_b archivePrePentS155
+      (all_drop_of_split_b archivePrePentS156
+      (all_drop_of_split_b archivePrePentS157
+      (all_drop_of_split_b archivePrePentS158
+      (all_drop_of_split_b archivePrePentS159
+      (archivePrePentS160))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+#print axioms archivePrePentAll
+
+#print axioms all_of_take_drop_b
+#print axioms all_drop_of_split_b
+
+end Kepler.Graphs

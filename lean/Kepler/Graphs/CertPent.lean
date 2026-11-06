@@ -2,6 +2,7 @@
 Pent seed (p = 2) enumeration certificate wiring.
 Evaluation-side file: `native_decide` allowed (DECISIONS.md 2026-08-10);
 every assembly proof is a pure kernel proof.  Mirrors CertTri.lean.
+ERRATA 2026-11-06（goodlist-w3）：`pent_top_bounds`、`pent_top_no_finals`、`pent_archive_pre` 的证明体已改为指向 `Kepler.Graphs.*All`（纯内核分片 + 符号链），不再是 native_decide；陈述未动。
 -/
 import Kepler.Graphs.CertCheck
 import Kepler.Graphs.CertData.PentTop
@@ -204,6 +205,9 @@ import Kepler.Graphs.CertShards.PentR3.K006
 import Kepler.Graphs.CertShards.PentR3.K007
 import Kepler.Graphs.CertShards.PentR3.K008
 import Kepler.Graphs.CertShards.PentR3.K009
+import Kepler.Graphs.TopBoundsPent
+import Kepler.Graphs.TopFinalsPent
+import Kepler.Graphs.ArchivePrePent
 
 set_option maxRecDepth 100000
 
@@ -220,8 +224,7 @@ theorem pent_top_replay : (List.range PentTop.length).all (fun i =>
 theorem pent_top_bounds : (List.range PentTopChildren.length).all (fun i =>
     (PentTopChildren[i]!).all (fun t =>
       (t.1 && decide (t.2 < PentFrontier.length)) ||
-        (!t.1 && decide (t.2 < PentTop.length)))) = true := by
-  native_decide
+        (!t.1 && decide (t.2 < PentTop.length)))) = true := topBoundsPentAll
 
 /-- `PentTop` is closed under `next_tame 2` up to `PentFrontier`. -/
 theorem pent_top_closed : ∀ x ∈ PentTop, ∀ c ∈ next_tame 2 x,
@@ -229,16 +232,14 @@ theorem pent_top_closed : ∀ x ∈ PentTop, ∀ c ∈ next_tame 2 x,
   closed_of_replay rfl pent_top_replay pent_top_bounds
 
 /-- No final graphs in the Pent top. -/
-theorem pent_top_no_finals : (PentTop.all (fun g => !g.final)) = true := by
-  native_decide
+theorem pent_top_no_finals : (PentTop.all (fun g => !g.final)) = true := topFinalsPentAll
 
 theorem pent_top_final_archive :
     ∀ g ∈ PentTop, g.final = true → inIso g.fgraph Archive :=
   top_final_archive_of_no_finals pent_top_no_finals
 
 /-- Every `PentData` entry satisfies `pre_iso_test`. -/
-theorem pent_archive_pre : (PentData.all (fun a => preIsoTestB a)) = true := by
-  native_decide
+theorem pent_archive_pre : (PentData.all (fun a => preIsoTestB a)) = true := archivePrePentAll
 
 theorem pent_archive_pre_iso : ∀ a ∈ PentData, pre_iso_test a := fun a ha =>
   preIsoTestB_correct ((List.all_eq_true.mp pent_archive_pre) a ha)
