@@ -1,20 +1,19 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2086774
-K_SORRIED 82
+K_REACH 2087833
+K_SORRIED 80
 K_AXIOM 624
-K_MODULES 4238
-K_UNIVERSE 2099883
-COVERAGE 2086774 / 2099883
-K_UNIVERSE_XCASES 37903
-K_REACH_XCASES 26351
-K_SORRIED_XCASES 82
+K_MODULES 4247
+K_UNIVERSE 2100044
+COVERAGE 2087833 / 2100044
+K_UNIVERSE_XCASES 38064
+K_REACH_XCASES 27410
+K_SORRIED_XCASES 80
 K_AXIOM_XCASES 624
-TOTAL_VALUE_DECLS 2086068
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2086068
-SORRIED 82
+TOTAL_VALUE_DECLS 2087127
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2087127
+SORRIED 80
 AXIOMS 624
 --- SORRIED ---
-Kepler.Assembly	Kepler.Assembly.fcdjdot	parent=Kepler.Assembly.textCapstone
 Kepler.Assembly	Kepler.Assembly.jcajydu	parent=Kepler.Assembly.textCapstone
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
 Kepler.Assembly	Kepler.Assembly.nliCell3QZECFICwt0	parent=Kepler.Assembly.nliCell3Bank
@@ -67,7 +66,6 @@ Kepler.Assembly	Kepler.Assembly.nliRestZTGIJCF4_0_1_1_0	parent=Kepler.Assembly.n
 Kepler.Assembly	Kepler.Assembly.nliRestZTGIJCF4_1_0_0_0	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestZTGIJCF4_1_0_0_1	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestZTGIJCF4_1_1_0_0	parent=Kepler.Assembly.nliPackNonlinearRest
-Kepler.Assembly	Kepler.Assembly.nliTskGXSA	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.nliTskIYOUOBFsharpv2	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.nliTskIYOUOBFsym	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.nliTskRIBCYXUsym	parent=Kepler.Assembly.nliTskBank
@@ -1979,6 +1977,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 689	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1736
 689	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard484
 689	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard485
+688	Kepler.Text.PackingAuto22
 687	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1036
 687	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1166
 687	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1580
@@ -3085,7 +3084,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 512	Kepler.Interval.Cases.CFWGKMBZ.Shard374
 512	Kepler.Interval.Cases.CFWGKMBZ.Shard434
 512	Kepler.Interval.Cases.CFWGKMBZ.Shard44
-512	Kepler.Text.PackingAuto15
 511	Kepler.Interval.Cases.CFWGKMBZ.Shard115
 511	Kepler.Interval.Cases.CFWGKMBZ.Shard14
 511	Kepler.Interval.Cases.CFWGKMBZ.Shard199
@@ -3112,6 +3110,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 509	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1286
 509	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1290
 509	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard2514
+509	Kepler.Text.PackingAuto15
 508	Kepler.Interval.Cases.CFWGKMBZ.Shard124
 507	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1
 507	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1007
@@ -3370,6 +3369,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 443	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard2497
 443	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard2643
 443	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard438
+442	Kepler.Assembly
 442	Kepler.Interval.Cases.CFWGKMBZ.Shard276
 442	Kepler.Interval.Cases.CFWGKMBZ.Shard371
 442	Kepler.Interval.Cases.CFWGKMBZ.Shard435
@@ -3609,6 +3609,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 379	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard2673
 379	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard583
 379	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard989
+379	Kepler.Text.PackingAuto3
 378	Kepler.Interval.Cases.CFWGKMBZ.Shard243
 378	Kepler.Interval.Cases.CFWGKMBZ.Shard406
 378	Kepler.Interval.Cases.CFWGKMBZ.Shard530
@@ -3677,7 +3678,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 362	Kepler.Interval.Cases.CFWGKMBZ.Shard418
 362	Kepler.Interval.Cases.CFWGKMBZ.Shard423
 362	Kepler.Interval.Cases.CFWGKMBZ.Shard582
-362	Kepler.Text.PackingAuto3
 361	Kepler.Interval.Cases.CFWGKMBZ.Shard419
 361	Kepler.Interval.Cases.CFWGKMBZ.Shard442
 360	Kepler.Interval.Cases.CFWGKMBZ.Shard230
@@ -3811,7 +3811,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 315	Kepler.Interval.Cases.CFWGKMBZ.Shard407
 315	Kepler.Interval.Cases.CFWGKMBZ.Shard84
 315	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard595
-314	Kepler.Assembly
 314	Kepler.Interval.Cases.CFWGKMBZ.Shard11
 314	Kepler.Interval.Cases.CFWGKMBZ.Shard20
 314	Kepler.Interval.Cases.CFWGKMBZ.Shard5
@@ -4115,14 +4114,14 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 209	Kepler.Text.LocalAuto22
 201	Kepler.Interval.Cases.CFWGKMBZ.Shard170
 200	Kepler.Interval.Cases.CFWGKMBZ.Shard494
+200	Kepler.Text.PackingAuto4
 199	Kepler.Interval.Cases.CFWGKMBZ.Shard466
 197	Kepler.Interval.Cases.CFWGKMBZ.Shard130
 197	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard2
 197	Kepler.Text.LocalAuto38
-196	Kepler.Text.PackingAuto4
 195	Kepler.Text.PackingAuto6
 194	Kepler.Interval.Cases.CFWGKMBZ.Shard426
-188	Kepler.Text.Hypermap
+191	Kepler.Text.Hypermap
 187	Kepler.Text.PackingAuto7
 186	Kepler.Interval.Cases.CFWGKMBZ.Shard227
 182	Kepler.Text.LocalAuto17
@@ -4140,8 +4139,8 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 145	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard7
 143	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard11
 143	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard23
-143	Kepler.Text.PackingAuto10
 143	Kepler.Text.SgtrnafKernel
+142	Kepler.Text.PackingAuto10
 140	Kepler.Graphs.FaceDivisionProps4
 138	Kepler.Graphs.FaceDivisionProps3
 138	Kepler.Text.LocalAuto3
@@ -4153,6 +4152,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 120	Kepler.Text.PackingAuto13
 119	Kepler.Text.LocalAuto2
 116	Kepler.Graphs.ScoreProps
+115	Kepler.Text.Polytope
 114	Kepler.Interval.CertTM
 103	Kepler.Geom.SolidAngle
 101	Kepler.Text.ConicCapVolume
@@ -4168,7 +4168,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 86	Kepler.Graphs.GeneratorProps
 86	Kepler.Interval.Basic
 84	Kepler.Text.PackingAuto16
-84	Kepler.Text.Polytope
+79	Kepler.Text.PolyAuto7
 74	Kepler.Geom.LuneVolume
 74	Kepler.Text.PackingAuto12
 71	Kepler.Graphs.Graph
@@ -4179,8 +4179,8 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 66	Kepler.Graphs.InvariantsB
 63	Kepler.Text.IneqClosureDefs
 63	Kepler.Text.PlanarityAuto12
+60	Kepler.Text.ContraFan
 60	Kepler.Text.PackingAuto9
-59	Kepler.Text.ContraFan
 59	Kepler.Text.LocalAuto27
 59	Kepler.Text.TameCorrFloor
 57	Kepler.Graphs.EnumeratorProps
@@ -4203,6 +4203,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 40	Kepler.Text.PackingAuto19
 39	Kepler.Text.ConformingAuto17
 38	Kepler.NliBanks2
+38	Kepler.Text.PolyAuto3
 36	Kepler.Geom.SimplexVolume
 35	Kepler.Text.ConformingAuto15
 35	Kepler.Text.Gamma4Deriv3
@@ -4234,6 +4235,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 25	Kepler.Text.PackingAuto17
 25	Kepler.Text.SphereKit
 25	Kepler.Text.TameCorrIso2
+24	Kepler.NliBanks15
 24	Kepler.Text.ConformingAuto11
 24	Kepler.Text.ConformingAuto21
 23	Kepler.Graphs.CertTri
@@ -4250,6 +4252,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 20	Kepler.Text.EulerDerivCore
 19	Kepler.Graphs.Tame
 19	Kepler.Text.Gamma4Deriv4
+19	Kepler.Text.PolyAuto5
 18	Kepler.Interval.CertG
 18	Kepler.Interval.CertGD
 18	Kepler.Text.ConformingAuto13
@@ -4258,6 +4261,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 18	Kepler.Text.LocalAuto7
 18	Kepler.Text.PackingAuto8
 18	Kepler.Text.PlanarityComponent
+17	Kepler.Text.Gamma4Val
 17	Kepler.Text.PlanarityAuto16
 17	Kepler.Text.TameCorrNodeCard
 16	Kepler.Assembly.GoodListDefs
@@ -4265,11 +4269,9 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 16	Kepler.Graphs.RotationLemmas
 16	Kepler.Text.ConformingAuto22
 16	Kepler.Text.PlanarityDarts
-16	Kepler.Text.PolyAuto7
 15	Kepler.Graphs.Plane
 15	Kepler.NliBanks3
 15	Kepler.Text.ConformingAuto10
-15	Kepler.Text.PackingAuto22
 15	Kepler.Text.PlanarityAuto13
 15	Kepler.Text.TameCorrIso
 14	Kepler.Graphs.RelativeCompleteness
@@ -4281,6 +4283,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 13	Kepler.Text.ConformingAuto9
 13	Kepler.Text.Gamma4Deriv8
 13	Kepler.Text.Gamma4VolY
+13	Kepler.Text.P22EdgeCount
 13	Kepler.Text.TameCorrCard
 12	Kepler.Graphs.CertHex
 12	Kepler.Graphs.CertPent
@@ -4288,6 +4291,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 12	Kepler.Graphs.Enumerator
 12	Kepler.Text.ConformingAuto12
 12	Kepler.Text.EulerAtn2Kit
+12	Kepler.Text.P22EdgeFacets
 12	Kepler.Text.PlanarityAuto8
 11	Kepler.Text.ConformingAuto5
 11	Kepler.Text.Gamma4Deriv7
@@ -4295,7 +4299,10 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 11	Kepler.Text.PlanarityConnect
 10	Kepler.Interval.CertDisj
 10	Kepler.NliHminus
+9	Kepler.NliBanks10
+9	Kepler.NliBanks16
 9	Kepler.NliBanks5
+9	Kepler.Text.Gamma4Sharp
 8	Kepler.Graphs.Plane1Props
 8	Kepler.Graphs.TameProps
 8	Kepler.Graphs.Worklist
@@ -4306,7 +4313,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 8	Kepler.NliBanks7
 8	Kepler.Text.ConformingDefs
 8	Kepler.Text.Gamma4Feed
-8	Kepler.Text.Gamma4Sharp
 8	Kepler.Text.TameCorrG3
 7	Kepler.Interval.CertBool
 7	Kepler.Statement
@@ -4955,10 +4961,10 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 1	Kepler.Graphs.ArchiveData.Tri
 1	Kepler.Graphs.QuasiOrder
 1	Kepler.Graphs.TameClassification
+1	Kepler.Text.Gamma4ValCornerKit
 1	Kepler.Text.LocalAuto30
 1	Kepler.Text.PolyAuto1
 1	Kepler.Text.TameCorrG8
 1	Kepler.Text.TameCorrG9
 1	Kepler.Text.TameCorrMain
 --- END ---
-nice -n 19 lake env lean scripts/e2e_reach_map.lean  805.63s user 10.42s system 99% cpu 13:36.67 total
