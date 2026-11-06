@@ -420,23 +420,32 @@
 | **K_SORRIED** | **82** | **−17（O 补测 99）** |
 | K_AXIOM | **624** | **±0（全期不变）** |
 | K_MODULES | 4,238 | +43 |
-| K_UNIVERSE | 2,099,882 | +872 |
-| COVERAGE | **99.375%**（2,086,774 / 2,099,882） | — |
+| K_UNIVERSE | 2,099,883 | +873 |
+| COVERAGE | **99.3752%**（2,086,774 / 2,099,883） | — |
 
 口径 II（剔除 `Kepler.Interval.Cases.*`）：
-**K_REACH_XCASES 26,351 / SORRIED_XCASES 82 / AXIOM_XCASES 624 / K_UNIVERSE_XCASES 37,902**。
+**K_REACH_XCASES 26,351 / SORRIED_XCASES 82 / AXIOM_XCASES 624 / K_UNIVERSE_XCASES 37,903**。
 
-**SORRIED 99 → 82 的逐笔归因**（−17，逐条可查）：
+**SORRIED 119（基线 N 的 TSV）→ 82 的逐笔归因**（−37；用 `--- SORRIED ---` 清单逐行 diff，
+**新增 0 条**）：
 
-| 笔 | 数量 | commit |
+| 笔 | 数量 | 依据 |
 |---|---:|---|
-| 12 条 nli 银行接线 | −12 | `a6e13301` / `fc41f981` |
-| `bank_TSKAJXYRIBCYXUsharp`（gamma4-w4） | −1 | `d7dc8376` |
-| `ZTGIJCF4_0_1_1_1` / `MKFKQWUhalfwt` / `GCKBQEA`（nli-unknown-w3） | −3 | `c6c722a2` |
-| `polyhedron_edge_sum`（pa22-edge-two，#9 在锥内） | −1 | `07df3e53` |
+| 窗口前 N→O 的旧账（`real_model_*`×15 / `pkLeafRankAzimPointwise` / `AURSIPD_p18` / `NUXCOEAv2_p28` / `PQCSXWG2_WITHINREAL_p11` / `cc_prep_model_data`） | −19 | 旧账 |
+| 本窗口的接线：15 `nliRest*` + 2 `nliTsk*`（`RIBCYXUsharp`/`TADIAMB`）+ `tameCorrespondenceIso` | −18 | 下详 |
 
-**注**：派生账曾算到 83，实测 82 —— 差 1 就是 `#9`：它本来也在锥内因而是 SORRIED 成员，
-闭掉它同样 −1。这条印证了"派生账要逐笔对 commit、最终以仪器为准"的口径。
+本窗口 18 条逐条：`nliRestBIXPCGWb`(adm3) / `BIXPCGW1738910218a2,6652007036a2,7080972881a2`(NB2) /
+`QITNPEA1_2_1,1_2_2,MKFKQWU`(NB3) / `ZTGIJCF4_1_0_1_0,1_0_1_1,1_1_0_1,1_1_1_0,1_1_1_1`(NB4) /
+`GCKBQEA,MKFKQWUhalfwt,ZTGIJCF4_0_1_1_1`(w3) / `nliTskRIBCYXUsharp`(gamma4-w4) / `nliTskTADIAMB` /
+`tameCorrespondenceIso`。
+
+**两处更正（实测推翻我的派生账）**：
+① **`#9 polyhedron_edge_sum` 闭了但不在锥内**——`PackingAuto22` 的 5 条 sorry 在
+`--- SORRIED ---` 里**一条都没有**（PA22 尚未被根 reach 到，属"材料先于接线"的孤儿）。
+所以它不贡献锥内数字；我此前"派生 83、差 1 = #9"的说法**作废**。
+② **`Assembly.lean` 64 条 `declaration uses sorry`，锥内只数到 59**——差的 5 条正是五个
+无消费者的 `nli*Ids` 死声明（`nliOx3q1hIds` / `nliMainNonlinearTerminalV11Ids` /
+`nliLpIneqsIds` / `nliPackIneqDefAIds` / `nliKcblrqcIneqDefIds`），从未被 reach 到。
 
 **K_AXIOM 624 全期不变**仍是硬约束：本基线新增的 872 个 universe 声明、618 个 reach 声明
 全是证明项/私助，零新公理。

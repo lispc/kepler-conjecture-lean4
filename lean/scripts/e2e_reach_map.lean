@@ -125,7 +125,11 @@ structure MapResult where
   /-- 口径 II 直方图：模块 → 可达 Kepler 声明数。 -/
   moduleCounts : Std.HashMap Name Nat := {}
   parents : Std.HashMap Name Name := {}
-  nodes : Array NodeRow := #[]
+  /-- DFS 序节点行。**用 `List` cons 累加（O(1)）**：2026-11-06 实测 `Array.push`
+  在 `{ r with nodes := … }` 的记录更新里拿不到唯一所有权 ⇒ 每次 push 复制整个
+  数组 ⇒ 2M 节点退化为 O(n²)（跑 5h18m / RSS 14.6 GiB 仍未完成）。打印时统一
+  `.reverse`。 -/
+  nodes : List NodeRow := []
 deriving Inhabited
 
 partial def reach (env : Environment) (root : Name) (dump : Bool := false) : MapResult :=
@@ -168,7 +172,7 @@ partial def reach (env : Environment) (root : Name) (dump : Bool := false) : Map
                     { name := n, module := moduleOf env n, kind := kindOf ci
                       directSorry := false, childCount := 0, extCount := 0
                       depth := d, generated := isGeneratedDecl (moduleOf env n) n }
-                  { r with nodes := r.nodes.push row }
+                  { r with nodes := row :: r.nodes }
                 else r
               go fuel rest seen r
             | some v =>
@@ -193,7 +197,7 @@ partial def reach (env : Environment) (root : Name) (dump : Bool := false) : Map
                       directSorry := isSor, childCount := kdeps
                       extCount := cs.size - kdeps
                       depth := d, generated := isGeneratedDecl (moduleOf env n) n }
-                  { r with nodes := r.nodes.push row }
+                  { r with nodes := row :: r.nodes }
                 else r
               go fuel (newOnes ++ rest) seen
                 { r with parents, total := r.total + 1 }
@@ -267,10 +271,10 @@ def defaultRoot : Name := `Kepler.Assembly.the_kepler_conjecture_from_interfaces
     IO.println "module\tsorries\tnodes\tmaxDepth\tgenerated"
     for (m, (cnt, sor, md)) in (arr.qsort (fun a b => a.2.2.1 > b.2.2.1)).extract 0 10 do
       IO.println s!"{m}\t{sor}\t{cnt}\t{md}\t{isGeneratedModule m}"
-    IO.println s!"TREE_ROWS {r.nodes.size}"
+    IO.println s!"TREE_ROWS {r.nodes.length}"
     IO.println "--- TREE ---"
     IO.println "name\tmodule\tkind\tdirectSorryAx\tparent\tchildCount\textCount\tdepth\tgenerated\ttreeChildCount"
-    for row in r.nodes do
+    for row in r.nodes.reverse do
       let p := match r.parents.get? row.name with
         | some p => p.toString
         | none => ""
