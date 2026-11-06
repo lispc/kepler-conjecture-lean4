@@ -4272,12 +4272,11 @@ theorem localAnnulusInequalityScriptL (V : Set V3) :
     rw [e1, e2]
   · simp only [localAnnulusInequality, setSum, scriptL, dif_neg hV]
 
-/-- 接口占位：HOL `Fnjlbxs.FCDJDOT`（FNJLBXS-compiled.hl；前提
-`pack_ineq_def_a` 显式化）。 -/
-theorem fcdjdot (hpa : PackIneqDefA)
-    (h : ∃ W : Set V3, Packing W ∧ W ⊆ ballAnnulus ∧ scriptL W > 12) :
-    ∃ V : Set V3, Contravening V := by
-  sorry
+/- **FCDJDOT**（`FNJLBXS-compiled.hl:1766`；前提 `pack_ineq_def_a` 显式化）——
+声明体移至本文件 `fnjlbxsCore` 之后：四柱（`scriptLAttainsMaxInBallAnnulus` /
+`fnjlbxsCore` / `DLWCHEM_full`·`XULJEPR_full` / `bijScriptL`·
+`localAnnulusInequalityScriptL`）中前三者都是本文件后段的 private 件，Lean
+声明顺序要求消费方在生产者之后。陈述逐字未改。 -/
 
 /-! NEEDS（2026-09-28 脊柱 lane 定级；2026-10-12 A4 填证 lane 依赖图更新）：
 A4 侧三件套已全部闭合于本文件（见下 `cpnknxn`/`flyspeckDevolution` 与
@@ -6703,6 +6702,76 @@ private theorem fnjlbxsCore {V : Set V3} (hpack : Packing V) (hsub : V ⊆ ballA
       (Function.update xst r u) (hfpChain n0 (le_refl _))
     rw [hcjFp n0, hcjXs n0] at hcon
     exact absurd hF2a (not_lt.mpr (hcon.trans hF2b))
+
+/-- **FCDJDOT**（`FNJLBXS-compiled.hl:1766-1797`；前提 `pack_ineq_def_a`
+显式化。2026-11-06 `fcdjdot-body` 车道真证落地）：四柱拼装——
+①`scriptLAttainsMaxInBallAnnulus` 取 scriptL 全局最大的 annulus packing `W1`；
+②`fnjlbxsCore` 经保范双射把 `W1` 归一化为 `V`（每个点是 ESTD-孤立或 surrounded）；
+④`bijScriptL` 把最大性、`localAnnulusInequalityScriptL` 把 `¬localAnnulus`
+搬到 `V` 上；③`DLWCHEM_full`（消费 `hpa`）给 `V` 的计数 ∈ {13,14,15}。
+ESTD 侧的孤立点由 `XULJEPR_full` 反证排除：`isolatedNodeNormECTC` 给
+`‖v‖ = 2`，ESTD-孤立给「其余点距离 > 2·h0」；ECTC 侧析取支由
+`notSurroundedNodeNormECTC` 给出。 -/
+theorem fcdjdot (hpa : PackIneqDefA)
+    (h : ∃ W : Set V3, Packing W ∧ W ⊆ ballAnnulus ∧ scriptL W > 12) :
+    ∃ V : Set V3, Contravening V := by
+  classical
+  obtain ⟨W0, hW0p, hW0s, hW0gt⟩ := h
+  -- 柱①：scriptL 在 annulus packing 上取到全局最大
+  obtain ⟨W1, hW1p, hW1s, hW1max⟩ := scriptLAttainsMaxInBallAnnulus
+  have hW1gt : 12 < scriptL W1 := lt_of_lt_of_le hW0gt (hW1max W0 hW0p hW0s)
+  -- 柱②：FNJLBXS 归一化（保范双射 + 每点孤立或 surrounded）
+  obtain ⟨V, φ, hbij, hVp, hVs, hnorm, hVestd⟩ := fnjlbxsCore hW1p hW1s
+  -- 柱④：双射保范 ⟹ scriptL 相等；局部不等式 ⟺ scriptL ≤ 12
+  have hW1fin : W1.Finite := packingFiniteOfBallAnnulus hW1p hW1s
+  have hLV : scriptL W1 = scriptL V := bijScriptL hW1fin φ hbij hnorm
+  have hVgt : 12 < scriptL V := by rw [← hLV]; exact hW1gt
+  have hVmax : ∀ U : Set V3, Packing U → U ⊆ ballAnnulus → scriptL U ≤ scriptL V := by
+    intro U hUp hUs
+    rw [← hLV]
+    exact hW1max U hUp hUs
+  have hloc : ¬ localAnnulusInequality V := by
+    intro hli
+    have h12 : scriptL V ≤ 12 := (localAnnulusInequalityScriptL V).mp hli
+    linarith
+  refine ⟨V, hVp, hVs, hVgt, hVmax, ?_, ?_, ?_⟩
+  · -- 柱③：计数柱（消费 pack_ineq_def_a）
+    exact DLWCHEM_full V hVp hpa hVs hloc
+  · -- ESTD 侧：孤立点不存在（否则 XULJEPR 给出 local，与 ¬local 矛盾）
+    intro v hv
+    rcases hVestd v hv with hiso | hsur
+    · exfalso
+      -- ECTC ⊆ ESTD（边长 2 ≤ 2·h0 = 2.52）
+      have hECTCsub : ECTC V ⊆ ESTD V := by
+        intro e he
+        obtain ⟨a, b, rfl, ha, hb, hne, hd⟩ := he
+        exact ⟨a, b, rfl, ha, hb, hne, by rw [hd]; norm_num [ContraFan.two_h0]⟩
+      have hsetC : setOfEdge v V (ECTC V) = ∅ := by
+        refine Set.eq_empty_iff_forall_notMem.mpr fun w hw => ?_
+        simp only [setOfEdge, Set.mem_setOf_eq] at hw
+        have h1 : w ∈ setOfEdge v V (ESTD V) := ⟨hECTCsub hw.1, hw.2⟩
+        rw [hiso] at h1
+        exact h1
+      -- 孤立 ⟹ 落在球面 ‖v‖ = 2
+      have hvn : ‖v‖ = 2 := isolatedNodeNormECTC hVp hVs hVmax hv hsetC
+      -- ESTD-孤立 ⟹ 与其余点距离 > 2·h0
+      have hfar : ∀ u ∈ V, u ≠ v → 2 * h0 ≤ dist u v := by
+        intro u hu huv
+        by_contra hlt
+        have hle : dist u v ≤ 2 * h0 := le_of_lt (not_le.mp hlt)
+        have hmem : u ∈ setOfEdge v V (ESTD V) := by
+          refine ⟨⟨v, u, rfl, hv, hu, Ne.symm huv, ?_⟩, hu⟩
+          rw [dist_comm]
+          exact hle
+        rw [hiso] at hmem
+        exact hmem
+      exact hloc (XULJEPR_full V hVp hVs hpa ⟨v, hv, hvn, hfar⟩)
+    · exact hsur
+  · -- ECTC 侧：非 surrounded ⟹ 落在球面
+    intro v hv
+    by_cases hns : surroundedNode V (ECTC V) v
+    · exact Or.inl hns
+    · exact Or.inr (notSurroundedNodeNormECTC hVp hVs hVmax hv hns)
 
 /-- **CPNKNXN**（flyspeck_devol.hl:135，2026-10-12 A4 填证 lane）：
 packing 可扩为 saturated packing 超集（Zorn：`zorn_subset_nonempty`，链并
