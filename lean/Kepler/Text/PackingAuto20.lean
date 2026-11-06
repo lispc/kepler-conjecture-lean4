@@ -1406,14 +1406,15 @@ theorem DIHX_DIH_Y_lemma (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3) (i : �
 
 
 
-/-- PROBE-ONLY stub of the hub's SOL_SOLID_TRIANGLE (the real proved
-theorem lives in PackingAuto20.lean:265; this probe validates only the
-SOL_SOL_Y_EXPLICIT assembly). -/
-axiom SOL_SOLID_TRIANGLE_probe {a b c : ℝ} (v0 v1 v2 v3 : V3)
+/-- PROBE-ONLY alias of the hub's `SOL_SOLID_TRIANGLE`（真证明在同文件 `:272`）。
+2026-11-06 卫生波：本条原为 `axiom`（**全树唯一一条**），改为一行转发 ——
+公理面清零，名字保留供探针复用。HOL 锚 `TSKAJXY1.hl:111`。 -/
+theorem SOL_SOLID_TRIANGLE_probe {a b c : ℝ} (v0 v1 v2 v3 : V3)
     (hnc : ¬ Coplanar ({v0, v1, v2, v3} : Set V3))
     (ha : a = dihV v0 v1 v2 v3) (hb : b = dihV v0 v2 v3 v1)
     (hc : c = dihV v0 v3 v1 v2) :
-    sol v0 (convexHull ℝ ({v0, v1, v2, v3} : Set V3)) = a + b + c - Real.pi
+    sol v0 (convexHull ℝ ({v0, v1, v2, v3} : Set V3)) = a + b + c - Real.pi :=
+  SOL_SOLID_TRIANGLE v0 v1 v2 v3 hnc ha hb hc
 
 /-- HOL `SOL_SOL_Y_EXPLICIT` (TSKAJXY1.hl:2995): the four vertex solid
 angles of a 4-cell are the `sol_y` values of the edge six-tuple.
