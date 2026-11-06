@@ -2,13 +2,24 @@
   Kepler/Assembly/GoodListAll — 全 archive good_list 组合定理（P6-C，机器生成）。
 
   生成器：`lean/scripts/gen_goodlist_shards.py`；请勿手改。
-  本模块纯内核：把各分片 `native_decide` 定理经 `all_of_take_drop`
+  本模块纯内核：把各分片（native 或 kernel 切片）定理经 `all_of_take_drop`
   串成逐类总定理，最终 `goodListArchiveAll : AllGoodList tameArchiveLists`
   （HOL `ALL good_list tame_archive_lists`，the_kepler_conjecture.hl 装配的 good_list 支）。
 -/
-import Kepler.Assembly.GoodListShardTri00
-import Kepler.Assembly.GoodListShardQuad00
-import Kepler.Assembly.GoodListShardQuad01
+import Kepler.Assembly.GoodListShardTriS00
+import Kepler.Assembly.GoodListShardQuadS00
+import Kepler.Assembly.GoodListShardQuadS01
+import Kepler.Assembly.GoodListShardQuadS02
+import Kepler.Assembly.GoodListShardQuadS03
+import Kepler.Assembly.GoodListShardQuadS04
+import Kepler.Assembly.GoodListShardQuadS05
+import Kepler.Assembly.GoodListShardQuadS06
+import Kepler.Assembly.GoodListShardQuadS07
+import Kepler.Assembly.GoodListShardQuadS08
+import Kepler.Assembly.GoodListShardQuadS09
+import Kepler.Assembly.GoodListShardQuadS10
+import Kepler.Assembly.GoodListShardQuadS11
+import Kepler.Assembly.GoodListShardQuadS12
 import Kepler.Assembly.GoodListShardPent00
 import Kepler.Assembly.GoodListShardPent01
 import Kepler.Assembly.GoodListShardPent02
@@ -37,13 +48,24 @@ namespace Kepler.Assembly
 set_option maxRecDepth 1000000 in
 /-- Tri 类闭合：9 图，1 分片。 -/
 theorem allGoodTri : TriData.all goodListB = true :=
-  goodListTri00
+  goodListTriS00
 
 set_option maxRecDepth 1000000 in
-/-- Quad 类闭合：1253 图，2 分片。 -/
+/-- Quad 类闭合：1253 图，13 分片。 -/
 theorem allGoodQuad : QuadData.all goodListB = true :=
-  all_of_take_drop goodListQuad00
-      (goodListQuad01)
+  all_of_take_drop goodListQuadS00
+      (all_of_take_drop goodListQuadS01
+      (all_of_take_drop goodListQuadS02
+      (all_of_take_drop goodListQuadS03
+      (all_of_take_drop goodListQuadS04
+      (all_of_take_drop goodListQuadS05
+      (all_of_take_drop goodListQuadS06
+      (all_of_take_drop goodListQuadS07
+      (all_of_take_drop goodListQuadS08
+      (all_of_take_drop goodListQuadS09
+      (all_of_take_drop goodListQuadS10
+      (all_of_take_drop goodListQuadS11
+      (goodListQuadS12))))))))))))
 
 set_option maxRecDepth 1000000 in
 /-- Pent 类闭合：16080 图，17 分片。 -/

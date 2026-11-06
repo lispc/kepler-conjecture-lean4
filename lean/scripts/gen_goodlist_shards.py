@@ -5,7 +5,8 @@ Reads the four archive data modules (`Kepler/Graphs/ArchiveData/{Tri,Quad,Pent,H
 counts the fgraphs in each `{Cls}Data` list, and emits:
 
 - `lean/Kepler/Assembly/GoodListShard{Cls}{ii}.lean` — one `native_decide`
-  theorem per slice of `SLICE` graphs:
+  theorem per slice of `SLICE` graphs (kernel-resharded classes, see
+  `KERNEL_RESHARD`, use `GoodListShard{Cls}S{ii}.lean` + `decide +kernel`):
       theorem goodList{Cls}{ii} : (({Cls}Data.drop k).take m).all goodListB = true
   (last slice: `{Cls}Data.drop k`, single-slice class: `{Cls}Data` itself);
 - `lean/Kepler/Assembly/GoodListAll.lean` — kernel-only combiner chaining the
@@ -27,6 +28,22 @@ ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(
 SLICE = int(sys.argv[2]) if len(sys.argv) > 2 else 1000
 
 CLASSES = ["Tri", "Quad", "Pent", "Hex"]
+
+# 2026-11-06 goodlist-reshard-pilot: per-class **kernel** resharding.
+# A class listed here is emitted at `KERNEL_RESHARD[cls]` graphs per shard with
+# `decide +kernel` (pure kernel, no `native_decide`) instead of `native_decide`.
+# Files/theorems get an `S` infix (`GoodListShardQuadS03` / `goodListQuadS03`)
+# so the kernel granularity can never silently shadow a native shard name.
+# Measured: 100 graphs/shard => 20-22 s wall, ~7.5 GB peak RSS (2026-11-06,
+# goodlist-reshard-pilot).  Adding a class here is a pure施工 change; the
+# emitted `GoodListAll.lean` re-chains it automatically.
+KERNEL_RESHARD = {"Tri": 100, "Quad": 100}
+def slice_size(cls):
+    return KERNEL_RESHARD.get(cls, SLICE)
+
+
+def is_kernel(cls):
+    return cls in KERNEL_RESHARD
 DATA_DIR = os.path.join(ROOT, "lean", "Kepler", "Graphs", "ArchiveData")
 OUT_DIR = os.path.join(ROOT, "lean", "Kepler", "Assembly")
 
@@ -64,10 +81,9 @@ def count_graphs(cls):
 SHARD_HEADER = """/-
   Kepler/Assembly/{mod} — good_list 量产分片（P6-C，机器生成）。
 
-  生成器：`lean/scripts/gen_goodlist_shards.py`（slice={slice}）；请勿手改，
+  生成器：`lean/scripts/gen_goodlist_shards.py`（slice={slice}{mode}）；请勿手改，
   重新生成会覆盖。覆盖 {cls}Data 第 [{lo}, {hi}) 图（全类 {total} 图）。
-  信任模型：native_decide（DECISIONS.md 2026-08-10 scoped exception，
-  2026-09-19 扩展至 Kepler.Assembly.GoodList*）。
+  信任模型：{trust}
 -/
 import Kepler.Assembly.GoodListDefs
 
@@ -75,9 +91,9 @@ open Kepler.Graphs
 
 namespace Kepler.Assembly
 
-/-- 分片闭合：`{expr}` 上 `goodListB` 全真。 -/
+{options}/-- 分片闭合：`{expr}` 上 `goodListB` 全真。 -/
 theorem {thm} : ({expr}).all goodListB = true := by
-  native_decide
+  {tactic}
 
 #print axioms {thm}
 
@@ -86,30 +102,47 @@ end Kepler.Assembly
 
 
 def shard_mod(cls, i):
-    return f"GoodListShard{cls}{i:02d}"
+    infix = "S" if is_kernel(cls) else ""
+    return f"GoodListShard{cls}{infix}{i:02d}"
 
 
 def shard_thm(cls, i):
-    return f"goodList{cls}{i:02d}"
+    infix = "S" if is_kernel(cls) else ""
+    return f"goodList{cls}{infix}{i:02d}"
 
 
 def slice_expr(cls, i, k):
     """List expression covered by slice i of k (each SLICE graphs)."""
     if k == 1:
         return f"{cls}Data"
-    lo = i * SLICE
+    sl = slice_size(cls)
+    lo = i * sl
     if i == k - 1:
         return f"{cls}Data.drop {lo}"
     base = f"{cls}Data" if lo == 0 else f"({cls}Data.drop {lo})"
-    return f"{base}.take {SLICE}"
+    return f"{base}.take {sl}"
 
 
 def gen_shard(cls, i, k, total):
+    sl = slice_size(cls)
     expr = slice_expr(cls, i, k)
-    lo, hi = i * SLICE, min((i + 1) * SLICE, total)
-    body = SHARD_HEADER.format(mod=shard_mod(cls, i), slice=SLICE, cls=cls,
+    lo, hi = i * sl, min((i + 1) * sl, total)
+    if is_kernel(cls):
+        mode = "，kernel 重切"
+        trust = f"kernel `decide +kernel`（无 native_decide；{sl} 图/片）"
+        tactic = "decide +kernel"
+        options = "\n".join("set_option " + o + " in"
+                            for o in ("maxRecDepth 1000000", "maxHeartbeats 0")) + "\n"
+    else:
+        mode = ""
+        trust = ("native_decide（DECISIONS.md 2026-08-10 scoped exception，\n"
+                 "  2026-09-19 扩展至 Kepler.Assembly.GoodList*）。")
+        tactic = "native_decide"
+        options = ""
+    body = SHARD_HEADER.format(mod=shard_mod(cls, i), slice=sl, cls=cls,
                                lo=lo, hi=hi, total=total, expr=expr,
-                               thm=shard_thm(cls, i))
+                               thm=shard_thm(cls, i), mode=mode, trust=trust,
+                               tactic=tactic, options=options)
     path = os.path.join(OUT_DIR, f"{shard_mod(cls, i)}.lean")
     with open(path, "w", encoding="utf-8") as f:
         f.write(body)
@@ -127,7 +160,7 @@ def class_total_term(cls, k):
 
 
 def gen_combiner(counts):
-    ks = {c: max(1, -(-counts[c] // SLICE)) for c in CLASSES}
+    ks = {c: max(1, -(-counts[c] // slice_size(c))) for c in CLASSES}
     imports = "\n".join(
         f"import Kepler.Assembly.{shard_mod(c, i)}"
         for c in CLASSES for i in range(ks[c]))
@@ -136,7 +169,7 @@ def gen_combiner(counts):
              "（P6-C，机器生成）。",
              "",
              "  生成器：`lean/scripts/gen_goodlist_shards.py`；请勿手改。",
-             "  本模块纯内核：把各分片 `native_decide` 定理经 `all_of_take_drop`",
+             "  本模块纯内核：把各分片（native 或 kernel 切片）定理经 `all_of_take_drop`",
              "  串成逐类总定理，最终 `goodListArchiveAll : AllGoodList "
              "tameArchiveLists`",
              "  （HOL `ALL good_list tame_archive_lists`，"
@@ -178,14 +211,15 @@ def main():
     total = sum(counts.values())
     nshards = 0
     for c in CLASSES:
-        k = max(1, -(-counts[c] // SLICE))
+        k = max(1, -(-counts[c] // slice_size(c)))
         for i in range(k):
             gen_shard(c, i, k, counts[c])
         nshards += k
     gen_combiner(counts)
     print(f"graphs: " + " ".join(f"{c}={counts[c]}" for c in CLASSES) +
           f" total={total}")
-    print(f"slice={SLICE} shards={nshards} -> {OUT_DIR}")
+    print(f"slice=" + " ".join(f"{c}={slice_size(c)}" for c in CLASSES) +
+          f" shards={nshards} -> {OUT_DIR}")
 
 
 if __name__ == "__main__":
