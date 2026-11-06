@@ -1,18 +1,18 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2087833
-K_SORRIED 80
-K_AXIOM 624
-K_MODULES 4247
-K_UNIVERSE 2100044
-COVERAGE 2087833 / 2100044
-K_UNIVERSE_XCASES 38064
-K_REACH_XCASES 27410
-K_SORRIED_XCASES 80
-K_AXIOM_XCASES 624
-TOTAL_VALUE_DECLS 2087127
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2087127
-SORRIED 80
-AXIOMS 624
+K_REACH 2087854
+K_SORRIED 79
+K_AXIOM 621
+K_MODULES 4258
+K_UNIVERSE 2100065
+COVERAGE 2087854 / 2100065
+K_UNIVERSE_XCASES 38085
+K_REACH_XCASES 27431
+K_SORRIED_XCASES 79
+K_AXIOM_XCASES 621
+TOTAL_VALUE_DECLS 2087151
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2087151
+SORRIED 79
+AXIOMS 621
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.jcajydu	parent=Kepler.Assembly.textCapstone
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
@@ -93,7 +93,6 @@ Kepler.Text.PackingAuto25	Kepler.Text.ox3q1hP25	parent=Kepler.Assembly.textCapst
 Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankCriticalEdge	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_ox3q1h_merge	parent=Kepler.Text.pkrmQuarter
 Kepler.Text.LocalConcl	_private.Kepler.Text.LocalConcl.0.Kepler.Text.mnt11_anchor	parent=Kepler.Text.TFITSKC_discharged
-Kepler.Text.LocalConcl	_private.Kepler.Text.LocalConcl.0.Kepler.Text.p21_anchor	parent=Kepler.Text.CUXVZOZ_discharged
 --- AXIOMS ---
 Kepler.Assembly.GoodListShardHex00	Kepler.Assembly.goodListHex00._native.native_decide.ax_1_1
 Kepler.Assembly.GoodListShardHex01	Kepler.Assembly.goodListHex01._native.native_decide.ax_1_1
@@ -115,9 +114,6 @@ Kepler.Assembly.GoodListShardPent13	Kepler.Assembly.goodListPent13._native.nativ
 Kepler.Assembly.GoodListShardPent14	Kepler.Assembly.goodListPent14._native.native_decide.ax_1_1
 Kepler.Assembly.GoodListShardPent15	Kepler.Assembly.goodListPent15._native.native_decide.ax_1_1
 Kepler.Assembly.GoodListShardPent16	Kepler.Assembly.goodListPent16._native.native_decide.ax_1_1
-Kepler.Assembly.GoodListShardQuad00	Kepler.Assembly.goodListQuad00._native.native_decide.ax_1_1
-Kepler.Assembly.GoodListShardQuad01	Kepler.Assembly.goodListQuad01._native.native_decide.ax_1_1
-Kepler.Assembly.GoodListShardTri00	Kepler.Assembly.goodListTri00._native.native_decide.ax_1_1
 Kepler.Graphs.CertHex	Kepler.Graphs.hex_archive_pre._native.native_decide.ax_1_1
 Kepler.Graphs.CertShards.Hex.K001	Kepler.Graphs.hex_shard_100._native.native_decide.ax_1_1
 Kepler.Graphs.CertShards.Hex.K010	Kepler.Graphs.hex_shard_1000._native.native_decide.ax_1_1
@@ -3826,10 +3822,10 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 311	Kepler.Interval.Cases.CFWGKMBZ.Shard577
 310	Kepler.Interval.Cases.CFWGKMBZ.Shard541
 309	Kepler.Interval.Cases.CFWGKMBZ.Shard537
-309	Kepler.Text.LocalConcl
 308	Kepler.Interval.Cases.CFWGKMBZ.Shard234
 308	Kepler.Interval.Cases.CFWGKMBZ.Shard41
 308	Kepler.Interval.Cases.CFWGKMBZ.Shard439
+308	Kepler.Text.LocalConcl
 307	Kepler.Interval.Cases.CFWGKMBZ.Shard413
 306	Kepler.Interval.Cases.CFWGKMBZ.Shard255
 306	Kepler.Interval.Cases.CFWGKMBZ.Shard80
@@ -4949,9 +4945,20 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1
 2	Kepler.Assembly.GoodListShardPent14
 2	Kepler.Assembly.GoodListShardPent15
 2	Kepler.Assembly.GoodListShardPent16
-2	Kepler.Assembly.GoodListShardQuad00
-2	Kepler.Assembly.GoodListShardQuad01
-2	Kepler.Assembly.GoodListShardTri00
+2	Kepler.Assembly.GoodListShardQuadS00
+2	Kepler.Assembly.GoodListShardQuadS01
+2	Kepler.Assembly.GoodListShardQuadS02
+2	Kepler.Assembly.GoodListShardQuadS03
+2	Kepler.Assembly.GoodListShardQuadS04
+2	Kepler.Assembly.GoodListShardQuadS05
+2	Kepler.Assembly.GoodListShardQuadS06
+2	Kepler.Assembly.GoodListShardQuadS07
+2	Kepler.Assembly.GoodListShardQuadS08
+2	Kepler.Assembly.GoodListShardQuadS09
+2	Kepler.Assembly.GoodListShardQuadS10
+2	Kepler.Assembly.GoodListShardQuadS11
+2	Kepler.Assembly.GoodListShardQuadS12
+2	Kepler.Assembly.GoodListShardTriS00
 2	Kepler.Graphs.Rotation
 2	Kepler.Interval.Cases.CFWGKMBZ.Base
 2	Kepler.Text.TameCorrG4b
