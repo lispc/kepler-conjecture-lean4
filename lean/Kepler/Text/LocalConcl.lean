@@ -32,11 +32,14 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   still contains a bare `sorry` -- so that the `sorryAx` axiom flows along the
   proof term and the main theorem's reachable debt graph really expands.
   Wires are marked WIRE, non-bridgeable shapes stay as explicit `sorry`
-  holds marked HOLD (with the precise reason).  Anchors: the twins that
-  consume an opaque terminal-bank Prop (`main_nonlinear_terminal_v11`,
-  `mainNonlinearTerminalV11_p21`) are wired through the injected skeleton
-  anchors `mnt11_anchor` / `p21_anchor` below -- that injection is the
+  holds marked HOLD (with the precise reason).  Anchor: twins that consume the
+  opaque terminal-bank Prop `main_nonlinear_terminal_v11` are wired through the
+  injected skeleton anchor `mnt11_anchor` below -- that injection is the
   corpus's own interface convention, not a shape bridge.
+  (ERRATA 2026-11-06: the p21 twins used to need a second anchor
+  `p21_anchor : mainNonlinearTerminalV11_p21`; after the `p21-anchor` DEF-FIX
+  charter that Prop is *defined* as `main_nonlinear_terminal_v11`, so the wires
+  pass their own `_hmn` and the anchor was deleted.  Cone sorry −1.)
 
     WIRE (real proof term, debt = twin's axioms + injected anchors): 69
       (body census = the 16 classic discharges + 53 assembly wires)
@@ -315,8 +318,10 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   (d) Twin proved (code-complete) but shape delta is not bridgeable.
       ASSEMBLY WAVE 2026-09-21: 5 remain HELD (OEHDBEN, TBRMXRZ1, VPWSHTO,
       XWNHLMD, QKNVMLB3); CUXVZOZ/CJBDXXN left this class -- their p21
-      twins match the registry concls modulo the terminal-bank anchor, so
-      they are WIRED through the injected `p21_anchor` (see the wave note).
+      twins match the registry concls modulo the terminal-bank hypothesis, so
+      they are WIRED through the wire's own `_hmn` (see the wave note).
+      [2026-11-06: the former `p21_anchor` sorry was deleted -- see §anchor
+      ERRATA at the top of this file.]
       [2026-11-01 SF-87: QKNVMLB3 left this class -- the registry re-based
       onto the corpus two-equation form and WIRED through the proved
       `QKNVMLB3_p35` (its `tausplit_le4` assembly closed the former
@@ -351,12 +356,13 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
         registry hypotheses.
       CUXVZOZ / CJBDXXN -- the p21 twins are PROVED (modulo the still
         sorried engine `general_482_deformation_p21`) and match the
-        registry concls modulo the anchor: they take
+        registry concls modulo the terminal-bank hypothesis: they take
         `mainNonlinearTerminalV11_p21` where the registry concl carries
-        `main_nonlinear_terminal_v11`; no bridge exists between the two
-        anchors, so the wave injects `p21_anchor` (a documented skeleton
-        sorry) and wires through the twins.  Former (d) blocker voided
-        2026-09-21.
+        `main_nonlinear_terminal_v11`.  [2026-11-06: the `p21-anchor` DEF-FIX
+        charter made that Prop *definitionally* the registry's, so no bridge
+        is needed and the former `p21_anchor` skeleton sorry is deleted --
+        the wires pass their own `_hmn`.  Cone sorry −1.]  Former (d) blocker
+        voided 2026-09-21.
       QKNVMLB3 -- QKNVMLB3_p35 is now PROVED but only by case-splitting
         onto the still-sorried `QKNVMLB3_Eq4/LE4_p35` branches, and its
         realisation arguments use the index convention
@@ -1987,11 +1993,12 @@ through this injected anchor -- one visible debt component covering the whole
 pending bank, per the corpus's `DISCHARGES` convention. -/
 private theorem mnt11_anchor : main_nonlinear_terminal_v11 := sorry
 
-/-- Skeleton anchor for the LA21 terminal bank: `mainNonlinearTerminalV11_p21`
-is the p21 lane's own `∀ y : Fin 6 → ℝ, ...` inequality bank (LA21:139); no
-bridge from `main_nonlinear_terminal_v11` exists, so the CUXVZOZ/CJBDXXN
-wires inject this documented skeleton anchor instead. -/
-private theorem p21_anchor : mainNonlinearTerminalV11_p21 := sorry
+/- 2026-11-06: the former `p21_anchor : mainNonlinearTerminalV11_p21 := sorry`
+   is gone.  After the `p21-anchor` DEF-FIX charter, `LocalAuto21` defines
+   `mainNonlinearTerminalV11_p21 : Prop := main_nonlinear_terminal_v11`, so the
+   wires' own `_hmn : main_nonlinear_terminal_v11` **is** the twin's hypothesis
+   (definitional unfolding, no bridge needed).  `CUXVZOZ_discharged` and
+   `CJBDXXN_discharged` below now pass `_hmn` directly. -/
 
 /-! ## Discharges -/
 
@@ -2169,8 +2176,9 @@ theorem PQCSXWG2_discharged : ∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ),
 
 Each entry applies its upstream twin directly; a twin that is still sorried
 passes its `sorryAx` along the proof term (the debt graph), which is the
-point of the assembly mode.  Anchors are injected via `mnt11_anchor` /
-`p21_anchor` where the twin's interface consumes a terminal bank. -/
+point of the assembly mode.  The anchor `mnt11_anchor` is injected where the
+twin's interface consumes a terminal bank.  (2026-11-06: `p21_anchor` is gone --
+see the §anchor ERRATA at the top of this file.) -/
 
 /-- WIRE `LocalAuto1.XWITCCN_concl` <- LA36 master `XWITCCN` (verbatim twin;
 still sorried — debt flows). -/
@@ -4716,8 +4724,9 @@ theorem MIQMCSN_discharged :
   MIQMCSN_p32 mnt11_anchor
 
 /-- WIRE `LocalAuto1.CUXVZOZ_concl` <- PROVED `CUXVZOZ_p21` (hypotheses
-verbatim; the twin's `mainNonlinearTerminalV11_p21` anchor is injected as
-`p21_anchor` — no bridge from `mnt11` exists yet).  The twin's engine
+verbatim).  The twin's hypothesis `mainNonlinearTerminalV11_p21` **is**
+`main_nonlinear_terminal_v11` (LocalAuto21 alias, `p21-anchor` DEF-FIX), so the
+wire's own `_hmn` is passed straight through — no anchor.  The twin's engine
 `general_482_deformation_p21` is still sorried — debt flows. -/
 theorem CUXVZOZ_discharged : main_nonlinear_terminal_v11 →
     ∀ (s : ScsV39) (FF : Set (V3 × V3)) (k p1 : ℕ) (v : ℕ → V3),
@@ -4743,12 +4752,12 @@ theorem CUXVZOZ_discharged : main_nonlinear_terminal_v11 →
   have hd' : 3 ≤ dist (v (p1 + (k - 1))) (v (p1 + 1)) := by rw [hkm]; exact hd
   have h2' : 2 ≤ dist (v (p1 + (k - 1))) (v p1) := by rw [hkm]; exact h2
   have hdc' : dist (v (p1 + (k - 1))) (v p1) ≤ cstab := by rw [hkm]; exact hdc
-  refine CUXVZOZ_p21 p21_anchor s FF k p1 v hFF hs hk hk3 hMMs hbasic hgen
+  refine CUXVZOZ_p21 _hmn s FF k p1 v hFF hs hk hk3 hMMs hbasic hgen
     hd' (fun i j hdiag hps => ha i j ⟨hdiag, by rw [← hkm]; exact hps⟩) hb
     hang hcase ha12 hb12 h2' hdc'
 
 /-- WIRE `LocalAuto1.CJBDXXN_concl` <- PROVED `CJBDXXN_p21` (mirror of
-CUXVZOZ, same `p21_anchor` injection). -/
+CUXVZOZ, same straight-through `_hmn`). -/
 theorem CJBDXXN_discharged : main_nonlinear_terminal_v11 →
     ∀ (s : ScsV39) (FF : Set (V3 × V3)) (k p1 : ℕ) (v : ℕ → V3),
       FF = Set.range (fun i => (v i, v (i + 1))) →
@@ -4776,7 +4785,7 @@ theorem CJBDXXN_discharged : main_nonlinear_terminal_v11 →
   have ha12' : s.a p1 (p1 + (k - 1)) = 2 := by rw [hkm]; exact ha12
   have hb12' : s.b p1 (p1 + (k - 1)) ≤ 2 * h0 := by rw [hkm]; exact hb12
   have hfin : dist (v p1) (v (p1 + (k - 1))) = 2 :=
-    CJBDXXN_p21 p21_anchor s FF k p1 v hFF hs hk hk3 hMMs hbasic hgen hd'
+    CJBDXXN_p21 _hmn s FF k p1 v hFF hs hk hk3 hMMs hbasic hgen hd'
       (fun i j hdiag hps => ha i j ⟨hdiag, by rw [← hkm]; exact hps⟩) hb hang
       hcase' ha12' hb12' h2 hdc
   rw [← hkm]
