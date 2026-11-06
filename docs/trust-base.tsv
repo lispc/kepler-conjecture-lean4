@@ -2,27 +2,6 @@
 # 生成源：docs/e2e-reachability-map.tsv 的 --- AXIOMS --- 段 + `#print` 陈述。
 # 口径：AGENTS.md §1（用户 2026-11-06 裁决：不比 Flyspeck/Isabelle 更差）。
 # 列：axiom | module | shape | next_tame_p | range_start | range_len | fuel | data | slice_start | slice_len | seed | stmt_sha256[:16]
-Kepler.Assembly.goodListHex00._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardHex00	goodlist-slice					Hex	0	1000		693cc0cff5609fe9
-Kepler.Assembly.goodListHex01._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardHex01	goodlist-slice					Hex	1000	1000		c11b484afe729fde
-Kepler.Assembly.goodListHex02._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardHex02	goodlist-slice					Hex	2000			8492ae4755c26272
-Kepler.Assembly.goodListPent00._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent00	goodlist-slice					Pent	0	1000		402494a1313830f0
-Kepler.Assembly.goodListPent01._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent01	goodlist-slice					Pent	1000	1000		5873dd40629b4cb0
-Kepler.Assembly.goodListPent02._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent02	goodlist-slice					Pent	2000	1000		b45126f8be49d603
-Kepler.Assembly.goodListPent03._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent03	goodlist-slice					Pent	3000	1000		32e3cbfd437c67ea
-Kepler.Assembly.goodListPent04._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent04	goodlist-slice					Pent	4000	1000		24adf68af6448486
-Kepler.Assembly.goodListPent05._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent05	goodlist-slice					Pent	5000	1000		8b478ae36087b0ad
-Kepler.Assembly.goodListPent06._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent06	goodlist-slice					Pent	6000	1000		59ef203f49d9a4fe
-Kepler.Assembly.goodListPent07._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent07	goodlist-slice					Pent	7000	1000		afd5208286f0f0b5
-Kepler.Assembly.goodListPent08._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent08	goodlist-slice					Pent	8000	1000		b77d814ef6e70c7e
-Kepler.Assembly.goodListPent09._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent09	goodlist-slice					Pent	9000	1000		102a693b160e8108
-Kepler.Assembly.goodListPent10._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent10	goodlist-slice					Pent	10000	1000		05fbfbe52defa341
-Kepler.Assembly.goodListPent11._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent11	goodlist-slice					Pent	11000	1000		405b873e2b723973
-Kepler.Assembly.goodListPent12._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent12	goodlist-slice					Pent	12000	1000		f42f6b09e27411cf
-Kepler.Assembly.goodListPent13._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent13	goodlist-slice					Pent	13000	1000		93fb73982be458d8
-Kepler.Assembly.goodListPent14._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent14	goodlist-slice					Pent	14000	1000		f62c94088c2771c5
-Kepler.Assembly.goodListPent15._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent15	goodlist-slice					Pent	15000	1000		20ba8e17ccff8014
-Kepler.Assembly.goodListPent16._native.native_decide.ax_1_1	Kepler.Assembly.GoodListShardPent16	goodlist-slice					Pent	16000			0ac0172e84628787
-Kepler.Graphs.hex_archive_pre._native.native_decide.ax_1_1	Kepler.Graphs.CertHex	archive-pre									c5d349eabf67c8a6
 Kepler.Graphs.hex_shard_100._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K001	shard-range	3	100	100	4000000	Hex				7b1eb827e40717d6
 Kepler.Graphs.hex_shard_1000._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K010	shard-range	3	1000	100	4000000	Hex				45c825c724286faf
 Kepler.Graphs.hex_shard_1100._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K011	shard-range	3	1100	100	4000000	Hex				27496fb3091ae548
@@ -89,8 +68,6 @@ Kepler.Graphs.hex_shard_7500._native.native_decide.ax_1_1	Kepler.Graphs.CertShar
 Kepler.Graphs.hex_shard_7600._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K076	shard-range	3	7600	84	4000000	Hex				60f0771e0fde46f3
 Kepler.Graphs.hex_shard_800._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K008	shard-range	3	800	100	4000000	Hex				342480f0016e8cb5
 Kepler.Graphs.hex_shard_900._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K009	shard-range	3	900	100	4000000	Hex				4ec35553a04d31ae
-Kepler.Graphs.hex_top_bounds._native.native_decide.ax_1_1	Kepler.Graphs.CertHex	top-bounds									f0e7d7cf0022b04c
-Kepler.Graphs.hex_top_no_finals._native.native_decide.ax_1_1	Kepler.Graphs.CertHex	top-no-finals									be5b760d95993834
 Kepler.Graphs.hex_top_replay._native.native_decide.ax_1_1	Kepler.Graphs.CertHex	top-replay	3								5557d449b8fab9da
 Kepler.Graphs.hexr2_shard_0._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.HexR2.K000	shard-range	3	0	1	400000000	Hex				7e3529a5e06c14ab
 Kepler.Graphs.hexr2_shard_1._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.HexR2.K001	shard-range	3	1	1	400000000	Hex				2b8ff5952c2db897
@@ -316,7 +293,6 @@ Kepler.Graphs.hexr_shard_80._native.native_decide.ax_1_1	Kepler.Graphs.CertShard
 Kepler.Graphs.hexr_shard_85._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.HexR.K017	shard-range	3	85	5	50000000	Hex				97c0fafb2b00672d
 Kepler.Graphs.hexr_shard_90._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.HexR.K018	shard-range	3	90	5	50000000	Hex				d108264afc88eea6
 Kepler.Graphs.hexr_shard_95._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.HexR.K019	shard-range	3	95	5	50000000	Hex				0ccd4b8938e79980
-Kepler.Graphs.pent_archive_pre._native.native_decide.ax_1_1	Kepler.Graphs.CertPent	archive-pre									a9957cd7a86ecd05
 Kepler.Graphs.pent_shard_1000._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K020	shard-range	2	1000	50	50000000	Pent				bbdf0954f375a0ce
 Kepler.Graphs.pent_shard_1050._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K021	shard-range	2	1050	50	50000000	Pent				8bfba74f4c00eea7
 Kepler.Graphs.pent_shard_1100._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K022	shard-range	2	1100	50	50000000	Pent				877d6f613a7ef4f8
@@ -459,8 +435,6 @@ Kepler.Graphs.pent_shard_800._native.native_decide.ax_1_1	Kepler.Graphs.CertShar
 Kepler.Graphs.pent_shard_850._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K017	shard-range	2	850	50	50000000	Pent				c3afc77cc5a1d56e
 Kepler.Graphs.pent_shard_900._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K018	shard-range	2	900	50	50000000	Pent				b1861fc13a39c779
 Kepler.Graphs.pent_shard_950._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K019	shard-range	2	950	50	50000000	Pent				65d6c83919e78601
-Kepler.Graphs.pent_top_bounds._native.native_decide.ax_1_1	Kepler.Graphs.CertPent	top-bounds									26be0b282b357855
-Kepler.Graphs.pent_top_no_finals._native.native_decide.ax_1_1	Kepler.Graphs.CertPent	top-no-finals									6261d0123756dafe
 Kepler.Graphs.pent_top_replay._native.native_decide.ax_1_1	Kepler.Graphs.CertPent	top-replay	2								1551a92c2a5d6284
 Kepler.Graphs.pentr2_shard_120._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.PentR2.K010	shard-range	2	120	1	300000000	Pent				0f4ab577be2d3ba2
 Kepler.Graphs.pentr2_shard_121._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.PentR2.K011	shard-range	2	121	1	300000000	Pent				cfab47ab51952a62
@@ -518,7 +492,6 @@ Kepler.Graphs.pentr_shard_50._native.native_decide.ax_1_1	Kepler.Graphs.CertShar
 Kepler.Graphs.pentr_shard_60._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.PentR.K006	shard-range	2	60	10	50000000	Pent				cffb27d17a845f19
 Kepler.Graphs.pentr_shard_80._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.PentR.K008	shard-range	2	80	10	50000000	Pent				0e94faa9cf56d2e6
 Kepler.Graphs.pentr_shard_90._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.PentR.K009	shard-range	2	90	10	50000000	Pent				6f7f255cd3c19841
-Kepler.Graphs.quad_archive_pre._native.native_decide.ax_1_1	Kepler.Graphs.CertQuad	archive-pre									28360aaac9e62031
 Kepler.Graphs.quad_shard_1000._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Quad.K010	shard-range	1	1000	100	4000000	Quad				cd603c5468dcf8cb
 Kepler.Graphs.quad_shard_1100._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Quad.K011	shard-range	1	1100	100	4000000	Quad				b716cb5c4257330f
 Kepler.Graphs.quad_shard_1200._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Quad.K012	shard-range	1	1200	100	4000000	Quad				4a303f722df0a366
@@ -531,9 +504,6 @@ Kepler.Graphs.quad_shard_600._native.native_decide.ax_1_1	Kepler.Graphs.CertShar
 Kepler.Graphs.quad_shard_700._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Quad.K007	shard-range	1	700	100	4000000	Quad				4c65aa09de3007be
 Kepler.Graphs.quad_shard_800._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Quad.K008	shard-range	1	800	100	4000000	Quad				8708fa737d8ee351
 Kepler.Graphs.quad_shard_900._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Quad.K009	shard-range	1	900	100	4000000	Quad				c94e8682d64bc103
-Kepler.Graphs.quad_top_bounds._native.native_decide.ax_1_1	Kepler.Graphs.CertQuad	top-bounds									3eae384351abeac3
-Kepler.Graphs.quad_top_no_finals._native.native_decide.ax_1_1	Kepler.Graphs.CertQuad	top-no-finals									e8319424b9405bdc
-Kepler.Graphs.quad_top_replay._native.native_decide.ax_1_1	Kepler.Graphs.CertQuad	top-replay	1								99f6b21754d85508
 Kepler.Graphs.quadr_shard_0._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.QuadR.K000	shard-range	1	0	5	50000000	Quad				f6242a67548dd0c5
 Kepler.Graphs.quadr_shard_10._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.QuadR.K002	shard-range	1	10	5	50000000	Quad				64a758a64e29b04a
 Kepler.Graphs.quadr_shard_100._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.QuadR.K020	shard-range	1	100	5	50000000	Quad				8b8e686270075a6c
@@ -614,12 +584,8 @@ Kepler.Graphs.quadr_shard_80._native.native_decide.ax_1_1	Kepler.Graphs.CertShar
 Kepler.Graphs.quadr_shard_85._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.QuadR.K017	shard-range	1	85	5	50000000	Quad				c844f379dfc1b466
 Kepler.Graphs.quadr_shard_90._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.QuadR.K018	shard-range	1	90	5	50000000	Quad				c4fc4d0894b0f8c8
 Kepler.Graphs.quadr_shard_95._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.QuadR.K019	shard-range	1	95	5	50000000	Quad				7c57d02834fdd447
-Kepler.Graphs.tri_archive_pre._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	archive-pre									c7c90c3b0cd34148
 Kepler.Graphs.tri_shard_0._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	tri-single-seed	0			500000	Tri			0	5933a045db4bb65c
 Kepler.Graphs.tri_shard_1._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	tri-single-seed	0			500000	Tri			1	c98d06817ce473ca
 Kepler.Graphs.tri_shard_2._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	tri-single-seed	0			500000	Tri			2	48cb1e26d8384e93
 Kepler.Graphs.tri_shard_3._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	tri-single-seed	0			500000	Tri			3	8da643aa10637ac3
 Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	tri-single-seed	0			500000	Tri			4	f34377c54e18b49d
-Kepler.Graphs.tri_top_bounds._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	top-bounds									be798b1c57e8c848
-Kepler.Graphs.tri_top_no_finals._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	top-no-finals									47d2acaa7bd5eeaf
-Kepler.Graphs.tri_top_replay._native.native_decide.ax_1_1	Kepler.Graphs.CertTri	top-replay	0								0fb9bb44fc61d2b8

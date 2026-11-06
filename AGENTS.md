@@ -8,23 +8,23 @@
 - 终局（**用户 2026-11-06 裁决**）：**不比 Flyspeck/Isabelle 更差**，不是完美标准三。
   验收式：`#print axioms Kepler.the_kepler_conjecture_e2e`（`lean/Kepler/Final.lean:22`）
   = `[propext, Classical.choice, Quot.sound]` ∪ **约 585 条地面 `native_decide` 公理**，且
-  1. **零 `sorryAx`**（锥内 79 条 sorry 是唯一还算"债"的东西）；
+  1. **零 `sorryAx`**（锥内 78 条 sorry 是唯一还算"债"的东西）；
   2. 每条公理的陈述是**封闭可判定的地面事实**（无自由变量、无对无限类型的量词），
      进 manifest、可 replay、注明数据源与生成器版本；
   3. 与原文形式化的 `same*`/`pre_iso_test*` **同数据、同信任类别**（见
-     `docs/handoff-2026-11-06.md` §0.1：HOL 跳过分类定理；HOL 零公理真证 `good_list`；
-     Isabelle 用 8 条 `by eval` 做枚举）。
-- 当前根面 625 = 621 native + 标准三 + `sorryAx`。**621 是信任基座，不是债**
-  （基线 R，`docs/priority-queue.md` 文件头）。
-- 在此原则下**明确不做**：把 580 条枚举 shard 拉进内核重放（实测 4,450–6,550 核时 +
+     `docs/handoff-2026-11-06.md` §0.1：HOL 跳过分类定理；HOL 零公理真证 `good_list`
+     —— 我们这半边已于 2026-11-06 追平；Isabelle 用 8 条 `by eval` 做枚举）。
+- 当前根面 591 = 587 native + 标准三 + `sorryAx`。**587 是信任基座，不是债**
+  （基线 S `2ef062e8`，`docs/priority-queue.md` 文件头）。
+- 在此原则下**明确不做**：把 585 条枚举 shard 拉进内核重放（实测 4,450–6,550 核时 +
   内存不可行）、证书农场、"真·标准三"。**但**下面这些没有 parity 借口，必须修：
-  `Prop := sorry` 型定义、`else True` 回落、索引盲谓词、空量化注册表。
+  `else True` 回落、索引盲谓词、空量化注册表（`Prop := sorry` 型已于 `b85eaade` 清零）。
 - 唯一验收语言：`#print axioms`。任何"完成了"的说法都必须附这条命令的输出。
 
 ## 2. 禁造边（最高优先）
 
 - 不许**新增** `axiom` / `sorry` / `admit` / `native_decide` / 假定理。
-  （在库的 ~621 条 `native_decide` shard 是 §1 声明的**信任基座**，不是违例；但也**不许再添一条**。
+  （在库的 ~587 条 `native_decide` shard 是 §1 声明的**信任基座**，不是违例；但也**不许再添一条**。
   能改 kernel `decide` 的必须改，改不动的不许换新的 `native_decide` 顶上。）
 - 不许改陈述来让证明通过。陈述改动只走 **SF 通道**（`docs/statement-fix-proposals.md`）；
   定义改动只走 **DEF-FIX 通道**（章程在 `docs/def-fix-charters/`）。
