@@ -72,6 +72,17 @@ proved here are upstream-sorry-free except where marked.
 -/
 
 import Kepler.Text.LocalAuto1
+-- LANE rrcw-weak-p26 (2026-11-06): `RRCWNS_WEAK_p22` is the HOL assembly
+-- `CIZMRRH` + `JKQEWGV2` + `JKQEWGV3` + `INTERIOR_ANGLE1_AZIM` + `SYNQIWN`.
+-- The trichotomy (`CIZMRRH`, LA3), the not-circular theorem (`JKQEWGV2_p23`,
+-- LA23) and the lunar interior-angle bound (`JKQEWGV3_p23`, LA23) have no
+-- `_p22` twins and no other producers anywhere in the tree, so the file
+-- imports the LA23 lane module (acyclic: LA23's closure is LA1/2/3/4/5/9 +
+-- `AzimBridge`/`CircularSolKit`/`ClosedSyKit`/`SphereKit`, which does not
+-- contain LA22).  See DELIVERY.md `rrcw-weak-p26` for the sign-off note:
+-- this supersedes the "same-wave lanes 19-21/23-27 are NOT imported" note
+-- in the file header for this one item.
+import Kepler.Text.LocalAuto23
 import Kepler.Text.SphereKit
 import Kepler.Geom.Aff
 import Kepler.Geom.Azim
@@ -2062,7 +2073,91 @@ theorem RRCWNS_WEAK_p22 (h : main_nonlinear_terminal_v11) (s : ScsV39) (vv : ℕ
         (norm (vv (i + 1)) = 2 ∨ dist (vv i) (vv (i + 1)) = 2) ∧
         (norm (vv (i + (s.k - 1))) = 2 ∨ dist (vv i) (vv (i + (s.k - 1))) = 2)) :
     scsGeneric vv := by
-  sorry
+  classical
+  -- HOL OCBICBY.hl:2675-2696 — `V`, `E`, `FF` and the local-fan facts.
+  set V : Set V3 := Set.range vv with hV
+  set E : Set (Set V3) := Set.range (fun i => {vv i, vv (i + 1)}) with hE
+  set FF : Set (V3 × V3) := Set.range (fun i => (vv i, vv (i + 1))) with hFF
+  -- HOL :2678 `convex_local_fan(V,E,f)` from `BBs_v39` + `3 < k`
+  -- (`BBs_v39` carries the `k <= 3 \/ convex_local_fan` disjunct).
+  have hk3 : ¬ s.k ≤ 3 := by omega
+  have hclf : ConvexLocalFan V E FF := by
+    rcases hB.2.2.2 with h3 | hcf
+    · exact absurd h3 hk3
+    · simpa only [hV, hE, hFF] using hcf
+  have hlf : LocalFan V E FF := hclf.1
+  -- `AzimBridge` vocabulary bridges: LA1 `LocalFan` ↦ LA3 `localFan_p3` ↦
+  -- LA2 `localFan_p2` (the `_p2` kit supplies `DETER_RHO_NODE`/`PRE_IVS`).
+  have hlf3 : localFan_p3 V E FF := localFanEquiv_p35.mp hlf
+  have hlf2 : localFan_p2 V E FF := localFan_p2.of_localFan_p3 hlf3
+  -- HOL :2681 `JKQEWGV2`: the realisation graph is not circular.
+  have hcirc : ¬ Circular V E := by
+    have hq := JKQEWGV2_p23 s vv h1 hk hB ht
+    simpa only [hV, hE, Set.image_univ] using hq
+  -- HOL :2682-2683 `CIZMRRH` (via `CVX_LO_IMP_LO`): generic or circular or
+  -- lunar, exclusively.
+  have htri := CIZMRRH hlf3
+  -- HOL :2680 the no-lunar subgoal: `JKQEWGV3` gives `< pi/2` at a lunar
+  -- vertex, `INTERIOR_ANGLE1_AZIM` + `SYNQIWN` give `> pi/2` at the same
+  -- angle (`hl` supplies the four lunar-local facts).
+  have hnoLunar : ¬ ∃ v w : V3, Lunar v w V E := by
+    rintro ⟨v, w, hlun⟩
+    have hvV : v ∈ V := hlun.2.1 (by simp)
+    obtain ⟨i, hi⟩ := hvV
+    subst hi
+    have hlun' : Lunar (vv i) w (Set.range vv)
+        (Set.range fun i => {vv i, vv (i + 1)}) := by
+      simpa only [hV, hE] using hlun
+    -- HOL `INTERIOR_ANGLE1_AZIM`: `interiorAngle1 0 FF (vv i)` is the fan azim
+    -- `azim 0 (vv i) (vv (i+1)) (vv (i+k-1))` (the rho-node is the successor,
+    -- the inverse-rho-node is the predecessor).
+    have hrn : rhoNode1 FF (vv i) = vv (i + 1) := by
+      have hrp : rhoNode1_p2 FF (vv i) = vv (i + 1) :=
+        DETER_RHO_NODE hlf2 (v := vv i) (w := vv (i + 1))
+          (show (vv i, vv (i + 1)) ∈ FF from Set.mem_range.mpr ⟨i, rfl⟩)
+      simpa only [rhoNode1, rhoNode1_p2] using hrp
+    have hivs : ivsRhoNode1 FF (vv i) = vv (i + (s.k - 1)) := by
+      have hmem : (vv (i + (s.k - 1)), vv i) ∈ FF := by
+        refine Set.mem_range.mpr ⟨i + (s.k - 1), ?_⟩
+        have hper : vv (i + (s.k - 1) + 1) = vv i := by
+          rw [show i + (s.k - 1) + 1 = i + s.k by omega]
+          exact hB.2.1 i
+        rw [hper]
+      have hip : ivsRhoNode1_p2 FF (vv i) = vv (i + (s.k - 1)) :=
+        PRE_IVS_RHO_NODE1_DETE hlf2 hmem
+      simpa only [ivsRhoNode1, ivsRhoNode1_p2] using hip
+    have hid : interiorAngle1 0 FF (vv i)
+        = azim 0 (vv i) (vv (i + 1)) (vv (i + (s.k - 1))) := by
+      simp only [interiorAngle1, hrn, hivs]
+    -- HOL :2686 `JKQEWGV3`: the interior angle at a lunar vertex is `< pi/2`.
+    have hlt : interiorAngle1 0 FF (vv i) < Real.pi / 2 := by
+      have hq := JKQEWGV3_p23 s vv (vv i) w h1 hB hk ht (by
+        simpa only [Set.image_univ] using hlun')
+      simpa only [hFF, Set.image_univ] using hq
+    -- HOL :2699-2715 `SYNQIWN`: the same azim is `> pi/2`; contradiction.
+    have hgt : Real.pi / 2 < azim 0 (vv i) (vv (i + 1)) (vv (i + (s.k - 1))) := by
+      have hk1 : i + s.k - 1 = i + (s.k - 1) := by omega
+      have hmain : Real.pi / 2 < azim 0 (vv i) (vv (i + 1)) (vv (i + s.k - 1)) := by
+        refine SYNQIWN_p22 h s vv i s.k h1 hB rfl hk ?_ ?_ ?_ ?_
+        · obtain ⟨-, -, he3, he4⟩ := hl i w hlun'
+          rcases he3 with he3 | he3 <;> rcases he4 with he4 | he4
+          · exact Or.inr (Or.inr (Or.inl (by simpa only [hk1] using ⟨he3, he4⟩)))
+          · exact Or.inl (by simpa only [hk1] using ⟨he3, he4⟩)
+          · exact Or.inr (Or.inl (by simpa only [hk1] using ⟨he4, he3⟩))
+          · exact Or.inr (Or.inr (Or.inr (Or.inl (by simpa only [hk1] using ⟨he3, he4⟩))))
+        · exact (hl i w hlun').1
+        · simpa only [hk1] using (hl i w hlun').2.1
+        · simpa only [hk1] using hd (i + 1) (i + (s.k - 1)) (scs_diag_2_p22 hk)
+      simpa only [hk1] using hmain
+    rw [hid] at hlt
+    linarith
+  -- HOL :2723 final kill (`MESON_TAC`): the trichotomy's first branch, with
+  -- `circular` killed by `JKQEWGV2` and `lunar` by the subgoal above.
+  rcases htri with ⟨hgen, -⟩ | ⟨hcir, -⟩ | ⟨⟨v, w, hlun3⟩, -⟩
+  · simpa only [scsGeneric, generic_p3, Generic, hV, hE] using hgen
+  · exact absurd (by simpa only [circular_p3, Circular] using hcir) hcirc
+  · exact absurd ⟨v, w, by
+      simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hlun3⟩ hnoLunar
 
 /-- HOL `EAR_SOL_NN`. -/
 theorem EAR_SOL_NN_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ)
