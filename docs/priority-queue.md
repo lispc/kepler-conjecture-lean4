@@ -46,7 +46,7 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-06 17:15，池 **2/3**）
+## 1. 在飞（2026-11-06 18:05，池 **1/3**）
 
 > **用户 2026-11-06 指令：近期限流频繁，并行度逐渐降到 3。** 已封顶 3（回到 `AGENTS.md` §3 原始规定）。
 > 当前只有 2 条在飞，**不补位** —— 限流期少发 agent 就是省额度。
@@ -58,10 +58,8 @@
 | 车道 | 任务 | 状态 |
 |---|---|---|
 | `goodlist-w2` | 剩余 20 条 `goodList*`（Hex 3 + Pent 17）+ 16 条 `{cls}_archive_pre`·`_top_*` + 5 条 `tri_shard` 全部改 kernel 重切 | 在飞。**根面 621 → 约 580 是上限**。边界已实测：100 图/片是内存上界（峰值 7.66 GB / 8 GB 红线）、0.20–0.21 s/图、公理级组合会炸内存 ⇒ 只能按类串。**今天新测**：那 16 条 `_top_*`/`archive_pre` 全是结构化小检查（`preIsoTestB` / 列表 / 索引）、5 条 `tri_shard` 是单种子 500k fuel ⇒ 21 条都可能在便宜档，所以目标可能到 580 而不是 585 |
-| `ox3q1h-deffix` | 全树最后一条 `def … : Prop := sorry`（`PackingAuto25:90`）→ 显式 230 条合取（DEF-FIX） | 在飞（限流后已续跑两次）。**它是"类型层面的 `sorryAx` 注射器`**（handoff pit 13）：陈述里提到它的定理，证明再干净也永远带 `sorryAx`。必须**机械转写**（`ineqdata3q1h.hl` 46 record × 5）+ 转写脚本一起交付；不证那 230 条 |
-
-> **已收工（本批）**：`rrcw-weak-p26` ✅ `ead0b4cb`（`RRCWNS_WEAK_p22` 真证，85 行，标准三，锥不变）；`nli-tsk-w2` 0/5 闭但交 `951852d3` `NliBanks17`（`hminus ≤ 1.23176`，并否证旧宽包络下 `RIBCYXUsym` 为假）+ 5 条定量；`nli-t2-wt0sqrt8` GAP（T1 模板被证否，但单调路线数值认证）。
-> **排队（限流不重启）**：`nliTskIYOUOBFsharpv2`（min=0 精确，只差 `hmono`+`h2d`，已有 `_of_reduce` 件）；`nliKcblrqcIneqDefIds` 接线（锥内 sorry，28 id，3 张 XL 证书已在库）。
+> **已收工（本批）**：`ox3q1h-deffix` ✅ `b85eaade`（**全树最后一条 `def … : Prop := sorry` → 显式 230 条合取**，DEF-FIX 闸 PASS；`#print axioms ox3q1hP25` 从 `[sorryAx]` 变标准三，类型通路探针同样，`real_model_ox3q1h_merge` 的残余 `sorryAx` 归因分离到它自己的证明体；根面 625 不变）；`rrcw-weak-p26` ✅ `ead0b4cb`（`RRCWNS_WEAK_p22` 真证，85 行，标准三，锥不变）；`nli-tsk-w2` 0/5 闭但交 `951852d3` `NliBanks17`（`hminus ≤ 1.23176`，并否证旧宽包络下 `RIBCYXUsym` 为假）+ 5 条定量；`nli-t2-wt0sqrt8` GAP（T1 模板被证否，但单调路线数值认证）。
+> **排队（限流不重启）**：`nliTskIYOUOBFsharpv2`（min=0 精确，只差 `hmono`+`h2d`，已有 `_of_reduce` 件）；`nliKcblrqcIneqDefIds` 接线（锥内 sorry，28 id，3 张 XL 证书已在库）；`taylor-rung`（N=2048→128 的实测加速比）。
 > **本轮已落（2026-11-06）**：`5ed1bb16`（goodlist Tri/Quad kernel 重切，**K_AXIOM 624→621**）、`d2847338`（删 `p21_anchor`，**锥 80→79**）、`951852d3`（`NliBanks17`）、`ead0b4cb`（`RRCWNS_WEAK_p22`）、`59229e30`/`03f0a970`（基线 Q/R 写档）、`09647f25`（**AGENTS §1 改口径 + trust manifest**）、`e9061eca`/`fe386cfd`（成本模型两档 + HOL strictbuild 校准）、`c0f6579d`（并行度降 3）。
 > **用户裁决待办**：`lp-idfix` 的设计点（infeasible 定义搬 `LPInfeasCert` 分片 vs 留原地）——补丁已就绪、183 文件、零锥面收益，**等设计裁决再落**。
 > 已落库车道全表见 [`history/lanes-landed.md`](history/lanes-landed.md)。
