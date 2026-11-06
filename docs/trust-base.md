@@ -37,6 +37,22 @@
 `by eval` 是 Isabelle 的 code generator 求值 ⇒ **它才是 `native_decide` 的对应物**。
 所以「624 变标准三」是**比原版更高的要求**，不是补原版做过的事。
 
+### 2.1 一条对我们有利、但要如实说的细节
+
+HOL Light 的**构建本身是严格的**：`text_formalization/build/strictbuild.hl:111-112`
+把 `new_axiom` 与 `mk_thm` 都改成 `failwith`（`"new_axiom has been disabled."`）。
+`trig2.hl:723/1014` 里那两处 `new_axiom`（`acs_atn2` / `COS_MONO_LT_EQ`）**都在注释块 `(* *)` 里**，
+是后来被真证掉后留下的历史痕迹。
+
+⇒ 逐**单个证明助手**看：HOL 的终定理零公理，我们是 621 条 —— 这一项我们确实弱。
+⇒ 逐**整个项目**看：他们的 tame 枚举信任在 **Isabelle 的 `by eval`** 里，只是不在 HOL 的公理表上。
+我们的 621 条与它**同类**，区别是**我们的看得见**（`#print axioms` 直接列出来），
+他们的藏在跨证明助手的 import 里。
+
+**可采纳的做法**：HOL 用 `strictbuild.hl` 机械禁用 `new_axiom`/`mk_thm`。
+我们的等价物 = `AGENTS.md` §2「不许新增 axiom」+ `scripts/trust_manifest.py --check`
+（后者是可跑的，前者靠纪律）。这条值得在 CI 里也跑起来。
+
 ---
 
 ## 3. manifest 与无损分解
