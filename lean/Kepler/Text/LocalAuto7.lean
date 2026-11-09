@@ -6165,6 +6165,330 @@ theorem p11w2_nn_image_dart_rev {V : Set V3} (E : Set (Set V3)) {FF : Set (V3 ×
 
 end W11b2Kit3
 
+/-! ### W11b2-iii-b polar dih2k / local_fan assembly (WSEWPCH wave W11b2)
+
+`dih2k_p3` 五合取（HOL `polar_fan.hl` 1730-1978）+ `localFan_p3` + LA1
+`LocalFan` 收口。数据半（`FF'`/`FF''` 基数·互斥·ff 迭代/轨道·nn 像）见
+W11b2-iii-a（同文件上一节）。
+
+HOL 锚：`HAS_ORD2_INTERPRET`（1905 的 has_orders）、`nn_of_hyp` 互逆（1916）、
+`dih2k` card（1846）、face 并（1940）。路线差异：HOL 直接对
+`hypermap (HYP …)` 作 `dih2k`；本批在 `_p3` 词形上对
+`eeOfHyp_p3/nnOfHyp_p3/ffOfHyp_p3` 直接证 `hasOrders_p3`，再用
+`exists_hypHyp_of_fan` 的 H 逐分量搬运（最后 `LocalFan.of_localFan_p3`）。 -/
+
+section W11b2Kit4
+
+/-- `ρ^[V.ncard] v = v`（plain 词形）。 -/
+private theorem p11w2_iter_rho_card {V : Set V3} (E : Set (Set V3)) {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) {v : V3}
+    (hv : v ∈ V) :
+    (rhoNode1 FF)^[V.ncard] v = v :=
+  w6a_iter_rho_card (w6a_to_p2 hcl.1 hedge) hv
+
+/-- `0 < i < V.ncard ⟹ ρ^i v ≠ v`（从 `w6a_orbit_cycle` 的"迭代点互异"取）。 -/
+private theorem p11w2_iter_rho_ne {V : Set V3} (E : Set (Set V3)) {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) {v : V3}
+    (hv : v ∈ V) {i : ℕ} (hi0 : 0 < i) (hi : i < V.ncard) :
+    (rhoNode1 FF)^[i] v ≠ v := by
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  obtain ⟨p, hp0, hpx, hdist, hset, hcard⟩ :=
+    w6a_orbit_cycle (fun x hx => WRGCVDR_ORBIT h2 x hx) hv
+  have hip : i < p := by omega
+  have hne : (rhoNode1_p2 FF)^[i] v ≠ v := by
+    intro hcon
+    exact hdist 0 i hi0 hip (by simpa using hcon.symm)
+  exact hne
+
+/-- `V` 非空（`fan1` 分量）。 -/
+private theorem p11w2_V_nonempty {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) : V.Nonempty :=
+  Set.nonempty_iff_ne_empty.mpr (hcl.1.1).2.2.1.2
+
+/-- `V` 有限（`fan1` 分量）。 -/
+private theorem p11w2_V_finite {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) : V.Finite :=
+  (hcl.1.1).2.2.1.1
+
+/-- perm 轨道 = 底层函数轨道（`Equiv.Perm.coe_pow`）。 -/
+private theorem p11w2_orbitMap_eq_orbitF {α : Type*} (f : Equiv.Perm α) (x : α) :
+    orbitMap f x = orbitF_p3 (⇑f) x := by
+  unfold orbitMap orbitF_p3
+  ext y
+  constructor
+  · rintro ⟨n, hn⟩
+    exact ⟨n, by simpa only [Equiv.Perm.coe_pow] using hn⟩
+  · rintro ⟨n, hn⟩
+    exact ⟨n, by simpa only [Equiv.Perm.coe_pow] using hn⟩
+
+/-- `ff_of_hyp` 的 `hasOrders`：周期 `FF'.ncard`（= `V.ncard`），无小周期。 -/
+theorem p11w2_ff_hasOrders {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    hasOrders_p3 (ffOfHyp_p3 0 (polarV V FF) (polarE V FF)) (polarFF V FF).ncard := by
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  have hcard : (polarFF V FF).ncard = V.ncard := p11w2_polarFF_card E hcl hedge hg hia
+  constructor
+  · intro i hi0 hi hid
+    obtain ⟨v0, hv0⟩ := p11w2_V_nonempty hcl
+    have hcross : cross3 ((rhoNode1 FF)^[i] v0) (rhoNode1 FF ((rhoNode1 FF)^[i] v0))
+        = cross3 v0 (rhoNode1 FF v0) := by
+      have h := congrFun hid (polarDart FF v0)
+      rw [p11w2_ff_iter (E := E) hcl hedge hg hia hv0 i] at h
+      have h' := congrArg Prod.fst h
+      simp only [id] at h'
+      simpa [polarDart] using h'
+    have hfst : (rhoNode1 FF)^[i] v0 = v0 :=
+      P11W_PRIME_INJ hcl hedge hg hia ((rhoNode1 FF)^[i] v0)
+        (w6a_iter_rho_mem h2 hv0 i) v0 hv0 hcross
+    refine p11w2_iter_rho_ne (E := E) hcl hedge hv0 hi0 ?_ hfst
+    rw [← hcard]
+    exact hi
+  · funext d
+    rw [hcard]
+    by_cases hd : d ∈ dartsOfHyp_p3 (polarE V FF) (polarV V FF)
+    · rw [p11w2_polar_darts (E := E) hcl hedge hg hia] at hd
+      rcases hd with hd | hd
+      · obtain ⟨v, hv, hdv⟩ := hd
+        have hdv' : polarDart FF v = d := hdv
+        rw [← hdv', p11w2_ff_iter (E := E) hcl hedge hg hia hv V.ncard,
+          p11w2_iter_rho_card E hcl hedge hv]
+        simp only [id]
+      · obtain ⟨v, hv, hdv⟩ := hd
+        have hdv' : polarDartRev FF v = d := hdv
+        rw [← hdv', p11w2_ff_iter_rev (E := E) hcl hedge hg hia hv V.ncard,
+          LOFA_IMP_ITER_IVS_RHO_NODE_ID hcl.1 hedge v hv]
+        simp only [id]
+    · have hstep : ffOfHyp_p3 0 (polarV V FF) (polarE V FF) d = d := by
+        unfold ffOfHyp_p3
+        rw [if_neg hd]
+      rw [Function.iterate_fixed hstep V.ncard]
+      simp only [id]
+
+/-- `ee_of_hyp` 的 `hasOrders 2`（对换）。 -/
+theorem p11w2_ee_hasOrders {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    hasOrders_p3 (eeOfHyp_p3 0 (polarV V FF) (polarE V FF)) 2 := by
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  have hmemF : ∀ v ∈ V, polarDart FF v ∈ dartsOfHyp_p3 (polarE V FF) (polarV V FF) := by
+    intro v hv
+    rw [p11w2_polar_darts (E := E) hcl hedge hg hia]
+    exact Set.mem_union_left _ ⟨v, hv, rfl⟩
+  constructor
+  · intro i hi0 hi2 hid
+    have hi1 : i = 1 := by omega
+    subst hi1
+    rw [Function.iterate_one] at hid
+    obtain ⟨v0, hv0⟩ := p11w2_V_nonempty hcl
+    have h := congrFun hid (polarDart FF v0)
+    have hee : eeOfHyp_p3 0 (polarV V FF) (polarE V FF) (polarDart FF v0)
+        = (cross3 (rhoNode1 FF v0) (rhoNode1 FF (rhoNode1 FF v0)),
+            cross3 v0 (rhoNode1 FF v0)) := by
+      unfold eeOfHyp_p3
+      rw [if_pos (hmemF v0 hv0)]
+      rfl
+    rw [hee] at h
+    have h' := congrArg Prod.fst h
+    simp only [id] at h'
+    have hrv : rhoNode1 FF v0 = v0 :=
+      P11W_PRIME_INJ hcl hedge hg hia (rhoNode1 FF v0)
+        (LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv0) v0 hv0 (by simpa [polarDart] using h')
+    have hne : v0 ≠ rhoNode1 FF v0 := by
+      intro hcon
+      have h0 : cross3 v0 (rhoNode1 FF v0) = 0 := by
+        rw [← hcon]; exact p11w2_cross3_self v0
+      exact P11W_PRIME_NE_ZERO hcl v0 hv0 h0
+    exact hne hrv.symm
+  · funext d
+    by_cases hd : d ∈ dartsOfHyp_p3 (polarE V FF) (polarV V FF)
+    · have hswap : eeOfHyp_p3 0 (polarV V FF) (polarE V FF) d = (d.2, d.1) := by
+        unfold eeOfHyp_p3
+        rw [if_pos hd]
+      have hswapmem : (d.2, d.1) ∈ dartsOfHyp_p3 (polarE V FF) (polarV V FF) := by
+        rw [p11w2_polar_darts (E := E) hcl hedge hg hia] at hd ⊢
+        rcases hd with hd | hd
+        · obtain ⟨v, hv, rfl⟩ := hd
+          exact Set.mem_union_right _ ⟨v, hv, rfl⟩
+        · obtain ⟨v, hv, rfl⟩ := hd
+          exact Set.mem_union_left _ ⟨v, hv, rfl⟩
+      have hswap2 : eeOfHyp_p3 0 (polarV V FF) (polarE V FF) (d.2, d.1) = d := by
+        unfold eeOfHyp_p3
+        rw [if_pos hswapmem]
+        try exact Prod.ext rfl rfl
+      rw [Function.iterate_succ_apply', Function.iterate_one, hswap, hswap2]
+      simp only [id]
+    · have hstep : eeOfHyp_p3 0 (polarV V FF) (polarE V FF) d = d := by
+        unfold eeOfHyp_p3
+        rw [if_neg hd]
+      rw [Function.iterate_fixed hstep 2]
+      simp only [id]
+
+/-- `nn_of_hyp` 的 `hasOrders 2`（两步互换）。 -/
+theorem p11w2_nn_hasOrders {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    hasOrders_p3 (nnOfHyp_p3 0 (polarV V FF) (polarE V FF)) 2 := by
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  constructor
+  · intro i hi0 hi2 hid
+    have hi1 : i = 1 := by omega
+    subst hi1
+    rw [Function.iterate_one] at hid
+    obtain ⟨v0, hv0⟩ := p11w2_V_nonempty hcl
+    have h := congrFun hid (polarDart FF v0)
+    have hnn : nnOfHyp_p3 0 (polarV V FF) (polarE V FF) (polarDart FF v0)
+        = polarDartRev FF (ivsRhoNode1 FF v0) :=
+      p11w2_nn_step (E := E) hcl hedge hg hia hv0
+    rw [hnn] at h
+    have h' := congrArg Prod.snd h
+    simp only [id] at h'
+    -- 第二分量：`P(ιv0) = P(ρv0)` → `ιv0 = ρv0` → `v0 = ρ(ρv0)`
+    have hιρ : ivsRhoNode1 FF v0 = rhoNode1 FF v0 := by
+      apply P11W_PRIME_INJ hcl hedge hg hia
+      · exact IVS_RHO_NODE1_IN_V hcl.1 hedge v0 hv0
+      · exact LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv0
+      · simpa [polarDart, polarDartRev] using h'
+    have hρ := p11w2_rho_ivs (E := E) hcl hedge hv0
+    rw [hιρ] at hρ
+    exact LOCAL_FAN_IMP_NOT_SEMI_IDE h2 hv0 hρ
+  · funext d
+    by_cases hd : d ∈ dartsOfHyp_p3 (polarE V FF) (polarV V FF)
+    · rw [p11w2_polar_darts (E := E) hcl hedge hg hia] at hd
+      rcases hd with hd | hd
+      · -- `d = polarDart v`：`nn ↦ polarDartRev (ιv) ↦ polarDart (ρ(ιv)) = polarDart v`
+        obtain ⟨v, hv, hdv⟩ := hd
+        have hdv' : polarDart FF v = d := hdv
+        rw [← hdv']
+        rw [Function.iterate_succ_apply', Function.iterate_one,
+          p11w2_nn_step (E := E) hcl hedge hg hia hv,
+          p11w2_nn_step_rev (E := E) hcl hedge hg hia
+            (IVS_RHO_NODE1_IN_V hcl.1 hedge v hv),
+          p11w2_rho_ivs (E := E) hcl hedge hv]
+        simp only [id]
+      · -- `d = polarDartRev v`：`nn ↦ polarDart (ρv) ↦ polarDartRev (ι(ρv)) = polarDartRev v`
+        obtain ⟨v, hv, hdv⟩ := hd
+        have hdv' : polarDartRev FF v = d := hdv
+        rw [← hdv']
+        rw [Function.iterate_succ_apply', Function.iterate_one,
+          p11w2_nn_step_rev (E := E) hcl hedge hg hia hv,
+          p11w2_nn_step (E := E) hcl hedge hg hia (w := rhoNode1 FF v)
+            (LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv),
+          p11w2_ivs_rho (E := E) hcl hedge hv]
+        simp only [id]
+    · have hstep : nnOfHyp_p3 0 (polarV V FF) (polarE V FF) d = d := by
+        unfold nnOfHyp_p3
+        rw [if_neg hd]
+      rw [Function.iterate_fixed hstep 2]
+      simp only [id]
+
+end W11b2Kit4
+
+/-- `darts_of_hyp` 的基数：`2 * FF'.ncard`（card = `FF' ∪ FF''`，互斥 + 两份基数）。 -/
+theorem p11w2_darts_card {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
+    {H : @Hypermap (V3 × V3) dartDecEq3}
+    (hdarts : (↑(@Hypermap.darts (V3 × V3) dartDecEq3 H) : Set (V3 × V3))
+      = dartsOfHyp_p3 (polarE V FF) (polarV V FF)) :
+    (@Hypermap.darts (V3 × V3) dartDecEq3 H).card = 2 * (polarFF V FF).ncard := by
+  have hFFfin : (polarFF V FF).Finite := by
+    rw [p11w2_polarFF_eq_image]
+    exact (p11w2_V_finite hcl).image (polarDart FF)
+  have hRfin : (polarFFrev V FF).Finite := by
+    rw [p11w2_polarFFrev_eq_image]
+    exact (p11w2_V_finite hcl).image (polarDartRev FF)
+  have hdisj : polarFF V FF ∩ polarFFrev V FF = ∅ :=
+    p11w2_polarFF_disjoint E hcl hedge hg hia
+  have hun : (polarFF V FF ∪ polarFFrev V FF).ncard
+      = (polarFF V FF).ncard + (polarFFrev V FF).ncard :=
+    Set.ncard_union_eq (Set.disjoint_iff_inter_eq_empty.mpr hdisj) hFFfin hRfin
+  have h1 : (@Hypermap.darts (V3 × V3) dartDecEq3 H).card
+      = (polarFF V FF).ncard + (polarFFrev V FF).ncard := by
+    rw [← Set.ncard_coe_finset
+        (s := @Hypermap.darts (V3 × V3) dartDecEq3 H), hdarts,
+      p11w2_polar_darts (E := E) hcl hedge hg hia]
+    exact hun
+  rw [h1, p11w2_polarFFrev_card E hcl hedge hg hia, two_mul,
+    ← p11w2_polarFF_card E hcl hedge hg hia]
+
+/-- face 并等式：`darts = face x ∪ node '' face x`（`FF'`/`FF''` 双轨道封口）。 -/
+theorem p11w2_darts_cover {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
+    {H : @Hypermap (V3 × V3) dartDecEq3}
+    (hdarts : (↑(@Hypermap.darts (V3 × V3) dartDecEq3 H) : Set (V3 × V3))
+      = dartsOfHyp_p3 (polarE V FF) (polarV V FF))
+    (hface : (@Hypermap.faceMap (V3 × V3) dartDecEq3 H : V3 × V3 → V3 × V3)
+      = ffOfHyp_p3 0 (polarV V FF) (polarE V FF))
+    (hnode : (@Hypermap.nodeMap (V3 × V3) dartDecEq3 H : V3 × V3 → V3 × V3)
+      = nnOfHyp_p3 0 (polarV V FF) (polarE V FF)) :
+    ∀ x ∈ @Hypermap.darts (V3 × V3) dartDecEq3 H,
+      (↑(@Hypermap.darts (V3 × V3) dartDecEq3 H) : Set (V3 × V3))
+        = @Hypermap.face (V3 × V3) dartDecEq3 H x ∪ (@Hypermap.nodeMap (V3 × V3) dartDecEq3 H : V3 × V3 → V3 × V3) '' @Hypermap.face (V3 × V3) dartDecEq3 H x := by
+  intro x hx
+  have hx' : x ∈ (↑(@Hypermap.darts (V3 × V3) dartDecEq3 H) : Set (V3 × V3)) :=
+    Finset.mem_coe.mpr hx
+  have hfacex : @Hypermap.face (V3 × V3) dartDecEq3 H x
+      = orbitF_p3 (ffOfHyp_p3 0 (polarV V FF) (polarE V FF)) x := by
+    unfold Hypermap.face
+    rw [p11w2_orbitMap_eq_orbitF (@Hypermap.faceMap (V3 × V3) dartDecEq3 H) x, hface]
+  have himg : (@Hypermap.nodeMap (V3 × V3) dartDecEq3 H : V3 × V3 → V3 × V3) '' @Hypermap.face (V3 × V3) dartDecEq3 H x
+      = (nnOfHyp_p3 0 (polarV V FF) (polarE V FF)) ''
+        orbitF_p3 (ffOfHyp_p3 0 (polarV V FF) (polarE V FF)) x := by
+    rw [hfacex, hnode]
+  rw [hdarts] at hx' ⊢
+  rw [p11w2_polar_darts (E := E) hcl hedge hg hia] at hx' ⊢
+  rw [himg, hfacex]
+  rcases hx' with hx' | hx'
+  · obtain ⟨v, hv, hdv⟩ := hx'
+    have hdv' : polarDart FF v = x := hdv
+    rw [← hdv', p11w2_ff_orbit_dart E hcl hedge hg hia hv,
+      p11w2_nn_image_dart E hcl hedge hg hia]
+  · obtain ⟨v, hv, hdv⟩ := hx'
+    have hdv' : polarDartRev FF v = x := hdv
+    rw [← hdv', p11w2_ff_orbit_dart_rev E hcl hedge hg hia hv,
+      p11w2_nn_image_dart_rev E hcl hedge hg hia, Set.union_comm]
+
+/-- **`localFan_p3 V' E' FF'`**：BGMIFTE 结论 1 的 local_fan 半（HOL 1698-1978）。
+H 取 `exists_hypHyp_of_fan`（真证 HYP 超图），五合取逐条落。 -/
+theorem p11w2_polar_localFan_p3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    localFan_p3 (polarV V FF) (polarE V FF) (polarFF V FF) := by
+  have hfan : FAN (0:V3) (polarV V FF) (polarE V FF) := p11w2_polar_FAN hcl hedge hg hia
+  obtain ⟨H, hdarts, hedge', hnode, hface⟩ := exists_hypHyp_of_fan hfan
+  obtain ⟨v0, hv0⟩ := p11w2_V_nonempty hcl
+  have hxmem : polarDart FF v0 ∈ (↑(@Hypermap.darts (V3 × V3) dartDecEq3 H) : Set (V3 × V3)) := by
+    rw [hdarts, p11w2_polar_darts (E := E) hcl hedge hg hia]
+    exact Set.mem_union_left _ ⟨v0, hv0, rfl⟩
+  have hxface : polarFF V FF = @Hypermap.face (V3 × V3) dartDecEq3 H (polarDart FF v0) := by
+    have h1 : @Hypermap.face (V3 × V3) dartDecEq3 H (polarDart FF v0)
+        = orbitF_p3 (ffOfHyp_p3 0 (polarV V FF) (polarE V FF)) (polarDart FF v0) := by
+      unfold Hypermap.face
+      rw [p11w2_orbitMap_eq_orbitF (@Hypermap.faceMap (V3 × V3) dartDecEq3 H)
+        (polarDart FF v0), hface]
+    rw [h1, p11w2_ff_orbit_dart E hcl hedge hg hia hv0]
+  refine ⟨H, hdarts, hedge', hnode, hface, hfan,
+    ⟨polarDart FF v0, ?_, hxface⟩, ?_⟩
+  · exact Finset.mem_coe.mp hxmem
+  · refine ⟨p11w2_darts_card hcl hedge hg hia hdarts, ?_, ?_, ?_, ?_⟩
+    · exact p11w2_darts_cover hcl hedge hg hia hdarts hface hnode
+    · rw [hface]; exact p11w2_ff_hasOrders hcl hedge hg hia
+    · rw [hedge']; exact p11w2_ee_hasOrders hcl hedge hg hia
+    · rw [hnode]; exact p11w2_nn_hasOrders hcl hedge hg hia
+
+/-- **`LocalFan V' E' FF'`**（LA1 形态，BGMIFTE 结论 1 的第一分量）：
+`LocalFan.of_localFan_p3`（`hno` 由 b-i 两件 rfl 组装）。 -/
+theorem p11w2_polar_LocalFan {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    LocalFan (polarV V FF) (polarE V FF) (polarFF V FF) := by
+  refine LocalFan.of_localFan_p3 (p11w2_polar_localFan_p3 hcl hedge hg hia) ?_
+  rw [p11w2_polar_darts (E := E) hcl hedge hg hia,
+    ← p11w2_polar_ordPairs (E := E) hcl hedge hg hia]
+  rfl
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
