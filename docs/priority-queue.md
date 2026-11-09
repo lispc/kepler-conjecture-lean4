@@ -314,45 +314,47 @@
 >
 > **ERRATA（续692）**：w13-rev 的「`LVDUCXU` 的 `Simple` 槽冗余、可 SF 掉省 200–330」**作废**——编排者与车道双方机器复核：`DIH2K_FACE_SIMPLIZED` 的陈述要求 `H.Simple`，`LVDUCXU` 证明体 `LocalAuto10.lean:1691-1694` 实际把 `hsimp` 喂给它，`dih2k_p3` 合取必须 `Simple`。`hsimple` 永久按槽记账。
 >
+> **ERRATA（续708 补）**：续692–续708 条目的手写时间曾按编排者估算漂移（最多 +2.7h），本批已**全部按对应 commit 的实际时间改正**（见 `git log --date=format:%H:%M`）。
+>
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
-- **2026-11-10（07:40，续708）**：**塔顶 12/13 槽形落库（`fa0ef688`，39 行）——`aq13Concl` 成为唯一显式槽；12 叶真证定理全部填入**。
+- **2026-11-10（05:01，续708）**：**塔顶 12/13 槽形落库（`fa0ef688`，39 行）——`aq13Concl` 成为唯一显式槽；12 叶真证定理全部填入**。
 ① **`transformAssumptionSpine_of_aq13`**：`(h13 : aq13Concl L hL) → transformAssumptionSpine L hL`，体 = `transformAssumptionOfAq L hL (aq1 L hL) … (aq12 L hL) h13` 一行。标准三、零 sorryAx；RC=0、0 error/0 warning；olean 装池。
 ② **意义**：AQ13 收口后**一行代入**即得 `transformAssumptionSpine`（HOL `transform_assumption` 目标形）⇒ 77 处消费者随之解锁。**塔账 = 12/13 真证 + 1 槽**。
 ③ **AQ13 余量**：`lp=z1 ∧ p∉parts r` 支（`aq13-c4` 在飞，直证路线：`z = nextEl r y = fList (eList y)` ⇒ `findFace (eList y) = findFace z = f`，故 `eList y` 是 f 上 z 的前驱——`eList y = l'y` 用 ⑦，否则 `eList y ∈ W = between f l'y z`（`indexfBetwnEq`）用 ⑭）→ W4b 主装（80–120）。
 
-- **2026-11-10（07:25，续707）**：**AQ13 `lower_case` 载体判定（非长度分类，是 Seq→List 重写包）；`lp=z1 ∧ p∉parts r` 支拆换血 `aq13-c4`（50–70）**。
+- **2026-11-10（05:00，续707）**：**AQ13 `lower_case` 载体判定（非长度分类，是 Seq→List 重写包）；`lp=z1 ∧ p∉parts r` 支拆换血 `aq13-c4`（50–70）**。
 ① **`lower_case`（`tame_list.hl:1397-1401`）** = `end_itlist CONJ [GSYM map_MAP; GSYM size; filter_FILTER; REVERSE_rev; GSYM last_LAST; APPEND_cat; ALL_all]` ——**Seq→List 表示层重写包**，不是列表长度分类；Lean 无对应 def，成员已是 simp/桥引理。⇒ 不提供新数学内容。
 ② **step1（`p∈parts r`）已闭**：`by_cases hpR : p ∈ partsSpine L r`，true 支直接 `aq13w4a2c_lastOfPartOfMemParts …`（W4a2c 已落）⇒ 无需新码。
 ③ **step2（`p∉parts r`）边界（40–60）**：已有 `nextEl r lp = fList (eList lp)`、`nextEl r y = z` ⇒ **`z = fList (eList y)`**；HOL 1525-1562 六步 = `good_list_e_list z1` → `f_list_power_next_el`+`MEM_POWER_NEXT_EL` → `mem_find_face_imp_faces_eq z x` → `prev_next_id (eList z1) f` → `betwn f y z = []` 二支（`betwn_nil`）→ ⑦（W1）/⑭（W1b）。Lean 载体：`goodListEList`/`fListPowEqNextElPow`/`memPowerNextEl`/`aq10_memFindFaceImpFacesEq`/`nextPrevId`/`betwnNil`。
 ④ **换血**：新车道 `aq13-c4`（/tmp/aq13-c4，基线 `a1e856d2`，新文件 `JcajyduAqLeaf13W4a2c4`，50–70 ≤120）——工作单含上述六步 + 载体候选清单。**之后 W4b 主装（80–120）⇒ AQ13 收口 ⇒ 塔 13/13**。
 
-- **2026-11-10（07:05，续706）**：**AQ13 W4a2c2 落库（`fe50291a`，66 行 1 件）——`lp≠z1` 支清零（B2n 短路绕开 FST/nextCat/last_cat）；剩 `lp=z1` 支 W4a2c3（30–45）**。
+- **2026-11-10（04:59，续706）**：**AQ13 W4a2c2 落库（`fe50291a`，66 行 1 件）——`lp≠z1` 支清零（B2n 短路绕开 FST/nextCat/last_cat）；剩 `lp=z1` 支 W4a2c3（30–45）**。
 ① **`aq13w4a2c2_lastOfPartOfNeLast`**：`p ∈ parts f1`、`y = LAST p`、`y ≠ z1`、`p1 ∈ parts r`、`y ∈ p1` ⇒ **`p1.getLast! = y`（无条件，不分 `p ∈/∉ parts r`）**。三段：`conditionLastParts(f1,p,lp).mpr` 得断口 → **`aq13w4a2_nextEl_f1`（B2n）转 r** → `conditionLastParts(r,p1,lp).mp`；`y = r.getLast!` 支走 `lastOfPartOfLast`。标准三；RC=0、0 error/0 warning；olean 装池。
 ② **分支表（按 HOL 1470-1495 修正，采信）**：`lp≠z1` 第二次调用 `(f1,p,lp)` 合法（**可绕开 FST/nextCat/last_cat**）；`lp=z1` 前提为假、不用，走第一次调用 `(r,p1,lp)` 给 `nextEl r y = fList (eList y)` + `lp=y=z1=prevEl r z` ⇒ `z = fList (eList y)`，再 `lower_case` + ⑦/⑭（1471-1479/1525-1562）；`LAST p = LAST r` 支共用 W4a2c 的 `lastOfPartOfLast`（不重复）。
 ③ **派单**：`aq13-survey` → **W4a2c3（30–45）**：`p ∈ parts r` 子支先落（`lastOfPartOfMemParts` ~10 行）；`p ∉ parts r` 子支找出 `lower_case` 的 Lean 载体（grep `lowerCase`/`length_le_one`），需自建 ≤20 行则建、超过即止损报边界。
 ④ **W4a2c3 之后 = W4b 主装（80–120）⇒ AQ13 收口 ⇒ 塔 13/13**。
 
-- **2026-11-10（06:50，续705）**：**W22d 目标纠正：是 `ConvexLocalFan`（LA1）不是 `convexLocalFan_p3`——「合取 1 缺口」不存在**。
+- **2026-11-10（04:57，续705）**：**W22d 目标纠正：是 `ConvexLocalFan`（LA1）不是 `convexLocalFan_p3`——「合取 1 缺口」不存在**。
 ① **依据（编排者读 HOL + 本树槽）**：HOL `RNSYJXM.vhl:279-282` 结论 `convex_local_fan (v_prime V f, e_prime E f, f)`，且 `rewrite convex_local_fan ("let_RULE f_surr_localization")` ——**local_fan 结构由 f_surr_localization 输出直接改写**，不构造 p3 证人；W21 的槽 `hL` 就是 `ConvexLocalFan (vPrime…) (ePrime…) (H.face d)`（`LocalAuto1.lean:174-175` = `LocalFan ∧ azim ≤ π ∧ V ⊆ wedgeInFanGe`）；`p22c2_f_surr_localization_cond_noHcard` 的第一合取正是 `LocalFan (vPrime) (ePrime) FF` ⇒ **直接投影**。
 ② **ERRATA**：aq1-fin 报的「合取 1 = `localFan_p3` 前置缺口、需从 ciib 提取公开件」**作废**——`localFan_p3` 是 `LVDUCXU` 的中间形，不是 W22d 消费形；不需要 `LocalFan.of_localFan_p3` 的反向件。
 ③ **W22d-ii 工单改**：件 2a（azim 半 10–15，条件形 azim 合取 + `azimDart_eq_azimInFan` 切片侧）+ 件 2b（wedge 半 90–130，六步闭包链 + `hclosed` 槽 + 本地内联 `WEDGE_SUBSET_WEDGE_GE` 2 行，批准）+ 装配 `⟨(noHcard …).1, fun x hx => ⟨2a, 2b⟩⟩`；槽 = `hclosed`/`hsimple`/`hfs`。
 ④ **PackingAuto import 政策**：`WEDGE_SUBSET_WEDGE_GE` 全树只在 PA18:8172（禁 import），但证明体 2 行 ⇒ 本地内联；**W22d-i 的 `p22d_closedWedge` 同样不得 import PA18**（sorryAx 污染）。
 
-- **2026-11-10（06:35，续704）**：**AQ13 y=z1 边界解开（编排者读 HOL 原文）——`condition_last_parts` 第二次调用只在 `lp ≠ z1` 支，`lp = z1` 支走第一次调用；W4a2c2 授权 100–130**。
+- **2026-11-10（04:56，续704）**：**AQ13 y=z1 边界解开（编排者读 HOL 原文）——`condition_last_parts` 第二次调用只在 `lp ≠ z1` 支，`lp = z1` 支走第一次调用；W4a2c2 授权 100–130**。
 ① **边界（aq13-survey 报告）**：W4a2c2 步2 卡在「`condition_last_parts` 前提 `d ≠ s.getLast!` 与本支 `d = LAST p = f1.getLast!` 相撞」；车道建议「需另确认实参 d/s，>40 行新引理」⇒ 按令止损。
 ② **编排者读 HOL 原文（`reference/flyspeck/text_formalization/tame/AQ13.hl:1470-1495`）**：实参确认——第二次调用 `condition_last_parts[s;L;p;LAST p]` 的 **d 就是 `LAST p`、s 就是 f1**，其前提 `LAST p ≠ s.getLast! = z1` 由 `Seq.cat_uniq` 的 `RESA_TAC` 现场拆开 ⇒ **`LAST p = z1`（= `lp = LAST s`）这一支不用第二次调用**，走第一次调用 `(r, p1, LAST p)` 的 `nextEl r lp = fList (eList lp)` + `lower_case`；`lp ≠ z1` 支才用第二次调用，照 HOL 1479-1522 续。**车道是把第二次调用用在了前提为假的分支上。**
 ③ **派单**：`aq13-survey` → **W4a2c2 续做（授权 100–130）**：先写 `lp = LAST s` / `lp ≠ z1` 分支表；`lp = z1` 支走 (r,p1,lp) 实例 + `lower_case` + ⑦/⑭；`lp ≠ z1` 支走 (f1,p,lp) 实例 + FST 三件 + `nextCatBetwnSame` + `last_cat` 三连；`=支`（`LAST p = LAST r`）已由 W4a2c 两 lemma 处理，不重复。
 ④ **HOL 分支结构记录**（供续做）：AQ13.hl「先 `s` 的 abbrev，再 `~A∨A [lp = LAST s]` 分裂，再 `A∨~A [LAST p = LAST r]` 分裂」；`DICH_TAC(70-52)`/`(78-63)`/`(79-63)` 是分支内假设的索引引用，非额外引理。
 
-- **2026-11-10（06:20，续703）**：**`hcard` 槽消（`7fa828ce`）+ `CLOSED_WEDGE` 是 sorry 桩（重大 ERRATA）——W22d 拆 W22d-i（CLOSED_WEDGE 真证）/ W22d-ii（装配）**。
+- **2026-11-10（04:54，续703）**：**`hcard` 槽消（`7fa828ce`）+ `CLOSED_WEDGE` 是 sorry 桩（重大 ERRATA）——W22d 拆 W22d-i（CLOSED_WEDGE 真证）/ W22d-ii（装配）**。
 ① **`p22c2_f_surr_localization_cond_noHcard`**（`LocalAuto7W22c3b`，增 19 行）：`p22c3_hcard_bridge` 自动填 `hcard` ⇒ 条件形只剩 `hfs`（免费）/`hsimple`/`hno`。标准三。同文件 ③ `p22c3_fullySurrounded_cardFaceGe3` + ④ `p22c3_hcard_bridge`（面映射 `rfl` 级一致：`IsHypOn_p10` 的 `faceMap = ffOfHyp_p3` + `ffOfHyp_p3_eq_faceMap` + `fanHyp`/`hypermapOfFanTl` 双包装）。**③④ 原本由 aq1-fin 因「岛池缺 olean」延后——ERRATA：池内 olean 齐备（03:56–04:15 装池），编排者就地补完。**
 ② **`CLOSED_WEDGE` 桩（ERRATA，采信 aq7 机器实证）**：PA18:7871 `CLOSED_WEDGE` 证体是 **`sorry`**，`#print axioms = [propext, sorryAx, choice, Quot.sound]`；上游 `IN_CONV0_IMP_AZIM_PI_ALT`（leaf_cell.hl:3581）/`AZIM_SPLIT_POINT`（:3612）/`CLOSED_WEDGE_LT_PI`（:3659）/`CLOSED_WEDGE_EQ_PI`（:3671）同为 sorry 桩。**战役表此前的「✅ CLOSED_WEDGE（PA18:7871）」是「存在但未证」，作废**——AGENTS §2 判 BLOCKED（上游假桩），不绕。
 ③ **W22d 六步表（aq7 recon，采信）**：283-288 条件形+切片 fan ✅ / 289-298 面⊆darts ✅ / 299-300 azim ≤ π ✅（`p22d_slice_azimDart_lt_pi`）/ 301-309 **x ∈ closure(wedge_gt) ⇒ CLOSED_WEDGE 桩 ⇒ BLOCKED** / 310-318 原扇 conforming+iso ✅（**切片 conforming 不需要、无第 5 槽**）/ 319-336 aff_gt→closure 链 ✅。
 ④ **拆波**：**W22d-i = `CLOSED_WEDGE` 真证**（HOL ~130，Lean 150–250；写新文件 `LocalAuto7W22dI`，**不 import PackingAuto18 以免 sorryAx 污染**，桩本体留待替换波）；**W22d-ii = wedge 半装配**（120–180，W22d-i 落地后）。**CLOSED_WEDGE 真证前不落 wedge 半。**
 ⑤ **派单**：`jcajydu-aq7` → **W22d-i**（路线：`wedgeGe = {z | 0 ≤ azim … ∧ azim … ≤ azim … w2}`，闭性 = 连续闭原像交；候选连续性件 `w5cA3_continuousAt_azim`（LA14:2971 private）/`azim_real_continuous_on_p14`（LA14:3347））。
 
-- **2026-11-10（06:00，续702）**：**AQ8 叶收口（`74401849`，290 行）——塔 12/13，只剩 AQ13**；同批 AQ13 W4a2c + W22c-iii-a 落库。
+- **2026-11-10（04:51，续702）**：**AQ8 叶收口（`74401849`，290 行）——塔 12/13，只剩 AQ13**；同批 AQ13 W4a2c + W22c-iii-a 落库。
 ① **AQ8（`JcajyduAqLeaf8W3ae`）**：`aq8w3ae_partsFstHdInjSND`（58 行，三支：farc×farc → `W3yI`；交叉 → `W3yII`；arc3×arc3 → `W3z` refine + **接缝不切**）+ `aq8w3ae_coreSNDNodup`（= W5 的 `hB` 槽逐字）+ **`aq8 : aq8Concl L hL`**（W5 骨架一行代入）。**3/3 标准三、零 sorryAx**；RC=0、0 error/0 warning；olean 装池。塔 **12/13**（`aq1`–`aq12` 全落）。
 ② **接缝不切（数学核心，采信）**：`fLastSpine L r` 定接缝处只剩 e-步（`nextElPartsUnlast`/`partsNextUnlast` 与 `normalListPartsNextLast` 的 f-步经 `nextElCat1`+`aq10_nextElPrefix` 相撞，`fListInjDarts`+`isRestrictedEListNondeg` 收口）⇒ 末元相等 ⇒ `uniqSublistUnique`。编排者此前的反例裁定（纯 `partsFst`+r-side 单射不够）被实现路径证实。
 ③ **行数 290 > 工单 150**：主定理 58 行在预算内，case C 的 LAST 链 3 个私枢纽 130 行未预算；< AGENTS §7 的 450 止损线，接受。
@@ -361,18 +363,18 @@
 ⑥ **ERRATA**：aq1-fin 报「③④ 岛池缺 `LocalAuto7W21/W22a/W22b/W22c` olean」**不成立**——编排者核池：四者 olean 均在 `.lake/build/lib/lean/Kepler/Text/`（03:56–04:15 装池）。③④ 由编排者就地补完（`LocalAuto7W22c3b`，③ `p22c3_fullySurrounded_cardFaceGe3` + ④ `p22c3_hcard_bridge`，编译中）。
 ⑦ **accounting**：`aq8` 的 `hB` 槽与 W5 的 `aq8Concl_of_uniqSnd` 一行接驳，`transformAssumptionOfAq` 的 `h8` 槽零适配。
 
-- **2026-11-10（05:45，续701）**：**localizationSimple 展开件落库（`cee26a78`，42 行 1 件）——主体单列换血车道 `loc-simple`（100–150）**。
+- **2026-11-10（04:48，续701）**：**localizationSimple 展开件落库（`cee26a78`，42 行 1 件）——主体单列换血车道 `loc-simple`（100–150）**。
 ① **`p22d_simple_expand`**：`H.Simple ↔ ∀ x ∈ H.darts, orbitMap H.nodeMap x ∩ orbitMap H.faceMap x = {x}`（`simp only [Hypermap.Simple, node, face]` 一行体）。`[propext, Quot.sound]`（零 choice、零 sorryAx）；RC=0、0 error/0 warning；olean 装池。
 ② **主体第 3 段（未证，交边界）**：`nnOfHyp_p3 ∩ ffOfHyp_p3 = {x}` 逐点 = `Simple` 的实质；第 1/2 段材料全齐（展开件 + `p20_face_representation` + `LVDUCXU` + `IMP_FAN_V_PRIME_E_PRIME`）。
 ③ **换血派单**：新车道 `loc-simple`（/tmp/loc-simple，基线 `cee26a78`，新文件 `LocalAuto7W22dG`，前缀 `p22d_locSimple_`）——工作单含 §P2 分支表路径、`p22d_simple_congr` 的 `Equiv.ext` 教训、`hH.1` 的 Set/Finset 成员桥提示；主体目标陈述已逐字给出（`FAN → IsHypOn H1 → x∈dartsOfHyp → FF=H1.face x → IsHypOn 切片 H2 → 2 ≤ FF.ncard → H1.Simple → H2.Simple`）。
 ④ **当前 perimeter 根面账**：`f_surr_localization` 条件形剩 `hcard`（第三路在飞，150–180）+ `hsimple`（本件，100–150）；W22d 的 azim 半已落、wedge 半 recon 在飞。
 
-- **2026-11-10（05:30，续700）**：**W22d azim 半落库（`1f1ba54c`，46 行 1 件）——前件与条件形同槽，装配可一行消费；wedge 半转 recon**。
+- **2026-11-10（04:47，续700）**：**W22d azim 半落库（`1f1ba54c`，46 行 1 件）——前件与条件形同槽，装配可一行消费；wedge 半转 recon**。
 ① **`p22d_slice_azimDart_lt_pi`**：`FAN 0 V E → IsHypOn_p10 0 V E H1 → x ∈ dartsOfHyp_p3 E V → FF = H1.face x → IsHypOn_p10 0 (vPrime) (ePrime) H2 → FullySurrounded V E → 2 < FF.ncard → H2.Simple → hno → y ∈ FF → azimDart (vPrime) (ePrime) y < π`。**前件与 `p22c2_f_surr_localization_cond` 完全同槽**。标准三；RC=0、0 error/0 warning；olean 装池。
 ② **路线 3 步**：条件形第 3 合取 `.2.2.1 y hy` 给 azim 不变式 → `rw [← haz]` → `FullySurrounded` 定义直接给 `< π`；`y ∈ dartOfFan` 由面⊆darts + `p22c2_dartsOfHyp_subset` ⇒ `{y.1,y.2} ∈ E` ⇒ `dart1OfFan` 右并支。
 ③ **派单**：`jcajydu-aq7` → **W22d wedge 半 recon（只读 30–40）**——5 件未移植件现已全落/坍缩（`4829c7d7`/`212bb47b`/`96a2537a`/`5f1ef193`/`8c717a72`），recon 三问：HOL 328-392 按句切 ≤6 步逐件对表、**wedge 半是否真需切片扇 conforming/Simple 的跨 `(V,E)` 转移**（否则作第 5 槽显式记账）、估行与拆件。
 
-- **2026-11-10（05:15，续699）**：**perimeter 战役再坍缩：`LINEAR_FACE_2`+`IN_DART1`（87 HOL，原估 240–370）免移植——`CARD_FACE_GE_3_TL`（TameLp:2607-2673，66 行）已是其 Lean 体，弱化前提到 `1 < ncard` 即可；剩三件 150–180**。
+- **2026-11-10（04:46，续699）**：**perimeter 战役再坍缩：`LINEAR_FACE_2`+`IN_DART1`（87 HOL，原估 240–370）免移植——`CARD_FACE_GE_3_TL`（TameLp:2607-2673，66 行）已是其 Lean 体，弱化前提到 `1 < ncard` 即可；剩三件 150–180**。
 ① **探针否掉 π-azim 路线**（8/8 `#check`）：`azimDart = if d1=d2 then 2π else azimFan`；`SOL_LOFA_EQ_SUM_INANGLE_p9` 是**顶点局部扇曲率恒等式**（面层面化简为 `Σ_f azim = Σ_V interior`，恒真不给矛盾）；`pW2_sum_collapse` 是 digon 线性化的邻居无入口；全树无面多边形角和定理。⇒「face 恰 2 ⇒ azimDart = π」不能由已落件直接收。
 ② **第三路（采信）**：`CARD_FACE_GE_3_TL` 的证明**就是** HOL `LINEAR_FACE_2 + CARD_SET_OF_EDGE_GT_1_IMP_CARD_FACE_GE_3` 的 Lean 体（`face ⊇ {d, f d}` ⇒ `2 ≤ ncard`；反设 `ncard = 2` ⇒ `f²d = d` ⇒ `inverseSigmaFan d.2 d.1 = d.1` ⇒ 撞 `SIGMA_FAN`）。**全文唯一用到 `3 ≤ ncard` 的只有末两行 `setOfEdge d.2 V E ≠ {d.1}`——`1 < ncard` 同样给（`omega`）**。⇒ 免移植 `LINEAR_FACE`(HOL 1169, 28 行)/`LINEAR_FACE_2`(1199, 23 行)/`IN_DART1`(1324, 36 行) 共 **87 HOL 行**；`IN_DART1` 的「face ≥ 2」已被该证明内联 `h2` 覆盖。
 ③ **施工表（派 `aq1-fin`，150–180）**：① `p22c3_cardFaceGe3_of_degGt1`（110–140，复制证明体 + `hcard : 1 < ncard` + `omega`）② `p22c3_cardSetOfEdgeGt1ImpCardFaceGe3`（12–18，环排除）③ `p22c3_fullySurrounded_cardFaceGe3`（3–5，②+`p22a_fs_ncard_gt1`）④ 词汇桥（≤20，`hypermapOfFanTl` 的 face ↔ `IsHypOn_p10` 的 `H1.face`，用 `p22d_isHypOn_maps_eq`）。
@@ -382,7 +384,7 @@
 ③ **派单**：`aq13-survey` → **W4a2c（y=z1 支，40–70，≤120；先 20 行 DICH_TAC 侦察再落体）**，基线 `fd42807d`；W4b 主装（80–120）其后。**W4 落库前不宣称 aq13 收口**。
 ④ 注：`aq8-w3ae` 已开工并机器核实 hB 形 + 投影路径，ERRATA 一条：`loopListSpine` 的 NormalListSpine 投影机器路径是 `hm.1.2.1.2.2.2.1`（前任记录 `...2.2` 少一层），桥 `(split…).2 = arc3 ++ farc` 由 `nextElPrevElUniq` 折平已 probe 通过。
 
-- **2026-11-10（04:55，续697）**：**战役 wave 2 三件落库（`5f1ef193` / `8c717a72` / `96a2537a`，163 行）——`fan_hypermaps_iso`/`iso_simple` 坍缩 + `wedge_in_fan_gt_eq_w_dart_fan` 清零；战役剩 2 件**。
+- **2026-11-10（04:44，续697）**：**战役 wave 2 三件落库（`5f1ef193` / `8c717a72` / `96a2537a`，163 行）——`fan_hypermaps_iso`/`iso_simple` 坍缩 + `wedge_in_fan_gt_eq_w_dart_fan` 清零；战役剩 2 件**。
 ① **`p22d_isHypOn_maps_eq`**（55 行，`LocalAuto7W22dC`）：同一 `(V,E)` 上两个 `IsHypOn_p10` 超映射四条映射相等。**关键判定**：`hypermap1OfFanx`/`hypermap1OfFan` 全树零命中、Lean 只有一个扇超映射（`hypermapOfFan`）⇒ HOL `fan_hypermaps_iso`（两超映射同构）**在 Lean 无对象**，坍缩为映射相等。
 ② **`p22d_simple_congr` + `p22d_simple_of_isHypOn`**（46 行，`LocalAuto7W22dD`，编排者亲写 3 轮收敛）：`iso_simple_imp` 坍缩为 `Simple` 沿 `nodeMap`/`faceMap`/`darts` 相等传输；注意 `p22d_isHypOn_maps_eq` 给的是**函数**相等，须 `Equiv.ext` 转 Perm 相等后才能 `rw`（探针教训）。**不消 `hsimple`**（ERRATA 见上）。
 ③ **`p22d_wedgeInFanGt_eq_wDartFan`**（62 行，`LocalAuto7W22dwedge`）：HOL `wedge_in_fan_gt_eq_w_dart_fan`（`RNSYJXM.vhl:74`）；词汇 `wedgeInFanGt_p2`，`ext_dart` 按定义式展开 `(0, d1, d2, extensionSigmaFan 0 V E d1 d2)`；`1 < ncard` 支用 `AZIM_CYCLE_EQ_SIGMA_FAN_ALT`，其余支 `ncard_eq_one` + `affGe` 补集。**依赖全在库、无桩**。
@@ -394,26 +396,26 @@
 ② **y=z1 特例侦察（~30–40 行可达）**：`y ≠ p1.getLast!` 时 p1 越过 y、p 与 p1 共享 y ⇒ `uniqSublistUnique` 给 p=p1 ⇒ `LAST p1 = LAST p = y` 矛盾；`p ∉ parts r` 走 HOL 1426–1464 的 `partsFlatten`/`parts_nonnil`/`MEM_LAST`/`LAST_parts` 落末 part 或 `y = r.getLast!`，`aqs_lastParts` 再矛盾。第 4 步「p∉parts r ⇒ 末 part」的精确蕴含需 W4a2b 内先验。
 ③ **派单**：`aq13-survey` → **W4a2b（S 链 + F f1 含 y=z1，140–180；超则拆 b-1 S 链 / b-2 F f1）**，基线 `d4107fd0`；W4b 主装（80–120）在其后。**W4 落库前不宣称 aq13 收口**。
 
-- **2026-11-10（06:05，续695）**：**战役 wave 1 两件落库（`212bb47b` `4829c7d7`，93 行）——`DART1_NOT_COLLINEAR_2` + `CLOSURE_MINIMAL_EQ` 清零；剩 4 件 ~420–690**。
+- **2026-11-10（04:36，续695）**：**战役 wave 1 两件落库（`212bb47b` `4829c7d7`，93 行）——`DART1_NOT_COLLINEAR_2` + `CLOSURE_MINIMAL_EQ` 清零；剩 4 件 ~420–690**。
 ① **`p22d_dart1NotCollinear2`**（54 行；HOL `fan/hypermap_and_fan.hl:2693`）：`FAN 0 V E → (v,w) ∈ dart1OfFan → ¬Collinear3 0 v w ∧ ¬Collinear3 0 v (sigmaFan …)`。**证明比 HOL 短**：两半都走 `fan6`（`FAN` 第五合取），第二半先证 `sigmaFan ∈ setOfEdge v V E`（单点支 `if_pos` / `SIGMA_FAN`）再经 `properties_ofSetOfEdge_fan` 换边交——**不需要** HOL 的 hypermap 层路线。2 轮收敛（1→0）。
 ② **`p22d_closureMinimalEq`**（39 行；HOL Light `topology1.ml:1758`，通用拓扑）：`IsClosed t → (closure s ⊆ t ↔ s ⊆ t)`，`subset_closure` + `closure_minimal` 两行。
 ③ 2/2 标准三、零 sorryAx；两文件各自 RC=0、0 error/0 warning；olean 装池。
 ④ **战役余量**：剩 `LINEAR_FACE_2`（200–300，等 aq1-fin face≥3 替代路线探针）/ `IN_DART1_OF_FAN_IMP_CARD_FACE_GT_1`（40–70）/ `fan_hypermaps_iso`+`iso_simple`（120–200，`hsimple` 与 W22d wedge 半双用）/ `wedge_in_fan_gt_eq_w_dart_fan`（aq7 在飞）。
 ⑤ **派单**：`w13-rev` → **`fan_hypermaps_iso` + `iso_simple`**（120–200，≤300；双用途最高价值件）。
 
-- **2026-11-10（05:45，续694）**：**消 `hno` 槽落库（`4232289f`，57 行 2 件）——`f_surr_localization` 条件形只剩 `hfs`（免费）/`hcard`/`hsimple`**。
+- **2026-11-10（04:35，续694）**：**消 `hno` 槽落库（`4232289f`，57 行 2 件）——`f_surr_localization` 条件形只剩 `hfs`（免费）/`hcard`/`hsimple`**。
 ① **`p22c2_vPrime_subset_sUnion`**（`vPrime_p3 V FF ⊆ ⋃₀ ePrime_p3 E FF`）：`y ∈ vPrime` 定义给 `(y,w) ∈ FF` ⇒ 面⊆darts ⇒ `dartsOfHyp_p3` ⇒ `FullySurrounded` 给 `{y,w} ∈ E` ⇒ `y ∈ ⋃₀ ePrime`。**`p22c2_noSlot_slice`**（`= dart1OfFan`）：切片 FAN（`IMP_FAN_V_PRIME_E_PRIME`）+ `noIsolated_of_hsub_p36`（LA36:633）+ `hno_of_no_isolated`（AzimBridge:1157）。2/2 标准三；RC=0、0 error/0 warning；olean 装池。
 ② **消槽对表**：调用形 = `p22c2_f_surr_localization_cond hfan h1 hx hFF h2 hfs hcard hsimple (p22c2_noSlot_slice hfan h1 hx hFF hfs)`；前件 5 个（`hfan`/`h1`/`hx`/`hFF`/`hfs`）在条件形调用上下文直接可得。
 ③ **派单**：`jcajydu-aq7` → **`wedge_in_fan_gt_eq_w_dart_fan`**（wedge 路线第 2 件，40–70；与 w13-rev wave 1 的两件无耦合，并行）。
 
-- **2026-11-10（05:25，续693）**：**W22d wedge 半 BLOCKED（探针 54 行）——perimeter 到根面并档为「conforming/iso 机器」战役 ~470–770（4–6 波）；「消两槽即到根面」作废**。
+- **2026-11-10（04:33，续693）**：**W22d wedge 半 BLOCKED（探针 54 行）——perimeter 到根面并档为「conforming/iso 机器」战役 ~470–770（4–6 波）；「消两槽即到根面」作废**。
 ① **7 件逐件判定（机器）**：`CLOSURE_MINIMAL_EQ` ❌零命中（精确+松散全 0）/ `DART1_NOT_COLLINEAR_2` ❌零命中（`Assembly.lean:4361` 注释明写「全树零机器」）/ `wedge_in_fan_gt_eq_w_dart_fan` ❌零命中 / `fan_hypermaps_iso`+`iso_simple` ❌零命中；✅ `CLOSED_WEDGE`（PA18:7871）/ `WEDGE_SUBSET_WEDGE_GE`（PA18:8172）/ `AZIM_CYCLE_EQ_SIGMA_FAN_ALT`（LA2:1212）。⇒ wedge 半真吃 5 件未移植件。
 ② **战役清单（估行）**：`LINEAR_FACE_2` 200–300 / `IN_DART1_OF_FAN_IMP_CARD_FACE_GT_1` 40–70 / `CLOSURE_MINIMAL_EQ` 40–70 / `DART1_NOT_COLLINEAR_2` 30–60 / `wedge_in_fan_gt_eq_w_dart_fan` 40–70 / `fan_hypermaps_iso`+`iso_simple` 120–200 ⇒ **470–770**。与 W22c-iii 的 400–650 重叠 ⇒ 单一战役排期，不再拆 80–140 小波。
 ③ **现状修正**：`hcard`/`hsimple` 与 W22d wedge 半**同源**；perimeter lane 到根面的剩余量 = 该战役 + W22d 装配；**不再宣称「消两槽即到根面」**。
 ④ **派单**：`w13-rev` → **战役 wave 1 = `DART1_NOT_COLLINEAR_2` + `CLOSURE_MINIMAL_EQ`**（各独立 patch，≤150；`LINEAR_FACE_2` 等 aq1-fin 的 face≥3 替代路线探针结果再定，避免白烧）。
 ⑤ **流程记账（派单丢失第 6 例）**：`aq13-survey` 的 W4a2 派单未送达（车道上一次输出 03:23，04:32 状态核查时确认「首次收到」）⇒ 已重发并要求接单回执；此例再次验证 AGENTS §3「接单先回一行」的必要性。
 
-- **2026-11-10（05:10，续692）**：**W22c-ii-b 条件形落库（`7233f12e`，+44 行 1 件）——`f_surr_localization` 5 合取成形，perimeter 侧只剩 `hcard`/`hsimple` 两个永久槽**。
+- **2026-11-10（04:31，续692）**：**W22c-ii-b 条件形落库（`7233f12e`，+44 行 1 件）——`f_surr_localization` 5 合取成形，perimeter 侧只剩 `hcard`/`hsimple` 两个永久槽**。
 ① **`p22c2_f_surr_localization_cond`**（HOL `RNSYJXM.vhl:245`）：`LocalFan (vPrime…) (ePrime…) FF ∧ FF = H2.face x ∧ (∀y∈FF, azimDart 不变) ∧ (∀y∈FF, wedgeInFanGt_p2 不变) ∧ (∀y∈FF, wedgeInFanGe_p2 不变)`；槽 = `hfs : FullySurrounded V E`（免费）/ `hcard : 2 < FF.ncard` / `hsimple : H2.Simple` / `hno : dartsOfHyp_p3 … = dart1OfFan …`。标准三；RC=0、0 error/0 warning；olean 装池。
 ② **装配**：`LVDUCXU`（LA10:1708，std3 5 合取）+ `p22c2_dartsOfHyp_subset`（自环支）+ `p22c2_face_subset_darts`（两侧面⊆darts）+ `IN_DARTS_FF_IMP_DARTS_E_PRIME_V_PRIME` + `IMP_FAN_V_PRIME_E_PRIME` + `p22c_azimDart_eq_azimInFan` 双向 + `LocalFan.of_localFan_p3`。三处机械 error 修法（`hazimWedge y hy` 先取等式再 `calc`；wedge `_p3 = _p2` defeq `exact`；`h3` 是 `→` 用 `exact`）已按编排者预判一次通过。
 ③ **W22d 开工前探针（w13-rev，只读 67 行）**：`H2.Simple` 不能由现有件导出（`SRPRNPL` 只给原扇，`localization_conforming` 零命中，`IsHypOn_p10` 不含 `Simple`）⇒ **`hsimple` 永久槽**；`FullySurrounded` 只给 `azimDart < π`、无基数信息 ⇒ **`hcard` 永久槽**（仍待 `LINEAR_FACE_2` 战役）；wedge 半疑似同食 `fan_hypermaps_iso`/`iso_simple`（零命中），W22d 落体前先做 15 行 wedge 探针。
