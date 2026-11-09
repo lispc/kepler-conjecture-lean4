@@ -73,8 +73,10 @@
 |---|---|---|
 | `packineqa-w1` | 闭 `nliPackIneqDefA`（5 条 3 族；定义已真化 `packIneqDefAP22`，`C1965189142x34` 在库；含 2 支常数不等式） | 在飞（已产 G4 证书试件 `C8055810915`，85 叶；⚠️ **该试件被写进主仓树 `lean/Kepler/Interval/Cases/`（未追踪）——位置违规，基线 T 已验证零污染，车道交付验收时编排者清理**） |
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
-| `wsewpch-w6a`（续跑） | LA7 九桩灌证（§5 第二根正主，10-26 任务单）：侦察定案 = 8/9 已于 10-26 落库（`2cee47ad`），#9 的 EGHNAVX 阻断已失效（LA14:6965 已真证但不可 import，改走 LA35/LA5/LA37/LA9 全可 import 路线），需复制 LA14-local 件 ~400 行 | 在飞（iter5 编译中，wip 快照 + logs 齐全；步子在自己的止损纪律内） |
-| `jcajydu-c2`（J0） | 战役第一波：num 层填证槽 `restrictedHypermapsArePlaneGraphsV4`（1.5–2.5k 行，HOL reduction 链机械移植） | 在飞（快照目录已立，未交件） |
+| `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
+| `jcajydu-c2`（J0） | 战役 J0：betwn 收官两定理 | **侦察 BLOCKED + 批 J0-a 已落库 `04a8443c`（见续412）**；收官等 AQ 塔；续做 J0-b（不触塔） |
+| `wsewpch-w7`（新） | WSEWPCH 本体（polar_fan.hl:2213，1,150 HOL 行）移植 → 解锁 W6c 一行装配闭 `fully_surrounded_perimeter_bound`（cone −1） | 在飞（w6a 收官后补位） |
+| `jcajydu-j2w2`（新） | **新关键路径**：AQ1–13 塔（`transform_assumption_v2`，reduction2，≈15k HOL 行）第一口——J3 与 J0 收官的公共父 | 在飞（续412 波序重排） |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
 | `jcajydu-j2w1` | 战役 J2：reduction2.hl 移植 | **批A 已落库 `0366932f`（9 件标准三，见续411）**；考古定案 8 批划分，批B 等 J0、批E(AQ1–13) 是 J3 硬前置 |
 | `jcajydu-j1w1`（J1 第一批） | 战役 J1：reduction4.hl（5,436 HOL 行/118 定理）移植第一口——同上 | 在飞（波序补位） |
