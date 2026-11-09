@@ -99,7 +99,7 @@
 | AQ5 | AQ56.hl | node 闭包（`node d ⊆ flatten`） | ✅ `aq5`（`JcajyduAqLeaf5`，351 行 5 件；5/5 ⊆ 标准三、`aq5_oldSubNew` 仅 `[propext]`；**`aq5_nodeCoverSelfNdSpine` 公开可复用**）。清单曾估 150–175（HOL 606 = 死件 6 + `case_hd_betwn_last` 82 弃 + 本体 518；三条结构性折算：filter 刻画→`aq1b_flattenNtrans1` 切口形、`case_hd_betwn_last` 省（吃 `aq1e_betwnSubset`）、upt/下标界→`pow_card_node_apply_self` 模周期）；**「`MarkedListSpineFull` 已给 N′ node 闭包」不成立**（只给旧 `N`）；实做 351（+100%，如实报、未截断） |
 | AQ6 | AQ56.hl | `rtrans … 1 ∈ ntrans … 1` | ✅ `aq6`（`TowerBase:353`，17 行） |
 | AQ7 | AQ7.hl 289 | `x ∈ rtransSpine … 1` | ✅ `aq7`（`JcajyduAqLeaf7:121`，158 行；helper 复用 AQ10-a2 批 ⇒ 净体积省一半） |
-| AQ8 | AQ8.hl 3,413 | `∀ q ∈ quotientListSpine L (ntrans …), q.Nodup` | **W0 已落**（`JcajyduAqLeaf8W0` 182 行 5 件）+ **W0.5 已落**（`JcajyduAqLeaf8W05` 203 行 6 件：`fstEqNextYtransV0`/`fstEqPrevZtransV0`/`fstNListPower`/`goodListUniq`/`listExtPowerInDarts`/`hdMap`；`hdMap` 零公理）+ **W1a 在飞**（y 族 + `AQ_normal_list` 条件槽） |
+| AQ8 | AQ8.hl 3,413 | `∀ q ∈ quotientListSpine L (ntrans …), q.Nodup` | **W0 已落**（`JcajyduAqLeaf8W0` 182 行 5 件）+ **W0.5 已落**（`JcajyduAqLeaf8W05` 203 行 6 件：`fstEqNextYtransV0`/`fstEqPrevZtransV0`/`fstNListPower`/`goodListUniq`/`listExtPowerInDarts`/`hdMap`；`hdMap` 零公理）+ **W1a 已落**（`JcajyduAqLeaf8W1a` 269 行 5 件：`aqs_aqNormalList` 条件槽 + y 族四件）；**W1b 在飞**（`parts_f_betwn_pure` + `uniq_fst_betwn_parts`，131 HOL） |
 | AQ9 | AQ9.hl 1,594 | `1 < 块数`（quotient 非退化） | 待派 |
 | AQ10 | AQ10.hl 206 | `nextEl (rtrans … 1) x = fList L x` | ✅ `aq10`（`JcajyduAqLeaf10G:?`，156 行；18 条声明全标准三：helper 14 + 分解 2 + 前缀 1 + 主证 1） |
 | AQ11 | AQ11.hl 277 | `finalListSpine L (findListSpine (ntrans … 1) (eList x))` | ✅ `aq11`（`JcajyduAqLeaf11`，214 行 6 件；**合取 7 直取**，原估 350–500 坍缩到 ~148 实际 214；6/6 标准三；**`aq1` 首个下游消费者**） |
@@ -144,7 +144,7 @@
 | `tame16-ql`（**换血**，续520） | `TameList16:1109` 定点攻坚（more_lemma2 + AQ12 双解锁） | **开跑**：直路线「单点块 ↔ 块数=1」撞 `MarkedListSpine` 第 5 合取，**绕开两次止损的 HOL `dart_of_card_node`**；裁决面 = 删 `have hql := by sorry` 一处、陈述零改 |
 | `nkezbfc-scout` | WSEWPCH 上游锁（NKEZBFC）侦察 → 施工 | **SCOUT + WAVE2 图纸 + wave 1 `842d1ddf` + EJRCFJD_ALT2 `64892e87` + W1 `8feef9cd`（4 件缺口支）+ W2 `LocalFanStepBW2`（192 行 D+E+F 全标准三）已落库**；**接口修正（重要）**：D 吃 B 支**跳跃索引**（`bta i=0 ∧ bta(i+1)=last`）而非 W1 缺口索引 ⇒ W7 分两支；**W2b `LocalFanStepBW2b`（72 行 `pW2b_jump_exists` 标准三）已落库**；在飞 **W3**（¬B 缺口支：坏 dart `e` 的 u/w 侧并集分解） |
 | `jcajydu-j3def` | 战役 J3：定理层（147 件 / 15 批） | **已落：审计 76 件 + 链 4/5 `8aec92da` + b_nfgtrans 族 `70415fa0` + T9B `647b5a65` + T9C 支撑 `faaac9f0`**；T9 余 4 大件拆 T9C 本体（`j3-t9c2`）/ T9D |
-| `j3-t6d` | 战役 J3 收盘 → J2 前置 | **T7E `a2e021be` + T7F `9e54540f`/DEF-FIX `3fac7551` + T7H 终版收盘表（143 active = 114 已落 / 11 J2 / 18 上游 / 0 定义层 / 可攻 0）**；`TAV2_READINESS.md` 已交；**AQ8 W0 `f5ef798b`（182 行 5 件共享地基）已落库**；在飞 **W0.5 六件**（`fstEqNextYtransV0`/`fstEqPrevZtransV0`/`fstNListPower`/`goodListUniq`/`listExtPowerInDarts`/`hdMap`） |
+| `j3-t6d` | 战役 J3 收盘 → J2 前置 | **T7E `a2e021be` + T7F `9e54540f`/DEF-FIX `3fac7551` + T7H 终版收盘表（143 active = 114 已落 / 11 J2 / 18 上游 / 0 定义层 / 可攻 0）**；`TAV2_READINESS.md` 已交；**AQ8 W0 `f5ef798b` + W0.5 `JcajyduAqLeaf8W05` + W1a `JcajyduAqLeaf8W1a`（269 行 5 件）已落库**；在飞 **W1b**（`parts_f_betwn_pure` + `uniq_fst_betwn_parts`） |
 | `archive-data-scout` | trust-base §4 第 2 条：`ArchiveData/{Tri,Quad,Pent,Hex}` vs HOL vs AFP 三路机械对账 | **✅ 已收工（四类全 SAME，见续407）** |
 
 > **排队（等腾槽）**：**下一战役槽自动补位序（2026-11-09 编排者排定，续412 波序细化）**：
