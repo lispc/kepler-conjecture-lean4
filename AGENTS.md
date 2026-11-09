@@ -173,6 +173,11 @@
    `h : f x = (a,b,c)`」，前提/结论一字未改（下游传 `rfl` 实例化），编译降到 2 分钟级
    （j3-t9c2 T9D 实测：`splitFace` 三元 let，115 s）。**注意**：这是陈述写法变更，
    虽 defeq 等价也必须在该批 DIFFERS 里记档。
+18. **负探针报 unknown 有两个成因，别只查名字**：(i) 名字面改名（HOL 名 → Lean 公开名，
+   如 `aq1`/`aq10_*`/`findListSpineMemN`）；(ii) **导入闭包过窄**——探针没 import 到
+   定义/已落库的叶文件，件明明在树仍报 Unknown（2026-11-10 AQ12 W1b 实测：
+   `ProbeAQ12_neg.lean` 未 import `JcajyduAqLeaf8W0`，`memPartsImp`/`sndMemRtran1` 假阴性）。
+   ⇒ 负探针必须按**最新叶文件全集**建 import 闭包，再逐名做语义 grep/`#check` 复核。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
