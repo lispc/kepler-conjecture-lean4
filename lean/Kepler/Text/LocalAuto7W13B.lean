@@ -126,7 +126,7 @@ private theorem p13b_azim_rho_ivs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 
 /-! ## `pre w` 的两种识别 -/
 
 /-- `w ≠ ρv` 时 `pre w = ιw`（`r (pre w) = w`；若 `ρ(pre w) = v` 则 `w = ρv`）。 -/
-private theorem p13b_pre_eq_ivs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+theorem p13b_pre_eq_ivs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
     {v : V3} (hv : v ∈ V) {w : V3} (hw : w ∈ p12b_V V v)
     (hne : w ≠ rhoNode1 FF v) :
@@ -145,7 +145,7 @@ private theorem p13b_pre_eq_ivs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 ×
     exact hid.symm
 
 /-- `w = ρv` 时 `pre w = ιv`（`r ιv = ρv` 且 `r` 在 `V'` 上单射）。 -/
-private theorem p13b_pre_of_eq_rho {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+theorem p13b_pre_of_eq_rho {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
     {v : V3} (hv : v ∈ V) {w : V3} (hw : w ∈ p12b_V V v)
     (heq : w = rhoNode1 FF v) :
