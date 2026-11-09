@@ -42,8 +42,8 @@
 - [`global-reachability-map.md`](global-reachability-map.md) — union 多根快照。
 - [`e2e-tree-visualization.md`](e2e-tree-visualization.md) — 本地树页面数据口径与重建。
 - [`e2e-reachability-map.tsv`](e2e-reachability-map.tsv) — 生成物；
-  **注意：当前停在基线 E（2,079,707 / SORRIED 135），落后 md 两个基线**，
-  引用前看 md 的最新 baseline 一节。
+  **当前 = 基线 T（2026-11-09：2,088,969 / SORRIED 78 / AXIOM 585）**，
+  与 `docs/priority-queue.md` 文件头同口径；历史基线叙事看 md 的对应节。
 
 ### 怎么跑闸 / 怎么开工
 

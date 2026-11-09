@@ -69,23 +69,27 @@ make reprove   # 从零重建 + 审计——Definition of Done
 注：重型重计算（LP 重跑、非线性证书重放）当前挂起等强机器，见 `PLAN.md`
 §5 计算约束表；纯 Lean 编译工作在本机基线（笔记本）上全部可行。
 
-## 状态（2026-11-05）
+## 状态（2026-11-09）
 
-端到端对象 `Kepler.the_kepler_conjecture_e2e` 已立。其实时公理面 = **628 行**
-= 624 个 `native_decide` 图枚举 shard 公理 + `propext` + `Classical.choice` +
-`Quot.sound` + `sorryAx`。624 个 shard 是 Phase 2 的特许计算；`sorryAx` 是剩余
-接口债，目标是只剩标准三公理。
+端到端对象 `Kepler.the_kepler_conjecture_e2e` 已立。实时公理面 = **589 行**
+= **585 个 `native_decide` 图枚举 shard 公理**（信任基座，2026-11-09 定格：
+580 shard-range + 5 tri-single-seed，仅 2 种形状）+ `propext` + `Classical.choice` +
+`Quot.sound` + `sorryAx`（锥内 78 条，唯一真债）。
+
+**终局标准（用户 2026-11-06 裁决，见 `AGENTS.md` §1）**：不比 Flyspeck/Isabelle 更差——
+即 585 条声明信任基座（与 Isabelle `by eval` 同类、同数据）+ 零 `sorryAx` 目标，
+**不是**「只剩标准三公理」（"真·标准三"明确不做；goodList 23 条已改 kernel 证明追平 HOL）。
 
 阶段级状态（定性——**实时数字只有一个出处**）：
 
 | Phase | 内容 | 状态 |
 |---|---|---|
-| 1 | 定理陈述 | ✅ 陈述已定稿；`Statement.lean` 的 sanctioned 占位 sorry 待终版退役 |
-| 2 | tame 平面图枚举 | ✅ 19,715 图 + 完备性证书；624 个内核验证 shard 公理 |
-| 3 | 线性规划 | ✅ 43,078 终端 LP 证书已核；e2e 锥上只有 1 个 hLP 债点。~42.9k LP 叶带在锥外，是另一笔债 |
-| 4 | 非线性不等式 | 🟡 hNL：`Assembly.lean` 里仍有 `nli*` 接口声明；重型农场重放挂起 |
-| 5 | 文字证明移植 | 🟡 几何塔群大部分已塌（LA14 / LA31 / LA34 / LA37 归零）；余塔债 + ~70 条 Text 层 hTC 移植 |
-| 6 | 集成与交付 | 🟡 e2e 已立；capstone 出口已接入 `Assembly`；余接口收尾 + 信任审计 |
+| 1 | 定理陈述 | ✅ 陈述已定稿 |
+| 2 | tame 平面图枚举 | ✅ 19,715 图 + 完备性真证；585 条 shard 公理 = 声明信任基座（数据与原版三路对账 SAME） |
+| 3 | 线性规划 | ✅ 43,078 终端 LP 证书已核；LP 检查器内核 soundness 真证；灌装债 = `lpArchiveCertificatesDebt`（锥内） |
+| 4 | 非线性不等式 | 🟡 hNL 六分量 5 条接口 sorry（`nli*`）；sqrt/atan 档重型农场重放挂起（原版同为农场） |
+| 5 | 文字证明移植 | 🟡 几何塔群大部分已塌（LA 系引擎层 16 文件零 sorry）；§5 两根在攻（J 战役 `jcajydu` + WSEWPCH 程序） |
+| 6 | 集成与交付 | 🟡 e2e 已立且总装链真证；根面 589；信任基座 manifest `--check` 全绿 |
 
 **数字在哪读**：唯一实时账本是
 [`docs/priority-queue.md`](docs/priority-queue.md)——在飞车道、排队、最近落库、

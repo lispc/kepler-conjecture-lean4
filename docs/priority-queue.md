@@ -47,9 +47,9 @@
 |---|---|---|---|
 | **M0b 兑现** | 塔群 capstone + Assembly 接线，闭件转成 K_REACH | **已三件：w1 126 + w2 45 + w3 151 = 322 出口入锥（`b8e64e18`/`68a306ec`、`939b2533`/`da9b5fd4`、`a7bdb571`/`cbfad0cd`），根公理面 628 行始终不变；LA6 的 PROVE_SLICING_FAN/LOFA_HYP 两件待小波补录** | 无（机械） |
 | **M1a 锥内文本债清零** | cone SORRIED **134 → 89**（只剩农场 84+5） | 文本波 35（twin-transfer/装配）+ 移植 7（hTC 3 + LEAF 3 + TameLp 1）+ 接口锚 2 + LP 1 | **勘误：twin 不全是捷径**——`ZLZTHIC_discharged := @ZLZTHIC_p14`、`MHAEYJN_discharged := MHAEYJN_p37` 是**指向塔内 sorry 的正向转发体**；M1a 的 transfer 只对"真证孪生"成立，须逐件 `#print axioms` 核实 |
-| **M1b 接口收口** | hTC + hLP 归零 → e2e 只剩 hNL + 624 shard | hLP 单件（`lpArchiveCertificatesDebt`，纯逻辑已真推导）；hTC 3 Assembly + ~70 Text 章级移植单开长车道 | hTC 章级移植深（DLWCHEM/XULJEPR 计数 GIANT） |
+| **M1b 接口收口** | hTC + hLP 归零 → e2e 只剩 hNL + 585 shard（**信任基座非债**，2026-11-06 裁决后口径） | hLP 单件（`lpArchiveCertificatesDebt`，纯逻辑已真推导）；hTC 3 Assembly + ~70 Text 章级移植单开长车道 | hTC 章级移植深（DLWCHEM/XULJEPR 计数 GIANT） |
 | **M2 信任基座** | 621 shard manifest + 抽样 replay + Docker 一键复现（**原版 Flyspeck 的答案**：见 handoff §0.1） | manifest/harness 本机可做；全量 replay 需算力窗口 | 算力 |
-| **M3 北极限** | hNL 77 + 624 shard 清偿 → 真·标准三 | 证书农场（89 农场件）+ D 证书层 | 用户保留（重型计算 / D 解冻 / certtm） |
+| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 78 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | 锥内 sorry 的非-LP 部分在攻（J 战役 / WSEWPCH / nli 移植）；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
 
 三接口独立债量（2026-10-28 口径，Assembly 81；2026-11-03 已降至 77，明细待重扫）：**hNL（非线性不等式）= 77 条 nli\***（57
 `nliPackNonlinearRest`（TSV 实数，含 A2 在飞的 rest 9）+ 8 `nliTskBank` + 7 `nliCell3Bank` + 直挂若干）；**hLP（线性规划）
