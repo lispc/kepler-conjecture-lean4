@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:15，续720）**：**W2 剩余四件止损（共同前置层挡住）→ 授权前置波（三引理 + 载体 transfer，150–280）**。
+① **逐件判定（aq13-survey，采信）**：`generateNonfinalPolygon_reduction`(623-719，3 ta) 前提含 `newvertex_prepped`；`lnrx_induction`(2706-2757，2 ta) **BLOCKED**——`core_split_normal_list_assumption`/`r_trans_eq_assumption`/`newvertex_prepped`/`element_pre` 全缺，所需引理 `elements_of_list_ntrans`/`newvertex_prepped_transform`/`transform_count_not`(Kbwpbhq) **Lean 零命中**；`good_faces_transform_lemma`(3 ta) 前提含 `assumption_setK10`；`generatePolygon_explicit_reduction`(388-455，1 ta) 同层。
+② **前置层构成**：def 已在树（`newvertexPrepped` Reduction3DefsNewVertex:78、`elementPre` Reduction3Defs:88）——非缺 def，是载体/命名 transfer；引理层零命中 >200 行；assumption 层 `assumption_setK10` 未侦察、Thm12 有 ⛔续411 off-by-one 雷区（**只标注不碰**）。
+③ **派单**：aq13-survey → **W2-前置波**（件1 `elements_of_list_ntrans` 40–80 / 件2 `newvertex_prepped_transform` 40–80 / 件3 `transform_count_not` 40–80 / 件4 transfer 核对 ~30；拆 2–3 patch，总 ≤350，超先报）。落地后 W2 四件（每件 60–150）解锁。
+④ 已落不受影响：`marked_list_mark_rtrans_top`（`ee2b1c9e`）。
+
 - **2026-11-10（07:30，续719）**：**2-ε / 2-ζ 上工（池 5/5）**。
 ① **`la-registry-mnt11`**（2-ε，用户裁「补前提」）：`VASYYAU`/`PWEIWBZ`/`WKZZEEH`/`YEBWJNG` 四条 `_concl` 补 `main_nonlinear_terminal_v11` 前提（SF 通道：`docs/statement-fix-proposals.md` 追加节 + 四条改陈述 + LA25 re-export + `LocalConcl` 绑定，一 commit）；消费者失效只报告不顺手改；某条变不可证则单独回滚标 UNRESOLVED。
 ② **`reduction5-scout`**（2-ζ，只读）：`restricted_hypermaps_are_planegraphs_thm` 边界（HOL 估 1,500–3,000）→ 依赖闭包逐件表 + 假桩对照 + 波次建议 + GO/NO-GO；时间盒 60–90 分钟。
