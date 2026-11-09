@@ -90,7 +90,7 @@ noncomputable def splitNormalListSpine (L : fgraph ℕ) (r f : List (ℕ × ℕ)
   let ram2' := nextEl r ram2
   let sz : ℕ → ℕ := fun v => (L.flatten.filter (fun t => decide (t = v))).length
   let nd : ℕ × ℕ → List (ℕ × ℕ) :=
-    fun x => (List.range' 1 (sz x.1)).map fun i => (nList L)^[i] x
+    fun x => (List.range' 1 (sz x.1 - 1)).map fun i => (nList L)^[i] x
   let new2 := between f ram1 ram2'
   let new1 := (new2.map nd).flatten
   let f1 := [ram1'] ++ between r ram1' ram2 ++ [ram2]
