@@ -45,14 +45,14 @@ theorem p13c_R_eq_rho_of_ne {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)
 /-! ## `arcV` ↔ `angle` 与 `setSum` 小工具 -/
 
 /-- `arcV u v w` 是顶点 `u` 处的欧氏角（HOL `ARCV_ANGLE`；`p7_arcV_eq_angle` 的本地副本）。 -/
-private theorem p13d_arcV_eq_angle (u v w : V3) :
+theorem p13d_arcV_eq_angle (u v w : V3) :
     arcV u v w = EuclideanGeometry.angle v u w := by
   rw [arcV, EuclideanGeometry.angle, vsub_eq_sub, vsub_eq_sub, InnerProductGeometry.angle,
     inner_eq_dot, ← dist_eq_norm, ← dist_eq_norm]
   simp only [WithLp.ofLp_sub]
 
 /-- `setSum` 逐点相等。 -/
-private theorem p13d_setSum_congr {α : Type*} {s : Set α} {f g : α → ℝ}
+theorem p13d_setSum_congr {α : Type*} {s : Set α} {f g : α → ℝ}
     (h : ∀ v ∈ s, f v = g v) : setSum s f = setSum s g := by
   unfold setSum
   by_cases hs : s.Finite
@@ -61,7 +61,7 @@ private theorem p13d_setSum_congr {α : Type*} {s : Set α} {f g : α → ℝ}
   · rw [dif_neg hs, dif_neg hs]
 
 /-- `setSum (insert a s) f = f a + setSum s f`（`a ∉ s`、`s` 有限）。 -/
-private theorem p13d_setSum_insert {α : Type*} [DecidableEq α] {s : Set α} {a : α}
+theorem p13d_setSum_insert {α : Type*} [DecidableEq α] {s : Set α} {a : α}
     (f : α → ℝ) (ha : a ∉ s) (hs : s.Finite) :
     setSum (insert a s) f = f a + setSum s f := by
   unfold setSum
@@ -84,7 +84,7 @@ private theorem p13d_collinear3_comm {a b c : V3} (h : Collinear3 a c b) :
 /-- **`affGe {0}{p,q} → affGt {0}{p,q}`**（两非共线前提把 `p`、`q` 的系数抬成严格正）：
 `v = r•p + s•q`（`r,s ≥ 0`）中若 `r = 0` 则 `v ∥ q` 撞 `¬Collinear3 0 v q`，
 `s = 0` 对称撞 `¬Collinear3 0 v p`；严格正后按 `Affsign` 显式给见证。 -/
-private theorem p13d_affGt_of_affGe {p q y : V3} (hp0 : p ≠ 0) (hq0 : q ≠ 0) (hpq : p ≠ q)
+theorem p13d_affGt_of_affGe {p q y : V3} (hp0 : p ≠ 0) (hq0 : q ≠ 0) (hpq : p ≠ q)
     (hmem : y ∈ affGe ({0} : Set V3) ({p, q} : Set V3))
     (hncp : ¬ Collinear3 (0 : V3) y p) (hncq : ¬ Collinear3 (0 : V3) y q) :
     y ∈ affGt ({0} : Set V3) ({p, q} : Set V3) := by
