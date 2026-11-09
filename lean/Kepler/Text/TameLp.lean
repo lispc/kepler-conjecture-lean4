@@ -9965,7 +9965,7 @@ private theorem yk10_affGe22_eq_union {u0 u1 u2 u3 : V3}
       module
 
 /-- aff_ge 2+2 闭（= CLOSED_AFF_GE 的 2+2 形；两平移闭锥之并）。 -/
-private theorem yk10_isClosed_affGe22 {u0 u1 u2 u3 : V3}
+theorem yk10_isClosed_affGe22 {u0 u1 u2 u3 : V3}
     (h01 : u0 ≠ u1) (h02 : u2 ≠ u0) (h03 : u3 ≠ u0) (h12 : u2 ≠ u1)
     (h13 : u3 ≠ u1) (h23 : u2 ≠ u3) :
     IsClosed (affGe ({u0, u1} : Set V3) ({u2, u3} : Set V3)) := by
