@@ -139,6 +139,14 @@
 11. **`Perm` 的 `~` 是 scoped notation**：裸文件里写 `~p` 报 unexpected token，
    一律写 `List.Perm xs xs'`；`List.getD_eq_getElem` 的界证明参数名是 **`hn`**（非 `h`）。
    `Perm` 归纳的 cons 真支两侧退化为 `news ++ tail` 时 IH 不适用，用 `p.mem_iff`。
+12. **`(ite c a b).2` 不 defeq `ite c a.2 b.2`**（`c : Bool` 变量表达式时 Decidable
+   不归约）⇒ 别用 `change` 把 `.2/.2.1` 推进 ite 分支；先 `rw [show β = ite形 from rfl]`
+   展开本体，再 `by_cases` + `if_pos/if_neg`。
+13. **`open Foo (fList eList …)` 里写错一个名字会让整条 open 失效**，且只报该名字一处，
+   随后满屏 unknown identifier（`Dart`/`parts`/`core`）⇒ 先核 `#check` 该名字的真实命名空间
+   （`fList`/`eList` 在 `Kepler.Assembly`，不在 `Kepler.Text.Reduction5`）。另：
+   `getLast!` 按前缀构造子递归（`(l++[a]).getLast! = a` 走 `getLastD_concat`；
+   `l.reverse.getLast! = l.head!` 需对 `l.reverse` 用再 `reverse_reverse`）。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
