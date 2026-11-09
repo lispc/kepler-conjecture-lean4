@@ -318,6 +318,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（06:00，续713）**：**塔顶 W1 接线落库（`295a28a9`，48 行 5 alias）——7 条消费者全部可传 `transformAssumptionSpine_top`；6/6 锚标准三、零 sorryAx**。
+① **alias**：`aqiunpp1_top`/`aqiunpp2_top`/`aqiunpp3_top`（TameList17 三个公开件）+ `DANGEYJ_concl_top`（def 形）+ `DANGEYJ_top`（TameList72）；`aqiunpp3_aux`/`DANGEYJ_step` 为 private 不做；**原文件零改**（`DANGEYJ_concl` 的 `_hta` 哑参数属陈述改动，留 SF 通道）。
+② **6/6 锚**（含 `transformAssumptionSpine_top` 补测）= `[propext, Classical.choice, Quot.sound]`、零 sorryAx；RC=0、0 error/0 warning；olean 装池。
+③ **W2/W3 排队**：W2 = J 移植 reduction3/KBWPBHQ/PBFLHET 时换 top 前提（每文件 ≤200，待 J 车道）；W3 = 全消费者 axioms 审计 + §0.3 对表（收尾）。
+④ **BIEFJHU round-2 进行中**：2 driver 各 ~102 子盒，实测 ~2.4 min/子盒（12 min 到 5/102）⇒ 预计 ~4h 完成，随后自动 assemble → `kernel_check(P6S)` → emit with `--r2`。不重启分片（避免丢已完成子盒、避开 driver 状态风险）。
+
 - **2026-11-10（05:50，续712）**：**两件落库：`p22c2_f_surr_localization_cond_full`（`31b6e04d`，97 行）⇒ `f_surr_localization` 全消槽；`p22d_closedWedge`（`452a5c7c`，221 行）⇒ CLOSED_WEDGE 真证。perimeter 只剩 W21 `hL` 槽接线（已派）。**
 ① **`p22c2_f_surr_localization_cond_full`（`LocalAuto7W22dK`）**：`p22dK_H1_simple`（FullySurrounded → conforming → `SRPRNPL` → `Simple_congr_inst` 跨实例传到 H1）+ 全消槽条件形（`hcard`←`p22c3_hcard_bridge`，`hsimple`←`p22d_locSimple_hypermap`，`hno`←`p22c2_noSlot_slice`），**只剩 `hfs`**。实例解法：`Simple_congr_inst` + 四条 `@`-显式 LA1 桥，**完全不提 private `fanHyp`**。标准三；RC=0、0 error/0 warning。
 ② **`p22d_closedWedge`（`LocalAuto7W22dI`，221 行 6 件）**：HOL `CLOSED_WEDGE` 逐字（PA18:7871 形，不 import PA18）；三支 `<π`（`WEDGE_GE_EQ_AFF_GE` + `yk10_isClosed_affGe22`）/`=π`（`AZIM_PI_WEDGE_GE_CROSS_DOT` + `isClosed_Ici.preimage`）/`>π`（105 行：`azimSplitPoint` + `IN_CONV0_IMP_AZIM_PI` + 本地移植 `azimBaseShiftLe`/`wedgeGeSplit`）。**勘误（陈述零改）**：`<π` 支「6 个 pairwise-≠ 由 h2/h3 直给」不成立——`h23 : u2 ≠ u3` 与两条非共线前提相容，已单开 `u2 = u3` 退化分支走 `closed_aff_ge_2_1`（TopologyFan:2635）。全标准三、零 sorryAx；RC=0、0 error/0 warning。
