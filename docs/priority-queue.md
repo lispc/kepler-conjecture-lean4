@@ -57,7 +57,7 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-09 12:00，池 **5/5**，续406 对表）
+## 1. 在飞（2026-11-09 12:30，池 **5/5**，续406 对表）
 
 > **用户 2026-11-09 指令：额度恢复，维持 5 车道。**（11-06 的"降到 3"解除。）
 > **用户 2026-11-09 裁决（常设）：`jcajydu` J 战役立项，池内永久保持 ≥1 条战役车道**——
@@ -76,6 +76,7 @@
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证（§5 第二根正主，10-26 任务单）：侦察定案 = 8/9 已于 10-26 落库（`2cee47ad`），#9 的 EGHNAVX 阻断已失效（LA14:6965 已真证但不可 import，改走 LA35/LA5/LA37/LA9 全可 import 路线），需复制 LA14-local 件 ~400 行 | 在飞（iter5 编译中，wip 快照 + logs 齐全；步子在自己的止损纪律内） |
 | `jcajydu-c2`（J0） | 战役第一波：num 层填证槽 `restrictedHypermapsArePlaneGraphsV4`（1.5–2.5k 行，HOL reduction 链机械移植） | 在飞（快照目录已立，未交件） |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行）——**深侦先行**（30 分钟级，停机条件写在工单：编码件缺口即停） | 在飞（侦察中） |
+| `archive-data-scout` | trust-base §4 第 2 条：`ArchiveData/{Tri,Quad,Pent,Hex}` vs HOL `tame_list.hl` vs AFP `Arch.thy` 三路机械对账（条目数 + 规范化指纹 + 逐条 diff）——若 SAME，§2 表第 4 行升级为「同一份数据」；原排「我自己做」，改派车道（零编译只读） | 在飞（侦察中；**过渡期补位**：J1/J2 按 §1 头部波序等 rx桥回报后发车，战役常驻 3 条不受影响） |
 
 > **排队（等腾槽）**：`kcblrqc` 注册表侧接线 + XL 过夜重建批（侦察定案见续400：小件 25 模块几分钟，XL 三棵 ≈11,717 模块/7.66M 行 ≈12–13 h 串行）；
 > ~~`kcblrqc` 定义侧~~（勘误 续402：BLOCKED，定义侧强于 HOL 形、被注册表侧挡死，正确闭法 = XL 批 + 28 id 接线 + 三层机械移植 1.5k–2.5k 行；可先立的独立小件 = 包装层 mk_imp 形零证书）；
