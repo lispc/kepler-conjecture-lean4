@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:19，续724）**：**tame-corr W2.5 收口（P1/P2 消波 + P3 落库 `b635be75`）→ 2-γ W3 上工 + 2-β W0 上工（池 5/5）**。
+① **P1/P2 消波（ERRATA，机器证据）**：`rxNumTransport` 填证本体 = `JcajyduRxBridge` §1–§4（`286cf3b6`，532 行，`rxNumTransportBridge : rxNumTransport α` :470 真证标准三）——**续410 `jcajydu-rxbridge` 行早已在账；续721① 的「rxNumTransport 填证 500–900」口径作废**。漏检根源（双向记档）：车道 W2 侦察消费边只按 TameList69/RXOKSKC 命中面 grep、未按模块名+定理名双路检索；编排者派 W2.5 时未对 §1 已落表行交叉核对。泛型 α→β 序列件（la7_listPairs_map 族）亦早已在 TameLp §10。
+② **P3 落库 `b635be75`**：`TameSpine/JcajyduOfNum.lean` 64 行 1 件——`jcajyduOfNum` = HOL `JCAJYDU`（:51–90）**忠实无条件形**（`htx` 跨型槽由桥真证消去，前提收窄 num 层 V4 单槽；DIFFERS 三条头注记档）。验收：apply-check 双基线 PASS / 岛编 RC=0 0err / **独立探针 3/3**（jcajyduOfNum + rxNumTransportBridge + jcajyduShell）标准三零 sorryAx / olean 装池。**章账：JCAJYDU.hl 四件全真证标准三（jcajydu 章闭）**——唯余 `Assembly:2509 jcajydu` 占位（删桩 = 本件 + J5 三桥折算，归装配波）；V4 供给 = reduction5 链（W2-a 在飞）。
+③ **2-γ W3 上工**（tame-corr 三波程序收官）：`tameCorrespondenceIso`（WMLNYMD.hl 1,515 行/40+ 引理，闭包估 2,000–4,500 HOL）；第一波侦察+PLAN（时间盒 60–90 min）+ 首件 patch 视侦察而定。
+④ **2-β W0 上工**（用户挂队条目，空槽候补）：`la21-general482-w1` 只读侦察波——CUXVZOZ.hl 7 前置逐条表 + 依赖序切 2–3 子波 + 本体 640 行结构判定 + 假桩对照 + 解锁面实证（JCYFMRP_p27/SCS_4I1→4I2→4T1/TFITSKC/LA16 CQAOQLR）；时间盒 60–90 min。
+
 - **2026-11-10（07:12，续723）**：**aq13-survey 额度尽退役换血 `aq13-survey-w2`（§1 行尾对表）**。① 前车道末轮为**归档轮**（W1 消费者 alias/W4a2c2/W4a2c3 交付物补档，均已先前落库；两份 DELIVERY 已去模板尾）；件1 本体按 §7 交完整交接包（`DELIVERY_W2_ITEM1A_SCOPE.md` §2–§3）。② 新车道回执合规（AGENTS 全文 + 基线 `fde99ddd` + 零禁词确认），在飞件1本体 120–160 单 patch。③ §1 `aq13-survey` 行尾由「在飞 W4a2→W4b」旧态修正为 W4a2 五笔 + W4b `35dc6251` 收口 + 塔顶已接 + 换血现态（对表滞后勘误）。
 
 - **2026-11-10（07:10，续722）**：**2-ζ reduction5 侦察 GO（核验通过）→ U3 裁决 + W2-a 派单；aq13-survey 件1a 消波（前提发现）→ 派件1本体（池 4/5）**。
