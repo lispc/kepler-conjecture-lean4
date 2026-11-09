@@ -5,6 +5,8 @@
   ┌─ 件目（纯定义 + nil 基例平凡事实）─────────────────────────────
   │   subdiv_face0_alt   tame_defs2.hl:368-381 → subdivFace0Alt
   │   subdiv_face0_alt2  tame_defs2.hl:389-397 → subdivFace0Alt2
+  │   subdiv_faceFinal2  tame_defs2.hl:397-400 → subdivFaceFinal2
+  │     （追加章程 `subdivface-final2-defs`；仅定义 + nil 方程）
   │ 动机：reduction3.hl:1454/:1560/:1572 三件直接引用它们，树内零命中；
   │ 本批只补定义，**不证** T5B 定理（章程 §3）。
   └────────────────────────────────────────────────────────────────
@@ -36,7 +38,7 @@ set_option linter.unusedSectionVars false
 
 namespace Kepler.Text.Reduction3
 
-open Kepler.Graphs (Face Graph splitFace)
+open Kepler.Graphs (Face Graph makeFaceFinal splitFace)
 
 /-- HOL `subdivFace0_alt`（tame_defs2.hl:368-381）：返回 `(f,g)` 余态的
 递归分面（`subdivFace0Beta` 的 `(f,g)` 形孪生——两者返回值不同，不可互相
@@ -73,6 +75,17 @@ theorem subdivFace0AltNil (g : Graph) (f : Face) (u n : Nat) :
 theorem subdivFace0Alt2Nil (g : Graph) (f : Face) (n0 : Nat) :
     subdivFace0Alt2 g f n0 [] = (f, g) := rfl
 
+/-- HOL `subdivFaceFinal2`（tame_defs2.hl:397-400）：`subdiv_face0_alt2` 后
+`make_face_final` 的 `graph` 形孪生（DEF-FIX 章程
+`docs/def-fix-charters/subdivface-final2-defs/CHARTER.md`）。 -/
+def subdivFaceFinal2 (g : Graph) (f : Face) (uvns : List (Nat × Nat × Nat)) : Graph :=
+  let p := subdivFace0Alt2 g f g.countVertices uvns
+  makeFaceFinal p.1 p.2
+
+/-- 定义即引理：`subdivFaceFinal2` 的 nil 方程（`subdivFace0Alt2 … [] = (f,g)`）。 -/
+theorem subdivFaceFinal2Nil (g : Graph) (f : Face) :
+    subdivFaceFinal2 g f [] = makeFaceFinal f g := rfl
+
 end Kepler.Text.Reduction3
 
 -- 探针（编译即执行）：签名比对 + 公理
@@ -80,3 +93,4 @@ end Kepler.Text.Reduction3
 #check @Kepler.Text.Reduction3.subdivFace0Alt2
 #print axioms Kepler.Text.Reduction3.subdivFace0AltNil
 #print axioms Kepler.Text.Reduction3.subdivFace0Alt2Nil
+#print axioms Kepler.Text.Reduction3.subdivFaceFinal2Nil
