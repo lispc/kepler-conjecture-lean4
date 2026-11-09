@@ -2753,13 +2753,143 @@ noncomputable def fanPerimeter (V : Set V3) (_E : Set (Set V3)) (FF : Set (V3 ×
   ∑ i ∈ Finset.range ((FF.ncard - 1 : ℕ) + 1),
     arcV (0 : V3) ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v)
 
+/-! ### W7 perimeter kit (`p7w3_*` private helpers; WSEWPCH wave W7)
+
+Renders the generic sum-manipulation moves of HOL
+`Polar_fan.FAN_PERIMETER_INVARIANT` (polar_fan.hl:2122-2170): the orbit
+cycle data comes from the w6a kit (`w6a_orbit_cycle` / `w6a_iter_rho_card`),
+`sum 0..k-1` reindexing `i ↦ (i + m) MOD k` is `Finset.sum_nbij'` on the
+`Nat` mod window lemmas below. -/
+
+section W7Kit
+
+/-- `k`-periodic point: every orbit point of `x` is again `k`-periodic
+(HOL `ITER_ADD` move `ITER k (rho) (ITER j (rho) v) = ITER j (rho) v`). -/
+private theorem p7w3_period_all {α : Type*} (f : α → α) {x : α} {k : ℕ}
+    (hx : f^[k] x = x) (j : ℕ) : f^[k] (f^[j] x) = f^[j] x := by
+  rw [← Function.iterate_add_apply, Nat.add_comm, Function.iterate_add_apply, hx]
+
+/-- Periodic sequences: shifting the argument by `k * q` changes nothing
+(HOL `SUM_OFFSET`/`ITER_ADD`-flavoured telescope). -/
+private theorem p7w3_period_add {k : ℕ} (f : ℕ → ℝ) (hper : ∀ j, f (j + k) = f j)
+    (q x : ℕ) : f (x + k * q) = f x := by
+  induction q with
+  | zero => simp
+  | succ q ih =>
+    have hsplit : x + k * (q + 1) = (x + k * q) + k := by ring
+    rw [hsplit, hper, ih]
+
+/-- `n % k` on the window `k ≤ n < 2 * k`. -/
+private theorem p7w3_mod_twok {k n : ℕ} (h1 : k ≤ n) (h2 : n < k + k) :
+    n % k = n - k := by
+  have h : (n - k + 1 * k) % k = (n - k) % k :=
+    Nat.add_mul_mod_self_right (x := n - k) (y := 1) (z := k)
+  have heq : (n - k + k) % k = (n - k) % k := by
+    have h2' : n - k + k = n - k + 1 * k := by ring_nf
+    rw [h2', h]
+  rw [show n % k = (n - k + k) % k from by congr 1; omega, heq,
+    Nat.mod_eq_of_lt (by omega)]
+
+/-- Cyclic reindexing of a `k`-periodic sum: shifting by `m < k` inside a
+`range k` sum is the identity.  This is the `SUM_EQ_GENERAL` move on
+`\i. (i + m) MOD k` in HOL `FAN_PERIMETER_INVARIANT`
+(polar_fan.hl:2153-2170, with `MOD_UNIQ`/`DIVISION` discharged by the
+`Nat` window lemmas above). -/
+private theorem p7w3_sum_mod_shift {k m : ℕ} (hk : 0 < k) (hmk : m < k) (f : ℕ → ℝ)
+    (hper : ∀ j, f (j + k) = f j) :
+    ∑ i ∈ Finset.range k, f (i + m) = ∑ i ∈ Finset.range k, f i := by
+  have step1 : ∑ i ∈ Finset.range k, f (i + m)
+      = ∑ i ∈ Finset.range k, f ((i + m) % k) := by
+    refine Finset.sum_congr rfl fun i _ => ?_
+    conv_lhs => rw [← Nat.mod_add_div (i + m) k]
+    rw [p7w3_period_add f hper ((i + m) / k) ((i + m) % k)]
+  have step2 : ∑ i ∈ Finset.range k, f ((i + m) % k)
+      = ∑ i ∈ Finset.range k, f i := by
+    refine Finset.sum_nbij' (fun i => (i + m) % k) (fun j => (j + k - m) % k)
+      ?_ ?_ ?_ ?_ (fun i _ => rfl)
+    · intro i hi
+      simp only [Finset.mem_range] at *
+      exact Nat.mod_lt _ hk
+    · intro j hj
+      simp only [Finset.mem_range] at *
+      exact Nat.mod_lt _ hk
+    · intro i hi
+      simp only [Finset.mem_range] at hi ⊢
+      rcases Nat.lt_or_ge (i + m) k with hlt | hge
+      · have hs : (i + m) % k = i + m := Nat.mod_eq_of_lt hlt
+        have hik : (i + m) % k + k - m = i + k := by rw [hs]; omega
+        have hml : (i + 1 * k) % k = i % k :=
+          Nat.add_mul_mod_self_right (x := i) (y := 1) (z := k)
+        rw [hik, show i + k = i + 1 * k from by ring, hml, Nat.mod_eq_of_lt hi]
+      · have hs : (i + m) % k = i + m - k := p7w3_mod_twok hge (by omega)
+        have hik : (i + m) % k + k - m = i := by rw [hs]; omega
+        rw [hik, Nat.mod_eq_of_lt hi]
+    · intro j hj
+      simp only [Finset.mem_range] at hj ⊢
+      rcases Nat.lt_or_ge j m with hlt | hge
+      · have ht : (j + k - m) % k = j + k - m := Nat.mod_eq_of_lt (by omega)
+        have hjk : (j + k - m) % k + m = j + k := by rw [ht]; omega
+        have hml : (j + 1 * k) % k = j % k :=
+          Nat.add_mul_mod_self_right (x := j) (y := 1) (z := k)
+        rw [hjk, show j + k = j + 1 * k from by ring, hml, Nat.mod_eq_of_lt hj]
+      · have ht : (j + k - m) % k = j - m := by
+          have h1 : j + k - m = (j - m) + 1 * k := by omega
+          have h2 : j - m < k := by omega
+          have hml : ((j - m) + 1 * k) % k = (j - m) % k :=
+            Nat.add_mul_mod_self_right (x := j - m) (y := 1) (z := k)
+          rw [h1, hml, Nat.mod_eq_of_lt h2]
+        have hjk : (j + k - m) % k + m = j := by rw [ht]; omega
+        rw [hjk, Nat.mod_eq_of_lt hj]
+  rw [step1, step2]
+
+/-- Orbit-index bijection `i ↦ ITER i (rho_node1) v` between `range p` and
+`V` (content of HOL `Local_lemmas1.LT_CARD_MONO_LOFA` /
+`POINT_PRESENTED_IN_RHOND1`, consumed by `FAN_PERIMETER`). -/
+private theorem p7w3_orbit_surj {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) {p : ℕ}
+    (hcover : ({(rhoNode1_p2 FF)^[n] v | n < p} : Set V3) = V) :
+    ∀ b ∈ V, ∃ n, n < p ∧ (rhoNode1_p2 FF)^[n] v = b := by
+  intro b hb
+  rw [← hcover] at hb
+  obtain ⟨n, hn, hnb⟩ := hb
+  exact ⟨n, Set.mem_Iio.mp hn, hnb⟩
+
+end W7Kit
+
 /-- HOL `FAN_PERIMETER_INVARIANT` (polar_fan.hl:2122). -/
 theorem FAN_PERIMETER_INVARIANT {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (v : V3) (hv : v ∈ V) :
     fanPerimeter V E FF =
       ∑ i ∈ Finset.range ((FF.ncard - 1 : ℕ) + 1),
         arcV (0 : V3) ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) := by
-  sorry
+  have h2 : localFan_p2 V E FF := w6a_to_p2 h hedge
+  have hcard : FF.ncard = V.ncard := LOFA_IMP_CARD_FF_V_EQ h2
+  have hv0 : 0 < V.ncard := w6a_vcard_pos h2 hv
+  -- unfold the perimeter definition; the epsilon point lands on the orbit of `v`
+  have h0 : fanPerimeter V E FF =
+      ∑ i ∈ Finset.range ((FF.ncard - 1 : ℕ) + 1),
+        arcV (0 : V3) ((rhoNode1 FF)^[i] (Classical.epsilon (fun z : V3 => z ∈ V)))
+          ((rhoNode1 FF)^[i + 1] (Classical.epsilon (fun z : V3 => z ∈ V))) := rfl
+  rw [h0]
+  have hwV : (Classical.epsilon (fun z : V3 => z ∈ V)) ∈ V :=
+    Classical.epsilon_spec (p := fun z : V3 => z ∈ V) ⟨v, hv⟩
+  obtain ⟨m, hmk, hmwe⟩ := LOCAL_FAN_ORBIT_MAP_EXPLICIT_LA7 h hedge v _ hv hwV
+  rw [hmwe, show ((FF.ncard - 1 : ℕ) + 1) = V.ncard from by rw [hcard]; omega]
+  simp only [← Function.iterate_add_apply, Nat.add_right_comm]
+  -- the orbit-indexed summand is `V.ncard`-periodic
+  have hK : ∀ n : ℕ, (rhoNode1 FF)^[n + V.ncard] v = (rhoNode1 FF)^[n] v := by
+    intro n
+    rw [Nat.add_comm, Function.iterate_add_apply, p7w3_period_all (rhoNode1 FF)
+      (w6a_iter_rho_card h2 hv) n]
+  have hper : ∀ j : ℕ,
+      (fun i => arcV (0 : V3) ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v))
+          (j + V.ncard)
+        = (fun i => arcV (0 : V3) ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v)) j := by
+    intro j
+    simp only
+    rw [hK j, show j + V.ncard + 1 = (j + 1) + V.ncard from by ring, hK (j + 1)]
+  exact p7w3_sum_mod_shift hv0 hmk
+    (fun i => arcV (0 : V3) ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v)) hper
 
 /-- HOL `FAN_PERIMETER_INVARIANT_CARD_V` (polar_fan.hl:2171). -/
 theorem FAN_PERIMETER_INVARIANT_CARD_V {V : Set V3} {E : Set (Set V3)}
@@ -2767,13 +2897,41 @@ theorem FAN_PERIMETER_INVARIANT_CARD_V {V : Set V3} {E : Set (Set V3)}
     fanPerimeter V E FF =
       ∑ i ∈ Finset.range ((V.ncard - 1 : ℕ) + 1),
         arcV (0 : V3) ((rhoNode1 FF)^[i] v) ((rhoNode1 FF)^[i + 1] v) := by
-  sorry
+  rw [FAN_PERIMETER_INVARIANT h hedge v hv, LOFA_IMP_CARD_FF_V_EQ (w6a_to_p2 h hedge)]
 
 /-- HOL `FAN_PERIMETER` (polar_fan.hl:2184). -/
 theorem FAN_PERIMETER {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : LocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
     fanPerimeter V E FF = setSum V (fun v : V3 => arcV (0 : V3) v (rhoNode1 FF v)) := by
-  sorry
+  have h2 : localFan_p2 V E FF := w6a_to_p2 h hedge
+  obtain ⟨d, hdFF⟩ : FF.Nonempty := Set.nonempty_iff_ne_empty.mpr (LOCAL_FAN_NOT_EMPTY_FF h)
+  have hv : d.1 ∈ V := (WRGCVDR_BIJ h2).1 hdFF
+  obtain ⟨p, hp0, hpx, hdis, hcover, hcard⟩ :=
+    w6a_orbit_cycle (fun z hz => WRGCVDR_ORBIT h2 z hz) hv
+  have hVfin : V.Finite := by
+    have himg : ((fun n : ℕ => (rhoNode1_p2 FF)^[n] d.1) '' Set.Iio p : Set V3)
+        = V := rfl.trans hcover
+    rw [← himg]
+    exact (Set.finite_Iio p).image (fun n : ℕ => (rhoNode1_p2 FF)^[n] d.1)
+  rw [FAN_PERIMETER_INVARIANT_CARD_V h hedge d.1 hv, hcard,
+    show p - 1 + 1 = p from by omega]
+  rw [setSum, dif_pos hVfin]
+  refine Finset.sum_nbij (fun i => (rhoNode1_p2 FF)^[i] d.1) ?_ ?_ ?_ ?_
+  · intro i _
+    exact (Set.Finite.mem_toFinset hVfin).mpr (w6a_iter_rho_mem h2 hv i)
+  · intro i hi j hj hcon
+    simp only [Finset.mem_coe, Finset.mem_range] at hi hj
+    rcases Nat.lt_trichotomy i j with hlt | heq | hgt
+    · exact absurd hcon (hdis i j hlt hj)
+    · exact heq
+    · exact absurd hcon.symm (hdis j i hgt hi)
+  · intro b hb
+    have hbV : b ∈ V := (Set.Finite.mem_toFinset hVfin).mp hb
+    obtain ⟨n, hn, hnb⟩ := p7w3_orbit_surj h2 hv hcover b hbV
+    exact ⟨n, Finset.mem_range.mpr hn, hnb⟩
+  · intro i _
+    rw [Function.iterate_succ_apply']
+    rfl
 
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
