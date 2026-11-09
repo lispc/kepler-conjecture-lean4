@@ -314,6 +314,13 @@
 >
 > **ERRATA（续692）**：w13-rev 的「`LVDUCXU` 的 `Simple` 槽冗余、可 SF 掉省 200–330」**作废**——编排者与车道双方机器复核：`DIH2K_FACE_SIMPLIZED` 的陈述要求 `H.Simple`，`LVDUCXU` 证明体 `LocalAuto10.lean:1691-1694` 实际把 `hsimp` 喂给它，`dih2k_p3` 合取必须 `Simple`。`hsimple` 永久按槽记账。
 
+- **2026-11-10（06:05，续695）**：**战役 wave 1 两件落库（`212bb47b` `4829c7d7`，93 行）——`DART1_NOT_COLLINEAR_2` + `CLOSURE_MINIMAL_EQ` 清零；剩 4 件 ~420–690**。
+① **`p22d_dart1NotCollinear2`**（54 行；HOL `fan/hypermap_and_fan.hl:2693`）：`FAN 0 V E → (v,w) ∈ dart1OfFan → ¬Collinear3 0 v w ∧ ¬Collinear3 0 v (sigmaFan …)`。**证明比 HOL 短**：两半都走 `fan6`（`FAN` 第五合取），第二半先证 `sigmaFan ∈ setOfEdge v V E`（单点支 `if_pos` / `SIGMA_FAN`）再经 `properties_ofSetOfEdge_fan` 换边交——**不需要** HOL 的 hypermap 层路线。2 轮收敛（1→0）。
+② **`p22d_closureMinimalEq`**（39 行；HOL Light `topology1.ml:1758`，通用拓扑）：`IsClosed t → (closure s ⊆ t ↔ s ⊆ t)`，`subset_closure` + `closure_minimal` 两行。
+③ 2/2 标准三、零 sorryAx；两文件各自 RC=0、0 error/0 warning；olean 装池。
+④ **战役余量**：剩 `LINEAR_FACE_2`（200–300，等 aq1-fin face≥3 替代路线探针）/ `IN_DART1_OF_FAN_IMP_CARD_FACE_GT_1`（40–70）/ `fan_hypermaps_iso`+`iso_simple`（120–200，`hsimple` 与 W22d wedge 半双用）/ `wedge_in_fan_gt_eq_w_dart_fan`（aq7 在飞）。
+⑤ **派单**：`w13-rev` → **`fan_hypermaps_iso` + `iso_simple`**（120–200，≤300；双用途最高价值件）。
+
 - **2026-11-10（05:45，续694）**：**消 `hno` 槽落库（`4232289f`，57 行 2 件）——`f_surr_localization` 条件形只剩 `hfs`（免费）/`hcard`/`hsimple`**。
 ① **`p22c2_vPrime_subset_sUnion`**（`vPrime_p3 V FF ⊆ ⋃₀ ePrime_p3 E FF`）：`y ∈ vPrime` 定义给 `(y,w) ∈ FF` ⇒ 面⊆darts ⇒ `dartsOfHyp_p3` ⇒ `FullySurrounded` 给 `{y,w} ∈ E` ⇒ `y ∈ ⋃₀ ePrime`。**`p22c2_noSlot_slice`**（`= dart1OfFan`）：切片 FAN（`IMP_FAN_V_PRIME_E_PRIME`）+ `noIsolated_of_hsub_p36`（LA36:633）+ `hno_of_no_isolated`（AzimBridge:1157）。2/2 标准三；RC=0、0 error/0 warning；olean 装池。
 ② **消槽对表**：调用形 = `p22c2_f_surr_localization_cond hfan h1 hx hFF h2 hfs hcard hsimple (p22c2_noSlot_slice hfan h1 hx hFF hfs)`；前件 5 个（`hfan`/`h1`/`hx`/`hFF`/`hfs`）在条件形调用上下文直接可得。
