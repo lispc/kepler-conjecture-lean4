@@ -5458,6 +5458,392 @@ theorem p11w2_polar_hvs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
 
 end W11b2Kit
 
+/-! ### W11b2-ii polar fan7 前题（`p11w2_*`；WSEWPCH wave W11b2）
+
+`hve`/`hee` 的极化验证 + `hsub` + `FAN 0 V' E'` 装配。与 W11b2-i 的 `hvs`
+同一骨架（射线/锥的差向量系数形 + `P11W_PRIME_NCOL`），但换用**点积探针**
+（每证一次 `y ⬝ᵥ ρx` 的两侧展开）代替 HOL 1400-1698 的楔形/azim 序论证：
+
+* 关键正性事实 `p11w2_polar_pos_dot`：`GENERIC_LOCAL_FAN_AZIM_POS` +
+  `SIN_AZIM_MUTUAL_CROSS` 给出 `0 < (p v) ⬝ᵥ w`（`w ∈ V`，`w ≠ v`，`w ≠ ρv`）；
+* `p v ⊥ v`、`p v ⊥ ρ v`（叉积正交，`p11w2_cross3_dot_*`）；
+* `ρ` 在 `V` 上单射（`w6a_rho_inj`）与 `ρ(ρv) ≠ v`（`LOCAL_FAN_IMP_NOT_SEMI_IDE`）
+  处理相邻边的例外情形。
+
+`hve` 的核心：若 `y ∈ Gt{0}{p a} ∩ Gt{0}{p b, p(ρb)}`，则点积 `ρb` 两侧给
+`s·((p a)·ρb) = 0`（`s > 0`）——`ρb ∉ {a, ρa}` 时与正性冲突；`ρb = a`（即
+`ρb ∈` 边的左端）与 `ρa = ρb`（`a = b`）两个例外由非共线 `P11W_PRIME_NCOL`
+收口。`hee` 同构：探针 `ρa` 给出 `u·((p b)·ρa) + v·((p ρb)·ρa) = 0`，例外情形
+`ρa = b` / `ρa = ρ b` / `ρa = ρ(ρb)` 用换探针（`ρ(ρa)` 或消去一项）归约。 -/
+
+section W11b2Kit2
+
+/-- `cross3 a a = 0`。 -/
+private theorem p11w2_cross3_self (a : V3) : cross3 a a = 0 := by
+  have h := p7w_cross3_smul_right_self a 1
+  simpa using h
+
+/-- `(a × b) ⬝ᵥ b = 0`（叉积与其第二因子正交）。 -/
+private theorem p11w2_cross3_dot_right (a b : V3) : (cross3 a b) ⬝ᵥ b = 0 := by
+  rw [p7w_dot_coe, coe_cross3P, dotProduct_comm]
+  exact dot_cross_self _ _
+
+/-- `(a × b) ⬝ᵥ a = 0`（叉积与其第一因子正交）。 -/
+private theorem p11w2_cross3_dot_left (a b : V3) : (cross3 a b) ⬝ᵥ a = 0 := by
+  rw [p7w_dot_coe, coe_cross3P, dotProduct_comm]
+  exact dot_self_cross _ _
+
+/-- `(t • a) ⬝ᵥ b = t * (a ⬝ᵥ b)`（V3 层；经 `p7w_dot_coe` + `smul_dotP`）。 -/
+private theorem p11w2_dot_smul_left (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) := by
+  rw [p7w_dot_coe, p7w_dot_coe, coe_smulP, smul_dotP]
+
+/-- `(a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c`（V3 层）。 -/
+private theorem p11w2_dot_add_left (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c := by
+  rw [p7w_dot_coe, p7w_dot_coe, p7w_dot_coe, p10w_coe_addP, add_dotProduct]
+
+/-- 共线三点第 2、3 位交换。 -/
+private theorem p11w2_col3_swap {a b c : V3} (h : Collinear3 a b c) : Collinear3 a c b := by
+  have hset : ({a, c, b} : Set V3) = {a, b, c} := by
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  show Collinear ℝ ({a, c, b} : Set V3)
+  rw [hset]
+  exact h
+
+/-- 极扇正性：`0 < (p v) ⬝ᵥ w`（`w ∈ V`、`w ≠ v`、`w ≠ ρ v`）。 -/
+private theorem p11w2_polar_pos_dot {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
+    {v w : V3} (hv : v ∈ V) (hw : w ∈ V) (hwv : w ≠ v) (hwr : w ≠ rhoNode1 FF v) :
+    0 < (cross3 v (rhoNode1 FF v)) ⬝ᵥ w := by
+  have hsin := GENERIC_LOCAL_FAN_AZIM_POS hcl hedge hg hia v w hv hw hwv hwr
+  exact (SIN_AZIM_MUTUAL_CROSS v (rhoNode1 FF v) w).2.1.mp hsin
+
+/-- `affGt {x} {v}` 的射线系数形（严格正）。 -/
+private theorem p11w2_gt_single_elim {x v y : V3} (hxv : x ≠ v)
+    (h : y ∈ affGt {x} {v}) :
+    ∃ a : ℝ, 0 < a ∧ y - x = a • (v - x) := by
+  obtain ⟨f, hfin, hvec, hsign, hone⟩ := h
+  have htof : hfin.toFinset = ({x, v} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    try tauto
+  rw [htof, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton] at hvec hone
+  refine ⟨f v, hsign v (by simp), ?_⟩
+  have hfx : f x = 1 - f v := by linarith
+  rw [hvec, hfx]
+  module
+
+/-- 极扇的 `hve` 条件（`FAN_AFF_GT_CONDITION` 前题之二）：单点锥与边锥不交。 -/
+theorem p11w2_polar_hve {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    ∀ v ∈ polarV V FF, ∀ e ∈ polarE V FF,
+      affGt ({(0:V3)} : Set V3) {v} ∩ affGt ({(0:V3)} : Set V3) e = ∅ := by
+  intro v hv e he
+  obtain ⟨a, ha, rfl⟩ := hv
+  obtain ⟨b, hb, rfl⟩ := he
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  rw [Set.eq_empty_iff_forall_notMem]
+  rintro y ⟨hy1, hy2⟩
+  have hpa0 : cross3 a (rhoNode1 FF a) ≠ 0 := P11W_PRIME_NE_ZERO hcl a ha
+  have hpb0 : cross3 b (rhoNode1 FF b) ≠ 0 := P11W_PRIME_NE_ZERO hcl b hb
+  have hrvaV : rhoNode1 FF a ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 ha
+  have hrvbV : rhoNode1 FF b ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 hb
+  have hpra0 : cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)) ≠ 0 :=
+    P11W_PRIME_NE_ZERO hcl (rhoNode1 FF a) hrvaV
+  have hprb0 : cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) ≠ 0 :=
+    P11W_PRIME_NE_ZERO hcl (rhoNode1 FF b) hrvbV
+  have hae : a ≠ rhoNode1 FF a := by
+    intro h
+    exact hpa0 (by rw [← h]; exact p11w2_cross3_self a)
+  have hbe : b ≠ rhoNode1 FF b := by
+    intro h
+    exact hpb0 (by rw [← h]; exact p11w2_cross3_self b)
+  have hpane : cross3 a (rhoNode1 FF a)
+      ≠ cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)) := by
+    intro h
+    exact hae (P11W_PRIME_INJ hcl hedge hg hia a ha (rhoNode1 FF a) hrvaV h)
+  have hpbne : cross3 b (rhoNode1 FF b)
+      ≠ cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) := by
+    intro h
+    exact hbe (P11W_PRIME_INJ hcl hedge hg hia b hb (rhoNode1 FF b) hrvbV h)
+  obtain ⟨s, hs, hys⟩ := p11w2_gt_single_elim (x := (0:V3)) (v := cross3 a (rhoNode1 FF a))
+    (Ne.symm hpa0) hy1
+  obtain ⟨t, u, ht, hu, hyt⟩ := p11w2_gt_pair_rel_elim (x := (0:V3))
+    (u := cross3 b (rhoNode1 FF b))
+    (v := cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+    (Ne.symm hpb0) (Ne.symm hprb0) hpbne hy2
+  have hyA : y = s • cross3 a (rhoNode1 FF a) := by
+    simpa using hys
+  have hyB : y = t • cross3 b (rhoNode1 FF b)
+      + u • cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) := by
+    simpa using hyt
+  -- 点积探针：`ρb`
+  have hdot : s * ((cross3 a (rhoNode1 FF a)) ⬝ᵥ rhoNode1 FF b) = 0 := by
+    have hL : y ⬝ᵥ rhoNode1 FF b
+        = s * ((cross3 a (rhoNode1 FF a)) ⬝ᵥ rhoNode1 FF b) := by
+      rw [hyA]
+      exact p11w2_dot_smul_left s _ _
+    have hR : y ⬝ᵥ rhoNode1 FF b = 0 := by
+      rw [hyB, p11w2_dot_add_left, p11w2_dot_smul_left, p11w2_dot_smul_left,
+        p11w2_cross3_dot_right, p11w2_cross3_dot_left]
+      ring
+    rw [hL] at hR
+    exact hR
+  have hpa_rhob : (cross3 a (rhoNode1 FF a)) ⬝ᵥ rhoNode1 FF b = 0 := by
+    rcases mul_eq_zero.mp hdot with h | h
+    · exact absurd h hs.ne'
+    · exact h
+  by_cases h1 : rhoNode1 FF b = a
+  · -- 例外一：`ρb = a`（`p a = p(ρb)`）：方程给出 `p b ∥ p(ρb)`
+    have hpaeq : cross3 a (rhoNode1 FF a)
+        = cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) := by
+      rw [h1]
+    have hsub : t • cross3 b (rhoNode1 FF b)
+        = (s - u) • cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) := by
+      have heq : s • cross3 a (rhoNode1 FF a)
+          = t • cross3 b (rhoNode1 FF b)
+            + u • cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) := by
+        rw [← hyA, hyB]
+      rw [hpaeq] at heq
+      rw [sub_smul]
+      exact (eq_sub_iff_add_eq).mpr heq.symm
+    have hpb_eq : cross3 b (rhoNode1 FF b)
+        = ((s - u) / t) • cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) := by
+      have h := congrArg (fun z => t⁻¹ • z) hsub
+      rw [smul_smul, smul_smul, inv_mul_cancel₀ ht.ne', one_smul] at h
+      refine h.trans ?_
+      rw [div_eq_inv_mul]
+    have hcol : Collinear3 (0:V3)
+        (cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+        (cross3 b (rhoNode1 FF b)) :=
+      (collinear3_iff_smul (v := (0:V3))
+        (w := cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+        (w1 := cross3 b (rhoNode1 FF b)) hprb0).mpr
+        ⟨(s - u) / t, by rw [hpb_eq, sub_zero, sub_zero]⟩
+    exact P11W_PRIME_NCOL hcl hedge hg hia b hb (rhoNode1 FF b) hrvbV hbe
+      (p11w2_col3_swap hcol)
+  · by_cases h2' : rhoNode1 FF b = rhoNode1 FF a
+    · -- 例外二：`ρb = ρa ⟹ b = a`：方程给出 `p b ∥ p a`（= `p ρa`）
+      have hba : b = a := w6a_rho_inj h2 hb ha h2'
+      rw [hba] at hyB
+      have hsub : (s - t) • cross3 a (rhoNode1 FF a)
+          = u • cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)) := by
+        have heq : s • cross3 a (rhoNode1 FF a)
+            = t • cross3 a (rhoNode1 FF a)
+              + u • cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)) := by
+          rw [← hyA, hyB]
+        rw [sub_smul, heq]
+        abel
+      have hpr_eq : cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a))
+          = (u⁻¹ * (s - t)) • cross3 a (rhoNode1 FF a) := by
+        have h := congrArg (fun z => u⁻¹ • z) hsub
+        rw [smul_smul, smul_smul, inv_mul_cancel₀ hu.ne', one_smul] at h
+        exact h.symm
+      have hcol : Collinear3 (0:V3) (cross3 a (rhoNode1 FF a))
+          (cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a))) :=
+        (collinear3_iff_smul (v := (0:V3)) (w := cross3 a (rhoNode1 FF a))
+          (w1 := cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)))
+          hpa0).mpr ⟨u⁻¹ * (s - t), by rw [hpr_eq, sub_zero, sub_zero]⟩
+      exact P11W_PRIME_NCOL hcl hedge hg hia a ha (rhoNode1 FF a) hrvaV hae hcol
+    · -- 一般情形：正性
+      have hpos : 0 < (cross3 a (rhoNode1 FF a)) ⬝ᵥ rhoNode1 FF b :=
+        p11w2_polar_pos_dot hcl hedge hg hia ha hrvbV h1 h2'
+      exact absurd hpa_rhob hpos.ne'
+
+/-- 极扇的 `hee` 条件（`FAN_AFF_GT_CONDITION` 前题之三）：两条不同极边锥不交。 -/
+theorem p11w2_polar_hee {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    ∀ e1 ∈ polarE V FF, ∀ e2 ∈ polarE V FF, e1 ≠ e2 →
+      affGt ({(0:V3)} : Set V3) e1 ∩ affGt ({(0:V3)} : Set V3) e2 = ∅ := by
+  intro e1 he1 e2 he2 hne
+  obtain ⟨a, ha, rfl⟩ := he1
+  obtain ⟨b, hb, rfl⟩ := he2
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  rw [Set.eq_empty_iff_forall_notMem]
+  rintro y ⟨hy1, hy2⟩
+  have hpa0 : cross3 a (rhoNode1 FF a) ≠ 0 := P11W_PRIME_NE_ZERO hcl a ha
+  have hpb0 : cross3 b (rhoNode1 FF b) ≠ 0 := P11W_PRIME_NE_ZERO hcl b hb
+  have hrvaV : rhoNode1 FF a ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 ha
+  have hrvbV : rhoNode1 FF b ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 hb
+  have hpra0 : cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)) ≠ 0 :=
+    P11W_PRIME_NE_ZERO hcl (rhoNode1 FF a) hrvaV
+  have hprb0 : cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) ≠ 0 :=
+    P11W_PRIME_NE_ZERO hcl (rhoNode1 FF b) hrvbV
+  have hae : a ≠ rhoNode1 FF a := by
+    intro h
+    exact hpa0 (by rw [← h]; exact p11w2_cross3_self a)
+  have hbe : b ≠ rhoNode1 FF b := by
+    intro h
+    exact hpb0 (by rw [← h]; exact p11w2_cross3_self b)
+  have hpane : cross3 a (rhoNode1 FF a)
+      ≠ cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)) := by
+    intro h
+    exact hae (P11W_PRIME_INJ hcl hedge hg hia a ha (rhoNode1 FF a) hrvaV h)
+  have hpbne : cross3 b (rhoNode1 FF b)
+      ≠ cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) := by
+    intro h
+    exact hbe (P11W_PRIME_INJ hcl hedge hg hia b hb (rhoNode1 FF b) hrvbV h)
+  obtain ⟨s, t, hs, ht, hys⟩ := p11w2_gt_pair_rel_elim (x := (0:V3))
+    (u := cross3 a (rhoNode1 FF a))
+    (v := cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)))
+    (Ne.symm hpa0) (Ne.symm hpra0) hpane hy1
+  obtain ⟨u, v, hu, hv, hyt⟩ := p11w2_gt_pair_rel_elim (x := (0:V3))
+    (u := cross3 b (rhoNode1 FF b))
+    (v := cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+    (Ne.symm hpb0) (Ne.symm hprb0) hpbne hy2
+  have hyA : y = s • cross3 a (rhoNode1 FF a)
+      + t • cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)) := by
+    simpa using hys
+  have hyB : y = u • cross3 b (rhoNode1 FF b)
+      + v • cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)) := by
+    simpa using hyt
+  -- 点积探针：`ρa`
+  have hdot : u * ((cross3 b (rhoNode1 FF b)) ⬝ᵥ rhoNode1 FF a)
+      + v * ((cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+        ⬝ᵥ rhoNode1 FF a) = 0 := by
+    have hA : y ⬝ᵥ rhoNode1 FF a
+        = s * ((cross3 a (rhoNode1 FF a)) ⬝ᵥ rhoNode1 FF a)
+          + t * ((cross3 (rhoNode1 FF a) (rhoNode1 FF (rhoNode1 FF a)))
+            ⬝ᵥ rhoNode1 FF a) := by
+      rw [hyA, p11w2_dot_add_left, p11w2_dot_smul_left, p11w2_dot_smul_left]
+    have hB : y ⬝ᵥ rhoNode1 FF a
+        = u * ((cross3 b (rhoNode1 FF b)) ⬝ᵥ rhoNode1 FF a)
+          + v * ((cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+            ⬝ᵥ rhoNode1 FF a) := by
+      rw [hyB, p11w2_dot_add_left, p11w2_dot_smul_left, p11w2_dot_smul_left]
+    rw [hA, p11w2_cross3_dot_right, p11w2_cross3_dot_left, mul_zero, mul_zero,
+      add_zero] at hB
+    exact hB.symm
+  by_cases hab : a = b
+  · subst hab
+    exact absurd rfl hne
+  · by_cases h2' : rhoNode1 FF a = rhoNode1 FF b
+    · exact absurd (w6a_rho_inj h2 ha hb h2') hab
+    · by_cases h3 : rhoNode1 FF a = b
+      · -- 相邻一：`b = ρa`，换探针 `ρ(ρa)`
+        have hρρaV : rhoNode1 FF (rhoNode1 FF a) ∈ V :=
+          LOFA_IN_V_SO_DO_RHO_NODE_V h2 hrvaV
+        have hA : y ⬝ᵥ rhoNode1 FF (rhoNode1 FF a)
+            = s * ((cross3 a (rhoNode1 FF a)) ⬝ᵥ rhoNode1 FF (rhoNode1 FF a)) := by
+          rw [hyA, p11w2_dot_add_left, p11w2_dot_smul_left, p11w2_dot_smul_left,
+            p11w2_cross3_dot_right, mul_zero, add_zero]
+        have hB : y ⬝ᵥ rhoNode1 FF (rhoNode1 FF a) = 0 := by
+          rw [hyB, p11w2_dot_add_left, p11w2_dot_smul_left, p11w2_dot_smul_left]
+          rw [← h3]
+          rw [p11w2_cross3_dot_right, p11w2_cross3_dot_left, mul_zero, mul_zero,
+            add_zero]
+        have hpa_rra : (cross3 a (rhoNode1 FF a)) ⬝ᵥ rhoNode1 FF (rhoNode1 FF a) = 0 := by
+          have h : s * ((cross3 a (rhoNode1 FF a))
+              ⬝ᵥ rhoNode1 FF (rhoNode1 FF a)) = 0 := by
+            rw [← hA, hB]
+          rcases mul_eq_zero.mp h with h' | h'
+          · exact absurd h' hs.ne'
+          · exact h'
+        have hsem : rhoNode1 FF (rhoNode1 FF a) ≠ a :=
+          LOCAL_FAN_IMP_NOT_SEMI_IDE h2 ha
+        have hrra : rhoNode1 FF (rhoNode1 FF a) ≠ rhoNode1 FF a := by
+          intro h
+          have h' : a = rhoNode1 FF a := w6a_rho_inj h2 ha hrvaV h.symm
+          exact hae h'
+        have hpos := p11w2_polar_pos_dot hcl hedge hg hia ha hρρaV hsem hrra
+        exact absurd hpa_rra hpos.ne'
+      · by_cases h4 : rhoNode1 FF a = rhoNode1 FF (rhoNode1 FF b)
+        · -- 相邻二：`a = ρb`，`p(ρb) = p a` 消去 hdot 第二项
+          have hab' : a = rhoNode1 FF b := w6a_rho_inj h2 ha hrvbV h4
+          have hprb_eq : cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b))
+              = cross3 a (rhoNode1 FF a) := by
+            rw [← h4, ← hab']
+          have hz : (cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+              ⬝ᵥ rhoNode1 FF a = (cross3 a (rhoNode1 FF a)) ⬝ᵥ rhoNode1 FF a := by
+            rw [hprb_eq]
+          have hdot' : u * ((cross3 b (rhoNode1 FF b)) ⬝ᵥ rhoNode1 FF a) = 0 := by
+            rw [hz, p11w2_cross3_dot_right, mul_zero, add_zero] at hdot
+            exact hdot
+          have hpb_ra : (cross3 b (rhoNode1 FF b)) ⬝ᵥ rhoNode1 FF a = 0 := by
+            rcases mul_eq_zero.mp hdot' with h' | h'
+            · exact absurd h' hu.ne'
+            · exact h'
+          have h3' : rhoNode1 FF a ≠ b := by
+            intro h
+            have h'' : rhoNode1 FF (rhoNode1 FF b) = b := by
+              rw [← h4]
+              exact h
+            exact LOCAL_FAN_IMP_NOT_SEMI_IDE h2 hb h''
+          have h2'' : rhoNode1 FF a ≠ rhoNode1 FF b := by
+            intro h
+            exact hab (w6a_rho_inj h2 ha hb h)
+          have hpos := p11w2_polar_pos_dot hcl hedge hg hia hb hrvaV h3' h2''
+          exact absurd hpb_ra hpos.ne'
+        · -- 一般情形：两项都正
+          have hp1 : 0 < (cross3 b (rhoNode1 FF b)) ⬝ᵥ rhoNode1 FF a :=
+            p11w2_polar_pos_dot hcl hedge hg hia hb hrvaV h3 h2'
+          have hp2 : 0 < (cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+              ⬝ᵥ rhoNode1 FF a :=
+            p11w2_polar_pos_dot hcl hedge hg hia hrvbV hrvaV h2' h4
+          have hpos : 0 < u * ((cross3 b (rhoNode1 FF b)) ⬝ᵥ rhoNode1 FF a)
+              + v * ((cross3 (rhoNode1 FF b) (rhoNode1 FF (rhoNode1 FF b)))
+                ⬝ᵥ rhoNode1 FF a) := by
+            have h1' := mul_pos hu hp1
+            have h2'' := mul_pos hv hp2
+            linarith
+          exact absurd hdot hpos.ne'
+
+/-- `⋃₀ E' ⊆ V'`（`FAN_AFF_GT_CONDITION` 的 `hun` 前题）。 -/
+theorem p11w2_polar_unions {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) :
+    ⋃₀ polarE V FF ⊆ polarV V FF := by
+  intro x hx
+  obtain ⟨e, he, hxe⟩ := hx
+  obtain ⟨v, hv, rfl⟩ := he
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  rcases Set.mem_insert_iff.mp hxe with h | h
+  · exact ⟨v, hv, h.symm⟩
+  · rw [Set.mem_singleton_iff] at h
+    exact ⟨rhoNode1 FF v, LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv, h.symm⟩
+
+/-- **`FAN 0 V' E'`**（BGMIFTE 结论 1 的 FAN 前件）：`P11W_POLAR_FAN_BASIC`
+四件 + `p11w2_polar_hvs/hve/hee` + `FAN_AFF_GT_CONDITION`。 -/
+theorem p11w2_polar_FAN {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    FAN (0:V3) (polarV V FF) (polarE V FF) := by
+  have hbasic := P11W_POLAR_FAN_BASIC hcl hedge hg hia
+  have hG : Graph (polarE V FF) := by
+    have h := hbasic.1
+    rwa [p11w2_polarFan_components] at h
+  have hf1 : fan1 (0:V3) (polarV V FF) (polarE V FF) := by
+    have h := hbasic.2.1
+    rwa [p11w2_polarFan_components] at h
+  have hf2 : fan2 (0:V3) (polarV V FF) (polarE V FF) := by
+    have h := hbasic.2.2.1
+    rwa [p11w2_polarFan_components] at h
+  have hf6 : fan6 (0:V3) (polarV V FF) (polarE V FF) := by
+    have h := hbasic.2.2.2
+    rwa [p11w2_polarFan_components] at h
+  refine ⟨p11w2_polar_unions hcl hedge, hG, hf1, hf2, hf6, ?_⟩
+  refine FAN7_AFF_GT_CONDITION 0 (polarV V FF) (polarE V FF) hG hf2 ?_ ?_ ?_ ?_
+  · intro e he
+    refine ⟨fun z hz => p11w2_polar_unions hcl hedge
+      (Set.subset_sUnion_of_mem he hz), ?_⟩
+    intro h0
+    obtain ⟨v, hv, rfl⟩ := he
+    rcases Set.mem_insert_iff.mp h0 with h | h
+    · exact P11W_PRIME_NE_ZERO hcl v hv h.symm
+    · rw [Set.mem_singleton_iff] at h
+      exact P11W_PRIME_NE_ZERO hcl (rhoNode1 FF v)
+        (LOFA_IN_V_SO_DO_RHO_NODE_V (w6a_to_p2 hcl.1 hedge) hv) h.symm
+  · exact p11w2_polar_hvs hcl hedge hg hia
+  · exact p11w2_polar_hve hcl hedge hg hia
+  · exact p11w2_polar_hee hcl hedge hg hia
+
+end W11b2Kit2
+
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
