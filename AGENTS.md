@@ -42,6 +42,10 @@
 - **禁止** `lake build`、`scripts/auto_gate.sh`、地图仪器（`e2e_reach_map` /
   `global_reach_map` / `orphan_histogram`）。这些由编排者跑。
 - 所有子任务派发必须**异步**（`run_in_background: true`），不阻塞主会话。
+- **派单记录必须与 `SendMessage` 的成功回执同批写下**：账本里的「派 X」= 消息已送达，
+  不是「打算派」。2026-11-11 实发生过三次「只写账本、未发消息」，三条车道空转 1–2 小时
+  （续650 ERRATA）。另：对 **1 小时无产出**的车道发一行状态检查是常规动作——本次正是靠它
+  发现空转。
 
 ## 4. 本机限制
 
