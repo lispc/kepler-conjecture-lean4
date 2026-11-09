@@ -75,7 +75,9 @@
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证（§5 第二根正主，10-26 任务单）：侦察定案 = 8/9 已于 10-26 落库（`2cee47ad`），#9 的 EGHNAVX 阻断已失效（LA14:6965 已真证但不可 import，改走 LA35/LA5/LA37/LA9 全可 import 路线），需复制 LA14-local 件 ~400 行 | 在飞（iter5 编译中，wip 快照 + logs 齐全；步子在自己的止损纪律内） |
 | `jcajydu-c2`（J0） | 战役第一波：num 层填证槽 `restrictedHypermapsArePlaneGraphsV4`（1.5–2.5k 行，HOL reduction 链机械移植） | 在飞（快照目录已立，未交件） |
-| `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行）——**深侦先行**（30 分钟级，停机条件写在工单：编码件缺口即停） | 在飞（侦察中） |
+| `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
+| `jcajydu-j2w1`（J2 第一批） | 战役 J2：reduction2.hl（1,671 HOL 行/53 定理）移植第一口——先考古分层（AGENTS §8）再发首批（最底自含切片，≤450 行制式） | 在飞（波序补位） |
+| `jcajydu-j1w1`（J1 第一批） | 战役 J1：reduction4.hl（5,436 HOL 行/118 定理）移植第一口——同上 | 在飞（波序补位） |
 | `archive-data-scout` | trust-base §4 第 2 条：`ArchiveData/{Tri,Quad,Pent,Hex}` vs HOL vs AFP 三路机械对账 | **✅ 已收工（四类全 SAME，见续407）** |
 
 > **排队（等腾槽）**：`kcblrqc` 注册表侧接线 + XL 过夜重建批（侦察定案见续400：小件 25 模块几分钟，XL 三棵 ≈11,717 模块/7.66M 行 ≈12–13 h 串行）；
@@ -236,6 +238,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（14:45，续410）**：**`jcajydu-rxbridge` 落库验收（`286cf3b6`，532 行纯新增）——rxNumTransport 桥槽真证闭合**。① **编排者验收**：patch apply-check PASS 且产出与树内/快照副本三方同字节；pit 10 扫描文件内 axiom/sorry/admit/native_decide **零声明**（唯一命中是文件头散文）；岛编译 RC=0（nice 串行、前置 vm_stat，pit 15 纪律），文件尾锚 `#print axioms rxNumTransportBridge` = **标准三零 sorryAx**（编排者独立复跑，非车道自报）；槽签名与 `JcajyduShell.lean:125` 逐字吻合，壳文件零改动。② **内容**：`Text/TameSpine/JcajyduRxBridge.lean`——19 条支撑定理（9 条 ℕ 先例机械泛化 + TameLp §10 已泛型件直接消费；1 条 iso_node_set 轨道像泛型重落；1 条纤维集运输新写 ~55 行；rxG↔TameLp α=ℕ 同体 defeq `rfl` 折算）；**不依赖 reduction 链** ⇒ J 攻击面收缩为 num 层链 + J5 收口。③ **两条 UNRESOLVED 裁决**：532>§7 软线 450——**接受单文件落库**（TameSpine 现行 300–650 行/批制式内，7 轮失败全机械性零结构性；如后续触碰再拆）；HEAD 漂移终验——编排者岛编译即在落库时点 HEAD 上跑，已覆盖。④ **雷区记档（新）**：rx 层泛型化批次 binder 只许 `[DecidableEq α][DecidableEq β]`，加 `[BEq β][LawfulBEq β]` 与 def 烘焙实例失配（本轮唯一实质坑）。⑤ **波序推进**：J0 → rx桥 均（J0 在飞）⇒ **J1∥J2 发车条件满足**，两槽按战役常设政策补位（`jcajydu-j2w1` = reduction2.hl 1,671 行/53 定理首口；`jcajydu-j1w1` = reduction4.hl 5,436 行/118 定理首口）；两单均按**新 AGENTS §8** 先考古后动手。
 
 - **2026-11-09（14:10，续409）**：**用户裁定入 AGENTS.md（新 §8）**：「遇难数学，先看原版」——复杂数学问题卡住时禁止瞎猜瞎试，动手/派车道前先考古 `reference/flyspeck`（HOL）与 `reference/afp-flyspeck-tame`（AFP）的同一对象证明思路；原版思路是路线参考非逐行翻译目标（注意口径差异）；考古结论必须入档。首例 = 续408 的 tsk_bank 三条考古（原版四件套形态直接背书我们的三个候选方向）。后续工单（含 J 战役 J1–J5 的 reduction 链移植、tsk_bank 新证书形态、kcblrqc 包装层）开工前一律先做原版考古步骤。
 
