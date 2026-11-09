@@ -69,6 +69,11 @@
   │ ④ 链层 `split_condition_list`（tame_defs2.hl:673）在案无独立载体，
   │    以 `splitConditionListSpine` + `markedList` 核心桥直取（结论 ⑧ 已折回
   │    链层 `IsSplitCondition`）。不新造重复定义。
+  │ ⑤ **FOR-ASSEMBLY 可见性上调（无陈述改动，编排者 2026-11-10 批准）**：
+  │    `markedListCoreOfMarked` / `markedListSplitOfMarked` 由 private 升
+  │    public——供 `ChainQRDYXYJ.qRDYXYJListChain` 组装直接复用。两件陈述/证体
+  │    逐字未动（只去掉 `private`）。第三件 `lzEqLZSpine` **实测组装不需要**
+  │    （`lz` 的 dart 成员性走 `memFListPower` 直达），故**未**上调。
   └────────────────────────────────────────────────────────────────
 
   **纪律**：零 axiom/sorry/admit/native_decide；不改任何既有陈述；
@@ -171,7 +176,7 @@ private theorem lyEqLYSpine (L : fgraph ℕ) {r : List Dart} {d : Dart}
 /-! ## §1 链层 hyp ↔ l' 四桥（HOL `hyp_m_l_m`/`hyp_p_l_p`/`hyp_y_l_y`/`hyp_z_l_z`） -/
 
 /-- `markedList` 核心 7 合取 → Spine 核心（`ChainBridge` 桥，零 `sList` 槽）。 -/
-private theorem markedListCoreOfMarked (L : fgraph ℕ) (hL : GoodList L)
+theorem markedListCoreOfMarked (L : fgraph ℕ) (hL : GoodList L)
     {N : List (List Dart)} {r : List Dart} {d : Dart}
     (hm : markedList L hL N r d) : MarkedListSpine hL N r d :=
   (markedListCore_iff_markedListSpine L hL N r d).mp
@@ -179,7 +184,7 @@ private theorem markedListCoreOfMarked (L : fgraph ℕ) (hL : GoodList L)
       hm.2.2.2.2.2.2.1⟩
 
 /-- `markedList + ~final_list` → Spine `split_condition_list`（私有支撑）。 -/
-private theorem markedListSplitOfMarked (L : fgraph ℕ) (hL : GoodList L)
+theorem markedListSplitOfMarked (L : fgraph ℕ) (hL : GoodList L)
     {N : List (List Dart)} {r : List Dart} {d : Dart}
     (hm : markedList L hL N r d) (hf : ¬ finalList L r) :
     splitConditionListSpine hL N r d :=
