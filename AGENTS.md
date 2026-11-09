@@ -119,6 +119,11 @@
 4. `List.append_eq_nil` 不存在；`List.getElem_append_right` 的 `h₂` 须具名传参；
    `List.Disjoint` 是 `∀ a∈l₁, ∀ b∈l₂, a≠b` 形，收口用 `(hdisp _ hx1 _ hx2) rfl`。
 5. 批量替换注释前先跑 **comment-depth 核查**（`/-` 与 `-/` 计数），否则层次归零。
+6. **`rw` 只重写首个匹配，`simp only [if_pos/if_neg h]` 重写全部匹配 if**——
+   LHS/RHS 各带同条件 `if` 时，`rw [if_pos]` 只改一边，会伪造"类型不匹配"假象
+   （j3def 连续 8 轮踩坑，一替换即全绿）。另：`exact f a _ (by tactic)` 里
+   元变量与 tactic 实参求值次序有坑，显式给实参。
+
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
 
