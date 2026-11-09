@@ -5256,6 +5256,208 @@ theorem P11W_POLAR_FAN_BASIC {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3
 end W11b2aKit
 
 
+/-! ### W11b2 polar dart-layer identities (`p11w2_*`; WSEWPCH wave W11b2)
+
+First file of the BGMIFTE conclusion-1 assembly (HOL `polar_fan.hl`
+1704-1740): the polar fan's ordered-pair / dart / edge-neighbour sets in the
+`_p3` HYP vocabulary consumed by `localFan_p3` (bridged back to LA1's
+`LocalFan` by `localFanEquiv_p35`).  All four identities are set algebra over
+the image presentation `E' = {p v, p (ρ v)}`, made injective by
+`P11W_PRIME_INJ` (W11b1).
+
+Survey note (W11b2 erratum): `FAN 0 V' E'` itself is **not** yet in the tree
+— the polar fan7 instantiation (`hvs`/`hve`/`hee`, HOL 1400-1698) is still a
+missing prerequisite, so `localFan_p3 V' E' FF'` (HOL 1698-1978) remains
+blocked on it.  `p11w2_polar_hvs` below is the first of those three
+conditions. -/
+
+section W11b2Kit
+
+/-- 极扇顶点集 `V'`（`polarFan` 第一分量，逐字）。 -/
+noncomputable def polarV (V : Set V3) (FF : Set (V3 × V3)) : Set V3 :=
+  image (fun v : V3 => cross3 v (rhoNode1 FF v)) V
+
+/-- 极扇边集 `E'`（`polarFan` 第二分量，逐字）。 -/
+noncomputable def polarE (V : Set V3) (FF : Set (V3 × V3)) : Set (Set V3) :=
+  image (fun v : V3 => ({cross3 v (rhoNode1 FF v),
+    cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))} : Set V3)) V
+
+/-- 极扇 dart 集 `FF'`（`polarFan` 第三分量，逐字）。 -/
+noncomputable def polarFF (V : Set V3) (FF : Set (V3 × V3)) : Set (V3 × V3) :=
+  image (fun v : V3 => (cross3 v (rhoNode1 FF v),
+    cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))) V
+
+/-- 反向 dart 集（HOL `FF''`）。 -/
+noncomputable def polarFFrev (V : Set V3) (FF : Set (V3 × V3)) : Set (V3 × V3) :=
+  image (fun v : V3 => (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)),
+    cross3 v (rhoNode1 FF v))) V
+
+/-- `polarFan` 的三分量就是上面的逐字呈现（`let` 消去后 `rfl`）。 -/
+theorem p11w2_polarFan_components (V : Set V3) (E : Set (Set V3))
+    (FF : Set (V3 × V3)) :
+    polarFan V E FF = (polarV V FF, polarE V FF, polarFF V FF) := rfl
+
+/-- `ord_pairs` 层（HOL `darts_of_hyp` 的首件）：`FF' ∪ FF''`。 -/
+theorem p11w2_polar_ordPairs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (_hcl : ConvexLocalFan V E FF) (_hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (_hg : Generic V E)
+    (_hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    ordPairs_p3 (polarE V FF) = polarFF V FF ∪ polarFFrev V FF := by
+  ext d
+  constructor
+  · intro hd
+    obtain ⟨v, hv, hveq⟩ := hd
+    rcases Set.pair_eq_pair_iff.mp hveq with ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · left
+      exact ⟨v, hv, Prod.ext h1 h2⟩
+    · right
+      exact ⟨v, hv, Prod.ext h2 h1⟩
+  · rintro (⟨v, hv, rfl⟩ | ⟨v, hv, rfl⟩)
+    · exact ⟨v, hv, rfl⟩
+    · exact ⟨v, hv, Set.pair_comm _ _⟩
+
+/-- 边邻集（HOL `polar_fan.hl:1714` 的 `EE (p v) E'`）：`{p(ρv), p(ιv)}`。 -/
+theorem p11w2_polar_EE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) {v : V3} (hv : v ∈ V) :
+    EE_p3 (cross3 v (rhoNode1 FF v)) (polarE V FF) =
+      ({cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)),
+        cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))} : Set V3) := by
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  ext w
+  constructor
+  · intro hw
+    have hw' : ({cross3 v (rhoNode1 FF v), w} : Set V3) ∈ polarE V FF := hw
+    obtain ⟨a, ha, hweq⟩ := hw'
+    -- `hweq : {p a, p(ρa)} = {p v, w}`
+    rcases Set.pair_eq_pair_iff.mp hweq with ⟨h1, h2'⟩ | ⟨h1, h2'⟩
+    · -- `p a = p v`, `p(ρa) = w`
+      have hva : v = a := P11W_PRIME_INJ hcl hedge hg hia v hv a ha h1.symm
+      refine Set.mem_insert_iff.mpr (Or.inl ?_)
+      rw [← hva] at h2'
+      exact h2'.symm
+    · -- `p a = w`, `p(ρa) = p v`：`a = ι v`
+      have hrv'aV : rhoNode1 FF a ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 ha
+      have hva : v = rhoNode1 FF a :=
+        P11W_PRIME_INJ hcl hedge hg hia v hv (rhoNode1 FF a) hrv'aV h2'.symm
+      have hι : ivsRhoNode1 FF v = a := by
+        rw [hva]
+        exact w6a_ivs_idd h2 ha
+      refine Set.mem_insert_iff.mpr (Or.inr ?_)
+      rw [Set.mem_singleton_iff]
+      rw [hι]
+      exact h1.symm
+  · intro hw
+    have hw' : w ∈ ({cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)),
+        cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))} : Set V3) := hw
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hw'
+    rcases hw' with hw' | hw'
+    · have hgoal : ({cross3 v (rhoNode1 FF v), w} : Set V3) ∈ polarE V FF := by
+        rw [hw']
+        exact ⟨v, hv, rfl⟩
+      exact hgoal
+    · have hgoal : ({cross3 v (rhoNode1 FF v), w} : Set V3) ∈ polarE V FF := by
+        rw [hw']
+        refine ⟨ivsRhoNode1 FF v, IVS_RHO_NODE1_IN_V hcl.1 hedge v hv, ?_⟩
+        simp only []
+        rw [show rhoNode1 FF (ivsRhoNode1 FF v) = v from w6a_rho_ivs h2 hv]
+        exact Set.pair_comm _ _
+      exact hgoal
+
+/-- `self_pairs` 为空：`V'` 上每个点都有边（`EE (p v) E' ∋ p(ρv)`）。 -/
+theorem p11w2_polar_selfPairs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    selfPairs_p3 (polarE V FF) (polarV V FF) = ∅ := by
+  rw [Set.eq_empty_iff_forall_notMem]
+  rintro ⟨a1, a2⟩ ⟨-, haV, hEE⟩
+  obtain ⟨v, hv, rfl⟩ := haV
+  have hEE' := p11w2_polar_EE hcl hedge hg hia hv
+  rw [hEE'] at hEE
+  have hmem : cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)) ∈
+      ({cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)),
+        cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))} : Set V3) := by
+    rw [Set.mem_insert_iff]
+    left
+    rfl
+  rw [hEE] at hmem
+  simpa using hmem
+
+/-- `darts_of_hyp` 层（HOL `polar_fan.hl:1704`）：`FF' ∪ FF''`。 -/
+theorem p11w2_polar_darts {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    dartsOfHyp_p3 (polarE V FF) (polarV V FF) = polarFF V FF ∪ polarFFrev V FF := by
+  rw [dartsOfHyp_p3, p11w2_polar_ordPairs hcl hedge hg hia,
+    p11w2_polar_selfPairs hcl hedge hg hia, Set.union_empty]
+
+/-- 极扇的 `hvs` 条件（`FAN_AFF_GT_CONDITION` 前题之一）：两条极射线的闭锥
+之交只有基点（`P11W_PRIME_NCOL` + 射线系数形）。 -/
+theorem p11w2_polar_hvs {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    ∀ v ∈ polarV V FF, ∀ w ∈ polarV V FF,
+      affGe ({(0:V3)} : Set V3) {v} ∩ affGe ({(0:V3)} : Set V3) {w}
+        = affGe ({(0:V3)} : Set V3) ({v} ∩ {w}) := by
+  intro v hv w hw
+  obtain ⟨a, ha, rfl⟩ := hv
+  obtain ⟨b, hb, rfl⟩ := hw
+  by_cases hab : a = b
+  · subst hab
+    rw [Set.inter_self, Set.inter_self]
+  · have hpa0 : cross3 a (rhoNode1 FF a) ≠ 0 := P11W_PRIME_NE_ZERO hcl a ha
+    have hpb0 : cross3 b (rhoNode1 FF b) ≠ 0 := P11W_PRIME_NE_ZERO hcl b hb
+    have hpne : cross3 a (rhoNode1 FF a) ≠ cross3 b (rhoNode1 FF b) := by
+      intro heq
+      exact hab (P11W_PRIME_INJ hcl hedge hg hia a ha b hb heq)
+    have hinter : ({cross3 a (rhoNode1 FF a)} : Set V3) ∩
+        {cross3 b (rhoNode1 FF b)} = ∅ := p11w2_single_inter_single hpne
+    rw [hinter, P11W_AFFGE_EMPTY]
+    apply Set.Subset.antisymm
+    · intro y hy
+      obtain ⟨hy1, hy2⟩ := hy
+      obtain ⟨s, hs, hys⟩ :=
+        (P11W2_GE_SINGLE_REL (x := (0:V3))
+          (v := cross3 a (rhoNode1 FF a)) (Ne.symm hpa0)).mp hy1
+      obtain ⟨t, ht, hyt⟩ :=
+        (P11W2_GE_SINGLE_REL (x := (0:V3))
+          (v := cross3 b (rhoNode1 FF b)) (Ne.symm hpb0)).mp hy2
+      rw [Set.mem_singleton_iff]
+      by_cases hs0 : s = 0
+      · rw [hs0, zero_smul] at hys
+        simpa using hys
+      · have ht0 : t ≠ 0 := by
+          intro ht0'
+          rw [ht0', zero_smul] at hyt
+          have hsa : s • (cross3 a (rhoNode1 FF a) - 0) = 0 := by
+            rw [← hys, hyt]
+          have hpa' : cross3 a (rhoNode1 FF a) - 0 = 0 :=
+            (smul_eq_zero.mp hsa).resolve_left hs0
+          exact hpa0 (sub_eq_zero.mp hpa')
+        have hEq : s • (cross3 a (rhoNode1 FF a) - 0)
+            = t • (cross3 b (rhoNode1 FF b) - 0) := by
+          rw [← hys, hyt]
+        have hpb' : cross3 b (rhoNode1 FF b) - 0
+            = (t⁻¹ * s) • (cross3 a (rhoNode1 FF a) - 0) := by
+          have h' := congrArg (fun z => t⁻¹ • z) hEq
+          rw [smul_smul, smul_smul, inv_mul_cancel₀ ht0, one_smul] at h'
+          exact h'.symm
+        have hcol : Collinear3 0 (cross3 a (rhoNode1 FF a)) (cross3 b (rhoNode1 FF b)) :=
+          (collinear3_iff_smul (v := (0:V3)) (w := cross3 a (rhoNode1 FF a))
+            (w1 := cross3 b (rhoNode1 FF b)) hpa0).mpr ⟨t⁻¹ * s, hpb'⟩
+        exact (P11W_PRIME_NCOL hcl hedge hg hia a ha b hb hab hcol).elim
+    · intro y hy
+      rw [Set.mem_singleton_iff] at hy
+      rw [hy]
+      exact
+        ⟨(P11W2_GE_SINGLE_REL (x := (0:V3))
+            (v := cross3 a (rhoNode1 FF a)) (Ne.symm hpa0)).mpr
+            ⟨0, le_refl 0, by simp⟩,
+          (P11W2_GE_SINGLE_REL (x := (0:V3))
+            (v := cross3 b (rhoNode1 FF b)) (Ne.symm hpb0)).mpr
+            ⟨0, le_refl 0, by simp⟩⟩
+
+end W11b2Kit
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
