@@ -314,6 +314,11 @@
 >
 > **ERRATA（续692）**：w13-rev 的「`LVDUCXU` 的 `Simple` 槽冗余、可 SF 掉省 200–330」**作废**——编排者与车道双方机器复核：`DIH2K_FACE_SIMPLIZED` 的陈述要求 `H.Simple`，`LVDUCXU` 证明体 `LocalAuto10.lean:1691-1694` 实际把 `hsimp` 喂给它，`dih2k_p3` 合取必须 `Simple`。`hsimple` 永久按槽记账。
 
+- **2026-11-10（04:39，续696）**：**AQ13 W4a2a 落库（`d4107fd0`，150 行 1 件）——B2n 断口转移清零；W4a2 拆 a/b，b（S 链 + F f1）140–180 待做**。
+① **`aq13w4a2_nextEl_f1`**（B2n）：`d ∈ f1 段 ∧ d ≠ prevEl r (lZSpine …) → nextEl f1 d = nextEl r d`。= W4a1 的 A3n 之 (a,b) 参数化版（a = `nextEl r y`、b = `prevEl r z`），三分 + `a ≠ b` 由 f1 Nodup 头/尾重复排除；只用已落 `nextElCat1/2/Last1`、`betwnNil`、`aqs_hdBetwn2`、`nextLastBetwn`、`aq10_nextElBetwnSame` + 3 个私有列表件。标准三；RC=0、0 error/0 warning；olean 装池。
+② **y=z1 特例侦察（~30–40 行可达）**：`y ≠ p1.getLast!` 时 p1 越过 y、p 与 p1 共享 y ⇒ `uniqSublistUnique` 给 p=p1 ⇒ `LAST p1 = LAST p = y` 矛盾；`p ∉ parts r` 走 HOL 1426–1464 的 `partsFlatten`/`parts_nonnil`/`MEM_LAST`/`LAST_parts` 落末 part 或 `y = r.getLast!`，`aqs_lastParts` 再矛盾。第 4 步「p∉parts r ⇒ 末 part」的精确蕴含需 W4a2b 内先验。
+③ **派单**：`aq13-survey` → **W4a2b（S 链 + F f1 含 y=z1，140–180；超则拆 b-1 S 链 / b-2 F f1）**，基线 `d4107fd0`；W4b 主装（80–120）在其后。**W4 落库前不宣称 aq13 收口**。
+
 - **2026-11-10（06:05，续695）**：**战役 wave 1 两件落库（`212bb47b` `4829c7d7`，93 行）——`DART1_NOT_COLLINEAR_2` + `CLOSURE_MINIMAL_EQ` 清零；剩 4 件 ~420–690**。
 ① **`p22d_dart1NotCollinear2`**（54 行；HOL `fan/hypermap_and_fan.hl:2693`）：`FAN 0 V E → (v,w) ∈ dart1OfFan → ¬Collinear3 0 v w ∧ ¬Collinear3 0 v (sigmaFan …)`。**证明比 HOL 短**：两半都走 `fan6`（`FAN` 第五合取），第二半先证 `sigmaFan ∈ setOfEdge v V E`（单点支 `if_pos` / `SIGMA_FAN`）再经 `properties_ofSetOfEdge_fan` 换边交——**不需要** HOL 的 hypermap 层路线。2 轮收敛（1→0）。
 ② **`p22d_closureMinimalEq`**（39 行；HOL Light `topology1.ml:1758`，通用拓扑）：`IsClosed t → (closure s ⊆ t ↔ s ⊆ t)`，`subset_closure` + `closure_minimal` 两行。
