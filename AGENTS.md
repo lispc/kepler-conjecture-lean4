@@ -49,6 +49,22 @@
 - **Assembly 级 `lake build` 永久禁止**（会触发全树重编与 shard trace 洪泛）。
   需要验证 Assembly 时走岛协议：standalone `lean -o /tmp/.../Kepler/Assembly.olean`
   + `LEAN_PATH` 探针 + 与基线根面逐字节比对 + olean 回灌。
+- **`auto_gate.sh` 的 “Text roots 全量构建” 步永久禁用**（2026-11-09 实测：它重编
+  8,801/8,816 个目标、在最后 15 个被 143 杀，把 swap 推到见底）。验收口径改为三件套：
+  ① 模块级 `lake build <单模块>` PASS；② 岛协议 `lean -o /tmp/...` RC=0；
+  ③ 编排者**亲跑** `#print axioms`（不许转述车道输出）。纯新增 diff（无既有模块改动）时，
+  “全树不破”由 ①②③ 替代；闸的 roots 步失败**不作为拒绝理由**，只在日志里记一笔。
+- **重编译串行**：起前查 `vm_stat` free ≥ 200,000 pages（≈3 GB）作为**软性提醒**；
+  硬闸是上一条（同一时刻 1 个 lean）。不满足就等，不许“先跑起来再说”。
+- **内存的真正约束是「同时只许 1 个 Lean 编译」，不是 free pages。** 2026-11-09 实测
+  （`/usr/bin/time -l`，`Base.lean` 12 KB 源）：**单次编译峰值 RSS = 5.66 GB**、耗时 27.8 s；
+  5 条车道并发编译 ⇒ **28 GB 需求 > 18 GB 物理**，这才是换页风暴/压力升到 critical(4) 的来源。
+  普通进程不是问题：同一测量里 3 GB 分配 **0 pageouts、压力不变（1）**。
+  ⇒ 车道起编译前必须确认“此刻没有别的 lean 在跑”；编排者侧只放行一个。
+- **swap 会动态伸缩**，不是只增不减：2026-11-09 实测从 **84.8 GB 回落到 25.5 GB**
+  （无需重启），单次编译又会长回去 **+3.2 GB**。所以 **`swapused` 本身不是告警指标**；
+  判据 = `kern.memorystatus_vm_pressure_level`（1 正常 / 2 警告 / 4 危急）+
+  `pageouts` 增量 + 并发编译数。**不许只看 `Pages free`**（macOS 的 free 常年很小）。
 - 用户保留项：certtm 的 TM3 / Mono* hold；D 证书层解冻 hold。不要单方面动。
 
 ## 5. 落库流程
@@ -56,6 +72,8 @@
 1. 车道交 `patch.diff`（相对某个 HEAD），编排者 `git apply --check` 后应用。
 2. 编排者跑闸：`cd lean && bash scripts/auto_gate.sh Kepler/Text/<File>.lean <THM>`。
    新文件先 `git add -N`。零删除 diff 会被 NOTES-LANE 豁免（规则 5 跳过）。
+   **该脚本的 “Text roots 全量构建” 步已禁用（§4）——只认它的模块 build 步 + 岛协议 +
+   编排者亲跑的 `#print axioms`；roots 步挂了不拒绝，记日志。**
 3. 闸 PASS 才 commit；**一个落库一笔 commit**，message 写清 文件/件数/commit 关系。
 4. 对表：更新 `docs/priority-queue.md` §1（在飞）与 §8（一条日志）。
 
