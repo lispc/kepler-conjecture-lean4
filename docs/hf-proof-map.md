@@ -6,6 +6,11 @@
 >
 > ## 状态更新
 >
+> - **2026-11-09（编排者，三）**：§11 #9 勘误——`KcblrqcIneqDef` 定义侧**不是**零证书纯数学：
+>   HOL `TRIANGULAR_FACE_AZIM_DART_BOUNDS`（tame_general.hl:739）以机器 ineq
+>   `5735387903`/`5490182221` 为**显式前件**（`mk_imp`），而 Lean 定义（TameLp:516）
+>   无此前件 ⇒ Lean 陈述强于 HOL 形，定义侧被注册表侧挡死
+>   （`kcblrqc-defside` BLOCKED，编排者复核通过，见 pq 续402）。
 > - **2026-11-09（编排者，二）**：§11 #4 重定义——`fully_surrounded_perimeter_bound` 的真路线**不是**移植三桥
 >   （三引理已全覆盖：`Hypermap.face_representation`:2794 / `perimSumFaceArc` TameLp:903 / `yk10_convexLocalFan`:10642；
 >   CIZMRRH 已证 LA3:2734；KCHMAMG 2-槽形已落 LA35:24547），而是树内已有的
