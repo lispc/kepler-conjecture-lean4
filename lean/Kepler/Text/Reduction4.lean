@@ -9,6 +9,13 @@
   │   ifbetwn_disjoint :3803 → §D ifbetwnDisjoint
   │   ifbetwn_cover    :3818 → §D ifbetwnCover
   │   ifbetwn_refl     :4499 → §D ifbetwnRefl
+  │ 批 B2（2026-11-09 续作，same file 追加节 §E-§G）：
+  │   transform_count_not :85（KBWPBHQ.hl，外部消费 ×28）→ §E transformCount_not
+  │   indexf_inj :3931 → §F indexfInj；随批链岛内联：
+  │   tame_list indexf_mem1/mem2 :1481/:1487、indexf_cond 差值形（§F indexf_val
+  │   私件）、indexfLeSizel/indexfLtSizel 同形、indexf_refl :1530、indexf0 :1542、
+  │   indexf_add_sum :1676、indexf_add_left/right :1638/:1656、
+  │   uniq_el :2130 → §G uniqEl、uniq_tl :2205 → §G uniqTl
   │ 外科内联的闭包内支撑件 4 条（不另落文件；J2/J3 车道到达时吸收去重）：
   │   tame_list.hl   not_betwn1    :2574 → §C notBetwn1
   │   tame_list.hl   not_betwn2    :2600 → §C notBetwn2
@@ -26,9 +33,10 @@
   │ BEq/LawfulBEq 实例与 def 烘焙失配；Lean core Core.lean:812 提供
   │ [DecidableEq α] → LawfulBEq α，故 between/splitAt/ListAuxLemmas 侧
   │ synth 唯一，全部走派生实例）。
-  │ 环安全：imports = Reduction5Base + ListAuxLemmas；import 闭包零
-  │ `Kepler.Assembly` 主模块、零 `Kepler.Text.TameSpine.*`
-  │ （Reduction5Base 头注岛纪律）。零 axiom/sorry/admit/native_decide。
+  │ 环安全：imports = Reduction5Base + Reduction5（minNum_spec）+
+  │ ListAuxLemmas；import 闭包零 `Kepler.Assembly` 主模块、零
+  │ `Kepler.Text.TameSpine.*`（Reduction5Base 头注岛纪律）。
+  │ 零 axiom/sorry/admit/native_decide。
   └────────────────────────────────────────────────────────────────
 
   ┌─ 版本差异（DIFFERS 记档）─────────────────────────────────────
@@ -46,6 +54,7 @@
 -/
 
 import Kepler.Text.Reduction5Base
+import Kepler.Text.Reduction5
 import Kepler.Graphs.ListAuxLemmas
 
 set_option autoImplicit false
@@ -56,8 +65,9 @@ set_option linter.unusedSectionVars false
 namespace Kepler.Text.Reduction4
 
 open Kepler.Graphs (between splitAt splitAtRec between_def splitAt_dist_ram
-  splitAt_no_ram splitAt_ram inbetween_inset set_between_id)
-open Kepler.Text.Reduction5 (ifbetwn)
+  splitAt_no_ram splitAt_ram inbetween_inset set_between_id fgraph)
+open Kepler.Text.Reduction5 (ifbetwn indexf minNum minNum_spec transformCount
+  rtrans finalList Dart)
 open Kepler.Text.TameLp (getElem_idxOf)
 
 /-! ## §0 位置小件（idxOf 算术，私有） -/
@@ -79,6 +89,19 @@ private theorem eq_of_idxOf_eq {s : List α} (hnd : s.Nodup) {x y : α} (hx : x 
     rw [List.getElem?_eq_getElem (List.idxOf_lt_length_iff.mpr hx), h1]
   have m2 : s[s.idxOf y]? = some y := by
     rw [List.getElem?_eq_getElem (List.idxOf_lt_length_iff.mpr hy), h2]
+  rw [← h] at m2
+  rw [m1] at m2
+  exact Option.some.inj m2
+
+/-- 同位置即同元素（无 Nodup 变体；`idxOf` 首现语义）。 -/
+private theorem eq_of_idxOf_eq' {s : List α} {x y : α} (hx : x ∈ s) (hy : y ∈ s)
+    (h : s.idxOf x = s.idxOf y) : x = y := by
+  have m1 : s[s.idxOf x]? = some x := by
+    rw [List.getElem?_eq_getElem (List.idxOf_lt_length_iff.mpr hx),
+      getElem_idxOf_mem hx]
+  have m2 : s[s.idxOf y]? = some y := by
+    rw [List.getElem?_eq_getElem (List.idxOf_lt_length_iff.mpr hy),
+      getElem_idxOf_mem hy]
   rw [← h] at m2
   rw [m1] at m2
   exact Option.some.inj m2
@@ -666,7 +689,269 @@ theorem ifbetwnCover {s : List α} (hnd : s.Nodup) {x y w : α}
 
 end IfbetwnProps
 
+/-! ## §E transformCount 件（KBWPBHQ.hl 外科内联；外部消费 ×28） -/
+
+section TransformCountProps
+
+variable {L : fgraph ℕ} {N : List (List Dart)} {r : List Dart} {x : Dart}
+
+/-- **HOL `transform_count_not`**（KBWPBHQ.hl:85，reduction4 外部消费 ×28）：
+`j < transformCount` ⇒ 第 `j` 次迭代尚未 final。`minNum` 极小性一步给出；
+空集情形由成员假 vacuous（HOL `minnum_not` 的 Lean 直证）。 -/
+theorem transformCount_not (j : ℕ) (hj : j < transformCount L N r x) :
+    ¬ finalList L (rtrans L N r x j) := by
+  intro hfin
+  have hdef : transformCount L N r x =
+      minNum ({i : ℕ | finalList L (rtrans L N r x i)} : Set ℕ) := rfl
+  by_cases hne : ({i : ℕ | finalList L (rtrans L N r x i)} : Set ℕ).Nonempty
+  · have hspec := minNum_spec hne
+    have hle := hspec.2 j hfin
+    rw [hdef] at hj
+    exact absurd hj (Nat.not_lt.mpr hle)
+  · exact hne ⟨j, hfin⟩
+
+end TransformCountProps
+
+/-! ## §F indexf 通用件（tame_list.hl indexf 基础件链岛重落 +
+reduction4.hl:3931 indexf_inj） -/
+
+section IndexfProps
+
+variable {α : Type*} [DecidableEq α]
+variable {s : List α} {x y z : α}
+
+/-- **HOL `indexf_mem1`/`indexf2`**（tame_list.hl:1481/:1487 合一）：任一端
+不在表内时取 junk 值 = 表长。 -/
+theorem indexf_eq_length_of_not_mem (h : x ∉ s ∨ y ∉ s) :
+    indexf x y s = s.length := by
+  by_cases hc : x ∈ s ∧ y ∈ s
+  · exact (h.elim (fun hh => hh hc.1) (fun hh => hh hc.2)).elim
+  · unfold indexf
+    rw [if_neg hc]
+
+/-- indexf ≤ 表长（无条件 junk 界；TameList3 indexfLeSizel 链岛同形）。 -/
+theorem indexf_le_length (u v : α) (t : List α) : indexf u v t ≤ t.length := by
+  by_cases hc : u ∈ t ∧ v ∈ t
+  · unfold indexf
+    rw [if_pos hc]
+    have hpos : 0 < t.length := List.length_pos_of_mem hc.1
+    exact Nat.mod_lt _ hpos |>.le
+  · unfold indexf
+    rw [if_neg hc]
+
+/-- 双侧成员时 indexf < 表长（TameList3 indexfLtSizel 链岛同形）。 -/
+theorem indexf_lt_length_of_mem (hx : x ∈ s) (hy : y ∈ s) :
+    indexf x y s < s.length := by
+  have hpos : 0 < s.length := List.length_pos_of_mem hx
+  by_cases hc : x ∈ s ∧ y ∈ s
+  · unfold indexf
+    rw [if_pos hc]
+    exact Nat.mod_lt _ hpos
+  · unfold indexf
+    rw [if_neg hc]
+    exact absurd ⟨hx, hy⟩ hc
+
+/-- indexf 的「有向差」展开（HOL indexf_cond 差值形；§F 诸件的 omega 引擎）：
+双侧成员时
+`indexf u v s = if idxOf u ≤ idxOf v then idxOf v - idxOf u else idxOf v + len - idxOf u`。 -/
+private theorem indexf_val {u v : α} (hu : u ∈ s) (hv : v ∈ s) :
+    indexf u v s =
+      if s.idxOf u ≤ s.idxOf v then s.idxOf v - s.idxOf u
+      else s.idxOf v + (s.length - s.idxOf u) := by
+  have hux : s.idxOf u < s.length := List.idxOf_lt_length_iff.mpr hu
+  have hvx : s.idxOf v < s.length := List.idxOf_lt_length_iff.mpr hv
+  unfold indexf
+  rw [if_pos (⟨hu, hv⟩ : u ∈ s ∧ v ∈ s)]
+  rcases Nat.lt_or_ge (s.idxOf v) (s.idxOf u) with h | h
+  · rw [if_neg (by omega)]
+    exact Nat.mod_eq_of_lt
+      (show s.idxOf v + (s.length - s.idxOf u) < s.length by omega)
+  · rw [if_pos h]
+    have he : s.idxOf v + (s.length - s.idxOf u) =
+        (s.idxOf v - s.idxOf u) + s.length := by omega
+    have hlt : s.idxOf v - s.idxOf u < s.length := by omega
+    rw [he, Nat.add_mod, Nat.mod_self, Nat.add_zero, Nat.mod_mod,
+      Nat.mod_eq_of_lt hlt]
+
+/-- **HOL `indexf_refl`**（tame_list.hl:1530）：`indexf x x s = 0`。 -/
+theorem indexfRefl (hx : x ∈ s) : indexf x x s = 0 := by
+  rw [indexf_val hx hx, if_pos (Nat.le_refl _)]
+  omega
+
+/-- **HOL `indexf0`**（tame_list.hl:1542）：双侧成员 + `indexf = 0` ⇒ 同元素。 -/
+theorem indexf_eq_zero (hx : x ∈ s) (hy : y ∈ s) (h : indexf x y s = 0) :
+    x = y := by
+  have hbx : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hx
+  rw [indexf_val hx hy] at h
+  rcases Nat.lt_or_ge (s.idxOf y) (s.idxOf x) with hlt | hge
+  · rw [if_neg (Nat.not_le.mpr hlt), Nat.add_eq_zero_iff] at h
+    obtain ⟨h1, h2⟩ := h
+    exact absurd (by omega : False) (by simp)
+  · rw [if_pos hge] at h
+    exact eq_of_idxOf_eq' hx hy (by omega)
+
+/-- **HOL `indexf_add_sum`**（tame_list.hl:1676）：环内和小于表长时取等。 -/
+theorem indexf_add_sum (hx : x ∈ s) (hy : y ∈ s) (hz : z ∈ s)
+    (h : indexf x y s + indexf y z s < s.length) :
+    indexf x y s + indexf y z s = indexf x z s := by
+  have hbx : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hx
+  have hby : s.idxOf y < s.length := List.idxOf_lt_length_iff.mpr hy
+  have hbz : s.idxOf z < s.length := List.idxOf_lt_length_iff.mpr hz
+
+  rw [indexf_val hx hy, indexf_val hy hz] at h
+  rw [indexf_val hx hy, indexf_val hy hz, indexf_val hx hz]
+  rcases Nat.lt_or_ge (s.idxOf y) (s.idxOf x) with h1 | h1
+  · rw [if_neg (Nat.not_le.mpr h1)] at h ⊢
+    rcases Nat.lt_or_ge (s.idxOf z) (s.idxOf y) with h2 | h2
+    · rw [if_neg (Nat.not_le.mpr h2)] at h ⊢
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3]
+        omega
+      · rw [if_neg h3]
+        omega
+    · rw [if_pos h2] at h ⊢
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3]
+        omega
+      · rw [if_neg h3]
+        omega
+  · rw [if_pos h1] at h ⊢
+    rcases Nat.lt_or_ge (s.idxOf z) (s.idxOf y) with h2 | h2
+    · rw [if_neg (Nat.not_le.mpr h2)] at h ⊢
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3]
+        omega
+      · rw [if_neg h3]
+        omega
+    · rw [if_pos h2] at h ⊢
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3]
+        omega
+      · rw [if_neg h3]
+        omega
+
+/-- **HOL `indexf_add_left`**（tame_list.hl:1638）。 -/
+theorem indexf_add_left (hx : x ∈ s) (hy : y ∈ s) (hz : z ∈ s)
+    (h : indexf x y s ≤ indexf x z s) :
+    indexf x y s + indexf y z s = indexf x z s := by
+  have hbx : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hx
+  have hby : s.idxOf y < s.length := List.idxOf_lt_length_iff.mpr hy
+  have hbz : s.idxOf z < s.length := List.idxOf_lt_length_iff.mpr hz
+
+  rw [indexf_val hx hy, indexf_val hx hz] at h
+  rw [indexf_val hx hy, indexf_val hy hz, indexf_val hx hz]
+  rcases Nat.lt_or_ge (s.idxOf y) (s.idxOf x) with h1 | h1
+  · rw [if_neg (Nat.not_le.mpr h1)] at h ⊢
+    rcases Nat.lt_or_ge (s.idxOf z) (s.idxOf y) with h2 | h2
+    · rw [if_neg (Nat.not_le.mpr h2)]
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3] at h ⊢
+        omega
+      · rw [if_neg h3] at h ⊢
+        omega
+    · rw [if_pos h2]
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3] at h ⊢
+        omega
+      · rw [if_neg h3] at h ⊢
+        omega
+  · rw [if_pos h1] at h ⊢
+    rcases Nat.lt_or_ge (s.idxOf z) (s.idxOf y) with h2 | h2
+    · rw [if_neg (Nat.not_le.mpr h2)]
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3] at h ⊢
+        omega
+      · rw [if_neg h3] at h ⊢
+        omega
+    · rw [if_pos h2]
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3] at h ⊢
+        omega
+      · rw [if_neg h3] at h ⊢
+        omega
+
+/-- **HOL `indexf_add_right`**（tame_list.hl:1656）。 -/
+theorem indexf_add_right (hx : x ∈ s) (hy : y ∈ s) (hz : z ∈ s)
+    (h : indexf y z s ≤ indexf x z s) :
+    indexf x y s + indexf y z s = indexf x z s := by
+  have hbx : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hx
+  have hby : s.idxOf y < s.length := List.idxOf_lt_length_iff.mpr hy
+  have hbz : s.idxOf z < s.length := List.idxOf_lt_length_iff.mpr hz
+
+  rw [indexf_val hy hz, indexf_val hx hz] at h
+  rw [indexf_val hx hy, indexf_val hy hz, indexf_val hx hz]
+  rcases Nat.lt_or_ge (s.idxOf y) (s.idxOf x) with h1 | h1
+  · rw [if_neg (Nat.not_le.mpr h1)]
+    rcases Nat.lt_or_ge (s.idxOf z) (s.idxOf y) with h2 | h2
+    · rw [if_neg (Nat.not_le.mpr h2)] at h ⊢
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3] at h ⊢
+        omega
+      · rw [if_neg h3] at h ⊢
+        omega
+    · rw [if_pos h2] at h ⊢
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3] at h ⊢
+        omega
+      · rw [if_neg h3] at h ⊢
+        omega
+  · rw [if_pos h1]
+    rcases Nat.lt_or_ge (s.idxOf z) (s.idxOf y) with h2 | h2
+    · rw [if_neg (Nat.not_le.mpr h2)] at h ⊢
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3] at h ⊢
+        omega
+      · rw [if_neg h3] at h ⊢
+        omega
+    · rw [if_pos h2] at h ⊢
+      by_cases h3 : s.idxOf x ≤ s.idxOf z
+      · rw [if_pos h3] at h ⊢
+        omega
+      · rw [if_neg h3] at h ⊢
+        omega
+
+
+/-- **HOL `indexf_inj`**（reduction4.hl:3931）：`indexf` 对第二参数单射
+（无需 Nodup：`idxOf` 首现语义，B1 `eq_of_idxOf_eq` 直用）。 -/
+theorem indexfInj (hx : x ∈ s) (hy : y ∈ s) (hz : z ∈ s) :
+    indexf x y s = indexf x z s ↔ y = z := by
+  have hbx : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hx
+  have hby : s.idxOf y < s.length := List.idxOf_lt_length_iff.mpr hy
+  have hbz : s.idxOf z < s.length := List.idxOf_lt_length_iff.mpr hz
+  constructor
+  · intro h
+    rw [indexf_val hx hy, indexf_val hx hz] at h
+    split_ifs at h <;> exact eq_of_idxOf_eq' hy hz (by omega)
+  · intro h
+    rw [h]
+
+end IndexfProps
+
+/-! ## §G uniq 件（reduction4.hl 层 A 泛用件） -/
+
+section UniqProps
+
+variable {α : Type*} [DecidableEq α]
+variable {s : List α}
+
+/-- **HOL `uniq_el`**（reduction4.hl:2130）：`Nodup` 下下标单射的逆否。 -/
+theorem uniqEl (hnd : s.Nodup) {i j : ℕ} (hi : i < s.length) (hj : j < s.length)
+    (h : i ≠ j) : s[i] ≠ s[j] := by
+  intro heq
+  have h1 := idxOf_getElem_of_nodup hnd hi
+  have h2 := idxOf_getElem_of_nodup hnd hj
+  rw [← heq] at h2
+  exact h (h1.symm.trans h2)
+
+/-- **HOL `uniq_tl`**（reduction4.hl:2205）。 -/
+theorem uniqTl (hnd : s.Nodup) (h : s ≠ []) : s.tail.Nodup := by
+  obtain ⟨a, t, rfl⟩ := List.exists_cons_of_ne_nil h
+  exact (List.nodup_cons.mp hnd).2
+
+end UniqProps
+
 end Kepler.Text.Reduction4
+
 
 /-! 公理审计锚（本文件编译即执行；预期 = 标准三
 `[propext, Classical.choice, Quot.sound]`，零 sorryAx。落库时编排者可整体
@@ -685,3 +970,15 @@ end Kepler.Text.Reduction4
 #print axioms Kepler.Text.Reduction4.memOfMemIfbetwn
 #print axioms Kepler.Text.Reduction4.ifbetwnDisjoint
 #print axioms Kepler.Text.Reduction4.ifbetwnCover
+#print axioms Kepler.Text.Reduction4.transformCount_not
+#print axioms Kepler.Text.Reduction4.indexf_eq_length_of_not_mem
+#print axioms Kepler.Text.Reduction4.indexf_le_length
+#print axioms Kepler.Text.Reduction4.indexf_lt_length_of_mem
+#print axioms Kepler.Text.Reduction4.indexfRefl
+#print axioms Kepler.Text.Reduction4.indexf_eq_zero
+#print axioms Kepler.Text.Reduction4.indexf_add_sum
+#print axioms Kepler.Text.Reduction4.indexf_add_left
+#print axioms Kepler.Text.Reduction4.indexf_add_right
+#print axioms Kepler.Text.Reduction4.indexfInj
+#print axioms Kepler.Text.Reduction4.uniqEl
+#print axioms Kepler.Text.Reduction4.uniqTl
