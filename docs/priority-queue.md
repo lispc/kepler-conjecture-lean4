@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:50，续730）**：**双落库（nkezbfc W6-K5 `95e3b585` + tame-corr W2-b P1 `4235270b`）→ 派 W6-K6 与 P2/P3**。
+① **W6-K5 落库**：`LocalFanStepW6K5.lean` 181 行 6 件全标准三——④ else 支收口链 `pW6k5_sol_nonneg_of_azim_id`（hcollapse+hcop+haid 三识别式显式槽+hlt ⇒ `0 ≤ solLocal_p9`）；**HOL 源读法勘误采信**：else 支（三点内角全 < π）不导 False 而是直接证 `0 ≤ sol_local`（NKEZBFC.hl:2039–2614），链 = collapse + 识别式 + `azim_dihv_same`×3 + W6K4③ `ΣdihV ≥ π` + linarith。缺口图：`azim_add` 全库无公开件（本地重证 15–25）/ haid 展开（HOL 2519–2584）/ `coplanar_of_azim_pi` LuneVolume:865 private。
+② **W2-b P1 落库**：`Reduction4Subseg8.lean` 182 行 3 件全标准三（`markedListUniqCore` :1747 / `scrollFlattenMap` :1586 `[propext,Quot.sound]` / `initialPrebatchExplicitScroll` :1847）；**全族判定表**（21 final_assumption_* + 塔 3 + mluc 逐件过 HOL 证体）：不吃 3 / 吃 TAV2 6 / 吃 AQIUNPP 3 / 吃 AQ 章 1 / 传递吃 TAV2 2 / 缓交 1（size_find_face，import 面污染）/ 已落查重 ✓；`size_find_face` 缓交采信。
+③ **再派**：nkezbfc → **W6-K6 两 patch**（A = azim_add 本地重证 + haid 展开 + coplanar 公开复制 ~120–160；B = 三分支总装 ~100–150，hprev/hstep 显式槽）；tame-corr → **P2/P3**（TAV2 def 已落 `56204efc` 立即解锁：吃 TAV2 6 件槽形 import Reduction5Tav2；aqiunpp 在 TameSpine 侧链道不可 import ⇒ 槽形；explicit2 前置 prebatch_suc_explicit 先侦察）。
+
 - **2026-11-10（07:41，续729）**：**W2-c 侦察收工（核验过：塔 DAG 10 件无死支、两族模板、U1/U2 双闭环）→ 三裁决 + 开工**。① **more_lemma2 四件**（mem_core/next_core_FST/indexf_z_lt_sizel_ytran/indexf3_final_lemmas）**归 scout**（W2-c-2；tame-corr W2-b 工单不含 more_lemma2 域，M1/M2 冻结族自 j1w1 退场无主；K3 indexf2..7 族含 prev_core_x W2-d 同归 scout）。② **批 6 patch 原样不合并**（≤350 派单口径非纪律线；总量上修 ~1,650–2,050 采信 = 塔本体 1,352 + on-path 外部 ~600 HOL）。③ 链侧名双路 grep 核实照计划（真缺才落孪生，超 350 先报）。**两条入账**：G5 大半不在路径 = 风险降级（HQYMRTX1_list/ztran_in_face_ytrans/Pbflhet 余 4 件消费面零命中）；链侧 ~35 件已落含 5 件意外命中（uniq_betwn Thm8B/uniq_imp_inj Thm10B/HD_BETWN2 Thm5C/betwnNil Thm12B/final_list_transform_count Thm2）防重复落。波次表 `W2C_PLAN.md`（W2-c-1 基础链孪生 → 2 more_lemma2 四件 → 3/4 TAV2 簇 A/B → 5 d_y 族 → 6 core0_z_y 族+主件）。跨文件件 parts_betwn_final/core_final（W2-d 领土被本塔消费）暂槽。
 
 - **2026-11-10（07:34，续728）**：**reduction5 W2-a 两笔落库（patch1 `56204efc` + patch2 `cb17eb52`）→ 所有权切分 + 派 W2-c**。
