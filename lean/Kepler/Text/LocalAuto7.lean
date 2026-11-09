@@ -6936,6 +6936,168 @@ theorem p11w2_polar_convex_of_eq {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 �
 
 end W11b2Kit6
 
+/-! ### W11b2-v BGMIFTE **结论 2**（`generic V' E'`，HOL polar_fan.hl:2073-2107）
+
+HOL 路线（2076-2107）：先在 `FF'` 世界求值
+`interior_angle1 0 FF' (prime' v) = azim 0 (prime' v) (prime'(ρv)) (prime'(ιv))`
+（`rho_node1`/`ivs_rho_node1` 的 `SELECT_UNIQUE`），再用 `CIZMRRH` 三分：
+generic 支即所得；circular 支由 `KCHMAMG` 的 `interiorAngle1 = π` 与该 azim
+`∈ (0, π)`（`p11w2_polar_sin_dart`）冲突；lunar 支的
+`Collinear 0 (p a) (p b)` 与 `P11W_PRIME_NCOL` 冲突。
+
+零件（本批普查实测均标准三）：`CIZMRRH`（LA3:2734）、`KCHMAMG`（LA5:5833）、
+`p11w2_polar_localFan_p3`、`p11w2_polar_convex`（iv-b）。
+唯一新 kit：polar 世界 hedge `p11w2_polar_hedge`（`polarE` 图像直取）。 -/
+
+section W11b2Kit7
+
+/-- polar 世界 hedge：`∀ z ∈ V', ∃ w, {z, w} ∈ E'`（`polarE` 图像直取）。 -/
+private theorem p11w2_polar_hedge {V : Set V3} {FF : Set (V3 × V3)} :
+    ∀ z ∈ polarV V FF, ∃ w, {z, w} ∈ polarE V FF := by
+  intro z hz
+  rw [p11w2_polarV_eq_image] at hz
+  obtain ⟨u, hu, hzu⟩ := hz
+  have hzu' : cross3 u (rhoNode1 FF u) = z := hzu
+  rw [← hzu']
+  exact ⟨cross3 (rhoNode1 FF u) (rhoNode1 FF (rhoNode1 FF u)), ⟨u, hu, rfl⟩⟩
+
+/-- `ρ'(p v) = p(ρv)`（`FF'` 图像 + `P11W_PRIME_INJ` 唯一性）。 -/
+private theorem p11w2_polar_rho_dart {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) {v : V3} (hv : v ∈ V) :
+    rhoNode1 (polarFF V FF) (cross3 v (rhoNode1 FF v))
+      = cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)) := by
+  have hmem : ((cross3 v (rhoNode1 FF v),
+      cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) : V3 × V3) ∈ polarFF V FF := by
+    rw [p11w2_polarFF_eq_image]
+    exact ⟨v, hv, rfl⟩
+  refine w6a_epsilon_fixed hmem ?_
+  intro y hy
+  rw [p11w2_polarFF_eq_image] at hy
+  obtain ⟨u, hu, huy⟩ := hy
+  have h1 : cross3 u (rhoNode1 FF u) = cross3 v (rhoNode1 FF v) := by
+    simpa [polarDart, rhoNode1] using congrArg Prod.fst huy
+  have h2 : y = cross3 (rhoNode1 FF u) (rhoNode1 FF (rhoNode1 FF u)) := by
+    simpa [polarDart, rhoNode1] using (congrArg Prod.snd huy).symm
+  have huv : u = v := P11W_PRIME_INJ hcl hedge hg hia u hu v hv h1
+  rw [h2, huv]
+
+/-- `ι'(p v) = p(ιv)`（`FF'` 图像 + `p11w2_rho_ivs` + `P11W_PRIME_INJ`）。 -/
+private theorem p11w2_polar_ivs_dart {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) {v : V3} (hv : v ∈ V) :
+    ivsRhoNode1 (polarFF V FF) (cross3 v (rhoNode1 FF v))
+      = cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v)) := by
+  have hιV : ivsRhoNode1 FF v ∈ V := IVS_RHO_NODE1_IN_V hcl.1 hedge v hv
+  have hρ : rhoNode1 FF (ivsRhoNode1 FF v) = v := p11w2_rho_ivs hcl hedge hv
+  have hmem : ((cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v)),
+      cross3 v (rhoNode1 FF v)) : V3 × V3) ∈ polarFF V FF := by
+    rw [p11w2_polarFF_eq_image]
+    refine ⟨ivsRhoNode1 FF v, hιV, ?_⟩
+    unfold polarDart
+    rw [hρ]
+  refine w6a_epsilon_fixed hmem ?_
+  intro y hy
+  rw [p11w2_polarFF_eq_image] at hy
+  obtain ⟨u, hu, huy⟩ := hy
+  have h1 : cross3 (rhoNode1 FF u) (rhoNode1 FF (rhoNode1 FF u))
+      = cross3 v (rhoNode1 FF v) := by
+    simpa [polarDart, rhoNode1] using congrArg Prod.snd huy
+  have h2' : y = cross3 u (rhoNode1 FF u) := by
+    simpa [polarDart, rhoNode1] using (congrArg Prod.fst huy).symm
+  have hruV : rhoNode1 FF u ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V (w6a_to_p2 hcl.1 hedge) hu
+  have hru : rhoNode1 FF u = v :=
+    P11W_PRIME_INJ hcl hedge hg hia (rhoNode1 FF u) hruV v hv h1
+  have huι : u = ivsRhoNode1 FF v := by
+    have h := p11w2_ivs_rho hcl hedge hu
+    rw [hru] at h
+    exact h.symm
+  rw [h2', huι, hρ]
+
+/-- `interiorAngle1 0 FF' (p v) = azim 0 (Pv)(Pρv)(Pιv)`（HOL 2076-2091）。 -/
+theorem p11w2_polar_interiorAngle1_dart {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) {v : V3} (hv : v ∈ V) :
+    interiorAngle1 (0 : V3) (polarFF V FF) (cross3 v (rhoNode1 FF v))
+      = azim 0 (cross3 v (rhoNode1 FF v))
+          (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))
+          (cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))) := by
+  unfold interiorAngle1
+  rw [p11w2_polar_rho_dart hcl hedge hg hia hv,
+    p11w2_polar_ivs_dart hcl hedge hg hia hv]
+
+/-- **`generic V' E'`**（BGMIFTE 结论 2；HOL 2092-2107 的 `CIZMRRH` 三分排除）。 -/
+theorem p11w2_polar_generic {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    Generic (polarV V FF) (polarE V FF) := by
+  have hlf3 : localFan_p3 (polarV V FF) (polarE V FF) (polarFF V FF) :=
+    p11w2_polar_localFan_p3 hcl hedge hg hia
+  have htri := CIZMRRH hlf3
+  rcases htri with ⟨hgen, -⟩ | ⟨hcirc, -⟩ | ⟨hlun, -⟩
+  · exact hgen
+  · -- circular 支：`KCHMAMG` 给出 `interiorAngle1 ≡ π`，与 `azim ∈ (0, π)` 冲突
+    exfalso
+    have hconv : ConvexLocalFan (polarV V FF) (polarE V FF) (polarFF V FF) :=
+      p11w2_polar_convex hcl hedge hg hia
+    have hclf2 : convexLocalFan_p2 (polarV V FF) (polarE V FF) (polarFF V FF) :=
+      w6a9_clf2 hconv p11w2_polar_hedge
+    have hcirc2 : circular_p2 (polarV V FF) (polarE V FF) := hcirc
+    have hk := (KCHMAMG hclf2 hcirc2).1
+    obtain ⟨v0, hv0⟩ := p11w2_V_nonempty hcl
+    have hz : cross3 v0 (rhoNode1 FF v0) ∈ polarV V FF := ⟨v0, hv0, rfl⟩
+    have hpi2 := hk _ hz
+    have hpi : interiorAngle1 (0 : V3) (polarFF V FF) (cross3 v0 (rhoNode1 FF v0))
+        = Real.pi := hpi2
+    rw [p11w2_polar_interiorAngle1_dart hcl hedge hg hia hv0] at hpi
+    have hb := p11w2_azim_bounds_of_sin_pos (p11w2_polar_sin_dart hcl hedge hg hia hv0)
+    linarith [hb.2]
+  · -- lunar 支：`Collinear 0 (p a) (p b)` 与 `P11W_PRIME_NCOL` 冲突
+    exfalso
+    obtain ⟨d, e, hd⟩ := hlun
+    obtain ⟨-, hsub, hde, hcol⟩ := hd
+    have hdV : d ∈ polarV V FF := hsub (by simp)
+    have heV : e ∈ polarV V FF := hsub (by simp)
+    rw [p11w2_polarV_eq_image] at hdV heV
+    obtain ⟨a, ha, had⟩ := hdV
+    obtain ⟨b, hb, hbe⟩ := heV
+    have had' : cross3 a (rhoNode1 FF a) = d := had
+    have hbe' : cross3 b (rhoNode1 FF b) = e := hbe
+    have hab : a ≠ b := by
+      intro hab
+      apply hde
+      rw [← had', ← hbe', hab]
+    rw [← had', ← hbe'] at hcol
+    exact P11W_PRIME_NCOL hcl hedge hg hia a ha b hb hab hcol
+
+/-- BGMIFTE 结论 2 的 HOL 签名形（`hp : polarFan V E FF = (V', E', FF')`）。 -/
+theorem p11w2_polar_generic_of_eq {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {V' : Set V3} {E' : Set (Set V3)} {FF' : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
+    (hp : polarFan V E FF = (V', E', FF')) :
+    Generic V' E' := by
+  have h : (V', E', FF') = (polarV V FF, polarE V FF, polarFF V FF) := by
+    rw [← hp]
+    rfl
+  obtain ⟨rfl, rfl, rfl⟩ := h
+  exact p11w2_polar_generic hcl hedge hg hia
+
+/-- BGMIFTE 结论 3 的 HOL 签名形（`V'.ncard = V.ncard`；`P11W_CARD` 沿 `hp`）。 -/
+theorem p11w2_polar_card_of_eq {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    {V' : Set V3} {E' : Set (Set V3)} {FF' : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
+    (hp : polarFan V E FF = (V', E', FF')) :
+    V'.ncard = V.ncard := by
+  have h1 : (polarFan V E FF).1 = V' := by
+    rw [hp]
+  rw [← h1]
+  exact P11W_CARD hcl hedge hg hia
+
+end W11b2Kit7
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
