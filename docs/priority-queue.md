@@ -316,6 +316,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:05，续706）**：**AQ13 W4a2c2 落库（`fe50291a`，66 行 1 件）——`lp≠z1` 支清零（B2n 短路绕开 FST/nextCat/last_cat）；剩 `lp=z1` 支 W4a2c3（30–45）**。
+① **`aq13w4a2c2_lastOfPartOfNeLast`**：`p ∈ parts f1`、`y = LAST p`、`y ≠ z1`、`p1 ∈ parts r`、`y ∈ p1` ⇒ **`p1.getLast! = y`（无条件，不分 `p ∈/∉ parts r`）**。三段：`conditionLastParts(f1,p,lp).mpr` 得断口 → **`aq13w4a2_nextEl_f1`（B2n）转 r** → `conditionLastParts(r,p1,lp).mp`；`y = r.getLast!` 支走 `lastOfPartOfLast`。标准三；RC=0、0 error/0 warning；olean 装池。
+② **分支表（按 HOL 1470-1495 修正，采信）**：`lp≠z1` 第二次调用 `(f1,p,lp)` 合法（**可绕开 FST/nextCat/last_cat**）；`lp=z1` 前提为假、不用，走第一次调用 `(r,p1,lp)` 给 `nextEl r y = fList (eList y)` + `lp=y=z1=prevEl r z` ⇒ `z = fList (eList y)`，再 `lower_case` + ⑦/⑭（1471-1479/1525-1562）；`LAST p = LAST r` 支共用 W4a2c 的 `lastOfPartOfLast`（不重复）。
+③ **派单**：`aq13-survey` → **W4a2c3（30–45）**：`p ∈ parts r` 子支先落（`lastOfPartOfMemParts` ~10 行）；`p ∉ parts r` 子支找出 `lower_case` 的 Lean 载体（grep `lowerCase`/`length_le_one`），需自建 ≤20 行则建、超过即止损报边界。
+④ **W4a2c3 之后 = W4b 主装（80–120）⇒ AQ13 收口 ⇒ 塔 13/13**。
+
 - **2026-11-10（06:50，续705）**：**W22d 目标纠正：是 `ConvexLocalFan`（LA1）不是 `convexLocalFan_p3`——「合取 1 缺口」不存在**。
 ① **依据（编排者读 HOL + 本树槽）**：HOL `RNSYJXM.vhl:279-282` 结论 `convex_local_fan (v_prime V f, e_prime E f, f)`，且 `rewrite convex_local_fan ("let_RULE f_surr_localization")` ——**local_fan 结构由 f_surr_localization 输出直接改写**，不构造 p3 证人；W21 的槽 `hL` 就是 `ConvexLocalFan (vPrime…) (ePrime…) (H.face d)`（`LocalAuto1.lean:174-175` = `LocalFan ∧ azim ≤ π ∧ V ⊆ wedgeInFanGe`）；`p22c2_f_surr_localization_cond_noHcard` 的第一合取正是 `LocalFan (vPrime) (ePrime) FF` ⇒ **直接投影**。
 ② **ERRATA**：aq1-fin 报的「合取 1 = `localFan_p3` 前置缺口、需从 ciib 提取公开件」**作废**——`localFan_p3` 是 `LVDUCXU` 的中间形，不是 W22d 消费形；不需要 `LocalFan.of_localFan_p3` 的反向件。
