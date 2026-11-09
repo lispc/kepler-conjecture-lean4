@@ -85,6 +85,30 @@
 
 ---
 
+## 0.3 J2 / AQ 塔状态表（2026-11-10，续530 对表）
+
+> 依据：`JcajyduAqTowerBase.lean:227-315`（13 槽 def，**陈述冻结**）+ `transformAssumptionOfAq`（:329，13 前提 ⇒ 无条件形）+ `TAV2_READINESS.md`。
+> 每叶 = 主证 + 5–10 个叶 helper（续530 口径修正），估工按 Lean 行而非 HOL 表面行。
+
+| 叶 | HOL | 陈述（Lean 槽） | 状态 |
+|---|---|---|---|
+| AQ1 | AQ1.hl 2,201 | `(ntransSpine … 1).flatten.Nodup` | **在飞**（`jcajydu-aqfin`）；**AQ11-a 硬前置** |
+| AQ2 | AQ23.hl | `∀ s ∈ ntrans … 1, s ≠ []` | ✅ `aq2`（`TowerE2:219`，48 行） |
+| AQ3 | AQ23.hl | `∀ s ∈ ntrans … 1, fLastSpine L s` | ✅ `aq3`（`Split1H:44`，66 行；split.1 = `fLastSplit1` 249 行 + split.2 = `aq3Split2FLastClean`） |
+| AQ4 | AQ4.hl 2,569 | `∀ s ∈ ntrans … 1, loopListSpine L s` | 待派 |
+| AQ5 | AQ56.hl | node 闭包（`node d ⊆ flatten`） | 待派 |
+| AQ6 | AQ56.hl | `rtrans … 1 ∈ ntrans … 1` | ✅ `aq6`（`TowerBase:353`，17 行） |
+| AQ7 | AQ7.hl 289 | `x ∈ rtransSpine … 1` | 待派（**债已清**：`hqymrtx1List` 转标准三 `967ebbb5`） |
+| AQ8 | AQ8.hl 3,413 | `∀ q ∈ quotientListSpine L (ntrans …), q.Nodup` | 待派 |
+| AQ9 | AQ9.hl 1,594 | `1 < 块数`（quotient 非退化） | 待派 |
+| AQ10 | AQ10.hl 206 | `nextEl (rtrans … 1) x = fList L x` | **AQ10-a 在飞**（`j3-t6d`，helper+gap 250–400）；AQ10-b 主证 120–200 |
+| AQ11 | AQ11.hl 277 | `finalListSpine L (findListSpine (ntrans … 1) (eList x))` | 待 **AQ1**（AQ11-a 350–500 + AQ11-b 100–160） |
+| AQ12 | AQ12.hl 4,091 | `finalListSpine L (rtrans … 1) → FlagListSpine L (ntrans … 1)` | 待派（**债已清**：`marked_list_is_node_nondegenerate` 标准三） |
+| AQ13 | AQ13.hl 1,574 | `¬finalListSpine L (rtrans … 1) → SFlagListSpine L (ntrans … 1) (rtrans … 1) x` | 待派 |
+
+**真证进度：3/13**（`aq2`/`aq3`/`aq6`；AQ10-a 与 AQ1 在飞）。**塔顶**：`transformAssumptionOfAq` 已落（13 前提 ⇒ `transformAssumptionSpine`），13 叶全落后即得无条件形，77 处消费者随之解锁。
+**关键路径**：AQ1 → AQ11-a；AQ7/AQ12 债已清可即刻派；AQ8(3,413)/AQ12(4,091) 是体量最大的两叶，需拆子波。
+
 ## 1. 在飞（2026-11-09 18:45，池 **5/5**，续477 对表）
 
 > **用户 2026-11-09 指令：额度恢复，维持 5 车道。**（11-06 的"降到 3"解除。）
