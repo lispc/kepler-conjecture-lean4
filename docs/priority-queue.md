@@ -313,6 +313,15 @@
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 >
 > **ERRATA（续692）**：w13-rev 的「`LVDUCXU` 的 `Simple` 槽冗余、可 SF 掉省 200–330」**作废**——编排者与车道双方机器复核：`DIH2K_FACE_SIMPLIZED` 的陈述要求 `H.Simple`，`LVDUCXU` 证明体 `LocalAuto10.lean:1691-1694` 实际把 `hsimp` 喂给它，`dih2k_p3` 合取必须 `Simple`。`hsimple` 永久按槽记账。
+>
+> **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-10（04:55，续697）**：**战役 wave 2 三件落库（`5f1ef193` / `8c717a72` / `96a2537a`，163 行）——`fan_hypermaps_iso`/`iso_simple` 坍缩 + `wedge_in_fan_gt_eq_w_dart_fan` 清零；战役剩 2 件**。
+① **`p22d_isHypOn_maps_eq`**（55 行，`LocalAuto7W22dC`）：同一 `(V,E)` 上两个 `IsHypOn_p10` 超映射四条映射相等。**关键判定**：`hypermap1OfFanx`/`hypermap1OfFan` 全树零命中、Lean 只有一个扇超映射（`hypermapOfFan`）⇒ HOL `fan_hypermaps_iso`（两超映射同构）**在 Lean 无对象**，坍缩为映射相等。
+② **`p22d_simple_congr` + `p22d_simple_of_isHypOn`**（46 行，`LocalAuto7W22dD`，编排者亲写 3 轮收敛）：`iso_simple_imp` 坍缩为 `Simple` 沿 `nodeMap`/`faceMap`/`darts` 相等传输；注意 `p22d_isHypOn_maps_eq` 给的是**函数**相等，须 `Equiv.ext` 转 Perm 相等后才能 `rw`（探针教训）。**不消 `hsimple`**（ERRATA 见上）。
+③ **`p22d_wedgeInFanGt_eq_wDartFan`**（62 行，`LocalAuto7W22dwedge`）：HOL `wedge_in_fan_gt_eq_w_dart_fan`（`RNSYJXM.vhl:74`）；词汇 `wedgeInFanGt_p2`，`ext_dart` 按定义式展开 `(0, d1, d2, extensionSigmaFan 0 V E d1 d2)`；`1 < ncard` 支用 `AZIM_CYCLE_EQ_SIGMA_FAN_ALT`，其余支 `ncard_eq_one` + `affGe` 补集。**依赖全在库、无桩**。
+④ 3 件全标准三、零 sorryAx；各 RC=0、0 error/0 warning；olean 装池。编排者在两处做了落库前清理：`5f1ef193` 删一处重复探针块；`96a2537a` 按战役前缀把 `wedgeInFanGt_eq_wDartFan` 改名为 `p22d_wedgeInFanGt_eq_wDartFan`（新文件无消费者，零风险）。
+⑤ **战役余量**：`LINEAR_FACE_2`（200–300，等 aq1-fin face≥3 替代路线探针）+ `IN_DART1_OF_FAN_IMP_CARD_FACE_GT_1`（40–70）。
 
 - **2026-11-10（04:39，续696）**：**AQ13 W4a2a 落库（`d4107fd0`，150 行 1 件）——B2n 断口转移清零；W4a2 拆 a/b，b（S 链 + F f1）140–180 待做**。
 ① **`aq13w4a2_nextEl_f1`**（B2n）：`d ∈ f1 段 ∧ d ≠ prevEl r (lZSpine …) → nextEl f1 d = nextEl r d`。= W4a1 的 A3n 之 (a,b) 参数化版（a = `nextEl r y`、b = `prevEl r z`），三分 + `a ≠ b` 由 f1 Nodup 头/尾重复排除；只用已落 `nextElCat1/2/Last1`、`betwnNil`、`aqs_hdBetwn2`、`nextLastBetwn`、`aq10_nextElBetwnSame` + 3 个私有列表件。标准三；RC=0、0 error/0 warning；olean 装池。
