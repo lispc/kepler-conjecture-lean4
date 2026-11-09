@@ -314,6 +314,11 @@
 >
 > **ERRATA（续692）**：w13-rev 的「`LVDUCXU` 的 `Simple` 槽冗余、可 SF 掉省 200–330」**作废**——编排者与车道双方机器复核：`DIH2K_FACE_SIMPLIZED` 的陈述要求 `H.Simple`，`LVDUCXU` 证明体 `LocalAuto10.lean:1691-1694` 实际把 `hsimp` 喂给它，`dih2k_p3` 合取必须 `Simple`。`hsimple` 永久按槽记账。
 
+- **2026-11-10（05:45，续694）**：**消 `hno` 槽落库（`4232289f`，57 行 2 件）——`f_surr_localization` 条件形只剩 `hfs`（免费）/`hcard`/`hsimple`**。
+① **`p22c2_vPrime_subset_sUnion`**（`vPrime_p3 V FF ⊆ ⋃₀ ePrime_p3 E FF`）：`y ∈ vPrime` 定义给 `(y,w) ∈ FF` ⇒ 面⊆darts ⇒ `dartsOfHyp_p3` ⇒ `FullySurrounded` 给 `{y,w} ∈ E` ⇒ `y ∈ ⋃₀ ePrime`。**`p22c2_noSlot_slice`**（`= dart1OfFan`）：切片 FAN（`IMP_FAN_V_PRIME_E_PRIME`）+ `noIsolated_of_hsub_p36`（LA36:633）+ `hno_of_no_isolated`（AzimBridge:1157）。2/2 标准三；RC=0、0 error/0 warning；olean 装池。
+② **消槽对表**：调用形 = `p22c2_f_surr_localization_cond hfan h1 hx hFF h2 hfs hcard hsimple (p22c2_noSlot_slice hfan h1 hx hFF hfs)`；前件 5 个（`hfan`/`h1`/`hx`/`hFF`/`hfs`）在条件形调用上下文直接可得。
+③ **派单**：`jcajydu-aq7` → **`wedge_in_fan_gt_eq_w_dart_fan`**（wedge 路线第 2 件，40–70；与 w13-rev wave 1 的两件无耦合，并行）。
+
 - **2026-11-10（05:25，续693）**：**W22d wedge 半 BLOCKED（探针 54 行）——perimeter 到根面并档为「conforming/iso 机器」战役 ~470–770（4–6 波）；「消两槽即到根面」作废**。
 ① **7 件逐件判定（机器）**：`CLOSURE_MINIMAL_EQ` ❌零命中（精确+松散全 0）/ `DART1_NOT_COLLINEAR_2` ❌零命中（`Assembly.lean:4361` 注释明写「全树零机器」）/ `wedge_in_fan_gt_eq_w_dart_fan` ❌零命中 / `fan_hypermaps_iso`+`iso_simple` ❌零命中；✅ `CLOSED_WEDGE`（PA18:7871）/ `WEDGE_SUBSET_WEDGE_GE`（PA18:8172）/ `AZIM_CYCLE_EQ_SIGMA_FAN_ALT`（LA2:1212）。⇒ wedge 半真吃 5 件未移植件。
 ② **战役清单（估行）**：`LINEAR_FACE_2` 200–300 / `IN_DART1_OF_FAN_IMP_CARD_FACE_GT_1` 40–70 / `CLOSURE_MINIMAL_EQ` 40–70 / `DART1_NOT_COLLINEAR_2` 30–60 / `wedge_in_fan_gt_eq_w_dart_fan` 40–70 / `fan_hypermaps_iso`+`iso_simple` 120–200 ⇒ **470–770**。与 W22c-iii 的 400–650 重叠 ⇒ 单一战役排期，不再拆 80–140 小波。
