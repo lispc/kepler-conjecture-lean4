@@ -29,10 +29,14 @@
     ntrans/rtrans/transform_list/transform_assumption（tame_defs2.hl:435-:472，
     批 7 记账「旗塔上游/reduction 波领土」定义层未进场）与 is_marked 九合取
     塔装配，随 transform/reduction 波批次立项，本批诚实跳过；
-  - `marked_list_is_node_nondegenerate` 的 ql 侧 node 非退化支：HOL 经
-    dart_of 选择函数章 dart_of_card_node 链（:8043-:8221 未移植），本批取
-    Lean 短路线（good_list_nodes-ql 假设 + marked_list 第 5 合取 filter>1 +
-    list_pairs 唯一性），收口步 2-strike 止损 sorry+NEEDS（见件内 docstring）。
+  - `marked_list_is_node_nondegenerate` 的 ql 侧 node 非退化支：**已证**
+    （2026-11-10，本文件 +128 行）。路线：`GoodList + 第 5 合取`单独不够
+    （单点面反例 `ql=[[u],[u,w,x],[x,w,u]]` 给 `nList (u,u)=(u,u)`），必须用
+    `hgnq : GoodListNodesTl ql hgood` 把 node 轨道钉成「同首分量 dart 全类」
+    （批 7 `memHypermapOfListNode`），再由三条计数桥把「含 d.1 的面数」换成
+    「首分量为 d.1 的 dart 数」，filter>1 给出第二个同 FST dart，与
+    「不动点 ⇒ 类 = 单点」（`orbitMap_eq_singleton`）矛盾。**未走 HOL
+    `dart_of` 章**；`countDartsFst`/`countNodeFace` 同证重推为局部 have。
 
   载体折算（沿批 1-15 约定）：parts/find_list/final_list/marked_list/
   normal_list/loop_of_list/loop_family_of_list ↦ *Spine（批 5-7）、
@@ -43,8 +47,8 @@
   Function.iterate、uniq ↦ List.Nodup、BIJ ↦ Set.BijOn、set_of_list ↦
   {x | x ∈ _}（批 11）。
 
-  红线遵守：零既有文件触碰、零 git 写操作；2-strike 止损件以 sorry+NEEDS
-  记账（其余全真证）。
+  红线遵守：零既有文件触碰、零 git 写操作；**本文件已无 `sorry`**（最后一件
+  `marked_list_is_node_nondegenerate` 的 ql 支于 2026-11-10 真证）。
 -/
 
 import Kepler.Text.TameSpine.TameList15
@@ -1088,10 +1092,10 @@ theorem quotientListIsoQuotient (L : fgraph ℕ) (hL : GoodList L)
 `good_list L /\ good_list_nodes L /\ good_list_nodes (quotient_list L N) /\
 marked_list L N r d ==> is_node_nondegenerate (quotient (hypermap_of_list L)
 (loop_family_of_list N))`——iso 运输（quotient_list_iso_quotient 本批 +
-Iso.symm + 批 14 isoIsNodeNondegenerate）+ ql 侧 node 非退化。NEEDS（记账）：
-ql 侧收口步——marked_list 第 5 合取 filter>1 取两张相异面 + good_list-ql 的
-list_of_darts-Nodup 排重——两次止损未闭合（HOL 原路经 dart_of 选择函数章
-dart_of_card_node，:8043-:8221 未移植），陈述逐字冻结，sorry 债务记账。 -/
+Iso.symm + 批 14 isoIsNodeNondegenerate）+ ql 侧 node 非退化（已证，路线：
+marked_list 第 5 合取 filter>1 + good_list_nodes-ql 把 node 轨道钉成同 FST
+类 + 「面计数 = 首点 dart 计数」三桥（局部私件）取第二个同 FST dart 排重；
+HOL 的 dart_of 选择函数章 dart_of_card_node :8043-:8221 未移植，不走该路）。 -/
 theorem markedListIsNodeNondegenerate (L : fgraph ℕ) (hL : GoodList L)
     (hgn : GoodListNodesTl L hL) (hres : (hypermapOfList L hL).IsRestricted)
     {N : List (List (ℕ × ℕ))} (hn : NormalListSpine hL N)
@@ -1103,10 +1107,138 @@ theorem markedListIsNodeNondegenerate (L : fgraph ℕ) (hL : GoodList L)
     ((hypermapOfList L hL).quotientHypermap
         (normalListNormal hL hgn hres hn)).NodeNondegenerate := by
   have hgood : GoodList (quotientListSpine L N) := goodListQuotient L hL hn hnedg hunL
-  -- ql 侧：node ql y = {y}（不动点）与 filter>1 两面排重矛盾
-  -- NEEDS：ql 侧 node 非退化支（见上方 docstring），本支 sorry。
+  -- ql 侧：node 不动点把同 FST 类压成 {d}；marked_list 第 5 合取 filter>1
+  -- 经「面计数 = 首点 dart 计数」三桥给出第二个同 FST dart，与类单点矛盾。
   have hql : (hypermapOfList (quotientListSpine L N) hgood).NodeNondegenerate := by
-    sorry
+    -- 计数桥（局部私件）：nodup 表按值过滤长度 ≤ 1。
+    have hLenFilterEq : ∀ {l : List ℕ} (hnod : l.Nodup) (v : ℕ),
+        (l.filter (fun t => decide (t = v))).length = if v ∈ l then 1 else 0 := by
+      intro l hnod v
+      induction l with
+      | nil => simp
+      | cons a t ih =>
+        rw [List.nodup_cons] at hnod
+        obtain ⟨hat, ht⟩ := hnod
+        by_cases ha : a = v
+        · subst ha
+          have hnil : (t.filter (fun t => decide (t = a))) = [] := by
+            rw [List.filter_eq_nil_iff]
+            intro x hx hxdec
+            exact hat (of_decide_eq_true hxdec ▸ hx)
+          rw [List.filter_cons, if_pos (by simp)]
+          simp [hnil]
+        · have hdec : ¬ (decide (a = v) = true) := by simpa using ha
+          rw [List.filter_cons, if_neg hdec, ih ht]
+          by_cases hvt : v ∈ t
+          · rw [if_pos hvt, if_pos (List.mem_cons_of_mem a hvt)]
+          · rw [if_neg hvt, if_neg (fun hc => hvt (List.mem_cons.mp hc |>.resolve_left
+              (fun hv => ha hv.symm)))]
+    -- 计数桥：flatten 中 v 的出现次数 = 含 v 的面数（逐面 nodup 即可）。
+    have hCountNodeFace : ∀ (M : List (List ℕ)), (∀ q ∈ M, q.Nodup) → ∀ v : ℕ,
+        (M.flatten.filter (fun t => decide (t = v))).length
+          = (M.filter (fun q => decide (v ∈ q))).length := by
+      intro M
+      induction M with
+      | nil => intro _ v; simp
+      | cons l ls ih =>
+        intro hun v
+        have hlnd : l.Nodup := hun l (List.mem_cons_self ..)
+        have hlsun : ∀ q ∈ ls, q.Nodup := fun q hq => hun q (List.mem_cons_of_mem _ hq)
+        rw [List.flatten_cons, List.filter_append, List.length_append, ih hlsun,
+          List.filter_cons, hLenFilterEq hlnd v]
+        by_cases hv : v ∈ l
+        · rw [if_pos (c := decide (v ∈ l) = true) (decide_eq_true hv),
+            if_pos (c := v ∈ l) hv]
+          simp only [List.length_cons]
+          omega
+        · rw [if_neg (c := decide (v ∈ l) = true) (fun h => hv (of_decide_eq_true h)),
+            if_neg (c := v ∈ l) hv]
+          omega
+    -- 计数桥：zip 层首分量过滤（`list_pairs` 的逐项计数）。
+    have hLengthFilterFstZip : ∀ (a b : List ℕ), b.length = a.length → ∀ v : ℕ,
+        ((a.zip b).filter (fun p : ℕ × ℕ => decide (p.1 = v))).length
+          = (a.filter (fun x => decide (x = v))).length := by
+      intro a b hb v
+      induction a generalizing b with
+      | nil => cases b <;> simp_all
+      | cons a as ih =>
+        cases b with
+        | nil => simp at hb
+        | cons b bs =>
+          rw [List.zip_cons_cons, List.filter_cons, List.filter_cons]
+          have h' : bs.length = as.length := by simpa using hb
+          by_cases hav : decide (a = v) = true
+          · rw [if_pos hav, if_pos hav]
+            simp only [List.length_cons, ih bs h']
+          · rw [if_neg hav, if_neg hav]
+            exact ih bs h'
+    -- 计数桥：首分量为 v 的 dart 数 = 面表中 v 的出现次数。
+    have hCountDartsFst : ∀ (M : List (List ℕ)) (v : ℕ),
+        ((listOfDarts M).filter (fun d => decide (d.1 = v))).length
+          = (M.flatten.filter (fun t => decide (t = v))).length := by
+      intro M v
+      induction M with
+      | nil => simp [listOfDarts]
+      | cons l ls ih =>
+        simp only [listOfDarts, List.map_cons, List.flatten_cons, List.filter_append,
+          List.length_append]
+        rw [show ((ls.map listPairs).flatten.filter (fun d => decide (d.1 = v))).length
+          = (ls.flatten.filter (fun t => decide (t = v))).length from ih]
+        congr 1
+        rw [listPairs]
+        have hlen : (l.drop 1 ++ l.take 1).length = l.length := by
+          rw [List.length_append, List.length_drop, List.length_take]; omega
+        exact hLengthFilterFstZip l (l.drop 1 ++ l.take 1) hlen v
+    intro d hd
+    have hdL : d ∈ listOfDarts (quotientListSpine L N) := List.mem_toFinset.mp hd
+    intro hfix
+    -- (1) node 轨道 = 同 FST 类；不动点把类压成 {d}
+    have hclass : ∀ y ∈ listOfDarts (quotientListSpine L N), y.1 = d.1 → y = d := by
+      intro y hyL hfst
+      have hyn : y ∈ (hypermapOfList (quotientListSpine L N) hgood).node d :=
+        (memHypermapOfListNode hgood hgnq hdL).2 ⟨hfst.symm, hyL⟩
+      have hsing : (hypermapOfList (quotientListSpine L N) hgood).node d = {d} :=
+        orbitMap_eq_singleton hfix
+      rw [hsing] at hyn
+      exact Set.mem_singleton_iff.mp hyn
+    -- (2) 面计数 > 1 ⇒ 首点 dart 计数 > 1
+    have hsq : ∀ q ∈ quotientListSpine L N, q.Nodup := (hm.2.2.2.2.1).1
+    have hcount := (hm.2.2.2.2.1).2
+    have hdflat : d.1 ∈ (quotientListSpine L N).flatten := by
+      obtain ⟨l, hl, hdl⟩ := List.mem_flatten.mp hdL
+      rw [List.mem_map] at hl
+      obtain ⟨l₀, hl₀, rfl⟩ := hl
+      exact List.mem_flatten.mpr ⟨l₀, hl₀, (List.of_mem_zip hdl).1⟩
+    have hcnt : 1 < ((quotientListSpine L N).filter (fun q => decide (d.1 ∈ q))).length :=
+      hcount d.1 hdflat
+    have hlenG : 1 < ((listOfDarts (quotientListSpine L N)).filter
+        (fun e => decide (e.1 = d.1))).length := by
+      rw [hCountDartsFst, hCountNodeFace _ hsq]
+      exact hcnt
+    -- (3) 类里还有第二个 dart ⇒ 与 hclass 矛盾
+    have hdG : d ∈ (listOfDarts (quotientListSpine L N)).filter
+        (fun e => decide (e.1 = d.1)) := by
+      rw [List.mem_filter]
+      exact ⟨hdL, by simp⟩
+    have hex : ∃ y ∈ (listOfDarts (quotientListSpine L N)).filter
+        (fun e => decide (e.1 = d.1)), y ≠ d := by
+      by_contra hcon
+      rw [not_exists] at hcon
+      have hall : ∀ y ∈ (listOfDarts (quotientListSpine L N)).filter
+          (fun e => decide (e.1 = d.1)), y = d := by
+        intro y hy
+        by_contra hne
+        exact hcon y ⟨hy, hne⟩
+      have hnod : ((listOfDarts (quotientListSpine L N)).filter
+          (fun e => decide (e.1 = d.1))).Nodup := hgood.1.filter _
+      have hrep : ((listOfDarts (quotientListSpine L N)).filter
+          (fun e => decide (e.1 = d.1))) = List.replicate _ d :=
+        List.eq_replicate_length.mpr hall
+      rw [hrep, List.nodup_replicate] at hnod
+      omega
+    obtain ⟨y, hyG, hyd⟩ := hex
+    rw [List.mem_filter] at hyG
+    exact hyd (hclass y hyG.1 (of_decide_eq_true hyG.2))
   exact isoIsNodeNondegenerate
     (quotientListIsoQuotient L hL hgn hres hn hnedg hunL).symm hql
 
