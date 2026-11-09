@@ -318,6 +318,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（06:15，续714）**：**perimeter ② 收口：`p21_hL_of_fullySurrounded`（`67190185`，103 行）+ 一行装配（`70740393`，37 行）——根面 `fully_surrounded_perimeter_bound` 只剩 `hNKE`（NKEZBFC）**。
+① **`p22dK_isHypOn_dart`（修正签名）**：`FAN` 只给 `⋃₀E ⊆ V`、不排除孤立点 ⇒ `IsHypOn_p10` 的 darts 槽需要 **`hno`** 参数（派单单参版不可证，车道探针勘误）；`H1 := hypermap_toDart (hypermapOfFan 0 V E)`（公开词代替 private `fanHyp`），四映射走 AzimBridge 桥。`H2 := toDart (切片 hypermapOfFan)`。
+② **`p21_hL_of_fullySurrounded (hfan) (hfs)`**：W21:66-70 槽形**逐字**；`hcard`/`hsimple`/`hno` 全自动填；装配复用 `p22dJ_convexLocalFan_p2`（已是 p2 词面，无需 simpa）+ `hclosed := p22d_closedWedge`。标准三；RC=0、0 error/0 warning。
+③ **`p21_fully_surrounded_perimeter_bound'`（`LocalAuto7W22dN`）**：只需 `hNKE` + `hfs`，② 由 ②件自动供给。标准三；RC=0、0 error/0 warning。**⇒ perimeter lane 到根面的全部缺口 = `hNKE`（stepB/NKEZBFC 链，`nkezbfc-scout` 在跑 W6-K3 ②a）。**
+④ **BIEFJHU round-2 进度**：2 driver 5/102（~2.4 min/子盒），ETA ~4h；不干扰。
+
 - **2026-11-10（06:00，续713）**：**塔顶 W1 接线落库（`295a28a9`，48 行 5 alias）——7 条消费者全部可传 `transformAssumptionSpine_top`；6/6 锚标准三、零 sorryAx**。
 ① **alias**：`aqiunpp1_top`/`aqiunpp2_top`/`aqiunpp3_top`（TameList17 三个公开件）+ `DANGEYJ_concl_top`（def 形）+ `DANGEYJ_top`（TameList72）；`aqiunpp3_aux`/`DANGEYJ_step` 为 private 不做；**原文件零改**（`DANGEYJ_concl` 的 `_hta` 哑参数属陈述改动，留 SF 通道）。
 ② **6/6 锚**（含 `transformAssumptionSpine_top` 补测）= `[propext, Classical.choice, Quot.sound]`、零 sorryAx；RC=0、0 error/0 warning；olean 装池。
