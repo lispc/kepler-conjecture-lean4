@@ -13,28 +13,22 @@
   │    is_split_condition (…) (loop_of_list r) d)
   └────────────────────────────────────────────────────────────────
 
-  ┌─ 状态：八合取中 6 条真证落地，合取 3 / 6 判 BLOCKED（上游 sorry）──
+  ┌─ 状态：八合取全落（③ ⑥ 于 `967ebbb5` 解锁后补齐）────────────
   │ HOL 结论八合取逐条对照（链层载体）：
-  │   ① hyp'm = l'm              → `hypMLmChain`            ✓ 本文件
-  │   ② hyp'p = l'p              → `hypPLpChain`            ✓ 本文件
-  │   ③ hyp'q = l'q              → **BLOCKED**（见下）
-  │   ④ hyp'y = l'y              → `hypYLChain`             ✓ 本文件
-  │   ⑤ hyp'z = l'z              → `hypZLzChain`            ✓ 本文件
-  │   ⑥ is_marked (…)            → **BLOCKED**（见下）
+  │   ① hyp'm = l'm              → `hypMLmChain`            ✓
+  │   ② hyp'p = l'p              → `hypPLpChain`            ✓
+  │   ③ hyp'q = l'q              → `hypQProofIrrel` + 载体
+  │      `ChainMarkedQ.markedQ`（`∀ hnf hmk hl` 全称，同值）  ✓ 本批
+  │   ④ hyp'y = l'y              → `hypYLChain`             ✓
+  │   ⑤ hyp'z = l'z              → `hypZLzChain`            ✓
+  │   ⑥ is_marked (…)            → `ChainMarkedQ.markedListIsMarked` ✓ 本批
   │   ⑦ ¬(loop_of_list r ∈ final_loops) → 复用
-  │      `ChainMarkedQ.notFinalList_not_mem_finalLoops`     ✓ 既有
-  │   ⑧ is_split_condition …     → `isSplitConditionOfMarkedList` ✓ 本文件
-  │ 聚合片（① ② ④ ⑤ ⑦ ⑧）：`markedTranslateCleanPart`。
-  │
-  │ ③/⑥ 的唯一阻塞点 = `TameSpine.markedListIsNodeNondegenerate`
-  │ （TameList16:1095，body :1108-1109 为**在案 sorry**，注释 "NEEDS：ql 侧
-  │ node 非退化支"；HOL 原路经 dart_of 选择函数章 :8043-:8221，未移植）。
-  │ 机器证据：`#print axioms Kepler.Text.TameSpine.markedListMarked`
-  │ = `[propext, sorryAx, Classical.choice, Quot.sound]`（`ChainMarkedQ.lean:15`
-  │ 已录同一条）。链层 `l'q` 载体 `markedQ`（ChainMarkedQ 交付
-  │ `logs/blocked_markedq_body.lean`）与 ⑥ 同源同锁。
-  │ ⇒ 本文件**不写**假 `IsMarked`、**不改**陈述、**不删**合取：③/⑥ 明确挂账，
-  │   待该支真证落库后由 `markedTranslateCleanPart` 直接补两合取即得原形。
+  │      `ChainMarkedQ.notFinalList_not_mem_finalLoops`     ✓
+  │   ⑧ is_split_condition …     → `isSplitConditionOfMarkedList` ✓
+  │ 八合取聚合 = `markedTranslate`（本批，§4）；六合取片
+  │ `markedTranslateCleanPart`（① ② ④ ⑤ ⑦ ⑧，零 `hs` 槽）陈述未动保留。
+  │ 历史：③/⑥ 曾因 `TameSpine.markedListIsNodeNondegenerate`（TameList16:1095）
+  │ 在案 sorry 挂账；该支已由 `967ebbb5` 真证替换。
   └────────────────────────────────────────────────────────────────
 
   ┌─ 归属对账（HOL Light Flyspeck，commit 1ce0353）─────────────────
@@ -92,12 +86,13 @@ namespace Kepler.Text.ChainMarkedTranslate
 open Kepler.Assembly (GoodList eList fList nextEl listOfDarts)
 open Kepler.Graphs (fgraph)
 open Kepler.Text.Reduction5 (Dart finalList)
-open Kepler.Text.ChainLists (markedList normalList)
-open Kepler.Text.ChainMarkedQ (loopOfList loopFamilyOfList notFinalList_not_mem_finalLoops)
+open Kepler.Text.ChainLists (markedList normalList sList)
+open Kepler.Text.ChainMarkedQ (loopOfList loopFamilyOfList notFinalList_not_mem_finalLoops
+  normalListIsNormalFamily markedListIsMarked markedQ)
 open Kepler.Text.TameLp (hypermapOfList GoodListNodesTl)
 open Kepler.Text.TameSpine (NormalListSpine MarkedListSpine MarkedListSpineFull
   finalListSpine lMSpine lPSpine lYSpine lZSpine splitConditionListSpine
-  loopOfListSpine loopFamilyOfListSpine
+  loopOfListSpine loopFamilyOfListSpine sListSpine
   normalListUniqNonnil markListSplitConditionList splitConditionListSplit
   hypMLm hypPLp hypYL hypZLz memLYDart dartsOfFamilyLoopFamilyOfList
   fListExtFListPower minNumSpine)
@@ -362,6 +357,63 @@ theorem markedTranslateCleanPart (L : fgraph ℕ) (hL : GoodList L)
     notFinalList_not_mem_finalLoops L hL hm hf,
     isSplitConditionOfMarkedList L hL hgn hunL hm hf⟩
 
+/-! ## §4 HOL 八合取原形（③ ⑥ 于 `967ebbb5` 解锁后补齐）
+
+③ `hyp'q = l'q` 与 ⑥ `is_marked` 现已可落：⑥ 由 `ChainMarkedQ.markedListIsMarked`
+直接供给；③ 取 `l'q` 载体 `ChainMarkedQ.markedQ`，`hypQ` 的证明参经证明无关性同值。
+六合取片 `markedTranslateCleanPart`（① ② ④ ⑤ ⑦ ⑧）陈述未动、保留。 -/
+
+/-- `hypQ` 的证明参无关性：换 `IsMarked`/`¬finalLoops` 证明（含 `hnf` 换证）不改值。
+`hypQ = Classical.choose (exists_hyp_q …)`，而 `Exists` 是 Prop ⇒ 两证经
+`Subsingleton.elim` 相等，`choose` 值相等。 -/
+private theorem hypQProofIrrel {α : Type*} [DecidableEq α] (H : Hypermap α)
+    {NF : Set (Loop α)} {L : Loop α} {x : α}
+    {hnf₁ hnf₂ : H.IsNormalFamily NF}
+    (hmark₁ : H.IsMarked NF hnf₁ L x) (hmark₂ : H.IsMarked NF hnf₂ L x)
+    (hl₁ hl₂ : L ∉ H.finalLoops NF) :
+    H.hypQ hmark₁ hl₁ = H.hypQ hmark₂ hl₂ := by
+  have h : hnf₁ = hnf₂ := Subsingleton.elim _ _
+  subst h
+  show Classical.choose (H.exists_hyp_q hmark₁ hl₁)
+    = Classical.choose (H.exists_hyp_q hmark₂ hl₂)
+  exact congrArg Classical.choose (Subsingleton.elim _ _)
+
+/-- **HOL `marked_translate`**（tame_list.hl:10100-10144）八合取原形（链层载体）。
+合取 ③ 的 `l'q` 取 `ChainMarkedQ.markedQ`（HOL `l'q` 定义即 `hyp'q` 回引）；
+⑥ 取 `ChainMarkedQ.markedListIsMarked`。`hs` 为 `sList` 槽（③ ⑥ 所需）。 -/
+theorem markedTranslate (L : fgraph ℕ) (hL : GoodList L)
+    (hgn : GoodListNodesTl L hL) (hunL : ∀ l ∈ L, l.Nodup)
+    {N : List (List Dart)} {r : List Dart} {d : Dart}
+    (hm : markedList L hL N r d) (hf : ¬ finalList L r)
+    (hs : sList L r d = sListSpine L r d) :
+    (hypermapOfList L hL).hypM (loopFamilyOfList N) (loopOfList r) d
+        = Reduction5.lm L r d ∧
+      (hypermapOfList L hL).hypP (loopFamilyOfList N) (loopOfList r) d
+        = Reduction5.lp L N r d ∧
+      (∀ (hnf : (hypermapOfList L hL).IsNormalFamily (loopFamilyOfList N))
+        (hmk : (hypermapOfList L hL).IsMarked (loopFamilyOfList N) hnf
+          (loopOfList r) d)
+        (hl : loopOfList r ∉ (hypermapOfList L hL).finalLoops (loopFamilyOfList N)),
+        (hypermapOfList L hL).hypQ hmk hl = markedQ L hL hgn hunL hm hf hs) ∧
+      (hypermapOfList L hL).hypY (loopFamilyOfList N) (loopOfList r) d
+        = Reduction5.ly L r d ∧
+      (hypermapOfList L hL).hypZ (loopFamilyOfList N) (loopOfList r) d
+        = Reduction5.lz L N r d ∧
+      (∀ hnf : (hypermapOfList L hL).IsNormalFamily (loopFamilyOfList N),
+        (hypermapOfList L hL).IsMarked (loopFamilyOfList N) hnf (loopOfList r) d) ∧
+      loopOfList r ∉ (hypermapOfList L hL).finalLoops (loopFamilyOfList N) ∧
+      (hypermapOfList L hL).IsSplitCondition (loopFamilyOfList N) (loopOfList r) d := by
+  obtain ⟨h1, h2, h4, h5, h7, h8⟩ := markedTranslateCleanPart L hL hgn hunL hm hf
+  refine ⟨h1, h2, ?_, h4, h5, ?_, h7, h8⟩
+  · intro hnf hmk hl
+    show (hypermapOfList L hL).hypQ hmk hl
+      = (hypermapOfList L hL).hypQ
+          (markedListIsMarked L hL hgn hunL hm hs
+            (normalListIsNormalFamily L hL hgn hm.1 hm.2.1))
+          (notFinalList_not_mem_finalLoops L hL hm hf)
+    exact hypQProofIrrel (hypermapOfList L hL) hmk _ hl _
+  · exact fun hnf => markedListIsMarked L hL hgn hunL hm hs hnf
+
 end Kepler.Text.ChainMarkedTranslate
 
 /-! 公理审计锚（本文件编译即执行；预期全部 ≤ 标准三，零 sorryAx。） -/
@@ -371,3 +423,4 @@ end Kepler.Text.ChainMarkedTranslate
 #print axioms Kepler.Text.ChainMarkedTranslate.hypZLzChain
 #print axioms Kepler.Text.ChainMarkedTranslate.isSplitConditionOfMarkedList
 #print axioms Kepler.Text.ChainMarkedTranslate.markedTranslateCleanPart
+#print axioms Kepler.Text.ChainMarkedTranslate.markedTranslate
