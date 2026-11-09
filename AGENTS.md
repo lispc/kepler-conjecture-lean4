@@ -187,6 +187,16 @@
    而其消费者 `aff_gt_3_1_rep_cross_dot` 与 `properties_fully_surrounded` 用 Geom 读法。
    ⇒ 写/消费仿射几何件时先 `#check` 目标谓词的读法，**同文件内统一一种**；
    跨读法时显式加桥，不许把两者当同义。
+20. **e 步跨面陷阱：对 `r`/`N` 的全称「单面/同面」断言先做反例探针**（2026-11-10 AQ8
+   实测，**四个已证假**：`ChunkFace`、全 `r` 的 `hR`、`harcF`、`hsface`）。根因：
+   `NormalListSpine` 的 `loopListSpine` 只保证每步 `nextEl r x = fList L x ∨ nextEl r x =
+   fList L (eList x)`（TameList5:116），**e 步可跨到相邻面**；`fLastSpine` 只钉闭合步。
+   配 `nextRNotEqF`（Split1C:50）在 `y = lYSpine` 处必走 e 步 ⇒ `r` 同时含两个面的 dart。
+   ⇒ ① 面成员性只从 **f-弧**（`betwn (findFaceDarts L x) …`）或显式假设取（`betwnMem` +
+   `aq10_memFindFaceImpFacesEq`），不从 `normal_list` 反推；② 任何「`parts L r` 上单射 /
+   同 node ⇒ 同 part / 全 r 在面 x」类断言，先写 10 行反例探针再立件（AQ8 W3d/W3f/W3h/W3i
+   四个判定件因此省下数百行死路）；③ 已落条件形若前提被证假，**保留件不动**、另立收窄件
+   （`aq8w3i_fstHdInjPartsFaceArc` 是范例）。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
