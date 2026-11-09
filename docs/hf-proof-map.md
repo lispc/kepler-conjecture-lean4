@@ -6,6 +6,18 @@
 >
 > ## 状态更新
 >
+> - **2026-11-09（编排者，六）**：§7 考古——**HOL 原版怎么证 tsk_bank 三条难件**（编排者实读，
+>   详证见 pq 续408）：双层机器。前层 = `merge_ineq.hl prove_ineq` 按 tags 拼 tactic
+>   （h0 切分 → `BRANCH_TAC` 分段引理 → `X_OF_Y_TAC` y→x 转换 / `SERIES3Q1H_5D_TAC` 6→5 维）
+>   归约到 `prepared_nonlinear ==> ineq`；后层 = `mk_all_ineq.hl` 逐 prep 件真证 `|- prepared_nonlinear`
+>   （`break_case_exec.prove_prep`：prep.hl 的 x-空间展开形 + `break_case_log.hl` 的 Iarg
+>   切面树 + `SERIAL_TAC` 反序列化叶子证明——叶子证明由官方构建农场离线跑区间/TM 验证器
+>   生成缓存，严格构建在内核内重放，`new_axiom`/`mk_thm` 已机械禁用）。**三条各自的证法**：
+>   XLLIPLS = 1 次切面（x1@0.9501）+1 叶；WKGUESB 非对称版因「slow calculation」**被废弃**，
+>   换对称版（析取缩域）——与我们候选方向 2（对称归约）同构；IYOUOBF sharp v2 = Xconvert
+>   x-空间路线（Eps 1e-12/Sharp tags；无专用 break 树，走公共 prep 机制）。
+>   **关键差异**：HOL 从不做「逐格 D_s 包络」，成本控制 = 对称缩域 + x 转换 + 按件手调切面
+>   + 叶级 B&B 序列化重放 —— 即我们候选方向 1（branch-and-bound）+ 2（对称）+ 3（x 空间）。
 > - **2026-11-09（编排者，五）**：**信任基座定格（基线 T @`52275a1c`）**——goodList 波四落地：
 >   最后 2 条 `{hex,pent}_top_replay` 换 kernel `decide`+符号链，`K_AXIOM` **587→585**（根面 591→589，
 >   Δ=2 精确命中）；manifest 再生 PASS，形状定格 **2 种**（shard-range 580 + tri-single-seed 5）。
