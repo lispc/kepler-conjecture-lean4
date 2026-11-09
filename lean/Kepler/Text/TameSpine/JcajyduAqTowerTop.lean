@@ -20,6 +20,7 @@ import Kepler.Text.TameSpine.JcajyduAqLeaf9W2
 import Kepler.Text.TameSpine.JcajyduAqLeaf10G
 import Kepler.Text.TameSpine.JcajyduAqLeaf11
 import Kepler.Text.TameSpine.JcajyduAqLeaf12AC
+import Kepler.Text.TameSpine.JcajyduAqLeaf13W4b
 
 namespace Kepler.Text.TameSpine
 
@@ -33,8 +34,15 @@ theorem transformAssumptionSpine_of_aq13 (L : fgraph ℕ) (hL : GoodList L)
     (aq5 L hL) (aq6 L hL) (aq7 L hL) (aq8 L hL) (aq9 L hL) (aq10 L hL)
     (aq11 L hL) (aq12 L hL) h13
 
+
+/-- **塔顶（13/13，无条件形）**：13 叶全部真证，直接给出 `transformAssumptionSpine`。 -/
+theorem transformAssumptionSpine_top (L : fgraph ℕ) (hL : GoodList L) :
+    transformAssumptionSpine L hL :=
+  transformAssumptionSpine_of_aq13 L hL (aq13 L hL)
+
 end Kepler.Text.TameSpine
 
 /-! ## `#print axioms` 探针（落库闸直接读编译输出） -/
 
 #print axioms Kepler.Text.TameSpine.transformAssumptionSpine_of_aq13
+#print axioms Kepler.Text.TameSpine.transformAssumptionSpine_top
