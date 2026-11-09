@@ -71,7 +71,8 @@
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `packineqa-w2`（接管） | 原车道异常终止（翻译反例 + 105GB runaway，续418）——根因定位 + 5 条件挽救裁决（8055810915 G4 链 vs 1965189142a slab 路线分开判） | 在飞（NO-GO 合格交付） |
+| `packineqa-w1`（**存活**，续426 勘误） | `8055810915` G4 链 + `1965189142a` slab 证书/胶水（`module_packineqa.lean`，15:12 版正在做真证明修补） | **在飞（此前"判死"作废：agent_48c76285 一直存活）**；已令停主仓写入、改 patch 交付、交 30 行状态报告 |
+| `packineqa-w2`（接管） | **根因批**：翻译反例路径（stage-A plain-interval 丢 h 反相关性）+ 5 条件挽救裁决（G4 链 vs slab 路线分开判） | 在飞（NO-GO 合格交付）；**最后通牒已撤销（续426：泄漏系 w1 存活所致，w2 主仓写入数 0）** |
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
 | ~~`jcajydu-c2`~~（退役） | 战役 J0 前置叶层 | **✅ 退役（续422）**：J0-a + J0-b₁ 两件落库；betwnRot 负结果 + eq 设计移交 j2w2；J0 收官等 AQ 塔（届时新开车道） |
@@ -251,6 +252,8 @@
 
 
 - **2026-11-09（15:15，续425）**：**packineqa-w2 再犯主仓泄漏（警告后 20 分钟）——最后通牒已下**。`lean/Kepler/Text/PackingAuto22PackIneqA.lean`（195 行 packIneqDefA 胶水，15:07 创建）于 14:35 警告 + 14:44 其确认只读之后再次写入主仓 ⇒ 已移入其快照 `main-tree-leak/`（内容保留为潜在交付件）并下达**最后通牒：再犯即终止车道 + 编排者接管**。本 session 泄漏计数：w1（2 代）/ c2（1 起，已自清转正）/ w2（1 起再犯）——后续泄漏一律直接处置，不再记录性警告。
+
+- **2026-11-09（15:20，续426）**：**泄漏归因勘误：`packineqa-w1` 从未死亡——本 session 全部主仓泄漏归因 w1 存活；w2 最后通牒撤销**。① **取证链**：主仓 `PackingAuto22PackIneqA.lean` 15:09 移走后 **15:12 又出现新版本**（8866→8941 B）；`/tmp/packineqa-w1/module_packineqa.lean` mtime **15:12**、sha256 `c839cdd9…` 与主仓 gen4 **逐字节相同**；15:17 该目录再出 `probe_matrix.lean`（针对 gen4 同一个 `simp only` 矩阵取值问题的 Mathlib 探针）⇒ w1 车道 agent `agent_48c76285` 存活，一直以 edit→compile→copy 循环工作，周期性把 module 复制进主仓（14:38 Cases、15:07/15:12 Text 同源）。② **我误判的根因**：w1 的 bash 调用日志停在 14:40 + 上下文压缩丢了它的 agent ID ⇒ 判死并发 w2 接管；**判定作废**。教训：**判死必须三查——目录 mtime / 进程 cwd / 会话日志**，只看调用日志会漏掉"还在干活但不再落 stdout 的 agent"。③ **w2 清白**：主仓写入数 = 0，归因报告的结论（w1 遗稿演化）正确；仅"逐字节同源"表述不精确（gen3 与 w1 11:57 稿第 7–8 行不同："83 leaves repaired to 85" vs "85 leaves…"）。④ **处置**：已令 w1 立即停主仓写入、改 `git diff --no-index` patch 交付、交 30 行状态报告（COUNTEREXAMPLE 结论 / 83→85 叶依据 / module 编译状态 / 1965189142a slab 状态），并要求与 w2 结论以机器证据对齐；已令 w2 继续根因。⑤ **取证法留档**：目标路径放置 **FIFO 陷阱** + 1 s `lsof` 监视（`/tmp/fifo_watch2.sh`）——写入方会在 `open(O_WRONLY)` 阻塞并暴露 PID，比反复看 mtime 可靠；**主仓该路径现为 FIFO，任何车道再写必阻塞**。⑥ gen4 内容是真 tactic 修复（`simp only` 去掉 `Matrix.cons_val_one`/`head_cons`，加 `Matrix.empty_val'`/`Fin.isValue`/`Int.cast_*`/`zpow_*` + `norm_num`），非模板重发——w1 在真修证明。
 
 - **2026-11-09（15:05，续423）**：**`jcajydu-j3def` 发车（按续418 补位序补 4/5→5/5）**。对象 = reduction3 定义层（`nfgtrans'`/`match_quotient_list`/`triple_data_v4`/`core_triple_v4`/`prebatch`，树内全零命中）；任务 = 考古全清单 + Lean 批次路线图 + **风险判词**（`match_quotient_list` 商/匹配形态能否自然进 Lean——不能则立即止损上报，触发全战役重估）+ 最底定义组首口。agent ID 留档：agent_d0341954。池 5/5 = packineqa-w2 / j2w2(E2) / w7(W9) / j1w1(B2) / j3def。
 
