@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:58，续731）**：**W2-b P3-a 落库 `129f6711` + P2 卡点报告 → 折中裁决（A 拆半）**。
+① **落库**：`Reduction4Subseg9.lean` 104 行 2 件全标准三（`AqiunppSlot` 链侧槽 def = aqiunpp 陈述形零成本折算；`finalAssumptionMemXCore` HOL :519 七前提逐字，证 = `mem_fst_core` 在 (ntrans k, rtrans k) 实例化）；RC=0 0err 0warn、olean 装池。
+② **P2 卡点（采信）**：派单四件在 TAV2 之外还有未落章节闸门——PNXVWFS1/2（各 40+ 行证体）闸 mem_uniq/fsty_core/fstz_core/explicit；DIOWAAS 闸 y_ne_z；Pbflhet.ztrans_in_suc 闸 zpre_core_k；properties_of_ytrans0/lnrx_induction/core_split/r_trans_eq 闸 yz_in_core（二重）；同章已就位件普查 ✓（prebatch_suc_explicit = Reduction3Thm13 已补齐）。
+③ **折中裁决（B 案否决）**：PNXVWFS 簇**不开平行波**——已归 scout W2-c-3/4（获批波次表）；tame-corr 开 **P2-pre 波**只做其独需件（scout 消费面零命中实证）：DIOWAAS 链 + PBFLHET 子链 4 件 + properties_of_ytrans0，估 300–500/1–2 patch；**记账不派**：`lnrx_induction` = aq13-survey-w2 件2（件1 落后续派）、`core_split/r_trans_eq` assumption lemmas = reduction_A–F 链领地（j3def T15 层，W2 顶装配时裁）。
+
 - **2026-11-10（07:50，续730）**：**双落库（nkezbfc W6-K5 `95e3b585` + tame-corr W2-b P1 `4235270b`）→ 派 W6-K6 与 P2/P3**。
 ① **W6-K5 落库**：`LocalFanStepW6K5.lean` 181 行 6 件全标准三——④ else 支收口链 `pW6k5_sol_nonneg_of_azim_id`（hcollapse+hcop+haid 三识别式显式槽+hlt ⇒ `0 ≤ solLocal_p9`）；**HOL 源读法勘误采信**：else 支（三点内角全 < π）不导 False 而是直接证 `0 ≤ sol_local`（NKEZBFC.hl:2039–2614），链 = collapse + 识别式 + `azim_dihv_same`×3 + W6K4③ `ΣdihV ≥ π` + linarith。缺口图：`azim_add` 全库无公开件（本地重证 15–25）/ haid 展开（HOL 2519–2584）/ `coplanar_of_azim_pi` LuneVolume:865 private。
 ② **W2-b P1 落库**：`Reduction4Subseg8.lean` 182 行 3 件全标准三（`markedListUniqCore` :1747 / `scrollFlattenMap` :1586 `[propext,Quot.sound]` / `initialPrebatchExplicitScroll` :1847）；**全族判定表**（21 final_assumption_* + 塔 3 + mluc 逐件过 HOL 证体）：不吃 3 / 吃 TAV2 6 / 吃 AQIUNPP 3 / 吃 AQ 章 1 / 传递吃 TAV2 2 / 缓交 1（size_find_face，import 面污染）/ 已落查重 ✓；`size_find_face` 缓交采信。
