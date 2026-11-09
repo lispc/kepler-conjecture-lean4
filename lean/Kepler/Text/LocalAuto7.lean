@@ -974,10 +974,87 @@ theorem GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE (u v w : V3)
 --     r·n > s·m 时对称地落 affGe {a} {v,w}。除法消除走
 --     div_eq_mul_inv + mul_inv_cancel₀ / mul_div_cancel_left₀ 路（本波已验的套路）。
 -- 消费者：W6 generic 支极扇 E' 子集引理一半。
+/- 伸缩版 `p7w_affGe_pair_intro`：`t • (y - a) = r • (p - a) + s • (q - a)`
+（`t > 0`、`r,s ≥ 0`）⟹ `y ∈ affGe {a} {p,q}`。除法只在本件内消一次。 -/
+private theorem p7w_affGe_pair_intro_smul {a p q y : V3} (hpa : p ≠ a) (hqa : q ≠ a)
+    {t : ℝ} (ht : 0 < t) {r s : ℝ} (hr : 0 ≤ r) (hs : 0 ≤ s)
+    (hy : t • (y - a) = r • (p - a) + s • (q - a)) :
+    y ∈ affGe ({a} : Set V3) ({p, q}) := by
+  have htne : t ≠ 0 := ne_of_gt ht
+  refine p7w_affGe_pair_intro hpa hqa (r := r / t) (s := s / t) ?_ ?_ ?_
+  · exact div_nonneg hr ht.le
+  · exact div_nonneg hs ht.le
+  · apply smul_right_injective V3 htne
+    show t • (y - a) = t • ((r / t) • (p - a) + (s / t) • (q - a))
+    rw [hy, smul_add, smul_smul, smul_smul, div_eq_mul_inv, div_eq_mul_inv]
+    rw [show t * (r * t⁻¹) = r by field_simp,
+      show t * (s * t⁻¹) = s by field_simp]
+
+-- 已闭（2026-11-09，W12-pre）：⊆ 两半系数合并；⊇ 按 `(m,n)` 零性三分支，
+-- 各支以 `t • (y-a) = A•? + B•?`（无除法）喂 `p7w_affGe_pair_intro_smul`。
 theorem UNION_AFF_GE_1_2 (a u v w : V3) (hmem : v ∈ affGe {a} {u, w})
     (hu : u ≠ a) (hv : v ≠ a) (hw : w ≠ a) :
     affGe {a} {u, v} ∪ affGe {a} {v, w} = affGe {a} {u, w} := by
-  sorry
+  obtain ⟨m, n, hm, hn, hvrep⟩ := p7w_affGe_pair_extract hu hw hmem
+  apply Set.Subset.antisymm
+  · intro y hy
+    rcases hy with hy | hy
+    · obtain ⟨r, s, hr, hs, hyrep⟩ := p7w_affGe_pair_extract hu hv hy
+      refine p7w_affGe_pair_intro (r := r + s * m) (s := s * n) hu hw ?_ ?_ ?_
+      · positivity
+      · positivity
+      · rw [hyrep, hvrep]
+        simp only [smul_add, smul_smul]
+        module
+    · obtain ⟨r, s, hr, hs, hyrep⟩ := p7w_affGe_pair_extract hv hw hy
+      refine p7w_affGe_pair_intro (r := r * m) (s := r * n + s) hu hw ?_ ?_ ?_
+      · positivity
+      · positivity
+      · rw [hyrep, hvrep]
+        simp only [smul_add, smul_smul]
+        module
+  · intro y hy
+    obtain ⟨r, s, hr, hs, hyrep⟩ := p7w_affGe_pair_extract hu hw hy
+    rcases lt_or_eq_of_le hm with hmpos | hm0eq
+    · rcases lt_or_eq_of_le hn with hnpos | hn0eq
+      · by_cases hle : r * n ≤ s * m
+        · right
+          refine p7w_affGe_pair_intro_smul (r := r) (s := s * m - r * n) hv hw
+            hmpos ?_ (by linarith) ?_
+          · exact hr
+          · rw [hyrep, hvrep]
+            simp only [smul_add, smul_smul]
+            module
+        · have hlt : s * m < r * n := lt_of_not_ge hle
+          left
+          refine p7w_affGe_pair_intro_smul (r := r * n - s * m) (s := s) hu hv
+            hnpos (by linarith) hs ?_
+          · rw [hyrep, hvrep]
+            simp only [smul_add, smul_smul]
+            module
+      · have hn0 : n = 0 := hn0eq.symm
+        have hmne : m ≠ 0 := ne_of_gt hmpos
+        have hv0 : v - a = m • (u - a) := by
+          rw [hvrep, hn0, zero_smul, add_zero]
+        right
+        refine p7w_affGe_pair_intro_smul (r := r) (s := s * m) hv hw
+          hmpos hr (by positivity) ?_
+        · rw [hyrep, hv0]
+          simp only [smul_add, smul_smul]
+          module
+    · have hm0 : m = 0 := hm0eq.symm
+      have hv0 : v - a = n • (w - a) := by
+        rw [hvrep, hm0, zero_smul, zero_add]
+      have hnne : n ≠ 0 := by
+        intro hn0
+        exact hv (sub_eq_zero.mp (by rw [hv0, hn0, zero_smul]))
+      have hnpos : 0 < n := lt_of_le_of_ne hn (Ne.symm hnne)
+      left
+      refine p7w_affGe_pair_intro_smul (r := n * r) (s := s) hu hv
+        hnpos (by positivity) hs ?_
+      · rw [hyrep, hv0]
+        simp only [smul_add, smul_smul]
+        module
 
 /-! ## Cycle and iteration kit (polar_fan.hl:279-406) -/
 
