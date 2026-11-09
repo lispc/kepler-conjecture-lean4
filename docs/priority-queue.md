@@ -54,9 +54,9 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-09 09:10，池 **0/3**）
+## 1. 在飞（2026-11-09 10:05，池 **5/5**）
 
-> **用户 2026-11-06 指令：近期限流频繁，并行度逐渐降到 3。** 已封顶 3（回到 `AGENTS.md` §3 原始规定）。
+> **用户 2026-11-09 指令：额度恢复，维持 5 车道。**（11-06 的"降到 3"解除。）
 > **机器状态（2026-11-09）**：`.lake` 里 **13,387 个 olean 已被清理**（12,438 `Interval/Cases` + 932 LP 叶
 > + 13 `GoodListShardQuadS*` 等），岛协议不受影响（编译只需直接 import 的 olean），
 > 但 **`lake build` 会按 trace 把它们全部并行重编 → 两次 OOM**（11-06 / 11-09，见 handoff 新 pit 15）。
@@ -67,10 +67,11 @@
 | `goodlist-w4`（重派） | 2 条 `{hex,pent}_top_replay` ⇒ 587→**585**；模板 = 波三 `TopReplayQuadShardS000-005` | 在飞（重派版，带内存纪律 + 边做边同步） |
 | `packineqa-w1` | 闭 `nliPackIneqDefA`（5 条 3 族；定义已真化 `packIneqDefAP22`，`C1965189142x34` 在库；含 2 支常数不等式） | 在飞（用户 11-09 批） |
 | `fspb-bridges-w1` | `fully_surrounded_perimeter_bound`（§5 第二根）：先侦察三桥 `WSEWPCH`/`FAN_PERIMETER`/`BGMIFTE` + 3 个未移植引理，支持才动手；纯移植零证书 | 在飞（用户 11-09 批；侦察报告也是合格交付） |
+| `kcblrqc-defside` | `nliKcblrqcIneqDef` **定义侧**（§11 #9）：第一支纯几何（azim 界）、第二支 `hmain` 是量化假设 ⇒ 可能零证书；注册表侧 28 id 与 XL 重建**不在本单** | 在飞（侦察优先；续400 ③ 的拆分决定） |
+| `jcajydu-scout` | §11 #3 解禁后的只读侦察：HOL `JCAJYDU.hl` 解剖 + 复核"全树 0 移植"是否仍陈旧 + 拆单方案与 go/no-go | 在飞（**零编译**；侦察报告即交付） |
 
-> **排队（等腾槽）**：`jcajydu` 侦察（用户 11-09 **解禁**重评——原 11-05 裁"先记着"；以只读侦察定规模，不直接派实现）；
-> `kcblrqc` 接线（侦察已完，见续400：小件 25 模块几分钟、XL 三棵 ≈11,717 模块/7.66M 行 ≈12–13 h 串行，另见"定义 vs 注册表侧"拆分问题）；
-> `lp-idfix` 落库（暂缓：932 个 LP 叶 olean 已被清，落地成本被抬高）；T2 walk。
+> **排队（等腾槽）**：`kcblrqc` 注册表侧接线 + XL 过夜重建批（侦察定案见续400：小件 25 模块几分钟，XL 三棵 ≈11,717 模块/7.66M 行 ≈12–13 h 串行）；
+> `ds-envelope`（一买 3）；`lp-idfix` 落库（暂缓：932 个 LP 叶 olean 已被清，落地成本被抬高）；T2 walk。
 > **我自己做（不占车道）**：`ArchiveData` vs HOL/Isabelle 数据对账；`hf-proof-map` 状态更新维护。
 
 > **已收工（本批）**：`hnl-109-census` ✅（只读，判死 T1/T2 两个大桶，见续398 ③④）；`taylor-rung` ✅（**负结果**：锥内 rung 收益 0，见续398 ⑤）。
