@@ -39,6 +39,7 @@ import Kepler.Text.TameSpine.JcajyduAqLeaf10
 import Kepler.Text.TameSpine.TameList8
 import Kepler.Text.TameSpine.TameList13
 import Kepler.Text.TameSpine.TameList11
+import Kepler.Text.TameSpine.TameList71
 import Kepler.Text.TameSpine.JcajyduBetwnBase
 
 set_option autoImplicit false
@@ -126,50 +127,14 @@ private theorem aqs_headBang_drop {α : Type*} [Inhabited α] {r : List α} {k :
 
 /-- **HOL `Dangeyj.HD_BETWN2`**（DANGEYJ.hl:709）：
 `uniq r ∧ a,b ∈ r ∧ a≠b ∧ betwn 非空 ⇒ HD (betwn r a b) = next_el r a`。
-（跨车道协调：AQ4 在飞未落 `aq4_` 声明，本件以中立 `aqs_` 公开件落地，
-后续**禁止双造**。） -/
+
+**去重（编排者 2026-11-09 裁定，选 1）**：基底层原件 `HD_BETWN2`
+（`TameList71:614`，泛型 α）结论逐字相同，本件改为**一行别名**
+（陈述零改动），不再重证。 -/
 theorem aqs_hdBetwn2 {r : List (ℕ × ℕ)} {a b : ℕ × ℕ} (hr : r.Nodup) (ha : a ∈ r)
     (hb : b ∈ r) (hab : a ≠ b) (hne : between r a b ≠ []) :
-    (between r a b).head! = nextEl r a := by
-  have hia : r.idxOf a < r.length := List.idxOf_lt_length_iff.mpr ha
-  have hib : r.idxOf b < r.length := List.idxOf_lt_length_iff.mpr hb
-  have hiab : r.idxOf a ≠ r.idxOf b := fun h => hab (aqs_idxOfInj hr ha hb h)
-  by_cases h1 : r.idxOf a < r.idxOf b
-  · have hm : r.idxOf b - (r.idxOf a + 1) ≠ 0 := by
-      intro h0
-      apply hne
-      rw [betwnTakeDrop hr hb, if_pos h1, List.take_eq_nil_iff]
-      exact Or.inl h0
-    rw [betwnTakeDrop hr hb, if_pos h1, aqs_headBang_take hm, aqs_headBang_drop (by omega)]
-    exact (aqs_nextEl_eq_getElem_succ hr ha (by omega)).symm
-  · rw [betwnTakeDrop hr hb, if_neg h1]
-    by_cases h2 : r.idxOf a + 1 < r.length
-    · have hhead : (r.drop (r.idxOf a + 1) ++ r.take (r.idxOf b)).head!
-          = (r.drop (r.idxOf a + 1)).head! := by
-        apply aqs_headBang_append_of_ne
-        intro h
-        rw [List.drop_eq_nil_iff] at h
-        omega
-      rw [hhead, aqs_headBang_drop h2]
-      exact (aqs_nextEl_eq_getElem_succ hr ha h2).symm
-    · -- a 是整体 LAST：nextEl 回卷到表头
-      have hia_last : r.idxOf a = r.length - 1 := by omega
-      have hdrop : r.drop (r.idxOf a + 1) = [] := by
-        rw [List.drop_eq_nil_iff]
-        omega
-      have hb0 : r.idxOf b ≠ 0 := by
-        intro h0
-        apply hne
-        rw [betwnTakeDrop hr hb, if_neg h1, hdrop, List.nil_append, List.take_eq_nil_iff]
-        exact Or.inl h0
-      rw [hdrop, List.nil_append, aqs_headBang_take hb0]
-      unfold Kepler.Assembly.nextEl
-      rw [if_pos hia_last]
-      have hne_r : r ≠ [] := List.ne_nil_of_mem ha
-      rw [show r.headD a = r.head! from by
-        cases r with
-        | nil => exact absurd rfl hne_r
-        | cons x xs => rw [List.head!_cons]; rfl]
+    (between r a b).head! = nextEl r a :=
+  Kepler.Text.TameSpine.HD_BETWN2 ha hb hab hr hne
 
 /-! ## §1 HOL AQ12.hl:1387 `contour_list_cat` -/
 
