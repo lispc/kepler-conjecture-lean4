@@ -97,6 +97,14 @@
     `sp.2 ∈ [sp.2]`（`by simp`），而 `w ∈ sp.2` 只用于最后
     `List.mem_flatten` 取 `l = sp.2`；两者不可混用（本批实测）。
 
+  ┌─ FOR-ASSEMBLY 可见性上调（编排者批准 2026-11-09，供
+  │  `JcajyduAqLeaf1` 的 AQ1 叶装配复用）──────────────────────────
+  │ `betwn_succ_subset`（本文件 :256）/ `betwn_next_subset`（:304）/
+  │ `betwn_or_betwn_cover`（:371）三件去 `private` 升 public：
+  │ **陈述与证体逐字未动**，仅可见性 + 本注记。消费者 = AQ1 叶的
+  │ 「互补弧」论证（`split.1`/`split.2` 的 f1×f2 互不交）。
+  └──────────────────────────────────────────────────────────────
+
   批 73 接续点（精确）：DANGEYJ.hl :949 文件末（`end;;`）已收章，
   下一章 = PWSSRAT.hl（759 行）。首件 = `min_not_eq_imp_eq`（:50）；
   :22 `AQIUNPP3_concl` / :28 `HQYMRTX1_list` 只是陈述重绑（对应
@@ -253,7 +261,7 @@ private theorem mem_between_iff_idx [BEq α] [LawfulBEq α] {s : List α}
 
 /-- 私件：`x ∈ betwn s u v ==> x ∈ [next_el s u] ++ betwn s next_el s u v`
 （集合内核：去掉首端点 `u` 后，弧的第一段就是 `next_el u`）。 -/
-private theorem betwn_succ_subset [BEq α] [LawfulBEq α] [DecidableEq α] {s : List α}
+theorem betwn_succ_subset [BEq α] [LawfulBEq α] [DecidableEq α] {s : List α}
     (hnd : s.Nodup) {u v : α} (hu : u ∈ s) (hv : v ∈ s) :
     between s u v ⊆ [nextEl s u] ++ between s (nextEl s u) v := by
   intro x hx
@@ -301,7 +309,7 @@ private theorem betwn_succ_subset [BEq α] [LawfulBEq α] [DecidableEq α] {s : 
 
 /-- 私件：`next_el` 右端点前移——`betwn s u (next_el s v) ⊆ betwn s u v ++ [v]`
 （集合内核：右端点换成其后继时，多出的唯一元素是 `v` 本身）。 -/
-private theorem betwn_next_subset [BEq α] [LawfulBEq α] [DecidableEq α] {s : List α}
+theorem betwn_next_subset [BEq α] [LawfulBEq α] [DecidableEq α] {s : List α}
     (hnd : s.Nodup) {u v : α} (hu : u ∈ s) (hv : v ∈ s) (huv : u ≠ v) :
     between s u (nextEl s v) ⊆ between s u v ++ [v] := by
   intro x hxw
@@ -368,7 +376,7 @@ private theorem mem_between_of_nextEl [BEq α] [LawfulBEq α] {s : List α}
 `f1 = [next_el r ram1] ++ betwn r next_el r ram1 ram2 ++ [ram2]`，
 `f2 = [next_el r ram2] ++ betwn r next_el r ram2 ram1 ++ [ram1]`
 （`SPLIT_NORMAL_LIST_CASES` 的集合内核）。 -/
-private theorem betwn_or_betwn_cover [BEq α] [LawfulBEq α] [DecidableEq α] {s : List α}
+theorem betwn_or_betwn_cover [BEq α] [LawfulBEq α] [DecidableEq α] {s : List α}
     (hnd : s.Nodup) (ram1 ram2 : α) {x : α} (hx : x ∈ s) :
     x ∈ (([nextEl s ram1] ++ between s (nextEl s ram1) ram2) ++ [ram2]) ++
         (([nextEl s ram2] ++ between s (nextEl s ram2) ram1) ++ [ram1]) := by
