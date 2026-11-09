@@ -4151,6 +4151,86 @@ theorem P11W_CARD {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
 
 end W11b1Kit
 
+/-! ### W11b2a polar-fan FAN basics (`p11w_*`; WSEWPCH wave W11b2a)
+
+HOL polar_fan.hl:1217-1260 entry block of BGMIFTE conclusion 1: four of the
+six FAN conjuncts on the polar pair `(V', E') = ((polarFan V E FF).1, .2.1)`.
+Consumes the W11b1 pieces (`P11W_PRIME_INJ` / `P11W_PRIME_NCOL` /
+`P11W_PRIME_NE_ZERO`) plus `LOCAL_FAN_IN_FF_DISTINCT` / PRIME injectivity.
+
+Remaining FAN conjuncts (fan7's aff_ge separation) and the local_fan/dih2k
+assembly + wedge conditions are W11b2a2/b2b (see lane DELIVERY). -/
+
+section W11b2aKit
+
+/-- 极扇边集是图（每条边恰两点）：`{p v, p (ρv)}` 两端由 `P11W_PRIME_INJ` +
+`ρv ≠ v`（`LOCAL_FAN_IN_FF_DISTINCT`）互异。 -/
+theorem P11W_POLAR_GRAPH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hg : Generic V E) (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    Graph ((polarFan V E FF).2.1) := by
+  intro e he
+  simp only [polarFan, Set.mem_image] at he
+  obtain ⟨v, hv, rfl⟩ := he
+  have hinj := P11W_PRIME_INJ hcl hedge hg hia
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  have hrmem : rhoNode1 FF v ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv
+  have hdart : (v, rhoNode1 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS h2).1 v hv
+  have hvv : v ≠ rhoNode1 FF v := LOCAL_FAN_IN_FF_DISTINCT h2 hdart
+  have hne : cross3 v (rhoNode1 FF v)
+      ≠ cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)) := by
+    intro heq
+    exact hvv (hinj v hv (rhoNode1 FF v) hrmem heq)
+  refine ⟨(Set.finite_singleton _).insert _, ?_⟩
+  have htf : ((Set.finite_singleton
+      (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))).insert
+        (cross3 v (rhoNode1 FF v))).toFinset
+      = ({cross3 v (rhoNode1 FF v),
+          cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  rw [htf, Finset.card_insert_of_notMem (by simp [hne]), Finset.card_singleton]
+
+/-- 极扇的 FAN 基本条件（4/6）：Graph、fan1（有限非空）、fan2（0 不在顶点集）、
+fan6（边不过 0 共线）。HOL polar_fan.hl:1217-1260 入口段。 -/
+theorem P11W_POLAR_FAN_BASIC {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hg : Generic V E) (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    Graph ((polarFan V E FF).2.1) ∧
+      fan1 (0:V3) ((polarFan V E FF).1) ((polarFan V E FF).2.1) ∧
+      fan2 (0:V3) ((polarFan V E FF).1) ((polarFan V E FF).2.1) ∧
+      fan6 (0:V3) ((polarFan V E FF).1) ((polarFan V E FF).2.1) := by
+  obtain ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩ := hcl.1
+  have hVfin : V.Finite := hfanL.2.2.1.1
+  have hVne : V ≠ ∅ := hfanL.2.2.1.2
+  refine ⟨P11W_POLAR_GRAPH hcl hedge hg hia, ?_, ?_, ?_⟩
+  · -- fan1: 像的有限非空
+    simp only [polarFan, fan1]
+    constructor
+    · exact hVfin.image _
+    · intro hz
+      rw [Set.image_eq_empty] at hz
+      exact hVne hz
+  · -- fan2: 极映射非零
+    simp only [polarFan, fan2]
+    intro h0
+    obtain ⟨v, hv, hvp⟩ := h0
+    exact P11W_PRIME_NE_ZERO hcl v hv hvp
+  · -- fan6: 边 {p v, p(ρv)} 与 0 不共线（= P11W_PRIME_NCOL at (v, ρv)）
+    intro e he
+    simp only [polarFan, Set.mem_image] at he
+    obtain ⟨v, hv, rfl⟩ := he
+    have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+    have hdart : (v, rhoNode1 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS h2).1 v hv
+    have hvv : v ≠ rhoNode1 FF v := LOCAL_FAN_IN_FF_DISTINCT h2 hdart
+    have hrmem : rhoNode1 FF v ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv
+    have hnc := P11W_PRIME_NCOL hcl hedge hg hia v hv (rhoNode1 FF v) hrmem hvv
+    simpa using hnc
+
+end W11b2aKit
+
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
