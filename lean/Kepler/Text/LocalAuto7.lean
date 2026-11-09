@@ -3897,6 +3897,76 @@ theorem FAN_PERIMETER_LE_2PI_OF_LUNAR {V : Set V3} {E : Set (Set V3)}
     hmV hnV hvw hwv hperp1 hperp2 hpl1 hpl2
 
 
+/-! ### W11a BGMIFTE prologue (`p11w_*`; WSEWPCH wave W11a)
+
+Self-contained pieces of HOL `BGMIFTE` (polar_fan.hl:1065) that do not need
+the aff_ge/affsign assembly of conclusion 1:
+
+* `P11W_PRIME_NE_ZERO` — the polar map `p v = v × ρv` is nowhere zero on `V`
+  (HOL BGMIFTE prologue: `!v. v IN V ==> ~(prime' v = vec 0)`).
+* `P11W_ARC_HALF` — **BGMIFTE conclusion 4's first arc half**: for every
+  `v ∈ V`, `arcV 0 (p v) (p (ρv)) = π - interiorAngle1 0 FF (ρv)` with both
+  bounds.  Instantiation of the real W5b engine `p7w2_half_polar_arc`
+  (IVS_RHO_IDD + CHARACTER_OF_RHO_NODE2 + INTERIOR_ANGLE1_POS + the BGMIFTE
+  premise `hia`).
+* `p11w_card_of_inj` — `V'.ncard = V.ncard` from injectivity of the polar map
+  (BGMIFTE conclusion 3's last step; injectivity itself is W11b). -/
+
+section W11aKit
+
+/-- BGMIFTE 前奏：极映射 `p v = v × ρv` 在 `V` 上非零。 -/
+theorem P11W_PRIME_NE_ZERO {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) : ∀ v ∈ V, cross3 v (rhoNode1 FF v) ≠ 0 := by
+  intro v hv
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1
+    (LOCAL_FAN_IMP_HEDGE hcl.1)
+  have hnc : ¬ Collinear ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hv
+  intro hz
+  refine hnc (COLLINEAR_CROSS_0.mpr ?_)
+  have hcoe : (WithLp.toLp 2 (crossProduct ((v - 0 : V3) : Fin 3 → ℝ)
+      ((rhoNode1 FF v - 0 : V3) : Fin 3 → ℝ)) : V3) = cross3 v (rhoNode1 FF v) := by
+    refine p7w_v3_eq ?_
+    rw [coe_toLp, coe_subP, coe_subP, coe_zeroV, sub_zero, sub_zero, coe_cross3P]
+  rw [hcoe, hz]
+
+/-- **BGMIFTE 结论 4 第一弧半**（polar_fan.hl:1065 第四合取的第一 ∀）：
+`arcV 0 (p v) (p (ρv)) = π - interiorAngle1 0 FF (ρv)`，且两条界。 -/
+theorem P11W_ARC_HALF {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    ∀ v ∈ V,
+      arcV (0 : V3) (cross3 v (rhoNode1 FF v))
+            (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))
+          = Real.pi - interiorAngle1 (0 : V3) FF (rhoNode1 FF v) ∧
+        0 < arcV (0 : V3) (cross3 v (rhoNode1 FF v))
+              (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) ∧
+        arcV (0 : V3) (cross3 v (rhoNode1 FF v))
+              (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) < Real.pi := by
+  intro v hv
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  have hrmem : rhoNode1 FF v ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv
+  have h4 : ¬ Collinear ℝ (({0, rhoNode1 FF v,
+      rhoNode1 (FF) (rhoNode1 FF v)} : Set V3)) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hrmem
+  have h5 : ¬ Collinear ℝ (({0, v, rhoNode1 FF v} : Set V3)) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hv
+  have h3 : ivsRhoNode1 FF (rhoNode1 FF v) = v := IVS_RHO_IDD h2 hv
+  exact p7w2_half_polar_arc (V := V) (FF := FF) (v := v) (a := rhoNode1 FF v)
+    (b := rhoNode1 FF (rhoNode1 FF v)) rfl rfl h3 h4 h5
+    (hia _ hrmem) (INTERIOR_ANGLE1_POS h2 hrmem)
+
+/-- BGMIFTE 结论 3 收尾步：极映射在 `V` 上单射 ⟹ `V'.ncard = V.ncard`
+（`V' = image p V`，即 `polarFan` 的第一分量）。 -/
+theorem p11w_card_of_inj {V : Set V3} {p : V3 → V3}
+    (hinj : ∀ v ∈ V, ∀ w ∈ V, p v = p w → v = w) :
+    (image p V).ncard = V.ncard := by
+  have hInj : Set.InjOn p V := fun a ha b hb hab => hinj a ha b hb hab
+  rw [Set.InjOn.ncard_image hInj]
+
+end W11aKit
+
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
