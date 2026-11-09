@@ -3335,6 +3335,260 @@ theorem FAN_PERIMETER_LE_2PI_OF_CIRCULAR_STRUCT {V : Set V3} {E : Set (Set V3)}
   rw [Function.iterate_succ_apply']
   exact (hvc ((rhoNode1 FF)^[i] d0.1) (hmem i)).2.2.1.symm
 
+/-! ### W10 lunar-branch kit (`p10w_*` private helpers; WSEWPCH wave W10)
+
+The lunar branch (polar_fan.hl:2360-2537): the lunar fan splits the rho orbit
+into two half-cycles (`w → v` in `n` steps and `v → w` in `m` steps); each
+half telescopes (via `Fan.sum4_azim_fan` + `RHO_NODE1_MONO_WITH_AZIM`) to an
+endpoint azimuth lying on the lunar line `{0, v, w}`, hence ≤ π.
+
+`W10a` proves the telescope core with the half-cycle data as explicit slots
+(mirroring the W9 slot architecture): `m n`, the endpoint equations and the
+plane memberships (`hplane1/hplane2`, derived in `W10b` from `HKIRPEP`'s arc
+equations).  `m + n = V.ncard` is derived internally from the w6a
+period/divisibility kit (no LA6 import needed). -/
+
+section W10Kit
+
+/-- V3 加法经强制转换保形（LA35 `kchCoeAdd_p35` 同款，本文件私件）。 -/
+private theorem p10w_coe_addP (a b : V3) :
+    ((a + b : V3) : Fin 3 → ℝ) = ((a : V3) : Fin 3 → ℝ) + ((b : V3) : Fin 3 → ℝ) := rfl
+
+/-- 望远镜：`∑_{k<n} (f(k+1) - f(k)) = f(n) - f(0)`。 -/
+private theorem p10w_sum_range_telescope (f : ℕ → ℝ) :
+    ∀ n : ℕ, (∑ k ∈ Finset.range n, (f (k + 1) - f k)) = f n - f 0
+  | 0 => by simp
+  | n + 1 => by
+    rw [Finset.sum_range_succ, p10w_sum_range_telescope f n]
+    ring
+
+/-- **Lunar half-cycle telescope**：基点 `b` 的轨道前 `p` 步之和（`arcV` 口径）
+等于端点沿轴 `cross3 b (ρb)` 的方位角，且 ≤ π。 输入面：轨道点全在平面
+`{0,b,ρb}`（`hplane`）且端点落在 `{0,b}` 的直线上（`hcol`）。 -/
+private theorem p10w_half_sum {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h2 : localFan_p2 V E FF) {b e : V3} (hb : b ∈ V) {p : ℕ} (hp0 : 0 < p)
+    (hpV : p < V.ncard) (hend : (rhoNode1 FF)^[p] b = e)
+    (hcol : Collinear ℝ ({(0:V3), b, e} : Set V3))
+    (hperp : ∀ k : ℕ, k ≤ p →
+      (cross3 b (rhoNode1 FF b)) ⬝ᵥ ((rhoNode1 FF)^[k] b) = 0)
+    (hplane : ∀ k : ℕ, k ≤ p →
+      (rhoNode1 FF)^[k] b ∈ affineSpan ℝ ({(0:V3), b, rhoNode1 FF b} : Set V3)) :
+    (∑ k ∈ Finset.range p,
+        arcV (0:V3) ((rhoNode1 FF)^[k] b) ((rhoNode1 FF)^[k + 1] b)) ≤ Real.pi := by
+  have hmem : ∀ k : ℕ, (rhoNode1 FF)^[k] b ∈ V := w6a_iter_rho_mem h2 hb
+  have hnc0 : ¬ Collinear ℝ ({(0:V3), b, rhoNode1 FF b} : Set V3) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hb
+  have haxtolp : (WithLp.toLp 2 (crossProduct ((b : V3) : Fin 3 → ℝ)
+      ((rhoNode1_p2 FF b : V3) : Fin 3 → ℝ)) : V3) = cross3 b (rhoNode1 FF b) := by
+    refine p7w_v3_eq ?_
+    rw [coe_toLp, coe_cross3P]
+    rfl
+  have haxne : cross3 b (rhoNode1 FF b) ≠ 0 := by
+    intro hz
+    refine hnc0 (COLLINEAR_CROSS_0.mpr ?_)
+    have hcoe : (WithLp.toLp 2 (crossProduct ((b - 0 : V3) : Fin 3 → ℝ)
+        ((rhoNode1 FF b - 0 : V3) : Fin 3 → ℝ)) : V3) = cross3 b (rhoNode1 FF b) := by
+      refine p7w_v3_eq ?_
+      rw [coe_toLp, coe_subP, coe_subP, coe_zeroV, sub_zero, sub_zero, coe_cross3P]
+    rw [hcoe, hz]
+  -- per-term non-collinearity {0, axis, orbit point}
+  have hcnc : ∀ k : ℕ, k ≤ p →
+      ¬ Collinear3 0 (cross3 b (rhoNode1 FF b)) ((rhoNode1 FF)^[k] b) := by
+    intro k hk hcon
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := cross3 b (rhoNode1 FF b))
+      (w1 := (rhoNode1 FF)^[k] b) haxne).mp hcon
+    have hx : (rhoNode1 FF)^[k] b = c • cross3 b (rhoNode1 FF b) := by
+      have hc' := hc
+      rw [sub_zero, sub_zero] at hc'
+      exact hc'
+    have hd : c * ((cross3 b (rhoNode1 FF b)) ⬝ᵥ (cross3 b (rhoNode1 FF b))) = 0 := by
+      have h := hperp k hk
+      rw [hx] at h
+      rw [p7w_dot_coe, p7w_dot_coe, coe_smulP, dotProduct_smul] at h
+      rw [p7w_dot_coe]
+      exact h
+    have haxax : (0:ℝ) < (cross3 b (rhoNode1 FF b)) ⬝ᵥ (cross3 b (rhoNode1 FF b)) := by
+      have hn : (0:ℝ) < ‖cross3 b (rhoNode1 FF b)‖ := norm_pos_iff.mpr haxne
+      have h2' : (0:ℝ) < ‖cross3 b (rhoNode1 FF b)‖ ^ 2 := by positivity
+      rwa [norm_sq_eq_dot] at h2'
+    have hc0 : c = 0 := by
+      rcases mul_eq_zero.mp hd with h | h
+      · exact h
+      · exact absurd h (ne_of_gt haxax)
+    have hx0 : (rhoNode1 FF)^[k] b = 0 := by rw [hx, hc0, zero_smul]
+    exact LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 (hmem k)
+      (by rw [hx0]; exact collinear3_of_eq rfl)
+  -- orbit monotonicity around the cross axis (LA5 real)
+  have hP2p : plane_p2 (affineSpan ℝ ({(0:V3), b, rhoNode1 FF b} : Set V3)) :=
+    ⟨0, b, rhoNode1 FF b, hnc0, rfl⟩
+  have h0p : (0:V3) ∈ affineSpan ℝ ({(0:V3), b, rhoNode1 FF b} : Set V3) :=
+    subset_affineSpan ℝ ({0, b, rhoNode1 FF b} : Set V3) (Set.mem_insert _ _)
+  have hmemb : ∀ z ∈ {(rhoNode1_p2 FF)^[n'] b | n' ≤ p},
+      z ∈ affineSpan ℝ ({(0:V3), b, rhoNode1 FF b} : Set V3) := by
+    intro z hz
+    obtain ⟨n', hn', rfl⟩ := hz
+    exact hplane n' hn'
+  have hmono := RHO_NODE1_MONO_WITH_AZIM h2 hb
+    (l := p) (U := {(rhoNode1_p2 FF)^[n'] b | n' ≤ p}) (rfl) hP2p h0p hmemb haxtolp
+  set A : ℕ → ℝ := fun k => azim 0 (cross3 b (rhoNode1 FF b)) b ((rhoNode1 FF)^[k] b) with hA
+  have hAend : A p = azim 0 (cross3 b (rhoNode1 FF b)) b e := by
+    simp only [hA, hend]
+  have hA0 : A 0 = 0 := by
+    simp only [hA, Function.iterate_zero_apply, azim_self]
+  have hAendle : azim 0 (cross3 b (rhoNode1 FF b)) b e ≤ Real.pi := by
+    rcases COLLINEAR_AZIM_0_OR_PI 0 (cross3 b (rhoNode1 FF b)) b e hcol with h | h
+    · exact le_trans (le_of_eq h) (le_of_lt Real.pi_pos)
+    · exact le_of_eq h
+  have hAendA : A p ≤ Real.pi := by
+    simp only [hA]
+    rw [hend]
+    exact hAendle
+  -- per-term difference identity: azim(ρ^k → ρ^(k+1)) = A(k+1) - A(k)
+  have hdiff : ∀ k, k < p →
+      azim 0 (cross3 b (rhoNode1 FF b)) ((rhoNode1 FF)^[k] b) ((rhoNode1 FF)^[k + 1] b)
+        = A (k + 1) - A k := by
+    intro k hk
+    have hsum4 := sum4_azim_fan (x := (0:V3)) (v := cross3 b (rhoNode1 FF b)) (u := b)
+      (w1 := (rhoNode1 FF)^[k] b) (w2 := (rhoNode1 FF)^[k + 1] b)
+      haxne (hcnc 0 (by omega))
+      (hcnc k (by omega))
+      (hcnc (k + 1) (by omega))
+      (by
+        rcases Nat.eq_zero_or_pos k with hk0 | hkpos
+        · rw [hk0, Function.iterate_zero_apply, Function.iterate_one, azim_self]
+          exact azim_nonneg _ _ _ _
+        · exact (hmono k (k + 1) (by omega) (by omega) (by omega)).le)
+    simp only [hA]
+    linarith [hsum4]
+  -- per-term arcV = A(k+1) - A(k) (AZIM_ARCV with the ≤π bound from monotonicity)
+  have hterm : ∀ k, k < p →
+      arcV (0:V3) ((rhoNode1 FF)^[k] b) ((rhoNode1 FF)^[k + 1] b) = A (k + 1) - A k := by
+    intro k hk
+    have hpi : azim 0 (cross3 b (rhoNode1 FF b))
+        ((rhoNode1 FF)^[k] b) ((rhoNode1 FF)^[k + 1] b) ≤ Real.pi := by
+      have hd := hdiff k hk
+      have hAk : A (k + 1) ≤ Real.pi := by
+        rcases Nat.lt_or_ge (k + 1) p with hlt | hge
+        · exact le_trans (hmono (k + 1) p hlt hpV (le_refl p)).le hAendA
+        · have heq : k + 1 = p := by omega
+          rw [heq]
+          exact hAendA
+      have hAk0 : (0:ℝ) ≤ A k := azim_nonneg 0 _ b ((rhoNode1 FF)^[k] b)
+      linarith [hd]
+    have haeq := AZIM_ARCV (e := cross3 b (rhoNode1 FF b)) (u := (0:V3))
+      (v := (rhoNode1 FF)^[k] b) (w := (rhoNode1 FF)^[k + 1] b)
+      (by
+        show ((cross3 b (rhoNode1 FF b) - 0 : V3) ⬝ᵥ ((rhoNode1 FF)^[k] b - 0 : V3)) = 0
+        rw [sub_zero, sub_zero]
+        exact hperp k (by omega))
+      (by
+        show ((cross3 b (rhoNode1 FF b) - 0 : V3)
+          ⬝ᵥ ((rhoNode1 FF)^[k + 1] b - 0 : V3)) = 0
+        rw [sub_zero, sub_zero]
+        exact hperp (k + 1) (by omega))
+      (hcnc k (by omega))
+      (hcnc (k + 1) (by omega))
+      hpi
+    rw [← haeq]
+    exact hdiff k hk
+  calc (∑ k ∈ Finset.range p,
+        arcV (0:V3) ((rhoNode1 FF)^[k] b) ((rhoNode1 FF)^[k + 1] b))
+      = ∑ k ∈ Finset.range p, (A (k + 1) - A k) :=
+        Finset.sum_congr rfl fun k hk => hterm k (Finset.mem_range.mp hk)
+    _ = A p - A 0 := p10w_sum_range_telescope A p
+    _ = azim 0 (cross3 b (rhoNode1 FF b)) b e - 0 := by rw [hAend, hA0]
+    _ ≤ Real.pi := by rw [sub_zero]; exact hAendle
+
+end W10Kit
+
+/-- **WSEWPCH lunar 支**（polar_fan.hl:2360-2537 的望远镜核心独立形）：凸局部扇
++ 两半周数据（`m n`、端点等式、双平面成员——W10b 由 `HKIRPEP` 弧描述 +
+`Lunar` 共线派生）⟹ 周长 ≤ 2π。 结构：`m + n = V.ncard`（内部经 w6a 周期
+整除导出），`∑_{i<m+n}` 按 `range` 分裂，两个半周各自用
+`p10w_half_sum` 望远镜到端点方位角 ≤ π。 -/
+theorem FAN_PERIMETER_LE_2PI_OF_LUNAR_STRUCT {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hcl : ConvexLocalFan V E FF)
+    (hed : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w : V3} (hvV : v ∈ V) (hwV : w ∈ V)
+    (hcol : Collinear ℝ ({(0:V3), v, w} : Set V3))
+    (m n : ℕ) (hn0 : 0 < n) (hm0 : 0 < m)
+    (hmV : m < V.ncard) (hnV : n < V.ncard)
+    (hvw : v = (rhoNode1 FF)^[n] w) (hwv : w = (rhoNode1 FF)^[m] v)
+    (hperp1 : ∀ k : ℕ, k ≤ n →
+      (cross3 w (rhoNode1 FF w)) ⬝ᵥ ((rhoNode1 FF)^[k] w) = 0)
+    (hperp2 : ∀ k : ℕ, k ≤ m →
+      (cross3 v (rhoNode1 FF v)) ⬝ᵥ ((rhoNode1 FF)^[k] v) = 0)
+    (hplane1 : ∀ k : ℕ, k ≤ n →
+      (rhoNode1 FF)^[k] w ∈ affineSpan ℝ ({(0:V3), w, rhoNode1 FF w} : Set V3))
+    (hplane2 : ∀ k : ℕ, k ≤ m →
+      (rhoNode1 FF)^[k] v ∈ affineSpan ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3)) :
+    fanPerimeter V E FF ≤ 2 * Real.pi := by
+  obtain ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩ := hcl.1
+  have hcl' : LocalFan V E FF := ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl' hed
+  have hcardpos : 0 < V.ncard := by omega
+  have hperw : (rhoNode1 FF)^[V.ncard] w = w := w6a_iter_rho_card h2 hwV
+  have hpermn : (rhoNode1 FF)^[m + n] w = w := by
+    rw [Function.iterate_add_apply, ← hvw, ← hwv]
+  -- V.ncard divides m + n (minimal-period divisibility via the w6a orbit cycle)
+  have hpdiv : V.ncard ∣ m + n := by
+    have hmod : (rhoNode1 FF)^[(m + n) % V.ncard] w = w := by
+      rw [← w6a_period_mod (rhoNode1 FF) hperw (m + n)]
+      exact hpermn
+    rcases Nat.eq_zero_or_pos ((m + n) % V.ncard) with h0 | hpos
+    · exact Nat.dvd_of_mod_eq_zero h0
+    · exfalso
+      obtain ⟨p', -, -, hdis, -, hcard_eq⟩ :=
+        w6a_orbit_cycle (fun z hz => WRGCVDR_ORBIT h2 z hz) hwV
+      have hlt : (m + n) % V.ncard < V.ncard := Nat.mod_lt _ hcardpos
+      have hltp : (m + n) % V.ncard < p' := by
+        rw [← hcard_eq]
+        exact hlt
+      exact (hdis 0 ((m + n) % V.ncard) hpos hltp)
+        (by rw [Function.iterate_zero_apply]; exact hmod.symm)
+  have hcard : V.ncard = m + n := by
+    obtain ⟨q, hq⟩ := hpdiv
+    have hqpos : 0 < q := by
+      rcases Nat.eq_zero_or_pos q with hq0 | hqpos
+      · rw [hq0, mul_zero] at hq
+        omega
+      · exact hqpos
+    have hqlt : q < 2 := by
+      have hlt : V.ncard * q < V.ncard * 2 := by
+        rw [← hq]
+        omega
+      exact Nat.lt_of_mul_lt_mul_left hlt
+    have hq1 : q = 1 := by omega
+    rw [hq1, mul_one] at hq
+    omega
+  rw [FAN_PERIMETER_INVARIANT hcl' hed w hwV, LOFA_IMP_CARD_FF_V_EQ h2]
+  rw [show (V.ncard - 1 : ℕ) + 1 = V.ncard from by omega, hcard]
+  rw [Nat.add_comm m n]
+  have hcol' : Collinear ℝ ({(0:V3), w, v} : Set V3) := by
+    simpa [Set.pair_comm] using hcol
+  have h1half := p10w_half_sum h2 hwV hn0 hnV hvw.symm hcol' hperp1 hplane1
+  have h2half : (∑ i ∈ Finset.range m,
+      arcV (0:V3) ((rhoNode1 FF)^[n + i] w) ((rhoNode1 FF)^[n + i + 1] w)) ≤ Real.pi := by
+    have h := p10w_half_sum h2 hvV hm0 hmV hwv.symm hcol hperp2 hplane2
+    refine le_trans (le_of_eq ?_) h
+    refine Finset.sum_congr rfl fun i _ => ?_
+    have h1 : (rhoNode1 FF)^[n + i] w = (rhoNode1 FF)^[i] v := by
+      rw [Nat.add_comm n i, Function.iterate_add_apply, ← hvw]
+    have h2' : (rhoNode1 FF)^[n + i + 1] w = (rhoNode1 FF)^[i + 1] v := by
+      rw [show n + i + 1 = (i + 1) + n from by ring]
+      rw [Function.iterate_add_apply, ← hvw]
+    rw [h1, h2']
+  calc (∑ i ∈ Finset.range (n + m),
+        arcV (0:V3) ((rhoNode1 FF)^[i] w) ((rhoNode1 FF)^[i + 1] w))
+      = (∑ i ∈ Finset.range n,
+          arcV (0:V3) ((rhoNode1 FF)^[i] w) ((rhoNode1 FF)^[i + 1] w))
+        + (∑ i ∈ Finset.range m,
+            arcV (0:V3) ((rhoNode1 FF)^[n + i] w) ((rhoNode1 FF)^[n + i + 1] w)) :=
+        Finset.sum_range_add _ n m
+    _ ≤ Real.pi + Real.pi := add_le_add h1half h2half
+    _ = 2 * Real.pi := by ring
+
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
