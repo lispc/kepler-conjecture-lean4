@@ -2422,6 +2422,146 @@ theorem CROSS_POSITIVE_MULTIPLE_AZIM_AXIS_ALT {x y z : V3} (hx : x ≠ 0)
   refine ⟨a⁻¹, by positivity, ?_⟩
   rw [hxy, smul_smul, inv_mul_cancel₀ ha.ne', one_smul]
 
+/-! ### W11b2p fan7 kit (`p11w_*`; WSEWPCH wave W11b2p)
+
+Support pieces for closing the fan7-equivalence stubs:
+`affGe {x} ∅ = {x}`, the graph-edge set trichotomy, and right-monotonicity of
+`affGe` (HOL `AFF_GE_MONO_RIGHT` — no definition in the reference tree, newly
+proved from the `Affsign` semantics). -/
+
+section W11b2pKit
+
+/-- `affGe {x} ∅ = {x}`：空方向的闭锥退化为基点（`Affsign` 系数只能落在 `x`
+且和为 1）。 -/
+theorem P11W_AFFGE_EMPTY (x : V3) : affGe ({x} : Set V3) (∅ : Set V3) = {x} := by
+  ext z
+  constructor
+  · intro hz
+    simp only [affGe, Set.mem_setOf_eq, Affsign] at hz
+    obtain ⟨f, hfin, hv, -, hone⟩ := hz
+    have h1 : hfin.toFinset = ({(x : V3)} : Finset V3) := by
+      ext w
+      simp [Set.Finite.mem_toFinset]
+    rw [h1, Finset.sum_singleton] at hv hone
+    rw [hv, hone, one_smul]
+    exact Set.mem_singleton x
+  · intro hz
+    rw [Set.mem_singleton_iff] at hz
+    rw [hz]
+    have hfin : ({(x : V3)} ∪ (∅ : Set V3)).Finite :=
+      (Set.finite_singleton x).union Set.finite_empty
+    have htof : hfin.toFinset = ({(x : V3)} : Finset V3) := by
+      ext w
+      simp [Set.Finite.mem_toFinset]
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [htof, Finset.sum_singleton]
+      simp only [one_smul]
+    · intro w hw
+      simp at hw
+    · rw [htof, Finset.sum_singleton]
+
+/-- `affGe` 右单调性的**单点支撑形**（HOL `AFF_GE_MONO_RIGHT` 在
+`GMLWKPK_ALT` 消费处的按需形；reference 无定义，按 `Affsign` 语义新证）。
+s = {x} 且 x ∉ t' 时系数零扩展直接成立（这正是 hx 前提的用途：x 不进 t'，
+不受新签约束）。一般 s 形为假（s-自由系数遇 t'-新点），不立。 -/
+theorem P11W_AFFGE_MONO_SINGLE {x : V3} {t t' : Set V3} (hsub : t ⊆ t')
+    (hx : x ∉ t') (ht' : t'.Finite) :
+    affGe ({x} : Set V3) t ⊆ affGe ({x} : Set V3) t' := by
+  intro v hv
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hv ⊢
+  obtain ⟨f, hfin, hvec, hsign, hone⟩ := hv
+  have hfin' : ({x} ∪ t').Finite := (Set.finite_singleton x).union ht'
+  have hsubF : hfin.toFinset ⊆ hfin'.toFinset := by
+    intro w hw
+    exact (Set.Finite.mem_toFinset hfin').mpr (by
+      have hw' := (Set.Finite.mem_toFinset hfin).mp hw
+      simp only [Set.mem_union, Set.mem_singleton_iff] at hw' ⊢
+      rcases hw' with h | h
+      · exact Or.inl h
+      · exact Or.inr (hsub h))
+  have hzeroS : ∀ w ∈ hfin'.toFinset, w ∉ hfin.toFinset →
+      (if w ∈ hfin.toFinset then f w else 0) = 0 :=
+    fun w _ hw => if_neg hw
+  have hzeroV : ∀ w ∈ hfin'.toFinset, w ∉ hfin.toFinset →
+      (if w ∈ hfin.toFinset then f w else 0) • w = 0 := by
+    intro w _ hw
+    rw [if_neg hw, zero_smul]
+  refine ⟨fun w => if w ∈ hfin.toFinset then f w else 0, hfin', ?_, ?_, ?_⟩
+  · rw [hvec]
+    refine Eq.trans (Finset.sum_congr rfl fun w hw => ?_)
+      (Finset.sum_subset hsubF hzeroV)
+    show f w • w = (if w ∈ hfin.toFinset then f w else 0) • w
+    rw [if_pos hw]
+  · intro w hw'
+    show (0:ℝ) ≤ (if w ∈ hfin.toFinset then f w else 0)
+    by_cases hwF : w ∈ hfin.toFinset
+    · rw [if_pos hwF]
+      have hwt : w ∈ t := by
+        have hw's := (Set.Finite.mem_toFinset hfin).mp hwF
+        simp only [Set.mem_union, Set.mem_singleton_iff] at hw's
+        rcases hw's with h | h
+        · exact absurd (h ▸ hw') hx
+        · exact h
+      exact hsign w hwt
+    · rw [if_neg hwF]
+  · rw [← hone]
+    refine Eq.trans (Finset.sum_subset hsubF hzeroS).symm ?_
+    exact Finset.sum_congr rfl fun w hw => if_pos hw
+
+/-- 单点像的两种渲染等价（`image (fun v => {v}) V` = `{s | ∃ v ∈ V, s = {v}}`；
+`Eq` 方向不同故非 rfl）。 -/
+theorem p11w_img_singleton_eq (V : Set V3) :
+    (Set.image (fun v : V3 => ({v} : Set V3)) V)
+      = {s : Set V3 | ∃ v ∈ V, s = ({v} : Set V3)} := by
+  ext z
+  simp only [Set.mem_image, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨v, hv, rfl⟩
+    exact ⟨v, hv, rfl⟩
+  · rintro ⟨v, hv, rfl⟩
+    exact ⟨v, hv, rfl⟩
+
+/-- 图边三元组：`e1, e2 ∈ E ∪ 单点集`、`Graph E` ⟹ 二者相等、交空或交为单点。 -/
+private theorem p11w_edge_trichotomy {E : Set (Set V3)} (hg : Graph E)
+    {V : Set V3} {e1 e2 : Set V3}
+    (h1 : e1 ∈ E ∪ (image (fun v : V3 => {v}) V))
+    (h2 : e2 ∈ E ∪ (image (fun v : V3 => {v}) V)) :
+    e1 = e2 ∨ e1 ∩ e2 = ∅ ∨ ∃ v : V3, e1 ∩ e2 = {v} := by
+  have hle : ∀ e ∈ E ∪ (image (fun v : V3 => {v}) V), e.Finite ∧ e.ncard ≤ 2 := by
+    intro e he
+    simp only [Set.mem_union] at he
+    rcases he with heE | hes
+    · obtain ⟨hfin, hcard⟩ := hg e heE
+      refine ⟨hfin, ?_⟩
+      rw [Set.ncard_eq_toFinset_card e hfin, hcard]
+    · obtain ⟨v, -, rfl⟩ := hes
+      exact ⟨Set.finite_singleton v, by simp⟩
+  obtain ⟨h1fin, h1le⟩ := hle e1 h1
+  obtain ⟨h2fin, h2le⟩ := hle e2 h2
+  have hIle : (e1 ∩ e2).ncard ≤ 2 :=
+    le_trans (Set.ncard_le_ncard Set.inter_subset_left h1fin) h1le
+  have hfinI : (e1 ∩ e2).Finite := h1fin.subset Set.inter_subset_left
+  rcases Nat.lt_or_ge (e1 ∩ e2).ncard 1 with h0 | h1'
+  · right
+    have h0' : (e1 ∩ e2).ncard = 0 := by omega
+    exact Or.inl ((Set.ncard_eq_zero hfinI).mp h0')
+  · rcases Nat.lt_or_ge (e1 ∩ e2).ncard 2 with hlt | hge
+    · right
+      have h1'' : (e1 ∩ e2).ncard = 1 := by omega
+      obtain ⟨v, hv⟩ := Set.ncard_eq_one.mp h1''
+      exact Or.inr ⟨v, hv⟩
+    · left
+      have h2' : (e1 ∩ e2).ncard = 2 := le_antisymm hIle hge
+      have he1eq : e1 ∩ e2 = e1 :=
+        Set.eq_of_subset_of_ncard_le Set.inter_subset_left
+          (by rw [h2']; exact h1le) h1fin
+      have he2eq : e1 ∩ e2 = e2 :=
+        Set.eq_of_subset_of_ncard_le Set.inter_subset_right
+          (by rw [h2']; exact h2le) h2fin
+      rw [← he1eq, he2eq]
+
+end W11b2pKit
+
 /-! ## fan7 / FAN equivalences (polar_fan.hl:572-1047) -/
 
 /-- HOL `GMLWKPK` (polar_fan.hl:572). -/
@@ -2431,7 +2571,25 @@ theorem GMLWKPK (x : V3) (V : Set V3) (E : Set (Set V3)) (hg : Graph E) :
         ∀ e2 ∈ E ∪ (image (fun v : V3 => {v}) V),
           (e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3)) ∧
           (∀ v : V3, e1 ∩ e2 = {v} → affGe {x} e1 ∩ affGe {x} e2 = affGe {x} {v}) := by
-  sorry
+  constructor
+  · intro h7 e1 he1 e2 he2
+    rw [p11w_img_singleton_eq] at he1 he2
+    have h := h7 e1 he1 e2 he2
+    refine ⟨fun h0 => ?_, fun v hv => ?_⟩
+    · rw [h, h0]
+      exact P11W_AFFGE_EMPTY x
+    · rw [h, hv]
+  · intro hs e1 he1 e2 he2
+    have he1i : e1 ∈ E ∪ (image (fun v : V3 => ({v} : Set V3)) V) := by
+      simpa [p11w_img_singleton_eq] using he1
+    have he2i : e2 ∈ E ∪ (image (fun v : V3 => ({v} : Set V3)) V) := by
+      simpa [p11w_img_singleton_eq] using he2
+    rcases p11w_edge_trichotomy (V := V) hg he1i he2i with heq | hemp | ⟨v, hv⟩
+    · rw [heq, Set.inter_self, Set.inter_self]
+    · rw [hemp, P11W_AFFGE_EMPTY x]
+      exact (hs e1 he1i e2 he2i).1 hemp
+    · rw [hv]
+      exact (hs e1 he1i e2 he2i).2 v hv
 
 /-- HOL `GMLWKPK_ALT` (polar_fan.hl:608). -/
 theorem GMLWKPK_ALT (x : V3) (V : Set V3) (E : Set (Set V3)) (hg : Graph E)
@@ -2442,7 +2600,69 @@ theorem GMLWKPK_ALT (x : V3) (V : Set V3) (E : Set (Set V3)) (hg : Graph E)
           e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3)) ∧
       (∀ e1 ∈ E, ∀ e2 ∈ E, ∀ v : V3, e1 ∩ e2 = {v} →
         affGe {x} e1 ∩ affGe {x} e2 = affGe {x} {v})) := by
-  sorry
+  constructor
+  · intro h7
+    have hs := (GMLWKPK x V E hg).mp h7
+    refine ⟨fun e1 he1 e2 he2 => (hs e1 he1 e2 he2).1, ?_⟩
+    intro e1 he1 e2 he2 v hv
+    exact (hs e1 (Set.mem_union_left _ he1) e2 (Set.mem_union_left _ he2)).2 v hv
+  · rintro ⟨h1, h2⟩
+    refine (GMLWKPK x V E hg).mpr ?_
+    intro e1 he1 e2 he2
+    refine ⟨h1 e1 he1 e2 he2, fun v hv => ?_⟩
+    simp only [Set.mem_union] at he1
+    rcases he1 with he1E | he1s
+    · have he2' := he2
+      simp only [Set.mem_union] at he2'
+      rcases he2' with he2E | he2s
+      · exact h2 e1 he1E e2 he2E v hv
+      · -- e2 单点
+        obtain ⟨b, -, rfl⟩ := he2s
+        have hve : v ∈ e1 ∩ ({b} : Set V3) := by
+          rw [hv]
+          exact Set.mem_singleton v
+        have hve' := hve
+        simp only [Set.mem_inter_iff] at hve'
+        obtain ⟨hve1, hvs⟩ := hve'
+        have hvb : v = b := Set.mem_singleton_iff.mp hvs
+        rw [hvb]
+        exact Set.inter_eq_right.mpr
+          (P11W_AFFGE_MONO_SINGLE (x := x) (t := ({b} : Set V3)) (t' := e1) (by
+            intro z hz
+            rw [Set.mem_singleton_iff] at hz
+            rw [hz]
+            rw [← hvb]
+            exact hve1) (hx e1 he1E) (hg e1 he1E).1)
+    · -- e1 单点
+      obtain ⟨a, -, rfl⟩ := he1s
+      simp only [Set.mem_union] at he2
+      rcases he2 with he2E | he2s
+      · have hve : v ∈ ({a} : Set V3) ∩ e2 := by
+          rw [hv]
+          exact Set.mem_singleton v
+        have hve' := hve
+        simp only [Set.mem_inter_iff] at hve'
+        obtain ⟨hvs, hve2⟩ := hve'
+        have hva : v = a := Set.mem_singleton_iff.mp hvs
+        rw [hva]
+        rw [Set.inter_comm]
+        exact Set.inter_eq_right.mpr
+          (P11W_AFFGE_MONO_SINGLE (x := x) (t := ({a} : Set V3)) (t' := e2) (by
+            intro z hz
+            rw [Set.mem_singleton_iff] at hz
+            rw [hz]
+            rw [← hva]
+            exact hve2) (hx e2 he2E) (hg e2 he2E).1)
+      · obtain ⟨b, -, rfl⟩ := he2s
+        have hve : v ∈ ({a} : Set V3) ∩ {b} := by
+          rw [hv]
+          exact Set.mem_singleton v
+        have hve' := hve
+        simp only [Set.mem_inter_iff] at hve'
+        obtain ⟨hvs, hvs2⟩ := hve'
+        have hva : v = a := Set.mem_singleton_iff.mp hvs
+        have hvb : v = b := Set.mem_singleton_iff.mp hvs2
+        rw [← hva, ← hvb, Set.inter_self]
 
 /-- HOL `FAN_ECONOMIZED` (polar_fan.hl:641). -/
 theorem FAN_ECONOMIZED (x : V3) (V : Set V3) (E : Set (Set V3)) :
