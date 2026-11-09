@@ -161,13 +161,13 @@
    再怀疑证明本身。
 15. **`Set.ncard_eq_toFinset_card` 的 autoParam 会静默插 `sorryAx`**（Finiteness 解不出时）：
    必须显式给证人（`Fintype`/`Finite` 项），否则审计线被污染而编译仍 RC=0。
-17. **`TameSpine.markedListMarked` 带 `sorryAx`**（根 = `TameList16.lean:1109` 的显式
-   `sorry`，经 `markedListIsNodeNondegenerate`；连带 `hqymrtx1List` 也脏）。**任何要
-   `IsMarked` 的件只要走它，就把在案债注进自己的 axioms**（aqfin r4 实测：0 error 但探针
-   出 `sorryAx`）。替代路线（已验证）：用 **node 轨道 + Simple**——`nodeMapSymmEqFList`
-   给 `node z = z1`/`node z1 = y`，配 `faceTableSubset` + `simpleHypermapList` 的
-   `node ∩ face = {y}` 塌出 `z = y`，同结论、零 Skolem 参、零 sorryAx；HOL 原版
-   （AQ23.hl:437/:485/:558）也消费 `simple_hypermap_uniq`，路线有原版背书。
+17. ~~**`TameSpine.markedListMarked` 带 `sorryAx`**（根 = `TameList16.lean:1109` 的显式
+   `sorry`，经 `markedListIsNodeNondegenerate`；连带 `hqymrtx1List` 也脏）。~~
+   **ERRATA（2026-11-10 编排者实测，作废本条）**：`TameList16:1109` 已于 `967ebbb5` 真证；
+   现 `#print axioms Kepler.Text.TameSpine.markedListMarked` 与 `markedListIsNodeNondegenerate`
+   均 = **`[propext, Classical.choice, Quot.sound]`**（零 `sorryAx`）。⇒ **`IsMarked` 路线已可安全消费**，
+   此前按本条绕行的件（`Split1G:17-19` 旧注、`ChainMarkedQ` 部分条件槽、AQ8 W1a 等）可择机简化。
+   历史事实保留：该债未清前，走它的件会把在案债注进自己 axioms（aqfin r4 实测 0 error 但探针出 sorryAx）。
 16. **陈述里写 `let (a,b,c) = f x` 模式绑定，会在最终 defeq 检验时打爆 heartbeats**
    （实测 8M 仍爆，单件编译从分钟级失控）⇒ 改「显式 `a b c` 参数 + 假设
    `h : f x = (a,b,c)`」，前提/结论一字未改（下游传 `rfl` 实例化），编译降到 2 分钟级

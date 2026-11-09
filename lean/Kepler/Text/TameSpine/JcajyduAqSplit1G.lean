@@ -17,7 +17,10 @@
      `hqymrtx3List`（HOL 用 `FST_EQ_NEXT/PREV_ZTRANS` + `QRDYXYJ_list`；
      本文件改走 node 轨道 + Simple，同结论、零 Skolem 参、零 sorryAx——
      `qrdyxyjList` 需 `IsMarked`，其唯一供给 `markedListMarked` 吃
-     `markedListIsNodeNondegenerate` 的在案债，**不可消费**）；
+     `markedListIsNodeNondegenerate` 的在案债，**不可消费**）
+     —— **ERRATA（2026-11-10）**：`TameList16:1109` 已真证（`967ebbb5`），
+     `markedListMarked`/`markedListIsNodeNondegenerate` 现均标准三、零 sorryAx，
+     「不可消费」已作废；本文件保留原路线（同结论，已落库，不回溯改写证明）。
   ③ 段2 `ra ≠ z1` × `new1 ≠ []`：`z1 ∉ new1.reverse`（`z1NotMemNew1`）+
      `f1.idxOf z1 = len−1`（`idxOfF1OfNe`）⇒ `split.1.idxOf z1 = len−1`
      ⇒ `nextEl = head!`（`nextElOfIdxLast`）⇒ `head! = LAST new1`
