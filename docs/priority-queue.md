@@ -316,6 +316,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（05:05，续698）**：**AQ13 W4a2b 落库（`fd42807d`，174 行 3 件）——S 链 + F f1 的 `y≠z1` 段清零；`y=z1` 支标 UNRESOLVED 另拆 W4a2c（40–70）**。
+① **3 件**：`aq13w4a2b_finalDartTransfer`（`e ∈ FinalDart N → e ∈ FinalDart N'`）+ `aq13w4a2b_sChain`（`p ∈ parts f2`、`y = LAST p`、`y ≠ l'y` ⇒ 目标）+ `aq13w4a2b_fChain`（`p ∈ parts f1`、`y = LAST p`、**`y ≠ z1`** ⇒ 目标）。3/3 标准三、零 sorryAx；RC=0、0 error/0 warning；olean 装池。
+② **`y=z1` 支 UNRESOLVED（不伪造）**：`p ∈ parts r` 支可闭（`uniqSublistUnique` ⇒ p=p1 ⇒ 矛盾，~10 行）；`p ∉ parts r` 支的「p∉parts r ⇒ p 是末 part」**不足**——反例形状：r 无断口、`f1 = [nextEl r y] ++ B ++ [y]` 且 y=z1 时 p1 严格含 p、`aqs_lastParts` 给 `p1.getLast! = LAST r ≠ y`，不矛盾。HOL 1440–1464 实际用 `LAST_parts`/`MEM_LAST`/`parts_uniq_nonnil`/`uniq_sublist_unique` 两重 case split 收口，需按 DICH_TAC 目标栈再侦察。估 **40–70**。
+③ **派单**：`aq13-survey` → **W4a2c（y=z1 支，40–70，≤120；先 20 行 DICH_TAC 侦察再落体）**，基线 `fd42807d`；W4b 主装（80–120）其后。**W4 落库前不宣称 aq13 收口**。
+④ 注：`aq8-w3ae` 已开工并机器核实 hB 形 + 投影路径，ERRATA 一条：`loopListSpine` 的 NormalListSpine 投影机器路径是 `hm.1.2.1.2.2.2.1`（前任记录 `...2.2` 少一层），桥 `(split…).2 = arc3 ++ farc` 由 `nextElPrevElUniq` 折平已 probe 通过。
+
 - **2026-11-10（04:55，续697）**：**战役 wave 2 三件落库（`5f1ef193` / `8c717a72` / `96a2537a`，163 行）——`fan_hypermaps_iso`/`iso_simple` 坍缩 + `wedge_in_fan_gt_eq_w_dart_fan` 清零；战役剩 2 件**。
 ① **`p22d_isHypOn_maps_eq`**（55 行，`LocalAuto7W22dC`）：同一 `(V,E)` 上两个 `IsHypOn_p10` 超映射四条映射相等。**关键判定**：`hypermap1OfFanx`/`hypermap1OfFan` 全树零命中、Lean 只有一个扇超映射（`hypermapOfFan`）⇒ HOL `fan_hypermaps_iso`（两超映射同构）**在 Lean 无对象**，坍缩为映射相等。
 ② **`p22d_simple_congr` + `p22d_simple_of_isHypOn`**（46 行，`LocalAuto7W22dD`，编排者亲写 3 轮收敛）：`iso_simple_imp` 坍缩为 `Simple` 沿 `nodeMap`/`faceMap`/`darts` 相等传输；注意 `p22d_isHypOn_maps_eq` 给的是**函数**相等，须 `Equiv.ext` 转 Perm 相等后才能 `rw`（探针教训）。**不消 `hsimple`**（ERRATA 见上）。
