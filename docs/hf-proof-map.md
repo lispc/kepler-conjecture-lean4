@@ -6,6 +6,12 @@
 >
 > ## 状态更新
 >
+> - **2026-11-09（编排者，四）**：§11 #3 拆单定案（jcajydu-scout）——jcajydu 本体是 99 行薄壳，
+>   全部数学在前提 `restricted_hypermaps_are_planegraphs_thm`（reduction5.hl:150，
+>   传递闭包 ≈20k HOL 行；"全树 0 移植"陈旧：基座/RXOKSKC/DANGEYJ/壳装配件已落，
+>   reduction1-4 主体与 `nfgtrans'` 定义层仍零命中）。HOL capstone（the_main_statement.hl:179）
+>   拿**真证定理**喂前提 ⇒ jcajydu 可真闭，但直接填 = 吞 17.7k 行链（NO-GO）。
+>   路径：C1 壳波（条件形、200–300 行、无悔）→ C2=J0 → J1–J5 战役（20k/60–80 批/数周，立项待用户）。
 > - **2026-11-09（编排者，三）**：§11 #9 勘误——`KcblrqcIneqDef` 定义侧**不是**零证书纯数学：
 >   HOL `TRIANGULAR_FACE_AZIM_DART_BOUNDS`（tame_general.hl:739）以机器 ineq
 >   `5735387903`/`5490182221` 为**显式前件**（`mk_imp`），而 Lean 定义（TameLp:516）
