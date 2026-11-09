@@ -3727,46 +3727,10 @@ noncomputable def polarFan (V : Set V3) (_E : Set (Set V3)) (FF : Set (V3 × V3)
 
 /-! ## Properties of the polar fan (polar_fan.hl:1065) -/
 
-/-- HOL `BGMIFTE` (polar_fan.hl:1065): the polar fan of a convex local
-fan is a convex local fan; the interior angles pass to the polar
-vertices via `arcV = π - interior_angle1` in both directions. -/
-theorem BGMIFTE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {V' : Set V3}
-    {E' : Set (Set V3)}
-    {FF' : Set (V3 × V3)}
-    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
-    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
-    (hp : polarFan V E FF = (V', E', FF')) :
-    ConvexLocalFan V' E' FF' ∧ Generic V' E' ∧ V'.ncard = V.ncard ∧
-      (∀ v ∈ V,
-          arcV (0 : V3) (cross3 v (rhoNode1 FF v))
-                (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))
-            = Real.pi - interiorAngle1 (0 : V3) FF (rhoNode1 FF v) ∧
-          0 < arcV (0 : V3) (cross3 v (rhoNode1 FF v))
-                (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) ∧
-          arcV (0 : V3) (cross3 v (rhoNode1 FF v))
-                (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) < Real.pi) ∧
-      (∀ v ∈ V,
-          arcV (0 : V3) v (rhoNode1 FF v)
-            = Real.pi - interiorAngle1 (0 : V3) FF' (cross3 v (rhoNode1 FF v)) ∧
-          0 < arcV (0 : V3) v (rhoNode1 FF v) ∧
-          arcV (0 : V3) v (rhoNode1 FF v) < Real.pi) := by
-  -- NEEDS（wsewpch-w5b 侦察+部分填证 2026-10-23；三缺口，剩余为 W6c 装配件）：
-  -- (1) 结论 4（第一 arc half）已闭合：私件 `p7w2_half_polar_arc`（本文件，
-  --     逐点前提形式；引擎 = `p7w2_hvihvec`，即 Hvihvec.hl:34 的 0 心移植）。
-  --     W6c 装配：foundation 供 (v, ρv) 轨道点、IVS_RHO_IDD、非共线（fan6 型，
-  --     LOCAL_FAN_CHARACTER_OF_RHO_NODE 第三合取逐点形）、INTERIOR_ANGLE1_POS
-  --     逐点形 + 本文件前提 hia 即可逐 v 实例化。
-  -- (2) 结论 1（ConvexLocalFan V' E' FF'）+ 结论 3（CARD V' = CARD V）：
-  --     HOL polar_fan.hl:1217-2050 的 FAN_AFF_GT_CONDITION 路线 + local_fan/dih2k
-  --     装配，~600 行，未移植。
-  -- (3) 结论 2（Generic V' E'）：**外部锚阻塞** —— HOL 经 CIZMRRH
-  --     （LA3:1881，未证，W3b）三分 + KCHMAMG（LA5:5018，未证）排除
-  --     circular/lunar 支；CIZMRRH/KCHMAMG 落地后机械装配。
-  -- 另两枚 SF 立案（见交付 DELIVERY.md）：LA1 `Generic`（affGt）与 HOL generic
-  -- （aff_ge，LA2 generic_p2 忠实）不一致；LA1 `LocalFan` 世界允许孤立顶点
-  -- （HOL local_fan 不允许），foundation 桩 RHO_NODE1_INJECTIVE 等在此弱编码下
-  -- 疑似假（junk ε），本 lane 的 :1093-1121 桩维持待证状态并等待 SF 裁决。
-  sorry
+/- HOL `BGMIFTE` 的**装配已移至文末**（`section W11b4Kit` 之后、`WSEWPCH` 之前）：
+其五合取依赖 `p11w2_polar_convex_of_eq` / `p11w2_polar_generic_of_eq` /
+`p11w2_polar_card_of_eq` / `P11W_ARC_HALF` / `P11W_ARC_HALF2`，这些件在本文件
+后半段定义，故不能在原位置前向引用。陈述逐字不变（HOL polar_fan.hl:1065-1072）。 -/
 
 /-! ## Perimeter and its bound of 2 pi (polar_fan.hl:2115-3362) -/
 
@@ -7320,6 +7284,51 @@ theorem P11W_ARC_HALF2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     linarith [hb.1, hb.2]
 
 end W11b4Kit
+
+/-! ### BGMIFTE 本体装配（polar_fan.hl:1065-1072；五合取全闭）
+
+五项依赖件（全标准三）：结论 1 `p11w2_polar_convex_of_eq`（9cd6c154）、
+结论 2 `p11w2_polar_generic_of_eq`（00452d80）、结论 3 `p11w2_polar_card_of_eq`
+（00452d80）、结论 4 第一弧半 `P11W_ARC_HALF`（W11a）、结论 5 第二弧半
+`P11W_ARC_HALF2`（441c30f1）。前三件是 `hp : polarFan V E FF = (V',E',FF')`
+的 HOL 签名形包装，后两件是关于原世界 `V` 的逐点弧关系（HOL 1065-1081 的
+两个 `let prime'` 合取），接口逐字对齐。 -/
+
+/-- HOL `BGMIFTE` (polar_fan.hl:1065): the polar fan of a convex local
+fan is a convex local fan; the interior angles pass to the polar
+vertices via `arcV = π - interior_angle1` in both directions. -/
+theorem BGMIFTE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)} {V' : Set V3}
+    {E' : Set (Set V3)}
+    {FF' : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi)
+    (hp : polarFan V E FF = (V', E', FF')) :
+    ConvexLocalFan V' E' FF' ∧ Generic V' E' ∧ V'.ncard = V.ncard ∧
+      (∀ v ∈ V,
+          arcV (0 : V3) (cross3 v (rhoNode1 FF v))
+                (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))
+            = Real.pi - interiorAngle1 (0 : V3) FF (rhoNode1 FF v) ∧
+          0 < arcV (0 : V3) (cross3 v (rhoNode1 FF v))
+                (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) ∧
+          arcV (0 : V3) (cross3 v (rhoNode1 FF v))
+                (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) < Real.pi) ∧
+      (∀ v ∈ V,
+          arcV (0 : V3) v (rhoNode1 FF v)
+            = Real.pi - interiorAngle1 (0 : V3) FF' (cross3 v (rhoNode1 FF v)) ∧
+          0 < arcV (0 : V3) v (rhoNode1 FF v) ∧
+          arcV (0 : V3) v (rhoNode1 FF v) < Real.pi) :=
+  ⟨p11w2_polar_convex_of_eq hcl hedge hg hia hp,
+    p11w2_polar_generic_of_eq hcl hedge hg hia hp,
+    p11w2_polar_card_of_eq hcl hedge hg hia hp,
+    P11W_ARC_HALF hcl hedge hia,
+    by
+      have hFF' : FF' = polarFF V FF := by
+        have h := congrArg
+          (fun t : Set V3 × Set (Set V3) × Set (V3 × V3) => t.2.2) hp
+        rw [show (polarFan V E FF).2.2 = polarFF V FF from rfl] at h
+        exact h.symm
+      rw [hFF']
+      exact P11W_ARC_HALF2 hcl hedge hg hia⟩
 
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
