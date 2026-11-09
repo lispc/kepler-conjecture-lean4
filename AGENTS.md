@@ -155,6 +155,13 @@
    再怀疑证明本身。
 15. **`Set.ncard_eq_toFinset_card` 的 autoParam 会静默插 `sorryAx`**（Finiteness 解不出时）：
    必须显式给证人（`Fintype`/`Finite` 项），否则审计线被污染而编译仍 RC=0。
+17. **`TameSpine.markedListMarked` 带 `sorryAx`**（根 = `TameList16.lean:1109` 的显式
+   `sorry`，经 `markedListIsNodeNondegenerate`；连带 `hqymrtx1List` 也脏）。**任何要
+   `IsMarked` 的件只要走它，就把在案债注进自己的 axioms**（aqfin r4 实测：0 error 但探针
+   出 `sorryAx`）。替代路线（已验证）：用 **node 轨道 + Simple**——`nodeMapSymmEqFList`
+   给 `node z = z1`/`node z1 = y`，配 `faceTableSubset` + `simpleHypermapList` 的
+   `node ∩ face = {y}` 塌出 `z = y`，同结论、零 Skolem 参、零 sorryAx；HOL 原版
+   （AQ23.hl:437/:485/:558）也消费 `simple_hypermap_uniq`，路线有原版背书。
 16. **陈述里写 `let (a,b,c) = f x` 模式绑定，会在最终 defeq 检验时打爆 heartbeats**
    （实测 8M 仍爆，单件编译从分钟级失控）⇒ 改「显式 `a b c` 参数 + 假设
    `h : f x = (a,b,c)`」，前提/结论一字未改（下游传 `rfl` 实例化），编译降到 2 分钟级
