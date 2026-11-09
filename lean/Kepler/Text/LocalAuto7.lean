@@ -7098,6 +7098,85 @@ theorem p11w2_polar_card_of_eq {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × 
 
 end W11b2Kit7
 
+/-! ### W11b-结论 3（WSEWPCH circular 支，HOL polar_fan.hl:2272-2335）
+
+`Circular V E` ⟹ `fanPerimeter V E FF ≤ 2π`。路线差异（比旧估省 ~150 行）：
+W9 已落 `FAN_PERIMETER_LE_2PI_OF_CIRCULAR_STRUCT`（两输入：`hplane`/`hint`），
+其中 `hint : ∀ v∈V, interiorAngle1 0 FF v = π` **不必走 OZQVSFF 链**——树内
+`KCHMAMG`（LA5:5833，标准三）在 `convexLocalFan_p2 + circular_p2` 下直接给出
+`∀ v∈V, interiorAngle1_p2 0 FF v = π`（def 同体，一行搬运）。`hplane` 由
+`LOFA_V_SUBSET_AFF_HULL`（LA5:5445）+ `LOFA_IN_E_IMP_IN_FF`（LA5:3374）
+从 circular 见证凑出（`{v,w}∈E` 先定向成 `(v,w)∈FF`）。 -/
+
+section W11b3Kit
+
+/-- `hplane` 抽取：`Circular V E` + `ConvexLocalFan` + hedge ⟹
+`V` 落在过原点平面（`LOFA_V_SUBSET_AFF_HULL` 的四前提由 circular 见证凑齐）。 -/
+private theorem p11w3_circular_hplane {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hcirc : Circular V E) :
+    ∃ P : Set V3,
+      (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+        P = affineSpan ℝ ({u, v, w} : Set V3)) ∧ (0:V3) ∈ P ∧ V ⊆ P := by
+  obtain ⟨a, b, c, he, hcV, hne⟩ := hcirc
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  have hclf2 : convexLocalFan_p2 V E FF := w6a9_clf2 hcl hedge
+  have hsub : V ⊆ (affineSpan ℝ ({a, b, (0:V3)} : Set V3) : Set V3) := by
+    rcases LOFA_IN_E_IMP_IN_FF h2 he with hFF | hFF
+    · exact (LOFA_V_SUBSET_AFF_HULL hFF hclf2 hcV hne).1
+    · have hne' : ¬(affGt ({0} : Set V3) ({b, a} : Set V3) ∩
+          affLt ({0} : Set V3) ({c} : Set V3) = ∅) := by
+        rwa [Set.pair_comm]
+      have hset : ({b, a, (0:V3)} : Set V3) = {a, b, 0} := by
+        ext x
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      simpa only [hset] using (LOFA_V_SUBSET_AFF_HULL hFF hclf2 hcV hne').1
+  have hnc : ¬ Collinear ℝ ({a, b, (0:V3)} : Set V3) := by
+    rcases LOFA_IN_E_IMP_IN_FF h2 he with hFF | hFF
+    · have hset : ({0, a, b} : Set V3) = {a, b, 0} := by
+        ext x
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      simpa only [hset] using (LOFA_V_SUBSET_AFF_HULL hFF hclf2 hcV hne).2
+    · have hne' : ¬(affGt ({0} : Set V3) ({b, a} : Set V3) ∩
+          affLt ({0} : Set V3) ({c} : Set V3) = ∅) := by
+        rwa [Set.pair_comm]
+      have hset : ({0, b, a} : Set V3) = {a, b, 0} := by
+        ext x
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      simpa only [hset] using (LOFA_V_SUBSET_AFF_HULL hFF hclf2 hcV hne').2
+  exact ⟨affineSpan ℝ ({a, b, (0:V3)} : Set V3), ⟨a, b, 0, hnc, rfl⟩,
+    subset_affineSpan ℝ _ (by simp), hsub⟩
+
+/-- `hint` 抽取：`Circular V E` ⟹ `∀ v∈V, interiorAngle1 0 FF v = π`
+（`KCHMAMG` 第一合取；**不经 OZQVSFF**）。 -/
+private theorem p11w3_circular_hint {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hcirc : Circular V E) :
+    ∀ v ∈ V, interiorAngle1 (0 : V3) FF v = Real.pi := by
+  obtain ⟨a, b, c, he, hcV, hne⟩ := hcirc
+  have hclf2 : convexLocalFan_p2 V E FF := w6a9_clf2 hcl hedge
+  have hcirc2 : circular_p2 V E := ⟨a, b, c, he, hcV, hne⟩
+  have hk := (KCHMAMG hclf2 hcirc2).1
+  intro v hv
+  exact hk v hv
+
+/-- **circular 支**：`Circular V E ⟹ fanPerimeter V E FF ≤ 2π`
+（HOL WSEWPCH circular case 2272-2335；W9 `..._CIRCULAR_STRUCT` 的两槽本批补齐）。 -/
+theorem FAN_PERIMETER_LE_2PI_OF_CIRCULAR {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hcl : ConvexLocalFan V E FF)
+    (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hcirc : Circular V E) :
+    fanPerimeter V E FF ≤ 2 * Real.pi :=
+  FAN_PERIMETER_LE_2PI_OF_CIRCULAR_STRUCT hcl hedge
+    (p11w3_circular_hplane hcl hedge hcirc)
+    (p11w3_circular_hint hcl hedge hcirc)
+
+end W11b3Kit
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
