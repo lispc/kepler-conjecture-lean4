@@ -130,6 +130,12 @@
 8. **本树无 Mathlib tactic**：`tauto` 不可用（unknown tactic）⇒ 命题收口用 core 的
    `grind`（j3def T9 五处一次通过，产物仍标准三）。`simp only [...]` 的 unusedSimpArgs
    linter 警告不影响 RC，但替换表里不要写已被 simp 消掉的项。
+9. **`LEAN_PATH` 解析 = 首个含 `Kepler/` 顶层目录的 entry 独占**（Lean 4.32 实测）：
+   引用 `/tmp` 侧 olean 时，该 entry 必须自身含完整 `Kepler/` 树（symlink farm 镜像
+   主仓 `.lake/build/lib/lean/Kepler` + 本车道新 olean），否则解析停在该 entry 报
+   “object file … does not exist”。探针最简法：把 olean 装进 `.lake` 再跑（见 §4 岛协议）。
+10. **`rw [← h]` 在 `getElem` 上 motive 不 type correct**（依赖索引）：改私有
+   `getElem_eq_of_eq`（证明无关，`rfl` 级）+ `rw` 该等式，不要硬 `rw` 原式。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
