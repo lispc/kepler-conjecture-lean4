@@ -74,7 +74,7 @@
 | `packineqa-w2`（接管） | 原车道异常终止（翻译反例 + 105GB runaway，续418）——根因定位 + 5 条件挽救裁决（8055810915 G4 链 vs 1965189142a slab 路线分开判） | 在飞（NO-GO 合格交付） |
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
-| `jcajydu-c2`（J0） | 战役 J0：betwn 收官两定理（收官等 AQ 塔） | **J0-a `04a8443c` + J0-b₁ 已落库（见续417）**；续做 betwnRot（携坑）+ eq 引擎三件 |
+| ~~`jcajydu-c2`~~（退役） | 战役 J0 前置叶层 | **✅ 退役（续422）**：J0-a + J0-b₁ 两件落库；betwnRot 负结果 + eq 设计移交 j2w2；J0 收官等 AQ 塔（届时新开车道） |
 | `wsewpch-w7` | WSEWPCH 本体（残余 = LA7 内 9 sorry；W9–W13：circular→lunar→generic→straight→装配） | **批一 `881abe8d` + W8 已落库（hedge桥+CORE母版+CARD≤2，见续419）**；续派 W9（circular） |
 | `jcajydu-j2w2` | **新关键路径**：AQ1–13 塔（实测 17,585 HOL 行/214 定理，7 子批 ≈5–6.5k Lean） | **批E1 已落库 `296b4d34`（塔底+塔顶装配，见续414）**；续派 E2；E3 待 z 侧解锁裁决（堵点=TameList16:1109 在案债） |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
@@ -246,6 +246,8 @@
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
 - **2026-11-09（20:10，续419）**：**`wsewpch-w7` 批W8 落库（`hedge桥+CORE母版+CARD≤2支`，+108 纯新增）**。① **编排者验收**：apply-check PASS；零删除零违禁；LA7 sorry 仍 9；岛编译 0 error + olean 探针 **3/3 全标准三**（独立复跑）；**内存纪律首次实战验证**——车道 free=5,660 页时等待 35 分钟至 830k 页才起编（续414 新规生效）。② **内容**：`LOCAL_FAN_IMP_HEDGE`（hedge 桥，LocalFan 强形，顺带裁定 w5b SF 提案不成立）/ `WSEWPCH_CORE`（yk11 hcore 母版：假设逐字 = WSEWPCH 陈述形、结论逐字 = hcore 槽形；条件形 = axiom 纪律下唯一干净形态，本体落地即字面一行换无条件）/ `FAN_PERIMETER_LE_2PI_OF_CARD_LE`（五分支 CARD≤2 支；arcV=arccos 顶掉 ARCV_BOUNDS，LA6/LA10 import 取消）。③ **路线图更新采信**：骨架内部逐步真证**不可行**（新 sorry 禁令）⇒ 五分支全以独立定理落地：W9 circular → W10 lunar → W11 generic（BGMIFTE 结论1+3 ~600）→ W12 straight+V′坍缩（~600）→ W13 装配一行（`WSEWPCH_CORE WSEWPCH` 换无条件形）→ W6c → cone −1。两条新陷阱记档（rw 尾部 rfl reducible / ℝ 求和用 sum_le_sum_of_subset_of_nonneg）。④ 池：w7 续 W9。
+
+- **2026-11-09（15:00，续422）**：**`jcajydu-c2` 车道光荣退役；eq 三件 + betwnRot 并入 j2w2 后续队列**。① c2 终态清点：**两件落库**（J0-a `04a8443c` 352 行 / J0-b₁ `a53fccca` 80 行）+ betwnRot 负结果（147 行半成品 `JcajyduBetwnRot.lean.draft` 已存快照， tactic 墙 = singleton-length simp 原子 / drop_append 双形式 hsub / drop_succ_cons 次序——三坑全部定位，差的只是执行）+ eq 三件完整设计（`idxOfIterateOfNodup` 草稿、`List.toFinset_card_of_nodup` 探针 ✓）+ 双 Lane 勘误贡献（rx minefield / 校钟）。② **队列合并裁决**：eq 三件原属 J0、betwnRot 原属 J2，但全是 betwn 机械且 j2w2 的 reduction2 定义上下文最厚 ⇒ **合并给 j2w2 作 E2 交付后的顺带批**（betwnRot draft + eq 设计清单一并交接）；c2 退役（其 context 对数周后的 J0 收官无用，届时开新车道以 AQ 塔成品为准）。③ 编排者 agent ID 台账增补：c2 = 已退役留档。
 
 - **2026-11-09（14:55，续421）**：**packineqa 僵尸管线结案**。① **w2 只读自证采信**：主仓 14:38 重现非 w2 所写（其全部主仓命令只读，唯一写 = cp 29 个 evidence 到 /tmp/packineqa-w2）；逐字节比对 = 主仓 `.lean` 与 w1 快照 11:04 一代 IDENTICAL、`Base.lean` 与 w1 工作区 14:38 再生成版 IDENTICAL。② **写者死亡时间线定案**：14:21 checkcase → 14:24 slabgen → 14:26–14:28 slab json → 14:38 主仓再生成 + Base/Shard1 → **14:40 slab8 尝试（最后一口气）**；60 秒监视零写入，无进程/句柄/cron/launchd ⇒ 判定 = **w1 的 detached 后台管线在 agent 死后跑完剩余队列自然退出**（非 harness agent、非调度器）。③ **处置**：主仓再清（14:38 版存快照 `main-tree-leak/*.gen2-1438`，与 11:04 一代并存）；`/tmp/packineqa-w1` 整目录 **chmod a-w 封棺**（写测试 Permission denied）；w2 的 evidence 副本读权限不受影响。④ **台账新规增补**：续418 的"agent ID 留档"之外，**车道禁用 detached 后台管线跑长任务**（agent 死则管线成孤儿，编排者既无法 stop 也无法心跳——本次 40+72GB runaway 与主仓再污染皆由此）。w2 继续根因任务。
 
