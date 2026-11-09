@@ -2679,6 +2679,386 @@ theorem FAN_ECONOMIZED (x : V3) (V : Set V3) (E : Set (Set V3)) :
   · rintro ⟨hun, hg, hf1, hf2, hf6, he⟩
     exact ⟨hun, hg, hf1, hf2, hf6, (GMLWKPK x V E hg).mpr he⟩
 
+/-! ### W11b2p2 fan7 closure (`p11w2_*`; WSEWPCH wave W11b2p2)
+
+Closes the remaining fan7 stubs by a **coefficient-form** route instead of
+the x-anchored wedge decompositions of HOL `AFF_GE_AFF_GT_DECOMP`.
+
+Truth-check (per the W11b2p discipline, performed before proving):
+* the 0-anchored decompositions `aff_ge {0} {u}` / `aff_ge {0} {u,v}` are
+  TRUE equalities (the `{0}` coefficient is free and absorbs the sum-1
+  constraint); the x-anchored boundary forms need the `u = x` degenerate
+  case.  Both families already exist in-tree outside this file
+  (`AFF_GE_1_1_0_p17`/`AFF_GE_1_2_0_p17` in `LocalAuto17`,
+  `AFF_GE_TO_AFF_GT2_GE1` = HOL `lemma2` in `LocalAuto3`), so duplicating
+  them here adds nothing.
+* the decisive piece for `FAN7_AFF_GT_CONDITION` is instead the
+  **membership coefficient form**: `mem_affGe_singleton(_pair)`
+  (`TopologyFan`) rewritten in difference-vector shape; the two-edge cases
+  expand `affGe {x} {u,v}` by `AFF_GE_TO_AFF_GT2_GE1` and kill the nine
+  intersection terms by `hve`/`hvs`/`hee` or the degenerate `t = x`.
+
+`reference/flyspeck/`: `AFF_GE_AFF_GT_DECOMP` has **no definition** (only
+consumption at `polar_fan.hl:675/689`); everything below is newly proved
+from the `Affsign` semantics. -/
+
+section W11b2p2Kit
+
+/-- `affGe {x} {v}` 的射线形（`mem_affGe_singleton` 的差向量重写）。 -/
+theorem P11W2_GE_SINGLE_REL {x v y : V3} (hxv : x ≠ v) :
+    y ∈ affGe {x} {v} ↔ ∃ a : ℝ, 0 ≤ a ∧ y - x = a • (v - x) := by
+  constructor
+  · intro hy
+    obtain ⟨t1, t2, ht2, hsum, hy'⟩ :=
+      (mem_affGe_singleton (x := x) (v := v) hxv).mp hy
+    refine ⟨t2, ht2, ?_⟩
+    have ht1 : t1 = 1 - t2 := by linarith
+    rw [hy', ht1]
+    module
+  · rintro ⟨a, ha, hy⟩
+    refine (mem_affGe_singleton (x := x) (v := v) hxv).mpr
+      ⟨1 - a, a, ha, by ring, ?_⟩
+    have h1 : y = (y - x) + x := by abel
+    rw [h1, hy]
+    module
+
+/-- `affGe {x} {u,v}` 的差向量系数形（`mem_affGe_singleton_pair` 的重写；
+`LocalAuto17` `w_xrq17_mem_affGe_pair_trans` 的同型重建）。 -/
+theorem P11W2_GE_PAIR_REL {x u v y : V3}
+    (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v) :
+    y ∈ affGe {x} {u, v} ↔
+      ∃ a b : ℝ, 0 ≤ a ∧ 0 ≤ b ∧ y - x = a • (u - x) + b • (v - x) := by
+  have hdisj : Disjoint ({x} : Set V3) {u, v} := by
+    rw [Set.disjoint_left]
+    intro z hz hz'
+    rw [Set.mem_singleton_iff] at hz
+    subst hz
+    rcases Set.mem_insert_iff.mp hz' with h | h
+    · exact hxu h
+    · rw [Set.mem_singleton_iff] at h
+      exact hxv h
+  constructor
+  · intro hy
+    obtain ⟨t1, t2, t3, ht2, ht3, hsum, hy'⟩ :=
+      (mem_affGe_singleton_pair (x := x) (v := u) (w := v) hdisj huv).mp hy
+    have ht1 : t1 = 1 - t2 - t3 := by linarith
+    refine ⟨t2, t3, ht2, ht3, ?_⟩
+    rw [hy', ht1]
+    module
+  · rintro ⟨a, b, ha, hb, hy⟩
+    refine (mem_affGe_singleton_pair (x := x) (v := u) (w := v) hdisj huv).mpr
+      ⟨1 - a - b, a, b, ha, hb, by ring, ?_⟩
+    have h1 : y = (y - x) + x := by abel
+    rw [h1, hy]
+    module
+
+/-- 差向量系数形（严格正）→ `affGt {x} {v}`。 -/
+theorem P11W2_GT_SINGLE_REL {x v y : V3} (hxv : x ≠ v) {a : ℝ} (ha : 0 < a)
+    (hy : y - x = a • (v - x)) : y ∈ affGt {x} {v} := by
+  have hfin : ({x} ∪ {v} : Set V3).Finite :=
+    (Set.finite_singleton x).union (Set.finite_singleton v)
+  have htof : hfin.toFinset = ({x, v} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  refine ⟨fun z => if z = v then a else 1 - a, hfin, ?_, ?_, ?_⟩
+  · rw [htof, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton]
+    show y = (if x = v then a else 1 - a) • x + (if v = v then a else 1 - a) • v
+    rw [if_neg hxv, if_pos rfl]
+    have h1 : y = (y - x) + x := by abel
+    rw [h1, hy]
+    module
+  · intro z hz
+    rw [Set.mem_singleton_iff] at hz
+    subst hz
+    simpa using ha
+  · rw [htof, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton]
+    show (if x = v then a else 1 - a) + (if v = v then a else 1 - a) = 1
+    rw [if_neg hxv, if_pos rfl]
+    ring
+
+/-- 差向量系数形（严格正）→ `affGt {x} {u,v}`（`Affsign.of_triple`）。 -/
+theorem P11W2_GT_PAIR_REL {x u v y : V3}
+    (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v) {a b : ℝ}
+    (ha : 0 < a) (hb : 0 < b) (hy : y - x = a • (u - x) + b • (v - x)) :
+    y ∈ affGt {x} {u, v} := by
+  have hy' : y = (1 - a - b) • x + a • u + b • v := by
+    have h1 : y = (y - x) + x := by abel
+    rw [h1, hy]
+    module
+  exact Affsign.of_triple (sgn := fun r => 0 < r) a b ha hb hy' hxu hxv huv
+
+/-- 图边两点分解。 -/
+theorem P11W2_EDGE_PAIR {E : Set (Set V3)} (hg : Graph E)
+    {e : Set V3} (he : e ∈ E) : ∃ a b : V3, a ≠ b ∧ e = {a, b} := by
+  obtain ⟨hf, hc⟩ := hg e he
+  have h2 : e.ncard = 2 := by
+    rw [Set.ncard_eq_toFinset_card e hf, hc]
+  obtain ⟨a, b, hab, heq⟩ := Set.ncard_eq_two.mp h2
+  exact ⟨a, b, hab, heq⟩
+
+/-- 过给定点的图边分解。 -/
+theorem P11W2_EDGE_PAIR_OF_MEM {E : Set (Set V3)} (hg : Graph E)
+    {e : Set V3} (he : e ∈ E) {v : V3} (hv : v ∈ e) :
+    ∃ u : V3, u ≠ v ∧ e = {u, v} := by
+  obtain ⟨a, b, hab, heq⟩ := P11W2_EDGE_PAIR hg he
+  subst heq
+  rcases Set.mem_insert_iff.mp hv with h | h
+  · refine ⟨b, ?_, ?_⟩
+    · rw [h]; exact hab.symm
+    · rw [h, Set.pair_comm]
+  · rw [Set.mem_singleton_iff] at h
+    refine ⟨a, ?_, ?_⟩
+    · rw [h]; exact hab
+    · rw [h]
+
+/-- 基点属于每个 `affGe {x} e`（`x ∉ e`）。 -/
+theorem p11w2_mem_self_affGe {x : V3} {e : Set V3}
+    (hfin : ({x} ∪ e).Finite) (hx : x ∉ e) : x ∈ affGe {x} e := by
+  have hxmem : x ∈ hfin.toFinset :=
+    (Set.Finite.mem_toFinset hfin).mpr (Set.mem_union_left e (Set.mem_singleton x))
+  have hval_v : ∑ w ∈ hfin.toFinset, (fun z => if z = x then (1 : ℝ) else 0) w • w = x := by
+    rw [Finset.sum_eq_single x]
+    · simp
+    · intro b _ hbx
+      simp [hbx]
+    · intro hxnot
+      exact absurd hxmem hxnot
+  have hval_s : ∑ w ∈ hfin.toFinset, (fun z => if z = x then (1 : ℝ) else 0) w = 1 := by
+    rw [Finset.sum_eq_single x]
+    · simp
+    · intro b _ hbx
+      simp [hbx]
+    · intro hxnot
+      exact absurd hxmem hxnot
+  refine ⟨fun z => if z = x then 1 else 0, hfin, ?_, ?_, ?_⟩
+  · exact hval_v.symm
+  · intro z hz
+    have hzx : z ≠ x := fun h => hx (h ▸ hz)
+    simp [hzx]
+  · exact hval_s
+
+/-- 两不同单点集的交为空。 -/
+theorem p11w2_single_inter_single {v w : V3} (hvw : v ≠ w) :
+    ({v} : Set V3) ∩ {w} = ∅ := by
+  rw [Set.eq_empty_iff_forall_notMem]
+  intro z hz
+  obtain ⟨hz1, hz2⟩ := hz
+  rw [Set.mem_singleton_iff] at hz1 hz2
+  exact hvw (hz1.symm.trans hz2)
+
+/-- 单点与两点集的交为空。 -/
+theorem p11w2_single_inter_pair {z u v : V3} (hzu : z ≠ u) (hzv : z ≠ v) :
+    ({z} : Set V3) ∩ {u, v} = ∅ := by
+  rw [Set.eq_empty_iff_forall_notMem]
+  intro t ht
+  obtain ⟨ht1, ht2⟩ := ht
+  rw [Set.mem_singleton_iff] at ht1
+  subst ht1
+  rcases Set.mem_insert_iff.mp ht2 with h | h
+  · exact hzu h
+  · rw [Set.mem_singleton_iff] at h
+    exact hzv h
+
+/-- `affGt ⊆ affGe`（同见证，`0 < r ⟹ 0 ≤ r`）。 -/
+theorem P11W2_GT_SUB_GE {s t : Set V3} : affGt s t ⊆ affGe s t := by
+  intro y hy
+  obtain ⟨f, hfin, hv, hpos, hone⟩ := hy
+  exact ⟨f, hfin, hv, fun z hz => le_of_lt (hpos z hz), hone⟩
+
+/-- 项杀手（FAN7）：`t ∈ affGt {x} e`、`t ∈ affGe {x} {z}`，`z` 与边 `e`
+在 `hve` 下两锥不交 ⟹ 只有退化可能 `t = x`。 -/
+theorem p11w2_gt_inter_ge_single {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hve : ∀ v ∈ V, ∀ e ∈ E, affGt {x} {v} ∩ affGt {x} e = ∅)
+    {z : V3} (hzV : z ∈ V) {e : Set V3} (he : e ∈ E)
+    (hxz : x ≠ z) {t : V3} (hgt : t ∈ affGt {x} e) (hge : t ∈ affGe {x} {z}) :
+    t = x := by
+  obtain ⟨a, ha, hta⟩ := (P11W2_GE_SINGLE_REL hxz).mp hge
+  rcases eq_or_lt_of_le ha with ha0 | hapos
+  · rw [← sub_eq_zero]
+    rw [← ha0] at hta
+    simpa using hta
+  · exfalso
+    have hmem : t ∈ affGt {x} {z} ∩ affGt {x} e :=
+      ⟨P11W2_GT_SINGLE_REL hxz hapos hta, hgt⟩
+    rw [hve z hzV e he] at hmem
+    simpa using hmem
+
+end W11b2p2Kit
+
+/-- 空交情形（边 × 边）：两条不同的图边，`affGe` 之交只有基点。 -/
+private theorem p11w2_empty_two_edges {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hg : Graph E) (hsubV : ∀ e ∈ E, e ⊆ V) (hsubx : ∀ e ∈ E, x ∉ e)
+    (hvs : ∀ v ∈ V, ∀ w ∈ V, affGe {x} {v} ∩ affGe {x} {w} = affGe {x} ({v} ∩ {w}))
+    (hve : ∀ v ∈ V, ∀ e ∈ E, affGt {x} {v} ∩ affGt {x} e = ∅)
+    (hee : ∀ e1 ∈ E, ∀ e2 ∈ E, e1 ≠ e2 → affGt {x} e1 ∩ affGt {x} e2 = ∅)
+    {e1 e2 : Set V3} (he1E : e1 ∈ E) (he2E : e2 ∈ E) (hemp : e1 ∩ e2 = ∅) :
+    affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3) := by
+  obtain ⟨u, v, huv, rfl⟩ := P11W2_EDGE_PAIR hg he1E
+  obtain ⟨y, z, hyz, rfl⟩ := P11W2_EDGE_PAIR hg he2E
+  have huV : u ∈ V := hsubV {u, v} he1E (by simp)
+  have hvV : v ∈ V := hsubV {u, v} he1E (by simp)
+  have hyV : y ∈ V := hsubV {y, z} he2E (by simp)
+  have hzV : z ∈ V := hsubV {y, z} he2E (by simp)
+  have hxu : x ≠ u := fun h => hsubx {u, v} he1E (by rw [← h]; simp)
+  have hxv : x ≠ v :=
+    fun h => hsubx {u, v} he1E (by rw [← h]; simp)
+  have hxy : x ≠ y := fun h => hsubx {y, z} he2E (by rw [← h]; simp)
+  have hxz : x ≠ z :=
+    fun h => hsubx {y, z} he2E (by rw [← h]; simp)
+  have hempty : ∀ t : V3, t ∈ ({u, v} : Set V3) → t ∈ ({y, z} : Set V3) → False := by
+    intro t h1 h2
+    have hmem : t ∈ ({u, v} : Set V3) ∩ {y, z} := ⟨h1, h2⟩
+    rw [hemp] at hmem
+    exact hmem
+  have huy : u ≠ y := fun h => hempty y (by rw [← h]; simp) (by simp)
+  have huz : u ≠ z :=
+    fun h => hempty z (by rw [← h]; simp)
+      (by simp)
+  have hvy : v ≠ y :=
+    fun h => hempty y (by rw [← h]; simp)
+      (by simp)
+  have hvz : v ≠ z :=
+    fun h => hempty z (by rw [← h]; simp)
+      (by simp)
+  have hne : ({u, v} : Set V3) ≠ {y, z} := by
+    intro h
+    have hmem : u ∈ ({y, z} : Set V3) := by rw [← h]; simp
+    rcases Set.mem_insert_iff.mp hmem with h' | h'
+    · exact huy h'
+    · rw [Set.mem_singleton_iff] at h'
+      exact huz h'
+  have hfin1 : ({x} ∪ {u, v} : Set V3).Finite :=
+    (Set.finite_singleton x).union (hg {u, v} he1E).1
+  have hfin2 : ({x} ∪ {y, z} : Set V3).Finite :=
+    (Set.finite_singleton x).union (hg {y, z} he2E).1
+  rw [AFF_GE_TO_AFF_GT2_GE1 (x := x) (u := u) (v := v) (Ne.symm hxu) (Ne.symm hxv),
+    AFF_GE_TO_AFF_GT2_GE1 (x := x) (u := y) (v := z) (Ne.symm hxy) (Ne.symm hxz)]
+  apply Set.Subset.antisymm
+  · intro t ht
+    obtain ⟨ht1, ht2⟩ := ht
+    simp only [Set.mem_union] at ht1 ht2
+    rcases ht1 with (h1a | h1b) | h1c <;> rcases ht2 with (h2a | h2b) | h2c
+    · have hmem : t ∈ affGt {x} {u, v} ∩ affGt {x} {y, z} := ⟨h1a, h2a⟩
+      rw [hee {u, v} he1E {y, z} he2E hne] at hmem
+      exact absurd hmem (by simp)
+    · have ht' : t = x := p11w2_gt_inter_ge_single hve hyV he1E hxy h1a h2b
+      rw [Set.mem_singleton_iff, ht']
+    · have ht' : t = x := p11w2_gt_inter_ge_single hve hzV he1E hxz h1a h2c
+      rw [Set.mem_singleton_iff, ht']
+    · have ht' : t = x := p11w2_gt_inter_ge_single hve huV he2E hxu h2a h1b
+      rw [Set.mem_singleton_iff, ht']
+    · have hmem : t ∈ affGe {x} {u} ∩ affGe {x} {y} := ⟨h1b, h2b⟩
+      rw [hvs u huV y hyV, p11w2_single_inter_single huy, P11W_AFFGE_EMPTY] at hmem
+      exact hmem
+    · have hmem : t ∈ affGe {x} {u} ∩ affGe {x} {z} := ⟨h1b, h2c⟩
+      rw [hvs u huV z hzV, p11w2_single_inter_single huz, P11W_AFFGE_EMPTY] at hmem
+      exact hmem
+    · have ht' : t = x := p11w2_gt_inter_ge_single hve hvV he2E hxv h2a h1c
+      rw [Set.mem_singleton_iff, ht']
+    · have hmem : t ∈ affGe {x} {v} ∩ affGe {x} {y} := ⟨h1c, h2b⟩
+      rw [hvs v hvV y hyV, p11w2_single_inter_single hvy, P11W_AFFGE_EMPTY] at hmem
+      exact hmem
+    · have hmem : t ∈ affGe {x} {v} ∩ affGe {x} {z} := ⟨h1c, h2c⟩
+      rw [hvs v hvV z hzV, p11w2_single_inter_single hvz, P11W_AFFGE_EMPTY] at hmem
+      exact hmem
+  · intro t ht
+    rw [Set.mem_singleton_iff] at ht
+    rw [ht]
+    exact ⟨Or.inr (p11w2_mem_self_affGe
+        ((Set.finite_singleton x).union (Set.finite_singleton v)) (by simp [hxv])),
+      Or.inr (p11w2_mem_self_affGe
+        ((Set.finite_singleton x).union (Set.finite_singleton z)) (by simp [hxz]))⟩
+
+/-- 空交情形（边 × 单点）：单点不在边上时 `affGe` 之交只有基点。 -/
+private theorem p11w2_empty_edge_single {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hg : Graph E) (hxV : x ∉ V) (hsubV : ∀ e ∈ E, e ⊆ V)
+    (hsubx : ∀ e ∈ E, x ∉ e)
+    (hvs : ∀ v ∈ V, ∀ w ∈ V, affGe {x} {v} ∩ affGe {x} {w} = affGe {x} ({v} ∩ {w}))
+    (hve : ∀ v ∈ V, ∀ e ∈ E, affGt {x} {v} ∩ affGt {x} e = ∅)
+    {e : Set V3} (heE : e ∈ E) {b : V3} (hbV : b ∈ V) (hb1 : b ∉ e) :
+    affGe {x} e ∩ affGe {x} {b} = ({x} : Set V3) := by
+  obtain ⟨u, w, huw, rfl⟩ := P11W2_EDGE_PAIR hg heE
+  have huV : u ∈ V := hsubV {u, w} heE (by simp)
+  have hwV : w ∈ V := hsubV {u, w} heE (by simp)
+  have hxu : x ≠ u := fun h => hsubx {u, w} heE (by rw [← h]; simp)
+  have hxw : x ≠ w :=
+    fun h => hsubx {u, w} heE (by rw [← h]; simp)
+  have hxb : x ≠ b := fun h => hxV (h ▸ hbV)
+  have hbu : b ≠ u := fun h => hb1 (by rw [h]; simp)
+  have hbw : b ≠ w := fun h => hb1 (by rw [h]; simp)
+  have hfin1 : ({x} ∪ {b} : Set V3).Finite :=
+    (Set.finite_singleton x).union (Set.finite_singleton b)
+  have hfin2 : ({x} ∪ {u, w} : Set V3).Finite :=
+    (Set.finite_singleton x).union (hg {u, w} heE).1
+  rw [AFF_GE_TO_AFF_GT2_GE1 (x := x) (u := u) (v := w) (Ne.symm hxu) (Ne.symm hxw)]
+  apply Set.Subset.antisymm
+  · intro t ht
+    obtain ⟨ht1, ht2⟩ := ht
+    simp only [Set.mem_union] at ht1
+    rcases ht1 with (h1a | h1b) | h1c
+    · have ht' : t = x := p11w2_gt_inter_ge_single hve hbV heE hxb h1a ht2
+      rw [Set.mem_singleton_iff, ht']
+    · have hmem : t ∈ affGe {x} {b} ∩ affGe {x} {u} := ⟨ht2, h1b⟩
+      rw [hvs b hbV u huV, p11w2_single_inter_single hbu, P11W_AFFGE_EMPTY] at hmem
+      exact hmem
+    · have hmem : t ∈ affGe {x} {b} ∩ affGe {x} {w} := ⟨ht2, h1c⟩
+      rw [hvs b hbV w hwV, p11w2_single_inter_single hbw, P11W_AFFGE_EMPTY] at hmem
+      exact hmem
+  · intro t ht
+    rw [Set.mem_singleton_iff] at ht
+    rw [ht]
+    exact ⟨Or.inr (p11w2_mem_self_affGe
+        ((Set.finite_singleton x).union (Set.finite_singleton w)) (by simp [hxw])),
+      p11w2_mem_self_affGe hfin1 (by simp [hxb])⟩
+
+/-- 空交情形（单点 × 单点）：两不同顶点的 `affGe` 之交只有基点。 -/
+private theorem p11w2_empty_two_singles {x : V3} {V : Set V3}
+    (hvs : ∀ v ∈ V, ∀ w ∈ V, affGe {x} {v} ∩ affGe {x} {w} = affGe {x} ({v} ∩ {w}))
+    {a b : V3} (haV : a ∈ V) (hbV : b ∈ V) (hab : a ≠ b) :
+    affGe {x} {a} ∩ affGe {x} {b} = ({x} : Set V3) := by
+  rw [hvs a haV b hbV, p11w2_single_inter_single hab, P11W_AFFGE_EMPTY]
+
+/-- `fan7` 的空交条件（`hvs`/`hve` 版本）。 -/
+private theorem p11w2_fan7_empty (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hg : Graph E) (hxV : x ∉ V)
+    (hsubV : ∀ e ∈ E, e ⊆ V) (hsubx : ∀ e ∈ E, x ∉ e)
+    (hvs : ∀ v ∈ V, ∀ w ∈ V, affGe {x} {v} ∩ affGe {x} {w} = affGe {x} ({v} ∩ {w}))
+    (hve : ∀ v ∈ V, ∀ e ∈ E, affGt {x} {v} ∩ affGt {x} e = ∅)
+    (hee : ∀ e1 ∈ E, ∀ e2 ∈ E, e1 ≠ e2 → affGt {x} e1 ∩ affGt {x} e2 = ∅)
+    {e1 e2 : Set V3} (he1 : e1 ∈ E ∪ (image (fun v : V3 => {v}) V))
+    (he2 : e2 ∈ E ∪ (image (fun v : V3 => {v}) V))
+    (hemp : e1 ∩ e2 = ∅) :
+    affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3) := by
+  have hu1 : e1 ∈ E ∨ e1 ∈ image (fun v : V3 => {v}) V := by
+    simpa only [Set.mem_union] using he1
+  have hu2 : e2 ∈ E ∨ e2 ∈ image (fun v : V3 => {v}) V := by
+    simpa only [Set.mem_union] using he2
+  rcases hu1 with he1E | ⟨a, haV, rfl⟩
+  · rcases hu2 with he2E | ⟨b, hbV, rfl⟩
+    · exact p11w2_empty_two_edges hg hsubV hsubx hvs hve hee he1E he2E hemp
+    · have hb1 : b ∉ e1 := by
+        intro hb
+        have hmem : b ∈ e1 ∩ ({b} : Set V3) := ⟨hb, Set.mem_singleton b⟩
+        rw [hemp] at hmem
+        exact hmem
+      exact p11w2_empty_edge_single hg hxV hsubV hsubx hvs hve he1E hbV hb1
+  · rcases hu2 with he2E | ⟨b, hbV, rfl⟩
+    · have ha1 : a ∉ e2 := by
+        intro ha
+        have hmem : a ∈ ({a} : Set V3) ∩ e2 := ⟨Set.mem_singleton a, ha⟩
+        rw [hemp] at hmem
+        exact hmem
+      rw [Set.inter_comm (affGe {x} {a}) (affGe {x} e2)]
+      exact p11w2_empty_edge_single hg hxV hsubV hsubx hvs hve he2E haV ha1
+    · have hab : a ≠ b := by
+        intro h
+        have hmem : a ∈ ({a} : Set V3) ∩ {b} :=
+          ⟨Set.mem_singleton a, by rw [h]; exact Set.mem_singleton b⟩
+        rw [hemp] at hmem
+        exact hmem
+      exact p11w2_empty_two_singles hvs haV hbV hab
+
 /-- HOL `FAN7_AFF_GT_CONDITION` (polar_fan.hl:661). -/
 theorem FAN7_AFF_GT_CONDITION (x : V3) (V : Set V3) (E : Set (Set V3))
     (hg : Graph E) (hx : x ∉ V)
@@ -2687,7 +3067,151 @@ theorem FAN7_AFF_GT_CONDITION (x : V3) (V : Set V3) (E : Set (Set V3))
     (hve : ∀ v ∈ V, ∀ e ∈ E, affGt {x} {v} ∩ affGt {x} e = ∅)
     (hee : ∀ e1 ∈ E, ∀ e2 ∈ E, e1 ≠ e2 → affGt {x} e1 ∩ affGt {x} e2 = ∅) :
     fan7 x V E := by
-  sorry
+  intro e1 he1 e2 he2
+  by_cases heq : e1 = e2
+  · rw [heq, Set.inter_self, Set.inter_self]
+  · rcases p11w_edge_trichotomy (V := V) hg
+      (by rw [p11w_img_singleton_eq]; exact he1)
+      (by rw [p11w_img_singleton_eq]; exact he2) with heq' | hemp | ⟨v, hv⟩
+    · exact absurd heq' heq
+    · rw [hemp, P11W_AFFGE_EMPTY]
+      exact p11w2_fan7_empty x V E hg hx (fun e he => (hsub e he).1)
+        (fun e he => (hsub e he).2) hvs hve hee
+        (by rw [p11w_img_singleton_eq]; exact he1)
+        (by rw [p11w_img_singleton_eq]; exact he2) hemp
+    · rw [hv]
+      have hv1 : v ∈ e1 := by
+        have h : v ∈ e1 ∩ e2 := by rw [hv]; exact Set.mem_singleton v
+        exact h.1
+      have hv2 : v ∈ e2 := by
+        have h : v ∈ e1 ∩ e2 := by rw [hv]; exact Set.mem_singleton v
+        exact h.2
+      have hfinv : ({x} ∪ {v} : Set V3).Finite :=
+        (Set.finite_singleton x).union (Set.finite_singleton v)
+      have hu1 : e1 ∈ E ∨ e1 ∈ image (fun v : V3 => {v}) V := by
+        rw [p11w_img_singleton_eq]
+        simpa only [Set.mem_union] using he1
+      have hu2 : e2 ∈ E ∨ e2 ∈ image (fun v : V3 => {v}) V := by
+        rw [p11w_img_singleton_eq]
+        simpa only [Set.mem_union] using he2
+      rcases hu1 with he1E | ⟨a, haV, rfl⟩
+      · rcases hu2 with he2E | ⟨b, hbV, rfl⟩
+        · -- 边 × 边，共享 v
+          obtain ⟨u, huv, he1eq⟩ := P11W2_EDGE_PAIR_OF_MEM hg he1E hv1
+          obtain ⟨z, hzv, he2eq⟩ := P11W2_EDGE_PAIR_OF_MEM hg he2E hv2
+          rw [he1eq, he2eq, Set.pair_comm z v]
+          have he1E' : ({u, v} : Set V3) ∈ E := by rw [← he1eq]; exact he1E
+          have he2E' : ({v, z} : Set V3) ∈ E := by
+            rw [Set.pair_comm v z, ← he2eq]; exact he2E
+          have huV : u ∈ V := (hsub {u, v} he1E').1 (by simp)
+          have hvV : v ∈ V :=
+            (hsub {u, v} he1E').1 (by simp)
+          have hzV : z ∈ V :=
+            (hsub {v, z} he2E').1 (by simp)
+          have hxu : x ≠ u := fun h => (hsub {u, v} he1E').2 (by rw [← h]; simp)
+          have hxv : x ≠ v :=
+            fun h => (hsub {u, v} he1E').2 (by rw [← h]; simp)
+          have hxz : x ≠ z :=
+            fun h => (hsub {v, z} he2E').2 (by rw [← h]; simp)
+          have huz : u ≠ z := by
+            intro h
+            apply heq
+            rw [he1eq, he2eq, h]
+          have hfin1 : ({u, v} : Set V3).Finite := (hg {u, v} he1E').1
+          have hfin2 : ({v, z} : Set V3).Finite := (hg {v, z} he2E').1
+          rw [AFF_GE_TO_AFF_GT2_GE1 (x := x) (u := u) (v := v) (Ne.symm hxu) (Ne.symm hxv),
+            AFF_GE_TO_AFF_GT2_GE1 (x := x) (u := v) (v := z) (Ne.symm hxv) (Ne.symm hxz)]
+          apply Set.Subset.antisymm
+          · intro t ht
+            obtain ⟨ht1, ht2⟩ := ht
+            simp only [Set.mem_union] at ht1 ht2
+            rcases ht1 with (h1a | h1b) | h1c <;> rcases ht2 with (h2a | h2b) | h2c
+            · have hmem : t ∈ affGt {x} {u, v} ∩ affGt {x} {v, z} := ⟨h1a, h2a⟩
+              have hne : ({u, v} : Set V3) ≠ {v, z} := by
+                intro h
+                have hmem' : u ∈ ({v, z} : Set V3) := by rw [← h]; simp
+                rcases Set.mem_insert_iff.mp hmem' with h' | h'
+                · exact huv h'
+                · rw [Set.mem_singleton_iff] at h'
+                  exact huz h'
+              rw [hee {u, v} he1E' {v, z} he2E' hne] at hmem
+              exact absurd hmem (by simp)
+            · exact h2b
+            · have ht' : t = x := p11w2_gt_inter_ge_single hve hzV he1E' hxz h1a h2c
+              rw [ht']
+              exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+            · have ht' : t = x := p11w2_gt_inter_ge_single hve huV he2E' hxu h2a h1b
+              rw [ht']
+              exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+            · have hmem : t ∈ affGe {x} {u} ∩ affGe {x} {v} := ⟨h1b, h2b⟩
+              rw [hvs u huV v hvV, p11w2_single_inter_single huv, P11W_AFFGE_EMPTY] at hmem
+              rw [Set.mem_singleton_iff] at hmem
+              rw [hmem]
+              exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+            · have hmem : t ∈ affGe {x} {u} ∩ affGe {x} {z} := ⟨h1b, h2c⟩
+              rw [hvs u huV z hzV, p11w2_single_inter_single huz, P11W_AFFGE_EMPTY] at hmem
+              rw [Set.mem_singleton_iff] at hmem
+              rw [hmem]
+              exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+            · exact h1c
+            · exact h1c
+            · have hmem : t ∈ affGe {x} {v} ∩ affGe {x} {z} := ⟨h1c, h2c⟩
+              rw [hvs v hvV z hzV, p11w2_single_inter_single hzv.symm, P11W_AFFGE_EMPTY] at hmem
+              rw [Set.mem_singleton_iff] at hmem
+              rw [hmem]
+              exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+          · intro t ht
+            exact ⟨Or.inr ht, Or.inl (Or.inr ht)⟩
+        · -- e1 边，e2 = {b} 单点
+          have hvb : v = b := by
+            have hmem : v ∈ e1 ∩ ({b} : Set V3) := by rw [hv]; exact Set.mem_singleton v
+            exact Set.mem_singleton_iff.mp hmem.2
+          rw [hvb]
+          have hinter : e1 ∩ ({b} : Set V3) = ({b} : Set V3) := by
+            rw [hv, ← hvb]
+          have hb1 : b ∈ e1 := by
+            have hmem : b ∈ e1 ∩ ({b} : Set V3) := by
+              rw [hinter]; exact Set.mem_singleton b
+            exact hmem.1
+          apply Set.Subset.antisymm
+          · exact Set.inter_subset_right
+          · intro t ht
+            exact ⟨P11W_AFFGE_MONO_SINGLE (t := ({b} : Set V3)) (t' := e1)
+              (by
+                intro y hy
+                rw [Set.mem_singleton_iff] at hy
+                rw [hy]
+                exact hb1) (hsub e1 he1E).2 (hg e1 he1E).1 ht, ht⟩
+      · rcases hu2 with he2E | ⟨b, hbV, rfl⟩
+        · -- e1 = {a} 单点，e2 边
+          have hva : v = a := by
+            have hmem : v ∈ ({a} : Set V3) ∩ e2 := by rw [hv]; exact Set.mem_singleton v
+            exact Set.mem_singleton_iff.mp hmem.1
+          rw [hva]
+          have hinter : ({a} : Set V3) ∩ e2 = ({a} : Set V3) := by
+            rw [hv, ← hva]
+          have ha2 : a ∈ e2 := by
+            have hmem : a ∈ ({a} : Set V3) ∩ e2 := by
+              rw [hinter]; exact Set.mem_singleton a
+            exact hmem.2
+          apply Set.Subset.antisymm
+          · exact Set.inter_subset_left
+          · intro t ht
+            exact ⟨ht, P11W_AFFGE_MONO_SINGLE (t := ({a} : Set V3)) (t' := e2)
+              (by
+                intro y hy
+                rw [Set.mem_singleton_iff] at hy
+                rw [hy]
+                exact ha2) (hsub e2 he2E).2 (hg e2 he2E).1 ht⟩
+        · -- 两个单点
+          have hva : v = a := by
+            have hmem : v ∈ ({a} : Set V3) ∩ {b} := by rw [hv]; exact Set.mem_singleton v
+            exact Set.mem_singleton_iff.mp hmem.1
+          have hvb : v = b := by
+            have hmem : v ∈ ({a} : Set V3) ∩ {b} := by rw [hv]; exact Set.mem_singleton v
+            exact Set.mem_singleton_iff.mp hmem.2
+          rw [← hva, ← hvb, Set.inter_self]
+
 
 /-- HOL `FAN_AFF_GT_CONDITION` (polar_fan.hl:812). -/
 theorem FAN_AFF_GT_CONDITION (x : V3) (V : Set V3) (E : Set (Set V3))
@@ -2697,7 +3221,281 @@ theorem FAN_AFF_GT_CONDITION (x : V3) (V : Set V3) (E : Set (Set V3))
     (hve : ∀ v ∈ V, ∀ e ∈ E, affGt {x} {v} ∩ affGt {x} e = ∅)
     (hee : ∀ e1 ∈ E, ∀ e2 ∈ E, e1 ≠ e2 → affGt {x} e1 ∩ affGt {x} e2 = ∅) :
     FAN x V E := by
-  sorry
+  refine ⟨hun, hg, hf1, hf2, hf6, ?_⟩
+  exact FAN7_AFF_GT_CONDITION x V E hg hf2
+    (fun e he => ⟨fun z hz => hun (Set.subset_sUnion_of_mem he hz),
+      fun h => hf2 (hun (Set.subset_sUnion_of_mem he h))⟩)
+    hvs hve hee
+
+/-- `affGt {x} {u,v}` 的差向量系数形（严格正；`Affsign` 消去）。 -/
+private theorem p11w2_gt_pair_rel_elim {x u v y : V3}
+    (hxu : x ≠ u) (hxv : x ≠ v) (huv : u ≠ v)
+    (h : y ∈ affGt {x} {u, v}) :
+    ∃ a b : ℝ, 0 < a ∧ 0 < b ∧ y - x = a • (u - x) + b • (v - x) := by
+  obtain ⟨f, hfin, hvec, hsign, hone⟩ := h
+  have h3 : hfin.toFinset = ({x, u, v} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    try tauto
+  rw [h3, Finset.sum_insert (by simp [hxu, hxv]),
+    Finset.sum_insert (Finset.notMem_singleton.mpr huv),
+    Finset.sum_singleton] at hvec hone
+  refine ⟨f u, f v, hsign u (by simp), hsign v (by simp), ?_⟩
+  have hfx : f x = 1 - f u - f v := by linarith
+  rw [hvec, hfx]
+  module
+
+/-- 共享点两边的 `affGt` 之交为空（空交充分条件 `h0` 的推论）：系数
+`b` 与 `c` 比较，`u` 或 `z` 被推入另一侧的闭锥，与 `h0` 冲突。 -/
+private theorem p11w2_gt_inter_gt_shared_empty {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (h0 : ∀ e1 ∈ E ∪ (image (fun v : V3 => {v}) V),
+      ∀ e2 ∈ E ∪ (image (fun v : V3 => {v}) V),
+        e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3))
+    {u v z : V3} (huV : u ∈ V) (hzV : z ∈ V)
+    (hxu : x ≠ u) (hxv : x ≠ v) (hxz : x ≠ z)
+    (huv : u ≠ v) (huz : u ≠ z) (hvz : v ≠ z)
+    (he1 : ({u, v} : Set V3) ∈ E) (he2 : ({v, z} : Set V3) ∈ E)
+    {t : V3} (h1 : t ∈ affGt {x} {u, v}) (h2 : t ∈ affGt {x} {v, z}) : False := by
+  obtain ⟨a, b, ha, hb, hta⟩ := p11w2_gt_pair_rel_elim hxu hxv huv h1
+  obtain ⟨c, d, hc, hd, htb⟩ := p11w2_gt_pair_rel_elim hxv hxz hvz h2
+  have hkey : a • (u - x) = (c - b) • (v - x) + d • (z - x) := by
+    have h := hta.symm.trans htb
+    calc a • (u - x) = (a • (u - x) + b • (v - x)) - b • (v - x) := by abel
+      _ = (c • (v - x) + d • (z - x)) - b • (v - x) := by rw [h]
+      _ = (c - b) • (v - x) + d • (z - x) := by module
+  rcases le_total b c with hbc | hcb
+  · -- b ≤ c：u ∈ 闭锥 {v,z}，与 h0 ({u} ∩ {v,z} = ∅) 冲突
+    have hmem : u ∈ affGe {x} {v, z} :=
+      (P11W2_GE_PAIR_REL hxv hxz hvz).mpr
+        ⟨a⁻¹ * (c - b), a⁻¹ * d,
+          mul_nonneg (le_of_lt (inv_pos.mpr ha)) (by linarith),
+          mul_nonneg (le_of_lt (inv_pos.mpr ha)) (le_of_lt hd), by
+            have h := congrArg (fun y => a⁻¹ • y) hkey
+            rw [smul_add, smul_smul, smul_smul, smul_smul,
+              inv_mul_cancel₀ ha.ne', one_smul] at h
+            exact h⟩
+    have hemp : ({u} : Set V3) ∩ {v, z} = ∅ := p11w2_single_inter_pair huv huz
+    have humem : u ∈ affGe {x} {u} :=
+      (P11W2_GE_SINGLE_REL hxu).mpr ⟨1, zero_le_one, by rw [one_smul]⟩
+    have hmem' : u ∈ affGe {x} {u} ∩ affGe {x} {v, z} := ⟨humem, hmem⟩
+    have h := h0 {u} (Set.mem_union_right _ ⟨u, huV, rfl⟩) {v, z}
+      (Set.mem_union_left _ he2) hemp
+    rw [h] at hmem'
+    rw [Set.mem_singleton_iff] at hmem'
+    exact hxu hmem'.symm
+  · -- c ≤ b：z ∈ 闭锥 {u,v}，与 h0 ({z} ∩ {u,v} = ∅) 冲突
+    have hmem : z ∈ affGe {x} {u, v} :=
+      (P11W2_GE_PAIR_REL hxu hxv huv).mpr
+        ⟨d⁻¹ * a, d⁻¹ * (b - c),
+          mul_nonneg (le_of_lt (inv_pos.mpr hd)) (le_of_lt ha),
+          mul_nonneg (le_of_lt (inv_pos.mpr hd)) (by linarith), by
+            have h := congrArg (fun y => d⁻¹ • y) hkey
+            rw [smul_add, smul_smul, smul_smul, smul_smul,
+              inv_mul_cancel₀ hd.ne', one_smul] at h
+            have h' : z - x = (d⁻¹ * a) • (u - x) - (d⁻¹ * (c - b)) • (v - x) := by
+              rw [eq_sub_iff_add_eq, add_comm]
+              exact h.symm
+            have hcoef : (d⁻¹ * (b - c)) • (v - x) = -((d⁻¹ * (c - b)) • (v - x)) := by
+              rw [← neg_smul]
+              congr 1
+              ring
+            rw [hcoef, ← sub_eq_add_neg]
+            exact h'⟩
+    have hemp : ({z} : Set V3) ∩ {u, v} = ∅ := p11w2_single_inter_pair huz.symm hvz.symm
+    have hzmem : z ∈ affGe {x} {z} :=
+      (P11W2_GE_SINGLE_REL hxz).mpr ⟨1, zero_le_one, by rw [one_smul]⟩
+    have hmem' : z ∈ affGe {x} {z} ∩ affGe {x} {u, v} := ⟨hzmem, hmem⟩
+    have h := h0 {z} (Set.mem_union_right _ ⟨z, hzV, rfl⟩) {u, v}
+      (Set.mem_union_left _ he1) hemp
+    rw [h] at hmem'
+    rw [Set.mem_singleton_iff] at hmem'
+    exact hxz hmem'.symm
+
+/-- 共享点两边的闭锥：`affGe {x} {u,v} ∩ affGe {x} {v,z} = affGe {x} {v}`
+（`GMLWKPK_SIMPLE` 的单交情形核心；`h0` 为全部空交对的条件）。 -/
+private theorem p11w2_shared_two_edges {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (h0 : ∀ e1 ∈ E ∪ (image (fun v : V3 => {v}) V),
+      ∀ e2 ∈ E ∪ (image (fun v : V3 => {v}) V),
+        e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3))
+    {u v z : V3} (huV : u ∈ V) (hvV : v ∈ V) (hzV : z ∈ V)
+    (hxu : x ≠ u) (hxv : x ≠ v) (hxz : x ≠ z)
+    (huv : u ≠ v) (huz : u ≠ z) (hvz : v ≠ z)
+    (he1 : ({u, v} : Set V3) ∈ E) (he2 : ({v, z} : Set V3) ∈ E) :
+    affGe {x} {u, v} ∩ affGe {x} {v, z} = affGe {x} {v} := by
+  have hfinv : ({x} ∪ {v} : Set V3).Finite :=
+    (Set.finite_singleton x).union (Set.finite_singleton v)
+  rw [AFF_GE_TO_AFF_GT2_GE1 (x := x) (u := u) (v := v) (Ne.symm hxu) (Ne.symm hxv),
+    AFF_GE_TO_AFF_GT2_GE1 (x := x) (u := v) (v := z) (Ne.symm hxv) (Ne.symm hxz)]
+  apply Set.Subset.antisymm
+  · intro t ht
+    obtain ⟨ht1, ht2⟩ := ht
+    simp only [Set.mem_union] at ht1 ht2
+    rcases ht1 with (h1a | h1b) | h1c <;> rcases ht2 with (h2a | h2b) | h2c
+    · exact (p11w2_gt_inter_gt_shared_empty h0 huV hzV hxu hxv hxz huv huz hvz
+        he1 he2 h1a h2a).elim
+    · exact h2b
+    · -- Gt{u,v} ∩ Ge{z}
+      obtain ⟨e, he0, hte⟩ := (P11W2_GE_SINGLE_REL hxz).mp h2c
+      rcases eq_or_lt_of_le he0 with he0' | hepos
+      · have ht' : t = x := by
+          rw [← sub_eq_zero, hte, ← he0', zero_smul]
+        rw [ht']
+        exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+      · have hgt : t ∈ affGt {x} {z} := P11W2_GT_SINGLE_REL hxz hepos hte
+        have hmem : t ∈ affGe {x} {z} ∩ affGe {x} {u, v} :=
+          ⟨P11W2_GT_SUB_GE hgt, P11W2_GT_SUB_GE h1a⟩
+        have hemp : ({z} : Set V3) ∩ {u, v} = ∅ := p11w2_single_inter_pair huz.symm hvz.symm
+        have h := h0 {z} (Set.mem_union_right _ ⟨z, hzV, rfl⟩) {u, v}
+          (Set.mem_union_left _ he1) hemp
+        rw [h] at hmem
+        rw [Set.mem_singleton_iff] at hmem
+        rw [hmem]
+        exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+    · -- Ge{u} ∩ Gt{v,z}
+      obtain ⟨e, he0, hte⟩ := (P11W2_GE_SINGLE_REL hxu).mp h1b
+      rcases eq_or_lt_of_le he0 with he0' | hepos
+      · have ht' : t = x := by
+          rw [← sub_eq_zero, hte, ← he0', zero_smul]
+        rw [ht']
+        exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+      · have hgt : t ∈ affGt {x} {u} := P11W2_GT_SINGLE_REL hxu hepos hte
+        have hmem : t ∈ affGe {x} {u} ∩ affGe {x} {v, z} :=
+          ⟨P11W2_GT_SUB_GE hgt, P11W2_GT_SUB_GE h2a⟩
+        have hemp : ({u} : Set V3) ∩ {v, z} = ∅ := p11w2_single_inter_pair huv huz
+        have h := h0 {u} (Set.mem_union_right _ ⟨u, huV, rfl⟩) {v, z}
+          (Set.mem_union_left _ he2) hemp
+        rw [h] at hmem
+        rw [Set.mem_singleton_iff] at hmem
+        rw [hmem]
+        exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+    · -- Ge{u} ∩ Ge{v}
+      have hmem : t ∈ affGe {x} {u} ∩ affGe {x} {v} := ⟨h1b, h2b⟩
+      have hemp : ({u} : Set V3) ∩ {v} = ∅ := p11w2_single_inter_single huv
+      have h := h0 {u} (Set.mem_union_right _ ⟨u, huV, rfl⟩) {v}
+        (Set.mem_union_right _ ⟨v, hvV, rfl⟩) hemp
+      rw [h, Set.mem_singleton_iff] at hmem
+      rw [hmem]
+      exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+    · -- Ge{u} ∩ Ge{z}
+      have hmem : t ∈ affGe {x} {u} ∩ affGe {x} {z} := ⟨h1b, h2c⟩
+      have hemp : ({u} : Set V3) ∩ {z} = ∅ := p11w2_single_inter_single huz
+      have h := h0 {u} (Set.mem_union_right _ ⟨u, huV, rfl⟩) {z}
+        (Set.mem_union_right _ ⟨z, hzV, rfl⟩) hemp
+      rw [h, Set.mem_singleton_iff] at hmem
+      rw [hmem]
+      exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+    · exact h1c
+    · exact h1c
+    · -- Ge{v} ∩ Ge{z}
+      have hmem : t ∈ affGe {x} {v} ∩ affGe {x} {z} := ⟨h1c, h2c⟩
+      have hemp : ({v} : Set V3) ∩ {z} = ∅ := p11w2_single_inter_single hvz
+      have h := h0 {v} (Set.mem_union_right _ ⟨v, hvV, rfl⟩) {z}
+        (Set.mem_union_right _ ⟨z, hzV, rfl⟩) hemp
+      rw [h, Set.mem_singleton_iff] at hmem
+      rw [hmem]
+      exact p11w2_mem_self_affGe hfinv (by simp [hxv])
+  · intro t ht
+    exact ⟨Or.inr ht, Or.inl (Or.inr ht)⟩
+
+/-- `fan7` 的空交充分条件（GMLWKPK_SIMPLE 的核心）：全部空交对的
+`affGe` 之交退化为基点 ⟹ `fan7`。 -/
+private theorem p11w2_fan7_of_empty_cond (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hg : Graph E) (hsubV : ∀ e ∈ E, e ⊆ V) (hsubx : ∀ e ∈ E, x ∉ e)
+    (h0 : ∀ e1 ∈ E ∪ (image (fun v : V3 => {v}) V),
+      ∀ e2 ∈ E ∪ (image (fun v : V3 => {v}) V),
+        e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3)) :
+    fan7 x V E := by
+  intro e1 he1 e2 he2
+  have he1i : e1 ∈ E ∪ (image (fun v : V3 => {v}) V) := by
+    rw [p11w_img_singleton_eq]; exact he1
+  have he2i : e2 ∈ E ∪ (image (fun v : V3 => {v}) V) := by
+    rw [p11w_img_singleton_eq]; exact he2
+  by_cases heq : e1 = e2
+  · rw [heq, Set.inter_self, Set.inter_self]
+  · rcases p11w_edge_trichotomy (V := V) hg he1i he2i with heq' | hemp | ⟨v, hv⟩
+    · exact absurd heq' heq
+    · rw [hemp, P11W_AFFGE_EMPTY]
+      exact h0 e1 he1i e2 he2i hemp
+    · rw [hv]
+      have hv1 : v ∈ e1 := by
+        have h : v ∈ e1 ∩ e2 := by rw [hv]; exact Set.mem_singleton v
+        exact h.1
+      have hv2 : v ∈ e2 := by
+        have h : v ∈ e1 ∩ e2 := by rw [hv]; exact Set.mem_singleton v
+        exact h.2
+      have hfinv : ({x} ∪ {v} : Set V3).Finite :=
+        (Set.finite_singleton x).union (Set.finite_singleton v)
+      rcases he1i with he1E | ⟨a, haV, rfl⟩
+      · rcases he2i with he2E | ⟨b, hbV, rfl⟩
+        · -- 边 × 边，共享 v
+          obtain ⟨u, huv, he1eq⟩ := P11W2_EDGE_PAIR_OF_MEM hg he1E hv1
+          obtain ⟨z, hzv, he2eq⟩ := P11W2_EDGE_PAIR_OF_MEM hg he2E hv2
+          rw [he1eq, he2eq, Set.pair_comm z v]
+          have he1E' : ({u, v} : Set V3) ∈ E := by rw [← he1eq]; exact he1E
+          have he2E' : ({v, z} : Set V3) ∈ E := by
+            rw [Set.pair_comm v z, ← he2eq]; exact he2E
+          have huV : u ∈ V := hsubV {u, v} he1E' (by simp)
+          have hvV : v ∈ V := hsubV {u, v} he1E' (by simp)
+          have hzV : z ∈ V := hsubV {v, z} he2E' (by simp)
+          have hxu : x ≠ u := fun h => hsubx {u, v} he1E' (by rw [← h]; simp)
+          have hxv : x ≠ v := fun h => hsubx {u, v} he1E' (by rw [← h]; simp)
+          have hxz : x ≠ z := fun h => hsubx {v, z} he2E' (by rw [← h]; simp)
+          have huz : u ≠ z := by
+            intro h
+            apply heq
+            rw [he1eq, he2eq, h]
+          exact p11w2_shared_two_edges h0 huV hvV hzV hxu hxv hxz huv huz
+            hzv.symm he1E' he2E'
+        · -- e1 边，e2 = {b} 单点
+          have hvb : v = b := by
+            have hmem : v ∈ e1 ∩ ({b} : Set V3) := by rw [hv]; exact Set.mem_singleton v
+            exact Set.mem_singleton_iff.mp hmem.2
+          rw [hvb]
+          have hinter : e1 ∩ ({b} : Set V3) = ({b} : Set V3) := by
+            rw [hv, ← hvb]
+          have hb1 : b ∈ e1 := by
+            have hmem : b ∈ e1 ∩ ({b} : Set V3) := by
+              rw [hinter]; exact Set.mem_singleton b
+            exact hmem.1
+          apply Set.Subset.antisymm
+          · exact Set.inter_subset_right
+          · intro t ht
+            exact ⟨P11W_AFFGE_MONO_SINGLE (t := ({b} : Set V3)) (t' := e1)
+              (by
+                intro y hy
+                rw [Set.mem_singleton_iff] at hy
+                rw [hy]
+                exact hb1) (hsubx e1 he1E) (hg e1 he1E).1 ht, ht⟩
+      · rcases he2i with he2E | ⟨b, hbV, rfl⟩
+        · -- e1 = {a} 单点，e2 边
+          have hva : v = a := by
+            have hmem : v ∈ ({a} : Set V3) ∩ e2 := by rw [hv]; exact Set.mem_singleton v
+            exact Set.mem_singleton_iff.mp hmem.1
+          rw [hva]
+          have hinter : ({a} : Set V3) ∩ e2 = ({a} : Set V3) := by
+            rw [hv, ← hva]
+          have ha2 : a ∈ e2 := by
+            have hmem : a ∈ ({a} : Set V3) ∩ e2 := by
+              rw [hinter]; exact Set.mem_singleton a
+            exact hmem.2
+          apply Set.Subset.antisymm
+          · exact Set.inter_subset_left
+          · intro t ht
+            exact ⟨ht, P11W_AFFGE_MONO_SINGLE (t := ({a} : Set V3)) (t' := e2)
+              (by
+                intro y hy
+                rw [Set.mem_singleton_iff] at hy
+                rw [hy]
+                exact ha2) (hsubx e2 he2E) (hg e2 he2E).1 ht⟩
+        · -- 两个单点
+          have hva : v = a := by
+            have hmem : v ∈ ({a} : Set V3) ∩ {b} := by rw [hv]; exact Set.mem_singleton v
+            exact Set.mem_singleton_iff.mp hmem.1
+          have hvb : v = b := by
+            have hmem : v ∈ ({a} : Set V3) ∩ {b} := by rw [hv]; exact Set.mem_singleton v
+            exact Set.mem_singleton_iff.mp hmem.2
+          rw [← hva, ← hvb, Set.inter_self]
 
 /-- HOL `GMLWKPK_SIMPLE` (polar_fan.hl:832). -/
 theorem GMLWKPK_SIMPLE (x : V3) (V : Set V3) (E : Set (Set V3))
@@ -2707,7 +3505,14 @@ theorem GMLWKPK_SIMPLE (x : V3) (V : Set V3) (E : Set (Set V3))
       ∀ e1 ∈ E ∪ (image (fun v : V3 => {v}) V),
         ∀ e2 ∈ E ∪ (image (fun v : V3 => {v}) V),
           e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3)) := by
-  sorry
+  constructor
+  · intro h7 e1 he1 e2 he2 hemp
+    have h := h7 e1 (by simpa only [p11w_img_singleton_eq] using he1)
+      e2 (by simpa only [p11w_img_singleton_eq] using he2)
+    rw [h, hemp, P11W_AFFGE_EMPTY]
+  · intro h0
+    exact p11w2_fan7_of_empty_cond x V E hg
+      (fun e he z hz => hun (Set.subset_sUnion_of_mem he hz)) hx h0
 
 /-- HOL `FAN_ECONOMIZED_SIMPLE` (polar_fan.hl:1023). -/
 theorem FAN_ECONOMIZED_SIMPLE (x : V3) (V : Set V3) (E : Set (Set V3)) :
