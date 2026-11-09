@@ -74,7 +74,7 @@
 | `packineqa-w1` | 闭 `nliPackIneqDefA`（5 条 3 族；定义已真化 `packIneqDefAP22`，`C1965189142x34` 在库；含 2 支常数不等式） | 在飞（已产 G4 证书试件 `C8055810915`，85 叶；⚠️ **该试件被写进主仓树 `lean/Kepler/Interval/Cases/`（未追踪）——位置违规，基线 T 已验证零污染，车道交付验收时编排者清理**） |
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
-| `jcajydu-c2`（J0） | 战役 J0：betwn 收官两定理 | **侦察 BLOCKED + 批 J0-a 已落库 `04a8443c`（见续412）**；收官等 AQ 塔；续做 J0-b（不触塔） |
+| `jcajydu-c2`（J0） | 战役 J0：betwn 收官两定理（收官等 AQ 塔） | **J0-a `04a8443c` + J0-b₁ 已落库（见续417）**；续做 betwnRot（携坑）+ eq 引擎三件 |
 | `wsewpch-w7` | WSEWPCH 本体（local/polar_fan.hl:2213，1,150 行；残余 = LA7 内 9 sorry，W8–W13 五批 1.5–2k Lean） | **批一已落库 `881abe8d`（FAN_PERIMETER 三件，见续415）**；续派 W8（串本体 + hedge 小桥） |
 | `jcajydu-j2w2` | **新关键路径**：AQ1–13 塔（实测 17,585 HOL 行/214 定理，7 子批 ≈5–6.5k Lean） | **批E1 已落库 `296b4d34`（塔底+塔顶装配，见续414）**；续派 E2；E3 待 z 侧解锁裁决（堵点=TameList16:1109 在案债） |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
@@ -244,6 +244,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（19:20，续417）**：**`jcajydu-c2` J0-b₁ 落库（80 行）+ betwnRot 止损续做授权**。① **编排者验收**：三方一致（in-tree/快照/patch_j0b.diff）；pit 10 零声明；岛编译 0 error + 探针 **2/2 全标准三**（`mapBetwn` AQ12:351 / `partsMemExists` AQ8:88→partsSpine）；binder 记账 `[DecidableEq α][DecidableEq β]` 合理（`nodup_map_iff_inj_on` 要求）。② **betwnRot 止损裁决**：设计已完、三坑已定位（getLast 点调用括号 / nodup_rotate flex-metavar 先固定 / take-drop 组合次序），3 轮结构性卡在 tactic 执行层 ⇒ **授权原车道携坑续做**（预计 1–2 轮闭合），eq 引擎三件随后；`JcajyduBetwnBase.idxOfGetLastOfNodup` private ⇒ **批准改 public**（可见性变更零公理影响，随下批触碰该文件时顺带）。③ **J0-c 备忘采信**：`FST_HD_MAP_betwn`/`condition_last_parts` 挂 `More_lemma1.parts_betwn` ⇒ 归 J2 波 intake（与 More_lemma2 批同属 more_lemma 家族，排队区并案）。
 
 - **2026-11-09（18:50，续416）**：**`jcajydu-j1w1` 批B1 落库（`05252ba3`，687 行）+ AGENTS §6.1 文档三层清单**。① **J1-B1 编排者验收**：apply-check PASS；pit 10 零声明（唯一命中文件头散文）；岛编译 0 error 0 warning + olean 回灌探针 **14/14 零 sorryAx**（13 标准三 + `ifbetwnRefl` 仅 `[propext]`，与车道申报逐字一致）。② **四条 UNRESOLVED 裁决**：(a) 687>450——**接受单文件**（rx 桥 532 先例；自然切点 = between 层/其余，B3+ 若再超即拆）；(b) **betwn_rot 归属 = 先到先落、后到吸收**（J2 领土，j2w1/j2w2 落了 J1-B3 直接消费）；(c) **betwnDisjoint 双家**：本批已按 reduction3.hl:2851 落链岛，J3 吸收勿重落；(d) **More_lemma2 批（2,294 行，J1/J3 共用）独立立批**，排入 J 战役队列（B7 前置）。③ **考古采信**：reduction5 真靶 = reduction4 恰 4 件（其余已落/在飞）；路线图 B1–B10 ≈4,000–4,500 Lean 行；B7 硬前置 J3 定义层（triple_data_v4 等，树内零命中）——**J3 定义层触发器已在两个独立车道（j1w1/j2w1）交叉确认**；j2w1 交集 10 件（trans0 ×25 树内已覆盖）。④ 续派 B2（首件 `transform_count_not` ≈15 行已侦察，KBWPBHQ.hl:85 外部消费 ×28 最高频）。⑤ **AGENTS §6.1 入档（用户裁定）**：文档三层清单（入口层 = README*.md/docs/README.md/PLAN 横幅/AGENTS §1；账本层 = pq 文件头/trust-base/hf-proof-map/handoff §0/e2e-map.tsv+md；历史层只增不改）+ 联动纪律 + 权威序；连带修英文 README 状态节（628/624 → 585/589，`e76900e4`）。至此外部评审的四点漂移全部闭环（`243111ef`/`bc5cb604`/`e76900e4`）。
 
