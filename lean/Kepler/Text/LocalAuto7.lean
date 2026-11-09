@@ -3041,6 +3041,300 @@ theorem FAN_PERIMETER_LE_2PI_OF_CARD_LE {V : Set V3} {E : Set (Set V3)}
   · rw [Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_zero]
     linarith
 
+/-! ### W9 circular-branch kit (`p9w_*` private helpers; WSEWPCH wave W9)
+
+The downstream half of the WSEWPCH circular branch (polar_fan.hl:2271-2360):
+from the KCHMAMG structure (as assembled by LA35's real `KCHMAMG_thm_p35`)
+to the 2*pi perimeter bound, via `RHO_NODE1_MONO_WITH_AZIM` (LA5, real),
+`ORDER_AZIM_SUM2Pi_0` (this file, real) and `CROSS_POSITIVE_MULTIPLE_AZIM_AXIS`
+(this file, real).  The two slots left open by LA35 (the OZQVSFF chain and
+`LOFA_V_SUBSET_AFF_HULL`; w6b 件1-3 remain open) are carried as explicit
+hypotheses `hplane` / `hint`, mirroring the `KCHMAMG_thm_p35` input face, so
+the final one-line assembly reads
+`FAN_PERIMETER_LE_2PI_OF_CIRCULAR_STRUCT hcl hed hplane hint`. -/
+
+section W9Kit
+
+/-- 轴的正常数缩放下 `AzimSpec` 不变（HOL `AZIM_SPECIAL_SCALE` 的角色；
+`PlanarityAuto8.azimSpec_axis_smul` 的逐字副本，彼件 private 不可 import）。 -/
+private theorem p9w_azimSpec_axis_smul {v w u w1 w2 : V3} {θ c : ℝ}
+    (hc : 0 < c) (hu : u - v = c • (w - v))
+    (hspec : AzimSpec v w w1 w2 θ) :
+    AzimSpec v u w1 w2 θ := by
+  obtain ⟨hθ0, hθ1, h1, h2, hframes⟩ := hspec
+  refine ⟨hθ0, hθ1, h1 / c, h2 / c, ?_⟩
+  intro e1 e2 e3 he hax hu_ne
+  have hcne : c ≠ 0 := ne_of_gt hc
+  have hwv : w ≠ v := by
+    intro hwv
+    apply hu_ne
+    have hzero : u - v = 0 := by rw [hu, hwv, sub_self, smul_zero]
+    exact sub_eq_zero.mp hzero
+  have hwv_eq : (w - v : V3) = (c⁻¹ * dist u v) • e3 := by
+    have hthis : c • (w - v) = dist u v • e3 := by rw [← hu, hax]
+    calc (w - v : V3) = c⁻¹ • (c • (w - v)) := by
+          rw [smul_smul, inv_mul_cancel₀ hcne, one_smul]
+      _ = c⁻¹ • (dist u v • e3) := by rw [hthis]
+      _ = (c⁻¹ * dist u v) • e3 := by rw [smul_smul]
+  have hdist : dist w v = c⁻¹ * dist u v := by
+    rw [dist_eq_norm, hwv_eq, norm_smul, Real.norm_eq_abs,
+      abs_of_nonneg (mul_nonneg (inv_nonneg.mpr hc.le) dist_nonneg)]
+    have he3 : ‖e3‖ = 1 := by
+      have hsq : ‖e3‖ ^ 2 = 1 := by rw [norm_sq_eq_dot, he.2.2.1]
+      rcases sq_eq_one_iff.mp hsq with h | h
+      · exact h
+      · exfalso; linarith [norm_nonneg e3, h]
+    rw [he3, mul_one]
+  have hwv_hax : (w - v : V3) = dist w v • e3 := by rw [hwv_eq, hdist]
+  obtain ⟨ψ, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframes e1 e2 e3 he hwv_hax hwv
+  refine ⟨ψ, r1, r2, ?_, ?_, hr1, hr2⟩
+  · rw [hrep1, hu, smul_smul, div_mul_cancel₀ _ hcne]
+  · rw [hrep2, hu, smul_smul, div_mul_cancel₀ _ hcne]
+
+/-- 轴心纯量倍不引入共线：`Collinear3 0 (a • e) z ↔ Collinear3 0 e z`
+（a ≠ 0；`collinear3_iff_smul` 双向转写）。 -/
+private theorem p9w_collinear3_axis_smul {e z : V3} {a : ℝ} (ha : a ≠ 0)
+    (hw : e ≠ 0) : Collinear3 0 (a • e) z ↔ Collinear3 0 e z := by
+  constructor
+  · intro hcol
+    by_cases hwz : z = 0
+    · rw [hwz]
+      exact p7w_col_131 0 e
+    · obtain ⟨t, ht⟩ := (collinear3_iff_smul (v := 0) (w := a • e) (w1 := z)
+        (smul_ne_zero ha hw)).mp hcol
+      exact (collinear3_iff_smul (v := 0) (w := e) (w1 := z) hw).mpr
+        ⟨t * a, by simp only [ht, sub_zero, smul_smul]⟩
+  · intro hcol
+    by_cases hwz : z = 0
+    · rw [hwz]
+      exact p7w_col_131 0 (a • e)
+    · obtain ⟨t, ht⟩ := (collinear3_iff_smul (v := 0) (w := e) (w1 := z) hw).mp hcol
+      exact (collinear3_iff_smul (v := 0) (w := a • e) (w1 := z)
+        (smul_ne_zero ha hw)).mpr
+        ⟨t / a, by simp only [ht, sub_zero, smul_smul, div_mul_cancel₀ _ ha]⟩
+
+/-- 轴向正缩放不改变方位角（HOL `AZIM_SPECIAL_SCALE` 的消费形）。 -/
+private theorem p9w_azim_axis_smul {e u w1 w2 : V3} {a : ℝ} (ha : 0 < a)
+    (hu : u = a • e) : azim 0 u w1 w2 = azim 0 e w1 w2 := by
+  have hcne : a ≠ 0 := ne_of_gt ha
+  have hct : ∀ z : V3, Collinear3 0 u z ↔ Collinear3 0 e z := by
+    intro z
+    by_cases hw : e = 0
+    · subst hw
+      have hu0 : u = 0 := by rw [hu, smul_zero]
+      subst hu0
+      exact Iff.rfl
+    · rw [hu]
+      exact p9w_collinear3_axis_smul hcne hw
+  by_cases h1c : Collinear3 0 e w1
+  · have h1u : Collinear3 0 u w1 := (hct w1).mpr h1c
+    unfold azim
+    rw [if_pos (Or.inl h1u), if_pos (Or.inl h1c)]
+  · by_cases h2c : Collinear3 0 e w2
+    · have h2u : Collinear3 0 u w2 := (hct w2).mpr h2c
+      unfold azim
+      rw [if_pos (Or.inr h2u), if_pos (Or.inr h2c)]
+    · have hn1 : ¬ Collinear3 0 u w1 := fun hcon => h1c ((hct w1).mp hcon)
+      have hn2 : ¬ Collinear3 0 u w2 := fun hcon => h2c ((hct w2).mp hcon)
+      have hspecE : AzimSpec 0 e w1 w2 (azim 0 e w1 w2) := by
+        have hnd : ¬ (Collinear3 0 e w1 ∨ Collinear3 0 e w2) := by tauto
+        unfold azim
+        rw [if_neg hnd]
+        exact Classical.epsilon_spec (azimSpec_exists h1c h2c)
+      exact azim_eq_of_spec hn1 hn2
+        (p9w_azimSpec_axis_smul ha (by rw [hu, sub_zero, sub_zero]) hspecE)
+
+/-- 轴向纯量倍点落在 `{0, a}` 的仿射包里（HOL `AFFINE_HULL_2` 过 0 特款；
+LA35 `kchSmulMemAffSpanZero_p35` 的逐字副本，彼件 private）。 -/
+private theorem p9w_smul_mem_affineSpan_zero (a : V3) (c : ℝ) :
+    c • a ∈ affineSpan ℝ ({0, a} : Set V3) := by
+  show c • a ∈ (affineSpan ℝ (insert 0 ({a} : Set V3)) : Set V3)
+  rw [affineSpan_insert_zero]
+  exact Submodule.smul_mem _ _ (Submodule.subset_span (Set.mem_singleton a))
+
+/-- **CYCLIC_SET_IMP_NOT_COLLINEAR 面**（Wrgcvdr_cizmrrh，KCHMAMG :3394 消费；
+LA35 `kchNotCollinear3_of_cyclicSet_p35` 的逐字副本，彼件 private）。 -/
+private theorem p9w_notCollinear3_of_cyclicSet {W : Set V3} {e x : V3}
+    (hcy : cyclicSet_p3 W 0 e) (hx : x ∈ W) : ¬ Collinear3 0 e x := by
+  intro hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := e) (w1 := x)
+    (Ne.symm hcy.1)).mp hcol
+  have hxm : x ∈ affineSpan ℝ ({0, e} : Set V3) := by
+    have h1 : x - 0 = c • (e - 0) := hc
+    simp only [sub_zero] at h1
+    rw [h1]
+    exact p9w_smul_mem_affineSpan_zero e c
+  have hmem : x ∈ W ∩ (affineSpan ℝ ({0, e} : Set V3) : Set V3) := Set.mem_inter hx hxm
+  have hmem2 : x ∈ (∅ : Set V3) := hcy.2.2.2 ▸ hmem
+  exact absurd hmem2 (by simp)
+
+/-- V3 加法经强制转换保形（LA35 `kchCoeAdd_p35` 同款）。 -/
+private theorem p9w_coe_addP (a b : V3) :
+    ((a + b : V3) : Fin 3 → ℝ) = ((a : V3) : Fin 3 → ℝ) + ((b : V3) : Fin 3 → ℝ) := rfl
+
+/-- azim = 0 的导渲染（LA35 `pmAzimNormalRender0_p35` 逐字副本，彼件 private）：
+`azim 0 ax a x = 0` 把目标放在开参考射线加轴松弛上（`x = e • ax + c • a`，
+c > 0）。 -/
+private theorem p9w_azim_zero_render {ax a x : V3} (ha0 : a ≠ (0:V3))
+    (hnc : ¬ Collinear3 0 ax a) (hncx : ¬ Collinear3 0 ax x)
+    (h : azim 0 ax a x = 0) :
+    ∃ e c : ℝ, 0 < c ∧ x - 0 = e • (ax - 0) + c • (a - 0) := by
+  obtain ⟨c, hc, e, he⟩ :=
+    (affGt_pair_iff (v0 := (0:V3)) (v1 := ax) (x := a) (y := x)
+      (fun hz => hnc (by rw [hz]; exact collinear3_of_eq rfl))
+      ha0 (fun hz => hnc (by rw [hz]; exact collinear3_pair_right rfl))).mp
+    ((azim_eq_zero_iff_alt (v0 := (0:V3)) (v1 := ax) (w := a) (x := x) hnc hncx).mp h)
+  exact ⟨e, c, hc, by rw [he]; exact add_comm _ _⟩
+
+end W9Kit
+
+/-- **WSEWPCH circular 支下游半程**（polar_fan.hl:2271-2360 独立形）：凸局部扇
++ 圆结构输入面（`hplane` = V 落在过 0 平面，`hint` = 全体顶点内角平角——
+即 LA35 `KCHMAMG_thm_p35` 的两枚显式输入槽；其上游 = OZQVSFF 链与
+`LOFA_V_SUBSET_AFF_HULL`，见 w6b 件1-3 与独立波）⟹ 周长 ≤ 2π。
+装配链（对 HOL 逐行忠实）：`KCHMAMG_thm_p35` 给轴 `e` ⊥ V 与
+`azim 0 e v (ρv) = arcV < π`；`CROSS_POSITIVE_MULTIPLE_AZIM_AXIS` 给
+`cross3 v (ρv) = a • e`（a > 0），轴向缩放传输正交/非共线/方位角到
+`cross3 v (ρv)`；`RHO_NODE1_MONO_WITH_AZIM`（LA5）给轨道单调；
+`ORDER_AZIM_SUM2Pi_0` 收口 `∑ azim = 2π`，而 `fanPerimeter`（W7 不变量）
+逐项等于该和。 -/
+theorem FAN_PERIMETER_LE_2PI_OF_CIRCULAR_STRUCT {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hcl : ConvexLocalFan V E FF)
+    (hed : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hplane : ∃ P : Set V3,
+      (∃ u v w : V3, ¬ Collinear ℝ ({u, v, w} : Set V3) ∧
+        P = affineSpan ℝ ({u, v, w} : Set V3)) ∧ (0:V3) ∈ P ∧ V ⊆ P)
+    (hint : ∀ v ∈ V, interiorAngle1 0 FF v = Real.pi) :
+    fanPerimeter V E FF ≤ 2 * Real.pi := by
+  obtain ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩ := hcl.1
+  have hcl' : LocalFan V E FF := ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl' hed
+  have hEE2 : ∀ u ∈ V, (EE_p3 u E).ncard = 2 := fun u hu => hee u hu
+  obtain ⟨hint', A, hplaneA, h0A, hVA, e, heA, hcyc, hvc⟩ :=
+    KCHMAMG_thm_p35 ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩ hEE2 hplane hint
+  obtain ⟨uP, vP, wP, hncP, hdefP⟩ := hplaneA
+  have hP2 : plane_p2 A := ⟨uP, vP, wP, hncP, hdefP⟩
+  -- base vertex from a dart
+  obtain ⟨d0, hd0⟩ : FF.Nonempty := Set.nonempty_iff_ne_empty.mpr
+    (LOCAL_FAN_NOT_EMPTY_FF ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩)
+  have hv0 : d0.1 ∈ V := (WRGCVDR_BIJ h2).1 hd0
+  have hv0cl := hvc d0.1 hv0
+  have hmem : ∀ i : ℕ, (rhoNode1 FF)^[i] d0.1 ∈ V := w6a_iter_rho_mem h2 hv0
+  -- non-collinearity of {0, e, z} for all z ∈ V
+  have hncE : ∀ z ∈ V, ¬ Collinear ℝ ({(0:V3), e, z} : Set V3) :=
+    fun z hz => p9w_notCollinear3_of_cyclicSet hcyc hz
+  have he0 : e ≠ 0 := by
+    intro hz
+    refine hncE (rhoNode1 FF d0.1) (hmem 1) ?_
+    subst hz
+    exact collinear3_of_eq (v := 0) (w := 0) rfl
+  -- azim at the base vertex is strictly positive (render route: azim = 0 would
+  -- put ρv0 in span{e, v0} with zero e-component, hence ρv0 ∥ v0 — CHARACTER2)
+  have hv0ne : d0.1 ≠ 0 := fun hz =>
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hv0 (by rw [hz]; exact collinear3_of_eq rfl)
+  have hpos : 0 < azim 0 e d0.1 (rhoNode1 FF d0.1) := by
+    refine lt_of_le_of_ne (azim_nonneg 0 e d0.1 (rhoNode1 FF d0.1)) (Ne.symm ?_)
+    intro hz0
+    obtain ⟨e', c', hc'0, hx'⟩ :=
+      p9w_azim_zero_render (ax := e) (a := d0.1) (x := rhoNode1 FF d0.1) hv0ne
+        (hncE d0.1 hv0) (hncE (rhoNode1 FF d0.1) (hmem 1)) hz0
+    have hx'' : rhoNode1 FF d0.1 = e' • e + c' • d0.1 := by
+      simpa using hx'
+    have hdot : ((rhoNode1 FF d0.1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]
+      exact heA _ (hVA (hmem 1))
+    have hdotv : ((d0.1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]
+      exact heA _ (hVA hv0)
+    have hcongr : e' * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) = 0 := by
+      have h := congrArg
+        (fun w : V3 => ((w : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) hx''
+      simp only [p9w_coe_addP, coe_smulP, add_dotProduct, smul_dotP] at h
+      rw [hdot, hdotv, mul_zero, add_zero] at h
+      exact h.symm
+    have hee : (0:ℝ) < ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) := by
+      have hn : (0:ℝ) < ‖e‖ := norm_pos_iff.mpr he0
+      have h2' : (0:ℝ) < ‖e‖ ^ 2 := by positivity
+      rwa [norm_sq_eq_dot, p7w_dot_coe] at h2'
+    have he'0 : e' = 0 := by
+      rcases mul_eq_zero.mp hcongr with h | h
+      · exact h
+      · linarith [hee, h]
+    have hpar : rhoNode1 FF d0.1 = c' • d0.1 := by
+      rw [he'0] at hx''
+      simpa using hx''
+    exact LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hv0
+      ((collinear3_iff_smul (v := 0) (w := d0.1) (w1 := rhoNode1 FF d0.1) hv0ne).mpr
+        ⟨c', by rw [hpar, sub_zero, sub_zero]⟩)
+  -- the rho orbit axis equals a positive multiple of the KCHMAMG axis
+  obtain ⟨a, ha0, hcpl⟩ :=
+    CROSS_POSITIVE_MULTIPLE_AZIM_AXIS he0
+      (by rw [p7w_dot_coe]; exact heA d0.1 (hVA hv0))
+      (by rw [p7w_dot_coe]; exact heA _ (hVA (hmem 1)))
+      hpos hv0cl.2.2.2
+  -- transport non-collinearity to the cross axis
+  have hcnc : ∀ z ∈ V,
+      ¬ Collinear ℝ ({(0:V3), cross3 d0.1 (rhoNode1 FF d0.1), z} : Set V3) :=
+    fun z hz hcon =>
+      hncE z hz ((p9w_collinear3_axis_smul (ne_of_gt ha0) he0).mp (hcpl ▸ hcon))
+  -- cross3 as the RHO_NODE1_MONO axis (WithLp transport)
+  have hcroe : (WithLp.toLp 2 (crossProduct ((d0.1 : V3) : Fin 3 → ℝ)
+      ((rhoNode1_p2 FF d0.1 : V3) : Fin 3 → ℝ)) : V3)
+      = cross3 d0.1 (rhoNode1 FF d0.1) := by
+    refine p7w_v3_eq ?_
+    rw [coe_toLp, coe_cross3P]
+    rfl
+  set g : ℕ → V3 := fun i => (rhoNode1 FF)^[i] d0.1 with hge
+  have hge2 : 2 ≤ V.ncard := by
+    have hge3 := LOCAL_FAN_NOT_CARD_FF_GE_2 hcl'
+    rw [LOFA_IMP_CARD_FF_V_EQ h2] at hge3
+    exact hge3
+  have hncard : (V.ncard - 1 : ℕ) + 1 = V.ncard := by omega
+  have hper : ∀ n : ℕ, (rhoNode1 FF)^[n + V.ncard] d0.1 = (rhoNode1 FF)^[n] d0.1 := by
+    intro n
+    rw [Nat.add_comm, Function.iterate_add_apply]
+    exact p7w3_period_all (rhoNode1 FF) (w6a_iter_rho_card h2 hv0) n
+  -- orbit monotonicity around the cross axis (LA5 real)
+  have hmono := RHO_NODE1_MONO_WITH_AZIM h2 hv0
+    (l := V.ncard - 1)
+    (U := {(rhoNode1_p2 FF)^[n] d0.1 | n ≤ V.ncard - 1})
+    (rfl) hP2 h0A
+    (fun z hz => by
+      obtain ⟨n, hn, rfl⟩ := hz
+      exact hVA (hmem n))
+    hcroe
+  -- ORDER_AZIM_SUM2Pi_0 instance
+  have hsum := ORDER_AZIM_SUM2Pi_0
+    (x := 0) (y := cross3 d0.1 (rhoNode1 FF d0.1)) (z := d0.1) (n := V.ncard - 1)
+    (g := g)
+    (by exact hcnc d0.1 hv0)
+    (fun i hi => by
+      simp only [Finset.mem_Ico, Finset.mem_range] at hi
+      exact hcnc (g i) (hmem i))
+    (by show (rhoNode1 FF)^[((V.ncard - 1 : ℕ) + 1)] d0.1 = (rhoNode1 FF)^[0] d0.1
+        rw [hncard]
+        have h0 := hper 0
+        rwa [Nat.zero_add] at h0)
+    (by omega)
+    (fun j hj k hk hjk => by
+      simp only [Finset.mem_Ico, Finset.mem_range] at hj hk
+      exact hmono j k hjk (by omega) (by omega))
+  -- the perimeter sum rewrites into the ORDER sum pointwise
+  refine le_of_eq ?_
+  rw [FAN_PERIMETER_INVARIANT ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩ hed d0.1 hv0,
+    LOFA_IMP_CARD_FF_V_EQ h2]
+  have hIco : (Finset.Ico 0 ((V.ncard - 1 : ℕ) + 1) : Finset ℕ)
+      = Finset.range ((V.ncard - 1 : ℕ) + 1) := by
+    ext i
+    simp only [Finset.mem_Ico, Finset.mem_range]
+    omega
+  rw [hIco] at hsum
+  refine Eq.trans (Finset.sum_congr rfl fun i _ => ?_) hsum
+  rw [p9w_azim_axis_smul ha0 hcpl]
+  simp only [hge]
+  rw [Function.iterate_succ_apply']
+  exact (hvc ((rhoNode1 FF)^[i] d0.1) (hmem i)).2.2.1.symm
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
