@@ -204,6 +204,7 @@
 >   **W1** P6-C 桥（`IsHypermapOfList L (hypermapOfList L)`，`TameLp` 侧构造已在）+ `RXOKSKC.hl`(1,105 行) 移植，产出**新模块**不动 Assembly；
 >   **W2** `jcajydu`（HOL 99 行本体，消费 W1）；**W3** `tameCorrespondenceIso`（`WMLNYMD.hl` 1,515 行 / 40+ 引理）。
 >   实测闭包 ≈2,000–4,500 HOL 行（不是整章 91,841 行）；`asfutbf`/`elllnyz` 已收口。每波验收 `#print axioms` 标准三。
+>   **✅ W1 已落库（续716 追溯认定，tame-corr-w1 侦察波机器核实）**：P6-C 桥 = `TameLp.hypermapOfList_isHypermapOfListTl`（TameLp:6138）+ `TameCorrBase…_arity`（:60）；RXOKSKC.hl 全章 12 件 = TameList65/66（`rxUniqListOfDarts`/`existsListFaceNode*`/`listCorFaceSet*`/`oneToOneDart`）+ TameList69:605（`RXOKSKC` 主件 + 五槽 `RxOkData.*` + `hypermapOfListG`），落库 commit `f7a559d6`/`73f14f76`/`6fddf837`/`2e37ccc3`（B3 D 链前序车道）。岛编探针 20/20 ⊆ 标准三零 sorryAx（`lane_snapshots/tame-corr/probe_w1.out`）。三处陈述形状差（泛型 α / witness 型 / 证明顺序）已记档无弱化。**防重复发车：勿再按旧工单派 W1。** 残留：TameList68/69 文件尾无 in-file `#print axioms`（体例统一，挂 B3 下次落库顺带）。
 > - **2-δ `pa22-packineq-defix-w1`**（用户 2026-11-06 裁「真化」，DECISIONS 同日条）—— 移植 HOL `arclength2`（`YSSKQOY.hl:297`）+ `arcV↔arclength` 桥；`PackIneqDefA` 从 `:= True` 改成三条具名不等式（`UKBRPFE`/`WAZLDCD`/`BIEFJHU`）真合取。走 **DEF-FIX**。代价：hNL 诚实 +1；收益：`_797` 变真命题、`XULJEPR` 有望转标准三。
 > - **2-ε `la-registry-mnt11-sf`**（用户同日裁「补前提」）—— `VASYYAU`/`PWEIWBZ`/`WKZZEEH`/`YEBWJNG` 四条 `_concl` 补 `main_nonlinear_terminal_v11` 前提（走 **SF**），连带 LA25 re-export 与 `LocalConcl` 绑定。恢复保真度，不是弱化。
 > - **2-ζ `reduction5-scout`**（用户同日裁「先移植」）—— 摸 `Reduction5.restricted_hypermaps_are_planegraphs_thm` 的边界（估 1,500–3,000 行），为 `jcajydu` W2 铺路；侦察先行，不施工。
