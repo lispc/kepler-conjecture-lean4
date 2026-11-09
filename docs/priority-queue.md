@@ -82,7 +82,10 @@
 | `jcajydu-j1w1` | 战役 J1：reduction4.hl（B1–B10 ≈4–4.5k Lean） | **批B1 已落库 `05252ba3`（14 件，见续416）**；续派 B2（transform_count_not ×28 消费）；More_lemma2 批已排队 |
 | `archive-data-scout` | trust-base §4 第 2 条：`ArchiveData/{Tri,Quad,Pent,Hex}` vs HOL vs AFP 三路机械对账 | **✅ 已收工（四类全 SAME，见续407）** |
 
-> **排队（等腾槽）**：`pa25-w9` 收尾批（**定位 = 空槽填充料，2026-11-09 编排者裁决**：PA25 滚动战役 w1–w8 已把锥内 19→2 / 文件 39→4，剩 `pkLeafRankCriticalEdge` + `real_model_ox3q1h_merge` 两锥内条目不解锁任何东西——父链终点 nliOx3q1h 的 230 条债（sqrt/atan 墙）无论如何还在；下一自然空槽（如战役波间等裁决的间隙）发车，发车前按 AGENTS §8 考古 merge 件是否藏真数学，若只是装配则半日线收尾）；
+> **排队（等腾槽）**：**下一战役槽自动补位序（2026-11-09 编排者排定，续412 波序细化）**：
+> ① `jcajydu-j3def`（**J3 定义层首口**：triple_data_v4/core_triple_v4/prebatch，树内零命中——j1w1∥j2w1 双车道交叉确认的硬前置，J1-B7 与 J3 本体的公共父，风险触发器本体，先探先知）；
+> ② `more-lemma2-w1`（J1/J3 共用 2,294 HOL 行机械批，B7 第二前置）；
+> ③ 填充料序：`pa25-w9` 收尾批（**定位 = 空槽填充料，2026-11-09 编排者裁决**：PA25 滚动战役 w1–w8 已把锥内 19→2 / 文件 39→4，剩 `pkLeafRankCriticalEdge` + `real_model_ox3q1h_merge` 两锥内条目不解锁任何东西——父链终点 nliOx3q1h 的 230 条债（sqrt/atan 墙）无论如何还在；下一自然空槽（如战役波间等裁决的间隙）发车，发车前按 AGENTS §8 考古 merge 件是否藏真数学，若只是装配则半日线收尾）；
 `kcblrqc` 注册表侧接线 + XL 过夜重建批（侦察定案见续400：小件 25 模块几分钟，XL 三棵 ≈11,717 模块/7.66M 行 ≈12–13 h 串行）；
 > ~~`kcblrqc` 定义侧~~（勘误 续402：BLOCKED，定义侧强于 HOL 形、被注册表侧挡死，正确闭法 = XL 批 + 28 id 接线 + 三层机械移植 1.5k–2.5k 行；可先立的独立小件 = 包装层 mk_imp 形零证书）；
 > `wsewpch-w6a` **在飞**（任务单 10-26 已立：LA7 九桩灌证——§5 第二根 `fully_surrounded_perimeter_bound` 的正主：`fspb-bridges-w1` 侦察实锤树内已有 `yk11_perimeterBound_of_core` 归约（TameLp:10960），闭合只需全称版 hcore = WSEWPCH 本体；~~OZQVSFF~~ **勘误：已在树 LA5:3772**，侦察车道建议作废）→ `W6c` 装配（一行 `yk11_WSEWPCH_core`）；
