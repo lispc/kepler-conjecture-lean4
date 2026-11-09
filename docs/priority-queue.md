@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:05，续717）**：**塔顶首个真实消费者落库（`ee2b1c9e`，23 行）——`marked_list_mark_rtrans_top`；reduction3 口径修正：38 处 ta 只有 25 处活跃/17 定理，12 件已移植且不吃 ta**。
+① **reduction3.hl 侦察修正（aq13-survey，采信）**：5,656 行；38 处 `transform_assumption` 中 **13 处是注释**（HOL 源已把 ta 前提划掉，`ntrans_final_list1/2`、`generateNonfinalPolygon_reduction`、`reduction_subdivFace`、`triple_data_nonnil` 等**根本不吃 ta**）⇒ 25 处活跃落 17 定理，三类：**12 件已移植且 ta 已消除**（Lean `Reduction3` 章全树 `transformAssumptionSpine` 零命中——移植时走了别的路，不需要塔顶）；`AQIUNPP` = `aqiunpp3`（W1 已 alias）；**未移植且 ta 活跃仅 5 件**：`generatePolygon_explicit_reduction`(1)/`generateNonfinalPolygon_reduction`(3)/`marked_list_mark_rtrans`(1)/`lnrx_induction`(2)/`good_faces_transform_lemma`(3)。
+② **首件 `marked_list_mark_rtrans_top`**：HOL 2611-2628 逐字（`marked_list L N r x ⇒ MEM x (rtrans L N r x i)`），ta = `transformAssumptionSpine_top L hL`，体 = `aqiunpp3` 投影 `.1.2.2.2.1`。标准三；RC=0、0 error/0 warning；olean 装池。假桩排查：闭包 = aqiunpp3 + TowerTop + TameList9/71，无账本 6 桩、无 TameList34 DIH2K 桩。
+③ **派单**：aq13-survey → **W2 剩余四件**（`ntrans_final_list1/2` 先行 → `generateNonfinalPolygon_reduction` → `lnrx_induction` → `good_faces_transform_lemma` → `generatePolygon_explicit_reduction`，每件独立 ≤200）。
+④ J3 对表修正：11 件 J2 阻塞项里 `marked_list_mark_rtrans` 即为首件（**1/11 已闭**）；其余 10 件的ta 前提形待逐件核（部分可能同型直取）。
+
 - **2026-11-10（06:50，续715）**：**车道补位（用户问询后盘点）：3 条新车道上工（§2 队列已批件），nkezbfc 疑似卡死已催；BIEFJHU round-2 74/204 子盒**。
 ① **盘点结论**：塔（13/13）与 perimeter（只剩 `hNKE`）两条关键路径收口后，aq7/hsimple-wire/aq13-survey/w22d-ii/loc-simple/aq13-c4 六车道全部交付完毕转空闲；唯一在跑的计算 = BIEFJHU round-2 两个 driver（`R2c0`/`R2c1`，74/204 子盒，R2c1 出现 1 张 NEG 子盒——`stage2_and_3` 的 `still` 只算 kernel FAIL 不算 R2 NEG，emit 时可能再拒，届时按 round-2 同法再拆）。
 ② **nkezbfc 疑似卡死（第 7 例？）**：05:37 回执后 70+ 分钟无 `/tmp/nkezbfc-w6k3b` 产物；已催（要求 5 分钟内回状态 + 先交 ⊆ 半最小件）；若无响应则换血重派 ②a。
