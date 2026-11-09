@@ -75,7 +75,7 @@
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
 | `jcajydu-c2`（J0） | 战役 J0：betwn 收官两定理（收官等 AQ 塔） | **J0-a `04a8443c` + J0-b₁ 已落库（见续417）**；续做 betwnRot（携坑）+ eq 引擎三件 |
-| `wsewpch-w7` | WSEWPCH 本体（local/polar_fan.hl:2213，1,150 行；残余 = LA7 内 9 sorry，W8–W13 五批 1.5–2k Lean） | **批一已落库 `881abe8d`（FAN_PERIMETER 三件，见续415）**；续派 W8（串本体 + hedge 小桥） |
+| `wsewpch-w7` | WSEWPCH 本体（残余 = LA7 内 9 sorry；W9–W13：circular→lunar→generic→straight→装配） | **批一 `881abe8d` + W8 已落库（hedge桥+CORE母版+CARD≤2，见续419）**；续派 W9（circular） |
 | `jcajydu-j2w2` | **新关键路径**：AQ1–13 塔（实测 17,585 HOL 行/214 定理，7 子批 ≈5–6.5k Lean） | **批E1 已落库 `296b4d34`（塔底+塔顶装配，见续414）**；续派 E2；E3 待 z 侧解锁裁决（堵点=TameList16:1109 在案债） |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
 | `jcajydu-j2w1` | 战役 J2：reduction2.hl 移植 | **批A 已落库 `0366932f`（9 件标准三，见续411）**；考古定案 8 批划分，批B 等 J0、批E(AQ1–13) 是 J3 硬前置 |
@@ -244,6 +244,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（20:10，续419）**：**`wsewpch-w7` 批W8 落库（`hedge桥+CORE母版+CARD≤2支`，+108 纯新增）**。① **编排者验收**：apply-check PASS；零删除零违禁；LA7 sorry 仍 9；岛编译 0 error + olean 探针 **3/3 全标准三**（独立复跑）；**内存纪律首次实战验证**——车道 free=5,660 页时等待 35 分钟至 830k 页才起编（续414 新规生效）。② **内容**：`LOCAL_FAN_IMP_HEDGE`（hedge 桥，LocalFan 强形，顺带裁定 w5b SF 提案不成立）/ `WSEWPCH_CORE`（yk11 hcore 母版：假设逐字 = WSEWPCH 陈述形、结论逐字 = hcore 槽形；条件形 = axiom 纪律下唯一干净形态，本体落地即字面一行换无条件）/ `FAN_PERIMETER_LE_2PI_OF_CARD_LE`（五分支 CARD≤2 支；arcV=arccos 顶掉 ARCV_BOUNDS，LA6/LA10 import 取消）。③ **路线图更新采信**：骨架内部逐步真证**不可行**（新 sorry 禁令）⇒ 五分支全以独立定理落地：W9 circular → W10 lunar → W11 generic（BGMIFTE 结论1+3 ~600）→ W12 straight+V′坍缩（~600）→ W13 装配一行（`WSEWPCH_CORE WSEWPCH` 换无条件形）→ W6c → cone −1。两条新陷阱记档（rw 尾部 rfl reducible / ℝ 求和用 sum_le_sum_of_subset_of_nonneg）。④ 池：w7 续 W9。
 
 - **2026-11-09（19:50，续418）**：**`packineqa-w1` 异常终止判定 + 接管车道发车 + 105GB 磁盘回收 + 编排者路由勘误**。① **死亡现场**：/tmp 最后活动 14:24、零进程、快照 11:57 未更新；`logs/bbarb_slab2.log` **72GB** + `bbarb_slab.log` **40.7GB** runaway（已剪尾保留 `*.TAIL-KEPT.log` 证据，logs 目录 105GB→468KB，磁盘释放 105GB 至 243GB 可用）；引擎 `bb_arb` 尾部打出 `COUNTEREXAMPLE：主 prog hi≤0（翻译错？）`——**翻译层被反例击中**，该状态下产出不可验收。原 agent 完成通知未送达且 ID 随上下文压缩丢失 ⇒ 编排者侧判死。② **主仓泄漏清理**：`C8055810915*`（原车道 G4 试件，85 叶）移入快照 `main-tree-leak/`——三起泄漏全部清账。③ **接管**：`packineqa-w2` 已发（根因定位：真反例 vs 引擎误报，最小可复现判据 + AGENTS §8 原版对照；5 条件逐条挽救裁决：8055810915 G4 链与 1965189142a slab 路线分开判；NO-GO 合格；**新日志纪律：>50MB 即失败，逐 slab 硬超时**）。④ **编排者路由勘误**：心跳指令误发 w6a（packineqa 的 agent ID 随压缩丢失，w6a=agent_2d5ff1de 恰在同批通知序列里被误认）——w6a 回复反而提供了归属实证（/tmp 各车道扫描），无实害；教训：**long-running 车道的 agent ID 要在续4xx 台账里留档**，本条起执行。
 
