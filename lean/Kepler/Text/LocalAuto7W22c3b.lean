@@ -54,9 +54,27 @@ theorem p22c3_hcard_bridge {V : Set V3} {E : Set (Set V3)}
   rw [hFF, hface]
   omega
 
+/-- **条件形的 `hcard` 消槽形**：`p22c3_hcard_bridge` 填掉 `hcard`，只剩 `hfs`/`hsimple`/`hno`。 -/
+theorem p22c2_f_surr_localization_cond_noHcard {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN 0 V E) {H1 : Hypermap (V3 × V3)} (h1 : IsHypOn_p10 0 V E H1)
+    {FF : Set (V3 × V3)} {x : V3 × V3} (hx : x ∈ dartsOfHyp_p3 E V) (hFF : FF = H1.face x)
+    {H2 : Hypermap (V3 × V3)}
+    (h2 : IsHypOn_p10 0 (vPrime_p3 V FF) (ePrime_p3 E FF) H2)
+    (hfs : FullySurrounded V E) (hsimple : H2.Simple)
+    (hno : dartsOfHyp_p3 (ePrime_p3 E FF) (vPrime_p3 V FF)
+      = dart1OfFan (vPrime_p3 V FF) (ePrime_p3 E FF)) :
+    LocalFan (vPrime_p3 V FF) (ePrime_p3 E FF) FF ∧
+    FF = H2.face x ∧
+    (∀ y ∈ FF, azimDart V E y = azimDart (vPrime_p3 V FF) (ePrime_p3 E FF) y) ∧
+    (∀ y ∈ FF, wedgeInFanGt_p2 y E = wedgeInFanGt_p2 y (ePrime_p3 E FF)) ∧
+    (∀ y ∈ FF, wedgeInFanGe_p2 y E = wedgeInFanGe_p2 y (ePrime_p3 E FF)) :=
+  p22c2_f_surr_localization_cond hfan h1 hx hFF h2 hfs
+    (p22c3_hcard_bridge hfan h1 hx hFF hfs) hsimple hno
+
 /-! ## `#print axioms` 探针（落库闸直接读编译输出） -/
 
 #print axioms Kepler.Text.p22c3_fullySurrounded_cardFaceGe3
 #print axioms Kepler.Text.p22c3_hcard_bridge
+#print axioms Kepler.Text.p22c2_f_surr_localization_cond_noHcard
 
 end Kepler.Text
