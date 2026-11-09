@@ -136,6 +136,9 @@
    “object file … does not exist”。探针最简法：把 olean 装进 `.lake` 再跑（见 §4 岛协议）。
 10. **`rw [← h]` 在 `getElem` 上 motive 不 type correct**（依赖索引）：改私有
    `getElem_eq_of_eq`（证明无关，`rfl` 级）+ `rw` 该等式，不要硬 `rw` 原式。
+11. **`Perm` 的 `~` 是 scoped notation**：裸文件里写 `~p` 报 unexpected token，
+   一律写 `List.Perm xs xs'`；`List.getD_eq_getElem` 的界证明参数名是 **`hn`**（非 `h`）。
+   `Perm` 归纳的 cons 真支两侧退化为 `news ++ tail` 时 IH 不适用，用 `p.mem_iff`。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
