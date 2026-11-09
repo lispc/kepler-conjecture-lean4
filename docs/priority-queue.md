@@ -104,19 +104,19 @@
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
 | ~~`jcajydu-c2`~~（退役） | 战役 J0 前置叶层 | **✅ 退役（续422）**：J0-a + J0-b₁ 两件落库；betwnRot 负结果 + eq 设计移交 j2w2；J0 收官等 AQ 塔（届时新开车道） |
-| `wsewpch-w7` | WSEWPCH 本体（W9–W13） | **已落库**：批一 + W8–W11 + W11b2 + W11b3 **circular `f3b56bed` + 结论 5 `441c30f1`**（结论 **1/2/3/4/5 全 ✅** + 三支 ✅）+ **BGMIFTE `54e312a0`**；LA7 裸 sorry **3**；**generic 支真阻塞 = `NKEZBFC`（LocalAuto2:1606 `:= sorry`）**，侦察车道 `nkezbfc-scout` 在跑；续派 **W12(a)**（私有移植 `AZIM_EQ_PI_ALT`，新文件 `LocalAuto7W12A.lean`） |
+| `w11-ivb` | WSEWPCH W12–W13（straight 支） | **W12(a) `96f67663`（292 行）+ W12(b1) `55af278d`（192 行）+ W12-pre `61c2f9aa`（LA7 `UNION_AFF_GE_1_2` 真证，裸 sorry 3→2）已落库**；在飞 **W12C = b2a**（`FAN 0 p12b_V p12b_E`，150–200）→ b2b → b2c → c；接口按 wave2 图纸形状 B |
 | `jcajydu-j2w2` | **新关键路径**：AQ1–13 塔（7 子批） | **E1/E2/betwnRot/b2b1/hsnd1a/hsnd1b + E4a `2427169b`（lastRange）已落库**；**AQ 塔第 3 叶 split.2 支落地**；E4b 交新车道 `jcajydu-split1b` 换血收口（~350–420） |
-| `jcajydu-split1b` | 战役 AQ/E4c–d：`aq3Concl` split.1 支 | **E4b `07ab2994` + E4c `9147c4ec`（`prev/nextRNotEqF`，190 行 2 件）已落库**；续派 **E4d-a**（共享子树 + `d1 = eList z1` + f_last，140–190）→ **E4d-b**（`aq3Concl`，20–30），走"`z1` 唯一出现"替代路线 |
+| ~~`jcajydu-split1b`~~（**退役**，续519） | 战役 AQ/E4c–d：`aq3Concl` split.1 支 | **E4c `9147c4ec` + E4d-a-1 `4b859592` + a-2 `96b817ad` + a-3 `374ee1ec` 全落库**；f_last 四支**装配本体未完成**（止损交到件层），六步装配清单 + 交接备注（`nextElPrevElUniq` 前提、`loopListSpine` 二择一方向、段2 禁用 `nextElAppendOfNotMem`）已交 `jcajydu-aqfin` |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
 | `jcajydu-j2w1` | 战役 J2：reduction2.hl 移植 | **批A 已落库 `0366932f`（9 件标准三，见续411）**；考古定案 8 批划分，批B 等 J0、批E(AQ1–13) 是 J3 硬前置 |
 | `jcajydu-j1w1` | 战役 J1（B1–B3 已落）+ `more_lemma2` 前置批 M0 | **B1/B2/B3 已落库**；`more_lemma2` **M1/M2 冻结**（91 外部引用：8 landed / 37 岛独占 / 22 零命中；且硬挂 J2 的 `transform_assumption_v2_lemma`）⇒ 改派 **M0a**（pnxvwfs+qcdvkea+pplhulj 6 件/607 HOL 行）+ 37 岛件重落清单（见续440） |
 | `j1-b4fix` | 战役 J1 收口（B4 rotParts）+ `more_lemma2` M0 各批 | **已落库**：`rotParts` `2dfd6e32` / M0h3 `ab0df061`（339 行）/ ChainMarkedQ 干净部分 `3d015703`；**`markedQ` BLOCKED**（TameList16:1109 上游 sorry）；续派 J1 B5–B10 普查 → 非 J2 批或 `simple_hypermap_uniq` 机器片 |
 | ~~`j1-b5a2`~~（退役，续503） | 战役 J1 F 组 + more_lemma2 收尾 | **12 patch 全落**：B5-A/B5-B + F1–F4 + chain-uniq §1–§3（`e802d086`/`b73f5074`/`5ec9c8ed`）；**#33 关闭**；账本口径修正（`f_list_quotient_alt` 已落） |
 | `ml2-marked`（**退役**，续514） | more_lemma2 尾部：`QRDYXYJ_list` 组装 | **✅ 封盘 36/37**：`marked_translate` `2c0a6429` + `card_atoms_of_loop` 链层 `75bc538a` + **`QRDYXYJ_list` 链层组装 `d5d1d41f`**；唯一锁 = `ChainMarkedQ`（`TameList16:1095/1109`）；转零产出待命（触发判据 = `markedListIsNodeNondegenerate` 转标准三，解锁后 ~80 行两件） |
-| `j3-t9c2` | 战役 J3/T9D 收尾 | **T9C 本体 `e01d6da9` 已落库**（`splitFace_props` 14前提/17结论 + `all_uniq_faceListAt`，338 行 3 件）；T9 只剩 2 件；续派 **`mem_faceListAt_lemma`(:3148) + `mem_faceListAt`(:3489)**（`Reduction3Thm9D.lean` 在写） |
+| ~~`j3-t9c2`~~（**退役**，续522） | 战役 J3/T9D 收尾 | **✅ T9 板 5/5 全清**：T9C `e01d6da9` + **T9D `e4843930`（`Thm9D` 444 行 + `Thm9D2` 178 行，标准三）**；交付 T9 段状态核对表 + ERRATA（`mem_flatten_facelistat` 实为 `647b5a65`） |
 | `nkezbfc-scout` | WSEWPCH generic 支上游锁侦察（只读，零 patch） | **开跑**：`NKEZBFC`（LocalAuto2:1606 `:= sorry`，HOL localization.hl:1502）+ `EJRCFJD`（LocalAuto9：仅 CARD=3 基例 + 挂账 skeleton）依赖 × 状态表、真值风险、WSEWPCH generic 可装配清单、立项裁决建议 |
 | `jcajydu-j3def` | 战役 J3：定理层（147 件 / 15 批） | **已落：审计 76 件 + 链 4/5 `8aec92da` + b_nfgtrans 族 `70415fa0` + T9B `647b5a65` + T9C 支撑 `faaac9f0`**；T9 余 4 大件拆 T9C 本体（`j3-t9c2`）/ T9D |
-| `j3-t6d` | 战役 J3/T7E–F | **T5B/T5C/T5D/T7C/T7D `e3ce8ca0` + T7E `a2e021be`（`bNfgtransInduction`，189 行）已落库**；b_nfgtrans 族全清；续派 **T7F**：`subdivFaceFinal2` def（章程 `subdivface-final2-defs` 已立）+ `subdivFace0Alt2Finals`(:456) + `subdivFaceFinal2Finals`(:488)；`reduction_subdivFace`(:720) 只报不入 |
+| `j3-t6d` | 战役 J3 收盘 → J2 前置 | **T7E `a2e021be` + T7F `9e54540f`/DEF-FIX `3fac7551` + T7H 终版收盘表（143 active = 114 已落 / 11 J2 / 18 上游 / 0 定义层 / 可攻 0）**；`TAV2_READINESS.md` 已交（AQ 真证叶 2/13）；在飞 **Wave 0 接口层**（复用 Spine `transformAssumptionSpine`/`transformAssumptionOfAq`，只做 ntrans/rtrans 桥 + 13 槽搬运，160–310） |
 | `archive-data-scout` | trust-base §4 第 2 条：`ArchiveData/{Tri,Quad,Pent,Hex}` vs HOL vs AFP 三路机械对账 | **✅ 已收工（四类全 SAME，见续407）** |
 
 > **排队（等腾槽）**：**下一战役槽自动补位序（2026-11-09 编排者排定，续412 波序细化）**：
