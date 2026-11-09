@@ -149,7 +149,10 @@
    `l.reverse.getLast! = l.head!` 需对 `l.reverse` 用再 `reverse_reverse`）。
 14. **有未解目标的声明仍会以 `sorryAx` 进入环境**（不只在 `error` 时）：文件里一处
    `error` 可能让另一处未收口的声明静默带债 ⇒ 验收必须 **"`error` 计数 0" 与 axioms 双检**，
-   只跑 `#print axioms` 或只看 RC 都会漏。
+   只跑 `#print axioms` 或只看 RC 都会漏。**新变体（2026-11-10，wsewpch wave1 实测）**：
+   private helper 里的 `error`（如 `Finset.sum_nbij` 方向写反）会让 Lean 为失败声明**合成
+   sorry 占位**并污染下游定理的 axioms 面 —— 见到"意外 `sorryAx`"先查**同文件 `error`**，
+   再怀疑证明本身。
 15. **`Set.ncard_eq_toFinset_card` 的 autoParam 会静默插 `sorryAx`**（Finiteness 解不出时）：
    必须显式给证人（`Fintype`/`Finite` 项），否则审计线被污染而编译仍 RC=0。
 16. **陈述里写 `let (a,b,c) = f x` 模式绑定，会在最终 defeq 检验时打爆 heartbeats**
