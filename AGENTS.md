@@ -147,6 +147,11 @@
    （`fList`/`eList` 在 `Kepler.Assembly`，不在 `Kepler.Text.Reduction5`）。另：
    `getLast!` 按前缀构造子递归（`(l++[a]).getLast! = a` 走 `getLastD_concat`；
    `l.reverse.getLast! = l.head!` 需对 `l.reverse` 用再 `reverse_reverse`）。
+14. **有未解目标的声明仍会以 `sorryAx` 进入环境**（不只在 `error` 时）：文件里一处
+   `error` 可能让另一处未收口的声明静默带债 ⇒ 验收必须 **"`error` 计数 0" 与 axioms 双检**，
+   只跑 `#print axioms` 或只看 RC 都会漏。
+15. **`Set.ncard_eq_toFinset_card` 的 autoParam 会静默插 `sorryAx`**（Finiteness 解不出时）：
+   必须显式给证人（`Fintype`/`Finite` 项），否则审计线被污染而编译仍 RC=0。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
