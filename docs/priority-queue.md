@@ -92,21 +92,21 @@
 
 | 叶 | HOL | 陈述（Lean 槽） | 状态 |
 |---|---|---|---|
-| AQ1 | AQ1.hl 2,201 | `(ntransSpine … 1).flatten.Nodup` | **在飞**（`jcajydu-aqfin`）：`split.1.Nodup` ✅ `be2ffc9c`、`N` 分解+flatten 展开 ✅ `3744d722`；余互不交+总装（AQ1-c ~100–180）；**AQ11-a 硬前置** |
+| AQ1 | AQ1.hl 2,201 | `(ntransSpine … 1).flatten.Nodup` | **六批已落**（`be2ffc9c`/`5957d046`/`3744d722`/`f3f6e4b4`/`9fe8f8b3`/`2e3529c3`）；剩 `f1 × f2` + 总装 ⇒ **换血车道 `aq1-fin` 收口中**；**AQ11-a 硬前置** |
 | AQ2 | AQ23.hl | `∀ s ∈ ntrans … 1, s ≠ []` | ✅ `aq2`（`TowerE2:219`，48 行） |
 | AQ3 | AQ23.hl | `∀ s ∈ ntrans … 1, fLastSpine L s` | ✅ `aq3`（`Split1H:44`，66 行；split.1 = `fLastSplit1` 249 行 + split.2 = `aq3Split2FLastClean`） |
 | AQ4 | AQ4.hl 2,569 | `∀ s ∈ ntrans … 1, loopListSpine L s` | 待派 |
 | AQ5 | AQ56.hl | node 闭包（`node d ⊆ flatten`） | 待派 |
 | AQ6 | AQ56.hl | `rtrans … 1 ∈ ntrans … 1` | ✅ `aq6`（`TowerBase:353`，17 行） |
-| AQ7 | AQ7.hl 289 | `x ∈ rtransSpine … 1` | 待派（**债已清**：`hqymrtx1List` 转标准三 `967ebbb5`） |
+| AQ7 | AQ7.hl 289 | `x ∈ rtransSpine … 1` | ✅ `aq7`（`JcajyduAqLeaf7:121`，158 行；helper 复用 AQ10-a2 批 ⇒ 净体积省一半） |
 | AQ8 | AQ8.hl 3,413 | `∀ q ∈ quotientListSpine L (ntrans …), q.Nodup` | 待派 |
 | AQ9 | AQ9.hl 1,594 | `1 < 块数`（quotient 非退化） | 待派 |
 | AQ10 | AQ10.hl 206 | `nextEl (rtrans … 1) x = fList L x` | **helper 层 14 件全 ✅**（`e9ac2e06` 5 + `26314655` 8 + `fcf718d9` 1）；**AQ10-b 主证在飞**（120–200） |
 | AQ11 | AQ11.hl 277 | `finalListSpine L (findListSpine (ntrans … 1) (eList x))` | 待 **AQ1**（AQ11-a 350–500 + AQ11-b 100–160） |
-| AQ12 | AQ12.hl 4,091 | `finalListSpine L (rtrans … 1) → FlagListSpine L (ntrans … 1)` | 待派（**债已清**：`marked_list_is_node_nondegenerate` 标准三） |
+| AQ12 | AQ12.hl 4,091 | `finalListSpine L (rtrans … 1) → FlagListSpine L (ntrans … 1)` | **开工清单在写**（`jcajydu-aq7`；塔内第二大叶；要求标出与 AQ13 的共享 helper） |
 | AQ13 | AQ13.hl 1,574 | `¬finalListSpine L (rtrans … 1) → SFlagListSpine L (ntrans … 1) (rtrans … 1) x` | 待派 |
 
-**真证进度：3/13**（`aq2`/`aq3`/`aq6`）；AQ10 helper 层 8 件已下（`26314655`），AQ1（3 批已落 2 批）与 AQ10-a3/AQ7 在飞。**塔顶**：`transformAssumptionOfAq` 已落（13 前提 ⇒ `transformAssumptionSpine`），13 叶全落后即得无条件形，77 处消费者随之解锁。
+**真证进度：4/13**（`aq2`/`aq3`/`aq6`/`aq7`）。AQ10 helper 层 14 件 + b0 已落（主证在飞）；AQ1 六批已落（`f1×f2` + 总装在飞）；AQ12 清单在写。**塔顶**：`transformAssumptionOfAq` 已落（13 前提 ⇒ `transformAssumptionSpine`），13 叶全落后即得无条件形，77 处消费者随之解锁。
 **关键路径**：AQ1 → AQ11-a；AQ7/AQ12 债已清可即刻派；AQ8(3,413)/AQ12(4,091) 是体量最大的两叶，需拆子波。
 
 ## 1. 在飞（2026-11-09 18:45，池 **5/5**，续477 对表）
