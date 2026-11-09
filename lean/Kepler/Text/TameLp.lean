@@ -868,7 +868,7 @@ OneFace 节 finalized 形）的 Lean 折算：
 （local_fan (v',e',f)）；经 `localFan_p2.of_LocalFan_noIso` 下潜 p2 世界，
 由 `WRGCVDR_BIJ` 供给 `DETER_RHO_NODE`（fst 单射定 ρ）与 `v_prime` 内容。
 LA1 `rhoNode1` 与 LA2 `rhoNode1_p2` 同为 `Classical.epsilon` 构造（defeq）。 -/
-private theorem perimFaceEqImageRhoNode1 (V : Set V3) (E : Set (Set V3))
+theorem perimFaceEqImageRhoNode1 (V : Set V3) (E : Set (Set V3))
     (f : Set (V3 × V3))
     (hloc : LocalFan (vPrime_p2 V f) (ePrime_p2 E f) f)
     (hhedge : ∀ v ∈ vPrime_p2 V f, ∃ w, {v, w} ∈ ePrime_p2 E f) :
@@ -900,7 +900,7 @@ private theorem perimFaceEqImageRhoNode1 (V : Set V3) (E : Set (Set V3))
 OneFace 节 finalized 形）的 Lean 折算，取主用形 `h = fun d => arcV 0 d.1 d.2`
 （周长和）。`hfin` 为 Lean `setSum` 折算所需（HOL `SUM_IMAGE` 对有限集天然
 有限；面 = 超映射轨道，有限性由 `orbitMap_finite` 供给）。 -/
-private theorem perimSumFaceArc (V : Set V3) (E : Set (Set V3))
+theorem perimSumFaceArc (V : Set V3) (E : Set (Set V3))
     (f : Set (V3 × V3))
     (hloc : LocalFan (vPrime_p2 V f) (ePrime_p2 E f) f)
     (hhedge : ∀ v ∈ vPrime_p2 V f, ∃ w, {v, w} ∈ ePrime_p2 E f)
