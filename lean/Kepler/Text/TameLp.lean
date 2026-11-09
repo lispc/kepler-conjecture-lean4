@@ -10928,17 +10928,17 @@ WSEWPCH 核（polar_fan.hl:2213）的依赖树现状（CIZMRRH 三分 + CARD V �
     azim_cycle = rho_node1 + 逐点 azim = arcV，求和 = 2π 走
     ORDER_AZIM_SUM2Pi0——**求和引擎已在树内真证**（PackingAuto25:8921
     `ORDER_AZIM_SUM2Pi0`；PackingAuto22:7562 `ORDER_AZIM_SUM2Pi` 同）；
-    但 KCHMAMG 本身（LocalAuto5:5018 同名件为桩且 LA5 不可 import——
-    与 PackingAuto18 的 AFF_GE_MONO_TRANS 重名）与 CYCLIC_SET 词表桥未移植；
+    **本支已收口**：`FAN_PERIMETER_LE_2PI_OF_CIRCULAR`（LocalAuto7:7134，标准三）；
   - lunar 分支：共线对劈半，周长和 = 两片平面扇 azim 望远镜和 ≤ π + π
-    （COLLINEAR_AZIM_0_OR_PI 收口）；依赖 HKIRPEP / CARD_IS_LEAST_CYCLE /
-    RHO_NODE1_MONO_WITH_AZIM（local_lemmas 章未移植）+ ITER 轨道 kit
-    （LocalAuto7:424-476 桩组）；
-  - generic 分支：内角全 < π 时走极扇 BGMIFTE（LocalAuto7:642 桩）+
-    polar_fan 构造（树内无定义）；存在平角（interior_angle1 = π）顶点时
-    直 dart 分裂成两小扇用归纳；依赖 GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE 等
-    LocalAuto7 桩组；
-  - 三分前提 CIZMRRH（WRGCVDR.hl:3056；LocalAuto3:1881 同名件为桩）。
+    （COLLINEAR_AZIM_0_OR_PI 收口）；**本支已收口**：
+    `FAN_PERIMETER_LE_2PI_OF_LUNAR`（LocalAuto7:4838，标准三），
+    RHO_NODE1_MONO_WITH_AZIM 与 ITER 轨道 kit 已在 LA7 内落地；
+  - generic 分支：内角全 < π 时走极扇 `BGMIFTE`（**已真证** LocalAuto7:7300，
+    标准五合取，标准三）+ `polarFan` 构造（**已在 LA7:3727 定义**）；存在平角
+    （interior_angle1 = π）顶点时直 dart 分裂成两小扇用归纳（W12 straight 支，
+    件已起：`p12a_*`/`p12b_*`，`UNION_AFF_GE_1_2` 已真证）；
+  - 三分前提 CIZMRRH（WRGCVDR.hl:3056；**已真证 LocalAuto3:2734，标准三**——
+    旧注记「LocalAuto3:1881 同名件为桩」作废，1881 现为无关 private 辅助区）。
   即残余锚 = 极扇/局部扇深章整章（LocalAuto7 头注 DISCHARGES 契约本体），
   非单波机械件，需专职 lane 多波推进。
 
