@@ -3103,7 +3103,7 @@ def EJRCFJD_concl_p9 : Prop :=
 fan into two strictly smaller convex local fans whose solid angles sum to
 `sol_local E FF`, so the strong induction hypothesis at both slices gives
 nonnegativity. -/
-private theorem p9_chord_case (h : EJRCFJD_concl_p9) (N : ℕ)
+theorem p9_chord_case (h : EJRCFJD_concl_p9) (N : ℕ)
     (IH : ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)),
       convexLocalFan_p2 V E FF → generic_p2 V E → V.ncard < N → 0 ≤ solLocal_p9 E FF)
     (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
@@ -3160,7 +3160,7 @@ the `EGHNAVX` orbit-ordering kit and is the second-wave target — this
 assembles the full theorem: base case `CARD V = 3`
 (`SOL_LOCAL_FAN_POS_CASE3_p9`), chord case (`p9_chord_case`), no-chord case
 (`stepB`). -/
-private theorem p9_main_induction (h : EJRCFJD_concl_p9)
+theorem p9_main_induction (h : EJRCFJD_concl_p9)
     (stepB : ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)),
       convexLocalFan_p2 V E FF → generic_p2 V E →
       (¬ ∃ v w : V3, v ∈ V ∧ w ∈ V ∧
