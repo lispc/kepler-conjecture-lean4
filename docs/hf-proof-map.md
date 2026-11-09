@@ -6,6 +6,13 @@
 >
 > ## 状态更新
 >
+> - **2026-11-09（编排者，五）**：**信任基座定格（基线 T @`52275a1c`）**——goodList 波四落地：
+>   最后 2 条 `{hex,pent}_top_replay` 换 kernel `decide`+符号链，`K_AXIOM` **587→585**（根面 591→589，
+>   Δ=2 精确命中）；manifest 再生 PASS，形状定格 **2 种**（shard-range 580 + tri-single-seed 5）。
+>   **本文件正文中以下现时数字已被基线 T 取代**：§0 表 §6 行「585+2 native_decide」→「585 native_decide」、
+>   §0 表 §9 行「根面 591 未清」→「根面 589 未清」、§10/§11/§12 处的「587 axiom」→ 585
+>   （§6 的收尾**已完成**，不再是「在飞」）；SORRIED 78 与各项 sorry 结构不变。
+>   本条目与「口径与数字出处」指针为权威，其余 587/591 字样按本条目折算。
 > - **2026-11-09（编排者，四）**：§11 #3 拆单定案（jcajydu-scout）——jcajydu 本体是 99 行薄壳，
 >   全部数学在前提 `restricted_hypermaps_are_planegraphs_thm`（reduction5.hl:150，
 >   传递闭包 ≈20k HOL 行；"全树 0 移植"陈旧：基座/RXOKSKC/DANGEYJ/壳装配件已落，
@@ -42,9 +49,9 @@
 > 声明**名**是稳定锚点：行号对不上时按名字 grep。
 >
 > ## 口径与数字出处（本文不自己重算任何指标）
-> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（基线 S @`2ef062e8`，2026-11-06 19:27）
->   —— cone SORRIED **78** / `K_AXIOM` **587** / 根面 591 = 587 native + 标准三 + `sorryAx`。
-> - 78 的构成（57 Assembly + 21 Text）、587 的构成（585 shard + 2 `{hex,pent}_top_replay`）：
+> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（基线 T @`52275a1c`，2026-11-09 定格）
+>   —— cone SORRIED **78** / `K_AXIOM` **585** / 根面 589 = 585 native + 标准三 + `sorryAx`。
+> - 78 的构成（57 Assembly + 21 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
 >   `docs/handoff-2026-11-06.md` §0。
 > - 信任基座逐类对照（含 `by eval` ↔ `native_decide`）、原版怎么处理 624：`docs/trust-base.md` §2 + `handoff §0.1`。
 > - 图数 19,715（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）：`Kepler/Assembly.lean:7295-7299` docstring。

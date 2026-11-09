@@ -9,19 +9,22 @@
 > **核心路线图（2026-11-09 用户指定）**：[`docs/hf-proof-map.md`](hf-proof-map.md) —— 九节完成度 +
 > 逐箭头逻辑链 + 缺口清单 §11；推进以它为基础，状态更新写在它的「状态更新」节。
 > **数字口径（2026-11-05 起）**：本文件里的指标是「最后实测」，不是实时值——
-> 每条都带 commit 与日期。当前实测 = **基线 S @`2ef062e8`（2026-11-06 19:27）**
-> （cone `K_REACH 2,088,636` / **SORRIED 78** / **`K_AXIOM 587`** / MODULES 4,657 /
-> UNIVERSE 2,100,847 / COVERAGE **99.4183%**；口径 II 28,213 / 78 / 587 / 38,867。
-> 根面 `#print axioms the_kepler_conjecture_e2e` = **591** = 587 native + 标准三 + `sorryAx`
-> （编排者 `lake env lean Kepler/Final.lean` 复核，RC=0）。
-> `docs/e2e-reachability-map.tsv` **已按基线 S 重写（5,341 行）** — 仪器原样输出，非手工）。
-> 较基线 R（`5ed1bb16`）：**K_AXIOM 621→587**（goodList 三波，逐条见续396–397）；
-> SORRIED 79→78，但**这 −1 是去重不是还债**：`ox3q1hP25` 从 `def … : Prop := sorry`
+> 每条都带 commit 与日期。当前实测 = **基线 T @`52275a1c`（2026-11-09，信任基座定格）**
+> （cone `K_REACH 2,088,969` / **SORRIED 78** / **`K_AXIOM 585`** / MODULES 4,747 /
+> UNIVERSE 2,101,184 / COVERAGE **99.4187%**；口径 II 28,546 / 78 / 585 / 39,204。
+> 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
+> （编排者复核，RC=0，Δ=2 精确命中波四消除的 2 条公理）。
+> `docs/e2e-reachability-map.tsv` **已按基线 T 重写（5,429 行）** — 仪器原样输出，非手工；
+> `trust-base.tsv` manifest 已再生（585 行，`--check` PASS：0 非地面、0 形状未知、
+> 三区间 0 空隙 0 重叠）。**公理形状仅剩 2 种：shard-range 580 + tri-single-seed 5**
+> —— AGENTS §1 的「约 585 条」自此为精确值，无任何可再削的公理。
+> 较基线 S（`2ef062e8`）：**K_AXIOM 587→585**（goodList 波四：最后 2 条
+> `{hex,pent}_top_replay` 换 kernel `decide`+符号链，`52275a1c`）；
+> K_REACH +333、K_MODULES +90（86 个 `TopReplay{Hex,Pent}Shard` 文件 + `Cert{Hex,Pent}` 链）。
+> 较基线 R（`5ed1bb16`）的轨迹：621 → 601 → 587 → **585**（goodList 四波）。
+> SORRIED 79→78（基线 S 时）**是去重不是还债**：`ox3q1hP25` 从 `def … : Prop := sorry`
 > 改成显式 230 条合取（`b85eaade`）后，`def` 自己那条 sorry 消失，而它代表的债务
-> （`Assembly.lean:1871` `nliOx3q1h : ox3q1hP25 := sorry`）一分未减
-> ⇒ **基线 R 的"79"高估了 1，真实待证义务一直是 78。**
-> K_REACH +782、K_MODULES +399（233 个 `Graphs/*` 重放模块 + 199 个 shard + `NliBanks17`）。
-> 剩余 587 = 585 shard + **2** 条 `{hex,pent}_top_replay`（`goodlist-w4` 的靶子）。
+> （`Assembly.lean` `nliOx3q1h : ox3q1hP25 := sorry`）一分未减 ⇒ 真实待证义务一直是 78。
 > union 本轮未重测（仍引基线 O：2,107,294 / ORPHANS 15,622）。
 > **624 的事原版怎么做，见 `handoff-2026-11-06.md` §0.1**（HOL 跳过分类定理；HOL 零公理真证
 > goodList；Isabelle 用 8 条 `by eval` 做枚举）—— 这是终局裁决的前提，别再当成"纯 Lean 债务"讨论。
@@ -34,7 +37,7 @@
 
 | 里程碑 | 定义 | 现状（**2026-11-06 实测，基线 O @`7c120676`**） |
 |---|---|---|
-| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **⚠️ 本行下列数字停在基线 O（历史）；当前 = 基线 S：cone SORRIED 78 / K_REACH 2,088,636 / AXIOM **587** / MODULES 4,657 / UNIVERSE 2,100,847 / COVERAGE 99.4183%（见文件头与 TSV）。基线 O：cone K_REACH 2,086,156（较 N +205）/ SORRIED **99**（较 N −19，`b07a1722` 补测）/ AXIOM 624（±0）/ K_MODULES 4,195 / K_UNIVERSE 2,099,010；口径 II ex-Cases = 25,733 / 99 / 624 / 37,030；UNION K_REACH 2,107,294 / ROOTS 164 / K_UNIVERSE 2,122,916 / COVERAGE 99.264% / ORPHANS 15,622（public 11,297 + private 4,325）/ SHIMS 22（sorried 2）**。**ORPHANS +1,123 已归因：GENERATED 层 Δ=0（否证「重建 shard」假设），`PackingAuto22` 单模块 983 = 87.5%（该模块本轮才由 `04db48c7` 进 env），其余 +140 是「新增未接线材料净掉塔群回收」；非回归。** 详见 `docs/e2e-reachability-map.md` 基线 O |
+| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **⚠️ 本行下列数字停在基线 O（历史）；当前 = 基线 T（2026-11-09 定格）：cone SORRIED 78 / K_REACH 2,088,969 / AXIOM **585** / MODULES 4,747 / UNIVERSE 2,101,184 / COVERAGE 99.4187%（见文件头与 TSV）。基线 O：cone K_REACH 2,086,156（较 N +205）/ SORRIED **99**（较 N −19，`b07a1722` 补测）/ AXIOM 624（±0）/ K_MODULES 4,195 / K_UNIVERSE 2,099,010；口径 II ex-Cases = 25,733 / 99 / 624 / 37,030；UNION K_REACH 2,107,294 / ROOTS 164 / K_UNIVERSE 2,122,916 / COVERAGE 99.264% / ORPHANS 15,622（public 11,297 + private 4,325）/ SHIMS 22（sorried 2）**。**ORPHANS +1,123 已归因：GENERATED 层 Δ=0（否证「重建 shard」假设），`PackingAuto22` 单模块 983 = 87.5%（该模块本轮才由 `04db48c7` 进 env），其余 +140 是「新增未接线材料净掉塔群回收」；非回归。** 详见 `docs/e2e-reachability-map.md` 基线 O |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 621 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -232,6 +235,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（14:30，续405）**：**信任基座定格全套写档（基线 T @`52275a1c`）**。① **goodList 波四落库**（`52275a1c`）：55 Hex（1,363 项）+ 31 Pent（754 项）`TopReplay*Shard` 新文件（25/片，每片 `decide + kernel`）+ `Cert{Hex,Pent}.lean` 两条 `top_replay` 证明体换符号链（陈述逐字不动）；**编排者验收**：反向闭包重建 `CertHex→CertPent→TameClassification→Graphs→Assembly→Final`（初版脚本误含 72 个 TameSpine 模块，权威 grep 纠正——TameSpine 零消费）；根面 **591→589，Δ=2 精确命中**（pit 14 判据）；干净落库（车道误产的 90 个孤儿 olean 精确清除，92 个真 shard 保留）。② **J 战役常设政策入账**（`c36dfd15`）：池内 ≥1 条战役车道常驻，波序 J0→rx桥→J1∥J2→J3（重估触发器 `nfgtrans'` 定义层）→J4→J5（收口 Assembly:2509）；`jcajydu-rxbridge` 已发（深侦先行，30 分钟级）。③ **仪器基线 T**：`e2e_reach_map.lean` 重跑（13.6 min，`nice -n 19`，pit 15 纪律下串行）；`K_AXIOM 585`（名单 diff 精确 −2：仅两条 `*_top_replay._native.native_decide.ax_1_1` 消失）、`K_SORRIED 78` 不变、`K_REACH` 2,088,636→**2,088,969**（+333）、`K_MODULES` 4,657→**4,747**（+90）、COVERAGE **99.4187%**；TSV 换装 + `trust_manifest.py` 再生（585 行，`--check` PASS：585/585 地面、0 非地面、0 形状未知、Quad/Pent/Hex 三区间 0 空隙 0 重叠、**形状定格 2 种：shard-range 580 + tri-single-seed 5**）。④ 全套文档刷到 585：`trust-base.md`（§1/§2/§2.1/§3/§7）、`AGENTS.md` §1/§2（「约 585」→「恰好 585」；根面 589）、`handoff §0`（基线 T 表 + 585 构成）、本文件头。**意义**：AGENTS §1 验收式的公理侧自此为精确冻结值，§6 路线图公理段收官；唯一债 = 78 条锥内 sorry（J 战役等正在啃）。
 
 - **2026-11-09（12:20，续404）**：**`jcajydu-c1` 落库（`0c520618`，纯新增 212 行）+ 对 SCOUT 的一处实质勘误**。① **编排者验收**：apply-check PASS；pit 10 手工扫描（新文件）代码层零违禁（5 处 `sorry` 命中全在文件头散文）；独立编译 RC=0 / 0 error；三条壳定理 `#print axioms` **全标准三零 sorryAx**。② **内容**：`Text/TameSpine/JcajyduShell.lean` —— 三个陈述槽（**纯 `def : Prop` 零证明义务**：num 层填证槽 / Set α 层前提槽 / `rxNumTransport` 跨型桥槽）+ 三条真证壳定理（`jcajyduShell` = Assembly `jcajydu` 条件形孪生 / `jcajydu1Shell` / 层归约胶水 `…V4Set_of_num`）⇒ **J 战役只需攻 num 层 + 一座桥**。`Assembly.lean:2509` 的 sorry 本波零触碰（J5 收口 = 三桥 defeq 折算 wrapper）。③ **勘误（对 SCOUT"前置全部就位"）**：RXOKSKC 产出在 **Set α 层**、JXBJOAB 已被 TameList1:169 honest-narrowing 收窄为 **ℕ→ℕ 单态**，而 HOL 壳（JCAJYDU.hl:57）恰恰消费跨型内容 ⇒ 模板签名在本树不可证，壳显式加 `htx : rxNumTransport α` 槽。桥的编码件 `injNumExists`（TameList5:211）已在；缺 rx 层 `MAP MAP φ` 运输段（**外推 300–600 行，不依赖 reduction 链，可与 J0 并行**，开工前需 30 分钟级深侦）。"壳不吃 hp 可直接真闭"检查：**不成立**（三条壳类型级消费前提，HOL 侧同构）。④ **J 战役规模更新**：壳本体已完成（本波）⇒ 余量 = rxNumTransport 桥（300–600，新增独立批）+ J0（1.5–2.5k）+ J1–J4（≈17k）+ J5 wrapper（~300）。立项与否仍待用户。
 

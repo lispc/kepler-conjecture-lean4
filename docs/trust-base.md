@@ -19,8 +19,9 @@
 2. 每条公理的陈述是**封闭可判定的地面事实**，进 manifest、可 replay、注明数据源与生成器版本；
 3. 与原文形式化的 `same*`/`pre_iso_test*` **同数据、同信任类别**。
 
-**唯一还算"债"的是 `sorryAx`。** 当前 587 条是**声明的信任基座**，不是债
-（goodList 的 23 条已在 `f686ca1a`/`2ef062e8` 里改回 kernel 证明，不再是公理）。
+**唯一还算"债"的是 `sorryAx`。** 当前 **585** 条是**声明的信任基座**，不是债
+（goodList 23 条 + top/archive 16 条已全部改回 kernel 证明，不再是公理：
+三波 `5ed1bb16`/`f686ca1a`/`2ef062e8` + 波四 `52275a1c`；基座于 2026-11-09 **定格**）。
 
 ---
 
@@ -31,9 +32,9 @@
 | 内核 | LCF kernel（`fusion.ml`） | Isabelle LCF kernel | Lean 4 kernel | **对等** |
 | 区间算术 / LP 证书 | **形式化验证**（Solovyev `formal_ineqs/`、`formal_lp/`） | — | 内核 `IExpr`/`checkPos` 重放 | **对等** |
 | `good_list` 归档校验 | **零公理真证**：`tame/good_list_archive.hl` 的 `all_conv_univ (eval_good_list0 …)`（`eval_good_list0` 见 `formal_lp/hypermap/computations/list_hypermap_computations.hl:449-468`） | `pre_iso_test3..6`，`by eval` | **0 条公理**（23 条已全部改为 kernel `decide`/符号链，三波 `5ed1bb16`/`f686ca1a`/`2ef062e8`） | **已追平 HOL**（比 Isabelle 的 `by eval` 更强） |
-| tame 枚举 | **明写跳过**（`tame/tame_concl.hl:26`：`(* WTEMDTA_concl skipped … *)`） | `same3..6`，`by eval`（`Computation/ArchComp.thy`，35 行 8 条；session `(slow very_slow)`、`timeout = 50400`） | 585 条 `native_decide`（580 `*_shard_*` + 5 `tri_shard_*`）+ **2** 条 `{hex,pent}_top_replay` = **587** | **对等**（同类别、同数据；我们分片更细，但分解经机器验证无损，见 §3） |
+| tame 枚举 | **明写跳过**（`tame/tame_concl.hl:26`：`(* WTEMDTA_concl skipped … *)`） | `same3..6`，`by eval`（`Computation/ArchComp.thy`，35 行 8 条；session `(slow very_slow)`、`timeout = 50400`） | 585 条 `native_decide`（**580 shard-range + 5 tri-single-seed，仅 2 种形状**；基线 T `52275a1c` 定格） | **对等**（同类别、同数据；我们分片更细，但分解经机器验证无损，见 §3） |
 | `Prop := sorry` 型定义 | 无 | 无 | **0 条**（`ox3q1hP25` 已由 `b85eaade` DEF-FIX 换成显式 230 条合取，闸 PASS） | **已修** |
-| `else True` 回落 / 索引盲谓词 / 空量化注册表 | 无 | 无 | `idsLpIneqs := []`、`LpTerminalCertified(_id)`、`certifiedIneqHolds_pilot` | **我们更差 → 必须修**（`lp-registry` 车道在飞） |
+| `else True` 回落 / 索引盲谓词 | 无 | 无 | **空量化注册表已修**：`idsLpIneqs := lpIneqsIds`（127 条真债，`60d0f544` DEF-FIX，闸等价验收）；剩余：`CertifiedIneqHolds` 五兄弟 `True` 回落分量、`LpTerminalCertified(_id)` 索引盲谓词 | **我们更差 → 必须修**（packineqa-w1 等在飞） |
 
 `by eval` 是 Isabelle 的 code generator 求值 ⇒ **它才是 `native_decide` 的对应物**。
 所以「624 变标准三」是**比原版更高的要求**，不是补原版做过的事。
@@ -45,9 +46,9 @@ HOL Light 的**构建本身是严格的**：`text_formalization/build/strictbuil
 `trig2.hl:723/1014` 里那两处 `new_axiom`（`acs_atn2` / `COS_MONO_LT_EQ`）**都在注释块 `(* *)` 里**，
 是后来被真证掉后留下的历史痕迹。
 
-⇒ 逐**单个证明助手**看：HOL 的终定理零公理，我们是 **587** 条 —— 这一项我们确实弱。
+⇒ 逐**单个证明助手**看：HOL 的终定理零公理，我们是 **585** 条 —— 这一项我们确实弱。
 ⇒ 逐**整个项目**看：他们的 tame 枚举信任在 **Isabelle 的 `by eval`** 里，只是不在 HOL 的公理表上。
-我们的 587 条与它**同类**，区别是**我们的看得见**（`#print axioms` 直接列出来），
+我们的 585 条与它**同类**，区别是**我们的看得见**（`#print axioms` 直接列出来），
 他们的藏在跨证明助手的 import 里。
 
 **可采纳的做法**：HOL 用 `strictbuild.hl` 机械禁用 `new_axiom`/`mk_thm`。
@@ -69,14 +70,14 @@ python3 scripts/trust_manifest.py --check   # 只校验（CI 用）
 它校验两件机器可判的事：
 
 **(a) 地面性**：每条陈述必须是 `decide (<闭项 Bool>) = true`，不出现 `∀`/`∃`/自由变量。
-**基线 S 实测：587 / 587 通过，0 条非地面，0 条形状未知。**
+**基线 T 实测（`52275a1c`，2026-11-09）：585 / 585 通过，0 条非地面，0 条形状未知。**
 
 **(b) 分解无损**：`*_shard_*` 的 `List.range' a l` 区间在每个 `(类, next_tame p)` 上
 **无空隙、无重叠**地铺满 `[0, max(a+l))`。铺满 ⇒ 585 条分片合起来**就是**一条 ∀ 事实，
 即 Isabelle 的 `same3..6` 那一条。**这是"不比他们差"最硬的一句证明**，且是组合检查（秒级），
 不是重算。
 
-基线 S 实测（全绿）：
+基线 T 实测（全绿）：
 
 | 类 | `next_tame p` | 片数 | 覆盖 | 空隙 | 重叠 |
 |---|---|---:|---|---:|---:|
@@ -86,10 +87,11 @@ python3 scripts/trust_manifest.py --check   # 只校验（CI 用）
 | Tri | 0 | 5 | 单种子（`tri_shard_i`，fuel 500000） | — | — |
 
 `good_list` 那句（`List.take N` / `List.drop M` 切片首尾相接）**已随公理一起消失** ——
-23 条全改 kernel 证明后，切片连续性检查在 587 上是空集（正确，非失效）。
+23 条全改 kernel 证明后，切片连续性检查在 585 上是空集（正确，非失效）。
 
-形状分布从 7 种降到 **3 种**（基线 S）：`shard-range` **580** · `tri-single-seed` **5** ·
-`top-replay` **2**（= `{hex,pent}_top_replay`，`goodlist-w4` 的靶子）。
+形状分布定格为 **2 种**（基线 T）：`shard-range` **580** · `tri-single-seed` **5**。
+第 3 种 `top-replay`（`{hex,pent}_top_replay` 2 条）已由 `goodlist-w4`（`52275a1c`）
+换成 `decide + kernel` 证明链，公理名单 diff 恰好 −2，**§6 的公理面已无任何可再削项**。
 
 ---
 
@@ -160,7 +162,7 @@ python3 scripts/trust_manifest.py --check   # 只校验（CI 用）
 **20 GB oleans**；可达结点 2,060,423 = **锥的 98.69%**，其中一个银行
 （`CQITNPEAx3725403817`）占 1,853,539（88.8%）/ **967,759 叶**。
 
-**这些证书贡献 0 条公理。** 公理面与计算面几乎不相交：587 条公理全部来自
+**这些证书贡献 0 条公理。** 公理面与计算面几乎不相交：585 条公理全部来自
 `Graphs/` 与 `Assembly` 侧的枚举声明，2.06M 个证明结点产出 **0** 条
 ⇒ **重计算买的是锥，不是信任。**
 

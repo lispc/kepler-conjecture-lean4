@@ -68,7 +68,6 @@ Kepler.Graphs.hex_shard_7500._native.native_decide.ax_1_1	Kepler.Graphs.CertShar
 Kepler.Graphs.hex_shard_7600._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K076	shard-range	3	7600	84	4000000	Hex				60f0771e0fde46f3
 Kepler.Graphs.hex_shard_800._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K008	shard-range	3	800	100	4000000	Hex				342480f0016e8cb5
 Kepler.Graphs.hex_shard_900._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Hex.K009	shard-range	3	900	100	4000000	Hex				4ec35553a04d31ae
-Kepler.Graphs.hex_top_replay._native.native_decide.ax_1_1	Kepler.Graphs.CertHex	top-replay	3								5557d449b8fab9da
 Kepler.Graphs.hexr2_shard_0._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.HexR2.K000	shard-range	3	0	1	400000000	Hex				7e3529a5e06c14ab
 Kepler.Graphs.hexr2_shard_1._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.HexR2.K001	shard-range	3	1	1	400000000	Hex				2b8ff5952c2db897
 Kepler.Graphs.hexr2_shard_2._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.HexR2.K002	shard-range	3	2	1	400000000	Hex				b2866c83157b7ae9
@@ -435,7 +434,6 @@ Kepler.Graphs.pent_shard_800._native.native_decide.ax_1_1	Kepler.Graphs.CertShar
 Kepler.Graphs.pent_shard_850._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K017	shard-range	2	850	50	50000000	Pent				c3afc77cc5a1d56e
 Kepler.Graphs.pent_shard_900._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K018	shard-range	2	900	50	50000000	Pent				b1861fc13a39c779
 Kepler.Graphs.pent_shard_950._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.Pent.K019	shard-range	2	950	50	50000000	Pent				65d6c83919e78601
-Kepler.Graphs.pent_top_replay._native.native_decide.ax_1_1	Kepler.Graphs.CertPent	top-replay	2								1551a92c2a5d6284
 Kepler.Graphs.pentr2_shard_120._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.PentR2.K010	shard-range	2	120	1	300000000	Pent				0f4ab577be2d3ba2
 Kepler.Graphs.pentr2_shard_121._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.PentR2.K011	shard-range	2	121	1	300000000	Pent				cfab47ab51952a62
 Kepler.Graphs.pentr2_shard_122._native.native_decide.ax_1_1	Kepler.Graphs.CertShards.PentR2.K012	shard-range	2	122	1	300000000	Pent				64866c5a789126db
