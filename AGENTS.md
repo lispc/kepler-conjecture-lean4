@@ -116,8 +116,14 @@
 2. **`def` 展开导致 `rfl`/`show` 失败时，先 `#check` 该 def 的自动生成方程引理**
    （`foo.eq_1/eq_2/eq_3`）——RHS 常是 Prop-ite 而非 `bif/cond`，按 `cond` 写必错。
 3. `Nat.iterate` **右嵌套**、`List.append` **左结合（`infixl`）**：pow/拼接目标的构造树必须按此摆。
-4. `List.append_eq_nil` 不存在；`List.getElem_append_right` 的 `h₂` 须具名传参；
-   `List.Disjoint` 是 `∀ a∈l₁, ∀ b∈l₂, a≠b` 形，收口用 `(hdisp _ hx1 _ hx2) rfl`。
+4. `List.append_eq_nil` 不存在；`List.getElem_append_right` 的 `h₂` 须具名传参。
+   **`List.Disjoint`（Batteries `Data/List/Basic.lean:544`，随 Kepler 模块 transitively import）
+   的真实形状是 `∀ ⦃a⦄, a ∈ l₁ → a ∈ l₂ → False`**（元素隐式、单成员、结论 `False`），
+   收口用 `(hdisp hx1 hx2).elim`——**不是** `∀ a∈l₁, ∀ b∈l₂, a≠b`（旧措辞错）；
+   而 `List.nodup_append` 的第三分量才是裸两变量 `∀ a, a∈l₁ → ∀ b, b∈l₂ → a≠b`。
+   两者逻辑等价但形状不同，互转各需一个 lambda。
+   **`#check foo` 报 unknown identifier 时先怀疑 import 面（探针有没有 import 到定义它的模块），
+   再怀疑存在性**——2026-11-10 有车道因 bare-prelude 探针误判"`List.Disjoint` 不存在"。
 5. 批量替换注释前先跑 **comment-depth 核查**（`/-` 与 `-/` 计数），否则层次归零。
 6. **`rw` 只重写首个匹配，`simp only [if_pos/if_neg h]` 重写全部匹配 if**——
    LHS/RHS 各带同条件 `if` 时，`rw [if_pos]` 只改一边，会伪造"类型不匹配"假象
