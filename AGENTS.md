@@ -152,6 +152,11 @@
    只跑 `#print axioms` 或只看 RC 都会漏。
 15. **`Set.ncard_eq_toFinset_card` 的 autoParam 会静默插 `sorryAx`**（Finiteness 解不出时）：
    必须显式给证人（`Fintype`/`Finite` 项），否则审计线被污染而编译仍 RC=0。
+16. **陈述里写 `let (a,b,c) = f x` 模式绑定，会在最终 defeq 检验时打爆 heartbeats**
+   （实测 8M 仍爆，单件编译从分钟级失控）⇒ 改「显式 `a b c` 参数 + 假设
+   `h : f x = (a,b,c)`」，前提/结论一字未改（下游传 `rfl` 实例化），编译降到 2 分钟级
+   （j3-t9c2 T9D 实测：`splitFace` 三元 let，115 s）。**注意**：这是陈述写法变更，
+   虽 defeq 等价也必须在该批 DIFFERS 里记档。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
