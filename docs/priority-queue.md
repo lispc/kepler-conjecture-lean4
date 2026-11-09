@@ -318,6 +318,13 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（05:15，续709）**：**AQ13 W4a2c3 落库（`75724c76`，122 行）——`lp=z1` 支收口，AQ13 只差 W4b 主装；W22d-i 边界 = `IsClosed affGe` 缺公开件，裁决转公开 `yk10_isClosed_affGe22`**。
+① **`aq13w4a2c3_fChainLast`**（直证，绕开 p1 定位与 `p∉parts r` 分叉）：`y=z1` ⇒ `nextEl r y = z`；取 `p1∈parts r, y∈p1`，`by_cases y = p1.getLast!`（true 支走旧 SFlag 第二合取+③/`finalDartTransfer`；false 支：`y = r.getLast!` 撞 `lastOfPartOfLast`，否则 `conditionLastParts(r,p1,y).mp` 逆否得 `nextEl r y = fList (eList y)`）；于是 `fList (eList y) = z`、`findFace (eList y) = findFace z = f`、`indexf (eList y) z = 1` ⇒ `indexfBetwnEq` 二支：`eList y = l'y` 用 ⑦，否则 `eList y ∈ W` 用 ⑭。**未新造 def**，`lower_case` = 表示层 simp。标准三；RC=0、0 error/0 warning；olean 装池。
+② **W22d-i 边界（aq7 机器实测，采信）**：`CLOSED_WEDGE` 三支——`<π` 支吃 `WEDGE_GE_EQ_AFF_GE`（LA5:2024 std3）+ **`IsClosed (affGe {u0,u1} {u2,u3})` 无公开件**（private 全套在 TameLp §9l.1：`yk10_isClosed_affGe22`:9968 / `yk10_affGe22_eq_union`:9928 / `yk10_isClosed_cone3`:9832 等；PA12:840 `CLOSED_MCELL` k=2 原文亦记 NEEDS 此件）；`=π` 支 `AZIM_PI_WEDGE_GE_CROSS_DOT`（LA5:6058 std3）+ `isClosed_Ici.preimage` 可落 ~15；`>π` 支 `IN_CONV0_IMP_AZIM_PI`（LA5:7459 std3）+ `IN_CONV0` + `WEDGE_GE_SPLIT`（PA18:7661 **std3**）+ `AZIM_BASE_SHIFT_LE`（PA18:7649 **std3**）~100（`AZIM_SPLIT_POINT` 桩可绕开）。
+③ **裁决**：(a) **`yk10_isClosed_affGe22` `private` → `theorem`（1 行可见性，陈述零改；先例 W22a）** 批准；(b) import PA18 不放行（整章 sorryAx 污染）；(c) 只落两支持续不算收口，不批。有此件后 W22d-i ≈100–130。
+④ **执行顺序**：BIEFJHU phase B 正跑 3 个 kernel 编译（各 RSS 7.3GB、free ~150MB）⇒ **TameLp 重编暂缓**（避免 OOM）；已令 aq7 先写 `LocalAuto7W22dI.lean` 三支，等我「TameLp 已装池」再编译。
+⑤ **派单**：`aq13-survey` → **W4b（`aq13` 主装，80–120）**，基线 `75724c76`；落地 ⇒ 塔 13/13 ⇒ `transformAssumptionSpine_of_aq13`（`fa0ef688`）一行接顶。
+
 - **2026-11-10（05:01，续708）**：**塔顶 12/13 槽形落库（`fa0ef688`，39 行）——`aq13Concl` 成为唯一显式槽；12 叶真证定理全部填入**。
 ① **`transformAssumptionSpine_of_aq13`**：`(h13 : aq13Concl L hL) → transformAssumptionSpine L hL`，体 = `transformAssumptionOfAq L hL (aq1 L hL) … (aq12 L hL) h13` 一行。标准三、零 sorryAx；RC=0、0 error/0 warning；olean 装池。
 ② **意义**：AQ13 收口后**一行代入**即得 `transformAssumptionSpine`（HOL `transform_assumption` 目标形）⇒ 77 处消费者随之解锁。**塔账 = 12/13 真证 + 1 槽**。
