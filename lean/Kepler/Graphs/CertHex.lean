@@ -297,6 +297,7 @@ import Kepler.Graphs.CertShards.HexR2.K001
 import Kepler.Graphs.CertShards.HexR2.K002
 import Kepler.Graphs.CertShards.HexR2.K003
 import Kepler.Graphs.CertShards.HexR2.K004
+import Kepler.Graphs.TopReplayHex
 import Kepler.Graphs.TopBoundsHex
 import Kepler.Graphs.TopFinalsHex
 import Kepler.Graphs.ArchivePreHex
@@ -309,8 +310,7 @@ namespace Kepler.Graphs
 children table entries. -/
 theorem hex_top_replay : (List.range HexTop.length).all (fun i =>
     decide (next_tame 3 HexTop[i]! =
-      (HexTopChildren[i]!).map (resolveChild HexTop HexFrontier))) = true := by
-  native_decide
+      (HexTopChildren[i]!).map (resolveChild HexTop HexFrontier))) = true := topReplayHexAll
 
 /-- Bounds: every tagged child index is in range of its target list. -/
 theorem hex_top_bounds : (List.range HexTopChildren.length).all (fun i =>

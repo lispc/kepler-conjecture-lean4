@@ -205,6 +205,7 @@ import Kepler.Graphs.CertShards.PentR3.K006
 import Kepler.Graphs.CertShards.PentR3.K007
 import Kepler.Graphs.CertShards.PentR3.K008
 import Kepler.Graphs.CertShards.PentR3.K009
+import Kepler.Graphs.TopReplayPent
 import Kepler.Graphs.TopBoundsPent
 import Kepler.Graphs.TopFinalsPent
 import Kepler.Graphs.ArchivePrePent
@@ -217,8 +218,7 @@ namespace Kepler.Graphs
 children table entries. -/
 theorem pent_top_replay : (List.range PentTop.length).all (fun i =>
     decide (next_tame 2 PentTop[i]! =
-      (PentTopChildren[i]!).map (resolveChild PentTop PentFrontier))) = true := by
-  native_decide
+      (PentTopChildren[i]!).map (resolveChild PentTop PentFrontier))) = true := topReplayPentAll
 
 /-- Bounds: every tagged child index is in range of its target list. -/
 theorem pent_top_bounds : (List.range PentTopChildren.length).all (fun i =>
