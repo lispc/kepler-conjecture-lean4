@@ -3967,6 +3967,190 @@ theorem p11w_card_of_inj {V : Set V3} {p : V3 → V3}
 end W11aKit
 
 
+/-! ### W11b1 BGMIFTE conclusion-1 prologue (`p11w_*`; WSEWPCH wave W11b1)
+
+* `P11W_AFFSIGN_SUBSET_AFFINESPAN` — the **reconstructed** sign-transport
+  lemma (NOT a port: `AFFSIGN_MONO_SHUFFLE`/`AFF_GE_EQ_AFFINE_HULL` have no
+  definition anywhere in `reference/flyspeck/` — only polar_fan.hl:1449
+  references them).  The mathematical content consumed there is
+  `Affsign sgn s t v ⟹ v ∈ affineSpan (s ∪ t)`, proved here from the
+  `Affsign` semantics (PackingAuto18 carries a private twin at :7437 which is
+  not importable from LA7; this is a fresh proof of the same statement).
+* `P11W_PRIME_NCOL` / `P11W_PRIME_INJ` / `P11W_CARD` — the HOL BGMIFTE
+  opening block (polar_fan.hl:1146-1180): the polar map's non-collinearity
+  (cross-algebra `lemma2/lemma3` machinery), injectivity on `V`, and
+  **BGMIFTE conclusion 3** (`V'.ncard = V.ncard`). -/
+
+section W11b1Kit
+
+/-- `Affsign` → `affineSpan` 桥（**新建件**，非移植：HOL
+`AFFSIGN_MONO_SHUFFLE` 在 reference 全树无定义、仅 polar_fan.hl:1449 消费；
+其在那里承担的实际数学内容即本件。证法：取 `w₀ ∈ s ∪ t`，差分落入
+`vectorSpan (s ∪ t)`，再沿仿射方向平移回去。） -/
+theorem P11W_AFFSIGN_SUBSET_AFFINESPAN {sgn : ℝ → Prop} {s t : Set V3} {v : V3}
+    (hv : Affsign sgn s t v) : v ∈ (affineSpan ℝ (s ∪ t) : Set V3) := by
+  obtain ⟨f, hfin, hvec, -, hone⟩ := hv
+  by_cases hF : hfin.toFinset = ∅
+  · rw [hF, Finset.sum_empty] at hone
+    norm_num at hone
+  · obtain ⟨w₀, hw₀F⟩ := Finset.nonempty_iff_ne_empty.2 hF
+    have hw₀S : w₀ ∈ (s ∪ t : Set V3) := (Set.Finite.mem_toFinset hfin).1 hw₀F
+    have key : v - w₀ = ∑ w ∈ hfin.toFinset, f w • (w - w₀) := by
+      have h1 : (∑ w ∈ hfin.toFinset, f w • (w - w₀) : V3)
+          = (∑ w ∈ hfin.toFinset, f w • w) - (∑ w ∈ hfin.toFinset, f w) • w₀ := by
+        rw [Finset.sum_smul, ← Finset.sum_sub_distrib]
+        exact Finset.sum_congr rfl fun w _ => by rw [smul_sub]
+      rw [h1, hvec, hone, one_smul]
+    have hd : (v - w₀ : V3) ∈ vectorSpan ℝ (s ∪ t : Set V3) := by
+      rw [vectorSpan_def, key]
+      refine Submodule.sum_mem _ fun w hw => ?_
+      exact Submodule.smul_mem _ _ (Submodule.subset_span (Set.mem_vsub.2
+        ⟨w, (Set.Finite.mem_toFinset hfin).1 hw, w₀, hw₀S, rfl⟩))
+    have hvv : v = (v -ᵥ w₀) +ᵥ w₀ := by rw [vsub_vadd]
+    rw [SetLike.mem_coe, hvv,
+      AffineSubspace.vadd_mem_iff_mem_direction (v -ᵥ w₀)
+        (subset_affineSpan ℝ (s ∪ t : Set V3) hw₀S),
+      direction_affineSpan]
+    exact hd
+
+/-- 非平行向量的纯量等式杀手（HOL BGMIFTE lemma3 的按需形）：
+`α • x = β • y`，`x, y ≠ 0` 且 `{0,x,y}` 不共线 ⟹ 两个系数全零。 -/
+private theorem p11w_smul_eq_zero {x y : V3} (hx : x ≠ 0) (hy : y ≠ 0)
+    (hncol : ¬ Collinear ℝ ({(0:V3), x, y} : Set V3)) {α β : ℝ}
+    (h : α • x = β • y) : α = 0 ∧ β = 0 := by
+  constructor
+  · by_contra hα
+    apply hncol
+    have hxey : x = (α⁻¹ * β) • y := by
+      calc x = α⁻¹ • (α • x) := by rw [smul_smul, inv_mul_cancel₀ hα, one_smul]
+        _ = α⁻¹ • (β • y) := by rw [h]
+        _ = (α⁻¹ * β) • y := by rw [smul_smul]
+    have hcol : Collinear ℝ ({(0:V3), y, x} : Set V3) :=
+      (collinear3_iff_smul (v := (0:V3)) (w := y) (w1 := x) hy).mpr
+        ⟨α⁻¹ * β, by rw [hxey, sub_zero, sub_zero]⟩
+    rwa [show ({(0:V3), y, x} : Set V3) = ({(0:V3), x, y} : Set V3) from by
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto] at hcol
+  · by_contra hβ
+    apply hncol
+    have hyex : y = (β⁻¹ * α) • x := by
+      calc y = β⁻¹ • (β • y) := by rw [smul_smul, inv_mul_cancel₀ hβ, one_smul]
+        _ = β⁻¹ • (α • x) := by rw [← h]
+        _ = (β⁻¹ * α) • x := by rw [smul_smul]
+    have hcol : Collinear ℝ ({(0:V3), x, y} : Set V3) :=
+      (collinear3_iff_smul (v := (0:V3)) (w := x) (w1 := y) hx).mpr
+        ⟨β⁻¹ * α, by rw [hyex, sub_zero, sub_zero]⟩
+    exact hcol
+
+/-- **BGMIFTE 前奏：极映射两两非共线**（HOL polar_fan.hl:1146-1170）：
+`v ≠ w` 时 `{0, v×ρv, w×ρw}` 不共线。交叉代数：共线 ⟹ 双叉积为零 ⟹
+展开 `(v×ρv)×(w×ρw) = α•ρv - β•v` ⟹ 非平行系数全零
+（`p11w_smul_eq_zero`）⟹ `α = 0` 与 `GENERIC_LOCAL_FAN_AZIM_POS` 的 sin
+正性矛盾（`SIN_AZIM_MUTUAL_CROSS`；`v = ρw` 边界改用 β 与对称方向 +
+SEMI_IDE 收口）。 -/
+theorem P11W_PRIME_NCOL {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hg : Generic V E) (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    ∀ v ∈ V, ∀ w ∈ V, v ≠ w →
+      ¬ Collinear ℝ ({(0:V3), cross3 v (rhoNode1 FF v),
+        cross3 w (rhoNode1 FF w)} : Set V3) := by
+  intro v hv w hw hne hcol
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  have hrmemv : rhoNode1 FF v ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv
+  have hncv : ¬ Collinear ℝ ({(0:V3), v, rhoNode1 FF v} : Set V3) :=
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hv
+  have hvne : v ≠ 0 := fun hz =>
+    hncv (by rw [hz]; exact collinear3_of_eq rfl)
+  have hrvne : rhoNode1 FF v ≠ 0 := fun hz =>
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hrmemv (by rw [hz]; exact collinear3_of_eq rfl)
+  have hncv' : ¬ Collinear ℝ ({(0:V3), rhoNode1 FF v, v} : Set V3) := by
+    rw [show ({(0:V3), rhoNode1 FF v, v} : Set V3)
+        = ({(0:V3), v, rhoNode1 FF v} : Set V3) from by
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto]
+    exact hncv
+  -- 交叉零：collinear ⟹ pv × pw = 0
+  have hcross0 : cross3 (cross3 v (rhoNode1 FF v)) (cross3 w (rhoNode1 FF w)) = 0 := by
+    have h := (COLLINEAR_CROSS_0 (x := (0:V3)) (y := cross3 v (rhoNode1 FF v))
+      (z := cross3 w (rhoNode1 FF w))).mp hcol
+    have hcoe : (WithLp.toLp 2 (crossProduct
+        ((cross3 v (rhoNode1 FF v) - 0 : V3) : Fin 3 → ℝ)
+        ((cross3 w (rhoNode1 FF w) - 0 : V3) : Fin 3 → ℝ)) : V3)
+        = cross3 (cross3 v (rhoNode1 FF v)) (cross3 w (rhoNode1 FF w)) := by
+      refine p7w_v3_eq ?_
+      rw [coe_toLp, coe_subP, coe_subP, coe_zeroV, sub_zero, sub_zero]
+      simp only [coe_cross3P]
+    rwa [hcoe] at h
+  -- 展开：(v×ρv)×(w×ρw) = α•ρv - β•v
+  have hexp : cross3 (cross3 v (rhoNode1 FF v)) (cross3 w (rhoNode1 FF w))
+      = ((cross3 w (rhoNode1 FF w)) ⬝ᵥ v) • rhoNode1 FF v
+        - (rhoNode1 FF v ⬝ᵥ (cross3 w (rhoNode1 FF w))) • v := by
+    refine p7w_v3_eq ?_
+    rw [coe_cross3P, coe_cross3P, coe_subP, coe_smulP, coe_smulP]
+    rw [cross_cross_eq_smul_sub_smul]
+    congr 1
+    rw [dotProduct_comm]
+  have hsmul : ((cross3 w (rhoNode1 FF w)) ⬝ᵥ v) • rhoNode1 FF v
+      = (rhoNode1 FF v ⬝ᵥ (cross3 w (rhoNode1 FF w))) • v := by
+    have h := hcross0
+    rw [hexp] at h
+    exact sub_eq_zero.mp h
+  have hαβ := p11w_smul_eq_zero hrvne hvne hncv' hsmul
+  by_cases hvr : v = rhoNode1 FF w
+  · -- 边界情形 v = ρw：α 自动为零；改用 β 与对称方向
+    have hβ0 : rhoNode1 FF v ⬝ᵥ (cross3 w (rhoNode1 FF w)) = 0 := hαβ.2
+    have h1 : rhoNode1 FF v ⬝ᵥ (cross3 w (rhoNode1 FF w))
+        = (cross3 v (rhoNode1 FF v)) ⬝ᵥ w := by
+      rw [hvr]
+      rw [p7w_dot_coe, p7w_dot_coe, coe_cross3P, coe_cross3P]
+      rw [triple_product_permutation]
+      exact dotProduct_comm _ _
+    have hβ' : (cross3 v (rhoNode1 FF v)) ⬝ᵥ w = 0 := by
+      rw [← h1]
+      exact hβ0
+    have hwrv : w ≠ rhoNode1 FF v := by
+      intro hcon
+      have hsem : rhoNode1 FF (rhoNode1 FF w) ≠ w := LOCAL_FAN_IMP_NOT_SEMI_IDE h2 hw
+      apply hsem
+      rw [← hvr, hcon]
+    have hsin := GENERIC_LOCAL_FAN_AZIM_POS hcl hedge hg hia v w hv hw
+      (fun hwv => hne hwv.symm) hwrv
+    have hpos' : (0:ℝ) < (cross3 v (rhoNode1 FF v)) ⬝ᵥ w :=
+      (SIN_AZIM_MUTUAL_CROSS v (rhoNode1 FF v) w).2.1.mp hsin
+    rw [hβ'] at hpos'
+    exact lt_irrefl _ hpos'
+  · -- 主情形：α = 0 与 GENERIC_POS (w, v) 的 sin 正性矛盾
+    have hsin := GENERIC_LOCAL_FAN_AZIM_POS hcl hedge hg hia w v hw hv hne hvr
+    have hpos' : (0:ℝ) < (cross3 w (rhoNode1 FF w)) ⬝ᵥ v :=
+      (SIN_AZIM_MUTUAL_CROSS w (rhoNode1 FF w) v).2.1.mp hsin
+    have h0 : (cross3 w (rhoNode1 FF w)) ⬝ᵥ v = 0 := hαβ.1
+    rw [h0] at hpos'
+    exact lt_irrefl _ hpos'
+
+/-- **BGMIFTE 前奏：极映射在 `V` 上单射**（HOL polar_fan.hl:1171-1180）。 -/
+theorem P11W_PRIME_INJ {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hg : Generic V E) (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    ∀ v ∈ V, ∀ w ∈ V, cross3 v (rhoNode1 FF v) = cross3 w (rhoNode1 FF w) → v = w := by
+  intro v hv w hw heq
+  by_contra hne
+  refine P11W_PRIME_NCOL hcl hedge hg hia v hv w hw hne ?_
+  rw [heq]
+  exact collinear3_pair_right rfl
+
+/-- **BGMIFTE 结论 3**：极扇顶点数不变（`V' = (polarFan V E FF).1`）。 -/
+theorem P11W_CARD {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    (hg : Generic V E) (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    (polarFan V E FF).1.ncard = V.ncard := by
+  have hinj := P11W_PRIME_INJ hcl hedge hg hia
+  simp only [polarFan]
+  exact p11w_card_of_inj hinj
+
+end W11b1Kit
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
