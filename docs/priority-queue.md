@@ -71,7 +71,7 @@
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `packineqa-w1` | 闭 `nliPackIneqDefA`（5 条 3 族；定义已真化 `packIneqDefAP22`，`C1965189142x34` 在库；含 2 支常数不等式） | 在飞（已产 G4 证书试件 `C8055810915`，85 叶；⚠️ **该试件被写进主仓树 `lean/Kepler/Interval/Cases/`（未追踪）——位置违规，基线 T 已验证零污染，车道交付验收时编排者清理**） |
+| `packineqa-w2`（接管） | 原车道异常终止（翻译反例 + 105GB runaway，续418）——根因定位 + 5 条件挽救裁决（8055810915 G4 链 vs 1965189142a slab 路线分开判） | 在飞（NO-GO 合格交付） |
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
 | `jcajydu-c2`（J0） | 战役 J0：betwn 收官两定理（收官等 AQ 塔） | **J0-a `04a8443c` + J0-b₁ 已落库（见续417）**；续做 betwnRot（携坑）+ eq 引擎三件 |
@@ -244,6 +244,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（19:50，续418）**：**`packineqa-w1` 异常终止判定 + 接管车道发车 + 105GB 磁盘回收 + 编排者路由勘误**。① **死亡现场**：/tmp 最后活动 14:24、零进程、快照 11:57 未更新；`logs/bbarb_slab2.log` **72GB** + `bbarb_slab.log` **40.7GB** runaway（已剪尾保留 `*.TAIL-KEPT.log` 证据，logs 目录 105GB→468KB，磁盘释放 105GB 至 243GB 可用）；引擎 `bb_arb` 尾部打出 `COUNTEREXAMPLE：主 prog hi≤0（翻译错？）`——**翻译层被反例击中**，该状态下产出不可验收。原 agent 完成通知未送达且 ID 随上下文压缩丢失 ⇒ 编排者侧判死。② **主仓泄漏清理**：`C8055810915*`（原车道 G4 试件，85 叶）移入快照 `main-tree-leak/`——三起泄漏全部清账。③ **接管**：`packineqa-w2` 已发（根因定位：真反例 vs 引擎误报，最小可复现判据 + AGENTS §8 原版对照；5 条件逐条挽救裁决：8055810915 G4 链与 1965189142a slab 路线分开判；NO-GO 合格；**新日志纪律：>50MB 即失败，逐 slab 硬超时**）。④ **编排者路由勘误**：心跳指令误发 w6a（packineqa 的 agent ID 随压缩丢失，w6a=agent_2d5ff1de 恰在同批通知序列里被误认）——w6a 回复反而提供了归属实证（/tmp 各车道扫描），无实害；教训：**long-running 车道的 agent ID 要在续4xx 台账里留档**，本条起执行。
 
 - **2026-11-09（19:20，续417）**：**`jcajydu-c2` J0-b₁ 落库（80 行）+ betwnRot 止损续做授权**。① **编排者验收**：三方一致（in-tree/快照/patch_j0b.diff）；pit 10 零声明；岛编译 0 error + 探针 **2/2 全标准三**（`mapBetwn` AQ12:351 / `partsMemExists` AQ8:88→partsSpine）；binder 记账 `[DecidableEq α][DecidableEq β]` 合理（`nodup_map_iff_inj_on` 要求）。② **betwnRot 止损裁决**：设计已完、三坑已定位（getLast 点调用括号 / nodup_rotate flex-metavar 先固定 / take-drop 组合次序），3 轮结构性卡在 tactic 执行层 ⇒ **授权原车道携坑续做**（预计 1–2 轮闭合），eq 引擎三件随后；`JcajyduBetwnBase.idxOfGetLastOfNodup` private ⇒ **批准改 public**（可见性变更零公理影响，随下批触碰该文件时顺带）。③ **J0-c 备忘采信**：`FST_HD_MAP_betwn`/`condition_last_parts` 挂 `More_lemma1.parts_betwn` ⇒ 归 J2 波 intake（与 More_lemma2 批同属 more_lemma 家族，排队区并案）。
 
