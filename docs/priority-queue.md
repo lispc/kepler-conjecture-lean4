@@ -316,6 +316,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（06:50，续705）**：**W22d 目标纠正：是 `ConvexLocalFan`（LA1）不是 `convexLocalFan_p3`——「合取 1 缺口」不存在**。
+① **依据（编排者读 HOL + 本树槽）**：HOL `RNSYJXM.vhl:279-282` 结论 `convex_local_fan (v_prime V f, e_prime E f, f)`，且 `rewrite convex_local_fan ("let_RULE f_surr_localization")` ——**local_fan 结构由 f_surr_localization 输出直接改写**，不构造 p3 证人；W21 的槽 `hL` 就是 `ConvexLocalFan (vPrime…) (ePrime…) (H.face d)`（`LocalAuto1.lean:174-175` = `LocalFan ∧ azim ≤ π ∧ V ⊆ wedgeInFanGe`）；`p22c2_f_surr_localization_cond_noHcard` 的第一合取正是 `LocalFan (vPrime) (ePrime) FF` ⇒ **直接投影**。
+② **ERRATA**：aq1-fin 报的「合取 1 = `localFan_p3` 前置缺口、需从 ciib 提取公开件」**作废**——`localFan_p3` 是 `LVDUCXU` 的中间形，不是 W22d 消费形；不需要 `LocalFan.of_localFan_p3` 的反向件。
+③ **W22d-ii 工单改**：件 2a（azim 半 10–15，条件形 azim 合取 + `azimDart_eq_azimInFan` 切片侧）+ 件 2b（wedge 半 90–130，六步闭包链 + `hclosed` 槽 + 本地内联 `WEDGE_SUBSET_WEDGE_GE` 2 行，批准）+ 装配 `⟨(noHcard …).1, fun x hx => ⟨2a, 2b⟩⟩`；槽 = `hclosed`/`hsimple`/`hfs`。
+④ **PackingAuto import 政策**：`WEDGE_SUBSET_WEDGE_GE` 全树只在 PA18:8172（禁 import），但证明体 2 行 ⇒ 本地内联；**W22d-i 的 `p22d_closedWedge` 同样不得 import PA18**（sorryAx 污染）。
+
 - **2026-11-10（06:35，续704）**：**AQ13 y=z1 边界解开（编排者读 HOL 原文）——`condition_last_parts` 第二次调用只在 `lp ≠ z1` 支，`lp = z1` 支走第一次调用；W4a2c2 授权 100–130**。
 ① **边界（aq13-survey 报告）**：W4a2c2 步2 卡在「`condition_last_parts` 前提 `d ≠ s.getLast!` 与本支 `d = LAST p = f1.getLast!` 相撞」；车道建议「需另确认实参 d/s，>40 行新引理」⇒ 按令止损。
 ② **编排者读 HOL 原文（`reference/flyspeck/text_formalization/tame/AQ13.hl:1470-1495`）**：实参确认——第二次调用 `condition_last_parts[s;L;p;LAST p]` 的 **d 就是 `LAST p`、s 就是 f1**，其前提 `LAST p ≠ s.getLast! = z1` 由 `Seq.cat_uniq` 的 `RESA_TAC` 现场拆开 ⇒ **`LAST p = z1`（= `lp = LAST s`）这一支不用第二次调用**，走第一次调用 `(r, p1, LAST p)` 的 `nextEl r lp = fList (eList lp)` + `lower_case`；`lp ≠ z1` 支才用第二次调用，照 HOL 1479-1522 续。**车道是把第二次调用用在了前提为假的分支上。**
