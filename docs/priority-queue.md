@@ -101,12 +101,12 @@
 | AQ7 | AQ7.hl 289 | `x ∈ rtransSpine … 1` | ✅ `aq7`（`JcajyduAqLeaf7:121`，158 行；helper 复用 AQ10-a2 批 ⇒ 净体积省一半） |
 | AQ8 | AQ8.hl 3,413 | `∀ q ∈ quotientListSpine L (ntrans …), q.Nodup` | 待派 |
 | AQ9 | AQ9.hl 1,594 | `1 < 块数`（quotient 非退化） | 待派 |
-| AQ10 | AQ10.hl 206 | `nextEl (rtrans … 1) x = fList L x` | **helper 层 14 件全 ✅**（`e9ac2e06` 5 + `26314655` 8 + `fcf718d9` 1）；**AQ10-b 主证在飞**（120–200） |
+| AQ10 | AQ10.hl 206 | `nextEl (rtrans … 1) x = fList L x` | ✅ `aq10`（`JcajyduAqLeaf10G:?`，156 行；18 条声明全标准三：helper 14 + 分解 2 + 前缀 1 + 主证 1） |
 | AQ11 | AQ11.hl 277 | `finalListSpine L (findListSpine (ntrans … 1) (eList x))` | 待 **AQ1**（AQ11-a 350–500 + AQ11-b 100–160） |
 | AQ12 | AQ12.hl 4,091 | `finalListSpine L (rtrans … 1) → FlagListSpine L (ntrans … 1)` | **开工清单在写**（`jcajydu-aq7`；塔内第二大叶；要求标出与 AQ13 的共享 helper） |
 | AQ13 | AQ13.hl 1,574 | `¬finalListSpine L (rtrans … 1) → SFlagListSpine L (ntrans … 1) (rtrans … 1) x` | 待派 |
 
-**真证进度：4/13**（`aq2`/`aq3`/`aq6`/`aq7`）。AQ10 helper 层 14 件 + b0 已落（主证在飞）；AQ1 六批已落（`f1×f2` + 总装在飞）；AQ12 清单在写。**塔顶**：`transformAssumptionOfAq` 已落（13 前提 ⇒ `transformAssumptionSpine`），13 叶全落后即得无条件形，77 处消费者随之解锁。
+**真证进度：5/13**（`aq2`/`aq3`/`aq6`/`aq7`/`aq10`）。AQ1 六批已落（`f1×f2` + 总装在飞，换血车道 `aq1-fin`）；AQ12 清单在写；AQ8 清单将派。**塔顶**：`transformAssumptionOfAq` 已落（13 前提 ⇒ `transformAssumptionSpine`），13 叶全落后即得无条件形，77 处消费者随之解锁。
 **关键路径**：AQ1 → AQ11-a；AQ7/AQ12 债已清可即刻派；AQ8(3,413)/AQ12(4,091) 是体量最大的两叶，需拆子波。
 
 ## 1. 在飞（2026-11-09 18:45，池 **5/5**，续477 对表）
