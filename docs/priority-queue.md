@@ -76,7 +76,7 @@
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
 | ~~`jcajydu-c2`~~（退役） | 战役 J0 前置叶层 | **✅ 退役（续422）**：J0-a + J0-b₁ 两件落库；betwnRot 负结果 + eq 设计移交 j2w2；J0 收官等 AQ 塔（届时新开车道） |
 | `wsewpch-w7` | WSEWPCH 本体（残余 = LA7 内 9 sorry；W9–W13：circular→lunar→generic→straight→装配） | **批一 `881abe8d` + W8 已落库（hedge桥+CORE母版+CARD≤2，见续419）**；续派 W9（circular） |
-| `jcajydu-j2w2` | **新关键路径**：AQ1–13 塔（实测 17,585 HOL 行/214 定理，7 子批 ≈5–6.5k Lean） | **批E1 已落库 `296b4d34`（塔底+塔顶装配，见续414）**；续派 E2；E3 待 z 侧解锁裁决（堵点=TameList16:1109 在案债） |
+| `jcajydu-j2w2` | **新关键路径**：AQ1–13 塔（7 子批） | **E1 `296b4d34` + E2 `9ce31959` 已落库（aq2 第 2 叶，见续424）**；续派 E3 前置侦察 + betwnRot/eq 顺带批；split.1 循环机归 E4/E5 |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
 | `jcajydu-j2w1` | 战役 J2：reduction2.hl 移植 | **批A 已落库 `0366932f`（9 件标准三，见续411）**；考古定案 8 批划分，批B 等 J0、批E(AQ1–13) 是 J3 硬前置 |
 | `jcajydu-j1w1` | 战役 J1：reduction4.hl（B1–B10 ≈4–4.5k Lean） | **批B1 已落库 `05252ba3`（14 件，见续416）**；续派 B2（transform_count_not ×28 消费）；More_lemma2 批已排队 |
@@ -246,6 +246,11 @@
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
 
 - **2026-11-09（20:10，续419）**：**`wsewpch-w7` 批W8 落库（`hedge桥+CORE母版+CARD≤2支`，+108 纯新增）**。① **编排者验收**：apply-check PASS；零删除零违禁；LA7 sorry 仍 9；岛编译 0 error + olean 探针 **3/3 全标准三**（独立复跑）；**内存纪律首次实战验证**——车道 free=5,660 页时等待 35 分钟至 830k 页才起编（续414 新规生效）。② **内容**：`LOCAL_FAN_IMP_HEDGE`（hedge 桥，LocalFan 强形，顺带裁定 w5b SF 提案不成立）/ `WSEWPCH_CORE`（yk11 hcore 母版：假设逐字 = WSEWPCH 陈述形、结论逐字 = hcore 槽形；条件形 = axiom 纪律下唯一干净形态，本体落地即字面一行换无条件）/ `FAN_PERIMETER_LE_2PI_OF_CARD_LE`（五分支 CARD≤2 支；arcV=arccos 顶掉 ARCV_BOUNDS，LA6/LA10 import 取消）。③ **路线图更新采信**：骨架内部逐步真证**不可行**（新 sorry 禁令）⇒ 五分支全以独立定理落地：W9 circular → W10 lunar → W11 generic（BGMIFTE 结论1+3 ~600）→ W12 straight+V′坍缩（~600）→ W13 装配一行（`WSEWPCH_CORE WSEWPCH` 换无条件形）→ W6c → cone −1。两条新陷阱记档（rw 尾部 rfl reducible / ℝ 求和用 sum_le_sum_of_subset_of_nonneg）。④ 池：w7 续 W9。
+
+- **2026-11-09（15:12，续424）**：**`jcajydu-j2w2` 批E2 落库（`9ce31959`，401 行）——AQ2 落定 + AQ3 三槽钉形**。① **编排者验收**：apply-check PASS；pit10 零声明；岛编译 0 error + olean 探针 **5/5 全标准三零 sorryAx**（独立复跑）；内存闸执行到位（累计 40 分钟等待，续414 新规持续生效）。② **内容**：`aq2`（13 叶第 2 叶；HOL 装载 7 件上下文零消费——"上下文装载≠实质依赖"第二例）/ `betwnNilNextOfNodup`（exist_or_next_f 空窗内核，对 PPLHULJ/z_not_eq_ytrans 债链**部分去债化**）/ `aq3Split2FLast`（AQ3 split.2 三槽条件形，E3 填槽即合流）。③ **E1 预判修正（机器证据采信）**：AQ3 **不是** E3-可并行（split.2 双支都需 z∈face）；split.1 **BLOCKED** 于 n_list 幂循环机（Lebhirj/count_node_face/dart_of_card_node 全零命中，归 E4/E5）。④ **E3 前置侦察授权 + 队列交接**：按车道建议，E3 动工前先侦察 Hypermap hqymrtx 侧干净性（三选一裁决的输入）；续422 移交的 betwnRot draft + eq 三件设计在 E2 后顺带批执行（全 betwn 机械，一个 context）。
+
+
+- **2026-11-09（15:15，续425）**：**packineqa-w2 再犯主仓泄漏（警告后 20 分钟）——最后通牒已下**。`lean/Kepler/Text/PackingAuto22PackIneqA.lean`（195 行 packIneqDefA 胶水，15:07 创建）于 14:35 警告 + 14:44 其确认只读之后再次写入主仓 ⇒ 已移入其快照 `main-tree-leak/`（内容保留为潜在交付件）并下达**最后通牒：再犯即终止车道 + 编排者接管**。本 session 泄漏计数：w1（2 代）/ c2（1 起，已自清转正）/ w2（1 起再犯）——后续泄漏一律直接处置，不再记录性警告。
 
 - **2026-11-09（15:05，续423）**：**`jcajydu-j3def` 发车（按续418 补位序补 4/5→5/5）**。对象 = reduction3 定义层（`nfgtrans'`/`match_quotient_list`/`triple_data_v4`/`core_triple_v4`/`prebatch`，树内全零命中）；任务 = 考古全清单 + Lean 批次路线图 + **风险判词**（`match_quotient_list` 商/匹配形态能否自然进 Lean——不能则立即止损上报，触发全战役重估）+ 最底定义组首口。agent ID 留档：agent_d0341954。池 5/5 = packineqa-w2 / j2w2(E2) / w7(W9) / j1w1(B2) / j3def。
 
