@@ -75,7 +75,7 @@
 | `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证 | **✅ 已落库 `a0bc357b`（九桩全闭，见续413）**；下一位 = `wsewpch-w7`（WSEWPCH 本体）→ W6c 一行装配 |
 | `jcajydu-c2`（J0） | 战役 J0：betwn 收官两定理 | **侦察 BLOCKED + 批 J0-a 已落库 `04a8443c`（见续412）**；收官等 AQ 塔；续做 J0-b（不触塔） |
-| `wsewpch-w7`（新） | WSEWPCH 本体（polar_fan.hl:2213，1,150 HOL 行）移植 → 解锁 W6c 一行装配闭 `fully_surrounded_perimeter_bound`（cone −1） | 在飞（w6a 收官后补位） |
+| `wsewpch-w7` | WSEWPCH 本体（local/polar_fan.hl:2213，1,150 行；残余 = LA7 内 9 sorry，W8–W13 五批 1.5–2k Lean） | **批一已落库 `881abe8d`（FAN_PERIMETER 三件，见续415）**；续派 W8（串本体 + hedge 小桥） |
 | `jcajydu-j2w2` | **新关键路径**：AQ1–13 塔（实测 17,585 HOL 行/214 定理，7 子批 ≈5–6.5k Lean） | **批E1 已落库 `296b4d34`（塔底+塔顶装配，见续414）**；续派 E2；E3 待 z 侧解锁裁决（堵点=TameList16:1109 在案债） |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
 | `jcajydu-j2w1` | 战役 J2：reduction2.hl 移植 | **批A 已落库 `0366932f`（9 件标准三，见续411）**；考古定案 8 批划分，批B 等 J0、批E(AQ1–13) 是 J3 硬前置 |
@@ -240,6 +240,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（18:00，续415）**：**`wsewpch-w7` 批一落库（`881abe8d`，LA7 +161/−3）——FAN_PERIMETER 三件真证 + 本体考古定案**。① **编排者验收**：apply-check PASS（HEAD `f620f338`）；净 diff 仅 LA7，删除面 = **恰 3 行 sorry**（SF-54 冻结零新 statement）；新增行零违禁；LA7 显式 sorry **12→9**；岛编译 0 error + olean 探针 **3/3 全标准三**（独立复跑）。② **考古采信**（发车单勘误 ×1）：WSEWPCH 实际在 **`local/polar_fan.hl:2213`**（发车单写的 `polar_fan/` 子目录不存在）；证明体 2213–3362 = 1,150 行到 EOF（w6a 估算精确）；对 CARD(V) 良基归纳五分支（circular/lunar/generic+BGMIFTE/CARD≤2/平角 V′-坍缩 ~630 行主体）；**依赖闭包无断裂**——五分支叶子件全部已在树真证（CIZMRRH LA3:2734 / KCHMAMG 2-槽 LA35:24547 / HKIRP* LA5 / ARCV_BOUNDS LA6 / SOL_LOFA LA9 / HAS_ORD2 LA10 / sum4_azim_fan TopologyFan），残余 = **LA7 文件内自身 9 sorry**，估 1,500–2,000 Lean 行 / W8–W13 五批。③ **接口**：yk11 的 hcore 是 face-和形，终装配 = WSEWPCH 串 FAN_PERIMETER（本批已闭）+ ~10 行 "ConvexLocalFan → hedge" 小桥（W8 内容）。④ **w7 陷阱记档**：`Nat.add_mul_mod_self_right` 自动合一失败须显式实例化；审计 farm 条目必须是根目录全树 symlink（写成子目录会静默回落旧 olean——首跑 sorryAx 即此因）。⑤ **BGMIFTE NEEDS 注记过时**：CIZMRRH/KCHMAMG 已落地，真实缺口 = 结论 1+3（~600 行）+ FAN_AFF_GT_CONDITION 族。⑥ 池：w7 原地续 W8（三选一裁决的 E3 与 J0-b/J1w1 在飞不变）。
 
 - **2026-11-09（17:30，续414）**：**`jcajydu-j2w2` 批E1 落库（`296b4d34`，384 行）——AQ 塔开工 + 体量大勘误**。① **编排者验收**：apply-check PASS；pit 10 零声明；13 个陈述槽全为纯 `def : Prop`（零 `:= sorry`，pit 13 注射器零风险）；岛编译零 error（内存告警窗口下完成，见⑤）；olean 回灌探针 **10/10 零 sorryAx**。② **体量勘误（对 j2w1，编排者采信）**：AQ 章 11 文件实测 **17,585 HOL 行 / 214 定理**（j2w1 记 ~2k，低估近一个数量级）⇒ 全塔拆 7 子批（E1 塔底→E2 AQ2/3→E3 z 侧→E4 AQ1/5→E5 AQ4/7/10→E6 AQ8/9→E7 AQ11/13/12+塔顶），估 ≈5,000–6,500 Lean 行。③ **好消息**：13 条主定理前提同构、结论逐槽对齐树内 `NormalList/Marked/Flag/SFlag Spine` 合取序**零缺口**；AQ6 的 HOL 证明上下文 7 件在 Lean 直达路线**零消费**（z 侧解锁不挡 AQ6，同模式预判适用 AQ2/3 ⇒ E2 可与 E3 并行）。④ **堵点立案（E3 前置，交编排者裁决）**：Hojodcm z 侧两件（`mem_ztrans_rtrans_v0`/`z_not_eq_ytrans_v0`）BLOCKED——证词 `HQYMRTX1_list` 的树内孪生带 **TameList16:1109 在案 sorryAx 债**；三选一解锁路线（闭债 / Hypermap 侧重取证 / list 侧重证）在车道 DELIVERY §1.5-1。⇒ 先派 E2（不依赖 z 侧），E3 待裁决。⑤ **运维告警**：free pages 一度仅 5,163（~80MB）——5 车道并发编译窗口撞车；纪律追加：车道编译前 vm_stat，**free < 200,000 页（~3GB）时等待重试**。⑥ **编排者自身流程勘误**：续413 插入脚本两次 `open(p,'w')`，第二次用旧串覆写把续413 日志条目清掉（池表更新存活）——本次一并补回；教训：单脚本单次写。
 
