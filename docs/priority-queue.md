@@ -76,7 +76,7 @@
 | `wsewpch-w6a`（续跑） | LA7 九桩灌证（§5 第二根正主，10-26 任务单）：侦察定案 = 8/9 已于 10-26 落库（`2cee47ad`），#9 的 EGHNAVX 阻断已失效（LA14:6965 已真证但不可 import，改走 LA35/LA5/LA37/LA9 全可 import 路线），需复制 LA14-local 件 ~400 行 | 在飞（iter5 编译中，wip 快照 + logs 齐全；步子在自己的止损纪律内） |
 | `jcajydu-c2`（J0） | 战役第一波：num 层填证槽 `restrictedHypermapsArePlaneGraphsV4`（1.5–2.5k 行，HOL reduction 链机械移植） | 在飞（快照目录已立，未交件） |
 | `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行） | **✅ 已落库 `286cf3b6`（532 行，标准三零 sorryAx，见续410）** |
-| `jcajydu-j2w1`（J2 第一批） | 战役 J2：reduction2.hl（1,671 HOL 行/53 定理）移植第一口——先考古分层（AGENTS §8）再发首批（最底自含切片，≤450 行制式） | 在飞（波序补位） |
+| `jcajydu-j2w1` | 战役 J2：reduction2.hl 移植 | **批A 已落库 `0366932f`（9 件标准三，见续411）**；考古定案 8 批划分，批B 等 J0、批E(AQ1–13) 是 J3 硬前置 |
 | `jcajydu-j1w1`（J1 第一批） | 战役 J1：reduction4.hl（5,436 HOL 行/118 定理）移植第一口——同上 | 在飞（波序补位） |
 | `archive-data-scout` | trust-base §4 第 2 条：`ArchiveData/{Tri,Quad,Pent,Hex}` vs HOL vs AFP 三路机械对账 | **✅ 已收工（四类全 SAME，见续407）** |
 
@@ -238,6 +238,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（15:30，续411）**：**`jcajydu-j2w1` 批A 落库（`0366932f`，218 行）+ TameList17 off-by-one 实锤立案**。① **编排者验收**：apply-check PASS；pit 10 零声明；岛编译 RC=0 + olean 回灌探针 **9/9 全标准三**（trans0/rtransCat/ntrans1/nextElPrevElUniq/transformList*/rtrans*/ntransId）；主仓零泄漏。② **DEF-FIX 候选 → 实锤**（编排者亲核三源）：`TameList17:93` `splitNormalListSpine.nd` 用 `List.range' 1 (sz x.1)` = `[1..sz]`，而 HOL 定义点原文 `tame_defs2.hl:172` 是 `map … (upt 1 (sz (FST x)))`，`upt i j = iota i (j−i)` ⇒ `[1..sz−1]`——**Lean 多跑一步 i=sz 迭代**；`Reduction5Base:149` 同件正确带 `-1`（树内一错一对）。边界行为核对：sz=0/1 两版皆空、sz≥2 才分叉，本批 8 件陈述只涉 split.2/new2 不敏感。⇒ **挂账 DEF-FIX**（一行修复 + 消费者审计：TameList17 splitNormalListSpine 的下游），下次触碰 TameList17 或批 C 消费 split.1 前必须先修。③ **J2 考古要点采信**：reduction2 定理层 53 条全零命中但**定义层已全落**（Reduction5Base W0 + TameList17 Spine 双载体——②的偏差只在 Spine 载体）；最大缺口 = AQ1–AQ13 章（批 E `transform_assumption_v2_lemma`，77 处消费，树内零命中）= **J3 开工硬前置**；批 B 等 J0 的 JcajyduBetwnBase 落库即自含。④ **新雷区（与 rx 桥同源反向）**：nextEl 族泛型定理须沿 TameLp 三例 `[BEq α][LawfulBEq α][DecidableEq α]` 随形（BEq 留参吃 `instBEqProd`），只绑 `[DecidableEq α]` 会在 ℕ×ℕ 消费点失配。⑤ **UNRESOLVED 交下一轮**：W0/Spine 双载体是否冻结一侧（建议：Spine 载体待 ② 修复后再评估）；批 H list↔Graph splitFace 桥需专门侦察。⑥ J2 后续批次路线图（8 批划分）在车道 DELIVERY，J3 工单起草时对表。
 
 - **2026-11-09（14:45，续410）**：**`jcajydu-rxbridge` 落库验收（`286cf3b6`，532 行纯新增）——rxNumTransport 桥槽真证闭合**。① **编排者验收**：patch apply-check PASS 且产出与树内/快照副本三方同字节；pit 10 扫描文件内 axiom/sorry/admit/native_decide **零声明**（唯一命中是文件头散文）；岛编译 RC=0（nice 串行、前置 vm_stat，pit 15 纪律），文件尾锚 `#print axioms rxNumTransportBridge` = **标准三零 sorryAx**（编排者独立复跑，非车道自报）；槽签名与 `JcajyduShell.lean:125` 逐字吻合，壳文件零改动。② **内容**：`Text/TameSpine/JcajyduRxBridge.lean`——19 条支撑定理（9 条 ℕ 先例机械泛化 + TameLp §10 已泛型件直接消费；1 条 iso_node_set 轨道像泛型重落；1 条纤维集运输新写 ~55 行；rxG↔TameLp α=ℕ 同体 defeq `rfl` 折算）；**不依赖 reduction 链** ⇒ J 攻击面收缩为 num 层链 + J5 收口。③ **两条 UNRESOLVED 裁决**：532>§7 软线 450——**接受单文件落库**（TameSpine 现行 300–650 行/批制式内，7 轮失败全机械性零结构性；如后续触碰再拆）；HEAD 漂移终验——编排者岛编译即在落库时点 HEAD 上跑，已覆盖。④ **雷区记档（新）**：rx 层泛型化批次 binder 只许 `[DecidableEq α][DecidableEq β]`，加 `[BEq β][LawfulBEq β]` 与 def 烘焙实例失配（本轮唯一实质坑）。⑤ **波序推进**：J0 → rx桥 均（J0 在飞）⇒ **J1∥J2 发车条件满足**，两槽按战役常设政策补位（`jcajydu-j2w1` = reduction2.hl 1,671 行/53 定理首口；`jcajydu-j1w1` = reduction4.hl 5,436 行/118 定理首口）；两单均按**新 AGENTS §8** 先考古后动手。
 
