@@ -316,6 +316,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（05:30，续700）**：**W22d azim 半落库（`1f1ba54c`，46 行 1 件）——前件与条件形同槽，装配可一行消费；wedge 半转 recon**。
+① **`p22d_slice_azimDart_lt_pi`**：`FAN 0 V E → IsHypOn_p10 0 V E H1 → x ∈ dartsOfHyp_p3 E V → FF = H1.face x → IsHypOn_p10 0 (vPrime) (ePrime) H2 → FullySurrounded V E → 2 < FF.ncard → H2.Simple → hno → y ∈ FF → azimDart (vPrime) (ePrime) y < π`。**前件与 `p22c2_f_surr_localization_cond` 完全同槽**。标准三；RC=0、0 error/0 warning；olean 装池。
+② **路线 3 步**：条件形第 3 合取 `.2.2.1 y hy` 给 azim 不变式 → `rw [← haz]` → `FullySurrounded` 定义直接给 `< π`；`y ∈ dartOfFan` 由面⊆darts + `p22c2_dartsOfHyp_subset` ⇒ `{y.1,y.2} ∈ E` ⇒ `dart1OfFan` 右并支。
+③ **派单**：`jcajydu-aq7` → **W22d wedge 半 recon（只读 30–40）**——5 件未移植件现已全落/坍缩（`4829c7d7`/`212bb47b`/`96a2537a`/`5f1ef193`/`8c717a72`），recon 三问：HOL 328-392 按句切 ≤6 步逐件对表、**wedge 半是否真需切片扇 conforming/Simple 的跨 `(V,E)` 转移**（否则作第 5 槽显式记账）、估行与拆件。
+
 - **2026-11-10（05:15，续699）**：**perimeter 战役再坍缩：`LINEAR_FACE_2`+`IN_DART1`（87 HOL，原估 240–370）免移植——`CARD_FACE_GE_3_TL`（TameLp:2607-2673，66 行）已是其 Lean 体，弱化前提到 `1 < ncard` 即可；剩三件 150–180**。
 ① **探针否掉 π-azim 路线**（8/8 `#check`）：`azimDart = if d1=d2 then 2π else azimFan`；`SOL_LOFA_EQ_SUM_INANGLE_p9` 是**顶点局部扇曲率恒等式**（面层面化简为 `Σ_f azim = Σ_V interior`，恒真不给矛盾）；`pW2_sum_collapse` 是 digon 线性化的邻居无入口；全树无面多边形角和定理。⇒「face 恰 2 ⇒ azimDart = π」不能由已落件直接收。
 ② **第三路（采信）**：`CARD_FACE_GE_3_TL` 的证明**就是** HOL `LINEAR_FACE_2 + CARD_SET_OF_EDGE_GT_1_IMP_CARD_FACE_GE_3` 的 Lean 体（`face ⊇ {d, f d}` ⇒ `2 ≤ ncard`；反设 `ncard = 2` ⇒ `f²d = d` ⇒ `inverseSigmaFan d.2 d.1 = d.1` ⇒ 撞 `SIGMA_FAN`）。**全文唯一用到 `3 ≤ ncard` 的只有末两行 `setOfEdge d.2 V E ≠ {d.1}`——`1 < ncard` 同样给（`omega`）**。⇒ 免移植 `LINEAR_FACE`(HOL 1169, 28 行)/`LINEAR_FACE_2`(1199, 23 行)/`IN_DART1`(1324, 36 行) 共 **87 HOL 行**；`IN_DART1` 的「face ≥ 2」已被该证明内联 `h2` 覆盖。
