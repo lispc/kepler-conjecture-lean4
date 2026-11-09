@@ -57,6 +57,10 @@
 ## 1. 在飞（2026-11-09 10:05，池 **5/5**）
 
 > **用户 2026-11-09 指令：额度恢复，维持 5 车道。**（11-06 的"降到 3"解除。）
+> **用户 2026-11-09 裁决（常设）：`jcajydu` J 战役立项，池内永久保持 ≥1 条战役车道**——
+> 战役车道收工即按波序补位下一波，不被非战役排队插队（除非用户另行指示）。
+> 波序：**J0（在飞 `jcajydu-c2`）→ 并行批 rxNumTransport 桥（300–600，先 30 分钟深侦）→ J1（reduction4，6–9k）∥ J2（reduction2，2–3k）→ J3（nfgtrans' 定义层 + main_induction，6–10k，最高风险）→ J4（max_finals_g_exists + reduction1，5–8k）→ J5（wrapper 收口 ~300，闭 Assembly:2509）**。
+> 规模重估触发器：J3 `nfgtrans'/match_quotient_list` 定义层（树内零命中）与 J4 极大性论证任一卡死 ⇒ 停下重估不硬推（AGENTS §7）。
 > **机器状态（2026-11-09）**：`.lake` 里 **13,387 个 olean 已被清理**（12,438 `Interval/Cases` + 932 LP 叶
 > + 13 `GoodListShardQuadS*` 等），岛协议不受影响（编译只需直接 import 的 olean），
 > 但 **`lake build` 会按 trace 把它们全部并行重编 → 两次 OOM**（11-06 / 11-09，见 handoff 新 pit 15）。
@@ -74,6 +78,7 @@
 > ~~`kcblrqc` 定义侧~~（勘误 续402：BLOCKED，定义侧强于 HOL 形、被注册表侧挡死，正确闭法 = XL 批 + 28 id 接线 + 三层机械移植 1.5k–2.5k 行；可先立的独立小件 = 包装层 mk_imp 形零证书）；
 > `wsewpch-w6a` **在飞**（任务单 10-26 已立：LA7 九桩灌证——§5 第二根 `fully_surrounded_perimeter_bound` 的正主：`fspb-bridges-w1` 侦察实锤树内已有 `yk11_perimeterBound_of_core` 归约（TameLp:10960），闭合只需全称版 hcore = WSEWPCH 本体；~~OZQVSFF~~ **勘误：已在树 LA5:3772**，侦察车道建议作废）→ `W6c` 装配（一行 `yk11_WSEWPCH_core`）；
 > `lp-idfix` 落库（暂缓：932 个 LP 叶 olean 已被清，落地成本被抬高）；T2 walk。
+> **J 战役常设政策**（用户 11-09 立项）：战役车道 ≥1 常驻，收工按波序补位（J0 在飞 → rx桥批 → J1∥J2 → J3 → J4 → J5），见 §1 头部。
 > **TameLp 注记勘误挂账**（下次触碰 TameLp 的落库顺带改，`fspb` DELIVERY §5 有逐字替换文本）：`:928-933` NEEDS 三引理"需移植"已过时（face_representation=Hypermap:2794 / perimSumFaceArc=TameLp:903 / f_surr_localization=yk10:10642 全覆盖）；CIZMRRH"未证"过时（LA3:2734，LA3 全文件 0 sorry）。
 > **我自己做（不占车道）**：`ArchiveData` vs HOL/Isabelle 数据对账；`hf-proof-map` 状态更新维护。
 
