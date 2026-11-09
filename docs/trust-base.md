@@ -32,7 +32,7 @@
 | 内核 | LCF kernel（`fusion.ml`） | Isabelle LCF kernel | Lean 4 kernel | **对等** |
 | 区间算术 / LP 证书 | **形式化验证**（Solovyev `formal_ineqs/`、`formal_lp/`） | — | 内核 `IExpr`/`checkPos` 重放 | **对等** |
 | `good_list` 归档校验 | **零公理真证**：`tame/good_list_archive.hl` 的 `all_conv_univ (eval_good_list0 …)`（`eval_good_list0` 见 `formal_lp/hypermap/computations/list_hypermap_computations.hl:449-468`） | `pre_iso_test3..6`，`by eval` | **0 条公理**（23 条已全部改为 kernel `decide`/符号链，三波 `5ed1bb16`/`f686ca1a`/`2ef062e8`） | **已追平 HOL**（比 Isabelle 的 `by eval` 更强） |
-| tame 枚举 | **明写跳过**（`tame/tame_concl.hl:26`：`(* WTEMDTA_concl skipped … *)`） | `same3..6`，`by eval`（`Computation/ArchComp.thy`，35 行 8 条；session `(slow very_slow)`、`timeout = 50400`） | 585 条 `native_decide`（**580 shard-range + 5 tri-single-seed，仅 2 种形状**；基线 T `52275a1c` 定格） | **对等**（同类别、同数据；我们分片更细，但分解经机器验证无损，见 §3） |
+| tame 枚举 | **明写跳过**（`tame/tame_concl.hl:26`：`(* WTEMDTA_concl skipped … *)`） | `same3..6`，`by eval`（`Computation/ArchComp.thy`，35 行 8 条；session `(slow very_slow)`、`timeout = 50400`） | 585 条 `native_decide`（**580 shard-range + 5 tri-single-seed，仅 2 种形状**；基线 T `52275a1c` 定格） | **对等**（**同一份数据**，2026-11-09 三路对账全 SAME 见 §4-2；我们分片更细，但分解经机器验证无损，见 §3） |
 | `Prop := sorry` 型定义 | 无 | 无 | **0 条**（`ox3q1hP25` 已由 `b85eaade` DEF-FIX 换成显式 230 条合取，闸 PASS） | **已修** |
 | `else True` 回落 / 索引盲谓词 | 无 | 无 | **空量化注册表已修**：`idsLpIneqs := lpIneqsIds`（127 条真债，`60d0f544` DEF-FIX，闸等价验收）；剩余：`CertifiedIneqHolds` 五兄弟 `True` 回落分量、`LpTerminalCertified(_id)` 索引盲谓词 | **我们更差 → 必须修**（packineqa-w1 等在飞） |
 
@@ -112,9 +112,17 @@ python3 scripts/trust_manifest.py --check   # 只校验（CI 用）
    - ⇒ **"造一个假 `Decidable` 实例让它证出假命题"这条通道在我们库里不存在。**
      剩下的信任与 Isabelle 的 `by eval` 完全同类：**相信编译器把定义算对了**。
      差别只在 Isabelle 从已证方程生成代码，我们从 `Decidable` 实例编译 —— 而实例是派生的。
-2. **数据来源一致性（待做）**：我们的 `ArchiveData/{Tri,Quad,Pent,Hex}` 是否与 HOL
-   `tame_list.hl` / Isabelle `Archives/*.thy` 同一份数据。若一致，§2 第 4 行从"我们自己的
-   事实"升级为"和他们同一个事实"。
+2. **数据来源一致性 —— 已闭合（2026-11-09，`archive-data-scout` 车道 + 编排者独立复核）**：
+   `ArchiveData/{Tri,Quad,Pent,Hex}` 与 HOL `formal_graph/archive/archive_all.ml`
+   （`Archive_all.tame_list`，19715 条）、AFP `Archives/*.ML` 三路**指纹全 SAME**
+   （含顺序逐位一致；条目数 9/1253/16080/2373 与 Flyspeck 自带闸 `make_archive.hl`
+   check1/check3 同口径）。编排者复核 = 独立 token 流比对四类全等（跳过 Lean 文件头
+   3 个噪声 token 后逐位相等）+ 车道脚本重放四 SAME。勘误：对账真身不是
+   `tame/tame_list.hl`（那是引理库，零数据）；HOL 侧档案 = `Archive_all.tame_list`，
+   文本形式化经 `good_list_archive.hl` 消费。另两个事实：分区按**最大面度**
+   （Quad = 最大面为 4，混有更小面）；逐类规范化指纹 sha256 表在
+   `~/c17_backup/lane_snapshots/archive-data-scout/REPORT.md` §5 —— **可直接用作
+   manifest「数据源哈希」字段材料（第 3 条的前置）**。⇒ §2 第 4 行已升级为「同一份数据」。
 3. **生成器版本**：manifest 目前只钉公理名 + 陈述哈希，还没有钉数据源哈希与
    `gen_goodlist_shards.py` 的版本。待补。
 
