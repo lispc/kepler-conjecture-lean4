@@ -130,7 +130,7 @@ private theorem aqs_mem_betwn_of_idx_wrap {S : List (ℕ × ℕ)} (hnd : S.Nodup
   exact (indexfBetwnEq hyz hnd hy hz).mpr ⟨hpos, hlt⟩
 
 /-- `idxOf` 在 Nodup 表上单射（parts 层，泛型）。 -/
-private theorem aqs_idxOf_inj {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α] {r : List α}
+theorem aqs_idxOf_inj {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α] {r : List α}
     (hr : r.Nodup) {a b : α} (ha : a ∈ r) (hb : b ∈ r) (h : r.idxOf a = r.idxOf b) : a = b := by
   have hlt_a : r.idxOf a < r.length := List.idxOf_lt_length_iff.mpr ha
   have hlt_b : r.idxOf b < r.length := List.idxOf_lt_length_iff.mpr hb
@@ -143,7 +143,7 @@ private theorem aqs_idxOf_inj {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq 
   exact Option.some.inj h'
 
 /-- 成员在 `drop k` 中 ⇒ `k ≤ idxOf`（Nodup）。 -/
-private theorem aqs_idxOf_ge_of_mem_drop {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
+theorem aqs_idxOf_ge_of_mem_drop {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
     {r : List α} (hr : r.Nodup) {x : α} {k : ℕ} (h : x ∈ r.drop k) : k ≤ r.idxOf x := by
   obtain ⟨j, hj, hget⟩ := List.mem_iff_getElem.mp h
   have hjn : k + j < r.length := by rw [List.length_drop] at hj; omega
@@ -152,7 +152,7 @@ private theorem aqs_idxOf_ge_of_mem_drop {α : Type*} [BEq α] [LawfulBEq α] [D
   omega
 
 /-- 成员在 `take n` 中 ⇒ `idxOf < n`（Nodup）。 -/
-private theorem aqs_idxOf_lt_of_mem_take {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
+theorem aqs_idxOf_lt_of_mem_take {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
     {r : List α} (hr : r.Nodup) {x : α} {n : ℕ} (h : x ∈ r.take n) : r.idxOf x < n := by
   obtain ⟨j, hj, hget⟩ := List.mem_take_iff_getElem.mp h
   have hjn : j < r.length := lt_of_lt_of_le hj (Nat.min_le_right _ _)
@@ -161,7 +161,7 @@ private theorem aqs_idxOf_lt_of_mem_take {α : Type*} [BEq α] [LawfulBEq α] [D
   exact hn
 
 /-- 成员在 `drop k` 中 ⇒ 全表 idxOf = k + 子表 idxOf。 -/
-private theorem aqs_idxOf_mem_drop_eq {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
+theorem aqs_idxOf_mem_drop_eq {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
     {r : List α} (hr : r.Nodup) {x : α} {k : ℕ} (h : x ∈ r.drop k) :
     r.idxOf x = k + (r.drop k).idxOf x := by
   have hj : (r.drop k).idxOf x < (r.drop k).length := List.idxOf_lt_length_iff.mpr h
@@ -177,7 +177,7 @@ private theorem aqs_idxOf_mem_drop_eq {α : Type*} [BEq α] [LawfulBEq α] [Deci
 
 /-- 成员在 parts 层的位置序 ⇒ flatten 层的 idxOf 严格序：
 `p` 在 `q` 之前（parts 层），则 `p` 内元素在 flatten 中先于 `q` 内元素。 -/
-private theorem aqs_flatIdx_lt_of_partIdx_lt {r : List (List (ℕ × ℕ))}
+theorem aqs_flatIdx_lt_of_partIdx_lt {r : List (List (ℕ × ℕ))}
     (hflat : r.flatten.Nodup) {p q : List (ℕ × ℕ)} (hp : p ∈ r) (hq : q ∈ r)
     (hpq : r.idxOf p < r.idxOf q) {a b : ℕ × ℕ} (ha : a ∈ p) (hb : b ∈ q) :
     r.flatten.idxOf a < r.flatten.idxOf b := by
