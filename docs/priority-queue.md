@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:20，续718）**：**2-α 追溯闭环（fcdjdot-pillars 侦察：工单 stale，零 patch）——柱③两件已标准三、fcdjdot 本体已落库、packIneqDefAP22 已真形；2-δ 的前提同被此侦察覆盖**。
+① **工单 stale（机器证据，采信）**：工单背景对应 `8cefdc7a`（11-05 20:05）**之前**的旧快照；基线 `e311f9f9` 时点已全部闭环——PA22 在基线↔HEAD diff = 0 行；探针打在预编译 olean 上（PA22 olean 11:34 > 源最后编辑 11:19，树 clean）。
+② **实测（HEAD `046d30ae`，RC=0/0 error/0 warning）**：`DLWCHEM_full`/`XULJEPR_full` = **标准三**（`31543c2f` pa22-10-chain）；清桩清单 5 项全真证（`YSSKQOY_VECTOR`/`_VECTOR2`/`_ALT`（`8cefdc7a`）、`EXISTS_M_POLYHEDRON`、`PACK_INEQ_DEF_A_797`、`POLYHEDRON_FACET_SUM_4Pi`——后两件都在路径上且已闭）；**`fcdjdot` 本体已落库**（`38c46b52`，Assembly:6746，标准三）；**裁决点已解**：`packIneqDefAP22` 现为真形 `UKBRPFE_bank ∧ WAZLDCD_bank ∧ BIEFJHU_bank`（PA22:406）、`arclength22 := arcLengthICD`。⇒ **2-α 与 2-δ 的核心前提均已被前序车道（pa22-10-chain 等）完成**；2-δ 若再派，先跑同款探针核对 `arclength2`/`arcV↔arclength` 桥是否也已在树。
+③ **PA22 余量 sorry = 4（均不在柱③路径，全树消费者 0）**：`insert_v`(:2089，DEF-FIX 补证 200–400)、`vol_solid_triangle_ortho`(:6783，GIANT 300–600)、`BIJ_EDGES_DART_FACE`(:13630)/**`BIJ_DART_POLYEDGE`(:14062)** 均 BLOCKED（CFYXFTY 半边未移植；后者清前须 SF 裁决假陈述风险）——账本续390 误记 "POLYHEDGE" 已勘误。
+④ **防重复发车**：2-α 标 ✅（追溯）；复核只需重跑两条探针（<2 分钟）。**车道释放**。
+
 - **2026-11-10（07:05，续717）**：**塔顶首个真实消费者落库（`ee2b1c9e`，23 行）——`marked_list_mark_rtrans_top`；reduction3 口径修正：38 处 ta 只有 25 处活跃/17 定理，12 件已移植且不吃 ta**。
 ① **reduction3.hl 侦察修正（aq13-survey，采信）**：5,656 行；38 处 `transform_assumption` 中 **13 处是注释**（HOL 源已把 ta 前提划掉，`ntrans_final_list1/2`、`generateNonfinalPolygon_reduction`、`reduction_subdivFace`、`triple_data_nonnil` 等**根本不吃 ta**）⇒ 25 处活跃落 17 定理，三类：**12 件已移植且 ta 已消除**（Lean `Reduction3` 章全树 `transformAssumptionSpine` 零命中——移植时走了别的路，不需要塔顶）；`AQIUNPP` = `aqiunpp3`（W1 已 alias）；**未移植且 ta 活跃仅 5 件**：`generatePolygon_explicit_reduction`(1)/`generateNonfinalPolygon_reduction`(3)/`marked_list_mark_rtrans`(1)/`lnrx_induction`(2)/`good_faces_transform_lemma`(3)。
 ② **首件 `marked_list_mark_rtrans_top`**：HOL 2611-2628 逐字（`marked_list L N r x ⇒ MEM x (rtrans L N r x i)`），ta = `transformAssumptionSpine_top L hL`，体 = `aqiunpp3` 投影 `.1.2.2.2.1`。标准三；RC=0、0 error/0 warning；olean 装池。假桩排查：闭包 = aqiunpp3 + TowerTop + TameList9/71，无账本 6 桩、无 TameList34 DIH2K 桩。
