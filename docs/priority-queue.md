@@ -316,6 +316,21 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（06:00，续702）**：**AQ8 叶收口（`74401849`，290 行）——塔 12/13，只剩 AQ13**；同批 AQ13 W4a2c + W22c-iii-a 落库。
+① **AQ8（`JcajyduAqLeaf8W3ae`）**：`aq8w3ae_partsFstHdInjSND`（58 行，三支：farc×farc → `W3yI`；交叉 → `W3yII`；arc3×arc3 → `W3z` refine + **接缝不切**）+ `aq8w3ae_coreSNDNodup`（= W5 的 `hB` 槽逐字）+ **`aq8 : aq8Concl L hL`**（W5 骨架一行代入）。**3/3 标准三、零 sorryAx**；RC=0、0 error/0 warning；olean 装池。塔 **12/13**（`aq1`–`aq12` 全落）。
+② **接缝不切（数学核心，采信）**：`fLastSpine L r` 定接缝处只剩 e-步（`nextElPartsUnlast`/`partsNextUnlast` 与 `normalListPartsNextLast` 的 f-步经 `nextElCat1`+`aq10_nextElPrefix` 相撞，`fListInjDarts`+`isRestrictedEListNondeg` 收口）⇒ 末元相等 ⇒ `uniqSublistUnique`。编排者此前的反例裁定（纯 `partsFst`+r-side 单射不够）被实现路径证实。
+③ **行数 290 > 工单 150**：主定理 58 行在预算内，case C 的 LAST 链 3 个私枢纽 130 行未预算；< AGENTS §7 的 450 止损线，接受。
+④ **AQ13 W4a2c（`6dadedd6`，55 行 2 件）**：`lastOfPartOfMemParts` + `lastOfPartOfLast`（y=z1 的两个定位分件）；2/2 标准三。剩余支 W4a2c2（60–75）断点：`conditionLastParts` 需排除 `d = s.getLast!` + `last_cat` 三连用。
+⑤ **W22c-iii-a（`04f1e212`，116 行 2 件）**：`p22c3_cardFaceGe3_of_degGt1`（`CARD_FACE_GE_3_TL` 度前提改弱 `3 ≤` → `1 <`，`omega`）+ `p22c3_cardSetOfEdgeGt1ImpCardFaceGe3`（HOL 目标名）；免移植 `LINEAR_FACE_2`+`IN_DART1` 87 HOL 行；2/2 标准三。
+⑥ **ERRATA**：aq1-fin 报「③④ 岛池缺 `LocalAuto7W21/W22a/W22b/W22c` olean」**不成立**——编排者核池：四者 olean 均在 `.lake/build/lib/lean/Kepler/Text/`（03:56–04:15 装池）。③④ 由编排者就地补完（`LocalAuto7W22c3b`，③ `p22c3_fullySurrounded_cardFaceGe3` + ④ `p22c3_hcard_bridge`，编译中）。
+⑦ **accounting**：`aq8` 的 `hB` 槽与 W5 的 `aq8Concl_of_uniqSnd` 一行接驳，`transformAssumptionOfAq` 的 `h8` 槽零适配。
+
+- **2026-11-10（05:45，续701）**：**localizationSimple 展开件落库（`cee26a78`，42 行 1 件）——主体单列换血车道 `loc-simple`（100–150）**。
+① **`p22d_simple_expand`**：`H.Simple ↔ ∀ x ∈ H.darts, orbitMap H.nodeMap x ∩ orbitMap H.faceMap x = {x}`（`simp only [Hypermap.Simple, node, face]` 一行体）。`[propext, Quot.sound]`（零 choice、零 sorryAx）；RC=0、0 error/0 warning；olean 装池。
+② **主体第 3 段（未证，交边界）**：`nnOfHyp_p3 ∩ ffOfHyp_p3 = {x}` 逐点 = `Simple` 的实质；第 1/2 段材料全齐（展开件 + `p20_face_representation` + `LVDUCXU` + `IMP_FAN_V_PRIME_E_PRIME`）。
+③ **换血派单**：新车道 `loc-simple`（/tmp/loc-simple，基线 `cee26a78`，新文件 `LocalAuto7W22dG`，前缀 `p22d_locSimple_`）——工作单含 §P2 分支表路径、`p22d_simple_congr` 的 `Equiv.ext` 教训、`hH.1` 的 Set/Finset 成员桥提示；主体目标陈述已逐字给出（`FAN → IsHypOn H1 → x∈dartsOfHyp → FF=H1.face x → IsHypOn 切片 H2 → 2 ≤ FF.ncard → H1.Simple → H2.Simple`）。
+④ **当前 perimeter 根面账**：`f_surr_localization` 条件形剩 `hcard`（第三路在飞，150–180）+ `hsimple`（本件，100–150）；W22d 的 azim 半已落、wedge 半 recon 在飞。
+
 - **2026-11-10（05:30，续700）**：**W22d azim 半落库（`1f1ba54c`，46 行 1 件）——前件与条件形同槽，装配可一行消费；wedge 半转 recon**。
 ① **`p22d_slice_azimDart_lt_pi`**：`FAN 0 V E → IsHypOn_p10 0 V E H1 → x ∈ dartsOfHyp_p3 E V → FF = H1.face x → IsHypOn_p10 0 (vPrime) (ePrime) H2 → FullySurrounded V E → 2 < FF.ncard → H2.Simple → hno → y ∈ FF → azimDart (vPrime) (ePrime) y < π`。**前件与 `p22c2_f_surr_localization_cond` 完全同槽**。标准三；RC=0、0 error/0 warning；olean 装池。
 ② **路线 3 步**：条件形第 3 合取 `.2.2.1 y hy` 给 azim 不变式 → `rw [← haz]` → `FullySurrounded` 定义直接给 `< π`；`y ∈ dartOfFan` 由面⊆darts + `p22c2_dartsOfHyp_subset` ⇒ `{y.1,y.2} ∈ E` ⇒ `dart1OfFan` 右并支。
