@@ -314,6 +314,13 @@
 >
 > **ERRATA（续692）**：w13-rev 的「`LVDUCXU` 的 `Simple` 槽冗余、可 SF 掉省 200–330」**作废**——编排者与车道双方机器复核：`DIH2K_FACE_SIMPLIZED` 的陈述要求 `H.Simple`，`LVDUCXU` 证明体 `LocalAuto10.lean:1691-1694` 实际把 `hsimp` 喂给它，`dih2k_p3` 合取必须 `Simple`。`hsimple` 永久按槽记账。
 
+- **2026-11-10（05:25，续693）**：**W22d wedge 半 BLOCKED（探针 54 行）——perimeter 到根面并档为「conforming/iso 机器」战役 ~470–770（4–6 波）；「消两槽即到根面」作废**。
+① **7 件逐件判定（机器）**：`CLOSURE_MINIMAL_EQ` ❌零命中（精确+松散全 0）/ `DART1_NOT_COLLINEAR_2` ❌零命中（`Assembly.lean:4361` 注释明写「全树零机器」）/ `wedge_in_fan_gt_eq_w_dart_fan` ❌零命中 / `fan_hypermaps_iso`+`iso_simple` ❌零命中；✅ `CLOSED_WEDGE`（PA18:7871）/ `WEDGE_SUBSET_WEDGE_GE`（PA18:8172）/ `AZIM_CYCLE_EQ_SIGMA_FAN_ALT`（LA2:1212）。⇒ wedge 半真吃 5 件未移植件。
+② **战役清单（估行）**：`LINEAR_FACE_2` 200–300 / `IN_DART1_OF_FAN_IMP_CARD_FACE_GT_1` 40–70 / `CLOSURE_MINIMAL_EQ` 40–70 / `DART1_NOT_COLLINEAR_2` 30–60 / `wedge_in_fan_gt_eq_w_dart_fan` 40–70 / `fan_hypermaps_iso`+`iso_simple` 120–200 ⇒ **470–770**。与 W22c-iii 的 400–650 重叠 ⇒ 单一战役排期，不再拆 80–140 小波。
+③ **现状修正**：`hcard`/`hsimple` 与 W22d wedge 半**同源**；perimeter lane 到根面的剩余量 = 该战役 + W22d 装配；**不再宣称「消两槽即到根面」**。
+④ **派单**：`w13-rev` → **战役 wave 1 = `DART1_NOT_COLLINEAR_2` + `CLOSURE_MINIMAL_EQ`**（各独立 patch，≤150；`LINEAR_FACE_2` 等 aq1-fin 的 face≥3 替代路线探针结果再定，避免白烧）。
+⑤ **流程记账（派单丢失第 6 例）**：`aq13-survey` 的 W4a2 派单未送达（车道上一次输出 03:23，04:32 状态核查时确认「首次收到」）⇒ 已重发并要求接单回执；此例再次验证 AGENTS §3「接单先回一行」的必要性。
+
 - **2026-11-10（05:10，续692）**：**W22c-ii-b 条件形落库（`7233f12e`，+44 行 1 件）——`f_surr_localization` 5 合取成形，perimeter 侧只剩 `hcard`/`hsimple` 两个永久槽**。
 ① **`p22c2_f_surr_localization_cond`**（HOL `RNSYJXM.vhl:245`）：`LocalFan (vPrime…) (ePrime…) FF ∧ FF = H2.face x ∧ (∀y∈FF, azimDart 不变) ∧ (∀y∈FF, wedgeInFanGt_p2 不变) ∧ (∀y∈FF, wedgeInFanGe_p2 不变)`；槽 = `hfs : FullySurrounded V E`（免费）/ `hcard : 2 < FF.ncard` / `hsimple : H2.Simple` / `hno : dartsOfHyp_p3 … = dart1OfFan …`。标准三；RC=0、0 error/0 warning；olean 装池。
 ② **装配**：`LVDUCXU`（LA10:1708，std3 5 合取）+ `p22c2_dartsOfHyp_subset`（自环支）+ `p22c2_face_subset_darts`（两侧面⊆darts）+ `IN_DARTS_FF_IMP_DARTS_E_PRIME_V_PRIME` + `IMP_FAN_V_PRIME_E_PRIME` + `p22c_azimDart_eq_azimInFan` 双向 + `LocalFan.of_localFan_p3`。三处机械 error 修法（`hazimWedge y hy` 先取等式再 `calc`；wedge `_p3 = _p2` defeq `exact`；`h3` 是 `→` 用 `exact`）已按编排者预判一次通过。
