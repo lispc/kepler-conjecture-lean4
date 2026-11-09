@@ -57,7 +57,7 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
-## 1. 在飞（2026-11-09 10:05，池 **5/5**）
+## 1. 在飞（2026-11-09 12:00，池 **5/5**，续406 对表）
 
 > **用户 2026-11-09 指令：额度恢复，维持 5 车道。**（11-06 的"降到 3"解除。）
 > **用户 2026-11-09 裁决（常设）：`jcajydu` J 战役立项，池内永久保持 ≥1 条战役车道**——
@@ -71,11 +71,11 @@
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| `goodlist-w4`（重派） | 2 条 `{hex,pent}_top_replay` ⇒ 587→**585**；模板 = 波三 `TopReplayQuadShardS000-005` | 在飞（重派版，带内存纪律 + 边做边同步） |
-| `packineqa-w1` | 闭 `nliPackIneqDefA`（5 条 3 族；定义已真化 `packIneqDefAP22`，`C1965189142x34` 在库；含 2 支常数不等式） | 在飞（用户 11-09 批） |
-| `fspb-bridges-w1` | `fully_surrounded_perimeter_bound`（§5 第二根）：先侦察三桥 `WSEWPCH`/`FAN_PERIMETER`/`BGMIFTE` + 3 个未移植引理，支持才动手；纯移植零证书 | 在飞（用户 11-09 批；侦察报告也是合格交付） |
-| `kcblrqc-defside` | `nliKcblrqcIneqDef` **定义侧**（§11 #9）：第一支纯几何（azim 界）、第二支 `hmain` 是量化假设 ⇒ 可能零证书；注册表侧 28 id 与 XL 重建**不在本单** | 在飞（侦察优先；续400 ③ 的拆分决定） |
-| `jcajydu-scout` | §11 #3 解禁后的只读侦察：HOL `JCAJYDU.hl` 解剖 + 复核"全树 0 移植"是否仍陈旧 + 拆单方案与 go/no-go | 在飞（**零编译**；侦察报告即交付） |
+| `packineqa-w1` | 闭 `nliPackIneqDefA`（5 条 3 族；定义已真化 `packIneqDefAP22`，`C1965189142x34` 在库；含 2 支常数不等式） | 在飞（已产 G4 证书试件 `C8055810915`，85 叶；⚠️ **该试件被写进主仓树 `lean/Kepler/Interval/Cases/`（未追踪）——位置违规，基线 T 已验证零污染，车道交付验收时编排者清理**） |
+| `ds-envelope` | 宽槽 `D_s` 包络可行性探针（`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym` 三消费项的工单前置） | **✅ 已收工（止损 NO-GO，零 patch）**——见续406 |
+| `wsewpch-w6a`（续跑） | LA7 九桩灌证（§5 第二根正主，10-26 任务单）：侦察定案 = 8/9 已于 10-26 落库（`2cee47ad`），#9 的 EGHNAVX 阻断已失效（LA14:6965 已真证但不可 import，改走 LA35/LA5/LA37/LA9 全可 import 路线），需复制 LA14-local 件 ~400 行 | 在飞（iter5 编译中，wip 快照 + logs 齐全；步子在自己的止损纪律内） |
+| `jcajydu-c2`（J0） | 战役第一波：num 层填证槽 `restrictedHypermapsArePlaneGraphsV4`（1.5–2.5k 行，HOL reduction 链机械移植） | 在飞（快照目录已立，未交件） |
+| `jcajydu-rxbridge` | 战役并行批：`rxNumTransport` 跨型桥（300–600 行）——**深侦先行**（30 分钟级，停机条件写在工单：编码件缺口即停） | 在飞（侦察中） |
 
 > **排队（等腾槽）**：`kcblrqc` 注册表侧接线 + XL 过夜重建批（侦察定案见续400：小件 25 模块几分钟，XL 三棵 ≈11,717 模块/7.66M 行 ≈12–13 h 串行）；
 > ~~`kcblrqc` 定义侧~~（勘误 续402：BLOCKED，定义侧强于 HOL 形、被注册表侧挡死，正确闭法 = XL 批 + 28 id 接线 + 三层机械移植 1.5k–2.5k 行；可先立的独立小件 = 包装层 mk_imp 形零证书）；
@@ -85,7 +85,7 @@
 > **TameLp 注记勘误挂账**（下次触碰 TameLp 的落库顺带改，`fspb` DELIVERY §5 有逐字替换文本）：`:928-933` NEEDS 三引理"需移植"已过时（face_representation=Hypermap:2794 / perimSumFaceArc=TameLp:903 / f_surr_localization=yk10:10642 全覆盖）；CIZMRRH"未证"过时（LA3:2734，LA3 全文件 0 sorry）。
 > **我自己做（不占车道）**：`ArchiveData` vs HOL/Isabelle 数据对账；`hf-proof-map` 状态更新维护。
 
-> **已收工（本批）**：`hnl-109-census` ✅（只读，判死 T1/T2 两个大桶，见续398 ③④）；`taylor-rung` ✅（**负结果**：锥内 rung 收益 0，见续398 ⑤）。
+> **已收工（本批）**：`ds-envelope` ✅（**止损 NO-GO**：宽槽包络存在但消费不可用，三锥项目"包络+项分裂"路线一起死，见续406）；`hnl-109-census` ✅（只读，判死 T1/T2 两个大桶，见续398 ③④）；`taylor-rung` ✅（**负结果**：锥内 rung 收益 0，见续398 ⑤）。
 > **已收工（上一批）**：`goodlist-w3` ✅ `2ef062e8`（**14 条 top/archive 公理消除，根面 601→587**；`Cert*.lean` 只换证明体、陈述逐字未动）；`goodlist-w2` ✅ `f686ca1a`（20 条 goodList，601）；`ox3q1h-deffix` ✅ `b85eaade`（全树最后一条 `Prop := sorry`）；`rrcw-weak-p26` ✅ `ead0b4cb`（`RRCWNS_WEAK_p22` 85 行）；`nli-tsk-w2` 0/5 闭但交 `951852d3`；`nli-iyouobf-sharp` 0 闭但把该条钉死（角点余量 **2.41e−6**、盒下角离零交叉仅 **1.04e−4** ⇒ 刀锋级真；`h2d` 切片归约到 **3 个 `atn2`**；`h2d`/`hmono` 卡的是**同一件**宽槽 `D_s` 包络）⇒ 该银行**不要**再单独派车道，改为先做包络。
 > **排队**：`goodlist-w4`（Pent/Hex `top_replay` 2 条 ⇒ 587→**585**，4 项/片实测可行，约 2 核时）；`ds-envelope`（宽槽 `D_s` 包络，一条买 **3 个**锥项目：`nliTskIYOUOBFsharpv2`/`XLLIPLS`/`WKGUESBsym`；先跑松容差探针）；`nliKcblrqcIneqDefIds` 接线（28 id，3 张 XL 证书在库）；`atan1-fastpath`（把 `C549*` 族 536 个闭参数 `atan` 发成 `atan1K`，**锥外，接线前才付**）；T2 walk 350–420 行。
 > **本轮已落（2026-11-06）**：`5ed1bb16`（goodlist Tri/Quad，624→621）、`f686ca1a`（goodlist Pent/Hex，621→601）、`2ef062e8`（top/archive 14 条，601→**587**）、`d2847338`（删 `p21_anchor`，锥 80→79）、`951852d3`（`NliBanks17`）、`ead0b4cb`（`RRCWNS_WEAK_p22`）、`b85eaade`（最后一条 `Prop := sorry`，DEF-FIX 闸 PASS）、`59229e30`/`03f0a970`（基线 Q/R）、`09647f25`（**AGENTS §1 改口径 + trust manifest**）、`e9061eca`/`fe386cfd`（成本模型两档 + HOL strictbuild 校准）、`c0f6579d`（并行度降 3）。
@@ -235,6 +235,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（12:05，续406）**：**`ds-envelope` 收工验收（止损 NO-GO，`patch.diff` 0 字节）+ §1 池表对表**。① **编排者验收**：主仓 tracked 零改动（与 git status 相符）；probe1（`python3 -I` 直跑）复现 DELIVERY 关键数字逐位吻合（D1–D6 真值变化幅 0.120/0.068）；无 Lean 产物 ⇒ `#print axioms` 验收不适用。② **判决**（工单第一纪律止损）：宽槽 `D_s` 包络**存在**（m=8 网格 64 格全覆盖、逐格认证零失败），但**消费不可用**——认证放大系数 κ_D = **32.49**（hmono）/ **41.28**（h2d）把逐格宽度预算压到 ~4e-3，窄槽不细分最小网格已 ≥ **64,992 格**（四分窄槽 ≥ 2.0M），对应 **≥10⁵–10⁶ 行 Lean**，比旧判决 160×160 更糟且是乐观下界。四个认证逃逸逐一排查全灭（Lipschitz 500–900× 抵消损失 / D4 在 x4 不单调 / 凹性=同款抵消墙 / 符号抵消是 κ 的来源无区间代数可绕）。③ **波及面**：`nliTskIYOUOBFsharpv2` / `nliTskXLLIPLS` / `nliTskWKGUESBsym` 三锥项目在"包络+项分裂"路线**一起死** ⇒ 排期从"买包络"改成"找新证书形态"（车道候选：变号点邻接 branch-and-bound（真值余量仅 0.007–0.008 的窄走廊）/ 2-slice 归约+对称 / D_s 单调端点分段）；`nli-iyouobf-sharp` 的"先做包络"批注一并作废。④ **勘误**：上一车道"`h2d` 切点余量 ~0.1"只在 2.30/2.36 成立，2.32/2.34 处真实余量 **0.0070–0.0082**。⑤ **可复用资产**（虽不落 Lean）：全盒认证 `Δ ≥ 50.01`、`|Δ_s| ≤ 51.75`、36 项 `|∂D_s/∂x_j| ≤ 2.770` 全表、二阶偏导界全表、h2d 符号变号剖面。⑥ **UNRESOLVED**（照录）：hmono "m=5 真值极值 +0.0244" 如何变认证——本轮只证死"项分裂家族"，未证任何证书形态不存在（branch-and-bound/符号代数未探测）。⑦ **纪律警示**：`packineqa-w1` 把 G4 证书试件 `C8055810915*` 写进主仓树（未追踪；快照有副本；**基线 T 已验证零污染**——TSV 0 命中）⇒ 验收时编排者清理，车道工单下次加"主仓树连未追踪文件也不写"。⑧ §1 池表已对表：当前池 = packineqa-w1 / wsewpch-w6a（iter5）/ jcajydu-c2(J0) / jcajydu-rxbridge（深侦）；**战役常设政策生效**：ds-envelope 腾出的槽按波序补战役位（rx桥已在），下一空槽给 J1 或 J2。
 
 - **2026-11-09（14:30，续405）**：**信任基座定格全套写档（基线 T @`52275a1c`）**。① **goodList 波四落库**（`52275a1c`）：55 Hex（1,363 项）+ 31 Pent（754 项）`TopReplay*Shard` 新文件（25/片，每片 `decide + kernel`）+ `Cert{Hex,Pent}.lean` 两条 `top_replay` 证明体换符号链（陈述逐字不动）；**编排者验收**：反向闭包重建 `CertHex→CertPent→TameClassification→Graphs→Assembly→Final`（初版脚本误含 72 个 TameSpine 模块，权威 grep 纠正——TameSpine 零消费）；根面 **591→589，Δ=2 精确命中**（pit 14 判据）；干净落库（车道误产的 90 个孤儿 olean 精确清除，92 个真 shard 保留）。② **J 战役常设政策入账**（`c36dfd15`）：池内 ≥1 条战役车道常驻，波序 J0→rx桥→J1∥J2→J3（重估触发器 `nfgtrans'` 定义层）→J4→J5（收口 Assembly:2509）；`jcajydu-rxbridge` 已发（深侦先行，30 分钟级）。③ **仪器基线 T**：`e2e_reach_map.lean` 重跑（13.6 min，`nice -n 19`，pit 15 纪律下串行）；`K_AXIOM 585`（名单 diff 精确 −2：仅两条 `*_top_replay._native.native_decide.ax_1_1` 消失）、`K_SORRIED 78` 不变、`K_REACH` 2,088,636→**2,088,969**（+333）、`K_MODULES` 4,657→**4,747**（+90）、COVERAGE **99.4187%**；TSV 换装 + `trust_manifest.py` 再生（585 行，`--check` PASS：585/585 地面、0 非地面、0 形状未知、Quad/Pent/Hex 三区间 0 空隙 0 重叠、**形状定格 2 种：shard-range 580 + tri-single-seed 5**）。④ 全套文档刷到 585：`trust-base.md`（§1/§2/§2.1/§3/§7）、`AGENTS.md` §1/§2（「约 585」→「恰好 585」；根面 589）、`handoff §0`（基线 T 表 + 585 构成）、本文件头。**意义**：AGENTS §1 验收式的公理侧自此为精确冻结值，§6 路线图公理段收官；唯一债 = 78 条锥内 sorry（J 战役等正在啃）。
 
