@@ -20,6 +20,9 @@
   展开为 §2a' 六分量具名骨架件的显式装配（15 枚：14 开放骨架 + 1 真装配）；
   `CertifiedIneqHolds` 语义按 §2a 处方落诚实最小形（试点查表，键
   `"3397113841"` 端到端闭合 = 会师点）。
+  2026-11-06 lp-registry 车道：LP 分量真化——`idsLpIneqs := lpIneqsIds`
+  （127 条），`CertifiedIneqHolds := lpIneqProp`（`LpIneqProps.lean`
+  机械转写的 127 条字面命题）；`LpIneqs` 从空量化恒真变为 127 条真债。
 -/
 import Kepler.Statement
 import Kepler.NliBanks16
@@ -57,6 +60,9 @@ import Kepler.Assembly.GoodListAll
 -- `CertifiedIneqHolds` 查表的试点链（G4 证书 C3397113841 + 粘合 + 语义命题）。
 import Kepler.Assembly.IdLists
 import Kepler.Assembly.IneqPilot
+-- lp-registry 车道（2026-11-06）：HOL `lp_ineqs` 127 条注册表（生成件），
+-- `CertifiedIneqHolds` / `idsLpIneqs` 在此接线。
+import Kepler.Assembly.LpIneqProps
 -- nli A1 车道（2026-10-22）：rest 20 `FWGKMBZ` 的在库 G4 证书（605 分片 + Base，
 -- 205,418 叶；导出 `CFWGKMBZ_pos`）。证书模块自包含，不依赖 Assembly。
 import Kepler.Interval.Cases.CFWGKMBZ
@@ -256,28 +262,36 @@ HOL `the_nonlinear_inequalities`（the_main_statement.hl:55-59）是六件**生�
 
 已批准折算（docs/phase6-spine.md §3 决策点）：每分量 = ID 清单（数据）+ 量化命题；
 折算合理性须登记 `docs/statement-fidelity.md`（P6-B）。
-**占位差距**：六个 ID 清单暂为空、`CertifiedIneqHolds` 语义暂为 `True` 占位——
-二者均由 Phase 4（G4 内核证书 + 155 定义闭包粘合，P6-E）填实；
-清单填入前本接口的量化部分无内容。仓库中无现成注册表形态
+**占位差距（2026-11-06 lp-registry 车道更新）**：LP 分量已真化——
+`idsLpIneqs = IdLists.lpIneqsIds`（127 条，rfl 钉子 `lpIneqsIds_length`），
+`CertifiedIneqHolds = lpIneqProp`（`LpIneqProps.lean` 的 127 条字面命题
+注册表）。其余五个分量的 ID 清单/语义仍是既有占位债务：
+`certLookupDomain` 内非 LP 键回落 `True`（本轮不动，见
+`lp-registry` DELIVERY 的健全性说明）。仓库中无现成注册表形态
 （`get_main_nonlinear` 仅见于 HOL 脚本与 LocalAuto16/19 的 NEEDS 注释），故按批准新造。 -/
 
-/-- 单条证书不等式成立的语义。**T1 骨架波（2026-10-08）按上方处方落地的诚实
-最小形**：查表体 = `certifiedIneqHolds_pilot`（IneqPilot.lean 的量产样板表）——
-表内键按 `id` 展开为 ineq.hl 字面量化不等式命题（`!y1..y6. box ==> ineq` 形；
-现含唯一端到端键 `"3397113841"`：G4 证书 `C3397113841_pos`（1504 叶）+ 粘合
-`C3397113841_evalReal` + 语义命题 `ineqProp_3397113841`，`#print axioms` =
-标准三公理，IneqPilot.lean:96-97 实证），表外键回落 `True`（原占位语义）。
-回落分支不可达性由量产波「ID 清单 = 查表定义域」不变量钉死（IdLists.lean
-`certLookupDomain`；其 :699 else-True 静默退化警告在案：表未覆盖定义域前，
-§2a' 的注册表侧骨架**不得**经回落分支平凡闭合）。签名（`String → Prop`，
-2026-09-19 冻结）一字未动，仅按处方替换函数体。 -/
-def CertifiedIneqHolds (_id : String) : Prop := certifiedIneqHolds_pilot _id
+/-- 单条证书不等式成立的语义（2026-11-06 lp-registry 车道接线）。
+
+**LP 分量已真化**：`lpIneqProp`（`Kepler.Assembly.LpIneqProps`，**生成件**）
+把 HOL `lp_ineqs` 的 127 条字面不等式（`!y1..y6. box ==> ineq` 形）按 id
+注册为 Lean 命题：LP 清单内 id 查表命中即得该命题（真实但未证 = 127 条债务）；
+LP 清单外的历史试点键 `"3397113841"`（HOL 里是 `skip` 记录，不在 lp_ineqs）
+仍映射到已证的 `ineqProp_3397113841`；六分量定义域 `certLookupDomain` 内其余
+id 仍为既有占位 `True`（五个兄弟分量的债务，本轮不动）；域外为 `False`。
+
+**健全性顺序**（先填表、再让清单 = 定义域）：127 条真命题先入表，
+`idsLpIneqs` 才等于定义域；「清单内 id 必命中查表」由
+`lpIneqs_domain_covered` 真证（`#print axioms` = 标准三公理），故 LP 域的
+`False` 回落是不可达死代码。签名（`String → Prop`）未动。 -/
+def CertifiedIneqHolds (id : String) : Prop := lpIneqProp id
 
 /-- 注册表量化：清单中每条 ID 对应的不等式成立。 -/
 def AllCertified (ids : List String) : Prop := ∀ id ∈ ids, CertifiedIneqHolds id
 
-/-- PLACEHOLDER(G4)：HOL `lp_ineqs` 分量的 ID 清单（the_main_statement.hl:29-45）。 -/
-def idsLpIneqs : List String := []
+/-- HOL `lp_ineqs` 分量的 ID 清单（the_main_statement.hl:29-45）：127 条。
+逐字等于 `IdLists.lpIneqsIds`（其 `lpIneqsIds_length = 127` 是 rfl 钉子；
+`LpIneqProps.lpIneqIds_eq` 用 rfl 钉死「注册表 id 列 = 本清单」）。 -/
+def idsLpIneqs : List String := lpIneqsIds
 
 /-- HOL `lp_ineqs`（the_main_statement.hl:29-45）的注册表折算形态。
 在 HOL 中它同时是 `the_nonlinear_inequalities` 的第四合取项和
@@ -1901,22 +1915,35 @@ theorem nliMainNonlinearTerminalV11Ids : AllCertified mainNonlinearTerminalV11Id
 
 /-! #### 分量 4/6 `LpIneqs`（127 条；the_main_statement.hl:29-45） -/
 
-/-- 中层骨架 4：HOL `lp_ineqs` 接口分量的当前形态 `AllCertified idsLpIneqs`
-（`idsLpIneqs = []`，§2a 占位清单）。资产状态：**占位空洞**——清单为空使
-本件当前空洞地成立；真化 = 把 IdLists.lean `lpIneqsIds`（127 条）代入
-`idsLpIneqs` 后由骨架 4' 承接。
-退化防线：**不得**利用 `idsLpIneqs = []` 或查表回落分支平凡闭合（两者皆是
-IdLists.lean:699 else-True 静默退化的变体；接线落地方可闭合）。
--- NEEDS: `idsLpIneqs := lpIneqsIds` 接线（随查表量产波）。 -/
+/-- 中层骨架 4：HOL `lp_ineqs` 接口分量的注册表形态 `AllCertified idsLpIneqs`
+（`idsLpIneqs = lpIneqsIds`，127 条；`LpIneqProps.lpIneqTable` 把每条 id
+展开为 ineq.hl 字面命题）。资产状态：**真实但未证**——127 条全部是 G4
+证书级债务（既不是空量化，也不是 `else True` 回落）。
+退化防线：**不得**经任何回落分支平凡闭合；本占位只能由 127 条逐条证书
+消解。`False` 回落对 LP 域不可达由 `lpIneqs_domain_covered` 真证钉死。
+-- NEEDS: 127 条逐条 G4 证书（`nliLpIneqsIds` 仍是同一债务的清单侧形态）。 -/
 theorem nliLpIneqs : LpIneqs := sorry
+
+/-- **LP 定义域覆盖（`certLookupDomain` 的 LP 片段）**：`idsLpIneqs` 的每个 id
+都命中查表 ⇒ `CertifiedIneqHolds` 的 `False` 回落对本分量不可达。
+真证（依赖 `LpIneqProps.lpIneqLookup_isSome_of_mem_lpIneqsIds`，
+`#print axioms` = 标准三公理）。 -/
+theorem lpIneqs_domain_covered {id : String} (h : id ∈ idsLpIneqs) :
+    (lpIneqLookup id).isSome :=
+  lpIneqLookup_isSome_of_mem_lpIneqsIds h
+
+/-- 覆盖的语义形态：LP 清单上的 `CertifiedIneqHolds` 就是注册表里那条字面命题。 -/
+theorem certifiedIneqHolds_eq_table_of_mem {id : String} (h : id ∈ idsLpIneqs) :
+    ∃ q ∈ lpIneqTable, q.1 = id ∧ CertifiedIneqHolds id = q.2 :=
+  lpIneqProp_eq_of_mem h
 
 /-- 中层骨架 4'：lp_ineqs 注册表侧（Lp/Tablelp/Lp_aux 标签 + `"6170936724"`
 特例、剔除 deprecated_quads，127 条，IdLists.lean:484-611）。
 资产状态：混合——在库 G4 证书 `3253650737` / `2570626711` / `5490182221`；
-试点案 `3397113841`（IneqPilot，端到端闭合、已入 §2a 查表）的**分量归属
-待对账**（IneqPilot 注记其 HOL 标签 Xconvert/Lp_aux/Tablelp 属 lp_ineqs，
-但该 10 位键不在生成清单 `lpIneqsIds` 中——gen_idlists.py 口径 vs 试点
-注记的分歧）。
+试点案 `3397113841` 的**分量归属已对账（2026-11-06 lp-registry 车道）**：
+该记录在 `ineq.hl:2055` 是 `skip { … }`（不是 `add`），故不进
+`!Ineq.ineqs`、也就不进 `lp_ineqs`——其 Lp_aux/Tablelp 标签因此不生效；
+`lpIneqProp` 只把它保留为 LP 清单外的历史试点键（`certifiedIneqHoldsPilotCase`）。
 -- NEEDS: 127 条逐条接线 + 证书；3397113841 归属对账；清单内多数条目归
 92 prep 家族重做口径。 -/
 theorem nliLpIneqsIds : AllCertified lpIneqsIds := sorry
@@ -1958,8 +1985,11 @@ theorem nliKcblrqcIneqDefIds : AllCertified kcblrqcIneqDefIds := sorry
 非空洞闭合——接口语义自此含一个由 G4 内核证书（`C3397113841_pos`，1504 叶
 bb_arb）+ 粘合引理支撑的真条目（`#print axioms` = 标准三公理）。后续
 自下而上波逐键扩表后，本形即量产样板。 -/
-theorem certifiedIneqHoldsPilotCase : CertifiedIneqHolds "3397113841" :=
-  certifiedIneqHolds_pilot_holds "3397113841"
+theorem certifiedIneqHoldsPilotCase : CertifiedIneqHolds "3397113841" := by
+  unfold CertifiedIneqHolds lpIneqProp
+  rw [if_neg (by decide : ¬ ("3397113841" ∈ lpIneqIds))]
+  rw [if_pos rfl]
+  exact ineq_3397113841
 
 /-- **接口 2**：HOL `linear_programming_results`（the_kepler_conjecture.hl:21-26）
 逐句镜像，archive 清单参数化（HOL 内嵌 `tame_archive_lists`；参数化是为了与
@@ -7074,7 +7104,8 @@ theorem linearProgrammingResultsOf (hnl : TheNonlinearInequalities)
 sorryAx 仅自 14 枚开放骨架节点流入（1a-1d 切片组、2/2'、3/3'、4/4'、5/5'、
 6/6'），分量 1 本体与 §2a 查表会师点为真推导/真叶。
 债务归属（原冻结注记，继续有效）：Phase 4 / G4 粘合（P6-E）。消除顺序：
-先填六个 ID 清单与 `CertifiedIneqHolds` 语义（语义已按处方落最小形——§2a），
+先填六个 ID 清单与 `CertifiedIneqHolds` 语义——**LP 分量已于 2026-11-06
+完成**（127 条真命题注册表 + 覆盖定理），其余五分量仍待填；
 再逐条闭合证书（自下而上波经 §2a 查表对接）。 -/
 theorem nonlinearInequalities : TheNonlinearInequalities :=
   ⟨nliPackNonlinearNonOx3q1h, nliOx3q1h, nliMainNonlinearTerminalV11, nliLpIneqs,
