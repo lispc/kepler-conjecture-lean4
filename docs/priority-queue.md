@@ -6,6 +6,8 @@
 > `完成（日期 · commit）`。
 > **北极限**：`#print axioms Kepler.the_kepler_conjecture_e2e`（Final.lean:22）=
 > `[propext, Classical.choice, Quot.sound]`。
+> **核心路线图（2026-11-09 用户指定）**：[`docs/hf-proof-map.md`](hf-proof-map.md) —— 九节完成度 +
+> 逐箭头逻辑链 + 缺口清单 §11；推进以它为基础，状态更新写在它的「状态更新」节。
 > **数字口径（2026-11-05 起）**：本文件里的指标是「最后实测」，不是实时值——
 > 每条都带 commit 与日期。当前实测 = **基线 S @`2ef062e8`（2026-11-06 19:27）**
 > （cone `K_REACH 2,088,636` / **SORRIED 78** / **`K_AXIOM 587`** / MODULES 4,657 /
@@ -62,7 +64,7 @@
 
 | 车道 | 任务 | 状态 |
 |---|---|---|
-| （无） | — | `lp-registry` 已回报并经编排者复核（**待落库**，见续399）；`hf-proof-map` 已回报并入库；`goodlist-w4` 车道 agent 死于 11-06 会话崩溃，`/tmp/goodlist-w4/` 留有半成品（1142 个分片日志、22:20 最后写入），**未交付** ⇒ 待重派或接管 |
+| （无） | — | `lp-registry` 已落库（`60d0f544`，DEF-FIX，岛协议等价验收）；`hf-proof-map` 已回报并入库；`goodlist-w4` 车道 agent 死于 11-06 会话崩溃，`/tmp/goodlist-w4/` 留有半成品（1142 个分片日志、22:20 最后写入），**未交付** ⇒ 待重派或接管 |
 
 > **已收工（本批）**：`hnl-109-census` ✅（只读，判死 T1/T2 两个大桶，见续398 ③④）；`taylor-rung` ✅（**负结果**：锥内 rung 收益 0，见续398 ⑤）。
 > **已收工（上一批）**：`goodlist-w3` ✅ `2ef062e8`（**14 条 top/archive 公理消除，根面 601→587**；`Cert*.lean` 只换证明体、陈述逐字未动）；`goodlist-w2` ✅ `f686ca1a`（20 条 goodList，601）；`ox3q1h-deffix` ✅ `b85eaade`（全树最后一条 `Prop := sorry`）；`rrcw-weak-p26` ✅ `ead0b4cb`（`RRCWNS_WEAK_p22` 85 行）；`nli-tsk-w2` 0/5 闭但交 `951852d3`；`nli-iyouobf-sharp` 0 闭但把该条钉死（角点余量 **2.41e−6**、盒下角离零交叉仅 **1.04e−4** ⇒ 刀锋级真；`h2d` 切片归约到 **3 个 `atn2`**；`h2d`/`hmono` 卡的是**同一件**宽槽 `D_s` 包络）⇒ 该银行**不要**再单独派车道，改为先做包络。
