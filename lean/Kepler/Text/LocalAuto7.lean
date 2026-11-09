@@ -7177,6 +7177,150 @@ theorem FAN_PERIMETER_LE_2PI_OF_CIRCULAR {V : Set V3} {E : Set (Set V3)}
 
 end W11b3Kit
 
+/-! ### W11b-结论 4（BGMIFTE **第二弧半**，HOL polar_fan.hl:1309-1360）
+
+`∀ v ∈ V, arcV 0 v (ρv) = π − interiorAngle1 0 FF' (p v) ∧ 0 < arcV ∧ arcV < π`。
+HOL 逐字（1309-1311）：`arcV 0 v (r v) = pi - azim 0 (prime' v) (prime'(r v))
+(prime'(ivs_rho_node1 FF v))`，右端经 `AZIM_DIHV_SAME`（`azim = dihV`）与
+`HVIHVEC`（`dihV 0 u v w = arcV 0 (u×v) (u×w)`）化成
+`π − arcV 0 (p v × p(ρv)) (p v × p(ιv))`；两条叉积分别 = `t • ρv`（`t>0`，
+`p11w2_cross_dart`）与 `−s • v`（`s>0`，`cross_dart_pair` + `dot_ivs_dart`），
+正伸缩不变 + `arcV 0 a (−b) = π − arcV 0 a b` + 对称即得。上一批的
+`p11w2_polar_interiorAngle1_dart` 把左端 `interiorAngle1 0 FF' (p v)` 换成该 azim。 -/
+
+section W11b4Kit
+
+/-- `arcV 0 (t • a) (s • b) = arcV 0 a b`（`t, s > 0`；正伸缩不变）。 -/
+private theorem p11w4_arcV_smul_pos {t s : ℝ} (ht : 0 < t) (hs : 0 < s) (a b : V3) :
+    arcV 0 (t • a) (s • b) = arcV 0 a b := by
+  by_cases ha : a = 0
+  · subst ha
+    simp [arcV]
+  by_cases hb : b = 0
+  · subst hb
+    simp [arcV]
+  rw [arcV_eq, arcV_eq]
+  simp only [sub_zero, dist_eq_norm]
+  rw [real_inner_smul_left, real_inner_smul_right, norm_smul, norm_smul,
+    Real.norm_eq_abs, Real.norm_eq_abs, abs_of_pos ht, abs_of_pos hs]
+  congr 1
+  have ha' : ‖a‖ ≠ 0 := norm_ne_zero_iff.mpr ha
+  have hb' : ‖b‖ ≠ 0 := norm_ne_zero_iff.mpr hb
+  field_simp
+
+/-- **BGMIFTE 第二弧半**（HOL 1309-1360）：`arcV 0 v (ρv) = π − interiorAngle1 0 FF' (p v)`
+及其 `(0, π)` 界。 -/
+theorem P11W_ARC_HALF2 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hg : Generic V E)
+    (hia : ∀ v ∈ V, interiorAngle1 (0 : V3) FF v < Real.pi) :
+    ∀ v ∈ V,
+      arcV (0 : V3) v (rhoNode1 FF v)
+        = Real.pi - interiorAngle1 (0 : V3) (polarFF V FF) (cross3 v (rhoNode1 FF v)) ∧
+      0 < arcV (0 : V3) v (rhoNode1 FF v) ∧
+      arcV (0 : V3) v (rhoNode1 FF v) < Real.pi := by
+  intro v hv
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hedge
+  have hrvV : rhoNode1 FF v ∈ V := LOFA_IN_V_SO_DO_RHO_NODE_V h2 hv
+  have hιV : ivsRhoNode1 FF v ∈ V := IVS_RHO_NODE1_IN_V hcl.1 hedge v hv
+  have hρ : rhoNode1 FF (ivsRhoNode1 FF v) = v := p11w2_rho_ivs hcl hedge hv
+  -- 非共线（两处 `P11W_PRIME_NCOL`）
+  have hvr : v ≠ rhoNode1 FF v := by
+    intro h
+    exact LOCAL_FAN_IMP_NOT_SEMI_IDE h2 hv (by
+      show rhoNode1 FF (rhoNode1 FF v) = v
+      rw [← h]
+      exact h.symm)
+  have hvi : v ≠ ivsRhoNode1 FF v := by
+    intro h
+    have h1 : rhoNode1 FF v = v := by
+      have hw' := p11w2_rho_ivs hcl hedge hv
+      rw [← h] at hw'
+      exact hw'
+    exact LOCAL_FAN_IMP_NOT_SEMI_IDE h2 hv (by
+      show rhoNode1 FF (rhoNode1 FF v) = v
+      rw [h1]
+      exact h1)
+  have hnc1 : ¬ Collinear3 (0:V3) (cross3 v (rhoNode1 FF v))
+      (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) :=
+    P11W_PRIME_NCOL hcl hedge hg hia v hv (rhoNode1 FF v) hrvV hvr
+  have hnc2 : ¬ Collinear3 (0:V3) (cross3 v (rhoNode1 FF v))
+      (cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))) :=
+    P11W_PRIME_NCOL hcl hedge hg hia v hv (ivsRhoNode1 FF v) hιV hvi
+  have hb := p11w2_azim_bounds_of_sin_pos (p11w2_polar_sin_dart hcl hedge hg hia hv)
+  -- `azim = dihV`，`dihV = arcV`（两叉积）
+  have haz := azim_dihv_same hnc1 hnc2 hb.2
+  have ha0 : cross3 v (rhoNode1 FF v) ≠ 0 := P11W_PRIME_NE_ZERO hcl v hv
+  have hdih := p7w2_hvihvec ha0
+    (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))
+    (cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v)))
+  have hcross1 : cross3 (cross3 v (rhoNode1 FF v))
+        (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))
+      = ((cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) ⬝ᵥ v)
+          • rhoNode1 FF v := p11w2_cross_dart hcl hedge hv
+  have hcross2 : cross3 (cross3 v (rhoNode1 FF v))
+        (cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v)))
+      = -(((rhoNode1 FF v) ⬝ᵥ
+          cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))) • v) := by
+    rw [p11w2_cross_dart_pair E hcl hedge hv hιV,
+      p11w2_dot_ivs_dart hcl hedge hv, zero_smul, zero_sub]
+  -- 两正点积（= `p11w2_polar_sin_dart` 的两因子）
+  have hbv : 0 < (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v))) ⬝ᵥ v := by
+    have hwr : v ≠ rhoNode1 FF (rhoNode1 FF v) :=
+      (LOCAL_FAN_IMP_NOT_SEMI_IDE h2 hv).symm
+    have hs := GENERIC_LOCAL_FAN_AZIM_POS hcl hedge hg hia (rhoNode1 FF v) v hrvV hv
+      hvr hwr
+    exact (SIN_AZIM_MUTUAL_CROSS (rhoNode1 FF v)
+      (rhoNode1 FF (rhoNode1 FF v)) v).2.1.mp hs
+  have hsc : 0 < (rhoNode1 FF v) ⬝ᵥ
+      (cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))) := by
+    have hne1 : rhoNode1 FF v ≠ ivsRhoNode1 FF v := by
+      intro h
+      exact LOCAL_FAN_IMP_NOT_SEMI_IDE h2 hv (by
+        show rhoNode1 FF (rhoNode1 FF v) = v
+        rw [h]
+        exact w6a_rho_ivs h2 hv)
+    have hne2 : rhoNode1 FF v ≠ rhoNode1 FF (ivsRhoNode1 FF v) := by
+      rw [hρ]
+      intro h
+      exact LOCAL_FAN_IMP_NOT_SEMI_IDE h2 hv (by
+        show rhoNode1 FF (rhoNode1 FF v) = v
+        rw [h]
+        exact h)
+    have hs := GENERIC_LOCAL_FAN_AZIM_POS hcl hedge hg hia (ivsRhoNode1 FF v)
+      (rhoNode1 FF v) hιV hrvV hne1 hne2
+    have hd := (SIN_AZIM_MUTUAL_CROSS (ivsRhoNode1 FF v)
+      (rhoNode1 FF (ivsRhoNode1 FF v)) (rhoNode1 FF v)).2.1.mp hs
+    rw [hρ] at hd ⊢
+    rwa [dotProduct_comm]
+  -- `dihV = π − arcV 0 v (ρv)`
+  have step : dihV 0 (cross3 v (rhoNode1 FF v))
+      (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))
+      (cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v)))
+      = Real.pi - arcV 0 v (rhoNode1 FF v) := by
+    rw [hdih, hcross1, hcross2]
+    rw [show (-(((rhoNode1 FF v) ⬝ᵥ
+        cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))) • v))
+        = ((rhoNode1 FF v) ⬝ᵥ
+            cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))) • (-v) from by
+      rw [smul_neg]]
+    rw [p11w4_arcV_smul_pos hbv hsc]
+    rw [p7w2_arcV_neg, p7w2_arcV_comm]
+  have hmain : arcV 0 v (rhoNode1 FF v)
+      = Real.pi - azim 0 (cross3 v (rhoNode1 FF v))
+          (cross3 (rhoNode1 FF v) (rhoNode1 FF (rhoNode1 FF v)))
+          (cross3 (ivsRhoNode1 FF v) (rhoNode1 FF (ivsRhoNode1 FF v))) := by
+    linarith [haz, step]
+  have hint := p11w2_polar_interiorAngle1_dart hcl hedge hg hia hv
+  refine ⟨?_, ?_, ?_⟩
+  · rw [hint]
+    exact hmain
+  · rw [hmain]
+    linarith [hb.1, hb.2]
+  · rw [hmain]
+    linarith [hb.1, hb.2]
+
+end W11b4Kit
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
