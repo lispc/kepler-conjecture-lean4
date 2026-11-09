@@ -117,10 +117,218 @@ theorem p12d_ff_step {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     exact Prod.ext rfl hdeg
   · rw [p12d_ivsTwo_p3 w (p12b_R FF v (p12b_R FF v w)) 0 (p12b_R FF v w)]
 
+
+/-! ## r 的 cycle-splice：`orbitF r w0 = orbitF ρ w0 \ {v}` 与 `= V'` -/
+
+/-- `r` 把 `V'` 送到 `V'`（迭代形）。 -/
+private theorem p12d_R_iter_mem {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w0 : V3} (hv : v ∈ V) (hw0 : w0 ∈ p12b_V V v) :
+    ∀ n : ℕ, (p12b_R FF v)^[n] w0 ∈ p12b_V V v := by
+  intro n
+  induction n with
+  | zero => simpa using hw0
+  | succ k ih =>
+    rw [Function.iterate_succ_apply']
+    exact p12b_R_mem hcl hedge hv ih
+
+/-- r-轨道 ⊆ ρ-轨道（`r x = ρx` 或 `r x = ρ(ρx)`）。 -/
+private theorem p12d_r_sub_rho {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w0 : V3} (hv : v ∈ V) (hw0 : w0 ∈ p12b_V V v) :
+    ∀ n : ℕ, ∃ m : ℕ,
+      (rhoNode1 FF)^[m] w0 = (p12b_R FF v)^[n] w0 := by
+  intro n
+  induction n with
+  | zero => exact ⟨0, rfl⟩
+  | succ k ih =>
+    obtain ⟨m, hm⟩ := ih
+    set x : V3 := (p12b_R FF v)^[k] w0 with hx
+    rw [show (p12b_R FF v)^[k + 1] w0 = p12b_R FF v x from
+      Function.iterate_succ_apply' (p12b_R FF v) k w0]
+    by_cases hcase : rhoNode1 FF x = v
+    · -- `r x = ρv = ρ(ρx)`：多走两步
+      have hrx : p12b_R FF v x = rhoNode1 FF v := by
+        show (if rhoNode1 FF x = v then rhoNode1 FF v else rhoNode1 FF x) = rhoNode1 FF v
+        rw [if_pos hcase]
+      rw [hrx]
+      refine ⟨m + 2, ?_⟩
+      have hsteps : (rhoNode1 FF)^[m + 2] w0 = rhoNode1 FF (rhoNode1 FF x) := by
+        rw [show m + 2 = m + 1 + 1 by omega,
+          Function.iterate_succ_apply' (rhoNode1 FF) (m + 1) w0,
+          Function.iterate_succ_apply' (rhoNode1 FF) m w0, hm]
+      rw [hsteps, hcase]
+    · have hrx : p12b_R FF v x = rhoNode1 FF x := by
+        show (if rhoNode1 FF x = v then rhoNode1 FF v else rhoNode1 FF x) = rhoNode1 FF x
+        rw [if_neg hcase]
+      rw [hrx]
+      exact ⟨m + 1, by rw [Function.iterate_succ_apply', hm]⟩
+
+/-- ρ-轨道 ⊆ r-轨道 ∪ {v}：双子句归纳
+（`ρ^n w0 ≠ v → r^[m] = ρ^n w0` / `ρ^n w0 = v → r^[m] = ρv`）。 -/
+private theorem p12d_rho_sub_r {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w0 : V3} (hv : v ∈ V) (hw0 : w0 ∈ p12b_V V v) :
+    ∀ n : ℕ,
+      (((rhoNode1 FF)^[n] w0 ≠ v →
+          ∃ m : ℕ, (p12b_R FF v)^[m] w0 = (rhoNode1 FF)^[n] w0) ∧
+        ((rhoNode1 FF)^[n] w0 = v →
+          ∃ m : ℕ, (p12b_R FF v)^[m] w0 = rhoNode1 FF v)) := by
+  intro n
+  induction n with
+  | zero => exact ⟨fun hne => ⟨0, rfl⟩, fun heq => absurd heq hw0.2⟩
+  | succ k ih =>
+    obtain ⟨ih1, ih2⟩ := ih
+    set x : V3 := (rhoNode1 FF)^[k] w0 with hx
+    have hstep : (rhoNode1 FF)^[k + 1] w0 = rhoNode1 FF x := by
+      rw [Function.iterate_succ_apply']
+    constructor
+    · intro hne
+      by_cases hcase : rhoNode1 FF x = v
+      · exact absurd (by rw [hstep]; exact hcase) hne
+      · by_cases hxv : x = v
+        · obtain ⟨m, hm⟩ := ih2 hxv
+          refine ⟨m, ?_⟩
+          rw [hstep, hxv]
+          exact hm
+        · obtain ⟨m, hm⟩ := ih1 hxv
+          have hrx : p12b_R FF v x = rhoNode1 FF x := by
+            show (if rhoNode1 FF x = v then rhoNode1 FF v else rhoNode1 FF x) = rhoNode1 FF x
+            rw [if_neg hcase]
+          refine ⟨m + 1, ?_⟩
+          show (p12b_R FF v)^[m + 1] w0 = (rhoNode1 FF)^[k + 1] w0
+          rw [hstep, Function.iterate_succ_apply' (p12b_R FF v) m w0, hm, hrx]
+    · intro heq
+      have hcase : rhoNode1 FF x = v := by rw [← hstep]; exact heq
+      by_cases hxv : x = v
+      · exact ih2 hxv
+      · obtain ⟨m, hm⟩ := ih1 hxv
+        have hrx : p12b_R FF v x = rhoNode1 FF v := by
+          show (if rhoNode1 FF x = v then rhoNode1 FF v else rhoNode1 FF x) = rhoNode1 FF v
+          rw [if_pos hcase]
+        refine ⟨m + 1, ?_⟩
+        show (p12b_R FF v)^[m + 1] w0 = rhoNode1 FF v
+        rw [Function.iterate_succ_apply' (p12b_R FF v) m w0, hm, hrx]
+
+/-- **cycle-splice**：`orbitF r w0 = orbitF ρ w0 \ {v}`（`w0 ∈ V'`）。 -/
+theorem p12d_orbit_splice {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w0 : V3} (hv : v ∈ V) (hw0 : w0 ∈ p12b_V V v) :
+    orbitF_p2 (p12b_R FF v) w0 = orbitF_p2 (rhoNode1 FF) w0 \ {v} := by
+  ext y
+  constructor
+  · rintro ⟨n, hn⟩
+    have hmemV : (p12b_R FF v)^[n] w0 ∈ p12b_V V v :=
+      p12d_R_iter_mem hcl hedge hv hw0 n
+    constructor
+    · obtain ⟨m, hm⟩ := p12d_r_sub_rho hcl hedge hv hw0 n
+      exact ⟨m, by rw [hm, hn]⟩
+    · rw [Set.mem_singleton_iff]
+      intro hyv
+      exact hmemV.2 (by rw [hn, hyv]; exact Set.mem_singleton v)
+  · rintro ⟨⟨n, hn⟩, hyv⟩
+    have hne : (rhoNode1 FF)^[n] w0 ≠ v := by rw [hn]; exact hyv
+    obtain ⟨m, hm⟩ := (p12d_rho_sub_r hcl hedge hv hw0 n).1 hne
+    exact ⟨m, by rw [hm, hn]⟩
+
+/-- `orbitF r w0 = V'`（配 `LOCAL_FAN_ORBIT_MAP_V`：`orbitF ρ w0 = V`）。 -/
+theorem p12d_orbit_splice_V {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w0 : V3} (hv : v ∈ V) (hw0 : w0 ∈ p12b_V V v) :
+    orbitF_p2 (p12b_R FF v) w0 = p12b_V V v := by
+  rw [p12d_orbit_splice hcl hedge hv hw0]
+  have h2 : localFan_p2 V E FF := localFan_p2.of_LocalFan_noIso hcl.1 hedge
+  have hρ : orbitF_p2 (rhoNode1 FF) w0 = V := LOCAL_FAN_ORBIT_MAP_V h2 hw0.1
+  rw [hρ]
+  rfl
+
+/-! ## `FF' = orbitF (ffOfHyp)` -/
+
+/-- `ffOfHyp_p3 0 V' E'` 的迭代公式：`ff^[n] (w0, r w0) = (r^[n] w0, r^[n+1] w0)`。 -/
+private theorem p12d_ff_iter {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w0 : V3} (hv : v ∈ V) (hw0 : w0 ∈ p12b_V V v) :
+    ∀ n : ℕ,
+      (ffOfHyp_p3 (0:V3) (p12b_V V v) (p12b_E V FF v))^[n]
+          (w0, p12b_R FF v w0)
+        = ((p12b_R FF v)^[n] w0, (p12b_R FF v)^[n + 1] w0) := by
+  intro n
+  induction n with
+  | zero => simp
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', ih]
+    have hk : (p12b_R FF v)^[k] w0 ∈ p12b_V V v :=
+      p12d_R_iter_mem hcl hedge hv hw0 k
+    have hsucc : (p12b_R FF v)^[k + 1] w0
+        = p12b_R FF v ((p12b_R FF v)^[k] w0) :=
+      Function.iterate_succ_apply' (p12b_R FF v) k w0
+    have hexp : (p12b_R FF v)^[k + 1 + 1] w0
+        = p12b_R FF v (p12b_R FF v ((p12b_R FF v)^[k] w0)) := by
+      rw [Function.iterate_succ_apply' (p12b_R FF v) (k + 1) w0, hsucc]
+    rw [hsucc, hexp]
+    exact p12d_ff_step hcl hedge hv hk
+
+/-- **`FF' = orbitF_p3 (ffOfHyp_p3 0 V' E') (w0, r w0)`**：正向用
+`p12d_orbit_splice_V` 把每个 `w` 写成 `r^[n] w0`，反向用迭代公式。 -/
+theorem p12d_FF_orbit {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w0 : V3} (hv : v ∈ V) (hw0 : w0 ∈ p12b_V V v) :
+    p12b_FF V FF v = orbitF_p3 (ffOfHyp_p3 (0:V3) (p12b_V V v) (p12b_E V FF v))
+      (w0, p12b_R FF v w0) := by
+  ext y
+  constructor
+  · rintro ⟨w, hw, rfl⟩
+    have hV : orbitF_p2 (p12b_R FF v) w0 = p12b_V V v :=
+      p12d_orbit_splice_V hcl hedge hv hw0
+    obtain ⟨n, hn⟩ : w ∈ orbitF_p2 (p12b_R FF v) w0 := by rw [hV]; exact hw
+    refine ⟨n, ?_⟩
+    rw [p12d_ff_iter hcl hedge hv hw0 n, Function.iterate_succ_apply', hn]
+  · rintro ⟨n, hn⟩
+    rw [p12d_ff_iter hcl hedge hv hw0 n, Function.iterate_succ_apply'] at hn
+    exact ⟨(p12b_R FF v)^[n] w0, p12d_R_iter_mem hcl hedge hv hw0 n, hn.symm⟩
+
+/-! ## `H.face` 桥（配 `exists_hypHyp_of_fan` 的第四分量，b2b-ii 直接消费） -/
+
+/-- `H.face d = orbitF_p3 (ffOfHyp_p3 0 V' E') d`，只要 `H.faceMap` 与 `ffOfHyp` 同函数
+（`exists_hypHyp_of_fan` 的 face 分量即是）。不碰 LA7 私件：`Hypermap.face = orbitMap` +
+`Equiv.Perm.coe_pow`。 -/
+theorem p12d_face_eq_orbit {V : Set V3} {FF : Set (V3 × V3)}
+    {v : V3} {H : @Hypermap (V3 × V3) dartDecEq3}
+    (hface : (H.faceMap : V3 × V3 → V3 × V3)
+      = ffOfHyp_p3 (0:V3) (p12b_V V v) (p12b_E V FF v)) :
+    ∀ d : V3 × V3, H.face d
+      = orbitF_p3 (ffOfHyp_p3 (0:V3) (p12b_V V v) (p12b_E V FF v)) d := by
+  intro d
+  unfold Hypermap.face orbitMap orbitF_p3
+  ext y
+  simp only [Equiv.Perm.coe_pow, hface]
+
+/-- **`FF' = H.face x`（`x ∈ H.darts`）**：b2b-ii 的 `localFan_p3` 第 6 分量。 -/
+theorem p12d_face_orbit {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hedge : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w0 : V3} (hv : v ∈ V) (hw0 : w0 ∈ p12b_V V v)
+    {H : @Hypermap (V3 × V3) dartDecEq3}
+    (hdarts : (↑H.darts : Set (V3 × V3))
+      = dartsOfHyp_p3 (p12b_E V FF v) (p12b_V V v))
+    (hface : (H.faceMap : V3 × V3 → V3 × V3)
+      = ffOfHyp_p3 (0:V3) (p12b_V V v) (p12b_E V FF v)) :
+    ∃ x ∈ H.darts, p12b_FF V FF v = H.face x := by
+  refine ⟨(w0, p12b_R FF v w0), ?_, ?_⟩
+  · exact Finset.mem_coe.mp (by
+      rw [hdarts]
+      exact Set.mem_union_left _
+        (show ({w0, p12b_R FF v w0} : Set V3) ∈ p12b_E V FF v from ⟨w0, hw0, rfl⟩))
+  · rw [p12d_FF_orbit hcl hedge hv hw0, p12d_face_eq_orbit hface]
+
 /-! ## `#print axioms` 探针（落库闸直接读编译输出） -/
 
 #print axioms Kepler.Text.p12d_hedge
 #print axioms Kepler.Text.p12d_EE_eq
 #print axioms Kepler.Text.p12d_ff_step
+#print axioms Kepler.Text.p12d_orbit_splice
+#print axioms Kepler.Text.p12d_orbit_splice_V
+#print axioms Kepler.Text.p12d_FF_orbit
+#print axioms Kepler.Text.p12d_face_eq_orbit
+#print axioms Kepler.Text.p12d_face_orbit
 
 end Kepler.Text
