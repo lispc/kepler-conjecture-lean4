@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:30，续719）**：**2-ε / 2-ζ 上工（池 5/5）**。
+① **`la-registry-mnt11`**（2-ε，用户裁「补前提」）：`VASYYAU`/`PWEIWBZ`/`WKZZEEH`/`YEBWJNG` 四条 `_concl` 补 `main_nonlinear_terminal_v11` 前提（SF 通道：`docs/statement-fix-proposals.md` 追加节 + 四条改陈述 + LA25 re-export + `LocalConcl` 绑定，一 commit）；消费者失效只报告不顺手改；某条变不可证则单独回滚标 UNRESOLVED。
+② **`reduction5-scout`**（2-ζ，只读）：`restricted_hypermaps_are_planegraphs_thm` 边界（HOL 估 1,500–3,000）→ 依赖闭包逐件表 + 假桩对照 + 波次建议 + GO/NO-GO；时间盒 60–90 分钟。
+③ 池内并行：`tame-corr`（W2 jcajydu 移植）、`aq13-survey`（W2 剩余四件）、`nkezbfc-w6k4`（②a）、BIEFJHU round-2 两个 driver。
+
 - **2026-11-10（07:20，续718）**：**2-α 追溯闭环（fcdjdot-pillars 侦察：工单 stale，零 patch）——柱③两件已标准三、fcdjdot 本体已落库、packIneqDefAP22 已真形；2-δ 的前提同被此侦察覆盖**。
 ① **工单 stale（机器证据，采信）**：工单背景对应 `8cefdc7a`（11-05 20:05）**之前**的旧快照；基线 `e311f9f9` 时点已全部闭环——PA22 在基线↔HEAD diff = 0 行；探针打在预编译 olean 上（PA22 olean 11:34 > 源最后编辑 11:19，树 clean）。
 ② **实测（HEAD `046d30ae`，RC=0/0 error/0 warning）**：`DLWCHEM_full`/`XULJEPR_full` = **标准三**（`31543c2f` pa22-10-chain）；清桩清单 5 项全真证（`YSSKQOY_VECTOR`/`_VECTOR2`/`_ALT`（`8cefdc7a`）、`EXISTS_M_POLYHEDRON`、`PACK_INEQ_DEF_A_797`、`POLYHEDRON_FACET_SUM_4Pi`——后两件都在路径上且已闭）；**`fcdjdot` 本体已落库**（`38c46b52`，Assembly:6746，标准三）；**裁决点已解**：`packIneqDefAP22` 现为真形 `UKBRPFE_bank ∧ WAZLDCD_bank ∧ BIEFJHU_bank`（PA22:406）、`arclength22 := arcLengthICD`。⇒ **2-α 与 2-δ 的核心前提均已被前序车道（pa22-10-chain 等）完成**；2-δ 若再派，先跑同款探针核对 `arclength2`/`arcV↔arclength` 桥是否也已在树。
