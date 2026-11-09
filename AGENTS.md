@@ -123,6 +123,13 @@
    LHS/RHS 各带同条件 `if` 时，`rw [if_pos]` 只改一边，会伪造"类型不匹配"假象
    （j3def 连续 8 轮踩坑，一替换即全绿）。另：`exact f a _ (by tactic)` 里
    元变量与 tactic 实参求值次序有坑，显式给实参。
+7. **grep 命中 ≠ 声明**：树里同名符号可能只出现在注释/排期注记里
+   （2026-11-09 实测：`indexf_rotn_alt`/`indexl_map_uniq`/`ifbetwn_indexf`/
+   `flatten_indexf`/`indexf_map_uniq`/`transform_assumption_v2` 全树仅注释命中）。
+   判"已落"必须 `#check` 或 `grep -E '^(theorem|lemma|def|noncomputable def) <name>'`。
+8. **本树无 Mathlib tactic**：`tauto` 不可用（unknown tactic）⇒ 命题收口用 core 的
+   `grind`（j3def T9 五处一次通过，产物仍标准三）。`simp only [...]` 的 unusedSimpArgs
+   linter 警告不影响 RC，但替换表里不要写已被 simp 消掉的项。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
