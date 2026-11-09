@@ -46,3 +46,8 @@ HOL `marked_list` 的 9 合取与本树 Spine 侧 `MarkedListSpine`（`TameList7
 ## 5. 顺序位置
 
 排在 M0e（37 岛件重落第一批，26 项，无定义依赖）**之后**、M0f 之前。理由：M0e 不依赖本族，先做不阻塞；L1 完成后 M0f 与 M0a 剩余件可并行。
+
+## 6. 实施澄清（2026-11-09，L1 落地时补充）
+
+- **允许显式参数。** §3 的"不得复用 Spine 的 BEq 实例"指的是**不要绑定 `GoodList`/实例化参数作为隐式类型类**，不等于"不许有显式前提参数"。L1 的 `normalList` 取显式 `(hL : GoodList L)`，理由是树内 `hypermapOfList` 载体必须吃 `(listOfDarts L).Nodup`，链侧先例 `GoodListNodesTl L hL`（`TameLp.lean:5278`）同形；替代方案（自造 node 轨道集）会加第 4 个定义、超出章程"只落定义"的边界。**已批准**，文件头以 `DIFFERS-②` 记档。
+- **辅助定义预算**：L1 用了 2 个（`oneStepList`/`fLast`），L2 若再超 3 个须先上报。
