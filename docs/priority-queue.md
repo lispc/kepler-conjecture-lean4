@@ -316,6 +316,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（06:35，续704）**：**AQ13 y=z1 边界解开（编排者读 HOL 原文）——`condition_last_parts` 第二次调用只在 `lp ≠ z1` 支，`lp = z1` 支走第一次调用；W4a2c2 授权 100–130**。
+① **边界（aq13-survey 报告）**：W4a2c2 步2 卡在「`condition_last_parts` 前提 `d ≠ s.getLast!` 与本支 `d = LAST p = f1.getLast!` 相撞」；车道建议「需另确认实参 d/s，>40 行新引理」⇒ 按令止损。
+② **编排者读 HOL 原文（`reference/flyspeck/text_formalization/tame/AQ13.hl:1470-1495`）**：实参确认——第二次调用 `condition_last_parts[s;L;p;LAST p]` 的 **d 就是 `LAST p`、s 就是 f1**，其前提 `LAST p ≠ s.getLast! = z1` 由 `Seq.cat_uniq` 的 `RESA_TAC` 现场拆开 ⇒ **`LAST p = z1`（= `lp = LAST s`）这一支不用第二次调用**，走第一次调用 `(r, p1, LAST p)` 的 `nextEl r lp = fList (eList lp)` + `lower_case`；`lp ≠ z1` 支才用第二次调用，照 HOL 1479-1522 续。**车道是把第二次调用用在了前提为假的分支上。**
+③ **派单**：`aq13-survey` → **W4a2c2 续做（授权 100–130）**：先写 `lp = LAST s` / `lp ≠ z1` 分支表；`lp = z1` 支走 (r,p1,lp) 实例 + `lower_case` + ⑦/⑭；`lp ≠ z1` 支走 (f1,p,lp) 实例 + FST 三件 + `nextCatBetwnSame` + `last_cat` 三连；`=支`（`LAST p = LAST r`）已由 W4a2c 两 lemma 处理，不重复。
+④ **HOL 分支结构记录**（供续做）：AQ13.hl「先 `s` 的 abbrev，再 `~A∨A [lp = LAST s]` 分裂，再 `A∨~A [LAST p = LAST r]` 分裂」；`DICH_TAC(70-52)`/`(78-63)`/`(79-63)` 是分支内假设的索引引用，非额外引理。
+
 - **2026-11-10（06:20，续703）**：**`hcard` 槽消（`7fa828ce`）+ `CLOSED_WEDGE` 是 sorry 桩（重大 ERRATA）——W22d 拆 W22d-i（CLOSED_WEDGE 真证）/ W22d-ii（装配）**。
 ① **`p22c2_f_surr_localization_cond_noHcard`**（`LocalAuto7W22c3b`，增 19 行）：`p22c3_hcard_bridge` 自动填 `hcard` ⇒ 条件形只剩 `hfs`（免费）/`hsimple`/`hno`。标准三。同文件 ③ `p22c3_fullySurrounded_cardFaceGe3` + ④ `p22c3_hcard_bridge`（面映射 `rfl` 级一致：`IsHypOn_p10` 的 `faceMap = ffOfHyp_p3` + `ffOfHyp_p3_eq_faceMap` + `fanHyp`/`hypermapOfFanTl` 双包装）。**③④ 原本由 aq1-fin 因「岛池缺 olean」延后——ERRATA：池内 olean 齐备（03:56–04:15 装池），编排者就地补完。**
 ② **`CLOSED_WEDGE` 桩（ERRATA，采信 aq7 机器实证）**：PA18:7871 `CLOSED_WEDGE` 证体是 **`sorry`**，`#print axioms = [propext, sorryAx, choice, Quot.sound]`；上游 `IN_CONV0_IMP_AZIM_PI_ALT`（leaf_cell.hl:3581）/`AZIM_SPLIT_POINT`（:3612）/`CLOSED_WEDGE_LT_PI`（:3659）/`CLOSED_WEDGE_EQ_PI`（:3671）同为 sorry 桩。**战役表此前的「✅ CLOSED_WEDGE（PA18:7871）」是「存在但未证」，作废**——AGENTS §2 判 BLOCKED（上游假桩），不绕。
