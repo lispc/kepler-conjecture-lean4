@@ -24,7 +24,8 @@ code is ever trusted.
   checkers — nothing else.
 - **`native_decide` is banned project-wide** (it would pull the compiler into
   the trusted base), with one chartered, scoped exception: the Phase 2 graph
-  enumeration shards (624 shard axioms, footprint recorded in `DECISIONS.md`).
+  enumeration shards (**585 shard axioms as of 2026-11-09** — declared trust
+  base, frozen; footprint in `DECISIONS.md` / `docs/trust-base.md`).
 - **Statement fidelity is the single quality valve.** The final statement is
   semantically aligned with Flyspeck's `the_kepler_conjecture`; all deviations
   are registered in `docs/statement-fidelity.md`, and statement changes only
@@ -80,24 +81,30 @@ Note: heavy recomputation (LP re-run, nonlinear certificate replays) is
 currently deferred pending a strong machine; see the compute-constraint table
 in `PLAN.md` §5. Pure Lean compilation work runs on the baseline laptop.
 
-## Status (as of 2026-11-05)
+## Status (as of 2026-11-09)
 
 The end-to-end object `Kepler.the_kepler_conjecture_e2e` stands. Its live axiom
-face is **628 lines** = 624 `native_decide` graph shard axioms + `propext` +
-`Classical.choice` + `Quot.sound` + `sorryAx`. The 624 shard axioms are the
-chartered Phase-2 computation; `sorryAx` is the remaining interface debt, and
-the target is the standard three axioms alone.
+face is **589 lines** = **585 `native_decide` graph shard axioms** (the declared
+trust base, frozen 2026-11-09: 580 shard-range + 5 tri-single-seed, two shapes
+only) + `propext` + `Classical.choice` + `Quot.sound` + `sorryAx` (78 cone
+sorries — the only real debt).
+
+**Terminal standard (user ruling 2026-11-06, `AGENTS.md` §1)**: no worse than
+Flyspeck/Isabelle — i.e. the 585 declared shard axioms (same class and same
+data as Isabelle's `by eval`) + a zero-`sorryAx` goal. **Not** "standard three
+alone" — "true standard-three" is explicitly out of scope (the 23 goodList
+facts are already kernel-proved, matching HOL).
 
 Phase-level status (qualitative — **live numbers live in one place only**):
 
 | Phase | Content | Status |
 |---|---|---|
-| 1 | Theorem statement | ✅ statement fixed; the sanctioned `Statement.lean` placeholder sorry retires at final assembly |
-| 2 | Tame plane graph enumeration | ✅ 19,715 graphs + completeness certificates; 624 kernel-checked shard axioms |
-| 3 | Linear programming | ✅ 43,078 terminal LP certificates checked; the e2e cone carries a single hLP debt point. The ~42.9k LP leaf band is outside the cone and is a different debt |
-| 4 | Nonlinear inequalities | 🟡 hNL: `nli*` interface declarations in `Assembly.lean` remain; heavy farm replay deferred |
-| 5 | Text proof porting | 🟡 geometry towers largely collapsed (LA14 / LA31 / LA34 / LA37 at zero); remaining tower debt + ~70 Text-level hTC ports |
-| 6 | Integration & delivery | 🟡 e2e stands; capstone exits wired into `Assembly`; final interface cleanup + trust audit remain |
+| 1 | Theorem statement | ✅ statement fixed |
+| 2 | Tame plane graph enumeration | ✅ 19,715 graphs + completeness proved; 585 shard axioms = declared trust base (data three-way reconciled SAME with the original) |
+| 3 | Linear programming | ✅ 43,078 terminal LP certificates checked; LP checkers kernel-proved; fill debt = `lpArchiveCertificatesDebt` (in cone) |
+| 4 | Nonlinear inequalities | 🟡 hNL six-component: 5 interface sorries (`nli*`); sqrt/atan-tier heavy farm replay deferred (the original used a farm too) |
+| 5 | Text proof porting | 🟡 geometry towers largely collapsed (LA engine layer: 16 files at zero sorries); §5 two roots under attack (J campaign `jcajydu` + WSEWPCH program) |
+| 6 | Integration & delivery | 🟡 e2e stands, assembly chain proved; root face 589; trust-base manifest `--check` green |
 
 **Where to read the numbers.** There is exactly one live ledger:
 [`docs/priority-queue.md`](docs/priority-queue.md) — in-flight lanes, queue,

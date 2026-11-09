@@ -64,6 +64,21 @@
 - `docs/priority-queue.md` 是**唯一**实时账本（在飞 + 排队 + 最近日志）。
 - 数字**只引用不抄**：同一指标不许在多个文档各写一份。写数带
   `(实测 <commit>，<日期>)` 或标 `stale`。
+
+### 6.1 文档三层清单（2026-11-09 用户裁定入档；基线刷新/重大落库时按层联动）
+
+- **入口层**（门户/导航——写状态必须与账本层同口径，**刷新基线时一并刷**，
+  外部评审 2026-11-09 抓出三处漂移即漏刷此层，`243111ef`）：
+  `README.md` / `README.zh.md`（状态节）、`docs/README.md`（导航注）；
+  `PLAN.md`（2026-10-10 快照——正文不改，只维护横幅）；`AGENTS.md` §1（验收式数字）。
+- **账本层**（数字唯一出处，**只在这里存一份**）：
+  `docs/priority-queue.md` 文件头（指标总出处 + §0 里程碑表）、
+  `docs/trust-base.md`（信任基座）、`docs/hf-proof-map.md`（核心路线图，状态更新节）、
+  `docs/handoff-2026-11-06.md` §0（接手档现状表）、
+  `docs/e2e-reachability-map.tsv`（仪器原样输出）+ `.md`（基线叙事）。
+- **历史层**（只增不改）：`docs/history/`、`docs/archive/`、`DECISIONS.md`（追加式）；
+  旧数字报错就加 `ERRATA`，不覆写。
+- 口径冲突时的权威序：账本层 > 入口层 > 历史层；发现入口层漂移 = 修入口层，不改账本层。
 - `docs/history/` 与 `docs/archive/` 只增不改；纠正加 `ERRATA`，不覆写原文。
 - `docs/statement-fix-proposals.md` 必须留在原路径：`auto_gate.sh:83` 按路径 +
   `^## N.` 切节读它。移动/拆分必须同 commit 改脚本。
