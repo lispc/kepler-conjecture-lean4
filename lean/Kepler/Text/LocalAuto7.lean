@@ -3737,6 +3737,166 @@ theorem LUNAR_VHALF_SLOTS {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
 end W10bKit
 
 
+/-! ### W10c lunar close-out (`p10w_*` continued; WSEWPCH wave W10c)
+
+The **w-half** slots of `FAN_PERIMETER_LE_2PI_OF_LUNAR_STRUCT` and the fully
+closed lunar branch.  The ιv-plane obstruction recorded in W10b collapses on
+a real tree lemma: `AFF_IVS_RHO_NODE_EQQ` (LA5:8592) gives the cone identity
+`affGt {0,w}{ρw} = affGt {0,v}{ιv}` (via
+`LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100` + `AFF_GT_SAME_WITH_ENDS` +
+`COLL_IN_AFF_GT_AFF_GT_EQ`), so the w-arc interior (HKIRPEP:
+`affGt {0,v}{ιv} ∩ V`) is literally the cone of the w-dart, hence lies in
+`affineSpan {0,w,ρw}` by `AFF_GT_SUB_AFF_UNION`.  No AFFSIGN-mono machinery
+needed. -/
+
+section W10cKit
+
+/-- **lunar w-半周槽位**：w-轨道（≤ n 步）落在平面 `{0, w, ρw}` 中且垂直轴
+`cross3 w (ρw)`。关键改写：w-弧 = `affGt {0,v}{ιv} ∩ V`
+`= affGt {0,w}{ρw} ∩ V`（`AFF_IVS_RHO_NODE_EQQ`，LA5 真证）。 -/
+theorem LUNAR_WHALF_SLOTS {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (hcl : ConvexLocalFan V E FF) (hed : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w : V3} (hlun : Lunar v w V E) :
+    ∃ n : ℕ, 0 < n ∧ n < V.ncard ∧ v = (rhoNode1 FF)^[n] w ∧
+      (∀ k : ℕ, k ≤ n →
+        (rhoNode1 FF)^[k] w ∈ affineSpan ℝ ({(0:V3), w, rhoNode1 FF w} : Set V3)) ∧
+      (∀ k : ℕ, k ≤ n →
+        (cross3 w (rhoNode1 FF w)) ⬝ᵥ ((rhoNode1 FF)^[k] w) = 0) := by
+  obtain ⟨m, n, hm0, hn0, hmV, hnV, hwv, hvw, -, harc2⟩ :=
+    p10w_lunar_data hcl hed hlun
+  -- p2-world convex fan + cone identity
+  obtain ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩ := hcl.1
+  have hcl' : LocalFan V E FF := ⟨hfanL, x0, hxd0, hFF0, hD, hee⟩
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl' hed
+  have hFFsub : FF ⊆ dart1OfFan V E := by
+    rw [hFF0]
+    exact (orbitMap_subset_of_permutesOn (hypermapOfFan 0 V E hfanL).faceMap_permutes hxd0).trans
+      (p7w2_coe_darts hfanL).subset
+  have hcv2 : convexLocalFan_p2 V E FF := by
+    refine ⟨h2, fun x hx => ?_⟩
+    obtain ⟨haz, hwedge⟩ := hcl.2 x hx
+    have hxd : x ∈ dart1OfFan V E := hFFsub hx
+    refine ⟨?_, ?_⟩
+    · rw [show azimInFan_p2 x E = azimInFan_p3 x E from rfl,
+        ← azimInFan_eq_azimInFan_p3 hfanL hxd]
+      exact haz
+    · rw [show wedgeInFanGe_p2 x E = wedgeInFanGe_p3 x E from rfl,
+        ← wedgeInFanGe_eq_wedgeInFanGe_p3 hfanL hxd]
+      exact hwedge
+  have hcone : affGt ({0, v} : Set V3) ({ivsRhoNode1 FF v} : Set V3)
+      = affGt ({0, w} : Set V3) ({rhoNode1 FF w} : Set V3) :=
+    (AFF_IVS_RHO_NODE_EQQ hcv2 hlun).symm
+  have hwV : w ∈ V := hlun.2.1 (Set.mem_insert_of_mem v (Set.mem_singleton w))
+  have hvV : v ∈ V := hlun.2.1 (Set.mem_insert v ({w} : Set V3))
+  have hwne : w ≠ 0 := fun hz =>
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hwV (by rw [hz]; exact collinear3_of_eq rfl)
+  have hvne : v ≠ 0 := fun hz =>
+    LOCAL_FAN_CHARACTER_OF_RHO_NODE2 h2 hvV (by rw [hz]; exact collinear3_of_eq rfl)
+  -- Lunar collinearity: w = c • v (v ≠ 0), hence v = c⁻¹ • w
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := 0) (w := v) (w1 := w) hvne).mp hlun.2.2.2
+  have hcw : w = c • v := by
+    have hc' := hc
+    rw [sub_zero, sub_zero] at hc'
+    exact hc'
+  have hcne : c ≠ 0 := by
+    intro hz
+    rw [hz, zero_smul] at hcw
+    exact hwne hcw
+  have hcv : v = c⁻¹ • w := by
+    rw [hcw, smul_smul, inv_mul_cancel₀ hcne, one_smul]
+  have hpl : ∀ k : ℕ, k ≤ n →
+      (rhoNode1 FF)^[k] w ∈ affineSpan ℝ ({(0:V3), w, rhoNode1 FF w} : Set V3) := by
+    intro k hk
+    rcases Nat.eq_zero_or_pos k with hk0 | hkpos
+    · rw [hk0, Function.iterate_zero_apply]
+      exact subset_affineSpan ℝ _ (by simp)
+    · rcases Nat.lt_or_ge k n with hlt | hge
+      · -- interior: the w-arc cone IS the w-dart cone (AFF_IVS_RHO_NODE_EQQ)
+        have hmem : (rhoNode1 FF)^[k] w ∈ (affGt ({0, v} : Set V3)
+            ({ivsRhoNode1 FF v} : Set V3) ∩ V) := by
+          rw [← harc2]
+          exact ⟨k, ⟨hkpos, hlt⟩, rfl⟩
+        rw [hcone] at hmem
+        have hunion : (({0, w} : Set V3) ∪ ({rhoNode1 FF w} : Set V3))
+            = ({(0:V3), w, rhoNode1 FF w} : Set V3) := by
+          ext z
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto
+        have hres := AFF_GT_SUB_AFF_UNION ({0, w} : Set V3) ({rhoNode1 FF w} : Set V3)
+          hmem.1
+        rwa [hunion] at hres
+      · -- endpoint k = n: v fills the plane through the Lunar line
+        have hkn : k = n := by omega
+        rw [hkn, ← hvw, hcv]
+        exact affineSpan_mono ℝ
+          (by
+            intro z hz
+            rcases Set.mem_insert_iff.mp hz with rfl | hz2
+            · exact Set.mem_insert _ _
+            · rw [Set.mem_singleton_iff] at hz2
+              subst hz2
+              exact Set.mem_insert_of_mem _ (Set.mem_insert _ _))
+          (p9w_smul_mem_affineSpan_zero w c⁻¹)
+  refine ⟨n, hn0, hnV, hvw, hpl, fun k hk => ?_⟩
+  exact p10w_affine_perp (a := w) (b := rhoNode1 FF w) (hpl k hk)
+
+end W10cKit
+
+/-- **WSEWPCH lunar 支全闭**（polar_fan.hl:2360-2537 的组装）：凸局部扇 + lunar
+二元组（`Lunar v w V E`）⟹ 周长 ≤ 2π。组装 = `p10w_lunar_data`（m/n/端点）
++ `LUNAR_VHALF_SLOTS` / `LUNAR_WHALF_SLOTS`（双半槽位，任一方向经
+`w6a orbit dis` 对齐）+ `FAN_PERIMETER_LE_2PI_OF_LUNAR_STRUCT`（W10a 望远镜）。 -/
+theorem FAN_PERIMETER_LE_2PI_OF_LUNAR {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (hcl : ConvexLocalFan V E FF)
+    (hed : ∀ v ∈ V, ∃ w, {v, w} ∈ E)
+    {v w : V3} (hlun : Lunar v w V E) :
+    fanPerimeter V E FF ≤ 2 * Real.pi := by
+  obtain ⟨m, n, hm0, hn0, hmV, hnV, hwv, hvw, -, -⟩ := p10w_lunar_data hcl hed hlun
+  obtain ⟨m', hm0', hmV', hwv', hpl2, hperp2⟩ := LUNAR_VHALF_SLOTS hcl hed hlun
+  obtain ⟨n', hn0', hnV', hvw', hpl1, hperp1⟩ := LUNAR_WHALF_SLOTS hcl hed hlun
+  have hvV : v ∈ V := hlun.2.1 (Set.mem_insert v ({w} : Set V3))
+  have hwV : w ∈ V := hlun.2.1 (Set.mem_insert_of_mem v (Set.mem_singleton w))
+  have hcol : Collinear ℝ ({(0:V3), v, w} : Set V3) := hlun.2.2.2
+  -- witness alignment (both directions inherit uniqueness from the rho cycle)
+  have h2 : localFan_p2 V E FF := w6a_to_p2 hcl.1 hed
+  have hmm : m = m' := by
+    by_contra hne
+    have heq : (rhoNode1 FF)^[m'] v = (rhoNode1 FF)^[m] v := by
+      rw [← hwv', ← hwv]
+    have heqP : (rhoNode1_p2 FF)^[m'] v = (rhoNode1_p2 FF)^[m] v := heq
+    rcases Nat.lt_or_gt_of_ne hne with hlt | hgt
+    · have h1 : (rhoNode1_p2 FF)^[m'] v ≠ (rhoNode1_p2 FF)^[m] v :=
+        LOFA_IMP_DIS_ELMS2 h2 hvV m m' hlt (by
+          rw [LOFA_IMP_CARD_FF_V_EQ h2]
+          exact hmV')
+      exact h1 heqP
+    · have h1 : (rhoNode1_p2 FF)^[m] v ≠ (rhoNode1_p2 FF)^[m'] v :=
+        LOFA_IMP_DIS_ELMS2 h2 hvV m' m hgt (by
+          rw [LOFA_IMP_CARD_FF_V_EQ h2]
+          exact hmV)
+      exact h1 heqP.symm
+  have hnn : n = n' := by
+    by_contra hne
+    have heq : (rhoNode1 FF)^[n'] w = (rhoNode1 FF)^[n] w := by
+      rw [← hvw', ← hvw]
+    have heqP : (rhoNode1_p2 FF)^[n'] w = (rhoNode1_p2 FF)^[n] w := heq
+    rcases Nat.lt_or_gt_of_ne hne with hlt | hgt
+    · have h1 : (rhoNode1_p2 FF)^[n'] w ≠ (rhoNode1_p2 FF)^[n] w :=
+        LOFA_IMP_DIS_ELMS2 h2 hwV n n' hlt (by
+          rw [LOFA_IMP_CARD_FF_V_EQ h2]
+          exact hnV')
+      exact h1 heqP
+    · have h1 : (rhoNode1_p2 FF)^[n] w ≠ (rhoNode1_p2 FF)^[n'] w :=
+        LOFA_IMP_DIS_ELMS2 h2 hwV n' n hgt (by
+          rw [LOFA_IMP_CARD_FF_V_EQ h2]
+          exact hnV)
+      exact h1 heqP.symm
+  subst hmm
+  subst hnn
+  exact FAN_PERIMETER_LE_2PI_OF_LUNAR_STRUCT hcl hed hvV hwV hcol m n hn0 hm0
+    hmV hnV hvw hwv hperp1 hperp2 hpl1 hpl2
+
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
