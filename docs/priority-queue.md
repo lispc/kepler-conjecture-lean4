@@ -57,6 +57,34 @@
 （TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
 ~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
+## 0.2 J 战役后路线图（2026-11-10 用户批准）
+
+> **来源**：2026-11-10 用户对"J 战役做完你准备做什么"的回答（第 0–5 步）裁定"同意"，本节点即该路线的正式立案。
+> **入口条件**：J5 wrapper 落库（闭 `Assembly:2509`）——即 J0 收官 / J4 / J5 全过。
+> **并行不冲突**：若 J 卡在 J2（TAV2）上，本节点第 1 步照常推进（WSEWPCH 与文本债不依赖 J）。
+> **原则**：J 之后主线从「证定理」切换到「清接口 + 信任基座收官」；唯一还需要用户裁决算力的地方是 hNL。
+
+| 步 | 名称 | 内容（可执行清单） | 前置 | 需用户裁决 |
+|---|---|---|---|---|
+| **0** | **收口量测（不猜）** | ① 重跑 `#print axioms Kepler.the_kepler_conjecture_e2e` + `e2e_reach_map` + SORRIED/K_REACH/K_AXIOM/K_MODULES；② 出**新基线 U** 并写档（带 commit 与日期）；③ 用 J5 实测对账 hTC 三件（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）——若全闭，e2e 应只剩 **hNL 585 基座 + hLP 1 条**；④ 更新 `docs/hf-proof-map.md` 状态表 | J5 落库 | 否 |
+| **1** | **文本层剩余债清零** | ① WSEWPCH：W12 straight 支（~500–650，三拆批）+ BGMIFTE 本体装配 + 五分支归纳 → 消 LA7 的 4 条 `sorry`，闭 `fully_surrounded_perimeter_bound`；② J 侧非 J2 尾巴扫干净（J3 审计表「可攻 35」归零、T9/T7/T11 残留件、`marked_x_exists` 等 M2 挂件随 M2 走）；③ 每件落库后按 §1 池纪律继续派 | 无（可与 J 并行） | 否 |
+| **2** | **hLP 一件收口** | `lpArchiveCertificatesDebt`（Assembly 级）：纯逻辑部分已真推导，只剩包装/接线；落库后 hLP 归零 | 无 | 否（**不触 LP 证书层**，仅逻辑接线） |
+| **3** | **hNL 77 条（最大剩余面）** | ① **零新增算力部分先做**：在库证书（三棵 XL、goodList 系、`JNTEFVP 1`、`6184614449` 等）的接线与复用、`nli*` 槽位族收敛；② 其余按用户裁决走 **BIEFJHU-a 三选一**（① TM/`--hull` ~2.6 核时需放行 certtm；② 过夜 plain 36–46 h；③ 挂账）；③ LP/kcblrqc 维持冻结，恢复时第一步仍是 (c) Flyspeck `prepared_nonlinear` 内核重放的有界侦察 | ① 无；② 需裁决 | **是**（算力路线） |
+| **4** | **M2 信任基座收官** | 585 条 `native_decide` 公理：① manifest 补数据源哈希字段；② 抽样 replay；③ Docker 一键复现 + `#print axioms` 断言；④ 与 `docs/handoff-2026-11-06.md` §0.1（原版 Flyspeck/Isabelle 的同类做法）对表 | 无（避开 AQ 塔编译峰值） | 否（replay 需算力窗口时另行上报） |
+| **5** | **交付收尾** | ① `hf-proof-map` / `handoff` / `README`（中英）/ `e2e-reachability-map.md` 状态节对表；② 全部 commits 的 **push**（当前 ~150+ 笔未 push）；③ 终局验收语言存档（`#print axioms` 输出 + manifest `--check`） | 0–4 | **是**（push） |
+
+**明确不做（用户保留项 / 已裁决不做）**
+- 不跑 XL 三棵重建、不开 LP/kcblrqc 证书波（**冻结中**）；
+- 不新增任何 `native_decide` / `axiom` / `sorry`；
+- 不动 certtm 的 TM3 / Mono* hold、D 证书层解冻 hold；
+- 不把 585 枚举 shard 拉进内核重放（AGENTS §1 已裁"明确不做"）。
+
+**关键路径（J 后）**：第 0 步（1 天）→ 第 2 步（hLP，低风险）→ 第 1 步并行推进（WSEWPCH 收口）→ 第 3 步的"零算力部分"边做边等用户对 hNL 的裁决 → 第 4 步可与 3 并行 → 第 5 步压轴。
+
+**裁决边界（编排者不单方面动）**：hNL 的算力路线（BIEFJHU-a 三选一）、LP/kcblrqc 解冻、全部 push——三件均等用户点头；其余按本路线图与 §1 池纪律自走。
+
+---
+
 ## 1. 在飞（2026-11-09 18:45，池 **5/5**，续477 对表）
 
 > **用户 2026-11-09 指令：额度恢复，维持 5 车道。**（11-06 的"降到 3"解除。）
