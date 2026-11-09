@@ -178,6 +178,13 @@
    定义/已落库的叶文件，件明明在树仍报 Unknown（2026-11-10 AQ12 W1b 实测：
    `ProbeAQ12_neg.lean` 未 import `JcajyduAqLeaf8W0`，`memPartsImp`/`sndMemRtran1` 假阴性）。
    ⇒ 负探针必须按**最新叶文件全集**建 import 闭包，再逐名做语义 grep/`#check` 复核。
+19. **`Coplanar` 有两个读法，不许混用**（2026-11-11 stepB W3b 实测）：
+   Mathlib `Coplanar ℝ`（秩 ≤ 2，点集张成空间维数）与 `Kepler.Geom.Coplanar`
+   （HOL 存在形，显式 `∃ a b c, … ∧ u = a•v + b•w + c•x`）**不是同一个谓词**，
+   互转需桥接件。`aff_ge_3_1_rep_cross_dot_p9`（LA9:2773 桩）用 Mathlib 读法，
+   而其消费者 `aff_gt_3_1_rep_cross_dot` 与 `properties_fully_surrounded` 用 Geom 读法。
+   ⇒ 写/消费仿射几何件时先 `#check` 目标谓词的读法，**同文件内统一一种**；
+   跨读法时显式加桥，不许把两者当同义。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
