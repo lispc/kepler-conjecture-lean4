@@ -316,6 +316,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:25，续707）**：**AQ13 `lower_case` 载体判定（非长度分类，是 Seq→List 重写包）；`lp=z1 ∧ p∉parts r` 支拆换血 `aq13-c4`（50–70）**。
+① **`lower_case`（`tame_list.hl:1397-1401`）** = `end_itlist CONJ [GSYM map_MAP; GSYM size; filter_FILTER; REVERSE_rev; GSYM last_LAST; APPEND_cat; ALL_all]` ——**Seq→List 表示层重写包**，不是列表长度分类；Lean 无对应 def，成员已是 simp/桥引理。⇒ 不提供新数学内容。
+② **step1（`p∈parts r`）已闭**：`by_cases hpR : p ∈ partsSpine L r`，true 支直接 `aq13w4a2c_lastOfPartOfMemParts …`（W4a2c 已落）⇒ 无需新码。
+③ **step2（`p∉parts r`）边界（40–60）**：已有 `nextEl r lp = fList (eList lp)`、`nextEl r y = z` ⇒ **`z = fList (eList y)`**；HOL 1525-1562 六步 = `good_list_e_list z1` → `f_list_power_next_el`+`MEM_POWER_NEXT_EL` → `mem_find_face_imp_faces_eq z x` → `prev_next_id (eList z1) f` → `betwn f y z = []` 二支（`betwn_nil`）→ ⑦（W1）/⑭（W1b）。Lean 载体：`goodListEList`/`fListPowEqNextElPow`/`memPowerNextEl`/`aq10_memFindFaceImpFacesEq`/`nextPrevId`/`betwnNil`。
+④ **换血**：新车道 `aq13-c4`（/tmp/aq13-c4，基线 `a1e856d2`，新文件 `JcajyduAqLeaf13W4a2c4`，50–70 ≤120）——工作单含上述六步 + 载体候选清单。**之后 W4b 主装（80–120）⇒ AQ13 收口 ⇒ 塔 13/13**。
+
 - **2026-11-10（07:05，续706）**：**AQ13 W4a2c2 落库（`fe50291a`，66 行 1 件）——`lp≠z1` 支清零（B2n 短路绕开 FST/nextCat/last_cat）；剩 `lp=z1` 支 W4a2c3（30–45）**。
 ① **`aq13w4a2c2_lastOfPartOfNeLast`**：`p ∈ parts f1`、`y = LAST p`、`y ≠ z1`、`p1 ∈ parts r`、`y ∈ p1` ⇒ **`p1.getLast! = y`（无条件，不分 `p ∈/∉ parts r`）**。三段：`conditionLastParts(f1,p,lp).mpr` 得断口 → **`aq13w4a2_nextEl_f1`（B2n）转 r** → `conditionLastParts(r,p1,lp).mp`；`y = r.getLast!` 支走 `lastOfPartOfLast`。标准三；RC=0、0 error/0 warning；olean 装池。
 ② **分支表（按 HOL 1470-1495 修正，采信）**：`lp≠z1` 第二次调用 `(f1,p,lp)` 合法（**可绕开 FST/nextCat/last_cat**）；`lp=z1` 前提为假、不用，走第一次调用 `(r,p1,lp)` 给 `nextEl r y = fList (eList y)` + `lp=y=z1=prevEl r z` ⇒ `z = fList (eList y)`，再 `lower_case` + ⑦/⑭（1471-1479/1525-1562）；`LAST p = LAST r` 支共用 W4a2c 的 `lastOfPartOfLast`（不重复）。
