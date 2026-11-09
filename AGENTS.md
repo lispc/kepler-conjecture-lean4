@@ -66,6 +66,8 @@
   判据 = `kern.memorystatus_vm_pressure_level`（1 正常 / 2 警告 / 4 危急）+
   `pageouts` 增量 + 并发编译数。**不许只看 `Pages free`**（macOS 的 free 常年很小）。
 - 用户保留项：certtm 的 TM3 / Mono* hold；D 证书层解冻 hold。不要单方面动。
+  **专项解冻（2026-11-11 用户明批，仅此一项）**：BIEFJHU-a 的 TM 证书 pilot 可动 certtm；
+  **TM3 量产扫全库、Mono\* 进 universe、D 证书层解冻仍然 hold**，跑完本 pilot 即回到 hold 态。
 
 ## 5. 落库流程
 
