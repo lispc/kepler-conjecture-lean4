@@ -114,7 +114,9 @@
 | ~~`j1-b5a2`~~（退役，续503） | 战役 J1 F 组 + more_lemma2 收尾 | **12 patch 全落**：B5-A/B5-B + F1–F4 + chain-uniq §1–§3（`e802d086`/`b73f5074`/`5ec9c8ed`）；**#33 关闭**；账本口径修正（`f_list_quotient_alt` 已落） |
 | `ml2-marked`（**退役**，续514） | more_lemma2 尾部：`QRDYXYJ_list` 组装 | **✅ 封盘 36/37**：`marked_translate` `2c0a6429` + `card_atoms_of_loop` 链层 `75bc538a` + **`QRDYXYJ_list` 链层组装 `d5d1d41f`**；唯一锁 = `ChainMarkedQ`（`TameList16:1095/1109`）；转零产出待命（触发判据 = `markedListIsNodeNondegenerate` 转标准三，解锁后 ~80 行两件） |
 | ~~`j3-t9c2`~~（**退役**，续522） | 战役 J3/T9D 收尾 | **✅ T9 板 5/5 全清**：T9C `e01d6da9` + **T9D `e4843930`（`Thm9D` 444 行 + `Thm9D2` 178 行，标准三）**；交付 T9 段状态核对表 + ERRATA（`mem_flatten_facelistat` 实为 `647b5a65`） |
-| `nkezbfc-scout` | WSEWPCH generic 支上游锁侦察（只读，零 patch） | **开跑**：`NKEZBFC`（LocalAuto2:1606 `:= sorry`，HOL localization.hl:1502）+ `EJRCFJD`（LocalAuto9：仅 CARD=3 基例 + 挂账 skeleton）依赖 × 状态表、真值风险、WSEWPCH generic 可装配清单、立项裁决建议 |
+| `jcajydu-aqfin`（**换血**，续519） | 战役 AQ3 split.1 收口（J0 收官最后前置） | **开跑**：件 A `f_last` 四支装配（~135，按前任六步清单 + 交接备注）+ 件 B `aq3Concl`（20–30）；件 A 落库不以件 B 为条件 |
+| `tame16-ql`（**换血**，续520） | `TameList16:1109` 定点攻坚（more_lemma2 + AQ12 双解锁） | **开跑**：直路线「单点块 ↔ 块数=1」撞 `MarkedListSpine` 第 5 合取，**绕开两次止损的 HOL `dart_of_card_node`**；裁决面 = 删 `have hql := by sorry` 一处、陈述零改 |
+| `nkezbfc-scout` | WSEWPCH 上游锁（NKEZBFC）侦察 → 施工 | **SCOUT + WAVE2 图纸已交**（CIZMRRH 勘误：已 std3@LA3:2734；`WSEWPCH_final` 外部前提恰好 1 个 = 全局 `hNKE`；五叶结构 + 接口形状 B）；**wave 1 `842d1ddf` 已落库**（generic 条件槽）；在飞 **wave B = `EJRCFJD_ALT2`**（135 HOL，估 400–600） |
 | `jcajydu-j3def` | 战役 J3：定理层（147 件 / 15 批） | **已落：审计 76 件 + 链 4/5 `8aec92da` + b_nfgtrans 族 `70415fa0` + T9B `647b5a65` + T9C 支撑 `faaac9f0`**；T9 余 4 大件拆 T9C 本体（`j3-t9c2`）/ T9D |
 | `j3-t6d` | 战役 J3 收盘 → J2 前置 | **T7E `a2e021be` + T7F `9e54540f`/DEF-FIX `3fac7551` + T7H 终版收盘表（143 active = 114 已落 / 11 J2 / 18 上游 / 0 定义层 / 可攻 0）**；`TAV2_READINESS.md` 已交（AQ 真证叶 2/13）；在飞 **Wave 0 接口层**（复用 Spine `transformAssumptionSpine`/`transformAssumptionOfAq`，只做 ntrans/rtrans 桥 + 13 槽搬运，160–310） |
 | `archive-data-scout` | trust-base §4 第 2 条：`ArchiveData/{Tri,Quad,Pent,Hex}` vs HOL vs AFP 三路机械对账 | **✅ 已收工（四类全 SAME，见续407）** |
