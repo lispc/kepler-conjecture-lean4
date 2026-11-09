@@ -7724,7 +7724,7 @@ private theorem yk6_local_diag_notE (hlpfan : LpFan V E) (f : Set (V3 × V3))
 
 /-- FullySurrounded ⟹ dart 首∈点 ≥ 2 邻居（HOL
 fully_surrounded_card_set_of_edge1 的折算；azimDart < π 排除 1 价 2π 分支）。 -/
-private theorem yk6_fs_ncard_gt1 (hfan : FAN 0 V E) (hfs : FullySurrounded V E)
+theorem yk6_fs_ncard_gt1 (hfan : FAN 0 V E) (hfs : FullySurrounded V E)
     {d : V3 × V3} (hd : d ∈ dart1OfFan V E) : 1 < (setOfEdge d.1 V E).ncard := by
   have hπ : azimDart V E d < Real.pi := hfs d (Set.mem_union_right _ hd)
   by_cases hnc : (setOfEdge d.1 V E).ncard > 1
