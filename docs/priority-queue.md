@@ -316,6 +316,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（07:40，续708）**：**塔顶 12/13 槽形落库（`fa0ef688`，39 行）——`aq13Concl` 成为唯一显式槽；12 叶真证定理全部填入**。
+① **`transformAssumptionSpine_of_aq13`**：`(h13 : aq13Concl L hL) → transformAssumptionSpine L hL`，体 = `transformAssumptionOfAq L hL (aq1 L hL) … (aq12 L hL) h13` 一行。标准三、零 sorryAx；RC=0、0 error/0 warning；olean 装池。
+② **意义**：AQ13 收口后**一行代入**即得 `transformAssumptionSpine`（HOL `transform_assumption` 目标形）⇒ 77 处消费者随之解锁。**塔账 = 12/13 真证 + 1 槽**。
+③ **AQ13 余量**：`lp=z1 ∧ p∉parts r` 支（`aq13-c4` 在飞，直证路线：`z = nextEl r y = fList (eList y)` ⇒ `findFace (eList y) = findFace z = f`，故 `eList y` 是 f 上 z 的前驱——`eList y = l'y` 用 ⑦，否则 `eList y ∈ W = between f l'y z`（`indexfBetwnEq`）用 ⑭）→ W4b 主装（80–120）。
+
 - **2026-11-10（07:25，续707）**：**AQ13 `lower_case` 载体判定（非长度分类，是 Seq→List 重写包）；`lp=z1 ∧ p∉parts r` 支拆换血 `aq13-c4`（50–70）**。
 ① **`lower_case`（`tame_list.hl:1397-1401`）** = `end_itlist CONJ [GSYM map_MAP; GSYM size; filter_FILTER; REVERSE_rev; GSYM last_LAST; APPEND_cat; ALL_all]` ——**Seq→List 表示层重写包**，不是列表长度分类；Lean 无对应 def，成员已是 simp/桥引理。⇒ 不提供新数学内容。
 ② **step1（`p∈parts r`）已闭**：`by_cases hpR : p ∈ partsSpine L r`，true 支直接 `aq13w4a2c_lastOfPartOfMemParts …`（W4a2c 已落）⇒ 无需新码。
