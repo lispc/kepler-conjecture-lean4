@@ -318,6 +318,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（06:50，续715）**：**车道补位（用户问询后盘点）：3 条新车道上工（§2 队列已批件），nkezbfc 疑似卡死已催；BIEFJHU round-2 74/204 子盒**。
+① **盘点结论**：塔（13/13）与 perimeter（只剩 `hNKE`）两条关键路径收口后，aq7/hsimple-wire/aq13-survey/w22d-ii/loc-simple/aq13-c4 六车道全部交付完毕转空闲；唯一在跑的计算 = BIEFJHU round-2 两个 driver（`R2c0`/`R2c1`，74/204 子盒，R2c1 出现 1 张 NEG 子盒——`stage2_and_3` 的 `still` 只算 kernel FAIL 不算 R2 NEG，emit 时可能再拒，届时按 round-2 同法再拆）。
+② **nkezbfc 疑似卡死（第 7 例？）**：05:37 回执后 70+ 分钟无 `/tmp/nkezbfc-w6k3b` 产物；已催（要求 5 分钟内回状态 + 先交 ⊆ 半最小件）；若无响应则换血重派 ②a。
+③ **补位派单（全为用户 2026-11-06 已批件）**：**2-α `fcdjdot-pillars`**（新车道：先只读侦察 PA22 16 条 sorry 哪些真在柱③两件证明项内，再按依赖序清 `YSSKQOY_VECTOR` → `_VECTOR2/_ALT` → `EXISTS_M_POLYHEDRON`，`packIneqDefAP22 := True` 占位只报告不动）；**2-γ `tame-corr-w1`**（新车道：`RXOKSKC.hl` 1,105 行逐件盘点 → 移植首批 ≤250）；**aq13-survey 续** → **塔顶消费者 W2**（`reduction3.hl` 侦察 + 首文件移植，`hta` 前提一律换 `transformAssumptionSpine_top`——13/13 的第一批真实消费者）。
+④ 塔顶 W1 alias 文件 `JcajyduTowerConsumers`（5 alias）已落库（`295a28a9`，6/6 锚标准三）。
+
 - **2026-11-10（06:15，续714）**：**perimeter ② 收口：`p21_hL_of_fullySurrounded`（`67190185`，103 行）+ 一行装配（`70740393`，37 行）——根面 `fully_surrounded_perimeter_bound` 只剩 `hNKE`（NKEZBFC）**。
 ① **`p22dK_isHypOn_dart`（修正签名）**：`FAN` 只给 `⋃₀E ⊆ V`、不排除孤立点 ⇒ `IsHypOn_p10` 的 darts 槽需要 **`hno`** 参数（派单单参版不可证，车道探针勘误）；`H1 := hypermap_toDart (hypermapOfFan 0 V E)`（公开词代替 private `fanHyp`），四映射走 AzimBridge 桥。`H2 := toDart (切片 hypermapOfFan)`。
 ② **`p21_hL_of_fullySurrounded (hfan) (hfs)`**：W21:66-70 槽形**逐字**；`hcard`/`hsimple`/`hno` 全自动填；装配复用 `p22dJ_convexLocalFan_p2`（已是 p2 词面，无需 simpa）+ `hclosed := p22d_closedWedge`。标准三；RC=0、0 error/0 warning。
