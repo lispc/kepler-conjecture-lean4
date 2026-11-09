@@ -2933,6 +2933,114 @@ theorem FAN_PERIMETER {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     rw [Function.iterate_succ_apply']
     rfl
 
+/-! ### W8 assembly kit (hedge extraction + WSEWPCH core; WSEWPCH wave W8)
+
+Two encoding-level bridges completing the perimeter lane's consumption
+surface for the `yk11` route (`yk11_perimeterBound_of_core`, TameLp):
+
+1. `LOCAL_FAN_IMP_HEDGE` — the SF-54 delta: LA1 `LocalFan` carries
+   `∀ u ∈ V, (ee u E).ncard = 2` (`ee v E = {w | {v, w} ∈ E}`, localization
+   `EE`), so the hedge hypothesis that HOL `local_fan` packages internally
+   is *provable* here and no longer needs to be threaded as an assumption
+   downstream.
+2. `WSEWPCH_CORE` — the yk11 hcore master (`yk11_WSEWPCH_core` of the
+   roadmap, `docs/hf-proof-map.md` §5 second root): the face-sum statement
+   `∀ U E' g, ConvexLocalFan U E' g → setSum g (arcV 0 d.1 d.2) ≤ 2*π`,
+   derived from the perimeter bound (= the `WSEWPCH` statement shape) via
+   `FAN_PERIMETER` and the dart↔vertex reindex along `WRGCVDR_BIJ`.
+   Final assembly at body-closure is the single line `WSEWPCH_CORE WSEWPCH`.
+3. `FAN_PERIMETER_LE_2PI_OF_CARD_LE` — the `CARD V ≤ 2` branch of the
+   WSEWPCH induction (polar_fan.hl:2633-2648) as a standalone real lemma:
+   each summand is `arcV ≤ π` (`arcV = Real.arccos …`, so the HOL
+   `ARCV_BOUNDS` content is one `Real.arccos_le_pi` here — no LA6 import
+   needed) and the orbit sum has ≤ 2 terms. -/
+
+/-- The hedge hypothesis is derivable from `LocalFan`: every vertex has
+exactly two neighbours (`ee v E = {w | {v, w} ∈ E}`, the localization `EE`),
+so `{v, w} ∈ E` for some `w`.  This discharges the SF-54 "isolated vertex"
+note: LA1 `LocalFan` cannot have `V`-vertices without edges. -/
+theorem LOCAL_FAN_IMP_HEDGE {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  obtain ⟨hfan, x, hxd, hFF, hD, hee⟩ := h
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := hee v hv
+  rcases Set.eq_empty_or_nonempty (ee v E) with h0 | hne
+  · rw [h0] at h2
+    simp at h2
+  · obtain ⟨w, hw⟩ := hne
+    exact ⟨w, hw⟩
+
+/-- **WSEWPCH core** (yk11 hcore master).  The hypothesis is exactly the
+`WSEWPCH` statement shape (perimeter bound of a convex local fan); the
+conclusion is the face-sum form consumed by
+`yk11_perimeterBound_of_core` (TameLp).  Assembly once the WSEWPCH body
+is real: `WSEWPCH_CORE WSEWPCH`. -/
+theorem WSEWPCH_CORE
+    (hW : ∀ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)),
+      ConvexLocalFan V E FF → (∀ v ∈ V, ∃ w, {v, w} ∈ E) →
+        fanPerimeter V E FF ≤ 2 * Real.pi)
+    (U : Set V3) (E' : Set (Set V3)) (g : Set (V3 × V3))
+    (hcl : ConvexLocalFan U E' g) :
+    setSum g (fun d : V3 × V3 => arcV (0 : V3) d.1 d.2) ≤ 2 * Real.pi := by
+  have hed : ∀ v ∈ U, ∃ w, {v, w} ∈ E' := LOCAL_FAN_IMP_HEDGE hcl.1
+  have h2 : localFan_p2 U E' g := w6a_to_p2 hcl.1 hed
+  have hbij := WRGCVDR_BIJ h2
+  obtain ⟨hfan, x, hxd, hFF, hD, hee⟩ := hcl.1
+  have hsub : g ⊆ dart1OfFan U E' := by
+    rw [hFF]
+    exact (orbitMap_subset_of_permutesOn (hypermapOfFan 0 U E' hfan).faceMap_permutes hxd).trans
+      (p7w2_coe_darts hfan).subset
+  have hGfin : g.Finite := (finite_dart1_fan hfan).subset hsub
+  have hUfin : U.Finite := Set.BijOn.image_eq hbij ▸ hGfin.image Prod.fst
+  -- dart-sum reindexes to the vertex-sum (fst is a bijection FF → V)
+  have hreindex : setSum g (fun d : V3 × V3 => arcV (0 : V3) d.1 d.2)
+      = setSum U (fun v : V3 => arcV (0 : V3) v (rhoNode1 g v)) := by
+    rw [setSum, setSum, dif_pos hGfin, dif_pos hUfin]
+    refine Finset.sum_nbij (fun d => d.1) ?_ ?_ ?_ ?_
+    · intro d hd
+      exact (Set.Finite.mem_toFinset hUfin).mpr
+        (hbij.1 ((Set.Finite.mem_toFinset hGfin).mp hd))
+    · intro d hd e he hcon
+      exact hbij.2.1 ((Set.Finite.mem_toFinset hGfin).mp hd)
+        ((Set.Finite.mem_toFinset hGfin).mp he) hcon
+    · intro v hv
+      obtain ⟨d, hd, hd1⟩ := hbij.2.2 ((Set.Finite.mem_toFinset hUfin).mp hv)
+      exact ⟨d, (Set.Finite.mem_toFinset hGfin).mpr hd, hd1⟩
+    · intro d hd
+      rw [← w6a_deter h2 ((Set.Finite.mem_toFinset hGfin).mp hd)]
+      rfl
+  calc setSum g (fun d : V3 × V3 => arcV (0 : V3) d.1 d.2)
+      = setSum U (fun v : V3 => arcV (0 : V3) v (rhoNode1 g v)) := hreindex
+    _ = fanPerimeter U E' g := (FAN_PERIMETER hcl.1 hed).symm
+    _ ≤ 2 * Real.pi := hW U E' g hcl hed
+
+/-- `arcV` is an arccos, so the HOL `ARCV_BOUNDS` content (`arcV ≤ π`) is
+immediate; kept private to avoid clashing LA6's public `ARCV_BOUNDS`. -/
+private theorem p8w_arcV_le_pi (u v w : V3) : arcV u v w ≤ Real.pi :=
+  Real.arccos_le_pi _
+
+/-- The `CARD V ≤ 2` branch of the WSEWPCH induction
+(polar_fan.hl:2633-2648) as a standalone lemma: the orbit sum has at most
+two terms, each bounded by `π`. -/
+theorem FAN_PERIMETER_LE_2PI_OF_CARD_LE {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : ConvexLocalFan V E FF)
+    (hed : ∀ v ∈ V, ∃ w, {v, w} ∈ E) (hcard : V.ncard ≤ 2) :
+    fanPerimeter V E FF ≤ 2 * Real.pi := by
+  have h2 : localFan_p2 V E FF := w6a_to_p2 h.1 hed
+  obtain ⟨d0, hd0⟩ : FF.Nonempty := Set.nonempty_iff_ne_empty.mpr (LOCAL_FAN_NOT_EMPTY_FF h.1)
+  have hv : d0.1 ∈ V := (WRGCVDR_BIJ h2).1 hd0
+  rw [FAN_PERIMETER_INVARIANT h.1 hed d0.1 hv, LOFA_IMP_CARD_FF_V_EQ h2]
+  refine le_trans (Finset.sum_le_sum fun i _ => p8w_arcV_le_pi _ _ _) ?_
+  refine le_trans (Finset.sum_le_sum_of_subset_of_nonneg
+    (t := Finset.range 2) ?_ ?_) ?_
+  · intro i hi
+    simp only [Finset.mem_range] at hi ⊢
+    omega
+  · intro i _ _
+    exact Real.pi_pos.le
+  · rw [Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_zero]
+    linarith
+
 /-- HOL `WSEWPCH` (polar_fan.hl:2213): the fan perimeter of a convex
 local fan is at most `2 * pi`. -/
 theorem WSEWPCH {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
