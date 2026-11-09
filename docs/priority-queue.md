@@ -71,7 +71,9 @@
 | `jcajydu-scout` | §11 #3 解禁后的只读侦察：HOL `JCAJYDU.hl` 解剖 + 复核"全树 0 移植"是否仍陈旧 + 拆单方案与 go/no-go | 在飞（**零编译**；侦察报告即交付） |
 
 > **排队（等腾槽）**：`kcblrqc` 注册表侧接线 + XL 过夜重建批（侦察定案见续400：小件 25 模块几分钟，XL 三棵 ≈11,717 模块/7.66M 行 ≈12–13 h 串行）；
-> `ds-envelope`（一买 3）；`lp-idfix` 落库（暂缓：932 个 LP 叶 olean 已被清，落地成本被抬高）；T2 walk。
+> `wsewpch-w6a`（**任务单 10-26 已立未跑**：LA7 九桩灌证，SF-54 已应用、施工路径已拍板——§5 第二根 `fully_surrounded_perimeter_bound` 的正主：`fspb-bridges-w1` 侦察实锤树内已有 `yk11_perimeterBound_of_core` 归约（TameLp:10960），闭合只需全称版 hcore = WSEWPCH 本体；~~OZQVSFF~~ **勘误：已在树 LA5:3772**，侦察车道建议作废）→ `W6c` 装配（一行 `yk11_WSEWPCH_core`）；
+> `lp-idfix` 落库（暂缓：932 个 LP 叶 olean 已被清，落地成本被抬高）；T2 walk。
+> **TameLp 注记勘误挂账**（下次触碰 TameLp 的落库顺带改，`fspb` DELIVERY §5 有逐字替换文本）：`:928-933` NEEDS 三引理"需移植"已过时（face_representation=Hypermap:2794 / perimSumFaceArc=TameLp:903 / f_surr_localization=yk10:10642 全覆盖）；CIZMRRH"未证"过时（LA3:2734，LA3 全文件 0 sorry）。
 > **我自己做（不占车道）**：`ArchiveData` vs HOL/Isabelle 数据对账；`hf-proof-map` 状态更新维护。
 
 > **已收工（本批）**：`hnl-109-census` ✅（只读，判死 T1/T2 两个大桶，见续398 ③④）；`taylor-rung` ✅（**负结果**：锥内 rung 收益 0，见续398 ⑤）。
@@ -128,7 +130,7 @@
 0. `已批·提级首发` **nli-prep-w1 切界层数学预处理波**（在飞，§1）（用户 2026-10-26 提级）：QITNPEAv2 主攻——rad2X 纯多项式支样板链先行（一行级粘合）→ 切界叶 prep 剖分（沿 disj 曲面加人工分割面）/ 单调性通道（HOL doc 自注 rad2 单调）双路试闭；任务书已立 `lane_snapshots/nli-prep-w1/TASK.md`；RQWUDDU 留下一波复用通道。预期样板链 + 部分切界叶 = 锥 −2 的一半。
 
 1. `在飞` **NKEZBFC_PREP GIANT 第二波（主石 stepB）**（见 §1 nkezbfc-giant-w2；第一波已落库 `3034e8f7`，LA9 NKEZBFC 节 19→9，`p9_main_induction` 骨架就位）；之后 `EJRCFJD_ALT2`（LA2:1589，正本 EJRCFJD LA6:1135）+ `NKEZBFC`（LA2:1606）一行装配——注意 LA2 import LA5/LA9 均成环，装配层需走 LA9 侧或桥文件。
-2. `在飞` **WSEWPCH W4 lunar**（见 §1 wsewpch-w4）。
+2. ~~`在飞` **WSEWPCH W4 lunar**~~ **`完成（2026-10-26 交付，已落树）`**（勘误 2026-11-09：此节 10-26 写就后未随 §1 维护；w4 件 `HALP_CIRCLE_IS_INTERSECTION` 等已在 LA5:8663 真证，w5a/w5b/w6a/w6b 快照齐、w6b=KCHMAMG 2-槽形已落 LA35:24547）。
 3. `已完成` **SF-53 应用 + CC4P4 discharge**（`b30bad76` + `e2c636ec`）：20 桩全闭，PA4 文件级 29→9，探针 20/20 标准三，锥 0；余 9 枚 §4/§5 cellParams/bump 桩另行排队。
 4. `待 A2-W2b` **A2 落地波**：探针 `CQITNPEAx3725403817_pos` 标准三 → olean 回灌（RUNBOOK-G4 §4）→ 新建 `A2QITNPEAGlue.lean` + Assembly:739 替换 → **−1 源**。
 5. `已批·分波执行` **hLP 终端语义移植**（`docs/archive/scouts/lp-design-scout.md`）：**W6-A 已交付**（续跑收工 2026-10-26：19,715 条逐图对齐定理 24 文件 `W6Align*` + 根定理 `w6align`，五停批门槛全绿，两次停批事件如实留档；**性能确诊与修复：Lean 4.32 String.toList 内核 O(n²) → 字节级单遍解码器，19,715 串语义对拍 0 失配**；族普查 182 族与 127 条 lpIneqsIds 交集=0，TSV 入 docs/scouts/）。**落库待验收构建**（锁被 lp-w1 长占；车道无人值守链将在工作区自动构建+验收，产物 build_w6align.log/accept_followup.log 同步快照——编排者轮询后落库）。**W6-B 已解锁**（GoodListNodes 真化已批，用户 2026-10-26；开波第一口，注意 P6-C 构造连带规模未知，开波先勘）。**W1 root 首批 5,000 条**在飞（§1）。W6-PIN 已批待排。磁盘窗口缓议（§6 第 8 项）。
@@ -224,6 +226,8 @@
 > 最近一个月的条目保留在此；更早的 320 条（续1–续344 及无编号条目）见
 > [`history/changelog-archive.md`](history/changelog-archive.md)。
 > 编号单调递增，日期以条目内 commit 为准（手写日期有漂移，已知勘误见归档头注）。
+
+- **2026-11-09（10:20，续401）**：**并行度回 5（用户）补发两车道 + `fspb-bridges-w1` 侦察回报：三桥工单口径大面积过时，§5 第二根的真路线是树内已有的 yk11 归约**。① **发车**：`kcblrqc-defside`（定义侧纯几何，注册表侧 28 id 与 XL 重建明确划出本单）+ `jcajydu-scout`（解禁后的只读侦察，六问：HOL 解剖 / 复核"全树 0 移植"是否陈旧 / 树内已有件 / 同类经验 / 旁路检查 / 拆单方案）⇒ 池 5/5；`ds-envelope` 顶替收工的 fspb 槽（松容差探针优先，包络不存在即止损——B1/B2 宽盒的教训写进了派单）。② **`fspb-bridges-w1` 纯侦察交付（编排者逐条机械核验通过）**：`yk11_perimeterBound_of_core`（TameLp:10960，Lane AW 2026-10-23 落地，真证零 sorry）把 `PerimeterBound` 归约到**单锚 hcore**（`∀ ConvexLocalFan U E' g, setSum g (arcV 0 · ·) ≤ 2π`）⇒ **工单要移植的三引理全部已覆盖**（`lemma_face_representation`=Hypermap:2794 / `sum_face_rho_node1`=perimSumFaceArc TameLp:903 / `f_surr_localization_convex_local`=`yk10_convexLocalFan` TameLp:10642）、CIZMRRH 已证（LA3:2734，LA3 全文件 0 sorry）、KCHMAMG 已落 2-槽形（LA35:24547）——TameLp NEEDS 注记与 yk11 注记里三处陈述过时（勘误挂账，逐字替换文本在 fspb DELIVERY §5）。**残余 = 全称版 hcore = WSEWPCH 本体**（polar_fan.hl:2213，HOL 1,150 行，依赖链 ≈9–10k HOL 行），**正主是 wsewpch 多波程序**：w1–w6b 快照齐（10-25/26）、w4/w5/w6b 已落树（`HALP_CIRCLE_IS_INTERSECTION` LA5:8663 真证）、**W6a 任务单 10-26 已立未跑**（LA7 九桩灌证，SF-54 已应用、施工路径已拍板）、W6c 装配只剩一行（`yk11_WSEWPCH_core`）。③ **编排者对侦察的两处反向勘误**（重要——车道结论必须核验的老规矩）：(a) 侦察说"W6b 续波下一口 = OZQVSFF（未移植、无主）"——**错，`OZQVSFF` 已在树内**（LA5:3772 真证，还有专门的 OZQVSFF-wave 支撑件 :3555/:3720，消费点 :5587）；(b) 侦察引用 pq 战略小节"wsewpch-w4 在飞"——**该节 10-26 写就后未随 §1 维护**，实为已落（本笔已在原位加勘误标注）。④ **FAN_PERIMETER 移植车道明确不派**（fspb 判定：机械可移植但在 yk11 路线不在靶子依赖图上，零收益死重）。
 
 - **2026-11-09（09:50，续400）**：**`hf-proof-map.md` 指定为核心路线图（用户）+ 按图发车一批（池 3/3）+ kcblrqc 重建侦察定案**。① **路线图运营化**（`dbf5f8a1`）：`docs/hf-proof-map.md` 头部加维护规则（行号漂移时在「状态更新」节追加带日期条目、不覆写正文；名是稳定锚点）+ 首条状态更新（lp-registry 落库取代 §7 差异1）；`priority-queue.md` 文件头挂指针。② **按图发车**（用户四选四）：`packineqa-w1`（闭 `nliPackIneqDefA`，5 条 3 族，编排者预侦察确认 `Assembly:305` 的 `PackIneqDefA := packIneqDefAP22` 已是真定义、三族 bank 区域 0 sorry、`C1965189142x34` 在库）；`fspb-bridges-w1`（§5 第二根，侦察优先——特别授意查 HOL 是否也有"HRXEFDM 式旁路"注记，有就绕开三桥别硬啃）；`jcajydu` **解禁**（用户撤 11-05 "先记着"裁决）但以只读侦察排队等槽（原搁置理由"规模未知"仍成立）。③ **kcblrqc 重建侦察（编排者，只读）**：五棵证书树的 import 闭包 × 缺失 olean 实测——`C3253650737` **5,258 缺 / 3.45M 行**、`C8425800388` 4,254 缺 / 2.78M 行、`C6078657299` 2,205 缺 / 1.43M 行、`C2570626711p200` **仅 25 缺 / 1,172 行**（≈几分钟）、`C5490182221` 无同名模块（待定位）。按 `trust-base.md` §7 的 poly 档构建记录反推：XL 三棵全重建 ≈ **11,717 模块 / 7.66M 行 / 12–13 h 串行**（1.67M 叶 5h19m + 1.35M 叶 4h47m + 0.69M 叶 ≈2h），内存轻（poly 档）。**拆分问题（接线工单必须先答）**：`KcblrqcIneqDef` 第一合取支是纯几何（Contravening ⇒ azim 界 `0.852<azimDart<1.893` / `1.15<`，源 = `tame_general.hl:735` 的 `azim_dart_bounds_3_list` = 我们在 lp-registry 抽查过的 `5735387903`/`5490182221` 那对）⇒ **定义侧 sorry（`Assembly:1973`）可能不需要任何 XL 证书**；证书喂的是注册表侧 `nliKcblrqcIneqDefIds`（28 id，另一条 sorry）。⇒ 先派"定义侧纯数学"小车道，XL 重建作专门的过夜串行批，别混在一个工单里。
 

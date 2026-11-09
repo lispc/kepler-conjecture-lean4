@@ -6,6 +6,12 @@
 >
 > ## 状态更新
 >
+> - **2026-11-09（编排者，二）**：§11 #4 重定义——`fully_surrounded_perimeter_bound` 的真路线**不是**移植三桥
+>   （三引理已全覆盖：`Hypermap.face_representation`:2794 / `perimSumFaceArc` TameLp:903 / `yk10_convexLocalFan`:10642；
+>   CIZMRRH 已证 LA3:2734；KCHMAMG 2-槽形已落 LA35:24547），而是树内已有的
+>   `yk11_perimeterBound_of_core`（TameLp:10960）归约到**全称版 hcore** = WSEWPCH 本体
+>   （polar_fan.hl:2213，1,150 HOL 行）——正主 = wsewpch 程序（W6a 任务单已立未跑，W6c 装配一行）。
+>   §5 剩余根的拆分因此改为：`jcajydu`（侦察中）+ hcore（wsewpch-w6a/w6c）。
 > - **2026-11-09（编排者）**：§7 差异 1 与 §11 #10/#12 的「`lp-registry` 在飞未提交、
 >   `idsLpIneqs := []`（恒真）」表述**已被取代**：`60d0f544` DEF-FIX 落库，
 >   `idsLpIneqs := lpIneqsIds`（127 条）+ `CertifiedIneqHolds := lpIneqProp`
