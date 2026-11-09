@@ -101,7 +101,7 @@
 | AQ7 | AQ7.hl 289 | `x ∈ rtransSpine … 1` | 待派（**债已清**：`hqymrtx1List` 转标准三 `967ebbb5`） |
 | AQ8 | AQ8.hl 3,413 | `∀ q ∈ quotientListSpine L (ntrans …), q.Nodup` | 待派 |
 | AQ9 | AQ9.hl 1,594 | `1 < 块数`（quotient 非退化） | 待派 |
-| AQ10 | AQ10.hl 206 | `nextEl (rtrans … 1) x = fList L x` | **AQ10-a 首批 ✅ `e9ac2e06`（5 件 200 行）**；**AQ10-a2 在飞**（三组 220–330，`indexfConstLe` 链）；AQ10-b 主证 120–200 |
+| AQ10 | AQ10.hl 206 | `nextEl (rtrans … 1) x = fList L x` | **helper 层 14 件全 ✅**（`e9ac2e06` 5 + `26314655` 8 + `fcf718d9` 1）；**AQ10-b 主证在飞**（120–200） |
 | AQ11 | AQ11.hl 277 | `finalListSpine L (findListSpine (ntrans … 1) (eList x))` | 待 **AQ1**（AQ11-a 350–500 + AQ11-b 100–160） |
 | AQ12 | AQ12.hl 4,091 | `finalListSpine L (rtrans … 1) → FlagListSpine L (ntrans … 1)` | 待派（**债已清**：`marked_list_is_node_nondegenerate` 标准三） |
 | AQ13 | AQ13.hl 1,574 | `¬finalListSpine L (rtrans … 1) → SFlagListSpine L (ntrans … 1) (rtrans … 1) x` | 待派 |
