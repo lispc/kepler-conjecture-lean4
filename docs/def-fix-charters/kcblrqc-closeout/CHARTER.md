@@ -80,3 +80,12 @@
 2. **(b) 26 张证书**：判 NOT FEASIBLE，不开波。
 3. **(c) 原创路线重估**：Flyspeck 的 `prepared_nonlinear` 离线证明能否在 Lean 侧重放（AGENTS §8 原版对照），尚未评估。
 4. 在裁决前：**kcblrqc 不再发任何证书/发射波**；`nliKcblrqcIneqDef` 保持 sorry，不动陈述。
+
+### 6.4 用户裁决（2026-11-09）
+
+**用户裁定：暂缓（"先不。记录下状态。以后再决定吧。"）。**
+
+- 不做选项 (c) 的原版重放侦察（留作下次决策的首选候选）；
+- 不做 (a) 的 SF 结构改造；
+- **kcblrqc / LP 冻结**：`nliKcblrqcIneqDef` 保持 `sorry`，不出证书、不发射、不改陈述；
+- 恢复条件：用户另行裁决。恢复时的第一步建议仍是 (c) 的有界侦察（Flyspeck `prepared_nonlinear` 序列化证明能否在 Lean 内核重放）。
