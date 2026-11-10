@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:50，续769）**：**T2 8a-1 落库 `74436aac`（207 行 6 件）——HD/LAST/nextEl 簇到位；8a 拆 8a-1/8a-2（真实依赖面 18 件 ≈500 超止损）**。
+① 件目：`hdCat`(tame_list:13285，`head!_append` **零公理**)、`nextElInj`(Seq2:1894 泛型公开化：`nextEl_eq_getD`+`nodup_getElem_inj`+mod 移位单射)、`eqHdLastBetwn`(more_lemma1:1618，链层直证 `betwn r hd last = tl.dropLast`+`dropLast_append_getLast`)、`memHdLastBetwn`/`lastHdLastBetwn`/`nextHdLastBetwn`(:1528/:1550/:1559 一行推论，HOL 的 `betwn_cases`/`next_el_last_hd` 路线整段省)、`HD_flatten`(reduction4:1509 **复用链现成** `Reduction4Idx.HD_flatten` 不重落)。
+② **验证**：apply-check PASS；禁词零；深度 1/0；RC=0 / 0err / 0warn；`hdCat` 零公理、其余 5 条标准三零 sorryAx；olean 装池。
+③ **DIFFERS**：`lastHdLastBetwn` 取 `getLast!` 形（= HOL 语义 LAST）；`eqHdLastBetwn` 簇在 `instBEqOfDecidableEq` 世界（8b 若需 `instBEqProd` 按 A8 口径加桥）。**8a-2 已派**（余 5 件 ≈240–260：`betwn_cat` 直证路线免 HOL 三子件 + `mem/last/cat_betwn_same` + `parts_betwn`）。
+
 - **2026-11-10（10:49，续768）**：**la21 patch4 落库 `20b6b082`——W3 vv-kit 四件真证（271 行），LA21 net sorry 25→21**。
 ① 件目：`VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21`/`vv_azim_le_alt_p21`（**绕开 LA38 sorry 件** `PRIOR_TO_LESS_THAN_PI_LEMMA_ALT`：直接消费 `ConvexLocalFan` wedge 合取 + `EE_vv` 二元邻域 + epsilon 唯一性钉 `sigmaFan = vv(i+k-1)`）/`vv_split_azim_alt_p21`（`sum4_azim_fan`，`hxv` 由 h3 补）/`interior_angle1_azim_scs_p21`（`interiorAngle1` 定义即 azim 同文件 rfl 件 ⇒ `show` 展开 + p14 两条 equivariance 替代 HOL `LOFA_IMP_INANGLE_EQ_AZIM_IVS`，`e' := min e e₁`）。LA14:2971 `w5cA3_continuousAt_azim` 可见性一字（陈述/证体逐字）。
 ② **验证**：四件 `#print axioms` 全标准三零 sorryAx（编排者独立 probe）；LA21 岛编 RC=0、21 条警告全预存 sorry（基线 25 −4 恰为本笔）；LA14 RC=0、74 条警告全预存 linter 类（39 unused simp/11 push_neg 弃用等，无一条在 2971）；olean 双装池；+187/−25。
