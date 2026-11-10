@@ -123,7 +123,7 @@
 | 波 | 件 | HOL | Lean 估 | 批 | 独立验收点 | 状态 |
 |---|---:|---:|---:|---:|---|---|
 | **W0+W3d** §0 两小件 + `bounded_size_finals`/`max_finals_g_exists` | 3+ | 167+ | 20–40 + ~330 | 1 | `maxFinalsGExists` | **✅ 已落 `a8dc86c1`**（296 行 6 件；`hne` 显式槽待 W2/W3c 填） |
-| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅（ℕ 处两套 defeq；桥簇属 Dart 世界）、批 1 `018fcbe5` ✅（`filterEl`）、批 2 = 膨胀率判定批在飞；剩余批重估 1,650–2,330 |
+| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅；批 1 `018fcbe5`（`filterEl`）/ 批 2 `974a94dd` / 批 3 `fcff9315` / 批 5 `61eea60e` 全 ✅；**批 4 UNRESOLVED 冻结**（`showDups0Bound`/`enumBound`，批 7 前须回收）；批 5b 桥 `3d27ec9d` + `dart_neighbors` `e24bb3be` ✅；批 6 前四件 + `duplicateEdge_next` 冻结包已收（编排者收口中）；剩余重估 1,650–2,330 |
 | **W2** GP 判据 + newvertex/iso_list | 22 | 1,165 | 1,466–1,986 | 4 | `iso_list_newvertex_lemma` + `UYOUIXG` | 排队 |
 | **W3a–c** contour/flag/图级 finals（余下） | 30 | 1,140 | 1,334–1,826 | 4 | `flag_list_seed` / contour 簇 | 排队（Lean 白地 = 最高风险） |
 | **W4** 尾部循环 + 主装配 | 18 | 1,048 | 1,317–1,798 | 4 | `restrictedHypermapsArePlaneGraphsReduction1` | 排队 |
@@ -342,6 +342,11 @@
 > **ERRATA（续708 补）**：续692–续708 条目的手写时间曾按编排者估算漂移（最多 +2.7h），本批已**全部按对应 commit 的实际时间改正**（见 `git log --date=format:%H:%M`）。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-10（17:05，续802）**：**tame-corr b2a-2a 落库 `6fb711c7`（`memBetwnLastHdParts` = HOL more_lemma1:39，+262 纯增）——b2a 第二件收口，b2a-3 已续派**。
+① **`6fb711c7` `Reduction3CoreSplitNormal.lean`（1470 行）**：`memBetwnLastHdParts`（`:39`）：`s = partsSpine L r ∧ y ∈ py ∧ z ∈ pz ∧ y.1 ≠ z.1 ⇒ ∀x, x ∈ betwn r py.getLast! pz.head! ↔ x ∈ flatten (betwn sp py pz)`。空支 `betwnNil`+`fListQuotientAlt` 双向传播；正向 `aqs_memFlattenBetwnSymCase` 三岐（py 支/pz 支撞矛盾、中间支直落）；反向 `aqs_memFlattenBetwnSym`。私件 `notMemPyOfMemBetwn`/`notMemPzOfMemBetwn`：块偏移 L0 把 `indexf py.last x r ≥ |r|−|py|+1`（F1）与 `indexf py.last pz.head! r ≤ |r|−|py|`（F2）对撞（镜像支 `pz.idxOf x ≥ 1`）。闸：apply-check PASS @ `202a0d6d`、禁词零、岛编 RC=0/0err/0warn、**18 探针**（`hdCat` 零公理 + 17 条标准三）零 sorryAx、olean 装池。
+② **新雷区入档（截断减法原子装箱）**：omega 把含 `take….flatten.length` 的整段 `a−b` 装箱成不透明原子、与旁路块长事实断联（本轮 4 个 omega 同因失败）⇒ **定型解法：进矛盾支前 `set T1/T2 := 前缀块长`**，全部 L0 偏移改写成 `idxOf = T + …` 后纯线性。附带三条：`rw` 方向在 goal/hyp 侧相反（`hsp`/`hflr`）；`indexfOfIdxOfLt` 的 (a,b) 绑定序（`hllr` 在前）；`List.exists_mem_of_ne_nil` 要显式 list 参、空支见证链 part→element 两级（`⟨w,hw,hv⟩`）。
+③ **b2a-3 剩余面（≈230，crux 已定位）**：`arcLastNext`（~80，`q = (betwn sp py pz).getLast! ⇒ nextEl sp q = pz`，`betwnTakeDrop` 双形 4 子支末元抽取）/ `lastBetwnLastHdParts`（:90，~40）/ `arcSuccNonlast`（~35）/ `nextBetwnLastHdParts`（:250，~60）/ `betwnLastHdPartsFlatten`（:398，~25，前四件装配）。**已续派**；b2a-3 绿后 → b2b（`parts_betwn`）→ Ncvibwu 铺装波（QCDVKEA/KBWPBHQ2 两闸）→ 8b。
 
 - **2026-11-10（16:41，续801）**：**tame-corr b2a-1 落库 `b7bf8b96` + J4 批 5b `dart_neighbors` 收口落库 `e24bb3be`（两笔）+ J4 新分工模型批准**。
 ① **`b7bf8b96` tame-corr b2a-1（+187/−2，`Reduction3CoreSplitNormal.lean` 现 1208 行）**：`normalConditionLastParts`（HOL more_lemma1:592，= `aqs_lastParts`+`uniqSublistUnique`+`normalListPartsNextLastNot`+`aqs_conditionLastParts`）+ 私件 `flattenIdxOfOffset`（块内 flatten 下标 = 前置块长 + part idxOf）+ `indexfOfIdxOfGe/Lt`（idxOf 序下 **indexf 整段消去 mod**——b1b-2 模数雷区第二解：绕开非逐字对齐）+ `hdBetwnG`（§5 hdBetwn2 的 BEq 泛型孪生、Dart 默认实例 R1 不桥接泛型重证）。**关键报告采信**：b2a 真实面 5 件非 3 件（:398 消费工单未列 `LAST_betwn_LAST_HD_parts` :90 + `next_betwn_LAST_HD_parts` :250；真实面 ≈420 = 2.3–2.8× 原估）⇒ 拆 b2a-1（本笔）/b2a-2（≈230，已派）。闸：apply-check PASS、禁词零、岛编 RC=0/0err/0warn、16 探针全 ⊆ 标准三零 sorryAx、olean 装池。
