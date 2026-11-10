@@ -123,7 +123,7 @@
 | 波 | 件 | HOL | Lean 估 | 批 | 独立验收点 | 状态 |
 |---|---:|---:|---:|---:|---|---|
 | **W0+W3d** §0 两小件 + `bounded_size_finals`/`max_finals_g_exists` | 3+ | 167+ | 20–40 + ~330 | 1 | `maxFinalsGExists` | **✅ 已落 `a8dc86c1`**（296 行 6 件；`hne` 显式槽待 W2/W3c 填） |
-| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**（先 30 min `indexf` 孪生侦察） |
+| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅（ℕ 处两套 defeq；桥簇属 Dart 世界）、批 1 `018fcbe5` ✅（`filterEl`）、批 2 = 膨胀率判定批在飞；剩余批重估 1,650–2,330 |
 | **W2** GP 判据 + newvertex/iso_list | 22 | 1,165 | 1,466–1,986 | 4 | `iso_list_newvertex_lemma` + `UYOUIXG` | 排队 |
 | **W3a–c** contour/flag/图级 finals（余下） | 30 | 1,140 | 1,334–1,826 | 4 | `flag_list_seed` / contour 簇 | 排队（Lean 白地 = 最高风险） |
 | **W4** 尾部循环 + 主装配 | 18 | 1,048 | 1,317–1,798 | 4 | `restrictedHypermapsArePlaneGraphsReduction1` | 排队 |
@@ -342,6 +342,12 @@
 > **ERRATA（续708 补）**：续692–续708 条目的手写时间曾按编排者估算漂移（最多 +2.7h），本批已**全部按对应 commit 的实际时间改正**（见 `git log --date=format:%H:%M`）。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-10（14:06，续785）**：**J4 W1 批 1 落库 `018fcbe5`（`filterEl` 142 行）+ `indexf` 孪生侦察定案 + 两条路线决定（RD-1/RD-2）**。
+① **`indexf` 侦察（UNRESOLVED 关闭，采信）**：**ℕ 处两套 `indexf` 是 defeq**（`unfold; rfl` 2 行），探针 A/B PASS；Dart 上 `instBEqProd` vs `instBEqOfDecidableEq` 仍 FAIL ⇒ **`b55b6dbe` 桥簇属 `Dart = ℕ×ℕ` 世界（W2/W4 用），W1 的 `List ℕ` 世界用不上**。约定入 `W1_INTERFACE_CONTRACT.md`：裸名 `indexf`（解析 TameSpine 版）、跨家族运输首选 `unfold; rfl`。顺带清点 W1 真缺件 3 条（`nextElRotEq`/`prevElRotEq`/`indexlMap` 树内 0 命中，各 10–25 行已计估算）。
+② **`018fcbe5` `filterEl`** = HOL `filter_el`（reduction1.hl:777-827）：前缀计数 + take/drop 两段单调（非 HOL LIST_INDUCT）；142 行 1 件。**DIFFERS-② 采信**：结论 `getElem?` 形（依赖式 `vs'[r]` 需界证明不能进 ∃ 绑定；前提+已证界下与 EL 形逐点等价）——已立 W1 接口约定：凡「filtered list 新位置」结论一律 `?` 形 + 等价注记，消费方批 7 按此接线。**`filterEl` = `[propext, Quot.sound]` 零 choice 零 sorryAx**。闸：apply-check PASS、禁词零（头注两处改写）、岛编 RC=0/0err/0warn、olean 装池。
+③ **路线决定（去机制非省事，采信）**：**RD-1 `mem_enumAppend_pow` 不移植**（Lean `Kepler.Graphs.iterate` 是 brecOn 原语、树内零展开引理 ⇒ 硬搬 40–60 行换 0 消费者）；**RD-2 `mem_enumerator` 改走 `enumerator_completeness`**（EnumeratorProps:562，120 → 估 50–70）。`increasingOfAdjacent` 试做后撤件（依赖式 `getElem` rw motive 不 type correct，§7.1-#10 同款；批 2 走 `?`-形非依赖重述 ~20–30）。
+④ **膨胀率读数**：批 1 表面 2.78×、有效代码 1.10×（56/51，含 60 行头注）；**批 2 = 判定批**（>2.2× 触发 §7 重估）。W1 剩余批序重估 ≈1,650–2,330，低于原估 1,879–2,517；验收点 `enumeration_vertex_list` 在批 7。批 2 已批（`mem_enumerator` + `increasingOfAdjacent` + 批内小件）。
 
 - **2026-11-10（14:02，续784）**：**aq13 B2 落库 `1d621360`（`loopFaceAgree` 86 行半件）——NCVIBWU 主山几何内核成型**。
 ① **件**：`loopFaceAgree`：`i ≤ lMSpine L r x + 1 ⇒ (nextEl r)^[i] x = (nextEl (findFaceDarts L x))^[i] x`——**HOL NCVIBWU ~1,000 行案析的几何内核**，4 步折叠（`hypM_spec` + `hypMLm` + 幂桥两件：`loopMapNextElIter` 私件同证重推导 11 行 + `faceMapListPower` + fList 桥），全公开原料、**零显式槽**。半件 1/3 如实标（头段进入结构性设计轮按 §7 交，不硬拼）。
