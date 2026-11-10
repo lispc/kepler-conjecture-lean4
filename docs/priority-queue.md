@@ -354,6 +354,11 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-10（23:16，续834）**：**一笔落库：J4 W2-4 两件绿 `389014a4`（`Reduction1W2l` 新文件 +92）——纪律修正生效（上轮零码审计 → 本轮真码），W2 全闭只差 `UYOUIXG` 一件**。
+① **`389014a4`**：`finalFaceSeed`（reduction1.hl:2337，`filter SND` ↦ `isFinal`、`upt 0 n` ↦ `List.range n`，defs-chase simp 一击，探针 `[propext]`）+ `faceIota`（:2345，`iota 0 n` ↦ `List.range' 0 n`；phi = f0 内 `idxOf` 枚举 + 外元 `+|f0|` 偏移续段，InjOn 四支）。**车道勘误采信**：`f0` 是顶点表 `List ℕ`（初稿误写 dart 表），按 HOL `MAP phi f0` 原文改正。折算结论在档（`upt/iota ↔ List.range/range'`、CARD ↔ `eraseDups.length` 组合）。闸：apply-check PASS @`adcef016`、禁词扫描净、岛编 RC=0/0err/0warn、2 探针 ⊆ 标准三零 sorryAx、olean 装池；两陈述经编排者对 HOL 原文逐字核对。
+② **W2 收口对表**：W2-1 ✅ / W2-2 ◐（7 绿 + oldnew 槽版，等 tame-corr 链）/ W2-3 ✅（`c82a4984`）/ W2-4 ◐（2/3，**余 `UYOUIXG` 一件 = W2 第二验收点**，估 150–250；消费 `faceIota` ✓ + `faceRep` ✓ + `finalFaceSeed` ✓ 全在库）。
+③ **续派（J4 → UYOUIXG 段）**：读 :2402-2560 展开陈述列槽 → 移植 → W2 全闭（4/4 子段）；余量接 W3a 侦察（战役执行表 §0.4 最高风险段，早侦早知）。tame-corr nb4 已续派 nb5（件 0 hPw 消槽 → OHCGKFU → trans_indexf_suc → w_betwn）；aq13（on-path 侦察）在飞。
+
 - **2026-11-10（23:14，续833）**：**一笔落库：tame-corr nb4 `05e44be7`（`Reduction3Pbflhet2` 新文件 +361，6 件绿）——nc4 全链收口，nc5 落两件（其一槽版）**。
 ① **`05e44be7`**：nc4 收口四件（`indexfYtransEqLmSpine` 塔层锚（V0 命中薄包装）+ `ltIndexfInRtransSucNotRtrans` + **`ltFromZSpine`**（PBFLHET:347，陈述经编排者逐字核对；`indexfTwoPoint`@d₁:=l'y(0) + 双锚 + `propertiesOfYtrans0Spine`@i/@i+1）+ `inductMemMainResultSpine`）+ nc5 两件（`ztranSucInRtransSpine` + `ztransSucInZtanWSpine`（:462-511，**PWSSRAT 主件槽版**，`hPw` = V0 单步形）。闸：apply-check 双基线 PASS、禁词扫描净、岛编 RC=0/0err/0warn、6 探针标准三零 sorryAx、olean 装池。
 ② **编排者核对勘误**：车道称「aq13 的 PWSSRAT 截至交付未落库」系**陈旧判断**——`8527c357`（续831）在其 applied-tree 复验基线 `adcef016` 之前已落；`hPw` 槽下波经 `pwssratSpine` 消去（注意车道槽形可能比 `pwssratSpine@0` 少 `MEM d r` 前提，消槽前先对形）。
