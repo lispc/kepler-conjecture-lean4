@@ -28,6 +28,19 @@ import Kepler.Text.Reduction4Subseg3
 import Kepler.Text.TameSpine.TameList70
 import Kepler.Text.TameSpine.TameList3
 import Kepler.Text.TameSpine.TameList53
+import Kepler.Text.TameSpine.TameList5
+import Kepler.Text.TameSpine.TameList6
+import Kepler.Text.TameSpine.TameList7
+import Kepler.Text.TameSpine.TameList9
+import Kepler.Text.TameSpine.TameList10
+import Kepler.Text.TameSpine.TameList11
+import Kepler.Text.TameSpine.JcajyduAqLeaf12B
+import Kepler.Text.TameSpine.JcajyduAqLeaf12C
+import Kepler.Text.TameSpine.JcajyduAqLeaf12D
+import Kepler.Text.TameSpine.JcajyduAqLeaf12I
+import Kepler.Text.TameSpine.JcajyduAqLeaf12J
+import Kepler.Text.TameSpine.JcajyduAqLeaf12T
+import Kepler.Text.TameSpine.JcajyduBetwnBase
 import Kepler.Text.MoreLemma2Island1
 import Kepler.Text.Reduction3Thm6B
 import Kepler.Text.TameSpine.JcajyduAqSnd
@@ -41,8 +54,8 @@ set_option linter.unusedSectionVars false
 
 namespace Kepler.Text.TameSpine
 
-open Kepler.Graphs (between)
-open Kepler.Assembly (nextEl prevEl fList)
+open Kepler.Graphs (between fgraph)
+open Kepler.Assembly (nextEl prevEl fList eList GoodList)
 open Kepler.Text.Reduction5 (Dart finalList indexf)
 
 /-! ## §1 `hd_cat`（tame_list.hl:13285） -/
@@ -1002,6 +1015,177 @@ theorem catBetwnSame {r s : List Dart} {y z lx lz : Dart}
     Kepler.Text.TameLp.getD_eq_getElem_of_lt hpr]
   exact hEq
 
+/-! ## §9 b2a（more_lemma1.hl:39 家族 + :592-:627）：
+`normal_condition_last_parts`(:600) / `betwn_LAST_HD_parts`(:39) /
+`LAST_betwn_LAST_HD_parts`(:90) / `next_betwn_LAST_HD_parts`(:250) /
+`betwn_LAST_HD_parts_flatten`(:398)。
+
+载体：`partsSpine`（TameList7）+ TameList5/6/9/10/11 parts 机器 + Leaf12 层
+（`aqs_memFlattenBetwnSym(Case)` / `aqs_eq_last_next` / `aqs_uniqFlattenBetwn` /
+`aqs_conditionLastParts` / `aqs_lastParts`）。`indexf` 全程 `TameSpine.indexf`
+（Leaf12 层原生口径，免 R5 折桥）；`between`/`nextEl` 在 Dart 默认实例世界。
+正向矛盾支的核心是**块偏移引理 L0**（part 块内元素在 `flatten` 中的下标 =
+前置块长 + part 内下标），使 indexf 值全部落进 omega 线性算术。 -/
+
+/-- **L0（b2a 块偏移引理）**：`r.flatten` 中 part `v` 块内元素 `a` 的下标 =
+`v` 之前所有块的总长 + `v.idxOf a`。 -/
+private theorem flattenIdxOfOffset {r : List (List Dart)} {v : List Dart}
+    (hflat : r.flatten.Nodup) (hv : v ∈ r) (hall : ∀ q ∈ r, q ≠ [])
+    {a : Dart} (ha : a ∈ v) :
+    r.flatten.idxOf a
+      = (r.take (r.idxOf v)).flatten.length + v.idxOf a := by
+  have hip : r.idxOf v < r.length := List.idxOf_lt_length_iff.mpr hv
+  have hrnd : r.Nodup := Kepler.Text.TameSpine.uniqFlatten (L := r) hflat hall
+  have hdec : r.flatten = (r.take (r.idxOf v)).flatten ++ v
+      ++ (r.drop (r.idxOf v + 1)).flatten := by
+    have hr : r = r.take (r.idxOf v) ++ v :: r.drop (r.idxOf v + 1) := by
+      calc r = r.take (r.idxOf v) ++ r.drop (r.idxOf v) := (List.take_append_drop _ _).symm
+        _ = r.take (r.idxOf v) ++ (v :: r.drop (r.idxOf v + 1)) := by
+              rw [List.drop_eq_getElem_cons hip, List.getElem_idxOf hip]
+    have h := congrArg List.flatten hr
+    simp only [List.flatten_append, List.flatten_cons] at h
+    rw [h, List.append_assoc]
+  have hfront : a ∉ (r.take (r.idxOf v)).flatten := by
+    intro hcon
+    obtain ⟨q, hq, haq⟩ := List.mem_flatten.mp hcon
+    have hqr : q ∈ r := List.mem_of_mem_take hq
+    have hlt := aqs_flatIdx_lt_of_partIdx_lt hflat hqr hv
+      (aqs_idxOf_lt_of_mem_take hrnd hq) haq ha
+    exact absurd hlt (Nat.lt_irrefl _)
+  have htail : a ∉ (r.drop (r.idxOf v + 1)).flatten := by
+    intro hcon
+    obtain ⟨q, hq, haq⟩ := List.mem_flatten.mp hcon
+    have hqr : q ∈ r := List.mem_of_mem_drop hq
+    have hlt := aqs_flatIdx_lt_of_partIdx_lt hflat hv hqr
+      (Nat.lt_of_lt_of_le (Nat.lt_succ_self _) (aqs_idxOf_ge_of_mem_drop hrnd hq)) ha haq
+    exact absurd hlt (Nat.lt_irrefl _)
+  rw [hdec, List.append_assoc]
+  rw [List.idxOf_append (l₁ := (r.take (r.idxOf v)).flatten)
+    (l₂ := v ++ (r.drop (r.idxOf v + 1)).flatten)]
+  by_cases h1 : a ∈ (r.take (r.idxOf v)).flatten
+  · exact absurd h1 hfront
+  · rw [if_neg h1, List.idxOf_append (l₁ := v)
+      (l₂ := (r.drop (r.idxOf v + 1)).flatten), if_pos ha]
+    omega
+
+/-- 同表双成员、`idxOf a ≤ idxOf b` ⇒ `indexf a b = idxOf b − idxOf a`
+（不回卷段）。 -/
+private theorem indexfOfIdxOfGe {s : List Dart} {a b : Dart} (ha : a ∈ s)
+    (hb : b ∈ s) (h : s.idxOf a ≤ s.idxOf b) :
+    Kepler.Text.TameSpine.indexf a b s = s.idxOf b - s.idxOf a := by
+  have h1 : s.idxOf a < s.length := List.idxOf_lt_length_iff.mpr ha
+  have h2 : s.idxOf b < s.length := List.idxOf_lt_length_iff.mpr hb
+  unfold Kepler.Text.TameSpine.indexf
+  rw [if_pos ⟨ha, hb⟩]
+  have heq : s.idxOf b + (s.length - s.idxOf a)
+      = s.idxOf b - s.idxOf a + s.length := by omega
+  rw [heq, Nat.add_comm (s.idxOf b - s.idxOf a) s.length, Nat.add_mod_left]
+  exact Nat.mod_eq_of_lt (by omega)
+
+/-- 同表双成员、`idxOf b < idxOf a` ⇒ `indexf a b = |s| − (idxOf a − idxOf b)`
+（回卷段）。 -/
+private theorem indexfOfIdxOfLt {s : List Dart} {a b : Dart} (ha : a ∈ s)
+    (hb : b ∈ s) (h : s.idxOf b < s.idxOf a) :
+    Kepler.Text.TameSpine.indexf a b s = s.length - (s.idxOf a - s.idxOf b) := by
+  have h1 : s.idxOf a < s.length := List.idxOf_lt_length_iff.mpr ha
+  have h2 : s.idxOf b < s.length := List.idxOf_lt_length_iff.mpr hb
+  unfold Kepler.Text.TameSpine.indexf
+  rw [if_pos ⟨ha, hb⟩]
+  have heq : s.idxOf b + (s.length - s.idxOf a)
+      = s.length - (s.idxOf a - s.idxOf b) := by omega
+  rw [heq]
+  exact Nat.mod_eq_of_lt (by omega)
+
+/-- **`HD_BETWN2` 的 BEq-泛型形**（DANGEYJ.hl:709 口径；§5 `hdBetwn2` 的
+instBEqProd 世界孪生——§9 的 `between` 在 Dart 默认实例，不能直接消费 §5 的
+`[DecidableEq]` 形）：弧非空时弧头 = 起点后继。证体沿 §5：`betwnTakeDrop`
+双支 + §5 take/drop 头私件 + `nextEl_eq_getD`。 -/
+private theorem hdBetwnG {f : List Dart} {u v : Dart} (hnd : f.Nodup)
+    (hu : u ∈ f) (hv : v ∈ f) (hne : u ≠ v) (hne' : between f u v ≠ []) :
+    (between f u v).head! = nextEl f u := by
+  have hiu : f.idxOf u < f.length := List.idxOf_lt_length_iff.mpr hu
+  have hiv : f.idxOf v < f.length := List.idxOf_lt_length_iff.mpr hv
+  have hidxne : f.idxOf u ≠ f.idxOf v := fun he => hne ((List.idxOf_inj hu).mp he)
+  have hpos : 0 < f.length := List.length_pos_of_mem hu
+  rw [betwnTakeDrop hnd hv]
+  rcases Nat.lt_or_ge (f.idxOf u) (f.idxOf v) with hlt | hge
+  · have hk : 0 < f.idxOf v - (f.idxOf u + 1) := by
+      by_contra hc
+      have hm0 : f.idxOf v - (f.idxOf u + 1) = 0 := by omega
+      apply hne'
+      rw [betwnTakeDrop hnd hv, if_pos hlt, hm0]
+      rfl
+    rw [if_pos hlt,
+      headBangTake (l := f.drop (f.idxOf u + 1))
+        (n := f.idxOf v - (f.idxOf u + 1)) hk,
+      headBangDrop (l := f) (n := f.idxOf u + 1) (by omega)]
+    rw [Kepler.Text.TameLp.nextEl_eq_getD hu, Nat.mod_eq_of_lt (by omega)]
+    exact (Kepler.Text.TameLp.getD_eq_getElem_of_lt (by omega) u).symm
+  · have hlt2 : f.idxOf v < f.idxOf u := lt_of_le_of_ne hge (Ne.symm hidxne)
+    by_cases hlast : f.idxOf u + 1 < f.length
+    · have hne0 : f.drop (f.idxOf u + 1) ≠ [] := by
+        intro h
+        have hlen : List.length (f.drop (f.idxOf u + 1)) = 0 := by rw [h]; rfl
+        rw [List.length_drop] at hlen
+        omega
+      rw [if_neg (Nat.not_lt.mpr hge), List.head!_append _ hne0, headBangDrop hlast,
+        Kepler.Text.TameLp.nextEl_eq_getD hu, Nat.mod_eq_of_lt hlast]
+      exact (Kepler.Text.TameLp.getD_eq_getElem_of_lt hlast u).symm
+    · have hlastn : f.idxOf u + 1 = f.length := by omega
+      have hdrop : f.drop (f.idxOf u + 1) = [] := by
+        rw [hlastn]; exact List.drop_length
+      have htake : f.take (f.idxOf v) ≠ [] := by
+        intro h
+        apply hne'
+        rw [betwnTakeDrop hnd hv, if_neg (Nat.not_lt.mpr hge), hdrop, List.nil_append, h]
+      have hi2pos : 0 < f.idxOf v := by
+        rcases Nat.eq_zero_or_pos (f.idxOf v) with h | h
+        · exfalso; apply htake; rw [h]; rfl
+        · exact h
+      rw [if_neg (Nat.not_lt.mpr hge), hdrop, List.nil_append,
+        headBangTake (l := f) (n := f.idxOf v) hi2pos,
+        Kepler.Text.TameLp.nextEl_eq_getD hu, hlastn, Nat.mod_self,
+        Kepler.Text.TameLp.getD_eq_getElem_of_lt hpos u]
+      cases f with
+      | nil => exact absurd hu (by simp)
+      | cons a t => rfl
+
+/-- **HOL `normal_condition_last_parts`**（more_lemma1.hl:592）：
+`MEM p (parts L r) ∧ MEM d p ∧ good_list L ∧ normal_list L N ∧ MEM r N ∧
+is_edge_nondegenerate (hypermap_of_list L) ⇒
+(¬(next_el r d = f_list L (e_list d)) ↔ d = LAST p)`。
+证体：`d = LAST r` 支走 `aqs_lastParts` + `uniqSublistUnique`（p = 末 part）+
+`normalListPartsNextLastNot`；其余支 = `aqs_conditionLastParts`（Leaf12T）。 -/
+theorem normalConditionLastParts (L : fgraph ℕ) (hL : GoodList L)
+    {N : List (List Dart)} (hn : NormalListSpine hL N)
+    (hnedg : (Kepler.Text.TameLp.hypermapOfList L hL).EdgeNondegenerate)
+    {r : List Dart} (hr : r ∈ N) {p : List Dart} (hp : p ∈ partsSpine L r)
+    {d : Dart} (hd : d ∈ p) :
+    (¬(nextEl r d = fList L (eList d)) ↔ d = p.getLast!) := by
+  obtain ⟨hrnd, hrne, -, -, -⟩ := partsUniqNonnil L hL hn hr hp
+  by_cases hdl : d = r.getLast!
+  · have hspne : partsSpine L r ≠ [] := partsNonnil L hrnd hrne
+    have hall := partsAllNonnil L hrnd hrne
+    have hsplast := aqs_lastParts L hL hn hr rfl
+    have hspL : (partsSpine L r).getLast! ∈ partsSpine L r := aqs_getLastMem hspne
+    have hlastInL : r.getLast! ∈ (partsSpine L r).getLast! := by
+      have h2 := aqs_getLastMem (hall _ hspL)
+      rwa [hsplast] at h2
+    have hflatnd : (partsSpine L r).flatten.Nodup := by
+      rw [partsFlatten L hrnd hrne]
+      exact hrnd
+    have hpe : (partsSpine L r).getLast! = p :=
+      Kepler.Text.TameSpine.uniqSublistUnique (partsSpine L r) hflatnd
+        ((partsSpine L r).getLast!) hspL p hp ⟨r.getLast!, hlastInL, hdl ▸ hd⟩
+    constructor
+    · intro _
+      rw [← hpe, hsplast]
+      exact hdl
+    · intro hdpe
+      rw [hdpe]
+      exact normalListPartsNextLastNot L hL hn hnedg hr hp
+  · exact aqs_conditionLastParts L hrnd hrne hp hd hdl
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理）。 -/
@@ -1021,3 +1205,4 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.memCatBetwnSame
 #print axioms Kepler.Text.TameSpine.lastCatBetwnSame
 #print axioms Kepler.Text.TameSpine.catBetwnSame
+#print axioms Kepler.Text.TameSpine.normalConditionLastParts
