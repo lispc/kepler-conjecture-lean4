@@ -319,6 +319,13 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:57，续767）**：**TM fill 诊断道回执（DIAG_TM_FILL.md，与 formal-ineqs 侦察独立同源）——根因确认 + 两条 ERRATA + 新约束（opt-in C 变体）已转施工道**。
+① **根因（机器证据链完整）**：ite guard `π/x2 − 3/4`；x2 低于阈值（4π/3≈4.1888）一侧走 `cos(|π/2−π/x2|)` 支；`TaylorM.trans .cosK => none`（:448）+ `.abs` 无条件 plain 回退（:3716）⇒ `π/x2` 区间宽 **一阶于 x2 盒宽、与 rung 无关**；fallbackTM err=2⁻⁷ 经 `2·x2·2·atan` 链放大到 2⁻⁴。NEG160 终局：err=0.094845、fB 宽=0.091325、loBound = 0.013624 − 0.047598 − 0.094845 = **−0.128819**；真实余量盒角/盒心采样 +0.0553，**72 盒最坏 gi141 = +0.02978**。判别式逐位吻合：叶 165（x2≥4.21094）PASS，**叶 166–183 共 18 叶/72 子盒全 NEG**，正好是含阈值那批。
+② **sqrt 排除**：NEG160 的 4 个 sqrt 节点全部 gate 通过、`M₀.sqrt` 成功、fB 宽 2⁻⁸¹、4 个三元组与 `params.txt:160` **逐位相同**；无 GATE/SQRT FAIL ⇒ P5 的「回退消耗 cert 槽」在 72 NEG 中未发生。
+③ **ERRATA（推翻续753 ② 的「精度翻倍收敛到 0⁻」）**：高精度重探三盒（gi 138/154/160）rung 128 与 256 的 loBound 是**逐位相同的有理数**（−0.15182180473915685 / −0.1494967950758977 / −0.12881903408977355），仅 Dyadic 表示由 e=−1445 换成 e=−2565（mantissa ×2¹¹²⁰）⇒ 不是收敛到 0⁻，是**盒宽一阶项钉死**；depth-3 两半盒（−0.1196/−0.1263）同证。**「细分/提精度均不收敛」的结论不变，但机理解释改正**。
+④ **新约束（已转 certtm-cosabs）**：直接改 `evalTMHullD2` 有 **549 家族爆炸半径**（C549* 旧证书依赖其语义）⇒ 实现改为 **opt-in `evalTMHullD2C`/`checkPosTMHullC`**（旧路径字节不变，BIEFJHU 证书叶改调 C 变体），`TaylorM.trans .cosK` 仍共享（cos 现恒 none ⇒ 加规则只影响 cos 节点、只会更紧且健全）。abs 定号判据 `fB.lo − W ≥ 0` identity / `fB.hi + W < 0` neg / 否则回退；本 case abs 参数∈[0.524,0.824] 恒正走 identity。
+⑤ **备选已排**：F2 guard 3/4→1（DEF-FIX 通道，181–183 余量偏紧）；F3 纯细分 72→576 盒 ≈8h（线性）；F4 IA shard（`evalIParamsFill` 7 盒 15 min 未跑完，不优）。F1 为唯一推荐。
+
 - **2026-11-10（10:45，续766）**：**W33+W34 落库（`482c6000` / `ebd82062`）——绕序两块新几何到位，W35 单归纳总装已派**。
 ① **W33（99 行 2 件）**：`pW33_edge_cone_excl` 一般形（任意互异 run 指数 ⇒ `vv m ∉ affGe{0}{vv p1, vv(p1+1)}`）+ `pW33_edge_cone_excl_mirror` 镜像实例（`m+1 ≤ p1` ⇒ 排除）。**路线勘误（机器证据推翻工单估）**：无需 `LOFA_IMP_EE_TWO_ELMS`+EE 路线——在库原语 `FAN_IN_AFF_GE_IMP_EQ`（LocalAuto5:1660，std3）直接给「点∈边锥 ⇒ 点=边端点」，与指数顺序无关；W32 卡住的「早一格」= `pW5_second_disjunct_false` **去掉 `j1≤j` 守卫**的同一定理（守卫仅服务 omega 定向）。99 行 vs 估 120–180。
 ② **W34（68 行 1 件）**：`pW34_rho_last_mem` = J 段 wrap 基点（`w = vv(k−1)`、周期回卷 `ρw = p` ⇒ `ρw ∈ affGe{0}{p,w}`）。**AZIM_COMPL 族对表**：`azim_compl`(AzimLemmas:318)/`azim_compl_eq_zero`(:407)/`AZIM_COMPL_EXT`(PackingAuto6:3489)/`AZIM_COMPL_NEG_fb`(FanBaseKit:407)/`point_in_aff_ge`(Planarity:4334) 全 std3 ✓；**禁用** `AZIM_COMPL_NEG_p13`/`AZIM_NEG_p13`（LocalAuto13:1526，证体 sorry）。
