@@ -1712,6 +1712,226 @@ private theorem takeFlatLenMono {α : Type*} {l : List (List α)} {i j : ℕ} (h
   exact flatLenTakeLe (l.take j) i
 
 
+/-! ## §9.5 b2a-3d 弧前缀块偏移（`:250` 主引理前置）。
+
+编排者按车道冻结包 `DELIVERY-b2a3d-FROZEN2.md` 的 v3 源收口（执行 §2 五点修法表；
+另修支 C `heq` 的假陈述——原式缺 `C` 项，改为直接向 omega 供给线性事实）。
+-/
+
+/-- **弧前缀块拼接恒等式**（`:250` 主引理）：`w ∈ B_sp.flatten` 在 `flatten`
+中的位置 = 其 r-环内位置（`py.getLast!` 起算，减一）。三支各出
+「r.idxOf 等式 ∧ 取向」（取向直供 `indexfOfIdxOfGe/Lt` 参数，避免 rw 参数内 omega）。 -/
+private theorem arcPrefixIdx (L : fgraph ℕ) (hL : GoodList L)
+    {N : List (List Dart)} (hn : NormalListSpine hL N) {r : List Dart} (hr : r ∈ N)
+    {sp : List (List Dart)} (hsp : partsSpine L r = sp)
+    {py pz : List Dart} (hpy : py ∈ sp) (hpz : pz ∈ sp)
+    {y z : Dart} (hy : y ∈ py) (hz : z ∈ pz) (hyz : y.1 ≠ z.1)
+    {w : Dart} (hw : w ∈ (between sp py pz).flatten) :
+    (between sp py pz).flatten.idxOf w + 1
+      = Kepler.Text.TameSpine.indexf py.getLast! w r := by
+  obtain ⟨hrnd, hrne, hpynd, hpne, -⟩ := partsUniqNonnil L hL hn hr (hsp ▸ hpy)
+  obtain ⟨-, -, hpznd, hpzne, -⟩ := partsUniqNonnil L hL hn hr (hsp ▸ hpz)
+  have hflr : sp.flatten = r := by rw [← hsp]; exact partsFlatten L hrnd hrne
+  have hflatnd : sp.flatten.Nodup := by rw [hflr]; exact hrnd
+  have hspnd : sp.Nodup := by rw [← hsp]; exact uniqParts L hrnd hrne
+  have hall : ∀ q ∈ sp, q ≠ [] := by rw [← hsp]; exact partsAllNonnil L hrnd hrne
+  have hallB : ∀ q ∈ between sp py pz, q ≠ [] :=
+    fun q hq => hall q (Kepler.Graphs.inbetween_inset hq)
+  have e1 : y.1 = py.head!.1 := partsFst L hL hn hr (hsp ▸ hpy) hy
+  have e2 : py.getLast!.1 = py.head!.1 :=
+    partsFst L hL hn hr (hsp ▸ hpy) (aqs_getLastMem hpne)
+  have hfz : z.1 = pz.head!.1 := partsFst L hL hn hr (hsp ▸ hpz) hz
+  have hlastne : py.getLast! ≠ pz.head! := by
+    intro hcon
+    apply hyz
+    rw [hfz]
+    exact e1.trans (e2.symm.trans (congrArg Prod.fst hcon))
+  have hpypz : py ≠ pz := by
+    intro hcon
+    apply hyz
+    rw [hfz]
+    exact e1.trans (congrArg (fun q => q.head!.1) hcon)
+  have hidxne : sp.idxOf py ≠ sp.idxOf pz := fun he => hpypz ((List.idxOf_inj hpy).mp he)
+  have hBnd : (between sp py pz).flatten.Nodup :=
+    aqs_uniqFlattenBetwn hflatnd hpy hpz hpypz hall
+  obtain ⟨p, hp, hwp⟩ := List.mem_flatten.mp hw
+  have hpq : p ∈ sp := Kepler.Graphs.inbetween_inset hp
+  have hwr : w ∈ r := hflr ▸ List.mem_flatten.mpr ⟨p, hpq, hwp⟩
+  have hllr : py.getLast! ∈ r :=
+    hflr ▸ List.mem_flatten.mpr ⟨py, hpy, aqs_getLastMem (hall py hpy)⟩
+  have hppos : 0 < p.length := List.length_pos_of_ne_nil (hall p hpq)
+  have hwpLen : p.idxOf w < p.length := List.idxOf_lt_length_iff.mpr hwp
+  have hFidx : (between sp py pz).flatten.idxOf w
+      = ((between sp py pz).take ((between sp py pz).idxOf p)).flatten.length + p.idxOf w :=
+    flattenIdxOfOffset hBnd hp hallB hwp
+  have hspidx : r.idxOf w = (sp.take (sp.idxOf p)).flatten.length + p.idxOf w := by
+    rw [← hflr]
+    exact flattenIdxOfOffset hflatnd hpq hall hwp
+  have hpypos : 0 < py.length := List.length_pos_of_ne_nil hpne
+  have hlastidx : r.idxOf py.getLast!
+      = (sp.take (sp.idxOf py)).flatten.length + py.length - 1 := by
+    rw [← hflr]
+    rw [flattenIdxOfOffset hflatnd hpy hall (aqs_getLastMem (hall py hpy)),
+      aqs_idxOfGetLast hpynd hpne]
+    omega
+  have hT1 : (sp.take (sp.idxOf py + 1)).flatten.length
+      = (sp.take (sp.idxOf py)).flatten.length + py.length := by
+    rw [takeSuccGetElem (List.idxOf_lt_length_iff.mpr hpy), List.flatten_append,
+      List.length_append]
+    simp
+  rcases Nat.lt_or_ge (sp.idxOf py) (sp.idxOf pz) with hlt | hge
+  · -- A：非回卷
+    have hpB : p ∈ (sp.drop (sp.idxOf py + 1)).take
+        (sp.idxOf pz - (sp.idxOf py + 1)) := by
+      have h := hp
+      rwa [betwnTakeDrop hspnd hpz, if_pos hlt] at h
+    have hpdrop : p ∈ sp.drop (sp.idxOf py + 1) := List.mem_of_mem_take hpB
+    have hk : sp.idxOf p = sp.idxOf py + 1 + (sp.drop (sp.idxOf py + 1)).idxOf p :=
+      aqs_idxOf_mem_drop_eq hspnd hpdrop
+    have hBp : (between sp py pz).idxOf p
+        = (sp.drop (sp.idxOf py + 1)).idxOf p := by
+      rw [betwnTakeDrop hspnd hpz, if_pos hlt]
+      exact takeIdxOfEq (uniqDrop hspnd) hpB
+    have hY : ((between sp py pz).take ((between sp py pz).idxOf p)).flatten.length
+        = ((sp.drop (sp.idxOf py + 1)).take
+            ((sp.drop (sp.idxOf py + 1)).idxOf p)).flatten.length := by
+      rw [hBp, betwnTakeDrop hspnd hpz, if_pos hlt]
+      rw [Kepler.Text.TameSpine.takeTake (by
+        have h := List.idxOf_lt_length_iff.mpr hpB
+        rw [List.length_take] at h
+        have hidx : ((sp.drop (sp.idxOf py + 1)).take
+            (sp.idxOf pz - (sp.idxOf py + 1))).idxOf p
+            = (sp.drop (sp.idxOf py + 1)).idxOf p :=
+          takeIdxOfEq (uniqDrop hspnd) hpB
+        have hk2 : (sp.drop (sp.idxOf py + 1)).idxOf p
+            < sp.idxOf pz - (sp.idxOf py + 1) := by
+          rw [← hidx]
+          exact lt_of_lt_of_le h (Nat.min_le_left _ _)
+        omega)]
+    have hTp : (sp.take (sp.idxOf p)).flatten.length
+        = (sp.take (sp.idxOf py + 1)).flatten.length
+          + ((between sp py pz).take ((between sp py pz).idxOf p)).flatten.length := by
+      rw [hk, takeAdd, List.flatten_append, List.length_append, ← hY]
+    set A := (sp.take (sp.idxOf py)).flatten.length with hA
+    set B := py.length with hB
+    set C := ((between sp py pz).take ((between sp py pz).idxOf p)).flatten.length with hC
+    have hTp' : (sp.take (sp.idxOf p)).flatten.length = A + B + C := by
+      rw [hTp, hT1]
+    have heq : r.idxOf w = r.idxOf py.getLast! + C + p.idxOf w + 1 := by
+      rw [hspidx, hlastidx, hTp']
+      omega
+    have hori : r.idxOf py.getLast! ≤ r.idxOf w := by
+      rw [hspidx, hlastidx, hTp']
+      omega
+    rw [indexfOfIdxOfGe hllr hwr hori, hFidx]
+    omega
+  · by_cases hpd : p ∈ sp.drop (sp.idxOf py + 1)
+    · -- B：回卷-drop
+      have hk : sp.idxOf p = sp.idxOf py + 1 + (sp.drop (sp.idxOf py + 1)).idxOf p :=
+        aqs_idxOf_mem_drop_eq hspnd hpd
+      have hBp : (between sp py pz).idxOf p
+          = (sp.drop (sp.idxOf py + 1)).idxOf p := by
+        rw [betwnTakeDrop hspnd hpz, if_neg (Nat.not_lt.mpr hge), List.idxOf_append,
+          if_pos hpd]
+      have hY : ((between sp py pz).take ((between sp py pz).idxOf p)).flatten.length
+          = ((sp.drop (sp.idxOf py + 1)).take
+              ((sp.drop (sp.idxOf py + 1)).idxOf p)).flatten.length := by
+        rw [hBp, betwnTakeDrop hspnd hpz, if_neg (Nat.not_lt.mpr hge)]
+        rw [List.take_append]
+        rw [show (sp.drop (sp.idxOf py + 1)).idxOf p
+            - (sp.drop (sp.idxOf py + 1)).length = 0 from by
+          have h := List.idxOf_lt_length_iff.mpr hpd
+          omega]
+        simp
+      have hTp : (sp.take (sp.idxOf p)).flatten.length
+          = (sp.take (sp.idxOf py + 1)).flatten.length
+            + ((between sp py pz).take ((between sp py pz).idxOf p)).flatten.length := by
+        rw [hk, takeAdd, List.flatten_append, List.length_append, ← hY]
+      set A := (sp.take (sp.idxOf py)).flatten.length with hA
+      set B := py.length with hB
+      set C := ((between sp py pz).take ((between sp py pz).idxOf p)).flatten.length with hC
+      have hTp' : (sp.take (sp.idxOf p)).flatten.length = A + B + C := by
+        rw [hTp, hT1]
+      have heq : r.idxOf w = r.idxOf py.getLast! + C + p.idxOf w + 1 := by
+        rw [hspidx, hlastidx, hTp']
+        omega
+      have hori : r.idxOf py.getLast! ≤ r.idxOf w := by
+        rw [hspidx, hlastidx, hTp']
+        omega
+      rw [indexfOfIdxOfGe hllr hwr hori, hFidx]
+      omega
+    · -- C：回卷-take
+      have hpt : p ∈ sp.take (sp.idxOf pz) := by
+        rcases List.mem_append.mp (show p ∈ sp.drop (sp.idxOf py + 1)
+            ++ sp.take (sp.idxOf pz) from by
+          have h := hp
+          rwa [betwnTakeDrop hspnd hpz, if_neg (Nat.not_lt.mpr hge)] at h) with h | h
+        · exact absurd h hpd
+        · exact h
+      have hk : sp.idxOf p = (sp.take (sp.idxOf pz)).idxOf p :=
+        (takeIdxOfEq hspnd hpt).symm
+      have hpi : sp.idxOf p < sp.idxOf py := by
+        have h := List.idxOf_lt_length_iff.mpr hpt
+        rw [List.length_take] at h
+        rw [hk]
+        have h1 : min (sp.idxOf pz) sp.length ≤ sp.idxOf pz := Nat.min_le_left _ _
+        have h2 : sp.idxOf pz < sp.idxOf py := lt_of_le_of_ne hge (Ne.symm hidxne)
+        omega
+      have hBp : (between sp py pz).idxOf p
+          = (sp.take (sp.idxOf pz)).idxOf p + (sp.drop (sp.idxOf py + 1)).length := by
+        rw [betwnTakeDrop hspnd hpz, if_neg (Nat.not_lt.mpr hge), List.idxOf_append,
+          if_neg hpd]
+      have hY : ((between sp py pz).take ((between sp py pz).idxOf p)).flatten.length
+          = (sp.drop (sp.idxOf py + 1)).flatten.length
+            + (sp.take (sp.idxOf p)).flatten.length := by
+        rw [hBp, betwnTakeDrop hspnd hpz, if_neg (Nat.not_lt.mpr hge)]
+        rw [List.take_append]
+        have hAn : (sp.drop (sp.idxOf py + 1)).take
+            ((sp.take (sp.idxOf pz)).idxOf p
+              + (sp.drop (sp.idxOf py + 1)).length)
+            = sp.drop (sp.idxOf py + 1) :=
+          List.take_of_length_le (by omega)
+        rw [hAn]
+        rw [show (sp.take (sp.idxOf pz)).idxOf p
+            + (sp.drop (sp.idxOf py + 1)).length
+            - (sp.drop (sp.idxOf py + 1)).length
+            = (sp.take (sp.idxOf pz)).idxOf p from by
+          have h := List.idxOf_lt_length_iff.mpr hpt
+          rw [List.length_take] at h
+          omega]
+        rw [Kepler.Text.TameSpine.takeTake (by
+          have h := List.idxOf_lt_length_iff.mpr hpt
+          rw [List.length_take] at h
+          omega)]
+        rw [← hk, List.flatten_append, List.length_append]
+      have hsp1 : r.length = (sp.take (sp.idxOf py + 1)).flatten.length
+          + (sp.drop (sp.idxOf py + 1)).flatten.length := by
+        rw [← hflr, ← List.length_append, ← List.flatten_append, List.take_append_drop]
+      set A := (sp.take (sp.idxOf py)).flatten.length with hA
+      set B := py.length with hB
+      set C := (sp.drop (sp.idxOf py + 1)).flatten.length with hC
+      have hA1 : (sp.take (sp.idxOf py + 1)).flatten.length = A + B := by
+        rw [hT1]
+      have hlen : r.length = A + B + C := by
+        rw [hsp1, hA1]
+      -- 取向：T_p < A+B（严格）
+      have hmid : (sp.take (sp.idxOf p)).flatten.length + p.length
+          ≤ (sp.take (sp.idxOf py)).flatten.length := by
+        have h1 : (sp.take (sp.idxOf p + 1)).flatten.length
+            = (sp.take (sp.idxOf p)).flatten.length + p.length := by
+          rw [takeSuccGetElem (List.idxOf_lt_length_iff.mpr hpq), List.flatten_append,
+            List.length_append]
+          simp
+        rw [← h1]
+        exact takeFlatLenMono (Nat.succ_le_of_lt hpi)
+      have hori : r.idxOf w < r.idxOf py.getLast! := by
+        have hh : (sp.take (sp.idxOf p)).flatten.length + p.idxOf w
+            < (sp.take (sp.idxOf py)).flatten.length := by
+          omega
+        rw [hspidx, hlastidx]
+        omega
+      rw [indexfOfIdxOfLt hllr hwr hori, hFidx]
+      omega
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理）。 -/
