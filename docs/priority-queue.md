@@ -319,6 +319,8 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（08:01，续732）**：**W2-件1 本体落库 `011c0451` → 派件1a 闭 hbridge**。`TameSpine/Reduction3ElementsOfListNtrans.lean` 349 行（`elementsOfListNtrans` = reduction2.hl:1042-1136 逐前提移植，ta↦`aqiunpp1_top` 内联；**唯一偏离采信** = HOL 证内切口提为显式前提 `hbridge`——闭合链 `face_diff_r`(~200 HOL)/`newvertex_alt`(~40) 树内零命中、"newvertexPrepped 免费"只覆盖区间性不覆盖 prefix 精确，硬凑才错）；**LEBHIRJ 首次组装 ~85 行**（`set(fn') = set(fn) ∪ set(v)`，`betwn_or_betwn_cover` 实例化后两弧逐字化 S 头段/F 尾段零 shift 件）；工具链四条实测入档（omega `Nat.sub` 失灵/`++` 左结合/`X.mp` 无括号/`lake env` 输入 containment）。编排者验收 RC=0、标准三零 sorryAx、olean 装池。**派件1a**（hbridge 闭合 120–200：newvertex_alt → face_diff_r → take 数算三入口，闭后件2 `lnrx_induction` 解阻）。
+
 - **2026-11-10（07:58，续731）**：**W2-b P3-a 落库 `129f6711` + P2 卡点报告 → 折中裁决（A 拆半）**。
 ① **落库**：`Reduction4Subseg9.lean` 104 行 2 件全标准三（`AqiunppSlot` 链侧槽 def = aqiunpp 陈述形零成本折算；`finalAssumptionMemXCore` HOL :519 七前提逐字，证 = `mem_fst_core` 在 (ntrans k, rtrans k) 实例化）；RC=0 0err 0warn、olean 装池。
 ② **P2 卡点（采信）**：派单四件在 TAV2 之外还有未落章节闸门——PNXVWFS1/2（各 40+ 行证体）闸 mem_uniq/fsty_core/fstz_core/explicit；DIOWAAS 闸 y_ne_z；Pbflhet.ztrans_in_suc 闸 zpre_core_k；properties_of_ytrans0/lnrx_induction/core_split/r_trans_eq 闸 yz_in_core（二重）；同章已就位件普查 ✓（prebatch_suc_explicit = Reduction3Thm13 已补齐）。
