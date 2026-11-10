@@ -1668,6 +1668,21 @@ theorem lastBetwnLastHdParts (L : fgraph ℕ) (hL : GoodList L)
         h2, getLastBangEqGetLast hqne]
     rw [hfin, ← hflat]
 
+/-- `x ∈ l.take n ⇒ (l.take n).idxOf x = l.idxOf x`（Nodup）。 -/
+private theorem takeIdxOfEq {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
+    {l : List α} {x : α} {n : ℕ} (hn : l.Nodup) (hx : x ∈ l.take n) :
+    (l.take n).idxOf x = l.idxOf x := by
+  have hi : (l.take n).idxOf x < (l.take n).length := List.idxOf_lt_length_iff.mpr hx
+  have hj2 : (l.take n).idxOf x < l.length := by
+    rw [List.length_take] at hi
+    exact lt_of_lt_of_le hi (Nat.min_le_right _ _)
+  have h2 : l[(l.take n).idxOf x] = x := by
+    rw [← List.getElem_take]
+    exact List.getElem_idxOf hi
+  conv_rhs => rw [← h2]
+  exact (Kepler.Text.TameLp.idxOf_getElem hn hj2).symm
+
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理）。 -/
