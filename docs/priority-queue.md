@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（14:42，续791）**：**J4 W1 批 3 §7 触发批落库 `fcff9315`（可机检底座 3 私件）+ §7 降级裁决 A（三条护栏）+ reduction5 第三轮分析零代码的切半指令**。
+① **`fcff9315` `Reduction1W1c.lean`（40 行 3 私件）**：`getElem!_eq_getElem`/`monoChain`/`elemDropTake`——(a)(b) 机械面底座中可机检部分；未收部分（`getElem!_last_eq_getLast!`/`dropLastIsLast`/`getLast!_take_eq`）**已裁掉不交**（依赖树内不存在的 `getElem?`↔`getLast?` 桥）⇒ **§7 触发成立**（约定触发线：批 3 的 (a)(b) 仍收不掉即降级重估）。闸：apply-check PASS、禁词零（头注改写）、岛编 RC=0/0err/0warn、**去-private 副本探针** 3 件全 ⊆ 标准三（`[propext]`/`[propext, Quot.sound]`/`[propext]`）零 sorryAx 零 choice、olean 装池；私件不外导（公开 axioms 面为空，审计口径 = 文件尾注）。
+② **§7 降级裁决：采纳 A（库内等价覆盖），三条护栏**：(1) 消费方陈述**保持 HOL 同形**（同一 `enumerator` 对象；定义编码差异是既存事实），**只换证明路线不改陈述**；绕不开的重述逐条走 SF 通道并对「不比原版差」核；(2) 等价论证在首个消费点（批 7 `enumeration_vertex_list`）落**可机检桥件**，不口头记账；(3) 等价失败的件回退 B 路线（`getElem?`↔`getLast?` 桥 + `mem_enumerator` 收口）；C 不启用（续403）。`mem_enumerator`/`mem_enumAppend_pow` 记「库内等价覆盖」不移植 ⇒ W1 约 8 件免移植、省 ≈570 HOL 行；**W1 重估 1,300–1,830（下修 25%）**；批序 4（180 HOL → 230–330）→ 5（148 → 190–280）→ 6（243 → 380–560）→ 7（217 → 300–450，验收点 `enumeration_vertex_list`）。批 4 已批。
+③ **reduction5 第三轮分析零代码（HQYMRTX1 侦察交班，质量采信：conj 拆分/供给清单/路线齐，实测 ~80–120 超 40–60 原估）**：**切半指令已下**——下笔交付物 = **仅 conj 1（`lz ∈ r`）链侧形**（路线已自备：`sFlagList` 第二合取 + `loopList` 闭包，~40–60），conj 2 一行不碰；4 轮内交；若仍无代码 ⇒ HQYMRTX1 改挂 explicit slot 记账（SF 式），车道转 `next_core_FST`。止损定性勘正：AGENTS §7 的「3 轮卡死」指结构性卡死，三轮停笔不构成——预算是编排者给的，不是车道自估的。
+
 - **2026-11-10（14:40，续790）**：**reduction5 第二轮侦察：底层三件共同前置 = `HQYMRTX1_list` 链侧零命中**。
 ① **发现（采信）**：`ytrans_in_suc`/`ztrans_in_suc`/`ztran_suc_in_rtrans` 三证体全吃 **`Tame_list.HQYMRTX1_list`**（TameList16，Spine 独占——`import Kepler.Assembly` 伞模块成环不可达；链侧化 ~40–60）。注：首半笔 `memYtransListOfDarts`（`f74ffd70`）当时是**绕开**了它；底层三件绕不开。
 ② **裁决**：下批 = **HQYMRTX1_list 链侧化 → 底层三件**；**硬要求已下**——连续两轮分析零代码后，本批交付必须含代码（最低 = HQYMRTX1 链侧化，允许半件）；「路线未 worked-out」不构成再停理由（worked-out 就是本批产出）。序：钉死 HOL 证体拆分（≤30 min）→ 动笔 → 底层三件接线。闸层不变（tame-corr 铺装波开顶层）。
