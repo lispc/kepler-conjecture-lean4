@@ -31,6 +31,8 @@ import Kepler.Text.Reduction4
 import Kepler.Text.MoreLemma2Island1
 import Kepler.Graphs.ListAuxLemmas
 import Kepler.Graphs.FaceDivisionProps1
+import Kepler.Text.Reduction4Subseg5
+import Kepler.Text.MoreLemma2Island3
 
 set_option autoImplicit false
 set_option maxHeartbeats 4000000
@@ -43,7 +45,7 @@ namespace Kepler.Text.Reduction5
 variable {α : Type} [DecidableEq α]
 
 open Kepler.Graphs (between fgraph)
-open Kepler.Assembly (nextEl prevEl findFaceDarts listOfDarts listPairs fList GoodList)
+open Kepler.Assembly (nextEl prevEl findFaceDarts listOfDarts listPairs fList GoodList eList)
 open Kepler.Graphs (between_distinct)
 open Kepler.Text.Reduction4 (indexf_lt_length_of_mem indexf_eq_length_of_not_mem
   indexfRefl indexf_add_left betwnMemCover between_eq_take_of_idxOf_lt
@@ -736,6 +738,112 @@ theorem finalListRot {L : fgraph ℕ} {r : List Dart} {d : Dart}
     _ = f := List.rotate_length f
 
 
+
+/-! ## §H parts 簇（parts_impure 链侧化 + finalListParts） -/
+
+/-- getLast! 成员（非空；private）。 -/
+private theorem getLastBang_mem {l : List Dart} (h : l ≠ []) : l.getLast! ∈ l := by
+  cases l with
+  | nil => exact absurd rfl h
+  | cons a t =>
+    rw [List.getLast!_cons_eq_getLastD]
+    exact List.getLastD_mem_cons
+
+/-- cons 与 tail 的 nextEl 在「x 在 tail 且 x 非 tail 末元」处一致（private；
+`partsImpure` 归纳 bridge；`a ∉ l`（Nodup）排除 x = a）。 -/
+private theorem nextEl_cons_tail {a : Dart} {l : List Dart} {x : Dart}
+    (ha : a ∉ l) (hx : x ∈ l) (hne : x ≠ l.getLastD a) :
+    nextEl (a :: l) x = nextEl l x := by
+  have hlen : 0 < l.length := List.length_pos_of_mem hx
+  have hix : l.idxOf x < l.length := List.idxOf_lt_length_iff.mpr hx
+  have hxne_a : x ≠ a := fun hc => ha (hc ▸ hx)
+  have hidxc : (a :: l).idxOf x = (l.idxOf x).succ :=
+    List.idxOf_cons_ne l (Ne.symm hxne_a)
+  have hlastb : l.getLastD a = l[l.length - 1]'(by omega) := by
+    rw [List.getLastD_eq_getLast?, List.getLast?_eq_some_getLast (List.ne_nil_of_mem hx),
+      Option.getD_some, List.getLast_eq_getElem]
+  have hnowrap : l.idxOf x ≠ l.length - 1 := by
+    intro hc
+    apply hne
+    rw [hlastb]
+    simpa [hc] using (Kepler.Text.TameLp.getElem_idxOf hx).symm
+  have hcond_c : ¬((l.idxOf x).succ = (a :: l).length - 1) := by
+    rw [List.length_cons, Nat.add_sub_cancel]
+    intro hc
+    apply hnowrap
+    omega
+  rw [nextEl, nextEl, hidxc]
+  rw [if_neg hcond_c, if_neg hnowrap]
+  have h1 : (l.idxOf x).succ + 1 < (a :: l).length := by
+    rw [List.length_cons]
+    omega
+  rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt h1,
+    Kepler.Text.TameLp.getD_eq_getElem_of_lt (by omega : l.idxOf x + 1 < l.length)]
+  simp only [List.getElem_cons_succ]
+
+/-- **HOL `parts_impure`**（tame_list.hl:11369）链侧化：`(∀ x ∈ f, x = LAST f ∨
+¬(next_el f x = f_list L (e_list x))) ∧ uniq f ⇒ parts L f = MAP (·[x]) f`。
+路线：`parts_cat` 归纳（比 HOL 的 pia0 扫描式短；不做 pia0 内部展开）。 -/
+theorem partsImpure {L : fgraph ℕ} {f : List Dart}
+    (h : ∀ x ∈ f, x = f.getLastD (0, 0) ∨ ¬(nextEl f x = fList L (eList x)))
+    (hnd : f.Nodup) : parts L f = f.map (fun x => [x]) := by
+  induction f with
+  | nil => rfl
+  | cons hd tl ih =>
+    cases tl with
+    | nil => rfl
+    | cons b rest =>
+      have hndc := List.nodup_cons.mp hnd
+      have hmem_last : (hd :: b :: rest).getLastD (0, 0) ∈ b :: rest := by
+        rw [List.getLastD_cons, List.getLastD_cons]
+        exact List.getLastD_mem_cons
+      have hbrk : ¬(nextEl (hd :: b :: rest) hd = fList L (eList hd)) := by
+        rcases h hd (List.mem_cons_self (a := hd) (l := b :: rest)) with heq | hne
+        · exfalso
+          have : hd ∈ b :: rest := heq ▸ hmem_last
+          exact hndc.1 this
+        · exact hne
+      have hcat := Kepler.Text.Reduction4Idx.parts_cat L (u := [hd]) (v := b :: rest)
+        (x := hd) (by simp) hbrk rfl (by simp) (by simp) (by simpa using hnd)
+      have hcat' : parts L (hd :: b :: rest) = parts L [hd] ++ parts L (b :: rest) := hcat
+      rw [hcat']
+      have hparts1 : parts L [hd] = [[hd]] := rfl
+      rw [hparts1]
+      rw [ih (fun x hx => ?_) hndc.2]
+      · rfl
+      · by_cases heq : x = (hd :: b :: rest).getLastD (0, 0)
+        · left
+          rw [heq]
+          simp only [List.getLastD_cons]
+        · refine Or.inr ?_
+          have hne := (h x (List.mem_cons_of_mem hd hx)).resolve_left heq
+          have hlastEq : (hd :: b :: rest).getLastD (0, 0)
+              = (b :: rest).getLastD (0, 0) := by
+            simp only [List.getLastD_cons]
+          have hxne : x ≠ (b :: rest).getLastD (0, 0) := by
+            intro hc
+            exact heq (by rw [hc, hlastEq])
+          have hnext := nextEl_cons_tail hndc.1 hx hxne
+          intro hcon
+          exact hne (hnext.trans hcon)
+
+/-- **HOL `final_list_parts`**（tame_list.hl:11510）：`good_list L ∧
+(all x ∈ f, MEM x (list_of_darts L)) ∧ is_edge_nondegenerate ∧
+final_list L f ∧ uniq f ⇒ parts L f = MAP (·[x]) f`。 -/
+theorem finalListParts {L : fgraph ℕ} {f : List Dart} (hL : GoodList L)
+    (hall : ∀ x ∈ f, x ∈ listOfDarts L)
+    (hne : (Kepler.Text.TameLp.hypermapOfList L hL).EdgeNondegenerate)
+    (hfin : finalList L f) (hnd : f.Nodup) :
+    parts L f = f.map (fun x => [x]) := by
+  refine partsImpure (fun x hx => ?_) hnd
+  by_cases hxlast : x = f.getLastD (0, 0)
+  · exact Or.inl hxlast
+  · refine Or.inr ?_
+    intro hcon
+    have hfx : fList L x = nextEl f x := hfin x hx
+    exact Kepler.Text.MoreLemma2Island3.edgeNondegFXorNi L hL hne (hall x hx)
+      (hfx.trans hcon)
+
 end Kepler.Text.Reduction5
 
 /-! 探针（编译即执行；目标 ⊆ 标准三零 sorryAx） -/
@@ -754,3 +862,5 @@ end Kepler.Text.Reduction5
 #print axioms Kepler.Text.Reduction5.memFindFaceImpFacesEq
 #print axioms Kepler.Text.Reduction5.rotFinalList
 #print axioms Kepler.Text.Reduction5.finalListRot
+#print axioms Kepler.Text.Reduction5.partsImpure
+#print axioms Kepler.Text.Reduction5.finalListParts
