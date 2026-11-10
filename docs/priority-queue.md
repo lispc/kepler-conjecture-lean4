@@ -319,6 +319,8 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（09:02，续747）**：**W22-§0 落库 `0e3c8242`（v2 链条 376 行 4 件）→ 派 ② C2 主攻 + ③ hstep 全 n**。`pW6k7_stepB_sol_nonneg_v2`（hslot_w 加 `0 < j`）/`pW6k8_…_affGe_v2`（同）/`pW19_stepB_sol_nonneg_v2`（**hprev 收紧 `2 ≤ n`**，n=1 假支剔除）/`pW19_nkezbfc_prep_p9_v2`（下游重述）；与 v1 逐字差异仅五处（两签名收紧 + 两 `hslot_w` 调用加参 + w 侧 telescope `i := 0 → 1` 界改），v1 陈述零改；全标准三、olean 装池。②③ 接入口 = `pW21_slot_w_v2`/`pW21_slot_u_v2` 的前提，中间件全在。**BIEFJHU round-2 进展**：**R2c0 全绿 102/102 PASS**（完成退出）；R2c1 至 08:54 已 93/102（30 PASS / 63 NEG，NEG 尾需 round-3）；R2c1 收尾后走 assemble → kernel_check(P6S) → emit `--r2`。
+
 - **2026-11-10（09:00，续746）**：**W21-① 落库 `19ef9067`（v2 转换两件）+ 第二个假支发现 → 派 W22（§0 v2 链条 → C2 → hstep）**。
 ① **W21-① 落库**：`LocalFanStepW21.lean` 114 行 2 件——`pW21_slot_u_v2`（hstep 全 n ⇒ affGe j≥1）/`pW21_slot_w_v2`（hprev-v2 n≥2 ⇒ affGe j≥1）；**机器核 `pW5w_telescope` 消费点（W5W:93）**：`i := 1` 覆盖 `[3, k−1] ⊂ [2, k−1]`，v2 范围恰好够用。编排者验收标准三、olean 装池。
 ② **★第二个假支发现（采信）**：`hslot_w` 的 **j = 0 实例亦假**——要求 `ρ(vv 1) = vv 2 ∈ cone{p, vv 1}`，但 `vv 2` 射线一般严格在 `vv 1` 之外（`bta 2 > 0` 时）。⇒ **诚实槽范围两侧统一 j ≥ 1**（消费者 `pW6k7` K 案只在 `j := i₀ ≥ 1` 消费，收紧无损失）；形式反证 ~55 行排 W23（不挤占主攻）。
