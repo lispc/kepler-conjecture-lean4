@@ -319,6 +319,10 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:35，续757）**：**NKEZBFC W27 落库 `2d9ba660`——`hslot_w` j=0 假支形式反证 + 诚实域 iff 桥（103 行 2 件）**。
+① `pW27_wslot_zero_false`：`hcl + p∈V + hiter + 1<ncard + hnc + azim 0 vv1 vv2 p ≠ 0 ⇒ ¬(ρ²p ∈ affGe{0}{p, ρp})`——`pW6k6_azim_zero_of_affGe` 逆否 + `azim_eq_zero_symm` 换序（非共线前提由 `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` 换序得）。`pW27_hslot_w_iff`：全 ∀ 形 ⟺（`0<j` 域形 ∧ j=0 实例），纯逻辑拆分——j=0 实例即 §1 反证 ⇒ **v4 的 `hslot_w` 签名写 `0<j` 有形式依据，假支图谱第二格正式闭**。
+② **验证**：apply-check PASS；禁词零；注释深度 1/0；RC=0 / 0err / 0warn；两条 axioms 全标准三零 sorryAx；olean 装池。实交 103 行 vs 估 55（前提推导 ~35 行，车道如实记账）。W28（v4 part 1）继续。
+
 - **2026-11-10（10:25，续756）**：**la21 W2a 两件真证落库 `09b60f09`（`LocalAuto21Kit` 675 行）——2-β 战役 W2a 修复轮收敛（18→12→4→2→0，4 轮内）**。
 ① 件目：`simplex_unique_w2`（HOL `Merge_ineq.simplex_unique`：`{v0,v1,v2,v3}` 与 `{v0,v1,v2,v3'}` 双 simplex 且四点非共面 ⇒ `v3' = v3` 的同类形）+ `mk_simplex_uniq_w2`（`mk_simplex` 唯一性），36 个私件 Kit（dot/cross 桥、Lagrange、`dotP` coe 桥、collinear 投影、`2×2` 齐次解、`sum3` 坐标分解、`sq_dist_eq`）。叶子模块（只 import V3Coe/LA1/LA11/Mathlib），零环。
 ② **验证**：`git apply --check` PASS；禁词扫描零命中（文件内连 `#print` 都没有，探针用副本尾部追加）；注释深度 1/0；**编排者清 4 条 `unused simp argument` 警告**（`WithLp.ofLp_neg`×1 + `LinearMap.mk₂_apply`×3，均为 linter 判定冗余的参数，逐条删除）后岛编 RC=0 / 0 err / 0 warn；两条探针 `#print axioms` 全 `[propext, Classical.choice, Quot.sound]` 零 sorryAx；olean 装池。
