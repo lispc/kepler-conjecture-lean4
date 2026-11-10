@@ -1409,6 +1409,45 @@ theorem EXISTS_PATH_COMPLEMENT (H : Hypermap α) (hr : H.IsRestricted) {x : α}
   · exact epcConj11 H hr hx n hn.symm hLd hLm hinj hmod
   · exact epcConj12 H hr hx n hLd hmod
 
+/-! ### §6 槽形包装：`ExistsPathComplementSlot` 逐字（J4 批 ① 槽；不 import J4） -/
+
+/-- **`ExistsPathComplementSlot` 的逐字同形**（J4 `Reduction1Aqt1` 的定义面
+逐字转写；本文件不 import J4 模块）。与 §5 `EXISTS_PATH_COMPLEMENT` 的差异
+只在两处包装：① 前件以柯里形 `H.IsRestricted → x ∈ H.darts →` 收在同一 Prop
+（HOL 原文前件即 `is_restricted H /\ x IN dart H`）；② 合取② 取点态形
+`∀ k, L.pathOf … k = …`（HOL `path_of_loop L (complement H x 0) = complement H x`
+的逐点读法，`congrFun` 一发）；合取④ 取 `∃ y ∈ s, ∃ z ∈ s, …` 成员形（HOL
+`?y z. in_dart_of_loop y L /\ in_dart_of_loop z L /\ …` 同形）。其余十合取与 §5
+定理逐字同式。本件给 J4 的 `hEpc : ∀ H x, ExistsPathComplementSlot H x` 一行消槽。 -/
+theorem existsPathComplementSlot (H : Hypermap α) (x : α) :
+    H.IsRestricted → x ∈ H.darts →
+      ∃ L : Loop α,
+        L.IsLoopOf H ∧
+        (∀ k : ℕ, L.pathOf (H.complementPt x 0) k = H.complementPt x k) ∧
+        (H.complementPt x 0) ∈ L.darts ∧
+        (∃ y ∈ L.darts, ∃ z ∈ L.darts, H.node y ≠ H.node z) ∧
+        ((↑L.darts : Set α) ∩ H.face x = ∅) ∧
+        (∀ y ∈ L.darts, ∀ z, z ∈ H.node y → z ∈ L.darts ∨ z ∈ H.face x) ∧
+        (∀ y, y ∈ H.face x → ∀ z, z ∈ H.node y → z ∈ L.darts ∨ z ∈ H.face x) ∧
+        (H.atomsOfLoop L).ncard = (H.face x).ncard ∧
+        (H.atomsOfLoop L ∩
+          {a : Set α | ∃ x1, a = H.atom (H.loopOfFace x) x1 ∧
+            x1 ∈ (H.loopOfFace x).darts} = ∅) ∧
+        (∀ x1, x1 ∈ L.darts →
+          ∃ y, y ∈ H.atom L x1 ∧ y = H.faceMap (L.invMap y) ∧
+            H.nodeMap y ∈ H.face x ∧ H.nodeMap (H.nodeMap y) ∈ H.atom L x1) ∧
+        (∀ x1, x1 ∈ H.face x →
+          ∃ y, y ∈ H.atom L (H.nodeMap.symm x1) ∧
+            y = H.faceMap (L.invMap y) ∧ x1 = H.nodeMap y ∧
+            H.nodeMap.symm x1 ∈ L.darts) ∧
+        (∀ x1, x1 ∈ H.face x → H.nodeMap x1 ∈ L.darts) := by
+  intro hr hx
+  obtain ⟨L, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩ :=
+    EXISTS_PATH_COMPLEMENT H hr hx
+  obtain ⟨y, z, hy, hz, hne⟩ := h4
+  exact ⟨L, h1, fun k => congrFun h2 k, h3, ⟨y, hy, z, hz, hne⟩,
+    h5, h6, h7, h8, h9, h10, h11, h12⟩
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（收口探针已执行，快照 t63_axiom_audit.log 全文）：
@@ -1421,3 +1460,7 @@ epcAtomInj / epcCard / epcFaceAtomSingleton / epcConj9-12，含不消费
 公理面即全链公理面；§0' 副本与 TameList62 §0-§2 件互不引用。
 #print axioms Kepler.Text.TameSpine.EXISTS_PATH_COMPLEMENT
 -/
+
+/-! 探针（编译即执行；目标 ⊆ 标准三，零占位依赖项） -/
+#print axioms Kepler.Text.TameSpine.EXISTS_PATH_COMPLEMENT
+#print axioms Kepler.Text.TameSpine.existsPathComplementSlot
