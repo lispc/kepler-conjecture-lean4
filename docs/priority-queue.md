@@ -354,6 +354,11 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（08:24，续887）**：**一笔落库：tame-corr nb26 `74224108`（`Reduction3J5PartsRot` +58，2 件）——J5-6 rot 族四件全清；J5-6 头 7 件收官 6/7**。
+① **`74224108`（tame-corr nb26）**：`partsRot`（HOL:62 = `finalListParts` 两侧 + 在库 `rotFinalList`（`Reduction5BetwnBase:596`）+ `List.map_rotate`）+ `coreRot`（HOL:75 = `core = parts.map headD.1` 定义级 + `partsRot` + `map_rotate`）。连同 `all_rot` = `allRot` / `mem_core` = `memCore` 两条查重直投，**rot 族无新证缺口**。修正记档：`rotFinalList` 在 `Kepler.Text.Reduction5` 命名空间须全限定；`finalListParts` 的 `L` 是隐式。闸：apply-check PASS @`43f39b93`→`13e1efaf` 复验、禁词净、岛编 RC=0/0err/0warn、2 探针标准三零 sorryAx、olean 装池。
+② **J5-6 剩余（入口已写清）**：`betwnRot`（HOL `reduction2.hl:107-:120`，20–30）→ **下轮第一动作 = 先读 `Kepler.Graphs` `ListAux:27` 的 `between` def（BEq 版）再定陈述**；`betwnFinalList`（HOL :42，~20，前置 `rotFinalList`/`nextElRotate` 全在库）；中段三件 `*_betwn_pre_face`（90+91+96+98）；主件 191。
+③ **续派**：tame-corr → **betwnRot/betwnFinalList + 中段三件整段**（特别提示：`between` 的 BEq 世界若命中第 5 例分裂，先按 nb16 模式查在库桥件）。J4（J5-7 侦察）、aq13（8b W2b B2–B5）在飞。
+
 - **2026-11-11（08:16，续886）**：**一笔落库：aq13 ml2b `58e6206e`（`Reduction5Ml1W2b` +62，2 件）——8b W2b 起手（`ml1S` 定义 + `ml1SMem`），B2–B6 冻结表带两条降本侦察**。
 ① **`58e6206e`（aq13 ml2b）**：`ml1S` def（More_lemma1:2147 `GABBREV_TAC s`：`[y1] ++ (betwn r y1 z1 ++ [z1])`）+ `ml1SMem`（:2205 `y1 ∈ s ∧ z1 ∈ s`）。闸：apply-check PASS @`f9f01445`→`43f39b93` 复验、禁词净、岛编 RC=0/0err/0warn、1 探针标准三零 sorryAx、olean 装池。
 ② **两条新侦察（采纳，入冻结表）**：(a) **B2 端点∉between 无按名公开件**（`aq7_notMemBetweenYZ` 是 AQ7 语境）⇒ 走 take/drop 段路线（`uniqTake`/`uniqDrop` + 1 索引等式 + 4 行）。(b) **B3 须带 `normalList L hL (ntrans L N r x 1)` 槽**——HOL 的 `parts_fst`/`normal_condition` 两处以 **state-1 normalList + `r := cat g s`** 应用（调用点 :2245/:2253）；树内 `aqs_aqNormalList`（Leaf8W1a:113，五槽条件形）供，`parts L (cat g s)` 用 W2a `aq12w` 分解。W2b 余量估 290–460、依赖无缺件。
