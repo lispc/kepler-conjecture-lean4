@@ -28,6 +28,10 @@ import Kepler.Text.Reduction4Subseg3
 import Kepler.Text.TameSpine.TameList70
 import Kepler.Text.TameSpine.TameList3
 import Kepler.Text.MoreLemma2Island1
+import Kepler.Text.Reduction3Thm6B
+import Kepler.Text.TameSpine.JcajyduAqSnd
+import Kepler.Text.TameSpine.JcajyduAqLeaf8W0
+import Kepler.Text.TameSpine.JcajyduAqLeaf12A
 
 set_option autoImplicit false
 set_option maxHeartbeats 2000000
@@ -516,6 +520,142 @@ theorem nextElBetwnSame {α : Type} [DecidableEq α] [Inhabited α]
       hidxnextlt).trans (Kepler.Text.TameLp.getElem_idxOf hnext))
 
 
+/-! ## §7 cat 族（more_lemma1.hl:1631-:1985）：
+`next_cat_betwn_same_power` / `indexf_cat_betwn_same(_1)` /
+`mem_cat_betwn_same` / `LAST_cat_betwn_same` / `cat_betwn_same`
+
+统一语境：`s = [y] ++ (betwn r y z ++ [z])`（r 的 y→z 弧）。 -/
+
+/-- 弧内成员 ⇒ r 成员。 -/
+private theorem memOfArc {r s : List Dart} {y z : Dart}
+    (hy : y ∈ r) (hz : z ∈ r) (hs : s = [y] ++ (between r y z ++ [z])) :
+    ∀ a ∈ s, a ∈ r := by
+  intro a ha
+  rw [hs] at ha
+  rcases List.mem_append.mp ha with h1 | h2
+  · rw [List.mem_singleton] at h1
+    rw [h1]; exact hy
+  · rcases List.mem_append.mp h2 with h3 | h4
+    · exact Kepler.Graphs.inbetween_inset h3
+    · rw [List.mem_singleton] at h4
+      rw [h4]; exact hz
+
+/-- **HOL `next_cat_betwn_same_power`**（more_lemma1.hl:1631）：
+弧内幂行走两侧一致（`n ≤ indexf lx z s`）。 -/
+theorem nextCatBetwnSamePower {r s : List Dart} {y z lx : Dart}
+    (hnd : r.Nodup) (hy : y ∈ r) (hz : z ∈ r) (hyz : y ≠ z)
+    (hs : s = [y] ++ (between r y z ++ [z])) (hlx : lx ∈ s) :
+    ∀ n : ℕ, n ≤ Kepler.Text.Reduction5.indexf lx z s →
+      (nextEl s)^[n] lx = (nextEl r)^[n] lx := by
+  have hsnd : s.Nodup := by
+    rw [hs]
+    exact Kepler.Text.TameSpine.uniqAppendBetwn hnd hy hz hyz
+  have hzs : z ∈ s := by rw [hs]; simp
+  intro n
+  induction n with
+  | zero => intro _; rfl
+  | succ k ih =>
+    intro hk
+    have hk' : k ≤ Kepler.Text.Reduction5.indexf lx z s := by omega
+    have hklt : k < Kepler.Text.Reduction5.indexf lx z s := by omega
+    have hidxlt : Kepler.Text.Reduction5.indexf lx z s < s.length :=
+      Kepler.Text.Reduction5.indexfLtSizel hlx hzs
+    have hd_eq : (nextEl s)^[k] lx = (nextEl r)^[k] lx := ih hk'
+    have hds : (nextEl s)^[k] lx ∈ s := by
+      have key : ∀ m : ℕ, (nextEl s)^[m] lx ∈ s := by
+        intro m
+        induction m with
+        | zero => simpa using hlx
+        | succ m ihm =>
+          rw [Function.iterate_succ_apply']
+          exact Kepler.Text.TameLp.nextEl_mem_of_mem ihm
+      exact key k
+    have hds' : (nextEl r)^[k] lx ∈ s := hd_eq ▸ hds
+    have hdz : (nextEl r)^[k] lx ≠ z := by
+      intro hcon
+      have h1 : (nextEl s)^[k] lx = z := by rw [hd_eq]; exact hcon
+      have h2 : Kepler.Text.Reduction5.indexf lx z s = k := by
+        have h := Kepler.Text.TameSpine.nextElnIndexf hlx hzs hsnd h1 (by omega)
+        rwa [← Kepler.Text.Reduction3.indexf_eq_spine lx z s] at h
+      omega
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply', hd_eq]
+    exact Kepler.Text.TameSpine.nextCatBetwnSame r hnd hz hy (Ne.symm hyz) hds' hs hdz
+
+/-- **HOL `indexf_cat_betwn_same`**（more_lemma1.hl:1676）：
+`indexf lx lz s ≤ indexf lx z s ⇒ indexf lx lz s = indexf lx lz r`。 -/
+theorem indexfCatBetwnSame {r s : List Dart} {y z lx lz : Dart}
+    (hnd : r.Nodup) (hy : y ∈ r) (hz : z ∈ r) (hyz : y ≠ z)
+    (hs : s = [y] ++ (between r y z ++ [z]))
+    (hlx : lx ∈ s) (hlz : lz ∈ s)
+    (hle : Kepler.Text.Reduction5.indexf lx lz s
+      ≤ Kepler.Text.Reduction5.indexf lx z s) :
+    Kepler.Text.Reduction5.indexf lx lz s
+      = Kepler.Text.Reduction5.indexf lx lz r := by
+  have hsnd : s.Nodup := by
+    rw [hs]; exact Kepler.Text.TameSpine.uniqAppendBetwn hnd hy hz hyz
+  have hzs : z ∈ s := by rw [hs]; simp
+  have hmemr := memOfArc hy hz hs
+  have hlxr : lx ∈ r := hmemr lx hlx
+  have hlzr : lz ∈ r := hmemr lz hlz
+  have hlen : s.length = Kepler.Text.Reduction5.indexf y z r + 1 := by
+    have hB : (between r y z).length = Kepler.Text.TameSpine.indexf y z r - 1 :=
+      Kepler.Text.TameSpine.sizeBetwn hnd hy hz hyz
+    rw [← Kepler.Text.Reduction3.indexf_eq_spine y z r] at hB
+    rw [hs, List.length_append, List.length_append, List.length_singleton,
+      List.length_singleton]
+    have hpos : 0 < Kepler.Text.Reduction5.indexf y z r := by
+      rcases Nat.eq_zero_or_pos (Kepler.Text.Reduction5.indexf y z r) with h0 | h1
+      · exact absurd (Kepler.Text.Reduction4.indexf_eq_zero hy hz h0) hyz
+      · exact h1
+    omega
+  have hlt : Kepler.Text.Reduction5.indexf lx lz s < r.length := by
+    have h1 : Kepler.Text.Reduction5.indexf lx lz s < s.length :=
+      Kepler.Text.Reduction5.indexfLtSizel hlx hlz
+    have h2 : Kepler.Text.Reduction5.indexf y z r < r.length :=
+      Kepler.Text.Reduction5.indexfLtSizel hy hz
+    omega
+  have hpow := nextCatBetwnSamePower hnd hy hz hyz hs hlx
+    (Kepler.Text.Reduction5.indexf lx lz s) hle
+  have hiterS : (nextEl s)^[Kepler.Text.Reduction5.indexf lx lz s] lx = lz := by
+    have h := Kepler.Text.TameSpine.indexfN hlx hlz hsnd
+    rwa [← Kepler.Text.Reduction3.indexf_eq_spine lx lz s] at h
+  have hiterR : (nextEl r)^[Kepler.Text.Reduction5.indexf lx lz s] lx = lz :=
+    hpow.symm.trans hiterS
+  have hfin := Kepler.Text.TameSpine.nextElnIndexf hlxr hlzr hnd hiterR hlt
+  rw [← Kepler.Text.Reduction3.indexf_eq_spine lx lz r] at hfin
+  exact hfin.symm
+
+/-- **HOL `indexf_cat_betwn_same1`**（more_lemma1.hl:1725）：
+`indexf lx lz r ≤ indexf lx z s ⇒ indexf lx lz s = indexf lx lz r`。 -/
+theorem indexfCatBetwnSame1 {r s : List Dart} {y z lx lz : Dart}
+    (hnd : r.Nodup) (hy : y ∈ r) (hz : z ∈ r) (hyz : y ≠ z)
+    (hs : s = [y] ++ (between r y z ++ [z]))
+    (hlx : lx ∈ s) (hlz : lz ∈ s)
+    (hle : Kepler.Text.Reduction5.indexf lx lz r
+      ≤ Kepler.Text.Reduction5.indexf lx z s) :
+    Kepler.Text.Reduction5.indexf lx lz s
+      = Kepler.Text.Reduction5.indexf lx lz r := by
+  have hsnd : s.Nodup := by
+    rw [hs]; exact Kepler.Text.TameSpine.uniqAppendBetwn hnd hy hz hyz
+  have hzs : z ∈ s := by rw [hs]; simp
+  have hmemr := memOfArc hy hz hs
+  have hlxr : lx ∈ r := hmemr lx hlx
+  have hlzr : lz ∈ r := hmemr lz hlz
+  have hpow := nextCatBetwnSamePower hnd hy hz hyz hs hlx
+    (Kepler.Text.Reduction5.indexf lx lz r) hle
+  have hiterR : (nextEl r)^[Kepler.Text.Reduction5.indexf lx lz r] lx = lz := by
+    have h := Kepler.Text.TameSpine.indexfN hlxr hlzr hnd
+    rwa [← Kepler.Text.Reduction3.indexf_eq_spine lx lz r] at h
+  have hiterS : (nextEl s)^[Kepler.Text.Reduction5.indexf lx lz r] lx = lz :=
+    hpow.trans hiterR
+  have hlt : Kepler.Text.Reduction5.indexf lx lz r < s.length := by
+    have h1 : Kepler.Text.Reduction5.indexf lx z s < s.length :=
+      Kepler.Text.Reduction5.indexfLtSizel hlx hzs
+    omega
+  have hfin := Kepler.Text.TameSpine.nextElnIndexf hlx hlz hsnd hiterS hlt
+  rwa [← Kepler.Text.Reduction3.indexf_eq_spine lx lz s] at hfin
+
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零 sorryAx）。 -/
@@ -529,3 +669,6 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.hdBetwn2
 #print axioms Kepler.Text.TameSpine.eqMemNextElLast
 #print axioms Kepler.Text.TameSpine.nextElBetwnSame
+#print axioms Kepler.Text.TameSpine.nextCatBetwnSamePower
+#print axioms Kepler.Text.TameSpine.indexfCatBetwnSame
+#print axioms Kepler.Text.TameSpine.indexfCatBetwnSame1
