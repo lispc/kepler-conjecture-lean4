@@ -38,6 +38,66 @@ namespace Kepler.Text.Reduction5
 open Kepler.Graphs (fgraph)
 open Kepler.Assembly (GoodList nextEl prevEl fList listOfDarts findFaceDarts)
 
+
+/-! ## §0 跨实例 `nextEl` 桥簇（雷区⑪ 修复形；陈述形状 = **逐点等式**）
+
+链上两族引理的 `nextEl` 在声明时烤死了不同实例：Island1 系
+（`indexfN`/`memNextElIterate`/`nextElnIndexf`）烤 `instBEqOfDecidableEq`，
+TameLp 系（`prevEl_nextEl`）与本文件默认烤 `instBEqProd`。两实例非 defeq
+（`LawfulBEq` 只保证行为相等）。桥簇提供 **逐点等式**（非 `List.Index` 级）：
+
+① `findIdxBeqAgree`：判定函数点态一致 ⇒ `findIdx` 相等；
+② `beqProdDerivedEq`：两实例的 `beq` 逐点相等（都 = `decide (b = a)`）；
+③ `idxOfInstEq`：`@List.idxOf Dart instBEqProd = @List.idxOf Dart instBEqOfDecidableEq`
+   （逐元素等式形）；
+④ `nextElInstEq` / `iterateInstEq`：`nextEl` 及任意次迭代的逐点等式。
+共享说明：aq13 主山 NCVIBWU 若也用 Island1 系引理，可复用 ①–④（同一陈述形状）。 -/
+
+/-- 判定函数点态一致 ⇒ `findIdx` 相等。 -/
+theorem findIdxBeqAgree {p q : Dart → Bool} (h : ∀ a, p a = q a) :
+    ∀ xs : List Dart, List.findIdx p xs = List.findIdx q xs
+  | [] => rfl
+  | a :: t => by
+    rw [List.findIdx_cons, List.findIdx_cons, h a, findIdxBeqAgree h t]
+
+/-- 两实例 `beq` 逐点相等：`@BEq.beq Dart instBEqProd b a = @BEq.beq Dart
+instBEqOfDecidableEq b a`。 -/
+theorem beqProdDerivedEq (b a : Dart) :
+    @BEq.beq Dart instBEqProd b a = @BEq.beq Dart instBEqOfDecidableEq b a := by
+  have h2 : @BEq.beq Dart instBEqOfDecidableEq b a = decide (b = a) := rfl
+  rw [h2]
+  by_cases h : b = a
+  · have h1 : @BEq.beq Dart instBEqProd b a = true :=
+      (@beq_iff_eq Dart instBEqProd _ b a).mpr h
+    rw [h1]
+    exact (decide_eq_true h).symm
+  · have h1 : @BEq.beq Dart instBEqProd b a = false :=
+      (@beq_eq_false_iff_ne Dart instBEqProd _ b a).mpr h
+    have hd : decide (b = a) = false := decide_eq_false_iff_not.mpr h
+    rw [h1, hd]
+
+/-- `idxOf` 跨实例逐元素等式。 -/
+theorem idxOfInstEq (a : Dart) (s : List Dart) :
+    @List.idxOf Dart instBEqProd a s = @List.idxOf Dart instBEqOfDecidableEq a s := by
+  unfold List.idxOf
+  exact findIdxBeqAgree (fun b => beqProdDerivedEq b a) s
+
+/-- `nextEl` 跨实例逐点等式。 -/
+theorem nextElInstEq (s : List Dart) (x : Dart) :
+    @nextEl Dart instBEqProd s x = @nextEl Dart instBEqOfDecidableEq s x := by
+  unfold Kepler.Assembly.nextEl
+  rw [idxOfInstEq x s]
+
+/-- `nextEl` 迭代跨实例逐点等式。 -/
+theorem iterateInstEq (s : List Dart) (x : Dart) :
+    ∀ n, (@nextEl Dart instBEqProd s)^[n] x
+      = (@nextEl Dart instBEqOfDecidableEq s)^[n] x
+  | 0 => rfl
+  | n + 1 => by
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply',
+      iterateInstEq s x n,
+      nextElInstEq s ((@nextEl Dart instBEqOfDecidableEq s)^[n] x)]
+
 /-! ## §1 `Nuxcoea.MIN_LEAST`（local/NUXCOEA.hl：`c ∈ X ⇒ min_num X ∈ X ∧ min_num X ≤ c`） -/
 
 /-- **HOL `Nuxcoea.MIN_LEAST`**：`minNum_spec` 直投。 -/
@@ -48,7 +108,7 @@ theorem minLeast {X : Set ℕ} {c : ℕ} (hc : c ∈ X) :
 
 /-! ## §2 `mem_ytrans_list_of_darts`（HOJODCM.hl） -/
 
-/-- f_list 迭代成员闭包（private）。 -/
+/-- f_list 迭代成员闭包。 -/
 private theorem fListIterateDarts {L : fgraph ℕ} (hn : (listOfDarts L).Nodup) {d : Dart}
     (hd : d ∈ listOfDarts L) : ∀ m, (fList L)^[m] d ∈ listOfDarts L := by
   intro m
@@ -75,14 +135,11 @@ theorem memYtransListOfDarts {L : fgraph ℕ} {N : List (List Dart)} {r : List D
   rw [hy_eq, hly]
   exact fListIterateDarts hL.1 hx _
 
-/-! ## §3 `prev_el_betwn_ztran_rtrans` —— 移交下一笔
+/-! ## §3 `prev_el_betwn_ztran_rtrans` —— 接线移下一笔
 
-熔断诊断（实例桥）：该件七步链需在 Island1 系（nextEl 烤派生实例：`indexfN`/
-`memNextElIterate`/`nextElnIndexf`）与 TameLp 系（`prevEl_nextEl` 在本树实例
-上下文烤 `instBEqProd`）之间拼接等式——两实例非 defeq（`instBEqProd` ≠
-`instBEqOfDecidableEq`，LawfulBEq 只保证行为相等）。修复形 = 私件桥簇：
-`findIdx` 点态一致引理 → `idxOf` 跨实例等值 → `nextEl` 跨实例等值 →
-迭代桥（各 ~10–15 行）。本笔按止损纪律先交两件绿件，prevElBetwn 随桥簇下笔。 -/
+§0 桥簇（逐点等式形）本笔交付。§3 七步链的实例接线尚需逐点确认
+（PwssratCase.indexfYLeZInR0 的 nextEl 实例与默认合成的显隐需 `set_option pp.all`
+级探针钉一次，再定 ← / → 方向），按止损纪律接线留下一笔（预估 1 轮内）。 -/
 
 end Kepler.Text.Reduction5
 
