@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（08:17，续733）**：**双线推进（件1a 侦察大缩水 + W6-K6 patch A 落库 `346e5c86`）→ 派 patch B 总装**。
+① **件1a 侦察（采信，编排者核四载体行号逐一命中）**：`face_diff_r`（~200 HOL）+ NCVIBWU 章（~1,500 行）**整体免移植**——hbridge 只消费「W = news 前缀」弱性质，非逐段精确等式；pre-y ∈ r 走轨道幂直取（`indexfYtransEqLm` ZIndexf:136 + `aq10_lYRepPowerLe` Leaf10:248 + `fListPowEqNextElPow` ZIndexf:109，HOL 90 行 indexl/Pwssrat 被树内 indexf 族吸收，~30 行）；**件1a 结构定形 240–280 批准**（工具层 ~100 + case B 主装直接 apply 已落 `elementsOfListNtrans` [LEBHIRJ 零重证] + case A ~60；新文件 `TameSpine/Reduction3HbridgeElim.lean`）。
+② **W6-K6 patch A 落库**：`LocalFanStepW6K6.lean` 283 行 8 件全标准三——**路线勘误采信**：`azim_add` 免证（`azim_eq_azim_iff` AzimLemmas:193 = HOL AZIM_EQ，+ `azim_compl` + `azim_eq_zero_iff` ⇒ 三段识别塌缩为成员性 iff；**W6-K 审计第二次「替换器形公开件」漏检，与 OPEN_AFF_GT_1_3 同款，教训入档：找恒等/替换器不能只搜名字**）；3 个私有依赖公开复制（LuneVolume:856/:247/:694）+ `pW6k6_coplanar_of_azim_pi` + `pW6k6_azim_zero_of_affGe`（closed-cone 径向零点）+ `pW6k6_iter_ivs`（ι(vv n) = vv(n−1)）+ `pW6k6_identification` 主件（hS3/hS4 望远镜显式槽）；hcop 推导路线解决采信。编排者验收 RC=0 0err 0warn、olean 装池。
+③ **派 patch B**（200–260）：三分支总装照 DELIVERY_W6K6A §3 已写死接线表（hallpi/¬B/B+D/E/F/else 四支全用已落件 + i=0 子情形矛盾 + M1/M2 + hS3/hS4 望远镜槽 hprev 终点形态保留）。
+
 - **2026-11-10（08:01，续732）**：**W2-件1 本体落库 `011c0451` → 派件1a 闭 hbridge**。`TameSpine/Reduction3ElementsOfListNtrans.lean` 349 行（`elementsOfListNtrans` = reduction2.hl:1042-1136 逐前提移植，ta↦`aqiunpp1_top` 内联；**唯一偏离采信** = HOL 证内切口提为显式前提 `hbridge`——闭合链 `face_diff_r`(~200 HOL)/`newvertex_alt`(~40) 树内零命中、"newvertexPrepped 免费"只覆盖区间性不覆盖 prefix 精确，硬凑才错）；**LEBHIRJ 首次组装 ~85 行**（`set(fn') = set(fn) ∪ set(v)`，`betwn_or_betwn_cover` 实例化后两弧逐字化 S 头段/F 尾段零 shift 件）；工具链四条实测入档（omega `Nat.sub` 失灵/`++` 左结合/`X.mp` 无括号/`lake env` 输入 containment）。编排者验收 RC=0、标准三零 sorryAx、olean 装池。**派件1a**（hbridge 闭合 120–200：newvertex_alt → face_diff_r → take 数算三入口，闭后件2 `lnrx_induction` 解阻）。
 
 - **2026-11-10（07:58，续731）**：**W2-b P3-a 落库 `129f6711` + P2 卡点报告 → 折中裁决（A 拆半）**。
