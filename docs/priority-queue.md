@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（21:35，续818）**：**一笔落库：aq13 破环件 `5233b972`（`Reduction3BetwnIdxAux` 102 行，编排者收口 FREEZE v2 修法 B ②′）**。
+① **`5233b972` `Reduction3BetwnIdxAux`（102 行）**：`betwnPosEnd`（`φ(|B|) = idxOf b`：线性支 = idxOf b、wrap 支 = L+idxOf b 取模；`sizeBetwn`+`indexfCond`+omega，新需求 `idxOf a < L` 补界）+ **`betwnLastIdx`**（`e ∈ B ∧ nextEl s e ∈ B ⇒ B.idxOf (nextEl s e) = B.idxOf e + 1`——末位之前走 B2d `betwnSuccGetElem`；末位支 `betwnPosEnd` ⇒ `nextEl s e = b` 撞 `notBetwn2`；**一次性给差 1 与 `i+1<|B|`，破 `hBoff`/`hBlen` 互依赖环**）。技法：依赖式 getElem 的重写动机失败 ⇒ `conv_lhs` 定位 + `getD` 先重写下标再化 getElem（雷区⑫再证）；`▸` 方向不明时显式 `absurd (h ▸ h) hnb`。闸：岛编 RC=0/0err/0warn、2 探针标准三零 sorryAx、olean 装池。
+② **两车道零码轮（如实）**：J4 `all_some_generatePolygon` 交冻结拆解（N1 `lastRotateTo` 三支推完 / N2 `indexfRotateEq` 模算术 / N3 `memListPairsRotateTo` 走 `is_nextElem` 层；估 105–145，建议 N3 单列）；aq13 交「已填 3/9 + 剩 6 槽修法表」（`betwnLastIdx` 即本轮所收）。两轮均按「冻结比硬凑好」纪律，无 patch。
+③ **续派**：aq13 → 用 `betwnLastIdx`（`5233b972` 在库）填 `hBoff`/`hBlen`，再 `hposW`/`hCmem`/`hCoff`/`hZidx`；J4 → N1/N2 先写（风险低），N3 单列；tame-corr → QCDVKEA（在飞）。
+
 - **2026-11-10（20:55，续817）**：**两笔落库：aq13 槽填充 3/9 `8d08a5b5`（+26）+ SF-105 陈述收紧 `4e188ae2`（W1p/W2b，64 行）——SF-105 由 J4 车道在 `all_some_generatePolygon` 受阻时发现，属本轮最重要的保真度修正**。
 ① **`8d08a5b5` aq13 槽填充 3/9（`Reduction3NcvibwuIndexMain.lean` +26）**：`fillHZlt`（`indexf w z f < r'.length`，以 `hZidx` 为假设：`rw [← hZidx]` + `indexfLtSizel`；`w ∈ r'` 走 `aqs_nextMarkCaseMem` 两案 × `rtransCat`、`z ∈ r'` 走 `[z]` 头）。探针标准三、olean 装池。**剩 6 槽**：`hposW` / `hBlen`+`hBoff`（互依赖，拟抽 `betwnLastIdx` 破环）/ `hCmem` / `hCoff` / `hZidx`（依赖序表已入 `DELIVERY_2fill3.md`）。
 ② **`4e188ae2` SF-105（`docs/statement-fix-proposals.md` §105）**：J4 三件 `hP19` **量化过强**——HOL `reduction1.hl:1185-1188` 的 `d` 是 `let` 绑定的「第 i 与 i+1 位解包对」，只约束相邻对；Lean 落库形 `∀ (i) (d), … d ∈ darts → d ∈ pairs` 等价于「g 全部 dart ⊆ listPairs F」，真实实例供不出（`all_some_generatePolygon` 直接 BLOCKED）。修法：四处 `hP19` 统一收紧为相邻对形（`W1p` 三陈述 + `W2b` 一陈述；`noConsecutiveDuplicate` 应用处 `hP19 i _ hi …` → `hP19 i hi …`，其余证体不变）。**方向 = 前提变弱 ⇒ 定理变强**，无生产消费方，不弱化 e2e。闸：两文件岛编 RC=0/0err/0warn、4 探针标准三零 sorryAx、olean 装池。
