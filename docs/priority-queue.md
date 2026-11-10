@@ -319,6 +319,9 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（08:56，续745）**：**W20 消槽边界落库 `c3a4fb77` + 重大范围 bug 发现 → 派 W21 三件套**。
+① **★hprev 槽范围 bug（正确性级，形式反证入档）**：pW19 的 hprev 槽从 n=1 起**不可证**——`vv 0 = p` 使 t-set `{p, vv 0} = {p}` 退化，槽实例迫使 `vv 1` 落 p 射线、与 generic 非共线矛盾；`pW20_hprev_one_degenerate` 形式反证 ⇒ **诚实槽范围 n ≥ 2**。这解释了 W5a-ii 三条路线全排的真正原因（当年在打含假支的陈述）。② **残留硬点最小化到 C2 单件**：`pW20_hprev_iff_21`（hprev 1_2 = C1∧C2）+ `pW20_c2_iff_azim`（C2 ⟺ `azim 0 (vv(n-1)) v (vv n) = 0`）；C2 = `vv n ∈ affGt{0,vv(n-1)}{v}`（n≥2）；中间件全在（pW5w2/w3/w4/w5/w6）。③ **hstep 口径更正**：`pW5_flat_cone_order`/`pW5b_hstep` 只覆盖 flat-run 段，pW19 槽是全 n——w 段（超 jump 索引）需镜像件（`vv n ↦ vv(k−n)` 第二 run）+ bta 接线（估 60–90）。**派 W21 三件套**：① 槽范围更正（`pW19_*_v2`，hprev n≥2 + hstep 范围复核，既有陈述零改）→ ② C2 主攻（60–100，第一档硬点正面最后一段）→ ③ hstep 全 n 闭包（60–90）；全部落库后 v2 消槽、陈述与 LA9:3196 逐字。W20 编排者验收 3 件标准三、olean 装池。
+
 - **2026-11-10（08:54，续744）**：**W2-c-1b 收尾笔落库 `66bdbc66`（finalListRot 簇全绿）→ 派 1b 最后收口笔**。`finalListRot`（tame_list:12829 本体）轨道枚举 canonicalization 真证：`nextElIterateGetElem`→`rotateEqOrbit`→双向 `periodDvd`+`dvd_antisymm`→calc（k = r.idxOf d + (f.length − f.idxOf d)）+ 5 私件；r6 0 收口；3 条雷区入档（⑭ 周期整除环路 hcycle_f 独立证 / ⑮ `Nat.ModEq.add_left_cancel'`+`modEq_zero_iff_dvd` 通道 / ⑯ 切片脚本过期索引假信号）。**对表判词采信**：`nextElRotateToEq`（tame-corr）vs `nextElRotate`（本道）同内容不同呈现、非重复落。编排者验收标准三、olean 装池。**派 1b 收口笔**（finalListParts 链侧化 parts_impure + 12T 两件，~150–250）。
 
 - **2026-11-10（08:53，续743）**：**双里程碑落库：W19 装配 `563d092b`（NKEZBFC 链装配完成，条件收敛到两诚实槽）+ 铺装 patch4 `4364ffcd`（三连件收官）→ 派 W20 消槽主攻与 patch5**。
