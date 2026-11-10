@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:25，续756）**：**la21 W2a 两件真证落库 `09b60f09`（`LocalAuto21Kit` 675 行）——2-β 战役 W2a 修复轮收敛（18→12→4→2→0，4 轮内）**。
+① 件目：`simplex_unique_w2`（HOL `Merge_ineq.simplex_unique`：`{v0,v1,v2,v3}` 与 `{v0,v1,v2,v3'}` 双 simplex 且四点非共面 ⇒ `v3' = v3` 的同类形）+ `mk_simplex_uniq_w2`（`mk_simplex` 唯一性），36 个私件 Kit（dot/cross 桥、Lagrange、`dotP` coe 桥、collinear 投影、`2×2` 齐次解、`sum3` 坐标分解、`sq_dist_eq`）。叶子模块（只 import V3Coe/LA1/LA11/Mathlib），零环。
+② **验证**：`git apply --check` PASS；禁词扫描零命中（文件内连 `#print` 都没有，探针用副本尾部追加）；注释深度 1/0；**编排者清 4 条 `unused simp argument` 警告**（`WithLp.ofLp_neg`×1 + `LinearMap.mk₂_apply`×3，均为 linter 判定冗余的参数，逐条删除）后岛编 RC=0 / 0 err / 0 warn；两条探针 `#print axioms` 全 `[propext, Classical.choice, Quot.sound]` 零 sorryAx；olean 装池。
+③ **偏差记账**：675 行超单件 ~450 止损线（车道以"Kit+两件"一次交付），判定可接受（36 私件均为两件共用的一次性代数工具，非可拆独立件；修复轮 4 轮内收敛无结构性卡死）。后续 patch3（`decrease_edge23` W2b）侦察已做：落点 = LA21 原位换桩 + import Kit；待补 deltaX 对称性局部件 + deltaX 正性；`PQCSXWG2_ATREAL` 需确认 ATREAL 或 WITHINREAL 特化。估 ~250 行 / 2 波。
+
 - **2026-11-10（10:15，续755）**：**铺装 patch7（0a+0b）落库 `ea5fc35d`——`PwssratFace` 293 行 6 件 + `sListEqOfMarked` 可见性一字；0a/0b 闭，QCDVKEA 消费面就位**。
 ① **件目**：`fListPowEqNextElPow`（PWSSRAT:502 面幂引擎 = `(f_list L)^m y = ((next_el (find_face L y))^m) y`，面轨道保面归纳；同时消 T1 engines 步的 `f_list_power_next_el` 缺）；0a 三件 `lyMemFindFaceDarts`/`lzMemFindFaceDarts`/`lyFindFaceEq`（HOJODCM:359 ①②，fList 轨道直证；**前提比 HOL 弱**：仅需 `markedList`，无需 `¬final_list`，DIFFERS 记档）；`indexfYtransEqLm`（`indexf_ytrans_eq_l_m` 面指数形：`nextElnIndexf` 换基 + 新界 `lmLtFaceLen` 三个全公开件拼装——**即 scout QCDVKEA 的消费面**）；`pplhulj3V0`（PPLHULJ_v0③，ZIndexf:261-:355 同构：`indexfN` 定位 + patch5 `hqymrtx1List` 第二合取排除 `i+1 ≤ l'm+1` ⇒ `l'm < i`）；`pplhuljV0`（三合取一行装配）。`PwssratMemberBase.sListEqOfMarked` private→public（陈述/证体逐字未动，docstring 记用途；ChainMarkedTranslate ⑤ 先例）。
 ② **验证（编排者亲跑）**：`git apply --check` PASS；双文件岛编 RC=0 / 0 error / 0 warning / 0 sorry；6 条 `#print axioms` 全 `[propext, Classical.choice, Quot.sound]`；注释深度 1；olean 双装入池（MemberBase 需先装新 olean 再编 Face——池内旧 olean 无公开件，这是验证序的关键点）。patch +297/−2，主仓 tracked 仅此两文件。
