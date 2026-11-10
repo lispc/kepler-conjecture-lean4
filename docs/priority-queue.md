@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（14:35，续789）**：**reduction5 修正依赖阶梯交档（分析轮，零 patch）+ 续787 裁决 A 勘误**。
+① **两发现（采信）**：(a) **QCDVKEA 亦闸 NCVIBWU**——证体尾段直接消费 `Ncvibwu.NCVIBWU`，修正「只差一件」旧判读（闸集不变：NCVIBWU+PPLHULJ）。(b) **「AQ7 一般形」在 HOL 不存在**（仅 R0 形 AQ7:181）——`prevElConstZtranRtrans` 实际消费 `Pnxvwfs.indexf_y_le_z_in_r`（PNXVWFS.hl 一般 i 形）= **reduction5 领地**（续736）⇒ **续787 裁决 A 归属结论不变、路线依据更正**（不是 AQ7 去瓶颈化，而是 PNXVWFS 簇自底向上阶梯）；该件证体吃 NCVIBWU + PPLHULJ + QCDVKEA + OHCGKFU + Pbflhet ⇒ **PNXVWFS/Pbflhet/Qcdvkea 簇 = 自底向上阶梯**。
+② **阶梯图（W2C_PLAN §8，与 tame-corr 共享措辞）**：底层三件（无闸、reduction5）`ytrans_in_suc`（PNXVWFS）/`ztrans_in_suc`（PBFLHET）/`ztran_suc_in_rtrans`（PBFLHET），各 ~40–60 split-face 几何、合计 ~150/patch；中层 R0 形 ✓（`indexfConstLe`/`indexfYLeZInR0`）+ `minnumNot`/`findListUniq`/迭代位置形 ✓；**闸层 NCVIBWU 主山 + PPLHULJ（tame-corr 铺装波）**；顶层 QCDVKEA / prevElConst / KBWPBHQ2 / indexf3 / izsj。
+③ **裁决**：底层三件 = reduction5 下批首项（~150，≤4 轮），已批开工（收尾模式预算给足）；车道本轮按止损交分析不开新施工（合理——链侧路线未 worked-out 前 150 行大概率半途止损污染绿文件）。reduction5 累计五笔已落（`247cff62`/`135ae550`/`4eb374aa`/`b55b6dbe`/`0e1c16cc`）。
+
 - **2026-11-10（14:27，续788）**：**aq13 B2b 落库 `f3252c94`（`dLMeqY` + `lMLtR` 155 行半件）——UNRESOLVED #2 机器判定成立、spine-i0 头段解锁**。
 ① **件**：`dLMeqY`（头段终点恒等式 `(nextEl f)^[lM] w = l'y`，3 行按令顺手落）+ **`lMLtR`**（`lMSpine + 1 ≤ r.length`，UNRESOLVED #2 **成立**——**基数论证免 wrap**：face 轨道 `d_0..d_lM` 共 lM+1 个互异 dart（`nextElnIndexf` 定位 + face Nodup）全 ∈ r（`leYInR`）⇒ Finset 基数收口）——NCVIBWU-spine 头段的 `nextElnIndexf`-on-r 阻塞点消除。
 ② **判定账（采信）**：#1（`lM' ≥ lM`）1 轮内判不出、预期不成立（state-1 前提清单无 y' 位置约束，y' 由 minNum 结构决定）——**如实报不硬凑，正确**；**#3 新识别** = 头段 ∈ r' 的 z1-弧包含 = OHCGKFU-i0 的 load-bearing 内容，但其子件**全在库**（`zMemFindFaceDarts`/`fListPowYtransNotMem`/`indexfYtransSucLp`/`fListPowEqNextElPow`）⇒ **B2c = OHCGKFU-i0 总装（120–160）无子件缺口**，B2d = NCVIBWU2/3 i=0 头段（80–120，消费 B2c + `lMLtR` + `dLMeqY` + B1 F-弧半件）⇒ **spine-i0 闭合、Wave C 解阻**。final-支 0 行收口三要素入档（`aqiunpp3_top` 供 marked@state-1；`loopFaceAgree` 不参与该支）。
