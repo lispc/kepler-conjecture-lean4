@@ -36,13 +36,14 @@ set_option autoImplicit false
 set_option maxHeartbeats 4000000
 set_option linter.unusedVariables false
 set_option linter.unusedSectionVars false
+set_option linter.unnecessarySimpa false -- getElem 索引依赖重写须走 simpa（§G 私有件）
 
 namespace Kepler.Text.Reduction5
 
 variable {α : Type} [DecidableEq α]
 
 open Kepler.Graphs (between fgraph)
-open Kepler.Assembly (nextEl prevEl findFaceDarts listOfDarts listPairs fList)
+open Kepler.Assembly (nextEl prevEl findFaceDarts listOfDarts listPairs fList GoodList)
 open Kepler.Graphs (between_distinct)
 open Kepler.Text.Reduction4 (indexf_lt_length_of_mem indexf_eq_length_of_not_mem
   indexfRefl indexf_add_left betwnMemCover between_eq_take_of_idxOf_lt
@@ -600,6 +601,141 @@ theorem rotFinalList {L : fgraph ℕ} {r r' : List Dart}
   rw [List.mem_rotate] at hd
   exact (hfin d hd).trans (nextElRotate hnd n d).symm
 
+
+/-! ## §G finalListRot 簇（tame_list.hl:12829；旋转存在性） -/
+
+/-- `(a % n + 1) % n = (a + 1) % n`（轨道位置递推算术）。 -/
+private theorem modSuccMod (a n : ℕ) : (a % n + 1) % n = (a + 1) % n := by
+  rcases n with _ | _ | n
+  · simp [Nat.mod_zero]
+  · simp
+  · rw [Nat.add_mod a 1 (n + 2), Nat.mod_eq_of_lt (by omega : 1 < n + 2)]
+
+/-- 非空表 `headD` = 第 0 位（private）。 -/
+private theorem headDGetElemZero {s : List α} (d : α) (h : 0 < s.length) :
+    s.headD d = s[0]'h := by
+  cases s with
+  | nil => exact absurd h (by simp)
+  | cons a t => exact (List.getElem_cons_zero a t _).symm
+
+/-- `nextEl` 迭代的环内位置形：第 k 步 = 第 `(idxOf x + k) % len` 位。 -/
+private theorem nextElIterateGetElem {α : Type} [BEq α] [LawfulBEq α] [DecidableEq α]
+    {s : List α} (hnd : s.Nodup) {x : α} (hx : x ∈ s) :
+    ∀ k, (nextEl s)^[k] x
+      = s[(s.idxOf x + k) % s.length]'(Nat.mod_lt _ (List.length_pos_of_mem hx)) := by
+  have hlen : 0 < s.length := List.length_pos_of_mem hx
+  have hix : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hx
+  intro k
+  induction k with
+  | zero =>
+    simpa [Function.iterate_zero_apply, Nat.add_zero, Nat.mod_eq_of_lt hix]
+      using (Kepler.Text.TameLp.getElem_idxOf hx).symm
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', ih]
+    set j := (s.idxOf x + k) % s.length with hjdef
+    have hj : j < s.length := Nat.mod_lt _ hlen
+    have hidxj : s.idxOf (s[j]'hj) = j := Kepler.Text.TameLp.idxOf_getElem hnd hj
+    have hs : s.idxOf x + (k + 1) = s.idxOf x + k + 1 := by omega
+    by_cases hlast : j = s.length - 1
+    · rw [nextEl, if_pos (by rw [hidxj]; exact hlast),
+        headDGetElemZero (s[j]'hj) hlen]
+      congr 1
+      rw [hs, ← modSuccMod (s.idxOf x + k) s.length, ← hjdef, hlast]
+      have h1 : s.length - 1 + 1 = s.length := by omega
+      rw [h1, Nat.mod_self]
+    · have hj1 : j + 1 < s.length := by omega
+      rw [nextEl, if_neg (by rw [hidxj]; exact hlast), hidxj,
+        Kepler.Text.TameLp.getD_eq_getElem_of_lt hj1]
+      congr 1
+      rw [hs, ← modSuccMod (s.idxOf x + k) s.length, hjdef, Nat.mod_eq_of_lt hj1]
+
+/-- 轨道枚举：Nodup 表从 `d` 起的旋转 = 轨道 list（`idxOf` 起）。 -/
+private theorem rotateEqOrbit {α : Type} [BEq α] [LawfulBEq α] [DecidableEq α]
+    {s : List α} (hnd : s.Nodup) {d : α} (hd : d ∈ s) :
+    s.rotate (s.idxOf d) = (List.range s.length).map (fun t => (nextEl s)^[t] d) := by
+  apply List.ext_getElem
+  · rw [List.length_rotate, List.length_map, List.length_range]
+  · intro i hi hi'
+    rw [List.getElem_rotate, List.getElem_map, List.getElem_range,
+      nextElIterateGetElem hnd hd i, Nat.add_comm i (s.idxOf d)]
+
+/-- 周期整除：`(nextEl s)^[k] d = d ⇒ s.length ∣ k`。 -/
+private theorem periodDvd {α : Type} [BEq α] [LawfulBEq α] [DecidableEq α]
+    {s : List α} (hnd : s.Nodup) {d : α} (hd : d ∈ s) {k : ℕ}
+    (h : (nextEl s)^[k] d = d) : s.length ∣ k := by
+  have hlen : 0 < s.length := List.length_pos_of_mem hd
+  have hix : s.idxOf d < s.length := List.idxOf_lt_length_iff.mpr hd
+  have h1 : s[(s.idxOf d + k) % s.length]'(Nat.mod_lt _ hlen) = d := by
+    rw [← nextElIterateGetElem hnd hd k, h]
+  have h2 : s[(s.idxOf d + k) % s.length]'(Nat.mod_lt _ hlen)
+      = s[s.idxOf d]'hix := by
+    rw [h1, Kepler.Text.TameLp.getElem_idxOf hd]
+  have h3 : (s.idxOf d + k) % s.length = s.idxOf d :=
+    hnd.getElem_inj_iff.mp h2
+  have h4 : s.idxOf d + k ≡ s.idxOf d [MOD s.length] := by
+    rw [Nat.ModEq, h3, Nat.mod_eq_of_lt hix]
+  have h5 : k ≡ 0 [MOD s.length] :=
+    Nat.ModEq.add_left_cancel' (s.idxOf d) (by simpa [Nat.add_zero] using h4)
+  exact Nat.modEq_zero_iff_dvd.mp h5
+
+/-- **HOL `Tame_list.final_list_rot`**（tame_list.hl:12829）：`good_list L ∧
+final_list L r ∧ MEM d r ∧ uniq r ∧ MEM d (list_of_darts L) ⇒
+(?n. rot n r = find_face L d)`。 -/
+theorem finalListRot {L : fgraph ℕ} {r : List Dart} {d : Dart}
+    (hL : GoodList L) (hfin : finalList L r) (hd : d ∈ r) (hnd : r.Nodup)
+    (hdart : d ∈ listOfDarts L) :
+    ∃ n, r.rotate n = findFaceDarts L d := by
+  have hn : (listOfDarts L).Nodup := hL.1
+  set f := findFaceDarts L d with hfdef
+  have hfdart : d ∈ f := (Kepler.Text.TameLp.dart_in_face L d).mpr hdart
+  have hfnd : f.Nodup := Kepler.Text.TameLp.findFaceDarts_nodup hn d
+  have horb := finalListPower hn hfin hd hdart
+  have hcycle_r : (nextEl r)^[r.length] d = d := by
+    rw [nextElIterateGetElem hnd hd r.length]
+    simpa [Nat.add_mod, Nat.mod_self, Nat.add_zero, Nat.mod_mod,
+      Nat.mod_eq_of_lt (List.idxOf_lt_length_iff.mpr hd)]
+      using Kepler.Text.TameLp.getElem_idxOf hd
+  have hcycle_f : (nextEl f)^[f.length] d = d := by
+    rw [nextElIterateGetElem hfnd hfdart f.length]
+    simpa [Nat.add_mod, Nat.mod_self, Nat.add_zero, Nat.mod_mod,
+      Nat.mod_eq_of_lt (List.idxOf_lt_length_iff.mpr hfdart)]
+      using Kepler.Text.TameLp.getElem_idxOf hfdart
+  have hdr : r.length ∣ f.length :=
+    periodDvd hnd hd ((horb f.length).trans hcycle_f)
+  have hdf : f.length ∣ r.length :=
+    periodDvd hfnd hfdart ((horb r.length).symm.trans hcycle_r)
+  have hlen : r.length = f.length := Nat.dvd_antisymm hdr hdf
+  have hCr : r.rotate (r.idxOf d)
+      = (List.range r.length).map (fun t => (nextEl r)^[t] d) :=
+    rotateEqOrbit hnd hd
+  have hCf : f.rotate (f.idxOf d)
+      = (List.range f.length).map (fun t => (nextEl f)^[t] d) :=
+    rotateEqOrbit hfnd hfdart
+  have hCeq : (List.range r.length).map (fun t => (nextEl r)^[t] d)
+      = (List.range f.length).map (fun t => (nextEl f)^[t] d) := by
+    rw [hlen]
+    exact List.map_congr_left (fun t _ => horb t)
+  refine ⟨r.idxOf d + (f.length - f.idxOf d), ?_⟩
+  calc r.rotate (r.idxOf d + (f.length - f.idxOf d))
+      = (r.rotate (r.idxOf d)).rotate (f.length - f.idxOf d) := by
+        rw [← List.rotate_rotate]
+    _ = ((List.range r.length).map (fun t => (nextEl r)^[t] d)).rotate
+          (f.length - f.idxOf d) := by
+        rw [hCr]
+    _ = ((List.range f.length).map (fun t => (nextEl f)^[t] d)).rotate
+          (f.length - f.idxOf d) := by
+        rw [hCeq]
+    _ = (f.rotate (f.idxOf d)).rotate (f.length - f.idxOf d) := by
+        rw [hCf]
+    _ = f.rotate (f.idxOf d + (f.length - f.idxOf d)) := by
+        rw [List.rotate_rotate]
+    _ = f.rotate f.length := by
+        rw [show f.idxOf d + (f.length - f.idxOf d) = f.length from by
+          have := List.idxOf_lt_length_iff.mpr hfdart
+          omega]
+    _ = f := List.rotate_length f
+
+
 end Kepler.Text.Reduction5
 
 /-! 探针（编译即执行；目标 ⊆ 标准三零 sorryAx） -/
@@ -617,3 +753,4 @@ end Kepler.Text.Reduction5
 #print axioms Kepler.Text.Reduction5.nextElRotate
 #print axioms Kepler.Text.Reduction5.memFindFaceImpFacesEq
 #print axioms Kepler.Text.Reduction5.rotFinalList
+#print axioms Kepler.Text.Reduction5.finalListRot
