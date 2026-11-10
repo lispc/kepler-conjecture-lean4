@@ -57,3 +57,24 @@ W35 `pW35_union_of_family`（124）· W36 th3×7（140）。
    proof state**（本地无 HOL 工具链，脚本静态分析已到极限：W37/W38/W39 三波
    机器核已把「可见文本面」穷尽）。备选 = 新立项独立攻 w 侧 1_2 几何
    （W23 绕序核心，估 200–400，成功率未定）。
+
+## 6. 附录（W40 追加，append-only；commit `ae463ff8`，2026-11-10 11:43）
+
+§4 件清单追加 6 件（`LocalFanStepW40.lean`，263 行，全 std3 零 sorryAx）：
+`pW40_G1_u_mem`（HOL :2063，2_1 u 侧锥）· `pW40_G2_w_mem`（:2081，经
+`vv(k−1)=ivs` + 周期回卷；**域注 `i+1 < k−1`**，边沿归 wrap 支，未覆盖）·
+`pW40_G3_azim_range`（:2120/:2123）· `pW40_G7_rho_g_mem`（:2194/:2224，
+`azim_eq_azim_iff` 链）· `pW40_G6_union`（:2143，成员 iff 形，HOL 集合等式经
+`Set.ext` 还原）· `pW40_slot_of_family`（W35 §2 补全：hfam ⇒ J 收尾
+`ρ(vv(i+1)) ∈ affGe{0}{v, vv(i+1)}`）。
+
+**未单列对表**：W37 钉死的 G4（`ρu=w`）/G5（`ιw=u`）——G4 = `iterate_succ`
+恒等（消费时一行）；G5 需 ivs-周期引理（`ivsRhoNode1 (vv(i+1)) = vv i` 经
+`(ρ)^[k−1]` + 周期；未验证，消费时补）。当前链无消费者，不造件充数。
+
+**ERRATA（W40 自纠，whnf 4M 超时根因）**：真根因**不是** Nat 减法下标，而是
+`have hnc : ¬Collinear3 … := LOCAL_FAN_CHARACTER_OF_RHO_NODE2 …` 的**类型注解**
+（插件结论含 `ρ(vv(i+1))`，与注解 `vv(i+2)` 非 defeq ⇒ 统一死循环）；修复 =
+未注解原形 + `show; rw[←hρ]; exact`。同机理解释 W35 §2 旧超时。
+
+**边界判读不变**：B1 = w 侧 1_2 族仍是唯一真几何缺口（§2/§3 不动）。
