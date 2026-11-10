@@ -354,6 +354,11 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（07:48，续882）**：**一笔落库：tame-corr nb21 `8ac9edfe`（`Reduction3J5IndexfPowAdd` +46，1 件）——`_pre` 换算第 2 步在树；逐行对读结论：`cases2Chain` 界形与 HOL CASES2 实例面一致（无需 SUC 版）**。
+① **`8ac9edfe`（tame-corr nb21）**：`indexfPowAdd`（`indexf w ((next_el r)^j zk) r = indexf w zk r + j`，前提 `indexf w zk r + j < r.length`）——`nextElnIndexf`（经 `iterateInstEq`.symm 桥）+ `indexf_add_sum`。闸：apply-check PASS @`262ea24e`、禁词净、岛编 RC=0/0err/0warn、1 探针标准三零 sorryAx、olean 装池。
+② **`_pre` 本体铺装进度（三笔铺垫件全在树）**：nb19 setup 三事实 / nb20 计数恒等式 `preIndexfZkXSucc` / nb21 幂加法 `indexfPowAdd`。逐行对读结论：**`cases2Chain` 的界正是 `≤` 形，与 HOL :933–:1120 的 CASES2 实例面一致；第 1 步 `d = (next_el r)^j zk` 可由 `cases2Chain` + f 侧 `indexfN` 合成，无需 SUC 版**。剩余真卡点 = 第 3 步 `hsum` 界换算（`indexf w zk r + j < r.length` 由 f 侧界 `j ≤ indexf zk w f` 换算，HOL :1000–:1120 用 `next_el_power_trans_eq_f`×2 + `indexf_add_left/antisym` 铺路）。
+③ **续派**：tame-corr → **`_pre` 本体收口**（f 侧子集 + 计数 + 收尾，本轮要求不再拆件）。J4（C 段）、aq13（8b W2a+W2b）在飞。
+
 - **2026-11-11（07:40，续881）**：**一笔落库：tame-corr nb20 `2d0f8fa6`（`Reduction3J5IndexfYltSizelPreCount` +56，1 件）——`_pre` 计数段核心恒等式在树，只差 f 侧子集件（40–60）**。
 ① **`2d0f8fa6`（tame-corr nb20）**：`preIndexfZkXSucc`（`indexf zk x f + 1 = indexf zk (next_el f x) f`）——`indexfPrevSucc` 在 `r:=f, pd:=x, d:=nextEl f x` 的实例化；`zk∈f` 用 `preZkMemF`（nb19）、`x∈f` 用 `dart_in_face` + `markedListOfDart`、`f.Nodup` 用 `findFaceDarts_nodup`。一次编译绿。闸：apply-check PASS @`b3e5c5f0`→`6bf94502` 复验、禁词净、岛编 RC=0/0err/0warn、1 探针标准三零 sorryAx、olean 装池。
 ② **`_pre` 最后卡点（f 侧子集 40–60，HOL :933–:1120）**：换算式 = `j = indexf zk d f < indexf zk w f` ⇒ `d = (next_el r)^j zk`（`cases2Chain`@j）⇒ `indexf w d r = indexf w zk r + j`（`nextElnIndexf` 反向 + 幂加法）⇒ 主怪件口径 `< indexf w (ytrans 0) r` ⇒ `singletonAtomSubset`；卡点 = `cases2Chain` 界形与 `nextElPowerTransEqFv0` 的 w 锚点对齐（需逐行对读）。
