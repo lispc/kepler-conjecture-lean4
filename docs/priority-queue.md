@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（08:53，续743）**：**双里程碑落库：W19 装配 `563d092b`（NKEZBFC 链装配完成，条件收敛到两诚实槽）+ 铺装 patch4 `4364ffcd`（三连件收官）→ 派 W20 消槽主攻与 patch5**。
+① **W19 装配落库**：`LocalFanStepW19.lean` 172 行 4 公开件全标准三——`pW19_stepB_sol_nonneg`（stepB 形装配 = `pW6k8` + 两侧望远镜直供；假支 `CARD_VERTEX_GE_3_LOCAL_FAN_p9`⇒ncard=3⇒`SOL_LOCAL_FAN_POS_CASE3_p9`）+ `pW19_nkezbfc_prep_p9`（**LA9:3196 下游同形重述**，`p9_main_induction` 参数序 #check 无差）+ 对顶点自成员两件。**关键对表纠正**：u 侧望远镜来源 = `pW4_telescope_u`（hstep 前向）非 hprev（对顶点索引反向）；两槽 = hstep 前向 / hprev 后向，**诚实显式保留**（未消未伪装），消槽留 W20；LA9 零编辑。编排者验收 RC=0 0err 0warn、olean 装池。
+② **铺装 patch4 落库**：`ytransMemRtrans`（PWSSRAT:275）39 行——三连件收官；**实例分歧实际最优解** = 目标同实例下 `iterate_succ_apply'`+`nextEl_mem_of_mem` 本地复证 5 行（派单 a/b 两案实测均触雷），入档。四件全标准三、olean 装池。
+③ **再派**：nkezbfc → **W20 两望远镜 endgame**（消 hstep/hprev 两槽，消后 §3 陈述与 LA9:3196 完全逐字；正面主攻第一档硬点，3 轮不收敛即停手报边界）；tame-corr → **patch5**（`HQYMRTX1_list` 本体 hs 槽形 + faceMapListPower 重推 + mem_ztrans_rtrans/z_not_eq_ytrans）。
+
 - **2026-11-10（08:50，续742）**：**铺装 patch3 落库 `13e8dc7b`（`lyNextElPow` 三连件之一收口）→ 派 patch4**。37 行增量：minNum 集合桥 `rw [← hset]` + rfl 收口生效 + `(L := L)` 参数位修正；三件全标准三、olean 装池。`ytransMemRtrans` 唯一剩卡点 = 同 `nextEl` 双 BEq 实例分歧（`instBEqOfDecidableEq` vs `instBEqProd`），**裁决方案 a**（`show` 显式钉派生实例，与 Island1 泛型 binder 统一；方案 b convert 15 行作备选不双写）。**派 patch4**：ytransMemRtrans → `HQYMRTX1_list` 本体（hs 槽形 + faceMapListPower 链侧重推）→ mem_ztrans_rtrans/z_not_eq_ytrans；新闸停手报槽清单。
 
 - **2026-11-10（08:48，续741）**：**W6-K8 落库 `b6fc735c` + GAP 表采信 → 派 W19 装配；铺装 patch2 落库 `557df8e6` → 派 patch3**。
