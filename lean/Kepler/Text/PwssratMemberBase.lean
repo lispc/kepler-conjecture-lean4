@@ -207,8 +207,32 @@ theorem fEqNextElX (L : fgraph ℕ) (hL : GoodList L)
   rw [← nextElRotateToEq hxr hrnd]
   exact (hmk.2.2.2.2.2.1).symm
 
+/-- **HOL `l_y_rep_power`**（PWSSRAT.hl:263-:273）：
+`fList L x = nextEl r x ⇒ ly L r x = (nextEl r)^[lm L r x + 1] x`。 -/
+theorem lyNextElPow (L : fgraph ℕ) {r : List Dart} {x : Dart}
+    (hteth : fList L x = nextEl r x) :
+    Kepler.Text.Reduction5.ly L r x = (nextEl r)^[lm L r x + 1] x := by
+  have hset : {m : ℕ | (nextEl r)^[m + 2] x ≠ fList L ((nextEl r)^[m + 1] x)}
+      = {m : ℕ | (nextEl r) ((nextEl r) ((nextEl r)^[m] x))
+          ≠ fList L ((nextEl r) ((nextEl r)^[m] x))} := by
+    ext m
+    simp only [Set.mem_setOf_eq]
+    have h1 : (nextEl r)^[m + 2] x = (nextEl r) ((nextEl r) ((nextEl r)^[m] x)) := by
+      rw [Function.iterate_succ_apply', Function.iterate_succ_apply']
+    have h2 : (nextEl r)^[m + 1] x = (nextEl r) ((nextEl r)^[m] x) := by
+      rw [Function.iterate_succ_apply']
+    rw [h1, h2]
+  have h := Kepler.Text.MoreLemma2Aux.minNotEqImpEq (nextEl r) (fList L) x
+    (n := lm L r x) (by rw [← hset]; rfl) (lm L r x) le_rfl
+  rw [← hteth] at h
+  rw [Function.iterate_succ] at h
+  show (fList L)^[lm L r x + 1] x = (nextEl r)^[lm L r x + 1] x
+  rw [Function.iterate_succ, Function.iterate_succ]
+  exact h.symm
+
 end Kepler.Text.Reduction4Idx
 
 /-! 公理审计锚。 -/
 #print axioms Kepler.Text.Reduction4Idx.nextElRotateToEq
 #print axioms Kepler.Text.Reduction4Idx.fEqNextElX
+#print axioms Kepler.Text.Reduction4Idx.lyNextElPow
