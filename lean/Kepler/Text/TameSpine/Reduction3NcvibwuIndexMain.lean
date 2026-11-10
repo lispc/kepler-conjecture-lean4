@@ -253,7 +253,50 @@ theorem ncvibwuV0IdxSpine (L : fgraph ℕ) (hL : GoodList L)
         rw [hd, hZidx]
         exact heqZ.symm
 
+
+/-! ## §2 槽填充：`hZw` / `hYw`（本轮两条；其余 7 槽修法表见 DELIVERY） -/
+
+/-- 槽 `hZw` 填充：`(nextEl f)^[indexf w z f] w = z`（`indexfN` on f + 换名）。 -/
+private theorem fillHZw (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesTl L hL)
+    {N : List (List (ℕ × ℕ))} {r : List (ℕ × ℕ)} {x : ℕ × ℕ}
+    (hm : MarkedListSpineFull hL N r x) (hf : ¬finalListSpine L r)
+    {f : List (ℕ × ℕ)} {w : ℕ × ℕ} (hfind : findFaceDarts L x = f)
+    (hw : nextEl f x = w) :
+    (nextEl f)^[indexf w (lZSpine L N r x) f] w = lZSpine L N r x := by
+  have hunL : ∀ l ∈ L, l.Nodup := isRestrictedAllUniq L hL hgn hm.1.1
+  obtain ⟨hyf, hzf⟩ := markedLemmaYzInFace L hL hgn hunL hm hf
+  have hxr : x ∈ r := hm.1.2.2.2.1
+  have hxd : x ∈ Kepler.Assembly.listOfDarts L :=
+    normalListListOfDarts hm.1.2.1 x (List.mem_flatten.mpr ⟨r, hm.1.2.2.1, hxr⟩)
+  have hxx : x ∈ findFaceDarts L x := (Kepler.Text.TameLp.dart_in_face L x).mpr hxd
+  have hxx' : x ∈ f := by rw [← hfind]; exact hxx
+  have hfnd' : f.Nodup := by rw [← hfind]; exact findFaceDarts_nodup hL.1 x
+  have hzf' : lZSpine L N r x ∈ f := by rw [← hfind]; exact hzf
+  have hw' : w ∈ f := by rw [← hw]; exact Kepler.Text.TameLp.nextEl_mem_of_mem hxx'
+  exact indexfN hw' hzf' hfnd'
+
+/-- 槽 `hYw` 填充：`(nextEl f)^[lM] w = y`（`dLMeqY` + `indexfYtransEqLm`）。 -/
+private theorem fillHYw (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesTl L hL)
+    {N : List (List (ℕ × ℕ))} {r : List (ℕ × ℕ)} {x : ℕ × ℕ}
+    (hm : MarkedListSpineFull hL N r x) (hf : ¬finalListSpine L r)
+    {f : List (ℕ × ℕ)} {w : ℕ × ℕ} (hfind : findFaceDarts L x = f)
+    (hw : nextEl f x = w) :
+    (nextEl f)^[lMSpine L r x] w = lYSpine L r x := by
+  have hunL : ∀ l ∈ L, l.Nodup := isRestrictedAllUniq L hL hgn hm.1.1
+  have hMLm : indexf w (lYSpine L r x) f = lMSpine L r x := by
+    have h := indexfYtransEqLm L hL hgn hunL hm hf
+    rwa [hfind, hw] at h
+  have h2 : (nextEl f)^[indexf w (lYSpine L r x) f] w = lYSpine L r x := by
+    have h := dLMeqY L hL hgn hunL hm hf
+    rwa [hfind, hw] at h
+  rw [hMLm] at h2
+  exact h2
+
 end Kepler.Text.TameSpine
 
 -- 公理审计锚（编译即执行；预期标准三，零 sorryAx）
 #print axioms Kepler.Text.TameSpine.ncvibwuV0IdxSpine
+
+-- 槽填充探针
+#print axioms Kepler.Text.TameSpine.fillHZw
+#print axioms Kepler.Text.TameSpine.fillHYw
