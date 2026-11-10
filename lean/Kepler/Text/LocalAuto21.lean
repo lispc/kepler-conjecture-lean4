@@ -100,6 +100,7 @@ import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto11
 import Kepler.Text.LocalAuto14
 import Kepler.Text.LocalAuto16
+import Kepler.Text.LocalAuto21Kit
 import Kepler.Text.LocalAuto37
 import Kepler.Text.LocalAuto38
 import Kepler.Text.SphereKit
@@ -276,6 +277,133 @@ private noncomputable def edge23F_p21 (v0 v1 v2 : V3) (g01 g12 : ℝ → ℝ) :
       ((dist v0 v1 + g01 t) ^ 2) ((dist v2 v1 + g12 t) ^ 2) (dist v0 v2 ^ 2)
   else w
 
+
+/-! ### W2b helpers for HOL `deform_simplex_decrease_edge23` (CUXVZOZ.hl:322) -/
+
+/-- Cyclic invariance of the scalar triple product `a·(b×c) = c·(a×b)`. -/
+private theorem w2b_triple_cyclic (a b c : V3) :
+    a ⬝ᵥ cross3 b c = c ⬝ᵥ cross3 a b := by
+  simp only [cross3, dotProduct, cross_apply, Fin.sum_univ_three,
+    Matrix.head_cons, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons]
+  ring
+
+/-- `deltaX` is invariant under `x1 <-> x2`, `x4 <-> x5` (HOL
+`Merge_ineq.delta_x_sym`). -/
+private theorem w2b_deltaX_sym (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX x2 x1 x3 x5 x4 x6 = deltaX x1 x2 x3 x4 x5 x6 := by
+  simp only [deltaX]
+  ring
+
+/-- Collinear points are coplanar with any fourth point. -/
+private theorem w2b_collinear_coplanar {z w w1 w2 : V3}
+    (hc : Collinear3 z w w1) : Coplanar ({z, w, w1, w2} : Set V3) := by
+  by_cases hzw : z = w
+  · have hset : ({z, w, w1, w2} : Set V3) = ({z, w1, w2} : Set V3) := by
+      rw [hzw]
+      ext p
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact coplanar_triple z w1 w2
+  · refine ⟨z, w, w2, fun p hp => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · have hmem : p ∈ line[ℝ, z, w] :=
+        hc.mem_affineSpan_of_mem_of_ne (p₁ := z) (p₂ := w)
+          (by simp) (by simp) (by simp) hzw
+      exact affineSpan_mono ℝ (by
+        intro q hq
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+        tauto) hmem
+    · exact mem_affineSpan ℝ (by simp)
+
+/-- `¬ Coplanar {x,y,z,w}` gives all six pairwise distinctness facts. -/
+private theorem w2b_ncop_ne_all {x y z w : V3}
+    (h : ¬ Coplanar ({x, y, z, w} : Set V3)) :
+    x ≠ y ∧ x ≠ z ∧ x ≠ w ∧ y ≠ z ∧ y ≠ w ∧ z ≠ w := by
+  have hxy : x ≠ y := by
+    intro he
+    apply h
+    have hset : ({x, y, z, w} : Set V3) = ({y, z, w} : Set V3) := by
+      rw [he]
+      ext p
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact coplanar_triple y z w
+  have hxz : x ≠ z := by
+    intro he
+    apply h
+    have hset : ({x, y, z, w} : Set V3) = ({y, z, w} : Set V3) := by
+      rw [he]
+      ext p
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact coplanar_triple y z w
+  have hxw : x ≠ w := by
+    intro he
+    apply h
+    have hset : ({x, y, z, w} : Set V3) = ({y, z, w} : Set V3) := by
+      rw [he]
+      ext p
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact coplanar_triple y z w
+  have hyz : y ≠ z := by
+    intro he
+    apply h
+    have hset : ({x, y, z, w} : Set V3) = ({x, z, w} : Set V3) := by
+      rw [he]
+      ext p
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact coplanar_triple x z w
+  have hyw : y ≠ w := by
+    intro he
+    apply h
+    have hset : ({x, y, z, w} : Set V3) = ({x, z, w} : Set V3) := by
+      rw [he]
+      ext p
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact coplanar_triple x z w
+  have hzw' : z ≠ w := by
+    intro he
+    apply h
+    have hset : ({x, y, z, w} : Set V3) = ({x, y, w} : Set V3) := by
+      rw [he]
+      ext p
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact coplanar_triple x y w
+  exact ⟨hxy, hxz, hxw, hyz, hyw, hzw'⟩
+
+/-- Cayley–Menger positivity off non-coplanarity, in the argument order used
+by the `PQCSXWG1_SYM`/`PQCSXWG2_ATREAL` consumption site. -/
+private theorem w2b_deltaX_pos_of_ncop {v0 v1 v2 : V3}
+    (hnc : ¬ Coplanar ({0, v2, v0, v1} : Set V3)) :
+    0 < deltaX (dist v2 0 ^ 2) (dist v0 0 ^ 2) (dist v1 0 ^ 2)
+      (dist v0 v1 ^ 2) (dist v2 v1 ^ 2) (dist v0 v2 ^ 2) := by
+  rw [← delta_delta_x]
+  rw [dist_comm v2 0, dist_comm v0 0, dist_comm v1 0, dist_comm v0 v2]
+  exact (POS_EQ_NOT_COPLANANR 0 v2 v0 v1).2
+    (fun hc => hnc (coplanar_eq_coplanar_alt.mpr hc))
+
+/-- Cancel squares with nonnegative sides. -/
+private theorem w2b_sq_eq_of_nonneg {x y : ℝ} (h : x ^ 2 = y ^ 2)
+    (hx : 0 ≤ x) (hy : 0 ≤ y) : x = y := by
+  rcases sq_eq_sq_iff_eq_or_eq_neg.mp h with h1 | h1
+  · exact h1
+  · linarith
+
 /-- HOL `deform_simplex_decrease_edge23` (CUXVZOZ.hl:322): moving `v1`
 continuously along both adjacent edges keeps the simplex rigid on the
 sphere and non-coplanar near `t = 0`. -/
@@ -289,10 +417,189 @@ theorem deform_simplex_decrease_edge23_p21 (V : Set V3) (g01 g12 : ℝ → ℝ)
       (∀ t, |t| < e' → dist v0 (edge23F_p21 v0 v1 v2 g01 g12 v1 t) = dist v0 v1 + g01 t ∧
         dist v2 (edge23F_p21 v0 v1 v2 g01 g12 v1 t) = dist v2 v1 + g12 t ∧
         ‖edge23F_p21 v0 v1 v2 g01 g12 v1 t‖ = ‖v1‖) := by
-  -- DISCHARGES: HOL `deform_simplex_decrease_edge23`, the 170-line
-  -- continuity + PQCSXWG2_ATREAL + Zlzthic.NONPLANAR_OPEN argument.
-  -- NEEDS: the PQCSXWG lane (LocalAuto11 side) and NONPLANAR_OPEN.
-  sorry
+  have hnc' : ¬ Coplanar ({0, v2, v0, v1} : Set V3) := by
+    intro hc
+    apply hnc
+    rwa [show ({0, v2, v0, v1} : Set V3) = ({0, v0, v1, v2} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+  have hncol : ¬ Collinear3 (0 : V3) v2 v0 := fun hcol =>
+    hnc' (w2b_collinear_coplanar (z := 0) (w := v2) (w1 := v0) (w2 := v1) hcol)
+  have hncol' : ¬ Collinear3 (0 : V3) v0 v2 := by
+    show ¬ Collinear ℝ ({0, v0, v2} : Set V3)
+    rw [show ({0, v0, v2} : Set V3) = ({0, v2, v0} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hncol
+  obtain ⟨h0v0, h0v1, h0v2, hv01, hv02, hv12⟩ := w2b_ncop_ne_all hnc
+  have hval : ∀ (w : V3) (t : ℝ),
+      edge23F_p21 v0 v1 v2 g01 g12 w t =
+        if w = v1 then
+          mkSimplex1 0 v2 v0 (‖v2‖ ^ 2) (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+            ((dist v0 v1 + g01 t) ^ 2) ((dist v2 v1 + g12 t) ^ 2) (dist v0 v2 ^ 2)
+        else w := fun w t => rfl
+  -- the moving vertex starts at `v1`
+  have hpos1 : (v2 - (0 : V3)) ⬝ᵥ cross3 (v0 - (0 : V3)) (v1 - (0 : V3)) > 0 := by
+    rw [sub_zero, sub_zero, sub_zero, w2b_triple_cyclic v2 v0 v1]
+    exact hcr
+  have hf0 : edge23F_p21 v0 v1 v2 g01 g12 v1 0 = v1 := by
+    rw [hval v1 0, if_pos rfl, h01, h12, add_zero, add_zero]
+    rw [show ‖v2‖ ^ 2 = dist (0 : V3) v2 ^ 2 from by
+          rw [dist_eq_norm, zero_sub, norm_neg],
+        show ‖v0‖ ^ 2 = dist (0 : V3) v0 ^ 2 from by
+          rw [dist_eq_norm, zero_sub, norm_neg],
+        show ‖v1‖ ^ 2 = dist (0 : V3) v1 ^ 2 from by
+          rw [dist_eq_norm, zero_sub, norm_neg],
+        show dist v0 v2 ^ 2 = dist v2 v0 ^ 2 from by rw [dist_comm v0 v2]]
+    exact mk_simplex_uniq_w2 0 v2 v0 v1 hnc' hpos1
+  -- `deltaX` positivity at `0` and near `0`
+  have hd0 : 0 < deltaX (dist v2 0 ^ 2) (dist v0 0 ^ 2) (dist v1 0 ^ 2)
+      (dist v0 v1 ^ 2) (dist v2 v1 ^ 2) (dist v0 v2 ^ 2) :=
+    w2b_deltaX_pos_of_ncop hnc'
+  have hd_at0 : 0 < deltaX (‖v2‖ ^ 2) (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+      ((dist v0 v1 + g01 0) ^ 2) ((dist v2 v1 + g12 0) ^ 2) (dist v0 v2 ^ 2) := by
+    rw [h01, h12, add_zero, add_zero]
+    rw [show ‖v2‖ ^ 2 = dist v2 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show ‖v0‖ ^ 2 = dist v0 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show ‖v1‖ ^ 2 = dist v1 0 ^ 2 from by rw [dist_eq_norm, sub_zero]]
+    exact hd0
+  have hg01 : ContinuousAt g01 0 := hc01.continuousAt (Ioo_mem_nhds (by linarith) he)
+  have hg12 : ContinuousAt g12 0 := hc12.continuousAt (Ioo_mem_nhds (by linarith) he)
+  have hdcont : ContinuousAt (fun t => deltaX (‖v2‖ ^ 2) (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+      ((dist v0 v1 + g01 t) ^ 2) ((dist v2 v1 + g12 t) ^ 2) (dist v0 v2 ^ 2)) 0 := by
+    have h4 : ContinuousAt (fun t : ℝ => (dist v0 v1 + g01 t) ^ 2) 0 :=
+      (continuousAt_const.add hg01).pow 2
+    have h5 : ContinuousAt (fun t : ℝ => (dist v2 v1 + g12 t) ^ 2) 0 :=
+      (continuousAt_const.add hg12).pow 2
+    simp only [deltaX]
+    fun_prop
+  obtain ⟨e1, he1, hδ⟩ := continuous_nbd_pos_p21 hdcont hd_at0
+  -- positivity of the two moving edge lengths near `0`
+  have hd01pos : 0 < dist v0 v1 + g01 0 := by rw [h01, add_zero]; exact dist_pos.mpr hv01
+  have hd21pos : 0 < dist v2 v1 + g12 0 := by
+    rw [h12, add_zero]; exact dist_pos.mpr (fun h => hv12 h.symm)
+  obtain ⟨ea, hea, hpa⟩ := continuous_nbd_pos_p21 (continuousAt_const.add hg01) hd01pos
+  obtain ⟨eb, heb, hpb⟩ := continuous_nbd_pos_p21 (continuousAt_const.add hg12) hd21pos
+  obtain ⟨e2, he2, h2a, h2b⟩ := epsilon_pair_p21 ea eb hea heb
+  -- a working radius for everything except the pointwise clauses
+  set E : ℝ := min e (min e1 e2) with hEdef
+  have hEpos : 0 < E := lt_min he (lt_min he1 he2)
+  have hEe : E ≤ e := min_le_left e (min e1 e2)
+  have hEe1 : E ≤ e1 := le_trans (min_le_right e (min e1 e2)) (min_le_left e1 e2)
+  have hEe2 : E ≤ e2 := le_trans (min_le_right e (min e1 e2)) (min_le_right e1 e2)
+  -- continuity of the moving vertex on the whole working interval
+  have hcont_at : ∀ r ∈ Ioo (-E) E,
+      ContinuousAt (fun t => edge23F_p21 v0 v1 v2 g01 g12 v1 t) r := by
+    intro r hr
+    obtain ⟨hr1, hr2⟩ := hr
+    have habs : |r| < e1 := by
+      rw [abs_lt]; constructor <;> linarith
+    have hre : r ∈ Ioo (-e) e := ⟨by linarith, by linarith⟩
+    have hgr1 : ContinuousAt g01 r := hc01.continuousAt (Ioo_mem_nhds hre.1 hre.2)
+    have hgr2 : ContinuousAt g12 r := hc12.continuousAt (Ioo_mem_nhds hre.1 hre.2)
+    have hff : (fun t => edge23F_p21 v0 v1 v2 g01 g12 v1 t)
+        = fun t => mkSimplex1_p11 0 v2 v0 (‖v2‖ ^ 2) (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+            ((dist v0 v1 + g01 t) ^ 2) ((dist v2 v1 + g12 t) ^ 2) (dist v0 v2 ^ 2) := by
+      funext t
+      rw [hval v1 t, if_pos rfl]
+      rfl
+    rw [hff]
+    refine PQCSXWG2_ATREAL_p11 (v0 := fun _ => (0 : V3)) (v1 := fun _ => v2)
+      (v2 := fun _ => v0)
+      (x1 := fun _ => ‖v2‖ ^ 2) (x2 := fun _ => ‖v0‖ ^ 2)
+      (x3 := fun _ => ‖v1‖ ^ 2)
+      (x4 := fun t => (dist v0 v1 + g01 t) ^ 2)
+      (x5 := fun t => (dist v2 v1 + g12 t) ^ 2)
+      (x6 := fun _ => dist v0 v2 ^ 2) (a := r)
+      hncol ?hx1 ?hx2 ?hx6 ?hd ?hv0 ?hv1 ?hv2 ?hx1c ?hx2c ?hx3c ?hx4c ?hx5c ?hx6c
+    · -- x1 a = dist (v1 a) (v0 a)^2
+      show ‖v2‖ ^ 2 = dist v2 (0 : V3) ^ 2
+      rw [dist_eq_norm, sub_zero]
+    · show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+      rw [dist_eq_norm, sub_zero]
+    · show dist v0 v2 ^ 2 = dist v2 v0 ^ 2
+      rw [dist_comm v0 v2]
+    · -- deltaX positivity at `r`
+      have hδr := hδ r (by simpa using habs)
+      exact hδr
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact (continuousAt_const.add hgr1).pow 2
+    · exact (continuousAt_const.add hgr2).pow 2
+    · exact continuousAt_const
+  -- final radius: the continuity part runs on `E`
+  refine ⟨E, hEpos, ?_, ?_, ?_⟩
+  · -- `Deformation`
+    refine ⟨?_, ?_, ?_⟩
+    · constructor <;> linarith
+    · intro v _ r hr
+      by_cases hvv : v = v1
+      · subst hvv
+        exact hcont_at r hr
+      · have hconst : edge23F_p21 v0 v1 v2 g01 g12 v = fun _ => v := by
+          funext t
+          rw [hval v t, if_neg hvv]
+        rw [hconst]
+        exact continuousAt_const
+    · intro v _
+      by_cases hvv : v = v1
+      · subst hvv
+        exact hf0
+      · rw [hval v 0, if_neg hvv]
+  · intro v t hvv
+    rw [hval v t, if_neg hvv]
+  · -- the three stellar facts
+    intro t ht
+    have htE : |t| < E := ht
+    have ht1 : |t| < e1 := lt_of_lt_of_le htE hEe1
+    have ht2 : |t| < e2 := lt_of_lt_of_le htE hEe2
+    have hposa : 0 < dist v0 v1 + g01 t :=
+      hpa t (by simpa using h2a t ht2)
+    have hposb : 0 < dist v2 v1 + g12 t :=
+      hpb t (by simpa using h2b t ht2)
+    have hΔ : 0 < deltaX (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+        ((dist v2 v1 + g12 t) ^ 2) ((dist v0 v1 + g01 t) ^ 2) (dist v0 v2 ^ 2) := by
+      rw [w2b_deltaX_sym]
+      exact hδ t (by simpa using ht1)
+    have hv3 : edge23F_p21 v0 v1 v2 g01 g12 v1 t
+        = mkSimplex1 0 v2 v0 (‖v2‖ ^ 2) (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+            ((dist v0 v1 + g01 t) ^ 2) ((dist v2 v1 + g12 t) ^ 2) (dist v0 v2 ^ 2) := by
+      rw [hval v1 t, if_pos rfl]
+    obtain ⟨h1, h2, h3, -⟩ := PQCSXWG1_SYM_p21 0 v0 v2
+      (edge23F_p21 v0 v1 v2 g01 g12 v1 t)
+      (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+      ((dist v2 v1 + g12 t) ^ 2) ((dist v0 v1 + g01 t) ^ 2) (dist v0 v2 ^ 2)
+      (pow_pos (norm_pos_iff.mpr h0v0.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v2.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v1.symm) 2)
+      (pow_pos hposb 2) (pow_pos hposa 2)
+      (pow_pos (dist_pos.mpr hv02) 2)
+      hncol'
+      (by show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero])
+      (by show ‖v2‖ ^ 2 = dist v2 (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero])
+      (by show (dist v0 v2) ^ 2 = dist v0 v2 ^ 2
+          rfl) hΔ hv3
+    refine ⟨?_, ?_, ?_⟩
+    · -- dist v0 (f v1 t) = dist v0 v1 + g01 t
+      have h2' : dist v0 (edge23F_p21 v0 v1 v2 g01 g12 v1 t) ^ 2
+          = (dist v0 v1 + g01 t) ^ 2 := by
+        rw [dist_comm v0 (edge23F_p21 v0 v1 v2 g01 g12 v1 t)]
+        exact h2.symm
+      exact w2b_sq_eq_of_nonneg h2' dist_nonneg (le_of_lt hposa)
+    · -- dist v2 (f v1 t) = dist v2 v1 + g12 t
+      have h3' : dist v2 (edge23F_p21 v0 v1 v2 g01 g12 v1 t) ^ 2
+          = (dist v2 v1 + g12 t) ^ 2 := by
+        rw [dist_comm v2 (edge23F_p21 v0 v1 v2 g01 g12 v1 t)]
+        exact h3.symm
+      exact w2b_sq_eq_of_nonneg h3' dist_nonneg (le_of_lt hposb)
+    · -- ‖f v1 t‖ = ‖v1‖
+      have h1' : ‖v1‖ ^ 2 = ‖edge23F_p21 v0 v1 v2 g01 g12 v1 t‖ ^ 2 := by
+        rw [h1, dist_eq_norm, sub_zero]
+      exact (w2b_sq_eq_of_nonneg h1' (norm_nonneg _) (norm_nonneg _)).symm
 
 /-- HOL `deform_simplex_edge_exists` (CUXVZOZ.hl:508): existential-witness
 form of the preceding theorem. -/
