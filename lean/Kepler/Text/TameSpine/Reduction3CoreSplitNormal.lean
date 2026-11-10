@@ -2286,6 +2286,15 @@ theorem partsBetwn (L : fgraph ℕ) (hL : GoodList L)
       rw [nextElArcSame hrnd hllr hzhr hlastne hdBr hdlast]
       exact normalConditionLastParts L hL hn hnedg hr hpr hdp
 
+/-- **HOL `change_next_prev`**（KBWPBHQ.hl:1246）：
+`uniq r ∧ MEM x r ∧ next_el r x = y ⇒ prev_el r y = x`。
+`Seq2.prev_next_id` 一步（ofDecidableEq 世界——与 `prevNextId` 同世界零混合；
+消费方按 §6 惯例在自己的世界里实例化）。 -/
+theorem changeNextPrev {α : Type} [DecidableEq α] {r : List α} {x y : α}
+    (hnd : r.Nodup) (_hx : x ∈ r) (hxy : nextEl r x = y) : prevEl r y = x := by
+  rw [← hxy]
+  exact Kepler.Text.Reduction5.prevNextId hnd x
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理）。 -/
@@ -2311,3 +2320,4 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.nextBetwnLastHdParts
 #print axioms Kepler.Text.TameSpine.betwnLastHdPartsFlatten
 #print axioms Kepler.Text.TameSpine.partsBetwn
+#print axioms Kepler.Text.TameSpine.changeNextPrev
