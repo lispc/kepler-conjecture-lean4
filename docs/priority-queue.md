@@ -319,34 +319,42 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
-- **2026-11-10（11:25，续760）**：**三笔连落（W29 / batch A8 / la21 patch3）+ GO-1 施工道立车 + 四工位续派——本窗口落库总数达 9 笔**。
+- **2026-11-10（10:28，续761）**：**NKEZBFC W30 落库 `8f69c9d3`（120 行 3 件）——v4 链两个供给面接线，绕序缺口收紧到「跳跃前段 C1 + 绕序判定」一处**。
+① `pW30_hprevC1`：`pW5b_flat_mem`+`pW5w2_affGt_prev_21` 接线 ⇒ `∀ n, i+2 ≤ n ≤ k−1 → vv n ∈ affGt{0,p}{vv(n−1)}`，**诚实域 = 跳跃后段**（flat-run 前提 `i+1≤n` 只在后段可用；跳跃前段 C1 仍为槽，缺口与绕序判定同源）。
+② `pW30_hstepEG`：hstep 槽的 EGHNAVX 语境 ∀-包装，放电 = 一行 `pW26_hstep_at_run`；**机器事实：v4 链唯一槽消费点（`pW28_slot_u_at` 内）恒在 `bta i = 0` 处** ⇒ 消槽最终一步 = 该点换调 pW26（v5 签名换形态，留统排）。
+③ `pW30_hstep_wire`：机器证明 W28 槽前提（hflat/hnc 的 `n+1≤i` 域）**不足以**直接过 `pW5b_hstep`（体内在索引 i 处还用 hflat/hnc）⇒ 三项端点补强 `hflat_i`/`hnc_i`/`hnc_i1` 如实列签（来源 EGHNAVX 首 run 分支 + hcol+LOFA_IMP_DIS_ELMS23，全库内可得，未造条件形充数）。
+④ 验证：apply-check PASS；禁词零；深度 1/0；RC=0 / 0err / 0warn；3 axioms 标准三零 sorryAx；olean 装池。W31（绕序 cross-dot 最小假设集侦察）继续。
+
+> **ERRATA（续761 补）**：编排者续755–761 条目的手写时间曾漂移 +15~75 min，本批已**按对应 commit 实际时间改正**（`git log --date=format:%H:%M`：patch7=09:58 / la21 W2a=10:07 / W27=10:10 / W28=10:12 / W29+A8=10:20 / la21 p3=10:22 / 续760=10:24）。此后时间一律以 commit 时戳为准，不手估。
+
+- **2026-11-10（10:24，续760）**：**三笔连落（W29 / batch A8 / la21 patch3）+ GO-1 施工道立车 + 四工位续派——本窗口落库总数达 9 笔**。
 ① **`155ac691` NKEZBFC W29（v4 链收口，167 行 3 件）**：`pW19_stepB_sol_nonneg_v4`/`pW19_nkezbfc_prep_p9_v4`/`pW24_stepB_sol_nonneg_v4`，hstep=run 前件形、hslot_w=`0<j`、C1/C2 分解 v3 形态逐字；3 axioms 标准三；**WINDING_PLAN 要点**：hstep 槽已可消（`pW5_flat_cone_order` 实例 + `pW26_hstep_at_run`，零新几何只差 wiring）；`hslot_w` 与 `hprev-C2` = 同一绕序缺口（ρ-run 相邻射线对 det/cross-dot 符号一致**零命中**，目标形 cross-dot 经 `pW24_c2_iff_crossdot` 直换 C2）；hprev-C1 件齐只差 40–70 装配。
 ② **`c99a881a` 铺装 batch A8（`PwssratCase` 361 行 5 件 + Tail 两件可见性）**：`lYRepPowerLe`(NCVIBWU:190)/`indexfConstLe`(Aq7:128)/`indexfYLeZInR0`(Aq7:181)/`nextMarkCaseMem`(NCVIBWU:333)/`nextMarkInRtransSuc`(AQ13:42)；5 axioms 标准三；`between` 双实例雷区实录（`rtrans` def 体 = `instBEqProd`，改用 BEq-多态 `TameSpine.indexfBetwnEq` + `Reduction3.indexf_eq_spine` 桥，零新桥）；**件 4 `prev_r_not_eq_f_v0` 判 BLOCKED-on-layer**（链侧四名 `indexfYtransSucLp`/`fListPowYtransNotMem`/`nextRNotEqF`/`nextElPeriod` 零 decl + `lpSetNonempty`，拆解 ≈210 → batch D 独立立项，同时解锁 OHCGKFU 两段）。
 ③ **`31e4e430` la21 patch3（W2b `decrease_edge23` 真证 +311/−4）**：LA21:276 桩体换真证 + import Kit + 6 私助；**net sorry 46→45**；`deform_simplex_decrease_edge23_p21` 标准三；`PQCSXWG2_ATREAL_p11` 树内已有未做特化（零陈述 shift）；HOL 连续性支 `NONPLANAR_OPEN` 因前置更强而未消费（路线差异非陈述改动）。
 ④ **GO-1 施工道立车 `certtm-cosabs`**（用户裁决后）：补 `TaylorM.trans .cosK`（镜像 sinK、导数取负）+ `evalTMHullD2 .abs` 符号敏感规则；硬门槛 = 原型 3 NEG 翻 `true` + 2 PASS 不动；队列对齐约束 = 新规则不消费 transCerts（dummy 模板 26 条）+ 生成器 cosK 证书结论；2.5h 时间盒，决策点（不消费不可行+生成器要改）即停手报我。
 ⑤ **续派**：tame-corr → batch B（engines 4 件 + `partsRevFBetwnPure`/`eqFstBetwnRevParts`，250–350），C/D 排队；nkezbfc → W30（hprev-C1 装配 + hstep 消槽 wiring，60–110）+ W31（绕序 cross-dot 最小假设集侦察，只读）；la21 → patch4（W3 vv-kit）。池 = 6 施工（tame-corr/nkezbfc/la21/aq13/reduction5/certtm-cosabs）+ 1 只读（TM fill 诊断）= 7。
 
-- **2026-11-10（10:55，续759）**：**formal-ineqs 侦察道回执（SCOUT.md 444 行）——BIEFJHU 72 NEG 直接根因定位 = CertTM `.cosK`/`.abs` 节点缺 TM 规则致零阶 fallback 误差；三条 GO/NO-GO 已定，路线裁决待用户（certtm 保留项）**。
+- **2026-11-10（10:15，续759）**：**formal-ineqs 侦察道回执（SCOUT.md 444 行）——BIEFJHU 72 NEG 直接根因定位 = CertTM `.cosK`/`.abs` 节点缺 TM 规则致零阶 fallback 误差；三条 GO/NO-GO 已定，路线裁决待用户（certtm 保留项）**。
 ① **根因（编排者已逐条亲核源码）**：`CertTM.lean:449` `.cosK => none`（sinK 有 trans 规则、cosK 直接拒绝）；`:3716` `.abs e, ps => … fallbackTM`（无条件零阶，不查符号）；`:2478` `fallbackTM` 斜率 `⟨0,0⟩`、`err = I.hi − I.lo` ⇒ hull 表达式里 `cosK(abs(π/2−π/k))` 的参数只依赖 k，18 叶盒上 fallback 误差模型 vs 实测 `trueMin − mirrorLoBound` 缺口比值 median 1.59，且 k 宽线性下降 ⇒ **细分/提精度不收敛是结构性的，与 R2c1 观测（loBound 指数 −1444→−2565 收敛 0⁻）完全一致**。
 ② **Q1 mono 归约（可移植性成立但非首选）**：HOL `partial_increasing_left/decreasing_left/increasing_right`（m_verifier.hl:605/672/738）+ `partial_convex_max`；盒子压缩端点面递归验证。**我们判据已机器验证**：18 叶并集 h∈[1,1.26]、k∈[3,4.2109375] 上 `∂F/∂k ∈ [−0.29192,−0.01692]`（严格负），k 压到 4.2109375 后 1-D 真最小值 **+0.0295156**（h≈1.08636）。树内已有 `lean/Kepler/Interval/MonoCorner.lean`（10-22，W8 线 = 被 hold 的 Mono*），缺 sin/cos/abs 导数规则 150–270 行。**Flyspeck 自己对本题（7534）统计 `pass=44, mono=0, glue=43, pass_mono=0`——他们没用 mono，靠完整 TM 节点直接啃**。
 ③ **Q3 数据复用判死（证实续754）**：azure stdout 只有统计/定理/时间/哈希，无 per-leaf TM 参数；`main_verifier.hl:29-48` 也只打印三样。**只能复用算法，不能复用数据**。
 ④ **三条路线**：**GO-1（首选）** 补 `.cosK`+`.abs` TM 规则（cosK 镜像 sinK 导数取负、abs 查符号恒等/取负）300–500 行，**不动表达式/盒/证书队列，现有 18 叶 TMParams 对同盒仍有效，预期 72 子盒全翻 PASS**（真余量 +0.0295，余项降 O(W²)≈1e-3）；**GO-2** k 单调归约 200–450 行（属 Mono* held 线，需解冻 + 重烘 1 个 sqrt 尾数证书）；**NO-GO** 整套 checker 移植 1500–3000 / 依赖细分（~32× 叶 ≈16 h 内核）/ 数据复用。**GO-1 触及 CertTM 健全性核心 + 用户 certtm 保留项 ⇒ 编排列上报用户裁决，不单方面动**。
 ⑤ 侦察道限制：未重跑 72 个 `checkPosTMHull = true := by decide +kernel`（最终验收仍需）；其试跑 `DiagA.lean` 返回 `D2 none` 判为 TMParams/盒失配，未作结论。
 
-- **2026-11-10（10:50，续758）**：**NKEZBFC W28 part 1 落库 `e06a59c6`（v4 层 319 行 2 件 + 1 私支）——v4 链两件就位，hstep/hslot_w 诚实域接线完成**。
+- **2026-11-10（10:13，续758）**：**NKEZBFC W28 part 1 落库 `e06a59c6`（v4 层 319 行 2 件 + 1 私支）——v4 链两件就位，hstep/hslot_w 诚实域接线完成**。
 ① `pW6k7_stepB_sol_nonneg_v4`：v2 主件机械复刻，三处差异——①`hslot_u` 删除换 **run 前件 hstep**（签名逐字对齐 `pW5_flat_cone_order` 实例化形 = `pW26_hstep_at_run` 结论形，part 2 放电一行调用）；②`hslot_w` 保持 W27 诚实域 `0<j`；③K 案 `hS3` 改由私支 `pW28_slot_u_at`（EGHNAVX 供 hflat、hcol 供 hnc → `pW4_telescope_u` → `pW6k6_azim_zero_of_affGe`+`azim_eq_zero_symm`），其余逐字。`pW6k8_stepB_sol_nonneg_affGe_v4` 孪生复刻。实交 319 行 vs 估 200–250（run 前件签名 12×3 + 私支 70，机械复刻内超估已记账）。
 ② **验证**：apply-check PASS（`d7469652`/`4e1de30a` 双基线）；禁词零；深度 1/0；RC=0 / 0err / 0warn；双 axioms 全标准三零 sorryAx；olean 装池。**W29（`pW19_v4` part 2）已派**，要求随交付附 `WINDING_PLAN.md`（绕序推导专项的槽供给件图谱，≤1 页）。
 
-- **2026-11-10（10:35，续757）**：**NKEZBFC W27 落库 `2d9ba660`——`hslot_w` j=0 假支形式反证 + 诚实域 iff 桥（103 行 2 件）**。
+- **2026-11-10（10:11，续757）**：**NKEZBFC W27 落库 `2d9ba660`——`hslot_w` j=0 假支形式反证 + 诚实域 iff 桥（103 行 2 件）**。
 ① `pW27_wslot_zero_false`：`hcl + p∈V + hiter + 1<ncard + hnc + azim 0 vv1 vv2 p ≠ 0 ⇒ ¬(ρ²p ∈ affGe{0}{p, ρp})`——`pW6k6_azim_zero_of_affGe` 逆否 + `azim_eq_zero_symm` 换序（非共线前提由 `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` 换序得）。`pW27_hslot_w_iff`：全 ∀ 形 ⟺（`0<j` 域形 ∧ j=0 实例），纯逻辑拆分——j=0 实例即 §1 反证 ⇒ **v4 的 `hslot_w` 签名写 `0<j` 有形式依据，假支图谱第二格正式闭**。
 ② **验证**：apply-check PASS；禁词零；注释深度 1/0；RC=0 / 0err / 0warn；两条 axioms 全标准三零 sorryAx；olean 装池。实交 103 行 vs 估 55（前提推导 ~35 行，车道如实记账）。W28（v4 part 1）继续。
 
-- **2026-11-10（10:25，续756）**：**la21 W2a 两件真证落库 `09b60f09`（`LocalAuto21Kit` 675 行）——2-β 战役 W2a 修复轮收敛（18→12→4→2→0，4 轮内）**。
+- **2026-11-10（10:08，续756）**：**la21 W2a 两件真证落库 `09b60f09`（`LocalAuto21Kit` 675 行）——2-β 战役 W2a 修复轮收敛（18→12→4→2→0，4 轮内）**。
 ① 件目：`simplex_unique_w2`（HOL `Merge_ineq.simplex_unique`：`{v0,v1,v2,v3}` 与 `{v0,v1,v2,v3'}` 双 simplex 且四点非共面 ⇒ `v3' = v3` 的同类形）+ `mk_simplex_uniq_w2`（`mk_simplex` 唯一性），36 个私件 Kit（dot/cross 桥、Lagrange、`dotP` coe 桥、collinear 投影、`2×2` 齐次解、`sum3` 坐标分解、`sq_dist_eq`）。叶子模块（只 import V3Coe/LA1/LA11/Mathlib），零环。
 ② **验证**：`git apply --check` PASS；禁词扫描零命中（文件内连 `#print` 都没有，探针用副本尾部追加）；注释深度 1/0；**编排者清 4 条 `unused simp argument` 警告**（`WithLp.ofLp_neg`×1 + `LinearMap.mk₂_apply`×3，均为 linter 判定冗余的参数，逐条删除）后岛编 RC=0 / 0 err / 0 warn；两条探针 `#print axioms` 全 `[propext, Classical.choice, Quot.sound]` 零 sorryAx；olean 装池。
 ③ **偏差记账**：675 行超单件 ~450 止损线（车道以"Kit+两件"一次交付），判定可接受（36 私件均为两件共用的一次性代数工具，非可拆独立件；修复轮 4 轮内收敛无结构性卡死）。后续 patch3（`decrease_edge23` W2b）侦察已做：落点 = LA21 原位换桩 + import Kit；待补 deltaX 对称性局部件 + deltaX 正性；`PQCSXWG2_ATREAL` 需确认 ATREAL 或 WITHINREAL 特化。估 ~250 行 / 2 波。
 
-- **2026-11-10（10:15，续755）**：**铺装 patch7（0a+0b）落库 `ea5fc35d`——`PwssratFace` 293 行 6 件 + `sListEqOfMarked` 可见性一字；0a/0b 闭，QCDVKEA 消费面就位**。
+- **2026-11-10（10:00，续755）**：**铺装 patch7（0a+0b）落库 `ea5fc35d`——`PwssratFace` 293 行 6 件 + `sListEqOfMarked` 可见性一字；0a/0b 闭，QCDVKEA 消费面就位**。
 ① **件目**：`fListPowEqNextElPow`（PWSSRAT:502 面幂引擎 = `(f_list L)^m y = ((next_el (find_face L y))^m) y`，面轨道保面归纳；同时消 T1 engines 步的 `f_list_power_next_el` 缺）；0a 三件 `lyMemFindFaceDarts`/`lzMemFindFaceDarts`/`lyFindFaceEq`（HOJODCM:359 ①②，fList 轨道直证；**前提比 HOL 弱**：仅需 `markedList`，无需 `¬final_list`，DIFFERS 记档）；`indexfYtransEqLm`（`indexf_ytrans_eq_l_m` 面指数形：`nextElnIndexf` 换基 + 新界 `lmLtFaceLen` 三个全公开件拼装——**即 scout QCDVKEA 的消费面**）；`pplhulj3V0`（PPLHULJ_v0③，ZIndexf:261-:355 同构：`indexfN` 定位 + patch5 `hqymrtx1List` 第二合取排除 `i+1 ≤ l'm+1` ⇒ `l'm < i`）；`pplhuljV0`（三合取一行装配）。`PwssratMemberBase.sListEqOfMarked` private→public（陈述/证体逐字未动，docstring 记用途；ChainMarkedTranslate ⑤ 先例）。
 ② **验证（编排者亲跑）**：`git apply --check` PASS；双文件岛编 RC=0 / 0 error / 0 warning / 0 sorry；6 条 `#print axioms` 全 `[propext, Classical.choice, Quot.sound]`；注释深度 1；olean 双装入池（MemberBase 需先装新 olean 再编 Face——池内旧 olean 无公开件，这是验证序的关键点）。patch +297/−2，主仓 tracked 仅此两文件。
 ③ **解锁面**：即刻可派链侧 `next_mark_case_mem`（步骤 1，估 60–80；此前 BLOCKED 因 PWSSRAT:584 无载体）；`indexf_y_le_z_in_r_0` / OHCGKFU 续作面；**T1 主机仍等 scout QCDVKEA/KBWPBHQ2**（裁决 c），**T2 Spine 侧装配 400–600 拆两笔等派**（裁决 a，`sListEqOfMarked` 即其消费面之一）。
