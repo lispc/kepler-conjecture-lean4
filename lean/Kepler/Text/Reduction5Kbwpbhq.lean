@@ -135,14 +135,111 @@ theorem memYtransListOfDarts {L : fgraph ℕ} {N : List (List Dart)} {r : List D
   rw [hy_eq, hly]
   exact fListIterateDarts hL.1 hx _
 
-/-! ## §3 `prev_el_betwn_ztran_rtrans` —— 接线移下一笔
+/-! ## §3 `prev_el_betwn_ztran_rtrans`（KBWPBHQ.hl）
 
-§0 桥簇（逐点等式形）本笔交付。§3 七步链的实例接线尚需逐点确认
-（PwssratCase.indexfYLeZInR0 的 nextEl 实例与默认合成的显隐需 `set_option pp.all`
-级探针钉一次，再定 ← / → 方向），按止损纪律接线留下一笔（预估 1 轮内）。 -/
+实例记账（pp.all 实测）：`indexfYLeZInR0` 的 `nextEl` = **prod-of-derived-Nat 变体**
+`@instBEqProd Nat Nat (instBEqOfDecidableEq Nat _) (instBEqOfDecidableEq Nat _)`
+——与**本文件裸名合成同类**（下称 P）；Island1 系泛型 `[DecidableEq]` 实例化所得为
+`instBEqOfDecidableEq (instDecidableEqProd …)`（下称 D）。桥簇 `iterateInstEq`
+（P = D，逐点）负责两向转换。 -/
+
+/-- **HOL `Kbwpbhq.prev_el_betwn_ztran_rtrans`**（KBWPBHQ.hl）：在 `(rtrans i)` 上
+`prev_el zi` 落在 `yi` 与 `zi` 之间的三合取（成员 / 严格小于 zi / ≥ yi）。
+TAV2 前提按 Pwssrat 簇惯例以 `AqiunppSlot` 显式槽供给。 -/
+theorem prevElBetwnZtranRtrans {L : fgraph ℕ} {N : List (List Dart)}
+    {r : List Dart} {x : Dart} (hL : GoodList L)
+    (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    (hunL : ∀ l ∈ L, l.Nodup)
+    (haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL)
+    (hm : Kepler.Text.ChainLists.markedList L hL N r x) {i : ℕ}
+    (hf : ¬ finalList L (rtrans L N r x i))
+    {w : Dart} (hw : nextEl (findFaceDarts L x) x = w) :
+    prevEl (rtrans L N r x i) (ztrans L N r x i) ∈ rtrans L N r x i ∧
+    indexf w (prevEl (rtrans L N r x i) (ztrans L N r x i)) (rtrans L N r x i)
+      < indexf w (ztrans L N r x i) (rtrans L N r x i) ∧
+    indexf w (ytrans L N r x i) (rtrans L N r x i)
+      ≤ indexf w (prevEl (rtrans L N r x i) (ztrans L N r x i)) (rtrans L N r x i) := by
+  set ri := rtrans L N r x i with hri
+  have hm' : Kepler.Text.ChainLists.markedList L hL (ntrans L N r x i) ri x :=
+    haq hgn N r x hm i
+  have hrnd : ri.Nodup := (List.nodup_flatten.mp hm'.2.1.1).1 ri hm'.2.2.1
+  -- 三成员
+  have hmem_z : ztrans L N r x i ∈ ri :=
+    Kepler.Text.Reduction4Idx.memZtransRtrans L hL haq hgn hunL i hm hf
+  have hmem_y : ytrans L N r x i ∈ ri :=
+    Kepler.Text.MoreLemma2Naming.ytransMemRtrans L hL hm' hf
+  have hmem_w : w ∈ ri :=
+    Kepler.Text.Reduction4Idx.nextMarkMemRTrans L hL haq hgn i hm rfl hw
+  -- 主不等式：h0 已在 P（与裸名同类）⇒ 直接换 w 与 ytrans/ztrans 定义
+  have hyz : indexf w (ytrans L N r x i) ri < indexf w (ztrans L N r x i) ri := by
+    have h0 := Kepler.Text.Reduction4Idx.indexfYLeZInR0 L hL hgn hunL hm' hf
+    rw [hw] at h0
+    simpa [Kepler.Text.Reduction5.ytrans, Kepler.Text.Reduction5.ztrans] using h0
+  -- 弧和
+  have hadd : indexf w (ytrans L N r x i) ri + indexf (ytrans L N r x i)
+      (ztrans L N r x i) ri = indexf w (ztrans L N r x i) ri :=
+    Kepler.Text.Reduction4.indexf_add_left hmem_w hmem_y hmem_z (le_of_lt hyz)
+  have hm_pos : 0 < indexf (ytrans L N r x i) (ztrans L N r x i) ri := by omega
+  -- 迭代分解（Island1 = D → 桥转 P）：zi = (nextEl ri)^(m) yi
+  have hiter : (nextEl ri)^[
+      indexf (ytrans L N r x i) (ztrans L N r x i) ri] (ytrans L N r x i)
+      = ztrans L N r x i := by
+    have h0 := Kepler.Text.MoreLemma2Island1.indexfN hmem_y hmem_z hrnd
+    rwa [← iterateInstEq] at h0
+  -- n = m - 1；prevEl zi = (nextEl)^n yi（TameLp.prevEl_nextEl 同在 P）
+  have hsucc' : (indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1).succ
+      = indexf (ytrans L N r x i) (ztrans L N r x i) ri :=
+    Nat.succ_pred_eq_of_pos hm_pos
+  have hz_pre : ztrans L N r x i
+      = nextEl ri ((nextEl ri)^[indexf (ytrans L N r x i)
+          (ztrans L N r x i) ri - 1] (ytrans L N r x i)) := by
+    rw [← Function.iterate_succ_apply' (nextEl ri)
+      (indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1) (ytrans L N r x i)]
+    rw [hsucc']
+    exact hiter.symm
+  have hd_mem : (nextEl ri)^[indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1]
+      (ytrans L N r x i) ∈ ri := by
+    have h0 := Kepler.Text.MoreLemma2Island1.memNextElIterate hmem_y
+      (indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1)
+    rwa [← iterateInstEq] at h0
+  have hprev : prevEl ri (ztrans L N r x i)
+      = (nextEl ri)^[indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1]
+          (ytrans L N r x i) := by
+    conv_lhs => rw [hz_pre]
+    exact Kepler.Text.TameLp.prevEl_nextEl hrnd hd_mem
+  -- indexf w d = (m-1) + indexf w yi（nextElnIndexf = D；两侧入参/出参各转一次）
+  have hwi : (nextEl ri)^[indexf w (ytrans L N r x i) ri] w = ytrans L N r x i := by
+    have h0 := Kepler.Text.MoreLemma2Island1.indexfN hmem_w hmem_y hrnd
+    rwa [← iterateInstEq] at h0
+  have hwiter : (nextEl ri)^[(indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1)
+        + indexf w (ytrans L N r x i) ri] w
+      = (nextEl ri)^[indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1]
+          (ytrans L N r x i) := by
+    rw [Function.iterate_add_apply, hwi]
+  have hcidx : indexf w (ztrans L N r x i) ri < ri.length :=
+    Kepler.Text.Reduction4.indexf_lt_length_of_mem hmem_w hmem_z
+  have hclen : (indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1)
+      + indexf w (ytrans L N r x i) ri < ri.length := by omega
+  have hidx_d : indexf w ((nextEl ri)^[indexf (ytrans L N r x i)
+        (ztrans L N r x i) ri - 1] (ytrans L N r x i)) ri
+      = (indexf (ytrans L N r x i) (ztrans L N r x i) ri - 1)
+        + indexf w (ytrans L N r x i) ri := by
+    have hdD := hd_mem
+    rw [iterateInstEq] at hdD
+    have hwD := hwiter
+    rw [iterateInstEq] at hwD
+    rw [iterateInstEq] at hwD
+    have h0 := Kepler.Text.MoreLemma2Island1.nextElnIndexf hmem_w hdD hrnd hwD hclen
+    rwa [← iterateInstEq] at h0
+  refine ⟨hprev ▸ Kepler.Text.TameLp.prevEl_mem_of_mem hmem_z, ?_, ?_⟩
+  · rw [hprev, hidx_d]
+    omega
+  · rw [hprev, hidx_d]
+    omega
 
 end Kepler.Text.Reduction5
 
 /-! 探针（编译即执行；目标 ⊆ 标准三） -/
 #print axioms Kepler.Text.Reduction5.minLeast
 #print axioms Kepler.Text.Reduction5.memYtransListOfDarts
+#print axioms Kepler.Text.Reduction5.prevElBetwnZtranRtrans
