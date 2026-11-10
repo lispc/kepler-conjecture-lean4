@@ -123,7 +123,7 @@
 | 波 | 件 | HOL | Lean 估 | 批 | 独立验收点 | 状态 |
 |---|---:|---:|---:|---:|---|---|
 | **W0+W3d** §0 两小件 + `bounded_size_finals`/`max_finals_g_exists` | 3+ | 167+ | 20–40 + ~330 | 1 | `maxFinalsGExists` | **✅ 已落 `a8dc86c1`**（296 行 6 件；`hne` 显式槽待 W2/W3c 填） |
-| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅；批 1 `018fcbe5`（`filterEl`）/ 批 2 `974a94dd` / 批 3 `fcff9315` / **批 4 `02c28fae`（回收，4 件 267 行）** / 批 5 `61eea60e` 全 ✅；批 5b 桥 `3d27ec9d` + `dart_neighbors` `e24bb3be` + `duplicateEdge_next` `94c5389c` 全 ✅；批 6 §4 mono = w1j 冻结包（车道再收口一轮中）、§1/§2 explicit 顺延、**§3 已解锁**（批 4 回收）；剩余重估 1,650–2,330 |
+| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅；批 1 `018fcbe5`（`filterEl`）/ 批 2 `974a94dd` / 批 3 `fcff9315` / **批 4 `02c28fae`（回收，4 件 267 行）** / 批 5 `61eea60e` 全 ✅；批 5b 桥 `3d27ec9d` + `dart_neighbors` `e24bb3be` + `duplicateEdge_next` `94c5389c` 全 ✅；批 6 §4 `41083d0a` / §1 `75882351` / §2 `96e487c1` 全 ✅（§1/§2 零 choice），**§3 已派**（依赖全在库）；剩余重估 1,650–2,330 |
 | **W2** GP 判据 + newvertex/iso_list | 22 | 1,165 | 1,466–1,986 | 4 | `iso_list_newvertex_lemma` + `UYOUIXG` | 排队 |
 | **W3a–c** contour/flag/图级 finals（余下） | 30 | 1,140 | 1,334–1,826 | 4 | `flag_list_seed` / contour 簇 | 排队（Lean 白地 = 最高风险） |
 | **W4** 尾部循环 + 主装配 | 18 | 1,048 | 1,317–1,798 | 4 | `restrictedHypermapsArePlaneGraphsReduction1` | 排队 |
