@@ -27,6 +27,7 @@ import Kepler.Text.Reduction4
 import Kepler.Text.Reduction4Subseg3
 import Kepler.Text.TameSpine.TameList70
 import Kepler.Text.TameSpine.TameList3
+import Kepler.Text.TameSpine.TameList53
 import Kepler.Text.MoreLemma2Island1
 import Kepler.Text.Reduction3Thm6B
 import Kepler.Text.TameSpine.JcajyduAqSnd
@@ -656,9 +657,354 @@ theorem indexfCatBetwnSame1 {r s : List Dart} {y z lx lz : Dart}
   rwa [← Kepler.Text.Reduction3.indexf_eq_spine lx lz s] at hfin
 
 
+/-! ## §8 cat 族本体（more_lemma1.hl:1769/:1840/:1941）：
+`mem_cat_betwn_same` / `LAST_cat_betwn_same` / `cat_betwn_same`
+
+统一语境同 §7：`s = [y] ++ (betwn r y z ++ [z])`。R1 口径（沿 §2/§7 实测）：陈述的
+`between`/`nextEl` 在 Dart 默认实例世界；成员↔indexf 判定一律走 BEq-多态
+`TameSpine.indexfBetwnEq`（其 `between` 随目标实例统一），`indexf` 值经
+`Reduction3Thm6B.indexf_eq_spine` 在 `Reduction5.indexf` ↔ `TameSpine.indexf`
+间折桥；不直接消费链侧 `[DecidableEq]` 世界的 between 件（R1 碰撞）。 -/
+
+/-- 幂行走成员（BEq 世界泛型；§8 反向支用）。 -/
+private theorem memNextElIterateG {α : Type} [BEq α] [LawfulBEq α] [DecidableEq α]
+    {s : List α} {x : α} (hx : x ∈ s) : ∀ k : ℕ, (nextEl s)^[k] x ∈ s := by
+  intro k
+  induction k with
+  | zero => simpa using hx
+  | succ k ih =>
+    rw [Function.iterate_succ_apply']
+    exact Kepler.Text.TameLp.nextEl_mem_of_mem ih
+
+/-- 弧 `betwn f a b` 末元的 `indexf` 值恰为 `indexf a b - 1`（BEq 世界）。 -/
+private theorem lastIndexfGetLastG {α : Type} [BEq α] [LawfulBEq α] [DecidableEq α]
+    [Inhabited α] {f : List α} {a b : α} (hab : a ≠ b) (ha : a ∈ f) (hb : b ∈ f)
+    (hnd : f.Nodup) (hBne : between f a b ≠ []) :
+    Kepler.Text.TameSpine.indexf a (between f a b).getLast! f
+      = Kepler.Text.TameSpine.indexf a b f - 1 := by
+  have hBnd : (between f a b).Nodup := Kepler.Graphs.between_distinct hnd
+  have hpos : 0 < (between f a b).length := List.length_pos_of_ne_nil hBne
+  have hd : (between f a b).getLast! ∈ between f a b := by
+    rw [getLastBangEqGetLast hBne]
+    exact List.getLast_mem hBne
+  have h1 : (between f a b).idxOf (between f a b).getLast! + 1
+      = Kepler.Text.TameSpine.indexf a (between f a b).getLast! f :=
+    Kepler.Text.TameSpine.indexlBetwn hnd ha hb hd
+  have h2 : (between f a b).length = Kepler.Text.TameSpine.indexf a b f - 1 :=
+    Kepler.Text.TameSpine.sizeBetwn hnd ha hb hab
+  have hgl : (between f a b).getLast!
+      = (between f a b)[(between f a b).length - 1]'(by omega) := by
+    rw [getLastBangEqGetLast hBne]
+    exact List.getLast_eq_getElem hBne
+  have h3 : (between f a b).idxOf (between f a b).getLast!
+      = (between f a b).length - 1 := by
+    conv_lhs => rw [hgl]
+    exact Kepler.Text.TameLp.idxOf_getElem hBnd
+      (i := (between f a b).length - 1) (by omega)
+  omega
+
+/-- 「弧内元的 `indexf` 恰为 `indexf a b - 1`」⇒ 它是弧的末元（BEq 世界；
+§6 `betwnGetLastOfIndexfSucc` 的泛型孪生，避开 R1 实例碰撞）。 -/
+private theorem betwnGetLastOfIndexfSuccG {α : Type} [BEq α] [LawfulBEq α]
+    [DecidableEq α] [Inhabited α] {f : List α} {a b d : α} (hab : a ≠ b)
+    (ha : a ∈ f) (hb : b ∈ f) (hd : d ∈ between f a b) (hnd : f.Nodup)
+    (hidx : Kepler.Text.TameSpine.indexf a d f
+      = Kepler.Text.TameSpine.indexf a b f - 1) :
+    (between f a b).getLast! = d := by
+  have hBne : between f a b ≠ [] := fun h => by rw [h] at hd; simp at hd
+  have hpos : 0 < (between f a b).length := List.length_pos_of_ne_nil hBne
+  have h1 : (between f a b).idxOf d + 1 = Kepler.Text.TameSpine.indexf a d f :=
+    Kepler.Text.TameSpine.indexlBetwn hnd ha hb hd
+  have h2 : (between f a b).length = Kepler.Text.TameSpine.indexf a b f - 1 :=
+    Kepler.Text.TameSpine.sizeBetwn hnd ha hb hab
+  have h3 : (between f a b).idxOf d = (between f a b).length - 1 := by omega
+  have hmemlast : (between f a b).getLast! ∈ between f a b := by
+    rw [getLastBangEqGetLast hBne]
+    exact List.getLast_mem hBne
+  have hgl : (between f a b).getLast!
+      = (between f a b)[(between f a b).length - 1]'(by omega) := by
+    rw [getLastBangEqGetLast hBne]
+    exact List.getLast_eq_getElem hBne
+  have hidxl : (between f a b).idxOf ((between f a b).getLast!)
+      = (between f a b).length - 1 := by
+    conv_lhs => rw [hgl]
+    exact Kepler.Text.TameLp.idxOf_getElem (Kepler.Graphs.between_distinct hnd)
+      (i := (between f a b).length - 1) (by omega)
+  exact (List.idxOf_inj hmemlast).mp (by rw [hidxl, h3])
+
+/-- **HOL `mem_cat_betwn_same`**（more_lemma1.hl:1769）：
+`s = [y]++(betwn r y z++[z]) ∧ uniq r ∧ y,z∈r ∧ y≠z ∧ lx,lz∈s ∧ lx≠lz ∧
+indexf lx lz s ≤ indexf lx z s ⇒ ∀x, x∈betwn s lx lz ↔ x∈betwn r lx lz`。
+证体沿 HOL：两侧 `indexfBetwnEq` + `indexfCatBetwnSame(_1)` 转移；反向支以
+`indexf_n` + `next_cat_betwn_same_power` 幂行走给出 `x∈s`。 -/
+theorem memCatBetwnSame {r s : List Dart} {y z lx lz : Dart}
+    (hnd : r.Nodup) (hy : y ∈ r) (hz : z ∈ r) (hyz : y ≠ z)
+    (hs : s = [y] ++ (between r y z ++ [z]))
+    (hlx : lx ∈ s) (hlz : lz ∈ s) (hlxzlz : lx ≠ lz)
+    (hle : Kepler.Text.Reduction5.indexf lx lz s
+      ≤ Kepler.Text.Reduction5.indexf lx z s) :
+    ∀ x, x ∈ between s lx lz ↔ x ∈ between r lx lz := by
+  have hsnd : s.Nodup := by
+    rw [hs]; exact Kepler.Text.TameSpine.uniqAppendBetwn hnd hy hz hyz
+  have hmemr := memOfArc hy hz hs
+  have hlxr : lx ∈ r := hmemr lx hlx
+  have hlzr : lz ∈ r := hmemr lz hlz
+  have elz : Kepler.Text.Reduction5.indexf lx lz s
+      = Kepler.Text.Reduction5.indexf lx lz r :=
+    indexfCatBetwnSame hnd hy hz hyz hs hlx hlz hle
+  intro x
+  constructor
+  · intro hx
+    have hxs : x ∈ s := Kepler.Graphs.inbetween_inset hx
+    have hIs := (Kepler.Text.TameSpine.indexfBetwnEq hlxzlz hsnd hlx hlz).mp hx
+    have hIs' : 0 < Kepler.Text.Reduction5.indexf lx x s
+        ∧ Kepler.Text.Reduction5.indexf lx x s
+          < Kepler.Text.Reduction5.indexf lx lz s := by
+      rw [Kepler.Text.Reduction3.indexf_eq_spine lx x s,
+        Kepler.Text.Reduction3.indexf_eq_spine lx lz s]
+      exact hIs
+    have ex : Kepler.Text.Reduction5.indexf lx x s
+        = Kepler.Text.Reduction5.indexf lx x r :=
+      indexfCatBetwnSame hnd hy hz hyz hs hlx hxs (by omega)
+    refine (Kepler.Text.TameSpine.indexfBetwnEq hlxzlz hnd hlxr hlzr).mpr ⟨?_, ?_⟩
+    · rw [← Kepler.Text.Reduction3.indexf_eq_spine lx x r]; omega
+    · rw [← Kepler.Text.Reduction3.indexf_eq_spine lx x r,
+        ← Kepler.Text.Reduction3.indexf_eq_spine lx lz r]
+      omega
+  · intro hx
+    have hxr : x ∈ r := Kepler.Graphs.inbetween_inset hx
+    have hIr := (Kepler.Text.TameSpine.indexfBetwnEq hlxzlz hnd hlxr hlzr).mp hx
+    have hIr' : 0 < Kepler.Text.Reduction5.indexf lx x r
+        ∧ Kepler.Text.Reduction5.indexf lx x r
+          < Kepler.Text.Reduction5.indexf lx lz r := by
+      rw [Kepler.Text.Reduction3.indexf_eq_spine lx x r,
+        Kepler.Text.Reduction3.indexf_eq_spine lx lz r]
+      exact hIr
+    have hiterR := Kepler.Text.TameSpine.indexfN hlxr hxr hnd
+    rw [← Kepler.Text.Reduction3.indexf_eq_spine lx x r] at hiterR
+    have hxeq : (nextEl s)^[Kepler.Text.Reduction5.indexf lx x r] lx = x := by
+      rw [nextCatBetwnSamePower hnd hy hz hyz hs hlx
+        (Kepler.Text.Reduction5.indexf lx x r) (by omega)]
+      exact hiterR
+    have hxs : x ∈ s := by
+      rw [← hxeq]
+      exact memNextElIterateG hlx _
+    have ex1 : Kepler.Text.Reduction5.indexf lx x s
+        = Kepler.Text.Reduction5.indexf lx x r :=
+      indexfCatBetwnSame1 hnd hy hz hyz hs hlx hxs (by omega)
+    refine (Kepler.Text.TameSpine.indexfBetwnEq hlxzlz hsnd hlx hlz).mpr ⟨?_, ?_⟩
+    · rw [← Kepler.Text.Reduction3.indexf_eq_spine lx x s]; omega
+    · rw [← Kepler.Text.Reduction3.indexf_eq_spine lx x s,
+        ← Kepler.Text.Reduction3.indexf_eq_spine lx lz s]
+      omega
+
+/-- **HOL `LAST_cat_betwn_same`**（more_lemma1.hl:1840）：
+同前件 ⇒ `LAST (betwn s lx lz) = LAST (betwn r lx lz)`。
+空支：`betwnNil` + `next_cat_betwn_same` 传播空性；非空支：末元 `indexf` 刻画
+（`lastIndexfGetLastG`）+ `indexfCatBetwnSame` 转移 + `betwnGetLastOfIndexfSuccG`
+收口。 -/
+theorem lastCatBetwnSame {r s : List Dart} {y z lx lz : Dart}
+    (hnd : r.Nodup) (hy : y ∈ r) (hz : z ∈ r) (hyz : y ≠ z)
+    (hs : s = [y] ++ (between r y z ++ [z]))
+    (hlx : lx ∈ s) (hlz : lz ∈ s) (hlxzlz : lx ≠ lz)
+    (hle : Kepler.Text.Reduction5.indexf lx lz s
+      ≤ Kepler.Text.Reduction5.indexf lx z s) :
+    (between s lx lz).getLast! = (between r lx lz).getLast! := by
+  have hsnd : s.Nodup := by
+    rw [hs]; exact Kepler.Text.TameSpine.uniqAppendBetwn hnd hy hz hyz
+  have hzs : z ∈ s := by rw [hs]; simp
+  have hmemr := memOfArc hy hz hs
+  have hlxr : lx ∈ r := hmemr lx hlx
+  have hlzr : lz ∈ r := hmemr lz hlz
+  have hlxz : lx ≠ z := by
+    intro hcon
+    have hle' := hle
+    rw [hcon] at hle'
+    rw [Kepler.Text.Reduction4.indexfRefl hzs] at hle'
+    have h0 : Kepler.Text.Reduction5.indexf z lz s = 0 :=
+      le_antisymm hle' (Nat.zero_le _)
+    exact hlxzlz (hcon.trans (Kepler.Text.Reduction4.indexf_eq_zero hzs hlz h0))
+  have elz : Kepler.Text.Reduction5.indexf lx lz s
+      = Kepler.Text.Reduction5.indexf lx lz r :=
+    indexfCatBetwnSame hnd hy hz hyz hs hlx hlz hle
+  by_cases hBs : between s lx lz = []
+  · have hnil := (Kepler.Text.TameSpine.betwnNil hsnd hlxzlz hlx hlz).mp hBs
+    have hnexteq : nextEl s lx = nextEl r lx :=
+      Kepler.Text.TameSpine.nextCatBetwnSame r hnd hz hy (Ne.symm hyz) hlx hs hlxz
+    have hr0 : between r lx lz = [] :=
+      (Kepler.Text.TameSpine.betwnNil hnd hlxzlz hlxr hlzr).mpr
+        (by rw [← hnexteq]; exact hnil)
+    rw [hBs, hr0]
+  · have hd_s : (between s lx lz).getLast! ∈ between s lx lz := by
+      rw [getLastBangEqGetLast hBs]; exact List.getLast_mem hBs
+    have hBdI := (Kepler.Text.TameSpine.indexfBetwnEq hlxzlz hsnd hlx hlz).mp hd_s
+    have hBdI' : 0 < Kepler.Text.Reduction5.indexf lx (between s lx lz).getLast! s
+        ∧ Kepler.Text.Reduction5.indexf lx (between s lx lz).getLast! s
+          < Kepler.Text.Reduction5.indexf lx lz s := by
+      rw [Kepler.Text.Reduction3.indexf_eq_spine lx (between s lx lz).getLast! s,
+        Kepler.Text.Reduction3.indexf_eq_spine lx lz s]
+      exact hBdI
+    have hidxs : Kepler.Text.Reduction5.indexf lx (between s lx lz).getLast! s
+        = Kepler.Text.Reduction5.indexf lx lz s - 1 := by
+      rw [Kepler.Text.Reduction3.indexf_eq_spine lx (between s lx lz).getLast! s,
+        Kepler.Text.Reduction3.indexf_eq_spine lx lz s]
+      exact lastIndexfGetLastG hlxzlz hlx hlz hsnd hBs
+    have hd_ss : (between s lx lz).getLast! ∈ s :=
+      Kepler.Graphs.inbetween_inset hd_s
+    have hd_r : Kepler.Text.Reduction5.indexf lx (between s lx lz).getLast! r
+        = Kepler.Text.Reduction5.indexf lx lz r - 1 := by
+      have htr : Kepler.Text.Reduction5.indexf lx (between s lx lz).getLast! s
+          = Kepler.Text.Reduction5.indexf lx (between s lx lz).getLast! r :=
+        indexfCatBetwnSame hnd hy hz hyz hs hlx hd_ss (by omega)
+      omega
+    have hmem_r : (between s lx lz).getLast! ∈ between r lx lz := by
+      refine (Kepler.Text.TameSpine.indexfBetwnEq hlxzlz hnd hlxr hlzr).mpr
+        ⟨?_, ?_⟩
+      · rw [← Kepler.Text.Reduction3.indexf_eq_spine lx
+          (between s lx lz).getLast! r]
+        omega
+      · rw [← Kepler.Text.Reduction3.indexf_eq_spine lx
+          (between s lx lz).getLast! r,
+          ← Kepler.Text.Reduction3.indexf_eq_spine lx lz r]
+        omega
+    rw [Kepler.Text.Reduction3.indexf_eq_spine lx (between s lx lz).getLast! r,
+      Kepler.Text.Reduction3.indexf_eq_spine lx lz r] at hd_r
+    exact (betwnGetLastOfIndexfSuccG hlxzlz hlxr hlzr hmem_r hnd hd_r).symm
+
+/-- **HOL `cat_betwn_same`**（more_lemma1.hl:1941）：
+同前件 ⇒ `betwn s lx lz = betwn r lx lz`。
+`aqs_eq_last_next` 收口：成员 iff（`memCatBetwnSame`）+ 末元（`lastCatBetwnSame`）
++ next_el 一致——`next_el` 展开到弧内同一落点下标 `p`，两侧落点经 `indexf`
+单射（`indexfInj`）判等，免 HOL 的 HD/last 拆支与 R1 实例碰撞。 -/
+theorem catBetwnSame {r s : List Dart} {y z lx lz : Dart}
+    (hnd : r.Nodup) (hy : y ∈ r) (hz : z ∈ r) (hyz : y ≠ z)
+    (hs : s = [y] ++ (between r y z ++ [z]))
+    (hlx : lx ∈ s) (hlz : lz ∈ s) (hlxzlz : lx ≠ lz)
+    (hle : Kepler.Text.Reduction5.indexf lx lz s
+      ≤ Kepler.Text.Reduction5.indexf lx z s) :
+    between s lx lz = between r lx lz := by
+  have hsnd : s.Nodup := by
+    rw [hs]; exact Kepler.Text.TameSpine.uniqAppendBetwn hnd hy hz hyz
+  have hmemr := memOfArc hy hz hs
+  have hlxr : lx ∈ r := hmemr lx hlx
+  have hlzr : lz ∈ r := hmemr lz hlz
+  have hmem : ∀ x, x ∈ between s lx lz ↔ x ∈ between r lx lz :=
+    memCatBetwnSame hnd hy hz hyz hs hlx hlz hlxzlz hle
+  have hlast : (between s lx lz).getLast! = (between r lx lz).getLast! :=
+    lastCatBetwnSame hnd hy hz hyz hs hlx hlz hlxzlz hle
+  refine Kepler.Text.TameSpine.aqs_eq_last_next
+    (Kepler.Graphs.between_distinct hnd) (Kepler.Graphs.between_distinct hsnd)
+    hmem ?_ hlast
+  intro x hx
+  have hxr : x ∈ between r lx lz := (hmem x).mp hx
+  have hxs : x ∈ s := Kepler.Graphs.inbetween_inset hx
+  have hsndB : (between s lx lz).Nodup := Kepler.Graphs.between_distinct hsnd
+  have hrndB : (between r lx lz).Nodup := Kepler.Graphs.between_distinct hnd
+  have hneB : between s lx lz ≠ [] := fun h => by rw [h] at hx; simp at hx
+  have hneR : between r lx lz ≠ [] := fun h => by rw [h] at hxr; simp at hxr
+  have hposB : 0 < (between s lx lz).length := List.length_pos_of_ne_nil hneB
+  have hposR : 0 < (between r lx lz).length := List.length_pos_of_ne_nil hneR
+  have hLs : (between s lx lz).length
+      = Kepler.Text.Reduction5.indexf lx lz s - 1 := by
+    rw [Kepler.Text.Reduction3.indexf_eq_spine lx lz s]
+    exact Kepler.Text.TameSpine.sizeBetwn hsnd hlx hlz hlxzlz
+  have hLr : (between r lx lz).length
+      = Kepler.Text.Reduction5.indexf lx lz r - 1 := by
+    rw [Kepler.Text.Reduction3.indexf_eq_spine lx lz r]
+    exact Kepler.Text.TameSpine.sizeBetwn hnd hlxr hlzr hlxzlz
+  have hIs := (Kepler.Text.TameSpine.indexfBetwnEq hlxzlz hsnd hlx hlz).mp hx
+  have hIs' : 0 < Kepler.Text.Reduction5.indexf lx x s
+      ∧ Kepler.Text.Reduction5.indexf lx x s
+        < Kepler.Text.Reduction5.indexf lx lz s := by
+    rw [Kepler.Text.Reduction3.indexf_eq_spine lx x s,
+      Kepler.Text.Reduction3.indexf_eq_spine lx lz s]
+    exact hIs
+  have ex : Kepler.Text.Reduction5.indexf lx x s
+      = Kepler.Text.Reduction5.indexf lx x r :=
+    indexfCatBetwnSame hnd hy hz hyz hs hlx hxs (by omega)
+  have elz : Kepler.Text.Reduction5.indexf lx lz s
+      = Kepler.Text.Reduction5.indexf lx lz r :=
+    indexfCatBetwnSame hnd hy hz hyz hs hlx hlz hle
+  have hi1 : (between s lx lz).idxOf x + 1
+      = Kepler.Text.Reduction5.indexf lx x s := by
+    rw [Kepler.Text.Reduction3.indexf_eq_spine lx x s]
+    exact Kepler.Text.TameSpine.indexlBetwn hsnd hlx hlz hx
+  have hi2 : (between r lx lz).idxOf x + 1
+      = Kepler.Text.Reduction5.indexf lx x r := by
+    rw [Kepler.Text.Reduction3.indexf_eq_spine lx x r]
+    exact Kepler.Text.TameSpine.indexlBetwn hnd hlxr hlzr hxr
+  have hps : ((between s lx lz).idxOf x + 1) % (between s lx lz).length
+      < (between s lx lz).length := Nat.mod_lt _ hposB
+  have hpr : ((between r lx lz).idxOf x + 1) % (between r lx lz).length
+      < (between r lx lz).length := Nat.mod_lt _ hposR
+  have hpEq : ((between s lx lz).idxOf x + 1) % (between s lx lz).length
+      = ((between r lx lz).idxOf x + 1) % (between r lx lz).length := by
+    rw [hi1, hi2, hLs, hLr, ← ex, ← elz]
+  have hws : (between s lx lz)[((between s lx lz).idxOf x + 1)
+      % (between s lx lz).length]'hps ∈ between s lx lz := List.getElem_mem hps
+  have hws_s : (between s lx lz)[((between s lx lz).idxOf x + 1)
+      % (between s lx lz).length]'hps ∈ s := Kepler.Graphs.inbetween_inset hws
+  have hwr : (between r lx lz)[((between r lx lz).idxOf x + 1)
+      % (between r lx lz).length]'hpr ∈ between r lx lz := List.getElem_mem hpr
+  have hIdxWs : Kepler.Text.TameSpine.indexf lx
+      ((between s lx lz)[((between s lx lz).idxOf x + 1)
+        % (between s lx lz).length]'hps) s
+      = ((between s lx lz).idxOf x + 1) % (between s lx lz).length + 1 := by
+    rw [← Kepler.Text.TameSpine.indexlBetwn hsnd hlx hlz hws,
+      Kepler.Text.TameLp.idxOf_getElem hsndB hps]
+  have hIdxWs' : Kepler.Text.Reduction5.indexf lx
+      ((between s lx lz)[((between s lx lz).idxOf x + 1)
+        % (between s lx lz).length]'hps) s
+      = ((between s lx lz).idxOf x + 1) % (between s lx lz).length + 1 := by
+    rw [Kepler.Text.Reduction3.indexf_eq_spine lx
+      ((between s lx lz)[((between s lx lz).idxOf x + 1)
+        % (between s lx lz).length]'hps) s]
+    exact hIdxWs
+  have hIdxWsR : Kepler.Text.Reduction5.indexf lx
+      ((between s lx lz)[((between s lx lz).idxOf x + 1)
+        % (between s lx lz).length]'hps) r
+      = ((between r lx lz).idxOf x + 1) % (between r lx lz).length + 1 := by
+    have htr : Kepler.Text.Reduction5.indexf lx
+        ((between s lx lz)[((between s lx lz).idxOf x + 1)
+          % (between s lx lz).length]'hps) s
+        = Kepler.Text.Reduction5.indexf lx
+          ((between s lx lz)[((between s lx lz).idxOf x + 1)
+            % (between s lx lz).length]'hps) r :=
+      indexfCatBetwnSame hnd hy hz hyz hs hlx hws_s (by omega)
+    rw [← htr]
+    omega
+  have hIdxWr : Kepler.Text.TameSpine.indexf lx
+      ((between r lx lz)[((between r lx lz).idxOf x + 1)
+        % (between r lx lz).length]'hpr) r
+      = ((between r lx lz).idxOf x + 1) % (between r lx lz).length + 1 := by
+    rw [← Kepler.Text.TameSpine.indexlBetwn hnd hlxr hlzr hwr,
+      Kepler.Text.TameLp.idxOf_getElem hrndB hpr]
+  have hIdxWr' : Kepler.Text.Reduction5.indexf lx
+      ((between r lx lz)[((between r lx lz).idxOf x + 1)
+        % (between r lx lz).length]'hpr) r
+      = ((between r lx lz).idxOf x + 1) % (between r lx lz).length + 1 := by
+    rw [Kepler.Text.Reduction3.indexf_eq_spine lx
+      ((between r lx lz)[((between r lx lz).idxOf x + 1)
+        % (between r lx lz).length]'hpr) r]
+    exact hIdxWr
+  have hws_r : (between s lx lz)[((between s lx lz).idxOf x + 1)
+      % (between s lx lz).length]'hps ∈ r := hmemr _ hws_s
+  have hwr_r : (between r lx lz)[((between r lx lz).idxOf x + 1)
+      % (between r lx lz).length]'hpr ∈ r := Kepler.Graphs.inbetween_inset hwr
+  have hEq : (between s lx lz)[((between s lx lz).idxOf x + 1)
+      % (between s lx lz).length]'hps
+      = (between r lx lz)[((between r lx lz).idxOf x + 1)
+        % (between r lx lz).length]'hpr :=
+    (Kepler.Text.Reduction4.indexfInj hlxr hws_r hwr_r).mp (by omega)
+  rw [Kepler.Text.TameLp.nextEl_eq_getD hx,
+    Kepler.Text.TameLp.getD_eq_getElem_of_lt hps,
+    Kepler.Text.TameLp.nextEl_eq_getD hxr,
+    Kepler.Text.TameLp.getD_eq_getElem_of_lt hpr]
+  exact hEq
+
 end Kepler.Text.TameSpine
 
-/-! 公理审计锚（编译即执行；预期标准三，零 sorryAx）。 -/
+/-! 公理审计锚（编译即执行；预期标准三，零未证公理）。 -/
 #print axioms Kepler.Text.TameSpine.hdCat
 #print axioms Kepler.Text.TameSpine.nextElInj
 #print axioms Kepler.Text.TameSpine.eqHdLastBetwn
@@ -672,3 +1018,6 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.nextCatBetwnSamePower
 #print axioms Kepler.Text.TameSpine.indexfCatBetwnSame
 #print axioms Kepler.Text.TameSpine.indexfCatBetwnSame1
+#print axioms Kepler.Text.TameSpine.memCatBetwnSame
+#print axioms Kepler.Text.TameSpine.lastCatBetwnSame
+#print axioms Kepler.Text.TameSpine.catBetwnSame
