@@ -343,6 +343,8 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（14:55，续794）**：**reduction5 conj 2 分析轮（零代码，第 2 次连续）**：Blocker = arc-ordering 基础设施（B2 的 `indexf_add_sum/left` 都需 ordering 前提，ordering 本身是弧序 ⇒ 循环依赖）。**修复形采纳**：私件 `indexf_w_arc`（~15 行：Nodup r 上任意 w,x,y ∈ r，`indexf w x + indexf x y ≡ indexf w y (mod len)`，自 `nextElIterateGetElem` 位置公式导出）⇒ conj 2 = 三行 omega。下笔 = `indexf_w_arc` + conj 2（~60），**已令直接写、不再交分析轮**；若 indexf_w_arc 超估则先交它作半件。上批绿件（lzMemR + 四支撑 + 桥簇）不变。
+
 - **2026-11-10（14:48，续793）**：**reduction5 lzMemR 落库 `8c762427`（HQYMRTX1 conj 1 链孪生，18 行）——切半指令后首笔代码**。
 ① **件**：`lzMemR`（`lz L N r x ∈ r`）= `memZtransRtrans` i=0 实例化 **term-mode 直证**（`lz ≡ ztrans@0`/`r ≡ rtrans@0` 均 defeq，`exact` 闭合），免 HQYMRTX1 的 hypermap 山展开；带 `AqiunppSlot`（Pwssrat 惯例）。
 ② **闸**：apply-check PASS（+18 零删除）、禁词零、岛编 RC=0/0err/0warn、4 件 axioms 全 ⊆ 标准三零 sorryAx、olean 装池。`Reduction5Kbwpbhq.lean` 现 263 行。
