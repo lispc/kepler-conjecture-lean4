@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（14:25，续787）**：**J4 W1 批 2 落库 `974a94dd` + reduction5 KBWPBHQ2 闸门升级（同闸 QCDVKEA）与两条裁决**。
+① **`974a94dd` `Reduction1W1b.lean`（129 行，1 公开 2 私）**：`increasingOfAdjacent`（W1A 撤件本批落地——批 1 依赖式 `getElem` 三写法全败，改 **`getElem!`** 一次过，升级为接口约定 **C2**：前提 `EL` 一律 `!` 形 + **C3** `?`/`!`↔`getElem` 换形链）+ `monoChain`/`elemDropTake` 私件。**路线升级 RD-2′**（推翻 RD-2）：`incrIndexList` 首槽 `1 < nmax` **不可由 HOL 六前提导出**（`outer ≤ 1` 反例：`LAST xs = 0` 全零列全满足）⇒ 改走 `enumerator_completeness_help`（`EnumeratorProps:514`，无该槽、全体 `outer` 一致），四槽三就位。闸：apply-check PASS、禁词零（头注两处改写）、岛编 RC=0/0err/0warn、`increasingOfAdjacent` = `[propext, Quot.sound]` 零 choice。`mem_enumerator` 本体留批 3（估 60–90，三机械面收口路线已验证）；**膨胀率判定延至批 3，触发线收紧：批 3 的 (a)(b) 仍收不掉即 §7 降级重估，无批 4**。
+② **reduction5 闸门升级（采信）**：KBWPBHQ2 全证体复核——内部支撑 `prev_mem_r_suc` **直接依赖 `Ncvibwu.NCVIBWU`（主山）+ `PPLHULJ`**（tame-corr 铺装面）⇒ **KBWPBHQ2 本体与 QCDVKEA 同闸**（QCDVKEA 差 NCVIBWU 一件、KBWPBHQ2 差两件 + `prev_el_betwn_ztran_ytrans_on_f`）。本轮净交付 0 新件（撞面停手，正确）。
+③ **编排者两裁决**：(A) **`indexf_y_le_z_in_r` 一般形（AQ7 章）→ reduction5**——唯一消费者、路线锚在 `PwssratCase.lean` 头注 ②（`pplhulj3V0` + `aq10_indexfYLeZInR0` 同构去 R0 化）、链侧原料在库；硬边界 = 一般形若真需主山即停手回报。(B) **NCVIBWU/PPLHULJ 时点**：tame-corr 序 = b1b-2 → b2a → b2b → **Ncvibwu 铺装波**（续736 其领地）→ 8b；铺装波落库即开两闸；aq13 spine 件为共享供面；收尾模式不新开车道。**纠正**：reduction5 报的「MIN_LEAST 待落」有误——`minLeast` 已在 `Reduction5Kbwpbhq.lean` §1（`f74ffd70`）落库。reduction5 本轮 = `indexfYLeZInR` 一般形 + `prevElConstZtranRtrans`（~60–90）；KBWPBHQ2 本体挂闸；`next_core_FST`/indexf3/izsj 排队不变。
+
 - **2026-11-10（14:10，续786）**：**用户指令（真用户输入）：即日起不再新发 sub agent；在飞任务回来一个、验收落库一个；全部结束后等用户新指令。**
 - 在飞清单（收尾模式，不补位、不新开）：① aq13 B2b（`loopFaceAgree` 接缝，两 UNRESOLVED 各 ≤1 轮机器判定）；② reduction5 KBWPBHQ2 本体（四支撑 4/4 齐）；③ J4 W1 批 2（膨胀率判定批）；④ tame-corr 8a-2b1b-2。**BIEFJHU glue 非中点切分接口**（W41 待办）**不开新车道**，挂起等指令。
 
