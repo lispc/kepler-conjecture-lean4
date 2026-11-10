@@ -196,6 +196,85 @@ theorem nextHdLastBetwn {α : Type*} [DecidableEq α] [Inhabited α] {r : List �
   intro x _
   exact congrArg (fun l => nextEl l x) (eqHdLastBetwn hne hnd hne2)
 
+/-! ## §4 `betwn_cat`（more_lemma1.hl:1136；直证路线，免 HOL 三子件） -/
+
+/-- **HOL `betwn_cat`**（more_lemma1.hl:1136）：
+`uniq (g ++ s) ∧ y,z ∈ s ∧ indexf y z s ≤ indexf y (LAST s) s ∧ y ≠ z
+⇒ betwn (g ++ s) y z = betwn s y z`。
+直证：`indexf` 定义展开把不等式化归为 `s.idxOf y < s.idxOf z`（非回卷支），
+再 `between_eq_take_of_idxOf_lt` 双侧 + `idxOf_append` 移位 + `drop_append` 对齐；
+HOL 的 `MEM_betwn_cat`/`LAST_betwn_cat`/`next_betwn_cat` 三子件不需要。 -/
+theorem betwnCat {α : Type*} [DecidableEq α] [Inhabited α]
+    {g s : List α} {y z : α}
+    (hnd : (g ++ s).Nodup) (hy : y ∈ s) (hz : z ∈ s)
+    (hle : Kepler.Text.Reduction5.indexf y z s
+      ≤ Kepler.Text.Reduction5.indexf y s.getLast! s) (hyz : y ≠ z) :
+    between (g ++ s) y z = between s y z := by
+  have hnds : s.Nodup := (List.nodup_append.mp hnd).2.1
+  have hdisj := (List.nodup_append.mp hnd).2.2
+  have hyg : y ∉ g := fun hmem => hdisj y hmem y hy rfl
+  have hne : s ≠ [] := by
+    intro h
+    subst h
+    simp at hy
+  have hyi : s.idxOf y < s.length := List.idxOf_lt_length_iff.mpr hy
+  have hzi : s.idxOf z < s.length := List.idxOf_lt_length_iff.mpr hz
+  have hidxne : s.idxOf y ≠ s.idxOf z := fun he => hyz ((List.idxOf_inj hy).mp he)
+  have hlastmem : s.getLast! ∈ s := by
+    rw [getLastBangEqGetLast hne]
+    exact List.getLast_mem hne
+  have hgl : s.getLast! = s[s.length - 1]'(by omega) := by
+    rw [getLastBangEqGetLast hne]
+    exact List.getLast_eq_getElem hne
+  have hidxlast : s.idxOf s.getLast! = s.length - 1 := by
+    conv_lhs => rw [hgl]
+    exact Kepler.Text.TameLp.idxOf_getElem hnds (i := s.length - 1) (by omega)
+  have hval : ∀ (u v : α), u ∈ s → v ∈ s →
+      Kepler.Text.Reduction5.indexf u v s
+        = (s.idxOf v + (s.length - s.idxOf u)) % s.length := by
+    intro u v hu hv
+    unfold Kepler.Text.Reduction5.indexf
+    rw [if_pos ⟨hu, hv⟩]
+  have hlt : s.idxOf y < s.idxOf z := by
+    by_contra hcon
+    push Not at hcon
+    have hzy : s.idxOf z < s.idxOf y := lt_of_le_of_ne hcon (Ne.symm hidxne)
+    rw [hval y z hy hz, hval y s.getLast! hy hlastmem, hidxlast] at hle
+    have e1 : (s.idxOf z + (s.length - s.idxOf y)) % s.length
+        = s.length - (s.idxOf y - s.idxOf z) := by
+      rw [show s.idxOf z + (s.length - s.idxOf y)
+          = s.length - (s.idxOf y - s.idxOf z) from by omega,
+        Nat.mod_eq_of_lt (by omega)]
+    have e2 : (s.length - 1 + (s.length - s.idxOf y)) % s.length
+        = s.length - 1 - s.idxOf y := by
+      rw [show s.length - 1 + (s.length - s.idxOf y)
+          = s.length + (s.length - 1 - s.idxOf y) from by omega,
+        Nat.add_mod_left, Nat.mod_eq_of_lt (by omega)]
+    rw [e1, e2] at hle
+    omega
+  have hy' : (g ++ s).idxOf y = s.idxOf y + g.length := by
+    rw [List.idxOf_append, if_neg hyg]
+  have hz' : (g ++ s).idxOf z = s.idxOf z + g.length := by
+    rw [List.idxOf_append, if_neg (fun hmem => hdisj z hmem z hz rfl)]
+  have hlt' : (g ++ s).idxOf y < (g ++ s).idxOf z := by
+    rw [hy', hz']; omega
+  rw [Kepler.Text.Reduction4.between_eq_take_of_idxOf_lt hnd
+        (List.mem_append_right g hy) (List.mem_append_right g hz) hlt',
+      Kepler.Text.Reduction4.between_eq_take_of_idxOf_lt hnds hy hz hlt]
+  rw [hy', hz']
+  have hk : s.idxOf z + g.length - (s.idxOf y + g.length) - 1
+      = s.idxOf z - s.idxOf y - 1 := by omega
+  have hd : List.drop (s.idxOf y + g.length + 1) (g ++ s)
+      = List.drop (s.idxOf y + 1) s := by
+    rw [List.drop_append]
+    have h1 : List.drop (s.idxOf y + g.length + 1) g = [] :=
+      List.drop_eq_nil_of_le (by omega)
+    rw [h1, List.nil_append]
+    congr 1
+    omega
+  rw [hk, hd]
+
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零 sorryAx）。 -/
@@ -205,3 +284,4 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.memHdLastBetwn
 #print axioms Kepler.Text.TameSpine.lastHdLastBetwn
 #print axioms Kepler.Text.TameSpine.nextHdLastBetwn
+#print axioms Kepler.Text.TameSpine.betwnCat
