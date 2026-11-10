@@ -110,6 +110,29 @@
 **真证进度：13/13**（`aq1`–`aq13` 全真证；续710 对表）。**塔顶无条件形已落**：`transformAssumptionSpine_top`（`e49d8c55`，标准三、零 sorryAx）——77 处消费者随之解锁。
 **关键路径**：AQ9 → `aq8` 的 `aq9Concl` 前件（塔顶装配用）；AQ8 B 路（`aq8-rev`）/ AQ13 W4a2（`aq13-survey`）为最后两条施工线。
 
+## 0.4 J4 战役执行表（2026-11-10 用户批准「15–20 工次投入」）
+
+> 依据：`~/c17_backup/lane_snapshots/j4-scout/REPORT.md`（机器实测闭包 93 件 / 4,933 HOL 行，
+> 去嵌套注释后按行区间传递闭包）+ 台账续780。**用户 2026-11-10 裁决：全战役投入（是）**。
+> 车道 `j4-scout` 转常驻施工（J 战役车道 ≥1 政策内）。
+> 目标：`restrictedHypermapsArePlaneGraphsReduction1`；**条件形先落**——`GeneratePolygonReductionV7`
+> 在 HOL 本就是前提（`tame_defs2.hl:732`，属 J3），`transform_assumption_v2` 已无条件真证
+> （`TameSpine/JcajyduRed2Tav2:66`）⇒ **不等 J1/J3**。
+> 总量：缺口 89 件 / 4,705 HOL → Lean **6,016–8,167**（中心 ≈6,100）；按 ≤450/波、大波 4–5 批。
+
+| 波 | 件 | HOL | Lean 估 | 批 | 独立验收点 | 状态 |
+|---|---:|---:|---:|---:|---|---|
+| **W0+W3d** §0 两小件 + `bounded_size_finals`/`max_finals_g_exists` | 3+ | 167+ | 20–40 + ~330 | 1 | `maxFinalsGExists` | **在飞**（j4-scout） |
+| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | 排队（先 30 min `indexf` 孪生侦察） |
+| **W2** GP 判据 + newvertex/iso_list | 22 | 1,165 | 1,466–1,986 | 4 | `iso_list_newvertex_lemma` + `UYOUIXG` | 排队 |
+| **W3a–c** contour/flag/图级 finals（余下） | 30 | 1,140 | 1,334–1,826 | 4 | `flag_list_seed` / contour 簇 | 排队（Lean 白地 = 最高风险） |
+| **W4** 尾部循环 + 主装配 | 18 | 1,048 | 1,317–1,798 | 4 | `restrictedHypermapsArePlaneGraphsReduction1` | 排队 |
+
+> **止损触发**：contour 簇一批做不完 `flag_list_seed` 一半；W1 前 2 批实测膨胀 >2.2×；
+> J3 判 NO-GO ⇒ J4 降级为 W1–W3 工具层（可独立复用，不白做）。
+> **HOL 死码 5 条禁搬**：`containsDuplicateEdge`（整块注释且带自由 `X`）/`oldvertex2`/`SHXWKXQ`/两件 iota。
+> 逐波落库一笔 commit + 一条续日志；行数超 450 先交半件 + 接缝报告（AGENTS §7）。
+
 ## 1. 在飞（2026-11-09 18:45，池 **5/5**，续477 对表）
 
 > **用户 2026-11-09 指令：额度恢复，维持 5 车道。**（11-06 的"降到 3"解除。）
@@ -319,6 +342,11 @@
 > **ERRATA（续708 补）**：续692–续708 条目的手写时间曾按编排者估算漂移（最多 +2.7h），本批已**全部按对应 commit 的实际时间改正**（见 `git log --date=format:%H:%M`）。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-10（13:34，续782）**：**reduction5 桥簇落库 `b55b6dbe`（跨实例 `nextEl` 5 件，雷区⑪ 转 infra）+ 用户批准 J4 全战役（15–20 工次），§0.4 执行表建立**。
+① **`b55b6dbe` `Reduction5Kbwpbhq.lean` §0 桥簇（148 行，91+57 net）**：`findIdxBeqAgree`/`beqProdDerivedEq`/`idxOfInstEq`/`nextElInstEq`/`iterateInstEq` 五件**全公开**；**陈述形状 = 逐点等式（非 `List.Index` 级）**，钉死 `Dart = ℕ×ℕ` 的 `instBEqProd ↔ instBEqOfDecidableEq` 实例对（LawfulBEq 只保证行为相等、两实例非 defeq）——**雷区⑪ 从负结果转公开 infra**。**aq13 复用判据（车道写入 DELIVERY）**：NCVIBWU-spine 若同一实例对可直接 import，否则按 `beqProdDerivedEq` 同式重证 ~5 行；`fListIterateDarts` 仍 private 同文件。闸：apply-check PASS、禁词零、岛编 RC=0/0err/0warn 5 s、**7 件 axioms 全 ⊆ 标准三**（`findIdxBeqAgree` 仅 `[propext]`）、olean 装池。**§3 `prevElBetwn` 接线留一笔**：需 `pp.all` 钉 `indexfYLeZInR0` 的 nextEl 实例显隐（~1 轮），随后 KBWPBHQ2 本体。
+② **用户 2026-11-10 裁决（真用户输入）**：「全战役 15–20 工次是否投入: **是**」⇒ **J4 战役正式全量立项**。已建 **§0.4 J4 战役执行表**（W0+W3d 在飞 → W1 5 批 → W2 4 批 → W3a–c 4 批 → W4 4 批；总量 89 件/4,705 HOL → Lean 6,016–8,167，中心 ≈6,100）；条件形先落（`GeneratePolygonReductionV7` 属 J3 前提、`transform_assumption_v2` 已真证，不等 J1/J3）；止损触发器与 HOL 死码 5 条禁搬已入表。
+③ **在飞账（13:34）**：W41 `W41SplitLeaves.lean` 编译中（`-s 1048576`，RSS 7.7 GB，12 探针/4 盒三分；72 盒 fill 全 0 fail 已记续781）；aq13 Wave B（NCVIBWU-spine + QCDVKEA 判定）；reduction5 §3 接线；tame-corr 8a-2b1b-2；J4 W3d。
 
 - **2026-11-10（13:30，续781）**：**aq13 件2 Wave A 落库 `92965f8a`（新文件 400 行 + 可见性补丁）——reduction2 移植第三笔；W41 fill 72 盒全 0 fail**。
 ① **`92965f8a` `Reduction3NewvertexPrepTransform.lean`（400 行）**：`newvertexPreppedTransformLemmaSpine` = HOL `newvertex_prepped_transform_lemma`（reduction2.hl:1139，`|fn'(1).dedup| = |fn.dedup| + |b|`）**逐字同形**；路线 = **AQ7 免移植**（`range'` 精确形替代 HOL 的 CARD/UNION/INTER 链）+ 计数收口走双 ℕ-前缀集逐点相等（`ltOfLeSubOne`/`leOfPredLt`，omega 对 sub-假设盲区的环境实测再确认）；附带公开 `lebhirjPoint`（LEBHIRJ 点态，件1/1a 私装同款重推导，**Wave C 直接消费**）。另 `Reduction3HbridgeElim.lean` 可见性补丁 **5 件 private→public**（`newsSplit`/`rtransFilterEq`/`leYInR`/`take_range'_eq`/`setOfListNatSpine_range'`，陈述与证体逐字零改，+12/−5）——实际跨文件不可取私件，替代 ~300 行纯复制（DELIVERY §3.4 记账）。
