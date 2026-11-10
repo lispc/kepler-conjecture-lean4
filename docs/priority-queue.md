@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（14:48，续793）**：**reduction5 lzMemR 落库 `8c762427`（HQYMRTX1 conj 1 链孪生，18 行）——切半指令后首笔代码**。
+① **件**：`lzMemR`（`lz L N r x ∈ r`）= `memZtransRtrans` i=0 实例化 **term-mode 直证**（`lz ≡ ztrans@0`/`r ≡ rtrans@0` 均 defeq，`exact` 闭合），免 HQYMRTX1 的 hypermap 山展开；带 `AqiunppSlot`（Pwssrat 惯例）。
+② **闸**：apply-check PASS（+18 零删除）、禁词零、岛编 RC=0/0err/0warn、4 件 axioms 全 ⊆ 标准三零 sorryAx、olean 装池。`Reduction5Kbwpbhq.lean` 现 263 行。
+③ **下笔已批 = conj 2**（arc-ordering ~40；链侧工具已盘点：`indexfYLeZInR0`/`indexfYtransEqLM1Core`/`indexfCompl`/`indexf_add_left` + 桥簇），粒度纪律照旧（只写本轮能全绿的部分）；后接底层三件接线（各 ~30–50）。**注**：车道交代的基线哈希 `98fb01c5` 非本仓 HEAD 系（勘误记档，apply-check 对现行工作树 PASS 为准）。
+
 - **2026-11-10（14:50，续792）**：**J4 批 4 零落库交回（自报预算耗尽）——编排者驳回：续做就是本车道，必须交代码**。
 ① **交回内容（侦察质量采信）**：正证据 = `showDups0.eq_1/2/3` 三方程存在、分支后 `rw` 直接通过（独立探针 RC=0；坑 = 必须 `cases b` 再 `rw`，§7.1-#2 实例）；负证据 = 依赖式 `getElem?` 在 take/drop 复合下标 motive 失败（批 3 同款）；**骨架已写好**（`w1d/logs/Reduction1W1d_draft_failing.lean`，四件 Lean 形按 C1/C2 + `elemShowDups0` 归纳骨架 + `showDups0Bound` 替代路线已论证：首元界由 `hu`/`hvs 0` 供给、余段换默认元套 IH），估余 ~125 行 / 2–3 轮，纯机械面。
 ② **指令（与 reduction5 同款处理）**：「预算耗尽」驳回——预算是编排者的；不新开车道，续做 = 本车道按自己的骨架直做；**交付物 = 至少编译全绿的部分**（允许半件）；不做 take/drop 下标换算（走 `getElem!_cons_zero/succ` 批 2 已验证路线）；护栏二桥件（六前提 ⇒ `enumerator` 成员 `?`-形）可同批提前落。4 轮内交付。
