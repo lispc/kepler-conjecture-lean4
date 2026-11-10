@@ -373,8 +373,10 @@ private theorem lmSetNonempty (L : fgraph ℕ) {r : List Dart} {d : Dart}
     exact hz hstep.symm
 
 /-- `markedList` + `~final_list` ⇒ `sList = sListSpine`（变换后 loop 的 `hs` 槽生产：
-`normalList` 给 `r.Nodup`，`lmSetNonempty` 给极小集非空，`lm = lMSpine` 换元）。 -/
-private theorem sListEqOfMarked (L : fgraph ℕ) (hL : GoodList L)
+`normalList` 给 `r.Nodup`，`lmSetNonempty` 给极小集非空，`lm = lMSpine` 换元）。
+patch7 可见性上调（private → public，陈述/证体逐字未动）：`PwssratFace`（0b 的
+`hqymrtx1List` hs 槽）与 T2 的 Spine 侧装配件消费；先例 ChainMarkedTranslate ⑤。 -/
+theorem sListEqOfMarked (L : fgraph ℕ) (hL : GoodList L)
     {N : List (List Dart)} {r : List Dart} {x : Dart}
     (hm : markedList L hL N r x) (hf : ¬ finalList L r) :
     sList L r x = Kepler.Text.TameSpine.sListSpine L r x := by
