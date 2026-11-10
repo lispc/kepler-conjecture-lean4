@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（15:09，续795）**：**编排者亲作 `indexfWArc` 落库 `0acd5373`（reduction5 conj 2 Blocker 移除）+ J4 批 4 v3 冻结 UNRESOLVED 跳批 5 + reduction5 空报处理**。
+① **`0acd5373` `Reduction5IndexfArc.lean`（编排者亲作，60 行）**：`indexfWArc`（泛型 `[DecidableEq α]`）= reduction5 W2C_PLAN §8 补遗 `indexf_w_arc` 的修复形——`w,x,y ∈ r ⇒ indexf w x r + indexf x y r ≡ indexf w y r (MOD len r)`。**路线比车道原设计（位置公式 + Nodup 单射）更短**：`indexf` 定义本身即弧距 `(idxOf y + (len − idxOf w)) MOD len` ⇒ 纯 MOD 算术 calc 四步（`Nat.add_mod.symm` + omega 和式 + `Nat.add_mod_right`），零 Nodup、零迭代式、零新基础设施依赖。闸：岛编 RC=0/0err/0warn、标准三零 sorryAx、olean 装池。**conj 2 至此 = membership simp + 本件一行**。
+② **reduction5 第三轮零代码（空状态报）**：按既定后果执行——本应挂 slot；因 Blocker 已由编排者移除，改给**最后一次机会**：下笔 = conj 2（量级 = 三行 omega + membership simp，工具 `indexfWArc` 现成）；仍零代码 ⇒ conj 2 + 底层三件整体挂 explicit slot，车道转 `next_core_FST`。
+③ **J4 批 4 v3 仍不绿 ⇒ 冻结 UNRESOLVED（按令执行，采信）**：v3 = 整文件重写（v2 splice 损坏修复），四件 HOL 同形陈述 + 骨架完整，余 11 条全机械面修法表 7 条；新确认 `List.getElem!_map` 树内 0 命中（`enumBound` 收口走 C3 三步链）。接续包齐（v3 文件 + 三份编译日志 + 正向探针 + DELIVERY_W1D_V3_FROZEN）。**跳批 5 已批**（`dart_neighbors`/`duplicateEdge_next`/`el_showDups0`/`el_enum_of_vertex_list`，148 HOL → 190–280；批 5/6 不依赖批 4；批 7 验收点 `enumeration_vertex_list` 依赖批 4 的 `enumBound`/`showDups0Bound` ⇒ 批 7 前须回收批 4）。J4 累计 607 行/13 件全 ⊆ 标准三。
+
 - **2026-11-10（14:55，续794）**：**reduction5 conj 2 分析轮（零代码，第 2 次连续）**：Blocker = arc-ordering 基础设施（B2 的 `indexf_add_sum/left` 都需 ordering 前提，ordering 本身是弧序 ⇒ 循环依赖）。**修复形采纳**：私件 `indexf_w_arc`（~15 行：Nodup r 上任意 w,x,y ∈ r，`indexf w x + indexf x y ≡ indexf w y (mod len)`，自 `nextElIterateGetElem` 位置公式导出）⇒ conj 2 = 三行 omega。下笔 = `indexf_w_arc` + conj 2（~60），**已令直接写、不再交分析轮**；若 indexf_w_arc 超估则先交它作半件。上批绿件（lzMemR + 四支撑 + 桥簇）不变。
 
 - **2026-11-10（14:48，续793）**：**reduction5 lzMemR 落库 `8c762427`（HQYMRTX1 conj 1 链孪生，18 行）——切半指令后首笔代码**。
