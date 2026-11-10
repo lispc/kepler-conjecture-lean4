@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（14:27，续788）**：**aq13 B2b 落库 `f3252c94`（`dLMeqY` + `lMLtR` 155 行半件）——UNRESOLVED #2 机器判定成立、spine-i0 头段解锁**。
+① **件**：`dLMeqY`（头段终点恒等式 `(nextEl f)^[lM] w = l'y`，3 行按令顺手落）+ **`lMLtR`**（`lMSpine + 1 ≤ r.length`，UNRESOLVED #2 **成立**——**基数论证免 wrap**：face 轨道 `d_0..d_lM` 共 lM+1 个互异 dart（`nextElnIndexf` 定位 + face Nodup）全 ∈ r（`leYInR`）⇒ Finset 基数收口）——NCVIBWU-spine 头段的 `nextElnIndexf`-on-r 阻塞点消除。
+② **判定账（采信）**：#1（`lM' ≥ lM`）1 轮内判不出、预期不成立（state-1 前提清单无 y' 位置约束，y' 由 minNum 结构决定）——**如实报不硬凑，正确**；**#3 新识别** = 头段 ∈ r' 的 z1-弧包含 = OHCGKFU-i0 的 load-bearing 内容，但其子件**全在库**（`zMemFindFaceDarts`/`fListPowYtransNotMem`/`indexfYtransSucLp`/`fListPowEqNextElPow`）⇒ **B2c = OHCGKFU-i0 总装（120–160）无子件缺口**，B2d = NCVIBWU2/3 i=0 头段（80–120，消费 B2c + `lMLtR` + `dLMeqY` + B1 F-弧半件）⇒ **spine-i0 闭合、Wave C 解阻**。final-支 0 行收口三要素入档（`aqiunpp3_top` 供 marked@state-1；`loopFaceAgree` 不参与该支）。
+③ **闸**：apply-check PASS（新文件零删除）、禁词零、岛编 RC=0/0err/0warn、2 件标准三零 sorryAx、olean 装池。**B2c→B2d 已批**（每波带 QCDVKEA/KBWPBHQ2 可用性一行结论；tame-corr 铺装波仍是其领地，b2b 后接）。
+
 - **2026-11-10（14:25，续787）**：**J4 W1 批 2 落库 `974a94dd` + reduction5 KBWPBHQ2 闸门升级（同闸 QCDVKEA）与两条裁决**。
 ① **`974a94dd` `Reduction1W1b.lean`（129 行，1 公开 2 私）**：`increasingOfAdjacent`（W1A 撤件本批落地——批 1 依赖式 `getElem` 三写法全败，改 **`getElem!`** 一次过，升级为接口约定 **C2**：前提 `EL` 一律 `!` 形 + **C3** `?`/`!`↔`getElem` 换形链）+ `monoChain`/`elemDropTake` 私件。**路线升级 RD-2′**（推翻 RD-2）：`incrIndexList` 首槽 `1 < nmax` **不可由 HOL 六前提导出**（`outer ≤ 1` 反例：`LAST xs = 0` 全零列全满足）⇒ 改走 `enumerator_completeness_help`（`EnumeratorProps:514`，无该槽、全体 `outer` 一致），四槽三就位。闸：apply-check PASS、禁词零（头注两处改写）、岛编 RC=0/0err/0warn、`increasingOfAdjacent` = `[propext, Quot.sound]` 零 choice。`mem_enumerator` 本体留批 3（估 60–90，三机械面收口路线已验证）；**膨胀率判定延至批 3，触发线收紧：批 3 的 (a)(b) 仍收不掉即 §7 降级重估，无批 4**。
 ② **reduction5 闸门升级（采信）**：KBWPBHQ2 全证体复核——内部支撑 `prev_mem_r_suc` **直接依赖 `Ncvibwu.NCVIBWU`（主山）+ `PPLHULJ`**（tame-corr 铺装面）⇒ **KBWPBHQ2 本体与 QCDVKEA 同闸**（QCDVKEA 差 NCVIBWU 一件、KBWPBHQ2 差两件 + `prev_el_betwn_ztran_ytrans_on_f`）。本轮净交付 0 新件（撞面停手，正确）。
