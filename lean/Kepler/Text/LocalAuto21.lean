@@ -33,7 +33,7 @@ FILE MAP (all 62 HOL theorems, source order; `_p21` suffix throughout)
     `interior_angle1_azim_p21`, `LOFA_IMP_INANGLE_EQ_AZIM_IVS_p21`
     (proved, definitional), `BBs_inj_p21` (proved), `IMAGE_FF_p21` (proved),
     `interior_angle1_azim_scs_p21` (proved), `deformation_BBs_p21`,
-    `deformation_BBs_ALT_p21` (sorry giants).
+    `deformation_BBs_ALT_p21` (proved; §E1 `w4clamp` kit).
   Section F (assumption reductions): `a_assumption_reduction_p21`,
     `b_assumption_reduction_p21`, `azim_assumption_reduction_p21`,
     `WNWSHJT_ALT_p21` (sorry giants).
@@ -1337,10 +1337,18 @@ theorem interior_angle1_azim_scs_p21 (s : ScsV39) (v : ℕ → V3) (k : ℕ)
     (Set.range fun i => {v i, v (i + 1)}) (Set.range fun i => (v i, v (i + 1)))
     s v (v i) k i hk rfl rfl rfl rfl hs (by omega) hBB]
 
+/-! ## Section E1: W4 clamp (BBs pair support) -/
+
+noncomputable def w4clamp (f : V3 → ℝ → V3) (e : ℝ) (x : V3) (t : ℝ) : V3 :=
+  if |t| < e then f x t else x
+
 /-- HOL `deformation_BBs` (CUXVZOZ.hl:1883; the `//`-commented azim skolem
 assumption of the source is dropped): a deformation that is rigid on the
 sphere, keeps flat `interior_angle1`s under π and preserves the tight a/b
-edges stays in `BBs_v39` for small `t`. -/
+edges stays in `BBs_v39` for small `t`.
+SF-104: `ha`/`hb` are parenthesized as in HOL (`?e1. 0<e1 /\ (tight ==> bound)`);
+the previous stub text parsed as `(0<e1 ∧ tight) → bound`, which `e1 := 0`
+satisfies vacuously. -/
 theorem deformation_BBs_p21 (s : ScsV39) (k : ℕ) (f : V3 → ℝ → V3) (v : ℕ → V3) (e : ℝ)
     (hs : isScsV39 s) (hk : s.k = k) (hBB : BBsV39 s v) (hg : scsGeneric v)
     (he : 0 < e) (hd : Deformation f (Set.range v) (-e) e)
@@ -1350,39 +1358,308 @@ theorem deformation_BBs_p21 (s : ScsV39) (k : ℕ) (f : V3 → ℝ → V3) (v : 
             (Set.image (fun p : V3 × V3 => (f p.1 t, f p.2 t))
               (Set.range fun j => (v j, v (j + 1)))) (f (v i) t) ≤ Real.pi)
     (hn : ∀ i t, |t| < e → ‖f (v i) t‖ = ‖v i‖)
-    (ha : ∀ i j, ∃ e1, 0 < e1 ∧ s.a i j = dist (v i) (v j) →
-      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t))
-    (hb : ∀ i j, ∃ e2, 0 < e2 ∧ dist (v i) (v j) = s.b i j →
-      ∀ t, |t| < e2 → dist (f (v i) t) (f (v j) t) ≤ s.b i j) :
+    (ha : ∀ i j, ∃ e1, 0 < e1 ∧ (s.a i j = dist (v i) (v j) →
+      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t)))
+    (hb : ∀ i j, ∃ e2, 0 < e2 ∧ (dist (v i) (v j) = s.b i j →
+      ∀ t, |t| < e2 → dist (f (v i) t) (f (v j) t) ≤ s.b i j)) :
     ∃ e', 0 < e' ∧ ∀ t, |t| < e' → BBsV39 s (fun i => f (v i) t) := by
-  -- DISCHARGES: HOL `deformation_BBs` (170 lines): the SKOLEM_PERIODIC2
-  -- reduction, the convex_local_fan transport under deformation, and the
-  -- generic-position azimuth machinery; the fan-transport lemmas
-  -- (deformation convex_local_fan) are not ported on this side.
-  -- NEEDS: merge with the deformation-transport lane.
-  sorry
+  obtain ⟨hd0mem, hdcont, hdid⟩ := hd
+  obtain ⟨-, hk1, -, -, -, -, -, hpa, -, -, hpb, -, -, -, -, -, -, -, -, -⟩ := hs
+  have hper : Periodic v k := by rw [← hk]; exact hBB.2.1
+  have hkne : k ≠ 0 := by omega
+  have hdistcont : ∀ i j, ContinuousAt (fun t => dist (f (v i) t) (f (v j) t)) 0 := by
+    intro i j
+    have hci : ContinuousAt (fun t => f (v i) t) 0 :=
+      hdcont (v i) (Set.mem_range_self i) 0 ⟨by linarith, he⟩
+    have hcj : ContinuousAt (fun t => f (v j) t) 0 :=
+      hdcont (v j) (Set.mem_range_self j) 0 ⟨by linarith, he⟩
+    have hsub : ContinuousAt (fun t => f (v i) t - f (v j) t) 0 := hci.sub hcj
+    have hnorm : ContinuousAt (fun t => ‖f (v i) t - f (v j) t‖) 0 := hsub.norm
+    simpa only [dist_eq_norm] using hnorm
+  have haP : ∀ i j, ∃ ee : ℝ, 0 < ee ∧ ∀ t, |t| < ee →
+      s.a i j ≤ dist (f (v i) t) (f (v j) t) := by
+    intro i j
+    by_cases htight : s.a i j = dist (v i) (v j)
+    · obtain ⟨e1, he1, hcond⟩ := ha i j
+      exact ⟨e1, he1, fun t ht => hcond htight t ht⟩
+    · have hle : s.a i j ≤ dist (v i) (v j) := (hBB.2.2.1 i j).1
+      have hlt : s.a i j < dist (v i) (v j) := lt_of_le_of_ne hle htight
+      have hg0 : 0 < dist (f (v i) 0) (f (v j) 0) - s.a i j := by
+        rw [hdid (v i) (Set.mem_range_self i), hdid (v j) (Set.mem_range_self j)]
+        linarith
+      have hcontg : ContinuousAt (fun t => dist (f (v i) t) (f (v j) t) - s.a i j) 0 :=
+        (hdistcont i j).sub continuousAt_const
+      obtain ⟨ee, hee, hall⟩ := continuous_nbd_pos_p21 hcontg hg0
+      exact ⟨ee, hee, fun t ht => by
+        have h2 : 0 < dist (f (v i) t) (f (v j) t) - s.a i j :=
+          hall t (by simpa using ht)
+        linarith⟩
+  have hbQ : ∀ i j, ∃ ee : ℝ, 0 < ee ∧ ∀ t, |t| < ee →
+      dist (f (v i) t) (f (v j) t) ≤ s.b i j := by
+    intro i j
+    by_cases htight : dist (v i) (v j) = s.b i j
+    · obtain ⟨e2, he2, hcond⟩ := hb i j
+      exact ⟨e2, he2, fun t ht => hcond htight t ht⟩
+    · have hle : dist (v i) (v j) ≤ s.b i j := (hBB.2.2.1 i j).2
+      have hlt : dist (v i) (v j) < s.b i j := lt_of_le_of_ne hle htight
+      have hg0 : 0 < s.b i j - dist (f (v i) 0) (f (v j) 0) := by
+        rw [hdid (v i) (Set.mem_range_self i), hdid (v j) (Set.mem_range_self j)]
+        linarith
+      have hcontg : ContinuousAt (fun t => s.b i j - dist (f (v i) t) (f (v j) t)) 0 :=
+        continuousAt_const.sub (hdistcont i j)
+      obtain ⟨ee, hee, hall⟩ := continuous_nbd_pos_p21 hcontg hg0
+      exact ⟨ee, hee, fun t ht => by
+        have h2 : 0 < s.b i j - dist (f (v i) t) (f (v j) t) :=
+          hall t (by simpa using ht)
+        linarith⟩
+  have hPper : Periodic2 (fun i j (ee : ℝ) =>
+      ∀ t, |t| < ee → s.a i j ≤ dist (f (v i) t) (f (v j) t)) k := by
+    intro i j
+    have hv1 : v (i + k) = v i := hper i
+    have ha1 : s.a (i + k) j = s.a i j := by rw [← hk]; exact (hpa i j).1
+    have hv2 : v (j + k) = v j := hper j
+    have ha2 : s.a i (j + k) = s.a i j := by rw [← hk]; exact (hpa i j).2
+    constructor
+    · funext ee
+      apply propext
+      exact ⟨fun h t ht => by simpa only [hv1, ha1] using h t ht,
+        fun h t ht => by simpa only [hv1, ha1] using h t ht⟩
+    · funext ee
+      apply propext
+      exact ⟨fun h t ht => by simpa only [hv2, ha2] using h t ht,
+        fun h t ht => by simpa only [hv2, ha2] using h t ht⟩
+  have hQper : Periodic2 (fun i j (ee : ℝ) =>
+      ∀ t, |t| < ee → dist (f (v i) t) (f (v j) t) ≤ s.b i j) k := by
+    intro i j
+    have hv1 : v (i + k) = v i := hper i
+    have hb1 : s.b (i + k) j = s.b i j := by rw [← hk]; exact (hpb i j).1
+    have hv2 : v (j + k) = v j := hper j
+    have hb2 : s.b i (j + k) = s.b i j := by rw [← hk]; exact (hpb i j).2
+    constructor
+    · funext ee
+      apply propext
+      exact ⟨fun h t ht => by simpa only [hv1, hb1] using h t ht,
+        fun h t ht => by simpa only [hv1, hb1] using h t ht⟩
+    · funext ee
+      apply propext
+      exact ⟨fun h t ht => by simpa only [hv2, hb2] using h t ht,
+        fun h t ht => by simpa only [hv2, hb2] using h t ht⟩
+  have hPmono : ∀ i j (ee ee' : ℝ), ee ≤ ee' →
+      (∀ t, |t| < ee' → s.a i j ≤ dist (f (v i) t) (f (v j) t)) →
+      ∀ t, |t| < ee → s.a i j ≤ dist (f (v i) t) (f (v j) t) :=
+    fun i j ee ee' hle h t ht => h t (lt_of_lt_of_le ht hle)
+  have hQmono : ∀ i j (ee ee' : ℝ), ee ≤ ee' →
+      (∀ t, |t| < ee' → dist (f (v i) t) (f (v j) t) ≤ s.b i j) →
+      ∀ t, |t| < ee → dist (f (v i) t) (f (v j) t) ≤ s.b i j :=
+    fun i j ee ee' hle h t ht => h t (lt_of_lt_of_le ht hle)
+  obtain ⟨e1, he1, hP1⟩ := (SKOLEM_PERIODIC2_p21 k hPper hkne hPmono).mp haP
+  obtain ⟨e2, he2, hQ2⟩ := (SKOLEM_PERIODIC2_p21 k hQper hkne hQmono).mp hbQ
+  have hball : ∀ t, |t| < e → Set.range (fun i => f (v i) t) ⊆ ballAnnulus := by
+    intro t ht x hx
+    obtain ⟨i, rfl⟩ := hx
+    simpa [ballAnnulus, dist_eq_norm, hn i t ht] using hBB.1 (Set.mem_range_self i)
+  have hperD : ∀ t, Periodic (fun i => f (v i) t) s.k := by
+    intro t i
+    exact congrArg (fun x => f x t) (hBB.2.1 i)
+  by_cases hkle : s.k ≤ 3
+  · obtain ⟨e', he', h1, h2, h3⟩ := epsilon_triple_p21 e1 e2 e he1 he2 he
+    refine ⟨e', he', fun t ht => ?_⟩
+    exact ⟨hball t (h3 t ht), hperD t,
+      fun i j => ⟨hP1 i j t (h1 t ht), hQ2 i j t (h2 t ht)⟩, Or.inl hkle⟩
+  · have hconv : ConvexLocalFan (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+        (Set.range fun i => (v i, v (i + 1))) := by
+      rcases hBB.2.2.2 with h3 | hcf
+      · exact absurd h3 hkle
+      · exact hcf
+    have hd' : Deformation (w4clamp f e) (Set.range v) (-e) e := by
+      refine ⟨⟨by linarith, he⟩, ?_, ?_⟩
+      · intro w hw r hr
+        have hcont : ContinuousAt (fun t => f w t) r := hdcont w hw r hr
+        have hfun : (fun t => w4clamp f e w t) =ᶠ[nhds r] (fun t => f w t) := by
+          filter_upwards [Ioo_mem_nhds hr.1 hr.2] with t ht
+          exact if_pos (abs_lt.mpr ht)
+        exact hcont.congr hfun.symm
+      · intro w hw
+        exact (if_pos (by simpa using he) : w4clamp f e w 0 = f w 0).trans (hdid w hw)
+    have h4c : ∀ w ∈ Set.range v, ∀ t ∈ Icc (-e) e,
+        interiorAngle1 0 (Set.range fun j => (v j, v (j + 1))) w = Real.pi →
+        interiorAngle1 0 ((fun d => (w4clamp f e d.1 t, w4clamp f e d.2 t)) ''
+          (Set.range fun j => (v j, v (j + 1)))) (w4clamp f e w t) ≤ Real.pi := by
+      intro w hw t ht hangle
+      obtain ⟨i, rfl⟩ := hw
+      by_cases hti : |t| < e
+      · have hiff : ∀ x, w4clamp f e x t = f x t := fun x => if_pos hti
+        have himg : (fun d : V3 × V3 => (w4clamp f e d.1 t, w4clamp f e d.2 t)) ''
+            (Set.range fun j => (v j, v (j + 1))) =
+            (fun p : V3 × V3 => (f p.1 t, f p.2 t)) ''
+              (Set.range fun j => (v j, v (j + 1))) := by
+          apply Set.image_congr
+          intro d _
+          rw [hiff d.1, hiff d.2]
+        rw [himg, hiff (v i)]
+        exact hflat i t (abs_lt.mp hti) hangle
+      · have hiff : ∀ x, w4clamp f e x t = x := fun x => if_neg hti
+        have himg : (fun d : V3 × V3 => (w4clamp f e d.1 t, w4clamp f e d.2 t)) ''
+            (Set.range fun j => (v j, v (j + 1))) = (Set.range fun j => (v j, v (j + 1))) := by
+          have hid : (fun d : V3 × V3 => (w4clamp f e d.1 t, w4clamp f e d.2 t)) = id := by
+            funext d
+            rw [hiff d.1, hiff d.2]
+            rfl
+          rw [hid, Set.image_id]
+        rw [himg, hiff (v i), hangle]
+    obtain ⟨εc, hεc, hconvT⟩ :=
+      ZLZTHIC_p14 (-e) e (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+        (Set.range fun i => (v i, v (i + 1))) (w4clamp f e) hconv hg hd' h4c
+    obtain ⟨e', he', h1, h2, h3, h4⟩ := epsilon_quad_p21 εc e1 e2 e hεc he1 he2 he
+    refine ⟨e', he', fun t ht => ?_⟩
+    refine ⟨hball t (h4 t ht), hperD t,
+      fun i j => ⟨hP1 i j t (h2 t ht), hQ2 i j t (h3 t ht)⟩, Or.inr ?_⟩
+    obtain ⟨hgt, -⟩ := hconvT t (abs_lt.mp (h1 t ht))
+    have hfc : ∀ x, w4clamp f e x t = f x t := fun x => if_pos (h4 t ht)
+    have hVimg : (fun x => w4clamp f e x t) '' (Set.range v) =
+        Set.range (fun i => f (v i) t) := by
+      rw [← Set.range_comp]
+      congr 1
+      funext i
+      exact hfc (v i)
+    have hEimg : (fun s => (fun x => w4clamp f e x t) '' s) ''
+        (Set.range fun i => ({v i, v (i + 1)} : Set V3)) =
+        Set.range (fun i => ({f (v i) t, f (v (i + 1)) t} : Set V3)) := by
+      rw [← Set.range_comp]
+      congr 1
+      funext i
+      simp only [Function.comp_apply]
+      rw [Set.image_pair, hfc (v i), hfc (v (i + 1))]
+    have hFimg : (fun d : V3 × V3 => (w4clamp f e d.1 t, w4clamp f e d.2 t)) ''
+        (Set.range fun i => (v i, v (i + 1))) =
+        Set.range (fun i => (f (v i) t, f (v (i + 1)) t)) := by
+      rw [← Set.range_comp]
+      congr 1
+      funext i
+      simp only [Function.comp_apply]
+      rw [hfc (v i), hfc (v (i + 1))]
+    rwa [hVimg, hEimg, hFimg] at hgt
 
 /-- HOL `deformation_BBs_ALT` (CUXVZOZ.hl:2249): the azim-skolem variant —
 the flat-angle hypothesis is replaced by the azimuth `≤ π` skolem chain via
-`interior_angle1_azim_scs` + `SKOLEM_PERIODIC`. -/
+`interior_angle1_azim_scs` + `SKOLEM_PERIODIC`.
+SF-104: `haz` and the two a/b skolems are parenthesized as in HOL; the
+previous stub text parsed as `(0<e ∧ premise) → bound` (vacuous at `e := 0`). -/
 theorem deformation_BBs_ALT_p21 (s : ScsV39) (k : ℕ) (f : V3 → ℝ → V3) (v : ℕ → V3) (e : ℝ)
     (hs : isScsV39 s) (hk : s.k = k) (hk3 : 3 < k) (hBB : BBsV39 s v) (hg : scsGeneric v)
     (he : 0 < e) (hd : Deformation f (Set.range v) (-e) e)
     (haz : ∀ i, ∃ e0, 0 < e0 ∧
-      azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
-      ∀ t, |t| < e0 →
-        azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi)
+      (azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
+        ∀ t, |t| < e0 →
+          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi))
     (hn : ∀ i t, |t| < e → ‖f (v i) t‖ = ‖v i‖)
-    (ha : ∀ i j, ∃ e1, 0 < e1 ∧ s.a i j = dist (v i) (v j) →
-      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t))
-    (hb : ∀ i j, ∃ e2, 0 < e2 ∧ dist (v i) (v j) = s.b i j →
-      ∀ t, |t| < e2 → dist (f (v i) t) (f (v j) t) ≤ s.b i j) :
+    (ha : ∀ i j, ∃ e1, 0 < e1 ∧ (s.a i j = dist (v i) (v j) →
+      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t)))
+    (hb : ∀ i j, ∃ e2, 0 < e2 ∧ (dist (v i) (v j) = s.b i j →
+      ∀ t, |t| < e2 → dist (f (v i) t) (f (v j) t) ≤ s.b i j)) :
     ∃ e', 0 < e' ∧ ∀ t, |t| < e' → BBsV39 s (fun i => f (v i) t) := by
-  -- DISCHARGES: HOL `deformation_BBs_ALT` (90 lines): applies
-  -- deformation_BBs over the SKOLEM_PERIODIC + interior_angle1_azim_scs
-  -- uniformisation; depends on the same missing fan-transport kit.
-  -- NEEDS: merge with the deformation-transport lane.
-  sorry
+  have hper : Periodic v k := by rw [← hk]; exact hBB.2.1
+  have hkne : k ≠ 0 := by omega
+  have hinj' : ∀ i j, i < k ∧ j < k ∧ v i = v j → i = j :=
+    fun i j h => BBs_inj_p21 s v k hs hk hBB i j h.1 h.2.1 h.2.2
+  -- uniformize haz over i (period k)
+  have hP1per : Periodic (fun i (ee : ℝ) =>
+      azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
+        ∀ t, |t| < ee →
+          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi) k := by
+    intro i
+    have h1 : v (i + k) = v i := hper i
+    have h2 : v ((i + k) + 1) = v (i + 1) := by
+      rw [show (i + k) + 1 = (i + 1) + k by omega]; exact hper (i + 1)
+    have h3 : v ((i + k) + (k - 1)) = v (i + (k - 1)) := by
+      rw [show (i + k) + (k - 1) = (i + (k - 1)) + k by omega]
+      exact hper (i + (k - 1))
+    funext ee
+    apply propext
+    exact ⟨fun h hpi t ht => by
+        rw [← h1, ← h2, ← h3] at hpi
+        simpa only [← h1, ← h2, ← h3] using h hpi t ht,
+      fun h hpi t ht => by
+        rw [h1, h2, h3] at hpi
+        simpa only [h1, h2, h3] using h hpi t ht⟩
+  have hP1mono : ∀ i (ee ee' : ℝ), ee ≤ ee' →
+      (azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
+        ∀ t, |t| < ee' →
+          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi) →
+      (azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
+        ∀ t, |t| < ee →
+          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi) :=
+    fun i ee ee' hle h hpi t ht => h hpi t (lt_of_lt_of_le ht hle)
+  obtain ⟨e0, he0, hP1u⟩ := (SKOLEM_PERIODIC_p21 k hP1per hkne hP1mono).mp haz
+  -- uniformize interior_angle1_azim_scs over i (period k)
+  have hIAper : Periodic (fun i (ee : ℝ) =>
+      ∀ t, |t| < ee →
+        interiorAngle1 0 (Set.image (fun p : V3 × V3 => (f p.1 t, f p.2 t))
+            (Set.range fun j => (v j, v (j + 1)))) (f (v i) t) =
+          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t)) k := by
+    intro i
+    have h1 : v (i + k) = v i := hper i
+    have h2 : v ((i + k) + 1) = v (i + 1) := by
+      rw [show (i + k) + 1 = (i + 1) + k by omega]; exact hper (i + 1)
+    have h3 : v ((i + k) + (k - 1)) = v (i + (k - 1)) := by
+      rw [show (i + k) + (k - 1) = (i + (k - 1)) + k by omega]
+      exact hper (i + (k - 1))
+    funext ee
+    apply propext
+    exact ⟨fun h t ht => by simpa only [h1, h2, h3] using h t ht,
+      fun h t ht => by simpa only [h1, h2, h3] using h t ht⟩
+  have hIAmono : ∀ i (ee ee' : ℝ), ee ≤ ee' →
+      (∀ t, |t| < ee' →
+        interiorAngle1 0 (Set.image (fun p : V3 × V3 => (f p.1 t, f p.2 t))
+            (Set.range fun j => (v j, v (j + 1)))) (f (v i) t) =
+          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t)) →
+      ∀ t, |t| < ee →
+        interiorAngle1 0 (Set.image (fun p : V3 × V3 => (f p.1 t, f p.2 t))
+            (Set.range fun j => (v j, v (j + 1)))) (f (v i) t) =
+          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) :=
+    fun i ee ee' hle h t ht => h t (lt_of_lt_of_le ht hle)
+  have hIA : ∀ i, ∃ ee : ℝ, 0 < ee ∧ ∀ t, |t| < ee →
+      interiorAngle1 0 (Set.image (fun p : V3 × V3 => (f p.1 t, f p.2 t))
+          (Set.range fun j => (v j, v (j + 1)))) (f (v i) t) =
+        azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) :=
+    fun i => interior_angle1_azim_scs_p21 (i := i) s v k f e he hd hs hk hk3 hBB
+  obtain ⟨e_ia, he_ia, hIAu⟩ := (SKOLEM_PERIODIC_p21 k hIAper hkne hIAmono).mp hIA
+  -- interiorAngle1 = azim at the original configuration
+  have hia : ∀ i, interiorAngle1 0 (Set.range fun j => (v j, v (j + 1))) (v i)
+      = azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) := by
+    intro i
+    show azim 0 (v i) (rhoNode1 (Set.range fun j => (v j, v (j + 1))) (v i))
+        (ivsRhoNode1 (Set.range fun j => (v j, v (j + 1))) (v i)) = _
+    rw [vv_rho_node1 v k hper (by omega) hinj' i]
+    rw [VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21 (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+      (Set.range fun i => (v i, v (i + 1))) s v (v i) k i hk rfl rfl rfl rfl hs (by omega) hBB]
+  -- assembly
+  set et : ℝ := min (min e0 e_ia) e with het_def
+  have het : 0 < et := lt_min (lt_min he0 he_ia) he
+  have het0 : et ≤ e0 := le_trans (min_le_left _ _) (min_le_left _ _)
+  have hetia : et ≤ e_ia := le_trans (min_le_left _ _) (min_le_right _ _)
+  have hete : et ≤ e := min_le_right _ _
+  have hd_et : Deformation f (Set.range v) (-et) et := by
+    obtain ⟨h0m, hcont, hid⟩ := hd
+    refine ⟨⟨by linarith, het⟩, ?_, hid⟩
+    intro w hw r hr
+    exact hcont w hw r ⟨by linarith [hr.1], by linarith [hr.2]⟩
+  have hn_et : ∀ i t, |t| < et → ‖f (v i) t‖ = ‖v i‖ :=
+    fun i t ht => hn i t (lt_of_lt_of_le ht hete)
+  have hflat' : ∀ i t, t ∈ Ioo (-et) et →
+      interiorAngle1 0 (Set.range fun j => (v j, v (j + 1))) (v i) = Real.pi →
+      interiorAngle1 0 (Set.image (fun p : V3 × V3 => (f p.1 t, f p.2 t))
+          (Set.range fun j => (v j, v (j + 1)))) (f (v i) t) ≤ Real.pi := by
+    intro i t ht hangle
+    have hlt : |t| < et := abs_lt.mpr ht
+    have h0 : |t| < e0 := lt_of_lt_of_le hlt het0
+    have hi : |t| < e_ia := lt_of_lt_of_le hlt hetia
+    have hpi : azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi := by
+      rw [← hia i]
+      exact hangle
+    rw [hIAu i t hi]
+    exact hP1u i hpi t h0
+  exact deformation_BBs_p21 s k f v et hs hk hBB hg het hd_et hflat' hn_et ha hb
 
 /-! ## Section F: assumption reductions -/
 

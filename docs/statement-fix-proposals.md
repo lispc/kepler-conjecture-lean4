@@ -6491,3 +6491,137 @@ theorem regular_spherical_polygon_area_asnFnhk (h : ℝ) (k : ℕ) (hk : 3 ≤ k
 归档补丁 `docs/statement-fix-proposals-patches/103-pa22-asnfnhk-k-factor.patch`；
 闸命令：`GATE_MODE=STATEMENT-FIX SF_PATCH=docs/statement-fix-proposals-patches/103-pa22-asnfnhk-k-factor.patch SF_ITEM=103 LANE_FILES=Kepler/Text/PackingAuto22.lean bash scripts/auto_gate.sh Kepler/Text/PackingAuto22.lean regular_spherical_polygon_area_asnFnhk`。
 验收口径：非标准三（仍是 sorry），关键验收 = 陈述与 `counting_spheres.hl:946` 同形。
+
+## 104. LA21 W4 两件（`deformation_BBs_p21` / `deformation_BBs_ALT_p21`）a/b/azim ε-skolem 前提缺括号 → 弱形（`e₁ := 0` 空洞满足，正 ε 信息丢失）— 分级 **A**（移植误植 · 陈述修正 · 已随 patch5 落地）
+
+> 侦查来源：车道 `la21-general482-w1`（2026-11-10）在 patch5（W4 BBs 双件）开工前的「件目对表 HOL 锚」例行检查中发现；用户 2026-11-10 裁定：「恢复括号是还原语义，不是为证而改，走 SF 通道合法」。
+> 补丁面：`lean/Kepler/Text/LocalAuto21.lean` 两处陈述共 5 个括号对（`patch5.diff` 一并交付）；无其他字面改动。
+
+### (a) HOL 裁决
+
+`reference/flyspeck/text_formalization/local/CUXVZOZ.hl:1901-1904`（`deformation_BBs`）：
+
+```
+    (!i j. ?e1. &0 < e1 /\ (scs_a_v39 s i j = dist(v i,v j) ==> 
+	(!t. abs t < e1 ==> scs_a_v39 s i j <= dist(f (v i) t,f (v j) t)))) /\
+    (!i j. ?e2. &0 < e2 /\ (dist(v i,v j) = scs_b_v39 s i j ==> 
+	(!t. abs t < e2 ==> dist(f (v i) t,f (v j) t) <= scs_b_v39 s i j))) ==>
+```
+
+`CUXVZOZ.hl:2258-2266`（`deformation_BBs_ALT`）：
+
+```
+    (!i. ?e0. &0 < e0 /\ (azim (vec 0) (v i) (v (i+1)) (v (i + (k-1))) = pi ==>
+	(!t. abs t < e0 ==> azim (vec 0) (f (v i) t) (f (v (i+1)) t) (f (v (i+(k-1))) t) <= pi))) /\
+...
+    (!i j. ?e1. &0 < e1 /\ (scs_a_v39 s i j = dist(v i,v j) ==> 
+	(!t. abs t < e1 ==> scs_a_v39 s i j <= dist(f (v i) t,f (v j) t)))) /\
+    (!i j. ?e2. &0 < e2 /\ (dist(v i,v j) = scs_b_v39 s i j ==> 
+	(!t. abs t < e2 ==> dist(f (v i) t,f (v j) t) <= scs_b_v39 s i j))) ==>
+```
+
+即 HOL 的每个 skolem 都是 **`?e. &0 < e /\ (紧边 ==> 邻域界)`**：**外层正性无条件**、条件化只作用于「紧边 ⇒ 界」。
+这正是 HOL 证明里 `SKOLEM_PERIODIC2` 归约的目标形
+（`(!i j. ?e1. &0 < e1 /\ (!t. abs t < e1 ==> a <= dist))`，见 `CUXVZOZ.hl:~1930` 的
+`TYPIFY ... ENOUGH_TO_SHOW_TAC` 段）。
+
+### (b) 机理/证据
+
+1. **优先级**：Lean 中 `∧` 优先级 35、`→` 优先级 25，故
+   `∃ e1, 0 < e1 ∧ A → B` 解析为 `∃ e1, (0 < e1 ∧ A) → B`（弱形），
+   而非 HOL 的 `∃ e1, 0 < e1 ∧ (A → B)`（强形）。pretty-print 亦无括号：
+   `#print deformation_BBs_p21` 显示
+   `∃ e1, 0 < e1 ∧ s.a i j = dist (v i) (v j) → ∀ t, |t| < e1 → …`。
+2. **弱形空洞**：弱形被 `e1 := 0` 空洞满足——前提 `0 < 0 ∧ A` 恒假，蕴涵恒真。
+   语义测试（`import Mathlib` 后编译通过）：
+
+   ```lean
+   example : (∃ e : ℝ, 0 < e ∧ False → True) := by
+     refine ⟨0, ?_⟩; intro h; trivial        -- 弱形：e := 0 通过
+   example : (∃ e : ℝ, 0 < e ∧ (False → True)) := by
+     refine ⟨0, ?_⟩; norm_num                -- 强形：e := 0 失败（需 0 < 0）
+   ```
+
+3. **影响**：紧边情形（`s.a i j = dist (v i) (v j)` / `dist = s.b i j` /
+   `azim = π`）下，定理需要**正 ε 邻域**内的单侧界（距离可在 `t ≠ 0` 处跌破 `a`
+   —— 这正是 `ha`/`hb`/`haz` 存在的目的）。弱形只保证
+   「若 witness 恰 `> 0` 则界成立」，witness `≤ 0` 时无任何信息，
+   无法提取任何正 ε；而 HOL 证明的 `SKOLEM_PERIODIC2` 归约（`P i j e` 不含正性、
+   由 `ha` 提供 `⟨e1, he1, hall⟩`）**正依赖无条件正性**。故弱形下定理不可证
+   （强形是本质前提，非装饰）。
+4. **同族对照**：LA21 内 `SKOLEM_PERIODIC_p21`/`SKOLEM_PERIODIC2_p21` 的结论、
+   `epsilon_triple/quad_p21` 的结论都是 `∃ e, 0 < e ∧ (…)`（强形，无此病灶）；
+   Section F 的 `h1/h2`（`azim_assumption_reduction_p21`）为 `∨ ∃ e1, 0 < e1 ∧ ∀ t, …`
+   亦为强形。病灶只见于「`∃ e, 0 < e ∧ A → B`」这一书写形。
+
+### (c) 修复（5 处括号，逐字其余不动）
+
+文件 `lean/Kepler/Text/LocalAuto21.lean`（基线 `561197d8`）。
+
+`deformation_BBs_p21`（现 `:1361-1364`）：
+
+```lean
+-- 旧（弱形）
+    (ha : ∀ i j, ∃ e1, 0 < e1 ∧ s.a i j = dist (v i) (v j) →
+      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t))
+    (hb : ∀ i j, ∃ e2, 0 < e2 ∧ dist (v i) (v j) = s.b i j →
+      ∀ t, |t| < e2 → dist (f (v i) t) (f (v j) t) ≤ s.b i j) :
+-- 新（SF-104，强形 = HOL 语义）
+    (ha : ∀ i j, ∃ e1, 0 < e1 ∧ (s.a i j = dist (v i) (v j) →
+      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t)))
+    (hb : ∀ i j, ∃ e2, 0 < e2 ∧ (dist (v i) (v j) = s.b i j →
+      ∀ t, |t| < e2 → dist (f (v i) t) (f (v j) t) ≤ s.b i j)) :
+```
+
+`deformation_BBs_ALT_p21`（现 `:1551-1560`）：
+
+```lean
+-- 旧（弱形，三处）
+    (haz : ∀ i, ∃ e0, 0 < e0 ∧
+      azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
+      ∀ t, |t| < e0 →
+        azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi)
+    (ha : … s.a i j = dist …)  -- 同上弱形
+    (hb : … dist … = s.b i j …)  -- 同上弱形
+-- 新（SF-104，强形）
+    (haz : ∀ i, ∃ e0, 0 < e0 ∧
+      (azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
+        ∀ t, |t| < e0 →
+          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi))
+    (ha : ∀ i j, ∃ e1, 0 < e1 ∧ (s.a i j = dist (v i) (v j) → ∀ t, …))
+    (hb : ∀ i j, ∃ e2, 0 < e2 ∧ (dist (v i) (v j) = s.b i j → ∀ t, …))
+```
+
+修复后两件均按强形**真证**（patch5：`deformation_BBs_p21` 走
+`SKOLEM_PERIODIC2` + `continuous_nbd_pos` 非紧边余量 + `ZLZTHIC_p14`
+（`w4clamp` 端点钳制以补齐 `Icc` 端点）；`deformation_BBs_ALT_p21` 走
+`SKOLEM_PERIODIC` 双向统一化 + `interior_angle1_azim_scs_p21`（patch4 件）
++ `vv_rho_node1`/`VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21`，两件 axioms 均
+`[propext, Classical.choice, Quot.sound]`、零 sorryAx）。
+
+### (d) 消费面
+
+- 修复前两件都是 `sorry`（无证明、无消费面）；全树 grep：两定理名除 LA21 声明/注释外
+  **零外部引用**，锥 / Assembly / 624 shard 面零影响。
+- 修复方向是**加强定理陈述**（前提更强），对将来生产 `ha`/`hb`/`haz` 的消费方
+  （Section F、W5 链）而言：只要它们按 HOL 本意提供「正 ε + 条件化界」即可满足；
+  若沿用弱形则会类型不匹配而显式暴露——不会静默通过。
+
+### (e) 同病灶扩展项（本 patch 不动，登记待开工时同口径修）
+
+Section F（`lean/Kepler/Text/LocalAuto21.lean`，基线 `561197d8` 行号）：
+
+| 件 | 位置 | 弱形槽位 |
+|---|---|---|
+| `a_assumption_reduction_p21` | `:1675` / `:1677` / `:1679` | `ha1` / `ha2` / 结论 `∀ i j, ∃ e1, …` |
+| `b_assumption_reduction_p21` | `:1695` / `:1697` / `:1700` | `hb1` / `hb2` / 结论 `∀ i j, ∃ e1, …` |
+| `azim_assumption_reduction_p21` | `:1744` | 结论第 7 合取支 `∀ i, ∃ e0, 0 < e0 ∧ azim … = π → …` |
+
+对应 HOL 锚：`CUXVZOZ.hl:2417`（`a_assumption_reduction`）、`:2541`
+（`b_assumption_reduction`）、`:2727`（`azim_assumption_reduction`）——三处 HOL 均为
+`?e. &0 < e /\ (紧 ==> 界)` 强形。均未开工（`sorry`），开工时按本 SF 同口径加括号。
+
+### (f) 状态
+
+**已执行（随 patch5 落地；本 § 由编排者并入本文档）**。`patch5.diff` 含 5 处括号修复
++ 两件真证；岛编 0 err、0 新增 warning；探针两件标准三零 sorryAx。
