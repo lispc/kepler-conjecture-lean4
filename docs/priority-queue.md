@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:36，续764）**：**W32 落库 `a475446c`（109 行）——绕序混合交付：`pW32_w_cone` 绿 + `WindingSlot` 显式槽本体 + full mirror 按铁律止损；残余缺口收敛为两块新几何**。
+① **成功件 `pW32_w_cone`（标准三零 sorryAx）**：HOL `NKEZBFC.hl:2426–2448` AZIM_EQ 链的 Lean 镜像——EGHNAVX 第二支 run 锥 + `azim_eq_azim_iff` 两次取等式 + 传递 ⇒ `vv n ∈ affGt{0,p}{vv(n+1)}`（2_1 形，跳跃后段 `i+1≤n`、`n+1<k`）；逐行对表零新几何，2 个机械修轮收敛。
+② **Attempt 2 止损（2 轮铁律）**：full mirror hstep（1_2 形）前半可组装，卡点 = 第二析取排除 `vv n ∉ affGe{0}{p,vv(n+1)}`——`pW5w_telescope` 展开后需「点比相邻对早一格」排除形，在库 `pW5_second_disjunct_false` 只覆盖「晚两格」，镜像**零命中**；HOL 用 `LOFA_IMP_EE_TWO_ELMS`+EE+`LOFA_IMP_DIS_ELMS23`（`:2455–2583`，~130 HOL）⇒ 新引理量级 120–180。
+③ **槽件本体 `WindingSlot (V) (FF) : Prop`** = WINDING_SCOUT §5 签名原样（ρ-run 相邻对 cross-dot < 0，`ιp := ivsRhoNode1_p2 FF p`），**def 零公理**、W23 先例、DIFFERS 记档（HOL 无显式槽，内容内嵌 2499–2614 证体）。
+④ **残余缺口 = 两块新几何**：①「早一格排除」（EE_TWO_ELMS 路线，120–180，HOL :2455–2583）；② J 段收尾 `ρw ∈ affGe{0}{p,w}`（AZIM_COMPL + `point_in_aff_ge`，:2499–2583，80–120）。**W33/W34 已派**，两块齐 ⇒ W35 总装 `WindingSlot` 真证（绕序槽退位，NKEZBFC stepB 零显式绕序假设）。
+
 - **2026-11-10（10:30，续763）**：**铺装 batch B 落库 `a301779b`（`PwssratEngine` 116 行 4 件）+ 件 7 判定免费（Spine 在库直接消费）——T2 主机（件 8）即刻开派，batch C 取消**。
 ① 件目：`finalListPowerFn`(tame_list:14016，归纳 motive 含 ∀d∈r)、`memPrevPower`(more_lemma1:818，**加强形**：HOL 的 `uniq r` 证体未用，DIFFERS 记档)、`symPowerPrevNext`(more_lemma1:830，双互逆幂等式 key1/key2)、`minnumNot`(PWSSRAT:449)。4 axioms 标准三零 sorryAx；RC=0 0err 0warn；olean 装池。
 ② **件 7 判定（重要减支）**：`partsRevFBetwnPure` = `aq8w2d_partsRevFBetwnPure`（Leaf8W2bD:390）+ `eqFstBetwnRevParts` = `aq8w2e_eqFstBetwnRevParts`（Leaf8W2bE:156），**Spine 侧已落库且标准三**，T2 直接 import + `ChainBridge.parts_eq_partsSpine` 对接链 `parts` 即可；链侧港版需 parts 大机器（`partsCases`/`partsPure`/`sizeInduct` TameList9 + `partsCharacterize` TameList39 链侧全零 decl，保守 ≥500）判超止损不立。**batch C 三件同款（`aq12w_catFstSplitNormalParts`/`FST_HD_MAP_betwn` Leaf12B/AQ12/`uniqFstSplitNorm` AQ1 族）⇒ batch C 取消**。
