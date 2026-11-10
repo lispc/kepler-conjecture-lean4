@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（15:26，续797）**：**J4 批 5 编排者按冻结包收口落库 `61eea60e`（2 公开件 + 2 rfl 私桥，118 行）+ reduction5 确认退役**。
+① **`61eea60e` `Reduction1W1e.lean`**：`elShowDups0`（reduction1.hl:626-648）+ `elEnumOfVertexList`（:649-675）双双 `[propext, Quot.sound]` 零 sorryAx 零 choice。车道 6 条修法全落地，编排者补三处：**无方程名 `cases b`**（车道发现的战役级雷区「`cases hb : b` 带方程名不自动替换上下文」采纳，建议入 AGENTS §7.1）、**`simp only [enumOfVertexList]` def 展开 + rfl 式 `showDups` cons 桥**（`showDupsConsNone/Some` 私件——`rw [showDups]` 确无方程引理，车道 hint `eq_def` 未用、rfl 更短）、**zero.none 支补 `rfl`**（none junk 项定义性归零）。车道 HOL 同形陈述零改动；DIFFERS 照 C2。闸：apply（本件编排者直写）、禁词零、岛编 RC=0/0err/0warn、olean 装池。`dart_neighbors`/`duplicateEdge_next` 留批 5b（已派）。
+② **reduction5 退役确认（按续796 宣告执行）**：车道自报 `next_core_FST` 需 ~40–60 行 parts-order 基础设施、4 轮内无法可靠闭合，按宣告退役。**已落库 6 笔**（`247cff62`/`135ae550`/`4eb374aa`/`b55b6dbe`/`0e1c16cc`/`8c762427`）全部标准三零 sorryAx 不受影响；**未落队列 slot 化**：`next_core_FST` / HQYMRTX1 conj 2 / 底层三件 / indexf3 / izsj / QCDVKEA / KBWPBHQ2 本体——等 tame-corr 铺装波开闸后由当值战役车道接；`indexfWArc`（`0acd5373`，编排者亲作）为公开复用件。交付物全在 `~/c17_backup/lane_snapshots/reduction5/`。
+③ **J4 累计对表**：W3d `a8dc86c1` + 批 1 `018fcbe5` + 批 2 `974a94dd` + 批 3 `fcff9315` + 批 5 `61eea60e` = **727 行 / 15 件全 ⊆ 标准三零 sorryAx**；批 4 UNRESOLVED（`w1d/` 冻结包，批 7 前须回收）；批 6/7 未开工。
+
 - **2026-11-10（15:15，续796）**：**reduction5 第四轮零代码（conj 2 依赖方向修正）——后果执行：slot 记账 + 车道转 `next_core_FST`**。
 ① **修正采信入档**：conj 2（`lzNotFListPow`）依赖方向**反转**——非「HQYMRTX1 → 底层三件」，实为 **conj 2 ← 底层三件（`ytrans_in_suc`/`ztrans_in_suc`/`ztran_suc_in_rtrans` 的 split-face 几何）**；已写入 `DELIVERY_W2C1A.md`。
 ② **slot 记账（explicit，SF 式）**：`HQYMRTX1_list conj 2` + `底层三件` 挂账——前置链 = 底层三件（split-face 几何链侧化 ~150，波序/供给清单在 `W2C_PLAN.md` §7-8）→ conj 2（~40）；消费链 = KBWPBHQ2 本体、QCDVKEA（二者同时闸于 tame-corr 铺装波 NCVIBWU+PPLHULJ，双闸收敛点不变）。编排者已供 `indexfWArc`（`0acd5373`）消 conj 2 的弧序 Blocker。`indexfWArc` 泛型公开件可被任何后接车道复用。
