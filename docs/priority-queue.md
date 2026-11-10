@@ -343,6 +343,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（19:05，续814）**：**两笔落库：J4 W2 批 1a `3a7f4b5d`（`Reduction1W2a` 99 行）+ tame-corr b2b `5bcfb81b`（`partsBetwn` +125）；aq13 index 半二度冻结（设计细化到可执行，转槽版路线重派）**。
+① **`3a7f4b5d` `Reduction1W2a`（99 行，J4 W2 批 1a）**：`splitAtSpec`（`splitAtRec` 三层归纳自建精确分解：`splitAt c as = (bef, aft) ∧ c ∈ as ⇒ as = bef ++ c :: aft`；绕开 `splitAt_is_prefix` 的 `is_prefix` 形）+ `sizeRotateTo`（HOL reduction1.hl:1423）+ `memRotateTo2`（:1576）。技法：`splitAt v vs` 项会被全局 rw 污染 ⇒ `conv_rhs`/`conv_lhs` 定位 vs；`(bs ++ [a]) ++ t` 经 `append_assoc` + `simpa` 归 `a :: t`。探针 `splitAtSpec [propext]` / `sizeRotateTo [propext,Quot.sound]` / `memRotateTo2 [propext]`，零 sorryAx。**W2-1a 两件收官**（W2-1 剩 7 件）。
+② **`5bcfb81b` tame-corr b2b（`Reduction3CoreSplitNormal` +125 纯增，现 2313 行）**：`partsBetwn` = HOL more_lemma1.hl:471，`partsCharacterize` **五前件全在位**（`hne` = `:39` 成员 iff 双向 / `hun` = `between_distinct` / `hfl` = `:398` `.symm` / `hall` = `inbetween_inset` / `hH` = `nextElArcSame` + `:600` 全域直用）；空支 `partsNil` 收口。**R1 第三次实战**：§6 的 `eqMemNextElLast`/`nextElBetwnSame` 是 `[DecidableEq]` 世界件、此前从未被实际应用，对 Dart 默认实例直接撞 R1 ⇒ 私件 `nextElArcSame`（Dart-world 孪生，同位置 + `indexfN`/`nextElnIndexf`），§6 本体未动。闸：22 探针（`hdCat` 零公理 + 21 件标准三）、olean 装池。**b2b 收官 ⇒ tame-corr 铺装波前件齐**。
+③ **aq13 index 半（第二次冻结，FREEZE v2）**：修法 B 细化——新识别 **③′（F 段 C 偏移归纳，v1 遗漏）**，总估上修 105–125；②′ 合法化改 `betwnLenPos`（免 getLast）。**编排者改派槽版路线**：主定理按 `rtransCat` 分解 + `indexf_seg_side`（d∈B 支）+ r′ 位置账（j=lM / j>lM）+ `hBoff` 显式假设槽（若 ② 未绿），要求本轮交「绿码或槽版绿码」。消费面不变：QCDVKEA 侦察判定**可开**（剩余 = index 半 105–125 + 组合薄装配 40–60 + 本体 port 80–120；KBWPBHQ2 本侧零缺口）。
+④ **三 lane 在飞**：J4 → W2-1b（GP 簇 3 件：`generatePolygon_criteria`/`subdivFace0_final`/`subdivFaceFinal_eq`，先命名空间探针）；tame-corr → Ncvibwu 铺装波（QCDVKEA 写码 ~90–120，`AqiunppSlot`/`markedList` 载体已定）；aq13 → index 半槽版绿码。
+
 - **2026-11-10（18:35，续813）**：**三笔落库：J4 批 7b `8f536102`（Ob3）+ `e5094b9d`（`Reduction1W1p` 258 行 = `enumeration_vertex_list` 本体 + wrapper，**W1 验收点达成**）+ tame-corr b2a-3e `5943f052`（+233，b2a 全 8 件收官）——两路冻结包/车道交付由编排者验收**。
 ① **`8f536102` `Reduction1W1o`（Ob3，31 行）**：`enumerationVertexListIndexToVertex` = HOL 结论③（`indexToVertexList` 回读 `vs`）。`indexToVertexListEnum`（TameList4:431）直投 + 槽对齐（`t.get! ∈ F` 的 `Option` 解包形，C4 同族）。闸：岛编 RC=0、探针标准三、olean 装池。
 ② **`e5094b9d` `Reduction1W1p`（258 行，W1 验收点）**：
