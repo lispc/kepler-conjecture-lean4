@@ -343,6 +343,10 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（14:40，续790）**：**reduction5 第二轮侦察：底层三件共同前置 = `HQYMRTX1_list` 链侧零命中**。
+① **发现（采信）**：`ytrans_in_suc`/`ztrans_in_suc`/`ztran_suc_in_rtrans` 三证体全吃 **`Tame_list.HQYMRTX1_list`**（TameList16，Spine 独占——`import Kepler.Assembly` 伞模块成环不可达；链侧化 ~40–60）。注：首半笔 `memYtransListOfDarts`（`f74ffd70`）当时是**绕开**了它；底层三件绕不开。
+② **裁决**：下批 = **HQYMRTX1_list 链侧化 → 底层三件**；**硬要求已下**——连续两轮分析零代码后，本批交付必须含代码（最低 = HQYMRTX1 链侧化，允许半件）；「路线未 worked-out」不构成再停理由（worked-out 就是本批产出）。序：钉死 HOL 证体拆分（≤30 min）→ 动笔 → 底层三件接线。闸层不变（tame-corr 铺装波开顶层）。
+
 - **2026-11-10（14:35，续789）**：**reduction5 修正依赖阶梯交档（分析轮，零 patch）+ 续787 裁决 A 勘误**。
 ① **两发现（采信）**：(a) **QCDVKEA 亦闸 NCVIBWU**——证体尾段直接消费 `Ncvibwu.NCVIBWU`，修正「只差一件」旧判读（闸集不变：NCVIBWU+PPLHULJ）。(b) **「AQ7 一般形」在 HOL 不存在**（仅 R0 形 AQ7:181）——`prevElConstZtranRtrans` 实际消费 `Pnxvwfs.indexf_y_le_z_in_r`（PNXVWFS.hl 一般 i 形）= **reduction5 领地**（续736）⇒ **续787 裁决 A 归属结论不变、路线依据更正**（不是 AQ7 去瓶颈化，而是 PNXVWFS 簇自底向上阶梯）；该件证体吃 NCVIBWU + PPLHULJ + QCDVKEA + OHCGKFU + Pbflhet ⇒ **PNXVWFS/Pbflhet/Qcdvkea 簇 = 自底向上阶梯**。
 ② **阶梯图（W2C_PLAN §8，与 tame-corr 共享措辞）**：底层三件（无闸、reduction5）`ytrans_in_suc`（PNXVWFS）/`ztrans_in_suc`（PBFLHET）/`ztran_suc_in_rtrans`（PBFLHET），各 ~40–60 split-face 几何、合计 ~150/patch；中层 R0 形 ✓（`indexfConstLe`/`indexfYLeZInR0`）+ `minnumNot`/`findListUniq`/迭代位置形 ✓；**闸层 NCVIBWU 主山 + PPLHULJ（tame-corr 铺装波）**；顶层 QCDVKEA / prevElConst / KBWPBHQ2 / indexf3 / izsj。
