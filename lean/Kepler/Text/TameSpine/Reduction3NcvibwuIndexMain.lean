@@ -292,11 +292,37 @@ private theorem fillHYw (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesT
   rw [hMLm] at h2
   exact h2
 
+
+/-- 槽 `hZlt` 填充（依赖 `hZidx`；w,z ∈ r' + `indexfLtSizel`）。 -/
+private theorem fillHZlt (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesTl L hL)
+    {N : List (List (ℕ × ℕ))} {r : List (ℕ × ℕ)} {x : ℕ × ℕ}
+    (hm : MarkedListSpineFull hL N r x) (hf : ¬finalListSpine L r)
+    {f : List (ℕ × ℕ)} {w : ℕ × ℕ} (hfind : findFaceDarts L x = f)
+    (hw : nextEl f x = w)
+    (hZidx : indexf w (lZSpine L N r x) (rtransSpine L N r x 1)
+      = indexf w (lZSpine L N r x) f) :
+    indexf w (lZSpine L N r x) f < (rtransSpine L N r x 1).length := by
+  have hrnd : r.Nodup := (normalListUniqNonnil hm.1.2.1 hm.1.2.2.1).1
+  have hwr' : w ∈ rtransSpine L N r x 1 := by
+    have hcase := aqs_nextMarkCaseMem L hL hgn (N := N) (r := r) (x := x) hm hf
+      (f := f) (w := w) hfind hw
+    rcases hcase with h | h
+    · rw [h, rtransCat L N r x hf hrnd]
+      exact List.mem_append_left _ (List.mem_append_right _ (List.mem_cons_self ..))
+    · rw [rtransCat L N r x hf hrnd]
+      exact List.mem_append_left _ (List.mem_append_left _ (List.mem_append_right _ h))
+  have hzr' : lZSpine L N r x ∈ rtransSpine L N r x 1 := by
+    rw [rtransCat L N r x hf hrnd]
+    exact List.mem_append_left _ (List.mem_append_left _ (List.mem_cons_self ..))
+  rw [← hZidx]
+  exact indexfLtSizel hwr' hzr'
+
 end Kepler.Text.TameSpine
 
 -- 公理审计锚（编译即执行；预期标准三，零 sorryAx）
 #print axioms Kepler.Text.TameSpine.ncvibwuV0IdxSpine
 
 -- 槽填充探针
+#print axioms Kepler.Text.TameSpine.fillHZlt
 #print axioms Kepler.Text.TameSpine.fillHZw
 #print axioms Kepler.Text.TameSpine.fillHYw
