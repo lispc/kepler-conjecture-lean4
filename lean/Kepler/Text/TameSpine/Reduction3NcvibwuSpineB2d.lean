@@ -27,6 +27,8 @@
   │   实例），改位置路线（§1 双实例 + nextEl_eq_getD）；`hdm` 前提位保留。
   │ ⑤ §1/§3 的前提统一为 `j < |between s a b|`（弧内末位也成立），
   │   §2 的 j+1 位可直接改取 §1，无需 j+2 界。
+  │ ⑥ ERRATA（B2e 付）：§4 hnest 落地形在 j=l'm 位为假（该位 = l'y，
+  │   端点不入弧）⇒ B2e 改严格界 + r-弧容器；反证 = errata_hnest.lean。
   └────────────────────────────────────────────────────────────────
 
   ┌─ 纪律 ────────────────────────────────────────────────────────
@@ -199,19 +201,28 @@ theorem betwnOrbit [BEq α] [LawfulBEq α] [DecidableEq α] {s : List α}
 
 三要素（B2e 填充对表，机械 0 行收口核对）：
 - **槽名**：`hnest`；
-- **填法**：state-1 `aqs_nextMarkCaseMem` 平行论证（JcajyduAqLeaf12T:130，
-  spine 公开）供 `w ∈ between r z1 y` 的弧嵌套，经 §1–§3 位置件
-  （betwnPosGetElem/betwnSuccGetElem/betwnOrbit）转移到 face 段；
-- **目标定理名**：`ohcgkfuSpineV0`（B2e 拼装：hnest 填后与 B1 的
+- **填法**：`aqs_nextMarkCaseMem`（JcajyduAqLeaf12T:130，spine 公开）+
+  `aqs_sListInBetwn`（JcajyduAqLeaf12U，sList = `(fList)^[1..lM] x`）+ §0 轨道
+  枚举（`(nextEl f)^[k] x = (fList)^[k] x` 于 face 轨道）——B2e `hnestFill`；
+- **目标定理名**：`ohcgkfuSpineV0`（B2e 装配：hnest 填后与 B1 的
   `ncvibwuSpineV0FPart` 并集即头段 ∪ F-弧 = spine-i0 成员性）。
 
-语义：face 段 `w..y`（= `(nextEl f)^[1..lM+1] x`，f = findFaceDarts L x）
-整段落在变换后 r'（= rtransSpine L N r x 1）的 `l'z → l'y` 弧内。 -/
+语义：face 段 `w..y⁻`（= `(nextEl f)^[1..lM] x` = sList，w = nextEl f x，
+**不含终点 y**）整段落在 **r-弧** `l'z → l'y` 内（`between r ...` 严格排除两端）。
+
+**ERRATA（B2e 修正，机器证据）**：B2d 落地形为 `j ≤ lMSpine` 且容器取
+`between (rtransSpine L N r x 1) ...`——在 `j = lMSpine` 处实例即
+`l'y ∈ between r' l'z l'y`（`(nextEl f)^[lM+1] x = l'y` 由 `dLMeqY` +
+`iterate_succ_apply` 供），而 `notBetwn2` 证明右端点永不入弧 ⇒ 落地形为假
+（车道 `errata_hnest.lean` 已机器反证：`¬hnestOld`，探针标准三）。
+修正=严格界 `<`（sList 恰为 1..lM 位）+ 容器回 **r-弧**（与 DELIVERY_2B2b §3
+三要素原文「face 段 ⊆ r-弧 z1→y」一致；r' 侧成员性由 B2e 的 `rtransCat`
+直投，无需把 r' 写进槽）。 -/
 def hnest (L : fgraph ℕ) (N : List (List (ℕ × ℕ))) (r : List (ℕ × ℕ))
     (x : ℕ × ℕ) : Prop :=
-  ∀ j : ℕ, j ≤ lMSpine L r x →
+  ∀ j : ℕ, j < lMSpine L r x →
     (nextEl (findFaceDarts L x))^[j + 1] x ∈
-      between (rtransSpine L N r x 1) (lZSpine L N r x) (lYSpine L r x)
+      between r (lZSpine L N r x) (lYSpine L r x)
 
 end Kepler.Text.TameSpine
 
