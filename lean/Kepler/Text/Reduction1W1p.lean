@@ -66,9 +66,10 @@ private theorem eqSomeGetD {o : Option Nat} (h : o.isSome = true) :
 `f.nextVertex u1 = u2`，撞 witness 第三合取。 -/
 theorem noConsecutiveDuplicate {f : Face} {g : Graph} {vs : List (Option Nat)}
     (hnd : f.vertices.Nodup)
-    (hP19 : ∀ (i : Nat) (d : Nat × Nat), i + 1 < vs.length →
+    (hP19 : ∀ (i : Nat), i + 1 < vs.length →
       (vs[i]!).isSome = true → (vs[i + 1]!).isSome = true →
-      d ∈ listOfDarts g.fgraph → d ∈ listPairs f.vertices) :
+      ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listOfDarts g.fgraph →
+      ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listPairs f.vertices) :
     ¬ ∃ i, i + 1 < vs.length ∧ (vs[i]!).isSome = true ∧
       (vs[i + 1]!).isSome = true ∧
       (vs[i]!.getD 0 ≠ (vs[i + 1]!.getD 0) ∧
@@ -77,7 +78,7 @@ theorem noConsecutiveDuplicate {f : Face} {g : Graph} {vs : List (Option Nat)}
        ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listOfDarts g.fgraph) := by
   rintro ⟨i, hi, h1, h2, -, -, hne, hin⟩
   have hpairs : ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listPairs f.vertices :=
-    hP19 i _ hi h1 h2 hin
+    hP19 i hi h1 h2 hin
   have his : is_nextElem f.vertices (vs[i]!.getD 0) (vs[i + 1]!.getD 0) :=
     (listPairsIsNextElem f.vertices _ _).mp hpairs
   have hedge : ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ f.edges :=
@@ -110,9 +111,10 @@ theorem enumerationVertexListLemma {g : Graph} {f : Face} {v : Nat}
     (hall : ∀ t ∈ (vs.filter Option.isSome).map Option.get!, t ∈ f.vertices)
     (hmono : ∀ i, i + 1 < vs'.length →
       indexf v vs'[i]! f.vertices < indexf v vs'[i + 1]! f.vertices)
-    (hP19 : ∀ (i : Nat) (d : Nat × Nat), i + 1 < vs.length →
+    (hP19 : ∀ (i : Nat), i + 1 < vs.length →
       (vs[i]!).isSome = true → (vs[i + 1]!).isSome = true →
-      d ∈ listOfDarts g.fgraph → d ∈ listPairs f.vertices) :
+      ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listOfDarts g.fgraph →
+      ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listPairs f.vertices) :
     ∃ e, e ∈ Kepler.Graphs.enumerator vs.length f.vertices.length ∧
       containsDuplicateEdge g f v e = false ∧
       vs = Kepler.Graphs.indexToVertexList f v e := by
@@ -149,9 +151,10 @@ theorem enumerationVertexList {g : Graph} {f : Face} {v : Nat}
     (hall : ∀ t ∈ (vs.filter Option.isSome).map Option.get!, t ∈ f.vertices)
     (hmono : ∀ i, i + 1 < vs'.length →
       indexf v vs'[i]! f.vertices < indexf v vs'[i + 1]! f.vertices)
-    (hP19 : ∀ (i : Nat) (d : Nat × Nat), i + 1 < vs.length →
+    (hP19 : ∀ (i : Nat), i + 1 < vs.length →
       (vs[i]!).isSome = true → (vs[i + 1]!).isSome = true →
-      d ∈ listOfDarts g.fgraph → d ∈ listPairs f.vertices) :
+      ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listOfDarts g.fgraph →
+      ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listPairs f.vertices) :
     ∃ e, e ∈ Kepler.Graphs.enumerator vs.length f.vertices.length ∧
       containsDuplicateEdge g f v e = false ∧
       vs = Kepler.Graphs.indexToVertexList f v e := by

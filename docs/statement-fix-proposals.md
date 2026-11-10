@@ -6625,3 +6625,54 @@ Section F（`lean/Kepler/Text/LocalAuto21.lean`，基线 `561197d8` 行号）：
 
 **已执行（随 patch5 落地；本 § 由编排者并入本文档）**。`patch5.diff` 含 5 处括号修复
 + 两件真证；岛编 0 err、0 新增 warning；探针两件标准三零 sorryAx。
+
+## 105. J4 W1/W2 三件 `hP19` 量化过强（`∀ d` vs HOL 的 `let d = 相邻 some 对`）— 分级 **A**（移植量化误植 · 陈述收紧 · 下游 `all_some_generatePolygon` 不可供）
+
+### (a) HOL 裁决
+
+`reference/flyspeck/text_formalization/tame/reduction1.hl:1185-1188`（1a 的 P19）：
+
+```
+(!i. (let d = (the (EL i vs), the (EL (SUC i) vs)) in
+     isSome (EL i vs) /\ isSome (EL (SUC i) vs) /\
+     SUC i < sizel vs /\ MEM d (list_of_darts (fgraph g)) ==>
+     MEM d (list_pairs (FST f))))
+```
+
+HOL 的 `d` 是 **`let` 绑定的「第 i 与 i+1 位解包对」**，假设只约束相邻对。
+
+### (b) Lean 现状（缺陷）
+
+`Reduction1W1p`（`enumerationVertexListLemma` / `enumerationVertexList` /
+`noConsecutiveDuplicate`）与 `Reduction1W2b`（`generatePolygonCriteria`）落库形为
+`∀ (i : Nat) (d : Nat × Nat), … d ∈ listOfDarts g.fgraph → d ∈ listPairs f.vertices`
+——`d` **任意**，等价于「g 的全部 dart ⊆ listPairs F」，比 HOL 强得多（g 可含多面，
+真实实例供不出）。发现于 J4 车道写 `all_some_generatePolygon` 时：
+`vs = MAP SOME (rotate_to F v)` 全 some，但 `hP19` 无从供给 ⇒ 该件 BLOCKED。
+
+**影响面**：三件均无生产消费方（`generatePolygonCriteria` 唯一消费者
+`all_some_generatePolygon` 未开工）⇒ 收紧不破坏任何在库证明链；
+收紧方向 = **前提变弱 ⇒ 定理变强**，不弱化 e2e 验收。
+
+### (c) 修法（已执行，2026-11-10）
+
+四处 `hP19` 统一收紧为 HOL 的相邻对形：
+
+```lean
+(hP19 : ∀ (i : Nat), i + 1 < vs.length →
+  (vs[i]!).isSome = true → (vs[i + 1]!).isSome = true →
+  ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listOfDarts g.fgraph →
+  ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listPairs f.vertices)
+```
+
+补丁面：`lean/Kepler/Text/Reduction1W1p.lean`（3 处陈述；`noConsecutiveDuplicate`
+证体的 `hP19 i _ hi h1 h2 hin` → `hP19 i hi h1 h2 hin`）+
+`lean/Kepler/Text/Reduction1W2b.lean`（1 处陈述；证体不变）。闸：两文件岛编
+RC=0 / 0 err / 0 warn；探针 4 条全 ⊆ `[propext, Classical.choice, Quot.sound]`、
+零 sorryAx、olean 装池。
+
+### (d) 消费面复检（待办）
+
+`all_some_generatePolygon` 下一轮按新形供 `hP19`（HOL 证体经
+`mem_list_pairs_explicit` 的相邻对版）；`noConsecutiveDuplicate` 用法已复核
+（只消费相邻对实例，收紧后类型直接匹配，证体仅改应用处）。

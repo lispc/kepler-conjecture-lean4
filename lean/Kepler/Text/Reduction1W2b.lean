@@ -40,9 +40,10 @@ theorem generatePolygonCriteria {g : Graph} {f : Face} {v : Nat}
     (hall : ∀ t ∈ (vs.filter Option.isSome).map Option.get!, t ∈ f.vertices)
     (hmono : ∀ i, i + 1 < vs'.length →
       indexf v vs'[i]! f.vertices < indexf v vs'[i + 1]! f.vertices)
-    (hP19 : ∀ (i : Nat) (d : Nat × Nat), i + 1 < vs.length →
+    (hP19 : ∀ (i : Nat), i + 1 < vs.length →
       (vs[i]!).isSome = true → (vs[i + 1]!).isSome = true →
-      d ∈ listOfDarts g.fgraph → d ∈ listPairs f.vertices) :
+      ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listOfDarts g.fgraph →
+      ((vs[i]!.getD 0), (vs[i + 1]!.getD 0)) ∈ listPairs f.vertices) :
     subdivFace g f vs ∈ generatePolygon vs.length v f g := by
   obtain ⟨e, hmem, hcontain, hvsE⟩ :=
     enumerationVertexList hvs' h3 hhd hlastSome hprev hfm hun hgf hvs2 hall hmono hP19
