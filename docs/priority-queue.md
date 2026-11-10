@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:15，续755）**：**铺装 patch7（0a+0b）落库 `ea5fc35d`——`PwssratFace` 293 行 6 件 + `sListEqOfMarked` 可见性一字；0a/0b 闭，QCDVKEA 消费面就位**。
+① **件目**：`fListPowEqNextElPow`（PWSSRAT:502 面幂引擎 = `(f_list L)^m y = ((next_el (find_face L y))^m) y`，面轨道保面归纳；同时消 T1 engines 步的 `f_list_power_next_el` 缺）；0a 三件 `lyMemFindFaceDarts`/`lzMemFindFaceDarts`/`lyFindFaceEq`（HOJODCM:359 ①②，fList 轨道直证；**前提比 HOL 弱**：仅需 `markedList`，无需 `¬final_list`，DIFFERS 记档）；`indexfYtransEqLm`（`indexf_ytrans_eq_l_m` 面指数形：`nextElnIndexf` 换基 + 新界 `lmLtFaceLen` 三个全公开件拼装——**即 scout QCDVKEA 的消费面**）；`pplhulj3V0`（PPLHULJ_v0③，ZIndexf:261-:355 同构：`indexfN` 定位 + patch5 `hqymrtx1List` 第二合取排除 `i+1 ≤ l'm+1` ⇒ `l'm < i`）；`pplhuljV0`（三合取一行装配）。`PwssratMemberBase.sListEqOfMarked` private→public（陈述/证体逐字未动，docstring 记用途；ChainMarkedTranslate ⑤ 先例）。
+② **验证（编排者亲跑）**：`git apply --check` PASS；双文件岛编 RC=0 / 0 error / 0 warning / 0 sorry；6 条 `#print axioms` 全 `[propext, Classical.choice, Quot.sound]`；注释深度 1；olean 双装入池（MemberBase 需先装新 olean 再编 Face——池内旧 olean 无公开件，这是验证序的关键点）。patch +297/−2，主仓 tracked 仅此两文件。
+③ **解锁面**：即刻可派链侧 `next_mark_case_mem`（步骤 1，估 60–80；此前 BLOCKED 因 PWSSRAT:584 无载体）；`indexf_y_le_z_in_r_0` / OHCGKFU 续作面；**T1 主机仍等 scout QCDVKEA/KBWPBHQ2**（裁决 c），**T2 Spine 侧装配 400–600 拆两笔等派**（裁决 a，`sListEqOfMarked` 即其消费面之一）。
+
 - **2026-11-10（10:05，续754）**：**formal_ineqs 证书格式判定（编排者亲查）——「显式 trace ⇒ 10–100× 便宜」假说推翻；import 价值重定位为算法复用 → 立侦察道**。
 ① **格式证据三条**：`verifier/certificate.hl` 的 `result_tree` 节点 = `Result_pass of (int*bool)` / `Result_pass_mono` / `Result_mono` / `Result_glue`——**结构/标志树，无显式区间数值**；`verify_ineq` 的 `verification_stats` 显式区分 `formal_verification_time` 与证书搜索时间；论文原文 "the tool uses interval arithmetic with Taylor approximations" internally ⇒ **formal 侧 = 按搜索结构重跑形式浮点/TS 算术，非校验显式 dyadic trace**。**此前「若为显式 trace 则验证端快 10–100×」的口径作废**（假设前提不成立）。
 ② **import 价值重定位**：数据不可复用（azure/results 为会话日志/哈希，非证书数据；Q3 待侦察确认），但**算法值得偷**——`mono_status`/`allow_derivatives`/`convex_flag`/`mono_pass_flag` = **单调性/凸性维数归约**（正是我们 18 叶低 k 角区缺的招：2-D 盒塌成 1-D/端点检验）+ 23k 覆盖的搜索质量。
