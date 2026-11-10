@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（20:55，续817）**：**两笔落库：aq13 槽填充 3/9 `8d08a5b5`（+26）+ SF-105 陈述收紧 `4e188ae2`（W1p/W2b，64 行）——SF-105 由 J4 车道在 `all_some_generatePolygon` 受阻时发现，属本轮最重要的保真度修正**。
+① **`8d08a5b5` aq13 槽填充 3/9（`Reduction3NcvibwuIndexMain.lean` +26）**：`fillHZlt`（`indexf w z f < r'.length`，以 `hZidx` 为假设：`rw [← hZidx]` + `indexfLtSizel`；`w ∈ r'` 走 `aqs_nextMarkCaseMem` 两案 × `rtransCat`、`z ∈ r'` 走 `[z]` 头）。探针标准三、olean 装池。**剩 6 槽**：`hposW` / `hBlen`+`hBoff`（互依赖，拟抽 `betwnLastIdx` 破环）/ `hCmem` / `hCoff` / `hZidx`（依赖序表已入 `DELIVERY_2fill3.md`）。
+② **`4e188ae2` SF-105（`docs/statement-fix-proposals.md` §105）**：J4 三件 `hP19` **量化过强**——HOL `reduction1.hl:1185-1188` 的 `d` 是 `let` 绑定的「第 i 与 i+1 位解包对」，只约束相邻对；Lean 落库形 `∀ (i) (d), … d ∈ darts → d ∈ pairs` 等价于「g 全部 dart ⊆ listPairs F」，真实实例供不出（`all_some_generatePolygon` 直接 BLOCKED）。修法：四处 `hP19` 统一收紧为相邻对形（`W1p` 三陈述 + `W2b` 一陈述；`noConsecutiveDuplicate` 应用处 `hP19 i _ hi …` → `hP19 i hi …`，其余证体不变）。**方向 = 前提变弱 ⇒ 定理变强**，无生产消费方，不弱化 e2e。闸：两文件岛编 RC=0/0err/0warn、4 探针标准三零 sorryAx、olean 装池。
+③ **续派**：J4 → `all_some_generatePolygon`（按 SF-105 新形供 `hP19`，90–130）；aq13 → 剩 6 槽；tame-corr → QCDVKEA（在飞）。
+
 - **2026-11-10（20:10，续816）**：**两笔落库：J4 `subdivFace0_final` `90341e53`（61 行）+ aq13 槽填充 2/9 `0e2d5c2c`（+43）**。
 ① **`90341e53` `Reduction1W2c`（W2 批 1c，61 行）**：`subdivFace0Final` = HOL reduction1.hl:1704：`(fun p => makeFaceFinal p.1 p.2) (subdivFace0Alt g f u n vos) = subdivFace' g f u n vos`（vos 归纳；none/some 双支 `if_pos`/`if_neg` **同一 h 连打两次**）。探针 `[propext]`。**新雷区记档（车道发现、采信）**：`simp only [def]` 会顺带消 `if`（`if_pos`/`if_neg` 是 simp 引理），if-型 def 展开须 `rw [def]` + 定点 `simp only [具体引理]`；与 C4（`Inhabited` 实例不共享）、`Prod` 投影落在未标注 `let` 项同族「展开粒度」问题。
 ② **`0e2d5c2c` aq13 槽填充 2/9（`Reduction3NcvibwuIndexMain.lean` +43）**：`fillHZw`（`(nextEl f)^[indexf w z f] w = z`：`indexfN` on f + `hfind`/`hw` 换名 + `nextEl_mem_of_mem`）+ `fillHYw`（`(nextEl f)^[lM] w = y`：`dLMeqY`/`indexfYtransEqLm` 经 `rwa [hfind, hw]` 桥）。两件 private、主定理签名未动（回填下波）；探针标准三零 sorryAx、olean 装池。**剩 7 槽**（`hposW`/`hBoff`/`hBlen`/`hCmem`/`hCoff`/`hZidx`/`hZlt`）修法表已入 `DELIVERY_2fill12.md`。
