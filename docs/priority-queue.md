@@ -319,6 +319,17 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:55，续759）**：**formal-ineqs 侦察道回执（SCOUT.md 444 行）——BIEFJHU 72 NEG 直接根因定位 = CertTM `.cosK`/`.abs` 节点缺 TM 规则致零阶 fallback 误差；三条 GO/NO-GO 已定，路线裁决待用户（certtm 保留项）**。
+① **根因（编排者已逐条亲核源码）**：`CertTM.lean:449` `.cosK => none`（sinK 有 trans 规则、cosK 直接拒绝）；`:3716` `.abs e, ps => … fallbackTM`（无条件零阶，不查符号）；`:2478` `fallbackTM` 斜率 `⟨0,0⟩`、`err = I.hi − I.lo` ⇒ hull 表达式里 `cosK(abs(π/2−π/k))` 的参数只依赖 k，18 叶盒上 fallback 误差模型 vs 实测 `trueMin − mirrorLoBound` 缺口比值 median 1.59，且 k 宽线性下降 ⇒ **细分/提精度不收敛是结构性的，与 R2c1 观测（loBound 指数 −1444→−2565 收敛 0⁻）完全一致**。
+② **Q1 mono 归约（可移植性成立但非首选）**：HOL `partial_increasing_left/decreasing_left/increasing_right`（m_verifier.hl:605/672/738）+ `partial_convex_max`；盒子压缩端点面递归验证。**我们判据已机器验证**：18 叶并集 h∈[1,1.26]、k∈[3,4.2109375] 上 `∂F/∂k ∈ [−0.29192,−0.01692]`（严格负），k 压到 4.2109375 后 1-D 真最小值 **+0.0295156**（h≈1.08636）。树内已有 `lean/Kepler/Interval/MonoCorner.lean`（10-22，W8 线 = 被 hold 的 Mono*），缺 sin/cos/abs 导数规则 150–270 行。**Flyspeck 自己对本题（7534）统计 `pass=44, mono=0, glue=43, pass_mono=0`——他们没用 mono，靠完整 TM 节点直接啃**。
+③ **Q3 数据复用判死（证实续754）**：azure stdout 只有统计/定理/时间/哈希，无 per-leaf TM 参数；`main_verifier.hl:29-48` 也只打印三样。**只能复用算法，不能复用数据**。
+④ **三条路线**：**GO-1（首选）** 补 `.cosK`+`.abs` TM 规则（cosK 镜像 sinK 导数取负、abs 查符号恒等/取负）300–500 行，**不动表达式/盒/证书队列，现有 18 叶 TMParams 对同盒仍有效，预期 72 子盒全翻 PASS**（真余量 +0.0295，余项降 O(W²)≈1e-3）；**GO-2** k 单调归约 200–450 行（属 Mono* held 线，需解冻 + 重烘 1 个 sqrt 尾数证书）；**NO-GO** 整套 checker 移植 1500–3000 / 依赖细分（~32× 叶 ≈16 h 内核）/ 数据复用。**GO-1 触及 CertTM 健全性核心 + 用户 certtm 保留项 ⇒ 编排列上报用户裁决，不单方面动**。
+⑤ 侦察道限制：未重跑 72 个 `checkPosTMHull = true := by decide +kernel`（最终验收仍需）；其试跑 `DiagA.lean` 返回 `D2 none` 判为 TMParams/盒失配，未作结论。
+
+- **2026-11-10（10:50，续758）**：**NKEZBFC W28 part 1 落库 `e06a59c6`（v4 层 319 行 2 件 + 1 私支）——v4 链两件就位，hstep/hslot_w 诚实域接线完成**。
+① `pW6k7_stepB_sol_nonneg_v4`：v2 主件机械复刻，三处差异——①`hslot_u` 删除换 **run 前件 hstep**（签名逐字对齐 `pW5_flat_cone_order` 实例化形 = `pW26_hstep_at_run` 结论形，part 2 放电一行调用）；②`hslot_w` 保持 W27 诚实域 `0<j`；③K 案 `hS3` 改由私支 `pW28_slot_u_at`（EGHNAVX 供 hflat、hcol 供 hnc → `pW4_telescope_u` → `pW6k6_azim_zero_of_affGe`+`azim_eq_zero_symm`），其余逐字。`pW6k8_stepB_sol_nonneg_affGe_v4` 孪生复刻。实交 319 行 vs 估 200–250（run 前件签名 12×3 + 私支 70，机械复刻内超估已记账）。
+② **验证**：apply-check PASS（`d7469652`/`4e1de30a` 双基线）；禁词零；深度 1/0；RC=0 / 0err / 0warn；双 axioms 全标准三零 sorryAx；olean 装池。**W29（`pW19_v4` part 2）已派**，要求随交付附 `WINDING_PLAN.md`（绕序推导专项的槽供给件图谱，≤1 页）。
+
 - **2026-11-10（10:35，续757）**：**NKEZBFC W27 落库 `2d9ba660`——`hslot_w` j=0 假支形式反证 + 诚实域 iff 桥（103 行 2 件）**。
 ① `pW27_wslot_zero_false`：`hcl + p∈V + hiter + 1<ncard + hnc + azim 0 vv1 vv2 p ≠ 0 ⇒ ¬(ρ²p ∈ affGe{0}{p, ρp})`——`pW6k6_azim_zero_of_affGe` 逆否 + `azim_eq_zero_symm` 换序（非共线前提由 `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` 换序得）。`pW27_hslot_w_iff`：全 ∀ 形 ⟺（`0<j` 域形 ∧ j=0 实例），纯逻辑拆分——j=0 实例即 §1 反证 ⇒ **v4 的 `hslot_w` 签名写 `0<j` 有形式依据，假支图谱第二格正式闭**。
 ② **验证**：apply-check PASS；禁词零；注释深度 1/0；RC=0 / 0err / 0warn；两条 axioms 全标准三零 sorryAx；olean 装池。实交 103 行 vs 估 55（前提推导 ~35 行，车道如实记账）。W28（v4 part 1）继续。
