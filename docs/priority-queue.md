@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:45，续766）**：**W33+W34 落库（`482c6000` / `ebd82062`）——绕序两块新几何到位，W35 单归纳总装已派**。
+① **W33（99 行 2 件）**：`pW33_edge_cone_excl` 一般形（任意互异 run 指数 ⇒ `vv m ∉ affGe{0}{vv p1, vv(p1+1)}`）+ `pW33_edge_cone_excl_mirror` 镜像实例（`m+1 ≤ p1` ⇒ 排除）。**路线勘误（机器证据推翻工单估）**：无需 `LOFA_IMP_EE_TWO_ELMS`+EE 路线——在库原语 `FAN_IN_AFF_GE_IMP_EQ`（LocalAuto5:1660，std3）直接给「点∈边锥 ⇒ 点=边端点」，与指数顺序无关；W32 卡住的「早一格」= `pW5_second_disjunct_false` **去掉 `j1≤j` 守卫**的同一定理（守卫仅服务 omega 定向）。99 行 vs 估 120–180。
+② **W34（68 行 1 件）**：`pW34_rho_last_mem` = J 段 wrap 基点（`w = vv(k−1)`、周期回卷 `ρw = p` ⇒ `ρw ∈ affGe{0}{p,w}`）。**AZIM_COMPL 族对表**：`azim_compl`(AzimLemmas:318)/`azim_compl_eq_zero`(:407)/`AZIM_COMPL_EXT`(PackingAuto6:3489)/`AZIM_COMPL_NEG_fb`(FanBaseKit:407)/`point_in_aff_ge`(Planarity:4334) 全 std3 ✓；**禁用** `AZIM_COMPL_NEG_p13`/`AZIM_NEG_p13`（LocalAuto13:1526，证体 sorry）。
+③ **架构发现（W35 指令依据）**：J 段完整证明 = 平凡对成员 + w 侧 union 望远镜等式（H 段 `∀j` 归纳，HOL :2345–2400）；归纳步进 `AFF_GE_EQ_AFF_GE_UNION` 的 h4（1_2 步进）由 HOL 标签 `th3` 供给（文件内未定位源，大概率 = 前文 w 侧 1_2 族）⇒ **H 段与 J 段是同一归纳的两面，不可拆件串联**。W35 已派：th3 溯源 + 单归纳主件（HOL :2345–2583 ≈250 HOL → Lean 250–350），目标 `WindingSlot` 真证（槽退位）。
+
 - **2026-11-10（10:41，续765）**：**件 8（T2 主机）对表完成 → BLOCKED 拆两笔；8a 上游缺件层 12 件已派**。
 ① **锚订正**：wrapper `reduction3.hl:183-191`（9 行）→ 主机 `More_lemma1.hl:2028-3082`（**1055 行 / 610 步，全树零移植**）；`tame_list:12829` 一带实为 `rot_final_list`（12831），**主机证体零引用**——实际 orbit 件 = `next_el_refl`/`next_el_cat1/2`/`next_el_parts_last`。
 ② **陈述对表逐字同形**（cat 右嵌套 ↔ `++` 结合序、`HD` junk ↦ `headD (0,0)`）；**唯一 DIFFERS = `haq : AqiunppSlot L hL` 显式化**（HOL 从 `transform_assumption_v2_lemma : ∀L, transform_assumption_v2 L` 内部取，链侧槽无生产者——J2 装配面，与 patch4–7 同口径）。
