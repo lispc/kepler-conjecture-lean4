@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（09:00，续746）**：**W21-① 落库 `19ef9067`（v2 转换两件）+ 第二个假支发现 → 派 W22（§0 v2 链条 → C2 → hstep）**。
+① **W21-① 落库**：`LocalFanStepW21.lean` 114 行 2 件——`pW21_slot_u_v2`（hstep 全 n ⇒ affGe j≥1）/`pW21_slot_w_v2`（hprev-v2 n≥2 ⇒ affGe j≥1）；**机器核 `pW5w_telescope` 消费点（W5W:93）**：`i := 1` 覆盖 `[3, k−1] ⊂ [2, k−1]`，v2 范围恰好够用。编排者验收标准三、olean 装池。
+② **★第二个假支发现（采信）**：`hslot_w` 的 **j = 0 实例亦假**——要求 `ρ(vv 1) = vv 2 ∈ cone{p, vv 1}`，但 `vv 2` 射线一般严格在 `vv 1` 之外（`bta 2 > 0` 时）。⇒ **诚实槽范围两侧统一 j ≥ 1**（消费者 `pW6k7` K 案只在 `j := i₀ ≥ 1` 消费，收紧无损失）；形式反证 ~55 行排 W23（不挤占主攻）。
+③ **链条范围影响**：`pW6k7 → pW6k8 → pW19` 槽皆 ∀j（含 j=0），**须 v2 化**（机械复刻 ~350–400，签名收紧 + 两处调用加 `0 < j`——②③ 成果的接入前提）。**派 W22**：§0 v2 链条（单 patch）→ ② C2 主攻（60–100）→ ③ hstep 全 n 闭包（60–90）；分序交付。
+
 - **2026-11-10（08:56，续745）**：**W20 消槽边界落库 `c3a4fb77` + 重大范围 bug 发现 → 派 W21 三件套**。
 ① **★hprev 槽范围 bug（正确性级，形式反证入档）**：pW19 的 hprev 槽从 n=1 起**不可证**——`vv 0 = p` 使 t-set `{p, vv 0} = {p}` 退化，槽实例迫使 `vv 1` 落 p 射线、与 generic 非共线矛盾；`pW20_hprev_one_degenerate` 形式反证 ⇒ **诚实槽范围 n ≥ 2**。这解释了 W5a-ii 三条路线全排的真正原因（当年在打含假支的陈述）。② **残留硬点最小化到 C2 单件**：`pW20_hprev_iff_21`（hprev 1_2 = C1∧C2）+ `pW20_c2_iff_azim`（C2 ⟺ `azim 0 (vv(n-1)) v (vv n) = 0`）；C2 = `vv n ∈ affGt{0,vv(n-1)}{v}`（n≥2）；中间件全在（pW5w2/w3/w4/w5/w6）。③ **hstep 口径更正**：`pW5_flat_cone_order`/`pW5b_hstep` 只覆盖 flat-run 段，pW19 槽是全 n——w 段（超 jump 索引）需镜像件（`vv n ↦ vv(k−n)` 第二 run）+ bta 接线（估 60–90）。**派 W21 三件套**：① 槽范围更正（`pW19_*_v2`，hprev n≥2 + hstep 范围复核，既有陈述零改）→ ② C2 主攻（60–100，第一档硬点正面最后一段）→ ③ hstep 全 n 闭包（60–90）；全部落库后 v2 消槽、陈述与 LA9:3196 逐字。W20 编排者验收 3 件标准三、olean 装池。
 
