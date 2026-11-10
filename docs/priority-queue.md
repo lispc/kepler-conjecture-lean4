@@ -319,6 +319,17 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:30，续763）**：**铺装 batch B 落库 `a301779b`（`PwssratEngine` 116 行 4 件）+ 件 7 判定免费（Spine 在库直接消费）——T2 主机（件 8）即刻开派，batch C 取消**。
+① 件目：`finalListPowerFn`(tame_list:14016，归纳 motive 含 ∀d∈r)、`memPrevPower`(more_lemma1:818，**加强形**：HOL 的 `uniq r` 证体未用，DIFFERS 记档)、`symPowerPrevNext`(more_lemma1:830，双互逆幂等式 key1/key2)、`minnumNot`(PWSSRAT:449)。4 axioms 标准三零 sorryAx；RC=0 0err 0warn；olean 装池。
+② **件 7 判定（重要减支）**：`partsRevFBetwnPure` = `aq8w2d_partsRevFBetwnPure`（Leaf8W2bD:390）+ `eqFstBetwnRevParts` = `aq8w2e_eqFstBetwnRevParts`（Leaf8W2bE:156），**Spine 侧已落库且标准三**，T2 直接 import + `ChainBridge.parts_eq_partsSpine` 对接链 `parts` 即可；链侧港版需 parts 大机器（`partsCases`/`partsPure`/`sizeInduct` TameList9 + `partsCharacterize` TameList39 链侧全零 decl，保守 ≥500）判超止损不立。**batch C 三件同款（`aq12w_catFstSplitNormalParts`/`FST_HD_MAP_betwn` Leaf12B/AQ12/`uniqFstSplitNorm` AQ1 族）⇒ batch C 取消**。
+③ **件 8 已派**（T2 主机 `core_split_normal_list`，Spine 侧，300–500 允许拆两笔）；batch D（阻断层五件 ~210，解锁件 4 + OHCGKFU 两段）排后。
+
+- **2026-11-10（10:30，续762）**：**W31 绕序侦察判定（只读，零编译）——在库装配 NO-GO ⇒ 立绕序显式槽为兜底；GO 子目标 = 抄 HOL w 侧 azim-eq 路线（WINDING_CORE 200–350，2 轮上限）**。
+① **同一缺口**：「det 单调」与「cross-dot 符号一致」是同一缺口的不同坐标（`pW22_c2_iff_det`/`pW24_c2_iff_crossdot`/`pW5w6_radial_iff_azim`/`azim_eq_zero_iff_alt` 等价链全在库）；azim↔cross-dot 只有正半桥 `pW3b_crossdot_pos_of_azim_lt_pi`（BW3bI:193），负半/逆向**零命中**。
+② **EGHNAVX（LA14:6965 std3）供**：bta 单调 + 两支 run 锥 + interiorAngle1=π；**不能供** bta 序↔det 序桥（W23 已证投影方向序 ≠ 径向序）。**扇凸性供**：`wedge_eq_affGt`(LuneVolume:647)/`azim_cone_of_combo`(:387)/`decomposition_planar_by_angle_fan`(Planarity:4203)+`pW5_second_disjunct_false` 二分排除；**不能供**第一析取 det 符号（−αγ''/β 不可判）。
+③ **HOL 锚**：`NKEZBFC.hl` 机器窗口确认 **HOL 也没有独立 det-monotone 引理**——w 侧 H/I 段 2271–2498 用 `AZIM_EQ`(:2434/:2447/:2448)+`FAN_IN_AFF_GE_IMP_EQ`(:2275)+EGHNAVX+aff_ge UNIONS 等式(:2459-2460)，绕序**内嵌于 566 行证体（2049–2614）不可单件搬**；对应 Lean 件（`azim_eq_azim_iff`/`FAN_IN_AFF_GE_IMP_EQ`/`pW5w_telescope`/`pW5w2`/`pW5w4`）全在库，缺口 = w 侧 mirror hstep 的 Lean 镜像。
+④ **最小假设集**（cross-dot 形）= {bta 单调+run 锥（EGHNAVX ✓）、非共线（generic ✓）、共同基表示（`pW22_rep_unique` ✓）、**绕序一致性（唯一新增，零命中）**}。**W32 已派**：WINDING_CORE 镜像试作，硬 2 轮上限；不收敛即落显式槽 `hwind`（§5 签名）+ DIFFERS，v4+ 链带此单一边界收口。
+
 - **2026-11-10（10:28，续761）**：**NKEZBFC W30 落库 `8f69c9d3`（120 行 3 件）——v4 链两个供给面接线，绕序缺口收紧到「跳跃前段 C1 + 绕序判定」一处**。
 ① `pW30_hprevC1`：`pW5b_flat_mem`+`pW5w2_affGt_prev_21` 接线 ⇒ `∀ n, i+2 ≤ n ≤ k−1 → vv n ∈ affGt{0,p}{vv(n−1)}`，**诚实域 = 跳跃后段**（flat-run 前提 `i+1≤n` 只在后段可用；跳跃前段 C1 仍为槽，缺口与绕序判定同源）。
 ② `pW30_hstepEG`：hstep 槽的 EGHNAVX 语境 ∀-包装，放电 = 一行 `pW26_hstep_at_run`；**机器事实：v4 链唯一槽消费点（`pW28_slot_u_at` 内）恒在 `bta i = 0` 处** ⇒ 消槽最终一步 = 该点换调 pW26（v5 签名换形态，留统排）。
