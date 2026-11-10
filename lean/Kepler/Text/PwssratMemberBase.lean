@@ -187,7 +187,28 @@ theorem nextElRotateToEq {α : Type} [BEq α] [LawfulBEq α] {r : List α} {x : 
       | cons b bs => rfl
     rw [hright]
 
+/-! ## §2 member 链快件（f_eq_next_el_x / l_y_rep_power / ytrans_mem_rtrans） -/
+
+/-- **HOL `f_eq_next_el_x`**（PWSSRAT.hl:160-:174，rtrans 形）：
+`fList L x = nextEl (rotateTo (rtrans L N r x i) x) x`。
+证明 = AqiunppSlot 变换后 markedList 第 6 槽（nextEl (rtrans i) x = fList x）
++ `← nextElRotateToEq`。 -/
+theorem fEqNextElX (L : fgraph ℕ) (hL : GoodList L)
+    (haq : AqiunppSlot L hL)
+    (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    {N : List (List Dart)} {r : List Dart} {x : Dart} (i : ℕ)
+    (hm : markedList L hL N r x) :
+    fList L x = nextEl (rotateTo (rtrans L N r x i) x) x := by
+  have hmk := haq hgn N r x hm i
+  have hN := hmk.2.1
+  have hrnd : (rtrans L N r x i).Nodup :=
+    Kepler.Text.MoreLemma2Island1.uniqFlattenUniq hN.1 hmk.2.2.1
+  have hxr : x ∈ rtrans L N r x i := hmk.2.2.2.1
+  rw [← nextElRotateToEq hxr hrnd]
+  exact (hmk.2.2.2.2.2.1).symm
+
 end Kepler.Text.Reduction4Idx
 
+/-! 公理审计锚。 -/
 #print axioms Kepler.Text.Reduction4Idx.nextElRotateToEq
-#print axioms Kepler.Text.Reduction4Idx.idxOf_splitAt_fst
+#print axioms Kepler.Text.Reduction4Idx.fEqNextElX
