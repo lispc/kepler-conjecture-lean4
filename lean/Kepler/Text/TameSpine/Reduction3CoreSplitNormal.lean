@@ -1186,6 +1186,267 @@ theorem normalConditionLastParts (L : fgraph ℕ) (hL : GoodList L)
       exact normalListPartsNextLastNot L hL hn hnedg hr hp
   · exact aqs_conditionLastParts L hrnd hrne hp hd hdl
 
+/-- **py 支矛盾**（`:39` 正向）：`x ∈ py ∩ B_r` 且 `x ≠ py.getLast!` 不可能。
+块偏移 L0 把 `indexf py.last x r` 展开为 `|r|−|py|+1` 以上（F1），而
+`indexf py.last pz.head! r ≤ |r|−|py|`（F2），与弧内 indexf 界冲突。 -/
+private theorem notMemPyOfMemBetwn {r : List Dart} {sp : List (List Dart)}
+    {py pz : List Dart} {x : Dart} (hrnd : r.Nodup) (hflr : sp.flatten = r)
+    (hall : ∀ q ∈ sp, q ≠ [])
+    (hpy : py ∈ sp) (hpz : pz ∈ sp) (hpynd : py.Nodup) (hpne : py ≠ [])
+    (hpznd : pz.Nodup) (hpzne : pz ≠ [])
+    (hlastmem : py.getLast! ∈ py) (hheadmem : pz.head! ∈ pz)
+    (hllr : py.getLast! ∈ r) (hzhr : pz.head! ∈ r)
+    (hlastne : py.getLast! ≠ pz.head!) (hpypz : py ≠ pz)
+    (hxpy : x ∈ py) (hxn : x ≠ py.getLast!)
+    (hx : x ∈ between r py.getLast! pz.head!) : False := by
+  have hflatnd : sp.flatten.Nodup := by rw [hflr]; exact hrnd
+  have hxr : x ∈ r := hflr ▸ List.mem_flatten.mpr ⟨py, hpy, hxpy⟩
+  set T1 := (sp.take (sp.idxOf pz)).flatten.length with hT1
+  set T2 := (sp.take (sp.idxOf py)).flatten.length with hT2
+  have hl0l : r.idxOf py.getLast! = T2 + py.idxOf py.getLast! := by
+    rw [← hflr]; exact flattenIdxOfOffset hflatnd hpy hall hlastmem
+  have hl0x : r.idxOf x = T2 + py.idxOf x := by
+    rw [← hflr]; exact flattenIdxOfOffset hflatnd hpy hall hxpy
+  have hl0h : r.idxOf pz.head! = T1 + pz.idxOf pz.head! := by
+    rw [← hflr]; exact flattenIdxOfOffset hflatnd hpz hall hheadmem
+  have hl0zl : r.idxOf pz.getLast! = T1 + pz.idxOf pz.getLast! := by
+    rw [← hflr]; exact flattenIdxOfOffset hflatnd hpz hall (aqs_getLastMem hpzne)
+  have hel : py.idxOf py.getLast! = py.length - 1 := aqs_idxOfGetLast hpynd hpne
+  have heh : pz.idxOf pz.head! = 0 := aqs_idxOfHead pz
+  have hezl : pz.idxOf pz.getLast! = pz.length - 1 := aqs_idxOfGetLast hpznd hpzne
+  have hlx : r.idxOf py.getLast! < r.length := List.idxOf_lt_length_iff.mpr hllr
+  have hlb : r.idxOf pz.getLast! < r.length :=
+    List.idxOf_lt_length_iff.mpr (hflr ▸ List.mem_flatten.mpr ⟨pz, hpz, aqs_getLastMem hpzne⟩)
+  have hzx : T1 + pz.length ≤ r.length := by
+    rw [hezl] at hl0zl
+    omega
+  have hxidxlt : py.idxOf x < py.length - 1 := by
+    have h1 : py.idxOf x < py.length := List.idxOf_lt_length_iff.mpr hxpy
+    have h2 : py.idxOf x ≠ py.length - 1 := by
+      intro he
+      apply hxn
+      exact (List.idxOf_inj hxpy).mp (by rw [he, ← hel])
+    omega
+  obtain ⟨hposx, hltx⟩ :=
+    (Kepler.Text.TameSpine.indexfBetwnEq hlastne hrnd hllr hzhr).mp hx
+  have hF1 : r.length - py.length + 1 ≤ Kepler.Text.TameSpine.indexf py.getLast! x r := by
+    have hord : r.idxOf x < r.idxOf py.getLast! := by
+      rw [hl0x, hl0l, hel]
+      omega
+    have hval := indexfOfIdxOfLt hllr hxr hord
+    rw [hl0x, hl0l, hel] at hval
+    rw [hval]
+    omega
+  have hF2 : Kepler.Text.TameSpine.indexf py.getLast! pz.head! r
+      ≤ r.length - py.length := by
+    rcases Nat.lt_or_ge (sp.idxOf py) (sp.idxOf pz) with hlt | hge
+    · have hordh : r.idxOf py.getLast! < r.idxOf pz.head! := by
+        rw [← hflr]
+        exact aqs_flatIdx_lt_of_partIdx_lt hflatnd hpy hpz hlt hlastmem hheadmem
+      have hval := indexfOfIdxOfGe hllr hzhr (le_of_lt hordh)
+      rw [hl0l, hl0h, hel, heh] at hval
+      rw [hval]
+      have hpl : 1 ≤ pz.length := List.length_pos_of_ne_nil hpzne
+      omega
+    · have hlt2 : sp.idxOf pz < sp.idxOf py := by
+        rcases Nat.lt_or_ge (sp.idxOf pz) (sp.idxOf py) with h | h
+        · exact h
+        · exact absurd ((List.idxOf_inj hpz).mp (le_antisymm hge h)) (fun hc => hpypz hc.symm)
+      have hordh : r.idxOf pz.head! < r.idxOf py.getLast! := by
+        rw [← hflr]
+        exact aqs_flatIdx_lt_of_partIdx_lt hflatnd hpz hpy hlt2 hheadmem hlastmem
+      have hT12 : T1 + pz.length ≤ T2 := by
+        have hord := aqs_flatIdx_lt_of_partIdx_lt hflatnd hpz hpy hlt2
+          (aqs_getLastMem hpzne) (aqs_headMem hpne)
+        rw [hflr] at hord
+        have hh : r.idxOf py.head! = T2 := by
+          have h := flattenIdxOfOffset hflatnd hpy hall (aqs_headMem hpne)
+          rw [hflr] at h
+          rw [h, aqs_idxOfHead py, Nat.add_zero]
+        rw [hl0zl, hezl, hh] at hord
+        omega
+      have hval := indexfOfIdxOfLt hllr hzhr hordh
+      rw [hl0l, hl0h, hel, heh] at hval
+      rw [hval]
+      omega
+  omega
+
+/-- **pz 支矛盾**（`:39` 正向，与 py 支镜像）：`x ∈ pz ∩ B_r` 且
+`x ≠ pz.head!` 不可能（`indexf` 差 = `pz.idxOf x ≥ 1`）。 -/
+private theorem notMemPzOfMemBetwn {r : List Dart} {sp : List (List Dart)}
+    {py pz : List Dart} {x : Dart} (hrnd : r.Nodup) (hflr : sp.flatten = r)
+    (hall : ∀ q ∈ sp, q ≠ [])
+    (hpy : py ∈ sp) (hpz : pz ∈ sp) (hpynd : py.Nodup) (hpne : py ≠ [])
+    (hpznd : pz.Nodup) (hpzne : pz ≠ [])
+    (hlastmem : py.getLast! ∈ py) (hheadmem : pz.head! ∈ pz)
+    (hllr : py.getLast! ∈ r) (hzhr : pz.head! ∈ r)
+    (hlastne : py.getLast! ≠ pz.head!) (hpypz : py ≠ pz)
+    (hxpz : x ∈ pz) (hxn : x ≠ pz.head!)
+    (hx : x ∈ between r py.getLast! pz.head!) : False := by
+  have hflatnd : sp.flatten.Nodup := by rw [hflr]; exact hrnd
+  have hxr : x ∈ r := hflr ▸ List.mem_flatten.mpr ⟨pz, hpz, hxpz⟩
+  set T1 := (sp.take (sp.idxOf pz)).flatten.length with hT1
+  set T2 := (sp.take (sp.idxOf py)).flatten.length with hT2
+  have hl0l : r.idxOf py.getLast! = T2 + py.idxOf py.getLast! := by
+    rw [← hflr]; exact flattenIdxOfOffset hflatnd hpy hall hlastmem
+  have hl0x : r.idxOf x = T1 + pz.idxOf x := by
+    rw [← hflr]; exact flattenIdxOfOffset hflatnd hpz hall hxpz
+  have hl0h : r.idxOf pz.head! = T1 + pz.idxOf pz.head! := by
+    rw [← hflr]; exact flattenIdxOfOffset hflatnd hpz hall hheadmem
+  have hel : py.idxOf py.getLast! = py.length - 1 := aqs_idxOfGetLast hpynd hpne
+  have heh : pz.idxOf pz.head! = 0 := aqs_idxOfHead pz
+  have hxidxpos : 1 ≤ pz.idxOf x := by
+    rcases Nat.eq_zero_or_pos (pz.idxOf x) with h | h
+    · exfalso
+      apply hxn
+      exact (List.idxOf_inj hxpz).mp (by rw [h, aqs_idxOfHead pz])
+    · exact h
+  obtain ⟨hposx, hltx⟩ :=
+    (Kepler.Text.TameSpine.indexfBetwnEq hlastne hrnd hllr hzhr).mp hx
+  rcases Nat.lt_or_ge (sp.idxOf py) (sp.idxOf pz) with hlt | hge
+  · have hordh : r.idxOf py.getLast! < r.idxOf pz.head! := by
+      rw [← hflr]
+      exact aqs_flatIdx_lt_of_partIdx_lt hflatnd hpy hpz hlt hlastmem hheadmem
+    have hTyt : T2 + py.length ≤ T1 := by
+      have hord := aqs_flatIdx_lt_of_partIdx_lt hflatnd hpy hpz hlt
+        hlastmem hheadmem
+      rw [hflr] at hord
+      have hh : r.idxOf pz.head! = T1 := by
+        rw [hl0h, heh, Nat.add_zero]
+      rw [hl0l, hel, hh] at hord
+      omega
+    have hordx : r.idxOf py.getLast! < r.idxOf x := by
+      rw [hl0l, hl0x, hel]
+      omega
+    have hval := indexfOfIdxOfGe hllr hxr (le_of_lt hordx)
+    rw [hl0l, hl0x, hel] at hval
+    have hD := indexfOfIdxOfGe hllr hzhr (le_of_lt hordh)
+    rw [hl0l, hl0h, hel, heh] at hD
+    rw [hval, hD] at hltx
+    omega
+  · have hlt2 : sp.idxOf pz < sp.idxOf py := by
+      rcases Nat.lt_or_ge (sp.idxOf pz) (sp.idxOf py) with h | h
+      · exact h
+      · exact absurd ((List.idxOf_inj hpz).mp (le_antisymm hge h)) (fun hc => hpypz hc.symm)
+    have hordh : r.idxOf pz.head! < r.idxOf py.getLast! := by
+      rw [← hflr]
+      exact aqs_flatIdx_lt_of_partIdx_lt hflatnd hpz hpy hlt2 hheadmem hlastmem
+    have hTty : T1 + pz.length ≤ T2 := by
+      have hord := aqs_flatIdx_lt_of_partIdx_lt hflatnd hpz hpy hlt2
+        (aqs_getLastMem hpzne) (aqs_headMem hpne)
+      rw [hflr] at hord
+      have hh : r.idxOf py.head! = T2 := by
+        have h := flattenIdxOfOffset hflatnd hpy hall (aqs_headMem hpne)
+        rw [hflr] at h
+        rw [h, aqs_idxOfHead py, Nat.add_zero]
+      have hl0zl : r.idxOf pz.getLast! = T1 + pz.idxOf pz.getLast! := by
+        rw [← hflr]
+        exact flattenIdxOfOffset hflatnd hpz hall (aqs_getLastMem hpzne)
+      have hezl : pz.idxOf pz.getLast! = pz.length - 1 := aqs_idxOfGetLast hpznd hpzne
+      rw [hl0zl, hezl, hh] at hord
+      omega
+    have hordx : r.idxOf x < r.idxOf py.getLast! := by
+      have h2 : pz.idxOf x < pz.length := List.idxOf_lt_length_iff.mpr hxpz
+      rw [hl0x, hl0l, hel]
+      omega
+    have hval := indexfOfIdxOfLt hllr hxr hordx
+    rw [hl0l, hl0x, hel] at hval
+    have hD := indexfOfIdxOfLt hllr hzhr hordh
+    rw [hl0l, hl0h, hel, heh] at hD
+    rw [hval, hD] at hltx
+    omega
+
+
+/-- **HOL `betwn_LAST_HD_parts`**（more_lemma1.hl:39）：
+`s = parts L r ∧ py,pz ∈ s ∧ y∈py ∧ z∈pz ∧ FST y ≠ FST z ⇒
+(∀x, x∈betwn r (LAST py) (HD pz) ↔ x∈flatten (betwn s py pz))`。
+反向 = `aqs_memFlattenBetwnSym`；正向三岐（`aqs_memFlattenBetwnSymCase`）：
+中间支直落，py/pz 支由块偏移 + indexf 界矛盾（`notMemPy/PzOfMemBetwn`）；
+空支由 `betwnNil` + `fListQuotientAlt` 双向传播。 -/
+theorem memBetwnLastHdParts (L : fgraph ℕ) (hL : GoodList L)
+    {N : List (List Dart)} (hn : NormalListSpine hL N) {r : List Dart} (hr : r ∈ N)
+    {sp : List (List Dart)} (hsp : partsSpine L r = sp)
+    (hunq : (sp.map (fun q => q.head!.1)).Nodup)
+    {py pz : List Dart} (hpy : py ∈ sp) (hpz : pz ∈ sp)
+    {y z : Dart} (hy : y ∈ py) (hz : z ∈ pz) (hyz : y.1 ≠ z.1) :
+    ∀ x, x ∈ between r py.getLast! pz.head! ↔ x ∈ (between sp py pz).flatten := by
+  obtain ⟨hrnd, hrne, hpynd, hpne, hysub⟩ := partsUniqNonnil L hL hn hr (hsp ▸ hpy)
+  obtain ⟨-, -, hpznd, hpzne, hzsub⟩ := partsUniqNonnil L hL hn hr (hsp ▸ hpz)
+  have hflr : sp.flatten = r := by rw [← hsp]; exact partsFlatten L hrnd hrne
+  have hflatnd' : sp.flatten.Nodup := by rw [hflr]; exact hrnd
+  have hspnd : sp.Nodup := by rw [← hsp]; exact uniqParts L hrnd hrne
+  have hall : ∀ q ∈ sp, q ≠ [] := by rw [← hsp]; exact partsAllNonnil L hrnd hrne
+  have hlastmem : py.getLast! ∈ py := aqs_getLastMem hpne
+  have hheadmem : pz.head! ∈ pz := aqs_headMem hpzne
+  have e1 : y.1 = py.head!.1 := partsFst L hL hn hr (hsp ▸ hpy) hy
+  have e2 : py.getLast!.1 = py.head!.1 := partsFst L hL hn hr (hsp ▸ hpy) hlastmem
+  have hfyl : y.1 = py.getLast!.1 := e1.trans e2.symm
+  have hfz : z.1 = pz.head!.1 := partsFst L hL hn hr (hsp ▸ hpz) hz
+  have hlastne : py.getLast! ≠ pz.head! := by
+    intro hcon
+    apply hyz
+    rw [hfyl, hfz, hcon]
+  have hpypz : py ≠ pz := by
+    intro hcon
+    apply hyz
+    rw [hcon] at e1
+    rw [e1, hfz]
+  have hllr : py.getLast! ∈ r := hflr ▸ List.mem_flatten.mpr ⟨py, hpy, hlastmem⟩
+  have hzhr : pz.head! ∈ r := hflr ▸ List.mem_flatten.mpr ⟨pz, hpz, hheadmem⟩
+  by_cases hB : between r py.getLast! pz.head! = []
+  · -- 空支：两侧同为空
+    have hBsp : between sp py pz = [] := by
+      by_contra hc
+      obtain ⟨w, hw⟩ := List.exists_mem_of_ne_nil _ hc
+      obtain ⟨v, hv⟩ := List.exists_mem_of_ne_nil _ (hall w (Kepler.Graphs.inbetween_inset hw))
+      have hwf : v ∈ (between sp py pz).flatten := List.mem_flatten.mpr ⟨w, hw, hv⟩
+      have hwr : v ∈ between r py.getLast! pz.head! := by
+        have h := aqs_memFlattenBetwnSym (r := sp) (v := py) (v1 := pz) (d := v)
+          (y := py.getLast!) (z := pz.head!) hflatnd' hwf hlastmem hheadmem
+          hpypz hpy hpz hall
+        rwa [hflr] at h
+      rw [hB] at hwr
+      exact absurd hwr (by simp)
+    intro x
+    constructor
+    · intro hx
+      rw [hB] at hx
+      exact absurd hx (by simp)
+    · intro hx
+      rw [hBsp] at hx
+      simp at hx
+  · intro x
+    constructor
+    · intro hx
+      have hxmem : x ∈ r := Kepler.Graphs.inbetween_inset hx
+      obtain ⟨p, hp, hxp⟩ := partsMemExists L hrnd hxmem
+      have htrich := aqs_memFlattenBetwnSymCase (r := sp) (v := py) (v1 := pz)
+        (d := x) (y := py.getLast!) (z := pz.head!) hflatnd' hlastmem hheadmem
+        hpypz hpy hpz hall (by rw [hflr]; exact hx)
+      rcases htrich with hcpy | hcout | hcpz
+      · have hxn : x ≠ py.getLast! := by
+          intro hc
+          have hIb :=
+            (Kepler.Text.TameSpine.indexfBetwnEq hlastne hrnd hllr hzhr).mp hx
+          rw [hc, Kepler.Text.TameSpine.indexfRefl hllr] at hIb
+          exact absurd hIb.1 (by omega)
+        exact False.elim (notMemPyOfMemBetwn hrnd hflr hall hpy hpz hpynd hpne
+          hpznd hpzne hlastmem hheadmem hllr hzhr hlastne hpypz hcpy hxn hx)
+      · exact hcout
+      · have hxn : x ≠ pz.head! := by
+          intro hc
+          have hIb :=
+            (Kepler.Text.TameSpine.indexfBetwnEq hlastne hrnd hllr hzhr).mp hx
+          rw [hc] at hIb
+          exact absurd hIb.2 (by omega)
+        exact False.elim (notMemPzOfMemBetwn hrnd hflr hall hpy hpz hpynd hpne
+          hpznd hpzne hlastmem hheadmem hllr hzhr hlastne hpypz hcpz hxn hx)
+    · intro hx
+      have h := aqs_memFlattenBetwnSym (r := sp) (v := py) (v1 := pz) (d := x)
+        (y := py.getLast!) (z := pz.head!) hflatnd' hx hlastmem hheadmem
+        hpypz hpy hpz hall
+      rwa [hflr] at h
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理）。 -/
@@ -1206,3 +1467,4 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.lastCatBetwnSame
 #print axioms Kepler.Text.TameSpine.catBetwnSame
 #print axioms Kepler.Text.TameSpine.normalConditionLastParts
+#print axioms Kepler.Text.TameSpine.memBetwnLastHdParts
