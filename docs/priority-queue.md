@@ -123,7 +123,7 @@
 | 波 | 件 | HOL | Lean 估 | 批 | 独立验收点 | 状态 |
 |---|---:|---:|---:|---:|---|---|
 | **W0+W3d** §0 两小件 + `bounded_size_finals`/`max_finals_g_exists` | 3+ | 167+ | 20–40 + ~330 | 1 | `maxFinalsGExists` | **✅ 已落 `a8dc86c1`**（296 行 6 件；`hne` 显式槽待 W2/W3c 填） |
-| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅；批 1 `018fcbe5`（`filterEl`）/ 批 2 `974a94dd` / 批 3 `fcff9315` / 批 5 `61eea60e` 全 ✅；**批 4 UNRESOLVED 冻结**（`showDups0Bound`/`enumBound`，编排者收口中）；批 5b 桥 `3d27ec9d` + `dart_neighbors` `e24bb3be` + `duplicateEdge_next` `94c5389c` 全 ✅；批 6 §4/§1/§2 已派车道、§3 挂批 4；剩余重估 1,650–2,330 |
+| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅；批 1 `018fcbe5`（`filterEl`）/ 批 2 `974a94dd` / 批 3 `fcff9315` / **批 4 `02c28fae`（回收，4 件 267 行）** / 批 5 `61eea60e` 全 ✅；批 5b 桥 `3d27ec9d` + `dart_neighbors` `e24bb3be` + `duplicateEdge_next` `94c5389c` 全 ✅；批 6 §4 mono = w1j 冻结包（车道再收口一轮中）、§1/§2 explicit 顺延、**§3 已解锁**（批 4 回收）；剩余重估 1,650–2,330 |
 | **W2** GP 判据 + newvertex/iso_list | 22 | 1,165 | 1,466–1,986 | 4 | `iso_list_newvertex_lemma` + `UYOUIXG` | 排队 |
 | **W3a–c** contour/flag/图级 finals（余下） | 30 | 1,140 | 1,334–1,826 | 4 | `flag_list_seed` / contour 簇 | 排队（Lean 白地 = 最高风险） |
 | **W4** 尾部循环 + 主装配 | 18 | 1,048 | 1,317–1,798 | 4 | `restrictedHypermapsArePlaneGraphsReduction1` | 排队 |
@@ -342,6 +342,12 @@
 > **ERRATA（续708 补）**：续692–续708 条目的手写时间曾按编排者估算漂移（最多 +2.7h），本批已**全部按对应 commit 的实际时间改正**（见 `git log --date=format:%H:%M`）。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-10（17:56，续806）**：**J4 批 4 回收落库 `02c28fae`（`Reduction1W1d` 4 件，267 行）——W1 批 4 全闭，解锁批 6 §3/批 7；tame-corr b2a-3a 落库 `477615b1`（+222）**。
+① **`02c28fae` `Reduction1W1d.lean`**（编排者按 `w1d` 冻结包 + 7 条修法表收口）：`showdups0SucIsSome`（reduction1.hl:956-1006）+ `enumSucIsSome`（:1007-1034）+ `showDups0Bound`（:676-692）+ `enumBound`（:738-776），**冻结语句零改动**。三处结构修正：(a) `showDups0_succ_none` 归纳重写（v3 的 `hall'`/`hnone'` 未绑定）；(b) `showDups0Bound` 改**单下标 aux**（`i<|vs|` + 只对 `j≤i` 前缀假设）——避开 `generalizing` 下 `k=|bs|` 的递归边界；(c) `getElemBangMap` 自建（`List.getElem!_map` 0 命中）+ `showDupsConsEq` 构造子 rfl 桥。闸：禁词零、岛编 RC=0/0err/0warn、**4 探针两条 `[propext, Quot.sound]`（无 choice）+ 两条标准三**、零 sorryAx、olean 装池。**批 4 四件全闭 ⇒ 批 6 §3 与批 7 解锁**。
+② **`477615b1` tame-corr b2a-3a（+222 纯增，现 1692 行）**：`lastBetwnLastHdParts` = HOL more_lemma1:90 + 私件 `takeGetLast`（`0<n≤|l| ⇒ (l.take n).getLast! = l[n−1]`）+ `arcLastNext`（弧尾 crux：`q = (betwn sp py pz).getLast! ⇒ nextEl sp q = pz`；`betwnTakeDrop` 双形四子支、回卷 take-空支析取判据）。路线：`nextElFlattenLast`+`arcLastNext` → `indexfAddLeft` 三角 → `betwnGetLastOfIndexfSuccG`。闸：apply-check PASS @`b24e615a`、禁词零、岛编 RC=0/0err/0warn、19 探针（`hdCat` 零公理 + 18 标准三）零 sorryAx、olean 装池。**b2a-3b 已续派**（`arcSuccNonlast` → `nextBetwnLastHdParts` :250 → `betwnLastHdPartsFlatten` :398，≈130–150）。
+③ **J4 w1j 冻结包已收**（批 6 §4 mono 达 ≤4 轮止损；9 error + 修法表）；关键结构结论已采信：`vs' : List ℕ`、`∀`-绑定替代 generalizing、IH 五参 `(vs', w, 方程, hmono, hhead)`。**已派车道按修法表再收口一轮**（从 `vs'b` 显式化重写 succ 支），失败则交回冻结包由我收口。
+④ 新雷区（tame-corr 记档）：跨 `getLast`/`take` 的证明参数依赖重写必炸 motive ⇒ **`congrArg (fun l => l.getLast!)` 是跨等列表搬 `getLast!` 的唯一免证明参数路**；下标改写一律 `getElemEqOfEqIdx` 桥。
 
 - **2026-11-10（17:38，续805）**：**aq13 B2e 落库 `9742e60b`（`hnestFill` + `ohcgkfuSpineV0`，127 行 + B2d 勘误）——spine-i0 成员性闭合，Wave C 解阻**。
 ① **`ohcgkfuSpineV0`**（spine-i0 成员性）：`j ≤ indexf w l'z f ⇒ (nextEl f)^[j] w ∈ rtransSpine 1`，三段装配：`j < lM` → `hnestFill` + `rtransCat`；`j = lM` → `l'y` 的 `[y]` 段；`j > lM` → B1 `ncvibwuSpineV0FPart`（锚 `indexfYtransEqLm`/`dLMeqY`）。`hnestFill` = `aqs_sListInBetwn`（12U = HOL AQ12 `s_list_in_betwn`:3086）+ `fListPowEqNextElPow` 轨道桥（12 行）。
