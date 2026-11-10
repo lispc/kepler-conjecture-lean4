@@ -348,6 +348,12 @@
 ② **两车道零码轮（如实）**：J4 `all_some_generatePolygon` 交冻结拆解（N1 `lastRotateTo` 三支推完 / N2 `indexfRotateEq` 模算术 / N3 `memListPairsRotateTo` 走 `is_nextElem` 层；估 105–145，建议 N3 单列）；aq13 交「已填 3/9 + 剩 6 槽修法表」（`betwnLastIdx` 即本轮所收）。两轮均按「冻结比硬凑好」纪律，无 patch。
 ③ **续派**：aq13 → 用 `betwnLastIdx`（`5233b972` 在库）填 `hBoff`/`hBlen`，再 `hposW`/`hCmem`/`hCoff`/`hZidx`；J4 → N1/N2 先写（风险低），N3 单列；tame-corr → QCDVKEA（在飞）。
 
+- **2026-11-10（22:30，续819）**：**编排方式改版（用户指令）+ tame-corr 漏派事故更正**。
+① **事故更正（编排者责任）**：tame-corr 在 b2b 交付（`5bcfb81b`）后**漏派续作**，但编排者在续814–818 多轮汇报中误标「QCDVKEA 在飞」——用户指出「Tame corr 没看到再跑」后核实为假。已补派。
+② **编排方式改版（用户指令「sub agent 负责更大、主线程更稀疏」）**：派单从「每轮 1–2 件」改为**整段交付制**——每车道一次负责一整个波段（多件 + 验收点），车道自行迭代到绿或真冻结，**只回主线程一次**，绿件打包单 patch 整批验收落库；冻结件附陈述+修法表；中途侦察不交主线程。
+③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
+④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
+
 - **2026-11-10（20:55，续817）**：**两笔落库：aq13 槽填充 3/9 `8d08a5b5`（+26）+ SF-105 陈述收紧 `4e188ae2`（W1p/W2b，64 行）——SF-105 由 J4 车道在 `all_some_generatePolygon` 受阻时发现，属本轮最重要的保真度修正**。
 ① **`8d08a5b5` aq13 槽填充 3/9（`Reduction3NcvibwuIndexMain.lean` +26）**：`fillHZlt`（`indexf w z f < r'.length`，以 `hZidx` 为假设：`rw [← hZidx]` + `indexfLtSizel`；`w ∈ r'` 走 `aqs_nextMarkCaseMem` 两案 × `rtransCat`、`z ∈ r'` 走 `[z]` 头）。探针标准三、olean 装池。**剩 6 槽**：`hposW` / `hBlen`+`hBoff`（互依赖，拟抽 `betwnLastIdx` 破环）/ `hCmem` / `hCoff` / `hZidx`（依赖序表已入 `DELIVERY_2fill3.md`）。
 ② **`4e188ae2` SF-105（`docs/statement-fix-proposals.md` §105）**：J4 三件 `hP19` **量化过强**——HOL `reduction1.hl:1185-1188` 的 `d` 是 `let` 绑定的「第 i 与 i+1 位解包对」，只约束相邻对；Lean 落库形 `∀ (i) (d), … d ∈ darts → d ∈ pairs` 等价于「g 全部 dart ⊆ listPairs F」，真实实例供不出（`all_some_generatePolygon` 直接 BLOCKED）。修法：四处 `hP19` 统一收紧为相邻对形（`W1p` 三陈述 + `W2b` 一陈述；`noConsecutiveDuplicate` 应用处 `hP19 i _ hi …` → `hP19 i hi …`，其余证体不变）。**方向 = 前提变弱 ⇒ 定理变强**，无生产消费方，不弱化 e2e。闸：两文件岛编 RC=0/0err/0warn、4 探针标准三零 sorryAx、olean 装池。
