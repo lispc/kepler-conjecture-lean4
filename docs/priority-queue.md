@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（16:33，续800）**：**J4 批 5b 桥件编排者亲作落库 `3d27ec9d`（`listPairsIsNextElem` 163 行，零假设）——批 5b 单缺件闭合**。
+① **`3d27ec9d` `Reduction1W1f.lean`**：`listPairsIsNextElem`（泛型 `[BEq α] [LawfulBEq α] [DecidableEq α] [Inhabited α]`）：**`(v,w) ∈ listPairs l ↔ is_nextElem l v w`，零假设（不需 Nodup）**；私件 `getElemBangH`（界内 getElem! = getElem）+ `listPairsLengthT` + `listPairsGetElemT`（经 `la7_rotOne_eq` + `la7_getElem_rotOne` 公开件免位次从属证明搬运）+ `getElemCongrList`。标准三零 sorryAx；岛编 RC=0/0err/0warn。
+② **战役级雷区（8 轮编译收敛，入档）**：**依赖式 `getElem` 的位次证明随 index 的 rw 拆解**（从属动基 motive 失败——`rw`/`conv` 均不可，`simp only` 的从属证明策略部分可）；四条对策：**getElem! 形**（无证明 arg，motive 安全）、**证明无关换形**（`getElemBangH` 双向桥）、**la7RotOne 桥**（`la7_getElem_rotOne` 把 rot 位次一次给全）、`simp only [从属 eq]`。此雷区与 W1c 的 `getElem?` 家族同源，5b/6/7 直接复用对策。
+③ **批 5b 收口已派回车道**（`dart_neighbors` 走 `neighbors_edges` (InvariantsC:848) → `edges_face_eq` → `Face.edges` def → `is_nextElem_edges_eq` (:456) → 桥 → `VerticesSet2Eq` def 展开；`duplicateEdge_next` 接 `duplicateEdge` def；估 80–140）。
+
 - **2026-11-10（15:41，续799）**：**aq13 B2c-p1 落库 `4879030f`（OHCGKFU-i0 基建 3 私件 75 行）**。`modSuccEqW`（`(m%len+1)%len = (m+1)%len`）+ `getDIdxOfSelfW`（getD-下标自反）+ `getDIdxEqW`（**m 任意**的 getD 下标单射 = 轨道位次复原引擎）。16 轮编译记档：getElem-位证链（% 嵌套 + mod 位移 + getD 回退槽）为本环境 getElem 雷区复合点，**已改走 getD 形并落地**。`orbitGetElemW` 本体留 B2d（接缝 ≤1 轮机器判定：m 显式传 % 嵌套形 + hdmem ~3 行；与 `betwnPosGetElem`/`betwnSuccGetElem`/`betwnOrbit` 弧位次三件总装，估 100–140）⇒ B2d 交付 = **spine-i0 完整闭合、Wave C 解阻**。闸：apply-check PASS、禁词零、岛编 RC=0/0err/0warn、5 探针全 ⊆ 标准三零 sorryAx、olean 装池。**B2d 已批**。
 
 - **2026-11-10（15:30，续798）**：**tame-corr b1b-2 落库 `56f077d3`（b1b 全链 6/6 收官，+349 纯增）+ J4 批 5b 侦察交单（`neighbors_edges` 在库，重估下修 40%）**。
