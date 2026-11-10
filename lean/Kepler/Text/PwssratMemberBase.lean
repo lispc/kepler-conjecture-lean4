@@ -230,9 +230,34 @@ theorem lyNextElPow (L : fgraph ℕ) {r : List Dart} {x : Dart}
   rw [Function.iterate_succ, Function.iterate_succ]
   exact h.symm
 
+/-- **HOL `ytrans_mem_rtrans`**（PWSSRAT.hl:275-:296）。 -/
+theorem ytransMemRtrans (L : fgraph ℕ) (hL : GoodList L)
+    (haq : AqiunppSlot L hL)
+    (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    {N : List (List Dart)} {r : List Dart} {x : Dart} (i : ℕ)
+    (hm : markedList L hL N r x) :
+    ytrans L N r x i ∈ rtrans L N r x i := by
+  have hmk := haq hgn N r x hm i
+  have hxr : x ∈ rtrans L N r x i := hmk.2.2.2.1
+  have hteth : fList L x = nextEl (rtrans L N r x i) x :=
+    (hmk.2.2.2.2.2.1).symm
+  show Kepler.Text.Reduction5.ly L (rtrans L N r x i) x ∈ rtrans L N r x i
+  rw [lyNextElPow L hteth]
+  have key : ∀ m : ℕ,
+      (nextEl (rtrans L N r x i))^[m] x ∈ rtrans L N r x i := by
+    intro m
+    induction m with
+    | zero => simpa using hxr
+    | succ m ih =>
+      rw [Function.iterate_succ_apply']
+      exact Kepler.Text.TameLp.nextEl_mem_of_mem ih
+  exact key _
+
 end Kepler.Text.Reduction4Idx
 
 /-! 公理审计锚。 -/
 #print axioms Kepler.Text.Reduction4Idx.nextElRotateToEq
 #print axioms Kepler.Text.Reduction4Idx.fEqNextElX
+
 #print axioms Kepler.Text.Reduction4Idx.lyNextElPow
+#print axioms Kepler.Text.Reduction4Idx.ytransMemRtrans
