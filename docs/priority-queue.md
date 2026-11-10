@@ -319,6 +319,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:59，续768）**：**la21 patch4 落库 `20b6b082`——W3 vv-kit 四件真证（271 行），LA21 net sorry 25→21**。
+① 件目：`VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21`/`vv_azim_le_alt_p21`（**绕开 LA38 sorry 件** `PRIOR_TO_LESS_THAN_PI_LEMMA_ALT`：直接消费 `ConvexLocalFan` wedge 合取 + `EE_vv` 二元邻域 + epsilon 唯一性钉 `sigmaFan = vv(i+k-1)`）/`vv_split_azim_alt_p21`（`sum4_azim_fan`，`hxv` 由 h3 补）/`interior_angle1_azim_scs_p21`（`interiorAngle1` 定义即 azim 同文件 rfl 件 ⇒ `show` 展开 + p14 两条 equivariance 替代 HOL `LOFA_IMP_INANGLE_EQ_AZIM_IVS`，`e' := min e e₁`）。LA14:2971 `w5cA3_continuousAt_azim` 可见性一字（陈述/证体逐字）。
+② **验证**：四件 `#print axioms` 全标准三零 sorryAx（编排者独立 probe）；LA21 岛编 RC=0、21 条警告全预存 sorry（基线 25 −4 恰为本笔）；LA14 RC=0、74 条警告全预存 linter 类（39 unused simp/11 push_neg 弃用等，无一条在 2971）；olean 双装池；+187/−25。
+③ **路线判定**：`ConvexLocalFan`/`LocalFan`（σFan 基）与 `_p2`（azimCycle 基）非 defeq 但本笔绕开 `_p2` 桥（仅 ivs kit 经 `localFan_p2.of_LocalFan_noIso` + 2-正则给 hedge）；**LA38:2494 BLOCKED 注释判 stale**（所引 `LOCAL_FAN_RHO_NODE_PROS2` 在 LA5:1044 且标准三），但一般形仍需 `sigmaFan = azim_cycle` 识别桥，**不宣称可一并关闭**。patch5（W4 BBs 双件）已派。
+
 - **2026-11-10（10:57，续767）**：**TM fill 诊断道回执（DIAG_TM_FILL.md，与 formal-ineqs 侦察独立同源）——根因确认 + 两条 ERRATA + 新约束（opt-in C 变体）已转施工道**。
 ① **根因（机器证据链完整）**：ite guard `π/x2 − 3/4`；x2 低于阈值（4π/3≈4.1888）一侧走 `cos(|π/2−π/x2|)` 支；`TaylorM.trans .cosK => none`（:448）+ `.abs` 无条件 plain 回退（:3716）⇒ `π/x2` 区间宽 **一阶于 x2 盒宽、与 rung 无关**；fallbackTM err=2⁻⁷ 经 `2·x2·2·atan` 链放大到 2⁻⁴。NEG160 终局：err=0.094845、fB 宽=0.091325、loBound = 0.013624 − 0.047598 − 0.094845 = **−0.128819**；真实余量盒角/盒心采样 +0.0553，**72 盒最坏 gi141 = +0.02978**。判别式逐位吻合：叶 165（x2≥4.21094）PASS，**叶 166–183 共 18 叶/72 子盒全 NEG**，正好是含阈值那批。
 ② **sqrt 排除**：NEG160 的 4 个 sqrt 节点全部 gate 通过、`M₀.sqrt` 成功、fB 宽 2⁻⁸¹、4 个三元组与 `params.txt:160` **逐位相同**；无 GATE/SQRT FAIL ⇒ P5 的「回退消耗 cert 槽」在 72 NEG 中未发生。
