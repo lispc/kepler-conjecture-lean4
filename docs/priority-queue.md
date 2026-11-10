@@ -354,6 +354,12 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（05:29，续856）**：**一笔落库：tame-corr nb10 `0819cdcd`（`Reduction3J5ZTranMeF` 新文件 +134，5 件全绿）——J5-5 前置与支件；双怪件依赖表 + J5-6 侦察表入账**。
+① **`0819cdcd`**：`ztranMeFSpine`（PPLHULJ:60 塔层直投）+ **`ztranMeFChain`**（链世界形，**前提子集更强**：省 `¬final`、`f =` 绑定内联，经编排者核 HOL :63-71）+ `ytranMeFSpine`（链孪生 `ytranMeF` 已在库免重落）+ `fstNextFaceEqSndSpine` + `memCoreSpine`。闸：apply-check 双基线 PASS、禁词扫描净、岛编 RC=0/0err/0warn、5 探针标准三零 sorryAx、olean 装池。
+② **J5-5 实测依赖表（采信）**：`next_power_core` 族四件的**唯一硬前置 = `next_core_FST`**（:221）；依赖 15 件在库 + **5 件 MISS**（`LAST_FLATTEN_2`/`MEM_LAST`/`next_el_MEM_map`/`is_restricted_e_list_nondeg`/`edge_nondeg_f_xor_ni`）+ `condition_last_parts` 近邻待对形。双怪件四步骨架①的两个核件即上列后两件（与族共享）。**拆波表**：波 1 共享核 5 + `next_core_FST`（≈180–250）→ 波 2 族四件（≈120）→ 波 3 双怪件（≈350–450）。**未落槽版**（避免无消费者半成品——纪律正确）。
+③ **J5-6 侦察（车道，采信）**：`betwn_corek_z_x.hl` :42–726 共 13 件 684 HOL（主件 191）+ `prev_core_x` 65；在库仅 `allRot`/`memCore`，11 件零命中；**推断** rot 族三件可能可绕（生态已记 rotate_to 路线整体消除）、中段三件 `*_betwn_pre_face`（90+91+96+98）是主件前件。
+④ **续派（tame-corr → J5-5 波 1）**：五件 MISS 共享核 + `condition_last_parts` 对形 + `next_core_FST`；余量族四件起步。J4（hne/MEEIXJO）、aq13（reduction2 余件）在飞。
+
 - **2026-11-11（05:27，续855）**：**一笔落库：aq13 j54 `9bfb8ece`（`Reduction5J5K1` 247 + `Reduction5J5Red2Pieces` 167，两新文件 +414，4 件全绿）——**K1 证体落库级全绿（J5-2 第二里程碑）；`hmu` 槽裁定接受**。
 ① **`reductionK1`**（152 行，42 结论合取逐条对账）：来源映射 C01–C42 ← k#/m#/假设方程（12 处来自 `hmu`；C14 走 k11 DIFF 等式集合外延；C19/C36 走假设块 (V) 合取）；HOL 末步 `MESON_TAC` 自动对账 → Lean 显式 42 条（这就是 48 HOL → 152 Lean 的口径差，自动化 vs 显式）。**`reductionK1Full`**（11 行，D3b 全实例化）：用本车道 `finalAssumptionMemUniq` 代入 `hmu`，**前提 = HOL 原文 + `haq` 惯例**，主线装配用形（陈述经编排者核对）。
 ② **`hmu` 槽裁定（编排者）：接受。** 反例论证：`assumptionSetK10` 假设块只有抽象 `Marked` 槽、结论块有 12 处 marked 推导事实，抽象槽下 `Marked := True` 即反例 ⇒ j53 通用形对任意槽不可证；处理沿 **K5 先例**（`reductionK5` 把同类事实 reify 成 `hbcK`/`hmuc`/`hnon0` 槽）= reify-then-instantiate；代价 = `reductionK1` 多一前提（陈述弱化、结论不变），Full 形恢复 HOL 前提集。
