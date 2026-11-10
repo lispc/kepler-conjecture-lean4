@@ -320,6 +320,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（12:42，续778）**：**aq13 件1a 止损口径半成品落库 `7936ba22`（§0 工具层 8 件）+ 重计算探路记账（`docs/heavy-scout.md` 建账 `89282fdf`）**。
+① **`7936ba22`**：`TameSpine/Reduction3HbridgeElim.lean` 213 行（头注 62 + §0 代码 151），8 件全 `[BEq α][LawfulBEq α][DecidableEq α]` 泛型旋转/轨道桥：`orbitMem`/`idxOfLt`/`getElemIdxOf`/`getDIdxOfSelf`/`getDIdxEq`/`modSuccEq`/`orbitEnumGetD`（orbit 坐标系主桥）/`idxOfRotateEqIndexf`（indexl↔orbit 换算桥）。**§1 主装 `elementsOfListNtransTop` 未落**——§0+§1 实测估 510 > 450，按 AGENTS §7 交班；路线图五步（case A 照搬件1 组装段 / case B a–e，含 **NCVIBWU 免移植精确化**：`Ncvibwu.hl:425/1132` ~1000 行在 rest 不识别弱化形下不被消费）全在 DELIVERY_1A §3，下一波零侦察直做。
+② **编排者独立闸**：apply-check PASS（新文件零删除）；禁词零（头注一行改写）；depth 0；岛编 RC=0/0err/0warn 4.5 s；**去-private 副本探针** 8 件 axioms 全标准三（`modSuccEq` 仅 `[propext, Quot.sound]`）零 sorryAx；olean 装池。**注**：8 件全 `private` ⇒ §1 必须同文件追加（或先公共化再另立文件）。
+③ **重计算探路（用户 2026-11-10 批准 A+B，状态唯一维护在 `docs/heavy-scout.md`）**：A（信任基座 shard 内核重放采样）已止损——最便宜 Quad root 140.6 s 到 8.11 GB、重跑 381.6 s 到 14.02 GB（≈37 MB/s 不收敛）⇒ **单 root 内存墙 >14 GB**，原「4,450–6,550 核时 + 内存不可行」判词在本机被量化复现；**明确不是重算证书**（证书 native 已完成；Tri 类纯内核交叉校验 26 核时已完成；全量 580 shard 内核重放仍是 AGENTS §1「不做」）。B（549 一个 shard 重放，旧机对照 1022.8 s / 11.2 GB）待 W41 结束启动。
+④ **A 扫描的机器结论**（写进 heavy-scout §6）：单 root 一进程（求值历史会叠加）；`maxRecDepth 100000` + `maxHeartbeats 0` 必显式；`/usr/bin/time -l` 只在退出时给 RSS（止损要用 `ps` 轮询）；探针放 `lean/` 根、跑完即删。
+
 - **2026-11-10（12:03，续777）**：**W42 落库 `ddec2058`（签名收紧五孪生 + hNKE provider）+ 父件条件形接线 `20506a3a`（编排者亲作）——B1 成为 `PerimeterBound` 的唯一显式边界**。
 ① **W42 判定（机器证据，采信）**：(b) 成立——hstep 消费点唯一 = `LocalFanStepW28:205`（跳变索引 + `hbi0 : bta i₀ = 0` 语境）；weak 形 hstep 槽（`hflat/hnc` 前件、域 `n+1≤i`）在端点 `n=i−1` 缺三项补强（W30 证据）⇒ **不可证/未定，不得当假设** ⇒ 全部换 **EGHNAVX 语境形**（`pW30_hstepEG` **定理**一行放电，不进签名）。
 ② **W42A `ddec2058`（407 行 5 件）**：`pW42_pW6k7_v4/pW6k8_v4/pW19_v4/pW24_v4/prep_v4` + 私支 `pW42_slot_u_at`。**编排者机器 diff（去注释归一化后）**：pW6k8_v4、pW24_v4 **零 body 差异**；pW6k7_v4 仅 K 案 hS3 放电调用（`hstep … hbi0`）+ 注释；pW19_v4/prep_v4 仅注释。签名差异 = hstep → `bta/hbta/hcol + bta i = 0`。岛编 RC=0/0err/0warn 7.1s，5 件全标准三。
