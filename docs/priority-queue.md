@@ -343,6 +343,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（15:15，续796）**：**reduction5 第四轮零代码（conj 2 依赖方向修正）——后果执行：slot 记账 + 车道转 `next_core_FST`**。
+① **修正采信入档**：conj 2（`lzNotFListPow`）依赖方向**反转**——非「HQYMRTX1 → 底层三件」，实为 **conj 2 ← 底层三件（`ytrans_in_suc`/`ztrans_in_suc`/`ztran_suc_in_rtrans` 的 split-face 几何）**；已写入 `DELIVERY_W2C1A.md`。
+② **slot 记账（explicit，SF 式）**：`HQYMRTX1_list conj 2` + `底层三件` 挂账——前置链 = 底层三件（split-face 几何链侧化 ~150，波序/供给清单在 `W2C_PLAN.md` §7-8）→ conj 2（~40）；消费链 = KBWPBHQ2 本体、QCDVKEA（二者同时闸于 tame-corr 铺装波 NCVIBWU+PPLHULJ，双闸收敛点不变）。编排者已供 `indexfWArc`（`0acd5373`）消 conj 2 的弧序 Blocker。`indexfWArc` 泛型公开件可被任何后接车道复用。
+③ **车道转向**：下笔 = **`next_core_FST`**（W2-c-2 余笔小件）→ PNXVWFS1 → PNXVWFS2（领地内无闸件，四支撑已齐）；**交付 = 编译全绿 patch（允许半件），4 轮**；若 `next_core_FST` 仍零代码 ⇒ **车道退役**，剩余队列（KBWPBHQ2 本体/conj 2/底层三件/indexf3/izsj）全部以 slot 留台账，铺装波开闸后由当值战役车道接。已落库六笔（`247cff62`/`135ae550`/`4eb374aa`/`b55b6dbe`/`0e1c16cc`/`8c762427`）不受影响。
+
 - **2026-11-10（15:09，续795）**：**编排者亲作 `indexfWArc` 落库 `0acd5373`（reduction5 conj 2 Blocker 移除）+ J4 批 4 v3 冻结 UNRESOLVED 跳批 5 + reduction5 空报处理**。
 ① **`0acd5373` `Reduction5IndexfArc.lean`（编排者亲作，60 行）**：`indexfWArc`（泛型 `[DecidableEq α]`）= reduction5 W2C_PLAN §8 补遗 `indexf_w_arc` 的修复形——`w,x,y ∈ r ⇒ indexf w x r + indexf x y r ≡ indexf w y r (MOD len r)`。**路线比车道原设计（位置公式 + Nodup 单射）更短**：`indexf` 定义本身即弧距 `(idxOf y + (len − idxOf w)) MOD len` ⇒ 纯 MOD 算术 calc 四步（`Nat.add_mod.symm` + omega 和式 + `Nat.add_mod_right`），零 Nodup、零迭代式、零新基础设施依赖。闸：岛编 RC=0/0err/0warn、标准三零 sorryAx、olean 装池。**conj 2 至此 = membership simp + 本件一行**。
 ② **reduction5 第三轮零代码（空状态报）**：按既定后果执行——本应挂 slot；因 Blocker 已由编排者移除，改给**最后一次机会**：下笔 = conj 2（量级 = 三行 omega + membership simp，工具 `indexfWArc` 现成）；仍零代码 ⇒ conj 2 + 底层三件整体挂 explicit slot，车道转 `next_core_FST`。
