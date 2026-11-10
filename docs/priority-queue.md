@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（11:08，续772）**：**四笔连落（la21 patch5+SF-104 `cad7e5f2` / 8a-2b1a `60a3ca95`）+ W37 侦察判定（G 段 NO-GO，不对称性发现）+ W38 K 案假设束提取已派**。
+① **`cad7e5f2` la21 patch5 + SF-104 执行**：`deformation_BBs_p21`（SKOLEM_PERIODIC2 + `continuous_nbd_pos` 非紧边余量 + `ZLZTHIC_p14` 凸扇输运，`w4clamp` 端点钳制补 `Icc`）+ `deformation_BBs_ALT_p21`（SKOLEM_PERIODIC 统一 haz 与 `interior_angle1_azim_scs_p21` 的 ε + `vv_rho_node1`/`VV_SUC` 桥）——两件真证，axioms 标准三零 sorryAx。**SF-104**：5 处 ε-skolem 括号修复还原 HOL 强形（`?e. 0<e ∧ (A ==> B)`；弱形 `e:=0` 空洞 + 语义测试入档 SF 文档）；**LA21 net sorry 21→19，Section E 清零**；Section F 三件同病灶登记 SF §(e) 未动。岛编 RC=0、19 警告全预存 sorry。
+② **`60a3ca95` 8a-2b1a**：`hdBetwn2`（DANGEYJ:709，idxOf 双支 + 私件 `headBangTake`/`headBangDrop` + `nextEl_eq_getD`；非回卷支 take 长度 0 由 `hne'` 反证排除；回卷末元支 headD 对齐）标准三；cat 族余 5 件拆 8a-2b1b（~180–220），**按保 parts 面建议先派 8a-2b2（`parts_betwn` ~90）**。
+③ **W37 G 段接口提取（只读）**：7 条输出清单钉死（G1 u∈affGt{0,v}{ρv} :2063 / G2 w∈affGt{0,v}{ιv} :2081 / G3 azim 区间 :2120/:2123 / G4 ρu=w :2132 / G5 ιw=u :2137 / G6 u 侧前向 union 归纳 :2143 / G7 g 区成员+ρg 2_1 :2194+:2208+:2224）；**h4 不在 G 输出面**（全文件 1_2 形 `aff_gt{0}{v,…}` 仅 12 处全是初始体积/SUBSET 语句，邻域内零独立事实）⇒「G 接口+供给件」假说 NO-GO。**★不对称性**：u 侧 1_2 在库（`pW5b_hstep`）而 union 未建；w 侧 union 已建（W35 骨架）而 **1_2 步进零命中**（W32 2_1 不蕴含 + W36b 坐标反证封死 th3 路线）⇒ **w 侧 1_2 = 唯一剩余真几何**。
+④ **W38 已派（只读，可能直接结案）**：K 案假设束提取（`NKEZBFC.hl :1900–2048` + H/J 段头 `:2049–2270` 的 DISCH/STRIP/ASSUME 序列）——判定 w 侧 1_2 是否 **HOL 假设形**：(i) 是 ⇒ 保留 `WindingSlot`/1_2 族边界**与 HOL 同信任类别**，按 §1 口径 NKEZBFC 结案（写 `NKEZBFC_FINAL.md`）；(ii) 中间导出 ⇒ 定位 Lean 对件缺口；(iii) 不可判 ⇒ 列 h4 关闭时活跃假设集。G 接口移植暂缓等 W38。
+
 - **2026-11-10（11:05，续771）**：**W36a 落库 `65d5824c`（th3 簇 140 行 7 件）——th3 语义定案（非共线分离件，无锥内容）+ 坐标反证判 h4 真来源 = G 段接口；W37 接口提取已派**。
 ① **W36a**：`pW36_th3a12/th3a/th3b/th3b1/th3c/th3d/th3` 逐件对 fan.hl:357–388 移植；th3c 桥 = `collinear_insert_of_mem_affineSpan_pair` 逆否；复用 `collinear3_pair_*`/`collinear_pair`/`Set.disjoint_singleton_*`；7 axioms 全标准三零 sorryAx；RC=0 / 0err / 0warn；olean 装池。
 ② **th3 语义定案**：**th3 ≡ 三重非共线本身**（th3c ⟺ ¬C3 双向等价；其余五件全是「非共线 ⇒ 互异/集合分离」拆解，**无锥/度量内容**）。**坐标模型反证**：`x=0, v=(1,0,0), u=(0,1,0), v1=(−1,−1,0)` 三重全非共线、th3 全满足，但 `v1=−v−u` 在闭锥外 ⇒ 分离条件**推不出** `affGt{0}{v,u}` 成员 ⇒ W35 的 `hfam` 不能被 th3 替换（本波最有价值判定）。
