@@ -41,8 +41,8 @@ namespace Kepler.Text.Reduction5
 
 variable {α : Type} [DecidableEq α]
 
-open Kepler.Graphs (between)
-open Kepler.Assembly (nextEl prevEl)
+open Kepler.Graphs (between fgraph)
+open Kepler.Assembly (nextEl prevEl findFaceDarts listOfDarts listPairs fList)
 open Kepler.Graphs (between_distinct)
 open Kepler.Text.Reduction4 (indexf_lt_length_of_mem indexf_eq_length_of_not_mem
   indexfRefl indexf_add_left betwnMemCover between_eq_take_of_idxOf_lt
@@ -420,6 +420,186 @@ theorem mapBetwn {β : Type} [DecidableEq β] {s : List α}
     rw [List.map_append, List.map_drop, List.map_take]
     rw [hidxm y hy, hidxm z hz]
 
+
+/-! ## §E Seq2 两件（wrap 支；getLastD 族路线） -/
+
+/-- `nextEl` 比对 rotate 不变（`la7_nextEl_rotOne` 迭代；rot 簇供给）。
+**显式实例绑定**：允许实例化到 `instBEqProd`（finalList 定义侧实例），
+绕开 `instBEqOfDecidableEq` 双实例差（W2-c-1b 雷区）。 -/
+theorem nextElRotate {α : Type} [BEq α] [LawfulBEq α] [DecidableEq α] {r : List α}
+    (hnd : r.Nodup) (n : ℕ) (x : α) :
+    nextEl (r.rotate n) x = nextEl r x := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [← List.rotate_rotate]
+    change Kepler.Assembly.nextEl (Kepler.Text.TameLp.la7RotOne (r.rotate n)) x
+      = Kepler.Assembly.nextEl r x
+    rw [Kepler.Text.TameLp.la7_nextEl_rotOne (List.nodup_rotate.mpr hnd)]
+    exact ih
+
+/-- **HOL `Seq2.prev_next_id`**：`uniq s ⇒ prev_el s (next_el s x) = x`。 -/
+theorem prevNextId {s : List α} (hnd : s.Nodup) (x : α) :
+    prevEl s (nextEl s x) = x := by
+  by_cases hxs : x ∈ s
+  · have hix : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hxs
+    by_cases hwrap : s.idxOf x = s.length - 1
+    · -- wrap：nextEl = headD；headD 后接 getLastD（idxOf-head = 0 支）回卷到 x
+      rw [nextEl, if_pos hwrap]
+      cases s with
+      | nil => exact absurd hxs (by simp)
+      | cons a t =>
+        have hne : (a :: t) ≠ [] := by simp
+        have hmem_a : a ∈ a :: t := List.mem_cons_self (a := a) (l := t)
+        have hidx0 : (a :: t).idxOf a = 0 :=
+          Kepler.Text.TameLp.idxOf_getElem (i := 0) (s := a :: t) hnd
+            (Nat.succ_pos t.length)
+        rw [List.headD_cons, prevEl, if_neg (fun hc => hc hmem_a),
+          if_pos hidx0]
+        rw [List.getLastD_eq_getLast?, List.getLast?_eq_some_getLast hne,
+          Option.getD_some, List.getLast_eq_getElem hne]
+        have hlast : (a :: t)[(a :: t).length - 1] = x := by
+          have h1 : (a :: t)[(a :: t).idxOf x] = x :=
+            Kepler.Text.TameLp.getElem_idxOf hxs
+          simpa [hwrap] using h1
+        exact hlast
+    · -- nowrap：nextEl = s[idxOf x + 1]，其 idxOf = idxOf x + 1 ≥ 1 → getD (idxOf x)
+      rw [nextEl, if_neg hwrap]
+      have hlt : s.idxOf x + 1 < s.length := by omega
+      rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt hlt x]
+      have hmem1 : s[s.idxOf x + 1] ∈ s := List.getElem_mem hlt
+      have hidx1 : s.idxOf s[s.idxOf x + 1] = s.idxOf x + 1 :=
+        Kepler.Text.TameLp.idxOf_getElem hnd hlt
+      rw [prevEl, if_neg (fun hc => hc hmem1), if_neg (by rw [hidx1]; omega),
+        hidx1]
+      have hsub : s.idxOf x + 1 - 1 = s.idxOf x := by omega
+      rw [hsub, Kepler.Text.TameLp.getD_eq_getElem_of_lt hix]
+      exact Kepler.Text.TameLp.getElem_idxOf hxs
+  · -- x ∉ s：nextEl = x（idxOf = len），prevEl = x（首支）
+    have hidxlen : s.idxOf x = s.length := List.idxOf_eq_length_iff.mpr hxs
+    have hnext : nextEl s x = x := by
+      rw [nextEl]
+      by_cases h0 : s = []
+      · subst h0
+        simp
+      · have hlen : 0 < s.length := List.length_pos_iff.mpr h0
+        rw [if_neg (by rw [hidxlen]; omega)]
+        rw [hidxlen, List.getD_eq_getElem?_getD]
+        have hnone : s[s.length + 1]? = none :=
+          List.getElem?_eq_none_iff.mpr (by omega)
+        rw [hnone]
+        simp
+    rw [hnext, prevEl, if_pos hxs]
+
+/-- **HOL `Seq2.next_prev_id`**：`uniq s ⇒ next_el s (prev_el s x) = x`。 -/
+theorem nextPrevId {s : List α} (hnd : s.Nodup) (x : α) :
+    nextEl s (prevEl s x) = x := by
+  by_cases hxs : x ∈ s
+  · have hix : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hxs
+    by_cases hhead : s.idxOf x = 0
+    · -- x 是头：prev = getLastD = s[len-1]；nextEl (s[len-1]) wrap → headD = x
+      rw [prevEl, if_neg (fun hc => hc hxs), if_pos hhead]
+      cases s with
+      | nil => exact absurd hxs (by simp)
+      | cons a t =>
+        have hne : (a :: t) ≠ [] := by simp
+        rw [List.getLastD_eq_getLast?, List.getLast?_eq_some_getLast hne,
+          Option.getD_some]
+        -- goal: nextEl (a::t) ((a::t).getLast hne) = x
+        rw [nextEl]
+        have hlastidx : (a :: t).idxOf ((a :: t).getLast hne)
+            = (a :: t).length - 1 := by
+          rw [List.getLast_eq_getElem hne]
+          exact Kepler.Text.TameLp.idxOf_getElem hnd
+            (Nat.sub_lt (by rw [List.length_cons]; omega) (by omega))
+        rw [if_pos hlastidx, List.headD_cons]
+        -- goal: a = x；由 idxOf x = 0 得 x 是头
+        have h1 : (a :: t)[(a :: t).idxOf x] = x :=
+          Kepler.Text.TameLp.getElem_idxOf hxs
+        simpa [hhead] using h1
+    · -- 一般：prev = s[idxOf x - 1]，其 idxOf = idxOf x - 1 < len - 1 → nowrap
+      have hpos : 0 < s.idxOf x := by omega
+      have hsub : s.idxOf x - 1 < s.length := by omega
+      have hmem1 : s[s.idxOf x - 1] ∈ s := List.getElem_mem hsub
+      have hidx1 : s.idxOf s[s.idxOf x - 1] = s.idxOf x - 1 :=
+        Kepler.Text.TameLp.idxOf_getElem hnd hsub
+      rw [prevEl, if_neg (fun hc => hc hxs), if_neg hhead]
+      rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt hsub x]
+      rw [nextEl, if_neg (by rw [hidx1]; omega), hidx1]
+      have hsub2 : s.idxOf x - 1 + 1 = s.idxOf x := by omega
+      rw [hsub2, Kepler.Text.TameLp.getD_eq_getElem_of_lt hix]
+      exact Kepler.Text.TameLp.getElem_idxOf hxs
+  · -- x ∉ s：prev = x（首支），nextEl s x = x
+    have hidxlen : s.idxOf x = s.length := List.idxOf_eq_length_iff.mpr hxs
+    rw [prevEl, if_pos hxs]
+    rw [nextEl]
+    by_cases h0 : s = []
+    · subst h0
+      simp
+    · have hlen : 0 < s.length := List.length_pos_iff.mpr h0
+      rw [if_neg (by rw [hidxlen]; omega)]
+      rw [hidxlen, List.getD_eq_getElem?_getD]
+      have hnone : s[s.length + 1]? = none :=
+        List.getElem?_eq_none_iff.mpr (by omega)
+      rw [hnone]
+      simp
+
+/-! ## §F find_face 簇（uniq/mem 传递；finalListPower 与 rot 两件） -/
+
+/-- **HOL `List_hypermap.mem_find_face_imp_faces_eq`**（list_hypermap-compiled.hl:424）：
+`uniq (list_of_darts L) ∧ MEM d1 (find_face L d2) ⇒ find_face L d1 = find_face L d2`。 -/
+theorem memFindFaceImpFacesEq {L : fgraph ℕ} (hn : (listOfDarts L).Nodup)
+    {d1 d2 : Dart} (hd : d1 ∈ findFaceDarts L d2) :
+    findFaceDarts L d1 = findFaceDarts L d2 := by
+  by_cases hval : L.find? (fun l => decide (d2 ∈ listPairs l)) = none
+  · rw [Kepler.Text.TameLp.findFaceDarts_none hval] at hd
+    exact absurd hd (by simp)
+  · obtain ⟨l', hs⟩ := Option.ne_none_iff_exists.mp hval
+    obtain ⟨hfeq, -, hl'⟩ := Kepler.Text.TameLp.findFaceDarts_some hs.symm
+    rw [hfeq] at hd ⊢
+    exact Kepler.Text.TameLp.findFaceDarts_eq_of_mem hn hl' hd
+
+/-- **HOL `final_list_power`**（tame_list.hl:5058）：`final_list L r ∧ MEM d r ∧
+uniq r ∧ MEM d (list_of_darts L) ⇒ (next_el r)^i d = (next_el (find_face L d))^i d`
+（本文件私有；循环不变式含 `findFace` 闭包与 darts 成员）。 -/
+private theorem finalListPower {L : fgraph ℕ} (hn : (listOfDarts L).Nodup)
+    {r : List Dart} {d : Dart}
+    (hfin : finalList L r) (hd : d ∈ r) (hdart : d ∈ listOfDarts L) :
+    ∀ i, (nextEl r)^[i] d = (nextEl (findFaceDarts L d))^[i] d := by
+  suffices h : ∀ i, ((nextEl r)^[i] d = (nextEl (findFaceDarts L d))^[i] d
+      ∧ (nextEl r)^[i] d ∈ r
+      ∧ (nextEl r)^[i] d ∈ listOfDarts L
+      ∧ findFaceDarts L ((nextEl r)^[i] d) = findFaceDarts L d) by
+    intro i
+    exact (h i).1
+  intro i
+  induction i with
+  | zero =>
+    exact ⟨rfl, hd, hdart, rfl⟩
+  | succ i ih =>
+    obtain ⟨hieq, hir, hid, hif⟩ := ih
+    have hnext : nextEl r ((nextEl r)^[i] d) = fList L ((nextEl r)^[i] d) :=
+      (hfin _ hir).symm
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · rw [Function.iterate_succ_apply', Function.iterate_succ_apply', hnext]
+      rw [Kepler.Assembly.fList, hif, hieq]
+    · rw [Function.iterate_succ_apply']
+      exact Kepler.Text.TameLp.nextEl_mem_of_mem hir
+    · rw [Function.iterate_succ_apply', hnext]
+      exact Kepler.Text.TameLp.fList_mem_darts hn hid
+    · rw [Function.iterate_succ_apply', hnext,
+        Kepler.Text.TameLp.findFace_fList hn hid, hif]
+
+/-- **HOL `Tame_list.rot_final_list`**（tame_list.hl:12831）：`final_list L r ∧
+uniq r ∧ (?n. r' = rot n r) ⇒ final_list L r'`。 -/
+theorem rotFinalList {L : fgraph ℕ} {r r' : List Dart}
+    (hfin : finalList L r) (hnd : r.Nodup) (hrot : ∃ n, r.rotate n = r') :
+    finalList L r' := by
+  obtain ⟨n, rfl⟩ := hrot
+  intro d hd
+  rw [List.mem_rotate] at hd
+  exact (hfin d hd).trans (nextElRotate hnd n d).symm
+
 end Kepler.Text.Reduction5
 
 /-! 探针（编译即执行；目标 ⊆ 标准三零 sorryAx） -/
@@ -432,3 +612,8 @@ end Kepler.Text.Reduction5
 #print axioms Kepler.Text.Reduction5.sizeFlattenLe
 #print axioms Kepler.Text.Reduction5.nextLastBetwn
 #print axioms Kepler.Text.Reduction5.mapBetwn
+#print axioms Kepler.Text.Reduction5.prevNextId
+#print axioms Kepler.Text.Reduction5.nextPrevId
+#print axioms Kepler.Text.Reduction5.nextElRotate
+#print axioms Kepler.Text.Reduction5.memFindFaceImpFacesEq
+#print axioms Kepler.Text.Reduction5.rotFinalList
