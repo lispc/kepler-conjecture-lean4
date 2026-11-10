@@ -319,6 +319,8 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（08:30，续735）**：**W2-c-1a 第一笔落库 `5b24a3e4` → 派 1a-ii**。`Reduction5BetwnBase.lean` 163 行 4+1 件全标准三（`betwnMem`/`indexfLtSizel`/`sizeBetwn`/`indexfCompl` + 私 `indexfCond`；载体单实例约定消双 BEq 实例错配雷区；5 条 API 雷区入档）。**勘误两条**：① 车道报"零 warning"实有 1 条 `push_neg` 弃用告警——编排者改 `push Not` 重编 RC=0（此后 deprecation 计入 warning 口径）；② r3→r7 超 3 轮止损采信（非结构性、每轮净减、绿件先行）但下笔起红件单轮修复 >4 轮即交修复点。**派 1a-ii**（indexlBetwn 收窄形 + indexfBetwn/IndexfBetwnEq + memPrevEl 三处换线 + sizeFlattenLe；`Kepler.Graphs.between_distinct` 先 `#check` 防命名再踩）。
+
 - **2026-11-10（08:27，续734）**：**P2-pre patch1 落库 `1001c90b` + 范围勘误 → 所有权再切**。`PwssratRotateBase.lean` 158 行底座三件全标准三（splitAtRec_exists_append/hdFstSplit/sndEmptyIndexl + 支撑 2；`idxOf_cons_self` 本版 Mathlib 无名实测勘误入档）；RC=0 0warn、olean 装池。**范围勘误采信**：六件目标传递闭包 = PWSSRAT/PPLHULJ/NCVIBWU/QCDVKEA/PBFLHET 五章 88 件（3,636 HOL）+ HOJODCM/DANGEYJ 跨章，总估上修 1,200–2,000/3–5 patch。**所有权再切**：QCDVKEA/PPLHULJ/FINAL_LIST_INDUCT1 = scout（W2-c-3/4 在批，tame-corr 禁移植）；挂起三件（ztrans_in_suc/ytrans_in_suc/ytran_suc_betwn_z_z_suc）等 scout 落簇后消费；tame-corr patch2 = DIOWAAS 链+本体（撞三章即停手报依赖表）；NCVIBWU 大头随挂起延后。
 
 - **2026-11-10（08:17，续733）**：**双线推进（件1a 侦察大缩水 + W6-K6 patch A 落库 `346e5c86`）→ 派 patch B 总装**。
