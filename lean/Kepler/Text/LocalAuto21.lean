@@ -98,7 +98,10 @@ ENCODING NOTES
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto11
+import Kepler.Text.LocalAuto14
 import Kepler.Text.LocalAuto16
+import Kepler.Text.LocalAuto37
+import Kepler.Text.LocalAuto38
 import Kepler.Text.SphereKit
 import Mathlib
 
