@@ -354,6 +354,11 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（05:39，续859）**：**一笔落库：J4 `e35a6e27`（`Reduction1Mee2` 新文件 +423，3 件全绿）——**MEEIXJO 主定理全绿，`hMee` 供料完成；J4 本线装配件全部结束，主定理无条件形只剩 `hAuq`（AUQTZYZ 链）**。
+① **`e35a6e27`**：**`meEixjo`**（HOL `MEEIXJO.hl:325` 逐字，经编排者核对；九合取全装配 297 行，消费树逐条落档：⑦ 经**无 hs 槽**的 `markedListCore_iff_markedListSpine`、⑧ 用 `contourList_iff_contourListSpine` 反用）+ **`meEixjoForall`**（`hMee` ∀ 形，14 行）+ **`restrictedHypermapsArePlanegraphsReduction1OfAuq`**（消槽演示 34 行）。**差额表终版**：`hne` 已供到只差 AUQTZYZ_list；`hMee` 本波已供 ⇒ **主定理无条件形剩余 = `hAuq` 的证（直系 1,094 HOL / 塔级闭包 2,300–3,400）**。5 轮机械错迭代（chain↔spine 方向 3 次）如实记档。闸：apply-check PASS @`c5de2654`、禁词扫描净、岛编 RC=0/0err/0warn、3 探针标准三零 sorryAx、olean 装池。
+② **AUQTZYZ 链并行拆分定案（编排者）**：三批——① `EXISTS_PATH_COMPLEMENT`（1,277）+ ② **AUQTZYZ 主定理（:1859–:2624，765）** + ③ `AUQTZYZ_list`（329 = `hAuq` 供料）。**J4 做批 ②（显式槽 `hEpc` 推进）**，aq13 做完当前段后做批 ①，批 ③ 最后收口（谁空谁做）；批①落库后批②一行消槽。
+③ **续派（J4 → AUQTZYZ 主定理段）**：依赖判词（真缺口 ≤100 顺手落）+ 陈述逐字 + 读一件落一件（2–3 波，本波落多少算多少）+ 余量批③槽版。tame-corr 新会话（J5-5 波 1 收口）、aq13（reduction2 余件）在飞。
+
 - **2026-11-11（05:35，续858）**：**一笔落库：tame-corr nb11 `d7680356`（`Reduction3J5M2Cores` 新文件 +74，2 件绿）——部分交付；会话 5 轮退役换血**。
 ① **`d7680356`**：`memLastBang`（HOL `MEM_LAST` tame_list:1364，`LAST`↦`getLast!`，探针仅 `[propext]`）+ `nextElMapOfMem`（HOL `next_el_MEM_map` :1011 逐字形，包装 `la7_nextEl_map`（TameLp:5571），实例面补 BEq/LawfulBEq/DecidableEq）。禁词净、岛编 RC=0/0err/0warn、2 探针标准三零 sorryAx、olean 装池。
 ② **查重命中三件免落**：`LAST_FLATTEN_2` = `lastFlatten2` **双份在库**（MoreLemma2Naming:68 + JcajyduBetwnBase:172——树内重复落件记档）；`next_el_MEM_map` = `la7_nextEl_map`；`condition_last_parts` = `aqs_conditionLastParts`（JcajyduAqLeaf12T:181 逐字）。
