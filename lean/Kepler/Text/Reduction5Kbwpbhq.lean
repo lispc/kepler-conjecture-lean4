@@ -237,9 +237,27 @@ theorem prevElBetwnZtranRtrans {L : fgraph ℕ} {N : List (List Dart)}
   · rw [hprev, hidx_d]
     omega
 
+
+/-! ## §4 HQYMRTX1_list conj 1：`lz ∈ r`（tame_list.hl:10165 链孪生） -/
+
+/-- **HOL `Tame_list.HQYMRTX1_list` conj 1**（tame_list.hl:10165-10169）：
+`good_list ∧ good_list_nodes ∧ AqiunppSlot ∧ marked_list L N r x ∧
+¬final_list L r ⇒ lz L N r x ∈ r`。
+路线：`memZtransRtrans` 在 i = 0 实例化（`rtrans 0 = r`，`ntrans 0 = N`）。
+（conj 2 移下一笔。） -/
+theorem lzMemR {L : fgraph ℕ} {N : List (List Dart)} {r : List Dart} {x : Dart}
+    (hL : GoodList L) (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    (hunL : ∀ l ∈ L, l.Nodup)
+    (haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL)
+    (hm : Kepler.Text.ChainLists.markedList L hL N r x)
+    (hf : ¬ finalList L r) :
+    lz L N r x ∈ r :=
+    Kepler.Text.Reduction4Idx.memZtransRtrans L hL haq hgn hunL 0 hm hf
+
 end Kepler.Text.Reduction5
 
 /-! 探针（编译即执行；目标 ⊆ 标准三） -/
 #print axioms Kepler.Text.Reduction5.minLeast
 #print axioms Kepler.Text.Reduction5.memYtransListOfDarts
 #print axioms Kepler.Text.Reduction5.prevElBetwnZtranRtrans
+#print axioms Kepler.Text.Reduction5.lzMemR
