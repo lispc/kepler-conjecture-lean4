@@ -76,9 +76,20 @@
 继续跑只会占用与 W41 争抢的 16–20 GB 内存。**A 的定位回顾：样本标定，不是全量重放**
 （全量重放 = AGENTS §1 明确不做）。
 
-### B（549）
+### B（549，`C549ProdS0001` 单 shard 重放）
 
-（未跑；等 W41 fill 结束后启动）
+| 阶段 | wall | 峰值 RSS | 结果 |
+|---|---|---|---|
+| 依赖 `C549CertSlimDefs.lean`（181 行） | 5.68 s | **5.66 GB** | RC=0（oleans 已装池） |
+| 主 shard（默认选项） | 105.4 s | **7.41 GB** | **RC=1：40 个 error**，`Sem*` 带 `sorryAx` |
+| 主 shard（`-D exponentiation.threshold=4000 -D maxRecDepth=1000000`） | ~2 min（手动止损） | ~6.8 GB | **仍是同类 error**（exponent 警告消失，`checkPosTMHull … = true` 仍被判 false） |
+
+**★ 结论（重要，非资源数字而是完整性发现）**：树内 `C549ProdS0001.lean` **在今天的树上不能干净重放**——失败形是
+`error: Tactic decide proved that the proposition checkPosTMHull (derivIExpr E549 2) B0 DP0 = true is false`
+（40 处）。两种解释：(a) 生产期用了我们未复现的构建选项/环境；(b) 生产后树的定义/数据发生漂移（该文件
+2026-09-28 生成，此后 CertTM 等多轮改动）。**在定根因之前，旧机的 1022.8 s / 11.2 GB 数字不能当作可复现基线**。
+本条目属 certtm 用户 hold 区（TM3/Mono*、XL 证书不重建）⇒ **只记录、不深挖、不修文件**；若用户要追根因，
+最小实验 = 在生产期 commit（`git log --follow` 该文件）上重放同一 shard 做二分。
 
 ## 5. 结论 / 外推（滚动）
 
@@ -108,5 +119,7 @@
 
 1. ~~等 A 首个 root 的 14 GB 重跑结果~~ **已完成（见 §4/§5），A 止损**；
    A 的最终结论 = 单 root >14 GB 内存墙，全量重放维持不做。
-2. W41 fill 结束后跑 B（549 shard 重放，旧机 1022.8 s / 11.2 GB），得“旧机↔本机”换算因子。
-3. 结论稳定后，把本文件 §5 的数字抄进 `docs/priority-queue.md` §8 续条（只引用，不重复维护）。
+2. ~~B（549 shard 重放）~~ **已跑（见 §4），结论 = 产物不可在当前树干净重放**；
+   换算因子**暂不可得**，根因待用户裁决（certtm hold 区，只记录不深挖）。
+3. 剩余可启动的重计算条目：C（LP 端到端，冻结）/ D（BIEFJHU，W41 在飞）/ E（本机无工具链）。
+4. 本文件 §5 的数字已抄入 `docs/priority-queue.md` §8 续条（只引用，不重复维护）。
