@@ -275,6 +275,97 @@ theorem betwnCat {α : Type*} [DecidableEq α] [Inhabited α]
   rw [hk, hd]
 
 
+/-! ## §5 `HD_BETWN2`（DANGEYJ.hl:709）：`betwn` 段的头 = `next_el r r1` -/
+
+/-- `take` 的头 = 父列表头（`0 < n`）。 -/
+private theorem headBangTake {α : Type*} [Inhabited α] {l : List α} {n : ℕ}
+    (hn : 0 < n) : (l.take n).head! = l.head! := by
+  cases l with
+  | nil =>
+    cases n with
+    | zero => omega
+    | succ m => rfl
+  | cons a t =>
+    cases n with
+    | zero => omega
+    | succ m => rfl
+
+/-- `drop n` 的头 = `l[n]`（`n < length`）。 -/
+private theorem headBangDrop {α : Type*} [Inhabited α] {l : List α} {n : ℕ}
+    (hn : n < l.length) : (l.drop n).head! = l[n]'hn := by
+  induction n generalizing l with
+  | zero =>
+    cases l with
+    | nil => simp at hn
+    | cons a t => rfl
+  | succ m ih =>
+    cases l with
+    | nil => simp at hn
+    | cons a t =>
+      rw [List.drop_succ_cons, ih (by simpa using hn)]
+      exact (List.getElem_cons_succ a t m hn).symm
+
+/-- **HOL `Dangeyj.HD_BETWN2`**（DANGEYJ.hl:709）：
+`MEM r1 r ∧ MEM r2 r ∧ r1≠r2 ∧ uniq r ∧ ~(betwn r r1 r2=[]) ⇒
+HD (betwn r r1 r2) = next_el r r1`。
+证体：`idxOf` 双支（`between_eq_take/append`）+ take/drop 头两小引理 + `nextEl_eq_getD`。 -/
+theorem hdBetwn2 {α : Type*} [DecidableEq α] [Inhabited α] {r : List α} {r1 r2 : α}
+    (hr1 : r1 ∈ r) (hr2 : r2 ∈ r) (hne : r1 ≠ r2) (hnd : r.Nodup)
+    (hne' : between r r1 r2 ≠ []) :
+    (between r r1 r2).head! = nextEl r r1 := by
+  have hi1 : r.idxOf r1 < r.length := List.idxOf_lt_length_iff.mpr hr1
+  have hi2 : r.idxOf r2 < r.length := List.idxOf_lt_length_iff.mpr hr2
+  have hidxne : r.idxOf r1 ≠ r.idxOf r2 := fun he => hne ((List.idxOf_inj hr1).mp he)
+  have hpos : 0 < r.length := List.length_pos_of_mem hr1
+  rcases Nat.lt_or_ge (r.idxOf r1) (r.idxOf r2) with hlt | hge
+  · have hk : 0 < r.idxOf r2 - r.idxOf r1 - 1 := by
+      by_contra h
+      push Not at h
+      apply hne'
+      rw [Kepler.Text.Reduction4.between_eq_take_of_idxOf_lt hnd hr1 hr2 hlt,
+        show r.idxOf r2 - r.idxOf r1 - 1 = 0 from by omega]
+      rfl
+    have hlt1 : r.idxOf r1 + 1 < r.length := by omega
+    rw [Kepler.Text.Reduction4.between_eq_take_of_idxOf_lt hnd hr1 hr2 hlt]
+    rw [headBangTake hk,
+      headBangDrop (l := r) (n := r.idxOf r1 + 1) (by omega)]
+    rw [Kepler.Text.TameLp.nextEl_eq_getD hr1, Nat.mod_eq_of_lt hlt1]
+    exact (Kepler.Text.TameLp.getD_eq_getElem_of_lt hlt1 r1).symm
+  · have hlt2 : r.idxOf r2 < r.idxOf r1 := lt_of_le_of_ne hge (Ne.symm hidxne)
+    have hform : between r r1 r2
+        = List.drop (r.idxOf r1 + 1) r ++ List.take (r.idxOf r2) r :=
+      Kepler.Text.Reduction4.between_eq_append_of_idxOf_gt hnd hr1 hr2 hlt2
+    rw [hform]
+    by_cases hlast : r.idxOf r1 + 1 < r.length
+    · have hne0 : List.drop (r.idxOf r1 + 1) r ≠ [] := by
+        intro h
+        have hlen : (List.drop (r.idxOf r1 + 1) r).length = 0 := by rw [h]; rfl
+        rw [List.length_drop] at hlen
+        omega
+      rw [List.head!_append _ hne0, headBangDrop hlast,
+        Kepler.Text.TameLp.nextEl_eq_getD hr1, Nat.mod_eq_of_lt hlast]
+      exact (Kepler.Text.TameLp.getD_eq_getElem_of_lt hlast r1).symm
+    · have hlastn : r.idxOf r1 + 1 = r.length := by omega
+      have hdrop : List.drop (r.idxOf r1 + 1) r = [] := by
+        rw [hlastn]; exact List.drop_length
+      have htake : List.take (r.idxOf r2) r ≠ [] := by
+        intro h
+        apply hne'
+        rw [hform, hdrop, h]
+        rfl
+      have hi2pos : 0 < r.idxOf r2 := by
+        rcases Nat.eq_zero_or_pos (r.idxOf r2) with h | h
+        · exfalso; apply htake; rw [h]; rfl
+        · exact h
+      rw [hdrop, List.nil_append, headBangTake hi2pos,
+        Kepler.Text.TameLp.nextEl_eq_getD hr1,
+        show (r.idxOf r1 + 1) % r.length = 0 from by rw [hlastn, Nat.mod_self],
+        Kepler.Text.TameLp.getD_eq_getElem_of_lt hpos r1]
+      cases r with
+      | nil => simp at hr1
+      | cons a t => rfl
+
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零 sorryAx）。 -/
@@ -285,3 +376,4 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.lastHdLastBetwn
 #print axioms Kepler.Text.TameSpine.nextHdLastBetwn
 #print axioms Kepler.Text.TameSpine.betwnCat
+#print axioms Kepler.Text.TameSpine.hdBetwn2
