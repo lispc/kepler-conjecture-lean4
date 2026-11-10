@@ -319,6 +319,8 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（09:08，续748）**：**W22-② 落库 `49b230f5`（C2 代数化）→ 派 W23 det 单调性最后一击**。`LocalFanStepW22C2.lean` 122 行 2 件全标准三：`pW22_rep_unique`（共同基表示唯一性）+ **`pW22_c2_iff_det`（★`y ∈ affGt{0,a}{v} ⟺ 0 < b₁g₂ − b₂g₁`）**——**C2 ⟺ 两 run 点 β/γ 比值沿 n 严格单调**；机器解释 W5a-ii 三路线全排机理（都提供不了该单调性；bta 单调不能给——run 内点 ⊥v 投影同向使 bta 恒 0，**投影方向序 ≠ 径向序**）。剩余唯一内容 = det 单调性（fan/wedge 凸性，估 40–70），机制已钉死。7 轮编译记账采信（纯局部代数细节，非结构卡死）。**派 W23**：① det 单调性（C2 收口，第一档硬点最后一击）→ ② ③ hstep 全 n（w 段镜像 + bta 接线）→ ③ j=0 假支反证（可顺延 W24）。全落库后 `pW19_…_p9_v2` 消槽 → NKEZBFC 无条件形 → hNKE → perimeter 根面收口。BIEFJHU R2c1 至 09:08 到 box 95（仍 NEG 尾）。
+
 - **2026-11-10（09:02，续747）**：**W22-§0 落库 `0e3c8242`（v2 链条 376 行 4 件）→ 派 ② C2 主攻 + ③ hstep 全 n**。`pW6k7_stepB_sol_nonneg_v2`（hslot_w 加 `0 < j`）/`pW6k8_…_affGe_v2`（同）/`pW19_stepB_sol_nonneg_v2`（**hprev 收紧 `2 ≤ n`**，n=1 假支剔除）/`pW19_nkezbfc_prep_p9_v2`（下游重述）；与 v1 逐字差异仅五处（两签名收紧 + 两 `hslot_w` 调用加参 + w 侧 telescope `i := 0 → 1` 界改），v1 陈述零改；全标准三、olean 装池。②③ 接入口 = `pW21_slot_w_v2`/`pW21_slot_u_v2` 的前提，中间件全在。**BIEFJHU round-2 进展**：**R2c0 全绿 102/102 PASS**（完成退出）；R2c1 至 08:54 已 93/102（30 PASS / 63 NEG，NEG 尾需 round-3）；R2c1 收尾后走 assemble → kernel_check(P6S) → emit `--r2`。
 
 - **2026-11-10（09:00，续746）**：**W21-① 落库 `19ef9067`（v2 转换两件）+ 第二个假支发现 → 派 W22（§0 v2 链条 → C2 → hstep）**。
