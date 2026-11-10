@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（11:05，续771）**：**W36a 落库 `65d5824c`（th3 簇 140 行 7 件）——th3 语义定案（非共线分离件，无锥内容）+ 坐标反证判 h4 真来源 = G 段接口；W37 接口提取已派**。
+① **W36a**：`pW36_th3a12/th3a/th3b/th3b1/th3c/th3d/th3` 逐件对 fan.hl:357–388 移植；th3c 桥 = `collinear_insert_of_mem_affineSpan_pair` 逆否；复用 `collinear3_pair_*`/`collinear_pair`/`Set.disjoint_singleton_*`；7 axioms 全标准三零 sorryAx；RC=0 / 0err / 0warn；olean 装池。
+② **th3 语义定案**：**th3 ≡ 三重非共线本身**（th3c ⟺ ¬C3 双向等价；其余五件全是「非共线 ⇒ 互异/集合分离」拆解，**无锥/度量内容**）。**坐标模型反证**：`x=0, v=(1,0,0), u=(0,1,0), v1=(−1,−1,0)` 三重全非共线、th3 全满足，但 `v1=−v−u` 在闭锥外 ⇒ 分离条件**推不出** `affGt{0}{v,u}` 成员 ⇒ W35 的 `hfam` 不能被 th3 替换（本波最有价值判定）。
+③ **h4 真来源**：H 步 `AFF_GE_EQ_AFF_GE_UNION` 的 h4 由上下文假设经 `ASM_REWRITE_TAC[]` 关闭，该假设来自 **G 段（HOL :2049–2270「u 侧 aff_ge 并集分解 + 方位 telescope」）输出接口**，尚未提取 ⇒ **W37 = G 段接口提取（只读 0.5 波）** 已派：接口逐条摘录（尤指 H 步上下文假设的确切形状）+ 对表 `pW5_flat_cone_order`/`pW26`/`pW30`/`pW32`/W33/W34 + GO/NO-GO 与波次建议。
+④ **备用面关闭**：`RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT` 需 planarity 前提（局部扇顶点球面 3D 分布，不可得，**不适用**）；`MIXED_PROD_POS_IMP_RANGE_AZIM` 仅为 cross-dot→azim 翻译器（不能自立供给）。**WindingSlot 暂保持最终信任边界**；`pW35_union_of_family` 骨架（hfam 接口）保留，W33/W34/W36a 为外围件。
+
 - **2026-11-10（11:00，续770）**：**W35 落库 + th3 重大勘误（结论反转，W36 重开）+ 8a-2a 落库 + la21 SF 陈述缺陷裁定 + certtm C 变体进展**。
 ① **W35 `23970f97`（124 行 1 件）**：`pW35_union_of_family` = H 段 union 望远镜等式成员形（∀j 归纳，基周期回卷 + pair_comm，步 `AFF_GE_EQ_AFF_GE_UNION_p9`，h4 ← 显式接口 hfam），标准三；**止损卡点**：§2 J 收尾 whnf 超时（Nat 减法下标 + ∃-绑定归约爆炸，机械，下标具名化 ~30 可解）。
 ② **ERRATA（th3 溯源，结论反转）**：车道 W35 判「th3 = 未入库全局件（w 侧 1_2 族），H/J 归纳不能自闭环」**不成立**——`th3` 在快照 `fan/fan.hl:388`（NKEZBFC.hl:8 `open Fan` 直接带入），内容 = **非共线三点的分离件**（两两互异 + 三 DISJOINT + `u ∉ aff{x,v}`），证体 = fan.hl:357-385 六个平凡小件（th3a12/th3a/th3b/th3b1/th3c/th3d）。H 步 th3[0;v;ITER(k-j-1)v] 给的是分离侧条件（`ITER ∉ aff{0,v}`），配合上下文已有非共线前提 ⇒ **h4 供给面远小于 200–400 估**。漏检原因：`let th3=prove(` 无空格 + `head -5` 截断（**编排者第一遍也漏，共同教训：零命中结论必须全量 grep 复核**）。**W36 重开**：a = th3 簇移植 ~50–80（先查 `pW6k4_notCoplanar_distinct`/`coplanar_triple` 覆盖）；b = hfam 实供给 + 下标引理 ~80–150，目标 `WindingSlot` 真证或把槽缩到「1_2 单点」。备用件：`local_lemmas.hl:683 RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT`（cross-dot 正性，证体在库）/`MIXED_PROD_POS_IMP_RANGE_AZIM`(:937)。
