@@ -2162,6 +2162,130 @@ theorem betwnLastHdPartsFlatten (L : fgraph ℕ) (hL : GoodList L)
   · exact Kepler.Text.TameSpine.aqs_eq_last_next hFnd hBrnd hmemiff
       (fun x hx => hnextE x hx) hlastE
 
+/-- **弧内非末元后继一致**（Dart-world 孪生；§6 `nextElBetwnSame` 的
+[DecidableEq] 世界版本在 Dart 默认实例目标下撞 R1，本件以同位置 + `indexfN`/
+`nextElnIndexf` 纯 `TameSpine.indexf` 机器重证）：
+`d ∈ betwn r a b ∧ d ≠ LAST (betwn r a b) ⇒ next_el (betwn r a b) d = next_el r d`。 -/
+private theorem nextElArcSame {r : List Dart} {a b d : Dart} (hnd : r.Nodup)
+    (ha : a ∈ r) (hb : b ∈ r) (hne : a ≠ b)
+    (hd : d ∈ between r a b) (hdlast : d ≠ (between r a b).getLast!) :
+    nextEl (between r a b) d = nextEl r d := by
+  have hBnd : (between r a b).Nodup := Kepler.Graphs.between_distinct hnd
+  have hBne : between r a b ≠ [] := List.ne_nil_of_mem hd
+  have hdr : d ∈ r := Kepler.Graphs.inbetween_inset hd
+  have hkB : (between r a b).idxOf d + 1 = Kepler.Text.TameSpine.indexf a d r :=
+    Kepler.Text.TameSpine.indexlBetwn hnd ha hb hd
+  have hbrlen : (between r a b).idxOf d + 1 < (between r a b).length := by
+    have h1 : (between r a b).idxOf d < (between r a b).length :=
+      List.idxOf_lt_length_iff.mpr hd
+    have h2 : (between r a b).idxOf d ≠ (between r a b).length - 1 := by
+      intro he
+      apply hdlast
+      have hBl : (between r a b).length - 1 < (between r a b).length := by omega
+      have hgl : (between r a b).getLast!
+          = (between r a b)[(between r a b).length - 1]'hBl := by
+        rw [getLastBangEqGetLast hBne, List.getLast_eq_getElem hBne]
+      rw [hgl]
+      exact ((getElemEqOfEqIdx he.symm hBl h1).trans
+        (Kepler.Text.TameLp.getElem_idxOf hd)).symm
+    omega
+  have hw1 : nextEl (between r a b) d
+      = (between r a b)[(between r a b).idxOf d + 1]'hbrlen := by
+    rw [Kepler.Text.TameLp.nextEl_eq_getD hd,
+      Kepler.Text.TameLp.getD_eq_getElem_of_lt
+        (Nat.mod_lt _ (List.length_pos_of_mem hd))]
+    exact getElemEqOfEqIdx (Nat.mod_eq_of_lt hbrlen) _ _
+  have hk1 : Kepler.Text.TameSpine.indexf a
+      ((between r a b)[(between r a b).idxOf d + 1]'hbrlen) r
+      = Kepler.Text.TameSpine.indexf a d r + 1 := by
+    have h3 := Kepler.Text.TameSpine.indexlBetwn hnd ha hb
+      (List.getElem_mem hbrlen)
+    have h4 : (between r a b).idxOf
+        ((between r a b)[(between r a b).idxOf d + 1]'hbrlen)
+        = (between r a b).idxOf d + 1 :=
+      Kepler.Text.TameLp.idxOf_getElem hBnd hbrlen
+    rw [h4] at h3
+    omega
+  have hk2 : Kepler.Text.TameSpine.indexf a (nextEl r d) r
+      = Kepler.Text.TameSpine.indexf a d r + 1 := by
+    have hir := Kepler.Text.TameSpine.indexfN ha hdr hnd
+    have hstep : (nextEl r)^[Kepler.Text.TameSpine.indexf a d r + 1] a
+        = nextEl r d := by
+      rw [Function.iterate_succ_apply', hir]
+    have hlt : Kepler.Text.TameSpine.indexf a d r + 1 < r.length := by
+      have hI := (Kepler.Text.TameSpine.indexfBetwnEq hne hnd ha hb).mp hd
+      have hB := Kepler.Text.TameSpine.indexfLtSizel ha hb
+      omega
+    exact Kepler.Text.TameSpine.nextElnIndexf ha
+      (Kepler.Text.TameLp.nextEl_mem_of_mem hdr) hnd hstep hlt
+  have e1 := Kepler.Text.TameSpine.indexfN ha
+    (Kepler.Graphs.inbetween_inset (List.getElem_mem hbrlen)) hnd
+  have e2 := Kepler.Text.TameSpine.indexfN ha
+    (Kepler.Text.TameLp.nextEl_mem_of_mem hdr) hnd
+  rw [hk1] at e1
+  rw [hk2] at e2
+  rw [hw1]
+  exact e1.symm.trans e2
+
+/-- **HOL `parts_betwn`**（more_lemma1.hl:471）：
+`is_edge_nondegenerate ∧ uniq (MAP (FST o HD) sp) ∧ normal_list ∧ good_list ∧
+r ∈ N ∧ parts L r = sp ∧ py,pz ∈ sp ∧ y∈py ∧ z∈pz ∧ FST y ≠ FST z ⇒
+parts L (betwn r (LAST py) (HD pz)) = betwn (parts L r) py pz`。
+`partsCharacterize` 装配：五前件 = `:39` 成员 iff 双向传播（`hne` 空支）/
+`between_distinct`（`hun`）/ **`:398`**（`hfl`）/ `inbetween_inset`（`hall`）/
+`hH`（§6 `eqMemNextElLast`+`nextElBetwnSame` 转移 + **`:600` 全域直用**——
+`partsCharacterize` 的 `hH` 自带 `d ≠ r.getLast!`，末元子案免）。空支
+`partsNil L` 收口。 -/
+theorem partsBetwn (L : fgraph ℕ) (hL : GoodList L)
+    {N : List (List Dart)} (hn : NormalListSpine hL N)
+    (hnedg : (Kepler.Text.TameLp.hypermapOfList L hL).EdgeNondegenerate)
+    {r : List Dart} (hr : r ∈ N) {sp : List (List Dart)} (hsp : partsSpine L r = sp)
+    (hunq : (sp.map (fun q => q.head!.1)).Nodup)
+    {py pz : List Dart} (hpy : py ∈ sp) (hpz : pz ∈ sp)
+    {y z : Dart} (hy : y ∈ py) (hz : z ∈ pz) (hyz : y.1 ≠ z.1) :
+    partsSpine L (between r py.getLast! pz.head!) = between sp py pz := by
+  obtain ⟨hrnd, hrne, hpynd, hpne, -⟩ := partsUniqNonnil L hL hn hr (hsp ▸ hpy)
+  obtain ⟨-, -, hpznd, hpzne, -⟩ := partsUniqNonnil L hL hn hr (hsp ▸ hpz)
+  have hflr : sp.flatten = r := by rw [← hsp]; exact partsFlatten L hrnd hrne
+  have hall : ∀ q ∈ sp, q ≠ [] := by rw [← hsp]; exact partsAllNonnil L hrnd hrne
+  have hmemiff := memBetwnLastHdParts L hL hn hr hsp hunq hpy hpz hy hz hyz
+  have e1 : y.1 = py.head!.1 := partsFst L hL hn hr (hsp ▸ hpy) hy
+  have e2 : py.getLast!.1 = py.head!.1 :=
+    partsFst L hL hn hr (hsp ▸ hpy) (aqs_getLastMem hpne)
+  have hfz : z.1 = pz.head!.1 := partsFst L hL hn hr (hsp ▸ hpz) hz
+  have hlastne : py.getLast! ≠ pz.head! := by
+    intro hcon
+    apply hyz
+    rw [hfz]
+    exact e1.trans (e2.symm.trans (congrArg Prod.fst hcon))
+  have hllr : py.getLast! ∈ r :=
+    hflr ▸ List.mem_flatten.mpr ⟨py, hpy, aqs_getLastMem (hall py hpy)⟩
+  have hzhr : pz.head! ∈ r :=
+    hflr ▸ List.mem_flatten.mpr ⟨pz, hpz, aqs_headMem hpzne⟩
+  rcases eq_or_ne (between r py.getLast! pz.head!) [] with hB | hB
+  · -- 空支：成员 iff 双向传播 ⇒ 两侧同空
+    have hBsp : between sp py pz = [] := by
+      by_contra hc
+      obtain ⟨w, hw⟩ := List.exists_mem_of_ne_nil _ hc
+      obtain ⟨v, hv⟩ := List.exists_mem_of_ne_nil _
+        (hall w (Kepler.Graphs.inbetween_inset hw))
+      have h2 := (hmemiff v).mpr (List.mem_flatten.mpr ⟨w, hw, hv⟩)
+      rw [hB] at h2
+      exact absurd h2 (by simp)
+    rw [hB, hBsp]
+    exact partsNil L
+  · refine Kepler.Text.TameSpine.partsCharacterize L hB
+      (Kepler.Graphs.between_distinct hrnd) ?_ ?_ ?_
+    · exact (betwnLastHdPartsFlatten L hL hn hr hsp hunq hpy hpz hy hz hyz).symm
+    · exact fun p hp => hall p (Kepler.Graphs.inbetween_inset hp)
+    · intro p hpB d hdp hdlast
+      have hpq : p ∈ sp := Kepler.Graphs.inbetween_inset hpB
+      have hpr : p ∈ partsSpine L r := hsp ▸ hpq
+      have hdBr : d ∈ between r py.getLast! pz.head! :=
+        (hmemiff d).mpr (List.mem_flatten.mpr ⟨p, hpB, hdp⟩)
+      rw [nextElArcSame hrnd hllr hzhr hlastne hdBr hdlast]
+      exact normalConditionLastParts L hL hn hnedg hr hpr hdp
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理）。 -/
@@ -2186,3 +2310,4 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.lastBetwnLastHdParts
 #print axioms Kepler.Text.TameSpine.nextBetwnLastHdParts
 #print axioms Kepler.Text.TameSpine.betwnLastHdPartsFlatten
+#print axioms Kepler.Text.TameSpine.partsBetwn
