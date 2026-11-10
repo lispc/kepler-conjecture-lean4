@@ -78,3 +78,23 @@ W35 `pW35_union_of_family`（124）· W36 th3×7（140）。
 未注解原形 + `show; rw[←hρ]; exact`。同机理解释 W35 §2 旧超时。
 
 **边界判读不变**：B1 = w 侧 1_2 族仍是唯一真几何缺口（§2/§3 不动）。
+
+## 7. 附录二（W42 追加，append-only；commit `ddec2058`，2026-11-10 12:03）
+
+**v4 链签名最终收紧**（W42A，407 行 5 件）：weak 形 hstep 槽（`hflat/hnc`
+前件、域 `n+1≤i`）在端点缺三项补强（W30 证据）⇒ 不作假设；全部换 EGHNAVX
+语境形，`pW30_hstepEG` 定理一行放电。五件 `pW42_pW6k7_v4 / pW6k8_v4 /
+pW19_v4 / pW24_v4 / prep_v4`；与 v4 原件 body 机器 diff：pW6k8/pW24 零差异、
+pW6k7 仅 K 案 hS3 放电调用、其余仅注释。
+
+**hNKE provider（hia 形）**（W42B，124 行 3 件）：`pW42_hNKE_hia (hB1)` ——
+hB1 = hslots.2 逐字；极扇凸性/generic 由 `p11w2_polar_*_of_eq` @ hia 供
+（HOL polar_fan.hl:2552–2568 的 hia 分支同形；W13F 的 hNKE 无 hia 槽是渲染
+时漏前提）。`pW42_WSEWPCH_hia_aux` 与 W13F aux body 机器 diff 仅 1 行；
+`pW42_perimeter_hia_v4 (hB1) (hcl) (hedge) : fanPerimeter ≤ 2π`。
+
+**父件条件形**（`20506a3a`，编排者亲作）：`pW43_parent_perimeterBound_of_fullySurrounded
+(hB1) (hfan) (hfs) : PerimeterBound V E hfan`。TameLp 无条件陈述零改动。
+
+**结论更新（取代 §5.1 的槽状态）**：`hstep` 已**真放电**（定理，不进签名）；
+唯一显式边界 = **B1**（w 侧 1_2 族）。条件形链路完整：B1 ⇒ PerimeterBound。
