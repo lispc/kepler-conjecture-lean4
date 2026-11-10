@@ -343,6 +343,9 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（14:10，续786）**：**用户指令（真用户输入）：即日起不再新发 sub agent；在飞任务回来一个、验收落库一个；全部结束后等用户新指令。**
+- 在飞清单（收尾模式，不补位、不新开）：① aq13 B2b（`loopFaceAgree` 接缝，两 UNRESOLVED 各 ≤1 轮机器判定）；② reduction5 KBWPBHQ2 本体（四支撑 4/4 齐）；③ J4 W1 批 2（膨胀率判定批）；④ tame-corr 8a-2b1b-2。**BIEFJHU glue 非中点切分接口**（W41 待办）**不开新车道**，挂起等指令。
+
 - **2026-11-10（14:06，续785）**：**J4 W1 批 1 落库 `018fcbe5`（`filterEl` 142 行）+ `indexf` 孪生侦察定案 + 两条路线决定（RD-1/RD-2）**。
 ① **`indexf` 侦察（UNRESOLVED 关闭，采信）**：**ℕ 处两套 `indexf` 是 defeq**（`unfold; rfl` 2 行），探针 A/B PASS；Dart 上 `instBEqProd` vs `instBEqOfDecidableEq` 仍 FAIL ⇒ **`b55b6dbe` 桥簇属 `Dart = ℕ×ℕ` 世界（W2/W4 用），W1 的 `List ℕ` 世界用不上**。约定入 `W1_INTERFACE_CONTRACT.md`：裸名 `indexf`（解析 TameSpine 版）、跨家族运输首选 `unfold; rfl`。顺带清点 W1 真缺件 3 条（`nextElRotEq`/`prevElRotEq`/`indexlMap` 树内 0 命中，各 10–25 行已计估算）。
 ② **`018fcbe5` `filterEl`** = HOL `filter_el`（reduction1.hl:777-827）：前缀计数 + take/drop 两段单调（非 HOL LIST_INDUCT）；142 行 1 件。**DIFFERS-② 采信**：结论 `getElem?` 形（依赖式 `vs'[r]` 需界证明不能进 ∃ 绑定；前提+已证界下与 EL 形逐点等价）——已立 W1 接口约定：凡「filtered list 新位置」结论一律 `?` 形 + 等价注记，消费方批 7 按此接线。**`filterEl` = `[propext, Quot.sound]` 零 choice 零 sorryAx**。闸：apply-check PASS、禁词零（头注两处改写）、岛编 RC=0/0err/0warn、olean 装池。
