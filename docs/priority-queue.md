@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（11:13，续773）**：**NKEZBFC 战线结案（条件形，与 HOL 同信任类别）——W38+W39 判定「w 侧 1_2 = HOL 隐式依赖」；结案报告入档 `docs/history/nkezbfc-final-2026-11-10.md`；W40（G 接口移植 + 下标引理）已派**。
+① **W38**：K 案假设束 `:1900–2048` aff **零命中**（分判定 (i) 假设形不成立）；H/J 段头全为 `SUBGOAL_THEN…ASSUME_TAC` 建立型且 G1/G2/G7 均 2_1（(ii) 中间导出不成立）；全文件 `aff_gt` 42 命中分类后 **1_2 形成员事实 0 处**。
+② **W39（候选 A 逐 tactic 追踪）**：`:2376` 目标完整还原（含 `:2374` IH-SYM 重写链）⇒ MATCH 实例唯一、h4 = 1_2 形；**四子目标关闭账（新发现）**：h1/h2 由 th3[0;v;·] 合取 5 关闭，**h3 由第三 th3 应用闭合（不是 h4）**，**h4 唯一不可关**（`:2399 ASM_REWRITE_TAC[]` 无供给，GSYM ITER/{A,B} 只对齐 h1–h3）；唯一上下文重织机制 `:2342` 排查无 1_2。**候选 C 空**（`:1–:1900` 与 local_lemmas.hl 全局均无 1_2 成员形）。**终局 = (b) HOL 隐式依赖（脚本内不可独立摘录，证明完整无 sorry）**。
+③ **结案报告 `docs/history/nkezbfc-final-2026-11-10.md`**（59 行）：链最终形态（`pW19_nkezbfc_prep_p9_v4` ← `pW24_v4` ← `pW19_v4` ← `pW6k8_v4` ← `pW6k7_v4`）；槽状态（hstep 可消 ✓ / hslot_w=边界 / C1 后跳在库、前跳边界 / C2=边界）；**唯一真几何缺口 B1 = w 侧 1_2 族**（`WindingSlot` 边界件 def 零公理、DIFFERS）；与 HOL 逐项对应表；全件清单 11 波全 std3 零 sorryAx。**判读：条件形收口，与 HOL 同信任类别（标注「隐式依赖」非「假设形」）**。降边界唯二入口：取得 HOL 可执行 proof state（本地无工具链）或独立攻绕序核心（200–400，成功率未定，登记为硬点）。
+④ **W40 已派（GO 低风险）**：G 接口移植（G1/G2/G3/G7 封装 + G6 u 侧 union，~80–120，无新几何，补 u 侧面与 pW26 汇合）+ W35 §2 下标引理具名化（~30，解 whnf 超时）。
+
 - **2026-11-10（11:08，续772）**：**四笔连落（la21 patch5+SF-104 `cad7e5f2` / 8a-2b1a `60a3ca95`）+ W37 侦察判定（G 段 NO-GO，不对称性发现）+ W38 K 案假设束提取已派**。
 ① **`cad7e5f2` la21 patch5 + SF-104 执行**：`deformation_BBs_p21`（SKOLEM_PERIODIC2 + `continuous_nbd_pos` 非紧边余量 + `ZLZTHIC_p14` 凸扇输运，`w4clamp` 端点钳制补 `Icc`）+ `deformation_BBs_ALT_p21`（SKOLEM_PERIODIC 统一 haz 与 `interior_angle1_azim_scs_p21` 的 ε + `vv_rho_node1`/`VV_SUC` 桥）——两件真证，axioms 标准三零 sorryAx。**SF-104**：5 处 ε-skolem 括号修复还原 HOL 强形（`?e. 0<e ∧ (A ==> B)`；弱形 `e:=0` 空洞 + 语义测试入档 SF 文档）；**LA21 net sorry 21→19，Section E 清零**；Section F 三件同病灶登记 SF §(e) 未动。岛编 RC=0、19 警告全预存 sorry。
 ② **`60a3ca95` 8a-2b1a**：`hdBetwn2`（DANGEYJ:709，idxOf 双支 + 私件 `headBangTake`/`headBangDrop` + `nextEl_eq_getD`；非回卷支 take 长度 0 由 `hne'` 反证排除；回卷末元支 headD 对齐）标准三；cat 族余 5 件拆 8a-2b1b（~180–220），**按保 parts 面建议先派 8a-2b2（`parts_betwn` ~90）**。
