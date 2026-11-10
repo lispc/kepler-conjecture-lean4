@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（09:55，续753）**：**记账 ERRATA（车道名 vs 战线）+ R2c1 终局判定（emit 语义：NEG 叶必败 decide；18 叶全部在 x2∈[3,4.21] 低 k 角区；depth-3 与 rung-256 均不翻）→ 开 TM fill 诊断道；LA21 接线落库 1b671cbd；la21 W2a 修复轮恢复；QCDVKEA/KBWPBHQ2 登记 scout §7**。
+① **ERRATA（记账口径）**：旧「tame-corr」车道自 2-γ 收官（续724/725：W1/W2/W3 全闭，余 Assembly 接线 10–20 行归 J5）后**已被复用为 J 战役铺装道**——其后的 Subseg8/9、Pwssrat* 7 连笔、P7 PLAN 全部属 **reduction4/reduction5 链**，与 tame-correspondence 章无关。此后账本按**战线**记账（J 战役 / 2-γ / NKEZBFC / BIEFJHU），车道名仅作临时工位号。**防重复发车注记：勿按"tame-corr 未完"重新派 2-γ 任何波。**
+② **BIEFJHU 终局判定（机器证据）**：emit 语义解码（`emit_hull_tree.py` L400+：每叶 `checkPosTMHull … = true := by decide +kernel`，probe verdict 只进 docstring）⇒ **72 NEG 叶会直接编译失败，证书无法收口**。72 盒 = **18 个 round-1 叶的全部 4 子盒**，坐标全部落在 **x2 ∈ [3.0, 4.21] × x1 ∈ [1,1.26]**（低 k 角区，手算真余量 +0.03~+0.14；k≈5–8 余量 ~0.01 最小带在其外侧）；depth-3 细分（同精度）两半盒仍 NEG；rung 256/-160 重探 3/3 仍 NEG 且 loBound 指数 −1444→−2565（**精度翻倍收敛到 0⁻**）⇒ 简单细分与提精度两条路在该区均死。**已开 TM fill 诊断道**（90–120 min 时间盒：CertTM `evalTMHullFill2`/sqrt 证书槽行为复现、PASS/NEG 盒中间界对比、判定 fill 缺陷 vs 固有墙 + 修法/绕过评估）。assemble 已备（params.txt 204 叶 132P/72N；**R2 驱动模板缺 DONE 哨兵**，已按完整性独立核验后补）。
+③ **LA21 落库 `1b671cbd`**：import 接线 +LA14/+LA37/+LA38（15 行，零环零重名，LA21 自身零改动，RC=0 0 error，olean 装池）。**la21 W2a WIP 采信**（660 行、18 处 elaboration 摩擦、无数学缺口、12 轮已定位 coe 插入模式）→ **恢复修复轮**（逐错误清单 → 全绿探针 → patch2 交付）。
+④ **QCDVKEA/KBWPBHQ2**：scout 已登记 `W2C_PLAN.md §7`（QCDVKEA = FINAL_LIST_INDUCT→QCDVKEA 串行，W2-c-4 首两件 ~90–130；KBWPBHQ2 证体 85 步、9 支撑件随批侦察，撞 tame-corr 铺装面即停手对表）；落库即通知 tame-corr 转 T1。
+
 - **2026-11-10（09:33，续751）**：**BIEFJHU round-2 收工（R2c0 102/102 PASS；R2c1 30 PASS / 72 NEG）+ NEG 判定「精度边缘非生成 bug」→ 高精度重探实验中**。
 ① **R2c1 收工**：102/102 全部报数（09:19 进程退出），终态 **30 PASS / 72 NEG**。round-2 合计 204 盒 = **132 PASS / 72 NEG**。
 ② **判定（非生成 bug，编排者机器证据）**：两 chunk driver 的 `HullR2c*Expr`/`Ps` 逐字相同（字符级比对）——不一致假说撤回；**NEG 语义解码**（`tmHullLeafProbe` = `lb := M.loBound box; (lb.isPos, lb.m, lb.e, …)`）：NEG 盒 = TM 认证下界为 **负 dyadic m·2^-1444（量级 ≈10^-330）**，PASS 盒也只是 **+m·2^-1478（≈10^-145）**——即证书在所有盒上都贴着数值零线，NEG = 认证精度边缘失败、非数学负值（手算真余量在 k=3..4、x1 顶端区约 +0.14）。
