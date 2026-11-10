@@ -354,6 +354,11 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（08:16，续886）**：**一笔落库：aq13 ml2b `58e6206e`（`Reduction5Ml1W2b` +62，2 件）——8b W2b 起手（`ml1S` 定义 + `ml1SMem`），B2–B6 冻结表带两条降本侦察**。
+① **`58e6206e`（aq13 ml2b）**：`ml1S` def（More_lemma1:2147 `GABBREV_TAC s`：`[y1] ++ (betwn r y1 z1 ++ [z1])`）+ `ml1SMem`（:2205 `y1 ∈ s ∧ z1 ∈ s`）。闸：apply-check PASS @`f9f01445`→`43f39b93` 复验、禁词净、岛编 RC=0/0err/0warn、1 探针标准三零 sorryAx、olean 装池。
+② **两条新侦察（采纳，入冻结表）**：(a) **B2 端点∉between 无按名公开件**（`aq7_notMemBetweenYZ` 是 AQ7 语境）⇒ 走 take/drop 段路线（`uniqTake`/`uniqDrop` + 1 索引等式 + 4 行）。(b) **B3 须带 `normalList L hL (ntrans L N r x 1)` 槽**——HOL 的 `parts_fst`/`normal_condition` 两处以 **state-1 normalList + `r := cat g s`** 应用（调用点 :2245/:2253）；树内 `aqs_aqNormalList`（Leaf8W1a:113，五槽条件形）供，`parts L (cat g s)` 用 W2a `aq12w` 分解。W2b 余量估 290–460、依赖无缺件。
+③ **续派**：aq13 → **W2b B2→B5 整段**（B3/B4 参数化内核，B6 余量允许则顺手）。J4（J5-7）、tame-corr（J5-6 rot 族收口+中段三件）在飞。
+
 - **2026-11-11（08:06，续885）**：**一笔落库：tame-corr nb25 `e60bbc2c`（`Reduction3J5CoreFinal` +61，2 件）——J5-6 rot 族核心两件在树，两未决判词清掉**。
 ① **`e60bbc2c`（tame-corr nb25）**：`coreFinalList`（HOL:95 = `finalListParts` + `List.map_map` + 单元素 headD 定义级）+ `coreFinal`（HOL:108 = marked loopList 给 all-darts + `hm.1.edgeNondegenerate` + `coreFinalList`）。查重记账：`all_rot` = `allRot`、`mem_core` = `memCore`，不重落。闸：apply-check PASS @`f9f01445`、禁词净、岛编 RC=0/0err/0warn、2 探针标准三零 sorryAx、olean 装池。
 ② **两未决判词（实测，采纳）**：① `betwn_rot` HOL 在 `reduction2.hl:107`（`betwn_corek_z_x.hl:51` 消费），Lean 树内仅 `Graphs/FaceDivisionProps1:1276/1282` 的 `pre_between_rotate*`（divides 域、非孪生）⇒ `betwnFinalList` 前置 = 新落 `betwnRot`（20–30）。② **`rot n [r] = [r]` 消解**：`finalListParts` 结论是逐 dart 单点 atom（`f.map (fun x => [x])`），故 `partsRot`/`coreRot` 的 final 支是 `map_rotate` 型恒等式，无需单元素引理——**省一个预期新件**。
