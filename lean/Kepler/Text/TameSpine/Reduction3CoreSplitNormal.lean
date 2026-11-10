@@ -366,6 +366,156 @@ theorem hdBetwn2 {α : Type*} [DecidableEq α] [Inhabited α] {r : List α} {r1 
       | cons a t => rfl
 
 
+/-! ## §6 `EQ_MEM_NEXT_EL_LAST`（AQ4.hl:60）与 `next_el_betwn_same`（NCVIBWU.hl:131）
+
+两件是 `parts_betwn`（more_lemma1.hl:471）与 cat 族的索引代数内核：
+`indexf` 模移位 + `indexlBetwn`/`sizeBetwn`/`indexfBetwnEq` 的环算术。 -/
+
+/-- `next_el` 步进下 `indexf y · f` 的模移位：
+`indexf y (next_el f d) f = (indexf y d f + 1) % f.length`（成员态）。 -/
+private theorem indexfNextEl {α : Type} [DecidableEq α] {f : List α} {y d : α}
+    (hnd : f.Nodup) (hy : y ∈ f) (hd : d ∈ f) :
+    Kepler.Text.Reduction5.indexf y (nextEl f d) f
+      = (Kepler.Text.Reduction5.indexf y d f + 1) % f.length := by
+  have hpos : 0 < f.length := List.length_pos_of_mem hd
+  have hnextmem : nextEl f d ∈ f := Kepler.Text.TameLp.nextEl_mem_of_mem hd
+  have hi : f.idxOf (nextEl f d) = (f.idxOf d + 1) % f.length := by
+    rw [Kepler.Text.TameLp.nextEl_eq_getD hd,
+      Kepler.Text.TameLp.getD_eq_getElem_of_lt (Nat.mod_lt _ hpos)]
+    exact Kepler.Text.TameLp.idxOf_getElem hnd (Nat.mod_lt _ hpos)
+  have hival : Kepler.Text.Reduction5.indexf y d f
+      = (f.idxOf d + (f.length - f.idxOf y)) % f.length := by
+    unfold Kepler.Text.Reduction5.indexf
+    rw [if_pos ⟨hy, hd⟩]
+  have hival2 : Kepler.Text.Reduction5.indexf y (nextEl f d) f
+      = (f.idxOf (nextEl f d) + (f.length - f.idxOf y)) % f.length := by
+    unfold Kepler.Text.Reduction5.indexf
+    rw [if_pos ⟨hy, hnextmem⟩]
+  rw [hival, hival2, hi, Nat.mod_add_mod, Nat.mod_add_mod]
+  congr 1
+  omega
+
+/-- `indexf y d f = indexf y z f - 1` ⇒ `d` 是 `betwn f y z` 的末元。 -/
+private theorem betwnGetLastOfIndexfSucc {α : Type} [DecidableEq α] [Inhabited α]
+    {f : List α} {y z d : α} (hyz : y ≠ z) (hy : y ∈ f) (hz : z ∈ f)
+    (hd : d ∈ between f y z) (hnd : f.Nodup)
+    (hidx : Kepler.Text.Reduction5.indexf y d f
+      = Kepler.Text.Reduction5.indexf y z f - 1) :
+    (between f y z).getLast! = d := by
+  have hBne : between f y z ≠ [] := fun h => by rw [h] at hd; simp at hd
+  have h1 : (between f y z).idxOf d + 1 = Kepler.Text.Reduction5.indexf y d f :=
+    Kepler.Text.Reduction5.indexlBetwn hnd hyz hy hz hd
+  have h2 : (between f y z).length = Kepler.Text.Reduction5.indexf y z f - 1 :=
+    Kepler.Text.Reduction5.sizeBetwn hnd hy hz hyz
+  have h3 : (between f y z).idxOf d = (between f y z).length - 1 := by omega
+  have hmemlast : (between f y z).getLast! ∈ between f y z := by
+    rw [getLastBangEqGetLast hBne]
+    exact List.getLast_mem hBne
+  have hgl : (between f y z).getLast!
+      = (between f y z)[(between f y z).length - 1]'(by omega) := by
+    rw [getLastBangEqGetLast hBne]
+    exact List.getLast_eq_getElem hBne
+  have hidxl : (between f y z).idxOf ((between f y z).getLast!)
+      = (between f y z).length - 1 := by
+    conv_lhs => rw [hgl]
+    exact Kepler.Text.TameLp.idxOf_getElem (Kepler.Graphs.between_distinct hnd)
+      (i := (between f y z).length - 1) (by omega)
+  exact (List.idxOf_inj hmemlast).mp (by rw [hidxl, h3])
+
+/-- **HOL `Aq4.EQ_MEM_NEXT_EL_LAST`**（AQ4.hl:60）：
+`¬(y=z) ∧ y,z∈f ∧ d∈betwn f y z ∧ uniq f ⇒
+(MEM (next_el f d) (betwn f y z) ↔ ~(LAST(betwn f y z)=d))`。
+正向：`d = last B ⇒ next_el d = z`（`nextLastBetwn`）撞 `notBetwn2`；
+反向：`indexf` 模移位 + 「末元 ⇔ indexf = indexf z - 1」。 -/
+theorem eqMemNextElLast {α : Type} [DecidableEq α] [Inhabited α]
+    {f : List α} {y z d : α}
+    (hyz : y ≠ z) (hy : y ∈ f) (hz : z ∈ f)
+    (hd : d ∈ between f y z) (hnd : f.Nodup) :
+    (nextEl f d ∈ between f y z) ↔ (between f y z).getLast! ≠ d := by
+  have hdf : d ∈ f := Kepler.Text.Reduction5.betwnMem hd
+  have hBne : between f y z ≠ [] := fun h => by rw [h] at hd; simp at hd
+  constructor
+  · intro hmem hgl
+    have hz1 : nextEl f d = z := by
+      rw [← hgl, show (between f y z).getLast!
+          = (between f y z).getLast hBne from getLastBangEqGetLast hBne]
+      exact Kepler.Text.Reduction5.nextLastBetwn hy hz hnd hyz hBne
+    rw [hz1] at hmem
+    exact (Kepler.Text.Reduction4.notBetwn2 hnd) hmem
+  · intro hgl
+    have hI := (Kepler.Text.Reduction5.indexfBetwnEq hyz hnd hy hz).mp hd
+    have hzlt : Kepler.Text.Reduction5.indexf y z f < f.length :=
+      Kepler.Text.Reduction5.indexfLtSizel hy hz
+    have hne2 : Kepler.Text.Reduction5.indexf y d f
+        ≠ Kepler.Text.Reduction5.indexf y z f - 1 :=
+      fun he => hgl (betwnGetLastOfIndexfSucc hyz hy hz hd hnd he)
+    have hlt2 : Kepler.Text.Reduction5.indexf y d f + 1
+        < Kepler.Text.Reduction5.indexf y z f := by omega
+    have hltn : Kepler.Text.Reduction5.indexf y d f + 1 < f.length := by omega
+    have hstep := indexfNextEl hnd hy hdf
+    refine (Kepler.Text.Reduction5.indexfBetwnEq hyz hnd hy hz).mpr ⟨?_, ?_⟩
+    · rw [hstep, Nat.mod_eq_of_lt hltn]
+      omega
+    · rw [hstep, Nat.mod_eq_of_lt hltn]
+      omega
+
+/-- 同下标 `getElem` 相等（证明参数无关；AGENTS §7.1 #10 口径）。 -/
+private theorem getElemEqOfEqIdx {α : Type*} {l : List α} {i j : ℕ}
+    (hij : i = j) (hi : i < l.length) (hj : j < l.length) : l[i]'hi = l[j]'hj := by
+  subst hij
+  rfl
+
+/-- **HOL `Ncvibwu.next_el_betwn_same`**（NCVIBWU.hl:131）：
+`¬(y=z) ∧ y,z∈f ∧ d∈betwn f y z ∧ next_el f d ∈ betwn f y z ∧ uniq f ⇒
+next_el (betwn f y z) d = next_el f d`。
+证体：`indexlBetwn`×2 + `sizeBetwn` + `indexf` 模移位 ⇒
+`B.idxOf (next_el d) = B.idxOf d + 1`（模坍缩支由 `nextLastBetwn`+`notBetwn2` 排除）。 -/
+theorem nextElBetwnSame {α : Type} [DecidableEq α] [Inhabited α]
+    {f : List α} {y z d : α}
+    (hyz : y ≠ z) (hy : y ∈ f) (hz : z ∈ f) (hd : d ∈ between f y z)
+    (hnext : nextEl f d ∈ between f y z) (hnd : f.Nodup) :
+    nextEl (between f y z) d = nextEl f d := by
+  have hdf : d ∈ f := Kepler.Text.Reduction5.betwnMem hd
+  have hBnd : (between f y z).Nodup := Kepler.Graphs.between_distinct hnd
+  have hBne : between f y z ≠ [] := fun h => by rw [h] at hd; simp at hd
+  have hin1 : (between f y z).idxOf d + 1 = Kepler.Text.Reduction5.indexf y d f :=
+    Kepler.Text.Reduction5.indexlBetwn hnd hyz hy hz hd
+  have hin2 : (between f y z).idxOf (nextEl f d) + 1
+      = Kepler.Text.Reduction5.indexf y (nextEl f d) f :=
+    Kepler.Text.Reduction5.indexlBetwn hnd hyz hy hz hnext
+  have hL : (between f y z).length = Kepler.Text.Reduction5.indexf y z f - 1 :=
+    Kepler.Text.Reduction5.sizeBetwn hnd hy hz hyz
+  have hzlt : Kepler.Text.Reduction5.indexf y z f < f.length :=
+    Kepler.Text.Reduction5.indexfLtSizel hy hz
+  have hidxnextlt : (between f y z).idxOf (nextEl f d) < (between f y z).length :=
+    List.idxOf_lt_length_iff.mpr hnext
+  have hstep := indexfNextEl hnd hy hdf
+  have hexp : (between f y z).idxOf (nextEl f d) + 1
+      = ((between f y z).idxOf d + 2) % f.length := by
+    rw [hin2, hstep, ← hin1]
+  have hmlt : (between f y z).idxOf d + 2 < f.length := by
+    have hI := (Kepler.Text.Reduction5.indexfBetwnEq hyz hnd hy hz).mp hd
+    omega
+  have hidxeq : (between f y z).idxOf (nextEl f d)
+      = (between f y z).idxOf d + 1 := by
+    rw [Nat.mod_eq_of_lt hmlt] at hexp
+    omega
+  -- nextEl B d = B[B.idxOf d + 1] = B[B.idxOf (nextEl d)] = nextEl f d
+  have hposB : 0 < (between f y z).length := List.length_pos_iff.mpr hBne
+  have hnextB : nextEl (between f y z) d
+      = (between f y z)[((between f y z).idxOf d + 1) % (between f y z).length]'
+          (Nat.mod_lt _ hposB) := by
+    rw [Kepler.Text.TameLp.nextEl_eq_getD hd,
+      Kepler.Text.TameLp.getD_eq_getElem_of_lt (Nat.mod_lt _ hposB)]
+  rw [hnextB]
+  have hidxmod : ((between f y z).idxOf d + 1) % (between f y z).length
+      = (between f y z).idxOf d + 1 := Nat.mod_eq_of_lt (by omega)
+  exact (getElemEqOfEqIdx (l := between f y z) hidxmod
+      (Nat.mod_lt _ hposB) (by omega)).trans
+    ((getElemEqOfEqIdx (l := between f y z) hidxeq.symm (by omega)
+      hidxnextlt).trans (Kepler.Text.TameLp.getElem_idxOf hnext))
+
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零 sorryAx）。 -/
@@ -377,3 +527,5 @@ end Kepler.Text.TameSpine
 #print axioms Kepler.Text.TameSpine.nextHdLastBetwn
 #print axioms Kepler.Text.TameSpine.betwnCat
 #print axioms Kepler.Text.TameSpine.hdBetwn2
+#print axioms Kepler.Text.TameSpine.eqMemNextElLast
+#print axioms Kepler.Text.TameSpine.nextElBetwnSame
