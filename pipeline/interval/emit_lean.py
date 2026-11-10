@@ -249,6 +249,21 @@ def build_goals(case, rpn):
 
 TRANS_KIND = {"atan": "arctanK", "sin": "sinK", "cos": "cosK", "ln": "lnK"}
 
+# W41/GO-1 opt-in C variant (default OFF = byte-identical legacy emission):
+# stage-A fill uses `tmHullLeafProbeC` (sign-sensitive abs + cosK TM) and
+# stage-B leaf theorems assert `checkPosTMHullC`.  The C path re-fills the
+# sqrt mantissas under the tighter abs/cosK model, so its triples must not
+# be mixed with legacy `params.txt` output.
+HULL_C_VARIANT = False
+
+
+def hull_probe_name():
+    return "tmHullLeafProbeC" if HULL_C_VARIANT else "tmHullLeafProbe"
+
+
+def hull_check_name():
+    return "checkPosTMHullC" if HULL_C_VARIANT else "checkPosTMHull"
+
 
 _LIT_ONE_RE = None  # compiled lazily: r"^\(\.const ⟨(-?\d+), (-?\d+)⟩\)$"
 
@@ -1333,7 +1348,7 @@ def hull_stage_a_file(mod, n, expr, boxes, gran, rung_n, rung_out,
                 f"def main : List String → IO UInt32 := fun _ => do\n"
                 f"  IO.println \"RUNG {rung_n} {rung_out} {g} {g} {g} {g} {g} {g} {g}\"\n"
                 f"  for i in [0:{mod}Boxes.size] do\n"
-                f"    match tmHullLeafProbe {mod}Expr {mod}Boxes[i]! {mod}Ps with\n"
+                f"    match {hull_probe_name()} {mod}Expr {mod}Boxes[i]! {mod}Ps with\n"
                 "    | some (p, m, e, l) =>\n"
                 "        let v := if p then \"PASS\" else \"NEG\"\n"
                 "        let trip := String.intercalate \" \"\n"
@@ -1400,10 +1415,10 @@ def hull_stage_b_file(mod, n, expr, rows, rung, nsqrt, ndiv, ntrans,
             f"def {mod}Box{j} : Fin {n} → DInterval :=\n  {box_lit(box)}\n\n"
             f"def {mod}P{j} : TMParams := ⟨[{sq}], [{iv}], [{tv}]⟩\n\n"
             f"theorem {mod}Leaf{j} :\n"
-            f"    checkPosTMHull {mod}Expr {mod}Box{j} {mod}P{j} = "
+            f"    {hull_check_name()} {mod}Expr {mod}Box{j} {mod}P{j} = "
             f"{'true' if verdict == 'PASS' else 'false'} := by\n  decide\n")
         pf.append((f"{mod}Leaf{j}",
-                   f"checkPosTMHull {mod}Expr {mod}Box{j} {mod}P{j} = "
+                   f"{hull_check_name()} {mod}Expr {mod}Box{j} {mod}P{j} = "
                    f"{'true' if verdict == 'PASS' else 'false'}"))
     goal = " ∧\n    ".join(v for _, v in pf)
     conj = (f"⟨{', '.join(t for t, _ in pf)}⟩" if len(pf) > 1
@@ -1732,7 +1747,7 @@ def gsplit_stage_a_file(mod, n, expr, boxes, gran, rung_n, rung_out,
             "    let tms ← IO.monoMsNow\n"
             f"    err.putStr s!\"[gsplit] sub-box {{i}}/{{{mod}Boxes.size}} ms={{tms}}\\n\"\n"
             "    err.flush\n"
-            f"    match tmHullLeafProbe {mod}Expr {mod}Boxes[i]! {mod}Ps with\n"
+            f"    match {hull_probe_name()} {mod}Expr {mod}Boxes[i]! {mod}Ps with\n"
             "    | some (p, m, e, l) =>\n"
             "        let v := if p then \"PASS\" else \"NEG\"\n"
             "        let trip := String.intercalate \" \"\n"
@@ -3682,7 +3697,7 @@ def main():
     # re-sum a 1024-term Leibniz series 4x (~40x slower per leaf, measured).
     # `--no-atan1-box` / `--no-fill-atan1-box` restore gen-10 byte-identical output.
     atan1_box = True
-    global fill_atan1_box, DECIDE_TAC
+    global fill_atan1_box, DECIDE_TAC, HULL_C_VARIANT
     fill_atan1_box = True
     # W8 gen-7: fixed split-node skeleton (the constructor takes box/d/l/r;
     # the splitOK proof is consumed by `covers`, not by the constructor).
@@ -3757,6 +3772,8 @@ def main():
             mixed_tm = True
         elif a == "--hull":
             hull = True
+        elif a == "--hull-c":
+            HULL_C_VARIANT = True
         elif a == "--gsplit=a":
             hull = True
             gsplit = "a"
@@ -3784,6 +3801,8 @@ def main():
             "                [--leaves=N] [--fill] [--stage-a] [--bbg --params=FILE]\n"
             "                [--bbg --disj-gd --params=FILE [--manifest=FILE]] [--disj-dummy]\n"
             "                [--hull --params=FILE --gran=G --rung=N --rung-out=O]\n"
+            "                [--hull-c] (W41 opt-in: stage-A tmHullLeafProbeC /\n"
+            "                stage-B checkPosTMHullC; default OFF = byte-identical)\n"
             "                [--hull --gsplit=a --params=ROUND1 [--manifest=ROUND1MF]\n"
             "                      [--gsplit-depth=12]]\n"
             "                [--hull --gsplit=b --params=ROUND2 [--manifest=MF] [--max-leaves=N]]\n"
