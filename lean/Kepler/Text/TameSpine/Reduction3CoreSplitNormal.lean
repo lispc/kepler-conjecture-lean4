@@ -1683,6 +1683,35 @@ private theorem takeIdxOfEq {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α
   exact (Kepler.Text.TameLp.idxOf_getElem hn hj2).symm
 
 
+/-- `l.take (i + k) = l.take i ++ (l.drop i).take k`。 -/
+private theorem takeAdd {α : Type*} (l : List α) (i k : ℕ) :
+    l.take (i + k) = l.take i ++ (l.drop i).take k := by
+  induction k generalizing i with
+  | zero => simp
+  | succ k ih =>
+    rw [Nat.add_succ, List.take_add_one, ih, List.take_add_one,
+      List.append_assoc, List.getElem?_drop]
+
+/-- `l.take (i + 1) = l.take i ++ [l[i]]`（`i < l.length`）。 -/
+private theorem takeSuccGetElem {α : Type*} {l : List α} {i : ℕ} (h : i < l.length) :
+    l.take (i + 1) = l.take i ++ [l[i]] := by
+  rw [List.take_add_one, List.getElem?_eq_getElem h]
+  rfl
+
+/-- `|flatten (l.take n)| ≤ |flatten l|`。 -/
+private theorem flatLenTakeLe {α : Type*} (l : List (List α)) (n : ℕ) :
+    (l.take n).flatten.length ≤ l.flatten.length := by
+  conv_rhs => rw [← List.take_append_drop n l]
+  rw [List.flatten_append, List.length_append]
+  omega
+
+/-- 前缀单调：`i ≤ j ⇒ |flatten (take i)| ≤ |flatten (take j)|`。 -/
+private theorem takeFlatLenMono {α : Type*} {l : List (List α)} {i j : ℕ} (h : i ≤ j) :
+    (l.take i).flatten.length ≤ (l.take j).flatten.length := by
+  rw [← Kepler.Text.TameSpine.takeTake h]
+  exact flatLenTakeLe (l.take j) i
+
+
 end Kepler.Text.TameSpine
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理）。 -/
