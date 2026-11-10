@@ -2,6 +2,13 @@
   Kepler.Text.TameSpine.Reduction3HbridgeElim — W2-件1a：`hbridge` 槽闭合
   （`elements_of_list_ntrans` 的无条件形，HOL reduction2.hl:1042-1136 全量）。
 
+  ┌─ 件2 Wave A 可见性翻公开（2026-11-10 追加交付）────────────────
+  │ newsSplit / rtransFilterEq / leYInR / take_range'_eq /
+  │ setOfListNatSpine_range' 五件 private → public：件2 Wave A
+  │ （Reduction3NewvertexPrepTransform）跨文件消费。陈述与证体逐字零改。
+  │ 其余件不变；elementsOfListNtransTop 早已公开。
+  └────────────────────────────────────────────────────────────────
+
   ┌─ 状态（2026-11-10 续跑完成）───────────────────────────────────
   │ §0 泛型旋转/轨道工具层 8 件（7936ba22 已落库）+ §1 主装
   │ `elementsOfListNtransTop` 无条件形（本 patch 新增）：§1 工具层 5 件
@@ -310,7 +317,7 @@ private theorem rotateToFilterSwap {α : Type} [BEq α] [LawfulBEq α] [Decidabl
 
 /-- **HOL `rtrans_diff_r`**（reduction2.hl:489）：r' 的 r-差恰为 face 新弧
 （between f_y y z；S 段 ⊆ r 全滤除、face 弧 ∉ r 全保留）。 -/
-private theorem rtransFilterEq (L : fgraph ℕ) (hL : GoodList L)
+theorem rtransFilterEq (L : fgraph ℕ) (hL : GoodList L)
     (hgn : GoodListNodesTl L hL) (hunL : ∀ l ∈ L, l.Nodup)
     {N : List (List (ℕ × ℕ))} {r : List (ℕ × ℕ)} {x : ℕ × ℕ}
     (hm : MarkedListSpineFull hL N r x) (hf : ¬finalListSpine L r) :
@@ -335,7 +342,7 @@ private theorem rtransFilterEq (L : fgraph ℕ) (hL : GoodList L)
 /-- **HOL `le_y_in_r`**（reduction2.hl:690-780）轨道化形：w 起 face 轨道上
 indexf ≤ l'm 的 dart ∈ r（NCVIBWU.l_y_rep_power_le + fListPowEqNextElPow +
 indexfN 三件组装，免逐段移植）。 -/
-private theorem leYInR (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesTl L hL)
+theorem leYInR (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesTl L hL)
     (hunL : ∀ l ∈ L, l.Nodup) {N : List (List (ℕ × ℕ))} {r : List (ℕ × ℕ)}
     {x : ℕ × ℕ} (hm : MarkedListSpineFull hL N r x) (hf : ¬finalListSpine L r)
     {x' : ℕ × ℕ} (hx'f : x' ∈ findFaceDarts L x)
@@ -370,7 +377,7 @@ private theorem leYInR (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesTl
 
 /-- **news 三段分解**（face_diff_r 结论级弱化形；HOL :843-1040 的 rest 免识别）：
 `newvertex = MAP FST (betwn f y z) ++ rest`。 -/
-private theorem newsSplit (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesTl L hL)
+theorem newsSplit (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNodesTl L hL)
     (hunL : ∀ l ∈ L, l.Nodup) {N : List (List (ℕ × ℕ))} {r : List (ℕ × ℕ)}
     {x : ℕ × ℕ} (hm : MarkedListSpineFull hL N r x) (hf : ¬finalListSpine L r) :
     ∃ rest : List ℕ,
@@ -512,7 +519,7 @@ private theorem newsSplit (L : fgraph ℕ) (hL : GoodList L) (hgn : GoodListNode
 /-! ## §3 take 数算 + 无条件主定理 -/
 
 /-- `range'` 的 take 前缀形（`l ≤ L` 时截取即低段）。 -/
-private theorem take_range'_eq (n l L : ℕ) (h : l ≤ L) :
+theorem take_range'_eq (n l L : ℕ) (h : l ≤ L) :
     (List.range' n L).take l = List.range' n l := by
   conv_lhs => rw [show L = l + (L - l) from (Nat.add_sub_of_le h).symm]
   rw [← List.range'_append, List.take_append,
@@ -520,7 +527,7 @@ private theorem take_range'_eq (n l L : ℕ) (h : l ≤ L) :
     List.length_range', Nat.sub_self, List.take_zero, List.append_nil]
 
 /-- `range'` 的集形：`setOfListNatSpine (range' n l) = {i | n ≤ i < n+l}`。 -/
-private theorem setOfListNatSpine_range' (n l : ℕ) :
+theorem setOfListNatSpine_range' (n l : ℕ) :
     setOfListNatSpine (List.range' n l) = {i : ℕ | n ≤ i ∧ i < n + l} := by
   ext i
   show i ∈ List.range' n l ↔ n ≤ i ∧ i < n + l
