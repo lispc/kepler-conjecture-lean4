@@ -28,11 +28,11 @@ FILE MAP (all 62 HOL theorems, source order; `_p21` suffix throughout)
     `periodic2_MOD_p21`, `MOD_periodic2_p21`, `MOD_SHIFT_p21` (proved),
     `I_IMP_p21` (proved), `psort_inj_p21`, `psort_mod_p21`,
     `solve_mod_k_p21` (proved), `sin_azim_pos_p21` (proved).
-  Section E (BBs/fan transport): `VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21` (sorry),
-    `vv_azim_le_alt_p21`, `vv_split_azim_alt_p21` (sorry),
+  Section E (BBs/fan transport): `VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21` (proved),
+    `vv_azim_le_alt_p21`, `vv_split_azim_alt_p21` (proved),
     `interior_angle1_azim_p21`, `LOFA_IMP_INANGLE_EQ_AZIM_IVS_p21`
     (proved, definitional), `BBs_inj_p21` (proved), `IMAGE_FF_p21` (proved),
-    `interior_angle1_azim_scs_p21` (sorry), `deformation_BBs_p21`,
+    `interior_angle1_azim_scs_p21` (proved), `deformation_BBs_p21`,
     `deformation_BBs_ALT_p21` (sorry giants).
   Section F (assumption reductions): `a_assumption_reduction_p21`,
     `b_assumption_reduction_p21`, `azim_assumption_reduction_p21`,
@@ -1074,6 +1074,101 @@ theorem sin_azim_pos_p21 (v1 v2 v3 v4 : V3) :
   · rintro ⟨h1, h2⟩
     exact Real.sin_pos_of_mem_Ioo ⟨h1, h2⟩
 
+/-! ## W3 private kit -/
+
+private theorem w3b_periodic_mod {α : Sort*} {f : ℕ → α} {k : ℕ} (hk : k ≠ 0)
+    (hf : Periodic f k) (i : ℕ) : f (i % k) = f i := by
+  induction i using Nat.strongRecOn with
+  | ind i ih =>
+    if h : i < k then
+      rw [Nat.mod_eq_of_lt h]
+    else
+      have hle : k ≤ i := le_of_not_gt h
+      rw [Nat.mod_eq_sub_mod hle, ih (i - k) (by omega), ← hf (i - k)]
+      congr 1
+      omega
+
+private theorem w3b_eps_fixed {α : Sort*} [Nonempty α] {pr : α → Prop} {a : α}
+    (hpa : pr a) (huniq : ∀ y, pr y → y = a) : Classical.epsilon pr = a := by
+  by_contra hne
+  exact hne (huniq _ (Classical.epsilon_spec ⟨a, hpa⟩))
+
+private theorem w3b_mod_ne_add {k a c : ℕ} (_hk0 : 0 < k) (hck : c < k) (hc0 : 0 < c) :
+    a % k ≠ (a + c) % k := by
+  intro h
+  have hd : k ∣ a + c - a := Nat.modEq_iff_dvd' (by omega) |>.mp h
+  rw [Nat.add_sub_cancel_left] at hd
+  have hd2 : c % k = 0 := Nat.dvd_iff_mod_eq_zero.mp hd
+  rw [Nat.mod_eq_of_lt hck] at hd2
+  omega
+
+private theorem w3b_hedge_of_localFan {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) : ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
+  obtain ⟨hfan, x, hx, hFF, hD, h2reg⟩ := h
+  intro v hv
+  have h2 : (ee v E).ncard = 2 := h2reg v hv
+  have hne : (ee v E).Nonempty := by
+    by_contra hc
+    rw [Set.not_nonempty_iff_eq_empty.mp hc, Set.ncard_empty] at h2
+    omega
+  obtain ⟨w, hw⟩ := hne
+  exact ⟨w, hw⟩
+
+private theorem w3b_distinct_succ_pred {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk3 : 3 ≤ k)
+    (hinj : ∀ i j, i < k → j < k → vv i = vv j → i = j) (i : ℕ) :
+    vv (i + 1) ≠ vv (i + (k - 1)) := by
+  have hk0 : k ≠ 0 := by omega
+  have hkpow : 0 < k := by omega
+  intro h
+  have h1 : vv ((i + 1) % k) = vv (i + 1) := w3b_periodic_mod hk0 hper (i + 1)
+  have h2 : vv ((i + (k - 1)) % k) = vv (i + (k - 1)) :=
+    w3b_periodic_mod hk0 hper (i + (k - 1))
+  have hlt1 : (i + 1) % k < k := Nat.mod_lt _ hkpow
+  have hlt2 : (i + (k - 1)) % k < k := Nat.mod_lt _ hkpow
+  have hmod := hinj _ _ hlt1 hlt2 (by rw [h1, h2, h])
+  have hc : i + (k - 1) = (i + 1) + (k - 2) := by omega
+  rw [hc] at hmod
+  exact absurd hmod (w3b_mod_ne_add hkpow (by omega) (by omega))
+
+/-- `sigma_fan 0 univ E (vv i) (vv (i+1)) = vv (i+k-1)`: the neighbour set is
+the two-point `ee` set (`EE_vv`), and the epsilon witness is forced. -/
+private theorem w3b_sigmaFan_eq_vv (vv : ℕ → V3) (k i : ℕ) (hper : Periodic vv k)
+    (hk3 : 3 ≤ k)
+    (hinj : ∀ i j, i < k → j < k → vv i = vv j → i = j) :
+    Fan.sigmaFan 0 Set.univ (Set.range fun i => ({vv i, vv (i + 1)} : Set V3))
+      (vv i) (vv (i + 1)) = vv (i + (k - 1)) := by
+  have hEE := EE_vv vv k i hper hk3 (fun i j h => hinj i j h.1 h.2.1 h.2.2)
+  have hne := w3b_distinct_succ_pred hper hk3 hinj i
+  have hS : Fan.setOfEdge (vv i) Set.univ (Set.range fun i => ({vv i, vv (i + 1)} : Set V3))
+      = ({vv (i + 1), vv (i + (k - 1))} : Set V3) := by
+    rw [← hEE]
+    ext w
+    simp [Fan.setOfEdge, ee]
+  have hnesing : Fan.setOfEdge (vv i) Set.univ
+      (Set.range fun i => ({vv i, vv (i + 1)} : Set V3)) ≠ {vv (i + 1)} := by
+    intro hc
+    have hz : vv (i + (k - 1)) ∈ ({vv (i + 1)} : Set V3) := by
+      rw [← hc, hS]
+      exact Set.mem_insert_of_mem _ rfl
+    exact hne (Set.mem_singleton_iff.mp hz).symm
+  unfold Fan.sigmaFan
+  rw [if_neg hnesing]
+  refine w3b_eps_fixed ⟨?_, ?_, ?_⟩ ?_
+  · rw [hS]
+    exact Set.mem_insert_of_mem _ rfl
+  · exact fun hc => hne hc.symm
+  · intro w1 hw1 hw1u
+    rw [hS] at hw1
+    rcases Set.mem_insert_iff.mp hw1 with h1 | h1
+    · exact absurd h1 hw1u
+    · rw [Set.mem_singleton_iff.mp h1]
+  · intro y hy
+    rw [hS] at hy
+    rcases Set.mem_insert_iff.mp hy.1 with hy1 | hy1
+    · exact absurd hy1 hy.2.1
+    · exact Set.mem_singleton_iff.mp hy1
+
 /-! ## Section E: BBs / local-fan transport -/
 
 /-- HOL `VV_SUC_EQ_IVS_RHO_NODE_PRIME` (CUXVZOZ.hl:18): `ivs_rho_node1` of
@@ -1085,12 +1180,35 @@ theorem VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21 (V : Set V3) (E : Set (Set V3))
     (hFF : Set.range (fun i => (vv i, vv (i + 1))) = FF)
     (hs : isScsV39 s) (hk3 : ¬ (k ≤ 3)) (hBB : BBsV39 s vv) :
     ivsRhoNode1 FF u = vv (p1 + (k - 1)) := by
-  -- DISCHARGES: HOL uses Appendix.BBs_v39 (fan data off BBs), the
-  -- hypermap-free `local_fan` fact CVX_LO_IMP_LO, LOCAL_FAN_IVS_IN_V,
-  -- Polar_fan.RHO_NODE1_INJECTIVE, LOCAL_FAN_RHO_NODE_IVS and
-  -- Qknvmlb.VV_SUC_EQ_RHO_NODE_PRIME; none of the polar-fan kit is ported
-  -- on this side. NEEDS: merge with the polar-fan lane.
-  sorry
+  have hconv : ConvexLocalFan V E FF := by
+    rcases hBB.2.2.2 with h3 | hcf
+    · exact absurd (by rw [hk] at h3; exact h3) hk3
+    · rw [hV, hE, hFF] at hcf
+      exact hcf
+  have hLF := hconv.1
+  have hedge := w3b_hedge_of_localFan hLF
+  have hlf2 := localFan_p2.of_LocalFan_noIso hLF hedge
+  have huV : u ∈ V := by
+    rw [← hV, ← hu]
+    exact Set.mem_range_self p1
+  have hivsV : ivsRhoNode1 FF u ∈ V := LOCAL_FAN_IVS_IN_V hlf2 huV
+  have hpairV : vv (p1 + (k - 1)) ∈ V := by
+    rw [← hV]
+    exact Set.mem_range_self _
+  have hkey : rhoNode1 FF (ivsRhoNode1 FF u) = rhoNode1 FF (vv (p1 + (k - 1))) := by
+    have hivsrho : rhoNode1 FF (ivsRhoNode1 FF u) = u := LOCAL_FAN_RHO_NODE_IVS hlf2 huV
+    rw [hivsrho]
+    have hp35 := VV_SUC_EQ_RHO_NODE_PRIME_p35 s k (p1 + (k - 1)) (p1 + (k - 1)) 0
+      (vv (p1 + (k - 1))) V E FF vv hk rfl hV hE hFF hs hk3 hBB 1
+    simp only [Function.iterate_one] at hp35
+    have hstep : rhoNode1 FF (vv (p1 + (k - 1))) = vv (p1 + k) := by
+      rw [hp35]
+      congr 1
+      omega
+    have hper : Periodic vv k := hk ▸ hBB.2.1
+    rw [hstep, hper p1]
+    exact hu.symm
+  exact (RHO_NODE1_INJECTIVE hLF hedge _ hivsV _ hpairV).mp hkey
 
 /-- HOL `vv_azim_le_alt` (CUXVZOZ.hl:2056): the successor azimuth dominates
 over the convex local fan. -/
@@ -1100,11 +1218,21 @@ theorem vv_azim_le_alt_p21 (vv : ℕ → V3) (k i j : ℕ) (hper : Periodic vv k
       (Set.range fun i => (vv i, vv (i + 1))))
     (hinj : ∀ i j, i < k → j < k → vv i = vv j → i = j) :
     azim 0 (vv i) (vv (i + 1)) (vv j) ≤ azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
-  -- DISCHARGES: HOL Terminal.PRIOR_TO_LESS_THAN_PI_LEMMA_ALT +
-  -- Terminal.vv_rho_node1 + Terminal.EE_vv +
-  -- Local_lemmas.AZIM_CYCLE_TWO_POINT_SET; the hypermap azimuth-cycle kit
-  -- is not on this side. NEEDS: merge with the Terminal lane.
-  sorry
+  have hshift : i + k - 1 = i + (k - 1) := by omega
+  rw [hshift]
+  have hinj' : ∀ i j, i < k ∧ j < k ∧ vv i = vv j → i = j :=
+    fun i j h => hinj i j h.1 h.2.1 h.2.2
+  have hEE := EE_vv vv k i hper hk3 hinj'
+  have hmem : vv j ∈ wedgeInFanGe ((vv i, vv (i + 1)))
+      (Set.range fun i => ({vv i, vv (i + 1)} : Set V3)) :=
+    (hcf.2 (vv i, vv (i + 1)) ⟨i, rfl⟩).2 (Set.mem_range_self j)
+  have hcard : 1 < (ee (vv i) (Set.range fun i => ({vv i, vv (i + 1)} : Set V3))).ncard := by
+    rw [hEE, Set.ncard_pair (w3b_distinct_succ_pred hper hk3 hinj i)]
+    norm_num
+  simp only [wedgeInFanGe, if_pos hcard] at hmem
+  simp only [wedgeGe, Set.mem_setOf_eq] at hmem
+  rw [w3b_sigmaFan_eq_vv vv k i hper hk3 hinj] at hmem
+  exact hmem.2
 
 /-- HOL `vv_split_azim_alt` (CUXVZOZ.hl:2091): the azimuth to the `k-1`
 predecessor splits over an interior vertex. -/
@@ -1118,10 +1246,19 @@ theorem vv_split_azim_alt_p21 (vv : ℕ → V3) (k i j : ℕ) (hper : Periodic v
     (hinj : ∀ i j, i < k → j < k → vv i = vv j → i = j) :
     azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) =
       azim 0 (vv i) (vv (i + 1)) (vv j) + azim 0 (vv i) (vv j) (vv (i + k - 1)) := by
-  -- DISCHARGES: HOL Fan.sum4_azim_fan applied over vv_azim_le_alt; the
-  -- sum4 azimuth-addition kit is not on this side.
-  -- NEEDS: merge with the Terminal/Fan azimuth-addition lane.
-  sorry
+  have hle := vv_azim_le_alt_p21 vv k i j hper hk3 hcf hinj
+  have hxv : vv i ≠ 0 := by
+    intro h0
+    apply h3
+    rw [h0]
+    have hset : ({0, 0, vv (i + 1)} : Set V3) = {0, vv (i + 1)} := by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ 0 (vv (i + 1))
+  exact sum4_azim_fan (x := 0) (v := vv i) (u := vv (i + 1)) (w1 := vv j)
+    (w2 := vv (i + k - 1)) hxv h3 h1 h2 hle
 
 /-- HOL `interior_angle1_azim` (CUXVZOZ.hl:2123). Here definitional:
 `interiorAngle1 x FF v := azim x v (rhoNode1 FF v) (ivsRhoNode1 FF v)`. -/
@@ -1168,12 +1305,37 @@ theorem interior_angle1_azim_scs_p21 (s : ScsV39) (v : ℕ → V3) (k : ℕ)
           (Set.image (fun p : V3 × V3 => (f p.1 t, f p.2 t))
             (Set.range fun i => (v i, v (i + 1)))) (f (v i) t) =
         azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) := by
-  -- DISCHARGES: HOL Lunar_deform.XRECQNS_UPDATE (the deformed dart set is
-  -- again a local fan) + Zlzthic.deformation_rho_node1_equivariant1 /
-  -- deformation_ivs_rho_node1_equivariant1 + BBs_inj + Terminal.vv_rho_node1
-  -- + VV_SUC_EQ_IVS_RHO_NODE_PRIME. The equivariance kit is not ported on
-  -- this side. NEEDS: merge with the deformation-equivariance lane.
-  sorry
+  have hconv : ConvexLocalFan (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+      (Set.range fun i => (v i, v (i + 1))) := by
+    rcases hBB.2.2.2 with h3 | hcf
+    · exact absurd (by rw [hk] at h3; exact h3) (by omega : ¬ k ≤ 3)
+    · exact hcf
+  have hLF := hconv.1
+  have hedge := w3b_hedge_of_localFan hLF
+  obtain ⟨e1, he1, hfanT⟩ := XRECQNS_UPDATE_p37 hd hLF
+  refine ⟨min e e1, lt_min he he1, ?_⟩
+  intro t ht
+  have ht1 : |t| < e1 := lt_of_lt_of_le ht (min_le_right e e1)
+  have hρ := deformation_rho_node1_equivariant1_p14 f (Set.range v)
+    (Set.range fun i => {v i, v (i + 1)}) (Set.range fun i => (v i, v (i + 1)))
+    (-e) e (v i) t hd hLF hedge (hfanT t ht1) (Set.mem_range_self i)
+  have hι := deformation_ivs_rho_node1_equivariant1_p14 f (Set.range v)
+    (Set.range fun i => {v i, v (i + 1)}) (Set.range fun i => (v i, v (i + 1)))
+    (-e) e (v i) t hd hLF hedge (hfanT t ht1) (Set.mem_range_self i)
+  show azim 0 (f (v i) t)
+      (rhoNode1 ((fun p : V3 × V3 => (f p.1 t, f p.2 t)) ''
+        (Set.range fun i => (v i, v (i + 1)))) (f (v i) t))
+      (ivsRhoNode1 ((fun p : V3 × V3 => (f p.1 t, f p.2 t)) ''
+        (Set.range fun i => (v i, v (i + 1)))) (f (v i) t)) =
+    azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t)
+  rw [← hρ, ← hι]
+  have hper : Periodic v k := hk ▸ hBB.2.1
+  have hinj' : ∀ i j, i < k ∧ j < k ∧ v i = v j → i = j :=
+    fun i j h => BBs_inj_p21 s v k hs hk hBB i j h.1 h.2.1 h.2.2
+  rw [vv_rho_node1 v k hper (by omega) hinj' i]
+  rw [VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21 (Set.range v)
+    (Set.range fun i => {v i, v (i + 1)}) (Set.range fun i => (v i, v (i + 1)))
+    s v (v i) k i hk rfl rfl rfl rfl hs (by omega) hBB]
 
 /-- HOL `deformation_BBs` (CUXVZOZ.hl:1883; the `//`-commented azim skolem
 assumption of the source is dropped): a deformation that is rigid on the

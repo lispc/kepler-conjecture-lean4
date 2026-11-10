@@ -2968,7 +2968,7 @@ private theorem w5cA3_azim_cos_sin (v2 v3 v4 : V3) (hv2 : v2 ≠ 0)
     ring
 
 /-- w5cA3: azim 沿连续曲线的逐点连续性（轴点非退化 + 该点 azim ≠ 0）。 -/
-private theorem w5cA3_continuousAt_azim {v2 v3 v4 : ℝ → V3} {t₀ : ℝ}
+theorem w5cA3_continuousAt_azim {v2 v3 v4 : ℝ → V3} {t₀ : ℝ}
     (hv2c : ContinuousAt v2 t₀) (hv3c : ContinuousAt v3 t₀)
     (hv4c : ContinuousAt v4 t₀)
     (h5 : ¬ Collinear ℝ ({0, v2 t₀, v3 t₀} : Set V3))
