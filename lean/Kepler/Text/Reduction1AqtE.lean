@@ -21,9 +21,15 @@
     node 闭包，不涉第三面）；三件合一 = `eListOnNormal2`（HOL 逐字）。
   · B 段 `normalListSpineOfIsNormal`：`NormalListSpine hL [f, r]` 五合取组装
     （AUQTZYZ_list.hl:62-215）。
-  · §8 主定理收口（C 槽版）`auqtzyzListSlotOfDih2kSlot`：A/B 内置，
-    `AuqtzyzListSlot` 无条件实例化**仅剩 C 槽**（`Dih2kListSpine`，冻结表见
-    DELIVERY_AQTF §4）。
+  · §8 主定理收口（C 槽版）`auqtzyzListSlotOfDih2kSlot`：A/B 内置的旧槽形
+    （**C 段落定后已被 §12 的直装定理取代**；该槽形的假设过弱、不可填，留作历史形）。
+  · §9-§11 C 段：`Dih2kListSpine (quotientListSpine L [f, r])` 实件
+    （C1 `core f = f0` / C2 `partsListPairs` / C3 `eListOnNormal2` /
+    C4 长度（`listOfDartsQuotient` + `atomListBij` + `dih2k` 首合取）/
+    C5 HD-LAST（`exists_mem_node_inter_loop` 原子回译 + `partsFst`）/
+    C6 `eListPairsRev` 收口）。
+  · §12 **J4 线收官**：`auqtzyzListSlot` —— **`AuqtzyzListSlot` 无条件实例化**
+    （`GoodList` + `GoodListNodesTl` + `IsRestricted` ⇒ 槽成立；hAuq 供料链全通）。
 
   **纪律**：零公理、零占位证明、零反射式判定；不改既有陈述/定义。
 -/
@@ -277,6 +283,27 @@ private theorem memGetLastBang {α : Type} [Inhabited α] {s : List α} (hne : s
     | cons b u =>
       exact List.mem_cons_of_mem _ (ih (List.cons_ne_nil b u))
 
+/-- 两面对 `[f, r]` 的环族集 = `{loopOfListSpine f, loopOfListSpine r}` 的
+`{L1, L2}` 形（B/C 段共用）。 -/
+theorem loopFamilyPairEq {f r : List (ℕ × ℕ)} {L1 L2 : Loop (ℕ × ℕ)}
+    (hL1 : L1 = Kepler.Text.TameSpine.loopOfListSpine f)
+    (hL2 : Kepler.Text.TameSpine.loopOfListSpine r = L2) :
+    Kepler.Text.TameSpine.loopFamilyOfListSpine [f, r]
+      = ({L1, L2} : Set (Loop (ℕ × ℕ))) := by
+  ext L'
+  constructor
+  · rintro ⟨s, hs, rfl⟩
+    rcases List.mem_cons.mp hs with rfl | hs
+    · rw [Set.mem_insert_iff]
+      exact Or.inl hL1.symm
+    · rw [List.mem_singleton.mp hs, Set.mem_insert_iff]
+      exact Or.inr (Set.mem_singleton_iff.mpr hL2)
+  · intro hL'
+    rcases Set.mem_insert_iff.mp hL' with rfl | hL'
+    · exact ⟨f, List.mem_cons_self, hL1⟩
+    · rw [Set.mem_singleton_iff.mp hL']
+      exact ⟨r, List.mem_cons_of_mem f List.mem_cons_self, hL2.symm⟩
+
 /-- **B 段装配**：`f ∈ listOfFaces L`、`f ≠ []`、AUQTZYZ 结论包 `(L2, hnf, hdih)`
 （`L1 = loopOfFace (f.head!)`）⇒ 存在 `r` 使 `NormalListSpine hL [f, r]`。
 
@@ -294,8 +321,13 @@ theorem normalListSpineOfIsNormal {L : fgraph ℕ} (hL : GoodList L)
       ({(hypermapOfList L hL).loopOfFace (f.head!), L2} : Set (Loop (ℕ × ℕ))))
     (hdih : Kepler.Text.dih2k_p3
       ((hypermapOfList L hL).quotientHypermap hnf)
-      ((hypermapOfList L hL).face (f.head!)).ncard) :
-    ∃ r : List (ℕ × ℕ), NormalListSpine hL [f, r] := by
+      ((hypermapOfList L hL).face (f.head!)).ncard)
+    {x0 : ℕ × ℕ} (hx0L2 : x0 ∈ L2.darts)
+    (hx0node : x0 ∈ (hypermapOfList L hL).node (f.head!)) :
+    ∃ r : List (ℕ × ℕ), NormalListSpine hL [f, r] ∧
+      Kepler.Text.TameSpine.loopOfListSpine r = L2 ∧
+      r.getLast! = (hypermapOfList L hL).headOfAtom
+        ({(hypermapOfList L hL).loopOfFace (f.head!), L2} : Set (Loop (ℕ × ℕ))) x0 := by
   set d := f.head! with hddef
   have hd : d ∈ f := List.head!_mem_self hfne
   have hdD : d ∈ listOfDarts L := memListOfDartsOfMemFace hf hd
@@ -309,8 +341,10 @@ theorem normalListSpineOfIsNormal {L : fgraph ℕ} (hL : GoodList L)
   have hL2mem : L2 ∈ ({L1, L2} : Set (Loop (ℕ × ℕ))) := by
     rw [Set.mem_insert_iff]
     exact Or.inr (Set.mem_singleton_iff.mpr rfl)
-  -- L2 非空 → 取 headOfAtom 作 r 的末元
-  obtain ⟨-, x0, hx0H, hx0L2⟩ := hnf.1 L2 hL2mem
+  -- x0 由调用方供（C 段要求 ∈ node d；§8 由 atom 回译件供）
+  have hx0H : x0 ∈ (hypermapOfList L hL).darts :=
+    (hypermapOfList L hL).darts_subset_darts_of_isNormalFamily hnf hL2mem
+      (Finset.mem_coe.mpr hx0L2)
   set xh := (hypermapOfList L hL).headOfAtom ({L1, L2} : Set (Loop (ℕ × ℕ))) x0 with hxhdef
   have hxhL2 : xh ∈ L2.darts :=
     (hypermapOfList L hL).mem_darts_of_mem_atom hx0L2
@@ -388,25 +422,74 @@ theorem normalListSpineOfIsNormal {L : fgraph ℕ} (hL : GoodList L)
     · rw [List.mem_singleton.mp hs]
       exact hrnd
   have hfamEq : Kepler.Text.TameSpine.loopFamilyOfListSpine [f, r]
-      = ({L1, L2} : Set (Loop (ℕ × ℕ))) := by
-    ext L'
-    constructor
-    · rintro ⟨s, hs, rfl⟩
-      rcases List.mem_cons.mp hs with rfl | hs
-      · rw [Set.mem_insert_iff]
-        exact Or.inl hL1eq.symm
-      · rw [List.mem_singleton.mp hs, Set.mem_insert_iff]
-        exact Or.inr (Set.mem_singleton_iff.mpr hrLoop)
-    · intro hL'
-      rcases Set.mem_insert_iff.mp hL' with rfl | hL'
-      · exact ⟨f, List.mem_cons_self, hL1eq⟩
-      · rw [Set.mem_singleton_iff.mp hL']
-        exact ⟨r, List.mem_cons_of_mem f List.mem_cons_self, hrLoop.symm⟩
+      = ({L1, L2} : Set (Loop (ℕ × ℕ))) := loopFamilyPairEq hL1eq hrLoop
   have hnor : (hypermapOfList L hL).IsNormalFamily
       (Kepler.Text.TameSpine.loopFamilyOfListSpine [f, r]) := hfamEq ▸ hnf
   have hloopAll := Kepler.Text.TameSpine.isNormalLoopList hL hgn hres hneN hNodupAll hnor
   have hnodeAll := Kepler.Text.TameSpine.isNormalNodal hL hgn hres hneN hNodupAll hnor
-  exact ⟨r, hflat, hneN, hlastAll, hloopAll, hnodeAll⟩
+  exact ⟨r, ⟨hflat, hneN, hlastAll, hloopAll, hnodeAll⟩, hrLoop, hrlast⟩
+
+/-- **C5 原子回译**：`dih2k` + `is_normal` ⇒ 存在 `x0 ∈ L2.darts ∩ node d`
+（HOL `DIH_IMP_EVERY_NODE_INTER_FACE` 于商 + `lemma_in_node3` 回译）。
+商上取 `A ∈ node_Q(atomChoice d) ∩ face_Q(atomChoice x0')`（`dihImpEveryNodeInterFace`）；
+`face_Q(atom L2 x0') = atomsOfLoop L2`（`face_quotient_atom`）拆出
+`A = atom L2 y`；`atomChoice y = A ∈ node_Q(atomChoice d)`
+经 `mem_node_of_atomChoice_mem_node_quotient` 回译为 `y ∈ node d`。 -/
+theorem exists_mem_node_inter_loop {L : fgraph ℕ} (hL : GoodList L)
+    (hres : (hypermapOfList L hL).IsRestricted)
+    {f : List (ℕ × ℕ)} (hf : f ∈ listOfFaces L) (hfne : f ≠ [])
+    {L2 : Loop (ℕ × ℕ)}
+    (hnf : (hypermapOfList L hL).IsNormalFamily
+      ({(hypermapOfList L hL).loopOfFace (f.head!), L2} : Set (Loop (ℕ × ℕ))))
+    (hdih : Kepler.Text.dih2k_p3
+      ((hypermapOfList L hL).quotientHypermap hnf)
+      ((hypermapOfList L hL).face (f.head!)).ncard) :
+    ∃ x0 : ℕ × ℕ, x0 ∈ L2.darts ∧ x0 ∈ (hypermapOfList L hL).node (f.head!) := by
+  classical
+  set d := f.head! with hddef
+  set NF0 := ({(hypermapOfList L hL).loopOfFace (f.head!), L2} : Set (Loop (ℕ × ℕ))) with hNF0
+  set L1 := (hypermapOfList L hL).loopOfFace d with hL1def
+  have hd : d ∈ f := List.head!_mem_self hfne
+  have hdD : d ∈ listOfDarts L := memListOfDartsOfMemFace hf hd
+  have hdL1 : d ∈ L1.darts := by
+    rw [hL1def]
+    exact ((hypermapOfList L hL).mem_faceFinset d d).mpr
+      ((hypermapOfList L hL).mem_face_self d)
+  have hL1mem : L1 ∈ NF0 := by
+    rw [hNF0]
+    exact Set.mem_insert _ _
+  have hL2mem : L2 ∈ NF0 := by
+    rw [hNF0]
+    exact Set.mem_insert_of_mem _ (Set.mem_singleton _)
+  obtain ⟨-, x0', hx0'H, hx0'L2⟩ := hnf.1 L2 hL2mem
+  have hdFam : d ∈ Kepler.Text.Hypermap.dartsOfFamily NF0 := ⟨L1, hL1mem, hdL1⟩
+  have hx0'Fam : x0' ∈ Kepler.Text.Hypermap.dartsOfFamily NF0 := ⟨L2, hL2mem, hx0'L2⟩
+  -- 商 darts 两个见证
+  have hq_d : (hypermapOfList L hL).atomChoice NF0 d
+      ∈ ((hypermapOfList L hL).quotientHypermap hnf).darts := by
+    rw [mem_darts_quotient (H := hypermapOfList L hL) hnf]
+    exact ((hypermapOfList L hL).atomChoice_mem_atomsOfFamily_iff hnf d).mpr hdFam
+  have hq_x : (hypermapOfList L hL).atomChoice NF0 x0'
+      ∈ ((hypermapOfList L hL).quotientHypermap hnf).darts := by
+    rw [mem_darts_quotient (H := hypermapOfList L hL) hnf]
+    exact ((hypermapOfList L hL).atomChoice_mem_atomsOfFamily_iff hnf x0').mpr hx0'Fam
+  obtain ⟨A, hAnode, hAface⟩ := dihImpEveryNodeInterFace hdih hq_d hq_x
+  -- face_Q(atomChoice x0') = atomsOfLoop L2
+  have hx0'eq : (hypermapOfList L hL).atomChoice NF0 x0'
+      = (hypermapOfList L hL).atom L2 x0' :=
+    (hypermapOfList L hL).atomChoice_eq_atom hnf hL2mem hx0'L2
+  rw [hx0'eq, Kepler.Text.Hypermap.face_quotient_atom (hypermapOfList L hL) hnf
+    hL2mem hx0'L2] at hAface
+  obtain ⟨y, hyL2, hAeq⟩ := hAface
+  refine ⟨y, hyL2, ?_⟩
+  -- y ∈ node d：lemma_in_node3 回译
+  refine Kepler.Text.Reduction1.lemmaInNode3 hnf hdFam ?_
+  have hyChoice : (hypermapOfList L hL).atomChoice NF0 y = A := by
+    rw [(hypermapOfList L hL).atomChoice_eq_atom hnf hL2mem hyL2]
+    exact hAeq.symm
+  rw [hyChoice]
+  exact hAnode
+
 
 /-! ## §8 主定理收口（C 槽版）：`AuqtzyzListSlot` 装配 -/
 
@@ -434,10 +517,309 @@ theorem auqtzyzListSlotOfDih2kSlot
   obtain ⟨L2, hnf, -, hdih⟩ :=
     auqtzyzConclUncond (hypermapOfList L hL) d ((hypermapOfList L hL).loopOfFace d)
       hres hdH rfl
+  -- C5 原子回译：取 x0 ∈ L2.darts ∩ node d
+  obtain ⟨x0, hx0L2, hx0node⟩ := exists_mem_node_inter_loop hL hres hf hfne hnf hdih
   -- B 段：normal_list 组装
-  obtain ⟨r, hnorm⟩ :=
-    normalListSpineOfIsNormal hL hgn hres hf hfne (L2 := L2) hnf hdih
+  obtain ⟨r, hnorm, -, -⟩ :=
+    normalListSpineOfIsNormal hL hgn hres hf hfne (L2 := L2) hnf hdih hx0L2 hx0node
   exact ⟨r, hnorm, hC L hL (listPairs l) r hnorm⟩
+
+/-! ## §9 C 段地基：List 小件（`head!`/`getLast!` 沿 map / flatten） -/
+
+private theorem headBangMap {α β : Type} [Inhabited α] [Inhabited β] {l : List α}
+    (h : l ≠ []) (f : α → β) : (l.map f).head! = f l.head! := by
+  cases l with
+  | nil => exact absurd rfl h
+  | cons a t => rfl
+
+private theorem getLastBangMap {α β : Type} [Inhabited α] [Inhabited β] {l : List α}
+    (h : l ≠ []) (f : α → β) : (l.map f).getLast! = f l.getLast! := by
+  induction l with
+  | nil => exact absurd rfl h
+  | cons a t ih =>
+    cases t with
+    | nil => rfl
+    | cons b u =>
+      simpa using ih (List.cons_ne_nil b u)
+
+private theorem getLast?_flatten_of_all_ne {α : Type} {L : List (List α)}
+    (h : L ≠ []) (hne : ∀ l ∈ L, l ≠ []) :
+    L.flatten.getLast? = (L.getLast!).getLast? := by
+  induction L with
+  | nil => exact absurd rfl h
+  | cons a t ih =>
+    cases t with
+    | nil => simp
+    | cons b u =>
+      have htne : (b :: u) ≠ [] := List.cons_ne_nil b u
+      have hbne : b ≠ [] := hne b (by simp)
+      have htall : ∀ l ∈ (b :: u), l ≠ [] :=
+        fun l hl => hne l (List.mem_cons_of_mem a hl)
+      have hflatne : (b :: u).flatten ≠ [] := by
+        obtain ⟨x, hx⟩ := List.exists_mem_of_ne_nil b hbne
+        intro hnil
+        have hxm : x ∈ (b :: u).flatten :=
+          List.mem_flatten.mpr ⟨b, List.mem_cons_self, hx⟩
+        rw [hnil] at hxm
+        exact List.not_mem_nil hxm
+      rw [List.flatten_cons, List.getLast?_append,
+        List.getLast?_eq_some_getLast hflatne]
+      have hgl : (a :: b :: u).getLast! = (b :: u).getLast! := rfl
+      have hor : (some ((b :: u).flatten.getLast hflatne)).or a.getLast?
+          = some ((b :: u).flatten.getLast hflatne) := rfl
+      rw [hgl, hor, ← List.getLast?_eq_some_getLast hflatne]
+      exact ih htne htall
+
+private theorem getLastBangFlatten_of_all_ne {α : Type} [Inhabited α]
+    {L : List (List α)} (h : L ≠ []) (hne : ∀ l ∈ L, l ≠ []) :
+    L.flatten.getLast! = (L.getLast!).getLast! :=
+  calc L.flatten.getLast! = L.flatten.getLast?.getD default :=
+        List.getLast!_eq_getLast?_getD
+    _ = (L.getLast!).getLast?.getD default := by
+        rw [getLast?_flatten_of_all_ne h hne]
+    _ = (L.getLast!).getLast! := (List.getLast!_eq_getLast?_getD).symm
+
+/-! ## §10 C 段 C1-C3：core 面 = f0 / listPairs 桥 / e_list 全体对称 -/
+
+/-- **C1**：final 面 f 的 `parts` 头表 = `f0`（`goodFaceRep` 证人；
+`finalListParts` 展开后 `[x].head!.1 = x.1`）。 -/
+theorem partsHeadEqOfFinal {L : fgraph ℕ} (hL : GoodList L)
+    (hres : (hypermapOfList L hL).IsRestricted)
+    {f : List (ℕ × ℕ)} (hD : ∀ x ∈ f, x ∈ listOfDarts L)
+    (hfin : Kepler.Text.TameSpine.finalListSpine L f) (hfnod : f.Nodup)
+    {f0 : List ℕ} (hfst : f.map Prod.fst = f0) :
+    (Kepler.Text.TameSpine.partsSpine L f).map (fun p => p.head!.1) = f0 := by
+  rw [Kepler.Text.TameSpine.finalListParts L hL f hD hres.edgeNondegenerate hfin hfnod]
+  have hcongr : (f.map (fun x => [x])).map (fun p => p.head!.1) = f.map Prod.fst := by
+    rw [List.map_map]
+    exact List.map_congr_left fun x _ => rfl
+  rw [hcongr, hfst]
+
+/-- **C2**：`listPairs (parts 头表) = parts 末元表`（`partsListPairs` 直投）。 -/
+theorem listPairsPartsHeadEq {L : fgraph ℕ} (hL : GoodList L)
+    (hgn : GoodListNodesTl L hL) (hres : (hypermapOfList L hL).IsRestricted)
+    {N : List (List (ℕ × ℕ))} (hn : NormalListSpine hL N)
+    {r : List (ℕ × ℕ)} (hr : r ∈ N) :
+    listPairs ((Kepler.Text.TameSpine.partsSpine L r).map (fun p => p.head!.1))
+      = (Kepler.Text.TameSpine.partsSpine L r).map (fun p => p.getLast!) :=
+  Kepler.Text.TameSpine.partsListPairs L hL hn hres.edgeNondegenerate
+    ((Kepler.Text.TameSpine.simpleHypermapUniq L hL hgn).mp hres.simple) hr
+
+/-- **C3**：normal 面 f 的每个 dart 的 e_list 伙伴都在 `parts r` 的末元表内
+（`eListOnNormal2` 逐点）。 -/
+theorem eListMemPartsOfNormalAll {L : fgraph ℕ} (hL : GoodList L)
+    (hres : (hypermapOfList L hL).IsRestricted)
+    {f r : List (ℕ × ℕ)} (hn : NormalListSpine hL [f, r])
+    (hf : f ∈ listOfFaces L) :
+    ∀ d ∈ f, eList d ∈ (Kepler.Text.TameSpine.partsSpine L r).map
+      (fun p => p.getLast!) :=
+  fun d hd => eListOnNormal2 hL hres hn hf hd
+
+/-! ## §11 C 段：`Dih2kListSpine (quotientListSpine L [f, r])`（AUQTZYZ_list :216-:325） -/
+
+/-- **C 段主件**：normal 面对 `[f, r]` + AUQTZYZ 结论包（`L2`, `hnf`, `hdih`，
+`x0 ∈ L2.darts ∩ node d`，`r` 的末元 = `headOfAtom x0`）⇒
+`Dih2kListSpine (quotientListSpine L [f, r])`。
+
+证人 `u = f0`（`goodFaceRep`）。C1 `core f = f0`（`finalListParts`）；
+C2 `listPairs (core r) = parts r 末元表`（`partsListPairs`）；C3 e_list 对称
+（`eListOnNormal2`）；C4 长度相等（`listOfDartsQuotient` + `atomListBij` +
+`dih2k` 首合取 + `cardFaceOfList`）；C5 HD-LAST（`partsFst` + 末 part 末元 +
+`fstNodeHypermapOfList`）；C6 `eListPairsRev` 收口。 -/
+theorem dih2kListSpineOfNormal {L : fgraph ℕ} (hL : GoodList L)
+    (hgn : GoodListNodesTl L hL) (hres : (hypermapOfList L hL).IsRestricted)
+    {f r : List (ℕ × ℕ)} (hn : NormalListSpine hL [f, r])
+    (hf : f ∈ listOfFaces L) (hfne : f ≠ [])
+    {L2 : Loop (ℕ × ℕ)}
+    (hnf : (hypermapOfList L hL).IsNormalFamily
+      ({(hypermapOfList L hL).loopOfFace (f.head!), L2} : Set (Loop (ℕ × ℕ))))
+    (hdih : Kepler.Text.dih2k_p3
+      ((hypermapOfList L hL).quotientHypermap hnf)
+      ((hypermapOfList L hL).face (f.head!)).ncard)
+    (hrLoop : Kepler.Text.TameSpine.loopOfListSpine r = L2)
+    {x0 : ℕ × ℕ} (hx0L2 : x0 ∈ L2.darts)
+    (hx0node : x0 ∈ (hypermapOfList L hL).node (f.head!))
+    (hrlast : r.getLast! = (hypermapOfList L hL).headOfAtom
+      ({(hypermapOfList L hL).loopOfFace (f.head!), L2} : Set (Loop (ℕ × ℕ))) x0) :
+    Kepler.Text.TameSpine.Dih2kListSpine
+      (Kepler.Text.TameSpine.quotientListSpine L [f, r]) := by
+  classical
+  set d := f.head! with hddef
+  have hd : d ∈ f := List.head!_mem_self hfne
+  have hdD : d ∈ listOfDarts L := memListOfDartsOfMemFace hf hd
+  have hdH : d ∈ (hypermapOfList L hL).darts := List.mem_toFinset.mpr hdD
+  have hfind : findFaceDarts L d = f :=
+    (Kepler.Text.TameSpine.findFaceEq hL hdD f).mpr ⟨hf, hd⟩
+  have hfnod : f.Nodup := by
+    rw [← hfind]
+    exact Kepler.Text.TameLp.findFaceDarts_nodup hL.1 d
+  have hfinalF : Kepler.Text.TameSpine.finalListSpine L f :=
+    Kepler.Text.TameSpine.finalListFace hL (List.mem_map.mpr ⟨d, hdD, hfind⟩)
+  have hunL : ∀ l ∈ L, l.Nodup :=
+    (Kepler.Text.TameSpine.simpleHypermapUniq L hL hgn).mp hres.simple
+  obtain ⟨f0, hpair, -, hfst, hf0nod, hf0ne⟩ :=
+    Kepler.Text.TameSpine.goodFaceRep L f hL hgn hres.simple hf
+  set A := (Kepler.Text.TameSpine.partsSpine L f).map (fun p => p.head!.1) with hAdef
+  set B := (Kepler.Text.TameSpine.partsSpine L r).map (fun p => p.head!.1) with hBdef
+  have hrn : r ∈ [f, r] := List.mem_cons_of_mem f List.mem_cons_self
+  obtain ⟨hrnd, hrne⟩ := Kepler.Text.TameSpine.normalListUniqNonnil hn hrn
+  -- C1
+  have hA : A = f0 := partsHeadEqOfFinal hL hres
+    (fun x hx => memListOfDartsOfMemFace hf hx) hfinalF hfnod hfst
+  -- C2
+  have hBpair : listPairs B = (Kepler.Text.TameSpine.partsSpine L r).map
+      (fun p => p.getLast!) := listPairsPartsHeadEq hL hgn hres hn hrn
+  -- C4：长度相等
+  have hkface : ((hypermapOfList L hL).face d).ncard = f.length := by
+    rw [Kepler.Text.TameCorrCard.cardFaceOfList hL hdD, hfind]
+  have hquot2 : ((hypermapOfList L hL).quotientHypermap hnf).darts.card
+      = 2 * ((hypermapOfList L hL).face d).ncard := hdih.1
+  have hL1eq : (hypermapOfList L hL).loopOfFace d
+      = Kepler.Text.TameSpine.loopOfListSpine f :=
+    Kepler.Text.TameSpine.loopOfFaceList hL hfinalF hfnod hd hdD
+  have hbij := Kepler.Text.TameSpine.atomListBij L hL hn hres.edgeNondegenerate hunL
+  rw [loopFamilyPairEq hL1eq hrLoop] at hbij
+  have hsrc : ({z : ℕ × ℕ | z ∈ listOfDarts
+        (Kepler.Text.TameSpine.quotientListSpine L [f, r])} : Set (ℕ × ℕ)).ncard
+      = (listOfDarts (Kepler.Text.TameSpine.quotientListSpine L [f, r])).length := by
+    have hset : {z : ℕ × ℕ | z ∈ listOfDarts
+          (Kepler.Text.TameSpine.quotientListSpine L [f, r])}
+        = ((listOfDarts (Kepler.Text.TameSpine.quotientListSpine L [f, r])).toFinset
+            : Set (ℕ × ℕ)) := by
+      ext z
+      simp
+    rw [hset, Set.ncard_coe_finset,
+      List.toFinset_card_of_nodup
+        (Kepler.Text.TameSpine.goodListQuotient L hL hn hres.edgeNondegenerate hunL).1]
+  have htgt : ((hypermapOfList L hL).atomsOfFamily
+        ({(hypermapOfList L hL).loopOfFace d, L2} : Set (Loop (ℕ × ℕ)))).ncard
+      = ((hypermapOfList L hL).quotientHypermap hnf).darts.card := by
+    have hset : ((hypermapOfList L hL).atomsOfFamily
+          ({(hypermapOfList L hL).loopOfFace d, L2} : Set (Loop (ℕ × ℕ)))
+          : Set (Set (ℕ × ℕ)))
+        = ↑((hypermapOfList L hL).quotientHypermap hnf).darts := by
+      ext a
+      exact (mem_darts_quotient (H := hypermapOfList L hL) hnf (a := a)).symm
+    rw [hset, Set.ncard_coe_finset]
+  have hcardEq : (listOfDarts (Kepler.Text.TameSpine.quotientListSpine L [f, r])).length
+      = ((hypermapOfList L hL).quotientHypermap hnf).darts.card := by
+    have h1 : ({z : ℕ × ℕ | z ∈ listOfDarts
+          (Kepler.Text.TameSpine.quotientListSpine L [f, r])} : Set (ℕ × ℕ)).ncard
+        = ((hypermapOfList L hL).atomsOfFamily
+          ({(hypermapOfList L hL).loopOfFace d, L2} : Set (Loop (ℕ × ℕ)))).ncard := by
+      rw [← Set.InjOn.ncard_image hbij.2.1, Set.BijOn.image_eq hbij]
+    rw [← hsrc, h1, htgt]
+  have hlistLen : (listOfDarts (Kepler.Text.TameSpine.quotientListSpine L [f, r])).length
+      = f.length + B.length := by
+    rw [Kepler.Text.TameSpine.listOfDartsQuotient L hL hn hres.edgeNondegenerate hunL]
+    have hflat : (List.map (Kepler.Text.TameSpine.partsSpine L) [f, r]).flatten
+        = Kepler.Text.TameSpine.partsSpine L f
+            ++ Kepler.Text.TameSpine.partsSpine L r := by
+      simp
+    rw [hflat, List.map_append, List.length_append, List.length_map, List.length_map]
+    have hpf : (Kepler.Text.TameSpine.partsSpine L f).length = f.length := by
+      rw [Kepler.Text.TameSpine.finalListParts L hL f
+        (fun x hx => memListOfDartsOfMemFace hf hx) hres.edgeNondegenerate hfinalF hfnod]
+      simp
+    have hpr : (Kepler.Text.TameSpine.partsSpine L r).length = B.length := by
+      show (Kepler.Text.TameSpine.partsSpine L r).length
+        = ((Kepler.Text.TameSpine.partsSpine L r).map (fun p => p.head!.1)).length
+      rw [List.length_map]
+    rw [hpf, hpr]
+  have hBlen : B.length = f0.length := by
+    have h2 : f.length + B.length = 2 * f.length := by
+      rw [← hlistLen, hcardEq, hquot2, hkface]
+    have h3 : B.length = f.length := by omega
+    rw [h3, ← hfst, List.length_map]
+  -- C5：HD-LAST
+  have hL2mem : L2 ∈ ({(hypermapOfList L hL).loopOfFace d, L2}
+      : Set (Loop (ℕ × ℕ))) := Set.mem_insert_of_mem _ (Set.mem_singleton _)
+  have hpartsne : (Kepler.Text.TameSpine.partsSpine L r) ≠ [] :=
+    Kepler.Text.TameSpine.partsNonnil L hrnd hrne
+  have hpartsall : ∀ l ∈ Kepler.Text.TameSpine.partsSpine L r, l ≠ [] :=
+    fun l hl => Kepler.Text.TameSpine.partsAllNonnil L hrnd hrne l hl
+  have hxhnode : r.getLast! ∈ (hypermapOfList L hL).node d := by
+    rw [hrlast]
+    have h1 : (hypermapOfList L hL).headOfAtom
+        ({(hypermapOfList L hL).loopOfFace d, L2} : Set (Loop (ℕ × ℕ))) x0
+        ∈ (hypermapOfList L hL).atom L2 x0 :=
+      ((hypermapOfList L hL).headOfAtom_mem_atom hnf hL2mem hx0L2).1
+    have h2 : (hypermapOfList L hL).headOfAtom
+        ({(hypermapOfList L hL).loopOfFace d, L2} : Set (Loop (ℕ × ℕ))) x0
+        ∈ (hypermapOfList L hL).node x0 :=
+      (hypermapOfList L hL).atom_subset_node L2 x0 h1
+    have h3 : (hypermapOfList L hL).node d = (hypermapOfList L hL).node x0 :=
+      Kepler.Text.Hypermap.node_eq_of_mem (hypermapOfList L hL) hx0node
+    rw [h3]
+    exact h2
+  have hfst_eq : d.1 = (r.getLast!).1 :=
+    fstNodeHypermapOfList hL hgn hdD hxhnode
+  have hrlastmem : r.getLast! ∈ (Kepler.Text.TameSpine.partsSpine L r).getLast! := by
+    have hflatr : (Kepler.Text.TameSpine.partsSpine L r).flatten = r :=
+      Kepler.Text.TameSpine.partsFlatten L hrnd hrne
+    have hflatr' : r.getLast!
+        = (Kepler.Text.TameSpine.partsSpine L r).flatten.getLast! :=
+      congrArg (fun s => s.getLast!) hflatr.symm
+    have h1 : r.getLast! = ((Kepler.Text.TameSpine.partsSpine L r).getLast!).getLast! := by
+      rw [hflatr']
+      exact getLastBangFlatten_of_all_ne
+        (L := Kepler.Text.TameSpine.partsSpine L r) hpartsne hpartsall
+    rw [h1]
+    exact memGetLastBang (hpartsall _ (memGetLastBang hpartsne))
+  have hplast : r.getLast!.1
+      = (Kepler.Text.TameSpine.partsSpine L r).getLast!.head!.1 :=
+    Kepler.Text.TameSpine.partsFst L hL hn hrn (memGetLastBang hpartsne) hrlastmem
+  have hBget : B.getLast!
+      = (Kepler.Text.TameSpine.partsSpine L r).getLast!.head!.1 := by
+    show ((Kepler.Text.TameSpine.partsSpine L r).map (fun p => p.head!.1)).getLast! = _
+    rw [getLastBangMap hpartsne (fun p => p.head!.1)]
+  have hf0head : f0.head! = d.1 := by
+    rw [← hfst]
+    exact headBangMap hfne Prod.fst
+  have hhd : f0.head! = B.getLast! := by
+    rw [hf0head, hBget, ← hplast, hfst_eq]
+  -- C3 + C6：eListPairsRev
+  have hlist : ∀ x ∈ listPairs f0, eList x ∈ listPairs B := by
+    intro x hx
+    rw [hpair] at hx
+    rw [hBpair]
+    exact eListOnNormal2 hL hres hn hf hx
+  have hrev : B = f0.reverse :=
+    Kepler.Text.TameSpine.eListPairsRev hf0nod hf0ne hBlen.symm hlist hhd
+  refine ⟨f0, hf0nod, ?_⟩
+  show Kepler.Text.TameSpine.quotientListSpine L [f, r] = [f0, f0.reverse]
+  have hq : Kepler.Text.TameSpine.quotientListSpine L [f, r] = [A, B] := rfl
+  rw [hq, hA, hrev]
+
+/-! ## §12 J4 线收官：`AuqtzyzListSlot` 无条件实例化 -/
+
+/-- **批③ 主定理（无条件形）**：`GoodList L` + `GoodListNodesTl` + `IsRestricted`
+⇒ **`AuqtzyzListSlot L hL`**（`hAuq` 供料链的最后一环）。
+`f` 取 `listPairs l`、`d = f.head!`、AUQTZYZ 无条件主定理给 `(L2, hnf, hdih)`；
+C5 原子回译取 `x0 ∈ L2.darts ∩ node d`；B 段组装 `NormalListSpine hL [f, r]`；
+C 段给 `Dih2kListSpine (quotientListSpine L [f, r])`。 -/
+theorem auqtzyzListSlot : ∀ (L : fgraph ℕ) (hL : GoodList L),
+    GoodListNodesTl L hL → (hypermapOfList L hL).IsRestricted → AuqtzyzListSlot L hL := by
+  intro L hL hgn hres f hf
+  obtain ⟨l, hl, rfl⟩ := List.mem_map.mp hf
+  have hlne : l ≠ [] := hL.2.1 l hl
+  have hfne : listPairs l ≠ [] := by
+    cases l with
+    | nil => exact absurd rfl hlne
+    | cons a t => simp [listPairs]
+  set d := (listPairs l).head! with hddef
+  have hd : d ∈ listPairs l := List.head!_mem_self hfne
+  have hdD : d ∈ listOfDarts L := memListOfDartsOfMemFace hf hd
+  have hdH : d ∈ (hypermapOfList L hL).darts := List.mem_toFinset.mpr hdD
+  obtain ⟨L2, hnf, -, hdih⟩ :=
+    auqtzyzConclUncond (hypermapOfList L hL) d ((hypermapOfList L hL).loopOfFace d)
+      hres hdH rfl
+  obtain ⟨x0, hx0L2, hx0node⟩ :=
+    exists_mem_node_inter_loop hL hres hf hfne hnf hdih
+  obtain ⟨r, hnorm, hrLoop, hrlast⟩ :=
+    normalListSpineOfIsNormal hL hgn hres hf hfne (L2 := L2) hnf hdih hx0L2 hx0node
+  exact ⟨r, hnorm,
+    dih2kListSpineOfNormal hL hgn hres hnorm hf hfne hnf hdih hrLoop hx0L2 hx0node hrlast⟩
 
 end Kepler.Text.Reduction1
 
@@ -454,3 +836,10 @@ end Kepler.Text.Reduction1
 #print axioms Kepler.Text.Reduction1.eListOnNormal2
 #print axioms Kepler.Text.Reduction1.normalListSpineOfIsNormal
 #print axioms Kepler.Text.Reduction1.auqtzyzListSlotOfDih2kSlot
+#print axioms Kepler.Text.Reduction1.partsHeadEqOfFinal
+#print axioms Kepler.Text.Reduction1.listPairsPartsHeadEq
+#print axioms Kepler.Text.Reduction1.eListMemPartsOfNormalAll
+#print axioms Kepler.Text.Reduction1.loopFamilyPairEq
+#print axioms Kepler.Text.Reduction1.exists_mem_node_inter_loop
+#print axioms Kepler.Text.Reduction1.dih2kListSpineOfNormal
+#print axioms Kepler.Text.Reduction1.auqtzyzListSlot
