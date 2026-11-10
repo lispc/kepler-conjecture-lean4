@@ -123,7 +123,7 @@
 | 波 | 件 | HOL | Lean 估 | 批 | 独立验收点 | 状态 |
 |---|---:|---:|---:|---:|---|---|
 | **W0+W3d** §0 两小件 + `bounded_size_finals`/`max_finals_g_exists` | 3+ | 167+ | 20–40 + ~330 | 1 | `maxFinalsGExists` | **✅ 已落 `a8dc86c1`**（296 行 6 件；`hne` 显式槽待 W2/W3c 填） |
-| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅；批 1 `018fcbe5`（`filterEl`）/ 批 2 `974a94dd` / 批 3 `fcff9315` / 批 5 `61eea60e` 全 ✅；**批 4 UNRESOLVED 冻结**（`showDups0Bound`/`enumBound`，批 7 前须回收）；批 5b 桥 `3d27ec9d` + `dart_neighbors` `e24bb3be` ✅；批 6 前四件 + `duplicateEdge_next` 冻结包已收（编排者收口中）；剩余重估 1,650–2,330 |
+| **W1** 枚举/重边 | 19 | 1,352 | 1,879–2,517 | 5 | `enumeration_vertex_list` | **在飞**：`indexf` 侦察 ✅；批 1 `018fcbe5`（`filterEl`）/ 批 2 `974a94dd` / 批 3 `fcff9315` / 批 5 `61eea60e` 全 ✅；**批 4 UNRESOLVED 冻结**（`showDups0Bound`/`enumBound`，编排者收口中）；批 5b 桥 `3d27ec9d` + `dart_neighbors` `e24bb3be` + `duplicateEdge_next` `94c5389c` 全 ✅；批 6 §4/§1/§2 已派车道、§3 挂批 4；剩余重估 1,650–2,330 |
 | **W2** GP 判据 + newvertex/iso_list | 22 | 1,165 | 1,466–1,986 | 4 | `iso_list_newvertex_lemma` + `UYOUIXG` | 排队 |
 | **W3a–c** contour/flag/图级 finals（余下） | 30 | 1,140 | 1,334–1,826 | 4 | `flag_list_seed` / contour 簇 | 排队（Lean 白地 = 最高风险） |
 | **W4** 尾部循环 + 主装配 | 18 | 1,048 | 1,317–1,798 | 4 | `restrictedHypermapsArePlaneGraphsReduction1` | 排队 |
@@ -342,6 +342,11 @@
 > **ERRATA（续708 补）**：续692–续708 条目的手写时间曾按编排者估算漂移（最多 +2.7h），本批已**全部按对应 commit 的实际时间改正**（见 `git log --date=format:%H:%M`）。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-10（17:22，续804）**：**J4 批 5b 第二件 `duplicateEdge_next` 落库 `94c5389c`（182 行）——批 5b 两件全闭；批 6 §4/§1/§2 已派车道，w1d 批 4 回收在我手上**。
+① **`94c5389c` `Reduction1W1h.lean`**：`duplicateEdgeNext` = HOL reduction1.hl:287-:317（七前提，`duplicateEdge g f v w = true ↔ v≠w ∧ nextVertex v≠w ∧ nextVertex w≠v ∧ (v,w) ∈ listOfDarts g.fgraph`）。路线：`decide_eq_true_iff` → `dldTwoIff`×2 → `nextVertexEqNextEl`×2 → `dartNeighbors`（`e24bb3be`）消 `neighbors`；顶点提升 `v ∈ verticesSet2 g` = `hfm`+`hvs`（`elementsOfList = flatten.eraseDups`），是 `hfm` 的唯一用途。私件：`nextVertexEqNextEl`（**本版无公开桥**：`nextElem`↔seq2 `next_el` 在 Nodup+成员下相等；`is_nextElem` 中继，`idxOf` 末位支走回卷析取、非末位支 `take i ++ [v,s[i+1]] ++ drop(i+2)`）、`dldTwoIff`（`2≤directedLength ↔ v≠w ∧ nextEl v≠w`，经 `betwnNil` :13449 真证件）、`getElemBangH`。**路线记档**：`directedLengthNext`（TameList53:200）在库但其结论为 `A∧B ↔ C` 形，单半 A 不可用，故未消费。闸：禁词零、岛编 RC=0/0err/0warn、`duplicateEdgeNext` 标准三零 sorryAx、olean 装池。
+② **B2d olean 补装**：发现近两笔岛编未落 olean（`lake env lean` 无 `-o` 不写产物）⇒ 已用 `-o .lake/build/lib/lean/…` 重编装池 `Reduction3NcvibwuSpineB2d.olean` 与 `Reduction1W1h.olean`（RC=0）。后续岛编一律带 `-o`。
+③ **派单/误派更正**：J4 车道（`j4-scout`）接 **批 6 §4 两件 mono 完整证明体**（`showDups0Mono` + `enumOfVertexListMono`，:478-:625）→ §1/§2 两件 explicit（:318-:477，先 §1 后 §2）；§3 仍挂批 4。一条派单误发到 tame-corr 后已即时更正（车道继续 b2a-3）。**下一步（编排者）**：收口 `w1d/` 批 4 冻结包（`showDups0Bound`/`enumBound` 等四件，7 条修法表、11 error 就地冻结）——批 4 回收是 §3 + 批 7 的前置。
 
 - **2026-11-10（17:12，续803）**：**aq13 B2d 落库 `eaeddd2f`（NCVIBWU-spine i=0 弧位次四件 + hnest 槽，223 行）——spine-i0 只差 B2e 填充**。
 ① **四件 + 槽**：`betwnPosGetElem`（tame_list.hl:2433 `betwn_take_drop`；**Option 形重写**绕从属 getElem 动机雷区、`getElem?_eq_getElem` 双桥回 getElem；前提 `j+1<|B|` 降为 `j<|B|`；wrap 支 `Nat.mod_eq_sub_mod`+`Nat.sub_eq_of_eq_add`+`Nat.sub_lt_left_of_lt_add` 显式桥）/ `betwnSuccGetElem`（Ncvibwu.hl:131 `next_el_betwn_same`；**位置路线**——`nextElBetwnSame` 直用撞 BEq 默认实例 R1 不桥接（b2a hdBetwnG 同病），改 §1 双实例 + `nextEl_eq_getD` mod 形 5 行）/ `betwnOrbit`（`(between s a b)[j] = (nextEl s)^[j+1] a`，无归纳）/ `hnest`（OHCGKFU-spine i=0 槽，填法 = `aqs_nextMarkCaseMem` 平行论证）+ 私件 `orbitGetElemW`（**勘误实证**：`getDIdxEqW` 的 m 实参须传裸和，%-嵌套形得双 mod）。闸：apply-check PASS @`aa3dafe1`（新文件，基线祖先链核过）、禁词零、岛编 RC=0/0err/0warn、5 探针全标准三零 sorryAx、olean 装池。
