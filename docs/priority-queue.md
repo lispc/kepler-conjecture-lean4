@@ -319,6 +319,8 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（08:50，续742）**：**铺装 patch3 落库 `13e8dc7b`（`lyNextElPow` 三连件之一收口）→ 派 patch4**。37 行增量：minNum 集合桥 `rw [← hset]` + rfl 收口生效 + `(L := L)` 参数位修正；三件全标准三、olean 装池。`ytransMemRtrans` 唯一剩卡点 = 同 `nextEl` 双 BEq 实例分歧（`instBEqOfDecidableEq` vs `instBEqProd`），**裁决方案 a**（`show` 显式钉派生实例，与 Island1 泛型 binder 统一；方案 b convert 15 行作备选不双写）。**派 patch4**：ytransMemRtrans → `HQYMRTX1_list` 本体（hs 槽形 + faceMapListPower 链侧重推）→ mem_ztrans_rtrans/z_not_eq_ytrans；新闸停手报槽清单。
+
 - **2026-11-10（08:48，续741）**：**W6-K8 落库 `b6fc735c` + GAP 表采信 → 派 W19 装配；铺装 patch2 落库 `557df8e6` → 派 patch3**。
 ① **W6-K8 落库**：`LocalFanStepW6K8.lean` 93 行——槽转换 `pW6k8_stepB_sol_nonneg_affGe`，轴槽改望远镜直供 affGe 成员形态（HOL 2281/2519 形；每槽 ~10 行 `Set.pair_comm`+`pW6k6_azim_zero_of_affGe`+`azim_eq_zero_symm`），既有 pW6k7 陈述零改；标准三、olean 装池。**stepB 接口 GAP 表（采信）**：hcl/hg/hnc 无差；`hk4 : 3 < V.ncard` 槽外前提一（假支 `CARD_VERTEX_GE_3_LOCAL_FAN_p9` ⇒ ncard=3 ⇒ `SOL_LOCAL_FAN_POS_CASE3_p9` ~8 行）；affGe 二槽槽外前提二（w 侧 = W5W 望远镜直供、u 侧 = hprev 见证）；结论 `solLocal_p9 = solLocal_p2` rfl 级无差。**派 W19 装配**（~35–50，新文件 import LA9+W6K8；**绝不编辑 LA9**——`NKEZBFC_PREP_p9` :3196 `by sorry` 走下游同形重述，先例 p17/p16；u 侧槽 = hprev 显式前提诚实保留，W5W 若对 u 侧直供即消槽并报告）。
 ② **铺装 patch2 落库**：`fEqNextElX`（PWSSRAT:160）34 行增量 = `nextElRotateToEq` + AqiunppSlot markedList 第 6 槽，零新上游；标准三、olean 装池。`l_y_rep_power` 90%（唯一卡点 = minNum 集合桥 rw 方向已定位）、`ytransMemRtrans` 体已就绪待复挂、`HQYMRTX1_list` 配方全备。**派 patch3**（三连件优先 + HQYMRTX1_list hs 槽形）。
