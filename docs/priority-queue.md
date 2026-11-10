@@ -319,6 +319,16 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（09:33，续751）**：**BIEFJHU round-2 收工（R2c0 102/102 PASS；R2c1 30 PASS / 72 NEG）+ NEG 判定「精度边缘非生成 bug」→ 高精度重探实验中**。
+① **R2c1 收工**：102/102 全部报数（09:19 进程退出），终态 **30 PASS / 72 NEG**。round-2 合计 204 盒 = **132 PASS / 72 NEG**。
+② **判定（非生成 bug，编排者机器证据）**：两 chunk driver 的 `HullR2c*Expr`/`Ps` 逐字相同（字符级比对）——不一致假说撤回；**NEG 语义解码**（`tmHullLeafProbe` = `lb := M.loBound box; (lb.isPos, lb.m, lb.e, …)`）：NEG 盒 = TM 认证下界为 **负 dyadic m·2^-1444（量级 ≈10^-330）**，PASS 盒也只是 **+m·2^-1478（≈10^-145）**——即证书在所有盒上都贴着数值零线，NEG = 认证精度边缘失败、非数学负值（手算真余量在 k=3..4、x1 顶端区约 +0.14）。
+③ **高精度重探实验**（省 round-3 细分成本）：取 3 个 NEG 盒（global 138/154/160 = leaves 167/171/173，均 k≈3.7–4.0 薄裕量区），rung 128/-80→**256/-160**、gran -80→-160 重探（`emit_highrung_probe.py`）。首版生成踩 Lean 注释嵌套坑（extra 字符串含 `/-` 使头部注释提前闭合并未闭环，`unterminated comment`），已修重发（pid 95393）。判读：flip PASS ⇒ 72 盒批量高精度重探（~1.5h）后直接进 emit；仍 NEG ⇒ round-3 细分（~6h/2 道）。
+
+- **2026-11-10（09:29，续752）**：**W26-② 落库 `8b2ac361` + 铺装 patch6 落库 `8b5a4382`（部分收官）→ 派两 assumption 引理**。
+① **W26-②**：`pW26_hstep_at_run`（EGHNAVX 首 run 直供，62 行标准三）；**第三/第四假支发现采信**：hstep 第二 run 段不可证 + hnc 顶部实例（`i = ncard−1, n = ncard`，`vv ncard = p` 周期）为假 ⇒ **诚实域 `i+1 < V.ncard`**；假支图谱四格补满（hprev n=1 / hslot_w j=0 / hstep 二 run / hnc 顶部）；消 hstep 槽诚实形态 = 槽携 run 前件，v4 链 ≈350–400 机械复刻（建议独立立项，待统排）。
+② **铺装 patch6**：`PwssratTail.lean` 179 行（nextMarkMemRTrans 链层 8 行 + indexfYtransEqLM1 + 私件 2，标准三）；**重名上报**：`indexf_antisym`=`Reduction5.indexfCompl`、`indexf_n`=`MoreLemma2Island1.indexfN`（均在库，未重复落）；`next_mark_case_mem` **BLOCKED**（PWSSRAT:584 无载体/PPLHULJ=scout 领土）；`OHCGKFU` **UNRESOLVED**（5 上游两件全树零命中，6 段续作 ~305 留档）。**铺装波部分收官**：可落全落，两件挂上游。
+③ **再派 tame-corr-w2**：两个 assumption 引理（reduction3:173 `r_trans_eq_assumption_lemma` / :183 `core_split_normal_list_assumption_lemma`，无主件，解 yz_in_core 第二闸）：先 PLAN 后落码，每件 60–150。
+
 - **2026-11-10（09:10，续750）**：**W23-① 判定：C2 撞「绕序」缺失（§7 止损，0 编译消耗）→ W24 绕序尝试 2 轮 + ②③**。**判定**（采信）：pW5w4 第二析取代入共同基给 `det = a·γ'' ≥ 0` ✓（严格化由 `LOCAL_FAN_CHARACTER_OF_RHO_NODE2`+hiter 直接排除共线）；第一析取代入给 `det = −α·γ''/β`、**符号不可判** ⇒ 二分法不足；缺口 = **fan 相邻射线一致定向（绕序）**——机器 grep 已核 fan 文件无 orientation/winding 定理，最近桥 = `pW3b_crossdot_pos_of_azim_lt_pi`（公开、标准三）只覆盖 azim↔叉积翻译一半。**W24 授权**：① 绕序导出（`decomposition_planar_by_angle_fan`+pW5w5 源，2 轮上限；不收敛则正式立**「绕序」独立 SLOT**（与 hstep/hprev 同级信任边界，DIFFERS 记档））→ ② hstep 全 n（不依赖绕序槽）→ ③ j=0 反证。若绕序成槽：`pW19_…_v2` 交出形 = 三槽条件形，perimeter 收口带该信任边界如实记账。**BIEFJHU R2c1 至 09:10 到 box 98（NEG 尾），收尾在即。**
 
 - **2026-11-10（09:09，续749）**：**铺装 patch5 落库 `cf0e5e59`（HQYMRTX1_list + 连环两件全落）→ 派 patch6 尾件笔**。`PwssratMemberBase` +219/−7：`hqymrtx1List`（5 步骨架：`markedTranslate` 八合取 → `normalListIsNormalFamily` 供 hnf → `Hypermap.hqymrtx` → 首合取 loopOfList 折算 + 第二合取 `faceMapListPowerChain` 链侧重推）+ `memZtransRtrans`/`zNotEqYtrans` 两行级。**三条勘误采信**：① **hs 槽本地现产**（`sListEqOfMarked`，比原计划前提化强一档）；② **hunL 不可由 GoodList 推出**（反例 `L=[[1,2,1,3]]`：listPairs 互异 + eList 闭合但面表非 Nodup）——工单"~10 行小证"误判，显式前提按 ChainMarkedTranslate 头注口径；③ Lean 4.32.2 root 检查拒绝仓外文件岛编（改 cwd=源目录 + 绝对 LEAN_PATH）。编排者验收 8 探针全标准三、olean 装池。**派 patch6 尾件笔**（Ncvibwu 三件/OHCGKFU/indexf_antisym·n；撞名报我）。
