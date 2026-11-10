@@ -85,7 +85,7 @@ theorem nextMarkMemRTrans (L : fgraph ℕ) (hL : GoodList L)
 /-- `lm` 严格小于表长：`¬final_list L r` + `next_el r x = f_list L x` +
 `x ∈ r` + `r.Nodup`。反证：偏差元素 `z` 的定位步 `k = indexf x z r`
 （`indexfN`，`k < r.length`）的**前一步**即离开 `f_list`，故 `lm ≤ k-1`。 -/
-private theorem lmLtLength (L : fgraph ℕ) {r : List Dart} {x : Dart}
+theorem lmLtLength (L : fgraph ℕ) {r : List Dart} {x : Dart}
     (hx : x ∈ r) (hr : r.Nodup) (hnext : nextEl r x = fList L x)
     (hf : ¬ finalList L r) :
     lm L r x < r.length := by
@@ -116,8 +116,11 @@ private theorem lmLtLength (L : fgraph ℕ) {r : List Dart} {x : Dart}
     omega
 
 /-- **HOL `Aq7.indexf_ytrans_eq_l_m1_v0`**（AQ7.hl:39）当前 loop 形：
-`marked_list ∧ ¬final_list ⇒ indexf (next_el (find_face x) x) (l'y) r = l'm`。 -/
-private theorem indexfYtransEqLM1Core (L : fgraph ℕ) (hL : GoodList L)
+`marked_list ∧ ¬final_list ⇒ indexf (next_el (find_face x) x) (l'y) r = l'm`。
+patch8 可见性上调（private → public，陈述/证体逐字未动）：`PwssratCase` 的
+`indexfConstLe`/`nextMarkCaseMem` 无 haq 形消费（与 Spine `aq10_indexfYtransEqLm1`
+公开件同口径）；`lmLtLength` 同款上调（NCVIBWU/Aq7 共同界件）。 -/
+theorem indexfYtransEqLM1Core (L : fgraph ℕ) (hL : GoodList L)
     {N : List (List Dart)} {r : List Dart} {x : Dart}
     (hm : Kepler.Text.ChainLists.markedList L hL N r x)
     (hf : ¬ finalList L r) :
