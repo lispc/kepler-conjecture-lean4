@@ -319,6 +319,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-10（10:41，续765）**：**件 8（T2 主机）对表完成 → BLOCKED 拆两笔；8a 上游缺件层 12 件已派**。
+① **锚订正**：wrapper `reduction3.hl:183-191`（9 行）→ 主机 `More_lemma1.hl:2028-3082`（**1055 行 / 610 步，全树零移植**）；`tame_list:12829` 一带实为 `rot_final_list`（12831），**主机证体零引用**——实际 orbit 件 = `next_el_refl`/`next_el_cat1/2`/`next_el_parts_last`。
+② **陈述对表逐字同形**（cat 右嵌套 ↔ `++` 结合序、`HD` junk ↦ `headD (0,0)`）；**唯一 DIFFERS = `haq : AqiunppSlot L hL` 显式化**（HOL 从 `transform_assumption_v2_lemma : ∀L, transform_assumption_v2 L` 内部取，链侧槽无生产者——J2 装配面，与 patch4–7 同口径）。
+③ **依赖矩阵 42 项 ✓**（链现成 20 + Spine 现成 17 + AqiunppSlot 槽）；**缺件 12 件 ≈300–330**：`hd_cat`(tame_list:13285)/`HD_flatten`(reduction4:1509)/`next_el_inj`/`MEM_HD_LAST_betwn`(:1528)/`LAST_HD_LAST_betwn`(:1550)/`next_HD_LAST_betwn`(:1559)/`eq_HD_LAST_betwn`(:1618)/`betwn_cat`(:1136)/`mem_cat_betwn_same`(:1769)/`LAST_cat_betwn_same`(:1840)/`cat_betwn_same`(:1941)/`parts_betwn`(:471)，全部有界可移植零假桩。
+④ **拆分**：8a = 缺件层 12 件（≈320，**已派**）；8b = 主机 `coreSplitNormalListAssumptionLemma`（450–600，必要时再拆）。风险 R1 between/nextEl 双 BEq（A8 同款）、R2 parts↔partsSpine 桥、R3 uniq_fst_split_norm 经 `aq1_split1Nodup`。
+
 - **2026-11-10（10:36，续764）**：**W32 落库 `a475446c`（109 行）——绕序混合交付：`pW32_w_cone` 绿 + `WindingSlot` 显式槽本体 + full mirror 按铁律止损；残余缺口收敛为两块新几何**。
 ① **成功件 `pW32_w_cone`（标准三零 sorryAx）**：HOL `NKEZBFC.hl:2426–2448` AZIM_EQ 链的 Lean 镜像——EGHNAVX 第二支 run 锥 + `azim_eq_azim_iff` 两次取等式 + 传递 ⇒ `vv n ∈ affGt{0,p}{vv(n+1)}`（2_1 形，跳跃后段 `i+1≤n`、`n+1<k`）；逐行对表零新几何，2 个机械修轮收敛。
 ② **Attempt 2 止损（2 轮铁律）**：full mirror hstep（1_2 形）前半可组装，卡点 = 第二析取排除 `vv n ∉ affGe{0}{p,vv(n+1)}`——`pW5w_telescope` 展开后需「点比相邻对早一格」排除形，在库 `pW5_second_disjunct_false` 只覆盖「晚两格」，镜像**零命中**；HOL 用 `LOFA_IMP_EE_TWO_ELMS`+EE+`LOFA_IMP_DIS_ELMS23`（`:2455–2583`，~130 HOL）⇒ 新引理量级 120–180。
