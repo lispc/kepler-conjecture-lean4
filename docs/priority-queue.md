@@ -356,6 +356,17 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（15:43，续960）**：**一笔落库：tame-corr nb50 `496f03dd`（`Reduction5J5K2A2Split` +214/−22，A2.2 四件全绿）——`split_normal_list` 本体绿（165 HOL → 179 Lean）**。
+① **`496f03dd`（tame-corr nb50）**：`finalAssumptionSplitNormalList`（reduction4.hl:1094-1275）——`bet = []` 支 98 行（`getLast!`→`getLast hne` 私有折平 `getLastBangEqGetLast`，`s.1`/`s.2` 显式形 + Nodup + `nextElLastHd` + `nextCoreNeFST`，index 引理撞 `hny`/`hnz`）；`bet ≠ []` 支 46 行（`coreSplitNormalListThm` 显式形 + 集合差取 `b`）。陈述逐字 = HOL 八前提（K1Asm 5 + `¬finalList` + `transformCount = k` + 两条 `not_next` + `n1_diff_n0`）。4/4 探针 ⊆ 标准三、零 sorryAx；实测 179 vs 估 140–180。
+② **勘误（对 nb49 §2.3）**：`quotientListElements` **不可直接用**——其陈述在 `Set ℕ` 上且属 `quotientListSpine`，`N.map` 之下 `parts_eq_partsSpine` 的 `rw` 不匹配。改直路（~18 行、零 spine 桥）：`quotientListCore`（`= N.map (core L)`）+ `coreEqPartsHeadFst` + `partsAllNonnil`/`partsFlatten` + `nodup_flatten`。A3 及同类件优先走此直路。
+③ **A3 就绪**：20 号槽（`yz_in_core`）用 nb48 `finalAssumptionYzInCoreUncond` 一行填；27 号槽（`split_normal_list`）用本轮 `finalAssumptionSplitNormalList`。唯一潜在补件 = HOL reduction4.hl:1000–1093 两条 `not_next` 成件（先查库再定）。
+④ **续派**：tame-corr → **A3 `reductionK2`（28 槽，20/27 一行可填，150–250）**，先核查两条 `not_next` 是否在库。
+
+- **2026-11-11（15:43，续961）**：**一笔落库：aq13 ml13 `9006597b`（`Reduction5J5K4IndexSndX` 新文件 +180，1 件）——K4 C2 `index_snd_x` 绿（98 HOL → 180）**。
+① **`9006597b`（aq13 ml13）**：`indexSndX`（reduction4.hl:4675-4772）——陈述逐字（五前提 + `transformCount = k` → `∀ i<k, indexf x.2 (FST y_i) (core L r) < indexf x.2 (FST z_i) (core L r)`）；路线三分支：`p'.head! = next_el (find_face x) x`（`nextElPartsLast`+`fListImpLast`+`uniqSublistUnique`），① 首点 = y_i 用 `indexfRefl`/`indexf_eq_zero`+`fstYiNeFstZi`；② 首点 = z_i 用 `simpleList` 抬 dart 等式 + `diowaasR` 与 `indexfRefl` 相抵；③ 常规用 `coreLtIndexf` 搬 `diowaasR` 不等式。1/1 探针 ⊆ 标准三、零 sorryAx；实测 180 vs 估 200–350。
+② **依赖核查两处口径修正（采信）**：scout 的「4675–5318 / 644 行」把其后 `next_el_core_last` 等独立 K4 辅助件并入范围，**本体实为 98 HOL 行**；本体证体**零引用** `_snd_x_fy/zx`（段内 grep 仅命中定义名）⇒ 直写、不触发「转 K3 `indexf2`」兜底。`core_lt_indexf` 由**已在库** `coreLtIndexf`（R2b1 三件之一）供给，不需 `core_betwn`。
+③ **续派**：aq13 → **K3 `indexf2`（Lane B1，150–250，370–690 簇首件）**；J4（`_snd_x_*`）、tame-corr（A3）在飞。
+
 - **2026-11-11（15:22，续959）**：**一笔落库：aq13 ml12 `99294311`（`Reduction5J5K4N1` +139，1 件）——K4 C3 `n1_diff_n0` 绿（342 HOL → 139 Lean）**。
 ① **`99294311`（aq13，K4 C3）**：`n1DiffN0`（reduction4.hl:3314-3655，342 HOL → 139 行，2 轮）——陈述逐字 = `reductionK2Concl` 的 BETWN 2（`Reduction5J5K2.lean:80`），前提 = HOL 五前提。路线：集合相等双向——`A\B ⊆ C` 走 `quotientListElements` → `aq9_provenance` 二分（旧表支与 B 相抵、窗口支折回）；`C ⊆ A\B` 走 `rtransDiffR` 反用 + `windowFstNotMemNFlatten`。探针 ⊆ 标准三、零 sorryAx。
 ② **替位判词（采信）**：两条零命中 HOL 依赖均有 Lean 原生替身且已在库——`Aq1.betwn_not_in_fst_faltten` = **`TameSpine.windowFstNotMemNFlatten`**（`JcajyduAqSplit1D.lean:87`，文件头明记即该 HOL 件 Lean 内核）；`Aq9.CASES_CORE`（610 HOL 行）= **`TameSpine.aq9_provenance`**（`JcajyduAqLeaf9W1b.lean:170`，文件头明记「原生 CASES_CORE 等价物」）。scout 建议的 `betwnCoreReductionLemma` **并非正确替身**（语义是 `betwn=[] ⇒ core nextEl`）——以机器证据为准。
