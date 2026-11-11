@@ -44,6 +44,9 @@ import Kepler.Text.Gamma4Feed
 import Kepler.Text.Hypermap
 import Kepler.Text.ContraFan
 import Kepler.Text.LocalAuto16
+-- J5-9 会师（2026-11-11）：`jcajydu` 接口占位填证——Reduction5 侧
+-- `jcajyduReduction5`（U 段 + K 链 + D1 全链真证，标准三零未证公理）。
+import Kepler.Text.Reduction5J5JcajyduFinal
 -- la1concl-reroute（2026-10，lane la1concl-reroute-w1；施工图
 -- la1reroute-w1）：LocalConcl 装配层进 e2e 锥——(c1) 上移装配点。本文件两个
 -- 消费点（linearProgrammingResults / textCapstone）改引
@@ -2504,12 +2507,20 @@ theorem tamePlanarHypermapRestricted {α : Type*} [DecidableEq α] (H : Hypermap
   · -- ③ tame_9a ⟹ face 基数 ≥ 3
     exact fun x hx => (h9a x hx).1
 
-/-- 接口占位：HOL `Jcajydu.JCAJYDU` 一般形（premise 版由 Reduction5 供应 list
-版的前提折入——填证时按 HOL 原形拆回，phase6-spine.md §5）。 -/
+/-- HOL `Jcajydu.JCAJYDU` 一般形（premise 版由 Reduction5 供应 list
+版的前提折入——填证时按 HOL 原形拆回，phase6-spine.md §5）。
+
+2026-11-11（J5-9 会师）：接口占位已由真证替换——
+`Kepler.Text.Reduction5.jcajyduReduction5`（U 段 UVNS + SX-c + K 链 K2/K3
++ D1 打包全链，标准三零未证公理）；四字段匿名构造器把
+`TameLp.IsHypermapOfListTl` 折到本文件 `IsHypermapOfList`。 -/
 theorem jcajydu {α : Type*} [DecidableEq α] (H : Hypermap α) (hres : H.IsRestricted) :
     ∃ g : Graph, PlaneGraphs g ∧ GoodGraphV4 g ∧
       ∃ H' : Hypermap (ℕ × ℕ), IsHypermapOfList g.fgraph H' ∧ HypermapIso H H' := by
-  sorry
+  obtain ⟨g, hpg, hgg, H', hH', hiso⟩ :=
+    Kepler.Text.Reduction5.jcajyduReduction5 H hres
+  exact ⟨g, hpg, hgg, H',
+    ⟨hH'.darts_eq, hH'.edgeMap_eq, hH'.nodeMap_eq, hH'.faceMap_eq⟩, hiso⟩
 
 /-- HOL `Wmlnymd.tame_correspondence_iso`（WMLNYMD.hl:1498）。
 
