@@ -356,6 +356,12 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（18:27，续975）**：**一笔落库：tame-corr nb58 `8e9b7bd5`（`Reduction5J5UvnsChainCl` +153/−7，文件 266 行）——U1b 5/5 全绿**。
+① **`8e9b7bd5`（tame-corr nb58）**：`chainClSomeAppend` 三 junction 保持引理落地（三分支 × 四簇位置账：跨越支 `cases r`+`hfirst`/`hfirstR`；`t<|r|` 支 `hchain`+`hlastR`；`t=|r|` 支 `hdisj`；`t>|r|` 支 `isSome` 互斥 + omega）+ 两微件 `uvnsGetDMapSomeApp`（`t<|r| → (r.map some ++ rest).getD t = some (r.getD t 0)`）/ `uvnsGetDMapAdd`（`(r.map some ++ rest).getD (|r|+m) = rest.getD m`）。7/7 探针 ⊆ 标准三、零 sorryAx；实测 +146 vs 估 80–120（5 轮，全部是 rw/simp target 匹配类，无数学卡点）。
+② **修法记录（3 条，采信）**：`rw … at h1 h2 ⊢` 在某 target 无匹配即整体失败 ⇒ 多 target 一律用实例化 `simp only`（静默跳过）；自指重写（`t = r.length + (t - r.length)` 型）会让 simp 死循环（maxRecDepth）⇒ `have` + 逐 target 单独 `rw`；`set t := …` 会同时改写 hypotheses ⇒ 之后不要再 `rw [show j - pfx.length = t]`。
+③ **续派**：tame-corr → **U1c 主线装配**（`uvnsWalkCons`：`D` 实例化 + base + succ + 全 vs 三段装配 + mem 支；私有重落 `getDLastD`/`eqDropLastAppendOfGetLastD`；120–180，可 PARTIAL）。U 段剩 U1c → U3 → U2 消槽。
+④ **落库闸**：apply-check PASS @06eee304、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（18:25，续974）**：**一笔落库：aq13 ml15 `39d8d9e1`（`Reduction5J5K4Lemma` 新文件 +184，1 件）——D1 前置构造件 `reductionK3ConclOfSlots` 绿；新登记 SX-c 缺口 220–300**。
 ① **`39d8d9e1`（aq13 ml15）**：`reductionK3ConclOfSlots : k3Indexf8Slot → k3Sx3Slot → k3UvnsSlot → (∀ L N r x k, reductionK3Asm → reductionK3Concl)`。18 合取逐条映射：INDEX 1–6 ← `indexf2/3/4/5/6/7FinalLemmas`（f3 @`J7W1d`，其余本日）；INDEX 7 ← 槽 `k3Indexf8Slot`；MISC ← `finalReductionMemZ0Ri`；BETWN 1–5 ← `betwnCorekZX`/`n1DiffN0`/`coreiReduction`/`finalAssumptionsNotNextCore0ZY`/`betwnCore0ZY`；NEW/SND_X a/b ← `finalAssumptionNotMemSndXZx/Fy`/`indexSndX`；SND_X c ← 槽 `k3Sx3Slot`；UVNS ← 槽 `k3UvnsSlot`。`haq` 由 `TameSpine.aqiunpp` **内部现拼**（不需外部参数）。1/1 探针 ⊆ 标准三、零 sorryAx；实测 184 vs 估 100–200。
 ② **重要判词（采信）**：**HOL 的 K4 引理在 Lean 18 合取设计下零消费**——五合取各有直接供料件，构造件不取 `hK4` 参数。D1 用法锁定：`reductionK4 = reductionK3 haq (reductionK3ConclOfSlots hF8 hSx3 hUvns)`。
