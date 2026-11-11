@@ -6386,7 +6386,44 @@ theorem CELL_CLUSTER_ESTIMATE_REDUCE (V : Set V3) (hp : Packing V) (hs : saturat
       0 ≤ setSum {X | {u0, u1} ∈ edgeX V X ∧ mcellSet V X} fun X =>
         gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X) :
     cellClusterInequality V := by
-  sorry
+  -- the two HOL hypotheses are part of the frozen signature but not consumed
+  have _hp := hp
+  have _hs := hs
+  intro e
+  show 0 ≤ setSum {X : Set V3 | e ∈ criticalEdgeX V X ∧ X ∈ mcellSet V}
+    (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V e X)
+  by_cases hempty : {X : Set V3 | e ∈ criticalEdgeX V X ∧ X ∈ mcellSet V} = ∅
+  · rw [hempty]
+    simp [setSum]
+  · obtain ⟨X0, hX0⟩ := Set.nonempty_iff_ne_empty.2 hempty
+    obtain ⟨hcrit0, -⟩ := hX0
+    unfold criticalEdgeX at hcrit0
+    obtain ⟨u, v, heq, hedge_uv, hlo, hhi⟩ := hcrit0
+    -- replace `e` by the pair everywhere
+    rw [heq] at hedge_uv ⊢
+    obtain ⟨a, b, heqab, -, -, hab⟩ := hedge_uv
+    -- the edge is a genuine pair, so its endpoints are distinct
+    have huv : u ≠ v := by
+      rintro rfl
+      exact hab (by
+        rcases Set.pair_eq_pair_iff.mp heqab with ⟨h1, h2⟩ | ⟨h1, h2⟩
+        · exact h1.symm.trans h2
+        · exact h2.symm.trans h1)
+    -- the critical-edge cluster of `{u,v}` is the edge cluster of `{u,v}`
+    have hset : {X : Set V3 | {u, v} ∈ criticalEdgeX V X ∧ X ∈ mcellSet V}
+        = {X : Set V3 | {u, v} ∈ edgeX V X ∧ X ∈ mcellSet V} := by
+      ext X
+      constructor
+      · rintro ⟨hcrit, hmem⟩
+        unfold criticalEdgeX at hcrit
+        obtain ⟨u', v', -, hedge', -, -⟩ := hcrit
+        exact ⟨hedge', hmem⟩
+      · rintro ⟨hedge', hmem⟩
+        refine ⟨?_, hmem⟩
+        unfold criticalEdgeX
+        exact ⟨u, v, rfl, hedge', hlo, hhi⟩
+    rw [hset]
+    exact hedge u v huv hlo hhi
 
 /-- HOL `cc_card_data` (field projection). -/
 theorem cc_card_data (V : Set V3) (f : ℕ → V3) (u0 u1 : V3) :
@@ -6734,7 +6771,85 @@ theorem CELL_CLUSTER_N_LE_1 (V : Set V3) (u0 u1 : V3) (hnl : pack_nonlinear_non_
     (hhi : hl [u0, u1] ≤ hplus) (hcard : Set.ncard (s_leaf V [u0, u1]) ≤ 1) :
     0 ≤ setSum {X | {u0, u1} ∈ edgeX V X ∧ mcellSet V X} fun X =>
       gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X := by
-  sorry
+  classical
+  -- `HOL SUM_POS_LE`: a pointwise nonnegative summand gives a nonnegative sum
+  have hsum_nonneg : ∀ (s : Set (Set V3)) (g : Set V3 → ℝ),
+      (∀ X ∈ s, 0 ≤ g X) → 0 ≤ setSum s g := by
+    intro s g hg
+    by_cases hfin : s.Finite
+    · unfold setSum
+      rw [dif_pos hfin]
+      exact Finset.sum_nonneg fun x hx => hg x (hfin.mem_toFinset.mp hx)
+    · unfold setSum
+      rw [dif_neg hfin]
+  by_cases h4 : ∃ ul : List V3, barV V 3 ul ∧ {u0, u1} ∈ edgeX V (mcell4 V ul)
+  · -- a 4-cell through the stem contradicts `CARD(s_leaf) <= 1`
+    obtain ⟨ul, hb, he4⟩ := h4
+    exfalso
+    have hnn : ¬ nullSet (mcell4 V ul) := by
+      intro hnull
+      obtain ⟨a, b, -, ha, -, -⟩ := he4
+      rw [VX, if_pos hnull] at ha
+      exact ha
+    obtain ⟨vl, hbvl, hu0, hu1, heq4⟩ := MCELL4_EDGE_FIRST hs hp hb he4
+    have hnn' : ¬ nullSet (mcell4 V vl) := by
+      intro hnull
+      exact hnn (by rw [heq4]; exact hnull)
+    have h2 := S_LEAF_CARD2 V vl hp hs hbvl hnn'
+    have hv0 : elV vl 0 = u0 := by
+      show vl.getD 0 0 = u0
+      exact hu0.symm
+    have hv1 : elV vl 1 = u1 := by
+      show vl.getD 1 0 = u1
+      exact hu1.symm
+    rw [hv0, hv1] at h2
+    omega
+  · -- otherwise each cell in the cluster is a 2/3-cell and `GAMMAX_NO_BETA` applies
+    refine hsum_nonneg _ _ ?_
+    intro X hX
+    obtain ⟨hXedge, hXmem⟩ := hX
+    obtain ⟨i, ul, hXeq, hb⟩ := hXmem
+    have hnnX : ¬ nullSet X := by
+      intro hnull
+      obtain ⟨a, b, -, ha, -, -⟩ := hXedge
+      rw [hXeq] at hnull ha
+      rw [VX, if_pos hnull] at ha
+      exact ha
+    have hi4 : i ≤ 4 := by
+      by_contra hgt
+      push Not at hgt
+      exfalso
+      apply h4
+      refine ⟨ul, hb, ?_⟩
+      have hm4 : mcell i V ul = mcell4 V ul := by
+        unfold mcell
+        rw [if_neg (by omega : ¬ i = 0), if_neg (by omega : ¬ i = 1),
+          if_neg (by omega : ¬ i = 2), if_neg (by omega : ¬ i = 3)]
+      rw [hXeq, hm4] at hXedge
+      exact hXedge
+    interval_cases i
+    · exfalso
+      have hempty := BumpP4.EDGE_IMP_K2 V ul 0 hs hp hb (by omega)
+      rw [hXeq, hempty] at hXedge
+      exact hXedge
+    · exfalso
+      have hempty := BumpP4.EDGE_IMP_K2 V ul 1 hs hp hb (by omega)
+      rw [hXeq, hempty] at hXedge
+      exact hXedge
+    · have hg := TSKAJXY_2 V X ul hnl hs hp hb hXeq
+      have he : ({u0, u1} : Set V3) ∈ criticalEdgeX V X := by
+        unfold criticalEdgeX
+        exact ⟨u0, u1, rfl, hXedge, hlo, hhi⟩
+      exact GAMMAX_NO_BETA V ul X {u0, u1} 2 hp hs hb hXeq hnnX (by omega) he hg
+    · have hg := TSKAJXY_3 V X ul hnl hs hp hb hXeq hnnX
+      have he : ({u0, u1} : Set V3) ∈ criticalEdgeX V X := by
+        unfold criticalEdgeX
+        exact ⟨u0, u1, rfl, hXedge, hlo, hhi⟩
+      exact GAMMAX_NO_BETA V ul X {u0, u1} 3 hp hs hb hXeq hnnX (by omega) he hg
+    · exfalso
+      apply h4
+      rw [hXeq] at hXedge
+      exact ⟨ul, hb, hXedge⟩
 
 /-- HOL `NOT_COPLANAR_AFF_3`.  Proof: if the direction of the affine span
 had rank `< 3`, it would be spanned by two vectors `v1, v2` (a basis of the
@@ -10108,7 +10223,106 @@ theorem pkLeafRankCriticalEdge (V : Set V3) (hp : Packing V) (hs : saturated V)
       u0 ∈ V ∧ u1 ∈ V ∧ periodic f n ∧
       (∀ j, leaf V [u0, u1, f j]) ∧ criticalEdgeY (dist u0 u1) ∧
       ∑ i ∈ Finset.Icc 0 (n - 1), gg_mcell V f u0 u1 i < 0 := by
-  sorry
+  classical
+  -- take the contrapositive of `CELL_CLUSTER_ESTIMATE_REDUCE`
+  have hnot : ¬ ∀ u0 u1 : V3, u0 ≠ u1 → hminus ≤ hl [u0, u1] →
+      hl [u0, u1] ≤ hplus →
+      0 ≤ setSum {X | {u0, u1} ∈ edgeX V X ∧ mcellSet V X} fun X =>
+        gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X :=
+    fun h => hcc (CELL_CLUSTER_ESTIMATE_REDUCE V hp hs h)
+  push Not at hnot
+  obtain ⟨u0, u1, hu0ne, hlo, hhi, hneg⟩ := hnot
+  set n : ℕ := (s_leaf V [u0, u1]).ncard with hn_def
+  have hfin : (s_leaf V [u0, u1]).Finite := S_LEAF_FINITE V [u0, u1] hp hs
+  have hsize : HasSizeP25 (s_leaf V [u0, u1]) n := ⟨hfin, hn_def.symm⟩
+  -- `CELL_CLUSTER_N_LE_1` rules out a critical stem with at most one leaf
+  have hn1 : 1 < n := by
+    by_contra hle
+    push Not at hle
+    have hle' : Set.ncard (s_leaf V [u0, u1]) ≤ 1 := hn_def ▸ hle
+    have hnn := CELL_CLUSTER_N_LE_1 V u0 u1 hnl hp hs hlo hhi hle'
+    exact absurd hnn (not_le.mpr hneg)
+  have hn0 : 0 < n := by omega
+  -- a non-collinear witness exists for any distinct pair
+  have hw0 : ∃ w0 : V3, ¬ Collinear3 u0 u1 w0 := by
+    have hdiff : u1 - u0 ≠ 0 := sub_ne_zero.mpr hu0ne.symm
+    obtain ⟨i, hi⟩ : ∃ i : Fin 3, (((u1 - u0 : V3)) : Fin 3 → ℝ) i ≠ 0 := by
+      by_contra h
+      push Not at h
+      exact hdiff (by ext j; exact h j)
+    obtain ⟨j, hj⟩ : ∃ j : Fin 3, j ≠ i := by
+      fin_cases i
+      · exact ⟨1, by decide⟩
+      · exact ⟨0, by decide⟩
+      · exact ⟨0, by decide⟩
+    refine ⟨u0 + (WithLp.toLp 2 ((Pi.single j (1 : ℝ) : Fin 3 → ℝ)) : V3), ?_⟩
+    intro hc
+    obtain ⟨c, hc⟩ :=
+      (collinear3_iff_smul (v := u0) (w := u1)
+        (w1 := (u0 + (WithLp.toLp 2 ((Pi.single j (1 : ℝ) : Fin 3 → ℝ)) : V3)))
+        hu0ne.symm).mp hc
+    have hc' : (WithLp.toLp 2 ((Pi.single j (1 : ℝ) : Fin 3 → ℝ)) : V3) =
+        c • (u1 - u0) := by
+      rw [add_sub_cancel_left] at hc
+      exact hc
+    have hleft : (((WithLp.toLp 2 ((Pi.single j (1 : ℝ) : Fin 3 → ℝ)) : V3)) :
+        Fin 3 → ℝ) i = 0 := by
+      show (Pi.single j (1 : ℝ) : Fin 3 → ℝ) i = 0
+      exact Pi.single_eq_of_ne (Ne.symm hj) 1
+    have hcoord : (((c • (u1 - u0) : V3)) : Fin 3 → ℝ) i =
+        c * (((u1 - u0 : V3)) : Fin 3 → ℝ) i := rfl
+    have hzero : c * (((u1 - u0 : V3)) : Fin 3 → ℝ) i = 0 := by
+      have hcf := congrFun (congrArg (fun x : V3 => ((x : V3) : Fin 3 → ℝ)) hc') i
+      rw [hleft, hcoord] at hcf
+      exact hcf.symm
+    have hc0 : c = 0 := by
+      rcases mul_eq_zero.mp hzero with h | h
+      · exact h
+      · exact absurd h hi
+    have hz : (((WithLp.toLp 2 ((Pi.single j (1 : ℝ) : Fin 3 → ℝ)) : V3)) :
+        Fin 3 → ℝ) j = 0 := by
+      have hcf := congrArg (fun x : V3 => ((x : V3) : Fin 3 → ℝ)) hc'
+      rw [hcf, hc0, zero_smul]
+      rfl
+    have h1 : (((WithLp.toLp 2 ((Pi.single j (1 : ℝ) : Fin 3 → ℝ)) : V3)) :
+        Fin 3 → ℝ) j = 1 := by
+      show (Pi.single j (1 : ℝ) : Fin 3 → ℝ) j = 1
+      exact Pi.single_eq_same j 1
+    rw [h1] at hz
+    exact one_ne_zero hz
+  obtain ⟨w0, hnc⟩ := hw0
+  -- rank the leaves by azimuth
+  obtain ⟨f, hfimg, hfper, hfmono⟩ := LEAF_RANKING_LEMMA V [u0, u1] w0 n hn0 hp hs hsize hnc
+  have hr : leaf_rank V [u0, u1] w0 n f := ⟨hfimg, hfper, hfmono⟩
+  have hleaf : ∀ j, leaf V [u0, u1, f j] := by
+    intro j
+    have hm := LEAF_RANK_S_LEAF V [u0, u1] w0 n f j hr
+    exact hm.1
+  have hmemV : u0 ∈ V ∧ u1 ∈ V := by
+    have hbar : barV V 2 [u0, u1, f 0] := (hleaf 0).1
+    have hsub := BARV_SUBSET V 2 [u0, u1, f 0] hbar
+    constructor
+    · exact hsub (by simp [setOfList])
+    · exact hsub (by simp [setOfList])
+  have hper : periodic f n := LEAF_RANK_PERIODIC V [u0, u1] w0 n f hr
+  have hcey : criticalEdgeY (dist u0 u1) := by
+    unfold criticalEdgeY
+    have h2 := HL_2 u0 u1
+    constructor <;> linarith
+  -- transfer the negative cluster sum to the `gg_mcell` sum
+  have hgg := LEAF_RANK_GG_SUM V [u0, u1] w0 n f hn1 hp hs hsize hmemV.1 hmemV.2 hnc hr
+  have hgg' : ∑ i ∈ Finset.Icc 0 (n - 1), gg_mcell V f u0 u1 i =
+      setSum {X : Set V3 | mcellSet V X ∧ ({u0, u1} : Set V3) ∈ edgeX V X}
+        (fun X => gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X) := hgg
+  have hseteq : {X : Set V3 | mcellSet V X ∧ ({u0, u1} : Set V3) ∈ edgeX V X}
+      = {X : Set V3 | ({u0, u1} : Set V3) ∈ edgeX V X ∧ mcellSet V X} := by
+    ext X
+    exact and_comm
+  have hneg2 : ∑ i ∈ Finset.Icc 0 (n - 1), gg_mcell V f u0 u1 i < 0 := by
+    rw [hgg', p25w3_setSum_congr hseteq]
+    exact hneg
+  exact ⟨u0, u1, n, w0, f, hn1, hsize, hu0ne, hlo, hhi, hnc, hr, hmemV.1, hmemV.2,
+    hper, hleaf, hcey, hneg2⟩
 
 /-- T4 骨架 W2 `pkLeafRankAzimPointwise`：楔形二面角塌缩——wedge 内 Marchal
 胞的 dihedral 和等于张角 `azim u0 u1 (f i) (f (i+1))`。HOL Oxl_real.hl。
