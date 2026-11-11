@@ -150,10 +150,11 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 4 三车道在飞**：`g482no4-w1`（`deform_simplex_684_pent_p21` 本体）、
-> `vas-nhx-w1`（`NEHXMWH_p23`，JOTSWIX.hl:1171-1678）、`cuxvzozF-w1`（Section F 四件：
-> `WNWSHJT_ALT_p21` + a/b/azim assumption reduction）。**`g482-482-w1` 判 BLOCKED**（本体根路径
-> 7 件 tainted + 2 桥，见续1001）；`g482br-w1`（两桥件）排队。
+> **wave 5 三车道在飞**：`cuxvzozF-w1`（Section F 四件：`WNWSHJT_ALT_p21` + a/b/azim
+> assumption reduction）、`g482br-w1`（`coplanar_delta_y_zero_p18` + `NOT_COL_EQ_UPS_X_POS` 孪生）、
+> `la22mono-w1`（`LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`）。**g482no4 已落库**
+> （`deform_simplex_684_pent_p21`，`3429af94`）；**vas-nhx 判 BLOCKED**（NEHXMWH：import DAG 死锁，
+> 见续1002 ②）；**g482-482 判 BLOCKED**（7 件 tainted + 2 桥，见续1001）。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -458,6 +459,12 @@
 ③ **情报更新（可用）**：`WNWSHJT_ALT` 的旧 DEFHOLE **已消失**——其缺失的 `REAL_CONTINUOUS_ATREAL_AZIM_COMPOSE` 孪生 `w5cA3_continuousAt_azim` 已在 `LocalAuto14:2971` 真证（标准三）且在闭包内 ⇒ 现为纯 labor；a/b/azim 三件 assumption reduction 也是纯 labor 候选。
 ④ **wave 4 换人（池 3/3 纪律）**：`cuxvzozF-w1` 接手 Section F 四件（`WNWSHJT_ALT_p21` + a/b/azim 三件）；`g482br-w1`（两桥件）**先停、排队**（避免 4 车道破并发 ≤3），待 g482no4/vas-nhx 任一收工即发。`g482no4-w1`（#4 本体）与 `vas-nhx-w1`（`NEHXMWH_p23`）照常。
 ⑤ **勘误纪律沉淀**：以后派「本体」车道时，阶段一必须逐件 `#print axioms` HOL 直接引用闭包（而非引 triage 清单），并把依赖表写进 DELIVERY。
+
+- **2026-11-12（03:21，续1002）**：**`g482no4-w1` 落库 `3429af94`（`deform_simplex_684_pent_p21` 真证，LA21 sorry 14→13）+ `vas-nhx-w1` 判词 BLOCKED（NEHXMWH_p23：import DAG 死锁）+ wave 5 发车**。
+① **`3429af94`（1 file / +353 / −4）**：`deform_simplex_684_pent_p21`（HOL `CUXVZOZ.hl:533`，270 行）真证替换；删除面恰 3 行 DISCHARGES/NEEDS 注释 + 1 行 `sorry`，零声明删除、零新增 helper。**编排者闸**：岛编 RC=0 / 0 err / **13 sorry-decls（14→13）** / 13 warn（全 sorry）；探针 target = 标准三，kit/#1–#3 不回归；`general_482_deformation_p21` 仍 sorryAx（预期）。**锥内零移动**；olean 装池（md5 `006e7bb9…`）。**注**：FILE MAP 的 `(sorry giant)` 标记未同步（最小 diff 口径），留待一次机械文档批。
+② **`vas-nhx-w1` 判词 BLOCKED（0/1，patch 0 字节）**：`NEHXMWH_p23`（HOL `JOTSWIX.hl:1171-1678`）的两条 docstring 暗示前置（`BBprime2`/`BBs` 投影、registry `5541487347`）实测可用且零债，但 HOL 真正的核心还吃四类基础设施：`ab4_assumption_reduction_p23`（LA23:434 sorry）/`deform_azim_sum_p23`（LA23:502 sorry）/ LA21 的 `MMs_minimize_tau_fun`+`azim_assumption_reduction`+`WNWSHJT_ALT`（全 sorry）/ LA22 的 `LEMMA_1834976363_p22`+`xrr_simple_*_bound`+`LOCAL_FAN_AZIM_POS`（全 sorry）。**决定性证据 = import DAG 死锁**：kit 提供者全在 LA23 下游，反向 import 成环（`LA21→LA16→LA23`、`LA22→LA23`、`LocalConcl→LA23`、`LA25→LA23`、`LA14→LA35→LA23`、`LA18→LA27→LA24→LA23`）⇒ 已绿 kit 一件也拿不到，复制进 LA23 是新增孪生（>1000 行，禁令）。**解封顺序**：先清 LA22 数值债 → LA21 三件 → **DAG 重构（把 deformation/azim kit 拆到 LA23 上游，编排级决定）** → 再拼装本体（预计 300–450 行）。另：3-D 数值优化给出 penalty=0 显式满足点 ⇒ 不是空洞命题，必须真实 deformation + tau 最小化。
+③ **wave 5 发车（池 3/3）**：`cuxvzozF-w1`（承接 Section F 四件，在飞）、`g482br-w1`（`coplanar_delta_y_zero_p18` + `NOT_COL_EQ_UPS_X_POS` 孪生移植，在飞）、`la22mono-w1`（`LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`，在飞；解 vas-nhx 根的第 1 步）。
+④ **盘面判断**：LA33/aq13 的 3 条锥内债（`MM_4I2_IMP_4T2_4T1`/`SCS_4I1_IMP_SCS_4I2`/`SCS_4I2_IMP_SCS_4T1`）解锁路径 = `general_482` 本体 → 其根 = 上表 7 件 + 2 桥；当前 wave 覆盖其中 4 件（Section F 三件 + coplanar 桥），剩 `LEMMA_4828966562`/`MMs_minimize_tau_fun`/`LEMMA_1834976363`/`dihV_obtuse_mono`/`NOT_COL_EQ_UPS_X_POS`。**没有一个能在单波内全清**——这是 J 战役后最硬的一段，预期还要 3–5 波。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
