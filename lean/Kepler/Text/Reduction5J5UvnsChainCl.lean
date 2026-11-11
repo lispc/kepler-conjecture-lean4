@@ -1092,6 +1092,295 @@ theorem getDZeroDestTriple0 (f : List ℕ) (uvns : List (ℕ × ℕ × ℕ)) :
       · simp only [List.cons_append]; exact ih y _
 
 
+/-- mid 段首项 = `some y_0`。 -/
+theorem getDMidZero
+    (L : fgraph ℕ) (hL : GoodList L)
+    (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    (hres : (Kepler.Text.TameLp.hypermapOfList L hL).IsRestricted)
+    {N : List (List Dart)} {r : List Dart} {x : Dart} {k : ℕ}
+    (hm : Kepler.Text.ChainLists.markedList L hL N r x)
+    (hnf : ¬ finalList L r) (hk : transformCount L N r x = k) :
+    (Kepler.Text.Reduction3.destTriple0 (core L r) []
+        (Kepler.Text.Reduction3.coreTripleV4 L N r x)).getD 0 none
+      = some (ytrans L N r x 0).1 := by
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have hk0 : 0 < k := by
+    have h := Kepler.Text.Reduction5.transformCountNon0OfMarked L hL hgn haq hm hnf
+    rw [hk] at h
+    exact Nat.pos_of_ne_zero h
+  have hlen0 : (Kepler.Text.Reduction3.coreTripleV4 L N r x).length = k := by
+    rw [Kepler.Text.Reduction3.coreTripleV4_length]
+    exact hk
+  have hget0 : (Kepler.Text.Reduction3.coreTripleV4 L N r x)[0]'(by rw [hlen0]; exact hk0) =
+      ((ytrans L N r x 0).1, (ztrans L N r x 0).1,
+        (between (findFaceDarts L x) (ytrans L N r x 0) (ztrans L N r x 0)).length) :=
+    Kepler.Text.Reduction3.elCoreTriple L N r x 0 (by rw [hk]; exact hk0)
+  cases huv : Kepler.Text.Reduction3.coreTripleV4 L N r x with
+  | nil => rw [huv] at hlen0; simp at hlen0; omega
+  | cons a t =>
+    have ht : a = ((ytrans L N r x 0).1, (ztrans L N r x 0).1,
+        (between (findFaceDarts L x) (ytrans L N r x 0) (ztrans L N r x 0)).length) := by
+      simpa only [huv, List.getElem_cons_zero] using hget0
+    rw [ht]
+    rw [show Kepler.Text.Reduction3.destTriple0 (core L r) []
+          (((ytrans L N r x 0).1, (ztrans L N r x 0).1,
+            (between (findFaceDarts L x) (ytrans L N r x 0) (ztrans L N r x 0)).length) :: t)
+        = Kepler.Text.Reduction3.destTriple0 (core L r)
+          ([some (ytrans L N r x 0).1] ++
+            List.replicate (between (findFaceDarts L x) (ytrans L N r x 0)
+              (ztrans L N r x 0)).length (none : Option ℕ) ++
+            [some (ztrans L N r x 0).1]) t from rfl]
+    exact getDZeroDestTriple0 (core L r) t (ytrans L N r x 0).1 _
+
+/-- `[some a] ++ X` 首位。 -/
+theorem getDSnocZero (a : ℕ) (X : List (Option ℕ)) :
+    ([some a] ++ X).getD 0 none = some a := by
+  show (some a :: X).getD 0 none = some a
+  rfl
+
+/-- `[some a] ++ X` 次位起。 -/
+theorem getDSnocSucc (a : ℕ) (X : List (Option ℕ)) (j : ℕ) :
+    ([some a] ++ X).getD (j + 1) none = X.getD j none := by
+  show (some a :: X).getD (j + 1) none = X.getD j none
+  rw [List.getD_cons_succ]
+
+/-- 界外的 `map some` 取值 = none。 -/
+theorem getDMapSomeNil {l : List ℕ} {j : ℕ} (hj : l.length ≤ j) :
+    (l.map some).getD j none = none := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_eq_none hj]
+  rfl
+
+/-- init 段 `Cl`：`[some v] ++ arc(v ↝ y_0)`（或空）。 -/
+theorem chainClInit
+    (L : fgraph ℕ) (hL : GoodList L)
+    (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    (hres : (Kepler.Text.TameLp.hypermapOfList L hL).IsRestricted)
+    {N : List (List Dart)} {r : List Dart} {x : Dart} {k : ℕ}
+    (hm : Kepler.Text.ChainLists.markedList L hL N r x)
+    (hnf : ¬ finalList L r) (hk : transformCount L N r x = k)
+    {v : ℕ} (hv : (prevEl (core L r) v, v) = x) :
+    ChainCl (core L r) (UvnsD L N r x k)
+      (if v = (ytrans L N r x 0).1 then []
+       else [some v] ++
+         (between (core L r) v (ytrans L N r x 0).1).map some) := by
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have hk0 : 0 < k := by
+    have h := Kepler.Text.Reduction5.transformCountNon0OfMarked L hL hgn haq hm hnf
+    rw [hk] at h
+    exact Nat.pos_of_ne_zero h
+  have hnfi : ∀ i, i < k → ¬ finalList L (rtrans L N r x i) := fun i hi =>
+    Kepler.Text.Reduction4.transformCount_not i (by rw [hk]; exact hi)
+  have hcoreof : ∀ u ∈ r, u.1 ∈ core L r :=
+    Kepler.Text.Reduction4Idx.finalAssumptionMemFstCore L hL hm
+  have hym : ∀ i, i < k → (ytrans L N r x i).1 ∈ core L r := fun i hi =>
+    hcoreof _ (pnxvwfs1 L hL hgn haq i (hnfi i hi) hm)
+  have hrnd : (core L r).Nodup := Kepler.Text.Reduction4Idx.markedListUniqCore L hL hm
+  have hx1 : x.1 = prevEl (core L r) v := (congrArg Prod.fst hv).symm
+  have hvcore : v ∈ core L r := by
+    have hprev : prevEl (core L r) v ∈ core L r := by
+      rw [← hx1]
+      exact hcoreof x hm.2.2.2.1
+    have h := Kepler.Text.TameLp.nextEl_mem_of_mem hprev
+    rwa [Kepler.Text.Reduction5.nextPrevId hrnd v] at h
+  have hy0 : (ytrans L N r x 0).1 ∈ core L r := hym 0 hk0
+  by_cases hv0 : v = (ytrans L N r x 0).1
+  · rw [if_pos hv0]
+    intro j hj
+    simp at hj
+  · rw [if_neg hv0]
+    intro j hj hs1 hs2
+    have hne : v ≠ (ytrans L N r x 0).1 := hv0
+    by_cases hj0 : j = 0
+    · have hpos : 0 < (between (core L r) v (ytrans L N r x 0).1).length := by
+        by_contra h
+        have h0 : (between (core L r) v (ytrans L N r x 0).1).length = 0 := by omega
+        have hnil : between (core L r) v (ytrans L N r x 0).1 = [] :=
+          List.length_eq_zero_iff.mp h0
+        have hs2' : (((between (core L r) v (ytrans L N r x 0).1).map some).getD 0 none).isSome := by
+          have h' := hs2
+          rw [hj0] at h'
+          simpa [getDSnocSucc] using h'
+        rw [hnil] at hs2'
+        simp at hs2'
+      left
+      have e1 : (([some v] ++ (between (core L r) v (ytrans L N r x 0).1).map some).getD j none).getD 0 = v := by
+        rw [hj0, getDSnocZero]
+        rfl
+      have e2 : (([some v] ++ (between (core L r) v (ytrans L N r x 0).1).map some).getD (j + 1) none).getD 0
+          = (between (core L r) v (ytrans L N r x 0).1).getD 0 0 := by
+        rw [hj0, getDSnocSucc, uvnsGetDMapSome hpos]
+        rfl
+      rw [e1, e2]
+      rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt hpos 0,
+        Kepler.Text.TameSpine.betwnOrbit hne hrnd hvcore hy0 hpos]
+      simp
+    · have hj1 : 1 ≤ j := by omega
+      obtain ⟨k, rfl⟩ : ∃ k, j = k + 1 := ⟨j - 1, by omega⟩
+      have hs1' : (((between (core L r) v (ytrans L N r x 0).1).map some).getD k none).isSome := by
+        have h := hs1
+        rw [getDSnocSucc] at h
+        exact h
+      have hs2' : (((between (core L r) v (ytrans L N r x 0).1).map some).getD (k + 1) none).isSome := by
+        have h := hs2
+        rw [getDSnocSucc] at h
+        exact h
+      have hlt1 : k < (between (core L r) v (ytrans L N r x 0).1).length := by
+        by_contra h
+        rw [getDMapSomeNil (l := between (core L r) v (ytrans L N r x 0).1) (by omega)] at hs1'
+        simp at hs1'
+      have hlt2 : k + 1 < (between (core L r) v (ytrans L N r x 0).1).length := by
+        by_contra h
+        rw [getDMapSomeNil (l := between (core L r) v (ytrans L N r x 0).1) (by omega)] at hs2'
+        simp at hs2'
+      left
+      have e1 : (([some v] ++ (between (core L r) v (ytrans L N r x 0).1).map some).getD (k + 1) none).getD 0
+          = (between (core L r) v (ytrans L N r x 0).1).getD k 0 := by
+        rw [getDSnocSucc, uvnsGetDMapSome hlt1]
+        rfl
+      have e2 : (([some v] ++ (between (core L r) v (ytrans L N r x 0).1).map some).getD ((k + 1) + 1) none).getD 0
+          = (between (core L r) v (ytrans L N r x 0).1).getD (k + 1) 0 := by
+        rw [getDSnocSucc, uvnsGetDMapSome hlt2]
+        rfl
+      rw [e1, e2]
+      rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt hlt1 0,
+        Kepler.Text.TameLp.getD_eq_getElem_of_lt hlt2 0,
+        Kepler.Text.TameSpine.betwnOrbit hne hrnd hvcore hy0 hlt1,
+        Kepler.Text.TameSpine.betwnOrbit hne hrnd hvcore hy0 hlt2]
+      simp only [Function.iterate_succ_apply']
+
+/-- final 段 `Cl`：`arc(z_{k-1} ↝ prevEl v) ++ [some (prevEl v)]`（或空）。 -/
+theorem chainClFinal
+    (L : fgraph ℕ) (hL : GoodList L)
+    (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    (hres : (Kepler.Text.TameLp.hypermapOfList L hL).IsRestricted)
+    {N : List (List Dart)} {r : List Dart} {x : Dart} {k : ℕ}
+    (hm : Kepler.Text.ChainLists.markedList L hL N r x)
+    (hnf : ¬ finalList L r) (hk : transformCount L N r x = k)
+    {v : ℕ} (hv : (prevEl (core L r) v, v) = x) :
+    ChainCl (core L r) (UvnsD L N r x k)
+      (if (ztrans L N r x (k - 1)).1 = prevEl (core L r) v then []
+       else (between (core L r) (ztrans L N r x (k - 1)).1 (prevEl (core L r) v)).map some
+         ++ [some (prevEl (core L r) v)]) := by
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have hk0 : 0 < k := by
+    have h := Kepler.Text.Reduction5.transformCountNon0OfMarked L hL hgn haq hm hnf
+    rw [hk] at h
+    exact Nat.pos_of_ne_zero h
+  have hnfi : ∀ i, i < k → ¬ finalList L (rtrans L N r x i) := fun i hi =>
+    Kepler.Text.Reduction4.transformCount_not i (by rw [hk]; exact hi)
+  have hcoreof : ∀ u ∈ r, u.1 ∈ core L r :=
+    Kepler.Text.Reduction4Idx.finalAssumptionMemFstCore L hL hm
+  have hzm : ∀ i, i < k → (ztrans L N r x i).1 ∈ core L r := fun i hi =>
+    hcoreof _ (pnxvwfs2 L hL hgn haq i (hnfi i hi) hm)
+  have hrnd : (core L r).Nodup := Kepler.Text.Reduction4Idx.markedListUniqCore L hL hm
+  have hx1 : x.1 = prevEl (core L r) v := (congrArg Prod.fst hv).symm
+  have hprevcore : prevEl (core L r) v ∈ core L r := by
+    rw [← hx1]
+    exact hcoreof x hm.2.2.2.1
+  have hzcore : (ztrans L N r x (k - 1)).1 ∈ core L r := hzm (k - 1) (by omega)
+  by_cases hzf : (ztrans L N r x (k - 1)).1 = prevEl (core L r) v
+  · rw [if_pos hzf]
+    intro j hj
+    simp at hj
+  · rw [if_neg hzf]
+    intro j hj hs1 hs2
+    have hne : (ztrans L N r x (k - 1)).1 ≠ prevEl (core L r) v := hzf
+    have hlen' : ((between (core L r) (ztrans L N r x (k - 1)).1
+        (prevEl (core L r) v)).map some ++ [some (prevEl (core L r) v)]).length
+        = (between (core L r) (ztrans L N r x (k - 1)).1 (prevEl (core L r) v)).length + 1 := by
+      simp
+    by_cases hjlt : j < (between (core L r) (ztrans L N r x (k - 1)).1
+        (prevEl (core L r) v)).length
+    · have hs1' : (((between (core L r) (ztrans L N r x (k - 1)).1
+          (prevEl (core L r) v)).map some).getD j none).isSome := by
+        have h := hs1
+        rw [uvnsGetDAppend (l := (between (core L r) (ztrans L N r x (k - 1)).1
+            (prevEl (core L r) v)).map some) (m := [some (prevEl (core L r) v)]) (j := j),
+          dif_pos (by simpa using hjlt)] at h
+        exact h
+      by_cases hj2 : j + 1 < (between (core L r) (ztrans L N r x (k - 1)).1
+          (prevEl (core L r) v)).length
+      · -- 弧内相邻
+        have hs2' : (((between (core L r) (ztrans L N r x (k - 1)).1
+              (prevEl (core L r) v)).map some).getD (j + 1) none).isSome := by
+          have h := hs2
+          rw [uvnsGetDAppend (l := (between (core L r) (ztrans L N r x (k - 1)).1
+              (prevEl (core L r) v)).map some) (m := [some (prevEl (core L r) v)]) (j := j + 1),
+            dif_pos (by simpa using hj2)] at h
+          exact h
+        left
+        have e1 : (((between (core L r) (ztrans L N r x (k - 1)).1
+            (prevEl (core L r) v)).map some ++ [some (prevEl (core L r) v)]).getD j none).getD 0
+            = (between (core L r) (ztrans L N r x (k - 1)).1 (prevEl (core L r) v)).getD j 0 := by
+          rw [uvnsGetDAppend (l := (between (core L r) (ztrans L N r x (k - 1)).1
+              (prevEl (core L r) v)).map some) (m := [some (prevEl (core L r) v)]) (j := j),
+            dif_pos (by simpa using hjlt), uvnsGetDMapSome hjlt]
+          rfl
+        have e2 : (((between (core L r) (ztrans L N r x (k - 1)).1
+            (prevEl (core L r) v)).map some ++ [some (prevEl (core L r) v)]).getD (j + 1) none).getD 0
+            = (between (core L r) (ztrans L N r x (k - 1)).1 (prevEl (core L r) v)).getD (j + 1) 0 := by
+          rw [uvnsGetDAppend (l := (between (core L r) (ztrans L N r x (k - 1)).1
+              (prevEl (core L r) v)).map some) (m := [some (prevEl (core L r) v)]) (j := j + 1),
+            dif_pos (by simpa using hj2), uvnsGetDMapSome hj2]
+          rfl
+        rw [e1, e2]
+        rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt hjlt 0,
+          Kepler.Text.TameLp.getD_eq_getElem_of_lt hj2 0,
+          Kepler.Text.TameSpine.betwnOrbit hne hrnd hzcore hprevcore hjlt,
+          Kepler.Text.TameSpine.betwnOrbit hne hrnd hzcore hprevcore hj2]
+        simp only [Function.iterate_succ_apply']
+      · -- 弧末 → `prevEl v`
+        have hje : j + 1 = (between (core L r) (ztrans L N r x (k - 1)).1
+            (prevEl (core L r) v)).length := by
+          have := hj
+          rw [hlen'] at this
+          omega
+        left
+        have e1 : (((between (core L r) (ztrans L N r x (k - 1)).1
+            (prevEl (core L r) v)).map some ++ [some (prevEl (core L r) v)]).getD j none).getD 0
+            = (between (core L r) (ztrans L N r x (k - 1)).1 (prevEl (core L r) v)).getD j 0 := by
+          rw [uvnsGetDAppend (l := (between (core L r) (ztrans L N r x (k - 1)).1
+              (prevEl (core L r) v)).map some) (m := [some (prevEl (core L r) v)]) (j := j),
+            dif_pos (by simpa using hjlt), uvnsGetDMapSome hjlt]
+          rfl
+        have e2 : (((between (core L r) (ztrans L N r x (k - 1)).1
+            (prevEl (core L r) v)).map some ++ [some (prevEl (core L r) v)]).getD (j + 1) none).getD 0
+            = prevEl (core L r) v := by
+          rw [uvnsGetDAppend (l := (between (core L r) (ztrans L N r x (k - 1)).1
+              (prevEl (core L r) v)).map some) (m := [some (prevEl (core L r) v)]) (j := j + 1),
+            dif_neg (by simpa using hj2)]
+          rw [show j + 1 - ((between (core L r) (ztrans L N r x (k - 1)).1
+              (prevEl (core L r) v)).map some).length = 0 from by
+            simp; omega]
+          rfl
+        rw [e1, e2]
+        -- `arc[j]`（= arc 末元）→ prevEl v 由 nextLastBetwn
+        have hb : (between (core L r) (ztrans L N r x (k - 1)).1
+            (prevEl (core L r) v)) ≠ [] := by
+          intro h
+          rw [h] at hjlt
+          simp at hjlt
+        have hlastb := Kepler.Text.Reduction5.nextLastBetwn (r := core L r)
+          (y := (ztrans L N r x (k - 1)).1) (z := prevEl (core L r) v)
+          hzcore hprevcore hrnd hne hb
+        rw [show j = (between (core L r) (ztrans L N r x (k - 1)).1
+            (prevEl (core L r) v)).length - 1 from by omega]
+        rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt
+            (by omega : (between (core L r) (ztrans L N r x (k - 1)).1
+              (prevEl (core L r) v)).length - 1
+              < (between (core L r) (ztrans L N r x (k - 1)).1
+                (prevEl (core L r) v)).length) 0,
+          ← List.getLast_eq_getElem]
+        exact hlastb
+    · -- j ≥ |arc|：不可能（j + 1 < |arc| + 1 ⇒ j ≤ |arc| - 1 < |arc|）
+      exfalso
+      have := hj
+      rw [hlen'] at this
+      omega
+
 end Kepler.Text.Reduction5
 
 #print axioms Kepler.Text.Reduction5.ChainCl
@@ -1113,3 +1402,6 @@ end Kepler.Text.Reduction5
 #print axioms Kepler.Text.Reduction5.memMid
 #print axioms Kepler.Text.Reduction5.chainClAppend
 #print axioms Kepler.Text.Reduction5.getDZeroDestTriple0
+#print axioms Kepler.Text.Reduction5.getDMidZero
+#print axioms Kepler.Text.Reduction5.chainClInit
+#print axioms Kepler.Text.Reduction5.chainClFinal
