@@ -192,12 +192,17 @@ theorem reductionE
 /-- HOL `reduction_F`（reduction3.hl:5636-5653）。 -/
 theorem reductionF
     (hK10 : assumptionSetK10Full)
-    (hrreAll : ∀ (L : fgraph ℕ) (N' : List (List Dart)) (r' : List Dart) (y : Dart),
-      Kepler.Text.Reduction5.rRtransEq L N' r' y)
-    (hrreSAll : ∀ (L : fgraph ℕ) (N' : List (List Dart)) (r' : List Dart) (y : Dart),
-      Kepler.Text.TameSpine.rRtransEqSpine L N' r' y)
-    (hcsnl : ∀ (L : fgraph ℕ) (hL : GoodList L) (N' : List (List Dart))
-      (r' : List Dart) (y : Dart),
+    (hrreAll : ∀ (L : fgraph ℕ) (hL : GoodList L), GoodListNodesTl L hL →
+      ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+      markedList L hL N' r' y → ¬ finalList L r' →
+        Kepler.Text.Reduction5.rRtransEq L N' r' y)
+    (hrreSAll : ∀ (L : fgraph ℕ) (hL : GoodList L), GoodListNodesTl L hL →
+      ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+      markedList L hL N' r' y → ¬ finalList L r' →
+        Kepler.Text.TameSpine.rRtransEqSpine L N' r' y)
+    (hcsnl : ∀ (L : fgraph ℕ) (hL : GoodList L)
+      (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+      GoodListNodesTl L hL →
       markedList L hL N' r' y → ¬ finalList L r' →
         Kepler.Text.Reduction5.coreSplitNormalList L N' r' y) :
     Kepler.Text.TameSpine.restrictedHypermapsArePlaneGraphsV4 := by
@@ -205,7 +210,7 @@ theorem reductionF
   intro i L hL N g p fs f v r x fx uvns gi fi hgn hres hnvp hm hnf hmq hng hpg hgf hvs2 hp
     hfs hf hv hlc hfx huv hgi hfi hi
   exact mainInduction hK10 i L N g p fs f v r x fx uvns gi fi hL
-    (hrreAll L) (hrreSAll L) (hcsnl L hL) hgn hres hnvp hm hnf hmq hng hpg hgf hvs2 hp.symm
+    (hrreAll L hL hgn) (hrreSAll L hL hgn) (hcsnl L hL) hgn hres hnvp hm hnf hmq hng hpg hgf hvs2 hp.symm
     hfs hf.symm hv.symm hlc hfx.symm huv.symm hgi.symm hfi.symm hi
 
 end Kepler.Text.Reduction3

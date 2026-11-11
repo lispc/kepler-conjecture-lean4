@@ -106,8 +106,9 @@ theorem finalAssumptionNewvertexPreppedOfSlots (L : fgraph ℕ) (hL : GoodList L
     (h8b : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
       markedList L hL N' r' y → ¬ finalList L r' → coreSplitNormalList L N' r' y)
     (hrte : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
-      rRtransEq L N' r' y)
+      markedList L hL N' r' y → ¬ finalList L r' → rRtransEq L N' r' y)
     (hrteS : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+      markedList L hL N' r' y → ¬ finalList L r' →
       Kepler.Text.TameSpine.rRtransEqSpine L N' r' y)
     (hfdr : ∀ {N' : List (List Dart)} {r' : List Dart} {x' w : Dart} {fw : List Dart},
       rRtransEq L N' r' x' → markedList L hL N' r' x' →
@@ -168,7 +169,7 @@ theorem finalAssumptionNewvertexPreppedOfSlots (L : fgraph ℕ) (hL : GoodList L
         (Kepler.Text.Reduction3.rotateTo (findFaceDarts L x)
           (nextEl (findFaceDarts L x) x)).filter
           (fun d => d ∉ rtrans L N r x (1 + i)) := by
-    have h := hfdr (hrte (ntrans L N r x i) (rtrans L N r x i) x) hm_i rfl rfl hfi
+    have h := hfdr (hrte (ntrans L N r x i) (rtrans L N r x i) x hm_i hfi) hm_i rfl rfl hfi
     rw [← (Kepler.Text.Reduction3.transAdd L N r x i 1).2.1] at h
     exact h
   -- ── ⑤ newvertex_alt 于状态 i ──
@@ -218,8 +219,9 @@ theorem finalAssumptionNewvertexPrepped (L : fgraph ℕ) (hL : GoodList L)
     (h8b : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
       markedList L hL N' r' y → ¬ finalList L r' → coreSplitNormalList L N' r' y)
     (hrte : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
-      rRtransEq L N' r' y)
+      markedList L hL N' r' y → ¬ finalList L r' → rRtransEq L N' r' y)
     (hrteS : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+      markedList L hL N' r' y → ¬ finalList L r' →
       Kepler.Text.TameSpine.rRtransEqSpine L N' r' y) :
     ∀ i : ℕ, i < k →
       List.range' ((List.flatten (ntrans L N r x i)).map (fun d => d.1)).dedup.length

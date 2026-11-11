@@ -20,10 +20,12 @@
   │     末步折叠   ← §1 `transSuccSpine`（transform^(k+1) = transform^1 ∘ transform^k）
   └────────────────────────────────────────────────────────────────
 
-  ┌─ DIFFERS ─────────────────────────────────────────────────────
-  │ ① `r_trans_eq_assumption L` ↦ 两个**无条件 schema**（原文 assumption 位）：
-  │    `hrreAll`（链原形，Wave A/件1a 输入）与 `hrreSAll`（Wave C 输入）。
-  │    HOL 侧同为 reduction3 链全局假设，本形即逐状态实例化。
+  ┌─ ERRATA (SF-106) / DIFFERS ───────────────────────────────────
+  │ ① **ERRATA**：本文件曾把 `r_trans_eq_assumption L`（HOL reduction3.hl:64-70，
+  │    原文带 `good_list ∧ good_list_nodes ∧ marked_list ∧ ¬final_list` 四前提）
+  │    错移成两个**无条件 schema**。SF-106 已裁决为槽型误植：现 `hrreAll/hrreSAll`
+  │    改为前提承载形 `markedList L hL N' r' y → ¬ finalList L r' → …`（槽前提
+  │    变弱 ⇒ 定理变强；结论逐字不变）。
   │ ② `core_split_normal_list_assumption L` **不显式携入**：证体零消费
   │    （HOL 同；件1/件1a/2B1 同口径）。
   │ ③ HOL `transform_count L N r x`（链 def）↦ `transformCountSpine`
@@ -43,6 +45,8 @@ import Kepler.Text.TameSpine.Reduction3HbridgeElim
 import Kepler.Text.ChainSpineBridge
 import Kepler.Text.Reduction4
 import Kepler.Text.TameSpine.JcajyduTowerConsumers
+import Kepler.Text.TameSpine.ChainTav2Interface
+import Kepler.Text.ChainBridgeParts
 
 set_option autoImplicit false
 set_option maxHeartbeats 4000000
@@ -96,13 +100,61 @@ theorem transformCountSpineNot (L : fgraph ℕ) (N : List (List (ℕ × ℕ)))
 
 /-! ## §3 总装：lnrx_induction 的 spine 形 -/
 
+
+/-- `lm` 极小集非空（`Reduction5J5Tav2Bridge` 同证私件的 TameSpine 侧重落；
+SF-106 槽型重构所需：spine marked + ¬final ⇒ chain `lm` 集非空）。 -/
+private theorem lmSetNonemptyOfNotFinal (L : fgraph ℕ) {r : List (ℕ × ℕ)} {d : ℕ × ℕ}
+    (hd : d ∈ r) (hr1 : r.Nodup) (hnext : nextEl r d = fList L d)
+    (hf : ¬ Kepler.Text.Reduction5.finalList L r) :
+    ({m : ℕ | (nextEl r)^[m + 2] d ≠ fList L ((nextEl r)^[m + 1] d)}).Nonempty := by
+  by_contra hcon
+  have hall : ∀ m : ℕ, (nextEl r)^[m + 2] d = fList L ((nextEl r)^[m + 1] d) := by
+    intro m
+    by_contra hc
+    exact hcon ⟨m, hc⟩
+  simp only [Kepler.Text.Reduction5.finalList] at hf
+  push Not at hf
+  obtain ⟨z, hzr, hz⟩ := hf
+  have hz1 : (nextEl r)^[Kepler.Text.TameSpine.indexf d z r] d = z :=
+    Kepler.Text.TameSpine.indexfN hd hzr hr1
+  rcases Nat.eq_zero_or_pos (Kepler.Text.TameSpine.indexf d z r) with hk | hk
+  · rw [hk] at hz1
+    simp only [Function.iterate_zero_apply] at hz1
+    exact hz (by rw [← hz1, hnext])
+  · obtain ⟨j, hj⟩ := Nat.exists_eq_succ_of_ne_zero (ne_of_gt hk)
+    have e1 : z = (nextEl r)^[j + 1] d := by rw [← hz1, hj]
+    have h2 : (nextEl r)^[j + 2] d = nextEl r ((nextEl r)^[j + 1] d) :=
+      Function.iterate_succ_apply' (nextEl r) (j + 1) d
+    have hstep := hall j
+    rw [h2, ← e1] at hstep
+    exact hz hstep.symm
+
+/-- **spine marked（全量）⇒ chain `markedList`**（`Reduction5J5Tav2Bridge` 内联构造
+的公开重落；`lm` 非空桥 + `sListEqOfLm` + `markedList_iff_markedListSpineFull`）。
+SF-106 下 `lnrxInductionSpine` 的状态 k 用此把 spine marked 转成槽前提。 -/
+private theorem markedListOfSpineFull (L : fgraph ℕ) (hL : GoodList L)
+    {N : List (List (ℕ × ℕ))} {r : List (ℕ × ℕ)} {x : ℕ × ℕ}
+    (hmS : MarkedListSpineFull hL N r x) (hfin : ¬ finalListSpine L r) :
+    Kepler.Text.ChainLists.markedList L hL N r x := by
+  have hr1 : r.Nodup := (List.nodup_flatten.mp hmS.1.2.1.1).1 _ hmS.1.2.2.1
+  have hnext : nextEl r x = fList L x := hmS.1.2.2.2.2.2.1
+  have hfinC : ¬ Kepler.Text.Reduction5.finalList L r := hfin
+  have hlm := lmEqLMSpineOfNonempty L
+    (lmSetNonemptyOfNotFinal L hmS.1.2.2.2.1 hr1 hnext hfinC)
+  have hs0 : Kepler.Text.ChainLists.sList L r x = sListSpine L r x := sListEqOfLm L hlm
+  exact (Kepler.Text.ChainBridge.markedList_iff_markedListSpineFull L hL N r x hs0).mpr hmS
+
 /-- **HOL `lnrx_induction`**（reduction3.hl:2706-2757）spine 形：
 `j < transform_count` ⇒ 状态 j 同时保持 `newvertex_prepped` 与 `element_pre`。 -/
 theorem lnrxInductionSpine (L : fgraph ℕ) (hL : GoodList L)
     (hgn : GoodListNodesTl L hL)
     (hrreAll : ∀ (N' : List (List (ℕ × ℕ))) (r' : List (ℕ × ℕ)) (y : ℕ × ℕ),
+      Kepler.Text.ChainLists.markedList L hL N' r' y →
+      ¬ Kepler.Text.Reduction5.finalList L r' →
       Kepler.Text.Reduction5.rRtransEq L N' r' y)
     (hrreSAll : ∀ (N' : List (List (ℕ × ℕ))) (r' : List (ℕ × ℕ)) (y : ℕ × ℕ),
+      Kepler.Text.ChainLists.markedList L hL N' r' y →
+      ¬ Kepler.Text.Reduction5.finalList L r' →
       rRtransEqSpine L N' r' y)
     {N : List (List (ℕ × ℕ))} {r : List (ℕ × ℕ)} {x : ℕ × ℕ}
     (hm : MarkedListSpineFull hL N r x)
@@ -126,16 +178,19 @@ theorem lnrxInductionSpine (L : fgraph ℕ) (hL : GoodList L)
       aqiunpp3_top L hL k hgn hm
     have hnf : ¬ finalListSpine L (rtransSpine L N r x k) :=
       transformCountSpineNot L N r x hjk
+    have hmkC : Kepler.Text.ChainLists.markedList L hL
+        (ntransSpine L N r x k) (rtransSpine L N r x k) x :=
+      markedListOfSpineFull L hL hmk hnf
     have hnvp' : Kepler.Text.Reduction3.newvertexPrepped L
         (ntransSpine L (ntransSpine L N r x k) (rtransSpine L N r x k) x 1)
         (rtransSpine L (ntransSpine L N r x k) (rtransSpine L N r x k) x 1) x :=
       newvertexPreppedTransformSpine L hL hgn
-        (hrreAll (ntransSpine L N r x k) (rtransSpine L N r x k) x) hmk ihnvp hnf ihpre
-        (hrreSAll (ntransSpine L N r x k) (rtransSpine L N r x k) x)
+        (hrreAll (ntransSpine L N r x k) (rtransSpine L N r x k) x hmkC hnf) hmk ihnvp hnf ihpre
+        (hrreSAll (ntransSpine L N r x k) (rtransSpine L N r x k) x hmkC hnf)
     have hpre' : Kepler.Text.Reduction3.elementPre L
         (ntransSpine L (ntransSpine L N r x k) (rtransSpine L N r x k) x 1) :=
       elementsOfListNtransTop L hL hgn
-        (hrreAll (ntransSpine L N r x k) (rtransSpine L N r x k) x) hmk ihnvp ihpre
+        (hrreAll (ntransSpine L N r x k) (rtransSpine L N r x k) x hmkC hnf) hmk ihnvp ihpre
     rw [ntransSuccSpine L N r x k, rtransSuccSpine L N r x k]
     exact ⟨hnvp', hpre'⟩
 

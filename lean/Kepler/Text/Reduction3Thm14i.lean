@@ -28,9 +28,11 @@
     `assumptionSetK10` 在状态 0 与状态 i 各实例化一次。
 
   **DIFFERS**：
-  ① HOL `r_trans_eq_assumption L` ↦ 链形全称 `hrreAll` + spine 形 `hrreSAll`
-    （`lnrxInductionSpine` 仅 spine 形；同 `nfgtransFst` 口径）。
-  ② HOL `core_split_normal_list_assumption L` ↦ 逐状态 schema `hcsnl`。
+  ① HOL `r_trans_eq_assumption L` ↦ 前提承载 `hrreAll` + `hrreSAll`
+    （SF-106 ERRATA：`markedList L hL N' r' y → ¬finalList L r' →`；
+    `lnrxInductionSpine` 仅 spine 形；同 `nfgtransFst` 口径）。
+  ② HOL `core_split_normal_list_assumption L` ↦ 逐状态 schema `hcsnl`
+    （SF-106：加 `GoodListNodesTl L hL` 前提）。
   ③ `good_faces_v3` ↦ `TameCorrList.GoodFacesV3`；`vertices_set2 g = elements_of_list (fgraph g)`
     ↦ `VerticesSet2Eq g`；`planegraphP p g` ↦ `PlaneGraphPSpine p g`；
     `~finalGraph g` ↦ `g.final = false`。
@@ -86,12 +88,14 @@ theorem mainInduction
       (fx : List Dart) (uvns : List (ℕ × ℕ × ℕ)) (gi : Graph) (fi : Face),
       (hL : GoodList L) →
       (hrreAll : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+        Kepler.Text.ChainLists.markedList L hL N' r' y → ¬ finalList L r' →
         rRtransEq L N' r' y) →
       (hrreSAll : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+        Kepler.Text.ChainLists.markedList L hL N' r' y → ¬ finalList L r' →
         Kepler.Text.TameSpine.rRtransEqSpine L N' r' y) →
       (hcsnl : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
-        Kepler.Text.ChainLists.markedList L hL N' r' y → ¬ finalList L r' →
-        coreSplitNormalList L N' r' y) →
+        GoodListNodesTl L hL → Kepler.Text.ChainLists.markedList L hL N' r' y →
+        ¬ finalList L r' → coreSplitNormalList L N' r' y) →
       GoodListNodesTl L hL →
       (hypermapOfList L hL).IsRestricted →
       newvertexPrepped L N r x →
@@ -291,7 +295,7 @@ theorem mainInduction
       rw [hpair]
     -- hcs（状态 i） / hnewVs' / hr1 / hr2 / hrne
     have hcs_i : coreSplitNormalList L (ntrans L N r x i) (rtrans L N r x i) x :=
-      hcsnl (ntrans L N r x i) (rtrans L N r x i) x hm_i hfi_i
+      hcsnl (ntrans L N r x i) (rtrans L N r x i) x hgn hm_i hfi_i
     have hconv_i := Kepler.Text.Reduction3.elementsOfListVerticesSet2Converse
       L hL hm_i gi' hIH1 hIH4
     have hnewVs' : List.range' gi'.countVertices
@@ -343,7 +347,7 @@ theorem mainInduction
       splitFaceGoodVerticesSet2 L (ntrans L N r x i) (rtrans L N r x i) x
         (ntrans L N r x (i + 1)) gi gi' (ytrans L N r x i).1 (ztrans L N r x i).1
         fi' newVs hL hgn haq hm_i hfi_i hir
-        (hrreAll (ntrans L N r x i) (rtrans L N r x i) x) hnvp_i hIH1 hnt_succ.symm
+        (hrreAll (ntrans L N r x i) (rtrans L N r x i) x hm_i hfi_i) hnvp_i hIH1 hnt_succ.symm
         hstep hpart1 hws hIH4
     -- 第 2 条：good_faces_v3（14j 前提包 + C4）
     have hsplit_eq : splitFace gi' (ytrans L N r x i).1 (ztrans L N r x i).1 fi' newVs

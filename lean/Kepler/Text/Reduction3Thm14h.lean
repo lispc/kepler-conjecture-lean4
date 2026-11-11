@@ -22,7 +22,8 @@
 
   **DIFFERS**：
   ① HOL 的 `r_trans_eq_assumption L` 在本仓直接实例化为
-    `hrreAll : ∀ N' r' y, rRtransEq L N' r' y`（与 T14 装配层既有口径一致）；
+    `hrreAll : ∀ N' r' y, markedList L hL N' r' y → ¬finalList L r' → rRtransEq L N' r' y`
+    （SF-106 ERRATA：前提承载形，对齐 HOL `r_trans_eq_assumption`），
     额外携带 `hrreSAll : ∀ N' r' y, rRtransEqSpine L N' r' y`，因为树内
     `lnrx_induction` 仅 spine 形可用，且无 `rRtransEq → rRtransEqSpine`
     无条件桥（同 `finalAssumptionNewvertexPrepped` 槽②' 口径）。
@@ -71,8 +72,10 @@ theorem nfgtransFst (i : ℕ) (f : Face) (g : Graph) (n : ℕ) (L : fgraph ℕ)
     (hnvp : newvertexPrepped L N r x)
     (hpre : elementPre L N)
     (hrreAll : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+      Kepler.Text.ChainLists.markedList L hL N' r' y → ¬ finalList L r' →
       rRtransEq L N' r' y)
     (hrreSAll : ∀ (N' : List (List Dart)) (r' : List Dart) (y : Dart),
+      Kepler.Text.ChainLists.markedList L hL N' r' y → ¬ finalList L r' →
       Kepler.Text.TameSpine.rRtransEqSpine L N' r' y)
     (hn : (N.flatten.map (fun d => d.1)).dedup.length = n)
     (hi : i ≤ transformCount L N r x) :
@@ -126,7 +129,7 @@ theorem nfgtransFst (i : ℕ) (f : Face) (g : Graph) (n : ℕ) (L : fgraph ℕ)
     -- 状态 i 的新顶点长度账
     have hB1 := newvertexPreppedTransformLemma L (ntrans L N r x i)
       (rtrans L N r x i) x hL hgn haq hm_i hfi hir
-      (hrreAll (ntrans L N r x i) (rtrans L N r x i) x)
+      (hrreAll (ntrans L N r x i) (rtrans L N r x i) x hm_i hfi)
       hnvp_i' hpre_i'
     have hrd := rtransDiffR L hL hgn hm_i hfi
     -- 将 ntrans (i+1) 折叠为状态 i 上的一步
