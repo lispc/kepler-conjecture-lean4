@@ -356,6 +356,11 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（18:16，续972）**：**J4 旧会话停滞判死并重发新会话（用户指令「不行就重发新的」）**。
+① **停滞证据（机器）**：J4 会话 `agent_222d1288` 的 output 最后写入 **16:13**（即 K3-B3 交付），此后 B3' 派单（16:20）与 17:58 状态 ping 均无产物；`~/c17_backup/lane_snapshots/j4-scout/` 无 16:13 后新文件、`/tmp/j4*` 无 17:00 后新文件、无 `lake env lean` 进程。结论：B3' 从未开工（旧会话卡死/静默）。
+② **处置**：`TaskStop` 已发（返回状态异常 `not running (status: running)`，按冻结处理）；**重发新会话**（agent_64f13636），带完整自包含工单：B3' = 私有 `indexfFaceOfLe`（more_lemma2.hl:2121–2170）+ `indexf8FinalLemmas`（:2172 起，逐字陈述，无 `0<k` 前提）+ 探针补到 3 条；基线 `75ef1f6a`；产物 `patch_k3b3p.diff` + `DELIVERY_K3B3P.md`；估 180–260。
+③ **影响**：K3 簇仍只差 f8；D1 的两个上游（f8 + U 段）不变。J4 车道 16:20–18:16 计 **≈2 小时空转**（如实记账）。
+
 - **2026-11-11（18:12，续971）**：**一笔落库：tame-corr nb56 `ac6bf050`（`Reduction5J5UvnsGetD` 新文件 +75，5 件全绿）——U1a getD 层 5/5 绿，U 段恢复绿色增量**。
 ① **`ac6bf050`（tame-corr nb56）**：`uvnsGetDAppend`（getD 沿 append 拆分）+ `uvnsGetDRepZV`（`replicate n none ++ [some zv]` 逐位取值；**关键修法：先 `simp only [List.length_replicate]` 归一 length 项**，否则 omega/simp 视其为不透明——nb55 卡点 2 的根治）+ `uvnsGetDHeadRepCons`（`[some y] ++ nseq ++ [some z]` 首位/中段两行式）+ `uvnsGetDMapSome`（`(l.map some).getD j` 界内）+ `uvnsGetDTakeOne`（`take 1` 单元形；`List.take_eq_extract` 确不存在，`cases`+`rfl` 定义级收口）。
 ② **验收**：5/5 探针 ⊆ 标准三（`uvnsGetDAppend`/`uvnsGetDMapSome`/`uvnsGetDTakeOne` 仅 `[propext]`，其余标准三）、零 sorryAx；岛编 RC=0/0err/0warn；实测 75 vs 估 60–90。
