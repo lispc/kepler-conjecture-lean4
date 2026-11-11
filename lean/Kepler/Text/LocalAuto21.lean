@@ -3427,11 +3427,34 @@ theorem MMs_minimize_tau_fun_p21 (s : ScsV39) (k : ℕ) (v w : ℕ → V3)
         (fun i => rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1)))) ≤
       setSum {i | i < k}
         (fun i => rhoFun ‖w i‖ * azim 0 (w i) (w (i + 1)) (w (i + (k - 1)))) := by
-  -- DISCHARGES: HOL Appendix.taustar_v39 / BBprime_v39 unfoldings,
-  -- Terminal.tau_fun_azim, Appendix.dsv_J_empty, Appendix.scs_basic and
-  -- Ayqjtmd.unadorned_MMs; the taustar registry lane is not on this side.
-  -- NEEDS: merge with the taustar/BBprime lane.
-  sorry
+  -- PROVED 2026-11-12: HOL CUXVZOZ.hl:3549. `BBprime_v39` supplies the
+  -- minimality `taustar_v39 s v ≤ taustar_v39 s w`; `3 < k` puts both sides in
+  -- the `tau_fun` branch, `tau_fun_azim` (LA38:2422) rewrites it to the
+  -- `rho_fun * azim` sum minus `(pi + sol0) * (k - 2)`, and `scs_basic_v39`'s
+  -- `J = fun _ _ => False` makes `dsv_v39` the constant `s.d` (`dsv_J_empty`).
+  have hv' : BBsV39 s v ∧
+      (∀ ww, BBsV39 s ww → taustarV39 s v ≤ taustarV39 s ww) ∧
+      taustarV39 s v < 0 := hv
+  obtain ⟨hBBv, hminv, -⟩ := hv'
+  obtain ⟨-, hJ⟩ := hbasic
+  have hJf : s.J = fun _ _ => False := funext fun i => funext fun j => hJ i j
+  have hkgt : ¬ s.k ≤ 3 := by rw [hk]; exact not_le.mpr hk3
+  have hle : taustarV39 s v ≤ taustarV39 s w := hminv w hw
+  have hper : ∀ u : ℕ → V3, BBsV39 s u → Periodic u k := by
+    intro u hu i
+    have h := hu.2.1 i
+    rwa [hk] at h
+  have hinj : ∀ u : ℕ → V3, BBsV39 s u →
+      ∀ i j : ℕ, i < k ∧ j < k ∧ u i = u j → i = j := by
+    intro u hu i j h
+    exact BBs_inj_p21 s u k hs hk hu i j h.1 h.2.1 h.2.2
+  have htv := tau_fun_azim v k (hper v hBBv) (le_of_lt hk3) (hinj v hBBv)
+  have htw := tau_fun_azim w k (hper w hw) (le_of_lt hk3) (hinj w hw)
+  have hdsv : dsvV39 s v = dsvV39 s w := by
+    rw [dsv_J_empty s v hJf, dsv_J_empty s w hJf]
+  simp only [taustarV39, if_neg hkgt] at hle
+  rw [htv, htw, hdsv] at hle
+  linarith
 
 /-- HOL `tau3_taum_nonplanar` (CUXVZOZ.hl:3608): off the coplanar locus
 `tau3` is the truncated tau `taum` on the edge lengths. -/

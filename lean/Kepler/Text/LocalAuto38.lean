@@ -1584,8 +1584,13 @@ theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h
       d ≤ taum y1 y2 y3 y4 y5 y6)
     (vv : ℕ → V3) (hbb : BBsV39 (mkUnadornedV39 3 d a b) vv) :
     0 ≤ taustarV39 (mkUnadornedV39 3 d a b) vv := by
-  sorry -- DISCHARGES: tau3_taum (box-to-vector transfer)
-  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
+  -- PROVED 2026-11-12: HOL terminal.hl:618 = `taustar3` (LA38:566) applied to
+  -- the box-to-vector transfer `tau3_taum_d` (LA38:1492); the old
+  -- "BLOCKED: DIHV_EQ_DIH_Y + taum_dih_y" note was stale (both upstream
+  -- pieces are already true here).
+  exact taustar3 d a b
+    (tau3_taum_d d (a 0 1) (a 1 2) (a 0 2) (b 0 1) (b 1 2) (b 0 2)
+      h1 h2 h3 h4 h5 h6 h) vv hbb
 
 /-- Helper (2026-09-28): `setSum` over the `{i | i < 3 ∧ f i (i+1)}` index
 set evaluates to the three-way `if`. -/
@@ -1625,8 +1630,20 @@ theorem taustar_taum_dfun (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ
       (fun _ => False) (fun _ => False)) vv) :
     0 ≤ taustarV39 (ScsV39.mk 3 d a a b b f (fun _ => False) (fun _ => False)
       (fun _ => False)) vv := by
-  sorry -- DISCHARGES: tau3_taum (box-to-vector transfer)
-  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
+  -- PROVED 2026-11-12: HOL terminal.hl:642 = `taustar3_fun` (LA38:591) fed by
+  -- `tau3_taum_dfun` (LA38:1536); `f (dist v1 v2) (dist v0 v2) (dist v0 v1)`
+  -- lands in the hypothesis's `(y4, y5, y6)` slots, and the only shape
+  -- mismatch — `dist v2 v0` vs `dist v0 v2` — is HOL's `DIST_SYM`.
+  refine taustar3_fun d a b f ?_ vv hbb
+  intro v0 v1 v2 n0 n0u n1 n1u n2 n2u e01l e01u e12l e12u e02l e02u
+  rw [dist_comm v2 v0]
+  exact tau3_taum_dfun d (a 0 1) (a 1 2) (a 0 2) (b 0 1) (b 1 2) (b 0 2)
+    (fun y4 y5 y6 => 0.1 * (if isEarV39 (ScsV39.mk 3 d a a b b f (fun _ => False)
+      (fun _ => False) (fun _ => False)) then 1 else -1) *
+      ((if f 0 1 then cstab - y6 else 0) + (if f 1 2 then cstab - y4 else 0) +
+       (if f 2 3 then cstab - y5 else 0) + 0))
+    h1 h2 h3 h4 h5 h6 h v0 v1 v2 n0 n0u n1 n1u n2 n2u e01l e01u e12l e12u
+    e02l e02u
 
 /-! ## Section D: taum symmetry and the funlist/periodicity kit
 (terminal.hl:684-1211) -/
