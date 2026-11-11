@@ -32,16 +32,19 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   still contains a bare `sorry` -- so that the `sorryAx` axiom flows along the
   proof term and the main theorem's reachable debt graph really expands.
   Wires are marked WIRE, non-bridgeable shapes stay as explicit `sorry`
-  holds marked HOLD (with the precise reason).  Anchor: twins that consume the
-  opaque terminal-bank Prop `main_nonlinear_terminal_v11` are wired through the
-  injected skeleton anchor `mnt11_anchor` below -- that injection is the
-  corpus's own interface convention, not a shape bridge.
+  holds marked HOLD (with the precise reason).  Twins that consume the opaque
+  terminal-bank Prop `main_nonlinear_terminal_v11` take it as an explicit
+  hypothesis; the consumption layers (`localconcl_wire_capstone_w1`/`w2`,
+  `JEJTVGB_p16_discharged`) already hold it and pass it down -- no anchor.
+  (ERRATA 2026-11-12: the former `mnt11_anchor` skeleton sorry is deleted and
+  the nine terminal-bank wires take `(hmn : main_nonlinear_terminal_v11)`.
+  Cone sorry −1.)
   (ERRATA 2026-11-06: the p21 twins used to need a second anchor
   `p21_anchor : mainNonlinearTerminalV11_p21`; after the `p21-anchor` DEF-FIX
   charter that Prop is *defined* as `main_nonlinear_terminal_v11`, so the wires
   pass their own `_hmn` and the anchor was deleted.  Cone sorry −1.)
 
-    WIRE (real proof term, debt = twin's axioms + injected anchors): 69
+    WIRE (real proof term, debt = twin's axioms; bank hypothesis passed in): 69
       (body census = the 16 classic discharges + 53 assembly wires)
     HOLD (explicit `sorry`, reason recorded): 21 (body census)
       = (a) 5 no-twin + (b) 11 circular re-export + (c) 5 non-bridgeable
@@ -154,7 +157,7 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   one layer up).
   Zero new debt: the two new theorems add no proof debt of their own; the
   reachable-debt rows move from LocalAuto1 to the twins' owners
-  (LA18/24/29/32/33/17 + `mnt11_anchor`), net +6 rows at the next
+  (LA18/24/29/32/33/17 + the terminal-bank hypothesis), net +6 rows at the next
   e2e rescan (static subcone accounting 151 -> 157, blueprint §3.2).
   Acyclicity of the new edge `Kepler.Assembly -> Kepler.Text.LocalConcl`:
   zero importers of this file tree-wide + module-closure computation
@@ -1986,12 +1989,13 @@ private theorem continuousAt_sqrt_upsX_mid {x1 x3 x5 : ℝ} :
   exact Real.continuous_sqrt.continuousAt.comp
     (hup.continuousAt.mul continuousAt_const)
 
-/-- Skeleton anchor for the terminal-bank consumers: `main_nonlinear_terminal_v11`
-is an opaque registry Prop (its *body* is `sorry`, LocalAuto1:815) carried by
-the nonlinear terminal lane.  The twins whose interface consumes it are wired
-through this injected anchor -- one visible debt component covering the whole
-pending bank, per the corpus's `DISCHARGES` convention. -/
-private theorem mnt11_anchor : main_nonlinear_terminal_v11 := sorry
+/- 2026-11-12: the former `mnt11_anchor : main_nonlinear_terminal_v11 := sorry`
+   is gone.  The nine terminal-bank wires (`RRCWNSJ`, `JCYFMRP`, `TFITSKC`,
+   `HIJQAHA`, `ARDBZYE`, `FYSSVEV`, `NWDGKXH`, `YOBIMPP`, `MIQMCSN`) now take
+   `(hmn : main_nonlinear_terminal_v11)` as an explicit hypothesis; their
+   consumers (`localconcl_wire_capstone_w1`/`w2`, `JEJTVGB_p16_discharged`)
+   already have that hypothesis in scope and pass it down.  Cone sorry −1,
+   zero new proof debt. -/
 
 /- 2026-11-06: the former `p21_anchor : mainNonlinearTerminalV11_p21 := sorry`
    is gone.  After the `p21-anchor` DEF-FIX charter, `LocalAuto21` defines
@@ -2176,9 +2180,11 @@ theorem PQCSXWG2_discharged : ∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ),
 
 Each entry applies its upstream twin directly; a twin that is still sorried
 passes its `sorryAx` along the proof term (the debt graph), which is the
-point of the assembly mode.  The anchor `mnt11_anchor` is injected where the
-twin's interface consumes a terminal bank.  (2026-11-06: `p21_anchor` is gone --
-see the §anchor ERRATA at the top of this file.) -/
+point of the assembly mode.  A twin whose interface consumes the terminal bank
+takes it as an explicit `hmn` hypothesis supplied by the consumer.
+(2026-11-06: `p21_anchor` is gone -- see the §anchor ERRATA at the top of this
+file.  2026-11-12: `mnt11_anchor` is gone too -- the nine terminal-bank wires
+take `(hmn : main_nonlinear_terminal_v11)`.) -/
 
 /-- WIRE `LocalAuto1.XWITCCN_concl` <- LA36 master `XWITCCN` (verbatim twin;
 still sorried — debt flows). -/
@@ -3846,23 +3852,21 @@ theorem AXJRPNC_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i j : ℕ), isSc
   fun s v i j hs hbasic hv hb hlunar =>
     AXJRPNC_p26 s v i j hs hbasic hb hv hlunar
 
-/-- WIRE `LocalAuto1.RRCWNSJ_concl` <- `RRCWNSJ_p26` (shims: injected
-`mnt11_anchor` — the twin's interface consumes the terminal bank; hypothesis
+/-- WIRE `LocalAuto1.RRCWNSJ_concl` <- `RRCWNSJ_p26` (shims: passed terminal-bank hypothesis `hmn`; hypothesis
 reorder `hs hb hk3 hv` -> `hs hb hv hk3`).  Twin still sorried — debt
 flows. -/
-theorem RRCWNSJ_discharged : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
+theorem RRCWNSJ_discharged (hmn : main_nonlinear_terminal_v11) : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
     scsBasicV39 s → 3 < s.k → v ∈ MMsV39 s →
     (∀ i j, scsDiag s.k i j → 4 * h0 < s.b i j) →
     (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
     (∀ i, s.b i (i + 1) ≤ cstab) → scsGeneric v :=
   fun s v hs hb hk3 hv hd4 hab hb1 =>
-    RRCWNSJ_p26 mnt11_anchor s v hs hb hv hk3 hd4 hab hb1
+    RRCWNSJ_p26 hmn s v hs hb hv hk3 hd4 hab hb1
 
-/-- WIRE `LocalAuto1.JCYFMRP_concl` <- `JCYFMRP_p27` (shims: injected
-`mnt11_anchor`; reorder moving `3 < s.k` forward).  Twin still sorried —
+/-- WIRE `LocalAuto1.JCYFMRP_concl` <- `JCYFMRP_p27` (shims: passed terminal-bank hypothesis `hmn`; reorder moving `3 < s.k` forward).  Twin still sorried —
 debt flows.  (The LA29 `_V2/_V3` siblings are variant forms with a
 conjunction conclusion and an extra `a < b` row hypothesis — not needed.) -/
-theorem JCYFMRP_discharged : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
+theorem JCYFMRP_discharged (hmn : main_nonlinear_terminal_v11) : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
     v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
     (∀ i j, scsDiag s.k i j → 4 * h0 < s.b i j) → (scsM s).ncard ≤ 1 →
     3 < s.k →
@@ -3870,13 +3874,12 @@ theorem JCYFMRP_discharged : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
     (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
     ∃ i, dist (v i) (v (i + 1)) = 2 :=
   fun s v hs hv hgen hbasic hb4 hm1 hk3 hA hdiag =>
-    JCYFMRP_p27 mnt11_anchor s v hk3 hs hv hgen hbasic hb4 hm1 hA hdiag
+    JCYFMRP_p27 hmn s v hk3 hs hv hgen hbasic hb4 hm1 hA hdiag
 
-/-- WIRE `LocalAuto1.TFITSKC_concl` <- `TFITSKC_p27` (shims: injected
-`mnt11_anchor`; hypothesis reorder; `le_of_eq` turns the registry's
+/-- WIRE `LocalAuto1.TFITSKC_concl` <- `TFITSKC_p27` (shims: passed terminal-bank hypothesis `hmn`; hypothesis reorder; `le_of_eq` turns the registry's
 `b (i+1) (i+2) = 2*h0` into the twin's `≤ 2*h0`).  Twin still sorried —
 debt flows. -/
-theorem TFITSKC_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
+theorem TFITSKC_discharged (hmn : main_nonlinear_terminal_v11) : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
     3 < s.k → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
     s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) = 2 * h0 →
     dist (v i) (v (i + 1)) = 2 →
@@ -3885,7 +3888,7 @@ theorem TFITSKC_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV
     2 < s.b i (i + 1) → s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) →
     dist (v (i + 1)) (v (i + 2)) = 2 :=
   fun s v i hs hk3 hv hgen hbasic hA hB hd hdiag h2 hlt =>
-    TFITSKC_p27 mnt11_anchor s v i hlt hk3 hs hv hgen hbasic hA (le_of_eq hB)
+    TFITSKC_p27 hmn s v i hlt hk3 hs hv hgen hbasic hA (le_of_eq hB)
       hd h2 (fun j j' hdiag' =>
         ⟨(hdiag j j' hdiag').1.1, (hdiag j j' hdiag').1.2, (hdiag j j' hdiag').2⟩)
 
@@ -4682,46 +4685,44 @@ theorem AQICLXA_discharged :
     scsArrowV39 {scsStabDiagV39 scs6I1 0 2} {scs5M1, scs3M1} :=
   arrowSetRight l20es_AQICLXA (by ext t; simp; tauto)
 
-/-- WIRE `LocalAuto1.HIJQAHA_concl` <- `HIJQAHA_p29` (shims: injected
-`mnt11_anchor`; target-set permutation — same ten systems, re-ordered).
+/-- WIRE `LocalAuto1.HIJQAHA_concl` <- `HIJQAHA_p29` (shims: passed terminal-bank hypothesis `hmn`; target-set permutation — same ten systems, re-ordered).
 Twin still sorried — debt flows. -/
-theorem HIJQAHA_discharged :
+theorem HIJQAHA_discharged (hmn : main_nonlinear_terminal_v11) :
     scsArrowV39 {scs5M2} {scs3T1, scs3T4, scs4M6', scs4M7, scs4M8, scs5T1,
       scsStabDiagV39 scs5I2 0 2, scsStabDiagV39 scs5M1 0 2,
       scsStabDiagV39 scs5M1 0 3, scsStabDiagV39 scs5M1 2 4} :=
-  arrowSetRight (HIJQAHA_p29 mnt11_anchor) (by ext t; simp; tauto)
+  arrowSetRight (HIJQAHA_p29 hmn) (by ext t; simp; tauto)
 
 /-- WIRE `LocalAuto1.ARDBZYE_concl` <- PROVED `ARDBZYE_p33` through the
-injected `mnt11_anchor` (verbatim modulo the anchor). -/
-theorem ARDBZYE_discharged : scsArrowV39 {scs4I2} {scs4T1, scs4T2} :=
-  ARDBZYE_p33 mnt11_anchor
+passed terminal-bank hypothesis `hmn` (verbatim modulo the hypothesis). -/
+theorem ARDBZYE_discharged (hmn : main_nonlinear_terminal_v11) : scsArrowV39 {scs4I2} {scs4T1, scs4T2} :=
+  ARDBZYE_p33 hmn
 
 /-- WIRE `LocalAuto1.FYSSVEV_concl` <- PROVED `FYSSVEV_p33` through the
-injected `mnt11_anchor` (verbatim modulo the anchor). -/
-theorem FYSSVEV_discharged :
+passed terminal-bank hypothesis `hmn` (verbatim modulo the hypothesis). -/
+theorem FYSSVEV_discharged (hmn : main_nonlinear_terminal_v11) :
     scsArrowV39 {scs4I1} {scs4I2, scsStabDiagV39 scs4I1 0 2} :=
-  FYSSVEV_p33 mnt11_anchor
+  FYSSVEV_p33 hmn
 
-/-- WIRE `LocalAuto1.NWDGKXH_concl` <- `NWDGKXH_p32` through the injected
-`mnt11_anchor` (verbatim modulo the anchor).  Twin still sorried — debt
+/-- WIRE `LocalAuto1.NWDGKXH_concl` <- `NWDGKXH_p32` through the passed terminal-bank hypothesis `hmn` (verbatim modulo the
+hypothesis).  Twin still sorried — debt
 flows. -/
-theorem NWDGKXH_discharged : scsArrowV39 {scs4M6'} {scs4T3, scs4T5} :=
-  NWDGKXH_p32 mnt11_anchor
+theorem NWDGKXH_discharged (hmn : main_nonlinear_terminal_v11) : scsArrowV39 {scs4M6'} {scs4T3, scs4T5} :=
+  NWDGKXH_p32 hmn
 
-/-- WIRE `LocalAuto1.YOBIMPP_concl` <- `YOBIMPP_p32` (shims: injected
-`mnt11_anchor`; target-set permutation
+/-- WIRE `LocalAuto1.YOBIMPP_concl` <- `YOBIMPP_p32` (shims: passed terminal-bank hypothesis `hmn`; target-set permutation
 `{scs4M6', scs3T3, scs3M1, scs3T4} = {scs3M1, scs3T3, scs3T4, scs4M6'}`).
 Twin still sorried — debt flows. -/
-theorem YOBIMPP_discharged :
+theorem YOBIMPP_discharged (hmn : main_nonlinear_terminal_v11) :
     scsArrowV39 {scs4M7} {scs3M1, scs3T3, scs3T4, scs4M6'} :=
-  arrowSetRight (YOBIMPP_p32 mnt11_anchor) (by ext t; simp; tauto)
+  arrowSetRight (YOBIMPP_p32 hmn) (by ext t; simp; tauto)
 
-/-- WIRE `LocalAuto1.MIQMCSN_concl` <- `MIQMCSN_p32` through the injected
-`mnt11_anchor` (verbatim modulo the anchor).  Twin still sorried — debt
+/-- WIRE `LocalAuto1.MIQMCSN_concl` <- `MIQMCSN_p32` through the passed terminal-bank hypothesis `hmn` (verbatim modulo the
+hypothesis).  Twin still sorried — debt
 flows. -/
-theorem MIQMCSN_discharged :
+theorem MIQMCSN_discharged (hmn : main_nonlinear_terminal_v11) :
     scsArrowV39 {scs4M8} {scs4M6', scs3T7, scs3T4} :=
-  MIQMCSN_p32 mnt11_anchor
+  MIQMCSN_p32 hmn
 
 /-- WIRE `LocalAuto1.CUXVZOZ_concl` <- PROVED `CUXVZOZ_p21` (hypotheses
 verbatim).  The twin's hypothesis `mainNonlinearTerminalV11_p21` **is**
@@ -5395,7 +5396,7 @@ theorem JEJTVGB_p16_discharged (h : main_nonlinear_terminal_v11) :
     JEJTVGB_assume_v39 := by
   exact JEJTVGB_case_breakdown_p16 h (OEHDBEN h) OTMTOTJ1_discharged
     OTMTOTJ2_discharged OTMTOTJ3_discharged OTMTOTJ4_discharged
-    (p16h_arrow_congr HIJQAHA_discharged rfl
+    (p16h_arrow_congr (HIJQAHA_discharged h) rfl
       (by ext s; simp [Set.mem_insert_iff]; tauto))
     (p16h_arrow_congr CNICGSF1_discharged rfl
       (by ext s; simp [Set.mem_insert_iff]; tauto))
@@ -5406,7 +5407,7 @@ theorem JEJTVGB_p16_discharged (h : main_nonlinear_terminal_v11) :
     CNICGSF4_discharged
     (p16h_arrow_congr CNICGSF5_discharged rfl
       (by ext s; simp [Set.mem_insert_iff]; tauto))
-    FYSSVEV_discharged ARDBZYE_discharged AUEAHEH_discharged
+    (FYSSVEV_discharged h) (ARDBZYE_discharged h) AUEAHEH_discharged
     (p16h_arrow_congr VQFYMZY_discharged rfl
       (by ext s; simp [Set.mem_insert_iff]; tauto))
     (p16h_arrow_congr BNAWVNH_discharged rfl
@@ -5417,10 +5418,10 @@ theorem JEJTVGB_p16_discharged (h : main_nonlinear_terminal_v11) :
       (by ext s; simp [Set.mem_insert_iff]; tauto))
     (p16h_arrow_congr RYPDIXT_discharged rfl
       (by ext s; simp [Set.mem_insert_iff]; tauto))
-    NWDGKXH_discharged
-    (p16h_arrow_congr YOBIMPP_discharged rfl
+    (NWDGKXH_discharged h)
+    (p16h_arrow_congr (YOBIMPP_discharged h) rfl
       (by ext s; simp [Set.mem_insert_iff]; tauto))
-    MIQMCSN_discharged BKOSSGE_p16
+    (MIQMCSN_discharged h) BKOSSGE_p16
 /-- Assembly-side switch wrapper, mirrors `LocalAuto16.
 nonlinear_imp_lp_main_estimate_p16`; `Kepler.Assembly`'s two consumption
 sites (`linearProgrammingResults`, `textCapstone`) re-point to this name. -/
@@ -5453,7 +5454,7 @@ recorded; wiring them would only visualize the registry sorry itself.
 /-- S1 aggregate wiring capstone (47 exits + the p16 switch as conjunct 1).
 Conjunct order: orphan-scout WIRE increments, descending.  See the section
 comment above for the wiring discipline and the per-exit anchors. -/
-theorem localconcl_wire_capstone_w1 :
+theorem localconcl_wire_capstone_w1 (hmn : main_nonlinear_terminal_v11) :
     (main_nonlinear_terminal_v11 → lp_main_estimate) ∧
     (∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s → s.k = 4 → v ∈ MMsV39 s →
       scsGeneric v) ∧
@@ -5729,8 +5730,8 @@ theorem localconcl_wire_capstone_w1 :
       JKQEWGV1_discharged, VPWSHTO_discharged, EYYPQDW3_discharged, PQCSXWG2_discharged,
       EYYPQDW2_discharged, YXIONXL1_discharged, CJBDXXN_discharged, CUXVZOZ_discharged,
       PQCSXWG1_discharged, TBRMXRZ1_discharged, UAGHHBM_discharged, AURSIPD_discharged,
-      DRNDRDV_discharged, JCYFMRP_discharged, MHAEYJN_discharged, RRCWNSJ_discharged,
-      TFITSKC_discharged, ZLZTHIC_discharged, ASSWPOW_discharged, MXQTIED_discharged,
+      DRNDRDV_discharged, JCYFMRP_discharged hmn, MHAEYJN_discharged, RRCWNSJ_discharged hmn,
+      TFITSKC_discharged hmn, ZLZTHIC_discharged, ASSWPOW_discharged, MXQTIED_discharged,
       AXJRPNC_discharged, FEKTYIY_discharged, HXHYTIJ_discharged, IMJXPHRv2_discharged,
       NUXCOEAv2_discharged, ODXLSTCv2_discharged, PPBTYDQ_discharged, XWITCCN2_discharged,
       XWITCCN_discharged, XWNHLMD_discharged, unadorned_MMs_discharged, AYQJTMD_discharged,
@@ -7067,7 +7068,7 @@ so the Assembly consumer's `.1` projection keeps its exact statement
 (`hcap.1 hmnt` elaborates to the same `lp_main_estimate` derivation).
 Body = repackaging of `la35_wire_capstone_w1` and the S1 capstone by
 projections -- zero new proof obligations. -/
-theorem localconcl_wire_capstone_w2 :
+theorem localconcl_wire_capstone_w2 (hmn : main_nonlinear_terminal_v11) :
     (main_nonlinear_terminal_v11 → lp_main_estimate) ∧
     (
   -- 1. CARD_FF_EQ_CARD_SLICE_FF_p35 (LA35:21341; HOL `CARD_FF_EQ_CARD_SLICE_FF`)
@@ -8008,52 +8009,52 @@ theorem localconcl_wire_capstone_w2 :
     scsBasicV39 s → 3 < s.k → scsDiag s.k i j → s.a i j ≤ cstab →
     isScsV39 (scsStabDiagV39 s i j) ∧ scsBasicV39 (scsStabDiagV39 s i j)) ∧
     (scsArrowV39 {scsStabDiagV39 scs4I3 0 2} {scs4T4}) :=
-    ⟨localconcl_wire_capstone_w1.1, la35_wire_capstone_w1,
-      localconcl_wire_capstone_w1.2.1, localconcl_wire_capstone_w1.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.1, localconcl_wire_capstone_w1.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      localconcl_wire_capstone_w1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2⟩
+    ⟨(localconcl_wire_capstone_w1 hmn).1, la35_wire_capstone_w1,
+      (localconcl_wire_capstone_w1 hmn).2.1, (localconcl_wire_capstone_w1 hmn).2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.1, (localconcl_wire_capstone_w1 hmn).2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      (localconcl_wire_capstone_w1 hmn).2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2⟩
 
 /-! ### LV materialization capstones, slots A1+A2 (lane lv12-w1,
 2026-11-04, after the leftover-mat-scout workorder): the clean public

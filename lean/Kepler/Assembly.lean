@@ -7143,7 +7143,7 @@ theorem textCapstone : TextCapstone := by
   -- `*_discharged` 注册表出口经聚合 capstone 在锥内消费（conjunct 次序 = orphan-scout
   -- WIRE 增量降序；每条边的锚 = 各出口 docstring + LocalConcl LEDGER (c)/(d)）。
   -- conjunct 1 就是下面 p16 switch 的原陈述，re-point 语义不变（定义相等投影）。
-  have hcap := localconcl_wire_capstone_w2
+  have hcap := localconcl_wire_capstone_w2 hmnt
   have hla36 := la36_capstone_w1
   have hla38 := la38_capstone_w1
   have hpa21 := pa21_capstone_w1
