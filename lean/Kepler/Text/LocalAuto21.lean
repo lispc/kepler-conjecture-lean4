@@ -3292,6 +3292,409 @@ theorem WNWSHJT_ALT_p21 (w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b c : ℝ)
 
 /-! ## Section G: obtuse-monotonicity kit -/
 
+section GKit
+
+open Filter
+open scoped Topology
+
+/-! ### Private re-derivation of the `dih_x` analytic kit
+
+HOL consumes `Ocbicby.derived_form_dih_x_wrt_x5` (the slot-5 derivative
+`−√x1·Δ₆/(ups_x x1 x3 x5·√Δ)`) and `Tame_inequalities.DIH_X_MONO_LT_4`
+(slot-4 monotonicity).  Neither kit is available on this side, so both are
+re-derived here from the canonical `SphereKit` definitions and Mathlib's
+mean value theorem.  All helpers are `private`. -/
+
+/-- `atn2 A B = arctan (B/A)` on the right half-plane `A > 0` (HOL
+`Trigonometry1.ATN2_BREAKDOWN`, first clause). -/
+private theorem g_atn2_eq_arctan {A B : ℝ} (hA : 0 < A) :
+    atn2 A B = Real.arctan (B / A) := by
+  unfold atn2
+  by_cases hb : |B| < A
+  · rw [if_pos hb]
+  · rw [if_neg hb]
+    rcases lt_trichotomy B 0 with hB | hB | hB
+    · rw [if_neg (show ¬(0 : ℝ) < B from by linarith), if_pos hB]
+      have hAB : A / B < 0 := by
+        have h2 : A / B = -(A / (-B)) := by field_simp
+        rw [h2, neg_lt_zero]
+        exact div_pos hA (neg_pos.mpr hB)
+      have hinv := Real.arctan_inv_of_neg hAB
+      rw [inv_div] at hinv
+      exact hinv.symm
+    · exact absurd (show |B| < A by rw [hB]; simpa using hA) hb
+    · rw [if_pos hB]
+      have hinv := Real.arctan_inv_of_pos (div_pos hB hA)
+      rw [inv_div] at hinv
+      linarith
+
+/-- `atn2 A B` on the lower-right half-plane (`A > 0`, `B < 0`). -/
+private theorem g_atn2_of_neg {A B : ℝ} (hA : 0 < A) (hB : B < 0) :
+    atn2 A B = -(Real.pi / 2) - Real.arctan (A / B) := by
+  unfold atn2
+  by_cases h1 : |B| < A
+  · rw [if_pos h1]
+    have hBA : B / A < 0 := div_neg_of_neg_of_pos hB hA
+    have hrec : A / B = (B / A)⁻¹ := by field_simp [ne_of_lt hB]
+    rw [hrec, Real.arctan_inv_of_neg hBA]
+    ring
+  · rw [if_neg h1]
+    by_cases h2 : 0 < B
+    · exact absurd h2 (not_lt.mpr hB.le)
+    · rw [if_neg h2]
+      by_cases h3 : B < 0
+      · rw [if_pos h3]
+      · exact absurd hB h3
+
+/-- `atn2 A B` on the upper-right half-plane (`A > 0`, `B > 0`). -/
+private theorem g_atn2_of_pos {A B : ℝ} (hA : 0 < A) (hB : 0 < B) :
+    atn2 A B = Real.pi / 2 - Real.arctan (A / B) := by
+  unfold atn2
+  by_cases h1 : |B| < A
+  · rw [if_pos h1]
+    have hBA : 0 < B / A := div_pos hB hA
+    have hrec : A / B = (B / A)⁻¹ := by field_simp [ne_of_gt hB]
+    rw [hrec, Real.arctan_inv_of_pos hBA]
+    ring
+  · rw [if_neg h1]
+    by_cases h2 : 0 < B
+    · rw [if_pos h2]
+    · exact absurd hB h2
+
+/-- Derivative of `s ↦ atn2 (A s) (B s)` while `A s > 0` (all branches). -/
+private theorem g_hasDerivAt_atn2 {A B : ℝ → ℝ} {A' B' t : ℝ}
+    (hA : 0 < A t) (hA' : HasDerivAt A A' t) (hB' : HasDerivAt B B' t) :
+    HasDerivAt (fun s => atn2 (A s) (B s))
+      ((A t * B' - B t * A') / (A t ^ 2 + B t ^ 2)) t := by
+  have hA2 : A t ^ 2 + B t ^ 2 ≠ 0 := by positivity
+  rcases lt_trichotomy (B t) 0 with hneg | hzero | hpos
+  · have hevA : ∀ᶠ s in 𝓝 t, 0 < A s :=
+      hA'.continuousAt.eventually (isOpen_Ioi.mem_nhds hA)
+    have hevB : ∀ᶠ s in 𝓝 t, B s < 0 :=
+      hB'.continuousAt.eventually_lt continuousAt_const hneg
+    have heq : (fun s => atn2 (A s) (B s)) =ᶠ[𝓝 t]
+        (fun s => -(Real.pi / 2) - Real.arctan (A s / B s)) := by
+      filter_upwards [hevA, hevB] with s hsA hsB
+      exact g_atn2_of_neg hsA hsB
+    have hdiv : HasDerivAt (fun s => A s / B s) ((A' * B t - A t * B') / (B t) ^ 2) t :=
+      hA'.div hB' (ne_of_lt hneg)
+    have hmain : HasDerivAt (fun s => -(Real.pi / 2) - Real.arctan (A s / B s))
+        (0 - (1 / (1 + (A t / B t) ^ 2)) * ((A' * B t - A t * B') / (B t) ^ 2)) t :=
+      (hasDerivAt_const (x := t) (c := -(Real.pi / 2))).sub hdiv.arctan
+    refine (hmain.congr_of_eventuallyEq heq).congr_deriv ?_
+    field_simp [ne_of_lt hneg, hA2]
+    ring
+  · have hlt : |B t| < A t := by rw [hzero, abs_zero]; exact hA
+    have hev : ∀ᶠ s in 𝓝 t, |B s| < A s :=
+      (hB'.continuousAt.abs).eventually_lt hA'.continuousAt hlt
+    have heq : (fun s => atn2 (A s) (B s)) =ᶠ[𝓝 t]
+        (fun s => Real.arctan (B s / A s)) := by
+      filter_upwards [hev] with s hs
+      unfold atn2
+      exact if_pos hs
+    have hdiv : HasDerivAt (fun s => B s / A s) ((B' * A t - B t * A') / (A t) ^ 2) t :=
+      hB'.div hA' (ne_of_gt hA)
+    have hmain : HasDerivAt (fun s => Real.arctan (B s / A s))
+        ((1 / (1 + (B t / A t) ^ 2)) * ((B' * A t - B t * A') / (A t) ^ 2)) t :=
+      hdiv.arctan
+    refine (hmain.congr_of_eventuallyEq heq).congr_deriv ?_
+    field_simp [ne_of_gt hA, hA2]
+  · have hevA : ∀ᶠ s in 𝓝 t, 0 < A s :=
+      hA'.continuousAt.eventually (isOpen_Ioi.mem_nhds hA)
+    have hevB : ∀ᶠ s in 𝓝 t, 0 < B s :=
+      continuousAt_const.eventually_lt hB'.continuousAt hpos
+    have heq : (fun s => atn2 (A s) (B s)) =ᶠ[𝓝 t]
+        (fun s => Real.pi / 2 - Real.arctan (A s / B s)) := by
+      filter_upwards [hevA, hevB] with s hsA hsB
+      exact g_atn2_of_pos hsA hsB
+    have hdiv : HasDerivAt (fun s => A s / B s) ((A' * B t - A t * B') / (B t) ^ 2) t :=
+      hA'.div hB' (ne_of_gt hpos)
+    have hmain : HasDerivAt (fun s => Real.pi / 2 - Real.arctan (A s / B s))
+        (0 - (1 / (1 + (A t / B t) ^ 2)) * ((A' * B t - A t * B') / (B t) ^ 2)) t :=
+      (hasDerivAt_const (x := t) (c := Real.pi / 2)).sub hdiv.arctan
+    refine (hmain.congr_of_eventuallyEq heq).congr_deriv ?_
+    field_simp [ne_of_gt hpos, hA2]
+    ring
+
+/-- Derivative of a quadratic, in the `a*(q*q) + (b*q+c)` normal form. -/
+private theorem g_hasDerivAt_quad (a b c x : ℝ) :
+    HasDerivAt (fun q : ℝ => a * (q * q) + (b * q + c)) (a * (x + x) + b) x := by
+  have h1 : HasDerivAt (fun q : ℝ => q * q) (x + x) x := by
+    exact HasDerivAt.congr_deriv
+      ((hasDerivAt_id x).mul (hasDerivAt_id x)) (by norm_num)
+  have h2 : HasDerivAt (fun q : ℝ => b * q + c) (b * 1 + 0) x :=
+    ((hasDerivAt_id x).const_mul b).add (hasDerivAt_const (x := x) (c := c))
+  exact HasDerivAt.congr_deriv ((h1.const_mul a).add h2) (by norm_num)
+
+/-- Derivative of an affine function. -/
+private theorem g_hasDerivAt_affine (a b x : ℝ) :
+    HasDerivAt (fun q : ℝ => a * q + b) a x := by
+  have h : HasDerivAt (fun q : ℝ => a * q + b) (a * 1 + 0) x :=
+    ((hasDerivAt_id x).const_mul a).add (hasDerivAt_const (x := x) (c := b))
+  exact HasDerivAt.congr_deriv h (by norm_num)
+
+/-- `∂deltaX/∂x4` (HOL `Sphere.delta_x4`). -/
+private theorem g_hasDerivAt_deltaX_x4 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    HasDerivAt (fun t => deltaX x1 x2 x3 t x5 x6) (deltaX4 x1 x2 x3 x4 x5 x6) x4 := by
+  have h := g_hasDerivAt_quad (-x1)
+    (x1 * (-x1 + x2 + x3 + x5 + x6) + (x2 * x5 + x3 * x6 - x2 * x3 - x5 * x6))
+    (x2 * x5 * (x1 - x2 + x3 - x5 + x6) + x3 * x6 * (x1 + x2 - x3 + x5 - x6)
+      - x1 * x3 * x5 - x1 * x2 * x6) x4
+  have he : (fun t => deltaX x1 x2 x3 t x5 x6) = fun q => (-x1) * (q * q)
+      + ((x1 * (-x1 + x2 + x3 + x5 + x6) + (x2 * x5 + x3 * x6 - x2 * x3 - x5 * x6)) * q
+        + (x2 * x5 * (x1 - x2 + x3 - x5 + x6) + x3 * x6 * (x1 + x2 - x3 + x5 - x6)
+          - x1 * x3 * x5 - x1 * x2 * x6)) := by
+    funext q; unfold deltaX; ring
+  rw [he]
+  exact HasDerivAt.congr_deriv h (by simp only [deltaX4]; ring)
+
+/-- `∂deltaX4/∂x4 = -2*x1`. -/
+private theorem g_hasDerivAt_deltaX4_x4 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    HasDerivAt (fun t => deltaX4 x1 x2 x3 t x5 x6) (-2 * x1) x4 := by
+  have h := g_hasDerivAt_affine (-2 * x1)
+    (-x2 * x3 + x2 * x5 + x3 * x6 - x5 * x6 + x1 * (-x1 + x2 + x3 + x5 + x6)) x4
+  have he : (fun t => deltaX4 x1 x2 x3 t x5 x6) = fun q => (-2 * x1) * q
+      + (-x2 * x3 + x2 * x5 + x3 * x6 - x5 * x6 + x1 * (-x1 + x2 + x3 + x5 + x6)) := by
+    funext q; unfold deltaX4; ring
+  rw [he]; exact h
+
+/-- `∂deltaX/∂x5` (HOL `Nonlin_def.delta_x5`; canonical `SphereKit.deltaX5`). -/
+private theorem g_hasDerivAt_deltaX_x5 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    HasDerivAt (fun t => deltaX x1 x2 x3 x4 t x6) (deltaX5 x1 x2 x3 x4 x5 x6) x5 := by
+  have h := g_hasDerivAt_quad (-x2)
+    (x1 * x4 + x1 * x2 - x2 ^ 2 + x2 * x3 + x2 * x4 + x2 * x6 + x3 * x6 - x1 * x3 - x4 * x6)
+    (x1 * x4 * (-x1 + x2 + x3 - x4 + x6) + x3 * x6 * (x1 + x2 - x3 + x4 - x6)
+      - x2 * x3 * x4 - x1 * x2 * x6) x5
+  have he : (fun t => deltaX x1 x2 x3 x4 t x6) = fun q => (-x2) * (q * q)
+      + ((x1 * x4 + x1 * x2 - x2 ^ 2 + x2 * x3 + x2 * x4 + x2 * x6 + x3 * x6 - x1 * x3 - x4 * x6) * q
+        + (x1 * x4 * (-x1 + x2 + x3 - x4 + x6) + x3 * x6 * (x1 + x2 - x3 + x4 - x6)
+          - x2 * x3 * x4 - x1 * x2 * x6)) := by
+    funext q; unfold deltaX; ring
+  rw [he]
+  exact HasDerivAt.congr_deriv h (by simp only [deltaX5]; ring)
+
+/-- `∂deltaX4/∂x5 = x1 + x2 - x6`. -/
+private theorem g_hasDerivAt_deltaX4_x5 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    HasDerivAt (fun t => deltaX4 x1 x2 x3 x4 t x6) (x1 + x2 - x6) x5 := by
+  have h := g_hasDerivAt_affine (x1 + x2 - x6)
+    (-x2 * x3 - x1 * x4 + x3 * x6 + x1 * (-x1 + x2 + x3 - x4 + x6)) x5
+  have he : (fun t => deltaX4 x1 x2 x3 x4 t x6) = fun q => (x1 + x2 - x6) * q
+      + (-x2 * x3 - x1 * x4 + x3 * x6 + x1 * (-x1 + x2 + x3 - x4 + x6)) := by
+    funext q; unfold deltaX4; ring
+  rw [he]; exact h
+
+/-- HOL `ups_x_delta_x`: `Δ₄² + 4·x₁·Δ = upsX x1 x3 x5 · upsX x1 x2 x6`. -/
+private theorem g_ups_delta (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX4 x1 x2 x3 x4 x5 x6 ^ 2 + 4 * x1 * deltaX x1 x2 x3 x4 x5 x6
+      = upsX x1 x3 x5 * upsX x1 x2 x6 := by
+  simp only [deltaX, deltaX4, upsX]
+  ring
+
+/-- The slot-5 rationalisation identity that turns the raw arctan-derivative
+numerator into `-2*x1*Δ₆`. -/
+private theorem g_delta_ident_x5 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    deltaX4 x1 x2 x3 x4 x5 x6 * deltaX5 x1 x2 x3 x4 x5 x6
+      + upsX x1 x2 x6 * deltaX6_p21 x1 x2 x3 x4 x5 x6
+      = 2 * deltaX x1 x2 x3 x4 x5 x6 * (x1 + x2 - x6) := by
+  simp only [deltaX, deltaX4, deltaX5, deltaX6_p21, upsX]
+  ring
+
+/-- Derivative of `x ↦ π/2 + atn2 (√(4*x1*f x)) (-(g x))`. -/
+private theorem g_hasDerivAt_dihXf_aux {f g : ℝ → ℝ} {f' g' t x1 : ℝ}
+    (hx1 : 0 < x1) (hf : HasDerivAt f f' t) (hg : HasDerivAt g g' t)
+    (hfpos : 0 < f t) :
+    HasDerivAt (fun s => Real.pi / 2 + atn2 (Real.sqrt (4 * x1 * f s)) (-(g s)))
+      ((2 * x1 * g t * f' - 4 * x1 * f t * g')
+        / (Real.sqrt (4 * x1 * f t) * (4 * x1 * f t + g t ^ 2))) t := by
+  have hpos : 0 < 4 * x1 * f t := by positivity
+  have hA : 0 < Real.sqrt (4 * x1 * f t) := Real.sqrt_pos.mpr hpos
+  have hA' : HasDerivAt (fun s => Real.sqrt (4 * x1 * f s))
+      (4 * x1 * f' / (2 * Real.sqrt (4 * x1 * f t))) t :=
+    (hf.const_mul (4 * x1)).sqrt (ne_of_gt hpos)
+  have hB' : HasDerivAt (fun s => -(g s)) (-g') t := hg.neg
+  have h := (hasDerivAt_const (x := t) (c := Real.pi / 2)).add
+    (g_hasDerivAt_atn2 hA hA' hB')
+  refine h.congr_deriv ?_
+  have hA2 : Real.sqrt (4 * x1 * f t) ^ 2 = 4 * x1 * f t := Real.sq_sqrt (le_of_lt hpos)
+  have hA0 : Real.sqrt (4 * x1 * f t) ≠ 0 := ne_of_gt hA
+  field_simp [hA0]
+  rw [hA2]
+  ring
+
+/-- `∂dihXf/∂x4 = 2·x₁/√(4·x₁·Δ)`. -/
+private theorem g_dihXf_hasDerivAt_x4 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
+    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsX x1 x2 x6)
+    (hu2 : 0 < upsX x1 x3 x5) :
+    HasDerivAt (fun t => dihXf x1 x2 x3 t x5 x6)
+      (2 * x1 / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) x4 := by
+  have h := g_hasDerivAt_dihXf_aux (x1 := x1) (t := x4)
+    (f := fun t => deltaX x1 x2 x3 t x5 x6)
+    (g := fun t => deltaX4 x1 x2 x3 t x5 x6)
+    (f' := deltaX4 x1 x2 x3 x4 x5 x6) (g' := -2 * x1) hx1
+    (g_hasDerivAt_deltaX_x4 x1 x2 x3 x4 x5 x6)
+    (g_hasDerivAt_deltaX4_x4 x1 x2 x3 x4 x5 x6) hd
+  have h' : HasDerivAt (fun t => dihXf x1 x2 x3 t x5 x6)
+      ((2 * x1 * deltaX4 x1 x2 x3 x4 x5 x6 * deltaX4 x1 x2 x3 x4 x5 x6
+          - 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 * (-2 * x1))
+        / (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+            * (4 * x1 * deltaX x1 x2 x3 x4 x5 x6 + deltaX4 x1 x2 x3 x4 x5 x6 ^ 2))) x4 := by
+    simpa only [dihXf] using h
+  refine h'.congr_deriv ?_
+  have hpos : 0 < 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 := by positivity
+  have hA0 : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.mpr hpos)
+  have hE : 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 + deltaX4 x1 x2 x3 x4 x5 x6 ^ 2
+      = upsX x1 x2 x6 * upsX x1 x3 x5 := by
+    rw [add_comm, g_ups_delta, mul_comm]
+  have hu126 : upsX x1 x2 x6 ≠ 0 := ne_of_gt hu1
+  have hu135 : upsX x1 x3 x5 ≠ 0 := ne_of_gt hu2
+  rw [hE]
+  field_simp [hA0, hu126, hu135]
+  linear_combination hE
+
+/-- `∂dihXf/∂x5 = −2·x₁·Δ₆/(√(4·x₁·Δ)·upsX x1 x3 x5)` (HOL
+`Ocbicby.derived_form_dih_x_wrt_x5`). -/
+private theorem g_dihXf_hasDerivAt_x5 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
+    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsX x1 x2 x6)
+    (hu2 : 0 < upsX x1 x3 x5) :
+    HasDerivAt (fun t => dihXf x1 x2 x3 x4 t x6)
+      (-2 * x1 * deltaX6_p21 x1 x2 x3 x4 x5 x6
+        / (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) * upsX x1 x3 x5)) x5 := by
+  have h := g_hasDerivAt_dihXf_aux (x1 := x1) (t := x5)
+    (f := fun t => deltaX x1 x2 x3 x4 t x6)
+    (g := fun t => deltaX4 x1 x2 x3 x4 t x6)
+    (f' := deltaX5 x1 x2 x3 x4 x5 x6) (g' := x1 + x2 - x6) hx1
+    (g_hasDerivAt_deltaX_x5 x1 x2 x3 x4 x5 x6)
+    (g_hasDerivAt_deltaX4_x5 x1 x2 x3 x4 x5 x6) hd
+  have h' : HasDerivAt (fun t => dihXf x1 x2 x3 x4 t x6)
+      ((2 * x1 * deltaX4 x1 x2 x3 x4 x5 x6 * deltaX5 x1 x2 x3 x4 x5 x6
+          - 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 * (x1 + x2 - x6))
+        / (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+            * (4 * x1 * deltaX x1 x2 x3 x4 x5 x6 + deltaX4 x1 x2 x3 x4 x5 x6 ^ 2))) x5 := by
+    simpa only [dihXf] using h
+  refine h'.congr_deriv ?_
+  have hpos : 0 < 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 := by positivity
+  have hA0 : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.mpr hpos)
+  have hE : 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 + deltaX4 x1 x2 x3 x4 x5 x6 ^ 2
+      = upsX x1 x2 x6 * upsX x1 x3 x5 := by
+    rw [add_comm, g_ups_delta, mul_comm]
+  have hu126 : upsX x1 x2 x6 ≠ 0 := ne_of_gt hu1
+  have hu135 : upsX x1 x3 x5 ≠ 0 := ne_of_gt hu2
+  have hI := g_delta_ident_x5 x1 x2 x3 x4 x5 x6
+  rw [hE]
+  field_simp [hA0, hu126, hu135]
+  nlinarith [hI]
+
+/-- HOL `Nonlinear_lemma.dih_x_sym`: `dihXf` is invariant under the
+`(x2 x3)(x5 x6)` swap. -/
+private theorem g_dihXf_sym (x1 x2 x3 x4 x5 x6 : ℝ) :
+    dihXf x1 x2 x3 x4 x5 x6 = dihXf x1 x3 x2 x4 x6 x5 := by
+  have hd : deltaX x1 x3 x2 x4 x6 x5 = deltaX x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX]; ring
+  have hd4 : deltaX4 x1 x3 x2 x4 x6 x5 = deltaX4 x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX4]; ring
+  simp only [dihXf, hd, hd4]
+
+/-- The slot transposition behind HOL's `delta_x4`/`delta_x5` exchange in
+`dihV_obtuse_mono_a` (`delta_x4 b a c e d f = delta_x5 a b c d e f`). -/
+private theorem g_deltaX4_eq_deltaX5 (a b c d e f : ℝ) :
+    deltaX4 b a c e d f = deltaX5 a b c d e f := by
+  simp only [deltaX4, deltaX5]; ring
+
+/-- HOL `dih_gt_pi2` (merge_ineq.hl:2761): `dih_x > π/2` forces `Δ₄ < 0`. -/
+private theorem g_dih_gt_pi2 {x1 x2 x3 x4 x5 x6 : ℝ} (h1 : 0 < x1)
+    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (hdih : Real.pi / 2 < dihXf x1 x2 x3 x4 x5 x6) :
+    deltaX4 x1 x2 x3 x4 x5 x6 < 0 := by
+  have hsqrt : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) :=
+    Real.sqrt_pos.mpr (by positivity)
+  have h0 : 0 < atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+      (-(deltaX4 x1 x2 x3 x4 x5 x6)) := by
+    have hdih' : Real.pi / 2 < Real.pi / 2 + atn2
+        (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+        (-(deltaX4 x1 x2 x3 x4 x5 x6)) := hdih
+    linarith
+  rw [g_atn2_eq_arctan hsqrt] at h0
+  rcases div_pos_iff.mp (Real.arctan_pos.mp h0) with ⟨hpos, -⟩ | ⟨-, hneg⟩
+  · linarith
+  · linarith [hsqrt]
+
+/-- Monotonicity from a nonnegative derivative (mean value theorem). -/
+private theorem g_mono_of_deriv_nonneg {f f' : ℝ → ℝ} {a b : ℝ} (hab : a ≤ b)
+    (hcont : ContinuousOn f (Set.Icc a b))
+    (hderiv : ∀ x ∈ Set.Ioo a b, HasDerivAt f (f' x) x)
+    (hnn : ∀ x ∈ Set.Ioo a b, 0 ≤ f' x) : f a ≤ f b := by
+  rcases eq_or_lt_of_le hab with h | h
+  · rw [← h]
+  · obtain ⟨c, hc, hsl⟩ := exists_hasDerivAt_eq_slope f f' h hcont hderiv
+    have hden : 0 < b - a := by linarith
+    have hq : 0 ≤ (f b - f a) / (b - a) := by rw [← hsl]; exact hnn c hc
+    have hmul := mul_nonneg hq (le_of_lt hden)
+    rw [div_mul_cancel₀ _ (ne_of_gt hden)] at hmul
+    linarith
+
+/-- Interval form of a near-zero positivity hypothesis: if `f` is positive
+on `|t'| < e`, it is positive on `[c+t, c]` for `|t| < e`, `t ≤ 0`. -/
+private theorem g_nbd_pos_Icc {f : ℝ → ℝ} {c e t : ℝ}
+    (h1 : ∀ t' : ℝ, |t'| < e → 0 < f (c + t')) (ht : |t| < e) (ht0 : t ≤ 0) :
+    ∀ q ∈ Set.Icc (c + t) c, 0 < f q := by
+  intro q hq
+  have hq1 : q - c ≤ 0 := by linarith [hq.2]
+  have hq2 : t ≤ q - c := by linarith [hq.1]
+  have habs : |q - c| ≤ |t| := by
+    rw [abs_of_nonpos hq1, abs_of_nonpos ht0]; linarith
+  have hlt : |q - c| < e := lt_of_le_of_lt habs ht
+  have h := h1 (q - c) hlt
+  have hq' : c + (q - c) = q := by ring
+  rwa [hq'] at h
+
+/-- `dihXf` is nondecreasing along a compact slot-4 interval on which `Δ`
+stays positive. -/
+private theorem g_dihXf_mono_x4 {x1 x2 x3 x4 x4' x5 x6 : ℝ} (hx1 : 0 < x1)
+    (h44 : x4 ≤ x4')
+    (hΔp : ∀ q ∈ Set.Icc x4 x4', 0 < deltaX x1 x2 x3 q x5 x6)
+    (hu1 : 0 < upsX x1 x2 x6) (hu2 : 0 < upsX x1 x3 x5) :
+    dihXf x1 x2 x3 x4 x5 x6 ≤ dihXf x1 x2 x3 x4' x5 x6 := by
+  refine g_mono_of_deriv_nonneg (f := fun q => dihXf x1 x2 x3 q x5 x6)
+    (f' := fun q => 2 * x1 / Real.sqrt (4 * x1 * deltaX x1 x2 x3 q x5 x6)) h44 ?_ ?_ ?_
+  · intro q hq
+    exact ((g_dihXf_hasDerivAt_x4 x1 x2 x3 q x5 x6 hx1 (hΔp q hq) hu1 hu2).continuousAt).continuousWithinAt
+  · intro q hq
+    exact g_dihXf_hasDerivAt_x4 x1 x2 x3 q x5 x6 hx1
+      (hΔp q (Set.Ioo_subset_Icc_self hq)) hu1 hu2
+  · intro q hq
+    exact div_nonneg (by positivity) (Real.sqrt_nonneg _)
+
+/-- `dihXf` is nondecreasing along a compact slot-5 interval on which `Δ`
+and `upsX x1 x3 ·` stay positive and `Δ₆` stays negative. -/
+private theorem g_dihXf_mono_x5 {x1 x2 x3 x4 x5 x5' x6 : ℝ} (hx1 : 0 < x1)
+    (h55 : x5 ≤ x5')
+    (hΔp : ∀ q ∈ Set.Icc x5 x5', 0 < deltaX x1 x2 x3 x4 q x6)
+    (hupp : ∀ q ∈ Set.Icc x5 x5', 0 < upsX x1 x3 q)
+    (h6p : ∀ q ∈ Set.Icc x5 x5', deltaX6_p21 x1 x2 x3 x4 q x6 < 0)
+    (hu1 : 0 < upsX x1 x2 x6) :
+    dihXf x1 x2 x3 x4 x5 x6 ≤ dihXf x1 x2 x3 x4 x5' x6 := by
+  refine g_mono_of_deriv_nonneg (f := fun q => dihXf x1 x2 x3 x4 q x6)
+    (f' := fun q => -2 * x1 * deltaX6_p21 x1 x2 x3 x4 q x6
+      / (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 q x6) * upsX x1 x3 q)) h55 ?_ ?_ ?_
+  · intro q hq
+    exact ((g_dihXf_hasDerivAt_x5 x1 x2 x3 x4 q x6 hx1 (hΔp q hq) hu1 (hupp q hq)).continuousAt).continuousWithinAt
+  · intro q hq
+    exact g_dihXf_hasDerivAt_x5 x1 x2 x3 x4 q x6 hx1
+      (hΔp q (Set.Ioo_subset_Icc_self hq)) hu1 (hupp q (Set.Ioo_subset_Icc_self hq))
+  · intro q hq
+    have hd : 0 < deltaX x1 x2 x3 x4 q x6 := hΔp q (Set.Ioo_subset_Icc_self hq)
+    have hup : 0 < upsX x1 x3 q := hupp q (Set.Ioo_subset_Icc_self hq)
+    have h6 : deltaX6_p21 x1 x2 x3 x4 q x6 < 0 := h6p q (Set.Ioo_subset_Icc_self hq)
+    have hden : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 q x6) * upsX x1 x3 q :=
+      mul_pos (Real.sqrt_pos.mpr (by positivity)) hup
+    have hnum : 0 ≤ -2 * x1 * deltaX6_p21 x1 x2 x3 x4 q x6 := by nlinarith
+    exact div_nonneg hnum (le_of_lt hden)
+
+
+end GKit
+
 /-- HOL `dih_x5_mono` (CUXVZOZ.hl:3116): `dih_x` decreases in `x5` while
 `delta_x6` is negative (MVT over the derived form). -/
 theorem dih_x5_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
@@ -3299,11 +3702,30 @@ theorem dih_x5_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
     (hu2 : 0 < upsX x1 x3 x5) (hΔ6 : deltaX6_p21 x1 x2 x3 x4 x5 x6 < 0) :
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
       dihXf x1 x2 x3 x4 (x5 + t) x6 ≤ dihXf x1 x2 x3 x4 x5 x6 := by
-  -- DISCHARGES: HOL Ocbicby.derived_form_dih_x_wrt_x5 (the ∂dih_x/∂x5
-  -- derivative form `--sqrt x1 * delta_x6 / (ups_x x1 x3 * sqrt delta_x)`)
-  -- + REAL_MVT_VERY_SIMPLE + epsilon_triple bookkeeping; the derivative
-  -- kit is not ported on this side. NEEDS: merge with the Ocbicby lane.
-  sorry
+  -- PROVED: MVT on the slot-5 derivative `g_dihXf_hasDerivAt_x5`
+  -- (`-2·x₁·Δ₆/(√(4·x₁·Δ)·upsX x1 x3 x5) ≥ 0`, HOL
+  -- `Ocbicby.derived_form_dih_x_wrt_x5`) with the three positivity radii
+  -- from `continuous_nbd_pos_p21` and `epsilon_triple_p21`.
+  have hc1 : ContinuousAt (fun t : ℝ => deltaX x1 x2 x3 x4 (x5 + t) x6) 0 := by
+    simp only [deltaX]; fun_prop
+  obtain ⟨e1, he1, h1⟩ := continuous_nbd_pos_p21 hc1 (by simpa using hΔ)
+  have hc2 : ContinuousAt (fun t : ℝ => upsX x1 x3 (x5 + t)) 0 := by
+    simp only [upsX]; fun_prop
+  obtain ⟨e2, he2, h2⟩ := continuous_nbd_pos_p21 hc2 (by simpa using hu2)
+  have hc3 : ContinuousAt (fun t : ℝ => -deltaX6_p21 x1 x2 x3 x4 (x5 + t) x6) 0 := by
+    simp only [deltaX6_p21]; fun_prop
+  obtain ⟨e3, he3, h3⟩ := continuous_nbd_pos_p21 hc3 (by simpa using (neg_pos.mpr hΔ6))
+  obtain ⟨e, he, h1e, h2e, h3e⟩ := epsilon_triple_p21 e1 e2 e3 he1 he2 he3
+  refine ⟨e, he, ?_⟩
+  intro t ht ht0
+  refine g_dihXf_mono_x5 (x1 := x1) (x2 := x2) (x3 := x3) (x4 := x4)
+    (x5 := x5 + t) (x5' := x5) (x6 := x6) hx1 (by linarith) ?_ ?_ ?_ hu1
+  · exact g_nbd_pos_Icc (by simpa only [sub_zero] using h1) (h1e t ht) ht0
+  · exact g_nbd_pos_Icc (by simpa only [sub_zero] using h2) (h2e t ht) ht0
+  · intro q hq
+    have h := g_nbd_pos_Icc (f := fun u => -deltaX6_p21 x1 x2 x3 x4 u x6)
+      (by simpa only [sub_zero] using h3) (h3e t ht) ht0 q hq
+    linarith
 
 /-- HOL `delta_x5_delta_x6` (CUXVZOZ.hl:3173): `delta_x6` is `delta_x5`
 under the `(x2,x3)`/`(x5,x6)` swap; a pure ring identity. -/
@@ -3320,11 +3742,30 @@ theorem dih_obtuse_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
       dihXf x1 x2 x3 (x4 + t) x5 x6 ≤ dihXf x1 x2 x3 x4 x5 x6 ∧
       dihXf x1 x2 x3 x4 x5 (x6 + t) ≤ dihXf x1 x2 x3 x4 x5 x6 := by
-  -- DISCHARGES: HOL uses dih_x5_mono (via delta_x5_delta_x6 and
-  -- Merge_ineq.delta_x_sym), epsilon_pair bookkeeping and
-  -- Tame_inequalities.DIH_X_MONO_LT_4; the delta_x-symmetry and tame
-  -- inequalities lanes are not on this side. NEEDS: merge.
-  sorry
+  -- PROVED: first conjunct from the slot-4 MVT monotonicity
+  -- (`g_dihXf_mono_x4`, HOL `Tame_inequalities.DIH_X_MONO_LT_4`), second
+  -- from `dih_x5_mono_p21` under the `(x2 x3)(x5 x6)` swap (HOL
+  -- `delta_x5_delta_x6` + `delta_x_sym`), epsilon_pair bookkeeping.
+  have hc1 : ContinuousAt (fun t : ℝ => deltaX x1 x2 x3 (x4 + t) x5 x6) 0 := by
+    simp only [deltaX]; fun_prop
+  obtain ⟨e1, he1, h1⟩ := continuous_nbd_pos_p21 hc1 (by simpa using hΔ)
+  have hΔ' : 0 < deltaX x1 x3 x2 x4 x6 x5 := by
+    rw [show deltaX x1 x3 x2 x4 x6 x5 = deltaX x1 x2 x3 x4 x5 x6 from by
+      simp only [deltaX]; ring]
+    exact hΔ
+  have hΔ6' : deltaX6_p21 x1 x3 x2 x4 x6 x5 < 0 := by
+    rw [delta_x5_delta_x6_p21]
+    exact hΔ5
+  obtain ⟨e2, he2, h2⟩ := dih_x5_mono_p21 x1 x3 x2 x4 x6 x5 hx1 hΔ' hu2 hu1 hΔ6'
+  obtain ⟨e, he, h1e, h2e⟩ := epsilon_pair_p21 e1 e2 he1 he2
+  refine ⟨e, he, ?_⟩
+  intro t ht ht0
+  constructor
+  · exact g_dihXf_mono_x4 (x1 := x1) (x2 := x2) (x3 := x3) (x4 := x4 + t) (x4' := x4)
+      (x5 := x5) (x6 := x6) hx1 (by linarith)
+      (g_nbd_pos_Icc (by simpa only [sub_zero] using h1) (h1e t ht) ht0) hu1 hu2
+  · have h := h2 t (h2e t ht) ht0
+    simpa only [g_dihXf_sym] using h
 
 /-- HOL `dih_obtuse_mono_b` (CUXVZOZ.hl:3228): the unconditional half of
 `dih_obtuse_mono` (only the `x4+t` slot, no `delta_x5` hypothesis). -/
@@ -3333,10 +3774,17 @@ theorem dih_obtuse_mono_b_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
     (hu2 : 0 < upsX x1 x3 x5) :
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
       dihXf x1 x2 x3 (x4 + t) x5 x6 ≤ dihXf x1 x2 x3 x4 x5 x6 := by
-  -- DISCHARGES: HOL Tame_inequalities.DIH_X_MONO_LT_4 + the delta_x
-  -- continuity nbd bookkeeping. NEEDS: merge with the tame-inequalities
-  -- lane.
-  sorry
+  -- PROVED: `deltaX` continuity nbd (`continuous_nbd_pos_p21`) + the
+  -- slot-4 MVT monotonicity `g_dihXf_mono_x4` (derivative
+  -- `2·x₁/√(4·x₁·Δ) > 0`, HOL `Tame_inequalities.DIH_X_MONO_LT_4`).
+  have hc1 : ContinuousAt (fun t : ℝ => deltaX x1 x2 x3 (x4 + t) x5 x6) 0 := by
+    simp only [deltaX]; fun_prop
+  obtain ⟨e1, he1, h1⟩ := continuous_nbd_pos_p21 hc1 (by simpa using hΔ)
+  refine ⟨e1, he1, ?_⟩
+  intro t ht ht0
+  exact g_dihXf_mono_x4 (x1 := x1) (x2 := x2) (x3 := x3) (x4 := x4 + t) (x4' := x4)
+    (x5 := x5) (x6 := x6) hx1 (by linarith)
+    (g_nbd_pos_Icc (by simpa only [sub_zero] using h1) ht ht0) hu1 hu2
 
 /-- HOL `square_add_neg_lemma` (CUXVZOZ.hl:3258). -/
 theorem square_add_neg_lemma_p21 (y t : ℝ) (ht : t ≤ 0) (h : 0 ≤ t + 2 * y) :
@@ -3355,11 +3803,133 @@ theorem dihV_obtuse_mono_a_p21 (v0 v1 v2 v3 : V3)
       dist v0 v2' = dist v0 v2 → dist v1 v2' = dist v1 v2 →
       dist v2' v3 = dist v2 v3 + t →
       dihV v0 v3 v2' v1 ≤ dihV v0 v3 v2 v1 := by
-  -- DISCHARGES: HOL Merge_ineq.DIHV_DIH_X (dihV = dih_x on the squared
-  -- distances), Collect_geom2.NOT_COL_EQ_UPS_X_POS, Merge_ineq.dih_gt_pi2
-  -- and the epsilon_quad bookkeeping; the DIHV_DIH_X bridge is not on this
-  -- side. NEEDS: merge with the Merge_ineq lane.
-  sorry
+  -- PROVED: HOL `DIHV_DIH_X` (both rotations, via `DIHV_EQ_DIH_Y_4PT`) +
+  -- `dih_gt_pi2` + `dih_obtuse_mono` (slot-4/6 MVT monotonicity), with the
+  -- moving bridge fed by `ups_x` continuity and `not_col_eq_upsX_pos_p21`;
+  -- epsilon_triple bookkeeping.
+  obtain ⟨hv01, hv02, hv03, hv12, hv13, hv23⟩ := w2b_ncop_ne_all hnc
+  have hx03 : 0 < dist v0 v3 ^ 2 := pow_pos (dist_pos.mpr hv03) 2
+  have hx02 : 0 < dist v0 v2 ^ 2 := pow_pos (dist_pos.mpr hv02) 2
+  have hd23pos : 0 < dist v2 v3 := dist_pos.mpr hv23
+  -- non-collinearity of the four triples at `v0`
+  have hncol023 : ¬ Collinear ℝ ({v0, v2, v3} : Set V3) := by
+    intro hc
+    apply hnc
+    have h := w2b_collinear_coplanar (z := v0) (w := v2) (w1 := v3) (w2 := v1) hc
+    rwa [show ({v0, v2, v3, v1} : Set V3) = ({v0, v1, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+  have hncol021 : ¬ Collinear ℝ ({v0, v2, v1} : Set V3) := by
+    intro hc
+    apply hnc
+    have h := w2b_collinear_coplanar (z := v0) (w := v2) (w1 := v1) (w2 := v3) hc
+    rwa [show ({v0, v2, v1, v3} : Set V3) = ({v0, v1, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+  have hncol032 : ¬ Collinear ℝ ({v0, v3, v2} : Set V3) := by
+    intro hc
+    apply hnc
+    have h := w2b_collinear_coplanar (z := v0) (w := v3) (w1 := v2) (w2 := v1) hc
+    rwa [show ({v0, v3, v2, v1} : Set V3) = ({v0, v1, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+  have hncol031 : ¬ Collinear ℝ ({v0, v3, v1} : Set V3) := by
+    intro hc
+    apply hnc
+    have h := w2b_collinear_coplanar (z := v0) (w := v3) (w1 := v1) (w2 := v2) hc
+    rwa [show ({v0, v3, v1, v2} : Set V3) = ({v0, v1, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+  -- the two Gram minors of the dih_obtuse_mono instantiation
+  have hu1 : 0 < upsX (dist v0 v3 ^ 2) (dist v0 v2 ^ 2) (dist v2 v3 ^ 2) := by
+    have h := (not_col_eq_upsX_pos_p21 v0 v3 v2).mp hncol032
+    simpa only [dist_comm] using h
+  have hu2 : 0 < upsX (dist v0 v3 ^ 2) (dist v0 v1 ^ 2) (dist v1 v3 ^ 2) := by
+    have h := (not_col_eq_upsX_pos_p21 v0 v3 v1).mp hncol031
+    simpa only [dist_comm] using h
+  -- Cayley–Menger positivity, both slot orderings
+  have hΔ1 : 0 < deltaX (dist v0 v2 ^ 2) (dist v0 v3 ^ 2) (dist v0 v1 ^ 2)
+      (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) (dist v2 v3 ^ 2) := by
+    rw [← delta_delta_x]
+    have h := (POS_EQ_NOT_COPLANANR v0 v2 v3 v1).2 (fun hc =>
+      hnc (coplanar_eq_coplanar_alt.mpr (by
+        rwa [show ({v0, v2, v3, v1} : Set V3) = ({v0, v1, v2, v3} : Set V3) from by
+          ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc)))
+    simpa only [dist_comm] using h
+  have hΔ' : 0 < deltaX (dist v0 v3 ^ 2) (dist v0 v2 ^ 2) (dist v0 v1 ^ 2)
+      (dist v1 v2 ^ 2) (dist v1 v3 ^ 2) (dist v2 v3 ^ 2) := by
+    rw [show deltaX (dist v0 v3 ^ 2) (dist v0 v2 ^ 2) (dist v0 v1 ^ 2)
+        (dist v1 v2 ^ 2) (dist v1 v3 ^ 2) (dist v2 v3 ^ 2)
+        = deltaX (dist v0 v2 ^ 2) (dist v0 v3 ^ 2) (dist v0 v1 ^ 2)
+          (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) (dist v2 v3 ^ 2) from by
+      simp only [deltaX]; ring]
+    exact hΔ1
+  -- the obtuse bridge and `dih_gt_pi2`
+  have hbridge1 : dihV v0 v2 v3 v1 =
+      dihXf (dist v0 v2 ^ 2) (dist v0 v3 ^ 2) (dist v0 v1 ^ 2)
+        (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) (dist v2 v3 ^ 2) := by
+    rw [DIHV_EQ_DIH_Y_4PT v0 v2 v3 v1 hncol023 hncol021]
+    simp only [dihY, pow_two, dist_comm]
+  have hz' : Real.pi / 2 < dihXf (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+      (dist v0 v1 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) (dist v2 v3 ^ 2) := by
+    rwa [hbridge1] at hz
+  have h4neg := g_dih_gt_pi2 hx02 hΔ1 hz'
+  have hΔ5 : deltaX5 (dist v0 v3 ^ 2) (dist v0 v2 ^ 2) (dist v0 v1 ^ 2)
+      (dist v1 v2 ^ 2) (dist v1 v3 ^ 2) (dist v2 v3 ^ 2) < 0 := by
+    rw [← g_deltaX4_eq_deltaX5]
+    exact h4neg
+  -- the ε-window of `dih_obtuse_mono`
+  obtain ⟨e', he', h'⟩ := dih_obtuse_mono_p21 (dist v0 v3 ^ 2) (dist v0 v2 ^ 2)
+    (dist v0 v1 ^ 2) (dist v1 v2 ^ 2) (dist v1 v3 ^ 2) (dist v2 v3 ^ 2)
+    hx03 hΔ' hu1 hu2 hΔ5
+  -- `ups_x` continuity around the moving slot
+  have hcont_ups : ContinuousAt
+      (fun t : ℝ => upsX (dist v0 v3 ^ 2) (dist v0 v2 ^ 2) ((dist v2 v3 + t) ^ 2)) 0 := by
+    simp only [upsX]; fun_prop
+  obtain ⟨eup, heup, hup⟩ := continuous_nbd_pos_p21 hcont_ups (by
+    simpa only [add_zero, pow_two, dist_comm] using hu1)
+  -- the `|2·d·t + t²|` window
+  have hcont_abs : ContinuousAt
+      (fun t : ℝ => e' - |2 * dist v2 v3 * t + t * t|) 0 := by
+    have h : ContinuousAt (fun t : ℝ => 2 * dist v2 v3 * t + t * t) 0 := by fun_prop
+    exact continuousAt_const.sub h.abs
+  obtain ⟨eabs, heabs, habs⟩ := continuous_nbd_pos_p21 hcont_abs (by simpa using he')
+  obtain ⟨E, hE, hEup, hEabs, hE2d⟩ := epsilon_triple_p21 eup eabs (2 * dist v2 v3)
+    heup heabs (by positivity)
+  refine ⟨E, hE, ?_⟩
+  intro v2' t ht ht0 hd02 hd12 hd23
+  -- the moving triples stay non-collinear
+  have hupt : 0 < upsX (dist v0 v3 ^ 2) (dist v0 v2 ^ 2) ((dist v2 v3 + t) ^ 2) :=
+    hup t (by simpa using hEup t ht)
+  have hncolv2' : ¬ Collinear ℝ ({v0, v3, v2'} : Set V3) := by
+    refine (not_col_eq_upsX_pos_p21 v0 v3 v2').mpr ?_
+    rw [hd02]
+    have h3 : dist v3 v2' = dist v2 v3 + t := by rw [dist_comm v3 v2', hd23]
+    rw [h3]
+    exact hupt
+  -- the ε-data at the actual `t`
+  have hs_abs : |2 * dist v2 v3 * t + t * t| < e' := by
+    have h := hEabs t ht
+    have h2 := habs t (by simpa using h)
+    linarith
+  have ht2d : 0 ≤ t + 2 * dist v2 v3 := by
+    have h := hE2d t ht
+    linarith [neg_abs_le t]
+  have hs_np : 2 * dist v2 v3 * t + t * t ≤ 0 :=
+    square_add_neg_lemma_p21 (dist v2 v3) t ht0 ht2d
+  have hkey := (h' (2 * dist v2 v3 * t + t * t) hs_abs hs_np).2
+  -- bridge the two `dihV`s to `dih_x`
+  have hb' : dihV v0 v3 v2' v1 =
+      dihXf (dist v0 v3 ^ 2) (dist v0 v2 ^ 2) (dist v0 v1 ^ 2)
+        (dist v1 v2 ^ 2) (dist v1 v3 ^ 2) (dist v2' v3 ^ 2) := by
+    rw [DIHV_EQ_DIH_Y_4PT v0 v3 v2' v1 hncolv2' hncol031]
+    simp only [dihY, pow_two, hd02, hd12, dist_comm]
+  have hbfix : dihV v0 v3 v2 v1 =
+      dihXf (dist v0 v3 ^ 2) (dist v0 v2 ^ 2) (dist v0 v1 ^ 2)
+        (dist v1 v2 ^ 2) (dist v1 v3 ^ 2) (dist v2 v3 ^ 2) := by
+    rw [DIHV_EQ_DIH_Y_4PT v0 v3 v2 v1 hncol032 hncol031]
+    simp only [dihY, pow_two, dist_comm]
+  have hs_eq : dist v2' v3 ^ 2 =
+      dist v2 v3 ^ 2 + (2 * dist v2 v3 * t + t * t) := by
+    rw [hd23]; ring
+  rw [hb', hbfix, hs_eq]
+  exact hkey
 
 /-- HOL `dihV_obtuse_mono_b` (CUXVZOZ.hl:3378): the opposite-handed half —
 `dihV v0 v1 v2' v3` decreases under the same edge move. -/
@@ -3369,9 +3939,76 @@ theorem dihV_obtuse_mono_b_p21 (v0 v1 v2 v3 : V3)
       dist v0 v2' = dist v0 v2 → dist v1 v2' = dist v1 v2 →
       dist v2' v3 = dist v2 v3 + t →
       dihV v0 v1 v2' v3 ≤ dihV v0 v1 v2 v3 := by
-  -- DISCHARGES: HOL Merge_ineq.DIHV_DIH_X + square_add_neg_lemma +
-  -- epsilon_quad bookkeeping. NEEDS: the DIHV_DIH_X bridge (see above).
-  sorry
+  -- PROVED: HOL `DIHV_DIH_X` + `dih_obtuse_mono_b` + `square_add_neg_lemma`,
+  -- with the moving bridge fed by `not_col_eq_upsX_pos_p21` and the
+  -- distance constraints; epsilon_triple bookkeeping.
+  obtain ⟨hv01, hv02, hv03, hv12, hv13, hv23⟩ := w2b_ncop_ne_all hnc
+  have hd23pos : 0 < dist v2 v3 := dist_pos.mpr hv23
+  have hx1 : 0 < dist v0 v1 ^ 2 := pow_pos (dist_pos.mpr hv01) 2
+  -- the two fixed triples at `v0`
+  have hncol012 : ¬ Collinear ℝ ({v0, v1, v2} : Set V3) :=
+    fun hc => hnc (w2b_collinear_coplanar (z := v0) (w := v1) (w1 := v2) (w2 := v3) hc)
+  have hncol013 : ¬ Collinear ℝ ({v0, v1, v3} : Set V3) := by
+    intro hc
+    apply hnc
+    have h := w2b_collinear_coplanar (z := v0) (w := v1) (w1 := v3) (w2 := v2) hc
+    rwa [show ({v0, v1, v3, v2} : Set V3) = ({v0, v1, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+  have hu1 : 0 < upsX (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v1 v2 ^ 2) :=
+    (not_col_eq_upsX_pos_p21 v0 v1 v2).mp hncol012
+  have hu2 : 0 < upsX (dist v0 v1 ^ 2) (dist v0 v3 ^ 2) (dist v1 v3 ^ 2) :=
+    (not_col_eq_upsX_pos_p21 v0 v1 v3).mp hncol013
+  -- Cayley–Menger positivity of the base tetrahedron
+  have hΔ : 0 < deltaX (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+      (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
+    rw [← delta_delta_x]
+    exact (POS_EQ_NOT_COPLANANR v0 v1 v2 v3).2
+      (fun hc => hnc (coplanar_eq_coplanar_alt.mpr hc))
+  -- the fixed bridge
+  have hb : dihV v0 v1 v2 v3 =
+      dihXf (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+        (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
+    rw [DIHV_EQ_DIH_Y_4PT v0 v1 v2 v3 hncol012 hncol013]
+    simp only [dihY, pow_two]
+  -- the ε-window of `dih_obtuse_mono_b`
+  obtain ⟨e', he', h'⟩ := dih_obtuse_mono_b_p21 (dist v0 v1 ^ 2) (dist v0 v2 ^ 2)
+    (dist v0 v3 ^ 2) (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2)
+    hx1 hΔ hu1 hu2
+  -- the `|2·d·t + t²|` window
+  have hcont_abs : ContinuousAt
+      (fun t : ℝ => e' - |2 * dist v2 v3 * t + t * t|) 0 := by
+    have h : ContinuousAt (fun t : ℝ => 2 * dist v2 v3 * t + t * t) 0 := by fun_prop
+    exact continuousAt_const.sub h.abs
+  obtain ⟨eabs, heabs, habs⟩ := continuous_nbd_pos_p21 hcont_abs (by simpa using he')
+  obtain ⟨E, hE, hEabs, hE2d⟩ := epsilon_pair_p21 eabs (2 * dist v2 v3) heabs (by positivity)
+  refine ⟨E, hE, ?_⟩
+  intro v2' t ht ht0 hd02 hd12 hd23
+  -- non-collinearity of the moving triple from the fixed Gram minor
+  have hncolv2' : ¬ Collinear ℝ ({v0, v1, v2'} : Set V3) := by
+    refine (not_col_eq_upsX_pos_p21 v0 v1 v2').mpr ?_
+    rw [hd02, hd12]
+    exact hu1
+  have hs_abs : |2 * dist v2 v3 * t + t * t| < e' := by
+    have h := hEabs t ht
+    have h2 := habs t (by simpa using h)
+    linarith
+  have ht2d : 0 ≤ t + 2 * dist v2 v3 := by
+    have h := hE2d t ht
+    linarith [neg_abs_le t]
+  have hs_np : 2 * dist v2 v3 * t + t * t ≤ 0 :=
+    square_add_neg_lemma_p21 (dist v2 v3) t ht0 ht2d
+  have hkey := h' (2 * dist v2 v3 * t + t * t) hs_abs hs_np
+  -- bridge the two `dihV`s to `dih_x`
+  have hb' : dihV v0 v1 v2' v3 =
+      dihXf (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+        (dist v2' v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
+    rw [DIHV_EQ_DIH_Y_4PT v0 v1 v2' v3 hncolv2' hncol013]
+    simp only [dihY, pow_two, hd02, hd12]
+  have hs_eq : dist v2' v3 ^ 2 =
+      dist v2 v3 ^ 2 + (2 * dist v2 v3 * t + t * t) := by
+    rw [hd23]; ring
+  rw [hb', hb, hs_eq]
+  exact hkey
 
 /-- HOL `dihV_obtuse_mono` (CUXVZOZ.hl:3476): the combined statement —
 from `dihV_obtuse_mono_a` (obtuse case, ε interleaved with `_b` via
