@@ -1,17 +1,17 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2095443
-K_SORRIED 77
+K_REACH 2095485
+K_SORRIED 76
 K_AXIOM 585
 K_MODULES 5219
-K_UNIVERSE 2108348
-COVERAGE 2095443 / 2108348
-K_UNIVERSE_XCASES 46368
-K_REACH_XCASES 35020
-K_SORRIED_XCASES 77
+K_UNIVERSE 2108358
+COVERAGE 2095485 / 2108358
+K_UNIVERSE_XCASES 46378
+K_REACH_XCASES 35062
+K_SORRIED_XCASES 76
 K_AXIOM_XCASES 585
-TOTAL_VALUE_DECLS 2094769
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2094769
-SORRIED 77
+TOTAL_VALUE_DECLS 2094811
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2094811
+SORRIED 76
 AXIOMS 585
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
@@ -88,7 +88,6 @@ Kepler.Text.PackingAuto13	Kepler.Text.URRPHBZ2	parent=Kepler.Text.QZYZMJC
 Kepler.Text.LocalAuto15	Kepler.Text.VPWSHTO_p15	parent=Kepler.Text.VPWSHTO_PRIME_p15
 Kepler.Text.LocalAuto32	Kepler.Text.YOBIMPP_p32	parent=Kepler.Text.YOBIMPP_discharged
 Kepler.Text.LocalAuto21	Kepler.Text.general_482_deformation_p21	parent=Kepler.Text.CUXVZOZ_p21
-Kepler.Text.PackingAuto25	Kepler.Text.pkLeafRankCriticalEdge	parent=Kepler.Text.LEAF_RANK_PROPS
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_ox3q1h_merge	parent=Kepler.Text.pkrmQuarter
 Kepler.Text.LocalConcl	_private.Kepler.Text.LocalConcl.0.Kepler.Text.mnt11_anchor	parent=Kepler.Text.TFITSKC_discharged
 --- AXIOMS ---
@@ -753,6 +752,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 975	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard645
 975	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard805
 975	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard898
+973	Kepler.Text.PackingAuto25
 971	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1047
 971	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1062
 971	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard113
@@ -843,7 +843,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 931	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1259
 931	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1938
 931	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard85
-931	Kepler.Text.PackingAuto25
 927	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1096
 927	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1185
 927	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard1376

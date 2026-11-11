@@ -6,6 +6,14 @@
 >
 > ## 状态更新
 >
+> - **2026-11-12（01:40，编排者，八）**：**J4-w1 落库（@`9ac1bc89`）——Text 章级债 21→20，锥总 77→76**。
+>   实测：cone `K_REACH 2,095,485` / **SORRIED 76**（清单 diff：closed 恰 `{Kepler.Text.pkLeafRankCriticalEdge}`、
+>   added ∅）/ `K_AXIOM 585`（名单 diff 0/0）/ MODULES 5,219 / UNIVERSE 2,108,358 / COVERAGE 99.3883%；
+>   口径 II 35,062 / 76 / 585 / 46,378。根面 589 与基线 U **逐字节 IDENTICAL**；TSV 换装 5,899 行、
+>   manifest `--check` PASS。**两车道 BLOCKED 判词**：aq13-w1（根 = `general_482_deformation_p21`）、
+>   tame-corr-w1（根 = VASYYAU 家族 HOLD(b) ~1,815 HOL 行）；**general_482 前置 4/7 已真证**
+>   （编排者探针：`deform_simplex_decrease_edge23_p21`/`deformation_BBs_p21`/`deformation_BBs_ALT_p21`/
+>   `tau3_azim_p21` 全标准三；剩 3 kit 件仍 `sorryAx`）⇒ wave 2 三车道发车（g482 / vas / mntdedup）。
 > - **2026-11-11（21:38，编排者，七）**：**基线 U 定格（@`64663be3`，J5-9 会师）——hTC Assembly 三件全闭；
 >   e2e 剩余债 = 55 `nli*` + 1 hLP + 21 Text 章级**。实测：cone `K_REACH 2,095,443`（较 T +6,474）/
 >   **SORRIED 77**（78→77；清单 diff：closed 恰 `{Kepler.Assembly.jcajydu}`、added ∅）/
@@ -72,11 +80,12 @@
 > 声明**名**是稳定锚点：行号对不上时按名字 grep。
 >
 > ## 口径与数字出处（本文不自己重算任何指标）
-> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 U @`64663be3`，2026-11-11**）
->   —— cone SORRIED **77**（= 55 `nli*` + 1 hLP + 21 Text 章级）/ `K_AXIOM` **585** /
->   根面 589 = 585 native + 标准三 + `sorryAx`。基线 T（`52275a1c`）为 SORRIED 78 / 根面 589。
-> - 77 的构成（56 Assembly + 21 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
->   `docs/e2e-reachability-map.md` 基线 U + `handoff-2026-11-06.md` §0。
+> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 V @`9ac1bc89`，2026-11-12**）
+>   —— cone SORRIED **76**（= 55 `nli*` + 1 hLP + 20 Text 章级）/ `K_AXIOM` **585** /
+>   根面 589 = 585 native + 标准三 + `sorryAx`。基线 U（`64663be3`）为 SORRIED 77 / 根面 589；
+>   基线 T（`52275a1c`）为 SORRIED 78 / 根面 589。
+> - 76 的构成（56 Assembly + 20 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
+>   `docs/e2e-reachability-map.md` 基线 V + `handoff-2026-11-06.md` §0。
 > - 信任基座逐类对照（含 `by eval` ↔ `native_decide`）、原版怎么处理 624：`docs/trust-base.md` §2 + `handoff §0.1`。
 > - 图数 19,715（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）：`Kepler/Assembly.lean:7295-7299` docstring。
 > - LP 记录 43,078（root 19,237 + easy 4,403 + hard 19,438、infeasible 189）：`Kepler/Text/LP/LPCert.lean:28-35` 文件头（该文件自己的盘点口径）。

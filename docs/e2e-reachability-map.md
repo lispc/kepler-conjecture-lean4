@@ -572,6 +572,40 @@ hTC 的 Assembly 侧全闭。**Axiom 名单 diff = 0/0**（585 不变，仍 580 
 （与基线 T 逐项一致）。**纪律**：`#print axioms` 探针必须保证**目标声明所在模块的 olean**
 新鲜；上游改动后下游 importer（尤其 `Final`）不重编，根面读数会"穿越"到旧状态。
 
+### 基线 V：J4-w1 PA25 三件落库 @ `9ac1bc89`（2026-11-12）
+
+> 触发：`PackingAuto25` 三件真证替换（`CELL_CLUSTER_ESTIMATE_REDUCE` /
+> `CELL_CLUSTER_N_LE_1` / 锥内 `pkLeafRankCriticalEdge`；214 ins / 3 del = 恰 3 行 sorry 删除面）。
+> 仪器 `nice -n 19 lake env lean scripts/e2e_reach_map.lean`（串行，pit 15 纪律）；
+> 输出原样换装 `docs/e2e-reachability-map.tsv`（**5,899 行**，−1 行 = 少 1 个 SORRIED）；
+> `trust_manifest.py --check` PASS（585/585 ground、0 形状未知、三区间 0 空隙 0 重叠）。
+
+| 指标 | 基线 V | 基线 U | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,485** | 2,095,443 | **+42** |
+| SORRIED | **76** | 77 | **−1** |
+| K_AXIOM | **585** | 585 | **0** |
+| K_MODULES | 5,219 | 5,219 | 0 |
+| K_UNIVERSE | 2,108,358 | 2,108,348 | +10 |
+| COVERAGE | 99.3883% | 99.3879% | +0.0004pp |
+| 口径 II（ex-Cases） | K_REACH **35,062** / SORRIED **76** / AXIOM **585** / UNIVERSE **46,378** | 35,020 / 77 / 585 / 46,368 | +42 / −1 / 0 / +10 |
+| TOTAL_VALUE_DECLS | 2,094,811 | 2,094,769 | +42 |
+
+**SORRIED 清单逐行 diff（唯一判据）**：closed = **{`Kepler.Text.pkLeafRankCriticalEdge`}**，
+added = ∅。**Axiom 名单 diff = 0/0**（585 不变，仍 580 shard-range + 5 tri-single-seed）。
+根面 `#print axioms Kepler.the_kepler_conjecture_e2e` 与基线 U **逐字节 IDENTICAL**（589）。
+
+**剩余 76 的构成**（`--- SORRIED ---` 段实测）：
+- Assembly **56** = 55 `nli*`（hNL）+ 1 `lpArchiveCertificatesDebt`（hLP）；
+- Text **20** = LocalAuto 阶梯 16（LA15/20/21/22/23/26/27×2/29/30/32×3/33×3）
+  + `TameLp.fully_surrounded_perimeter_bound` + PA13 `URRPHBZ2`
+  + PA25 `real_model_ox3q1h_merge` + `_private…mnt11_anchor`（21→20，J4-w1 闭 `pkLeafRankCriticalEdge`）。
+
+**判读**：+42 reach / +10 universe 全部来自三件证明体与其私有 helper 入树（MODULES 不变）；
+SORRIED −1 恰为被真证声明，零新增。
+
+- 回归对照（基线 U 的 stale-olean 勘误仍有效）：见上一节「仪器勘误」。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
