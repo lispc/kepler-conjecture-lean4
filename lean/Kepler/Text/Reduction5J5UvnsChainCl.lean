@@ -9,6 +9,11 @@
 import Kepler.Text.Reduction5J5UvnsGetD
 import Kepler.Text.Reduction5BetwnBase
 import Kepler.Text.Reduction3Thm6B
+import Kepler.Text.Reduction5J5Pnxvwfs
+import Kepler.Text.Reduction4Subseg4
+import Kepler.Text.Reduction5J5Termination
+import Kepler.Text.TameSpine.Reduction3NcvibwuSpineB2d
+import Kepler.Text.TameSpine.JcajyduRed2Tav2
 
 set_option autoImplicit false
 set_option maxHeartbeats 4000000
@@ -17,8 +22,8 @@ set_option linter.unusedSectionVars false
 
 namespace Kepler.Text.Reduction5
 
-open Kepler.Assembly (nextEl)
-open Kepler.Graphs (between)
+open Kepler.Assembly (GoodList nextEl prevEl findFaceDarts listOfDarts listPairs)
+open Kepler.Graphs (fgraph between)
 
 /-- 走行分类谓词（相邻 Some 项 `nextEl f` 相邻，或落入分类谓词 `D`）。 -/
 def ChainCl (f : List ℕ) (D : ℕ → ℕ → Prop) (l : List (Option ℕ)) : Prop :=
@@ -255,6 +260,50 @@ theorem chainClSomeAppend (f : List ℕ) (D : ℕ → ℕ → Prop)
           · simp only [if_neg e1] at hs1
             simp at hs1
 
+/-! ## §3 U1c 前置：last/getLastD 桥（私有重落） -/
+
+/-- `l.getD (|l|-1) = l.getLastD`。 -/
+theorem uvnsGetDLastD {l : List (Option ℕ)} (hne : l ≠ []) :
+    l.getD (l.length - 1) none = l.getLastD none := by
+  have h1 : l.getLastD none = l.getLast hne := by
+    induction l with
+    | nil => exact absurd rfl hne
+    | cons a t ih =>
+      cases t with
+      | nil => rfl
+      | cons b t => simpa using ih (by simp)
+  rw [h1]
+  have hlt : l.length - 1 < l.length := by
+    cases l with
+    | nil => exact absurd rfl hne
+    | cons a t => simp
+  rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt hlt (none : Option ℕ),
+    List.getLast_eq_getElem]
+
+/-- `l.getLastD = l.getLast`（非空时）。 -/
+theorem uvnsGetLastDEqGetLast {l : List (Option ℕ)} (hne : l ≠ []) :
+    l.getLastD none = l.getLast hne := by
+  induction l with
+  | nil => exact absurd rfl hne
+  | cons a t ih =>
+    cases t with
+    | nil => rfl
+    | cons b t => simpa using ih (by simp)
+
+/-- `l = l.dropLast ++ [last]`（`getLast` 形式）。 -/
+theorem uvnsEqDropLastAppend {α : Type} {l : List α} {a : α}
+    (hne : l ≠ []) (h : l.getLast hne = a) : l = l.dropLast ++ [a] := by
+  rw [← h, List.dropLast_append_getLast hne]
+
+/-! ## §4 U1c 主线：mid 段前缀归纳（`sizeVs` 骨架改 Cl+last 不变量） -/
+
+/-- UVNS 分类谓词（每段 `(y_t, z_t)` 且 `betwn (find_face) y_t z_t = []`）。 -/
+def UvnsD (L : fgraph ℕ) (N : List (List Dart)) (r : List Dart) (x : Dart) (k : ℕ) :
+    ℕ → ℕ → Prop :=
+  fun a b => ∃ t, t < k ∧ a = (ytrans L N r x t).1 ∧ b = (ztrans L N r x t).1 ∧
+    (between (findFaceDarts L x) (ytrans L N r x t) (ztrans L N r x t)).length = 0
+
+
 end Kepler.Text.Reduction5
 
 #print axioms Kepler.Text.Reduction5.ChainCl
@@ -264,3 +313,6 @@ end Kepler.Text.Reduction5
 #print axioms Kepler.Text.Reduction5.uvnsGetDMapSomeApp
 #print axioms Kepler.Text.Reduction5.uvnsGetDMapAdd
 #print axioms Kepler.Text.Reduction5.chainClSomeAppend
+#print axioms Kepler.Text.Reduction5.uvnsGetDLastD
+#print axioms Kepler.Text.Reduction5.uvnsEqDropLastAppend
+#print axioms Kepler.Text.Reduction5.UvnsD
