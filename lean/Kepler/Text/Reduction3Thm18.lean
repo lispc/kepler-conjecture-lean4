@@ -13,6 +13,13 @@ import Kepler.Text.T4TheoryA
 import Kepler.Text.T4TheoryB
 import Kepler.Text.Reduction3DefsAssumptionInst
 import Kepler.Text.TameSpine.JcajyduRed2Tav2
+import Kepler.Text.Reduction3Thm5B
+import Kepler.Text.Reduction5J5Termination
+import Kepler.Text.TameSpine.TameList2
+import Kepler.Text.TameSpine.TameList3
+import Kepler.Text.TameSpine.TameList5
+import Kepler.Text.TameSpine.TameList6
+import Kepler.Text.MoreLemma2a23
 
 set_option autoImplicit false
 set_option maxHeartbeats 8000000
@@ -22,7 +29,7 @@ set_option linter.unusedSectionVars false
 namespace Kepler.Text.Reduction3
 
 open Kepler.Graphs (Face Graph fgraph nonFinals minimalFace minimalVertex
-  generatePolygon subdivFace maxGon setFinal)
+  generatePolygon subdivFace maxGon setFinal makeFaceFinal)
 open Kepler.Assembly (GoodList findFaceDarts prevEl nextEl listPairs listOfDarts)
 open Kepler.Text.Reduction5
   (Dart core quotientList ntrans rtrans ytrans ztrans transformCount finalList indexf)
@@ -195,8 +202,180 @@ theorem reductionA
       Option.default_eq_none] using hres'
   exact ⟨hfg', hgf', hvs2', hmono, by rw [← hi]; exact hsize, hP19, hsub, hpair⟩
 
+
+/-! ## §W6g `reduction_B`（reduction3.hl:2478） -/
+
+/-- HOL `reduction_B`（reduction3.hl:2478-2627）。 -/
+theorem reductionB
+    (hA3 : assumptionSet3 GoodNodesSlot IsRestrictedSlot MarkedSlot)
+    (hgen : ∀ (L : fgraph ℕ) (hL : GoodList L) (N Nk : List (List Dart))
+      (g : Graph) (p : ℕ) (fs : List Face) (f : Face) (v k : ℕ) (r : List Dart)
+      (x : Dart) (fx : List Dart) (uvns : List (ℕ × ℕ × ℕ)) (gk : Graph) (fk : Face)
+      (vs : List (Option ℕ)) (vs' : List ℕ),
+      GoodListNodesTl L hL →
+      (hypermapOfList L hL).IsRestricted →
+      newvertexPrepped L N r x →
+      markedList L hL N r x →
+      ¬ finalList L r →
+      matchQuotientList g L N →
+      g.final = false →
+      Kepler.Text.TameSpine.PlaneGraphPSpine p g →
+      Kepler.Text.TameCorrList.GoodFacesV3 g →
+      Kepler.Text.TameCorrList.VerticesSet2Eq g →
+      p = (L.map List.length).foldr max 0 - 3 →
+      nonFinals g = fs →
+      f = minimalFace fs →
+      v = minimalVertex g f →
+      loopChoice2 g L N = (r, x) →
+      uvns = coreTripleV4 L N r x →
+      vs = destTripleFull f.vertices v uvns →
+      (vs.filter Option.isSome).map Option.get! = vs' →
+      gk = (subdivFace0Alt2 g f g.countVertices uvns).2 →
+      fk = (subdivFace0Alt2 g f g.countVertices uvns).1 →
+      transformCount L N r x = k →
+      ntrans L N r x k = Nk →
+      findFaceDarts L x = fx →
+      (fgraphOfGraph gk = quotientList L Nk ∧
+        Kepler.Text.TameCorrList.GoodFacesV3 gk ∧
+        gk.faceListAt.length = gk.countVertices ∧
+        Kepler.Text.TameCorrList.VerticesSet2Eq gk ∧
+        gk = (subdivFace0Beta g f none 0 vs).2.2 ∧
+        fk = (subdivFace0Beta g f none 0 vs).2.1 ∧
+        listPairs fk.vertices = rtrans L N r x k)) :
+    Kepler.Text.TameSpine.restrictedHypermapsArePlaneGraphsV4 := by
+  apply reductionA hA3
+  intro L hL N Nk g p fs f v k r x fx uvns g' vs vs' hgn hres hnvp hm hnf hmq hng hpg
+    hgf hvs2 hp hfs hf hv hlc huv hvs hvs' hg' hk hN' hfx
+  let gk : Graph := (subdivFace0Alt2 g f g.countVertices uvns).2
+  let fk : Face := (subdivFace0Alt2 g f g.countVertices uvns).1
+  have hgk : gk = (subdivFace0Alt2 g f g.countVertices uvns).2 := rfl
+  have hfk : fk = (subdivFace0Alt2 g f g.countVertices uvns).1 := rfl
+  have h := hgen L hL N Nk g p fs f v k r x fx uvns gk fk vs vs' hgn hres hnvp hm hnf
+    hmq hng hpg hgf hvs2 hp hfs hf.symm hv hlc huv hvs hvs' hgk hfk hk hN' hfx
+  obtain ⟨hfgk, hgfk, hcl, hvs2k, hgk_beta, hfk_beta, hpair⟩ := h
+  have hg'eq : g' = makeFaceFinal fk gk := by
+    rw [← hg']
+    simp only [subdivFaceFinal2, ← hgk, ← hfk]
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have hfinal := Kepler.Text.Reduction5.finalListTransformCount L hL hgn haq hm
+    (t := transformCount L N r x) rfl
+  have hne : vs ≠ [] := vsNonnil L N r x f.vertices v uvns vs hfinal hnf huv hvs
+  have h0 : transformCount L N r x ≠ 0 :=
+    Kepler.Text.Reduction5.transformCountNon0OfMarked L hL hgn haq hm hnf
+  have hhd := hdVsSomeV L N r x g f v uvns vs h0 huv hvs
+  have his : (vs.headD none).isSome = true := by rw [hhd]; rfl
+  have hm_k : markedList L hL Nk (rtrans L N r x k) x := by
+    rw [← hN']
+    exact Kepler.Text.TameSpine.aqiunpp L hL hgn N r x hm k
+  have hnl : normalList L hL Nk := hm_k.2.1
+  have huniq : ∀ v ∈ Kepler.Text.TameCorrList.verticesSet2 gk,
+      (Kepler.Text.TameCorrList.facesAtV2 gk v).Nodup :=
+    fun v _ => facesAtV2Uniq L hL hgn Nk hnl hres gk v hfgk
+  have hgf' : Kepler.Text.TameCorrList.GoodFacesV3 (makeFaceFinal fk gk) :=
+    goodFacesMakeFaceFinal fk gk huniq hcl hgfk
+  have hvs2' : Kepler.Text.TameCorrList.VerticesSet2Eq (makeFaceFinal fk gk) := by
+    show Kepler.Text.TameCorrList.verticesSet2 (makeFaceFinal fk gk) =
+      Kepler.Text.TameLp.elementsOfList (makeFaceFinal fk gk).fgraph
+    rw [show Kepler.Text.TameCorrList.verticesSet2 (makeFaceFinal fk gk)
+        = Kepler.Text.TameCorrList.verticesSet2 gk from by
+      show {v : ℕ | v ∈ (makeFaceFinal fk gk).vertices} = {v : ℕ | v ∈ gk.vertices}
+      rw [Kepler.Text.TameSpine.verticesSet2MakeFaceFinal]]
+    rw [show (makeFaceFinal fk gk).fgraph = gk.fgraph from
+      Kepler.Text.TameSpine.fgraphMakeFaceFinal fk gk]
+    exact hvs2k
+  have hfg' : fgraphOfGraph (makeFaceFinal fk gk) = quotientList L Nk := by
+    have hb : fgraphOfGraph (makeFaceFinal fk gk)
+        = Kepler.Text.TameSpine.facesVertexLists (makeFaceFinal fk gk) := rfl
+    have hb2 : Kepler.Text.TameSpine.facesVertexLists gk = fgraphOfGraph gk := rfl
+    rw [hb, Kepler.Text.TameSpine.fgraphMakeFaceFinal, hb2]
+    exact hfgk
+  have hsub_beta : subdivFace g f vs
+      = makeFaceFinal (subdivFace0Beta g f none 0 vs).2.1
+          (subdivFace0Beta g f none 0 vs).2.2 :=
+    subdivFaceSubdivFace0Beta g f vs hne his
+  have hsub : subdivFace g f vs = makeFaceFinal fk gk := by
+    rw [hsub_beta, ← hfk_beta, ← hgk_beta]
+  have hpair' : listPairs ((subdivFace0Alt2 g f g.countVertices uvns).1.vertices)
+      = rtrans L N r x k := by
+    rw [← hfk]
+    exact hpair
+  exact ⟨by rwa [← hg'], by rwa [← hg'], by rwa [← hg'], by rwa [← hg'], hpair'⟩
+
+/-! ## §W6h `reduction_C`（reduction3.hl:2629） -/
+
+/-- HOL `reduction_C`（reduction3.hl:2629-2704）。 -/
+theorem reductionC
+    (hA3 : assumptionSet3 GoodNodesSlot IsRestrictedSlot MarkedSlot)
+    (hgen : ∀ (L : fgraph ℕ) (hL : GoodList L) (N Nk : List (List Dart))
+      (g : Graph) (p : ℕ) (fs : List Face) (f : Face) (v k : ℕ) (r : List Dart)
+      (x : Dart) (fx : List Dart) (uvns : List (ℕ × ℕ × ℕ)) (gk : Graph) (fk : Face)
+      (vs : List (Option ℕ)) (vs' : List ℕ),
+      GoodListNodesTl L hL →
+      (hypermapOfList L hL).IsRestricted →
+      newvertexPrepped L N r x →
+      markedList L hL N r x →
+      ¬ finalList L r →
+      matchQuotientList g L N →
+      g.final = false →
+      Kepler.Text.TameSpine.PlaneGraphPSpine p g →
+      Kepler.Text.TameCorrList.GoodFacesV3 g →
+      Kepler.Text.TameCorrList.VerticesSet2Eq g →
+      p = (L.map List.length).foldr max 0 - 3 →
+      nonFinals g = fs →
+      f = minimalFace fs →
+      v = minimalVertex g f →
+      loopChoice2 g L N = (r, x) →
+      uvns = coreTripleV4 L N r x →
+      vs = destTripleFull f.vertices v uvns →
+      (vs.filter Option.isSome).map Option.get! = vs' →
+      gk = (subdivFace0Alt2 g f g.countVertices uvns).2 →
+      fk = (subdivFace0Alt2 g f g.countVertices uvns).1 →
+      transformCount L N r x = k →
+      ntrans L N r x k = Nk →
+      findFaceDarts L x = fx →
+      (fgraphOfGraph gk = quotientList L Nk ∧
+        Kepler.Text.TameCorrList.GoodFacesV3 gk ∧
+        gk.faceListAt.length = gk.countVertices ∧
+        Kepler.Text.TameCorrList.VerticesSet2Eq gk ∧
+        gk = (subdivFace0Beta g f none 0 vs).2.2 ∧
+        fk = (subdivFace0Beta g f none 0 vs).2.1 ∧
+        core L (rtrans L N r x k) = fk.vertices)) :
+    Kepler.Text.TameSpine.restrictedHypermapsArePlaneGraphsV4 := by
+  apply reductionB hA3
+  intro L hL N Nk g p fs f v k r x fx uvns gk fk vs vs' hgn hres hnvp hm hnf hmq hng
+    hpg hgf hvs2 hp hfs hf hv hlc huv hvs hvs' hgk hfk hk hN' hfx
+  have h := hgen L hL N Nk g p fs f v k r x fx uvns gk fk vs vs' hgn hres hnvp hm hnf
+    hmq hng hpg hgf hvs2 hp hfs hf hv hlc huv hvs hvs' hgk hfk hk hN' hfx
+  obtain ⟨hfgk, hgfk, hcl, hvs2k, hgk_beta, hfk_beta, hcorek⟩ := h
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have hm_k : markedList L hL Nk (rtrans L N r x k) x := by
+    rw [← hN']
+    exact Kepler.Text.TameSpine.aqiunpp L hL hgn N r x hm k
+  have hnl : normalList L hL Nk := hm_k.2.1
+  have hnlS : Kepler.Text.TameSpine.NormalListSpine hL Nk :=
+    (Kepler.Text.ChainBridge.normalList_iff_normalListSpine L hL Nk).mp hnl
+  have hrN : rtrans L N r x k ∈ Nk := hm_k.2.2.1
+  have hdarts : ∀ d ∈ rtrans L N r x k, d ∈ listOfDarts L := by
+    intro d hd
+    exact Kepler.Text.TameSpine.normalListListOfDarts hnlS d
+      (List.mem_flatten.mpr ⟨rtrans L N r x k, hrN, hd⟩)
+  have hrn : (rtrans L N r x k).Nodup :=
+    (Kepler.Text.TameSpine.normalListUniqNonnil hnlS hrN).1
+  have hfin : finalList L (rtrans L N r x k) :=
+    Kepler.Text.Reduction5.finalListTransformCount L hL hgn haq hm (t := k) hk
+  have hxr : x ∈ rtrans L N r x k := hm_k.2.2.2.1
+  have hxD : x ∈ listOfDarts L := Kepler.Text.MoreLemma2a23.markedListOfDart L hL hm
+  have hpair : listPairs fk.vertices = rtrans L N r x k := by
+    have h := finalListPairsCore L (rtrans L N r x k) x hL hres hdarts hrn hfin hxr hxD
+    rwa [hcorek] at h
+  exact ⟨hfgk, hgfk, hcl, hvs2k, hgk_beta, hfk_beta, hpair⟩
+
 end Kepler.Text.Reduction3
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理） -/
 #print axioms Kepler.Text.Reduction3.assumptionSet3Projection
 #print axioms Kepler.Text.Reduction3.reductionA
+#print axioms Kepler.Text.Reduction3.reductionB
+#print axioms Kepler.Text.Reduction3.reductionC
