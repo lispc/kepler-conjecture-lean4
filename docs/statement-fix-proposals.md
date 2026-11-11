@@ -6679,6 +6679,8 @@ RC=0 / 0 err / 0 warn；探针 4 条全 ⊆ `[propext, Classical.choice, Quot.so
 
 ## 106. J5-9 hF 链五件 `rRtransEq`/`coreSplitNormalList` 槽型误移为无条件 schema（HOL 原文前提承载）— 分级 **A**（移植槽型误植 · 槽变弱 ⇒ 定理变强 · 结论不变 · 零新定理）
 
+> **已执行（2026-11-11，commit `1b66dc50`，aq13 ml11）**：六文件 +166/−26，14 探针 ⊆ 标准三、零 sorryAx；`hFTameSpine` + `jcajyduOfK4` 落库。
+
 ### (a) HOL 裁决
 
 `reference/flyspeck/text_formalization/tame/reduction3.hl:56-71`：
