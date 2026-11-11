@@ -158,10 +158,10 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 10 三车道在飞（池 3/3）**：`g482-482-w3`（`general_482_deformation_p21` 本体续写，接 w2 的
-> 278 行前缀 + T0–T8 配方）、`rrw-w1`（`RRCWNSJ_p26`，锥内直源）、`tfitskcv1-w1`（`TFITSKCv1_p27`）。
-> **w2 判 STOPPED**（44/44 上游标准三，卡在单件规模，不是缺件；见续1007）；**la27wire 判 BLOCKED**
-> （JCYFMRP 唯一缺口 = general_482；TFITSKC 缺 TFITSKCv1 + LA7 件，见续1006 ⑥）。
+> **wave 11 三车道在飞（池 3/3）**：`g482-482-w3`（`general_482_deformation_p21` 续写）、
+> `rrw-w1`（`RRCWNSJ_p26`）、`la7gen-w1`（LA7 `GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE` 复制 W12A 真证）。
+> **tfitskcv1 判 BLOCKED**（缺口 A 锁死 general_482；缺口 B 已解，见续1008）；**w2 STOPPED**
+> （44/44 上游标准三，卡在规模；见续1007）。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -507,6 +507,12 @@
 ③ **ERRATA（对 w1 台账 T7）**：`LEMMA_4828966562_p22` 与 `coplanar_delta_y_zero_p18` **本来就在 LA21 import 闭包内**（`#check` 直见，LA21→LA38→LA18/23 链），w1 的「桥缺失/需接线」**不成立**；零 import 改动、零 DEF-FIX。
 ④ **`g482-482-w3` 发车**（池 3/3）：从 `Body.lean`/`Kit.lean` 续写剩余 ~440 HOL 行（T5–T8），分批编译，目标 LA21 3→2、本体标准三。**磁盘吃紧（当前 ~3 GiB 空闲，`.lake` 74G）** ⇒ w3 已禁用全量 hardlink shadow，探针走 `.lake` 只读 + `/tmp` 产物 + olean md5 自证。
 ⑤ **wave 10 在飞（3/3）**：`g482-482-w3` / `rrw-w1`（`RRCWNSJ_p26`）/ `tfitskcv1-w1`（`TFITSKCv1_p27`）。
+
+- **2026-11-12（06:25，续1008）**：**`tfitskcv1-w1` 判词 BLOCKED（缺口 A 锁死 general_482）；但缺口 B 已解——`GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE` 真证早已在库；`la7gen-w1` 发车**。
+① **判词 BLOCKED（0/1）**：`TFITSKCv1_p27`（LA27:311）的 HOL 两次决定性收官是 `Cuxvzoz.CUXVZOZ`（:331）与 `Cuxvzoz.CJBDXXN`（:550），Lean 孪生只是 `general_482_deformation_p21` 的一行实例（`g482-482-w3` 在飞）⇒ 唯一根锁死。基线 LA27 岛编 RC=0/0err/4 sorry（`:311/:331/:495/:559`，olean md5 `ddf26a6b` 与 la27wire 逐字节相同）；28 件路线 kit 全标准三。
+② **缺口 B 已闭（重要更正）**：`GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE`（LA7:958 sorry）的真证明已在 **`LocalAuto7W12A.lean:236` `p12a_straight_aff_ge`**（落库 `96f67663`），陈述逐字相同、探针标准三、proof-term replay 编译通过；`LocalAuto7W12A` import `LocalAuto7`（正向）⇒ 修法 = **把证明体复制进 LA7**（同 patch 内复制，非新增孪生公理）。**ERRATA（续1006 ⑥）**：「TFITSKC 缺 LA7 件」应改为「LA7 件已有真证，待复制/重指」。
+③ **其他盘点**：`CHANGE_A/B/W_SCS_MOD` 均标准三但在 LA28（LA28→LA34→LA18→LA27 成环 ⇒ 只能 LA27 内 private 重写，估 400–700 行）；`LEMMA_4828966562_p22`/`LEMMA_1834976363_p22` 标准三且在 LA27 闭包内；109 条 `mainEstimate_*` 是纯数值 Prop，其几何实例化就是 `general_482`。**解锁顺序**：general_482 → `JCYFMRP_p27`（300 行搬运）；LA7 复制 → `TFITSKC_p27`（13 行 demo）；`TFITSKCv1_p27` 需再等 general_482 + 私有 kit 重写。
+④ **wave 11（池 3/3）**：`g482-482-w3`（general_482 续写）/ `rrw-w1`（`RRCWNSJ_p26`）/ `la7gen-w1`（LA7 `GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE` 证明体复制）。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
