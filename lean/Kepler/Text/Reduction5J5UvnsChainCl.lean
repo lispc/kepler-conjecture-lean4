@@ -14,6 +14,8 @@ import Kepler.Text.Reduction4Subseg4
 import Kepler.Text.Reduction5J5Termination
 import Kepler.Text.TameSpine.Reduction3NcvibwuSpineB2d
 import Kepler.Text.TameSpine.JcajyduRed2Tav2
+import Kepler.Text.TameSpine.JcajyduAqLeaf10
+import Kepler.Text.Reduction5J5FstNe
 
 set_option autoImplicit false
 set_option maxHeartbeats 4000000
@@ -304,6 +306,393 @@ def UvnsD (L : fgraph ℕ) (N : List (List Dart)) (r : List Dart) (x : Dart) (k 
     (between (findFaceDarts L x) (ytrans L N r x t) (ztrans L N r x t)).length = 0
 
 
+/-! ## §4 U1c 主线：mid 段前缀归纳（`sizeVs` 骨架改 Cl+last 不变量） -/
+
+/-- **mid 段前缀归纳**：`destTriple0 f [] (uvns.take (i+1))` 的 `ChainCl` +
+末元 = `z_i`。base = 单段 `chainClBase`；succ = `destTriple0Cat2` 拆段 +
+`destTriple0` 步进三分支（三支各取独立分支等式 + 显式桥）。 -/
+theorem chainClMid
+    (L : fgraph ℕ) (hL : GoodList L)
+    (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    (hres : (Kepler.Text.TameLp.hypermapOfList L hL).IsRestricted)
+    {N : List (List Dart)} {r : List Dart} {x : Dart} {k : ℕ}
+    (hm : Kepler.Text.ChainLists.markedList L hL N r x)
+    (hnf : ¬ finalList L r) (hk : transformCount L N r x = k) :
+    ∀ i, i + 1 ≤ k →
+      ChainCl (core L r) (UvnsD L N r x k)
+        (Kepler.Text.Reduction3.destTriple0 (core L r) []
+          ((Kepler.Text.Reduction3.coreTripleV4 L N r x).take (i + 1))) ∧
+      (Kepler.Text.Reduction3.destTriple0 (core L r) []
+          ((Kepler.Text.Reduction3.coreTripleV4 L N r x).take (i + 1))).getLastD none
+        = some (ztrans L N r x i).1 := by
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have hk0 : 0 < k := by
+    have h := Kepler.Text.Reduction5.transformCountNon0OfMarked L hL hgn haq hm hnf
+    rw [hk] at h
+    exact Nat.pos_of_ne_zero h
+  have hnf_i : ∀ i, i < k → ¬ finalList L (rtrans L N r x i) := fun i hi =>
+    Kepler.Text.Reduction4.transformCount_not i (by rw [hk]; exact hi)
+  have hcoreof : ∀ u ∈ r, u.1 ∈ core L r :=
+    Kepler.Text.Reduction4Idx.finalAssumptionMemFstCore L hL hm
+  have hym : ∀ i, i < k → (ytrans L N r x i).1 ∈ core L r := fun i hi =>
+    hcoreof _ (pnxvwfs1 L hL hgn haq i (hnf_i i hi) hm)
+  have hzm : ∀ i, i < k → (ztrans L N r x i).1 ∈ core L r := fun i hi =>
+    hcoreof _ (pnxvwfs2 L hL hgn haq i (hnf_i i hi) hm)
+  have hrnd : (core L r).Nodup := Kepler.Text.Reduction4Idx.markedListUniqCore L hL hm
+  have hlen0 : (Kepler.Text.Reduction3.coreTripleV4 L N r x).length = k := by
+    rw [Kepler.Text.Reduction3.coreTripleV4_length]
+    exact hk
+  have hget : ∀ i (hi : i < k),
+      (Kepler.Text.Reduction3.coreTripleV4 L N r x)[i]'(by rw [hlen0]; exact hi) =
+        ((ytrans L N r x i).1, (ztrans L N r x i).1,
+          (between (findFaceDarts L x) (ytrans L N r x i) (ztrans L N r x i)).length) := by
+    intro i hi
+    exact Kepler.Text.Reduction3.elCoreTriple L N r x i (by rw [hk]; exact hi)
+  set uvns := Kepler.Text.Reduction3.coreTripleV4 L N r x with huv
+  have hlen : uvns.length = k := hlen0
+  intro i
+  induction i with
+  | zero =>
+    intro h1k
+    have h0len : 0 < uvns.length := by rw [hlen]; exact hk0
+    have htake1 : uvns.take 1 = [uvns[0]'h0len] := uvnsGetDTakeOne uvns h0len
+    rw [htake1]
+    have hg0 : uvns[0]'h0len =
+        ((ytrans L N r x 0).1, (ztrans L N r x 0).1,
+          (between (findFaceDarts L x) (ytrans L N r x 0) (ztrans L N r x 0)).length) :=
+      hget 0 hk0
+    rw [hg0]
+    rw [show Kepler.Text.Reduction3.destTriple0 (core L r) []
+          [((ytrans L N r x 0).1, (ztrans L N r x 0).1,
+            (between (findFaceDarts L x) (ytrans L N r x 0) (ztrans L N r x 0)).length)]
+        = Kepler.Text.Reduction3.destTriple0 (core L r)
+          ([some (ytrans L N r x 0).1] ++
+            List.replicate (between (findFaceDarts L x) (ytrans L N r x 0)
+              (ztrans L N r x 0)).length (none : Option ℕ) ++
+            [some (ztrans L N r x 0).1]) [] from rfl]
+    rw [Kepler.Text.Reduction3.destTriple0Nil]
+    refine ⟨chainClBase _ _ _ _ _ ?_, ?_⟩
+    · intro hn
+      exact ⟨0, hk0, rfl, rfl, hn⟩
+    · rw [List.getLastD_concat]
+  | succ i ih =>
+    intro hik
+    have hi1 : i + 1 ≤ k := by omega
+    have hi1lt : i + 1 < k := by omega
+    have hilt : i < k := by omega
+    obtain ⟨hCl, hlast⟩ := ih hi1
+    have hgeti : uvns[i + 1]'(by rw [hlen]; exact hi1lt) =
+        ((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+          (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+            (ztrans L N r x (i + 1))).length) := hget (i + 1) hi1lt
+    have htake : uvns.take (i + 1 + 1)
+        = uvns.take (i + 1) ++ [uvns[i + 1]'(by rw [hlen]; exact hi1lt)] := by
+      rw [List.take_add_one, List.getElem?_eq_getElem (by rw [hlen]; exact hi1lt)]
+      rfl
+    have ha_ne : uvns.take (i + 1) ≠ [] := by
+      intro h
+      have hc := congrArg List.length h
+      rw [List.length_take, hlen, Nat.min_eq_left hi1] at hc
+      simp at hc
+    have hL1ne : Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1)) ≠ [] := by
+      intro h
+      rw [h] at hlast
+      simp at hlast
+    have hlast' : (Kepler.Text.Reduction3.destTriple0 (core L r) []
+        (uvns.take (i + 1))).getLast hL1ne = some (ztrans L N r x i).1 := by
+      rw [← uvnsGetLastDEqGetLast hL1ne]
+      exact hlast
+    have hL1eq : Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+        = (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))).dropLast
+          ++ [some (ztrans L N r x i).1] :=
+      uvnsEqDropLastAppend hL1ne hlast'
+    have hcat2 : Kepler.Text.Reduction3.destTriple0 (core L r) []
+          (uvns.take (i + 1) ++ [uvns[i + 1]'(by rw [hlen]; exact hi1lt)])
+        = (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))).dropLast
+          ++ Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+            [uvns[i + 1]'(by rw [hlen]; exact hi1lt)] :=
+      Kepler.Text.Reduction3.destTriple0Cat2 (core L r) [] (uvns.take (i + 1))
+        [uvns[i + 1]'(by rw [hlen]; exact hi1lt)]
+        (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))).dropLast
+        (ztrans L N r x i).1 ha_ne (fun h => absurd rfl h) hL1eq
+    rw [htake, hcat2, hgeti]
+    by_cases h1 : (ztrans L N r x i).1 = (ytrans L N r x (i + 1)).1
+    · -- 分支 1（`u0 = u`）：追加 `nseq ++ [some z_{i+1}]`
+      have hpc : Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+          [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+            (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+              (ztrans L N r x (i + 1))).length)]
+          = [some (ztrans L N r x i).1] ++
+            (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+              (ztrans L N r x (i + 1))).length (none : Option ℕ)
+              ++ [some (ztrans L N r x (i + 1)).1]) := by
+        simp only [Kepler.Text.Reduction3.destTriple0]
+        rw [if_neg (by simp : ¬ ([some (ztrans L N r x i).1] : List (Option ℕ)) = [])]
+        rw [show ([some (ztrans L N r x i).1] : List (Option ℕ)).getLastD none
+            = some (ztrans L N r x i).1 from rfl]
+        simp only [Option.getD_some, if_pos h1]
+        rfl
+      refine ⟨?_, ?_⟩
+      · have hbridge : (Kepler.Text.Reduction3.destTriple0 (core L r) []
+            (uvns.take (i + 1))).dropLast
+            ++ ([some (ztrans L N r x i).1] ++
+              (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                ++ [some (ztrans L N r x (i + 1)).1]))
+            = Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+              ++ (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                ++ [some (ztrans L N r x (i + 1)).1]) := by
+          rw [← List.append_assoc, ← hL1eq]
+        rw [hpc, hbridge]
+        exact chainClNsAppend (core L r) (UvnsD L N r x k)
+          (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1)))
+          (ztrans L N r x i).1 (ztrans L N r x (i + 1)).1
+          (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+            (ztrans L N r x (i + 1))).length hCl
+          (fun j hj => by
+            have hdj : (Kepler.Text.Reduction3.destTriple0 (core L r) []
+                (uvns.take (i + 1))).getD j none = some (ztrans L N r x i).1 := by
+              rw [show j = (Kepler.Text.Reduction3.destTriple0 (core L r) []
+                (uvns.take (i + 1))).length - 1 from by omega, uvnsGetDLastD hL1ne]
+              exact hlast
+            rw [hdj]
+            rfl)
+          (fun hn => ⟨i + 1, hi1lt, h1, rfl, hn⟩)
+      · have hbridge2 : ((Kepler.Text.Reduction3.destTriple0 (core L r) []
+            (uvns.take (i + 1))).dropLast
+            ++ ([some (ztrans L N r x i).1] ++
+              (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                ++ [some (ztrans L N r x (i + 1)).1]))).getLastD none
+            = some (ztrans L N r x (i + 1)).1 := by
+          rw [← List.append_assoc, ← hL1eq, ← List.append_assoc, List.getLastD_concat]
+        rw [hpc]
+        exact hbridge2
+    · by_cases h2 : nextEl (core L r) (ztrans L N r x i).1 = (ytrans L N r x (i + 1)).1
+      · -- 分支 2（`nextEl u0 = u`）：追加 `[some y_{i+1}] ++ nseq ++ [some z_{i+1}]`
+        have hpc2 : Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+            [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+              (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                (ztrans L N r x (i + 1))).length)]
+            = [some (ztrans L N r x i).1] ++
+              ([some (ytrans L N r x (i + 1)).1] ++
+                (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                  (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                  ++ [some (ztrans L N r x (i + 1)).1])) := by
+          simp only [Kepler.Text.Reduction3.destTriple0]
+          rw [if_neg (by simp : ¬ ([some (ztrans L N r x i).1] : List (Option ℕ)) = [])]
+          rw [show ([some (ztrans L N r x i).1] : List (Option ℕ)).getLastD none
+              = some (ztrans L N r x i).1 from rfl]
+          simp only [Option.getD_some, if_neg h1, if_pos h2]
+          rfl
+        refine ⟨?_, ?_⟩
+        · have hbridge : (Kepler.Text.Reduction3.destTriple0 (core L r) []
+              (uvns.take (i + 1))).dropLast
+              ++ ([some (ztrans L N r x i).1] ++
+                ([some (ytrans L N r x (i + 1)).1] ++
+                  (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                    (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                    ++ [some (ztrans L N r x (i + 1)).1])))
+              = Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+                ++ ([some (ytrans L N r x (i + 1)).1] ++
+                  (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                    (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                    ++ [some (ztrans L N r x (i + 1)).1])) := by
+            rw [← List.append_assoc, ← hL1eq]
+          rw [hpc2, hbridge]
+          refine chainClSomeAppend (core L r) (UvnsD L N r x k)
+            (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1)))
+            (ztrans L N r x i).1 [] (ytrans L N r x (i + 1)).1
+            (ztrans L N r x (i + 1)).1
+            (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+              (ztrans L N r x (i + 1))).length hCl ?_ ?_ ?_ ?_ ?_ ?_
+          · intro j hj
+            have hdj : (Kepler.Text.Reduction3.destTriple0 (core L r) []
+                (uvns.take (i + 1))).getD j none = some (ztrans L N r x i).1 := by
+              rw [show j = (Kepler.Text.Reduction3.destTriple0 (core L r) []
+                (uvns.take (i + 1))).length - 1 from by omega, uvnsGetDLastD hL1ne]
+              exact hlast
+            rw [hdj]
+            rfl
+          · intro _
+            exact Or.inl h2
+          · intro hr
+            exact absurd rfl hr
+          · intro j hj
+            simp at hj
+          · intro hr
+            exact absurd rfl hr
+          · intro hn
+            exact ⟨i + 1, hi1lt, rfl, rfl, hn⟩
+        · have hbridge2 : ((Kepler.Text.Reduction3.destTriple0 (core L r) []
+              (uvns.take (i + 1))).dropLast
+              ++ ([some (ztrans L N r x i).1] ++
+                ([some (ytrans L N r x (i + 1)).1] ++
+                  (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                    (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                    ++ [some (ztrans L N r x (i + 1)).1])))).getLastD none
+              = some (ztrans L N r x (i + 1)).1 := by
+            rw [← List.append_assoc, ← hL1eq, ← List.append_assoc, ← List.append_assoc,
+              List.getLastD_concat]
+          rw [hpc2]
+          exact hbridge2
+      · -- 分支 3（else）：追加 `arc ++ [some y_{i+1}] ++ nseq ++ [some z_{i+1}]`
+        have hne : (ztrans L N r x i).1 ≠ (ytrans L N r x (i + 1)).1 := h1
+        have hpc3 : Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+            [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+              (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                (ztrans L N r x (i + 1))).length)]
+            = [some (ztrans L N r x i).1] ++
+              ((between (core L r) (ztrans L N r x i).1
+                  (ytrans L N r x (i + 1)).1).map some
+                ++ ([some (ytrans L N r x (i + 1)).1] ++
+                  (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                    (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                    ++ [some (ztrans L N r x (i + 1)).1]))) := by
+          simp only [Kepler.Text.Reduction3.destTriple0]
+          rw [if_neg (by simp : ¬ ([some (ztrans L N r x i).1] : List (Option ℕ)) = [])]
+          rw [show ([some (ztrans L N r x i).1] : List (Option ℕ)).getLastD none
+              = some (ztrans L N r x i).1 from rfl]
+          simp only [Option.getD_some, if_neg h1, if_neg h2]
+          simp only [List.append_assoc]
+        refine ⟨?_, ?_⟩
+        · have hbridge : (Kepler.Text.Reduction3.destTriple0 (core L r) []
+              (uvns.take (i + 1))).dropLast
+              ++ ([some (ztrans L N r x i).1] ++
+                ((between (core L r) (ztrans L N r x i).1
+                    (ytrans L N r x (i + 1)).1).map some
+                  ++ ([some (ytrans L N r x (i + 1)).1] ++
+                    (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                      (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                      ++ [some (ztrans L N r x (i + 1)).1]))))
+              = Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+                ++ ((between (core L r) (ztrans L N r x i).1
+                    (ytrans L N r x (i + 1)).1).map some
+                  ++ ([some (ytrans L N r x (i + 1)).1] ++
+                    (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                      (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                      ++ [some (ztrans L N r x (i + 1)).1]))) := by
+            rw [← List.append_assoc, ← hL1eq]
+          rw [hpc3, hbridge]
+          rw [show Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+                ++ ((between (core L r) (ztrans L N r x i).1 (ytrans L N r x (i + 1)).1).map some
+                  ++ ([some (ytrans L N r x (i + 1)).1] ++
+                    (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                      (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                      ++ [some (ztrans L N r x (i + 1)).1])))
+              = Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+                ++ (((between (core L r) (ztrans L N r x i).1
+                      (ytrans L N r x (i + 1)).1).map some
+                  ++ [some (ytrans L N r x (i + 1)).1]) ++
+                  List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                    (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                  ++ [some (ztrans L N r x (i + 1)).1]) from by
+            simp only [List.append_assoc]]
+          have hpos : 0 < (between (core L r) (ztrans L N r x i).1
+              (ytrans L N r x (i + 1)).1).length := by
+            by_contra h
+            exact h2 (Kepler.Text.TameSpine.aq10_betwnEqNil
+              (List.length_eq_zero_iff.mp (by omega : (between (core L r) (ztrans L N r x i).1
+                (ytrans L N r x (i + 1)).1).length = 0))
+              (hzm i hilt) (hym (i + 1) hi1lt) hne hrnd)
+          refine chainClSomeAppend (core L r) (UvnsD L N r x k)
+            (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1)))
+            (ztrans L N r x i).1
+            (between (core L r) (ztrans L N r x i).1 (ytrans L N r x (i + 1)).1)
+            (ytrans L N r x (i + 1)).1 (ztrans L N r x (i + 1)).1
+            (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+              (ztrans L N r x (i + 1))).length hCl ?_ ?_ ?_ ?_ ?_ ?_
+          · intro j hj
+            have hdj : (Kepler.Text.Reduction3.destTriple0 (core L r) []
+                (uvns.take (i + 1))).getD j none = some (ztrans L N r x i).1 := by
+              rw [show j = (Kepler.Text.Reduction3.destTriple0 (core L r) []
+                (uvns.take (i + 1))).length - 1 from by omega, uvnsGetDLastD hL1ne]
+              exact hlast
+            rw [hdj]
+            rfl
+          · intro hr
+            exact absurd (List.length_eq_zero_iff.mpr hr) (by omega : (between (core L r)
+              (ztrans L N r x i).1 (ytrans L N r x (i + 1)).1).length ≠ 0)
+          · intro _
+            have hd0 : (between (core L r) (ztrans L N r x i).1
+                (ytrans L N r x (i + 1)).1).getD 0 0
+                = nextEl (core L r) (ztrans L N r x i).1 := by
+              rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt hpos 0,
+                Kepler.Text.TameSpine.betwnOrbit hne hrnd (hzm i hilt) (hym (i + 1) hi1lt) hpos]
+              simp
+            exact hd0.symm
+          · intro j hj
+            have hj1 : j < (between (core L r) (ztrans L N r x i).1
+                (ytrans L N r x (i + 1)).1).length := by omega
+            have e1 : (between (core L r) (ztrans L N r x i).1
+                (ytrans L N r x (i + 1)).1).getD j 0
+                = (between (core L r) (ztrans L N r x i).1
+                    (ytrans L N r x (i + 1)).1)[j]'hj1 :=
+              Kepler.Text.TameLp.getD_eq_getElem_of_lt hj1 0
+            have e2 : (between (core L r) (ztrans L N r x i).1
+                (ytrans L N r x (i + 1)).1).getD (j + 1) 0
+                = (between (core L r) (ztrans L N r x i).1
+                    (ytrans L N r x (i + 1)).1)[j + 1]'hj :=
+              Kepler.Text.TameLp.getD_eq_getElem_of_lt hj 0
+            rw [e1, e2,
+              Kepler.Text.TameSpine.betwnOrbit hne hrnd (hzm i hilt) (hym (i + 1) hi1lt) hj1,
+              Kepler.Text.TameSpine.betwnOrbit hne hrnd (hzm i hilt) (hym (i + 1) hi1lt) hj]
+            simp only [Function.iterate_succ_apply']
+          · intro hr
+            have hb : (between (core L r) (ztrans L N r x i).1
+                (ytrans L N r x (i + 1)).1) ≠ [] := by
+              intro h
+              rw [h] at hpos
+              simp at hpos
+            have hlastb := Kepler.Text.Reduction5.nextLastBetwn (r := core L r)
+              (y := (ztrans L N r x i).1) (z := (ytrans L N r x (i + 1)).1)
+              (hzm i hilt) (hym (i + 1) hi1lt) hrnd hne hb
+            have e : (between (core L r) (ztrans L N r x i).1
+                (ytrans L N r x (i + 1)).1).getD
+                ((between (core L r) (ztrans L N r x i).1
+                  (ytrans L N r x (i + 1)).1).length - 1) 0
+                = (between (core L r) (ztrans L N r x i).1
+                    (ytrans L N r x (i + 1)).1).getLast hb := by
+              rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt (by omega : (between (core L r)
+                (ztrans L N r x i).1 (ytrans L N r x (i + 1)).1).length - 1
+                < (between (core L r) (ztrans L N r x i).1
+                  (ytrans L N r x (i + 1)).1).length) 0, List.getLast_eq_getElem]
+            rw [e]
+            exact hlastb
+          · intro hn
+            exact ⟨i + 1, hi1lt, rfl, rfl, hn⟩
+        · have hbridge2 : ((Kepler.Text.Reduction3.destTriple0 (core L r) []
+              (uvns.take (i + 1))).dropLast
+              ++ ([some (ztrans L N r x i).1] ++
+                ((between (core L r) (ztrans L N r x i).1
+                    (ytrans L N r x (i + 1)).1).map some
+                  ++ ([some (ytrans L N r x (i + 1)).1] ++
+                    (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                      (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                      ++ [some (ztrans L N r x (i + 1)).1]))))).getLastD none
+              = some (ztrans L N r x (i + 1)).1 := by
+            rw [← List.append_assoc, ← hL1eq]
+            rw [show Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+                  ++ ((between (core L r) (ztrans L N r x i).1
+                      (ytrans L N r x (i + 1)).1).map some
+                    ++ ([some (ytrans L N r x (i + 1)).1] ++
+                      (List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                        (ztrans L N r x (i + 1))).length (none : Option ℕ)
+                        ++ [some (ztrans L N r x (i + 1)).1])))
+                = (((Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+                    ++ (between (core L r) (ztrans L N r x i).1
+                        (ytrans L N r x (i + 1)).1).map some) ++
+                    [some (ytrans L N r x (i + 1)).1]) ++
+                    List.replicate (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                      (ztrans L N r x (i + 1))).length (none : Option ℕ))
+                  ++ [some (ztrans L N r x (i + 1)).1] from by
+              simp only [List.append_assoc]]
+            rw [List.getLastD_concat]
+          rw [hpc3]
+          exact hbridge2
+
 end Kepler.Text.Reduction5
 
 #print axioms Kepler.Text.Reduction5.ChainCl
@@ -316,3 +705,4 @@ end Kepler.Text.Reduction5
 #print axioms Kepler.Text.Reduction5.uvnsGetDLastD
 #print axioms Kepler.Text.Reduction5.uvnsEqDropLastAppend
 #print axioms Kepler.Text.Reduction5.UvnsD
+#print axioms Kepler.Text.Reduction5.chainClMid
