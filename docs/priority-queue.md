@@ -150,11 +150,11 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 5 三车道在飞**：`cuxvzozF-w1`（Section F 四件：`WNWSHJT_ALT_p21` + a/b/azim
-> assumption reduction）、`g482br-w1`（`coplanar_delta_y_zero_p18` + `NOT_COL_EQ_UPS_X_POS` 孪生）、
-> `la22mono-w1`（`LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`）。**g482no4 已落库**
-> （`deform_simplex_684_pent_p21`，`3429af94`）；**vas-nhx 判 BLOCKED**（NEHXMWH：import DAG 死锁，
-> 见续1002 ②）；**g482-482 判 BLOCKED**（7 件 tainted + 2 桥，见续1001）。
+> **wave 6 三车道在飞**：`cuxvzozF-w1`（Section F 四件：`WNWSHJT_ALT_p21` + a/b/azim
+> assumption reduction）、`la22mono-w1`（`LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`）、
+> `cuxvzozG-w1`（Section G 六件 dih/dihV monotonicity）。**g482br 已落库**（两桥件，`a908b449`）；
+> **g482no4 已落库**（`deform_simplex_684_pent_p21`，`3429af94`）；**vas-nhx / g482-482 判 BLOCKED**
+> （import DAG 死锁 / 7 件 tainted，见续1002 ②、续1001）。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -465,6 +465,12 @@
 ② **`vas-nhx-w1` 判词 BLOCKED（0/1，patch 0 字节）**：`NEHXMWH_p23`（HOL `JOTSWIX.hl:1171-1678`）的两条 docstring 暗示前置（`BBprime2`/`BBs` 投影、registry `5541487347`）实测可用且零债，但 HOL 真正的核心还吃四类基础设施：`ab4_assumption_reduction_p23`（LA23:434 sorry）/`deform_azim_sum_p23`（LA23:502 sorry）/ LA21 的 `MMs_minimize_tau_fun`+`azim_assumption_reduction`+`WNWSHJT_ALT`（全 sorry）/ LA22 的 `LEMMA_1834976363_p22`+`xrr_simple_*_bound`+`LOCAL_FAN_AZIM_POS`（全 sorry）。**决定性证据 = import DAG 死锁**：kit 提供者全在 LA23 下游，反向 import 成环（`LA21→LA16→LA23`、`LA22→LA23`、`LocalConcl→LA23`、`LA25→LA23`、`LA14→LA35→LA23`、`LA18→LA27→LA24→LA23`）⇒ 已绿 kit 一件也拿不到，复制进 LA23 是新增孪生（>1000 行，禁令）。**解封顺序**：先清 LA22 数值债 → LA21 三件 → **DAG 重构（把 deformation/azim kit 拆到 LA23 上游，编排级决定）** → 再拼装本体（预计 300–450 行）。另：3-D 数值优化给出 penalty=0 显式满足点 ⇒ 不是空洞命题，必须真实 deformation + tau 最小化。
 ③ **wave 5 发车（池 3/3）**：`cuxvzozF-w1`（承接 Section F 四件，在飞）、`g482br-w1`（`coplanar_delta_y_zero_p18` + `NOT_COL_EQ_UPS_X_POS` 孪生移植，在飞）、`la22mono-w1`（`LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`，在飞；解 vas-nhx 根的第 1 步）。
 ④ **盘面判断**：LA33/aq13 的 3 条锥内债（`MM_4I2_IMP_4T2_4T1`/`SCS_4I1_IMP_SCS_4I2`/`SCS_4I2_IMP_SCS_4T1`）解锁路径 = `general_482` 本体 → 其根 = 上表 7 件 + 2 桥；当前 wave 覆盖其中 4 件（Section F 三件 + coplanar 桥），剩 `LEMMA_4828966562`/`MMs_minimize_tau_fun`/`LEMMA_1834976363`/`dihV_obtuse_mono`/`NOT_COL_EQ_UPS_X_POS`。**没有一个能在单波内全清**——这是 J 战役后最硬的一段，预期还要 3–5 波。
+
+- **2026-11-12（03:44，续1003）**：**`g482br-w1` 落库 `a908b449`——两桥件全闭（coplanar_delta_y_zero_p18 真证 + NOT_COL_EQ_UPS_X_POS 自包含移植）；wave 6 换人**。
+① **A：`coplanar_delta_y_zero_p18`（LA18:436，HOL `IUNBUIG.hl:144`）真证替换**：路线 `coplanar_eq_coplanar_alt` → `delta_delta_x`（deltaY→deltaP）→ `POS_EQ_NOT_COPLANANR` + `DELTA_Y_POS_4POINTS_B` → `linarith`；上游四件探针全标准三。**编排者闸**：LA18 岛编 RC=0 / 0 err / **10 sorry-decls（11→10）** / 86 warn（基线 87）；探针本标准三。删除面 = 1 行 `sorry` + 3 行注释，零声明删除。
+② **B：`NOT_COL_EQ_UPS_X_POS`（HOL `leg/collect_geom2.hl:1420`）自包含移植**：`LocalAuto21Kit` 新增 private `g482_not_col_eq_upsX_pos` + 4 个 private 助手（`¬Collinear3 a b c ↔ 0 < upsX (dist a b²)(dist a c²)(dist b c²)`），**零新增 import**（绕开 `EulerSimplexGeom` 闭包）；kit 岛编 RC=0 / 0 err / **0 warn**；探针标准三。**编排者补 public 别名 `not_col_eq_upsX_pos_p21`**（一行，供 `general_482` 接线跨模块消费），重编 0/0/0、探针标准三。
+③ **对 general_482 根的进度**（续1001 依赖表逐项核销）：2 桥已清（本笔）；Section F 四件（`WNWSHJT_ALT` + a/b/azim）由 `cuxvzozF-w1` 在飞；Section G 六件（`dih_x5_mono`/`dih_obtuse_mono(_b)`/`dihV_obtuse_mono(_a/_b)`）由 `cuxvzozG-w1` 在飞；LA22 两件（`LEMMA_4828966562`/`LEMMA_1834976363`）由 `la22mono-w1` 在飞。**剩余未派** = `MMs_minimize_tau_fun_p21`（root 在 LA38 `taustar_taum*` 两件）与 `LEMMA_4828966562`（在飞）。
+④ **wave 6（池 3/3）**：`cuxvzozF-w1` / `la22mono-w1` / `cuxvzozG-w1`。**锥内零移动**（所有目标件均不在 SORRIED）；oleans 装池（LA18 md5 `428c2870…`，Kit 重编）。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
