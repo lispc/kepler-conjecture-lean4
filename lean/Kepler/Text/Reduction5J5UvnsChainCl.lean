@@ -1031,6 +1031,67 @@ theorem memMid
     rw [hcomp]
     exact hgd
 
+/-! ## §6 U1c 收尾 II：全 vs 装配（Cl 半） -/
+
+/-- `ChainCl` 的 append 胶水：跨接合由 `hj` 供。 -/
+theorem chainClAppend (f : List ℕ) (D : ℕ → ℕ → Prop) (l1 l2 : List (Option ℕ))
+    (h1 : ChainCl f D l1) (h2 : ChainCl f D l2)
+    (hj : ∀ j, j + 1 = l1.length → (l1.getD j none).isSome → (l2.getD 0 none).isSome →
+      nextEl f ((l1.getD j none).getD 0) = (l2.getD 0 none).getD 0 ∨
+        D ((l1.getD j none).getD 0) ((l2.getD 0 none).getD 0)) :
+    ChainCl f D (l1 ++ l2) := by
+  intro j hj' hs1 hs2
+  simp only [List.length_append] at hj'
+  simp only [uvnsGetDAppend (l := l1) (m := l2) (j := j),
+    uvnsGetDAppend (l := l1) (m := l2) (j := j + 1)] at hs1 hs2
+  have hv1 : (l1 ++ l2).getD j none =
+      if h : j < l1.length then l1.getD j none else l2.getD (j - l1.length) none :=
+    uvnsGetDAppend l1 l2 j
+  have hv2 : (l1 ++ l2).getD (j + 1) none =
+      if h : j + 1 < l1.length then l1.getD (j + 1) none
+      else l2.getD (j + 1 - l1.length) none :=
+    uvnsGetDAppend l1 l2 (j + 1)
+  by_cases hj1 : j < l1.length
+  · by_cases hj2 : j + 1 < l1.length
+    · simp only [dif_pos hj1, dif_pos hj2] at hs1 hs2
+      rw [hv1, hv2]
+      rw [dif_pos hj1, dif_pos hj2]
+      exact h1 j hj2 hs1 hs2
+    · have hje : j + 1 = l1.length := by omega
+      simp only [dif_pos hj1, dif_neg hj2] at hs1 hs2
+      have hs2' : (l2.getD 0 none).isSome := by
+        rwa [show j + 1 - l1.length = 0 from by omega] at hs2
+      rw [hv1, hv2]
+      rw [dif_pos hj1, dif_neg hj2, show j + 1 - l1.length = 0 from by omega]
+      exact hj j hje hs1 hs2'
+  · simp only [dif_neg hj1] at hs1
+    have hs2' : (l2.getD ((j - l1.length) + 1) none).isSome := by
+      have h := hs2
+      simp only [dif_neg (by omega : ¬ j + 1 < l1.length)] at h
+      rwa [show j + 1 - l1.length = (j - l1.length) + 1 from by omega] at h
+    rw [hv1, hv2]
+    rw [dif_neg hj1, dif_neg (by omega : ¬ j + 1 < l1.length)]
+    rw [show j + 1 - l1.length = (j - l1.length) + 1 from by omega]
+    exact h2 (j - l1.length) (by omega) hs1 hs2'
+
+/-- `destTriple0` 的首位不变（sofar 以 `some y` 开头 ⇒ 结果首位仍 `some y`）。 -/
+theorem getDZeroDestTriple0 (f : List ℕ) (uvns : List (ℕ × ℕ × ℕ)) :
+    ∀ (y : ℕ) (rest : List (Option ℕ)),
+      (Kepler.Text.Reduction3.destTriple0 f (some y :: rest) uvns).getD 0 none = some y := by
+  induction uvns with
+  | nil => intro y rest; rfl
+  | cons t ts ih =>
+    obtain ⟨u, v, n⟩ := t
+    intro y rest
+    simp only [Kepler.Text.Reduction3.destTriple0]
+    rw [if_neg (by simp : ¬ ((some y :: rest : List (Option ℕ)) = []))]
+    split
+    · simp only [List.cons_append]; exact ih y _
+    · split
+      · simp only [List.cons_append]; exact ih y _
+      · simp only [List.cons_append]; exact ih y _
+
+
 end Kepler.Text.Reduction5
 
 #print axioms Kepler.Text.Reduction5.ChainCl
@@ -1050,3 +1111,5 @@ end Kepler.Text.Reduction5
 #print axioms Kepler.Text.Reduction5.memInDestSingle
 #print axioms Kepler.Text.Reduction5.getLastDDestSingle
 #print axioms Kepler.Text.Reduction5.memMid
+#print axioms Kepler.Text.Reduction5.chainClAppend
+#print axioms Kepler.Text.Reduction5.getDZeroDestTriple0
