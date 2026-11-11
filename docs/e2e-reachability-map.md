@@ -642,6 +642,32 @@ SORRIED −1 恰为被真证声明，零新增。
   + `TameLp.fully_surrounded_perimeter_bound` + PA13 `URRPHBZ2`
   + PA25 `real_model_ox3q1h_merge`（mnt11_anchor 已去重出列，20→19）。
 
+### 基线 X：g482/SF-107 落库 @ `66e70eb4`（2026-11-12）
+
+> 触发：`g482kit`（`38d64102`，LA21 kit 两件真证）+ `SF-107`（`405df55d`，陈述保真度）+
+> `g482-w1`（`66e70eb4`，LA21 #1–#3 真证）。三笔均**不动锥内 sorry**（目标件不在 SORRIED 清单；
+> TUAPYYU_discharged 仍 sorry ⇒ SF-107 只改类型）。仪器原样换装
+> `docs/e2e-reachability-map.tsv`（5,898 行）；`trust_manifest.py --check` PASS（585/585 ground、pins OK）。
+
+| 指标 | 基线 X | 基线 W | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,484** | 2,095,484 | 0 |
+| SORRIED | **75** | 75 | 0 |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,219 | 5,219 | 0 |
+| K_UNIVERSE | 2,108,389 | 2,108,357 | **+32** |
+| COVERAGE | 99.3879% | 99.3894% | −0.0015pp |
+| 口径 II（ex-Cases） | K_REACH **35,061** / SORRIED **75** / AXIOM **585** / UNIVERSE **46,409** | 35,061 / 75 / 585 / 46,377 | 0 / 0 / 0 / +32 |
+| TOTAL_VALUE_DECLS | 2,094,810 | 2,094,810 | 0 |
+
+**SORRIED 清单逐行 diff**：closed = ∅，added = ∅（三笔落库均不碰锥内 sorry）。
+**Axiom 名单 diff = 0/0**。根面 `#print axioms the_kepler_conjecture_e2e` 589 与基线 W
+**逐字节 IDENTICAL**。
+
+**判读**：K_UNIVERSE **+32** 全部是 LA21 证明体新增的私有 helper/声明（不可达，不进锥）；
+K_REACH 与 SORRIED 不动 ⇒ COVERAGE 微降是分母涨，不是树退步。三件的价值在**解锁下游**
+（#4 `deform_simplex_684_pent_p21`、LA33/aq13 的 general_482 根），不在本轮刻度。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
