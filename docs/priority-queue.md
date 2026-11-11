@@ -150,11 +150,11 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 7 三车道在飞**：`la22mono-w1`（LA22 `LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`）、
-> `cuxvzozG-w1`（Section G 六件 dih/dihV monotonicity）、`taustar-w1`（LA38 `taustar_taum` +
-> `taustar_taum_dfun` + LA21 `MMs_minimize_tau_fun_p21`）。**cuxvzozF 已落库**（Section F 四件，
-> `30aefbc5`）+ **SF-108 立案**（7 处 ∃-ε 括号）；**g482br 已落库**（两桥件，`a908b449`）；
-> **vas-nhx / g482-482 判 BLOCKED**（DAG 死锁 / 7 件 tainted，见续1002 ②、续1001）。
+> **wave 8 三车道在飞**：`la22mono-w1`（LA22 `LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`）、
+> `cuxvzozG-w1`（Section G 六件 dih/dihV monotonicity）、`sf108-w1`（执行 SF-108：7 处 ∃-ε 括号）。
+> **taustar 已落库**（3 件，`f300a334`）、**cuxvzozF 已落库**（Section F 四件，`30aefbc5`）、
+> **g482br 已落库**（两桥件，`a908b449`）；**vas-nhx / g482-482 判 BLOCKED**（DAG 死锁 / 7 件 tainted，
+> 见续1002 ②、续1001）；两在飞全绿后重发 `g482-482-w2`。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -478,6 +478,12 @@
 ③ **general_482 根依赖核销（续1001 表）**：2 桥 ✅（`a908b449`）；Section F 四件 ✅（本笔）；**在飞** = Section G 六件（`cuxvzozG`）、LA22 两件（`la22mono`）、taustar 三件（`taustar-w1`，本波新发：LA38 `taustar_taum`/`taustar_taum_dfun` + LA21 `MMs_minimize_tau_fun_p21`）。**关键情报**：`tau3_taum`/`tau3_taum_40` **已真证**（编排者探针标准三），LA38 的「BLOCKED: as tau3_taum」旧注释过时；`LocalAuto21` 已 import `LocalAuto38` ⇒ MMs_minimize 可直接消费 taustar 链（无 DAG 死锁）。
 ④ **wave 7（池 3/3）**：`la22mono-w1` / `cuxvzozG-w1` / `taustar-w1`。若三波全绿，general_482 本体的 7 件 tainted 将清零 ⇒ 下一波即可重发本体（`g482-482-w2`）。
 ⑤ **锥内零移动**；olean 装池（LocalAuto21 md5 `297f8311…`）。
+
+- **2026-11-12（04:25，续1005）**：**`taustar-w1` 落库 `f300a334`——taustar 链三件全绿（general_482 根最后一块 kit）；SF-108 执行车道发车**。
+① **`f300a334`（2 files / +49 / −9）**：LA38 `taustar_taum`（HOL `terminal.hl:618`）+ `taustar_taum_dfun`（:642）+ LA21 `MMs_minimize_tau_fun_p21`（HOL `CUXVZOZ.hl:3549`）真证替换；删除面 = 3 行 `sorry` + 6 行过时注释，零声明删除。**关键情报**：LA38 旧注释「BLOCKED: as tau3_taum」**已过时**——`tau3_taum`/`tau3_taum_40` 早已真证（编排者探针标准三）；三件均纯 labor（`taustar3`/`taustar3_fun` 应用 + `BBprimeV39` 极小性）。
+② **编排者闸（装池顺序 LA38→LA21）**：LA38 岛编 RC=0 / 0 err / **45 sorry-decls（47→45）** / 77 warn；LA21 RC=0 / 0 err / **8 sorry-decls（9→8）** / 8 warn；探针 **3/3 标准三** + `tau3_taum`/`tau3_taum_40` 不回归。**锥内零移动**；oleans 装池（LA38 `cfa36ed0…`，LA21 `c71ec3b4…`）。
+③ **general_482 根依赖核销（续1001 表终盘）**：7 件 tainted 中 **6 件已清或已落**（Section F 四件 `30aefbc5`、`MMs_minimize_tau_fun` `f300a334`），仅剩 **Section G 六件（`cuxvzozG` 在飞）** 与 **LA22 两件（`la22mono` 在飞）**；2 桥已清（`a908b449`）。⇒ 两车道回执全绿后即可重发 **`g482-482-w2`**（本体 640 行）。
+④ **wave 8（池 3/3）**：`la22mono-w1` / `cuxvzozG-w1` / `sf108-w1`（执行 SF-108：7 处 ∃-ε 括号，陈述修、证明体不动）。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
