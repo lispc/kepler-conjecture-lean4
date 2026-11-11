@@ -67,7 +67,23 @@ python3 scripts/trust_manifest.py           # 生成 manifest
 python3 scripts/trust_manifest.py --check   # 只校验（CI 用）
 ```
 
-它校验两件机器可判的事：
+**数据源 / 生成器钉定（2026-11-12，M2 第 4 步①）**：manifest 头部钉定 6 条完整 sha256
+（`--check` 重算仓内现文件并逐条比对，任何漂移 ⇒ `FAIL`）：
+
+| 类别 | 文件 | sha256 |
+|---|---|---|
+| data Tri | `lean/Kepler/Graphs/ArchiveData/Tri.lean` | `a1cbf19c…460ce14f` |
+| data Quad | `lean/Kepler/Graphs/ArchiveData/Quad.lean` | `9d5c6a69…97a3734f` |
+| data Pent | `lean/Kepler/Graphs/ArchiveData/Pent.lean` | `b6ae6786…197b8816` |
+| data Hex | `lean/Kepler/Graphs/ArchiveData/Hex.lean` | `36ff52ed…6992a14b` |
+| gen `shard-range`（580 片） | `lean/scripts/gen_goodlist_shards.py` | `5439fbf9…9eae87d5` |
+| gen `tri-single-seed`（5 片） | `lean/Kepler/Graphs/CertTri.lean` | `3fefe929…4f3b86ab` |
+
+四类 `ArchiveData` 的完整哈希与 `archive-data-scout` REPORT §5 **逐位一致**（独立复核）；
+每条公理行另带 `data_sha256[:16]` / `gen_sha256[:16]` 两列，可逐条追溯到数据源与发射器。
+数据源与 HOL `archive_all.ml` / AFP `Archives/*.ML` 的三路 SAME 证据见 §4-2。
+
+它校验三件机器可判的事：
 
 **(a) 地面性**：每条陈述必须是 `decide (<闭项 Bool>) = true`，不出现 `∀`/`∃`/自由变量。
 **基线 T 实测（`52275a1c`，2026-11-09）：585 / 585 通过，0 条非地面，0 条形状未知。**
@@ -123,8 +139,10 @@ python3 scripts/trust_manifest.py --check   # 只校验（CI 用）
    （Quad = 最大面为 4，混有更小面）；逐类规范化指纹 sha256 表在
    `~/c17_backup/lane_snapshots/archive-data-scout/REPORT.md` §5 —— **可直接用作
    manifest「数据源哈希」字段材料（第 3 条的前置）**。⇒ §2 第 4 行已升级为「同一份数据」。
-3. **生成器版本**：manifest 目前只钉公理名 + 陈述哈希，还没有钉数据源哈希与
-   `gen_goodlist_shards.py` 的版本。待补。
+3. **生成器版本 —— 已闭合（2026-11-12，M2 第 4 步①）**：manifest 头部钉定 6 条完整 sha256
+   （四类 `ArchiveData` 数据源 + `gen_goodlist_shards.py` + `CertTri.lean` 发射器），
+   公理行带 `data_sha256[:16]` / `gen_sha256[:16]` 两列；`--check` 重算现文件并比对
+   （漂移检测已用「篡改一位 → 恰 1 行 DRIFT」做负向测试）。证据见 §3 表。
 
 ---
 

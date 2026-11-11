@@ -8,10 +8,13 @@
 它做三件事：
  1. 从 `docs/e2e-reachability-map.tsv` 的 `--- AXIOMS ---` 段取公理名单（仪器产的，不手抄）。
  2. 生成一个 Lean 探针逐条 `#print`，把每条公理的**陈述**取出来（这是审计的对象）。
- 3. 校验两件事并写进 manifest：
+ 3. 校验三件事并写进 manifest：
     (a) **地面性**：陈述必须是 `decide (<闭项 Bool>) = true` 形，不许出现 `∀`/`∃`/自由变量；
     (b) **分解无损**：`*_shard_*` 的 `List.range' a l` 区间在每个 (类, next_tame p) 上
-        无空隙、无重叠地铺满 [0, max(a+l))。铺满 ⇒ 分片合起来就是一条 ∀ 事实。
+        无空隙、无重叠地铺满 [0, max(a+l))。铺满 ⇒ 分片合起来就是一条 ∀ 事实；
+    (c) **数据源/生成器钉定**：每条公理带 `data_sha256` / `gen_sha256` 列；
+        manifest 头部钉定 ArchiveData 四类 + 发射脚本的完整 sha256，
+        `--check` 重算现文件并比对（数据漂移或生成器改动 ⇒ FAIL）。
 
 不联网、不编译（只 `lake env lean` 读 olean）、不改 Lean 源码。
 """
@@ -30,7 +33,37 @@ LEAN = REPO / "lean"
 TSV = REPO / "docs" / "e2e-reachability-map.tsv"
 OUT = REPO / "docs" / "trust-base.tsv"
 
+# 数据源与生成器钉定（trust-base.md §4 待办第 3 条；AGENTS §1 第 2 条
+# "注明数据源与生成器版本"）。`--check` 会把**仓内现文件的 sha256** 与
+# manifest 头部记录的钉定值比对，任何数据漂移/生成器改动都会 FAIL。
+DATA_FILES = {
+    "Tri": "lean/Kepler/Graphs/ArchiveData/Tri.lean",
+    "Quad": "lean/Kepler/Graphs/ArchiveData/Quad.lean",
+    "Pent": "lean/Kepler/Graphs/ArchiveData/Pent.lean",
+    "Hex": "lean/Kepler/Graphs/ArchiveData/Hex.lean",
+}
+GEN_SHARD = "lean/scripts/gen_goodlist_shards.py"   # shard-range 585 的 580 片
+GEN_TRI = "lean/Kepler/Graphs/CertTri.lean"         # tri-single-seed 5 片（种子前沿，手写/一次性生成）
+
 AXIOM_SECTION = re.compile(r"^--- AXIOMS ---$", re.M)
+PIN_LINE = re.compile(r"^# (data|gen) ([^ ]+) ([^ ]+) ([0-9a-f]{64})$", re.M)
+
+
+def sha256_file(rel):
+    return hashlib.sha256((REPO / rel).read_bytes()).hexdigest()
+
+
+def live_pins():
+    pins = [("data", cls, rel, sha256_file(rel)) for cls, rel in sorted(DATA_FILES.items())]
+    pins.append(("gen", "shard-range", GEN_SHARD, sha256_file(GEN_SHARD)))
+    pins.append(("gen", "tri-single-seed", GEN_TRI, sha256_file(GEN_TRI)))
+    return pins
+
+
+def pinned_pins():
+    if not OUT.exists():
+        return None
+    return {(k, name, rel): h for k, name, rel, h in PIN_LINE.findall(OUT.read_text())}
 
 
 def read_axioms():
@@ -156,6 +189,7 @@ def main():
         print("FATAL: %d axioms without a printed statement, e.g. %s" % (len(missing), missing[:5]))
         sys.exit(1)
 
+    live = {(k, name, rel): h for k, name, rel, h in live_pins()}
     rows, bad_ground, unknown = [], [], []
     tiling = defaultdict(lambda: {"cover": set(), "ends": 0})
     for module, name in axioms:
@@ -173,12 +207,18 @@ def main():
             for i in range(start, start + ln):
                 tiling[key]["cover"].add(i)
         h = hashlib.sha256(stmt.encode()).hexdigest()[:16]
+        cls = pr.get("class", "") or ""
+        data_sha = live[("data", cls, DATA_FILES[cls])][:16] if cls in DATA_FILES else ""
+        if shape == "tri-single-seed":
+            gen_sha = live[("gen", "tri-single-seed", GEN_TRI)][:16]
+        else:
+            gen_sha = live[("gen", "shard-range", GEN_SHARD)][:16]
         rows.append((name, module, shape,
                      str(pr.get("p", "")), str(pr.get("range_start", "")),
                      str(pr.get("range_len", "")), str(pr.get("fuel", "")),
                      pr.get("data", ""),
                      str(pr.get("slice_start", "")), str(pr.get("slice_len", "")),
-                     str(pr.get("seed", "")), h))
+                     str(pr.get("seed", "")), h, data_sha, gen_sha))
 
     # 分解无损校验
     tile_lines, tile_ok = [], True
@@ -238,17 +278,37 @@ def main():
         print(f"    {data}: {len(v)} slices, contiguous={ok}, tail_open="
               f"{v[-1][1] is None}" + (f" breaks={bad}" if bad else ""))
 
+    # 数据源 / 生成器钉定校验（manifest 头部 vs 仓内现文件；仅 --check）
     if args.check:
-        ok = (not bad_ground) and (not unknown) and tile_ok and not dups and gl_ok
+        pins_live = live_pins()
+        pins_pinned = pinned_pins()
+        pin_bad = []
+        if pins_pinned is None:
+            pin_bad = [("MANIFEST", "docs/trust-base.tsv missing")]
+        else:
+            for k, name, rel, h in pins_live:
+                if pins_pinned.get((k, name, rel)) != h:
+                    pin_bad.append((f"{k}:{name}", f"{rel} pinned={pins_pinned.get((k, name, rel))} live={h}"))
+        print(f"data-source/gen pins   : {'OK' if not pin_bad else 'DRIFT'}")
+        for n, s in pin_bad:
+            print("   ", n, "::", s)
+        ok = (not bad_ground) and (not unknown) and tile_ok and not dups and gl_ok and not pin_bad
         print("CHECK:", "PASS" if ok else "FAIL")
         return 0 if ok else 1
+
+    pins_live = live_pins()
+    print(f"data-source/gen pins   : pinning {len(pins_live)} entries")
 
     with OUT.open("w") as f:
         f.write("# 信任基座 manifest —— 由 scripts/trust_manifest.py 生成，勿手改。\n")
         f.write("# 生成源：docs/e2e-reachability-map.tsv 的 --- AXIOMS --- 段 + `#print` 陈述。\n")
         f.write("# 口径：AGENTS.md §1（用户 2026-11-06 裁决：不比 Flyspeck/Isabelle 更差）。\n")
+        f.write("# 钉定（--check 校验现文件 sha256；数据源 = ArchiveData 四类，生成器 = shard 发射脚本）：\n")
+        for k, name, rel, h in pins_live:
+            f.write(f"# {k} {name} {rel} {h}\n")
         f.write("# 列：axiom | module | shape | next_tame_p | range_start | range_len | fuel |"
-                " data | slice_start | slice_len | seed | stmt_sha256[:16]\n")
+                " data | slice_start | slice_len | seed | stmt_sha256[:16] | data_sha256[:16] |"
+                " gen_sha256[:16]\n")
         for r in rows:
             f.write("\t".join(r) + "\n")
     print(f"wrote {OUT}  ({len(rows)} rows)")
