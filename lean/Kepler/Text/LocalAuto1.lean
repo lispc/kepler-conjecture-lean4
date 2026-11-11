@@ -4878,8 +4878,10 @@ theorem YEBWJNG_concl (h : main_nonlinear_terminal_v11) :
     dist (v p) (v (p + 1)) = 2 := by
   sorry
 
-/-- HOL `TUAPYYU_concl` (appendix.hl:1465). Proof pending. -/
-theorem TUAPYYU_concl : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+/-- HOL `TUAPYYU_concl` (appendix.hl:1465). Proof pending. HOL form is
+conditional: `main_nonlinear_terminal_v11 ==> (!s v p. …)` (VASYYAU.hl:524-525). -/
+theorem TUAPYYU_concl (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →

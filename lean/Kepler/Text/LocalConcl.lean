@@ -4947,8 +4947,9 @@ theorem WGDHPPI_discharged : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
 
 /-- HOLD (b) `TUAPYYU_concl`: cycle path
 `TUAPYYU_concl -> LA25.TUAPYYU_p25 (LA25:1264, proof = `fun _ =>
-TUAPYYU_concl`). -/
-theorem TUAPYYU_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+TUAPYYU_concl`). ERRATA (SF-107, 2026-11-12): added `(hmn : main_nonlinear_terminal_v11)` per HOL `VASYYAU.hl:524`; cycle/line refs kept as historical record (at HEAD fb89790e the twin is LA25:2251, body `fun h => TUAPYYU_concl h`). -/
+theorem TUAPYYU_discharged (hmn : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
     (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
       4 * h0 < s.b i j) →

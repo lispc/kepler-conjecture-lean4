@@ -6792,3 +6792,17 @@ SF-102 (b) 的「同批排除项」只读 :640 的证明脚本、漏看 :524 的
 `#check @Kepler.Text.TUAPYYU_concl` 输出以 `main_nonlinear_terminal_v11 →` 开头；
 LA1/LA25/LocalConcl/VasTuaKit 岛编 0 error；`#print axioms` 仍含 `sorryAx`
 （本 SF 只修陈述保真度、不证本体，**不以标准三为验收**）。
+
+### 执行记录（2026-11-12，`sf107-w1` + 编排者复核）
+
+- 补丁 3 文件 **+8/−5**：`LocalAuto1.lean:4882`（陈述加 `(h : …)` + docstring 条件式锚）、
+  `LocalAuto25.lean:2251`（`TUAPYYU_p25 := fun h => TUAPYYU_concl h`，类型不变）、
+  `LocalConcl.lean:4951`（`TUAPYYU_discharged (hmn : …)`，body 仍 `sorry`）。
+- **ERRATA（对 (b)/(c)）**：`TUAPYYU_p25` 实际在 LA25:**2251**（LocalConcl 历史注写的 :1264 已属
+  `ZITHLQN_CASE_5_pro_cs_p25` 区域，原文保留作历史记录）；`VasTuaKit` **零改动**——其结论槽是
+  `TUAPYYU_concl_p25`（LA25:2220 def，定义体本就以 `main_nonlinear_terminal_v11 →` 开头），
+  证明体第三个 `intro` 已是 `h`，重编即通过。
+- 机器证据：`#check @Kepler.Text.TUAPYYU_concl` = `Kepler.Text.main_nonlinear_terminal_v11 → ∀ …`；
+  LA1/LA25/LocalConcl/VasTuaKit 岛编 RC=0/0 err，警告谱与基线归一化逐条相同；
+  `VasTuaKit` 三件仍标准三；`#print axioms TUAPYYU_concl` 仍含 `sorryAx`（预期，未证本体）。
+- 全树无其它代码调用点（`LocalAuto25:2266/2269` 消费者本来就已传 `h`，类型不变故零改动）。

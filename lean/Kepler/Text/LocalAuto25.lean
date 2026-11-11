@@ -2248,7 +2248,7 @@ theorem TUAPYYU1_p25 : NEHXMWH1_concl_p25 → NEHXMWH_concl_p25 → TUAPYYU_conc
 endpoint lemmas (`NEHXMWH`/`BZQNDMN`, ported as LocalAuto23
 `NEHXMWH_p23`/`BZQNDMN_p23`); discharged here by the identical LocalAuto1
 registry twin. -/
-theorem TUAPYYU_p25 : TUAPYYU_concl_p25 := fun _ => TUAPYYU_concl
+theorem TUAPYYU_p25 : TUAPYYU_concl_p25 := fun h => TUAPYYU_concl h
 
 /-- HOL `TUAPYYU_IMP_CASES` (VASYYAU.hl:1058): the endpoint distance is one
 of `&2, &2*h0, cstab`. -/
