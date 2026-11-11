@@ -356,6 +356,13 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（12:26，续929）**：**零码轮（如实）：aq13 8b W5 侦察冻结——W5a/W5b 结构性前置缺件，无 patch；8b 累计 62 件/10 文件/3,246 行，62/62 探针 ⊆ 标准三**。
+① **冻结判词（机器证据）**：W5a `indexfZtransLt`（more_lemma1.hl:868–:913）证体只需归纳+算术，但前提 **`RYIUUVK`/`DIOWAAS`**（r 侧两不等式）树内**按名+按语句双搜零命中**；二者又依赖 **`leng_ytrans_w_const`/`leng_ytrans_ztrans_const`/`leng_ztrans_w_const`** 三件「r↔rtrans 索引转移包」——全库两模式 grep 确认零命中。W5b `rRtransEqThm`（:1162–:1527）依赖 W5a；`KBWPBHQ2` 仅 spine 形（`kbwpbhq2Spine`）而 W5b 用链层；其余 23 项依赖已全部核在库（清单见 DELIVERY_ml7 §4）。目标陈述已机器 elaboration（`indexfZtransLtStmt`/`rRtransEqThmStmt`）。
+② **关键联动（升格为 J5-8 关键路径件）**：W5b = `rRtransEqThm` 正是 J4 `nfgtransFst` 目前以链形前提 `hrreAll : ∀ N' r' y, rRtransEq L N' r' y` 携带的 `r_trans_eq_assumption`——**W5 落库即可消去 `nfgtransFst` 的该前提**，也是 J5-8 终局装配「2 assumption lemmas」里的第一枚。此前给这枚记的 20–30 行严重低估。
+③ **路线（采信）**：T1 三件 `leng_*` 转移包（200–300，spine 入参复用 `Pnxvwfs.spineInputs` 模式）→ T2 `diowaasR`+`ryiuuvkR`（160–240）→ T3 W5a（50–80）→ T4 W5b（380–520，超 450 拆件）。**8b W5 余量修正：440–600 → ≈790–1,140**（T1+T2+T3 410–620 + T4 380–520）；战役总余量相应 +350–540。
+④ **状态**：8b W1–W4 全段收官真实有效（主件 `coreSplitNormalListThm` 标准三）；W5 是对外 assumption 的补证线，不影响已落 W1–W4 的验收结论。
+⑤ **续派**：aq13 → **T1+T2+T3 整段（≈410–620）**；J4（14j+14i）、tame-corr（J5-9 装配）在飞。
+
 - **2026-11-11（12:18，续928）**：**一笔落库：tame-corr nb42 `e929020f`（`Reduction3J5PartOfXHead` +311 / `Reduction3J5BetwnCorekZX` +76，2 件）——J5-6 主件 `betwnCorekZX` 真证收官**。
 ① **主件 `betwnCorekZX`**（HOL `betwn_corek_z_x.hl:535` 逐字，零改、无 SF；探针 = `[propext, Classical.choice, Quot.sound]`，零 sorryAx）：`betwnCoreKZXFinalSide`（nb38）→ `trans` → `betwnCoreInitOfLastHead`（nb41，代入 A `partOfZkGetLast` + B）→ 两行 `trans` 收口。**主件陈述与 `Reduction5K5.reductionK4Concl` 第一合取同形，可直接替换槽位**。
 ② **子论证 B `partOfXHead`**（HOL :641–:700）：`px.head! = x`。双支 `pd := prevEl px x`：末支直接 `nextEl px (LAST px) = px.head!` 收；非末支走 HOL 同款 indexf 矛盾链——`nextElPartsUnlast` + `partsNextUnlast` ⇒ `x = fList (eList pd)`；`partsFst` ⇒ `pd.1 = x.1`；`pplhulj3V0` 排模坍缩 + `cases2Chain` 对齐 ⇒ `d = (nextEl r)^[n] zk = pd`；`nextCoreFst` ⇒ core 自环；`nextElRefl` + `zk.1 ∈ core` 且 `zk.1 ≠ x.1` ⇒ 矛盾。**即工单建议的 `conditionLastParts` 双支：末支直接收，非末支「仍成头」由 indexf 链排除，无需另补 atom 边界反向件**。
