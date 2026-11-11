@@ -104,7 +104,90 @@ theorem reductionSubdivFace
   exact ⟨hpair, hfg', hgf', hvs2', hgenPoly⟩
 
 
+
+/-- 私有：`List.filterMap id = (filter isSome) |>.map get!`（junk 访问器转换）。 -/
+private theorem filterMapIdEqMapGet (vs : List (Option ℕ)) :
+    List.filterMap id vs = (vs.filter Option.isSome).map Option.get! := by
+  induction vs with
+  | nil => rfl
+  | cons o os ih => cases o <;> simpa [List.filterMap] using ih
+
+/-! ## §W6e `reduction_subdivFace2`（reduction3.hl:1379-1448） -/
+
+/-- HOL `reduction_subdivFace2`（reduction3.hl:1379-1448）。 -/
+theorem reductionSubdivFace2
+    (hgen : ∀ (L : fgraph ℕ) (hL : GoodList L) (N N' : List (List Dart))
+      (g : Graph) (p : ℕ) (fs : List Face) (f : Face) (v k : ℕ) (r : List Dart)
+      (x : Dart) (uvns : List (ℕ × ℕ × ℕ)) (g' : Graph) (i : ℕ)
+      (vs : List (Option ℕ)) (vs' : List ℕ),
+      GoodListNodesTl L hL →
+      (hypermapOfList L hL).IsRestricted →
+      newvertexPrepped L N r x →
+      markedList L hL N r x →
+      ¬ finalList L r →
+      matchQuotientList g L N →
+      g.final = false →
+      Kepler.Text.TameSpine.PlaneGraphPSpine p g →
+      Kepler.Text.TameCorrList.GoodFacesV3 g →
+      Kepler.Text.TameCorrList.VerticesSet2Eq g →
+      p = (L.map List.length).foldr max 0 - 3 →
+      nonFinals g = fs →
+      minimalFace fs = f →
+      minimalVertex g f = v →
+      loopChoice2 g L N = (r, x) →
+      uvns = coreTripleV4 L N r x →
+      vs = destTripleFull f.vertices v uvns →
+      (vs.filter Option.isSome).map Option.get! = vs' →
+      subdivFaceFinal2 g f uvns = g' →
+      transformCount L N r x = k →
+      ntrans L N r x k = N' →
+      (findFaceDarts L x).length = i →
+      (fgraphOfGraph g' = quotientList L N' ∧
+        Kepler.Text.TameCorrList.GoodFacesV3 g' ∧
+        Kepler.Text.TameCorrList.VerticesSet2Eq g' ∧
+        (∀ j, j + 1 < vs'.length → indexf v vs'[j]! f.vertices < indexf v vs'[j+1]! f.vertices) ∧
+        i = vs.length ∧
+        (∀ j, j + 1 < vs.length → (vs[j]!).isSome = true → (vs[j+1]!).isSome = true →
+          ((vs[j]!).getD 0, (vs[j+1]!).getD 0) ∈ listOfDarts (fgraphOfGraph g) →
+          ((vs[j]!).getD 0, (vs[j+1]!).getD 0) ∈ listPairs f.vertices) ∧
+        subdivFace g f vs = g' ∧
+        listPairs ((subdivFace0Alt2 g f g.countVertices uvns).1.vertices)
+          = rtrans L N r x k)) :
+    Kepler.Text.TameSpine.restrictedHypermapsArePlaneGraphsV4 := by
+  apply reductionSubdivFace
+  intro L hL N N' g p fs f v k r x uvns g' i vs vs' hgn hres hnvp hm hnf hmq hng hpg
+    hgf hvs2 hp hfs hf hv hlc huv hvs hvs' hg' hk hN' hi
+  have h := hgen L hL N N' g p fs f v k r x uvns g' i vs vs' hgn hres hnvp hm hnf hmq
+    hng hpg hgf hvs2 hp hfs hf hv hlc huv hvs hvs' hg' hk hN' hi
+  obtain ⟨hfg', hgf', hvs2', hmono, hivs, hP19, hsub, hpair⟩ := h
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have h0 : transformCount L N r x ≠ 0 :=
+    Kepler.Text.Reduction5.transformCountNon0OfMarked L hL hgn haq hm hnf
+  have h3 : 3 ≤ vs.length := by
+    rw [← hivs, ← hi]
+    exact t10b_sizel_3_concl L hL N r x hres hm
+  have hhd : vs.head! = some v := by
+    simpa only [List.head!_eq_head?_getD, List.headD_eq_head?_getD, Option.default_eq_none]
+      using hdVsSomeV L N r x g f v uvns vs h0 huv hvs
+  have hlast : (vs.getLast!).isSome = true := by
+    have h := lastVsSomePrev L N r x g f v uvns vs h0 huv hvs
+    have h2 : (vs.getLastD none).isSome = true := by rw [h]; rfl
+    simpa only [List.getLast!_eq_getLast?_getD, List.getLastD_eq_getLast?,
+      Option.default_eq_none] using h2
+  have hprev : prevEl f.vertices v = (vs.getLast!).getD 0 := by
+    have h := lastVsSomePrev L N r x g f v uvns vs h0 huv hvs
+    have h2 : (vs.getLastD none).getD 0 = prevEl f.vertices v := by rw [h]; rfl
+    simpa only [List.getLast!_eq_getLast?_getD, List.getLastD_eq_getLast?,
+      Option.default_eq_none] using h2.symm
+  have hall : ∀ t ∈ (vs.filter Option.isSome).map Option.get!, t ∈ f.vertices := by
+    have h := destTripleFullAllFilter L N r x g fs f v uvns vs hL hgn hres hm hmq hnf hng
+      hfs hf hv.symm hlc huv hvs
+    rwa [filterMapIdEqMapGet vs] at h
+  exact ⟨hfg', hgf', hvs2', h3, hhd, hlast, hprev, hall, hmono, hivs, hP19, hsub, hpair⟩
+
 end Kepler.Text.Reduction3
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理） -/
 #print axioms Kepler.Text.Reduction3.reductionSubdivFace
+#print axioms Kepler.Text.Reduction3.reductionSubdivFace2
