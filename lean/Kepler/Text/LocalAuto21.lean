@@ -671,8 +671,202 @@ theorem deform_684_pent_exists_p21 (V : Set V3) (g23 : ℝ → ℝ) (v0 v1 v2 v3
   ⟨pent684F_p21 v0 v1 v2 v3 g23, fun h1 h2 hc1 hc2 he h23 h23z =>
     deform_simplex_684_pent_p21 V g23 v0 v1 v2 v3 e h1 h2 hc1 hc2 he h23 h23z⟩
 
+private theorem g482_finrank_pair_le (a b : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) ≤ 2 := by
+  haveI : Fintype ↥({a, b} : Set V3) := (Set.toFinite _).fintype
+  have h := finrank_span_le_card (R := ℝ) (M := V3) (s := ({a, b} : Set V3))
+  have hcard : ({a, b} : Set V3).toFinset.card ≤ 2 := by
+    rw [show ({a, b} : Set V3).toFinset = ({a, b} : Finset V3) from by
+      ext x
+      simp]
+    have hc := Finset.card_insert_le (a := a) (s := ({b} : Finset V3))
+    simpa using hc
+  omega
+
+private theorem g482_image_vsub3 (p u v : V3) :
+    ((fun x : V3 => x -ᵥ p) '' ({p, u, v} : Set V3))
+      = ({0, u -ᵥ p, v -ᵥ p} : Set V3) := by
+  ext x
+  simp only [Set.mem_image, Set.mem_insert_iff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    rcases hy with rfl | rfl | rfl
+    · exact Or.inl (vsub_self y)
+    · exact Or.inr (Or.inl rfl)
+    · exact Or.inr (Or.inr rfl)
+  · rintro (rfl | rfl | rfl)
+    · exact ⟨_, Or.inl rfl, vsub_self _⟩
+    · exact ⟨u, Or.inr (Or.inl rfl), rfl⟩
+    · exact ⟨v, Or.inr (Or.inr rfl), rfl⟩
+
+private theorem g482_span_zero_insert (a b : V3) :
+    Submodule.span ℝ ({0, a, b} : Set V3) = Submodule.span ℝ ({a, b} : Set V3) := by
+  refine le_antisymm ?_ (Submodule.span_mono (fun x hx => ?_))
+  · rw [Submodule.span_le]
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl
+    · exact Submodule.zero_mem _
+    · exact Submodule.subset_span (by simp)
+    · exact Submodule.subset_span (by simp)
+  · simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+    tauto
+
+private theorem g482_mem_span_of_coplanar {v0 v1 v2 v3 : V3}
+    (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+    (hc : Coplanar ({v0, v1, v2, v3} : Set V3)) :
+    v3 -ᵥ v0 ∈ Submodule.span ℝ ({v1 -ᵥ v0, v2 -ᵥ v0} : Set V3) := by
+  obtain ⟨u, v, w, hsub⟩ := hc
+  have h0 : v0 ∈ affineSpan ℝ ({u, v, w} : Set V3) := hsub (by simp)
+  have h1 : v1 ∈ affineSpan ℝ ({u, v, w} : Set V3) := hsub (by simp)
+  have h2 : v2 ∈ affineSpan ℝ ({u, v, w} : Set V3) := hsub (by simp)
+  have h3 : v3 ∈ affineSpan ℝ ({u, v, w} : Set V3) := hsub (by simp)
+  have he1 : v1 -ᵥ v0 ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+    have hm : v1 -ᵥ v0 ∈ (affineSpan ℝ ({u, v, w} : Set V3)).direction :=
+      vsub_mem_vectorSpan (k := ℝ) (p₁ := v1) (p₂ := v0) h1 h0
+    rwa [direction_affineSpan] at hm
+  have he2 : v2 -ᵥ v0 ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+    have hm : v2 -ᵥ v0 ∈ (affineSpan ℝ ({u, v, w} : Set V3)).direction :=
+      vsub_mem_vectorSpan (k := ℝ) (p₁ := v2) (p₂ := v0) h2 h0
+    rwa [direction_affineSpan] at hm
+  have hx : v3 -ᵥ v0 ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+    have hm : v3 -ᵥ v0 ∈ (affineSpan ℝ ({u, v, w} : Set V3)).direction :=
+      vsub_mem_vectorSpan (k := ℝ) (p₁ := v3) (p₂ := v0) h3 h0
+    rwa [direction_affineSpan] at hm
+  have hle : Submodule.span ℝ ({v1 -ᵥ v0, v2 -ᵥ v0} : Set V3)
+      ≤ vectorSpan ℝ ({u, v, w} : Set V3) := by
+    rw [Submodule.span_le]
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl
+    · exact he1
+    · exact he2
+  have hS2 : Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) ≤ 2 := by
+    rw [vectorSpan_eq_span_vsub_set_right (k := ℝ) (p := u) (by simp)]
+    rw [g482_image_vsub3 u v w]
+    rw [g482_span_zero_insert (v -ᵥ u) (w -ᵥ u)]
+    exact g482_finrank_pair_le (v -ᵥ u) (w -ᵥ u)
+  have hvec : vectorSpan ℝ ({v0, v1, v2} : Set V3)
+      = Submodule.span ℝ ({v1 -ᵥ v0, v2 -ᵥ v0} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right (k := ℝ) (p := v0) (by simp)]
+    rw [show ((fun x : V3 => x -ᵥ v0) '' ({v0, v1, v2} : Set V3))
+        = ({0, v1 -ᵥ v0, v2 -ᵥ v0} : Set V3) from by
+      simpa using g482_image_vsub3 v0 v1 v2]
+    rw [g482_span_zero_insert]
+  have hpair_ge : 2 ≤ Module.finrank ℝ
+      (Submodule.span ℝ ({v1 -ᵥ v0, v2 -ᵥ v0} : Set V3)) := by
+    have h := collinear_iff_finrank_le_one (k := ℝ) (s := ({v0, v1, v2} : Set V3))
+    have h' : ¬ Module.finrank ℝ (vectorSpan ℝ ({v0, v1, v2} : Set V3)) ≤ 1 := by
+      intro hle1
+      exact hnc (h.mpr hle1)
+    rw [hvec] at h'
+    omega
+  have hpair_dim : Module.finrank ℝ
+      (Submodule.span ℝ ({v1 -ᵥ v0, v2 -ᵥ v0} : Set V3)) = 2 :=
+    le_antisymm (g482_finrank_pair_le _ _) hpair_ge
+  have hSdim : Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) = 2 := by
+    have hmono : Module.finrank ℝ (Submodule.span ℝ ({v1 -ᵥ v0, v2 -ᵥ v0} : Set V3))
+        ≤ Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) := Submodule.finrank_mono hle
+    omega
+  have hEq : Submodule.span ℝ ({v1 -ᵥ v0, v2 -ᵥ v0} : Set V3)
+      = vectorSpan ℝ ({u, v, w} : Set V3) :=
+    Submodule.eq_of_le_of_finrank_eq hle (by rw [hpair_dim, hSdim])
+  rw [← hEq] at hx
+  exact hx
+
+private theorem g482_norm_decomp (a b : ℝ) (e1 n : V3) (hn : inner ℝ e1 n = 0) :
+    ‖a • e1 + b • n‖ ^ 2 = a ^ 2 * ‖e1‖ ^ 2 + b ^ 2 * ‖n‖ ^ 2 := by
+  rw [norm_add_sq_real]
+  have hinner : inner ℝ (a • e1) (b • n) = 0 := by
+    rw [real_inner_smul_left, real_inner_smul_right, hn]; ring
+  rw [hinner, norm_smul, norm_smul, mul_pow, mul_pow, Real.norm_eq_abs, Real.norm_eq_abs,
+    sq_abs, sq_abs]
+  ring
+
+private theorem g482_cross_add_smul (a b : ℝ) (e1 n z : V3) :
+    cross3 (a • e1 + b • n) z = a • cross3 e1 z + b • cross3 n z := by
+  ext i
+  fin_cases i <;> simp [cross3, crossProduct, WithLp.ofLp_smul, WithLp.ofLp_add]
+
+private theorem g482_cross_self (e1 : V3) : cross3 e1 e1 = 0 := by
+  ext i
+  fin_cases i <;> simp [cross3, crossProduct] <;> ring
+
+private theorem g482_n_formula (e1 e2 : V3) :
+    cross3 e1 (cross3 e1 e2) = (e1 ⬝ᵥ e2) • e1 - (e1 ⬝ᵥ e1) • e2 := by
+  ext i
+  fin_cases i <;> simp [cross3, crossProduct, dotProduct, Fin.sum_univ_three] <;> ring
+
+private theorem g482_n_perp (e1 e2 : V3) : inner ℝ e1 (cross3 e1 (cross3 e1 e2)) = 0 := by
+  rw [g482_n_formula]
+  simp only [inner_sub_right, real_inner_smul_right, real_inner_self_eq_norm_sq,
+    inner_eq_dot, norm_sq_eq_dot]
+  ring
+
+private theorem g482_pair_li (v0 v1 v2 : V3)
+    (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3)) :
+    LinearIndependent ℝ (![v1 - v0, v2 - v0] : Fin 2 → V3) := by
+  have hne : v1 ≠ v0 := by
+    intro h
+    apply hnc
+    rw [h]
+    simpa using collinear_pair ℝ v0 v2
+  have hcol := collinear3_iff_smul (v := v0) (w := v1) (w1 := v2) hne
+  have hnot : ¬ ∃ c : ℝ, v2 - v0 = c • (v1 - v0) := fun ⟨c, hc⟩ => hnc (hcol.mpr ⟨c, hc⟩)
+  rw [LinearIndependent.pair_iff]
+  intro s t hst
+  have ht : t = 0 := by
+    by_contra htne
+    apply hnot
+    refine ⟨-(t⁻¹ * s), ?_⟩
+    have h1 : t • (v2 - v0) = -(s • (v1 - v0)) := by
+      rw [eq_neg_iff_add_eq_zero, add_comm]
+      exact hst
+    have h2 := congrArg (fun z : V3 => (1 / t) • z) h1
+    simpa [smul_smul, inv_mul_cancel₀ htne] using h2
+  subst ht
+  have hs : s = 0 := by
+    have h1 : s • (v1 - v0) = 0 := by simpa using hst
+    exact (smul_eq_zero.mp h1).resolve_right (sub_ne_zero.mpr hne)
+  exact ⟨hs, rfl⟩
+
+private theorem g482_pair_li_fin (v0 v1 v2 : V3)
+    (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3)) :
+    LinearIndependent ℝ (![((v1 - v0 : V3) : Fin 3 → ℝ), ((v2 - v0 : V3) : Fin 3 → ℝ)] :
+      Fin 2 → (Fin 3 → ℝ)) := by
+  have hind := g482_pair_li v0 v1 v2 hnc
+  rw [LinearIndependent.pair_iff] at hind ⊢
+  intro s t hst
+  have hV : s • (v1 - v0) + t • (v2 - v0) = 0 := by
+    apply WithLp.ofLp_injective 2
+    simpa [WithLp.ofLp_add, WithLp.ofLp_smul] using hst
+  exact hind s t hV
+
+private theorem g482_cross_ne (v0 v1 v2 : V3)
+    (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3)) :
+    cross3 (v1 - v0) (v2 - v0) ≠ 0 := by
+  have hLI := g482_pair_li_fin v0 v1 v2 hnc
+  have hne := (crossProduct_ne_zero_iff_linearIndependent (F := ℝ)
+    (v := ((v1 - v0 : V3) : Fin 3 → ℝ)) (w := ((v2 - v0 : V3) : Fin 3 → ℝ))).mpr hLI
+  intro hz
+  apply hne
+  have := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hz
+  simpa [cross3] using this
+
+private theorem g482_n_cross_ne (e1 e2 : V3) (he1 : e1 ≠ 0) (hne : cross3 e1 e2 ≠ 0) :
+    cross3 (cross3 e1 (cross3 e1 e2)) e1 ≠ 0 := by
+  have hform : cross3 (cross3 e1 (cross3 e1 e2)) e1 = (e1 ⬝ᵥ e1) • cross3 e1 e2 := by
+    ext i
+    fin_cases i <;> simp [cross3, crossProduct, dotProduct, Fin.sum_univ_three] <;> ring
+  rw [hform]
+  refine smul_ne_zero ?_ hne
+  rw [← norm_sq_eq_dot]
+  exact ne_of_gt (pow_pos (norm_pos_iff.mpr he1) 2)
+
+
 /-- HOL `mk_planar_unique` (CUXVZOZ.hl:839): a planar completion is
 uniquely determined by distances and the cross-product ray. -/
+
 theorem mk_planar_unique_p21 (v0 v1 v2 v3 v3' : V3)
     (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
     (d0 : dist v0 v3 = dist v0 v3') (d1 : dist v1 v3 = dist v1 v3')
@@ -680,11 +874,224 @@ theorem mk_planar_unique_p21 (v0 v1 v2 v3 v3' : V3)
     (cp' : Coplanar ({v0, v1, v2, v3'} : Set V3))
     (hcr : ∃ t : ℝ, 0 < t ∧ t • cross3 (v3 - v0) (v1 - v0) =
       cross3 (v3' - v0) (v1 - v0)) : v3 = v3' := by
-  -- DISCHARGES: HOL `mk_planar_unique` (basis `v1, v1 cross v2, n`
-  -- expansion over Trigonometry2.NONCOPLANAR_3_BASIS and
-  -- Zlzthic.coplanar_in_affine_hull); affine-hull engine absent here.
-  -- NEEDS: port of the planar basis-expansion argument.
-  sorry
+  obtain ⟨t, htpos, hcr⟩ := hcr
+  set e1 : V3 := v1 - v0
+  set e2 : V3 := v2 - v0
+  set x : V3 := v3 - v0
+  set x' : V3 := v3' - v0
+  set z : V3 := x - x'
+  set n : V3 := cross3 e1 (cross3 e1 e2) with hn_def
+  have hxP : x ∈ Submodule.span ℝ ({e1, e2} : Set V3) := by
+    have := g482_mem_span_of_coplanar hnc cp
+    simpa [e1, e2, x] using this
+  have hx'P : x' ∈ Submodule.span ℝ ({e1, e2} : Set V3) := by
+    have := g482_mem_span_of_coplanar hnc cp'
+    simpa [e1, e2, x'] using this
+  have he1ne : e1 ≠ 0 := by
+    intro h
+    apply hnc
+    have hv : v1 = v0 := sub_eq_zero.mp h
+    rw [hv]
+    simpa using collinear_pair ℝ v0 v2
+  have hd0n : ‖x‖ = ‖x'‖ := by
+    have h := d0
+    rw [dist_eq_norm, dist_eq_norm] at h
+    rw [show ‖x‖ = ‖v0 - v3‖ from by
+          rw [show x = v3 - v0 from rfl, ← neg_sub, norm_neg],
+      show ‖x'‖ = ‖v0 - v3'‖ from by
+          rw [show x' = v3' - v0 from rfl, ← neg_sub, norm_neg]]
+    exact h
+  have hd1n : ‖x - e1‖ = ‖x' - e1‖ := by
+    have h := d1
+    rw [dist_eq_norm, dist_eq_norm] at h
+    have e : x - e1 = v3 - v1 := by simp [x, e1]
+    have e' : x' - e1 = v3' - v1 := by simp [x', e1]
+    rw [e, e',
+      show ‖v3 - v1‖ = ‖v1 - v3‖ from by rw [← neg_sub, norm_neg],
+      show ‖v3' - v1‖ = ‖v1 - v3'‖ from by rw [← neg_sub, norm_neg]]
+    exact h
+  have hcross_ne : cross3 e1 e2 ≠ 0 := by
+    have := g482_cross_ne v0 v1 v2 hnc
+    simpa [e1, e2] using this
+  have hnform : n = (e1 ⬝ᵥ e2) • e1 - (e1 ⬝ᵥ e1) • e2 := by
+    rw [hn_def]
+    exact g482_n_formula e1 e2
+  have hninner : inner ℝ e1 n = 0 := by
+    rw [hn_def]
+    exact g482_n_perp e1 e2
+  have hLpos : (0 : ℝ) < e1 ⬝ᵥ e1 := by
+    rw [← norm_sq_eq_dot]
+    exact pow_pos (norm_pos_iff.mpr he1ne) 2
+  have hnmem : n ∈ Submodule.span ℝ ({e1, e2} : Set V3) := by
+    rw [hnform]
+    refine Submodule.sub_mem _ ?_ ?_
+    · exact Submodule.smul_mem _ _ (Submodule.subset_span (by simp))
+    · exact Submodule.smul_mem _ _ (Submodule.subset_span (by simp))
+  have he2mem : e2 ∈ Submodule.span ℝ ({e1, n} : Set V3) := by
+    have hL : (e1 ⬝ᵥ e1) ≠ 0 := ne_of_gt hLpos
+    have heq : e2 = ((e1 ⬝ᵥ e2) / (e1 ⬝ᵥ e1)) • e1 - (1 / (e1 ⬝ᵥ e1)) • n := by
+      calc e2 = (1 / (e1 ⬝ᵥ e1)) • ((e1 ⬝ᵥ e1) • e2) := by
+              rw [smul_smul, one_div, inv_mul_cancel₀ hL, one_smul]
+        _ = (1 / (e1 ⬝ᵥ e1)) • ((e1 ⬝ᵥ e2) • e1 - n) := by
+              have h : (e1 ⬝ᵥ e1) • e2 = (e1 ⬝ᵥ e2) • e1 - n := by
+                rw [hnform]; abel
+              rw [h]
+        _ = (1 / (e1 ⬝ᵥ e1)) • ((e1 ⬝ᵥ e2) • e1) - (1 / (e1 ⬝ᵥ e1)) • n := by
+              rw [smul_sub]
+        _ = ((e1 ⬝ᵥ e2) / (e1 ⬝ᵥ e1)) • e1 - (1 / (e1 ⬝ᵥ e1)) • n := by
+              rw [smul_smul, div_eq_inv_mul]
+              ring_nf
+    rw [heq]
+    refine Submodule.sub_mem _ ?_ ?_
+    · exact Submodule.smul_mem _ _ (Submodule.subset_span (by simp))
+    · exact Submodule.smul_mem _ _ (Submodule.subset_span (by simp))
+  have hspan : Submodule.span ℝ ({e1, n} : Set V3) = Submodule.span ℝ ({e1, e2} : Set V3) := by
+    refine le_antisymm ?_ ?_
+    · rw [Submodule.span_le]
+      intro y hy
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+      rcases hy with rfl | rfl
+      · exact Submodule.subset_span (by simp)
+      · exact hnmem
+    · rw [Submodule.span_le]
+      intro y hy
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+      rcases hy with rfl | rfl
+      · exact Submodule.subset_span (by simp)
+      · exact he2mem
+  have hzP : z ∈ Submodule.span ℝ ({e1, n} : Set V3) := by
+    rw [hspan]
+    exact Submodule.sub_mem _ hxP hx'P
+  have hxP' : x ∈ Submodule.span ℝ ({e1, n} : Set V3) := by
+    rw [hspan]; exact hxP
+  obtain ⟨a, b, hab⟩ := Submodule.mem_span_pair.mp hzP
+  obtain ⟨p, q, hpq⟩ := Submodule.mem_span_pair.mp hxP'
+  have hze1 : inner ℝ z e1 = 0 := by
+    have h0 : ‖x‖ ^ 2 = ‖x'‖ ^ 2 := by rw [hd0n]
+    have h1 : ‖x - e1‖ ^ 2 = ‖x' - e1‖ ^ 2 := by rw [hd1n]
+    have h2 : ‖x - e1‖ ^ 2 = ‖x‖ ^ 2 - 2 * inner ℝ x e1 + ‖e1‖ ^ 2 :=
+      norm_sub_sq_real x e1
+    have h3 : ‖x' - e1‖ ^ 2 = ‖x'‖ ^ 2 - 2 * inner ℝ x' e1 + ‖e1‖ ^ 2 :=
+      norm_sub_sq_real x' e1
+    have hx1 : inner ℝ x e1 = inner ℝ x' e1 := by linarith
+    change inner ℝ (x - x') e1 = 0
+    rw [inner_sub_left, hx1, sub_self]
+  have ha0 : a = 0 := by
+    have hn' : inner ℝ n e1 = 0 := by rw [real_inner_comm]; exact hninner
+    have hz' : inner ℝ (a • e1 + b • n) e1 = 0 := by rw [hab]; exact hze1
+    rw [inner_add_left, real_inner_smul_left, real_inner_smul_left, hn',
+      real_inner_self_eq_norm_sq] at hz'
+    have hL : (0 : ℝ) < ‖e1‖ ^ 2 := pow_pos (norm_pos_iff.mpr he1ne) 2
+    have h : a * ‖e1‖ ^ 2 = 0 := by linarith
+    exact (mul_eq_zero.mp h).resolve_right (ne_of_gt hL)
+  have hzn : z = b • n := by
+    rw [← hab, ha0, zero_smul, zero_add]
+  have hx'eq : x' = p • e1 + (q - b) • n := by
+    have hxz : x - z = x' := by
+      change x - (x - x') = x'
+      exact sub_sub_cancel x x'
+    rw [← hxz, ← hpq, hzn]
+    module
+  have hN0 : b * (2 * q - b) * ‖n‖ ^ 2 = 0 := by
+    have h0 : ‖x‖ ^ 2 = ‖x'‖ ^ 2 := by rw [hd0n]
+    have hx1 : ‖x‖ ^ 2 = p ^ 2 * ‖e1‖ ^ 2 + q ^ 2 * ‖n‖ ^ 2 := by
+      rw [← hpq]
+      exact g482_norm_decomp p q e1 n hninner
+    have hx2 : ‖x'‖ ^ 2 = p ^ 2 * ‖e1‖ ^ 2 + (q - b) ^ 2 * ‖n‖ ^ 2 := by
+      rw [hx'eq]
+      exact g482_norm_decomp p (q - b) e1 n hninner
+    have hq : q ^ 2 * ‖n‖ ^ 2 = (q - b) ^ 2 * ‖n‖ ^ 2 := by linarith
+    have hfac : q ^ 2 * ‖n‖ ^ 2 - (q - b) ^ 2 * ‖n‖ ^ 2
+        = b * (2 * q - b) * ‖n‖ ^ 2 := by ring
+    linarith
+  have hxcross : cross3 x e1 = q • cross3 n e1 := by
+    rw [← hpq, g482_cross_add_smul, g482_cross_self, smul_zero, zero_add]
+  have hx'cross : cross3 x' e1 = (q - b) • cross3 n e1 := by
+    rw [hx'eq, g482_cross_add_smul, g482_cross_self, smul_zero, zero_add]
+  have hncn : cross3 n e1 ≠ 0 := by
+    rw [hn_def]
+    exact g482_n_cross_ne e1 e2 he1ne hcross_ne
+  have hcross_eq : (t * q - (q - b)) • cross3 n e1 = 0 := by
+    have h : t • cross3 x e1 = cross3 x' e1 := by
+      simpa [x, x', e1] using hcr
+    rw [hxcross, hx'cross, smul_smul] at h
+    rw [sub_smul, h, sub_self]
+  have htq : t * q = q - b := by
+    rcases smul_eq_zero.mp hcross_eq with h | h
+    · linarith
+    · exact absurd h hncn
+  have hb_eq : b = (1 - t) * q := by
+    rw [sub_mul, one_mul]
+    linarith
+  have hz0 : z = 0 := by
+    by_cases hN : ‖n‖ ^ 2 = 0
+    · have hn0 : n = 0 := by
+        have hn : ‖n‖ = 0 := by nlinarith [norm_nonneg n, hN]
+        exact norm_eq_zero.mp hn
+      rw [hzn, hn0, smul_zero]
+    · have hNpos : 0 < ‖n‖ ^ 2 := lt_of_le_of_ne (sq_nonneg _) (Ne.symm hN)
+      have hbq : b * (2 * q - b) = 0 := by
+        rcases mul_eq_zero.mp hN0 with h | h
+        · exact h
+        · exact absurd h (ne_of_gt hNpos)
+      have hb0 : b = 0 := by
+        by_cases hq : q = 0
+        · rw [hb_eq, hq]; ring
+        · have hprod : (1 - t) * (1 + t) * q ^ 2 = 0 := by
+            have hfac : ((1 - t) * q) * (2 * q - (1 - t) * q) = (1 - t) * (1 + t) * q ^ 2 := by
+              ring
+            rw [hb_eq] at hbq
+            rw [hfac] at hbq
+            exact hbq
+          have h2 : (1 - t) = 0 := by
+            have h12 : (1 - t) * (1 + t) = 0 :=
+              (mul_eq_zero.mp hprod).resolve_right (pow_ne_zero 2 hq)
+            exact (mul_eq_zero.mp h12).resolve_right (by linarith)
+          rw [hb_eq, h2]; ring
+      rw [hzn, hb0, zero_smul]
+  have hxx : x = x' := by
+    have : x - x' = 0 := hz0
+    exact sub_eq_zero.mp this
+  have hv : v3 - v0 = v3' - v0 := by
+    simpa [x, x'] using hxx
+  have := congrArg (fun w : V3 => w + v0) hv
+  simpa using this
+
+/-- Continuity of `cross3` along continuous curves (kit for
+`mk_planar2_continuous`; HOL `CONTINUOUS_CROSS` + the bilinear bound).
+Private: no repo twin on this side. -/
+private theorem continuousAt_cross3_p21 {f g : ℝ → V3} {a : ℝ}
+    (hf : ContinuousAt f a) (hg : ContinuousAt g a) :
+    ContinuousAt (fun t => cross3 (f t) (g t)) a := by
+  have hb : ∀ t : ℝ, dist (cross3 (f t) (g t)) (cross3 (f a) (g a))
+      ≤ ‖f t - f a‖ * ‖g t‖ + ‖f a‖ * ‖g t - g a‖ := by
+    intro t
+    have hid : cross3 (f t) (g t) - cross3 (f a) (g a)
+        = cross3 (f t - f a) (g t) + cross3 (f a) (g t - g a) := by
+      ext i
+      fin_cases i <;> simp [cross3, crossProduct] <;> ring
+    rw [dist_eq_norm, hid]
+    refine le_trans (norm_add_le _ _) ?_
+    exact add_le_add (NORM_CROSS_LE_p37 _ _) (NORM_CROSS_LE_p37 _ _)
+  have h1 : Filter.Tendsto (fun t => ‖f t - f a‖) (nhds a) (nhds 0) := by
+    have h : Filter.Tendsto (fun t => ‖f t - f a‖) (nhds a) (nhds (‖f a - f a‖)) :=
+      (hf.sub continuousAt_const).norm.tendsto
+    rwa [sub_self, norm_zero] at h
+  have h2 : Filter.Tendsto (fun t => ‖g t - g a‖) (nhds a) (nhds 0) := by
+    have h : Filter.Tendsto (fun t => ‖g t - g a‖) (nhds a) (nhds (‖g a - g a‖)) :=
+      (hg.sub continuousAt_const).norm.tendsto
+    rwa [sub_self, norm_zero] at h
+  have hgcont : Filter.Tendsto (fun t => ‖g t‖) (nhds a) (nhds (‖g a‖)) := hg.norm.tendsto
+  have hsum : Filter.Tendsto
+      (fun t => ‖f t - f a‖ * ‖g t‖ + ‖f a‖ * ‖g t - g a‖) (nhds a) (nhds 0) := by
+    have hA : Filter.Tendsto (fun t => ‖f t - f a‖ * ‖g t‖) (nhds a) (nhds 0) := by
+      simpa using h1.mul hgcont
+    have hB : Filter.Tendsto (fun t => ‖f a‖ * ‖g t - g a‖) (nhds a) (nhds 0) := by
+      simpa using (tendsto_const_nhds (x := ‖f a‖)).mul h2
+    simpa using hA.add hB
+  rw [ContinuousAt, tendsto_iff_dist_tendsto_zero]
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hsum
+    (fun t => dist_nonneg) hb
 
 /-- HOL `mk_planar2_continuous` (CUXVZOZ.hl:974): `mk_planar2` is
 real-continuous in all parameters (s fixed). -/
@@ -696,11 +1103,31 @@ theorem mk_planar2_continuous_p21 (v0 v1 v2 : ℝ → V3) (x1 x2 x3 x5 x6 : ℝ 
     (hc5 : ContinuousAt x5 a) (hc6 : ContinuousAt x6 a) :
     ContinuousAt (fun t => mkPlanar2 (v0 t) (v1 t) (v2 t) (x1 t) (x2 t) (x3 t) (x5 t) (x6 t) s)
       a := by
-  -- DISCHARGES: continuity of `cross_product` on `real^3`
-  -- (Xbjrphc.CONTINUOUS_CROSS) and the sqrt composition
-  -- (Pqcsxwg.REAL_CONTINUOUS_ATREAL_SQRT_COMPOSE); the cross-continuity
-  -- lemma is not on this side. NEEDS: port of the cross kit.
-  sorry
+  have _hu2 := hu2
+  have hx1ne : x1 a ≠ 0 := ne_of_gt hx1
+  have hu1ne : upsX (x1 a) (x2 a) (x6 a) ≠ 0 := ne_of_gt hu1
+  have h2x1 : (2 : ℝ) * x1 a ≠ 0 := by positivity
+  have hcoef : ContinuousAt (fun t => (x1 t + x3 t - x5 t) / (2 * x1 t)) a := by
+    refine ContinuousAt.div ?_ ?_ h2x1
+    · fun_prop
+    · fun_prop
+  have hN : ContinuousAt (fun t => upsX (x1 t) (x3 t) (x5 t)) a := by
+    simp only [upsX]; fun_prop
+  have hD : ContinuousAt (fun t => upsX (x1 t) (x2 t) (x6 t)) a := by
+    simp only [upsX]; fun_prop
+  have hratio : ContinuousAt
+      (fun t => upsX (x1 t) (x3 t) (x5 t) / upsX (x1 t) (x2 t) (x6 t)) a :=
+    hN.div hD hu1ne
+  have hcoef2 : ContinuousAt
+      (fun t => (s / x1 t) * Real.sqrt (upsX (x1 t) (x3 t) (x5 t) / upsX (x1 t) (x2 t) (x6 t))) a :=
+    (continuousAt_const.div hc1 hx1ne).mul hratio.sqrt
+  have hcross : ContinuousAt
+      (fun t => cross3 (v1 t - v0 t) (cross3 (v1 t - v0 t) (v2 t - v0 t))) a :=
+    continuousAt_cross3_p21 (hv1.sub hv0)
+      (continuousAt_cross3_p21 (hv1.sub hv0) (hv2.sub hv0))
+  simp only [mkPlanar2]
+  exact (hv0.add (hcoef.smul (hv1.sub hv0))).add (hcoef2.smul hcross)
+
 
 /-- HOL `collinear_expand` (CUXVZOZ.hl:1004): a vector coplanar with the
 plane spanned off the origin expands over the two non-collinear vectors. -/
@@ -708,11 +1135,68 @@ theorem collinear_expand_p21 (v1 v2 v3 : V3)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hc : Coplanar ({0, v1, v2, v3} : Set V3)) :
     ∃ t1 t2 : ℝ, v3 = t1 • v1 + t2 • v2 := by
-  -- DISCHARGES: HOL Counting_spheres.NOT_COLLINEAR_AFF_DIM_2 +
-  -- Leaf_cell.COPLANAR_IMP_AFF_DIM + AFF_DIM_EQ_AFFINE_HULL +
-  -- Marchal_cells_2_new.IN_AFFINE_KY_LEMMA1 (affDim bookkeeping).
-  -- NEEDS: the affDim kit over `affDim` (Polytope) or Mathlib equivalents.
-  sorry
+  obtain ⟨u, v, w, hsub⟩ := hc
+  have h0 : (0 : V3) ∈ affineSpan ℝ ({u, v, w} : Set V3) := hsub (by simp)
+  have h1 : v1 ∈ affineSpan ℝ ({u, v, w} : Set V3) := hsub (by simp)
+  have h2 : v2 ∈ affineSpan ℝ ({u, v, w} : Set V3) := hsub (by simp)
+  have h3 : v3 ∈ affineSpan ℝ ({u, v, w} : Set V3) := hsub (by simp)
+  have hv1S : v1 ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+    have hm : v1 -ᵥ (0 : V3) ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+      have hd : v1 -ᵥ (0 : V3) ∈ (affineSpan ℝ ({u, v, w} : Set V3)).direction :=
+        vsub_mem_vectorSpan (k := ℝ) (p₁ := v1) (p₂ := (0 : V3)) h1 h0
+      rwa [direction_affineSpan] at hd
+    simpa using hm
+  have hv2S : v2 ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+    have hm : v2 -ᵥ (0 : V3) ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+      have hd : v2 -ᵥ (0 : V3) ∈ (affineSpan ℝ ({u, v, w} : Set V3)).direction :=
+        vsub_mem_vectorSpan (k := ℝ) (p₁ := v2) (p₂ := (0 : V3)) h2 h0
+      rwa [direction_affineSpan] at hd
+    simpa using hm
+  have hv3S : v3 ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+    have hm : v3 -ᵥ (0 : V3) ∈ vectorSpan ℝ ({u, v, w} : Set V3) := by
+      have hd : v3 -ᵥ (0 : V3) ∈ (affineSpan ℝ ({u, v, w} : Set V3)).direction :=
+        vsub_mem_vectorSpan (k := ℝ) (p₁ := v3) (p₂ := (0 : V3)) h3 h0
+      rwa [direction_affineSpan] at hd
+    simpa using hm
+  have hle : Submodule.span ℝ ({v1, v2} : Set V3) ≤ vectorSpan ℝ ({u, v, w} : Set V3) := by
+    rw [Submodule.span_le]
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl
+    · exact hv1S
+    · exact hv2S
+  have hS2 : Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) ≤ 2 := by
+    rw [vectorSpan_eq_span_vsub_set_right (k := ℝ) (p := u) (by simp)]
+    rw [g482_image_vsub3 u v w]
+    rw [g482_span_zero_insert (v -ᵥ u) (w -ᵥ u)]
+    exact g482_finrank_pair_le (v -ᵥ u) (w -ᵥ u)
+  have hvec0 : vectorSpan ℝ ({0, v1, v2} : Set V3) = Submodule.span ℝ ({v1, v2} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right (k := ℝ) (p := (0 : V3)) (by simp)]
+    rw [show ((fun x : V3 => x -ᵥ (0 : V3)) '' ({0, v1, v2} : Set V3))
+        = ({0, v1, v2} : Set V3) from by
+      rw [g482_image_vsub3 (0 : V3) v1 v2]
+      simp]
+    rw [g482_span_zero_insert v1 v2]
+  have hpair_ge : 2 ≤ Module.finrank ℝ (Submodule.span ℝ ({v1, v2} : Set V3)) := by
+    have h := collinear_iff_finrank_le_one (k := ℝ) (s := ({0, v1, v2} : Set V3))
+    have h' : ¬ Module.finrank ℝ (vectorSpan ℝ ({0, v1, v2} : Set V3)) ≤ 1 := by
+      intro hle1
+      exact hnc (h.mpr hle1)
+    rw [hvec0] at h'
+    omega
+  have hpair_dim : Module.finrank ℝ (Submodule.span ℝ ({v1, v2} : Set V3)) = 2 :=
+    le_antisymm (g482_finrank_pair_le v1 v2) hpair_ge
+  have hSdim : Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) = 2 := by
+    have hmono : Module.finrank ℝ (Submodule.span ℝ ({v1, v2} : Set V3))
+        ≤ Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) := Submodule.finrank_mono hle
+    omega
+  have hEq : Submodule.span ℝ ({v1, v2} : Set V3) = vectorSpan ℝ ({u, v, w} : Set V3) :=
+    Submodule.eq_of_le_of_finrank_eq hle (by rw [hpair_dim, hSdim])
+  have hv3' : v3 ∈ Submodule.span ℝ ({v1, v2} : Set V3) := by
+    rw [← hEq] at hv3S
+    exact hv3S
+  obtain ⟨t1, t2, ht⟩ := Submodule.mem_span_pair.mp hv3'
+  exact ⟨t1, t2, ht.symm⟩
 
 /-- HOL let `f1` (CUXVZOZ.hl:1417): the `mk_simplex1` deformation moving
 `v2` within the 684 face with both edges prescribed. -/
