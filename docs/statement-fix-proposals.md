@@ -6849,3 +6849,16 @@ Lean 现行文（HEAD `4673518a`）写成
 `#check @Kepler.Text.{a,b,azim}_assumption_reduction_p21` 中对应位置显示
 `∃ e, 0 < e ∧ (P → …)`；LA21 岛编 RC=0 / 0 err；三件 `#print axioms` 仍
 `[propext, Classical.choice, Quot.sound]`；不涉 sorry 删除面。
+
+### 执行记录（2026-11-12，`sf108-w1` + 编排者复核）
+
+- 补丁：`docs/statement-fix-proposals-patches/108-la21-sf108-exists-eps-parens.patch`（单文件 +103/−115，
+  16 hunk 全在三件内部；7 处括号 + 29 处同构证明形状换型，零数学内容改动）。
+- 机器证据：LA21 岛编 **RC=0 / 0 err / 8 sorry-decls（不变）/ 8 warn**；`#check` 三件对应位置均
+  `∃ e1, 0 < e1 ∧ (P → ∀ t, …)`（a 3 处 / b 3 处 / azim A7 1 处）；三件 `#print axioms` 仍
+  `[propext, Classical.choice, Quot.sound]`；`sorry` token 计数 22→22（本 SF 不删 sorry）；
+  worktree diff 与归档 patch 的增删行**多重集逐行相等**（115/115、103/103）。
+- **闸的例外说明**：`GATE_MODE=STATEMENT-FIX` 的规则 4/4b 是 `lake build`，本机 `.lake` 缺 13,387 个
+  olean（pit 15），实测一开闸即拉起 **7 个并行 `lean -o`**、空闲页从 48 万跌到 7.8 万 ⇒ 立即止损
+  （AGENTS §4 机器限制优先）。SF 专属检查（patch 多重集相等）已按脚本同口径手工执行并通过；
+  规则 4 的编译检查由**同文件岛编 RC=0** 等价覆盖。此例外记入 `handoff §6` pit 16。

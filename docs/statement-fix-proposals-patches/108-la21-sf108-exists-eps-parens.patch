@@ -1,0 +1,409 @@
+--- a/lean/Kepler/Text/LocalAuto21.lean
++++ b/lean/Kepler/Text/LocalAuto21.lean
+@@ -2564,12 +2564,12 @@
+       s.a i j < dist (v i) (v j))
+     (hd : Deformation f (Set.range v) (-e) e)
+     (hfr : ∀ w t, w ≠ v p1 → f w t = w)
+-    (ha1 : ∃ e1, 0 < e1 ∧ s.a p1 (p1 + 1) = dist (v p1) (v (p1 + 1)) →
+-      ∀ t, |t| < e1 → s.a p1 (p1 + 1) ≤ dist (f (v p1) t) (f (v (p1 + 1)) t))
+-    (ha2 : ∃ e1, 0 < e1 ∧ s.a p1 (p1 + (k - 1)) = dist (v p1) (v (p1 + (k - 1))) →
+-      ∀ t, |t| < e1 → s.a p1 (p1 + (k - 1)) ≤ dist (f (v p1) t) (f (v (p1 + (k - 1))) t)) :
+-    ∀ i j, ∃ e1, 0 < e1 ∧ s.a i j = dist (v i) (v j) →
+-      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t) := by
++    (ha1 : ∃ e1, 0 < e1 ∧ (s.a p1 (p1 + 1) = dist (v p1) (v (p1 + 1)) →
++      ∀ t, |t| < e1 → s.a p1 (p1 + 1) ≤ dist (f (v p1) t) (f (v (p1 + 1)) t)))
++    (ha2 : ∃ e1, 0 < e1 ∧ (s.a p1 (p1 + (k - 1)) = dist (v p1) (v (p1 + (k - 1))) →
++      ∀ t, |t| < e1 → s.a p1 (p1 + (k - 1)) ≤ dist (f (v p1) t) (f (v (p1 + (k - 1))) t))) :
++    ∀ i j, ∃ e1, 0 < e1 ∧ (s.a i j = dist (v i) (v j) →
++      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t)) := by
+   -- PROVED: HOL proof ported (mod-k reduction via `periodic2_mod_reduce`,
+   -- `BBs_inj` routing for distinct mod classes, and the freeze case).
+ 
+@@ -2589,9 +2589,9 @@
+     add_mod_ne_p21 p1 (k - 1) k (by omega) (by omega) h.symm
+   have hamod : ∀ i j, s.a i j = s.a (i % k) (j % k) := fun i j =>
+     periodic2_MOD_p21 (a := s.a) (i := i) (j := j) (k := k) hkne hpa
+-  -- the p1-anchored claim (`j < k`), in the statement's weak `∃e1,(0<e1 ∧ eq) → B` shape
+-  have hclaim : ∀ j, j < k → ∃ e1, (0 < e1 ∧ s.a p1 j = dist (v p1) (v j)) →
+-      ∀ t, |t| < e1 → s.a p1 j ≤ dist (f (v p1) t) (f (v j) t) := by
++  -- the p1-anchored claim (`j < k`), in the statement's shape `∃e1, 0<e1 ∧ (eq → B)`
++  have hclaim : ∀ j, j < k → ∃ e1, 0 < e1 ∧ (s.a p1 j = dist (v p1) (v j) →
++      ∀ t, |t| < e1 → s.a p1 j ≤ dist (f (v p1) t) (f (v j) t)) := by
+     intro j hj
+     by_cases hdj : scsDiag k p1 j
+     · have hps : psort k (p1, j) ≠ psort k (p1 + 1, p1 + (k - 1)) := by
+@@ -2600,36 +2600,33 @@
+         · exact hp1ne h1
+         · exact hp1ne' h2
+       have hlt := hdiag p1 j hdj hps
+-      exact ⟨1, fun hh => absurd hh.2 (ne_of_lt hlt)⟩
++      exact ⟨1, one_pos, fun heq => absurd heq (ne_of_lt hlt)⟩
+     · have hcase : p1 % k = j % k ∨ (p1 + 1) % k = j % k ∨ p1 % k = (j + 1) % k := by
+         unfold scsDiag at hdj
+         tauto
+       rcases hcase with hA | hB | hC
+       · -- j ≡ p1: both points frozen, distance 0
+-        refine ⟨1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++        refine ⟨1, one_pos, ?_⟩
++        intro heq
+         have hvj : v j = v p1 := by rw [← hvmod j, ← hvmod p1, hA]
+         intro t ht
+         rw [hvj] at heq ⊢
+         rw [dist_self] at heq ⊢
+         rw [heq]
+       · -- j ≡ p1 + 1: use ha1
+-        obtain ⟨e1, hb⟩ := ha1
+-        refine ⟨e1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++        obtain ⟨e1, he1, hb⟩ := ha1
++        refine ⟨e1, he1, ?_⟩
++        intro heq
+         have hvj : v j = v (p1 + 1) := by rw [← hvmod j, ← hvmod (p1 + 1), hB]
+         have haj : s.a p1 j = s.a p1 (p1 + 1) := by
+           rw [hamod p1 j, hamod p1 (p1 + 1), hB]
+         intro t ht
+         rw [hvj, haj] at heq ⊢
+-        exact hb ⟨he1, heq⟩ t ht
++        exact hb heq t ht
+       · -- j ≡ p1 + k - 1: use ha2
+-        obtain ⟨e1, hb⟩ := ha2
+-        refine ⟨e1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++        obtain ⟨e1, he1, hb⟩ := ha2
++        refine ⟨e1, he1, ?_⟩
++        intro heq
+         have hjk : j % k = (p1 + (k - 1)) % k := by
+           have h := MOD_SHIFT_p21 k p1 (j + 1) (k - 1) hkne hC
+           rw [show j + 1 + (k - 1) = j + k by omega, Nat.add_mod_right] at h
+@@ -2640,27 +2637,25 @@
+           rw [hamod p1 j, hamod p1 (p1 + (k - 1)), hjk]
+         intro t ht
+         rw [hvj, haj] at heq ⊢
+-        exact hb ⟨he1, heq⟩ t ht
++        exact hb heq t ht
+   -- assembly for `i, j < k`
+   have hbounded : ∀ i j, i < k → j < k → ∃ e1,
+-      (0 < e1 ∧ s.a i j = dist (v i) (v j)) →
+-        ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t) := by
++      0 < e1 ∧ (s.a i j = dist (v i) (v j) →
++        ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t)) := by
+     intro i j hi hj
+     by_cases hi1 : i % k = p1 % k
+-    · obtain ⟨e1, hb⟩ := hclaim j hj
+-      refine ⟨e1, ?_⟩
+-      intro hh
+-      obtain ⟨he1, heq⟩ := hh
++    · obtain ⟨e1, he1, hb⟩ := hclaim j hj
++      refine ⟨e1, he1, ?_⟩
++      intro heq
+       have hvi : v i = v p1 := by rw [← hvmod i, ← hvmod p1, hi1]
+       have hai : s.a i j = s.a p1 j := by rw [hamod i j, hamod p1 j, hi1]
+       intro t ht
+       rw [hvi, hai] at heq ⊢
+-      exact hb ⟨he1, heq⟩ t ht
++      exact hb heq t ht
+     · by_cases hj1 : j % k = p1 % k
+-      · obtain ⟨e1, hb⟩ := hclaim i hi
+-        refine ⟨e1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++      · obtain ⟨e1, he1, hb⟩ := hclaim i hi
++        refine ⟨e1, he1, ?_⟩
++        intro heq
+         have hvj : v j = v p1 := by rw [← hvmod j, ← hvmod p1, hj1]
+         have haji : s.a i j = s.a p1 i := by
+           calc s.a i j = s.a (i % k) (j % k) := hamod i j
+@@ -2669,11 +2664,10 @@
+             _ = s.a p1 i := (hamod p1 i).symm
+         intro t ht
+         rw [hvj, haji] at heq ⊢
+-        have hble := hb ⟨he1, by rw [dist_comm]; exact heq⟩ t ht
++        have hble := hb (by rw [dist_comm]; exact heq) t ht
+         rwa [dist_comm] at hble
+-      · refine ⟨1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++      · refine ⟨1, one_pos, ?_⟩
++        intro heq
+         have hvi : v i ≠ v p1 := by
+           intro hve
+           exact hi1 (hinjmod i p1 (by rw [hvmod i, hvmod p1]; exact hve))
+@@ -2683,26 +2677,26 @@
+         intro t ht
+         rw [hfr (v i) t hvi, hfr (v j) t hvj]
+         exact le_of_eq heq
+-  have hP : ∀ a b, (∃ e1, (0 < e1 ∧ s.a a b = dist (v a) (v b)) →
+-        ∀ t, |t| < e1 → s.a a b ≤ dist (f (v a) t) (f (v b) t)) =
+-      (∃ e1, (0 < e1 ∧ s.a (a % k) (b % k) = dist (v (a % k)) (v (b % k))) →
+-        ∀ t, |t| < e1 → s.a (a % k) (b % k) ≤ dist (f (v (a % k)) t) (f (v (b % k)) t)) := by
++  have hP : ∀ a b, (∃ e1, 0 < e1 ∧ (s.a a b = dist (v a) (v b) →
++        ∀ t, |t| < e1 → s.a a b ≤ dist (f (v a) t) (f (v b) t))) =
++      (∃ e1, 0 < e1 ∧ (s.a (a % k) (b % k) = dist (v (a % k)) (v (b % k)) →
++        ∀ t, |t| < e1 → s.a (a % k) (b % k) ≤ dist (f (v (a % k)) t) (f (v (b % k)) t))) := by
+     intro a b
+     rw [hamod a b, hvmod a, hvmod b]
+   intro i j
+   refine periodic2_mod_reduce
+-    (P := fun i j => ∃ e1, (0 < e1 ∧ s.a i j = dist (v i) (v j)) →
+-      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t))
++    (P := fun i j => ∃ e1, 0 < e1 ∧ (s.a i j = dist (v i) (v j) →
++      ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t)))
+     k hkne ?_ ?_ i j
+   · intro i j
+-    show (∃ e1, (0 < e1 ∧ s.a (i + k) j = dist (v (i + k)) (v j)) →
+-        ∀ t, |t| < e1 → s.a (i + k) j ≤ dist (f (v (i + k)) t) (f (v j) t)) =
+-      (∃ e1, (0 < e1 ∧ s.a i j = dist (v i) (v j)) →
+-        ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t)) ∧
+-      (∃ e1, (0 < e1 ∧ s.a i (j + k) = dist (v i) (v (j + k))) →
+-        ∀ t, |t| < e1 → s.a i (j + k) ≤ dist (f (v i) t) (f (v (j + k)) t)) =
+-      (∃ e1, (0 < e1 ∧ s.a i j = dist (v i) (v j)) →
+-        ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t))
++    show (∃ e1, 0 < e1 ∧ (s.a (i + k) j = dist (v (i + k)) (v j) →
++        ∀ t, |t| < e1 → s.a (i + k) j ≤ dist (f (v (i + k)) t) (f (v j) t))) =
++      (∃ e1, 0 < e1 ∧ (s.a i j = dist (v i) (v j) →
++        ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t))) ∧
++      (∃ e1, 0 < e1 ∧ (s.a i (j + k) = dist (v i) (v (j + k)) →
++        ∀ t, |t| < e1 → s.a i (j + k) ≤ dist (f (v i) t) (f (v (j + k)) t))) =
++      (∃ e1, 0 < e1 ∧ (s.a i j = dist (v i) (v j) →
++        ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t)))
+     exact ⟨by rw [hP (i + k) j, hP i j, Nat.add_mod_right],
+       by rw [hP i (j + k), hP i j, Nat.add_mod_right]⟩
+   · exact fun i j hij => hbounded i j hij.1 hij.2
+@@ -2715,13 +2709,13 @@
+     (hdiag : ∀ i j, scsDiag k i j → 4 * h0 < s.b i j)
+     (hd : Deformation f (Set.range v) (-e) e)
+     (hfr : ∀ w t, w ≠ v p1 → f w t = w)
+-    (hb1 : ∃ e1, 0 < e1 ∧ dist (v p1) (v (p1 + 1)) = s.b p1 (p1 + 1) →
+-      ∀ t, |t| < e1 → dist (f (v p1) t) (f (v (p1 + 1)) t) ≤ s.b p1 (p1 + 1))
+-    (hb2 : ∃ e1, 0 < e1 ∧ dist (v p1) (v (p1 + (k - 1))) = s.b p1 (p1 + (k - 1)) →
++    (hb1 : ∃ e1, 0 < e1 ∧ (dist (v p1) (v (p1 + 1)) = s.b p1 (p1 + 1) →
++      ∀ t, |t| < e1 → dist (f (v p1) t) (f (v (p1 + 1)) t) ≤ s.b p1 (p1 + 1)))
++    (hb2 : ∃ e1, 0 < e1 ∧ (dist (v p1) (v (p1 + (k - 1))) = s.b p1 (p1 + (k - 1)) →
+       ∀ t, |t| < e1 → dist (f (v p1) t) (f (v (p1 + (k - 1))) t) ≤
+-        s.b p1 (p1 + (k - 1))) :
+-    ∀ i j, ∃ e1, 0 < e1 ∧ dist (v i) (v j) = s.b i j →
+-      ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j := by
++        s.b p1 (p1 + (k - 1)))) :
++    ∀ i j, ∃ e1, 0 < e1 ∧ (dist (v i) (v j) = s.b i j →
++      ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j) := by
+   -- PROVED: the `a`-proof over the b-slots, the diagonal case closed by the
+   -- `4 * h0` triangle bound on the annulus (`BBsV39` ball-annulus).
+ 
+@@ -2744,8 +2738,8 @@
+   have hnorm : ∀ i, dist (v i) 0 ≤ 2 * h0 := fun i =>
+     (hBB.1 (Set.mem_range_self i)).1
+   -- the p1-anchored claim (`j < k`)
+-  have hclaim : ∀ j, j < k → ∃ e1, (0 < e1 ∧ dist (v p1) (v j) = s.b p1 j) →
+-      ∀ t, |t| < e1 → dist (f (v p1) t) (f (v j) t) ≤ s.b p1 j := by
++  have hclaim : ∀ j, j < k → ∃ e1, 0 < e1 ∧ (dist (v p1) (v j) = s.b p1 j →
++      ∀ t, |t| < e1 → dist (f (v p1) t) (f (v j) t) ≤ s.b p1 j) := by
+     intro j hj
+     by_cases hdj : scsDiag k p1 j
+     · have hlt := hdiag p1 j hdj
+@@ -2754,36 +2748,33 @@
+         have h2 := hnorm p1
+         have h3 : dist 0 (v j) ≤ 2 * h0 := by rw [dist_comm]; exact hnorm j
+         linarith
+-      exact ⟨1, fun hh => absurd hh.2 (ne_of_lt (by linarith))⟩
++      exact ⟨1, one_pos, fun heq => absurd heq (ne_of_lt (by linarith))⟩
+     · have hcase : p1 % k = j % k ∨ (p1 + 1) % k = j % k ∨ p1 % k = (j + 1) % k := by
+         unfold scsDiag at hdj
+         tauto
+       rcases hcase with hA | hB | hC
+       · -- j ≡ p1: distance 0 on both sides
+-        refine ⟨1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++        refine ⟨1, one_pos, ?_⟩
++        intro heq
+         have hvj : v j = v p1 := by rw [← hvmod j, ← hvmod p1, hA]
+         intro t ht
+         rw [hvj] at heq ⊢
+         rw [dist_self] at heq ⊢
+         rw [← heq]
+       · -- j ≡ p1 + 1: use hb1
+-        obtain ⟨e1, hb⟩ := hb1
+-        refine ⟨e1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++        obtain ⟨e1, he1, hb⟩ := hb1
++        refine ⟨e1, he1, ?_⟩
++        intro heq
+         have hvj : v j = v (p1 + 1) := by rw [← hvmod j, ← hvmod (p1 + 1), hB]
+         have hbj : s.b p1 j = s.b p1 (p1 + 1) := by
+           rw [hbmod p1 j, hbmod p1 (p1 + 1), hB]
+         intro t ht
+         rw [hvj, hbj] at heq ⊢
+-        exact hb ⟨he1, heq⟩ t ht
++        exact hb heq t ht
+       · -- j ≡ p1 + k - 1: use hb2
+-        obtain ⟨e1, hb⟩ := hb2
+-        refine ⟨e1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++        obtain ⟨e1, he1, hb⟩ := hb2
++        refine ⟨e1, he1, ?_⟩
++        intro heq
+         have hjk : j % k = (p1 + (k - 1)) % k := by
+           have h := MOD_SHIFT_p21 k p1 (j + 1) (k - 1) hkne hC
+           rw [show j + 1 + (k - 1) = j + k by omega, Nat.add_mod_right] at h
+@@ -2794,27 +2785,25 @@
+           rw [hbmod p1 j, hbmod p1 (p1 + (k - 1)), hjk]
+         intro t ht
+         rw [hvj, hbj] at heq ⊢
+-        exact hb ⟨he1, heq⟩ t ht
++        exact hb heq t ht
+   -- assembly for `i, j < k`
+   have hbounded : ∀ i j, i < k → j < k → ∃ e1,
+-      (0 < e1 ∧ dist (v i) (v j) = s.b i j) →
+-        ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j := by
++      0 < e1 ∧ (dist (v i) (v j) = s.b i j →
++        ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j) := by
+     intro i j hi hj
+     by_cases hi1 : i % k = p1 % k
+-    · obtain ⟨e1, hb⟩ := hclaim j hj
+-      refine ⟨e1, ?_⟩
+-      intro hh
+-      obtain ⟨he1, heq⟩ := hh
++    · obtain ⟨e1, he1, hb⟩ := hclaim j hj
++      refine ⟨e1, he1, ?_⟩
++      intro heq
+       have hvi : v i = v p1 := by rw [← hvmod i, ← hvmod p1, hi1]
+       have hbi : s.b i j = s.b p1 j := by rw [hbmod i j, hbmod p1 j, hi1]
+       intro t ht
+       rw [hvi, hbi] at heq ⊢
+-      exact hb ⟨he1, heq⟩ t ht
++      exact hb heq t ht
+     · by_cases hj1 : j % k = p1 % k
+-      · obtain ⟨e1, hb⟩ := hclaim i hi
+-        refine ⟨e1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++      · obtain ⟨e1, he1, hb⟩ := hclaim i hi
++        refine ⟨e1, he1, ?_⟩
++        intro heq
+         have hvj : v j = v p1 := by rw [← hvmod j, ← hvmod p1, hj1]
+         have hbji : s.b i j = s.b p1 i := by
+           calc s.b i j = s.b (i % k) (j % k) := hbmod i j
+@@ -2823,11 +2812,10 @@
+             _ = s.b p1 i := (hbmod p1 i).symm
+         intro t ht
+         rw [hvj, hbji] at heq ⊢
+-        have hble := hb ⟨he1, by rw [dist_comm]; exact heq⟩ t ht
++        have hble := hb (by rw [dist_comm]; exact heq) t ht
+         rwa [dist_comm] at hble
+-      · refine ⟨1, ?_⟩
+-        intro hh
+-        obtain ⟨he1, heq⟩ := hh
++      · refine ⟨1, one_pos, ?_⟩
++        intro heq
+         have hvi : v i ≠ v p1 := by
+           intro hve
+           exact hi1 (hinjmod i p1 (by rw [hvmod i, hvmod p1]; exact hve))
+@@ -2837,26 +2825,26 @@
+         intro t ht
+         rw [hfr (v i) t hvi, hfr (v j) t hvj]
+         exact le_of_eq heq
+-  have hP : ∀ a b, (∃ e1, (0 < e1 ∧ dist (v a) (v b) = s.b a b) →
+-        ∀ t, |t| < e1 → dist (f (v a) t) (f (v b) t) ≤ s.b a b) =
+-      (∃ e1, (0 < e1 ∧ dist (v (a % k)) (v (b % k)) = s.b (a % k) (b % k)) →
+-        ∀ t, |t| < e1 → dist (f (v (a % k)) t) (f (v (b % k)) t) ≤ s.b (a % k) (b % k)) := by
++  have hP : ∀ a b, (∃ e1, 0 < e1 ∧ (dist (v a) (v b) = s.b a b →
++        ∀ t, |t| < e1 → dist (f (v a) t) (f (v b) t) ≤ s.b a b)) =
++      (∃ e1, 0 < e1 ∧ (dist (v (a % k)) (v (b % k)) = s.b (a % k) (b % k) →
++        ∀ t, |t| < e1 → dist (f (v (a % k)) t) (f (v (b % k)) t) ≤ s.b (a % k) (b % k))) := by
+     intro a b
+     rw [hbmod a b, hvmod a, hvmod b]
+   intro i j
+   refine periodic2_mod_reduce
+-    (P := fun i j => ∃ e1, (0 < e1 ∧ dist (v i) (v j) = s.b i j) →
+-      ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j)
++    (P := fun i j => ∃ e1, 0 < e1 ∧ (dist (v i) (v j) = s.b i j →
++      ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j))
+     k hkne ?_ ?_ i j
+   · intro i j
+-    show (∃ e1, (0 < e1 ∧ dist (v (i + k)) (v j) = s.b (i + k) j) →
+-        ∀ t, |t| < e1 → dist (f (v (i + k)) t) (f (v j) t) ≤ s.b (i + k) j) =
+-      (∃ e1, (0 < e1 ∧ dist (v i) (v j) = s.b i j) →
+-        ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j) ∧
+-      (∃ e1, (0 < e1 ∧ dist (v i) (v (j + k)) = s.b i (j + k)) →
+-        ∀ t, |t| < e1 → dist (f (v i) t) (f (v (j + k)) t) ≤ s.b i (j + k)) =
+-      (∃ e1, (0 < e1 ∧ dist (v i) (v j) = s.b i j) →
+-        ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j)
++    show (∃ e1, 0 < e1 ∧ (dist (v (i + k)) (v j) = s.b (i + k) j →
++        ∀ t, |t| < e1 → dist (f (v (i + k)) t) (f (v j) t) ≤ s.b (i + k) j)) =
++      (∃ e1, 0 < e1 ∧ (dist (v i) (v j) = s.b i j →
++        ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j)) ∧
++      (∃ e1, 0 < e1 ∧ (dist (v i) (v (j + k)) = s.b i (j + k) →
++        ∀ t, |t| < e1 → dist (f (v i) t) (f (v (j + k)) t) ≤ s.b i (j + k))) =
++      (∃ e1, 0 < e1 ∧ (dist (v i) (v j) = s.b i j →
++        ∀ t, |t| < e1 → dist (f (v i) t) (f (v j) t) ≤ s.b i j))
+     exact ⟨by rw [hP (i + k) j, hP i j, Nat.add_mod_right],
+       by rw [hP i (j + k), hP i j, Nat.add_mod_right]⟩
+   · exact fun i j hij => hbounded i j hij.1 hij.2
+@@ -2899,9 +2887,9 @@
+         azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) =
+           azim 0 (v (p1 + 1)) (v (p1 + 2)) (f (v p1) t)) ∧
+       (∀ i, ∃ e0, 0 < e0 ∧
+-        azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
++        (azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
+         ∀ t, |t| < e0 →
+-          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi) ∧
++          azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi)) ∧
+       (∃ e1, 0 < e1 ∧ ∀ t, |t| < e1 →
+         azim 0 (v (p1 + (k - 1))) (f (v p1) t) (v (p1 + (k - 2))) =
+           azim 0 (v (p1 + (k - 1))) (f (v p1) t) (v (p1 + 1)) +
+@@ -3246,15 +3234,15 @@
+     exact ⟨e', he', fun t ht => ⟨(hP t (h1e t ht)).1, (hQ t (h2e t ht)).1⟩⟩
+   -- (A7)
+   have hA7 : ∀ i, ∃ e0, 0 < e0 ∧
+-      azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
++      (azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi →
+       ∀ t, |t| < e0 →
+-        azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi := by
++        azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t) ≤ Real.pi) := by
+     intro i
+     by_cases hcase : p1 % k ≠ i % k ∧ p1 % k ≠ (i + 1) % k ∧
+         p1 % k ≠ (i + (k - 1)) % k
+-    · refine ⟨1, ?_⟩
++    · refine ⟨1, one_pos, ?_⟩
+       intro hh t ht
+-      rw [hA3 i t hcase.1 hcase.2.1 hcase.2.2, hh.2]
++      rw [hA3 i t hcase.1 hcase.2.1 hcase.2.2, hh]
+     · have hcase' : p1 % k = i % k ∨ p1 % k = (i + 1) % k ∨
+           p1 % k = (i + (k - 1)) % k := by
+         rcases Classical.em (p1 % k = i % k) with hA | hA
+@@ -3265,7 +3253,7 @@
+         · exact Or.inr (Or.inr hC)
+         · exact absurd ⟨hA, hB, hC⟩ hcase
+       rcases hcase' with hA | hB | hC
+-      · refine ⟨1, ?_⟩
++      · refine ⟨1, one_pos, ?_⟩
+         intro hh
+         exfalso
+         have hcong1 : v i = v p1 := by rw [← hvmod i, ← hvmod p1, hA]
+@@ -3275,15 +3263,15 @@
+           rw [← hvmod (i + (k - 1)), ← hvmod (p1 + (k - 1)),
+             MOD_SHIFT_p21 k i p1 (k - 1) hkne hA.symm]
+         rw [hcong1, hcong2, hcong3] at hh
+-        linarith [hz, hh.2]
++        linarith [hz, hh]
+       · obtain ⟨eP, heP, hP⟩ := hPclaim
+-        refine ⟨eP, ?_⟩
+-        intro hh t ht
++        refine ⟨eP, heP, ?_⟩
++        intro _ t ht
+         rw [hA5 i t hB]
+         exact (hP t ht).2
+       · obtain ⟨eQ, heQ, hQ⟩ := hQclaim
+-        refine ⟨eQ, ?_⟩
+-        intro hh t ht
++        refine ⟨eQ, heQ, ?_⟩
++        intro _ t ht
+         rw [hA6 i t hC]
+         exact (hQ t ht).2
+   exact ⟨hA1, hA2, hA3, hA4, hA5, hA6, hA7, hA8, hA9⟩
