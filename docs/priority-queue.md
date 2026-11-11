@@ -150,11 +150,11 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 6 三车道在飞**：`cuxvzozF-w1`（Section F 四件：`WNWSHJT_ALT_p21` + a/b/azim
-> assumption reduction）、`la22mono-w1`（`LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`）、
-> `cuxvzozG-w1`（Section G 六件 dih/dihV monotonicity）。**g482br 已落库**（两桥件，`a908b449`）；
-> **g482no4 已落库**（`deform_simplex_684_pent_p21`，`3429af94`）；**vas-nhx / g482-482 判 BLOCKED**
-> （import DAG 死锁 / 7 件 tainted，见续1002 ②、续1001）。
+> **wave 7 三车道在飞**：`la22mono-w1`（LA22 `LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`）、
+> `cuxvzozG-w1`（Section G 六件 dih/dihV monotonicity）、`taustar-w1`（LA38 `taustar_taum` +
+> `taustar_taum_dfun` + LA21 `MMs_minimize_tau_fun_p21`）。**cuxvzozF 已落库**（Section F 四件，
+> `30aefbc5`）+ **SF-108 立案**（7 处 ∃-ε 括号）；**g482br 已落库**（两桥件，`a908b449`）；
+> **vas-nhx / g482-482 判 BLOCKED**（DAG 死锁 / 7 件 tainted，见续1002 ②、续1001）。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -471,6 +471,13 @@
 ② **B：`NOT_COL_EQ_UPS_X_POS`（HOL `leg/collect_geom2.hl:1420`）自包含移植**：`LocalAuto21Kit` 新增 private `g482_not_col_eq_upsX_pos` + 4 个 private 助手（`¬Collinear3 a b c ↔ 0 < upsX (dist a b²)(dist a c²)(dist b c²)`），**零新增 import**（绕开 `EulerSimplexGeom` 闭包）；kit 岛编 RC=0 / 0 err / **0 warn**；探针标准三。**编排者补 public 别名 `not_col_eq_upsX_pos_p21`**（一行，供 `general_482` 接线跨模块消费），重编 0/0/0、探针标准三。
 ③ **对 general_482 根的进度**（续1001 依赖表逐项核销）：2 桥已清（本笔）；Section F 四件（`WNWSHJT_ALT` + a/b/azim）由 `cuxvzozF-w1` 在飞；Section G 六件（`dih_x5_mono`/`dih_obtuse_mono(_b)`/`dihV_obtuse_mono(_a/_b)`）由 `cuxvzozG-w1` 在飞；LA22 两件（`LEMMA_4828966562`/`LEMMA_1834976363`）由 `la22mono-w1` 在飞。**剩余未派** = `MMs_minimize_tau_fun_p21`（root 在 LA38 `taustar_taum*` 两件）与 `LEMMA_4828966562`（在飞）。
 ④ **wave 6（池 3/3）**：`cuxvzozF-w1` / `la22mono-w1` / `cuxvzozG-w1`。**锥内零移动**（所有目标件均不在 SORRIED）；oleans 装池（LA18 md5 `428c2870…`，Kit 重编）。
+
+- **2026-11-12（04:11，续1004）**：**`cuxvzozF-w1` 落库 `30aefbc5`——LA21 Section F 四件全绿；SF-108 立案（∃-ε 括号缺失）；wave 7 发车**。
+① **`30aefbc5`（1 file / 713 ins / 19 del）**：`WNWSHJT_ALT_p21`（HOL :3842）+ `a_assumption_reduction_p21`（:4032）+ `b_assumption_reduction_p21`（:4063）+ `azim_assumption_reduction_p21`（:3910）真证替换；删除面 = 4 行 `sorry` + 15 行注释，零声明删除。**编排者闸**：岛编 RC=0 / 0 err / **9 sorry-decls（13→9，恰 −4）** / 9 warn（全 sorry）；探针 **4/4 标准三**；`dihV_obtuse_mono_p21` 仍 sorryAx（Section G 在飞，预期）。新增 2 个 private 助手（`add_mod_ne_p21`/`w_nwshjt_p21`，解决源序 azim→WNWSHJT 的前向依赖；公开件 body 为 `exact w_nwshjt_p21 …`）——**不是搬债**，是同一 patch 内的证明体去重。
+② **SF-108 立案（分级 A，陈述保真）**：a/b/azim 三件共 **7 处** `∃ e, 0<e ∧ P → Q` 因 `∧` 优先级高于 `→` 解析为 `(0<e ∧ P) → Q`，`P` 为假时 `e:=0` 空洞满足；HOL 是 `?e. 0<e /\ (P ==> Q)`。下游 `general_482` 需要取出 `0<e1` 喂 `deformation_BBs` 的 ε-槽。**cuxvzozF 的证明体已按强形式收口**，补括号即兼容（证明体不动）。
+③ **general_482 根依赖核销（续1001 表）**：2 桥 ✅（`a908b449`）；Section F 四件 ✅（本笔）；**在飞** = Section G 六件（`cuxvzozG`）、LA22 两件（`la22mono`）、taustar 三件（`taustar-w1`，本波新发：LA38 `taustar_taum`/`taustar_taum_dfun` + LA21 `MMs_minimize_tau_fun_p21`）。**关键情报**：`tau3_taum`/`tau3_taum_40` **已真证**（编排者探针标准三），LA38 的「BLOCKED: as tau3_taum」旧注释过时；`LocalAuto21` 已 import `LocalAuto38` ⇒ MMs_minimize 可直接消费 taustar 链（无 DAG 死锁）。
+④ **wave 7（池 3/3）**：`la22mono-w1` / `cuxvzozG-w1` / `taustar-w1`。若三波全绿，general_482 本体的 7 件 tainted 将清零 ⇒ 下一波即可重发本体（`g482-482-w2`）。
+⑤ **锥内零移动**；olean 装池（LocalAuto21 md5 `297f8311…`）。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
