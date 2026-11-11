@@ -6,6 +6,13 @@
 >
 > ## 状态更新
 >
+> - **2026-11-12（06:50，编排者，十二）**：**`RRCWNSJ_p26` 真证落库（`75ed6d07`）——J 收工后第一条
+>   真还债的锥内 sorry；基线 Z**。实测：cone `K_REACH 2,095,561`（+77，证明体 kit 入锥）/
+>   **SORRIED 74**（75→74；清单 diff：closed 恰 `{Kepler.Text.RRCWNSJ_p26}`、added ∅）/
+>   `K_AXIOM 585`（0/0）/ MODULES 5,219 / UNIVERSE 2,108,677 / COVERAGE 99.3796%；
+>   口径 II 35,138 / 74 / 585 / 46,697。根面 589 **逐字节 IDENTICAL**；TSV 5,897 行 + manifest PASS。
+>   另 `g482-482-w3` 增量落库（`3d8db02b`，19 条 `g482w3_*` 求和 kit +271 纯新增，全标准三）。
+>   wave 12 在飞：`g482-482-w4`（general_482 续写 Body2 511 行 + T2–T8）/ `la7gen`（LA7 复制 W12A 真证）。
 > - **2026-11-12（05:59，编排者，十一）**：**四笔落库 + 基线 Y**——`la22mono`（`3ebeecdd`，LA22 两件 +
 >   23 条 private taum kit + import Gamma4Deriv2）、`la22aux`（`055dfcea`，xrr 两界 + LOCAL_FAN_AZIM_POS +
 >   dih_y_mono）、`SF-108`（`4db35f92`，a/b/azim 7 处 ∃-ε 括号，陈述保真）、`cuxvzozG`（`e56181cb`，
@@ -110,13 +117,13 @@
 > 声明**名**是稳定锚点：行号对不上时按名字 grep。
 >
 > ## 口径与数字出处（本文不自己重算任何指标）
-> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 Y @`e56181cb`，2026-11-12**）
->   —— cone SORRIED **75**（= 55 `nli*` + 1 hLP + 19 Text 章级）/ `K_AXIOM` **585** /
->   根面 589 = 585 native + 标准三 + `sorryAx`。基线 X（`66e70eb4`）/ W（`1de85f96`）均为 SORRIED 75 / 根面 589；
+> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 Z @`75ed6d07`，2026-11-12**）
+>   —— cone SORRIED **74**（= 55 `nli*` + 1 hLP + 18 Text 章级）/ `K_AXIOM` **585** /
+>   根面 589 = 585 native + 标准三 + `sorryAx`。基线 Y（`e56181cb`）/ X / W 均为 SORRIED 75 / 根面 589；
 >   基线 V（`9ac1bc89`）为 SORRIED 76 / 根面 589；
 >   基线 U（`64663be3`）为 SORRIED 77 / 根面 589；基线 T（`52275a1c`）为 SORRIED 78 / 根面 589。
 > - 75 的构成（56 Assembly + 19 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
->   `docs/e2e-reachability-map.md` 基线 Y + `handoff-2026-11-06.md` §0。
+>   `docs/e2e-reachability-map.md` 基线 Z + `handoff-2026-11-06.md` §0。
 > - 信任基座逐类对照（含 `by eval` ↔ `native_decide`）、原版怎么处理 624：`docs/trust-base.md` §2 + `handoff §0.1`。
 > - 图数 19,715（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）：`Kepler/Assembly.lean:7295-7299` docstring。
 > - LP 记录 43,078（root 19,237 + easy 4,403 + hard 19,438、infeasible 189）：`Kepler/Text/LP/LPCert.lean:28-35` 文件头（该文件自己的盘点口径）。

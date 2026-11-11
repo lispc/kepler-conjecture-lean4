@@ -693,6 +693,31 @@ xrr/dy kit、Section F/G 的 private kit 等，均不可达）；reach/SORRIED �
 是分母涨。价值仍在**解锁**：`general_482` 根路径 7 件 + 2 桥现已全绿（本节四笔 + 此前
 `30aefbc5`/`f300a334`/`a908b449`）⇒ `g482-482-w2` 已发车。
 
+### 基线 Z：RRCWNSJ_p26 真证 @ `75ed6d07`（2026-11-12）
+
+> 触发：`rrw-w1` 落库 `75ed6d07`（`RRCWNSJ_p26`，HOL 614 行，锥内直源收口）+ `g482-482-w3`
+> 增量 `3d8db02b`（19 条 `g482w3_*` 求和 kit，+271 纯新增）。仪器原样换装
+> `docs/e2e-reachability-map.tsv`（**5,897 行**，−1 = 少 1 个 SORRIED）；manifest `--check` PASS。
+
+| 指标 | 基线 Z | 基线 Y | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,561** | 2,095,484 | **+77** |
+| SORRIED | **74** | 75 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,219 | 5,219 | 0 |
+| K_UNIVERSE | 2,108,677 | 2,108,564 | +113 |
+| COVERAGE | 99.3796% | 99.3797% | −0.0001pp |
+| 口径 II（ex-Cases） | K_REACH **35,138** / SORRIED **74** / AXIOM **585** / UNIVERSE **46,697** | 35,061 / 75 / 585 / 46,584 | +77 / −1 / 0 / +113 |
+| TOTAL_VALUE_DECLS | 2,094,887 | 2,094,810 | +77 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.RRCWNSJ_p26`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 与基线 Y/X/W **逐字节 IDENTICAL**。
+
+**判读**：`RRCWNSJ_p26` 的证明体（`RRCWNS_weak` / `IMJXPHRv2` / `w6a_*` kit）入锥 ⇒
+reach **+77**、universe +113（其中 19 条 w3 引理不可达 + 证明体新可达件）；**SORRIED −1 是真还债**
+（J 收工后第一条：不同于 `pkLeafRankCriticalEdge` 与 `mnt11_anchor`）。剩余 **74** =
+Assembly 56（55 `nli*` + 1 hLP）+ **Text 18**。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
