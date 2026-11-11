@@ -6676,3 +6676,67 @@ RC=0 / 0 err / 0 warn；探针 4 条全 ⊆ `[propext, Classical.choice, Quot.so
 `all_some_generatePolygon` 下一轮按新形供 `hP19`（HOL 证体经
 `mem_list_pairs_explicit` 的相邻对版）；`noConsecutiveDuplicate` 用法已复核
 （只消费相邻对实例，收紧后类型直接匹配，证体仅改应用处）。
+
+## 106. J5-9 hF 链五件 `rRtransEq`/`coreSplitNormalList` 槽型误移为无条件 schema（HOL 原文前提承载）— 分级 **A**（移植槽型误植 · 槽变弱 ⇒ 定理变强 · 结论不变 · 零新定理）
+
+### (a) HOL 裁决
+
+`reference/flyspeck/text_formalization/tame/reduction3.hl:56-71`：
+
+```
+let core_split_normal_list_assumption = new_definition'
+  `!L.  core_split_normal_list_assumption L <=>
+  (! N r (x:A#A).  good_list L /\ good_list_nodes L /\
+  marked_list L N r x /\ ~final_list L r
+     ==> core_split_normal_list L N r x)`;;
+
+let r_trans_eq_assumption = new_definition'
+  `!L.  r_trans_eq_assumption L <=>
+  (! N r (x:A#A).  good_list L /\ good_list_nodes L /\
+  marked_list L N r x /\ ~final_list L r
+     ==> r_rtrans_eq L N r x)`;;
+```
+
+两条 assumption 均**前提承载**（good_list ∧ good_list_nodes ∧ marked_list ∧ ¬final_list），
+且 HOL 各有 `_lemma : !L. …`（reduction3.hl:173/:183）把逐 L 版本证出。
+
+### (b) Lean 现状（缺陷）
+
+`Reduction3LnrxInductionSpine.lean` 头注 DIFFERS ① 把 `r_trans_eq_assumption L`
+错移成「两个无条件 schema」（`∀ N' r' y, rRtransEq L N' r' y`），`core_split_normal_list_assumption`
+的 `good_list_nodes` 也丢失。该形状被以下五处继承：
+
+| 文件 | 定理 | 当前槽型 |
+|---|---|---|
+| `TameSpine/Reduction3LnrxInductionSpine.lean` | `lnrxInductionSpine` | `hrreAll/hrreSAll : ∀ N' r' y, …`（无前提） |
+| `Reduction3Thm14i.lean` | `mainInduction` | 同上 + `hcsnl : ∀ N' r' y, marked → ¬final → …`（缺 hgn） |
+| `Reduction3Thm14h.lean` | `nfgtransFst` | 同上两槽 |
+| `Reduction3Thm19.lean` | `reductionF` | `hrreAll/hrreSAll : ∀ L N' r' y, …`（无前提）+ `hcsnl` 缺 hgn |
+| `Reduction5J5NewvertexPrepped.lean` | `finalAssumptionNewvertexPreppedOfSlots` / `…Prepped` | `hrte/hrteS : ∀ N' r' y, …`（无前提） |
+
+机器后果：`rRtransEqThm`（W5b `24e18012`）与 `rRtransEqToSpine`（nb46 `5ef698e8`）
+均为前提承载形，**填不进无条件槽**；`hcsnl` 因缺 `hgn` 也供不出
+（`coreSplitNormalListThm` 必须吃 `GoodListNodesTl`）。J5-9 的 hF 因此 BLOCKED。
+
+### (c) 修法（槽型回到 HOL 前提承载形；结论零改）
+
+- 固定 `L/hL/hgn` 在上下文中的四件（`lnrxInductionSpine`/`mainInduction`/`nfgtransFst`/
+  `NewvertexPrepped`）：槽改为
+  `∀ N' r' y, markedList L hL N' r' y → ¬ finalList L r' → rRtransEq L N' r' y`
+  （spine 版同理；`hcsnl` 加 `hgn`）。
+- `reductionF`（槽内量化 L）：槽改为
+  `∀ L (hL : GoodList L), GoodListNodesTl L hL → ∀ N' r' y, markedList L hL N' r' y → ¬ finalList L r' → rRtransEq L N' r' y`
+  （spine 版同理；`hcsnl` 加 `GoodListNodesTl L hL`）。
+- 供法（改后即机械）：
+  `hrreAll := fun … hgn hm hnf => rRtransEqThm …`；
+  `hrreSAll := fun … => rRtransEqToSpine … (rRtransEqThm …)`（`AqiunppSlot` 由 `TameSpine.aqiunpp` 内部构造）；
+  `hcsnl := fun … hgn hm hnf => coreSplitNormalListThm L hL hgn hm hnf`；
+  `hF := fun hK10 => reductionF hK10 hrreAll hrreSAll hcsnl`。
+- 补丁面：上述五文件陈述 + 各调用点（`Reduction3Thm14i` 内 `hrreAll (ntrans …)` 等约 6 处、
+  `Reduction3Thm19` 的 `reductionF` 证体、`Reduction5J5NewvertexPrepped` 两处）+ 头注 ERRATA。
+
+### (d) 影响面 / 方向核对
+
+槽前提增加 ⇒ 作为**前提**变弱 ⇒ 定理变强（更易应用）；**结论逐字不变**，
+不弱化 e2e 验收。补后 J5-9 的 hF 为机械供给，仅剩 hK4。执行时五文件岛编
+RC=0/0 err/0 warn、探针 ⊆ 标准三、零 sorryAx。
