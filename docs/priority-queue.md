@@ -356,6 +356,24 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（16:18，续966）**：**一笔落库：aq13 ml14 `8a17dd66`（`Reduction5J5K3Indexf2` 新文件 +397，1 件）——K3 B1 `indexf2` 绿**。
+① **`8a17dd66`（aq13 ml14）**：`indexf2FinalLemmas`（more_lemma2.hl:1231–1285）——陈述逐字（五前提 + `0<k`；`indexf (FST (ztrans (k-1))) (FST x) (core L r) = indexf (ztrans (k-1)) x (find_face L x)`）。依赖核查：`next_eln_indexf` 已在库（`MoreLemma2Island1.nextElnIndexf`，派单疑虑排除）、`MEM_CORE = memCore`、`next_power_core_pre`/`cases2` 在库。
+② **派单未列缺件（采信，自建）**：`indexf_y_lt_sizel_pre`（more_lemma2.hl:890）树内**零命中** ⇒ 私件 `indexfZkXltCore`（~200 行）：`pplhulj3Gen'` 排 `zk=w` → `preIndexfZkXSucc` 给 `indexf zk w f = m+1` → `cases2Chain` 沿 f 走 → 弧上 m 个 dart 均单点 atom（`memPartsSingleton`）且 zk 的 part 不在像集 → `m+1 ≤ |parts| = |core|`。本体 ~180。1/1 探针 ⊆ 标准三、零 sorryAx；实测 397 vs 估 150–250（+缺件 ~200，未触 450）；7 轮机械修正。
+③ **续派**：建议 `indexf_y_lt_sizel_pre` 提升为公开小文件（零新数学）供 f6/7/8 复用；本轮 F6/7/8 由 J4 以私有桥自建。J4 → B3'（`indexf1Face` + `indexf8`），tame-corr → `reductionK3`。
+④ **落库闸**：apply-check PASS @5ad59541、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
+- **2026-11-11（16:18，续965）**：**一笔落库：J4 K3-B3 `5ad59541`（`Reduction5J5K3Indexf678` 新文件 +189，f6/f7 绿、f8 PARTIAL）**。
+① **`5ad59541`（J4）**：`indexf6FinalLemmas`（more_lemma2.hl:1996–2060）+ `indexf7FinalLemmas`（:2061–2119）——陈述逐字（五前提 + `0<k`，`PRE k ↦ k-1`）。f6：`indexfRefl` 支 + `indexfCompl`×2（链版 antisym）+ `nextElIndexf`（`nextElInstEq` 桥，`indexf x w f = 1`）+ `indexfLtSizel` + `omega`；f7：`pplhulj3Gen 0`（`y0<z0`）+ `indexfZtransLeGen (k-1)`（`z0≤z_{k-1}`）直 trans。2/2 探针 ⊆ 标准三、零 sorryAx；实测 189 vs 估 140–280（4 轮）。
+② **f8 PARTIAL（如实）**：上游 `indexf1_final_lemmas_face`（more_lemma2.hl:2121–2170）Lean **零命中**；`indexf_y_lt_sizel` 在库只有 Spine 世界版（结论是 r 层），f8 需 state-i 的 f 层界 → 需一次换算私有桥。**已定位短落点**：私有 `indexfFaceOfLe` = HOL indexf1Face → 两侧 core `indexf` 都折算到同一 f 层 `indexf`（base 侧 `indexf3FinalLemmas`@i-1；state-i 侧 `indexfFaceOfLe` + `indexf_add_left`×2 + `qcdvkeaChain`）⇒ 两 core `indexf` 相等 ⇒ iff 直接改写（估 180–260）。
+③ **续派**：J4 → **B3' `indexf1Face` 私有桥 + `indexf8`**（修改本文件，探针补到 3 条）。K3 簇全清后 → `reductionK3`（tame-corr 在飞）→ D1 → hK4 → J5-9。
+④ **落库闸**：apply-check PASS @a8ab07aa、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
+- **2026-11-11（16:18，续964）**：**一笔落库：tame-corr nb51 `a8ab07aa`（`Reduction5J5K2A3` 新文件 +217，3 件全绿）——K2 A3 `reductionK2` 收官，28/28 槽**。
+① **`a8ab07aa`（tame-corr nb51）**：HOL `reduction_K2`（reduction4.hl:1276–1359）。**关键裁决（采信）**：HOL 证体首步即 `MATCH_MP_TAC reduction_K1`，故分两层——`reductionK2 (haq) (hK2 : ∀K2Asm→K2Concl) : ∀K1Asm→K1Concl`（HOL 证体中层）+ `reductionK2Step` 单态 28 槽逐态装配（103 行）+ `reductionK2K10 = reductionK1Full haq (reductionK2 haq hK2) : assumptionSetK10Full`（**HOL 形**）。`haq : ∀L hL, AqiunppSlot L hL` 由 `TameSpine.aqiunpp` 无条件供给，非实质前提。
+② **补件 0**：两条 `not_next` 已在库（`finalAssumptionsNotNextCore0I` @`Reduction5J5NotNextCore0I:68`、`finalAssumptionsNotNextCore0ZY` @`Reduction5J5NotNextCore:81`），且本件由 K2CONCLUSION 的 BETWN 3/4 直接供给。PREPPED 槽三个外部槽现场消掉（`coreSplitNormalListThm`/`rRtransEqThm`/`rRtransEqToSpine`），外部前提仅 `haq` + `hK2`。3/3 探针 ⊆ 标准三、零 sorryAx；实测 217 vs 估 150–250（1 轮编译，2 处机械修正）。
+③ **续派**：tame-corr → **`reductionK3`**（HOL reduction4.hl:3132–3226；K3 引理 ⇒ K2 引理 ⇒ `reductionK2K10`；需新落 `reductionK3Asm/Concl` 逐字活段）。
+④ **落库闸**：apply-check PASS @c269c6f1、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（16:02，续963）**：**一笔落库：J4 K3-B2 `098f7704`（`Reduction5J5K3Indexf45` 新文件 +220，2 件）——K3 `indexf4`/`indexf5` 绿**。
 ① **`098f7704`（J4）**：`indexf4FinalLemmas`（more_lemma2.hl:1833–1910）+ `indexf5FinalLemmas`（:1946–1995）——陈述逐字（五前提 + `SUC i < k ↦ i+1 < k`，`find_face ↦ findFaceDarts`），已与 HOL 原文逐条核对。私有供料 4 件：`aqSlotOf`（`AqiunppSlot` 无条件实例，使陈述保持 HOL 五前提、**不加 haq**）+ `pplhulj3Gen`（一般 i 的 PPLHULJ3，塔态 `(ntrans i, rtrans i)` 实例化）+ `indexfZtransLeGen`/`indexfYtransLeGen`（塔态 `indexf` 单调归纳，`qcdvkeaChain` 供）。主件 `indexf_add_left` 两次（基 w、端点 y0）+ `omega` 收口——等价 HOL 三连 `add_left`+`ARITH_TAC`，只需两条。2/2 探针 ⊆ 标准三、零 sorryAx；实测 220 vs 估 80–160（1 轮编译，未触止损）。
 ② **续派**：J4 → **K3 Lane B3 `indexf6`/`indexf7`/`indexf8`**（more_lemma2.hl:1996–2060 / 2061–2119 / 2172 起；B3 完成后 K3 只差 `reductionK3`）。aq13（indexf2）、tame-corr（A3）在飞。
