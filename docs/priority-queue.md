@@ -158,10 +158,10 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 9 两车道在飞（池 2/3）**：`g482-482-w2`（`general_482_deformation_p21` 本体 640 行，
-> 全部 7 件前置 + 2 桥已绿）、`rrw-w1`（`RRCWNSJ_p26`，锥内直源）。**wave 8 四笔已全落库**
-> （la22mono `3ebeecdd` / la22aux `055dfcea` / SF-108 `4db35f92` / cuxvzozG `e56181cb`）；
-> **la27wire 判 BLOCKED**（JCYFMRP 唯一缺口 = general_482；TFITSKC 缺 TFITSKCv1 + LA7 件，见续1006 ⑥）。
+> **wave 10 三车道在飞（池 3/3）**：`g482-482-w3`（`general_482_deformation_p21` 本体续写，接 w2 的
+> 278 行前缀 + T0–T8 配方）、`rrw-w1`（`RRCWNSJ_p26`，锥内直源）、`tfitskcv1-w1`（`TFITSKCv1_p27`）。
+> **w2 判 STOPPED**（44/44 上游标准三，卡在单件规模，不是缺件；见续1007）；**la27wire 判 BLOCKED**
+> （JCYFMRP 唯一缺口 = general_482；TFITSKC 缺 TFITSKCv1 + LA7 件，见续1006 ⑥）。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -500,6 +500,13 @@
 ⑤ **基线 Y（`e2e_reach_map`，仪器原样）**：`K_REACH 2,095,484`（0）/ **SORRIED 75（0/0）** / **`K_AXIOM 585`（0/0）** / `K_MODULES 5,219`（0）/ `K_UNIVERSE 2,108,564`（**+175**，四笔私有 kit，不可达）/ COVERAGE **99.3797%**；口径 II `35,061 / 75 / 585 / 46,584`。TSV 换装 5,898 行，manifest `--check` PASS，根面 589 **逐字节 IDENTICAL**。
 ⑥ **`la27wire-w1` 判词 BLOCKED（0/2，patch 0 字节）**：`TFITSKC_p27` 缺本文件 `TFITSKCv1_p27`（:311 sorry）+ `GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE`（LA7:958 sorry，在 LA27 闭包内）；`JCYFMRP_p27` **唯一缺口 = `CUXVZOZ`（即 general_482）**——其余 300 行路线依赖全有已证孪生。车道另交 **13 行 TFITSKC_p27 路线 demo**（`git apply --check` PASS，标 NOT FOR LANDING，等 `TFITSKCv1` 落地即插即用）。**推论**：general_482 本体绿后，`JCYFMRP_p27` 只差加 import + 300 行搬运。
 ⑦ **wave 9（池 2/3）**：`g482-482-w2`（general_482 本体 640 行，已发车）+ `rrw-w1`（`RRCWNSJ_p26`，锥内直源）。**下一波候选**：`JCYFMRP_p27`（待 general_482）、`TFITSKCv1_p27`+LA7 件、`OCBICBY_p22`、VASYYAU DAG 重构。
+
+- **2026-11-12（06:03，续1007）**：**`g482-482-w2` 判词 STOPPED（止损，非 BLOCKED）——44/44 上游标准三、本体写就 278 行可编译前缀；`g482-482-w3` 接续发车**。
+① **判词与依据**：本体 `general_482_deformation_p21` 未动（LA21 仍 3 条 sorry），主仓零改动、patch 0 字节。**不是 BLOCKED**——阶段一 44 条上游/桥/kit 逐条 `#print axioms` **全部标准三或更弱**（含 9 件点名件与全部消费件，`logs/probe2.log` 原文）；止损依据是 **AGENTS §7 单件规模**：640 HOL 行 → 估 800–1000 Lean 行，远超 ~450 行止损线。
+② **已交付可续写资产**：`Body.lean` **278 行 RC=0 / 0 error**（覆盖 HOL :3649–:3860：preliminaries / collinearity / coplanarity / `LEMMA_482` 应用 / 反证设定 / `deform_simplex_edge_exists` 两分支形变 / `WNWSHJT_ALT` / 方位角循环）+ `Kit.lean` 6 条独立验证辅助引理 + DELIVERY 的 **T0–T8 施工序/卡点/续做配方** + Evidence 的终局代数恒等式与 `dihV_obtuse_mono` 实例化配方。
+③ **ERRATA（对 w1 台账 T7）**：`LEMMA_4828966562_p22` 与 `coplanar_delta_y_zero_p18` **本来就在 LA21 import 闭包内**（`#check` 直见，LA21→LA38→LA18/23 链），w1 的「桥缺失/需接线」**不成立**；零 import 改动、零 DEF-FIX。
+④ **`g482-482-w3` 发车**（池 3/3）：从 `Body.lean`/`Kit.lean` 续写剩余 ~440 HOL 行（T5–T8），分批编译，目标 LA21 3→2、本体标准三。**磁盘吃紧（当前 ~3 GiB 空闲，`.lake` 74G）** ⇒ w3 已禁用全量 hardlink shadow，探针走 `.lake` 只读 + `/tmp` 产物 + olean md5 自证。
+⑤ **wave 10 在飞（3/3）**：`g482-482-w3` / `rrw-w1`（`RRCWNSJ_p26`）/ `tfitskcv1-w1`（`TFITSKCv1_p27`）。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
