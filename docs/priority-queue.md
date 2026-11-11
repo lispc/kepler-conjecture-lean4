@@ -356,6 +356,23 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
+① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
+② **v4 岛协议验收（机器证据）**：① standalone `lean -o /tmp/assembly_test/Kepler/Assembly.olean Kepler/Assembly.lean` → **RC=0 / 0 error / 110 warn**（全部为 Assembly 既有基线：61 `declaration uses sorry` + 其余 deprecation/unused-simp；**编辑区 2490–2540 与 import 行零警告**）；② 文本 `sorry` 计数 **93 → 92**（恰好 = 被真证声明，符合删除面纪律）；③ `#print axioms Kepler.the_kepler_conjecture_e2e` 与基线**逐字节 IDENTICAL**（585 native ax + `propext/Classical.choice/Quot.sound` + `sorryAx`；ax_ 计数 585 不变）；④ olean 回灌 `.lake` 后 pool 再验 **FACE IDENTICAL**。
+③ **意义**：`jcajydu` 从接口占位变真证 ⇒ **hTC 三件（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）全闭**；锥内 `sorryAx` 来源只剩其余接口占位（61 声明）。J 链（J0–J5）自此收官。
+④ **注**：Assembly 的 110 warn 是既有基线，不属本次改动；后续「0 warn」口径仍只适用于车道新文件。
+⑤ **下一步（路线图第 0 步）**：新基线 U 量测（`#print axioms` + `e2e_reach_map` + SORRIED/K_REACH/K_AXIOM/K_MODULES）+ 更新 `hf-proof-map`。
+
+- **2026-11-11（21:03，续993）**：**一笔落库：编排者接线 `551fe9b6`（`Reduction5J5JcajyduFinal` 新文件 +66，3 件全绿）——会师接线全通**。
+① **`551fe9b6`**：`finalAssumptionUvnsCombined := uvnsMainOfU2 uvnsVsOrdered`（U 段收官）→ `k3UvnsSlotInstance := k3UvnsOfSlots finalAssumptionUvnsCombined` → `jcajyduReduction5 := jcajyduFinalShape finalAssumptionUvnsCombined H hres`（J5-9 结论）。3/3 探针 ⊆ 标准三、零 sorryAx；岛编 RC=0/0err/0warn；olean 装池。
+② **会师链路（全通）**：U2 → `uvnsMainOfU2` → `k3UvnsOfSlots` → `jcajyduOfK4Slots k3Sx3SlotInstance …` → `jcajyduFinalShape` → Assembly 删桩。
+
+- **2026-11-11（21:03，续992）**：**一笔落库：J4 U2 收官 `b554adb5`（`Reduction5J5UvnsU2` +843，文件 1112 行）——`uvnsVsOrdered` 绿，全链最后一件落定**。
+① **`b554adb5`（J4）**：`uvnsVsOrdered`——陈述与 `uvnsMainOfU2` 的 `hU2` 逐字同形（无 `hnNil/hnFy/hnZx/hIdxSnd` 参数；三件在本文件已落为 `v` 形）。路线：`destTriple0` 段分解（`cons_eq`/`Append`/`stepSeg`/`single`）+ `filterMap` 分配；`midAux` 归纳（`IndexfStrict` + 末项 `some z_{i-1}`，四分支 junction：首 triple `hIdx` / `u0=u` `hIdx` / `nextEl` 步进 / else 弧段 `arcSnocIndexfStrict`）；`midFirstAux`（首项 `y0`）；init/final 分别 `arcIndexfStrict`/`arcSnocIndexfStrict`（端点排除用 `hnFy`/`hnZx` 的 `v` 形）；两 junction + 两次 `IndexfStrict.append`。
+② **接口探针机器通过**：`uvnsMainOfU2 uvnsVsOrdered : k3UvnsMainSlot` ⇒ U 段合成完成。探针 ⊆ 标准三、零 sorryAx；岛编 RC=0/0err/0warn。
+③ **实测 vs 估（如实）**：净 **+843 vs 估 80–120（约 7×）**——段分解 + 归纳 + 逐段 getD 账在 Lean 侧远比 HOL `el_flatten` 索引追击啰嗦；一次交付，超 450 软线如实记；约 20 轮岛编全为机械修（`subst`/依赖 getElem/`nth_rewrite`/`simp only` 参数）。
+④ **落库闸**：apply-check PASS @32dee76c、禁词净、岛编 RC=0/0err/0warn、olean 装池。**U 段收官。**
+
 - **2026-11-11（20:09，续991）**：**一笔落库：J4 U2 引擎 `0d903628`（`Reduction5J5UvnsU2` 新文件 +269，7 件全绿）——U2 步进引擎绿（PARTIAL：`uvnsVsOrdered` 未收口）**。
 ① **`0d903628`（J4）**：`IndexfStrict`（目标谓词）+ `indexfNextElSucc`（非回卷 `nextEl` 步 `indexf v a + 1 = indexf v b`；HOL `indexf_ifbetwn` 步进引擎、Dart 版 `indexfPrevSucc` 的 ℕ 重落）+ `indexfStrictOfSteps`（相邻对「nextEl 步 ∧ v≠target」或「直接严格增」⇒ 整链严格增，粘合接口）+ `arcIndexfStrict`（`a :: between s a b` 段内严格增，`betwnOrbit` + 步进引擎，`v ∉ between` 排回卷）+ `indexfYtranLtZtranOfPrev` / `notMemIfbetwnFyOfPrev` / `notMemIfbetwnZxOfPrev`（把 `indexSndX` / `finalAssumptionNotMemSndXFy` / `_XZx` 转 `v` 形，`hprev` 给 `v = x.2`——**`uvnsMainOfU2` 的 `hU2` 无这四前提，必须内部化，已备好**）+ `IndexfStrict.append`（段拼粘合）。
 ② **PARTIAL（如实）**：`uvnsVsOrdered`（与 `uvnsMainOfU2` 的 `hU2` 逐字同形）仍空；余 glue 80–120（`filterMap id vs` 索引对应 + `destTriple0` 六分支段分解 + 两 junction），DELIVERY §4 配方逐条。7/7 探针 ⊆ 标准三、零 sorryAx；实测 269（引擎 ~200）；10 轮岛编全为引擎机械错误（getD 界/空表/getLastD 形），无结构性重证。
