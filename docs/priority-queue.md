@@ -356,6 +356,12 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（14:08，续947）**：**一笔落库：J4 K4-C0 第一轮 `d9048339`（`Reduction4K4C0` +69，2 件）——`indexf0` + `ifbetwnIndexf` 绿**。
+① **`d9048339`（J4 K4-C0 R1）**：`indexf0`（tame_list.hl:1473，rfl 级，探针仅 `[propext]`）+ `ifbetwnIndexf`（reduction4.hl:3948-3967）。`ifbetwnIndexf` 短路线：`x = z` 支 `ifbetwn s x x = []` + `indexfRefl` 反证；`x ≠ z` 支 `ifbetwn s x z = between s x z ++ [z]`；`y = z` 支 `indexf_eq_zero` 反证 `0 < indexf x z s`；`y ≠ z` 支 `indexfBetwnEq` 给 `<` 形 + `indexfInj` 排除等号后与 `≤` 互化。DIFFERS：`uniq s` ↦ `s.Nodup`，`MEM` ↦ `∈`。实测 69 vs 估 120–180。
+② **判词免重落**：HOL `indexf0` 两件同名——:1473 是本件；:1542 的 `MEM x s ∧ MEM y s ∧ indexf x y s = 0 ⇒ x = y` **在库 `indexf_eq_zero`（Reduction4.lean:782 同形）**，不另立。
+③ **K4-C0 第二轮**：`mem_ifbetwn_hd_extend`（77）+ `mem_ifbetwn_tl_extend`（226）+ `core_lt_indexf`（76）+ `core_betwn`（73）= 452 HOL，Lean 估 450–550；`ifbetwnIndexf` 已绿可直接消费。**按拆件纪律分两轮**：R2a = `mem_ifbetwn_hd_extend` + `core_lt_indexf` + `core_betwn`（≈230–300）；R2b = `mem_ifbetwn_tl_extend`（≈200–280）。
+④ **续派**：J4 → **K4-C0 R2a**；aq13（W5b）、tame-corr（Lane A2+A3）在飞。
+
 - **2026-11-11（14:02，续946）**：**一笔落库：J4 K4 Lane C1 `c5a201d7`（`Reduction4K4C1` +74，1 件）——`coreiReduction` 绿；两件 `_snd_x_*` 判 BLOCKED，勘误 scout（依赖塔缺 6 件）**。
 ① **`c5a201d7`（J4，K4 Lane C1）**：`coreiReduction`（HOL reduction4.hl:3274-3313）——路线 `transAdd L N r x i 0`（`0+i=i` 折叠）+ `transformCount_not` + `aqiunpp i`；`h0` 在状态 `(ntrans i, rtrans i)` 实例化后经 `rtrans_zero`/`transAdd` 折回 `i` 形。实测 74（含头部/import）；探针 ⊆ 标准三、零 sorryAx。
 ② **两件 `_snd_x_*` BLOCKED（编排放勘误 scout）**：机器证据——两件 HOL 证体均显式调用 `core_betwn`（`_fy` :4543、`_zx` :4623），而 `core_betwn` 在 Lean **零命中**，且其证体又依赖 4 件零命中件。**完整缺件塔 6 件**：`ifbetwn_indexf`（:3948-4045，98）/ `mem_ifbetwn_hd_extend`（:4046-4122，77）/ `mem_ifbetwn_tl_extend`（:4123-4348，226）/ `core_lt_indexf`（:4349-4424，76）/ `core_betwn`（:4425-4497，73）/ `indexf0`（tame_list :1473/:1542，~15）——计 ≈565 HOL。scout 的「`snd_x_fy/zx` 子依赖全在库」判词**不成立**，以机器证据为准。
