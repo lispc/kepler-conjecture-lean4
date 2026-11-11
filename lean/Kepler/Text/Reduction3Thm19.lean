@@ -133,7 +133,61 @@ theorem reductionD
     (Prod.ext_iff.mp hpair_eq).1
   exact ⟨h1, h2, h3, h4, hgk_beta, hfk_beta, h7⟩
 
+
+/-! ## §W-D2 `reduction_E`（reduction3.hl:4682） -/
+
+/-- HOL `reduction_E`（reduction3.hl:4682-4733）。 -/
+theorem reductionE
+    (hK10 : assumptionSetK10Full)
+    (hgen : ∀ (i : ℕ) (L : fgraph ℕ) (hL : GoodList L) (N : List (List Dart))
+      (g : Graph) (p : ℕ) (fs : List Face) (f : Face) (v : ℕ) (r : List Dart)
+      (x : Dart) (fx : List Dart) (uvns : List (ℕ × ℕ × ℕ)) (gi : Graph) (fi : Face),
+      GoodListNodesTl L hL →
+      (hypermapOfList L hL).IsRestricted →
+      newvertexPrepped L N r x →
+      markedList L hL N r x →
+      ¬ finalList L r →
+      matchQuotientList g L N →
+      g.final = false →
+      Kepler.Text.TameSpine.PlaneGraphPSpine p g →
+      Kepler.Text.TameCorrList.GoodFacesV3 g →
+      Kepler.Text.TameCorrList.VerticesSet2Eq g →
+      p = (L.map List.length).foldr max 0 - 3 →
+      nonFinals g = fs →
+      f = minimalFace fs →
+      v = minimalVertex g f →
+      loopChoice2 g L N = (r, x) →
+      fx = findFaceDarts L x →
+      uvns = coreTripleV4 L N r x →
+      gi = (nfgtrans' (g.countVertices, f, g) L N r x i).2.2 →
+      fi = (nfgtrans' (g.countVertices, f, g) L N r x i).2.1 →
+      i ≤ transformCount L N r x →
+      (fgraphOfGraph gi = quotientList L (ntrans L N r x i) ∧
+        Kepler.Text.TameCorrList.GoodFacesV3 gi ∧
+        gi.faceListAt.length = gi.countVertices ∧
+        Kepler.Text.TameCorrList.VerticesSet2Eq gi ∧
+        (0 < i → ((some (ztrans L N r x (i - 1)).1, 0) : Option ℕ × ℕ)
+          = (bNfgtrans0 f g L N r x i).1) ∧
+        (fi, gi) = (bNfgtrans0 f g L N r x i).2 ∧
+        core L (rtrans L N r x i) = fi.vertices)) :
+    Kepler.Text.TameSpine.restrictedHypermapsArePlaneGraphsV4 := by
+  apply reductionD hK10
+  intro L hL N Nk g p fs f v k r x fx uvns gk fk hgn hres hnvp hm hnf hmq hng hpg hgf
+    hvs2 hp hfs hf hv hlc huv hg_def hf_def hk hN' hfx
+  have h := hgen k L hL N g p fs f v r x fx uvns gk fk hgn hres hnvp hm hnf hmq hng hpg
+    hgf hvs2 hp hfs hf hv hlc hfx.symm huv hg_def hf_def (by rw [hk])
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7⟩ := h
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have hfinal := Kepler.Text.Reduction5.finalListTransformCount L hL hgn haq hm
+    (t := transformCount L N r x) rfl
+  have hkpos : 0 < k := by
+    rw [← hk]
+    exact Nat.pos_of_ne_zero (transformCountNon0 L N r x hfinal hnf)
+  exact ⟨by rwa [← hN'], h2, h3, h4, h5 hkpos, h6, h7⟩
+
 end Kepler.Text.Reduction3
 
 /-! 公理审计锚（编译即执行；预期标准三，零未证公理） -/
 #print axioms Kepler.Text.Reduction3.reductionD
+#print axioms Kepler.Text.Reduction3.reductionE
