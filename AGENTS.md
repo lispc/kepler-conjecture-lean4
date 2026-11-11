@@ -8,8 +8,8 @@
 - 终局（**用户 2026-11-06 裁决**）：**不比 Flyspeck/Isabelle 更差**，不是完美标准三。
   验收式：`#print axioms Kepler.the_kepler_conjecture_e2e`（`lean/Kepler/Final.lean:22`）
   = `[propext, Classical.choice, Quot.sound]` ∪ **恰好 585 条地面 `native_decide` 公理**，且
-  1. **零 `sorryAx`**（锥内 76 条 sorry 是唯一还算"债"的东西：55 `nli*` + 1 hLP + 20 Text 章级；
-     基线 V `9ac1bc89`，2026-11-12）；
+  1. **零 `sorryAx`**（锥内 75 条 sorry 是唯一还算"债"的东西：55 `nli*` + 1 hLP + 19 Text 章级；
+     基线 W `1de85f96`，2026-11-12）；
   2. 每条公理的陈述是**封闭可判定的地面事实**（无自由变量、无对无限类型的量词），
      进 manifest、可 replay、注明数据源与生成器版本；
   3. 与原文形式化的 `same*`/`pre_iso_test*` **同数据、同信任类别**（见

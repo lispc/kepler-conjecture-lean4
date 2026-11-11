@@ -6,6 +6,16 @@
 >
 > ## 状态更新
 >
+> - **2026-11-12（02:25，编排者，九）**：**两笔落库 + 基线 W**——`mntdedup`（`1de85f96`）去重
+>   `mnt11_anchor`（锥内 SORRIED **76→75**，清单 diff：closed 恰 `_private…mnt11_anchor`、added ∅；
+>   **去重非还债**，银行债务 `nliMainNonlinearTerminalV11` 未动）+ `vas-w1`（`fb89790e`）
+>   `VasTuaKit` 149 行三件真证（零删除资产；`TUAPYYU_concl` 目标判 BLOCKED）。
+>   实测：cone `K_REACH 2,095,484`（−1）/ SORRIED **75** / `K_AXIOM 585`（名单 0/0）/
+>   MODULES 5,219 / UNIVERSE 2,108,357（−1）/ COVERAGE 99.3894%；口径 II 35,061 / 75 / 585 / 46,377。
+>   根面 589 与改前**逐字节 IDENTICAL**；TSV 换装 5,898 行、manifest `--check` PASS（pins OK）。
+>   **SF-107 立案 + SF-102 ERRATA**：HOL `VASYYAU.hl:524` 的 `TUAPYYU_concl` 陈述本身带
+>   `main_nonlinear_terminal_v11 ==>` ⇒ SF-102 的「排除项」误判（只读证明脚本漏看陈述定义）。
+>   wave 3 在飞：g482-w1（#1）/ sf107-w1（执行 SF-107）/ g482kit-w1（simplex kit 两件）。
 > - **2026-11-12（01:40，编排者，八）**：**J4-w1 落库（@`9ac1bc89`）——Text 章级债 21→20，锥总 77→76**。
 >   实测：cone `K_REACH 2,095,485` / **SORRIED 76**（清单 diff：closed 恰 `{Kepler.Text.pkLeafRankCriticalEdge}`、
 >   added ∅）/ `K_AXIOM 585`（名单 diff 0/0）/ MODULES 5,219 / UNIVERSE 2,108,358 / COVERAGE 99.3883%；
@@ -80,12 +90,12 @@
 > 声明**名**是稳定锚点：行号对不上时按名字 grep。
 >
 > ## 口径与数字出处（本文不自己重算任何指标）
-> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 V @`9ac1bc89`，2026-11-12**）
->   —— cone SORRIED **76**（= 55 `nli*` + 1 hLP + 20 Text 章级）/ `K_AXIOM` **585** /
->   根面 589 = 585 native + 标准三 + `sorryAx`。基线 U（`64663be3`）为 SORRIED 77 / 根面 589；
->   基线 T（`52275a1c`）为 SORRIED 78 / 根面 589。
-> - 76 的构成（56 Assembly + 20 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
->   `docs/e2e-reachability-map.md` 基线 V + `handoff-2026-11-06.md` §0。
+> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 W @`1de85f96`，2026-11-12**）
+>   —— cone SORRIED **75**（= 55 `nli*` + 1 hLP + 19 Text 章级）/ `K_AXIOM` **585** /
+>   根面 589 = 585 native + 标准三 + `sorryAx`。基线 V（`9ac1bc89`）为 SORRIED 76 / 根面 589；
+>   基线 U（`64663be3`）为 SORRIED 77 / 根面 589；基线 T（`52275a1c`）为 SORRIED 78 / 根面 589。
+> - 75 的构成（56 Assembly + 19 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
+>   `docs/e2e-reachability-map.md` 基线 W + `handoff-2026-11-06.md` §0。
 > - 信任基座逐类对照（含 `by eval` ↔ `native_decide`）、原版怎么处理 624：`docs/trust-base.md` §2 + `handoff §0.1`。
 > - 图数 19,715（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）：`Kepler/Assembly.lean:7295-7299` docstring。
 > - LP 记录 43,078（root 19,237 + easy 4,403 + hard 19,438、infeasible 189）：`Kepler/Text/LP/LPCert.lean:28-35` 文件头（该文件自己的盘点口径）。

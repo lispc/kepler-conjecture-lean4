@@ -606,6 +606,42 @@ SORRIED −1 恰为被真证声明，零新增。
 
 - 回归对照（基线 U 的 stale-olean 勘误仍有效）：见上一节「仪器勘误」。
 
+### 基线 W：mntdedup 落库 @ `1de85f96`（2026-11-12）
+
+> 触发：`mnt11_anchor` 去重（删唯一 truth-declaration
+> `private theorem mnt11_anchor : main_nonlinear_terminal_v11 := sorry`，
+> 9 条 terminal-bank wire + w1/w2 + `JEJTVGB_p16_discharged` 改显式 `(hmn …)` 传参；
+> 零新证明/import/axiom，合取陈述一字未动）。仪器输出原样换装
+> `docs/e2e-reachability-map.tsv`（**5,898 行**）；`trust_manifest.py --check` PASS
+> （585/585 ground、pins OK）。注：`lean --run` 结束码 1 是脚本无 `main` 的既有行为
+> （stderr `(interpreter) unknown declaration 'main'`），输出以 `--- END ---` 收尾、完整。
+
+| 指标 | 基线 W | 基线 V | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,484** | 2,095,485 | **−1** |
+| SORRIED | **75** | 76 | **−1** |
+| K_AXIOM | **585** | 585 | **0** |
+| K_MODULES | 5,219 | 5,219 | 0 |
+| K_UNIVERSE | 2,108,357 | 2,108,358 | −1 |
+| COVERAGE | 99.3894% | 99.3883% | +0.0011pp |
+| 口径 II（ex-Cases） | K_REACH **35,061** / SORRIED **75** / AXIOM **585** / UNIVERSE **46,377** | 35,062 / 76 / 585 / 46,378 | −1 / −1 / 0 / −1 |
+| TOTAL_VALUE_DECLS | 2,094,810 | 2,094,811 | −1 |
+
+**SORRIED 清单逐行 diff（唯一判据）**：closed =
+**{`_private.Kepler.Text.LocalConcl.0.Kepler.Text.mnt11_anchor`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 `#print axioms the_kepler_conjecture_e2e` 与改前
+**逐字节 IDENTICAL**（589 = 585 native + 标准三 + `sorryAx`）。
+
+**判读**：这是**去重不是还债**（同 `p21_anchor` 先例 `d2847338`，锥 80→79）：真实银行债务
+`Assembly.nliMainNonlinearTerminalV11` 一分未减，`sorryAx` 仍经 `hmnt` 流进 9 条 wire。
+−1 的 reach/universe 恰是消失的 anchor 声明本身。
+
+**剩余 75 的构成**（`--- SORRIED ---` 段实测）：
+- Assembly **56** = 55 `nli*`（hNL）+ 1 `lpArchiveCertificatesDebt`（hLP）；
+- Text **19** = LocalAuto 阶梯 16（LA15/20/21/22/23/26/27×2/29/30/32×3/33×3）
+  + `TameLp.fully_surrounded_perimeter_bound` + PA13 `URRPHBZ2`
+  + PA25 `real_model_ox3q1h_merge`（mnt11_anchor 已去重出列，20→19）。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的

@@ -1,17 +1,17 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2095485
-K_SORRIED 76
+K_REACH 2095484
+K_SORRIED 75
 K_AXIOM 585
 K_MODULES 5219
-K_UNIVERSE 2108358
-COVERAGE 2095485 / 2108358
-K_UNIVERSE_XCASES 46378
-K_REACH_XCASES 35062
-K_SORRIED_XCASES 76
+K_UNIVERSE 2108357
+COVERAGE 2095484 / 2108357
+K_UNIVERSE_XCASES 46377
+K_REACH_XCASES 35061
+K_SORRIED_XCASES 75
 K_AXIOM_XCASES 585
-TOTAL_VALUE_DECLS 2094811
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2094811
-SORRIED 76
+TOTAL_VALUE_DECLS 2094810
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2094810
+SORRIED 75
 AXIOMS 585
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
@@ -89,7 +89,6 @@ Kepler.Text.LocalAuto15	Kepler.Text.VPWSHTO_p15	parent=Kepler.Text.VPWSHTO_PRIME
 Kepler.Text.LocalAuto32	Kepler.Text.YOBIMPP_p32	parent=Kepler.Text.YOBIMPP_discharged
 Kepler.Text.LocalAuto21	Kepler.Text.general_482_deformation_p21	parent=Kepler.Text.CUXVZOZ_p21
 Kepler.Text.PackingAuto25	Kepler.Text.real_model_ox3q1h_merge	parent=Kepler.Text.pkrmQuarter
-Kepler.Text.LocalConcl	_private.Kepler.Text.LocalConcl.0.Kepler.Text.mnt11_anchor	parent=Kepler.Text.TFITSKC_discharged
 --- AXIOMS ---
 Kepler.Graphs.CertShards.Hex.K001	Kepler.Graphs.hex_shard_100._native.native_decide.ax_1_1
 Kepler.Graphs.CertShards.Hex.K010	Kepler.Graphs.hex_shard_1000._native.native_decide.ax_1_1
@@ -3787,8 +3786,8 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 308	Kepler.Interval.Cases.CFWGKMBZ.Shard234
 308	Kepler.Interval.Cases.CFWGKMBZ.Shard41
 308	Kepler.Interval.Cases.CFWGKMBZ.Shard439
-308	Kepler.Text.LocalConcl
 307	Kepler.Interval.Cases.CFWGKMBZ.Shard413
+307	Kepler.Text.LocalConcl
 306	Kepler.Interval.Cases.CFWGKMBZ.Shard255
 306	Kepler.Interval.Cases.CFWGKMBZ.Shard80
 305	Kepler.Interval.Cases.CFWGKMBZ.Shard263
