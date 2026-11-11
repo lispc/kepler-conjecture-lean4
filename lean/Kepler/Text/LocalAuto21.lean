@@ -4213,6 +4213,277 @@ theorem tau3_azim_p21 (v0 v1 v2 : V3)
   unfold tau3
   rw [e1, e2, e3]
 
+/-! ## W3 kit (`g482w3_*`): generic helpers for `general_482_deformation_p21`
+
+Everything here is `private`-free so the block can be spliced into
+`LocalAuto21.lean` immediately above the target theorem. -/
+
+/-- Cyclic symmetry of `taum` (from `taum_sym2`). -/
+theorem g482w3_taum_cyc (a b c x y z : ℝ) : taum a b c x y z = taum b c a y z x := by
+  rw [(taum_sym2 a b c x y z).1, (taum_sym2 b a c y x z).2]
+
+theorem g482w3_taum_swap12 (a b c x y z : ℝ) : taum a b c x y z = taum b a c y x z :=
+  (taum_sym2 a b c x y z).1
+
+/-- Determinant positivity from an azimuth in `(0, π)` (HOL `JBDNJJB`). -/
+theorem g482w3_cross_det_pos {x y z : V3} (h1 : ¬ Collinear3 0 x y) (h2 : ¬ Collinear3 0 x z)
+    (hpos : 0 < azim 0 x y z) (hlt : azim 0 x y z < Real.pi) :
+    0 < crossProduct x.ofLp y.ofLp ⬝ᵥ z.ofLp := by
+  obtain ⟨s, hs, hseq⟩ := JBDNJJB (u := x) (v := y) (w := z) h1 h2
+  have hsin : 0 < Real.sin (azim 0 x y z) := (sin_azim_pos_p21 0 x y z).mpr ⟨hpos, hlt⟩
+  rw [hseq] at hsin
+  nlinarith [hs, hsin]
+
+theorem g482w3_cross_det_cyc (a b c : V3) :
+    crossProduct a.ofLp b.ofLp ⬝ᵥ c.ofLp = crossProduct b.ofLp c.ofLp ⬝ᵥ a.ofLp := by
+  rw [dotProduct_comm, triple_product_permutation c a b, dotProduct_comm]
+
+theorem g482w3_cross_det_cyc2 (a b c : V3) :
+    crossProduct a.ofLp b.ofLp ⬝ᵥ c.ofLp = crossProduct c.ofLp a.ofLp ⬝ᵥ b.ofLp := by
+  rw [g482w3_cross_det_cyc a b c, g482w3_cross_det_cyc b c a]
+
+/-- Azim-cycle: one azimuth in `(0, π)` gives the other two. -/
+theorem g482w3_azim_cycle {x y z : V3} (h1 : ¬ Collinear3 0 x y)
+    (h2 : ¬ Collinear3 0 x z)
+    (hpos : 0 < azim 0 x y z) (hlt : azim 0 x y z < Real.pi) :
+    (0 < azim 0 y z x ∧ azim 0 y z x < Real.pi) ∧
+      (0 < azim 0 z x y ∧ azim 0 z x y < Real.pi) := by
+  have hdet : 0 < crossProduct x.ofLp y.ofLp ⬝ᵥ z.ofLp := g482w3_cross_det_pos h1 h2 hpos hlt
+  have hyzx : 0 < (cross3 y z).ofLp ⬝ᵥ x.ofLp := by
+    rw [cross3, WithLp.ofLp_toLp]
+    rw [← g482w3_cross_det_cyc x y z]
+    exact hdet
+  have hzxy : 0 < (cross3 z x).ofLp ⬝ᵥ y.ofLp := by
+    rw [cross3, WithLp.ofLp_toLp]
+    rw [← g482w3_cross_det_cyc2 x y z]
+    exact hdet
+  exact ⟨(azim_lt_pi_cross_p14 y z x).mpr hyzx, (azim_lt_pi_cross_p14 z x y).mpr hzxy⟩
+
+/-- `0 < upsX` bridge from non-collinearity. -/
+theorem g482w3_upsX_pos_of_not_col {a b c : V3} (hnc : ¬ Collinear3 a b c) :
+    0 < upsX (dist a b * dist a b) (dist a c * dist a c) (dist b c * dist b c) := by
+  have h := (not_col_eq_upsX_pos_p21 a b c).mp hnc
+  simpa [pow_two] using h
+
+/-- `0 < deltaY` bridge from non-coplanarity. -/
+theorem g482w3_deltaY_pos {u0 u1 u2 u3 : V3} (hnc : ¬ Coplanar ({u0, u1, u2, u3} : Set V3)) :
+    0 < deltaY (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3) (dist u1 u3) (dist u1 u2) := by
+  have hnn : 0 ≤ deltaY (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3)
+      (dist u1 u3) (dist u1 u2) := DELTA_Y_POS_4POINTS_B u0 u1 u2 u3
+  refine lt_of_le_of_ne hnn ?_
+  intro hz
+  exact hnc ((coplanar_delta_y_zero_p18 u0 u1 u2 u3).mpr hz.symm)
+
+/-- Re-indexing of the four-point `taum` by the pair equality
+`{p0, p2} = {b, c}` (HOL `general_482_deformation`, `taum_sym2` block). -/
+theorem g482w3_taum4 (w b c p0 p2 : V3) (hne : b ≠ c)
+    (h : ({p0, p2} : Set V3) = {b, c}) :
+    taum ‖w‖ ‖b‖ ‖c‖ (dist b c) (dist w c) (dist w b)
+      = taum ‖p0‖ ‖p2‖ ‖w‖ (dist w p2) (dist p0 w) (dist p0 p2) := by
+  have hcases : (p0 = b ∧ p2 = c) ∨ (p0 = c ∧ p2 = b) := by
+    have hm0 : p0 ∈ ({b, c} : Set V3) := by rw [← h]; simp
+    have hc : c ∈ ({p0, p2} : Set V3) := by rw [h]; simp
+    have hb : b ∈ ({p0, p2} : Set V3) := by rw [h]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm0 hc hb
+    rcases hm0 with hm0 | hm0
+    · subst hm0
+      rcases hc with hc | hc
+      · exact absurd hc.symm hne
+      · exact Or.inl ⟨rfl, hc.symm⟩
+    · subst hm0
+      rcases hb with hb | hb
+      · exact absurd hb hne
+      · exact Or.inr ⟨rfl, hb.symm⟩
+  rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+  · rw [hp0, hp2]
+    rw [g482w3_taum_cyc, dist_comm b w]
+  · rw [hp0, hp2]
+    rw [g482w3_taum_cyc, g482w3_taum_swap12, dist_comm c w, dist_comm c b]
+
+/-- `setSum` over `{i | i < k}` is `Finset.range` summation. -/
+theorem g482w3_setSum_range (f : ℕ → ℝ) (k : ℕ) :
+    setSum {i | i < k} f = ∑ i ∈ Finset.range k, f i := by
+  have hfin : ({i : ℕ | i < k} : Set ℕ).Finite := Set.finite_Iio k
+  have key : setSum ({i : ℕ | i < k} : Set ℕ) f = ∑ w ∈ hfin.toFinset, f w := by
+    unfold setSum
+    exact dif_pos hfin
+  rw [key]
+  congr 1
+  ext x
+  simp only [Set.Finite.mem_toFinset, Finset.mem_range]
+  rfl
+
+/-- Periodicity of `v` transported across a shifted reduced index:
+`v (i % k + c) = v (i + c)`. -/
+theorem g482w3_periodic_add {v : ℕ → V3} {k : ℕ} (hper : Periodic v k) (_hk : k ≠ 0)
+    (i c : ℕ) : v ((i % k) + c) = v (i + c) := by
+  have h1 : v ((i % k) + c) = v (((i % k) + c) % k) := (periodic_mod_p18 hper _).symm
+  have h2 : ((i % k) + c) % k = (i + c) % k := by
+    rw [Nat.add_mod (i % k) c k, Nat.add_mod i c k, Nat.mod_mod]
+  rw [h1, h2, periodic_mod_p18 hper]
+
+/-- The three residues `p1, p1+1, p1+k-1` are pairwise distinct mod `k`. -/
+theorem g482w3_res_three_distinct {k p1 : ℕ} (hk3 : 3 < k) :
+    (p1 + 1) % k ≠ p1 % k ∧ (p1 + (k - 1)) % k ≠ p1 % k ∧
+      (p1 + (k - 1)) % k ≠ (p1 + 1) % k := by
+  refine ⟨?_, ?_, ?_⟩
+  · intro he
+    have hdvd : k ∣ (p1 + 1) - p1 :=
+      (Nat.modEq_iff_dvd' (by omega : p1 ≤ p1 + 1)).mp he.symm
+    have h1 : (p1 + 1) - p1 = 1 := by omega
+    rw [h1] at hdvd
+    have := Nat.le_of_dvd (by norm_num) hdvd
+    omega
+  · intro he
+    have hdvd : k ∣ (p1 + (k - 1)) - p1 :=
+      (Nat.modEq_iff_dvd' (by omega : p1 ≤ p1 + (k - 1))).mp he.symm
+    have h1 : (p1 + (k - 1)) - p1 = k - 1 := by omega
+    rw [h1] at hdvd
+    have := Nat.le_of_dvd (by omega) hdvd
+    omega
+  · intro he
+    have hdvd : k ∣ (p1 + (k - 1)) - (p1 + 1) :=
+      (Nat.modEq_iff_dvd' (by omega : p1 + 1 ≤ p1 + (k - 1))).mp he.symm
+    have h1 : (p1 + (k - 1)) - (p1 + 1) = k - 2 := by omega
+    rw [h1] at hdvd
+    have := Nat.le_of_dvd (by omega) hdvd
+    omega
+
+/-- Expansion of the three-point sum at `t = 0` (HOL `general_482_deformation`,
+the `sum {p1 MOD k, ...}` block). -/
+theorem g482w3_sum_T_G (v : ℕ → V3) {k p1 : ℕ} (hk3 : 3 < k) (hper : Periodic v k) :
+    ∑ i ∈ ({p1 % k, (p1 + 1) % k, (p1 + (k - 1)) % k} : Finset ℕ),
+        rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1)))
+      = rhoFun ‖v p1‖ * azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1)))
+        + rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + 2)) (v p1)
+        + rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + (k - 2))) := by
+  obtain ⟨hA, hB, hC⟩ := g482w3_res_three_distinct (k := k) (p1 := p1) hk3
+  have hk0 : k ≠ 0 := by omega
+  have hnot1 : p1 % k ∉ ({((p1 + 1) % k), ((p1 + (k - 1)) % k)} : Finset ℕ) := by
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
+    exact ⟨Ne.symm hA, Ne.symm hB⟩
+  have hnot2 : ((p1 + 1) % k) ∉ ({(p1 + (k - 1)) % k} : Finset ℕ) := by
+    simpa using (Ne.symm hC)
+  rw [Finset.sum_insert hnot1, Finset.sum_insert hnot2, Finset.sum_singleton]
+  have e1 : rhoFun ‖v (p1 % k)‖ * azim 0 (v (p1 % k)) (v (p1 % k + 1)) (v (p1 % k + (k - 1)))
+      = rhoFun ‖v p1‖ * azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) := by
+    rw [periodic_mod_p18 hper, g482w3_periodic_add hper hk0 p1 1,
+      g482w3_periodic_add hper hk0 p1 (k - 1)]
+  have e2 : rhoFun ‖v ((p1 + 1) % k)‖ * azim 0 (v ((p1 + 1) % k))
+        (v ((p1 + 1) % k + 1)) (v ((p1 + 1) % k + (k - 1)))
+      = rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + 2)) (v p1) := by
+    rw [periodic_mod_p18 hper, g482w3_periodic_add hper hk0 (p1 + 1) 1,
+      g482w3_periodic_add hper hk0 (p1 + 1) (k - 1),
+      show (p1 + 1) + (k - 1) = p1 + k by omega, hper p1]
+  have e3 : rhoFun ‖v ((p1 + (k - 1)) % k)‖ * azim 0 (v ((p1 + (k - 1)) % k))
+        (v ((p1 + (k - 1)) % k + 1)) (v ((p1 + (k - 1)) % k + (k - 1)))
+      = rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + (k - 2))) := by
+    rw [periodic_mod_p18 hper, g482w3_periodic_add hper hk0 (p1 + (k - 1)) 1,
+      g482w3_periodic_add hper hk0 (p1 + (k - 1)) (k - 1),
+      show (p1 + (k - 1)) + 1 = p1 + k by omega, hper p1,
+      show (p1 + (k - 1)) + (k - 1) = (p1 + (k - 2)) + k by omega, hper (p1 + (k - 2))]
+  rw [e1, e2, e3]
+  ring
+
+/-- Expansion of the three-point sum at time `t`, using the four frozen values
+(HOL `general_482_deformation`, `A3`-`A6` frozen-azimuth block). -/
+theorem g482w3_sum_T_H (f : V3 → ℝ → V3) (v : ℕ → V3) {k p1 : ℕ} (t : ℝ) (hk3 : 3 < k)
+    (hper : Periodic v k)
+    (hf1 : f (v (p1 + 1)) t = v (p1 + 1)) (hf2 : f (v (p1 + 2)) t = v (p1 + 2))
+    (hf3 : f (v (p1 + (k - 1))) t = v (p1 + (k - 1)))
+    (hf4 : f (v (p1 + (k - 2))) t = v (p1 + (k - 2))) :
+    ∑ i ∈ ({p1 % k, (p1 + 1) % k, (p1 + (k - 1)) % k} : Finset ℕ),
+        rhoFun ‖f (v i) t‖ * azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + (k - 1))) t)
+      = rhoFun ‖f (v p1) t‖ * azim 0 (f (v p1) t) (v (p1 + 1)) (v (p1 + (k - 1)))
+        + rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + 2)) (f (v p1) t)
+        + rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (f (v p1) t) (v (p1 + (k - 2))) := by
+  obtain ⟨hA, hB, hC⟩ := g482w3_res_three_distinct (k := k) (p1 := p1) hk3
+  have hk0 : k ≠ 0 := by omega
+  have hnot1 : p1 % k ∉ ({((p1 + 1) % k), ((p1 + (k - 1)) % k)} : Finset ℕ) := by
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
+    exact ⟨Ne.symm hA, Ne.symm hB⟩
+  have hnot2 : ((p1 + 1) % k) ∉ ({(p1 + (k - 1)) % k} : Finset ℕ) := by
+    simpa using (Ne.symm hC)
+  rw [Finset.sum_insert hnot1, Finset.sum_insert hnot2, Finset.sum_singleton]
+  have e1 : rhoFun ‖f (v (p1 % k)) t‖ * azim 0 (f (v (p1 % k)) t)
+        (f (v (p1 % k + 1)) t) (f (v (p1 % k + (k - 1))) t)
+      = rhoFun ‖f (v p1) t‖ * azim 0 (f (v p1) t) (v (p1 + 1)) (v (p1 + (k - 1))) := by
+    rw [periodic_mod_p18 hper, g482w3_periodic_add hper hk0 p1 1,
+      g482w3_periodic_add hper hk0 p1 (k - 1), hf1, hf3]
+  have e2 : rhoFun ‖f (v ((p1 + 1) % k)) t‖ * azim 0 (f (v ((p1 + 1) % k)) t)
+        (f (v ((p1 + 1) % k + 1)) t) (f (v ((p1 + 1) % k + (k - 1))) t)
+      = rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + 2)) (f (v p1) t) := by
+    rw [periodic_mod_p18 hper, g482w3_periodic_add hper hk0 (p1 + 1) 1,
+      g482w3_periodic_add hper hk0 (p1 + 1) (k - 1),
+      show (p1 + 1) + (k - 1) = p1 + k by omega, hper p1, hf1, hf2]
+  have e3 : rhoFun ‖f (v ((p1 + (k - 1)) % k)) t‖ * azim 0 (f (v ((p1 + (k - 1)) % k)) t)
+        (f (v ((p1 + (k - 1)) % k + 1)) t) (f (v ((p1 + (k - 1)) % k + (k - 1))) t)
+      = rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (f (v p1) t) (v (p1 + (k - 2))) := by
+    rw [periodic_mod_p18 hper, g482w3_periodic_add hper hk0 (p1 + (k - 1)) 1,
+      g482w3_periodic_add hper hk0 (p1 + (k - 1)) (k - 1),
+      show (p1 + (k - 1)) + 1 = p1 + k by omega, hper p1,
+      show (p1 + (k - 1)) + (k - 1) = (p1 + (k - 2)) + k by omega, hper (p1 + (k - 2)),
+      hf3, hf4]
+  rw [e1, e2, e3]
+  ring
+
+/-- `psort` is symmetric in its pair argument (HOL `Terminal.psort_sym`). -/
+theorem g482w3_psort_swap (k a b : ℕ) : psort k (a, b) = psort k (b, a) := by
+  simp only [psort]
+  by_cases h1 : a % k ≤ b % k <;> by_cases h2 : b % k ≤ a % k <;>
+    simp [h1, h2] <;> omega
+
+/-- Nested-epsilon intersection: a single `e` below six given positive bounds. -/
+theorem g482w3_eps6 (e1 e2 e3 e4 e5 e6 : ℝ) (h1 : 0 < e1) (h2 : 0 < e2) (h3 : 0 < e3)
+    (h4 : 0 < e4) (h5 : 0 < e5) (h6 : 0 < e6) :
+    ∃ e, 0 < e ∧ (∀ t, |t| < e → |t| < e1) ∧ (∀ t, |t| < e → |t| < e2) ∧
+      (∀ t, |t| < e → |t| < e3) ∧ (∀ t, |t| < e → |t| < e4) ∧
+      (∀ t, |t| < e → |t| < e5) ∧ (∀ t, |t| < e → |t| < e6) := by
+  refine ⟨min e1 (min e2 (min e3 (min e4 (min e5 e6)))), ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · positivity
+  · intro t ht; exact lt_of_lt_of_le ht (min_le_left _ _)
+  · intro t ht
+    exact lt_of_lt_of_le ht (le_trans (min_le_right _ _) (min_le_left _ _))
+  · intro t ht
+    exact lt_of_lt_of_le ht
+      (le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_left _ _)))
+  · intro t ht
+    exact lt_of_lt_of_le ht (le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
+      (le_trans (min_le_right _ _) (min_le_left _ _))))
+  · intro t ht
+    exact lt_of_lt_of_le ht (le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
+      (le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_left _ _)))))
+  · intro t ht
+    exact lt_of_lt_of_le ht (le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
+      (le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_right _ _)))))
+
+/-- Nested-epsilon intersection, four bounds. -/
+theorem g482w3_eps4 (e1 e2 e3 e4 : ℝ) (h1 : 0 < e1) (h2 : 0 < e2) (h3 : 0 < e3)
+    (h4 : 0 < e4) :
+    ∃ e, 0 < e ∧ (∀ t, |t| < e → |t| < e1) ∧ (∀ t, |t| < e → |t| < e2) ∧
+      (∀ t, |t| < e → |t| < e3) ∧ (∀ t, |t| < e → |t| < e4) := by
+  obtain ⟨e, he, h1', h2', h3', h4', -, -⟩ := g482w3_eps6 e1 e2 e3 e4 e1 e2 h1 h2 h3 h4 h1 h2
+  exact ⟨e, he, h1', h2', h3', h4'⟩
+
+/-- Algebra of the final three-point comparison (HOL `general_482_deformation`,
+`MATCH_MP_TAC (arith ...)` closing step): the two sums differ only in the
+`r1*a1 + r2*a2 + r3*b2` bracket once the `(A1)`/`(A2)` splits are substituted. -/
+theorem g482w3_T_lt_alg (r1 r2 r3 A1 A1' X X' Y Y' C2 C3 G H : ℝ)
+    (hG : G = r1 * A1 + r2 * (C2 + Y) + r3 * (X + C3))
+    (hH : H = r1 * A1' + r2 * (C2 + Y') + r3 * (X' + C3))
+    (hlt : r1 * A1' + r2 * Y' + r3 * X' < r1 * A1 + r2 * Y + r3 * X) : H < G := by
+  rw [hG, hH]; linarith
+
+/-- Interface of the `LEMMA_4828966562` monotonicity witness at a decreased
+`y4`: the only obligations are the two `Ioo` memberships and the strict drop. -/
+theorem g482w3_taum_lt (y1 y2 y3 y4 y4a y5 y6 a b : ℝ)
+    (hmem : y4 ∈ Set.Ioo a b)
+    (hmono : ∀ p q, p ∈ Set.Ioo a b → q ∈ Set.Ioo a b → p < q →
+      taum y1 y2 y3 p y5 y6 < taum y1 y2 y3 q y5 y6)
+    (hlt : y4a < y4) (hlo : a < y4a) (hhi : y4a < b) :
+    taum y1 y2 y3 y4a y5 y6 < taum y1 y2 y3 y4 y5 y6 :=
+  hmono y4a y4 ⟨hlo, hhi⟩ hmem hlt
+
 /-- HOL `general_482_deformation` (CUXVZOZ.hl:3649, 640 lines): the master
 482-cell deformation theorem. -/
 theorem general_482_deformation_p21 (h : mainNonlinearTerminalV11_p21)
