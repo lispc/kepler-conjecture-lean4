@@ -432,14 +432,40 @@ theorem ARCV_ADD_AFF_GE_p18 (u v w x : V3) (hv : v ≠ u) (hw : w ≠ u)
   -- DISCHARGES: HOL ANGLES_ADD_AFF_GE (Harrison, fan geometry); the `arcV`
   -- rendering is Kepler.Geom.LuneVolume's (HOL sphere.hl:375).
 
-/-- HOL `coplanar_delta_y_zero` (IUNBUIG.hl:144). -/
+/-- HOL `coplanar_delta_y_zero` (IUNBUIG.hl:144).
+
+Route (verbatim HOL `ASM_MESON_TAC` chain): `coplanar_eq_coplanar_alt`
+(`PackingAuto18`) turns the goal into `CoplanarAlt`; the Oxlzlez criterion
+`POS_EQ_NOT_COPLANANR` (`PackingAuto18`) is `0 < deltaP ↔ ¬CoplanarAlt`; the
+nonnegativity `0 ≤ deltaP` is `DELTA_Y_POS_4POINTS_B` (`LocalAuto38Bridge`,
+HOL `Terminal.DELTA_Y_POS_4POINTS`); `deltaY` at distances is `deltaP` at
+their squares by `delta_delta_x` (`PackingAuto18`). -/
 theorem coplanar_delta_y_zero_p18 (u₀ u₁ u₂ u₃ : V3) :
     Coplanar ({u₀, u₁, u₂, u₃} : Set V3) ↔
       deltaY (dist u₀ u₁) (dist u₀ u₂) (dist u₀ u₃) (dist u₂ u₃)
         (dist u₁ u₃) (dist u₁ u₂) = 0 := by
-  sorry
-  -- DISCHARGES: HOL Terminal.DELTA_Y_POS_4POINTS (delta_y > 0 off
-  -- coplanarity) + Oxlzlez.coplanar_delta_y (coplanarity criterion).
+  have hdelta : deltaY (dist u₀ u₁) (dist u₀ u₂) (dist u₀ u₃)
+        (dist u₂ u₃) (dist u₁ u₃) (dist u₁ u₂)
+      = deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
+          (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := by
+    simp only [deltaY, pow_two, delta_delta_x]
+  have hnn : 0 ≤ deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
+      (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := by
+    rw [← hdelta]
+    exact DELTA_Y_POS_4POINTS_B u₀ u₁ u₂ u₃
+  have hpos := POS_EQ_NOT_COPLANANR u₀ u₁ u₂ u₃
+  rw [coplanar_eq_coplanar_alt, hdelta]
+  constructor
+  · intro hc
+    have hnlt : ¬ 0 < deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
+        (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) :=
+      fun hp => (hpos.mp hp) hc
+    linarith
+  · intro hzero
+    by_contra hnc
+    have hp : 0 < deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
+        (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := hpos.mpr hnc
+    linarith
 
 /-- HOL `real_continuous_finite_range_constant` (IUNBUIG.hl:157): a real
 function continuous on an open interval with finite range is constant

@@ -672,4 +672,117 @@ theorem mk_simplex_uniq_w2 (v0 v1 v2 v3 : V3)
     rw [div_mul_cancel₀ _ (ne_of_gt hQposP)]
   exact (simplex_unique_w2 v0 v1 v2 v3 _ hncol d0 d1 d2 hre').symm
 
+/-! ## `NOT_COL_EQ_UPS_X_POS` twin (g482 wave)
+
+HOL `Collect_geom2.NOT_COL_EQ_UPS_X_POS` (`collect_geom2.hl:1420`):
+`~collinear {v1,v2,v3} <=> 0 < ups_x (dist(v1,v2)^2) (dist(v1,v3)^2)
+(dist(v2,v3)^2)`. The Lean proof exists as `EulerSimplexGeom.ea2_upsX_pos_iff`
+but that module is outside the LA21 import closure (`#check` unknown), so the
+statement is re-established here self-contained on the kit's `upsX`
+(`Kepler.Text.SphereKit`) / `Collinear3` (`Kepler.Geom.Azim`) interface.
+Route is the `ea2` one: `upsX` at the three Gram atoms is
+`4·((a×b)·(a×b))` (Lagrange), and a vanishing cross product is collinearity.
+No new imports; all helpers below are private scalar/coordinate algebra. -/
+
+private theorem g482_coe_sub (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+/-- `(f − g)·(f − g) = f·f + g·g − 2(f·g)` on `Fin 3 → ℝ` (HOL `dot` expansion). -/
+private theorem g482_dmix (f g : Fin 3 → ℝ) :
+    (f - g) ⬝ᵥ (f - g) = f ⬝ᵥ f + g ⬝ᵥ g - 2 * (f ⬝ᵥ g) := by
+  rw [sub_dotProduct, dotProduct_sub, dotProduct_sub, dotProduct_comm f g]
+  ring
+
+/-- `ups_x` at the three Gram atoms: `upsX C A (A + C − 2D) = 4(CA − D²)`
+(HOL `UPS_X` scalar identity; `ea2_ups_atoms` twin, unused binder dropped). -/
+private theorem g482_ups_atoms (A C D : ℝ) :
+    upsX C A (A + C - 2 * D) = 4 * (C * A - D * D) := by
+  simp only [upsX]
+  ring
+
+/-- Collinearity of `{v,w,w1}` is equivalent to vanishing of the cross
+product of the two difference vectors (HOL `CROSS_EQ_0` bridge; twin of
+`EulerSimplexGeom.ea2_collinear3_iff_cross`). -/
+private theorem g482_collinear3_iff_cross (v w w1 : V3) :
+    Collinear3 v w w1 ↔
+      crossProduct ((w - v : V3) : Fin 3 → ℝ) ((w1 - v : V3) : Fin 3 → ℝ) = 0 := by
+  constructor
+  · intro hcol
+    by_cases hw : w = v
+    · subst hw
+      have h0 : ((w - w : V3) : Fin 3 → ℝ) = 0 := by simp
+      rw [h0, LinearMap.map_zero, LinearMap.zero_apply]
+    · obtain ⟨c, hc⟩ := (collinear3_iff_smul hw).mp hcol
+      have hcoe : ((w1 - v : V3) : Fin 3 → ℝ) = c • ((w - v : V3) : Fin 3 → ℝ) := by
+        have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hc
+        simpa only [w2_smul_coe] using h
+      rw [hcoe, LinearMap.map_smul, cross_self, smul_zero]
+  · intro hcross
+    by_cases hw : w = v
+    · exact collinear3_of_eq hw
+    · rw [collinear3_iff_smul hw]
+      have hfne : ((w - v : V3) : Fin 3 → ℝ) ≠ 0 := by
+        intro hz
+        exact hw (sub_eq_zero.mp
+          ((WithLp.ofLp_injective (p := 2)) (by simpa using hz)))
+      have hli : ¬ LinearIndependent ℝ ![((w - v : V3) : Fin 3 → ℝ),
+          ((w1 - v : V3) : Fin 3 → ℝ)] :=
+        (crossProduct_ne_zero_iff_linearIndependent
+          (v := ((w - v : V3) : Fin 3 → ℝ)) (w := ((w1 - v : V3) : Fin 3 → ℝ))).not.mp
+            (not_not.mpr hcross)
+      have hnel' : ¬ (∀ a : ℝ, a • ((w - v : V3) : Fin 3 → ℝ)
+          ≠ ((w1 - v : V3) : Fin 3 → ℝ)) :=
+        fun hcon => hli ((LinearIndependent.pair_iff' hfne).mpr hcon)
+      push Not at hnel'
+      obtain ⟨a, ha⟩ := hnel'
+      exact ⟨a, WithLp.ofLp_injective (p := 2) (by simpa only [w2_smul_coe] using ha.symm)⟩
+
+/-- HOL `NOT_COL_EQ_UPS_X_POS` (`collect_geom2.hl:1420`), HOL statement
+order: `¬collinear` on the left, `0 < ups_x` on the right. -/
+private theorem g482_not_col_eq_upsX_pos (a b c : V3) :
+    ¬ Collinear3 a b c ↔ 0 < upsX (dist a b ^ 2) (dist a c ^ 2) (dist b c ^ 2) := by
+  set f : Fin 3 → ℝ := ((b - a : V3) : Fin 3 → ℝ) with hf
+  set g : Fin 3 → ℝ := ((c - a : V3) : Fin 3 → ℝ) with hg
+  have e1 : dist a b ^ 2 = f ⬝ᵥ f := by
+    simp only [w2_dist_sq, WithLp.ofLp_sub, hf]
+  have e2 : dist a c ^ 2 = g ⬝ᵥ g := by
+    simp only [w2_dist_sq, WithLp.ofLp_sub, hg]
+  have hcb : ((c : V3) : Fin 3 → ℝ) - ((b : V3) : Fin 3 → ℝ) = g - f := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ))
+      (show (c : V3) - b = (c - a) - (b - a) from by abel)
+    simpa only [g482_coe_sub, hg, hf] using h
+  have e3 : dist b c ^ 2 = (g - f) ⬝ᵥ (g - f) := by
+    simp only [w2_dist_sq, WithLp.ofLp_sub, hcb]
+  have hups : upsX (dist a b ^ 2) (dist a c ^ 2) (dist b c ^ 2)
+      = 4 * ((crossProduct f g) ⬝ᵥ (crossProduct f g)) := by
+    rw [e1, e2, e3, g482_dmix g f, g482_ups_atoms (g ⬝ᵥ g) (f ⬝ᵥ f) (g ⬝ᵥ f),
+      dotProduct_comm g f, ← w2_lagrangeP f g]
+  constructor
+  · intro hnc
+    have hcz : crossProduct f g ≠ 0 := by
+      intro hz
+      exact hnc ((g482_collinear3_iff_cross a b c).mpr hz)
+    rw [hups]
+    have hvne : (WithLp.toLp 2 (crossProduct f g) : V3) ≠ 0 := by
+      intro hzz
+      exact hcz (by simpa using hzz)
+    have hpos : 0 < (crossProduct f g) ⬝ᵥ (crossProduct f g) := by
+      have h2 : (crossProduct f g) ⬝ᵥ (crossProduct f g)
+          = ‖(WithLp.toLp 2 (crossProduct f g) : V3)‖ ^ 2 := (norm_sq_eq_dot _).symm
+      rw [h2]
+      exact pow_pos (norm_pos_iff.mpr hvne) 2
+    exact mul_pos (by norm_num) hpos
+  · intro hpos hcol
+    have hcz : crossProduct f g = 0 := (g482_collinear3_iff_cross a b c).mp hcol
+    rw [hcz] at hups
+    simp at hups
+    linarith
+
+/-- Public alias of the private `g482_not_col_eq_upsX_pos` (HOL `NOT_COL_EQ_UPS_X_POS`,
+`leg/collect_geom2.hl:1420`). The private proof is self-contained (no new imports); this
+alias makes it consumable by `general_482` wiring in other modules. -/
+theorem not_col_eq_upsX_pos_p21 (a b c : V3) :
+    ¬ Collinear3 a b c ↔ 0 < upsX (dist a b ^ 2) (dist a c ^ 2) (dist b c ^ 2) :=
+  g482_not_col_eq_upsX_pos a b c
+
 end Kepler.Text
