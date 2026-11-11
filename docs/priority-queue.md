@@ -356,6 +356,12 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（13:54，续944）**：**一笔落库：J4 `c82388a4`（`Reduction3Thm19` 增补 +66 → 193 行，2 探针）——`reduction_E` 绿；`reduction_F` 仅剩 3 个 `.symm`**。
+① **`c82388a4`（J4 reduction_E）**：`reductionE`（HOL reduction3.hl:4682-4733）——`apply reductionD hK10` → E-hgen at `i := k`（`k ≤ transformCount` 由 `hk`）→ 7 元中仅第 5 条需 `0 < k`（`transformCountNon0` + `finalListTransformCount`）。实测 ≈54 vs 估 40–60；探针 ⊆ 标准三、零 sorryAx。
+② **reduction_F PARTIAL（完整证明已写出，3 个等式方向）**：`apply reductionE hK10` + `exact mainInduction hK10 i L N g p fs f v r x fx uvns gi fi hL (hrreAll L) (hrreSAll L) (hcsnl L hL) hgn …`；剩 `huv`/`hgi`/`hfi` 各一次 `.symm`，**下一轮一次编译即收**。
+③ **hF → J5-9 接线建议（采信）**：`reductionF hF hrreAll hrreSAll hcsnl : restrictedHypermapsArePlaneGraphsV4` 直接供给 J5-9 的 ① 号勾。三条 assumption 前提来源：`hcsnl` = `coreSplitNormalListThm`（8b 已真证）；`hrreAll`/`hrreSAll` 由 W5b `rRtransEqThm` 落库后消除，落库前由 `assumptionSetK10` 装配层显式携带（与 14i 现状一致）。
+④ **续派**：J4 → **reduction_F 清 3 方向收官（极小）**；aq13（W5b）、tame-corr（Lane A2+A3）在飞。
+
 - **2026-11-11（13:50，续943）**：**一笔落库：tame-corr nb44 `a86b8719`（`Reduction5J5K2Prefix` +175，2 件）——K2 前置 Lane A1 收官**。
 ① **`a86b8719`（tame-corr nb44）**：`vFinalLemmas`（more_lemma2.hl:195-216，32 行）——用 `prevCoreX`（nb37）在基态/塔态 i 各一次 + `fstNextFaceEqSnd`（J5-1a）+ `Prod.ext`；HOL 的 `prev_el_core_all_x`（45 行）/`MEM_CORE`/`quotient_all_uniq` 段全被 `prevCoreX` 吃掉。`indexf1FinalLemmas`（more_lemma2.hl:745-776，72 行）——四步全用库件：`indexfYtransEqLm` 给 f 侧 = `lm`；`indexfYtransEqLM1`@i=0 给 r 侧 = `lm`（`rtrans_zero` + marked successor 槽）；`nextPowerCoreW` + `TameSpine.indexfN` + `nextElnIndexf` 钉 core 层下标；`indexfYltSizel` 供 `n < |core|`；末步 core 层 = n = r 层 = f 层。两件探针 ⊆ 标准三、零 sorryAx；文件 175 行落在 scout 估 110–220 内。
 ② **最大误判风险已核实**：`reductionK1` 签名确实只做 K1CONCLUSION → `assumptionSetK10`；本件补的正是它缺的 **V/INDEX 1 两合取**证明，未假设 K1 已覆盖。A3 的 28 合取装配可直接 `exact vFinalLemmas …` / `exact indexf1FinalLemmas …` 填槽，其余 26 合取从 K2CONCLUSION 投影或由 A2/K1 辅助簇供。
