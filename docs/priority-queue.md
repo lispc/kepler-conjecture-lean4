@@ -356,6 +356,28 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（19:36，续988）**：**一笔落库：tame-corr nb65 `64438c41`（`Reduction5J5UvnsFinal` 新文件 +280，1 件）——`uvnsWalkCons` 绿，U1c 收官（Cl+mem 全 vs 装配）**。
+① **`64438c41`（tame-corr nb65）**：`uvnsWalkCons`——Cl：两次 `chainClAppend`（`(init++mid)` junction 用 `getDMidZero` + `arc=[]`→`aq10_betwnEqNil` / `arc≠[]`→`nextLastBetwn`；`++ final` junction 用 `hIMlast`（mid 末 = `z_{k-1}`）× final 首（`betwnOrbit`@0 / `aq10_betwnEqNil`））；mem：两次 `memInAppend`（`memInit`/`memMid@k-1`/`memFinal`，**mem 槽零新增**）；三段展开 `hvs` = `unfold destTripleFull; rw [hhead, hlast]; rfl`（`hhead` = `elCoreTriple@0`，`hlast` = `lastCoreTriple (k-1)`）；`take ((k-1)+1) = uvns` 由 `hlen0` 账。
+② **ERRATA（依赖方向入账）**：派单要求在 ChainCl 追加，实测 **import 成环**——`Reduction5J5UvnsMemHalf.lean:26` 自身 `import …UvnsChainCl`（J4 复用了 `MemIn` 等）⇒ 装配件独立成第三文件 `Reduction5J5UvnsFinal.lean`（import 两边），**MemHalf 与 ChainCl 均零改动**；后续依赖方向固定为 **MemHalf → ChainCl**。
+③ **修法记录（4 条）**：import 环 ⇒ 装配件独立文件；`hvs` 展开后补 `rfl`（rw 只到 let-投影层）；字面列表长度 omega 前先 `simpa using hj`；`hIMlast` 的 `dif_neg` 需 `0 < |mid|` 显式，`getLastD = some z` 取 `getD 0` 用 `rw [hmidlast]; rfl`（不能 `exact`）。
+④ **验收**：探针 ⊆ 标准三、零 sorryAx；实测 280 vs 估 90–110（三段展开 + 长度账为大头）。**续派**：tame-corr → **U3 pairs 支（100–160）**；J4 → **U2 有序支（120–180）**（并行，独立文件）。
+⑤ **落库闸**：apply-check PASS @fca3931f、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
+- **2026-11-11（19:36，续987）**：**一笔落库：aq13 ml18 `fca3931f`（`Reduction5J5FinalShape` 新文件 +111，4 件全绿）——会师终装验证件绿**。
+① **`fca3931f`（aq13 ml18）**：`jcajyduFinalShape (hU : k3UvnsMainSlot) : Assembly stub 的 Reduction5 侧逐字形`——**证体 1 行** `exact jcajyduOfK4Slots k3Sx3SlotInstance (k3UvnsOfSlots hU) H hres`（**零桥判词**：结论与 `jcajyduOfK4Slots` 逐字同形）；`AssemblyHypermapIso`/`AssemblyIsHypermapOfList` 同体镜像（不 import Assembly）+ `assemblyShapeBridge`（四字段匿名构造器一步 + `H.Iso` 同体直落，桥体 5 行）。
+② **验收**：4/4 探针 ⊆ 标准三、零 sorryAx（两镜像仅 `[propext, Quot.sound]`）；**import 闭包源级递归核验：1620 模块，`Kepler.Assembly` ∉ 闭包、坏边 0**（满足「不得牵入 Assembly 全树」）；实测 111 vs 估 30–50（头注/Assembly 原形对照 55 行）。
+③ **删桩样板（等 U 段 hU，DELIVERY §3）**：
+
+```lean
+obtain ⟨g, hpg, hgg, H', hH', hiso⟩ :=
+  Kepler.Text.Reduction5.jcajyduFinalShape hU H hres
+exact ⟨g, hpg, hgg, H',
+  ⟨hH'.darts_eq, hH'.edgeMap_eq, hH'.nodeMap_eq, hH'.faceMap_eq⟩, hiso⟩
+```
+
+④ **注**：镜像 def 仅为文件自包含的纸面核验；**Assembly 侧四字段桥在删桩时用真实 def 重编验证**（5 行 hunk，与 nb43 §4 一致）。aq13 车道进入会师待命。
+⑤ **落库闸**：apply-check PASS @78f3d218、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（19:27，续986）**：**一笔落库：J4 mem 半 `68a066ac`（`Reduction5J5UvnsMemHalf` 新文件 +148，2 件全绿）——`memInit`/`memFinal` 绿**。
 ① **`68a066ac`（J4）**：`MemIn (fun w => w ∈ core L r)` 对 init/final 形状（nb63 §2.2/2.3）；假设集与 `memMid` 同形（六载体 + `hm`/`hnf`/`hk`）+ `v` + `hprev : (prevEl (core L r) v, v) = x`。差异仅一处（≤1 行桥）：`memFinal` 统一取 `hprev`，`hprevcore` 由 `congrArg Prod.fst hprev` + `x ∈ r` 现推。
 ② **路线（采信）**：`nextPrevId` + `nextEl_mem_of_mem` 得 `v ∈ core`；`pnxvwfs1/2` + `finalAssumptionMemFstCore` 得 `y0/z/prevEl v ∈ core`；`between` 段经新私有胶水 `memInMapSome`（`uvnsGetDMapSomeApp` + `betwnMem`）。2/2 探针 ⊆ 标准三、零 sorryAx；实测 148 vs 估 50–80（证明体 95 在估内，超出为头注/共享胶水）；3 轮收敛；**与 tame-corr Cl 半零写冲突**（新文件，未改 ChainCl）。
