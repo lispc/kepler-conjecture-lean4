@@ -6390,6 +6390,13 @@ GATE_MODE=STATEMENT-FIX \
 
 验收口径：四件 SF 后仍是 `sorry`，`#print axioms` 仍含 `sorryAx`（实测 `[propext, sorryAx, Classical.choice, Quot.sound]`）——**不以标准三为验收**；本 SF 的关键验收 = **陈述与 HOL 条件式 `mnt11 ==> (!s v p. …)` 同形**（`#check` 输出以 `main_nonlinear_terminal_v11 →` 开头）+ `git apply --check` PASS + LA25 转发链 0 error。注意 `auto_gate.sh` 的 `## ${SF_ITEM}.` 节须含 `(a) HOL` 字样（本文件 `### (a) HOL 裁决` 满足）。
 
+> **ERRATA（2026-11-12，编排者 + vas-w1 机器证据）**：上面「同批排除项」对 `TUAPYYU_concl` 的排除**是错的**。
+> HOL `VASYYAU.hl:524` 的**陈述定义本身**就是条件式
+> ``let TUAPYYU_concl = `main_nonlinear_terminal_v11 ==> (!s v p. …)` ``；
+> `:640` 的 `prove(TUAPYYU_concl, STRIP_TAC THEN MP_TAC TUAPYYU1 …)` 第一件事就是 `STRIP_TAC`
+> 剥掉该蕴含前提 —— 该段只读了证明脚本，漏看陈述定义。⇒ TUAPYYU 与四兄弟同形，须补前提；
+> 已另立 **SF-107**。SF-102 本体（四件）不受影响。
+
 ## 103. PA22 `regular_spherical_polygon_area_asnFnhk` 右端多乘一个 `k`（HOL `counting_spheres.hl:946` 无此因子；`asnFnhk` 定义本身已含 `k`）— 分级 **A**（移植误植 · 陈述修正 · 用户 2026-11-06 裁决「一并走 SF」· 补丁面 = PA22 单陈述 + docstring）
 
 > 侦查来源：`797-defix-scout`（2026-11-05，只读）在 `_797` 真化准备中发现；编排者复核 HOL 原文确认。
@@ -6742,3 +6749,46 @@ let r_trans_eq_assumption = new_definition'
 槽前提增加 ⇒ 作为**前提**变弱 ⇒ 定理变强（更易应用）；**结论逐字不变**，
 不弱化 e2e 验收。补后 J5-9 的 hF 为机械供给，仅剩 hK4。执行时五文件岛编
 RC=0/0 err/0 warn、探针 ⊆ 标准三、零 sorryAx。
+
+## 107. LA1 `TUAPYYU_concl`（HEAD :4882）漏 `main_nonlinear_terminal_v11` 前提（HOL `VASYYAU.hl:524-535` 明写 `main_nonlinear_terminal_v11 ==>`；同时是 SF-102「同批排除项」的 ERRATA）— 分级 **A**（移植漏前提 · Lean 陈述强于 HOL · 补丁面 = LA1 单陈述 + LA25 `TUAPYYU_p25` 转发 + LocalConcl `TUAPYYU_discharged` + `VasTuaKit` 形参）
+
+### (a) HOL 裁决（机器证据，2026-11-12）
+
+```text
+VASYYAU.hl:524  let TUAPYYU_concl = `
+VASYYAU.hl:525  main_nonlinear_terminal_v11 ==>
+VASYYAU.hl:526  (!s v p. ...
+VASYYAU.hl:640  let TUAPYYU=prove( TUAPYYU_concl,
+VASYYAU.hl:641  STRIP_TAC                     ← 第一件事就是剥掉 :525 的蕴含前提
+VASYYAU.hl:642  THEN MP_TAC TUAPYYU1
+VASYYAU.hl:644  THEN MP_TAC Jotswix.NEHXMWH
+VASYYAU.hl:645  THEN MP_TAC Jotswix.BZQNDMN
+```
+
+SF-102 (b) 的「同批排除项」只读 :640 的证明脚本、漏看 :524 的**陈述定义**本身带
+`main_nonlinear_terminal_v11 ==>`，故误判 TUAPYYU 为无条件；ERRATA 已写回 SF-102 节末。
+四兄弟（`YEBWJNG_concl`/`WKZZEEH_concl`/`PWEIWBZ_concl`/`VASYYAU_concl`）已按 SF-102 补前提，
+唯 `TUAPYYU_concl` 被该错误排除留在无条件形。
+
+### (b) 现状与破位面（HEAD 实测）
+
+- Lean `TUAPYYU_concl`（`LocalAuto1:4882`）：`theorem TUAPYYU_concl : ∀ (s : ScsV39) …`，无 `h`。
+- LA25 转发 `TUAPYYU_p25`（`LocalAuto25:1264`，`fun _ => TUAPYYU_concl`）与
+  `TUAPYYU_concl_p25`（LA25:2220）；LocalConcl `TUAPYYU_discharged`（:4951，HOLD(b) cycle 记录在 :4948-4950）。
+- `VasTuaKit.TUAPYYU1_vaskit`（2026-11-12 落库 kit）形如
+  `NEHXMWH1_concl → NEHXMWH_concl → TUAPYYU_concl`（结论槽按当前无条件形），执行本 SF 时同步加 `h`。
+- HOL 消费点（`MIQMCSN.hl:1953/2208/2211/2721/2736/2742/2745`，含 `EXTREMAL_SCS_4M6` 内部）
+  全在 `main_nonlinear_terminal_v11 ==>` 证明体内 ⇒ 加前提后均有 `h` 在作用域，机械传参。
+
+### (c) 修法（与 SF-102 四件同形）
+
+在 `theorem TUAPYYU_concl` 与 `:` 之间插入 `(h : main_nonlinear_terminal_v11)`；
+`∀` 绑定顺序、全部 hypotheses、结论逐字不动。LA25 转发体改为 `fun h => TUAPYYU_concl h`
+（或直接 `TUAPYYU_concl`）；`LocalConcl.TUAPYYU_discharged` 与 `VasTuaKit` 相应形参同步补 `h`；
+下游消费点按 SF-102 的传参样板改调用形。
+
+### (d) 验收
+
+`#check @Kepler.Text.TUAPYYU_concl` 输出以 `main_nonlinear_terminal_v11 →` 开头；
+LA1/LA25/LocalConcl/VasTuaKit 岛编 0 error；`#print axioms` 仍含 `sorryAx`
+（本 SF 只修陈述保真度、不证本体，**不以标准三为验收**）。
